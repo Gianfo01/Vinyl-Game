@@ -30,13 +30,13 @@ export function toReal(cents: number, year: number): number {
 export function formatMoney(cents: number, locale = 'pt-BR'): string {
   const v = cents / 100;
   const abs = Math.abs(v);
+  const en = locale.startsWith('en');
   let s: string;
-  if (abs >= 1_000_000_000) s = (v / 1_000_000_000).toLocaleString(locale, { maximumFractionDigits: 2 }) + ' bi';
-  else if (abs >= 1_000_000) s = (v / 1_000_000).toLocaleString(locale, { maximumFractionDigits: 2 }) + ' mi';
-  else if (abs >= 10_000) s = (v / 1000).toLocaleString(locale, { maximumFractionDigits: 1 }) + ' mil';
-  else s = v.toLocaleString(locale, { maximumFractionDigits: 0 });
-  if (locale.startsWith('en')) s = s.replace(' bi', 'B').replace(' mi', 'M').replace(' mil', 'k');
-  return '$' + s;
+  if (abs >= 1_000_000_000) s = (abs / 1_000_000_000).toLocaleString(locale, { maximumFractionDigits: 2 }) + (en ? 'B' : ' bi');
+  else if (abs >= 1_000_000) s = (abs / 1_000_000).toLocaleString(locale, { maximumFractionDigits: 2 }) + (en ? 'M' : ' mi');
+  else if (abs >= 10_000) s = (abs / 1000).toLocaleString(locale, { maximumFractionDigits: 1 }) + (en ? 'k' : ' mil');
+  else s = abs.toLocaleString(locale, { maximumFractionDigits: 0 });
+  return (v <= -0.5 ? '−$' : '$') + s;
 }
 
 export function formatNumber(n: number, locale = 'pt-BR'): string {

@@ -12,7 +12,7 @@ import { availableFormats, scheduleRelease, suggestedPress } from '../../sim/pro
 import type { GameState } from '../../sim/types';
 import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { careerSlotsUsed } from '../../sim/contracts';
-import { $, N, actLink, branchName, cityName, cover, genreName, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
+import { $, N, memoText, actLink, branchName, cityName, cover, genreName, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h } from '../dom';
 import { openRelease } from '../ficha';
 import { HqView } from '../hq';
@@ -193,7 +193,7 @@ function finances(s: GameState): HTMLElement {
       section(t(S.yearly), h('table', { class: 'tbl compact' },
         h('thead', null, h('tr', null, h('th', null, t(l('Ano', 'Year'))), h('th', null, t(S.revenue)), h('th', null, t(l('Resultado', 'Result'))))),
         h('tbody', null, years.map((y) => h('tr', null, h('td', null, y), h('td', null, $(s.player.revenueByYear[y] ?? 0)), h('td', { class: (s.player.profitByYear[y] ?? 0) >= 0 ? 'good' : 'bad' }, $(s.player.profitByYear[y] ?? 0))))))),
-      section(t(S.ledger), h('table', { class: 'tbl compact' }, h('tbody', null, s.ledger.slice(-30).reverse().map((e) => h('tr', null, h('td', { class: 'muted' }, `${t(S.week)} ${e.week}`), h('td', null, e.memo), h('td', null, catName(e.cat)), h('td', { class: e.amount >= 0 ? 'good' : 'bad' }, $(e.amount))))))),
+      section(t(S.ledger), h('table', { class: 'tbl compact' }, h('tbody', null, s.ledger.slice(-30).reverse().map((e) => h('tr', null, h('td', { class: 'muted' }, `${t(S.week)} ${e.week}`), h('td', null, memoText(e.memo)), h('td', null, catName(e.cat)), h('td', { class: e.amount >= 0 ? 'good' : 'bad' }, $(e.amount))))))),
     ),
     h('aside', { class: 'col-side' },
       section(t(S.cash), h('div', { class: 'big' }, $(s.player.cash))),

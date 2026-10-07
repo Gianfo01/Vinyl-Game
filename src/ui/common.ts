@@ -1,6 +1,6 @@
 import { formatMoney, formatNumber } from '../core/money';
 import { cityById, genreById, type L } from '../data/world';
-import { S, locale, t } from '../i18n/strings';
+import { S, getLang, locale, t } from '../i18n/strings';
 import type { Act, GameState, Release } from '../sim/types';
 import { coverUrl, logoUrl } from './art';
 import { h } from './dom';
@@ -156,3 +156,25 @@ export const promiseName = (x: string) => t(PROMISE[x]) || x;
 
 const BRANCH: Record<string, L> = { audio: { pt: 'captação e áudio', en: 'capture & audio' }, manufacturing: { pt: 'fabricação', en: 'manufacturing' }, marketing: { pt: 'marketing', en: 'marketing' }, comfort: { pt: 'conforto', en: 'comfort' }, archive: { pt: 'arquivo', en: 'archive' } };
 export const branchName = (x: string) => t(BRANCH[x]) || x;
+
+const MEMO_EN: [string, string][] = [
+  ['Aluguel da sede', 'HQ rent'], ['Salários', 'Salaries'], ['Terceirização de carreiras', 'Career outsourcing'], ['Manutenção', 'Maintenance'],
+  ['Parcela de empréstimo', 'Loan payment'], ['Empréstimo', 'Loan'], ['Participação do investidor', 'Investor share'], ['Investidor', 'Investor'],
+  ['Ampliação da sede', 'HQ upgrade'], ['Pedido de scout', 'Scout request'], ['Reprensagem', 'Repress'], ['Venda forçada de equipamento', 'Forced equipment sale'],
+  ['Custos de shows ', 'Gig costs '], ['Vendas ', 'Sales '], ['Distribuição ', 'Distribution '], ['Royalties de ', 'Royalties from '], ['Edição ', 'Publishing '],
+  ['Gravação ', 'Recording '], ['Lançamento ', 'Release '], ['Cancelado ', 'Cancelled '], ['Shows ', 'Gigs '], ['Adiantamento ', 'Advance '],
+  ['Renovação ', 'Renewal '], ['Contratação ', 'Hire '], ['Rescisão ', 'Severance '], ['Impostos ', 'Taxes '], ['Transferência ', 'Transfer '],
+  ['Venda de catálogo', 'Catalog sale'], ['Compra de catálogo', 'Catalog purchase'], ['Bônus de renovação', 'Renewal bonus'], ['Bônus', 'Bonus'],
+  ['Tratamento', 'Treatment'], ['Terapia', 'Therapy'], ['Cirurgia', 'Surgery'], ['Processo', 'Lawsuit'], ['Indenização', 'Damages'], ['Multa', 'Fine'],
+  ['Acordo de sampling', 'Sampling settlement'], ['Condenação', 'Judgment'], ['Mediação', 'Mediation'], ['Remoção', 'Takedown'], ['Urgência', 'Rush fee'],
+  ['Versão editada', 'Edited version'], ['Apoio à cena', 'Scene sponsorship'], ['Licença de voz', 'Voice license'], ['Licença de treino', 'Training license'],
+  ['Ato sintético', 'Synthetic act'], ['Álbum fantasma', 'Ghost album'], ['Licença', 'License'], ['Reunião', 'Reunion'], ['Residência', 'Residency'],
+  ['Substituto', 'Replacement'], ['Writing camp', 'Writing camp'], ['Divulgação (?)', 'Promotion (?)'], ['Sync (master)', 'Sync (master)'], ['Sync (edição)', 'Sync (publishing)'],
+];
+
+/** Memos do extrato ficam gravados em PT; traduz o prefixo para EN na exibição. */
+export function memoText(memo: string): string {
+  if (getLang() !== 'en') return memo;
+  for (const [pt, en] of MEMO_EN) if (memo.startsWith(pt)) return en + memo.slice(pt.length);
+  return memo;
+}

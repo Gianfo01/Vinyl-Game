@@ -247,6 +247,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     }
     let h = rel.appeal * decay(rel.type, age) * (1 + 2.5 * rel.marketingE * Math.exp(-age / 9) + 0.3 * rel.marketingE);
     h *= 0.85 + act.momentum / 300;
+    h *= Math.exp(r.normal(0, 0.12)); // variação semanal: paradas se mexem
     if (age > 52) h = Math.max(h, rel.appeal * 0.012 * (1 + act.fame / 40)); // cauda de catálogo
     if (hasMutator(s, 'no_stars')) h = Math.pow(h, 0.85);
     const n = recentByOwner[rel.owner] ?? 0;
