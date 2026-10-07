@@ -178,7 +178,7 @@ const CAT_NAMES: Record<string, [string, string]> = {
   recording: ['Gravação', 'Recording'], advances: ['Adiantamentos', 'Advances'], rent: ['Aluguel', 'Rent'], salaries: ['Salários', 'Salaries'],
   scouting: ['Scouting', 'Scouting'], artist_dev: ['Desenvolvimento artístico', 'Artist development'], legal: ['Jurídico', 'Legal'], sync: ['Sync', 'Sync'],
   loans: ['Empréstimos', 'Loans'], financing: ['Financiamento', 'Financing'], equipment: ['Equipamento', 'Equipment'], hq: ['Sede', 'HQ'],
-  marketing: ['Marketing avulso', 'Ad-hoc marketing'], outsourcing: ['Terceirização', 'Outsourcing'], neural: ['Era neural', 'Neural era'], acquisitions: ['Aquisições', 'Acquisitions'], asset_sales: ['Venda de ativos', 'Asset sales'],
+  marketing: ['Marketing avulso', 'Ad-hoc marketing'], taxes: ['Impostos', 'Taxes'], outsourcing: ['Terceirização', 'Outsourcing'], neural: ['Era neural', 'Neural era'], acquisitions: ['Aquisições', 'Acquisitions'], asset_sales: ['Venda de ativos', 'Asset sales'],
 };
 const catName = (c: string) => t(CAT_NAMES[c] ? l(CAT_NAMES[c][0], CAT_NAMES[c][1]) : l(c));
 

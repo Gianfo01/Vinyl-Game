@@ -14,7 +14,7 @@ import { launchPending, marketWeek } from './market';
 import { rivalYearEnd, rivalsMonth } from './rivals';
 import { monthlySignals } from './scouting';
 import type { GameState, Notification } from './types';
-import { dateOfDay, fmtL, notify, playerActs, remember, rngOf } from './util';
+import { dateOfDay, fmtL, money, notify, playerActs, post, remember, rngOf } from './util';
 
 export const END_YEAR = 2040;
 
@@ -79,6 +79,7 @@ export function advanceMonth(s: GameState): void {
     s.stats.playerUnitsYear = 0;
     prune(s);
     yearSummary(s, closingYear);
+    payTaxes(s, closingYear);
   }
   if (s.month % 3 === 2) refreshProfessionals(s, r);
 
@@ -180,6 +181,14 @@ function techMonth(s: GameState): void {
   if (s.divergence.clipnet === 'no' && s.year === techById.clipnet.base && s.month === 0) {
     remember(s, 'divergence', l('A rede de clipes nunca decolou nesta história.', 'The music-video network never took off in this history.'), { important: true });
   }
+}
+
+/** Impostos sobre o resultado positivo do ano (cascata do GDD §18). */
+function payTaxes(s: GameState, year: number): void {
+  const profit = s.player.profitByYear[year] ?? 0;
+  if (profit <= 0) return;
+  const rate = profit > money(s, 1_000_000) ? 0.32 : 0.22;
+  post(s, `tax:${year}`, -Math.round(profit * rate), 'taxes', `Impostos ${year}`);
 }
 
 function yearSummary(s: GameState, year: number): void {

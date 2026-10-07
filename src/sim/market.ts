@@ -220,6 +220,14 @@ export function marketWeek(s: GameState, r: Rng): void {
   const pool = weeklyPool(s);
   s.stats.weeklyPool = pool;
   const live = Object.values(s.releases).filter((x) => x.live);
+  // foco promocional: lançamentos recentes do mesmo dono disputam a mesma equipe
+  const recentByOwner: Record<string, number> = {};
+  for (const rel of live) if (s.week - rel.week < 12) recentByOwner[rel.owner] = (recentByOwner[rel.owner] ?? 0) + 1;
+  const focusCap = (owner: string) => {
+    if (owner === 'player') return 2 + s.player.hq + staffCount(s, 'publicist') * 2 + staffCount(s, 'admin');
+    const fam = s.labels[owner]?.family;
+    return fam === 'A' ? 8 : fam === 'C' ? 6 : 4;
+  };
   const heats: [Release, number][] = [];
   let H = 0;
   for (const rel of live) {
@@ -237,6 +245,9 @@ export function marketWeek(s: GameState, r: Rng): void {
     h *= 0.85 + act.momentum / 300;
     if (age > 52) h = Math.max(h, rel.appeal * 0.012 * (1 + act.fame / 40)); // cauda de catálogo
     if (hasMutator(s, 'no_stars')) h = Math.pow(h, 0.85);
+    const n = recentByOwner[rel.owner] ?? 0;
+    const cap = focusCap(rel.owner);
+    if (age < 12 && n > cap) h *= Math.sqrt(cap / n);
     heats.push([rel, h]);
     H += h;
   }

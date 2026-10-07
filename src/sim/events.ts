@@ -732,6 +732,37 @@ export const EVENTS: EventDef[] = [
       { id: 'ignore', label: l('Ignorar', 'Ignore'), apply: () => {} },
     ],
   },
+  // ---------------- Insolvência: venda de ativos (GDD §18) ----------------
+  {
+    id: 'distress_sale', cat: 'business', tone: 'neutral', tags: [], cooldown: 0, forcedOnly: true,
+    title: l('Credores na porta', 'Creditors at the door'),
+    text: l('O caixa está negativo há meses. Compradores oferecem {priceTxt} por {n} masters do seu catálogo, ou {feeTxt} pelo contrato de {act}.', 'Cash has been negative for months. Buyers offer {priceTxt} for {n} of your masters, or {feeTxt} for {act}\'s contract.'),
+    options: [
+      { id: 'sell_catalog', label: l('Vender masters', 'Sell masters'), hint: l('Caixa agora; perde a cauda de catálogo.', 'Cash now; lose the catalog tail.'), apply: (s, _r, c) => {
+        const buyer = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.cash - a.cash)[0];
+        const rels = Object.values(s.releases).filter((x) => x.owner === 'player').sort((a, b) => a.week - b.week).slice(0, Number(c.n));
+        for (const rel of rels) rel.owner = buyer?.id ?? 'indie';
+        gain(s, 'distress_catalog', Number(c.price), 'asset_sales', 'Venda de catálogo');
+        remember(s, 'distress', fmtL(l('Para sobreviver, o selo vende {n} masters a {b}.', 'To survive, the label sells {n} masters to {b}.'), { n: rels.length, b: buyer?.name ?? '?' }), { important: true });
+      } },
+      { id: 'sell_act', label: l('Transferir o contrato do ato', 'Transfer the act\'s contract'), apply: (s, r, c) => {
+        const a = act(s, c);
+        if (!a) return;
+        const lb = Object.values(s.labels).filter((x) => x.active).sort((x, y) => y.cash - x.cash)[0];
+        if (!lb) return;
+        const k = a.contractId ? s.contracts[a.contractId] : undefined;
+        if (k) { k.party = lb.id; }
+        a.owner = lb.id;
+        lb.roster.push(a.id);
+        delete s.agenda[a.id];
+        gain(s, `distress_act:${a.id}`, Number(c.fee), 'asset_sales', `Transferência ${a.name}`);
+        rep(s, 'artists', -5);
+        remember(s, 'distress', fmtL(l('{a} é vendido a {b} para pagar dívidas.', '{a} is sold to {b} to pay debts.'), { a: a.name, b: lb.name }), { actId: a.id, important: true });
+        void r;
+      } },
+      { id: 'hold', label: l('Resistir', 'Hold on'), apply: () => {} },
+    ],
+  },
   // ---------------- Carreira do artista (papel Artista) ----------------
   {
     id: 'label_offer_band', cat: 'contract', tone: 'good', tags: [], cooldown: 8,

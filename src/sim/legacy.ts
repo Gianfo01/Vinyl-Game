@@ -135,27 +135,28 @@ export function endingScores(s: GameState): { id: string; score: number }[] {
   const liveShare = (totals.live ?? 0) / revenue;
   const legends = Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length;
   const recent = Object.values(s.releases).some((r) => r.owner === 'player' && s.year - r.year <= 5);
+  const consentOk = consent && n.voiceLicenses + n.synthActs > 0;
   const scores: Record<string, number> = {
-    last_vinyl: n.humanFocus * 7 + (s.player.equipment.includes('own_plant') ? 25 : 0) + (hasCard(s, 'manufacturer') ? 20 : 0) + L.catalog * 0.2 - synth * 10,
-    house_of_masters: L.artists * 0.7 + legends * 9 + n.humanFocus * 3 - synth * 5,
-    live_stage: liveShare * 120 + n.humanFocus * 4 + st.headlines * 6,
-    analog_manifesto: n.neuralAdopted === false ? 40 + L.cultural * 0.35 + n.humanFocus * 4 : 0,
-    end_of_bar: L.commercial < 25 && L.industry < 20 ? 62 - L.commercial : 0,
-    silenced_voice: n.consentPolicy === 'no_consent' ? 30 + n.voiceLicenses * 8 + (100 - L.artists) * 0.3 : 0,
-    perfect_duet: consent && synth > 0 ? 35 + synth * 6 + L.artists * 0.3 : 0,
-    the_bridge: Math.min(L.artists, L.innovation + synth * 8) * 0.9 + (consent && synth > 0 ? 10 : 0),
-    licensed_choir: consent && n.voiceLicenses >= 2 ? 30 + n.voiceLicenses * 10 + L.catalog * 0.2 : 0,
-    two_worlds: n.synthActs >= 1 && n.humanFocus >= 3 ? 48 + Math.min(n.synthActs, n.humanFocus) * 4 : 0,
-    fragile_balance: 38,
-    voice_scandal: n.voiceScandal ? 75 : 0,
-    neural_empire: n.neuralAdopted && s.divergence.neural === 'accepted' ? 30 + L.commercial * 0.4 + L.industry * 0.4 : 0,
-    infinite_catalog: n.catalogTraining ? 35 + L.catalog * 0.5 : 0,
-    famous_ghost: n.ghostVoice ? 62 : 0,
-    white_noise: synth >= 3 && L.cultural < 30 ? 50 + synth * 3 : 0,
-    human_renaissance: s.divergence.neural === 'rejected' && n.humanFocus >= 3 ? 40 + L.cultural * 0.4 + n.humanFocus * 3 : 0,
-    creative_singularity: s.flags.synthNumber1 ? 55 + L.innovation * 0.4 : 0,
-    eternal_archivist: hasCard(s, 'archivist') || s.player.reissues >= 10 ? 30 + L.catalog * 0.5 + s.player.reissues * 2 : 0,
-    the_silence: !recent && s.config.role !== 'artist' ? 58 : 0,
+    last_vinyl: (s.player.equipment.includes('own_plant') || hasCard(s, 'manufacturer')) && n.humanFocus >= 2 ? 50 + n.humanFocus * 2 + L.catalog * 0.05 : 0,
+    house_of_masters: legends >= 2 && L.artists > 55 ? 45 + legends * 3 + L.artists * 0.1 : 0,
+    live_stage: liveShare > 0.3 ? 45 + liveShare * 30 + st.headlines * 2 : 0,
+    analog_manifesto: n.neuralAdopted === false && n.humanFocus >= 4 && L.cultural > 35 ? 45 + L.cultural * 0.15 + n.humanFocus * 1.5 : 0,
+    end_of_bar: L.commercial < 25 && L.industry < 20 ? 60 : 0,
+    silenced_voice: n.consentPolicy === 'no_consent' && n.voiceLicenses >= 1 ? 50 + n.voiceLicenses * 5 : 0,
+    perfect_duet: consentOk && n.synthActs >= 1 && n.voiceLicenses >= 1 ? 50 + synth * 3 : 0,
+    the_bridge: consentOk && L.artists > 45 ? 40 + Math.min(L.artists, L.innovation + synth * 8) * 0.2 : 0,
+    licensed_choir: consent && n.voiceLicenses >= 2 ? 46 + n.voiceLicenses * 4 : 0,
+    two_worlds: n.synthActs >= 1 && n.humanFocus >= 3 ? 48 + Math.min(n.synthActs, n.humanFocus) * 2 : 0,
+    fragile_balance: 45,
+    voice_scandal: n.voiceScandal ? 70 : 0,
+    neural_empire: n.neuralAdopted && s.divergence.neural === 'accepted' && L.industry > 40 && L.commercial > 45 ? 42 + (L.commercial + L.industry) * 0.12 : 0,
+    infinite_catalog: n.catalogTraining ? 44 + L.catalog * 0.2 : 0,
+    famous_ghost: n.ghostVoice ? 58 : 0,
+    white_noise: synth >= 3 && L.cultural < 30 ? 52 + synth : 0,
+    human_renaissance: s.divergence.neural === 'rejected' && n.humanFocus >= 3 ? 42 + L.cultural * 0.2 + n.humanFocus * 1.5 : 0,
+    creative_singularity: s.flags.synthNumber1 ? 66 : 0,
+    eternal_archivist: hasCard(s, 'archivist') || s.player.reissues >= 10 ? 45 + L.catalog * 0.15 + s.player.reissues : 0,
+    the_silence: !recent && s.config.role !== 'artist' ? 62 : 0,
   };
   return Object.entries(scores).map(([id, score]) => ({ id, score })).sort((a, b) => b.score - a.score);
 }
