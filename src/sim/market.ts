@@ -100,7 +100,10 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
   const mom = 0.8 + act.momentum / 250;
   const luck = Math.exp(r.normal(0, 0.33));
   const nostalgia = rel.reissueOf ? (hasMutator(s, 'strong_nostalgia') ? 0.6 : 0.35) : 1;
-  const appeal = qF * fameF * gp * cov * era * design * mom * luck * nostalgia;
+  // superexposição: lançar demais no mesmo ano cansa o público
+  const recent = act.releases.filter((id) => s.releases[id] && s.week - s.releases[id].week < 52 && id !== rel.id).length;
+  const overexposure = 1 / (1 + Math.max(0, recent - 1) * 0.35);
+  const appeal = qF * fameF * gp * cov * era * design * mom * luck * nostalgia * overexposure;
   const conf = (v: number): AutopsyFactor['confidence'] => (Math.abs(Math.log(v)) > 0.5 ? 'high' : Math.abs(Math.log(v)) > 0.2 ? 'medium' : 'low');
   const factors: AutopsyFactor[] = [
     { key: 'quality', label: l('Qualidade (Q)', 'Quality (Q)'), value: qF, confidence: conf(qF) },
@@ -111,6 +114,7 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
     { key: 'momentum', label: l('Momento da carreira', 'Career momentum'), value: mom, confidence: 'low' },
     { key: 'luck', label: l('Acaso (não explicado)', 'Chance (unexplained)'), value: luck, confidence: 'low' },
   ];
+  if (overexposure < 1) factors.push({ key: 'overexposure', label: l('Superexposição (lançamentos no ano)', 'Overexposure (releases this year)'), value: overexposure, confidence: 'medium' });
   return { appeal, factors };
 }
 
@@ -302,6 +306,8 @@ export function marketWeek(s: GameState, r: Rng): void {
   rankChart(s, albums, 'albums');
 }
 
+const CERT_NAME = { gold: l('ouro', 'gold'), platinum: l('platina', 'platinum'), diamond: l('diamante', 'diamond') };
+
 function certify(s: GameState, rel: Release): void {
   const levels: [Release['certified'], number][] = [['diamond', 10e6], ['platinum', 1e6], ['gold', 5e5]];
   for (const [lvl, n] of levels) {
@@ -312,8 +318,8 @@ function certify(s: GameState, rel: Release): void {
       if (rel.owner === 'player' || act?.playerBand) {
         if (lvl === 'gold') s.player.stats.gold += 1;
         else s.player.stats.platinum += 1;
-        notify(s, fmtL(l('"{t}" de {a} é {lvl}!', '"{t}" by {a} went {lvl}!'), { t: rel.title, a: act?.name ?? '', lvl: lvl === 'gold' ? 'ouro/gold' : lvl === 'platinum' ? 'platina/platinum' : 'diamante/diamond' }), 'good');
-        remember(s, 'cert', fmtL(l('"{t}" ({a}) recebe disco de {lvl} da AMIF.', '"{t}" ({a}) certified {lvl} by AMIF.'), { t: rel.title, a: act?.name ?? '', lvl: lvl ?? '' }), { actId: rel.actId, important: true });
+        notify(s, fmtL(l('"{t}" de {a} é {lvl}!', '"{t}" by {a} went {lvl}!'), { t: rel.title, a: act?.name ?? '', lvl: CERT_NAME[lvl ?? 'gold'] }), 'good');
+        remember(s, 'cert', fmtL(l('"{t}" ({a}) recebe disco de {lvl} da AMIF.', '"{t}" ({a}) certified {lvl} by AMIF.'), { t: rel.title, a: act?.name ?? '', lvl: CERT_NAME[lvl ?? 'gold'] }), { actId: rel.actId, important: true });
       }
       return;
     }

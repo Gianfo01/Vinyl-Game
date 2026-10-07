@@ -8,6 +8,8 @@ import { fmtL, money, notify, remember } from './util';
 import { talentScore } from './worldgen';
 import { emitEvent } from './events';
 
+const STRAT = { develop: l('desenvolver', 'develop'), buy_catalog: l('comprar catálogos', 'buy catalogs'), niche: l('nichos', 'niches'), stars: l('estrelas', 'stars') };
+
 const ROSTER_CAP: Record<Label['family'], number> = { A: 32, B: 14, C: 20, D: 12 };
 
 export function rivalsMonth(s: GameState, r: Rng): void {
@@ -37,7 +39,7 @@ export function rivalsMonth(s: GameState, r: Rng): void {
         .sort((x, y) => y.v - x.v)[0];
       if (best && best.v > 12 && lb.cash > money(s, expectedAdvance(s, best.a))) {
         signWithRival(s, best.a, lb.id, r);
-        lb.lastDecision = `signed ${best.a.name}: ${lb.strategy}`;
+        lb.lastDecision = fmtL(l('contratou {a} (estratégia: {st})', 'signed {a} (strategy: {st})'), { a: best.a.name, st: STRAT[lb.strategy] });
         if ((s.knowledge[best.a.id]?.degree ?? 0) >= 2 && s.config.role !== 'artist') {
           notify(s, fmtL(l('{lb} contratou {a}, que estava no seu radar.', '{lb} signed {a}, who was on your radar.'), { lb: lb.name, a: best.a.name }), 'bad');
         }
@@ -56,14 +58,14 @@ export function rivalsMonth(s: GameState, r: Rng): void {
         } else endContract(s, a, 'expired');
       } else if (a.fame < 4 && a.hits === 0 && c && s.week - c.startWeek > 156 && r.chance(0.2)) {
         endContract(s, a, 'terminated');
-        lb.lastDecision = `dropped ${a.name}: no results`;
+        lb.lastDecision = fmtL(l('dispensou {a}: sem resultado', 'dropped {a}: no results'), { a: a.name });
       }
     }
     // estratégia muda com caixa e mercado
     if (r.chance(0.02)) {
       const prev = lb.strategy;
       lb.strategy = lb.cash < money(s, 200000) ? 'niche' : r.pick(['develop', 'buy_catalog', 'niche', 'stars'] as const);
-      if (prev !== lb.strategy) lb.lastDecision = `strategy ${prev} → ${lb.strategy}`;
+      if (prev !== lb.strategy) lb.lastDecision = fmtL(l('mudou de estratégia: {a} → {b} (caixa e mercado)', 'changed strategy: {a} → {b} (cash and market)'), { a: STRAT[prev], b: STRAT[lb.strategy] });
     }
     // expansão de territórios
     if (lb.cash > money(s, 2_000_000) && lb.territories.length < 7 && r.chance(0.05)) {
@@ -97,7 +99,7 @@ function closeLabel(s: GameState, r: Rng, lb: Label): void {
   // catálogo vendido para quem tem caixa
   const buyer = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 500000)).sort((a, b) => b.cash - a.cash)[0];
   if (buyer) for (const rel of Object.values(s.releases)) if (rel.owner === lb.id) rel.owner = buyer.id;
-  remember(s, 'label_closed', fmtL(l('{n} fecha as portas{b}.', '{n} closes its doors{b}.'), { n: lb.name, b: buyer ? ` (catálogo → ${buyer.name})` : '' }), { important: true });
+  remember(s, 'label_closed', buyer ? fmtL(l('{n} fecha as portas (catálogo → {b}).', '{n} closes its doors (catalog → {b}).'), { n: lb.name, b: buyer.name }) : fmtL(l('{n} fecha as portas.', '{n} closes its doors.'), { n: lb.name }), { important: true });
   notify(s, fmtL(l('{n} faliu. Os atos do selo estão livres.', '{n} went bankrupt. Its acts are free agents.'), { n: lb.name }), 'event');
   lb.reputation = clamp(lb.reputation - 30, 0, 100);
   void r;

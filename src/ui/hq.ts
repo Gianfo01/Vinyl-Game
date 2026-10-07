@@ -7,6 +7,7 @@ import { EQUIPMENT, HQ_LEVELS } from '../data/rules';
 import type { GameState } from '../sim/types';
 import { playerActs } from '../sim/util';
 import { logoUrl } from './art';
+import { getLang } from '../i18n/strings';
 
 const TW = 64;
 const TH = 32;
@@ -283,7 +284,7 @@ export class HqView {
       ctx.beginPath();
       ctx.arc(x + 10, y - 30, 3, 0, 7);
       ctx.fill();
-      this.hits.push({ x: x - 4, y: y - 44, w: TW + 8, h: 50, label: `Estúdio ${i + 1}` });
+      this.hits.push({ x: x - 4, y: y - 44, w: TW + 8, h: 50, label: `${getLang() === 'pt' ? 'Estúdio' : 'Studio'} ${i + 1}` });
     }
     // equipamento ao longo da parede
     s.player.equipment.forEach((id, i) => {
@@ -293,7 +294,7 @@ export class HqView {
       ctx.fillRect(x - 10, y - 18, 20, 18);
       ctx.fillStyle = 'rgba(255,255,255,0.25)';
       ctx.fillRect(x - 10, y - 18, 20, 4);
-      this.hits.push({ x: x - 10, y: y - 18, w: 20, h: 18, label: def?.name.pt ?? id });
+      this.hits.push({ x: x - 10, y: y - 18, w: 20, h: 18, label: def?.name[getLang()] ?? id });
     });
     // mesas da equipe
     s.player.staff.forEach((st, i) => {

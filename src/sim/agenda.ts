@@ -75,7 +75,7 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
         return false;
       });
     }
-    if (s.delegated[actId] !== false && !act.playerBand) autoRelease(s, r, act);
+    if (s.delegated[actId] !== false) autoRelease(s, r, act);
   }
 }
 
@@ -203,7 +203,7 @@ function autoRelease(s: GameState, r: Rng, act: Act): void {
   if (s.pendingReleases.some((p) => p.actId === act.id)) return;
   const ready = unreleasedRecorded(s, act).sort((a, b) => b.q - a.q);
   const since = s.week - act.lastRelease;
-  if (!ready.length || since < 14) return;
+  if (!ready.length || since < 22) return;
   const type: 'single' | 'lp' = ready.length >= 8 ? 'lp' : 'single';
   const songs = type === 'lp' ? ready.slice(0, 10).map((x) => x.id) : [ready[0].id];
   const budgetCap = Math.max(0, Math.round(s.player.cash * 0.08));
@@ -225,5 +225,5 @@ function autoRelease(s: GameState, r: Rng, act: Act): void {
     territories: s.player.territories,
     weeksAhead: 2,
   });
-  if ('pt' in res) notify(s, fmtL(l('Lançamento automático de {act} não saiu: {e}', 'Auto release for {act} failed: {e}'), { act: act.name, e: res.pt }), 'info');
+  if ('pt' in res) notify(s, fmtL(l('Lançamento automático de {act} não saiu: {e}', 'Auto release for {act} failed: {e}'), { act: act.name, e: res }), 'info');
 }

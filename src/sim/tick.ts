@@ -2,6 +2,7 @@
 // (finanças, contratos, pessoas, rivais, mundo, eventos, legado). GDD §6, §7.
 
 import { clamp } from '../core/rng';
+import { formatMoney } from '../core/money';
 import { TECHS, techById } from '../data/rules';
 import { GENRES, genreById, l, type L } from '../data/world';
 import { processPlayerAgendas } from './agenda';
@@ -194,7 +195,8 @@ function payTaxes(s: GameState, year: number): void {
 function yearSummary(s: GameState, year: number): void {
   const rev = s.player.revenueByYear[year] ?? 0;
   const profit = s.player.profitByYear[year] ?? 0;
-  remember(s, 'year', fmtL(l('Fim de {y}: receita {r}, resultado {p}.', 'End of {y}: revenue {r}, result {p}.'), { y: year, r: `$${Math.round(rev / 100).toLocaleString('pt-BR')}`, p: `$${Math.round(profit / 100).toLocaleString('pt-BR')}` }));
+  const m = (v: number) => ({ pt: formatMoney(v, 'pt-BR'), en: formatMoney(v, 'en-US') });
+  remember(s, 'year', fmtL(l('Fim de {y}: receita {r}, resultado {p}.', 'End of {y}: revenue {r}, result {p}.'), { y: year, r: m(rev), p: m(profit) }));
 }
 
 /** Briefing de até 5 itens (GDD §6). */

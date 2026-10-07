@@ -138,3 +138,21 @@ export function rerender(): void {
 export function tl(x: L | undefined): string {
   return t(x);
 }
+
+const STATUS: Record<string, L> = {
+  emerging: { pt: 'emergente', en: 'emerging' }, active: { pt: 'ativo', en: 'active' }, hiatus: { pt: 'em pausa', en: 'on hiatus' },
+  retired: { pt: 'aposentado', en: 'retired' }, split: { pt: 'separado', en: 'split' },
+};
+export const statusName = (x: string) => t(STATUS[x]) || x;
+
+const STRATEGY: Record<string, L> = {
+  develop: { pt: 'desenvolver talentos', en: 'develop talent' }, buy_catalog: { pt: 'comprar catálogos', en: 'buy catalogs' },
+  niche: { pt: 'dominar nichos', en: 'own niches' }, stars: { pt: 'disputar estrelas', en: 'chase stars' },
+};
+export const strategyName = (x: string) => t(STRATEGY[x]) || x;
+
+const PROMISE: Record<string, L> = { priority: { pt: 'prioridade', en: 'priority' }, tour: { pt: 'turnê', en: 'tour' }, freedom: { pt: 'liberdade', en: 'freedom' } };
+export const promiseName = (x: string) => t(PROMISE[x]) || x;
+
+const BRANCH: Record<string, L> = { audio: { pt: 'captação e áudio', en: 'capture & audio' }, manufacturing: { pt: 'fabricação', en: 'manufacturing' }, marketing: { pt: 'marketing', en: 'marketing' }, comfort: { pt: 'conforto', en: 'comfort' }, archive: { pt: 'arquivo', en: 'archive' } };
+export const branchName = (x: string) => t(BRANCH[x]) || x;

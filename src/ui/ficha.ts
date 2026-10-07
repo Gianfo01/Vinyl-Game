@@ -7,7 +7,7 @@ import { defaultOffer, evaluateOffer, makeOffer } from '../sim/contracts';
 import { actState } from '../sim/people';
 import { DEGREES, estimate, sourceName, visibleFields } from '../sim/scouting';
 import type { Act, GameState, Offer } from '../sim/types';
-import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, monthName, ownerName, pill, rerender, sparkline, toast } from './common';
+import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, monthName, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
 import { bar, h, rangeBar, select } from './dom';
 import { playPreview, stopPreview } from './audio';
 import { store } from './store';
@@ -158,11 +158,11 @@ export function openLabel(id: string): void {
   const roster = lb.roster.map((x) => s.acts[x]).filter(Boolean).sort((a, b) => b.fame - a.fame);
   const body = h('div', { class: 'ficha' },
     kv(t(l('Família', 'Family')), lb.family),
-    kv(t(l('Estratégia', 'Strategy')), lb.strategy),
+    kv(t(l('Estratégia', 'Strategy')), strategyName(lb.strategy)),
     kv(t(S.city), cityName(lb.city)),
     kv(t(l('Fundação', 'Founded')), lb.founded),
     kv(t(l('Receita do último ano (pública)', 'Last year revenue (public)')), $(lb.revenueLastYear)),
-    kv(t(l('Última decisão', 'Last decision')), lb.lastDecision ?? '—'),
+    kv(t(l('Última decisão', 'Last decision')), t(lb.lastDecision) || '—'),
     h('h4', null, `${t(S.roster)} (${roster.length})`),
     h('div', { class: 'chips' }, roster.slice(0, 40).map((a) => actLink(s, a.id))),
   );

@@ -12,7 +12,7 @@ import { availableFormats, scheduleRelease, suggestedPress } from '../../sim/pro
 import type { GameState } from '../../sim/types';
 import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { careerSlotsUsed } from '../../sim/contracts';
-import { $, N, actLink, cityName, cover, genreName, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
+import { $, N, actLink, branchName, cityName, cover, genreName, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h } from '../dom';
 import { openRelease } from '../ficha';
 import { HqView } from '../hq';
@@ -231,8 +231,8 @@ function hqTab(s: GameState): HTMLElement {
         up !== null ? h('button', { class: 'btn primary', onclick: () => { const e = upgradeHq(s); if (e) toast(t(e), 'bad'); rerender(); } }, `${t(S.upgrade)} (${$(up)})`) : null,
       ),
       section(t(S.equipment), h('table', { class: 'tbl compact' }, h('tbody', null,
-        s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', null, t(e.name)), h('td', null, e.branch), h('td', null, '✓'), h('td', null, '')); }),
-        availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, e.branch), h('td', null, $(money(s, e.cost))), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
+        s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', null, t(e.name)), h('td', null, branchName(e.branch)), h('td', null, '✓'), h('td', null, '')); }),
+        availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, $(money(s, e.cost))), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
       ))),
     ),
     h('aside', { class: 'col-side' },

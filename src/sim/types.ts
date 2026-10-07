@@ -88,6 +88,8 @@ export interface Act {
   /** contatos e preparação */
   networking: number;
   rehearsed: number;
+  /** saturação de público por shows recentes */
+  gigSat?: number;
   feats: number;
   /** dinheiro próprio do ato (independentes e artistas), centavos */
   cash: number;
@@ -199,7 +201,7 @@ export interface Label {
   revenueLastYear: number;
   procedural?: boolean;
   closedYear?: number;
-  lastDecision?: string;
+  lastDecision?: L;
 }
 
 export interface Knowledge {

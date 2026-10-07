@@ -8,6 +8,7 @@ import type { Act, GameState } from './types';
 import { fmtL, hasCard, money, notify, post, remember, staffSkill } from './util';
 
 const TICKET = [12, 25, 45, 70, 95];
+const ARTIST_SPLIT = 0.6;
 
 export function maxVenueTier(s: GameState, act: Act): number {
   const booking = staffSkill(s, 'booking') / 12;
@@ -30,9 +31,12 @@ export function gigEstimate(s: GameState, act: Act, tier: number, dates: number)
   const capacity = Math.round((v.cap[0] + v.cap[1]) / 2);
   const t = actTalent(s, act);
   const draw = (act.fans.core * 0.8 + act.fans.active * 0.3 + act.fans.casual * 0.02) * (1 + act.fame / 60) * (0.7 + t.stage / 150);
-  const perDate = Math.round(Math.min(capacity, draw / Math.max(1, Math.sqrt(dates) * 1.2)));
+  // o mesmo público não vai a todo show: shows recentes saturam a praça
+  const sat = 1 + (act.gigSat ?? 0) / 6;
+  const perDate = Math.round(Math.min(capacity, draw / sat / Math.max(1, Math.sqrt(dates) * 1.2)));
   const price = money(s, TICKET[v.id] * (hasCard(s, 'showman') ? 1.1 : 1));
-  const revenue = perDate * dates * price;
+  // promotor e casa ficam com parte da bilheteria
+  const revenue = Math.round(perDate * dates * price * ARTIST_SPLIT);
   const tm = staffSkill(s, 'tour_manager');
   const crew = money(s, (v.cost + 120 * act.members.length) * (1 - tm / 400)) * dates;
   let comfort = 0;
@@ -46,7 +50,8 @@ export function playGigs(s: GameState, r: Rng, act: Act, tier: number, dates: nu
   const noise = r.float(0.8, 1.15);
   const attendance = Math.round(Math.min(est.capacity, est.perDate * noise)) * dates;
   const v = VENUE_TIERS[clamp(tier, 0, 4)];
-  const revenue = Math.round(attendance * money(s, TICKET[v.id]));
+  const revenue = Math.round(attendance * money(s, TICKET[v.id]) * ARTIST_SPLIT);
+  act.gigSat = (act.gigSat ?? 0) + dates;
   const net = revenue - est.cost;
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (act.playerBand) {
@@ -59,10 +64,11 @@ export function playGigs(s: GameState, r: Rng, act: Act, tier: number, dates: nu
   } else {
     act.cash += net;
   }
-  act.fans.casual += Math.round(attendance * 0.5);
-  act.fans.active += Math.round(attendance * 0.22);
-  act.fans.core += Math.round(attendance * 0.025);
-  act.fame = clamp(act.fame + Math.log10(1 + attendance) * 0.25, 0, 100);
+  // só parte do público é nova
+  act.fans.casual += Math.round(attendance * 0.15);
+  act.fans.active += Math.round(attendance * 0.05);
+  act.fans.core += Math.round(attendance * 0.006);
+  act.fame = clamp(act.fame + Math.log10(1 + attendance) * 0.08 * (1 - act.fame / 90), 0, 100);
   act.momentum = clamp(act.momentum + 2 + v.id, 0, 100);
   for (const id of act.members) {
     const p = s.persons[id];
@@ -83,9 +89,9 @@ export function playGigs(s: GameState, r: Rng, act: Act, tier: number, dates: nu
     }[kind];
     act.momentum = clamp(act.momentum - 6, 0, 100);
     remember(s, 'stage_incident', fmtL(msg, { act: act.name }), { actId: act.id });
-    notify(s, fmtL(l('Incidente: {m}.', 'Incident: {m}.'), { m: fmtL(msg, { act: act.name }).pt }), 'bad');
+    notify(s, fmtL(l('Incidente: {m}.', 'Incident: {m}.'), { m: fmtL(msg, { act: act.name }) }), 'bad');
   }
-  remember(s, 'gigs', fmtL(l('{act} fez {d} show(s) em {v}: {n} pessoas.', '{act} played {d} show(s) at {v}: {n} people.'), { act: act.name, d: dates, v: v.name.pt, n: attendance }), { actId: act.id });
+  remember(s, 'gigs', fmtL(l('{act} fez {d} show(s) em {v}: {n} pessoas.', '{act} played {d} show(s) at {v}: {n} people.'), { act: act.name, d: dates, v: v.name, n: attendance }), { actId: act.id });
 }
 
 /** Convites de festival no verão do hemisfério norte; vagas por adequação, prestígio e rede. */

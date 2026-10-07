@@ -57,6 +57,7 @@ export function monthlyPeople(s: GameState, r: Rng): void {
     if (hasMutator(s, 'no_stars')) act.fame = Math.min(act.fame, 80);
     act.momentum = clamp(act.momentum * 0.94 + (s.week - act.lastRelease < 20 ? 2 : -1), 0, 100);
     act.networking *= 0.92;
+    if (act.gigSat) act.gigSat *= 0.7;
     const fanMult = hasMutator(s, 'strong_fanclubs') ? 1.5 : 1;
     act.fans.casual = Math.round(act.fans.casual * 0.982);
     act.fans.active = Math.round(act.fans.active * 0.99 + act.fans.casual * 0.004);
@@ -225,6 +226,6 @@ export function newRivalLabel(s: GameState, r: Rng): void {
     reputation: 30, roster: [], active: true, aggression: r.float(0.3, 0.7), strategy: 'niche', territories: [city.market],
     revenueYear: 0, revenueLastYear: 0, procedural: true,
   };
-  remember(s, 'label_new', fmtL(l('Novo selo independente: {n} ({c}).', 'New indie label: {n} ({c}).'), { n: `${word} Records`, c: city.name.pt }));
+  remember(s, 'label_new', fmtL(l('Novo selo independente: {n} ({c}).', 'New indie label: {n} ({c}).'), { n: `${word} Records`, c: city.name }));
   notify(s, fmtL(l('Novo rival: {n}.', 'New rival: {n}.'), { n: `${word} Records` }), 'info');
 }

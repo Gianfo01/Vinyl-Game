@@ -102,7 +102,7 @@ function rivals(s: GameState): HTMLElement {
         h('td', null, lb.roster.length),
         h('td', null, $(lb.revenueLastYear)),
         h('td', null, lb.territories.length),
-        h('td', { class: 'muted small' }, lb.lastDecision ?? '—'),
+        h('td', { class: 'muted small' }, t(lb.lastDecision) || '—'),
       ))),
     ),
   );

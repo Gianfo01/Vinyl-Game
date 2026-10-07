@@ -880,7 +880,7 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
   const r = rngOf(s);
   opt.apply(s, r, d.ctx);
   s.decisions = s.decisions.filter((x) => x !== d);
-  remember(s, `decision:${def.id}`, fmtL(l('{t} → {o}', '{t} → {o}'), { t: d.title.pt, o: opt.label.pt }), { actId: d.ctx.act ? String(d.ctx.act) : undefined });
+  remember(s, `decision:${def.id}`, fmtL(l('{t} → {o}', '{t} → {o}'), { t: d.title, o: opt.label }), { actId: d.ctx.act ? String(d.ctx.act) : undefined });
   return true;
 }
 

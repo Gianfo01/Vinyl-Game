@@ -6,7 +6,7 @@ import { l, type L } from '../data/world';
 import { mainAmbition } from './people';
 import type { Act, Contract, GameState, Offer } from './types';
 import { fmtL, hasCard, hasMutator, money, nextId, notify, playerActs, post, remember, rngOf, staffCount } from './util';
-import { HQ_LEVELS } from '../data/rules';
+import { CONTRACT_MODELS, HQ_LEVELS } from '../data/rules';
 
 export function expectedAdvance(s: GameState, act: Act): number {
   // dólares reais
@@ -211,7 +211,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): void {
   s.delegated[act.id] = s.delegated[act.id] ?? true;
   s.player.stats.signed += 1;
   notify(s, fmtL(l('{act} assinou com você!', '{act} signed with you!'), { act: act.name }), 'good');
-  remember(s, 'signed', fmtL(l('{act} assinou contrato ({model}) com {company}.', '{act} signed a {model} deal with {company}.'), { act: act.name, model: o.model, company: s.config.companyName }), { actId: act.id, important: true });
+  remember(s, 'signed', fmtL(l('{act} assinou contrato ({model}) com {company}.', '{act} signed a {model} deal with {company}.'), { act: act.name, model: CONTRACT_MODELS.find((m) => m.id === o.model)?.name ?? o.model, company: s.config.companyName }), { actId: act.id, important: true });
 }
 
 export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng): void {
@@ -245,8 +245,9 @@ export function endContract(s: GameState, act: Act, reason: 'expired' | 'termina
   act.contractId = undefined;
   if (wasPlayer && !act.playerBand) {
     delete s.agenda[act.id];
-    notify(s, fmtL(l('{act} deixou o selo ({reason}).', '{act} left the label ({reason}).'), { act: act.name, reason }), reason === 'expired' ? 'info' : 'bad');
-    remember(s, 'left', fmtL(l('{act} saiu do selo: {reason}.', '{act} left the label: {reason}.'), { act: act.name, reason }), { actId: act.id, important: true });
+    const why = { expired: l('fim do contrato', 'contract ended'), terminated: l('rescisão', 'termination'), left: l('saída por insatisfação', 'left unhappy') }[reason];
+    notify(s, fmtL(l('{act} deixou o selo ({reason}).', '{act} left the label ({reason}).'), { act: act.name, reason: why }), reason === 'expired' ? 'info' : 'bad');
+    remember(s, 'left', fmtL(l('{act} saiu do selo: {reason}.', '{act} left the label: {reason}.'), { act: act.name, reason: why }), { actId: act.id, important: true });
     if (reason === 'left') s.player.stats.leftUnhappy += 1;
   }
 }

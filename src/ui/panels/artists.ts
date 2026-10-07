@@ -1,7 +1,7 @@
 // Artistas: elenco, carreira em 3 eixos, estados, agenda de 4 slots, contrato (GDD §9, §11).
 
 import { AGENDA_ACTIONS, agendaById } from '../../data/people';
-import { APPROACHES, STUDIO_TIERS, VENUE_TIERS } from '../../data/rules';
+import { APPROACHES, CONTRACT_MODELS, STUDIO_TIERS, VENUE_TIERS } from '../../data/rules';
 import { l } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import { defaultAgenda, slotCost, slotsFor, usedSlots } from '../../sim/agenda';
@@ -10,7 +10,7 @@ import { maxVenueTier } from '../../sim/live';
 import { actState } from '../../sim/people';
 import type { AgendaSlot, GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
-import { $, N, actLink, genreName, cityName, kv, logo, pill, rerender, section, toast } from '../common';
+import { $, N, actLink, genreName, cityName, kv, logo, pill, promiseName, rerender, section, statusName, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { openAct } from '../ficha';
 import { store } from '../store';
@@ -77,7 +77,7 @@ export function artistsPanel(s: GameState): HTMLElement {
       section(a.name,
         h('div', { class: 'ficha-head' }, logo(a, 64),
           h('div', null,
-            h('div', null, `${genreName(a.genre)} · ${cityName(a.city)} · `, pill(a.status)),
+            h('div', null, `${genreName(a.genre)} · ${cityName(a.city)} · `, pill(statusName(a.status))),
             h('div', null, h('button', { class: 'link', onclick: () => openAct(a.id) }, t(S.inspect)), ' · ', h('button', { class: 'link', onclick: () => playPreview(a.logoSeed, a.genre, s.year) }, t(S.preview))),
           ),
         ),
@@ -101,12 +101,12 @@ export function artistsPanel(s: GameState): HTMLElement {
         h('p', { class: 'muted small' }, t(l('Ações repetidas no mês rendem menos (retorno decrescente). Artistas com controle criativo podem trocar uma ação.', 'Repeated actions in a month yield less (diminishing returns). Artists with creative control may swap an action.'))),
       ),
       c ? section(t(S.contract),
-        kv(t(S.model), c.party === 'player' ? c.model : `${c.model} — ${s.labels[c.party]?.name ?? ''}`),
+        kv(t(S.model), c.party === 'player' ? t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name) : `${t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name)} — ${s.labels[c.party]?.name ?? ''}`),
         kv(t(S.royalty), `${Math.round(c.royalty * 100)}%`),
         kv(t(S.recoup), $(c.recoupBalance)),
         kv(t(S.ends), `${Math.max(0, Math.round((c.endWeek - s.week) / 4.35))} ${t(l('meses', 'months'))}`),
         kv(t(S.releasesOwed), `${c.releasesDone}/${c.releasesOwed}`),
-        c.promises.length ? kv(t(S.promises), h('span', null, c.promises.map((p) => pill(`${p.kind}${p.kept === undefined ? '' : p.kept ? ' ✓' : ' ✗'}`, p.kept === false ? 'bad' : '')))) : null,
+        c.promises.length ? kv(t(S.promises), h('span', null, c.promises.map((p) => pill(`${promiseName(p.kind)}${p.kept === undefined ? '' : p.kept ? ' ✓' : ' ✗'}`, p.kept === false ? 'bad' : '')))) : null,
         c.party === 'player' && !a.playerBand ? h('div', { class: 'actions' },
           h('button', { class: 'btn', onclick: () => { const bonus = money(s, 1500 + a.fame * a.fame * 15); if (!renewContract(s, a.id, 36, bonus)) toast(t(l('Renovação recusada ou sem caixa.', 'Renewal refused or no cash.')), 'bad'); rerender(); } }, `${t(S.renew)} (36m, ${$(money(s, 1500 + a.fame * a.fame * 15))})`),
           h('button', { class: 'btn ghost', onclick: () => { raiseRoyalty(s, a.id, 0.02); rerender(); } }, t(S.raiseRoyalty)),

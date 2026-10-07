@@ -272,7 +272,7 @@ export function createGame(cfg: RunConfig): GameState {
 
   remember(s, 'start', fmtL(l('{company} abre as portas em {city}, {year}. Run {sig}.', '{company} opens its doors in {city}, {year}. Run {sig}.'), {
     company: cfg.companyName,
-    city: cityById[cfg.homeCity]?.name.pt ?? cfg.homeCity,
+    city: cityById[cfg.homeCity]?.name ?? cfg.homeCity,
     year: cfg.startYear,
     sig: s.signature,
   }), { important: true });
@@ -341,7 +341,7 @@ function setupPlayer(s: GameState, r: Rng): void {
     act.status = 'emerging';
     p.bandActId = act.id;
     s.knowledge[act.id] = { actId: act.id, degree: 5, stage: 'negotiation', bias: 0, updatedWeek: 0, source: 'self' };
-    s.delegated[act.id] = false;
+    s.delegated[act.id] = true;
   }
   if (cfg.role !== 'artist' && cfg.scenario !== 'from_zero') {
     const n = cfg.scenario === 'established' ? 3 : 1;
