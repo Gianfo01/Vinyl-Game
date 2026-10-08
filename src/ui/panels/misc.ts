@@ -416,11 +416,14 @@ let hqView: HqView | null = null;
 export function hqPanel(s: GameState): HTMLElement {
   hqView ??= new HqView(() => store.game);
   hqView.onSelect = (id) => inspect.act(id);
-  const wrap = h('div', { class: 'hq-wrap' }, hqView.canvas);
+  hqView.onSelectPerson = (id) => inspect.person(id);
+  hqView.onSelectStaff = () => { store.area = 'company'; store.companyTab = 'staff'; rerender(); };
+  hqView.refreshToolbar();
+  const wrap = h('div', { class: 'hq-wrap' }, hqView.toolbar, hqView.stage);
   setTimeout(() => hqView?.start(), 0);
   const acts = playerActs(s).map((id) => s.acts[id]);
   return h('div', { class: 'panel hq' },
-    h('div', { class: 'col-main' }, section(`${s.config.companyName} — ${t(HQ_LEVELS[s.player.hq].name)}`, wrap, h('p', { class: 'muted small' }, t(l('Clique numa banda para abrir a ficha. Discos de ouro e platina aparecem na parede.', 'Click a band to open its record. Gold and platinum discs hang on the wall.'))))),
+    h('div', { class: 'col-main' }, section(`${s.config.companyName} — ${t(HQ_LEVELS[s.player.hq].name)}`, wrap, h('p', { class: 'muted small' }, t(l('Clique numa pessoa para abrir a ficha. Arraste para mover, roda do mouse ou +/− para zoom, Home centraliza. Discos de ouro e platina ficam na sala de troféus.', 'Click a person to open their record. Drag to pan, mouse wheel or +/− to zoom, Home recenters. Gold and platinum discs hang in the trophy room.'))))),
     h('aside', { class: 'col-side' },
       section(t(l('Unidades por banda', 'Band units')), acts.length ? h('ul', { class: 'small' }, acts.map((a) => h('li', null, actLink(s, a.id), ` · ${t(S.fame)} ${Math.round(a.fame)} · `, t(l('agenda', 'agenda')), ': ', (s.agenda[a.id] ?? []).map((x) => x.action).join(', ') || '—'))) : h('p', { class: 'muted' }, t(S.noActs))),
       section(t(l('Capacidade', 'Capacity')), h('p', { class: 'small' }, t(hqCapacityText(s))), kv(t(S.mgmtLoad), `${(managementLoad(s) * 100).toFixed(0)}%`)),
