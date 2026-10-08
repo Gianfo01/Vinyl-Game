@@ -32,6 +32,7 @@ export const TECHS: TechDef[] = [
   { id: 'download', name: l('Loja de downloads', 'Download store'), base: 2003, deps: ['internet'], spread: 3 },
   { id: 'streaming', name: l('Streaming', 'Streaming'), base: 2008, deps: ['download'], spread: 4 },
   { id: 'short_video', name: l('Vídeo curto', 'Short video'), base: 2018, deps: ['streaming'], spread: 3 },
+  { id: 'hologram', name: l('Hologramas de palco', 'Stage holograms'), base: 2027, deps: ['short_video'], spread: 3 },
   { id: 'synthetic_voice', name: l('Vozes sintéticas', 'Synthetic voices'), base: 2030, deps: ['short_video'], spread: 3 },
   { id: 'neural', name: l('Interface neural', 'Neural interface'), base: 2036, deps: ['synthetic_voice'], spread: 2, divergence: true },
 ];
@@ -138,6 +139,9 @@ export const STAFF_ROLES: StaffRole[] = [
   { id: 'manufacturing', name: l('Fabricação', 'Manufacturing'), desc: l('Prensagem mais barata e previsão de estoque.', 'Cheaper pressing and stock forecasts.'), salary: 2200 },
   { id: 'legal', name: l('Jurídico', 'Legal'), desc: l('Disputas e contratos mais seguros.', 'Safer disputes and contracts.'), salary: 3500 },
   { id: 'designer', name: l('Designer', 'Designer'), desc: l('Capas e imagem: pequeno bônus de vendas.', 'Covers and image: small sales bonus.'), salary: 2100 },
+  { id: 'manager', name: l('Empresário', 'Artist manager'), desc: l('Confiança dos artistas e cachês de marca maiores.', 'Artist trust and bigger brand fees.'), salary: 3000 },
+  { id: 'agent', name: l('Agente internacional', 'International agent'), desc: l('Vistos, rotas e vagas em festivais estrangeiros.', 'Visas, routes and foreign festival slots.'), salary: 2800 },
+  { id: 'sync', name: l('Agente de sync', 'Sync agent'), desc: l('Mais ofertas de cinema, TV, jogos e comerciais.', 'More film, TV, game and ad offers.'), salary: 2400 },
 ];
 
 export const staffRoleById = Object.fromEntries(STAFF_ROLES.map((x) => [x.id, x])) as Record<string, StaffRole>;

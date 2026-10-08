@@ -4,7 +4,7 @@ import { clamp, type Rng } from '../core/rng';
 import { APPROACHES, EQUIPMENT, FORMATS, HQ_LEVELS, STUDIO_TIERS, type FormatId } from '../data/rules';
 import { l, type L, type MarketId } from '../data/world';
 import { actLang, actState, actTalent, songTitle, traitMod } from './people';
-import type { Act, GameState, PendingRelease, Song } from './types';
+import type { Act, GameState, PendingRelease, Release, Song } from './types';
 import { fmtL, hasCard, hasTech, money, nextId, notify, post, staffSkill } from './util';
 import { forecastUnits } from './market';
 
@@ -161,7 +161,7 @@ export function pressingCost(s: GameState, formats: FormatId[], units: number): 
   discount += staffSkill(s, 'manufacturing') / 400;
   if (hasCard(s, 'manufacturer')) discount += 0.1;
   discount = Math.min(0.5, discount);
-  return money(s, (unit * units * (1 - discount)) + 400);
+  return money(s, (unit * units * (1 - discount) * (s.flags.geoPressing ?? 1)) + 400);
 }
 
 export interface ReleasePlan {
@@ -175,6 +175,9 @@ export interface ReleasePlan {
   territories: MarketId[];
   weeksAhead: number;
   reissueOf?: string;
+  kind?: Release['kind'];
+  hype?: number;
+  rolloutId?: string;
 }
 
 export function validateRelease(s: GameState, p: ReleasePlan): L | null {
@@ -182,7 +185,7 @@ export function validateRelease(s: GameState, p: ReleasePlan): L | null {
   if (!act || act.owner !== 'player') return l('Ato não é seu.', 'Not your act.');
   const need = p.type === 'single' ? 1 : p.type === 'ep' ? 3 : 7;
   if (!p.reissueOf && p.songs.length < need) return fmtL(l('{t} precisa de {n} música(s) gravada(s).', '{t} needs {n} recorded song(s).'), { t: p.type.toUpperCase(), n: need });
-  if (p.songs.some((id) => !s.songs[id]?.recorded || (s.songs[id].releaseId && !p.reissueOf))) return l('Use apenas músicas gravadas e inéditas.', 'Use only recorded, unreleased songs.');
+  if (p.songs.some((id) => !s.songs[id]?.recorded || (s.songs[id].releaseId && !p.reissueOf && !s.flags[`extracted:${id}`]))) return l('Use apenas músicas gravadas e inéditas.', 'Use only recorded, unreleased songs.');
   if (!p.formats.length) return l('Escolha ao menos um formato.', 'Pick at least one format.');
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && c.party !== 'player' && act.playerBand) return null;
@@ -220,6 +223,9 @@ export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRe
     territories: p.territories,
     week: s.week + Math.max(1, p.weeksAhead),
     reissueOf: p.reissueOf,
+    kind: p.kind,
+    hype: p.hype,
+    rolloutId: p.rolloutId,
   };
   // custo pago na programação (cancelar antes do lançamento devolve; GDD §27 "cancelar não cobra")
   const cost = releaseCost(s, p);
@@ -247,7 +253,7 @@ export function cancelRelease(s: GameState, id: string): boolean {
 }
 
 export function unreleasedRecorded(s: GameState, act: Act): Song[] {
-  return act.songs.map((id) => s.songs[id]).filter((x) => x && x.recorded && !x.releaseId);
+  return act.songs.map((id) => s.songs[id]).filter((x) => x && x.recorded && !x.releaseId && !s.flags[`ro:${x.id}`] && !x.vault);
 }
 
 export function unrecorded(s: GameState, act: Act): Song[] {

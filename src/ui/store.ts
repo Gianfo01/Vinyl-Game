@@ -1,3 +1,5 @@
+import { ensureExt } from '../sim/ext';
+import { registerMovementGenres } from '../sim/culture';
 // Estado da interface, preferências e persistência (IndexedDB + gzip; GDD §26).
 
 import { getLang, setLang, type Lang } from '../i18n/strings';
@@ -162,6 +164,8 @@ export function migrate(g: GameState): GameState {
   g.economy.investorShare ??= 0;
   g.economy.investorUntil ??= 0;
   g.upcoming ??= [];
+  ensureExt(g);
+  registerMovementGenres(g);
   g.version = SAVE_VERSION;
   return g;
 }

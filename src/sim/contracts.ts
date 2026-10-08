@@ -138,6 +138,7 @@ export function resolveOffers(s: GameState, r: Rng): void {
         o.status = 'sniped';
         o.note = rival.name;
         signWithRival(s, act, rival.id, r);
+        s.rivalries[rival.id] = (s.rivalries[rival.id] ?? 0) + 15;
         notify(s, fmtL(l('{label} assinou com {act} antes da sua resposta.', '{label} signed {act} before your answer.'), { label: rival.name, act: act.name }), 'bad');
         remember(s, 'sniped', fmtL(l('{label} levou {act} numa disputa com você.', '{label} took {act} from you in a bidding war.'), { label: rival.name, act: act.name }), { actId: act.id });
         continue;

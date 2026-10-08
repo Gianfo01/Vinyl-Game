@@ -1,5 +1,8 @@
 // Gerador de mundo em camadas (GDD §5): L0 seed → L1 mundo → L2 elenco → L3 mercado → L5 jogador.
 
+import { emptyExt, ensureExt } from './ext';
+import { initWorldExt } from './worldext';
+import { registerMovementGenres } from './culture';
 import { clamp, hashString, Rng, seedState } from '../core/rng';
 import { nominal } from '../core/money';
 import { CATALOG_ACTS, CATALOG_LABELS } from '../data/catalog';
@@ -10,7 +13,7 @@ import type { Act, GameState, Label, RunConfig, StaffMember } from './types';
 import { dayOfDate, fmtL, hasMutator, nextId, remember } from './util';
 import { l } from '../data/world';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export function runSignature(seed: string, startYear: number): string {
   const h = hashString(seed).toString(16).toUpperCase().padStart(8, '0');
@@ -146,6 +149,7 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
 export function createGame(cfg: RunConfig): GameState {
   const startDay = 0;
   const s: GameState = {
+    ...emptyExt(),
     version: SAVE_VERSION,
     config: cfg,
     signature: runSignature(cfg.seed, cfg.startYear),
@@ -211,6 +215,7 @@ export function createGame(cfg: RunConfig): GameState {
     upcoming: [],
     stats: { weeklyPool: 0, marketUnitsYear: 0, playerUnitsYear: 0, marketShare: 0 },
   };
+  registerMovementGenres(s);
   s.day = dayOfDate(cfg.startYear, cfg.startYear, 0);
   const r = new Rng(s.rng);
 
@@ -269,6 +274,8 @@ export function createGame(cfg: RunConfig): GameState {
 
   // rumores iniciais de cena (sinais)
   seedInitialSignals(s, r);
+  ensureExt(s);
+  initWorldExt(s, r);
 
   remember(s, 'start', fmtL(l('{company} abre as portas em {city}, {year}. Run {sig}.', '{company} opens its doors in {city}, {year}. Run {sig}.'), {
     company: cfg.companyName,

@@ -809,6 +809,15 @@ function mergeLabelsSync(s: GameState, buyer: string, target: string): void {
 
 export const eventById = Object.fromEntries(EVENTS.map((e) => [e.id, e])) as Record<string, EventDef>;
 
+/** Módulos da expansão registram seus eventos (o diretor sorteia os que têm find). */
+export function registerEvents(defs: EventDef[]): void {
+  for (const d of defs) {
+    if (eventById[d.id]) continue;
+    EVENTS.push(d);
+    eventById[d.id] = d;
+  }
+}
+
 // ---------- Renderização de parâmetros ----------
 export function ctxParams(s: GameState, ctx: Ctx): Record<string, Param> {
   const p: Record<string, Param> = { ...ctx };
@@ -826,6 +835,8 @@ export function ctxParams(s: GameState, ctx: Ctx): Record<string, Param> {
   if (ctx.price !== undefined) p.priceTxt = fmt(Number(ctx.price));
   if (ctx.amount !== undefined) p.amountTxt = fmt(Number(ctx.amount));
   if (ctx.advance !== undefined) p.advanceTxt = fmt(Number(ctx.advance));
+  if (ctx.mem) p.memText = s.memory.find((m) => m.id === ctx.mem)?.text ?? '';
+  if (ctx.other && s.acts[String(ctx.other)]) p.otherName = s.acts[String(ctx.other)].name;
   if (ctx.slot) p.slotName = ctx.slot === 'headline' ? l('headline', 'headline') : ctx.slot === 'afternoon' ? l('tarde', 'afternoon') : l('abertura', 'opening');
   return p;
 }

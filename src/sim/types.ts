@@ -2,6 +2,7 @@ import type { RngState } from '../core/rng';
 import type { AmbitionId, SkillId } from '../data/people';
 import type { ContractModel, FormatId, RoleId } from '../data/rules';
 import type { L, MarketId } from '../data/world';
+import type { ExtState } from './xtypes';
 
 export type Mode = 'historic' | 'free' | 'chaos';
 export type StorytellerId = 'maestro' | 'brisa' | 'acaso';
@@ -62,6 +63,12 @@ export interface Person {
   lowMoraleMonths: number;
   /** aparência escolhida no editor; ausente = derivada deterministicamente do id */
   look?: Appearance;
+  /** personalidade 0–100 (GDD §45.2) */
+  persona?: { openness: number; perfectionism: number; ambition: number; sociability: number; discipline: number; resilience: number };
+  /** objetivo pessoal (GDD §46.5) */
+  goal?: 'security' | 'credit' | 'family' | 'leadership' | 'solo';
+  parentId?: string;
+  retireAge?: number;
 }
 
 export type ActStatus = 'emerging' | 'active' | 'hiatus' | 'retired' | 'split';
@@ -111,6 +118,12 @@ export interface Act {
   cash: number;
   history: string[]; // ids de memória
   rs?: boolean;
+  leaderId?: string;
+  /** reputação da carreira em 4 eixos (GDD §46.6) */
+  image?: { artistic: number; popularity: number; professionalism: number; publicImage: number };
+  cancelledUntil?: number;
+  movementId?: string;
+  deceased?: boolean;
 }
 
 export interface Song {
@@ -131,6 +144,18 @@ export interface Song {
   studioTier?: number;
   approach?: string;
   synthetic?: boolean;
+  /** participação autoral por pessoa (soma 1) */
+  splits?: { personId: string; share: number }[];
+  sampleOf?: string;
+  coverOf?: string;
+  remixOf?: string;
+  translationOf?: string;
+  lang?: string;
+  minutes?: number;
+  vault?: boolean; // inédita guardada
+  posthumous?: boolean;
+  aiVoice?: boolean;
+  producerId?: string;
 }
 
 export type ReleaseType = 'single' | 'ep' | 'lp';
@@ -164,6 +189,10 @@ export interface Release {
   reissueOf?: string;
   certified?: 'gold' | 'platinum' | 'diamond';
   live: boolean;
+  kind?: 'standard' | 'deluxe' | 'limited' | 'anniversary' | 'tribute' | 'remix' | 'live' | 'compilation' | 'posthumous' | 'translation';
+  returns?: number;
+  hypeBoost?: number;
+  rolloutId?: string;
 }
 
 export interface AutopsyFactor {
@@ -197,6 +226,13 @@ export interface Contract {
   recoupBalance: number; // centavos ainda a recuperar
   promises: ContractPromise[];
   distributionFee?: number; // 0..1 para modelo distribuição
+  /** territórios cobertos (vazio = mundo) e cessão parcial a terceiros */
+  territories?: MarketId[];
+  ceded?: { party: string; share: number; markets: MarketId[] }[];
+  crossCollat?: boolean;
+  options?: number; // períodos de opção restantes
+  exitFee?: number; // cláusula de saída (centavos)
+  buyout?: number; // valor de compra do contrato
 }
 
 export interface Label {
@@ -218,6 +254,10 @@ export interface Label {
   procedural?: boolean;
   closedYear?: number;
   lastDecision?: L;
+  archetype?: 'empire' | 'scene_hunter' | 'hitmaker' | 'catalog' | 'boutique';
+  ceo?: string;
+  debt?: number;
+  parentLabel?: string;
 }
 
 export interface Knowledge {
@@ -291,6 +331,9 @@ export interface PendingRelease {
   territories: MarketId[];
   week: number;
   reissueOf?: string;
+  kind?: Release['kind'];
+  hype?: number;
+  rolloutId?: string;
 }
 
 export interface DecisionOption {
@@ -338,7 +381,7 @@ export interface Notification {
   kind: 'info' | 'good' | 'bad' | 'event';
 }
 
-export interface GameState {
+export interface GameState extends ExtState {
   version: number;
   config: RunConfig;
   signature: string;

@@ -54,13 +54,6 @@ export function yearlyAwards(s: GameState, r: Rng): void {
     remember(s, 'award', fmtL(l('Gramófonos de Ouro {y} — {c}: {n}.', 'Golden Gramophones {y} — {c}: {n}.'), { y: year, c: c.name, n: `${act?.name ?? '?'} — ${w.title}` }), { actId: w.actId, important: byPlayer || !!act?.catalogNo });
   }
   if (s.awards.length > 400) s.awards.splice(0, s.awards.length - 400);
-  // Hall of Echoes: lendas com 25 anos de carreira
-  for (const a of Object.values(s.acts)) {
-    if (a.legend && year - a.debutYear === 25) {
-      remember(s, 'hall', fmtL(l('{a} entra para o Hall of Echoes.', '{a} is inducted into the Hall of Echoes.'), { a: a.name }), { actId: a.id, important: true });
-      if (a.owner === 'player' || a.playerBand) notify(s, fmtL(l('{a} entra para o Hall of Echoes!', '{a} enters the Hall of Echoes!'), { a: a.name }), 'good');
-    }
-  }
 }
 
 // ---------- Metas visíveis (6 a 12 meses) ----------

@@ -9,6 +9,7 @@ import type { GameState, StaffMember } from './types';
 import { fmtL, hasMutator, hasTech, money, nextId, notify, post, remember } from './util';
 import { genProfessionals } from './worldgen';
 import { emitEvent } from './events';
+import { addAsset } from './finance';
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
@@ -88,6 +89,7 @@ export function checkInsolvency(s: GameState, r: Rng): void {
   if (m === 3) {
     // venda forçada de equipamento
     const sold = s.player.equipment.splice(0);
+    s.assets = s.assets.filter((a) => a.kind !== 'equipment');
     let v = 0;
     for (const id of sold) v += money(s, (EQUIPMENT.find((e) => e.id === id)?.cost ?? 0) * 0.4);
     if (v) post(s, 'forced_sale', v, 'asset_sales', 'Venda forçada de equipamento');
@@ -141,6 +143,7 @@ export function upgradeHq(s: GameState): L | null {
   if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `hq:${s.player.hq + 1}`, -cost, 'hq', 'Ampliação da sede');
   s.player.hq += 1;
+  addAsset(s, { kind: 'building', name: HQ_LEVELS[s.player.hq].name, cost, lifeMonths: 240 });
   remember(s, 'hq', fmtL(l('{c} muda para: {h}.', '{c} moves up to: {h}.'), { c: s.config.companyName, h: HQ_LEVELS[s.player.hq].name }), { important: true });
   return null;
 }
@@ -157,6 +160,7 @@ export function buyEquipment(s: GameState, id: string): L | null {
   if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `eq:${id}`, -cost, 'equipment', def.name.pt);
   s.player.equipment.push(id);
+  addAsset(s, { kind: 'equipment', name: def.name, cost, lifeMonths: 60, refId: id });
   if (def.tech && s.techDates[def.tech] && s.year - s.techDates[def.tech] <= 2) s.player.legacy.innovation += 3;
   return null;
 }

@@ -6,6 +6,8 @@ import { nominal } from '../core/money';
 import { CHANNELS, EQUIPMENT, FORMATS, type FormatId } from '../data/rules';
 import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type MarketId } from '../data/world';
 import { physicalShare } from './production';
+import { payAuthors } from './finance';
+import { superfanDebut } from './fandom';
 import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
 import { fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
 
@@ -29,6 +31,7 @@ export function weeklyPool(s: GameState, year = s.year): number {
   if (year < POOL[0][0]) v = POOL[0][1];
   if (hasMutator(s, 'fragile_market')) v *= 0.75;
   if (s.economy.recession) v *= 0.85;
+  v *= s.flags.geoDemand ?? 1; // guerras, crises e pandemias (culture.ts)
   return v;
 }
 
@@ -150,8 +153,15 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
     reissueOf: pr.reissueOf,
     live: true,
   };
+  rel.kind = pr.kind;
+  rel.rolloutId = pr.rolloutId;
   const { appeal, factors } = computeAppeal(s, r, rel, act);
-  rel.appeal = appeal;
+  // campanha de rollout (teaser, pré-save, singles, clipe) e superfãs aquecem a estreia
+  const hype = 1 + (pr.hype ?? 0);
+  const fans = superfanDebut(s, act);
+  rel.hypeBoost = hype * fans;
+  rel.appeal = appeal * rel.hypeBoost;
+  if (rel.hypeBoost > 1.02) factors.push({ key: 'hype', label: l('Rollout e superfãs', 'Rollout and superfans'), value: rel.hypeBoost, confidence: 'medium' });
   rel.autopsy = [...factors, { key: 'marketing', label: l('Marketing (E)', 'Marketing (E)'), value: 1 + 2.5 * rel.marketingE, confidence: rel.marketingE > 0.3 ? 'high' : 'low' }];
   s.releases[rel.id] = rel;
   act.releases.push(rel.id);
@@ -295,6 +305,14 @@ export function marketWeek(s: GameState, r: Rng): void {
       gross += nonPhys * nominal(FORMATS.find((x) => x.id === 'airplay')!.net[rel.type], s.year);
     }
     gross = Math.round(gross * (1 - piracy));
+    if (rel.kind === 'limited') gross = Math.round(gross * 1.8);
+    // devoluções do varejo: parte do físico volta quando a venda esfria (GDD §19)
+    if (rel.owner === 'player' && physSold > 0 && rel.weekly.length > 6 && rel.stock > rel.pressed * 0.3) {
+      const back = Math.round(physSold * 0.08);
+      rel.returns = (rel.returns ?? 0) + back;
+      rel.stock += back;
+      gross -= Math.round(back * nominal(physDef.net[rel.type], s.year));
+    }
     distribute(s, rel, gross, units);
     if (rel.owner === 'player' || s.acts[rel.actId]?.playerBand) playerUnits += units;
     const entry: ChartEntry = { releaseId: rel.id, units, pos: 0, last: rel.lastPos, weeks: rel.weeksOnChart };
@@ -331,6 +349,8 @@ function certify(s: GameState, rel: Release): void {
 function distribute(s: GameState, rel: Release, gross: number, units: number): void {
   const act = s.acts[rel.actId];
   if (!act) return;
+  // subselo: liquidação no caixa próprio (sublabels.ts), nunca no da matriz
+  if (s.subLabels.some((x) => x.id === rel.owner)) return;
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   const publishing = Math.round(gross * 0.1);
   const rightsLeak = 1 - Math.min(0.25, staffSkill(s, 'rights') / 300) ;
@@ -383,6 +403,8 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
     post(s, `pub:${rel.id}`, amount, 'publishing', `Edição ${rel.title}`);
   }
   if (pubToPlayer < 1 && !act.playerBand) act.cash += Math.round(publishing * (1 - pubToPlayer) * 0.5);
+  // parcela dos autores: paga individualmente a cada compositor (GDD §42.10)
+  payAuthors(s, rel, Math.round(publishing * 0.5));
   // fãs
   act.fans.casual += Math.round(units * 0.1);
   act.fans.active += Math.round(units * 0.006);

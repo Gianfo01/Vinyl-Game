@@ -11,6 +11,9 @@ import { availableChannels } from './market';
 import type { Act, AgendaSlot, GameState } from './types';
 import { fmtL, money, notify, playerActs, post, remember } from './util';
 import { emitEvent } from './events';
+import { EXTRA_ACTIONS } from '../data/actions';
+import { activeMembers, agendaLoad, monthIndex, personLoad, planSlots, slotLoad } from './capacity';
+import { runExtraAction } from './actions2';
 
 export function slotsFor(act: Act): number {
   return act.fame < 10 && act.status === 'emerging' ? 3 : 4;
@@ -24,12 +27,22 @@ export function usedSlots(slots: AgendaSlot[]): number {
   return slots.reduce((t, x) => t + slotCost(x.action), 0);
 }
 
+/** Capacidade livre da formação neste mês, fora a agenda do próprio ato (turnês, planos, solo). */
+export function freeCapacity(s: GameState, act: Act): number {
+  const now = monthIndex(s);
+  const own = agendaLoad(s.agenda[act.id] ?? []);
+  let free = 100;
+  for (const pid of activeMembers(s, act)) free = Math.min(free, 100 - (personLoad(s, pid, now).total - own));
+  return Math.max(0, free);
+}
+
 export function defaultAgenda(s: GameState, act: Act): AgendaSlot[] {
   const st = actState(s, act);
   const max = slotsFor(act);
+  const cap = Math.min(100, freeCapacity(s, act) - agendaLoad(planSlots(s, act.id)));
   const out: AgendaSlot[] = [];
   const add = (a: AgendaSlot) => {
-    if (usedSlots(out) + slotCost(a.action) <= max) out.push(a);
+    if (usedSlots(out) + slotCost(a.action) <= max && agendaLoad(out) + slotLoad(a) <= cap) out.push(a);
   };
   if (st.fatigue > 65 || st.stress > 75) add({ action: 'rest' });
   const unrec = unrecorded(s, act).length;
@@ -46,7 +59,7 @@ export function defaultAgenda(s: GameState, act: Act): AgendaSlot[] {
 export function setAgenda(s: GameState, actId: string, slots: AgendaSlot[]): boolean {
   const act = s.acts[actId];
   if (!act) return false;
-  if (usedSlots(slots) > slotsFor(act)) return false;
+  if (agendaLoad(slots) + agendaLoad(planSlots(s, actId)) > freeCapacity(s, act)) return false;
   s.agenda[actId] = slots;
   s.delegated[actId] = false;
   return true;
@@ -62,7 +75,16 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
     if (s.delegated[actId] !== false) s.agenda[actId] = slots;
     // autonomia: artista com controle criativo pode trocar uma ação
     const c = act.contractId ? s.contracts[act.contractId] : undefined;
-    if (c?.creativeControl && r.chance(0.15) && !act.playerBand) slots = [...slots.slice(0, -1), { action: 'residency_art' }];
+    if (c?.creativeControl && r.chance(0.15) && !act.playerBand && slots.length) slots = [...slots.slice(0, -1), { action: 'residency_art' }];
+    // planos iniciados têm precedência; a agenda é cortada até caber em 100%
+    const fromPlans = planSlots(s, actId);
+    if (fromPlans.length) {
+      const capLeft = freeCapacity(s, act) + agendaLoad(s.agenda[actId] ?? []);
+      const kept: AgendaSlot[] = [...fromPlans];
+      for (const x of slots) if (agendaLoad(kept) + slotLoad(x) <= capLeft) kept.push(x);
+      slots = kept;
+    }
+    s.loadNow[actId] = agendaLoad(slots);
     const counts: Record<string, number> = {};
     for (const slot of slots) {
       const n = (counts[slot.action] = (counts[slot.action] ?? 0) + 1);
@@ -79,9 +101,14 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
   }
 }
 
-function payAction(s: GameState, act: Act, id: string): boolean {
-  const def = agendaById[id];
+function payAction(s: GameState, act: Act, id: string, planned?: string): boolean {
+  const def = agendaById[id] ?? EXTRA_ACTIONS.find((x) => x.id === id);
   if (!def?.cost) return true;
+  // planos de vários meses pagam só no primeiro mês
+  if (planned) {
+    const p = s.plans.find((x) => x.id === planned);
+    if (p && p.startMonth !== monthIndex(s)) return true;
+  }
   const cost = money(s, def.cost);
   if (act.playerBand || act.owner === 'player') {
     if (s.player.cash < cost) return false;
@@ -96,7 +123,11 @@ function members(s: GameState, act: Act) {
 
 function runAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number, takeSession: () => boolean): void {
   const a = slot.action;
-  if (!payAction(s, act, a)) return;
+  if (!payAction(s, act, a, slot.params?.plan ? String(slot.params.plan) : undefined)) return;
+  if (EXTRA_ACTIONS.some((x) => x.id === a)) {
+    runExtraAction(s, r, act, slot, dim);
+    return;
+  }
   const grow = (keys: SkillId[], amt: number) => {
     for (const p of members(s, act)) for (const k of keys) growPerson(p, k, amt * dim);
   };

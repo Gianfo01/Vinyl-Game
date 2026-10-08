@@ -1,7 +1,8 @@
 // Loop do mês: agenda → semanas (lançamentos, mercado, paradas) → fechamento
 // (finanças, contratos, pessoas, rivais, mundo, eventos, legado). GDD §6, §7.
 
-import { clamp } from '../core/rng';
+import { clamp, type Rng } from '../core/rng';
+import { dailyStep, directorMonth, monthlyExt, startPlans, weeklyExt, yearlyExt } from './hooks';
 import { formatMoney } from '../core/money';
 import { TECHS, techById } from '../data/rules';
 import { GENRES, genreById, l, type L } from '../data/world';
@@ -24,35 +25,66 @@ export interface AdvanceResult {
   stopReason?: L;
 }
 
-export function advanceMonth(s: GameState): void {
-  if (s.ended && !s.flags.sandbox) return;
-  const r = rngOf(s);
+/** Abertura do mês: decisões vencidas, extrato, agendas e planos que começam. */
+function openMonth(s: GameState, r: Rng): void {
   // decisões não respondidas seguem o padrão (o jogador teve o mês inteiro)
   for (const d of [...s.decisions]) resolveDecision(s, d.id, d.defaultOption);
   s.ledgerKeys = {};
   s.lastMonthLedger = s.monthLedger;
   s.monthLedger = {};
   s.notifications = s.notifications.filter((n) => s.week - n.week < 26);
-  const monthStartWeek = s.week;
-
+  s.clock.monthStartWeek = s.week;
+  s.clock.dayInMonth = 0;
+  s.clock.opened = true;
+  startPlans(s, r);
   processPlayerAgendas(s, r);
+}
 
-  // semanas: charts fecham a cada 7 dias; o mês é agregado das semanas
+function daysInCurrentMonth(s: GameState): number {
   const { year, month } = dateOfDay(s.config.startYear, s.day);
-  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-  for (let d = 0; d < daysInMonth; d++) {
-    const day = s.day + d;
-    if ((day + 1) % 7 !== 0) continue;
-    s.week += 1;
-    for (const pr of [...s.pendingReleases]) {
-      if (pr.week <= s.week) {
-        s.pendingReleases.splice(s.pendingReleases.indexOf(pr), 1);
-        if (s.acts[pr.actId]) launchPending(s, r, pr);
+  return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+}
+
+/**
+ * Avança até o próximo fechamento semanal de paradas (ou o fim do mês).
+ * Granularidade diária para turnês, estúdio e crises. Retorna true se o mês fechou.
+ */
+export function advanceWeek(s: GameState): boolean {
+  if (s.ended && !s.flags.sandbox) return true;
+  const r = rngOf(s);
+  if (!s.clock.opened) openMonth(s, r);
+  const dim = daysInCurrentMonth(s);
+  while (s.clock.dayInMonth < dim) {
+    const day = s.day + s.clock.dayInMonth;
+    dailyStep(s, r, day);
+    s.clock.dayInMonth += 1;
+    if ((day + 1) % 7 === 0) {
+      s.week += 1;
+      for (const pr of [...s.pendingReleases]) {
+        if (pr.week <= s.week) {
+          s.pendingReleases.splice(s.pendingReleases.indexOf(pr), 1);
+          if (s.acts[pr.actId]) launchPending(s, r, pr);
+        }
       }
+      marketWeek(s, r);
+      weeklyExt(s, r);
+      if (s.clock.dayInMonth < dim) return false;
     }
-    marketWeek(s, r);
   }
+  closeMonth(s, r, dim);
+  return true;
+}
+
+export function advanceMonth(s: GameState): void {
+  if (s.ended && !s.flags.sandbox) return;
+  for (let i = 0; i < 8; i++) if (advanceWeek(s)) return;
+}
+
+function closeMonth(s: GameState, r: Rng, daysInMonth: number): void {
+  const monthStartWeek = s.clock.monthStartWeek;
   s.day += daysInMonth;
+  s.clock.dayInMonth = 0;
+  s.clock.opened = false;
 
   // ---------- fechamento do mês ----------
   payMonth(s);
@@ -67,6 +99,7 @@ export function advanceMonth(s: GameState): void {
   monthlySignals(s, r);
   genresMonth(s, r);
   economyMonth(s);
+  monthlyExt(s, r);
   const share = s.stats.marketUnitsYear > 0 ? s.stats.playerUnitsYear / s.stats.marketUnitsYear : 0;
   s.stats.marketShare = share;
   updateLegacy(s);
@@ -75,6 +108,7 @@ export function advanceMonth(s: GameState): void {
   const closingYear = s.year;
   if (s.month === 11) {
     yearlyAwards(s, r);
+    yearlyExt(s, r);
     rivalYearEnd(s);
     s.stats.marketUnitsYear = 0;
     s.stats.playerUnitsYear = 0;
@@ -92,6 +126,7 @@ export function advanceMonth(s: GameState): void {
 
   const monthIndex = (s.year - s.config.startYear) * 12 + s.month;
   storyteller(s, r, monthIndex);
+  directorMonth(s, r);
   checkInsolvency(s, r);
   s.scoutActionsUsed = 0;
   if (s.year > END_YEAR && !s.ended) finishArc(s);
@@ -221,7 +256,11 @@ function interruptReason(s: GameState, sinceWeek: number): L | undefined {
   return undefined;
 }
 
-export function advance(s: GameState, mode: 'month' | 'quarter' | 'event'): AdvanceResult {
+export function advance(s: GameState, mode: 'week' | 'month' | 'quarter' | 'event'): AdvanceResult {
+  if (mode === 'week') {
+    const closed = advanceWeek(s);
+    return { months: closed ? 1 : 0 };
+  }
   const max = mode === 'month' ? 1 : mode === 'quarter' ? 3 : 12;
   let months = 0;
   for (let i = 0; i < max; i++) {
