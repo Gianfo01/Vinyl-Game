@@ -1,0 +1,78 @@
+/* Sistema "people" (rodada 4): área Pessoas, caixa de entrada por era, feed e Mesa de negociação. */
+
+.ppl-grid { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(300px, 2fr); gap: 1rem; align-items: start; }
+@media (max-width: 760px) { .ppl-grid { grid-template-columns: 1fr; } }
+
+.ppl-roster { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.ppl-roster li button { width: 100%; display: flex; align-items: center; gap: 0.5rem; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.5rem; color: var(--ink); cursor: pointer; }
+.ppl-roster li button.on { border-color: var(--accent); }
+.ppl-roster .ppl-act { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0.6rem 0 0.1rem; }
+.ppl-mood { font-weight: 700; min-width: 2.6rem; text-align: right; margin-left: auto; font-variant-numeric: tabular-nums; }
+.ppl-mood.pos { color: var(--good); }
+.ppl-mood.neg { color: var(--bad); }
+
+.ppl-stack { list-style: none; margin: 0.3rem 0; padding: 0; border: 1px solid var(--line); border-radius: 6px; }
+.ppl-stack li { display: flex; gap: 0.5rem; padding: 0.25rem 0.5rem; border-bottom: 1px dashed var(--line); font-size: 0.9rem; }
+.ppl-stack li:last-child { border-bottom: 0; }
+.ppl-stack .v { font-weight: 700; min-width: 2.4rem; font-variant-numeric: tabular-nums; }
+.ppl-stack .v.pos { color: var(--good); }
+.ppl-stack .v.neg { color: var(--bad); }
+.ppl-stack .d { margin-left: auto; color: var(--muted); font-size: 0.8rem; }
+.ppl-stack li.total { background: var(--panel-2); font-weight: 600; }
+
+.ppl-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0.3rem 0; }
+.ppl-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin: 0.4rem 0; }
+.ppl-reply { border-left: 3px solid var(--accent); padding: 0.3rem 0.6rem; margin: 0.4rem 0; background: var(--panel-2); font-style: italic; }
+
+/* mapa social */
+.ppl-social svg { width: 100%; max-width: 640px; height: auto; display: block; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; }
+.ppl-social text { fill: var(--ink); font-size: 11px; }
+.ppl-social .hull { fill: none; stroke: var(--line); stroke-dasharray: 4 3; }
+.ppl-social .edge.friend { stroke: var(--good); }
+.ppl-social .edge.feud { stroke: var(--bad); stroke-dasharray: 5 3; }
+.ppl-social .node { stroke: var(--ink); stroke-width: 1; }
+.ppl-social .lead { fill: var(--gold); }
+
+/* caixa de entrada por era */
+.ppl-inbox { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.ppl-msg { border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.8rem; background: var(--panel); position: relative; }
+.ppl-msg.unread { box-shadow: inset 4px 0 0 var(--accent); }
+.ppl-msg.bad { border-color: var(--bad); }
+.ppl-msg .hd { display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); }
+.ppl-msg .sj { font-weight: 700; margin: 0.15rem 0; }
+.ppl-msg .bd { margin: 0.2rem 0; }
+.ppl-msg.letter { font-family: Georgia, 'Times New Roman', serif; background: color-mix(in srgb, var(--gold) 8%, var(--panel)); }
+.ppl-msg.letter .bd { font-style: italic; }
+.ppl-msg.telegram { font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: 0.04em; background: color-mix(in srgb, var(--warn) 10%, var(--panel)); }
+.ppl-msg.phone .bd::before { content: '☎ '; }
+.ppl-msg.fax { font-family: 'Courier New', monospace; background: repeating-linear-gradient(0deg, var(--panel), var(--panel) 3px, var(--panel-2) 4px); }
+.ppl-msg.email .hd { font-family: system-ui, sans-serif; }
+.ppl-msg.message { border-radius: 14px 14px 14px 2px; background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+.ppl-filter { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.6rem; }
+.ppl-filter button.on { border-color: var(--accent); font-weight: 600; }
+
+/* feed */
+.ppl-feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.ppl-feed li { border: 1px solid var(--line); border-radius: 8px; padding: 0.4rem 0.6rem; background: var(--panel); }
+.ppl-feed li .au { font-weight: 700; font-size: 0.85rem; }
+.ppl-feed li .meta { color: var(--muted); font-size: 0.75rem; display: flex; gap: 0.6rem; }
+.ppl-feed li.pos { border-left: 4px solid var(--good); }
+.ppl-feed li.neg { border-left: 4px solid var(--bad); }
+.ppl-feed li.letter { font-family: Georgia, serif; font-style: italic; }
+.ppl-feed li.gossip { font-family: Georgia, serif; }
+
+/* mesa de negociação */
+.ppl-table { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 760px) { .ppl-table { grid-template-columns: 1fr; } }
+.ppl-table label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.85rem; margin-bottom: 0.4rem; }
+.ppl-table input[type=range] { width: 100%; }
+.ppl-cards { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ppl-cards button { border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); color: var(--ink); padding: 0.4rem 0.5rem; max-width: 12rem; text-align: left; cursor: pointer; }
+.ppl-cards button:disabled { opacity: 0.4; cursor: not-allowed; }
+.ppl-cards button b { display: block; font-size: 0.85rem; }
+.ppl-cards button small { color: var(--muted); }
+.ppl-log { list-style: none; padding: 0; margin: 0; max-height: 12rem; overflow: auto; font-size: 0.9rem; }
+.ppl-log li { padding: 0.15rem 0; border-bottom: 1px dashed var(--line); }
+
+.ppl-owner { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+.ppl-owner .who { min-width: 12rem; }
