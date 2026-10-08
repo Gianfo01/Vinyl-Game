@@ -123,7 +123,7 @@ function makeRealPerson(s: GameState, r: Rng, act: Act, m: { name: string; role:
   const lang = langForCity(act.city, r);
   const p = makePerson(s, r, { lang, role: m.role, potential, born: m.born ?? act.formed - r.int(18, 26), startFrac: 0.66, name: real ? m.name : undefined });
   s.persons[p.id] = p;
-  if (m.died !== undefined && m.died <= s.year) p.alive = false;
+  if (m.died !== undefined && m.died <= s.year) { p.alive = false; p.died = m.died; }
   return p;
 }
 
@@ -160,7 +160,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       } else {
         p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, real);
       }
-      if (died !== undefined && died <= s.year) p.alive = false;
+      if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
       else if (died !== undefined && fates) st.sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
       if (leave !== undefined && leave <= s.year) {
         (st.former[act.id] ??= []).push({ personId: p.id, year: leave, reason: 'left' });
@@ -179,7 +179,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       if (real) p.name = d.n;
       if (d.b) p.born = d.b;
       if (d.r) p.role = d.r;
-      if (d.x !== undefined && d.x <= s.year) p.alive = false;
+      if (d.x !== undefined && d.x <= s.year) { p.alive = false; p.died = d.x; }
       else if (d.x !== undefined && fates) st.sched.push({ year: d.x, kind: 'fate', actId: act.id, personId: p.id });
     }
   }
@@ -383,6 +383,7 @@ function monthly(s: GameState, r: Rng): void {
         if (Object.values(s.acts).some((a) => a.members.includes(p.id))) personDies(s, p, l('no mesmo ano da vida real', 'in the same year as in real life'));
         else {
           p.alive = false;
+          p.died = s.year;
           remember(s, 'death', fmtL(l('Morre {p}, ex-integrante de {a}, aos {age} anos.', '{p}, former member of {a}, dies at {age}.'), { p: p.name, a: act.name, age: s.year - p.born }), { actId: act.id, important: act.fame > 30 });
         }
       }

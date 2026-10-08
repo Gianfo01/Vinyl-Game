@@ -619,3 +619,19 @@ img.portrait { border: 1px solid var(--line); }
 .sa-val small { color: var(--muted); font-weight: 400; }
 .sa-val.gA { color: var(--good); } .sa-val.gE { color: var(--bad); }
 @media (max-width: 700px) { .sa-row { grid-template-columns: 7rem 1fr 3rem; } .sa-what { display: none; } }
+.year-input { width: 6rem; }
+.sale-box { display: grid; gap: 0.3rem; padding: 0.5rem; border: 1px dashed var(--line); border-radius: 8px; width: 100%; }
+.sale-box label { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.85rem; }
+.num-sm { width: 5.5rem; }
+
+/* rodada 7: agenda em calendário */
+.agenda-cal { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4rem; margin: 0.4rem 0; }
+.agenda-week { border: 1px solid var(--line); border-radius: 8px; padding: 0.35rem; min-height: 4rem; background: var(--panel); }
+.agenda-week header { font-size: 0.8rem; font-weight: 600; display: flex; gap: 0.25rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.25rem; }
+.agenda-week.crowded { border-color: var(--warn); }
+.agenda-week.release { box-shadow: inset 0 0 0 2px var(--gold, #c9a227); }
+.agenda-week .slots { margin: 0; padding: 0; }
+.agenda-week .slot { flex-wrap: wrap; font-size: 0.85rem; }
+.slot.combo { border-left: 3px solid var(--good); }
+.agenda-tpl { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin-top: 0.4rem; }
+@media (max-width: 900px) { .agenda-cal { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

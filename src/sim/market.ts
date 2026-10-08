@@ -276,7 +276,14 @@ export function marketWeek(s: GameState, r: Rng): void {
     const cap = focusCap(rel.owner);
     if (age < 12 && n > cap) h *= Math.sqrt(cap / n);
     heats.push([rel, h]);
-    H += h;
+  }
+  // rodada 7: com centenas de artistas reais o mundo ficou mais denso; a atenção de terceiros é
+  // normalizada pela densidade (mais artistas dividem a mesma fatia, sem esmagar o jogador)
+  const npc = heats.filter(([rel]) => rel.owner !== 'player' && !s.acts[rel.actId]?.playerBand).length;
+  const density = Math.pow(Math.max(1, npc / 280), 0.85);
+  for (const e of heats) {
+    if (density > 1 && e[0].owner !== 'player' && !s.acts[e[0].actId]?.playerBand) e[1] /= density;
+    H += e[1];
   }
   const B = MARKET_TAIL * (s.year < 1950 ? 0.6 : 1);
   s.stats.lastH = H;

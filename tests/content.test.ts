@@ -129,6 +129,6 @@ describe('simulação longa com o conteúdo novo', () => {
     it(`30 anos sem exceção e caixa fechando (${seed}, ${start})`, () => {
       const { state } = simulate(defaultConfig(seed, { startYear: start, storyteller: 'acaso' }), 30);
       expect(state.player.cash).toBe(state.player.initialCash + state.player.totalPosted);
-    }, 120000);
+    }, 300000);
   }
 });

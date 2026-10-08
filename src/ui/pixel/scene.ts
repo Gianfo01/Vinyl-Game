@@ -8,6 +8,7 @@ import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import type { Dir } from './avatar';
 import { PALETTES, eraIndex, eraOf, type EraId, type Palette } from './palette';
+import { KIND_TO_ITEM } from '../../sim/sys/furnish';
 import { equipmentVisual, footprint, furnFrames, type Facing, type FurnKind, type RoomKind } from './sprites';
 
 export type FloorKey = keyof Palette['floors'];
@@ -327,6 +328,9 @@ interface Ctx {
   r: Rng;
   keepClear: Uint8Array;
   owned: Set<string>;
+  /** rodada 7: mobília comprada (null = save antigo, sede mobiliada como antes) */
+  furn: Record<string, number> | null;
+  used: Record<string, number>;
 }
 
 function free(c: Ctx, x: number, y: number, w = 1, d = 1, room?: Room): boolean {
@@ -348,6 +352,12 @@ function free(c: Ctx, x: number, y: number, w = 1, d = 1, room?: Room): boolean 
 function put(c: Ctx, room: Room, kind: FurnKind, x: number, y: number, facing: Facing, variant = 0, opts: { block?: boolean; label?: L } = {}): Item | null {
   const { w, d } = footprint(kind, facing);
   if (!free(c, x, y, w, d, room)) return null;
+  // sede que começa vazia: só aparece o que foi comprado
+  const item = c.furn ? KIND_TO_ITEM[kind] : undefined;
+  if (item) {
+    if ((c.used[item] ?? 0) >= (c.furn![item] ?? 0)) return null;
+    c.used[item] = (c.used[item] ?? 0) + 1;
+  }
   const it: Item = { kind, x, y, w, d, facing, variant, frames: furnFrames(kind), room: room.id, key: x + w / 2 + y + d / 2, label: opts.label };
   c.sc.items.push(it);
   if (opts.block !== false) for (let j = 0; j < d; j++) for (let i = 0; i < w; i++) c.sc.blocked[(y + j) * c.sc.W + x + i] = 1;
@@ -684,7 +694,8 @@ export function buildScene(s: GameState, site?: { level: number; seedKey: string
     if (d.side === 'E') clear(d.x + 1, d.y);
     else clear(d.x, d.y + 1);
   }
-  const c: Ctx = { s, sc, era, e: eraIndex(era), r: Rng.fromSeed(`hq:${level}:${era}:${s.config.seed}${site ? ':' + site.seedKey : ''}`), keepClear, owned: new Set(s.player.equipment) };
+  const fs = (s.x4 as { furn?: { legacy: boolean; items: Record<string, number> } } | undefined)?.furn;
+  const c: Ctx = { s, sc, era, e: eraIndex(era), r: Rng.fromSeed(`hq:${level}:${era}:${s.config.seed}${site ? ':' + site.seedKey : ''}`), keepClear, owned: new Set(s.player.equipment), furn: !site && fs && !fs.legacy ? fs.items : null, used: {} };
   // ordem: salas com mais exigência primeiro
   const order: RoomKind[] = ['control', 'booth', 'office', 'trophy', 'meeting', 'writing', 'lounge', 'rehearsal', 'hall'];
   for (const k of order) for (const room of layout.rooms.filter((r) => r.kind === k)) furnishRoom(c, room);

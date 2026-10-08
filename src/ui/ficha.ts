@@ -2,12 +2,12 @@
 
 import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
-import { defaultOffer, evaluateOffer, makeOffer } from '../sim/contracts';
+import { acceptCounter, defaultOffer, evaluateOffer, offerNow, pressForAnswer, withdrawCounter } from '../sim/contracts';
 import type { Act, GameState, Offer, Song } from '../sim/types';
 import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
 import { h, select } from './dom';
 import { store } from './store';
-import { money } from '../sim/util';
+import { money, rngOf } from '../sim/util';
 import { l } from '../data/world';
 import { openActPage, openPersonPage } from './pages';
 import { reviewCard, reviewSummary } from './reviewView';
@@ -130,16 +130,44 @@ export function openOffer(actId: string): void {
   );
   update();
   let close = () => {};
+  const reply = h('div', { class: 'offer-reply' });
+  const showReply = (offer: Offer | null, result: string) => {
+    if (result === 'accepted') {
+      toast(t(l('{a} aceitou na hora! Contrato assinado.', '{a} accepted on the spot! Contract signed.'), { a: a.name }), 'good');
+      close();
+      rerender();
+      return;
+    }
+    if (result === 'invalid') { reply.replaceChildren(h('p', { class: 'bad' }, t(l('Já existe uma oferta em aberto para este artista.', 'There is already an open offer for this act.')))); return; }
+    if (result === 'sniped') { reply.replaceChildren(h('p', { class: 'bad' }, t(l('Tarde demais: outro selo fechou antes.', 'Too late: another label closed first.')))); rerender(); return; }
+    if (result === 'thinking' && offer) {
+      reply.replaceChildren(
+        h('p', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', t(l('{a} gostou, mas pediu até {n} semana(s) para pensar. A resposta chega sozinha — ou você pode pressionar agora (perde um pouco de confiança).', '{a} liked it but asked for up to {n} week(s) to think. The answer arrives on its own — or you can push now (costs a little trust).'), { a: a.name, n: Math.max(1, (offer.thinkUntil ?? s.week) - s.week) })),
+        h('div', { class: 'row' },
+          h('button', { class: 'btn small', onclick: () => showReply(offer, pressForAnswer(s, rngOf(s), offer.id)) }, t(l('Pressionar por uma resposta', 'Push for an answer'))),
+          h('button', { class: 'btn small ghost', onclick: () => { close(); rerender(); } }, t(l('Esperar', 'Wait')))),
+      );
+      return;
+    }
+    if (result === 'counter' && offer) {
+      reply.replaceChildren(
+        h('p', null, pill(t(l('contraproposta', 'counter')), 'warn'), ' ', t(l('{a} topa se o adiantamento for {v}.', '{a} is in if the advance is {v}.'), { a: a.name, v: $(offer.advance) })),
+        h('div', { class: 'row' },
+          h('button', { class: 'btn small primary', onclick: () => { if (acceptCounter(s, offer.id)) { toast(t(l('Fechado!', 'Deal!')), 'good'); close(); rerender(); } else toast(t(l('Caixa insuficiente.', 'Not enough cash.')), 'bad'); } }, t(l('Aceitar', 'Accept'))),
+          h('button', { class: 'btn small ghost', onclick: () => { withdrawCounter(s, offer.id); reply.replaceChildren(h('p', { class: 'muted small' }, t(l('Ajuste a proposta e envie de novo.', 'Adjust the offer and send it again.')))); } }, t(l('Ajustar e reenviar', 'Adjust and resend')))),
+      );
+      return;
+    }
+    reply.replaceChildren(h('p', { class: 'bad' }, t(l('{a} recusou: {r}', '{a} declined: {r}'), { a: a.name, r: offer?.note ?? '' })), h('small', { class: 'muted' }, t(l('Melhore a proposta para tentar de novo (cada recusa custa um pouco de confiança).', 'Improve the offer to try again (each refusal costs a little trust).'))));
+    if (offer) s.offers = s.offers.filter((x) => x.id !== offer.id);
+  };
   const actions = h('div', { class: 'actions' },
     h('button', { class: 'btn primary', onclick: () => {
       if (s.player.cash < o.advance) return toast(t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
-      const res = makeOffer(s, o);
-      if (res) {
-        toast(t(l('Oferta enviada. Resposta no fechamento do mês.', 'Offer sent. Answer at month close.')), 'info');
-        close();
-        rerender();
-      } else toast(t(l('Já existe oferta pendente.', 'There is already a pending offer.')), 'bad');
-    } }, t(S.send)),
+      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises] });
+      showReply(offer, result);
+    } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
+    reply,
   );
   close = modal(`${t(S.offerTitle)}: ${a.name}`, h('div', null, form, actions));
 }

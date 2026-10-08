@@ -14,6 +14,7 @@ import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { genStaff } from '../worldgen';
 import { rw } from './realworld';
+import { resolveThinking } from '../contracts';
 
 type Ctx = Record<string, string | number>;
 
@@ -351,3 +352,6 @@ registerSimHook('month', 'lifecycle7', (s, r) => {
   labelLoans(s, r);
 });
 registerSimHook('year', 'lifecycle7', (s) => yearly(s));
+
+// rodada 7: quem pediu tempo para pensar responde ao longo das semanas (não espera o fim do mês)
+registerSimHook('week', 'offers7', (s, r) => resolveThinking(s, r));

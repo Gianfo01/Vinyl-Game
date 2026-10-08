@@ -90,6 +90,19 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 | Conteúdo | 155 cidades, subgêneros por era (1920–59 e 2030–40 detalhados), ~120 eventos novos, plataformas, críticos, produtores, marcas e prêmios fictícios **com o equivalente real ao lado** |
 | Interface | **Sede em pixel art isométrica** por era e nível, pessoas andando conforme a atividade real, avatares combináveis com editor, ícones em pixel art, retratos; novas áreas Central, Mundo e Negócios; tutorial; modos para daltonismo; leitor de tela; comparador de carreiras |
 
+## Rodada 7: mundo real, ciclo de vida, paradas por país e vida intensa
+
+- **~740 artistas reais** (EUA/Canadá, Reino Unido/Irlanda, Itália, resto da Europa, Brasil e mundo) surgem perto do ano real de estreia, com integrantes (entradas e saídas), discografia anterior à run, fim de carreira e voltas. No modo ficcional entram como arquétipos com nomes gerados. Opção de mortes nos anos reais (modo histórico). Dados em `src/data/realacts_*.ts`, carregador em `src/sim/sys/realworld.ts`.
+- **Ciclo de vida para todos** (`lifecycle7.ts`): envelhecer, morrer, aposentar, sair da aposentadoria, reunião, carreira solo, supergrupo, virar produtor; bandas decidem seguir com substituto, seguir menores, pausar ou acabar; o catálogo de quem parou vende para sempre; NPCs têm vícios e reabilitação; selos rivais pegam empréstimos.
+- **Paradas por país, região e formato** (`charts7.ts`, `data/countries.ts`): 34 países com população, poder de compra e gosto por época; top músicas, álbuns, streaming, vendas e clipes; prêmios nacionais (Grammy, BRIT, Prêmio da Música Brasileira…). Aba **Países** em Mundo.
+- **Início personalizado**: ano exato, caixa, patrimônio, sede, estúdio/mobília, solo ou banda (1–6), estágio da carreira com discografia, atos contratados, equipe, mercados e reputação.
+- **Instrumentos** (`instruments.ts`): até 5 por pessoa, facilidade por família, aulas sozinho ou com professor; instrumentos típicos do gênero dão bônus.
+- **Sede que começa vazia** (`furnish.ts`): mobília e instrumentos comprados aparecem no desenho e têm efeito.
+- **Vida intensa** (`vices.ts`): cigarro, bebida, drogas (dependência, polícia, escândalo, reabilitação), viagens, empréstimos pessoais (banco, família, agiota) e da empresa (banco, fomento, dívida conversível, agiota); traços conquistados (Dependente, Sóbrio, Fumante, Viajado, Endividado).
+- **Venda de composições** (`songsale.ts`) com valor, royalties e parte do selo negociados na hora; **ofertas de contrato com resposta imediata** (o artista pode pedir tempo para pensar).
+- **Agenda em calendário** (`agenda7.ts`): 4 semanas, combinações entre ações, semana cheia, sinergia com a semana do lançamento, modelos prontos e salvos.
+- **Menu agrupado** em 6 grupos (Início, Selo, Artistas, Música, Mundo, Você); a reprodução de áudio saiu e os atributos das composições ficaram explícitos.
+
 ## Rodada 6: personagem com personalidade, capital, gestão, intriga e nomes reais
 
 - **Scouting e pipeline consertados:** 3 ações por mês no mínimo (mais A&R, olheiros, sede e bônus), custos menores, filtros e ordenação. O pipeline agora é interativo (setas entre colunas, aprofundar, oferta, contraproposta, descartar), e as colunas Oferta e Negociação seguem as ofertas reais.

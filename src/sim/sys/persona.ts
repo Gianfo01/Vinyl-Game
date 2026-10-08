@@ -102,7 +102,7 @@ function applyPersona(s: GameState, r: Rng): void {
     o.attrs = { ...attrs };
   } else {
     // jogos sem ficha (bots, testes, cenários): personalidade sorteada
-    const pool = PLAYER_TRAITS.filter((x) => !x.congenital);
+    const pool = PLAYER_TRAITS.filter((x) => !x.congenital && !x.earned);
     while (P0.traits.length < 2) {
       const t = r.pick(pool);
       if (!P0.traits.includes(t.id) && !P0.traits.some((x) => playerTraitById[x]?.opposite === t.id)) P0.traits.push(t.id);

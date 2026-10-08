@@ -1,9 +1,9 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
-import { CARDS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
+import { CARDS, HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
 import { S, t, type Lang } from '../i18n/strings';
-import type { RunConfig } from '../sim/types';
+import type { RunConfig, StartCustom } from '../sim/types';
 import { createGame } from '../sim/worldgen';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
@@ -70,8 +70,48 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
         select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { store.prefs.lang = v; savePrefs(); titleScreen(root, onStart); }, { 'aria-label': t(S.language) }),
       ),
       saves,
-      h('p', { class: 'muted small foot' }, t(l('Universo 100% ficcional. Protótipo jogável do GDD v8 (fases 0–3 e parte da 5).', 'A 100% fictional universe. Playable prototype of GDD v8 (phases 0–3 and part of 5).'))),
+      h('p', { class: 'muted small foot' }, t(l('Universo ficcional por padrão; ligue "Nomes reais" para jogar com artistas, selos e prêmios de verdade.', 'Fictional universe by default; turn on "Real names" to play with real artists, labels and awards.'))),
     ),
+  );
+}
+
+/** Início personalizado (rodada 7): tudo opcional; vazio = padrão do cenário. */
+function customCard(cfg: RunConfig): HTMLElement {
+  const c = (cfg.custom ??= {}) as StartCustom;
+  const num = (key: 'cash' | 'personalCash', ph: string) => h('input', { type: 'number', min: 0, step: 1000, placeholder: ph, oninput: (e: Event) => { const v = (e.target as HTMLInputElement).value; if (v === '') delete c[key]; else c[key] = Math.max(0, Number(v)); } });
+  const opt = <K extends keyof StartCustom>(key: K, options: { value: string; label: string }[], parse: (v: string) => StartCustom[K]) =>
+    select<string>(c[key] === undefined ? '' : String(c[key]), [{ value: '', label: t(l('(padrão do cenário)', '(scenario default)')) }, ...options], (v) => { if (v === '') delete c[key]; else c[key] = parse(v); });
+  const repLabel = h('span', null, t(l('(padrão)', '(default)')));
+  return h('section', { class: 'card' },
+    h('h3', null, t(l('Início personalizado', 'Custom start'))),
+    h('p', { class: 'muted small' }, t(l('Deixe em branco para usar o padrão do cenário. Valores em dólares de 1960 (o jogo converte para a moeda da época).', 'Leave blank to use the scenario default. Values in 1960 dollars (the game converts to the era\'s money).'))),
+    h('label', null, t(l('Caixa da empresa', 'Company cash')), num('cash', '45000')),
+    h('label', null, t(l('Patrimônio pessoal', 'Personal wealth')), num('personalCash', '5000')),
+    h('label', null, t(l('Sede inicial', 'Starting HQ')), opt('hq', HQ_LEVELS.slice(0, 4).map((x, i) => ({ value: String(i), label: t(x.name) })), (v) => Number(v))),
+    h('label', null, t(l('Estúdio e mobília iniciais', 'Starting studio and furniture')), opt('studio', [
+      { value: 'none', label: t(l('Vazio: mesa, cadeiras e um microfone', 'Empty: a table, chairs and one mic')) },
+      { value: 'basic', label: t(l('Básico: bateria, amplificadores, teclado e sofá', 'Basic: drums, amps, keys and a sofa')) },
+      { value: 'pro', label: t(l('Completo: estúdio montado e sala confortável', 'Full: studio set up and a comfy lounge')) },
+    ], (v) => v as StartCustom['studio'])),
+    h('label', null, t(l('Seu artista: formação', 'Your act: line-up')), opt('members', [
+      { value: '1', label: t(l('Carreira solo', 'Solo career')) }, { value: '2', label: t(l('Dupla', 'Duo')) },
+      { value: '3', label: t(l('Trio', 'Trio')) }, { value: '4', label: t(l('Banda de 4', '4-piece band')) }, { value: '5', label: t(l('Banda de 5', '5-piece band')) }, { value: '6', label: t(l('Banda de 6', '6-piece band')) },
+    ], (v) => Number(v))),
+    h('label', null, t(l('Seu artista: estágio da carreira', 'Your act: career stage')), opt('level', [
+      { value: 'garage', label: t(l('Garagem — nada lançado', 'Garage — nothing released')) },
+      { value: 'local', label: t(l('Cena local — um single', 'Local scene — one single')) },
+      { value: 'rising', label: t(l('Em ascensão — EP e primeiros fãs', 'Rising — an EP and first fans')) },
+      { value: 'established', label: t(l('Estabelecido — discos e um sucesso', 'Established — records and a hit')) },
+      { value: 'star', label: t(l('Estrela — discografia e fama', 'Star — discography and fame')) },
+    ], (v) => v as StartCustom['level'])),
+    h('small', { class: 'muted' }, t(l('Formação e estágio valem para os papéis Artista e Híbrido.', 'Line-up and stage apply to the Artist and Hybrid roles.'))),
+    h('label', null, t(l('Atos já contratados (selo)', 'Acts already signed (label)')), opt('roster', [0, 1, 2, 3, 4, 5, 6, 8].map((n) => ({ value: String(n), label: String(n) })), (v) => Number(v))),
+    h('label', null, t(l('Funcionários iniciais', 'Starting staff')), opt('staff', [0, 1, 2, 3, 4, 6, 8].map((n) => ({ value: String(n), label: String(n) })), (v) => Number(v))),
+    h('label', null, t(l('Mercados abertos', 'Open markets')), opt('markets', [
+      { value: 'home', label: t(l('Só o mercado da cidade', 'Home market only')) }, { value: 'region', label: t(l('Mercado da cidade + vizinhos', 'Home + neighbours')) }, { value: 'world', label: t(l('O mundo todo', 'The whole world')) },
+    ], (v) => v as StartCustom['markets'])),
+    h('label', null, t(l('Reputação inicial', 'Starting reputation')), ' ', repLabel,
+      h('input', { type: 'range', min: 0, max: 100, step: 5, value: 35, oninput: (e: Event) => { const v = Number((e.target as HTMLInputElement).value); c.reputation = v; repLabel.textContent = String(v); } })),
   );
 }
 
@@ -92,6 +132,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     bandName: '',
     bandGenre: 'rnr',
     contentFilters: [],
+    custom: {},
   };
   const bandBox = h('div', { class: 'band-box' });
   const renderBand = () => {
@@ -110,6 +151,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
   const muts = h('div', { class: 'mut-grid' }, MUTATORS.map((m) => h('label', { class: 'check', title: t(m.desc) },
     h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.mutators = on ? [...cfg.mutators, m.id] : cfg.mutators.filter((x) => x !== m.id); } }),
     h('span', null, t(m.name), h('small', { class: 'muted' }, ` — ${t(m.desc)}`)))));
+  const yearInput = h('input', { type: 'number', min: 1920, max: 2039, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: t(l('Ano exato de início (1920–2039)', 'Exact start year (1920–2039)')),
+    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= 1920 && v <= 2039) { cfg.startYear = v; renderBand(); } } }) as HTMLInputElement;
   const seedInput = h('input', { type: 'text', value: cfg.seed, oninput: (e: Event) => (cfg.seed = (e.target as HTMLInputElement).value || randomSeed()) });
   root.replaceChildren(
     h('div', { class: 'newgame' },
@@ -126,7 +169,9 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
             { value: 'emerging', label: t(S.scenarioEmerging) },
             { value: 'established', label: t(S.scenarioEstablished) },
           ] as { value: RunConfig['scenario']; label: string }[], (v) => (cfg.scenario = v))),
-          h('label', null, t(S.startYear), select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; renderBand(); })),
+          h('label', null, t(S.startYear), h('div', { class: 'row' },
+            select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); }),
+            yearInput)),
           h('label', null, t(S.homeCity), select(cfg.homeCity, [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id))).map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => (cfg.homeCity = v))),
         ),
         h('section', { class: 'card' },
@@ -142,13 +187,16 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
             { value: 'easy', label: t(S.easy) }, { value: 'normal', label: t(S.normal) }, { value: 'hard', label: t(S.hard) },
           ] as { value: RunConfig['difficulty']; label: string }[], (v) => (cfg.difficulty = v))),
           h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.ironman = (e.target as HTMLInputElement).checked) }), t(S.ironman)),
-          h('label', { class: 'check', title: t(l('Os 100 atos históricos, as gravadoras, festivais, rádios, revistas, plataformas, paradas e prêmios aparecem com os nomes reais (Beatles, Motown, Woodstock, Billboard, Grammy…). Artistas gerados continuam inventados.', 'The 100 historical acts, labels, festivals, radio, magazines, platforms, charts and awards use their real names (Beatles, Motown, Woodstock, Billboard, Grammy…). Generated artists stay invented.')) },
+          h('label', { class: 'check', title: t(l('Cerca de 740 artistas reais (EUA, Reino Unido, Itália, Brasil e mundo) surgem perto do ano real de estreia, com integrantes e discografia; as gravadoras, festivais, rádios, revistas, plataformas, paradas e prêmios aparecem com os nomes reais (Beatles, Motown, Woodstock, Billboard, Grammy…). Artistas gerados continuam inventados.', 'About 740 real artists (US, UK, Italy, Brazil and worldwide) appear near their real debut year, with members and discographies; labels, festivals, radio, magazines, platforms, charts and awards use their real names (Beatles, Motown, Woodstock, Billboard, Grammy…). Generated artists stay invented.')) },
             h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.realNames = (e.target as HTMLInputElement).checked) }), t(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'))),
+          h('label', { class: 'check', title: t(l('Só no modo histórico: artistas reais tendem a morrer no mesmo ano em que morreram na vida real. Desligado, a morte é só simulada (idade, saúde, vícios).', 'Historic mode only: real artists tend to die in the same year they did in real life. Off, death is only simulated (age, health, addiction).')) },
+            h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.realFates = (e.target as HTMLInputElement).checked) }), t(l('Mortes nos anos reais (modo histórico)', 'Deaths in their real years (historic mode)'))),
           h('label', null, t(S.seed), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; } }, '🎲'))),
           h('fieldset', null, h('legend', null, t(S.contentFilters)), SENSITIVE.map((x) => h('label', { class: 'check' },
             h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.contentFilters = on ? [...cfg.contentFilters, x.id] : cfg.contentFilters.filter((y) => y !== x.id); } }),
             t(x.label)))),
         ),
+        customCard(cfg),
         characterCard(cfg),
         h('section', { class: 'card wide' }, h('h3', null, t(S.card)), cards),
         h('section', { class: 'card wide' }, h('h3', null, t(S.mutators)), muts),

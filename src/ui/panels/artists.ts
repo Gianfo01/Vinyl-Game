@@ -17,6 +17,8 @@ import { personCard } from '../pages';
 import { store } from '../store';
 import { EXTRA_ACTIONS } from '../../data/actions';
 import { agendaLoad, slotLoad } from '../../sim/capacity';
+import { slotWeek } from '../../sim/agenda';
+import { PRESETS, ag7, applyTemplate, crowdedWeeks, deleteTemplate, plannedCombos, releaseWeek, saveTemplate } from '../../sim/sys/agenda7';
 import { freeCapacity } from '../../sim/agenda';
 import { ic, loadBar, meter, setTab, stat } from '../vis';
 import { contractExtra, fandomSection, membersSection, reunionSection } from './people';
@@ -43,6 +45,9 @@ export function artistsPanel(s: GameState): HTMLElement {
     s.delegated[a.id] = false;
     rerender();
   };
+  const combos = plannedCombos(slots);
+  const crowded = crowdedWeeks(slots);
+  const relWeek = releaseWeek(s, a.id);
   const slotEditor = (slot: AgendaSlot, idx: number) => {
     const params: HTMLElement[] = [];
     if (slot.action === 'gigs') {
@@ -57,12 +62,15 @@ export function artistsPanel(s: GameState): HTMLElement {
     if (slot.action === 'reposition') {
       params.push(select(String(slot.params?.target ?? 'crossover'), [{ value: 'crossover', label: t(S.crossover) }, { value: 'underground', label: t(S.underground) }], (v) => { slot.params = { ...slot.params, target: v }; commit(slots); }));
     }
+    params.push(select(slotWeek(slot, idx), [1, 2, 3, 4].map((w) => ({ value: w, label: `${t(l('Semana', 'Week'))} ${w}` })), (v) => { slot.params = { ...slot.params, week: v }; commit(slots); }, { 'aria-label': t(l('Semana', 'Week')) }));
     const def = agendaById[slot.action] ?? EXTRA_ACTIONS.find((x) => x.id === slot.action);
-    return h('li', { class: 'slot' },
+    const combo = combos.filter((c) => c.after === idx);
+    return h('li', { class: `slot ${combo.length ? 'combo' : ''}` },
       h('b', null, t(def?.name)), slotCost(slot.action) > 1 ? pill(`×${slotCost(slot.action)}`) : null,
       def?.cost ? h('span', { class: 'muted small' }, ` ${$(money(s, def.cost))}`) : null,
       ...params,
       h('small', { class: 'muted' }, t(def?.desc)),
+      ...combo.map((c) => pill(`✦ ${t(c.combo.name)}`, 'good')),
       h('button', { class: 'icon', 'aria-label': 'remover', onclick: () => commit(slots.filter((_, i) => i !== idx)) }, '✕'),
     );
   };
@@ -106,8 +114,14 @@ export function artistsPanel(s: GameState): HTMLElement {
       section(`${t(S.agenda)} — ${t(l('capacidade', 'capacity'))} ${agendaLoad(slots)}%`,
         loadBar(slots.map((x) => ({ label: t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name), load: slotLoad(x) }))),
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: delegated, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; s.delegated[a.id] = on ? true : false; if (!on) s.agenda[a.id] = defaultAgenda(s, a); rerender(); } }), t(S.delegate)),
-        h('ul', { class: 'slots' }, delegated ? slots.map((x) => h('li', { class: 'slot muted' }, t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name))) : slots.map(slotEditor)),
+        h('div', { class: 'agenda-cal' }, [1, 2, 3, 4].map((w) => h('div', { class: `agenda-week ${crowded.includes(w) ? 'crowded' : ''} ${relWeek === w ? 'release' : ''}` },
+          h('header', null, `${t(l('Semana', 'Week'))} ${w}`, relWeek === w ? pill(t(l('lançamento', 'release')), 'gold') : null, crowded.includes(w) ? pill(t(l('cheia', 'busy')), 'warn') : null),
+          h('ul', { class: 'slots' }, slots.map((x, i) => ({ x, i })).filter(({ x, i }) => slotWeek(x, i) === w).map(({ x, i }) => delegated ? h('li', { class: 'slot muted' }, t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name)) : slotEditor(x, i))),
+        ))),
         delegated ? null : addSel,
+        combos.length ? h('p', { class: 'small good' }, '✦ ', combos.map((c) => `${t(c.combo.name)}: ${t(c.combo.desc)}`).join(' · ')) : h('p', { class: 'muted small' }, t(l('Dica: combinações dão bônus — ensaiar antes dos shows, compor antes de gravar, treinar antes de gravar, descansar depois da estrada, dar entrevista na semana do lançamento.', 'Tip: combos give bonuses — rehearse before gigs, write before recording, train before recording, rest after the road, do interviews in release week.'))),
+        crowded.length ? h('p', { class: 'small warn' }, t(l('Semana cheia (3+ ações, ou shows e gravação juntos): o grupo cansa mais.', 'Busy week (3+ actions, or gigs and recording together): the group tires more.'))) : null,
+        templatesRow(s, a.id, slots),
         h('p', { class: 'muted small' }, t(l('Ações repetidas no mês rendem menos (retorno decrescente). Artistas com controle criativo podem trocar uma ação.', 'Repeated actions in a month yield less (diminishing returns). Artists with creative control may swap an action.'))),
       ),
       c ? section(t(S.contract),
@@ -127,5 +141,24 @@ export function artistsPanel(s: GameState): HTMLElement {
       fandomSection(s, a),
       h('p', null, actLink(s, a.id)),
     ),
+  );
+}
+
+/** Modelos de agenda (rodada 7): prontos e salvos por você; aplicam a um artista ou a todos. */
+function templatesRow(s: GameState, actId: string, slots: AgendaSlot[]): HTMLElement {
+  const st = ag7(s);
+  const apply = (tplSlots: AgendaSlot[], all: boolean) => {
+    const ids = all ? playerActs(s) : [actId];
+    for (const id of ids) { s.agenda[id] = tplSlots.map((x) => ({ action: x.action, params: { ...(x.params ?? {}) } })); s.delegated[id] = false; }
+    rerender();
+  };
+  return h('div', { class: 'agenda-tpl' },
+    h('small', { class: 'muted' }, t(l('Modelos:', 'Templates:'))),
+    ...PRESETS.map((p) => h('button', { class: 'btn small ghost', title: t(l('Aplicar a este artista (Shift: a todos)', 'Apply to this act (Shift: all acts)')), onclick: (e: MouseEvent) => apply(p.slots, e.shiftKey) }, t(p.name))),
+    ...st.templates.map((tp) => h('span', { class: 'row', style: 'gap:2px' },
+      h('button', { class: 'btn small ghost', onclick: (e: MouseEvent) => { applyTemplate(s, tp.id, e.shiftKey ? playerActs(s) : [actId]); rerender(); } }, tp.name),
+      h('button', { class: 'icon', 'aria-label': 'apagar', onclick: () => { deleteTemplate(s, tp.id); rerender(); } }, '✕'))),
+    slots.length ? h('button', { class: 'btn small', onclick: () => { const n = prompt(t(l('Nome do modelo', 'Template name')), t(l('Minha agenda', 'My schedule'))); if (n) { saveTemplate(s, n, slots); rerender(); } } }, '💾 ', t(l('Salvar como modelo', 'Save as template'))) : null,
+    h('button', { class: 'btn small ghost', onclick: () => { for (const id of playerActs(s)) { s.agenda[id] = slots.map((x) => ({ action: x.action, params: { ...(x.params ?? {}) } })); s.delegated[id] = false; } rerender(); } }, t(l('Copiar para todos', 'Copy to all acts'))),
   );
 }

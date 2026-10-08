@@ -18,3 +18,8 @@ import './charts7';
 import './instruments';
 import './realworld';
 import './lifecycle7';
+import './furnish';
+import './custom7';
+import './vices';
+import './songsale';
+import './agenda7';

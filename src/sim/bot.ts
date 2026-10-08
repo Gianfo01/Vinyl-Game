@@ -46,11 +46,14 @@ export function botMonth(s: GameState): void {
         .filter((k) => k.degree >= 2 && s.acts[k.actId] && !s.acts[k.actId].owner && !s.offers.some((o) => o.actId === k.actId && (o.status === 'pending' || o.status === 'counter')))
         .map((k) => ({ k, v: (estimate(s, k.actId, 'potential')?.mid ?? 0) * 0.6 + (estimate(s, k.actId, 'talent')?.mid ?? 0) * 0.6 - s.acts[k.actId].fame * 0.3 }))
         .sort((a, b) => b.v - a.v);
-      const best = cands[0];
-      if (best && best.v >= 30 && !s.offers.some((o) => o.status === 'pending')) {
-        const act = s.acts[best.k.actId];
-        const o = defaultOffer(s, act);
-        if (evaluateOffer(s, act, o).band !== 'unlikely' && s.player.cash > o.advance * 3 && s.player.cash > estimateMonthlyBurn(s) * 6) makeOffer(s, o);
+      // o melhor candidato viável (um mundo cheio de estrelas tem muita gente cara e disputada)
+      if (!s.offers.some((o) => o.status === 'pending')) {
+        for (const best of cands.slice(0, 6)) {
+          if (best.v < 30) break;
+          const act = s.acts[best.k.actId];
+          const o = defaultOffer(s, act);
+          if (evaluateOffer(s, act, o).band !== 'unlikely' && s.player.cash > o.advance * 3 && s.player.cash > estimateMonthlyBurn(s) * 6) { makeOffer(s, o); break; }
+        }
       }
     }
     for (const o of s.offers) if (o.status === 'counter' && s.player.cash > o.advance * 4) acceptCounter(s, o.id);

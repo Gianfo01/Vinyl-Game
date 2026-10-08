@@ -54,7 +54,7 @@ export function characterCard(cfg: RunConfig): HTMLElement {
     h('b', null, t(b.name)), h('small', null, t(b.desc)), b.effects ? h('small', { class: 'muted' }, t(b.effects)) : null)));
 
   const traitBox = h('div', { class: 'cc-traits' });
-  const drawTraits = () => traitBox.replaceChildren(...PLAYER_TRAITS.map((tr) => {
+  const drawTraits = () => traitBox.replaceChildren(...PLAYER_TRAITS.filter((x) => !x.earned).map((tr) => {
     const on = ch.traits!.includes(tr.id);
     const ok = canAddTrait(ch, tr.id);
     return h('button', { type: 'button', class: `chip-btn ${on ? 'on' : ''}`, disabled: !ok, title: t(tr.desc) + (tr.opposite ? ` (${t(l('oposto', 'opposite'))}: ${t(playerTraitById[tr.opposite]?.name)})` : ''),

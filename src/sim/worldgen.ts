@@ -349,12 +349,15 @@ function setupPlayer(s: GameState, r: Rng): void {
   }
   if (cfg.card === 'prospector') real *= 0.8;
   real *= diffMult;
+  if (cfg.custom?.cash !== undefined) real = Math.max(0, cfg.custom.cash);
+  if (cfg.custom?.hq !== undefined) p.hq = clamp(Math.round(cfg.custom.hq), 0, 3);
+  if (cfg.custom?.reputation !== undefined) { const v = clamp(cfg.custom.reputation, 0, 100); p.reputation = { artistic: v, commercial: v, artists: v, institutional: v }; }
   p.cash = nominal(real, s.year);
   p.initialCash = p.cash;
 
   if (cfg.role === 'artist' || cfg.role === 'hybrid') {
     const genre = cfg.bandGenre && genreById[cfg.bandGenre] ? cfg.bandGenre : 'rnr';
-    const members = r.int(1, 4);
+    const members = cfg.custom?.members ? clamp(Math.round(cfg.custom.members), 1, 6) : r.int(1, 4);
     const act = makeAct(s, r, { name: cfg.bandName || undefined, genre, city: cfg.homeCity, members, potential: r.int(62, 78), formed: s.year, debutYear: s.year, fame: 1, startFrac: 0.6 });
     if (cfg.bandName) act.name = cfg.bandName;
     act.owner = 'player';
@@ -365,19 +368,26 @@ function setupPlayer(s: GameState, r: Rng): void {
     s.knowledge[act.id] = { actId: act.id, degree: 5, stage: 'negotiation', bias: 0, updatedWeek: 0, source: 'self' };
     s.delegated[act.id] = true;
   }
-  if (cfg.role !== 'artist' && cfg.scenario !== 'from_zero') {
-    const n = cfg.scenario === 'established' ? 3 : 1;
+  const customRoster = cfg.role !== 'artist' ? cfg.custom?.roster : undefined;
+  if (cfg.role !== 'artist' && (cfg.scenario !== 'from_zero' || customRoster)) {
+    const n = customRoster !== undefined ? clamp(Math.round(customRoster), 0, 8) : cfg.scenario === 'established' ? 3 : 1;
     for (let i = 0; i < n; i++) {
       const act = spawnProceduralAct(s, r, { city: cfg.homeCity, potential: r.int(50, 72), fame: r.int(8, 25), formedYear: s.year - 2 });
       act.status = 'active';
       grantPlayerContract(s, act, r.int(36, 60));
       s.knowledge[act.id] = { actId: act.id, degree: 4, stage: 'negotiation', bias: r.normal(0, 3), updatedWeek: 0, source: 'roster' };
     }
-    if (cfg.scenario === 'established') {
+    if (cfg.scenario === 'established' && cfg.custom?.staff === undefined) {
       for (const role of ['producer', 'anr', 'publicist']) p.staff.push(genStaff(s, r, role, r.int(45, 65)));
       p.territories = [...new Set([home, 'na', 'eu'] as MarketId[])];
     }
   }
+  if (cfg.custom?.staff) {
+    const roles = ['anr', 'producer', 'publicist', 'engineer', 'admin', 'designer', 'analyst', 'rights'];
+    for (let i = 0; i < Math.min(8, cfg.custom.staff); i++) p.staff.push(genStaff(s, r, roles[i % roles.length], r.int(40, 65)));
+  }
+  if (cfg.custom?.markets === 'region') p.territories = [...new Set([home, home === 'na' ? 'eu' : 'na', home === 'br' ? 'latam' : home === 'latam' ? 'br' : 'eu'] as MarketId[])];
+  if (cfg.custom?.markets === 'world') p.territories = MARKETS.map((m) => m.id);
 }
 
 export function grantPlayerContract(s: GameState, act: Act, months: number): void {

@@ -86,9 +86,14 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
     }
     s.loadNow[actId] = agendaLoad(slots);
     const counts: Record<string, number> = {};
-    for (const slot of slots) {
+    // rodada 7: cada ação acontece na semana marcada (1–4); a semana 1 roda já, as outras entram na fila
+    const ordered = [...slots].map((x, i) => ({ x, i })).sort((a, b) => slotWeek(a.x, a.i) - slotWeek(b.x, b.i) || a.i - b.i);
+    for (const { x: slot, i } of ordered) {
       const n = (counts[slot.action] = (counts[slot.action] ?? 0) + 1);
       const dim = 1 / n; // retorno decrescente
+      const week = slotWeek(slot, i);
+      if (week > 1 && agendaQueue) { agendaQueue(s, act.id, slot, dim, week); continue; }
+      beforeSlot?.(s, r, act, slot, week);
       runAction(s, r, act, slot, dim, () => {
         if (sessionsLeft > 0) {
           sessionsLeft -= 1;
@@ -97,8 +102,30 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
         return false;
       });
     }
+    sessionsBank?.(s, sessionsLeft);
     if (s.delegated[actId] !== false) autoRelease(s, r, act);
   }
+}
+
+/** Semana do mês (1–4) em que a ação acontece; sem marcação, distribui na ordem. */
+export function slotWeek(slot: AgendaSlot, index: number): number {
+  const w = Number(slot.params?.week ?? 0);
+  return w >= 1 && w <= 4 ? w : Math.min(4, 1 + index);
+}
+
+// ganchos da rodada 7 (agenda por semana, combinações): registrados por sim/sys/agenda7.ts
+let agendaQueue: ((s: GameState, actId: string, slot: AgendaSlot, dim: number, week: number) => void) | null = null;
+let beforeSlot: ((s: GameState, r: Rng, act: Act, slot: AgendaSlot, week: number) => void) | null = null;
+let sessionsBank: ((s: GameState, left: number) => void) | null = null;
+export function setAgendaHooks(h: { queue: typeof agendaQueue; before: typeof beforeSlot; bank: typeof sessionsBank }): void {
+  agendaQueue = h.queue;
+  beforeSlot = h.before;
+  sessionsBank = h.bank;
+}
+
+/** Roda uma ação da agenda (usado pela fila semanal). */
+export function runAgendaSlot(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number, takeSession: () => boolean): void {
+  runAction(s, r, act, slot, dim, takeSession);
 }
 
 function payAction(s: GameState, act: Act, id: string, planned?: string): boolean {

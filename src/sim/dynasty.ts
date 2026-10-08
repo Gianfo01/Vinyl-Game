@@ -39,6 +39,7 @@ function deathRisk(age: number, p: Person): number {
 export function personDies(s: GameState, p: Person, cause: L): void {
   if (!p.alive) return;
   p.alive = false;
+  p.died = s.year;
   const acts = Object.values(s.acts).filter((a) => a.members.includes(p.id));
   for (const act of acts) {
     const alive = act.members.filter((id) => s.persons[id]?.alive);

@@ -2,10 +2,10 @@
 // coletâneas, ao vivo), perfil comercial, autores e o que fazer com cada uma.
 
 import { l, type L } from '../../data/world';
-import { t } from '../../i18n/strings';
+import { S, t } from '../../i18n/strings';
 import { makeRemix } from '../../sim/studio';
 import {
-  REVISE_FOCUS, STATUS_NAMES, derivedSongs, discardIdea, discardSong, liveCandidates, pitchFee, pitchSong, pitchSync, pitchTargets, releaseCompilation,
+  REVISE_FOCUS, STATUS_NAMES, derivedSongs, discardIdea, discardSong, liveCandidates, pitchSync, releaseCompilation,
   releaseDemo, releaseLive, releaseSingle, repertoire, restoreSong, reviseCost, reviseSong, songProfile, songStatus, songUses, toggleVault,
   type ReviseFocus, type SongStatus,
 } from '../../sim/repertoire';
@@ -17,9 +17,49 @@ import { store } from '../store';
 import { chips, ic, portrait, setTab, stat } from '../vis';
 import { preselectSession } from './studio';
 import { songAttrs } from '../songAttrs';
+import { closeSale, fairTerms, offerSong, saleChance, saleTargets, type SaleTerms } from '../../sim/sys/songsale';
 
 /** Botões extras no cabeçalho de cada música (ouvir a música). */
 export const REP_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
+
+// ---------- venda de composição (rodada 7) ----------
+const sale: { songId: string; target: string; fee: number; royalty: number; labelShare: number; reply: { text: L; counter?: SaleTerms } | null } = { songId: '', target: '', fee: 0, royalty: 0.08, labelShare: 50, reply: null };
+
+function saleBox(s: GameState, so: Song): HTMLElement {
+  const targets = saleTargets(s, so);
+  if (!targets.length) return h('small', { class: 'muted' }, t(l('Ninguém em atividade para comprar esta música agora.', 'Nobody active to buy this song right now.')));
+  if (sale.songId !== so.id) {
+    sale.songId = so.id;
+    sale.target = targets[0].id;
+    const f = fairTerms(s, so, sale.target);
+    sale.fee = Math.round(f.fee / 100);
+    sale.royalty = Math.round(f.royalty * 1000) / 10;
+    sale.reply = null;
+  }
+  if (!targets.some((a) => a.id === sale.target)) sale.target = targets[0].id;
+  const terms = (): SaleTerms => ({ fee: Math.round(sale.fee * 100), royalty: sale.royalty / 100, labelShare: sale.labelShare / 100 });
+  const p = saleChance(s, so, sale.target, terms());
+  const band = p > 0.66 ? 'likely' : p > 0.36 ? 'uncertain' : 'unlikely';
+  const fair = fairTerms(s, so, sale.target);
+  const num = (v: number, step: number, set: (x: number) => void, max?: number) => h('input', { type: 'number', value: v, step, min: 0, max, class: 'num-sm', onchange: (e: Event) => { set(Number((e.target as HTMLInputElement).value)); sale.reply = null; rerender(); } });
+  return h('div', { class: 'sale-box' },
+    h('b', null, ic('handshake'), ' ', t(l('Vender a composição', 'Sell the song'))),
+    h('div', { class: 'row wrap' },
+      select(sale.target, targets.map((a) => ({ value: a.id, label: `${a.name} (★${Math.round(a.fame)}${a.genre === so.genre ? ' ✓' : ''})` })), (v) => { sale.target = v; sale.reply = null; rerender(); }, { 'aria-label': t(l('Comprador', 'Buyer')) }),
+      h('label', null, t(l('Valor $', 'Price $')), num(sale.fee, 50, (x) => (sale.fee = x))),
+      h('label', null, t(l('Royalties %', 'Royalties %')), num(sale.royalty, 0.5, (x) => (sale.royalty = x), 30)),
+      h('label', null, t(l('Parte do selo %', 'Label share %')), num(sale.labelShare, 5, (x) => (sale.labelShare = Math.min(100, x)), 100)),
+    ),
+    h('small', { class: 'muted' }, t(l('Referência do mercado: {f} e {r}% de royalties. O selo fica com {ls}% do que entrar (edição); o resto vai para os compositores. Chance: ', 'Market reference: {f} and {r}% royalties. The label keeps {ls}% of the income (publishing); the rest goes to the writers. Chance: '), { f: $(fair.fee), r: (fair.royalty * 100).toFixed(1), ls: sale.labelShare }), pill(t(S[band]), band)),
+    h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => {
+      const res = offerSong(s, rngOf(s), so.id, sale.target, terms());
+      if (res.result === 'accepted') { toast(t(res.text), 'good'); sale.songId = ''; rerender(); return; }
+      sale.reply = { text: res.text, counter: res.counter };
+      rerender();
+    } }, ic('handshake'), ' ', t(l('Propor agora', 'Propose now')))),
+    sale.reply ? h('div', { class: 'small' }, t(sale.reply.text), sale.reply.counter ? h('button', { class: 'btn small primary', onclick: () => { const c = sale.reply!.counter!; closeSale(s, rngOf(s), so.id, sale.target, c); toast(t(l('Venda fechada.', 'Sale closed.')), 'good'); sale.songId = ''; rerender(); } }, t(l('Aceitar contraproposta', 'Accept counter'))) : null) : null,
+  );
+}
 
 const view = { status: 'all' as SongStatus | 'all' | 'unused', sort: 'recent' as 'recent' | 'q' | 'hook', open: '' as string, pitchTo: '' as string, comp: new Set<string>() };
 
@@ -90,16 +130,7 @@ function actions(s: GameState, so: Song, st: SongStatus): HTMLElement {
     list.push(btn('film', l('Oferecer para sync', 'Pitch for sync'), () => { const res = pitchSync(s, r, so.id); toast(t(res), 'info'); }));
     list.push(h('label', { class: 'chip-btn' + (view.comp.has(so.id) ? ' on' : '') }, h('input', { type: 'checkbox', checked: view.comp.has(so.id), onchange: () => { if (view.comp.has(so.id)) view.comp.delete(so.id); else view.comp.add(so.id); rerender(); } }), ' ', t(l('Para coletânea', 'For a compilation'))));
   }
-  if (st === 'written' || st === 'recorded' || st === 'vault') {
-    const targets = pitchTargets(s, so);
-    if (targets.length) {
-      if (!targets.some((a) => a.id === view.pitchTo)) view.pitchTo = targets[0].id;
-      const tg = s.acts[view.pitchTo];
-      list.push(h('span', { class: 'row', style: 'gap:4px' },
-        select(view.pitchTo, targets.map((a) => ({ value: a.id, label: `${a.name} (${a.genre === so.genre ? '✓' : '~'})` })), (v) => { view.pitchTo = v; rerender(); }, { 'aria-label': t(l('Artista', 'Artist')) }),
-        btn('handshake', l('Oferecer a este artista', 'Pitch to this artist'), () => toast(t(pitchSong(s, r, so.id, view.pitchTo)), 'info'), { title: `${t(l('Taxa', 'Fee'))} ~${$(pitchFee(s, so, tg))}` })));
-    }
-  }
+  if (st === 'written' || st === 'recorded' || st === 'vault') list.push(saleBox(s, so));
   if (st === 'written' || st === 'recorded') list.push(btn('vault', l('Guardar no cofre', 'Put in the vault'), () => say(toggleVault(s, so.id), l('Guardada no cofre.', 'Put in the vault.'))));
   if (st === 'vault') list.push(btn('vault', l('Tirar do cofre', 'Take out of the vault'), () => say(toggleVault(s, so.id), l('De volta ao repertório.', 'Back in the repertoire.'))));
   if (st === 'written' || st === 'recorded') list.push(btn('skull', l('Descartar', 'Discard'), () => say(discardSong(s, so.id), l('Descartada.', 'Discarded.'))));

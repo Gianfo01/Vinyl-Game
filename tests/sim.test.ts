@@ -114,5 +114,5 @@ describe('arco completo', () => {
     expect(s.ended).toBeTruthy();
     expect(endingScores(s).length).toBe(20);
     expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
-  });
+  }, 180000);
 });

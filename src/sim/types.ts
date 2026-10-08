@@ -29,8 +29,33 @@ export interface RunConfig {
   realNames?: boolean;
   /** rodada 7: no modo histórico, pessoas reais morrem perto do ano real */
   realFates?: boolean;
+  /** rodada 7: início personalizado (tudo opcional; ausente = padrão do cenário) */
+  custom?: StartCustom;
   /** personagem do jogador (rodada 5); ausente = gerado */
   character?: CharacterSpec;
+}
+
+export interface StartCustom {
+  /** caixa inicial da empresa em dólares de 1960 (valor real; vira nominal no ano de início) */
+  cash?: number;
+  /** patrimônio pessoal do personagem (dólares de 1960) */
+  personalCash?: number;
+  /** nível da sede 0..3 */
+  hq?: number;
+  /** equipamento e mobília iniciais */
+  studio?: 'none' | 'basic' | 'pro';
+  /** integrantes da banda do jogador (1 = carreira solo) */
+  members?: number;
+  /** estágio da carreira do artista do jogador */
+  level?: 'garage' | 'local' | 'rising' | 'established' | 'star';
+  /** atos já contratados pelo selo */
+  roster?: number;
+  /** funcionários iniciais */
+  staff?: number;
+  /** mercados abertos */
+  markets?: 'home' | 'region' | 'world';
+  /** reputação inicial 0..100 */
+  reputation?: number;
 }
 
 export interface CharacterSpec {
@@ -82,6 +107,8 @@ export interface Person {
   resentment: number;
   health: 'ok' | 'voice_strain' | 'burnout' | 'addiction' | 'recovering' | 'ill';
   alive: boolean;
+  /** rodada 7: ano da morte */
+  died?: number;
   /** relações direcionais −100..100 */
   rel: Record<string, number>;
   lowMoraleMonths: number;
@@ -344,6 +371,8 @@ export interface Offer {
   week: number;
   status: 'pending' | 'accepted' | 'rejected' | 'sniped' | 'counter';
   note?: string;
+  /** rodada 7: o artista pediu tempo para pensar até esta semana */
+  thinkUntil?: number;
 }
 
 export interface AgendaSlot {

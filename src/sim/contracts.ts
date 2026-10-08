@@ -122,51 +122,100 @@ export function withdrawOffer(s: GameState, offerId: string): void {
   }
 }
 
+/** Resolve uma oferta. `live` = resposta na hora (rodada 7): o artista pode pedir tempo para pensar. */
+export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer['status'] | 'thinking' {
+  const act = s.acts[o.actId];
+  if (!act || act.owner) {
+    o.status = 'sniped';
+    o.note = act?.owner ? s.labels[act.owner]?.name : undefined;
+    return 'sniped';
+  }
+  const ev = evaluateOffer(s, act, o);
+  // rival disputa atos públicos (na mesa, ele só aparece se o artista pedir tempo)
+  const rivalBid = !live && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
+  if (rivalBid) {
+    const rival = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 50000)).sort((a, b) => b.aggression - a.aggression)[0];
+    if (rival && r.chance((0.15 + rival.aggression * 0.35 - ev.score * 0.2) * (o.thinkUntil !== undefined ? 0.6 : 1))) {
+      o.status = 'sniped';
+      o.note = rival.name;
+      signWithRival(s, act, rival.id, r);
+      s.rivalries[rival.id] = (s.rivalries[rival.id] ?? 0) + 15;
+      notify(s, fmtL(l('{label} assinou com {act} antes da sua resposta.', '{label} signed {act} before your answer.'), { label: rival.name, act: act.name }), 'bad');
+      remember(s, 'sniped', fmtL(l('{label} levou {act} numa disputa com você.', '{label} took {act} from you in a bidding war.'), { label: rival.name, act: act.name }), { actId: act.id });
+      return 'sniped';
+    }
+  }
+  // na hora: quem está em dúvida pede alguns dias para pensar (uma vez)
+  if (live && o.thinkUntil === undefined && ev.p > 0.3 && ev.p < 0.72 && r.chance(0.45)) {
+    o.thinkUntil = s.week + r.int(1, 2);
+    o.note = 'thinking';
+    const kn = s.knowledge[act.id];
+    if (kn) kn.stage = 'negotiation';
+    return 'thinking';
+  }
+  if (r.chance(ev.p)) {
+    acceptOffer(s, act, o);
+    return 'accepted';
+  }
+  if (ev.p > 0.25 && r.chance(0.6)) {
+    o.status = 'counter';
+    o.note = 'advance';
+    o.thinkUntil = undefined;
+    o.advance = Math.round(o.advance * r.float(1.25, 1.6) + money(s, 500));
+    const kn = s.knowledge[act.id];
+    if (kn) kn.stage = 'negotiation';
+    notify(s, fmtL(l('{act} fez contraproposta: adiantamento maior.', '{act} countered: higher advance.'), { act: act.name }), 'event');
+    return 'counter';
+  }
+  o.status = 'rejected';
+  o.thinkUntil = undefined;
+  o.note = ev.reasons[0]?.pt;
+  const k = s.knowledge[act.id];
+  if (k) k.stage = 'investigating';
+  act.trust = clamp(act.trust - 3, 0, 100);
+  notify(s, fmtL(l('{act} recusou a oferta.', '{act} declined the offer.'), { act: act.name }), 'bad');
+  return 'rejected';
+}
+
+/** Oferta com resposta imediata (rodada 7). Devolve o desfecho para a interface. */
+export function offerNow(s: GameState, r: Rng, o: Omit<Offer, 'id' | 'week' | 'status'>): { offer: Offer | null; result: Offer['status'] | 'thinking' | 'invalid' } {
+  const offer = makeOffer(s, o);
+  if (!offer) return { offer: null, result: 'invalid' };
+  return { offer, result: resolveOne(s, r, offer, true) };
+}
+
+/** Pressionar quem pediu tempo: responde já, com um pouco menos de boa vontade. */
+export function pressForAnswer(s: GameState, r: Rng, offerId: string): Offer['status'] | 'thinking' | 'invalid' {
+  const o = s.offers.find((x) => x.id === offerId && x.status === 'pending');
+  if (!o) return 'invalid';
+  const act = s.acts[o.actId];
+  if (act) act.trust = clamp(act.trust - 4, 0, 100);
+  o.thinkUntil = -1;
+  return resolveOne(s, r, o, false);
+}
+
+/** Respostas dos que pediram tempo (chamado toda semana). */
+export function resolveThinking(s: GameState, r: Rng): void {
+  for (const o of s.offers) if (o.status === 'pending' && o.thinkUntil !== undefined && o.thinkUntil >= 0 && o.thinkUntil <= s.week) {
+    const res = resolveOne(s, r, o, false);
+    const act = s.acts[o.actId];
+    if (res === 'accepted' && act) notify(s, fmtL(l('{act} pensou e aceitou a sua proposta!', '{act} thought it over and accepted your offer!'), { act: act.name }), 'good');
+  }
+}
+
 /** Resolve ofertas pendentes no fechamento do mês. Rivais podem chegar antes. */
 export function resolveOffers(s: GameState, r: Rng): void {
   for (const o of s.offers) {
     if (o.status !== 'pending') continue;
-    const act = s.acts[o.actId];
-    if (!act || act.owner) {
-      o.status = 'sniped';
-      o.note = act?.owner ? s.labels[act.owner]?.name : undefined;
-      continue;
-    }
-    const ev = evaluateOffer(s, act, o);
-    // rival disputa atos públicos
-    const rivalBid = act.fame > 10 || (act.catalogNo && s.year >= act.debutYear);
-    if (rivalBid) {
-      const rival = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 50000)).sort((a, b) => b.aggression - a.aggression)[0];
-      if (rival && r.chance(0.15 + rival.aggression * 0.35 - ev.score * 0.2)) {
-        o.status = 'sniped';
-        o.note = rival.name;
-        signWithRival(s, act, rival.id, r);
-        s.rivalries[rival.id] = (s.rivalries[rival.id] ?? 0) + 15;
-        notify(s, fmtL(l('{label} assinou com {act} antes da sua resposta.', '{label} signed {act} before your answer.'), { label: rival.name, act: act.name }), 'bad');
-        remember(s, 'sniped', fmtL(l('{label} levou {act} numa disputa com você.', '{label} took {act} from you in a bidding war.'), { label: rival.name, act: act.name }), { actId: act.id });
-        continue;
-      }
-    }
-    if (r.chance(ev.p)) {
-      acceptOffer(s, act, o);
-    } else if (ev.p > 0.25 && r.chance(0.6)) {
-      o.status = 'counter';
-      o.note = 'advance';
-      o.advance = Math.round(o.advance * r.float(1.25, 1.6) + money(s, 500));
-      const kn = s.knowledge[act.id];
-      if (kn) kn.stage = 'negotiation';
-      notify(s, fmtL(l('{act} fez contraproposta: adiantamento maior.', '{act} countered: higher advance.'), { act: act.name }), 'event');
-    } else {
-      o.status = 'rejected';
-      o.note = ev.reasons[0]?.pt;
-      const k = s.knowledge[act.id];
-      if (k) k.stage = 'investigating';
-      act.trust = clamp(act.trust - 3, 0, 100);
-      notify(s, fmtL(l('{act} recusou a oferta.', '{act} declined the offer.'), { act: act.name }), 'bad');
-    }
+    resolveOne(s, r, o, false);
   }
   // limpa ofertas antigas resolvidas
   s.offers = s.offers.filter((o) => o.status === 'pending' || o.status === 'counter' || s.week - o.week < 10);
+}
+
+/** Recusa a contraproposta para mandar uma nova oferta. */
+export function withdrawCounter(s: GameState, offerId: string): void {
+  s.offers = s.offers.filter((x) => x.id !== offerId);
 }
 
 export function acceptCounter(s: GameState, offerId: string): boolean {

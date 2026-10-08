@@ -689,7 +689,7 @@ export const EVENTS: EventDef[] = [
     id: 'ghost_voice', cat: 'neural', tone: 'neutral', tags: ['death'], cooldown: 999,
     find: (s, r) => {
       if (!hasTech(s, 'synthetic_voice') || s.flags.ghostAsked) return null;
-      const legends = Object.values(s.acts).filter((a) => (a.status === 'retired') && (a.legend || a.hits > 2) && (a.owner === 'player' || Object.values(s.releases).some((x) => x.actId === a.id && x.owner === 'player')));
+      const legends = Object.values(s.acts).filter((a) => (a.status === 'retired') && (a.legend || a.hits > 2) && (a.owner === 'player' || a.releases.some((id) => s.releases[id]?.owner === 'player')));
       return legends.length && r.chance(0.5) ? { act: r.pick(legends).id } : null;
     },
     title: l('Recriar a voz de {act}?', 'Recreate {act}\'s voice?'),
@@ -891,6 +891,11 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
   const def = eventById[d.eventId];
   const opt = def?.options.find((o) => o.id === optionId);
   if (!def || !opt) return false;
+  // o mundo mudou desde a pergunta (pessoa ou ato removidos do save): a decisão perde o sentido
+  if ((d.ctx.person && !s.persons[String(d.ctx.person)]) || (d.ctx.act && !s.acts[String(d.ctx.act)])) {
+    s.decisions = s.decisions.filter((x) => x !== d);
+    return true;
+  }
   const r = rngOf(s);
   opt.apply(s, r, d.ctx);
   s.decisions = s.decisions.filter((x) => x !== d);

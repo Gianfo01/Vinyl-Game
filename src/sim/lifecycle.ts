@@ -172,7 +172,8 @@ export function prune(s: GameState): void {
     const notable = a.catalogNo || a.hits > 0 || a.owner === 'player' || a.playerBand || a.legend || keepActs.has(a.id);
     const stale = !old && !a.owner && a.fame < 3 && s.year - a.formed > 8 && a.releases.length === 0;
     if (((old && s.year - a.careerEnd > 3) || stale) && !notable) {
-      for (const id of a.members) delete s.persons[id];
+      // a pessoa pode estar em outro ato (carreira solo, supergrupo) ou ser você: só sai se ninguém mais usa
+      for (const id of a.members) if (!s.persons[id]?.isPlayer && !Object.values(s.acts).some((b) => b !== a && b.members.includes(id))) delete s.persons[id];
       for (const id of a.songs) delete s.songs[id];
       for (const id of a.releases) delete s.releases[id];
       if (a.contractId) delete s.contracts[a.contractId];

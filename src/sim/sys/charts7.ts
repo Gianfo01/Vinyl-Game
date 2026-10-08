@@ -86,23 +86,35 @@ const actCountry = (s: GameState, actId: string): string | null => {
   return a ? countryOfCity(a.city) : null;
 };
 
-function countryWeights(s: GameState, rel: Release): number[] {
+// tamanho e gosto por país mudam por ano: calculados uma vez por semana (desempenho)
+let cache: { year: number; size: number[]; taste: Record<string, number[]> } | null = null;
+function weekCache(year: number) {
+  if (cache?.year === year) return cache;
+  const size = COUNTRY_INFO.map((c) => countryMarketSize(c, year));
+  cache = { year, size, taste: {} };
+  return cache;
+}
+
+function countryWeights(s: GameState, rel: Release, out: number[]): number {
   const act = s.acts[rel.actId];
   const fam = act ? familyOf(act.genre) : 'pop';
   const home = act ? actCountry(s, act.id) : null;
   const homeMarket = home ? countryInfoByA3[home]?.market : undefined;
   const crossover = act ? act.positioning / 100 : 0.4;
-  const out: number[] = [];
-  for (const c of COUNTRY_INFO) {
-    let w = countryMarketSize(c, s.year);
-    const taste = countryTaste(c, fam, s.year);
-    w *= taste + (1 - Math.min(1, taste)) * crossover * 0.4;
-    w *= rel.territories.includes(c.market) ? 1 : 0.04;
+  const wc = weekCache(s.year);
+  const tastes = (wc.taste[fam] ??= COUNTRY_INFO.map((c) => countryTaste(c, fam as never, s.year)));
+  let sum = 0;
+  for (let i = 0; i < COUNTRY_INFO.length; i++) {
+    const c = COUNTRY_INFO[i];
+    const taste = tastes[i];
+    let w = wc.size[i] * (taste + (1 - Math.min(1, taste)) * crossover * 0.4);
+    if (!rel.territories.includes(c.market)) w *= 0.04;
     if (home === c.a3) w *= 4;
     else if (homeMarket === c.market) w *= 1.4;
-    out.push(w);
+    out[i] = w;
+    sum += w;
   }
-  return out;
+  return sum;
 }
 
 function formatShares(s: GameState, c: CountryInfo): { phys: number; stream: number; dl: number } {
@@ -132,9 +144,25 @@ function emptyBoard(): Board {
   return { songs: [], albums: [], stream: [], sales: [], video: [] };
 }
 
+/** Top-N sem ordenar a lista inteira (desempenho). */
+function topN(rows: { relId: string; u: number }[], n: number): { relId: string; u: number }[] {
+  const top: { relId: string; u: number }[] = [];
+  let min = 0.5;
+  for (const x of rows) {
+    if (x.u <= min && top.length >= n) continue;
+    if (x.u <= 0.5) continue;
+    let i = top.length;
+    while (i > 0 && top[i - 1].u < x.u) i--;
+    top.splice(i, 0, x);
+    if (top.length > n) top.pop();
+    if (top.length >= n) min = top[top.length - 1].u;
+  }
+  return top;
+}
+
 function rank(prev: Row7[] | undefined, rows: { relId: string; u: number }[]): Row7[] {
   const before = new Map((prev ?? []).map((x) => [x.relId, x]));
-  return rows.filter((x) => x.u > 0.5).sort((a, b) => b.u - a.u).slice(0, TOP).map((x, i) => {
+  return topN(rows, TOP).map((x, i) => {
     const p = before.get(x.relId);
     return { relId: x.relId, u: Math.round(x.u), pos: i + 1, last: p?.pos ?? 0, wk: (p?.wk ?? 0) + 1 };
   });
@@ -158,14 +186,17 @@ function weekCharts(s: GameState): void {
   }
   st.lastTotal = nextTotals;
   if (!fresh.length) return;
+  // só os mais vendidos da semana podem entrar em algum top 20 (desempenho)
+  if (fresh.length > 350) { fresh.sort((a, b) => b.units - a.units); fresh.length = 350; }
+  const hasStream = hasTech(s, 'streaming');
 
   const nC = COUNTRY_INFO.length;
   const shares = COUNTRY_INFO.map((c) => formatShares(s, c));
   // acumuladores: [país][tipo] -> lista
   const acc: Record<ChartKind, { relId: string; u: number }[]>[] = COUNTRY_INFO.map(() => ({ songs: [], albums: [], stream: [], sales: [], video: [] }));
+  const w: number[] = new Array(COUNTRY_INFO.length).fill(0);
   for (const { rel, units } of fresh) {
-    const w = countryWeights(s, rel);
-    const sum = w.reduce((a, b) => a + b, 0);
+    const sum = countryWeights(s, rel, w);
     if (sum <= 0) continue;
     const vf = videoFactor(s, rel);
     const album = rel.type === 'lp' || rel.type === 'ep';
@@ -175,7 +206,7 @@ function weekCharts(s: GameState): void {
       const a = acc[i];
       (album ? a.albums : a.songs).push({ relId: rel.id, u });
       const sh = shares[i];
-      if (sh.stream > 0) a.stream.push({ relId: rel.id, u: u * sh.stream * STREAMS_PER_UNIT * (album ? 0.6 : 1) });
+      if (hasStream && sh.stream > 0) a.stream.push({ relId: rel.id, u: u * sh.stream * STREAMS_PER_UNIT * (album ? 0.6 : 1) });
       a.sales.push({ relId: rel.id, u: u * (sh.phys + sh.dl) });
       if (vf > 0) a.video.push({ relId: rel.id, u: u * vf * VIEWS_PER_UNIT * (album ? 0.4 : 1) });
       const yu = (st.yearUnits[COUNTRY_INFO[i].a3] ??= {});

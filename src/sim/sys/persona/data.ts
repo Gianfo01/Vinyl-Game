@@ -22,6 +22,8 @@ export interface PlayerTraitDef {
   families?: { ids: string[]; perks: PerkValues };
   /** congênito: herdável pelos filhos */
   congenital?: boolean;
+  /** rodada 7: conquistado em jogo (vícios, viagens), não aparece na criação */
+  earned?: boolean;
 }
 
 export const PLAYER_TRAITS: PlayerTraitDef[] = [
@@ -45,6 +47,12 @@ export const PLAYER_TRAITS: PlayerTraitDef[] = [
   { id: 'ambitious', name: l('Ambicioso', 'Ambitious'), desc: l('Quer o topo e não esconde. Aprende e cresce rápido, cansa mais.', 'Wants the top and shows it. Learns and grows fast, tires more.'), perks: { xp: 0.15, stress: 0.1, offer: 0.02, valuation: 0.05 }, personTrait: 'ambitious' },
   { id: 'frugal', name: l('Frugal', 'Frugal'), desc: l('Vive com pouco: o patrimônio pessoal rende mais.', 'Lives on little: personal wealth stretches further.'), perks: { wealth: 90, staffCost: -0.03 }, personTrait: 'frugal' },
   { id: 'perfect_pitch', name: l('Ouvido absoluto', 'Perfect pitch'), desc: l('Dom raro e hereditário: escuta uma nota fora a dez metros.', 'A rare, inheritable gift: hears a wrong note from ten metres.'), attrs: { ear: 10 }, skills: { instr: 4, voice: 4 }, perks: { songQ: 1 }, congenital: true, personTrait: 'virtuoso' },
+  // conquistados em jogo (rodada 7)
+  { id: 'addicted', name: l('Dependente', 'Addicted'), desc: l('A noite cobrou a conta: estressa fácil, os artistas desconfiam, mas às vezes a escuridão vira canção.', 'The nights took their toll: stressed easily, artists wary, yet sometimes darkness becomes a song.'), opposite: 'sober', perks: { stress: 0.15, trust: -4, songQ: 0.4 }, earned: true },
+  { id: 'sober', name: l('Sóbrio', 'Sober'), desc: l('Venceu o vício: mais energia, mais respeito.', 'Beat addiction: more energy, more respect.'), opposite: 'addicted', perks: { energy: 1, trust: 3, stress: -0.05 }, earned: true },
+  { id: 'smoker', name: l('Fumante', 'Smoker'), desc: l('O cigarro acalma, mas a voz e a saúde pagam.', 'Cigarettes calm you, but voice and health pay.'), perks: { stress: -0.05 }, earned: true },
+  { id: 'worldly', name: l('Viajado', 'Worldly'), desc: l('Conhece cenas do mundo todo: ouve sinais antes e negocia com estrangeiros.', 'Knows scenes all over the world: hears signals first and deals with foreigners.'), perks: { signals: 1, offer: 0.02, scoutAccuracy: 0.04 }, earned: true },
+  { id: 'indebted', name: l('Endividado', 'Indebted'), desc: l('Credores ligam toda semana: estresse alto, decisões apressadas.', 'Creditors call every week: high stress, rushed decisions.'), perks: { stress: 0.15, offer: -0.02 }, earned: true },
 ];
 
 export const playerTraitById = Object.fromEntries(PLAYER_TRAITS.map((x) => [x.id, x])) as Record<string, PlayerTraitDef>;

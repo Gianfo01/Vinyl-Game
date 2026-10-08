@@ -26,6 +26,7 @@ import { portraitCanvas } from './pixel/avatar';
 import { appearanceEditor } from './pixel/editor';
 import { personActivity } from './pixel/activity';
 import { instrumentsTab } from './sys/instruments';
+import { rw } from '../sim/sys/realworld';
 import { instById, instrumentsOf } from '../sim/sys/instruments';
 import { icon } from './pixel/icons';
 import { store } from './store';
@@ -349,8 +350,12 @@ function overviewTab(s: GameState, a: Act, deg: number, mine: boolean): HTMLElem
 }
 
 function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
+  const former = (rw(s).former[a.id] ?? []).map((f) => ({ f, p: s.persons[f.personId] })).filter((x) => x.p);
+  const why = { left: l('saiu', 'left'), died: l('faleceu', 'died'), retired: l('aposentou-se', 'retired'), fired: l('foi demitido', 'was fired') };
   return h('div', null,
     h('div', { class: 'pcard-grid' }, ms.map((p) => personCard(s, p))),
+    former.length ? h('div', null, h('h4', null, t(l('Ex-integrantes', 'Former members'))),
+      h('ul', { class: 'small' }, former.map(({ f, p }) => h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(p.id) }, p.name), ` — ${t(why[f.reason])} ${t(l('em', 'in'))} ${f.year}`, !p.alive ? ' †' : '')))) : null,
     h('p', { class: 'muted small' }, t(l('Clique num integrante para ver a carta completa com todos os atributos.', 'Click a member for the full card with every attribute.'))),
   );
 }
@@ -363,7 +368,7 @@ function discoTab(s: GameState, a: Act, mine: boolean): HTMLElement {
     h('tbody', null, rels.map((r) => {
       const rv = avgReview(s, r.id);
       return h('tr', { class: 'click', onclick: () => openRelease(r.id) },
-        h('td', null, cover(s, r, 32)), h('td', null, h('b', null, r.title), r.certified ? pill(r.certified, 'gold') : null),
+        h('td', null, cover(s, r, 32)), h('td', null, h('b', null, r.title), r.certified ? pill(r.certified, 'gold') : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null),
         h('td', null, r.type.toUpperCase()), h('td', null, r.year), h('td', null, r.peak < 999 ? `#${r.peak}` : '—'), h('td', null, N(r.totalUnits)),
         h('td', null, rv !== undefined ? rv.toFixed(1) : '—'), mine ? h('td', null, $(r.revenue)) : null);
     })));
