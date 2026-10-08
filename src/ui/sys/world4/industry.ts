@@ -80,7 +80,7 @@ export function methodTab(s: GameState): HTMLElement {
 
 export function moreChartsSection(s: GameState): HTMLElement {
   const w = w4(s);
-  const items = EXTRA_CHARTS.filter((c) => !c.from || hasTech(s, c.from)).map((c) => ({
+  const items: { id: string; label: string; render: () => HTMLElement }[] = EXTRA_CHARTS.filter((c) => !c.from || hasTech(s, c.from)).map((c) => ({
     id: c.id, label: t(c.name), render: () => {
       const rows = c.rows(s);
       return h('div', null, note(c.desc), rows.length ? h('ol', { class: 'w4-chart' }, rows.map((r) => {
@@ -141,7 +141,7 @@ export function fanClubsSection(s: GameState): HTMLElement | null {
         h('div', { class: 'row between' }, h('b', null, a.name), pill(`${N(c.members)} ${t(l('sócios', 'members'))}`, 'good')),
         h('small', null, `${t(l('Saldo do mês', 'Monthly net'))}: ${$(c.income)}`),
         h('div', { class: 'row' },
-          select(c.tier, CLUB_TIERS.map((tier, i) => ({ value: i as 0 | 1 | 2, label: t(tier.name) })), (v) => { setClubTier(s, Number(v) as 0 | 1 | 2); rerender(); }, { 'aria-label': t(l('Mensalidade', 'Dues')) }),
+          select(c.tier, CLUB_TIERS.map((tier, i) => ({ value: i as 0 | 1 | 2, label: t(tier.name) })), (v) => { setClubTier(s, a.id, Number(v) as 0 | 1 | 2); rerender(); }, { 'aria-label': t(l('Mensalidade', 'Dues')) }),
           btn(c.magazine ? t(l('Revista: sim', 'Magazine: on')) : t(l('Revista: não', 'Magazine: off')), () => { toggleMagazine(s, a.id); rerender(); }, { pressed: c.magazine }),
           btn(t(l('Encontro', 'Meetup')), () => act(() => clubMeetup(s, a.id), l('Encontro realizado: núcleo e superfãs crescem.', 'Meetup held: core fans and superfans grow.'))),
           btn(t(l('Fechar', 'Close')), () => { closeFanClub(s, a.id); rerender(); }, { cls: 'ghost' })),

@@ -47,7 +47,7 @@ export function timelineSection(s: GameState): HTMLElement {
         st !== 'next' ? h('p', { class: 'small' }, t(m.text)) : null,
         h('div', { class: 'row' }, ic('bulb'), h('span', { class: 'small' }, t(m.mech)),
           st === 'before' ? pill(t(l('antes do início', 'before your start')), '') : null,
-          active && st !== 'next' && m.until ? pill(t(fmtL(l('vigora até {y}', 'until {y}'), { y: m.until })), 'good') : null,
+          active && m.until ? pill(t(fmtL(l('vigora até {y}', 'until {y}'), { y: m.until })), 'good') : null,
           st !== 'next' && m.until !== undefined && s.year > m.until ? pill(t(l('encerrado', 'ended')), '') : null),
         m.realRef ? h('small', { class: 'muted' }, `${t(l('Referência real', 'Real reference'))}: ${m.realRef}`) : null,
       )));
@@ -88,7 +88,7 @@ export function scenesSection(s: GameState): HTMLElement {
         h('div', { class: 'row between' }, h('b', null, t(sc.name)), pill(t(STAGE_NAME[st]), st === 'rise' ? 'good' : st === 'peak' ? 'gold' : st === 'over' ? '' : 'warn')),
         h('small', { class: 'muted' }, `${cityName(sc.city)} · ${sc.genres.filter((g) => genreById[g]).map(genreName).join(', ')}`),
         arcBar(s, sc.from, sc.peak, sc.to),
-        phase >= 0 ? h('p', { class: 'small' }, t(sc.arc[phase])) : note(fmtL(l('Começa por volta de {y}.', 'Starts around {y}.'), { y: sc.from })),
+        phase >= 0 ? h('p', { class: 'small' }, t(sc.arc[phase as 0 | 1 | 2])) : note(fmtL(l('Começa por volta de {y}.', 'Starts around {y}.'), { y: sc.from })),
         h('div', { class: 'w4-look' },
           h('span', { class: 'w4-swatches', 'aria-hidden': 'true' }, sc.look.palette.map((c) => h('span', { style: `background:${c}` }))),
           h('small', null, `${t(l('Visual', 'Look'))}: ${t(sc.look.label)}`)),
