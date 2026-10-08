@@ -9,40 +9,7 @@ import { cityName, toast } from './common';
 import { h, select } from './dom';
 import { deleteSave, importSave, listSaves, loadGame, savePrefs, store } from './store';
 import { prepareNewGame, scenarioButton } from './sys/live/goals';
-import { BACKGROUNDS } from '../sim/sys/life/data';
-import { ROLE_NAMES, type Role } from '../sim/sys/talent/attrs';
-import { appearanceEditor } from './pixel/editor';
-import type { Appearance } from '../sim/types';
-
-/** Ficha de criação do personagem (rodada 5). */
-function characterCard(cfg: RunConfig): HTMLElement {
-  const ch = (cfg.character ??= { name: '', age: 30, background: 'musician', role: 'guitar' });
-  const fake: { id: string; role: Role; look?: Appearance } = { id: 'player-new', role: ch.role ?? 'guitar', look: ch.look };
-  const lookBox = h('div', { class: 'ng-look' });
-  const drawLook = () => lookBox.replaceChildren(appearanceEditor(fake, (look) => { ch.look = look; fake.look = look; }, cfg.startYear));
-  drawLook();
-  const bgBox = h('div', { class: 'card-grid' });
-  const drawBg = () => bgBox.replaceChildren(...BACKGROUNDS.map((b) => h('button', { class: `pick ${ch.background === b.id ? 'on' : ''}`, type: 'button', onclick: () => { ch.background = b.id; ch.role = b.role; fake.role = b.role; roleSel.value = b.role; drawBg(); drawLook(); } },
-    h('b', null, t(b.name)), h('small', null, t(b.desc)))));
-  const roles: Role[] = ['vocal', 'guitar', 'bass', 'drums', 'keys', 'horns', 'strings', 'dj', 'producer', 'mc'];
-  const roleSel = select<Role>(ch.role ?? 'guitar', roles.map((r) => ({ value: r, label: t(ROLE_NAMES[r]) })), (v) => { ch.role = v; fake.role = v; drawLook(); });
-  drawBg();
-  return h('section', { class: 'card wide' },
-    h('h3', null, t(l('Seu personagem', 'Your character'))),
-    h('p', { class: 'muted small' }, t(l('Você é o dono do selo e também uma pessoa no mundo: pode namorar, casar, ter filhos, tocar, formar ou entrar numa banda (área Você, tecla V).', 'You own the label and are also a person in the world: date, marry, have children, play, form or join a band (You area, key V).'))),
-    h('div', { class: 'ng-char' },
-      h('div', null,
-        h('label', null, t(l('Nome', 'Name')), h('input', { type: 'text', value: ch.name, placeholder: t(l('(gerado)', '(generated)')), maxlength: 40, oninput: (e: Event) => (ch.name = (e.target as HTMLInputElement).value) })),
-        h('label', null, t(l('Idade', 'Age')), select(ch.age, [18, 20, 22, 25, 28, 30, 33, 35, 40, 45, 50, 55, 60].map((a) => ({ value: a, label: String(a) })), (v) => (ch.age = v))),
-        h('label', null, t(l('Instrumento principal', 'Main instrument')), roleSel),
-        h('h4', null, t(l('Origem', 'Background'))),
-        bgBox,
-      ),
-      lookBox,
-    ),
-  );
-}
-
+import { characterCard } from './charCreate';
 
 const START_YEARS: { year: number; label: { pt: string; en: string } }[] = [
   { year: 1920, label: l('1920 — Goma-laca e rádio nascente', '1920 — Shellac and early radio') },

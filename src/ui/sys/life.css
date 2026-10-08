@@ -16,3 +16,17 @@
 .ng-char { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
 .ng-char label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
 @media (max-width: 760px) { .ng-char { grid-template-columns: 1fr; } }
+.cc-row { gap: 0.6rem; }
+.cc-row > label { flex: 1 1 140px; min-width: 0; }
+.cc-preview { border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem; background: var(--panel-2); }
+.cc-attr { display: grid; grid-template-columns: 7rem auto 1fr 2.2rem auto; gap: 0.4rem; align-items: center; margin: 0.25rem 0; }
+.cc-attr .meter-bar { height: 8px; }
+.cc-traits { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.chip-btn { font: inherit; font-size: 0.88rem; padding: 0.3rem 0.6rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+.chip-btn.on { background: var(--accent); color: var(--bg, #fff); border-color: var(--accent); }
+.chip-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.cc-traits p { flex-basis: 100%; }
+.style-tree { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.4rem; }
+.style-tree .perk { border: 1px solid var(--line); border-radius: 6px; padding: 0.4rem; font-size: 0.85rem; background: var(--panel-2); }
+.style-tree .perk.got { border-color: var(--good, #2a7); box-shadow: 0 0 0 1px var(--good, #2a7) inset; }
+.style-tree .perk.next { border-style: dashed; border-color: var(--accent); }

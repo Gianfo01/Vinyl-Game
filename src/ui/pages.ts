@@ -4,6 +4,7 @@
 // O que o jogador vê de atos alheios depende do grau de conhecimento (faixas, não números exatos).
 
 import { AMBITIONS, ORIGINS, traitById } from '../data/people';
+import { actAffinity, affinityLabel, bestFamilies, genreFamilyName, worstFamily } from '../sim/sys/temper';
 import { CONTRACT_MODELS } from '../data/rules';
 import { l, type L } from '../data/world';
 import { S, t } from '../i18n/strings';
@@ -204,6 +205,8 @@ function profileTab(s: GameState, p: Person, vis: ReturnType<typeof visibleField
         const mods = Object.entries(d.mod).map(([k, v]) => `${k} ${Number(v) > 0 ? '+' : ''}${v}`).join(', ');
         return h('li', null, pill(t(d.name), 'trait'), h('small', { class: 'muted' }, ` ${mods}`));
       })) : h('p', { class: 'muted small' }, '…'),
+      vis.traits && bestFamilies(p).length ? kv(t(l('Combina com', 'Suits')), h('span', null, ...bestFamilies(p).map((f) => pill(t(f.name), 'good')))) : null,
+      vis.traits && worstFamily(p) ? kv(t(l('Não combina com', 'Does not suit')), pill(t(worstFamily(p)!.name), 'bad')) : null,
       kv(t(S.origin), t(ORIGINS.find((o) => o.id === p.origin)?.name)),
       kv(t(l('Nascimento', 'Born')), p.born),
       p.retireAge ? kv(t(l('Pensa em parar aos', 'Plans to stop at')), p.retireAge) : null,
@@ -331,6 +334,7 @@ function overviewTab(s: GameState, a: Act, deg: number, mine: boolean): HTMLElem
       mine && !a.playerBand ? kv(t(S.trust), bar(a.trust)) : null,
       deg >= 4 || mine ? kv(`${t(S.morale)} / ${t(S.fatigue)} / ${t(S.stress)}`, h('span', null, bar(st.morale, 100, 'good'), bar(st.fatigue, 100, 'warn'), bar(st.stress, 100, 'bad'))) : null,
       mine ? kv(t(l('Caixa próprio do ato', 'Act\'s own cash')), $(a.cash)) : null,
+      deg >= 4 || mine ? kv(t(l('Temperamento × gênero', 'Temperament × genre')), h('span', null, pill(t(affinityLabel(actAffinity(s, a))), actAffinity(s, a) > 0.2 ? 'good' : actAffinity(s, a) < -0.2 ? 'bad' : ''), h('small', { class: 'muted' }, ` ${t(genreFamilyName(a.genre))}`))) : null,
     ),
     h('div', null,
       h('h4', null, t(l('Recordes', 'Records'))),

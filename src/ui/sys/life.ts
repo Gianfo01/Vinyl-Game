@@ -3,7 +3,8 @@
 // saúde, patrimônio (casa, retirada, sucessão) e diário pessoal. Cada ação gasta tempo livre do mês.
 
 import './life.css';
-import { GENRES, l, type L } from '../../data/world';
+import { GENRES, familyOf, l, type L } from '../../data/world';
+import { traitAffinity } from '../../data/people';
 import { t } from '../../i18n/strings';
 import {
   ENERGY_PER_MONTH, HOBBIES, MENTOR_NAMES, maxEnergy, mentorAct, type MentorKind, KID_EDU, PARTNER_TRAITS, WEDDINGS, adopt, backgroundById, breakUp, charity, energyLeft, familyTime, goOnDate, gym, hobby,
@@ -19,6 +20,8 @@ import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { openActPage, openPersonPage, personCard } from '../pages';
 import { portraitCanvas } from '../pixel/avatar';
+import { personaTab } from './persona';
+import { persona } from '../../sim/sys/persona';
 import { registerArea, registerCutscene } from '../registry';
 import { chips, ic, meter, stat, tabs } from '../vis';
 import { ownerTab } from './people/area';
@@ -159,7 +162,12 @@ function musicTab(s: GameState): HTMLElement {
   const act = playerAct(s);
   const r = () => rngOf(s);
   let newRole: Role = ROLES.find((x) => x !== p.role) ?? 'guitar';
-  let genre = GENRES.find((x) => x.born <= s.year && x.id === 'rnr')?.id ?? GENRES.filter((x) => x.born <= s.year)[0]?.id ?? 'rnr';
+  const me = playerPerson(s);
+  const fav = persona(s).favGenre;
+  const avail = GENRES.filter((x) => x.born <= s.year);
+  // sugestão: o gênero do coração, ou o que mais combina com o seu temperamento
+  const byTemper = me ? [...avail].sort((x, y) => traitAffinity(me.traits, familyOf(y.id)) - traitAffinity(me.traits, familyOf(x.id)) || (s.genrePop[y.id] ?? 0) - (s.genrePop[x.id] ?? 0))[0]?.id : undefined;
+  let genre = (fav && avail.some((x) => x.id === fav) ? fav : byTemper) ?? avail.find((x) => x.id === 'rnr')?.id ?? avail[0]?.id ?? 'rnr';
   let name = '';
   const genres = GENRES.filter((x) => x.born <= s.year).sort((a, b) => t(a.name).localeCompare(t(b.name)));
   const joinable = act ? [] : joinableActs(s);
@@ -253,6 +261,7 @@ function diaryTab(s: GameState): HTMLElement {
 function youArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub life' }, tabs('life', [
     { id: 'me', label: t(l('Perfil', 'Profile')), icon: 'star', render: () => profileTab(s) },
+    { id: 'persona', label: t(l('Personalidade', 'Personality')), icon: 'sparkle', badge: persona(s).copingPrompt ? 1 : undefined, render: () => personaTab(s) },
     { id: 'love', label: t(l('Amor e família', 'Love and family')), icon: 'heart', render: () => loveTab(s) },
     { id: 'music', label: t(l('Carreira musical', 'Music career')), icon: 'guitar', render: () => musicTab(s) },
     { id: 'leisure', label: t(l('Lazer e saúde', 'Leisure and health')), icon: 'sparkle', render: () => leisureTab(s) },
