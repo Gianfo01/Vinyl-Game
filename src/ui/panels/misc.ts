@@ -23,6 +23,7 @@ import { nominal } from '../../core/money';
 import { countryName, unitOfCity } from '../../data/geo';
 import { planRoute } from '../../sim/travel';
 import { WorldMap, glyphCanvas, transportName, type MapCity } from '../map';
+import { activeToursSection, merchSection, tourPlannerSection } from './tours';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -226,6 +227,7 @@ function tourMapSection(s: GameState): HTMLElement {
       if (id === s.config.homeCity) return;
       tourStops = tourStops.includes(id) ? tourStops.filter((x) => x !== id) : [...tourStops, id];
       refreshTour(s);
+      rerender();
     },
   };
   if (!tourMap) tourMap = new WorldMap(opts);
@@ -241,6 +243,9 @@ export function showsPanel(s: GameState): HTMLElement {
   return h('div', { class: 'panel shows' },
     h('div', { class: 'col-main' },
       tourMapSection(s),
+      tourPlannerSection(s, tourStops),
+      activeToursSection(s),
+      merchSection(s),
       ids.length ? ids.map((id) => {
         const a = s.acts[id];
         const mt = maxVenueTier(s, a);

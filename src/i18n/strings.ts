@@ -92,6 +92,9 @@ export const S = {
   areaShows: s('Shows', 'Shows'),
   areaCompany: s('Empresa', 'Company'),
   areaDiary: s('Diário da run', 'Run diary'),
+  areaPlan: s('Central', 'Hub'),
+  areaWorld: s('Mundo', 'World'),
+  areaBusiness: s('Negócios', 'Business'),
   // mesa
   briefing: s('Briefing do mês', 'Monthly briefing'),
   decisions: s('Decisões', 'Decisions'),

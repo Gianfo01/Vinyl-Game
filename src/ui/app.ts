@@ -16,19 +16,37 @@ import { deskPanel } from './panels/desk';
 import { marketPanel } from './panels/market';
 import { catalogPanel, chartsPanel, companyPanel, diaryPanel, hqPanel, mediaPanel, showsPanel, stopHq } from './panels/misc';
 import { applyPrefs, exportSave, migrate, saveGame, savePrefs, store, type Area } from './store';
+import { centralPanel } from './panels/central';
+import { worldPanel } from './panels/world';
+import { businessPanel } from './panels/business';
+import { studioHub } from './panels/studio';
+import { auctionsSection, contestsSection, demosSection, rivalsExtra, scoutsSection } from './panels/discovery';
+import { pressSection } from './panels/media2';
+import { compareActs } from './compare';
+import { restartTutorial, tutorialCard } from './tutorial';
+import { ic, tabs } from './vis';
+
+/** Leitor de tela: resume o briefing após avançar. */
+function announce(msg: string): void {
+  const el = document.getElementById('sr-live');
+  if (el) el.textContent = msg;
+}
 
 const AREAS: { id: Area; label: keyof typeof S; icon: string; key: string }[] = [
-  { id: 'desk', label: 'areaDesk', icon: '🗂', key: '1' },
-  { id: 'hq', label: 'areaHq', icon: '🏠', key: '2' },
-  { id: 'charts', label: 'areaCharts', icon: '📈', key: '3' },
-  { id: 'artists', label: 'areaArtists', icon: '🎸', key: '4' },
-  { id: 'market', label: 'areaMarket', icon: '🔎', key: '5' },
-  { id: 'media', label: 'areaMedia', icon: '📻', key: '6' },
-  { id: 'catalog', label: 'areaCatalog', icon: '💿', key: '7' },
-  { id: 'creation', label: 'areaCreation', icon: '🎚', key: '8' },
-  { id: 'shows', label: 'areaShows', icon: '🎤', key: '9' },
-  { id: 'company', label: 'areaCompany', icon: '🏢', key: '0' },
-  { id: 'diary', label: 'areaDiary', icon: '📖', key: 'd' },
+  { id: 'desk', label: 'areaDesk', icon: 'calendar', key: '1' },
+  { id: 'plan', label: 'areaPlan', icon: 'clock', key: 'c' },
+  { id: 'hq', label: 'areaHq', icon: 'house', key: '2' },
+  { id: 'charts', label: 'areaCharts', icon: 'chart-up', key: '3' },
+  { id: 'artists', label: 'areaArtists', icon: 'guitar', key: '4' },
+  { id: 'market', label: 'areaMarket', icon: 'fans', key: '5' },
+  { id: 'media', label: 'areaMedia', icon: 'radio', key: '6' },
+  { id: 'catalog', label: 'areaCatalog', icon: 'disc', key: '7' },
+  { id: 'creation', label: 'areaCreation', icon: 'mic', key: '8' },
+  { id: 'shows', label: 'areaShows', icon: 'tour-bus', key: '9' },
+  { id: 'world', label: 'areaWorld', icon: 'globe', key: 'w' },
+  { id: 'business', label: 'areaBusiness', icon: 'bank', key: 'b' },
+  { id: 'company', label: 'areaCompany', icon: 'contract', key: '0' },
+  { id: 'diary', label: 'areaDiary', icon: 'newspaper', key: 'd' },
 ];
 
 let root: HTMLElement;
@@ -71,7 +89,7 @@ function onKey(e: KeyboardEvent): void {
   }
 }
 
-function doAdvance(mode: 'month' | 'quarter' | 'event'): void {
+function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event'): void {
   const g = store.game;
   if (!g) return;
   if (g.ended && !g.flags.sandbox) return endScreen();
@@ -82,6 +100,7 @@ function doAdvance(mode: 'month' | 'quarter' | 'event'): void {
   const fresh = g.notifications.filter((n) => n.week > noteWeek).slice(-3);
   for (const n of fresh) toast(t(n.text), n.kind);
   if (res.stopReason && mode !== 'month') toast(`⏸ ${t(res.stopReason)}`, 'event');
+  announce(g.briefing.map((n) => t(n.text)).join('. '));
   void before;
   void saveGame('auto');
   if (g.ended && !g.flags.sandbox) {
@@ -114,6 +133,7 @@ function topBar(): HTMLElement {
       store.undoSnapshot && !g.config.ironman ? h('button', { class: 'btn ghost small', onclick: undo }, '↶ ' + t(S.undo)) : null,
       h('button', { class: 'btn ghost small', title: t(S.advanceEvent), onclick: () => doAdvance('event') }, '⏭ ' + t(S.advanceEvent)),
       h('button', { class: 'btn ghost small', onclick: () => doAdvance('quarter') }, '⏩ ' + t(S.advanceQuarter)),
+      h('button', { class: 'btn small', title: t(l('Avança até o próximo fechamento semanal (dias de turnê, estúdio e crise)', 'Advance to the next weekly close (tour, studio and crisis days)')), onclick: () => doAdvance('week') }, '▷ ' + t(l('Semana', 'Week')), g.clock.opened ? h('small', null, ` ${g.clock.dayInMonth}d`) : null),
       h('button', { class: 'btn primary', title: 'Ctrl+Enter', onclick: () => doAdvance('month') }, '▶ ' + t(S.advanceMonth), g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null),
       h('button', { class: 'icon', 'aria-label': t(S.settings), onclick: settings }, '⚙'),
     ),
@@ -124,7 +144,7 @@ function nav(): HTMLElement {
   const g = store.game!;
   return h('nav', { class: 'nav', 'aria-label': 'áreas' }, AREAS.map((a) =>
     h('button', { class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, title: `${t(S[a.label])} (${a.key.toUpperCase()})`, onclick: () => { store.area = a.id; render(); } },
-      h('span', { class: 'ic', 'aria-hidden': 'true' }, a.icon), h('span', { class: 'lbl' }, t(S[a.label])),
+      h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, t(S[a.label])),
       a.id === 'desk' && g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null,
     )));
 }
@@ -134,12 +154,23 @@ function panel(): HTMLElement {
   if (store.area !== 'hq') stopHq();
   switch (store.area) {
     case 'hq': return hqPanel(g);
+    case 'plan': return centralPanel(g);
     case 'charts': return chartsPanel(g);
     case 'artists': return artistsPanel(g);
-    case 'market': return marketPanel(g);
-    case 'media': return mediaPanel(g);
+    case 'market': return h('div', { class: 'panel' }, tabs('marketHub', [
+      { id: 'classic', label: t(l('Radar e pipeline', 'Radar and pipeline')), icon: 'fans', render: () => marketPanel(g) },
+      { id: 'discovery', label: t(l('Olheiros, concursos e demos', 'Scouts, contests and demos')), icon: 'trophy', badge: g.demos.filter((d) => !d.heard).length || undefined, render: () => h('div', null, scoutsSection(g), contestsSection(g), demosSection(g)) },
+      { id: 'auctions', label: t(l('Leilões', 'Auctions')), icon: 'gavel', badge: g.auctions.filter((a) => a.status === 'open').length || undefined, render: () => auctionsSection(g) },
+      { id: 'rivals2', label: t(l('Rivais e inteligência', 'Rivals and intel')), icon: 'camera', render: () => rivalsExtra(g) },
+    ], render));
+    case 'media': return h('div', { class: 'panel' }, tabs('mediaHub', [
+      { id: 'press', label: t(l('Imprensa e crítica', 'Press and critics')), icon: 'newspaper', render: () => pressSection(g) },
+      { id: 'channels', label: t(l('Canais e reputação', 'Channels and reputation')), icon: 'radio', render: () => mediaPanel(g) },
+    ], render));
     case 'catalog': return catalogPanel(g);
-    case 'creation': return creationPanel(g);
+    case 'creation': return studioHub(g, () => creationPanel(g));
+    case 'world': return worldPanel(g);
+    case 'business': return businessPanel(g);
     case 'shows': return showsPanel(g);
     case 'company': return companyPanel(g);
     case 'diary': return diaryPanel(g);
@@ -155,6 +186,8 @@ export function render(): void {
       topBar(),
       nav(),
       h('main', { id: 'main', tabindex: '-1' }, panel()),
+      tutorialCard(store.game, render),
+      h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
     ),
   );
   const main = document.querySelector('main');
@@ -168,6 +201,8 @@ function settings(): void {
     h('label', null, t(S.language), select(p.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { p.lang = v; savePrefs(); close(); render(); settings(); })),
     h('label', null, `${t(S.textSize)}: ${p.textScale}%`, h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { p.textScale = Number((e.target as HTMLInputElement).value); savePrefs(); } })),
     h('label', null, t(S.theme), select(p.theme, [{ value: 'auto', label: t(S.themeAuto) }, { value: 'light', label: t(S.themeLight) }, { value: 'dark', label: t(S.themeDark) }] as { value: typeof p.theme; label: string }[], (v) => { p.theme = v; savePrefs(); })),
+    h('label', null, t(l('Modo para daltonismo', 'Colorblind mode')), select(p.colorblind ?? 'none', [{ value: 'none' as const, label: t(l('Desligado', 'Off')) }, { value: 'deutan' as const, label: t(l('Deuteranopia (verde)', 'Deuteranopia (green)')) }, { value: 'protan' as const, label: t(l('Protanopia (vermelho)', 'Protanopia (red)')) }, { value: 'tritan' as const, label: t(l('Tritanopia (azul)', 'Tritanopia (blue)')) }], (v) => { p.colorblind = v; savePrefs(); })),
+    h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.reducedMotion)),
     h('hr'),
@@ -190,6 +225,8 @@ function palette(): void {
     { label: `▶ ${t(S.advanceMonth)}`, run: () => doAdvance('month') },
     { label: `⏩ ${t(S.advanceQuarter)}`, run: () => doAdvance('quarter') },
     { label: `⏭ ${t(S.advanceEvent)}`, run: () => doAdvance('event') },
+    { label: `▷ ${t(l('Avançar semana', 'Advance week'))}`, run: () => doAdvance('week') },
+    { label: `⚖ ${t(l('Comparar carreiras', 'Compare careers'))}`, run: () => compareActs(g, playerActs(g)) },
     ...playerActs(g).map((id) => ({ label: `🎸 ${g.acts[id].name}`, run: () => inspect.act(id) })),
     ...Object.values(g.knowledge).filter((k) => g.acts[k.actId] && g.acts[k.actId].owner !== 'player').map((k) => ({ label: `🔎 ${g.acts[k.actId].name}`, run: () => inspect.act(k.actId) })),
     ...Object.values(g.labels).filter((x) => x.active).map((x) => ({ label: `🏢 ${x.name}`, run: () => inspect.label(x.id) })),

@@ -6,7 +6,7 @@ import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
 import { SAVE_VERSION } from '../sim/worldgen';
 
-export type Area = 'hq' | 'desk' | 'charts' | 'artists' | 'market' | 'media' | 'catalog' | 'creation' | 'shows' | 'company' | 'diary';
+export type Area = 'hq' | 'desk' | 'plan' | 'charts' | 'artists' | 'market' | 'media' | 'catalog' | 'creation' | 'shows' | 'company' | 'business' | 'world' | 'diary';
 
 export interface Prefs {
   lang: Lang;
@@ -14,6 +14,7 @@ export interface Prefs {
   contrast: boolean;
   reducedMotion: boolean;
   theme: 'auto' | 'light' | 'dark';
+  colorblind?: 'none' | 'deutan' | 'protan' | 'tritan';
 }
 
 export const store = {
@@ -55,6 +56,7 @@ export function applyPrefs(): void {
   root.style.fontSize = `${p.textScale}%`;
   root.classList.toggle('contrast', p.contrast);
   root.classList.toggle('reduced-motion', p.reducedMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  root.setAttribute('data-cb', p.colorblind ?? 'none');
   if (p.theme === 'auto') root.removeAttribute('data-theme');
   else root.setAttribute('data-theme', p.theme);
 }

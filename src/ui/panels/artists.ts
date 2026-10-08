@@ -11,10 +11,15 @@ import { actState } from '../../sim/people';
 import type { AgendaSlot, GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, genreName, cityName, kv, logo, pill, promiseName, rerender, section, statusName, toast } from '../common';
-import { bar, h, select } from '../dom';
+import { h, select } from '../dom';
 import { openAct } from '../ficha';
 import { store } from '../store';
 import { playPreview } from '../audio';
+import { EXTRA_ACTIONS } from '../../data/actions';
+import { agendaLoad, slotLoad } from '../../sim/capacity';
+import { freeCapacity } from '../../sim/agenda';
+import { loadBar, meter, portrait, stat } from '../vis';
+import { contractExtra, fandomSection, membersSection, reunionSection } from './people';
 
 export function artistsPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
@@ -52,7 +57,7 @@ export function artistsPanel(s: GameState): HTMLElement {
     if (slot.action === 'reposition') {
       params.push(select(String(slot.params?.target ?? 'crossover'), [{ value: 'crossover', label: t(S.crossover) }, { value: 'underground', label: t(S.underground) }], (v) => { slot.params = { ...slot.params, target: v }; commit(slots); }));
     }
-    const def = agendaById[slot.action];
+    const def = agendaById[slot.action] ?? EXTRA_ACTIONS.find((x) => x.id === slot.action);
     return h('li', { class: 'slot' },
       h('b', null, t(def?.name)), slotCost(slot.action) > 1 ? pill(`×${slotCost(slot.action)}`) : null,
       def?.cost ? h('span', { class: 'muted small' }, ` ${$(money(s, def.cost))}`) : null,
@@ -62,17 +67,19 @@ export function artistsPanel(s: GameState): HTMLElement {
     );
   };
   const free = max - usedSlots(slots);
-  const addSel = select('', [{ value: '', label: `+ ${t(S.addAction)}` }, ...AGENDA_ACTIONS.filter((x) => slotCost(x.id) <= free).map((x) => ({ value: x.id, label: t(x.name) }))], (v) => {
+  const capLeft = freeCapacity(s, a) - agendaLoad(slots);
+  const addSel = select('', [{ value: '', label: `+ ${t(S.addAction)}` }, ...[...AGENDA_ACTIONS, ...EXTRA_ACTIONS].filter((x) => slotLoad({ action: x.id }) <= capLeft && (slotCost(x.id) <= free || EXTRA_ACTIONS.includes(x as never))).map((x) => ({ value: x.id, label: `${t(x.name)} · ${slotLoad({ action: x.id })}%` }))], (v) => {
     if (!v) return;
     const p: AgendaSlot = { action: v };
     if (v === 'gigs') p.params = { tier: Math.min(maxVenueTier(s, a), 2), dates: 4 };
     if (v === 'record') p.params = { tier: s.player.hq >= 1 ? 0 : 1, approach: 'balanced' };
+    if (EXTRA_ACTIONS.find((x) => x.id === v)?.scope === 'person') p.params = { person: a.members[0] };
     commit([...slots, p]);
-  }, { disabled: free <= 0 });
+  }, { disabled: capLeft <= 0 });
   const unrec = a.songs.filter((id) => s.songs[id] && !s.songs[id].recorded).length;
   const ready = a.songs.filter((id) => s.songs[id]?.recorded && !s.songs[id].releaseId).length;
   return h('div', { class: 'panel artists' },
-    h('aside', { class: 'col-side' }, section(`${t(S.roster)} (${ids.length})`, list)),
+    h('aside', { class: 'col-side' }, section(`${t(S.roster)} (${ids.length})`, list), reunionSection(s)),
     h('div', { class: 'col-main' },
       section(a.name,
         h('div', { class: 'ficha-head' }, logo(a, 64),
@@ -81,22 +88,24 @@ export function artistsPanel(s: GameState): HTMLElement {
             h('div', null, h('button', { class: 'link', onclick: () => openAct(a.id) }, t(S.inspect)), ' · ', h('button', { class: 'link', onclick: () => playPreview(a.logoSeed, a.genre, s.year) }, t(S.preview))),
           ),
         ),
+        h('div', { class: 'row wrap portraits' }, a.members.map((id) => portrait(s.persons[id], 44))),
         h('div', { class: 'grid3' },
-          kv(t(S.fame), h('span', null, Math.round(a.fame), ' ', bar(a.fame))),
-          kv(t(S.momentum), h('span', null, Math.round(a.momentum), ' ', bar(a.momentum))),
-          kv(t(S.positioning), h('span', null, bar(a.positioning), h('small', { class: 'muted' }, a.positioning < 40 ? ` ${t(S.underground)}` : a.positioning > 60 ? ` ${t(S.crossover)}` : ''))),
-          kv(t(S.morale), bar(st.morale, 100, 'good')),
-          kv(t(S.fatigue), bar(st.fatigue, 100, 'warn')),
-          kv(t(S.stress), bar(st.stress, 100, 'bad')),
-          kv(t(S.inspiration), bar(st.inspiration)),
-          a.playerBand ? null : kv(t(S.trust), bar(a.trust)),
-          kv(t(S.fans), `${N(a.fans.casual)} / ${N(a.fans.active)} / ${N(a.fans.core)}`),
+          meter('fame', S.fame, a.fame),
+          meter('fire', S.momentum, a.momentum),
+          meter('globe', S.positioning, a.positioning),
+          meter('heart', S.morale, st.morale),
+          meter('sleep', S.fatigue, st.fatigue, 100, true),
+          meter('stress', S.stress, st.stress, 100, true),
+          meter('sparkle', S.inspiration, st.inspiration),
+          a.playerBand ? null : meter('handshake', S.trust, a.trust),
+          stat('fans', `${N(a.fans.casual)} / ${N(a.fans.active)} / ${N(a.fans.core)}`, S.fans),
         ),
         h('p', { class: 'small muted' }, t(l('Músicas escritas: {u} · gravadas inéditas: {r} · lançamentos: {n}', 'Written songs: {u} · recorded unreleased: {r} · releases: {n}'), { u: unrec, r: ready, n: a.releases.length })),
       ),
-      section(`${t(S.agenda)} — ${usedSlots(slots)}/${max} ${t(S.slots)}`,
+      section(`${t(S.agenda)} — ${t(l('capacidade', 'capacity'))} ${agendaLoad(slots)}%`,
+        loadBar(slots.map((x) => ({ label: t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name), load: slotLoad(x) }))),
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: delegated, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; s.delegated[a.id] = on ? true : false; if (!on) s.agenda[a.id] = defaultAgenda(s, a); rerender(); } }), t(S.delegate)),
-        h('ul', { class: 'slots' }, delegated ? slots.map((x) => h('li', { class: 'slot muted' }, t(agendaById[x.action]?.name))) : slots.map(slotEditor)),
+        h('ul', { class: 'slots' }, delegated ? slots.map((x) => h('li', { class: 'slot muted' }, t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name))) : slots.map(slotEditor)),
         delegated ? null : addSel,
         h('p', { class: 'muted small' }, t(l('Ações repetidas no mês rendem menos (retorno decrescente). Artistas com controle criativo podem trocar uma ação.', 'Repeated actions in a month yield less (diminishing returns). Artists with creative control may swap an action.'))),
       ),
@@ -112,6 +121,9 @@ export function artistsPanel(s: GameState): HTMLElement {
           h('button', { class: 'btn ghost', onclick: () => { raiseRoyalty(s, a.id, 0.02); rerender(); } }, t(S.raiseRoyalty)),
         ) : null,
       ) : a.playerBand ? section(t(S.contract), h('p', { class: 'muted' }, s.config.role === 'hybrid' ? t(l('Sua banda lança pelo seu próprio selo.', 'Your band releases on your own label.')) : t(l('Independente: distribuição por agregador (taxa) e só nos seus territórios. Selos podem fazer propostas quando o alcance crescer.', 'Independent: aggregator distribution (fee) and only in your territories. Labels may approach you as your reach grows.')))) : null,
+      contractExtra(s, a),
+      membersSection(s, a),
+      fandomSection(s, a),
       h('p', null, actLink(s, a.id)),
     ),
   );

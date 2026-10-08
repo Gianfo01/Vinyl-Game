@@ -4,7 +4,7 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
-import { composeSongs, songQ } from './production';
+import { availableFormats, composeSongs, scheduleRelease, songQ } from './production';
 import type { Act, GameState, Person } from './types';
 import type { HologramShow } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
@@ -148,7 +148,9 @@ export function posthumousRelease(s: GameState, r: Rng, personId: string, author
   }
   if (!authorized) unauthorizedUse(s, r, p, act);
   remember(s, 'posthumous', fmtL(l('Inéditas de {p} saem do cofre para um disco póstumo.', '{p}\'s unreleased songs leave the vault for a posthumous record.'), { p: p.name }), { actId: act.id, important: true });
-  s.flags[`posthumousReady:${act.id}`] = 1;
+  const type = vault.length >= 6 ? 'lp' : vault.length >= 3 ? 'ep' : 'single';
+  const res = scheduleRelease(s, r, { actId: act.id, type, songs: type === 'single' ? [vault[0]] : vault.slice(0, 12), title: type === 'single' ? undefined : fmtL(l('{p}: Inéditas', '{p}: The Vault'), { p: p.name }).pt, formats: availableFormats(s), press: 2000, marketing: [], territories: s.player.territories, weeksAhead: 3, kind: 'posthumous', hype: 0.3 });
+  if ('pt' in res) return res;
   return null;
 }
 
@@ -180,6 +182,8 @@ export function aiVoiceSongs(s: GameState, r: Rng, personId: string, n: number, 
   s.player.neural.voiceLicenses += authorized ? 1 : 0;
   if (!authorized) unauthorizedUse(s, r, p, act);
   else if (s.player.neural.consentPolicy !== 'no_consent') s.player.neural.consentPolicy = 'consent';
+  const single = scheduleRelease(s, r, { actId: act.id, type: 'single', songs: [songs[0].id], formats: availableFormats(s), press: 0, marketing: [], territories: s.player.territories, weeksAhead: 2, kind: 'standard' });
+  void single;
   remember(s, 'ai_voice', fmtL(l('{n} faixa(s) novas com a voz sintética de {p}.', '{n} new track(s) with {p}\'s synthetic voice.'), { n, p: p.name }), { actId: act.id, important: true });
   return null;
 }
