@@ -144,3 +144,12 @@ export function showPendingCutscene(s: GameState, rerender: () => void, skip: bo
   void closeFn;
   return true;
 }
+
+/** Abre uma cena específica (iniciada por uma ação do jogador, não pelo avanço do tempo). */
+export function openCutscene(s: GameState, cs: Cutscene, rerender: () => void): boolean {
+  const fn = CUTSCENES[cs.kind];
+  if (!fn) return false;
+  cs.seen = true;
+  openScene((cs.data.title as L | string | undefined) ?? '', (close) => fn(s, cs, close), { onClose: rerender });
+  return true;
+}

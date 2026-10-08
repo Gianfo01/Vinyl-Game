@@ -1,0 +1,39 @@
+/* Cenas em pixel art */
+.scene-frame { display: grid; gap: 10px; }
+.scene-stage { margin: 0; }
+.scene-stage canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--line); background: #000; }
+.scene-text { font-size: 1.02rem; margin: 0; }
+.scene-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.scene-choices .btn { display: inline-flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.scene-result { margin: 0; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 6px; }
+.scene-close { justify-content: flex-end; }
+.scene-gold { font-size: 1.4rem; font-weight: 800; color: var(--gold, #b8901c); text-align: center; }
+.aw-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.aw-cat { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--panel-2); }
+.aw-cat ul { margin: 4px 0; padding-left: 1.1em; font-size: 0.85rem; }
+.aw-cat li.mine { font-weight: 700; }
+.aw-win { font-weight: 700; margin: 4px 0 0; }
+.aw-win.good { color: var(--good); }
+.aw-env { margin: 4px 0 0; font-style: italic; }
+.iv-q { font-size: 1.1rem; }
+.iv-clock { font: 700 1rem ui-monospace, monospace; color: var(--warn); }
+.place-strip { display: flex; flex-wrap: wrap; gap: 4px; }
+.place-thumb { font: inherit; font-size: 0.82rem; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.place-thumb:hover, .place-thumb:focus-visible { border-color: var(--accent); }
+.agm-list { list-style: none; padding: 0; display: grid; gap: 2px; }
+
+/* Interface por era: só acentos discretos, sem mexer em contraste nem nos temas claro/escuro. */
+:root[data-era="1920"], :root[data-era="1930"], :root[data-era="1940"] { --era-accent: #b8901c; --era-font: Georgia, 'Times New Roman', serif; }
+:root[data-era="1950"] { --era-accent: #d0452f; --era-font: Georgia, serif; }
+:root[data-era="1960"] { --era-accent: #e05a9a; --era-font: 'Trebuchet MS', sans-serif; }
+:root[data-era="1970"] { --era-accent: #e08a1e; --era-font: 'Cooper Black', Georgia, serif; }
+:root[data-era="1980"] { --era-accent: #ff3fa4; --era-font: 'Trebuchet MS', sans-serif; }
+:root[data-era="1990"] { --era-accent: #6b8e23; --era-font: 'Courier New', monospace; }
+:root[data-era="2000"] { --era-accent: #8aa4c0; --era-font: Verdana, sans-serif; }
+:root[data-era="2010"] { --era-accent: #2bb3a3; --era-font: Helvetica, Arial, sans-serif; }
+:root[data-era="2020"], :root[data-era="2030"], :root[data-era="2040"] { --era-accent: #7b5cff; --era-font: system-ui, sans-serif; }
+:root[data-era] .topbar { border-bottom: 3px solid var(--era-accent, var(--line)); }
+:root[data-era] .topbar .brand { font-family: var(--era-font, Georgia, serif); }
+:root[data-era] .nav button.on { box-shadow: inset 3px 0 0 var(--era-accent, transparent); }
+:root[data-era] .section > h3, :root[data-era] section > h3 { font-family: var(--era-font, inherit); }
+:root[data-era="1980"] .topbar, :root[data-era="2030"] .topbar, :root[data-era="2040"] .topbar { box-shadow: 0 2px 12px color-mix(in srgb, var(--era-accent) 35%, transparent); }

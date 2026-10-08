@@ -1,3 +1,4 @@
-// Interface do sistema "people" da rodada 4. Usa src/ui/registry.ts (registerTab, registerSection,
-// registerArea, registerCutscene, openScene). CSS próprio: importe './people.css' daqui.
+// Interface do sistema "people" da rodada 4.
+import './people.css';
+import './people/area';
 export {};

@@ -76,3 +76,14 @@
 
 .ppl-owner { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
 .ppl-owner .who { min-width: 12rem; }
+.pp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.pp-card { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--panel); display: grid; gap: 6px; align-content: start; }
+.pp-head { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+.pp-mood { font: 700 1.2rem/1 ui-monospace, monospace; padding: 4px 8px; border-radius: 8px; background: var(--panel-2); }
+.pp-mood.good { color: var(--good); }
+.pp-mood.bad { color: var(--bad); }
+.pp-thoughts { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 0.85rem; }
+.pp-thoughts li.good b { color: var(--good); }
+.pp-thoughts li.bad b { color: var(--bad); }
+.pp-health { display: flex; flex-wrap: wrap; gap: 4px; }
+.pp-talk { border-top: 1px dashed var(--line); padding-top: 6px; display: grid; gap: 4px; }
