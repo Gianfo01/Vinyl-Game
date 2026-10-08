@@ -1,139 +1,26 @@
 // Ficha unificada com cadeia de inspeção por IDs estáveis (GDD §24) + modal de oferta.
 
-import { AMBITIONS, ORIGINS, SKILLS, traitById } from '../data/people';
 import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
 import { defaultOffer, evaluateOffer, makeOffer } from '../sim/contracts';
-import { actState } from '../sim/people';
-import { DEGREES, estimate, sourceName, visibleFields } from '../sim/scouting';
 import type { Act, GameState, Offer, Song } from '../sim/types';
-import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, monthName, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
-import { bar, h, rangeBar, select } from './dom';
-import { playPreview, stopPreview } from './audio';
+import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
+import { h, select } from './dom';
 import { store } from './store';
 import { money } from '../sim/util';
 import { l } from '../data/world';
-import { portraitCanvas, portraitDataUrl } from './pixel/avatar';
-import { appearanceEditor } from './pixel/editor';
-import { personActivity } from './pixel/activity';
-import { icon } from './pixel/icons';
+import { openActPage, openPersonPage } from './pages';
 
 function g(): GameState {
   return store.game!;
 }
 
 export function openAct(id: string): void {
-  const s = g();
-  const a = s.acts[id];
-  if (!a) return;
-  const k = s.knowledge[id];
-  const mine = a.owner === 'player';
-  const deg = mine ? 5 : k?.degree ?? 0;
-  const vis = visibleFields(deg);
-  const st = actState(s, a);
-  const pot = estimate(s, id, 'potential');
-  const fame = estimate(s, id, 'fame');
-  const body = h('div', { class: 'ficha' },
-    h('div', { class: 'ficha-head' }, logo(a, 72),
-      h('div', null,
-        h('h3', null, a.name, a.catalogNo ? pill('★', 'gold') : null, a.legend ? pill(t(l('Lenda', 'Legend')), 'gold') : null, a.archetype === 'synthetic' ? pill('AI', 'neural') : null),
-        h('div', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${t(l('desde', 'since'))} ${a.formed}`),
-        h('div', null, t(S.owner), ': ', labelLink(s, a.owner)),
-        h('div', null, t(S.knownAs), ': ', pill(t(DEGREES[Math.max(0, deg - 1)])), k ? h('span', { class: 'muted' }, ` · ${t(S.source)}: ${t(sourceName(k.source))}`) : null),
-      ),
-      h('button', { class: 'btn small', onclick: () => playPreview(a.logoSeed, a.genre, s.year) }, t(S.preview)),
-      h('button', { class: 'btn small ghost', onclick: () => stopPreview() }, t(S.stop)),
-    ),
-    h('div', { class: 'grid2' },
-      h('div', null,
-        kv(t(S.fame), fame ? h('span', null, mine ? Math.round(a.fame) : `${fame.lo}–${fame.hi}`, ' ', bar(a.fame)) : '?'),
-        kv(t(S.momentum), deg >= 2 ? bar(a.momentum) : '?'),
-        kv(t(S.positioning), h('span', null, t(S.underground), ' ', deg >= 2 ? bar(a.positioning) : '?', ' ', t(S.crossover))),
-        kv(t(S.potential), pot ? h('span', null, `${pot.lo}–${pot.hi} `, rangeBar(pot.lo, pot.hi)) : h('span', { class: 'muted' }, t(S.hidden))),
-        kv(t(S.fans), deg >= 2 ? `${N(a.fans.casual)} ${t(S.casual)} · ${N(a.fans.active)} ${t(S.active)} · ${N(a.fans.core)} ${t(S.core)}` : '?'),
-        mine && !a.playerBand ? kv(t(S.trust), bar(a.trust)) : null,
-        vis.private ? kv(`${t(S.morale)} / ${t(S.fatigue)} / ${t(S.stress)}`, h('span', null, bar(st.morale, 100, 'good'), bar(st.fatigue, 100, 'warn'), bar(st.stress, 100, 'bad'))) : null,
-        kv(t(l('Recordes', 'Records')), `#${a.peakChart < 999 ? a.peakChart : '—'} · ${a.hits} top 10 · ${a.number1s}× #1 · ${a.awards} 🏆`),
-        !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn primary', onclick: () => openOffer(a.id) }, t(S.makeOffer)) : null,
-      ),
-      h('div', null,
-        h('h4', null, t(S.members)),
-        h('table', { class: 'tbl compact' },
-          h('tbody', null, a.members.map((pid) => {
-            const p = s.persons[pid];
-            if (!p) return null;
-            return h('tr', null,
-              h('td', null, h('img', { class: 'px', src: portraitDataUrl(p, 32, s.year), width: 28, height: 28, alt: '', style: 'vertical-align:middle;border-radius:4px;margin-right:4px' }), h('button', { class: 'link', onclick: () => openPerson(pid) }, p.name)),
-              h('td', { class: 'muted' }, p.role),
-              h('td', null, vis.ambition ? t(AMBITIONS.find((x) => x.id === p.ambition)?.name) : ''),
-              h('td', null, vis.traits ? p.traits.map((tr) => pill(t(traitById[tr]?.name))) : h('span', { class: 'muted' }, '…')),
-            );
-          })),
-        ),
-      ),
-    ),
-    h('h4', null, t(S.releases)),
-    h('div', { class: 'cover-row' }, a.releases.slice(-10).reverse().map((rid) => {
-      const r = s.releases[rid];
-      if (!r) return null;
-      return h('div', { class: 'cover-item', onclick: () => openRelease(rid) }, cover(s, r, 64), h('small', null, r.title), h('small', { class: 'muted' }, `${r.year} · #${r.peak < 999 ? r.peak : '—'}`));
-    })),
-    h('h4', null, t(S.history)),
-    h('ul', { class: 'memory' }, a.history.slice(-12).reverse().map((mid) => {
-      const m = s.memory.find((x) => x.id === mid);
-      return m ? h('li', null, h('span', { class: 'muted' }, `${monthName(m.month)} ${m.year} · `), t(m.text)) : null;
-    })),
-  );
-  modal(a.name, body, { wide: true, onClose: stopPreview });
+  openActPage(id);
 }
 
-const ROLE_NAMES: Record<string, ReturnType<typeof l>> = {
-  vocal: l('voz', 'vocals'), guitar: l('guitarra', 'guitar'), bass: l('baixo', 'bass'), drums: l('bateria', 'drums'), keys: l('teclados', 'keys'),
-  horns: l('sopros', 'horns'), dj: l('DJ', 'DJ'), producer: l('produção', 'producer'), mc: l('MC', 'MC'), strings: l('cordas', 'strings'), synthetic: l('voz sintética', 'synthetic voice'),
-};
-
 export function openPerson(id: string): void {
-  const s = g();
-  const p = s.persons[id];
-  if (!p) return;
-  const act = Object.values(s.acts).find((a) => a.members.includes(id));
-  const mine = act?.owner === 'player';
-  const deg = mine ? 5 : act ? s.knowledge[act.id]?.degree ?? 0 : 0;
-  const vis = visibleFields(deg);
-  const portraitBox = h('div', null, portraitCanvas(p, s, 3));
-  const activity = mine ? personActivity(s, id) : null;
-  const editLook = () => {
-    const editor = appearanceEditor(p, (look) => {
-      if (look) p.look = look;
-      else delete p.look;
-      portraitBox.replaceChildren(portraitCanvas(p, s, 3));
-    }, s.year);
-    modal(t(l('Editar aparência', 'Edit look')) + ` — ${p.name}`, editor, { wide: true, onClose: () => rerender() });
-  };
-  const body = h('div', { class: 'ficha' },
-    h('div', { class: 'person-head' }, portraitBox,
-      h('div', null,
-        h('div', null, pill(t(ROLE_NAMES[p.role] ?? l(p.role)))),
-        activity ? h('div', { class: 'small' }, icon(activity.icon, 1), ' ', t(activity.label)) : null,
-        h('button', { class: 'btn small', onclick: editLook }, t(l('Editar aparência', 'Edit look'))),
-      ),
-    ),
-    kv(t(S.age), s.year - p.born),
-    kv(t(S.origin), t(ORIGINS.find((o) => o.id === p.origin)?.name)),
-    act ? kv(t(l('Ato', 'Act')), actLink(s, act.id)) : null,
-    vis.ambition ? kv(t(S.ambition), t(AMBITIONS.find((x) => x.id === p.ambition)?.name)) : null,
-    vis.traits ? kv(t(S.traits), h('span', null, p.traits.map((tr) => pill(t(traitById[tr]?.name), 'trait')))) : null,
-    vis.private ? kv(t(S.health), p.health) : null,
-    h('h4', null, t(S.skills)),
-    vis.skills
-      ? h('table', { class: 'tbl compact' }, h('tbody', null, SKILLS.map((sk) => {
-        const v = p.skills[sk.id];
-        const w = mine ? 0 : [0, 26, 15, 8, 3][Math.max(0, deg - 1)];
-        return h('tr', null, h('td', null, t(sk.name)), h('td', null, mine ? Math.round(v) : `${Math.max(0, Math.round(v - w / 2))}–${Math.min(100, Math.round(v + w / 2))}`), h('td', null, mine ? bar(v) : rangeBar(Math.max(0, v - w / 2), Math.min(100, v + w / 2))));
-      })))
-      : h('p', { class: 'muted' }, t(l('Habilidades aparecem a partir de Observação.', 'Skills appear from Observation onward.'))),
-  );
-  modal(p.name, body);
+  openPersonPage(id);
 }
 
 /** Extras por faixa na ficha do lançamento (rodada 4: botão de ouvir). */

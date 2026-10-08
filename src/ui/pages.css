@@ -1,0 +1,49 @@
+/* Páginas de artista e cartas de integrante (rodada 5). */
+.pg .pg-head { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; padding: 10px; border-radius: var(--radius); background: var(--panel-2); border: 1px solid var(--line); margin-bottom: 10px; }
+.pg .pg-head-main { flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pg .pg-head h3 { margin: 0; }
+.pg-portrait canvas { image-rendering: pixelated; border-radius: 8px; background: var(--panel); }
+.pg-tabs .tabs { flex-wrap: wrap; }
+.pg-tab-body { padding-top: 8px; }
+
+.ovr { display: inline-grid; place-items: center; min-width: 34px; height: 30px; padding: 0 6px; border-radius: 7px; font-weight: 800; font-variant-numeric: tabular-nums; color: #fff; background: #8a7f74; }
+.ovr.big { min-width: 56px; height: 52px; font-size: 1.5rem; border-radius: 10px; }
+.ovr.low { background: #8a7f74; }
+.ovr.mid { background: #b7791f; }
+.ovr.good { background: #2f7d4f; }
+.ovr.elite { background: linear-gradient(135deg, #b8901c, #e3c158); color: #2a1f05; }
+
+.form { display: inline-block; font-weight: 800; padding: 0 4px; border-radius: 4px; }
+.form.f0 { color: var(--bad); } .form.f1 { color: var(--bad); } .form.f2 { color: var(--muted); } .form.f3 { color: var(--good); } .form.f4 { color: var(--good); }
+
+.pcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.pcard { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; text-align: center; font: inherit; }
+.pcard:hover, .pcard:focus-visible { border-color: var(--accent); }
+.pcard.elite { background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 18%, var(--panel)), var(--panel)); border-color: var(--gold); }
+.pcard.good { background: linear-gradient(180deg, color-mix(in srgb, var(--good) 10%, var(--panel)), var(--panel)); }
+.pcard-top { display: flex; align-items: center; gap: 6px; width: 100%; justify-content: space-between; }
+.pcard canvas { image-rendering: pixelated; }
+.pcard-name { font-size: 0.9rem; line-height: 1.15; }
+.pcard-attrs { display: flex; flex-direction: column; gap: 1px; font-size: 0.75rem; width: 100%; }
+.pcard-attrs span { display: flex; justify-content: space-between; gap: 6px; }
+.pcard-big.elite { border-color: var(--gold); }
+
+.attr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.attr-col { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; background: var(--panel); }
+.attr-col h4 { margin: 0 0 6px; display: flex; align-items: center; gap: 6px; }
+.attr-col ul, .attr-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.attr-col li, .attr-list li { display: grid; grid-template-columns: minmax(90px, 1fr) 80px 44px auto; gap: 6px; align-items: center; font-size: 0.85rem; }
+.attr-col .bar, .attr-list .bar { width: 100%; }
+.attr-v { font-variant-numeric: tabular-nums; text-align: right; font-weight: 700; }
+.attr-v.elite { color: var(--gold); } .attr-v.good { color: var(--good); } .attr-v.mid { color: var(--warn); } .attr-v.low { color: var(--muted); }
+.bar.elite > span { background: var(--gold); } .bar.mid > span { background: var(--warn); } .bar.low > span { background: var(--muted); }
+.trait-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.thoughts { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; }
+.thoughts li.good { color: var(--good); } .thoughts li.bad { color: var(--bad); }
+.timeline li.important { font-weight: 600; }
+.tbl tr.click { cursor: pointer; }
+.tbl tr.click:hover { background: var(--panel-2); }
+@media (max-width: 560px) {
+  .attr-col li, .attr-list li { grid-template-columns: minmax(80px, 1fr) 60px 40px; }
+  .pcard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

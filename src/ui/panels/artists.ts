@@ -13,12 +13,13 @@ import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, genreName, cityName, kv, logo, pill, promiseName, rerender, section, statusName, toast } from '../common';
 import { h, select } from '../dom';
 import { openAct } from '../ficha';
+import { personCard } from '../pages';
 import { store } from '../store';
 import { playPreview } from '../audio';
 import { EXTRA_ACTIONS } from '../../data/actions';
 import { agendaLoad, slotLoad } from '../../sim/capacity';
 import { freeCapacity } from '../../sim/agenda';
-import { ic, loadBar, meter, portrait, setTab, stat } from '../vis';
+import { ic, loadBar, meter, setTab, stat } from '../vis';
 import { contractExtra, fandomSection, membersSection, reunionSection } from './people';
 
 export function artistsPanel(s: GameState): HTMLElement {
@@ -88,7 +89,7 @@ export function artistsPanel(s: GameState): HTMLElement {
             h('div', null, h('button', { class: 'link', onclick: () => openAct(a.id) }, t(S.inspect)), ' · ', h('button', { class: 'link', onclick: () => playPreview(a.logoSeed, a.genre, s.year) }, t(S.preview))),
           ),
         ),
-        h('div', { class: 'row wrap portraits' }, a.members.map((id) => portrait(s.persons[id], 44))),
+        h('div', { class: 'pcard-grid' }, a.members.map((id) => s.persons[id] ? personCard(s, s.persons[id], { compact: true }) : null)),
         h('div', { class: 'grid3' },
           meter('fame', S.fame, a.fame),
           meter('fire', S.momentum, a.momentum),

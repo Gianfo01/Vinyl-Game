@@ -69,6 +69,8 @@ export interface Person {
   goal?: 'security' | 'credit' | 'family' | 'leadership' | 'solo';
   parentId?: string;
   retireAge?: number;
+  /** personagem do jogador (rodada 5) */
+  isPlayer?: boolean;
 }
 
 export type ActStatus = 'emerging' | 'active' | 'hiatus' | 'retired' | 'split';
