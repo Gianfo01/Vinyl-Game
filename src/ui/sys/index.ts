@@ -8,3 +8,4 @@ import './scenes';
 import './live';
 import './life';
 import './directory';
+import './capital';

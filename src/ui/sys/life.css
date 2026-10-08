@@ -30,3 +30,5 @@
 .style-tree .perk { border: 1px solid var(--line); border-radius: 6px; padding: 0.4rem; font-size: 0.85rem; background: var(--panel-2); }
 .style-tree .perk.got { border-color: var(--good, #2a7); box-shadow: 0 0 0 1px var(--good, #2a7) inset; }
 .style-tree .perk.next { border-style: dashed; border-color: var(--accent); }
+.tile.inv { display: flex; flex-direction: column; gap: 0.3rem; }
+.op-list { margin: 0; padding-left: 1rem; }

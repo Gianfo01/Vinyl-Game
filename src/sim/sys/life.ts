@@ -102,6 +102,11 @@ export function energyLeft(s: GameState): number {
   return Math.max(0, maxEnergy(s) - L0.used);
 }
 
+/** Gasta tempo livre do mês (para outros sistemas: sócios, tramas, decisões). */
+export function spendEnergy(s: GameState, n: number): L | null {
+  return spend(s, n);
+}
+
 function spend(s: GameState, n: number): L | null {
   if (energyLeft(s) < n) return l('Sem tempo livre este mês. Volte no mês que vem.', 'No free time left this month. Come back next month.');
   life(s).used += n;

@@ -21,6 +21,7 @@ import { h, select } from '../dom';
 import { openActPage, openPersonPage, personCard } from '../pages';
 import { portraitCanvas } from '../pixel/avatar';
 import { personaTab } from './persona';
+import { transferSection } from './capital';
 import { persona } from '../../sim/sys/persona';
 import { registerArea, registerCutscene } from '../registry';
 import { chips, ic, meter, stat, tabs } from '../vis';
@@ -265,7 +266,7 @@ function youArea(s: GameState): HTMLElement {
     { id: 'love', label: t(l('Amor e família', 'Love and family')), icon: 'heart', render: () => loveTab(s) },
     { id: 'music', label: t(l('Carreira musical', 'Music career')), icon: 'guitar', render: () => musicTab(s) },
     { id: 'leisure', label: t(l('Lazer e saúde', 'Leisure and health')), icon: 'sparkle', render: () => leisureTab(s) },
-    { id: 'wealth', label: t(l('Patrimônio', 'Wealth')), icon: 'house', render: () => ownerTab(s) },
+    { id: 'wealth', label: t(l('Patrimônio', 'Wealth')), icon: 'house', render: () => h('div', null, transferSection(s), ownerTab(s)) },
     { id: 'diary', label: t(l('Diário', 'Diary')), icon: 'newspaper', render: () => diaryTab(s) },
   ], rerender));
 }

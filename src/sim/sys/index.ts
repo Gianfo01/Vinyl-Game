@@ -11,3 +11,4 @@ import './life';
 import './temper';
 import './persona';
 import './cards6';
+import './capital';
