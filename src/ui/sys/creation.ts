@@ -17,6 +17,7 @@ import { registerCutscene, registerTab, openScene } from '../registry';
 import { store } from '../store';
 import { chips, ic, scoreBadge, stat, tile } from '../vis';
 import './creation.css';
+import { reviewCard, reviewSummary } from '../reviewView';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { recipeSong: '', featSong: '', featGuest: '', clipSong: '', commAct: '' };
@@ -337,19 +338,22 @@ registerTab('creation', { id: 'cr-comm', label: l('Encomendas', 'Commissions'), 
 registerTab('creation', { id: 'cr-div', label: l('Divisões', 'Divisions'), icon: 'cd', render: divisionsTab, order: 66 });
 registerTab('creation', { id: 'cr-catalog', label: l('Remaster e standards', 'Remasters and standards'), icon: 'disc', render: catalogTab, order: 67 });
 
-/** Cena: as quatro críticas do lançamento, reveladas uma a uma. */
+/** Cena: as críticas completas do lançamento, reveladas uma a uma, e a nota dos fãs no fim. */
 registerCutscene('review', (s, cs, close) => {
   const rel = s.releases[String(cs.data.releaseId)];
   const rv = rel ? s.reviews[rel.id] ?? [] : [];
   const box = h('div', { class: 'cr-reviews' });
   let shown = 0;
   const next = () => {
-    if (shown >= rv.length) return;
+    if (shown >= rv.length || !rel) return;
     const r = rv[shown++];
-    box.appendChild(h('div', { class: 'cr-review' }, h('div', { class: 'cr-review-head' }, h('b', null, r.outlet), h('small', { class: 'muted' }, r.critic)), scoreBadge(r.score), h('p', null, `"${t(r.quote)}"`)));
+    box.querySelectorAll('details').forEach((d) => d.removeAttribute('open'));
+    box.appendChild(reviewCard(s, rel, r));
     if (shown === rv.length) {
       const avg = rv.reduce((t2, x) => t2 + x.score, 0) / Math.max(1, rv.length);
       box.appendChild(h('p', { class: 'cr-verdict' }, t(l('Média: ', 'Average: ')), scoreBadge(avg), ' ', avg >= 8 ? t(l('A crítica se rendeu.', 'The critics surrendered.')) : avg >= 6 ? t(l('Recepção boa.', 'Good reception.')) : avg >= 4.5 ? t(l('Recepção morna.', 'Lukewarm reception.')) : t(l('A crítica não perdoou.', 'The critics showed no mercy.'))));
+      const sum = reviewSummary(s, rel);
+      if (sum) box.appendChild(sum);
       nextBtn.hidden = true;
     }
   };

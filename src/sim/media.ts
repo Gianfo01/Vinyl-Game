@@ -6,6 +6,7 @@ import { familyOf, l, type L, type MarketId } from '../data/world';
 import { registerEvents, type EventDef } from './events';
 import type { Act, GameState, Release } from './types';
 import type { Crisis, Review } from './xtypes';
+import { buildReviews } from './reviews';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 
 export interface CriticDef {
@@ -50,26 +51,16 @@ export function activeCritics(s: GameState): CriticDef[] {
   return CRITICS.filter((c) => s.year >= c.from && s.year <= c.to);
 }
 
-/** Resenhas de um lançamento (3–5 críticos, cada um com viés). */
+/** Resenhas de um lançamento (cada crítico com viés próprio; texto completo em reviews.ts). */
 export function reviewRelease(s: GameState, r: Rng, rel: Release): Review[] {
   const act = s.acts[rel.actId];
   if (!act) return [];
-  const fam = familyOf(act.genre);
-  const orig = rel.songs.reduce((t, id) => t + (s.songs[id]?.originality ?? 50), 0) / Math.max(1, rel.songs.length);
   const crit = activeCritics(s);
   const n = Math.min(crit.length, rel.owner === 'player' ? 4 : 2);
   const picks = r.shuffle([...crit]).slice(0, n);
-  const out: Review[] = picks.map((c) => {
-    let v = rel.q / 10 * 0.75 + orig / 10 * 0.25;
-    if (c.favors.includes(fam)) v += 0.8;
-    if (c.dislikes.includes(fam)) v -= 1.2;
-    v += (c.mainstream * (act.positioning - 50)) / 60;
-    v -= c.harsh * 1.2;
-    v += r.normal(0, 0.7);
-    const score = Math.round(clamp(v, 0.5, 10) * 10) / 10;
-    const quote = score >= 8.5 ? l('Obra-prima instantânea.', 'An instant masterpiece.') : score >= 7 ? l('Forte, com momentos memoráveis.', 'Strong, with memorable moments.') : score >= 5.5 ? l('Competente, mas previsível.', 'Competent but predictable.') : score >= 4 ? l('Irregular e sem foco.', 'Uneven and unfocused.') : l('Um erro de percurso.', 'A misstep.');
-    return { critic: c.name, outlet: c.outlet, score, quote };
-  });
+  // críticas completas: nota por aspecto, texto montado na hora (rodada 5); rivais ficam só com números
+  const out: Review[] = buildReviews(s, r, rel, picks);
+  if (rel.owner !== 'player' && !act.playerBand) for (const x of out) { delete x.ctx; delete x.best; delete x.worst; }
   s.reviews[rel.id] = out;
   const avg = out.reduce((t, x) => t + x.score, 0) / Math.max(1, out.length);
   // crítica afeta prestígio e um pouco o apelo (não compra hit)

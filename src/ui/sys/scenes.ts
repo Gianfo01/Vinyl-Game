@@ -8,7 +8,7 @@ import type { Cutscene } from '../../sim/ext4';
 import { awardSpeech, type SpeechChoice } from '../../sim/sys/scenes/awards';
 import { agmVote, type AgmChoice } from '../../sim/sys/scenes/board';
 import { appealVerdict, courtChoice, expertFee, type CourtChoice } from '../../sim/sys/scenes/court';
-import { TONES, TONE_NAMES, autoAnswers, canInterview, resolveInterview, startInterview, type Question, type Tone } from '../../sim/sys/scenes/interview';
+import { TONES, TONE_NAMES, autoAnswers, canInterview, reaction, resolveInterview, startInterview, type Question, type Tone } from '../../sim/sys/scenes/interview';
 import { BOOTH_COST, CLUB_NIGHTS, clubNight, factoryOvertime, fairChoice, farewellChoice, mansionParty, streetChoice, type BoothSize } from '../../sim/sys/scenes/life';
 import { MOOD_NAMES, canVisitRadio, radioFit, resolveRadio, startRadioVisit, type DjMood } from '../../sim/sys/scenes/radio';
 import { sc, type PlaceKind } from '../../sim/sys/scenes/state';
@@ -121,31 +121,47 @@ registerCutscene('interview', (s, cs, close) => {
     clearInterval(timer);
     const res = resolveInterview(s, rngOf(s), cs.id, answers);
     if ('pt' in res) { box.replaceChildren(h('p', null, t(res))); return; }
-    box.replaceChildren(h('p', null, t(l('Nota da entrevista: ', 'Interview grade: ')), scoreBadge(res.grade / 10)), h('ul', null, res.lines.map((x) => h('li', null, t(x)))));
+    box.replaceChildren(...([
+      h('p', null, t(l('Nota da entrevista: ', 'Interview grade: ')), scoreBadge(res.grade / 10)),
+      res.transcript ? h('ol', { class: 'iv-transcript' }, res.transcript.map((x) => h('li', { class: x.mood },
+        h('div', { class: 'muted small' }, `“${t(x.q)}”`),
+        h('div', null, x.a ? `— ${t(x.a)}` : t(l('— (silêncio)', '— (silence)'))),
+        h('small', null, t(x.r))))) : null,
+      h('ul', null, res.lines.map((x) => h('li', null, t(x))))] as (HTMLElement | null)[]).filter((x): x is HTMLElement => !!x));
     rerender();
   };
   const ask = (k: number) => {
     clearInterval(timer);
     if (k >= qs.length) return finish();
-    let left = 10;
+    let left = 15;
     const clock = h('span', { class: 'iv-clock', 'aria-live': 'off' }, `${left}s`);
+    const q = qs[k];
+    const choose = (tn: Tone | null) => {
+      clearInterval(timer);
+      answers[k] = tn;
+      const re = reaction(q, tn);
+      box.replaceChildren(h('p', { class: 'iv-q' }, `“${t(q.text)}”`), tn && q.answers ? h('p', { class: 'iv-a' }, `— ${t(q.answers[tn])}`) : '', h('p', { class: `iv-react ${re.mood}` }, t(re.text)));
+      setTimeout(() => ask(k + 1), document.documentElement.classList.contains('reduced-motion') ? 0 : 1100);
+    };
+    const order = [...TONES].sort((a, b) => ((q.text.pt.length * 7 + a.length * 3) % 5) - ((q.text.pt.length * 7 + b.length * 3) % 5));
     box.replaceChildren(
-      h('p', { class: 'iv-q' }, h('small', { class: 'muted' }, `${k + 1}/${qs.length} · ${String((cs.data.venue as { host?: string })?.host ?? '')}`), h('br'), `“${t(qs[k].text)}”`),
-      h('div', { class: 'row wrap' }, TONES.map((tn) => h('button', { class: 'btn', onclick: () => { answers[k] = tn; ask(k + 1); } }, t(TONE_NAMES[tn])))),
+      h('p', { class: 'iv-q' }, h('small', { class: 'muted' }, `${k + 1}/${qs.length} · ${String((cs.data.venue as { host?: string })?.host ?? '')}`), h('br'), `“${t(q.text)}”`),
+      h('div', { class: 'iv-answers' }, order.map((tn) => h('button', { class: 'btn iv-ans', onclick: () => choose(tn) },
+        h('span', null, q.answers ? t(q.answers[tn]) : t(TONE_NAMES[tn])), q.answers ? h('small', { class: 'muted' }, t(TONE_NAMES[tn])) : null))),
       clock,
     );
     if (!document.documentElement.classList.contains('reduced-motion')) {
       timer = window.setInterval(() => {
         left -= 1;
         clock.textContent = `${left}s`;
-        if (left <= 0) { answers[k] = null; ask(k + 1); }
+        if (left <= 0) choose(null);
       }, 1000);
     }
   };
   const start = h('div', { class: 'row' },
     h('button', { class: 'btn primary', onclick: () => ask(0) }, t(l('Começar a entrevista', 'Start the interview'))),
     h('button', { class: 'btn ghost', onclick: () => { const a = autoAnswers(s, rngOf(s), cs.id); a.forEach((x, i) => (answers[i] = x)); finish(); } }, t(l('Resolver automático', 'Auto-resolve'))));
-  box.append(h('p', { class: 'muted small' }, t(l('Responda cada pergunta com um tom. Sem resposta em 10 segundos, conta como silêncio.', 'Answer each question with a tone. No answer in 10 seconds counts as silence.'))), start);
+  box.append(h('p', { class: 'muted small' }, t(l('Escolha a resposta para cada pergunta. O tom de cada uma aparece embaixo; sem resposta em 15 segundos, conta como silêncio.', 'Pick the answer to each question. Each one\'s tone is shown below it; no answer in 15 seconds counts as silence.'))), start);
   if (store.prefs.minigames === 'auto') setTimeout(() => (start.lastChild as HTMLButtonElement)?.click(), 0);
   return frame(s, cs, () => { clearInterval(timer); close(); }, box, { fx: 'flash' });
 });

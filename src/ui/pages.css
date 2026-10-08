@@ -47,3 +47,13 @@
   .attr-col li, .attr-list li { grid-template-columns: minmax(80px, 1fr) 60px 40px; }
   .pcard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.rv-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; background: var(--panel); margin-bottom: 10px; }
+.rv-head { display: flex; gap: 10px; align-items: center; }
+.rv-stars { color: var(--gold); letter-spacing: 1px; }
+.rv-quote { font-size: 1.05rem; font-style: italic; margin: 6px 0; }
+.rv-card details p { margin: 6px 0; line-height: 1.45; }
+.rv-card summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; }
+.rv-aspects { list-style: none; padding: 0; margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 4px 12px; font-size: 0.82rem; }
+.rv-aspects li { display: grid; grid-template-columns: 1fr 60px 30px; gap: 6px; align-items: center; }
+.rv-aspects .bar { width: 100%; }
+.rv-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 6px 0; }

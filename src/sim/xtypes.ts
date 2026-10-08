@@ -214,6 +214,13 @@ export interface Review {
   outlet: string;
   score: number; // 0..10
   quote: L;
+  /** rodada 5: semente do texto, notas por aspecto (0..10), faixas citadas, gosto e contexto */
+  seed?: number;
+  aspects?: Record<'melody' | 'lyrics' | 'performance' | 'production' | 'originality' | 'cohesion', number>;
+  best?: string;
+  worst?: string;
+  fav?: number;
+  ctx?: { nth: number; prev?: string; prevPeak?: number; prevAvg?: number; rival?: string; rivalAct?: string; rivalBetter?: boolean };
 }
 
 export interface Crisis {

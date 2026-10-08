@@ -10,6 +10,7 @@ import { store } from './store';
 import { money } from '../sim/util';
 import { l } from '../data/world';
 import { openActPage, openPersonPage } from './pages';
+import { reviewCard, reviewSummary } from './reviewView';
 
 function g(): GameState {
   return store.game!;
@@ -53,6 +54,7 @@ export function openRelease(id: string): void {
         return h('tr', null, h('td', null, so.title, ' ', ...RELEASE_SONG_EXTRAS.map((f) => f(s, so))), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, show(so.lyrics)), h('td', null, show(so.performance)), h('td', null, show(so.production)), h('td', null, show(so.originality)));
       })),
     ) : null,
+    s.reviews[r.id]?.length ? h('div', null, h('h4', null, t(l('Críticas', 'Reviews'))), reviewSummary(s, r), ...s.reviews[r.id].map((rv) => reviewCard(s, r, rv, { open: false }))) : null,
     mine && r.autopsy ? h('div', null,
       h('h4', null, t(S.autopsy)),
       h('p', { class: 'muted small' }, t(S.autopsyNote)),
