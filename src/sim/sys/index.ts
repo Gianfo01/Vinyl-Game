@@ -13,3 +13,4 @@ import './persona';
 import './cards6';
 import './capital';
 import './hq6';
+import './intrigue';

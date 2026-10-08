@@ -135,3 +135,28 @@ describe('nomes reais', () => {
     expect(t({ pt: 'WorldSound 100', en: 'WorldSound 100' })).toBe('WorldSound 100');
   });
 });
+
+describe('intriga e decisões (CK3)', () => {
+  it('trama de investigação termina, decisões aplicam perks e o caixa fecha', async () => {
+    const I = await import('../src/sim/sys/intrigue');
+    const s = mk('r6-intrigue', { startYear: 1970 });
+    const lb = Object.values(s.labels).find((x) => x.active)!;
+    expect(I.startScheme(s, 'dig', { kind: 'label', id: lb.id }, 2)).toBeNull();
+    expect(I.intrigue(s).schemes.length).toBe(1);
+    for (let i = 0; i < 8; i++) advanceMonth(s);
+    expect(I.intrigue(s).schemes.length).toBe(0);
+    expect(I.intrigue(s).log.length).toBeGreaterThan(1);
+    s.player.reputation.institutional = 60;
+    s.player.hq = Math.max(s.player.hq, 2);
+    s.player.cash += 0;
+    const before = perk(s, 'signals');
+    if (s.player.cash > 100000_00) {
+      expect(I.takeDecision(s, rngOf(s), 'music_school')).toBeNull();
+      expect(perk(s, 'signals')).toBeGreaterThan(before);
+    }
+    expect(I.takeDecision(s, rngOf(s), 'artistic_manifesto')).toBeNull();
+    expect(I.takeDecision(s, rngOf(s), 'commercial_pact')).not.toBeNull();
+    expect(perk(s, 'critics')).toBeGreaterThan(0.2);
+    invariant(s);
+  });
+});

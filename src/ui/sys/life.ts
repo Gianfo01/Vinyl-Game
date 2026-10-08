@@ -21,6 +21,7 @@ import { h, select } from '../dom';
 import { openActPage, openPersonPage, personCard } from '../pages';
 import { portraitCanvas } from '../pixel/avatar';
 import { personaTab } from './persona';
+import { decisionsTab } from './intrigue';
 import { transferSection } from './capital';
 import { persona } from '../../sim/sys/persona';
 import { registerArea, registerCutscene } from '../registry';
@@ -263,6 +264,7 @@ function youArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub life' }, tabs('life', [
     { id: 'me', label: t(l('Perfil', 'Profile')), icon: 'star', render: () => profileTab(s) },
     { id: 'persona', label: t(l('Personalidade', 'Personality')), icon: 'sparkle', badge: persona(s).copingPrompt ? 1 : undefined, render: () => personaTab(s) },
+    { id: 'decisions', label: t(l('Decisões', 'Decisions')), icon: 'flag', render: () => decisionsTab(s) },
     { id: 'love', label: t(l('Amor e família', 'Love and family')), icon: 'heart', render: () => loveTab(s) },
     { id: 'music', label: t(l('Carreira musical', 'Music career')), icon: 'guitar', render: () => musicTab(s) },
     { id: 'leisure', label: t(l('Lazer e saúde', 'Leisure and health')), icon: 'sparkle', render: () => leisureTab(s) },
