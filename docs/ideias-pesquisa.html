@@ -1,0 +1,436 @@
+<title>Vinyl to Neural · Próximas Faixas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: encarte de disco — índice fixo à esquerda (lado A / lado B), faixas numeradas à direita, cada ideia é uma linha de crédito com selos de prioridade e esforço. */
+:root {
+  --bg: #eef1f3; --paper: #fbfcfc; --ink: #15202a; --muted: #586774; --line: #d3dbe1;
+  --accent: #0c7a6b; --accent-soft: #d6ece8; --gold: #a97a14; --gold-soft: #f4e7c6; --hot: #b4412b; --hot-soft: #f6dcd5;
+  --display: 'Syne', 'Arial Black', system-ui, sans-serif; --body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f151b; --paper: #161f27; --ink: #e5ecf1; --muted: #9aabb8; --line: #2a3742;
+  --accent: #3fc1aa; --accent-soft: #163a35; --gold: #e0b14a; --gold-soft: #3a2f16; --hot: #ee7d63; --hot-soft: #3d201a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f151b; --paper: #161f27; --ink: #e5ecf1; --muted: #9aabb8; --line: #2a3742;
+  --accent: #3fc1aa; --accent-soft: #163a35; --gold: #e0b14a; --gold-soft: #3a2f16; --hot: #ee7d63; --hot-soft: #3d201a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15.5px/1.6 var(--body); padding-inline: 16px; padding-block: 0 48px; }
+a { color: var(--accent); }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px; }
+header.hero { max-width: 1180px; margin: 0 auto; padding-block: 40px 28px; display: grid; gap: 14px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 800 clamp(2.2rem, 5vw, 3.6rem)/1.02 var(--display); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h1 em { font-style: normal; color: var(--accent); }
+.lede { max-width: 68ch; color: var(--muted); margin: 0; font-size: 1.05rem; }
+.groove { height: 10px; background: repeating-linear-gradient(90deg, var(--line) 0 2px, transparent 2px 6px); border-radius: 2px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); align-self: start; display: grid; gap: 2px; font-size: .9rem; max-height: calc(100vh - 32px); overflow: auto; }
+nav.toc .side { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+nav.toc a { color: var(--ink); text-decoration: none; padding: 4px 8px; border-radius: 6px; display: grid; grid-template-columns: 2.2em 1fr; }
+nav.toc a span { font: 500 12px/1.6 var(--mono); color: var(--muted); }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--accent-soft); outline: none; }
+main { min-width: 0; display: grid; gap: 44px; }
+section { display: grid; gap: 14px; scroll-margin-top: 16px; }
+.track { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+.track b { font: 500 13px/1 var(--mono); color: var(--accent); }
+h2 { font: 800 1.6rem/1.15 var(--display); margin: 0; text-wrap: balance; }
+h3 { font: 600 1.05rem/1.3 var(--body); margin: 18px 0 2px; }
+p { margin: 0; max-width: 72ch; }
+.intro { color: var(--muted); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.filters .lbl { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.filters button { font: 600 13px/1 var(--body); padding: 7px 11px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.filters button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.filters .count { margin-left: auto; font: 500 12px/1 var(--mono); color: var(--muted); }
+ul.items { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+li.it { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+li.it > .h { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: baseline; }
+li.it > .h strong { font-weight: 600; margin-right: 4px; }
+li.it p { color: var(--ink); }
+li.it .src { color: var(--muted); font-size: .88rem; }
+.tag { font: 500 11px/1 var(--mono); padding: 4px 7px; border-radius: 4px; letter-spacing: .03em; white-space: nowrap; }
+.p1 { background: var(--hot-soft); color: var(--hot); }
+.p2 { background: var(--gold-soft); color: var(--gold); }
+.p3 { background: var(--accent-soft); color: var(--accent); }
+.e { border: 1px solid var(--line); color: var(--muted); }
+.k { color: var(--muted); }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { font: 500 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+td:first-child { font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.era { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 4px 16px; border-left: 3px solid var(--accent); padding-left: 14px; }
+.era .y { font: 500 13px/1.6 var(--mono); color: var(--accent); }
+.phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.phase { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.phase h3 { margin: 0; font-family: var(--display); font-weight: 800; }
+.phase ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: .93rem; }
+.note { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: .93rem; color: var(--muted); }
+.hidden-by-filter { display: none; }
+@media (max-width: 880px) {
+  .wrap { grid-template-columns: 1fr; }
+  nav.toc { position: static; max-height: none; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  nav.toc .side { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<header class="hero">
+  <div class="eyebrow">Vinyl to Neural · documento de planejamento · lado A + lado B</div>
+  <h1>Próximas faixas: o que <em>adicionar, aprofundar e melhorar</em></h1>
+  <p class="lede">Pesquisa em 14 jogos de gestão e na história da música gravada, cruzada com o que o jogo já tem depois da rodada 3. Cada ideia traz de onde veio, como funcionaria no jogo, prioridade e tamanho do trabalho. Use os filtros para ver só mini-jogos, arte, sistemas, conteúdo ou melhorias.</p>
+  <div class="groove" aria-hidden="true"></div>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sumário">
+  <div class="side">Lado A · pesquisa</div>
+  <a href="#legenda"><span>00</span>Como ler</a>
+  <a href="#jogos"><span>01</span>O que cada jogo ensina</a>
+  <a href="#historia"><span>02</span>História da música</a>
+  <div class="side">Lado B · o que fazer</div>
+  <a href="#minijogos"><span>03</span>Mini-jogos de criação</a>
+  <a href="#cenas"><span>04</span>Novos locais em pixel art</a>
+  <a href="#pessoas"><span>05</span>Pessoas e vida</a>
+  <a href="#criacao"><span>06</span>Criação e estúdio</a>
+  <a href="#industria"><span>07</span>Fábrica, varejo e distribuição</a>
+  <a href="#marketing"><span>08</span>Marketing, mídia e paradas</a>
+  <a href="#shows"><span>09</span>Shows e festivais</a>
+  <a href="#negocios"><span>10</span>Negócios e império</a>
+  <a href="#mundo"><span>11</span>Mundo, leis e política</a>
+  <a href="#temas"><span>12</span>Cenas, gêneros e temáticas</a>
+  <a href="#modos"><span>13</span>Modos, metas e rejogabilidade</a>
+  <a href="#som"><span>14</span>Som e visual</a>
+  <a href="#melhorias"><span>15</span>Melhorias do que já existe</a>
+  <a href="#roteiro"><span>16</span>Roteiro sugerido</a>
+  <a href="#fontes"><span>17</span>Fontes</a>
+</nav>
+
+<main>
+<section id="legenda">
+  <div class="track"><b>00</b><h2>Como ler</h2></div>
+  <p class="intro">Cada ideia tem três selos. <span class="tag p1">Impacto alto</span> muda como o jogo é jogado ou percebido; <span class="tag p2">Impacto médio</span> aprofunda um sistema existente; <span class="tag p3">Impacto baixo</span> é tempero. O esforço é <span class="tag e">P</span> (dias), <span class="tag e">M</span> (1–2 semanas) ou <span class="tag e">G</span> (um mês ou mais). O tipo diz se é mini-jogo, arte, sistema, conteúdo ou melhoria.</p>
+  <div class="note">Ponto de partida: o jogo já tem agenda por capacidade, semana e dias, sede isométrica em 6 níveis com filiais, repertório, estúdio por takes, rollout, mídia com censura, turnês no mapa, marcas, negócios com bolsa, era sintética, dinastias, movimentos, rivais com relatório e mapa com camadas. As ideias abaixo evitam repetir isso; quando tocam num sistema existente, dizem o que muda.</div>
+</section>
+
+<div class="filters" role="group" aria-label="Filtrar ideias">
+  <span class="lbl">Tipo</span>
+  <button type="button" data-f="k" data-v="all" aria-pressed="true">Tudo</button>
+  <button type="button" data-f="k" data-v="minijogo" aria-pressed="false">Mini-jogos</button>
+  <button type="button" data-f="k" data-v="arte" aria-pressed="false">Arte</button>
+  <button type="button" data-f="k" data-v="sistema" aria-pressed="false">Sistemas</button>
+  <button type="button" data-f="k" data-v="conteudo" aria-pressed="false">Conteúdo</button>
+  <button type="button" data-f="k" data-v="melhoria" aria-pressed="false">Melhorias</button>
+  <span class="lbl" style="margin-left:8px">Impacto</span>
+  <button type="button" data-f="p" data-v="all" aria-pressed="true">Todos</button>
+  <button type="button" data-f="p" data-v="1" aria-pressed="false">Alto</button>
+  <button type="button" data-f="p" data-v="2" aria-pressed="false">Médio</button>
+  <span class="count" id="count" aria-live="polite"></span>
+</div>
+
+<section id="jogos">
+  <div class="track"><b>01</b><h2>O que cada jogo ensina</h2></div>
+  <p class="intro">A pergunta para cada referência foi: qual é a mecânica que faz as pessoas jogarem por centenas de horas, e qual é o equivalente dela no mundo de uma gravadora.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Jogo</th><th>Mecânica que vale copiar</th><th>Tradução para Vinyl to Neural</th></tr></thead>
+    <tbody>
+      <tr><td>RimWorld</td><td>Narrador de histórias que dosa desastres pela riqueza; pessoas com necessidades, pensamentos que somam humor, colapsos mentais, saúde por parte do corpo, relações e brigas.</td><td>Humor como pilha de pensamentos visíveis ("dormiu no ônibus −6", "show lotado +12"); colapsos (sumir antes do show, quebrar o estúdio, recaída); saúde vocal e auditiva; o Diretor de Histórias escala crises pelo tamanho do selo.</td></tr>
+      <tr><td>Game Dev Tycoon</td><td>Combinação tema × gênero com notas; distribuição de foco por etapa do desenvolvimento; crítica de 4 revisores; garagem → escritório; feiras do setor; motor próprio; tendências.</td><td>Combinação gênero × tema de letra (com tendências por era); sliders de foco por etapa (composição, arranjo, gravação, mixagem); feiras reais do setor (MIDEM 1967, SXSW 1987) para gerar hype; "motor" = som assinatura do estúdio que você desenvolve.</td></tr>
+      <tr><td>Capitalism Lab</td><td>Cadeias de suprimento com unidades (compra, fábrica, venda); qualidade × marca × preço; pesquisa tecnológica; prefeito e cidade; mídia tradicional disputada pela internet; comprar empresas privadas.</td><td>Cadeia goma-laca/PVC/policarbonato → prensagem → depósito → loja; preço com elasticidade por formato; árvore de pesquisa (estúdio, fabricação, distribuição); possuir rádio, TV e streaming; a internet tirando audiência do rádio.</td></tr>
+      <tr><td>Football Manager</td><td>Olheiros com atributos escondidos até conhecer; dinâmica do vestiário (líderes, grupos); coletivas de imprensa; conversas com jogador; diretoria com expectativa e demissão; cláusulas; caixa de entrada como interface.</td><td>Atributos de artista revelados aos poucos; hierarquia e grupos na banda; coletiva de imprensa como mini-jogo; conversas um a um (elogiar, cobrar, multar); modo carreira em que você é contratado por um selo e pode ser demitido pelo conselho; caixa de entrada com e-mails, memorandos e faxes conforme a era.</td></tr>
+      <tr><td>FIFA Manager</td><td>Vida pessoal do técnico (casa, família, carro, fortuna); construção detalhada do estádio e do centro de treinamento; loja e fã-clube; patrocínios por placa.</td><td>O dono do selo como personagem: casa, família, saúde, patrimônio pessoal separado da empresa; construir a própria casa de shows peça por peça; fã-clube oficial com mensalidade.</td></tr>
+      <tr><td>Hollywood Animal</td><td>Estúdio de cinema da era do som em diante; roteiro com elementos e tags; química de elenco; segredos, subornos e chantagem; código de censura; produção por fases; tom adulto e escolhas morais.</td><td>Segredos de artistas e rivais (dossiês) como moeda; química entre músicos e com produtores; código moral de rádios e TVs por era; pré-estreia de disco com convidados; escolhas moralmente cinzentas (jabá, contratos leoninos, abafar escândalo).</td></tr>
+      <tr><td>Chart Wars 3 / Music Wars</td><td>O clássico do gênero: contratar bandas, lançar, promover, turnês, balanço, rivais por IA. Music Wars Empire: mais de 50 paradas no mundo, incluindo streaming.</td><td>Mais paradas por país e formato (rádio, vendas, streaming, vídeo); paradas com nome e regras próprias que mudam com a era (ver SoundScan, abaixo).</td></tr>
+      <tr><td>CD Market</td><td>Selo que começa no vinil e vai ao digital; conquistas em vendas, turnês, prêmios, formatos, processos, lojas e música digital.</td><td>Lojas de discos como negócio próprio; processos judiciais como parte normal da indústria; formatos como progressão visível.</td></tr>
+      <tr><td>Schedule I</td><td>Misturar ingredientes muda efeitos e valor do produto; clientes com preferências e orçamento; revendedores com comissão de 20% e carteira de clientes; funcionários produzem enquanto você vende; bairros que se abrem.</td><td>Receita sonora: combinar ingredientes (instrumentos, efeitos, samples) gera "efeitos" que públicos específicos procuram; equipe de rua (street team) e distribuidores independentes com comissão e carteira de lojas; bairros e cenas que se abrem pela reputação; risco de fiscalização (pirataria, jabá).</td></tr>
+      <tr><td>RollerCoaster Tycoon</td><td>Construir peça por peça; notas de empolgação, intensidade e náusea; pensamentos dos visitantes ("quero ir embora"); cenários com objetivo; editor livre.</td><td>Montar o próprio festival e o palco: empolgação, intensidade e cansaço do show; balões de pensamento do público; cenários históricos com meta e prazo; modo sandbox com editor.</td></tr>
+      <tr><td>Kairosoft</td><td>Combos de salas vizinhas; funcionários que mudam de profissão; premiação anual; revistas com quatro notas; itens que dão bônus; pixel art fofa e muitos ícones.</td><td>Combos de salas na sede (sala de composição ao lado do lounge = +inspiração); troca de função de funcionários; cerimônia anual com tela própria; quatro críticos dando nota na hora do lançamento.</td></tr>
+      <tr><td>Two Point Hospital / Software Inc.</td><td>Cada sala tem itens que sobem a nota; treinamento de funcionários; mobília com efeito mensurável; humor.</td><td>Sede editável: o jogador posiciona salas e mobília; cada item tem efeito (isolamento acústico, mesa de som, sofá); notas por sala.</td></tr>
+      <tr><td>Crusader Kings III</td><td>Dinastias, segredos, estresse, estilos de vida, intrigas.</td><td>Estresse com limiares e consequências; famílias musicais com herança de talento e de rixas; intrigas entre selos.</td></tr>
+      <tr><td>Out of the Park Baseball</td><td>Modo histórico com banco de dados de época; ligas fictícias; relatórios estatísticos profundos.</td><td>Modo "história alternativa" × "fiel à época"; estatísticas de carreira com gráficos e recordes por década.</td></tr>
+      <tr><td>Democracy / Frostpunk</td><td>Leis e políticas que mexem em grupos; consequências em rede.</td><td>Associação do setor: votar em leis de direitos autorais, prazos de domínio público, regras de rádio e cotas de música nacional.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="historia">
+  <div class="track"><b>02</b><h2>História da música: o que ainda não está no jogo</h2></div>
+  <p class="intro">Fatos que viram mecânica, evento ou mudança de regra. Os anos são marcos aproximados de quando a regra deveria entrar.</p>
+  <div class="era"><span class="y">1925</span><p>Gravação elétrica com microfone substitui a acústica: qualidade de produção dá um salto e cantores de voz suave (crooners) passam a funcionar. Mecânica: tecnologia que muda que tipo de voz vende.</p></div>
+  <div class="era"><span class="y">1929–33</span><p>Crash: vendas de discos caem cerca de 90% nos EUA e o rádio gratuito domina. Mecânica: selos falidos à venda por pouco; jukebox como canal que salva o setor nos anos 30.</p></div>
+  <div class="era"><span class="y">1941</span><p>Disputa ASCAP × rádios: as rádios boicotam o catálogo da ASCAP e nasce a BMI, que abre espaço para country, R&amp;B e latina. Mecânica: sociedades de direitos rivais; escolher a que você filia o catálogo.</p></div>
+  <div class="era"><span class="y">1942–44</span><p>Greve dos músicos (proibição Petrillo da AFM): nenhuma gravação nova com músicos sindicalizados. Mecânica: sindicato e greve; quem tem músicas guardadas no cofre lucra; cantores gravam a capella.</p></div>
+  <div class="era"><span class="y">1948–49</span><p>Guerra das velocidades: LP de 33⅓ (Columbia) contra compacto de 45 (RCA). Mecânica: apostar num formato e licenciá-lo aos rivais; formatos perdedores encalham estoque.</p></div>
+  <div class="era"><span class="y">1959–60</span><p>Escândalo do jabá (payola) nos EUA: audiências no Congresso, DJs demitidos. Mecânica: jabá funciona e é ilegal; risco de investigação cresce com o uso.</p></div>
+  <div class="era"><span class="y">1960s</span><p>Fábricas de hits (Brill Building, Motown com controle de qualidade semanal), Wall of Sound, festivais da canção na TV brasileira (1965–69), Jovem Guarda, Tropicália, AI-5 e a censura prévia. Mecânica: reunião semanal de qualidade; festivais de TV com júri e vaia.</p></div>
+  <div class="era"><span class="y">1964–70</span><p>Gravação multipista (4, 8, 16 faixas) e o álbum conceitual. Mecânica: o número de pistas limita o arranjo e libera o tipo de disco "conceitual".</p></div>
+  <div class="era"><span class="y">1967</span><p>MIDEM em Cannes, primeira grande feira do setor. Mecânica: feiras anuais para vender licenças internacionais e gerar hype.</p></div>
+  <div class="era"><span class="y">1970s</span><p>Rádio FM e o rock de álbum; disco music e a reação (Disco Demolition Night, 1979); punk e selos independentes de fundo de quintal; reggae e os sound systems jamaicanos; dub como técnica de estúdio. Mecânica: reação cultural contra um gênero saturado; selo DIY com custo quase zero e credibilidade alta.</p></div>
+  <div class="era"><span class="y">1979–82</span><p>Walkman, fita cassete e "gravar em casa está matando a música"; MTV estreia (1981); o CD é lançado (1982). Mecânica: pirataria doméstica com campanha contra ela; videoclipe passa a ser obrigatório.</p></div>
+  <div class="era"><span class="y">1983</span><p>MIDI e a bateria eletrônica no centro do pop. Mecânica: produtor-programador como novo papel; custo de gravação cai para quem tem os equipamentos.</p></div>
+  <div class="era"><span class="y">1985</span><p>Live Aid; criação do PMRC e do selo "Parental Advisory". Mecânica: megaeventos beneficentes; etiqueta de conteúdo explícito que tira o disco de grandes redes de varejo.</p></div>
+  <div class="era"><span class="y">1991</span><p>SoundScan passa a medir vendas reais nas paradas americanas, e de repente rap e country aparecem muito mais no topo; primeiro grande processo de sample (Grand Upright × Biz Markie). Mecânica: troca de metodologia das paradas muda o ranking da noite para o dia; samples passam a exigir liberação.</p></div>
+  <div class="era"><span class="y">1990s</span><p>Pro Tools e o estúdio caseiro; fusões das grandes gravadoras (de seis para cinco, depois quatro e três); boy bands; axé e pagode no Brasil. Mecânica: órgão antitruste que bloqueia fusões; consolidação dos rivais.</p></div>
+  <div class="era"><span class="y">1998</span><p>Auto-Tune e a correção de afinação. Mecânica: mais performance para cantores fracos, com risco de crítica.</p></div>
+  <div class="era"><span class="y">1999–2003</span><p>Napster, processos contra fãs, iTunes a 99 centavos por faixa. Mecânica: escolher processar fãs (reputação) ou licenciar; a faixa avulsa desmonta o álbum.</p></div>
+  <div class="era"><span class="y">2005–08</span><p>YouTube, MySpace, contratos 360°, Spotify. Mecânica: artista com público próprio negocia melhor; descoberta por plataforma.</p></div>
+  <div class="era"><span class="y">2010s</span><p>Playlists editoriais, guerra do volume e a normalização de loudness nas plataformas, k-pop com sistema de trainees, "Despacito" e o boom latino, renascimento do vinil, sertanejo universitário, funk e piseiro. Mecânica: escola de trainees por anos; curadores de playlist como críticos novos.</p></div>
+  <div class="era"><span class="y">2019–21</span><p>Vídeos curtos virais decidem hits; pandemia sem shows; NFTs musicais; boom de compra de catálogos. Mecânica: trecho de 15 segundos escolhido pelo jogador; fundos que compram catálogos inteiros.</p></div>
+  <div class="era"><span class="y">2023+</span><p>Faixas com vozes clonadas por IA viralizam e são derrubadas; plataformas criam regras para música gerada. Mecânica: já existe a era sintética; falta a regulação por país e o mercado de licenças de voz.</p></div>
+  <div class="era"><span class="y">Mundo</span><p>Discos em radiografias na União Soviética ("música nos ossos"), cassetes no Oriente Médio e na Índia, cantores de playback em Bollywood, afrobeat de Fela em Lagos, city pop em Tóquio, cumbia, highlife. Mecânica: mercados com regras próprias de formato e de estrela.</p></div>
+</section>
+
+<section id="minijogos">
+  <div class="track"><b>03</b><h2>Mini-jogos de criação e de carreira</h2></div>
+  <p class="intro">Regra geral: todo mini-jogo é opcional e tem um botão "resolver automático", que usa os atributos da equipe. Jogar bem dá um bônus limitado (por exemplo até +10% na nota), nunca obrigatório. O som sai do WebAudio, gerado na hora, sem arquivos.</p>
+  <ul class="items">
+    <li class="it" data-k="minijogo" data-p="1"><div class="h"><strong>Escada de acordes</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>O compositor tem uma mão de cartas de acordes (I, IV, V, vi, ii, bVII…) que depende do gênero e da era. Monte 4 a 8 compassos para verso e refrão. Medidores mostram familiaridade (vende) e surpresa (originalidade). Progressões clássicas (I–V–vi–IV, 12 compassos de blues, ii–V–I) dão bônus no gênero certo. Você ouve o resultado tocado na hora.</p><p class="src">Inspiração: Game Dev Tycoon (sliders), cartas de RimWorld/roguelikes.</p></li>
+    <li class="it" data-k="minijogo" data-p="1"><div class="h"><strong>Contorno da melodia</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Desenhe com o dedo ou o mouse a curva da melodia sobre uma grade da escala (pentatônica, maior, menor, modos). O jogo encaixa as notas, toca e calcula o gancho: saltos no lugar certo, repetição, nota mais alta no refrão. Gera a nota de melodia da música.</p><p class="src">Inspiração: Mario Paint Composer, Electroplankton.</p></li>
+    <li class="it" data-k="minijogo" data-p="1"><div class="h"><strong>Ímãs de geladeira (letra)</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Palavras e imagens do tema (do caderno de ideias) viram ímãs. Monte versos, escolha esquema de rima (AABB, ABAB). O jogo avalia coerência com o tema, rima e risco de censura do país/era, e mostra o título gerado. Ideias fortes trazem palavras raras.</p></li>
+    <li class="it" data-k="minijogo" data-p="1"><div class="h"><strong>Linha do tempo do arranjo</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Arraste blocos (intro, verso, pré, refrão, ponte, solo, final) e instrumentos por faixa. Restrições da era: 3 minutos no compacto de 1960; 4 pistas em 1965; intro curta na era do streaming (pular antes de 30 s não conta). Medidor de energia por seção.</p></li>
+    <li class="it" data-k="minijogo" data-p="1"><div class="h"><strong>Take no tempo</strong><span class="tag p1">Impacto alto</span><span class="tag e">P</span><span class="k">mini-jogo</span></div><p>Na sessão de estúdio já existente, cada take pode ser jogado: toque no tempo das batidas (ritmo) enquanto a tensão do músico sobe. Acertos viram performance; errar demais cansa o músico. Os takes já têm a decisão manter/repetir/montar; o mini-jogo só substitui o sorteio.</p><p class="src">Inspiração: Rhythm Heaven, Guitar Hero.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Mesa de mixagem</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Faders, pan e equalização de 4 a 8 canais para chegar perto de um "alvo" de som da era (gramofone abafado, Wall of Sound, reverb gated dos anos 80, grave de 808). O espectro aparece como barras em pixel art.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Masterização e guerra do volume</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">mini-jogo</span></div><p>Um controle: volume contra dinâmica. Até 2014, mais volume vende mais no rádio e cansa a crítica; depois da normalização das plataformas, volume extra não ajuda mais.</p></li>
+    <li class="it" data-k="minijogo" data-p="1"><div class="h"><strong>Sequenciador de 16 passos</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Para eletrônica, hip-hop, funk e piseiro: grade de 16 passos com bumbo, caixa, chimbal, 808, palmas. Disponível conforme a tecnologia (bateria eletrônica em 1980, sampler em 1986). A batida vira assinatura do produtor.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Garimpo de discos</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Uma caixa de discos numa loja em pixel art: folheie capas, ouça trechos, encontre "breaks". Discos obscuros têm risco jurídico menor; clássicos têm mais impacto e liberação cara. Liga no sistema de samples existente.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Capa do disco</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Editor de capa com camadas: foto da banda (avatares já existentes), tipografia por era, colagem, paleta da época. A capa afeta a primeira impressão e o merch. Capas icônicas entram num museu do selo.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Curva do setlist</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">mini-jogo</span></div><p>Ordene as músicas para desenhar a curva de energia do show (abrir forte, respiro, clímax, bis). O planejador de turnês já tem setlist; isso dá nota e explica por quê.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Show ao vivo</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Na noite de um show importante, uma tela com o público em pixel art e um medidor de energia. Você reage a incidentes (microfone falha, chuva, briga na plateia) com cartas de resposta. Shows comuns continuam automáticos.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Jam da banda</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">mini-jogo</span></div><p>Cartas de cada membro (riff, levada, solo, letra) combinadas na mesa. Química alta destrava combos; egos grandes brigam pelo espaço. Gera ideias para o caderno.</p></li>
+    <li class="it" data-k="minijogo" data-p="1"><div class="h"><strong>Coletiva e entrevista</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Perguntas com tempo para responder e tons (sincero, evasivo, provocador, engraçado). Cada resposta move imagem pública, fãs, haters e a relação com o jornalista. Cenário muda por era: rádio, TV, programa de auditório, podcast, live.</p><p class="src">Inspiração: coletivas do Football Manager.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Mesa de negociação</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Contratos como rodadas de proposta: barra de paciência do outro lado, cartas de argumento (dados de vendas, rival interessado, promessa de turnê), blefe que pode ser descoberto.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>Audição às cegas</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">mini-jogo</span></div><p>Ouça três demos geradas pelos atributos reais dos artistas e aposte em uma, sem ver os números. Acertar treina seu "ouvido" (bônus permanente de olheiro).</p></li>
+    <li class="it" data-k="minijogo" data-p="3"><div class="h"><strong>Roteiro do videoclipe</strong><span class="tag p3">Impacto baixo</span><span class="tag e">M</span><span class="k">mini-jogo</span></div><p>Na era da MTV: escolha 6 planos (banda tocando, história, animação, dança, efeito caro). Orçamento × impacto; clipes caros podem virar lendas ou fiascos.</p></li>
+    <li class="it" data-k="minijogo" data-p="2"><div class="h"><strong>O trecho viral</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">mini-jogo</span></div><p>A partir de 2019: escolha os 15 segundos da música para os vídeos curtos e um desafio de dança ou meme. O gancho da música e a escolha do trecho decidem a viralização.</p></li>
+    <li class="it" data-k="minijogo" data-p="3"><div class="h"><strong>Programa de rádio</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">mini-jogo</span></div><p>Visite um DJ: escolha o disco certo para a audiência dele num cartão de perfil. Com jabá ou sem.</p></li>
+  </ul>
+</section>
+
+<section id="cenas">
+  <div class="track"><b>04</b><h2>Novos locais em pixel art</h2></div>
+  <p class="intro">Hoje a arte em pixel está na sede. Cada local abaixo vira uma "cena" com fundo isométrico ou frontal, personagens já existentes (avatares) e uma mecânica própria. Todos mudam de visual por era, como a sede.</p>
+  <ul class="items">
+    <li class="it" data-k="arte" data-p="1"><div class="h"><strong>Cerimônia de premiação</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">arte</span></div><p>Teatro com palco, telão e plateia. Indicados por categoria, envelope aberto com suspense, discurso de agradecimento com escolhas (agradecer a equipe, provocar rival, discurso político). Mesas mostram onde cada selo sentou. Gramofone de Ouro, prêmios regionais e o tapete vermelho antes.</p></li>
+    <li class="it" data-k="arte" data-p="1"><div class="h"><strong>Estúdio de TV: talk show</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">arte</span></div><p>Sofá, mesa do apresentador e plateia. Cenário do mini-jogo de entrevista. Versões: programa de variedades em preto e branco (anos 50), auditório com calouros e buzina (estilo brasileiro dos anos 70), parada musical semanal na TV, canal de clipes, podcast em vídeo.</p></li>
+    <li class="it" data-k="arte" data-p="1"><div class="h"><strong>Casas de show por porte</strong><span class="tag p1">Impacto alto</span><span class="tag e">G</span><span class="k">arte</span></div><p>Bar, clube, teatro, ginásio, arena, estádio e campo de festival, cada um com público animado pelo nível de energia do show. É onde acontece o mini-jogo de show ao vivo e onde aparecem acidentes (palco cede, chuva, luz apaga).</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Estação de rádio</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">arte</span></div><p>Cabine com microfone, toca-discos e placa "no ar". Visitas de divulgação, entrevistas, jabá. Na era FM ganha neon; na era do streaming vira sala de curadores de playlist.</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Fábrica de discos</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">arte</span></div><p>Prensas, fornos de vinil, linha de CDs, controle de qualidade. Mostra a fila de pedidos e defeitos. Liga na cadeia de suprimentos (seção 07).</p></li>
+    <li class="it" data-k="arte" data-p="1"><div class="h"><strong>Loja de discos</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">arte</span></div><p>Prateleiras, cabines de audição, vitrine com seus lançamentos, sessão de autógrafos. Se a loja for sua, você monta o layout (Kairosoft/CD Market). Também é onde acontece o garimpo de samples.</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Bastidores e camarim</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">arte</span></div><p>Antes do show: humor dos músicos, pedidos absurdos de camarim, visitas de famosos e de jornalistas. Brigas acontecem aqui.</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Ônibus de turnê, aeroporto e hotel</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">arte</span></div><p>Cenas curtas entre shows: cansaço, romance, festas, quarto destruído (multa), visto negado no aeroporto. Dão rosto aos dias de viagem que já existem.</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Tribunal</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">arte</span></div><p>Processos de plágio, sample, quebra de contrato e auditoria ganham audiência com testemunhas e peritos musicais tocando os dois trechos. Escolhas: acordo, recurso, testemunha surpresa.</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Sala do conselho e bolsa</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">arte</span></div><p>Reunião de acionistas com votos visíveis, pregão com o gráfico da ação do selo. Liga no IPO e nos subselos com conselho.</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Pista de dança e clube</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">arte</span></div><p>Os clubes compráveis do mapa ganham interior: DJ, pista, fila na porta. Noites temáticas criam cenas e movimentos.</p></li>
+    <li class="it" data-k="arte" data-p="3"><div class="h"><strong>Set de clipe e estúdio de fotos</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">arte</span></div><p>Câmera, refletores, cenário pintado. Cena do mini-jogo de roteiro do clipe e das sessões de foto para capa.</p></li>
+    <li class="it" data-k="arte" data-p="3"><div class="h"><strong>Casa de campo para composição</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">arte</span></div><p>Retiros de composição (camps) com piano, lareira e piscina. Dobra ideias no caderno, com risco de festa demais.</p></li>
+    <li class="it" data-k="arte" data-p="3"><div class="h"><strong>Clínica, hospital e velório</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">arte</span></div><p>Reabilitação, cirurgia nas cordas vocais, despedida de uma lenda (com homenagem no Hall dos Ecos). Momentos sérios tratados com cuidado.</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Mansão da estrela e casa do dono</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">arte</span></div><p>O patrimônio pessoal visível: casa que cresce com o sucesso, carros, piscina, festas. Base da "vida pessoal" (seção 05).</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Rua e calçada</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">arte</span></div><p>Músicos de rua descobertos pelo olheiro, colagem de cartazes, fila do lançamento à meia-noite na porta da loja.</p></li>
+    <li class="it" data-k="arte" data-p="3"><div class="h"><strong>Feira do setor</strong><span class="tag p3">Impacto baixo</span><span class="tag e">M</span><span class="k">arte</span></div><p>Estandes de selos (inclusive rivais) numa feira anual. Você escolhe tamanho do estande e quem leva; vende licenças e ouve boatos.</p></li>
+    <li class="it" data-k="arte" data-p="3"><div class="h"><strong>Palco holográfico e estúdio neural</strong><span class="tag p3">Impacto baixo</span><span class="tag e">M</span><span class="k">arte</span></div><p>Os shows de holograma e as faixas com voz IA ganham cena própria, com plateia que mistura humanos e avatares.</p></li>
+  </ul>
+</section>
+
+<section id="pessoas">
+  <div class="track"><b>05</b><h2>Pessoas e vida</h2></div>
+  <ul class="items">
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Humor como pilha de pensamentos</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Cada pessoa mostra os pensamentos que somam o humor, com valor e prazo: "show lotado +12 (7 dias)", "dormiu no ônibus −6", "parceiro levou o crédito −10". O jogador entende por que alguém está mal e o que fazer.</p><p class="src">Inspiração: RimWorld.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Colapsos</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Abaixo de um limiar, chance de colapso: sumir antes do show, quebrar equipamento, bebedeira, sair da banda no palco, postar algo ofensivo. Traços mudam o tipo. Gera histórias e crises sem roteiro fixo.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Saúde do músico</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Voz (calos, cirurgia, repouso), audição (zumbido após anos de palco alto), lesão por esforço, dependência e reabilitação. Equipe médica e fonoaudiólogo como funcionários.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Conversas um a um</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Chame um artista para conversar: elogiar, cobrar, pedir paciência, prometer algo (single, turnê, aumento), multar. Promessas ficam registradas e quebrá-las custa confiança.</p><p class="src">Inspiração: Football Manager.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Hierarquia e panelinhas</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Mapa social do elenco inteiro: líderes de vestiário, grupos por idade, gênero ou cidade, amizades entre bandas diferentes. Contratar ou dispensar mexe nos grupos.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Segredos e dossiês</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Pessoas têm segredos (caso, dívida, plágio escondido, filho não assumido). Detetives, jornalistas e rivais podem descobri-los. Usar um segredo em negociação funciona e é arriscado.</p><p class="src">Inspiração: Hollywood Animal, Crusader Kings III.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>O dono do selo como personagem</strong><span class="tag p1">Impacto alto</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Avatar com atributos (ouvido, negociação, carisma, gestão), estresse, saúde, família e patrimônio pessoal separado da empresa. Pode envelhecer e passar o selo a um herdeiro ou sucessor escolhido.</p><p class="src">Inspiração: FIFA Manager, Crusader Kings III.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Funcionários com carreira</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Equipe com atributos, treinamento, promoção e troca de função (o engenheiro vira produtor; o olheiro vira executivo de A&amp;R). Podem pedir demissão para um rival ou abrir o próprio selo.</p><p class="src">Inspiração: Kairosoft.</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Romances na banda</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Casais dentro da banda melhoram química e criam risco grande no término. Discos de separação têm letras melhores.</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Fortuna e falência pessoal dos artistas</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Artistas gastam (casas, carros, festas). Estrela falida aceita contratos piores; estrela rica fica exigente.</p></li>
+  </ul>
+</section>
+
+<section id="criacao">
+  <div class="track"><b>06</b><h2>Criação e estúdio</h2></div>
+  <ul class="items">
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Gênero × tema da letra</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Cada música tem tema (amor, festa, protesto, saudade, estrada, fé, cidade…). Combinações têm nota oculta que o jogador descobre com o tempo (anotada num caderno de combinações) e tendências mudam por era e país.</p><p class="src">Inspiração: Game Dev Tycoon.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Receita sonora com efeitos</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Ingredientes (instrumentos, efeitos, samples, estilo vocal) somam "efeitos" na música: dançante, melancólica, épica, nostálgica, agressiva. Tipos de público procuram efeitos específicos; combinações raras viram assinatura.</p><p class="src">Inspiração: Schedule I.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Foco por etapa</strong><span class="tag p1">Impacto alto</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Na sessão de estúdio, divida o tempo entre composição, arranjo, gravação e mixagem com sliders. Cada gênero tem a distribuição ideal, aprendida jogando.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Quatro críticos no lançamento</strong><span class="tag p1">Impacto alto</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Tela de lançamento com 4 notas de veículos com viés (já existem críticos com viés): suspense, nota a nota, e a manchete. Momento de celebração ou desastre.</p><p class="src">Inspiração: Game Dev Tycoon, Kairosoft.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Participações e duetos</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Convide artistas de outros selos (taxa, divisão de royalties, liberação do selo rival). Duetos entre gêneros abrem públicos novos.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Compositores profissionais e fantasmas</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Contratar compositores de aluguel e ghostwriters. O crédito escondido pode virar escândalo.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Encomendas</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Jingles, trilhas de filme, novela e jogos, hinos de clube, música de abertura. Dinheiro rápido e previsível para manter a equipe ocupada no começo.</p><p class="src">Inspiração: contratos externos do Game Dev Story.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Estúdio com pistas e equipamento por era</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Número de pistas (1, 4, 8, 24, ilimitado) limita arranjos. Equipamentos lendários (console, microfones, câmara de eco) dão som característico e podem ser comprados de estúdios falidos.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Domínio público e standards</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Músicas antigas entram em domínio público pelo prazo do país; regravações não pagam autor. Canções clássicas regravadas por gerações (standards).</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Remasterização e versões de luxo</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Remasterizar catálogo com tecnologia nova (CD, alta resolução, áudio espacial) para reedições.</p></li>
+  </ul>
+</section>
+
+<section id="industria">
+  <div class="track"><b>07</b><h2>Fábrica, varejo e distribuição</h2></div>
+  <ul class="items">
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Cadeia de suprimentos</strong><span class="tag p1">Impacto alto</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Matéria-prima (goma-laca, PVC, polycarbonato, papel) com preços por era e crises (goma-laca na guerra, petróleo em 1973). Fábricas com capacidade e fila; atraso de prensagem perde a janela do hit.</p><p class="src">Inspiração: Capitalism Lab.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Rede de lojas própria</strong><span class="tag p1">Impacto alto</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Abrir lojas nas cidades: layout, estoque, preços, cabines de audição, eventos. Vendem também discos dos rivais (margem). Megalojas nos anos 90, fechamento em massa nos 2000, renascimento no vinil.</p><p class="src">Inspiração: CD Market, Kairosoft.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Distribuidores e equipe de rua</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Distribuidores independentes com comissão e carteira de lojas por região; equipes de rua que colam cartazes e vendem mixtapes. Bairros e cidades se abrem com reputação.</p><p class="src">Inspiração: Schedule I.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Preço com elasticidade</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Escolher preço por formato e mercado; preço alto vende menos e ganha mais por unidade; linhas econômicas (selo barato) e de luxo.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Jukebox</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Dos anos 30 aos 60, operadores de jukebox compram muitos compactos e criam hits regionais. Canal de marketing específico da época.</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Clube do disco por correio</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Assinaturas de discos pelo correio (anos 50–90): receita recorrente com margem baixa.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Plataforma própria de streaming</strong><span class="tag p2">Impacto médio</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Na era digital, lançar uma loja ou plataforma própria contra as gigantes: assinantes, catálogo licenciado, curadoria. Alto risco, alto poder.</p></li>
+  </ul>
+</section>
+
+<section id="marketing">
+  <div class="track"><b>08</b><h2>Marketing, mídia e paradas</h2></div>
+  <ul class="items">
+    <li class="it" data-k="melhoria" data-p="1"><div class="h"><strong>Caixa de entrada por era</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">melhoria</span></div><p>Toda comunicação chega como carta, telegrama, telefonema, fax, e-mail ou mensagem, conforme a época. Responder direto pela mensagem. Substitui parte das notificações soltas.</p><p class="src">Inspiração: Football Manager.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Jabá</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Pagar DJs e programadores funciona muito; o risco de investigação acumula. 1959–60 traz a grande investigação; depois volta disfarçado (promotores independentes nos 80). Dilema moral recorrente.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Feed de redes sociais simulado</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>A partir dos anos 2000, uma linha do tempo com posts de fãs, haters, jornalistas e artistas, com humor medido. Antes disso, cartas de fãs e colunas de fofoca.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Feiras do setor e hype</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Feiras anuais (internacional desde 1967; festival de vitrines desde 1987) para vender licenças internacionais e anunciar lançamentos. Hype que sobe e cai como em Game Dev Tycoon.</p></li>
+    <li class="it" data-k="conteudo" data-p="1"><div class="h"><strong>Mudança de metodologia das paradas</strong><span class="tag p1">Impacto alto</span><span class="tag e">P</span><span class="k">conteúdo</span></div><p>Paradas mudam de regra por era: lojas informando (manipulável) → medição real (1991) → streaming conta → vídeos contam. Cada mudança reembaralha o topo e pode ser explorada ou sofrida.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Manipulação de paradas</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Compra em massa, lojas "amigas", fazendas de streams. Funciona até ser pego.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Curadores de playlist</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Na era do streaming, curadores com gosto e humor substituem os DJs. Relacionamento conta como antes.</p></li>
+    <li class="it" data-k="conteudo" data-p="2"><div class="h"><strong>Mais paradas</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">conteúdo</span></div><p>Paradas de rádio, de vendas, de vídeo, latina, country, de dance; parada de fim de ano; parada das paradas (todos os tempos).</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Fã-clube oficial</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Mensalidade, revista do fã-clube, encontros. Converte fãs ativos em núcleo.</p></li>
+  </ul>
+</section>
+
+<section id="shows">
+  <div class="track"><b>09</b><h2>Shows e festivais</h2></div>
+  <ul class="items">
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Construtor de festival</strong><span class="tag p1">Impacto alto</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Monte o terreno: palcos, banheiros, comida, camping, segurança, acessos. O público em pixel art anda e mostra pensamentos ("fila do banheiro enorme", "melhor show da vida"). Nota de empolgação e de segurança; desastre se faltar estrutura.</p><p class="src">Inspiração: RollerCoaster Tycoon.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Notas do show</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Cada show recebe empolgação, intensidade e cansaço (como empolgação, intensidade e náusea das montanhas-russas). Produção cara sobe empolgação; shows longos cansam.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Casa de shows própria</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Comprar ou construir um teatro ou arena: agenda própria, aluguel a terceiros, bar, acústica.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Ingressos e cambistas</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Preço dinâmico (era digital), cambistas, ingresso VIP, meia-entrada no Brasil, esgotar em minutos como notícia.</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Residência em cassino</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Temporadas fixas para artistas veteranos: dinheiro estável, sem viagem.</p></li>
+    <li class="it" data-k="conteudo" data-p="3"><div class="h"><strong>Megaeventos beneficentes</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">conteúdo</span></div><p>Convites para eventos globais transmitidos (modelo 1985): sem cachê, reputação enorme, sobe vendas de catálogo.</p></li>
+  </ul>
+</section>
+
+<section id="negocios">
+  <div class="track"><b>10</b><h2>Negócios e império</h2></div>
+  <ul class="items">
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Sede editável com combos de salas</strong><span class="tag p1">Impacto alto</span><span class="tag e">G</span><span class="k">sistema</span></div><p>O jogador posiciona salas e mobília na planta isométrica. Itens têm efeito (isolamento, console, sofá, mesa de reunião) e salas vizinhas dão combos (composição ao lado do lounge, técnica ao lado da cabine).</p><p class="src">Inspiração: Kairosoft, Two Point Hospital, Software Inc.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Árvore de pesquisa</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Pontos de pesquisa ganhos com projetos destravam técnicas (som assinatura, prensagem mais rápida, análise de dados, contrato 360°). Tecnologias do mundo continuam chegando por data.</p></li>
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Modo carreira com conselho</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Começar como executivo contratado por um selo: o conselho define metas (lucro, prêmios, catálogo) e pode demitir você. Ofertas de emprego de rivais.</p><p class="src">Inspiração: Football Manager.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Antitruste e fusões das grandes</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Rivais se fundem com o tempo, como na vida real. Fusões grandes passam por um órgão regulador que pode exigir venda de partes, abrindo oportunidades.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Mídia própria</strong><span class="tag p2">Impacto médio</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Comprar rádio, canal de TV ou revista. Toca seus artistas (com risco de acusação de favorecimento) e disputa audiência com a internet.</p><p class="src">Inspiração: Capitalism Lab (mídia tradicional disputada pela internet).</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Promotora e ticketeira</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Empresa de shows e de venda de ingressos: integração vertical com conflito de interesse.</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Fábrica de instrumentos e equipamentos</strong><span class="tag p3">Impacto baixo</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Assinaturas de guitarra, pedais, microfones; endosso de artistas.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Moedas e inflação por país</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Receita em moeda local com câmbio; hiperinflação brasileira; controle de remessas. Hoje há um dólar fictício único.</p></li>
+  </ul>
+</section>
+
+<section id="mundo">
+  <div class="track"><b>11</b><h2>Mundo, leis e política</h2></div>
+  <ul class="items">
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Sindicatos e greves</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Músicos sindicalizados com piso e regras; greve de gravação (1942–44 como marco) que trava estúdios. Quem guardou músicas no cofre sai na frente.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Sociedades de direitos</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Arrecadadoras rivais (o conflito de 1941), taxas, auditorias e a opção de filiar o catálogo a uma ou outra.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Leis votadas pelo setor</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Associação de gravadoras com voto e influência: prazos de direito autoral, cotas de música nacional no rádio, impostos sobre suportes virgens, regras de IA.</p><p class="src">Inspiração: Democracy, Frostpunk.</p></li>
+    <li class="it" data-k="conteudo" data-p="2"><div class="h"><strong>Selo de conteúdo explícito</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">conteúdo</span></div><p>A partir de 1985, discos com selo de aviso perdem grandes varejistas e ganham credibilidade com certos públicos; versões limpas para o rádio.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Pirataria com resposta</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Camelôs, fitas, CD-R, P2P. Respostas: processar fãs (reputação), preço baixo, tecnologia anticópia (que pode dar escândalo), licenciar.</p></li>
+    <li class="it" data-k="conteudo" data-p="2"><div class="h"><strong>Mercados com regras próprias</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">conteúdo</span></div><p>Discos em radiografias na URSS, cassetes no Oriente Médio, cantores de playback na Índia, programas de auditório no Brasil, sistema de trainees na Coreia.</p></li>
+  </ul>
+</section>
+
+<section id="temas">
+  <div class="track"><b>12</b><h2>Cenas, gêneros e temáticas</h2></div>
+  <ul class="items">
+    <li class="it" data-k="conteudo" data-p="1"><div class="h"><strong>Cenas históricas com história própria</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">conteúdo</span></div><p>Arcos de cena com início, auge e fim: Harlem e o jazz, Memphis e o rockabilly, Detroit e a soul em linha de montagem, Kingston e os sound systems, Bronx e as festas de quarteirão, Nova York punk, Manchester, Seattle, Detroit techno, Rio e a bossa nova, Bahia e a Tropicália, Tóquio e o city pop, Lagos e o afrobeat, Seul e o k-pop. O jogador pode estar lá cedo e assinar a cena.</p></li>
+    <li class="it" data-k="conteudo" data-p="2"><div class="h"><strong>Divisões especializadas</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">conteúdo</span></div><p>Música clássica e orquestra, gospel e música religiosa, infantil, trilhas de cinema, musicais de teatro, música de jogos (chiptune), ambiente e meditação. Cada uma com regras de público e prêmios próprios.</p></li>
+    <li class="it" data-k="conteudo" data-p="2"><div class="h"><strong>Reações culturais</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">conteúdo</span></div><p>Gênero saturado gera reação: queima de discos, "morte do disco", pânico moral. Os movimentos já existem; falta o refluxo.</p></li>
+    <li class="it" data-k="arte" data-p="3"><div class="h"><strong>Moda e visual por cena</strong><span class="tag p3">Impacto baixo</span><span class="tag e">M</span><span class="k">arte</span></div><p>Roupas dos avatares mudam com movimentos e cenas (topetes, psicodelia, jaquetas de couro, ombreiras, flanela, streetwear), e o jogador pode lançar moda.</p></li>
+  </ul>
+</section>
+
+<section id="modos">
+  <div class="track"><b>13</b><h2>Modos, metas e rejogabilidade</h2></div>
+  <ul class="items">
+    <li class="it" data-k="conteudo" data-p="1"><div class="h"><strong>Cenários históricos</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">conteúdo</span></div><p>Mapas com meta e prazo: "Salve um selo de soul em 1972", "Lance a Tropicália antes do AI-5", "Sobreviva ao Napster", "Leve um grupo de trainees ao topo mundial", "Feche 2040 com catálogo humano". Medalhas bronze, prata, ouro.</p><p class="src">Inspiração: cenários de RollerCoaster Tycoon.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Desafio da semana</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Seed e regras fixas para todos, com placar local e código de compartilhamento.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Editor de universo</strong><span class="tag p2">Impacto médio</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Criar cidades, selos, artistas, eventos e eras em JSON pela interface; pacotes de conteúdo compartilháveis.</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Conquistas</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Por vendas, turnês, prêmios, formatos, processos, lojas e digital, com algumas escondidas.</p><p class="src">Inspiração: CD Market.</p></li>
+    <li class="it" data-k="sistema" data-p="3"><div class="h"><strong>Museu do selo</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">sistema</span></div><p>Sala na sede com capas icônicas, discos de ouro, instrumentos de lendas e a linha do tempo da run.</p></li>
+  </ul>
+</section>
+
+<section id="som">
+  <div class="track"><b>14</b><h2>Som e visual</h2></div>
+  <ul class="items">
+    <li class="it" data-k="sistema" data-p="1"><div class="h"><strong>Cada música soa diferente</strong><span class="tag p1">Impacto alto</span><span class="tag e">G</span><span class="k">sistema</span></div><p>Gerar um trecho tocável por música a partir dos atributos (acordes, melodia, ritmo, timbres do gênero e da era) com WebAudio. É a base de todos os mini-jogos e faz o jogo de música ter música.</p></li>
+    <li class="it" data-k="sistema" data-p="2"><div class="h"><strong>Rádio do jogo</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">sistema</span></div><p>Uma rádio que toca as músicas do topo das paradas (suas e dos rivais), com filtro de época (chiado de gramofone, AM, FM, fone digital).</p></li>
+    <li class="it" data-k="arte" data-p="2"><div class="h"><strong>Interface por era</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">arte</span></div><p>A moldura da interface muda: art déco (1920–40), psicodelia (60s), neon (80s), cromado (2000s), holográfico (2030s). Opcional nas configurações.</p></li>
+    <li class="it" data-k="arte" data-p="3"><div class="h"><strong>Animações de evento</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">arte</span></div><p>Disco de ouro entregue na sede, chuva de confete no número 1, ônibus saindo para a turnê.</p></li>
+  </ul>
+</section>
+
+<section id="melhorias">
+  <div class="track"><b>15</b><h2>Melhorias do que já existe</h2></div>
+  <ul class="items">
+    <li class="it" data-k="melhoria" data-p="1"><div class="h"><strong>Equilíbrio do começo de jogo</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">melhoria</span></div><p>O simulador automático ainda vai à falência cedo começando do zero em 1960. Rodar o simulador em lote (centenas de seeds) e ajustar custos fixos, adiantamentos e as encomendas de começo de jogo.</p></li>
+    <li class="it" data-k="melhoria" data-p="1"><div class="h"><strong>Velocidade da simulação</strong><span class="tag p1">Impacto alto</span><span class="tag e">M</span><span class="k">melhoria</span></div><p>Trinta anos a partir de 2005 levam cerca de 35 s no teste: mover a simulação para um Web Worker e reduzir varreduras completas de lançamentos e cidades a cada semana.</p></li>
+    <li class="it" data-k="melhoria" data-p="2"><div class="h"><strong>Mapa mais limpo</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">melhoria</span></div><p>Os números de clubes em cada cidade poluem o mapa; mostrar só com zoom ou na camada de clubes. Agrupar cidades próximas quando afastado.</p></li>
+    <li class="it" data-k="melhoria" data-p="2"><div class="h"><strong>Exportar e salvar fora do navegador</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">melhoria</span></div><p>Os botões de exportar diário e save não funcionam dentro do link publicado. Oferecer copiar como texto e importar por colagem.</p></li>
+    <li class="it" data-k="melhoria" data-p="2"><div class="h"><strong>Celular</strong><span class="tag p2">Impacto médio</span><span class="tag e">M</span><span class="k">melhoria</span></div><p>Navegação inferior em telas pequenas, cartões em vez de tabelas, sede com toque e pinça revisados.</p></li>
+    <li class="it" data-k="melhoria" data-p="2"><div class="h"><strong>Explicar os números</strong><span class="tag p2">Impacto médio</span><span class="tag e">P</span><span class="k">melhoria</span></div><p>Toda nota com um "por quê" ao passar o mouse (como a autópsia de lançamentos), inclusive humor, demanda de cidade e risco de censura.</p></li>
+    <li class="it" data-k="melhoria" data-p="3"><div class="h"><strong>Tutorial por cenário</strong><span class="tag p3">Impacto baixo</span><span class="tag e">P</span><span class="k">melhoria</span></div><p>Trocar o tutorial de 8 passos por um primeiro cenário guiado de 2 anos de jogo.</p></li>
+  </ul>
+</section>
+
+<section id="roteiro">
+  <div class="track"><b>16</b><h2>Roteiro sugerido</h2></div>
+  <p class="intro">Ordem pensada para que cada fase deixe o jogo melhor sozinha, e para que as primeiras construam a base técnica das seguintes (som, cenas e caixa de entrada).</p>
+  <div class="phases">
+    <div class="phase"><h3>Fase A · Som e momentos</h3><ol><li>Cada música soa diferente</li><li>Escada de acordes, contorno da melodia, take no tempo</li><li>Quatro críticos no lançamento</li><li>Cerimônia de premiação e talk show em pixel art</li><li>Coletiva e entrevista</li><li>Equilíbrio do começo de jogo</li></ol></div>
+    <div class="phase"><h3>Fase B · Pessoas</h3><ol><li>Humor como pilha de pensamentos</li><li>Colapsos e saúde do músico</li><li>Conversas um a um com promessas</li><li>Dono do selo como personagem</li><li>Caixa de entrada por era</li><li>Segredos e dossiês</li></ol></div>
+    <div class="phase"><h3>Fase C · Indústria</h3><ol><li>Gênero × tema e receita sonora</li><li>Cadeia de suprimentos e fábrica</li><li>Rede de lojas e loja em pixel art</li><li>Jabá, sindicatos, sociedades de direitos</li><li>Mudança de metodologia das paradas</li><li>Sede editável com combos</li></ol></div>
+    <div class="phase"><h3>Fase D · Grandes sistemas</h3><ol><li>Construtor de festival</li><li>Cenários históricos e modo carreira</li><li>Mídia própria, promotora, streaming próprio</li><li>Moedas por país</li><li>Editor de universo</li><li>Velocidade em Web Worker</li></ol></div>
+  </div>
+</section>
+
+<section id="fontes">
+  <div class="track"><b>17</b><h2>Fontes</h2></div>
+  <p class="intro">Pesquisa feita em outubro de 2026. Para jogos antigos e fatos históricos amplamente documentados (RimWorld, Football Manager, FIFA Manager, RollerCoaster Tycoon, marcos da indústria fonográfica) usei conhecimento geral, não uma fonte única.</p>
+  <ul class="items">
+    <li class="it" data-k="x" data-p="x"><p><a href="https://www.keengamer.com/articles/previews/hollywood-animal-preview-build-your-empire-amid-the-glitz-and-grit-of-the-roaring-twenties" target="_blank" rel="noopener">Hollywood Animal: prévia (KeenGamer)</a> · <a href="https://vaporlens.app/app/2680550/hollywood_animal.md" target="_blank" rel="noopener">resumo de avaliações (VaporLens)</a></p></li>
+    <li class="it" data-k="x" data-p="x"><p><a href="https://games.softpedia.com/get/Shareware-Games/Chart-Wars-3.shtml" target="_blank" rel="noopener">Chart Wars 3 (Softpedia)</a> · <a href="https://alternativeto.net/software/music-wars-empire/about/" target="_blank" rel="noopener">Music Wars Empire (AlternativeTo)</a></p></li>
+    <li class="it" data-k="x" data-p="x"><p><a href="https://store.steampowered.com/app/4622330/CD_Market_-_Music_Label_Sim/" target="_blank" rel="noopener">CD Market: Music Label Sim (Steam)</a></p></li>
+    <li class="it" data-k="x" data-p="x"><p><a href="https://fullcleared.com/features/schedule-i-first-impressions/" target="_blank" rel="noopener">Schedule I: primeiras impressões (FullCleared)</a> · <a href="https://schedule-1-calculator.com/blog/mastering-the-mixing-in-schedule-1" target="_blank" rel="noopener">guia de mistura</a> · <a href="https://primagames.com/?p=309447" target="_blank" rel="noopener">revendedores (Prima Games)</a></p></li>
+    <li class="it" data-k="x" data-p="x"><p><a href="https://www.capitalismlab.com/dlc/" target="_blank" rel="noopener">Capitalism Lab: DLCs (site oficial)</a> · <a href="https://www.capitalismlab.com/?p=10417" target="_blank" rel="noopener">City Economic Simulation: FAQ</a></p></li>
+    <li class="it" data-k="x" data-p="x"><p><a href="https://en.wikipedia.org/wiki/Game_Dev_Story" target="_blank" rel="noopener">Game Dev Story (Wikipedia)</a> · <a href="https://giantbomb.com/reviews/game-dev-story-review" target="_blank" rel="noopener">análise (Giant Bomb)</a></p></li>
+  </ul>
+</section>
+</main>
+</div>
+
+<script>
+(function () {
+  var state = { k: 'all', p: 'all' };
+  var items = Array.prototype.slice.call(document.querySelectorAll('li.it')).filter(function (li) { return li.dataset.k !== 'x'; });
+  var count = document.getElementById('count');
+  function apply() {
+    var shown = 0;
+    items.forEach(function (li) {
+      var ok = (state.k === 'all' || li.dataset.k === state.k) && (state.p === 'all' || li.dataset.p === state.p);
+      li.classList.toggle('hidden-by-filter', !ok);
+      if (ok) shown++;
+    });
+    document.querySelectorAll('ul.items').forEach(function (ul) {
+      var sec = ul.closest('section');
+      if (!sec || sec.id === 'fontes') return;
+      var any = ul.querySelector('li.it:not(.hidden-by-filter)');
+      sec.classList.toggle('hidden-by-filter', !any && (state.k !== 'all' || state.p !== 'all'));
+    });
+    count.textContent = shown + ' de ' + items.length + ' ideias';
+  }
+  document.querySelectorAll('.filters button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = b.dataset.f;
+      state[f] = b.dataset.v;
+      document.querySelectorAll('.filters button[data-f="' + f + '"]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      apply();
+    });
+  });
+  apply();
+})();
+</script>
