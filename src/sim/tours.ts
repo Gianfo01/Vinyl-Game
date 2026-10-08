@@ -233,7 +233,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     st.sold = sold;
     st.status = 'played';
     runSimHooks('show', s, r, { show: { actId: act.id, cityId: st.cityId, sold, capacity: st.capacity, revenue: sold * st.price, tourId: t.id } });
-    const gross = sold * st.price;
+    const gross = Math.round(applyMods(s, 'showRevenue', sold * st.price, { act, cityId: st.cityId }).value);
     // pagamento: bilheteria 65% líquida / cachê fixo / garantia + 45%
     const forecast = Math.round(Math.min(st.capacity, demand) * st.price * 0.5);
     let pay = t.pay === 'door' ? Math.round(gross * 0.65) : t.pay === 'guarantee' ? Math.round(forecast * 0.8) : Math.round(forecast * 0.4 + gross * 0.45);
