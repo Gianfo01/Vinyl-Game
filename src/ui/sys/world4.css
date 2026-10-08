@@ -1,0 +1,41 @@
+/* Sistema world4: linha do tempo, cenas históricas, tabelas de metodologia e paradas extras. */
+.w4-timeline { list-style: none; margin: 0.5rem 0 0; padding: 0 0 0 0.9rem; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 0.45rem; }
+.w4-timeline .w4-decade { font-weight: 700; color: var(--gold); margin: 0.4rem 0 0; }
+.w4-ms { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.6rem; position: relative; padding: 0.35rem 0.5rem; border-radius: var(--radius); background: var(--panel-2); border: 1px solid var(--line); }
+.w4-ms::before { content: ''; position: absolute; left: -1.25rem; top: 0.8rem; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--accent); }
+.w4-ms.next { opacity: 0.6; }
+.w4-ms.next::before { background: var(--line); }
+.w4-ms.before::before { background: var(--muted); }
+.w4-ms p { margin: 0.2rem 0; }
+.w4-year { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); font-size: 0.9rem; }
+.w4-ms-body { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.w4-scene.future, .w4-scene.over { opacity: 0.7; }
+.w4-scene.rise { border-left: 4px solid var(--good); }
+.w4-scene.peak { border-left: 4px solid var(--gold); }
+.w4-scene p { margin: 0.2rem 0; }
+.w4-arc { position: relative; height: 0.5rem; background: linear-gradient(90deg, var(--good), var(--gold) 50%, var(--bad)); border-radius: 99px; margin: 0.4rem 0 1rem; opacity: 0.85; }
+.w4-arc-peak { position: absolute; top: -0.2rem; width: 2px; height: 0.9rem; background: var(--ink); }
+.w4-arc-now { position: absolute; top: -0.3rem; width: 0.7rem; height: 1.1rem; margin-left: -0.35rem; border-radius: 3px; background: var(--panel); border: 2px solid var(--ink); }
+.w4-arc-a, .w4-arc-b { position: absolute; top: 0.55rem; font-size: 0.7rem; color: var(--muted); }
+.w4-arc-a { left: 0; }
+.w4-arc-b { right: 0; }
+.w4-look { display: flex; align-items: center; gap: 0.4rem; }
+.w4-swatches { display: inline-flex; border: 1px solid var(--line); }
+.w4-swatches span { width: 0.8rem; height: 0.8rem; display: inline-block; }
+.w4-list { list-style: none; padding: 0; margin: 0.4rem 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.w4-list li { padding: 0.3rem 0.4rem; border-bottom: 1px dashed var(--line); }
+.w4-table-wrap { overflow-x: auto; }
+.w4-table { border-collapse: collapse; font-size: 0.85rem; width: 100%; margin: 0.5rem 0; }
+.w4-table th, .w4-table td { padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--line); text-align: center; }
+.w4-table tbody th { text-align: left; font-weight: 500; }
+.w4-table tr.on { background: var(--panel-2); outline: 2px solid var(--accent); }
+.w4-table td.good { color: var(--good); }
+.w4-table td.bad { color: var(--bad); }
+.w4-chart { margin: 0.4rem 0; padding-left: 1.8rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.w4-chart li { padding: 0.1rem 0; }
+.w4-chart li.mine { font-weight: 700; }
+.w4-score { float: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.w4-alert { border-left: 4px solid var(--bad); }
+.w4-probe { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; text-align: center; padding: 1rem; }
+.w4-probe-art { display: flex; gap: 1rem; }
+.extra-sections .row.between, .w4-ms .row.between, .w4-scene .row.between, .w4-list .row.between { justify-content: space-between; }
