@@ -13,7 +13,7 @@ export const SKILLS: { id: SkillId; name: L }[] = [
   { id: 'biz', name: l('Negócios', 'Business') },
 ];
 
-export type TraitGroup = 'creative' | 'social' | 'professional' | 'emotional' | 'public';
+export type TraitGroup = 'creative' | 'social' | 'professional' | 'emotional' | 'public' | 'temper';
 
 export interface TraitDef {
   id: string;
@@ -65,7 +65,45 @@ export const TRAITS: TraitDef[] = [
   t('controversial', 'public', 'Polêmico', 'Controversial', { scandal: 0.6, media: 6 }),
   t('engaged', 'public', 'Engajado', 'Engaged', { media: 3, trust: 2 }),
   t('reserved', 'public', 'Reservado', 'Reserved', { scandal: -0.3, media: -3 }),
+  // temperamento (rodada 6): puxa para certos gêneros (ver GENRE_AFFINITY)
+  t('rebel', 'temper', 'Rebelde', 'Rebel', { originality: 4, scandal: 0.3, trust: -2 }),
+  t('romantic', 'temper', 'Romântico', 'Romantic', { quality: 1, morale: 2 }),
+  t('spiritual', 'temper', 'Espiritual', 'Spiritual', { stress: -3, scandal: -0.2 }),
+  t('party', 'temper', 'Festeiro', 'Party animal', { stage: 4, fatigue: 3, scandal: 0.2 }),
+  t('intellectual', 'temper', 'Intelectual', 'Intellectual', { originality: 4, media: -2 }),
+  t('street', 'temper', 'Cria da rua', 'Street-raised', { originality: 3, trust: -2, media: 2 }),
+  t('rooted', 'temper', 'Raiz', 'Rooted', { quality: 2, originality: -2, loyalty: 5 }),
+  t('dreamer', 'temper', 'Sonhador', 'Dreamer', { originality: 5, output: -0.1 }),
+  t('virtuoso', 'temper', 'Virtuoso', 'Virtuoso', { quality: 5, stress: 2 }),
 ];
+
+/** Afinidade de traços com famílias de gênero (rodada 6): rebeldia puxa para o rock, espiritualidade
+ *  para o sagrado e o reggae, festa para a eletrônica e a disco… −1..+1 por família. */
+export const GENRE_AFFINITY: Record<string, Partial<Record<string, number>>> = {
+  rebel: { rock: 1, hiphop: 0.8, caribbean: 0.4, electronic: 0.3, latin: 0.2, sacred: -0.8, pop: -0.3, europe: -0.2 },
+  romantic: { latin: 0.8, pop: 0.7, rnb: 0.6, brazil: 0.6, europe: 0.4, country_folk: 0.3, hiphop: -0.2 },
+  spiritual: { sacred: 1, caribbean: 0.6, africa: 0.5, rnb: 0.4, asia_me: 0.5, electronic: -0.2 },
+  party: { electronic: 0.9, rnb: 0.6, latin: 0.6, pop: 0.5, brazil: 0.5, caribbean: 0.4, sacred: -0.7, country_folk: -0.2 },
+  intellectual: { blues_jazz: 0.8, sacred: 0.6, europe: 0.6, electronic: 0.3, brazil: 0.3, rock: 0.2, pop: -0.4 },
+  street: { hiphop: 1, caribbean: 0.6, rnb: 0.4, latin: 0.4, africa: 0.4, brazil: 0.4, sacred: -0.5, europe: -0.3 },
+  rooted: { country_folk: 0.9, blues_jazz: 0.6, brazil: 0.5, africa: 0.5, europe: 0.4, sacred: 0.3, electronic: -0.6 },
+  dreamer: { electronic: 0.5, pop: 0.4, rock: 0.4, europe: 0.3, asia_me: 0.2 },
+  virtuoso: { blues_jazz: 0.8, sacred: 0.8, rock: 0.3, latin: 0.3, hiphop: -0.3 },
+  experimental: { electronic: 0.5, blues_jazz: 0.4, rock: 0.3, pop: -0.3 },
+  melancholic: { blues_jazz: 0.6, country_folk: 0.5, rock: 0.3, europe: 0.3 },
+  charismatic: { pop: 0.5, rnb: 0.3, latin: 0.3 },
+  perfectionist: { sacred: 0.4, blues_jazz: 0.3, electronic: 0.2 },
+  controversial: { hiphop: 0.4, rock: 0.4, pop: 0.2 },
+};
+
+export const TEMPER_TRAITS = TRAITS.filter((x) => x.group === 'temper').map((x) => x.id);
+
+/** Afinidade (−1..+1 aprox.) de um conjunto de traços com uma família de gênero. */
+export function traitAffinity(traits: string[], family: string): number {
+  let v = 0;
+  for (const tr of traits) v += GENRE_AFFINITY[tr]?.[family] ?? 0;
+  return v;
+}
 
 export const traitById = Object.fromEntries(TRAITS.map((x) => [x.id, x])) as Record<string, TraitDef>;
 

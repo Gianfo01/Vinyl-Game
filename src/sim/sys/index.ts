@@ -8,3 +8,5 @@ import './scenes';
 import './live';
 import './talent';
 import './life';
+import './temper';
+import './persona';

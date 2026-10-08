@@ -11,6 +11,7 @@ import { composeSongs, songQ } from '../production';
 import { langForCity, makeAct, makePerson, personName } from '../people';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, remember } from '../util';
+import { perk } from '../perks';
 import { grantPlayerContract } from '../worldgen';
 import { P } from './people/state';
 import { gainXp, ownerOf, type OwnerAttr } from './people/owner';
@@ -92,7 +93,7 @@ const mKey = (s: GameState) => s.year * 12 + s.month;
 
 /** Tempo livre do mês: tocar numa banda ocupa uma unidade (ensaios e compromissos). */
 export function maxEnergy(s: GameState): number {
-  return ENERGY_PER_MONTH - (playerAct(s) ? 1 : 0);
+  return Math.max(1, ENERGY_PER_MONTH - (playerAct(s) ? 1 : 0) + Math.round(perk(s, 'energy')));
 }
 
 export function energyLeft(s: GameState): number {
@@ -488,7 +489,7 @@ export function playBar(s: GameState, r: Rng): L | null {
   const L0 = life(s);
   const o = ownerOf(s);
   const quality = (overall(s, p) + p.skills.stage) / 2 + r.int(-10, 10);
-  const pay = money(s, 60 + quality * 5);
+  const pay = money(s, (60 + quality * 5) * (L0.background === 'musician' || L0.background === 'roadie' ? 1.5 : 1));
   o.wealth += pay;
   L0.fame = clamp(L0.fame + clamp((quality - 35) / 25, 0, 2), 0, 100);
   grow(s, p, 'presence', 0.4);

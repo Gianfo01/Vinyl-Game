@@ -35,6 +35,16 @@ export interface CharacterSpec {
   background: string;
   role?: Person['role'];
   look?: Appearance;
+  /** rodada 6: personalização e personalidade */
+  nickname?: string;
+  pronoun?: 'he' | 'she' | 'they';
+  hometown?: string;
+  favGenre?: string;
+  visual?: string;
+  motto?: string;
+  traits?: string[];
+  style?: string;
+  points?: Partial<Record<'ear' | 'negotiation' | 'charisma' | 'management', number>>;
 }
 
 /** Aparência combinável (GDD §44): 3 corpos × 3 rostos × 4 peles × 16 cabelos × 8 cores × 4 roupas × 8 cores × acessórios. */

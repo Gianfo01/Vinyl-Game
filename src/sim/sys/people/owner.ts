@@ -11,6 +11,7 @@ import { personName, langForCity } from '../../people';
 import type { GameState } from '../../types';
 import { fmtL, money, notify, post, remember } from '../../util';
 import { P, clamp01, type Owner } from './state';
+import { perk } from '../../perks';
 
 export type OwnerAttr = keyof Owner['attrs'];
 
@@ -111,7 +112,7 @@ export function ownerAge(s: GameState): number {
 export function gainXp(s: GameState, a: OwnerAttr, n: number): void {
   const o = P(s).owner;
   if (!o) return;
-  o.xp[a] += n;
+  o.xp[a] += n * Math.max(0.5, 1 + perk(s, 'xp'));
   while (o.xp[a] >= 10) {
     o.xp[a] -= 10;
     if (o.attrs[a] < 95) o.attrs[a] += 1;
@@ -264,6 +265,7 @@ export function ownerMonth(s: GameState, r: Rng, signedBefore: number): void {
   if (o.wealth < 0) ds += 4;
   ds -= 3 + (house?.relief ?? 0) + ownerBonus(s, 'management') * 3;
   if (o.vacationUntil && o.vacationUntil > s.week) ds -= 10;
+  if (ds > 0) ds *= Math.max(0.3, 1 + perk(s, 'stress'));
   o.stress = clamp01(o.stress + ds);
   o.health = clamp01(o.health + (o.stress > 70 ? -1.5 : o.stress < 35 ? 0.4 : 0) - (age > 55 ? (age - 55) * 0.06 : 0));
   // experiência

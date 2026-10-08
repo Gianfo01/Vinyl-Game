@@ -8,6 +8,7 @@ import type { Act, Contract, GameState, Offer } from './types';
 import { fmtL, hasCard, hasMutator, money, nextId, notify, playerActs, post, remember, rngOf, staffCount } from './util';
 import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
+import { perk } from './perks';
 
 export function expectedAdvance(s: GameState, act: Act): number {
   // dólares reais
@@ -45,7 +46,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   const amb = mainAmbition(s, act);
   const reasons: L[] = [];
   const advReal = toReal(o.advance, s.year);
-  const exp = expectedAdvance(s, act);
+  const exp = expectedAdvance(s, act) * (1 + perk(s, 'advance'));
   const advU = clamp(advReal / exp, 0, 2.5);
   const roy = o.model === 'distribution' ? 1 - (o.distributionFee ?? 0.2) : o.royalty;
   const expRoy = o.model === 'distribution' ? 0.8 : 0.14 + act.fame / 600;
@@ -80,6 +81,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (hasCard(s, 'artists_house')) score += 0.06;
   if (hasCard(s, 'emperor')) score -= 0.04;
   if (act.catalogNo && act.fame < 5) score += 0.05;
+  score += perk(s, 'offer', act);
 
   if (advU < 0.6) reasons.push(l('Adiantamento abaixo do que esperam.', 'Advance below expectations.'));
   if (advU > 1.4) reasons.push(l('Adiantamento generoso.', 'Generous advance.'));
@@ -206,7 +208,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): void {
   s.contracts[id] = c;
   act.owner = 'player';
   act.contractId = id;
-  act.trust = clamp(act.trust + 10, 0, 100);
+  act.trust = clamp(act.trust + 10 + perk(s, 'trust', act), 0, 100);
   act.cash += o.advance;
   if (act.status === 'emerging' && act.fame > 5) act.status = 'active';
   post(s, `advance:${act.id}`, -o.advance, 'advances', `Adiantamento ${act.name}`);

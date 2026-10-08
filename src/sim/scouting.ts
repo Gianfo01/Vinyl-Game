@@ -5,6 +5,7 @@ import { CITIES, cityById, familyOf, l, type L } from '../data/world';
 import { actTalent } from './people';
 import type { Act, GameState, Knowledge } from './types';
 import { addSignal, spawnProceduralAct, talentScore } from './worldgen';
+import { perk } from './perks';
 import { fmtL, hasCard, hasTech, money, notify, post, rngOf, staffCount, staffSkill } from './util';
 
 export const DEGREES: L[] = [
@@ -24,13 +25,14 @@ export const STAGES: Record<Knowledge['stage'], L> = {
 };
 
 export function scoutActionsPerMonth(s: GameState): number {
-  return 3 + staffCount(s, 'anr') + s.scouts.length + (hasCard(s, 'prospector') ? 2 : 0) + (s.player.hq >= 2 ? 1 : 0) + (s.flags.scoutBonus ?? 0);
+  return 3 + staffCount(s, 'anr') + s.scouts.length + (hasCard(s, 'prospector') ? 2 : 0) + (s.player.hq >= 2 ? 1 : 0) + (s.flags.scoutBonus ?? 0) + Math.round(perk(s, 'scoutActions'));
 }
 
 function widthFor(s: GameState, degree: number, base: number[]): number {
   let w = base[clamp(degree, 1, 5) - 1];
   w *= 1 - staffSkill(s, 'anr') / 300;
   if (hasCard(s, 'prospector')) w *= 0.8;
+  w *= clamp(1 - perk(s, 'scoutAccuracy'), 0.4, 1.6);
   return w;
 }
 
@@ -157,7 +159,7 @@ export function monthlySignals(s: GameState, r: Rng): void {
   if (s.config.role === 'artist') return;
   const homeMarket = cityById[s.config.homeCity]?.market;
   const sources = SOURCES.filter((x) => (!x.from || hasTech(s, x.from)) && (!x.fromYear || s.year >= x.fromYear));
-  const n = 1 + Math.min(3, staffCount(s, 'anr')) + (r.chance(0.5) ? 1 : 0);
+  const n = Math.max(0, 1 + Math.min(3, staffCount(s, 'anr')) + (r.chance(0.5) ? 1 : 0) + Math.round(perk(s, 'signals')));
   const candidates = Object.values(s.acts).filter((a) => !a.owner && (a.status === 'emerging' || a.status === 'active') && !s.knowledge[a.id]);
   for (let i = 0; i < n; i++) {
     const src = r.pick(sources);

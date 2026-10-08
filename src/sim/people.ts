@@ -1,7 +1,7 @@
 // Geração de pessoas, atos, nomes e músicas (GDD §5.3, §9; Catálogo §9).
 
 import { clamp, type Rng } from '../core/rng';
-import { AMBITIONS, BAND_WORDS, FIRST_NAMES, LAST_NAMES, ORIGINS, SONG_WORDS, TRAITS, type SkillId } from '../data/people';
+import { AMBITIONS, BAND_WORDS, FIRST_NAMES, LAST_NAMES, ORIGINS, SONG_WORDS, TRAITS, GENRE_AFFINITY, TEMPER_TRAITS, traitById, type SkillId } from '../data/people';
 import { cityById, familyOf, type FamilyId, type NameGroup } from '../data/world';
 import type { Act, GameState, Person } from './types';
 import { hasMutator, nextId } from './util';
@@ -144,6 +144,15 @@ export function makeAct(s: GameState, r: Rng, o: MakeActOpts): Act {
       name: o.members === 1 && o.name ? o.name : undefined,
     });
     if (synthetic) p.traits = ['prolific', 'media_savvy'];
+    else if (r.chance(0.7)) {
+      // temperamento costuma combinar com o gênero (rebeldia → rock, rua → hip hop…)
+      const tr = r.weighted(TEMPER_TRAITS, (x) => Math.max(0.03, (GENRE_AFFINITY[x]?.[family] ?? 0) + 0.08));
+      if (tr && !p.traits.includes(tr)) {
+        p.traits = p.traits.filter((x) => traitById[x]?.group !== 'temper');
+        if (p.traits.length >= 3) p.traits.pop();
+        p.traits.push(tr);
+      }
+    }
     members.push(p);
     s.persons[p.id] = p;
   }

@@ -11,11 +11,12 @@ import { genProfessionals } from './worldgen';
 import { emitEvent } from './events';
 import { addAsset } from './finance';
 import { branchRent, hqBlocker, hqCaps } from './branches';
+import { perk } from './perks';
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
   const rent = money(s, hq.rent) + branchRent(s);
-  const salaries = s.player.staff.reduce((t, x) => t + x.salary, 0);
+  const salaries = Math.round(s.player.staff.reduce((t, x) => t + x.salary, 0) * Math.max(0.5, 1 + perk(s, 'staffCost')));
   const over = Math.max(0, careerSlotsUsed(s) - hqCaps(s).careers);
   // terceirizar carreiras além da capacidade custa menos para quem ainda é pequeno
   const outsourcing = money(s, over * (s.player.hq <= 1 ? 900 : 1600));

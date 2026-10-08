@@ -11,6 +11,7 @@ import type { CriticDef } from './media';
 import type { GameState, Release, Song } from './types';
 import type { Review } from './xtypes';
 import { fmtL } from './util';
+import { perk } from './perks';
 
 export type Aspect = 'melody' | 'lyrics' | 'performance' | 'production' | 'originality' | 'cohesion';
 export const ASPECTS: Aspect[] = ['melody', 'lyrics', 'performance', 'production', 'originality', 'cohesion'];
@@ -98,7 +99,7 @@ export function buildReview(s: GameState, r: Rng, rel: Release, c: CriticDef, as
     sum += v * w[k];
     wsum += w[k];
   }
-  let score = sum / wsum + (c.mainstream * ((act?.positioning ?? 50) - 50)) / 60 + r.normal(0, 0.35);
+  let score = sum / wsum + (c.mainstream * ((act?.positioning ?? 50) - 50)) / 60 + r.normal(0, 0.35) + (act?.owner === 'player' ? perk(s, 'critics', act) : 0);
   score = Math.round(clamp(score, 0.5, 10) * 10) / 10;
   const songs = rel.songs.map((id) => s.songs[id]).filter((x): x is Song => !!x).sort((x, y) => y.q - x.q);
   return {
