@@ -291,8 +291,9 @@ function suitsMonth(s: GameState, r: Rng): void {
       fileLawsuit(s, { kind: 'sample', plaintiff: s.acts[s.songs[unc[0].sourceSongId]?.actId ?? '']?.name ?? 'Espólio', defendant: 'player', actId: rel.actId, songId: unc[0].songId, claim: money(s, 15000 + rel.totalUnits * 0.3), odds: 0.25 + legal, text: fmtL(l('Uso de sample sem liberação em "{t}".', 'Uncleared sample in "{t}".'), { t: rel.title }) });
     }
     // plágio: melodias parecidas de músicas muito populares
-    if (rel.peak <= 10 && r.chance(0.03)) {
-      fileLawsuit(s, { kind: 'plagiarism', plaintiff: 'Compositor independente', defendant: 'player', actId: rel.actId, songId: rel.songs[0], claim: money(s, 40000 + rel.totalUnits * 0.5), odds: 0.55 + legal, text: fmtL(l('Acusação de plágio contra "{t}".', 'Plagiarism claim against "{t}".'), { t: rel.title }) });
+    // selos pequenos e novos são alvo raro: o processo segue o dinheiro
+    if (rel.peak <= 10 && s.week > 78 && r.chance(rel.revenue > money(s, 30000) ? 0.03 : 0.008)) {
+      fileLawsuit(s, { kind: 'plagiarism', plaintiff: 'Compositor independente', defendant: 'player', actId: rel.actId, songId: rel.songs[0], claim: Math.min(money(s, 40000 + rel.totalUnits * 0.5), Math.round(rel.revenue * 0.5) + money(s, 8000)), odds: 0.55 + legal, text: fmtL(l('Acusação de plágio contra "{t}".', 'Plagiarism claim against "{t}".'), { t: rel.title }) });
     }
   }
   // auditoria de royalties: artista desconfiado com saldo de recoupment
@@ -311,13 +312,13 @@ function suitsMonth(s: GameState, r: Rng): void {
     if (suit.stage === 'filed') {
       suit.stage = 'discovery';
       suit.nextWeek = s.week + 12;
-      post(s, `legalfee:${suit.id}:1`, -money(s, 2500), 'legal', 'Honorários advocatícios');
+      post(s, `legalfee:${suit.id}:1`, -Math.min(money(s, 2500), Math.round(suit.claim * 0.08)), 'legal', 'Honorários advocatícios');
       continue;
     }
     if (suit.stage === 'discovery') {
       suit.stage = 'trial';
       suit.nextWeek = s.week + 8;
-      post(s, `legalfee:${suit.id}:2`, -money(s, 4000), 'legal', 'Honorários advocatícios');
+      post(s, `legalfee:${suit.id}:2`, -Math.min(money(s, 4000), Math.round(suit.claim * 0.12)), 'legal', 'Honorários advocatícios');
       continue;
     }
     const win = r.chance(clamp(suit.odds, 0.05, 0.95));

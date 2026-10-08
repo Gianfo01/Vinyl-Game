@@ -7,7 +7,17 @@ const PRICE_INDEX: [number, number][] = [
   [2020, 1.0], [2030, 1.25], [2040, 1.5],
 ];
 
+const PI_CACHE = new Map<number, number>();
+
 export function priceIndex(year: number): number {
+  const hit = PI_CACHE.get(year);
+  if (hit !== undefined) return hit;
+  const v = priceIndexRaw(year);
+  if (PI_CACHE.size < 4000) PI_CACHE.set(year, v);
+  return v;
+}
+
+function priceIndexRaw(year: number): number {
   if (year <= PRICE_INDEX[0][0]) return PRICE_INDEX[0][1];
   for (let i = 1; i < PRICE_INDEX.length; i++) {
     const [y1, v1] = PRICE_INDEX[i];

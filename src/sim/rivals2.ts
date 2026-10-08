@@ -7,7 +7,7 @@ import { l, type L } from '../data/world';
 import { endContract, signWithRival } from './contracts';
 import { personName } from './people';
 import { emitEvent, registerEvents, type EventDef } from './events';
-import type { GameState, Label } from './types';
+import type { GameState, Label, Release } from './types';
 import type { RivalReportItem } from './xtypes';
 import { fmtL, money, playerActs, post, remember } from './util';
 
@@ -84,6 +84,13 @@ export function spyOnRival(s: GameState, r: Rng, labelId: string): L {
 export function rivals2Month(s: GameState, r: Rng): void {
   const items: RivalReportItem[] = [];
   const mine = playerActs(s).map((id) => s.acts[id]);
+  const recentByOwner = new Map<string, Release[]>();
+  for (const x of Object.values(s.releases)) {
+    if (s.week - x.week >= 5) continue;
+    const list = recentByOwner.get(x.owner) ?? [];
+    list.push(x);
+    recentByOwner.set(x.owner, list);
+  }
   for (const lb of Object.values(s.labels)) {
     if (!lb.active) continue;
     archetypeOf(lb);
@@ -95,7 +102,7 @@ export function rivals2Month(s: GameState, r: Rng): void {
       s.flags[key] = dec.length + lb.roster.length;
       report(items, lb, fmtL(l('{d}.', '{d}.'), { d: lb.lastDecision! }));
     }
-    const rel = Object.values(s.releases).filter((x) => x.owner === lb.id && s.week - x.week < 5);
+    const rel = recentByOwner.get(lb.id) ?? [];
     if (rel.length) report(items, lb, fmtL(l('lançou {n} obra(s), destaque "{t}".', 'released {n} work(s), led by "{t}".'), { n: rel.length, t: rel[0].title }));
     // rivalidade pessoal decai devagar, mas nunca some sozinha
     if (s.rivalries[lb.id]) s.rivalries[lb.id] = Math.max(5, s.rivalries[lb.id] * 0.99);

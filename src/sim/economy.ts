@@ -17,7 +17,8 @@ export function monthlyCosts(s: GameState): { rent: number; salaries: number; ou
   const rent = money(s, hq.rent) + branchRent(s);
   const salaries = s.player.staff.reduce((t, x) => t + x.salary, 0);
   const over = Math.max(0, careerSlotsUsed(s) - hqCaps(s).careers);
-  const outsourcing = money(s, over * 2200);
+  // terceirizar carreiras além da capacidade custa menos para quem ainda é pequeno
+  const outsourcing = money(s, over * (s.player.hq <= 1 ? 900 : 1600));
   const loans = s.player.loans.reduce((t, x) => t + x.monthly, 0);
   const equipment = money(s, s.player.equipment.length * 60);
   return { rent, salaries, outsourcing, loans, equipment };

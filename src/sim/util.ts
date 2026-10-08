@@ -103,10 +103,31 @@ export function avg(arr: number[]): number {
   return arr.length ? sum(arr) / arr.length : 0;
 }
 
+let paCache: { s: GameState; ids: string[] } | null = null;
+
+/** Roda `fn` com a lista de atos do jogador congelada (para varreduras que não mudam o elenco). */
+export function withPlayerActsCache<T>(s: GameState, fn: () => T): T {
+  const prev = paCache;
+  paCache = { s, ids: playerActsRaw(s) };
+  try {
+    return fn();
+  } finally {
+    paCache = prev;
+  }
+}
+
 export function playerActs(s: GameState): string[] {
-  return Object.values(s.acts)
-    .filter((a) => a.owner === 'player' && a.status !== 'retired' && a.status !== 'split')
-    .map((a) => a.id);
+  if (paCache && paCache.s === s) return paCache.ids.slice();
+  return playerActsRaw(s);
+}
+
+function playerActsRaw(s: GameState): string[] {
+  const out: string[] = [];
+  for (const id in s.acts) {
+    const a = s.acts[id];
+    if (a.owner === 'player' && a.status !== 'retired' && a.status !== 'split') out.push(id);
+  }
+  return out;
 }
 
 export function staffCount(s: GameState, role: string): number {

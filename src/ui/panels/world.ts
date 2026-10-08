@@ -23,7 +23,7 @@ let worldMap: WorldMap | null = null;
 let focusCity: string | null = null;
 let focusCountry: string | null = null;
 
-type Layer = 'fans' | 'scenes' | 'festivals' | 'rivals' | 'hq' | 'tours' | 'movements' | 'geo';
+type Layer = 'fans' | 'scenes' | 'festivals' | 'rivals' | 'hq' | 'tours' | 'movements' | 'clubs' | 'geo';
 const LAYERS: { id: Layer; icon: string; name: L }[] = [
   { id: 'fans', icon: 'fans', name: l('Seus fãs', 'Your fans') },
   { id: 'scenes', icon: 'fire', name: l('Cenas', 'Scenes') },
@@ -32,6 +32,7 @@ const LAYERS: { id: Layer; icon: string; name: L }[] = [
   { id: 'festivals', icon: 'star', name: l('Festivais', 'Festivals') },
   { id: 'tours', icon: 'tour-bus', name: l('Turnês', 'Tours') },
   { id: 'movements', icon: 'fire', name: l('Movimentos', 'Movements') },
+  { id: 'clubs', icon: 'house', name: l('Clubes', 'Clubs') },
   { id: 'geo', icon: 'globe', name: l('Crises e censura', 'Crises and censorship') },
 ];
 const layers = new Set<Layer>(['fans', 'hq', 'tours']);
@@ -118,7 +119,7 @@ function mapCities(s: GameState): MapCity[] {
       id: c.id,
       color: own ? 'var(--gold, #b8901c)' : mine ? 'var(--accent)' : movementCities.has(c.id) ? 'var(--warn, #e0a030)' : scene > 3 ? 'var(--good)' : undefined,
       size: (own ? 1.2 : 0.9) + Math.min(1, scene / 20),
-      badge: clubCities.get(c.id) ? String(clubCities.get(c.id)) : undefined,
+      badge: layers.has('clubs') && clubCities.get(c.id) ? String(clubCities.get(c.id)) : undefined,
       locked: !s.player.territories.includes(c.market) && scene < 1,
     };
   });

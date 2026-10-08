@@ -12,17 +12,20 @@ import { createGame } from './worldgen';
 import type { RunConfig } from './types';
 import { advanceMonth } from './tick';
 import { hqCaps } from './branches';
+import { resolveDecision } from './events';
 
 export function botMonth(s: GameState): void {
   const salaries = s.player.staff.reduce((t, x) => t + x.salary, 0);
   const recentRevenue = (s.lastMonthLedger.sales ?? 0) + (s.lastMonthLedger.publishing ?? 0) + (s.lastMonthLedger.live ?? 0);
   const yearRevenue = s.player.revenueByYear[s.year - 1] ?? 0;
   if (playerActs(s).length && s.player.cash < estimateMonthlyBurn(s) * 2 && s.player.loans.length === 0) takeLoan(s);
-  if (s.player.cash < 0 && s.player.staff.length) {
+  if (s.player.cash < estimateMonthlyBurn(s) * 2 && s.player.staff.length) {
     const top = [...s.player.staff].sort((a, b) => b.salary - a.salary)[0];
     fireStaff(s, top.id);
   }
   void recentRevenue;
+  // em crise, aceita vender masters em vez de deixar a empresa fechar
+  for (const d of [...s.decisions]) if (d.eventId === 'distress_sale' && s.player.cash < 0) resolveDecision(s, d.id, 'sell_catalog');
   if (s.config.role !== 'artist') {
     // scouting: aprofunda os sinais mais promissores (barato primeiro)
     const ks = Object.values(s.knowledge)
@@ -43,7 +46,7 @@ export function botMonth(s: GameState): void {
       if (best && best.v >= 30 && !s.offers.some((o) => o.status === 'pending')) {
         const act = s.acts[best.k.actId];
         const o = defaultOffer(s, act);
-        if (evaluateOffer(s, act, o).band !== 'unlikely' && s.player.cash > o.advance * 3) makeOffer(s, o);
+        if (evaluateOffer(s, act, o).band !== 'unlikely' && s.player.cash > o.advance * 3 && s.player.cash > estimateMonthlyBurn(s) * 6) makeOffer(s, o);
       }
     }
     for (const o of s.offers) if (o.status === 'counter' && s.player.cash > o.advance * 4) acceptCounter(s, o.id);
@@ -51,7 +54,7 @@ export function botMonth(s: GameState): void {
     const up = upgradeCost(s);
     if (up !== null && careerSlotsUsed(s) >= cap && s.player.cash > up * 3) upgradeHq(s);
     const avgMonthly = yearRevenue / 12;
-    if (avgMonthly > (salaries + money(s, 3000)) * 3 && s.player.cash > money(s, 20000) && s.player.staff.length < hqCaps(s).staff) {
+    if (avgMonthly > (salaries + money(s, 3000)) * 3 && s.player.cash > money(s, 20000) && s.player.cash > (salaries + money(s, 3000)) * 12 && s.player.staff.length < hqCaps(s).staff) {
       const want = ['producer', 'anr', 'publicist', 'engineer', 'analyst', 'booking'];
       const have = new Set(s.player.staff.map((x) => x.role));
       const pro = s.professionals.filter((p) => want.includes(p.role) && !have.has(p.role)).sort((a, b) => b.skill - a.skill)[0];

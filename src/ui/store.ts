@@ -191,6 +191,50 @@ export function exportSave(): void {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
+const SAVE_PREFIX = 'VTN1:';
+
+async function gzipB64(text: string): Promise<string> {
+  if (typeof CompressionStream === 'undefined') return 'raw:' + btoa(unescape(encodeURIComponent(text)));
+  const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
+  const buf = new Uint8Array(await new Response(stream).arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+async function unGzipB64(b64: string): Promise<string> {
+  if (b64.startsWith('raw:')) return decodeURIComponent(escape(atob(b64.slice(4))));
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  const stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(stream).text();
+}
+
+/** Save como texto compactado (para copiar e colar onde downloads são bloqueados). */
+export async function exportSaveText(): Promise<string> {
+  const g = store.game;
+  if (!g) return '';
+  return SAVE_PREFIX + (await gzipB64(JSON.stringify(g)));
+}
+
+export async function importSaveText(text: string): Promise<GameState> {
+  const tx = text.trim();
+  if (tx.startsWith('{')) return migrate(JSON.parse(tx));
+  if (!tx.startsWith(SAVE_PREFIX)) throw new Error('formato');
+  return migrate(JSON.parse(await unGzipB64(tx.slice(SAVE_PREFIX.length))));
+}
+
+/** Copia um texto para a área de transferência; se não der, devolve false (a interface mostra o texto para seleção). */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function importSave(file: File): Promise<GameState> {
   return file.text().then((txt) => migrate(JSON.parse(txt)));
 }

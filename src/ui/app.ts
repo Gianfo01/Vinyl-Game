@@ -27,6 +27,7 @@ import { restartTutorial, tutorialCard } from './tutorial';
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
+import { copyText, exportSaveText, importSaveText } from './store';
 import { EXTRA_AREAS, extraSections, mergeTabs, showPendingCutscene } from './registry';
 import './sys';
 
@@ -244,11 +245,29 @@ function settings(): void {
     h('div', { class: 'row' },
       h('button', { class: 'btn', onclick: async () => { const ok = await saveGame(`slot-${store.game?.signature}`); toast(ok ? t(S.saved) : 'Erro', ok ? 'good' : 'bad'); } }, t(S.save)),
       h('button', { class: 'btn ghost', onclick: () => exportSave() }, t(S.exportSave)),
+      h('button', { class: 'btn ghost', onclick: () => { close(); void saveTextDialog(); } }, t(l('Copiar / colar save', 'Copy / paste save'))),
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveGame('auto'); store.game = null; titleScreen(root, startGame); } }, t(l('Menu inicial', 'Main menu'))),
     ),
     h('p', { class: 'muted small' }, t(l('Atalhos: 1–0 e D trocam de área · Ctrl+Enter avança · Ctrl+K abre a paleta de comandos.', 'Shortcuts: 1–0 and D switch area · Ctrl+Enter advances · Ctrl+K opens the command palette.'))),
   );
   close = modal(t(S.settings), body);
+}
+
+/** Save como texto: funciona mesmo onde downloads são bloqueados (ex.: link publicado). */
+async function saveTextDialog(): Promise<void> {
+  const text = await exportSaveText();
+  const area = h('textarea', { class: 'save-text', rows: 6, readonly: true, 'aria-label': t(l('Save atual em texto', 'Current save as text')) }, text) as HTMLTextAreaElement;
+  const paste = h('textarea', { class: 'save-text', rows: 4, placeholder: t(l('Cole aqui um save copiado antes', 'Paste a previously copied save here')), 'aria-label': t(l('Colar save', 'Paste save')) }) as HTMLTextAreaElement;
+  let close = () => {};
+  const body = h('div', { class: 'form' },
+    h('p', { class: 'muted small' }, t(l('Copie o texto e guarde onde quiser (nota, e-mail). Para continuar depois, cole-o abaixo.', 'Copy the text and keep it anywhere (a note, an email). To continue later, paste it below.'))),
+    area,
+    h('div', { class: 'row' }, h('button', { class: 'btn', onclick: async () => { const ok = await copyText(text); if (!ok) { area.focus(); area.select(); } toast(ok ? t(l('Save copiado.', 'Save copied.')) : t(l('Selecionei o texto: use Ctrl+C.', 'Text selected: press Ctrl+C.')), 'good'); } }, t(l('Copiar save', 'Copy save'))), h('small', { class: 'muted' }, `${Math.round(text.length / 1024)} KB`)),
+    h('hr'),
+    paste,
+    h('button', { class: 'btn primary', onclick: async () => { try { store.game = await importSaveText(paste.value); close(); render(); toast(t(l('Save carregado.', 'Save loaded.')), 'good'); } catch { toast(t(l('Texto de save inválido.', 'Invalid save text.')), 'bad'); } } }, t(l('Carregar save colado', 'Load pasted save'))),
+  );
+  close = modal(t(l('Save em texto', 'Save as text')), body);
 }
 
 /** Paleta de comandos (GDD §24). */

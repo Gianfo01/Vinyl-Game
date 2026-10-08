@@ -9,7 +9,7 @@ import { cityById, familyOf, genreById, l, type L } from '../data/world';
 import { formatMoney } from '../core/money';
 import { makeAct, makePerson, langForCity } from './people';
 import type { Act, Decision, GameState } from './types';
-import { fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
+import { withPlayerActsCache, fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
 import { MORE_EVENTS } from './events_more';
@@ -908,13 +908,16 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
   const target = profile === 'maestro' ? 0.5 + 0.35 * Math.sin((monthIndex / 14) * Math.PI * 2) : 0.35;
   for (let i = 0; i < n; i++) {
     const valid: [EventDef, Ctx][] = [];
-    for (const def of EVENTS) {
-      if (def.forcedOnly || !def.find) continue;
-      if ((s.eventCooldowns[def.id] ?? -1) > s.week) continue;
-      if (filtered(s, def)) continue;
-      const ctx = def.find(s, r);
-      if (ctx && !filtered(s, def, ctx)) valid.push([def, ctx]);
-    }
+    // as funções find só leem o estado: a lista de atos do jogador fica congelada durante a varredura
+    withPlayerActsCache(s, () => {
+      for (const def of EVENTS) {
+        if (def.forcedOnly || !def.find) continue;
+        if ((s.eventCooldowns[def.id] ?? -1) > s.week) continue;
+        if (filtered(s, def)) continue;
+        const ctx = def.find(s, r);
+        if (ctx && !filtered(s, def, ctx)) valid.push([def, ctx]);
+      }
+    });
     if (!valid.length) return;
     const pick = r.weighted(valid, ([def]) => {
       let w = def.weight ?? 1;

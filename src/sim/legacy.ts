@@ -12,7 +12,9 @@ export function updateLegacy(s: GameState): void {
   const p = s.player;
   const totalRevenueReal = Object.entries(p.revenueByYear).reduce((t, [y, v]) => t + toReal(v, Number(y)), 0);
   const mine = Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
-  const developed = Object.values(s.acts).filter((a) => (a.owner === 'player' || s.memory.some((m) => m.actId === a.id && m.kind === 'signed')) && a.fame > 35).length;
+  const signed = new Set<string>();
+  for (const m of s.memory) if (m.kind === 'signed' && m.actId) signed.add(m.actId);
+  const developed = Object.values(s.acts).filter((a) => (a.owner === 'player' || signed.has(a.id)) && a.fame > 35).length;
   const legends = Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length;
   const share = s.stats.marketShare;
   const L = p.legacy;

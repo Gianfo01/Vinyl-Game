@@ -45,8 +45,7 @@ export function fandomMonth(s: GameState, r: Rng): void {
     const recent = act.releases.filter((id) => s.releases[id] && s.week - s.releases[id].week < 26).length;
     const targetHaters = (act.fans.casual * 0.01 + act.fame * 30) * (1 + act.scandals * 0.3 + Math.max(0, recent - 2) * 0.2);
     f.haters = Math.round(f.haters + (targetHaters - f.haters) * 0.08);
-    const rivalry = Object.values(s.fandoms).length > 1 ? 0 : 0;
-    const toxTarget = clamp((f.haters / Math.max(1, f.superfans + f.haters)) * 40 + act.scandals * 4 + (f.superfans > 5000 ? 15 : 0) + rivalry, 0, 100);
+    const toxTarget = clamp((f.haters / Math.max(1, f.superfans + f.haters)) * 40 + act.scandals * 4 + (f.superfans > 5000 ? 15 : 0), 0, 100);
     f.toxicity = clamp(f.toxicity + (toxTarget - f.toxicity) * 0.1 + r.normal(0, 1.5), 0, 100);
     // efeitos
     if (act.image) act.image.publicImage = clamp(act.image.publicImage - (f.toxicity > 60 ? 0.6 : 0) + (f.superfans > 1000 ? 0.1 : 0), 0, 100);
