@@ -13,6 +13,10 @@ import { playPreview, stopPreview } from './audio';
 import { store } from './store';
 import { money } from '../sim/util';
 import { l } from '../data/world';
+import { portraitCanvas, portraitDataUrl } from './pixel/avatar';
+import { appearanceEditor } from './pixel/editor';
+import { personActivity } from './pixel/activity';
+import { icon } from './pixel/icons';
 
 function g(): GameState {
   return store.game!;
@@ -59,7 +63,7 @@ export function openAct(id: string): void {
             const p = s.persons[pid];
             if (!p) return null;
             return h('tr', null,
-              h('td', null, h('button', { class: 'link', onclick: () => openPerson(pid) }, p.name)),
+              h('td', null, h('img', { class: 'px', src: portraitDataUrl(p, 32, s.year), width: 28, height: 28, alt: '', style: 'vertical-align:middle;border-radius:4px;margin-right:4px' }), h('button', { class: 'link', onclick: () => openPerson(pid) }, p.name)),
               h('td', { class: 'muted' }, p.role),
               h('td', null, vis.ambition ? t(AMBITIONS.find((x) => x.id === p.ambition)?.name) : ''),
               h('td', null, vis.traits ? p.traits.map((tr) => pill(t(traitById[tr]?.name))) : h('span', { class: 'muted' }, '…')),
@@ -83,6 +87,11 @@ export function openAct(id: string): void {
   modal(a.name, body, { wide: true, onClose: stopPreview });
 }
 
+const ROLE_NAMES: Record<string, ReturnType<typeof l>> = {
+  vocal: l('voz', 'vocals'), guitar: l('guitarra', 'guitar'), bass: l('baixo', 'bass'), drums: l('bateria', 'drums'), keys: l('teclados', 'keys'),
+  horns: l('sopros', 'horns'), dj: l('DJ', 'DJ'), producer: l('produção', 'producer'), mc: l('MC', 'MC'), strings: l('cordas', 'strings'), synthetic: l('voz sintética', 'synthetic voice'),
+};
+
 export function openPerson(id: string): void {
   const s = g();
   const p = s.persons[id];
@@ -91,7 +100,24 @@ export function openPerson(id: string): void {
   const mine = act?.owner === 'player';
   const deg = mine ? 5 : act ? s.knowledge[act.id]?.degree ?? 0 : 0;
   const vis = visibleFields(deg);
+  const portraitBox = h('div', null, portraitCanvas(p, s, 3));
+  const activity = mine ? personActivity(s, id) : null;
+  const editLook = () => {
+    const editor = appearanceEditor(p, (look) => {
+      if (look) p.look = look;
+      else delete p.look;
+      portraitBox.replaceChildren(portraitCanvas(p, s, 3));
+    }, s.year);
+    modal(t(l('Editar aparência', 'Edit look')) + ` — ${p.name}`, editor, { wide: true, onClose: () => rerender() });
+  };
   const body = h('div', { class: 'ficha' },
+    h('div', { class: 'person-head' }, portraitBox,
+      h('div', null,
+        h('div', null, pill(t(ROLE_NAMES[p.role] ?? l(p.role)))),
+        activity ? h('div', { class: 'small' }, icon(activity.icon, 1), ' ', t(activity.label)) : null,
+        h('button', { class: 'btn small', onclick: editLook }, t(l('Editar aparência', 'Edit look'))),
+      ),
+    ),
     kv(t(S.age), s.year - p.born),
     kv(t(S.origin), t(ORIGINS.find((o) => o.id === p.origin)?.name)),
     act ? kv(t(l('Ato', 'Act')), actLink(s, act.id)) : null,
