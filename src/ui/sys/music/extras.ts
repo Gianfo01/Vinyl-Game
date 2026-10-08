@@ -1,86 +1,14 @@
-// Jam da banda, audição às cegas, rádio do jogo e o atalho do take no tempo na Central.
+// Rádio do jogo: toca em sequência o topo das paradas com o som da época.
 
 import { nowPlaying, onPlayChange, play, stopAll } from '../../../audio/engine';
-import { buildActDemoSpec, buildSongSpec } from '../../../audio/spec';
+import { buildSongSpec } from '../../../audio/spec';
 import { l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
-import {
-  ERA_NAMES, JAM_NAMES, autoJam, blindBet, blindCandidates, blindReady, broadcastSound, jamCards, jamChemistry, ms, playJam, scoreJam, type JamCard,
-} from '../../../sim/sys/music';
+import { ERA_NAMES, broadcastSound } from '../../../sim/sys/music';
 import type { GameState, Song } from '../../../sim/types';
-import { rngOf } from '../../../sim/util';
-import { actLink, genreName, logo, pill, rerender, section, toast } from '../../common';
+import { actLink, pill, section, toast } from '../../common';
 import { h } from '../../dom';
-import { chips, ic, portrait, stat } from '../../vis';
-import { gauge, isErr, openGame, playBtn, redrawGame, type GameFrame } from './common';
-import { openTake } from './studio';
-
-// ------------------------------------------------------------------ jam
-
-export function openJam(s: GameState, actId: string): void {
-  const act = s.acts[actId];
-  if (!act) return;
-  const cards = jamCards(s, act);
-  const st = { table: [] as string[] };
-  const picked = (): JamCard[] => st.table.map((id) => cards.find((c) => c.id === id)!).filter(Boolean);
-  const f: GameFrame = {
-    title: l('Jam da banda', 'Band jam'),
-    intro: l('Coloque até 4 cartas na mesa. Riff + levada e letra + melodia formam combos; dois solos com um ego grande viram briga. O resultado vira ideias no caderno.', 'Put up to 4 cards on the table. Riff + groove and lyric + melody make combos; two solos with a big ego become a fight. The result becomes notebook ideas.'),
-    meters: () => {
-      const sc = scoreJam(s, act, picked());
-      return h('div', { class: 'mu-gauges' }, gauge(l('Química', 'Chemistry'), (jamChemistry(s, act) + 100) / 2), gauge(l('Nota', 'Score'), picked().length >= 2 ? sc.score : 0),
-        sc.combos.map((c) => pill(t(c), 'good')), sc.fight ? pill(t(l('Briga de egos!', 'Ego clash!')), 'bad') : null);
-    },
-    board: () => h('div', null,
-      h('div', { class: 'mu-table', 'aria-label': t(l('Mesa', 'Table')) }, picked().length ? picked().map((c) => cardEl(s, c, true, () => { st.table = st.table.filter((x) => x !== c.id); redrawGame(f); })) : h('p', { class: 'muted small' }, t(l('Mesa vazia.', 'Empty table.')))),
-      h('div', { class: 'mu-hand' }, cards.filter((c) => !st.table.includes(c.id)).map((c) => cardEl(s, c, false, () => { if (st.table.length < 4) st.table.push(c.id); redrawGame(f); }))),
-    ),
-    auto: () => wrapJam(autoJam(s, rngOf(s), actId)),
-    confirm: () => wrapJam(playJam(s, rngOf(s), actId, st.table)),
-    done: (res) => {
-      const r = res as { ideas?: { theme: { pt: string; en: string } }[]; fight?: boolean };
-      if (r?.ideas?.length) toast(`${t(l('Novas ideias no caderno', 'New notebook ideas'))}: ${r.ideas.map((i) => t(i.theme)).join(', ')}`, 'good');
-      if (r?.fight) toast(t(l('A jam terminou em discussão.', 'The jam ended in an argument.')), 'bad');
-    },
-  };
-  openGame(f);
-}
-
-function cardEl(s: GameState, c: JamCard, onTable: boolean, onclick: () => void): HTMLElement {
-  const p = s.persons[c.personId];
-  return h('button', { class: `mu-card jam k-${c.kind} ${onTable ? 'on' : ''}`, onclick, 'aria-label': `${p?.name ?? ''}: ${t(JAM_NAMES[c.kind])} ${c.power}` },
-    portrait(p, 28), h('b', null, t(JAM_NAMES[c.kind])), h('small', null, `${p?.name.split(' ')[0] ?? ''} · ${c.power}`), p?.traits.includes('big_ego') ? h('small', { class: 'bad' }, 'ego') : null);
-}
-
-function wrapJam(res: ReturnType<typeof playJam>) {
-  if (isErr(res)) return res;
-  return { score: res.score, deltas: {}, ideas: res.ideas, fight: res.fight };
-}
-
-// ------------------------------------------------------------------ audição às cegas
-
-export function blindTab(s: GameState): HTMLElement {
-  const m = ms(s);
-  const cands = blindCandidates(s);
-  const ready = blindReady(s);
-  return h('div', null, section(t(l('Audição às cegas', 'Blind audition')),
-    h('p', { class: 'muted small' }, t(l('Três demos, sem nomes nem números. Ouça e aposte na que tem mais futuro. Acertar treina o seu ouvido: as notas percebidas das demos ficam mais precisas para sempre.', 'Three demos, no names or numbers. Listen and bet on the one with the most future. Hitting trains your ear: perceived demo scores become permanently more accurate.'))),
-    chips(stat('fans', `${m.ear}/10`, l('Ouvido do selo', 'Label ear')), stat('trophy', `${m.earHits}/${m.earTries}`, l('Acertos', 'Hits'))),
-    !ready ? h('p', { class: 'muted' }, t(cands.length < 3 ? l('Faltam artistas disponíveis para uma audição.', 'Not enough available artists for an audition.') : l('A próxima audição fica para daqui a algumas semanas.', 'The next audition is a few weeks away.')))
-      : h('div', { class: 'mu-blind' }, cands.map((c, i) => h('article', { class: 'tile' },
-        h('div', { class: 'tile-ic' }, h('span', { class: 'mu-demo-n' }, String.fromCharCode(65 + i))),
-        h('div', { class: 'tile-body' }, h('b', null, `${t(l('Demo', 'Demo'))} ${String.fromCharCode(65 + i)}`), h('small', { class: 'muted' }, genreName(s.acts[c.actId].genre)),
-          h('div', { class: 'row' }, playBtn(() => buildActDemoSpec(s, s.acts[c.actId])),
-            h('button', { class: 'btn small primary', onclick: () => {
-              stopAll();
-              const res = blindBet(s, rngOf(s), c.actId);
-              if (isErr(res)) { toast(t(res), 'bad'); return; }
-              toast(res.correct ? t(l('Acertou! A demo {x} era a de maior potencial. Ouvido {e}/10.', 'Right! Demo {x} had the most potential. Ear {e}/10.'), { x: String.fromCharCode(65 + i), e: res.ear }) : t(l('Errou: a melhor era de {a}. O artista que você escolheu entrou no radar.', 'Missed: the best one was {a}. The artist you picked is now on your radar.'), { a: s.acts[res.bestId]?.name ?? '' }), res.correct ? 'good' : 'info');
-              rerender();
-            } }, t(l('Apostar nesta', 'Bet on this one')))))))),
-    m.earTries ? h('p', { class: 'small muted' }, t(l('Depois da aposta, os nomes aparecem no radar de descoberta.', 'After the bet, the names show up in the discovery radar.'))) : null,
-  ));
-}
+import { ic } from '../../vis';
 
 // ------------------------------------------------------------------ rádio do jogo
 
@@ -136,18 +64,3 @@ export function radioSection(s: GameState): HTMLElement | null {
     ));
 }
 
-// ------------------------------------------------------------------ Central: take no tempo
-
-export function takeSection(s: GameState): HTMLElement | null {
-  const pend = s.sessions.filter((x) => !x.done && x.decision && s.acts[x.actId]);
-  if (!pend.length) return null;
-  return section(t(l('Estúdio: jogar o take no tempo', 'Studio: play the timing take')),
-    h('p', { class: 'muted small' }, t(l('Antes de decidir manter, repetir ou montar, toque o take no tempo: acertos melhoram o último take.', 'Before choosing keep, retry or comp, play the take in time: hits improve the last take.'))),
-    pend.map((ss) => {
-      const so = s.songs[ss.decision!.songId];
-      if (!so) return null;
-      const used = ms(s).songs[so.id]?.take?.used;
-      return h('div', { class: 'row wrap' }, logo(s.acts[ss.actId], 24), h('b', null, so.title),
-        used ? pill(t(l('take já jogado', 'take already played')), 'good') : h('button', { class: 'btn small primary', onclick: () => openTake(s, so) }, ic('mic'), ' ', t(l('Jogar o take no tempo', 'Play the timing take'))));
-    }));
-}

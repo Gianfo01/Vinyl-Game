@@ -1,134 +1,18 @@
-// Sala de composição (aba em Criação): as músicas do ato com os mini-jogos disponíveis para cada
-// uma, o foco por etapa da próxima sessão, o estúdio (pistas e equipamentos lendários) e a jam.
+// Estúdio (aba em Criação): foco por etapa da próxima gravação, pistas da era e equipamentos lendários.
 
-import { buildSongSpec } from '../../../audio/spec';
-import { familyOf, l, type L } from '../../../data/world';
+import { familyOf, l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
-import {
-  FOCUS_IDEAL, GEAR, STAGES, TRACK_LABEL, autoArrange, autoBeat, autoChords, autoLyrics, autoMelody, applyArrange, applyBeat, applyChords, applyLyrics, applyMelody,
-  autoMix, applyMix, autoTake, beatReady, buyGear, crateRecords, eraLimits, focusFit, gearAvailable, gearById, jamReady, ms, normalizeFocus, pendingTake, setFocus, trackLimit,
-  type SongComp, type Stage,
-} from '../../../sim/sys/music';
-import { songStatus } from '../../../sim/repertoire';
-import type { GameState, Song } from '../../../sim/types';
-import { money, rngOf } from '../../../sim/util';
+import { FOCUS_IDEAL, STAGES, TRACK_LABEL, buyGear, eraLimits, focusFit, gearAvailable, gearById, ms, normalizeFocus, setFocus, trackLimit, type Stage } from '../../../sim/sys/music';
+import type { GameState } from '../../../sim/types';
+import { money } from '../../../sim/util';
 import { $, pill, rerender, section, toast } from '../../common';
 import { h } from '../../dom';
-import { openScene } from '../../registry';
 import { store } from '../../store';
 import { chips, ic, stat } from '../../vis';
-import { deltaText, isAuto, playBtn } from './common';
-import { openArrange, openChords, openLyrics, openMelody } from './compose';
-import { openJam } from './extras';
-import { openBeat, openDig, openMaster, openMix, openTake } from './studio';
 
-interface GameDef { id: keyof SongComp; name: L; icon: string; when: (s: GameState, so: Song) => boolean; open: (s: GameState, so: Song) => void }
-
-const written = (s: GameState, so: Song) => !so.recorded && !so.releaseId;
-const editable = (s: GameState, so: Song) => !so.releaseId;
-
-export const GAMES: GameDef[] = [
-  { id: 'chords', name: l('Escada de acordes', 'Chord ladder'), icon: 'note', when: written, open: openChords },
-  { id: 'melody', name: l('Contorno da melodia', 'Melody contour'), icon: 'pen', when: written, open: openMelody },
-  { id: 'lyrics', name: l('Ímãs de geladeira', 'Fridge magnets'), icon: 'bulb', when: written, open: openLyrics },
-  { id: 'arrange', name: l('Arranjo', 'Arrangement'), icon: 'calendar', when: written, open: openArrange },
-  { id: 'beat', name: l('Sequenciador', 'Sequencer'), icon: 'drums', when: (s, so) => editable(s, so) && beatReady(s), open: openBeat },
-  { id: 'dig', name: l('Garimpo de discos', 'Crate digging'), icon: 'disc', when: (s, so) => written(s, so) && !so.sampleOf, open: openDig },
-  { id: 'take', name: l('Take no tempo', 'Timing take'), icon: 'mic', when: (s, so) => (!so.recorded && !so.releaseId) || !!pendingTake(s, so.id), open: openTake },
-  { id: 'mix', name: l('Mesa de mixagem', 'Mixing desk'), icon: 'radio', when: editable, open: openMix },
-  { id: 'master', name: l('Masterização', 'Mastering'), icon: 'cd', when: (s, so) => so.recorded && !so.releaseId, open: openMaster },
-];
-
-function scoreOf(rec: SongComp | undefined, id: keyof SongComp): number | undefined {
-  const v = rec?.[id] as { score?: number; brk?: number } | undefined;
-  return v ? v.score ?? v.brk : undefined;
-}
-
-/** Resolve automaticamente todos os mini-jogos possíveis de uma música. */
-export function autoAll(s: GameState, so: Song): number {
-  const r = rngOf(s);
-  let n = 0;
-  const rec = ms(s).songs[so.id];
-  if (written(s, so)) {
-    if (!rec?.chords) { const a = autoChords(s, r, so); applyChords(s, so.id, a.verse, a.chorus); n++; }
-    if (!rec?.melody) { applyMelody(s, so.id, autoMelody(s, r, so)); n++; }
-    if (!rec?.lyrics) { const a = autoLyrics(s, r, so); applyLyrics(s, so.id, a.lines, a.scheme); n++; }
-    if (!rec?.arrange) { const a = autoArrange(s, r, so); applyArrange(s, so.id, a.blocks, a.lanes); n++; }
-    if (!rec?.take) { autoTake(s, r, so.id); n++; }
-  }
-  if (editable(s, so)) {
-    if (beatReady(s) && !ms(s).songs[so.id]?.beat && ['hiphop', 'electronic', 'rnb', 'pop', 'brazil', 'caribbean', 'latin', 'africa'].includes(familyOf(so.genre))) { applyBeat(s, so.id, autoBeat(s, r, so)); n++; }
-    if (!ms(s).songs[so.id]?.mix) { const a = autoMix(s, r, so); applyMix(s, so.id, a.faders, a.eq); n++; }
-  }
-  return n;
-}
-
-/** Painel de mini-jogos de uma música (aberto pelo Repertório ou pela Sala de composição). */
-export function openSongGames(s: GameState, so: Song): void {
-  openScene(l(`Compor: ${so.title}`, `Write: ${so.title}`), (close) => songGamesBody(s, so, close), { onClose: () => rerender() });
-}
-
-function songGamesBody(s: GameState, so: Song, close: () => void): HTMLElement {
-  const rec = ms(s).songs[so.id];
-  const list = GAMES.filter((g) => g.when(s, so));
-  return h('div', { class: 'mu-games' },
-    h('div', { class: 'row wrap' }, playBtn(() => buildSongSpec(s, so), { label: l('Ouvir a música', 'Listen to the song'), small: false }), songBars(so)),
-    list.length ? h('div', { class: 'mu-game-list' }, list.map((g) => {
-      const sc = scoreOf(rec, g.id);
-      return h('button', { class: `tile mu-gtile ${sc !== undefined ? 'done' : ''}`, onclick: () => { close(); g.open(s, so); } },
-        h('div', { class: 'tile-ic' }, ic(g.icon, 2)),
-        h('div', { class: 'tile-body' }, h('b', null, t(g.name)), sc !== undefined ? pill(`${Math.round(sc)}/100`, sc >= 60 ? 'good' : '') : h('small', { class: 'muted' }, t(l('ainda não jogado', 'not played yet')))));
-    })) : h('p', { class: 'muted' }, t(l('Nenhum mini-jogo disponível para esta música agora.', 'No mini-game available for this song right now.'))),
-    rec ? h('p', { class: 'small muted' }, t(l('Bônus somados (limite ±10 por atributo): ', 'Bonuses added (limit ±10 per attribute): ')), deltaText(rec.applied)) : null,
-    h('button', { class: 'btn ghost', onclick: () => { const n = autoAll(s, so); toast(t(l('{n} mini-jogo(s) resolvido(s) automaticamente.', '{n} mini-game(s) auto-resolved.'), { n }), 'good'); close(); } }, ic('sparkle'), ' ', t(l('Resolver tudo automático', 'Auto-resolve everything'))),
-  );
-}
-
-function songBars(so: Song): HTMLElement {
-  return chips(stat('note', Math.round(so.melody), l('Melodia', 'Melody')), stat('pen', Math.round(so.lyrics), l('Letra', 'Lyrics')), stat('sparkle', Math.round(so.originality), l('Originalidade', 'Originality')),
-    so.recorded ? stat('mic', Math.round(so.performance), l('Performance', 'Performance')) : null, so.recorded ? stat('radio', Math.round(so.production), l('Produção', 'Production')) : null,
-    stat('star', Math.round(so.q), l('Qualidade Q', 'Quality Q')));
-}
-
-/** Botão rápido "Compor com mini-jogos" (Repertório). */
-export function composeBtn(s: GameState, so: Song): HTMLElement | null {
-  if (so.releaseId || songStatus(s, so) === 'discarded') return null;
-  const auto = isAuto();
-  return h('button', { class: 'btn small', title: t(auto ? l('Mini-jogos em modo automático', 'Mini-games in auto mode') : l('Acordes, melodia, letra, arranjo, batida, mixagem…', 'Chords, melody, lyrics, arrangement, beat, mix…')), onclick: () => {
-    if (auto) { const n = autoAll(s, so); toast(t(l('{n} mini-jogo(s) resolvido(s) automaticamente.', '{n} mini-game(s) auto-resolved.'), { n }), 'good'); rerender(); return; }
-    openSongGames(s, so);
-  } }, ic('note'), ' ', t(so.recorded ? l('Estúdio com mini-jogos', 'Studio mini-games') : l('Compor com mini-jogos', 'Write with mini-games')));
-}
-
-// ------------------------------------------------------------------ aba
-
-export function roomTab(s: GameState): HTMLElement {
+export function studioTab(s: GameState): HTMLElement {
   const a = s.acts[store.selectedAct ?? ''];
-  if (!a) return h('p', null, '—');
-  const songs = a.songs.map((id) => s.songs[id]).filter((so): so is Song => !!so && !so.releaseId && songStatus(s, so) !== 'discarded' && !so.vault).sort((x, y) => y.createdWeek - x.createdWeek).slice(0, 24);
-  const m = ms(s);
-  return h('div', { class: 'mu-room' },
-    section(t(l('Sala de composição — {a}', 'Writing room — {a}'), { a: a.name }),
-      h('p', { class: 'muted small' }, t(l('Cada música soa diferente: ouça, componha com os mini-jogos e veja os atributos mudarem. Jogar bem dá bônus limitado; o automático usa os atributos da equipe.', 'Every song sounds different: listen, write with the mini-games and watch the attributes change. Playing well gives a limited bonus; auto uses the team\'s attributes.'))),
-      songs.length ? h('div', { class: 'mu-songs' }, songs.map((so) => {
-        const rec = m.songs[so.id];
-        const done = GAMES.filter((g) => scoreOf(rec, g.id) !== undefined);
-        return h('article', { class: `mu-song ${so.recorded ? 'rec' : ''}` },
-          h('div', { class: 'row wrap', style: 'justify-content:space-between' },
-            h('span', { class: 'row', style: 'gap:6px' }, ic(so.recorded ? 'disc' : 'note'), h('b', null, so.title), pill(so.recorded ? t(l('gravada', 'recorded')) : t(l('escrita', 'written')), so.recorded ? 'good' : '')),
-            h('span', { class: 'row', style: 'gap:6px' }, playBtn(() => buildSongSpec(s, so)), composeBtn(s, so))),
-          songBars(so),
-          done.length ? h('div', { class: 'row wrap' }, done.map((g) => pill(`${t(g.name)} ${Math.round(scoreOf(rec, g.id)!)}`))) : null,
-          pendingTake(s, so.id) ? h('p', { class: 'small' }, ic('mic'), ' ', t(l('Take aguardando decisão: ', 'Take awaiting a decision: ')), h('button', { class: 'btn small primary', onclick: () => openTake(s, so) }, t(l('Jogar o take no tempo', 'Play the timing take')))) : null,
-        );
-      })) : h('p', { class: 'muted small' }, t(l('Nenhuma música em andamento. Coloque "Compor" na agenda.', 'No songs in progress. Add "Write songs" to the agenda.'))),
-    ),
-    focusSection(s, a.id),
-    studioSection(s),
-    a.members.length >= 2 ? section(t(l('Jam da banda', 'Band jam')),
-      h('p', { class: 'muted small' }, t(l('Cartas de cada membro na mesa: química alta destrava combos, egos grandes brigam pelo espaço. Gera ideias para o caderno (uma jam por mês).', 'Each member\'s cards on the table: high chemistry unlocks combos, big egos fight for space. Generates notebook ideas (one jam a month).'))),
-      h('button', { class: 'btn', disabled: !jamReady(s, a.id), onclick: () => openJam(s, a.id) }, ic('guitar'), ' ', t(jamReady(s, a.id) ? l('Chamar a banda para uma jam', 'Call the band for a jam') : l('Jam deste mês já feita', 'This month\'s jam is done')))) : null,
-  );
+  return h('div', { class: 'mu-room' }, a ? focusSection(s, a.id) : null, studioSection(s));
 }
 
 const focusDraft: Record<string, Record<Stage, number>> = {};
@@ -177,4 +61,3 @@ function studioSection(s: GameState): HTMLElement {
   );
 }
 
-void GEAR; void crateRecords;

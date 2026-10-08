@@ -17,7 +17,7 @@ import { store } from '../store';
 import { chips, ic, portrait, setTab, stat } from '../vis';
 import { preselectSession } from './studio';
 
-/** Botões extras no cabeçalho de cada música (rodada 4: ouvir, compor com mini-jogos). */
+/** Botões extras no cabeçalho de cada música (ouvir a música). */
 export const REP_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
 
 const view = { status: 'all' as SongStatus | 'all' | 'unused', sort: 'recent' as 'recent' | 'q' | 'hook', open: '' as string, pitchTo: '' as string, comp: new Set<string>() };
