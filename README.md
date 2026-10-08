@@ -90,6 +90,23 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 | Conteúdo | 155 cidades, subgêneros por era (1920–59 e 2030–40 detalhados), ~120 eventos novos, plataformas, críticos, produtores, marcas e prêmios fictícios **com o equivalente real ao lado** |
 | Interface | **Sede em pixel art isométrica** por era e nível, pessoas andando conforme a atividade real, avatares combináveis com editor, ícones em pixel art, retratos; novas áreas Central, Mundo e Negócios; tutorial; modos para daltonismo; leitor de tela; comparador de carreiras |
 
+## Rodada 4: tudo do documento de pesquisa (`docs/ideias-pesquisa.html`)
+
+A base de extensão (`src/sim/ext4.ts`, `src/ui/registry.ts`) deixa cada sistema guardar estado próprio, entrar no tick por ganchos, mexer no apelo/demanda/custos por modificadores (que aparecem na autópsia) e registrar abas, áreas, seções e cenas.
+
+| Sistema | O que entrou |
+|---|---|
+| Música e mini-jogos | Cada música soa diferente (áudio procedural com filtro de época: gramofone, AM, FM, digital); mini-jogos de acordes, melodia, letra, arranjo, take no tempo, mixagem, masterização (guerra do volume), sequenciador de 16 passos, garimpo de samples, audição às cegas e jam da banda; foco por etapa; pistas por era e equipamentos lendários; rádio do jogo nas Paradas |
+| Criação | Tema da letra × gênero com tendências e caderno de combinações; receita sonora (ingredientes → efeitos que cada mercado procura); críticas reveladas em cena; participações e duetos; compositores contratados e fantasmas; encomendas (jingles, trilhas, novela, jogos, hinos); domínio público e standards; remasterização; capa (editor), videoclipe e trecho viral; divisões (clássica, gospel, infantil, trilhas, musicais, jogos) com prêmios |
+| Pessoas | Humor como pilha de pensamentos, colapsos, saúde (voz, audição, lesões, dependência, clínica), conversas e promessas, relações e panelinhas, segredos e dossiês, o dono do selo como personagem (casa, família, patrimônio, sucessão), carreira da equipe, romances, fortuna dos artistas, caixa de entrada por era (carta → mensagem), redes sociais simuladas, mesa de negociação |
+| Indústria | Matéria-prima com choques históricos, fábricas próprias e fila de prensagem, lojas com planta editável, distribuidores e equipe de rua, preço com elasticidade, jukebox, clube do disco, streaming próprio, mídia própria, promotora, ticketeira, instrumentos, árvore de pesquisa, conselho de investidores (pode demitir), fusões com antitruste, câmbio e hiperinflação, sede editável com itens e combos de salas |
+| Mundo e leis | Marcos da história da música como regras datadas (greve de 1942, guerra das velocidades, jabá de 1959, MIDEM, MTV, CD, Parental Advisory, SoundScan, Napster…), jabá e curadores, metodologia das paradas por era, manipulação, mais paradas, feiras, fã-clubes, sindicatos, sociedades de direitos, leis votadas, pirataria, mercados com regras próprias, cenas históricas com arcos |
+| Shows e modos | Construtor de festival com público e pensamentos, notas do show (empolgação, intensidade, cansaço), curva do setlist, show ao vivo jogável, casa de shows própria, ingressos/cambistas/meia, residência, megaeventos, cenários históricos com medalhas, desafio da semana, editor de universo, conquistas e museu |
+| Cenas em pixel art | 36 locais por era (premiação, TV, auditório, rádio, casas de show, fábrica, loja, camarim, ônibus, aeroporto, hotel, tribunal, conselho, pregão, clube, set de clipe, clínica, velório, mansão, rua, feira, palco holográfico) com escolhas: discurso na premiação, entrevista com tempo, visita à rádio, audiência no tribunal, assembleia, vinhetas de turnê; galeria Lugares; interface com o visual da época |
+| Melhorias | Simulação ~2× mais rápida, equilíbrio do começo de jogo, save e diário em texto (copiar/colar), clubes como camada do mapa, layout de celular com navegação inferior |
+
+Ainda não: simulação em Web Worker (preferi otimizar os laços), tutorial convertido em cenário guiado (os cenários existem; o tutorial de 8 passos continua) e explicação por passar o mouse em todos os números (a autópsia e as fichas explicam os principais).
+
 ## Rodada 3: profundidade (repertório, sedes, mapa)
 
 | Sistema | O que mudou |
