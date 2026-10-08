@@ -26,6 +26,20 @@ export interface RunConfig {
   contentFilters: string[]; // tags desligadas
 }
 
+/** Aparência combinável (GDD §44): 3 corpos × 3 rostos × 4 peles × 16 cabelos × 8 cores × 4 roupas × 8 cores × acessórios. */
+export interface Appearance {
+  body: number; // 0..2
+  face: number; // 0..2
+  skin: number; // 0..3
+  hair: number; // 0..15 (0 = sem cabelo)
+  hairColor: number; // 0..7
+  outfit: number; // 0..3
+  outfitColor: number; // 0..7
+  glasses: boolean;
+  hat: boolean;
+  beard: boolean;
+}
+
 export interface Person {
   id: string;
   name: string;
@@ -46,6 +60,8 @@ export interface Person {
   /** relações direcionais −100..100 */
   rel: Record<string, number>;
   lowMoraleMonths: number;
+  /** aparência escolhida no editor; ausente = derivada deterministicamente do id */
+  look?: Appearance;
 }
 
 export type ActStatus = 'emerging' | 'active' | 'hiatus' | 'retired' | 'split';
