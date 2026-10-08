@@ -1,6 +1,8 @@
 // Catálogo do Universo: 100 atos (arquétipos), 22 gravadoras, festivais, mídia,
-// casas e estúdios. A coluna "referência real" do documento é interna e NÃO entra
-// no build (Catálogo, regra 4; GDD §26).
+// casas e estúdios. Para ATOS e ARTISTAS a "referência real" continua interna e NÃO
+// entra no build (Catálogo, regra 4; GDD §26). Por decisão do dono do projeto, festivais,
+// veículos, plataformas, paradas e premiações mostram o equivalente real ao lado do nome
+// (campo opcional `realRef`, ex.: "WorldSound 100 (≈ Billboard Hot 100)").
 
 import { l, type L } from './world';
 
@@ -163,6 +165,10 @@ export const CATALOG_LABELS: CatalogLabel[] = [
   lb('cortex', 'Cortex Sound', 'Selo de vozes sintéticas', 'Synthetic voice label', 'tokyo', 2028, 'C', ['electronic', 'pop']),
 ];
 
+export type FestivalVibe =
+  | 'mega' | 'boutique' | 'underground' | 'charity' | 'tv_contest' | 'jazz' | 'showcase' | 'trade_fair'
+  | 'carnival' | 'touring' | 'rodeo' | 'convention' | 'free' | 'radio_barn' | 'neural';
+
 export interface Festival {
   name: string;
   city: string;
@@ -172,6 +178,22 @@ export interface Festival {
   focus: string[];
   prestige: number;
   scouting?: boolean;
+  // ---- identidade (opcionais; ver FESTIVAL_IDENTITY abaixo) ----
+  /** equivalente real, mostrado ao lado do nome: "≈ Glastonbury" */
+  realRef?: string;
+  /** gêneros-assinatura do line-up (ids de GENRES) */
+  genres?: string[];
+  /** reputação pública 0..100 (pode divergir do prestígio crítico) */
+  reputation?: number;
+  /** público por edição */
+  capacity?: number;
+  /** mês da edição (0 = janeiro, como GameState.month) */
+  month?: number;
+  /** ano da última edição (ausente = segue) */
+  end?: number;
+  vibe?: FestivalVibe;
+  /** descrição curta da identidade */
+  identity?: L;
 }
 
 const f = (name: string, city: string, pt: string, en: string, start: number, focus: string[], prestige: number, scouting = false): Festival =>
@@ -212,7 +234,110 @@ export const FESTIVALS: Festival[] = [
   f('Polderland Showcase', 'berlin', 'Showcase para scouting', 'Scouting showcase', 1986, ['rock', 'electronic', 'pop'], 45, true),
   f('Riviera Music Market', 'paris', 'Feira de negócios', 'Business fair', 1967, [], 40, true),
   f('Tonewood Expo', 'los_angeles', 'Feira de instrumentos', 'Instrument fair', 1950, [], 30, true),
+  // ---- Expansão: festivais com identidade própria (todas as eras e mercados) ----
+  f('Saturday Barn Jamboree', 'nashville', 'Baile de celeiro no rádio', 'Radio barn dance', 1925, ['country_folk'], 70),
+  f('Harlem Ballroom Jubilee', 'new_york', 'Batalha de orquestras', 'Battle of the bands', 1927, ['blues_jazz'], 66),
+  f('Coroa do Rádio', 'rio', 'Concurso de cantoras do rádio', 'Radio singers contest', 1937, ['brazil', 'pop'], 58),
+  f('Road March do Carnaval', 'port_of_spain', 'Carnaval e disputa de calypso', 'Carnival calypso contest', 1932, ['caribbean'], 55),
+  f('Festival Pan-Africano das Artes', 'dakar', 'Encontro cultural pan-africano', 'Pan-African arts gathering', 1966, ['africa', 'blues_jazz'], 72),
+  f('Notting Vale Carnival', 'london', 'Carnaval de rua caribenho', 'Caribbean street carnival', 1966, ['caribbean', 'electronic'], 60),
+  f('Bayou Heritage Fair', 'new_orleans', 'Jazz e herança', 'Jazz & heritage', 1970, ['blues_jazz', 'rnb'], 74),
+  f('Concerto pela Reconstrução', 'new_york', 'Concerto beneficente', 'Benefit concert', 1971, ['rock', 'pop'], 80),
+  f('Concurso Ibero-Americano da Canção', 'mexico_city', 'Concurso de canção na TV', 'TV song contest', 1972, ['latin', 'pop', 'brazil'], 60),
+  f('Arraiá do Sertão', 'fortaleza', 'Festa junina e forró', 'June festival & forró', 1983, ['brazil'], 55),
+  f('Farm Harvest Aid', 'chicago', 'Beneficente rural', 'Rural benefit', 1985, ['country_folk', 'rock'], 62),
+  f('Festa dos Bois do Rio-Mar', 'manaus', 'Festival folclórico amazônico', 'Amazonian folk festival', 1966, ['brazil'], 52),
+  f('Love March', 'berlin', 'Desfile techno de rua', 'Techno street parade', 1989, ['electronic'], 70),
+  f('Hardhall Rotterdam', 'rotterdam', 'Rave hardcore', 'Hardcore rave', 1992, ['electronic'], 48),
+  f('Big Day South', 'sydney', 'Festival itinerante de verão', 'Touring summer festival', 1992, ['rock', 'electronic', 'hiphop'], 70),
+  f('Isle of Danube Fest', 'budapest', 'Festival na ilha', 'Island festival', 1993, ['rock', 'pop', 'electronic', 'europe'], 74),
+  f('Dream Stage Seoul', 'seoul', 'Concerto de ídolos', 'Idol concert', 1995, ['pop', 'asia_me'], 64),
+  f('Planeta Atlântico', 'porto_alegre', 'Festival de verão na praia', 'Beach summer festival', 1996, ['brazil', 'rock', 'pop'], 58),
+  f('Kansai Sonic', 'osaka', 'Festival urbano de verão', 'Urban summer festival', 2000, ['rock', 'pop', 'electronic'], 70),
+  f('Fortress Exit', 'belgrade', 'Festival numa fortaleza', 'Fortress festival', 2000, ['rock', 'electronic', 'europe'], 68),
+  f('Jazz on the Cape', 'cape_town', 'Jazz internacional', 'International jazz', 2000, ['blues_jazz', 'africa'], 66),
+  f('Desert Sand Gathering', 'bamako', 'Festival no deserto', 'Desert gathering', 2001, ['africa'], 62),
+  f('Splendour Ridge', 'brisbane', 'Festival indie de inverno', 'Winter indie festival', 2001, ['rock', 'pop', 'hiphop'], 66),
+  f('Sauti ya Pwani', 'zanzibar', 'Música da costa suaíli', 'Swahili coast music', 2004, ['africa', 'asia_me'], 56),
+  f('Forevermore', 'brussels', 'Megafestival eletrônico', 'Electronic mega-festival', 2005, ['electronic'], 82),
+  f('Detty Harbour December', 'accra', 'Temporada de shows de dezembro', 'December concert season', 2017, ['africa', 'hiphop', 'caribbean'], 64),
+  f('Holo Arena Tour', 'los_angeles', 'Turnê de hologramas e avatares', 'Hologram & avatar tour', 2031, ['pop', 'electronic'], 70),
+  f('Human Hands Gathering', 'dublin', 'Festival 100% humano', '100% human festival', 2033, ['rock', 'country_folk', 'blues_jazz'], 72),
+  f('Feedfest', 'tokyo', 'Festival de feed neural', 'Neural feed festival', 2037, ['electronic', 'pop'], 76),
 ];
+
+/** Identidade dos festivais: equivalente real, gêneros-assinatura, reputação, público, mês, fim e "vibe". */
+type FestId = Pick<Festival, 'realRef' | 'genres' | 'reputation' | 'capacity' | 'month' | 'end' | 'vibe' | 'identity'>;
+const fi = (realRef: string | undefined, vibe: Festival['vibe'], capacity: number, month: number, reputation: number, genres: string[], ipt: string, ien: string, end?: number): FestId =>
+  ({ realRef, vibe, capacity, month, reputation, genres, identity: l(ipt, ien), end });
+
+export const FESTIVAL_IDENTITY: Record<string, FestId> = {
+  'Gala della Riviera': fi('Sanremo', 'tv_contest', 2000, 1, 72, ['canzone', 'cantautori'], 'Teatro, orquestra e votação na TV; canção vencedora domina o ano.', 'Theatre, orchestra and TV vote; the winning song rules the year.'),
+  'Grande Festival da Canção': fi('Festival de MPB da TV Record', 'tv_contest', 3000, 9, 70, ['mpb', 'tropicalia', 'bossa'], 'Plateia que vaia e consagra; política nas entrelinhas.', 'An audience that boos and crowns; politics between the lines.', 1972),
+  'Concurso Eurocanção': fi('Eurovision Song Contest', 'tv_contest', 10000, 4, 78, ['eurodance', 'nordic_pop', 'chanson_pop', 'schlager'], 'Votos por país, figurinos e pontos de vizinhança.', 'Votes by country, costumes and neighbourly points.'),
+  'Bayfront Sound': fi('Monterey Pop Festival', 'boutique', 50000, 5, 82, ['psychedelic', 'soul', 'folk'], 'Três dias que lançam carreiras e destroem guitarras.', 'Three days that launch careers and smash guitars.', 1969),
+  'Timberfield Rock': fi('Woodstock', 'mega', 400000, 7, 95, ['psychedelic', 'folk', 'hard_rock'], 'Lama, paz e uma geração inteira na estrada.', 'Mud, peace and a whole generation on the road.', 1969),
+  'Isle of Gull Festival': fi('Isle of Wight Festival', 'mega', 150000, 7, 72, ['hard_rock', 'psychedelic', 'prog'], 'Balsas lotadas rumo à ilha.', 'Packed ferries to the island.'),
+  'Glasswick Fields': fi('Glastonbury', 'mega', 200000, 5, 93, ['alt_rock', 'britpop', 'indie', 'edm', 'hiphop'], 'Fazenda, palcos-lenda e lama obrigatória.', 'A farm, legendary stages and compulsory mud.'),
+  'Earth Aid': fi('Live Aid', 'charity', 72000, 6, 96, ['arena_rock', 'pop_rock', 'synthpop'], 'Transmissão global por uma causa; um set de 20 minutos vira história.', 'Global broadcast for a cause; a 20-minute set becomes history.', 1985),
+  'Rock na Baía Dourada': fi('Rock in Rio', 'mega', 250000, 0, 88, ['hard_rock', 'rock_br', 'heavy_metal', 'pop_rock'], 'Cidade do rock gigante; o Brasil entra no circuito mundial.', 'A giant rock city; Brazil joins the world circuit.'),
+  'Parkaloo Festival': fi('Lollapalooza', 'touring', 60000, 7, 76, ['alt_rock', 'grunge', 'hiphop', 'indie'], 'Caravana alternativa que vira marca global.', 'An alternative caravan that becomes a global brand.'),
+  'Dune Valley Sessions': fi('Coachella', 'mega', 125000, 3, 89, ['edm', 'indie', 'pop_rnb', 'hiphop'], 'Deserto, influenciadores e hologramas surpresa.', 'Desert, influencers and surprise holograms.'),
+  'Nextday Beat': fi('Melt! Festival', 'underground', 20000, 6, 74, ['techno', 'house', 'idm'], 'Guindastes industriais e sets até o sol nascer.', 'Industrial cranes and sets until sunrise.'),
+  'NeonGlasswick': fi(undefined, 'neural', 120000, 5, 80, ['neuro_pop', 'dream_feed', 'latent_core'], 'Metade do público assiste por interface neural.', 'Half the audience attends through a neural interface.'),
+  'Nordfjord Open Air': fi('Roskilde Festival', 'mega', 80000, 6, 70, ['nordic_pop', 'indie', 'heavy_metal'], 'Gestão sem fins lucrativos e tendas laranjas.', 'Non-profit management and orange tents.'),
+  'Lac Bleu Jazz': fi('Montreux Jazz Festival', 'jazz', 15000, 6, 84, ['cool_jazz', 'fusion', 'soul'], 'Lago, gravações ao vivo lendárias e cachês modestos.', 'A lake, legendary live recordings and modest fees.'),
+  'Harbor Point Folk & Jazz': fi('Newport Jazz & Folk Festival', 'jazz', 12000, 6, 78, ['bebop', 'cool_jazz', 'folk'], 'Puristas vaiam quem liga a guitarra na tomada.', 'Purists boo whoever plugs in.'),
+  'Ringwald Open Air': fi('Rock am Ring', 'mega', 85000, 5, 72, ['hard_rock', 'heavy_metal', 'nu_metal'], 'Autódromo transformado em templo do rock.', 'A racetrack turned rock temple.'),
+  'Ironbridge Open Air': fi('Monsters of Rock / Download', 'mega', 80000, 7, 70, ['heavy_metal', 'thrash', 'hard_rock'], 'Volume máximo e camisetas pretas até o horizonte.', 'Maximum volume and black T-shirts to the horizon.'),
+  'Mount Aoi Rock': fi('Fuji Rock Festival', 'mega', 40000, 6, 76, ['jpop', 'indie', 'techno'], 'Montanha, chuva e público impecavelmente limpo.', 'Mountain, rain and an impeccably tidy crowd.'),
+  'Ponent Sound': fi('Primavera Sound', 'boutique', 60000, 5, 80, ['indie', 'post_rock', 'shoegaze', 'alt_rnb'], 'Curadoria indie que dita o ano dos blogs.', 'Indie curation that sets the blogs\' year.'),
+  'Lone Star Showcase': fi('SXSW', 'showcase', 30000, 2, 62, ['indie', 'alt_rock', 'outlaw'], 'Mil bandas, cem A&Rs e crachás por toda parte.', 'A thousand bands, a hundred A&Rs and badges everywhere.'),
+  'Biscayne Beats': fi('Ultra Music Festival', 'mega', 55000, 2, 70, ['edm', 'trance', 'house'], 'Palco principal com pirotecnia e drops gigantes.', 'Main stage with pyrotechnics and giant drops.'),
+  'Passarela do Samba': fi('Desfile das escolas de samba (Sambódromo)', 'carnival', 70000, 1, 86, ['samba_enredo', 'samba'], 'Escolas, samba-enredo e jurados implacáveis.', 'Samba schools, theme sambas and merciless judges.'),
+  'Festival da Orla Azul': fi('Festival de Viña del Mar', 'tv_contest', 15000, 1, 70, ['pop_latino', 'bolero', 'nueva_cancion'], 'O "monstro" da plateia decide quem fica no palco.', 'The crowd "monster" decides who stays on stage.'),
+  'Rock al Bosque': fi('Rock al Parque', 'free', 80000, 6, 62, ['rock_latino', 'hardcore_punk', 'ska'], 'Gratuito, público jovem e rodas punk.', 'Free, young crowd and punk circle pits.'),
+  'Vibra Latina': fi('Vive Latino', 'mega', 80000, 2, 70, ['rock_latino', 'cumbia', 'latin_trap'], 'Rock em espanhol com cumbia no fim da noite.', 'Rock en español with cumbia late at night.'),
+  'Soul Weekend Crescent': fi('Essence Festival', 'mega', 50000, 6, 72, ['soul', 'neo_soul', 'pop_rnb'], 'Celebração da cultura negra e do R&B.', 'A celebration of Black culture and R&B.'),
+  'Afro Praia Fest': fi('Afro Nation', 'mega', 40000, 6, 70, ['afrobeats', 'amapiano', 'dancehall'], 'Praia, diáspora e headliners africanos.', 'Beach, diaspora and African headliners.'),
+  'Sertão em Festa': fi('Festa do Peão de Barretos', 'rodeo', 90000, 7, 66, ['sertanejo', 'sertanejo_univ'], 'Rodeio, arena e duplas sertanejas.', 'Rodeo, arena and sertanejo duos.'),
+  'Hallyu Convention': fi('KCON', 'convention', 50000, 7, 64, ['kpop', 'k_indie'], 'Fã-clubes, lightsticks e encontros pagos.', 'Fan clubs, lightsticks and paid meet-and-greets.'),
+  'Lakefront Summer Fest': fi('Summerfest', 'mega', 80000, 5, 60, ['pop_rock', 'country', 'soul'], 'Dez palcos à beira do lago, público familiar.', 'Ten lakeside stages, family crowd.'),
+  'Polderland Showcase': fi('Eurosonic Noorderslag', 'showcase', 40000, 0, 52, ['indie', 'techno'], 'Vitrine de talentos para programadores europeus.', 'Talent showcase for European bookers.'),
+  'Riviera Music Market': fi('MIDEM', 'trade_fair', 10000, 0, 45, [], 'Feira de direitos e catálogos à beira-mar.', 'Seaside rights and catalog fair.'),
+  'Tonewood Expo': fi('NAMM Show', 'trade_fair', 100000, 0, 40, [], 'Instrumentos, endossos e lançamentos de equipamento.', 'Instruments, endorsements and gear launches.'),
+  'Saturday Barn Jamboree': fi('Grand Ole Opry', 'radio_barn', 3000, 9, 82, ['country', 'old_time', 'honky_tonk', 'bluegrass'], 'Transmissão ao vivo todo sábado; tocar ali é ser da família.', 'Live broadcast every Saturday; playing there makes you family.'),
+  'Harlem Ballroom Jubilee': fi('Batalhas de orquestras do Savoy Ballroom', 'jazz', 4000, 10, 78, ['hot_jazz', 'big_band', 'kansas_city_jazz'], 'Duas orquestras, um salão e os dançarinos como júri.', 'Two orchestras, one ballroom and the dancers as judges.', 1958),
+  'Coroa do Rádio': fi('Concurso Rainha do Rádio', 'tv_contest', 5000, 7, 64, ['samba_cancao', 'marchinha', 'bolero'], 'Votos em cupons de revista; fã-clubes em guerra.', 'Votes on magazine coupons; fan clubs at war.', 1958),
+  'Road March do Carnaval': fi('Road March do Carnaval de Trinidad', 'carnival', 50000, 1, 66, ['calypso', 'soca', 'steelpan'], 'A música mais tocada nas ruas vence.', 'The song most played on the streets wins.'),
+  'Festival Pan-Africano das Artes': fi('FESMAN (Festival Mundial de Artes Negras)', 'boutique', 30000, 3, 74, ['highlife', 'rumba_congolaise', 'ethio_jazz'], 'Diplomacia cultural e encontros históricos.', 'Cultural diplomacy and historic meetings.'),
+  'Notting Vale Carnival': fi('Notting Hill Carnival', 'carnival', 1000000, 7, 70, ['calypso', 'dub', 'uk_garage', 'soca'], 'Sound systems de rua por dois dias.', 'Street sound systems for two days.'),
+  'Bayou Heritage Fair': fi('New Orleans Jazz & Heritage Festival', 'jazz', 80000, 3, 80, ['nola_jazz', 'rnb', 'gospel'], 'Barracas de comida, metais e gospel ao meio-dia.', 'Food stalls, brass and gospel at noon.'),
+  'Concerto pela Reconstrução': fi('Concert for Bangladesh', 'charity', 40000, 7, 84, ['folk', 'pop_rock', 'indian_classical'], 'O primeiro grande concerto beneficente; o disco ao vivo arrecada.', 'The first great benefit concert; the live album raises funds.', 1971),
+  'Concurso Ibero-Americano da Canção': fi('Festival OTI', 'tv_contest', 4000, 10, 60, ['bolero', 'pop_latino', 'mpb'], 'Um país, uma canção, uma orquestra.', 'One country, one song, one orchestra.', 2000),
+  'Arraiá do Sertão': fi('São João de Caruaru / Campina Grande', 'carnival', 100000, 5, 62, ['forro', 'baiao', 'piseiro'], 'Trinta noites de forró e quadrilha.', 'Thirty nights of forró and square dance.'),
+  'Farm Harvest Aid': fi('Farm Aid', 'charity', 50000, 8, 66, ['country', 'outlaw', 'folk'], 'Shows anuais para o pequeno produtor.', 'Annual shows for small farmers.'),
+  'Festa dos Bois do Rio-Mar': fi('Festival de Parintins', 'carnival', 35000, 5, 60, ['carimbo', 'brega'], 'Dois bois, duas cores e uma arena dividida.', 'Two bulls, two colours and a divided arena.'),
+  'Love March': fi('Love Parade', 'free', 1000000, 6, 74, ['techno', 'trance', 'house'], 'Carros de som e um milhão dançando na avenida.', 'Sound trucks and a million dancing on the avenue.', 2010),
+  'Hardhall Rotterdam': fi('Thunderdome', 'underground', 20000, 10, 50, ['gabber'], '200 BPM, agasalhos e cabeças raspadas.', '200 BPM, tracksuits and shaved heads.'),
+  'Big Day South': fi('Big Day Out', 'touring', 50000, 0, 72, ['alt_rock', 'grunge', 'hiphop', 'edm'], 'Turnê de verão por várias capitais.', 'Summer tour across several capitals.', 2014),
+  'Isle of Danube Fest': fi('Sziget Festival', 'mega', 90000, 7, 74, ['indie', 'edm', 'balkan_brass'], 'Uma semana numa ilha do rio.', 'A week on a river island.'),
+  'Dream Stage Seoul': fi('Dream Concert', 'convention', 50000, 4, 66, ['kpop'], 'Escalação de dezenas de grupos num só estádio.', 'Dozens of groups in one stadium.'),
+  'Planeta Atlântico': fi('Planeta Atlântida', 'mega', 80000, 1, 58, ['rock_br', 'pagode', 'sertanejo_univ'], 'Verão gaúcho com rock, pagode e sertanejo.', 'Southern summer with rock, pagode and sertanejo.'),
+  'Kansai Sonic': fi('Summer Sonic', 'mega', 100000, 7, 70, ['jpop', 'indie', 'edm'], 'Duas cidades, mesmos headliners, trens lotados.', 'Two cities, same headliners, packed trains.'),
+  'Fortress Exit': fi('EXIT Festival', 'mega', 55000, 6, 70, ['techno', 'indie', 'turbo_folk'], 'Nasceu como protesto e virou destino.', 'Born as a protest, became a destination.'),
+  'Jazz on the Cape': fi('Cape Town International Jazz Festival', 'jazz', 37000, 2, 68, ['cape_jazz', 'ethio_jazz', 'neo_soul'], 'O maior encontro de jazz do continente.', 'The continent\'s largest jazz gathering.'),
+  'Desert Sand Gathering': fi('Festival au Désert', 'boutique', 10000, 0, 66, ['desert_blues'], 'Dunas, tendas e guitarras hipnóticas.', 'Dunes, tents and hypnotic guitars.'),
+  'Splendour Ridge': fi('Splendour in the Grass', 'boutique', 50000, 6, 68, ['indie', 'alt_rnb', 'pub_rock'], 'Inverno ameno, curadoria indie.', 'Mild winter, indie curation.'),
+  'Sauti ya Pwani': fi('Sauti za Busara', 'boutique', 15000, 1, 58, ['taarab', 'bongo_flava', 'benga'], 'Forte histórico e música da costa suaíli.', 'Historic fort and Swahili coast music.'),
+  'Forevermore': fi('Tomorrowland', 'mega', 400000, 6, 84, ['edm', 'trance', 'house'], 'Cenografia de conto de fadas e ingressos esgotados em minutos.', 'Fairy-tale staging, sold out in minutes.'),
+  'Detty Harbour December': fi('Detty December / Afrochella', 'mega', 30000, 11, 66, ['afrobeats', 'amapiano', 'hiplife'], 'Diáspora volta para casa em dezembro.', 'The diaspora comes home in December.'),
+  'Holo Arena Tour': fi(undefined, 'neural', 20000, 4, 60, ['k_synth', 'neuro_pop'], 'Avatares em turnê; artistas reais nos bastidores (às vezes).', 'Avatars on tour; real artists backstage (sometimes).'),
+  'Human Hands Gathering': fi(undefined, 'boutique', 15000, 7, 74, ['handmade_rock', 'holo_folk', 'consent_wave'], 'Só instrumentos tocados por humanos; celulares lacrados.', 'Human-played instruments only; phones sealed.'),
+  'Feedfest': fi(undefined, 'neural', 500000, 9, 70, ['dream_feed', 'lucid_trance', 'neuro_pop'], 'Uma noite inteira transmitida direto no córtex de quem assina.', 'A whole night streamed straight to subscribers\' cortex.'),
+};
+
+for (const fest of FESTIVALS) Object.assign(fest, FESTIVAL_IDENTITY[fest.name] ?? {});
 
 export interface MediaOutlet {
   name: string;
@@ -223,6 +348,8 @@ export interface MediaOutlet {
   /** prestígio (crítica) vs alcance (popularidade) */
   prestige: number;
   reach: number;
+  /** equivalente real mostrado ao lado do nome (ex.: "≈ Billboard") */
+  realRef?: string;
 }
 
 const m = (name: string, kind: MediaOutlet['kind'], pt: string, en: string, start: number, prestige: number, reach: number, end?: number): MediaOutlet =>
@@ -262,11 +389,76 @@ export const MEDIA: MediaOutlet[] = [
   m('LiveLoop', 'platform', 'Transmissão ao vivo', 'Live streaming', 2011, 15, 60),
   m('Loopit', 'platform', 'Vídeo curto', 'Short video', 2018, 10, 100),
   m('Voxera', 'platform', 'Plataforma de vozes licenciadas', 'Licensed voice platform', 2031, 20, 80),
+  m('Palco & Partitura', 'press', 'Semanário de espetáculos', 'Show-business weekly', 1920, 55, 45),
+  m('Agulha Clássica', 'press', 'Revista de discos clássicos', 'Classical records magazine', 1923, 80, 20),
+  m('Ondas & Astros', 'press', 'Revista de fãs do rádio', 'Radio fan magazine', 1948, 30, 60, 1970),
+  m('Feedback Diário', 'web', 'Crítica da era sintética', 'Synthetic-era criticism', 2031, 60, 50),
   m('Spire Records', 'retail', 'Rede de lojas de discos', 'Record store chain', 1960, 30, 50, 2006),
   m('Maiden Megastore', 'retail', 'Megastore', 'Megastore', 1971, 25, 60, 2009),
   m('Cobble Trade', 'retail', 'Loja independente', 'Independent shop', 1976, 80, 15),
   m('Club do Disco', 'retail', 'Venda por correspondência', 'Mail-order club', 1955, 10, 40, 2009),
 ];
+
+/** Equivalentes reais dos veículos (mostrados ao lado do nome). */
+export const MEDIA_REFS: Record<string, string> = {
+  'Rádio Mundial Onda': 'NBC Radio Network',
+  'Corporação Nacional de Radiodifusão': 'BBC',
+  'Rádio Galeão Livre': 'Radio Caroline',
+  'FM Estação Cidade': 'rádio FM Top 40',
+  'Onda Universitária': 'college radio',
+  'Dance Hall Hour': 'American Bandstand',
+  'Gala de Domingo': 'The Ed Sullivan Show',
+  'Parada Quente': 'Top of the Pops',
+  'Groove Express': 'Soul Train',
+  'Sábado Ao Vivo': 'Saturday Night Live',
+  ClipNet: 'MTV',
+  'Next Voice': 'American Idol',
+  'Blind Stage': 'The Voice',
+  'Tune Maker': 'Melody Maker',
+  'WorldSound Weekly': 'Billboard',
+  'Weekly Needle': 'NME',
+  'Rock Chronicle': 'Rolling Stone',
+  Whirl: 'Spin',
+  Barulho: 'Bizz',
+  'Vault Magazine': 'Mojo',
+  'Spearpoint Review': 'Pitchfork',
+  ShareWave: 'Napster',
+  TuneShop: 'iTunes Store',
+  'Pocket Radio': 'Pandora',
+  Kaleido: 'YouTube',
+  Streamhaven: 'Spotify',
+  'Orchard Music': 'Apple Music',
+  AudioDrift: 'SoundCloud',
+  Bandhaus: 'Bandcamp',
+  Hearo: 'Shazam',
+  LiveLoop: 'Twitch',
+  Loopit: 'TikTok',
+  'Palco & Partitura': 'Variety',
+  'Agulha Clássica': 'Gramophone',
+  'Ondas & Astros': 'Revista do Rádio',
+  'Spire Records': 'Tower Records',
+  'Maiden Megastore': 'Virgin Megastore',
+  'Cobble Trade': 'Rough Trade',
+  'Club do Disco': 'Columbia House',
+};
+for (const mo of MEDIA) if (MEDIA_REFS[mo.name]) mo.realRef = MEDIA_REFS[mo.name];
+
+/** Equivalentes reais das instituições (mesmas chaves de INSTITUTIONS). */
+export const INSTITUTION_REFS: Record<string, string> = {
+  performing: 'ASCAP / BMI / ECAD',
+  mechanical: 'Harry Fox Agency',
+  neighbouring: 'PPL / SoundExchange',
+  industry: 'IFPI',
+  singlesChart: 'Billboard Hot 100',
+  albumsChart: 'Billboard 200',
+  awards: 'Grammy Awards',
+  hall: 'Rock & Roll Hall of Fame',
+};
+
+/** "Nome (≈ referência real)" — utilitário para a interface. */
+export function withRealRef(name: string, realRef?: string): string {
+  return realRef ? `${name} (≈ ${realRef})` : name;
+}
 
 export const INSTITUTIONS = {
   performing: 'SMAC',

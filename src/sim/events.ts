@@ -12,6 +12,7 @@ import type { Act, Decision, GameState } from './types';
 import { fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
+import { MORE_EVENTS } from './events_more';
 
 export type Ctx = Record<string, string | number>;
 
@@ -784,6 +785,7 @@ export const EVENTS: EventDef[] = [
       { id: 'indie', label: l('Continuar independente', 'Stay independent'), apply: (s, _r, c) => { act(s, c).momentum += 3; } },
     ],
   },
+  ...MORE_EVENTS,
 ];
 
 function mergeLabelsSync(s: GameState, buyer: string, target: string): void {
