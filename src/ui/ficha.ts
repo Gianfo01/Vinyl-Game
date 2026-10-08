@@ -6,7 +6,7 @@ import { S, t } from '../i18n/strings';
 import { defaultOffer, evaluateOffer, makeOffer } from '../sim/contracts';
 import { actState } from '../sim/people';
 import { DEGREES, estimate, sourceName, visibleFields } from '../sim/scouting';
-import type { Act, GameState, Offer } from '../sim/types';
+import type { Act, GameState, Offer, Song } from '../sim/types';
 import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, monthName, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
 import { bar, h, rangeBar, select } from './dom';
 import { playPreview, stopPreview } from './audio';
@@ -136,6 +136,9 @@ export function openPerson(id: string): void {
   modal(p.name, body);
 }
 
+/** Extras por faixa na ficha do lançamento (rodada 4: botão de ouvir). */
+export const RELEASE_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
+
 export function openRelease(id: string): void {
   const s = g();
   const r = s.releases[id];
@@ -160,7 +163,7 @@ export function openRelease(id: string): void {
         const so = s.songs[sid];
         if (!so) return null;
         const show = (v: number) => (mine ? Math.round(v) : '~' + Math.round(v / 10) * 10);
-        return h('tr', null, h('td', null, so.title), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, show(so.lyrics)), h('td', null, show(so.performance)), h('td', null, show(so.production)), h('td', null, show(so.originality)));
+        return h('tr', null, h('td', null, so.title, ' ', ...RELEASE_SONG_EXTRAS.map((f) => f(s, so))), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, show(so.lyrics)), h('td', null, show(so.performance)), h('td', null, show(so.production)), h('td', null, show(so.originality)));
       })),
     ) : null,
     mine && r.autopsy ? h('div', null,
