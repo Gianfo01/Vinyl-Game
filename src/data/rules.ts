@@ -109,6 +109,13 @@ export interface HqLevel {
   rent: number; // dólares reais/mês
   /** mercados que a sede alcança sem distribuidor */
   freeMarkets: number;
+  /** ano mínimo (a arquitetura e a tecnologia precisam existir) */
+  minYear?: number;
+  /** tecnologia exigida (id de TECHS) */
+  tech?: string;
+  /** exige esta reputação comercial mínima */
+  minReputation?: number;
+  desc?: L;
 }
 
 export const HQ_LEVELS: HqLevel[] = [
@@ -116,6 +123,24 @@ export const HQ_LEVELS: HqLevel[] = [
   { id: 'small_studio', name: l('Estúdio pequeno', 'Small studio'), careers: 3, staff: 3, sessions: 1, equipment: 6, reach: l('Circuito regional', 'Regional circuit'), upgradeCost: 25000, rent: 900, freeMarkets: 1 },
   { id: 'loft', name: l('Loft', 'Loft'), careers: 6, staff: 6, sessions: 2, equipment: 9, reach: l('Operação nacional', 'National operation'), upgradeCost: 140000, rent: 4500, freeMarkets: 1 },
   { id: 'complex', name: l('Complexo', 'Complex'), careers: 12, staff: 12, sessions: 4, equipment: 12, reach: l('Operação internacional', 'International operation'), upgradeCost: 700000, rent: 18000, freeMarkets: 2 },
+  { id: 'tower', name: l('Torre multinacional', 'Multinational tower'), careers: 20, staff: 20, sessions: 6, equipment: 16, reach: l('Multinacional', 'Multinational'), upgradeCost: 3000000, rent: 60000, freeMarkets: 3, minYear: 1968, minReputation: 55, desc: l('Andares de A&R, jurídico e marketing; estúdios A e B; sala de imprensa.', 'Floors of A&R, legal and marketing; studios A and B; a press room.') },
+  { id: 'campus', name: l('Campus futurista', 'Futuristic campus'), careers: 30, staff: 28, sessions: 8, equipment: 20, reach: l('Global e neural', 'Global and neural'), upgradeCost: 9000000, rent: 120000, freeMarkets: 4, minYear: 2026, tech: 'hologram', minReputation: 65, desc: l('Palco holográfico, laboratório neural, estúdios imersivos e jardim suspenso.', 'Holographic stage, neural lab, immersive studios and a hanging garden.') },
+];
+
+export interface BranchLevel {
+  name: L;
+  careers: number;
+  staff: number;
+  sessions: number;
+  cost: number; // dólares reais
+  rent: number; // dólares reais/mês
+}
+
+/** Filiais em outras cidades: ampliam a capacidade e abrem o mercado local. */
+export const BRANCH_LEVELS: BranchLevel[] = [
+  { name: l('Escritório regional', 'Regional office'), careers: 2, staff: 2, sessions: 0, cost: 25000, rent: 1200 },
+  { name: l('Estúdio regional', 'Regional studio'), careers: 3, staff: 3, sessions: 1, cost: 90000, rent: 3500 },
+  { name: l('Sede regional', 'Regional headquarters'), careers: 5, staff: 5, sessions: 2, cost: 320000, rent: 11000 },
 ];
 
 // ---------- Equipe ----------

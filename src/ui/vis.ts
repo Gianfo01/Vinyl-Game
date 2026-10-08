@@ -12,6 +12,7 @@ const EMOJI: Record<string, string> = {
   mic: '🎤', guitar: '🎸', drums: '🥁', calendar: '📅', contract: '📜', warning: '⚠️', heart: '❤️', 'broken-heart': '💔', trophy: '🏆',
   'gold-disc': '🥇', 'platinum-disc': '💿', house: '🏠', 'tour-bus': '🚌', plane: '✈️', ship: '🚢', train: '🚆', newspaper: '📰', tv: '📺',
   radio: '📻', camera: '📷', film: '🎬', gamepad: '🎮', shirt: '👕', handshake: '🤝', gavel: '⚖️', bank: '🏦', hologram: '👻', brain: '🧠',
+  flag: '🚩', star: '🎪', note: '🎵', pen: '✍️', vault: '🗄️', bulb: '💡', building: '🏢', rocket: '🚀',
   fire: '🔥', skull: '💀', sleep: '😴', sparkle: '✨', stress: '😣', clock: '⏱', globe: '🌍', lock: '🔒', key: '🔑',
 };
 

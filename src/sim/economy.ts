@@ -10,12 +10,13 @@ import { fmtL, hasMutator, hasTech, money, nextId, notify, post, remember } from
 import { genProfessionals } from './worldgen';
 import { emitEvent } from './events';
 import { addAsset } from './finance';
+import { branchRent, hqBlocker, hqCaps } from './branches';
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
-  const rent = money(s, hq.rent);
+  const rent = money(s, hq.rent) + branchRent(s);
   const salaries = s.player.staff.reduce((t, x) => t + x.salary, 0);
-  const over = Math.max(0, careerSlotsUsed(s) - hq.careers);
+  const over = Math.max(0, careerSlotsUsed(s) - hqCaps(s).careers);
   const outsourcing = money(s, over * 2200);
   const loans = s.player.loans.reduce((t, x) => t + x.monthly, 0);
   const equipment = money(s, s.player.equipment.length * 60);
@@ -24,9 +25,8 @@ export function monthlyCosts(s: GameState): { rent: number; salaries: number; ou
 
 /** Carga de gestão: acima de 1 há atrito (qualidade, confiança). */
 export function managementLoad(s: GameState): number {
-  const hq = HQ_LEVELS[s.player.hq];
   const admin = s.player.staff.filter((x) => x.role === 'admin').length;
-  return careerSlotsUsed(s) / Math.max(1, hq.careers + admin * 1.5);
+  return careerSlotsUsed(s) / Math.max(1, hqCaps(s).careers + admin * 1.5);
 }
 
 export function payMonth(s: GameState): void {
@@ -111,7 +111,7 @@ export function checkInsolvency(s: GameState, r: Rng): void {
 export function hireStaff(s: GameState, proId: string): L | null {
   const pro = s.professionals.find((x) => x.id === proId);
   if (!pro) return l('Profissional indisponível.', 'Professional unavailable.');
-  if (s.player.staff.length >= HQ_LEVELS[s.player.hq].staff) return l('Sede sem vagas para equipe. Amplie a sede.', 'No staff room in the HQ. Upgrade it.');
+  if (s.player.staff.length >= hqCaps(s).staff) return l('Sede sem vagas para equipe. Amplie a sede.', 'No staff room in the HQ. Upgrade it.');
   const signOn = Math.round(pro.salary * 0.5);
   if (s.player.cash < signOn) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `hire:${pro.id}`, -signOn, 'salaries', `Contratação ${pro.name}`);
@@ -140,6 +140,8 @@ export function upgradeCost(s: GameState): number | null {
 export function upgradeHq(s: GameState): L | null {
   const cost = upgradeCost(s);
   if (cost === null) return l('Sede já no nível máximo.', 'HQ already at max level.');
+  const block = hqBlocker(s);
+  if (block) return block;
   if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `hq:${s.player.hq + 1}`, -cost, 'hq', 'Ampliação da sede');
   s.player.hq += 1;
@@ -155,7 +157,7 @@ export function availableEquipment(s: GameState) {
 export function buyEquipment(s: GameState, id: string): L | null {
   const def = EQUIPMENT.find((e) => e.id === id);
   if (!def) return l('Item inválido.', 'Invalid item.');
-  if (s.player.equipment.length >= HQ_LEVELS[s.player.hq].equipment) return l('Sem espaço para equipamento na sede.', 'No equipment space in the HQ.');
+  if (s.player.equipment.length >= hqCaps(s).equipment) return l('Sem espaço para equipamento na sede.', 'No equipment space in the HQ.');
   const cost = money(s, def.cost);
   if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `eq:${id}`, -cost, 'equipment', def.name.pt);

@@ -1,4 +1,4 @@
-// Planta da sede por nível (Garagem, Estúdio pequeno, Loft, Complexo): salas, portas, paredes,
+// Planta da sede por nível (Garagem, Estúdio pequeno, Loft, Complexo, Torre, Campus): salas, portas, paredes,
 // mobília por era e equipamento do jogador, pontos de atividade e busca de caminho no grid.
 
 import { Rng } from '../../core/rng';
@@ -109,7 +109,75 @@ export const LAYOUTS: LayoutDef[] = [
     glass: [E(4, 1, 'E'), E(12, 1, 'E')],
     entrance: E(12, 14, 'S'),
   },
+  // 4 Torre multinacional: três estúdios, dois andares de escritórios, lobby com lounge
+  {
+    W: 26, H: 18,
+    rooms: [
+      R('boothA', 'booth', 0, 0, 5, 4, 'studio'),
+      R('ctrlA', 'control', 5, 0, 4, 4, 'control'),
+      R('boothB', 'booth', 9, 0, 5, 4, 'studio'),
+      R('ctrlB', 'control', 14, 0, 4, 4, 'control'),
+      R('boothC', 'booth', 18, 0, 4, 4, 'studio'),
+      R('tro', 'trophy', 22, 0, 4, 4, 'hall'),
+      R('hall', 'hall', 0, 4, 26, 2, 'hall'),
+      R('reh', 'rehearsal', 0, 6, 5, 5, 'studio'),
+      R('wri', 'writing', 5, 6, 4, 5, 'office'),
+      R('lng', 'lounge', 9, 6, 6, 5, 'lounge'),
+      R('wri2', 'writing', 15, 6, 4, 5, 'office'),
+      R('meet', 'meeting', 19, 6, 7, 5, 'office'),
+      R('hall2', 'hall', 0, 11, 26, 2, 'hall'),
+      R('offA', 'office', 0, 13, 7, 5, 'office'),
+      R('offB', 'office', 7, 13, 6, 5, 'office'),
+      R('meet2', 'meeting', 13, 13, 5, 5, 'office'),
+      R('lng2', 'lounge', 18, 13, 8, 5, 'lounge'),
+    ],
+    doors: [
+      E(2, 3, 'S'), E(6, 3, 'S'), E(11, 3, 'S'), E(15, 3, 'S'), E(19, 3, 'S'), E(23, 3, 'S'),
+      E(4, 2, 'E'), E(13, 2, 'E'), E(17, 2, 'E'),
+      E(2, 5, 'S'), E(6, 5, 'S'), E(11, 5, 'S'), E(16, 5, 'S'), E(22, 5, 'S'),
+      E(2, 10, 'S'), E(6, 10, 'S'), E(12, 10, 'S'), E(16, 10, 'S'), E(22, 10, 'S'),
+      E(3, 12, 'S'), E(9, 12, 'S'), E(15, 12, 'S'), E(21, 12, 'S'),
+    ],
+    glass: [E(4, 1, 'E'), E(13, 1, 'E'), E(17, 1, 'E')],
+    entrance: E(21, 17, 'S'),
+  },
+  // 5 Campus futurista: estúdios imersivos, galeria holográfica, dois lounges
+  {
+    W: 30, H: 20,
+    rooms: [
+      R('boothA', 'booth', 0, 0, 6, 5, 'studio'),
+      R('ctrlA', 'control', 6, 0, 4, 5, 'control'),
+      R('boothB', 'booth', 10, 0, 5, 5, 'studio'),
+      R('ctrlB', 'control', 15, 0, 4, 5, 'control'),
+      R('boothC', 'booth', 19, 0, 5, 5, 'studio'),
+      R('ctrlC', 'control', 24, 0, 6, 5, 'control'),
+      R('hall', 'hall', 0, 5, 30, 2, 'hall'),
+      R('reh', 'rehearsal', 0, 7, 6, 6, 'studio'),
+      R('reh2', 'rehearsal', 6, 7, 5, 6, 'studio'),
+      R('wri', 'writing', 11, 7, 4, 6, 'office'),
+      R('lng', 'lounge', 15, 7, 7, 6, 'lounge'),
+      R('tro', 'trophy', 22, 7, 8, 6, 'hall'),
+      R('hall2', 'hall', 0, 13, 30, 2, 'hall'),
+      R('offA', 'office', 0, 15, 7, 5, 'office'),
+      R('offB', 'office', 7, 15, 7, 5, 'office'),
+      R('meet', 'meeting', 14, 15, 5, 5, 'office'),
+      R('wri2', 'writing', 19, 15, 4, 5, 'office'),
+      R('lng2', 'lounge', 23, 15, 7, 5, 'lounge'),
+    ],
+    doors: [
+      E(3, 4, 'S'), E(8, 4, 'S'), E(12, 4, 'S'), E(17, 4, 'S'), E(21, 4, 'S'), E(27, 4, 'S'),
+      E(5, 2, 'E'), E(14, 2, 'E'), E(23, 2, 'E'),
+      E(3, 6, 'S'), E(8, 6, 'S'), E(13, 6, 'S'), E(18, 6, 'S'), E(26, 6, 'S'),
+      E(3, 12, 'S'), E(8, 12, 'S'), E(13, 12, 'S'), E(18, 12, 'S'), E(26, 12, 'S'),
+      E(3, 14, 'S'), E(10, 14, 'S'), E(16, 14, 'S'), E(21, 14, 'S'), E(26, 14, 'S'),
+    ],
+    glass: [E(5, 1, 'E'), E(14, 1, 'E'), E(23, 1, 'E')],
+    entrance: E(26, 19, 'S'),
+  },
 ];
+
+/** Planta usada por uma filial (escritório, estúdio ou sede regional). */
+export const BRANCH_LAYOUT = [1, 2, 3];
 
 export const ROOM_NAMES: Record<RoomKind, L> = {
   booth: l('Sala de gravação', 'Live room'),
@@ -596,8 +664,8 @@ function computeEdges(sc: Scene): void {
 }
 
 /** Monta a cena da sede para o estado atual (determinística). */
-export function buildScene(s: GameState): Scene {
-  const level = Math.max(0, Math.min(3, s.player.hq));
+export function buildScene(s: GameState, site?: { level: number; seedKey: string }): Scene {
+  const level = Math.max(0, Math.min(LAYOUTS.length - 1, site ? site.level : s.player.hq));
   const layout = LAYOUTS[level];
   const era = eraOf(s.year);
   const { W, H } = layout;
@@ -614,7 +682,7 @@ export function buildScene(s: GameState): Scene {
     if (d.side === 'E') clear(d.x + 1, d.y);
     else clear(d.x, d.y + 1);
   }
-  const c: Ctx = { s, sc, era, e: eraIndex(era), r: Rng.fromSeed(`hq:${level}:${era}:${s.config.seed}`), keepClear, owned: new Set(s.player.equipment) };
+  const c: Ctx = { s, sc, era, e: eraIndex(era), r: Rng.fromSeed(`hq:${level}:${era}:${s.config.seed}${site ? ':' + site.seedKey : ''}`), keepClear, owned: new Set(s.player.equipment) };
   // ordem: salas com mais exigência primeiro
   const order: RoomKind[] = ['control', 'booth', 'office', 'trophy', 'meeting', 'writing', 'lounge', 'rehearsal', 'hall'];
   for (const k of order) for (const room of layout.rooms.filter((r) => r.kind === k)) furnishRoom(c, room);

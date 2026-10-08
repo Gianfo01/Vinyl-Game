@@ -16,6 +16,7 @@ import { $, actLink, genreName, logo, pill, rerender, section, toast } from '../
 import { h, select } from '../dom';
 import { store } from '../store';
 import { chips, ic, portrait, stat, tabs, tile } from '../vis';
+import { repertoireTab } from './repertoire';
 
 const say = (res: L | null | object, ok: L) => {
   const err = res && typeof res === 'object' && 'pt' in res ? (res as L) : null;
@@ -30,6 +31,11 @@ function actPicker(s: GameState): HTMLElement | null {
 }
 
 const sess = { tier: 1, approach: 'balanced', producer: '' as string, songs: new Set<string>() };
+
+/** Repertório → Estúdio: pré-seleciona as músicas da próxima sessão. */
+export function preselectSession(ids: string[]): void {
+  sess.songs = new Set(ids);
+}
 
 function sessionTab(s: GameState): HTMLElement {
   const a = s.acts[store.selectedAct ?? ''];
@@ -190,6 +196,7 @@ export function studioHub(s: GameState, launch: () => HTMLElement): HTMLElement 
   return h('div', { class: 'hub studio-hub' },
     picker,
     tabs('creation', [
+      { id: 'repertoire', label: t(l('Repertório', 'Repertoire')), icon: 'note', render: () => repertoireTab(s) },
       { id: 'launch', label: t(l('Lançar', 'Release')), icon: 'cd', render: launch },
       { id: 'session', label: t(l('Estúdio', 'Studio')), icon: 'mic', render: () => sessionTab(s) },
       { id: 'rollout', label: t(l('Rollout', 'Rollout')), icon: 'calendar', render: () => rolloutTab(s) },

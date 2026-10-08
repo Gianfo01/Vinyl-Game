@@ -13,6 +13,7 @@ import { dateOfDay, fmtL, hasTech, money, nextId, post, remember, staffSkill } f
 import { activeMembers, checkCapacity, monthIndex } from './capacity';
 import { legInfo, climateInfo } from './travelAdapter';
 import { clubBonus, liveBlocked } from './culture';
+import { branchCityBonus } from './branches';
 
 const TICKET = [12, 25, 45, 70, 95];
 const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
@@ -47,7 +48,7 @@ export function cityDemand(s: GameState, act: Act, cityId: string): number {
   const scene = s.scenes[`${cityId}:${act.genre}`] ?? 0;
   const last = s.flags[`played:${act.id}:${cityId}`];
   const sat = last !== undefined ? clamp((s.week - last) / 26, 0.35, 1) : 1;
-  return Math.round(total * share * (1 + act.fame / 70) * (1 + Math.min(0.4, scene / 30)) * sat);
+  return Math.round(total * share * (1 + act.fame / 70) * (1 + Math.min(0.4, scene / 30)) * sat * branchCityBonus(s, cityId));
 }
 
 export function autoTier(s: GameState, act: Act, demand: number): number {

@@ -491,4 +491,38 @@ export interface ExtState {
   tutorial: { step: number; done: boolean; seen: string[] };
   /** voto/diálogo de autonomia criativa pendente */
   votes: { id: string; actId: string; topic: L; options: { id: string; label: L }[]; votes: Record<string, string>; week: number }[];
+  /** filiais da empresa em outras cidades */
+  branches: Branch[];
+  /** ato -> filial que cuida dele (ausente = matriz) */
+  branchOf: Record<string, string>;
+  /** caderno de ideias por ato (temas colhidos na estrada, na família, nos movimentos) */
+  ideas: Record<string, Idea[]>;
+  /** ofertas de músicas do jogador a outros artistas */
+  songPitches: SongPitch[];
+}
+
+export interface Branch {
+  id: string;
+  city: string;
+  /** 0 escritório regional, 1 estúdio regional, 2 sede regional */
+  level: number;
+  name: string;
+  opened: number; // semana
+}
+
+export interface Idea {
+  id: string;
+  theme: L;
+  source: 'tour' | 'family' | 'movement' | 'city' | 'love' | 'loss' | 'politics';
+  strength: number; // 1..10
+  week: number;
+}
+
+export interface SongPitch {
+  id: string;
+  songId: string;
+  targetActId: string;
+  fee: number; // centavos
+  week: number;
+  status: 'pending' | 'accepted' | 'declined';
 }

@@ -89,7 +89,7 @@ function contestName(s: GameState, city: string): L {
 function contestsMonth(s: GameState, r: Rng): void {
   // novos concursos (um ou dois por mês no mundo, com chance maior em cidades com cena forte)
   if (r.chance(0.35)) {
-    const city = r.weighted(CITIES, (c) => (c.id === s.config.homeCity ? 3 : 1) * (s.player.territories.includes(c.market) ? 1.5 : 0.6));
+    const city = r.weighted(CITIES, (c) => (c.id === s.config.homeCity ? 3 : s.branches.some((b) => b.city === c.id) ? 2.2 : 1) * (s.player.territories.includes(c.market) ? 1.5 : 0.6));
     if (city) {
       const entrants = Object.values(s.acts).filter((a) => a.city === city.id && !a.owner && a.status === 'emerging').slice(0, 6).map((a) => a.id);
       if (entrants.length < 3) entrants.push(spawnProceduralAct(s, r, { city: city.id }).id);

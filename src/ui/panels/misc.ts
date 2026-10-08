@@ -1,7 +1,7 @@
 // Paradas, Mídia, Catálogo, Shows, Empresa, Diário e Sede.
 
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
-import { CARDS, ENDINGS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
+import { BRANCH_LEVELS, CARDS, ENDINGS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
 import { MARKETS, familyOf, l } from '../../data/world';
 import { S, locale, t } from '../../i18n/strings';
 import { availableEquipment, buyEquipment, fireStaff, loanOffer, managementLoad, monthlyCosts, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from '../../sim/economy';
@@ -13,7 +13,7 @@ import type { GameState } from '../../sim/types';
 import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { careerSlotsUsed } from '../../sim/contracts';
 import { $, N, memoText, actLink, branchName, cityName, cover, genreName, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
-import { bar, h } from '../dom';
+import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
 import { HqView } from '../hq';
 import { store } from '../store';
@@ -24,6 +24,8 @@ import { countryName, unitOfCity } from '../../data/geo';
 import { planRoute } from '../../sim/travel';
 import { WorldMap, glyphCanvas, transportName, type MapCity } from '../map';
 import { activeToursSection, merchSection, tourPlannerSection } from './tours';
+import { assignBranch, closeBranch, hqBlocker, hqCaps, upgradeBranch } from '../../sim/branches';
+import { ic, tile } from '../vis';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -334,7 +336,7 @@ function finances(s: GameState): HTMLElement {
 }
 
 function staff(s: GameState): HTMLElement {
-  const cap = HQ_LEVELS[s.player.hq].staff;
+  const cap = hqCaps(s).staff;
   return section(`${t(S.staff)} ${s.player.staff.length}/${cap}`,
     s.player.staff.length ? h('table', { class: 'tbl' }, h('tbody', null, s.player.staff.map((st) => {
       const role = STAFF_ROLES.find((r) => r.id === st.role);
@@ -345,15 +347,50 @@ function staff(s: GameState): HTMLElement {
   );
 }
 
+function hqLadder(s: GameState): HTMLElement {
+  return h('div', { class: 'hq-ladder' }, HQ_LEVELS.map((lv, i) => {
+    const blk = i > s.player.hq ? hqBlocker(s, lv) : null;
+    return h('div', { class: `hq-step ${i === s.player.hq ? 'cur' : i < s.player.hq ? 'done' : blk ? 'locked' : ''}` },
+      h('b', null, ic(i >= 4 ? (i === 5 ? 'rocket' : 'building') : 'house'), ' ', t(lv.name)),
+      h('small', null, `${lv.careers} ${t(l('carreiras', 'careers'))} · ${lv.staff} ${t(l('equipe', 'staff'))} · ${lv.sessions} ${t(l('sessões', 'sessions'))}`),
+      h('small', { class: 'muted' }, `${t(lv.reach)} · ${t(l('aluguel', 'rent'))} ${$(money(s, lv.rent))}/m`),
+      lv.desc ? h('small', { class: 'muted' }, t(lv.desc)) : null,
+      i === s.player.hq ? pill(t(l('atual', 'current')), 'good') : blk ? pill(t(blk), 'warn') : null);
+  }));
+}
+
+export function branchesSection(s: GameState): HTMLElement {
+  const acts = playerActs(s);
+  return section(t(l('Filiais', 'Branches')),
+    h('p', { class: 'muted small' }, t(l('A partir do Loft, abra filiais pelo mapa (Mundo → clique numa cidade). Cada filial soma carreiras, equipe e sessões, abre o mercado local e dá vantagem de público e garimpo na região.', 'From the Loft on, open branches from the map (World → click a city). Each branch adds careers, staff and sessions, opens the local market and boosts audiences and scouting in the region.'))),
+    s.branches.length ? h('div', { class: 'branch-list' }, s.branches.map((b) => {
+      const lv = BRANCH_LEVELS[b.level];
+      const next = BRANCH_LEVELS[b.level + 1];
+      const here = acts.filter((id) => s.branchOf[id] === b.id);
+      return tile('building', `${t(cityById[b.city]?.name)} — ${t(lv.name)}`, [
+        h('small', null, `+${lv.careers} ${t(l('carreiras', 'careers'))} · +${lv.staff} ${t(l('equipe', 'staff'))} · +${lv.sessions} ${t(l('sessões', 'sessions'))} · ${$(money(s, lv.rent))}/m`),
+        h('div', { class: 'row wrap' }, here.length ? here.map((id) => actLink(s, id)) : h('small', { class: 'muted' }, t(l('Nenhum artista designado.', 'No artists assigned.')))),
+        h('div', { class: 'row wrap' },
+          next ? h('button', { class: 'btn small', onclick: () => { const e = upgradeBranch(s, b.id); toast(t(e ?? l('Filial ampliada!', 'Branch upgraded!')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Ampliar para', 'Upgrade to'))} ${t(next.name)} (${$(money(s, next.cost))})`) : null,
+          h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(t(l('Fechar esta filial? O investimento não volta.', 'Close this branch? The investment is not refunded.')))) return; closeBranch(s, b.id); rerender(); } }, t(l('Fechar filial', 'Close branch'))),
+        ),
+      ]);
+    })) : null,
+    s.branches.length && acts.length ? h('div', null, h('h4', null, t(l('Quem trabalha onde', 'Who works where'))),
+      h('ul', { class: 'small' }, acts.map((id) => h('li', null, actLink(s, id), ' ',
+        select(s.branchOf[id] ?? '', [{ value: '', label: t(l('Matriz', 'Main HQ')) }, ...s.branches.map((b) => ({ value: b.id, label: t(cityById[b.city]?.name) }))], (v) => { assignBranch(s, id, v || null); rerender(); }, { 'aria-label': t(l('Sede do artista', "Artist's HQ")) }))))) : null,
+  );
+}
+
 function hqTab(s: GameState): HTMLElement {
   const up = upgradeCost(s);
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
-      section(t(S.areaHq), h('p', null, t(hqCapacityText(s))), kv(t(l('Carreiras em uso', 'Careers in use')), `${careerSlotsUsed(s)}/${HQ_LEVELS[s.player.hq].careers}`),
-        h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', null, t(l('Carreiras', 'Careers'))), h('th', null, t(S.staff)), h('th', null, t(l('Sessões', 'Sessions'))), h('th', null, t(S.equipment)), h('th', null, t(l('Alcance', 'Reach'))))),
-          h('tbody', null, HQ_LEVELS.map((lv, i) => h('tr', { class: i === s.player.hq ? 'mine' : '' }, h('td', null, t(lv.name)), h('td', null, lv.careers), h('td', null, lv.staff), h('td', null, lv.sessions), h('td', null, lv.equipment), h('td', null, t(lv.reach)))))),
-        up !== null ? h('button', { class: 'btn primary', onclick: () => { const e = upgradeHq(s); if (e) toast(t(e), 'bad'); rerender(); } }, `${t(S.upgrade)} (${$(up)})`) : null,
+      section(t(S.areaHq), h('p', null, t(hqCapacityText(s))), kv(t(l('Carreiras em uso', 'Careers in use')), `${careerSlotsUsed(s)}/${hqCaps(s).careers}`),
+        hqLadder(s),
+        up !== null ? (() => { const blk = hqBlocker(s); return h('div', { class: 'row' }, h('button', { class: 'btn primary', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => { const e = upgradeHq(s); if (e) toast(t(e), 'bad'); rerender(); } }, ic('building'), ` ${t(S.upgrade)}: ${t(HQ_LEVELS[s.player.hq + 1].name)} (${$(up)})`), blk ? h('small', { class: 'muted' }, t(blk)) : null); })() : null,
       ),
+      branchesSection(s),
       section(t(S.equipment), h('table', { class: 'tbl compact' }, h('tbody', null,
         s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', null, t(e.name)), h('td', null, branchName(e.branch)), h('td', null, '✓'), h('td', null, '')); }),
         availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, $(money(s, e.cost))), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
@@ -427,6 +464,7 @@ export function hqPanel(s: GameState): HTMLElement {
     h('aside', { class: 'col-side' },
       section(t(l('Unidades por banda', 'Band units')), acts.length ? h('ul', { class: 'small' }, acts.map((a) => h('li', null, actLink(s, a.id), ` · ${t(S.fame)} ${Math.round(a.fame)} · `, t(l('agenda', 'agenda')), ': ', (s.agenda[a.id] ?? []).map((x) => x.action).join(', ') || '—'))) : h('p', { class: 'muted' }, t(S.noActs))),
       section(t(l('Capacidade', 'Capacity')), h('p', { class: 'small' }, t(hqCapacityText(s))), kv(t(S.mgmtLoad), `${(managementLoad(s) * 100).toFixed(0)}%`)),
+      branchesSection(s),
       section(t(l('Cartas e mutators', 'Cards and mutators')), h('p', { class: 'small' }, t(CARDS.find((c) => c.id === s.config.card)?.name))),
     ),
   );

@@ -1,12 +1,14 @@
 // Composição, gravação e preparação de lançamentos (GDD §12, §13).
 
 import { clamp, type Rng } from '../core/rng';
-import { APPROACHES, EQUIPMENT, FORMATS, HQ_LEVELS, STUDIO_TIERS, type FormatId } from '../data/rules';
+import { APPROACHES, EQUIPMENT, FORMATS, STUDIO_TIERS, type FormatId } from '../data/rules';
 import { l, type L, type MarketId } from '../data/world';
 import { actLang, actState, actTalent, songTitle, traitMod } from './people';
 import type { Act, GameState, PendingRelease, Release, Song } from './types';
 import { fmtL, hasCard, hasTech, money, nextId, notify, post, staffSkill } from './util';
 import { forecastUnits } from './market';
+import { hqCaps } from './branches';
+import { takeIdea } from './repertoire';
 
 export function songQ(song: Pick<Song, 'melody' | 'lyrics' | 'performance' | 'production' | 'originality'>): number {
   // Qualidade Q (GDD §12): 0,25 melodia + 0,20 letra + 0,25 performance + 0,20 produção + 0,10 originalidade
@@ -30,13 +32,16 @@ export function composeSongs(s: GameState, r: Rng, act: Act, n: number): Song[] 
     const melody = clamp(t.comp * 0.85 + insp + r.normal(0, 8) + traitMod(s, act, 'quality'), 5, 100);
     const lyrics = clamp(t.lyr * 0.85 + insp * 0.6 + r.normal(0, 8), 5, 100);
     const originality = clamp(35 + traitMod(s, act, 'originality') + st.inspiration * 0.3 - saturation * 40 + r.normal(0, 10) + (act.archetype === 'genius' ? 20 : 0), 5, 100);
+    const idea = takeIdea(s, act.id);
+    const ib = idea ? idea.strength : 0;
     const song: Song = {
       id: nextId(s, 's'),
       actId: act.id,
       title: songTitle(r, actLang(act)),
       genre: act.genre,
       writers,
-      melody, lyrics, performance: 0, production: 0, originality,
+      melody: clamp(melody + ib * 0.4, 5, 100), lyrics: clamp(lyrics + ib * 0.8, 5, 100), performance: 0, production: 0, originality: clamp(originality + ib * 0.6, 5, 100),
+      theme: idea?.theme,
       q: 0,
       recorded: false,
       createdWeek: s.week,
@@ -90,7 +95,7 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
   const ap = APPROACHES.find((a) => a.id === approach) ?? APPROACHES[1];
   const studio = STUDIO_TIERS[clamp(tier, 0, 3)];
   const producer = payer === 'player' ? staffSkill(s, 'producer') * 0.22 : 8 + tier * 2;
-  const own = payer === 'player' && tier === 0 ? ownStudioProduction(s) + HQ_LEVELS[s.player.hq].sessions * 2 : 0;
+  const own = payer === 'player' && tier === 0 ? ownStudioProduction(s) + hqCaps(s).sessions * 2 : 0;
   const engineerFix = payer === 'player' ? staffSkill(s, 'engineer') / 25 : 2;
   const showman = hasCard(s, 'showman') && payer === 'player' ? -3 : 0;
   const cost = recordingCost(s, tier, approach, songIds.length);
@@ -185,7 +190,7 @@ export function validateRelease(s: GameState, p: ReleasePlan): L | null {
   if (!act || act.owner !== 'player') return l('Ato não é seu.', 'Not your act.');
   const need = p.type === 'single' ? 1 : p.type === 'ep' ? 3 : 7;
   if (!p.reissueOf && p.songs.length < need) return fmtL(l('{t} precisa de {n} música(s) gravada(s).', '{t} needs {n} recorded song(s).'), { t: p.type.toUpperCase(), n: need });
-  if (p.songs.some((id) => !s.songs[id]?.recorded || (s.songs[id].releaseId && !p.reissueOf && !s.flags[`extracted:${id}`]))) return l('Use apenas músicas gravadas e inéditas.', 'Use only recorded, unreleased songs.');
+  if (p.songs.some((id) => !s.songs[id]?.recorded || (s.songs[id].releaseId && !p.reissueOf && p.kind !== 'compilation' && !s.flags[`extracted:${id}`]))) return l('Use apenas músicas gravadas e inéditas.', 'Use only recorded, unreleased songs.');
   if (!p.formats.length) return l('Escolha ao menos um formato.', 'Pick at least one format.');
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && c.party !== 'player' && act.playerBand) return null;
@@ -236,7 +241,7 @@ export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRe
     c.recoupBalance += press;
     if (s.labels[c.party]) s.labels[c.party].cash -= press;
   }
-  for (const id of p.songs) if (s.songs[id] && !p.reissueOf) s.songs[id].releaseId = pr.id;
+  for (const id of p.songs) if (s.songs[id] && !p.reissueOf && p.kind !== 'compilation') s.songs[id].releaseId = pr.id;
   s.pendingReleases.push(pr);
   notify(s, fmtL(l('{title} programado para a semana {w}.', '{title} scheduled for week {w}.'), { title: pr.title, w: pr.week }), 'info');
   return pr;
@@ -261,7 +266,7 @@ export function unrecorded(s: GameState, act: Act): Song[] {
 }
 
 export function recordingSessionsAvailable(s: GameState): number {
-  return HQ_LEVELS[s.player.hq].sessions;
+  return hqCaps(s).sessions;
 }
 
 export function notifyRecorded(s: GameState, act: Act, n: number, q: number): void {

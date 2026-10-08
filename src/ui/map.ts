@@ -29,6 +29,15 @@ export interface MapCity {
   locked?: boolean;
 }
 
+export type OverlayIcon = 'hq' | 'branch' | 'rival' | 'festival' | 'movement' | 'tour' | 'club' | 'warn';
+export type MapOverlay =
+  /** círculo proporcional (0..1) — mapa de calor de fãs, tamanho de cena etc. */
+  | { kind: 'bubble'; city: string; value: number; color: string }
+  /** arco entre duas cidades (turnês em andamento, rivalidades, rotas de filial) */
+  | { kind: 'arc'; from: string; to: string; color: string; dashed?: boolean; width?: number }
+  /** ícone pixel art ao lado da cidade */
+  | { kind: 'icon'; city: string; icon: OverlayIcon; slot?: number };
+
 export interface WorldMapOptions {
   getYear: () => number;
   /** 0 = janeiro */
@@ -41,6 +50,16 @@ export interface WorldMapOptions {
   mode: MapMode;
   onCityClick: (id: string) => void;
   onCountryClick?: (a3: string) => void;
+  /** camadas extras desenhadas entre a rota e as cidades */
+  overlays?: () => MapOverlay[];
+  /** sombreamento por país (ex.: censura, guerra, embargo) */
+  countryShade?: (a3: string) => { color: string; hatch?: boolean } | undefined;
+  /** linhas extras no balão de uma cidade */
+  cityTipExtra?: (id: string) => HTMLElement | null;
+  /** linhas extras no balão de um país */
+  countryTipExtra?: (a3: string) => HTMLElement | null;
+  /** itens extras na legenda */
+  legendExtra?: () => HTMLElement[];
 }
 
 const WORLD_W = 360;
@@ -73,7 +92,7 @@ type Glyph = { rows: string[]; colors: Record<string, string> };
 const G = (rows: string[], colors: Record<string, string>): Glyph => ({ rows, colors });
 const INK = '#2a1f1a';
 const TRANSPORT_GLYPHS = new Set<string>(['ship', 'prop_plane', 'jet', 'train', 'bus', 'hyperloop']);
-const GLYPHS: Record<TransportMode | ClimateIcon | 'visa' | 'visa_bad', Glyph> = {
+const GLYPHS: Record<TransportMode | ClimateIcon | OverlayIcon | 'visa' | 'visa_bad', Glyph> = {
   ship: G(['....r.....', '....rr....', '....rrr...', '....k.....', 'kkkkkkkkkk', '.kwwwwwwk.', '..kkkkkk..'], { r: '#d8473a', k: INK, w: '#f2efe6' }),
   prop_plane: G(['....k.....', '....kk....', 'kkkkkkkkkk', '.wwwwwwwkk', '....kk....', '....k.....', '..kkk.....'], { k: INK, w: '#7aa0b8' }),
   jet: G(['.....k....', '.....kk...', 'k...kkkk..', 'kkkkkkkkkk', 'k...kkkk..', '.....kk...', '.....k....'], { k: INK }),
@@ -87,6 +106,14 @@ const GLYPHS: Record<TransportMode | ClimateIcon | 'visa' | 'visa_bad', Glyph> =
   rain: G(['...ww...', '..wwww..', '.wwwwww.', 'wwwwwwww', '.b..b..b', 'b..b..b.'], { w: '#c9d1da', b: '#3f8fd8' }),
   monsoon: G(['...gg...', '..gggg..', '.gggggg.', 'gggggggg', 'b.b.b.b.', '.b.b.b.b', 'b.b.b.b.'], { g: '#6c7a89', b: '#2f78c4' }),
   storm: G(['...gg...', '..gggg..', '.gggggg.', 'gggggggg', '...yy...', '..yy....', '...yy...', '....y...'], { g: '#59616b', y: '#f6d33c' }),
+  hq: G(['...k...', '..kyk..', '.kyyyk.', 'kyyyyyk', '.kwkwk.', '.kwkwk.', '.kkkkk.'], { k: INK, y: '#f0b429', w: '#f4ead8' }),
+  branch: G(['..k..', '.kyk.', 'kyyyk', 'kwkwk', 'kkkkk'], { k: INK, y: '#c8641e', w: '#f4ead8' }),
+  rival: G(['k......', 'krrrr..', 'krrrrr.', 'krrrr..', 'k......', 'k......', 'k......'], { k: INK, r: '#d8473a' }),
+  festival: G(['...r...', '...k...', '..kpk..', '.kpwpk.', 'kpwpwpk', 'kpwkwpk', 'kkkkkkk'], { k: INK, p: '#a35bd8', w: '#f4ead8', r: '#3fa860' }),
+  movement: G(['...y...', '...y...', 'yyyyyyy', '.yyyyy.', '..yyy..', '.yy.yy.', 'y.....y'], { y: '#f0b429' }),
+  tour: G(['kkkkkkk.', 'kwwwwwkk', 'kwwwwwkk', 'kkkkkkkk', '.o....o.'], { k: '#5a4fcf', w: '#c9c4ff', o: INK }),
+  club: G(['.kkkkk.', 'kpppppk', 'kpwpwpk', 'kpppppk', 'kpkkkpk', 'kkkkkkk'], { k: INK, p: '#a35bd8', w: '#f6d33c' }),
+  warn: G(['...k...', '..kyk..', '..kyk..', '.kykyk.', '.kyyyk.', 'kyykyyk', 'kkkkkkk'], { k: INK, y: '#f6d33c' }),
   visa: G(['kkkkkkk', 'kyyyyyk', 'kykkkyk', 'kyyyyyk', 'kykkkyk', 'kyyyyyk', 'kkkkkkk'], { k: INK, y: '#f0b429' }),
   visa_bad: G(['kkkkkkk', 'krrrrrk', 'krwrwrk', 'krrwrrk', 'krwrwrk', 'krrrrrk', 'kkkkkkk'], { k: INK, r: '#d8473a', w: '#fff' }),
 };
@@ -120,6 +147,7 @@ function drawGlyph(ctx: CanvasRenderingContext2D, g: Glyph, cx: number, cy: numb
 }
 
 /** Desenha um ícone de clima/transporte num <canvas> pequeno (para tabelas e legendas). */
+export type GlyphName = keyof typeof GLYPHS;
 export function glyphCanvas(name: keyof typeof GLYPHS, px = 2): HTMLCanvasElement {
   const g = GLYPHS[name];
   const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
@@ -362,6 +390,7 @@ export class WorldMap {
     this.legend.append(
       sw(th.audience, t(l('Com público', 'Has audience')), 'dot'), sw(th.selected, t(l('Selecionada', 'Selected')), 'dot'), sw(th.locked, t(l('Sem acesso', 'No access')), 'dot'),
     );
+    for (const e of this.opts.legendExtra?.() ?? []) this.legend.append(e);
     // lista acessível de cidades
     clear(this.a11y);
     const list = this.opts.cities();
@@ -646,6 +675,7 @@ export class WorldMap {
       h('div', { class: 'muted' }, country + (uname && uname !== country ? ` · ${uname}` : '')),
       unit?.bloc ? h('div', { class: 'muted' }, t(BLOC_NAMES[unit.bloc])) : null,
       h('div', { class: 'wmap-tip-row' }, glyphCanvas(cl.icon, 2), `${t(cl.name)} · ${Math.round(cl.tempC)} °C`),
+      this.opts.cityTipExtra?.(id) ?? null,
     );
   }
 
@@ -661,6 +691,7 @@ export class WorldMap {
       uname !== name ? h('div', { class: 'muted' }, t(l('hoje: {n}', 'today: {n}'), { n: name })) : null,
       unit.bloc ? h('div', { class: 'muted' }, t(BLOC_NAMES[unit.bloc])) : null,
       this.tint === 'markets' ? h('div', { class: 'muted' }, t(MARKETS.find((m) => m.id === marketOfCountry(c.a3))?.name)) : null,
+      this.opts.countryTipExtra?.(c.a3) ?? null,
     );
   }
 
@@ -780,6 +811,8 @@ export class WorldMap {
         ctx.stroke(reg);
         ctx.restore();
       }
+      const shade = this.opts.countryShade?.(c.a3);
+      if (shade) { ctx.globalAlpha = 0.32; fillIt(this.resolveColor(shade.color) ?? shade.color); ctx.globalAlpha = 1; if (shade.hatch && hatch) fillIt(hatch); }
       if (c.idx === this.hoverCountry) fillIt('rgba(255,255,255,0.18)');
     }
 
@@ -825,6 +858,7 @@ export class WorldMap {
 
     // rota, cidades, clima
     this.drawRoute(th);
+    this.drawOverlays(th);
     this.drawCities(th);
 
     // selo do ano
@@ -996,6 +1030,70 @@ export class WorldMap {
       if (!c) continue;
       const [x, y] = this.project(c.lon, c.lat);
       drawGlyph(ctx, GLYPHS[st.climate.icon], (x + 11) * dpr, (y - 12) * dpr, Math.max(1, Math.round(dpr * 1.5)));
+    }
+  }
+
+  private drawOverlays(th: Theme): void {
+    const list = this.opts.overlays?.() ?? [];
+    if (!list.length) return;
+    const ctx = this.ctx;
+    const dpr = this.dpr;
+    const zoom = Math.max(1, this.k / this.kMin());
+    // bolhas primeiro (maiores atrás), depois arcos, depois ícones
+    const bubbles = list.filter((o): o is Extract<MapOverlay, { kind: 'bubble' }> => o.kind === 'bubble').sort((a, b) => b.value - a.value);
+    for (const b of bubbles) {
+      const c = cityById[b.city];
+      if (!c) continue;
+      const [x, y] = this.project(c.lon, c.lat);
+      const r = (5 + 26 * Math.sqrt(Math.max(0, Math.min(1, b.value)))) * Math.min(2.2, Math.sqrt(zoom)) * dpr;
+      const col = this.resolveColor(b.color) ?? b.color;
+      ctx.globalAlpha = 0.28;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(x * dpr, y * dpr, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = Math.max(1, dpr);
+      ctx.strokeStyle = col;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    for (const a of list) {
+      if (a.kind !== 'arc') continue;
+      const ca = cityById[a.from];
+      const cb = cityById[a.to];
+      if (!ca || !cb) continue;
+      const [x0, y0] = this.project(ca.lon, ca.lat);
+      const [x1, y1] = this.project(cb.lon, cb.lat);
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      const len = Math.hypot(dx, dy) || 1;
+      const bend = Math.min(50, len * 0.22);
+      const cx = (x0 + x1) / 2 + (dy / len) * bend;
+      const cy = (y0 + y1) / 2 - (Math.abs(dx) / len) * bend;
+      ctx.beginPath();
+      ctx.moveTo(x0 * dpr, y0 * dpr);
+      ctx.quadraticCurveTo(cx * dpr, cy * dpr, x1 * dpr, y1 * dpr);
+      ctx.lineWidth = ((a.width ?? 1.6) + 2) * dpr;
+      ctx.strokeStyle = th.halo;
+      ctx.setLineDash([]);
+      ctx.stroke();
+      ctx.lineWidth = (a.width ?? 1.6) * dpr;
+      ctx.strokeStyle = this.resolveColor(a.color) ?? a.color;
+      ctx.setLineDash(a.dashed ? [4 * dpr, 3 * dpr] : []);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    const gpx = Math.max(1, Math.round(dpr * 1.5));
+    for (const o of list) {
+      if (o.kind !== 'icon') continue;
+      const c = cityById[o.city];
+      if (!c) continue;
+      const [x, y] = this.project(c.lon, c.lat);
+      const slot = o.slot ?? 0;
+      const ox = -12 - (slot % 3) * 13;
+      const oy = -10 + Math.floor(slot / 3) * 12;
+      drawGlyph(ctx, GLYPHS[o.icon], (x + ox) * dpr, (y + oy) * dpr, gpx);
     }
   }
 

@@ -2,8 +2,8 @@
 // mobília e equipamento por era, pessoas fazendo o que a agenda do mês manda.
 // Renderiza num backbuffer de baixa resolução e amplia por zoom inteiro (pixels nítidos).
 
-import { HQ_LEVELS, STAFF_ROLES } from '../data/rules';
-import { l, type L } from '../data/world';
+import { BRANCH_LEVELS, HQ_LEVELS, STAFF_ROLES } from '../data/rules';
+import { cityById, l, type L } from '../data/world';
 import { getLang, t } from '../i18n/strings';
 import type { Appearance, GameState, Person } from '../sim/types';
 import { playerActs } from '../sim/util';
@@ -15,7 +15,7 @@ import { drawText, fitText } from './pixel/font';
 import { icon } from './pixel/icons';
 import { PALETTES, eraOf } from './pixel/palette';
 import { C, Px, mix, shade, withAlpha, type Sprite } from './pixel/px';
-import { ROOM_NAMES, buildScene, findPath, freeTiles, roomAt, type Scene, type Spot } from './pixel/scene';
+import { BRANCH_LAYOUT, ROOM_NAMES, buildScene, findPath, freeTiles, roomAt, type Scene, type Spot } from './pixel/scene';
 import { WALL_H, decalPx, floorAt, furniture, groundAt, rugAt, wallSprite, type DecalKind } from './pixel/sprites';
 
 const MARGIN = 3; // tiles de chão externo
@@ -78,6 +78,8 @@ export class HqView {
 
   private scene: Scene | null = null;
   private sceneKey = '';
+  /** 'main' = matriz; senão o id da filial mostrada */
+  site = 'main';
   private agentKey = '';
   private staticCanvas: HTMLCanvasElement | null = null;
   private X0 = 0;
@@ -149,6 +151,18 @@ export class HqView {
     cancelAnimationFrame(this.raf);
   }
 
+  /** Troca entre a matriz e as filiais. */
+  setSite(site: string): void {
+    this.site = site;
+    this.mode = 'overview';
+    this.userCam = false;
+    this.agents = new Map();
+    this.agentKey = '';
+    this.sync();
+    this.refreshToolbar();
+    this.dirty = true;
+  }
+
   /** Muda o modo do seletor (visão geral ou uma banda). */
   setMode(mode: Mode): void {
     this.mode = mode;
@@ -163,13 +177,15 @@ export class HqView {
   private sync(): void {
     const s = this.getState();
     if (!s) return;
-    const acts = playerActs(s);
+    if (this.site !== 'main' && !s.branches.some((b) => b.id === this.site)) this.site = 'main';
+    const branch = s.branches.find((b) => b.id === this.site);
+    const acts = siteActs(s, this.site);
     if (this.mode !== 'overview' && !acts.includes(this.mode)) this.mode = 'overview';
     const st = s.player.stats;
-    const sk = `${s.player.hq}|${eraOf(s.year)}|${s.player.equipment.join(',')}|${st.gold}/${st.platinum}/${st.awards}|${acts.join(',')}|${s.player.staff.length}|${s.config.seed}`;
+    const sk = `${this.site}:${branch?.level ?? ''}|${s.player.hq}|${eraOf(s.year)}|${s.player.equipment.join(',')}|${st.gold}/${st.platinum}/${st.awards}|${acts.join(',')}|${s.player.staff.length}|${s.config.seed}`;
     if (sk !== this.sceneKey) {
       this.sceneKey = sk;
-      this.scene = buildScene(s);
+      this.scene = buildScene(s, branch ? { level: BRANCH_LAYOUT[branch.level], seedKey: branch.id } : undefined);
       this.buildStatic(s);
       this.agentKey = '';
       if (!this.userCam) this.resetCam();
@@ -195,7 +211,7 @@ export class HqView {
       want.set(key, a);
       return a;
     };
-    const acts = playerActs(s).map((id) => s.acts[id]);
+    const acts = siteActs(s, this.site).map((id) => s.acts[id]);
     for (const act of acts) {
       const activity = actActivity(s, act);
       if (!isPresent(activity)) continue;
@@ -208,7 +224,8 @@ export class HqView {
         for (const p of members) mk(`m:${p.id}`, { kind: 'member', personId: p.id, actId: act.id, name: p.name, look: lookOf(p), role: p.role, variant: variantOf(p.id), activity });
       }
     }
-    for (const st of s.player.staff) mk(`s:${st.id}`, { kind: 'staff', staffId: st.id, name: st.name, look: lookOf({ id: st.id }), role: null, staffRole: st.role, variant: 0, activity: staffActivity(s, st.id) });
+    const staff = this.site === 'main' ? s.player.staff : [];
+    for (const st of staff) mk(`s:${st.id}`, { kind: 'staff', staffId: st.id, name: st.name, look: lookOf({ id: st.id }), role: null, staffRole: st.role, variant: 0, activity: staffActivity(s, st.id) });
     this.agents = want;
     this.recording = [...want.values()].some((a) => a.activity.kind === 'record');
     this.assignSpots(snap);
@@ -434,7 +451,7 @@ export class HqView {
 
   private drawSign(cx: CanvasRenderingContext2D, s: GameState): void {
     const sc = this.scene!;
-    const name = s.config.companyName || 'HQ';
+    const name = s.branches.find((b) => b.id === this.site)?.name ?? (s.config.companyName || 'HQ');
     const pal = sc.pal;
     const [ex] = sc.entrance;
     const gx = (ex + 1.6) * 16;
@@ -831,8 +848,10 @@ export class HqView {
   refreshToolbar(): void {
     const s = this.getState();
     if (!s) return;
-    const acts = playerActs(s).map((id) => s.acts[id]);
+    const acts = siteActs(s, this.site).map((id) => s.acts[id]);
     const lang = getLang();
+    const branch = s.branches.find((b) => b.id === this.site);
+    const siteName = branch ? `${t(BRANCH_LEVELS[branch.level].name)} · ${t(cityById[branch.city]?.name)}` : t(HQ_LEVELS[s.player.hq].name);
     const chip = (on: boolean, label: (Node | string)[], onclick: () => void, title?: string) =>
       h('button', { class: `hq-chip ${on ? 'on' : ''}`, 'aria-pressed': on ? 'true' : 'false', title: title ?? '', onclick }, ...label);
     const modes = h('div', { class: 'hq-modes', role: 'group', 'aria-label': t(l('Quem mostrar na sede', 'Who to show at HQ')) },
@@ -864,14 +883,24 @@ export class HqView {
         counts.set(act.kind, c);
       }
       status = h('div', { class: 'hq-status' }, ...[...counts.values()].map((c) => h('span', { class: 'hq-count', title: t(c.label) }, icon(c.icon, 1, t(c.label)), `${c.n}`)),
-        h('span', { class: 'muted' }, ` ${t(HQ_LEVELS[s.player.hq].name)} · ${s.year}`));
+        h('span', { class: 'muted' }, ` ${siteName} · ${s.year}`));
     }
-    this.toolbar.replaceChildren(h('div', { class: 'hq-bar' }, modes, zoom), status);
-    this.canvas.setAttribute('aria-label', lang === 'pt' ? `Sede isométrica: ${t(HQ_LEVELS[s.player.hq].name)}` : `Isometric HQ: ${t(HQ_LEVELS[s.player.hq].name)}`);
+    const sites = s.branches.length ? h('div', { class: 'hq-modes', role: 'group', 'aria-label': t(l('Sede mostrada', 'HQ shown')) },
+      chip(this.site === 'main', [icon('house', 1), ' ', t(l('Matriz', 'Main HQ')), ` · ${t(cityById[s.config.homeCity]?.name)}`], () => this.setSite('main')),
+      ...s.branches.map((b) => chip(this.site === b.id, [icon('building', 1), ' ', t(cityById[b.city]?.name)], () => this.setSite(b.id), t(BRANCH_LEVELS[b.level].name)))) : null;
+    this.toolbar.replaceChildren(...[sites, h('div', { class: 'hq-bar' }, modes, zoom), status].filter((x): x is HTMLElement => !!x));
+    this.canvas.setAttribute('aria-label', lang === 'pt' ? `Sede isométrica: ${siteName}` : `Isometric HQ: ${siteName}`);
   }
 }
 
 // ---------- utilidades ----------
+
+/** Atos que trabalham numa sede: a matriz fica com quem não foi designado a uma filial. */
+function siteActs(s: GameState, site: string): string[] {
+  const all = playerActs(s);
+  if (site === 'main') return all.filter((id) => !s.branchOf?.[id] || !s.branches.some((b) => b.id === s.branchOf[id]));
+  return all.filter((id) => s.branchOf?.[id] === site);
+}
 
 const canvasCache = new Map<string, HTMLCanvasElement>();
 function getCanvas(key: string, make: () => HTMLCanvasElement): HTMLCanvasElement {

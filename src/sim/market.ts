@@ -10,6 +10,7 @@ import { payAuthors } from './finance';
 import { superfanDebut } from './fandom';
 import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
 import { fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
+import { songProfile } from './repertoire';
 
 const POOL: [number, number][] = [
   [1920, 260e3], [1930, 300e3], [1945, 600e3], [1955, 1.5e6], [1965, 3e6], [1975, 5e6], [1985, 6e6],
@@ -102,11 +103,14 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
   const design = rel.owner === 'player' && staffCount(s, 'designer') ? 1.05 : 1;
   const mom = 0.8 + act.momentum / 250;
   const luck = Math.exp(r.normal(0, 0.33));
-  const nostalgia = rel.reissueOf ? (hasMutator(s, 'strong_nostalgia') ? 0.6 : 0.35) : 1;
+  const nostalgia = rel.reissueOf ? (hasMutator(s, 'strong_nostalgia') ? 0.6 : 0.35) : rel.kind === 'compilation' ? 0.45 + act.fame / 250 : rel.kind === 'demo' ? 0.35 : rel.kind === 'live' ? 0.55 + act.fame / 300 : 1;
+  // gancho: singles vivem do refrão (perfil comercial da faixa principal)
+  const lead = s.songs[rel.songs[0]];
+  const hook = rel.type === 'single' && lead ? 0.85 + songProfile(lead).hook / 330 : 1;
   // superexposição: lançar demais no mesmo ano cansa o público
   const recent = act.releases.filter((id) => s.releases[id] && s.week - s.releases[id].week < 52 && id !== rel.id).length;
   const overexposure = 1 / (1 + Math.max(0, recent - 1) * 0.35);
-  const appeal = qF * fameF * gp * cov * era * design * mom * luck * nostalgia * overexposure;
+  const appeal = qF * fameF * gp * cov * era * design * mom * luck * nostalgia * overexposure * hook;
   const conf = (v: number): AutopsyFactor['confidence'] => (Math.abs(Math.log(v)) > 0.5 ? 'high' : Math.abs(Math.log(v)) > 0.2 ? 'medium' : 'low');
   const factors: AutopsyFactor[] = [
     { key: 'quality', label: l('Qualidade (Q)', 'Quality (Q)'), value: qF, confidence: conf(qF) },
@@ -117,6 +121,7 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
     { key: 'momentum', label: l('Momento da carreira', 'Career momentum'), value: mom, confidence: 'low' },
     { key: 'luck', label: l('Acaso (não explicado)', 'Chance (unexplained)'), value: luck, confidence: 'low' },
   ];
+  if (hook !== 1) factors.push({ key: 'hook', label: l('Gancho do single', 'Single hook'), value: hook, confidence: conf(hook) });
   if (overexposure < 1) factors.push({ key: 'overexposure', label: l('Superexposição (lançamentos no ano)', 'Overexposure (releases this year)'), value: overexposure, confidence: 'medium' });
   return { appeal, factors };
 }
@@ -167,7 +172,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   act.releases.push(rel.id);
   act.lastRelease = s.week;
   act.momentum = clamp(act.momentum + 12 + rel.marketingE * 15, 0, 100);
-  for (const id of pr.songs) if (s.songs[id] && !pr.reissueOf) s.songs[id].releaseId = rel.id;
+  for (const id of pr.songs) if (s.songs[id] && !pr.reissueOf && pr.kind !== 'compilation') s.songs[id].releaseId = rel.id;
   if (c) c.releasesDone += 1;
   if (act.status === 'emerging') act.status = 'active';
   if (owner === 'player') s.player.stats.releases += 1;
@@ -411,7 +416,7 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
 }
 
 export function distributionFee(s: GameState): number {
-  return [0.22, 0.2, 0.17, 0.13][s.player.hq] ?? 0.13;
+  return [0.22, 0.2, 0.17, 0.13, 0.1, 0.08][s.player.hq] ?? 0.08;
 }
 
 function rankChart(s: GameState, entries: ChartEntry[], which: 'singles' | 'albums'): void {

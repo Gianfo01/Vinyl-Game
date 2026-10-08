@@ -1,5 +1,6 @@
 // Ponto único onde os sistemas da expansão entram no tick (dia, semana, mês, ano).
 
+import { repertoireMonth } from './repertoire';
 import type { Rng } from '../core/rng';
 import type { GameState } from './types';
 import { startPlans as startPlansImpl } from './capacity';
@@ -53,6 +54,7 @@ export function monthlyExt(s: GameState, r: Rng): void {
   cultureMonth(s, r);
   rivals2Month(s, r);
   contracts2Month(s, r);
+  repertoireMonth(s, r);
   studioCleanup(s);
   toursCleanup(s);
   s.loadNow = {};

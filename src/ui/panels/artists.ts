@@ -18,7 +18,7 @@ import { playPreview } from '../audio';
 import { EXTRA_ACTIONS } from '../../data/actions';
 import { agendaLoad, slotLoad } from '../../sim/capacity';
 import { freeCapacity } from '../../sim/agenda';
-import { loadBar, meter, portrait, stat } from '../vis';
+import { ic, loadBar, meter, portrait, setTab, stat } from '../vis';
 import { contractExtra, fandomSection, membersSection, reunionSection } from './people';
 
 export function artistsPanel(s: GameState): HTMLElement {
@@ -100,7 +100,8 @@ export function artistsPanel(s: GameState): HTMLElement {
           a.playerBand ? null : meter('handshake', S.trust, a.trust),
           stat('fans', `${N(a.fans.casual)} / ${N(a.fans.active)} / ${N(a.fans.core)}`, S.fans),
         ),
-        h('p', { class: 'small muted' }, t(l('Músicas escritas: {u} · gravadas inéditas: {r} · lançamentos: {n}', 'Written songs: {u} · recorded unreleased: {r} · releases: {n}'), { u: unrec, r: ready, n: a.releases.length })),
+        h('p', { class: 'small muted' }, t(l('Músicas escritas: {u} · gravadas inéditas: {r} · lançamentos: {n}', 'Written songs: {u} · recorded unreleased: {r} · releases: {n}'), { u: unrec, r: ready, n: a.releases.length }), ' ',
+          h('button', { class: 'btn small', onclick: () => { store.selectedAct = a.id; setTab('creation', 'repertoire'); store.area = 'creation'; rerender(); } }, ic('note'), ' ', t(l('Abrir repertório', 'Open repertoire')))),
       ),
       section(`${t(S.agenda)} — ${t(l('capacidade', 'capacity'))} ${agendaLoad(slots)}%`,
         loadBar(slots.map((x) => ({ label: t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name), load: slotLoad(x) }))),

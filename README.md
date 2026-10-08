@@ -90,6 +90,19 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 | Conteúdo | 155 cidades, subgêneros por era (1920–59 e 2030–40 detalhados), ~120 eventos novos, plataformas, críticos, produtores, marcas e prêmios fictícios **com o equivalente real ao lado** |
 | Interface | **Sede em pixel art isométrica** por era e nível, pessoas andando conforme a atividade real, avatares combináveis com editor, ícones em pixel art, retratos; novas áreas Central, Mundo e Negócios; tutorial; modos para daltonismo; leitor de tela; comparador de carreiras |
 
+## Rodada 3: profundidade (repertório, sedes, mapa)
+
+| Sistema | O que mudou |
+|---|---|
+| Repertório | Nova aba **Criação → Repertório**: todas as composições do ato com status (escrita, gravada inédita, programada, lançada, cofre, descartada), barras de qualidade, autores e participações, **em quais discos cada música entrou** (single, EP, LP, coletânea, ao vivo, demo) e versões derivadas. Filtros ("nunca usadas em disco") e ordenação |
+| O que fazer com uma música | Revisar a composição (refrão, letra ou arranjo; até 4 vezes, custo e estresse crescentes), mandar para o estúdio, lançar como **demo** ou single, montar **coletânea** com faixas já lançadas, **disco ao vivo** depois de uma turnê, guardar no cofre, descartar/recuperar, **oferecer a outro artista** (taxa + 8 % de edição) e **oferecer para sync** |
+| Perfil comercial | Cada faixa tem gancho, acessibilidade e durabilidade; o gancho entra no apelo dos singles (e aparece na autópsia) |
+| Caderno de ideias | Turnês, família, perdas, movimentos e política viram temas anotados; a ideia mais forte vira o tema da próxima composição e melhora melodia, letra e originalidade |
+| Sedes | Escada **Garagem → Estúdio pequeno → Loft → Complexo → Torre multinacional (anos 70+) → Campus futurista (era dos hologramas)**, com requisitos de era, tecnologia e reputação; plantas isométricas novas para Torre e Campus |
+| Filiais | A partir do Loft, abra **filiais em outras cidades** pelo mapa: somam carreiras, equipe e sessões, abrem o mercado local, aumentam público e garimpo na região; podem ser ampliadas (escritório → estúdio → sede regional); cada artista pode ser designado a uma sede; a vista da sede alterna entre matriz e filiais |
+| Mapa | **Camadas ligáveis**: seus fãs (bolhas), cenas, suas sedes e filiais, selos rivais, festivais, turnês em andamento (rotas), movimentos, crises e censura (sombreamento por mercado). Ficha de **cidade** (fãs por artista, cenas, festivais, rivais, clubes, clima, contexto político, abrir filial) e de **país** |
+| Geopolítica | Mostra só **quando começou e os efeitos** (consumo, shows suspensos, fabricação, temas visados, risco de veto) — nunca quando termina |
+
 ### Decisões pendentes do GDD §30 — o que foi adotado
 
 Usei as recomendações do próprio GDD: sem "porte inicial" (cenário + sede); Gravadora e Híbrido começam no

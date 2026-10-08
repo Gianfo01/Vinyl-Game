@@ -6,6 +6,7 @@ import { HQ_LEVELS } from '../data/rules';
 import { l, type L } from '../data/world';
 import type { GameState, Release } from './types';
 import { fmtL, hasCard, notify, remember, sum } from './util';
+import { hqCaps } from './branches';
 
 export function updateLegacy(s: GameState): void {
   const p = s.player;
@@ -168,5 +169,7 @@ export function legacyTotal(s: GameState): number {
 
 export function hqCapacityText(s: GameState): L {
   const h = HQ_LEVELS[s.player.hq];
-  return fmtL(l('{n}: {c} carreiras, {st} funcionários, {se} sessões, {e} equipamentos', '{n}: {c} careers, {st} staff, {se} sessions, {e} gear'), { n: h.name, c: h.careers, st: h.staff, se: h.sessions, e: h.equipment });
+  const c = hqCaps(s);
+  const br = s.branches?.length ?? 0;
+  return fmtL(l('{n}{b}: {c} carreiras, {st} funcionários, {se} sessões, {e} equipamentos', '{n}{b}: {c} careers, {st} staff, {se} sessions, {e} gear'), { n: h.name, b: br ? ` + ${br} ${br > 1 ? 'filiais' : 'filial'}` : '', c: c.careers, st: c.staff, se: c.sessions, e: c.equipment });
 }

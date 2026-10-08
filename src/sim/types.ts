@@ -156,6 +156,10 @@ export interface Song {
   posthumous?: boolean;
   aiVoice?: boolean;
   producerId?: string;
+  /** revisões de composição feitas (máx. 4) */
+  revisions?: number;
+  /** tema tirado do caderno de ideias */
+  theme?: L;
 }
 
 export type ReleaseType = 'single' | 'ep' | 'lp';
@@ -189,7 +193,7 @@ export interface Release {
   reissueOf?: string;
   certified?: 'gold' | 'platinum' | 'diamond';
   live: boolean;
-  kind?: 'standard' | 'deluxe' | 'limited' | 'anniversary' | 'tribute' | 'remix' | 'live' | 'compilation' | 'posthumous' | 'translation';
+  kind?: 'standard' | 'demo' | 'deluxe' | 'limited' | 'anniversary' | 'tribute' | 'remix' | 'live' | 'compilation' | 'posthumous' | 'translation';
   returns?: number;
   hypeBoost?: number;
   rolloutId?: string;

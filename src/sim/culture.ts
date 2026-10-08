@@ -197,6 +197,17 @@ export function activeGeo(s: GameState): GeoEvent[] {
   return GEO_EVENTS.filter((g) => s.year >= g.from && s.year <= g.to);
 }
 
+/** Efeitos de um evento geopolítico em frases curtas (sem revelar quando termina). */
+export function geoEffects(g: GeoEvent): L[] {
+  const out: L[] = [];
+  const pct = Math.round((g.demand - 1) * 100);
+  if (pct) out.push(fmtL(pct < 0 ? l('Consumo de música {p}%', 'Music spending {p}%') : l('Consumo de música +{p}%', 'Music spending +{p}%'), { p: pct }));
+  if (g.liveBlocked) out.push(l('Shows e turnês suspensos', 'Shows and tours suspended'));
+  if (g.pressingMult && g.pressingMult !== 1) out.push(fmtL(l('Fabricação +{p}%', 'Manufacturing +{p}%'), { p: Math.round((g.pressingMult - 1) * 100) }));
+  if (!out.length) out.push(l('Clima social e político pesa nas escolhas', 'The social and political climate weighs on choices'));
+  return out;
+}
+
 export function liveBlocked(s: GameState, cityId: string): GeoEvent | undefined {
   const m = cityById[cityId]?.market;
   return activeGeo(s).find((g) => g.liveBlocked && m && g.markets.includes(m));

@@ -9,6 +9,7 @@ export const ICON_NAMES = [
   'calendar', 'contract', 'warning', 'heart', 'broken-heart', 'trophy', 'gold-disc', 'platinum-disc', 'house', 'tour-bus',
   'plane', 'ship', 'train', 'newspaper', 'tv', 'radio', 'camera', 'film', 'gamepad', 'shirt', 'handshake', 'gavel', 'bank',
   'hologram', 'brain', 'fire', 'skull', 'sleep', 'sparkle', 'stress', 'clock', 'globe', 'lock', 'key',
+  'flag', 'star', 'note', 'pen', 'vault', 'bulb', 'building', 'rocket',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -395,6 +396,58 @@ const DRAW: Record<IconName, (p: Px) => void> = {
     p.line(8, 7, 15, 14, K.gold);
     p.line(11, 12, 13, 10, K.gold);
     p.line(13, 14, 14, 12, K.gold);
+  },
+  flag: (p) => {
+    p.vline(3, 1, 15, K.dbrown);
+    p.poly([[4, 2], [14, 2], [11, 5.5], [14, 9], [4, 9]], K.red);
+    p.hline(4, 11, 3, C('#ff8a7a'));
+  },
+  star: (p) => {
+    p.vline(8, 0, 2, K.dgreen);
+    p.rect(9, 0, 3, 2, K.green);
+    p.poly([[8, 2], [15, 13], [1, 13]], K.purple);
+    p.poly([[8, 2], [11, 13], [5, 13]], K.white);
+    p.rect(1, 13, 15, 2, K.dbrown);
+    p.rect(7, 9, 2, 4, K.ink);
+  },
+  note: (p) => {
+    p.disc(5, 12, 2.6, K.purple);
+    p.disc(12, 10.5, 2.6, K.purple);
+    p.vline(7, 3, 12, K.purple);
+    p.vline(14, 2, 10, K.purple);
+    p.rect(7, 2, 8, 2, K.purple);
+  },
+  pen: (p) => {
+    p.line(3, 13, 12, 4, K.blue);
+    p.line(4, 13, 13, 4, K.blue);
+    p.line(4, 14, 13, 5, K.dblue);
+    p.rect(12, 2, 2, 2, K.gold);
+    p.put(2, 14, K.ink);
+  },
+  vault: (p) => {
+    p.rect(2, 2, 12, 12, K.dgrey);
+    p.rect(3, 3, 10, 10, K.grey);
+    p.ring(8, 8, 3, K.dgrey);
+    p.put(8, 8, K.ink);
+    p.hline(3, 12, 3, C('#d8d4d0'));
+  },
+  bulb: (p) => {
+    p.disc(8, 6.5, 5, K.gold);
+    p.set(6, 4, C('#fff2b0'));
+    p.rect(6, 11, 4, 2, K.grey);
+    p.rect(7, 13, 2, 2, K.dgrey);
+  },
+  building: (p) => {
+    p.rect(3, 2, 10, 13, K.dblue);
+    for (let y = 4; y < 13; y += 3) for (let x = 5; x < 12; x += 3) p.rect(x, y, 2, 2, K.gold);
+    p.rect(7, 12, 2, 3, K.ink);
+  },
+  rocket: (p) => {
+    p.poly([[8, 1], [11, 6], [11, 11], [5, 11], [5, 6]], K.white);
+    p.disc(8, 6.5, 1.4, K.blue);
+    p.poly([[5, 8], [2, 12], [5, 11]], K.red);
+    p.poly([[11, 8], [14, 12], [11, 11]], K.red);
+    p.rect(6, 12, 4, 2, K.orange);
   },
 };
 

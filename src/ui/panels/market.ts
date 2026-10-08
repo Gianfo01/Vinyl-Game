@@ -10,7 +10,7 @@ import { $, actLink, cityName, genreName, labelLink, logo, pill, rerender, secti
 import { h, rangeBar, select } from '../dom';
 import { openOffer } from '../ficha';
 import { store } from '../store';
-import { HQ_LEVELS } from '../../data/rules';
+import { hqCaps } from '../../sim/branches';
 
 export function marketPanel(s: GameState): HTMLElement {
   const tabs: [typeof store.marketTab, string][] = [
@@ -109,7 +109,7 @@ function rivals(s: GameState): HTMLElement {
 }
 
 function professionals(s: GameState): HTMLElement {
-  const cap = HQ_LEVELS[s.player.hq].staff;
+  const cap = hqCaps(s).staff;
   return section(`${t(S.professionals)} — ${t(S.staff)} ${s.player.staff.length}/${cap}`,
     h('table', { class: 'tbl' },
       h('thead', null, h('tr', null, h('th', null, t(l('Nome', 'Name'))), h('th', null, t(l('Função', 'Role'))), h('th', null, t(l('Habilidade', 'Skill'))), h('th', null, t(l('Salário/mês', 'Salary/mo'))), h('th', null, ''))),

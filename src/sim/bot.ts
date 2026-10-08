@@ -1,7 +1,6 @@
 // Jogador automático simples para o simulador sem interface (GDD §26, §27).
 // Usa as mesmas ações e validadores da interface.
 
-import { HQ_LEVELS } from '../data/rules';
 import { MARKETS } from '../data/world';
 import { acceptCounter, careerSlotsUsed, defaultOffer, evaluateOffer, makeOffer } from './contracts';
 import { fireStaff, hireStaff, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from './economy';
@@ -12,6 +11,7 @@ import { money, playerActs } from './util';
 import { createGame } from './worldgen';
 import type { RunConfig } from './types';
 import { advanceMonth } from './tick';
+import { hqCaps } from './branches';
 
 export function botMonth(s: GameState): void {
   const salaries = s.player.staff.reduce((t, x) => t + x.salary, 0);
@@ -33,7 +33,7 @@ export function botMonth(s: GameState): void {
       scoutAct(s, k.actId);
     }
     // oferta: talento/potencial estimado e vaga na sede
-    const cap = HQ_LEVELS[s.player.hq].careers;
+    const cap = hqCaps(s).careers;
     if (careerSlotsUsed(s) < cap) {
       const cands = Object.values(s.knowledge)
         .filter((k) => k.degree >= 2 && s.acts[k.actId] && !s.acts[k.actId].owner && !s.offers.some((o) => o.actId === k.actId && (o.status === 'pending' || o.status === 'counter')))
@@ -51,7 +51,7 @@ export function botMonth(s: GameState): void {
     const up = upgradeCost(s);
     if (up !== null && careerSlotsUsed(s) >= cap && s.player.cash > up * 3) upgradeHq(s);
     const avgMonthly = yearRevenue / 12;
-    if (avgMonthly > (salaries + money(s, 3000)) * 3 && s.player.cash > money(s, 20000) && s.player.staff.length < HQ_LEVELS[s.player.hq].staff) {
+    if (avgMonthly > (salaries + money(s, 3000)) * 3 && s.player.cash > money(s, 20000) && s.player.staff.length < hqCaps(s).staff) {
       const want = ['producer', 'anr', 'publicist', 'engineer', 'analyst', 'booking'];
       const have = new Set(s.player.staff.map((x) => x.role));
       const pro = s.professionals.filter((p) => want.includes(p.role) && !have.has(p.role)).sort((a, b) => b.skill - a.skill)[0];

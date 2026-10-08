@@ -8,6 +8,10 @@ import type { ExtState } from './xtypes';
 export function emptyExt(): ExtState {
   return {
     clock: { dayInMonth: 0, opened: false, monthStartWeek: 0 },
+    branches: [],
+    branchOf: {},
+    ideas: {},
+    songPitches: [],
     daily: [],
     plans: [],
     loadNow: {},

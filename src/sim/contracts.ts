@@ -6,7 +6,8 @@ import { l, type L } from '../data/world';
 import { mainAmbition } from './people';
 import type { Act, Contract, GameState, Offer } from './types';
 import { fmtL, hasCard, hasMutator, money, nextId, notify, playerActs, post, remember, rngOf, staffCount } from './util';
-import { CONTRACT_MODELS, HQ_LEVELS } from '../data/rules';
+import { CONTRACT_MODELS } from '../data/rules';
+import { hqCaps } from './branches';
 
 export function expectedAdvance(s: GameState, act: Act): number {
   // dólares reais
@@ -57,7 +58,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   };
   let score = advU * w.adv + royU * w.roy;
   score += (o.creativeControl ? 1 : 0.35) * w.control;
-  const reach = s.player.territories.length / 4 + HQ_LEVELS[s.player.hq].careers / 24 + s.player.reputation.commercial / 160;
+  const reach = s.player.territories.length / 4 + hqCaps(s).careers / 24 + s.player.reputation.commercial / 160;
   score += clamp(reach, 0.2, 1.6) * w.reach;
   score += (s.player.reputation.artists - 40) / 250;
   score += (act.trust - 50) / 300;
