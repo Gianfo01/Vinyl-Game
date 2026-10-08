@@ -151,6 +151,8 @@ export function resolveOffers(s: GameState, r: Rng): void {
       o.status = 'counter';
       o.note = 'advance';
       o.advance = Math.round(o.advance * r.float(1.25, 1.6) + money(s, 500));
+      const kn = s.knowledge[act.id];
+      if (kn) kn.stage = 'negotiation';
       notify(s, fmtL(l('{act} fez contraproposta: adiantamento maior.', '{act} countered: higher advance.'), { act: act.name }), 'event');
     } else {
       o.status = 'rejected';

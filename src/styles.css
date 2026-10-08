@@ -201,7 +201,12 @@ main { overflow-y: auto; padding: 1rem; }
 .est { font-size: 0.88rem; display: grid; gap: 0.15rem; }
 .kanban { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 0.6rem; overflow-x: auto; }
 .kcol { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem; min-height: 200px; }
-.kcard { background: var(--panel-2); border-radius: 6px; padding: 0.35rem 0.45rem; margin: 0.3rem 0; font-size: 0.9rem; }
+.kcard { background: var(--panel-2); border-radius: 6px; padding: 0.35rem 0.45rem; margin: 0.3rem 0; font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.kcard.signed { opacity: 0.6; }
+.kcard .kact { gap: 0.25rem; }
+.kcard .kact .btn.small { padding: 0.1rem 0.4rem; font-size: 0.78rem; }
+.scout-filter { gap: 0.5rem; margin: 0.4rem 0 0.6rem; align-items: center; }
+.scout-filter input[type=search] { flex: 1 1 220px; min-width: 0; }
 .eval { background: var(--panel-2); border-radius: 8px; padding: 0.5rem 0.7rem; margin: 0.6rem 0; }
 
 /* criação */
@@ -579,3 +584,9 @@ img.portrait { border: 1px solid var(--line); }
   .tutorial { left: 8px; right: 8px; bottom: 76px; max-width: none; }
   .hq-stage canvas { touch-action: none; }
 }
+.dir-filters { gap: 0.4rem; margin: 0.5rem 0; align-items: center; }
+.dir-filters .dir-search { flex: 1 1 260px; min-width: 0; }
+.tbl-wrap { overflow-x: auto; }
+.dir-tbl td { vertical-align: middle; }
+.panel.directory { display: block; }
+.panel.directory > * { margin-bottom: 0.5rem; }

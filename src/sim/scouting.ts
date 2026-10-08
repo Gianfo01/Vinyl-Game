@@ -24,7 +24,7 @@ export const STAGES: Record<Knowledge['stage'], L> = {
 };
 
 export function scoutActionsPerMonth(s: GameState): number {
-  return 1 + staffCount(s, 'anr') + (hasCard(s, 'prospector') ? 1 : 0) + (s.player.hq >= 2 ? 1 : 0);
+  return 3 + staffCount(s, 'anr') + s.scouts.length + (hasCard(s, 'prospector') ? 2 : 0) + (s.player.hq >= 2 ? 1 : 0) + (s.flags.scoutBonus ?? 0);
 }
 
 function widthFor(s: GameState, degree: number, base: number[]): number {
@@ -71,7 +71,7 @@ export function visibleFields(degree: number): { skills: boolean; potential: boo
 }
 
 export function scoutCost(s: GameState, degree: number): number {
-  return money(s, [150, 300, 700, 1200, 2000][clamp(degree, 1, 5) - 1]);
+  return money(s, [80, 200, 450, 900, 1500][clamp(degree, 1, 5) - 1]);
 }
 
 export function canScout(s: GameState, actId: string): { ok: boolean; reason?: L } {
@@ -101,6 +101,34 @@ export function scoutAct(s: GameState, actId: string): boolean {
   return true;
 }
 
+/** Move manualmente um nome entre as colunas do pipeline (oferta e negociação seguem as ofertas reais). */
+export function setStage(s: GameState, actId: string, stage: Knowledge['stage']): boolean {
+  const k = s.knowledge[actId];
+  if (!k || stage === 'offer' || stage === 'negotiation') return false;
+  if (s.offers.some((o) => o.actId === actId && (o.status === 'pending' || o.status === 'counter'))) return false;
+  k.stage = stage;
+  return true;
+}
+
+/** Põe no radar (grau 1) um ato visto na busca, nas paradas ou num show. */
+export function watchAct(s: GameState, actId: string): boolean {
+  const a = s.acts[actId];
+  if (!a || a.owner === 'player' || s.knowledge[actId]) return false;
+  s.knowledge[actId] = { actId, degree: 1, stage: 'monitoring', bias: rngOf(s).normal(0, 6), updatedWeek: s.week, source: 'watch' };
+  return true;
+}
+
+/** Mantém as colunas Oferta/Negociação coerentes com as ofertas e tira do pipeline quem já assinou com rivais. */
+export function syncPipeline(s: GameState): void {
+  for (const k of Object.values(s.knowledge)) {
+    const a = s.acts[k.actId];
+    if (!a || a.owner === 'player') continue;
+    const o = s.offers.find((x) => x.actId === k.actId && (x.status === 'pending' || x.status === 'counter'));
+    if (o) k.stage = o.status === 'counter' ? 'negotiation' : 'offer';
+    else if (k.stage === 'offer' || k.stage === 'negotiation') k.stage = k.degree >= 3 ? 'investigating' : 'monitoring';
+  }
+}
+
 export function dropSignal(s: GameState, actId: string): void {
   if (s.acts[actId]?.owner === 'player') return;
   delete s.knowledge[actId];
@@ -116,6 +144,8 @@ const SOURCES: { id: string; name: L; from?: string; fromYear?: number }[] = [
   { id: 'showcase', name: l('showcase de feira', 'trade showcase'), fromYear: 1967 },
   { id: 'viral', name: l('viralização em plataforma', 'platform virality'), from: 'streaming' },
   { id: 'scene', name: l('cena da cidade', 'city scene') },
+  { id: 'watch', name: l('você mesmo', 'yourself') },
+  { id: 'scout', name: l('olheiro', 'scout') },
 ];
 
 export function sourceName(id: string): L {
@@ -175,8 +205,12 @@ export function monthlySignals(s: GameState, r: Rng): void {
   }
 }
 
+export function scoutRequestCost(s: GameState): number {
+  return money(s, 500);
+}
+
 export function requestScout(s: GameState, req: { genreFamily: string; market: string; level: string; role: string }): boolean {
-  const cost = money(s, 900);
+  const cost = scoutRequestCost(s);
   if (s.player.cash < cost) return false;
   if (s.scoutActionsUsed >= scoutActionsPerMonth(s)) return false;
   s.scoutActionsUsed += 1;

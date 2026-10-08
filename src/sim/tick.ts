@@ -14,7 +14,7 @@ import { checkCardGoal, finishArc, updateLegacy, yearlyAwards } from './legacy';
 import { monthlyPeople, newRivalLabel, npcProduction, prune, worldSpawns } from './lifecycle';
 import { launchPending, marketWeek } from './market';
 import { rivalYearEnd, rivalsMonth } from './rivals';
-import { monthlySignals } from './scouting';
+import { monthlySignals, syncPipeline } from './scouting';
 import type { GameState, Notification } from './types';
 import { dateOfDay, fmtL, money, notify, playerActs, post, remember, rngOf } from './util';
 
@@ -89,6 +89,7 @@ function closeMonth(s: GameState, r: Rng, daysInMonth: number): void {
   // ---------- fechamento do mês ----------
   payMonth(s);
   resolveOffers(s, r);
+  syncPipeline(s);
   checkPromises(s);
   contractsMonth(s);
   monthlyPeople(s, r);
