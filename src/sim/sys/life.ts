@@ -341,7 +341,7 @@ function addKid(s: GameState, r: Rng, adopted: boolean): string {
   const o = ownerOf(s);
   // dom hereditário (ouvido absoluto): 50% de chance de passar para filhos biológicos
   const gifted = !adopted && ((s.x4 as unknown as { persona?: { traits: string[] } }).persona?.traits ?? []).includes('perfect_pitch') && r.chance(0.5);
-  const k = { name: personName(r, langForCity(s.config.homeCity, r)), born: s.year - (adopted ? r.int(1, 6) : 0), aptitude: Math.min(99, r.int(25, 75) + (gifted ? 20 : 0)) };
+  const k = { name: personName(r, langForCity(s.config.homeCity, r)), born: s.year - (adopted ? r.int(1, 6) : 0), aptitude: Math.min(99, r.int(25, 75) + (gifted ? 20 : 0) + (s.config.card === 'dynast' ? 10 : 0)) };
   if (gifted) logLife(s, fmtL(l('{k} herdou o seu ouvido absoluto.', '{k} inherited your perfect pitch.'), { k: k.name }), 'good');
   o.kids.push(k);
   life(s).kidsX[o.kids.length - 1] = { edu: 'public', bond: 60, adopted };

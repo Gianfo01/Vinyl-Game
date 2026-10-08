@@ -10,3 +10,4 @@ import './talent';
 import './life';
 import './temper';
 import './persona';
+import './cards6';

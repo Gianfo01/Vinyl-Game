@@ -87,6 +87,9 @@ export function nextGoals(s: GameState): Milestone[] {
   return milestones(s).filter((m) => !m.done).slice(0, 3);
 }
 
+/** Metas de cartas registradas por sistemas (rodada 6). */
+export const EXTRA_CARD_GOALS: Record<string, (s: GameState) => boolean> = {};
+
 export function cardGoalDone(s: GameState): boolean {
   const st = s.player.stats;
   switch (s.config.card) {
@@ -105,7 +108,7 @@ export function cardGoalDone(s: GameState): boolean {
     case 'corsair': return st.scandalsSurvived >= 1;
     case 'globalist': return s.player.territories.length >= 7;
     case 'synthetic_pioneer': return s.player.neural.synthActs > 0 && !!s.flags.synthNumber1;
-    default: return false;
+    default: return EXTRA_CARD_GOALS[s.config.card]?.(s) ?? false;
   }
 }
 

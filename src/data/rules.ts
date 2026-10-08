@@ -263,6 +263,21 @@ export const MUTATORS: MutatorDef[] = [
   mu('strong_fanclubs', 'Fã-Clubes Fortes', 'Strong Fan Clubs', 'Comunidades mobilizam mais.', 'Communities mobilize more.'),
   mu('early_synthetic', 'Voz Sintética Precoce', 'Early Synthetic Voice', 'Era neural adiantada.', 'Neural era arrives early.'),
   mu('no_safety_net', 'Sem Rede de Segurança', 'No Safety Net', 'Sem crédito emergencial.', 'No emergency credit.'),
+  // rodada 6
+  mu('superstar_economy', 'Economia de Superstars', 'Superstar Economy', 'Atos famosos (★40+) vendem 15% mais; o resto, 5% menos.', 'Famous acts (★40+) sell 15% more; everyone else 5% less.'),
+  mu('fast_trends', 'Modas Relâmpago', 'Flash Trends', 'A popularidade dos gêneros sobe e desce duas vezes mais rápido.', 'Genre popularity rises and falls twice as fast.'),
+  mu('expensive_plants', 'Fábricas Caras', 'Expensive Plants', 'Fabricação 25% mais cara.', 'Manufacturing 25% more expensive.'),
+  mu('generous_critics', 'Crítica Generosa', 'Generous Critics', '+0,6 nas notas da crítica.', '+0.6 on critics\' scores.'),
+  mu('harsh_critics', 'Crítica Implacável', 'Merciless Critics', '−0,7 nas notas da crítica.', '−0.7 on critics\' scores.'),
+  mu('stage_fever', 'Febre dos Palcos', 'Stage Fever', 'Shows rendem 20% mais; discos vendem 10% menos.', 'Shows earn 20% more; records sell 10% less.'),
+  mu('short_careers', 'Carreiras Curtas', 'Short Careers', 'Os atos encerram a carreira bem antes.', 'Acts end their careers much sooner.'),
+  mu('hustle_culture', 'Cultura do Corre', 'Hustle Culture', '+1 tempo livre por mês, +40% de estresse.', '+1 free time a month, +40% stress.'),
+  mu('wealth_tax', 'Imposto sobre Fortunas', 'Wealth Tax', 'Todo ano, 3% do caixa acima de $100 mil (corrigido) vai para o fisco.', 'Every year, 3% of cash above $100k (adjusted) goes to the taxman.'),
+  mu('fickle_fans', 'Fãs Volúveis', 'Fickle Fans', 'O momento dos atos esfria mais rápido.', 'Act momentum cools faster.'),
+  mu('talent_flood', 'Enxurrada de Talentos', 'Talent Flood', '+2 sinais e +1 ação de scouting por mês.', '+2 signals and +1 scouting action a month.'),
+  mu('galloping_inflation', 'Inflação Galopante', 'Galloping Inflation', 'Adiantamentos e salários 15% mais caros.', 'Advances and salaries 15% more expensive.'),
+  mu('loyal_artists', 'Artistas Leais', 'Loyal Artists', '+10 de confiança e moral melhor no elenco.', '+10 trust and better morale on the roster.'),
+  mu('beginners_luck', 'Sorte de Principiante', "Beginner's Luck", '+12% de apelo nos três primeiros anos.', '+12% appeal in the first three years.'),
 ];
 
 // ---------- Cartas do Selo (GDD §5.6) ----------
@@ -282,6 +297,19 @@ export const CARDS: CardDef[] = [
   cd('patron', 'O Mecenas', 'The Patron', '+ cenas locais / − lucro', '+ local scenes / − profit', 'Fundar um movimento cultural', 'Found a cultural movement'),
   cd('corsair', 'O Corsário', 'The Corsair', '+ eficiência em práticas questionáveis / − reputação institucional', '+ efficiency in questionable practices / − institutional reputation', 'Sobreviver a um escândalo', 'Survive a scandal'),
   cd('globalist', 'O Globalista', 'The Globalist', '+ mercados externos / − cena local', '+ foreign markets / − local scene', 'Presença nos 7 mercados', 'Presence in all 7 markets'),
+  // rodada 6
+  cd('indie_spirit', 'O Independente', 'The Indie', '+ confiança e crítica / − vendas', '+ trust and critics / − sales', '3 lançamentos com média 8+ na crítica', '3 releases averaging 8+ with critics'),
+  cd('hit_factory', 'A Fábrica de Hits', 'The Hit Factory', '+ apelo e vendas / − crítica e moral', '+ appeal and sales / − critics and morale', '10 entradas no Top 10', '10 Top 10 entries'),
+  cd('family_business', 'O Negócio de Família', 'The Family Business', '+ tempo livre, renda pessoal e moral / − valor de mercado', '+ free time, personal income and morale / − market value', 'Um filho(a) assumir a empresa', 'A child takes over the company'),
+  cd('gambler', 'O Apostador', 'The Gambler', '+ ofertas irresistíveis e golpes de sorte / − adiantamentos caros e azares', '+ irresistible offers and windfalls / − costly advances and bad luck', 'Chegar a $1 milhão (corrigido) em caixa', 'Reach $1 million (adjusted) in cash'),
+  cd('tastemaker', 'O Formador de Opinião', 'The Tastemaker', '+ crítica e sinais / − bilheteria', '+ critics and signals / − box office', '5 lançamentos com nota 9+', '5 releases scoring 9+'),
+  cd('road_warrior', 'O Guerreiro da Estrada', 'The Road Warrior', '+ bilheteria e tempo livre / − fabricação cara', '+ box office and free time / − costly manufacturing', '200 shows do elenco', '200 roster shows'),
+  cd('conglomerate', 'O Conglomerado', 'The Conglomerate', '+ valor de mercado e salários baixos / − confiança', '+ market value and low salaries / − trust', 'Abrir o capital', 'Go public'),
+  cd('underdog', 'O Azarão', 'The Underdog', '+ aprendizado e apelo de atos pequenos / − caixa inicial', '+ learning and appeal for small acts / − starting cash', 'Um número 1 com um ato que começou com ★5 ou menos', 'A number one with an act that started at ★5 or less'),
+  cd('provocateur', 'O Provocador', 'The Provocateur', '+ apelo / − reputação institucional todo ano', '+ appeal / − institutional reputation every year', 'Sobreviver a 3 escândalos', 'Survive 3 scandals'),
+  cd('activist', 'O Engajado', 'The Activist', '+ reputação, crítica e confiança / − salários maiores', '+ reputation, critics and trust / − higher salaries', 'Reputação institucional 80+', 'Institutional reputation 80+'),
+  cd('inventor', 'O Inventor', 'The Inventor', '+ fabricação barata e vendas / − qualidade crua', '+ cheap manufacturing and sales / − rough quality', 'Ter a fábrica própria e 3 equipamentos', 'Own the plant and 3 pieces of equipment'),
+  cd('dynast', 'O Dinasta', 'The Dynast', '+ legado familiar: herdeiros mais talentosos, + moral / − estresse', '+ family legacy: more gifted heirs, + morale / − stress', 'Três gerações no comando', 'Three generations in charge'),
   cd('synthetic_pioneer', 'O Pioneiro Sintético', 'The Synthetic Pioneer', '+ vozes sintéticas / − credibilidade humana', '+ synthetic voices / − human credibility', 'Um final sintético', 'A synthetic ending'),
 ];
 
