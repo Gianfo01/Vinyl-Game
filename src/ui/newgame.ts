@@ -8,6 +8,7 @@ import { createGame } from '../sim/worldgen';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
 import { deleteSave, importSave, listSaves, loadGame, savePrefs, store } from './store';
+import { prepareNewGame, scenarioButton } from './sys/live/goals';
 
 const START_YEARS: { year: number; label: { pt: string; en: string } }[] = [
   { year: 1920, label: l('1920 — Goma-laca e rádio nascente', '1920 — Shellac and early radio') },
@@ -62,6 +63,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
       h('p', { class: 'tagline' }, t(S.tagline)),
       h('div', { class: 'row center' },
         h('button', { class: 'btn primary big', onclick: () => newGameScreen(root, onStart) }, t(S.newGame)),
+        scenarioButton(root, onStart, () => titleScreen(root, onStart)),
         h('button', { class: 'btn ghost', onclick: () => fileInput.click() }, t(S.importSave)),
         fileInput,
         select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { store.prefs.lang = v; savePrefs(); titleScreen(root, onStart); }, { 'aria-label': t(S.language) }),
@@ -148,6 +150,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
         h('section', { class: 'card wide' }, h('h3', null, t(S.mutators)), muts),
       ),
       h('div', { class: 'row center' }, h('button', { class: 'btn primary big', onclick: () => {
+        prepareNewGame(cfg);
         store.game = createGame(cfg);
         store.area = 'desk';
         store.undoSnapshot = null;
