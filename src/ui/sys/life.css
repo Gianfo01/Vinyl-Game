@@ -32,3 +32,11 @@
 .style-tree .perk.next { border-style: dashed; border-color: var(--accent); }
 .tile.inv { display: flex; flex-direction: column; gap: 0.3rem; }
 .op-list { margin: 0; padding-left: 1rem; }
+.mg-card { border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem; background: var(--panel-2); display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.5rem; }
+.mg-card h4 { margin: 0; }
+.mg-depts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.5rem; }
+.mg-dept { border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.mg-dept.on { border-color: var(--accent); }
+.mg-branches { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.5rem; }
+.mg-open { gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+.mg-markets { columns: 2; }

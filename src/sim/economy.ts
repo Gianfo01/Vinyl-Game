@@ -15,7 +15,8 @@ import { perk } from './perks';
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
-  const rent = money(s, hq.rent) + branchRent(s);
+  // prédio próprio (rodada 6): sem aluguel da matriz
+  const rent = (s.flags.ownBuildingHq === s.player.hq ? 0 : money(s, hq.rent)) + branchRent(s);
   const salaries = Math.round(s.player.staff.reduce((t, x) => t + x.salary, 0) * Math.max(0.5, 1 + perk(s, 'staffCost')));
   const over = Math.max(0, careerSlotsUsed(s) - hqCaps(s).careers);
   // terceirizar carreiras além da capacidade custa menos para quem ainda é pequeno

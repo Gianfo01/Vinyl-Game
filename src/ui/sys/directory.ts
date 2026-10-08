@@ -71,7 +71,7 @@ function actRows(s: GameState): HTMLElement {
           h('td', null, tal ? `${tal.lo}–${tal.hi}` : '?'),
           h('td', null, a.owner === 'player' ? '—' : k ? `${k.degree}/5` : '—'),
           h('td', { class: 'row' },
-            h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('eye'), ' ', t(l('Página', 'Page'))),
+            h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page'))),
             a.owner !== 'player' && !k && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small', onclick: () => { watchAct(s, a.id); toast(t(l('{a} entrou no seu radar (Mercado → Pipeline).', '{a} is on your radar (Market → Pipeline).'), { a: a.name }), 'good'); rerender(); } }, t(l('Seguir', 'Follow'))) : null,
             !a.owner && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small primary', onclick: () => openOffer(a.id) }, t(l('Oferta', 'Offer'))) : null,
           ),
@@ -117,7 +117,7 @@ function personRows(s: GameState): HTMLElement {
           h('td', null, String(s.year - p.born)),
           h('td', null, a ? actLink(s, a.id) : '—'),
           h('td', null, deg >= 4 ? String(o) : deg >= 2 ? `${Math.max(0, o - 8)}–${Math.min(99, o + 8)}` : '?'),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('eye'), ' ', t(l('Ficha', 'Profile')))),
+          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
         );
       })),
     )),

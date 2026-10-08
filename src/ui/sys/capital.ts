@@ -129,7 +129,7 @@ function ipoSection(s: GameState): HTMLElement {
       h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { road = (e.target as HTMLInputElement).checked; draw(); } }), t(l('Roadshow (+5%, 2 tempos)', 'Roadshow (+5%, 2 time)'))),
     ),
     box,
-    h('button', { class: 'btn primary small', onclick: () => { if (confirm(t(l('Abrir capital agora?', 'Go public now?')))) say(goPublic6(s, float, uw, road), l('Sino tocado! A empresa está na bolsa.', 'Bell rung! The company is listed.')); } }, ic('bell'), ' ', t(l('Abrir capital', 'Go public'))),
+    h('button', { class: 'btn primary small', onclick: () => { if (confirm(t(l('Abrir capital agora?', 'Go public now?')))) say(goPublic6(s, float, uw, road), l('Sino tocado! A empresa está na bolsa.', 'Bell rung! The company is listed.')); } }, ic('gavel'), ' ', t(l('Abrir capital', 'Go public'))),
   );
 }
 

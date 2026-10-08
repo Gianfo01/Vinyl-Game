@@ -84,7 +84,7 @@ export const STYLES: StyleDef[] = [
     sp('Single no palco', 'Single on stage', '+5% de bilheteria.', '+5% box office.', { showRevenue: 0.05 }),
     sp('Toque de Midas', 'Midas touch', '+6% de apelo e vendas.', '+6% appeal and sales.', { appeal: 0.06, chartUnits: 0.03 }),
   ] },
-  { id: 'curator', name: l('Garimpeiro', 'Curator'), icon: 'eye', desc: l('Descobrir antes de todo mundo. Scouting, faro e cenas.', 'Find them before anyone else. Scouting, flair and scenes.'), attrs: { ear: 6 }, perks: [
+  { id: 'curator', name: l('Garimpeiro', 'Curator'), icon: 'key', desc: l('Descobrir antes de todo mundo. Scouting, faro e cenas.', 'Find them before anyone else. Scouting, flair and scenes.'), attrs: { ear: 6 }, perks: [
     sp('Caderninho', 'Little black book', '+1 ação de scouting por mês.', '+1 scouting action a month.', { scoutActions: 1 }),
     sp('Olho clínico', 'Clinical eye', 'Relatórios 8% mais precisos.', 'Reports 8% more precise.', { scoutAccuracy: 0.08 }),
     sp('Rede de bares', 'Club network', '+1 sinal novo por mês.', '+1 new signal a month.', { signals: 1 }),

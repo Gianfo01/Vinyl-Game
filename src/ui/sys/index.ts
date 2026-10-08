@@ -9,3 +9,4 @@ import './live';
 import './life';
 import './directory';
 import './capital';
+import './hq6';

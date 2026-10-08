@@ -465,7 +465,6 @@ export function hqPanel(s: GameState): HTMLElement {
     h('aside', { class: 'col-side' },
       section(t(l('Unidades por banda', 'Band units')), acts.length ? h('ul', { class: 'small' }, acts.map((a) => h('li', null, actLink(s, a.id), ` · ${t(S.fame)} ${Math.round(a.fame)} · `, t(l('agenda', 'agenda')), ': ', (s.agenda[a.id] ?? []).map((x) => x.action).join(', ') || '—'))) : h('p', { class: 'muted' }, t(S.noActs))),
       section(t(l('Capacidade', 'Capacity')), h('p', { class: 'small' }, t(hqCapacityText(s))), kv(t(S.mgmtLoad), `${(managementLoad(s) * 100).toFixed(0)}%`)),
-      branchesSection(s),
       section(t(l('Cartas e mutators', 'Cards and mutators')), h('p', { class: 'small' }, t(CARDS.find((c) => c.id === s.config.card)?.name))),
     ),
   );
