@@ -25,6 +25,16 @@ export interface RunConfig {
   bandName?: string;
   bandGenre?: string;
   contentFilters: string[]; // tags desligadas
+  /** personagem do jogador (rodada 5); ausente = gerado */
+  character?: CharacterSpec;
+}
+
+export interface CharacterSpec {
+  name: string;
+  age: number;
+  background: string;
+  role?: Person['role'];
+  look?: Appearance;
 }
 
 /** Aparência combinável (GDD §44): 3 corpos × 3 rostos × 4 peles × 16 cabelos × 8 cores × 4 roupas × 8 cores × acessórios. */

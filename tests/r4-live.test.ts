@@ -113,11 +113,13 @@ describe('ingressos', () => {
   it('VIP e preço dinâmico sobem a bilheteria; meia-entrada reduz no Brasil', () => {
     const { s, act } = withAct('live-tix', { startYear: 2010 });
     const base = previewShowRevenue(s, act.id, 'london', 3, 2, 1_000_000);
-    expect(base).toBe(1_000_000);
+    // a presença de palco dos integrantes (atributos, rodada 5) já mexe um pouco na base
+    expect(base).toBeGreaterThan(900_000);
+    expect(base).toBeLessThan(1_100_000);
     liveOf(s).tickets = { vip: true, dynamic: true };
-    expect(previewShowRevenue(s, act.id, 'london', 3, 2, 1_000_000)).toBeGreaterThan(1_000_000);
+    expect(previewShowRevenue(s, act.id, 'london', 3, 2, 1_000_000)).toBeGreaterThan(base);
     liveOf(s).tickets = { vip: false, dynamic: false };
-    expect(previewShowRevenue(s, act.id, 'sao_paulo', 3, 2, 1_000_000)).toBeLessThan(1_000_000);
+    expect(previewShowRevenue(s, act.id, 'sao_paulo', 3, 2, 1_000_000)).toBeLessThan(base);
   });
 });
 

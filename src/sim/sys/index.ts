@@ -7,3 +7,4 @@ import './world4';
 import './scenes';
 import './live';
 import './talent';
+import './life';

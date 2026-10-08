@@ -1,0 +1,18 @@
+/* Área "Você" (rodada 5). */
+.lf-head { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+.lf-head > div:nth-child(2) { flex: 1 1 280px; min-width: 0; }
+.lf-portrait canvas { image-rendering: pixelated; border-radius: 10px; background: var(--panel-2); }
+.lf-energy { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.lf-dots { display: inline-flex; gap: 4px; }
+.lf-dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); background: transparent; }
+.lf-dots i.on { background: var(--accent); }
+.lf-cost { font-size: 0.75em; opacity: 0.8; letter-spacing: -2px; }
+.lf-cands { margin-top: 8px; }
+.memory li.good { color: var(--good); }
+.memory li.bad { color: var(--bad); }
+.lf-scene { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 10px; }
+.lf-scene canvas { image-rendering: pixelated; }
+.lf-scene-text { font-size: 1.15rem; max-width: 46ch; }
+.ng-char { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.ng-char label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+@media (max-width: 760px) { .ng-char { grid-template-columns: 1fr; } }

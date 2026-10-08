@@ -81,6 +81,8 @@ export interface Owner {
   since?: number;
   vacationUntil?: number;
   retired?: { name: string; years: string }[];
+  /** pessoa (s.persons) que representa o dono como personagem (rodada 5) */
+  personId?: string;
 }
 
 export interface StaffCareer {

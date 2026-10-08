@@ -140,7 +140,7 @@ function secretsTab(s: GameState): HTMLElement {
 
 // ------------------------------------------------------------------ dono do selo
 
-function ownerTab(s: GameState): HTMLElement {
+export function ownerTab(s: GameState): HTMLElement {
   const o = ownerOf(s);
   const houses = availableHouses(s);
   const kids = o.kids.map((k, i) => ({ value: `kid:${i}`, label: `${k.name} (${t(l('aptidão', 'aptitude'))} ${k.aptitude})` }));
@@ -195,7 +195,6 @@ function peopleArea(s: GameState): HTMLElement {
     { id: 'health', label: t(l('Saúde', 'Health')), icon: 'warning', render: () => healthTab(s) },
     { id: 'relations', label: t(l('Relações', 'Relationships')), icon: 'handshake', render: () => relationsTab(s) },
     { id: 'secrets', label: t(l('Segredos', 'Secrets')), icon: 'key', render: () => secretsTab(s) },
-    { id: 'owner', label: t(l('Você', 'You')), icon: 'house', render: () => ownerTab(s) },
     { id: 'staff', label: t(l('Equipe', 'Staff')), icon: 'contract', render: () => staffTab(s) },
     { id: 'feed', label: t(l('Redes e cartas', 'Social and letters')), icon: 'stream', render: () => feedView(s) },
   ], rerender));

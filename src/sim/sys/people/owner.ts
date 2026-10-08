@@ -254,7 +254,7 @@ export function ownerMonth(s: GameState, r: Rng, signedBefore: number): void {
     } else o.stress = clamp01(o.stress + 3);
   }
   const house = o.house >= 0 ? HOUSES[o.house] : undefined;
-  o.wealth -= money(s, 400 + o.kids.length * 150 + (house ? house.price * 0.001 : 250) + (o.spouse ? 150 : 0));
+  o.wealth -= money(s, 200 + o.kids.length * 120 + (house ? house.price * 0.001 : 150) + (o.spouse ? 100 : 0));
   // estresse e saúde
   let ds = 0;
   if (s.player.cash < 0) ds += 6;
@@ -274,12 +274,12 @@ export function ownerMonth(s: GameState, r: Rng, signedBefore: number): void {
     const a = r.pick(['ear', 'charisma', 'management'] as OwnerAttr[]);
     o.attrs[a] = Math.max(10, o.attrs[a] - 1);
   }
-  // família
-  if (!o.spouse && age >= 24 && age <= 50 && r.chance(0.015)) {
+  // família (sem personagem criado: a vida segue sozinha; com personagem, o jogador decide)
+  if (!o.personId && !o.spouse && age >= 24 && age <= 50 && r.chance(0.015)) {
     o.spouse = personName(r, langForCity(s.config.homeCity, r));
     remember(s, 'owner_family', fmtL(l('{o} se casa com {p}.', '{o} marries {p}.'), { o: o.name, p: o.spouse }));
   }
-  if (o.spouse && age <= 46 && o.kids.length < 3 && r.chance(0.012)) {
+  if (!o.personId && o.spouse && age <= 46 && o.kids.length < 3 && r.chance(0.012)) {
     const k = { name: personName(r, langForCity(s.config.homeCity, r)), born: s.year, aptitude: r.int(25, 85) };
     o.kids.push(k);
     remember(s, 'owner_family', fmtL(l('Nasce {k}, filho(a) de {o}.', '{k} is born to {o}.'), { k: k.name, o: o.name }));
