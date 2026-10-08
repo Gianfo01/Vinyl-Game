@@ -24,7 +24,21 @@ import { auctionsSection, contestsSection, demosSection, rivalsExtra, scoutsSect
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
-import { ic, tabs } from './vis';
+import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
+import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
+import { portraitDataUrl } from './pixel/avatar';
+
+registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : null));
+registerPortrait((p, size) => {
+  const img = document.createElement('img');
+  img.src = portraitDataUrl(p, 64, store.game?.year ?? 1960);
+  img.width = size;
+  img.height = size;
+  img.alt = p.name;
+  img.title = p.name;
+  img.className = 'px';
+  return img;
+});
 
 /** Leitor de tela: resume o briefing após avançar. */
 function announce(msg: string): void {
@@ -157,13 +171,13 @@ function panel(): HTMLElement {
     case 'plan': return centralPanel(g);
     case 'charts': return chartsPanel(g);
     case 'artists': return artistsPanel(g);
-    case 'market': return h('div', { class: 'panel' }, tabs('marketHub', [
+    case 'market': return h('div', { class: 'hub' }, tabs('marketHub', [
       { id: 'classic', label: t(l('Radar e pipeline', 'Radar and pipeline')), icon: 'fans', render: () => marketPanel(g) },
       { id: 'discovery', label: t(l('Olheiros, concursos e demos', 'Scouts, contests and demos')), icon: 'trophy', badge: g.demos.filter((d) => !d.heard).length || undefined, render: () => h('div', null, scoutsSection(g), contestsSection(g), demosSection(g)) },
       { id: 'auctions', label: t(l('Leilões', 'Auctions')), icon: 'gavel', badge: g.auctions.filter((a) => a.status === 'open').length || undefined, render: () => auctionsSection(g) },
       { id: 'rivals2', label: t(l('Rivais e inteligência', 'Rivals and intel')), icon: 'camera', render: () => rivalsExtra(g) },
     ], render));
-    case 'media': return h('div', { class: 'panel' }, tabs('mediaHub', [
+    case 'media': return h('div', { class: 'hub' }, tabs('mediaHub', [
       { id: 'press', label: t(l('Imprensa e crítica', 'Press and critics')), icon: 'newspaper', render: () => pressSection(g) },
       { id: 'channels', label: t(l('Canais e reputação', 'Channels and reputation')), icon: 'radio', render: () => mediaPanel(g) },
     ], render));

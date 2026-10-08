@@ -21,6 +21,7 @@ import { rivals2Month } from './rivals2';
 import { contracts2Month } from './contracts2';
 import { directorMonth as directorImpl } from './director';
 import { yearlyAwards2 } from './awards2';
+import './contentBridge';
 
 export function startPlans(s: GameState, r: Rng): void {
   startPlansImpl(s, r);

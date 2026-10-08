@@ -186,7 +186,8 @@ void neuralDraft; void actLink; void PRODUCERS;
 
 export function studioHub(s: GameState, launch: () => HTMLElement): HTMLElement {
   const picker = actPicker(s);
-  return h('div', { class: 'panel studio-hub' },
+  if (!picker) return launch();
+  return h('div', { class: 'hub studio-hub' },
     picker,
     tabs('creation', [
       { id: 'launch', label: t(l('Lançar', 'Release')), icon: 'cd', render: launch },

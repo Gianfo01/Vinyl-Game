@@ -93,10 +93,10 @@ export function rivals2Month(s: GameState, r: Rng): void {
     const dec = lb.lastDecision ? lb.lastDecision.pt : '';
     if (dec && s.flags[key] !== dec.length + lb.roster.length) {
       s.flags[key] = dec.length + lb.roster.length;
-      report(items, lb, fmtL(l('{b} {d}.', '{b} {d}.'), { b: lb.name, d: lb.lastDecision! }));
+      report(items, lb, fmtL(l('{d}.', '{d}.'), { d: lb.lastDecision! }));
     }
     const rel = Object.values(s.releases).filter((x) => x.owner === lb.id && s.week - x.week < 5);
-    if (rel.length) report(items, lb, fmtL(l('{b} lançou {n} obra(s), destaque "{t}".', '{b} released {n} work(s), led by "{t}".'), { b: lb.name, n: rel.length, t: rel[0].title }));
+    if (rel.length) report(items, lb, fmtL(l('lançou {n} obra(s), destaque "{t}".', 'released {n} work(s), led by "{t}".'), { n: rel.length, t: rel[0].title }));
     // rivalidade pessoal decai devagar, mas nunca some sozinha
     if (s.rivalries[lb.id]) s.rivalries[lb.id] = Math.max(5, s.rivalries[lb.id] * 0.99);
     // aliciamento: artista do jogador nos últimos meses de contrato ou com confiança baixa
@@ -106,7 +106,7 @@ export function rivals2Month(s: GameState, r: Rng): void {
       const target = mine.filter((a) => !a.playerBand && a.fame > 20 && (a.trust < 45 || (a.contractId && s.contracts[a.contractId].endWeek - s.week < 26))).sort((a, b) => b.fame - a.fame)[0];
       if (target && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
         emitEvent(s, r, 'poach_attempt', { act: target.id, label: lb.id });
-        report(items, lb, fmtL(l('{b} tentou aliciar {a}.', '{b} tried to poach {a}.'), { b: lb.name, a: target.name }));
+        report(items, lb, fmtL(l('tentou aliciar {a}.', 'tried to poach {a}.'), { a: target.name }));
       }
     }
     // espionagem: rival hostil cola um lançamento na semana do seu
@@ -114,7 +114,7 @@ export function rivals2Month(s: GameState, r: Rng): void {
       const pr = s.pendingReleases[0];
       s.flags[`spied:${pr.id}`] = 1;
       emitEvent(s, r, 'spy_caught', { label: lb.id, pending: pr.id });
-      report(items, lb, fmtL(l('{b} descobriu sua data de lançamento.', '{b} found out your release date.'), { b: lb.name }));
+      report(items, lb, l('descobriu sua data de lançamento.', 'found out your release date.'));
     }
   }
   // falências entre rivais criam oportunidade de compra; aquisições entre eles já acontecem em rivals.ts

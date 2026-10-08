@@ -26,16 +26,16 @@ export interface ProducerDef {
 }
 
 export const SIGNATURES: Record<ProducerDef['signature'], { name: L; prod: number; perf: number; orig: number; families: string[] }> = {
-  wall_of_sound: { name: l('Parede de som', 'Wall of sound'), prod: 8, perf: 0, orig: -2, families: ['pop', 'rock', 'soul'] },
+  wall_of_sound: { name: l('Parede de som', 'Wall of sound'), prod: 8, perf: 0, orig: -2, families: ['pop', 'rock', 'rnb'] },
   lofi: { name: l('Lo-fi caseiro', 'Lo-fi'), prod: -6, perf: 2, orig: 10, families: ['rock', 'hiphop', 'electronic'] },
   maximalist: { name: l('Maximalista', 'Maximalist'), prod: 10, perf: -2, orig: 2, families: ['pop', 'electronic'] },
-  dry: { name: l('Seco e cru', 'Dry and raw'), prod: 2, perf: 6, orig: 4, families: ['rock', 'blues_jazz', 'folk'] },
-  organic: { name: l('Orgânico ao vivo', 'Organic live'), prod: 4, perf: 8, orig: 0, families: ['blues_jazz', 'brazil', 'latin', 'folk'] },
+  dry: { name: l('Seco e cru', 'Dry and raw'), prod: 2, perf: 6, orig: 4, families: ['rock', 'blues_jazz', 'country_folk'] },
+  organic: { name: l('Orgânico ao vivo', 'Organic live'), prod: 4, perf: 8, orig: 0, families: ['blues_jazz', 'brazil', 'latin', 'country_folk'] },
   trap808: { name: l('Graves 808', '808 low end'), prod: 7, perf: 0, orig: 3, families: ['hiphop', 'electronic'] },
   neural: { name: l('Síntese neural', 'Neural synthesis'), prod: 12, perf: -4, orig: 5, families: ['electronic', 'pop'] },
   swing: { name: l('Big band e swing', 'Big band swing'), prod: 5, perf: 5, orig: 0, families: ['blues_jazz', 'pop'] },
   dub: { name: l('Dub e eco', 'Dub and echo'), prod: 6, perf: 0, orig: 6, families: ['caribbean', 'electronic'] },
-  glossy: { name: l('Polido de rádio', 'Radio gloss'), prod: 9, perf: 0, orig: -4, families: ['pop', 'country'] },
+  glossy: { name: l('Polido de rádio', 'Radio gloss'), prod: 9, perf: 0, orig: -4, families: ['pop', 'country_folk'] },
 };
 
 const P = (id: string, name: string, signature: ProducerDef['signature'], from: number, to: number, skill: number, fee: number, ego = 40): ProducerDef =>
