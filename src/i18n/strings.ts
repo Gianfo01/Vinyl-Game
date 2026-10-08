@@ -2,6 +2,7 @@
 
 import type { L } from '../data/world';
 import { fmtL, type Param } from '../sim/util';
+import { realText } from '../data/realnames';
 
 export type Lang = 'pt' | 'en';
 let lang: Lang = 'pt';
@@ -21,7 +22,7 @@ export function locale(): string {
 
 export function t(text: L | undefined, params?: Record<string, Param>): string {
   if (!text) return '';
-  return params ? fmtL(text, params)[lang] : text[lang];
+  return realText(params ? fmtL(text, params)[lang] : text[lang]);
 }
 
 const s = (pt: string, en: string): L => ({ pt, en });

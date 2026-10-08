@@ -25,6 +25,8 @@ export interface RunConfig {
   bandName?: string;
   bandGenre?: string;
   contentFilters: string[]; // tags desligadas
+  /** rodada 6: artistas, selos, festivais e mídia com nomes reais */
+  realNames?: boolean;
   /** personagem do jogador (rodada 5); ausente = gerado */
   character?: CharacterSpec;
 }

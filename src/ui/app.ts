@@ -28,6 +28,7 @@ import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
 import { copyText, exportSaveText, importSaveText } from './store';
+import { applyRealNames } from '../data/realnames';
 import { EXTRA_AREAS, extraSections, mergeTabs, showPendingCutscene } from './registry';
 import './sys';
 
@@ -211,6 +212,7 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
 
 export function render(): void {
   if (!store.game) return titleScreen(root, startGame);
+  applyRealNames(!!store.game.config.realNames);
   if (store.prefs.eraSkin !== false) document.documentElement.dataset.era = String(Math.floor(store.game.year / 10) * 10);
   else delete document.documentElement.dataset.era;
   const scroll = document.querySelector('main')?.scrollTop ?? 0;

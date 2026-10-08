@@ -116,3 +116,22 @@ describe('capital', () => {
     invariant(s);
   });
 });
+
+describe('nomes reais', () => {
+  it('atos históricos, selos, festivais e textos fixos aparecem com nomes reais', async () => {
+    const { applyRealNames } = await import('../src/data/realnames');
+    const { FESTIVALS } = await import('../src/data/catalog');
+    const { t } = await import('../src/i18n/strings');
+    const s = mk('r6-real', { startYear: 1965, mode: 'historic', realNames: true });
+    const names = Object.values(s.acts).map((a) => a.name);
+    expect(names).toContain('The Beatles');
+    const beatles = Object.values(s.acts).find((a) => a.name === 'The Beatles')!;
+    expect(beatles.members.map((m) => s.persons[m].name)).toContain('Paul McCartney');
+    expect(Object.values(s.labels).map((x) => x.name)).toContain('Motown');
+    expect(FESTIVALS.map((f) => f.name)).toContain('Woodstock');
+    expect(t({ pt: 'Top 10 da WorldSound 100', en: 'WorldSound 100 top 10' })).toContain('Billboard Hot 100');
+    applyRealNames(false);
+    expect(FESTIVALS.map((f) => f.name)).toContain('Timberfield Rock');
+    expect(t({ pt: 'WorldSound 100', en: 'WorldSound 100' })).toBe('WorldSound 100');
+  });
+});

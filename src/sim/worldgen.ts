@@ -7,6 +7,7 @@ import { registerMovementGenres } from './culture';
 import { clamp, hashString, Rng, seedState } from '../core/rng';
 import { nominal } from '../core/money';
 import { CATALOG_ACTS, CATALOG_LABELS } from '../data/catalog';
+import { REAL_ACTS, REAL_LABELS, applyRealNames } from '../data/realnames';
 import { STAFF_ROLES, TECHS } from '../data/rules';
 import { CITIES, GENRES, MARKETS, cityById, familyOf, genreById, type MarketId } from '../data/world';
 import { actTalent, makeAct, personName } from './people';
@@ -133,6 +134,13 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
     rs: u.rs,
   });
   act.name = u.name;
+  // modo nomes reais: integrantes conhecidos com os nomes de verdade
+  const real = s.config.realNames ? REAL_ACTS[u.no] : undefined;
+  if (real) {
+    act.name = real.name;
+    const names = real.members ?? (act.members.length === 1 ? [real.name] : []);
+    act.members.forEach((id, i) => { if (names[i] && s.persons[id]) s.persons[id].name = names[i]; });
+  }
   if (activeYears > 0) {
     act.status = 'active';
     act.fame = clamp((15 + activeYears * 4) * (u.potential / 95) + r.normal(0, 6), 5, 85);
@@ -149,6 +157,7 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
 }
 
 export function createGame(cfg: RunConfig): GameState {
+  applyRealNames(!!cfg.realNames);
   const startDay = 0;
   const s: GameState = {
     ...emptyExt(),
@@ -230,7 +239,7 @@ export function createGame(cfg: RunConfig): GameState {
   // L3 — mercado: gravadoras
   for (const def of CATALOG_LABELS) {
     const founded = cfg.mode === 'chaos' ? def.founded + r.int(-12, 12) : cfg.mode === 'free' ? def.founded + r.int(-4, 4) : def.founded;
-    makeLabel(s, r, { ...def, founded: def.id === 'cortex' ? Math.max(founded, s.techDates.synthetic_voice - 2) : founded });
+    makeLabel(s, r, { ...def, name: cfg.realNames ? REAL_LABELS[def.id] ?? def.name : def.name, founded: def.id === 'cortex' ? Math.max(founded, s.techDates.synthetic_voice - 2) : founded });
   }
   const activeCount = Object.values(s.labels).filter((x) => x.active).length;
   for (let i = 0; i < Math.max(0, 5 - activeCount); i++) {
