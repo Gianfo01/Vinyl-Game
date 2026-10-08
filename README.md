@@ -90,6 +90,30 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 | Conteúdo | 155 cidades, subgêneros por era (1920–59 e 2030–40 detalhados), ~120 eventos novos, plataformas, críticos, produtores, marcas e prêmios fictícios **com o equivalente real ao lado** |
 | Interface | **Sede em pixel art isométrica** por era e nível, pessoas andando conforme a atividade real, avatares combináveis com editor, ícones em pixel art, retratos; novas áreas Central, Mundo e Negócios; tutorial; modos para daltonismo; leitor de tela; comparador de carreiras |
 
+## Rodada 6: personagem com personalidade, capital, gestão, intriga e nomes reais
+
+- **Scouting e pipeline consertados:** 3 ações por mês no mínimo (mais A&R, olheiros, sede e bônus), custos menores, filtros e ordenação. O pipeline agora é interativo (setas entre colunas, aprofundar, oferta, contraproposta, descartar), e as colunas Oferta e Negociação seguem as ofertas reais.
+- **Todos os artistas (tecla A):** lista de todos os atos e pessoas do mundo, com busca (inclusive por integrante), filtros e ordenação, além de botões para abrir a página, seguir no radar ou fazer oferta.
+- **Perks** (`src/sim/perks.ts`): um registro único de bônus que mexem na simulação. Origem, traços, estilo de vida, cartas, mutators, sócios, departamentos e decisões entram nele. O quadro "Seus bônus" mostra tudo.
+- **Personagem:**
+  - Ficha de criação com nome, apelido, pronome, idade, cidade natal, gênero do coração, visual, lema, 3 traços (opostos se excluem), estilo de vida e pontos livres, com prévia dos atributos resultantes.
+  - 11 origens com efeitos reais. As 5 novas são Cria da periferia, Maestro, Crítico, Engenheiro e Ex-produtor de turnê.
+  - 20 traços. O ouvido absoluto é hereditário.
+- **Estilos de vida (Crusader Kings):** Mentor, Magnata, Fazedor de hits, Garimpeiro, Showman e Intrigante. Cada um tem uma árvore de 6 perks liberada com XP mensal. Também há válvulas de escape quando o estresse estoura.
+- **Temperamento × gênero:** traços como Rebelde, Cria da rua, Espiritual, Festeiro, Romântico, Intelectual, Raiz, Sonhador e Virtuoso puxam o artista para certos gêneros. Combinar melhora composição e gravação; contrariar derruba a moral.
+- **Cartas e mutators:** 12 cartas novas, com metas próprias, e 14 mutators novos.
+- **Capital e sócios** (Negócios → Capital e sócios):
+  - Aporte, empréstimo e retirada entre o seu bolso e a empresa, com consequências. Também há o cartão corporativo, com risco de auditoria.
+  - 8 tipos de investidor, cada um com gostos, metas, cláusulas e opinião com modificadores que decaem.
+  - Recompra de participação, dividendos e IPO com escolha de fatia, banco e roadshow.
+  - Confiança do conselho: quem tem menos de 50% das ações pode ser demitido.
+- **Gestão na Sede:** ampliar a matriz, comprar o prédio, 8 departamentos com 3 níveis, abrir filiais em qualquer cidade, definir foco e diretor regional delas e abrir mercados.
+- **Intriga (Mercado → Intriga e segredos):**
+  - Segredos de artistas e de rivais, que viram ganchos fracos ou fortes.
+  - Tramas com agentes: investigar, aproximar-se, roubar artista, sabotar e difamar.
+  - Decisões grandes, como escola de música, estúdio lendário, premiação própria, turnê beneficente, retiro criativo, gala, manifesto e pacto de não agressão.
+- **Nomes reais (opcional, no novo jogo):** os 100 atos históricos (com integrantes conhecidos), as gravadoras, os festivais, a mídia, as plataformas, as paradas e os prêmios aparecem com os nomes reais.
+
 ## Rodada 5: pessoas de verdade, você no jogo, críticas e entrevistas
 
 | O quê | Como ficou |
@@ -161,4 +185,4 @@ tools         Simulador sem interface
 tests         Invariáveis do GDD §27
 ```
 
-O universo é 100% ficcional. A coluna "referência real" do Catálogo é interna e **não** entra no código.
+Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, para uso pessoal) troca atos históricos, selos, festivais, mídia e prêmios pelos nomes reais (`src/data/realnames.ts`).

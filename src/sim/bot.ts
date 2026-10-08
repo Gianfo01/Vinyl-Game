@@ -35,7 +35,7 @@ export function botMonth(s: GameState): void {
     const ks = Object.values(s.knowledge)
       .filter((k) => s.acts[k.actId] && !s.acts[k.actId].owner && k.degree < 4)
       .sort((a, b) => (estimate(s, b.actId, 'talent')?.mid ?? s.acts[b.actId].fame) + b.degree * 4 - ((estimate(s, a.actId, 'talent')?.mid ?? s.acts[a.actId].fame) + a.degree * 4));
-    for (const k of ks.slice(0, 3)) {
+    for (const k of ks.slice(0, s.player.cash > money(s, 15000) ? 3 : 1)) {
       if (!canScout(s, k.actId).ok) break;
       scoutAct(s, k.actId);
     }
