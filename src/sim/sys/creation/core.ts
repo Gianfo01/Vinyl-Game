@@ -1,10 +1,11 @@
+import { deferEvents } from '../../ext4';
 // Criação (rodada 4): gênero × tema com tendências, receita sonora com efeitos, críticas no
 // lançamento (cena), participações e duetos, compositores contratados e fantasmas, encomendas,
 // domínio público e standards, remasterização, capa, videoclipe, trecho viral e divisões.
 
 import { clamp, hashString, type Rng } from '../../../core/rng';
 import { FAMILIES, MARKETS, familyOf, l, type FamilyId, type L, type MarketId } from '../../../data/world';
-import { registerEvents, emitEvent, type EventDef } from '../../events';
+import { emitEvent, type EventDef } from '../../events';
 import { queueCutscene, registerExt4, registerMod, registerSimHook } from '../../ext4';
 import { reviewRelease } from '../../media';
 import { personName } from '../../people';
@@ -626,7 +627,7 @@ const EVENTS_CR: EventDef[] = [
     ],
   },
 ];
-registerEvents(EVENTS_CR);
+deferEvents(EVENTS_CR);
 
 registerSimHook('compose', 'creation', (s, r, a) => { if (a.song) onCompose(s, r, a.song); });
 registerSimHook('launch', 'creation', (s, r, a) => { if (a.release) onLaunch(s, r, a.release); });

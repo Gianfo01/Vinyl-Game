@@ -162,12 +162,14 @@ function fortuneMonth(s: GameState, r: Rng): void {
     const alive = act.members.filter((id) => s.persons[id]?.alive).length || 1;
     const draw = act.cash > 0 ? Math.round((act.cash * 0.05) / alive) : 0;
     act.cash -= draw;
-    const income = Math.max(0, roy - (st.lastRoyalty[p.id] ?? roy)) + draw;
+    // quem ainda não vive de música faz bicos (aulas, bailes, emprego de dia)
+    const sideJob = act.fame < 35 ? money(s, 150 - act.fame * 3) : 0;
+    const income = Math.max(0, roy - (st.lastRoyalty[p.id] ?? roy)) + draw + sideJob;
     st.lastRoyalty[p.id] = roy;
     const spend = lifestyle(s, p.id);
     st.wealth[p.id] += income - spend;
     const w = st.wealth[p.id];
-    if (w < 0) {
+    if (w < -money(s, 800)) {
       addThought(s, p.id, 'broke');
       if (w < -money(s, 4000) && r.chance(0.25) && !st.inbox.some((m) => m.kind === 'request' && m.ref?.person === p.id && !m.resolved)) {
         const amount = money(s, Math.round(-w / money(s, 1) / 500) * 500 + 1000);

@@ -69,7 +69,7 @@ function makeOwner(s: GameState, r: Rng, gen = 1): Owner {
     stress: 25,
     health: 90,
     wealth: money(s, 8000),
-    salary: money(s, 1500),
+    salary: 0,
     house: -1,
     kids: [],
     generation: gen,
@@ -247,7 +247,8 @@ export function ownerMonth(s: GameState, r: Rng, signedBefore: number): void {
   const age = s.year - o.born;
   // salário (retirada) e custo de vida
   if (o.salary > 0) {
-    if (s.player.cash > o.salary) {
+    // a retirada só sai se a empresa aguentar seis meses dela
+    if (s.player.cash > o.salary * 6) {
       post(s, 'owner_salary', -o.salary, 'owner_draw', 'Retirada do dono');
       o.wealth += o.salary;
     } else o.stress = clamp01(o.stress + 3);

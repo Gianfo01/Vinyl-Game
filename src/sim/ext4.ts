@@ -100,3 +100,23 @@ export function queueCutscene(s: GameState, kind: string, data: Record<string, u
   s.cutscenes.push({ id: `cs${s.week}-${s.cutscenes.length}-${kind}`, kind, week: s.week, data });
   if (s.cutscenes.length > 40) s.cutscenes.splice(0, s.cutscenes.length - 40);
 }
+
+// ---------------------------------------------------------------- eventos (sem ciclo de imports)
+
+type EventDefLike = { id: string };
+let registrar: ((defs: never[]) => void) | null = null;
+const pendingEvents: EventDefLike[][] = [];
+
+/**
+ * Registra eventos de um sistema da rodada 4. Como os sistemas podem carregar antes de events.ts
+ * terminar (ciclo de imports), a lista fica na fila até events.ts chamar setEventRegistrar.
+ */
+export function deferEvents<T extends EventDefLike>(defs: T[]): void {
+  if (registrar) registrar(defs as never[]);
+  else pendingEvents.push(defs);
+}
+
+export function setEventRegistrar(fn: (defs: never[]) => void): void {
+  registrar = fn;
+  for (const defs of pendingEvents.splice(0)) fn(defs as never[]);
+}

@@ -1,3 +1,4 @@
+import { deferEvents } from '../../ext4';
 // Segredos e dossiês (Hollywood Animal / Crusader Kings III). Pessoas do elenco, CEOs rivais e o
 // próprio dono têm segredos. Detetives (contratados pelo jogador), jornalistas e rivais podem
 // descobri-los. Usar um segredo funciona — na Mesa de negociação ou contra um CEO rival — e arrisca
@@ -5,7 +6,7 @@
 
 import type { Rng } from '../../../core/rng';
 import { l, type L } from '../../../data/world';
-import { emitEvent, registerEvents, type EventDef } from '../../events';
+import { emitEvent, type EventDef } from '../../events';
 import { openCrisis } from '../../media';
 import type { GameState } from '../../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../../util';
@@ -207,4 +208,4 @@ const SECRET_EVENTS: EventDef[] = [
     ],
   },
 ];
-registerEvents(SECRET_EVENTS);
+deferEvents(SECRET_EVENTS);

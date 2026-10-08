@@ -1,9 +1,10 @@
+import { deferEvents } from '../../ext4';
 // Casa de shows própria (agenda, aluguel a terceiros, bar, acústica), residência em cassino para
 // veteranos e megaeventos beneficentes globais (modelo 1985).
 
 import { clamp, type Rng } from '../../../core/rng';
 import { cityById, l, type L } from '../../../data/world';
-import { emitEvent, registerEvents, type EventDef } from '../../events';
+import { emitEvent, type EventDef } from '../../events';
 import { applyMods, registerMod, registerSimHook } from '../../ext4';
 import { gigEstimate } from '../../live';
 import type { Act, GameState } from '../../types';
@@ -225,7 +226,7 @@ const MEGA_EVENT: EventDef = {
     { id: 'decline', label: l('Recusar', 'Decline'), apply: (s) => { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 2, 0, 100); } },
   ],
 };
-registerEvents([MEGA_EVENT]);
+deferEvents([MEGA_EVENT]);
 
 registerMod('chartUnits', 'live-mega', (s, value, ctx) => {
   const rel = ctx.release;

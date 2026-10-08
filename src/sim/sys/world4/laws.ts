@@ -1,9 +1,10 @@
+import { deferEvents } from '../../ext4';
 // Leis e indústria: sindicato dos músicos (piso, acordo, greves), sociedades de direitos rivais,
 // associação do setor com votação de leis, selo de conteúdo explícito e pirataria com resposta.
 
 import { clamp, type Rng } from '../../../core/rng';
 import { cityById, familyOf, l, type L } from '../../../data/world';
-import { registerEvents, type EventDef } from '../../events';
+import { type EventDef } from '../../events';
 import { registerMod } from '../../ext4';
 import type { GameState } from '../../types';
 import { fmtL, hasMutator, hasTech, money, notify, post, remember } from '../../util';
@@ -138,7 +139,7 @@ const lawEvents: EventDef[] = LAWS.map((d) => ({
     { id: 'abstain', label: l('Abster-se', 'Abstain'), apply: () => {} },
   ],
 }));
-registerEvents(lawEvents);
+deferEvents(lawEvents);
 
 function lawsMonth(s: GameState, r: Rng, emit: (id: string) => void): void {
   const w = w4(s);

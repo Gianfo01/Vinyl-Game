@@ -13,6 +13,7 @@ import type { RunConfig } from './types';
 import { advanceMonth } from './tick';
 import { hqCaps } from './branches';
 import { resolveDecision } from './events';
+import { acceptCommission } from './sys/creation/core';
 
 export function botMonth(s: GameState): void {
   const salaries = s.player.staff.reduce((t, x) => t + x.salary, 0);
@@ -24,6 +25,9 @@ export function botMonth(s: GameState): void {
     fireStaff(s, top.id);
   }
   void recentRevenue;
+  // encomendas (jingles, trilhas): renda previsível para quem está começando
+  const acts = playerActs(s);
+  for (const c of s.x4?.creation?.commissions ?? []) if (c.status === 'offered' && acts.length) acceptCommission(s, c.id, acts[c.id.length % acts.length]);
   // em crise, aceita vender masters em vez de deixar a empresa fechar
   for (const d of [...s.decisions]) if (d.eventId === 'distress_sale' && s.player.cash < 0) resolveDecision(s, d.id, 'sell_catalog');
   if (s.config.role !== 'artist') {

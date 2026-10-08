@@ -1,10 +1,11 @@
+import { deferEvents } from '../../ext4';
 // Marcos da história da indústria fonográfica (1925–2024) e dos mercados mundiais como regras
 // datadas: cada marco vira notícia e memória, aplica um efeito mecânico real (modificador de apelo,
 // gancho de gravação, mudança de regra) e, quando faz sentido, abre uma decisão.
 
 import { clamp, type Rng } from '../../../core/rng';
 import { familyOf, l, type L } from '../../../data/world';
-import { emitEvent, registerEvents, type EventDef } from '../../events';
+import { emitEvent, type EventDef } from '../../events';
 import { registerMod, registerSimHook } from '../../ext4';
 import { songQ } from '../../production';
 import type { Act, GameState, Release } from '../../types';
@@ -597,7 +598,7 @@ const EVENTS: EventDef[] = [
     ],
   },
 ];
-registerEvents(EVENTS);
+deferEvents(EVENTS);
 
 function setBet(s: GameState, bet: FormatBet): void {
   w4(s).formatBet = bet;

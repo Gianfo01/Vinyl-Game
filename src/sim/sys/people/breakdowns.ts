@@ -1,10 +1,11 @@
+import { deferEvents } from '../../ext4';
 // Colapsos (RimWorld): abaixo de um limiar de moral, chance de a pessoa surtar. O tipo depende dos
 // traços — sumir antes do show, quebrar equipamento, bebedeira, sair da banda no palco, declaração
 // ofensiva, recaída. Efeitos reais (data cancelada, multa, reputação, crise) e memória no diário.
 
 import type { Rng } from '../../../core/rng';
 import { l, type L } from '../../../data/world';
-import { emitEvent, registerEvents, type EventDef } from '../../events';
+import { emitEvent, type EventDef } from '../../events';
 import { openCrisis } from '../../media';
 import type { Act, GameState, Person } from '../../types';
 import { fmtL, money, notify, post, remember } from '../../util';
@@ -201,5 +202,5 @@ const QUIT: EventDef[] = [
     ],
   },
 ];
-registerEvents(QUIT);
+deferEvents(QUIT);
 

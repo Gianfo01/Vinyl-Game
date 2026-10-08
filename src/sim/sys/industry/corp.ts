@@ -1,10 +1,11 @@
+import { deferEvents } from '../../ext4';
 // Grupo empresarial: streaming próprio, mídia própria (rádio, TV, revista), promotora de shows e
 // ticketeira, fábrica de instrumentos com endossos, conselho (modo carreira), fusões entre rivais
 // com órgão antitruste, e câmbio/inflação por mercado.
 
 import { clamp, type Rng } from '../../../core/rng';
 import { MARKETS, cityById, l, type L, type MarketId } from '../../../data/world';
-import { registerEvents, emitEvent, type EventDef } from '../../events';
+import { emitEvent, type EventDef } from '../../events';
 import { registerMod, registerSimHook } from '../../ext4';
 import type { GameState } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
@@ -350,7 +351,7 @@ const EVENTS_IND: EventDef[] = [
     ],
   },
 ];
-registerEvents(EVENTS_IND);
+deferEvents(EVENTS_IND);
 
 registerSimHook('month', 'industry:corp', (s, r) => { streamingMonth(s, r); outletsMonth(s, r); venturesMonth(s, r); fxMonth(s); });
 registerSimHook('year', 'industry:board', (s, r) => { boardYear(s, r); mergersYear(s, r); s.x4.industry.fxLossYear = 0; });

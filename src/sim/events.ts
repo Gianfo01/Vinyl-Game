@@ -2,6 +2,7 @@
 // Cada evento: pré-condições, participantes compatíveis, cooldown, tags de conteúdo,
 // opções e efeitos. O diretor escolhe entre os válidos; nunca inventa evento sem causa.
 
+import { setEventRegistrar } from './ext4';
 import { clamp, type Rng } from '../core/rng';
 import { toReal } from '../core/money';
 import { FESTIVALS, MEDIA } from '../data/catalog';
@@ -942,3 +943,6 @@ export function estimateMonthlyBurn(s: GameState): number {
   return salaries + money(s, 500 + s.player.hq * 1500);
 }
 
+
+// eventos dos sistemas da rodada 4 que carregaram antes deste módulo
+setEventRegistrar(registerEvents as (defs: never[]) => void);
