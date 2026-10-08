@@ -3,7 +3,7 @@
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
 import { CARDS, ENDINGS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
 import { MARKETS, familyOf, l } from '../../data/world';
-import { S, t } from '../../i18n/strings';
+import { S, locale, t } from '../../i18n/strings';
 import { availableEquipment, buyEquipment, fireStaff, loanOffer, managementLoad, monthlyCosts, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from '../../sim/economy';
 import { cardGoalDone, hqCapacityText, legacyTotal, milestones } from '../../sim/legacy';
 import { festivalSlot, gigEstimate, maxVenueTier } from '../../sim/live';
@@ -18,7 +18,11 @@ import { openRelease } from '../ficha';
 import { HqView } from '../hq';
 import { store } from '../store';
 import { inspect } from '../common';
-import { genreById } from '../../data/world';
+import { CITIES, cityById, genreById } from '../../data/world';
+import { nominal } from '../../core/money';
+import { countryName, unitOfCity } from '../../data/geo';
+import { planRoute } from '../../sim/travel';
+import { WorldMap, glyphCanvas, transportName, type MapCity } from '../map';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -116,12 +120,127 @@ export function catalogPanel(s: GameState): HTMLElement {
   );
 }
 
+// ---------- Mapa de turnê (demonstração do planejador) ----------
+let tourMap: WorldMap | null = null;
+let tourStops: string[] = [];
+let tourSummary: HTMLElement | null = null;
+
+function tourCrew(s: GameState): number {
+  const a = playerActs(s).map((id) => s.acts[id])[0];
+  return a ? a.members.length + 2 : 4;
+}
+
+/** Cidades com público/cena dos atos do jogador (verde), territórios abertos (neutro) e sem acesso (cinza). */
+function tourCities(s: GameState): MapCity[] {
+  const acts = playerActs(s).map((id) => s.acts[id]);
+  const genres = new Set(acts.map((a) => a.genre));
+  const homeCities = new Set(acts.map((a) => a.city));
+  const scene = new Map<string, number>();
+  for (const [k, v] of Object.entries(s.scenes)) {
+    const [city, genre] = k.split(':');
+    if (genres.has(genre) && v > 0) scene.set(city, Math.max(scene.get(city) ?? 0, v));
+  }
+  return CITIES.map((c) => {
+    const audience = homeCities.has(c.id) || scene.has(c.id) || c.id === s.config.homeCity;
+    const open = s.player.territories.includes(c.market);
+    const order = tourStops.indexOf(c.id);
+    return {
+      id: c.id,
+      color: audience ? 'var(--good)' : open ? 'var(--map-city)' : undefined,
+      locked: !audience && !open,
+      size: audience ? 1.15 : 1,
+      badge: order >= 0 ? String(order + 1) : undefined,
+    };
+  });
+}
+
+function tourSummaryView(s: GameState): HTMLElement {
+  const home = s.config.homeCity;
+  const crew = tourCrew(s);
+  if (!tourStops.length) {
+    return h('p', { class: 'muted small' }, t(l('Clique nas cidades do mapa para montar uma rota a partir de {c} (equipe de {n}). Arraste para mover, role ou use +/− para zoom.', 'Click cities on the map to build a route from {c} (crew of {n}). Drag to pan; scroll or use +/− to zoom.'), { c: cityName(home), n: crew }));
+  }
+  const plan = planRoute(tourStops, home, s.year, s.month, crew);
+  const money$ = (real: number) => $(nominal(real, s.year));
+  const visaCell = (v: (typeof plan.legs)[number]['visa']) => {
+    if (!v.needed) return h('span', { class: 'muted', title: t(v.reason) }, '—');
+    const cls = v.boycott || v.denyChance > 0.5 ? 'bad' : v.denyChance > 0.1 ? 'warn' : '';
+    return h('span', { title: t(v.reason) }, pill(`${v.processingDays}d · ${Math.round(v.denyChance * 100)}%`, cls));
+  };
+  const rows = plan.legs.map((g, i) => {
+    const st = plan.stops[i];
+    const unit = unitOfCity(g.to, st?.year ?? s.year);
+    return h('tr', null,
+      h('td', null, `${cityName(g.from)} → `, h('b', null, cityName(g.to)), h('div', { class: 'muted small' }, unit ? t(unit.name) : t(countryName(null)))),
+      h('td', null, `${N(g.km)} km`),
+      h('td', { class: 'nowrap' }, glyphCanvas(g.mode, 2), ' ', transportName(g.mode)),
+      h('td', null, String(g.days).replace('.', getDecimal())),
+      h('td', null, money$(g.costReal)),
+      h('td', null, visaCell(g.visa)),
+      h('td', { class: 'nowrap' }, st ? [glyphCanvas(st.climate.icon, 2), ` ${Math.round(st.climate.tempC)}°`] : null),
+    );
+  });
+  const tt = plan.totals;
+  // notas agrupadas: mesmo texto, várias cidades
+  const grouped = new Map<string, string[]>();
+  const addNote = (text: string, city?: string) => { const g = grouped.get(text) ?? []; if (city && !g.includes(city)) g.push(city); grouped.set(text, g); };
+  for (const g of plan.legs) if (g.borderNote) addNote(t(g.borderNote));
+  for (const v of tt.visas) addNote(t(v.reason), cityName(v.to));
+  const notes = [...grouped.entries()].map(([text, cities]) => h('li', { class: /apartheid/.test(text) ? 'bad' : '' }, cities.length ? `${cities.join(', ')}: ${text}` : text));
+  return h('div', null,
+    h('table', { class: 'tbl compact route' },
+      h('thead', null, h('tr', null, h('th', null, t(l('Trecho', 'Leg'))), h('th', null, t(l('Distância', 'Distance'))), h('th', null, t(l('Meio', 'Mode'))), h('th', null, t(l('Dias', 'Days'))), h('th', null, t(l('Custo', 'Cost'))), h('th', null, t(l('Visto', 'Visa'))), h('th', null, t(l('Clima', 'Weather'))))),
+      h('tbody', null, rows),
+      h('tfoot', null, h('tr', null, h('th', null, t(l('Total', 'Total'))), h('th', null, `${N(tt.km)} km`), h('th', null, ''), h('th', null, String(tt.days).replace('.', getDecimal())), h('th', null, money$(tt.costReal + tt.visaCostReal)),
+        h('th', null, tt.visas.length ? pill(`${tt.visas.length} · ${tt.leadDays}d · ${Math.round(tt.maxDenyChance * 100)}%`, tt.boycott || tt.maxDenyChance > 0.5 ? 'bad' : tt.maxDenyChance > 0.1 ? 'warn' : '') : '—'), h('th', null, ''))),
+    ),
+    notes.length ? h('ul', { class: 'small route-notes' }, notes) : null,
+    h('div', { class: 'row' },
+      h('span', { class: 'muted small' }, t(l('Custos em valores de {y} (passagens + frete; vistos inclusos no total). Prazo de vistos corre antes da partida.', 'Costs in {y} money (fares + freight; visas included in the total). Visa processing runs before departure.'), { y: s.year })),
+      h('button', { class: 'btn small ghost', onclick: () => { tourStops = []; refreshTour(s); } }, t(l('Limpar rota', 'Clear route'))),
+    ),
+  );
+}
+
+const getDecimal = () => (locale().startsWith('pt') ? ',' : '.');
+
+function refreshTour(s: GameState): void {
+  tourMap?.update({ cities: () => tourCities(s), selected: [...tourStops], route: tourStops.length ? [s.config.homeCity, ...tourStops] : [], crewSize: tourCrew(s) });
+  if (tourSummary) {
+    const next = tourSummaryView(s);
+    tourSummary.replaceChildren(next);
+  }
+}
+
+function tourMapSection(s: GameState): HTMLElement {
+  tourStops = tourStops.filter((id) => cityById[id] && id !== s.config.homeCity);
+  const opts = {
+    getYear: () => store.game?.year ?? s.year,
+    getMonth: () => store.game?.month ?? s.month,
+    cities: () => tourCities(s),
+    selected: [...tourStops],
+    route: tourStops.length ? [s.config.homeCity, ...tourStops] : [],
+    crewSize: tourCrew(s),
+    mode: 'tour' as const,
+    onCityClick: (id: string) => {
+      if (id === s.config.homeCity) return;
+      tourStops = tourStops.includes(id) ? tourStops.filter((x) => x !== id) : [...tourStops, id];
+      refreshTour(s);
+    },
+  };
+  if (!tourMap) tourMap = new WorldMap(opts);
+  else tourMap.update(opts);
+  tourSummary = h('div', { class: 'route-summary' }, tourSummaryView(s));
+  return section(t(l('Mapa', 'Map')), tourMap.element, tourSummary);
+}
+
 // ---------- Shows ----------
 export function showsPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
   const fests = FESTIVALS.filter((f) => f.start <= s.year && !f.scouting);
   return h('div', { class: 'panel shows' },
     h('div', { class: 'col-main' },
+      tourMapSection(s),
       ids.length ? ids.map((id) => {
         const a = s.acts[id];
         const mt = maxVenueTier(s, a);
