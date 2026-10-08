@@ -8,6 +8,7 @@ import { clamp, hashString, Rng, seedState } from '../core/rng';
 import { nominal } from '../core/money';
 import { CATALOG_ACTS, CATALOG_LABELS } from '../data/catalog';
 import { REAL_ACTS, REAL_LABELS, applyRealNames } from '../data/realnames';
+import { REAL_CLASSIC } from '../data/realacts_classic';
 import { STAFF_ROLES, TECHS } from '../data/rules';
 import { CITIES, GENRES, MARKETS, cityById, familyOf, genreById, type MarketId } from '../data/world';
 import { actTalent, makeAct, personName } from './people';
@@ -255,10 +256,12 @@ export function createGame(cfg: RunConfig): GameState {
     let potential = r.int(80, 97);
     if (hasMutator(s, 'rare_talent')) potential -= r.int(0, 10);
     if (hasMutator(s, 'no_stars')) potential -= 6;
-    const u = { no: ca.no, name: ca.name, genre: ca.genre, city: ca.city, members: ca.members, debut: ca.debut + jitter, potential, rs: ca.rs, synthetic: ca.synthetic };
+    const realD = cfg.realNames ? REAL_CLASSIC[ca.no]?.d : undefined;
+    const u = { no: ca.no, name: ca.name, genre: ca.genre, city: ca.city, members: ca.members, debut: (realD ?? ca.debut) + jitter, potential, rs: ca.rs, synthetic: ca.synthetic };
     const activeYears = cfg.startYear - u.debut;
     if (activeYears >= 0) {
-      const careerLen = r.int(14, 40);
+      const realE = cfg.realNames ? REAL_CLASSIC[ca.no]?.e : undefined;
+      const careerLen = realE !== undefined ? realE - u.debut + (cfg.mode === 'historic' ? 0 : r.int(-3, 3)) : r.int(14, 40);
       if (activeYears > careerLen) continue; // já faz parte da história
       const act = spawnCatalogAct(s, r, u, activeYears);
       act.careerEnd = u.debut + careerLen;

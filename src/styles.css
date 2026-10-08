@@ -590,3 +590,32 @@ img.portrait { border: 1px solid var(--line); }
 .dir-tbl td { vertical-align: middle; }
 .panel.directory { display: block; }
 .panel.directory > * { margin-bottom: 0.5rem; }
+
+/* rodada 7: menu agrupado */
+.nav.grouped { gap: 4px; }
+.nav-group { display: flex; flex-direction: column; gap: 1px; }
+.nav-head { font-weight: 600; }
+.nav-sub { display: flex; flex-direction: column; gap: 1px; padding-left: 0.9rem; border-left: 2px solid var(--line); margin-left: 0.9rem; }
+.nav-sub button { padding: 0.35rem 0.5rem; font-size: 0.92rem; }
+.nav-head.on:not(:only-child) { background: var(--panel-2); color: var(--ink); }
+.subnav { display: none; gap: 0.3rem; overflow-x: auto; margin-bottom: 0.75rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--line); }
+.subnav button { flex: 0 0 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 0.3rem 0.7rem; font: inherit; font-size: 0.85rem; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+.subnav button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+@media (max-width: 900px) {
+  .nav.grouped .nav-sub { display: none; }
+  .nav.grouped { flex-direction: row; }
+  .subnav { display: flex; }
+}
+
+/* rodada 7: atributos das composições */
+.song-attrs { display: grid; gap: 2px; margin: 0.35rem 0; font-size: 0.85rem; }
+.sa-row { display: grid; grid-template-columns: 9.5rem minmax(4rem, 10rem) 3.2rem 1fr; align-items: center; gap: 0.45rem; }
+.song-attrs.compact .sa-row { grid-template-columns: 7rem minmax(3rem, 7rem) 3rem; }
+.sa-name { color: var(--muted); }
+.sa-q .sa-name { color: var(--ink); font-weight: 600; }
+.sa-derived .sa-name { font-style: italic; }
+.sa-bar { height: 0.55rem; background: var(--line); border-radius: 99px; overflow: hidden; position: relative; }
+.sa-bar > span { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 99px; }
+.sa-val small { color: var(--muted); font-weight: 400; }
+.sa-val.gA { color: var(--good); } .sa-val.gE { color: var(--bad); }
+@media (max-width: 700px) { .sa-row { grid-template-columns: 7rem 1fr 3rem; } .sa-what { display: none; } }

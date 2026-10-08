@@ -15,7 +15,6 @@ import { h, select } from '../dom';
 import { openAct } from '../ficha';
 import { personCard } from '../pages';
 import { store } from '../store';
-import { playPreview } from '../audio';
 import { EXTRA_ACTIONS } from '../../data/actions';
 import { agendaLoad, slotLoad } from '../../sim/capacity';
 import { freeCapacity } from '../../sim/agenda';
@@ -86,7 +85,7 @@ export function artistsPanel(s: GameState): HTMLElement {
         h('div', { class: 'ficha-head' }, logo(a, 64),
           h('div', null,
             h('div', null, `${genreName(a.genre)} · ${cityName(a.city)} · `, pill(statusName(a.status))),
-            h('div', null, h('button', { class: 'link', onclick: () => openAct(a.id) }, t(S.inspect)), ' · ', h('button', { class: 'link', onclick: () => playPreview(a.logoSeed, a.genre, s.year) }, t(S.preview))),
+            h('div', null, h('button', { class: 'link', onclick: () => openAct(a.id) }, t(S.inspect))),
           ),
         ),
         h('div', { class: 'pcard-grid' }, a.members.map((id) => s.persons[id] ? personCard(s, s.persons[id], { compact: true }) : null)),

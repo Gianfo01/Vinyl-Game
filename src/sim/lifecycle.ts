@@ -183,7 +183,7 @@ export function prune(s: GameState): void {
   for (const rel of Object.values(s.releases)) {
     if (rel.live || rel.owner === 'player' || s.acts[rel.actId]?.playerBand) continue;
     const act = s.acts[rel.actId];
-    const notable = rel.peak <= 3 || (act && (act.catalogNo || act.legend) && rel.peak <= 20);
+    const notable = rel.hist || rel.peak <= 3 || (act && (act.catalogNo || act.legend) && rel.peak <= 20);
     if (!notable && s.week - rel.week > 60) {
       for (const id of rel.songs) delete s.songs[id];
       if (act) {

@@ -101,10 +101,7 @@ function onKey(e: KeyboardEvent): void {
     return;
   }
   const area = [...AREAS, ...EXTRA_AREAS].find((a) => a.key === e.key.toLowerCase());
-  if (area && !e.ctrlKey && !e.metaKey && !e.altKey) {
-    store.area = area.id;
-    render();
-  }
+  if (area && !e.ctrlKey && !e.metaKey && !e.altKey) go(area.id);
 }
 
 function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event'): void {
@@ -159,17 +156,67 @@ function topBar(): HTMLElement {
   );
 }
 
-function nav(): HTMLElement {
+/** Menus agrupados (rodada 7): 6 grupos no lugar de ~20 áreas soltas; o grupo atual abre suas áreas. */
+const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; areas: string[] }[] = [
+  { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['desk', 'plan', 'inbox', 'goals', 'diary'] },
+  { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'business', 'industry'] },
+  { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'directory', 'people', 'market'] },
+  { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['creation', 'catalog', 'shows'] },
+  { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['charts', 'media', 'world'] },
+  { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you'] },
+];
+const lastInGroup: Record<string, string> = {};
+
+interface NavItem { id: string; label: string; icon: string; key: string; badge?: number }
+
+function navItems(): NavItem[] {
   const g = store.game!;
-  return h('nav', { class: 'nav', 'aria-label': 'áreas' }, AREAS.map((a) =>
-    h('button', { class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, title: `${t(S[a.label])} (${a.key.toUpperCase()})`, onclick: () => { store.area = a.id; render(); } },
-      h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, t(S[a.label])),
-      a.id === 'desk' && g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null,
-    )), EXTRA_AREAS.map((a) => {
-      const b = a.badge?.(g);
-      return h('button', { class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, title: `${t(a.label)} (${a.key.toUpperCase()})`, onclick: () => { store.area = a.id; render(); } },
-        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, t(a.label)), b ? h('span', { class: 'badge' }, b) : null);
-    }));
+  return [
+    ...AREAS.map((a) => ({ id: a.id as string, label: t(S[a.label]), icon: a.icon, key: a.key, badge: a.id === 'desk' && g.decisions.length ? g.decisions.length : undefined })),
+    ...EXTRA_AREAS.map((a) => ({ id: a.id, label: t(a.label), icon: a.icon, key: a.key, badge: a.badge?.(g) })),
+  ];
+}
+
+export function groupOf(area: string): (typeof GROUPS)[number] {
+  return GROUPS.find((x) => x.areas.includes(area)) ?? GROUPS[0];
+}
+
+function groupItems(gr: (typeof GROUPS)[number]): NavItem[] {
+  const all = navItems();
+  const listed = new Set(GROUPS.flatMap((x) => x.areas));
+  const items = gr.areas.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
+  // áreas registradas que não estão em nenhum grupo caem em Início
+  if (gr.id === 'home') items.push(...all.filter((x) => !listed.has(x.id)));
+  return items;
+}
+
+function go(id: string): void {
+  store.area = id;
+  lastInGroup[groupOf(id).id] = id;
+  render();
+}
+
+function nav(): HTMLElement {
+  const cur = groupOf(store.area);
+  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' }, GROUPS.map((gr) => {
+    const items = groupItems(gr);
+    const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
+    const open = gr.id === cur.id;
+    return h('div', { class: `nav-group ${open ? 'open' : ''}` },
+      h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => go(lastInGroup[gr.id] && items.some((x) => x.id === lastInGroup[gr.id]) ? lastInGroup[gr.id] : items[0]?.id ?? 'desk') },
+        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
+      open && items.length > 1 ? h('div', { class: 'nav-sub' }, items.map((a) =>
+        h('button', { class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, title: `${a.label} (${a.key.toUpperCase()})`, onclick: () => go(a.id) },
+          h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null,
+    );
+  }));
+}
+
+/** Faixa de sub-áreas no topo do painel (útil no celular, onde o menu lateral vira barra). */
+function subnav(): HTMLElement | null {
+  const items = groupItems(groupOf(store.area));
+  if (items.length < 2) return null;
+  return h('div', { class: 'subnav', role: 'tablist' }, items.map((a) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: store.area === a.id ? 'on' : '', onclick: () => go(a.id) }, ic(a.icon), ' ', a.label, a.badge ? h('span', { class: 'badge' }, a.badge) : null)));
 }
 
 function panel(): HTMLElement {
@@ -177,7 +224,7 @@ function panel(): HTMLElement {
   const extra = EXTRA_AREAS.find((a) => a.id === store.area);
   if (extra) { stopHq(); return extra.render(g); }
   const el = basePanel(g);
-  const more = extraSections(store.area, g);
+  const more = store.area === 'charts' || store.area === 'world' ? null : extraSections(store.area, g);
   if (more) el.appendChild(more);
   return el;
 }
@@ -187,7 +234,10 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
   switch (store.area) {
     case 'hq': return hqPanel(g);
     case 'plan': return centralPanel(g);
-    case 'charts': return chartsPanel(g);
+    case 'charts': return h('div', { class: 'hub' }, tabs('chartsHub', mergeTabs([
+      { id: 'global', label: t(l('Parada mundial', 'World chart')), icon: 'chart-up', render: () => chartsPanel(g) },
+      { id: 'more', label: t(l('Rádio e outras paradas', 'Radio and other charts')), icon: 'radio', render: () => extraSections('charts', g) ?? h('div') },
+    ], 'chartsHub', g), render));
     case 'artists': return artistsPanel(g);
     case 'market': return h('div', { class: 'hub' }, tabs('marketHub', mergeTabs([
       { id: 'classic', label: t(l('Radar e pipeline', 'Radar and pipeline')), icon: 'fans', render: () => marketPanel(g) },
@@ -201,7 +251,10 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
     ], 'mediaHub', g), render));
     case 'catalog': return catalogPanel(g);
     case 'creation': return studioHub(g, () => creationPanel(g));
-    case 'world': return worldPanel(g);
+    case 'world': return h('div', { class: 'hub' }, tabs('worldHub', mergeTabs([
+      { id: 'map', label: t(l('Mapa e cenas', 'Map and scenes')), icon: 'globe', render: () => worldPanel(g) },
+      { id: 'history', label: t(l('História, leis e lugares', 'History, laws and places')), icon: 'newspaper', render: () => extraSections('world', g) ?? h('div') },
+    ], 'worldHub', g), render));
     case 'business': return businessPanel(g);
     case 'shows': return showsPanel(g);
     case 'company': return companyPanel(g);
@@ -220,7 +273,7 @@ export function render(): void {
     h('div', { class: 'app' },
       topBar(),
       nav(),
-      h('main', { id: 'main', tabindex: '-1' }, panel()),
+      h('main', { id: 'main', tabindex: '-1' }, subnav(), panel()),
       tutorialCard(store.game, render),
       h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
     ),

@@ -51,7 +51,7 @@ describe('premiação', () => {
   it('monta indicados, revela o vencedor e aplica o discurso uma vez', () => {
     const { s, act } = withAct('scn-aw');
     const r = rngOf(s);
-    const rel = Object.values(s.releases)[0];
+    const rel = Object.values(s.releases).find((x) => !x.hist);
     s.awards.push({ year: s.year, category: 'record', releaseId: rel?.id, actId: act.id, name: `${act.name} — x`, byPlayer: true });
     awardsYear(s, r);
     const cs = last(s, 'awards')!;

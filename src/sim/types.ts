@@ -27,6 +27,8 @@ export interface RunConfig {
   contentFilters: string[]; // tags desligadas
   /** rodada 6: artistas, selos, festivais e mídia com nomes reais */
   realNames?: boolean;
+  /** rodada 7: no modo histórico, pessoas reais morrem perto do ano real */
+  realFates?: boolean;
   /** personagem do jogador (rodada 5); ausente = gerado */
   character?: CharacterSpec;
 }
@@ -221,6 +223,8 @@ export interface Release {
   returns?: number;
   hypeBoost?: number;
   rolloutId?: string;
+  /** rodada 7: discografia anterior ao início da run (real ou simulada) */
+  hist?: boolean;
 }
 
 export interface AutopsyFactor {

@@ -12,7 +12,7 @@ import { avgReview } from '../sim/media';
 import { actState } from '../sim/people';
 import { DEGREES, estimate, sourceName, visibleFields } from '../sim/scouting';
 import {
-  GROUP_NAMES, LESSON_COST, LESSON_NAMES, ROLE_NAMES, attrsOf, form, groupAvg, lessonFor, marketValue, otherInstruments, overall, startLessons, stopLessons, tal,
+  GROUP_NAMES, LESSON_COST, LESSON_NAMES, ROLE_NAMES, attrsOf, form, groupAvg, lessonFor, marketValue, overall, startLessons, stopLessons, tal,
   type AttrGroup,
 } from '../sim/sys/talent';
 import { P } from '../sim/sys/people/state';
@@ -21,11 +21,12 @@ import type { Act, GameState, Person } from '../sim/types';
 import { money } from '../sim/util';
 import { $, N, actLink, cityName, cover, genreName, kv, labelLink, logo, modal, monthName, pill, rerender, statusName, toast } from './common';
 import { bar, h, rangeBar, select } from './dom';
-import { playPreview, stopPreview } from './audio';
 import { openOffer, openRelease } from './ficha';
 import { portraitCanvas } from './pixel/avatar';
 import { appearanceEditor } from './pixel/editor';
 import { personActivity } from './pixel/activity';
+import { instrumentsTab } from './sys/instruments';
+import { instById, instrumentsOf } from '../sim/sys/instruments';
 import { icon } from './pixel/icons';
 import { store } from './store';
 import { chips, ic, meter, stat } from './vis';
@@ -147,6 +148,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
   return h('div', { class: 'ficha pg' }, head, pageTabs([
     { id: 'attrs', label: l('Atributos', 'Attributes'), icon: 'chart-up', render: () => attrsTab(s, p, w, mine) },
     { id: 'profile', label: l('Perfil', 'Profile'), icon: 'bulb', render: () => profileTab(s, p, vis) },
+    { id: 'inst', label: l('Instrumentos', 'Instruments'), icon: 'guitar', render: () => instrumentsTab(s, p, mine || !!p.isPlayer, redraw) },
     mine ? { id: 'mood', label: l('Humor e saúde', 'Mood and health'), icon: 'heart', render: () => moodTab(s, p) } : null,
     vis.private || mine ? { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p) } : null,
     { id: 'career', label: l('Carreira', 'Career'), icon: 'trophy', render: () => careerTab(s, p) },
@@ -158,7 +160,6 @@ function attrsTab(s: GameState, p: Person, w: number, mine: boolean): HTMLElemen
   if (w >= 99) return h('p', { class: 'muted' }, t(l('Os atributos aparecem a partir de Observação (descoberta).', 'Attributes appear from Observation onward (discovery).')));
   const all = attrsOf(s, p);
   const growth = tal(s).g[p.id] ?? {};
-  const inst = otherInstruments(s, p);
   return h('div', null,
     h('div', { class: 'attr-grid' }, GROUPS.map((gr) => {
       const xs = all.filter((x) => x.def.group === gr);
@@ -175,7 +176,7 @@ function attrsTab(s: GameState, p: Person, w: number, mine: boolean): HTMLElemen
             mine && Math.abs(gv) >= 0.5 ? h('small', { class: gv > 0 ? 'good' : 'bad' }, gv > 0 ? `+${Math.round(gv)}` : String(Math.round(gv))) : null);
         })));
     })),
-    inst.length ? h('p', null, h('b', null, t(l('Também toca: ', 'Also plays: '))), inst.map((x) => pill(`${t(ROLE_NAMES[x.role])} ${shown(x.level, w)}`))) : null,
+    h('p', null, h('b', null, t(l('Instrumentos: ', 'Instruments: '))), instrumentsOf(s, p).map((x) => pill(`${t(instById[x.id]?.name ?? l(x.id))} ${shown(x.lvl, w)}`))),
     h('p', { class: 'muted small' }, t(l('Técnica entra na performance das gravações; criação nas notas das músicas; palco na receita dos shows; mental na regularidade; físico no desgaste das turnês. Passe o mouse para ver o que cada atributo faz.', 'Technique feeds recording performance; creativity feeds song scores; stage feeds show revenue; mental feeds consistency; physical feeds tour wear. Hover to see what each attribute does.'))),
     mine ? null : h('p', { class: 'muted small' }, t(l('Faixas = incerteza do seu conhecimento sobre o artista. Olheiros e reuniões estreitam.', 'Ranges = uncertainty of your knowledge. Scouts and meetings narrow them.'))),
   );
@@ -283,7 +284,7 @@ export function openActPage(id: string, tab?: string): void {
   let close = () => {};
   const content = h('div');
   content.appendChild(actBody(s, a, () => close(), tab));
-  close = modal(a.name, content, { wide: true, onClose: stopPreview });
+  close = modal(a.name, content, { wide: true });
 }
 
 function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLElement {
@@ -302,8 +303,6 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
           h('div', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${t(l('desde', 'since'))} ${a.formed} · `, pill(statusName(a.status))),
           h('div', null, t(S.owner), ': ', labelLink(s, a.owner), ' · ', t(S.knownAs), ': ', pill(t(DEGREES[Math.max(0, deg - 1)])), k ? h('span', { class: 'muted' }, ` · ${t(S.source)}: ${t(sourceName(k.source))}`) : null))),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn small', onclick: () => playPreview(a.logoSeed, a.genre, s.year) }, '▶ ', t(S.preview)),
-        h('button', { class: 'btn small ghost', onclick: () => stopPreview() }, '■'),
         !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn small primary', onclick: () => { close(); openOffer(a.id); } }, t(S.makeOffer)) : null),
     ),
   );

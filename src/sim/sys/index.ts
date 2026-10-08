@@ -14,3 +14,7 @@ import './cards6';
 import './capital';
 import './hq6';
 import './intrigue';
+import './charts7';
+import './instruments';
+import './realworld';
+import './lifecycle7';

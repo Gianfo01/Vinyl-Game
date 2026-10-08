@@ -16,6 +16,7 @@ import { h, select } from '../dom';
 import { store } from '../store';
 import { chips, ic, portrait, setTab, stat } from '../vis';
 import { preselectSession } from './studio';
+import { songAttrs } from '../songAttrs';
 
 /** Botões extras no cabeçalho de cada música (ouvir a música). */
 export const REP_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
@@ -31,7 +32,7 @@ const KIND_NAMES: Record<string, L> = {
   posthumous: l('Póstumo', 'Posthumous'), translation: l('Versão', 'Version'),
 };
 
-function qBars(so: Song): HTMLElement {
+export function qBars(so: Song): HTMLElement {
   const bar = (v: number, cls: string, name: L) => h('i', { class: cls, style: `height:${Math.max(8, Math.round(v))}%`, title: `${t(name)} ${Math.round(v)}` });
   return h('span', { class: 'rep-q', role: 'img', 'aria-label': `Q ${Math.round(so.q)}` },
     bar(so.melody, 'm', l('Melodia', 'Melody')), bar(so.lyrics, 'l', l('Letra', 'Lyrics')),
@@ -108,15 +109,15 @@ function actions(s: GameState, so: Song, st: SongStatus): HTMLElement {
 
 function songCard(s: GameState, so: Song): HTMLElement {
   const st = songStatus(s, so);
-  const p = songProfile(so);
   const open = view.open === so.id;
   return h('article', { class: `rep-song ${STATUS_CLS[st]}` },
     h('div', { class: 'rep-head' },
       h('span', { class: 'row', style: 'gap:6px' }, ic(so.recorded ? 'disc' : 'note'), h('b', null, so.title), pill(t(STATUS_NAMES[st]), st === 'released' ? 'good' : st === 'vault' ? 'warn' : '')),
-      h('span', { class: 'row', style: 'gap:6px' }, ...REP_SONG_EXTRAS.map((f) => f(s, so)), qBars(so), stat('sparkle', Math.round(so.q), l('Qualidade Q', 'Quality Q')),
+      h('span', { class: 'row', style: 'gap:6px' }, ...REP_SONG_EXTRAS.map((f) => f(s, so)), stat('sparkle', Math.round(so.q), l('Qualidade Q', 'Quality Q')),
         h('button', { class: 'btn small ghost', 'aria-expanded': open ? 'true' : 'false', onclick: () => { view.open = open ? '' : so.id; rerender(); } }, t(open ? l('Fechar', 'Close') : l('O que fazer', 'What to do'))))),
     so.theme ? h('small', { class: 'muted' }, ic('bulb'), ` ${t(l('Tema', 'Theme'))}: ${t(so.theme)}`) : null,
-    chips(stat('fire', p.hook, l('Gancho (singles)', 'Hook (singles)')), stat('radio', p.access, l('Acessibilidade (rádio)', 'Accessibility (radio)')), stat('clock', p.durability, l('Durabilidade (catálogo)', 'Durability (catalog)')), writers(s, so), ...flags(s, so)),
+    songAttrs(so, { compact: !open }),
+    chips(writers(s, so), ...flags(s, so)),
     usedIn(s, so),
     open ? actions(s, so, st) : null,
   );
