@@ -63,6 +63,33 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 | §26 Arquitetura | TypeScript, Canvas 2D, simulação separada da renderização, saves em IndexedDB com gzip, exportação/importação JSON, migrações; simulador headless |
 | §27 QA | Testes de determinismo, extrato × caixa, recoupment, cancelar não cobra, chave duplicada, filtros de conteúdo, regra RS, finais |
 
+
+## Expansão GDD v11 (esta versão)
+
+| Sistema | O que mudou |
+|---|---|
+| Tempo | Avanço por **semana** (mês agregado) ou mês/trimestre; turnês, sessões de estúdio e crises rodam **dia a dia** |
+| Agenda | **100% de capacidade por pessoa** por mês, compartilhada entre banda e carreira solo; reservas até 12 meses sem custo; conflitos explicados; deslocamento entre cidades |
+| Economia | Centavos; **royalties pagos a cada autor** (créditos que somam 100%); inventário de **ativos com depreciação**; **credores** que retomam bens |
+| Mapa | Contornos de 177 países (Natural Earth), **fronteiras históricas** por ano, blocos da Guerra Fria, **vistos**, transporte por era (navio, hélice, jato) e **clima** |
+| Narrativa | **Diretor de Histórias** cria arcos a partir do save (rivalidade, volta por cima, ascensão, guerra entre selos, traição, cena) e traz **memórias de volta** |
+| Subselos | Empresas com caixa, extrato, credores, **conselho com votos**, dividendos e **falência própria** |
+| Descoberta | Olheiros com região, viés e salário; concursos e showcases por era; mercado de demos; **leilão** contra rivais |
+| Criação | Sessão com **decisão por take**; produtores com **assinatura sonora**; camps; samples/interpolações com liberação; covers, remixes, versões em outro idioma e tributos |
+| Lançamento | **Rollout**: teaser → pré-save → singles → clipe → álbum → deluxe; edição limitada; reedição de aniversário; devoluções do varejo |
+| Mídia | Críticos com viés, TV, capas, assessoria, **crises com prazo**, cancelamento e **censura por país e era** |
+| Shows | Planejador sobre o mapa: setlist, produção, headline/co/abertura, equipe, pagamento, bilheteria e merch por cidade, acidentes |
+| Marcas | Merch, licenciamento, patrocínio exclusivo e sync (cinema, TV/novela, jogos, comerciais) |
+| Negócios | Compra de selos **com passivos**, joint venture, fábrica, editora própria, leilão e **securitização** de catálogo, **bolsa (IPO)**, processos (plágio, sample, auditoria) |
+| Contratos | Territórios, cessão parcial, cross-collateral, buyout, opções, multa de saída, renegociação em crise |
+| Era sintética | **Hologramas** de artistas falecidos, lançamentos **póstumos** e faixas com **voz IA** — exigem negociar direitos com o espólio (ou arriscar o uso sem consentimento) |
+| Pessoas | 6 traços de personalidade, objetivos, **famílias com agenda própria**, facções e líder, votação da banda, reunião negociada, mentoria, **dinastias**, carreira solo, documentários, Hall dos Ecos, envelhecimento e morte |
+| Cultura | **Movimentos** que geram subgêneros nomeados, clubes por cena (compráveis), moda por era, geopolítica (guerras, ditaduras, embargos, pandemia) |
+| Rivais | Arquétipos com CEO, rivalidades longas, aliciamento, espionagem e contraespionagem, relatório mensal "o que os rivais fizeram" |
+| Paradas e público | Paradas por gênero e região, recordes, certificações; superfãs, haters, toxicidade e rituais de fandom |
+| Conteúdo | 155 cidades, subgêneros por era (1920–59 e 2030–40 detalhados), ~120 eventos novos, plataformas, críticos, produtores, marcas e prêmios fictícios **com o equivalente real ao lado** |
+| Interface | **Sede em pixel art isométrica** por era e nível, pessoas andando conforme a atividade real, avatares combináveis com editor, ícones em pixel art, retratos; novas áreas Central, Mundo e Negócios; tutorial; modos para daltonismo; leitor de tela; comparador de carreiras |
+
 ### Decisões pendentes do GDD §30 — o que foi adotado
 
 Usei as recomendações do próprio GDD: sem "porte inicial" (cenário + sede); Gravadora e Híbrido começam no
@@ -75,7 +102,7 @@ Conteúdo sexual explícito **não** foi incluído (dúvida 8 do GDD ainda em ab
 
 - Papéis Empresário, Editora musical e Estúdio/produtor (fase 4/5) e modelos de contrato correspondentes.
 - Tick em Web Worker, editor de universo, placar por seed, telemetria opt-in, pacote offline.
-- Filiais e joint ventures; mercados com moedas próprias; 500 eventos (há ~50).
+- Mercados com moedas próprias; mais eventos (há ~170).
 - Calibração fina: o simulador headless já mede falência e unicidade (sobreposição de top 100 entre
   seeds fica entre 6 % e 23 %), mas os números `[HIP]` do GDD ainda precisam de playtest.
 
