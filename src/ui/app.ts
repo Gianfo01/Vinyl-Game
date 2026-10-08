@@ -27,6 +27,8 @@ import { restartTutorial, tutorialCard } from './tutorial';
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
+import { EXTRA_AREAS, extraSections, mergeTabs, showPendingCutscene } from './registry';
+import './sys';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : null));
 registerPortrait((p, size) => {
@@ -96,7 +98,7 @@ function onKey(e: KeyboardEvent): void {
     doAdvance('month');
     return;
   }
-  const area = AREAS.find((a) => a.key === e.key.toLowerCase());
+  const area = [...AREAS, ...EXTRA_AREAS].find((a) => a.key === e.key.toLowerCase());
   if (area && !e.ctrlKey && !e.metaKey && !e.altKey) {
     store.area = area.id;
     render();
@@ -123,6 +125,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event'): void {
     return;
   }
   render();
+  showPendingCutscene(g, render, store.prefs.cutscenes === false);
 }
 
 function undo(): void {
@@ -160,27 +163,40 @@ function nav(): HTMLElement {
     h('button', { class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, title: `${t(S[a.label])} (${a.key.toUpperCase()})`, onclick: () => { store.area = a.id; render(); } },
       h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, t(S[a.label])),
       a.id === 'desk' && g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null,
-    )));
+    )), EXTRA_AREAS.map((a) => {
+      const b = a.badge?.(g);
+      return h('button', { class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, title: `${t(a.label)} (${a.key.toUpperCase()})`, onclick: () => { store.area = a.id; render(); } },
+        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, t(a.label)), b ? h('span', { class: 'badge' }, b) : null);
+    }));
 }
 
 function panel(): HTMLElement {
   const g = store.game!;
+  const extra = EXTRA_AREAS.find((a) => a.id === store.area);
+  if (extra) { stopHq(); return extra.render(g); }
+  const el = basePanel(g);
+  const more = extraSections(store.area, g);
+  if (more) el.appendChild(more);
+  return el;
+}
+
+function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
   if (store.area !== 'hq') stopHq();
   switch (store.area) {
     case 'hq': return hqPanel(g);
     case 'plan': return centralPanel(g);
     case 'charts': return chartsPanel(g);
     case 'artists': return artistsPanel(g);
-    case 'market': return h('div', { class: 'hub' }, tabs('marketHub', [
+    case 'market': return h('div', { class: 'hub' }, tabs('marketHub', mergeTabs([
       { id: 'classic', label: t(l('Radar e pipeline', 'Radar and pipeline')), icon: 'fans', render: () => marketPanel(g) },
       { id: 'discovery', label: t(l('Olheiros, concursos e demos', 'Scouts, contests and demos')), icon: 'trophy', badge: g.demos.filter((d) => !d.heard).length || undefined, render: () => h('div', null, scoutsSection(g), contestsSection(g), demosSection(g)) },
       { id: 'auctions', label: t(l('Leilões', 'Auctions')), icon: 'gavel', badge: g.auctions.filter((a) => a.status === 'open').length || undefined, render: () => auctionsSection(g) },
       { id: 'rivals2', label: t(l('Rivais e inteligência', 'Rivals and intel')), icon: 'camera', render: () => rivalsExtra(g) },
-    ], render));
-    case 'media': return h('div', { class: 'hub' }, tabs('mediaHub', [
+    ], 'marketHub', g), render));
+    case 'media': return h('div', { class: 'hub' }, tabs('mediaHub', mergeTabs([
       { id: 'press', label: t(l('Imprensa e crítica', 'Press and critics')), icon: 'newspaper', render: () => pressSection(g) },
       { id: 'channels', label: t(l('Canais e reputação', 'Channels and reputation')), icon: 'radio', render: () => mediaPanel(g) },
-    ], render));
+    ], 'mediaHub', g), render));
     case 'catalog': return catalogPanel(g);
     case 'creation': return studioHub(g, () => creationPanel(g));
     case 'world': return worldPanel(g);
@@ -194,6 +210,8 @@ function panel(): HTMLElement {
 
 export function render(): void {
   if (!store.game) return titleScreen(root, startGame);
+  if (store.prefs.eraSkin !== false) document.documentElement.dataset.era = String(Math.floor(store.game.year / 10) * 10);
+  else delete document.documentElement.dataset.era;
   const scroll = document.querySelector('main')?.scrollTop ?? 0;
   root.replaceChildren(
     h('div', { class: 'app' },
@@ -217,6 +235,9 @@ function settings(): void {
     h('label', null, t(S.theme), select(p.theme, [{ value: 'auto', label: t(S.themeAuto) }, { value: 'light', label: t(S.themeLight) }, { value: 'dark', label: t(S.themeDark) }] as { value: typeof p.theme; label: string }[], (v) => { p.theme = v; savePrefs(); })),
     h('label', null, t(l('Modo para daltonismo', 'Colorblind mode')), select(p.colorblind ?? 'none', [{ value: 'none' as const, label: t(l('Desligado', 'Off')) }, { value: 'deutan' as const, label: t(l('Deuteranopia (verde)', 'Deuteranopia (green)')) }, { value: 'protan' as const, label: t(l('Protanopia (vermelho)', 'Protanopia (red)')) }, { value: 'tritan' as const, label: t(l('Tritanopia (azul)', 'Tritanopia (blue)')) }], (v) => { p.colorblind = v; savePrefs(); })),
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
+    h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.reducedMotion)),
     h('hr'),
@@ -236,6 +257,7 @@ function palette(): void {
   type Cmd = { label: string; run: () => void };
   const cmds: Cmd[] = [
     ...AREAS.map((a) => ({ label: `→ ${t(S[a.label])}`, run: () => { store.area = a.id; render(); } })),
+    ...EXTRA_AREAS.map((a) => ({ label: `→ ${t(a.label)}`, run: () => { store.area = a.id; render(); } })),
     { label: `▶ ${t(S.advanceMonth)}`, run: () => doAdvance('month') },
     { label: `⏩ ${t(S.advanceQuarter)}`, run: () => doAdvance('quarter') },
     { label: `⏭ ${t(S.advanceEvent)}`, run: () => doAdvance('event') },

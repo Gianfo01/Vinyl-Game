@@ -11,6 +11,7 @@ import { superfanDebut } from './fandom';
 import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
 import { fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
 import { songProfile } from './repertoire';
+import { applyMods, runSimHooks } from './ext4';
 
 const POOL: [number, number][] = [
   [1920, 260e3], [1930, 300e3], [1945, 600e3], [1955, 1.5e6], [1965, 3e6], [1975, 5e6], [1985, 6e6],
@@ -93,6 +94,8 @@ function eraTypeFit(year: number, type: Release['type']): number {
   return year < 1965 ? 1.15 : year < 2008 ? 0.95 : 1.1;
 }
 
+const t0 = (x: { pt: string }) => x.pt;
+
 export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { appeal: number; factors: AutopsyFactor[] } {
   const qF = Math.pow(Math.max(5, rel.q) / 55, 2.4);
   // convexo: estrelas concentram atenção; desconhecidos disputam a cauda
@@ -110,7 +113,9 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
   // superexposição: lançar demais no mesmo ano cansa o público
   const recent = act.releases.filter((id) => s.releases[id] && s.week - s.releases[id].week < 52 && id !== rel.id).length;
   const overexposure = 1 / (1 + Math.max(0, recent - 1) * 0.35);
-  const appeal = qF * fameF * gp * cov * era * design * mom * luck * nostalgia * overexposure * hook;
+  const base = qF * fameF * gp * cov * era * design * mom * luck * nostalgia * overexposure * hook;
+  const mods = applyMods(s, 'appeal', base, { release: rel, act });
+  const appeal = mods.value;
   const conf = (v: number): AutopsyFactor['confidence'] => (Math.abs(Math.log(v)) > 0.5 ? 'high' : Math.abs(Math.log(v)) > 0.2 ? 'medium' : 'low');
   const factors: AutopsyFactor[] = [
     { key: 'quality', label: l('Qualidade (Q)', 'Quality (Q)'), value: qF, confidence: conf(qF) },
@@ -121,6 +126,7 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
     { key: 'momentum', label: l('Momento da carreira', 'Career momentum'), value: mom, confidence: 'low' },
     { key: 'luck', label: l('Acaso (não explicado)', 'Chance (unexplained)'), value: luck, confidence: 'low' },
   ];
+  for (const f of mods.factors) factors.push({ key: `mod:${t0(f.label)}`, label: f.label, value: f.ratio, confidence: Math.abs(Math.log(f.ratio)) > 0.2 ? 'medium' : 'low' });
   if (hook !== 1) factors.push({ key: 'hook', label: l('Gancho do single', 'Single hook'), value: hook, confidence: conf(hook) });
   if (overexposure < 1) factors.push({ key: 'overexposure', label: l('Superexposição (lançamentos no ano)', 'Overexposure (releases this year)'), value: overexposure, confidence: 'medium' });
   return { appeal, factors };
@@ -185,6 +191,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   const pressBoost = pr.marketing.some((m) => m.channel === 'press') ? 6 : 0;
   s.player.reputation.artistic = clamp(s.player.reputation.artistic + (crit + rel.q - 110 + pressBoost) / 40, 0, 100);
   remember(s, 'release', fmtL(l('{act} lança "{title}" ({type}).', '{act} releases "{title}" ({type}).'), { act: act.name, title: rel.title, type: rel.type.toUpperCase() }), { actId: act.id });
+  runSimHooks('launch', s, r, { release: rel });
   return rel;
 }
 
@@ -281,7 +288,7 @@ export function marketWeek(s: GameState, r: Rng): void {
   let playerUnits = 0;
   let marketUnits = 0;
   for (const [rel, h] of heats) {
-    let units = Math.round((pool * h) / (H + B));
+    let units = Math.round(applyMods(s, 'chartUnits', (pool * h) / (H + B), { release: rel }).value);
     if (units <= 0) continue;
     // estoque: demanda física só vira venda com estoque
     const physUnits = Math.round(units * phys);

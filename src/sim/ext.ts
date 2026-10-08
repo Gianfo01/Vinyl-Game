@@ -4,10 +4,13 @@
 import { hashString } from '../core/rng';
 import type { GameState, Person } from './types';
 import type { ExtState } from './xtypes';
+import { ensureExt4, type Ext4 } from './ext4';
 
 export function emptyExt(): ExtState {
   return {
     clock: { dayInMonth: 0, opened: false, monthStartWeek: 0 },
+    x4: {} as Ext4,
+    cutscenes: [],
     branches: [],
     branchOf: {},
     ideas: {},
@@ -83,6 +86,7 @@ export function ensureExt(s: GameState): GameState {
   const st = s as unknown as Record<string, unknown>;
   for (const k of Object.keys(base)) if (st[k] === undefined) st[k] = base[k];
   if (!s.clock.monthStartWeek) s.clock.monthStartWeek = s.week;
+  ensureExt4(s);
   for (const p of Object.values(s.persons)) {
     personaOf(p);
     if (!p.goal) {

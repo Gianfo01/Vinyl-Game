@@ -6,7 +6,9 @@ import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
 import { SAVE_VERSION } from '../sim/worldgen';
 
-export type Area = 'hq' | 'desk' | 'plan' | 'charts' | 'artists' | 'market' | 'media' | 'catalog' | 'creation' | 'shows' | 'company' | 'business' | 'world' | 'diary';
+export type BaseArea = 'hq' | 'desk' | 'plan' | 'charts' | 'artists' | 'market' | 'media' | 'catalog' | 'creation' | 'shows' | 'company' | 'business' | 'world' | 'diary';
+/** Áreas base + áreas registradas pelos sistemas da rodada 4 (registerArea). */
+export type Area = BaseArea | (string & {});
 
 export interface Prefs {
   lang: Lang;
@@ -15,6 +17,12 @@ export interface Prefs {
   reducedMotion: boolean;
   theme: 'auto' | 'light' | 'dark';
   colorblind?: 'none' | 'deutan' | 'protan' | 'tritan';
+  /** mini-jogos: jogar ou resolver automaticamente */
+  minigames?: 'play' | 'auto';
+  /** mostrar cenas (premiação, crítica, entrevista) ao avançar o tempo */
+  cutscenes?: boolean;
+  /** pele da interface por era */
+  eraSkin?: boolean;
 }
 
 export const store = {

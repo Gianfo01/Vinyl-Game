@@ -23,6 +23,8 @@ import { contracts2Month } from './contracts2';
 import { directorMonth as directorImpl } from './director';
 import { yearlyAwards2 } from './awards2';
 import './contentBridge';
+import './sys';
+import { runSimHooks } from './ext4';
 
 export function startPlans(s: GameState, r: Rng): void {
   startPlansImpl(s, r);
@@ -32,12 +34,14 @@ export function dailyStep(s: GameState, r: Rng, day: number): void {
   sessionDay(s, r, day);
   tourDay(s, r, day);
   crisisDay(s, r, day);
+  runSimHooks('day', s, r, { day });
 }
 
 export function weeklyExt(s: GameState, r: Rng): void {
   rolloutsWeek(s, r);
   auctionsWeek(s, r);
   chartsWeek(s);
+  runSimHooks('week', s, r);
 }
 
 export function monthlyExt(s: GameState, r: Rng): void {
@@ -55,6 +59,7 @@ export function monthlyExt(s: GameState, r: Rng): void {
   rivals2Month(s, r);
   contracts2Month(s, r);
   repertoireMonth(s, r);
+  runSimHooks('month', s, r);
   studioCleanup(s);
   toursCleanup(s);
   s.loadNow = {};
@@ -64,6 +69,7 @@ export function monthlyExt(s: GameState, r: Rng): void {
 export function yearlyExt(s: GameState, r: Rng): void {
   dynastyYear(s);
   yearlyAwards2(s, r);
+  runSimHooks('year', s, r);
 }
 
 export function directorMonth(s: GameState, r: Rng): void {

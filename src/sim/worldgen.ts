@@ -1,5 +1,6 @@
 // Gerador de mundo em camadas (GDD §5): L0 seed → L1 mundo → L2 elenco → L3 mercado → L5 jogador.
 
+import './sys';
 import { emptyExt, ensureExt } from './ext';
 import { initWorldExt } from './worldext';
 import { registerMovementGenres } from './culture';
@@ -12,8 +13,9 @@ import { actTalent, makeAct, personName } from './people';
 import type { Act, GameState, Label, RunConfig, StaffMember } from './types';
 import { dayOfDate, fmtL, hasMutator, nextId, remember } from './util';
 import { l } from '../data/world';
+import { runSimHooks } from './ext4';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export function runSignature(seed: string, startYear: number): string {
   const h = hashString(seed).toString(16).toUpperCase().padStart(8, '0');
@@ -276,6 +278,7 @@ export function createGame(cfg: RunConfig): GameState {
   seedInitialSignals(s, r);
   ensureExt(s);
   initWorldExt(s, r);
+  runSimHooks('newgame', s, r);
 
   remember(s, 'start', fmtL(l('{company} abre as portas em {city}, {year}. Run {sig}.', '{company} opens its doors in {city}, {year}. Run {sig}.'), {
     company: cfg.companyName,

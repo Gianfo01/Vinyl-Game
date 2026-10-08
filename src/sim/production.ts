@@ -9,6 +9,7 @@ import { fmtL, hasCard, hasTech, money, nextId, notify, post, staffSkill } from 
 import { forecastUnits } from './market';
 import { hqCaps } from './branches';
 import { takeIdea } from './repertoire';
+import { applyMods, runSimHooks } from './ext4';
 
 export function songQ(song: Pick<Song, 'melody' | 'lyrics' | 'performance' | 'production' | 'originality'>): number {
   // Qualidade Q (GDD §12): 0,25 melodia + 0,20 letra + 0,25 performance + 0,20 produção + 0,10 originalidade
@@ -51,6 +52,7 @@ export function composeSongs(s: GameState, r: Rng, act: Act, n: number): Song[] 
     s.songs[song.id] = song;
     act.songs.push(song.id);
     out.push(song);
+    runSimHooks('compose', s, r, { song });
   }
   for (const id of act.members) {
     const p = s.persons[id];
@@ -122,6 +124,7 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
   // custo de gravação é recuperável no contrato clássico
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && c.model !== 'distribution' && c.model !== 'licensing' && payer !== 'act') c.recoupBalance += Math.round(cost * 0.5);
+  for (const song of done) runSimHooks('record', s, r, { song });
   return { cost, songs: done };
 }
 
@@ -166,7 +169,7 @@ export function pressingCost(s: GameState, formats: FormatId[], units: number): 
   discount += staffSkill(s, 'manufacturing') / 400;
   if (hasCard(s, 'manufacturer')) discount += 0.1;
   discount = Math.min(0.5, discount);
-  return money(s, (unit * units * (1 - discount) * (s.flags.geoPressing ?? 1)) + 400);
+  return Math.round(applyMods(s, 'pressingCost', money(s, (unit * units * (1 - discount) * (s.flags.geoPressing ?? 1)) + 400), {}).value);
 }
 
 export interface ReleasePlan {

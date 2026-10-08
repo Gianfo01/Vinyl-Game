@@ -3,6 +3,7 @@
 
 import type { L, MarketId } from '../data/world';
 import type { Loan } from './types';
+import type { Cutscene, Ext4 } from './ext4';
 
 // ---------- Tempo ----------
 export interface Clock {
@@ -491,6 +492,10 @@ export interface ExtState {
   tutorial: { step: number; done: boolean; seen: string[] };
   /** voto/diálogo de autonomia criativa pendente */
   votes: { id: string; actId: string; topic: L; options: { id: string; label: L }[]; votes: Record<string, string>; week: number }[];
+  /** estado dos sistemas da rodada 4 (ver ext4.ts) */
+  x4: Ext4;
+  /** momentos para a interface mostrar (premiação, crítica, entrevista...) */
+  cutscenes: Cutscene[];
   /** filiais da empresa em outras cidades */
   branches: Branch[];
   /** ato -> filial que cuida dele (ausente = matriz) */

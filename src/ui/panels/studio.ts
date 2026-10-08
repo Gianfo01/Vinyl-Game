@@ -17,6 +17,7 @@ import { h, select } from '../dom';
 import { store } from '../store';
 import { chips, ic, portrait, stat, tabs, tile } from '../vis';
 import { repertoireTab } from './repertoire';
+import { mergeTabs } from '../registry';
 
 const say = (res: L | null | object, ok: L) => {
   const err = res && typeof res === 'object' && 'pt' in res ? (res as L) : null;
@@ -195,13 +196,13 @@ export function studioHub(s: GameState, launch: () => HTMLElement): HTMLElement 
   if (!picker) return launch();
   return h('div', { class: 'hub studio-hub' },
     picker,
-    tabs('creation', [
+    tabs('creation', mergeTabs([
       { id: 'repertoire', label: t(l('Repertório', 'Repertoire')), icon: 'note', render: () => repertoireTab(s) },
       { id: 'launch', label: t(l('Lançar', 'Release')), icon: 'cd', render: launch },
       { id: 'session', label: t(l('Estúdio', 'Studio')), icon: 'mic', render: () => sessionTab(s) },
       { id: 'rollout', label: t(l('Rollout', 'Rollout')), icon: 'calendar', render: () => rolloutTab(s) },
       { id: 'versions', label: t(l('Covers e versões', 'Covers & versions')), icon: 'disc', render: () => versionsTab(s) },
       { id: 'neural', label: t(l('Era sintética', 'Synthetic era')), icon: 'hologram', render: () => neuralTab(s) },
-    ], rerender),
+    ], 'creation', s), rerender),
   );
 }

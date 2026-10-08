@@ -14,6 +14,7 @@ import { activeMembers, checkCapacity, monthIndex } from './capacity';
 import { legInfo, climateInfo } from './travelAdapter';
 import { clubBonus, liveBlocked } from './culture';
 import { branchCityBonus } from './branches';
+import { applyMods, runSimHooks } from './ext4';
 
 const TICKET = [12, 25, 45, 70, 95];
 const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
@@ -48,7 +49,7 @@ export function cityDemand(s: GameState, act: Act, cityId: string): number {
   const scene = s.scenes[`${cityId}:${act.genre}`] ?? 0;
   const last = s.flags[`played:${act.id}:${cityId}`];
   const sat = last !== undefined ? clamp((s.week - last) / 26, 0.35, 1) : 1;
-  return Math.round(total * share * (1 + act.fame / 70) * (1 + Math.min(0.4, scene / 30)) * sat * branchCityBonus(s, cityId));
+  return Math.round(applyMods(s, 'cityDemand', total * share * (1 + act.fame / 70) * (1 + Math.min(0.4, scene / 30)) * sat * branchCityBonus(s, cityId), { act, cityId }).value);
 }
 
 export function autoTier(s: GameState, act: Act, demand: number): number {
@@ -231,6 +232,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     sold = Math.max(0, sold);
     st.sold = sold;
     st.status = 'played';
+    runSimHooks('show', s, r, { show: { actId: act.id, cityId: st.cityId, sold, capacity: st.capacity, revenue: sold * st.price, tourId: t.id } });
     const gross = sold * st.price;
     // pagamento: bilheteria 65% líquida / cachê fixo / garantia + 45%
     const forecast = Math.round(Math.min(st.capacity, demand) * st.price * 0.5);
