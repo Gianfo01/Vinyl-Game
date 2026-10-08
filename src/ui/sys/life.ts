@@ -6,7 +6,7 @@ import './life.css';
 import { GENRES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
-  ENERGY_PER_MONTH, HOBBIES, KID_EDU, PARTNER_TRAITS, WEDDINGS, adopt, backgroundById, breakUp, charity, energyLeft, familyTime, goOnDate, gym, hobby,
+  ENERGY_PER_MONTH, HOBBIES, MENTOR_NAMES, maxEnergy, mentorAct, type MentorKind, KID_EDU, PARTNER_TRAITS, WEDDINGS, adopt, backgroundById, breakUp, charity, energyLeft, familyTime, goOnDate, gym, hobby,
   industryParty, joinBand, joinChance, joinableActs, launchKidCareer, learnNewInstrument, leaveBand, life, marry, meetPeople, ownerAgeNow, playBar, playerAct,
   playerPerson, practice, propose, setKidEdu, startDating, startProject, switchMainInstrument, therapy, tryForBaby, writeAlone, writeMemoir,
   type KidEdu, type WeddingKind,
@@ -14,7 +14,7 @@ import {
 import { ROLE_NAMES, type Role } from '../../sim/sys/talent';
 import { ownerOf } from '../../sim/sys/people/owner';
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money, playerActs, rngOf } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { openActPage, openPersonPage, personCard } from '../pages';
@@ -43,8 +43,8 @@ function energyBar(s: GameState): HTMLElement {
   const left = energyLeft(s);
   return h('div', { class: 'lf-energy', 'aria-label': t(l('Tempo livre este mês', 'Free time this month')) },
     h('span', null, t(l('Tempo livre este mês', 'Free time this month'))),
-    h('span', { class: 'lf-dots' }, Array.from({ length: ENERGY_PER_MONTH }, (_, i) => h('i', { class: i < left ? 'on' : '' }))),
-    h('small', { class: 'muted' }, t(l('renova todo mês', 'refills every month'))));
+    h('span', { class: 'lf-dots' }, Array.from({ length: maxEnergy(s) }, (_, i) => h('i', { class: i < left ? 'on' : '' }))),
+    h('small', { class: 'muted' }, t(maxEnergy(s) < ENERGY_PER_MONTH ? l('renova todo mês (a banda ocupa uma unidade)', 'refills every month (the band takes one unit)') : l('renova todo mês', 'refills every month'))));
 }
 
 // ------------------------------------------------------------------ perfil
@@ -201,7 +201,20 @@ function musicTab(s: GameState): HTMLElement {
         h('td', null, `${Math.round(joinChance(s, a) * 100)}%`),
         h('td', null, btn(l('Pedir para entrar', 'Ask to join'), 1, () => run(joinBand(s, r(), a.id)))))))) : h('p', { class: 'muted small' }, t(l('Nenhuma banda aberta: contrate ou descubra bandas independentes (radar) para ter opções.', 'No band open: sign or discover unsigned bands (radar) to have options.'))),
     ),
+    mentorSection(s),
   );
+}
+
+function mentorSection(s: GameState): HTMLElement | null {
+  const me = playerPerson(s);
+  const acts = playerActs(s).map((id) => s.acts[id]).filter((a) => a && !a.members.includes(me?.id ?? '') && a.status !== 'retired' && a.status !== 'split');
+  if (!acts.length) return null;
+  const kinds: MentorKind[] = ['talk', 'studio', 'stage'];
+  return section(t(l('Perto dos seus artistas', 'Close to your artists')),
+    h('p', { class: 'small muted' }, t(l('Conversa sobe moral e confiança (seu carisma pesa); estúdio usa seu ouvido e sua produção na próxima gravação; ensaio deixa o show afiado. Uma vez por mês por ato.', 'Talks raise morale and trust (your charisma counts); studio uses your ear and production on the next recording; rehearsal sharpens the show. Once a month per act.'))),
+    h('table', { class: 'tbl compact' }, h('tbody', null, acts.map((a) => h('tr', null,
+      h('td', null, actLink(s, a.id)),
+      h('td', null, h('div', { class: 'row wrap' }, kinds.map((k) => btn(MENTOR_NAMES[k], 1, () => run(mentorAct(s, a.id, k), l('Feito.', 'Done.')))))))))));
 }
 
 // ------------------------------------------------------------------ lazer

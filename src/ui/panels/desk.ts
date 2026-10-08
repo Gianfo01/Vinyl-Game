@@ -11,6 +11,7 @@ import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { $, actLink, kv, pill, releaseLink, rerender, section } from '../common';
 import { h } from '../dom';
+import { advisorSection } from '../advisor';
 
 const CAT_ICON: Record<string, string> = {
   career: '🎼', people: '👥', band: '🎸', contract: '📜', market: '🏢', tech: '📡', culture: '🎨', scandal: '📰',
@@ -39,6 +40,7 @@ export function deskPanel(s: GameState): HTMLElement {
   const card = cardById[s.config.card];
   return h('div', { class: 'panel desk' },
     h('div', { class: 'col-main' },
+      advisorSection(s),
       section(t(S.briefing),
         s.briefing.length ? h('ul', { class: 'briefing' }, s.briefing.map((n) => h('li', { class: n.kind }, t(n.text)))) : h('p', { class: 'muted' }, t(l('Mês tranquilo.', 'A quiet month.'))),
       ),

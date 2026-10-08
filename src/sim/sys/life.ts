@@ -6,8 +6,8 @@
 
 import { clamp, type Rng } from '../../core/rng';
 import { genreById, l, type L } from '../../data/world';
-import { queueCutscene, registerExt4, registerSimHook } from '../ext4';
-import { composeSongs } from '../production';
+import { queueCutscene, registerExt4, registerMod, registerSimHook } from '../ext4';
+import { composeSongs, songQ } from '../production';
 import { langForCity, makeAct, makePerson, personName } from '../people';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, remember } from '../util';
@@ -90,10 +90,15 @@ export const ENERGY_PER_MONTH = 4;
 
 const mKey = (s: GameState) => s.year * 12 + s.month;
 
+/** Tempo livre do mês: tocar numa banda ocupa uma unidade (ensaios e compromissos). */
+export function maxEnergy(s: GameState): number {
+  return ENERGY_PER_MONTH - (playerAct(s) ? 1 : 0);
+}
+
 export function energyLeft(s: GameState): number {
   const L0 = life(s);
   if (L0.monthKey !== mKey(s)) { L0.monthKey = mKey(s); L0.used = 0; }
-  return Math.max(0, ENERGY_PER_MONTH - L0.used);
+  return Math.max(0, maxEnergy(s) - L0.used);
 }
 
 function spend(s: GameState, n: number): L | null {
@@ -598,6 +603,66 @@ export function leaveBand(s: GameState): L | null {
   return null;
 }
 
+// ---------------------------------------------------------------- o dono perto dos artistas
+
+export type MentorKind = 'talk' | 'studio' | 'stage';
+export const MENTOR_NAMES: Record<MentorKind, L> = {
+  talk: l('Conversa e conselho', 'Talk and advice'),
+  studio: l('Acompanhar no estúdio', 'Sit in on the studio'),
+  stage: l('Ensaiar o show junto', 'Rehearse the show together'),
+};
+
+/** Passar tempo com um ato do selo: moral, confiança, e o seu talento ajudando de verdade. */
+export function mentorAct(s: GameState, actId: string, kind: MentorKind): L | null {
+  const act = s.acts[actId];
+  if (!act || (act.owner !== 'player' && !act.playerBand)) return l('Ato não é seu.', 'Not your act.');
+  const me = playerPerson(s);
+  if (act.members.includes(me?.id ?? '')) return l('Você já faz parte desse ato.', 'You are already part of this act.');
+  const key = `mentor:${actId}`;
+  if (s.flags[key] && s.week - s.flags[key] < 4) return l('Uma mentoria por ato a cada mês.', 'One mentoring session per act each month.');
+  const e = spend(s, 1);
+  if (e) return e;
+  s.flags[key] = s.week;
+  const o = ownerOf(s);
+  const ms = act.members.map((id) => s.persons[id]).filter((x): x is Person => !!x && x.alive);
+  if (kind === 'talk') {
+    for (const p of ms) { p.morale = clamp(p.morale + 6 + (o.attrs.charisma - 50) / 10, 0, 100); p.stress = clamp(p.stress - 5, 0, 100); }
+    act.trust = clamp(act.trust + 3, 0, 100);
+    gainXp(s, 'management', 2);
+  } else if (kind === 'studio') {
+    // o seu ouvido e a sua produção valem na próxima gravação (até 6 semanas)
+    s.flags[`mentor-studio:${actId}`] = s.week;
+    for (const p of ms) p.inspiration = clamp(p.inspiration + 6, 0, 100);
+    gainXp(s, 'ear', 2);
+  } else {
+    act.rehearsed = clamp(act.rehearsed + 8 + (me ? me.skills.stage / 10 : 0), 0, 40);
+    for (const p of ms) grow(s, p, 'presence', 0.3);
+  }
+  o.stress = clamp(o.stress + 2, 0, 100);
+  return null;
+}
+
+registerSimHook('record', 'life-mentor', (s, _r, arg) => {
+  const so = arg.song;
+  if (!so) return;
+  const at = s.flags[`mentor-studio:${so.actId}`];
+  if (!at || s.week - at > 6) return;
+  const me = playerPerson(s);
+  const ear = ownerOf(s).attrs.ear;
+  const boost = clamp((ear - 45) / 10 + (me ? (me.skills.prod - 40) / 15 : 0), 0, 5);
+  so.production = clamp(so.production + boost, 0, 100);
+  so.performance = clamp(so.performance + boost / 2, 0, 100);
+  so.q = songQ(so);
+});
+
+/** Fama pessoal do dono ajuda um pouco a divulgar os lançamentos do selo. */
+registerMod('appeal', 'life-fame', (s, value, ctx) => {
+  if (!ctx.release || (ctx.release.owner !== 'player' && !s.acts[ctx.release.actId]?.playerBand)) return null;
+  const f = life(s).fame;
+  if (f < 10) return null;
+  return { value: value * (1 + Math.min(0.05, f / 2000)), label: l('Fama pessoal do dono', 'Owner\'s personal fame') };
+});
+
 // ---------------------------------------------------------------- lazer, saúde e imagem
 
 export function gym(s: GameState): L | null {
@@ -760,6 +825,8 @@ registerSimHook('month', 'life', (s, r) => {
     kx.bond = clamp(kx.bond - 0.6, 0, 100);
     if (age === 18 && s.month === 0) notify(s, fmtL(l('{k} fez 18 anos: pode ser herdeiro(a) ou lançar carreira.', '{k} turned 18: can be heir or launch a career.'), { k: k.name }), 'info');
   });
+  // vida dupla: tocar numa banda e dirigir o selo cansa
+  if (playerAct(s)) o.stress = clamp(o.stress + 1.5, 0, 100);
   // fama pessoal esfria
   L0.fame = clamp(L0.fame - 0.25, 0, 100);
   // pedido do par

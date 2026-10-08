@@ -113,7 +113,15 @@ export function modal(title: string, content: HTMLElement, opts: { wide?: boolea
 export function toast(msg: string, kind = 'info'): void {
   const host = document.getElementById('toasts');
   if (!host) return;
-  const el = h('div', { class: `toast ${kind}`, role: 'status' }, msg);
+  // avisos repetidos viram um só com contador (×2, ×3...)
+  const same = [...host.children].find((c) => (c as HTMLElement).dataset.msg === msg && !c.classList.contains('out')) as HTMLElement | undefined;
+  if (same) {
+    const n = Number(same.dataset.n ?? '1') + 1;
+    same.dataset.n = String(n);
+    same.textContent = `${msg} ×${n}`;
+    return;
+  }
+  const el = h('div', { class: `toast ${kind}`, role: 'status', 'data-msg': msg }, msg);
   host.appendChild(el);
   while (host.children.length > 4) host.firstElementChild?.remove();
   setTimeout(() => el.classList.add('out'), 4200);

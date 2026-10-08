@@ -49,7 +49,7 @@ function romanceMonth(s: GameState, r: Rng): void {
   const st = P(s);
   for (const actId of playerActs(s)) {
     const act = s.acts[actId];
-    const ms = act.members.map((id) => s.persons[id]).filter((p) => p?.alive && s.year - p.born >= 18);
+    const ms = act.members.map((id) => s.persons[id]).filter((p) => p?.alive && !p.isPlayer && s.year - p.born >= 18);
     if (ms.length < 2) continue;
     const cur = activeRomance(s, actId);
     if (!cur) {

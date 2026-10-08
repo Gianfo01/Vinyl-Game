@@ -14,7 +14,8 @@
 .cr-wave { display: flex; align-items: center; gap: 2px; height: 70px; margin: 8px 0; }
 .cr-wave i { flex: 1; background: var(--line); border-radius: 2px; }
 .cr-wave i.on { background: var(--accent); }
-.cr-reviews { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
+.cr-reviews { display: flex; flex-direction: column; gap: 10px; margin: 10px 0; max-width: 760px; }
+.cr-reviews .rv-card { animation: cr-pop 0.35s ease-out; }
 .cr-review { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--panel-2); display: grid; gap: 6px; animation: cr-pop 0.35s ease-out; }
 .cr-review-head { display: flex; justify-content: space-between; gap: 6px; }
 .cr-verdict { grid-column: 1 / -1; font-size: 1.05rem; }

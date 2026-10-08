@@ -916,6 +916,8 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
         if ((s.eventCooldowns[def.id] ?? -1) > s.week) continue;
         if (filtered(s, def)) continue;
         const ctx = def.find(s, r);
+        // o personagem do jogador decide a própria vida (área Você): eventos pessoais não o escolhem
+        if (ctx && def.cat === 'people' && ctx.person && s.persons[String(ctx.person)]?.isPlayer) continue;
         if (ctx && !filtered(s, def, ctx)) valid.push([def, ctx]);
       }
     });
