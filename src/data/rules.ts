@@ -307,6 +307,7 @@ export const ROLES: { id: RoleId; name: L; desc: L; available: boolean }[] = [
 
 // ---------- Finais do Arco Neural (GDD §22) ----------
 export const ENDINGS: { id: string; name: L; text: L }[] = [
+  { id: 'fired_by_board', name: l('Demitido pelo Conselho', 'Fired by the Board'), text: l('Os investidores queriam números que você não entregou. A placa com o seu nome sai da porta; os discos ficam.', "The investors wanted numbers you didn't deliver. The plate with your name comes off the door; the records stay.") },
   { id: 'last_vinyl', name: l('O Último Vinil', 'The Last Vinyl'), text: l('Enquanto o mundo trocava discos por feeds, sua casa continuou prensando. O último vinil saiu da sua fábrica — e esgotou.', 'While the world swapped records for feeds, your house kept pressing. The last vinyl came out of your plant — and sold out.') },
   { id: 'house_of_masters', name: l('Casa dos Mestres', 'House of Masters'), text: l('Seus artistas viraram referência. Cada geração nova aprende com quem passou pela sua casa.', 'Your artists became the reference. Every new generation learns from those who passed through your house.') },
   { id: 'live_stage', name: l('Palco Vivo', 'Living Stage'), text: l('Quando gravar ficou fácil demais, o valor voltou ao palco. Você estava lá.', 'When recording became too easy, value returned to the stage. You were there.') },

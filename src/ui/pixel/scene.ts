@@ -666,7 +666,9 @@ function computeEdges(sc: Scene): void {
 /** Monta a cena da sede para o estado atual (determinística). */
 export function buildScene(s: GameState, site?: { level: number; seedKey: string }): Scene {
   const level = Math.max(0, Math.min(LAYOUTS.length - 1, site ? site.level : s.player.hq));
-  const layout = LAYOUTS[level];
+  // trocas de função das salas feitas pelo jogador (só na matriz)
+  const kinds = !site ? (s.x4 as { industry?: { roomKinds?: Record<string, Record<string, string>> } } | undefined)?.industry?.roomKinds?.[String(level)] : undefined;
+  const layout: LayoutDef = kinds ? { ...LAYOUTS[level], rooms: LAYOUTS[level].rooms.map((r) => (kinds[r.id] ? { ...r, kind: kinds[r.id] as RoomKind } : r)) } : LAYOUTS[level];
   const era = eraOf(s.year);
   const { W, H } = layout;
   const sc: Scene = {

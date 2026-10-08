@@ -1,0 +1,13 @@
+.ind-mats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.ind-mat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--panel); }
+.ind-mat.main { border-color: var(--accent); }
+.ind-mat .bad { color: var(--bad); font-weight: 600; }
+.ind-mat .good { color: var(--good); font-weight: 600; }
+.ind-grid { display: grid; gap: 4px; max-width: 420px; margin: 8px 0; }
+.ind-cell { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); color: var(--ink); font-size: 1.2rem; cursor: pointer; display: grid; place-items: center; }
+.ind-cell:hover, .ind-cell:focus-visible { outline: 2px solid var(--accent); }
+.ind-cell.c-empty { opacity: 0.5; }
+.ind-cell.c-window { background: color-mix(in srgb, var(--accent) 18%, var(--panel-2)); }
+.ind-cell.c-register { background: color-mix(in srgb, var(--good) 20%, var(--panel-2)); }
+.tile.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tile.good { border-color: var(--good); }
