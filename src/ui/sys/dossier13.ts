@@ -307,9 +307,7 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
     h('div', { class: 'row wrap' }, open ? h('button', { class: 'link', onclick: () => openPersonPage(p.id) }, h('b', null, p.name)) : h('b', null, p.name),
       ` · ${p.alive ? `${s.year - p.born} ${t(l('anos', 'yrs'))}` : `${t(l('morreu em', 'died'))} ${p.died ?? '?'}`}`),
     h('ul', { class: 'dos13-list small' },
-      h('li', null, ic('heart'), ' ', lf.together ? `${t(l('Em relacionamento com', 'In a relationship with'))} ${lf.partner}` : lf.separated ? t(l('Separado(a)', 'Separated')) : t(l('Solteiro(a)', 'Single')),
-        lf.exes.length ? h('small', { class: 'muted' }, ` · ${t(l('ex', 'exes'))}: ${lf.exes.slice(0, 4).join(', ')}`) : null),
-      h('li', null, ic('fans'), ' ', lf.kids.length ? `${t(l('Filhos', 'Children'))}: ${lf.kids.map((k) => `${k.name} (${s.year - k.born})`).join(', ')}` : t(l('Sem filhos conhecidos', 'No known children'))),
+      // relacionamento, ex e filhos ficam no bloco único "Família" (rodada 15)
       h('li', { class: p.health === 'ok' ? '' : 'bad' }, ic('heart'), ` ${t(l('Saúde', 'Health'))}: ${t(healthName[p.health] ?? l(p.health))}`,
         lf.voice !== undefined ? ` · ${t(l('voz', 'voice'))} ${Math.round(lf.voice)}` : '', lf.hearing !== undefined ? ` · ${t(l('audição', 'hearing'))} ${Math.round(lf.hearing)}` : ''),
       lf.dependency !== undefined && lf.dependency > 5 ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
