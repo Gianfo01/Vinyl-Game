@@ -16,6 +16,7 @@ import { pageTabs } from './registry';
 import { rightsFieldset } from './rightsView';
 import { defaultRights } from '../sim/rights';
 import { offerAside12, packageFields } from './sys/offers12';
+import { relHype12 } from './sys/hype12';
 
 function g(): GameState {
   return store.game!;
@@ -64,6 +65,7 @@ export function openRelease(id: string): void {
         mine && r.pressed ? kv(t(S.stock), `${N(Math.max(0, r.stock))} / ${N(r.pressed)}`) : null,
         mine && r.shortage ? kv(t(S.shortage), N(r.shortage)) : null,
         r.weekly.length ? h('div', null, sparkline(r.weekly.slice(-40), 220, 40)) : null,
+        relHype12(s, r),
       ),
     ),
     h('div', { class: 'grid2' },

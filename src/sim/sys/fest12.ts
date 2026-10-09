@@ -303,6 +303,8 @@ export function clashes12(s: GameState, f: OwnFestival): { ex: number; co: numbe
 
 // ---------------------------------------------------------------- demanda, ingressos e caixa
 
+/** Rodada 12 (hype12): hype do line-up e fatos somam à procura. */
+export const festHypeHook: { f: (s: GameState, f: OwnFestival) => { k: number; why?: L } | null } = { f: () => null };
 export interface Proj { demand: number; cap: number; fair: number; early: number; why: L[]; avg: number }
 export function proj12(s: GameState, f: OwnFestival): Proj {
   const x = f12(s, f);
@@ -325,6 +327,8 @@ export function proj12(s: GameState, f: OwnFestival): Proj {
   if (x.cyc.phase !== 'onsale') { dem *= 0.35; why.push(l('Line-up ainda não anunciado: só o público fiel e os curiosos compram.', 'Line-up not announced yet: only the loyal crowd and the curious buy.')); }
   if (x.cyc.late) why.push(l('Anúncio tardio: pouca gente teve tempo de se planejar (−15%).', 'Late announcement: few people had time to plan (−15%).'));
   if (f.days > 1 && x.cyc.passes) { dem *= 1.15; why.push(l('Passes de um dia: mais gente casual entra (+15%), ticket médio menor.', 'Day passes: more casual buyers (+15%), lower average ticket.')); }
+  const hh = festHypeHook.f(s, f);
+  if (hh) { dem *= hh.k; if (hh.why) why.push(hh.why); }
   dem = dem * x.cyc.hype * x.cyc.mods.dem * (x.cyc.late ? 0.85 : 1) + x.loyal * id.loyalF;
   if (x.loyal) why.push(fmtL(l('{n} fiéis compram pelo festival, não pela atração.', '{n} loyalists buy for the festival, not the act.'), { n: Math.round(x.loyal) }));
   const trust = clamp((f.rep + x.hist.length * 6) / 90, 0.08, 1);
