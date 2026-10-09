@@ -1,15 +1,16 @@
-// Aba "Personalidade" da área Você (rodada 6): traços, estilo de vida com árvore de perks e foco,
+// Aba "Personalidade" da área Você (rodada 6): traços, estilo de vida (rodada 9: derivado das habilidades),
 // válvulas de escape, identidade (apelido, pronome, visual, lema) e o quadro "Seus bônus" com todas as
 // fontes de perks (origem, traços, estilo, cartas, mutators, sócios…).
 
 import { CITIES, GENRES, genreById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { bumpPerks, perkEntries, type PerkKey } from '../../sim/perks';
-import { COPING, PRONOUNS, STYLES, VISUALS, chooseCoping, dropCoping, perkCost, persona, playerTraitById, setFocus, styleById, styleProgress, type CopingId } from '../../sim/sys/persona';
+import { COPING, PRONOUNS, VISUALS, chooseCoping, dropCoping, lifestyleById, persona, playerTraitById, skills, type CopingId } from '../../sim/sys/persona';
+import type { PerkValues } from '../../sim/perks';
 import { backgroundById, life } from '../../sim/sys/life';
 import { ownerOf } from '../../sim/sys/people/owner';
 import type { GameState } from '../../sim/types';
-import { cityName, pill, rerender, section, toast } from '../common';
+import { cityName, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { ic } from '../vis';
 
@@ -47,6 +48,14 @@ export function fmtPerk(k: PerkKey, v: number): string {
   return `${v > 0 ? '+' : ''}${Math.round(v * 10) / 10}`;
 }
 
+/** Texto curto dos efeitos de um conjunto de perks (ex.: "Confiança ao assinar +3 · Estresse −10%"). */
+export function fxText(v: PerkValues | undefined, attrs?: Partial<Record<string, number>>): string {
+  const ATTR: Record<string, L> = { ear: l('Ouvido', 'Ear'), negotiation: l('Negociação', 'Negotiation'), charisma: l('Carisma', 'Charisma'), management: l('Gestão', 'Management') };
+  const parts = (Object.entries(v ?? {}) as [PerkKey, number][]).filter(([, x]) => x).map(([k, x]) => `${t(PERK_NAMES[k])} ${fmtPerk(k, x).replace('-', '−')}`);
+  for (const [k, x] of Object.entries(attrs ?? {})) if (x && ATTR[k]) parts.push(`${t(ATTR[k])} ${x > 0 ? '+' : '−'}${Math.abs(x)}`);
+  return parts.join(' · ');
+}
+
 export function bonusTable(s: GameState): HTMLElement {
   const rows = perkEntries(s).flatMap((e) => (Object.entries(e.values) as [PerkKey, number][]).filter(([, v]) => v).map(([k, v]) => ({ k, v, label: e.label, cond: !!e.act })));
   if (!rows.length) return h('p', { class: 'muted small' }, t(l('Nenhum bônus ativo.', 'No active bonuses.')));
@@ -61,8 +70,8 @@ export function bonusTable(s: GameState): HTMLElement {
 export function personaTab(s: GameState): HTMLElement {
   const P0 = persona(s);
   const o = ownerOf(s);
-  const prog = styleProgress(s);
-  const cur = styleById[P0.style];
+  const S0 = skills(s);
+  const ls = S0.lifestyle ? lifestyleById[S0.lifestyle] : undefined;
   const bg = backgroundById[life(s).background];
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
@@ -70,15 +79,9 @@ export function personaTab(s: GameState): HTMLElement {
         h('div', { class: 'row wrap' }, P0.traits.length ? P0.traits.map((x) => h('span', { class: 'chip-btn on', title: t(playerTraitById[x]?.desc) }, t(playerTraitById[x]?.name))) : h('span', { class: 'muted' }, '—')),
         bg ? h('p', { class: 'small' }, h('b', null, t(bg.name)), ': ', t(bg.effects ?? bg.desc)) : null,
       ),
-      section(`${t(l('Estilo de vida', 'Lifestyle'))}: ${t(cur.name)}`,
-        h('p', { class: 'muted small' }, t(cur.desc)),
-        prog.done ? pill(t(l('estilo dominado', 'style mastered')), 'good')
-          : h('div', null, h('span', { class: 'small' }, t(l('Próximo perk: {x}/{c} XP', 'Next perk: {x}/{c} XP'), { x: Math.round(prog.xp), c: prog.cost })), ' ', h('span', { class: 'meter-bar' }, h('span', { style: `width:${Math.min(100, (prog.xp / prog.cost) * 100)}%` }))),
-        h('div', { class: 'style-tree' }, cur.perks.map((p, i) => h('div', { class: `perk ${i < prog.n ? 'got' : i === prog.n ? 'next' : ''}` }, h('b', null, `${i + 1}. ${t(p.name)}`), h('div', { class: 'muted' }, t(p.desc)), i >= prog.n ? h('small', { class: 'muted' }, `${perkCost(i)} XP`) : null))),
-        h('h4', null, t(l('Mudar o foco', 'Change focus'))),
-        h('p', { class: 'muted small' }, t(l('Perks já ganhos continuam valendo. O XP do próximo perk zera. O XP mensal cresce com o que você faz no estilo (elenco para Mentor, caixa para Magnata, lançamentos para Hits, radar para Garimpeiro, shows para Showman).', 'Perks you earned stay. XP towards the next perk resets. Monthly XP grows with what you do in the style (roster for Mentor, cash for Mogul, releases for Hitmaker, radar for Curator, gigs for Showman).'))),
-        h('div', { class: 'row wrap' }, STYLES.map((st) => h('button', { class: `btn small ${st.id === P0.style ? 'primary' : 'ghost'}`, disabled: st.id === P0.style, onclick: () => say(setFocus(s, st.id), l('Foco alterado.', 'Focus changed.')) },
-          t(st.name), (P0.unlocked[st.id] ?? 0) ? ` (${P0.unlocked[st.id]}/6)` : ''))),
+      section(`${t(l('Estilo de vida', 'Lifestyle'))}: ${ls ? t(ls.name) : '—'}`,
+        ls ? h('p', { class: 'small' }, t(ls.desc)) : null,
+        h('p', { class: 'muted small' }, t(l('O estilo de vida nasce de onde você investe os pontos de habilidade. Pontos livres: {n} — gaste na aba Habilidades.', 'Your lifestyle comes from where you invest ability points. Free points: {n} — spend them in the Abilities tab.'), { n: S0.points })),
       ),
       section(t(l('Válvulas de escape', 'Coping mechanisms')),
         P0.copingPrompt ? h('div', null,

@@ -4,21 +4,62 @@ import { CARDS, HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
 import { S, t, type Lang } from '../i18n/strings';
 import type { RunConfig, StartCustom } from '../sim/types';
-import { createGame } from '../sim/worldgen';
+import { createGame, takeoverCandidates } from '../sim/worldgen';
+import { formatMoney } from '../core/money';
+import { genreById } from '../data/world';
+import { locale } from '../i18n/strings';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
 import { deleteSave, importSave, listSaves, loadGame, savePrefs, store } from './store';
 import { prepareNewGame, scenarioButton } from './sys/live/goals';
 import { characterCard } from './charCreate';
 
-const START_YEARS: { year: number; label: { pt: string; en: string } }[] = [
-  { year: 1920, label: l('1920 — Goma-laca e rádio nascente', '1920 — Shellac and early radio') },
-  { year: 1950, label: l('1950 — Single, jukebox e rock\'n\'roll', '1950 — Singles, jukebox and rock\'n\'roll') },
-  { year: 1962, label: l('1962 — Bandas, LP e TV', '1962 — Bands, LPs and TV') },
-  { year: 1980, label: l('1980 — Garagem 1980 (clipes e CD)', '1980 — Garage 1980 (videos and CD)') },
-  { year: 2000, label: l('2000 — A virada digital', '2000 — The digital turn') },
-  { year: 2030, label: l('2030 — Arco Neural', '2030 — Neural Arc') },
+/** Anos marcantes (rodada 9: lista longa; o campo ao lado aceita qualquer ano de 1920 a 2039). */
+const NOTABLE: Record<number, ReturnType<typeof l>> = {
+  1920: l('Goma-laca e rádio nascente', 'Shellac and early radio'),
+  1927: l('Cinema falado e o jazz na tela', 'Talkies and jazz on screen'),
+  1935: l('Era do swing', 'Swing era'),
+  1948: l('Nasce o LP', 'The LP is born'),
+  1950: l('Single, jukebox e rock\'n\'roll', 'Singles, jukebox and rock\'n\'roll'),
+  1954: l('O rock\'n\'roll explode', 'Rock\'n\'roll explodes'),
+  1958: l('Bossa nova e estéreo', 'Bossa nova and stereo'),
+  1962: l('Bandas, LP e TV', 'Bands, LPs and TV'),
+  1964: l('Invasão britânica', 'British Invasion'),
+  1967: l('Verão do amor e psicodelia', 'Summer of love and psychedelia'),
+  1969: l('Woodstock', 'Woodstock'),
+  1973: l('Funk, soul e rock de arena', 'Funk, soul and arena rock'),
+  1977: l('Punk e discoteca', 'Punk and disco'),
+  1979: l('Hip hop e walkman', 'Hip hop and the walkman'),
+  1981: l('MTV e clipes', 'MTV and music videos'),
+  1983: l('Chega o CD', 'The CD arrives'),
+  1985: l('Live Aid e o pop global', 'Live Aid and global pop'),
+  1991: l('Grunge e rap no topo', 'Grunge and rap on top'),
+  1995: l('CD no auge', 'The CD at its peak'),
+  1999: l('Napster e o pânico digital', 'Napster and the digital panic'),
+  2001: l('iPod e loja digital', 'iPod and the digital store'),
+  2005: l('YouTube e redes sociais', 'YouTube and social media'),
+  2008: l('Streaming nasce', 'Streaming is born'),
+  2013: l('Streaming domina', 'Streaming takes over'),
+  2020: l('Pandemia e lives', 'Pandemic and livestreams'),
+  2025: l('Algoritmos e vídeos curtos', 'Algorithms and short video'),
+  2030: l('Arco Neural', 'Neural Arc'),
+  2035: l('Vozes sintéticas', 'Synthetic voices'),
+};
+const DECADE: [number, ReturnType<typeof l>][] = [
+  [1920, l('goma-laca e rádio', 'shellac and radio')], [1930, l('swing e rádio', 'swing and radio')], [1940, l('big bands e guerra', 'big bands and war')],
+  [1950, l('single e jukebox', 'singles and jukebox')], [1960, l('LP e TV', 'LPs and TV')], [1970, l('discoteca, punk e estádios', 'disco, punk and stadiums')],
+  [1980, l('clipes e CD', 'videos and CD')], [1990, l('a era do CD', 'the CD era')], [2000, l('virada digital', 'the digital turn')],
+  [2010, l('streaming', 'streaming')], [2020, l('algoritmos e IA', 'algorithms and AI')], [2030, l('Arco Neural', 'Neural Arc')],
 ];
+const START_YEARS: { year: number; label: { pt: string; en: string } }[] = (() => {
+  const ys = new Set<number>(Object.keys(NOTABLE).map(Number));
+  for (let y = 1920; y <= 2035; y += 5) ys.add(y);
+  ys.add(2039);
+  return [...ys].sort((a, b) => a - b).map((year) => {
+    const lab = NOTABLE[year] ?? [...DECADE].reverse().find(([d]) => year >= d)![1];
+    return { year, label: { pt: `${year} — ${lab.pt}`, en: `${year} — ${lab.en}` } };
+  });
+})();
 
 const SENSITIVE = [
   { id: 'drugs', label: l('Drogas e dependência', 'Drugs and addiction') },
@@ -104,7 +145,7 @@ function customCard(cfg: RunConfig): HTMLElement {
       { value: 'established', label: t(l('Estabelecido — discos e um sucesso', 'Established — records and a hit')) },
       { value: 'star', label: t(l('Estrela — discografia e fama', 'Star — discography and fame')) },
     ], (v) => v as StartCustom['level'])),
-    h('small', { class: 'muted' }, t(l('Formação e estágio valem para os papéis Artista e Híbrido.', 'Line-up and stage apply to the Artist and Hybrid roles.'))),
+    h('small', { class: 'muted' }, t(l('Formação e estágio valem para o papel Híbrido (sua banda).', 'Line-up and stage apply to the Hybrid role (your band).'))),
     h('label', null, t(l('Atos já contratados (selo)', 'Acts already signed (label)')), opt('roster', [0, 1, 2, 3, 4, 5, 6, 8].map((n) => ({ value: String(n), label: String(n) })), (v) => Number(v))),
     h('label', null, t(l('Funcionários iniciais', 'Starting staff')), opt('staff', [0, 1, 2, 3, 4, 6, 8].map((n) => ({ value: String(n), label: String(n) })), (v) => Number(v))),
     h('label', null, t(l('Mercados abertos', 'Open markets')), opt('markets', [
@@ -115,10 +156,43 @@ function customCard(cfg: RunConfig): HTMLElement {
   );
 }
 
+/** Rodada 9: fundar um selo novo ou assumir uma gravadora gerada para este começo. */
+function takeoverCard(cfg: RunConfig, nameInput: HTMLInputElement, citySel: () => void): { el: HTMLElement; refresh: () => void } {
+  let on = false;
+  let list: ReturnType<typeof takeoverCandidates> = [];
+  const box = h('div', { class: 'card-grid' });
+  const SIZE = [l('', ''), l('Pequena', 'Small'), l('Média', 'Mid-size'), l('Grande', 'Major')];
+  const draw = () => {
+    if (!on) { box.replaceChildren(); return; }
+    if (!list.length) { box.replaceChildren(h('p', { class: 'muted small' }, t(l('Nenhuma gravadora ativa neste começo.', 'No active label in this start.')))); return; }
+    box.replaceChildren(...list.map(({ label: lb, terms: x }) => h('button', { type: 'button', class: `pick ${cfg.takeover === lb.id ? 'on' : ''}`, onclick: () => { cfg.takeover = lb.id; cfg.companyName = lb.name; nameInput.value = lb.name; nameInput.disabled = true; cfg.homeCity = lb.city; citySel(); draw(); } },
+      h('b', null, lb.name), h('small', null, `${t(SIZE[x.tier])} · ${cityName(lb.city)} · ${t(l('fundada em', 'founded'))} ${lb.founded}`),
+      h('small', null, `${t(l('Caixa', 'Cash'))}: ${formatMoney(x.cash, locale())} · ${t(l('Elenco', 'Roster'))}: ${x.roster} · ${t(l('Reputação', 'Reputation'))}: ${x.reputation}`),
+      h('small', null, `${t(l('Gêneros', 'Genres'))}: ${x.genres.map((g) => t(genreById[g]?.name)).join(', ') || '—'}`),
+      x.debt ? h('small', { class: 'bad' }, `${t(l('Dívida', 'Debt'))}: ${formatMoney(x.debt, locale())} (${formatMoney(x.monthly, locale())}/${t(l('mês', 'month'))})`) : null,
+      ...x.notes.map((n) => h('small', { class: 'muted' }, t(n))))));
+  };
+  const refresh = () => {
+    if (!on) return;
+    try { list = takeoverCandidates(cfg); } catch { list = []; }
+    if (cfg.takeover && !list.some((c) => c.label.id === cfg.takeover)) { delete cfg.takeover; nameInput.disabled = false; }
+    draw();
+  };
+  const mode = (v: boolean) => { on = v; if (!v) { delete cfg.takeover; nameInput.disabled = false; } refresh(); draw(); };
+  const el = h('section', { class: 'card wide' },
+    h('h3', null, t(l('Como começar', 'How to start'))),
+    h('label', { class: 'radio' }, h('input', { type: 'radio', name: 'tk', checked: true, onchange: () => mode(false) }), h('span', null, h('b', null, t(l('Fundar um selo novo', 'Found a new label'))), h('small', { class: 'muted' }, ` — ${t(l('do zero, com o cenário escolhido.', 'from scratch, with the chosen scenario.'))}`))),
+    h('label', { class: 'radio' }, h('input', { type: 'radio', name: 'tk', onchange: () => mode(true) }), h('span', null, h('b', null, t(l('Assumir uma gravadora existente', 'Take over an existing label'))), h('small', { class: 'muted' }, ` — ${t(l('elenco, contratos, catálogo e caixa passam a ser seus; as grandes vêm com dívidas e equipe.', 'roster, contracts, catalog and cash become yours; big ones come with debts and staff.'))}`))),
+    h('p', { class: 'muted small' }, t(l('A lista depende do ano, do modo, da semente e dos nomes reais.', 'The list depends on year, mode, seed and real names.'))),
+    box,
+  );
+  return { el, refresh };
+}
+
 export function newGameScreen(root: HTMLElement, onStart: () => void): void {
   const cfg: RunConfig = {
     seed: randomSeed(),
-    role: 'label',
+    role: 'hybrid',
     scenario: 'from_zero',
     startYear: 1962,
     mode: 'free',
@@ -153,15 +227,20 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.mutators = on ? [...cfg.mutators, m.id] : cfg.mutators.filter((x) => x !== m.id); } }),
     h('span', null, t(m.name), h('small', { class: 'muted' }, ` — ${t(m.desc)}`)))));
   const yearInput = h('input', { type: 'number', min: 1920, max: 2039, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: t(l('Ano exato de início (1920–2039)', 'Exact start year (1920–2039)')),
-    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= 1920 && v <= 2039) { cfg.startYear = v; renderBand(); } } }) as HTMLInputElement;
-  const seedInput = h('input', { type: 'text', value: cfg.seed, oninput: (e: Event) => (cfg.seed = (e.target as HTMLInputElement).value || randomSeed()) });
+    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= 1920 && v <= 2039) { cfg.startYear = v; renderBand(); tk.refresh(); } } }) as HTMLInputElement;
+  const seedInput = h('input', { type: 'text', value: cfg.seed, oninput: (e: Event) => (cfg.seed = (e.target as HTMLInputElement).value || randomSeed()), onchange: () => tk.refresh() });
+  const nameInput = h('input', { type: 'text', value: cfg.companyName, oninput: (e: Event) => (cfg.companyName = (e.target as HTMLInputElement).value || 'Selo') }) as HTMLInputElement;
+  const cityBox = h('span');
+  const drawCity = () => cityBox.replaceChildren(select(cfg.homeCity, [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id))).map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => (cfg.homeCity = v), cfg.takeover ? { disabled: true } : undefined));
+  drawCity();
+  const tk = takeoverCard(cfg, nameInput, drawCity);
   root.replaceChildren(
     h('div', { class: 'newgame' },
       h('header', null, h('button', { class: 'btn ghost', onclick: () => titleScreen(root, onStart) }, '← ' + t(S.back)), h('h1', null, t(S.newGame))),
       h('div', { class: 'ng-grid' },
         h('section', { class: 'card' },
-          h('label', null, t(S.companyName), h('input', { type: 'text', value: cfg.companyName, oninput: (e: Event) => (cfg.companyName = (e.target as HTMLInputElement).value || 'Selo') })),
-          h('fieldset', null, h('legend', null, t(S.role)), ROLES.map((r) => h('label', { class: `radio ${r.available ? '' : 'disabled'}` },
+          h('label', null, t(S.companyName), nameInput),
+          h('fieldset', null, h('legend', null, t(S.role)), ROLES.filter((r) => r.id === 'label' || r.id === 'hybrid').map((r) => h('label', { class: `radio ${r.available ? '' : 'disabled'}` },
             h('input', { type: 'radio', name: 'role', checked: cfg.role === r.id, disabled: !r.available, onchange: () => { cfg.role = r.id; renderBand(); } }),
             h('span', null, h('b', null, t(r.name)), h('small', { class: 'muted' }, ` — ${t(r.desc)}`))))),
           bandBox,
@@ -171,16 +250,16 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
             { value: 'established', label: t(S.scenarioEstablished) },
           ] as { value: RunConfig['scenario']; label: string }[], (v) => (cfg.scenario = v))),
           h('label', null, t(S.startYear), h('div', { class: 'row' },
-            select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); }),
+            select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); tk.refresh(); }),
             yearInput)),
-          h('label', null, t(S.homeCity), select(cfg.homeCity, [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id))).map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => (cfg.homeCity = v))),
+          h('label', null, t(S.homeCity), cityBox),
         ),
         h('section', { class: 'card' },
           h('label', null, t(S.mode), select(cfg.mode, [
             { value: 'historic', label: t(S.modeHistoric) },
             { value: 'free', label: t(S.modeFree) },
             { value: 'chaos', label: t(S.modeChaos) },
-          ] as { value: RunConfig['mode']; label: string }[], (v) => (cfg.mode = v))),
+          ] as { value: RunConfig['mode']; label: string }[], (v) => { cfg.mode = v; tk.refresh(); })),
           h('fieldset', null, h('legend', null, t(S.storyteller)), STORYTELLERS.map((st) => h('label', { class: 'radio' },
             h('input', { type: 'radio', name: 'st', checked: cfg.storyteller === st.id, onchange: () => (cfg.storyteller = st.id) }),
             h('span', null, h('b', null, t(st.name)), h('small', { class: 'muted' }, ` — ${t(st.desc)}`))))),
@@ -189,14 +268,15 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
           ] as { value: RunConfig['difficulty']; label: string }[], (v) => (cfg.difficulty = v))),
           h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.ironman = (e.target as HTMLInputElement).checked) }), t(S.ironman)),
           h('label', { class: 'check', title: t(l('Cerca de 740 artistas reais (EUA, Reino Unido, Itália, Brasil e mundo) surgem perto do ano real de estreia, com integrantes e discografia; as gravadoras, festivais, rádios, revistas, plataformas, paradas e prêmios aparecem com os nomes reais (Beatles, Motown, Woodstock, Billboard, Grammy…). Artistas gerados continuam inventados.', 'About 740 real artists (US, UK, Italy, Brazil and worldwide) appear near their real debut year, with members and discographies; labels, festivals, radio, magazines, platforms, charts and awards use their real names (Beatles, Motown, Woodstock, Billboard, Grammy…). Generated artists stay invented.')) },
-            h('input', { type: 'checkbox', checked: true, onchange: (e: Event) => (cfg.realNames = (e.target as HTMLInputElement).checked) }), t(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'))),
+            h('input', { type: 'checkbox', checked: true, onchange: (e: Event) => { cfg.realNames = (e.target as HTMLInputElement).checked; tk.refresh(); } }), t(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'))),
           h('label', { class: 'check', title: t(l('Só no modo histórico: artistas reais tendem a morrer no mesmo ano em que morreram na vida real. Desligado, a morte é só simulada (idade, saúde, vícios).', 'Historic mode only: real artists tend to die in the same year they did in real life. Off, death is only simulated (age, health, addiction).')) },
             h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.realFates = (e.target as HTMLInputElement).checked) }), t(l('Mortes nos anos reais (modo histórico)', 'Deaths in their real years (historic mode)'))),
-          h('label', null, t(S.seed), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; } }, '🎲'))),
+          h('label', null, t(S.seed), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; tk.refresh(); } }, '🎲'))),
           h('fieldset', null, h('legend', null, t(S.contentFilters)), SENSITIVE.map((x) => h('label', { class: 'check' },
             h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.contentFilters = on ? [...cfg.contentFilters, x.id] : cfg.contentFilters.filter((y) => y !== x.id); } }),
             t(x.label)))),
         ),
+        tk.el,
         customCard(cfg),
         characterCard(cfg),
         h('section', { class: 'card wide' }, h('h3', null, t(S.card)), cards),
