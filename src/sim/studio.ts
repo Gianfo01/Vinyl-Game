@@ -11,6 +11,7 @@ import type { Act, GameState, Song } from './types';
 import type { SampleRequest, StudioSession, Take } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember, staffSkill } from './util';
 import { activeMembers, checkCapacity, monthIndex } from './capacity';
+import { applyMods } from './ext4';
 
 // ---------- Produtores ----------
 export interface ProducerDef {
@@ -203,6 +204,8 @@ function fixSong(s: GameState, r: Rng, sess: StudioSession, songId: string, perf
     sess.log.push(fmtL(l('{p} e a banda discutiram sobre o arranjo.', '{p} and the band argued over the arrangement.'), { p: pr.name }));
   }
   song.q = songQ(song);
+  // sem produtor de fora, a equipe da casa (especialistas, química) assina a faixa
+  if (!pr) song.q = applyMods(s, 'songQ', song.q, { song, act }).value;
   song.recorded = true;
   song.studioTier = sess.tier;
   song.approach = sess.approach;

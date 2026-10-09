@@ -38,3 +38,6 @@ import './social8';
 import './stakes8';
 import './feats8';
 import './heirs8';
+import './crew8';
+import './route8';
+import './consent8';

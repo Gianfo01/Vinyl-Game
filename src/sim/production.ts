@@ -113,6 +113,8 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
     song.production = clamp(eraProductionBase(s) + studio.production + own + producer + t.prod * 0.18 + ap.prod + techIssue + showman + r.normal(0, 5), 5, 100);
     song.originality = clamp(song.originality + ap.originality, 0, 100);
     song.q = songQ(song);
+    // equipe da casa (especialistas, química): ajusta os atributos da faixa
+    if (payer === 'player') song.q = applyMods(s, 'songQ', song.q, { song, act }).value;
     song.recorded = true;
     song.studioTier = tier;
     song.approach = approach;

@@ -12,6 +12,7 @@ import { h, rangeBar, select } from '../dom';
 import { openOffer } from '../ficha';
 import { store } from '../store';
 import { hqCaps } from '../../sim/branches';
+import { crewProfileCell } from '../sys/crew8';
 
 export function marketPanel(s: GameState): HTMLElement {
   const tabs: [typeof store.marketTab, string][] = [
@@ -184,7 +185,7 @@ function professionals(s: GameState): HTMLElement {
         const role = STAFF_ROLES.find((r) => r.id === p.role);
         return h('tr', null,
           h('td', null, p.name),
-          h('td', { title: t(role?.desc) }, t(role?.name)),
+          h('td', { title: t(role?.desc) }, t(role?.name), h('div', null, crewProfileCell(s, p))),
           h('td', null, p.skill),
           h('td', null, $(p.salary)),
           h('td', null, h('button', { class: 'btn small', disabled: s.player.staff.length >= cap, onclick: () => { const e = hireStaff(s, p.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(S.hire))),

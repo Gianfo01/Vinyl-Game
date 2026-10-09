@@ -16,8 +16,8 @@ import { clubBonus, liveBlocked } from './culture';
 import { branchCityBonus } from './branches';
 import { applyMods, runSimHooks } from './ext4';
 
-const TICKET = [12, 25, 45, 70, 95];
-const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
+export const TICKET = [12, 25, 45, 70, 95];
+export const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
 const PRODUCTION_BONUS = [0, 0.06, 0.14, 0.25];
 
 export interface TourPlan {
@@ -34,6 +34,8 @@ export interface TourPlan {
   crew: number;
   pay: Tour['pay'];
   name?: string;
+  /** folga a cada N datas (padrão 4; 0 = sem folga) */
+  restEvery?: number;
 }
 
 /** Público potencial numa cidade: fãs locais + regionais, saturação de visitas recentes. */
@@ -85,8 +87,9 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
   p.cities.forEach((cityId, i) => {
     const leg = legInfo(s, prev, cityId, people);
     km += leg.km;
-    day += leg.days;
-    if (i > 0 && i % 4 === 0) day += 1; // folga contratada
+    day += Math.round(leg.days); // datas em dias inteiros (viagens de meio dia não podem pular o show)
+    const rest = p.restEvery ?? 4;
+    if (rest > 0 && i > 0 && i % rest === 0) day += 1; // folga contratada
     const demand = cityDemand(s, act, cityId) * (p.role === 'opening' ? 0.3 : p.role === 'co' ? 1.2 : 1);
     const tier = p.tier !== undefined && p.tier >= 0 ? clamp(p.tier, 0, 4) : autoTier(s, act, demand);
     const v = VENUE_TIERS[tier];
@@ -201,7 +204,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     const t2 = actTalent(s, act);
     const fatigue = activeMembers(s, act).reduce((x, id) => x + (s.persons[id]?.fatigue ?? 0), 0) / Math.max(1, act.members.length);
     // acidentes e cancelamentos: fadiga, produção complexa, clima, pouca equipe
-    const risk = 0.006 + fatigue / 2500 + t.production * 0.004 + clim.cancelRisk + Math.max(0, 3 - t.crew) * 0.004;
+    const risk = applyMods(s, 'tourRisk', 0.006 + fatigue / 2500 + t.production * 0.004 + clim.cancelRisk + Math.max(0, 3 - t.crew) * 0.004, { act, cityId: st.cityId }).value;
     if (r.chance(risk)) {
       const kind = r.pick(['storm', 'injury', 'stage', 'power'] as const);
       const text = {
