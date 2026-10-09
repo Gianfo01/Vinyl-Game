@@ -147,7 +147,7 @@ export function centralPanel(s: GameState): HTMLElement {
             h('header', null, logo(a, 28), h('b', null, a.name), h('button', { class: 'btn small', onclick: () => reserveDialog(s, id) }, ic('calendar'), ' ', t(l('Reservar', 'Book')))),
             calendarFor(s, id, 6),
           );
-        }) : h('p', { class: 'muted' }, t(l('Sem carreiras.', 'No careers.'))),
+        }) : h('p', { class: 'muted' }, t(l('Nenhum artista no elenco ainda — contrate no Mercado.', 'No artists on the roster yet — sign some in the Market.'))),
       ),
       section(t(l('Planos', 'Plans')),
         s.plans.filter((p) => p.status !== 'done' && p.status !== 'cancelled').length ? h('table', { class: 'table' },

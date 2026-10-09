@@ -314,7 +314,7 @@ export function proj12(s: GameState, f: OwnFestival): Proj {
   const top = acts.reduce((t, a) => Math.max(t, a.fame), 0);
   const why: L[] = [];
   let dem = m.demand * id.demF;
-  if (x.ident === 'mega') { dem *= 0.6 + top / 100; why.push(fmtL(l('Mega: o headliner (fama {t}) decide o público.', 'Mega: the headliner (fame {t}) drives the crowd.'), { t: top })); }
+  if (x.ident === 'mega') { dem *= 0.6 + top / 100; why.push(fmtL(l('Mega: o headliner (fama {t}) decide o público.', 'Mega: the headliner (fame {t}) drives the crowd.'), { t: Math.round(top) })); }
   if (x.ident === 'discovery') { const small = acts.filter((a) => a.fame < 35).length; dem *= 1 + Math.min(0.3, small * 0.05); if (small) why.push(fmtL(l('{n} descobertas no line-up atraem quem confia na curadoria.', '{n} discoveries on the bill draw people who trust the curation.'), { n: small })); }
   if (x.ident === 'genre') { const on = acts.length ? acts.filter((a) => familyOf(a.genre) === x.fam).length / acts.length : 1; dem *= 0.75 + on * 0.45; if (on < 1) why.push(fmtL(l('{p}% do line-up fora do gênero.', '{p}% of the bill is off-genre.'), { p: Math.round((1 - on) * 100) })); }
   if (x.ident === 'family') { dem *= 0.7 + m.comfort / 200 + m.safety / 400; why.push(l('Família: conforto e segurança pesam na decisão de compra.', 'Family: comfort and safety weigh on the buying decision.')); }

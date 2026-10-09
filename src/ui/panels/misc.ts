@@ -331,7 +331,7 @@ function finances(s: GameState): HTMLElement {
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
       section(t(S.byCategory), h('table', { class: 'tbl compact' }, h('tbody', null, last.map(([k, v]) => h('tr', null, h('td', null, catName(k)), h('td', { class: v >= 0 ? 'good' : 'bad' }, $(v))))))),
-      section(t(S.yearly), h('table', { class: 'tbl compact' },
+      section(t(S.yearly), !years.length ? h('p', { class: 'muted small' }, t(l('O primeiro ano fecha em dezembro; receita e resultado anuais aparecem aqui.', 'The first year closes in December; yearly revenue and result show up here.'))) : h('table', { class: 'tbl compact' },
         h('thead', null, h('tr', null, h('th', null, t(l('Ano', 'Year'))), h('th', null, t(S.revenue)), h('th', null, t(l('Resultado', 'Result'))))),
         h('tbody', null, years.map((y) => h('tr', null, h('td', null, y), h('td', null, $(s.player.revenueByYear[y] ?? 0)), h('td', { class: (s.player.profitByYear[y] ?? 0) >= 0 ? 'good' : 'bad' }, $(s.player.profitByYear[y] ?? 0))))))),
       section(t(S.ledger), h('table', { class: 'tbl compact' }, h('tbody', null, s.ledger.slice(-30).reverse().map((e) => h('tr', null, h('td', { class: 'muted' }, `${t(S.week)} ${e.week}`), h('td', null, memoText(e.memo)), h('td', null, catName(e.cat)), h('td', { class: e.amount >= 0 ? 'good' : 'bad' }, $(e.amount))))))),
@@ -344,7 +344,7 @@ function finances(s: GameState): HTMLElement {
       ),
       section(t(S.loans),
         s.player.loans.map((ln) => kv(t(l('Saldo', 'Balance')), `${$(ln.balance)} · ${(ln.rate * 100).toFixed(1)}% a.a. · ${$(ln.monthly)}/m`)),
-        offer ? h('div', null, h('p', { class: 'small' }, t(l('Oferta: {a} a {r}% ao ano, 36 meses.', 'Offer: {a} at {r}% a year, 36 months.'), { a: $(offer.amount), r: (offer.rate * 100).toFixed(1) })), h('button', { class: 'btn', disabled: s.player.loans.length >= 3, onclick: () => { takeLoan(s); rerender(); } }, t(S.takeLoan))) : h('p', { class: 'muted small' }, t(l('Sem crédito disponível (Sem Rede de Segurança).', 'No credit available (No Safety Net).'))),
+        offer ? h('div', null, h('p', { class: 'small' }, t(l('Oferta: {a} a {r}% ao ano, 36 meses.', 'Offer: {a} at {r}% a year, 36 months.'), { a: $(offer.amount), r: String(Math.round(offer.rate * 1000) / 10).replace('.', t(l(',', '.'))) })), h('button', { class: 'btn', disabled: s.player.loans.length >= 3, onclick: () => { takeLoan(s); rerender(); } }, t(S.takeLoan))) : h('p', { class: 'muted small' }, t(l('Sem crédito disponível (Sem Rede de Segurança).', 'No credit available (No Safety Net).'))),
       ),
     ),
   );

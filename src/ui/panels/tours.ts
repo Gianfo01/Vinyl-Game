@@ -22,7 +22,7 @@ const PROD = [l('Básica', 'Basic'), l('Luzes e telão', 'Lights and screens'), 
 
 export function tourPlannerSection(s: GameState, stops: string[]): HTMLElement {
   const ids = playerActs(s);
-  if (!ids.length) return section(t(l('Planejar turnê', 'Plan a tour')), h('p', { class: 'muted' }, t(l('Sem carreiras.', 'No careers.'))));
+  if (!ids.length) return section(t(l('Planejar turnê', 'Plan a tour')), h('p', { class: 'muted' }, t(l('Nenhum artista no elenco para levar à estrada.', 'No artists on the roster to take on the road.'))));
   if (!draft.actId || !ids.includes(draft.actId)) draft.actId = ids[0];
   const act = s.acts[draft.actId];
   const recorded = act.songs.map((id) => s.songs[id]).filter((x) => x?.recorded).sort((a, b) => b.q - a.q);

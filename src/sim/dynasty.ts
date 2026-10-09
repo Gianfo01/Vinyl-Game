@@ -109,11 +109,14 @@ function familyMonth(s: GameState, r: Rng): void {
       if (!p?.alive) continue;
       const age = s.year - p.born;
       const fam = ensureFamily(s, p.id);
-      if (!fam.partner && !fam.separated && age > 24 && r.chance(0.01)) {
+      // rodada 14: quem já vive a rotina de lazer (leisure14) namora e tem filhos por lá — sem sorteio em dobro
+      // (o teste fica no fim da condição para não mudar o consumo do Rng compartilhado)
+      const lz = !!(s.x4 as unknown as { leisure14?: { r?: Record<string, unknown> } }).leisure14?.r?.[`p:${p.id}`];
+      if (!fam.partner && !fam.separated && age > 24 && r.chance(0.01) && !lz) {
         fam.partner = { name: personName(r, langForCity(act.city, r)), job: r.pick(JOBS), trust: 60, wellbeing: 60, agenda: r.pick(AGENDAS) };
         remember(s, 'partner', fmtL(l('{p} começa um relacionamento com {q}.', '{p} starts a relationship with {q}.'), { p: p.name, q: fam.partner.name }), { actId });
       }
-      if (fam.partner && age < 45 && fam.kids.length < 3 && r.chance(0.006)) {
+      if (fam.partner && age < 45 && fam.kids.length < 3 && r.chance(0.006) && !lz) {
         const kid = { id: nextId(s, 'k'), name: personName(r, langForCity(act.city, r)), born: s.year, bond: 70, musical: r.int(10, 90) };
         fam.kids.push(kid);
         remember(s, 'birth', fmtL(l('Nasce {k}, filho(a) de {p}.', '{k} is born to {p}.'), { k: kid.name, p: p.name }), { actId });

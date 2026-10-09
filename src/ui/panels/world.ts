@@ -23,6 +23,7 @@ import { board } from '../../sim/sys/charts7';
 import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
 import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
 import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintShadeMap } from '../sys/map13';
+import { tagName14 } from '../../sim/sys/polish14';
 import { scene14 } from '../pixel/scenes14';
 
 let worldMap: WorldMap | null = null;
@@ -244,7 +245,7 @@ function cityCard(s: GameState, cityId: string): HTMLElement {
     rivals.length ? h('div', null, h('small', { class: 'muted' }, t(l('Selos rivais com sede aqui', 'Rival labels based here'))), h('ul', { class: 'small' }, rivals.map((r) => h('li', null, ic('flag'), ` ${r.name} · ${r.roster.length} ${t(l('artistas', 'acts'))}`)))) : null,
     geo.length || cens.length ? h('div', null, h('small', { class: 'muted' }, t(l('Contexto político', 'Political context'))), h('ul', { class: 'small' },
       geo.map((g) => h('li', null, ic(g.liveBlocked ? 'lock' : 'globe'), ` ${t(g.name)} — ${geoLine(s, g)}`)),
-      cens.map((c) => h('li', null, ic('newspaper'), ` ${t(c.name)} — ${t(l('visados', 'targeted'))}: ${c.banned.join(', ')}`)))) : null,
+      cens.map((c) => h('li', null, ic('newspaper'), ` ${t(c.name)} — ${t(l('visados', 'targeted'))}: ${c.banned.map((x) => t(tagName14(x))).join(', ')}`)))) : null,
     clubs.length ? h('div', { class: 'cards' }, clubs.map((c) => tile('house', c.name, [
       h('small', null, `${genreName(c.genre)} · ${N(c.capacity)} ${t(l('lugares', 'capacity'))} · ${t(l('prestígio', 'prestige'))} ${Math.round(c.prestige)}`),
       c.owner === 'player' ? pill(t(l('seu clube', 'your club')), 'good') : h('button', { class: 'btn small', onclick: () => { const e = buyClub(s, c.id); toast(e ? t(e) : t(l('Clube comprado!', 'Club bought!')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Comprar', 'Buy'))} ~${$(money(s, 15000 + c.capacity * 40 + c.prestige * 500))}`),
@@ -258,7 +259,7 @@ function cityCard(s: GameState, cityId: string): HTMLElement {
 
 function geoLine(s: GameState, g: ReturnType<typeof activeGeo>[number]): string {
   const cr = activeCensorship(s).find((c) => c.id === g.id);
-  return [...geoEffects(g).map((e) => t(e)), cr ? `${t(l('visados', 'targeted'))}: ${cr.banned.join(', ')}` : ''].filter(Boolean).join(' · ');
+  return [...geoEffects(g).map((e) => t(e)), cr ? `${t(l('visados', 'targeted'))}: ${cr.banned.map((x) => t(tagName14(x))).join(', ')}` : ''].filter(Boolean).join(' · ');
 }
 
 function countryCard(s: GameState, a3: string): HTMLElement {
@@ -279,7 +280,7 @@ function countryCard(s: GameState, a3: string): HTMLElement {
     countryPanel13(s, a3),
     geo.length || cens.length ? h('ul', { class: 'small' },
       geo.map((g) => h('li', null, ic(g.liveBlocked ? 'lock' : 'globe'), ' ', h('b', null, t(g.name)), ` (${t(l('desde', 'since'))} ${g.from}) — ${geoLine(s, g)}`)),
-      cens.map((c) => h('li', null, ic('newspaper'), ' ', h('b', null, t(c.name)), ` (${t(l('desde', 'since'))} ${c.from}) — ${t(l('visados', 'targeted'))}: ${c.banned.join(', ')}`))) : h('p', { class: 'muted small' }, t(l('Sem crises ou censura ativas.', 'No active crises or censorship.'))),
+      cens.map((c) => h('li', null, ic('newspaper'), ' ', h('b', null, t(c.name)), ` (${t(l('desde', 'since'))} ${c.from}) — ${t(l('visados', 'targeted'))}: ${c.banned.map((x) => t(tagName14(x))).join(', ')}`))) : h('p', { class: 'muted small' }, t(l('Sem crises ou censura ativas.', 'No active crises or censorship.'))),
     cities.length ? h('div', { class: 'row wrap' }, cities.map((c) => h('button', { class: 'btn small ghost', onclick: () => { focusCity = c.id; focusCountry = null; rerender(); } }, t(c.name)))) : null,
   );
 }
@@ -337,7 +338,7 @@ function geoSection(s: GameState): HTMLElement {
         h('div', { class: 'chips' }, geoEffects(g).map((e) => pill(t(e), 'warn'))),
         h('small', { class: 'muted' }, `${t(l('Desde', 'Since'))} ${g.from} · ${mk(g.markets)}`)], { cls: 'warn' })),
       cens.map((c) => tile('newspaper', t(c.name), [
-        h('small', null, t(l('Gêneros/temas visados: ', 'Targeted genres/themes: ')), c.banned.join(', ')),
+        h('small', null, t(l('Gêneros/temas visados: ', 'Targeted genres/themes: ')), c.banned.map((x) => t(tagName14(x))).join(', ')),
         h('div', { class: 'chips' }, pill(`${t(l('Risco de veto', 'Ban risk'))} ${Math.round(c.level * 100)}%`, 'bad')),
         h('small', { class: 'muted' }, `${t(l('Desde', 'Since'))} ${c.from} · ${mk(c.markets)}`)], { cls: 'bad' })),
     ) : h('p', { class: 'muted small' }, t(l('Mundo relativamente calmo.', 'A relatively calm world.'))),

@@ -348,7 +348,7 @@ export function writerPool(s: GameState): Writer[] {
     const h = hashString(`${r.h}:${i}`);
     const fam = FAMILIES[h % FAMILIES.length].id;
     const skill = 45 + (h % 45);
-    out.push({ id: `wpool:${s.year}:${i}`, name: `${['Ana', 'Leo', 'Mia', 'Hal', 'Rosa', 'Theo', 'Iris', 'Noel'][h % 8]} ${['Blum', 'Carvalho', 'Reyes', 'Marsh', 'Okafor', 'Sato', 'Weiss', 'Duarte'][(h >> 4) % 8]}`, skill, style: fam, fee: 0, ghost: false, songs: 0, until: 0 });
+    out.push({ id: `wpool:${s.year}:${i}`, name: `${['Ana', 'Leo', 'Mia', 'Hal', 'Rosa', 'Theo', 'Iris', 'Noel'][h % 8]} ${['Blum', 'Carvalho', 'Reyes', 'Marsh', 'Okafor', 'Sato', 'Weiss', 'Duarte'][(h >>> 4) % 8]}`, skill, style: fam, fee: 0, ghost: false, songs: 0, until: 0 });
   }
   return out;
 }

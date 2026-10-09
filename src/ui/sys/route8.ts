@@ -34,7 +34,7 @@ function move(i: number, d: number): void {
 export function routePlannerSection(s: GameState): HTMLElement {
   const ids = playerActs(s);
   const title = t(l('Roteiro de turnê com promotor', 'Promoter tour routing'));
-  if (!ids.length) return section(title, h('p', { class: 'muted' }, t(l('Sem carreiras.', 'No careers.'))));
+  if (!ids.length) return section(title, h('p', { class: 'muted' }, t(l('Nenhum artista no elenco ainda.', 'No artists on the roster yet.'))));
   if (!draft.actId || !ids.includes(draft.actId)) { draft.actId = ids[0]; draft.cities = []; }
   const act = s.acts[draft.actId];
   const opts = candidateCities(s, act.id, 40).filter((o) => !draft.cities.includes(o.cityId));

@@ -48,10 +48,10 @@ function spotCard(s: GameState, k: Spot14): HTMLElement {
       ? h('ul', { class: 'dos13-list small' }, regs.slice(0, 8).map((key) => {
         const w = who14(s, key)!;
         const x = leisureOf14(s, key);
-        const op = x?.opinion ?? 0;
+        const op = Math.round(x?.opinion ?? 0);
         return h('li', null,
           w.p ? h('button', { class: 'link', onclick: () => openPersonPage(w.p!.id) }, w.name) : h('b', null, w.name),
-          h('span', { class: 'muted' }, ` · ${t(KIND[w.kind])}${w.act ? ` (${w.act.name})` : ''}`),
+          h('span', { class: 'muted' }, ` · ${t(KIND[w.kind])}${w.act && w.act.name !== w.name ? ` (${w.act.name})` : ''}`),
           ' ', pill(`${op > 0 ? '+' : ''}${op}`, tone(op)),
           !w.p ? h('details', null, h('summary', { class: 'small muted' }, t(l('vida pessoal', 'personal life'))), timeline(s, key, 6)) : null);
       }), regs.length > 8 ? h('li', { class: 'muted' }, `+${regs.length - 8}`) : null)

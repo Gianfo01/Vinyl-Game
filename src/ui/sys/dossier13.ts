@@ -82,12 +82,12 @@ export function labelDossier(s: GameState, id: string, close: () => void, tab?: 
       chips(
         stat('star', rank ? `#${rank}` : '—', l('no ranking de prestígio', 'in the standing ranking')),
         stat('fans', roster.length, l('artistas no elenco', 'acts on the roster')),
-        stat('money', $(revLast), l('receita do último ano', 'last year revenue')),
+        stat('money', revLast ? $(revLast) : '—', l('receita do último ano', 'last year revenue')),
         stat('trophy', stats.no1, l('números 1', 'number ones')),
         stat('fire', Math.round(st.pop), l('popularidade', 'popularity')),
       )),
   );
-  const extras = pageTabs('label', s, id).map((x) => ({ id: `x-${x.id}`, label: x.label, icon: x.icon, render: () => x.render(s, id) }));
+  const extras = pageTabs('label', s, id).filter((x) => x.id !== 'standing9').map((x) => ({ id: `x-${x.id}`, label: x.label, icon: x.icon, render: () => x.render(s, id) }));
   return h('div', { class: 'ficha pg dossier13' }, head, tabbed([
     { id: 'overview', label: l('Visão geral', 'Overview'), icon: 'building', render: () => overviewTab(s, id) },
     { id: 'standing', label: l('Prestígio e hype', 'Standing and hype'), icon: 'star', render: () => h('div', null,

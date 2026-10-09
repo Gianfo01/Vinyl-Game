@@ -101,7 +101,7 @@ function area(s: GameState): HTMLElement {
         rank.slice(0, 10).map((r, i) => h('tr', { class: r.you ? 'good' : '' }, h('td', null, String(i + 1)), h('td', null, r.you ? h('b', null, r.name) : h('button', { class: 'link', onclick: () => openMgr14(r.id) }, r.name)), h('td', null, String(r.clients)), h('td', null, String(r.fame))))),
       h('p', { class: 'small muted' }, t(l('Tirar clientes de outro empresário é mais difícil quanto mais forte ele for; dá para disputar na ficha dele ou na página do artista.', 'Taking clients from another manager is harder the stronger they are; contest them on their profile or the artist page.')))) : null,
     h('div', { class: 'row wrap' },
-      h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: F.past, onchange: (e: Event) => { F.past = (e.target as HTMLInputElement).checked; rerender(); } }), ' ', t(l('Incluir quem já saiu do ramo', 'Include those who left the business')))),
+      h('label', { class: 'check small' }, h('input', { type: 'checkbox', checked: F.past, onchange: (e: Event) => { F.past = (e.target as HTMLInputElement).checked; rerender(); } }), ' ', t(l('Incluir quem já saiu do ramo', 'Include those who left the business')))),
     list.length ? h('table', { class: 'table' },
       h('tr', null, ...[l('Nome', 'Name'), l('Estilo', 'Style'), l('Praça', 'Base'), l('Anos', 'Years'), l('Negociação', 'Negotiation'), l('Carisma', 'Charisma'), l('Opinião', 'Opinion'), l('Clientes', 'Clients')].map((x) => h('th', null, t(x)))),
       list.map((m) => {

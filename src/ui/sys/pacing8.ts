@@ -34,7 +34,7 @@ export function stopSummary(s: GameState): string {
 function stopForm(s: GameState, onChange?: () => void): HTMLElement {
   const st = pace8(s).stop;
   const chk = (k: keyof StopCriteria, name: L, icon: string) => h('label', { class: 'check' },
-    h('input', { type: 'checkbox', checked: !!st[k], onchange: (e: Event) => { (st as unknown as Record<string, boolean>)[k] = (e.target as HTMLInputElement).checked; onChange?.(); } }), ic(icon), ' ', t(name));
+    h('input', { type: 'checkbox', checked: !!st[k], onchange: (e: Event) => { (st as unknown as Record<string, boolean>)[k] = (e.target as HTMLInputElement).checked; onChange?.(); } }), h('span', null, ic(icon), ' ', t(name)));
   const num = (k: 'cashFloor' | 'chartTop' | 'maxMonths', min: number, max: number, step: number) => h('input', { type: 'number', min, max, step, value: st[k], style: 'width:7em', onchange: (e: Event) => { const v = Number((e.target as HTMLInputElement).value); if (Number.isFinite(v)) st[k] = Math.max(min, Math.min(max, v)); onChange?.(); } });
   return h('div', { class: 'form pace-form' },
     ...STOPS.map((x) => chk(x.k, x.name, x.icon)),
@@ -128,7 +128,7 @@ function teamArea(s: GameState): HTMLElement {
         h('p', { class: 'muted small' }, t(l('Com poucos artistas, você decide tudo. Com muitos, decide quem é foco, quanto cada carreira pode gastar e o que a equipe deve priorizar — e confere abaixo o que ela fez.', 'With few artists you decide everything. With many, you decide who is the focus, how much each career may spend and what the team should prioritise — then check below what it did.'))),
         ids.length ? h('table', { class: 'table small team-table' },
           h('thead', null, h('tr', null, ...[l('Carreira', 'Career'), l('Agenda', 'Agenda'), l('Prioridade', 'Priority'), l('Atenção', 'Attention'), l('Teto/mês', 'Cap/mo')].map((x) => h('th', null, t(x))))),
-          h('tbody', null, ids.map((id) => policyRow(s, id, over)))) : h('p', { class: 'muted' }, t(l('Nenhuma carreira no elenco.', 'No careers on the roster.'))),
+          h('tbody', null, ids.map((id) => policyRow(s, id, over)))) : h('p', { class: 'muted' }, t(l('Nenhum artista no elenco ainda.', 'No artists on the roster yet.'))),
       ),
       section(t(l('O que a equipe decidiu e por quê', 'What the team decided and why')),
         h('div', { class: 'row wrap' }, select(logFilter, [{ value: '', label: t(l('Todas as carreiras', 'All careers')) }, ...ids.map((id) => ({ value: id, label: s.acts[id].name }))], (v) => { logFilter = v; rerender(); })),

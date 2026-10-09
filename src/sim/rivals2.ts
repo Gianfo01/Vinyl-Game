@@ -108,7 +108,7 @@ export function rivals2Month(s: GameState, r: Rng): void {
       report(items, lb, fmtL(l('{d}.', '{d}.'), { d: lb.lastDecision! }));
     }
     const rel = recentByOwner.get(lb.id) ?? [];
-    if (rel.length) report(items, lb, fmtL(l('lançou {n} obra(s), destaque "{t}".', 'released {n} work(s), led by "{t}".'), { n: rel.length, t: rel[0].title }));
+    if (rel.length) report(items, lb, fmtL(rel.length === 1 ? l('lançou "{t}".', 'released "{t}".') : l('lançou {n} obras, destaque "{t}".', 'released {n} works, led by "{t}".'), { n: rel.length, t: rel[0].title }));
     // rivalidade pessoal decai devagar, mas nunca some sozinha
     if (s.rivalries[lb.id]) s.rivalries[lb.id] = Math.max(5, s.rivalries[lb.id] * 0.99);
     // aliciamento: artista do jogador nos últimos meses de contrato ou com confiança baixa
