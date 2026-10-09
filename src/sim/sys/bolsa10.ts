@@ -444,7 +444,7 @@ function rivalIpos(s: GameState, r: Rng): void {
   if (s.year < 1930 || Object.keys(st.lbl).filter((k) => s.labels[k]?.active).length >= 8) return;
   const cand = Object.values(s.labels).filter((x) => canIpo(s, x) && s.year - x.founded >= 5 && revenueOf(x) >= money(s, 250_000));
   for (const lb of cand.sort((a, b) => revenueOf(b) - revenueOf(a))) {
-    const p = 0.05 + (lb.archetype === 'empire' || lb.archetype === 'hitmaker' ? 0.06 : 0) + (lb.cash < money(s, 200_000) ? 0.05 : 0);
+    const p = 0.025 + (lb.archetype === 'empire' || lb.archetype === 'hitmaker' ? 0.03 : 0) + (lb.cash < money(s, 200_000) ? 0.025 : 0);
     if (r.chance(p)) { ipoLabel(s, lb, s.year, true); return; }
   }
 }
