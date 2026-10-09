@@ -103,3 +103,5 @@ import './fest12';
 import './venue12';
 // Rodada 12: hype unificado (artistas, lançamentos, relíquias, festivais, turnês, selos e cenas).
 import './hype12';
+// Rodada 13: despesas que escalam com porte e época (burocracia, jurídico, equipes de época, promoção mínima).
+import './overhead13';

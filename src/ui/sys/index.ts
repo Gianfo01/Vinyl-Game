@@ -59,3 +59,5 @@ import './fest12';
 import './venue12';
 // Rodada 12: hype unificado (medidor com motivos, alavancas, ranking nas paradas).
 import './hype12';
+// Rodada 13: quebra das despesas gerais na aba Finanças.
+import './overhead13';
