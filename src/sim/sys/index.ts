@@ -105,3 +105,4 @@ import './venue12';
 import './hype12';
 // Rodada 13: pontos de habilidade por conquistas.
 import './skillpts13';
+import './project13';

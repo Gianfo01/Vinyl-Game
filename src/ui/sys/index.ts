@@ -61,3 +61,4 @@ import './venue12';
 import './hype12';
 // Rodada 13: dossiê completo do selo, marcos/contratos/relíquias/vida pessoal do artista e mapa legível.
 import './dossier13';
+import './project13';
