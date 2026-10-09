@@ -16,6 +16,7 @@ import { visibleAct } from '../../sim/future';
 import { $, N, cityName, monthName, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { openScene, registerSection } from '../registry';
+import { festHype12 } from './hype12';
 import { chips, ic, meter, stat, tabs } from '../vis';
 import { festivalDayView, openFestivalEditor } from './live/festival';
 import { BODY } from './ventures9';
@@ -187,6 +188,7 @@ export function festCard12(s: GameState, f: OwnFestival): HTMLElement {
   const mu = muOf(s, f);
   return h('div', { class: 'lv-fest' },
     h('header', null, ic('flag', 2), h('b', null, f.name), ' ', pill(cityName(f.cityId)), pill(`${monthName(f.month)}/${f.nextYear} · ${f.days}d`), pill(t(IDENTS[x.ident].name)), pill(t(l('{n} edições', '{n} editions'), { n: x.hist.length }))),
+    festHype12(s, f.id),
     tabs(`fest12:${f.id}`, [
       { id: 'concept', label: t(l('Conceito', 'Concept')), icon: 'bulb', render: () => conceptTab(s, f) },
       { id: 'lineup', label: t(l('Line-up', 'Line-up')), icon: 'note', badge: clashes12(s, f).why.length || undefined, render: () => lineupTab(s, f) },

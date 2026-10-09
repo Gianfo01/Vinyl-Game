@@ -22,6 +22,7 @@ import { openPerson } from '../ficha';
 import { newgameCards } from '../newgame';
 import { PERSON_TABS, openActPage } from '../pages';
 import { registerArea, registerPageTab } from '../registry';
+import { relicHype12 } from './hype12';
 import { setTab, tabs } from '../vis';
 import './lendas9.css';
 
@@ -151,6 +152,7 @@ export function openRelic(s: GameState, id: string): void {
       h('div', { class: 'ln-relhead' }, h('span', { class: 'ln-ico' }, RELIC_ICON[rl.k]),
         h('div', null, h('div', null, t(RELIC_KIND[rl.k]), ' · ', String(rl.y), rl.a ? h('span', null, ' · ', who(s, rl.a)) : null, rl.p && rl.p !== rl.a ? h('span', null, ' · ', who(s, rl.p)) : null),
           h('div', { class: 'row wrap' }, pill(t(RELIC_ST[rl.st]), ST_CLS[rl.st]), h('b', null, $(relicPrice(s, rl)))))),
+      relicHype12(s, rl.id),
       section(t(l('Donos', 'Provenance')), h('ol', { class: 'ln-own' }, rl.own.map((o) => h('li', null, h('b', null, o[0]), h('small', { class: 'muted' }, ` · ${o[1]} · ${o[2]}`))))),
       section(t(l('Ações', 'Actions')), ...acts),
       section(t(l('Na crônica', 'In the chronicle')), chronList(s, chronQuery(s, { kinds: ['relic'] }).filter((e) => t(e.t).includes(t(rl.n))), 10)));

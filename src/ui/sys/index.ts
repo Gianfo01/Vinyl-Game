@@ -57,3 +57,5 @@ import './story12';
 // Rodada 12: dono de festival (ficha única em Shows e Empreendimentos) e dono de casa de shows.
 import './fest12';
 import './venue12';
+// Rodada 12: hype unificado (medidor com motivos, alavancas, ranking nas paradas).
+import './hype12';

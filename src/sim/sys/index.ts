@@ -101,3 +101,5 @@ import './story12';
 // Rodada 12: dono de festival (festival unificado: Empreendimentos + terreno) e dono de casa de shows.
 import './fest12';
 import './venue12';
+// Rodada 12: hype unificado (artistas, lançamentos, relíquias, festivais, turnês, selos e cenas).
+import './hype12';

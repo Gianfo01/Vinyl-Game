@@ -23,6 +23,7 @@ import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
 import { openActPage } from '../pages';
 import { registerArea, registerSection } from '../registry';
+import { projHype12 } from './hype12';
 import { store } from '../store';
 import { chips, ic, setTab } from '../vis';
 import { explainBox, goToProjects } from './project8';
@@ -209,7 +210,7 @@ function projectView(s: GameState, p: MusicProject): HTMLElement {
     h('div', null, h('h3', null, p.title || t(l('(sem título)', '(untitled)'))), h('small', { class: 'muted' }, `${act?.name ?? '—'} · ${p.type.toUpperCase()} · ${t(c.name)} · ${p.songIds.length}/${needSongs(p.type)}+ ${t(l('faixas', 'tracks'))}`)),
     pill(t(STAGE_NAMES[st]), st === 'followup' || st === 'released' ? 'good' : st === 'finishing' ? 'gold' : ''));
   if (!pl || ui.edit) return h('div', { class: 'p12-view' }, head, commitPanel(s, p), contextLinks(s, p));
-  return h('div', { class: 'p12-view' }, head, timeline(s, p, st), problemCard(s, p), results(s, p), nextAction(s, p, st), commitSummary(s, p), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
+  return h('div', { class: 'p12-view' }, head, timeline(s, p, st), problemCard(s, p), results(s, p), st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, nextAction(s, p, st), commitSummary(s, p), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
 }
 
 function hub(s: GameState): HTMLElement {

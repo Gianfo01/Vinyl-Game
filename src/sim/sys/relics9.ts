@@ -40,6 +40,8 @@ export interface Relic {
   brw?: number;
 }
 export interface Relics9State { list: Relic[] }
+/** Rodada 12 (hype12): multiplicador de preço pelo hype da peça. */
+export const relicHook: { f: (s: GameState, rl: Relic) => number } = { f: () => 1 };
 declare module '../ext4' { interface Ext4 { relics9: Relics9State } }
 registerExt4('relics9', () => ({ list: [] }));
 export function relics(s: GameState): Relics9State {
@@ -86,10 +88,10 @@ chronListeners().push((s: GameState, e: ChronEv) => {
 
 /** Preço: no leilão, a compra imediata (arremate já); fora dele, a pedida do dono. */
 export function relicPrice(s: GameState, rl: Relic): number {
-  return money(s, rl.v * (rl.st === 'auction' ? 1.25 : 1.3));
+  return money(s, rl.v * (rl.st === 'auction' ? 1.25 : 1.3) * relicHook.f(s, rl));
 }
 /** Lance inicial do leilão (dinheiro do jogo). */
-export const openingBid = (s: GameState, rl: Relic): number => money(s, rl.v);
+export const openingBid = (s: GameState, rl: Relic): number => money(s, rl.v * relicHook.f(s, rl));
 export const ownerName = (rl: Relic): string => rl.own[rl.own.length - 1]?.[0] ?? '?';
 const MUSEUMS = ['Museu do Som', 'Arquivo Nacional da Música', 'Hall dos Ecos'];
 const roll = (s: GameState, rl: Relic, what: string): number => (hashString(`${s.config.seed}|rl11|${what}|${rl.id}|${s.week}`) % 1000) / 1000;
@@ -243,7 +245,7 @@ const fate = (s: GameState, r: Rng, rl: Relic): void => {
   const col = () => `${r.pick(COLLECTORS)} (${r.pick(['colecionador', 'museu privado', 'fã'])})`;
   if (rl.st === 'auction') {
     if (rl.au !== undefined && s.week < rl.au) return;
-    const top = Math.round(rl.v * r.float(1, 1.4));
+    const top = Math.round(rl.v * r.float(1, 1.4) * relicHook.f(s, rl));
     const bid = rl.bid;
     rl.bid = undefined;
     if (bid && bid >= money(s, top)) {
