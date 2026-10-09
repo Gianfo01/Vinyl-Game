@@ -88,3 +88,5 @@ import './fame15';
 import './looks15';
 // Rodada 15: aprofundamentos (Sync, Disputas, Fandom do ato, júri dos prêmios).
 import './deep15';
+// Rodada 16: página única de pessoa (todos os personagens), empresário/produtor no artista, obras com pop-up, sucessão no selo.
+import './people16';

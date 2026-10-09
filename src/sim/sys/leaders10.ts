@@ -137,7 +137,7 @@ export function describeLeader(s: GameState, L0: Leader): L[] {
 
 // ---------------------------------------------------------------- criação e cargos
 
-function newLeader(s: GameState, r: Rng, lb: Label, o: { founder?: boolean; name?: string; born?: number } = {}): Leader {
+export function newLeader(s: GameState, r: Rng, lb: Label, o: { founder?: boolean; name?: string; born?: number } = {}): Leader {
   const st = leaders(s);
   const id = `ldr${++st.seq}`;
   const city = r.chance(0.75) ? lb.city : r.pick(Object.keys(cityById));
@@ -176,7 +176,7 @@ function appoint(s: GameState, r: Rng, lb: Label, L0: Leader, since = s.year, qu
   }
 }
 
-function depart(s: GameState, lb: Label | undefined, L0: Leader, end: JobEnd): void {
+export function depart(s: GameState, lb: Label | undefined, L0: Leader, end: JobEnd): void {
   const job = [...L0.jobs].reverse().find((j) => j.lb === L0.label && j.to === undefined);
   if (job) { job.to = s.year; job.end = end; }
   if (lb && lb.leaderId === L0.id) { delete lb.leaderId; }
@@ -186,11 +186,17 @@ function depart(s: GameState, lb: Label | undefined, L0: Leader, end: JobEnd): v
   if (end === 'died') L0.died = s.year;
 }
 
+/** Rodada 16: quem escolhe o sucessor (herdeiro, executivo da casa, contratação de fora) e quem registra a troca. */
+export const SUCC10: { pick?: (s: GameState, lb: Label, why: L) => { L: Leader; how: string } | undefined; done?: (s: GameState, lb: Label, L0: Leader, why: L, how: string) => void } = {};
+
 /** Escolhe e empossa o sucessor (um líder livre experiente ou alguém novo). */
-function succeed(s: GameState, r: Rng, lb: Label, why: L): Leader {
-  const free = Object.values(leaders(s).L).filter((x) => x.st === 'free' && s.year - x.born < x.retireAge - 2 && x.jobs.length > 0 && !x.jobs.some((j) => j.lb === lb.id));
-  const L0 = free.length && r.chance(0.4) ? free.sort((a, b) => b.amb - a.amb)[0] : newLeader(s, r, lb);
+export function succeed(s: GameState, r: Rng, lb: Label, why: L): Leader {
+  const pre = SUCC10.pick?.(s, lb, why);
+  const free = pre ? [] : Object.values(leaders(s).L).filter((x) => x.st === 'free' && s.year - x.born < x.retireAge - 2 && x.jobs.length > 0 && !x.jobs.some((j) => j.lb === lb.id));
+  const vet = free.length && r.chance(0.4);
+  const L0 = pre?.L ?? (vet ? free.sort((a, b) => b.amb - a.amb)[0] : newLeader(s, r, lb));
   appoint(s, r, lb, L0);
+  SUCC10.done?.(s, lb, L0, why, pre?.how ?? (vet ? 'veteran' : 'outside'));
   remember(s, 'leader10', fmtL(l('{n} assume {b} ({w}).', '{n} takes over {b} ({w}).'), { n: L0.name, b: lb.name, w: why }));
   if (lb.roster.length >= 5 || lb.family === 'A') notify(s, fmtL(l('Novo comando em {b}: {n}, {st}, prefere "{p}".', 'New leadership at {b}: {n}, {st}, prefers "{p}".'), { b: lb.name, n: L0.name, st: STYLE_TXT[L0.style][0], p: PLAYBOOKS[L0.pref].name }), 'info');
   return L0;

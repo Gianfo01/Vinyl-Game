@@ -17,6 +17,7 @@ import { langForCity, personName } from '../people';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
 import { poachName11 } from './manager11';
+import { gone16 } from './gone16';
 import { labelNeg, opine, opinionOf, registerPer13 } from './persona13';
 import { ownerOf } from './people/owner';
 import { realDataOf } from './realworld';
@@ -52,7 +53,7 @@ export function m14(s: GameState): M14 {
 // ---------------------------------------------------------------- quem é quem
 
 export const mgrKey = (id: string): string => `e:${id}`;
-export const mgrActive = (s: GameState, m: RealMgr): boolean => s.year >= m.from && s.year <= Math.min(m.to, m.died ?? 9999);
+export const mgrActive = (s: GameState, m: RealMgr): boolean => s.year >= m.from && s.year <= Math.min(m.to, m.died ?? 9999) && !gone16(s, `e:${m.id}`);
 export const activeMgrs = (s: GameState): RealMgr[] => REAL_MGRS.filter((m) => mgrActive(s, m));
 /** Já existiu (ativo agora ou no passado) — nunca mostra quem ainda não começou. */
 export const knownMgr = (s: GameState, m: RealMgr): boolean => s.year >= m.from;

@@ -22,6 +22,7 @@ import { bar, h, select } from '../dom';
 import { registerSection } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
+import { personRoute16 } from '../route16';
 
 const MONTHS = [l('jan', 'Jan'), l('fev', 'Feb'), l('mar', 'Mar'), l('abr', 'Apr'), l('mai', 'May'), l('jun', 'Jun'), l('jul', 'Jul'), l('ago', 'Aug'), l('set', 'Sep'), l('out', 'Oct'), l('nov', 'Nov'), l('dez', 'Dec')];
 const famName = (id: string) => t(FAMILIES.find((f) => f.id === id)?.name ?? l(id));
@@ -264,11 +265,18 @@ const outletName = (s: GameState, c: CriticDef) => (s.config.realNames && c.real
 const relPill = (v: number) => pill(v >= 20 ? t(l('simpatia', 'friendly')) : v <= -20 ? t(l('inimizade', 'hostile')) : t(l('neutra', 'neutral')), v >= 20 ? 'good' : v <= -20 ? 'bad' : '');
 
 export function openCriticPage(name: string): void {
+  if (personRoute16.f?.(`c:${name}`)) return;
   const s = g();
-  const c = criticByName(name);
-  if (!c) return;
+  if (!criticByName(name)) return;
   let close = () => {};
-  const draw = () => {
+  const draw = () => { close = modal(name, criticBody(s, name, () => { close(); draw(); }), { wide: true }); };
+  draw();
+}
+
+/** Corpo da página do crítico (rodada 16: também é a aba "Crítico" da página única de pessoa). */
+export function criticBody(s: GameState, name: string, redraw: () => void, full = true): HTMLElement {
+  const c = criticByName(name)!;
+  {
     const given = reviewsBy(s, name);
     const avg = given.length ? given.reduce((t0, x) => t0 + x.score, 0) / given.length : 0;
     const mine = given.filter((x) => { const r = s.releases[x.relId]; return r && (r.owner === 'player' || s.acts[r.actId]?.playerBand); });
@@ -289,16 +297,15 @@ export function openCriticPage(name: string): void {
       ),
       section(t(l('Relação com o seu selo', 'Relationship with your label')),
         h('p', null, relPill(relWith(s, name)), ` ${relWith(s, name) > 0 ? '+' : ''}${relWith(s, name)}`),
-        h('div', { class: 'row wrap' }, CRIT_ACTIONS.map((a) => h('button', { class: 'btn small', title: t(a.desc), onclick: () => { const e = criticAction(s, rngOf(s), name, a.id); toast(e ? t(e) : t(l('Feito.', 'Done.')), e ? 'bad' : 'good'); if (!e) { close(); draw(); rerender(); } } }, `${t(a.name)}${a.cost ? ` · ${$(money(s, a.cost))}` : ''}`))),
+        h('div', { class: 'row wrap' }, CRIT_ACTIONS.map((a) => h('button', { class: 'btn small', title: t(a.desc), onclick: () => { const e = criticAction(s, rngOf(s), name, a.id); toast(e ? t(e) : t(l('Feito.', 'Done.')), e ? 'bad' : 'good'); if (!e) { redraw(); rerender(); } } }, `${t(a.name)}${a.cost ? ` · ${$(money(s, a.cost))}` : ''}`))),
       ),
-      section(t(l('Ficha completa', 'Full profile')), ficha13(s, `c:${name}`, () => { close(); draw(); })),
+      full ? section(t(l('Ficha completa', 'Full profile')), ficha13(s, `c:${name}`, redraw)) : null,
       section(t(l('Notas que deu', 'Scores given')) + (given.length ? ` — ${t(l('média', 'average'))} ${avg.toFixed(1)}` : ''),
         given.length ? h('table', { class: 'tbl compact' }, h('tbody', null, given.slice(-25).reverse().map((x) => h('tr', { class: mine.includes(x) ? 'mine' : '' }, h('td', null, releaseLink(s, x.relId)), h('td', null, actLink(s, s.releases[x.relId]?.actId)), h('td', null, h('b', null, x.score.toFixed(1))))))) : h('p', { class: 'muted small' }, t(l('Nenhuma resenha guardada ainda.', 'No stored reviews yet.'))),
       ),
     );
-    close = modal(name, body, { wide: true });
-  };
-  draw();
+    return body;
+  }
 }
 
 // ================================================================ registro

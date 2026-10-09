@@ -127,3 +127,5 @@ import './looks15';
 import './sync15';
 import './fan15';
 import './dispute15';
+// Rodada 16: uma identidade por pessoa, empresários da praça, vida (vícios, mortes, casamentos) para toda a indústria e sucessão nos selos.
+import './people16';

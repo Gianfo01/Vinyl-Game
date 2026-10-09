@@ -297,7 +297,7 @@ ACT_TABS.push((s, a) => {
 });
 
 /** Blocos extras da vida pessoal (rodada 14: lazer, encontros e linha do tempo). */
-export const LIFE_EXTRAS13: ((s: GameState, p: Person) => HTMLElement | null)[] = [];
+export const LIFE_EXTRAS13: ((s: GameState, p: Person, open?: boolean) => HTMLElement | null)[] = [];
 
 function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
   const lf = personLife(s, p);
@@ -315,7 +315,7 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
         lf.voice !== undefined ? ` · ${t(l('voz', 'voice'))} ${Math.round(lf.voice)}` : '', lf.hearing !== undefined ? ` · ${t(l('audição', 'hearing'))} ${Math.round(lf.hearing)}` : ''),
       lf.dependency !== undefined && lf.dependency > 5 && canSee(s, p.id, 'health') ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
     ),
-    ...(canSee(s, p.id, 'life') ? LIFE_EXTRAS13.map((f) => f(s, p)) : []),
+    ...(canSee(s, p.id, 'life') ? LIFE_EXTRAS13.map((f) => f(s, p, open)) : []),
     ...[...groups].filter(() => canSee(s, p.id, 'life')).map(([g, xs]) => h('details', null, h('summary', { class: 'small muted' }, `${t(l('Mais dados', 'More data'))} · ${g}`),
       h('ul', { class: 'dos13-list small' }, xs.slice(0, 25).map((f) => h('li', null, h('span', { class: 'muted' }, `${t(f.label)}: `), typeof f.v === 'string' ? f.v : t(f.v)))))));
 }

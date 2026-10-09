@@ -51,10 +51,12 @@ const GROUPS: AttrGroup[] = ['tech', 'create', 'stage', 'mind', 'body'];
 export interface PageTab { id: string; label: L; icon?: string; render: () => HTMLElement | null }
 export const PERSON_TABS: ((s: GameState, p: Person, closeAll: () => void) => PageTab | null)[] = [];
 export const ACT_TABS: ((s: GameState, a: Act, close: () => void) => PageTab | null)[] = [];
+/** Rodada 16: linhas extras no cabeçalho da página de pessoa (cargos, cidade, família). */
+export const PERSON_HEAD_EXTRAS: ((s: GameState, p: Person) => HTMLElement | null)[] = [];
 const GROUP_ICON: Record<AttrGroup, string> = { tech: 'guitar', create: 'pen', stage: 'mic', mind: 'bulb', body: 'heart' };
 
 /** Abas locais de uma página (redesenham só o corpo da página). */
-function pageTabs(items: { id: string; label: L; icon?: string; render: () => HTMLElement | null }[], initial?: string): HTMLElement {
+export function pageTabs(items: { id: string; label: L; icon?: string; render: () => HTMLElement | null }[], initial?: string): HTMLElement {
   const body = h('div', { class: 'pg-tab-body' });
   const bar0 = h('div', { class: 'tabs', role: 'tablist' });
   let cur = items.find((i) => i.id === initial)?.id ?? items[0]?.id;
@@ -118,18 +120,18 @@ export function personCard(s: GameState, p: Person, opts: { onClick?: () => void
   );
 }
 
-export function openPersonPage(id: string): void {
+export function openPersonPage(id: string, tab?: string): void {
   const s = g();
   const p = s.persons[id];
   if (!p) return;
   let close = () => {};
   const content = h('div');
-  const draw = () => content.replaceChildren(personBody(s, p, () => { close(); rerender(); }, draw));
+  const draw = () => content.replaceChildren(personBody(s, p, () => { close(); rerender(); }, draw, tab));
   draw();
   close = modal(p.name, content, { wide: true, onClose: () => rerender() });
 }
 
-function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () => void): HTMLElement {
+function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () => void, tab?: string): HTMLElement {
   const { act, mine, deg } = personDegree(s, p);
   const vis = visibleFields(deg);
   const w = fuzz(deg, mine);
@@ -158,6 +160,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
         vis.skills || mine ? stat('coin', $(money(s, marketValue(s, p, act?.fame ?? 0))), l('Valor de mercado (cachê/passe)', 'Market value (fee/transfer)')) : null,
         stat('globe', t(ORIGINS.find((o) => o.id === p.origin)?.name) || '—', l('Formação', 'Background')),
       ),
+      ...PERSON_HEAD_EXTRAS.map((f) => f(s, p)),
       activity ? h('div', { class: 'small' }, icon(activity.icon, 1), ' ', t(activity.label)) : null,
       h('div', { class: 'row wrap' },
         mine || vis.private ? h('button', { class: 'btn small', onclick: editLook }, ic('pen'), ' ', t(l('Editar aparência', 'Edit look'))) : null,
@@ -173,7 +176,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
     { id: 'career', label: l('Carreira', 'Career'), icon: 'trophy', render: () => careerTab(s, p) },
     mine && !p.isPlayer ? { id: 'train', label: l('Treino', 'Training'), icon: 'sparkle', render: () => trainTab(s, p, redraw) } : null,
     ...PERSON_TABS.map((f) => f(s, p, closeAll)),
-  ].filter((x): x is NonNullable<typeof x> => !!x)));
+  ].filter((x): x is NonNullable<typeof x> => !!x), tab));
 }
 
 function attrsTab(s: GameState, p: Person, w: number, mine: boolean): HTMLElement {
