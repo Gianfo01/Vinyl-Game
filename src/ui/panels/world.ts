@@ -24,7 +24,6 @@ import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
 import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
 import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintShadeMap } from '../sys/map13';
 import { tagName14 } from '../../sim/sys/polish14';
-import { scene14 } from '../pixel/scenes14';
 
 let worldMap: WorldMap | null = null;
 let focusCity: string | null = null;
@@ -229,7 +228,6 @@ function cityCard(s: GameState, cityId: string): HTMLElement {
       h('h4', null, ic('globe'), ' ', t(city.name)),
       h('button', { class: 'btn small ghost', 'aria-label': t(l('Fechar', 'Close')), onclick: () => { focusCity = null; rerender(); } }, '×')),
     h('div', { class: 'muted small' }, `${unit ? t(unit.name) : ''} · ${t(mkt.name)} · ${t(cl.name)} ${Math.round(cl.tempC)} °C`),
-    scene14('city', { year: s.year, cityId, size: 'card', variant: s.month % 2 }),
     chips(
       stat('fans', N(fans.reduce((t2, [, v]) => t2 + v, 0)), l('Seus fãs potenciais', 'Your potential fans')),
       stat('fire', sceneOf(s, cityId).toFixed(1), l('Força da cena', 'Scene strength')),

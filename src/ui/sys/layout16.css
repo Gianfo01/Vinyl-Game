@@ -1,0 +1,14 @@
+/* Rodada 16 — correções de layout achadas na varredura (1400px/390px, claro/escuro). Só sobrescritas. */
+/* pílula dourada: #b8901c sobre creme dava contraste 2.4 — mistura com a tinta mantém o tom e lê */
+html .pill.gold { color: color-mix(in srgb, var(--gold) 62%, var(--ink)); }
+/* listas de atributos (movimentos, fichas): rótulos longos ("comercialização") vazavam da coluna fixa */
+html .attr-col li, html .attr-list li { grid-template-columns: minmax(90px, 1fr) minmax(80px, auto) minmax(44px, auto) auto; }
+html .attr-list li > *, html .attr-col li > * { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) { html .attr-col li, html .attr-list li { grid-template-columns: minmax(80px, 1fr) minmax(60px, auto) minmax(40px, auto); } }
+/* Lendas: o ano (ex.: 1965) não cabia no ícone de 2rem */
+html .ln-card .ln-ico { min-width: max-content; }
+/* histórico do laço (details) ocupa a linha toda em vez da coluna de 40px */
+html .attr-list li > details, html .attr-col li > details { grid-column: 1 / -1; }
+/* nota média (fundo âmbar claro no escuro): texto branco dava contraste 1.9 */
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .score:not(.good):not(.bad) { color: #1d1606; } }
+:root[data-theme='dark'] .score:not(.good):not(.bad) { color: #1d1606; }

@@ -27,6 +27,10 @@ export interface SceneOpts14 {
   capacity?: number;
   cityId?: string;
   variant?: number;
+  /** R16: local forçado (momento: festival, rádio FM, escritório...) e título/equipamento próprios */
+  place?: PlaceKind;
+  title?: L;
+  gear?: L;
 }
 
 export interface SceneSpec14 {
@@ -152,8 +156,14 @@ const r = (id: string, x: number, y: number, w: number, hh: number, label: L, ti
 const TO_SESSION: Nav14 = { area: 'studio', tab: ['creation-studio', 'session'] };
 const TO_GEAR: Nav14 = { area: 'studio', tab: ['creation-studio', 'studio-gear'] };
 
-/** Especificação da cena (função pura, testável). */
+/** Especificação da cena (função pura, testável); R16: local/título/equipamento podem ser forçados. */
 export function sceneSpec14(kind: Scene14, o: SceneOpts14): SceneSpec14 {
+  const b = baseSpec14(kind, o);
+  if (!o.place && !o.title && !o.gear) return b;
+  return { ...b, place: o.place ?? b.place, title: o.title ?? b.title, gear: o.gear ?? b.gear };
+}
+
+function baseSpec14(kind: Scene14, o: SceneOpts14): SceneSpec14 {
   const y = o.year;
   const era = eraOf(y);
   const base = { kind, era, fashion: FASHION[era], tier: 0, fill: 1 };

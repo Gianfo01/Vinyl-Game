@@ -1,5 +1,10 @@
-.ind-mats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
-.ind-mat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--panel); }
+.ind-mats { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+.ind-mat { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; align-items: stretch; background: var(--panel); min-width: 0; overflow-wrap: anywhere; }
+.ind-mat-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ind-mat-price { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; }
+.ind-mat-fmts { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.ind-mat-sup { display: flex; flex-direction: column; gap: 2px; }
+.ind-mat-sup select { width: 100%; max-width: 100%; min-width: 0; }
 .ind-mat.main { border-color: var(--accent); }
 .ind-mat .bad { color: var(--bad); font-weight: 600; }
 .ind-mat .good { color: var(--good); font-weight: 600; }

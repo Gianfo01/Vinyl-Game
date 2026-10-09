@@ -131,3 +131,6 @@ import './fan15';
 import './dispute15';
 // Rodada 16: agentes de shows e promotores com ordens delegadas.
 import './deleg16';
+// Rodada 16: momentos ilustrados (cena só quando algo acontece) e preço de matéria-prima já na época.
+import './moments16';
+import './supply16';

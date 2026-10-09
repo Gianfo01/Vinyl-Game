@@ -28,7 +28,7 @@ import { activeToursSection, merchSection, tourPlannerSection } from './tours';
 import { assignBranch, closeBranch, hqBlocker, hqCaps, upgradeBranch } from '../../sim/branches';
 import { ic, tile } from '../vis';
 import { crewProfileCell, crewRespecButton, crewSummary } from '../sys/crew8';
-import { banner14, venueBanner14 } from '../sys/visuals14';
+import { replayBtn16 } from '../sys/moments16';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -68,7 +68,6 @@ export function mediaPanel(s: GameState): HTMLElement {
   const known = TECHS.filter((x) => s.techDates[x.id] !== undefined && s.techDates[x.id] <= s.year);
   return h('div', { class: 'panel media' },
     h('div', { class: 'col-main' },
-      banner14(s, 'media'),
       pendingFeatures(s).length ? section(t(l('Novidade disponível', 'New: available now')),
         h('p', { class: 'muted small' }, t(l('A tecnologia chegou, mas seu selo precisa de equipe e equipamento antes de usar.', 'The technology has arrived, but your label needs crew and gear before using it.'))),
         ...pendingFeatures(s).map((f) => h('div', { class: 'row' }, h('b', null, t(f.label)), h('small', { class: 'muted' }, f.blurb ? t(f.blurb) : ''),
@@ -257,7 +256,6 @@ export function showsPanel(s: GameState): HTMLElement {
   const fests = FESTIVALS.filter((f) => f.start <= s.year && !f.scouting);
   return h('div', { class: 'panel shows' },
     h('div', { class: 'col-main' },
-      venueBanner14(s),
       tourMapSection(s),
       tourPlannerSection(s, tourStops),
       activeToursSection(s),
@@ -457,7 +455,7 @@ export function diaryPanel(s: GameState): HTMLElement {
         h('button', { class: 'btn small ghost', onclick: exportTxt }, t(l('Exportar diário', 'Export diary'))),
         h('button', { class: 'btn small ghost', onclick: async () => { const txt = s.memory.filter((m) => m.important).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`).join('\n'); const ok = await copyText(`Masters — Run ${s.signature}\n${s.config.companyName}\n\n${txt}`); toast(ok ? t(l('Diário copiado.', 'Diary copied.')) : t(l('Não deu para copiar aqui.', 'Copy is not available here.')), ok ? 'good' : 'bad'); } }, t(l('Copiar diário', 'Copy diary'))),
       ),
-      [...byYear.entries()].map(([y, list]) => h('div', { class: 'year' }, h('h4', null, y), h('ul', null, list.map((m) => h('li', null, h('span', { class: 'muted' }, monthName(m.month) + ' · '), t(m.text), m.actId ? h('span', null, ' ', actLink(s, m.actId)) : null))))),
+      [...byYear.entries()].map(([y, list]) => h('div', { class: 'year' }, h('h4', null, y), h('ul', null, list.map((m) => h('li', null, h('span', { class: 'muted' }, monthName(m.month) + ' · '), t(m.text), m.actId ? h('span', null, ' ', actLink(s, m.actId)) : null, ' ', replayBtn16(s, m)))))),
     ),
   );
 }

@@ -92,3 +92,6 @@ import './looks15';
 import './deep15';
 // Rodada 16: painel Delegar (equipe) e 'Agenciado por' (ato).
 import './deleg16';
+// Rodada 16: momentos ilustrados (cena só quando algo acontece; "ver cena" no diário).
+import './moments16';
+import './layout16';
