@@ -12,7 +12,7 @@ import { bumpPerks, perk } from '../src/sim/perks';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import {
   PROFILES, PROFILE_ACTIONS, actionBlock, ident, identityMonth, leadOfferEffect, noteDecision, originOfferEffect, pressReaction,
-  profileOfferEffect, retentionBonus, runProfileAction, trackLaunch, type ProfileId,
+  profileOfferEffect, retentionBonus, runProfileAction, trackLaunch, type CoreProfileId, type ProfileId,
 } from '../src/sim/sys/identity';
 import { cityById } from '../src/data/world';
 import { money, rngOf } from '../src/sim/util';
@@ -132,7 +132,7 @@ describe('perfis do selo emergem das decisões', () => {
       return closed && open;
     };
     s.player.territories = [home, foreignM as Release['territories'][number]];
-    const kinds: Record<ProfileId, { opp: boolean; cost: boolean; reaction: boolean }> = {
+    const kinds: Record<CoreProfileId, { opp: boolean; cost: boolean; reaction: boolean }> = {
       hits: {
         opp: oppOpen('hits') && ratio('hits', appeal(newRel)) > 1.05,
         cost: ratio('hits', appeal(reRel)) < 0.95 && diff('hits', () => perk(s, 'advance')) > 0.05,
@@ -169,7 +169,7 @@ describe('perfis do selo emergem das decisões', () => {
         reaction: diff('live', () => pressReaction(s, liveRel)) > 0 && diff('live', () => perk(s, 'trust', act)) > 0,
       },
     };
-    for (const p of PROFILES) expect(kinds[p.id], p.id).toEqual({ opp: true, cost: true, reaction: true });
+    for (const p of PROFILES.filter((x) => x.id in kinds)) expect(kinds[p.id as CoreProfileId], p.id).toEqual({ opp: true, cost: true, reaction: true });
     invariant(s);
   });
 

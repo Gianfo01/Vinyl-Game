@@ -6,8 +6,10 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { coverById, type CoverStyle } from '../../sim/covers';
 import { PRODUCERS } from '../../sim/studio';
+import { subOf, subRules } from '../../sim/sys/sound/subgenre';
+import { timbreById } from '../../sim/sys/sound/timbre';
 import {
-  AXES, AXIS_INFO, MOMENTS, PRESETS, actAim, actSignature, arrangementPull, bestWorst, clearSoundCache, cohesion, composeControl, coverFit, describeRelease,
+  AXES, AXIS_INFO, MOMENTS, PRESETS, actAim, actTrademarks, subsView, actSignature, arrangementPull, bestWorst, clearSoundCache, cohesion, composeControl, coverFit, describeRelease,
   describeSong, labelSignature, naturalSound, outletName, recordControl, recordPulls, releaseSound, setActAim, setSongAim, snd, soundAppeal, soundOf,
   soundTags, type Pull, type Vec,
 } from '../../sim/sys/sound';
@@ -76,7 +78,8 @@ function shortLine(s: GameState, so: Song): string {
 
 // ------------------------------------------------------------------ painel de uma faixa
 
-function sliders(aim: number[], onChange: (a: number[]) => void): HTMLElement {
+function sliders(aim0: number[], onChange: (a: number[]) => void): HTMLElement {
+  const aim = AXES.map((_, i) => aim0[i] ?? -1);
   return h('div', { class: 'snd-sliders' }, ...AXES.map((k, i) => {
     const free = aim[i] < 0;
     return h('div', { class: 'snd-slider' },
@@ -207,6 +210,8 @@ ACT_OVERVIEW_EXTRAS.push((s, a, deg, mine) => {
     axisBars(sig.v, { ghost: sig.n >= 3 ? sig.first : undefined, ghostLabel: l('Início da carreira', 'Early career'), compact: true }),
     changed.length ? h('p', { class: 'small' }, t(l('Desde o começo: ', 'Since the start: ')), changed.map((x) => `${t(x.d > 0 ? AXIS_INFO[x.k].hi : AXIS_INFO[x.k].lo)} (${x.d > 0 ? '+' : ''}${x.d})`).join(', ')) : sig.n >= 3 ? h('p', { class: 'small muted' }, t(l('Som estável desde o começo.', 'Sound steady since the start.'))) : null,
     prods.length ? h('p', { class: 'small muted' }, t(l('Produtores: ', 'Producers: ')), prods.slice(0, 4).join(', ')) : null,
+    actTrademarks(s, a.id).length ? h('p', { class: 'small' }, t(l('Timbres de assinatura: ', 'Signature timbres: ')), actTrademarks(s, a.id).map((x) => pill(t(timbreById[x].name), 'gold'))) : null,
+    (() => { const sg = subOf(subsView(s), a.id); return sg ? h('p', { class: 'small' }, t(l('Subgênero: ', 'Subgenre: ')), pill(t(sg.name)), ' ', h('span', { class: 'muted' }, t(subRules(sg)))) : null; })(),
     fitChips(s, sig.v),
   );
 });

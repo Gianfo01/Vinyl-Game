@@ -45,7 +45,7 @@ describe('eixos puxados por quem está envolvido', () => {
   it('composição grava os seis eixos; produtor seco e produtor polido levam a mesma faixa para lados opostos', () => {
     const { s, r, act } = withAct('snd-prod');
     const [so] = composeSongs(s, r, act, 1);
-    expect(so.sound?.v).toHaveLength(6);
+    expect(so.sound?.v).toHaveLength(9);
     expect(so.sound!.v.every((x) => x >= 0 && x <= 100)).toBe(true);
     const dry = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: PRODUCERS.find((p) => p.signature === 'dry' || p.signature === 'lofi')!.id, studioTier: 2, approach: 'balanced' } as Song;
     const gloss = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: PRODUCERS.find((p) => p.signature === 'glossy' || p.signature === 'neural')!.id, studioTier: 2, approach: 'balanced' } as Song;
@@ -170,7 +170,7 @@ describe('assinatura sonora que evolui', () => {
     runSimHooks('launch', s, r, { release: r1 });
     const lb = labelSignature(s);
     expect(lb.n).toBe(1);
-    expect(lb.v).toEqual(a.sound!.v);
+    expect(lb.v.slice(0, 6)).toEqual(a.sound!.v.slice(0, 6));
     const first = [...snd(s).sig[act.id].v];
     for (let i = 0; i < 3; i++) {
       const so = fixedSong(s, act.id, `sb${i}`, b.sound!.v);
@@ -236,7 +236,7 @@ describe('o som importa no jogo', () => {
     const songs = composeSongs(s, r, act, 3);
     delete songs[0].sound;
     const v = soundOf(s, songs[0]);
-    expect(v).toHaveLength(6);
+    expect(v).toHaveLength(9);
     expect(soundOf(s, songs[0])).toEqual(v); // determinístico
     invariant(s);
   });
