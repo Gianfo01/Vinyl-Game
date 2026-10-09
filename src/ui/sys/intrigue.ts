@@ -12,7 +12,7 @@ import { money, rngOf } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerTab } from '../registry';
-import { DILEMMAS, dilemmaBlocker, dilemmas, optionBlocker, takeDilemma, type Effects } from '../../sim/sys/dilemmas9';
+import { lifeEventsSection } from './lifeevents10';
 import { ic } from '../vis';
 import { visibleAct } from '../../sim/future';
 
@@ -88,35 +88,8 @@ export function intriguePanel(s: GameState): HTMLElement {
   );
 }
 
-const fxText = (f: Effects): string => [
-  f.health ? `${t(l('saúde', 'health'))} ${f.health > 0 ? '+' : ''}${f.health}` : '', f.stress ? `${t(l('estresse', 'stress'))} ${f.stress > 0 ? '+' : ''}${f.stress}` : '',
-  f.love ? `${t(l('relação', 'bond'))} ${f.love > 0 ? '+' : ''}${f.love}` : '', f.rep ? `${t(l('reputação', 'reputation'))} ${f.rep > 0 ? '+' : ''}${f.rep}` : '',
-  f.cash ? `${t(l('caixa', 'cash'))} +${f.cash}` : '', f.wealth ? `${t(l('patrimônio', 'wealth'))} +${f.wealth}` : '',
-].filter(Boolean).join(' · ');
-
-function dilemmasSection(s: GameState): HTMLElement {
-  const st = dilemmas(s);
-  return section(t(l('Dilemas pessoais', 'Personal dilemmas')),
-    h('p', { class: 'muted small' }, t(l('Cada escolha mostra o que custa e o que muda. Algumas deixam consequências meses depois.', 'Each choice shows its cost and effects. Some leave consequences months later.'))),
-    st.pending.length ? h('p', { class: 'small' }, t(l('Consequências a caminho: {n}', 'Consequences on the way: {n}'), { n: st.pending.length })) : null,
-    h('div', { class: 'card-grid' }, DILEMMAS.map((d) => {
-      const cool = dilemmaBlocker(s, d);
-      return h('div', { class: 'pick' },
-        h('b', null, t(d.name)), h('small', null, t(d.desc)),
-        cool ? h('small', { class: 'muted' }, t(cool)) : h('div', { class: 'col' }, d.opts.map((o) => {
-          const blk = optionBlocker(s, o);
-          return h('div', { class: 'opt' },
-            h('button', { class: 'btn small', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => say(takeDilemma(s, d.id, o.id), l('Escolha feita.', 'Choice made.')) }, t(o.label)),
-            h('small', { class: 'muted' }, `${o.cost ? `${$(o.cost)} · ` : ''}${o.energy ? `${o.energy} ${t(l('tempo livre', 'free time'))} · ` : ''}${fxText(o.fx)}${o.later ? ` · ${t(l('consequência depois', 'later consequence'))}` : ''}`),
-            o.note ? h('small', { class: 'muted' }, t(o.note)) : null,
-            blk ? h('small', { class: 'muted' }, t(blk)) : null);
-        })));
-    })),
-  );
-}
-
 export function decisionsTab(s: GameState): HTMLElement {
-  return h('div', null, dilemmasSection(s), bigDecisions(s));
+  return h('div', null, lifeEventsSection(s), bigDecisions(s));
 }
 
 function bigDecisions(s: GameState): HTMLElement {

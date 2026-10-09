@@ -82,6 +82,9 @@ export interface CharacterSpec {
   sex?: 'm' | 'f' | 'x';
   /** rodada 9: habilidades iniciais (árvore; até START_SKILL_POINTS) */
   skills?: string[];
+  /** rodada 10: visão política e religião (ids de src/sim/beliefs.ts; vazio = derivado do mundo) */
+  politics?: string;
+  religion?: string;
 }
 
 /** Aparência combinável (GDD §44): 3 corpos × 3 rostos × 4 peles × 16 cabelos × 8 cores × 4 roupas × 8 cores × acessórios. */

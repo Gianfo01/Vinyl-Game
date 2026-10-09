@@ -53,7 +53,9 @@ import './bonds9';
 import './movements9';
 import './rights8';
 import './dossier8';
-import './dilemmas9';
+// Rodada 10: vida pessoal (eventos mensais), política e religião.
+import './beliefs10';
+import './lifeevents10';
 // Rodada 9: prestígio dos selos e empreendimentos (festival, editora, estúdio, agência, mídia, streaming, gestão).
 import './standing9';
 import './ventures9';

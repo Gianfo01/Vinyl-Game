@@ -10,6 +10,7 @@ import { buildReviews } from './reviews';
 import { coverCriticBonus } from './covers';
 import { REGIONAL_CRITICS } from '../data/critics8';
 import { criticRelBonus } from './criticrel';
+import { isPolitical, viewsOf } from './beliefs';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 
 export interface CriticDef {
@@ -268,7 +269,7 @@ export function censorCheck(s: GameState, r: Rng, rel: Release): void {
   const act = s.acts[rel.actId];
   if (!act) return;
   const fam = familyOf(act.genre);
-  const political = act.members.some((id) => s.persons[id]?.traits.includes('engaged'));
+  const political = act.members.some((id) => s.persons[id]?.traits.includes('engaged') || isPolitical(viewsOf(s, id), 75));
   for (const rule of activeCensorship(s)) {
     const hit = rule.banned.includes(fam) || (political && rule.banned.includes('political'));
     if (!hit) continue;

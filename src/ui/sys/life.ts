@@ -27,6 +27,7 @@ import { transferSection } from './capital';
 import { persona, skills } from '../../sim/sys/persona';
 import { vicesTab } from './vices';
 import { registerArea, registerCutscene } from '../registry';
+import { playerViewsBlock } from './beliefs10';
 import { chips, ic, meter, stat, tabs } from '../vis';
 import { ownerTab } from './people/area';
 import { personalAgendaTab, possessionsTab } from './goods8';
@@ -84,6 +85,7 @@ function profileTab(s: GameState): HTMLElement {
         p ? h('div', null, personCard(s, p), h('button', { class: 'btn small ghost', onclick: () => openPersonPage(p.id) }, t(l('Ver todos os atributos', 'See every attribute')))) : null,
       ),
     ),
+    section(t(l('Visão de mundo', 'Worldview')), playerViewsBlock(s)),
     section(t(l('Como você joga com o personagem', 'How the character plays')),
       h('ul', { class: 'small muted' },
         h('li', null, t(l('Cada mês você tem 5 unidades de tempo livre (⏱), uma delas ocupada pela banda. Use em romance, família, música ou lazer.', 'Each month you get 5 units of free time (⏱), one taken by the band. Spend them on romance, family, music or leisure.'))),
