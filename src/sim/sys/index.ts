@@ -75,3 +75,7 @@ import './novelty9';
 // Rodada 10: bolsa de valores (ações de selos, plataformas, mídia e fabricantes) e aluguel só de imóveis próprios.
 import './bolsa10';
 import './leaders10';
+// Rodada 12: arcos de personagem (memória → decisão), vida pessoal que cruza com o selo e história do selo.
+import './arcs12';
+import './life12';
+import './story12';

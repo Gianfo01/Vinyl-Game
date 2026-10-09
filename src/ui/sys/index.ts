@@ -36,3 +36,6 @@ import './lendas9';
 import './rockhall9';
 import './menus9';
 import './leaders10';
+// Rodada 12: aba Arco do artista, rotinas pessoais e História do selo.
+import './arcs12';
+import './story12';
