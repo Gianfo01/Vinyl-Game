@@ -7,6 +7,7 @@ import type { GameState, Label } from './types';
 import { fmtL, money, notify, remember } from './util';
 import { talentScore } from './worldgen';
 import { emitEvent } from './events';
+import { rivalSignsLeft } from './sys/gate14';
 
 const STRAT = { develop: l('desenvolver', 'develop'), buy_catalog: l('comprar catálogos', 'buy catalogs'), niche: l('nichos', 'niches'), stars: l('estrelas', 'stars') };
 
@@ -26,7 +27,7 @@ export function rivalsMonth(s: GameState, r: Rng): void {
     lb.roster = lb.roster.filter((id) => s.acts[id] && s.acts[id].owner === lb.id);
     const cap = ROSTER_CAP[lb.family];
     // contratação: atos públicos (fama visível) ou estreias do catálogo
-    if (lb.roster.length < cap && lb.cash > money(s, 40000) && r.chance(0.07 + lb.aggression * 0.16)) {
+    if (lb.roster.length < cap && rivalSignsLeft(s, lb) > 0 && lb.cash > money(s, 40000) && r.chance(0.07 + lb.aggression * 0.16)) {
       const pool = Object.values(s.acts).filter(
         (a) => !a.owner && (a.status === 'active' || a.status === 'emerging') && (a.fame > 6 || (a.catalogNo && s.year >= a.debutYear)),
       );

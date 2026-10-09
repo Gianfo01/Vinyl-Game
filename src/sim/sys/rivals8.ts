@@ -21,6 +21,7 @@ import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { bondNote, prefsOf } from './identity8';
 import type { ProfileId } from './identity/data';
 import { XBY_ID, envOf, adj } from './identity/extra';
+import { skipBlockedLog } from './gate14';
 
 export type PlaybookId = 'vulture' | 'scene' | 'catalog' | 'tech' | 'live' | 'idol' | 'gospel' | 'prestige' | 'sync' | 'regional' | 'fund' | 'visionary' | 'purist'
   | 'viral' | 'school' | 'royalty' | 'conglomerate' | 'importer' | 'agitator' | 'copycat' | 'budget';
@@ -277,6 +278,7 @@ export function moveText(m: Move): L {
 }
 
 export function logMove(s: GameState, lb: Label, m: Omit<Move, 'w'>): void {
+  if (skipBlockedLog(s, lb.id, m.a)) return;
   const st = rivals8(s);
   const mv: Move = { w: s.week, ...m };
   const list = (st.log[lb.id] ??= []);
@@ -442,6 +444,7 @@ function resolveInterest(s: GameState, r: Rng): void {
     if (!r.chance(0.18) || lb.cash < money(s, expectedAdvance(s, a) * 1.3)) continue;
     const offer = s.offers.find((o) => o.actId === actId && (o.status === 'pending' || o.status === 'counter'));
     signWithRival(s, a, lb.id, r);
+    if (a.owner !== lb.id) { skipBlockedLog(s, lb.id, a.name); continue; }
     delete st.interest[actId];
     const key = rivals8(s).scene[lb.id];
     if (offer) {

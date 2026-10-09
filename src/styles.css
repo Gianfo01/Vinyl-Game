@@ -702,3 +702,7 @@ img.portrait { border: 1px solid var(--line); }
 .kpi13 .card { flex: 1 1 200px; padding: 0.5rem 0.7rem; margin: 0; }
 .kpi13 .kv13 { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.9em; }
 .found13 { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+
+/* Rodada 14: barras de capacidade */
+.cap14-row { margin: 6px 0; }
+.cap14-row .row { justify-content: space-between; }

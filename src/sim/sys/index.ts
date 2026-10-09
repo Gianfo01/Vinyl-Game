@@ -109,3 +109,5 @@ import './project13';
 // Rodada 13: despesas que escalam com porte e época (burocracia, jurídico, equipes de época, promoção mínima).
 import './overhead13';
 import './persona13';
+// Rodada 14: capacidade mensal (você, atos, equipe e rivais).
+import './capacity14';

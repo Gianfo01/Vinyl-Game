@@ -67,3 +67,5 @@ import './careerui13';
 import './overhead13';
 import './persona13';
 import './persona13tab';
+// Rodada 14: barras de capacidade (mesa, equipe, ato, rival).
+import './capacity14';
