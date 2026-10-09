@@ -292,3 +292,13 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - Modos de história: vida real exata, vida real com variações (padrão) ou personagens reais com história aleatória.
 - Fama por pessoa e por banda com 6 degraus e efeitos; informação visível depende da fama e dos olheiros (paradas sempre públicas).
 - Aprofundado: sincronização (trilhas de filme/TV/anúncio/jogos), pedidos e guerras de fãs, disputas contratuais (auditoria, greve, imprensa) e prêmios nacionais com júri local e esnobadas.
+
+## Rodada 16
+- Telas consertadas (matéria-prima em cartões, preços da época desde o início) e varredura de layout em todas as telas.
+- Pixel art só em momentos: show (pelo porte real da casa), TV/rádio por época, premiação, gravação, lançamento, contrato; "ver cena" no diário.
+- Formações vivas: Jackson 5 → The Jacksons (1975), Michael sai em 1984; ~65 transições reais; saídas, solos, bandas novas e supergrupos na simulação; decisões quando alguém do seu elenco quer sair.
+- Uma pessoa, uma página: artista que é produtor/empresário/CEO é a mesma pessoa; página padrão para todos com abas comuns + aba do cargo; empresário e produtor no artista; obras com pop-up; vida completa e sucessão nos selos rivais.
+- Contratar agentes de shows e promotores com ordens delegadas.
+- Menus: Festivais, Editora, Mídia e Plataforma com páginas próprias; Empreendimentos vira a carteira; 3 habilidades iniciais.
+- Fama por país/região com efeitos locais.
+- Sistemas conectados (fama→notoriedade, sync→paradas, amigos→scouting, luto, rixas, produtor×conceito, mídia própria, empresário em rixa, equipe sobrecarregada, esnobadas e memória do júri, fitas demo).
