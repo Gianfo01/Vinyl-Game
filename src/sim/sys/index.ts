@@ -111,3 +111,5 @@ import './overhead13';
 import './persona13';
 import './notoriety14';
 import './leisure14';
+// Rodada 14: empresários reais (representam artistas, exigências, indicações, rixas, concorrência).
+import './managers14';

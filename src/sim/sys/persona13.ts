@@ -31,7 +31,7 @@ import { FACETS, FACET_TXT, soul, type Facet } from './soul9';
 
 // ---------------------------------------------------------------- esquema
 
-export type Kind13 = 'player' | 'person' | 'leader' | 'staff' | 'critic' | 'media' | 'npc';
+export type Kind13 = 'player' | 'person' | 'leader' | 'staff' | 'critic' | 'media' | 'npc' | 'manager';
 export type Attr13 = 'ear' | 'neg' | 'cha' | 'mgmt' | 'img';
 export const ATTR13: Record<Attr13, [L, L]> = {
   ear: [l('Ouvido', 'Ear'), l('Reconhece talento e hits antes dos outros: pesa no A&R e na escolha de repertório.', 'Spots talent and hits before others: weighs on A&R and song choice.')],
@@ -162,6 +162,7 @@ export function per13(s: GameState, key: string): P13 | null {
 const staffSig = (s: GameState, key: string): string => {
   if (key === 'player' || s.persons[key.slice(2)]?.isPlayer) return Object.values(ownerOf(s).attrs).join(',') + persona(s).traits.join(',');
   if (key.startsWith('p:')) { const p = s.persons[key.slice(2)]; return p?.look ? `${p.look.skin}${p.look.beard ? 1 : 0}` : ''; }
+  if (key.startsWith('e:')) return s.config.realNames ? 'R' : 'F';
   if (!key.startsWith('s:')) return '';
   const st = s.player.staff.find((x) => x.id === key.slice(2));
   return st ? `${st.role}${st.skill}` : '';
@@ -183,6 +184,7 @@ function build(s: GameState, key: string): P13 | null {
   let look: Appearance | undefined;
   let role: string | undefined;
   let job: string | undefined;
+  let extSex: [Sex13 | undefined, number | undefined] | undefined;
   if (key === 'player') {
     const o = ownerOf(s);
     kind = 'player'; name = o.name; born = o.born; city = s.config.homeCity; job = 'exec';
@@ -271,14 +273,29 @@ function build(s: GameState, key: string): P13 | null {
     if (kind === 'critic') { up('critic', 70 + u(s, key, 'cq') * 25); up('anr', 50 + u(s, key, 'ca') * 20); job = 'critic'; }
     if (kind === 'media') { up('publicist', 60 + u(s, key, 'mq') * 25); job = 'publicist'; }
     views = viewsOf(s, key);
+  } else if (EXT13[kc]) {
+    const e = EXT13[kc](s, id);
+    if (!e) return null;
+    kind = e.kind; name = e.name; born = e.born; city = e.city ?? s.config.homeCity; job = e.job;
+    facets = { ...hashFacets(s, key), ...e.facets };
+    attrs = { ...e.attrs };
+    native.push(...(e.native ?? []));
+    for (const [j, v] of Object.entries(e.prof ?? {})) up(j, v);
+    views = deriveViews(s.config.seed, key, { born, year: s.year, city });
+    if (e.sex || e.skin !== undefined) extSex = [e.sex, e.skin];
   } else return null;
   for (const k of ATTR13_IDS) attrs[k] = c100(attrs[k]);
   for (const j of Object.keys(prof)) prof[j] = c100(prof[j]);
   const year = s.year;
-  const sex: Sex13 = kind === 'player' ? (persona(s).sex ?? 'x') : sexFor(s, key, kind, born ? born + 25 : year, role, look);
-  const skin = look ? look.skin : skinFor(s, key, city);
+  const sex: Sex13 = kind === 'player' ? (persona(s).sex ?? 'x') : extSex?.[0] ?? sexFor(s, key, kind, born ? born + 25 : year, role, look);
+  const skin = look ? look.skin : extSex?.[1] ?? skinFor(s, key, city);
   return { key, kind, name, born, city, attrs, facets, traits: traitsOf(facets), native, views, prof, sex, skin, job };
 }
+
+/** Rodada 14: outros sistemas registram tipos de pessoa por prefixo de chave (ex.: 'e:' empresários). */
+export interface Ext13 { kind: Kind13; name: string; born?: number; city?: string; job?: string; attrs: Record<Attr13, number>; facets?: Partial<Record<Facet, number>>; native?: L[]; prof?: Record<string, number>; sex?: Sex13; skin?: number }
+const EXT13: Record<string, (s: GameState, id: string) => Ext13 | null> = {};
+export function registerPer13(prefix: string, fn: (s: GameState, id: string) => Ext13 | null): void { EXT13[prefix] = fn; }
 
 export const keyOfPerson = (p: Person): string => `p:${p.id}`;
 export const keyOfLeader = (L0: Leader): string => `l:${L0.id}`;

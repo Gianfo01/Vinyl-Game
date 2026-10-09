@@ -72,3 +72,5 @@ import './notoriety14';
 import './cockpit14';
 import './theme14';
 import './leisure14';
+// Rodada 14: diretório e fichas de empresários reais.
+import './managers14';

@@ -283,6 +283,8 @@ function leave(s: GameState, c: Client, a: Act, by: string): L {
 }
 
 /** Você rouba o cliente de outro empresário: bônus de assinatura aumenta a chance. */
+/** Rodada 14: nome do empresário rival que corteja o cliente (real/ativo da praça), quando houver. */
+export const poachName11: ((s: GameState, a: Act) => string | null)[] = [];
 export function poachChance(s: GameState, a: Act, rate: number): number { return clamp(mgChance(s, a, rate) + 0.15, 0.03, 0.97); }
 export function poachClient(s: GameState, r: Rng, actId: string, rate: number): { ok: boolean; text: L } {
   const mg = ventures(s).mg;
@@ -359,7 +361,8 @@ function managerMonth(s: GameState, r: Rng): void {
       x.poach = undefined;
       if (r.chance(clamp((60 - c.sat) / 60, 0, 0.9))) { const t = leave(s, c, a, by); notify(s, t, 'bad'); notes.push(t); }
     } else if (!x.poach && r.chance(0.02 + a.fame / 1500 + (c.sat < 50 ? 0.03 : 0))) {
-      x.poach = { by: personName(r, langForCity(a.city, r)), rate: Math.max(0.08, Math.round((c.rate - 0.03) * 100) / 100), until: s.week + 4 };
+      const gen = personName(r, langForCity(a.city, r));
+      x.poach = { by: poachName11.reduce<string | null>((v, f) => v ?? f(s, a), null) ?? gen, rate: Math.max(0.08, Math.round((c.rate - 0.03) * 100) / 100), until: s.week + 4 };
       notify(s, fmtL(l('O empresário {b} está cercando {a} ({p}% de comissão). Responda em Gestão de artistas.', 'Manager {b} is courting {a} ({p}% commission). Respond in Artist management.'), { b: x.poach.by, a: a.name, p: Math.round(x.poach.rate * 100) }), 'bad');
       notes.push(fmtL(l('Assédio do empresário {b}.', 'Courted by manager {b}.'), { b: x.poach.by }));
     }
