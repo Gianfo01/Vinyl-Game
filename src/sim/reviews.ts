@@ -40,7 +40,10 @@ export function releaseAspects(s: GameState, rel: Release): Record<Aspect, numbe
     const sd = Math.sqrt(songs.reduce((t, x) => t + (x.q - m) ** 2, 0) / songs.length);
     cohesion = clamp(m + 12 - sd * 2.2, 5, 100);
   }
-  return { melody: avg('melody'), lyrics: avg('lyrics'), performance: avg('performance'), production: avg('production'), originality: avg('originality'), cohesion };
+  // rodada 10: faixas instrumentais não entram na média das letras (disco todo instrumental: aspecto neutro)
+  const sung = songs.filter((x) => !x.instrumental);
+  const lyrics = sung.length ? sung.reduce((t, x) => t + x.lyrics, 0) / sung.length : (avg('melody') + avg('performance')) / 2;
+  return { melody: avg('melody'), lyrics, performance: avg('performance'), production: avg('production'), originality: avg('originality'), cohesion };
 }
 
 /** Pesos de cada aspecto para um crítico (o gosto dele). */

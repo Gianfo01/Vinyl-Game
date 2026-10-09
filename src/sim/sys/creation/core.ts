@@ -11,6 +11,7 @@ import { queueCutscene, registerExt4, registerMod, registerSimHook } from '../..
 import { reviewRelease } from '../../media';
 import { personName } from '../../people';
 import { scheduleRelease, songQ, availableFormats, suggestedPress } from '../../production';
+import { settleVocals } from '../vocals10';
 import { songProfile } from '../../repertoire';
 import type { Act, GameState, Release, Song } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
@@ -333,6 +334,7 @@ export function inviteFeature(s: GameState, r: Rng, songId: string, guestId: str
   songX(s, songId).featuring = guestId;
   song.title = `${song.title} (feat. ${guest.name})`;
   song.performance = clamp(song.performance + 4, 0, 100);
+  if (song.instrumental) { settleVocals(s, song); if (!song.instrumental && song.recorded) song.q = songQ(song); }
   remember(s, 'feature', fmtL(l('{g} grava participação em "{t}".', '{g} records a feature on "{t}".'), { g: guest.name, t: song.title }), { actId: song.actId });
   return fmtL(l('{g} topou! Participação gravada.', '{g} said yes! Feature recorded.'), { g: guest.name });
 }

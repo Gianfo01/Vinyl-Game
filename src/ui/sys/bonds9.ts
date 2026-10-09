@@ -10,7 +10,7 @@ import { $, actLink, modal, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { ACT_HEAD_EXTRAS, ACT_TABS, PERSON_TABS, openActPage, openPersonPage } from '../pages';
 import {
-  BOND_NAME, END_NAME, EPI_NAME, PLAYER_KINDS, activeBonds, admiration, bondChance, bondCost, bondTitle, bonds, bondsOfAct, bondsOfPerson, leaveBond, opinionsOf, proposeBond,
+  BOND_NAME, END_NAME, EPI_NAME, PLAYER_KINDS, activeBonds, admiration, bondChance, bondCost, bondTitle, bonds, bondsOfAct, bondsOfPerson, leaveBond, opinionText, opinionsOf, proposeBond,
   type Bond, type BondKind,
 } from '../../sim/sys/bonds9';
 import {
@@ -214,7 +214,8 @@ ACT_TABS.push((s, a, close) => {
 function opinionsBlock(s: GameState, pid: string, close: () => void): HTMLElement | null {
   const op = opinionsOf(s, pid);
   if (!op.top.length && !op.low.length) return null;
-  const row = (x: { act: Act; v: number }) => h('li', null, h('button', { class: 'link', onclick: () => { close(); openActPage(x.act.id); } }, x.act.name), ' ', pill(`${x.v > 0 ? '+' : ''}${x.v}`, x.v > 0 ? 'good' : 'bad'));
+  const row = (x: { act: Act; v: number }) => h('li', null, h('button', { class: 'link', onclick: () => { close(); openActPage(x.act.id); } }, x.act.name), ' ', pill(`${x.v > 0 ? '+' : ''}${x.v}`, x.v > 0 ? 'good' : 'bad'),
+    h('div', { class: 'muted' }, h('i', null, `“${t(opinionText(s, pid, x.act.id))}”`)));
   return h('div', null, h('h4', null, `${t(l('Opiniões de', 'Opinions of'))} ${s.persons[pid]?.name ?? ''}`),
     op.top.length ? h('div', null, h('small', { class: 'muted' }, t(l('Admira', 'Admires'))), h('ul', { class: 'small' }, op.top.map(row))) : null,
     op.low.length ? h('div', null, h('small', { class: 'muted' }, t(l('Torce o nariz para', 'Looks down on'))), h('ul', { class: 'small' }, op.low.map(row))) : null);

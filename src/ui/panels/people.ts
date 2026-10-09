@@ -7,7 +7,11 @@ import { familyAction, launchHeir, negotiateReunion, reunionTerms, setLeader, st
 import { personaOf } from '../../sim/ext';
 import { callOutToxic, fanMeetup, moderateCommunity, fandomOf } from '../../sim/fandom';
 import { cedeTerritory, crisisRenegotiate, exerciseOption, setClauses } from '../../sim/contracts2';
-import type { Act, GameState } from '../../sim/types';
+import type { Act, GameState, Person } from '../../sim/types';
+import { instById, instrumentsOf } from '../../sim/sys/instruments';
+import { overall, ROLE_NAMES, type Role } from '../../sim/sys/talent/attrs';
+import { sings } from '../../sim/sys/vocals10';
+import { openPersonPage } from '../pages';
 import { rngOf } from '../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
@@ -21,6 +25,24 @@ const PERSONA: [keyof ReturnType<typeof personaOf>, L][] = [
 ];
 const GOAL: Record<string, L> = { security: l('segurança financeira', 'financial security'), credit: l('reconhecimento autoral', 'songwriting credit'), family: l('família', 'family'), leadership: l('liderança', 'leadership'), solo: l('carreira solo', 'solo career') };
 
+const HEALTH: Record<string, L> = { voice_strain: l('voz cansada', 'voice strain'), burnout: l('esgotamento', 'burnout'), addiction: l('vício', 'addiction'), recovering: l('em recuperação', 'recovering'), ill: l('doente', 'ill') };
+
+/** Rodada 10: as características principais de um integrante (função, instrumentos, voz, habilidades-chave, nota, contrato). */
+function mainTraits(s: GameState, a: Act, p: Person, known: boolean): HTMLElement {
+  const v = (x: number) => (known ? String(Math.round(x)) : `~${Math.round(x / 10) * 10}`);
+  const insts = instrumentsOf(s, p).slice().sort((x, y) => y.lvl - x.lvl).slice(0, 3);
+  const c = a.contractId ? s.contracts[a.contractId] : undefined;
+  const sk = p.skills;
+  return h('div', { class: 'chips main-traits' },
+    pill(`${t(l('Nota', 'OVR'))} ${known ? overall(s, p) : '~' + Math.round(overall(s, p) / 10) * 10}`, 'gold'),
+    sings(s, p) ? pill(`🎤 ${t(l('canta', 'sings'))}`, 'good') : null,
+    ...insts.map((x) => pill(`${t(instById[x.id]?.name ?? l(x.id, x.id))} ${v(x.lvl)}`)),
+    pill(`${t(l('Voz', 'Voice'))} ${v(sk.voice)}`), pill(`${t(l('Instrumento', 'Instrument'))} ${v(sk.instr)}`),
+    pill(`${t(l('Composição', 'Songwriting'))} ${v(sk.comp)}`), pill(`${t(l('Letra', 'Lyrics'))} ${v(sk.lyr)}`), pill(`${t(l('Palco', 'Stage'))} ${v(sk.stage)}`),
+    c ? pill(`${t(l('Contrato até', 'Contract until'))} ${s.config.startYear + Math.floor(c.endWeek / 52.18)}`) : pill(t(a.owner === 'player' || a.playerBand ? l('seu elenco', 'your roster') : l('sem contrato conosco', 'not signed to us'))),
+  );
+}
+
 export function membersSection(s: GameState, a: Act): HTMLElement {
   const r = rngOf(s);
   const fac = s.factions[a.id];
@@ -32,9 +54,12 @@ export function membersSection(s: GameState, a: Act): HTMLElement {
     const fam = s.families[pid];
     const group = fac?.groups.findIndex((g) => g.includes(pid)) ?? -1;
     return h('article', { class: `member ${p.alive ? '' : 'gone'}` },
-      h('header', null, portrait(p, 56), h('div', null, h('b', null, p.name), h('small', null, `${s.year - p.born} ${t(l('anos', 'yrs'))} · ${p.role}`), a.leaderId === pid ? pill(t(l('líder', 'leader')), 'good') : null, group >= 0 && (fac?.groups.length ?? 0) > 1 ? pill(`${t(l('facção', 'faction'))} ${group + 1}`) : null, !p.alive ? pill('✝') : null)),
-      chips(stat('heart', Math.round(p.morale), l('Moral', 'Morale')), stat('sleep', Math.round(p.fatigue), l('Fadiga', 'Fatigue')), stat('stress', Math.round(p.stress), l('Estresse', 'Stress')), stat('sparkle', Math.round(p.inspiration), l('Inspiração', 'Inspiration'))),
-      known ? h('div', { class: 'persona' }, PERSONA.map(([k, lbl]) => meter('sparkle', lbl, pe[k]))) : h('p', { class: 'muted small' }, t(l('Personalidade revelada com convivência.', 'Personality revealed through time together.'))),
+      // rodada 10: o cabeçalho abre a ficha completa da pessoa
+      h('header', { class: 'click', role: 'button', tabindex: 0, title: t(l('Abrir ficha completa', 'Open full card')), onclick: () => openPersonPage(pid), onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter') openPersonPage(pid); } },
+        portrait(p, 56), h('div', null, h('button', { class: 'link', type: 'button' }, h('b', null, p.name)), h('small', null, `${s.year - p.born} ${t(l('anos', 'yrs'))} · ${t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))}`), a.leaderId === pid ? pill(t(l('líder', 'leader')), 'good') : null, group >= 0 && (fac?.groups.length ?? 0) > 1 ? pill(`${t(l('facção', 'faction'))} ${group + 1}`) : null, !p.alive ? pill('✝') : null)),
+      mainTraits(s, a, p, !!known),
+      chips(stat('heart', Math.round(p.morale), l('Moral', 'Morale'), p.morale < 35 ? 'warn' : ''), stat('stress', Math.round(p.stress), l('Estresse', 'Stress'), p.stress > 65 ? 'warn' : ''), p.health !== 'ok' ? stat('warning', t(HEALTH[p.health] ?? l(p.health, p.health)), l('Saúde', 'Health'), 'warn') : null),
+      known ? h('details', { class: 'persona' }, h('summary', { class: 'small' }, t(l('Personalidade', 'Personality'))), PERSONA.map(([k, lbl]) => meter('sparkle', lbl, pe[k]))) : null,
       known && p.goal ? h('p', { class: 'small' }, ic('key'), ' ', t(l('Objetivo: ', 'Goal: ')), t(GOAL[p.goal])) : null,
       fam && (fam.partner || fam.kids.length) ? h('div', { class: 'family small' },
         fam.partner ? h('div', null, ic('heart'), ` ${fam.partner.name} — ${t(fam.partner.job)}; `, h('i', null, t(fam.partner.agenda)), ' ', meter('handshake', l('Confiança', 'Trust'), fam.partner.trust)) : null,

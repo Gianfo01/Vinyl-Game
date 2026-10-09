@@ -116,6 +116,15 @@ function own(s: GameState, p: Person): PersonInst {
   return (st(s).people[p.id] ??= { list: defaults(p).map((x) => ({ ...x })) });
 }
 
+/** Rodada 10: garante um instrumento com nível mínimo (ex.: voz para quem vira vocalista da banda). */
+export function grantInstrument(s: GameState, p: Person, id: string, lvl: number): void {
+  if (!instById[id]) return;
+  const o = own(s, p);
+  const cur = o.list.find((x) => x.id === id);
+  if (cur) cur.lvl = Math.max(cur.lvl, lvl);
+  else o.list.push({ id, lvl });
+}
+
 export function lessonCost(s: GameState, teacher: boolean): number {
   return money(s, teacher ? 450 : 60);
 }

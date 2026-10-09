@@ -11,9 +11,12 @@ import { forecastUnits } from './market';
 import { hqCaps } from './branches';
 import { takeIdea } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
+import { settleVocals } from './sys/vocals10';
 
-export function songQ(song: Pick<Song, 'melody' | 'lyrics' | 'performance' | 'production' | 'originality'>): number {
+export function songQ(song: Pick<Song, 'melody' | 'lyrics' | 'performance' | 'production' | 'originality'> & { instrumental?: boolean }): number {
   // Qualidade Q (GDD §12): 0,25 melodia + 0,20 letra + 0,25 performance + 0,20 produção + 0,10 originalidade
+  // rodada 10: instrumental — a letra não conta; os outros pesos são renormalizados
+  if (song.instrumental) return (0.25 * song.melody + 0.25 * song.performance + 0.2 * song.production + 0.1 * song.originality) / 0.8;
   return 0.25 * song.melody + 0.2 * song.lyrics + 0.25 * song.performance + 0.2 * song.production + 0.1 * song.originality;
 }
 
@@ -49,8 +52,9 @@ export function composeSongs(s: GameState, r: Rng, act: Act, n: number): Song[] 
       createdWeek: s.week,
       synthetic: act.archetype === 'synthetic',
     };
-    song.q = songQ({ ...song, performance: melody * 0.6, production: 30 });
     s.songs[song.id] = song;
+    settleVocals(s, song);
+    song.q = songQ({ ...song, performance: melody * 0.6, production: 30 });
     act.songs.push(song.id);
     out.push(song);
     runSimHooks('compose', s, r, { song });
@@ -106,7 +110,9 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
   for (const id of songIds) {
     const song = s.songs[id];
     if (!song || song.recorded) continue;
-    const perfBase = (t.voice * 0.55 + t.instr * 0.45) * 0.92 + act.rehearsed * 0.6;
+    settleVocals(s, song);
+    // instrumental: a execução depende dos instrumentos, não da voz
+    const perfBase = (song.instrumental ? t.instr * 0.9 + t.voice * 0.1 : t.voice * 0.55 + t.instr * 0.45) * 0.92 + act.rehearsed * 0.6;
     const mood = (st.morale - 50) / 8 - st.fatigue / 12;
     song.performance = clamp(perfBase + mood + ap.perf + r.normal(0, 6), 5, 100);
     const techIssue = r.chance(Math.max(0.02, 0.12 - engineerFix * 0.03)) ? -r.int(4, 12) : 0;

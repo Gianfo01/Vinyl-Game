@@ -17,6 +17,7 @@ import { P } from './people/state';
 import { gainXp, ownerOf, type OwnerAttr } from './people/owner';
 import { grow, learnInstrument, overall, type Role } from './talent';
 import { BACKGROUNDS, HOBBIES, JOBS, KID_EDU, PARTNER_TRAITS, backgroundById, type BackgroundId, type HobbyId, type KidEdu } from './life/data';
+import { ensureBandVocalist } from './vocals10';
 
 export * from './life/data';
 
@@ -192,6 +193,7 @@ function applyCharacter(s: GameState, r: Rng): void {
     if (band.members.length === 1 && !s.config.bandName) band.name = p.name;
     for (const id of band.members) if (id !== p.id && s.persons[id]) { s.persons[id].rel[p.id] = r.int(10, 50); p.rel[id] = r.int(10, 50); }
   }
+  ensureBandVocalist(s, band); // rodada 10: a banda começa com alguém que canta
 }
 
 registerSimHook('newgame', 'life', (s, r) => applyCharacter(s, r));
@@ -543,6 +545,7 @@ export function startProject(s: GameState, r: Rng, kind: 'solo' | 'band', genre:
   act.leaderId = p.id;
   for (const id of act.members) if (id !== p.id && s.persons[id]) { s.persons[id].rel[p.id] = r.int(0, 45); p.rel[id] = r.int(10, 50); }
   act.name = name.trim() ? name.trim().slice(0, 40) : kind === 'solo' ? p.name : act.name;
+  ensureBandVocalist(s, act); // rodada 10: sem vocalista não há letra
   signOwn(s, act);
   const text = kind === 'solo'
     ? fmtL(l('{o} lança carreira solo como "{a}".', '{o} launches a solo career as "{a}".'), { o: p.name, a: act.name })

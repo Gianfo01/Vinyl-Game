@@ -10,6 +10,7 @@ import { familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { launchNpcRelease } from '../market';
 import { composeSongs, songQ } from '../production';
+import { settleVocals } from './vocals10';
 import { songStatus } from '../repertoire';
 import type { Act, GameState, Song } from '../types';
 import { fmtL, nextId, notify, playerActs, post, remember } from '../util';
@@ -211,6 +212,7 @@ export function closeFeat(s: GameState, songId: string, guestId: string, t0: Fea
   songX(s, songId).featuring = guestId;
   song.title = `${song.title} (feat. ${guest.name})`;
   song.performance = clamp(song.performance + 4 + guest.fame / 25, 0, 100);
+  settleVocals(s, song); // rodada 10: o convidado que canta dá voz à faixa instrumental
   song.q = songQ(song);
   s.x4.creation.features.push({ id: nextId(s, 'ft'), songId, guestActId: guestId, fee: t0.fee, share: t0.split, status: 'done', week: s.week });
   if (s.x4.creation.features.length > 40) s.x4.creation.features.splice(0, s.x4.creation.features.length - 40);
@@ -293,8 +295,9 @@ export function acceptNpcInvite(s: GameState, r: Rng, hostId: string, guestId: s
   song.recorded = true;
   song.performance = clamp(45 + host.fame / 2 + guest.fame / 6 + r.normal(0, 6), 5, 100);
   song.production = clamp(55 + r.normal(0, 8), 5, 100);
-  song.q = songQ(song);
   songX(s, song.id).featuring = guestId;
+  settleVocals(s, song);
+  song.q = songQ(song);
   song.title = `${base} (feat. ${guest.name})`;
   if (fee > 0) post(s, `featin:${song.id}`, fee, 'royalties', `Cachê de participação: ${host.name}`);
   host.cash -= fee;

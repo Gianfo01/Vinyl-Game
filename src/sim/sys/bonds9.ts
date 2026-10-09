@@ -6,8 +6,8 @@
 // opinião sobre o trabalho dos outros (qualidade dos discos, afinidade de gênero, laços).
 // No modo histórico com nomes reais, os laços famosos entram no ano certo quando os dois existem.
 
-import { clamp, type Rng } from '../../core/rng';
-import { familyOf, genreById, l, type L } from '../../data/world';
+import { clamp, hashString, type Rng } from '../../core/rng';
+import { familyOf, genreById, l, type FamilyId, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { makeAct } from '../people';
 import type { Act, GameState } from '../types';
@@ -17,6 +17,7 @@ import { MSG_HANDLERS } from './people/inbox';
 import { addMsg, P } from './people/state';
 import { clearance, crossAudience } from './feats8';
 import { actOfPerson, bump, tieOf, tiesOf } from './social8';
+import { soul } from './soul9';
 
 export type BondKind = 'duo' | 'couple' | 'super' | 'ally' | 'cross' | 'patron';
 export type BondEnd = 'fight' | 'wear' | 'death' | 'prison' | 'divergence' | 'money' | 'done';
@@ -102,28 +103,108 @@ function workQ(s: GameState, act: Act): number {
   return rs.length ? rs.reduce((x, r) => x + r.q, 0) / rs.length : 50;
 }
 
-/** Admiração de uma pessoa pelo trabalho de um ato (−100..100). */
-export function admiration(s: GameState, pid: string, actId: string): number {
+/** Por que alguém pensa o que pensa de um ato: cada fator com seu peso (rodada 10). */
+export type AdmWhy = 'quality' | 'success' | 'genre' | 'curious' | 'generation' | 'envy' | 'rebel' | 'commercial' | 'taste' | 'ties' | 'bond' | 'heard';
+
+const FAMS: FamilyId[] = ['blues_jazz', 'country_folk', 'rnb', 'rock', 'pop', 'hiphop', 'electronic', 'caribbean', 'latin', 'brazil', 'africa', 'asia_me', 'europe', 'sacred'];
+
+/**
+ * Admiração de uma pessoa pelo trabalho de um ato (−100..100), com os fatores.
+ * Rodada 10: depende do gosto de quem opina (personalidade e valores do soul9, gênero preferido, geração em que
+ * cresceu, inveja, rebeldia, uma "química" pessoal determinística), não só da qualidade dos discos — antes todo
+ * mundo da mesma família de gêneros admirava a mesma lista. Sem sorteios: nada mexe no Rng compartilhado.
+ */
+export function admirationWhy(s: GameState, pid: string, actId: string): { v: number; parts: { k: AdmWhy; v: number }[] } {
   const p = s.persons[pid];
   const target = s.acts[actId];
-  if (!p || !target) return 0;
+  if (!p || !target) return { v: 0, parts: [] };
   const mine = actOfPerson(s, pid);
-  if (mine?.id === actId) return 0;
-  let v = (workQ(s, target) - 50) * 1.1 + Math.min(15, target.hits * 2 + target.awards * 3);
+  if (mine?.id === actId) return { v: 0, parts: [] };
+  const so = soul(s, p);
+  const f = so.f;
+  const val = so.v;
+  const parts: { k: AdmWhy; v: number }[] = [];
+  const add = (k: AdmWhy, v: number) => { if (Math.abs(v) >= 0.5) parts.push({ k, v }); };
+  const seed = s.config.seed;
+  // qualidade: perfeccionistas e quem valoriza a arte pesam mais
+  add('quality', (workQ(s, target) - 50) * (0.55 + f.perfeccionismo / 150 + val.arte / 300));
+  // sucesso: quem ama fama admira quem faz sucesso; quem só quer arte, nem tanto
+  add('success', Math.min(15, target.hits * 2 + target.awards * 3) * (0.25 + val.fama / 90));
+  // gênero: o próprio, o preferido pessoal e a curiosidade por outros mundos
+  const fam = familyOf(target.genre);
+  const fav = FAMS[hashString(`${seed}|fav|${pid}`) % FAMS.length];
   if (mine) {
-    if (mine.genre === target.genre) v += 12;
-    else if (familyOf(mine.genre) === familyOf(target.genre)) v += 7;
-    else v -= 4;
-    if (mine.movementId && mine.movementId === target.movementId) v += 10;
+    if (mine.genre === target.genre) add('genre', 6 + val.tradicao / 10);
+    else if (familyOf(mine.genre) === fam) add('genre', 3 + val.tradicao / 20);
+    else add('curious', (f.curiosidade - 50) / 3 - f.teimosia / 12);
+    if (mine.movementId && mine.movementId === target.movementId) add('genre', 10);
   }
+  if (fav === fam) add('taste', 9);
+  // geração: a música de quando a pessoa tinha uns 18 anos marca para sempre
+  const youth = p.born + 18;
+  const gap = Math.abs(target.debutYear - youth);
+  add('generation', clamp(10 - gap / 2, -10, 10) * (0.4 + val.tradicao / 100));
+  // inveja: mesmo universo, muito mais famoso, ego e ambição altos
+  if (mine && familyOf(mine.genre) === fam && target.fame > mine.fame + 10) add('envy', -Math.max(0, (f.ego + f.ambicao - 100) / 4) * Math.min(1, (target.fame - mine.fame) / 40));
+  // rebeldes desconfiam de quem virou instituição; quem preza a arte torce o nariz para o muito comercial
+  if (target.legend || target.fame > 70) add('rebel', -(f.rebeldia - 50) / 4);
+  if (target.positioning > 70) add('commercial', -(val.arte - val.fama) / 5);
+  // química pessoal: algo no som pega (ou não) — fixa para cada par pessoa/ato
+  add('taste', ((hashString(`${seed}|adm|${pid}|${actId}`) % 1000) / 1000 - 0.5) * 30);
+  // laços pessoais (quem é sociável pesa mais as amizades), parcerias e o que já ouviu
   let tv = 0;
   for (const m of target.members) { const t = tieOf(s, pid, m); if (t) tv += t.v; }
-  v += clamp(tv, -100, 100) * 0.35;
-  for (const b of bondsOfPerson(s, pid)) if (!b.end && b.a.includes(actId)) v += 15;
-  v += bonds(s).adm[`${pid}|${actId}`] ?? 0;
-  if (p.persona) v += (p.persona.openness - 50) / 10;
-  return clamp(Math.round(v), -100, 100);
+  add('ties', clamp(tv, -100, 100) * (0.2 + f.sociabilidade / 300));
+  for (const b of bondsOfPerson(s, pid)) if (!b.end && b.a.includes(actId)) add('bond', 15);
+  add('heard', bonds(s).adm[`${pid}|${actId}`] ?? 0);
+  const v = parts.reduce((t, x) => t + x.v, 0);
+  return { v: clamp(Math.round(v), -100, 100), parts };
 }
+
+/** Admiração de uma pessoa pelo trabalho de um ato (−100..100). */
+export function admiration(s: GameState, pid: string, actId: string): number {
+  return admirationWhy(s, pid, actId).v;
+}
+
+// frases: abertura por faixa de sentimento + o motivo mais forte (várias versões, escolhidas por hash do par)
+const OPEN: Record<'love' | 'like' | 'meh' | 'dislike' | 'hate', L[]> = {
+  love: [l('{a}? Referência absoluta', '{a}? An absolute touchstone'), l('Ouço {a} até hoje', 'I still play {a} all the time'), l('Ninguém faz o que {a} faz', 'Nobody does what {a} does'), l('Tiro o chapéu para {a}', 'Hats off to {a}'), l('{a} mudou a minha cabeça', '{a} changed my mind about music')],
+  like: [l('Gosto de {a}', 'I like {a}'), l('{a} tem o seu valor', '{a} has real merit'), l('Respeito o trabalho de {a}', 'I respect what {a} does'), l('{a} me agrada', '{a} works for me')],
+  meh: [l('{a}? Tanto faz', '{a}? Whatever'), l('Não tenho muito a dizer sobre {a}', 'I have little to say about {a}'), l('{a} passa por mim', '{a} goes right past me')],
+  dislike: [l('{a} não me desce', '{a} does not go down well with me'), l('Não entendo o barulho em torno de {a}', 'I do not get the fuss about {a}'), l('{a} me cansa', '{a} wears me out'), l('Desligo o rádio quando toca {a}', 'I switch the radio off when {a} comes on')],
+  hate: [l('{a} é tudo o que há de errado na música', '{a} is everything wrong with music'), l('Prefiro o silêncio a {a}', 'I would rather have silence than {a}'), l('{a}? Nem me pergunte', '{a}? Do not even ask')],
+};
+const WHY_TXT: Record<AdmWhy, [L[], L[]]> = {
+  quality: [[l('os discos são impecáveis', 'the records are flawless'), l('cada faixa é bem cuidada', 'every track is carefully made')], [l('os últimos discos são fracos', 'the latest records are weak'), l('falta capricho', 'it lacks care')]],
+  success: [[l('sabem fazer sucesso', 'they know how to land a hit'), l('os números não mentem', 'the numbers do not lie')], [l('sucesso não é tudo', 'success is not everything')]],
+  genre: [[l('falamos a mesma língua musical', 'we speak the same musical language'), l('é a minha praia', 'it is right up my street')], [l('nem é o meu mundo', 'not my world at all')]],
+  curious: [[l('ousam fora da caixinha', 'they dare outside the box'), l('é bom ouvir outro mundo', 'it is good to hear another world')], [l('nem é o meu mundo', 'not my world at all'), l('não é o meu tipo de som', 'not my kind of sound')]],
+  generation: [[l('me lembra a minha juventude', 'it takes me back to my youth'), l('é a trilha da minha geração', 'it is the soundtrack of my generation')], [l('é coisa de outra geração', 'it belongs to another generation'), l('não é do meu tempo', 'it is not from my time')]],
+  envy: [[l('merecem cada aplauso', 'they deserve every bit of applause')], [l('fama demais para tão pouco', 'too much fame for so little'), l('o hype é maior que a música', 'the hype is bigger than the music')]],
+  rebel: [[l('instituição merecida', 'a deserved institution')], [l('virou parte do sistema', 'they became part of the system'), l('viraram peça de museu', 'they turned into a museum piece')]],
+  commercial: [[l('pop bem feito', 'well-made pop')], [l('comercial demais', 'far too commercial'), l('feito para vender, não para sentir', 'made to sell, not to feel')]],
+  taste: [[l('tem algo ali que me pega', 'something in it just gets me'), l('o som bate comigo', 'the sound clicks with me')], [l('simplesmente não bate comigo', 'it simply does not click with me'), l('algo no som me irrita', 'something in the sound grates on me')]],
+  ties: [[l('e são gente boa', 'and they are good people'), l('e conheço bem quem está lá', 'and I know the people there well')], [l('e conheço bem demais quem está lá', 'and I know the people there too well'), l('e a convivência já foi ruim', 'and things got ugly between us')]],
+  bond: [[l('trabalhamos juntos', 'we work together')], [l('trabalhamos juntos, infelizmente', 'we work together, sadly')]],
+  heard: [[l('o último disco me conquistou', 'the last record won me over')], [l('o último disco me decepcionou', 'the last record let me down')]],
+};
+
+/** O que a pessoa diz sobre um ato — frase curta, coerente com o motivo mais forte e variada entre pessoas. */
+export function opinionText(s: GameState, pid: string, actId: string): L {
+  const w = admirationWhy(s, pid, actId);
+  const band = w.v >= 45 ? 'love' : w.v >= 12 ? 'like' : w.v > -6 ? 'meh' : w.v > -30 ? 'dislike' : 'hate';
+  const hh = hashString(`${s.config.seed}|op|${pid}|${actId}`);
+  const opens = OPEN[band];
+  const open = fmtL(opens[hh % opens.length], { a: s.acts[actId]?.name ?? '?' });
+  if (band === 'meh') return open;
+  const pos = w.v > 0;
+  const lead = w.parts.filter((x) => (x.v > 0) === pos).sort((x, y) => Math.abs(y.v) - Math.abs(x.v))[0];
+  if (!lead) return open;
+  const pool = WHY_TXT[lead.k][pos ? 0 : 1];
+  const why = pool[(hh >>> 7) % pool.length];
+  return { pt: `${open.pt} — ${why.pt}.`, en: `${open.en} — ${why.en}.` };
+}
+
 export function nudgeAdmiration(s: GameState, pid: string, actId: string, dv: number): void {
   const st = bonds(s);
   const k = `${pid}|${actId}`;

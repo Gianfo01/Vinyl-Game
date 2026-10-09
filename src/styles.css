@@ -476,6 +476,11 @@ img.portrait { border: 1px solid var(--line); }
 .member { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.6rem; }
 .member header { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.3rem; }
 .member header > div { display: flex; flex-direction: column; gap: 0.15rem; }
+.member header.click { cursor: pointer; border-radius: 6px; }
+.member header.click:hover { background: var(--panel); }
+.member header .link { text-align: left; padding: 0; }
+.member .main-traits { flex-wrap: wrap; gap: 0.25rem; margin: 0.2rem 0; }
+.member .main-traits .pill { font-size: 0.72rem; }
 .member.gone { opacity: 0.75; }
 .persona .meter { grid-template-columns: auto minmax(7rem, 10rem) 1fr 2rem; }
 .family { border-top: 1px dashed var(--line); margin-top: 0.4rem; padding-top: 0.4rem; }

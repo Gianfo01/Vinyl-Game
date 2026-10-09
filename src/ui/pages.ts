@@ -101,7 +101,11 @@ export function personCard(s: GameState, p: Person, opts: { onClick?: () => void
   const { mine, deg } = personDegree(s, p);
   const w = fuzz(deg, mine);
   const ovr = overall(s, p);
-  const top = attrsOf(s, p).sort((a, b) => b.value - a.value).slice(0, opts.compact ? 2 : 3);
+  // rodada 10: as características principais (técnica da função primeiro), não as maiores notas secundárias
+  const all = attrsOf(s, p);
+  const main = all.filter((x) => x.def.group === 'tech').sort((a, b) => b.value - a.value).slice(0, 2);
+  const extra = all.filter((x) => x.def.group === 'create' || x.def.group === 'stage').sort((a, b) => b.value - a.value).slice(0, 1);
+  const top = [...main, ...extra].slice(0, opts.compact ? 2 : 3);
   return h('button', { class: `pcard ${tone(ovr)}`, type: 'button', onclick: opts.onClick ?? (() => openPersonPage(p.id)) },
     h('div', { class: 'pcard-top' }, w >= 99 ? ovrBadge('?') : ovrBadge(w ? shown(ovr, w) : ovr), h('small', null, t(ROLE_NAMES[p.role] ?? l(p.role, p.role))), mine ? formIcon(form(p)) : null),
     portraitCanvas(p, s, 2),
@@ -404,7 +408,7 @@ function songsTab(s: GameState, a: Act, mine: boolean): HTMLElement {
   return h('table', { class: 'tbl compact' },
     h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, 'Q'), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.performance)), h('th', null, t(S.production)), h('th', null, t(l('Compositores', 'Writers'))), h('th', null, t(l('Lançada em', 'Released on'))))),
     h('tbody', null, songs.map((so) => h('tr', null,
-      h('td', null, so.title), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, show(so.lyrics)),
+      h('td', null, so.title, so.instrumental ? h('small', { class: 'muted' }, ` · ${t(l('instrumental', 'instrumental'))}`) : ''), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, so.instrumental ? '—' : show(so.lyrics)),
       h('td', null, so.recorded ? show(so.performance) : '—'), h('td', null, so.recorded ? show(so.production) : '—'),
       h('td', { class: 'small' }, so.writers.map((w) => s.persons[w]?.name.split(' ')[0] ?? '?').join(', ')),
       h('td', null, so.releaseId && s.releases[so.releaseId] ? h('button', { class: 'link', onclick: () => openRelease(so.releaseId!) }, s.releases[so.releaseId].title) : h('span', { class: 'muted' }, t(so.recorded ? l('gravada', 'recorded') : l('escrita', 'written'))))))));

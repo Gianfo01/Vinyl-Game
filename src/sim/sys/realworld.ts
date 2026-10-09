@@ -37,6 +37,8 @@ export interface RwState {
   done: Record<string, 1>;
   /** ex-integrantes por ato (para a página e a aba de inativos) */
   former: Record<string, { personId: string; year: number; reason: 'left' | 'died' | 'retired' | 'fired' }[]>;
+  /** rodada 10: identidade única — nome real canônico → id da pessoa (a mesma pessoa em banda, solo e supergrupo) */
+  pid?: Record<string, string>;
 }
 
 declare module '../ext4' { interface Ext4 { rw: RwState } }
@@ -127,6 +129,68 @@ function makeRealPerson(s: GameState, r: Rng, act: Act, m: { name: string; role:
   return p;
 }
 
+// ---------------------------------------------------------------- identidade única (rodada 10)
+
+/** Apelidos: grafias diferentes da mesma pessoa real nas listas. */
+const ALIASES: Record<string, string> = {
+  'beyonce knowles': 'beyonce',
+  'beyonce knowlescarter': 'beyonce',
+  'ozzy osbourne': 'ozzy',
+  'john ozzy osbourne': 'ozzy',
+  'roberto frejat': 'frejat',
+  'agenor de miranda araujo neto': 'cazuza',
+  'renato manfredini junior': 'renato russo',
+  'gordon sumner': 'sting',
+  'georgios panayiotou': 'george michael',
+  'robert nesta marley': 'bob marley',
+  'ney de souza pereira': 'ney matogrosso',
+  'rita lee jones': 'rita lee',
+};
+
+/** Chave canônica de um nome real (sem acentos, pontuação e caixa; apelidos unificados). */
+export function canonKey(name: string): string {
+  const k = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  return ALIASES[k] ?? k;
+}
+
+/** Índice nome canônico → pessoa (saves antigos: reconstruído a partir dos atos reais, modo nomes reais). */
+function pidIndex(s: GameState): Record<string, string> {
+  const st = rw(s);
+  if (st.pid) return st.pid;
+  const idx: Record<string, string> = {};
+  if (s.config.realNames) {
+    for (const a of Object.values(s.acts)) {
+      if (!a.catalogNo) continue;
+      for (const id of [...a.members, ...(st.former[a.id] ?? []).map((x) => x.personId)]) {
+        const p = s.persons[id];
+        if (p) idx[canonKey(p.name)] ??= p.id;
+      }
+    }
+  }
+  st.pid = idx;
+  return idx;
+}
+
+/** A pessoa real canônica para `p` (mesmo nome real e nascimento compatível); registra `p` se for a primeira. */
+function canonical(s: GameState, p: Person, realName: string, born: number | undefined, exclude: string[]): Person {
+  const idx = pidIndex(s);
+  const key = canonKey(realName);
+  if (!key) return p;
+  const ex = idx[key] ? s.persons[idx[key]] : undefined;
+  if (ex && ex !== p && !exclude.includes(ex.id) && !ex.isPlayer && (born === undefined || Math.abs(ex.born - born) <= 1)) {
+    if (born !== undefined) ex.born = born;
+    return ex;
+  }
+  if (!ex) idx[key] = p.id;
+  return p;
+}
+
+/** Atos (fora `except`) dos quais a pessoa faz ou fez parte. */
+function otherActsOf(s: GameState, personId: string, except: string): Act[] {
+  const st = rw(s);
+  return Object.values(s.acts).filter((a) => a.id !== except && (a.members.includes(personId) || (st.former[a.id] ?? []).some((x) => x.personId === personId)));
+}
+
 const potentialFor = (r: Rng, tier: number) => (tier === 1 ? r.int(90, 99) : tier === 2 ? r.int(80, 93) : r.int(68, 84));
 
 /** Aplica os dados reais a um ato já criado (integrantes, nascimento, fim, voltas, discografia). */
@@ -160,6 +224,12 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       } else {
         p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, real);
       }
+      // a mesma pessoa real já existe em outro ato (banda → solo, supergrupo): reaproveita
+      const c = canonical(s, p, name, born, now);
+      if (c !== p) {
+        if (p !== reuse) delete s.persons[p.id];
+        p = c;
+      }
       if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
       else if (died !== undefined && fates) st.sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
       if (leave !== undefined && leave <= s.year) {
@@ -173,8 +243,23 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     for (const p of old) if (!now.includes(p.id) && !(st.former[act.id] ?? []).some((x) => x.personId === p.id)) delete s.persons[p.id];
     if (now.length) act.members = now;
     act.leaderId = act.members[0];
+    // relações entre os integrantes (pessoas reaproveitadas de outros atos)
+    for (const a of act.members) for (const b of act.members) if (a !== b && s.persons[a] && s.persons[a].rel[b] === undefined) s.persons[a].rel[b] = 20;
   } else {
-    const p = s.persons[act.members[0]];
+    let p = s.persons[act.members[0]];
+    // carreira solo de quem já está (ou esteve) numa banda: a mesma pessoa, não um sósia
+    if (p && act.members.length === 1) {
+      const c = canonical(s, p, d.n, d.b, []);
+      if (c !== p) {
+        delete s.persons[p.id];
+        act.members = [c.id];
+        act.leaderId = c.id;
+        if (!real) act.name = c.name;
+        p = c;
+        const from = otherActsOf(s, c.id, act.id)[0];
+        if (from && s.week > 0) remember(s, 'solo', fmtL(l('{p} ({a}) estreia em carreira solo.', '{p} ({a}) debuts a solo career.'), { p: c.name, a: from.name }), { actId: act.id, important: act.fame > 30 || from.fame > 45 });
+      }
+    }
     if (p) {
       if (real) p.name = d.n;
       if (d.b) p.born = d.b;
@@ -362,7 +447,10 @@ function monthly(s: GameState, r: Rng): void {
     if (!act) continue;
     if (ev.kind === 'join' && ev.m && act.status !== 'retired' && act.status !== 'split' && act.owner !== 'player') {
       const [name, role, born, died] = ev.m;
-      const p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, !!s.config.realNames);
+      let p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, !!s.config.realNames);
+      const c = canonical(s, p, name, born, act.members);
+      if (c !== p) { delete s.persons[p.id]; p = c; }
+      if (act.members.includes(p.id)) continue;
       act.members.push(p.id);
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && act.owner !== 'player' && act.members.includes(ev.personId) && act.members.length > 1) {

@@ -13,6 +13,7 @@ import { money, playerActs, rngOf } from '../../sim/util';
 import { $, N, actLink, kv, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { store } from '../store';
+import { hasSinger, hireSessionSinger, sessionSingerCost, voiceLabel } from '../../sim/sys/vocals10';
 
 export function creationPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
@@ -59,7 +60,7 @@ export function creationPanel(s: GameState): HTMLElement {
   const renderSongs = () => {
     songList.replaceChildren(...ready.map((so) => h('label', { class: 'check' },
       h('input', { type: 'checkbox', checked: plan.songs.includes(so.id), onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; plan.songs = on ? [...plan.songs, so.id] : plan.songs.filter((x) => x !== so.id); } }),
-      `${so.title} `, pill(`Q ${Math.round(so.q)}`, so.q >= 60 ? 'good' : so.q < 40 ? 'bad' : ''),
+      `${so.title} `, pill(`Q ${Math.round(so.q)}`, so.q >= 60 ? 'good' : so.q < 40 ? 'bad' : ''), voiceLabel(so) ? pill(t(voiceLabel(so)!), so.instrumental ? 'warn' : '') : '',
     )));
   };
   renderSongs();
@@ -100,9 +101,14 @@ export function creationPanel(s: GameState): HTMLElement {
     h('div', { class: 'col-main' },
       section(`${a.name}: ${t(S.unrecorded)} (${written.length})`,
         written.length ? h('table', { class: 'tbl compact' },
-          h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.originality)))),
-          h('tbody', null, written.map((so) => h('tr', null, h('td', null, so.title), h('td', null, Math.round(so.melody)), h('td', null, Math.round(so.lyrics)), h('td', null, Math.round(so.originality))))),
+          h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.originality)), h('th', null, ''))),
+          h('tbody', null, written.map((so) => h('tr', null, h('td', null, so.title, ' ', voiceLabel(so) ? pill(t(voiceLabel(so)!), so.instrumental ? 'warn' : '') : ''),
+            h('td', null, Math.round(so.melody)), h('td', { class: so.instrumental ? 'muted' : '' }, so.instrumental ? `— (${Math.round(so.lyrics)})` : Math.round(so.lyrics)), h('td', null, Math.round(so.originality)),
+            h('td', null, so.instrumental ? h('button', { class: 'btn small ghost', title: t(l('Um cantor contratado grava a voz: a letra passa a contar.', 'A hired singer records the vocals: the lyrics start to count.')), onclick: () => { toast(t(hireSessionSinger(s, so.id))); rerender(); } }, t(l('Cantor de estúdio', 'Session singer')), ` ${$(sessionSingerCost(s))}`) : '')))),
         ) : h('p', { class: 'muted' }, t(l('Nenhuma. Coloque "Compor" na agenda do artista.', 'None. Add "Write songs" to the artist agenda.'))),
+        hasSinger(s, a) ? '' : h('p', { class: 'warn small' }, '🎤 ', t(l(
+          'Ninguém canta neste ato: as músicas saem instrumentais (a letra não conta na nota). Para ter voz: participação (feat.) de quem canta, um cantor de estúdio por faixa, ou contrate/ensine um vocalista (voz como instrumento).',
+          'Nobody sings in this act: songs come out instrumental (lyrics do not count). To get vocals: a feature (feat.) by a singer, a session singer per track, or hire/teach a vocalist (voice as an instrument).'))),
         h('p', { class: 'muted small' }, t(l('Gravar acontece pela agenda ("Gravar", 2 slots): estúdio, abordagem e salas da sede definem performance e produção.', 'Recording happens through the agenda ("Record", 2 slots): studio, approach and HQ rooms set performance and production.'))),
       ),
       section(`${t(S.planRelease)} — ${t(S.recordedUnreleased)} (${ready.length})`,

@@ -223,6 +223,10 @@ export interface Song {
   theme?: L;
   /** rodada 8: direção sonora (ver src/sim/sys/sound.ts) */
   sound?: SongSound;
+  /** rodada 10: faixa sem voz (o ato não tem quem cante e não houve feat/cantor de estúdio); a letra não conta */
+  instrumental?: boolean;
+  /** rodada 10: voz gravada por um cantor de estúdio contratado */
+  sessionVocal?: boolean;
 }
 
 /** Som de uma faixa: 6 eixos 0–100 (energia, densidade, eletrônico, foco vocal, polimento, experimentação). */
