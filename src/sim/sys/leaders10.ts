@@ -304,7 +304,7 @@ registerSimHook('month', 'leaders10', (s) => {
     } else succeed(s, r, lb, l('cargo vago', 'vacant post'));
   }
   // morte nos anos reais (modo histórico com "mortes nos anos reais")
-  if (s.config.realFates && s.config.mode === 'historic') for (const L0 of Object.values(st.L)) {
+  if (s.config.realFates && s.config.mode === 'historic' && s.config.history !== 'free') for (const L0 of Object.values(st.L)) {
     if (!L0.real || L0.realDied !== s.year || L0.st === 'dead') continue;
     const lb = L0.label ? s.labels[L0.label] : undefined;
     depart(s, lb, L0, 'died');
@@ -323,7 +323,7 @@ registerSimHook('year', 'leaders10', (s) => {
     if (L0.st === 'active' && (!lb || !lb.active || lb.leaderId !== L0.id)) { depart(s, lb, L0, 'closed'); continue; }
     // morte (genérica; reais com data conhecida só morrem nela se "mortes nos anos reais" estiver ligado)
     const pDie = age >= 70 ? (age - 68) * 0.012 : 0.002;
-    const realFixed = L0.real && s.config.realFates && s.config.mode === 'historic' && L0.realDied !== undefined;
+    const realFixed = L0.real && s.config.realFates && s.config.mode === 'historic' && s.config.history !== 'free' && L0.realDied !== undefined;
     if (!realFixed && r.chance(pDie)) {
       depart(s, lb, L0, 'died');
       if (lb) {

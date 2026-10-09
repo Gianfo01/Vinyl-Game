@@ -26,12 +26,13 @@ import { langForCity, makeAct, makePerson, songTitle } from '../people';
 import type { Act, GameState, Person, Release } from '../types';
 import { fmtL, nextId, remember } from '../util';
 import { addSignal, signToBestRival } from '../worldgen';
+import { histAltered, histDiverged, histMode, histRoll } from '../history15';
 
 export const REAL_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
 
-type Sched = { year: number; kind: 'join' | 'leave' | 'reunion' | 'fate' | 'release'; actId: string; personId?: string; m?: RealMember; until?: number; rel?: RealRelease };
+type Sched = { year: number; kind: 'join' | 'leave' | 'reunion' | 'fate' | 'release'; actId: string; personId?: string; m?: RealMember; until?: number; rel?: RealRelease; mo?: number };
 
 export interface RwState {
   upcoming: number[];
@@ -201,7 +202,11 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   if (st.done[act.id]) return;
   st.done[act.id] = 1;
   const real = !!s.config.realNames;
-  const fates = !!s.config.realFates && s.config.mode === 'historic';
+  const hm = histMode(s);
+  const fates = !!s.config.realFates && s.config.mode === 'historic' && hm !== 'free';
+  // rodada 15: exata → mês fixo por evento; aleatória → cada fato real futuro vira uma possibilidade
+  const keep = (k: string, pr: number) => hm !== 'free' || histRoll(s, `${act.id}:${k}`) < pr;
+  const sched = { push: (e: Sched) => st.sched.push(hm === 'strict' ? { ...e, mo: Math.floor(histRoll(s, `${e.kind}:${act.id}:${e.personId ?? e.rel?.[0] ?? e.m?.[0] ?? e.year}`) * 12) } : e) };
   const debut = act.debutYear;
   const shift = d.d !== undefined ? debut - d.d : 0; // deslocamento (modos livre/caos)
   if (real) act.name = d.n;
@@ -221,7 +226,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
         p.role = role;
         if (born) p.born = born;
       } else if (join !== undefined && join > s.year) {
-        st.sched.push({ year: join, kind: 'join', actId: act.id, m });
+        if (keep(`j${name}`, 0.5)) sched.push({ year: join, kind: 'join', actId: act.id, m });
         return;
       } else {
         p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, real);
@@ -233,12 +238,12 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
         p = c;
       }
       if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
-      else if (died !== undefined && fates) st.sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
+      else if (died !== undefined && fates) sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
       if (leave !== undefined && leave <= s.year) {
         (st.former[act.id] ??= []).push({ personId: p.id, year: leave, reason: 'left' });
       } else {
         now.push(p.id);
-        if (leave !== undefined && s.config.mode !== 'chaos') st.sched.push({ year: leave, kind: 'leave', actId: act.id, personId: p.id });
+        if (leave !== undefined && s.config.mode !== 'chaos' && keep(`l${name}`, 0.5)) sched.push({ year: leave, kind: 'leave', actId: act.id, personId: p.id });
       }
     });
     // integrantes gerados que sobraram saem do ato
@@ -267,19 +272,19 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       if (d.b) p.born = d.b;
       if (d.r) p.role = d.r;
       if (d.x !== undefined && d.x <= s.year) { p.alive = false; p.died = d.x; }
-      else if (d.x !== undefined && fates) st.sched.push({ year: d.x, kind: 'fate', actId: act.id, personId: p.id });
+      else if (d.x !== undefined && fates) sched.push({ year: d.x, kind: 'fate', actId: act.id, personId: p.id });
     }
   }
   // fim de carreira e voltas
-  if (d.e !== undefined) act.careerEnd = d.e + shift + (s.config.mode === 'historic' ? 0 : jitter(s, r, 2));
+  if (d.e !== undefined) act.careerEnd = d.e + shift + (s.config.mode === 'historic' ? 0 : jitter(s, r, 2)) + (hm === 'free' && d.e >= s.year ? Math.floor(histRoll(s, `${act.id}:e`) * 11) - 5 : 0);
   else act.careerEnd = Math.max(act.careerEnd, 2026 + r.int(0, 14));
-  for (const [a, b] of d.rj ?? []) st.sched.push({ year: a + shift, kind: 'reunion', actId: act.id, until: b !== undefined ? b + shift : undefined });
+  for (const [a, b] of d.rj ?? []) if (keep(`r${a}`, 0.4)) sched.push({ year: a + shift, kind: 'reunion', actId: act.id, until: b !== undefined ? b + shift : undefined });
   // discografia: o que já saiu vira catálogo; o resto sai no ano certo (se o ato não for do jogador)
   for (const rel of d.al ?? []) {
     const year = rel[1] + shift;
     const title = real ? rel[0] : songTitle(r, langForCity(act.city, r));
     if (year < s.year || (year === s.year && s.month > 0)) seedRelease(s, r, act, { title, year, type: rel[2] ?? 'lp', tier: d.t });
-    else st.sched.push({ year, kind: 'release', actId: act.id, rel: [title, year, rel[2]] });
+    else if (keep(`a${rel[0]}`, 0.5)) sched.push({ year, kind: 'release', actId: act.id, rel: [title, year, rel[2]] });
   }
   // todo mundo morto antes da run: o ato é parte da história
   if (act.members.length && act.members.every((id) => !s.persons[id]?.alive)) {
@@ -442,13 +447,15 @@ function monthly(s: GameState, r: Rng): void {
   }
   // agenda histórica
   if (!st.sched.length) return;
-  const due = st.sched.filter((x) => x.year <= s.year);
+  const isDue = (x: Sched) => x.year < s.year || (x.year === s.year && (x.mo ?? 0) <= s.month);
+  const due = st.sched.filter(isDue);
   if (!due.length) return;
-  st.sched = st.sched.filter((x) => x.year > s.year);
+  st.sched = st.sched.filter((x) => !isDue(x));
+  const hm = histMode(s);
   for (const ev of due) {
     const act = s.acts[ev.actId];
     if (!act) continue;
-    if (ev.kind === 'join' && ev.m && act.status !== 'retired' && act.status !== 'split' && act.owner !== 'player') {
+    if (ev.kind === 'join' && ev.m && act.status !== 'retired' && act.status !== 'split' && !histDiverged(s, act)) {
       const [name, role, born, died] = ev.m;
       let p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, !!s.config.realNames);
       const c = canonical(s, p, name, born, act.members);
@@ -456,21 +463,21 @@ function monthly(s: GameState, r: Rng): void {
       if (act.members.includes(p.id)) continue;
       act.members.push(p.id);
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
-    } else if (ev.kind === 'leave' && ev.personId && act.owner !== 'player' && act.members.includes(ev.personId) && act.members.length > 1) {
+    } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {
       act.members = act.members.filter((x) => x !== ev.personId);
       (st.former[act.id] ??= []).push({ personId: ev.personId, year: s.year, reason: 'left' });
       const p = s.persons[ev.personId];
       remember(s, 'lineup', fmtL(l('{p} deixa {a}.', '{p} leaves {a}.'), { p: p?.name ?? '?', a: act.name }), { actId: act.id, important: act.fame > 30 });
-    } else if (ev.kind === 'reunion' && (act.status === 'retired' || act.status === 'split') && !act.deceased && act.owner !== 'player') {
+    } else if (ev.kind === 'reunion' && (act.status === 'retired' || act.status === 'split') && !act.deceased && !histDiverged(s, act)) {
       const alive = act.members.filter((id) => s.persons[id]?.alive);
       if (!alive.length) continue;
       act.status = 'active';
       act.momentum = clamp(act.momentum + 40, 0, 100);
-      act.careerEnd = ev.until ?? s.year + r.int(2, 6);
+      act.careerEnd = ev.until ?? Math.max(s.year + r.int(2, 6), hm === 'strict' ? 2026 : 0);
       remember(s, 'reunion', fmtL(l('{a} se reúne para uma volta histórica.', '{a} reunites for a historic comeback.'), { a: act.name }), { actId: act.id, important: true });
     } else if (ev.kind === 'fate' && ev.personId) {
       const p = s.persons[ev.personId];
-      if (p?.alive && r.chance(0.85)) {
+      if (p?.alive && (r.chance(0.85) || (hm === 'strict' && !histAltered(s, act)))) { // exata: 100% (salvo se você mudou a história do ato)
         if (Object.values(s.acts).some((a) => a.members.includes(p.id))) personDies(s, p, l('no mesmo ano da vida real', 'in the same year as in real life'));
         else {
           p.alive = false;
@@ -479,7 +486,7 @@ function monthly(s: GameState, r: Rng): void {
         }
       }
       else if (p?.alive) st.sched.push({ ...ev, year: s.year + 1 });
-    } else if (ev.kind === 'release' && ev.rel && act.owner !== 'player' && !act.playerBand && (act.status === 'active' || act.status === 'emerging')) {
+    } else if (ev.kind === 'release' && ev.rel && !histDiverged(s, act) && !act.playerBand && (act.status === 'active' || act.status === 'emerging')) {
       // disco real no ano real: entra no mercado como lançamento de terceiros
       const rel = seedRelease(s, r, act, { title: ev.rel[0], year: s.year, type: ev.rel[2] ?? 'lp', tier: realDataOf(act)?.t ?? 2, live: true });
       rel.weeksOnChart = 0;

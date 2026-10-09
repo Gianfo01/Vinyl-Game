@@ -115,3 +115,5 @@ import './leisure14';
 import './managers14';
 // Rodada 14: capacidade mensal (você, atos, equipe e rivais).
 import './capacity14';
+// Rodada 15: modos de história dos artistas reais (exata / com variações / aleatória).
+import './history15';

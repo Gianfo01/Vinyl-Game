@@ -41,6 +41,8 @@ export interface RunConfig {
   dbSize?: 'small' | 'medium' | 'large' | 'huge';
   /** rodada 12: carreiras escolhidas no começo (atividades principais, origem profissional, ambição) */
   careers?: { main: string[]; origin?: string; ambition?: string };
+  /** rodada 15: história dos artistas reais — exata, com variações (padrão) ou aleatória */
+  history?: 'strict' | 'loose' | 'free';
 }
 
 export interface LabelSetup {

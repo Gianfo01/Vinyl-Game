@@ -1,5 +1,6 @@
 // Gerador de mundo em camadas (GDD §5): L0 seed → L1 mundo → L2 elenco → L3 mercado → L5 jogador.
 
+import { normalizeHistory } from './history15';
 import './sys';
 import { emptyExt, ensureExt } from './ext';
 import { initWorldExt } from './worldext';
@@ -219,6 +220,7 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
 }
 
 export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): GameState {
+  normalizeHistory(cfg);
   applyRealNames(!!cfg.realNames);
   const startDay = 0;
   const s: GameState = {

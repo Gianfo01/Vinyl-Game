@@ -15,6 +15,7 @@ import { genStaff } from '../worldgen';
 import { chron, chronListeners, chronState, cityL, nameOf, type ChronEv } from './chron9';
 import { spendDrama, worldDramaOk, worldPace } from './pace9';
 import { tiesOf } from './social8';
+import { histLocked } from '../history15';
 
 // ---------------------------------------------------------------- facetas e valores
 
@@ -360,7 +361,7 @@ registerSimHook('month', 'soul9', (s, r) => {
     if (egoClash >= 2 && npc && a.members.length >= 2) {
       let sum = 0; let n = 0;
       for (const x of a.members) for (const y of a.members) if (x !== y && s.persons[x]) { s.persons[x].rel[y] = clamp((s.persons[x].rel[y] ?? 0) - 2, -100, 100); sum += s.persons[x].rel[y]; n++; }
-      if (n && sum / n < -40 && a.fame > 15 && r.chance(0.03 * pace) && worldDramaOk(s, r, 3)) {
+      if (n && sum / n < -40 && a.fame > 15 && !histLocked(s, a) && r.chance(0.03 * pace) && worldDramaOk(s, r, 3)) {
         a.status = 'split';
         a.careerEnd = s.year;
         a.legend = a.legend || a.fame > 45;
@@ -381,6 +382,7 @@ function dreamDone(s: GameState, p: Person, a: Act | undefined, t: L): void {
 }
 
 function pursueDream(s: GameState, r: Rng, a: Act, p: Person): boolean {
+  if (histLocked(s, a)) return false; // vida real exata: o roteiro real manda
   const d = dreamOf(s, p);
   const age = s.year - p.born;
   const band = a.members.length >= 2;

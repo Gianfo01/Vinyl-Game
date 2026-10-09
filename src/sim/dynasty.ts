@@ -9,6 +9,7 @@ import type { Act, GameState, Person } from './types';
 import type { Family } from './xtypes';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from './util';
 import { personaOf } from './ext';
+import { histLocked } from './history15';
 
 const JOBS: L[] = [
   l('professora', 'teacher'), l('enfermeiro', 'nurse'), l('fotógrafa', 'photographer'), l('advogado', 'lawyer'),
@@ -37,7 +38,7 @@ function deathRisk(age: number, p: Person): number {
 }
 
 /** Artistas reais seguem a vida real até o presente: não morrem por sorteio antes de 2026 (as mortes reais vêm do roteiro). */
-export const realSafe = (s: GameState, act: { catalogNo?: number }): boolean => !!act.catalogNo && s.year < 2026;
+export const realSafe = (s: GameState, act: { catalogNo?: number }): boolean => !!act.catalogNo && s.year < 2026 && s.config.history !== 'free';
 
 export function personDies(s: GameState, p: Person, cause: L): void {
   if (!p.alive) return;
@@ -92,7 +93,7 @@ function agingMonth(s: GameState, r: Rng): void {
         continue;
       }
       // aposentadoria individual (limiar pessoal 62–75, decisão probabilística)
-      if (age >= (p.retireAge ?? 70) && act.members.length > 1 && r.chance(0.02 + (p.health !== 'ok' ? 0.02 : 0))) {
+      if (age >= (p.retireAge ?? 70) && act.members.length > 1 && r.chance(0.02 + (p.health !== 'ok' ? 0.02 : 0)) && !histLocked(s, act)) {
         act.members = act.members.filter((x) => x !== p.id);
         remember(s, 'member_retires', fmtL(l('{p} se aposenta e deixa {a}.', '{p} retires and leaves {a}.'), { p: p.name, a: act.name }), { actId: act.id });
       }

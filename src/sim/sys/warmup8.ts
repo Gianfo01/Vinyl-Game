@@ -8,6 +8,7 @@ import { computeAppeal, launchNpcRelease, marketWeek } from '../market';
 import { composeSongs } from '../production';
 import type { GameState } from '../types';
 import { weekCharts, ch7 } from './charts7';
+import { histLocked } from '../history15';
 
 const WARM_WEEKS = 4;
 
@@ -28,6 +29,7 @@ export function warmCharts(s: GameState, r: Rng): void {
       recent.appeal = computeAppeal(s, r, recent, act).appeal;
       continue;
     }
+    if (histLocked(s, act)) continue; // vida real exata: sem disco inventado
     const songs = composeSongs(s, r, act, 1);
     if (!songs.length) continue;
     const type = r.chance(s.config.startYear < 1966 ? 0.75 : 0.5) ? 'single' : 'lp';

@@ -14,6 +14,7 @@ import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { genStaff } from '../worldgen';
 import { rw } from './realworld';
+import { histLocked } from '../history15';
 import { resolveThinking } from '../contracts';
 
 type Ctx = Record<string, string | number>;
@@ -72,7 +73,7 @@ function bandLoss(s: GameState, r: Rng): void {
       const lead = s.persons[pid]?.role === 'vocal' || act.leaderId === pid;
       const pSplit = clamp(0.15 + (lead ? 0.25 : 0) + (live.length === 1 ? 0.2 : 0) - act.fame / 400, 0.05, 0.8);
       const pReplace = clamp(0.35 + act.fame / 250 - (lead ? 0.1 : 0), 0.1, 0.8);
-      const roll = r.next();
+      const roll = histLocked(s, act) ? 1 : r.next(); // vida real exata: segue sem substituir (o roteiro real cuida do resto)
       if (roll < pSplit) {
         act.status = 'split';
         act.careerEnd = s.year;
@@ -140,7 +141,7 @@ deferEvents([{
 
 function retirements(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
-    if (act.playerBand || act.owner === 'player') continue;
+    if (act.playerBand || act.owner === 'player' || histLocked(s, act)) continue;
     if (act.status !== 'active' && act.status !== 'hiatus') continue;
     const live = alive(s, act);
     if (!live.length) { act.status = 'retired'; act.deceased = true; continue; }
@@ -159,7 +160,7 @@ function retirements(s: GameState, r: Rng): void {
 function comebacks(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
     if (act.status !== 'retired' && act.status !== 'split') continue;
-    if (act.deceased || act.owner === 'player' || act.playerBand) continue;
+    if (act.deceased || act.owner === 'player' || act.playerBand || histLocked(s, act)) continue;
     const live = alive(s, act);
     if (!live.length) continue;
     const off = s.year - act.careerEnd;
@@ -186,7 +187,7 @@ function careerMoves(s: GameState, r: Rng): void {
   const acts = Object.values(s.acts);
   // carreira solo (lateral): integrante famoso e ambicioso lança um projeto próprio
   for (const act of acts) {
-    if (act.status !== 'active' || act.members.length < 2 || act.fame < 38 || act.owner === 'player' || act.playerBand) continue;
+    if (act.status !== 'active' || act.members.length < 2 || act.fame < 38 || act.owner === 'player' || act.playerBand || histLocked(s, act)) continue;
     if (!r.chance(0.004)) continue;
     const cands = alive(s, act).map((id) => s.persons[id]).filter((p) => p.goal === 'solo' || p.ambition === 'fame' || p.role === 'vocal');
     const p = cands.length ? r.pick(cands) : undefined;
@@ -205,7 +206,7 @@ function careerMoves(s: GameState, r: Rng): void {
   }
   // supergrupo: dois nomes de bandas diferentes do mesmo universo musical
   if (r.chance(0.025)) {
-    const pool = acts.filter((a) => a.fame > 45 && (a.status === 'active' || a.status === 'split' || a.status === 'hiatus') && a.owner !== 'player' && !a.playerBand);
+    const pool = acts.filter((a) => a.fame > 45 && (a.status === 'active' || a.status === 'split' || a.status === 'hiatus') && a.owner !== 'player' && !a.playerBand && !histLocked(s, a));
     if (pool.length >= 2) {
       const a = r.pick(pool);
       const b = r.pick(pool.filter((x) => x !== a && familyOf(x.genre) === familyOf(a.genre)));

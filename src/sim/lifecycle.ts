@@ -13,6 +13,7 @@ import { addSignal, spawnProceduralAct } from './worldgen';
 import { dbSizeInfo } from './dbsize14';
 import { fmtL, hasMutator, money, nextId, notify, remember } from './util';
 import { emitEvent } from './events';
+import { histLocked } from './history15';
 
 export function monthlyPeople(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
@@ -85,7 +86,7 @@ export function monthlyPeople(s: GameState, r: Rng): void {
     }
     // aposentadoria e fênix
     if (s.year >= act.careerEnd && !act.playerBand && act.status !== 'hiatus') {
-      if (r.chance(0.08)) {
+      if (r.chance(0.08) && !histLocked(s, act)) {
         act.status = 'hiatus';
         act.hiatusUntil = s.week + r.int(260, 700);
         act.archetype = act.archetype ?? 'phoenix';
@@ -106,7 +107,7 @@ export function retireAct(s: GameState, act: Act): void {
 /** Atos fora do jogador produzem e lançam conforme dono (selo rival ou independente). */
 export function npcProduction(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
-    if (act.owner === 'player' || (act.status !== 'active' && act.status !== 'emerging')) continue;
+    if (act.owner === 'player' || (act.status !== 'active' && act.status !== 'emerging') || histLocked(s, act)) continue;
     const lb = act.owner ? s.labels[act.owner] : undefined;
     const pace = lb ? 0.35 : 0.12;
     let unrec = unrecorded(s, act);
