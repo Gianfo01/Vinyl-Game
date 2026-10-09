@@ -20,6 +20,8 @@ import './identity';
 import './sound';
 // Rodada 8: herdeiros, participações em selos, relações entre artistas e feats negociados.
 import './round8';
+// Rodada 9: laços duradouros, movimentos e rede de relações.
+import './bonds9';
 import './route8';
 import './consent8';
 import './pacing8';

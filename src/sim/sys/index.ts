@@ -48,5 +48,8 @@ import './identity8';
 import './audience8';
 import './rivals8';
 import './stories8';
+// Rodada 9: laços duradouros entre artistas e movimentos completos.
+import './bonds9';
+import './movements9';
 import './rights8';
 import './dossier8';

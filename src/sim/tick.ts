@@ -7,6 +7,7 @@ import { formatMoney } from '../core/money';
 import { TECHS, techById } from '../data/rules';
 import { GENRES, genreById, l, type L } from '../data/world';
 import { processPlayerAgendas } from './agenda';
+import { registerMovementGenres } from './culture';
 import { checkPromises, endContract, resolveOffers } from './contracts';
 import { checkInsolvency, payMonth, refreshProfessionals } from './economy';
 import { resolveDecision, storyteller } from './events';
@@ -52,6 +53,8 @@ function daysInCurrentMonth(s: GameState): number {
 export function advanceWeek(s: GameState): boolean {
   if (s.ended && !s.flags.sandbox) return true;
   const r = rngOf(s);
+  // gêneros de movimentos são globais: garante que pertençam a este jogo (várias partidas no mesmo processo)
+  registerMovementGenres(s);
   if (!s.clock.opened) openMonth(s, r);
   const dim = daysInCurrentMonth(s);
   while (s.clock.dayInMonth < dim) {
