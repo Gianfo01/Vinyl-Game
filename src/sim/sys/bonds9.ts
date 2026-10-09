@@ -17,7 +17,7 @@ import { fashionOf, registerMovementGenres } from '../culture';
 import { MSG_HANDLERS } from './people/inbox';
 import { addMsg, P } from './people/state';
 import { clearance, crossAudience } from './feats8';
-import { actOfPerson, bump, tieOf, tiesOf } from './social8';
+import { actOfPerson, bump, tieOf, tiesOf, type TieKind } from './social8';
 import { soul } from './soul9';
 
 export type BondKind = 'duo' | 'couple' | 'super' | 'ally' | 'cross' | 'patron';
@@ -105,7 +105,18 @@ function workQ(s: GameState, act: Act): number {
 }
 
 /** Por que alguém pensa o que pensa de um ato: cada fator com seu peso (rodada 10). */
-export type AdmWhy = 'quality' | 'success' | 'genre' | 'curious' | 'generation' | 'envy' | 'rebel' | 'commercial' | 'taste' | 'ties' | 'bond' | 'heard';
+export type AdmWhy = 'quality' | 'success' | 'genre' | 'curious' | 'generation' | 'envy' | 'rebel' | 'commercial' | 'taste' | 'ties' | 'bond' | 'heard' | 'politics';
+
+/** A pessoa faz ou fez parte do ato (banda atual ou antiga, carreira solo, supergrupo)? Ninguém opina sobre si mesmo. */
+export function isOwnAct(s: GameState, pid: string, act: Act): boolean {
+  if (act.members.includes(pid) || act.leaderId === pid) return true;
+  const p = s.persons[pid];
+  if (p && act.name === p.name) return true;
+  const x = s.x4 as unknown as { rw?: { former?: Record<string, { personId: string }[]> }; chron9?: { mem?: Record<string, string[]> } };
+  if (x.rw?.former?.[act.id]?.some((f) => f.personId === pid)) return true;
+  if (x.chron9?.mem?.[pid]?.some((m) => m.startsWith(act.id + ':'))) return true;
+  return bonds(s).list.some((b) => b.act === act.id && b.p.includes(pid));
+}
 
 const FAMS: FamilyId[] = ['blues_jazz', 'country_folk', 'rnb', 'rock', 'pop', 'hiphop', 'electronic', 'caribbean', 'latin', 'brazil', 'africa', 'asia_me', 'europe', 'sacred'];
 
@@ -120,7 +131,7 @@ export function admirationWhy(s: GameState, pid: string, actId: string): { v: nu
   const target = s.acts[actId];
   if (!p || !target) return { v: 0, parts: [] };
   const mine = actOfPerson(s, pid);
-  if (mine?.id === actId) return { v: 0, parts: [] };
+  if (mine?.id === actId || isOwnAct(s, pid, target)) return { v: 0, parts: [] };
   const so = soul(s, p);
   const f = so.f;
   const val = so.v;
@@ -158,6 +169,9 @@ export function admirationWhy(s: GameState, pid: string, actId: string): { v: nu
   add('ties', clamp(tv, -100, 100) * (0.2 + f.sociabilidade / 300));
   for (const b of bondsOfPerson(s, pid)) if (!b.end && b.a.includes(actId)) add('bond', 15);
   add('heard', bonds(s).adm[`${pid}|${actId}`] ?? 0);
+  // visão de mundo: quem é engajado se aproxima (ou se afasta) de quem pensa parecido
+  const tl = leadOf(target);
+  if (tl && tl !== pid && s.persons[tl]) add('politics', clamp(compat(s, pid, tl) * 7, -9, 9));
   const v = parts.reduce((t, x) => t + x.v, 0);
   return { v: clamp(Math.round(v), -100, 100), parts };
 }
@@ -188,21 +202,66 @@ const WHY_TXT: Record<AdmWhy, [L[], L[]]> = {
   ties: [[l('e são gente boa', 'and they are good people'), l('e conheço bem quem está lá', 'and I know the people there well')], [l('e conheço bem demais quem está lá', 'and I know the people there too well'), l('e a convivência já foi ruim', 'and things got ugly between us')]],
   bond: [[l('trabalhamos juntos', 'we work together')], [l('trabalhamos juntos, infelizmente', 'we work together, sadly')]],
   heard: [[l('o último disco me conquistou', 'the last record won me over')], [l('o último disco me decepcionou', 'the last record let me down')]],
+  politics: [[l('e pensamos parecido sobre o mundo', 'and we see the world the same way'), l('e dizem o que precisa ser dito', 'and they say what needs saying')], [l('e as ideias deles me afastam', 'and their views push me away'), l('e não suporto o discurso deles', 'and I cannot stand what they preach')]],
+};
+// voz da pessoa: o traço mais forte muda o jeito de falar (prefixo opcional)
+const VOICE: Record<'ego' | 'rebeldia' | 'sociabilidade' | 'perfeccionismo' | 'curiosidade', [L, L]> = {
+  ego: [l('Não é fácil me impressionar, mas', 'I am hard to impress, but'), l('Sinceramente, eu faço melhor, e', 'Honestly, I do it better, and')],
+  rebeldia: [l('Contra tudo e contra todos:', 'Against the grain:'), l('Vou ser direto:', 'I will be blunt:')],
+  sociabilidade: [l('Cá entre nós,', 'Between us,'), l('Falo com carinho, mas', 'I say it kindly, but')],
+  perfeccionismo: [l('Ouvindo com atenção,', 'Listening closely,'), l('No detalhe,', 'In the details,')],
+  curiosidade: [l('Gosto de ouvir de tudo, e', 'I listen to everything, and'), l('Sempre atento ao novo:', 'Always on the lookout:')],
+};
+// relação pessoal com quem está no ato (amizade, rivalidade, romance…) vira o motivo quando pesa
+const TIE_TXT: Partial<Record<TieKind, [L, L]>> = {
+  friend: [l('e somos amigos de longa data', 'and we go way back as friends'), l('apesar da amizade', 'despite our friendship')],
+  rival: [l('e a rivalidade nos faz crescer', 'and the rivalry keeps us sharp'), l('e a rivalidade é antiga', 'and the rivalry runs deep')],
+  romance: [l('e o coração fala alto', 'and my heart speaks loudly'), l('e o fim do namoro ainda dói', 'and the break-up still stings')],
+  mentor: [l('e aprendi muito com eles', 'and I learned a lot from them'), l('mesmo tendo aprendido com eles', 'even if I learned from them')],
+  feud: [l('apesar da briga', 'despite our feud'), l('e a briga não ajudou', 'and the feud did not help')],
+  collab: [l('e gravar juntos foi ótimo', 'and recording together was great'), l('e gravar juntos foi um tormento', 'and recording together was torture')],
 };
 
-/** O que a pessoa diz sobre um ato — frase curta, coerente com o motivo mais forte e variada entre pessoas. */
-export function opinionText(s: GameState, pid: string, actId: string): L {
+/**
+ * O que a pessoa diz sobre um ato — frase curta, coerente com o motivo mais forte e variada entre pessoas.
+ * `used` (opcional) guarda aberturas/motivos já usados por essa pessoa na mesma lista, para não repetir.
+ */
+export function opinionText(s: GameState, pid: string, actId: string, used?: Set<string>): L {
+  const A = s.acts[actId];
+  if (!A || isOwnAct(s, pid, A)) return l('', '');
   const w = admirationWhy(s, pid, actId);
   const band = w.v >= 45 ? 'love' : w.v >= 12 ? 'like' : w.v > -6 ? 'meh' : w.v > -30 ? 'dislike' : 'hate';
   const hh = hashString(`${s.config.seed}|op|${pid}|${actId}`);
-  const opens = OPEN[band];
-  const open = fmtL(opens[hh % opens.length], { a: s.acts[actId]?.name ?? '?' });
+  const pickFrom = <T extends L>(pool: T[], salt: number, tag: string): T => {
+    for (let i = 0; i < pool.length; i++) {
+      const x = pool[(salt + i) % pool.length];
+      if (!used || !used.has(tag + x.pt)) { used?.add(tag + x.pt); return x; }
+    }
+    return pool[salt % pool.length];
+  };
+  let open = fmtL(pickFrom(OPEN[band], hh, 'o:'), { a: A.name });
+  // personalidade: o traço mais marcante dá o tom (só para quem tem traço forte, e nem sempre)
+  const p = s.persons[pid];
+  if (p && (hh >>> 3) % 3 === 0) {
+    const f = soul(s, p).f;
+    const top = (Object.keys(VOICE) as (keyof typeof VOICE)[]).map((k) => [k, f[k]] as const).sort((x, y) => y[1] - x[1])[0];
+    if (top && top[1] >= 70) {
+      const vx = VOICE[top[0]][(hh >>> 5) % 2];
+      if (!used?.has('v:' + vx.pt)) { used?.add('v:' + vx.pt); open = { pt: `${vx.pt} ${open.pt.charAt(0).toLowerCase()}${open.pt.slice(1)}`, en: `${vx.en} ${open.en.charAt(0).toLowerCase()}${open.en.slice(1)}` }; }
+    }
+  }
   if (band === 'meh') return open;
   const pos = w.v > 0;
   const lead = w.parts.filter((x) => (x.v > 0) === pos).sort((x, y) => Math.abs(y.v) - Math.abs(x.v))[0];
   if (!lead) return open;
-  const pool = WHY_TXT[lead.k][pos ? 0 : 1];
-  const why = pool[(hh >>> 7) % pool.length];
+  let why: L | undefined;
+  if (lead.k === 'ties') {
+    // a relação mais forte com alguém do ato define a frase
+    const tie = A.members.map((m) => tieOf(s, pid, m)).filter((x): x is NonNullable<typeof x> => !!x).sort((x, y) => Math.abs(y.v) - Math.abs(x.v))[0];
+    const tx = tie && TIE_TXT[tie.k];
+    if (tx) why = tx[pos ? 0 : 1];
+  }
+  why ??= pickFrom(WHY_TXT[lead.k][pos ? 0 : 1], hh >>> 7, 'w:');
   return { pt: `${open.pt} — ${why.pt}.`, en: `${open.en} — ${why.en}.` };
 }
 
@@ -213,12 +272,36 @@ export function nudgeAdmiration(s: GameState, pid: string, actId: string, dv: nu
   const keys = Object.keys(st.adm);
   if (keys.length > 500) for (const x of keys.slice(0, keys.length - 500)) delete st.adm[x];
 }
-/** Opiniões de uma pessoa notável: quem ela admira e quem ela despreza. */
+/**
+ * Opiniões de uma pessoa notável: quem ela admira e quem ela despreza. Nunca sobre os próprios atos (atuais,
+ * antigos ou solo), um ato por vez (sem repetir nome entre "admira" e "torce o nariz"), no máximo `n` de cada.
+ */
 export function opinionsOf(s: GameState, pid: string, n = 4): { top: { act: Act; v: number }[]; low: { act: Act; v: number }[] } {
+  n = Math.max(0, Math.min(n, 6));
   const me = actOfPerson(s, pid);
-  const pool = Object.values(s.acts).filter((a) => a !== me && (live(a) || a.legend) && a.fame > 15);
-  const scored = pool.map((act) => ({ act, v: admiration(s, pid, act.id) })).sort((x, y) => y.v - x.v);
-  return { top: scored.slice(0, n).filter((x) => x.v > 10), low: scored.slice(-n).reverse().filter((x) => x.v < -5) };
+  const pool = Object.values(s.acts).filter((a) => a !== me && (live(a) || a.legend) && a.fame > 15 && !isOwnAct(s, pid, a));
+  const scored = pool.map((act) => ({ act, v: admiration(s, pid, act.id) })).sort((x, y) => y.v - x.v || x.act.id.localeCompare(y.act.id));
+  const seen = new Set<string>();
+  const take = (list: typeof scored, ok: (v: number) => boolean) => {
+    const out: typeof scored = [];
+    for (const x of list) {
+      if (out.length >= n || !ok(x.v)) break;
+      const k = x.act.name.toLowerCase();
+      if (seen.has(x.act.id) || seen.has(k)) continue;
+      seen.add(x.act.id); seen.add(k);
+      out.push(x);
+    }
+    return out;
+  };
+  const top = take(scored, (v) => v > 10);
+  const low = take(scored.slice().reverse(), (v) => v < -5);
+  return { top, low };
+}
+/** Opiniões já com as frases, sem repetir abertura ou motivo dentro da mesma lista. */
+export function opinionLines(s: GameState, pid: string, n = 4): { act: Act; v: number; txt: L }[] {
+  const op = opinionsOf(s, pid, n);
+  const used = new Set<string>();
+  return [...op.top, ...op.low].map((x) => ({ ...x, txt: opinionText(s, pid, x.act.id, used) }));
 }
 /** Admiração média dos integrantes de um ato pelo trabalho de outro. */
 export function actAdmiration(s: GameState, from: Act, toId: string): number {
