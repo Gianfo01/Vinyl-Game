@@ -84,3 +84,5 @@ import './kin15';
 import './producers15';
 // Rodada 15: fama (aba, gráfico, segurança) e o quadro 'O que se sabe'.
 import './fame15';
+// Rodada 15: retratos coerentes (artistas reais e procedurais com pele/sexo da ficha).
+import './looks15';

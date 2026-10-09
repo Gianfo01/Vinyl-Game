@@ -12,9 +12,9 @@ export type Pose = 'stand' | 'walk' | 'sit' | 'play' | 'sitplay';
 export type Role = Person['role'];
 
 export const SKINS = ['#f6d3b3', '#e0aa7e', '#a8714a', '#6e4528'];
-export const HAIR_COLORS = ['#1e1814', '#3d2616', '#6e4426', '#8e3a1e', '#dcb862', '#c0602a', '#cfc9bf', '#4a6fd0'];
-export const OUTFIT_COLORS = ['#2c4a7e', '#a33434', '#2f7a4c', '#d0a43c', '#6a4590', '#e4dccb', '#2a2a30', '#d8692a'];
-export const HAIR_STYLES = 16;
+export const HAIR_COLORS = ['#1e1814', '#3d2616', '#6e4426', '#8e3a1e', '#dcb862', '#c0602a', '#cfc9bf', '#4a6fd0', '#f1e9cf', '#d0302c', '#ee7cc0', '#8fe04a', '#7fb8e8'];
+export const OUTFIT_COLORS = ['#2c4a7e', '#a33434', '#2f7a4c', '#d0a43c', '#6a4590', '#e4dccb', '#2a2a30', '#d8692a', '#d8b040', '#e070a8', '#b4b8c4', '#5e3c26', '#6ab0e0'];
+export const HAIR_STYLES = 23;
 
 const DYED: Record<EraId, string> = { '1920': '#e8dcb0', '1950': '#e8dcb0', '1960': '#e8dcb0', '1980': '#ff5fb0', '1990': '#5fbf4a', '2000': '#3f7fe0', '2010': '#9a6ae0', '2020': '#b58cff', '2030': '#3fe8d8' };
 
@@ -37,12 +37,16 @@ export function randomLook(seed: string): Appearance {
   };
 }
 
+/** Rodada 15: resolvedor opcional (UI) — visual real pela fase ou procedural coerente com sexo/pele. */
+let LOOK_FN: ((p: { id: string }) => Appearance | undefined) | null = null;
+export function setLookResolver(fn: typeof LOOK_FN): void { LOOK_FN = fn; }
+
 export function lookOf(p: { id: string; look?: Appearance }): Appearance {
-  return p.look ?? randomLook(p.id);
+  return p.look ?? LOOK_FN?.(p) ?? randomLook(p.id);
 }
 
 export function lookKey(a: Appearance): string {
-  return `${a.body}${a.face}${a.skin}.${a.hair}.${a.hairColor}.${a.outfit}${a.outfitColor}${a.glasses ? 1 : 0}${a.hat ? 1 : 0}${a.beard ? 1 : 0}`;
+  return `${a.body}${a.face}${a.skin}.${a.hair}.${a.hairColor}.${a.outfit}${a.outfitColor}${a.glasses ? 1 : 0}${a.hat ? 1 : 0}${a.beard ? 1 : 0}.${a.hatT ?? ''}${a.hatC ?? ''}.${a.glT ?? ''}${a.bdT ?? ''}${a.paint ?? ''}${a.helm ?? ''}.${a.roots ?? ''}${a.sx ?? ''}`;
 }
 
 // ---------- cores ----------
@@ -62,9 +66,9 @@ interface Colors {
 function colorsFor(a: Appearance, pal: Palette): Colors {
   const t = (c: Col) => tone(c, pal);
   const skin = C(SKINS[a.skin % 4]);
-  const hairHex = a.hairColor === 7 ? DYED[pal.era] : HAIR_COLORS[a.hairColor % 8];
+  const hairHex = a.hairColor === 7 ? DYED[pal.era] : HAIR_COLORS[a.hairColor % HAIR_COLORS.length];
   const hair = t(C(hairHex));
-  const cloth = t(C(OUTFIT_COLORS[a.outfitColor % 8]));
+  const cloth = t(C(OUTFIT_COLORS[a.outfitColor % OUTFIT_COLORS.length]));
   const e = pal.era;
   const formalPants = a.outfit === 1 && (e === '1920' || e === '1950');
   let pants = C('#3a5a8c');
@@ -144,7 +148,7 @@ function drawFace(h: HeadCtx): void {
     }
     if (look.face === 1) { p.put(X(3), Y(3), col.hairD); p.put(X(6), Y(3), col.hairD); p.put(X(5), Y(5), col.skinD); }
     if (look.face === 2) { p.set(X(2), Y(5), withAlpha(C('#e86a6a'), 110)); p.set(X(7), Y(5), withAlpha(C('#e86a6a'), 90)); }
-    if (!look.beard) {
+    if (!look.beard || look.bdT) {
       if (look.face === 0) p.hline(X(4), X(5), Y(6), mix(col.skinD, C('#8a3a3a'), 0.4));
       else if (look.face === 1) p.put(X(5), Y(6), mix(col.skinD, C('#8a3a3a'), 0.5));
       else { p.put(X(4), Y(6), mix(col.skinD, C('#8a3a3a'), 0.5)); p.put(X(5), Y(6), mix(col.skinD, C('#8a3a3a'), 0.5)); p.put(X(3), Y(5) + 0, col.skin); }
@@ -173,7 +177,7 @@ function drawFace(h: HeadCtx): void {
   p.put(X(5) + 1, Y(5) + 1, col.skinD);
   p.put(X(5), Y(5) + 1, col.skinD);
   if (look.face === 2) { p.set(X(2), Y(5) + 1, withAlpha(C('#e86a6a'), 120)); p.set(X(2) + 1, Y(5) + 1, withAlpha(C('#e86a6a'), 90)); p.set(X(7), Y(5) + 1, withAlpha(C('#e86a6a'), 100)); }
-  if (!look.beard) {
+  if (!look.beard || look.bdT) {
     const lip = mix(col.skinD, C('#a03a3a'), 0.45);
     if (look.face === 0) p.hline(X(4), X(5) + 1, Y(6) + 1, lip);
     else if (look.face === 1) { p.hline(X(4) + 1, X(5) + 1, Y(6) + 1, lip); }
@@ -184,6 +188,17 @@ function drawFace(h: HeadCtx): void {
 function drawBeard(h: HeadCtx): void {
   if (!h.look.beard || h.view !== 'front') return;
   const { col } = h;
+  const bt = h.look.bdT ?? 0;
+  if (bt === 1 || bt === 2) {
+    R(h, 2, 5, 4, 1, col.hair); // bigode
+    if (h.s > 1) { h.p.hline(h.x0 + 4, h.x0 + 11, h.y0 + 11, col.hair); h.p.put(h.x0 + 3, h.y0 + 12, col.hairD); h.p.put(h.x0 + 12, h.y0 + 12, col.hairD); }
+    if (bt === 2) { R(h, 3, 7, 2, 1, col.hair); R(h, 3, 8, 2, 1, col.hairD); }
+    return;
+  }
+  if (bt === 3) {
+    for (let y = h.y0 + 5 * h.s; y < h.y0 + 8 * h.s; y++) for (let x = h.x0; x < h.x0 + 8 * h.s; x++) if (dith(x, y, 0.5)) h.p.set(x, y, withAlpha(col.hairD, 110));
+    return;
+  }
   R(h, 0, 5, 1, 2, col.hair);
   R(h, 7, 5, 1, 2, col.hairD);
   R(h, 1, 6, 6, 2, col.hair);
@@ -196,11 +211,27 @@ function drawBeard(h: HeadCtx): void {
 function drawGlasses(h: HeadCtx): void {
   if (!h.look.glasses || h.view !== 'front') return;
   const e = h.era;
-  const frame = e === '1980' ? C('#e84aa0') : e === '2030' ? C('#3fe8d8') : e === '1950' || e === '1960' ? C('#3a2418') : C('#1e1e24');
-  const lens = e === '2030' ? withAlpha(C('#5ffff0'), 150) : withAlpha(C('#bfe0ff'), 120);
+  const gt = h.look.glT ?? 0;
+  let frame = e === '1980' ? C('#e84aa0') : e === '2030' ? C('#3fe8d8') : e === '1950' || e === '1960' ? C('#3a2418') : C('#1e1e24');
+  let lens = e === '2030' ? withAlpha(C('#5ffff0'), 150) : withAlpha(C('#bfe0ff'), 120);
+  if (gt === 1) { frame = C('#b89a4a'); lens = withAlpha(C('#9a7ad0'), 110); }
+  else if (gt === 2) { frame = C('#101014'); lens = C('#18181e'); }
+  else if (gt === 3) { frame = C('#ff4fb0'); lens = withAlpha(C('#ffd23f'), 170); }
   const { p, s } = h;
   const X = (u: number) => h.x0 + u * s;
   const Y = (v: number) => h.y0 + v * s;
+  if (gt && s > 1) {
+    for (const ex of [3, 6]) {
+      const x = X(ex) - 2;
+      const y = Y(4) - 1;
+      if (gt === 1) { p.hline(x + 1, x + 3, y, frame); p.hline(x + 1, x + 3, y + 3, frame); p.vline(x, y + 1, y + 2, frame); p.vline(x + 4, y + 1, y + 2, frame); p.rect(x + 1, y + 1, 3, 2, lens); }
+      else if (gt === 2) { p.rect(x, y, 5, 3, frame); p.rect(x + 1, y + 1, 3, 2, lens); p.put(x + 1, y + 1, C('#5a5a6a')); }
+      else { p.rect(x - 1, y - 1, 7, 5, frame); p.rect(x, y, 5, 3, lens); p.put(x - 2, y - 2, C('#ffffff')); p.put(x + 6, y - 2, C('#ffffff')); }
+    }
+    p.hline(X(4) + 1, X(5), Y(4), frame);
+    p.hline(X(0), X(1), Y(4), frame);
+    return;
+  }
   if (s === 1) {
     p.set(X(2), Y(4), frame);
     p.set(X(3), Y(4), lens);
@@ -325,6 +356,52 @@ const HAIR: HairFn[] = [
     if (h.view === 'back') for (let u = -1; u <= 8; u++) R(h, u, 0, 1, 12 - (u % 2), u % 2 ? c.hairD : c.hair);
     R(h, 2, -1, 3, 1, c.hairL);
   },
+  // 16 mullet
+  (h, c) => {
+    R(h, 1, -2, 6, 1, c.hair); R(h, 0, -1, 8, 3, c.hair); R(h, 0, 2, 1, 2, c.hair); R(h, 7, 2, 1, 1, c.hairD);
+    R(h, -1, 4, 2, 6, c.hair); R(h, 7, 4, 2, 6, c.hairD);
+    if (h.view === 'back') R(h, -1, -1, 10, 11, c.hair);
+    R(h, 2, -2, 3, 1, c.hairL);
+  },
+  // 17 bufante / colmeia
+  (h, c) => {
+    h.p.ellipse(h.x0 + 4 * h.s, h.y0 - 1 * h.s, 5.6 * h.s, 4.2 * h.s, (x, y) => (dith(x, y, 0.2) ? c.hairD : c.hair));
+    R(h, -2, 1, 2, 7, c.hair); R(h, 8, 1, 2, 7, c.hairD);
+    if (h.view === 'front') { R(h, 1, 2, 6, 5, c.skin); R(h, 1, 1, 3, 1, c.hair); R(h, 7, 1, 1, 6, c.skinD); R(h, 0, 3, 1, 2, c.skinD); }
+    else R(h, -2, -3, 12, 11, c.hair);
+    R(h, 2, -4, 3, 1, c.hairL);
+  },
+  // 18 gomalina (para trás)
+  (h, c) => {
+    R(h, 1, -1, 6, 1, c.hair); R(h, 0, 0, 8, 1, c.hair); R(h, 0, 1, 1, 2, c.hair); R(h, 7, 1, 1, 2, c.hairD);
+    R(h, 2, -1, 4, 1, c.hairL);
+    if (h.view === 'back') R(h, 0, 0, 8, 6, c.hair);
+  },
+  // 19 longo com franja reta
+  (h, c) => {
+    R(h, 1, -1, 6, 1, c.hair); R(h, 0, 0, 8, 3, c.hair);
+    R(h, -1, 1, 2, 10, c.hair); R(h, 7, 1, 2, 10, c.hairD);
+    if (h.view === 'back') R(h, -1, 0, 10, 11, c.hair);
+    R(h, 2, -1, 3, 1, c.hairL);
+  },
+  // 20 cachos longos volumosos
+  (h, c) => {
+    h.p.ellipse(h.x0 + 4 * h.s, h.y0 + 3 * h.s, 6.4 * h.s, 7.4 * h.s, (x, y) => (dith(x, y, 0.3) ? c.hairD : (x + y) % 5 === 0 ? c.hairL : c.hair));
+    if (h.view === 'front') { R(h, 1, 2, 6, 5, c.skin); R(h, 1, 7, 6, 1, c.skinD); R(h, 1, 1, 6, 1, c.hair); R(h, 0, 2, 1, 1, c.hair); }
+  },
+  // 21 trancinhas rentes
+  (h, c) => {
+    R(h, 1, -1, 6, 1, c.hair); R(h, 0, 0, 8, 2, c.hair); R(h, 0, 2, 1, 2, c.hair); R(h, 7, 2, 1, 1, c.hairD);
+    for (let u = 1; u < 8; u += 2) R(h, u, -1, 1, 3, c.hairD);
+    if (h.view === 'back') { R(h, 0, 0, 8, 6, c.hair); for (let u = 1; u < 8; u += 2) R(h, u, 0, 1, 6, c.hairD); }
+  },
+  // 22 pixie assimétrico
+  (h, c) => {
+    R(h, 1, -1, 7, 1, c.hair); R(h, 0, 0, 9, 2, c.hair); R(h, 4, 2, 4, 1, c.hair); R(h, 7, 3, 2, 2, c.hairD);
+    R(h, 0, 2, 1, 1, mix(c.hair, c.skin, 0.5));
+    if (h.view === 'back') R(h, 0, 0, 8, 5, c.hair);
+    R(h, 5, -1, 2, 1, c.hairL);
+  },
 ];
 
 /** Reabre o rosto depois de um cabelo volumoso (black power). */
@@ -334,8 +411,88 @@ function drawSkullFaceArea(h: HeadCtx): void {
   R(h, 1, 7, 6, 1, col.skinD);
 }
 
+const HAT_DEF = ['', '#1c1c20', '#8a6038', '', '', '#c03030', '', '#2a2a30', ''];
+
+/** Rodada 15: chapéus com forma própria (cartola, caubói, boina, gorro, faixa, boné, fedora, bandana). */
+function drawHatType(h: HeadCtx, ty: number): void {
+  const c = h.col;
+  const pal = PALETTES[h.era];
+  const hc = h.look.hatC !== undefined ? tone(C(OUTFIT_COLORS[h.look.hatC % OUTFIT_COLORS.length]), pal) : HAT_DEF[ty] ? tone(C(HAT_DEF[ty]), pal) : c.cloth;
+  const hd = shade(hc, -0.3);
+  const hl = shade(hc, 0.25);
+  if (ty === 1) { R(h, -2, 0, 12, 1, hc); R(h, 0, -6, 8, 6, hc); R(h, 0, -1, 8, 1, mix(hc, C('#c8b070'), 0.5)); R(h, 1, -6, 2, 5, hl); R(h, 7, -6, 1, 6, hd); }
+  else if (ty === 2) { R(h, -3, 0, 14, 1, hc); R(h, -3, -1, 1, 1, hc); R(h, 10, -1, 1, 1, hc); R(h, 1, -3, 6, 3, hc); R(h, 3, -3, 2, 1, hd); R(h, 1, -1, 6, 1, hd); R(h, 1, -3, 1, 2, hl); }
+  else if (ty === 3) { R(h, -1, -1, 9, 2, hc); R(h, 0, -2, 7, 1, hc); R(h, 3, -3, 1, 1, hd); R(h, 0, -2, 3, 1, hl); }
+  else if (ty === 4) { R(h, 0, -3, 8, 1, hc); R(h, -1, -2, 10, 3, hc); R(h, -1, 0, 10, 1, hd); R(h, 1, -3, 2, 1, hl); }
+  else if (ty === 5) { R(h, 0, 1, 8, 1, hc); if (h.view === 'back') R(h, 3, 1, 2, 3, hd); else R(h, 8, 1, 1, 3, hd); }
+  else if (ty === 6) { R(h, 0, -2, 8, 3, hc); R(h, 1, -2, 3, 1, hl); if (h.view === 'front') R(h, -1, 0, 7, 1, hd); else R(h, 6, 0, 4, 1, hd); }
+  else if (ty === 7) { R(h, -2, 0, 12, 1, hc); R(h, 1, -3, 6, 3, hc); R(h, 1, -1, 6, 1, hd); R(h, 3, -3, 2, 1, hd); R(h, 1, -3, 1, 2, hl); }
+  else { R(h, 0, -1, 8, 3, hc); R(h, -1, 1, 10, 1, hc); R(h, 2, -1, 3, 1, hl); if (h.view === 'front') { R(h, 8, 1, 2, 2, hd); R(h, 9, 3, 1, 2, hd); } else R(h, 3, 2, 2, 3, hd); }
+}
+
+/** Rodada 15: pintura facial por baixo dos olhos (base branca e marcas). */
+const WHITE_PAINT = [1, 2, 3, 4, 7];
+const BACK_HAIR = [6, 17, 20];
+function drawPaintUnder(h: HeadCtx): void {
+  const pt = h.look.paint ?? 0;
+  if (!pt || h.view !== 'front') return;
+  const ink = C('#101014');
+  if (pt === 1) { // estrela no olho direito (do artista)
+    R(h, 3, 2, 1, 4, ink); R(h, 2, 4, 3, 1, ink); R(h, 2, 3, 1, 1, ink); R(h, 4, 3, 1, 1, ink); R(h, 2, 5, 1, 1, ink); R(h, 4, 5, 1, 1, ink);
+    R(h, 4, 6, 2, 1, mix(ink, C('#c02020'), 0.6));
+  } else if (pt === 2) { // demônio: asas pretas até a testa
+    for (const ex of [3, 6]) { R(h, ex - 1, 3, 3, 2, ink); R(h, ex === 3 ? 1 : 6, 1, 1, 2, ink); R(h, ex === 3 ? 2 : 7, 2, 1, 1, ink); }
+    R(h, 4, 6, 2, 1, ink);
+  } else if (pt === 3) { // gato: focinho e bigodes
+    for (const ex of [3, 6]) R(h, ex - 1, 3, 3, 1, C('#2f8a4a'));
+    R(h, 4, 5, 2, 1, ink); R(h, 1, 5, 2, 1, ink); R(h, 6, 5, 2, 1, ink); R(h, 1, 6, 1, 1, ink); R(h, 7, 6, 1, 1, ink);
+  } else if (pt === 4) { // espacial: estrelas prateadas nos dois olhos
+    for (const ex of [3, 6]) { R(h, ex - 1, 3, 3, 3, C('#c8ccd8')); R(h, ex, 2, 1, 1, C('#c8ccd8')); R(h, ex, 6, 1, 1, C('#c8ccd8')); }
+    R(h, 4, 6, 2, 1, mix(ink, C('#a03030'), 0.5));
+  } else if (pt === 7) { // máscara branca com olhos negros
+    for (const ex of [3, 6]) R(h, ex - 1, 3, 3, 3, ink);
+    R(h, 4, 6, 2, 1, ink);
+  }
+}
+
+/** Marcas por cima (raio vermelho/azul, delineador). */
+function drawPaintOver(h: HeadCtx): void {
+  const pt = h.look.paint ?? 0;
+  if (!pt || h.view !== 'front') return;
+  const { p, s } = h;
+  if (pt === 5) {
+    const red = C('#e02a2a');
+    const blue = C('#3a7ae0');
+    const pts: [number, number][] = [[5, 0], [3, 3], [5, 3], [3, 7]];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [a, b] = pts[i]; const [c2, d] = pts[i + 1];
+      p.line(h.x0 + a * s, h.y0 + b * s, h.x0 + c2 * s, h.y0 + d * s, red);
+      if (s > 1) p.line(h.x0 + a * s + 1, h.y0 + b * s, h.x0 + c2 * s + 1, h.y0 + d * s, blue);
+    }
+  } else if (pt === 6) {
+    const ink = C('#101014');
+    if (s > 1) { p.put(h.x0 + 2 * s - 2, h.y0 + 4 * s - 1, ink); p.put(h.x0 + 6 * s + 2, h.y0 + 4 * s - 1, ink); p.hline(h.x0 + 3 * s - 1, h.x0 + 3 * s + 1, h.y0 + 4 * s - 1, ink); p.hline(h.x0 + 6 * s - 1, h.x0 + 6 * s + 1, h.y0 + 4 * s - 1, ink); }
+    const lip = C('#c0283a');
+    p.hline(h.x0 + 4 * s, h.x0 + 5 * s + (s > 1 ? 1 : 0), h.y0 + 6 * s + (s > 1 ? 1 : 0), lip);
+  }
+}
+
+/** Capacete de robô (dupla francesa): cobre a cabeça toda. */
+function drawHelmet(h: HeadCtx): void {
+  const gold = h.look.helm === 2;
+  const m = C(gold ? '#d8b048' : '#c8ccd6');
+  const md = shade(m, -0.3);
+  const ml = shade(m, 0.35);
+  R(h, 0, -2, 8, 1, m); R(h, -1, -1, 10, 9, m); R(h, 0, 8, 8, 1, md); R(h, 8, -1, 1, 9, md); R(h, 0, -1, 2, 6, ml);
+  if (h.view !== 'front') return;
+  const v = C('#0a0a10');
+  if (gold) { R(h, 0, 2, 8, 5, v); R(h, 1, 7, 6, 1, v); R(h, 3, 1, 2, 1, v); if (h.s > 1) h.p.hline(h.x0 + 2, h.x0 + 13, h.y0 + 5, withAlpha(C('#ffe0a0'), 140)); }
+  else { R(h, -1, 3, 10, 3, v); if (h.s > 1) for (let x = 1; x < 15; x += 3) h.p.put(h.x0 + x, h.y0 + 8, C('#ff3a3a')); }
+}
+
 function drawHat(h: HeadCtx): void {
   if (!h.look.hat) return;
+  if (h.look.hatT) { drawHatType(h, h.look.hatT); return; }
   const c = h.col;
   const e = h.era;
   const dark = tone(C('#2c2622'), PALETTES[e]);
@@ -371,10 +528,31 @@ function drawHat(h: HeadCtx): void {
 }
 
 function drawHead(h: HeadCtx): void {
+  if (h.look.helm) { drawSkull(h); drawHelmet(h); return; }
+  if (h.look.paint && WHITE_PAINT.includes(h.look.paint)) { const W = C('#f2f0ea'); h = { ...h, col: { ...h.col, skin: W, skinD: shade(W, -0.12), skinL: W } }; }
+  const hairFn = HAIR[h.look.hair % HAIR.length];
+  // rodada 15: cabelos volumosos (black, bufante, cachos) vão atrás do rosto; só o topo fica na frente
+  const back = h.view === 'front' && BACK_HAIR.includes(h.look.hair % HAIR.length);
+  if (back) hairFn(h, h.col);
   drawSkull(h);
+  drawPaintUnder(h);
   if (h.view === 'front') drawFace(h);
+  drawPaintOver(h);
   drawBeard(h);
-  HAIR[h.look.hair % HAIR.length](h, h.col);
+  if (back) {
+    const q = h.p.clone();
+    hairFn({ ...h, p: q }, h.col);
+    for (let y = h.y0 - 8 * h.s; y < h.y0 + 2 * h.s; y++) for (let x = h.x0 - 4 * h.s; x < h.x0 + 12 * h.s; x++) { const v = q.get(x, y); if (v !== h.p.get(x, y)) h.p.put(x, y, v); }
+  } else hairFn(h, h.col);
+  if (h.look.roots !== undefined && h.look.hair > 0) {
+    // raiz de outra cor (cabelo bicolor)
+    const rc = tone(C(HAIR_COLORS[h.look.roots % HAIR_COLORS.length]), PALETTES[h.era]);
+    const { p, col } = h;
+    for (let y = h.y0 - 4 * h.s; y < h.y0 + 1 * h.s; y++) for (let x = h.x0 - 3 * h.s; x < h.x0 + 11 * h.s; x++) {
+      const v = p.get(x, y);
+      if (v === col.hair) p.put(x, y, rc); else if (v === col.hairD) p.put(x, y, shade(rc, -0.3)); else if (v === col.hairL) p.put(x, y, shade(rc, 0.25));
+    }
+  }
   drawGlasses(h);
   drawHat(h);
   if (h.s > 1 && h.look.hair > 0 && h.look.hair !== 3) {
@@ -447,7 +625,7 @@ function drawFigure(p: Px, look: Appearance, pal: Palette, o: FigOpts): void {
 
   // ---- pernas ----
   const outfit = look.outfit % 4;
-  const dress = outfit === 2;
+  const dress = outfit === 2 && look.sx !== 'm'; // rodada 15: homem de casaco longo usa calça
   const legC = dress ? (e === '1920' ? tone(C('#6a5040'), pal) : col.skin) : col.pants;
   const legD = dress ? (e === '1920' ? shade(legC, -0.2) : col.skinD) : col.pantsD;
   const baggy = e === '1990' && !dress ? 1 : 0;

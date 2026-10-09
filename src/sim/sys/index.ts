@@ -121,3 +121,5 @@ import './kin15';
 // Rodada 15: produtores musicais reais (catálogo, som próprio, cachê, agenda, demanda de selos rivais).
 import './producers15';
 import './fame15';
+// Rodada 15: visual de artistas reais por fase.
+import './looks15';
