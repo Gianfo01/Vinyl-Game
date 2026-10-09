@@ -294,6 +294,9 @@ ACT_TABS.push((s, a) => {
   } : null;
 });
 
+/** Blocos extras da vida pessoal (rodada 14: lazer, encontros e linha do tempo). */
+export const LIFE_EXTRAS13: ((s: GameState, p: Person) => HTMLElement | null)[] = [];
+
 function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
   const lf = personLife(s, p);
   const facts = personExtraFacts(s, p);
@@ -311,6 +314,7 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
         lf.voice !== undefined ? ` · ${t(l('voz', 'voice'))} ${Math.round(lf.voice)}` : '', lf.hearing !== undefined ? ` · ${t(l('audição', 'hearing'))} ${Math.round(lf.hearing)}` : ''),
       lf.dependency !== undefined && lf.dependency > 5 ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
     ),
+    ...LIFE_EXTRAS13.map((f) => f(s, p)),
     ...[...groups].map(([g, xs]) => h('details', null, h('summary', { class: 'small muted' }, `${t(l('Mais dados', 'More data'))} · ${g}`),
       h('ul', { class: 'dos13-list small' }, xs.slice(0, 25).map((f) => h('li', null, h('span', { class: 'muted' }, `${t(f.label)}: `), typeof f.v === 'string' ? f.v : t(f.v)))))));
 }
