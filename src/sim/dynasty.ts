@@ -86,7 +86,7 @@ function agingMonth(s: GameState, r: Rng): void {
       const p = s.persons[id];
       if (!p || !p.alive) continue;
       const age = s.year - p.born;
-      if (!safe && r.chance(deathRisk(age, p))) {
+      if (r.chance(deathRisk(age, p)) && !safe) { // sorteia sempre (mantém a sequência), mas reais não morrem
         const cause = age > 70 ? l('causas naturais', 'natural causes') : p.health === 'addiction' ? l('complicações de saúde', 'health complications') : l('um acidente inesperado', 'an unexpected accident');
         personDies(s, p, cause);
         continue;

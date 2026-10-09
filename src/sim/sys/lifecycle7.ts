@@ -37,12 +37,13 @@ function formerPush(s: GameState, actId: string, personId: string, reason: 'left
 
 function agingAll(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
-    if (tracked(act) || realSafe(s, act)) continue; // os acompanhados já envelhecem em dynasty.ts; reais seguem o roteiro
+    if (tracked(act)) continue;
+    const safe = realSafe(s, act); // os acompanhados já envelhecem em dynasty.ts; reais seguem o roteiro
     for (const id of act.members) {
       const p = s.persons[id];
       if (!p?.alive) continue;
       const age = s.year - p.born;
-      if (age > 40 && r.chance(deathRisk(age, p))) personDies(s, p, age > 70 ? l('causas naturais', 'natural causes') : l('uma doença', 'an illness'));
+      if (age > 40 && r.chance(deathRisk(age, p)) && !safe) personDies(s, p, age > 70 ? l('causas naturais', 'natural causes') : l('uma doença', 'an illness'));
     }
   }
 }
