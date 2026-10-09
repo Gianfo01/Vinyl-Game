@@ -79,7 +79,7 @@ function identityTab(s: GameState, actId: string): HTMLElement {
     h('p', null, prefsLines(pr).map((x) => pill(t(x)))),
   ) : h('p', { class: 'muted small' }, t(l('Conheça melhor o ato (olheiro) para ler as preferências.', 'Scout the act further to read their preferences.')));
 
-  const memBox = m && (mine || m.log.length) ? h('div', null,
+  const memBox = m && !a.playerBand && (mine || m.log.length) ? h('div', null,
     h('h4', null, t(l('Memória da relação com o selo', 'Memory of the label relationship'))),
     chips(stat('handshake', Math.round(m.sup * 10) / 10, l('Apoio lembrado', 'Remembered support')), stat('heart', Math.round(m.kept * 10) / 10, l('Promessas cumpridas', 'Promises kept')),
       stat('warning', Math.round(m.broke * 10) / 10, l('Promessas quebradas', 'Promises broken')), stat('clock', Math.round(m.ab * 10) / 10, l('Abandono e culpa', 'Abandonment and blame')), stat('star', Math.round(m.fav * 10) / 10, l('Favoritismo sentido', 'Felt favoritism'))),

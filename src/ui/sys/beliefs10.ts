@@ -15,9 +15,10 @@ const compatWord = (c: number): { w: L; tone: 'good' | 'bad' | '' } =>
 export function viewsLine(s: GameState, personId: string): HTMLElement {
   const v = viewsOf(s, personId);
   const me = playerViews(s);
-  const c = personId === 'player' ? 1 : compatOf(v, me);
+  const self = personId === 'player' || !!s.persons[personId]?.isPlayer;
+  const c = self ? 1 : compatOf(v, me);
   const w = compatWord(c);
-  return h('span', null, t(viewsLabel(v)), personId === 'player' ? null : [' ', pill(t(w.w), w.tone || undefined)]);
+  return h('span', null, t(viewsLabel(v)), self ? [' ', pill(t(l('você', 'you')), 'gold')] : [' ', pill(t(w.w), w.tone || undefined)]);
 }
 
 /** Bloco do perfil do jogador com o efeito de cada escolha. */

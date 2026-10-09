@@ -278,6 +278,8 @@ export function nudgeAdmiration(s: GameState, pid: string, actId: string, dv: nu
  */
 export function opinionsOf(s: GameState, pid: string, n = 4): { top: { act: Act; v: number }[]; low: { act: Act; v: number }[] } {
   n = Math.max(0, Math.min(n, 6));
+  // o personagem do jogador não tem opiniões geradas: as opiniões dele são as suas escolhas
+  if (s.persons[pid]?.isPlayer) return { top: [], low: [] };
   const me = actOfPerson(s, pid);
   const pool = Object.values(s.acts).filter((a) => a !== me && (live(a) || a.legend) && a.fame > 15 && !isOwnAct(s, pid, a));
   const scored = pool.map((act) => ({ act, v: admiration(s, pid, act.id) })).sort((x, y) => y.v - x.v || x.act.id.localeCompare(y.act.id));

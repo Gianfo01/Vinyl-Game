@@ -21,8 +21,8 @@ function arcTab(s: GameState, id: string): HTMLElement | null {
     : l('Neutro: o histórico ainda não pesa muito.', 'Neutral: the history does not weigh much yet.');
   return h('div', { class: 'arc12' },
     section(t(arcTitle(s, act)),
-      h('div', { class: 'arc-meter' }, h('small', null, t(l('mágoa', 'grudge'))), h('div', { class: 'track' }, h('span', { class: 'dot', style: `left:${pct}%` })), h('small', null, t(l('gratidão', 'gratitude')))),
-      h('p', { class: 'small' }, t(mood)),
+      act.playerBand ? null : h('div', { class: 'arc-meter' }, h('small', null, t(l('mágoa', 'grudge'))), h('div', { class: 'track' }, h('span', { class: 'dot', style: `left:${pct}%` })), h('small', null, t(l('gratidão', 'gratitude')))),
+      act.playerBand ? h('p', { class: 'small muted' }, t(l('É a sua própria banda: não há mágoa ou gratidão com o selo — os capítulos ficam como história.', 'It is your own band: no grudge or gratitude toward the label — chapters stay as history.'))) : h('p', { class: 'small' }, t(mood)),
       w.best ? h('p', { class: 'small good' }, '＋ ', t(arcReason(s, act, w.best))) : null,
       w.worst ? h('p', { class: 'small bad' }, '－ ', t(arcReason(s, act, w.worst))) : null,
       h('p', { class: 'muted small' }, t(l('A memória pesa em renovações, propostas de contrato, tentativas de aliciamento e brigas públicas — sempre com o motivo à vista. O que é antigo pesa menos; mágoa dura mais que gratidão; um novo dono herda metade da gratidão e quase toda a mágoa. Lealdade e teimosia do líder ampliam o efeito.', 'Memory weighs on renewals, contract offers, poaching attempts and public feuds — always with the reason shown. Old chapters weigh less; grudges outlast gratitude; a new owner inherits half the gratitude and nearly all the grudges. The leader\'s loyalty and stubbornness amplify it.')))),
