@@ -74,7 +74,7 @@ export function availableChannels(s: GameState): typeof CHANNELS {
   return CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear));
 }
 
-function decay(type: Release['type'], age: number): number {
+export function decay(type: Release['type'], age: number): number {
   if (type === 'single') return age < 2 ? 0.75 + 0.12 * age : Math.pow(0.88, age - 2);
   if (type === 'ep') return age < 2 ? 0.85 : Math.pow(0.9, age - 2);
   return age < 3 ? 0.9 + age * 0.03 : Math.pow(0.935, age - 3);
@@ -175,6 +175,8 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   rel.appeal = appeal * rel.hypeBoost;
   if (rel.hypeBoost > 1.02) factors.push({ key: 'hype', label: l('Rollout e superfãs', 'Rollout and superfans'), value: rel.hypeBoost, confidence: 'medium' });
   rel.autopsy = [...factors, { key: 'marketing', label: l('Marketing (E)', 'Marketing (E)'), value: 1 + 2.5 * rel.marketingE, confidence: rel.marketingE > 0.3 ? 'high' : 'low' }];
+  // rodada 8: guarda a previsão de 10 semanas no momento do lançamento (para comparar depois)
+  if (owner === 'player' || act.playerBand) rel.fc = forecastUnits(s, act, rel.type, rel.q, rel.marketing, rel.territories).mid;
   s.releases[rel.id] = rel;
   act.releases.push(rel.id);
   act.lastRelease = s.week;

@@ -256,6 +256,10 @@ export interface Release {
   critic?: number;
   criticN?: number;
   coverChoice?: string;
+  /** rodada 8: previsão de unidades em 10 semanas guardada no lançamento, unidades reais nessas 10 semanas e leitura já enviada */
+  fc?: number;
+  fa?: number;
+  expl?: boolean;
 }
 
 export interface AutopsyFactor {

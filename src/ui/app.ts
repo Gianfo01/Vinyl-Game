@@ -249,7 +249,9 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
       { id: 'press', label: t(l('Imprensa e crítica', 'Press and critics')), icon: 'newspaper', render: () => pressSection(g) },
       { id: 'channels', label: t(l('Canais e reputação', 'Channels and reputation')), icon: 'radio', render: () => mediaPanel(g) },
     ], 'mediaHub', g), render));
-    case 'catalog': return catalogPanel(g);
+    case 'catalog': return h('div', { class: 'hub' }, tabs('catalogHub', mergeTabs([
+      { id: 'list', label: t(l('Catálogo', 'Catalog')), icon: 'disc', render: () => catalogPanel(g) },
+    ], 'catalogHub', g), render));
     case 'creation': return studioHub(g, () => creationPanel(g));
     case 'world': return h('div', { class: 'hub' }, tabs('worldHub', mergeTabs([
       { id: 'map', label: t(l('Mapa e cenas', 'Map and scenes')), icon: 'globe', render: () => worldPanel(g) },

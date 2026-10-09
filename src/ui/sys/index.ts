@@ -14,3 +14,5 @@ import './intrigue';
 import './charts7';
 import './furnish';
 import './hubs8';
+import './project8';
+import './retro8';
