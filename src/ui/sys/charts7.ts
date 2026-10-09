@@ -83,9 +83,9 @@ export function nationalAwardsTab(s: GameState): HTMLElement {
   return section(t(l('Prêmios nacionais', 'National awards')),
     h('p', { class: 'muted small' }, t(l('No fim de cada ano, cada país premia artista, música, álbum e revelação do ano pelo consumo local. Os prêmios só existem a partir do ano em que foram criados.', 'At the end of each year, every country awards artist, song, album and newcomer of the year based on local consumption. Awards only exist from the year they were created.'))),
     h('div', { class: 'row wrap' },
-      select(ui.awardCountry, [{ value: 'all', label: t(l('Só os meus prêmios (todos os países)', 'Only my awards (all countries)')) }, ...COUNTRY_INFO.filter((x) => x.award).map((x) => ({ value: x.a3, label: `${t(countryName(x.a3))} — ${awardName(s, x)} (${x.award![2]})` }))], (v) => { ui.awardCountry = v; rerender(); }),
+      select(ui.awardCountry, [{ value: 'all', label: t(l('Só os meus prêmios (todos os países)', 'Only my awards (all countries)')) }, ...COUNTRY_INFO.filter((x) => x.award && x.award[2] <= s.year).map((x) => ({ value: x.a3, label: `${t(countryName(x.a3))} — ${awardName(s, x)} (${x.award![2]})` }))], (v) => { ui.awardCountry = v; rerender(); }),
     ),
-    c?.award && c.award[2] > s.year ? h('p', { class: 'muted small' }, t(l('{a} só será criado em {y}.', '{a} will only be created in {y}.'), { a: awardName(s, c), y: c.award[2] })) : null,
+    c && (!c.award || c.award[2] > s.year) ? h('p', { class: 'muted small' }, t(l('Este país ainda não tem uma premiação nacional.', 'This country has no national award yet.'))) : null,
     list.length ? h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Ano', 'Year'))), h('th', null, t(l('País', 'Country'))), h('th', null, t(l('Categoria', 'Category'))), h('th', null, t(l('Vencedor', 'Winner'))))),
       h('tbody', null, list.map((a) => h('tr', { class: a.byPlayer ? 'mine' : '' }, h('td', null, a.year), h('td', null, t(countryName(a.a3))), h('td', null, t(AWARD_CATS[a.cat])), h('td', null, a.actId ? actLink(s, a.actId, a.relId ? ` — ${s.releases[a.relId]?.title ?? a.winner.split(' — ')[1] ?? ''}` : '') : a.winner))))) : h('p', { class: 'muted small' }, t(l('Nenhum prêmio ainda.', 'No awards yet.'))),
@@ -125,7 +125,7 @@ export function countryCard(s: GameState, c: CountryInfo, compact = false): HTML
     !compact ? h('div', { class: 'small' }, h('b', null, t(l('Há 20 anos', '20 years ago'))), ' ', ...topFamilies(c, y - 20, 3).map((f) => pill(famName(f.id)))) : null,
     note ? h('p', { class: 'small' }, `${note[0]}: `, t(l(note[1], note[2]))) : null,
     leadRel ? h('p', { class: 'small' }, t(l('Lidera agora: ', 'Topping now: ')), releaseLink(s, leadRel.id), ' — ', actLink(s, leadRel.actId)) : null,
-    c.award ? h('small', { class: 'muted' }, `${t(l('Parada', 'Chart'))}: ${s.config.realNames ? c.chart[1] : c.chart[0]} · ${t(l('Prêmio', 'Award'))}: ${awardName(s, c)} (${c.award[2]})`) : null,
+    c.award && c.award[2] <= y ? h('small', { class: 'muted' }, `${t(l('Parada', 'Chart'))}: ${s.config.realNames ? c.chart[1] : c.chart[0]} · ${t(l('Prêmio', 'Award'))}: ${awardName(s, c)} (${c.award[2]})`) : null,
   );
 }
 

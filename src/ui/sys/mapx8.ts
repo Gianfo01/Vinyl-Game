@@ -21,6 +21,7 @@ import type { MapOverlay } from '../map';
 import { addTourStop } from '../panels/misc';
 import { store } from '../store';
 import { ic } from '../vis';
+import { visibleAct } from '../../sim/future';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -38,7 +39,7 @@ let promoAct = '';
 /** Cena local: atos da cidade, líder das paradas do país e da região. */
 export function cityScene(s: GameState, cityId: string): HTMLElement {
   const city = cityById[cityId];
-  const acts = Object.values(s.acts).filter((a) => a.city === cityId && (a.status === 'active' || a.status === 'emerging') && !a.deceased).sort((a, b) => b.fame - a.fame).slice(0, 8);
+  const acts = Object.values(s.acts).filter((a) => visibleAct(s, a) && a.city === cityId && (a.status === 'active' || a.status === 'emerging') && !a.deceased).sort((a, b) => b.fame - a.fame).slice(0, 8);
   const a3 = countryOfCity(cityId);
   const lead = a3 ? countryLeader(s, a3) : undefined;
   const reg = s.regionCharts[city.market]?.[0];

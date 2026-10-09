@@ -93,7 +93,6 @@ function shopTab(s: GameState): HTMLElement {
   const o = ownerOf(s);
   const cats = Object.keys(CAT_NAMES) as GoodCat[];
   const list = GOODS.filter((d) => d.cat === shopCat).sort((a, b) => a.price - b.price);
-  const later = list.filter((d) => !goodAvailable(s, d) && d.from > s.year);
   return h('div', null,
     wealthChips(s),
     h('div', { class: 'layer-bar', role: 'group' }, cats.map((c) => h('button', { type: 'button', class: `chip-btn ${shopCat === c ? 'on' : ''}`, 'aria-pressed': shopCat === c ? 'true' : 'false', onclick: () => { shopCat = c; rerender(); } }, t(CAT_NAMES[c])))),
@@ -109,7 +108,6 @@ function shopTab(s: GameState): HTMLElement {
         h('button', { class: 'btn small primary', disabled: o.wealth < price, onclick: () => run(buyGood(s, d.id), l('Comprado!', 'Bought!')) }, t(l('Comprar', 'Buy'))),
       ]);
     })),
-    later.length ? h('p', { class: 'muted small' }, t(l('Em épocas futuras: ', 'In future eras: ')), later.map((d) => `${t(d.name)} (${d.from})`).join(', ')) : null,
   );
 }
 

@@ -7,6 +7,7 @@ import { estimate, watchAct } from '../../sim/scouting';
 import type { Act, GameState, Person } from '../../sim/types';
 import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
+import { preDebut, visibleAct } from '../../sim/future';
 import { actLink, cityName, genreName, labelLink, logo, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
 import { openAct, openOffer, openPerson } from '../ficha';
@@ -29,6 +30,7 @@ const F = {
 const PAGE = 40;
 
 function actMatches(s: GameState, a: Act, q: string): boolean {
+  if (!visibleAct(s, a)) return false;
   if (F.family !== 'any' && familyOf(a.genre) !== F.family) return false;
   if (F.market !== 'any' && cityById[a.city]?.market !== F.market) return false;
   if (F.owner === 'mine' && a.owner !== 'player') return false;
@@ -65,7 +67,7 @@ function actRows(s: GameState): HTMLElement {
         const tal = estimate(s, a.id, 'talent');
         return h('tr', null,
           h('td', null, logo(a, 28)),
-          h('td', null, actLink(s, a.id), h('div', { class: 'muted small' }, `${a.members.length > 1 ? t(l('Banda', 'Band')) + ` (${a.members.length})` : t(l('Solo', 'Solo'))} · ${t(l('desde', 'since'))} ${a.debutYear}`), a.status === 'retired' || a.status === 'split' ? pill(t(l('encerrado', 'ended')), 'bad') : a.status === 'hiatus' ? pill(t(l('hiato', 'hiatus')), 'warn') : null),
+          h('td', null, actLink(s, a.id), h('div', { class: 'muted small' }, `${a.members.length > 1 ? t(l('Banda', 'Band')) + ` (${a.members.length})` : t(l('Solo', 'Solo'))} · ${preDebut(s, a) ? t(l('promessa', 'up-and-coming')) : `${t(l('desde', 'since'))} ${a.debutYear}`}`), a.status === 'retired' || a.status === 'split' ? pill(t(l('encerrado', 'ended')), 'bad') : a.status === 'hiatus' ? pill(t(l('hiato', 'hiatus')), 'warn') : null),
           h('td', null, genreName(a.genre)),
           h('td', null, cityName(a.city)),
           h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? labelLink(s, a.owner) : h('span', { class: 'muted' }, t(l('independente', 'independent')))),
@@ -92,6 +94,7 @@ function personRows(s: GameState): HTMLElement {
     if (!p.alive && F.status === 'live') return false;
     if (F.role !== 'any' && p.role !== F.role) return false;
     const a = actOf[p.id];
+    if (a && !visibleAct(s, a)) return false;
     if (F.owner === 'mine' && a?.owner !== 'player') return false;
     if (F.owner === 'free' && a?.owner) return false;
     if (F.owner === 'rival' && (!a?.owner || a.owner === 'player')) return false;

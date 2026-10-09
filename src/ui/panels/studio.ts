@@ -159,7 +159,7 @@ const neuralDraft = { offer: 0 };
 function neuralTab(s: GameState): HTMLElement {
   const r = rngOf(s);
   const legends = deceasedLegends(s);
-  if (!hologramReady(s) && !aiVoiceReady(s)) return section(t(l('Era sintética', 'Synthetic era')), h('p', { class: 'muted' }, t(l('Hologramas chegam por volta de 2027 e vozes sintéticas por volta de 2030 (depende da run).', 'Holograms arrive around 2027 and synthetic voices around 2030 (depends on the run).'))));
+  if (!hologramReady(s) && !aiVoiceReady(s)) return section(t(l('Novas tecnologias', 'New technologies')), h('p', { class: 'muted' }, t(l('Nada disso existe ainda. Quando a tecnologia chegar, você vai saber pelo noticiário.', 'None of this exists yet. When the technology arrives, you will hear about it in the news.'))));
   return h('div', null,
     section(t(l('Política de consentimento', 'Consent policy')), chips(
       stat('brain', s.player.neural.voiceLicenses, l('Licenças de voz', 'Voice licenses')),
@@ -202,7 +202,7 @@ export function studioHub(s: GameState, launch: () => HTMLElement): HTMLElement 
       { id: 'session', label: t(l('Estúdio', 'Studio')), icon: 'mic', render: () => sessionTab(s) },
       { id: 'rollout', label: t(l('Rollout', 'Rollout')), icon: 'calendar', render: () => rolloutTab(s) },
       { id: 'versions', label: t(l('Covers e versões', 'Covers & versions')), icon: 'disc', render: () => versionsTab(s) },
-      { id: 'neural', label: t(l('Era sintética', 'Synthetic era')), icon: 'hologram', render: () => neuralTab(s) },
+      ...(hologramReady(s) || aiVoiceReady(s) ? [{ id: 'neural', label: t(l('Era sintética', 'Synthetic era')), icon: 'hologram', render: () => neuralTab(s) }] : []),
     ], 'creation', s), rerender),
   );
 }

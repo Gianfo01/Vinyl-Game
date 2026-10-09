@@ -3,7 +3,7 @@
 
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { ERA_SHIFTS, PIVOT_COST, PIVOT_WEEKS, activeStances, currentEra, era8, eraStarted, eraYear, pivotStance, rivalStances, type StanceDef, type StanceFx } from '../../sim/sys/eras8';
+import { PIVOT_COST, PIVOT_WEEKS, activeStances, currentEra, era8, erasSoFar, eraYear, pivotStance, rivalStances, type StanceDef, type StanceFx } from '../../sim/sys/eras8';
 import type { GameState } from '../../sim/types';
 import { money } from '../../sim/util';
 import { $, labelLink, pill, rerender, section, toast } from '../common';
@@ -56,16 +56,16 @@ function eraPanel(s: GameState): HTMLElement {
         asked ? h('p', { class: 'small' }, ic('calendar'), ' ', t(l('A decisão desta era está na sua mesa (se ninguém responder, vale a última opção).', 'This era\'s decision is on your desk (if unanswered, the last option applies).'))) : null,
       ),
       section(t(l('Linha do tempo das eras', 'Era timeline')),
-        h('ol', { class: 'era-line' }, ERA_SHIFTS.map((e) => {
+        h('ol', { class: 'era-line' }, erasSoFar(s).map((e) => {
           const y = eraYear(s, e.id);
-          const started = eraStarted(s, e.id);
           const a = act.find((x) => x.era.id === e.id);
           const c = st.chosen[e.id];
-          return h('li', { class: `${started ? 'on' : 'future'} ${e.id === cur.id ? 'cur' : ''}` },
-            h('b', null, t(e.name)), ' ', h('span', { class: 'muted' }, y === undefined ? t(l('não acontece nesta história', 'never happens in this history')) : Number.isFinite(y) ? (started ? String(y) : t(l('futuro', 'future'))) : t(l('início', 'start'))),
+          return h('li', { class: `on ${e.id === cur.id ? 'cur' : ''}` },
+            h('b', null, t(e.name)), ' ', h('span', { class: 'muted' }, y !== undefined && Number.isFinite(y) ? String(y) : t(l('início', 'start'))),
             a ? h('div', { class: 'small' }, t(a.stance.name), ' ', c?.auto ? pill(t(l('padrão', 'default'))) : null, ' ', pill(t(l('peso {p}%', 'weight {p}%'), { p: Math.round(a.weight * 100) })), ' ', fxChips(a.stance, a.weight)) : null,
           );
         })),
+        h('p', { class: 'muted small' }, t(l('A próxima virada ninguém sabe qual será: fique de olho nos rumores e no noticiário.', 'Nobody knows what the next shift will be: keep an eye on rumors and the news.'))),
         h('p', { class: 'muted small' }, t(l('Posturas antigas continuam valendo, mas pesam menos a cada era nova: o que era tocar bem um selo muda com a tecnologia.', 'Old stances still apply but weigh less with each new era: what running a label well means changes with technology.'))),
       ),
     ),
