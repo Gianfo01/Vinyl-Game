@@ -14,6 +14,7 @@ import { fmtL, money, notify, post, remember } from '../util';
 import { registerExt4, registerSimHook } from '../ext4';
 import { opine, opinionOf, registerPer13 } from './persona13';
 import { ownerOf } from './people/owner';
+import { gone16 } from './gone16';
 
 export interface C15 { y: number; m: number; who: string; title: string; q?: number; you?: 1 }
 export interface P15 {
@@ -38,7 +39,7 @@ export function p15(s: GameState): P15 {
 export const prodDefId = (id: string): string => `rp_${id}`;
 export const prodKey = (id: string): string => `pd:${id}`;
 const last = (p: RealProd): number => Math.min(p.to, p.died ?? 9999);
-export const prodActive = (s: GameState, p: RealProd): boolean => s.year >= p.from && s.year <= last(p);
+export const prodActive = (s: GameState, p: RealProd): boolean => s.year >= p.from && s.year <= last(p) && !gone16(s, `pd:${p.id}`);
 /** Já existiu (nunca mostra quem ainda não começou). */
 export const prodKnown = (s: GameState, p: RealProd): boolean => s.year >= p.from;
 export const realProdOf = (defId: string): RealProd | undefined => (defId.startsWith('rp_') ? prodById[defId.slice(3)] : undefined);

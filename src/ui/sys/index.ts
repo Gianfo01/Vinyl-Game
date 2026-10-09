@@ -95,3 +95,5 @@ import './deleg16';
 // Rodada 16: momentos ilustrados (cena só quando algo acontece; "ver cena" no diário).
 import './moments16';
 import './layout16';
+// Rodada 16: página única de pessoa (todos os personagens), empresário/produtor no artista, obras com pop-up, sucessão no selo.
+import './people16';

@@ -58,4 +58,5 @@ export function familyBlock15(s: GameState, p: Person): HTMLElement | null {
     log.length ? h('ul', { class: 'memory small' }, log.map((e) => h('li', null, h('span', { class: 'muted' }, `${e[0]}/${String(e[1] + 1).padStart(2, '0')} · `), t(e[2])))) : null);
 }
 
-LIFE_EXTRAS13.push((s: GameState, p: Person) => familyBlock15(s, p));
+// rodada 16: na página da pessoa a família tem aba própria; no ato continua dentro da vida pessoal
+LIFE_EXTRAS13.push((s: GameState, p: Person, open?: boolean) => (open === false ? null : familyBlock15(s, p)));

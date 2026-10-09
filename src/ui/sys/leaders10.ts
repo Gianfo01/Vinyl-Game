@@ -15,6 +15,7 @@ import { portraitCanvas } from '../pixel/avatar';
 import { registerPageTab } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
+import { personRoute16 } from '../route16';
 
 const relWord = (v: number): L => v >= 40 ? l('aliado', 'ally') : v >= 12 ? l('cordial', 'friendly') : v > -12 ? l('neutro', 'neutral') : v > -40 ? l('frio', 'cold') : l('inimigo', 'enemy');
 const relCls = (v: number) => (v >= 12 ? 'good' : v <= -12 ? 'bad' : '');
@@ -37,10 +38,16 @@ export function leaderLink(s: GameState, L0: Leader | undefined): HTMLElement {
 }
 
 export function openLeader(id: string): void {
+  if (personRoute16.f?.(`l:${id}`, 'r_ceo')) return;
   const s = store.game;
   if (!s) return;
   const L0 = leaders(s).L[id];
   if (!L0) return;
+  modal(L0.name, leaderBody(s, L0));
+}
+
+/** Corpo do perfil do líder (rodada 16: também é a aba "CEO" da página única de pessoa). */
+export function leaderBody(s: GameState, L0: Leader, full = true): HTMLElement {
   const lb = L0.label ? s.labels[L0.label] : undefined;
   const pb = PLAYBOOKS[L0.pref];
   const status = L0.st === 'dead' ? fmt(l('morreu em {y}', 'died in {y}'), { y: L0.died ?? '?' }) : L0.st === 'retired' ? t(l('aposentadoria', 'retired')) : L0.st === 'free' ? t(l('sem cargo', 'between jobs')) : '';
@@ -49,8 +56,8 @@ export function openLeader(id: string): void {
   const grudge = lb ? lb.roster.map((x) => s.acts[x]).filter((a) => a && a.trust < 35).sort((a, b) => a.trust - b.trust)[0] : undefined;
   const relP = L0.rel.player ?? 0;
   const body = h('div', { class: 'ficha leader10' },
-    h('div', { class: 'row' }, face(s, L0, 4), h('div', null,
-      h('h3', null, L0.name, L0.real ? h('small', { class: 'muted' }, ` · ${t(l('pessoa real', 'real person'))}`) : null),
+    h('div', { class: 'row' }, full ? face(s, L0, 4) : null, h('div', null,
+      full ? null : L0.real ? pill(t(l('pessoa real', 'real person')), 'gold') : null, h('h3', full ? null : { hidden: true }, L0.name, L0.real ? h('small', { class: 'muted' }, ` · ${t(l('pessoa real', 'real person'))}`) : null),
       h('p', null, `${ageOf(s, L0)} ${t(l('anos', 'years old'))} · ${t(l('de', 'from'))} ${cityName(L0.city)} · ${t(BG_TXT[L0.bg])}`, status ? ` · ${status}` : ''),
       lb ? h('p', null, t(L0.founder ? l('Fundador e líder de ', 'Founder and head of ') : l('Líder de ', 'Head of ')), labelLink(s, lb.id), ` ${t(l('desde', 'since'))} ${L0.since}`) : null,
       L0.note ? h('p', { class: 'small muted' }, t(L0.note)) : null)),
@@ -71,17 +78,23 @@ export function openLeader(id: string): void {
     L0.jobs.length ? h('ul', { class: 'small' }, [...L0.jobs].reverse().map((j) => h('li', null,
       s.labels[j.lb] ? labelLink(s, j.lb) : h('span', null, j.n), ` ${j.from}–${j.to ?? t(l('hoje', 'now'))}`, j.end ? h('span', { class: 'muted' }, ` · ${t(jobEndText(j.end))}`) : null)))
       : h('p', { class: 'muted small' }, '—'),
-    h('h4', null, t(l('Ficha completa', 'Full profile'))), ficha13(s, `l:${L0.id}`),
+    full ? h('h4', null, t(l('Ficha completa', 'Full profile'))) : null, full ? ficha13(s, `l:${L0.id}`) : null,
   );
-  modal(L0.name, body);
+  return body;
 }
 
 function fmt(x: L, p: Record<string, string | number>): string { return t(x, p as never); }
 
 /** Perfil do próprio jogador como líder do selo. */
 export function openPlayerLeader(): void {
+  if (personRoute16.f?.('player', 'r_owner')) return;
   const s = store.game;
   if (!s) return;
+  modal(ownerOf(s).name, playerLeaderBody(s));
+}
+
+/** Você como líder do selo (rodada 16: aba "Dono do selo" na sua página). */
+export function playerLeaderBody(s: GameState, full = true): HTMLElement {
   const o = ownerOf(s);
   const p = playerPerson(s);
   const body = h('div', { class: 'ficha leader10' },
@@ -97,9 +110,9 @@ export function openPlayerLeader(): void {
     h('ul', { class: 'small' }, Object.values(leaders(s).L).filter((x) => x.st === 'active' && x.label && s.labels[x.label])
       .sort((a, b) => (a.rel.player ?? 0) - (b.rel.player ?? 0)).slice(0, 8)
       .map((x) => h('li', null, leaderLink(s, x), ` (${s.labels[x.label!].name}) — `, pill(t(relWord(x.rel.player ?? 0)), relCls(x.rel.player ?? 0))))),
-    h('h4', null, t(l('Ficha completa', 'Full profile'))), ficha13(s, 'player'),
+    full ? h('h4', null, t(l('Ficha completa', 'Full profile'))) : null, full ? ficha13(s, 'player') : null,
   );
-  modal(o.name, body);
+  return body;
 }
 
 // ---------------------------------------------------------------- ficha do selo

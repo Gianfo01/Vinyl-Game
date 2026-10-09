@@ -22,6 +22,14 @@ import { openOffer } from '../ficha';
 import { registerArea, registerPageTab } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
+import { personRoute16 } from '../route16';
+import { mgrsOfAct16 } from '../../sim/sys/people16';
+
+/** Rodada 16: quem já empresariou o ato (com anos). */
+function mgrHist16(s: GameState, actId: string): HTMLElement | null {
+  const hs = mgrsOfAct16(s, actId).filter((x) => mgrById[x.id]);
+  return hs.length ? section(t(l('Empresários ao longo da carreira', 'Managers over the career')), h('ul', { class: 'small' }, hs.map((x) => h('li', null, mgrBtn(s, mgrById[x.id]), ` · ${x.from}–${x.to ?? t(l('hoje', 'now'))}`)))) : null;
+}
 
 const F = { past: false };
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -48,7 +56,7 @@ function contestBtn(s: GameState, actId: string, redraw: () => void): HTMLElemen
   }, `${t(l('Disputar cliente', 'Contest client'))} · ${pct(ch)}`);
 }
 
-function profile(s: GameState, id: string, redraw: () => void): HTMLElement {
+export function profile(s: GameState, id: string, redraw: () => void, full = true): HTMLElement {
   const m = mgrById[id];
   const live = mgrActive(s, m);
   const ro = live ? rosterOf(s, id) : [];
@@ -72,11 +80,12 @@ function profile(s: GameState, id: string, redraw: () => void): HTMLElement {
       feud ? h('button', { class: 'btn small', disabled: !!pb, title: t(pb ?? l('Paga um acordo e encerra a rixa.', 'Pay a settlement and end the feud.')), onclick: act14(redraw, () => makePeace(s, id)) }, `${t(l('Fazer as pazes', 'Make peace'))} · ${$(peaceCost(s, m))}`) : null,
     ) : null,
     lg.length ? section(t(l('Histórico com o mercado e com você', 'History with the trade and with you')), h('ul', { class: 'small' }, lg.map(([y, mo, , x]) => h('li', null, `${mo + 1}/${y} — `, t(x))))) : null,
-    section(t(l('Ficha', 'Profile')), ficha13(s, mgrKey(id), redraw)),
+    full ? section(t(l('Ficha', 'Profile')), ficha13(s, mgrKey(id), redraw)) : null,
   );
 }
 
 export function openMgr14(id: string): void {
+  if (personRoute16.f?.(mgrKey(id), 'r_manager')) return;
   const s = store.game;
   const m = mgrById[id];
   if (!s || !m || !knownMgr(s, m)) return;
@@ -118,7 +127,7 @@ registerArea({ id: 'managers14', label: l('Empresários', 'Managers'), icon: 'ha
 
 registerPageTab('act', {
   id: 'mgr14', label: l('Empresário', 'Manager'), icon: 'handshake', order: 46,
-  when: (s, id) => !!repOf(s, id) || !!m14(s).brought[id],
+  when: (s, id) => !!repOf(s, id) || !!m14(s).brought[id] || mgrsOfAct16(s, id).length > 0,
   render: (s, id) => {
     const m = repOf(s, id);
     const br = m14(s).brought[id];
@@ -128,6 +137,8 @@ registerPageTab('act', {
       m ? h('p', { class: 'small' }, h('b', null, t(l('O que exige numa proposta: ', 'What they demand in an offer: '))), t(MGR_STYLE[m.style][1]), ' ', t(l('Negociação {n}.', 'Negotiation {n}.'), { n: m.a[1] })) : null,
       br && br[1] >= s.week ? h('p', { class: 'small good' }, t(l('Indicado por {n}: suas propostas valem mais até a semana {w}.', 'Referred by {n}: your offers count for more until week {w}.'), { n: mgrName(s, mgrById[br[0]]), w: br[1] })) : null,
       m ? contestBtn(s, id, draw) : null,
+      !m ? h('p', { class: 'small muted' }, t(l('Sem empresário no momento: negocia direto (sem exigências de estilo).', 'No manager right now: negotiates directly (no style demands).'))) : null,
+      mgrHist16(s, id),
     ));
     draw();
     return box;

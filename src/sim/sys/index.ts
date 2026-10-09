@@ -136,3 +136,5 @@ import './moments16';
 import './supply16';
 // Rodada 16: conexões entre sistemas (fama→notoriedade, sync→paradas, lazer→scouting, família→arcos/estúdio, produtor×conceito, veículo próprio→hype, rixas→imprensa, sobrecarga→aliciamento, esnobada→júri com memória, demos).
 import './links16';
+// Rodada 16: uma identidade por pessoa, empresários da praça, vida (vícios, mortes, casamentos) para toda a indústria e sucessão nos selos.
+import './people16';

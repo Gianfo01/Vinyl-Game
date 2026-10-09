@@ -13,11 +13,12 @@ import { openPersonPage } from '../pages';
 import { registerArea } from '../registry';
 import { ic } from '../vis';
 import { LIFE_EXTRAS13 } from './dossier13';
+import { personRoute16 } from '../route16';
 
 const KIND: Record<string, L> = { artist: l('artista', 'artist'), exec: l('executivo(a) rival', 'rival executive'), staff: l('sua equipe', 'your staff') };
 const tone = (v: number) => (v > 0 ? 'good' : v < 0 ? 'bad' : '');
 
-function timeline(s: GameState, key: string, n = 12): HTMLElement | null {
+export function timeline(s: GameState, key: string, n = 12): HTMLElement | null {
   const x = leisureOf14(s, key);
   if (!x) return null;
   const rc = x.rec;
@@ -50,7 +51,7 @@ function spotCard(s: GameState, k: Spot14): HTMLElement {
         const x = leisureOf14(s, key);
         const op = Math.round(x?.opinion ?? 0);
         return h('li', null,
-          w.p ? h('button', { class: 'link', onclick: () => openPersonPage(w.p!.id) }, w.name) : h('b', null, w.name),
+          w.p ? h('button', { class: 'link', onclick: () => openPersonPage(w.p!.id) }, w.name) : h('button', { class: 'link', onclick: () => personRoute16.f?.(key) }, w.name),
           h('span', { class: 'muted' }, ` · ${t(KIND[w.kind])}${w.act && w.act.name !== w.name ? ` (${w.act.name})` : ''}`),
           ' ', pill(`${op > 0 ? '+' : ''}${op}`, tone(op)),
           !w.p ? h('details', null, h('summary', { class: 'small muted' }, t(l('vida pessoal', 'personal life'))), timeline(s, key, 6)) : null);

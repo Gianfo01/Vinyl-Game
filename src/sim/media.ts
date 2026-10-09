@@ -12,6 +12,7 @@ import { REGIONAL_CRITICS } from '../data/critics8';
 import { criticRelBonus } from './criticrel';
 import { isPolitical, viewsOf } from './beliefs';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
+import { gone16 } from './sys/gone16';
 
 export interface CriticDef {
   name: string;
@@ -62,7 +63,7 @@ export function allCritics(): CriticDef[] {
 }
 
 export function activeCritics(s: GameState): CriticDef[] {
-  return allCritics().filter((c) => s.year >= c.from && s.year <= c.to);
+  return allCritics().filter((c) => s.year >= c.from && s.year <= c.to && !gone16(s, `c:${c.name}`));
 }
 
 export function criticByName(name: string): CriticDef | undefined {

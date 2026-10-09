@@ -15,6 +15,7 @@ import { $, modal, pill, rerender, section, toast } from '../common';
 import { bar, h } from '../dom';
 import { store } from '../store';
 import { HINT15, canSee, knownLevel } from '../../sim/sys/fame15';
+import { personRoute16 } from '../route16';
 
 const tone = (v: number) => (v >= 65 ? 'good' : v <= 35 ? 'bad' : '');
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -91,6 +92,7 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
 }
 
 export function openFicha13(key: string, title?: string): void {
+  if (personRoute16.f?.(key)) return;
   const s = store.game;
   if (!s) return;
   const P = per13(s, key);

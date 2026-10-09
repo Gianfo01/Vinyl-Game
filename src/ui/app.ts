@@ -44,6 +44,7 @@ import { tabSnapshot } from './vis';
 import { withPlayerActsCache } from '../sim/util';
 import { visibleAct } from '../sim/future';
 import { openPerson } from './ficha';
+import { personRoute16, searchRoute16 } from './route16';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : null));
 registerPortrait((p, size) => {
@@ -471,6 +472,7 @@ function palette(): void {
     const actOf: Record<string, string> = {};
     for (const a of Object.values(g.acts)) if (visibleAct(g, a)) for (const m of a.members) actOf[m] = a.name;
     for (const p of Object.values(g.persons)) if (actOf[p.id] && p.name.toLowerCase().includes(qq.slice(0, 2))) out.push({ label: p.name, kind: 'person', icon: 'star', hint: actOf[p.id] + (p.alive ? '' : ' · †'), run: () => openPerson(p.id) });
+    for (const x of searchRoute16.f?.(g, qq) ?? []) out.push({ label: x.label, kind: 'person', icon: 'star', hint: x.hint, run: () => personRoute16.f?.(x.key) });
     return out;
   };
   palette15(base, search);

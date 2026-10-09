@@ -12,6 +12,7 @@ import { h } from '../dom';
 import { registerArea } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
+import { personRoute16 } from '../route16';
 
 const F = { fam: '', past: false };
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -28,7 +29,7 @@ function status(s: GameState, p: RealProd): HTMLElement {
 }
 const link = (s: GameState, p: RealProd) => h('button', { class: 'link', onclick: () => openProd15(p.id) }, prodName(s, p));
 
-function profile(s: GameState, id: string, redraw: () => void): HTMLElement {
+export function profile(s: GameState, id: string, redraw: () => void, full = true): HTMLElement {
   const p = prodById[id];
   const live = prodActive(s, p);
   const works = worksOf(s, p);
@@ -41,14 +42,15 @@ function profile(s: GameState, id: string, redraw: () => void): HTMLElement {
     s.config.realNames ? h('p', null, t(p.bio)) : h('p', { class: 'small muted' }, t(l('Personagem inspirado num produtor real da época (nomes reais desligados).', 'Character inspired by a real producer of the era (real names off).'))),
     h('p', { class: 'small' }, h('b', null, t(l('Som de assinatura: ', 'Signature sound: '))), t(l('produção {a}, performance {b}, originalidade {c}; rende 100% nos gêneros {g} e 60% fora deles.', 'production {a}, performance {b}, originality {c}; full effect in {g} and 60% outside them.'), { a: signed(p.fx[0]), b: signed(p.fx[1]), c: signed(p.fx[2]), g: fams })),
     h('p', { class: 'small' }, h('b', null, t(l('Cachê: ', 'Fee: '))), `${$(money(s, feeOf(s, p)))}/${t(l('faixa', 'track'))} (${stars(p)})`, fm.why.length ? ` — ${fm.why.map((x) => t(x)).join('; ')}` : '', '. ', t(l('Um grande projeto por vez: quem é de faixa alta fecha a agenda por mais algumas semanas. Contrate no estúdio ou no projeto musical.', 'One big project at a time: top-tier names shut the diary for a few more weeks. Hire in the studio or the music project.'))),
-    works.length ? section(t(l('Obras famosas', 'Famous works')), h('ul', { class: 'small' }, works.map(([w, a, y]) => h('li', null, `${w} — ${a} (${y})`)))) : null,
+    full && works.length ? section(t(l('Obras famosas', 'Famous works')), h('ul', { class: 'small' }, works.map(([w, a, y]) => h('li', null, `${w} — ${a} (${y})`)))) : null,
     cr.length ? section(t(l('Créditos recentes no jogo', 'Recent credits in the game')), h('ul', { class: 'small' }, cr.slice(0, 8).map((c) => h('li', null, `${c.m + 1}/${c.y} — `, c.you ? h('b', null, `${c.who}: "${c.title}" (Q ${c.q})`) : `${c.who} · ${c.title}`)))) : null,
     live ? h('div', { class: 'row wrap' }, h('button', { class: 'btn small', disabled: !!db, title: t(db ?? l('Aproxima: seu carisma e seu ouvido contam. A cada 6 meses. Bom relacionamento dá desconto; quem o desagrada paga mais ou nem é atendido.', 'Brings you closer: your charisma and ear count. Every 6 months. A good relationship gives a discount; disliked, you pay more or are turned away.')), onclick: () => { const r = dinner(s, id); toast(t(r.text), r.ok ? 'good' : 'bad'); redraw(); rerender(); } }, `${t(l('Jantar no estúdio', 'Dinner at the studio'))} · ${$(money(s, DINNER_COST))}`)) : null,
-    section(t(l('Ficha', 'Profile')), ficha13(s, prodKey(id), redraw)),
+    full ? section(t(l('Ficha', 'Profile')), ficha13(s, prodKey(id), redraw)) : null,
   );
 }
 
 export function openProd15(id: string): void {
+  if (personRoute16.f?.(prodKey(id), 'r_producer')) return;
   const s = store.game;
   const p = prodById[id];
   if (!s || !p || !prodKnown(s, p)) return;
