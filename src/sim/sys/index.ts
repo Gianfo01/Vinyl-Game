@@ -81,3 +81,6 @@ import './explain12';
 import './ventures12';
 import './media12';
 import './platform12';
+// Rodada 12: estrutura da empresa x era (reorganização) e cenas locais como redes (filiais escolhem parceiros).
+import './eras12';
+import './scenes12';

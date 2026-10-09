@@ -39,3 +39,6 @@ import './leaders10';
 // Rodada 12: negociação por pacote e "Por que deu nisso?" ampliado.
 import './offers12';
 import './explain12';
+// Rodada 12: estrutura da empresa x era e cenas locais como redes.
+import './eras12';
+import './scenes12';
