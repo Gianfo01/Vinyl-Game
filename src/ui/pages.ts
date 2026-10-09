@@ -28,6 +28,7 @@ import { portraitCanvas } from './pixel/avatar';
 import { appearanceEditor } from './pixel/editor';
 import { personActivity } from './pixel/activity';
 import { instrumentsTab } from './sys/instruments';
+import { viewsLine } from './sys/beliefs10';
 import { rw } from '../sim/sys/realworld';
 import { instById, instrumentsOf } from '../sim/sys/instruments';
 import { icon } from './pixel/icons';
@@ -227,6 +228,7 @@ function profileTab(s: GameState, p: Person, vis: ReturnType<typeof visibleField
       vis.traits && worstFamily(p) ? kv(t(l('Não combina com', 'Does not suit')), pill(t(worstFamily(p)!.name), 'bad')) : null,
       kv(t(S.origin), t(ORIGINS.find((o) => o.id === p.origin)?.name)),
       kv(t(l('Nascimento', 'Born')), p.born),
+      kv(t(l('Política e religião', 'Politics and faith')), viewsLine(s, p.id)),
       p.retireAge ? kv(t(l('Pensa em parar aos', 'Plans to stop at')), p.retireAge) : null,
     ),
   );
@@ -382,6 +384,7 @@ function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
   const why = { left: l('saiu', 'left'), died: l('faleceu', 'died'), retired: l('aposentou-se', 'retired'), fired: l('foi demitido', 'was fired') };
   return h('div', null,
     h('div', { class: 'pcard-grid' }, ms.map((p) => personCard(s, p))),
+    h('ul', { class: 'small views10' }, ms.map((p) => h('li', null, h('b', null, p.name), ': ', viewsLine(s, p.id)))),
     former.length ? h('div', null, h('h4', null, t(l('Ex-integrantes', 'Former members'))),
       h('ul', { class: 'small' }, former.map(({ f, p }) => h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(p.id) }, p.name), ` — ${t(why[f.reason])} ${t(l('em', 'in'))} ${f.year}`, !p.alive ? ' †' : '')))) : null,
     h('p', { class: 'muted small' }, t(l('Clique num integrante para ver a carta completa com todos os atributos.', 'Click a member for the full card with every attribute.'))),

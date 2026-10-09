@@ -11,6 +11,7 @@ import { FREE_POINTS, PLAYER_TRAITS, PRONOUNS, VISUALS, playerTraitById, type Ow
 import { BRANCHES, SKILL_TREE, START_SKILL_POINTS, canBuySkill, lifestyleById, lifestyleOf, skillById, validStartSkills } from '../sim/sys/persona/skills';
 import { canAddTrait, careerOfSpec, deriveAttrs, pointsUsed } from '../sim/sys/persona';
 import { ORIGINS, originById } from '../sim/sys/identity/data';
+import { POLS, POL_HINT, RELS, polById, relById } from '../sim/beliefs';
 import { ROLE_NAMES, type Role } from '../sim/sys/talent/attrs';
 import type { Appearance, CharacterSpec, RunConfig } from '../sim/types';
 import { cityName } from './common';
@@ -125,6 +126,14 @@ export function characterCard(cfg: RunConfig): HTMLElement {
       h('b', null, t(tr.name), tr.congenital ? ' ✦' : ''), h('small', null, t(tr.desc)), fx ? h('small', { class: 'muted' }, fx) : null);
   }));
 
+  const beliefHint = h('small', { class: 'muted' });
+  const drawBelief = () => beliefHint.replaceChildren(
+    ch.politics ? `${t(POL_HINT[ch.politics as keyof typeof POL_HINT])} ` : '', ch.religion ? t(relById[ch.religion as keyof typeof relById].hint) : '',
+    !ch.politics && !ch.religion ? t(l('Sem escolha, o mundo sorteia conforme sua cidade e época. Visões parecidas aproximam artistas, equipe e parceiros; opostas criam atrito.', 'Left blank, the world draws them from your city and era. Similar views bring artists, staff and partners closer; opposed ones create friction.')) : '');
+  drawBelief();
+  const polSel = select(ch.politics ?? '', [{ value: '', label: t(l('(sorteado)', '(drawn)')) }, ...POLS.map((p) => ({ value: p.id, label: t(polById[p.id].name) }))], (v) => { ch.politics = v || undefined; drawBelief(); });
+  const relSel = select(ch.religion ?? '', [{ value: '', label: t(l('(sorteada)', '(drawn)')) }, ...RELS.map((r) => ({ value: r.id, label: t(r.name) }))], (v) => { ch.religion = v || undefined; drawBelief(); });
+
   const genres = GENRES.filter((g) => g.born <= cfg.startYear).sort((a, b) => t(a.name).localeCompare(t(b.name)));
   const cities = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
 
@@ -155,6 +164,8 @@ export function characterCard(cfg: RunConfig): HTMLElement {
           h('label', null, t(l('Visual', 'Look')), select(ch.visual ?? 'casual', VISUALS.map((v) => ({ value: v.id, label: `${t(v.name)} — ${t(v.desc)}` })), (v) => { ch.visual = v; drawPreview(); })),
         ),
         h('label', null, t(l('Lema', 'Motto')), h('input', { type: 'text', value: ch.motto ?? '', maxlength: 120, placeholder: t(l('Ex.: "Disco bom não tem prazo de validade."', 'E.g. "A good record never expires."')), oninput: (e: Event) => (ch.motto = (e.target as HTMLInputElement).value) })),
+        h('div', { class: 'row wrap cc-row' }, h('label', null, t(l('Visão política', 'Political view')), polSel), h('label', null, t(l('Religião', 'Religion')), relSel)),
+        beliefHint,
         preview,
       ),
       lookBox,

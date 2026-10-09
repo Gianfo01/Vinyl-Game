@@ -10,6 +10,7 @@ import { clamp, type Rng } from '../../core/rng';
 import { familyOf, l, type L } from '../../data/world';
 import { emitEvent } from '../events';
 import { registerExt4, registerSimHook } from '../ext4';
+import { compat } from '../beliefs';
 import { registerPerkSource, type PerkEntry } from '../perks';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, notify, playerActs, remember } from '../util';
@@ -127,14 +128,18 @@ function kindFor(t: Tie): TieKind {
 }
 
 /** Cria ou mexe num laço entre duas pessoas de atos diferentes. */
-export function bump(s: GameState, a: string, b: string, dv: number, src: TieSrc, kind?: TieKind): Tie | undefined {
+export function bump(s: GameState, a: string, b: string, dv0: number, src: TieSrc, kind?: TieKind): Tie | undefined {
   if (!a || !b || a === b) return undefined;
+  let dv = dv0;
   const pa = s.persons[a];
   const pb = s.persons[b];
   if (!pa?.alive || !pb?.alive) return undefined;
   const A = actOfPerson(s, a);
   const B = actOfPerson(s, b);
   if (A && B && A === B) return undefined; // dentro da banda: Person.rel
+  // rodada 10: visões parecidas aproximam, opostas atritam (política e religião)
+  const cp = compat(s, a, b);
+  dv = dv >= 0 ? dv * (1 + 0.35 * cp) : dv * (1 - 0.3 * cp);
   const st = social(s);
   let t = tieOf(s, a, b);
   if (!t) {

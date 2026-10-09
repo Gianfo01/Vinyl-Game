@@ -9,6 +9,7 @@
 import { clamp, hashString, type Rng } from '../../core/rng';
 import { familyOf, genreById, l, type FamilyId, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
+import { compat } from '../beliefs';
 import { makeAct } from '../people';
 import type { Act, GameState } from '../types';
 import { fmtL, nextId, notify, playerActs, post, remember, rngOf } from '../util';
@@ -522,7 +523,7 @@ export function bondChance(s: GameState, k: BondKind, mineId: string, otherId: s
   const adm = lo ? admiration(s, lo, M.id) : 0;
   const lm = leadOf(M);
   const tv = lm && lo ? tieOf(s, lm, lo)?.v ?? 0 : 0;
-  let x = adm / 60 + tv / 80 + (M.fame - O.fame) / 70 + (s.player.reputation.artists - 50) / 150;
+  let x = adm / 60 + tv / 80 + (M.fame - O.fame) / 70 + (s.player.reputation.artists - 50) / 150 + (lm && lo ? compat(s, lm, lo) * 0.5 : 0);
   if (k === 'couple') x = (tieOf(s, lm ?? '', lo ?? '')?.k === 'romance' ? 1.5 : -3) + tv / 60;
   if (k === 'patron') x += M.fame > O.fame ? 0.6 : -0.6;
   if (k === 'cross') x -= familyOf(M.genre) === familyOf(O.genre) ? 2 : 0.2;

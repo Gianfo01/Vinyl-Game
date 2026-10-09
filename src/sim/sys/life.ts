@@ -344,7 +344,7 @@ export function breakUp(s: GameState): L | null {
 
 // ---------------------------------------------------------------- filhos
 
-function addKid(s: GameState, r: Rng, adopted: boolean): string {
+export function addKid(s: GameState, r: Rng, adopted: boolean): string {
   const o = ownerOf(s);
   // dom hereditário (ouvido absoluto): 50% de chance de passar para filhos biológicos
   const gifted = !adopted && ((s.x4 as unknown as { persona?: { traits: string[] } }).persona?.traits ?? []).includes('perfect_pitch') && r.chance(0.5);

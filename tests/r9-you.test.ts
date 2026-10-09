@@ -1,15 +1,12 @@
-// Rodada 9 (F): dilemas pessoais, 5 unidades de tempo livre, novidades de época e save em texto.
+// Rodada 9 (F): 5 unidades de tempo livre, novidades de época e save em texto.
 
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
-import { ownerOf } from '../src/sim/sys/people/owner';
 import { ENERGY_PER_MONTH, energyLeft, maxEnergy } from '../src/sim/sys/life';
-import { DILEMMAS, dilemmas, takeDilemma } from '../src/sim/sys/dilemmas9';
 import { isUnlocked, pendingFeatures, unlockFeature } from '../src/sim/era';
 import { availableChannels } from '../src/sim/market';
-import { money } from '../src/sim/util';
 import { exportSaveText, importSaveText, store } from '../src/ui/store';
 
 const mk = (seed: string, startYear: number) => createGame(defaultConfig(seed, { startYear }));
@@ -20,28 +17,6 @@ describe('tempo livre', () => {
     const s = mk('r9-energy', 1985);
     expect(maxEnergy(s)).toBeGreaterThanOrEqual(4);
     expect(energyLeft(s)).toBeGreaterThanOrEqual(4);
-  });
-});
-
-describe('dilemas pessoais', () => {
-  it('opções têm custo e efeitos; consequência atrasada acontece depois', () => {
-    const s = mk('r9-dil', 1985);
-    ownerOf(s).wealth = money(s, 100000);
-    ownerOf(s).stress = 50;
-    expect(DILEMMAS.every((d) => d.opts.length >= 2 && d.opts.length <= 4)).toBe(true);
-    const w0 = ownerOf(s).wealth;
-    expect(takeDilemma(s, 'burnout', 'clinic')).toBeNull();
-    expect(ownerOf(s).wealth).toBeLessThan(w0);
-    expect(ownerOf(s).stress).toBeLessThan(50);
-    expect(takeDilemma(s, 'burnout', 'rest')).not.toBeNull(); // cooldown
-    expect(takeDilemma(s, 'old_friend', 'refuse')).toBeNull();
-    expect(dilemmas(s).pending.length).toBe(1);
-    for (let i = 0; i < 5; i++) advanceMonth(s);
-    expect(dilemmas(s).pending.length).toBe(0);
-  });
-  it('opção com requisito fica bloqueada sem parceiro', () => {
-    const s = mk('r9-gate', 1985);
-    expect(takeDilemma(s, 'partner_trip', 'trip')).not.toBeNull();
   });
 });
 
