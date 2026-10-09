@@ -61,3 +61,4 @@ import './soul9';
 import './relics9';
 import './press9';
 import './world9';
+import './rockhall9';

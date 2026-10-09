@@ -31,3 +31,4 @@ import './rights8';
 import './ventures9';
 // Rodada 9: Lendas (crônica do mundo, biografias, relíquias, jornal, livro e mundo persistente).
 import './lendas9';
+import './rockhall9';
