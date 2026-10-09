@@ -106,7 +106,7 @@ function customCard(cfg: RunConfig): HTMLElement {
       { value: 'established', label: t(l('Estabelecido — discos e um sucesso', 'Established — records and a hit')) },
       { value: 'star', label: t(l('Estrela — discografia e fama', 'Star — discography and fame')) },
     ], (v) => v as StartCustom['level'])),
-    h('small', { class: 'muted' }, t(l('Formação e estágio valem para o papel Híbrido (sua banda).', 'Line-up and stage apply to the Hybrid role (your band).'))),
+    h('small', { class: 'muted' }, t(l('Formação e estágio valem para quem tem banda própria (atividade Músico).', 'Line-up and stage apply if you have a band of your own (Musician activity).'))),
     h('label', null, t(l('Atos já contratados (selo)', 'Acts already signed (label)')), opt('roster', [0, 1, 2, 3, 4, 5, 6, 8].map((n) => ({ value: String(n), label: String(n) })), (v) => Number(v))),
     h('label', null, t(l('Funcionários iniciais', 'Starting staff')), opt('staff', [0, 1, 2, 3, 4, 6, 8].map((n) => ({ value: String(n), label: String(n) })), (v) => Number(v))),
     h('label', null, t(l('Mercados abertos', 'Open markets')), opt('markets', [
@@ -118,7 +118,7 @@ function customCard(cfg: RunConfig): HTMLElement {
 }
 
 /** Rodada 9 (11: qualquer gravadora do ano): fundar um selo novo ou assumir uma gravadora existente. */
-function takeoverCard(cfg: RunConfig, nameInput: HTMLInputElement, citySel: () => void, onPick: () => void): { el: HTMLElement; refresh: () => void } {
+function takeoverCard(cfg: RunConfig, nameInput: HTMLInputElement, citySel: () => void, onPick: () => void): { el: HTMLElement; refresh: () => void; show: (v: boolean) => void } {
   let on = false;
   let list: ReturnType<typeof takeoverCandidates> = [];
   let q = '';
@@ -160,7 +160,8 @@ function takeoverCard(cfg: RunConfig, nameInput: HTMLInputElement, citySel: () =
     box,
   );
   search.hidden = true;
-  return { el, refresh };
+  const show = (v: boolean) => { el.hidden = !v; if (!v && on) { el.querySelector<HTMLInputElement>('input[name=tk]')!.checked = true; mode(false); } };
+  return { el, refresh, show };
 }
 
 type Tab = { id: string; name: ReturnType<typeof l>; body: HTMLElement[] };
@@ -168,7 +169,7 @@ type Tab = { id: string; name: ReturnType<typeof l>; body: HTMLElement[] };
 export function newGameScreen(root: HTMLElement, onStart: () => void): void {
   const cfg: RunConfig = {
     seed: randomSeed(),
-    role: 'hybrid',
+    role: 'label',
     scenario: 'from_zero',
     startYear: 1962,
     mode: 'free',
@@ -221,9 +222,6 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
       h('section', { class: 'card' },
         h('h3', null, t(l('Gravadora e papel', 'Label and role'))),
         h('label', null, ...hl(S.companyName, 'company'), nameInput),
-        h('fieldset', null, h('legend', null, ...hl(S.role, 'role')), ROLES.filter((r) => r.id === 'label' || r.id === 'hybrid').map((r) => h('label', { class: `radio ${r.available ? '' : 'disabled'}` },
-          h('input', { type: 'radio', name: 'role', value: r.id, checked: cfg.role === r.id, disabled: !r.available, onchange: () => { cfg.role = r.id; renderBand(); } }),
-          h('span', null, h('b', null, t(r.name)), h('small', { class: 'muted' }, ` — ${t(r.desc)}`))))),
         bandBox,
         h('label', null, ...hl(S.scenario, 'scenario'), select(cfg.scenario, [
           { value: 'from_zero', label: t(S.scenarioFromZero) },
@@ -231,7 +229,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
           { value: 'established', label: t(S.scenarioEstablished) },
         ] as { value: RunConfig['scenario']; label: string }[], (v) => (cfg.scenario = v))),
       ),
-      careerCard(cfg, () => { wrap.querySelectorAll<HTMLInputElement>('input[name=role]').forEach((x) => (x.checked = x.value === cfg.role)); renderBand(); }),
+      careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }),
       tk.el,
       customCard(cfg),
     ] },

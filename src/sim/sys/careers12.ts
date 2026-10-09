@@ -206,6 +206,8 @@ export function dropCareer(s: GameState, id: string): { ok: boolean; text: L } {
   log(s, t);
   return { ok: true, text: id === 'manager' ? fmtL(l('{t} Seus agenciados se sentem abandonados (−10 de satisfação).', '{t} Your clients feel abandoned (−10 satisfaction).'), { t }) : t };
 }
+/** Papel de config derivado das atividades principais: só músico = artista; selo + músico = híbrido; o resto = gravadora. */
+export const roleFromMain = (main: string[]): 'label' | 'artist' | 'hybrid' => (!main.includes('musician') ? 'label' : main.length === 1 ? 'artist' : 'hybrid');
 export const isActive = (s: GameState, id: string) => careers(s).active.includes(id);
 
 export function setAmbition(s: GameState, a: Ambition): void {

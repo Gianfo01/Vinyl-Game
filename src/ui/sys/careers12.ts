@@ -6,7 +6,7 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState, RunConfig } from '../../sim/types';
 import {
-  AMBITIONS, AMBITION_PERK, ORIGINS, ambitionGoal, careerDef, careerDefs, careers, decideHeir, dropCareer, setAmbition, startCareer, timeLoad, type Ambition, type CareerDef, type Origin,
+  AMBITIONS, AMBITION_PERK, ORIGINS, ambitionGoal, roleFromMain, careerDef, careerDefs, careers, decideHeir, dropCareer, setAmbition, startCareer, timeLoad, type Ambition, type CareerDef, type Origin,
 } from '../../sim/sys/careers12';
 import { pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
@@ -15,6 +15,7 @@ import { store } from '../store';
 import { hl } from '../newgame13';
 import { fxText } from './persona';
 import { openCareer } from './careerui13';
+import { notoPanel } from './notoriety14';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const go = (area: string) => { store.area = area; rerender(); };
@@ -73,6 +74,7 @@ export function careersPanel(s: GameState): HTMLElement {
           h('td', null, on ? h('div', { class: 'row' }, h('button', { class: 'btn tiny', onclick: () => openCareer(d.id) }, t(l('Abrir', 'Open'))), h('button', { class: 'btn tiny ghost', onclick: () => res(dropCareer(s, d.id)) }, t(l('Largar', 'Drop'))))
             : h('button', { class: 'btn tiny primary', onclick: () => res(startCareer(s, d.id)) }, t(l('Começar', 'Start')))));
       })))),
+    notoPanel(s),
     st.log.length ? section(t(l('Trajetória', 'Path')), h('ul', { class: 'small' }, st.log.slice(-8).reverse().map((x) => h('li', null, `${x.y}: ${t(x.t)}`)))) : null,
   );
 }
@@ -84,12 +86,13 @@ const NG_CAREERS = ['label', 'manager', 'festival', 'booking', 'venue', 'studio'
 /** Aba "Carreira" do Novo Jogo: atividades principais (várias), origem profissional e ambição. */
 export function careerCard(cfg: RunConfig, onRole?: () => void): HTMLElement {
   const c = (cfg.careers ??= { main: ['label'], origin: 'musician', ambition: 'legacy' });
+  cfg.role = roleFromMain(c.main);
   const box = h('div', { class: 'car12-ng' });
   const draw = () => box.replaceChildren(
     h('section', { class: 'card wide' }, h('h3', null, ...hl(l('Atividade principal', 'Main activity'), 'main')),
-      h('p', { class: 'muted small' }, t(l('Escolha uma ou mais. O selo existe sempre; as outras definem onde você começa a gastar seu tempo. Carreiras de época (ex.: plataforma) só abrem no ano certo.', 'Pick one or more. The label always exists; the rest decide where your time goes. Era careers (e.g. platform) only open in the right year.'))),
+      h('p', { class: 'muted small' }, t(l('Escolha uma ou mais. O papel (selo, banda ou os dois) sai das atividades escolhidas; as outras definem onde você gasta seu tempo. Carreiras de época (ex.: plataforma) só abrem no ano certo.', 'Pick one or more. Your role (label, band or both) follows from what you pick; the rest decide where your time goes. Era careers (e.g. platform) only open in the right year.'))),
       h('div', { class: 'mut-grid' }, NG_CAREERS.map((id) => { const d = careerDef(id); if (!d) return null; const off = d.from > cfg.startYear; return h('label', { class: `check ${off ? 'disabled' : ''}`, title: t(d.desc) },
-        h('input', { type: 'checkbox', checked: c.main.includes(id), disabled: off, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; c.main = on ? [...c.main, id] : c.main.filter((x) => x !== id); if (!c.main.length) c.main = ['label']; if (id === 'musician' && on) { cfg.role = 'hybrid'; onRole?.(); } draw(); } }),
+        h('input', { type: 'checkbox', checked: c.main.includes(id), disabled: off, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; c.main = on ? [...c.main, id] : c.main.filter((x) => x !== id); if (!c.main.length) c.main = ['label']; cfg.role = roleFromMain(c.main); onRole?.(); draw(); } }),
         h('span', null, t(d.name), h('small', { class: 'muted' }, ` — ${t(d.desc)}`))); }))),
     h('section', { class: 'card' }, h('h3', null, ...hl(l('Origem profissional', 'Professional origin'), 'origin')),
       h('p', { class: 'muted small' }, t(l('O que você fazia antes de ter um negócio na música. Vale dinheiro, habilidades, reputação e contatos de saída.', 'What you did before running a music business. Brings money, skills, reputation and contacts from day one.'))),
