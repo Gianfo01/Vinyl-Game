@@ -11,6 +11,7 @@
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
+import { fameAt } from '../famehook16';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { addHype } from './hype12';
@@ -131,7 +132,7 @@ export function knownLevel(s: GameState, id: string): Known15 {
     if (mineAct(a)) return full(tier);
     const deg = s.knowledge[id]?.degree ?? 0;
     const rel = a.members.reduce((m, pid) => Math.max(m, relDeg(s, pid)), 0);
-    const exp = exposure(a.fame);
+    const exp = exposure(fameAt(s, a, '@me')); // r16: exposição vista do país do jogador
     return { mine: false, deg, rel, exp, priv: Math.max(deg, rel), pub: Math.max(deg, rel, exp), tier };
   }
   const p = s.persons[id];
@@ -141,7 +142,8 @@ export function knownLevel(s: GameState, id: string): Known15 {
   if (p.isPlayer || acts.some(mineAct)) return full(tier);
   const deg = acts.reduce((m, x) => Math.max(m, s.knowledge[x.id]?.degree ?? 0), 0);
   const rel = relDeg(s, id);
-  const exp = exposure(pf(s, id));
+  const ma = acts.slice().sort((x, y) => y.fame - x.fame)[0];
+  const exp = exposure(ma && ma.fame > 0 ? pf(s, id) * Math.min(1.25, fameAt(s, ma, '@me') / ma.fame) : pf(s, id));
   return { mine: false, deg, rel, exp, priv: Math.max(deg, rel), pub: Math.max(deg, rel, exp), tier };
 }
 
@@ -207,9 +209,9 @@ export const secCost = (s: GameState, a: Act, lv = f15(s).sec[a.id] ?? 0): numbe
 export function setSecurity(s: GameState, actId: string, lv: number): void { f15(s).sec[actId] = clamp(Math.round(lv), 0, 2); }
 
 /** Pressão de paparazzi por mês (estresse) para integrantes do ato. */
-export const papStress = (s: GameState, a: Act): number => { const t = fameTier(a.fame); const lv = f15(s).sec[a.id] ?? 0; return t < 3 ? 0 : (t - 2) * [1.2, 0.6, 0.25][lv]; };
+export const papStress = (s: GameState, a: Act): number => { const t = fameTier(fameAt(s, a)); const lv = f15(s).sec[a.id] ?? 0; return t < 3 ? 0 : (t - 2) * [1.2, 0.6, 0.25][lv]; };
 /** Chance mensal de tumulto de fãs. */
-export const mobChance = (s: GameState, a: Act): number => { const t = fameTier(a.fame); const lv = f15(s).sec[a.id] ?? 0; return t < 3 ? 0 : (t - 2) * [0.05, 0.022, 0.006][lv]; };
+export const mobChance = (s: GameState, a: Act): number => { const t = fameTier(fameAt(s, a)); const lv = f15(s).sec[a.id] ?? 0; return t < 3 ? 0 : (t - 2) * [0.05, 0.022, 0.006][lv]; };
 /** Multiplicador de cachê de shows pela fama. */
 export const feeMult = (a: Act): number => [1, 1, 1.05, 1.12, 1.22, 1.3][fameTier(a.fame)];
 /** Royalty que um ato famoso considera justo. */
@@ -350,7 +352,7 @@ registerMod('showRevenue', 'fame15', (_s, v, c) => {
 // turnês: tumulto e assédio sem segurança
 registerMod('tourRisk', 'fame15', (s, v, c) => {
   if (!c.act || !mineAct(c.act)) return null;
-  const t = fameTier(c.act.fame);
+  const t = fameTier(fameAt(s, c.act, c.cityId));
   if (t < 3) return null;
   return { value: v + (t - 2) * [0.004, 0.0015, 0][f15(s).sec[c.act.id] ?? 0], label: l('assédio de fãs (fama)', 'fan harassment (fame)') };
 });

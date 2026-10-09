@@ -13,6 +13,7 @@ import { $, pill, rerender, section } from '../common';
 import { h } from '../dom';
 import { ACT_TABS, PERSON_TABS } from '../pages';
 import { chips, stat } from '../vis';
+import { regionFameBlock } from './fame16';
 
 /** Marcador de dado oculto, com dica de como descobrir. */
 export const hid = (f?: Field15): HTMLElement => h('span', { class: 'muted', title: t(f ? whyHidden(f) : HINT15) }, '?');
@@ -90,6 +91,7 @@ function actFame(s: GameState, a: Act, redraw: () => void): HTMLElement {
     k.mine && ti >= 2 ? section(t(l('Segurança', 'Security')),
       h('div', { class: 'row wrap' }, SEC15.map((x, i) => h('button', { class: `btn small ${i === sec ? 'primary' : 'ghost'}`, title: t(x.desc), onclick: () => { setSecurity(s, a.id, i); redraw(); rerender(); } }, `${t(x.name)} · ${$(secCost(s, a, i))}/${t(l('mês', 'mo'))}`))),
       h('p', { class: 'small muted' }, t(SEC15[sec].desc))) : null,
+    regionFameBlock(s, a.id),
     ms.length > 1 && (k.mine || k.pub >= 2) ? section(t(l('Quem é mais famoso', 'Who is most famous')), h('ul', { class: 'small' }, ms.map((p) => ({ p, v: personFame(s, p.id).v })).sort((x, y) => y.v - x.v).map(({ p, v }) => h('li', null, h('b', null, p.name), ` · ${Math.round(v)} `, tierPill(v), v - a.fame >= 8 ? pill(t(l('maior que a banda (ego)', 'bigger than the band (ego)')), 'warn') : null)))) : null,
     section(t(l('Fama ao longo do tempo', 'Fame over time')), k.mine || k.pub >= 1 ? fameGraph(s, a.id) : hiddenNote('bio')),
     k.mine || k.pub >= 1 ? logList(s, [a.id]) : null,
@@ -106,6 +108,7 @@ function personFameView(s: GameState, p: Person): HTMLElement {
       h('span', { class: 'small muted' }, t(FTIERS[fameTier(pf.v)].desc))),
     pub && pf.parts.length ? h('ul', { class: 'small' }, pf.parts.map((x) => h('li', null, `${x.v > 0 ? '+' : ''}${x.v} · `, t(x.t)))) : null,
     h('p', { class: 'small muted' }, t(l('A fama de cada pessoa sai da banda (líder e voz levam mais), do carisma de palco e de um saldo pessoal: escândalos, morte e ego. Quem é mais famoso que a banda leva a fama para a carreira solo.', 'Each person\'s fame comes from the band (leader and voice get more), stage charisma and a personal balance: scandals, death and ego. Whoever is bigger than the band takes that fame into a solo career.'))),
+    regionFameBlock(s, p.id),
     section(t(l('Fama ao longo do tempo', 'Fame over time')), k.mine || k.pub >= 1 ? fameGraph(s, p.id) : hiddenNote('bio')),
     k.mine || k.pub >= 1 ? logList(s, [p.id]) : null,
   );

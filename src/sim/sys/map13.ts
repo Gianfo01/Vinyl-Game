@@ -11,8 +11,8 @@ import { hasMutator, hasTech } from '../util';
 import { ch7 } from './charts7';
 import { fansByCountry } from './mapx8';
 
-export type Paint = 'none' | 'market' | 'growth' | 'fans' | 'share' | 'rivaldom' | 'piracy' | 'physical';
-export const PAINTS: Paint[] = ['none', 'market', 'growth', 'fans', 'share', 'rivaldom', 'piracy', 'physical'];
+export type Paint = 'none' | 'market' | 'growth' | 'fans' | 'share' | 'rivaldom' | 'piracy' | 'physical' | 'afame';
+export const PAINTS: Paint[] = ['none', 'market', 'growth', 'fans', 'share', 'rivaldom', 'piracy', 'physical', 'afame'];
 
 export const PAINT_INFO: Record<Paint, { name: L; unit: L; why: L }> = {
   none: { name: l('Nada', 'Nothing'), unit: l('', ''), why: l('', '') },
@@ -30,6 +30,9 @@ export const PAINT_INFO: Record<Paint, { name: L; unit: L; why: L }> = {
     why: l('Estimativa: perda da época (fita de rua, troca de arquivos, streaming) ajustada pelo poder de compra local.', 'Estimate: the era\'s leakage (street tapes, file sharing, streaming) adjusted by local buying power.') },
   physical: { name: l('Formato físico', 'Physical format'), unit: l('% do consumo em físico', '% of consumption on physical'),
     why: l('Quanto do consumo ainda é disco/fita/CD. Alto = tiragem e fábrica importam; baixo = digital manda.', 'How much consumption is still records/tapes/CDs. High = pressing and plants matter; low = digital rules.') },
+  // r16: fama regional do artista selecionado (calculada na interface: depende da seleção)
+  afame: { name: l('Fama do artista selecionado', 'Selected artist\'s fame'), unit: l('fama local 0–100', 'local fame 0–100'),
+    why: l('Fama no país: origem, idioma e mercado, alcance do degrau e gosto pelo gênero, mais paradas, prêmios, shows e divulgação lá. Sem atividade, volta devagar à base.', 'Fame in the country: origin, language and market, tier reach and genre taste, plus charts, awards, shows and promotion there. Without activity it slowly returns to base.') },
 };
 
 export function paintAvailable(s: GameState, p: Paint): boolean {
