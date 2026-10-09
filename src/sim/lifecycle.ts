@@ -10,6 +10,7 @@ import { launchNpcRelease } from './market';
 import type { Act, GameState } from './types';
 import { endContract } from './contracts';
 import { addSignal, spawnProceduralAct } from './worldgen';
+import { dbSizeInfo } from './dbsize14';
 import { fmtL, hasMutator, money, nextId, notify, remember } from './util';
 import { emitEvent } from './events';
 
@@ -159,7 +160,7 @@ export function worldSpawns(s: GameState, r: Rng): void {
     }
   }
   const base = hasMutator(s, 'small_world') ? 0.9 : hasMutator(s, 'giant_world') ? 3 : 1.7;
-  const n = Math.round(base * (s.config.mode === 'historic' ? 0.9 : 1.1) * r.float(0.6, 1.4));
+  const n = Math.round(base * (s.config.mode === 'historic' ? 0.9 : 1.1) * r.float(0.6, 1.4) * dbSizeInfo(s.config).yearly);
   for (let i = 0; i < n; i++) spawnProceduralAct(s, r);
 }
 

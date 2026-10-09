@@ -33,6 +33,8 @@ export interface RealArtist {
   b?: number;
   x?: number;
   r?: RealRole;
+  /** rodada 14: nível da base de dados em que entra (ausente = base original; 1 médio, 2 grande, 3 enorme) */
+  z?: 1 | 2 | 3;
   /** banda/dupla: integrantes */
   m?: RealMember[];
   /** discos e singles marcantes */
