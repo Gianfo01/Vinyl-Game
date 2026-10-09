@@ -136,7 +136,7 @@ export function viewsOf(s: GameState, id: string): Views {
   } else {
     v = deriveViews(s.config.seed, id, { year: s.year, city: s.config.homeCity });
   }
-  if (cache.size > 6000) cache.clear();
+  if (cache.size > 30000) cache.clear(); // r15: teto maior (base grande esvaziava o cache todo mês)
   cache.set(key, v);
   return v;
 }

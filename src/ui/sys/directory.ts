@@ -87,6 +87,8 @@ function actRows(s: GameState): HTMLElement {
   );
 }
 
+let ocVer = '';
+const OC = new Map<string, number>();
 function personRows(s: GameState): HTMLElement {
   const q = F.q.trim().toLowerCase();
   const actOf: Record<string, Act> = {};
@@ -103,7 +105,8 @@ function personRows(s: GameState): HTMLElement {
     if (F.market !== 'any' && (!a || cityById[a.city]?.market !== F.market)) return false;
     return !q || p.name.toLowerCase().includes(q) || (a?.name.toLowerCase().includes(q) ?? false);
   });
-  const ovr = (p: Person) => overall(s, p);
+  const ver = `${s.config.seed}|${s.week}`; if (ver !== ocVer) { ocVer = ver; OC.clear(); } const oc = OC; // r15: memo por semana (o sort chamava overall() em cada comparação)
+  const ovr = (p: Person) => { let v = oc.get(p.id); if (v === undefined) oc.set(p.id, v = overall(s, p)); return v; };
   list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.born - a.born : (actOf[b.id]?.fame ?? 0) - (actOf[a.id]?.fame ?? 0) || ovr(b) - ovr(a));
   const pages = Math.max(1, Math.ceil(list.length / PAGE));
   F.page = Math.min(F.page, pages - 1);
@@ -116,7 +119,7 @@ function personRows(s: GameState): HTMLElement {
         const a = actOf[p.id];
         const mine = a?.owner === 'player' || p.isPlayer;
         const deg = mine ? 5 : knownLevel(s, p.id).priv;
-        const o = ovr(p);
+        const o = overall(s, p);
         return h('tr', null,
           h('td', null, h('b', null, p.name), p.isPlayer ? pill(t(l('você', 'you')), 'good') : null, !p.alive ? pill('†', 'bad') : null),
           h('td', null, t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))),

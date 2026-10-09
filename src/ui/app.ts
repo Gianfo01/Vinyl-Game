@@ -39,6 +39,11 @@ import { careers } from '../sim/sys/careers12';
 import { getTab, setTab } from './vis';
 import { alias14, ALIAS14, groupOf14, navGroups14, type NavGroup14 } from './careernav14';
 import { themeButton } from './sys/theme14';
+import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
+import { tabSnapshot } from './vis';
+import { withPlayerActsCache } from '../sim/util';
+import { visibleAct } from '../sim/future';
+import { openPerson } from './ficha';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : null));
 registerPortrait((p, size) => {
@@ -87,12 +92,23 @@ export function boot(el: HTMLElement): void {
   store.rerender = render;
   store.toast = toast;
   window.addEventListener('keydown', onKey);
+  // rodada 15: voltar/avançar do navegador, abas lembradas, paleta pelo botão da barra
+  for (const [k, v] of Object.entries(loadTabs15())) setTab(k, v);
+  initRouter15((r) => { if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
+  document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
   titleScreen(root, startGame);
 }
+
+/** Área existe e está visível agora (atalhos/rotas não abrem áreas de anos futuros). */
+const areaExists = (id: string): boolean => navItems().some((x) => x.id === alias14(id));
 
 function startGame(): void {
   // rodada 13: sem área escolhida, abre a casa da carreira principal
   if (!store.area || store.area === 'desk') { const hm = defaultHome(careers(store.game!).active); if (hm.tab) setTab(hm.tab[0], hm.tab[1]); store.area = hm.area; }
+  // rodada 15: recarregar a página volta à mesma tela (rota no endereço)
+  const r0 = initialRoute15();
+  navMemo = null;
+  if (r0 && areaExists(r0.area)) { store.area = r0.area; if (r0.tab) setTab(r0.tab[0], r0.tab[1]); }
   render();
   void saveGame('auto');
 }
@@ -112,8 +128,14 @@ function onKey(e: KeyboardEvent): void {
     doAdvance('month');
     return;
   }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === '?' || e.key === '/')) {
+    e.preventDefault();
+    if (e.key === '/') palette();
+    else shortcutsHelp15(navItems().map((x) => ({ key: x.key, label: x.label })));
+    return;
+  }
   const area = [...AREAS, ...EXTRA_AREAS].find((a) => a.key === e.key.toLowerCase());
-  if (area && !e.ctrlKey && !e.metaKey && !e.altKey) go(area.id);
+  if (area && !e.ctrlKey && !e.metaKey && !e.altKey && areaExists(area.id)) go(area.id);
 }
 
 function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void {
@@ -142,7 +164,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void
   if (res.stopReason && mode !== 'month' && !digest) toast(`⏸ ${t(res.stopReason)}`, 'event');
   announce(g.briefing.map((n) => t(n.text)).join('. '));
   void before;
-  void saveGame('auto');
+  saveSoon(() => void saveGame('auto')); // r15: grava depois de pintar (o mês aparece antes)
   if (g.ended && !g.flags.sandbox) {
     render();
     endScreen();
@@ -166,6 +188,7 @@ function topBar(): HTMLElement {
   const net = Object.values(g.lastMonthLedger).reduce((a, b) => a + b, 0);
   const rep = g.player.reputation;
   return h('header', { class: 'topbar' },
+    menuButton15(openDrawer),
     h('div', { class: 'brand' }, h('span', { class: 'disc-sm', 'aria-hidden': 'true' }), h('b', null, g.config.companyName)),
     h('div', { class: 'date' }, h('b', null, dateLabel(g)), h('small', { class: 'muted' }, ` · ${t(S.week)} ${g.week} · Run ${g.signature}`)),
     h('div', { class: 'money' }, h('span', { class: 'muted' }, `${t(S.cash)} `), h('b', { class: g.player.cash < 0 ? 'bad' : '' }, $(g.player.cash)),
@@ -198,13 +221,16 @@ const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; are
 ];
 const lastInGroup: Record<string, string> = {};
 /** Rodada 14: cada carreira ativa é um grupo de topo; as inativas ficam em "Outras atividades". */
-const groups = (): NavGroup14[] => navGroups14(store.game ? careers(store.game).active : ['label'], GROUPS);
+const groups = (): NavGroup14[] => (groupsMemo ??= navGroups14(store.game ? careers(store.game).active : ['label'], GROUPS));
 
 interface NavItem { id: string; label: string; icon: string; key: string; badge?: number }
+// rodada 15: menu (com selos/badges, alguns caros) calculado uma vez por render, não uma vez por grupo
+let navMemo: NavItem[] | null = null;
+let groupsMemo: NavGroup14[] | null = null;
 
 function navItems(): NavItem[] {
   const g = store.game!;
-  return [
+  return navMemo ??= [
     ...AREAS.map((a) => ({ id: a.id as string, label: t(S[a.label]), icon: a.icon, key: a.key, badge: a.id === 'desk' && g.decisions.length ? g.decisions.length : undefined })),
     ...EXTRA_AREAS.filter((a) => !a.visible || a.visible(g)).map((a) => ({ id: a.id, label: t(a.label), icon: a.icon, key: a.key, badge: a.badge?.(g) })),
   ];
@@ -310,23 +336,69 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
 
 export function render(): void {
   if (!store.game) return titleScreen(root, startGame);
-  store.area = alias14(store.area);
-  applyRealNames(!!store.game.config.realNames);
-  if (store.prefs.eraSkin !== false) document.documentElement.dataset.era = String(Math.floor(store.game.year / 10) * 10);
-  else delete document.documentElement.dataset.era;
-  const scroll = document.querySelector('main')?.scrollTop ?? 0;
-  root.replaceChildren(
-    h('div', { class: 'app' },
-      topBar(),
-      nav(),
-      h('main', { id: 'main', tabindex: '-1' }, subnav(), panel()),
-      tutorialCard(store.game, render),
-      h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
-    ),
-  );
-  const main = document.querySelector('main');
-  if (main) main.scrollTop = scroll;
+  const t0 = performance.now();
+  renderApp();
+  perfNote('render', performance.now() - t0);
 }
+
+let shownArea = '';
+function renderApp(): void {
+  if (!store.game) return;
+  const g = store.game;
+  navMemo = null;
+  groupsMemo = null;
+  store.area = alias14(store.area);
+  applyRealNames(!!g.config.realNames);
+  if (store.prefs.eraSkin !== false) document.documentElement.dataset.era = String(Math.floor(g.year / 10) * 10);
+  else delete document.documentElement.dataset.era;
+  // rodada 15: rolagem lembrada por área (mesma área mantém; área nova volta onde estava ou abre no topo)
+  const old = document.querySelector('main');
+  if (old && shownArea) scroll15.save(shownArea, old.scrollTop);
+  const scroll = scroll15.get(store.area);
+  const same = shownArea === store.area;
+  shownArea = store.area;
+  // render não muda o elenco: a lista de atos do jogador é calculada uma vez só
+  const [sub, body] = withPlayerActsCache(g, () => [subnav(), panel()] as const);
+  const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
+    topBar(),
+    nav(),
+    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), body),
+    tutorialCard(g, render),
+    h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
+  ));
+  root.replaceChildren(app);
+  const main = app.querySelector('main');
+  if (main) { stickyFix15(main); main.scrollTop = scroll; if (!same && document.activeElement === document.body) main.focus({ preventScroll: true }); }
+  const tw = body.querySelector<HTMLElement>('[data-tabs]');
+  const tk = tw?.dataset.tabs;
+  const tid = tw?.dataset.cur;
+  syncRoute15({ area: store.area, tab: tk && tid ? [tk, tid] : undefined }, pageTitle15(areaLabel(store.area), g.config.companyName));
+  saveTabs15(tabSnapshot());
+}
+
+/** Rótulo da área igual ao do menu (casa da carreira usa o nome do grupo). */
+function areaLabel(id: string): string {
+  const gr = groupOf(id);
+  const it = navItems().find((x) => x.id === id);
+  return gr.home?.tab && gr.home.area === id ? t(gr.label) : it?.label ?? id;
+}
+
+/** Barra fixa: ← voltar, Grupo › Área › Aba, botão de busca e (no celular) as sub-áreas. */
+function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
+  const gr = groupOf(store.area);
+  const items = groupItems(gr);
+  const tabLbl = body.querySelector('[data-tabs] > .tabs > [aria-selected=true]')?.textContent?.trim();
+  const head = () => { const last = lastInGroup[gr.id]; go(last && items.some((x) => x.id === last) ? last : gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit'); };
+  return crumbBar15([{ label: t(gr.label), go: head }, { label: areaLabel(store.area), go: () => go(store.area) }, ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
+}
+
+function openDrawer(): void {
+  const cur = groupOf(store.area);
+  drawer15(groups().map((gr) => ({ label: t(gr.label), icon: gr.icon, on: gr.id === cur.id,
+    items: groupItems(gr).map((a) => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, icon: a.icon, key: a.key, badge: a.badge, on: a.id === store.area,
+      go: () => { if (gr.home?.tab && gr.home.area === a.id) setTab(gr.home.tab[0], gr.home.tab[1]); go(a.id); } })) })));
+}
+
 
 function settings(): void {
   const p = store.prefs;
@@ -349,7 +421,7 @@ function settings(): void {
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveTextDialog(); } }, t(l('Copiar / colar save', 'Copy / paste save'))),
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveGame('auto'); store.game = null; titleScreen(root, startGame); } }, t(l('Menu inicial', 'Main menu'))),
     ),
-    h('p', { class: 'muted small' }, t(l('Atalhos: 1–0 e D trocam de área · Ctrl+Enter avança · Ctrl+K abre a paleta de comandos.', 'Shortcuts: 1–0 and D switch area · Ctrl+Enter advances · Ctrl+K opens the command palette.'))),
+    h('p', { class: 'muted small' }, t(l('Atalhos: 1–0 e D trocam de área · Ctrl+Enter avança · Ctrl+K abre a busca · ? lista todos os atalhos · Alt+← volta.', 'Shortcuts: 1–0 and D switch area · Ctrl+Enter advances · Ctrl+K opens search · ? lists every shortcut · Alt+← goes back.'))),
   );
   close = modal(t(S.settings), body);
 }
@@ -372,38 +444,36 @@ async function saveTextDialog(): Promise<void> {
   close = modal(t(l('Save em texto', 'Save as text')), body);
 }
 
-/** Paleta de comandos (GDD §24). */
+/** Paleta de comandos (GDD §24; rodada 15: busca tolerante a acentos, setas, pessoas e todos os artistas visíveis). */
 function palette(): void {
   const g = store.game!;
-  type Cmd = { label: string; run: () => void };
-  const cmds: Cmd[] = [
-    ...AREAS.map((a) => ({ label: `→ ${t(S[a.label])}`, run: () => { store.area = a.id; render(); } })),
-    ...EXTRA_AREAS.map((a) => ({ label: `→ ${t(a.label)}`, run: () => { store.area = a.id; render(); } })),
-    { label: `▶ ${t(S.advanceMonth)}`, run: () => doAdvance('month') },
-    { label: `⏩ ${t(S.advanceQuarter)}`, run: () => doAdvance('quarter') },
-    { label: `⏭ ${t(S.advanceEvent)}`, run: () => doAdvance('event') },
-    { label: `⏭ ${t(l('Avançar até algo relevante', 'Advance until something relevant'))}`, run: () => doAdvance('until') },
-    { label: `▷ ${t(l('Avançar semana', 'Advance week'))}`, run: () => doAdvance('week') },
-    { label: `⚖ ${t(l('Comparar carreiras', 'Compare careers'))}`, run: () => compareActs(g, playerActs(g)) },
-    ...playerActs(g).map((id) => ({ label: `🎸 ${g.acts[id].name}`, run: () => inspect.act(id) })),
-    ...Object.values(g.knowledge).filter((k) => g.acts[k.actId] && g.acts[k.actId].owner !== 'player').map((k) => ({ label: `🔎 ${g.acts[k.actId].name}`, run: () => inspect.act(k.actId) })),
-    ...Object.values(g.labels).filter((x) => x.active).map((x) => ({ label: `🏢 ${x.name}`, run: () => inspect.label(x.id) })),
+  navMemo = null;
+  const mine = new Set(playerActs(g));
+  const base: PCmd[] = [
+    ...groups().flatMap((gr) => groupItems(gr).map((a): PCmd => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, kind: 'area', icon: a.icon, hint: t(gr.label) + (a.key ? ` · ${a.key.toUpperCase()}` : ''), weight: 6,
+      run: () => { if (gr.home?.tab && gr.home.area === a.id) setTab(gr.home.tab[0], gr.home.tab[1]); go(a.id); } }))),
+    { label: t(S.advanceMonth), kind: 'action', icon: 'calendar', hint: 'Ctrl+Enter', run: () => doAdvance('month') },
+    { label: t(S.advanceQuarter), kind: 'action', icon: 'calendar', run: () => doAdvance('quarter') },
+    { label: t(S.advanceEvent), kind: 'action', icon: 'calendar', run: () => doAdvance('event') },
+    { label: t(l('Avançar até algo relevante', 'Advance until something relevant')), kind: 'action', icon: 'calendar', run: () => doAdvance('until') },
+    { label: t(l('Avançar semana', 'Advance week')), kind: 'action', icon: 'calendar', run: () => doAdvance('week') },
+    { label: t(l('Comparar carreiras', 'Compare careers')), kind: 'action', icon: 'chart-up', run: () => compareActs(g, playerActs(g)) },
+    { label: t(l('Atalhos de teclado', 'Keyboard shortcuts')), kind: 'action', hint: '?', run: () => shortcutsHelp15(navItems().map((x) => ({ key: x.key, label: x.label }))) },
+    { label: t(S.settings), kind: 'action', run: settings },
+    ...[...mine].map((id): PCmd => ({ label: g.acts[id].name, kind: 'mine', icon: 'guitar', weight: 12, run: () => inspect.act(id) })),
   ];
-  const list = h('ul', { class: 'palette-list' });
-  let close = () => {};
-  const input = h('input', { type: 'search', placeholder: t(l('Buscar área, ato, selo, ação…', 'Search area, act, label, action…')), oninput: () => fill(), onkeydown: (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      const first = list.querySelector('button') as HTMLButtonElement | null;
-      first?.click();
-    }
-  } });
-  const fill = () => {
-    const q = input.value.toLowerCase();
-    list.replaceChildren(...cmds.filter((c) => c.label.toLowerCase().includes(q)).slice(0, 14).map((c) => h('li', null, h('button', { class: 'link', onclick: () => { close(); c.run(); } }, c.label))));
+  // busca sob demanda (base grande: milhares de nomes) — só o que já existe no ano atual
+  const search = (q: string): PCmd[] => {
+    const out: PCmd[] = [];
+    for (const a of Object.values(g.acts)) if (!mine.has(a.id) && visibleAct(g, a)) out.push({ label: a.name, kind: 'act', icon: 'fans', hint: a.owner && g.labels[a.owner] ? g.labels[a.owner].name : undefined, weight: Math.min(8, a.fame / 12) + (g.knowledge[a.id] ? 3 : 0), run: () => inspect.act(a.id) });
+    for (const x of Object.values(g.labels)) if (x.active) out.push({ label: x.name, kind: 'label', icon: 'building', weight: 4, run: () => inspect.label(x.id) });
+    const qq = q.trim().toLowerCase();
+    const actOf: Record<string, string> = {};
+    for (const a of Object.values(g.acts)) if (visibleAct(g, a)) for (const m of a.members) actOf[m] = a.name;
+    for (const p of Object.values(g.persons)) if (actOf[p.id] && p.name.toLowerCase().includes(qq.slice(0, 2))) out.push({ label: p.name, kind: 'person', icon: 'star', hint: actOf[p.id] + (p.alive ? '' : ' · †'), run: () => openPerson(p.id) });
+    return out;
   };
-  fill();
-  close = modal(t(l('Paleta de comandos', 'Command palette')), h('div', null, input, list));
-  input.focus();
+  palette15(base, search);
 }
 
 // rodada 8: aposentadoria sem herdeiros encerra a run fora do avanço do tempo

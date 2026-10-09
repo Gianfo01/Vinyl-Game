@@ -127,7 +127,7 @@ const tabState: Record<string, string> = {};
 export function tabs(key: string, items: { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement }[], rerender: () => void): HTMLElement {
   const cur = tabState[key] && items.some((i) => i.id === tabState[key]) ? tabState[key] : items[0]?.id;
   const active = items.find((i) => i.id === cur);
-  return h('div', { class: 'tabs-wrap' },
+  return h('div', { class: 'tabs-wrap', 'data-tabs': key, 'data-cur': cur },
     h('div', { class: 'tabs', role: 'tablist' }, items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null))),
     h('div', { role: 'tabpanel' }, active ? active.render() : null),
   );
@@ -137,6 +137,8 @@ export function setTab(key: string, id: string): void {
   tabState[key] = id;
 }
 export const getTab = (key: string): string | undefined => tabState[key];
+/** Rodada 15: abas escolhidas (para lembrar entre sessões). */
+export const tabSnapshot = (): Record<string, string> => ({ ...tabState });
 
 /** Gráfico de linha simples em SVG (ações, receita). */
 export function lineChart(values: number[], w = 260, hgt = 70): HTMLElement {

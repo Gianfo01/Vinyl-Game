@@ -156,7 +156,7 @@ export function per13(s: GameState, key: string): P13 | null {
   if (hit) return hit;
   const out = build(s, key);
   if (!out) return null;
-  if (CACHE.size > 3000) CACHE.clear();
+  if (CACHE.size > 20000) CACHE.clear();
   CACHE.set(ck, out);
   return out;
 }
@@ -401,10 +401,10 @@ export function imageWeight(y: number): { w: number; era: L } {
 /** Barreiras e trunfos de um ato num país (padrão: a cidade do ato). m = multiplicador do alcance. */
 const BCACHE = new Map<string, Barrier13[]>();
 export function barriers13(s: GameState, a: Act, cityId?: string): Barrier13[] {
-  const ck = `${s.config.seed}|${s.week}|${s.year}|${a.id}|${a.genre}|${a.city}|${cityId ?? ''}|${a.members.join(',')}|${p13(s).bar[a.id]?.join() ?? ''}`;
+  const ck = `${s.config.seed}|${s.year}|${a.id}|${a.genre}|${a.city}|${cityId ?? ''}|${a.members.join(',')}|${p13(s).bar[a.id]?.join() ?? ''}`;
   const hit = BCACHE.get(ck);
   if (hit) return hit;
-  if (BCACHE.size > 4000) BCACHE.clear();
+  if (BCACHE.size > 20000) BCACHE.clear(); // r15: sem semana na chave (só muda por ano) e teto maior p/ bases grandes
   const out = barriersRaw(s, a, cityId);
   BCACHE.set(ck, out);
   return out;
