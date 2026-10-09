@@ -16,6 +16,7 @@ import { registerCutscene, registerSection, openScene } from '../../registry';
 import { store } from '../../store';
 import { chips, ic, meter, stat } from '../../vis';
 import { drawPerson, drawTile, tileUrl } from './art';
+import { visibleAct } from '../../../sim/future';
 
 const draft = { name: '', city: '', month: 6, days: 1 };
 
@@ -132,7 +133,7 @@ function editorView(s: GameState, f: OwnFestival, redraw: () => void): HTMLEleme
     }
   }
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => !f.lineup.some((x) => x.actId === a.id));
-  const guests = Object.values(s.acts).filter((a) => !isMine(s, a.id) && (a.status === 'active' || a.status === 'emerging') && a.fame > 5 && !f.lineup.some((x) => x.actId === a.id)).sort((a, b) => b.fame - a.fame).slice(0, 40);
+  const guests = Object.values(s.acts).filter((a) => visibleAct(s, a) && !isMine(s, a.id) && (a.status === 'active' || a.status === 'emerging') && a.fame > 5 && !f.lineup.some((x) => x.actId === a.id)).sort((a, b) => b.fame - a.fame).slice(0, 40);
   let pick = '';
   const settings = h('div', { class: 'lv-side' },
     h('label', null, t(l('Ingresso por dia (US$ reais)', 'Ticket per day (real US$)')), h('input', { type: 'number', min: 5, max: 400, value: f.price, onchange: (e: Event) => { setFestival(s, f.id, { price: Number((e.target as HTMLInputElement).value) }); redraw(); } }), h('small', { class: 'muted' }, ` ≈ ${$(money(s, f.price))}`)),

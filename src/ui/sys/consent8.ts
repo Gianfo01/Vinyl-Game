@@ -35,7 +35,7 @@ function consentLabel(v?: 'g' | 'r'): HTMLElement {
 }
 
 export function aiTab(s: GameState): HTMLElement {
-  if (!aiEra(s)) return section(t(l('IA e autoria', 'AI and authorship')), h('p', { class: 'muted' }, t(l('A crise da autoria chega com os modelos generativos de música (a partir de 2023). Até lá, toda voz é de alguém.', 'The authorship crisis arrives with generative music models (from 2023). Until then, every voice belongs to someone.'))));
+  if (!aiEra(s)) return section(t(l('IA e autoria', 'AI and authorship')), h('p', { class: 'muted' }, t(l('Por enquanto, toda voz é de alguém: ninguém consegue imitar um cantor sem que ele esteja no estúdio.', 'For now every voice belongs to someone: nobody can imitate a singer without them in the studio.'))));
   const st = ai(s);
   const r = () => rngOf(s);
   const ids = playerActs(s);

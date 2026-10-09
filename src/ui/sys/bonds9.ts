@@ -17,10 +17,11 @@ import {
   FOUND_COST, MV_END_NAME, PHASE_NAME, TIER_NAME, enemyKind, foundChance, foundMovement, leaveMovement, members, memberAffinity, mov9, movX, mvById, requestJoin, tierOf, type FoundSpec, type MvTier,
 } from '../../sim/sys/movements9';
 import { actTies, actOfPerson, social } from '../../sim/sys/social8';
+import { visibleAct } from '../../sim/future';
 
 const mine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
 const myActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.members.length > 0 && a.status !== 'split' && a.status !== 'retired');
-const liveActs = (s: GameState) => Object.values(s.acts).filter((a) => (a.status === 'active' || a.status === 'emerging') && !a.deceased && a.members.length > 0);
+const liveActs = (s: GameState) => Object.values(s.acts).filter((a) => visibleAct(s, a) && (a.status === 'active' || a.status === 'emerging') && !a.deceased && a.members.length > 0);
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 const band = (p: number) => (p >= 0.6 ? 'good' : p >= 0.3 ? 'warn' : 'bad');
 const esc = (x: string) => x.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);

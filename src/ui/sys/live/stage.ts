@@ -58,9 +58,9 @@ function ticketsSection(s: GameState): HTMLElement {
   return section(t(l('Ingressos e cambistas', 'Tickets and scalpers')),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: lv.tickets.vip, onchange: (e: Event) => { lv.tickets.vip = (e.target as HTMLInputElement).checked; rerender(); } }),
       t(l('Ingresso VIP em teatros, arenas e estádios (+6% de bilheteria, fãs fiéis)', 'VIP tickets at theatres, arenas and stadiums (+6% box office, loyal fans)'))),
-    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: lv.tickets.dynamic, disabled: !dyn, onchange: (e: Event) => { lv.tickets.dynamic = (e.target as HTMLInputElement).checked; rerender(); } }),
+    dyn ? h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: lv.tickets.dynamic, onchange: (e: Event) => { lv.tickets.dynamic = (e.target as HTMLInputElement).checked; rerender(); } }),
       t(l('Preço dinâmico (era digital): acompanha a procura e tira o lucro dos cambistas, mas irrita os fãs', 'Dynamic pricing (digital era): follows demand and cuts out scalpers, but annoys fans')),
-      dyn ? null : h('small', { class: 'muted' }, ` (${t(l('a partir de 2009', 'from 2009'))})`)),
+    ) : null,
     h('p', { class: 'small muted' }, t(l('No Brasil vale a meia-entrada: estudantes e idosos pagam metade (−15% na bilheteria média). Shows que esgotam em minutos viram notícia; sem preço dinâmico, cambistas revendem pelo triplo e a imagem do artista sofre.', 'In Brazil, half-price entry applies: students and seniors pay half (−15% average box office). Shows that sell out in minutes make the news; without dynamic pricing, scalpers resell at triple and the act\'s image suffers.'))),
   );
 }

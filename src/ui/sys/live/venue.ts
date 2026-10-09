@@ -24,7 +24,7 @@ function venueSection(s: GameState): HTMLElement {
     return section(t(l('Casa de shows própria', 'Your own venue')),
       h('p', { class: 'muted small' }, t(l('Compre um clube, teatro ou arena: alugue datas a terceiros, toque com seus artistas, invista em bar e acústica. Renda mensal.', 'Buy a club, theatre or arena: rent dates to others, play your own acts, invest in the bar and acoustics. Monthly income.'))),
       h('div', { class: 'lv-form' },
-        h('label', null, t(l('Tipo', 'Type')), select(buy.kind, VENUE_KINDS.map((x) => ({ value: x.id, label: `${t(x.name)} · ${N(x.cap)} · ${$(money(s, x.price))}`, disabled: s.year < x.minYear })), (val) => { buy.kind = val; rerender(); })),
+        h('label', null, t(l('Tipo', 'Type')), select(buy.kind, VENUE_KINDS.filter((x) => s.year >= x.minYear).map((x) => ({ value: x.id, label: `${t(x.name)} · ${N(x.cap)} · ${$(money(s, x.price))}` })), (val) => { buy.kind = val; rerender(); })),
         h('label', null, t(l('Cidade', 'City')), select(buy.city, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (val) => (buy.city = val))),
         h('label', null, t(l('Nome', 'Name')), h('input', { type: 'text', maxlength: 40, value: buy.name, placeholder: t(l('(automático)', '(automatic)')), oninput: (e: Event) => (buy.name = (e.target as HTMLInputElement).value) })),
         h('button', { class: 'btn primary', disabled: s.player.cash < money(s, k.price), onclick: () => { const r = buyVenue(s, buy.kind, buy.city, buy.name); if ('pt' in r) toast(t(r), 'bad'); else toast(t(l('Casa comprada!', 'Venue bought!')), 'good'); rerender(); } }, ic('house'), ' ', t(l('Comprar ({p})', 'Buy ({p})'), { p: $(money(s, k.price)) })),
@@ -78,11 +78,11 @@ function residencySection(s: GameState): HTMLElement | null {
 
 function megaSection(s: GameState): HTMLElement | null {
   const lv = liveOf(s);
-  const next = MEGA_EVENTS.find((x) => x.year >= s.year);
+  const next = MEGA_EVENTS.find((x) => x.year === s.year);
   if (!lv.mega.length && !next) return null;
   return section(t(l('Megaeventos beneficentes', 'Benefit mega-events')),
     h('p', { class: 'muted small' }, t(l('Shows globais transmitidos ao vivo: convite para o seu artista mais famoso (fama 35+). Sem cachê; reputação enorme e catálogo vendendo mais por três meses.', 'Live global broadcasts: an invitation for your most famous act (fame 35+). No fee; huge reputation and catalog sales up for three months.'))),
-    next ? h('p', { class: 'small' }, ic('globe'), ' ', t(l('Próximo: {n} ({y}, {c})', 'Next: {n} ({y}, {c})'), { n: next.name, y: next.year, c: cityName(next.city) })) : null,
+    next ? h('p', { class: 'small' }, ic('globe'), ' ', t(l('Este ano: {n} ({c})', 'This year: {n} ({c})'), { n: next.name, c: cityName(next.city) })) : null,
     lv.mega.length ? h('ul', { class: 'small' }, lv.mega.slice().reverse().map((m) => h('li', null, `${m.year} · ${m.name} · `, actLink(s, m.actId), ' ', m.accepted ? pill(t(l('tocou', 'played')), 'good') : pill(t(l('convite', 'invited'))))) ) : null,
   );
 }

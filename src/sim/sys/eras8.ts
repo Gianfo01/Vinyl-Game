@@ -1,5 +1,6 @@
-// Eras de negócio (rodada 8): cada virada tecnológica muda o que é "tocar bem um selo". Na chegada do
-// LP, da TV de clipes, do CD, da pirataria, do streaming e das vozes sintéticas, o selo escolhe uma
+// Eras de negócio (rodada 8, ampliadas na 9): cada virada tecnológica muda o que é "tocar bem um selo". Das
+// jukeboxes ao LP, ao rock'n'roll, ao FM, às discotecas, à TV de clipes, ao CD, à pirataria, ao download pago,
+// ao streaming, aos vídeos curtos, às vozes sintéticas, à era neural e ao pós-IA, o selo escolhe uma
 // postura estratégica com efeitos duradouros na economia (apelo por tipo de disco, catálogo, shows,
 // prensagem, fãs, custos mensais). Os selos rivais também escolhem — cada um segundo o seu arquétipo.
 // Posturas antigas continuam valendo, mas pesam menos a cada era nova.
@@ -11,7 +12,7 @@ import { deferEvents, registerExt4, registerMod, registerSimHook } from '../ext4
 import type { Act, GameState, Label, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 
-export type EraId = 'radio' | 'albums' | 'video' | 'cd' | 'piracy' | 'streaming' | 'synthetic';
+export type EraId = 'radio' | 'jukebox' | 'albums' | 'rocknroll' | 'fm' | 'disco' | 'video' | 'cd' | 'piracy' | 'download' | 'streaming' | 'viral' | 'synthetic' | 'neural' | 'postai';
 type NpcTag = 'hits' | 'catalog' | 'indie' | 'empire';
 
 /** Efeitos de uma postura (multiplicadores; 1 = neutro). */
@@ -45,6 +46,8 @@ export interface StanceDef {
   /** efeitos mensais no elenco do jogador */
   monthly?: { costPerAct?: number; fixed?: number; casual?: number; core?: number; fame?: number; fatigue?: number; trust?: number; scandal?: number };
   onPick?: (s: GameState) => void;
+  /** texto do escândalo mensal (monthly.scandal) */
+  scandalText?: L;
   npc: NpcTag[];
 }
 
@@ -55,6 +58,8 @@ export interface EraShift {
   model: L;
   question: L;
   tech?: string;
+  /** era sem tecnologia própria: começa N anos depois de outra tecnologia (segue os desvios do modo Livre/Caos) */
+  after?: { tech: string; plus: number }[];
   stances: StanceDef[];
 }
 
@@ -67,6 +72,16 @@ export const ERA_SHIFTS: EraShift[] = [
     question: l('', ''), stances: [],
   },
   {
+    id: 'jukebox', name: l('Jukebox e big bands', 'Jukeboxes and big bands'), after: [{ tech: 'electric_rec', plus: 10 }],
+    model: l('Bares, salões e jukeboxes tocam o que chega primeiro; as orquestras vivem na estrada e o 78 rotações vende de balcão em balcão.', 'Bars, ballrooms and jukeboxes play whatever arrives first; orchestras live on the road and 78s sell counter by counter.'),
+    question: l('As jukeboxes se espalham por todo bar. Onde o selo põe o dinheiro?', 'Jukeboxes are in every bar. Where does the label put its money?'),
+    stances: [
+      { id: 'jukebox', name: l('Encher as jukeboxes', 'Fill the jukeboxes'), desc: l('Singles +12%, vendas +3%; os distribuidores cobram todo mês.', 'Singles +12%, sales +3%; distributors charge every month.'), fx: { single: 1.12, units: 1.03 }, monthly: { fixed: 150 }, npc: ['hits', 'empire'] },
+      { id: 'ballroom', name: l('Turnês de salão', 'Ballroom tours'), desc: l('Shows +12% e fama todo mês; o elenco cansa mais.', 'Shows +12% and fame every month; the roster tires faster.'), fx: { show: 1.12 }, monthly: { fame: 0.1, fatigue: 1 }, npc: ['indie'] },
+      { id: 'sheet', name: l('Partituras e direitos', 'Sheet music and rights'), desc: l('Catálogo +20%, reedições +10%.', 'Catalog +20%, reissues +10%.'), fx: { catalog: 1.2, reissue: 1.1 }, npc: ['catalog'] },
+    ],
+  },
+  {
     id: 'albums', name: l('Do single ao álbum', 'From singles to albums'), tech: 'lp',
     model: l('O LP vira obra: o disco inteiro vende e vira assunto; o single passa a anunciar o álbum.', 'The LP becomes a work: the whole record sells and gets talked about; the single now announces the album.'),
     question: l('O LP chegou. O selo investe numa faixa forte ou numa obra completa?', 'The LP has arrived. Does the label invest in one strong track or a complete work?'),
@@ -74,6 +89,36 @@ export const ERA_SHIFTS: EraShift[] = [
       { id: 'hits', name: l('Apostar na faixa forte', 'Bet on the strong track'), desc: l('Singles +15% de apelo; LPs −8%.', 'Singles +15% appeal; LPs −8%.'), fx: { single: 1.15, lp: 0.92 }, npc: ['hits', 'empire'] },
       { id: 'works', name: l('Apostar na obra completa', 'Bet on the complete work'), desc: l('LPs +18%, EPs +5%; singles −10%. Reputação artística.', 'LPs +18%, EPs +5%; singles −10%. Artistic reputation.'), fx: { lp: 1.18, ep: 1.05, single: 0.9 }, onPick: (s) => rep(s, 'artistic', 3), npc: ['indie', 'catalog'] },
       { id: 'both', name: l('Equilibrar: o single anuncia, o LP fecha', 'Balance: the single announces, the LP closes'), desc: l('+4% para singles e LPs. Sem riscos, sem grandes saltos.', '+4% for singles and LPs. No risk, no big leaps.'), fx: { single: 1.04, lp: 1.04 }, npc: [] },
+    ],
+  },
+  {
+    id: 'rocknroll', name: l("Rock'n'roll e a juventude", "Rock'n'roll and youth"), tech: 'multitrack',
+    model: l('Adolescentes com mesada compram 45 rotações; o DJ de rádio faz e desfaz carreiras, e o escândalo vende.', 'Teenagers with pocket money buy 45s; radio DJs make and break careers, and scandal sells.'),
+    question: l('A juventude virou mercado. Como o selo trata a nova música jovem?', 'Youth has become a market. How does the label treat the new youth music?'),
+    stances: [
+      { id: 'youth', name: l('Apostar na juventude', 'Bet on youth'), desc: l('Apelo +8%, singles +10%, fama todo mês; risco mensal de escândalo.', 'Appeal +8%, singles +10%, fame every month; monthly scandal risk.'), fx: { appeal: 1.08, single: 1.1 }, monthly: { fame: 0.12, scandal: 0.015 }, scandalText: l('Escândalo: um astro do selo é flagrado e as rádios conservadoras boicotam.', 'Scandal: one of the label\'s stars is caught out and conservative radio boycotts.'), npc: ['hits', 'indie'] },
+      { id: 'payola', name: l('Pagar os DJs (jabá)', 'Pay the DJs (payola)'), desc: l('Singles +15%; custo fixo todo mês; reputação institucional cai.', 'Singles +15%; fixed monthly cost; institutional reputation drops.'), fx: { single: 1.15 }, monthly: { fixed: 300 }, onPick: (s) => rep(s, 'institutional', -3), npc: ['empire'] },
+      { id: 'adult', name: l('Ficar com o público adulto', 'Stay with the adult audience'), desc: l('LPs +8%, catálogo +10%.', 'LPs +8%, catalog +10%.'), fx: { lp: 1.08, catalog: 1.1 }, npc: ['catalog'] },
+    ],
+  },
+  {
+    id: 'fm', name: l('O álbum conceitual e o FM', 'The concept album and FM'), tech: 'fm',
+    model: l('O FM toca lados inteiros de LP; capas, conceitos e turnês de arena transformam o álbum em acontecimento.', 'FM plays whole LP sides; covers, concepts and arena tours turn the album into an event.'),
+    question: l('O FM abriu espaço para discos longos. O selo dá liberdade ou controle aos artistas?', 'FM made room for long records. Does the label give artists freedom or control?'),
+    stances: [
+      { id: 'freedom', name: l('Liberdade criativa', 'Creative freedom'), desc: l('LPs +15%, EPs +5%, singles −6%; a confiança dos artistas sobe. Reputação artística.', 'LPs +15%, EPs +5%, singles −6%; artist trust rises. Artistic reputation.'), fx: { lp: 1.15, ep: 1.05, single: 0.94 }, monthly: { trust: 0.3 }, onPick: (s) => rep(s, 'artistic', 3), npc: ['indie'] },
+      { id: 'arena', name: l('Turnês de arena', 'Arena tours'), desc: l('Shows +15%; custa por artista todo mês e o elenco cansa.', 'Shows +15%; costs per artist every month and the roster tires.'), fx: { show: 1.15 }, monthly: { costPerAct: 200, fatigue: 1 }, npc: ['empire', 'hits'] },
+      { id: 'control', name: l('O produtor manda', 'The producer is in charge'), desc: l('Singles +5%, LPs +3%.', 'Singles +5%, LPs +3%.'), fx: { single: 1.05, lp: 1.03 }, npc: ['catalog'] },
+    ],
+  },
+  {
+    id: 'disco', name: l('Discotecas e pistas', 'Discos and dancefloors'), after: [{ tech: 'synth', plus: 5 }],
+    model: l('A pista manda: remixes estendidos, DJs e clubes ditam o sucesso, e o single de 12 polegadas vira produto.', 'The dancefloor rules: extended remixes, DJs and clubs dictate hits, and the 12-inch single becomes a product.'),
+    question: l('A febre das discotecas chegou. Entrar na pista ou resistir?', 'Disco fever has arrived. Hit the dancefloor or resist?'),
+    stances: [
+      { id: 'dance', name: l('Entrar na pista', 'Hit the dancefloor'), desc: l('Singles +15%, EPs (12") +10%; LPs −8%.', 'Singles +15%, EPs (12") +10%; LPs −8%.'), fx: { single: 1.15, ep: 1.1, lp: 0.92 }, npc: ['hits', 'empire'] },
+      { id: 'backlash', name: l('Apostar na reação (rock cru, punk)', 'Bet on the backlash (raw rock, punk)'), desc: l('Apelo −3%; fãs fiéis crescem todo mês; shows +6%.', 'Appeal −3%; core fans grow every month; shows +6%.'), fx: { appeal: 0.97, show: 1.06 }, monthly: { core: 0.008 }, npc: ['indie'] },
+      { id: 'remix', name: l('Remixar o catálogo', 'Remix the catalog'), desc: l('Reedições +25%, catálogo +10%.', 'Reissues +25%, catalog +10%.'), fx: { reissue: 1.25, catalog: 1.1 }, npc: ['catalog'] },
     ],
   },
   {
@@ -97,13 +142,23 @@ export const ERA_SHIFTS: EraShift[] = [
     ],
   },
   {
-    id: 'piracy', name: l('Pirataria e downloads', 'Piracy and downloads'), tech: 'p2p',
+    id: 'piracy', name: l('Pirataria e troca de arquivos', 'Piracy and file sharing'), tech: 'p2p',
     model: l('A música vira arquivo e escapa: a venda física desaba e quem é ouvido de graça pode lotar os shows.', 'Music becomes a file and leaks: physical sales collapse, and whoever gets heard for free can fill venues.'),
     question: l('A troca de arquivos se espalha. Proteger a receita imediata ou ampliar o alcance?', 'File sharing spreads. Protect immediate revenue or widen reach?'),
     stances: [
       { id: 'protect', name: l('Proteger a receita', 'Protect revenue'), desc: l('Vendas +8% (processos e travas); custo mensal; o público casual encolhe e os artistas torcem o nariz.', 'Sales +8% (lawsuits and locks); monthly cost; the casual audience shrinks and artists frown.'), fx: { units: 1.08 }, monthly: { fixed: 250, costPerAct: 40, casual: -0.004 }, onPick: (s) => { rep(s, 'artists', -2); rep(s, 'institutional', 2); }, npc: ['empire', 'catalog'] },
       { id: 'reach', name: l('Ampliar o alcance', 'Widen the reach'), desc: l('Vendas −7%; público casual e fama crescem todo mês; shows +8%.', 'Sales −7%; casual audience and fame grow every month; shows +8%.'), fx: { units: 0.93, show: 1.08 }, monthly: { casual: 0.012, fame: 0.1 }, npc: ['indie', 'hits'] },
       { id: 'wait', name: l('Esperar a poeira baixar', 'Wait for the dust to settle'), desc: l('Nada muda — e os rivais podem sair na frente.', 'Nothing changes — and rivals may pull ahead.'), fx: {}, npc: [] },
+    ],
+  },
+  {
+    id: 'download', name: l('O download pago', 'Paid downloads'), tech: 'download',
+    model: l('A loja digital vende faixa por faixa a preço fixo: o álbum se desmancha e o catálogo antigo ganha vitrine infinita.', 'The digital store sells track by track at a fixed price: the album unbundles and the old catalog gets an endless shop window.'),
+    question: l('A loja de downloads virou a saída legal. Como o selo entra nela?', 'The download store is the legal way out. How does the label get in?'),
+    stances: [
+      { id: 'tracks', name: l('Vender faixa a faixa', 'Sell track by track'), desc: l('Singles +12%; LPs −8%.', 'Singles +12%; LPs −8%.'), fx: { single: 1.12, lp: 0.92 }, npc: ['hits'] },
+      { id: 'bundle', name: l('Defender o álbum', 'Defend the album'), desc: l('LPs +10%; faixas bônus custam um pouco por artista.', 'LPs +10%; bonus tracks cost a little per artist.'), fx: { lp: 1.1 }, monthly: { costPerAct: 60 }, npc: ['indie'] },
+      { id: 'digitize', name: l('Digitalizar o catálogo', 'Digitise the catalog'), desc: l('Catálogo +25%, discos de 3–12 meses +5%; digitalizar custa todo mês.', 'Catalog +25%, 3–12 month records +5%; digitising costs every month.'), fx: { catalog: 1.25, tail: 1.05 }, monthly: { fixed: 200 }, npc: ['catalog', 'empire'] },
     ],
   },
   {
@@ -117,6 +172,16 @@ export const ERA_SHIFTS: EraShift[] = [
     ],
   },
   {
+    id: 'viral', name: l('Vídeos curtos e virais', 'Short videos and virality'), tech: 'short_video',
+    model: l('Quinze segundos de refrão decidem tudo: dancinhas, memes e algoritmos fazem e esquecem sucessos em semanas.', 'Fifteen seconds of chorus decide everything: dances, memes and algorithms make and forget hits within weeks.'),
+    question: l('Os vídeos curtos mandam na descoberta. Como o selo joga com o algoritmo?', 'Short videos rule discovery. How does the label play the algorithm?'),
+    stances: [
+      { id: 'chase', name: l('Caçar o viral', 'Chase the viral'), desc: l('Singles +15%, apelo +4%; público casual cresce, o elenco cansa.', 'Singles +15%, appeal +4%; casual audience grows, the roster tires.'), fx: { single: 1.15, appeal: 1.04 }, monthly: { casual: 0.008, fatigue: 1.5 }, npc: ['hits'] },
+      { id: 'artist', name: l('Construir artistas', 'Build artists'), desc: l('Fãs fiéis crescem todo mês, LPs +6%; apelo −3%.', 'Core fans grow every month, LPs +6%; appeal −3%.'), fx: { lp: 1.06, appeal: 0.97 }, monthly: { core: 0.008 }, npc: ['indie'] },
+      { id: 'revive', name: l('Reviver o catálogo', 'Revive the catalog'), desc: l('Sons antigos viralizam: catálogo +25%, discos de 3–12 meses +10%.', 'Old songs go viral: catalog +25%, 3–12 month records +10%.'), fx: { catalog: 1.25, tail: 1.1 }, npc: ['catalog', 'empire'] },
+    ],
+  },
+  {
     id: 'synthetic', name: l('Vozes sintéticas', 'Synthetic voices'), tech: 'synthetic_voice',
     model: l('Qualquer voz pode ser clonada e qualquer catálogo treinado. O valor passa a estar em autoria, consentimento e identidade.', 'Any voice can be cloned and any catalog trained on. Value shifts to authorship, consent and identity.'),
     question: l('Vozes sintéticas chegaram. Como negociar autoria, consentimento e identidade?', 'Synthetic voices are here. How do you negotiate authorship, consent and identity?'),
@@ -124,6 +189,26 @@ export const ERA_SHIFTS: EraShift[] = [
       { id: 'open', name: l('Vozes livres', 'Open voices'), desc: l('Faixas e atos sintéticos +25%; humanos −3%; artistas desconfiam e há risco de escândalo todo mês.', 'Synthetic tracks and acts +25%; human −3%; artists grow wary and there is a monthly scandal risk.'), fx: { synth: 1.25, human: 0.97 }, monthly: { scandal: 0.02 }, onPick: (s) => { s.flags.consentAsked = 1; s.player.neural.consentPolicy = 'no_consent'; rep(s, 'artists', -8); }, npc: ['hits', 'empire'] },
       { id: 'human', name: l('Selo 100% humano', '100% human label'), desc: l('Humanos +8%, sintéticos −25%. Reputação artística.', 'Humans +8%, synthetic −25%. Artistic reputation.'), fx: { human: 1.08, synth: 0.75 }, onPick: (s) => { s.flags.consentAsked = 1; s.player.neural.consentPolicy = 'consent'; s.player.neural.humanFocus += 3; rep(s, 'artistic', 3); }, npc: ['indie'] },
       { id: 'consent', name: l('Consentimento, crédito e partilha', 'Consent, credit and revenue share'), desc: l('Humanos +3%; licenças custam pouco por mês; a confiança dos artistas sobe.', 'Humans +3%; licences cost a little each month; artist trust rises.'), fx: { human: 1.03 }, monthly: { costPerAct: 60, trust: 0.3 }, onPick: (s) => { s.flags.consentAsked = 1; s.player.neural.consentPolicy = 'consent'; rep(s, 'artists', 5); }, npc: ['catalog'] },
+    ],
+  },
+  {
+    id: 'neural', name: l('A era neural', 'The neural era'), tech: 'neural',
+    model: l('A música toca direto na mente, sob medida para o humor de cada ouvinte; o disco vira sensação e a presença física vira luxo.', 'Music plays straight into the mind, tailored to each listener\'s mood; the record becomes a sensation and physical presence becomes a luxury.'),
+    question: l('Interfaces neurais tocam música direto na mente. O selo produz experiências sob medida ou defende o momento compartilhado?', 'Neural interfaces play music straight into the mind. Does the label produce tailored experiences or defend the shared moment?'),
+    stances: [
+      { id: 'tailored', name: l('Experiências sob medida', 'Tailored experiences'), desc: l('Sintéticos +15%, apelo +5%; público casual cresce; custa por artista todo mês.', 'Synthetic +15%, appeal +5%; casual audience grows; costs per artist every month.'), fx: { synth: 1.15, appeal: 1.05 }, monthly: { costPerAct: 150, casual: 0.006 }, npc: ['hits', 'empire'] },
+      { id: 'presence', name: l('Presença ao vivo', 'Live presence'), desc: l('Shows +18%, humanos +5%; fãs fiéis crescem todo mês.', 'Shows +18%, humans +5%; core fans grow every month.'), fx: { show: 1.18, human: 1.05 }, monthly: { core: 0.006 }, npc: ['indie'] },
+      { id: 'license', name: l('Licenciar o catálogo', 'License the catalog'), desc: l('Catálogo +25%, reedições +10%; vendas −3%.', 'Catalog +25%, reissues +10%; sales −3%.'), fx: { catalog: 1.25, reissue: 1.1, units: 0.97 }, npc: ['catalog'] },
+    ],
+  },
+  {
+    id: 'postai', name: l('Pós-IA: a era da autenticidade', 'Post-AI: the age of authenticity'), after: [{ tech: 'neural', plus: 8 }, { tech: 'synthetic_voice', plus: 14 }],
+    model: l('Com música infinita e grátis em toda parte, vale o que prova ter alguém de verdade por trás: origem, presença e história.', 'With infinite free music everywhere, value lies in proof that a real someone is behind it: provenance, presence and story.'),
+    question: l('A música infinita barateou tudo. Onde o selo encontra valor?', 'Infinite music has cheapened everything. Where does the label find value?'),
+    stances: [
+      { id: 'provenance', name: l('Selo de origem', 'Certified provenance'), desc: l('Humanos +10%, sintéticos −15%; a certificação custa todo mês; a confiança dos artistas sobe.', 'Humans +10%, synthetic −15%; certification costs every month; artist trust rises.'), fx: { human: 1.1, synth: 0.85 }, monthly: { fixed: 200, trust: 0.2 }, npc: ['indie', 'catalog'] },
+      { id: 'curation', name: l('Curadoria', 'Curation'), desc: l('Apelo +6%, catálogo +10%.', 'Appeal +6%, catalog +10%.'), fx: { appeal: 1.06, catalog: 1.1 }, npc: ['empire'] },
+      { id: 'hybrid', name: l('Híbrido', 'Hybrid'), desc: l('Sintéticos +10%, humanos +3%.', 'Synthetic +10%, humans +3%.'), fx: { synth: 1.1, human: 1.03 }, npc: ['hits'] },
     ],
   },
 ];
@@ -147,6 +232,11 @@ export const era8 = (s: GameState): Era8State => {
 /** Ano em que a era começa nesta história (ou undefined se a tecnologia não existe). */
 export function eraYear(s: GameState, id: EraId): number | undefined {
   const e = eraById[id];
+  if (!e) return undefined;
+  if (e.after) {
+    for (const a of e.after) { const t = s.techDates[a.tech]; if (t !== undefined) return t + a.plus; }
+    return undefined;
+  }
   if (!e.tech) return -Infinity;
   const y = s.techDates[e.tech];
   if (y !== undefined) return y;
@@ -162,7 +252,8 @@ export function eraStarted(s: GameState, id: EraId, year = s.year): boolean {
 
 /** Eras já iniciadas, em ordem. */
 export function erasSoFar(s: GameState): EraShift[] {
-  return ERA_SHIFTS.filter((e) => eraStarted(s, e.id));
+  // em ordem cronológica (no modo Livre/Caos as datas podem trocar de lugar); empate mantém a ordem da lista
+  return ERA_SHIFTS.map((e, i) => ({ e, i, y: eraYear(s, e.id) as number })).filter((x) => eraStarted(s, x.e.id)).sort((a, b) => a.y - b.y || a.i - b.i).map((x) => x.e);
 }
 
 export function currentEra(s: GameState): EraShift {
@@ -364,8 +455,8 @@ function monthlyFx(s: GameState, r: Rng): void {
     if (m.scandal && acts.length && r.chance(m.scandal * weight)) {
       rep(s, 'institutional', -4);
       rep(s, 'artists', -2);
-      notify(s, l('Escândalo: uma voz foi clonada sem autorização num lançamento do selo.', 'Scandal: a voice was cloned without permission on one of the label\'s releases.'), 'bad');
-      remember(s, 'era_scandal', l('Voz clonada sem autorização vira escândalo.', 'Voice cloned without permission becomes a scandal.'), { important: true });
+      notify(s, stance.scandalText ?? l('Escândalo: uma voz foi clonada sem autorização num lançamento do selo.', 'Scandal: a voice was cloned without permission on one of the label\'s releases.'), 'bad');
+      remember(s, 'era_scandal', stance.scandalText ?? l('Voz clonada sem autorização vira escândalo.', 'Voice cloned without permission becomes a scandal.'), { important: true });
     }
   }
 }

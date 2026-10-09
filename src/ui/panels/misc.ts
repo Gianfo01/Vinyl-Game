@@ -427,7 +427,7 @@ function legacyTab(s: GameState): HTMLElement {
     ),
     h('aside', { class: 'col-side' },
       card ? section(t(card.name), h('p', null, t(card.passive)), h('p', null, t(card.goal), ' ', pill(cardGoalDone(s) || s.player.goalsDone.includes(card.id) ? t(S.done) : t(S.pending)))) : null,
-      section(t(l('Arco Neural', 'Neural Arc')), h('p', { class: 'small muted' }, t(l('Em 2040 a run termina num dos 20 finais, escolhido pelo seu legado e pelas escolhas da era neural.', 'In 2040 the run ends in one of 20 endings, chosen by your legacy and your neural-era choices.'))), h('p', { class: 'small' }, `${ENDINGS.length} ${t(l('finais possíveis', 'possible endings'))}`)),
+      section(t(l('Fim da história', 'End of the story')), h('p', { class: 'small muted' }, t(l('Em 2040 a run termina num dos 20 finais, escolhido pelo seu legado e pelas escolhas que você fizer até lá.', 'In 2040 the run ends in one of 20 endings, chosen by your legacy and the choices you make until then.'))), h('p', { class: 'small' }, `${ENDINGS.length} ${t(l('finais possíveis', 'possible endings'))}`)),
       section(t(l('Mutators', 'Mutators')), h('p', { class: 'small' }, s.config.mutators.length ? s.config.mutators.join(', ') : t(S.none))),
       section(t(l('Run', 'Run')), kv(t(S.seed), s.config.seed), kv(t(l('Assinatura', 'Signature')), s.signature), kv(t(S.mode), s.config.mode), kv(t(S.storyteller), s.config.storyteller)),
     ),

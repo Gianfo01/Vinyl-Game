@@ -140,11 +140,11 @@ function partnersTab(s: GameState): HTMLElement {
 function divisionsTab(s: GameState): HTMLElement {
   const st = s.x4.creation;
   return h('div', null,
-    section(t(l('Divisões especializadas', 'Specialist divisions')), h('div', { class: 'cards' }, DIVISIONS.map((d) => {
+    section(t(l('Divisões especializadas', 'Specialist divisions')), h('div', { class: 'cards' }, DIVISIONS.filter((d) => s.year >= d.from || st.divisions[d.id]).map((d) => {
       const dv = st.divisions[d.id];
       return tile('cd', t(d.name), [
         dv ? chips(stat('fame', Math.round(dv.prestige), l('Prestígio', 'Prestige')), stat('trophy', dv.awards, l('Prêmios', 'Awards'))) : h('small', null, `${t(l('Abertura', 'Setup'))} ${$(money(s, d.cost * 5))} · ${t(l('custo', 'cost'))} ${$(money(s, d.cost))}/m`),
-        dv ? h('button', { class: 'btn small ghost', onclick: () => { closeDivision(s, d.id); rerender(); } }, t(l('Fechar', 'Close'))) : h('button', { class: 'btn small', disabled: s.year < d.from, onclick: () => say(openDivision(s, d.id), l('Divisão aberta.', 'Division opened.')) }, s.year < d.from ? `${t(l('a partir de', 'from'))} ${d.from}` : t(l('Abrir', 'Open'))),
+        dv ? h('button', { class: 'btn small ghost', onclick: () => { closeDivision(s, d.id); rerender(); } }, t(l('Fechar', 'Close'))) : h('button', { class: 'btn small', onclick: () => say(openDivision(s, d.id), l('Divisão aberta.', 'Division opened.')) }, t(l('Abrir', 'Open'))),
       ], { cls: dv ? 'on' : '' });
     }))),
     st.divisionAwards.length ? section(t(l('Prêmios das divisões', 'Division awards')), h('ul', { class: 'small' }, st.divisionAwards.slice(0, 12).map((a) => h('li', { class: a.mine ? 'good' : '' }, `${a.year} · ${t(DIVISIONS.find((d) => d.id === a.division)!.name)}: ${a.title}`)))) : null,
@@ -159,7 +159,7 @@ function catalogTab(s: GameState): HTMLElement {
   const std = standards(s);
   return h('div', null,
     section(t(l('Remasterização', 'Remastering')),
-      opts.length ? h('p', { class: 'small' }, t(l('Tecnologias disponíveis: ', 'Available technologies: ')), opts.map((o) => t(o.name)).join(', ')) : h('p', { class: 'muted small' }, t(l('Remasterizar faz sentido quando chega uma tecnologia nova (CD em 1984, alta resolução, áudio espacial).', 'Remastering makes sense when new technology arrives (CD in 1984, high resolution, spatial audio).'))),
+      opts.length ? h('p', { class: 'small' }, t(l('Tecnologias disponíveis: ', 'Available technologies: ')), opts.map((o) => t(o.name)).join(', ')) : h('p', { class: 'muted small' }, t(l('Remasterizar faz sentido quando chega uma tecnologia nova de som ou de formato.', 'Remastering makes sense when a new sound or format technology arrives.'))),
       opts.length && mine.length ? h('ul', { class: 'small' }, mine.map((r) => h('li', null, `${r.title} (${r.year}) · ${N(r.totalUnits)} `, h('button', { class: 'btn small', onclick: () => say(remaster(s, rngOf(s), r.id), l('Remaster programado.', 'Remaster scheduled.')) }, t(l('Remasterizar e relançar', 'Remaster and reissue')))))) : null,
     ),
     section(t(l('Standards e domínio público', 'Standards and public domain')),
@@ -251,7 +251,7 @@ export function openCoverEditor(s: GameState, songId: string): void {
       info.replaceChildren(h('p', null, t(l('Impacto previsto: ', 'Expected impact: ')), h('b', null, String(sc.score))), h('ul', { class: 'small' }, sc.notes.map((n) => h('li', null, t(n)))));
     };
     const swatches = (key: 'bg' | 'fg') => h('div', { class: 'row wrap' }, BGS.concat(['#ffffff']).map((col) => h('button', { class: 'swatch', style: `background:${col}`, 'aria-label': col, onclick: () => { c[key] = col; paint(); } })));
-    const fontSel = select(c.font, FONTS.map((f) => ({ value: f.id, label: `${t(f.name)} (${f.eras[0]}–${f.eras[1]})` })), (v) => { c.font = v; paint(); }, { 'aria-label': t(l('Tipografia', 'Typography')) });
+    const fontSel = select(c.font, FONTS.filter((f) => f.eras[0] <= s.year || f.id === c.font).map((f) => ({ value: f.id, label: `${t(f.name)} (${f.eras[0]}–${f.eras[1] <= s.year ? f.eras[1] : '…'})` })), (v) => { c.font = v; paint(); }, { 'aria-label': t(l('Tipografia', 'Typography')) });
     const elSel = select(c.el, ELEMENTS.map((e) => ({ value: e.id, label: t(e.name) })), (v) => { c.el = v; paint(); }, { 'aria-label': t(l('Elemento', 'Element')) });
     const photo = h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: c.photo, onchange: (e: Event) => { c.photo = (e.target as HTMLInputElement).checked; paint(); } }), t(l('Foto da banda', 'Band photo')));
     const save = (score: number) => { setCover(s, songId, score); close(); toast(t(l('Capa aprovada.', 'Cover approved.')), 'good'); rerender(); };

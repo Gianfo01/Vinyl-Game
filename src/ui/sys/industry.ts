@@ -10,7 +10,7 @@ import { COMBOS, ROOM_ITEMS, activeCombos, buyItem, effectiveRooms, swapRooms } 
 import { ROOM_NAMES } from '../pixel/scene';
 import type { Material, PriceTier, StoreCell } from '../../sim/sys/industry/state';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerArea, registerSection } from '../registry';
@@ -142,12 +142,12 @@ function corpTab(s: GameState): HTMLElement {
     ),
     section(t(l('Empresas do grupo', 'Group companies')), h('div', { class: 'cards' },
       tile('tour-bus', t(l('Promotora de shows', 'Concert promoter')), [h('small', null, t(l('Ganha com shows de terceiros; seus atos atraem +5% de público.', 'Earns from third-party shows; your acts draw +5% audiences.'))), st.promoter.active ? pill(`${$(st.promoter.revenue)}/m`, 'good') : h('button', { class: 'btn small', onclick: () => say(openVenture(s, 'promoter'), l('Promotora aberta.', 'Promoter opened.')) }, `${t(l('Abrir', 'Open'))} (${$(money(s, 150000))})`)]),
-      tile('key', t(l('Ticketeira', 'Ticketing company')), [h('small', null, t(l('Taxas sobre ingressos (a partir dos anos 70).', 'Fees on tickets (from the 1970s).'))), st.ticketing.active ? pill(`${$(st.ticketing.revenue)}/m`, 'good') : h('button', { class: 'btn small', onclick: () => say(openVenture(s, 'ticketing'), l('Ticketeira aberta.', 'Ticketing opened.')) }, `${t(l('Abrir', 'Open'))} (${$(money(s, 300000))})`)]),
+      s.year < 1970 && !st.ticketing.active ? null : tile('key', t(l('Ticketeira', 'Ticketing company')), [h('small', null, t(l('Taxas sobre ingressos.', 'Fees on tickets.'))), st.ticketing.active ? pill(`${$(st.ticketing.revenue)}/m`, 'good') : h('button', { class: 'btn small', onclick: () => say(openVenture(s, 'ticketing'), l('Ticketeira aberta.', 'Ticketing opened.')) }, `${t(l('Abrir', 'Open'))} (${$(money(s, 300000))})`)]),
       tile('guitar', t(l('Fábrica de instrumentos', 'Instrument factory')), [h('small', null, t(l('Vende mais com endossos de artistas famosos.', 'Sells more with famous artist endorsements.'))),
         st.instruments.active ? h('div', null, pill(`${$(st.instruments.revenue)}/m`, 'good'), h('div', { class: 'row wrap' }, playerActs(s).filter((id) => !st.instruments.endorsements.includes(id)).slice(0, 6).map((id) => h('button', { class: 'btn small ghost', onclick: () => say(endorse(s, id), l('Endosso fechado.', 'Endorsement signed.')) }, `+ ${s.acts[id].name}`))), h('div', { class: 'row wrap' }, st.instruments.endorsements.map((id) => actLink(s, id))))
           : h('button', { class: 'btn small', onclick: () => say(openVenture(s, 'instruments'), l('Fábrica aberta.', 'Factory opened.')) }, `${t(l('Abrir', 'Open'))} (${$(money(s, 200000))})`)]),
     )),
-    section(t(l('Plataforma de streaming própria', 'Own streaming platform')),
+    !hasTech(s, 'streaming') && !st.streaming.active ? null : section(t(l('Plataforma de streaming própria', 'Own streaming platform')),
       st.streaming.active ? h('div', null, chips(stat('fans', N(st.streaming.subs), l('Assinantes', 'Subscribers')), stat('cd', st.streaming.licenses.length, l('Catálogos licenciados', 'Licensed catalogs'))),
         h('div', { class: 'row wrap' }, Object.values(s.labels).filter((lb) => lb.active && !st.streaming.licenses.includes(lb.id)).slice(0, 8).map((lb) => h('button', { class: 'btn small ghost', onclick: () => say(licenseCatalog(s, lb.id), l('Catálogo licenciado.', 'Catalog licensed.')) }, `${t(l('Licenciar', 'License'))} ${lb.name}`))))
         : h('div', null, h('p', { class: 'muted small' }, t(l('Concorra com as gigantes: assinantes crescem com o tamanho do catálogo (o seu e os licenciados). Investimento enorme.', 'Compete with the giants: subscribers grow with catalog size (yours and licensed ones). A huge investment.'))),

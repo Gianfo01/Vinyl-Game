@@ -17,6 +17,7 @@ import { $, actLink, cityName, genreName, pill, rerender, section, sparkline, to
 import { bar, h, select } from '../dom';
 import { registerArea, registerPageTab, registerSection } from '../registry';
 import { tabs } from '../vis';
+import { visibleAct } from '../../sim/future';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -53,7 +54,7 @@ function ventureHead(s: GameState, v: Venture): HTMLElement {
 
 function foundForm(s: GameState, kind: VKind): HTMLElement {
   const info = VKINDS[kind];
-  if (!kindsAvailable(s).includes(kind)) return h('p', { class: 'muted' }, t(l('Ainda não existe nesta época (a partir de {y}).', 'Not available in this era yet (from {y}).'), { y: info.from }));
+  if (!kindsAvailable(s).includes(kind)) return h('p', { class: 'muted' }, t(l('Ainda não existe nesta época.', 'Not available in this era yet.')));
   let owner: Holder = 'label';
   let name = '';
   let city = s.config.homeCity;
@@ -99,7 +100,7 @@ function publisherBody(s: GameState, v: Venture): HTMLElement {
   const r = rngOf(s);
   const cands = writerCandidates(s, v.id);
   let wpick = cands[0]?.pid ?? '';
-  const acts = Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.fame >= 10).sort((a, b) => b.fame - a.fame).slice(0, 30);
+  const acts = Object.values(s.acts).filter((a) => visibleAct(s, a) && a.status !== 'retired' && a.status !== 'split' && a.fame >= 10).sort((a, b) => b.fame - a.fame).slice(0, 30);
   let apick = acts[0]?.id ?? '';
   let wr = v.writers![0]?.pid ?? '';
   return h('div', null,
@@ -144,7 +145,7 @@ function bookingBody(s: GameState, v: Venture): HTMLElement {
 
 function mediaBody(s: GameState, v: Venture): HTMLElement {
   const r = rngOf(s);
-  const acts = Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.members.length).sort((a, b) => b.momentum - a.momentum).slice(0, 40);
+  const acts = Object.values(s.acts).filter((a) => visibleAct(s, a) && a.status !== 'retired' && a.status !== 'split' && a.members.length).sort((a, b) => b.momentum - a.momentum).slice(0, 40);
   const genres = [...new Set(Object.values(s.acts).filter((a) => a.city === v.city).map((a) => a.genre))];
   return h('div', null,
     h('p', null, t(MEDIA[v.media!].name), ' · ', t(l('Alcance', 'Reach')), ' ', bar(v.reach!), ` ${Math.round(v.reach!)}`, (v.heat ?? 0) > 0.1 ? pill(t(l('jabá na mira', 'payola under scrutiny')), 'bad') : null),
@@ -197,7 +198,7 @@ function overview(s: GameState): HTMLElement {
 function venturesArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub ventures9' }, tabs('ventures9', [
     { id: 'overview', label: t(l('Visão geral', 'Overview')), icon: 'bank', render: () => overview(s) },
-    ...(Object.keys(VKINDS) as VKind[]).map((k) => ({ id: k, label: t(VKINDS[k].name), icon: VKINDS[k].icon, render: () => kindTab(s, k) })),
+    ...(Object.keys(VKINDS) as VKind[]).filter((k) => kindsAvailable(s).includes(k) || ventures(s).list.some((v) => v.kind === k)).map((k) => ({ id: k, label: t(VKINDS[k].name), icon: VKINDS[k].icon, render: () => kindTab(s, k) })),
   ], rerender));
 }
 

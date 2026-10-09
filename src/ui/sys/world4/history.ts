@@ -14,7 +14,7 @@ import { h } from '../../dom';
 import { ic } from '../../vis';
 import { act, btn, note } from './util';
 
-let filter: 'all' | 'done' | 'world' | 'next' = 'done';
+let filter: 'all' | 'world' = 'all';
 
 function msStatus(s: GameState, m: Milestone): 'done' | 'before' | 'next' {
   const y = w4(s).ms[m.id];
@@ -24,14 +24,13 @@ function msStatus(s: GameState, m: Milestone): 'done' | 'before' | 'next' {
 
 export function timelineSection(s: GameState): HTMLElement {
   const list = MILESTONES.slice().sort((a, b) => a.year - b.year || (a.month ?? 0) - (b.month ?? 0)).filter((m) => {
-    const st = msStatus(s, m);
-    if (filter === 'done') return st !== 'next';
-    if (filter === 'next') return st === 'next';
+    // o futuro não aparece: só marcos que já aconteceram (ou vieram antes do início)
+    if (msStatus(s, m) === 'next') return false;
     if (filter === 'world') return !!m.world;
     return true;
   });
   const done = MILESTONES.filter((m) => msStatus(s, m) !== 'next').length;
-  const filters: [typeof filter, string][] = [['done', t(l('Já aconteceu', 'Happened'))], ['next', t(l('Por vir', 'Upcoming'))], ['world', t(l('Mercados mundiais', 'World markets'))], ['all', t(l('Tudo', 'All'))]];
+  const filters: [typeof filter, string][] = [['all', t(l('Tudo', 'All'))], ['world', t(l('Mercados mundiais', 'World markets'))]];
   let decade = 0;
   const items: HTMLElement[] = [];
   for (const m of list) {
@@ -54,7 +53,7 @@ export function timelineSection(s: GameState): HTMLElement {
   }
   return section(t(l('Linha do tempo da indústria', 'Industry timeline')),
     h('div', { class: 'row between' },
-      h('span', { class: 'small muted' }, t(fmtL(l('{n} de {m} marcos', '{n} of {m} milestones'), { n: done, m: MILESTONES.length }))),
+      h('span', { class: 'small muted' }, t(fmtL(l('{n} marcos até agora', '{n} milestones so far'), { n: done }))),
       h('div', { class: 'row', role: 'group', 'aria-label': t(l('Filtro', 'Filter')) }, filters.map(([id, label]) => btn(label, () => { filter = id; rerender(); }, { cls: filter === id ? 'primary' : 'ghost', pressed: filter === id })))),
     items.length ? h('ol', { class: 'w4-timeline' }, items) : note(l('Nada aqui ainda.', 'Nothing here yet.')),
   );
@@ -64,16 +63,16 @@ function arcBar(s: GameState, from: number, peak: number, to: number): HTMLEleme
   const span = Math.max(1, to - from);
   const pos = Math.max(0, Math.min(1, (s.year - from) / span));
   const pk = (peak - from) / span;
-  return h('div', { class: 'w4-arc', role: 'img', 'aria-label': `${from}–${to}` },
-    h('span', { class: 'w4-arc-peak', style: `left:${pk * 100}%` }),
+  return h('div', { class: 'w4-arc', role: 'img', 'aria-label': `${from}–${to <= s.year ? to : '…'}` },
+    peak <= s.year ? h('span', { class: 'w4-arc-peak', style: `left:${pk * 100}%` }) : null,
     s.year >= from && s.year <= to ? h('span', { class: 'w4-arc-now', style: `left:${pos * 100}%` }) : null,
-    h('small', { class: 'w4-arc-a' }, String(from)), h('small', { class: 'w4-arc-b' }, String(to)));
+    h('small', { class: 'w4-arc-a' }, String(from)), h('small', { class: 'w4-arc-b' }, to <= s.year ? String(to) : '…'));
 }
 
 export function scenesSection(s: GameState): HTMLElement {
   const w = w4(s);
   const mine = liveMine(s);
-  const cards = HIST_SCENES.slice().sort((a, b) => {
+  const cards = HIST_SCENES.filter((sc) => sceneStage(s, sc) !== 'future').sort((a, b) => {
     const order = { rise: 0, peak: 1, decline: 2, future: 3, over: 4 } as const;
     return order[sceneStage(s, a)] - order[sceneStage(s, b)] || a.from - b.from;
   }).map((sc) => {
@@ -88,7 +87,7 @@ export function scenesSection(s: GameState): HTMLElement {
         h('div', { class: 'row between' }, h('b', null, t(sc.name)), pill(t(STAGE_NAME[st]), st === 'rise' ? 'good' : st === 'peak' ? 'gold' : st === 'over' ? '' : 'warn')),
         h('small', { class: 'muted' }, `${cityName(sc.city)} · ${sc.genres.filter((g) => genreById[g]).map(genreName).join(', ')}`),
         arcBar(s, sc.from, sc.peak, sc.to),
-        phase >= 0 ? h('p', { class: 'small' }, t(sc.arc[phase as 0 | 1 | 2])) : note(fmtL(l('Começa por volta de {y}.', 'Starts around {y}.'), { y: sc.from })),
+        h('p', { class: 'small' }, t(sc.arc[Math.max(0, phase) as 0 | 1 | 2])),
         h('div', { class: 'w4-look' },
           h('span', { class: 'w4-swatches', 'aria-hidden': 'true' }, sc.look.palette.map((c) => h('span', { style: `background:${c}` }))),
           h('small', null, `${t(l('Visual', 'Look'))}: ${t(sc.look.label)}`)),
@@ -110,14 +109,14 @@ export function scenesSection(s: GameState): HTMLElement {
 
 export function marketsSection(s: GameState): HTMLElement {
   const w = w4(s);
-  const world = MILESTONES.filter((m) => m.world);
+  const world = MILESTONES.filter((m) => m.world && msStatus(s, m) !== 'next');
   const trainOpen = w.ms.trainees !== undefined;
   return section(t(l('Mercados com regras próprias', 'Markets with their own rules')),
     h('div', { class: 'cards' }, world.map((m) => {
       const st = msStatus(s, m);
       const on = st !== 'next' && (m.until === undefined || s.year <= m.until);
       return h('div', { class: `tile ${on ? '' : 'muted'}` }, h('div', { class: 'tile-body' },
-        h('div', { class: 'row between' }, h('b', null, t(m.title)), pill(on ? t(l('em vigor', 'in force')) : st === 'next' ? `${m.year}` : t(l('passou', 'past')), on ? 'good' : '')),
+        h('div', { class: 'row between' }, h('b', null, t(m.title)), pill(on ? t(l('em vigor', 'in force')) : t(l('passou', 'past')), on ? 'good' : '')),
         h('small', null, t(m.mech))));
     })),
     trainOpen ? h('div', null,

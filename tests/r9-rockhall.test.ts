@@ -8,6 +8,7 @@ describe('Hall da Fama do Rock', () => {
   it('não existe antes de 1983 e empossa turmas a partir de 1986', () => {
     const s = createGame(defaultConfig('rh', { startYear: 1982, realNames: true }));
     expect(hallExists(s)).toBe(false);
+    s.flags.sandbox = 1; // o teste é do Hall, não da saúde financeira do selo sem jogador
     for (let i = 0; i < 12 * 4 + 2; i++) advanceMonth(s);
     expect(hallExists(s)).toBe(true);
     const st = hall(s);

@@ -15,6 +15,7 @@ import { AWARD_CATS, awardName, ch7 } from '../../sim/sys/charts7';
 import { TIER_NAME, TIER_ORDER, acceptInvite, declineInvite, editionOf, fest8, festActive, festCapacity, festFee, festMonth, festTierFor, pitchAct, withdraw, type FestTier, type PitchResult } from '../../sim/sys/fests8';
 import type { GameState } from '../../sim/types';
 import { money, playerActs, rngOf } from '../../sim/util';
+import { existsNow } from '../../sim/future';
 import { $, N, actLink, cityName, kv, modal, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerSection } from '../registry';
@@ -31,7 +32,7 @@ const fui = { filter: 'year' as 'year' | 'mine' | 'all', sort: 'date' as 'date' 
 
 export function festivalsTab(s: GameState): HTMLElement {
   const st = fest8(s);
-  let list = FESTIVALS.map((f, fi) => ({ f, fi, ed: editionOf(s, fi) })).filter((x) => festActive(x.f, s.year) || fui.filter === 'all');
+  let list = FESTIVALS.map((f, fi) => ({ f, fi, ed: editionOf(s, fi) })).filter((x) => festActive(x.f, s.year) || (fui.filter === 'all' && existsNow(s, x.f.start)));
   if (fui.filter === 'mine') list = list.filter((x) => x.ed?.lineup.some((sl) => mineAct(s, sl.actId)) || st.invites.some((i) => i.fi === x.fi));
   list.sort((a, b) => fui.sort === 'prestige' ? b.f.prestige - a.f.prestige : festMonth(a.f, a.fi) - festMonth(b.f, b.fi));
   return h('div', { class: 'cols' },
@@ -39,7 +40,7 @@ export function festivalsTab(s: GameState): HTMLElement {
       section(t(l('Festivais de {y}', 'Festivals of {y}'), { y: s.year }),
         h('p', { class: 'muted small' }, t(l('Cada festival tem data, foco, prestígio e line-up montado com artistas do mundo todo. Ofereça seus artistas (a resposta é na hora) ou espere convites. Na data, quem toca ganha cachê, fama e fãs.', 'Each festival has a date, focus, prestige and a line-up built from artists worldwide. Pitch your acts (instant answer) or wait for invitations. On the date, performers earn a fee, fame and fans.'))),
         h('div', { class: 'row wrap' },
-          select(fui.filter, [{ value: 'year', label: t(l('Edições deste ano', 'This year\'s editions')) }, { value: 'mine', label: t(l('Com artistas meus ou convites', 'With my acts or invitations')) }, { value: 'all', label: t(l('Todos (inclusive extintos e futuros)', 'All (incl. defunct and future)')) }], (v) => { fui.filter = v as typeof fui.filter; rerender(); }),
+          select(fui.filter, [{ value: 'year', label: t(l('Edições deste ano', 'This year\'s editions')) }, { value: 'mine', label: t(l('Com artistas meus ou convites', 'With my acts or invitations')) }, { value: 'all', label: t(l('Todos (inclusive extintos)', 'All (incl. defunct)')) }], (v) => { fui.filter = v as typeof fui.filter; rerender(); }),
           select(fui.sort, [{ value: 'date', label: t(l('Por data', 'By date')) }, { value: 'prestige', label: t(l('Por prestígio', 'By prestige')) }], (v) => { fui.sort = v as typeof fui.sort; rerender(); }),
         ),
         h('table', { class: 'tbl compact' },
@@ -52,7 +53,7 @@ export function festivalsTab(s: GameState): HTMLElement {
               h('td', null, h('button', { class: 'link', onclick: () => openFestivalPage(fi) }, f.name)),
               h('td', null, cityName(f.city)),
               h('td', null, bar(f.prestige, 100)),
-              h('td', { class: 'small' }, heads.join(', ') || (festActive(f, s.year) ? '—' : f.start > s.year ? t(l('a partir de {y}', 'from {y}'), { y: f.start }) : t(l('extinto', 'defunct')))),
+              h('td', { class: 'small' }, heads.join(', ') || (festActive(f, s.year) ? '—' : t(l('extinto', 'defunct')))),
               h('td', null, ed?.done ? pill(t(l('aconteceu', 'happened'))) : mine.length ? pill(t(l('você toca', 'you play')), 'good') : st.invites.some((i) => i.fi === fi) ? pill(t(l('convite', 'invitation')), 'gold') : null),
             );
           })),
@@ -147,7 +148,7 @@ function ceremonies(s: GameState): CeremonyRow[] {
     const def = REGIONAL_AWARDS[m.id];
     if (def) out.push({ id: def.id, name: s.config.realNames && def.realRef ? def.realRef : t(def.name), month: 11, kind: l('Regional', 'Regional'), cats: [def.id], desc: l('Vai para quem lidera a parada da região no fim do ano.', 'Goes to the region\'s chart leader at year end.') });
   }
-  for (const c of COUNTRY_INFO) if (c.award) out.push({ id: `nat_${c.a3}`, name: awardName(s, c), month: 11, kind: fmtKind(c.a3), cats: [], desc: l('Artista, música, álbum e revelação do ano pelo consumo no país.', 'Artist, song, album and newcomer of the year by consumption in the country.'), country: c.a3 });
+  for (const c of COUNTRY_INFO) if (c.award && c.award[2] <= s.year) out.push({ id: `nat_${c.a3}`, name: awardName(s, c), month: 11, kind: fmtKind(c.a3), cats: [], desc: l('Artista, música, álbum e revelação do ano pelo consumo no país.', 'Artist, song, album and newcomer of the year by consumption in the country.'), country: c.a3 });
   return out;
 }
 
@@ -199,7 +200,7 @@ export function openCeremonyPage(id: string): void {
       const hist = ch7(s).awards.filter((a) => a.a3 === a3).slice(-40).reverse();
       blocks.push(section(t(l('Vencedores', 'Winners')), hist.length ? h('table', { class: 'tbl compact' }, h('tbody', null, hist.map((a) => h('tr', { class: a.byPlayer ? 'mine' : '' }, h('td', null, a.year), h('td', null, t(AWARD_CATS[a.cat])), h('td', null, a.actId ? actLink(s, a.actId, a.relId ? ` — ${s.releases[a.relId]?.title ?? ''}` : '') : a.winner))))) : h('p', { class: 'muted small' }, t(l('Ainda sem vencedores na partida.', 'No winners yet in this run.')))));
       const info = countryInfoByA3[a3];
-      if (info?.award && info.award[2] > s.year) blocks.push(h('p', { class: 'muted small' }, t(l('Criado em {y}.', 'Created in {y}.'), { y: info.award[2] })));
+      if (info?.award) blocks.push(h('p', { class: 'muted small' }, t(l('Criado em {y}.', 'Created in {y}.'), { y: info.award[2] })));
     } else {
       const hist = s.awards.filter((a) => (c.id === 'gramo' ? GRAMO_CATS.some((x) => x.id === a.category) : c.cats.includes(a.category))).slice(-48).reverse();
       blocks.push(section(t(l('Vencedores', 'Winners')), hist.length ? h('table', { class: 'tbl compact' }, h('tbody', null, hist.map((a) => h('tr', { class: a.byPlayer ? 'mine' : '' }, h('td', null, a.year), h('td', null, t(GRAMO_CATS.find((x) => x.id === a.category)?.name ?? l(''))), h('td', null, a.releaseId && s.releases[a.releaseId] ? releaseLink(s, a.releaseId) : a.name), h('td', null, a.actId ? actLink(s, a.actId) : ''))))) : h('p', { class: 'muted small' }, t(l('Ainda sem vencedores na partida.', 'No winners yet in this run.')))));
@@ -235,12 +236,12 @@ function reviewsBy(s: GameState, name: string) {
 }
 
 export function criticsTab(s: GameState): HTMLElement {
-  const list = allCritics().filter((c) => (kui.era === 'all' || (c.from <= s.year && c.to >= s.year)) && (kui.region === 'all' || (c.region ?? 'global') === kui.region)).sort((a, b) => b.prestige - a.prestige);
+  const list = allCritics().filter((c) => c.from <= s.year && (kui.era === 'all' || c.to >= s.year) && (kui.region === 'all' || (c.region ?? 'global') === kui.region)).sort((a, b) => b.prestige - a.prestige);
   return section(t(l('Críticos', 'Critics')),
     h('p', { class: 'muted small' }, t(l('Cada região tem seus veículos e críticos, com gostos próprios. Quem resenha um disco depende de onde o artista é e onde o disco saiu. Sua relação com cada crítico pesa um pouco nas notas.', 'Each region has its outlets and critics with their own tastes. Who reviews a record depends on where the act is from and where it came out. Your relationship with each critic slightly affects scores.'))),
     h('div', { class: 'row wrap' },
       select(kui.region, [{ value: 'all', label: t(l('Todas as regiões', 'All regions')) }, { value: 'global', label: t(l('Internacional', 'International')) }, ...MARKETS.map((m) => ({ value: m.id, label: t(m.name) }))], (v) => { kui.region = v; rerender(); }),
-      select(kui.era, [{ value: 'now', label: t(l('Ativos agora', 'Active now')) }, { value: 'all', label: t(l('Todas as épocas', 'All eras')) }], (v) => { kui.era = v as typeof kui.era; rerender(); }),
+      select(kui.era, [{ value: 'now', label: t(l('Ativos agora', 'Active now')) }, { value: 'all', label: t(l('Inclusive os aposentados', 'Including retired')) }], (v) => { kui.era = v as typeof kui.era; rerender(); }),
     ),
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Crítico', 'Critic'))), h('th', null, t(l('Veículo', 'Outlet'))), h('th', null, t(l('Região', 'Region'))), h('th', null, t(l('Gosta de', 'Likes'))), h('th', null, t(l('Rigor', 'Harshness'))), h('th', null, t(l('Relação', 'Relationship'))))),

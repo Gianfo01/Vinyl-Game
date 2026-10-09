@@ -12,6 +12,7 @@ import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, cityName, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, dailyTimeline, ic, stat } from '../vis';
+import { visibleAct } from '../../sim/future';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -25,7 +26,7 @@ export function tourPlannerSection(s: GameState, stops: string[]): HTMLElement {
   const recorded = act.songs.map((id) => s.songs[id]).filter((x) => x?.recorded).sort((a, b) => b.q - a.q);
   const need = Math.ceil(draft.minutes / 4);
   draft.setlist = recorded.slice(0, need).map((x) => x.id);
-  const others = Object.values(s.acts).filter((x) => x.id !== act.id && x.status === 'active' && Math.abs(x.fame - act.fame) < 30).sort((a, b) => b.fame - a.fame).slice(0, 20);
+  const others = Object.values(s.acts).filter((x) => visibleAct(s, x) && x.id !== act.id && x.status === 'active' && Math.abs(x.fame - act.fame) < 30).sort((a, b) => b.fame - a.fame).slice(0, 20);
   const plan: TourPlan = { ...draft, actId: act.id, cities: stops };
   const est = stops.length ? estimateTour(s, plan) : null;
   return section(t(l('Planejar turnê', 'Plan a tour')),
