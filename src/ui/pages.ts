@@ -317,7 +317,14 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
   ].filter((x): x is NonNullable<typeof x> => !!x), tab));
 }
 
+/** Blocos extras no fim da visão geral do artista (rodada 8: assinatura sonora). */
+export const ACT_OVERVIEW_EXTRAS: ((s: GameState, a: Act, deg: number, mine: boolean) => HTMLElement | null)[] = [];
+
 function overviewTab(s: GameState, a: Act, deg: number, mine: boolean): HTMLElement {
+  return h('div', null, overviewGrid(s, a, deg, mine), ...ACT_OVERVIEW_EXTRAS.map((f) => f(s, a, deg, mine)));
+}
+
+function overviewGrid(s: GameState, a: Act, deg: number, mine: boolean): HTMLElement {
   const st = actState(s, a);
   const pot = estimate(s, a.id, 'potential');
   const fame = estimate(s, a.id, 'fame');

@@ -213,6 +213,22 @@ export interface Song {
   revisions?: number;
   /** tema tirado do caderno de ideias */
   theme?: L;
+  /** rodada 8: direção sonora (ver src/sim/sys/sound.ts) */
+  sound?: SongSound;
+}
+
+/** Som de uma faixa: 6 eixos 0–100 (energia, densidade, eletrônico, foco vocal, polimento, experimentação). */
+export interface SongSound {
+  /** valores (camada escrita; depois de gravada, inclui a gravação) */
+  v: number[];
+  /** direção pretendida pelo jogador (−1 = livre) */
+  a?: number[];
+  /** camada de gravação já aplicada */
+  r?: 1;
+  /** valor final congelado no lançamento (inclui o arranjo) */
+  f?: 1;
+  /** momento de vida de quem compôs (códigos curtos) */
+  m?: string[];
 }
 
 export type ReleaseType = 'single' | 'ep' | 'lp';

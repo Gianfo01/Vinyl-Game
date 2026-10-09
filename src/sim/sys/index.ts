@@ -24,3 +24,4 @@ import './vices';
 import './songsale';
 import './agenda7';
 import './warmup8';
+import './sound';
