@@ -69,3 +69,5 @@ import './world9';
 import './rockhall9';
 // Rodada 9: novidades do ano no noticiário (nada do futuro aparece nas telas).
 import './novelty9';
+// Rodada 10: bolsa de valores (ações de selos, plataformas, mídia e fabricantes) e aluguel só de imóveis próprios.
+import './bolsa10';

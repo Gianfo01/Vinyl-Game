@@ -5,10 +5,10 @@
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
-  APPEARANCES, CAT_NAMES, COURSES, FOUNDATION, GOODS, INVEST, PSTAFF, ROUTINES, appear, artExhibit, buyGood, canReachCity, closeFoundation, courseBlocker,
-  createFoundation, firePStaff, goodAvailable, goodById, goodPrice, goodUpkeep, goods, hasUnlock, hirePStaff, homeSession, invest, lecture, netWorth, redeem,
+  APPEARANCES, CAT_NAMES, COURSES, FOUNDATION, GOODS, PSTAFF, ROUTINES, appear, artExhibit, buyGood, canReachCity, closeFoundation, courseBlocker,
+  createFoundation, firePStaff, goodAvailable, goodById, goodPrice, goodUpkeep, goods, hasUnlock, hirePStaff, homeSession, lecture, netWorth,
   saleValue, sellGood, setRoutine, staffBlocker, study, upkeepTotal, venueNight, yachtParty,
-  type AppearId, type CourseId, type FoundationFocus, type GoodCat, type GoodDef, type InvId, type PStaffId, type RoutineId,
+  type AppearId, type CourseId, type FoundationFocus, type GoodCat, type GoodDef, type PStaffId, type RoutineId,
 } from '../../sim/sys/goods8';
 import { energyLeft, maxEnergy } from '../../sim/sys/life';
 import { ATTR_NAME, ownerOf } from '../../sim/sys/people/owner';
@@ -18,6 +18,7 @@ import { money, rngOf } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
+import { investmentsTab } from './bolsa10';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -136,33 +137,6 @@ function mineTab(s: GameState): HTMLElement {
   );
 }
 
-// ------------------------------------------------------------------ investimentos
-
-function investTab(s: GameState): HTMLElement {
-  const st = goods(s);
-  const o = ownerOf(s);
-  const ids = (Object.keys(INVEST) as InvId[]).filter((id) => s.year >= INVEST[id].from);
-  const chunk = (f: number) => Math.max(money(s, 1000), Math.round(o.wealth * f));
-  return h('div', null,
-    wealthChips(s),
-    h('p', { class: 'muted small' }, t(l('O dinheiro aplicado oscila todo mês. Crises históricas (1929, 1973, 1987, 2000, 2008…) derrubam a bolsa; o ouro sobe quando o mundo tem medo; imóveis pagam aluguel. Resgate tem taxa de 1%.', 'Invested money moves every month. Historic crises (1929, 1973, 1987, 2000, 2008…) sink stocks; gold rises when the world is afraid; property pays rent. Redemptions cost 1%.'))),
-    h('div', { class: 'cards' }, ids.map((id) => {
-      const d = INVEST[id];
-      const pos = st.inv[id];
-      const gain = pos ? pos.value / Math.max(1, pos.principal) - 1 : 0;
-      return tile('chart-up', t(d.name), [
-        h('small', null, t(d.desc)),
-        pos ? h('div', null, h('b', null, $(pos.value)), ' ', pill(pct(gain), gain >= 0 ? 'good' : 'bad'), h('small', { class: 'muted' }, ` ${t(l('aplicado', 'put in'))} ${$(pos.principal)}`)) : h('small', { class: 'muted' }, t(l('Nada aplicado.', 'Nothing invested.'))),
-        h('div', { class: 'row wrap' },
-          h('button', { class: 'btn small', disabled: o.wealth < money(s, 5000), onclick: () => run(invest(s, id, money(s, 5000)), l('Aplicado.', 'Invested.')) }, `+${$(money(s, 5000))}`),
-          h('button', { class: 'btn small', disabled: o.wealth < money(s, 1000), onclick: () => run(invest(s, id, Math.min(o.wealth, chunk(0.25))), l('Aplicado.', 'Invested.')) }, `+25% ${t(l('do bolso', 'of pocket'))}`),
-          pos ? h('button', { class: 'btn small ghost', onclick: () => run(redeem(s, id, 0.5), l('Resgatado.', 'Redeemed.')) }, t(l('Resgatar metade', 'Redeem half'))) : null,
-          pos ? h('button', { class: 'btn small ghost', onclick: () => run(redeem(s, id, 1), l('Resgatado.', 'Redeemed.')) }, t(l('Resgatar tudo', 'Redeem all'))) : null),
-      ]);
-    })),
-  );
-}
-
 // ------------------------------------------------------------------ equipe pessoal e fundação
 
 function staffTab(s: GameState): HTMLElement {
@@ -206,7 +180,7 @@ export function possessionsTab(s: GameState): HTMLElement {
   return tabs('goods8', [
     { id: 'shop', label: t(l('Loja', 'Shop')), icon: 'money', render: () => shopTab(s) },
     { id: 'mine', label: t(l('Seus bens', 'Your belongings')), icon: 'house', badge: goods(s).owned.filter((x) => x.unpaid).length || undefined, render: () => mineTab(s) },
-    { id: 'invest', label: t(l('Investimentos', 'Investments')), icon: 'chart-up', render: () => investTab(s) },
+    { id: 'invest', label: t(l('Investimentos', 'Investments')), icon: 'chart-up', render: () => investmentsTab(s) },
     { id: 'staff', label: t(l('Equipe pessoal e fundação', 'Personal staff and foundation')), icon: 'fans', render: () => staffTab(s) },
   ], rerender);
 }
