@@ -8,8 +8,8 @@
 import { clamp, Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerContractHook } from '../contracts';
-import { registerEvents, emitEvent } from '../events';
-import { registerDecisionListener, registerExt4, registerSimHook } from '../ext4';
+import { emitEvent, type EventDef } from '../events';
+import { deferEvents, registerDecisionListener, registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, notify, playerActs } from '../util';
 import { chronListeners, type ChronEv } from './chron9';
@@ -187,7 +187,7 @@ registerContractHook('arcs12', {
 
 const majorOf = (s: GameState) => Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.cash - a.cash)[0];
 
-registerEvents([
+deferEvents<EventDef>([
   {
     id: 'arc12_loyal', cat: 'contract', tone: 'good', tags: [], cooldown: 3, forcedOnly: true,
     title: l('{act} recusa {labelName}', '{act} turns down {labelName}'),

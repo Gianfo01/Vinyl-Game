@@ -249,3 +249,12 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - **Mercado**: busca que não perde o foco, filtros, missões de olheiro com região/gênero/duração e névoa de potencial, lista de observados e comparação.
 - **Empresário**: comissão renegociável, metas de carreira, turnês, campanhas de imagem, oferecer clientes a gravadoras, conflito de interesse, empresários rivais e relatórios mensais.
 - **+116 eventos aleatórios** (artistas, gravadora, indústria por época e vida pessoal), todos com condições de época e intervalo mínimo.
+
+## Rodada 12: projeto musical no centro e carreiras independentes
+
+- **Projeto musical** (Música → Projeto musical): intenção, compromissos (orçamento, direção, prazo, público), linha do tempo, problemas com consequências (atraso, orçamento, conflito) e próximo passo. Sem receita fixa por gênero no estúdio.
+- **Propostas em pacote** (dinheiro, autonomia, direitos, compromissos) comparadas com rivais; **previsões e "Por que deu nisso?"** em contratação, renovação, turnê e festival.
+- **Sede viva** (quem grava, quem negocia, prêmios reais, equipe sobrecarregada) e **rivais que respondem** (leilões, janela de lançamento, produtor, mercado, catálogo, festival; distribuição com rivais).
+- **Cenas como redes** (casa, produtor, veículo, público; autenticidade × exploração) e **eras que exigem reorganização** (estrutura em 7 departamentos).
+- **Arcos de artistas** com memória nas negociações, **vida pessoal ligada à carreira** (herdeiro, romance, venda de masters), rotinas e **história do selo**.
+- **Carreiras**: escolha de atividade(s), origem e ambição; mudar de carreira no meio da partida; mercado de serviços de empresas do jogo. Empresário (confiança, plano, mandato, equipe), festival unificado e casa de shows, agente/promotor, estúdio/produtor, editora, mídia e plataforma.
