@@ -5,7 +5,7 @@ import type { L, MarketId } from '../data/world';
 import type { ExtState } from './xtypes';
 
 export type Mode = 'historic' | 'free' | 'chaos';
-export type StorytellerId = 'maestro' | 'brisa' | 'acaso';
+export type StorytellerId = 'maestro' | 'brisa' | 'acaso' | 'cronista' | 'tabloide' | 'poeta' | 'cinico' | 'locutor';
 export type ScenarioId = 'from_zero' | 'emerging' | 'established';
 
 export interface RunConfig {

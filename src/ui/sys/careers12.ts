@@ -6,12 +6,14 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState, RunConfig } from '../../sim/types';
 import {
-  AMBITIONS, ORIGINS, careerDef, careerDefs, careers, decideHeir, dropCareer, setAmbition, startCareer, timeLoad, type Ambition, type CareerDef, type Origin,
+  AMBITIONS, AMBITION_PERK, ORIGINS, ambitionGoal, careerDef, careerDefs, careers, decideHeir, dropCareer, setAmbition, startCareer, timeLoad, type Ambition, type CareerDef, type Origin,
 } from '../../sim/sys/careers12';
 import { pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea, registerSection } from '../registry';
 import { store } from '../store';
+import { hl } from '../newgame13';
+import { fxText } from './persona';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const go = (area: string) => { store.area = area; rerender(); };
@@ -57,6 +59,7 @@ export function careersPanel(s: GameState): HTMLElement {
       h('div', { class: 'row wrap small' }, t(l('Ambição', 'Ambition')), ' ',
         select<Ambition>(st.ambition, (Object.keys(AMBITIONS) as Ambition[]).map((k) => ({ value: k, label: t(AMBITIONS[k].name) })), (k) => { setAmbition(s, k); rerender(); }),
         h('span', { class: 'muted' }, t(AMBITIONS[st.ambition].desc), ' ', t(l('(trocar custa +4 de estresse)', '(changing costs +4 stress)')))),
+      (() => { const g = ambitionGoal(s); return g ? h('div', { class: `small ${g.ok ? 'good' : 'muted'}` }, t(l('Meta deste ano até agora: ', 'This year\'s goal so far: ')), t(g.why), ` · ${t(l('cumprida dá', 'met gives'))}: ${fxText(AMBITION_PERK[st.ambition])}`) : null; })(),
       h('div', { class: 'row small' }, t(l('Agenda', 'Schedule')), ' ', bar(Math.min(100, load * 100)), ` ${Math.round(load * 100)}%`),
       st.mood.length ? h('ul', { class: 'small' }, st.mood.slice(-4).reverse().map((m) => h('li', { class: m.ok ? 'good' : 'bad' }, `${m.y}: ${t(m.t)}`))) : null),
     section(t(l('Carreiras', 'Careers')),
@@ -78,19 +81,24 @@ registerArea({ id: 'careers', label: l('Carreiras', 'Careers'), icon: 'star', ke
 
 const NG_CAREERS = ['label', 'manager', 'festival', 'booking', 'venue', 'studio', 'publisher', 'media', 'platform', 'musician'];
 /** Aba "Carreira" do Novo Jogo: atividades principais (várias), origem profissional e ambição. */
-export function careerCard(cfg: RunConfig): HTMLElement {
+export function careerCard(cfg: RunConfig, onRole?: () => void): HTMLElement {
   const c = (cfg.careers ??= { main: ['label'], origin: 'musician', ambition: 'legacy' });
   const box = h('div', { class: 'car12-ng' });
   const draw = () => box.replaceChildren(
-    h('section', { class: 'card wide' }, h('h3', null, t(l('Atividade principal', 'Main activity'))),
+    h('section', { class: 'card wide' }, h('h3', null, ...hl(l('Atividade principal', 'Main activity'), 'main')),
       h('p', { class: 'muted small' }, t(l('Escolha uma ou mais. O selo existe sempre; as outras definem onde você começa a gastar seu tempo. Carreiras de época (ex.: plataforma) só abrem no ano certo.', 'Pick one or more. The label always exists; the rest decide where your time goes. Era careers (e.g. platform) only open in the right year.'))),
       h('div', { class: 'mut-grid' }, NG_CAREERS.map((id) => { const d = careerDef(id); if (!d) return null; const off = d.from > cfg.startYear; return h('label', { class: `check ${off ? 'disabled' : ''}`, title: t(d.desc) },
-        h('input', { type: 'checkbox', checked: c.main.includes(id), disabled: off, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; c.main = on ? [...c.main, id] : c.main.filter((x) => x !== id); if (!c.main.length) c.main = ['label']; if (id === 'musician' && on) cfg.role = 'hybrid'; draw(); } }),
+        h('input', { type: 'checkbox', checked: c.main.includes(id), disabled: off, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; c.main = on ? [...c.main, id] : c.main.filter((x) => x !== id); if (!c.main.length) c.main = ['label']; if (id === 'musician' && on) { cfg.role = 'hybrid'; onRole?.(); } draw(); } }),
         h('span', null, t(d.name), h('small', { class: 'muted' }, ` — ${t(d.desc)}`))); }))),
-    h('section', { class: 'card' }, h('h3', null, t(l('Origem profissional', 'Professional origin'))),
-      (Object.keys(ORIGINS) as Origin[]).map((k) => h('label', { class: 'radio' }, h('input', { type: 'radio', name: 'origin12', checked: c.origin === k, onchange: () => { c.origin = k; } }), h('span', null, h('b', null, t(ORIGINS[k].name)), h('small', { class: 'muted' }, ` — ${t(ORIGINS[k].desc)}`))))),
-    h('section', { class: 'card' }, h('h3', null, t(l('Ambição', 'Ambition'))),
-      (Object.keys(AMBITIONS) as Ambition[]).map((k) => h('label', { class: 'radio' }, h('input', { type: 'radio', name: 'amb12', checked: c.ambition === k, onchange: () => { c.ambition = k; } }), h('span', null, h('b', null, t(AMBITIONS[k].name)), h('small', { class: 'muted' }, ` — ${t(AMBITIONS[k].desc)}`))))),
+    h('section', { class: 'card' }, h('h3', null, ...hl(l('Origem profissional', 'Professional origin'), 'origin')),
+      h('p', { class: 'muted small' }, t(l('O que você fazia antes de ter um negócio na música. Vale dinheiro, habilidades, reputação e contatos de saída.', 'What you did before running a music business. Brings money, skills, reputation and contacts from day one.'))),
+      select<Origin>(c.origin as Origin, (Object.keys(ORIGINS) as Origin[]).map((k) => ({ value: k, label: t(ORIGINS[k].name) })), (k) => { c.origin = k; draw(); }, { 'aria-label': t(l('Origem profissional', 'Professional origin')) }),
+      h('p', { class: 'small good' }, t(ORIGINS[c.origin as Origin]?.desc ?? l('', '')))),
+    h('section', { class: 'card' }, h('h3', null, ...hl(l('Ambição', 'Ambition'), 'ambition')),
+      select<Ambition>(c.ambition as Ambition, (Object.keys(AMBITIONS) as Ambition[]).map((k) => ({ value: k, label: t(AMBITIONS[k].name) })), (k) => { c.ambition = k; draw(); }, { 'aria-label': t(l('Ambição', 'Ambition')) }),
+      h('p', { class: 'small' }, h('b', null, t(l('Meta anual: ', 'Yearly goal: '))), t(AMBITIONS[c.ambition as Ambition]?.desc ?? l('', ''))),
+      h('p', { class: 'small good' }, h('b', null, t(l('Cumprida: ', 'Met: '))), `${t(l('−6 de estresse e no ano seguinte', '−6 stress and next year'))} ${fxText(AMBITION_PERK[c.ambition as Ambition])}`),
+      h('p', { class: 'small bad' }, h('b', null, t(l('Frustrada: ', 'Missed: '))), t(l('+6 de estresse.', '+6 stress.')))),
   );
   draw();
   return box;

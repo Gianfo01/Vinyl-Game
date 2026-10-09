@@ -316,10 +316,16 @@ export const CARDS: CardDef[] = [
 export const cardById = Object.fromEntries(CARDS.map((x) => [x.id, x])) as Record<string, CardDef>;
 
 // ---------- Narradores (GDD §20) ----------
-export const STORYTELLERS: { id: 'maestro' | 'brisa' | 'acaso'; name: L; desc: L }[] = [
+export const STORYTELLERS: { id: 'maestro' | 'brisa' | 'acaso' | 'cronista' | 'tabloide' | 'poeta' | 'cinico' | 'locutor'; name: L; desc: L }[] = [
   { id: 'maestro', name: l('Maestro', 'Maestro'), desc: l('Tensão em ondas: oportunidade, crise, recuperação.', 'Tension in waves: opportunity, crisis, recovery.') },
   { id: 'brisa', name: l('Brisa', 'Breeze'), desc: l('Ritmo calmo; crises raras e brandas.', 'Calm pace; rare, mild crises.') },
   { id: 'acaso', name: l('Acaso', 'Chance'), desc: l('Aleatório puro, sem curva.', 'Pure randomness, no curve.') },
+  // rodada 13: narradores com voz (reescrevem notícias e decisões; ver sim/narrator13.ts)
+  { id: 'cronista', name: l('Cronista', 'Chronicler'), desc: l('Marés longas de bonança e crise (ciclos de ~2,5 anos); narra como livro de história: "Crônica de março de 1962: …".', 'Long tides of boom and bust (~2.5-year cycles); narrates like a history book: "Chronicle, March 1962: …".') },
+  { id: 'tabloide', name: l('Tabloide', 'Tabloid'), desc: l('Mais eventos por mês e crises 50% mais prováveis; manchetes em caixa-alta ("BOMBA!", "EXCLUSIVO:").', 'More events a month and crises 50% likelier; all-caps headlines ("SHOCKER!", "EXCLUSIVE:").') },
+  { id: 'poeta', name: l('Poeta', 'Poet'), desc: l('Menos eventos, crises mais raras e boas notícias mais frequentes; fecha cada notícia com um verso.', 'Fewer events, rarer crises and more good news; ends every story with a line of verse.') },
+  { id: 'cinico', name: l('Veterano cínico', 'Jaded veteran'), desc: l('Crises mais frequentes e sem piedade: não alivia quando o caixa aperta (mais difícil). Comenta tudo com sarcasmo.', 'More frequent crises and no mercy: does not ease off when cash runs low (harder). Comments on everything sarcastically.') },
+  { id: 'locutor', name: l('Locutor de rádio', 'Radio host'), desc: l('Ondas curtas e rápidas (~8 meses) e boas notícias um pouco mais comuns; narra tudo como plantão no ar ("Alô, ouvintes!").', 'Short, fast waves (~8 months) and slightly more good news; narrates everything like a live bulletin ("Hello, listeners!").') },
 ];
 
 // ---------- Papéis (GDD §4) ----------
