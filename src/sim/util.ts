@@ -145,7 +145,13 @@ export function staffCount(s: GameState, role: string): number {
 export function staffSkill(s: GameState, role: string): number {
   const list = s.player.staff.filter((x) => x.role === role);
   if (!list.length) return 0;
-  return Math.max(...list.map((x) => x.skill));
+  return Math.max(...list.map((x) => x.skill + staffAdjusters().reduce((t, f) => t + f(s, x), 0)));
+}
+
+/** Rodada 13: ajustes do desempenho efetivo de um funcionário (aptidão para o cargo, atributos). Função içada. */
+export function staffAdjusters(): ((s: GameState, st: GameState['player']['staff'][number]) => number)[] {
+  const f = staffAdjusters as unknown as { l?: ((s: GameState, st: GameState['player']['staff'][number]) => number)[] };
+  return (f.l ??= []);
 }
 
 export function hasMutator(s: GameState, id: string): boolean {

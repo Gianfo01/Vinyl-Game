@@ -65,3 +65,5 @@ import './project13';
 import './careerui13';
 // Rodada 13: quebra das despesas gerais na aba Finanças.
 import './overhead13';
+import './persona13';
+import './persona13tab';
