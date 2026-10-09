@@ -35,6 +35,8 @@ import './ventures9';
 import './lendas9';
 import './rockhall9';
 import './menus9';
+import './tour12';
+import './studio12';
 import './leaders10';
 // Rodada 12: negociação por pacote e "Por que deu nisso?" ampliado.
 import './offers12';

@@ -59,6 +59,8 @@ import './lifeevents10';
 // Rodada 9: prestígio dos selos e empreendimentos (festival, editora, estúdio, agência, mídia, streaming, gestão).
 import './standing9';
 import './ventures9';
+import './tour12';
+import './studio12';
 // Rodada 11: ofício de empresário (metas, turnês, propostas, imagem, conflitos, rivais) e scouting com névoa.
 import './manager11';
 import './scout11';
