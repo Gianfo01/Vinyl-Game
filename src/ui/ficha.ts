@@ -15,6 +15,7 @@ import { reviewCard, reviewSummary } from './reviewView';
 import { pageTabs } from './registry';
 import { rightsFieldset } from './rightsView';
 import { defaultRights } from '../sim/rights';
+import { offerAside12, packageFields } from './sys/offers12';
 
 function g(): GameState {
   return store.game!;
@@ -150,6 +151,7 @@ export function openOffer(actId: string): void {
       h('div', null, t(S.chance), ': ', pill(t(S[ev.band]), ev.band)),
       h('ul', { class: 'small' }, ev.reasons.map((x) => h('li', null, t(x)))),
       h('p', { class: 'muted small' }, (s.knowledge[actId]?.degree ?? 0) < 3 ? t(l('Você ainda não conhece as ambições do ato: a leitura é grosseira.', 'You do not yet know the act\'s ambitions: this read is rough.')) : ''),
+      offerAside12(s, a, o),
     );
   };
   const num = (value: number, step: number, set: (v: number) => void, min = 0) =>
@@ -173,6 +175,7 @@ export function openOffer(actId: string): void {
       (['priority', 'tour', 'freedom'] as const).map((p) => h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; o.promises = on ? [...o.promises, p] : o.promises.filter((x) => x !== p); update(); } }), t(p === 'priority' ? S.promisePriority : p === 'tour' ? S.promiseTour : S.promiseFreedom))),
     ),
     rightsBox,
+    packageFields(s, o, () => update()),
     evalBox,
   );
   drawRights();
@@ -212,12 +215,12 @@ export function openOffer(actId: string): void {
   const actions = h('div', { class: 'actions' },
     h('button', { class: 'btn primary', onclick: () => {
       if (s.player.cash < o.advance) return toast(t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
-      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined });
+      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined });
       showReply(offer, result);
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
     reply,
   );
-  close = modal(`${t(S.offerTitle)}: ${a.name}`, h('div', null, form, actions));
+  close = modal(`${t(S.offerTitle)}: ${a.name}`, h('div', null, form, actions), { wide: true });
 }
 
 export function actRow(s: GameState, a: Act): HTMLElement {

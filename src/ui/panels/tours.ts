@@ -13,6 +13,8 @@ import { $, N, actLink, cityName, pill, rerender, section, toast } from '../comm
 import { h, select } from '../dom';
 import { chips, dailyTimeline, ic, stat } from '../vis';
 import { visibleAct } from '../../sim/future';
+import { forecastTour } from '../../sim/sys/explain12';
+import { forecastBox } from '../sys/explain12';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -49,6 +51,7 @@ export function tourPlannerSection(s: GameState, stops: string[]): HTMLElement {
         est.visas ? stat('key', est.visas, l('Vistos', 'Visas'), 'warn') : null),
       h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: 'stop' }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name))))),
       est.warnings.length ? h('ul', { class: 'small warn' }, est.warnings.map((w) => h('li', null, ic('warning'), ' ', t(w)))) : null,
+      forecastBox(forecastTour(s, plan, est)),
       h('button', { class: 'btn primary', onclick: () => {
         const res = planTour(s, plan);
         if ('pt' in res) toast(t(res), 'bad');

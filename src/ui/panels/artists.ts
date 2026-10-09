@@ -5,7 +5,7 @@ import { APPROACHES, CONTRACT_MODELS, STUDIO_TIERS, VENUE_TIERS } from '../../da
 import { l } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import { defaultAgenda, slotCost, slotsFor, usedSlots } from '../../sim/agenda';
-import { raiseRoyalty, renewContract } from '../../sim/contracts';
+import { raiseRoyalty } from '../../sim/contracts';
 import { maxVenueTier } from '../../sim/live';
 import { actState } from '../../sim/people';
 import type { AgendaSlot, GameState } from '../../sim/types';
@@ -22,6 +22,9 @@ import { PRESETS, ag7, applyTemplate, crowdedWeeks, deleteTemplate, plannedCombo
 import { freeCapacity } from '../../sim/agenda';
 import { ic, loadBar, meter, setTab, stat } from '../vis';
 import { contractExtra, fandomSection, membersSection, reunionSection } from './people';
+import { forecastRenewal, renewWithReading } from '../../sim/sys/explain12';
+import { forecastBox } from '../sys/explain12';
+import { pledgeLine } from '../sys/offers12';
 
 export function artistsPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
@@ -132,10 +135,11 @@ export function artistsPanel(s: GameState): HTMLElement {
         kv(t(S.releasesOwed), `${c.releasesDone}/${c.releasesOwed}`),
         c.promises.length ? kv(t(S.promises), h('span', null, c.promises.map((p) => pill(`${promiseName(p.kind)}${p.kept === undefined ? '' : p.kept ? ' ✓' : ' ✗'}`, p.kept === false ? 'bad' : '')))) : null,
         c.party === 'player' && !a.playerBand ? h('div', { class: 'actions' },
-          h('button', { class: 'btn', onclick: () => { const bonus = money(s, 1500 + a.fame * a.fame * 15); if (!renewContract(s, a.id, 36, bonus)) toast(t(l('Renovação recusada ou sem caixa.', 'Renewal refused or no cash.')), 'bad'); rerender(); } }, `${t(S.renew)} (36m, ${$(money(s, 1500 + a.fame * a.fame * 15))})`),
+          h('button', { class: 'btn', onclick: () => { const bonus = money(s, 1500 + a.fame * a.fame * 15); if (!renewWithReading(s, a.id, 36, bonus)) toast(t(l('Renovação recusada ou sem caixa.', 'Renewal refused or no cash.')), 'bad'); rerender(); } }, `${t(S.renew)} (36m, ${$(money(s, 1500 + a.fame * a.fame * 15))})`),
           h('button', { class: 'btn ghost', onclick: () => { raiseRoyalty(s, a.id, 0.02); rerender(); } }, t(S.raiseRoyalty)),
         ) : null,
       ) : a.playerBand ? section(t(S.contract), h('p', { class: 'muted' }, s.config.role === 'hybrid' ? t(l('Sua banda lança pelo seu próprio selo.', 'Your band releases on your own label.')) : t(l('Independente: distribuição por agregador (taxa) e só nos seus territórios. Selos podem fazer propostas quando o alcance crescer.', 'Independent: aggregator distribution (fee) and only in your territories. Labels may approach you as your reach grows.')))) : null,
+      c?.party === 'player' && !a.playerBand ? h('div', null, pledgeLine(s, a), forecastBox(forecastRenewal(s, a, money(s, 1500 + a.fame * a.fame * 15)))) : null,
       contractExtra(s, a),
       membersSection(s, a),
       fandomSection(s, a),

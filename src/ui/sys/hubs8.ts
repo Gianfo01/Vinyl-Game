@@ -13,6 +13,7 @@ import { REGIONAL_AWARDS } from '../../sim/awards2';
 import { CAMPAIGN_COST, CEREMONY_MONTH, GRAMO_CATS, NOMS_MONTH, answerPerform, campaignBonus, cer8, eligible, nominees, runCampaign, type GramoCat } from '../../sim/sys/ceremonies8';
 import { AWARD_CATS, awardName, ch7 } from '../../sim/sys/charts7';
 import { TIER_NAME, TIER_ORDER, acceptInvite, declineInvite, editionOf, fest8, festActive, festCapacity, festFee, festMonth, festTierFor, pitchAct, withdraw, type FestTier, type PitchResult } from '../../sim/sys/fests8';
+import { festForecast12 } from './explain12';
 import type { GameState } from '../../sim/types';
 import { money, playerActs, rngOf } from '../../sim/util';
 import { existsNow } from '../../sim/future';
@@ -124,6 +125,7 @@ export function openFestivalPage(fi: number): void {
           h('label', null, t(l('Faixa pedida', 'Slot requested')), select(form.tier, TIER_ORDER.map((x) => ({ value: x, label: t(TIER_NAME[x]) })), (v) => { form.tier = v; refreshFee(); })),
           h('label', null, t(l('Cachê pedido ($)', 'Fee requested ($)')), feeInput),
           h('button', { class: 'btn primary', onclick: () => showReply(pitchAct(s, rngOf(s), fi, form.actId, form.tier, form.fee)) }, t(l('Negociar', 'Negotiate'))),
+          festForecast12(s, fi, form),
           reply,
           h('small', { class: 'muted' }, t(l('O festival olha fama, rede, seu booking e se o artista já tocou lá. Pedir faixa acima do possível gera contraproposta; cachê muito alto, recusa.', 'The festival weighs fame, network, your booking staff and past appearances. Asking for a higher slot brings a counter-offer; a very high fee, a refusal.'))),
         )) : null,
