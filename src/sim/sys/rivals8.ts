@@ -8,20 +8,23 @@
 // produtor, antecipar um lançamento, oferecer contrato mais atraente, abandonar um mercado — para o
 // jogador aprender a reconhecer e antecipar cada um.
 
-import { clamp, type Rng } from '../../core/rng';
+import { clamp, hashString, type Rng } from '../../core/rng';
 import { techById } from '../../data/rules';
-import { cityById, familyOf, genreById, l, marketById, type L, type MarketId } from '../../data/world';
+import { cityById, familyOf, genreById, l, marketById, type FamilyId, type L, type MarketId } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { emitEvent, type EventDef } from '../events';
 import { deferEvents, registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import { launchNpcRelease } from '../market';
 import { unreleasedRecorded } from '../production';
-import type { Act, GameState, Label } from '../types';
+import type { Act, GameState, Label, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { bondNote, prefsOf } from './identity8';
+import type { ProfileId } from './identity/data';
+import { XBY_ID, envOf, adj } from './identity/extra';
 
-export type PlaybookId = 'vulture' | 'scene' | 'catalog' | 'tech' | 'live';
-export type MoveKind = 'buyout' | 'buy_offer' | 'scene_sign' | 'interest' | 'catalog_buy' | 'reissue' | 'tech_bet' | 'producer' | 'date_move' | 'outbid' | 'abandon' | 'tour_push';
+export type PlaybookId = 'vulture' | 'scene' | 'catalog' | 'tech' | 'live' | 'idol' | 'gospel' | 'prestige' | 'sync' | 'regional' | 'fund' | 'visionary' | 'purist';
+export type MoveKind = 'buyout' | 'buy_offer' | 'scene_sign' | 'interest' | 'catalog_buy' | 'reissue' | 'tech_bet' | 'producer' | 'date_move' | 'outbid' | 'abandon' | 'tour_push'
+  | 'idol_debut' | 'gospel_circuit' | 'prestige_award' | 'sync_deal' | 'regional_tour' | 'asset_strip' | 'visionary_bet' | 'purist_refuse';
 
 export interface Move { w: number; k: MoveKind; a?: string; x?: string }
 
@@ -42,31 +45,89 @@ declare module '../ext4' { interface Ext4 { rivals8: Rivals8State } }
 registerExt4('rivals8', () => ({ log: {}, interest: {}, scene: {}, tech: {}, clash: {}, lastClash: -999 }));
 export const rivals8 = (s: GameState): Rivals8State => (s as unknown as { x4: { rivals8: Rivals8State } }).x4.rivals8;
 
-export const PLAYBOOKS: Record<PlaybookId, { name: L; desc: L; tells: L[] }> = {
+export const PLAYBOOKS: Record<PlaybookId, { name: L; desc: L; tells: L[]; leader: L; profiles: ProfileId[] }> = {
   vulture: {
     name: l('Abutre', 'Vulture'),
     desc: l('Major que deixa os outros arriscarem e compra quem começa a subir.', 'A major that lets others take the risk and buys whoever starts rising.'),
     tells: [l('Fica de olho em atos com fama subindo rápido.', 'Watches acts whose fame rises fast.'), l('Oferece comprar contratos, inclusive os seus.', 'Offers to buy contracts, including yours.'), l('Antecipa lançamentos para a semana dos seus.', 'Moves releases into the same week as yours.')],
+    leader: l('O Barão da Major', 'The Major Baron'),
+    profiles: ['hits', 'predator'],
   },
   scene: {
     name: l('Dono da cena', 'Scene owner'),
     desc: l('Selo independente que domina uma cena local e assina quem aparece nela.', 'An indie that dominates a local scene and signs whoever emerges there.'),
     tells: [l('Contrata cedo e barato na própria cena.', 'Signs early and cheap in its own scene.'), l('Artistas da cena preferem ficar com ele.', 'Scene artists prefer to stay with it.')],
+    leader: l('O Papa da Cena', 'The Scene Pope'),
+    profiles: ['scene', 'diy'],
   },
   catalog: {
     name: l('Guardião de catálogo', 'Catalog keeper'),
     desc: l('Aposta em catálogo e relançamentos; compra masters de quem está em crise.', 'Bets on catalog and reissues; buys masters from labels in trouble.'),
     tells: [l('Aparece quando um selo quebra.', 'Shows up when a label goes under.'), l('Relança clássicos em vez de assinar novatos.', 'Reissues classics instead of signing newcomers.')],
+    leader: l('O Curador do Cofre', 'The Vault Curator'),
+    profiles: ['catalog', 'archive'],
   },
   tech: {
     name: l('Aposta tecnológica', 'Tech bettor'),
     desc: l('Investe pesado em tecnologia e formatos novos; disputa produtores e datas.', 'Invests heavily in technology and new formats; fights for producers and dates.'),
     tells: [l('Chega primeiro em cada formato novo.', 'First into every new format.'), l('Contrata os melhores produtores do mercado.', 'Hires the best producers on the market.'), l('Antecipa lançamentos.', 'Moves release dates earlier.')],
+    leader: l('O Engenheiro Obstinado', 'The Obsessive Engineer'),
+    profiles: ['tech', 'export'],
   },
   live: {
     name: l('Palco e fãs', 'Stage and fans'),
     desc: l('Prioriza shows e relação com os fãs; elenco pequeno e fiel.', 'Prioritizes shows and fan relationships; a small, loyal roster.'),
     tells: [l('Põe o elenco na estrada.', 'Keeps its roster on the road.'), l('Os fãs dos seus artistas são fiéis.', 'Its artists have loyal fans.')],
+    leader: l('O Empresário de Estrada', 'The Road Manager'),
+    profiles: ['live'],
+  },
+  idol: {
+    name: l('Fábrica de ídolos', 'Idol factory'),
+    desc: l('Treina jovens por anos e estreia grupos coreografados com fandom organizado.', 'Trains youngsters for years and debuts choreographed groups with an organized fandom.'),
+    tells: [l('Estreia grupos grandes de jovens, sempre com campanha pesada.', 'Debuts large youth groups, always with a heavy campaign.'), l('Assina trainees e contratos longos.', 'Signs trainees on long contracts.')],
+    leader: l('A Diretora de Treinamento', 'The Training Director'), profiles: ['idol', 'hits'],
+  },
+  gospel: {
+    name: l('Rede gospel', 'Gospel network'),
+    desc: l('Vive do circuito de igrejas, congressos e rádios religiosas.', 'Lives off the circuit of churches, conventions and religious radio.'),
+    tells: [l('Põe o elenco nos congressos de louvor.', 'Puts its roster on the praise-convention circuit.'), l('Atos sacros fiéis, quase nunca trocam de selo.', 'Loyal sacred acts that almost never change label.')],
+    leader: l('O Pastor-Empresário', 'The Pastor-Entrepreneur'), profiles: ['gospel'],
+  },
+  prestige: {
+    name: l('Boutique de prestígio', 'Prestige boutique'),
+    desc: l('Poucos discos impecáveis, campanhas de prêmios e crítica a favor.', 'Few impeccable records, awards campaigns and critics on its side.'),
+    tells: [l('Faz campanha de prêmios para cada disco.', 'Runs an awards campaign for every record.'), l('Lança pouco e raramente erra a mão.', 'Releases little and rarely misses.')],
+    leader: l('O Produtor Perfeccionista', 'The Perfectionist Producer'), profiles: ['hifi', 'luxury'],
+  },
+  sync: {
+    name: l('Casa de sync', 'Sync house'),
+    desc: l('Coloca música em filmes, comerciais e novelas; o artista é fornecedor.', 'Places music in films, ads and soaps; the artist is a supplier.'),
+    tells: [l('Anuncia faixas em trilhas e comerciais.', 'Announces tracks in soundtracks and ads.'), l('Aceita músicas "limpas" e versáteis.', 'Takes "clean", versatile songs.')],
+    leader: l('A Supervisora de Música', 'The Music Supervisor'), profiles: ['sync'],
+  },
+  regional: {
+    name: l('Rei regional', 'Regional king'),
+    desc: l('Domina um gênero e um território com casa cheia e rádio local.', 'Rules one genre and one territory with packed houses and local radio.'),
+    tells: [l('Fecha o circuito regional com seus atos.', 'Locks up the regional circuit with its acts.'), l('Quase não sai do mercado de casa.', 'Barely leaves its home market.')],
+    leader: l('O Coronel do Interior', 'The Heartland Colonel'), profiles: ['regional'],
+  },
+  fund: {
+    name: l('Fundo de investimento', 'Investment fund'),
+    desc: l('Compra selos em apuros, desmonta e vende os ativos em pedaços.', 'Buys labels in trouble, takes them apart and sells the assets in pieces.'),
+    tells: [l('Aparece quando um selo está sem caixa.', 'Shows up when a label is out of cash.'), l('Vende o que compra.', 'Sells what it buys.')],
+    leader: l('O Gestor de Ativos', 'The Asset Manager'), profiles: ['predator', 'hits'],
+  },
+  visionary: {
+    name: l('Executivo visionário', 'Visionary executive'),
+    desc: l('Aposta em artistas que ninguém entende e espera o mundo alcançar.', 'Bets on artists nobody understands and waits for the world to catch up.'),
+    tells: [l('Assina o artista mais estranho da cena.', 'Signs the oddest artist in the scene.'), l('Perde dinheiro por anos e de repente acerta.', 'Loses money for years and suddenly hits.')],
+    leader: l('O Visionário Teimoso', 'The Stubborn Visionary'), profiles: ['political', 'starlabel', 'tech'],
+  },
+  purist: {
+    name: l('Indie purista', 'Purist indie'),
+    desc: l('Recusa as majors, protege os artistas e vive de credibilidade.', 'Refuses the majors, protects its artists and lives on credibility.'),
+    tells: [l('Recusa ofertas de compra de majors.', 'Turns down major buyout offers.'), l('Artistas ficam por lealdade, não por dinheiro.', 'Artists stay for loyalty, not money.')],
+    leader: l('A Fundadora Intransigente', 'The Uncompromising Founder'), profiles: ['diy', 'scene'],
   },
 };
 
@@ -77,9 +138,24 @@ function archetypeOf(lb: Label): NonNullable<Label['archetype']> {
   return lb.archetype;
 }
 
+/** Manuais possíveis por arquétipo (o original aparece em dobro; a escolha é fixa pelo id do selo). */
+const VARIANTS: Record<NonNullable<Label['archetype']>, PlaybookId[]> = {
+  empire: ['vulture', 'vulture', 'fund', 'idol', 'visionary'],
+  scene_hunter: ['scene', 'scene', 'regional', 'purist', 'gospel'],
+  boutique: ['live', 'live', 'prestige', 'purist'],
+  catalog: ['catalog', 'catalog', 'sync', 'gospel'],
+  hitmaker: ['tech', 'tech', 'idol', 'visionary', 'sync'],
+};
+
 export function playbookOf(lb: Label): PlaybookId {
-  const ar = archetypeOf(lb);
-  return ar === 'empire' ? 'vulture' : ar === 'scene_hunter' ? 'scene' : ar === 'catalog' ? 'catalog' : ar === 'hitmaker' ? 'tech' : 'live';
+  const v = VARIANTS[archetypeOf(lb)];
+  return v[hashString(`pb:${lb.id}`) % v.length];
+}
+
+/** Perfil de identidade do selo rival, fixo, sorteado entre os perfis do manual (os 18 perfis valem para todos). */
+export function rivalProfile(lb: Label): ProfileId {
+  const pool = PLAYBOOKS[playbookOf(lb)].profiles;
+  return pool[hashString(`pf:${lb.id}`) % pool.length];
 }
 
 const MOVE_TXT: Record<MoveKind, L> = {
@@ -95,6 +171,14 @@ const MOVE_TXT: Record<MoveKind, L> = {
   outbid: l('cobriu sua oferta e assinou {a}', 'outbid you and signed {a}'),
   abandon: l('abandonou o mercado {x}', 'abandoned the {x} market'),
   tour_push: l('pôs {a} na estrada para fidelizar fãs', 'put {a} on the road to build loyal fans'),
+  idol_debut: l('estreou o grupo {a} depois de anos de treino', 'debuted the group {a} after years of training'),
+  gospel_circuit: l('levou {a} ao circuito de congressos e igrejas', 'took {a} onto the convention and church circuit'),
+  prestige_award: l('abriu campanha de prêmios para {a}', 'launched an awards campaign for {a}'),
+  sync_deal: l('emplacou {a} numa trilha', 'landed {a} in a soundtrack'),
+  regional_tour: l('fechou o circuito regional com {a}', 'locked up the regional circuit with {a}'),
+  asset_strip: l('desmontou {x} e vendeu {a} ativos', 'took {x} apart and sold {a} assets'),
+  visionary_bet: l('apostou em {a}, que ninguém entendia', 'bet on {a}, whom nobody understood'),
+  purist_refuse: l('recusou a major e manteve {a} independente', 'turned down the major and kept {a} independent'),
 };
 
 export function sceneName(key: string): string {
@@ -356,18 +440,140 @@ registerOfferMod('rivals8', (s, a) => {
   return null;
 });
 
+
+// ---------------------------------------------------------------- manuais da rodada 9
+
+const liveActs = (s: GameState, lb: Label): Act[] => lb.roster.map((id) => s.acts[id]).filter((a): a is Act => !!a && a.status === 'active' && !a.deceased);
+const famOf = (a: Act): FamilyId => familyOf(a.genre);
+
+function idolFactory(s: GameState, r: Rng, lb: Label): void {
+  const acts = liveActs(s, lb);
+  if (r.chance(0.05)) {
+    const g = acts.filter((a) => a.members.length >= 3 && a.fame < 30 && a.momentum < 60).sort((x, y) => x.fame - y.fame)[0];
+    if (g && lb.cash > money(s, 40000)) {
+      lb.cash -= money(s, 12000);
+      g.momentum = clamp(g.momentum + 12, 0, 100);
+      g.fans.casual += Math.round(g.fans.casual * 0.08) + 200;
+      logMove(s, lb, { k: 'idol_debut', a: g.name });
+    }
+  }
+  // trainees: assina jovens do pop com contrato longo
+  if (r.chance(0.04) && lb.roster.length < 16) {
+    const t0 = Object.values(s.acts).filter((a) => free(a) && a.fame < 12 && famOf(a) === 'pop' && a.members.every((id) => s.year - (s.persons[id]?.born ?? 0) < 25)).sort((x, y) => y.potential - x.potential)[0];
+    if (t0 && lb.cash > money(s, expectedAdvance(s, t0) * 1.2)) { signWithRival(s, t0, lb.id, r); logMove(s, lb, { k: 'scene_sign', a: t0.name, x: `${t0.city}:${t0.genre}` }); }
+  }
+}
+
+function gospelNetwork(s: GameState, r: Rng, lb: Label): void {
+  if (!r.chance(0.04)) return;
+  const a = liveActs(s, lb).filter((x) => famOf(x) === 'sacred').sort((x, y) => y.fans.core - x.fans.core)[0] ?? liveActs(s, lb)[0];
+  if (!a) return;
+  a.fans.core += Math.round(a.fans.core * 0.025) + 50;
+  const v = money(s, 1500 + Math.min(20000, a.fans.core) * 0.1);
+  lb.cash += v;
+  lb.revenueYear += v;
+  logMove(s, lb, { k: 'gospel_circuit', a: a.name });
+}
+
+function prestigeBoutique(s: GameState, r: Rng, lb: Label): void {
+  if (!r.chance(0.035) || lb.cash < money(s, 60000)) return;
+  const a = liveActs(s, lb).sort((x, y) => y.momentum - x.momentum)[0];
+  if (!a) return;
+  lb.cash -= money(s, 8000);
+  a.fame = clamp(a.fame + 0.8, 0, 100);
+  a.momentum = clamp(a.momentum + 4, 0, 100);
+  logMove(s, lb, { k: 'prestige_award', a: a.name });
+}
+
+function syncHouse(s: GameState, r: Rng, lb: Label): void {
+  if (!r.chance(0.05)) return;
+  const a = liveActs(s, lb).sort((x, y) => y.fame - x.fame)[0];
+  if (!a) return;
+  const v = money(s, 2500 + a.fame * 80);
+  lb.cash += v;
+  lb.revenueYear += v;
+  a.momentum = clamp(a.momentum + 3, 0, 100);
+  logMove(s, lb, { k: 'sync_deal', a: a.name });
+}
+
+function regionalKing(s: GameState, r: Rng, lb: Label): void {
+  const key = homeScene(s, lb);
+  if (!r.chance(0.05)) return;
+  const a = liveActs(s, lb).sort((x, y) => y.fans.active - x.fans.active)[0];
+  if (!a) return;
+  a.fans.core += Math.round(a.fans.active * 0.015) + 30;
+  const k = key ?? `${a.city}:${a.genre}`;
+  s.scenes[k] = (s.scenes[k] ?? 0) + 0.8;
+  logMove(s, lb, { k: 'regional_tour', a: a.name });
+  if (key && r.chance(0.5) && lb.roster.length < 14) {
+    const t0 = sceneTargets(s, key).sort((x, y) => y.potential - x.potential)[0];
+    if (t0 && lb.cash > money(s, expectedAdvance(s, t0) * 1.2)) { signWithRival(s, t0, lb.id, r); logMove(s, lb, { k: 'scene_sign', a: t0.name, x: key }); }
+  }
+}
+
+function assetStripper(s: GameState, r: Rng, lb: Label): void {
+  if (!r.chance(0.035) || lb.cash < money(s, 250000)) return;
+  const sellers = Object.values(s.labels).filter((x) => x.active && x.id !== lb.id && x.cash < money(s, 90000) && x.family !== 'A');
+  const seller = sellers.length ? r.pick(sellers) : undefined;
+  if (!seller) return;
+  const rels = Object.values(s.releases).filter((x) => x.owner === seller.id).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 5);
+  const price = money(s, 1200 * Math.max(1, rels.length));
+  for (const x of rels) x.owner = lb.id;
+  lb.cash += Math.round(price * 0.6); // compra por `price` e revende em pedaços: o fundo só lucra desmontando
+  seller.cash += price;
+  const best = seller.roster.map((id) => s.acts[id]).filter((a): a is Act => !!a && a.status === 'active' && !!a.contractId).sort((x, y) => y.fame - x.fame)[0];
+  if (best) endContract(s, best, 'terminated');
+  logMove(s, lb, { k: 'asset_strip', a: String(rels.length), x: seller.name });
+}
+
+function visionaryExec(s: GameState, r: Rng, lb: Label): void {
+  if (!r.chance(0.03) || lb.cash < money(s, 120000) || lb.roster.length >= 14) return;
+  const a = Object.values(s.acts).filter((x) => free(x) && x.positioning < 40 && x.fame < 35).sort((x, y) => y.potential - x.potential)[0];
+  if (!a || lb.cash < money(s, expectedAdvance(s, a) * 1.2)) return;
+  signWithRival(s, a, lb.id, r);
+  logMove(s, lb, { k: 'visionary_bet', a: a.name });
+}
+
+function purist(s: GameState, r: Rng, lb: Label): void {
+  if (!r.chance(0.03)) return;
+  const a = liveActs(s, lb).sort((x, y) => y.fame - x.fame)[0];
+  if (!a) return;
+  a.trust = clamp(a.trust + 3, 0, 100);
+  a.fame = clamp(a.fame + 0.4, 0, 100);
+  a.momentum = clamp(a.momentum + 2, 0, 100);
+  logMove(s, lb, { k: 'purist_refuse', a: a.name });
+}
+
+const RUN: Record<PlaybookId, (s: GameState, r: Rng, lb: Label, all: Act[]) => void> = {
+  vulture, scene: (s, r, lb) => sceneOwner(s, r, lb), catalog: (s, r, lb) => catalogKeeper(s, r, lb), tech: (s, r, lb) => techBettor(s, r, lb), live: (s, r, lb) => stageAndFans(s, r, lb),
+  idol: (s, r, lb) => idolFactory(s, r, lb), gospel: (s, r, lb) => gospelNetwork(s, r, lb), prestige: (s, r, lb) => prestigeBoutique(s, r, lb), sync: (s, r, lb) => syncHouse(s, r, lb),
+  regional: (s, r, lb) => regionalKing(s, r, lb), fund: (s, r, lb) => assetStripper(s, r, lb), visionary: (s, r, lb) => visionaryExec(s, r, lb), purist: (s, r, lb) => purist(s, r, lb),
+};
+
+// perfis de identidade valem para os rivais: o mesmo apelo dos perfis do jogador, com força fixa
+const CORE_APPEAL: Partial<Record<ProfileId, (rel: Release, act: Act) => number>> = {
+  hits: (rel) => (rel.reissueOf ? 0.92 : 1.06), catalog: (rel) => (rel.reissueOf ? 1.12 : 1), export: (rel) => (rel.territories.length >= 2 ? 1.05 : 1),
+  dev: (_r, act) => (act.releases.length <= 1 ? 1.05 : 1), live: (rel) => (rel.kind === 'live' ? 1.1 : 1), scene: (_r, act) => (act.fame < 30 ? 1.04 : 1),
+};
+registerMod('appeal', 'rivals8profile', (s, v, c) => {
+  const rel = c.release;
+  if (!rel || rel.owner === 'player' || rel.owner === 'indie') return null;
+  const lb = s.labels[rel.owner];
+  const act = s.acts[rel.actId];
+  if (!lb?.active || !act) return null;
+  const pf = rivalProfile(lb);
+  const xf = XBY_ID[pf];
+  const m = xf?.appeal ? adj(xf.appeal(s, rel, act, envOf(s, liveActs(s, lb), false)), 0.7) : (CORE_APPEAL[pf]?.(rel, act) ?? 1);
+  return Math.abs(m - 1) < 0.005 ? null : { value: v * m, label: fmtL(l('Perfil do selo: {p}', 'Label profile: {p}'), { p: XBY_ID[pf]?.def.name ?? l(pf, pf) }) };
+});
+
 // ---------------------------------------------------------------- tick
 
 registerSimHook('month', 'rivals8', (s, r) => {
   const all = Object.values(s.acts);
   for (const lb of Object.values(s.labels)) {
     if (!lb.active) continue;
-    const pb = playbookOf(lb);
-    if (pb === 'vulture') vulture(s, r, lb, all);
-    else if (pb === 'scene') sceneOwner(s, r, lb);
-    else if (pb === 'catalog') catalogKeeper(s, r, lb);
-    else if (pb === 'tech') techBettor(s, r, lb);
-    else stageAndFans(s, r, lb);
+    RUN[playbookOf(lb)](s, r, lb, all);
   }
   resolveInterest(s, r);
   const st = rivals8(s);

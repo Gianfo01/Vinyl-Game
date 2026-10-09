@@ -5,10 +5,13 @@
 
 import { l, type L } from '../../../data/world';
 import type { BackgroundId } from '../life/data';
+import { XDEFS } from './extra';
 
 // ---------------------------------------------------------------- perfis do selo
 
-export type ProfileId = 'hits' | 'catalog' | 'scene' | 'export' | 'dev' | 'tech' | 'live';
+export type CoreProfileId = 'hits' | 'catalog' | 'scene' | 'export' | 'dev' | 'tech' | 'live';
+/** Perfis de selo: 7 do núcleo + 11 da rodada 9 (ver identity/extra.ts). */
+export type ProfileId = CoreProfileId | 'hifi' | 'regional' | 'political' | 'sync' | 'gospel' | 'archive' | 'idol' | 'diy' | 'luxury' | 'starlabel' | 'predator';
 
 export interface ProfileDef {
   id: ProfileId;
@@ -21,7 +24,7 @@ export interface ProfileDef {
   reactions: L[];
 }
 
-export const PROFILES: ProfileDef[] = [
+const CORE_PROFILES: ProfileDef[] = [
   {
     id: 'hits', name: l('Selo de hits', 'Hit factory'),
     desc: l('Lança muito, rápido e para o grande público.', 'Releases a lot, fast, for the mass audience.'),
@@ -79,6 +82,7 @@ export const PROFILES: ProfileDef[] = [
     reactions: [l('Artistas de palco confiam mais (+3).', 'Stage acts trust you more (+3).'), l('Imprensa: +0,5 em discos ao vivo.', 'Press: +0.5 on live records.')],
   },
 ];
+export const PROFILES: ProfileDef[] = [...CORE_PROFILES, ...XDEFS];
 export const profileById = Object.fromEntries(PROFILES.map((p) => [p.id, p])) as Record<ProfileId, ProfileDef>;
 
 // ---------------------------------------------------------------- trajetórias profissionais

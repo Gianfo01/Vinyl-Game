@@ -231,6 +231,10 @@ export interface SongSound {
   f?: 1;
   /** momento de vida de quem compôs (códigos curtos) */
   m?: string[];
+  /** timbres da faixa (rodada 9) */
+  t?: string[];
+  /** subgênero do ato na composição */
+  sg?: string;
 }
 
 export type ReleaseType = 'single' | 'ep' | 'lp';

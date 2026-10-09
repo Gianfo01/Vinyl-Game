@@ -6,7 +6,8 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { readAudience, audience } from '../../sim/sys/audience8';
 import { PHASES, bondBalance, bondText, careerPhase, identity, prefsLines, prefsOf, reactionText } from '../../sim/sys/identity8';
-import { PLAYBOOKS, moveText, playbookOf, rivals8, sceneName } from '../../sim/sys/rivals8';
+import { profileById } from '../../sim/sys/identity/data';
+import { PLAYBOOKS, moveText, playbookOf, rivalProfile, rivals8, sceneName } from '../../sim/sys/rivals8';
 import { STEP_TXT, fundCost, fundExperimental, stories, storyTitle, type Story } from '../../sim/sys/stories8';
 import { techById } from '../../data/rules';
 import type { Act, GameState } from '../../sim/types';
@@ -129,6 +130,7 @@ function labelPlaybook(s: GameState, id: string): HTMLElement | null {
   return h('div', { class: 'playbook8' },
     h('h4', null, t(l('Estratégia reconhecível', 'Recognizable strategy'))),
     h('p', null, pill(t(pb.name), 'gold'), ' ', h('span', { class: 'muted small' }, t(pb.desc))),
+    h('p', { class: 'small' }, h('b', null, t(l('Líder: ', 'Leader: '))), `${lb.ceo ? lb.ceo + ' · ' : ''}${t(pb.leader)}`, ' · ', h('b', null, t(l('Perfil: ', 'Profile: '))), t(profileById[rivalProfile(lb)].name)),
     h('p', { class: 'small' }, h('b', null, t(l('Como reconhecer: ', 'How to spot it: '))), pb.tells.map((x, i) => h('span', null, i ? ' · ' : '', t(x)))),
     st.scene[id] ? h('p', { class: 'small' }, t(l('Cena dominada: ', 'Dominated scene: ')), pill(sceneName(st.scene[id]))) : null,
     bet ? h('p', { class: 'small' }, t(l('Aposta tecnológica: ', 'Tech bet: ')), pill(t(techById[bet.id]?.name ?? l(bet.id, bet.id)), 'neural'), ` ${t(l('até', 'until'))} ${bet.until}`) : null,

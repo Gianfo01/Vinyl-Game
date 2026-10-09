@@ -27,6 +27,8 @@ import { life } from './life';
 import { ownerOf } from './people/owner';
 import { LEADS, OPTION_STYLE, ORIGIN_OF_BACKGROUND, PROFILES, leadById, originById, profileById, type LeadId, type OriginId, type ProfileId } from './identity/data';
 
+import { XBY_ID, XPROFILES, adj, envOf, type Env } from './identity/extra';
+
 export * from './identity/data';
 
 // ---------------------------------------------------------------- estado
@@ -58,7 +60,10 @@ export interface IdentState {
   scan: number;
 }
 
-const zeroP = (): Record<ProfileId, number> => ({ hits: 0, catalog: 0, scene: 0, export: 0, dev: 0, tech: 0, live: 0 });
+const zeroP = (): Record<ProfileId, number> => Object.fromEntries(PROFILES.map((p) => [p.id, 0])) as Record<ProfileId, number>;
+/** Saves antigos: perfis novos começam em zero. */
+const fillAcc = (st: IdentState): void => { for (const p of PROFILES) st.acc[p.id] ??= 0; };
+const envP = (s: GameState): Env => envOf(s, rosterActs(s), true);
 const zeroL = (): Record<LeadId, number> => ({ artistFirst: 0, pragmatic: 0, paternal: 0, delegator: 0, controller: 0 });
 
 declare module '../ext4' { interface Ext4 { ident: IdentState } }
@@ -130,6 +135,7 @@ function addLead(s: GameState, w: Partial<Record<LeadId, number>>, why?: L): voi
 export function trackLaunch(s: GameState, rel: Release): void {
   if (!mineRel(rel)) return;
   const st = ident(s);
+  fillAcc(st);
   const a = st.acc;
   const gap = s.week - st.lastLaunch;
   if (isReissue(rel)) a.catalog += 3;
@@ -145,6 +151,7 @@ export function trackLaunch(s: GameState, rel: Release): void {
   }
   const act = s.acts[rel.actId];
   if (act && act.fame < 15 && act.releases.length <= 1) a.dev += 0.8;
+  if (act) { const e = envP(s); for (const x of XPROFILES) a[x.def.id] += Math.max(0, x.launch?.(s, rel, act, gap, e) ?? 0); }
   st.lastLaunch = s.week;
 }
 
@@ -169,9 +176,11 @@ export function noteDecision(s: GameState, eventId: string, optionId: string): v
 
 function scanMonth(s: GameState): void {
   const st = ident(s);
+  fillAcc(st);
   const a = st.acc;
   const acts = rosterActs(s);
   const homeCity = s.config.homeCity;
+  { const e = envOf(s, acts, true); for (const x of XPROFILES) a[x.def.id] += Math.max(0, x.scan?.(s, e) ?? 0); }
   // elenco: gente da cidade e atos pequenos
   if (acts.length) {
     a.scene += (acts.filter((x) => x.city === homeCity).length / acts.length) * 1.6;
@@ -323,6 +332,13 @@ function profileMonth(s: GameState, r: Rng): void {
   const acts = rosterActs(s);
   const labels = Object.values(s.labels).filter((x) => x.active);
   const home = homeMarket(s);
+  const xf = XBY_ID[cur];
+  if (xf) {
+    const e = envOf(s, acts, true);
+    for (const [ar, v] of Object.entries(xf.rivals ?? {})) for (const lb of labels) if (archetypeOf(lb) === ar) bumpRivalry(s, lb.id, v * k);
+    xf.month?.(s, k, e);
+    return;
+  }
   if (cur === 'hits') {
     for (const a of acts) {
       const recent = a.releases.filter((id) => s.releases[id] && s.week - s.releases[id].week < 52).length;
@@ -398,6 +414,7 @@ function originMonth(s: GameState, r: Rng): void {
 
 export function identityMonth(s: GameState, r: Rng): void {
   const st = ident(s);
+  fillAcc(st);
   for (const k of Object.keys(st.acc) as ProfileId[]) st.acc[k] *= 0.96;
   for (const k of Object.keys(st.lacc) as LeadId[]) st.lacc[k] *= 0.97;
   scanMonth(s);
@@ -482,6 +499,7 @@ export const PROFILE_ACTIONS: ProfileActionDef[] = [
   { id: 'lab', profile: 'tech', name: l('Laboratório de formatos', 'Format lab'), desc: l('Por 26 semanas: fabricação −15% e vendas +5%. Risco de 15% de falha pública.', 'For 26 weeks: manufacturing −15% and sales +5%. 15% risk of a public failure.'), cost: 5000, cooldown: 39 },
   { id: 'festival', profile: 'live', name: l('Festival do selo', 'Label festival'), desc: l('Bilheteria pelos fãs do núcleo do elenco e +4% de fãs fiéis; o elenco cansa.', 'Box office from the roster\'s core fans and +4% loyal fans; the roster gets tired.'), cost: 8000, cooldown: 52 },
 ];
+PROFILE_ACTIONS.push(...XPROFILES.filter((x) => x.action).map((x) => ({ id: x.action!.id, profile: x.def.id, name: x.action!.name, desc: x.action!.desc, cost: x.action!.cost, cooldown: x.action!.cooldown })));
 export const actionById = Object.fromEntries(PROFILE_ACTIONS.map((x) => [x.id, x])) as Record<string, ProfileActionDef>;
 
 function oldCatalog(s: GameState): Release[] {
@@ -505,6 +523,8 @@ export function actionBlock(s: GameState, id: string): L | null {
   if (id === 'license' && oldCatalog(s).length < 3) return l('Precisa de 3 discos com mais de 2 anos.', 'Needs 3 records older than 2 years.');
   if (id === 'partner' && !s.player.territories.some((m) => m !== homeMarket(s))) return l('Abra ao menos um território fora do mercado de casa.', 'Open at least one territory outside the home market.');
   if ((id === 'festival' || id === 'residency') && !acts.length) return l('Precisa de artistas no elenco.', 'Needs acts on the roster.');
+  const xa = XPROFILES.find((x) => x.action?.id === id)?.action;
+  if (xa?.block) { const b = xa.block(s, envP(s)); if (b) return b; }
   if (id === 'night' && !acts.some((a) => a.city === s.config.homeCity)) return l('Precisa de ao menos um ato da cidade-sede.', 'Needs at least one act from the HQ city.');
   return null;
 }
@@ -519,7 +539,9 @@ export function runProfileAction(s: GameState, r: Rng, id: string): L | null {
   const acts = rosterActs(s);
   if (d.cost) post(s, `id:act:${id}`, -money(s, d.cost), id === 'festival' ? 'live_costs' : id === 'residency' ? 'artist_dev' : 'marketing', d.name.pt);
   let text: L = d.name;
-  if (id === 'blitz') {
+  const xa = XPROFILES.find((x) => x.action?.id === id)?.action;
+  if (xa) text = xa.run(s, k, envP(s));
+  else if (id === 'blitz') {
     st.boost.blitz = s.week + 8;
     text = l('Blitz nas rádios: os próximos lançamentos chegam com tudo.', 'Radio blitz: your next releases arrive in force.');
   } else if (id === 'license') {
@@ -605,6 +627,7 @@ registerMod('appeal', 'identity', (s, v, c) => {
   const kE = profileK(s, 'export');
   if (kE && terr.length >= 2) f *= 1 + 0.08 * kE;
   const org = st.origin;
+  { const xp = st.cur ? XBY_ID[st.cur] : undefined; const act = s.acts[rel!.actId]; if (xp?.appeal && act) f *= adj(xp.appeal(s, rel!, act, envP(s)), profileK(s, xp.def.id)); }
   if (org === 'radio' && rel!.type === 'single') f *= 1.05;
   if (org === 'recordStore' && re) f *= 1.10;
   if (Math.abs(f - 1) < 0.005) return null;
@@ -621,6 +644,7 @@ registerMod('chartUnits', 'identity', (s, v, c) => {
   if ((st.boost.lab ?? -1) >= s.week) f *= 1.05;
   const kL = profileK(s, 'live');
   if (kL) f *= rel!.kind === 'live' ? 1 + 0.2 * kL : 1 - 0.06 * kL;
+  { const xp = st.cur ? XBY_ID[st.cur] : undefined; const act = s.acts[rel!.actId]; if (xp?.units && act) f *= adj(xp.units(s, rel!, act, envP(s)), profileK(s, xp.def.id)); }
   if ((st.boost.partner ?? -1) >= s.week && rel!.territories.some((m) => m !== homeMarket(s))) f *= 0.94;
   if ((st.boost.soldCat ?? -1) >= s.week && s.week - rel!.week > 104) f *= 0.85;
   if (st.origin === 'recordStore') f *= 1.03;
@@ -631,6 +655,7 @@ registerMod('chartUnits', 'identity', (s, v, c) => {
 registerMod('pressingCost', 'identity', (s, v) => {
   const st = ident(s);
   let f = 1 - 0.10 * profileK(s, 'tech');
+  if (st.cur && XBY_ID[st.cur]?.pressing) f *= 1 + XBY_ID[st.cur].pressing! * profileK(s, st.cur);
   if ((st.boost.lab ?? -1) >= s.week) f *= 0.85;
   return f === 1 ? null : { value: v * f };
 });
@@ -645,6 +670,7 @@ registerMod('cityDemand', 'identity', (s, v, c) => {
   const kE = profileK(s, 'export');
   if (kE && !inHome) f *= 1 + 0.12 * kE;
   f *= 1 + 0.08 * profileK(s, 'live');
+  { const xp = st.cur ? XBY_ID[st.cur] : undefined; if (xp?.show) f *= adj(xp.show(s, c.act, inHome, envP(s)), profileK(s, xp.def.id)); }
   if (st.origin === 'promoter' && inHome) f *= 1.10;
   return Math.abs(f - 1) < 0.005 ? null : { value: v * f, label: identityLabel(s) };
 });
@@ -675,6 +701,9 @@ export function pressReaction(s: GameState, rel: Release): number {
   if (act && act.releases.length <= 1) d += 0.3 * profileK(s, 'dev');
   if (act && familyOf(act.genre) !== 'electronic') d -= 0.2 * profileK(s, 'tech');
   if (rel.kind === 'live') d += 0.5 * profileK(s, 'live');
+  const cur = ident(s).cur;
+  const xp = cur ? XBY_ID[cur] : undefined;
+  if (xp?.press && act) d += xp.press(s, rel, act, envP(s)) * profileK(s, xp.def.id);
   return d;
 }
 registerReviewAdjust('identity', pressReaction);
@@ -697,6 +726,8 @@ registerPerkSource('identity', (s) => {
     if (st.cur === 'export') out.push({ label: lb, values: { trust: -3 * k }, act: local });
     if (st.cur === 'dev') { out.push({ label: lb, values: { morale: 0.4 * k } }); out.push({ label: lb, values: { trust: 6 * k, songQ: 1.5 * k }, act: small }); }
     if (st.cur === 'live') out.push({ label: lb, values: { trust: 3 * k, stress: 0.06 * k } });
+    const xp = XBY_ID[st.cur];
+    if (xp?.perks) for (const pk of xp.perks(k, envP(s))) out.push({ label: lb, values: pk.values as PerkEntry['values'], act: pk.act });
   }
   const o = st.origin;
   if (o) {
@@ -767,6 +798,8 @@ export function profileOfferEffect(s: GameState, act: Act): { score: number; rea
     case 'live':
       if (act.rehearsed >= 8 || (act.gigSat ?? 0) > 0) P.push({ v: 0.05 * k, r: l('Querem estrada e o selo vive no palco.', 'They want the road and the label lives on stage.') });
       break;
+    default:
+      for (const x of XBY_ID[st.cur]?.offer?.(s, act, amb, k, envP(s)) ?? []) P.push(x);
   }
   return pickReason(P);
 }

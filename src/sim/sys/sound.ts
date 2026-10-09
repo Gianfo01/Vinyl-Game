@@ -12,7 +12,7 @@
 
 import { Rng, clamp, hashString } from '../../core/rng';
 import { APPROACHES, STUDIO_TIERS } from '../../data/rules';
-import { familyOf, l, type FamilyId, type L } from '../../data/world';
+import { cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
 import { coverById, type CoverStyle } from '../covers';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { CRITICS } from '../media';
@@ -20,17 +20,22 @@ import { eraProductionBase, songQ } from '../production';
 import { songProfile } from '../repertoire';
 import { PRODUCERS, SIGNATURES, type ProducerDef } from '../studio';
 import type { Act, GameState, Person, Release, Song, SongSound } from '../types';
-import { hasTech, playerActs, staffSkill } from '../util';
+import { fmtL, hasTech, notify, playerActs, remember, staffSkill } from '../util';
 import { INGREDIENTS, songX, themeById } from './creation/core';
+import { MOMENTS, MOMENT_PULL, detectNewMoments, momentMarks, type MomentCtx } from './sound/moments';
+import { subMonth, subOf, subStore, type SubStore } from './sound/subgenre';
+import { claimTimbres, copiedTimbres, pickTimbres, tally, timbreById, timbresFromRecipe, type TimbreStore } from './sound/timbre';
 import { instrumentsOf } from './instruments';
+import { ownerOf } from './people/owner';
 import { activeThoughts, moodOf } from './people/thoughts';
 import { P as peopleState } from './people/state';
 import { vices } from './vices';
 
 // ------------------------------------------------------------------ eixos
 
-export type Axis = 'en' | 'de' | 'el' | 'vo' | 'po' | 'ex';
-export const AXES: Axis[] = ['en', 'de', 'el', 'vo', 'po', 'ex'];
+export type Axis = 'en' | 'de' | 'el' | 'vo' | 'po' | 'ex' | 'me' | 'gl' | 'tr';
+export const AXES: Axis[] = ['en', 'de', 'el', 'vo', 'po', 'ex', 'me', 'gl', 'tr'];
+export { MOMENTS };
 export type Vec = number[];
 
 export const AXIS_INFO: Record<Axis, { name: L; lo: L; hi: L }> = {
@@ -40,9 +45,14 @@ export const AXIS_INFO: Record<Axis, { name: L; lo: L; hi: L }> = {
   vo: { name: l('Foco instrumental ↔ vocal', 'Instrumental ↔ vocal focus'), lo: l('instrumental', 'instrumental'), hi: l('voz na frente', 'vocal-led') },
   po: { name: l('Cru ↔ polido', 'Raw ↔ polished'), lo: l('crua', 'raw'), hi: l('polida', 'polished') },
   ex: { name: l('Experimentação', 'Experimentation'), lo: l('clássica', 'classic'), hi: l('experimental', 'experimental') },
+  me: { name: l('Melancolia ↔ euforia', 'Melancholy ↔ euphoria'), lo: l('melancólica', 'melancholic'), hi: l('eufórica', 'euphoric') },
+  gl: { name: l('Local ↔ global', 'Local ↔ global'), lo: l('de raiz local', 'locally rooted'), hi: l('global', 'global') },
+  tr: { name: l('Tradição ↔ ruptura', 'Tradition ↔ rupture'), lo: l('tradicional', 'traditional'), hi: l('de ruptura', 'rupturist') },
 };
 
-const zero = (): Vec => [0, 0, 0, 0, 0, 0];
+const zero = (): Vec => AXES.map(() => 0);
+/** Completa vetores de saves antigos (6 eixos) com o valor neutro nos eixos novos. */
+export const fit9 = (v: number[]): Vec => (v.length >= AXES.length ? v : AXES.map((_, i) => v[i] ?? 50));
 const add = (a: Vec, b: Vec, k = 1): Vec => a.map((x, i) => x + (b[i] ?? 0) * k);
 const V = (p: Partial<Record<Axis, number>>): Vec => AXES.map((k) => p[k] ?? 0);
 const round = (v: Vec): Vec => v.map((x) => Math.round(clamp(x, 0, 100)));
@@ -51,7 +61,7 @@ const round = (v: Vec): Vec => v.map((x) => Math.round(clamp(x, 0, 100)));
 export function dist(a: Vec, b: Vec): number {
   let t = 0;
   let n = 0;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < AXES.length; i++) {
     if (b[i] === undefined || b[i] < 0) continue;
     t += Math.abs(a[i] - b[i]);
     n++;
@@ -81,6 +91,13 @@ const FAMILY_BASE: Record<FamilyId, Vec> = {
   sacred: [40, 55, 5, 75, 55, 25],
 };
 
+/** Eixos novos por família: [melancolia↔euforia, local↔global, tradição↔ruptura]. */
+const FAMILY_EXT: Record<FamilyId, [number, number, number]> = {
+  blues_jazz: [38, 40, 45], country_folk: [42, 22, 22], rnb: [58, 50, 40], rock: [55, 55, 55], pop: [66, 72, 35], hiphop: [55, 60, 65],
+  electronic: [68, 75, 70], caribbean: [72, 45, 35], latin: [68, 45, 30], brazil: [62, 30, 35], africa: [66, 35, 40], asia_me: [48, 35, 35],
+  europe: [50, 50, 35], sacred: [60, 35, 18],
+};
+
 /** Teto do eixo eletrônico na era (antes do sintetizador, no máximo órgão elétrico e efeitos). */
 export function electronicCap(s: GameState, year = s.year): number {
   if (hasTech(s, 'synth', year)) return 100;
@@ -90,7 +107,8 @@ export function electronicCap(s: GameState, year = s.year): number {
 
 /** Ponto de partida do gênero na era (cada gênero com um desvio fixo da família). */
 export function genreBase(s: GameState, genre: string, year = s.year): Vec {
-  const base = FAMILY_BASE[familyOf(genre)] ?? FAMILY_BASE.pop;
+  const fam = familyOf(genre);
+  const base = [...(FAMILY_BASE[fam] ?? FAMILY_BASE.pop), ...(FAMILY_EXT[fam] ?? FAMILY_EXT.pop)];
   const out = base.map((x, i) => x + ((hashString(`${genre}:snd:${i}`) % 17) - 8));
   // polimento acompanha a técnica de gravação da época
   out[4] += (eraProductionBase(s) - 35) * 0.6;
@@ -154,40 +172,6 @@ export function instrumentPull(s: GameState, act: Act): { d: Vec; lead?: string;
 
 // ------------------------------------------------------------------ momento de vida de quem compõe
 
-export const MOMENTS: Record<string, { name: L; phrase: L; themes?: string[] }> = {
-  gr: { name: l('luto', 'grief'), phrase: l('escrita no luto', 'written in mourning'), themes: ['longing', 'heartbreak', 'faith'] },
-  ad: { name: l('vício', 'addiction'), phrase: l('febril, escrita no excesso', 'feverish, written in excess'), themes: ['rebellion', 'party'] },
-  rh: { name: l('reabilitação', 'rehab'), phrase: l('sóbria, sobre recomeçar', 'sober, about starting over'), themes: ['faith', 'nature'] },
-  su: { name: l('sucesso recente', 'recent success'), phrase: l('confiante depois do sucesso', 'confident after a hit'), themes: ['money', 'party'] },
-  fl: { name: l('fracasso recente', 'recent flop'), phrase: l('teimosa depois do tropeço', 'defiant after a stumble'), themes: ['rebellion', 'protest'] },
-  lv: { name: l('apaixonado(a)', 'in love'), phrase: l('apaixonada', 'smitten'), themes: ['love'] },
-  br: { name: l('término', 'breakup'), phrase: l('de coração partido', 'heartbroken'), themes: ['heartbreak'] },
-  yo: { name: l('juventude', 'youth'), phrase: l('com pressa de juventude', 'with youthful hurry') },
-  ol: { name: l('maturidade', 'maturity'), phrase: l('madura, sem pressa', 'mature, unhurried'), themes: ['nostalgia'] },
-  ti: { name: l('exaustão', 'exhaustion'), phrase: l('cansada', 'weary') },
-  st: { name: l('estresse', 'stress'), phrase: l('tensa', 'tense') },
-  in: { name: l('inspiração', 'inspiration'), phrase: l('inspirada', 'inspired') },
-  lo: { name: l('baixo astral', 'low spirits'), phrase: l('confessional', 'confessional'), themes: ['longing'] },
-  hi: { name: l('alto astral', 'high spirits'), phrase: l('para cima', 'upbeat'), themes: ['party', 'dance'] },
-};
-
-const MOMENT_PULL: Record<string, Partial<Record<Axis, number>>> = {
-  gr: { en: -15, de: -10, vo: 10, el: -6 },
-  ad: { ex: 15, po: -12, de: 6 },
-  rh: { en: -8, vo: 8, po: 4, ex: -4 },
-  su: { po: 8, en: 6, de: 5 },
-  fl: { ex: 10, po: -5 },
-  lv: { en: 4, vo: 6 },
-  br: { vo: 10, en: -6 },
-  yo: { en: 8, el: 6, po: -5 },
-  ol: { en: -8, el: -6, ex: -6, po: 6 },
-  ti: { en: -10, de: -6 },
-  st: { en: 8, po: -8 },
-  in: { ex: 8, de: 5 },
-  lo: { en: -6, vo: 6 },
-  hi: { en: 6 },
-};
-
 function writersOf(s: GameState, act: Act, song?: Song): Person[] {
   const ids = song?.writers?.length ? song.writers : act.members;
   const out = ids.map((id) => s.persons[id]).filter((p): p is Person => !!p?.alive);
@@ -216,6 +200,40 @@ function recentOutcome(s: GameState, act: Act): 'su' | 'fl' | null {
     return null;
   }
   return null;
+}
+
+/** Fotografia do estado do ato para os momentos de vida novos (memória recente, pensamentos, saúde, família). */
+function momentCtx(s: GameState, act: Act, ws: Person[], m: { age: number; insp: number; stress: number; fat: number }): MomentCtx {
+  const mem = new Map<string, number>();
+  for (let i = s.memory.length - 1, n = 0; i >= 0 && n < 600; i--, n++) {
+    const e = s.memory[i];
+    const ago = s.week - e.week;
+    if (ago > 160) break;
+    if (e.actId !== act.id && e.kind !== 'life') continue;
+    if (!mem.has(e.kind)) mem.set(e.kind, ago);
+  }
+  const lifeAgo: MomentCtx['lifeAgo'] = {};
+  const mine = ws.some((p) => p.isPlayer);
+  if (mine) {
+    for (let i = s.memory.length - 1, n = 0; i >= 0 && n < 400; i--, n++) {
+      const e = s.memory[i];
+      if (s.week - e.week > 110) break;
+      if (e.kind !== 'life') continue;
+      if (lifeAgo.divorce === undefined && /^Divórcio|^Divorce/.test(e.text.pt)) lifeAgo.divorce = s.week - e.week;
+      if (lifeAgo.birth === undefined && /^Nasce|is born/.test(e.text.pt + e.text.en)) lifeAgo.birth = s.week - e.week;
+    }
+  }
+  let kidAge: number | undefined;
+  if (mine) for (const k of ownerOf(s).kids ?? []) kidAge = Math.min(kidAge ?? 99, s.year - k.born);
+  let cleanMonths = 0;
+  for (const p of ws) if (p.isPlayer) { const v = vices(s); if (v.dep.drugs > 0 || v.dep.drink > 20) cleanMonths = Math.max(cleanMonths, Math.min(v.clean.drugs, v.clean.drink)); }
+  const abroad = ws.length > 0 && ws.every((p) => !!p.origin && cityById[p.origin] && cityById[act.city] && cityById[p.origin].market !== cityById[act.city].market);
+  return {
+    fame: act.fame, momentum: act.momentum, trust: act.trust, hasLabel: !!act.contractId, age: m.age, insp: m.insp, stress: m.stress, fat: m.fat,
+    mem, thoughts: new Set(ws.flatMap((p) => activeThoughts(s, p.id).map((x) => x.k))),
+    ill: ws.some((p) => p.health === 'ill'), burnout: ws.some((p) => p.health === 'burnout'), cleanMonths,
+    abroad, yearsFormed: s.year - act.formed, kidAge, lifeAgo, sacred: familyOf(act.genre) === 'sacred', marks: momentMarks(s, act.id),
+  };
 }
 
 /** Momento de vida de quem compõe: códigos ativos com intensidade (0–1). */
@@ -261,6 +279,7 @@ export function lifeMoments(s: GameState, act: Act, song?: Song): { code: string
   const spirit = mood + (morale - 50) / 3;
   if (spirit < -8) push('lo', (-spirit - 4) / 20);
   else if (spirit > 10) push('hi', (spirit - 6) / 20);
+  for (const m of detectNewMoments(momentCtx(s, act, ws, { age, insp, stress, fat }))) push(m.code, m.k);
   return out.sort((a, b) => b.k - a.k).slice(0, 4);
 }
 
@@ -276,7 +295,7 @@ export function composerPull(s: GameState, act: Act, song?: Song): { d: Vec; mom
     if (Math.abs(open - 50) > 12 || Math.abs(perf - 50) > 12) parts.push({ label: l('Personalidade de quem compõe', 'Writers\' personality'), d: pers });
   }
   const moments = lifeMoments(s, act, song);
-  for (const m of moments) {
+  for (const m of moments.slice(0, 2)) {
     const v = V(MOMENT_PULL[m.code] ?? {}).map((x) => x * m.k);
     d = add(d, v);
     parts.push({ label: l(`Momento: ${MOMENTS[m.code].name.pt}`, `Moment: ${MOMENTS[m.code].name.en}`), d: v });
@@ -294,10 +313,15 @@ export interface SoundState {
   /** assinatura do selo e sua história anual */
   label: { v: number[]; n: number; hist: { y: number; v: number[] }[] };
   init?: boolean;
+  /** marcas de timbre (timbre → ato dono) e cópias percebidas */
+  tm?: TimbreStore['tm'];
+  copies?: Record<string, number>;
+  /** subgêneros do modo livre */
+  sub?: SubStore;
 }
 
 declare module '../ext4' { interface Ext4 { sound: SoundState } }
-registerExt4('sound', () => ({ aim: {}, sig: {}, label: { v: [50, 50, 50, 50, 50, 50], n: 0, hist: [] } }));
+registerExt4('sound', () => ({ aim: {}, sig: {}, label: { v: AXES.map(() => 50), n: 0, hist: [] } }));
 export const snd = (s: GameState): SoundState => (s as unknown as { x4: { sound: SoundState } }).x4.sound;
 
 export const PRESETS: { id: string; name: L; v: number[] }[] = [
@@ -308,6 +332,8 @@ export const PRESETS: { id: string; name: L; v: number[] }[] = [
   { id: 'exp', name: l('Experimental', 'Experimental'), v: [-1, -1, -1, 35, -1, 85] },
   { id: 'stadium', name: l('Estádio', 'Stadium'), v: [80, 75, -1, 70, 65, 25] },
 ];
+
+for (const p of PRESETS) p.v = AXES.map((_, i) => p.v[i] ?? -1);
 
 export function actAim(s: GameState, actId: string): number[] | undefined {
   const a = snd(s).aim[actId];
@@ -370,9 +396,16 @@ export function naturalSound(s: GameState, act: Act, song?: Song): { v: Vec; par
   const base = cached(s, `g:${genre}`, () => genreBase(s, genre));
   const inst = cached(s, `i:${act.id}`, () => instrumentPull(s, act));
   const comp = cached(s, `c:${act.id}:${song?.writers.join(',') ?? ''}`, () => composerPull(s, act, song));
-  const v = add(add(base, inst.d), comp.d);
+  let v = add(add(base, inst.d), comp.d);
+  const parts = [...inst.parts, ...comp.parts];
+  const sg = subOf(subsView(s), act.id);
+  if (sg) {
+    const d = V(sg.pull).map((x) => x * 0.6);
+    v = add(v, d);
+    parts.push({ label: l(`Subgênero: ${sg.name.pt}`, `Subgenre: ${sg.name.en}`), d });
+  }
   v[2] = Math.min(v[2], electronicCap(s));
-  return { v, parts: [...inst.parts, ...comp.parts], moments: comp.moments };
+  return { v, parts, moments: comp.moments };
 }
 
 function ensureSound(s: GameState, so: Song): SongSound {
@@ -390,15 +423,27 @@ function onCompose(s: GameState, so: Song): void {
   let v = nat.v.map((x) => x + r.normal(0, nat.moments.some((m) => m.code === 'ad') ? 9 : 6));
   v = pullToAim(v, aim, composeControl(s, act));
   v[2] = Math.min(v[2], electronicCap(s));
+  // timbres: instrumentos de quem toca, família e o que o ato já repete
+  const own = Object.keys(actTimbreCounts(s, act));
+  const insts = act.members.flatMap((id) => (s.persons[id] ? instrumentsOf(s, s.persons[id]).map((x) => x.id) : []));
+  const tb = pickTimbres(r, s.year, familyOf(so.genre), insts, own);
+  for (const id of tb) v = add(v, V(timbreById[id].pull));
+  v[2] = Math.min(v[2], electronicCap(s));
   const sd: SongSound = { v: round(v) };
+  if (tb.length) sd.t = tb;
+  const sgi = subOf(subsView(s), act.id);
+  if (sgi) sd.sg = sgi.id;
   if (aim) sd.a = [...aim];
   const ms = nat.moments.filter((m) => m.k > 0.35).map((m) => m.code);
   if (ms.length) sd.m = ms.slice(0, 3);
   so.sound = sd;
   // o momento de vida também muda o assunto
-  const strong = nat.moments.find((m) => MOMENTS[m.code].themes && m.k >= 0.5);
+  // até dois momentos se combinam no assunto (o mais forte pesa mais)
+  const strongs = nat.moments.filter((m) => MOMENTS[m.code].themes && m.k >= 0.5).slice(0, 2);
+  const strong = strongs[0];
   if (strong && !so.theme && r.chance(0.35 + strong.k * 0.4)) {
-    const th = r.pick(MOMENTS[strong.code].themes!);
+    const pool = strongs.length > 1 && r.chance(0.4) ? [...MOMENTS[strongs[0].code].themes!, ...MOMENTS[strongs[1].code].themes!] : MOMENTS[strong.code].themes!;
+    const th = r.pick(pool);
     (songX(s, so.id) as { theme?: string }).theme = th;
     if (mine && themeById[th]) so.theme = themeById[th].name;
   }
@@ -464,7 +509,7 @@ export function recordControl(s: GameState, so: Song): number {
 export function applyRecord(s: GameState, so: Song): void {
   const sd = ensureSound(s, so);
   if (sd.r) return;
-  let v = [...sd.v];
+  let v = [...fit9(sd.v)];
   for (const p of recordPulls(s, so)) v = add(v, p.d);
   v = pullToAim(v, sd.a, recordControl(s, so));
   v[2] = Math.min(v[2], electronicCap(s));
@@ -500,8 +545,8 @@ function fallbackSound(s: GameState, so: Song): Vec {
 /** Som final da faixa (0–100 por eixo), com o arranjo enquanto ainda não foi lançada. */
 export function soundOf(s: GameState, so: Song): Vec {
   const sd = so.sound;
-  if (sd?.f) return sd.v;
-  let v = sd ? [...sd.v] : fallbackSound(s, so);
+  if (sd?.f) return fit9(sd.v);
+  let v = sd ? [...fit9(sd.v)] : fallbackSound(s, so);
   if (sd && !sd.r && so.recorded) for (const p of recordPulls(s, so)) v = add(v, p.d);
   for (const p of arrangementPull(s, so)) v = add(v, p.d);
   return round(v);
@@ -526,11 +571,11 @@ export function cohesion(s: GameState, rel: Release): number | null {
   const vs = rel.songs.map((id) => s.songs[id]).filter((x): x is Song => !!x).map((so) => soundOf(s, so));
   if (vs.length < 3) return null;
   let sd = 0;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < AXES.length; i++) {
     const m = vs.reduce((t, v) => t + v[i], 0) / vs.length;
     sd += Math.sqrt(vs.reduce((t, v) => t + (v[i] - m) ** 2, 0) / vs.length);
   }
-  return Math.round(sd / 6);
+  return Math.round(sd / AXES.length);
 }
 
 // ------------------------------------------------------------------ onde o som funciona
@@ -550,6 +595,13 @@ export const OUTLETS: Outlet[] = [
   { id: 'tv', name: l('TV', 'TV'), ideal: [65, 55, -1, 85, 75, 20], w: [0.8, 0.4, 0, 1.2, 1, 1], ok: (s) => hasTech(s, 'tv_music') },
   { id: 'short', name: l('vídeos curtos', 'short videos'), ideal: [80, 50, -1, 80, 65, 40], w: [1.2, 0.4, 0, 1.2, 0.5, 0.3], ok: (s) => hasTech(s, 'short_video') },
 ];
+/** Eixos novos de cada canal: [melancolia↔euforia, local↔global, tradição↔ruptura] como [ideal, peso]. */
+const OUTLET_EXT: Record<string, [[number, number], [number, number], [number, number]]> = {
+  radio: [[62, 0.4], [55, 0.3], [30, 0.5]], popradio: [[70, 0.5], [65, 0.3], [40, 0.3]], clubs: [[60, 0.2], [-1, 0], [60, 0.4]],
+  dance: [[80, 0.8], [65, 0.3], [-1, 0]], arena: [[70, 0.5], [70, 0.5], [-1, 0]], playlists: [[55, 0.4], [70, 0.5], [40, 0.3]],
+  press: [[-1, 0], [-1, 0], [70, 0.8]], tv: [[65, 0.4], [55, 0.3], [25, 0.6]], short: [[75, 0.5], [-1, 0], [55, 0.3]],
+};
+for (const o of OUTLETS) { const e = OUTLET_EXT[o.id]; if (e) { o.ideal = [...o.ideal.slice(0, 6), ...e.map((x) => x[0])]; o.w = [...o.w.slice(0, 6), ...e.map((x) => x[1])]; } }
 export const outletById = Object.fromEntries(OUTLETS.map((o) => [o.id, o])) as Record<string, Outlet>;
 
 export function outletName(s: GameState, id: string): L {
@@ -562,12 +614,12 @@ export function outletFit(s: GameState, v: Vec, id: string): number {
   if (!o) return 50;
   let t = 0;
   let wt = 0;
-  for (let i = 0; i < 6; i++) {
-    let ideal = o.ideal[i];
-    let w = o.w[i];
+  for (let i = 0; i < AXES.length; i++) {
+    let ideal = o.ideal[i] ?? -1;
+    let w = o.w[i] ?? 0;
     if (id === 'dance' && i === 2) { if (s.year < 1975) { ideal = 30; w = 0.3; } }
     if (ideal < 0 || !w) continue;
-    t += Math.abs(v[i] - ideal) * w;
+    t += Math.abs((v[i] ?? 50) - ideal) * w;
     wt += w;
   }
   return Math.round(clamp(100 - (wt ? t / wt : 0) * 1.6, 0, 100));
@@ -667,8 +719,11 @@ const PROD_PHRASE: Record<ProducerDef['signature'], L> = {
 };
 
 /** Frases (pt/en) que descrevem o som, sem o veredito de canais. */
-export function soundPhrases(s: GameState, v: Vec, opts: { song?: Song; inst?: string; hook?: number; year?: number; moments?: string[] } = {}): L[] {
+export function soundPhrases(s: GameState, v: Vec, opts: { song?: Song; inst?: string; hook?: number; year?: number; moments?: string[]; timbres?: string[] } = {}): L[] {
   const [en, de, el, vo, po, ex] = v;
+  const me = v[6] ?? 50;
+  const gl = v[7] ?? 50;
+  const tr = v[8] ?? 50;
   const out: L[] = [];
   const year = opts.year ?? s.year;
   const inst = opts.inst;
@@ -694,8 +749,16 @@ export function soundPhrases(s: GameState, v: Vec, opts: { song?: Song; inst?: s
   if (el > 55 && year < 1978) out.push(l('soa à frente do seu tempo', 'sounds ahead of its time'));
   else if (po < 28 && year >= 1995) out.push(l('com cara de demo, de propósito', 'deliberately demo-like'));
   else if (po > 80 && year < 1960) out.push(l('luxo de estúdio para a época', 'studio luxury for its day'));
+  if (me <= 22) out.push(l('melancolia densa', 'deep melancholy'));
+  else if (me >= 82) out.push(l('euforia de pista', 'euphoric abandon'));
+  if (gl >= 82) out.push(l('som de ninguém e de todo lugar', 'a sound from nowhere and everywhere'));
+  else if (gl <= 18) out.push(l('com sotaque de rua local', 'with the accent of a local street'));
+  if (tr >= 82) out.push(l('rompendo com a tradição', 'breaking with tradition'));
+  else if (tr <= 18) out.push(l('fiel à tradição', 'faithful to tradition'));
+  for (const id of (opts.timbres ?? []).slice(0, 1)) if (timbreById[id]) out.splice(Math.min(2, out.length), 0, timbreById[id].phrase);
   // o momento de vida vem logo no começo: é o que mais conta a história da faixa
-  for (const m of (opts.moments ?? []).slice(0, 1)) if (MOMENTS[m]) out.splice(Math.min(1, out.length), 0, MOMENTS[m].phrase);
+  const mm = (opts.moments ?? []).filter((m) => MOMENTS[m]).slice(0, 2);
+  if (mm.length) out.splice(Math.min(1, out.length), 0, mm.length > 1 ? l(`${MOMENTS[mm[0]].phrase.pt}, e ${MOMENTS[mm[1]].phrase.pt}`, `${MOMENTS[mm[0]].phrase.en}, and ${MOMENTS[mm[1]].phrase.en}`) : MOMENTS[mm[0]].phrase);
   return out;
 }
 
@@ -714,7 +777,7 @@ export function fitVerdict(s: GameState, v: Vec): L {
 export function describeSong(s: GameState, so: Song): L {
   const v = soundOf(s, so);
   const pr = PRODUCERS.find((x) => x.id === so.producerId);
-  const phrases = soundPhrases(s, v, { song: so, inst: leadInstrument(s, so), hook: songProfile(so).hook, moments: so.sound?.m, year: s.year - Math.max(0, Math.round((s.week - so.createdWeek) / 52)) });
+  const phrases = soundPhrases(s, v, { song: so, inst: leadInstrument(s, so), hook: songProfile(so).hook, moments: so.sound?.m, timbres: timbresOf(s, so), year: s.year - Math.max(0, Math.round((s.week - so.createdWeek) / 52)) });
   if (pr && phrases.length < 6) phrases.splice(1, 0, PROD_PHRASE[pr.signature]);
   const head = joinL(phrases.slice(0, 4));
   const fit = fitVerdict(s, v);
@@ -726,7 +789,7 @@ export function describeRelease(s: GameState, rel: Release): L | null {
   const v = releaseSound(s, rel);
   if (!v) return null;
   const lead = s.songs[rel.songs[0]];
-  const phrases = soundPhrases(s, v, { inst: lead ? leadInstrument(s, lead) : undefined, hook: lead ? songProfile(lead).hook : 55, moments: lead?.sound?.m, year: rel.year });
+  const phrases = soundPhrases(s, v, { inst: lead ? leadInstrument(s, lead) : undefined, hook: lead ? songProfile(lead).hook : 55, moments: lead?.sound?.m, timbres: lead ? timbresOf(s, lead) : undefined, year: rel.year });
   const coh = cohesion(s, rel);
   if (coh !== null) phrases.splice(2, 0, coh < 8 ? l('faixas muito parecidas entre si', 'tracks very alike') : coh > 20 ? l('sequência dispersa', 'a scattered running order') : l('sequência bem amarrada', 'a well-knit running order'));
   const head = joinL(phrases.slice(0, 5));
@@ -746,6 +809,9 @@ export function soundTags(v: Vec): L[] {
   pick(0, 35, 72);
   pick(3, 38, 78);
   pick(1, 32, 70);
+  pick(6, 20, 82);
+  pick(8, 20, 80);
+  pick(7, 18, 82);
   return out.slice(0, 3);
 }
 
@@ -780,16 +846,78 @@ function bump(s: GameState, rel: Release): void {
   const st = snd(s);
   const lb = st.label;
   const k = lb.n < 5 ? 1 / (lb.n + 1) : 0.15;
-  lb.v = round(lb.v.map((x, i) => x + (v[i] - x) * k));
+  lb.v = round(fit9(lb.v).map((x, i) => x + (v[i] - x) * k));
   lb.n += 1;
   const a = (st.sig[rel.actId] ??= { v: [...v], n: 0 });
+  a.v = fit9(a.v);
   if (a.n) a.v = round(a.v.map((x, i) => x + (v[i] - x) * 0.35));
   a.n += 1;
 }
 
 export function labelSignature(s: GameState): SoundState['label'] {
   backfill(s);
+  snd(s).label.v = fit9(snd(s).label.v);
   return snd(s).label;
+}
+
+// ------------------------------------------------------------------ timbres e subgêneros
+
+export const subs = (s: GameState): SubStore => { const st = snd(s); return (st.sub = subStore(st.sub)); };
+/** Leitura sem criar estado (visualizações não podem mudar o save). */
+const EMPTY_SUB: SubStore = { list: [], adopt: {} };
+export const subsView = (s: GameState): SubStore => snd(s).sub ?? EMPTY_SUB;
+const tmStore = (s: GameState): TimbreStore => { const st = snd(s); return { tm: (st.tm ??= {}), copies: (st.copies ??= {}) }; };
+
+/** Timbres de uma faixa: os da composição mais os que a receita de arranjo traz. */
+export function timbresOf(s: GameState, so: Song): string[] {
+  const rec = s.x4.creation?.songs[so.id]?.recipe ?? [];
+  return [...new Set([...(so.sound?.t ?? []), ...timbresFromRecipe(rec, s.year)])];
+}
+
+const relTimbres = (s: GameState, rel: Release): string[] => [...new Set(rel.songs.flatMap((id) => (s.songs[id] ? timbresOf(s, s.songs[id]) : [])))];
+
+/** Quantos dos últimos 5 lançamentos do ato usaram cada timbre. */
+export function actTimbreCounts(s: GameState, act: Act, extra?: Release): Record<string, number> {
+  const rels = act.releases.map((id) => s.releases[id]).filter((r): r is Release => !!r && !r.reissueOf && r.kind !== 'compilation' && r.id !== extra?.id).sort((a, b) => a.week - b.week).slice(extra ? -4 : -5);
+  if (extra) rels.push(extra);
+  return tally(rels.map((r) => relTimbres(s, r)));
+}
+
+/** Timbres que são marca registrada do ato. */
+export function actTrademarks(s: GameState, actId: string): string[] {
+  return Object.entries(snd(s).tm ?? {}).filter(([, v]) => v.actId === actId).map(([k]) => k);
+}
+
+const aliveAct = (s: GameState) => (id: string) => { const a = s.acts[id]; return !!a && !a.deceased && a.status !== 'retired' && a.status !== 'split'; };
+
+/** No lançamento: marca registrada nova, ou cópia do timbre de outro ato (a crítica percebe). */
+function timbreLaunch(s: GameState, rel: Release, act: Act): void {
+  const tb = relTimbres(s, rel);
+  if (!tb.length) return;
+  const st = tmStore(s);
+  const counts = actTimbreCounts(s, act, rel);
+  const mine = rel.owner === 'player' || !!act.playerBand;
+  for (const t of claimTimbres(st, act.id, s.year, counts, aliveAct(s))) {
+    if (mine) notify(s, fmtL(l('{a} firmou um timbre de assinatura: {t}.', '{a} has made {t} a signature timbre.'), { a: act.name, t: timbreById[t].name }), 'good');
+  }
+  for (const c of copiedTimbres(st, act.id, tb, counts)) {
+    const holder = s.acts[c.holder];
+    if (!holder) continue;
+    st.copies[c.holder] = (st.copies[c.holder] ?? 0) + 1;
+    holder.momentum = clamp(holder.momentum + 1, 0, 100);
+    const rv = s.reviews[rel.id];
+    if (rv?.length) {
+      const pen = 0.3 + Math.min(0.4, holder.fame / 200);
+      for (const x of rv) x.score = clamp(Math.round((x.score - pen) * 10) / 10, 0, 10);
+      rel.critic = Math.round((rv.reduce((a, x) => a + x.score, 0) / rv.length) * 10);
+    }
+    rel.appeal *= 0.97;
+    if (mine || holder.owner === 'player' || holder.playerBand) {
+      const text = fmtL(mine ? l('A crítica notou: {a} copiou o timbre de {h} ({t}).', 'Critics noticed: {a} copied {h}\'s timbre ({t}).') : l('{a} está copiando o timbre de {h}: {t}.', '{a} is copying {h}\'s timbre: {t}.'), { a: act.name, h: holder.name, t: timbreById[c.t].name });
+      notify(s, text, mine ? 'bad' : 'info');
+      remember(s, 'timbre_copy', text, { actId: mine ? act.id : holder.id });
+    }
+  }
 }
 
 // ------------------------------------------------------------------ efeitos no jogo
@@ -811,6 +939,11 @@ export function soundAppeal(s: GameState, rel: Release, act: Act): { m: number; 
     const sig = snd(s).sig[act.id];
     if (sig && sig.n >= 2 && dist(v, sig.v) > 24) parts.push({ label: l('Mudança brusca de som (fãs antigos estranham)', 'Abrupt change of sound (old fans balk)'), m: 0.96 });
   }
+  const sg = subOf(subsView(s), act.id);
+  if (sg && sg.spread < 40) parts.push({ label: l(`Subgênero em ascensão (${sg.name.pt})`, `Rising subgenre (${sg.name.en})`), m: 1.03 });
+  else if (sg && sg.spread > 85) parts.push({ label: l(`Subgênero saturado (${sg.name.pt})`, `Saturated subgenre (${sg.name.en})`), m: 0.98 });
+  const tm = actTrademarks(s, act.id);
+  if (tm.length && relTimbres(s, rel).some((x) => tm.includes(x))) parts.push({ label: l('Timbre de assinatura reconhecível', 'Recognizable signature timbre'), m: 1.02 });
   return { m: parts.reduce((t, p) => t * p.m, 1), parts };
 }
 
@@ -861,6 +994,8 @@ export function criticTaste(s: GameState, criticName: string, v: Vec): number {
   if (c.dislikes.includes('electronic') && v[2] > 70) d -= 0.4;
   if (c.favors.includes('electronic') && v[2] > 60) d += 0.3;
   if (c.favors.includes('folk') && v[2] < 25) d += 0.2;
+  // ruptura agrada a quem é underground; tradição, ao mainstream; melancolia profunda comove a crítica
+  d += ((((v[8] ?? 50) - 50) / 50) * -mu * 0.25) + (((50 - (v[6] ?? 50)) / 50) * 0.08);
   return d;
 }
 
@@ -877,6 +1012,7 @@ function onLaunch(s: GameState, rel: Release): void {
   }
   const v = releaseSound(s, rel);
   if (!v || rel.reissueOf) return;
+  timbreLaunch(s, rel, act);
   const mine = rel.owner === 'player' || !!act.playerBand;
   // capa coerente com o som reforça a identidade (ou confunde)
   const cf = rel.coverChoice ? coverFit(rel.coverChoice, v) : 0;
@@ -924,6 +1060,13 @@ function sweepSessions(s: GameState): void {
     }
   }
 }
+registerSimHook('month', 'sound', (s) => {
+  const r = Rng.fromSeed(`subgen:${s.year}:${s.week}`);
+  for (const sg of subMonth(s, r, subs(s))) {
+    const a = sg.acts.map((id) => s.acts[id]).find((x) => x && (x.owner === 'player' || x.playerBand));
+    if (a) notify(s, fmtL(l('Nasce na cena de {c} um subgênero: {n}. {a} já toca assim.', 'A subgenre is born in the {c} scene: {n}. {a} already plays it.'), { c: cityById[sg.city]?.name ?? sg.city, n: sg.name, a: a.name }), 'info');
+  }
+});
 registerSimHook('day', 'sound', (s) => sweepSessions(s));
 registerSimHook('week', 'sound', (s) => sweepSessions(s));
 
