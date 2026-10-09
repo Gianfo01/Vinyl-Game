@@ -564,6 +564,7 @@ registerOfferMod('soul9', (s, act, o) => {
   if (f.teimosia >= 75) opts.push({ d: -2, r: l('teimoso: difícil de convencer', 'stubborn: hard to convince') });
   if (!opts.length) return null;
   const best = opts.sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0];
-  return { delta: opts.reduce((t, x) => t + x.d, 0), reason: fmtL(l('{p}: {r}', '{p}: {r}'), { p: lead.name, r: best.r }) };
+  // d em pontos percentuais; o placar da proposta vai de ~0 a ~1
+  return { delta: opts.reduce((t, x) => t + x.d, 0) / 100, reason: fmtL(l('{p}: {r}', '{p}: {r}'), { p: lead.name, r: best.r }) };
 });
 

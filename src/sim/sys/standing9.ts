@@ -132,7 +132,8 @@ registerMod('appeal', 'standing9', (s, v, c) => {
 registerOfferMod('standing9', (s) => {
   const st = standings(s).by.player;
   if (!st) return null;
-  const delta = (st.trust - 50) / 600 + (st.rec - 50) / 900 + (st.mom - 50) / 1500;
+  // selo novo não começa punido: a fama ruim pesa pouco; a boa ajuda mais
+  const delta = Math.max(-0.03, Math.min(0.06, (st.trust - 50) / 600 + (st.rec - 50) / 900 + (st.mom - 50) / 1500));
   if (Math.abs(delta) < 0.01) return null;
   return { delta, reason: delta > 0 ? l('O selo tem prestígio e boa fama entre artistas.', 'The label has prestige and a good name among artists.') : l('A fama do selo entre artistas não ajuda.', 'The label\'s name among artists does not help.') };
 });
