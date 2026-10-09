@@ -77,3 +77,7 @@ import './bolsa10';
 import './leaders10';
 import './offers12';
 import './explain12';
+// Rodada 12: carreiras de editora, mídia e plataforma.
+import './ventures12';
+import './media12';
+import './platform12';

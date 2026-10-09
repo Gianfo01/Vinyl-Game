@@ -20,6 +20,7 @@ import { tabs } from '../vis';
 import { visibleAct } from '../../sim/future';
 import { clientExtras, poachTab, reportsTab } from './manager11';
 import { mgr11 } from '../../sim/sys/manager11';
+import { extra12 } from './ventures12';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -178,7 +179,7 @@ function kindTab(s: GameState, kind: VKind): HTMLElement {
   const list = ventures(s).list.filter((v) => v.kind === kind);
   const npc = ventures(s).npc.filter((n) => n.kind === kind);
   return h('div', null,
-    ...list.map((v) => h('div', { class: 'card' }, ventureHead(s, v), BODY[kind](s, v))),
+    ...list.map((v) => h('div', { class: 'card' }, ventureHead(s, v), BODY[kind](s, v), extra12(s, v))),
     kind === 'media' && isConglomerate(s) ? h('p', null, pill(t(l('Conglomerado de mídia', 'Media conglomerate')), 'good'), ' ', t(l('Três veículos diferentes: publicidade +25% e cobertura extra para o selo.', 'Three different outlets: +25% ad revenue and extra coverage for the label.'))) : null,
     foundForm(s, kind),
     npc.length ? section(t(l('Concorrentes', 'Competitors')), h('ul', { class: 'small' }, npc.map((n) => h('li', null, `${n.name} · ${cityName(n.city)} · ${t(l('reputação', 'reputation'))} ${n.rep}`)))) : null);
