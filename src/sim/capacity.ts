@@ -210,3 +210,24 @@ export function moveAct(s: GameState, actId: string, cityId: string, why: L): vo
   s.location[actId] = cityId;
   if (from) remember(s, 'travel', fmtL(l('{a} viaja de {f} para {t} ({w}).', '{a} travels from {f} to {t} ({w}).'), { a: s.acts[actId]?.name ?? '', f: cityById[from]?.name ?? from, t: cityById[cityId]?.name ?? cityId, w: why }), { actId });
 }
+
+/** Rodada 16: um compromisso grande (sessão de estúdio, turnê) toma o lugar da agenda do mês do próprio ato:
+ *  tira primeiro a gravação automática e depois os itens do fim da lista até caber. Não mexe no estado;
+ *  devolve o conflito restante (vem de outra coisa) e a agenda que sobra para aplicar se a ação der certo. */
+export function fitOverAgenda(s: GameState, actId: string, check: () => Conflict | null, drop: (a: AgendaSlot) => boolean = (x) => x.action === 'record'): { conflict: Conflict | null; keep: AgendaSlot[]; dropped: number } {
+  const prev = s.agenda[actId];
+  const base = (prev ?? []).filter((x) => !drop(x));
+  let keep = base;
+  let conflict: Conflict | null = null;
+  for (;;) {
+    s.agenda[actId] = keep;
+    conflict = check();
+    if (!conflict) break;
+    const i = keep.map((x) => x.action !== 'session').lastIndexOf(true);
+    if (i < 0) break;
+    keep = keep.filter((_, j) => j !== i);
+  }
+  if (prev === undefined) delete s.agenda[actId];
+  else s.agenda[actId] = prev;
+  return { conflict, keep, dropped: (prev ?? []).length - keep.length };
+}

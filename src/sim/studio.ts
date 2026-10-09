@@ -10,7 +10,7 @@ import { eraProductionBase, ownStudioProduction, recordingCost, songQ } from './
 import type { Act, GameState, Song } from './types';
 import type { SampleRequest, StudioSession, Take } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember, staffSkill } from './util';
-import { activeMembers, checkCapacity, monthIndex } from './capacity';
+import { activeMembers, checkCapacity, fitOverAgenda, monthIndex } from './capacity';
 import { applyMods } from './ext4';
 
 // ---------- Produtores ----------
@@ -97,17 +97,7 @@ export function startSession(s: GameState, actId: string, songIds: string[], tie
   const load = Math.min(90, 55 + 5 * songs.length);
   // a sessão toma o lugar da agenda do mês do próprio ato (gravação automática primeiro, depois os itens do fim)
   // em vez de recusar "Agenda de X 91%"; só recusa se o conflito vem de outra coisa (turnê, plano, outro ato)
-  const prevAg = s.agenda[actId];
-  let keep = (prevAg ?? []).filter((x) => x.action !== 'record');
-  let conflict = null as ReturnType<typeof checkCapacity>;
-  for (;;) {
-    s.agenda[actId] = keep;
-    conflict = checkCapacity(s, activeMembers(s, act), monthIndex(s), 1, load);
-    if (!conflict || !keep.length) break;
-    keep = keep.slice(0, -1);
-  }
-  s.agenda[actId] = prevAg as typeof keep;
-  if (prevAg === undefined) delete s.agenda[actId];
+  const { conflict, keep } = fitOverAgenda(s, actId, () => checkCapacity(s, activeMembers(s, act), monthIndex(s), 1, load));
   if (conflict) return conflict.text;
   const cost = sessionCost(s, songs.length, tier, approach, producerId);
   if (s.player.cash < cost) return l('Caixa insuficiente para a sessão.', 'Not enough cash for the session.');
@@ -124,8 +114,8 @@ export function startSession(s: GameState, actId: string, songIds: string[], tie
     days: sessionDays(songs.length, approach), dayDone: 0, takes: {}, costPaid: cost + travel, log: [],
   };
   s.sessions.push(sess);
+  const cut = (s.agenda[actId] ?? []).filter((x) => x.action !== 'record').length - keep.length;
   s.agenda[actId] = [...keep, { action: 'session', params: { session: sess.id } }];
-  const cut = (prevAg ?? []).filter((x) => x.action !== 'record').length - keep.length;
   if (cut > 0) notify(s, fmtL(l('{a} entrou em estúdio: {n} item(ns) da agenda do mês saíram para abrir espaço.', '{a} went into the studio: {n} item(s) of this month\'s agenda were dropped to make room.'), { a: act.name, n: cut }));
   if (producerId) s.producerBusy[producerId] = s.week + Math.ceil(sess.days / 7) + 1;
   const pr0 = PRODUCERS.find((x) => x.id === producerId);

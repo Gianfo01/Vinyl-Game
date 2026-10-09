@@ -7,10 +7,10 @@ import { clamp, type Rng } from '../core/rng';
 import { VENUE_TIERS } from '../data/rules';
 import { cityById, l, type L } from '../data/world';
 import { actTalent } from './people';
-import type { Act, GameState } from './types';
+import type { Act, AgendaSlot, GameState } from './types';
 import type { Tour, TourStop } from './xtypes';
-import { dateOfDay, fmtL, hasTech, money, nextId, post, remember, staffSkill } from './util';
-import { activeMembers, checkCapacity, monthIndex } from './capacity';
+import { dateOfDay, fmtL, hasTech, money, nextId, notify, post, remember, staffSkill } from './util';
+import { activeMembers, checkCapacity, fitOverAgenda, monthIndex } from './capacity';
 import { legInfo, climateInfo } from './travelAdapter';
 import { clubBonus, liveBlocked } from './culture';
 import { branchCityBonus } from './branches';
@@ -126,10 +126,19 @@ export function planTour(s: GameState, p: TourPlan): Tour | L {
   // capacidade: dias por mês
   const perMonth: Record<number, number> = {};
   for (const st of est.stops) perMonth[monthOfDay(s, st.day)] = (perMonth[monthOfDay(s, st.day)] ?? 0) + 1 + st.travelDays;
+  // rodada 16: no mês corrente a turnê toma o lugar da agenda do próprio ato (shows locais, entrevistas...) em vez de recusar
+  let agendaKeep: AgendaSlot[] | null = null;
   for (const [m, d] of Object.entries(perMonth)) {
     const load = Math.min(100, Math.round(((d + 4) / 28) * 100));
-    const c = checkCapacity(s, activeMembers(s, act), Number(m), 1, load);
-    if (c) return c.text;
+    const chk = () => checkCapacity(s, activeMembers(s, act), Number(m), 1, load);
+    if (Number(m) === monthIndex(s)) {
+      const f = fitOverAgenda(s, act.id, chk, () => false);
+      if (f.conflict) return f.conflict.text;
+      if (f.dropped) agendaKeep = f.keep;
+    } else {
+      const c = chk();
+      if (c) return c.text;
+    }
   }
   if (p.partnerActId && !s.acts[p.partnerActId]) return l('Parceiro inválido.', 'Invalid partner.');
   if (s.player.cash < est.logistics) return l('Caixa insuficiente para reservar a logística.', 'Not enough cash to book logistics.');
@@ -139,6 +148,11 @@ export function planTour(s: GameState, p: TourPlan): Tour | L {
   };
   post(s, `tour:${tour.id}`, -est.logistics, 'live_costs', `Logística ${tour.name}`);
   s.tours.push(tour);
+  if (agendaKeep) {
+    const n = (s.agenda[act.id] ?? []).length - agendaKeep.length;
+    s.agenda[act.id] = agendaKeep;
+    notify(s, fmtL(l('{a} cai na estrada: {n} item(ns) da agenda deste mês saíram para abrir espaço.', '{a} hits the road: {n} item(s) of this month\'s agenda were dropped to make room.'), { a: act.name, n }));
+  }
   remember(s, 'tour_planned', fmtL(l('{a} anuncia {t}: {n} cidades.', '{a} announces {t}: {n} cities.'), { a: act.name, t: tour.name, n: tour.stops.length }), { actId: act.id });
   return tour;
 }
