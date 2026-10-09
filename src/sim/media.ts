@@ -2,12 +2,14 @@
 // crises de relações públicas com prazo em dias, cancelamento e censura por país e era.
 
 import { clamp, type Rng } from '../core/rng';
-import { familyOf, l, type L, type MarketId } from '../data/world';
+import { cityById, familyOf, l, type L, type MarketId } from '../data/world';
 import { registerEvents, type EventDef } from './events';
 import type { Act, GameState, Release } from './types';
 import type { Crisis, Review } from './xtypes';
 import { buildReviews } from './reviews';
 import { coverCriticBonus } from './covers';
+import { REGIONAL_CRITICS } from '../data/critics8';
+import { criticRelBonus } from './criticrel';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 
 export interface CriticDef {
@@ -21,6 +23,9 @@ export interface CriticDef {
   harsh: number; // 0..1
   prestige: number;
   realRef?: string;
+  /** rodada 8: identificador e região do veículo ('global' = internacional) */
+  id?: string;
+  region?: MarketId | 'global';
 }
 
 const C = (name: string, outlet: string, from: number, to: number, favors: string[], dislikes: string[], mainstream: number, harsh: number, prestige: number, realRef?: string): CriticDef =>
@@ -48,8 +53,27 @@ export function setCritics(list: CriticDef[]): void {
   if (list.length) CRITICS = list;
 }
 
+const REGIONAL: CriticDef[] = REGIONAL_CRITICS.map((c) => ({ name: c.name, outlet: c.outlet, from: c.from, to: c.to, favors: c.favors, dislikes: c.dislikes, mainstream: c.mainstream, harsh: c.harsh, prestige: c.prestige, realRef: c.realRef, id: c.id, region: c.region }));
+
+/** Todos os críticos: globais (content.ts) e regionais (rodada 8). */
+export function allCritics(): CriticDef[] {
+  return [...CRITICS, ...REGIONAL];
+}
+
 export function activeCritics(s: GameState): CriticDef[] {
-  return CRITICS.filter((c) => s.year >= c.from && s.year <= c.to);
+  return allCritics().filter((c) => s.year >= c.from && s.year <= c.to);
+}
+
+export function criticByName(name: string): CriticDef | undefined {
+  return allCritics().find((c) => c.name === name);
+}
+
+/** Quem resenha: críticos da região de origem e dos mercados onde o disco saiu pesam mais. */
+function pickCritics(s: GameState, r: Rng, rel: Release, act: Act, n: number): CriticDef[] {
+  const home = cityById[act.city]?.market;
+  const markets = new Set<string>([...(home ? [home] : []), ...rel.territories]);
+  const pool = activeCritics(s).map((c) => ({ c, w: (c.region === home ? 3 : c.region && markets.has(c.region) ? 1.6 : !c.region || c.region === 'global' ? 1.2 : 0.25) * (0.6 + c.prestige / 100) * (0.5 + r.next()) }));
+  return pool.sort((a, b) => b.w - a.w).slice(0, n).map((x) => x.c);
 }
 
 /** Resenhas de um lançamento (cada crítico com viés próprio; texto completo em reviews.ts). */
@@ -58,11 +82,15 @@ export function reviewRelease(s: GameState, r: Rng, rel: Release): Review[] {
   if (!act) return [];
   const crit = activeCritics(s);
   const n = Math.min(crit.length, rel.owner === 'player' ? 4 : 2);
-  const picks = r.shuffle([...crit]).slice(0, n);
+  const picks = pickCritics(s, r, rel, act, n);
   // críticas completas: nota por aspecto, texto montado na hora (rodada 5); rivais ficam só com números
   const out: Review[] = buildReviews(s, r, rel, picks);
   const cb = coverCriticBonus(rel);
-  if (cb) for (const x of out) x.score = clamp(Math.round((x.score + cb) * 10) / 10, 0, 10);
+  const mineRel = rel.owner === 'player' || !!act.playerBand;
+  for (const x of out) {
+    const bonus = cb + (mineRel ? criticRelBonus(s, x.critic) : 0);
+    if (bonus) x.score = clamp(Math.round((x.score + bonus) * 10) / 10, 0, 10);
+  }
   if (rel.owner !== 'player' && !act.playerBand) for (const x of out) { delete x.ctx; delete x.best; delete x.worst; }
   s.reviews[rel.id] = out;
   const avg = out.reduce((t, x) => t + x.score, 0) / Math.max(1, out.length);

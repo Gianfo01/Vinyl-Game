@@ -3,6 +3,7 @@
 
 import { COUNTRY_INFO, countryBuy, countryInfoByA3, countryMarketSize, countryPop, countryTaste, type CountryInfo } from '../../data/countries';
 import { countryName, countryOfCity } from '../../data/geo';
+import { localPref, softPower } from '../../data/relevance';
 import { FAMILIES, MARKETS, l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { AWARD_CATS, CHART_KINDS, KIND_NAMES, awardName, board, ch7, chartLabel, countryLeader, kindAvailable, kindUnit, type ChartKind } from '../../sim/sys/charts7';
@@ -117,6 +118,8 @@ export function countryCard(s: GameState, c: CountryInfo, compact = false): HTML
       h('div', null, t(l('Região do jogo', 'Game region')), ': ', t(MARKETS.find((m) => m.id === c.market)?.name)),
       h('div', null, t(l('Formatos', 'Formats')), ': ', `${Math.round(phys * 100)}% ${t(l('físico', 'physical'))}`, stream ? ` · ${Math.round(stream * 100)}% streaming` : ''),
       h('div', null, t(l('Artistas ativos daqui', 'Active local artists')), ': ', h('b', null, locals)),
+      h('div', { title: t(l('Quanto a música deste país viaja para fora (EUA = 100).', 'How far this country\'s music travels abroad (US = 100).')) }, t(l('Peso mundial', 'Global weight')), ': ', bar(softPower(c.a3, y) * 100, 100), ` ${Math.round(softPower(c.a3, y) * 100)}`),
+      h('div', { title: t(l('Quanto o público daqui prefere artistas da casa.', 'How much the audience here prefers home acts.')) }, t(l('Preferência por artistas locais', 'Preference for local acts')), ': ', h('b', null, localPref(c.a3) >= 2.3 ? t(l('muito alta', 'very high')) : localPref(c.a3) >= 1.8 ? t(l('alta', 'high')) : localPref(c.a3) >= 1.45 ? t(l('média', 'medium')) : t(l('baixa', 'low')))),
     ),
     h('div', { class: 'small' }, h('b', null, t(l('Gêneros favoritos agora', 'Favourite genres now'))), ' ', ...topFamilies(c, y).map((f) => pill(`${famName(f.id)} ${Math.round(f.v * 50)}`))),
     !compact ? h('div', { class: 'small' }, h('b', null, t(l('Há 20 anos', '20 years ago'))), ' ', ...topFamilies(c, y - 20, 3).map((f) => pill(famName(f.id)))) : null,
@@ -156,5 +159,4 @@ export function countriesTab(s: GameState): HTMLElement {
 }
 
 registerTab('chartsHub', { id: 'countries', label: l('Por país e formato', 'By country and format'), icon: 'globe', order: 55, render: countryChartsTab });
-registerTab('chartsHub', { id: 'natawards', label: l('Prêmios nacionais', 'National awards'), icon: 'trophy', order: 56, render: nationalAwardsTab });
 registerTab('worldHub', { id: 'countries', label: l('Países', 'Countries'), icon: 'flag', order: 55, render: countriesTab });

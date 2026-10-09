@@ -13,3 +13,4 @@ import './hq6';
 import './intrigue';
 import './charts7';
 import './furnish';
+import './hubs8';

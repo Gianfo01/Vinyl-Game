@@ -23,7 +23,7 @@ export function applyContent(): void {
   done = true;
   setCritics(C_CRITICS.map((c) => {
     const o = outletById[c.outlet];
-    return { name: c.name, outlet: o?.name ?? c.outlet, from: c.start, to: c.end, favors: c.favored, dislikes: c.disfavored, mainstream: c.mainstream, harsh: c.harshness, prestige: o?.bias.prestige ?? 60, realRef: o?.realRef };
+    return { name: c.name, outlet: o?.name ?? c.outlet, from: c.start, to: c.end, favors: c.favored, dislikes: c.disfavored, mainstream: c.mainstream, harsh: c.harshness, prestige: o?.bias.prestige ?? 60, realRef: o?.realRef, id: c.id, region: o?.market ?? 'global' };
   }));
 
   const kindOf = (cat: string): BrandDef['kind'] =>

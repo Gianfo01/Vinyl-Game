@@ -84,7 +84,7 @@ export function openRelease(id: string): void {
         return h('tr', null, h('td', null, tr.n), h('td', null, tr.title, tr.single && r.type !== 'single' ? ' ' : '', tr.single && r.type !== 'single' ? pill(t(l('faixa de trabalho', 'lead single'))) : null, ' ', ...(so ? RELEASE_SONG_EXTRAS.map((f) => f(s, so)) : [])),
           h('td', null, fmtSecs(tr.secs)),
           so ? h('td', null, h('b', null, show(so.q))) : h('td', { class: 'muted' }, '—'),
-          ...(so ? [so.melody, so.lyrics, so.performance, so.production, so.originality].map((v) => h('td', null, show(v))) : [h('td', { class: 'muted', colspan: 5 }, t(l('sem ficha técnica guardada', 'no stored credits')))]));
+          ...(so ? [so.melody, so.lyrics, so.performance, so.production, so.originality].map((v) => h('td', null, v > 0 ? show(v) : '—')) : [h('td', { class: 'muted', colspan: 5 }, t(l('sem ficha técnica guardada', 'no stored credits')))]));
       })),
     ),
     ...RELEASE_EXTRAS.map((f) => f(s, r)),

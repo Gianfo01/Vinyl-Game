@@ -273,18 +273,18 @@ export const BAND_WORDS = {
 
 export const SONG_WORDS = {
   en: {
-    a: ['Midnight', 'Blue', 'Lonely', 'Golden', 'Electric', 'Broken', 'Sweet', 'Wild', 'Silver', 'Neon', 'Burning', 'Paper', 'Velvet', 'Restless', 'Endless', 'Quiet', 'Crazy', 'Last', 'Little', 'Heavy'],
-    b: ['Train', 'Heart', 'River', 'Highway', 'Dream', 'Rain', 'Night', 'Fire', 'Love', 'Moon', 'Road', 'Summer', 'Shadow', 'Radio', 'Kiss', 'Avenue', 'Ghost', 'Garden', 'Signal', 'Dance'],
-    solo: ['Stay', 'Runaway', 'Hold On', 'Tonight', 'Gravity', 'Echo', 'Wildfire', 'Fever', 'Satellite', 'Home', 'Overdrive', 'Daydream'],
+    a: ['Midnight', 'Blue', 'Lonely', 'Golden', 'Electric', 'Broken', 'Sweet', 'Wild', 'Silver', 'Neon', 'Burning', 'Paper', 'Velvet', 'Restless', 'Endless', 'Quiet', 'Crazy', 'Last', 'Little', 'Heavy', 'Hollow', 'Crimson', 'Distant', 'Secret', 'Fading', 'Starlit', 'Northern', 'Lucky', 'Dirty', 'Holy', 'Radio', 'Glass', 'Cherry', 'Diamond', 'Lost', 'Hungry', 'Faded', 'Purple', 'Sunday', 'Brave', 'Gentle', 'Strange', 'Wicked', 'Tender', 'Cosmic'],
+    b: ['Train', 'Heart', 'River', 'Highway', 'Dream', 'Rain', 'Night', 'Fire', 'Love', 'Moon', 'Road', 'Summer', 'Shadow', 'Radio', 'Kiss', 'Avenue', 'Ghost', 'Garden', 'Signal', 'Dance', 'Letter', 'Mirror', 'Paradise', 'Thunder', 'Window', 'Angel', 'Lullaby', 'Promise', 'Ocean', 'Season', 'Stranger', 'Morning', 'Boulevard', 'Waltz', 'Machine', 'Horizon', 'Memory', 'Carousel', 'Hurricane', 'Telephone', 'Valentine', 'Rodeo', 'Parade', 'Lantern', 'Sermon'],
+    solo: ['Stay', 'Runaway', 'Hold On', 'Tonight', 'Gravity', 'Echo', 'Wildfire', 'Fever', 'Satellite', 'Home', 'Overdrive', 'Daydream', 'Breathe', 'Sugar', 'Heroes', 'Gasoline', 'Halo', 'Lightning', 'Wanderlust', 'Unchained', 'Oblivion', 'Magnolia', 'Kaleidoscope', 'Afterglow', 'Undertow', 'Resurrection', 'Vertigo', 'Monsoon', 'Serenade', 'Tightrope', 'Elegy', 'Jubilee'],
   },
   pt: {
-    a: ['Coração', 'Noite', 'Saudade', 'Lua', 'Estrada', 'Chuva', 'Samba', 'Asfalto', 'Mar', 'Rosa', 'Sol', 'Tempo', 'Vento', 'Morena', 'Cidade', 'Fogo'],
-    b: ['de Papel', 'Azul', 'Sem Fim', 'do Sertão', 'Vadia', 'de Verão', 'Elétrica', 'Perdida', 'de Neon', 'Serena', 'do Morro', 'Proibida', 'Bandida', 'de Cristal'],
-    solo: ['Fica', 'Madrugada', 'Desatino', 'Balanço', 'Primavera', 'Partida', 'Aquarela', 'Miragem', 'Cais', 'Ventania'],
+    a: ['Coração', 'Noite', 'Saudade', 'Lua', 'Estrada', 'Chuva', 'Samba', 'Asfalto', 'Mar', 'Rosa', 'Sol', 'Tempo', 'Vento', 'Morena', 'Cidade', 'Fogo', 'Janela', 'Ciranda', 'Varanda', 'Areia', 'Sereia', 'Canção', 'Tarde', 'Menina', 'Ladeira', 'Promessa', 'Estrela', 'Flor', 'Carta', 'Viola', 'Maré', 'Alegria', 'Ilusão', 'Pandeiro'],
+    b: ['de Papel', 'Azul', 'Sem Fim', 'do Sertão', 'Vadia', 'de Verão', 'Elétrica', 'Perdida', 'de Neon', 'Serena', 'do Morro', 'Proibida', 'Bandida', 'de Cristal', 'Dourada', 'do Cais', 'Calada', 'de Abril', 'Morena', 'do Interior', 'Distante', 'de Fevereiro', 'Imensa', 'do Subúrbio', 'Sincera', 'de Algodão', 'Encantada', 'da Serra', 'Inquieta'],
+    solo: ['Fica', 'Madrugada', 'Desatino', 'Balanço', 'Primavera', 'Partida', 'Aquarela', 'Miragem', 'Cais', 'Ventania', 'Cafuné', 'Maresia', 'Batucada', 'Travessia', 'Sereno', 'Tropicália', 'Recomeço', 'Cantiga', 'Feitiço', 'Quimera', 'Fim de Tarde', 'Guarânia', 'Xodó', 'Desencontro', 'Arrebol'],
   },
   es: {
-    a: ['Corazón', 'Noche', 'Luna', 'Camino', 'Fuego', 'Amor', 'Lluvia', 'Sol', 'Ciudad'],
-    b: ['Perdido', 'de Plata', 'Sin Fin', 'Salvaje', 'Eterno', 'de Cristal', 'Azul', 'Callejero'],
-    solo: ['Quédate', 'Bésame', 'Tormenta', 'Locura', 'Madrugada', 'Fuego'],
+    a: ['Corazón', 'Noche', 'Luna', 'Camino', 'Fuego', 'Amor', 'Lluvia', 'Sol', 'Ciudad', 'Sueño', 'Ventana', 'Tarde', 'Estrella', 'Guitarra', 'Mar', 'Flor', 'Río', 'Sombra', 'Carta'],
+    b: ['Perdido', 'de Plata', 'Sin Fin', 'Salvaje', 'Eterno', 'de Cristal', 'Azul', 'Callejero', 'de Fuego', 'Dormido', 'Lejano', 'de Mayo', 'Rebelde', 'Herido', 'Dorado', 'del Sur', 'Prohibido'],
+    solo: ['Quédate', 'Bésame', 'Tormenta', 'Locura', 'Madrugada', 'Fuego', 'Despacio', 'Volver', 'Contigo', 'Mentiras', 'Bailando', 'Olvido', 'Destino', 'Nostalgia', 'Mariposa', 'Tequila'],
   },
 };

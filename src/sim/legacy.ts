@@ -7,6 +7,7 @@ import { l, type L } from '../data/world';
 import type { GameState, Release } from './types';
 import { fmtL, hasCard, notify, remember, sum } from './util';
 import { hqCaps } from './branches';
+import { campaignBonus, restrictToNominees } from './sys/ceremonies8';
 
 export function updateLegacy(s: GameState): void {
   const p = s.player;
@@ -32,12 +33,17 @@ export function yearlyAwards(s: GameState, r: Rng): void {
   const year = s.year;
   const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
   if (!rels.length) return;
-  const winner = (list: Release[], score: (x: Release) => number) => list.sort((a, b) => score(b) - score(a))[0];
+  // rodada 8: só concorre quem foi indicado em outubro; campanhas do selo somam pontos
+  const winner = (cat: string, list: Release[], score: (x: Release) => number) => {
+    const pool = restrictToNominees(s, cat, list);
+    const sc = new Map(pool.map((x) => [x.id, score(x) + campaignBonus(s, x.id, cat)]));
+    return pool.sort((a, b) => sc.get(b.id)! - sc.get(a.id)!)[0];
+  };
   const cats: { id: string; name: L; pick: () => Release | undefined }[] = [
-    { id: 'record', name: l('Gravação do Ano', 'Record of the Year'), pick: () => winner(rels.filter((x) => x.type === 'single'), (x) => x.q * 1.2 + Math.log10(1 + x.totalUnits) * 8 + r.float(0, 6)) },
-    { id: 'album', name: l('Álbum do Ano', 'Album of the Year'), pick: () => winner(rels.filter((x) => x.type === 'lp'), (x) => x.q * 1.4 + Math.log10(1 + x.totalUnits) * 6 + r.float(0, 6)) },
-    { id: 'newcomer', name: l('Artista Revelação', 'Best New Artist'), pick: () => winner(rels.filter((x) => s.acts[x.actId]?.debutYear >= year - 1), (x) => (s.acts[x.actId]?.fame ?? 0) + x.q * 0.5 + r.float(0, 6)) },
-    { id: 'performance', name: l('Melhor Performance', 'Best Performance'), pick: () => winner(rels, (x) => Math.max(...x.songs.map((id) => s.songs[id]?.performance ?? 0)) + r.float(0, 6)) },
+    { id: 'record', name: l('Gravação do Ano', 'Record of the Year'), pick: () => winner('record', rels.filter((x) => x.type === 'single'), (x) => x.q * 1.2 + Math.log10(1 + x.totalUnits) * 8 + r.float(0, 6)) },
+    { id: 'album', name: l('Álbum do Ano', 'Album of the Year'), pick: () => winner('album', rels.filter((x) => x.type === 'lp'), (x) => x.q * 1.4 + Math.log10(1 + x.totalUnits) * 6 + r.float(0, 6)) },
+    { id: 'newcomer', name: l('Artista Revelação', 'Best New Artist'), pick: () => winner('newcomer', rels.filter((x) => s.acts[x.actId]?.debutYear >= year - 1), (x) => (s.acts[x.actId]?.fame ?? 0) + x.q * 0.5 + r.float(0, 6)) },
+    { id: 'performance', name: l('Melhor Performance', 'Best Performance'), pick: () => winner('performance', rels, (x) => Math.max(...x.songs.map((id) => s.songs[id]?.performance ?? 0)) + r.float(0, 6)) },
   ];
   for (const c of cats) {
     const w = c.pick();

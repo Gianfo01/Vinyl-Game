@@ -9,6 +9,7 @@
 import { clamp, type Rng } from '../../core/rng';
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize, countryTaste, type CountryInfo } from '../../data/countries';
 import { countryName, countryOfCity } from '../../data/geo';
+import { localPref, softPower } from '../../data/relevance';
 import { MARKETS, familyOf, l, type L, type MarketId } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { physicalShare } from '../production';
@@ -87,11 +88,12 @@ const actCountry = (s: GameState, actId: string): string | null => {
 };
 
 // tamanho e gosto por país mudam por ano: calculados uma vez por semana (desempenho)
-let cache: { year: number; size: number[]; taste: Record<string, number[]> } | null = null;
+let cache: { year: number; size: number[]; taste: Record<string, number[]>; soft: (a3: string | null) => number } | null = null;
 function weekCache(year: number) {
   if (cache?.year === year) return cache;
   const size = COUNTRY_INFO.map((c) => countryMarketSize(c, year));
-  cache = { year, size, taste: {} };
+  const soft: Record<string, number> = {};
+  cache = { year, size, taste: {}, soft: (a3: string | null) => (soft[a3 ?? ''] ??= softPower(a3, year)) };
   return cache;
 }
 
@@ -109,8 +111,11 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
     const taste = tastes[i];
     let w = wc.size[i] * (taste + (1 - Math.min(1, taste)) * crossover * 0.4);
     if (!rel.territories.includes(c.market)) w *= 0.04;
-    if (home === c.a3) w *= 4;
-    else if (homeMarket === c.market) w *= 1.4;
+    // rodada 8: artista local tem preferência em casa; fora, viaja conforme o peso mundial do país
+    if (home === c.a3) w *= 1.6 * localPref(c.a3);
+    else {
+      w *= (homeMarket === c.market ? 1.25 : 1) * (0.25 + 0.75 * wc.soft(home)) / Math.sqrt(localPref(c.a3) / 1.6);
+    }
     out[i] = w;
     sum += w;
   }

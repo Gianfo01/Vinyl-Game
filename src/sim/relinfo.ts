@@ -22,9 +22,12 @@ export function trackList(s: GameState, rel: Release): TrackRow[] {
   const r = Rng.fromSeed(`tracks:${rel.id}:${rel.coverSeed}`);
   const rows: TrackRow[] = rel.songs.map((id, i) => {
     const so = s.songs[id];
-    return { n: i + 1, title: so?.title ?? '—', secs: so?.minutes ? Math.round(so.minutes * 60) : trackSecs(rel.year, r), songId: id, q: so?.q, single: i === 0 };
+    const mins = so?.minutes && so.minutes >= 1.5 && so.minutes <= 9 ? so.minutes : 0;
+    return { n: i + 1, title: so?.title ?? '—', secs: mins ? Math.round(mins * 60) : trackSecs(rel.year, r), songId: id, q: so?.q, single: i === 0 };
   });
-  const want = Math.max(rows.length, rel.songs.length ? rows.length : trackCount(rel, r));
+  // do jogador o disco guarda todas as faixas; de terceiros só a principal (o resto é gerado)
+  const mine = rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand;
+  const want = mine && rows.length ? rows.length : Math.max(rows.length, trackCount(rel, r));
   const act = s.acts[rel.actId];
   const lang = langForCity(act?.city ?? 'london', r);
   // a faixa-título abre o disco quando não há músicas guardadas
