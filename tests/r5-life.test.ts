@@ -77,7 +77,8 @@ describe('personagem', () => {
     expect(typeof act === 'object' && 'members' in act).toBe(true);
     expect(playerAct(s)?.name).toBe('Ana');
     expect(playBar(s, r)).toBeNull();
-    expect(joinableActs(s).length).toBe(0);
+    // a trajetória de ex-músico já traz contatos: só não pode oferecer o próprio projeto
+    expect(joinableActs(s).some((a) => a.id === playerAct(s)?.id)).toBe(false);
     expect(leaveBand(s)).toBeNull();
     expect(playerAct(s)).toBeUndefined();
     for (let i = 0; i < 3; i++) advanceMonth(s);
