@@ -273,3 +273,13 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - Matéria-prima com preço próprio por material e crise, escolha de fornecedor por grau; projeto com mistura de conceitos, local, estratégia de singles, edições, direção de capa, orçamento e prévia com motivos.
 - Mapa com camadas e legendas, painel por país com ações; ficha completa de gravadora; página de artista com abas (marcos, contratos, relíquias, vida pessoal).
 - Despesas crescem com o porte e a era (estrutura, jurídico, compliance, equipes de dados/vídeo, promoção mínima).
+
+## Rodada 14
+- Base de artistas reais maior (417 novos, todos os continentes) e tamanho da base escolhido no Novo Jogo.
+- Empresários reais (Parker, Epstein, Grant, Azoff, Lázaro, Poladian…) como pessoas completas: negociam pelos clientes, indicam, exigem, roubam artistas e disputam clientes com você.
+- Cockpit: mesa do mês + caixa de entrada + pixel art da sede numa página só; modo claro/escuro; um menu principal por profissão.
+- Capacidade real: suas bolinhas, horas dos membros de cada banda, carga da equipe por função e limite de contratações dos rivais.
+- Vida fora do trabalho para todos: hobbies, pontos de encontro, amizades, romances, rixas, filhos, vícios, musas; área Noite e encontros.
+- Cenas em pixel art por época (estúdio, palco, mídia, loja, fábrica, cidades, premiação, imprensa) com pontos clicáveis.
+- Novo jogo: sem "Papel" (sai da atividade principal), "Como começar" só com gravadora; notoriedade por carreira.
+- Polimento geral; artistas reais não morrem por sorteio antes do presente.
