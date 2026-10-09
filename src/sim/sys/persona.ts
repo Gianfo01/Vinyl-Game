@@ -55,6 +55,10 @@ export interface SkillState {
   milestones: string[];
   lastYear: number;
   lifestyle: LifestyleId | null;
+  /** rodada 13: conquistas já pagas (ids), pontos por fonte e diário de pontos */
+  ach?: string[];
+  achPts?: Record<string, number>;
+  achLog?: { week: number; text: L }[];
 }
 
 declare module '../ext4' {

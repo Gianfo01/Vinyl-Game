@@ -8,7 +8,7 @@ import type { Act, GameState } from '../../types';
 import type { PerkValues } from '../../perks';
 import type { OwnerAttrId } from './data';
 
-export type BranchId = 'biz' | 'craft' | 'net' | 'stage' | 'health' | 'media';
+export type BranchId = 'biz' | 'craft' | 'net' | 'stage' | 'health' | 'media' | 'mgmt' | 'digital';
 
 export const BRANCHES: { id: BranchId; name: L; icon: string; desc: L }[] = [
   { id: 'biz', name: l('Negócios', 'Business'), icon: 'bank', desc: l('Custos, contratos, investidores e escala.', 'Costs, contracts, investors and scale.') },
@@ -17,6 +17,8 @@ export const BRANCHES: { id: BranchId; name: L; icon: string; desc: L }[] = [
   { id: 'stage', name: l('Palco', 'Stage'), icon: 'mic', desc: l('Shows, turnês e espetáculo.', 'Shows, tours and spectacle.') },
   { id: 'health', name: l('Bem-estar', 'Wellbeing'), icon: 'heart', desc: l('Estresse, saúde, família e elenco feliz.', 'Stress, health, family and a happy roster.') },
   { id: 'media', name: l('Mídia', 'Media'), icon: 'newspaper', desc: l('Imprensa, imagem, lançamentos e vendas.', 'Press, image, launches and sales.') },
+  { id: 'mgmt', name: l('Gestão de artistas', 'Artist management'), icon: 'handshake', desc: l('Confiança, carreira, moral e contratos justos.', 'Trust, career plans, morale and fair deals.') },
+  { id: 'digital', name: l('Digital e plataformas', 'Digital & platforms'), icon: 'globe', desc: l('Streaming, redes, playlists e dados de audiência.', 'Streaming, social, playlists and audience data.') },
 ];
 export const branchById = Object.fromEntries(BRANCHES.map((b) => [b.id, b])) as Record<BranchId, (typeof BRANCHES)[number]>;
 
@@ -78,9 +80,27 @@ export const SKILL_TREE: SkillDef[] = [
   sk('me_launch', 'media', 3, ['me_contacts'], 'Lançamento cirúrgico', 'Surgical release', { appeal: 0.04 }),
   sk('me_ears', 'media', 4, ['me_image'], 'Ouvidos nas paredes', 'Ears in the walls', { scheme: 0.1, scoutAccuracy: 0.04 }),
   sk('me_midas', 'media', 5, ['me_launch', 'me_ears'], 'Toque de Midas', 'Midas touch', { appeal: 0.05, chartUnits: 0.03 }),
+
+  sk('mg_notes', 'mgmt', 1, [], 'Fichas de artista', 'Artist files', { trust: 2 }),
+  sk('mg_contract', 'mgmt', 2, ['mg_notes'], 'Contrato justo', 'Fair contract', { advance: -0.04 }, { attrs: { negotiation: 1 } }),
+  sk('mg_care', 'mgmt', 2, ['mg_notes'], 'Cuidado de carreira', 'Career care', { morale: 0.3, stress: -0.04 }),
+  sk('mg_plan', 'mgmt', 3, ['mg_contract'], 'Plano de carreira', 'Career plan', { offer: 0.03, reputation: 0.5 }),
+  sk('mg_mediator', 'mgmt', 4, ['mg_care'], 'Mediador de bandas', 'Band mediator', { morale: 0.5, scheme: -0.1 }),
+  sk('mg_dynasty', 'mgmt', 5, ['mg_plan', 'mg_mediator'], 'Casa de lendas', 'House of legends', { trust: 3, offer: 0.03, reputation: 1 }),
+
+  sk('dg_meta', 'digital', 1, [], 'Metadados limpos', 'Clean metadata', { chartUnits: 0.02 }),
+  sk('dg_social', 'digital', 2, ['dg_meta'], 'Redes sociais', 'Social media', { appeal: 0.03 }),
+  sk('dg_playlist', 'digital', 2, ['dg_meta'], 'Curadoria de playlists', 'Playlist curation', { chartUnits: 0.03 }),
+  sk('dg_data', 'digital', 3, ['dg_social'], 'Dados de audiência', 'Audience data', { scoutAccuracy: 0.05, signals: 1 }),
+  sk('dg_viral', 'digital', 4, ['dg_playlist'], 'Faro viral', 'Viral nose', { appeal: 0.04, chartUnits: 0.02 }),
+  sk('dg_platform', 'digital', 5, ['dg_data', 'dg_viral'], 'Sócio das plataformas', 'Platform partner', { valuation: 0.08, chartUnits: 0.03, wealth: 100 }),
 ];
 export const skillById = Object.fromEntries(SKILL_TREE.map((x) => [x.id, x])) as Record<string, SkillDef>;
 
+// Balanço (rodada 13): 8 ramos x 6 habilidades, custo 1/1/1/2/2/3 = 10 pts por ramo, 80 no total.
+// Fontes numa partida média de 8 anos: criação 5 + anos 2x8=16 + marcos ~6 + conquistas (prêmios, nº 1,
+// hits, certificações, turnês esgotadas; ver skillpts13.ts) ~10 = ~37 pts, ou seja ~46% da árvore.
+// Quem joga muito bem chega a ~55% (tetos por fonte somam 28 de conquistas); ninguém zera os 80.
 /** Pontos para distribuir na criação. */
 export const START_SKILL_POINTS = 5;
 /** Pontos por ano completo. */
@@ -105,19 +125,19 @@ export const LIFESTYLES: LifestyleDef[] = [
   { id: 'magnata', name: l('Magnata', 'Tycoon'), desc: l('Vive para o balanço: valor de mercado +6%, salários −2%; estresse +5%.', 'Lives for the balance sheet: market value +6%, salaries −2%; stress +5%.'), w: { biz: 1 }, values: { valuation: 0.06, staffCost: -0.02, stress: 0.05 } },
   { id: 'asceta', name: l('Asceta', 'Ascetic'), desc: l('Pouco gasto, muita calma: estresse −12%, +$60/mês; artistas te acham distante (−2 de confiança).', 'Little spending, lots of calm: stress −12%, +$60/month; artists find you distant (−2 trust).'), w: { health: 1 }, values: { stress: -0.12, wealth: 60, trust: -2 } },
   { id: 'intelectual', name: l('Intelectual', 'Intellectual'), desc: l('Livros, críticas e conservatório: crítica +0,25, scouting 4% mais preciso; apelo popular −2%.', 'Books, reviews and conservatory: critics +0.25, scouting 4% sharper; popular appeal −2%.'), w: { craft: 0.6, media: 0.4, health: 0.4 }, values: { critics: 0.25, scoutAccuracy: 0.04, appeal: -0.02 } },
-  { id: 'jetsetter', name: l('Jet-setter', 'Jet-setter'), desc: l('Festas em três continentes: +1 sinal/mês e ofertas +2; a vida custa $120/mês.', 'Parties on three continents: +1 signal/month and offers +2; costs $120/month.'), w: { net: 0.7, media: 0.7 }, values: { signals: 1, offer: 0.02, wealth: -120 } },
+  { id: 'jetsetter', name: l('Jet-setter', 'Jet-setter'), desc: l('Festas em três continentes: +1 sinal/mês e ofertas +2; a vida custa $120/mês.', 'Parties on three continents: +1 signal/month and offers +2; costs $120/month.'), w: { net: 0.7, media: 0.7, digital: 0.5 }, values: { signals: 1, offer: 0.02, wealth: -120 } },
   { id: 'festeiro', name: l('Festeiro', 'Party animal'), desc: l('A festa é o escritório: confiança +3 e elenco animado; a saúde cai um pouco todo mês.', 'The party is the office: trust +3 and a cheerful roster; health slips a little every month.'), w: { stage: 0.7, net: 0.7 }, values: { trust: 3, morale: 0.3 }, health: -0.4 },
   { id: 'underground', name: l('Underground', 'Underground'), desc: l('Porões e cenas: ofertas +5 para atos de nicho; investidores torcem o nariz (−5% de valor).', 'Basements and scenes: offers +5 for niche acts; investors frown (−5% value).'), w: { craft: 0.7, stage: 0.7 }, values: { offer: 0.05 }, act: (_s, a) => a.positioning < 50 },
-  { id: 'mecenas', name: l('Mecenas', 'Patron'), desc: l('Financia artistas: moral +0,5/mês e confiança +3; custa $100/mês do seu bolso.', 'Funds artists: morale +0.5/month and trust +3; costs $100/month from your pocket.'), w: { craft: 0.7, net: 0.7 }, values: { morale: 0.5, trust: 3, wealth: -100 } },
-  { id: 'workaholic', name: l('Workaholic', 'Workaholic'), desc: l('Sem fim de semana: +1 tempo livre por mês, estresse +15%.', 'No weekends: +1 free time a month, stress +15%.'), w: { biz: 0.7, media: 0.7 }, values: { energy: 1, stress: 0.15 } },
-  { id: 'familia', name: l('Família', 'Family person'), desc: l('Jantar em casa: estresse −10%, saúde +0,2/mês e elenco tratado como família; tramas −10%.', 'Dinner at home: stress −10%, health +0.2/month and a family-like roster; schemes −10%.'), w: { health: 0.7, net: 0.7 }, values: { stress: -0.1, morale: 0.2, scheme: -0.1 }, health: 0.2 },
+  { id: 'mecenas', name: l('Mecenas', 'Patron'), desc: l('Financia artistas: moral +0,5/mês e confiança +3; custa $100/mês do seu bolso.', 'Funds artists: morale +0.5/month and trust +3; costs $100/month from your pocket.'), w: { craft: 0.7, net: 0.7, mgmt: 0.5 }, values: { morale: 0.5, trust: 3, wealth: -100 } },
+  { id: 'workaholic', name: l('Workaholic', 'Workaholic'), desc: l('Sem fim de semana: +1 tempo livre por mês, estresse +15%.', 'No weekends: +1 free time a month, stress +15%.'), w: { biz: 0.7, media: 0.7, digital: 0.5 }, values: { energy: 1, stress: 0.15 } },
+  { id: 'familia', name: l('Família', 'Family person'), desc: l('Jantar em casa: estresse −10%, saúde +0,2/mês e elenco tratado como família; tramas −10%.', 'Dinner at home: stress −10%, health +0.2/month and a family-like roster; schemes −10%.'), w: { health: 0.7, net: 0.7, mgmt: 0.4 }, values: { stress: -0.1, morale: 0.2, scheme: -0.1 }, health: 0.2 },
   { id: 'boemio', name: l('Boêmio', 'Bohemian'), desc: l('Noite, bar e violão: +1 sinal/mês e +0,5 de qualidade; a saúde cobra (−0,3/mês).', 'Night, bars and guitars: +1 signal/month and +0.5 quality; health pays (−0.3/month).'), w: { craft: 0.5, net: 0.5, stage: 0.5 }, values: { signals: 1, songQ: 0.5 }, health: -0.3 },
 ];
 export const lifestyleById = Object.fromEntries(LIFESTYLES.map((x) => [x.id, x])) as Record<LifestyleId, LifestyleDef>;
 
 /** Pontos investidos por ramo. */
 export function branchPoints(owned: string[]): Record<BranchId, number> {
-  const out = { biz: 0, craft: 0, net: 0, stage: 0, health: 0, media: 0 } as Record<BranchId, number>;
+  const out = Object.fromEntries(BRANCHES.map((b) => [b.id, 0])) as Record<BranchId, number>;
   for (const id of owned) { const d = skillById[id]; if (d) out[d.branch] += d.cost; }
   return out;
 }

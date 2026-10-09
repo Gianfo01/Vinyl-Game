@@ -66,7 +66,7 @@ describe('árvore de habilidades', () => {
 
   it('há exatamente 10 estilos de vida e cada um é alcançável', () => {
     expect(LIFESTYLES.length).toBe(10);
-    expect(BRANCHES.length).toBe(6);
+    expect(BRANCHES.length).toBe(8);
     const all = new Set<string>();
     const ids = SKILL_TREE.map((x) => x.id);
     // combinações de até 3 ramos com os dois primeiros níveis

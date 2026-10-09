@@ -10,6 +10,7 @@ import { rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { ic } from '../vis';
 import { fxText } from './persona';
+import { skillSources } from './skills13';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 
@@ -20,8 +21,8 @@ export function skillsTab(s: GameState): HTMLElement {
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
       section(`${t(l('Habilidades', 'Abilities'))} — ${t(l('{n} pontos livres', '{n} free points'), { n: S0.points })}`,
-        h('p', { class: 'muted small' }, t(l('Ganhe {y} pontos por ano e +1 em cada marco da carreira. Cada habilidade pede as anteriores do ramo (setas). Custo: 1 nos níveis 1–2, 2 nos níveis 3–4, 3 no topo.', 'Earn {y} points a year and +1 at each career milestone. Each ability needs the earlier ones in its branch (arrows). Cost: 1 at tiers 1–2, 2 at tiers 3–4, 3 at the top.'), { y: YEARLY_SKILL_POINTS })),
-        h('div', { class: 'sk-tree' }, BRANCHES.map((b) => h('div', { class: 'sk-branch' },
+        h('p', { class: 'muted small' }, t(l('Ganhe {y} pontos por ano, +1 em cada marco e pontos por prêmios, nº 1, hits, certificações e turnês esgotadas (veja Fontes de pontos). Cada habilidade pede as anteriores do ramo (setas). Custo: 1 nos níveis 1–2, 2 nos níveis 3–4, 3 no topo.', 'Earn {y} points a year, +1 per milestone and points for awards, #1s, hits, certifications and sold-out tours (see Point sources). Each ability needs the earlier ones in its branch (arrows). Cost: 1 at tiers 1–2, 2 at tiers 3–4, 3 at the top.'), { y: YEARLY_SKILL_POINTS })),
+        h('div', { class: 'sk-tree sk-tree8' }, BRANCHES.map((b) => h('div', { class: 'sk-branch' },
           h('b', null, ic(b.icon), ' ', t(b.name), h('small', { class: 'muted' }, ` · ${bp[b.id]} ${t(l('pts', 'pts'))}`)),
           h('small', { class: 'muted' }, t(b.desc)),
           ...SKILL_TREE.filter((x) => x.branch === b.id).map((d) => {
@@ -45,6 +46,7 @@ export function skillsTab(s: GameState): HTMLElement {
         h('ul', { class: 'small' }, LIFESTYLES.map((x) => h('li', { class: x.id === S0.lifestyle ? 'good' : '' }, h('b', null, t(x.name)), ' — ', t(x.desc),
           h('small', { class: 'muted' }, ` [${Object.keys(x.w).map((k) => t(BRANCHES.find((b) => b.id === k)!.name)).join(' + ')}]`)))),
       ),
+      skillSources(s),
       section(t(l('Marcos', 'Milestones')),
         h('ul', { class: 'small' }, SKILL_MILESTONES.map((m) => h('li', { class: S0.milestones.includes(m.id) ? 'good' : 'muted' }, S0.milestones.includes(m.id) ? '✔ ' : '○ ', t(m.name)))),
         h('p', { class: 'muted small' }, t(l('Pontos ganhos no total: {n}', 'Points earned in total: {n}'), { n: S0.earned })),
