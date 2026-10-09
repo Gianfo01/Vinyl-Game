@@ -229,3 +229,13 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - **Hall da Fama do Rock** (1983/1986), **15 eras**, nada do futuro nas telas e novidades do ano nas notícias.
 - **Menus:** grupos Mundo (Mapa, Paradas, Gravadoras, Relações e movimentos, Lendas) e Prêmios e eventos (Festivais, Premiações, Hall da Fama, Críticos).
 - **Saves:** baixar, copiar e colar; o importador aceita arquivo ou texto.
+
+## Rodada 10: vida pessoal, gravadoras, bolsa e menus
+
+- **Vida pessoal:** 50 eventos aleatórios em pop-up (2–4 respostas, custos visíveis, desdobramentos meses depois), no lugar dos dilemas.
+- **Política e religião** para todas as pessoas: afinidade, atrito, censura e reação a capas e letras.
+- **Gravadoras:** 45 novas (com nome real em "Nomes reais"), escolha de quantas e quais, modo "do zero — todos iguais", 21 estratégias reconhecíveis e líderes com perfil, carreira, sucessão e troca de estratégia.
+- **Vocalista:** sem alguém que cante, só instrumental (salvo feat ou cantor de estúdio); a banda do jogador começa com vocalista.
+- **Pessoas reais únicas** entre bandas e carreira solo; opiniões variadas por personalidade e gosto; integrantes clicáveis com características principais.
+- **Investimentos:** bolsa com ações de gravadoras, streaming, vídeo, mídia e fabricantes que reagem ao mundo do jogo; aluguel só de imóvel próprio.
+- **Menus:** Música → Compor, Estúdio, Lançamentos; Selo → Finanças separada de Negócios; Você → Você, Vida pessoal, Patrimônio e investimentos.
