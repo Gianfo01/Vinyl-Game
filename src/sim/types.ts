@@ -116,6 +116,24 @@ export interface Appearance {
   glasses: boolean;
   hat: boolean;
   beard: boolean;
+  /** rodada 15 (opcionais; ausente = padrão da era): tipo de chapéu 1 cartola 2 caubói 3 boina 4 gorro 5 faixa 6 boné 7 fedora 8 bandana */
+  hatT?: number;
+  /** cor do chapéu (índice de OUTFIT_COLORS) */
+  hatC?: number;
+  /** óculos 1 redondos 2 escuros 3 extravagantes */
+  glT?: number;
+  /** barba 1 bigode 2 cavanhaque 3 por fazer */
+  bdT?: number;
+  /** pintura facial 1 estrela 2 demônio 3 gato 4 espacial 5 raio 6 delineador 7 máscara branca */
+  paint?: number;
+  /** capacete 1 prateado 2 dourado */
+  helm?: number;
+  /** cor da raiz (cabelo bicolor) */
+  roots?: number;
+  /** sexo conhecido (artistas reais) */
+  sx?: 'm' | 'f';
+  /** visual real aplicado automaticamente (rodada 15); some quando o jogador edita */
+  rl?: string;
 }
 
 export interface Person {

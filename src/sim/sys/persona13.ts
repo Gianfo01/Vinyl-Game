@@ -118,6 +118,7 @@ function hashFacets(s: GameState, key: string): Record<Facet, number> {
 }
 
 function sexFor(s: GameState, key: string, kind: Kind13, year: number, role?: string, look?: Appearance): Sex13 {
+  if (look?.sx) return look.sx;
   if (look?.beard) return 'm';
   const late = clamp((year - 1965) / 50, 0, 1);
   const pf = kind === 'person' ? (role === 'vocal' ? 0.42 : 0.1 + late * 0.15) : kind === 'leader' ? 0.05 + late * 0.22 : kind === 'staff' || kind === 'media' ? 0.25 + late * 0.2 : 0.18 + late * 0.25;
@@ -214,7 +215,7 @@ function build(s: GameState, key: string): P13 | null {
     up('artist', art); up('producer', k.prod); up('engineer', k.prod * 0.8); up('anr', (k.comp + k.prod) / 2 * 0.75); up('manager', k.biz * 0.85);
     up('booking', k.biz * 0.6 + k.stage * 0.2); up('publicist', k.stage * 0.35 + k.biz * 0.35); up('legal', k.biz * 0.45); up('exec', k.biz * 0.6 + facets.ambicao * 0.2);
     up('critic', k.lyr * 0.5 + facets.curiosidade * 0.3); job = p.isPlayer ? 'exec' : 'artist';
-    look = lookOf13(p.id, p.look);
+    look = p.look ?? (p.isPlayer ? lookOf13(p.id) : undefined); // rodada 15: sem visual salvo, pele vem da cidade (retrato segue)
     views = viewsOf(s, p.id);
     if (p.isPlayer) {
       const o = ownerOf(s);
