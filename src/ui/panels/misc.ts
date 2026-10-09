@@ -17,7 +17,7 @@ import { $, N, memoText, actLink, branchName, cityName, cover, genreName, kv, la
 import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
 import { HqView, hqHooks } from '../hq';
-import { copyText, store } from '../store';
+import { copyText, store, tryDownload } from '../store';
 import { inspect } from '../common';
 import { CITIES, cityById, genreById } from '../../data/world';
 import { nominal } from '../../core/money';
@@ -445,11 +445,7 @@ export function diaryPanel(s: GameState): HTMLElement {
   }
   const exportTxt = () => {
     const lines = s.memory.filter((m) => m.important).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`);
-    const blob = new Blob([`Masters — Run ${s.signature}\n${s.config.companyName}\n\n${lines.join('\n')}`], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `diario-${s.signature}.txt`;
-    a.click();
+    tryDownload(`diario-${s.signature}.txt`, `Masters — Run ${s.signature}\n${s.config.companyName}\n\n${lines.join('\n')}`, 'text/plain');
   };
   return h('div', { class: 'panel diary' },
     section(`${t(S.areaDiary)} — Run ${s.signature}`,

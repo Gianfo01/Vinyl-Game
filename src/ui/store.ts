@@ -231,6 +231,19 @@ export async function importSaveText(text: string): Promise<GameState> {
 
 /** Tenta baixar como arquivo; devolve false se o navegador (ex.: visualizador isolado) bloquear. */
 export function tryDownload(name: string, content: string, type = 'application/json'): boolean {
+  // Dentro do visualizador de artifacts do claude.ai, links de download não funcionam: usa a
+  // capacidade "downloads" (o visitante confirma o arquivo). Fora dele, link de blob comum.
+  const cl = (window as unknown as { claude?: { use?: (n: string) => Promise<{ save: (r: { filename: string; data: string }) => Promise<unknown> } | null> } }).claude;
+  if (cl?.use) {
+    void cl.use('downloads').then((d) => (d ? d.save({ filename: name, data: content }) : blobDownload(name, content, type))).catch((e: { code?: string }) => {
+      if (e?.code !== 'declined') blobDownload(name, content, type);
+    });
+    return true;
+  }
+  return blobDownload(name, content, type);
+}
+
+function blobDownload(name: string, content: string, type: string): boolean {
   try {
     const blob = new Blob([content], { type });
     const a = document.createElement('a');

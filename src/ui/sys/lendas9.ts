@@ -1,3 +1,4 @@
+import { tryDownload } from '../store';
 // Rodada 9 — área "Lendas": linha do tempo do mundo com filtros, biografias (personalidade, sonho,
 // memórias, genealogia, influências), cidades e cenas, jornal e boatos, relíquias com leilão, o livro
 // da partida e o mundo persistente. Também: aba "Alma" na página da pessoa, aba "Lendas" na página do
@@ -161,12 +162,7 @@ function relicsTab(s: GameState): HTMLElement {
 }
 
 function download(name: string, text: string, type: string): void {
-  const blob = new Blob([text], { type });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  tryDownload(name, text, type);
 }
 
 export function saveWorld(s: GameState): void {
