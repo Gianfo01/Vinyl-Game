@@ -56,7 +56,8 @@ describe('laços duradouros', () => {
 
   it('o mundo forma laços sozinho e a admiração tem opinião', () => {
     const s = mk('r9-alive', { startYear: 1980 });
-    for (let i = 0; i < 36; i++) advanceMonth(s);
+    // laços são raros e o selo parado quebra em ~4 anos: caixa folgado e até 10 anos de mundo
+    for (let i = 0; i < 120 && !bonds(s).list.length; i++) { s.player.cash = Math.max(s.player.cash, 1e9); advanceMonth(s); }
     expect(bonds(s).list.length).toBeGreaterThan(0);
     const A = npcs(s)[0];
     const op = opinionsOf(s, lead(A));

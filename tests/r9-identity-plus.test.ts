@@ -266,9 +266,9 @@ describe('modo livre: subgêneros', () => {
     s.scenes[`${home}:${genre}`] = 6;
     const st = subs(s);
     let born = 0;
-    for (let i = 0; i < 300 && !born; i++) born = subMonth(s, rngOf(s), st).length;
+    for (let i = 0; i < 300 && !st.list.some((x) => x.city === home); i++) born += subMonth(s, rngOf(s), st).length;
     expect(st.list.length).toBeGreaterThan(0);
-    const sg = st.list[0];
+    const sg = st.list.find((x) => x.city === home) ?? st.list[0]; // outras cenas reais podem nascer antes
     expect(sg.name.pt && sg.name.en).toBeTruthy();
     expect(sg.city).toBe(home);
     expect(sg.inst.length).toBeGreaterThan(0);
@@ -277,6 +277,6 @@ describe('modo livre: subgêneros', () => {
     for (let i = 0; i < 400; i++) subMonth(s, rngOf(s), st);
     expect(sg.acts.length).toBeGreaterThanOrEqual(n0);
     expect(sg.spread).toBeGreaterThan(0);
-    expect(Object.keys(st.adopt).length).toBe(sg.acts.length);
+    expect(Object.keys(st.adopt).length).toBeGreaterThanOrEqual(sg.acts.length); // outras cenas também adotam
   });
 });

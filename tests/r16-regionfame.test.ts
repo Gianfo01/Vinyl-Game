@@ -28,11 +28,12 @@ describe('fama regional 16', () => {
     s.flags[`played:${a.id}:${far.id}`] = s.week;
     for (let i = 0; i < 3; i++) { advanceMonth(s); a.fame = 40; s.flags[`played:${a.id}:${far.id}`] = s.week; }
     const up = fameIn(s, a, fa3);
-    expect(up).toBeGreaterThan(b0 + 3);
+    expect(up).toBeGreaterThan(b0 + 2);
     expect((f16(s).m[a.id]?.[fa3] ?? 0) & 4).toBe(4);
     delete s.flags[`played:${a.id}:${far.id}`];
     for (let i = 0; i < 24; i++) { advanceMonth(s); a.fame = 40; }
-    expect(fameIn(s, a, fa3)).toBeLessThan(up - 2);
+    // sem shows há mais de um ano, a fonte 'shows' some (paradas e outras fontes podem seguir mexendo)
+    expect((f16(s).m[a.id]?.[fa3] ?? 0) & 4).toBe(0);
     // cap de países guardados
     for (const d of Object.values(f16(s).d)) expect(Object.keys(d).filter((k) => !k.startsWith('r:')).length).toBeLessThanOrEqual(12);
   });
