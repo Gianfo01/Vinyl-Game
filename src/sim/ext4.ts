@@ -61,9 +61,9 @@ export interface ModCtx {
   cityId?: string;
   song?: Song;
 }
-export type ModName = 'appeal' | 'cityDemand' | 'pressingCost' | 'songQ' | 'showRevenue' | 'chartUnits';
+export type ModName = 'appeal' | 'cityDemand' | 'pressingCost' | 'songQ' | 'showRevenue' | 'chartUnits' | 'tourRisk';
 type ModFn = (s: GameState, value: number, ctx: ModCtx) => { value: number; label?: L } | null;
-const MODS: Record<ModName, { id: string; fn: ModFn }[]> = { appeal: [], cityDemand: [], pressingCost: [], songQ: [], showRevenue: [], chartUnits: [] };
+const MODS: Record<ModName, { id: string; fn: ModFn }[]> = { appeal: [], cityDemand: [], pressingCost: [], songQ: [], showRevenue: [], chartUnits: [], tourRisk: [] };
 
 export function registerMod(name: ModName, id: string, fn: ModFn): void {
   const list = MODS[name];

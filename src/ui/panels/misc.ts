@@ -26,6 +26,7 @@ import { WorldMap, glyphCanvas, transportName, type MapCity } from '../map';
 import { activeToursSection, merchSection, tourPlannerSection } from './tours';
 import { assignBranch, closeBranch, hqBlocker, hqCaps, upgradeBranch } from '../../sim/branches';
 import { ic, tile } from '../vis';
+import { crewProfileCell, crewRespecButton, crewSummary } from '../sys/crew8';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -338,9 +339,11 @@ function finances(s: GameState): HTMLElement {
 function staff(s: GameState): HTMLElement {
   const cap = hqCaps(s).staff;
   return section(`${t(S.staff)} ${s.player.staff.length}/${cap}`,
+    crewSummary(s),
     s.player.staff.length ? h('table', { class: 'tbl' }, h('tbody', null, s.player.staff.map((st) => {
       const role = STAFF_ROLES.find((r) => r.id === st.role);
-      return h('tr', null, h('td', null, st.name), h('td', { title: t(role?.desc) }, t(role?.name)), h('td', null, st.skill), h('td', null, $(st.salary)), h('td', null, h('button', { class: 'btn small ghost', onclick: () => { fireStaff(s, st.id); rerender(); } }, t(S.fire))));
+      const years = Math.max(0, (s.week - st.hiredWeek) / 52);
+      return h('tr', null, h('td', null, st.name, h('div', { class: 'muted small' }, t(l('{y} ano(s) de casa', '{y} year(s) here'), { y: years.toFixed(1) }))), h('td', { title: t(role?.desc) }, t(role?.name)), h('td', null, crewProfileCell(s, st, { mine: true })), h('td', null, st.skill), h('td', null, $(st.salary)), h('td', null, crewRespecButton(s, st), ' ', h('button', { class: 'btn small ghost', onclick: () => { fireStaff(s, st.id); rerender(); } }, t(S.fire))));
     }))) : h('p', { class: 'muted' }, t(l('Sem equipe. Contrate em Mercado → Profissionais.', 'No staff. Hire in Market → Professionals.'))),
     h('h4', null, t(l('Funções', 'Roles'))),
     h('ul', { class: 'small' }, STAFF_ROLES.map((r) => h('li', null, h('b', null, t(r.name)), ' — ', t(r.desc)))),

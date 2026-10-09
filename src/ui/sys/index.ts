@@ -13,3 +13,5 @@ import './hq6';
 import './intrigue';
 import './charts7';
 import './furnish';
+import './route8';
+import './consent8';
