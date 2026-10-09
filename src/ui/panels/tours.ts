@@ -16,7 +16,7 @@ import { visibleAct } from '../../sim/future';
 import { forecastTour } from '../../sim/sys/explain12';
 import { forecastBox } from '../sys/explain12';
 import { fameText } from '../../sim/sys/fame15';
-import { suggestRoute16 } from '../../sim/route16';
+import { labelTourNet16, sizedDraft16, suggestRoute16 } from '../../sim/route16';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -53,6 +53,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
         stat('money', $(est.logistics), l('Logística (reservada agora)', 'Logistics (booked now)')), stat('chart-up', $(est.expectedRevenue), l('Bilheteria bruta prevista', 'Expected gross box office')), stat('shirt', $(est.expectedMerch), l('Merch previsto', 'Expected merch')),
         est.visas ? stat('key', est.visas, l('Vistos', 'Visas'), 'warn') : null),
       h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: 'stop' }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name))))),
+      ((n) => h('p', { class: `small ${n.net < 0 && -n.net > s.player.cash * 0.25 ? 'bad' : 'muted'}` }, ic('money'), ' ', t(n.why), n.net < 0 && -n.net > s.player.cash * 0.25 ? t(l(' Atenção: é mais de 1/4 do caixa.', ' Warning: that is over 1/4 of your cash.')) : ''))(labelTourNet16(s, act.id, est)),
       est.warnings.length ? h('ul', { class: 'small warn' }, est.warnings.map((w) => h('li', null, ic('warning'), ' ', t(w)))) : null,
       forecastBox(forecastTour(s, plan, est)),
       h('button', { class: 'btn primary', onclick: () => {
@@ -103,6 +104,6 @@ export function merchSection(s: GameState): HTMLElement {
 function routeHintRow(s: GameState, actId: string, setStops: (ids: string[]) => void): HTMLElement {
   const r = suggestRoute16(s, actId);
   return h('div', { class: 'row wrap' },
-    h('button', { class: 'btn small', disabled: !r.ids.length, title: t(r.why), onclick: () => { setStops(r.ids); toast(t(r.why), 'info'); } }, ic('globe'), ' ', t(l('Sugerir rota (maior procura)', 'Suggest route (top demand)'))),
+    h('button', { class: 'btn small', disabled: !r.ids.length, title: t(r.why), onclick: () => { Object.assign(draft, sizedDraft16(s, actId)); setStops(r.ids); toast(t(r.why), 'info'); } }, ic('globe'), ' ', t(l('Sugerir rota (maior procura)', 'Suggest route (top demand)'))),
     h('small', { class: 'muted' }, t(r.why)));
 }
