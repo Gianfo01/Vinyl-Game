@@ -1,7 +1,7 @@
 // Rodada 12 (UI): agente x promotor. Mapa + calendário + previsão por parada; ofertas arena x casa menor.
 
 import { VENUE_TIERS } from '../../data/rules';
-import { CITIES, cityById, l, type L } from '../../data/world';
+import { CITIES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { dateOfDay, rngOf } from '../../sim/util';
 import {
@@ -12,6 +12,11 @@ import type { GameState } from '../../sim/types';
 import { $, actLink, cityName, monthName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
+import { WorldMap, type MapCity, type MapOverlay } from '../map';
+import { store } from '../store';
+import { foundInline, signInline } from './careerui13';
+import { PROMOTER_LICENSE } from '../../sim/sys/tour12';
+import { money } from '../../sim/util';
 
 let role: Role = 'agent';
 let actId = '';
@@ -33,23 +38,28 @@ function pool(s: GameState) {
   return role === 'agent' ? clientsOf(s) : Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.members.length && a.fame >= 5).sort((a, b) => b.fame - a.fame).slice(0, 40);
 }
 
+// rodada 13: o mapa antigo (SVG solto, sem continentes, que vazava da caixa) virou o mapa-múndi do jogo
+let wmap: WorldMap | null = null;
+function mapCities(s: GameState): MapCity[] {
+  const act = s.acts[actId];
+  const order = [...draft].sort((a, b) => a.week - b.week).map((x) => x.city);
+  return CITIES.map((c) => {
+    const d = act ? localDraw(s, act, c.id) : 0, nw = act ? isNewMarket(s, act.id, c.id) : true, i = order.indexOf(c.id);
+    return { id: c.id, color: nw ? '#8a8f98' : '#3fb27f', size: 0.7 + Math.min(1.1, Math.log10(1 + d) / 4), badge: i >= 0 ? String(i + 1) : undefined };
+  });
+}
 function mapView(s: GameState): HTMLElement {
-  const W = 420, H = 210, act = s.acts[actId];
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'map12'); svg.setAttribute('style', 'width:100%;max-width:560px;background:rgba(127,127,127,.12);border-radius:8px');
-  const P = (id: string) => { const c = cityById[id]; return [((c.lon + 180) / 360) * W, ((90 - c.lat) / 180) * H]; };
-  const add = (tag: string, a: Record<string, string>, txt?: string) => { const e = document.createElementNS(ns, tag); for (const k in a) e.setAttribute(k, a[k]); if (txt) e.textContent = txt; svg.appendChild(e); return e; };
-  const sorted = [...draft].sort((a, b) => a.week - b.week);
-  sorted.slice(1).forEach((st, i) => { const [x1, y1] = P(sorted[i].city), [x2, y2] = P(st.city); add('line', { x1: String(x1), y1: String(y1), x2: String(x2), y2: String(y2), stroke: '#e6a23c', 'stroke-width': '1.5', 'stroke-dasharray': '4 3' }); });
-  for (const c of CITIES) {
-    const [x, y] = P(c.id), d = act ? localDraw(s, act, c.id) : 0, nw = act ? isNewMarket(s, act.id, c.id) : true;
-    const r = 3 + Math.min(7, Math.log10(1 + d) * 2);
-    const el = add('circle', { cx: String(x), cy: String(y), r: String(r), fill: nw ? '#8a8f98' : '#3fb27f', stroke: c.id === selCity ? '#fff' : rel(s, c.id) >= 50 ? '#e6a23c' : 'none', 'stroke-width': '2', style: 'cursor:pointer' });
-    el.addEventListener('click', () => { selCity = c.id; rerender(); });
-    const tt = document.createElementNS(ns, 'title'); tt.textContent = `${cityName(c.id)} · ${t(nw ? l('mercado novo', 'new market') : l('conquistada', 'conquered'))} · ${t(l('força local', 'local draw'))} ~${Math.round(d)} · ${t(l('relação', 'relations'))} ${Math.round(rel(s, c.id))}`; el.appendChild(tt);
-  }
-  return h('div', null, svg, h('div', { class: 'small muted' }, t(l('Verde = conquistada (tamanho = força local), cinza = mercado novo, contorno dourado = boa relação com o promotor local, tracejado = sua rota.', 'Green = conquered (size = local draw), grey = new market, gold ring = good local promoter relations, dashed = your route.'))));
+  const act = s.acts[actId];
+  const route = [...draft].sort((a, b) => a.week - b.week).map((x) => x.city);
+  const opts = {
+    getYear: () => store.game?.year ?? s.year, getMonth: () => store.game?.month ?? s.month,
+    cities: () => mapCities(s), selected: [selCity, ...route].filter(Boolean), route, mode: 'tour' as const,
+    onCityClick: (id: string) => { selCity = id; rerender(); },
+    overlays: (): MapOverlay[] => Object.entries(c12(s).rel).filter(([, v]) => v >= 50).map(([city]) => ({ kind: 'icon' as const, city, icon: 'promo' as const })),
+    cityTipExtra: (id: string) => h('div', { class: 'small' }, `${t(act && !isNewMarket(s, act.id, id) ? l('conquistada', 'conquered') : l('mercado novo', 'new market'))} · ${t(l('força local', 'local draw'))} ~${act ? Math.round(localDraw(s, act, id)) : 0} · ${t(l('relação', 'relations'))} ${Math.round(rel(s, id))}`),
+  };
+  if (!wmap) wmap = new WorldMap(opts); else wmap.update(opts);
+  return h('div', null, wmap.element, h('div', { class: 'small muted' }, t(l('Verde = conquistada (tamanho = força local), cinza = mercado novo, ícone = boa relação com o promotor local, linha = sua rota. Clique numa cidade para escolhê-la.', 'Green = conquered (size = local draw), grey = new market, icon = good local promoter relations, line = your route. Click a city to pick it.'))));
 }
 
 function calendar(s: GameState): HTMLElement {
@@ -91,8 +101,11 @@ function predRow(s: GameState, st: Stop, p: Pred, reasons: L[], i: number): HTML
 function builder(s: GameState): HTMLElement {
   const list = pool(s);
   if (!list.some((a) => a.id === actId)) { actId = list[0]?.id ?? ''; draft = []; }
-  if (role === 'agent' && !hasAgency(s)) return h('p', { class: 'muted' }, t(l('Para atuar como agente, fundue uma Agência de shows em Empreendimentos e assine clientes.', 'To act as an agent, found a Booking agency under Ventures and sign clients.')));
+  // rodada 13: antes era só um texto ("funde em Empreendimentos") sem botão — agora dá para fundar e assinar aqui
+  if (role === 'agent' && !hasAgency(s)) return foundInline(s, 'booking', l('Para atuar como agente você precisa de uma agência de shows: ela assina clientes e você ganha comissão sobre cada data que fechar.', 'To act as an agent you need a booking agency: it signs clients and you earn a commission on every date you close.'));
+  if (role === 'agent' && !list.length) return signInline(s, hasAgency(s)!);
   if (role === 'promoter' && !c12(s).promoter.on) return h('div', null, h('p', null, t(l('Como promotor você banca os shows: paga casa e cachê, fica com a bilheteria — e com o prejuízo se a casa esvaziar.', 'As a promoter you finance the shows: you pay venue and fee, keep the box office — and the loss if the room empties.'))),
+    h('p', { class: `small ${s.player.cash < money(s, PROMOTER_LICENSE) ? 'bad' : 'muted'}` }, t(l('Licença e relações iniciais: {c} do caixa do selo (você tem {h}).', 'License and starting relations: {c} from label cash (you have {h}).'), { c: $(money(s, PROMOTER_LICENSE)), h: $(s.player.cash) })),
     btn(l('Abrir promotora', 'Open promotion arm'), () => { const e = openPromoter(s); toast(t(e ?? l('Promotora aberta.', 'Promotion arm open.')), e ? 'bad' : 'good'); rerender(); }, 'btn primary'));
   if (!actId) return h('p', { class: 'muted' }, t(l('Nenhum artista disponível.', 'No acts available.')));
   const act = s.acts[actId];
@@ -103,7 +116,7 @@ function builder(s: GameState): HTMLElement {
   return h('div', null,
     h('div', { class: 'row wrap' }, select<string>(actId, list.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)})` })), (x) => { actId = x; draft = []; rerender(); }),
       act ? h('span', { class: 'small muted' }, `${t(l('Força local em', 'Local draw in'))} ${cityName(selCity)}: ~${Math.round(localDraw(s, act, selCity))} · ${t(l('porte sustentável', 'sustainable size'))}: ${t(VENUE_TIERS[suggestTier(s, act, selCity)].name)}`) : null),
-    h('div', { class: 'row wrap', style: 'align-items:flex-start;gap:12px' }, h('div', { style: 'flex:1 1 320px' }, mapView(s)), h('div', { style: 'flex:1 1 320px' }, calendar(s))),
+    mapView(s), calendar(s),
     h('div', { class: 'row wrap' }, select<string>(selCity, CITIES.map((c) => ({ value: c.id, label: cityName(c.id) })), (x) => { selCity = x; rerender(); }),
       select<number>(week, free.map((w) => ({ value: w, label: wk(s, w) })), (x) => (week = x)),
       btn(l('Adicionar parada', 'Add stop'), () => { const st = defaultStop(s, act, selCity, week); st.ask = 1; refee(s, st, actId); draft.push(st); draft.sort((a, b) => a.week - b.week); rerender(); }, 'btn small primary')),

@@ -15,8 +15,9 @@ import { h } from './dom';
 import { store } from './store';
 import { ic, setTab } from './vis';
 import { unreadCount } from '../sim/sys/people/inbox';
+import { careers } from '../sim/sys/careers12';
 
-interface Tip {
+export interface Tip {
   icon: string;
   text: L;
   area: string;
@@ -25,13 +26,16 @@ interface Tip {
   level: 'bad' | 'warn' | 'info';
 }
 
+/** Rodada 13: outros sistemas somam dicas (ex.: por carreira). */
+export const ADVISOR_EXTRA: ((s: GameState) => Tip[])[] = [];
+
 export function advisorTips(s: GameState): Tip[] {
   const out: Tip[] = [];
   const net = Object.values(s.lastMonthLedger).reduce((a, b) => a + b, 0);
   if (s.player.cash < 0) out.push({ icon: 'warning', text: l('Caixa negativo: corte custos, venda masters ou peça empréstimo (Negócios).', 'Negative cash: cut costs, sell masters or take a loan (Business).'), area: 'business', level: 'bad' });
   else if (net < 0 && s.player.cash / -net < 4) out.push({ icon: 'warning', text: fmtL(l('No ritmo do último mês, o caixa dura ~{n} meses ({c}).', 'At last month\'s pace, cash lasts ~{n} months ({c}).'), { n: Math.max(1, Math.floor(s.player.cash / -net)), c: $(s.player.cash) }), area: 'business', level: 'warn' });
   const ids = playerActs(s);
-  if (!ids.length) out.push({ icon: 'fans', text: l('Seu elenco está vazio: descubra artistas no Mercado e faça uma oferta.', 'Your roster is empty: discover artists in the Market and make an offer.'), area: 'market', level: 'warn' });
+  if (!ids.length && careers(s).active.some((c) => c === 'label' || c === 'musician')) out.push({ icon: 'fans', text: l('Seu elenco está vazio: descubra artistas no Mercado e faça uma oferta.', 'Your roster is empty: discover artists in the Market and make an offer.'), area: 'market', level: 'warn' });
   for (const id of ids) {
     const a = s.acts[id];
     if (!a || a.status === 'retired' || a.status === 'split') continue;
@@ -52,6 +56,7 @@ export function advisorTips(s: GameState): Tip[] {
   const pt = life(s).partner;
   if (pt && pt.affinity < 30) out.push({ icon: 'heart', text: fmtL(l('{p} anda distante. Passe tempo junto (Vida pessoal → Amor e família).', '{p} has been distant. Spend time together (Personal life → Love and family).'), { p: pt.name }), area: 'you', tab: ['life', 'love'], level: 'warn' });
   if (energyLeft(s) === maxEnergy(s) && out.length < 6) out.push({ icon: 'star', text: l('Você ainda tem todo o tempo livre do mês: pratique, namore, toque num bar ou mentore um artista (Você).', 'You still have all your free time this month: practise, date, play a bar or mentor an artist (You).'), area: 'you', level: 'info' });
+  for (const f of ADVISOR_EXTRA) out.push(...f(s));
   const order = { bad: 0, warn: 1, info: 2 };
   return out.sort((a, b) => order[a.level] - order[b.level]).slice(0, 7);
 }

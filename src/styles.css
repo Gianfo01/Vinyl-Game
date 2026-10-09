@@ -695,3 +695,10 @@ img.portrait { border: 1px solid var(--line); }
 .mgr12 > div, .mgr12 > ul { margin: 0.3rem 0; }
 .mgr12 .card.warn { border-color: var(--warn, var(--accent)); }
 .car12-ng { display: contents; }
+/* rodada 13: grupos do menu ligados às suas carreiras */
+.nav-career > .nav-head { box-shadow: inset 3px 0 0 var(--accent); }
+.nav-career > .nav-head .lbl::after { content: ' ★'; color: var(--accent); font-size: 0.8em; }
+.kpi13 { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.kpi13 .card { flex: 1 1 200px; padding: 0.5rem 0.7rem; margin: 0; }
+.kpi13 .kv13 { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.9em; }
+.found13 { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }

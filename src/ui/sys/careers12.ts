@@ -14,6 +14,7 @@ import { registerArea, registerSection } from '../registry';
 import { store } from '../store';
 import { hl } from '../newgame13';
 import { fxText } from './persona';
+import { openCareer } from './careerui13';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const go = (area: string) => { store.area = area; rerender(); };
@@ -27,7 +28,7 @@ export function registerCareerCard(id: string, render: (s: GameState, d: CareerD
 function defaultCard(s: GameState, d: CareerDef): HTMLElement {
   const st = d.status?.(s);
   return h('div', { class: 'card car12-card' },
-    h('div', { class: 'row between' }, h('b', null, t(d.name)), h('button', { class: 'btn tiny', onclick: () => go(d.area) }, t(l('Abrir', 'Open')) + ' →')),
+    h('div', { class: 'row between' }, h('b', null, t(d.name)), h('button', { class: 'btn tiny', onclick: () => openCareer(d.id) }, t(l('Abrir', 'Open')) + ' →')),
     st ? h('div', { class: 'small muted' }, t(st)) : null);
 }
 
@@ -69,7 +70,7 @@ export function careersPanel(s: GameState): HTMLElement {
         return h('tr', { class: on ? 'me' : '' },
           h('td', null, h('b', null, t(d.name)), h('div', { class: 'small muted' }, t(d.desc))),
           h('td', { class: 'small' }, on ? `${t(l('desde', 'since'))} ${st.started[d.id] ?? s.year}` : `${Math.round(d.load * 100)}% ${t(l('da agenda', 'of schedule'))}`),
-          h('td', null, on ? h('div', { class: 'row' }, h('button', { class: 'btn tiny', onclick: () => go(d.area) }, t(l('Abrir', 'Open'))), h('button', { class: 'btn tiny ghost', onclick: () => res(dropCareer(s, d.id)) }, t(l('Largar', 'Drop'))))
+          h('td', null, on ? h('div', { class: 'row' }, h('button', { class: 'btn tiny', onclick: () => openCareer(d.id) }, t(l('Abrir', 'Open'))), h('button', { class: 'btn tiny ghost', onclick: () => res(dropCareer(s, d.id)) }, t(l('Largar', 'Drop'))))
             : h('button', { class: 'btn tiny primary', onclick: () => res(startCareer(s, d.id)) }, t(l('Começar', 'Start')))));
       })))),
     st.log.length ? section(t(l('Trajetória', 'Path')), h('ul', { class: 'small' }, st.log.slice(-8).reverse().map((x) => h('li', null, `${x.y}: ${t(x.t)}`)))) : null,
