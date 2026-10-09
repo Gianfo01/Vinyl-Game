@@ -140,6 +140,9 @@ function secretsTab(s: GameState): HTMLElement {
 
 // ------------------------------------------------------------------ dono do selo
 
+/** Seções extras na aba do dono (rodada 8: herdeiros e aposentadoria). */
+export const OWNER_EXTRAS: ((s: GameState) => HTMLElement | null)[] = [];
+
 export function ownerTab(s: GameState): HTMLElement {
   const o = ownerOf(s);
   const houses = availableHouses(s);
@@ -169,6 +172,7 @@ export function ownerTab(s: GameState): HTMLElement {
       h('label', null, `${t(l('Herdeiro', 'Heir'))}: `, select(o.heir ?? '', [{ value: '', label: '—' }, ...kids, ...staff], (v) => say(setHeir(s, v || undefined), l('Sucessão definida.', 'Succession set.')))),
       o.retired?.length ? h('p', { class: 'small muted' }, `${t(l('Gerações anteriores', 'Previous generations'))}: ${o.retired.map((x) => `${x.name} (${x.years})`).join(', ')}`) : null,
     ),
+    ...OWNER_EXTRAS.map((f) => f(s)),
   );
 }
 

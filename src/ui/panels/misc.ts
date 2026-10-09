@@ -310,6 +310,7 @@ const CAT_NAMES: Record<string, [string, string]> = {
   scouting: ['Scouting', 'Scouting'], artist_dev: ['Desenvolvimento artístico', 'Artist development'], legal: ['Jurídico', 'Legal'], sync: ['Sync', 'Sync'],
   loans: ['Empréstimos', 'Loans'], financing: ['Financiamento', 'Financing'], equipment: ['Equipamento', 'Equipment'], hq: ['Sede', 'HQ'],
   marketing: ['Marketing avulso', 'Ad-hoc marketing'], taxes: ['Impostos', 'Taxes'], outsourcing: ['Terceirização', 'Outsourcing'], neural: ['Era neural', 'Neural era'], acquisitions: ['Aquisições', 'Acquisitions'], asset_sales: ['Venda de ativos', 'Asset sales'],
+  dividends: ['Dividendos', 'Dividends'], owner_draw: ['Retiradas e aportes do dono', 'Owner draws and injections'],
 };
 const catName = (c: string) => t(CAT_NAMES[c] ? l(CAT_NAMES[c][0], CAT_NAMES[c][1]) : l(c));
 

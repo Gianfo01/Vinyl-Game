@@ -18,3 +18,5 @@ import './project8';
 import './retro8';
 import './identity';
 import './sound';
+// Rodada 8: herdeiros, participações em selos, relações entre artistas e feats negociados.
+import './round8';

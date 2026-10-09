@@ -33,3 +33,8 @@ import './explain8';
 import './project8';
 import './identity';
 import './sound';
+// Rodada 8: relações entre artistas, feats negociados, participações em selos e herdeiros.
+import './social8';
+import './stakes8';
+import './feats8';
+import './heirs8';

@@ -1,5 +1,6 @@
 // Interface da criação (rodada 4): abas em Criação e a cena de crítica do lançamento.
 
+import { openFeatModal } from './round8';
 import { FAMILIES, MARKETS, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
@@ -118,7 +119,8 @@ function partnersTab(s: GameState): HTMLElement {
       song ? h('div', { class: 'row wrap' },
         select(ui.featSong, songs.map((so) => ({ value: so.id, label: so.title })), (v) => { ui.featSong = v; rerender(); }, { 'aria-label': t(l('Música', 'Song')) }),
         select(ui.featGuest, cands.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)}) · ${$(featureFee(s, a))}` })), (v) => { ui.featGuest = v; rerender(); }, { 'aria-label': t(l('Convidado', 'Guest')) }),
-        h('button', { class: 'btn', disabled: !ui.featGuest, onclick: () => { toast(t(inviteFeature(s, rngOf(s), ui.featSong, ui.featGuest)), 'info'); rerender(); } }, t(l('Convidar', 'Invite')))) : h('p', { class: 'muted small' }, t(l('Precisa de uma música inédita.', 'You need an unreleased song.'))),
+        h('button', { class: 'btn primary', disabled: !ui.featGuest, onclick: () => openFeatModal(s, { host: song.actId, song: ui.featSong, guest: ui.featGuest }) }, t(l('Negociar', 'Negotiate'))),
+        h('button', { class: 'btn ghost', disabled: !ui.featGuest, title: t(l('Convite rápido com o cachê de tabela, sem negociar.', 'Quick invite at the list fee, no negotiation.')), onclick: () => { toast(t(inviteFeature(s, rngOf(s), ui.featSong, ui.featGuest)), 'info'); rerender(); } }, t(l('Convite rápido', 'Quick invite')))) : h('p', { class: 'muted small' }, t(l('Precisa de uma música inédita.', 'You need an unreleased song.'))),
       h('p', { class: 'muted small' }, t(l('Convidados famosos e de outros gêneros trazem público novo. Selos rivais podem barrar.', 'Famous guests and other genres bring new audiences. Rival labels may block it.'))),
       st.features.length ? h('ul', { class: 'small' }, st.features.slice(-8).reverse().map((f) => h('li', null, `${s.songs[f.songId]?.title ?? '?'} + ${s.acts[f.guestActId]?.name ?? '?'} — `, pill(f.status === 'done' ? t(l('gravada', 'recorded')) : t(l('recusada', 'refused')), f.status === 'done' ? 'good' : 'bad')))) : null,
     ),

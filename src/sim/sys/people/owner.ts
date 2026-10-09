@@ -54,7 +54,7 @@ export function availableHouses(s: GameState): HouseDef[] {
   return HOUSES.filter((h) => s.year >= h.from && s.year <= h.to);
 }
 
-function makeOwner(s: GameState, r: Rng, gen = 1): Owner {
+export function makeOwner(s: GameState, r: Rng, gen = 1): Owner {
   const role = s.config.role;
   const base = () => r.int(38, 58);
   const attrs = { ear: base(), negotiation: base(), charisma: base(), management: base() };
@@ -202,6 +202,12 @@ export function setHeir(s: GameState, heir: string | undefined): L | null {
   return null;
 }
 
+/**
+ * Rodada 8: quem decide o fim do dono (morte, saúde, aposentadoria). O sistema de herdeiros registra aqui
+ * uma função que abre a escolha do herdeiro ou encerra a run; devolve true quando tratou o caso.
+ */
+export const successionGate: { fn: ((s: GameState, r: Rng, reason: 'retire' | 'death' | 'health') => boolean) | null } = { fn: null };
+
 /** Passa o selo adiante (aposentadoria voluntária ou morte). */
 export function succession(s: GameState, r: Rng, reason: 'retire' | 'death' | 'health'): void {
   const st = P(s);
@@ -290,7 +296,10 @@ export function ownerMonth(s: GameState, r: Rng, signedBefore: number): void {
   const ear = ownerBonus(s, 'ear');
   if (ear > 0) for (const k of Object.values(s.knowledge)) k.bias *= 1 - ear * 0.08;
   // fim da linha: saúde, idade ou morte
-  if (o.health <= 0 || (age > 72 && r.chance((age - 72) * 0.004))) succession(s, r, o.health <= 0 && age < 72 ? 'health' : 'death');
+  if (o.health <= 0 || (age > 72 && r.chance((age - 72) * 0.004))) {
+    const why = o.health <= 0 && age < 72 ? 'health' : 'death';
+    if (!successionGate.fn?.(s, r, why)) succession(s, r, why);
+  }
   else if (o.health < 15) notify(s, fmtL(l('A saúde de {o} preocupa. Escolha um sucessor.', '{o}\'s health is worrying. Choose a successor.'), { o: o.name }), 'bad');
 }
 
