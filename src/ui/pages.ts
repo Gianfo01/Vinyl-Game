@@ -29,6 +29,7 @@ import { instrumentsTab } from './sys/instruments';
 import { rw } from '../sim/sys/realworld';
 import { instById, instrumentsOf } from '../sim/sys/instruments';
 import { icon } from './pixel/icons';
+import { pageTabs as extraPageTabs } from './registry';
 import { store } from './store';
 import { chips, ic, meter, stat } from './vis';
 import './pages.css';
@@ -325,6 +326,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
     { id: 'history', label: l('Carreira', 'Career'), icon: 'trophy', render: () => historyTab(s, a) },
     a.contractId && (mine || deg >= 3) ? { id: 'contract', label: S.contract, icon: 'contract', render: () => contractTab(s, a) } : null,
     ...ACT_TABS.map((f) => f(s, a, close)),
+    ...extraPageTabs('act', s, a.id).map((x) => ({ id: x.id, label: x.label, icon: x.icon, render: () => x.render(s, a.id) })),
   ].filter((x): x is NonNullable<typeof x> => !!x), tab));
 }
 

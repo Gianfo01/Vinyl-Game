@@ -92,6 +92,31 @@ export function extraSections(host: string, s: GameState): HTMLElement | null {
   return els.length ? h('div', { class: 'extra-sections' }, els) : null;
 }
 
+// ---------------------------------------------------------------- fichas (rodada 8)
+
+/** Abas extras na página do ato e seções extras na ficha do selo. */
+export interface PageTab {
+  id: string;
+  label: L;
+  icon: string;
+  render: (s: GameState, id: string) => HTMLElement | null;
+  /** aparece só quando devolve true (ex.: conhecimento suficiente do ato) */
+  when?: (s: GameState, id: string) => boolean;
+  order?: number;
+}
+const PAGE_TABS: Record<'act' | 'label', PageTab[]> = { act: [], label: [] };
+
+export function registerPageTab(host: 'act' | 'label', tab: PageTab): void {
+  const list = PAGE_TABS[host];
+  const i = list.findIndex((x) => x.id === tab.id);
+  if (i >= 0) list[i] = tab;
+  else list.push(tab);
+}
+
+export function pageTabs(host: 'act' | 'label', s: GameState, id: string): PageTab[] {
+  return PAGE_TABS[host].filter((x) => !x.when || x.when(s, id)).sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
+}
+
 export function hasCutscene(kind: string): boolean {
   return !!CUTSCENES[kind];
 }

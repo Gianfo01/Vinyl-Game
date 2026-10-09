@@ -12,7 +12,7 @@
 
 import type { Rng } from '../core/rng';
 import type { L } from '../data/world';
-import type { Act, GameState, Release, Song } from './types';
+import type { Act, GameState, Offer, Release, Song } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Ext4 {}
@@ -133,4 +133,20 @@ export function deferEvents<T extends EventDefLike>(defs: T[]): void {
 export function setEventRegistrar(fn: (defs: never[]) => void): void {
   registrar = fn;
   for (const defs of pendingEvents.splice(0)) fn(defs as never[]);
+}
+
+// ---------------------------------------------------------------- propostas (rodada 8)
+
+/** Sistemas acrescentam motivos à avaliação de propostas de contrato (preferências, memória, rivais).
+ *  Fica aqui (módulo sem dependências) para não sofrer com a ordem de carga dos imports.
+ *  Precisam ser puros: a interface chama a avaliação a cada tecla. */
+export type OfferMod = (s: GameState, act: Act, o: Omit<Offer, 'id' | 'week' | 'status'>) => { delta: number; reason?: L } | null;
+const OFFER_MODS: { id: string; fn: OfferMod }[] = [];
+export function registerOfferMod(id: string, fn: OfferMod): void {
+  const i = OFFER_MODS.findIndex((x) => x.id === id);
+  if (i >= 0) OFFER_MODS[i] = { id, fn };
+  else OFFER_MODS.push({ id, fn });
+}
+export function offerMods(): { id: string; fn: OfferMod }[] {
+  return OFFER_MODS;
 }

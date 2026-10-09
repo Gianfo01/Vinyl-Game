@@ -44,3 +44,7 @@ import './consent8';
 import './eras8';
 import './pacing8';
 import './hq8';
+import './identity8';
+import './audience8';
+import './rivals8';
+import './stories8';

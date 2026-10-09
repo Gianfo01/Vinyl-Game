@@ -9,6 +9,8 @@ import { fmtL, hasCard, hasMutator, money, nextId, notify, playerActs, post, rem
 import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
+import { offerMods } from './ext4';
+export { registerOfferMod } from './ext4';
 
 // Ganchos de negociação (rodada 8): sistemas como a identidade do selo e o estilo de liderança mexem na
 // avaliação das ofertas (com motivo visível) e na chance de renovação, sem editar este arquivo.
@@ -102,6 +104,13 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
     score += res.score;
     if (res.reason && Math.abs(res.score) >= 0.02) hookReasons.push(res.reason);
   }
+  const modReasons: L[] = [];
+  for (const m of offerMods()) {
+    const res = m.fn(s, act, o);
+    if (!res || !Number.isFinite(res.delta)) continue;
+    score += res.delta;
+    if (res.reason) modReasons.push(res.reason);
+  }
 
   if (advU < 0.6) reasons.push(l('Adiantamento abaixo do que esperam.', 'Advance below expectations.'));
   if (advU > 1.4) reasons.push(l('Adiantamento generoso.', 'Generous advance.'));
@@ -109,7 +118,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (rivalHeat > 0.05) reasons.push(l('Há interesse de rivais.', 'Rivals are interested.'));
   if (reach < 0.5 && w.reach > 0.2) reasons.push(l('Querem alcance que sua sede ainda não tem.', 'They want reach your HQ lacks.'));
   if (o.promises.length) reasons.push(l('Promessas pesam a favor (e viram obrigação).', 'Promises help (and become obligations).'));
-  reasons.push(...hookReasons);
+  reasons.push(...hookReasons, ...modReasons);
 
   const p = 1 / (1 + Math.exp(-(score - 0.58) * 8));
   // analista estreita a leitura; sem analista, a faixa é mais grosseira
