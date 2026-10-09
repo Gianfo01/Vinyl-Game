@@ -4,7 +4,7 @@
 import { APPROACHES, STUDIO_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { PRODUCERS, SIGNATURES, availableProducers, makeCover, makeRemix, makeTranslation, planTribute, producerFit, requestSample, sessionCost, sessionDays, startSession } from '../../sim/studio';
+import { PRODUCERS, soundOf, availableProducers, makeCover, makeRemix, makeTranslation, planTribute, producerFit, requestSample, sessionCost, sessionDays, startSession } from '../../sim/studio';
 import { anniversaryCandidates, canPresave, canVideo, cancelRollout, planRollout, scheduleAnniversary } from '../../sim/rollout';
 import { aiVoiceReady, aiVoiceSongs, deceasedLegends, hologramCost, hologramReady, negotiateImageRights, posthumousRelease, startHologramShow } from '../../sim/neural';
 import { tributeCandidates } from '../../sim/dynasty';
@@ -62,7 +62,7 @@ function sessionTab(s: GameState): HTMLElement {
         const fit = producerFit(p, a.genre);
         return h('button', { class: `tile ${sess.producer === p.id ? 'on' : ''} ${busy ? 'muted' : ''}`, disabled: busy, onclick: () => { sess.producer = p.id; rerender(); } },
           h('div', { class: 'tile-ic' }, ic('mic', 2)),
-          h('div', { class: 'tile-body' }, h('b', null, p.name), h('small', null, t(SIGNATURES[p.signature].name)),
+          h('div', { class: 'tile-body' }, h('b', null, p.name), h('small', null, t(soundOf(p).name)),
             chips(stat('sparkle', p.skill, l('Habilidade', 'Skill')), stat('money', $(money(s, p.fee)), l('Por faixa', 'Per track')), stat(fit === 1 ? 'heart' : 'warning', fit === 1 ? '✓' : '~', l('Afinidade com o gênero', 'Genre fit'))),
             busy ? pill(t(l('ocupado', 'busy')), 'warn') : null,
           ));

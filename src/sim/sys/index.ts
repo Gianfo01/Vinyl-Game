@@ -118,3 +118,5 @@ import './capacity14';
 // Rodada 15: modos de história dos artistas reais (exata / com variações / aleatória).
 import './history15';
 import './kin15';
+// Rodada 15: produtores musicais reais (catálogo, som próprio, cachê, agenda, demanda de selos rivais).
+import './producers15';

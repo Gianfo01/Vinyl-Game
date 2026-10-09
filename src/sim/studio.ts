@@ -24,7 +24,13 @@ export interface ProducerDef {
   skill: number;
   fee: number; // dólares base por faixa
   ego: number; // 0..100
+  /** rodada 15: produtor real (id em data/producers15) e som próprio que substitui a assinatura genérica */
+  real?: string;
+  sound?: { name: L; prod: number; perf: number; orig: number };
 }
+/** Rodada 15: ganchos do sistema de produtores reais (nome gerado, cachê com relação, recusa, ocupação longa). */
+export const prodHooks: { name?: (s: GameState, p: ProducerDef) => string; fee?: (s: GameState, p: ProducerDef) => number; ok?: (s: GameState, p: ProducerDef) => boolean; started?: (s: GameState, p: ProducerDef, sess: StudioSession) => void } = {};
+export const soundOf = (p: ProducerDef): { name: L; prod: number; perf: number; orig: number } => p.sound ?? SIGNATURES[p.signature];
 
 export const SIGNATURES: Record<ProducerDef['signature'], { name: L; prod: number; perf: number; orig: number; families: string[] }> = {
   wall_of_sound: { name: l('Parede de som', 'Wall of sound'), prod: 8, perf: 0, orig: -2, families: ['pop', 'rock', 'rnb'] },
@@ -62,7 +68,8 @@ export const PRODUCERS: ProducerDef[] = [
 ];
 
 export function availableProducers(s: GameState): ProducerDef[] {
-  return PRODUCERS.filter((p) => s.year >= p.from && s.year <= p.to && (p.signature !== 'neural' || hasTech(s, 'synthetic_voice')));
+  return PRODUCERS.filter((p) => s.year >= p.from && s.year <= p.to && (p.signature !== 'neural' || hasTech(s, 'synthetic_voice')) && (!prodHooks.ok || prodHooks.ok(s, p)))
+    .map((p) => (prodHooks.name ? { ...p, name: prodHooks.name(s, p) } : p));
 }
 
 export function producerFit(p: ProducerDef, genre: string): number {
@@ -77,7 +84,7 @@ export function sessionDays(songs: number, approach: string): number {
 
 export function sessionCost(s: GameState, songs: number, tier: number, approach: string, producerId?: string): number {
   const pr = PRODUCERS.find((x) => x.id === producerId);
-  return recordingCost(s, tier, approach, songs) + (pr ? money(s, pr.fee * songs) : 0);
+  return recordingCost(s, tier, approach, songs) + (pr ? money(s, (prodHooks.fee ? prodHooks.fee(s, pr) : pr.fee) * songs) : 0);
 }
 
 export function startSession(s: GameState, actId: string, songIds: string[], tier: number, approach: string, producerId?: string): StudioSession | L {
@@ -107,6 +114,8 @@ export function startSession(s: GameState, actId: string, songIds: string[], tie
   s.sessions.push(sess);
   s.agenda[actId] = [...(s.agenda[actId] ?? []).filter((x) => x.action !== 'record'), { action: 'session', params: { session: sess.id } }];
   if (producerId) s.producerBusy[producerId] = s.week + Math.ceil(sess.days / 7) + 1;
+  const pr0 = PRODUCERS.find((x) => x.id === producerId);
+  if (pr0) prodHooks.started?.(s, pr0, sess);
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && c.party === 'player' && c.model !== 'distribution' && c.model !== 'licensing') c.recoupBalance += Math.round(cost * 0.5);
   return sess;
@@ -189,7 +198,7 @@ function fixSong(s: GameState, r: Rng, sess: StudioSession, songId: string, perf
   const ap = APPROACHES.find((a) => a.id === sess.approach) ?? APPROACHES[1];
   const studio = STUDIO_TIERS[clamp(sess.tier, 0, 3)];
   const pr = PRODUCERS.find((x) => x.id === sess.producerId);
-  const sig = pr ? SIGNATURES[pr.signature] : undefined;
+  const sig = pr ? soundOf(pr) : undefined;
   const fit = pr ? producerFit(pr, song.genre) : 1;
   const own = sess.tier === 0 ? ownStudioProduction(s) + 2 : 0;
   const prodSkill = pr ? pr.skill * 0.25 * fit : staffSkill(s, 'producer') * 0.22;
@@ -221,7 +230,7 @@ function finishSession(s: GameState, _r: Rng, sess: StudioSession): void {
   const songs = sess.songIds.map((id) => s.songs[id]).filter((x) => x?.recorded);
   const avg = songs.reduce((t, x) => t + x.q, 0) / Math.max(1, songs.length);
   notify(s, fmtL(l('Sessão de {a} terminou: {n} faixa(s), Q média {q}.', '{a}\'s session wrapped: {n} track(s), average Q {q}.'), { a: act.name, n: songs.length, q: Math.round(avg) }), 'good');
-  remember(s, 'session', fmtL(l('{a} conclui sessão de estúdio{p}.', '{a} wraps a studio session{p}.'), { a: act.name, p: sess.producerId ? fmtL(l(' com {x}', ' with {x}'), { x: PRODUCERS.find((x) => x.id === sess.producerId)?.name ?? '' }) : '' }), { actId: act.id });
+  remember(s, 'session', fmtL(l('{a} conclui sessão de estúdio{p}.', '{a} wraps a studio session{p}.'), { a: act.name, p: sess.producerId ? fmtL(l(' com {x}', ' with {x}'), { x: (() => { const q = PRODUCERS.find((x) => x.id === sess.producerId); return q ? (prodHooks.name?.(s, q) ?? q.name) : ''; })() }) : '' }), { actId: act.id });
   s.agenda[act.id] = (s.agenda[act.id] ?? []).filter((x) => x.action !== 'session');
 }
 

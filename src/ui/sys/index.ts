@@ -80,3 +80,5 @@ import './capacity14';
 // Rodada 15: modo de história no Novo Jogo + aba Vida real no ato.
 import '../history15';
 import './kin15';
+// Rodada 15: lista e página de produtores reais.
+import './producers15';
