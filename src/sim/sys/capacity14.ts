@@ -95,6 +95,9 @@ const recentReleases = (s: GameState): number => mine(s).reduce((t, a) => t + a.
 const liveTours = (s: GameState): number => s.tours.filter((t) => t.status !== 'done' && t.status !== 'cancelled' && s.acts[t.actId]?.owner === 'player').length;
 const delegatedCount = (s: GameState): number => mine(s).filter((a) => s.delegated[a.id] !== false && !a.playerBand).length;
 
+/** Rodada 16: ordens permanentes ativas delegadas a uma função (estado em x4.deleg16, sem importar o sistema). */
+const orders16 = (s: GameState, role: string): number => ((s.x4 as unknown as { deleg16?: { orders: { on: boolean; staffId: string }[] } }).deleg16?.orders ?? []).filter((o) => o.on && s.player.staff.some((x) => x.id === o.staffId && x.role === role)).length;
+
 const WORK: Record<string, RoleWork> = {
   manager: { unit: l('carreiras delegadas', 'delegated careers'), per: 3, demand: (s) => delegatedCount(s) },
   admin: { unit: l('carreiras delegadas', 'delegated careers'), per: 2, demand: (s) => delegatedCount(s) },
@@ -110,6 +113,8 @@ const WORK: Record<string, RoleWork> = {
   legal: { unit: l('carreiras sob contrato', 'careers under contract'), per: 8, demand: (s) => playerActs(s).length },
   rights: { unit: l('carreiras sob contrato', 'careers under contract'), per: 10, demand: (s) => playerActs(s).length },
   analyst: { unit: l('carreiras acompanhadas', 'careers tracked'), per: 10, demand: (s) => playerActs(s).length },
+  booking_agent: { unit: l('ordens permanentes', 'standing orders'), per: 3, demand: (s) => orders16(s, 'booking_agent') },
+  promoter: { unit: l('ordens permanentes', 'standing orders'), per: 3, demand: (s) => orders16(s, 'promoter') },
 };
 
 export interface RoleLoad { role: string; name: L; staff: StaffMember[]; demand: number; supply: number; load: number; unit: L; strain: number }

@@ -127,3 +127,5 @@ import './looks15';
 import './sync15';
 import './fan15';
 import './dispute15';
+// Rodada 16: agentes de shows e promotores com ordens delegadas.
+import './deleg16';

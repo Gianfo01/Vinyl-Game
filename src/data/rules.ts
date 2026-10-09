@@ -167,6 +167,8 @@ export const STAFF_ROLES: StaffRole[] = [
   { id: 'manager', name: l('Empresário', 'Artist manager'), desc: l('Confiança dos artistas e cachês de marca maiores.', 'Artist trust and bigger brand fees.'), salary: 3000 },
   { id: 'agent', name: l('Agente internacional', 'International agent'), desc: l('Vistos, rotas e vagas em festivais estrangeiros.', 'Visas, routes and foreign festival slots.'), salary: 2800 },
   { id: 'sync', name: l('Agente de sync', 'Sync agent'), desc: l('Mais ofertas de cinema, TV, jogos e comerciais.', 'More film, TV, game and ad offers.'), salary: 2400 },
+  { id: 'booking_agent', name: l('Agente de shows', 'Booking agent (delegate)'), desc: l('Recebe ordens permanentes: marcar turnês, negociar cachês, preencher festivais. Execução mensal.', 'Takes standing orders: book tours, negotiate fees, fill festival slots. Monthly execution.'), salary: 2700 },
+  { id: 'promoter', name: l('Promotor', 'Promoter'), desc: l('Recebe ordens permanentes: divulgar shows e lançamentos, rádio/clubes, noites do selo. Execução mensal.', 'Takes standing orders: promote shows and releases, radio/club promo, label nights. Monthly execution.'), salary: 2600 },
 ];
 
 export const staffRoleById = Object.fromEntries(STAFF_ROLES.map((x) => [x.id, x])) as Record<string, StaffRole>;
