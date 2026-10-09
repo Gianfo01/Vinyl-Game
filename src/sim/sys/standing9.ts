@@ -50,8 +50,8 @@ function rosterOf(s: GameState, id: string): string[] {
 /** Recalcula todos os selos (mensal). */
 export function updateStandings(s: GameState): void {
   const ids = ['player', ...Object.values(s.labels).filter((x) => x.active).map((x) => x.id)];
-  const agg: Record<string, { u3: number; u12: number; cs: number; cn: number; hits: number }> = {};
-  for (const id of ids) agg[id] = { u3: 0, u12: 0, cs: 0, cn: 0, hits: 0 };
+  const agg: Record<string, { u3: number; p3: number; u12: number; cs: number; cn: number; hits: number }> = {};
+  for (const id of ids) agg[id] = { u3: 0, p3: 0, u12: 0, cs: 0, cn: 0, hits: 0 };
   const from = s.week - 52;
   for (const rel of Object.values(s.releases)) {
     const a = agg[rel.owner];
@@ -60,6 +60,7 @@ export function updateStandings(s: GameState): void {
       const u = rel.weekly[i];
       a.u12 += u;
       if (rel.week + i >= s.week - 13) a.u3 += u;
+      else if (rel.week + i >= s.week - 26) a.p3 += u;
     }
     if (rel.critic !== undefined && rel.week >= from) { a.cs += rel.critic * (rel.criticN ?? 1); a.cn += rel.criticN ?? 1; }
   }
@@ -68,6 +69,8 @@ export function updateStandings(s: GameState): void {
     if (owner && agg[owner] && e.pos <= 10) agg[owner].hits += 1;
   }
   const maxU = Math.max(1, ...ids.map((id) => agg[id].u12));
+  const mkt = Math.log2((ids.reduce((x, id) => x + agg[id].u3, 0) + 50) / (ids.reduce((x, id) => x + agg[id].p3, 0) + 50));
+  const topN = Math.max(1, s.charts.singles.filter((e) => e.pos <= 10).length + s.charts.albums.filter((e) => e.pos <= 10).length);
   for (const id of ids) {
     const st = standingOf(s, id);
     const a = agg[id];
@@ -81,7 +84,9 @@ export function updateStandings(s: GameState): void {
     st.ros = acts.length;
     const crit = a.cn ? a.cs / a.cn : st.crit;
     const popT = 100 * Math.sqrt(a.u12 / maxU) * 0.7 + fame * 0.3;
-    const momT = clamp(50 + ((a.u3 * 4) / (a.u12 + 1) - 1) * 45 + a.hits * 5 + newSign * 3, 0, 100);
+    // momento = tendência (último trimestre contra o anterior) + presença no top 10 + contratações
+    const trend = clamp(Math.log2((a.u3 + 50) / (a.p3 + 50)) - mkt, -1.2, 1.2);
+    const momT = clamp(50 + trend * 28 + Math.min(14, (a.hits / topN) * 60) - 4 + Math.min(6, newSign * 3), 0, 100);
     const recT = clamp(baseRep(s, id) * 0.5 + Math.min(30, honors) + (crit - 50) * 0.25 + fame * 0.15, 0, 100);
     const lb = s.labels[id];
     const trustT = id === 'player'
