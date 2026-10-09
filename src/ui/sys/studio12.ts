@@ -14,6 +14,7 @@ import type { GameState } from '../../sim/types';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
+import { foundInline } from './careerui13';
 import { tabs } from '../vis';
 
 const btn = (label: L, fn: () => void, cls = 'btn small', dis = false) => h('button', { class: cls, disabled: dis, onclick: fn }, t(label));
@@ -87,7 +88,7 @@ function jobRow(s: GameState, v: Venture, b: ReturnType<typeof studioOf>['jobs']
 
 function studioTab(s: GameState): HTMLElement {
   const list = studios(s);
-  if (!list.length) return h('p', { class: 'muted' }, t(l('Você não tem estúdio. Funde um em Empreendimentos > Estúdio e produção: o dono do estúdio gerencia salas, equipe e agenda; é outra carreira que a de produtor.', 'You have no studio. Found one under Ventures > Studio: the owner manages rooms, staff and bookings — a different career from the producer\'s.')));
+  if (!list.length) return foundInline(s, 'studio', l('Você não tem estúdio. O dono do estúdio gerencia salas, equipe e agenda — outra carreira que a de produtor (aba ao lado).', 'You have no studio. The owner manages rooms, staff and bookings — a different career from the producer\'s (next tab).'));
   return h('div', null, ...list.map((v) => studioCard(s, v)));
 }
 

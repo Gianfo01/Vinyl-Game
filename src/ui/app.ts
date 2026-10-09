@@ -34,6 +34,9 @@ import { applyRealNames } from '../data/realnames';
 import { EXTRA_AREAS, extraSections, mergeTabs, showPendingCutscene } from './registry';
 import { openLabelStory } from './sys/story12';
 import './sys';
+import { defaultHome, navGroups, type NavGroup } from './careernav13';
+import { careers } from '../sim/sys/careers12';
+import { setTab } from './vis';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : null));
 registerPortrait((p, size) => {
@@ -86,7 +89,8 @@ export function boot(el: HTMLElement): void {
 }
 
 function startGame(): void {
-  store.area = store.area || 'desk';
+  // rodada 13: sem área escolhida, abre a casa da carreira principal
+  if (!store.area || store.area === 'desk') { const hm = defaultHome(careers(store.game!).active); if (hm.tab) setTab(hm.tab[0], hm.tab[1]); store.area = hm.area; }
   render();
   void saveGame('auto');
 }
@@ -190,6 +194,8 @@ const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; are
   { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth'] },
 ];
 const lastInGroup: Record<string, string> = {};
+/** Rodada 13: o menu segue as carreiras ativas (recalculado a cada desenho). */
+const groups = (): NavGroup[] => (store.game ? navGroups(careers(store.game).active, GROUPS) : GROUPS);
 
 interface NavItem { id: string; label: string; icon: string; key: string; badge?: number }
 
@@ -201,13 +207,14 @@ function navItems(): NavItem[] {
   ];
 }
 
-export function groupOf(area: string): (typeof GROUPS)[number] {
-  return GROUPS.find((x) => x.areas.includes(area)) ?? GROUPS[0];
+export function groupOf(area: string): NavGroup {
+  const gs = groups();
+  return gs.find((x) => x.areas.includes(area)) ?? gs[0];
 }
 
-function groupItems(gr: (typeof GROUPS)[number]): NavItem[] {
+function groupItems(gr: NavGroup): NavItem[] {
   const all = navItems();
-  const listed = new Set(GROUPS.flatMap((x) => x.areas));
+  const listed = new Set(groups().flatMap((x) => x.areas));
   const items = gr.areas.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
   // áreas registradas que não estão em nenhum grupo caem em Início
   if (gr.id === 'home') items.push(...all.filter((x) => !listed.has(x.id)));
@@ -222,11 +229,11 @@ function go(id: string): void {
 
 function nav(): HTMLElement {
   const cur = groupOf(store.area);
-  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' }, GROUPS.map((gr) => {
+  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' }, groups().map((gr) => {
     const items = groupItems(gr);
     const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
     const open = gr.id === cur.id;
-    return h('div', { class: `nav-group ${open ? 'open' : ''}` },
+    return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''}`, 'data-career': gr.career },
       h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => go(lastInGroup[gr.id] && items.some((x) => x.id === lastInGroup[gr.id]) ? lastInGroup[gr.id] : items[0]?.id ?? 'desk') },
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
       open && items.length > 1 ? h('div', { class: 'nav-sub' }, items.map((a) =>
