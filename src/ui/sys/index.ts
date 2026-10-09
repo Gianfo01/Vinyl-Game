@@ -86,3 +86,5 @@ import './producers15';
 import './fame15';
 // Rodada 15: retratos coerentes (artistas reais e procedurais com pele/sexo da ficha).
 import './looks15';
+// Rodada 15: aprofundamentos (Sync, Disputas, Fandom do ato, júri dos prêmios).
+import './deep15';
