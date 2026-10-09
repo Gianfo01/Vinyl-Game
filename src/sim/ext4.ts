@@ -74,6 +74,8 @@ export interface ModCtx {
   act?: Act;
   cityId?: string;
   song?: Song;
+  /** rodada 13: formatos do pedido de prensagem */
+  formats?: string[];
 }
 export type ModName = 'appeal' | 'cityDemand' | 'pressingCost' | 'songQ' | 'showRevenue' | 'chartUnits' | 'tourRisk';
 type ModFn = (s: GameState, value: number, ctx: ModCtx) => { value: number; label?: L } | null;

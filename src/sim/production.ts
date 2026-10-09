@@ -178,7 +178,7 @@ export function pressingCost(s: GameState, formats: FormatId[], units: number): 
   discount += staffSkill(s, 'manufacturing') / 400;
   if (hasCard(s, 'manufacturer')) discount += 0.1;
   discount = Math.min(0.5, discount);
-  return Math.round(applyMods(s, 'pressingCost', money(s, (unit * units * (1 - discount) * (s.flags.geoPressing ?? 1)) + 400), {}).value);
+  return Math.round(applyMods(s, 'pressingCost', money(s, (unit * units * (1 - discount) * (s.flags.geoPressing ?? 1)) + 400), { formats }).value);
 }
 
 export interface ReleasePlan {

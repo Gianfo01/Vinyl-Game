@@ -10,6 +10,7 @@ import type { GameState, Release } from '../../types';
 import { fmtL, money, nextId, notify, post, remember } from '../../util';
 import type { Material, Plant } from './state';
 import { researchDone } from './research';
+import { costFactor, gradeDefect, matTarget, onGradeLaunch } from './supply13';
 
 export const MATERIAL_NAMES: Record<Material, L> = {
   shellac: l('Goma-laca', 'Shellac'),
@@ -28,21 +29,11 @@ export function mainMaterial(year: number): Material {
   return 'vinyl';
 }
 
-/** Choques históricos de preço por material. */
-function shock(m: Material, year: number): number {
-  if (m === 'shellac' && year >= 1941 && year <= 1946) return 2.6; // goma-laca racionada na guerra
-  if (m === 'vinyl' && year >= 1973 && year <= 1975) return 1.7; // choque do petróleo
-  if (m === 'vinyl' && year >= 1979 && year <= 1981) return 1.35;
-  if (m === 'polycarbonate' && year >= 2005 && year <= 2008) return 1.25;
-  if (m === 'vinyl' && year >= 2018 && year <= 2022) return 1.4; // fila mundial do renascimento do vinil
-  if (m === 'paper' && year >= 2021 && year <= 2022) return 1.3;
-  return 1;
-}
-
+/** Choques históricos e curva por época: ver supply13 (matTarget). */
 export function updateMaterials(s: GameState, r: Rng): void {
   const st = s.x4.industry;
   for (const m of Object.keys(st.matPrice) as Material[]) {
-    const target = shock(m, s.year) * (1 + r.normal(0, 0.03));
+    const target = matTarget(m, s.year) * (1 + r.normal(0, 0.03));
     st.matPrice[m] = clamp(st.matPrice[m] + (target - st.matPrice[m]) * 0.35, 0.5, 4);
   }
 }
@@ -103,8 +94,9 @@ function onLaunch(s: GameState, r: Rng, rel: Release): void {
   const rest = rel.pressed - firstWeek;
   // defeitos: fábrica própria e pesquisa reduzem
   const ownShare = cap.own / Math.max(1, weekly);
-  const defectRate = clamp(0.03 - ownShare * 0.015 - (researchDone(s, 'quality_control') ? 0.012 : 0) + r.normal(0, 0.01), 0, 0.08);
+  const defectRate = clamp(0.03 - ownShare * 0.015 - (researchDone(s, 'quality_control') ? 0.012 : 0) + gradeDefect(s, rel.formats) + r.normal(0, 0.01), 0, 0.1);
   const defects = Math.round(rel.pressed * defectRate);
+  onGradeLaunch(s, rel, defects);
   st.defectsYear += defects;
   rel.stock = Math.max(0, firstWeek - defects);
   if (defects > 2000) notify(s, fmtL(l('{n} cópias defeituosas de "{t}" voltaram da fábrica.', '{n} defective copies of "{t}" came back from the plant.'), { n: defects, t: rel.title }), 'bad');
@@ -151,9 +143,9 @@ function plantsMonth(s: GameState, r: Rng): void {
   }
 }
 
-registerMod('pressingCost', 'industry:materials', (s, v) => {
+registerMod('pressingCost', 'industry:materials', (s, v, c) => {
   const st = s.x4.industry;
-  const mat = st.matPrice[mainMaterial(s.year)];
+  const mat = c.formats?.length ? costFactor(s, c.formats) : st.matPrice[mainMaterial(s.year)];
   const own = st.plants.reduce((t, p) => t + p.level, 0);
   const discount = Math.min(0.35, own * 0.08) + (researchDone(s, 'lean_press') ? 0.05 : 0);
   const value = v * mat * (1 - discount);

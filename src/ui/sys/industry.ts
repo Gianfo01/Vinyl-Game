@@ -2,13 +2,13 @@
 
 import { CITIES, MARKETS, cityById, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { MATERIAL_NAMES, PLANT_LEVELS, buildPlant, mainMaterial, pressCapacity, upgradePlant } from '../../sim/sys/industry/supply';
+import { PLANT_LEVELS, buildPlant, pressCapacity, upgradePlant } from '../../sim/sys/industry/supply';
 import { CELL_INFO, PRICE_TIERS, STORE_W, STREET_COST, closeStore, fireDistributor, hireDistributor, openStore, retailCycle, setCell, setJukebox, setStreetTeam, storeOpenCost, storeScore, toggleMailClub } from '../../sim/sys/industry/retail';
 import { RESEARCH, canResearch, startResearch } from '../../sim/sys/industry/research';
 import { OUTLET_INFO, boardProgress, buyOutlet, endorse, fxLoss, joinBoard, launchStreaming, licenseCatalog, openVenture, outletCost, outletKinds, setFavoritism } from '../../sim/sys/industry/corp';
 import { COMBOS, ROOM_ITEMS, activeCombos, buyItem, effectiveRooms, swapRooms } from '../../sim/sys/industry/hqedit';
 import { ROOM_NAMES } from '../pixel/scene';
-import type { Material, PriceTier, StoreCell } from '../../sim/sys/industry/state';
+import type { PriceTier, StoreCell } from '../../sim/sys/industry/state';
 import type { GameState } from '../../sim/types';
 import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../common';
@@ -16,6 +16,7 @@ import { h, select } from '../dom';
 import { registerArea, registerSection } from '../registry';
 import { chips, ic, meter, stat, tabs, tile } from '../vis';
 import './industry.css';
+import { materialsSection } from './industry13';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { plantCity: '', storeCity: '', distMarket: 'na' as MarketId, outletKind: 'radio' as 'radio' | 'tv' | 'magazine', outletMarket: 'na' as MarketId, storeSel: '', cellPick: 'shelf' as StoreCell, swapA: '', swapB: '' };
@@ -35,13 +36,8 @@ function marketSelect(value: MarketId, set: (v: MarketId) => void): HTMLSelectEl
 function supplyTab(s: GameState): HTMLElement {
   const st = s.x4.industry;
   const cap = pressCapacity(s);
-  const main = mainMaterial(s.year);
   return h('div', null,
-    section(t(l('Matéria-prima', 'Raw materials')),
-      h('p', { class: 'muted small' }, t(l('O preço da matéria-prima muda o custo de prensagem. Guerras e crises do petróleo encarecem tudo; o renascimento do vinil criou filas mundiais.', 'Raw material prices change pressing costs. Wars and oil crises make everything pricier; the vinyl revival created worldwide queues.'))),
-      h('div', { class: 'ind-mats' }, (Object.keys(st.matPrice) as Material[]).map((m) => h('div', { class: `ind-mat ${m === main ? 'main' : ''}` },
-        h('b', null, t(MATERIAL_NAMES[m])), h('span', { class: st.matPrice[m] > 1.15 ? 'bad' : st.matPrice[m] < 0.95 ? 'good' : '' }, `×${st.matPrice[m].toFixed(2)}`), m === main ? pill(t(l('em uso', 'in use'))) : null))),
-    ),
+    materialsSection(s),
     section(t(l('Capacidade de prensagem', 'Pressing capacity')),
       chips(stat('house', N(cap.own), l('Própria por semana', 'Own per week')), stat('handshake', N(cap.third), l('Terceiros por semana', 'Third-party per week')), stat('warning', N(st.defectsYear), l('Defeitos no ano', 'Defects this year'))),
       st.orders.length ? h('ul', { class: 'small' }, st.orders.slice(0, 8).map((o) => h('li', null, `${s.releases[o.releaseId]?.title ?? '?'} — ${N(o.units)} ${t(l('cópias na semana', 'copies in week'))} ${o.ready}`))) : h('p', { class: 'muted small' }, t(l('Fila vazia.', 'Queue empty.'))),

@@ -59,3 +59,4 @@ import './fest12';
 import './venue12';
 // Rodada 12: hype unificado (medidor com motivos, alavancas, ranking nas paradas).
 import './hype12';
+import './project13';
