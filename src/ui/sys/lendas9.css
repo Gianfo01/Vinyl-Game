@@ -5,3 +5,33 @@
 .lendas .ln-book { white-space: pre-wrap; max-height: 60vh; overflow: auto; font-size: 0.85em; padding: 0.8em; background: var(--panel2, #0001); }
 .lendas .ln-paper li { padding: 0.15em 0; }
 .lendas .row.wrap { display: flex; flex-wrap: wrap; gap: 0.4em; align-items: center; }
+
+/* Rodada 11 — cartões, filtros e popups */
+.lendas .ln-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.5rem; margin: 0.4rem 0 0.8rem; }
+.ln-stat { display: flex; flex-direction: column; align-items: flex-start; padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; text-align: left; }
+.ln-stat b { font-size: 1.3rem; line-height: 1.1; }
+.ln-stat small { color: var(--muted); }
+.ln-stat:hover, .ln-card:hover { border-color: var(--accent); }
+.ln-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.5rem; margin: 0.3rem 0 0.8rem; }
+.ln-card { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.6rem 0.7rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); font: inherit; text-align: left; cursor: pointer; min-width: 0; box-shadow: var(--shadow); }
+.ln-card > div { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.ln-card b { overflow-wrap: anywhere; }
+.ln-card.gold { border-left: 3px solid var(--gold); }
+.ln-card.good { border-left: 3px solid var(--good); }
+.ln-card.bad { opacity: 0.8; border-left: 3px solid var(--bad); }
+.ln-card.i5 { border-left: 3px solid var(--accent); }
+.ln-ico { font-size: 1.5rem; line-height: 1; min-width: 2rem; text-align: center; font-variant-numeric: tabular-nums; }
+.ln-card .ln-ico { font-size: 1.3rem; }
+.ln-stars { color: var(--gold); letter-spacing: -1px; font-size: 0.85em; }
+.lendas .ln-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.6rem; padding: 0.6rem; }
+.lendas .ln-filters input[type='search'] { flex: 1 1 180px; min-width: 0; }
+.ln-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.6rem; }
+.ln-chips .chip { padding: 0.2rem 0.7rem; }
+.ln-evt { text-align: left; color: inherit; }
+.ln-pop .ln-big { font-size: 1.1rem; margin: 0.2rem 0 0.6rem; }
+.ln-pop .row.wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin: 0.3rem 0; }
+.ln-relhead { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 0.4rem; }
+.ln-relhead .ln-ico { font-size: 2.4rem; }
+.ln-own { margin: 0; padding-left: 1.3rem; }
+.ln-own li { padding: 0.1rem 0; }
+@media (max-width: 560px) { .ln-cards { grid-template-columns: 1fr; } }
