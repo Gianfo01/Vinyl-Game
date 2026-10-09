@@ -71,3 +71,4 @@ import './notoriety14';
 // Rodada 14: cockpit (mesa + caixa de entrada + sede) e tema claro/escuro.
 import './cockpit14';
 import './theme14';
+import './leisure14';
