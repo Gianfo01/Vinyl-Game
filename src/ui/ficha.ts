@@ -3,7 +3,8 @@
 import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
 import { acceptCounter, defaultOffer, evaluateOffer, offerNow, pressForAnswer, withdrawCounter } from '../sim/contracts';
-import type { Act, GameState, Offer, Song } from '../sim/types';
+import type { Act, GameState, Offer, Release, Song } from '../sim/types';
+import { criticScore, fmtSecs, scoreClass, trackList } from '../sim/relinfo';
 import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
 import { h, select } from './dom';
 import { store } from './store';
@@ -27,33 +28,66 @@ export function openPerson(id: string): void {
 /** Extras por faixa na ficha do lançamento (rodada 4: botão de ouvir). */
 export const RELEASE_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
 
+/** Extras na ficha do lançamento (rodada 8: explicação do resultado, capa…). */
+export const RELEASE_EXTRAS: ((s: GameState, r: Release) => HTMLElement | null)[] = [];
+
+const TYPE_NAME: Record<string, ReturnType<typeof l>> = { single: l('Single', 'Single'), ep: l('EP', 'EP'), lp: l('Álbum (LP)', 'Album (LP)') };
+
 export function openRelease(id: string): void {
   const s = g();
   const r = s.releases[id];
   if (!r) return;
   const mine = r.owner === 'player' || s.acts[r.actId]?.playerBand;
+  const act = s.acts[r.actId];
+  const tracks = trackList(s, r);
+  const total = tracks.reduce((t, x) => t + x.secs, 0);
+  const crit = criticScore(s, r);
+  const producer = r.songs.map((x) => s.songs[x]?.producerId).find(Boolean);
+  const writers = [...new Set(r.songs.flatMap((x) => s.songs[x]?.writers ?? []))].map((w) => s.persons[w]).filter(Boolean);
+  const show = (v: number) => (mine ? Math.round(v) : '~' + Math.round(v / 10) * 10);
   const body = h('div', { class: 'ficha' },
-    h('div', { class: 'ficha-head' }, cover(s, r, 120),
+    h('div', { class: 'ficha-head' }, cover(s, r, 140),
       h('div', null,
-        h('h3', null, r.title, ' ', pill(r.type.toUpperCase()), r.certified ? pill(r.certified, 'gold') : null, r.reissueOf ? pill(t(l('reedição', 'reissue'))) : null),
+        h('h3', null, r.title, ' ', pill(t(TYPE_NAME[r.type] ?? l(r.type))), r.certified ? pill(r.certified, 'gold') : null, r.reissueOf ? pill(t(l('reedição', 'reissue'))) : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null),
         h('div', null, actLink(s, r.actId), ' · ', labelLink(s, r.owner), ` · ${r.year}`),
-        kv(t(S.peak), r.peak < 999 ? `#${r.peak}` : '—'),
-        kv(t(S.totalUnits), N(r.totalUnits)),
+        h('div', { class: 'row wrap' },
+          h('div', { class: `crit-badge ${scoreClass(crit.score)}`, title: crit.estimated ? t(l('Estimativa da imprensa da época (sem resenhas guardadas).', 'Period press estimate (no stored reviews).')) : t(l('Média de {n} resenhas.', 'Average of {n} reviews.'), { n: crit.n }) }, h('b', null, crit.score), h('small', null, crit.estimated ? t(l('crítica (est.)', 'critics (est.)')) : t(l('crítica', 'critics')))),
+          kv(t(S.peak), r.peak < 999 ? `#${r.peak}` : '—'),
+          kv(t(l('Semanas na parada', 'Weeks on chart')), r.weeksOnChart || '—'),
+          kv(t(S.totalUnits), N(r.totalUnits)),
+        ),
         mine ? kv(t(S.revenue), $(r.revenue)) : null,
         mine && r.pressed ? kv(t(S.stock), `${N(Math.max(0, r.stock))} / ${N(r.pressed)}`) : null,
         mine && r.shortage ? kv(t(S.shortage), N(r.shortage)) : null,
-        h('div', null, sparkline(r.weekly.slice(-40), 220, 40)),
+        r.weekly.length ? h('div', null, sparkline(r.weekly.slice(-40), 220, 40)) : null,
       ),
     ),
-    r.songs.length ? h('table', { class: 'tbl compact' },
-      h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, 'Q'), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.performance)), h('th', null, t(S.production)), h('th', null, t(S.originality)))),
-      h('tbody', null, r.songs.map((sid) => {
-        const so = s.songs[sid];
-        if (!so) return null;
-        const show = (v: number) => (mine ? Math.round(v) : '~' + Math.round(v / 10) * 10);
-        return h('tr', null, h('td', null, so.title, ' ', ...RELEASE_SONG_EXTRAS.map((f) => f(s, so))), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, show(so.lyrics)), h('td', null, show(so.performance)), h('td', null, show(so.production)), h('td', null, show(so.originality)));
+    h('div', { class: 'grid2' },
+      h('div', null,
+        kv(t(l('Gênero', 'Genre')), genreName(act?.genre ?? '')),
+        kv(t(l('Duração', 'Length')), `${fmtSecs(total)} · ${tracks.length} ${t(l('faixas', 'tracks'))}`),
+        kv(t(l('Formatos', 'Formats')), r.formats.length ? r.formats.join(', ') : '—'),
+        kv(t(l('Mercados', 'Markets')), r.territories.join(', ').toUpperCase()),
+      ),
+      h('div', null,
+        producer && s.persons[producer] ? kv(t(l('Produção', 'Producer')), s.persons[producer].name) : null,
+        writers.length ? kv(t(l('Compositores', 'Writers')), writers.slice(0, 6).map((p) => p.name).join(', ')) : null,
+        r.marketing.length ? kv(t(l('Divulgação', 'Promotion')), r.marketing.map((m) => m.channel).join(', ')) : null,
+        r.kind && r.kind !== 'standard' ? kv(t(l('Edição', 'Edition')), r.kind) : null,
+      ),
+    ),
+    h('h4', null, t(l('Faixas', 'Tracklist'))),
+    h('table', { class: 'tbl compact' },
+      h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(S.title)), h('th', null, t(l('Duração', 'Length'))), h('th', null, 'Q'), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.performance)), h('th', null, t(S.production)), h('th', null, t(S.originality)))),
+      h('tbody', null, tracks.map((tr) => {
+        const so = tr.songId ? s.songs[tr.songId] : undefined;
+        return h('tr', null, h('td', null, tr.n), h('td', null, tr.title, tr.single && r.type !== 'single' ? ' ' : '', tr.single && r.type !== 'single' ? pill(t(l('faixa de trabalho', 'lead single'))) : null, ' ', ...(so ? RELEASE_SONG_EXTRAS.map((f) => f(s, so)) : [])),
+          h('td', null, fmtSecs(tr.secs)),
+          so ? h('td', null, h('b', null, show(so.q))) : h('td', { class: 'muted' }, '—'),
+          ...(so ? [so.melody, so.lyrics, so.performance, so.production, so.originality].map((v) => h('td', null, show(v))) : [h('td', { class: 'muted', colspan: 5 }, t(l('sem ficha técnica guardada', 'no stored credits')))]));
       })),
-    ) : null,
+    ),
+    ...RELEASE_EXTRAS.map((f) => f(s, r)),
     s.reviews[r.id]?.length ? h('div', null, h('h4', null, t(l('Críticas', 'Reviews'))), reviewSummary(s, r), ...s.reviews[r.id].map((rv) => reviewCard(s, r, rv, { open: false }))) : null,
     mine && r.autopsy ? h('div', null,
       h('h4', null, t(S.autopsy)),

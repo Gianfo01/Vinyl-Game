@@ -5,7 +5,6 @@ import { clamp, type Rng } from '../../core/rng';
 import { registerSimHook } from '../ext4';
 import { langForCity, songTitle } from '../people';
 import type { GameState, Release } from '../types';
-import { money } from '../util';
 import { ownerOf } from './people/owner';
 import { seedRelease } from './realworld';
 
@@ -48,5 +47,5 @@ function playerLevel(s: GameState, r: Rng): void {
 registerSimHook('newgame', 'custom7', (s, r) => {
   playerLevel(s, r);
   const pc = s.config.custom?.personalCash;
-  if (pc !== undefined) ownerOf(s, r).wealth = money(s, Math.max(0, pc));
+  if (pc !== undefined) ownerOf(s, r).wealth = Math.round(Math.max(0, pc) * 100);
 });

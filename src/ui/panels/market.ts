@@ -100,7 +100,7 @@ function scouting(s: GameState): HTMLElement {
     h('aside', { class: 'col-side' },
       section(t(S.scoutRequest),
         h('p', { class: 'muted small' }, t(l('Formulário estruturado. Resultado no fim do mês. Usa 1 ação.', 'Structured form. Results at month end. Uses 1 action.'))),
-        h('label', null, t(S.family), select('any', [{ value: 'any', label: t(S.any) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) }))], (v) => (req.genreFamily = v))),
+        h('label', null, t(S.family), select('any', [{ value: 'any', label: t(S.any) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })).sort((a, b) => a.label.localeCompare(b.label))], (v) => (req.genreFamily = v))),
         h('label', null, t(S.region), select('any', [{ value: 'any', label: t(S.any) }, ...MARKETS.map((m) => ({ value: m.id, label: t(m.name) }))], (v) => (req.market = v))),
         h('label', null, t(S.level), select('promising', [{ value: 'beginner', label: t(S.beginner) }, { value: 'promising', label: t(S.promising) }, { value: 'established', label: t(S.established) }], (v) => (req.level = v))),
         h('label', null, t(S.format), select('any', [{ value: 'any', label: t(S.any) }, { value: 'band', label: t(S.band) }, { value: 'solo', label: t(S.solo) }], (v) => (req.role = v))),

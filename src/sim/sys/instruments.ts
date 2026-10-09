@@ -93,16 +93,19 @@ function defaults(p: Person): InstEntry[] {
   const extra = h % 100 < 35 ? 0 : h % 100 < 70 ? 1 : h % 100 < 90 ? 2 : 3;
   const pool = ROLE_SECOND[p.role] ?? [];
   for (let i = 0; i < extra && i < pool.length; i++) {
-    const id = pool[(h >> (i * 3)) % pool.length];
+    const id = pool[(h >>> (i * 3)) % pool.length];
     if (out.some((x) => x.id === id)) continue;
-    const lvl = Math.round(clamp(base * (0.35 + ((h >> (i * 5)) % 40) / 100), 5, 95));
+    const lvl = Math.round(clamp(base * (0.35 + ((h >>> (i * 5)) % 40) / 100), 5, 95));
     out.push({ id, lvl });
   }
   return out;
 }
 
 export function instrumentsOf(s: GameState, p: Person): InstEntry[] {
-  return st(s).people[p.id]?.list ?? defaults(p);
+  const own = st(s).people[p.id];
+  // saves antigos podiam guardar um instrumento sem id (hash negativo): limpa
+  if (own && own.list.some((x) => !instById[x.id])) own.list = own.list.filter((x) => instById[x.id]);
+  return own?.list ?? defaults(p);
 }
 
 export function learningOf(s: GameState, p: Person): PersonInst['learning'] {

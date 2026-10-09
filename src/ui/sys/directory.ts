@@ -202,7 +202,7 @@ function directoryArea(s: GameState): HTMLElement {
       h('button', { role: 'tab', class: F.mode === 'gone' ? 'on' : '', 'aria-selected': String(F.mode === 'gone'), onclick: () => set('mode')('gone') }, ic('skull'), ' ', t(l('Mortos, separados e aposentados', 'Dead, split and retired')))),
     h('div', { class: 'row wrap dir-filters' },
       search,
-      select(F.family, [{ value: 'any', label: t(l('Todas as famílias', 'All families')) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) }))], set('family')),
+      select(F.family, [{ value: 'any', label: t(l('Todas as famílias', 'All families')) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })).sort((a, b) => a.label.localeCompare(b.label))], set('family')),
       select(F.market, [{ value: 'any', label: t(l('Todas as regiões', 'All regions')) }, ...MARKETS.map((m) => ({ value: m.id, label: t(m.name) }))], set('market')),
       F.mode === 'gone' ? select(F.gone, [
         { value: 'all', label: t(l('Todos os inativos', 'All inactive')) }, { value: 'dead', label: t(l('Falecidos', 'Deceased')) },

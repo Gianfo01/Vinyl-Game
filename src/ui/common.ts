@@ -71,7 +71,7 @@ export function logo(act: Act, size = 40): HTMLElement {
 export function cover(s: GameState, r: Release, size = 56): HTMLElement {
   const act = s.acts[r.actId];
   const budget = Math.min(1, r.marketingE + 0.2);
-  return h('img', { class: 'cover', src: coverUrl(r.coverSeed, r.title, act?.name ?? '', act?.genre ?? 'pop', r.year, budget, 160), width: size, height: size, alt: '' });
+  return h('img', { class: 'cover', src: coverUrl(r.coverSeed, r.title, act?.name ?? '', act?.genre ?? 'pop', r.year, budget, 160, r.coverChoice), width: size, height: size, alt: '' });
 }
 
 export function pill(text: string, cls = ''): HTMLElement {

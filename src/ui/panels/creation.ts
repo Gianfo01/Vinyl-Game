@@ -1,6 +1,8 @@
 // Criação: repertório, Q por componentes, e planejador de lançamento
 // (formatos por era, tiragem, marketing com retorno decrescente, territórios). GDD §12–14.
 
+import { coverById, coverCost, coverOptions, type CoverStyle } from '../../sim/covers';
+import { coverUrl } from '../art';
 import { FORMATS, type FormatId } from '../../data/rules';
 import { MARKETS, l, type MarketId } from '../../data/world';
 import { S, t } from '../../i18n/strings';
@@ -46,9 +48,10 @@ export function creationPanel(s: GameState): HTMLElement {
       kv(t(l('Previsão (10 semanas)', 'Forecast (10 weeks)')), `${N(fc.lo)}–${N(fc.hi)} ${t(l('unid.', 'units'))}`),
       kv(t(l('Demanda física estimada', 'Estimated physical demand')), `~${N(Math.round(fc.mid * physicalShare(s)))}`),
       kv(t(S.press), $(press)),
+      ...(plan.cover ? [kv(t(l('Capa', 'Cover')), `${t(coverById[plan.cover.style as CoverStyle]?.name ?? l('?'))} · ${$(coverCost(s, plan.cover.style))}`)] : []),
       kv(t(S.marketing), `${$(mk)} · E = ${(E * 100).toFixed(0)}%`),
       kv(t(l('Cobertura de mercado', 'Market coverage')), `${(cov * 100).toFixed(0)}%`),
-      kv(t(S.totalCost), h('b', null, $(press + mk))),
+      kv(t(S.totalCost), h('b', null, $(press + mk + coverCost(s, plan.cover?.style)))),
       h('p', { class: 'muted small' }, t(l('E = 1 − exp(−investimento/custo de alcance): dobrar a verba não dobra o efeito.', 'E = 1 − exp(−spend/reach cost): doubling the budget does not double the effect.'))),
     );
   };
@@ -72,6 +75,22 @@ export function creationPanel(s: GameState): HTMLElement {
   updateCost();
   const formats = availableFormats(s);
   const titleInput = h('input', { type: 'text', placeholder: t(l('(automático)', '(automatic)')), oninput: (e: Event) => (plan.title = (e.target as HTMLInputElement).value) });
+  // rodada 8: três propostas de capa, cada uma com custo e consequência
+  let coverRound = 0;
+  const coverBox = h('div', { class: 'cover-pick' });
+  const renderCovers = () => {
+    const opts = coverOptions(s, a.id, coverRound);
+    if (!plan.cover || !opts.some((o) => o.seed === plan.cover!.seed)) plan.cover = { ...opts[0] };
+    const title = plan.title?.trim() || (plan.type === 'single' ? s.songs[plan.songs[0]]?.title ?? a.name : a.name);
+    coverBox.replaceChildren(...opts.map((o) => {
+      const def = coverById[o.style];
+      return h('button', { class: `pick cover-opt ${plan.cover?.seed === o.seed ? 'on' : ''}`, onclick: () => { plan.cover = { ...o }; renderCovers(); updateCost(); } },
+        h('img', { class: 'cover', src: coverUrl(o.seed, title, a.name, a.genre, s.year, 0.6, 160, o.style), width: 96, height: 96, alt: '' }),
+        h('b', null, t(def.name)), h('small', null, t(def.effect)), h('small', { class: 'muted' }, def.cost ? $(coverCost(s, o.style)) : t(l('grátis', 'free'))));
+    }), h('button', { class: 'btn small ghost', onclick: () => { coverRound += 1; plan.cover = undefined; renderCovers(); updateCost(); } }, '🎲 ', t(l('Outras propostas', 'Other proposals'))));
+  };
+  renderCovers();
+  updateCost();
   const pressInput = h('input', { type: 'number', min: 0, step: 100, value: plan.press, oninput: (e: Event) => { plan.press = Math.max(0, Number((e.target as HTMLInputElement).value)); updateCost(); } });
   return h('div', { class: 'panel creation' },
     h('aside', { class: 'col-side' },
@@ -91,6 +110,7 @@ export function creationPanel(s: GameState): HTMLElement {
           h('label', null, t(S.type), select(plan.type, [{ value: 'single', label: 'Single' }, { value: 'ep', label: 'EP (3+)' }, { value: 'lp', label: 'LP (7+)' }] as { value: 'single' | 'ep' | 'lp'; label: string }[], (v) => { plan.type = v; plan.press = suggestedPress(s, a, v, ready[0]?.q ?? 50); pressInput.value = String(plan.press); updateCost(); })),
           h('label', null, t(S.title), titleInput),
           songList,
+          h('fieldset', null, h('legend', null, t(l('Capa (escolha uma das três propostas)', 'Cover (pick one of three proposals)'))), coverBox),
           h('fieldset', null, h('legend', null, t(S.formats)), formats.map((f) => h('label', { class: 'check' },
             h('input', { type: 'checkbox', checked: plan.formats.includes(f), onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; plan.formats = on ? [...plan.formats, f] : plan.formats.filter((x) => x !== f); updateCost(); } }),
             t(FORMATS.find((x) => x.id === f)?.name)))),

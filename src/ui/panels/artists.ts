@@ -76,7 +76,7 @@ export function artistsPanel(s: GameState): HTMLElement {
   };
   const free = max - usedSlots(slots);
   const capLeft = freeCapacity(s, a) - agendaLoad(slots);
-  const addSel = select('', [{ value: '', label: `+ ${t(S.addAction)}` }, ...[...AGENDA_ACTIONS, ...EXTRA_ACTIONS].filter((x) => slotLoad({ action: x.id }) <= capLeft && (slotCost(x.id) <= free || EXTRA_ACTIONS.includes(x as never))).map((x) => ({ value: x.id, label: `${t(x.name)} · ${slotLoad({ action: x.id })}%` }))], (v) => {
+  const addSel = select('', [{ value: '', label: `+ ${t(S.addAction)}` }, ...[...AGENDA_ACTIONS, ...EXTRA_ACTIONS].filter((x) => slotLoad({ action: x.id }) <= capLeft && (slotCost(x.id) <= free || EXTRA_ACTIONS.includes(x as never))).map((x) => ({ value: x.id, label: `${t(x.name)} · ${slotLoad({ action: x.id })}%` })).sort((a, b) => a.label.localeCompare(b.label))], (v) => {
     if (!v) return;
     const p: AgendaSlot = { action: v };
     if (v === 'gigs') p.params = { tier: Math.min(maxVenueTier(s, a), 2), dates: 4 };

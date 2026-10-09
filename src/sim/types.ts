@@ -252,6 +252,10 @@ export interface Release {
   rolloutId?: string;
   /** rodada 7: discografia anterior ao início da run (real ou simulada) */
   hist?: boolean;
+  /** rodada 8: nota agregada da crítica (0–100) e nº de resenhas; capa escolhida */
+  critic?: number;
+  criticN?: number;
+  coverChoice?: string;
 }
 
 export interface AutopsyFactor {
@@ -395,6 +399,7 @@ export interface PendingRelease {
   kind?: Release['kind'];
   hype?: number;
   rolloutId?: string;
+  cover?: { style: string; seed: number };
 }
 
 export interface DecisionOption {

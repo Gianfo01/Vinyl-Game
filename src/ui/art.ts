@@ -274,8 +274,11 @@ export function posterPx(seed: number, name: string, genre: string, year: number
 
 const COVER_N = 40;
 
-export function coverPx(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5): Px {
-  const style = eraStyle(year);
+/** Estilo de capa escolhido pelo jogador (rodada 8) → estilo visual. */
+const CHOICE_ART: Record<string, ArtStyle> = { portrait: 'classic', concept: 'neon', provocative: 'punk', minimal: 'minimal', illustrated: 'psych', scene: 'grunge', diy: 'punk' };
+
+export function coverPx(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, choice?: string): Px {
+  const style = (choice && CHOICE_ART[choice]) || eraStyle(year);
   const key = `C:${seed}:${style}:${Math.round(budget * 4)}`;
   const hit = pxCache.get(key);
   if (hit) return hit;
@@ -428,11 +431,11 @@ export function coverPx(seed: number, title: string, actName: string, genre: str
   return p;
 }
 
-export function coverUrl(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, size = 160): string {
-  const key = `cover:${seed}:${eraStyle(year)}:${Math.round(budget * 4)}:${size}`;
+export function coverUrl(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, size = 160, choice?: string): string {
+  const key = `cover:${seed}:${(choice && CHOICE_ART[choice]) || eraStyle(year)}:${Math.round(budget * 4)}:${size}`;
   const hit = cache.get(key);
   if (hit) return hit;
-  const url = upscale(coverPx(seed, title, actName, genre, year, budget).canvas(), size).toDataURL();
+  const url = upscale(coverPx(seed, title, actName, genre, year, budget, choice).canvas(), size).toDataURL();
   cache.set(key, url);
   return url;
 }

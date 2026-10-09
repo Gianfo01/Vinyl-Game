@@ -7,6 +7,7 @@ import { registerEvents, type EventDef } from './events';
 import type { Act, GameState, Release } from './types';
 import type { Crisis, Review } from './xtypes';
 import { buildReviews } from './reviews';
+import { coverCriticBonus } from './covers';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 
 export interface CriticDef {
@@ -60,9 +61,12 @@ export function reviewRelease(s: GameState, r: Rng, rel: Release): Review[] {
   const picks = r.shuffle([...crit]).slice(0, n);
   // críticas completas: nota por aspecto, texto montado na hora (rodada 5); rivais ficam só com números
   const out: Review[] = buildReviews(s, r, rel, picks);
+  const cb = coverCriticBonus(rel);
+  if (cb) for (const x of out) x.score = clamp(Math.round((x.score + cb) * 10) / 10, 0, 10);
   if (rel.owner !== 'player' && !act.playerBand) for (const x of out) { delete x.ctx; delete x.best; delete x.worst; }
   s.reviews[rel.id] = out;
   const avg = out.reduce((t, x) => t + x.score, 0) / Math.max(1, out.length);
+  if (out.length) { rel.critic = Math.round(avg * 10); rel.criticN = out.length; }
   // crítica afeta prestígio e um pouco o apelo (não compra hit)
   rel.appeal *= 0.92 + avg / 60;
   if (act.image) act.image.artistic = clamp(act.image.artistic + (avg - 6) * 1.2, 0, 100);

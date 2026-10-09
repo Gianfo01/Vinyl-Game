@@ -635,3 +635,13 @@ img.portrait { border: 1px solid var(--line); }
 .slot.combo { border-left: 3px solid var(--good); }
 .agenda-tpl { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin-top: 0.4rem; }
 @media (max-width: 900px) { .agenda-cal { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* rodada 8: nota da crítica estilo metascore */
+.crit-badge { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3.4rem; padding: 0.3rem 0.5rem; border-radius: 8px; background: var(--panel-2); border: 2px solid var(--line); }
+.crit-badge b { font-size: 1.35rem; line-height: 1; }
+.crit-badge small { font-size: 0.68rem; color: var(--muted); }
+.crit-badge.good { border-color: var(--good); }
+.crit-badge.bad { border-color: var(--bad); }
+.cover-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; align-items: stretch; }
+.cover-opt { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-align: center; }
+.cover-opt img { image-rendering: pixelated; border-radius: 4px; }

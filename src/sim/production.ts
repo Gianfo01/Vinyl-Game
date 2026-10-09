@@ -1,5 +1,6 @@
 // Composição, gravação e preparação de lançamentos (GDD §12, §13).
 
+import { coverCost } from './covers';
 import { clamp, type Rng } from '../core/rng';
 import { APPROACHES, EQUIPMENT, FORMATS, STUDIO_TIERS, type FormatId } from '../data/rules';
 import { l, type L, type MarketId } from '../data/world';
@@ -186,6 +187,8 @@ export interface ReleasePlan {
   kind?: Release['kind'];
   hype?: number;
   rolloutId?: string;
+  /** rodada 8: proposta de capa escolhida */
+  cover?: { style: string; seed: number };
 }
 
 export function validateRelease(s: GameState, p: ReleasePlan): L | null {
@@ -211,7 +214,7 @@ export function labelFunded(s: GameState, actId: string): boolean {
 
 export function releaseCost(s: GameState, p: ReleasePlan): number {
   const press = labelFunded(s, p.actId) ? 0 : pressingCost(s, p.formats, p.press);
-  return press + p.marketing.reduce((t, m) => t + m.budget, 0);
+  return press + p.marketing.reduce((t, m) => t + m.budget, 0) + coverCost(s, p.cover?.style);
 }
 
 export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRelease | L {
@@ -234,6 +237,7 @@ export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRe
     kind: p.kind,
     hype: p.hype,
     rolloutId: p.rolloutId,
+    cover: p.cover,
   };
   // custo pago na programação (cancelar antes do lançamento devolve; GDD §27 "cancelar não cobra")
   const cost = releaseCost(s, p);

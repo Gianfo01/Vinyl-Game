@@ -16,7 +16,7 @@ import { activeMembers, agendaLoad, monthIndex, personLoad, planSlots, slotLoad 
 import { runExtraAction } from './actions2';
 
 export function slotsFor(act: Act): number {
-  return act.fame < 10 && act.status === 'emerging' ? 3 : 4;
+  return act.fame < 10 && act.status === 'emerging' ? 5 : 6;
 }
 
 export function slotCost(action: string): number {

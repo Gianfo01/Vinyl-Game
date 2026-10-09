@@ -316,11 +316,11 @@ function visualsTab(s: GameState): HTMLElement {
   if (!act) return h('p', null, '—');
   const songs = act.songs.map((id) => s.songs[id]).filter((so): so is Song => !!so && songStatus(s, so) !== 'discarded').slice(-15).reverse();
   return section(t(l('Capa, clipe e vídeo curto', 'Cover, video and short video')),
-    h('p', { class: 'muted small' }, t(l('A capa e o clipe valem para o lançamento em que a música for a faixa principal.', 'The cover and video apply to the release where the song is the lead track.'))),
+    h('p', { class: 'muted small' }, t(l('A capa é escolhida entre três propostas na hora de programar o lançamento; o clipe vale para o lançamento em que a música for a faixa principal.', 'The cover is picked from three proposals when scheduling the release; the video applies to the release where the song is the lead track.'))),
     h('table', { class: 'tbl compact' }, h('tbody', null, songs.map((so) => {
       const x = s.x4.creation.songs[so.id] ?? {};
       return h('tr', null, h('td', null, so.title),
-        h('td', null, x.cover !== undefined ? scoreBadge(x.cover / 10) : h('button', { class: 'btn small', onclick: () => openCoverEditor(s, so.id) }, ic('camera'), ` ${t(l('Capa', 'Cover'))}`)),
+        h('td', null, x.cover !== undefined ? scoreBadge(x.cover / 10) : h('small', { class: 'muted' }, t(l('capa: escolhida ao programar o lançamento', 'cover: picked when scheduling the release')))),
         h('td', null, x.clip ? pill(`${t(l('clipe', 'video'))} ${Math.round(x.clip.result * 50)}`, 'good') : s.year >= 1981 ? h('button', { class: 'btn small', onclick: () => openClipEditor(s, so.id) }, ic('film'), ` ${t(l('Clipe', 'Video'))}`) : h('small', { class: 'muted' }, '—')),
         h('td', null, x.viral ? pill(x.viral.result > 0.5 ? t(l('viralizou', 'went viral')) : t(l('não pegou', "didn't catch on")), x.viral.result > 0.5 ? 'good' : '') : hasTech(s, 'short_video') && so.recorded ? h('button', { class: 'btn small', onclick: () => openViral(s, so.id) }, ic('stream'), ` ${t(l('Viral', 'Viral'))}`) : h('small', { class: 'muted' }, '—')));
     }))),

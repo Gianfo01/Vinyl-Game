@@ -349,10 +349,11 @@ function setupPlayer(s: GameState, r: Rng): void {
   }
   if (cfg.card === 'prospector') real *= 0.8;
   real *= diffMult;
-  if (cfg.custom?.cash !== undefined) real = Math.max(0, cfg.custom.cash);
   if (cfg.custom?.hq !== undefined) p.hq = clamp(Math.round(cfg.custom.hq), 0, 3);
   if (cfg.custom?.reputation !== undefined) { const v = clamp(cfg.custom.reputation, 0, 100); p.reputation = { artistic: v, commercial: v, artists: v, institutional: v }; }
   p.cash = nominal(real, s.year);
+  // início personalizado: o valor digitado é em dólares do próprio ano de início (o que aparece na tela)
+  if (cfg.custom?.cash !== undefined) p.cash = Math.round(Math.max(0, cfg.custom.cash) * 100);
   p.initialCash = p.cash;
 
   if (cfg.role === 'artist' || cfg.role === 'hybrid') {
@@ -368,8 +369,8 @@ function setupPlayer(s: GameState, r: Rng): void {
     s.knowledge[act.id] = { actId: act.id, degree: 5, stage: 'negotiation', bias: 0, updatedWeek: 0, source: 'self' };
     s.delegated[act.id] = true;
   }
-  const customRoster = cfg.role !== 'artist' ? cfg.custom?.roster : undefined;
-  if (cfg.role !== 'artist' && (cfg.scenario !== 'from_zero' || customRoster)) {
+  const customRoster = cfg.custom?.roster;
+  if ((cfg.role !== 'artist' && cfg.scenario !== 'from_zero') || customRoster) {
     const n = customRoster !== undefined ? clamp(Math.round(customRoster), 0, 8) : cfg.scenario === 'established' ? 3 : 1;
     for (let i = 0; i < n; i++) {
       const act = spawnProceduralAct(s, r, { city: cfg.homeCity, potential: r.int(50, 72), fame: r.int(8, 25), formedYear: s.year - 2 });

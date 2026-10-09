@@ -70,7 +70,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
         select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { store.prefs.lang = v; savePrefs(); titleScreen(root, onStart); }, { 'aria-label': t(S.language) }),
       ),
       saves,
-      h('p', { class: 'muted small foot' }, t(l('Universo ficcional por padrão; ligue "Nomes reais" para jogar com artistas, selos e prêmios de verdade.', 'Fictional universe by default; turn on "Real names" to play with real artists, labels and awards.'))),
+      h('p', { class: 'muted small foot' }, t(l('Nomes reais ligados por padrão (Elvis, Beatles, Roberto Carlos…); desligue "Nomes reais" para um universo ficcional.', 'Real names on by default (Elvis, Beatles…); turn off "Real names" for a fictional universe.'))),
     ),
   );
 }
@@ -84,7 +84,7 @@ function customCard(cfg: RunConfig): HTMLElement {
   const repLabel = h('span', null, t(l('(padrão)', '(default)')));
   return h('section', { class: 'card' },
     h('h3', null, t(l('Início personalizado', 'Custom start'))),
-    h('p', { class: 'muted small' }, t(l('Deixe em branco para usar o padrão do cenário. Valores em dólares de 1960 (o jogo converte para a moeda da época).', 'Leave blank to use the scenario default. Values in 1960 dollars (the game converts to the era\'s money).'))),
+    h('p', { class: 'muted small' }, t(l('Deixe em branco para usar o padrão do cenário. Os valores em dinheiro são exatamente os que aparecem no jogo (dólares do ano de início).', 'Leave blank to use the scenario default. Money values are exactly what you will see in game (dollars of the start year).'))),
     h('label', null, t(l('Caixa da empresa', 'Company cash')), num('cash', '45000')),
     h('label', null, t(l('Patrimônio pessoal', 'Personal wealth')), num('personalCash', '5000')),
     h('label', null, t(l('Sede inicial', 'Starting HQ')), opt('hq', HQ_LEVELS.slice(0, 4).map((x, i) => ({ value: String(i), label: t(x.name) })), (v) => Number(v))),
@@ -133,6 +133,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     bandGenre: 'rnr',
     contentFilters: [],
     custom: {},
+    realNames: true,
   };
   const bandBox = h('div', { class: 'band-box' });
   const renderBand = () => {
@@ -188,7 +189,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
           ] as { value: RunConfig['difficulty']; label: string }[], (v) => (cfg.difficulty = v))),
           h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.ironman = (e.target as HTMLInputElement).checked) }), t(S.ironman)),
           h('label', { class: 'check', title: t(l('Cerca de 740 artistas reais (EUA, Reino Unido, Itália, Brasil e mundo) surgem perto do ano real de estreia, com integrantes e discografia; as gravadoras, festivais, rádios, revistas, plataformas, paradas e prêmios aparecem com os nomes reais (Beatles, Motown, Woodstock, Billboard, Grammy…). Artistas gerados continuam inventados.', 'About 740 real artists (US, UK, Italy, Brazil and worldwide) appear near their real debut year, with members and discographies; labels, festivals, radio, magazines, platforms, charts and awards use their real names (Beatles, Motown, Woodstock, Billboard, Grammy…). Generated artists stay invented.')) },
-            h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.realNames = (e.target as HTMLInputElement).checked) }), t(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'))),
+            h('input', { type: 'checkbox', checked: true, onchange: (e: Event) => (cfg.realNames = (e.target as HTMLInputElement).checked) }), t(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'))),
           h('label', { class: 'check', title: t(l('Só no modo histórico: artistas reais tendem a morrer no mesmo ano em que morreram na vida real. Desligado, a morte é só simulada (idade, saúde, vícios).', 'Historic mode only: real artists tend to die in the same year they did in real life. Off, death is only simulated (age, health, addiction).')) },
             h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.realFates = (e.target as HTMLInputElement).checked) }), t(l('Mortes nos anos reais (modo histórico)', 'Deaths in their real years (historic mode)'))),
           h('label', null, t(S.seed), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; } }, '🎲'))),

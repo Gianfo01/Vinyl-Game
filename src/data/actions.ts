@@ -49,20 +49,20 @@ export const EXTRA_ACTIONS: ExtraAction[] = [
 
 /** Carga de cada ação base (GDD §45.4). */
 export const BASE_LOADS: Record<string, ActionMeta> = {
-  train: { id: 'train', load: 25, scope: 'band' },
-  workshop: { id: 'workshop', load: 25, scope: 'band' },
-  rehearse: { id: 'rehearse', load: 25, scope: 'band' },
-  opening: { id: 'opening', load: 25, scope: 'band' },
-  networking: { id: 'networking', load: 25, scope: 'band' },
-  interview: { id: 'interview', load: 25, scope: 'band' },
+  train: { id: 'train', load: 20, scope: 'band' },
+  workshop: { id: 'workshop', load: 20, scope: 'band' },
+  rehearse: { id: 'rehearse', load: 15, scope: 'band' },
+  opening: { id: 'opening', load: 20, scope: 'band' },
+  networking: { id: 'networking', load: 15, scope: 'band' },
+  interview: { id: 'interview', load: 10, scope: 'band' },
   residency_art: { id: 'residency_art', load: 75, scope: 'band' },
   side_job: { id: 'side_job', load: 75, scope: 'band' },
-  feat: { id: 'feat', load: 50, scope: 'band' },
-  rest: { id: 'rest', load: 25, scope: 'band' },
-  social: { id: 'social', load: 25, scope: 'band' },
+  feat: { id: 'feat', load: 30, scope: 'band' },
+  rest: { id: 'rest', load: 20, scope: 'band' },
+  social: { id: 'social', load: 15, scope: 'band' },
   reposition: { id: 'reposition', load: 50, scope: 'band' },
-  compose: { id: 'compose', load: 45, scope: 'band' },
-  record: { id: 'record', load: 60, scope: 'band' },
+  compose: { id: 'compose', load: 22, scope: 'band' },
+  record: { id: 'record', load: 50, scope: 'band' },
   gigs: { id: 'gigs', load: 40, scope: 'band' },
 };
 

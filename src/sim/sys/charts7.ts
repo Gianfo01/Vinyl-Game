@@ -168,7 +168,7 @@ function rank(prev: Row7[] | undefined, rows: { relId: string; u: number }[]): R
   });
 }
 
-function weekCharts(s: GameState): void {
+export function weekCharts(s: GameState): void {
   const st = ch7(s);
   if (st.week === s.week) return;
   st.week = s.week;
