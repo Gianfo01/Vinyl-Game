@@ -12,6 +12,7 @@ import { money, rngOf } from '../sim/util';
 import { l } from '../data/world';
 import { openActPage, openPersonPage } from './pages';
 import { reviewCard, reviewSummary } from './reviewView';
+import { pageTabs } from './registry';
 
 function g(): GameState {
   return store.game!;
@@ -117,6 +118,7 @@ export function openLabel(id: string): void {
     kv(t(l('Última decisão', 'Last decision')), t(lb.lastDecision) || '—'),
     h('h4', null, `${t(S.roster)} (${roster.length})`),
     h('div', { class: 'chips' }, roster.slice(0, 40).map((a) => actLink(s, a.id))),
+    ...pageTabs('label', s, id).map((x) => x.render(s, id)),
   );
   modal(lb.name, body);
 }
