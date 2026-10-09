@@ -1,0 +1,21 @@
+/* Rodada 14 — tokens extras para que todo CSS use variáveis (claro/escuro). */
+:root {
+  --on-color: #fff;            /* texto sobre fundo colorido (badges, notas) */
+  --scrim: rgba(10, 6, 12, 0.55);
+  --scrim-strong: rgba(10, 8, 14, 0.72);
+  --tip-bg: rgba(16, 12, 20, 0.92);
+  --tip-ink: #f4ede2;
+  --vinyl: #111;
+  --vinyl-2: #222;
+  --card: var(--panel);
+  --panel2: var(--panel-2);
+  --neutral: #8a7f74;
+  --gold-2: #e3c158;
+  --gold-ink: #2a1f05;
+  --split-pro: #3fa37a; --split-gst: #d0663f; --split-dst: #888;
+  --load-0: #c8641e; --load-1: #3f7fbf; --load-2: #2f9d6a; --load-3: #9b59b6; --load-4: #d4a72c; --load-5: #5f6b7a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) { --neutral: #6f655c; --split-dst: #777; --load-1: #5b95d6; --load-3: #b07cc9; --load-5: #7d8796; }
+}
+:root[data-theme='dark'] { --neutral: #6f655c; --split-dst: #777; --load-1: #5b95d6; --load-3: #b07cc9; --load-5: #7d8796; }

@@ -67,3 +67,6 @@ import './careerui13';
 import './overhead13';
 import './persona13';
 import './persona13tab';
+// Rodada 14: cockpit (mesa + caixa de entrada + sede) e tema claro/escuro.
+import './cockpit14';
+import './theme14';

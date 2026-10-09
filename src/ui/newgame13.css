@@ -7,7 +7,7 @@
 .cc-path-sel { max-width: 100%; }
 .tr13-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.3rem 0 0.6rem; }
 .tr13-count { padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid var(--accent); }
-.tr13-count.full { background: var(--accent); color: var(--bg, #000); }
+.tr13-count.full { background: var(--accent); color: var(--accent-ink); }
 .tr13-chip { font: inherit; font-size: 0.85rem; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
 .tr13-group h5 { margin: 0.6rem 0 0.3rem; font-size: 0.95rem; }
 .tr13-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.45rem; }

@@ -2,7 +2,7 @@
 .lendas .ln-year h4 { margin: 0.8em 0 0.2em; border-bottom: 1px solid var(--line, #8884); }
 .lendas .ln-ev.i4, .lendas .ln-ev.i5 { font-weight: 600; }
 .lendas .ln-ev.i1 { opacity: 0.75; }
-.lendas .ln-book { white-space: pre-wrap; max-height: 60vh; overflow: auto; font-size: 0.85em; padding: 0.8em; background: var(--panel2, #0001); }
+.lendas .ln-book { white-space: pre-wrap; max-height: 60vh; overflow: auto; font-size: 0.85em; padding: 0.8em; background: var(--panel-2); }
 .lendas .ln-paper li { padding: 0.15em 0; }
 .lendas .row.wrap { display: flex; flex-wrap: wrap; gap: 0.4em; align-items: center; }
 
