@@ -18,6 +18,10 @@ import { vices, gainTrait, loseTrait, type ViceId } from './vices';
 import type { Owner } from './people/state';
 import { persona, skills } from './persona';
 import { EVENTS } from './lifeevents10/data';
+import { EVENTS11 } from './lifeevents10/data11';
+
+// rodada 11: mais eventos no mesmo sorteio
+for (const d of EVENTS11) if (!EVENTS.some((x) => x.id === d.id)) EVENTS.push(d);
 
 export interface LeCtx { act?: string; pid?: string; lab?: string; n?: number; kid?: number }
 export interface Fx {

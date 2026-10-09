@@ -10,16 +10,16 @@ import type { GameState } from '../../types';
 import { fmtL } from '../../util';
 import { names, type Ch, type Def, type Env, type Fx, type LeCtx } from '../lifeevents10';
 
-const T = (pt: string, en: string) => (s: GameState, c: LeCtx): L => fmtL(l(pt, en), names(s, c));
-const C = (id: string, pt: string, en: string, fx: Fx, rpt: string, ren: string, o: Partial<Ch> & { nt?: [string, string] } = {}): Ch => {
+export const T = (pt: string, en: string) => (s: GameState, c: LeCtx): L => fmtL(l(pt, en), names(s, c));
+export const C = (id: string, pt: string, en: string, fx: Fx, rpt: string, ren: string, o: Partial<Ch> & { nt?: [string, string] } = {}): Ch => {
   const { nt, ...rest } = o;
   return { id, label: l(pt, en), fx, res: l(rpt, ren), ...(nt ? { note: l(nt[0], nt[1]) } : {}), ...rest };
 };
-const has = (e: Env, t: string): boolean => e.traits.includes(t);
-const attrNeed = (k: 'ear' | 'negotiation' | 'charisma' | 'management', n: number) => (e: Env): L | null =>
+export const has = (e: Env, t: string): boolean => e.traits.includes(t);
+export const attrNeed = (k: 'ear' | 'negotiation' | 'charisma' | 'management', n: number) => (e: Env): L | null =>
   e.o.attrs[k] >= n ? null : l(`Exige ${k} ${n}+.`, `Requires ${k} ${n}+.`);
-const needPartner = (e: Env): L | null => (e.partner ? null : l('Exige um(a) parceiro(a).', 'Requires a partner.'));
-const actCtx = (e: Env, r: Rng): LeCtx | null => {
+export const needPartner = (e: Env): L | null => (e.partner ? null : l('Exige um(a) parceiro(a).', 'Requires a partner.'));
+export const actCtx = (e: Env, r: Rng): LeCtx | null => {
   if (!e.acts.length) return null;
   const a = r.pick(e.acts);
   const pid = a.leaderId && a.members.includes(a.leaderId) ? a.leaderId : a.members[0];
