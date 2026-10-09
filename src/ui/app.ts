@@ -36,8 +36,9 @@ import { openLabelStory } from './sys/story12';
 import './sys';
 import { defaultHome, type NavGroup } from './careernav13';
 import { careers } from '../sim/sys/careers12';
-import { getTab, setTab } from './vis';
-import { alias14, ALIAS14, groupOf14, navGroups14, type NavGroup14 } from './careernav14';
+import { setTab } from './vis';
+import { alias14, ALIAS14, type NavGroup14 } from './careernav14';
+import { groupOf16, navGroups16 } from './careernav16';
 import { themeButton } from './sys/theme14';
 import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
 import { tabSnapshot } from './vis';
@@ -214,14 +215,14 @@ const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; are
   { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'finance', 'business', 'identity', 'team', 'industry'] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'market', 'directory', 'people', 'management', 'managers14', 'producers15'] },
   { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['project', 'creation', 'studio', 'releases', 'catalog', 'shows', 'media'] },
-  { id: 'ventures', label: l('Empreendimentos', 'Ventures'), icon: 'bank', areas: ['ventures', 'careers', 'tour12', 'studio12'] },
+  { id: 'ventures', label: l('Empreendimentos', 'Ventures'), icon: 'bank', areas: ['ventures', 'careers', 'tour12', 'studio12', 'publishing16', 'outlets16', 'platform16'] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['world', 'charts', 'labels', 'movements', 'lendas'] },
   { id: 'fame', label: l('Prêmios e eventos', 'Awards and events'), icon: 'trophy', areas: ['festivals', 'awards', 'rockhall', 'critics'] },
   { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth', 'night14'] },
 ];
 const lastInGroup: Record<string, string> = {};
 /** Rodada 14: cada carreira ativa é um grupo de topo; as inativas ficam em "Outras atividades". */
-const groups = (): NavGroup14[] => (groupsMemo ??= navGroups14(store.game ? careers(store.game).active : ['label'], GROUPS));
+const groups = (): NavGroup14[] => (groupsMemo ??= navGroups16(store.game ? careers(store.game).active : ['label'], GROUPS));
 
 interface NavItem { id: string; label: string; icon: string; key: string; badge?: number }
 // rodada 15: menu (com selos/badges, alguns caros) calculado uma vez por render, não uma vez por grupo
@@ -237,7 +238,7 @@ function navItems(): NavItem[] {
 }
 
 export function groupOf(area: string): NavGroup14 {
-  return groupOf14(groups(), area, getTab);
+  return groupOf16(groups(), area);
 }
 
 function groupItems(gr: NavGroup): NavItem[] {

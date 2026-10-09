@@ -6,7 +6,7 @@ import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame, takeoverCandidates } from '../src/sim/worldgen';
 import { perk } from '../src/sim/perks';
-import { BRANCHES, LIFESTYLES, SKILL_TREE, buySkill, deriveAttrs, lifestyleOf, persona, skills, validStartSkills } from '../src/sim/sys/persona';
+import { BRANCHES, LIFESTYLES, SKILL_TREE, START_SKILL_POINTS, buySkill, deriveAttrs, lifestyleOf, persona, skills, validStartSkills } from '../src/sim/sys/persona';
 import { ORIGINS } from '../src/sim/sys/identity/data';
 import { backgroundById } from '../src/sim/sys/life/data';
 import { ownerOf } from '../src/sim/sys/people/owner';
@@ -46,10 +46,10 @@ describe('assumir gravadora existente', () => {
 
 describe('árvore de habilidades', () => {
   it('pontos iniciais, compra com pré-requisito, estilo derivado e pontos anuais', () => {
-    const spec = { name: 'Ana', age: 30, background: 'producer', career: 'producer', role: 'producer' as const, traits: [], points: {}, skills: ['cr_ear', 'cr_hook', 'cr_arr', 'cr_polish'] };
+    const spec = { name: 'Ana', age: 30, background: 'producer', career: 'producer', role: 'producer' as const, traits: [], points: {}, skills: ['cr_ear', 'cr_hook', 'cr_arr', 'cr_polish'] }; // 3 pontos (rodada 16): Lapidador não cabe
     const s = createGame(defaultConfig('r9-skill', { character: spec }));
     const S0 = skills(s);
-    expect(S0.owned).toEqual(['cr_ear', 'cr_hook', 'cr_arr', 'cr_polish']);
+    expect(S0.owned).toEqual(['cr_ear', 'cr_hook', 'cr_arr']);
     expect(S0.points).toBe(0);
     expect(S0.lifestyle).toBe('intelectual');
     expect(ownerOf(s).attrs.ear).toBe(deriveAttrs(spec).ear - 0); // ouvido treinado já entra na ficha
@@ -57,6 +57,7 @@ describe('árvore de habilidades', () => {
     S0.points = 10;
     expect(buySkill(s, 'net_door')).not.toBeNull(); // falta Caderninho
     expect(buySkill(s, 'cr_radio')).toBeNull();
+    expect(buySkill(s, 'cr_polish')).toBeNull();
     expect(buySkill(s, 'cr_master')).toBeNull();
     expect(perk(s, 'songQ')).toBeGreaterThan(3);
     const pts = S0.points;
@@ -87,7 +88,7 @@ describe('árvore de habilidades', () => {
     P0.unlocked = { mentor: 3, mogul: 1 };
     const S0 = skills(s);
     expect(S0.owned).toEqual([]);
-    expect(S0.points).toBe(5 + (1 + 1 + 2) + 1);
+    expect(S0.points).toBe(START_SKILL_POINTS + (1 + 1 + 2) + 1);
     expect(P0.unlocked).toEqual({});
   });
 });

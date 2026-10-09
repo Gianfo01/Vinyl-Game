@@ -33,7 +33,7 @@ const btn = (label: L, fn: () => void, cls = 'btn small') => h('button', { class
 
 // ================================================================== empreendimentos
 
-function plLine(v: Venture): HTMLElement {
+export function plLine(v: Venture): HTMLElement {
   const last = v.pl.at(-1);
   const year = v.pl.reduce((s, e) => s + e.rev - e.cost, 0);
   return h('div', { class: 'row wrap small' },
@@ -43,7 +43,7 @@ function plLine(v: Venture): HTMLElement {
     v.pl.length > 1 ? sparkline(v.pl.map((e) => e.rev - e.cost)) : null);
 }
 
-function ventureHead(s: GameState, v: Venture): HTMLElement {
+export function ventureHead(s: GameState, v: Venture): HTMLElement {
   return h('div', null,
     h('div', { class: 'row between wrap' },
       h('h4', null, v.name, ' ', pill(t(v.owner === 'label' ? l('selo', 'label') : l('pessoal', 'personal')), v.owner === 'label' ? '' : 'good'), ' ', pill(`${t(l('Nível', 'Level'))} ${v.level}/${MAX_LEVEL}`)),
@@ -58,7 +58,7 @@ function ventureHead(s: GameState, v: Venture): HTMLElement {
       btn(l('Vender', 'Sell'), () => { if (confirm(t(l('Vender este negócio?', 'Sell this business?')))) say(sellVenture(s, v.id), l('Vendido.', 'Sold.')); }, 'btn small danger')));
 }
 
-function foundForm(s: GameState, kind: VKind): HTMLElement {
+export function foundForm(s: GameState, kind: VKind): HTMLElement {
   const info = VKINDS[kind];
   if (!kindsAvailable(s).includes(kind)) return h('p', { class: 'muted' }, t(l('Ainda não existe nesta época.', 'Not available in this era yet.')));
   let owner: Holder = 'label';
@@ -178,7 +178,7 @@ function platformBody(s: GameState, v: Venture): HTMLElement {
 
 export const BODY: Record<VKind, (s: GameState, v: Venture) => HTMLElement> = { festival: festivalBody, publisher: publisherBody, studio: studioBody, booking: bookingBody, media: mediaBody, platform: platformBody };
 
-function kindTab(s: GameState, kind: VKind): HTMLElement {
+export function kindTab(s: GameState, kind: VKind): HTMLElement {
   const list = ventures(s).list.filter((v) => v.kind === kind);
   const npc = ventures(s).npc.filter((n) => n.kind === kind);
   return h('div', null,

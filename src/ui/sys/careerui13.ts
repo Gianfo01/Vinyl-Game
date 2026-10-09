@@ -14,6 +14,7 @@ import type { GameState } from '../../sim/types';
 import { fmtL, money, rngOf } from '../../sim/util';
 import { ADVISOR_EXTRA, type Tip } from '../advisor';
 import { CAREER_NAV } from '../careernav13';
+import { PAGE16 } from '../pages16';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerSection } from '../registry';
@@ -107,7 +108,7 @@ registerSection('hq', { id: 'careers13', order: 0, render: hqKpis });
 ADVISOR_EXTRA.push((s) => {
   const st = careers(s), out: Tip[] = [];
   const on = (id: string) => st.active.includes(id);
-  const tab = (k: VKind): [string, string] => ['ventures9', k];
+  const tab = (k: VKind): [string, string] | undefined => PAGE16[k].tab; // rodada 16: cada negócio na sua página
   if (on('booking')) {
     const ag = hasAgency(s), c = c12(s);
     if (!ag && !c.promoter.on) out.push({ icon: 'tour-bus', text: l('Agente/promotor sem estrutura: funde a agência ou abra a promotora (Agente e promotor).', 'Agent/promoter with no setup: found the agency or open the promotion arm (Agent & promoter).'), area: 'tour12', level: 'warn' });
@@ -120,10 +121,10 @@ ADVISOR_EXTRA.push((s) => {
     const cr = mg.clients.filter((c) => c.crisis).length;
     if (cr) out.push({ icon: 'warning', text: fmtL(l('{n} agenciado(s) em crise: resolva antes que larguem você.', '{n} client(s) in crisis: handle it before they leave you.'), { n: cr }), area: 'management', level: 'bad' });
   }
-  if (on('festival') && !liveOf(s).fests.length && s.year >= 1950) out.push({ icon: 'star', text: l('Você é dono de festival sem festival: escolha data, cidade e identidade.', 'A festival owner with no festival: pick a date, city and identity.'), area: 'ventures', tab: tab('festival'), level: 'warn' });
+  if (on('festival') && !liveOf(s).fests.length && s.year >= 1950) out.push({ icon: 'star', text: l('Você é dono de festival sem festival: escolha data, cidade e identidade.', 'A festival owner with no festival: pick a date, city and identity.'), area: PAGE16.festival.area, tab: tab('festival'), level: 'warn' });
   if (on('venue') && !liveOf(s).venue) out.push({ icon: 'mic', text: l('Sem casa de shows ainda: compre uma em Shows.', 'No venue yet: buy one in Shows.'), area: 'shows', level: 'warn' });
   if (on('studio') && !studios(s).length && !prod(s).on) out.push({ icon: 'cd', text: l('Estúdio/produtor parado: funde um estúdio ou comece a produzir.', 'Studio/producer idle: found a studio or start producing.'), area: 'studio12', level: 'warn' });
-  for (const k of ['publisher', 'media', 'platform'] as const) if (on(k) && kindsAvailable(s).includes(k) && !vsum(s, k).n) out.push({ icon: CAREER_NAV[k].icon, text: fmtL(l('Carreira de {c} sem negócio: funde um ({p}).', '{c} career with no business: found one ({p}).'), { c: careerDef(k)!.name, p: $(foundCost(s, k)) }), area: 'ventures', tab: tab(k), level: 'info' });
+  for (const k of ['publisher', 'media', 'platform'] as const) if (on(k) && kindsAvailable(s).includes(k) && !vsum(s, k).n) out.push({ icon: CAREER_NAV[k].icon, text: fmtL(l('Carreira de {c} sem negócio: funde um ({p}).', '{c} career with no business: found one ({p}).'), { c: careerDef(k)!.name, p: $(foundCost(s, k)) }), area: PAGE16[k].area, tab: tab(k), level: 'info' });
   if (timeLoad(s) > 1) out.push({ icon: 'clock', text: fmtL(l('Agenda em {p}%: carreiras demais estressam todo mês.', 'Schedule at {p}%: too many careers add stress every month.'), { p: Math.round(timeLoad(s) * 100) }), area: 'careers', level: 'warn' });
   return out;
 });

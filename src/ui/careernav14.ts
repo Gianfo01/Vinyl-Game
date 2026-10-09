@@ -20,6 +20,7 @@ const LABEL_GROUPS = ['label', 'artists', 'music'];
 const GENERIC = ['world', 'fame'];
 const ORDER = ['label', 'musician', 'manager', 'booking', 'festival', 'venue', 'studio', 'publisher', 'media', 'platform'];
 
+/** Substituída por navGroups16 (careernav16.ts) na rodada 16; mantida para saves/testes antigos. */
 export function navGroups14(active0: string[], base: NavGroup[]): NavGroup14[] {
   const active = active0.filter((id) => CAREER_NAV[id]);
   if (!active.length) active.push('label');

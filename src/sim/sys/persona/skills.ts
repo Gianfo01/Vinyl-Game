@@ -98,11 +98,11 @@ export const SKILL_TREE: SkillDef[] = [
 export const skillById = Object.fromEntries(SKILL_TREE.map((x) => [x.id, x])) as Record<string, SkillDef>;
 
 // Balanço (rodada 13): 8 ramos x 6 habilidades, custo 1/1/1/2/2/3 = 10 pts por ramo, 80 no total.
-// Fontes numa partida média de 8 anos: criação 5 + anos 2x8=16 + marcos ~6 + conquistas (prêmios, nº 1,
-// hits, certificações, turnês esgotadas; ver skillpts13.ts) ~10 = ~37 pts, ou seja ~46% da árvore.
+// Fontes numa partida média de 8 anos: criação 3 (rodada 16; era 5) + anos 2x8=16 + marcos ~6 + conquistas (prêmios, nº 1,
+// hits, certificações, turnês esgotadas; ver skillpts13.ts) ~10 = ~35 pts, ou seja ~44% da árvore.
 // Quem joga muito bem chega a ~55% (tetos por fonte somam 28 de conquistas); ninguém zera os 80.
 /** Pontos para distribuir na criação. */
-export const START_SKILL_POINTS = 5;
+export const START_SKILL_POINTS = 3;
 /** Pontos por ano completo. */
 export const YEARLY_SKILL_POINTS = 2;
 

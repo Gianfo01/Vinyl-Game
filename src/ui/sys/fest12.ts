@@ -1,5 +1,5 @@
 // Interface do dono de festival (rodada 12). A mesma ficha aparece em Shows (festival próprio) e em
-// Empreendimentos (aba Festival): conceito, line-up por palco e horário com negociação, ingressos em
+// Festivais (aba Seus festivais): conceito, line-up por palco e horário com negociação, ingressos em
 // lotes, financiamento com fluxo de caixa datado e a história das edições com os porquês.
 
 import { CITIES, FAMILIES, l, type FamilyId, type L } from '../../data/world';
@@ -225,7 +225,7 @@ export function festSection12(s: GameState): HTMLElement {
   sync12(s);
   const lv = liveOf(s);
   return section(t(l('Festival próprio', 'Your own festival')),
-    h('p', { class: 'muted small' }, t(l('O mesmo festival aparece aqui e em Empreendimentos: conceito, financiamento, contratação, vendas, operação e a próxima edição.', 'The same festival appears here and in Ventures: concept, financing, booking, sales, operations and the next edition.'))),
+    h('p', { class: 'muted small' }, t(l('O mesmo festival aparece aqui e em Festivais (aba Seus festivais): conceito, financiamento, contratação, vendas, operação e a próxima edição.', 'The same festival appears here and in Festivals (Your festivals tab): concept, financing, booking, sales, operations and the next edition.'))),
     lv.fests.map((f) => festCard12(s, f)),
     s.year >= 1950 ? foundForm12(s) : h('p', { class: 'muted small' }, t(l('Festivais ao ar livre só surgem nos anos 1950.', 'Open-air festivals only appear in the 1950s.'))),
   );
