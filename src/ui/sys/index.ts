@@ -51,3 +51,6 @@ import './manager12';
 import './project12';
 import './rivals12';
 import './hq12';
+// Rodada 12: aba Arco do artista, rotinas pessoais e História do selo.
+import './arcs12';
+import './story12';

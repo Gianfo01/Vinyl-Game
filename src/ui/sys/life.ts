@@ -27,6 +27,7 @@ import { transferSection } from './capital';
 import { persona, skills } from '../../sim/sys/persona';
 import { vicesTab } from './vices';
 import { registerArea, registerCutscene } from '../registry';
+import { routinesTab } from './life12';
 import { playerViewsBlock } from './beliefs10';
 import { chips, ic, meter, stat, tabs } from '../vis';
 import { ownerTab } from './people/area';
@@ -268,7 +269,7 @@ function diaryTab(s: GameState): HTMLElement {
 // Rodada 10: "Você" tinha 12 abas; agora são três áreas (Você, Vida pessoal, Patrimônio).
 const YOU_GROUP: Record<string, 'you' | 'personal' | 'wealth'> = {
   me: 'you', persona: 'you', skills: 'you', decisions: 'you', music: 'you', diary: 'you',
-  love: 'personal', leisure: 'personal', agenda8: 'personal', vices: 'personal',
+  love: 'personal', leisure: 'personal', agenda8: 'personal', vices: 'personal', routines12: 'personal',
   wealth: 'wealth', goods8: 'wealth',
 };
 function youArea(s: GameState, group: 'you' | 'personal' | 'wealth' = 'you'): HTMLElement {
@@ -282,6 +283,7 @@ function youArea(s: GameState, group: 'you' | 'personal' | 'wealth' = 'you'): HT
     { id: 'leisure', label: t(l('Lazer e saúde', 'Leisure and health')), icon: 'sparkle', render: () => leisureTab(s) },
     { id: 'agenda8', label: t(l('Agenda pessoal', 'Personal agenda')), icon: 'calendar', render: () => personalAgendaTab(s) },
     { id: 'vices', label: t(l('Vida intensa', 'Fast life')), icon: 'fire', render: () => vicesTab(s) },
+    { id: 'routines12', label: t(l('Rotinas e selo', 'Routines and label')), icon: 'clock', render: () => routinesTab(s) },
     { id: 'wealth', label: t(l('Patrimônio', 'Wealth')), icon: 'house', render: () => h('div', null, transferSection(s), ownerTab(s)) },
     { id: 'goods8', label: t(l('Bens e investimentos', 'Belongings and investments')), icon: 'money', render: () => possessionsTab(s) },
     { id: 'diary', label: t(l('Diário', 'Diary')), icon: 'newspaper', render: () => diaryTab(s) },

@@ -94,3 +94,7 @@ import './manager12';
 import './recipe12';
 import './project12';
 import './rivals12';
+// Rodada 12: arcos de personagem (memória → decisão), vida pessoal que cruza com o selo e história do selo.
+import './arcs12';
+import './life12';
+import './story12';
