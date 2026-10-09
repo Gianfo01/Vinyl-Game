@@ -14,6 +14,7 @@ const mk = (seed: string, y = 1985) => {
   const s = createGame(defaultConfig(seed, { startYear: y }));
   const act = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
+  s.player.cash *= 3; // rodada 16: o começo do zero ficou mais apertado; aqui o selo fica parado 2 anos e não pode quebrar
   return s;
 };
 

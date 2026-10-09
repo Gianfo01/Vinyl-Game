@@ -17,7 +17,7 @@ describe('overhead13', () => {
     expect(tierOf(5e6).id).toBe('mid');
     expect(tierOf(30e6).id).toBe('major');
   });
-  it('major paga 15-25% da receita e mais que o pequeno', () => {
+  it('major paga 10-33% da receita (streaming: +8 p.p. de playlists/anúncios) e mais que o pequeno', () => {
     const s = mk(2018);
     const R = 20e6;
     oh(s).ema = Math.round(money(s, R) / 12); // receita mensal em centavos nominais
@@ -26,7 +26,7 @@ describe('overhead13', () => {
     expect(big.total).toBeGreaterThan(small.total);
     const rate = big.total / oh(s).ema;
     expect(rate).toBeGreaterThan(0.1);
-    expect(rate).toBeLessThanOrEqual(0.26);
+    expect(rate).toBeLessThanOrEqual(0.34);
   });
   it('promoção do lançamento depende da época e do tamanho do mercado', () => {
     const a = mk(1970), b = mk(2018);

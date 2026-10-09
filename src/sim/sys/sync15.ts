@@ -202,7 +202,7 @@ export function syncMonth15(s: GameState): void {
     const medium = r.pick(media);
     const M = MEDIA15[medium];
     const rv = rivals.length ? r.pick(rivals) : undefined;
-    st.briefs.push({ id: nextId(s, 'sb'), medium, client: r.pick(M.clients), mood: r.pick(Object.keys(MOOD15) as Mood15[]), old: r.chance(M.old), budget: Math.round(M.budget * r.float(0.7, 1.4)), until: s.week + 6, rival: rv?.id ?? '', rv: Math.round(r.float(0.3, 0.68) * 100) / 100, status: 'open', week: s.week });
+    st.briefs.push({ id: nextId(s, 'sb'), medium, client: r.pick(M.clients), mood: r.pick(Object.keys(MOOD15) as Mood15[]), old: r.chance(M.old), budget: Math.round(M.budget * r.float(0.7, 1.4)), until: s.week + 6, rival: rv?.id ?? '', rv: Math.round(r.float(0.36, 0.74) * 100) / 100, status: 'open', week: s.week });
   }
 }
 

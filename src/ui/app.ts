@@ -31,7 +31,7 @@ import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
 import { copyText, exportSaveText, importSaveText } from './store';
 import { applyRealNames } from '../data/realnames';
-import { EXTRA_AREAS, extraSections, mergeTabs, showPendingCutscene } from './registry';
+import { EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
 import { openLabelStory } from './sys/story12';
 import './sys';
 import { defaultHome, type NavGroup } from './careernav13';
@@ -463,6 +463,9 @@ function palette(): void {
     { label: t(l('Atalhos de teclado', 'Keyboard shortcuts')), kind: 'action', hint: '?', run: () => shortcutsHelp15(navItems().map((x) => ({ key: x.key, label: x.label }))) },
     { label: t(S.settings), kind: 'action', run: settings },
     ...[...mine].map((id): PCmd => ({ label: g.acts[id].name, kind: 'mine', icon: 'guitar', weight: 12, run: () => inspect.act(id) })),
+    // rodada 16: abas extras (Sync, Disputas...) também aparecem no Ir para… — antes só se achavam abrindo a área certa
+    ...([['charts', 'chartsHub'], ['market', 'marketHub'], ['media', 'mediaHub'], ['catalog', 'catalogHub'], ['world', 'worldHub']] as const).flatMap(([area, host]) =>
+      extraTabs(host, g).map((tb): PCmd => ({ label: tb.label, kind: 'area', icon: tb.icon, hint: navItems().find((x) => x.id === area)?.label, weight: 5, run: () => { setTab(host, tb.id); go(area); } }))),
   ];
   // busca sob demanda (base grande: milhares de nomes) — só o que já existe no ano atual
   const search = (q: string): PCmd[] => {

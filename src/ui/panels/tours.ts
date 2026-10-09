@@ -16,12 +16,13 @@ import { visibleAct } from '../../sim/future';
 import { forecastTour } from '../../sim/sys/explain12';
 import { forecastBox } from '../sys/explain12';
 import { fameText } from '../../sim/sys/fame15';
+import { labelTourNet16, sizedDraft16, suggestRoute16 } from '../../sim/route16';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
 const PROD = [l('Básica', 'Basic'), l('Luzes e telão', 'Lights and screens'), l('Cenografia', 'Stage design'), l('Espetáculo', 'Spectacle')];
 
-export function tourPlannerSection(s: GameState, stops: string[]): HTMLElement {
+export function tourPlannerSection(s: GameState, stops: string[], setStops?: (ids: string[]) => void): HTMLElement {
   const ids = playerActs(s);
   if (!ids.length) return section(t(l('Planejar turnê', 'Plan a tour')), h('p', { class: 'muted' }, t(l('Nenhum artista no elenco para levar à estrada.', 'No artists on the roster to take on the road.'))));
   if (!draft.actId || !ids.includes(draft.actId)) draft.actId = ids[0];
@@ -46,11 +47,13 @@ export function tourPlannerSection(s: GameState, stops: string[]): HTMLElement {
     ),
     h('p', { class: 'small' }, ic('disc'), ' ', t(l('Setlist: {n} gravações próprias ({q} necessárias){c}.', 'Setlist: {n} own recordings ({q} needed){c}.'), { n: draft.setlist.length, q: need, c: draft.setlist.length < need ? t(l(' — o resto vira covers, com penalidade', ' — the rest will be covers, with a penalty')) : '' })),
     !stops.length ? h('p', { class: 'muted small' }, t(l('Monte a rota clicando nas cidades do mapa acima.', 'Build the route by clicking cities on the map above.'))) : null,
+    setStops ? routeHintRow(s, act.id, setStops) : null,
     est ? h('div', null,
       chips(stat('tour-bus', stops.length, l('Datas', 'Dates')), stat('globe', `${N(est.km)} km`, l('Distância', 'Distance')), stat('calendar', `${est.days}d`, l('Duração', 'Duration')),
         stat('money', $(est.logistics), l('Logística (reservada agora)', 'Logistics (booked now)')), stat('chart-up', $(est.expectedRevenue), l('Bilheteria bruta prevista', 'Expected gross box office')), stat('shirt', $(est.expectedMerch), l('Merch previsto', 'Expected merch')),
         est.visas ? stat('key', est.visas, l('Vistos', 'Visas'), 'warn') : null),
       h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: 'stop' }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name))))),
+      ((n) => h('p', { class: `small ${n.net < 0 && -n.net > s.player.cash * 0.25 ? 'bad' : 'muted'}` }, ic('money'), ' ', t(n.why), n.net < 0 && -n.net > s.player.cash * 0.25 ? t(l(' Atenção: é mais de 1/4 do caixa.', ' Warning: that is over 1/4 of your cash.')) : ''))(labelTourNet16(s, act.id, est)),
       est.warnings.length ? h('ul', { class: 'small warn' }, est.warnings.map((w) => h('li', null, ic('warning'), ' ', t(w)))) : null,
       forecastBox(forecastTour(s, plan, est)),
       h('button', { class: 'btn primary', onclick: () => {
@@ -95,4 +98,12 @@ export function merchSection(s: GameState): HTMLElement {
       ),
     ));
   })));
+}
+
+/** Rodada 16: botão de rota sugerida (cidades de maior procura) com o porquê. */
+function routeHintRow(s: GameState, actId: string, setStops: (ids: string[]) => void): HTMLElement {
+  const r = suggestRoute16(s, actId);
+  return h('div', { class: 'row wrap' },
+    h('button', { class: 'btn small', disabled: !r.ids.length, title: t(r.why), onclick: () => { Object.assign(draft, sizedDraft16(s, actId)); setStops(r.ids); toast(t(r.why), 'info'); } }, ic('globe'), ' ', t(l('Sugerir rota (maior procura)', 'Suggest route (top demand)'))),
+    h('small', { class: 'muted' }, t(r.why)));
 }

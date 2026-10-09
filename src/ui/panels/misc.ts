@@ -257,7 +257,7 @@ export function showsPanel(s: GameState): HTMLElement {
   return h('div', { class: 'panel shows' },
     h('div', { class: 'col-main' },
       tourMapSection(s),
-      tourPlannerSection(s, tourStops),
+      tourPlannerSection(s, tourStops, (ids) => { tourStops = [...ids]; refreshTour(s); rerender(); }),
       activeToursSection(s),
       merchSection(s),
       ids.length ? ids.map((id) => {

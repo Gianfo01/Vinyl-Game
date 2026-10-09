@@ -426,7 +426,8 @@ function setupPlayer(s: GameState, r: Rng): void {
     real = 55000;
     p.hq = 1;
   } else {
-    real = cfg.scenario === 'from_zero' ? 45000 : cfg.scenario === 'emerging' ? 110000 : 650000;
+    // rodada 16 (testes com o bot jogador): do zero começa mais apertado — com 45 mil nenhum jogador competente quebrava
+    real = cfg.scenario === 'from_zero' ? 34000 : cfg.scenario === 'emerging' ? 100000 : 650000;
     p.hq = cfg.scenario === 'established' ? 2 : 1;
   }
   if (cfg.card === 'prospector') real *= 0.8;
