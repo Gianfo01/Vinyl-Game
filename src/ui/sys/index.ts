@@ -79,3 +79,4 @@ import './managers14';
 import './capacity14';
 // Rodada 15: modo de história no Novo Jogo + aba Vida real no ato.
 import '../history15';
+import './kin15';
