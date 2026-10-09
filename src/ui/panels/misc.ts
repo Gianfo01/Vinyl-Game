@@ -126,6 +126,11 @@ export function catalogPanel(s: GameState): HTMLElement {
 // ---------- Mapa de turnê (demonstração do planejador) ----------
 let tourMap: WorldMap | null = null;
 let tourStops: string[] = [];
+
+/** Põe uma cidade na rota do planejador de turnê (usado pela ficha da cidade no mapa). */
+export function addTourStop(cityId: string): void {
+  if (!tourStops.includes(cityId)) tourStops.push(cityId);
+}
 let tourSummary: HTMLElement | null = null;
 
 function tourCrew(s: GameState): number {

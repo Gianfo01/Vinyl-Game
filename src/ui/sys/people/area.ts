@@ -7,7 +7,7 @@ import { t } from '../../../i18n/strings';
 import { BREAK_NAME, breakRisk } from '../../../sim/sys/people/breakdowns';
 import { MED_ROLES, TREATMENT, buyEarProtection, fireMedic, hireMedic, inEarsAvailable, medCandidates, startTreatment, treatmentCost, type Treatment } from '../../../sim/sys/people/health';
 import { activeRomance, personalAdvance, wealthOf } from '../../../sim/sys/people/life';
-import { ATTR_DESC, ATTR_NAME, availableHouses, buyHouse, invest, ownerAge, ownerCourse, ownerOf, setHeir, setSalary, vacation, withdraw, type OwnerAttr } from '../../../sim/sys/people/owner';
+import { ATTR_DESC, ATTR_NAME, HOUSES, availableHouses, buyHouse, invest, ownerAge, ownerCourse, ownerOf, setHeir, setSalary, vacation, withdraw, type OwnerAttr } from '../../../sim/sys/people/owner';
 import { SECRET_NAME, detectiveCost, hireDetective, ownerLabel, pressureCeo } from '../../../sim/sys/people/secrets';
 import { LEVEL_NAME, ROLE_PATHS, careerOf, changeRole, promote, promoteReady, trainCost, trainStaff } from '../../../sim/sys/people/staff';
 import { P, healthOf } from '../../../sim/sys/people/state';
@@ -160,8 +160,7 @@ export function ownerTab(s: GameState): HTMLElement {
         h('button', { class: 'btn small ghost', onclick: () => say(vacation(s), l('Boas férias!', 'Enjoy the holiday!')) }, t(l('Tirar férias', 'Take a holiday')))),
     ),
     section(t(l('Casa', 'Home')), h('div', { class: 'cards' }, houses.map((hs) => {
-      const idx = availableHouses(s).indexOf(hs);
-      const mine = o.house >= 0 && o.house === idx;
+      const mine = o.house >= 0 && HOUSES[o.house] === hs;
       return tile('house', t(hs.name), [h('small', null, `${$(money(s, hs.price))} · ${t(l('alívio de estresse', 'stress relief'))} ${hs.relief}`), mine ? pill(t(l('sua casa', 'your home')), 'good') : h('button', { class: 'btn small', onclick: () => say(buyHouse(s, hs.id), l('Casa comprada!', 'House bought!')) }, t(l('Comprar', 'Buy')))]);
     }))),
     section(t(l('Família e sucessão', 'Family and succession')),

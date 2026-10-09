@@ -27,3 +27,5 @@ import './warmup8';
 import './fests8';
 import './ceremonies8';
 import './relevance8';
+import './goods8';
+import './mapx8';
