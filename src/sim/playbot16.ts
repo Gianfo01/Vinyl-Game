@@ -256,7 +256,7 @@ function records(s: GameState, k: Knobs, prof: Profile): void {
     } else if (st === 'finishing') {
       p.marketing = marketingFor(s, act, p, k);
       if (runway(s) < k.cut) for (const m of p.marketing) m.budget = Math.round(m.budget / 3);
-      const lp = p.type === 'lp' && prof !== 'cautious' && runway(s) > k.cut * 2 && !(globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.PB_NOROLL;
+      const lp = p.type === 'lp' && prof !== 'cautious' && runway(s) > k.cut * 2;
       if (lp && !rolloutProject(s, p)) { L.rollouts++; L.releases++; }
       else if (!scheduleProject(s, rngOf(s), p)) L.releases++;
     } else if ((st === 'writing' || st === 'concept') && s.week - (p.created ?? s.week) > 26 && unreleasedRecorded(s, act).length === 0 && p.type !== 'single') {
