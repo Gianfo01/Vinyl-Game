@@ -283,3 +283,12 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - Cenas em pixel art por época (estúdio, palco, mídia, loja, fábrica, cidades, premiação, imprensa) com pontos clicáveis.
 - Novo jogo: sem "Papel" (sai da atividade principal), "Como começar" só com gravadora; notoriedade por carreira.
 - Polimento geral; artistas reais não morrem por sorteio antes do presente.
+
+## Rodada 15
+- Pixel art de ~200 artistas reais com o visual de cada fase; novas peças (cabelos, chapéus, óculos, pinturas, capacetes) também no editor do jogador.
+- Navegação: endereço com tela/aba (voltar/avançar), trilha no topo, busca Ctrl+K, atalhos "?", menu ☰ no celular, memória de rolagem; telas e meses mais rápidos.
+- Laços familiares reais e gerados num bloco "Família" único (parentes, parceiro, ex, filhos); luto, rixas de irmãos, filhos herdeiros de público, indicações.
+- 50 produtores reais contratáveis, com som próprio, cachê, agenda e disputa com rivais.
+- Modos de história: vida real exata, vida real com variações (padrão) ou personagens reais com história aleatória.
+- Fama por pessoa e por banda com 6 degraus e efeitos; informação visível depende da fama e dos olheiros (paradas sempre públicas).
+- Aprofundado: sincronização (trilhas de filme/TV/anúncio/jogos), pedidos e guerras de fãs, disputas contratuais (auditoria, greve, imprensa) e prêmios nacionais com júri local e esnobadas.
