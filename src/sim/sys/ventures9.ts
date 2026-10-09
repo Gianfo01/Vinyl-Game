@@ -26,7 +26,7 @@ export interface Venture {
   // festival
   month?: number; price?: number; lineup?: { actId: string; fee: number }[]; editions?: { y: number; crowd: number; profit: number; verdict: Verdict; head: string }[];
   // editora
-  writers?: { pid: string; name: string; skill: number; until: number }[]; cat?: { title: string; actId: string; y: number; v: number }[]; cool?: number;
+  writers?: { pid: string; name: string; skill: number; until: number }[]; cat?: { title: string; actId: string; y: number; v: number; wp?: string; x?: import('./ventures12').CatX }[]; cool?: number;
   // estúdio
   gear?: number; sound?: number; booked?: { lab: string; n: number }[];
   // agência
@@ -104,7 +104,7 @@ export function funds(s: GameState, h: Holder): number {
 }
 
 /** Movimenta dinheiro de um negócio: caixa do selo (livro-caixa) ou patrimônio pessoal. */
-function vpay(s: GameState, h: Holder, amount: number, key: string, memo: string, v?: Venture): void {
+export function vpay(s: GameState, h: Holder, amount: number, key: string, memo: string, v?: Venture): void {
   amount = Math.round(amount);
   if (!amount) return;
   if (h === 'label') post(s, `v9:${key}`, amount, 'business', memo);
@@ -337,7 +337,7 @@ const W2 = ['Azul', 'Sem Fim', 'de Neon', 'Perdida', 'Elétrica', 'do Sul', 'em 
 
 function placeOne(s: GameState, r: Rng, v: Venture, w: { name: string; skill: number }, a: Act): void {
   const title = `${r.pick(W1)} ${r.pick(W2)}`;
-  v.cat!.push({ title, actId: a.id, y: s.year, v: money(s, 20 + a.fame * w.skill * 0.08) * (0.7 + r.next() * 0.6) });
+  v.cat!.push({ title, actId: a.id, y: s.year, v: money(s, 20 + a.fame * w.skill * 0.08) * (0.7 + r.next() * 0.6), wp: v.writers!.find((x) => x.name === w.name)?.pid });
   if (v.cat!.length > 80) { v.cat!.sort((x, y) => y.v - x.v); v.cat!.length = 80; }
   v.rep = clamp(v.rep + a.fame / 60, 0, 100);
   log(s, fmtL(l('{w} emplaca "{t}" com {a} ({b}).', '{w} places "{t}" with {a} ({b}).'), { w: w.name, t: title, a: a.name, b: ownerLabel(s, a) ?? l('independente', 'independent') }));
