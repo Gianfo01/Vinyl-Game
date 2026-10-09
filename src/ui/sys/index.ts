@@ -77,3 +77,4 @@ import './leisure14';
 import './managers14';
 // Rodada 14: barras de capacidade (mesa, equipe, ato, rival).
 import './capacity14';
+import './kin15';
