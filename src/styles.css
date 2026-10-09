@@ -687,3 +687,11 @@ img.portrait { border: 1px solid var(--line); }
 .mission11 .bar { display: block; margin: 0.2rem 0; }
 .mgr11 { border-top: 1px dashed var(--line); margin-top: 0.4rem; padding-top: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .mgr11 .warn-list { margin: 0; padding-left: 1rem; }
+/* rodada 12: carreiras e empresário */
+.car12-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.5rem; }
+.car12-card { margin: 0; }
+.mgr12 { border-top: 1px dashed var(--line); margin-top: 0.4rem; padding-top: 0.4rem; }
+.mgr12 > summary { cursor: pointer; }
+.mgr12 > div, .mgr12 > ul { margin: 0.3rem 0; }
+.mgr12 .card.warn { border-color: var(--warn, var(--accent)); }
+.car12-ng { display: contents; }

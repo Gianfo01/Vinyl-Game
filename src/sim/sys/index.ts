@@ -86,3 +86,7 @@ import './platform12';
 // Rodada 12: estrutura da empresa x era (reorganização) e cenas locais como redes (filiais escolhem parceiros).
 import './eras12';
 import './scenes12';
+// Rodada 12: carreiras (atividades, origem, ambição, herdeiro), mercado de serviços de NPCs e empresário com confiança.
+import './careers12';
+import './services12';
+import './manager12';

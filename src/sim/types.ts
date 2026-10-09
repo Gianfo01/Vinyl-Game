@@ -37,6 +37,8 @@ export interface RunConfig {
   takeover?: string;
   /** rodada 10: quais gravadoras rivais existem e como começam (ausente = comportamento histórico de sempre) */
   labels?: LabelSetup;
+  /** rodada 12: carreiras escolhidas no começo (atividades principais, origem profissional, ambição) */
+  careers?: { main: string[]; origin?: string; ambition?: string };
 }
 
 export interface LabelSetup {

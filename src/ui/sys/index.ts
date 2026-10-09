@@ -44,3 +44,6 @@ import './explain12';
 // Rodada 12: estrutura da empresa x era e cenas locais como redes.
 import './eras12';
 import './scenes12';
+// Rodada 12: carreiras (Você → Carreiras, cartões na mesa) e empresário com confiança e mercado de serviços.
+import './careers12';
+import './manager12';
