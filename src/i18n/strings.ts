@@ -132,7 +132,7 @@ export const S = {
   contract: s('Contrato', 'Contract'),
   songs: s('Músicas', 'Songs'),
   releases: s('Lançamentos', 'Releases'),
-  noActs: s('Nenhum ato no elenco. Vá em Mercado → Scouting para encontrar talentos.', 'No acts on the roster. Go to Market → Scouting to find talent.'),
+  noActs: s('Nenhum artista no elenco. Vá em Artistas → Mercado (radar, olheiros e demos) para encontrar talentos.', 'No artists on the roster. Go to Artists → Market (radar, scouts and demos) to find talent.'),
   renew: s('Renovar', 'Renew'),
   raiseRoyalty: s('Subir royalties +2 p.p.', 'Raise royalties +2 pts'),
   recoup: s('Saldo a recuperar', 'Unrecouped balance'),

@@ -40,7 +40,7 @@ const DEFS: CareerDef[] = [
   { id: 'media', name: l('Dono de mídia', 'Media owner'), desc: l('Revista, rádio, TV: poder de execução e cenas.', 'Magazine, radio, TV: airplay power and scenes.'), from: 1900, icon: 'bulb', area: 'ventures', load: 0.25, status: owns('media', 'veículo(s)', 'outlet(s)') },
   { id: 'platform', name: l('Dono de plataforma', 'Platform owner'), desc: l('Streaming: assinantes e briga pelo repasse.', 'Streaming: subscribers and payout fights.'), from: 2005, icon: 'globe', area: 'ventures', load: 0.35, status: owns('platform', 'plataforma(s)', 'platform(s)') },
   { id: 'musician', name: l('Músico', 'Musician'), desc: l('Você mesmo no palco e no estúdio (sua banda).', 'Yourself on stage and in the studio (your band).'), from: 1900, icon: 'guitar', area: 'artists', load: 0.35,
-    status: (s) => { const b = Object.values(s.acts).find((a) => a.playerBand); return b ? fmtL(l('{b}: fama {f}', '{b}: fame {f}'), { b: b.name, f: b.fame }) : l('Sem banda própria (papel Híbrido).', 'No band of your own (Hybrid role).'); } },
+    status: (s) => { const b = Object.values(s.acts).find((a) => a.playerBand); return b ? fmtL(l('{b}: fama {f}', '{b}: fame {f}'), { b: b.name, f: Math.round(b.fame) }) : l('Sem banda própria (papel Híbrido).', 'No band of your own (Hybrid role).'); } },
 ];
 /** Outros sistemas registram/refinam carreiras (ex.: casa de shows com área própria). */
 export function registerCareer(d: CareerDef): void {

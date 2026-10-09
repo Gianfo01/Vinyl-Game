@@ -3,7 +3,7 @@
 // Amizades e rixas entre bandas evoluem todo mês; contratar e dispensar mexe nos grupos.
 
 import type { Rng } from '../../../core/rng';
-import { familyOf, l, type L } from '../../../data/world';
+import { FAMILIES, familyOf, l, type L } from '../../../data/world';
 import type { Act, GameState } from '../../types';
 import { playerActs } from '../../util';
 import { P } from './state';
@@ -51,7 +51,7 @@ export function groupLabel(s: GameState, by: GroupBy, key: string): L {
     if (key.startsWith('sub:')) return l(s.subLabels.find((x) => x.id === key.slice(4))?.name ?? key);
     return l(s.branches.find((x) => x.id === key.slice(3))?.name ?? key);
   }
-  return l(key);
+  return FAMILIES.find((f) => f.id === key)?.name ?? l(key);
 }
 
 /** Influência do ato no vestiário (fama, sucessos, tempo de casa). */

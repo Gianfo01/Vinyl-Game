@@ -183,7 +183,7 @@ function side(s: GameState): HTMLElement {
         st.project ? h('div', { class: 'small muted' }, t(st.project.label), ' ', h('span', { class: 'meter-bar sm' }, h('span', { style: `width:${Math.round(st.project.pct * 100)}%` }))) : null,
         h('button', { class: 'link small', onclick: () => openActCard(s, id) }, '→ ', t(st.next.label)),
       );
-    })) : h('p', { class: 'muted small' }, t(l('Sem carreiras no elenco.', 'No careers on the roster.'))),
+    })) : h('p', { class: 'muted small' }, t(l('Ninguém no elenco ainda.', 'Nobody on the roster yet.'))),
     h('button', { class: 'btn small ghost', onclick: () => openTimeline(s) }, ic('building'), ' ', t(l('Como a empresa cresceu', 'How the company grew'))),
   );
 }

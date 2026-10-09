@@ -171,7 +171,7 @@ export function noteDecision(s: GameState, eventId: string, optionId: string): v
   const w = OPTION_STYLE[optionId];
   if (!w) return;
   const top = (Object.entries(w) as [LeadId, number][]).sort((a, b) => b[1] - a[1])[0];
-  addLead(s, w, fmtL(l('Decisão "{e}" → {s}', 'Decision "{e}" → {s}'), { e: eventId, s: leadById[top[0]].name }));
+  addLead(s, w, fmtL(l('Decisão "{e}" → {s}', 'Decision "{e}" → {s}'), { e: s.decisions.find((d) => d.eventId === eventId)?.title ?? eventId, s: leadById[top[0]].name }));
 }
 
 function scanMonth(s: GameState): void {

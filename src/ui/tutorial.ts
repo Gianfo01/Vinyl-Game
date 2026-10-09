@@ -7,6 +7,8 @@ import type { GameState } from '../sim/types';
 import { h } from './dom';
 import { store, type Area } from './store';
 import { ic } from './vis';
+import { tutorialIntro14 } from './tutorial14';
+import { careers } from '../sim/sys/careers12';
 
 interface Step {
   icon: string;
@@ -30,7 +32,8 @@ const STEPS: Step[] = [
 export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | null {
   const tu = s.tutorial;
   if (tu.done || tu.step >= STEPS.length) return null;
-  const st = STEPS[tu.step];
+  const st0 = STEPS[tu.step];
+  const st: Step = tu.step === 0 ? { ...st0, ...tutorialIntro14(careers(s).active), area: tutorialIntro14(careers(s).active).area as Area } : st0;
   const next = () => {
     tu.step += 1;
     if (tu.step >= STEPS.length) tu.done = true;

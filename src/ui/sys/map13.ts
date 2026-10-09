@@ -120,7 +120,7 @@ export function bubbleNotes(s: GameState, layers: Set<string>, fam: string): HTM
   const out: HTMLElement[] = [];
   const note = (color: string, title: L, unit: L, max: number, why: L) => out.push(h('div', { class: 'map13-legend' },
     h('div', { class: 'row' }, h('i', { class: 'map13-dot', style: `background:${color}` }), h('b', null, t(title))),
-    h('small', null, t(l('Tamanho da bolha ∝ {u}. Maior bolha = {m}.', 'Bubble size ∝ {u}. Biggest bubble = {m}.'), { u: t(unit), m: max ? (max >= 100 ? N(Math.round(max)) : max.toFixed(1)) : '—' })),
+    h('small', null, max ? t(l('Tamanho da bolha ∝ {u}. Maior bolha = {m}.', 'Bubble size ∝ {u}. Biggest bubble = {m}.'), { u: t(unit), m: max >= 100 ? N(Math.round(max)) : max.toFixed(1).replace('.', t(l(',', '.'))) }) : t(l('Tamanho da bolha ∝ {u}. Ainda não há nada para mostrar nesta camada.', 'Bubble size ∝ {u}. Nothing to show on this layer yet.'), { u: t(unit) })),
     h('small', { class: 'muted' }, ' ', t(why))));
   if (layers.has('fans')) {
     const acts = playerActs(s).map((id) => s.acts[id]).filter(Boolean);

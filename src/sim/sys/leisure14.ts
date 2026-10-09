@@ -10,6 +10,7 @@
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
+import { atPlace14 } from './polish14';
 import { langForCity, personName } from '../people';
 import { ensureFamily } from '../dynasty';
 import type { Act, GameState, Person } from '../types';
@@ -246,7 +247,7 @@ const single = (s: GameState, p: Person, rc: Rec14) => !rc.cp && (!s.families[p.
 
 function meet(s: GameState, r: Rng, a: Who14, b: Who14, PA: P13, PB: P13, ra: Rec14, rb: Rec14): void {
   const sp = spotOf(ra);
-  const place = SPOT14[sp].name(s.year);
+  const place = atPlace14(SPOT14[sp].name(s.year));
   const c = compat14(PA, PB, ra.h, rb.h);
   const v = c.v + r.normal(0, 10);
   const why = (v >= 0 ? c.pos[0] : c.neg[0]) ?? (v >= 0 ? l('acaso', 'chance') : l('bebida demais e palavras erradas', 'too many drinks and the wrong words'));
@@ -263,7 +264,7 @@ function meet(s: GameState, r: Rng, a: Who14, b: Who14, PA: P13, PB: P13, ra: Re
       x.p!.morale = clamp(x.p!.morale + 8, 0, 100);
     }
     tie(s, a.key, b.key, 25);
-    const tx = T(l('{a} e {b} se conheceram em {p} ({w}) e estão namorando.', '{a} and {b} met at {p} ({w}) and are dating.'), {});
+    const tx = T(l('{a} e {b} se conheceram {p} ({w}) e estão namorando.', '{a} and {b} met {p} ({w}) and are dating.'), {});
     news(s, a, tx, 1, true); logTo(s, b.key, tx, 1);
     return;
   }
@@ -272,16 +273,16 @@ function meet(s: GameState, r: Rng, a: Who14, b: Who14, PA: P13, PB: P13, ra: Re
     const collab = a.p && b.p && a.act && b.act && a.act.id !== b.act.id && (sp === 'studio' || sp === 'club' || sp === 'bar') && r.chance(0.2);
     if (collab) {
       for (const [x, y] of [[a, b], [b, a]] as const) { x.p!.inspiration = clamp(x.p!.inspiration + 6, 0, 100); nudgeAdmiration(s, x.p!.id, y.act!.id, 6); }
-      const tx = T(l('{a} e {b} tocaram juntos em {p} até de manhã — fala-se em parceria ({w}).', '{a} and {b} played together at {p} till dawn — talk of a collaboration ({w}).'), {});
+      const tx = T(l('{a} e {b} tocaram juntos {p} até de manhã — fala-se em parceria ({w}).', '{a} and {b} played together {p} till dawn — talk of a collaboration ({w}).'), {});
       news(s, a, tx, 1, a.act!.owner === 'player' || b.act!.owner === 'player'); logTo(s, b.key, tx, 1);
     } else {
-      const tx = T(l('Ficou amigo(a) de {b} em {p} ({w}).', 'Became friends with {b} at {p} ({w}).'), {});
+      const tx = T(l('Ficou amigo(a) de {b} {p} ({w}).', 'Became friends with {b} {p} ({w}).'), {});
       logTo(s, a.key, tx, 1);
-      logTo(s, b.key, T(l('Ficou amigo(a) de {a} em {p} ({w}).', 'Became friends with {a} at {p} ({w}).'), {}), 1);
+      logTo(s, b.key, T(l('Ficou amigo(a) de {a} {p} ({w}).', 'Became friends with {a} {p} ({w}).'), {}), 1);
       // executivo rival amigo do seu artista: risco de assédio
       const mineA = a.act?.owner === 'player' ? a : b.act?.owner === 'player' ? b : null;
       const ex = a.kind === 'exec' ? a : b.kind === 'exec' ? b : null;
-      if (mineA && ex && r.chance(0.5)) notify(s, fmtL(l('{e} (selo rival) anda frequentando {p} com {a}. Fique de olho na lealdade.', '{e} (rival label) has been hanging out at {p} with {a}. Watch their loyalty.'), { e: ex.name, p: place, a: mineA.name }), 'event');
+      if (mineA && ex && r.chance(0.5)) notify(s, fmtL(l('{e} (selo rival) anda aparecendo {p} com {a}. Fique de olho na lealdade.', '{e} (rival label) has been hanging out {p} with {a}. Watch their loyalty.'), { e: ex.name, p: place, a: mineA.name }), 'event');
     }
     if (sp === 'club' || sp === 'studio' || sp === 'bar') for (const x of [a, b]) if (x.act?.owner === 'player') { const n = scene12(s).nets[x.city]; if (n) n.health = clamp(n.health + 0.5, 0, 100); }
     return;
@@ -289,7 +290,7 @@ function meet(s: GameState, r: Rng, a: Who14, b: Who14, PA: P13, PB: P13, ra: Re
   if (v < -8) {
     tie(s, a.key, b.key, -8 + Math.round(v / 4));
     for (const x of [a, b]) if (x.p) x.p.stress = clamp(x.p.stress + 4, 0, 100);
-    const tx = T(l('{a} e {b} discutiram feio em {p} ({w}). Viraram desafetos.', '{a} and {b} had an ugly row at {p} ({w}). Now they\'re enemies.'), {});
+    const tx = T(l('{a} e {b} discutiram feio {p} ({w}). Viraram desafetos.', '{a} and {b} had an ugly row {p} ({w}). Now they\'re enemies.'), {});
     news(s, a, tx, -1, (a.act?.fame ?? 0) + (b.act?.fame ?? 0) > 110 || a.act?.owner === 'player' || b.act?.owner === 'player'); logTo(s, b.key, tx, -1);
     return;
   }
@@ -528,7 +529,7 @@ export function goOut14(s: GameState, k: Spot14): { ok: boolean; text: L; met: {
   const me = per13(s, 'player');
   const pp = playerPerson(s);
   const regs = regulars14(s, k);
-  const place = SPOT14[k].name(s.year);
+  const place = atPlace14(SPOT14[k].name(s.year));
   const met: { key: string; dv: number; why: L }[] = [];
   const pick = r.shuffle([...regs]).slice(0, 2);
   for (const key of pick) {
@@ -540,16 +541,16 @@ export function goOut14(s: GameState, k: Spot14): { ok: boolean; text: L; met: {
     const v = c0.v + 8 + r.normal(0, 8);
     const dv = Math.round(clamp(v / 3, -6, 10));
     const why = (dv >= 0 ? c0.pos[0] : c0.neg[0]) ?? (dv >= 0 ? l('frequentam o mesmo lugar', 'same haunt') : l('santo não bateu', 'no chemistry'));
-    opine(s, key, dv, fmtL(l('Encontro em {p}: {w}', 'Met at {p}: {w}'), { p: place, w: why }));
+    opine(s, key, dv, fmtL(l('Encontro {p}: {w}', 'Met {p}: {w}'), { p: place, w: why }));
     if (pp && w.p && w.p.rel[pp.id] === undefined) w.p.rel[pp.id] = 0; // passa a conhecer você
-    logTo(s, key, fmtL(dv >= 0 ? l('Encontrou o(a) dono(a) de {c} em {p} e gostou ({w}).', 'Met the owner of {c} at {p} and liked them ({w}).') : l('Encontrou o(a) dono(a) de {c} em {p} e não gostou ({w}).', 'Met the owner of {c} at {p} and disliked them ({w}).'), { c: s.config.companyName, p: place, w: why }), dv >= 0 ? 1 : -1);
+    logTo(s, key, fmtL(dv >= 0 ? l('Encontrou o(a) dono(a) de {c} {p} e gostou ({w}).', 'Met the owner of {c} {p} and liked them ({w}).') : l('Encontrou o(a) dono(a) de {c} {p} e não gostou ({w}).', 'Met the owner of {c} {p} and disliked them ({w}).'), { c: s.config.companyName, p: place, w: why }), dv >= 0 ? 1 : -1);
     met.push({ key, dv, why });
   }
   const names = met.map((x) => `${who14(s, x.key)?.name ?? '?'} (${x.dv >= 0 ? '+' : ''}${x.dv}: ${x.why.pt})`).join(', ');
   const namesEn = met.map((x) => `${who14(s, x.key)?.name ?? '?'} (${x.dv >= 0 ? '+' : ''}${x.dv}: ${x.why.en})`).join(', ');
   const text: L = met.length
-    ? { pt: `${place.pt}: você conversou com ${names}.`, en: `${place.en}: you talked with ${namesEn}.` }
-    : fmtL(l('{p}: noite tranquila, ninguém conhecido por lá — pelo menos a cabeça descansou.', '{p}: quiet night, nobody notable around — at least your mind rested.'), { p: place });
+    ? { pt: `${SPOT14[k].name(s.year).pt}: você conversou com ${names}.`, en: `${SPOT14[k].name(s.year).en}: you talked with ${namesEn}.` }
+    : fmtL(l('{p}: noite tranquila, ninguém conhecido por lá — pelo menos a cabeça descansou.', '{p}: quiet night, nobody notable around — at least your mind rested.'), { p: SPOT14[k].name(s.year) });
   st.pl.log.unshift([s.year, s.month, text]);
   if (st.pl.log.length > 12) st.pl.log.length = 12;
   return { ok: true, text, met };

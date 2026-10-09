@@ -10,6 +10,7 @@ import { $, actLink, cover, logo, pill, releaseLink, rerender, section, toast } 
 import { h } from '../dom';
 import { chips, ic, scoreBadge, stat, tile } from '../vis';
 import { banner14 } from '../sys/visuals14';
+import { tagName14 } from '../../sim/sys/polish14';
 
 export function pressSection(s: GameState): HTMLElement {
   const r = rngOf(s);
@@ -41,8 +42,8 @@ export function pressSection(s: GameState): HTMLElement {
       s.releases[b.releaseId]?.owner === 'player' ? h('button', { class: 'btn small ghost', onclick: () => { toast(t(appealBan(s, r, b.releaseId, b.market)), 'info'); rerender(); } }, t(l('Recorrer', 'Appeal'))) : null)))) : null,
     section(t(l('Críticos em atividade', 'Active critics')), h('div', { class: 'cards' }, activeCritics(s).map((c) => tile('newspaper', c.name, [
       h('small', null, c.outlet, c.realRef ? h('span', { class: 'muted' }, ` (≈ ${c.realRef})`) : null),
-      chips(stat('trophy', c.prestige, l('Prestígio', 'Prestige')), stat('skull', Math.round(c.harsh * 100), l('Rigor', 'Harshness')), stat('globe', c.mainstream > 0.3 ? 'mainstream' : c.mainstream < -0.3 ? 'underground' : '—', l('Preferência', 'Preference'))),
-      h('small', { class: 'muted' }, t(l('Gosta de: ', 'Likes: ')), c.favors.join(', ') || '—'),
+      chips(stat('trophy', c.prestige, l('Prestígio', 'Prestige')), stat('skull', Math.round(c.harsh * 100), l('Rigor', 'Harshness')), stat('globe', c.mainstream > 0.3 ? t(l('popular', 'mainstream')) : c.mainstream < -0.3 ? t(l('alternativo', 'underground')) : t(l('neutra', 'neutral')), l('Preferência', 'Preference'))),
+      h('small', { class: 'muted' }, t(l('Gosta de: ', 'Likes: ')), c.favors.map((x) => t(tagName14(x))).join(', ') || '—'),
     ])))),
   );
 }

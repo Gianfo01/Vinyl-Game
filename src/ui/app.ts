@@ -254,9 +254,10 @@ function nav(): HTMLElement {
 
 /** Faixa de sub-áreas no topo do painel (útil no celular, onde o menu lateral vira barra). */
 function subnav(): HTMLElement | null {
-  const items = groupItems(groupOf(store.area));
+  const gr = groupOf(store.area);
+  const items = groupItems(gr);
   if (items.length < 2) return null;
-  return h('div', { class: 'subnav', role: 'tablist' }, items.map((a) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: store.area === a.id ? 'on' : '', onclick: () => go(a.id) }, ic(a.icon), ' ', a.label, a.badge ? h('span', { class: 'badge' }, a.badge) : null)));
+  return h('div', { class: 'subnav', role: 'tablist' }, items.map((a) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: store.area === a.id ? 'on' : '', onclick: () => go(a.id) }, ic(a.icon), ' ', gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, a.badge ? h('span', { class: 'badge' }, a.badge) : null)));
 }
 
 function panel(): HTMLElement {

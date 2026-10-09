@@ -13,7 +13,7 @@ import { overall, ROLE_NAMES, type Role } from '../../sim/sys/talent/attrs';
 import { sings } from '../../sim/sys/vocals10';
 import { openPersonPage } from '../pages';
 import { rngOf } from '../../sim/util';
-import { $, N, actLink, pill, rerender, section, toast } from '../common';
+import { $, N, inspect, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, ic, meter, portrait, stat, tile } from '../vis';
 
@@ -129,7 +129,7 @@ export function reunionSection(s: GameState): HTMLElement | null {
       h('small', null, t(tm.reason)),
       tm.ok ? chips(stat('money', $(tm.cost), l('Proposta', 'Offer')), stat('chart-up', `${Math.round(tm.chance * 100)}%`, l('Chance estimada', 'Estimated chance'))) : null,
       tm.ok ? h('button', { class: 'btn small', onclick: () => { toast(t(negotiateReunion(s, r, a.id)), 'info'); rerender(); } }, t(l('Negociar reunião', 'Negotiate reunion'))) : null,
-      actLink(s, a.id),
+      h('button', { class: 'link small', onclick: () => inspect.act(a.id) }, t(l('Ver ficha', 'View sheet'))),
     ]);
   })));
 }
