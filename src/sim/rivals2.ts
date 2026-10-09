@@ -6,7 +6,8 @@ import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import { endContract, signWithRival } from './contracts';
 import { personName } from './people';
-import { emitEvent, registerEvents, type EventDef } from './events';
+import { emitEvent, type EventDef } from './events';
+import { deferEvents } from './ext4';
 import type { GameState, Label, Release } from './types';
 import type { RivalReportItem } from './xtypes';
 import { fmtL, money, playerActs, post, remember } from './util';
@@ -52,7 +53,7 @@ const RIVAL_EVENTS: EventDef[] = [
     ],
   },
 ];
-registerEvents(RIVAL_EVENTS);
+deferEvents(RIVAL_EVENTS);
 
 /** Contraespionagem: segurança reduz vazamentos por 12 meses. */
 export function buySecurity(s: GameState): L | null {

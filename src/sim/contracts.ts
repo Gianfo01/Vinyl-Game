@@ -18,11 +18,12 @@ export interface ContractHook {
   offer?: (s: GameState, act: Act, o: Omit<Offer, 'id' | 'week' | 'status'>) => { score: number; reason?: L } | null;
   renew?: (s: GameState, act: Act) => number;
 }
-const CONTRACT_HOOKS: { id: string; h: ContractHook }[] = [];
+// lista guardada numa função (hoisted): sistemas carregados antes deste módulo terminar já podem registrar
+function contractHooks(): { id: string; h: ContractHook }[] { const f = contractHooks as unknown as { l?: { id: string; h: ContractHook }[] }; return (f.l ??= []); }
 export function registerContractHook(id: string, h: ContractHook): void {
-  const i = CONTRACT_HOOKS.findIndex((x) => x.id === id);
-  if (i >= 0) CONTRACT_HOOKS[i] = { id, h };
-  else CONTRACT_HOOKS.push({ id, h });
+  const i = contractHooks().findIndex((x) => x.id === id);
+  if (i >= 0) contractHooks()[i] = { id, h };
+  else contractHooks().push({ id, h });
 }
 import { renewalAdj, rightsScore, scopeTerritories, signingTrust } from './rights';
 
@@ -99,7 +100,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (act.catalogNo && act.fame < 5) score += 0.05;
   score += perk(s, 'offer', act);
   const hookReasons: L[] = [];
-  for (const { h: hk } of CONTRACT_HOOKS) {
+  for (const { h: hk } of contractHooks()) {
     const res = hk.offer?.(s, act, o);
     if (!res || !Number.isFinite(res.score)) continue;
     score += res.score;
@@ -357,7 +358,7 @@ export function renewContract(s: GameState, actId: string, months: number, bonus
   if (!act || !c || c.party !== 'player') return false;
   if (s.player.cash < bonus) return false;
   const r = rngOf(s);
-  const extra = CONTRACT_HOOKS.reduce((t, x) => t + (x.h.renew?.(s, act) ?? 0), 0);
+  const extra = contractHooks().reduce((t, x) => t + (x.h.renew?.(s, act) ?? 0), 0);
   const p = clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3 + extra + renewalAdj(s, c), 0, 0.97);
   if (!r.chance(p)) {
     act.trust -= 4;
