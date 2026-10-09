@@ -159,7 +159,7 @@ export function consentChance(s: GameState, a: Act, kind: 'v' | 't', share: numb
   const fam = familyOf(a.genre);
   const famBias = ['electronic', 'pop', 'hiphop'].includes(fam) ? 0.08 : ['rock', 'blues_jazz', 'country_folk', 'brazil'].includes(fam) ? -0.08 : 0;
   return clamp(
-    0.18 + a.trust / 220 + share * 0.9 + (credit ? 0.08 : 0) + famBias - (kind === 'v' ? 0.05 : 0)
+    0.05 + a.trust / 220 + share * 0.6 + (credit ? 0.08 : 0) + famBias - (kind === 'v' ? 0.05 : 0)
       - (influence(s) < 40 ? 0.12 : 0) - (hasSpec(s, 'hardball') ? 0.08 : 0) + (hasSpec(s, 'mediator') ? 0.05 : 0)
       - (s.player.neural.voiceScandal ? 0.2 : 0) - (ai(s).trust < 35 ? 0.1 : 0),
     0.02, 0.95);

@@ -194,7 +194,9 @@ export function suggestRoute(s: GameState, actId: string, mode: 'compact' | 'exp
   const home = cityById[a.city]?.market;
   let pick: string[];
   if (mode === 'compact') {
-    pick = opts.filter((o) => o.market === home || o.km < 900).slice(0, n).map((o) => o.cityId);
+    // público pesado pela distância: perto de casa e cheio vence (se o mercado de casa estiver fechado, o mais perto possível)
+    const near = (o: CityOption) => o.demand / (1 + o.km / 500) * (o.market === home ? 1.5 : 1);
+    pick = [...opts].sort((x, y) => near(y) - near(x)).slice(0, n).map((o) => o.cityId);
   } else {
     const fresh = opts.filter((o) => o.newMarket).sort((x, y) => y.demand - x.demand);
     const markets = new Set<MarketId>();
