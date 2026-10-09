@@ -97,3 +97,5 @@ import './moments16';
 import './layout16';
 // Rodada 16: página única de pessoa (todos os personagens), empresário/produtor no artista, obras com pop-up, sucessão no selo.
 import './people16';
+// Rodada 16: páginas próprias de Festivais, Editora, Veículos de mídia e Plataforma; Empreendimentos vira a carteira.
+import './ventures16';

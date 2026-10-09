@@ -12,12 +12,12 @@ export const CAREER_NAV: Record<string, { label: L; icon: string; areas: string[
   label: { label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'artists', 'market', 'releases'], home: { area: 'desk' } },
   manager: { label: l('Gestão de artistas', 'Artist management'), icon: 'handshake', areas: ['management', 'managers14', 'directory', 'people', 'market', 'tour12'], home: { area: 'management' } },
   booking: { label: l('Turnês e agenciamento', 'Tours & booking'), icon: 'tour-bus', areas: ['tour12', 'shows', 'festivals', 'directory'], home: { area: 'tour12' } },
-  festival: { label: l('Seu festival', 'Your festival'), icon: 'star', areas: ['ventures', 'shows', 'festivals', 'directory'], home: { area: 'ventures', tab: ['ventures9', 'festival'] } },
+  festival: { label: l('Seu festival', 'Your festival'), icon: 'star', areas: ['festivals', 'shows', 'directory'], home: { area: 'festivals', tab: ['festivals16', 'mine'] } },
   venue: { label: l('Sua casa de shows', 'Your venue'), icon: 'mic', areas: ['shows', 'tour12', 'directory'], home: { area: 'shows' } },
   studio: { label: l('Estúdio e produção', 'Studio & production'), icon: 'cd', areas: ['studio12', 'studio', 'project', 'creation'], home: { area: 'studio12' } },
-  publisher: { label: l('Editora e catálogo', 'Publishing & catalog'), icon: 'note', areas: ['ventures', 'catalog', 'creation', 'directory'], home: { area: 'ventures', tab: ['ventures9', 'publisher'] } },
-  media: { label: l('Seus veículos', 'Your outlets'), icon: 'radio', areas: ['ventures', 'media', 'charts', 'critics'], home: { area: 'ventures', tab: ['ventures9', 'media'] } },
-  platform: { label: l('Sua plataforma', 'Your platform'), icon: 'globe', areas: ['ventures', 'charts', 'catalog', 'industry'], home: { area: 'ventures', tab: ['ventures9', 'platform'] } },
+  publisher: { label: l('Editora e catálogo', 'Publishing & catalog'), icon: 'note', areas: ['publishing16', 'catalog', 'creation', 'directory'], home: { area: 'publishing16' } },
+  media: { label: l('Seus veículos', 'Your outlets'), icon: 'radio', areas: ['outlets16', 'media', 'charts', 'critics'], home: { area: 'outlets16' } },
+  platform: { label: l('Sua plataforma', 'Your platform'), icon: 'globe', areas: ['platform16', 'charts', 'catalog', 'industry'], home: { area: 'platform16' } },
   musician: { label: l('Sua banda', 'Your band'), icon: 'guitar', areas: ['artists', 'project', 'creation', 'studio', 'releases', 'shows', 'people'], home: { area: 'artists' } },
 };
 
