@@ -90,6 +90,20 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 | Conteúdo | 155 cidades, subgêneros por era (1920–59 e 2030–40 detalhados), ~120 eventos novos, plataformas, críticos, produtores, marcas e prêmios fictícios **com o equivalente real ao lado** |
 | Interface | **Sede em pixel art isométrica** por era e nível, pessoas andando conforme a atividade real, avatares combináveis com editor, ícones em pixel art, retratos; novas áreas Central, Mundo e Negócios; tutorial; modos para daltonismo; leitor de tela; comparador de carreiras |
 
+## Rodada 8: festivais, premiações, críticos, herdeiros, direitos e identidade
+
+- **Correções:** instrumento em branco; o caixa do início personalizado é o valor exato digitado e os atos contratados entram em qualquer papel; nomes reais ligados por padrão (Elvis, Beatles…); sem desafio da semana e editor de universo; agenda e gêneros em ordem alfabética; compor cabe 3–4× por mês; paradas já preenchidas no início (`warmup8.ts`).
+- **Ficha do disco** (`relinfo.ts`): faixas com duração (até de discos anteriores à run), nota da crítica, gênero, formatos, compositores, produção e a leitura **"Por que deu nisso?"** (`explain8.ts`: 3 fatores a favor, 2 contra, resultado × previsão, uma oportunidade).
+- **Capas** (`covers.ts`): três propostas por lançamento, com custo e efeito (retrato, conceitual, provocativa com risco de censura…).
+- **Festivais, premiações e críticos com página** (`fests8.ts`, `ceremonies8.ts`, `critics8.ts`, `criticrel.ts`): line-up por ano, negociação na hora e convites; indicados em outubro, campanhas e convite para tocar; críticos regionais com gosto e relação com o selo.
+- **Peso mundial dos países** (`relevance.ts`, `relevance8.ts`): artista local domina em casa; fora, viaja conforme o peso cultural do país em cada época.
+- **Você e mapa** (`goods8.ts`, `mapx8.ts`): bens, investimentos com crises históricas, equipe pessoal, fundação, agenda pessoal; ficha de cidade e país com ações.
+- **Herdeiros, compra de selos, relações e feats** (`heirs8.ts`, `stakes8.ts`, `social8.ts`, `feats8.ts`).
+- **Projeto musical** (`project8.ts`), **retrospectiva do catálogo** (`retro8.ts`).
+- **Identidade e memória dos artistas, histórias com continuidade, rivais reconhecíveis e público por tipo** (`identity8.ts`, `stories8.ts`, `rivals8.ts`, `audience8.ts`).
+- **Sede como interface, estratégia por era, "Até…" e delegação** (`hq8.ts`, `eras8.ts`, `pacing8.ts`).
+- **Documento de oportunidades:** identidade mecânica do selo e liderança (`identity.ts`), direção sonora por faixa com o momento de vida de quem compõe (`sound.ts`), direitos como economia e dossiê de A&R (`rights.ts`, `rights8.ts`, `dossier8.ts`), equipe com química, roteiro de turnê e IA com consentimento (`crew8.ts`, `route8.ts`, `consent8.ts`).
+
 ## Rodada 7: mundo real, ciclo de vida, paradas por país e vida intensa
 
 - **~740 artistas reais** (EUA/Canadá, Reino Unido/Irlanda, Itália, resto da Europa, Brasil e mundo) surgem perto do ano real de estreia, com integrantes (entradas e saídas), discografia anterior à run, fim de carreira e voltas. No modo ficcional entram como arquétipos com nomes gerados. Opção de mortes nos anos reais (modo histórico). Dados em `src/data/realacts_*.ts`, carregador em `src/sim/sys/realworld.ts`.
