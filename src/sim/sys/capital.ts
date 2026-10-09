@@ -129,7 +129,17 @@ export function valuation(s: GameState): number {
   const base = ipoTerms(s).valuation;
   const floor = money(s, 25000) + Math.max(0, s.player.cash) + playerActs(s).length * money(s, 6000);
   const rep = 1 + (s.player.reputation.commercial - 50) / 250;
-  return Math.max(floor, Math.round(base * rep * (1 + perk(s, 'valuation'))));
+  const model = Math.round(base * rep * (1 + perk(s, 'valuation')));
+  // listada: metade do valor vem da cotação no pregão (rodada 11)
+  return Math.max(floor, s.listing.listed ? Math.round(model * 0.5 + s.listing.price * s.listing.shares * 0.5) : model);
+}
+
+/** Blocos do seu selo no pregão (bolsa10, lido cru para não criar ciclo): rivais hostis e o que você comprou. */
+function floatBlocks(s: GameState): { hostile: number; mine: number } {
+  const b = (s.x4 as unknown as { bolsa10?: { own?: Record<string, Record<string, number>>; pos?: Record<string, { sh: number }> } }).bolsa10;
+  let hostile = 0;
+  for (const [k, f] of Object.entries(b?.own?.own ?? {})) if (k.startsWith('L:')) hostile += f;
+  return { hostile, mine: (b?.pos?.own?.sh ?? 0) / Math.max(1, s.listing.shares) };
 }
 
 export function ownerShare(s: GameState): number {
@@ -455,8 +465,11 @@ export function boardConfidence(s: GameState): number {
     const h = s.listing.history;
     const tr = h.length > 6 ? h[h.length - 1] / Math.max(1, h[h.length - 7]) - 1 : 0;
     const k = s.listing.floatShare;
+    const fb = floatBlocks(s);
+    const hostile = Math.min(k, fb.hostile);
+    const mine = Math.min(k - hostile, fb.mine);
     w += k;
-    v += k * clamp(55 + tr * 150, 0, 100);
+    v += (k - hostile - mine) * clamp(55 + tr * 150, 0, 100) + hostile * 15 + mine * 100;
   }
   return w ? Math.round(v / w) : 100;
 }
@@ -553,7 +566,7 @@ registerSimHook('month', 'capital', (s, r) => {
   // conselho
   if (c.investors.length || s.listing.listed) {
     c.confidence = boardConfidence(s);
-    const control = ownerShare(s) >= 0.5;
+    const control = ownerShare(s) + (s.listing.listed ? floatBlocks(s).mine : 0) >= 0.5;
     if (c.confidence < 30) {
       c.lowMonths += 1;
       if (c.lowMonths === 1) notify(s, fmtL(l('Confiança do conselho em {v}: ultimato. Melhore resultados ou converse com os sócios.', 'Board confidence at {v}: ultimatum. Improve results or talk to your partners.'), { v: c.confidence }), 'bad');

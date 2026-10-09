@@ -83,7 +83,12 @@ export function fairStakePrice(s: GameState, labelId: string, share: number, mod
   if (!lb) return 0;
   const after = stakeOf(s, labelId) + share;
   const prem = after > CONTROL ? 1.3 : after >= BOARD_SEAT ? 1.1 : 1;
-  return Math.round(labelValue(s, lb).value * share * prem * (mode === 'hostile' ? 1.25 : 1));
+  // selo listado (fez IPO): metade do preço vem da cotação no pregão (rodada 11)
+  const b = (s.x4 as unknown as { bolsa10?: { q: Record<string, { p: number; dead?: unknown }>; lsh: Record<string, number> } }).bolsa10;
+  const q = b?.q[`lb:${labelId}`];
+  const v = labelValue(s, lb).value;
+  const worth = q && !q.dead && b?.lsh[labelId] ? Math.round(v * 0.5 + q.p * b.lsh[labelId] * 0.5) : v;
+  return Math.round(worth * share * prem * (mode === 'hostile' ? 1.25 : 1));
 }
 
 /** Participação de mercado estimada (fração) de um selo e do jogador. */
@@ -430,7 +435,7 @@ function payOutOthers(s: GameState, lb: Label, buyer: string): void {
 
 // ---------------------------------------------------------------- rivais compram rivais
 
-function npcAbsorb(s: GameState, buyer: Label, target: Label): void {
+export function npcAbsorb(s: GameState, buyer: Label, target: Label): void {
   payOutOthers(s, target, buyer.id);
   for (const id of [...target.roster]) {
     const a = s.acts[id];
