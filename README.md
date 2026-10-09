@@ -263,3 +263,13 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 
 - **Hype** (0–100, com tendência e motivos) para artistas, discos, relíquias, festivais, turnês, selos e cenas: vira vendas de estreia, ingressos e preços de leilão; hype maior que a qualidade gera rejeição, discos ótimos sem alarde viram sucessos lentos. Alavancas por época (teaser, vazamento, briga encenada, audição exclusiva, embargo) e ranking de hype nas paradas.
 - **Equilíbrio**: pirataria pesa mais na era P2P; download e streaming rendem menos por unidade; selo novo na era digital tem alcance reduzido até se firmar; a qualidade técnica do jogador conta menos a partir dos anos 90 (ferramentas baratas para todos); teto de fatia semanal por lançamento e retornos decrescentes quando o selo passa de ~3% do mercado (menos na era do streaming).
+
+## Rodada 13
+- Telas e menus seguem as carreiras escolhidas; painel por carreira na sede; mapa do promotor e fundação de agência/estúdio corrigidos.
+- Novo jogo: trajetória/origem/ambição em lista, sem lema, traços em cartões agrupados, eras com nomes únicos, 5 narradores novos, ajuda (?) em cada seção, carreira+gravadora+papel numa aba só, 6 origens e 5 ambições novas.
+- Atributos iguais para todos (inclusive o jogador): ouvido, negociação, política, traços, proficiência por cargo; visual, sexo e cor pesam conforme época e país (barreiras históricas que dá para enfrentar); ações mudam relações com motivo.
+- O artista do jogador é o próprio personagem (sem opiniões geradas sobre você).
+- Árvore de habilidades com 8 ramos; pontos por prêmios, nº 1, hits, certificados e turnês lotadas.
+- Matéria-prima com preço próprio por material e crise, escolha de fornecedor por grau; projeto com mistura de conceitos, local, estratégia de singles, edições, direção de capa, orçamento e prévia com motivos.
+- Mapa com camadas e legendas, painel por país com ações; ficha completa de gravadora; página de artista com abas (marcos, contratos, relíquias, vida pessoal).
+- Despesas crescem com o porte e a era (estrutura, jurídico, compliance, equipes de dados/vídeo, promoção mínima).
