@@ -12,6 +12,7 @@ import { playerActs } from '../../sim/util';
 import { $, actLink, kv, pill, releaseLink, rerender, section } from '../common';
 import { h } from '../dom';
 import { advisorSection } from '../advisor';
+import { decisionThumb14 } from '../sys/visuals14';
 
 const CAT_ICON: Record<string, string> = {
   career: '🎼', people: '👥', band: '🎸', contract: '📜', market: '🏢', tech: '📡', culture: '🎨', scandal: '📰',
@@ -21,6 +22,7 @@ const CAT_ICON: Record<string, string> = {
 export function deskPanel(s: GameState): HTMLElement {
   const decisions = s.decisions.map((d) =>
     h('article', { class: 'decision' },
+      decisionThumb14(s, d),
       h('header', null, h('span', { class: 'cat' }, CAT_ICON[d.cat] ?? '•'), h('h4', null, t(d.title))),
       h('p', null, t(d.text)),
       h('div', { class: 'options' }, d.options.map((o) =>

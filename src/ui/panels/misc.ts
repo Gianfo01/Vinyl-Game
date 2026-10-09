@@ -28,6 +28,7 @@ import { activeToursSection, merchSection, tourPlannerSection } from './tours';
 import { assignBranch, closeBranch, hqBlocker, hqCaps, upgradeBranch } from '../../sim/branches';
 import { ic, tile } from '../vis';
 import { crewProfileCell, crewRespecButton, crewSummary } from '../sys/crew8';
+import { banner14, venueBanner14 } from '../sys/visuals14';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -67,6 +68,7 @@ export function mediaPanel(s: GameState): HTMLElement {
   const known = TECHS.filter((x) => s.techDates[x.id] !== undefined && s.techDates[x.id] <= s.year);
   return h('div', { class: 'panel media' },
     h('div', { class: 'col-main' },
+      banner14(s, 'media'),
       pendingFeatures(s).length ? section(t(l('Novidade disponível', 'New: available now')),
         h('p', { class: 'muted small' }, t(l('A tecnologia chegou, mas seu selo precisa de equipe e equipamento antes de usar.', 'The technology has arrived, but your label needs crew and gear before using it.'))),
         ...pendingFeatures(s).map((f) => h('div', { class: 'row' }, h('b', null, t(f.label)), h('small', { class: 'muted' }, f.blurb ? t(f.blurb) : ''),
@@ -255,6 +257,7 @@ export function showsPanel(s: GameState): HTMLElement {
   const fests = FESTIVALS.filter((f) => f.start <= s.year && !f.scouting);
   return h('div', { class: 'panel shows' },
     h('div', { class: 'col-main' },
+      venueBanner14(s),
       tourMapSection(s),
       tourPlannerSection(s, tourStops),
       activeToursSection(s),
