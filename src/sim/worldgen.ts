@@ -344,6 +344,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     if (!equal && act.fame > 18 && r.chance(0.6)) signToBestRival(s, r, act);
   }
   if (opts.preview) return s;
+  if (cfg.takeover) takeoverLabel(s, cfg.takeover);
 
   // L5 — jogador (rodada 9: pode assumir uma gravadora gerada acima)
   const taken = cfg.takeover ? s.labels[cfg.takeover] : undefined;
@@ -380,7 +381,10 @@ export function signToBestRival(s: GameState, r: Rng, act: Act): void {
   const fam = familyOf(act.genre);
   const candidates = Object.values(s.labels).filter((lb) => lb.active && lb.roster.length < 40);
   const lb = r.weighted(candidates, (x) => (x.focus.length === 0 ? 1 : x.focus.includes(fam) ? 3 : 0.2) * (cityById[x.city]?.market === cityById[act.city]?.market ? 2 : 1));
-  if (!lb) return;
+  if (lb) signTo(s, r, act, lb);
+}
+
+function signTo(s: GameState, r: Rng, act: Act, lb: Label): void {
   const id = nextId(s, 'k');
   s.contracts[id] = {
     id,
@@ -472,11 +476,55 @@ function setupPlayer(s: GameState, r: Rng): void {
   if (cfg.custom?.markets === 'world') p.territories = MARKETS.map((m) => m.id);
 }
 
-/** Rodada 9: gravadoras que o jogador pode assumir neste começo (mesma semente, ano e modo). */
-export function takeoverCandidates(cfg: RunConfig): { label: Label; terms: TakeoverTerms }[] {
+/** Elenco mínimo (rodada 11) para quem não tem dados de elenco: depende do porte e dos gêneros do selo. */
+const FALLBACK_ROSTER: Record<Label['family'], [number, number]> = { A: [5, 8], B: [2, 4], C: [3, 5], D: [2, 3] };
+
+/**
+ * Rodada 11: garante no mundo a gravadora a assumir. Se o sorteio de rivais a deixou de fora (ou ela só
+ * nasceria depois por causa da variação de fundação), entra agora com os dados do catálogo; se não tem
+ * elenco, ganha um elenco mínimo coerente. Rng própria: o resto do mundo não muda.
+ */
+function takeoverLabel(s: GameState, id: string): Label | undefined {
+  const cfg = s.config;
+  const equal = cfg.labels?.start === 'equal';
+  let lb: Label | undefined = s.labels[id];
+  const r = new Rng(seedState(`${cfg.seed}:tk11:${id}`));
+  if (!lb?.active) {
+    const def = labelPool().find((d) => d.id === id && d.founded <= cfg.startYear);
+    if (!def) return lb;
+    delete s.labels[id];
+    for (const x of Object.values(s.labels)) if (x.parentLabel === id) delete x.parentLabel;
+    lb = makeLabel(s, r, { ...def, name: cfg.realNames ? def.real ?? REAL_LABELS[def.id] ?? def.name : def.name, founded: def.founded });
+    if (def.playbook) lb.playbook = def.playbook;
+    if (equal) { lb.cash = nominal(EQUAL_START_REAL, cfg.startYear); lb.reputation = EQUAL_REP; }
+  }
+  if (equal || lb.roster.length) return lb;
+  const genres = GENRES.filter((g) => g.born <= cfg.startYear && lb!.focus.includes(familyOf(g.id))).map((g) => g.id);
+  const [lo, hi] = FALLBACK_ROSTER[lb.family];
+  for (let i = r.int(lo, hi); i > 0; i--) {
+    const act = spawnProceduralAct(s, r, { city: r.chance(0.6) ? lb.city : undefined, genre: genres.length ? r.pick(genres) : undefined, formedYear: cfg.startYear - r.int(1, 8) });
+    const years = cfg.startYear - act.formed;
+    act.status = 'active';
+    act.fame = clamp(r.normal(10 + years * 2.5, 5) * (act.potential / 60), 3, 60);
+    const f = Math.pow(10, 2 + act.fame / 25);
+    act.fans = { casual: Math.round(f), active: Math.round(f * 0.15), core: Math.round(f * 0.03) };
+    signTo(s, r, act, lb);
+  }
+  return lb;
+}
+
+/** Rodada 9 (11: todas): gravadoras que o jogador pode assumir neste começo (mesma semente, ano e modo) —
+ *  as rivais do mundo e todas as do catálogo já fundadas no ano de início (`extra` = entra no mundo se escolhida). */
+export function takeoverCandidates(cfg: RunConfig): { label: Label; terms: TakeoverTerms; extra?: boolean }[] {
   const s = createGame({ ...cfg, takeover: undefined, character: undefined }, { preview: true });
-  return Object.values(s.labels).filter((lb) => lb.active && (lb.roster.length > 0 || cfg.labels?.start === 'equal')).map((lb) => ({ label: lb, terms: takeoverTerms(s, lb) }))
-    .sort((a, b) => a.terms.tier - b.terms.tier || a.terms.roster - b.terms.roster);
+  const inWorld = new Set(Object.values(s.labels).filter((lb) => lb.active).map((lb) => lb.id));
+  const ids = [...inWorld, ...labelPool().filter((d) => d.founded <= cfg.startYear && !inWorld.has(d.id)).map((d) => d.id)];
+  const out: { label: Label; terms: TakeoverTerms; extra?: boolean }[] = [];
+  for (const id of ids) {
+    const lb = takeoverLabel(s, id);
+    if (lb?.active) out.push({ label: lb, terms: takeoverTerms(s, lb), extra: !inWorld.has(id) || undefined });
+  }
+  return out.sort((a, b) => a.terms.tier - b.terms.tier || a.terms.roster - b.terms.roster || a.label.name.localeCompare(b.label.name));
 }
 
 /** Transfere a gravadora escolhida para o jogador: elenco, contratos, catálogo, caixa, equipe, dívidas e reputação. */

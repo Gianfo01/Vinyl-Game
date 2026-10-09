@@ -79,7 +79,7 @@ describe('gravadoras escolhidas', () => {
     // assumir uma gravadora continua funcionando no conjunto escolhido
     const c = cfg('r10-eq', { startYear: 1975, labels: { start: 'equal', ids: ['x_virgin', 'x_sire', 'imperial'] } });
     const cands = takeoverCandidates(c);
-    expect(cands.map((x) => x.label.id).sort()).toEqual(['imperial', 'x_sire', 'x_virgin']);
+    expect(cands.filter((x) => !x.extra).map((x) => x.label.id).sort()).toEqual(['imperial', 'x_sire', 'x_virgin']);
     const t = createGame({ ...c, takeover: 'x_sire' });
     expect(t.labels.x_sire).toBeUndefined();
     expect(t.config.companyName).toBe(cands.find((x) => x.label.id === 'x_sire')!.label.name);

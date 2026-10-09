@@ -294,6 +294,33 @@ img.pxi { vertical-align: -3px; display: inline-block; padding: 0; }
 .pick { font: inherit; text-align: left; display: flex; flex-direction: column; gap: 0.2rem; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
 .pick.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
 .mut-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.2rem 1rem; }
+/* rodada 11: Novo Jogo em abas + resumo fixo */
+.newgame.tabbed { max-width: 1280px; padding-bottom: 5rem; }
+.ng-tabs { display: flex; gap: 0.3rem; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 1rem; scrollbar-width: thin; }
+.ng-tab { font: inherit; flex: 0 0 auto; padding: 0.55rem 0.8rem; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.ng-tab.on { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.ng-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ng-num { display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; border-radius: 50%; background: var(--panel-2); font-size: 0.8em; }
+.ng-tab.on .ng-num { background: var(--accent); color: var(--accent-ink); }
+.ng-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1rem; align-items: start; }
+.ng-panel[hidden] { display: none; }
+.ng-nav { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+.ng-side { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
+.ng-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.25rem 0.75rem; margin: 0 0 0.8rem; font-size: 0.9rem; }
+.ng-dl dt { color: var(--muted); }
+.ng-dl dd { margin: 0; overflow-wrap: anywhere; }
+.linkish { font: inherit; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-align: left; text-decoration: underline dotted; }
+.ng-bar { display: none; }
+.tk-search { width: 100%; margin: 0.4rem 0; }
+.tk-list h4 { margin: 0.8rem 0 0.4rem; }
+@media (max-width: 860px) {
+  .ng-layout { grid-template-columns: 1fr; }
+  .ng-side { display: none; }
+  .ng-bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; gap: 0.6rem; align-items: center; justify-content: space-between; padding: 0.5rem 16px; background: var(--panel); border-top: 1px solid var(--line); box-shadow: var(--shadow); }
+  .ng-bar .ng-mini { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .ng-bar .btn.big { padding: 0.5rem 1rem; font-size: 1rem; flex: 0 0 auto; }
+  .newgame.tabbed { padding: 0.75rem 16px 5rem; }
+}
 .ending { text-align: center; }
 .ending .kv { text-align: left; }
 .ending .lead { font-size: 1.15rem; font-family: Georgia, serif; }
