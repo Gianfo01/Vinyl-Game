@@ -98,7 +98,6 @@ export function personaTab(s: GameState): HTMLElement {
         h('label', null, t(l('Visual', 'Look')), select(P0.visual, VISUALS.map((v) => ({ value: v.id, label: t(v.name) })), (v) => { P0.visual = v; bumpPerks(); rerender(); })),
         h('label', null, t(l('Gênero do coração', 'Favourite genre')), select(P0.favGenre ?? '', [{ value: '', label: '—' }, ...GENRES.filter((g) => g.born <= s.year).sort((a, b) => t(a.name).localeCompare(t(b.name))).map((g) => ({ value: g.id, label: t(g.name) }))], (v) => { P0.favGenre = v || undefined; bumpPerks(); rerender(); })),
         h('p', { class: 'small' }, ic('house'), ' ', t(l('Cidade natal', 'Hometown')), ': ', P0.hometown && CITIES.some((c) => c.id === P0.hometown) ? cityName(P0.hometown) : '—'),
-        h('label', null, t(l('Lema', 'Motto')), h('input', { type: 'text', value: P0.motto ?? '', maxlength: 120, onchange: (e: Event) => { P0.motto = (e.target as HTMLInputElement).value.trim() || undefined; } })),
         P0.favGenre && genreById[P0.favGenre] ? h('p', { class: 'muted small' }, t(l('Mudar de gosto não custa nada, mas o visual e o gênero mexem nos bônus.', 'Changing taste is free, but look and genre change your bonuses.'))) : null,
       ),
       P0.history.length ? section(t(l('Perks recentes', 'Recent perks')), h('ul', { class: 'small' }, P0.history.slice(0, 8).map((x) => h('li', null, t(x.text))))) : null,

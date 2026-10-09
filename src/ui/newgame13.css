@@ -1,0 +1,18 @@
+/* Rodada 13 — ajuda "(?)" e seletor de traços do Novo Jogo */
+.ng-hw { position: relative; display: inline-block; }
+.ng-help { font: inherit; font-size: 0.8em; padding: 0 0.15em; border: 0; background: none; color: var(--accent); cursor: pointer; text-decoration: underline dotted; }
+.ng-help[aria-expanded="true"] { font-weight: bold; }
+.ng-pop { position: absolute; z-index: 30; left: 0; top: 1.6em; width: min(320px, 80vw); padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 0.85rem; font-weight: normal; line-height: 1.35; text-transform: none; letter-spacing: normal; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); white-space: normal; }
+.ng-pop[hidden] { display: none; }
+.cc-path-sel { max-width: 100%; }
+.tr13-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.3rem 0 0.6rem; }
+.tr13-count { padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid var(--accent); }
+.tr13-count.full { background: var(--accent); color: var(--bg, #000); }
+.tr13-chip { font: inherit; font-size: 0.85rem; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+.tr13-group h5 { margin: 0.6rem 0 0.3rem; font-size: 0.95rem; }
+.tr13-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.45rem; }
+.tr13-card .tr13-fx { color: var(--good, #6c6); }
+.tr13-card .tr13-why { color: var(--bad, #d66); }
+.tr13-card.blocked { opacity: 0.6; cursor: not-allowed; }
+.tr13-on { color: var(--accent); }
+.ng-lt { display: inline; white-space: nowrap; }

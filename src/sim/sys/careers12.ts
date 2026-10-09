@@ -8,15 +8,19 @@ import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { GameState } from '../types';
-import { fmtL, money, notify, remember } from '../util';
+import { fmtL, money, notify, post, remember } from '../util';
+import { registerPerkSource, type PerkValues } from '../perks';
+import type { SkillId } from '../../data/people';
+import { playerPerson } from './life';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 import { ventures } from './ventures9';
 
 export type CareerId = 'label' | 'manager' | 'festival' | 'booking' | 'venue' | 'studio' | 'publisher' | 'media' | 'platform' | 'musician';
 export interface CareerDef { id: string; name: L; desc: L; from: number; icon: string; area: string; load: number; status?: (s: GameState) => L | null }
-export type Origin = 'musician' | 'roadie' | 'journalist' | 'lawyer' | 'heir' | 'dj' | 'accountant';
-export type Ambition = 'money' | 'legacy' | 'power' | 'art' | 'family';
+export type Origin = 'musician' | 'roadie' | 'journalist' | 'lawyer' | 'heir' | 'dj' | 'accountant'
+  | 'musicKid' | 'session' | 'anr' | 'teacher' | 'engineer' | 'adman';
+export type Ambition = 'money' | 'legacy' | 'power' | 'art' | 'family' | 'fame' | 'discover' | 'world' | 'glory' | 'freedom';
 
 const vcount = (s: GameState, k: string) => ventures(s).list.filter((v) => v.kind === k).length;
 const owns = (k: string, pt: string, en: string) => (s: GameState) => { const n = vcount(s, k); return n ? fmtL(l(`{n} ${pt}`, `{n} ${en}`), { n }) : l('Nenhum negócio ainda: abra em Empreendimentos ou use o mercado de serviços.', 'No business yet: found one in Ventures or use the services market.'); };
@@ -45,13 +49,36 @@ export const careerDefs = (s?: GameState) => DEFS.filter((d) => !s || d.from <= 
 export const careerDef = (id: string) => DEFS.find((d) => d.id === id);
 
 export const ORIGINS: Record<Origin, { name: L; desc: L }> = {
-  musician: { name: l('Ex-músico', 'Former musician'), desc: l('+carisma e ouvido; artistas confiam mais em você de saída.', '+charisma and ear; acts trust you more from the start.') },
-  roadie: { name: l('Roadie/produção de estrada', 'Roadie/road crew'), desc: l('+gestão; contatos com agências e festivais.', '+management; contacts with bookers and festivals.') },
-  journalist: { name: l('Jornalista musical', 'Music journalist'), desc: l('+ouvido; contatos na mídia.', '+ear; media contacts.') },
-  lawyer: { name: l('Advogado do meio', 'Music lawyer'), desc: l('+negociação; mandatos e contratos saem melhores.', '+negotiation; better mandates and contracts.') },
-  heir: { name: l('Herdeiro de família rica', 'Rich heir'), desc: l('Patrimônio inicial alto; os artistas desconfiam do "filhinho".', 'Big starting wealth; acts distrust the "rich kid".') },
-  dj: { name: l('DJ/radialista', 'DJ/radio host'), desc: l('+carisma e ouvido; contatos em rádio e festivais.', '+charisma and ear; radio and festival contacts.') },
-  accountant: { name: l('Contador', 'Accountant'), desc: l('+gestão e negociação; contatos em estúdios e gravadoras.', '+management and negotiation; studio and label contacts.') },
+  musician: { name: l('Ex-músico(a) de banda', 'Former band musician'), desc: l('Carisma +6, ouvido +4, instrumento +6 e palco +4; artistas confiam +3. Contatos em estúdios e festivais.', 'Charisma +6, ear +4, instrument +6 and stage +4; acts trust +3. Studio and festival contacts.') },
+  roadie: { name: l('Ex-roadie/produção de estrada', 'Former roadie/road crew'), desc: l('Gestão +6; bilheteria +4%. Muitos contatos em agências e festivais.', 'Management +6; box office +4%. Lots of booking and festival contacts.') },
+  journalist: { name: l('Jornalista musical', 'Music journalist'), desc: l('Ouvido +6; crítica +0,2 e reputação institucional +2. Contatos na mídia.', 'Ear +6; critics +0.2 and institutional reputation +2. Media contacts.') },
+  lawyer: { name: l('Advogado(a) do meio', 'Music lawyer'), desc: l('Negociação +10; adiantamentos 4% menores, mas artistas confiam −2.', 'Negotiation +10; 4% smaller advances, but acts trust −2.') },
+  heir: { name: l('Herdeiro(a) de família rica', 'Rich heir'), desc: l('+$60 mil de patrimônio e +$20 mil no caixa; reputação com artistas −5 e confiança −3 ("filhinho").', '+$60k wealth and +$20k company cash; reputation with artists −5 and trust −3 ("rich kid").') },
+  dj: { name: l('DJ/radialista', 'DJ/radio host'), desc: l('Carisma +4, ouvido +4; +1 sinal de talento por mês. Contatos em rádio e festivais.', 'Charisma +4, ear +4; +1 talent signal a month. Radio and festival contacts.') },
+  accountant: { name: l('Contador(a)', 'Accountant'), desc: l('Gestão +8, negociação +3; salários 4% menores. Contatos em estúdios e gravadoras.', 'Management +8, negotiation +3; salaries 4% lower. Studio and label contacts.') },
+  musicKid: { name: l('Filho(a) de músicos', 'Child of musicians'), desc: l('Cresceu na coxia: instrumento +10, voz +6, composição +4, ouvido +4; confiança +4 e reputação com artistas +4. Negociação −3.', 'Grew up backstage: instrument +10, voice +6, writing +4, ear +4; trust +4 and reputation with artists +4. Negotiation −3.') },
+  session: { name: l('Músico(a) de estúdio', 'Session musician'), desc: l('Instrumento +12, ouvido +5; +0,5 de qualidade nas gravações. Muitos contatos em estúdios e produtores. Carisma −3.', 'Instrument +12, ear +5; +0.5 recording quality. Lots of studio and producer contacts. Charisma −3.') },
+  anr: { name: l('Ex-olheiro(a) de A&R', 'Former A&R scout'), desc: l('Ouvido +6; relatórios de olheiro 6% mais precisos e +1 sinal por mês. Contatos em gravadoras. Caixa −$5 mil (multa de saída).', 'Ear +6; scouting reports 6% sharper and +1 signal a month. Label contacts. −$5k cash (exit penalty).') },
+  teacher: { name: l('Professor(a) de música', 'Music teacher'), desc: l('Ouvido +4, gestão +3; o elenco aprende rápido (moral +0,5/mês, XP +10%). Patrimônio modesto (−$3 mil).', 'Ear +4, management +3; the roster learns fast (morale +0.5/month, XP +10%). Modest wealth (−$3k).') },
+  engineer: { name: l('Técnico(a) de som', 'Sound engineer'), desc: l('Produção +8; +0,8 de qualidade e fabricação 5% mais barata. Contatos em estúdios. Carisma −4.', 'Production +8; +0.8 quality and 5% cheaper manufacturing. Studio contacts. Charisma −4.') },
+  adman: { name: l('Publicitário(a)', 'Ad executive'), desc: l('Carisma +5, negociação +4; apelo de lançamentos +5% e +$10 mil no caixa. Crítica desconfia (−0,15). Contatos na mídia.', 'Charisma +5, negotiation +4; release appeal +5% and +$10k cash. Critics wary (−0.15). Media contacts.') },
+};
+/** Efeitos mecânicos de cada origem (aplicados uma vez no começo; perks valem a partida toda). */
+interface OriginFx { attrs?: Partial<Record<'ear' | 'negotiation' | 'charisma' | 'management', number>>; wealth?: number; cash?: number; rep?: number; artists?: number; skills?: Partial<Record<SkillId, number>>; perks?: PerkValues }
+export const ORIGIN_FX: Record<Origin, OriginFx> = {
+  musician: { attrs: { charisma: 6, ear: 4 }, skills: { instr: 6, stage: 4 }, perks: { trust: 3 } },
+  roadie: { attrs: { management: 6 }, perks: { showRevenue: 0.04 } },
+  journalist: { attrs: { ear: 6 }, rep: 2, perks: { critics: 0.2 } },
+  lawyer: { attrs: { negotiation: 10 }, perks: { advance: -0.04, trust: -2 } },
+  heir: { wealth: 60000, cash: 20000, artists: -5, perks: { trust: -3 } },
+  dj: { attrs: { charisma: 4, ear: 4 }, perks: { signals: 1 } },
+  accountant: { attrs: { management: 8, negotiation: 3 }, perks: { staffCost: -0.04 } },
+  musicKid: { attrs: { ear: 4, negotiation: -3 }, skills: { instr: 10, voice: 6, comp: 4 }, artists: 4, perks: { trust: 4 } },
+  session: { attrs: { ear: 5, charisma: -3 }, skills: { instr: 12 }, perks: { songQ: 0.5 } },
+  anr: { attrs: { ear: 6 }, cash: -5000, perks: { scoutAccuracy: 0.06, signals: 1 } },
+  teacher: { attrs: { ear: 4, management: 3 }, wealth: -3000, perks: { morale: 0.5, xp: 0.1 } },
+  engineer: { attrs: { charisma: -4 }, skills: { prod: 8 }, perks: { songQ: 0.8, pressingCost: -0.05 } },
+  adman: { attrs: { charisma: 5, negotiation: 4 }, cash: 10000, perks: { appeal: 0.05, critics: -0.15 } },
 };
 export const AMBITIONS: Record<Ambition, { name: L; desc: L }> = {
   money: { name: l('Fortuna', 'Fortune'), desc: l('Satisfeito quando o patrimônio e o caixa crescem no ano.', 'Content when wealth and cash grow over the year.') },
@@ -59,14 +86,26 @@ export const AMBITIONS: Record<Ambition, { name: L; desc: L }> = {
   power: { name: l('Poder', 'Power'), desc: l('Satisfeito com várias frentes e muitos clientes ao mesmo tempo.', 'Content running several fronts and many clients at once.') },
   art: { name: l('Arte', 'Art'), desc: l('Satisfeito quando sai música nova que você bancou ou produziu.', 'Content when new music you backed or produced comes out.') },
   family: { name: l('Família', 'Family'), desc: l('Satisfeito com pouca sobrecarga: no máximo duas carreiras e estresse baixo.', 'Content with little overload: at most two careers and low stress.') },
+  fame: { name: l('Fama', 'Fame'), desc: l('Satisfeito quando um ato seu entra no top 10 no ano.', 'Content when one of your acts reaches the top 10 that year.') },
+  discover: { name: l('Descobridor(a)', 'Talent finder'), desc: l('Satisfeito quando contrata pelo menos um artista novo no ano.', 'Content when you sign at least one new act that year.') },
+  world: { name: l('Conquistar o mundo', 'Conquer the world'), desc: l('Satisfeito quando abre um território novo no ano.', 'Content when you open a new territory that year.') },
+  glory: { name: l('Consagração', 'Acclaim'), desc: l('Satisfeito quando ganha um prêmio no ano.', 'Content when you win an award that year.') },
+  freedom: { name: l('Independência', 'Independence'), desc: l('Satisfeito ao fechar o ano sem empréstimos e sem meses no vermelho.', 'Content ending the year with no loans and no months in the red.') },
+};
+/** Bônus de quem cumpriu a ambição no ano anterior (vale o ano seguinte). */
+export const AMBITION_PERK: Record<Ambition, PerkValues> = {
+  money: { valuation: 0.05 }, legacy: { critics: 0.1 }, power: { offer: 0.03 }, art: { songQ: 0.5 }, family: { stress: -0.1 },
+  fame: { appeal: 0.04 }, discover: { scoutAccuracy: 0.04 }, world: { showRevenue: 0.05 }, glory: { reputation: 1 }, freedom: { staffCost: -0.03 },
 };
 const ORIGIN_CONTACTS: Record<Origin, Partial<Record<string, number>>> = {
   musician: { studio: 6, producer: 6, festival: 4 }, roadie: { booking: 12, festival: 10 }, journalist: { media: 14, label: 4 }, lawyer: { label: 8 },
   heir: { label: 4, festival: 4 }, dj: { media: 10, festival: 8 }, accountant: { studio: 6, label: 8 },
+  musicKid: { studio: 8, producer: 6, festival: 6 }, session: { studio: 14, producer: 12 }, anr: { label: 12, media: 4 }, teacher: { studio: 4, label: 4 },
+  engineer: { studio: 14, producer: 8 }, adman: { media: 12, label: 4 },
 };
 
 export interface HeirWish { gen: number; name: string; wants: CareerId[]; ambition: Ambition; decided?: 'embrace' | 'tradition' | 'blend' }
-export interface CareersState { init: boolean; active: string[]; origin: Origin; ambition: Ambition; started: Record<string, number>; gen: number; heir?: HeirWish; snap?: { y: number; worth: number; std: number; rel: number }; mood: { y: number; ok: boolean; t: L }[]; log: { y: number; t: L }[] }
+export interface CareersState { init: boolean; active: string[]; origin: Origin; ambition: Ambition; started: Record<string, number>; gen: number; heir?: HeirWish; snap?: { y: number; worth: number; std: number; rel: number; hits?: number; signed?: number; mk?: number; aw?: number }; mood: { y: number; ok: boolean; t: L }[]; log: { y: number; t: L }[] }
 
 declare module '../ext4' { interface Ext4 { careers12: CareersState } }
 const fresh = (): CareersState => ({ init: false, active: [], origin: 'musician', ambition: 'legacy', started: {}, gen: 1, mood: [], log: [] });
@@ -92,15 +131,15 @@ export function careers(s: GameState): CareersState {
 
 function applyOrigin(s: GameState, st: CareersState): void {
   const o = ownerOf(s);
-  const add = (k: keyof typeof o.attrs, d: number) => (o.attrs[k] = clamp(o.attrs[k] + d, 10, 95));
-  const m = st.origin;
-  if (m === 'musician') { add('charisma', 6); add('ear', 4); }
-  else if (m === 'roadie') add('management', 6);
-  else if (m === 'journalist') add('ear', 6);
-  else if (m === 'lawyer') add('negotiation', 10);
-  else if (m === 'heir') o.wealth += money(s, 60000);
-  else if (m === 'dj') { add('charisma', 4); add('ear', 4); }
-  else { add('management', 8); add('negotiation', 3); }
+  const fx = ORIGIN_FX[st.origin] ?? {};
+  for (const [k, d] of Object.entries(fx.attrs ?? {})) { const key = k as keyof typeof o.attrs; o.attrs[key] = clamp(o.attrs[key] + (d ?? 0), 10, 95); }
+  if (fx.wealth) o.wealth = Math.max(0, o.wealth + money(s, fx.wealth));
+  if (fx.cash) post(s, 'car12:origin', money(s, fx.cash), fx.cash > 0 ? 'investment' : 'misc', fx.cash > 0 ? 'Aporte da origem' : 'Custo da origem');
+  const R = s.player.reputation;
+  if (fx.rep) R.institutional = clamp(R.institutional + fx.rep, 0, 100);
+  if (fx.artists) R.artists = clamp(R.artists + fx.artists, 0, 100);
+  const p = playerPerson(s);
+  if (p) for (const [k, v] of Object.entries(fx.skills ?? {})) { const key = k as keyof typeof p.skills; p.skills[key] = clamp(p.skills[key] + (v ?? 0), 3, 99); }
   if (st.active.includes('manager')) ventures(s).mg.rep = clamp(ventures(s).mg.rep + 8, 0, 100);
 }
 
@@ -111,7 +150,17 @@ export function contactsFor(s: GameState, kind: string): number {
   const near: Record<string, string[]> = { studio: ['studio', 'musician'], producer: ['studio', 'musician'], booking: ['booking', 'venue', 'manager'], festival: ['festival', 'booking', 'manager'], label: ['label', 'manager'], media: ['media'] };
   return Math.min(40, (ORIGIN_CONTACTS[st.origin][kind] ?? 0) + (near[kind] ?? []).reduce((t, id) => t + yrs(id), 0));
 }
-export const originTrust = (s: GameState) => ({ musician: 8, heir: -6, lawyer: 0, roadie: 3, journalist: 0, dj: 3, accountant: -2 }[careers(s).origin]);
+export const originTrust = (s: GameState) => ORIGIN_FX[careers(s).origin]?.perks?.trust ?? 0;
+// perks permanentes da origem e o bônus da ambição cumprida no ano anterior
+registerPerkSource('careers12', (s) => {
+  const st = careers(s);
+  const out: { label: L; values: PerkValues }[] = [];
+  const fx = ORIGIN_FX[st.origin]?.perks;
+  if (fx && s.config.careers) out.push({ label: fmtL(l('Origem: {o}', 'Origin: {o}'), { o: ORIGINS[st.origin].name }), values: fx });
+  const last = st.mood[st.mood.length - 1];
+  if (last?.ok && last.y === s.year - 1 && AMBITION_PERK[st.ambition]) out.push({ label: fmtL(l('Ambição cumprida: {a}', 'Ambition fulfilled: {a}'), { a: AMBITIONS[st.ambition].name }), values: AMBITION_PERK[st.ambition] });
+  return out;
+});
 
 /** Carga de tempo: 1 = um mês cheio. Acima disso o dono se estressa (e quem precisa de você sente). */
 export function timeLoad(s: GameState): number {
@@ -216,6 +265,11 @@ function ambitionMet(s: GameState, st: CareersState): { ok: boolean; why: L } {
     case 'legacy': { const ok = standingOf(s, 'player').rec + ventures(s).mg.rep > sn.std + 1; return { ok, why: ok ? l('o prestígio subiu', 'prestige rose') : l('o prestígio parou', 'prestige stalled') }; }
     case 'power': { const ok = st.active.length >= 3 || ventures(s).mg.clients.length + ventures(s).list.length >= 4; return { ok, why: ok ? l('você comanda várias frentes', 'you run several fronts') : l('poucas frentes sob seu comando', 'too few fronts under your command') }; }
     case 'art': { const n = Object.values(s.releases).filter((x) => x.owner === 'player').length; const ok = n > sn.rel; return { ok, why: ok ? l('saiu música nova sua', 'new music of yours came out') : l('nenhum lançamento novo', 'no new release') }; }
+    case 'fame': { const n = s.player.stats.top10s + s.player.stats.number1s; const ok = n > (sn.hits ?? n); return { ok, why: ok ? l('um ato seu chegou ao top 10', 'one of your acts hit the top 10') : l('nenhum top 10 no ano', 'no top 10 this year') }; }
+    case 'discover': { const n = s.player.stats.signed; const ok = n > (sn.signed ?? n); return { ok, why: ok ? l('você descobriu talento novo', 'you discovered new talent') : l('ninguém novo no elenco', 'nobody new on the roster') }; }
+    case 'world': { const n = s.player.territories.length; const ok = n > (sn.mk ?? n); return { ok, why: ok ? l('um território novo se abriu', 'a new territory opened') : l('o mapa não cresceu', 'the map did not grow') }; }
+    case 'glory': { const n = s.player.stats.awards; const ok = n > (sn.aw ?? n); return { ok, why: ok ? l('veio um prêmio', 'an award came in') : l('nenhum prêmio no ano', 'no award this year') }; }
+    case 'freedom': { const ok = !s.player.loans.length && s.player.insolvencyMonths === 0 && s.player.cash > 0; return { ok, why: ok ? l('sem dívidas, sem patrão', 'no debts, no masters') : l('as dívidas mandam em você', 'debts call the shots') }; }
     default: { const ok = st.active.length <= 2 && o.stress < 55; return { ok, why: ok ? l('sobrou tempo para casa', 'there was time for home') : l('o trabalho engoliu a família', 'work swallowed the family') }; }
   }
 }
@@ -227,7 +281,9 @@ function careersMonth(s: GameState): void {
   const load = timeLoad(s);
   if (load > 1) o.stress = clamp(o.stress + (load - 1) * 8, 0, 100);
   if (s.month !== 0) return;
-  const snap = { y: s.year, worth: worth(s), std: standingOf(s, 'player').rec + ventures(s).mg.rep, rel: Object.values(s.releases).filter((x) => x.owner === 'player').length };
+  const P = s.player;
+  const snap = { y: s.year, worth: worth(s), std: standingOf(s, 'player').rec + ventures(s).mg.rep, rel: Object.values(s.releases).filter((x) => x.owner === 'player').length,
+    hits: P.stats.top10s + P.stats.number1s, signed: P.stats.signed, mk: P.territories.length, aw: P.stats.awards };
   if (st.snap && st.snap.y < s.year) {
     const m = ambitionMet(s, st);
     o.stress = clamp(o.stress + (m.ok ? -6 : 6), 0, 100);
@@ -240,3 +296,11 @@ function careersMonth(s: GameState): void {
 }
 
 registerSimHook('month', 'careers12', (s) => careersMonth(s));
+// rodada 13: aplica a origem já na criação (depois da ficha do personagem), para o caixa/reputação aparecerem no mês 1
+registerSimHook('newgame', 'careers12', (s) => { careers(s); });
+
+/** Meta de ambição do ano em curso, com progresso legível (rodada 13). */
+export function ambitionGoal(s: GameState): { ok: boolean; why: L } | null {
+  const st = careers(s);
+  return st.snap ? ambitionMet(s, st) : null;
+}

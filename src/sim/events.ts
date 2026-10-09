@@ -15,6 +15,7 @@ import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
 import { MORE_EVENTS } from './events_more';
 import { MORE_EVENTS_11 } from './events_more11';
+import { narrate, narratorPace } from './narrator13';
 
 export type Ctx = Record<string, string | number>;
 
@@ -866,7 +867,7 @@ export function emitEvent(s: GameState, r: Rng, id: string, ctx: Ctx): void {
   const params = ctxParams(s, ctx);
   if (def.options.length === 1) {
     def.options[0].apply(s, r, ctx);
-    notify(s, fmtL(def.title, params), def.tone === 'good' ? 'good' : def.tone === 'bad' ? 'bad' : 'event');
+    notify(s, narrate(s, fmtL(def.title, params), def.tone, def.id), def.tone === 'good' ? 'good' : def.tone === 'bad' ? 'bad' : 'event');
     remember(s, `event:${def.id}`, fmtL(def.title, params), { actId: ctx.act ? String(ctx.act) : undefined });
   } else {
     const d: Decision = {
@@ -874,7 +875,7 @@ export function emitEvent(s: GameState, r: Rng, id: string, ctx: Ctx): void {
       eventId: def.id,
       cat: def.cat,
       title: fmtL(def.title, params),
-      text: fmtL(def.text, params),
+      text: narrate(s, fmtL(def.text, params), def.tone, def.id),
       options: def.options.map((o) => ({ id: o.id, label: o.label, hint: o.hint })),
       ctx,
       week: s.week,
@@ -908,13 +909,13 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
 
 /** Diretor de histórias: Maestro (ondas), Brisa (calmo), Acaso (aleatório). Machuca, mas não mata. */
 export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
-  const profile = s.config.storyteller;
-  const freq = profile === 'brisa' ? 0.7 : profile === 'acaso' ? 1.2 : 1.35;
+  const pc = narratorPace(s.config.storyteller);
+  const freq = pc.freq;
   let n = Math.floor(freq + r.next());
   if (s.decisions.length >= 4) n = 0; // a mesa do mês tem no máximo ~5 itens
   const monthlyCost = estimateMonthlyBurn(s);
   const struggling = s.player.cash < monthlyCost * 2 || s.player.insolvencyMonths > 0;
-  const target = profile === 'maestro' ? 0.5 + 0.35 * Math.sin((monthIndex / 14) * Math.PI * 2) : 0.35;
+  const target = pc.wave ? 0.5 + 0.35 * Math.sin((monthIndex / pc.wave) * Math.PI * 2) : 0.35;
   for (let i = 0; i < n; i++) {
     const valid: [EventDef, Ctx][] = [];
     // as funções find só leem o estado: a lista de atos do jogador fica congelada durante a varredura
@@ -932,14 +933,14 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
     if (!valid.length) return;
     const pick = r.weighted(valid, ([def]) => {
       let w = def.weight ?? 1;
-      if (profile === 'acaso') return w;
+      if (pc.random) return w;
       if (def.tone === 'bad') {
-        w *= profile === 'brisa' ? 0.45 : s.tension < target ? 1.8 : 0.6;
-        if (struggling) w *= 0.2;
+        w *= (pc.flatBad ?? (s.tension < target ? 1.8 : 0.6)) * pc.bad;
+        if (struggling && pc.mercy) w *= 0.2;
       }
       if (def.tone === 'good') {
-        w *= s.tension > target ? 1.6 : 0.8;
-        if (struggling) w *= 2;
+        w *= (s.tension > target ? 1.6 : 0.8) * pc.good;
+        if (struggling && pc.mercy) w *= 2;
       }
       return w;
     });
