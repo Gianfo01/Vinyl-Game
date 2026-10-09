@@ -14,6 +14,7 @@ import { withPlayerActsCache, fmtL, type Param, hasCard, hasMutator, hasTech, mo
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
 import { MORE_EVENTS } from './events_more';
+import { MORE_EVENTS_11 } from './events_more11';
 
 export type Ctx = Record<string, string | number>;
 
@@ -787,6 +788,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   ...MORE_EVENTS,
+  ...MORE_EVENTS_11,
 ];
 
 function mergeLabelsSync(s: GameState, buyer: string, target: string): void {

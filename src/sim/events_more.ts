@@ -2147,3 +2147,9 @@ export const MORE_EVENTS: EventDef[] = [
   ...ERA_EARLY, ...GEO, ...MEDIA_PR, ...FANDOM, ...TECH, ...LIVE,
   ...BRAND, ...LAW, ...FAMILY, ...BAND, ...RIVALS, ...CRITIC_AWARD, ...FEST_MOVE, ...NEURAL,
 ];
+
+/** Construtores e efeitos reaproveitados pelos eventos da rodada 11 (events_more11.ts). */
+export const EH = {
+  o, E, noop, mine, pick, crew, fam, mkt, era, myRels, isLabel, active, traitIn, ambitionIn, lead, withinFlag,
+  A, P, pay, gain, rep, fame, mom, trust, fans, fansMul, mood, pmood, hiatus, legal, winOdds, split, feeBy, log, appeal, latestRel, signal,
+};
