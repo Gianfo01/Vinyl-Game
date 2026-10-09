@@ -2,12 +2,13 @@
 
 import { familyOf, l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
-import { FOCUS_IDEAL, STAGES, TRACK_LABEL, buyGear, eraLimits, focusFit, gearAvailable, gearById, ms, normalizeFocus, setFocus, trackLimit, type Stage } from '../../../sim/sys/music';
+import { STAGES, TRACK_LABEL, buyGear, eraLimits, focusFit, gearAvailable, gearById, ms, normalizeFocus, setFocus, trackLimit, type Stage } from '../../../sim/sys/music';
 import type { GameState } from '../../../sim/types';
 import { money } from '../../../sim/util';
 import { $, pill, rerender, section, toast } from '../../common';
 import { h } from '../../dom';
 import { store } from '../../store';
+import { focusIdeal, stageName, studioContext } from '../../../sim/sys/studio12';
 import { chips, ic, stat } from '../../vis';
 
 export function studioTab(s: GameState): HTMLElement {
@@ -21,20 +22,22 @@ function focusSection(s: GameState, actId: string): HTMLElement {
   const fam = familyOf(s.acts[actId].genre);
   const cur = ms(s).focus[actId];
   const d = (focusDraft[actId] ??= cur ? { ...cur } : { comp: 25, arr: 25, rec: 25, mix: 25 });
-  const learn = ms(s).focusLearn[fam];
+  const learn = ms(s).focusLearn[actId];
   const keys = Object.keys(STAGES) as Stage[];
-  const top = (Object.entries(FOCUS_IDEAL[fam]) as [Stage, number][]).sort((x, y) => y[1] - x[1])[0][0];
+  // rodada 12: o ideal vem do contexto (artista, conceito do projeto, produtor, público-alvo), não só do gênero
+  const ctx = studioContext(s, actId);
+  const fi = ctx ? focusIdeal(s, ctx) : null;
   const norm = normalizeFocus(d);
   const box = h('div', { class: 'mu-focus' }, keys.map((k) => h('label', null, h('span', null, t(STAGES[k])), h('input', { type: 'range', min: 0, max: 100, value: d[k], 'aria-label': t(STAGES[k]), oninput: (e: Event) => { d[k] = Number((e.target as HTMLInputElement).value); const n = normalizeFocus(d); box.querySelectorAll('output').forEach((o, i) => { o.textContent = `${n[keys[i]]}%`; }); } }), h('output', null, `${norm[k]}%`))));
   return section(t(l('Foco por etapa (próxima gravação)', 'Stage focus (next recording)')),
-    h('p', { class: 'muted small' }, t(l('Divida o tempo do estúdio entre composição, arranjo, gravação e mixagem. Cada gênero tem uma distribuição ideal — você a descobre gravando.', 'Split studio time between songwriting, arrangement, recording and mixing. Each genre has an ideal split — you discover it by recording.'))),
+    h('p', { class: 'muted small' }, t(l('Divida o tempo do estúdio entre composição, arranjo, gravação e mixagem. Não há divisão certa por gênero: o melhor foco muda com os pontos fortes do artista, o conceito do disco, o estilo do produtor e o público-alvo — o que deu certo num disco pode falhar no próximo.', 'Split studio time between songwriting, arrangement, recording and mixing. There is no right split per genre: the best focus shifts with the act\'s strengths, the record\'s concept, the producer\'s style and the target audience — what worked on one record may fail on the next.'))),
+    fi?.drivers.length ? h('p', { class: 'small' }, t(l('O que pesa agora: ', 'What weighs now: ')), fi.drivers.map((d) => `${t(d.label)} → ${t(stageName(d.stage))}`).join(' · ')) : null,
     box,
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn small primary', onclick: () => { setFocus(s, actId, d); toast(t(l('Foco salvo para as próximas gravações.', 'Focus saved for the next recordings.')), 'good'); rerender(); } }, t(l('Salvar foco', 'Save focus'))),
       cur ? pill(`${t(l('Atual', 'Current'))}: ${keys.map((k) => `${t(STAGES[k]).slice(0, 4)} ${cur[k]}%`).join(' · ')}`) : pill(t(l('sem foco definido (neutro)', 'no focus set (neutral)'))),
       learn ? pill(`${t(l('Melhor encaixe', 'Best fit'))}: ${Math.round(learn.best * 100)}% · ${t(l('último', 'last'))} ${Math.round(learn.last * 100)}% · ${learn.tries}×`, learn.best > 0.8 ? 'good' : '') : null,
-      learn && learn.tries >= 3 ? pill(`${t(l('Aprendido: o gênero pede mais', 'Learned: the genre wants more'))} ${t(STAGES[top]).toLowerCase()}`, 'good') : null,
-      cur ? pill(`${t(l('Previsão', 'Forecast'))} ~${learn && learn.tries >= 2 ? Math.round(focusFit(fam, cur) * 100) + '%' : '?'}`) : null,
+      cur && fi ? pill(`${t(l('Previsão neste contexto', 'Forecast in this context'))} ~${learn && learn.tries >= 2 ? Math.round(focusFit(fam, cur, fi.ideal) * 100) + '%' : '?'}`) : null,
     ));
 }
 

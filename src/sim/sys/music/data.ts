@@ -247,7 +247,7 @@ export const STAGES: Record<Stage, L> = {
   comp: l('Composição', 'Songwriting'), arr: l('Arranjo', 'Arrangement'), rec: l('Gravação', 'Recording'), mix: l('Mixagem', 'Mixing'),
 };
 
-/** Distribuição ideal (oculta) por família, soma 100. */
+/** Tradição de cada família (soma 100): só um dos pesos — o ideal real vem do contexto (studio12). */
 export const FOCUS_IDEAL: Record<FamilyId, Record<Stage, number>> = {
   blues_jazz: { comp: 20, arr: 25, rec: 45, mix: 10 },
   country_folk: { comp: 40, arr: 20, rec: 30, mix: 10 },

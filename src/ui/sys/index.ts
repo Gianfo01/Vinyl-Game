@@ -36,3 +36,5 @@ import './lendas9';
 import './rockhall9';
 import './menus9';
 import './leaders10';
+// Rodada 12: projeto musical como centro (hub em Música e cartão no Início).
+import './project12';

@@ -7,6 +7,7 @@ import type { GameState, Song } from '../../types';
 import { fmtL, money, notify, post } from '../../util';
 import { FOCUS_IDEAL, GEAR, STAGES, gearById, type Stage } from './data';
 import { ms, songRec, syncSong, type Deltas } from './state';
+import { focusIdealForSong } from '../studio12';
 
 const fam = (song: Song): FamilyId => familyOf(song.genre);
 
@@ -27,8 +28,8 @@ export function setFocus(s: GameState, actId: string, mix: Partial<Record<Stage,
   return f;
 }
 
-export function focusFit(family: FamilyId, mix: Record<Stage, number>): number {
-  const ideal = FOCUS_IDEAL[family];
+/** Encaixe do foco (0–1). Sem `ideal`, usa só a tradição do gênero; na gravação o ideal vem do contexto (studio12). */
+export function focusFit(family: FamilyId, mix: Record<Stage, number>, ideal: Record<Stage, number> = FOCUS_IDEAL[family]): number {
   let d = 0;
   for (const k of Object.keys(STAGES) as Stage[]) d += Math.abs((mix[k] ?? 25) - ideal[k]);
   return Math.round(clamp(1 - d / 120, 0, 1) * 100) / 100;
@@ -97,10 +98,11 @@ export function onRecorded(s: GameState, song: Song): void {
   const f = fam(song);
   const focus = act ? ms(s).focus[act.id] : undefined;
   if (focus) {
-    const fit = focusFit(f, focus);
+    // rodada 12: o ideal depende do artista, do conceito, do produtor e do público-alvo
+    const fit = focusFit(f, focus, focusIdealForSong(s, song) ?? undefined);
     const b = (fit - 0.6) * 10;
     rec.b.focus = { performance: clamp(b, -4, 4), production: clamp(b, -4, 4), melody: clamp((focus.comp - 25) / 25 * fit, -1, 2) };
-    const fl = (ms(s).focusLearn[f] ??= { tries: 0, best: 0, last: 0 });
+    const fl = (ms(s).focusLearn[act!.id] ??= { tries: 0, best: 0, last: 0 });
     fl.tries += 1;
     fl.last = fit;
     if (fit > fl.best) { fl.best = fit; fl.bestMix = { ...focus }; }
