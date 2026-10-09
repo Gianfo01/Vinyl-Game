@@ -93,3 +93,4 @@ import './manager12';
 // Rodada 12: projeto musical como centro (intenção, compromissos, problemas, próximo passo) e estúdio sob medida.
 import './recipe12';
 import './project12';
+import './rivals12';

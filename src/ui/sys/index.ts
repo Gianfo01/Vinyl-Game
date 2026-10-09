@@ -49,3 +49,5 @@ import './careers12';
 import './manager12';
 // Rodada 12: projeto musical como centro (hub em Música e cartão no Início).
 import './project12';
+import './rivals12';
+import './hq12';

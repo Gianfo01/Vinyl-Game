@@ -1,0 +1,5 @@
+/* rodada 12: avisos de rivais e mesa de negociação */
+.riv12-list { display: grid; gap: 8px; }
+.riv12-card { border: 1px solid var(--line, #8884); border-left: 3px solid var(--warn, #c90); border-radius: 6px; padding: 6px 10px; }
+.riv12-card.done { border-left-color: var(--line, #8884); opacity: .8; }
+.riv12-card p { margin: 4px 0; }
