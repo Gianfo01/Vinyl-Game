@@ -104,7 +104,7 @@ export function funds(s: GameState, h: Holder): number {
 }
 
 /** Movimenta dinheiro de um negócio: caixa do selo (livro-caixa) ou patrimônio pessoal. */
-function vpay(s: GameState, h: Holder, amount: number, key: string, memo: string, v?: Venture): void {
+export function vpay(s: GameState, h: Holder, amount: number, key: string, memo: string, v?: Venture): void {
   amount = Math.round(amount);
   if (!amount) return;
   if (h === 'label') post(s, `v9:${key}`, amount, 'business', memo);
