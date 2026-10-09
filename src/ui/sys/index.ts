@@ -36,3 +36,6 @@ import './lendas9';
 import './rockhall9';
 import './menus9';
 import './leaders10';
+// Rodada 12: estrutura da empresa x era e cenas locais como redes.
+import './eras12';
+import './scenes12';

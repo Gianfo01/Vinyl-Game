@@ -75,3 +75,6 @@ import './novelty9';
 // Rodada 10: bolsa de valores (ações de selos, plataformas, mídia e fabricantes) e aluguel só de imóveis próprios.
 import './bolsa10';
 import './leaders10';
+// Rodada 12: estrutura da empresa x era (reorganização) e cenas locais como redes (filiais escolhem parceiros).
+import './eras12';
+import './scenes12';
