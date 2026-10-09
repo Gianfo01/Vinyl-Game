@@ -16,9 +16,29 @@ import { icon } from './pixel/icons';
 import { PALETTES, eraOf } from './pixel/palette';
 import { C, Px, mix, shade, withAlpha, type Sprite } from './pixel/px';
 import { BRANCH_LAYOUT, ROOM_NAMES, buildScene, findPath, freeTiles, roomAt, type Scene, type Spot } from './pixel/scene';
-import { WALL_H, decalPx, floorAt, furniture, groundAt, rugAt, wallSprite, type DecalKind } from './pixel/sprites';
+import { WALL_H, decalPx, floorAt, furniture, groundAt, rugAt, wallSprite, type DecalKind, type RoomKind } from './pixel/sprites';
 
 const MARGIN = 3; // tiles de chão externo
+
+// ---------- ganchos da sede-painel (rodada 8, ui/sys/hq8.ts) ----------
+
+/** Estado visível de uma carreira na sede: o balão sobre a cabeça. */
+export type BubbleKind = 'record' | 'write' | 'rehearse' | 'rest' | 'idle' | 'attention';
+export interface RoomTag { room: RoomKind; text: string; tone: 'good' | 'warn' | 'bad' | 'info' }
+export const hqHooks: {
+  /** balão por carreira (null = nenhum) */
+  bubble?: (s: GameState, actId: string) => BubbleKind | null;
+  /** etiquetas sobre as salas: estúdio livre ou com fila, quem compõe, quem descansa… */
+  roomTags?: (s: GameState) => RoomTag[];
+  /** clique numa sala (ex.: estúdio → sessão em andamento) */
+  onRoom?: (kind: RoomKind) => void;
+  /** clique numa carreira (ex.: próxima decisão importante) */
+  onAct?: (actId: string) => void;
+  /** linhas extras no balão de dica da carreira */
+  tip?: (s: GameState, actId: string) => string[];
+  /** lista lateral (acesso direto, para quem prefere rapidez) */
+  side?: (s: GameState) => HTMLElement;
+} = {};
 const FPS_MS = 33;
 
 interface Agent {
@@ -55,6 +75,7 @@ interface Hit {
   actId?: string;
   label?: string;
   sub?: string;
+  room?: RoomKind;
 }
 
 type Mode = 'overview' | string;
@@ -88,6 +109,12 @@ export class HqView {
   private hits: Hit[] = [];
   private hover: Hit | null = null;
   private recording = false;
+  /** balões e etiquetas calculados no sync (não a cada quadro) */
+  private bubbles = new Map<string, BubbleKind>();
+  private tags: RoomTag[] = [];
+  private statusKey = '';
+  /** camada de estado (balões e etiquetas das salas) ligada? */
+  overlay = true;
 
   private zoom = 0; // 0 = automático
   private camX = 0;
@@ -192,6 +219,17 @@ export class HqView {
       this.refreshToolbar();
     }
     const ak = `${this.mode}|${s.week}|${acts.map((id) => `${id}:${(s.agenda[id] ?? []).map((x) => x.action).join('+')}:${s.acts[id].status}:${s.acts[id].members.map((m) => (s.persons[m]?.look ? lookKey(s.persons[m].look!) : m)).join('.')}`).join(',')}|${s.player.staff.map((x) => x.id + x.role).join(',')}`;
+    // balões e etiquetas: baratos de recalcular a cada 400 ms
+    const bub = new Map<string, BubbleKind>();
+    if (hqHooks.bubble) for (const id of acts) { const k = hqHooks.bubble(s, id); if (k) bub.set(id, k); }
+    const tags = hqHooks.roomTags?.(s) ?? [];
+    const stk = `${[...bub].map(([a, b]) => a + b).join(',')}|${tags.map((x) => x.room + x.text + x.tone).join(',')}`;
+    if (stk !== this.statusKey) {
+      this.statusKey = stk;
+      this.bubbles = bub;
+      this.tags = tags;
+      this.dirty = true;
+    }
     if (ak !== this.agentKey) {
       const first = this.agentKey === '';
       this.agentKey = ak;
@@ -618,6 +656,18 @@ export class HqView {
               this.hits.push({ x: bx, y: by, w: badge.width, h: badge.height, key: key + 2000, agent: a, actId: act.id });
             }
           }
+          if (this.overlay && a.actId && (a.kind === 'rep' || (a.kind === 'member' && this.firstMember(s, a)))) {
+            const bk = this.bubbles.get(a.actId);
+            if (bk) {
+              const bc = getCanvas(`bubble:${bk}:${sc.era}`, () => bubblePx(bk, pal).canvas());
+              const bob = this.reduced || bk !== 'attention' ? 0 : frameAt(2, a.phase) % 2;
+              const top = a.kind === 'rep' ? dy - 14 : dy - 2;
+              const bx = Math.round(x + 5);
+              const by = Math.round(top - bc.height + 2 - bob);
+              b.drawImage(bc, bx, by);
+              this.hits.push({ x: bx, y: by, w: bc.width, h: bc.height, key: key + 2500, agent: a, actId: a.actId });
+            }
+          }
           if (this.hover?.agent === a) {
             b.fillStyle = cssCol(pal.glow);
             const mx = Math.round(x);
@@ -631,7 +681,30 @@ export class HqView {
     }
     list.sort((p, q) => p.key - q.key);
     for (const d of list) d.draw();
+    if (this.overlay) this.drawTags(b, sc);
     this.blitOut(bw, bh, z);
+  }
+
+  /** Etiquetas em pixel art no centro de cada sala (mesma fonte 3×5 da placa da entrada). */
+  private drawTags(b: CanvasRenderingContext2D, sc: Scene): void {
+    for (const tg of this.tags) {
+      const room = sc.rooms.find((r) => r.kind === tg.room);
+      if (!room) continue;
+      const gx = (room.x + room.w / 2) * 16;
+      const gy = (room.y + room.h / 2) * 16;
+      const x = this.X0 + gx - gy;
+      const y = this.Y0 + (gx + gy) / 2;
+      const cv = getCanvas(`tag:${tg.text}:${tg.tone}:${sc.era}`, () => tagPx(tg.text, tg.tone, sc.pal).canvas());
+      const tx = Math.round(x - cv.width / 2);
+      const ty = Math.round(y - 30);
+      b.drawImage(cv, tx, ty);
+      this.hits.push({ x: tx, y: ty, w: cv.width, h: cv.height, key: 500, label: t(ROOM_NAMES[tg.room]), sub: tg.text, room: tg.room });
+    }
+  }
+
+  private firstMember(s: GameState, a: Agent): boolean {
+    const act = a.actId ? s.acts[a.actId] : undefined;
+    return !!act && act.members.find((id) => s.persons[id]?.alive) === a.personId;
   }
 
   private poseOf(a: Agent, seated: boolean): Pose {
@@ -701,6 +774,10 @@ export class HqView {
       if (!d || d.moved) return;
       const [wx, wy] = this.toWorld(e.clientX, e.clientY);
       const hit = this.hitAt(wx, wy);
+      if ((!hit || (!hit.agent && !hit.actId)) && hqHooks.onRoom) {
+        const room = hit?.room ?? this.roomKindAt(wx, wy);
+        if (room && CLICK_ROOMS.includes(room)) { hqHooks.onRoom(room); return; }
+      }
       this.activate(hit);
       if (e.pointerType !== 'mouse') this.onHover(e.clientX, e.clientY);
     };
@@ -773,13 +850,22 @@ export class HqView {
     const prev = this.hover;
     this.hover = hit;
     if (prev?.agent !== hit?.agent || prev?.label !== hit?.label) this.dirty = true;
-    this.canvas.style.cursor = hit?.agent || hit?.actId ? 'pointer' : this.drag ? 'grabbing' : 'grab';
+    const clickRoom = !!hqHooks.onRoom && (!!hit?.room || (!hit?.agent && CLICK_ROOMS.includes(this.roomKindAt(wx, wy) as RoomKind)));
+    this.canvas.style.cursor = hit?.agent || hit?.actId || clickRoom ? 'pointer' : this.drag ? 'grabbing' : 'grab';
     if (hit) this.showTip(hit, clientX, clientY);
     else {
       const room = this.roomUnder(wx, wy);
       if (room) this.showTipText(room[0], room[1], clientX, clientY);
       else this.hideTip();
     }
+  }
+
+  private roomKindAt(wx: number, wy: number): RoomKind | null {
+    const sc = this.scene;
+    if (!sc) return null;
+    const X = wx - this.X0;
+    const Y = wy - this.Y0;
+    return roomAt(sc, Math.floor((Y + X / 2) / 16), Math.floor((Y - X / 2) / 16))?.kind ?? null;
   }
 
   private roomUnder(wx: number, wy: number): [string, string] | null {
@@ -808,8 +894,9 @@ export class HqView {
     let sub = t(a.activity.label);
     if (a.kind === 'rep' && a.personId && s) title = `${a.name} — ${s.persons[a.personId]?.name ?? ''}`;
     if (a.kind === 'staff') sub = t(STAFF_ROLES.find((r) => r.id === a.staffRole)?.name) || sub;
-    const hint = a.kind === 'staff' ? '' : t(a.kind === 'rep' ? l('Clique para abrir a ficha da banda', 'Click to open the band record') : l('Clique para abrir a ficha', 'Click to open the record'));
+    const hint = a.kind === 'staff' ? '' : t(a.kind === 'rep' ? (hqHooks.onAct ? l('Clique para ver a próxima decisão', 'Click to see the next decision') : l('Clique para abrir a ficha da banda', 'Click to open the band record')) : l('Clique para abrir a ficha', 'Click to open the record'));
     const rows: Node[] = [h('b', null, title), h('div', { class: 'hq-tip-row' }, icon(a.kind === 'staff' ? 'contract' : a.activity.icon, 1), ' ', sub)];
+    if (a.actId && s && hqHooks.tip) for (const line of hqHooks.tip(s, a.actId)) rows.push(h('div', { class: 'hq-tip-row' }, line));
     if (hint) rows.push(h('div', { class: 'hq-tip-hint' }, hint));
     this.tip.replaceChildren(...rows);
     this.placeTip(clientX, clientY);
@@ -819,6 +906,7 @@ export class HqView {
     if (!title) return this.hideTip();
     const rows: Node[] = [h('b', null, title)];
     if (sub) rows.push(h('div', { class: 'hq-tip-row' }, sub));
+    if (hqHooks.onRoom && CLICK_ROOMS.some((k) => t(ROOM_NAMES[k]) === title)) rows.push(h('div', { class: 'hq-tip-hint' }, t(l('Clique para abrir', 'Click to open'))));
     this.tip.replaceChildren(...rows);
     this.placeTip(clientX, clientY);
   }
@@ -869,6 +957,7 @@ export class HqView {
       zoomLabel,
       h('button', { class: 'hq-chip', title: t(l('Aproximar (+)', 'Zoom in (+)')), 'aria-label': t(l('Aproximar', 'Zoom in')), onclick: () => this.zoomBy(1) }, '+'),
       h('button', { class: 'hq-chip', title: t(l('Centralizar (Home)', 'Recenter (Home)')), 'aria-label': t(l('Centralizar', 'Recenter')), onclick: () => this.resetCam() }, icon('house', 1)),
+      hqHooks.bubble ? h('button', { class: `hq-chip ${this.overlay ? 'on' : ''}`, 'aria-pressed': this.overlay ? 'true' : 'false', title: t(l('Balões de estado e etiquetas das salas', 'Status bubbles and room tags')), onclick: () => { this.overlay = !this.overlay; this.dirty = true; this.refreshToolbar(); } }, icon('warning', 1), ' ', t(l('Estado', 'Status'))) : null,
     );
     let status: HTMLElement | null = null;
     if (this.mode !== 'overview' && s.acts[this.mode]) {
@@ -910,6 +999,45 @@ function getCanvas(key: string, make: () => HTMLCanvasElement): HTMLCanvasElemen
     canvasCache.set(key, c);
   }
   return c;
+}
+
+/** Salas que abrem algo ao clicar. */
+const CLICK_ROOMS: RoomKind[] = ['booth', 'control', 'rehearsal', 'writing', 'lounge', 'office', 'trophy', 'meeting'];
+
+// glifos 5×5 dos balões (mesma escala da fonte 3×5 da sede)
+const GLYPH: Record<BubbleKind, string> = {
+  record: '.###.|#####|#####|#####|.###.',
+  write: '...##|..##.|.##..|##...|#....',
+  rehearse: '..##.|..#.#|..#..|###..|##...',
+  rest: '####.|..#..|.#...|####.|.....',
+  idle: '.....|.....|#.#.#|.....|.....',
+  attention: '..#..|..#..|..#..|.....|..#..',
+};
+
+/** Balão de estado: papel e contorno da paleta da era, glifo colorido; atenção usa fundo dourado. */
+function bubblePx(kind: BubbleKind, pal: { paper: number; outline: number; gold: number; accent: number }): Px {
+  const p = new Px(11, 12);
+  const bg = kind === 'attention' ? pal.gold : pal.paper;
+  p.rect(1, 1, 9, 8, bg);
+  p.rect(2, 0, 7, 1, bg);
+  p.rect(4, 9, 3, 1, bg);
+  p.put(5, 10, bg);
+  const col = kind === 'record' ? C('#d83a32') : kind === 'attention' ? C('#9c2c2c') : kind === 'write' ? C('#3a5a9c') : kind === 'rest' ? C('#5c6c9c') : kind === 'rehearse' ? pal.accent : C('#7a7672');
+  GLYPH[kind].split('|').forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') p.put(3 + i, 2 + j, col); }));
+  p.outline(pal.outline);
+  return p;
+}
+
+/** Etiqueta de sala (texto curto na fonte da placa). */
+function tagPx(text: string, tone: RoomTag['tone'], pal: { paper: number; outline: number }): Px {
+  const txt = fitText(text, 60);
+  const w = Math.max(10, txt.length * 4 + 5);
+  const p = new Px(w + 2, 10);
+  const bg = tone === 'good' ? C('#3c8a4c') : tone === 'warn' ? C('#c08a1c') : tone === 'bad' ? C('#b0342c') : C('#3a4a6c');
+  p.rect(1, 1, w, 7, bg);
+  drawText(p, txt, 3, 2, pal.paper);
+  p.outline(pal.outline);
+  return p;
 }
 
 function cssCol(c: number): string {

@@ -1,0 +1,55 @@
+/* Rodada 8: sede-painel, eras de negócio, ritmo e delegação. */
+
+.pill.info { border-color: var(--accent); color: var(--accent); }
+.meter-bar.sm { height: 0.4rem; min-width: 2.5rem; vertical-align: middle; }
+
+/* avançar até… */
+.btn-split { display: inline-flex; gap: 0; }
+.btn-split > .btn:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.btn-split > .btn:last-child { border-top-left-radius: 0; border-bottom-left-radius: 0; padding-inline: 0.35rem; border-left: 1px solid var(--line); }
+.pace-form label { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+
+/* resumo do período */
+.digest .digest-cats { columns: 2; column-gap: 1.2rem; padding-left: 1rem; }
+.digest .digest-cats li { break-inside: avoid; display: flex; justify-content: space-between; gap: 0.5rem; }
+.digest-group { border: 1px solid var(--line); border-radius: 8px; padding: 0.3rem 0.6rem; margin: 0.35rem 0; background: var(--panel); }
+.digest-group summary { cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
+.digest-group ul { margin: 0.3rem 0 0.2rem; padding-left: 1.1rem; }
+@media (max-width: 560px) { .digest .digest-cats { columns: 1; } }
+
+/* registro da equipe */
+.team-log { list-style: none; padding: 0; margin: 0.3rem 0; }
+.team-log li { padding: 0.25rem 0; border-bottom: 1px dashed var(--line); }
+.team-log .why { padding-left: 1.4rem; font-size: 0.85em; }
+.team-log li.tl-cut, .team-log li.tl-hold { color: var(--warn); }
+.team-table td { vertical-align: middle; }
+.team-table tr.over td { background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.team8 .big { font-size: 1.6rem; font-weight: 700; margin: 0.2rem 0; }
+.team-table { width: 100%; }
+@media (max-width: 720px) { .team-table thead { display: none; } .team-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem; padding: 0.4rem 0; border-bottom: 1px solid var(--line); } .team-table td:first-child { grid-column: 1 / -1; } }
+
+/* eras */
+.era8 .stances { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; }
+.era8 .stance { text-align: left; }
+.era8 .stance.on { outline: 2px solid var(--good); }
+.era8 .stance .tile-body { display: flex; flex-direction: column; gap: 0.25rem; }
+.fx-chips { display: inline-flex; flex-wrap: wrap; gap: 0.15rem; }
+.era-line { list-style: none; padding: 0; margin: 0; border-left: 3px solid var(--line); }
+.era-line li { padding: 0.3rem 0 0.3rem 0.8rem; position: relative; }
+.era-line li::before { content: ''; position: absolute; left: -7px; top: 0.6rem; width: 10px; height: 10px; border-radius: 2px; background: var(--line); }
+.era-line li.on::before { background: var(--accent); }
+.era-line li.cur::before { background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 30%, transparent); }
+.era-line li.future { opacity: 0.6; }
+
+/* sede-painel */
+.hq8-list { list-style: none; padding: 0; margin: 0.3rem 0; }
+.hq8-list li { padding: 0.35rem 0.3rem; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 0.15rem; }
+.hq8-list li.urgent { border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 7%, transparent); }
+.hq8-list .row { align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+.hq8-card .attention { padding-left: 1rem; }
+.hq8-card .next-step { border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.7rem; margin: 0.6rem 0; background: var(--panel-2); }
+.hq8-card .next-step h4 { margin-top: 0; }
+.hq8-spark { display: inline-flex; align-items: flex-end; gap: 1px; height: 18px; vertical-align: middle; }
+.hq8-spark i { display: block; width: 3px; background: var(--accent); image-rendering: pixelated; }
+.hq-growth { list-style: none; padding: 0; margin: 0.4rem 0; border-left: 3px solid var(--line); }
+.hq-growth li { padding: 0.2rem 0 0.2rem 0.7rem; }
