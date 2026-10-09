@@ -150,6 +150,8 @@ const SOURCES: { id: string; name: L; from?: string; fromYear?: number }[] = [
   { id: 'scene', name: l('cena da cidade', 'city scene') },
   { id: 'watch', name: l('você mesmo', 'yourself') },
   { id: 'scout', name: l('olheiro', 'scout') },
+  // rodada 16: indicação de amigo (lazer) — só por ligação, nunca sorteada como fonte mensal
+  { id: 'friend', name: l('indicação de amigo', 'friend\'s tip'), fromYear: 99999 },
 ];
 
 export function sourceName(id: string): L {

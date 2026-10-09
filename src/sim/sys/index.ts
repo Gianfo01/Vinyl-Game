@@ -127,3 +127,5 @@ import './looks15';
 import './sync15';
 import './fan15';
 import './dispute15';
+// Rodada 16: conexões entre sistemas (fama→notoriedade, sync→paradas, lazer→scouting, família→arcos/estúdio, produtor×conceito, veículo próprio→hype, rixas→imprensa, sobrecarga→aliciamento, esnobada→júri com memória, demos).
+import './links16';

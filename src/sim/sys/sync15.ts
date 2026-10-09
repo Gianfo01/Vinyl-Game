@@ -176,6 +176,7 @@ export function pitch15(s: GameState, briefId: string, songId: string, ask = fal
     for (const id of act.members) opine(s, `p:${id}`, -8, fmtL(l('vendeu "{t}" para publicidade sem me consultar.', 'sold "{t}" to advertising without asking me.'), { t: song.title }));
     extra.push(l('O artista soube pela TV e ficou furioso (−confiança, superfãs se dizem traídos).', 'The artist found out from TV and is furious (−trust, superfans feel betrayed).'));
   }
+  extra.push(l('Nas próximas semanas a faixa vende mais nas paradas e os shows do artista atraem público novo (efeito some em ~3 meses).', 'Over the next weeks the track sells more on the charts and the act\'s shows draw new crowds (fades in ~3 months).'));
   if (revived) extra.push(fmtL(l('"{t}" ({y}) volta às lojas e às paradas.', '"{t}" ({y}) returns to stores and charts.'), { t: song.title, y: rel!.year }));
   const text = fmtL(l('{c} fechou "{t}" ({a}) para o {m}: {f} para você. {x}', '{c} licensed "{t}" ({a}) for the {m}: {f} to you. {x}'),
     { c: b.client, t: song.title, a: act.name, m: M.name, f: { pt: formatMoney(mine, 'pt-BR'), en: formatMoney(mine, 'en-US') }, x: { pt: extra.map((e) => e.pt).join(' '), en: extra.map((e) => e.en).join(' ') } });

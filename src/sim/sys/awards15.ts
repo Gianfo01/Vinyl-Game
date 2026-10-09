@@ -70,6 +70,9 @@ export function snub15(s: GameState, actId: string, a3: string, award: string, w
   emitEvent(s, juryRng(s, a3), 'aw15_snub', { act: actId, award, winner, a3 });
 }
 
+/** Rodada 16: memória do júri (preenchida por links16 — simpatia após esnobada). */
+export const juryMemHook: { f?: (s: GameState, actId: string, a3: string) => number } = {};
+
 /** Ato em boicote não comparece (e não concorre com simpatia do júri) no ano seguinte. */
 export const boycotting = (s: GameState, actId: string): boolean => (aw15(s).boycott[actId] ?? 0) >= s.year;
 
@@ -83,7 +86,7 @@ deferEvents<EventDef>([
         apply: (s, _r, c) => { const a = s.acts[String(c.act)]; if (!a) return; addHype(s, `a:${a.id}`, 'aw15', l('Esnobado no prêmio', 'Award snub'), 10); a.trust = clamp(a.trust + 4, 0, 100); s.player.reputation.institutional = clamp(s.player.reputation.institutional - 4, 0, 100); } },
       { id: 'boycott', label: l('Boicotar a cerimônia do ano que vem', 'Boycott next year\'s ceremony'), hint: l('Confiança +6, credibilidade artística +2; o ato não concorre no país no ano seguinte.', 'Trust +6, artistic credibility +2; the act does not compete in that country next year.'),
         apply: (s, _r, c) => { const a = s.acts[String(c.act)]; if (!a) return; a.trust = clamp(a.trust + 6, 0, 100); s.player.reputation.artistic = clamp(s.player.reputation.artistic + 2, 0, 100); aw15(s).boycott[a.id] = s.year + 1; s.player.reputation.institutional = clamp(s.player.reputation.institutional - 2, 0, 100); } },
-      { id: 'grace', label: l('Aplaudir o vencedor', 'Applaud the winner'), hint: l('Reputação institucional +3; o artista acha que você não brigou por ele (confiança −3).', 'Institutional reputation +3; the act feels you did not fight for them (trust −3).'),
+      { id: 'grace', label: l('Aplaudir o vencedor', 'Applaud the winner'), hint: l('Reputação institucional +3; o artista acha que você não brigou por ele (confiança −3). O júri lembra da elegância: mais simpatia nos próximos 2 anos.', 'Institutional reputation +3; the act feels you did not fight for them (trust −3). The jury remembers the grace: more sympathy for 2 years.'),
         apply: (s, _r, c) => { const a = s.acts[String(c.act)]; if (a) a.trust = clamp(a.trust - 3, 0, 100); s.player.reputation.institutional = clamp(s.player.reputation.institutional + 3, 0, 100); } },
     ],
   },

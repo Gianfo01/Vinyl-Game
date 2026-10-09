@@ -16,7 +16,7 @@ import { physicalShare } from '../production';
 import type { GameState, Release } from '../types';
 import { isUnlocked } from '../era';
 import { fmtL, hasTech, remember } from '../util';
-import { boycotting, flushAwards, flushTop10, homeK, juryRng, queueAward, queueTop10, snub15 } from './awards15';
+import { boycotting, flushAwards, flushTop10, homeK, juryMemHook, juryRng, queueAward, queueTop10, snub15 } from './awards15';
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -315,7 +315,7 @@ function nationalAwards(s: GameState, r: Rng): void {
     // rodada 15: júri local (artista da casa pesa mais, crítica e lobby entram como ruído estável)
     const jr = juryRng(s, c.a3);
     const jury: Record<string, number> = {};
-    const jk = (actId: string) => (jury[actId] ??= boycotting(s, actId) ? 0 : homeK(s, actId, c.a3) * jr.float(0.85, 1.15));
+    const jk = (actId: string) => (jury[actId] ??= boycotting(s, actId) ? 0 : homeK(s, actId, c.a3) * (juryMemHook.f?.(s, actId, c.a3) ?? 1) * jr.float(0.85, 1.15));
     const pickRel = (f: (x: Release) => boolean) => rels.filter((x) => f(x.rel)).sort((a, b) => b.u * (0.8 + b.rel.q / 200) * jk(b.rel.actId) - a.u * (0.8 + a.rel.q / 200) * jk(a.rel.actId))[0];
     const byAct: Record<string, number> = {};
     const qAct: Record<string, number> = {};
