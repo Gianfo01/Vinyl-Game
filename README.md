@@ -215,3 +215,17 @@ tests         Invariáveis do GDD §27
 ```
 
 Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, para uso pessoal) troca atos históricos, selos, festivais, mídia e prêmios pelos nomes reais (`src/data/realnames.ts`).
+
+## Rodada 9: mundo vivo, empreendimentos e Masters
+
+- **Início da partida:** papel Gravadora ou Híbrido (padrão), assumir um selo existente, ~40 anos de início, sexo do personagem com aparência filtrada, 17 trajetórias, efeitos dos traços visíveis, árvore de habilidades (6 ramos) que gera um de 10 estilos de vida.
+- **Empreendimentos** (do selo ou pessoais): festival próprio, editora, estúdio, agência, mídia/conglomerado, streaming (2005+); **Gestão de artistas** de qualquer selo.
+- **Prestígio de todos os selos:** reconhecimento, popularidade, momento, crédito com a crítica, confiança dos artistas.
+- **Sucessão:** a carreira só continua passando o selo a outra pessoa, que você passa a controlar.
+- **Lendas:** crônica do mundo, biografias, genealogia de bandas, influências, livro da partida; personalidade (facetas e valores), sonhos, estresse, surto criativo, relíquias, boatos, jornal, pré-história e mundo persistente.
+- **Relações e movimentos:** duplas de composição, casais, supergrupos, alianças, cruzamentos de gênero, padrinhos; movimentos com núcleo, manifesto, convite, pedido, criação e fim.
+- **Identidades:** 18 perfis de selo, 13 estratégias de rivais, 9 eixos sonoros, 15 timbres, 40 momentos de vida, subgêneros gerados.
+- **Você:** dilemas com escolhas reais, 5 unidades de tempo por mês, novidades de época que precisam ser desbloqueadas.
+- **Hall da Fama do Rock** (1983/1986), **15 eras**, nada do futuro nas telas e novidades do ano nas notícias.
+- **Menus:** grupos Mundo (Mapa, Paradas, Gravadoras, Relações e movimentos, Lendas) e Prêmios e eventos (Festivais, Premiações, Hall da Fama, Críticos).
+- **Saves:** baixar, copiar e colar; o importador aceita arquivo ou texto.
