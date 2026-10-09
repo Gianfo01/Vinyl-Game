@@ -24,7 +24,7 @@ registerSection('company', {
     return h('section', { class: 'panel' },
       h('h3', null, t(l('Despesas gerais por porte e época', 'Overhead by size and era'))),
       h('p', { class: 'small' },
-        h('b', null, t(p.tier.name)), ` · ${t(eraName(s.year))} · ${t(l('faturamento anual (média)', 'annual revenue (avg)'))} ~US$ ${short(R)} (${t(l('dólares de 2020', '2020 dollars'))}) · ${t(l('teto', 'cap'))} ${(capRate(R) * 100).toFixed(0)}% ${t(l('da receita', 'of revenue'))}`),
+        h('b', null, t(p.tier.name)), ` · ${t(eraName(s.year))} · ${t(l('faturamento anual (média)', 'annual revenue (avg)'))} ~US$ ${short(R)} (${t(l('dólares de 2020', '2020 dollars'))}) · ${t(l('teto', 'cap'))} ${(capRate(R, s.year) * 100).toFixed(0)}% ${t(l('da receita', 'of revenue'))}`),
       lines.length
         ? h('table', { class: 'tbl compact' }, h('tbody', null,
           lines.map((x) => h('tr', null, h('td', null, t(x.label), h('div', { class: 'muted small' }, t(x.why))), h('td', { class: 'bad' }, $(-x.amount)))),
