@@ -1,3 +1,4 @@
+import { isUnlocked } from './era';
 // Planner de rollout (GDD §34, §46.4 + pedido do criador): teaser → pré-save → single(s) →
 // clipe → álbum → deluxe; edições limitadas e reedição de aniversário.
 
@@ -25,7 +26,7 @@ export interface RolloutOpts {
 }
 
 export function canVideo(s: GameState): boolean {
-  return hasTech(s, 'tv_music');
+  return hasTech(s, 'tv_music') && isUnlocked(s, 'music_video');
 }
 
 export function canPresave(s: GameState): boolean {

@@ -1,3 +1,4 @@
+import { isUnlocked } from '../../era';
 import { deferEvents } from '../../ext4';
 // Criação (rodada 4): gênero × tema com tendências, receita sonora com efeitos, críticas no
 // lançamento (cena), participações e duetos, compositores contratados e fantasmas, encomendas,
@@ -516,6 +517,7 @@ export const SHOTS: { id: string; name: L; cost: number; impact: number; risk: n
 
 export function shootClip(s: GameState, r: Rng, songId: string, shots: string[]): L | null {
   if (!hasTech(s, 'clipnet') && s.year < 1981) return l('Videoclipe ainda não é um canal (MTV e afins chegam nos anos 80).', 'Music videos are not a channel yet (music TV arrives in the 1980s).');
+  if (!isUnlocked(s, 'music_video')) return l('Desbloqueie "Clipes (equipe de vídeo)" em Mídia antes de gravar clipes.', 'Unlock "Music videos (video crew)" in Media before shooting videos.');
   if (shots.length !== 6) return l('Escolha 6 planos.', 'Pick 6 shots.');
   const defs = shots.map((id) => SHOTS.find((x) => x.id === id)!).filter(Boolean);
   const budget = defs.reduce((t, x) => t + x.cost, 0);
