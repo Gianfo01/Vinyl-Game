@@ -233,9 +233,10 @@ export function succession(s: GameState, r: Rng, reason: 'retire' | 'death' | 'h
     next.wealth = money(s, 5000);
     s.player.staff = s.player.staff.filter((x) => x !== sf);
   } else {
-    next = makeOwner(s, r, old.generation + 1);
-    next.wealth = money(s, 3000);
-    s.player.reputation.institutional = clamp01(s.player.reputation.institutional - 5);
+    // rodada 9: sem ninguém para quem passar o selo, a carreira termina (não há dono aleatório)
+    s.ended = { ending: reason === 'retire' ? 'quiet_retirement' : 'end_of_line', year: s.year, reason: 'arc' };
+    remember(s, 'dynasty_end', fmtL(l('{o} sai de cena sem sucessor. Fim da história de {c}.', '{o} leaves without a successor. End of {c}\'s story.'), { o: old.name, c: s.config.companyName }), { important: true });
+    return;
   }
   next.retired = [...(old.retired ?? []), { name: old.name, years: `${old.since ?? old.born + 30}–${s.year}` }].slice(-6);
   st.owner = next;
