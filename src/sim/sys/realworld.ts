@@ -15,6 +15,7 @@ import { REAL_EU } from '../../data/realacts_eu';
 import { REAL_US } from '../../data/realacts_us';
 import { REAL_WORLD } from '../../data/realacts_world';
 import { REAL_MORE } from '../../data/realacts_more14';
+import { ALIASES16, REAL_L16 } from '../../data/lineups16';
 import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
 import type { RealArtist, RealMember, RealRelease } from '../../data/realtypes';
@@ -28,7 +29,11 @@ import { fmtL, nextId, remember } from '../util';
 import { addSignal, signToBestRival } from '../worldgen';
 import { histAltered, histDiverged, histMode, histRoll } from '../history15';
 
-export const REAL_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
+const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+const BASE_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
+const taken16 = new Set([...BASE_ALL.map((a) => norm16(a.n)), ...Object.values(REAL_ACTS).map((a) => norm16(a.name))]);
+/** rodada 16: formações (solos e bandas novas de quem saiu) entram no fim — catalogNo estável. */
+export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...REAL_L16.filter((a) => !taken16.has(norm16(a.n)))];
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
 
@@ -148,6 +153,7 @@ const ALIASES: Record<string, string> = {
   'robert nesta marley': 'bob marley',
   'ney de souza pereira': 'ney matogrosso',
   'rita lee jones': 'rita lee',
+  ...ALIASES16,
 };
 
 /** Chave canônica de um nome real (sem acentos, pontuação e caixa; apelidos unificados). */
@@ -455,13 +461,16 @@ function monthly(s: GameState, r: Rng): void {
   for (const ev of due) {
     const act = s.acts[ev.actId];
     if (!act) continue;
-    if (ev.kind === 'join' && ev.m && act.status !== 'retired' && act.status !== 'split' && !histDiverged(s, act)) {
+    if (ev.kind === 'join' && (act.status === 'retired' || act.status === 'split') && st.sched.some((x) => x.kind === 'reunion' && x.actId === act.id && x.year <= s.year)) {
+      st.sched.push({ ...ev, mo: Math.min(12, s.month + 1) }); // rodada 16: volta na reunião do mesmo ano
+    } else if (ev.kind === 'join' && ev.m && act.status !== 'retired' && act.status !== 'split' && !histDiverged(s, act)) {
       const [name, role, born, died] = ev.m;
       let p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, !!s.config.realNames);
       const c = canonical(s, p, name, born, act.members);
       if (c !== p) { delete s.persons[p.id]; p = c; }
       if (act.members.includes(p.id)) continue;
       act.members.push(p.id);
+      if (ev.m[5] !== undefined && ev.m[5] > s.year) st.sched.push({ year: ev.m[5], kind: 'leave', actId: act.id, personId: p.id }); // rodada 16: segunda passagem também sai
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {
       act.members = act.members.filter((x) => x !== ev.personId);

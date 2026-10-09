@@ -127,3 +127,5 @@ import './looks15';
 import './sync15';
 import './fan15';
 import './dispute15';
+// Rodada 16: formações vivas (saídas, solos, bandas novas, voltas, renomes, linha do tempo).
+import './lineup16';

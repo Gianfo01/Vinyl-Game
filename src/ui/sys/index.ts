@@ -88,3 +88,5 @@ import './fame15';
 import './looks15';
 // Rodada 15: aprofundamentos (Sync, Disputas, Fandom do ato, júri dos prêmios).
 import './deep15';
+// Rodada 16: formação (linha do tempo) e trajetória da pessoa.
+import './lineup16';
