@@ -277,7 +277,8 @@ function road(s: GameState, k: Knobs, prof: Profile): void {
     // selo clássico só paga a logística (bilheteria é do artista): vale como investimento se não pesa no caixa
     const share = c?.model === '360' ? c.share360 : 0;
     const back = (est.expectedRevenue * 0.65 + est.expectedMerch) * share;
-    if (est.logistics - back > s.player.cash * k.tourCash) continue;
+    // ato grande vende mais disco depois da estrada: aceita investir mais nele
+    if (est.logistics - back > s.player.cash * k.tourCash * (1 + act.fame / 40)) continue;
     const r = planTour(s, plan);
     if (!('pt' in r)) { L.tours++; M.tourW[id] = s.week; }
   }
@@ -326,10 +327,11 @@ function team(s: GameState, k: Knobs): void {
   const yearRev = s.player.revenueByYear[s.year - 1] ?? 0;
   const want: string[] = [];
   if (acts.length >= 1) want.push('anr');
-  if (acts.length >= 2) want.push('publicist', 'booking_agent');
-  if (acts.length >= 3) want.push('producer', 'promoter', 'analyst');
-  if (acts.length >= 4) want.push('admin', 'sync', 'booking', 'tour_manager');
-  const role = want.find((r) => !have.has(r));
+  if (acts.length >= 2) want.push('publicist', 'booking_agent', 'booking', 'manager');
+  if (acts.length >= 3) want.push('producer', 'promoter', 'tour_manager', 'analyst');
+  if (acts.length >= 4) want.push('admin', 'sync', 'rights', 'manufacturing');
+  // o mercado só tem alguns profissionais por vez: contrata a primeira função desejada que aparece
+  const role = want.find((r) => !have.has(r) && s.professionals.some((p) => p.role === r));
   if (role && s.player.staff.length < hqCaps(s).staff && runway(s) > k.cut * 2.5) {
     const pro = s.professionals.filter((p) => p.role === role).sort((a, b) => b.skill / Math.max(1, b.salary) - a.skill / Math.max(1, a.salary))[0];
     const afford = pro && s.player.cash > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || s.player.cash > (salaries + pro.salary) * 24 * k.hireMult);
@@ -428,19 +430,26 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   personal(s);
 }
 
-export interface PlayerSummary { seed: string; profile: Profile; startYear: number; endYear: number; cash: number; realCash: number; ended?: string; acts: number; releases: number; number1s: number; log: PlayLog }
+export interface PlayerSummary { seed: string; profile: Profile; startYear: number; endYear: number; cash: number; realCash: number; ended?: string; endedYear?: number;
+  /** menor caixa real (US$ de hoje) e caixa real ao fim do 1º e 2º anos: mede o aperto do começo */
+  low: number; y1: number; y2: number; acts: number; releases: number; number1s: number; log: PlayLog }
 
 /** Joga `years` anos com o perfil escolhido. */
 export function simulatePlayer(cfg: RunConfig, years: number, profile: Profile = 'balanced'): { state: GameState; summary: PlayerSummary } {
   const s = createGame(cfg);
+  let low = Infinity, y1 = 0, y2 = 0;
   for (let m = 0; m < years * 12 && !s.ended; m++) {
     playMonth(s, profile);
     advanceMonth(s);
+    const r = toReal(s.player.cash, s.year);
+    low = Math.min(low, r);
+    if (m === 11) y1 = r;
+    if (m === 23) y2 = r;
   }
   return {
     state: s,
     summary: {
-      seed: cfg.seed, profile, startYear: cfg.startYear, endYear: s.year, cash: s.player.cash, realCash: Math.round(toReal(s.player.cash, s.year)), ended: s.ended?.ending,
+      seed: cfg.seed, profile, startYear: cfg.startYear, endYear: s.year, cash: s.player.cash, realCash: Math.round(toReal(s.player.cash, s.year)), ended: s.ended?.ending, endedYear: s.ended ? s.year : undefined, low: Math.round(low), y1: Math.round(y1), y2: Math.round(y2),
       acts: playerActs(s).length, releases: s.player.stats.releases, number1s: s.player.stats.number1s, log: { ...playLog(s) },
     },
   };
