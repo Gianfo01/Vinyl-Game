@@ -1,0 +1,18 @@
+/* Rodada 13: legendas e ficha de país do mapa */
+.map13-paint { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; margin-left: 0.4rem; }
+.map13-legend { display: flex; flex-direction: column; gap: 2px; padding: 4px 6px; border: 1px dashed var(--line); border-radius: 4px; max-width: 26rem; flex-basis: 100%; }
+.map13-scale { display: flex; align-items: center; gap: 6px; }
+.map13-scale i { flex: 1; height: 10px; min-width: 120px; border: 1px solid var(--line); border-radius: 2px; display: block; }
+.map13-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.map13-country h5 { margin: 0.6rem 0 0.2rem; }
+.map13-country .bar-row { display: grid; grid-template-columns: minmax(6rem, 10rem) 1fr 3rem; gap: 6px; align-items: center; }
+.map13-country .bar i.bad { background: var(--bad); }
+.map13-country .bar i.good { background: var(--good); }
+.map13-lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; }
+@media (max-width: 600px) { .map13-country .bar-row { grid-template-columns: 6rem 1fr 3rem; } }
+/* dossiê do selo */
+.dos13-head { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+.dos13-head h3 { margin: 0; }
+.dos13-list { list-style: none; padding: 0; margin: 0.3rem 0; }
+.dos13-list li { padding: 2px 0; border-bottom: 1px dotted var(--line); }
+.dos13-why { font-size: 0.8rem; color: var(--muted); margin: 0.2rem 0 0.5rem; }

@@ -59,3 +59,5 @@ import './fest12';
 import './venue12';
 // Rodada 12: hype unificado (medidor com motivos, alavancas, ranking nas paradas).
 import './hype12';
+// Rodada 13: dossiê completo do selo, marcos/contratos/relíquias/vida pessoal do artista e mapa legível.
+import './dossier13';

@@ -22,6 +22,7 @@ import { select } from '../dom';
 import { board } from '../../sim/sys/charts7';
 import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
 import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
+import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintShadeMap } from '../sys/map13';
 
 let worldMap: WorldMap | null = null;
 let focusCity: string | null = null;
@@ -183,6 +184,8 @@ function cityTipExtra(s: GameState, id: string): HTMLElement | null {
   if (fest.length) rows.push(tipLine('star', fest.map((f) => f.name).join(', ')));
   const blk = liveBlocked(s, id);
   if (blk) rows.push(tipLine('lock', t(blk.name)));
+  const x13 = cityTip13(s, id, layers, genreFam);
+  if (x13) rows.push(x13);
   return rows.length ? h('div', { class: 'wmap-tip-extra' }, rows) : null;
 }
 
@@ -190,8 +193,9 @@ function countryTipExtra(s: GameState, a3: string): HTMLElement | null {
   const m = marketOfCountry(a3);
   const geo = activeGeo(s).filter((g) => g.markets.includes(m));
   const cens = activeCensorship(s).filter((c) => c.markets.includes(m));
-  if (!geo.length && !cens.length) return null;
-  return h('div', { class: 'wmap-tip-extra' }, [...geo.map((g) => tipLine('globe', t(g.name))), ...cens.map((c) => tipLine('newspaper', t(c.name)))]);
+  const x13 = countryTip13(s, a3);
+  if (!geo.length && !cens.length) return x13;
+  return h('div', { class: 'wmap-tip-extra' }, [...geo.map((g) => tipLine('globe', t(g.name))), ...cens.map((c) => tipLine('newspaper', t(c.name))), x13]);
 }
 
 function layerBar(): HTMLElement {
@@ -200,6 +204,7 @@ function layerBar(): HTMLElement {
       type: 'button', class: `chip-btn ${layers.has(ly.id) ? 'on' : ''}`, 'aria-pressed': layers.has(ly.id) ? 'true' : 'false',
       onclick: () => { if (layers.has(ly.id)) layers.delete(ly.id); else layers.add(ly.id); rerender(); },
     }, ic(ly.icon), ' ', t(ly.name))),
+    paintBar(store.game!),
     layers.has('genre') ? select(genreFam, FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })), (v) => { genreFam = v; rerender(); }, { 'aria-label': t(l('Gênero da camada', 'Layer genre')) }) : null);
 }
 
@@ -269,6 +274,7 @@ function countryCard(s: GameState, a3: string): HTMLElement {
     h('div', { class: 'muted small' }, [t(countryName(a3)), unit.bloc ? t(blocName[unit.bloc]) : '', t(mkt.name)].filter(Boolean).join(' · ')),
     chips(s.player.territories.includes(m) ? pill(t(l('mercado aberto', 'market open')), 'good') : pill(t(l('sem distribuição', 'no distribution')), 'warn')),
     countryExtra(s, a3),
+    countryPanel13(s, a3),
     geo.length || cens.length ? h('ul', { class: 'small' },
       geo.map((g) => h('li', null, ic(g.liveBlocked ? 'lock' : 'globe'), ' ', h('b', null, t(g.name)), ` (${t(l('desde', 'since'))} ${g.from}) — ${geoLine(s, g)}`)),
       cens.map((c) => h('li', null, ic('newspaper'), ' ', h('b', null, t(c.name)), ` (${t(l('desde', 'since'))} ${c.from}) — ${t(l('visados', 'targeted'))}: ${c.banned.join(', ')}`))) : h('p', { class: 'muted small' }, t(l('Sem crises ou censura ativas.', 'No active crises or censorship.'))),
@@ -279,6 +285,7 @@ function countryCard(s: GameState, a3: string): HTMLElement {
 function mapSection(s: GameState): HTMLElement {
   const shade = marketShade(s);
   const cshade = countryLayerShade(s);
+  const pshade = paintShadeMap(s);
   const opts = {
     getYear: () => store.game?.year ?? s.year,
     getMonth: () => store.game?.month ?? s.month,
@@ -288,10 +295,12 @@ function mapSection(s: GameState): HTMLElement {
     onCityClick: (id: string) => { focusCity = id; focusCountry = null; rerender(); },
     onCountryClick: (a3: string) => { focusCountry = a3; focusCity = null; rerender(); },
     overlays: () => overlays(s),
-    countryShade: (a3: string) => shade.get(marketOfCountry(a3)) ?? cshade.get(a3),
+    countryShade: (a3: string) => shade.get(marketOfCountry(a3)) ?? pshade.get(a3) ?? cshade.get(a3),
     cityTipExtra: (id: string) => cityTipExtra(s, id),
     countryTipExtra: (a3: string) => countryTipExtra(s, a3),
     legendExtra: () => [
+      ...paintLegend(s),
+      ...bubbleNotes(s, layers, genreFam),
       layers.has('fans') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--accent)' }), t(l('Bolha: seus fãs', 'Bubble: your fans'))) : null,
       layers.has('geo') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw hatch', style: 'background-color:var(--bad)' }), t(l('Shows suspensos', 'Shows suspended'))) : null,
       layers.has('geo') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:var(--bad);opacity:.5' }), t(l('Censura forte', 'Heavy censorship'))) : null,

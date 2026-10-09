@@ -112,7 +112,11 @@ export function openRelease(id: string): void {
 /** Extras na ficha do selo (rodada 8: participação acionária e negociação). */
 export const LABEL_EXTRAS: ((s: GameState, labelId: string, close: () => void) => HTMLElement | null)[] = [];
 
+/** Rodada 13: o dossiê completo (ui/sys/dossier13) substitui a ficha simples. */
+export const labelOpener: { f?: (id: string) => void } = {};
+
 export function openLabel(id: string): void {
+  if (labelOpener.f) return labelOpener.f(id);
   const s = g();
   const lb = s.labels[id];
   if (!lb) return;
