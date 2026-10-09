@@ -10,6 +10,19 @@ import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
 
+// Ganchos de negociação (rodada 8): sistemas como a identidade do selo e o estilo de liderança mexem na
+// avaliação das ofertas (com motivo visível) e na chance de renovação, sem editar este arquivo.
+export interface ContractHook {
+  offer?: (s: GameState, act: Act, o: Omit<Offer, 'id' | 'week' | 'status'>) => { score: number; reason?: L } | null;
+  renew?: (s: GameState, act: Act) => number;
+}
+const CONTRACT_HOOKS: { id: string; h: ContractHook }[] = [];
+export function registerContractHook(id: string, h: ContractHook): void {
+  const i = CONTRACT_HOOKS.findIndex((x) => x.id === id);
+  if (i >= 0) CONTRACT_HOOKS[i] = { id, h };
+  else CONTRACT_HOOKS.push({ id, h });
+}
+
 export function expectedAdvance(s: GameState, act: Act): number {
   // dólares reais
   let v = 800 + act.fame * act.fame * 30 + act.fame * 150;
@@ -82,6 +95,13 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (hasCard(s, 'emperor')) score -= 0.04;
   if (act.catalogNo && act.fame < 5) score += 0.05;
   score += perk(s, 'offer', act);
+  const hookReasons: L[] = [];
+  for (const { h: hk } of CONTRACT_HOOKS) {
+    const res = hk.offer?.(s, act, o);
+    if (!res || !Number.isFinite(res.score)) continue;
+    score += res.score;
+    if (res.reason && Math.abs(res.score) >= 0.02) hookReasons.push(res.reason);
+  }
 
   if (advU < 0.6) reasons.push(l('Adiantamento abaixo do que esperam.', 'Advance below expectations.'));
   if (advU > 1.4) reasons.push(l('Adiantamento generoso.', 'Generous advance.'));
@@ -89,6 +109,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (rivalHeat > 0.05) reasons.push(l('Há interesse de rivais.', 'Rivals are interested.'));
   if (reach < 0.5 && w.reach > 0.2) reasons.push(l('Querem alcance que sua sede ainda não tem.', 'They want reach your HQ lacks.'));
   if (o.promises.length) reasons.push(l('Promessas pesam a favor (e viram obrigação).', 'Promises help (and become obligations).'));
+  reasons.push(...hookReasons);
 
   const p = 1 / (1 + Math.exp(-(score - 0.58) * 8));
   // analista estreita a leitura; sem analista, a faixa é mais grosseira
@@ -314,7 +335,8 @@ export function renewContract(s: GameState, actId: string, months: number, bonus
   if (!act || !c || c.party !== 'player') return false;
   if (s.player.cash < bonus) return false;
   const r = rngOf(s);
-  const p = clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3, 0, 0.97);
+  const extra = CONTRACT_HOOKS.reduce((t, x) => t + (x.h.renew?.(s, act) ?? 0), 0);
+  const p = clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3 + extra, 0, 0.97);
   if (!r.chance(p)) {
     act.trust -= 4;
     notify(s, fmtL(l('{act} não quis renovar agora.', '{act} did not want to renew now.'), { act: act.name }), 'bad');

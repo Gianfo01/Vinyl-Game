@@ -74,6 +74,8 @@ export interface CharacterSpec {
   traits?: string[];
   style?: string;
   points?: Partial<Record<'ear' | 'negotiation' | 'charisma' | 'management', number>>;
+  /** rodada 8: trajetória profissional (vazio = deduzida da origem) */
+  career?: string;
 }
 
 /** Aparência combinável (GDD §44): 3 corpos × 3 rostos × 4 peles × 16 cabelos × 8 cores × 4 roupas × 8 cores × acessórios. */

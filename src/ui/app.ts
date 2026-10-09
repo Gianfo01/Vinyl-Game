@@ -159,7 +159,7 @@ function topBar(): HTMLElement {
 /** Menus agrupados (rodada 7): 6 grupos no lugar de ~20 áreas soltas; o grupo atual abre suas áreas. */
 const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; areas: string[] }[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['desk', 'plan', 'inbox', 'goals', 'diary'] },
-  { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'business', 'industry'] },
+  { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'business', 'industry', 'identity'] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'directory', 'people', 'market'] },
   { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['creation', 'catalog', 'shows'] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['charts', 'media', 'world'] },
