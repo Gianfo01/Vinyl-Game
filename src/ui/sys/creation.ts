@@ -1,3 +1,4 @@
+import { isUnlocked } from '../../sim/era';
 // Interface da criação (rodada 4): abas em Criação e a cena de crítica do lançamento.
 
 import { openFeatModal } from './round8';
@@ -317,13 +318,14 @@ function visualsTab(s: GameState): HTMLElement {
   const act = curAct(s);
   if (!act) return h('p', null, '—');
   const songs = act.songs.map((id) => s.songs[id]).filter((so): so is Song => !!so && songStatus(s, so) !== 'discarded').slice(-15).reverse();
-  return section(t(l('Capa, clipe e vídeo curto', 'Cover, video and short video')),
-    h('p', { class: 'muted small' }, t(l('A capa é escolhida entre três propostas na hora de programar o lançamento; o clipe vale para o lançamento em que a música for a faixa principal.', 'The cover is picked from three proposals when scheduling the release; the video applies to the release where the song is the lead track.'))),
+  const vid = isUnlocked(s, 'music_video');
+  return section(t(vid ? (hasTech(s, 'short_video') ? l('Capa, clipe e vídeo curto', 'Cover, video and short video') : l('Capa e clipe', 'Cover and video')) : l('Capa', 'Cover')),
+    h('p', { class: 'muted small' }, t(l('A capa é escolhida entre três propostas na hora de programar o lançamento.', 'The cover is picked from three proposals when scheduling the release.'))),
     h('table', { class: 'tbl compact' }, h('tbody', null, songs.map((so) => {
       const x = s.x4.creation.songs[so.id] ?? {};
       return h('tr', null, h('td', null, so.title),
         h('td', null, x.cover !== undefined ? scoreBadge(x.cover / 10) : h('small', { class: 'muted' }, t(l('capa: escolhida ao programar o lançamento', 'cover: picked when scheduling the release')))),
-        h('td', null, x.clip ? pill(`${t(l('clipe', 'video'))} ${Math.round(x.clip.result * 50)}`, 'good') : s.year >= 1981 ? h('button', { class: 'btn small', onclick: () => openClipEditor(s, so.id) }, ic('film'), ` ${t(l('Clipe', 'Video'))}`) : h('small', { class: 'muted' }, '—')),
+        h('td', null, x.clip ? pill(`${t(l('clipe', 'video'))} ${Math.round(x.clip.result * 50)}`, 'good') : vid ? h('button', { class: 'btn small', onclick: () => openClipEditor(s, so.id) }, ic('film'), ` ${t(l('Clipe', 'Video'))}`) : h('small', { class: 'muted' }, '—')),
         h('td', null, x.viral ? pill(x.viral.result > 0.5 ? t(l('viralizou', 'went viral')) : t(l('não pegou', "didn't catch on")), x.viral.result > 0.5 ? 'good' : '') : hasTech(s, 'short_video') && so.recorded ? h('button', { class: 'btn small', onclick: () => openViral(s, so.id) }, ic('stream'), ` ${t(l('Viral', 'Viral'))}`) : h('small', { class: 'muted' }, '—')));
     }))),
     s.x4.creation.museum.length ? h('p', { class: 'small' }, `${t(l('Capas icônicas no museu', 'Iconic covers in the museum'))}: ${s.x4.creation.museum.map((id) => s.releases[id]?.title).filter(Boolean).join(', ')}`) : null,
@@ -334,7 +336,8 @@ function visualsTab(s: GameState): HTMLElement {
 
 registerTab('creation', { id: 'cr-themes', label: l('Temas e tendências', 'Themes and trends'), icon: 'chart-up', render: themesTab, order: 61 });
 registerTab('creation', { id: 'cr-recipe', label: l('Receita sonora', 'Sound recipe'), icon: 'sparkle', render: recipeTab, order: 62 });
-registerTab('creation', { id: 'cr-visuals', label: l('Capa e vídeo', 'Cover and video'), icon: 'camera', render: visualsTab, order: 63 });
+registerTab('creation', { id: 'cr-visuals', label: l('Capa e vídeo', 'Cover and video'), icon: 'camera', render: visualsTab, order: 63, visible: (s) => isUnlocked(s, 'music_video') });
+registerTab('creation', { id: 'cr-cover', label: l('Capa', 'Cover'), icon: 'camera', render: visualsTab, order: 63, visible: (s) => !isUnlocked(s, 'music_video') });
 registerTab('creation', { id: 'cr-partners', label: l('Parcerias', 'Partners'), icon: 'handshake', render: partnersTab, order: 64 });
 registerTab('creation', { id: 'cr-comm', label: l('Encomendas', 'Commissions'), icon: 'contract', render: commissionsTab, order: 65, badge: (s) => s.x4.creation.commissions.filter((c) => c.status === 'offered').length || undefined });
 registerTab('creation', { id: 'cr-div', label: l('Divisões', 'Divisions'), icon: 'cd', render: divisionsTab, order: 66 });

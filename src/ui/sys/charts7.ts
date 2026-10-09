@@ -59,7 +59,7 @@ export function countryChartsTab(s: GameState): HTMLElement {
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
       section(t(l('Paradas por país, região e formato', 'Charts by country, region and format')),
-        h('p', { class: 'muted small' }, t(l('Cada país tem seu gosto, seu tamanho e seus formatos: um sertanejo pode liderar no Brasil sem aparecer nos EUA, e o Japão ainda compra CD quando o resto do mundo só faz streaming.', 'Each country has its own taste, size and formats: a sertanejo hit can top Brazil without showing up in the US, and Japan still buys CDs when the rest of the world only streams.'))),
+        h('p', { class: 'muted small' }, t(l('Cada país tem seu gosto, seu tamanho e seus formatos: um sucesso pode liderar no Brasil sem aparecer nos EUA, e cada mercado troca de formato no seu próprio ritmo.', 'Each country has its own taste, size and formats: a hit can top Brazil without showing up in the US, and each market switches formats at its own pace.'))),
         h('div', { class: 'row wrap' },
           select(ui.key, keyOptions(s), (v) => { ui.key = v; rerender(); }, { 'aria-label': t(l('País ou região', 'Country or region')) }),
           ...kinds.map((k) => h('button', { class: `btn small ${ui.kind === k ? 'primary' : 'ghost'}`, onclick: () => { ui.kind = k; rerender(); } }, t(KIND_NAMES[k]))),

@@ -1,7 +1,7 @@
 // Abas e seções de indústria: jabá e rádio, paradas e metodologia (manipulação), mais paradas,
 // feiras e hype, fã-clubes oficiais, leis e sindicatos (com selo de aviso) e pirataria.
 
-import { FAMILIES, l } from '../../../data/world';
+import { FAMILIES, GENRES, l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
 import { isUnlocked } from '../../../sim/era';
 import { EXTRA_CHARTS, MANIP, METHOD_INFO, PAYOLA_ERA_INFO, PAYOLA_TIERS, chartMethod, manipulate, payDJs, payolaCost, payolaEra, pitchLegit, type ChartMethod } from '../../../sim/sys/world4/charts';
@@ -33,7 +33,7 @@ export function radioTab(s: GameState): HTMLElement {
       meter(curator ? 'stream' : 'radio', curator ? l('Relação com curadores', 'Curator relationship') : l('Relação com DJs e programadores', 'DJ and programmer relationship'), curator ? p.curator : p.dj),
       meter('chart-up', l('Empurrão atual nas paradas', 'Current chart push'), p.level * 100, 45),
       meter('warning', l('Risco de investigação', 'Investigation risk'), p.heat, 100, true),
-      note(l('A relação aumenta o apelo de estreia dos seus discos (mais ainda com divulgação em rádio/playlists). O empurrão vale para lançamentos das últimas 16 semanas e cai a cada mês. O risco acumula; uma investigação traz multa e perda de reputação.', 'The relationship raises your records\' debut appeal (more with radio/playlist promotion). The push applies to releases from the last 16 weeks and fades monthly. Risk builds up; an investigation brings fines and lost reputation.')),
+      note(l('A relação aumenta o apelo de estreia dos seus discos (mais ainda com divulgação no rádio). O empurrão vale para lançamentos das últimas 16 semanas e cai a cada mês. O risco acumula; uma investigação traz multa e perda de reputação.', 'The relationship raises your records\' debut appeal (more with radio promotion). The push applies to releases from the last 16 weeks and fades monthly. Risk builds up; an investigation brings fines and lost reputation.')),
       !radio ? note(l('Ainda não há rádio comercial.', 'No commercial radio yet.')) : h('div', { class: 'row' },
         btn(`${t(curator ? l('Apresentar repertório aos curadores', 'Pitch curators') : l('Visitar rádios (legítimo)', 'Visit stations (legit)'))} · ${$(money(s, 500))}`, () => act(() => pitchLegit(s)), { disabled: p.pitchWeek === s.week }),
         PAYOLA_TIERS.map((tier, i) => btn(`${t(tier.name)} · ${$(payolaCost(s, i))}`, () => act(() => payDJs(s, i), l('Pagamento feito. As rádios vão tocar…', 'Payment made. The stations will play…')), { cls: i === 2 ? 'primary' : '', disabled: p.lastWeek === s.week, title: t(fmtL(l('Empurrão +{a}%, risco +{b}', 'Push +{a}%, risk +{b}'), { a: Math.round(tier.level * 100), b: Math.round(tier.heat * info.heat) })) }))),
@@ -47,8 +47,10 @@ export function radioTab(s: GameState): HTMLElement {
 export function methodTab(s: GameState): HTMLElement {
   const w = w4(s);
   const cur = chartMethod(s);
-  const methods: ChartMethod[] = ['shops', 'scan', 'stream', 'video'];
-  const fams = ['pop', 'rock', 'hiphop', 'country_folk', 'rnb', 'latin', 'electronic', 'africa'];
+  const all: ChartMethod[] = ['shops', 'scan', 'stream', 'video'];
+  // só metodologias que já existiram e famílias de gênero que já nasceram (nada do futuro na tela)
+  const methods = all.slice(0, all.indexOf(cur) + 1);
+  const fams = ['pop', 'rock', 'hiphop', 'country_folk', 'rnb', 'latin', 'electronic', 'africa'].filter((f) => GENRES.some((g) => g.family === f && g.born <= s.year));
   const famName = (id: string) => t(FAMILIES.find((f) => f.id === id)?.name ?? l(id));
   const rels = liveMineReleases(s, 30);
   const avail = Object.entries(MANIP).filter(([, m]) => m.methods.includes(cur));

@@ -138,7 +138,7 @@ function corpTab(s: GameState): HTMLElement {
         select(ui.outletKind, kinds.map((k) => ({ value: k, label: `${t(OUTLET_INFO[k].name)} (${$(outletCost(s, k))})` })), (v) => { ui.outletKind = v; rerender(); }),
         marketSelect(ui.outletMarket, (v) => { ui.outletMarket = v; }),
         h('button', { class: 'btn', onclick: () => say(buyOutlet(s, ui.outletKind, ui.outletMarket, ''), l('Veículo comprado!', 'Outlet bought!')) }, t(l('Comprar', 'Buy')))) : null,
-      h('p', { class: 'muted small' }, t(l('Tocar seus artistas ajuda os lançamentos, mas a audiência cai e há risco de acusação de favorecimento. A internet corrói rádio, TV e revistas.', 'Playing your artists helps releases, but audiences drop and there is a risk of favoritism accusations. The internet erodes radio, TV and magazines.'))),
+      h('p', { class: 'muted small' }, t(l('Tocar seus artistas ajuda os lançamentos, mas a audiência cai e há risco de acusação de favorecimento.', 'Playing your artists helps releases, but audiences drop and there is a risk of favoritism accusations.'))),
     ),
     section(t(l('Empresas do grupo', 'Group companies')), h('div', { class: 'cards' },
       tile('tour-bus', t(l('Promotora de shows', 'Concert promoter')), [h('small', null, t(l('Ganha com shows de terceiros; seus atos atraem +5% de público.', 'Earns from third-party shows; your acts draw +5% audiences.'))), st.promoter.active ? pill(`${$(st.promoter.revenue)}/m`, 'good') : h('button', { class: 'btn small', onclick: () => say(openVenture(s, 'promoter'), l('Promotora aberta.', 'Promoter opened.')) }, `${t(l('Abrir', 'Open'))} (${$(money(s, 150000))})`)]),
