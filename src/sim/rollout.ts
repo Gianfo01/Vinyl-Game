@@ -8,6 +8,7 @@ import { availableFormats, scheduleRelease, suggestedPress } from './production'
 import type { GameState, Release } from './types';
 import type { Rollout, RolloutPhase } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
+import { exploitBlock } from './rights';
 
 export interface RolloutOpts {
   actId: string;
@@ -176,6 +177,8 @@ export function scheduleAnniversary(s: GameState, r: Rng, relId: string, budget:
   const rel = s.releases[relId];
   if (!rel) return l('Inválido.', 'Invalid.');
   const years = s.year - rel.year;
+  const blocked = exploitBlock(s, rel, 'reissue');
+  if (blocked) return blocked;
   if (!ANNIV.includes(years)) return l('Só em aniversários redondos (10, 20, 25, 30, 40, 50).', 'Only on round anniversaries (10, 20, 25, 30, 40, 50).');
   const act = s.acts[rel.actId];
   const res = scheduleRelease(s, r, { actId: rel.actId, type: 'lp', songs: rel.songs, title: `${rel.title} (${years}º aniversário)`, formats: availableFormats(s), press: Math.round(suggestedPress(s, act, 'lp') * 0.5), marketing: budget ? [{ channel: mainChannel(s, 'album'), budget }] : [], territories: s.player.territories, weeksAhead: 2, reissueOf: rel.id, kind: 'anniversary', hype: 0.2 + years / 200 });

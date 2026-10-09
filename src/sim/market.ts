@@ -12,6 +12,7 @@ import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release
 import { fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
 import { songProfile } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
+import { artistRate, dealOfRelease, hasGuest, rightsOf } from './rights';
 
 const POOL: [number, number][] = [
   [1920, 260e3], [1930, 300e3], [1945, 600e3], [1955, 1.5e6], [1965, 3e6], [1975, 5e6], [1985, 6e6],
@@ -152,7 +153,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
     pressed: pr.press,
     marketing: pr.marketing,
     marketingE: Math.min(0.95, marketingE(s, pr.marketing, 'player') + (owner !== 'player' ? 0.25 : 0)),
-    territories: owner !== 'player' && s.labels[owner] ? [...new Set([...pr.territories, ...s.labels[owner].territories])] : pr.territories,
+    territories: owner !== 'player' && s.labels[owner] ? [...new Set([...pr.territories, ...s.labels[owner].territories])] : contractScope(pr.territories, c),
     weekly: [],
     totalUnits: 0,
     revenue: 0,
@@ -196,6 +197,13 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   remember(s, 'release', fmtL(l('{act} lança "{title}" ({type}).', '{act} releases "{title}" ({type}).'), { act: act.name, title: rel.title, type: rel.type.toUpperCase() }), { actId: act.id });
   runSimHooks('launch', s, r, { release: rel });
   return rel;
+}
+
+/** Rodada 8: o selo só lança onde o contrato cobre (escopo territorial da ficha de direitos). */
+function contractScope(ts: MarketId[], c: { party: string; territories?: MarketId[] } | undefined): MarketId[] {
+  if (!c || c.party !== 'player' || !c.territories?.length) return ts;
+  const ok = ts.filter((m) => c.territories!.includes(m));
+  return ok.length ? ok : [c.territories[0]];
 }
 
 /** Lançamento de rivais e independentes (mesmos validadores e economia). */
@@ -367,19 +375,28 @@ function certify(s: GameState, rel: Release): void {
   }
 }
 
-/** Separa master e edição; recoupment só abate o saldo (não é receita extra; GDD §11, §16). */
+/** Separa master e edição; recoupment só abate o saldo (não é receita extra; GDD §11, §16).
+ *  Rodada 8: cada master segue o acordo que o cobre (não o contrato atual do ato), com a divisão da
+ *  ficha de direitos (master compartilhado, pontos de produtor e convidados, fatia da edição) e
+ *  masters revertidos pagam só o artista. */
 function distribute(s: GameState, rel: Release, gross: number, units: number): void {
   const act = s.acts[rel.actId];
   if (!act) return;
   // subselo: liquidação no caixa próprio (sublabels.ts), nunca no da matriz
   if (s.subLabels.some((x) => x.id === rel.owner)) return;
-  const c = act.contractId ? s.contracts[act.contractId] : undefined;
+  const current = act.contractId ? s.contracts[act.contractId] : undefined;
+  // master do selo: vale o acordo da época do disco; master que voltou ao artista não é do selo
+  const deal = !act.playerBand && rel.owner === 'player' ? dealOfRelease(s, rel) : undefined;
+  const reverted = !act.playerBand && rel.owner === 'indie' && current?.party === 'player';
+  const c = reverted ? undefined : deal ?? current;
+  const terms = c && c.party === 'player' && !act.playerBand ? rightsOf(c) : undefined;
   const publishing = Math.round(gross * 0.1);
   const rightsLeak = 1 - Math.min(0.25, staffSkill(s, 'rights') / 300) ;
   let artistShare = 0;
   let partyGets = gross;
   if (c) {
-    artistShare = Math.round(gross * c.royalty);
+    const fee = c.party === 'player' ? distributionFee(s) : 0.2;
+    artistShare = Math.round(gross * (terms ? artistRate(c, fee) : c.royalty));
     if (c.model === 'distribution') {
       artistShare = Math.round(gross * (1 - (c.distributionFee ?? 0.2)));
     }
@@ -387,9 +404,17 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
     if (c.recoupBalance > 0 && c.model !== 'distribution') {
       const rec = Math.min(c.recoupBalance, artistShare);
       c.recoupBalance -= rec;
+      if (c.party === 'player') c.recouped = (c.recouped ?? 0) + rec;
       payout = artistShare - rec;
     }
-    partyGets = gross - payout;
+    // pontos de produtor e convidados: all-in (saem do que o artista recebe) ou pagos pelo selo
+    let points = 0;
+    if (terms) {
+      const pts = Math.round(gross * (terms.producerPts + (hasGuest(s, rel) ? terms.guestPts : 0)));
+      points = terms.pointsFromLabel ? pts : Math.min(payout, pts);
+      if (!terms.pointsFromLabel) payout -= points;
+    }
+    partyGets = gross - payout - points;
     // quem recebe o quê
     if (c.party === 'player') {
       post(s, `sales:${rel.id}`, gross, 'sales', `Vendas ${rel.title}`);
@@ -399,6 +424,7 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
         post(s, `roy:${rel.id}`, -payout, 'royalties', `Royalties ${act.name}`);
         act.cash += payout;
       }
+      if (points > 0) post(s, `pts:${rel.id}`, -points, 'royalties', `Pontos de produção ${rel.title}`);
     } else {
       const lb = s.labels[c.party];
       if (lb) {
@@ -417,8 +443,8 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
     else act.cash += net;
   }
   rel.revenue += partyGets;
-  // edição: autores e editora
-  const pubToPlayer = act.playerBand ? (c?.publishing && c.party !== 'player' ? 0.5 : 1) : c?.party === 'player' && c.publishing ? 0.5 : 0;
+  // edição: autores e editora (a fatia do selo vem da ficha de direitos)
+  const pubToPlayer = act.playerBand ? (c?.publishing && c.party !== 'player' ? 0.5 : 1) : c?.party === 'player' ? (terms ? terms.pubShare : c.publishing ? 0.5 : 0) : 0;
   if (pubToPlayer > 0) {
     let amount = Math.round(publishing * pubToPlayer * rightsLeak);
     if (hasCard(s, 'publisher')) amount = Math.round(amount * 1.3);

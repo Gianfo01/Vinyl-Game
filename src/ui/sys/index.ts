@@ -26,3 +26,4 @@ import './pacing8';
 import './eras8';
 import './hq8';
 import './stories8';
+import './rights8';

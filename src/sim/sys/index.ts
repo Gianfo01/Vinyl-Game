@@ -48,3 +48,5 @@ import './identity8';
 import './audience8';
 import './rivals8';
 import './stories8';
+import './rights8';
+import './dossier8';
