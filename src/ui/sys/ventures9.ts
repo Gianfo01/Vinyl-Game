@@ -20,6 +20,8 @@ import { tabs } from '../vis';
 import { visibleAct } from '../../sim/future';
 import { clientExtras, poachTab, reportsTab } from './manager11';
 import { mgr11 } from '../../sim/sys/manager11';
+import { clientPanel12, managementTabs12 } from './manager12';
+import { careersPanel } from './careers12';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -200,6 +202,7 @@ function overview(s: GameState): HTMLElement {
 function venturesArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub ventures9' }, tabs('ventures9', [
     { id: 'overview', label: t(l('Visão geral', 'Overview')), icon: 'bank', render: () => overview(s) },
+    { id: 'careers12', label: t(l('Carreiras', 'Careers')), icon: 'star', render: () => careersPanel(s) },
     ...(Object.keys(VKINDS) as VKind[]).filter((k) => kindsAvailable(s).includes(k) || ventures(s).list.some((v) => v.kind === k)).map((k) => ({ id: k, label: t(VKINDS[k].name), icon: VKINDS[k].icon, render: () => kindTab(s, k) })),
   ], rerender));
 }
@@ -228,6 +231,7 @@ function rosterTab(s: GameState): HTMLElement {
           select<CrisisMove>(move, (['pr', 'rest', 'lawyer'] as CrisisMove[]).map((m) => ({ value: m, label: `${t({ pr: l('Assessoria de imprensa', 'PR push'), rest: l('Pausa e conversa', 'Break and talk'), lawyer: l('Advogados', 'Lawyers') }[m])} (${$(crisisCost(s, m))})` })), (m) => (move = m)),
           btn(l('Agir', 'Act'), () => res(handleCrisis(s, r, a.id, move)), 'btn small primary')) : null,
         clientExtras(s, c),
+        clientPanel12(s, c),
         h('div', { class: 'row wrap' },
           k && k.party !== 'player' ? btn(l('Renegociar com a gravadora', 'Renegotiate with the label'), () => res(negotiateFor(s, r, a.id))) : null,
           btn(l('Deixar de empresariar', 'Stop managing'), () => { dropClient(s, a.id); rerender(); }, 'btn small ghost')));
@@ -253,6 +257,7 @@ function managementArea(s: GameState): HTMLElement {
     { id: 'prospect', label: t(l('Prospectar', 'Prospect')), icon: 'handshake', render: () => prospectTab(s) },
     { id: 'reports', label: t(l('Relatórios', 'Reports')), icon: 'chart-up', render: () => reportsTab(s) },
     { id: 'poach', label: t(l('Roubar clientes', 'Poach clients')), icon: 'fire', render: () => poachTab(s) },
+    ...managementTabs12(s),
   ], rerender));
 }
 

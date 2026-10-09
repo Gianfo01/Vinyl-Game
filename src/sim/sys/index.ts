@@ -75,3 +75,7 @@ import './novelty9';
 // Rodada 10: bolsa de valores (ações de selos, plataformas, mídia e fabricantes) e aluguel só de imóveis próprios.
 import './bolsa10';
 import './leaders10';
+// Rodada 12: carreiras (atividades, origem, ambição, herdeiro), mercado de serviços de NPCs e empresário com confiança.
+import './careers12';
+import './services12';
+import './manager12';

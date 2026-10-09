@@ -14,6 +14,7 @@ import { deleteSave, importSave, importSaveText, listSaves, loadGame, savePrefs,
 import { prepareNewGame, scenarioButton } from './sys/live/goals';
 import { characterCard } from './charCreate';
 import { labelsCard } from './newgameLabels';
+import { careerCard, careerSummary } from './sys/careers12';
 
 /** Anos marcantes (rodada 9: lista longa; o campo ao lado aceita qualquer ano de 1920 a 2039). */
 const NOTABLE: Record<number, ReturnType<typeof l>> = {
@@ -274,6 +275,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
       customCard(cfg),
       tk.el,
     ] },
+    { id: 'career', name: l('Carreira', 'Career'), body: [careerCard(cfg)] },
     { id: 'world', name: l('Mundo e ano', 'World and year'), body: [
       h('section', { class: 'card' },
         h('label', null, t(S.startYear), h('div', { class: 'row' }, yearSel, yearInput)),
@@ -331,16 +333,17 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
       [l('Começo', 'Start'), cfg.takeover ? t(l('assume a gravadora', 'takes over the label')) : t(l('selo novo', 'new label')), 1],
       [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name), 1],
       [S.scenario, opt(cfg.scenario, SCN()), 1],
-      [S.startYear, String(cfg.startYear), 2],
-      [S.homeCity, cityName(cfg.homeCity), 2],
-      [S.mode, opt(cfg.mode, MODES()), 2],
-      [l('Nomes reais', 'Real names'), yesNo(cfg.realNames), 2],
-      [S.seed, cfg.seed, 2],
-      [l('Gravadoras rivais', 'Rival labels'), `${rivals}${cfg.labels?.start === 'equal' ? ` · ${t(l('todos iguais', 'all equal'))}` : ''}`, 3],
-      [S.storyteller, t(STORYTELLERS.find((x) => x.id === cfg.storyteller)!.name), 4],
-      [S.difficulty, `${opt(cfg.difficulty, DIFF())}${cfg.ironman ? ' · ironman' : ''}`, 4],
-      [S.card, t(CARDS.find((c) => c.id === cfg.card)!.name), 4],
-      [S.mutators, cfg.mutators.map((id) => t(MUTATORS.find((m) => m.id === id)!.name)).join(', ') || '—', 4],
+      [l('Carreira', 'Career'), careerSummary(cfg), 2],
+      [S.startYear, String(cfg.startYear), 3],
+      [S.homeCity, cityName(cfg.homeCity), 3],
+      [S.mode, opt(cfg.mode, MODES()), 3],
+      [l('Nomes reais', 'Real names'), yesNo(cfg.realNames), 3],
+      [S.seed, cfg.seed, 3],
+      [l('Gravadoras rivais', 'Rival labels'), `${rivals}${cfg.labels?.start === 'equal' ? ` · ${t(l('todos iguais', 'all equal'))}` : ''}`, 4],
+      [S.storyteller, t(STORYTELLERS.find((x) => x.id === cfg.storyteller)!.name), 5],
+      [S.difficulty, `${opt(cfg.difficulty, DIFF())}${cfg.ironman ? ' · ironman' : ''}`, 5],
+      [S.card, t(CARDS.find((c) => c.id === cfg.card)!.name), 5],
+      [S.mutators, cfg.mutators.map((id) => t(MUTATORS.find((m) => m.id === id)!.name)).join(', ') || '—', 5],
     ];
   };
   function drawSummary(): void {

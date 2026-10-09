@@ -36,3 +36,6 @@ import './lendas9';
 import './rockhall9';
 import './menus9';
 import './leaders10';
+// Rodada 12: carreiras (Você → Carreiras, cartões na mesa) e empresário com confiança e mercado de serviços.
+import './careers12';
+import './manager12';
