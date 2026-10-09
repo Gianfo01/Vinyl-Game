@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { runSimHooks } from '../src/sim/ext4';
+import { activeCritics } from '../src/sim/media';
+import { PRODUCERS } from '../src/sim/studio';
 import { composeSongs, recordSongs } from '../src/sim/production';
 import {
   applyRecord, bestWorst, clearSoundCache, composerPull, coverFit, criticTaste, describeRelease, describeSong, dist, fitVerdict, instrumentPull, labelSignature,
@@ -45,8 +47,8 @@ describe('eixos puxados por quem está envolvido', () => {
     const [so] = composeSongs(s, r, act, 1);
     expect(so.sound?.v).toHaveLength(6);
     expect(so.sound!.v.every((x) => x >= 0 && x <= 100)).toBe(true);
-    const dry = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: 'pr_marlowe', studioTier: 2, approach: 'balanced' } as Song;
-    const gloss = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: 'pr_dumont', studioTier: 2, approach: 'balanced' } as Song;
+    const dry = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: PRODUCERS.find((p) => p.signature === 'dry' || p.signature === 'lofi')!.id, studioTier: 2, approach: 'balanced' } as Song;
+    const gloss = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: PRODUCERS.find((p) => p.signature === 'glossy' || p.signature === 'neural')!.id, studioTier: 2, approach: 'balanced' } as Song;
     applyRecord(s, dry);
     applyRecord(s, gloss);
     expect(gloss.sound!.v[4] - dry.sound!.v[4]).toBeGreaterThanOrEqual(20); // polimento
@@ -212,8 +214,12 @@ describe('o som importa no jogo', () => {
     expect(coverFit('portrait', glossy)).toBeGreaterThan(0.3);
     expect(coverFit('diy', glossy)).toBeLessThan(0);
     // crítico underground (Pitchfolk) premia o risco; o mainstream prefere o polido
-    expect(criticTaste(s, 'Ivy Marchetti', exp)).toBeGreaterThan(criticTaste(s, 'Ivy Marchetti', glossy));
-    expect(criticTaste(s, 'Sam Okoye', glossy)).toBeGreaterThanOrEqual(criticTaste(s, 'Sam Okoye', exp));
+    const cs = [...activeCritics(s)].sort((x, y) => x.mainstream - y.mainstream);
+    const under = cs[0];
+    const main = cs[cs.length - 1];
+    expect(under.mainstream).toBeLessThan(0);
+    expect(criticTaste(s, under.name, exp)).toBeGreaterThan(criticTaste(s, under.name, glossy));
+    expect(criticTaste(s, main.name, glossy)).toBeGreaterThanOrEqual(criticTaste(s, main.name, exp));
     // palco: som cru e enérgico cresce ao vivo; estúdio polido e eletrônico sem quem toque eletrônicos perde
     snd(s).sig[act.id] = { v: [85, 60, 20, 60, 30, 50], n: 3 };
     const raw = liveFactor(s, act).m;

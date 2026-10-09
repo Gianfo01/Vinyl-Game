@@ -727,7 +727,7 @@ export function describeRelease(s: GameState, rel: Release): L | null {
   const lead = s.songs[rel.songs[0]];
   const phrases = soundPhrases(s, v, { inst: lead ? leadInstrument(s, lead) : undefined, hook: lead ? songProfile(lead).hook : 55, moments: lead?.sound?.m, year: rel.year });
   const coh = cohesion(s, rel);
-  if (coh !== null) phrases.push(coh < 8 ? l('faixas muito parecidas entre si', 'tracks very alike') : coh > 20 ? l('sequência dispersa', 'a scattered running order') : l('sequência bem amarrada', 'a well-knit running order'));
+  if (coh !== null) phrases.splice(2, 0, coh < 8 ? l('faixas muito parecidas entre si', 'tracks very alike') : coh > 20 ? l('sequência dispersa', 'a scattered running order') : l('sequência bem amarrada', 'a well-knit running order'));
   const head = joinL(phrases.slice(0, 5));
   const fit = fitVerdict(s, v);
   return l(`${cap(head.pt)}; ${fit.pt}.`, `${cap(head.en)}; ${fit.en}.`);
@@ -901,8 +901,9 @@ function onLaunch(s: GameState, rel: Release): void {
     rel.appeal *= (0.92 + after / 60) / (0.92 + before / 60);
   }
   if (mine) {
-    backfill(s);
-    bump(s, rel);
+    // saves antigos: a primeira vez reconstrói tudo (já inclui este lançamento)
+    if (!snd(s).init) backfill(s);
+    else bump(s, rel);
   }
 }
 
