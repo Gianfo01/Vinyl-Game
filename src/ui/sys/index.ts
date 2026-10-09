@@ -67,3 +67,5 @@ import './careerui13';
 import './overhead13';
 import './persona13';
 import './persona13tab';
+// Rodada 14: diretório e fichas de empresários reais.
+import './managers14';

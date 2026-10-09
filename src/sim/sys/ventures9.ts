@@ -626,8 +626,10 @@ export function mgChance(s: GameState, a: Act, rate: number): number {
   const mg = ventures(s).mg;
   const o = ownerOf(s);
   const fired = mg.fired.some((f) => f.actId === a.id && s.year - f.y < 5);
-  return clamp(0.35 + mg.rep / 200 + (o.attrs.charisma - 50) / 250 + (standingOf(s, 'player').trust - 50) / 400 - (rate - 0.1) * 2.5 - Math.max(0, a.fame - mg.rep) / 150 - (fired ? 0.3 : 0) + (a.owner === 'player' ? 0.1 : 0), 0.03, 0.95);
+  return clamp(0.35 + mg.rep / 200 + (o.attrs.charisma - 50) / 250 + (standingOf(s, 'player').trust - 50) / 400 - (rate - 0.1) * 2.5 - Math.max(0, a.fame - mg.rep) / 150 - (fired ? 0.3 : 0) + (a.owner === 'player' ? 0.1 : 0) + mgAdj9.reduce((t, f) => t + f(s, a), 0), 0.03, 0.95);
 }
+/** Rodada 14: ajustes externos à chance de conquistar um cliente (ex.: empresário rival que já o representa). */
+export const mgAdj9: ((s: GameState, a: Act) => number)[] = [];
 
 export function pitchClient(s: GameState, r: Rng, actId: string, rate: number): { ok: boolean; text: L } {
   const mg = ventures(s).mg;
