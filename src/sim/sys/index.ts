@@ -41,3 +41,6 @@ import './heirs8';
 import './crew8';
 import './route8';
 import './consent8';
+import './eras8';
+import './pacing8';
+import './hq8';

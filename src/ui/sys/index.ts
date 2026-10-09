@@ -22,3 +22,6 @@ import './sound';
 import './round8';
 import './route8';
 import './consent8';
+import './pacing8';
+import './eras8';
+import './hq8';

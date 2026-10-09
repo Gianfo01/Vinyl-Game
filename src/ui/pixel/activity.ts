@@ -5,6 +5,7 @@ import { agendaById } from '../../data/people';
 import { staffRoleById } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import type { Act, GameState } from '../../sim/types';
+import { weekActions } from '../../sim/sys/hq8';
 import type { IconName } from './icons';
 
 export type ActivityKind = 'away' | 'hiatus' | 'record' | 'write' | 'rest' | 'rehearse' | 'idle' | 'work';
@@ -25,7 +26,8 @@ export function actActivity(s: GameState, act: Act): Activity {
   const actId = act.id;
   if (act.status === 'hiatus' || (act.hiatusUntil !== undefined && act.hiatusUntil > s.week))
     return { kind: 'hiatus', actId, label: l('Em pausa, longe da sede', 'On hiatus, away from HQ'), icon: 'sleep' };
-  const actions = (s.agenda[actId] ?? []).map((x) => x.action);
+  // rodada 8: a sede mostra o que está marcado para esta semana do mês
+  const actions = weekActions(s, actId);
   if (has(actions, 'gigs', 'tour')) return { kind: 'away', actId, action: 'gigs', label: l('Na estrada: shows do mês', 'On the road: this month\'s gigs'), icon: 'tour-bus' };
   if (has(actions, 'record')) return { kind: 'record', actId, action: 'record', label: l('Gravando no estúdio', 'Recording in the studio'), icon: 'mic' };
   if (has(actions, 'compose')) return { kind: 'write', actId, action: 'compose', label: l('Compondo músicas', 'Writing songs'), icon: 'sparkle' };

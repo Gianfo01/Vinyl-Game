@@ -1,10 +1,12 @@
 // Layout principal: barra superior, 10 áreas + Diário, avanço, paleta de comandos, fim de run.
 
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
-import { l } from '../data/world';
+import { l, type L } from '../data/world';
 import { S, t, type Lang } from '../i18n/strings';
 import { endingScores, legacyTotal } from '../sim/legacy';
 import { advance } from '../sim/tick';
+import { advanceUntil, digestEnd, digestStart, type Digest } from '../sim/sys/pacing8';
+import { openUntilConfig, showDigest, stopSummary } from './sys/pacing8';
 import { playerActs } from '../sim/util';
 import { $, dateLabel, inspect, kv, modal, toast } from './common';
 import { bar, h, select } from './dom';
@@ -104,17 +106,30 @@ function onKey(e: KeyboardEvent): void {
   if (area && !e.ctrlKey && !e.metaKey && !e.altKey) go(area.id);
 }
 
-function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event'): void {
+function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void {
   const g = store.game;
   if (!g) return;
   if (g.ended && !g.flags.sandbox) return endScreen();
   if (!g.config.ironman) store.undoSnapshot = JSON.stringify(g);
   const before = g.notifications.length;
   const noteWeek = g.week;
-  const res = advance(g, mode);
-  const fresh = g.notifications.filter((n) => n.week > noteWeek).slice(-3);
-  for (const n of fresh) toast(t(n.text), n.kind);
-  if (res.stopReason && mode !== 'month') toast(`⏸ ${t(res.stopReason)}`, 'event');
+  // rodada 8: avanços longos terminam num resumo agrupado em vez de uma chuva de avisos
+  let digest: { d: Digest; why?: L } | null = null;
+  let res: { stopReason?: L } = {};
+  if (mode === 'until') {
+    const u = advanceUntil(g);
+    digest = { d: u.digest, why: u.reason };
+  } else if (mode === 'quarter' || mode === 'event') {
+    const snap = digestStart(g);
+    const r0 = advance(g, mode);
+    res = r0;
+    digest = { d: digestEnd(g, snap, r0.months), why: r0.stopReason };
+  } else res = advance(g, mode);
+  if (!digest) {
+    const fresh = g.notifications.filter((n) => n.week > noteWeek).slice(-3);
+    for (const n of fresh) toast(t(n.text), n.kind);
+  }
+  if (res.stopReason && mode !== 'month' && !digest) toast(`⏸ ${t(res.stopReason)}`, 'event');
   announce(g.briefing.map((n) => t(n.text)).join('. '));
   void before;
   void saveGame('auto');
@@ -124,7 +139,8 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event'): void {
     return;
   }
   render();
-  showPendingCutscene(g, render, store.prefs.cutscenes === false);
+  if (digest) showDigest(g, digest.d, digest.why, () => showPendingCutscene(g, render, store.prefs.cutscenes === false));
+  else showPendingCutscene(g, render, store.prefs.cutscenes === false);
 }
 
 function undo(): void {
@@ -147,7 +163,9 @@ function topBar(): HTMLElement {
     h('div', { class: 'rep', title: t(S.reputation) }, '★ ', Math.round((rep.artistic + rep.commercial + rep.artists + rep.institutional) / 4)),
     h('div', { class: 'advance' },
       store.undoSnapshot && !g.config.ironman ? h('button', { class: 'btn ghost small', onclick: undo }, '↶ ' + t(S.undo)) : null,
-      h('button', { class: 'btn ghost small', title: t(S.advanceEvent), onclick: () => doAdvance('event') }, '⏭ ' + t(S.advanceEvent)),
+      h('span', { class: 'btn-split' },
+        h('button', { class: 'btn ghost small', title: stopSummary(g), onclick: () => doAdvance('until') }, '⏭ ' + t(l('Até…', 'Until…'))),
+        h('button', { class: 'btn ghost small', title: t(l('Critérios de parada', 'Stop criteria')), 'aria-label': t(l('Critérios de parada', 'Stop criteria')), onclick: () => openUntilConfig(g, () => doAdvance('until')) }, '▾')),
       h('button', { class: 'btn ghost small', onclick: () => doAdvance('quarter') }, '⏩ ' + t(S.advanceQuarter)),
       h('button', { class: 'btn small', title: t(l('Avança até o próximo fechamento semanal (dias de turnê, estúdio e crise)', 'Advance to the next weekly close (tour, studio and crisis days)')), onclick: () => doAdvance('week') }, '▷ ' + t(l('Semana', 'Week')), g.clock.opened ? h('small', null, ` ${g.clock.dayInMonth}d`) : null),
       h('button', { class: 'btn primary', title: 'Ctrl+Enter', onclick: () => doAdvance('month') }, '▶ ' + t(S.advanceMonth), g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null),
@@ -337,6 +355,7 @@ function palette(): void {
     { label: `▶ ${t(S.advanceMonth)}`, run: () => doAdvance('month') },
     { label: `⏩ ${t(S.advanceQuarter)}`, run: () => doAdvance('quarter') },
     { label: `⏭ ${t(S.advanceEvent)}`, run: () => doAdvance('event') },
+    { label: `⏭ ${t(l('Avançar até algo relevante', 'Advance until something relevant'))}`, run: () => doAdvance('until') },
     { label: `▷ ${t(l('Avançar semana', 'Advance week'))}`, run: () => doAdvance('week') },
     { label: `⚖ ${t(l('Comparar carreiras', 'Compare careers'))}`, run: () => compareActs(g, playerActs(g)) },
     ...playerActs(g).map((id) => ({ label: `🎸 ${g.acts[id].name}`, run: () => inspect.act(id) })),

@@ -3,7 +3,7 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { agendaById, type SkillId } from '../data/people';
-import { l } from '../data/world';
+import { l, type L } from '../data/world';
 import { maxVenueTier, playGigs } from './live';
 import { actHasTrait, actState, growPerson, traitMod } from './people';
 import { composeSongs, notifyRecorded, recordSongs, recordingSessionsAvailable, scheduleRelease, suggestedPress, unrecorded, unreleasedRecorded, availableFormats, labelFunded, pressingCost } from './production';
@@ -68,10 +68,11 @@ export function setAgenda(s: GameState, actId: string, slots: AgendaSlot[]): boo
 /** Processa a agenda de todos os atos do jogador no início do mês. */
 export function processPlayerAgendas(s: GameState, r: Rng): void {
   let sessionsLeft = recordingSessionsAvailable(s);
-  for (const actId of playerActs(s)) {
+  const ids = deleg.order ? deleg.order(s, playerActs(s)) : playerActs(s);
+  for (const actId of ids) {
     const act = s.acts[actId];
     if (act.hiatusUntil && act.hiatusUntil > s.week) continue;
-    let slots = s.delegated[actId] !== false ? defaultAgenda(s, act) : s.agenda[actId] ?? [];
+    let slots = s.delegated[actId] !== false ? (deleg.agenda ? deleg.agenda(s, act, defaultAgenda(s, act)) : defaultAgenda(s, act)) : s.agenda[actId] ?? [];
     if (s.delegated[actId] !== false) s.agenda[actId] = slots;
     // autonomia: artista com controle criativo pode trocar uma ação
     const c = act.contractId ? s.contracts[act.contractId] : undefined;
@@ -123,6 +124,24 @@ export function setAgendaHooks(h: { queue: typeof agendaQueue; before: typeof be
   sessionsBank = h.bank;
 }
 
+// delegação da rodada 8 (prioridades, tetos de gasto, ordem e registro das decisões): sim/sys/pacing8.ts
+export interface DelegationHooks {
+  /** ordem em que as carreiras disputam sessões e orçamento */
+  order?: (s: GameState, ids: string[]) => string[];
+  /** agenda delegada a partir da padrão */
+  agenda?: (s: GameState, act: Act, base: AgendaSlot[]) => AgendaSlot[];
+  /** a equipe pode gastar isto nesta carreira? */
+  canSpend?: (s: GameState, act: Act, cost: number, what: string) => boolean;
+  spent?: (s: GameState, act: Act, cost: number, what: string) => void;
+  /** política de lançamento delegado */
+  release?: (s: GameState, act: Act) => { ok: boolean; minGap: number; budgetMult: number; maxSpend: number };
+  released?: (s: GameState, act: Act, info: { type: 'single' | 'lp'; budget: number; press: number; cost: number; error?: L }) => void;
+}
+let deleg: DelegationHooks = {};
+export function setDelegationHooks(h: DelegationHooks): void {
+  deleg = h;
+}
+
 /** Roda uma ação da agenda (usado pela fila semanal). */
 export function runAgendaSlot(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number, takeSession: () => boolean): void {
   runAction(s, r, act, slot, dim, takeSession);
@@ -139,7 +158,10 @@ function payAction(s: GameState, act: Act, id: string, planned?: string): boolea
   const cost = money(s, def.cost);
   if (act.playerBand || act.owner === 'player') {
     if (s.player.cash < cost) return false;
+    const byTeam = s.delegated[act.id] !== false;
+    if (byTeam && deleg.canSpend && !deleg.canSpend(s, act, cost, id)) return false;
     post(s, `agenda:${act.id}:${id}`, -cost, 'artist_dev', `${def.name.pt} ${act.name}`);
+    if (byTeam) deleg.spent?.(s, act, cost, id);
   }
   return true;
 }
@@ -259,20 +281,24 @@ function runAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number
 /** Política de lançamento delegada: singles regulares, LP quando há repertório. */
 function autoRelease(s: GameState, r: Rng, act: Act): void {
   if (s.pendingReleases.some((p) => p.actId === act.id)) return;
+  const pol = deleg.release?.(s, act);
+  if (pol && !pol.ok) return;
   const ready = unreleasedRecorded(s, act).sort((a, b) => b.q - a.q);
   const since = s.week - act.lastRelease;
-  if (!ready.length || since < 22) return;
+  if (!ready.length || since < (pol?.minGap ?? 22)) return;
   const type: 'single' | 'lp' = ready.length >= 8 ? 'lp' : 'single';
   const songs = type === 'lp' ? ready.slice(0, 10).map((x) => x.id) : [ready[0].id];
   const budgetCap = Math.max(0, Math.round(s.player.cash * 0.08));
   const ch = availableChannels(s);
   const main = ch.find((c) => c.id === 'playlists') ?? ch.find((c) => c.id === 'music_video') ?? ch.find((c) => c.id === 'tv_show') ?? ch[0];
-  const budget = Math.min(budgetCap, money(s, type === 'lp' ? 6000 : 2500) * (1 + act.fame / 30));
+  let budget = Math.min(budgetCap, money(s, type === 'lp' ? 6000 : 2500) * (1 + act.fame / 30));
+  if (pol) budget = Math.round(Math.min(budget * pol.budgetMult, pol.maxSpend * 0.5));
   const formats = availableFormats(s);
   const per1000 = Math.max(1, pressingCost(s, formats, 1000) - pressingCost(s, formats, 0));
-  const affordable = Math.floor((s.player.cash * 0.15) / per1000) * 1000;
+  const affordable = Math.floor((pol ? Math.min(s.player.cash * 0.15, pol.maxSpend * 0.5) : s.player.cash * 0.15) / per1000) * 1000;
   const press = labelFunded(s, act.id) ? suggestedPress(s, act, type) : Math.min(suggestedPress(s, act, type), affordable);
   if (s.player.cash < money(s, 1500)) return;
+  const cashBefore = s.player.cash;
   const res = scheduleRelease(s, r, {
     actId: act.id,
     type,
@@ -284,4 +310,5 @@ function autoRelease(s: GameState, r: Rng, act: Act): void {
     weeksAhead: 2,
   });
   if ('pt' in res) notify(s, fmtL(l('Lançamento automático de {act} não saiu: {e}', 'Auto release for {act} failed: {e}'), { act: act.name, e: res }), 'info');
+  deleg.released?.(s, act, { type, budget, press: Math.max(200, press), cost: Math.max(0, cashBefore - s.player.cash), error: 'pt' in res ? res : undefined });
 }

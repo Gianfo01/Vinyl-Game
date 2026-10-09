@@ -15,7 +15,7 @@ import { careerSlotsUsed } from '../../sim/contracts';
 import { $, N, memoText, actLink, branchName, cityName, cover, genreName, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
-import { HqView } from '../hq';
+import { HqView, hqHooks } from '../hq';
 import { copyText, store } from '../store';
 import { inspect } from '../common';
 import { CITIES, cityById, genreById } from '../../data/world';
@@ -313,7 +313,7 @@ const CAT_NAMES: Record<string, [string, string]> = {
   marketing: ['Marketing avulso', 'Ad-hoc marketing'], taxes: ['Impostos', 'Taxes'], outsourcing: ['Terceirização', 'Outsourcing'], neural: ['Era neural', 'Neural era'], acquisitions: ['Aquisições', 'Acquisitions'], asset_sales: ['Venda de ativos', 'Asset sales'],
   dividends: ['Dividendos', 'Dividends'], owner_draw: ['Retiradas e aportes do dono', 'Owner draws and injections'],
 };
-const catName = (c: string) => t(CAT_NAMES[c] ? l(CAT_NAMES[c][0], CAT_NAMES[c][1]) : l(c));
+export const catName = (c: string) => t(CAT_NAMES[c] ? l(CAT_NAMES[c][0], CAT_NAMES[c][1]) : l(c));
 
 function finances(s: GameState): HTMLElement {
   const last = Object.entries(s.lastMonthLedger).sort((a, b) => b[1] - a[1]);
@@ -462,7 +462,7 @@ export function diaryPanel(s: GameState): HTMLElement {
 let hqView: HqView | null = null;
 export function hqPanel(s: GameState): HTMLElement {
   hqView ??= new HqView(() => store.game);
-  hqView.onSelect = (id) => inspect.act(id);
+  hqView.onSelect = (id) => (hqHooks.onAct ? hqHooks.onAct(id) : inspect.act(id));
   hqView.onSelectPerson = (id) => inspect.person(id);
   hqView.onSelectStaff = () => { store.area = 'company'; store.companyTab = 'staff'; rerender(); };
   hqView.refreshToolbar();
@@ -470,9 +470,9 @@ export function hqPanel(s: GameState): HTMLElement {
   setTimeout(() => hqView?.start(), 0);
   const acts = playerActs(s).map((id) => s.acts[id]);
   return h('div', { class: 'panel hq' },
-    h('div', { class: 'col-main' }, section(`${s.config.companyName} — ${t(HQ_LEVELS[s.player.hq].name)}`, wrap, h('p', { class: 'muted small' }, t(l('Clique numa pessoa para abrir a ficha. Arraste para mover, roda do mouse ou +/− para zoom, Home centraliza. Discos de ouro e platina ficam na sala de troféus.', 'Click a person to open their record. Drag to pan, mouse wheel or +/− to zoom, Home recenters. Gold and platinum discs hang in the trophy room.'))))),
+    h('div', { class: 'col-main' }, section(`${s.config.companyName} — ${t(HQ_LEVELS[s.player.hq].name)}`, wrap, h('p', { class: 'muted small' }, t(l('Balões mostram quem grava, compõe, ensaia, descansa, está à toa ou precisa de atenção (!); etiquetas mostram estúdio livre, gravando ou com fila. Clique no artista para ver a próxima decisão, no estúdio para abrir a sessão em andamento, no escritório para a equipe e nos troféus para a história da empresa. Arraste para mover, roda do mouse ou +/− para zoom, Home centraliza.', 'Bubbles show who is recording, writing, rehearsing, resting, idle or needs attention (!); tags show whether the studio is free, recording or has a queue. Click an artist for their next decision, the studio for the session in progress, the office for the team and the trophies for the company history. Drag to pan, mouse wheel or +/− to zoom, Home recenters.'))))),
     h('aside', { class: 'col-side' },
-      section(t(l('Unidades por banda', 'Band units')), acts.length ? h('ul', { class: 'small' }, acts.map((a) => h('li', null, actLink(s, a.id), ` · ${t(S.fame)} ${Math.round(a.fame)} · `, t(l('agenda', 'agenda')), ': ', (s.agenda[a.id] ?? []).map((x) => x.action).join(', ') || '—'))) : h('p', { class: 'muted' }, t(S.noActs))),
+      hqHooks.side ? hqHooks.side(s) : section(t(l('Unidades por banda', 'Band units')), acts.length ? h('ul', { class: 'small' }, acts.map((a) => h('li', null, actLink(s, a.id), ` · ${t(S.fame)} ${Math.round(a.fame)} · `, t(l('agenda', 'agenda')), ': ', (s.agenda[a.id] ?? []).map((x) => x.action).join(', ') || '—'))) : h('p', { class: 'muted' }, t(S.noActs))),
       section(t(l('Capacidade', 'Capacity')), h('p', { class: 'small' }, t(hqCapacityText(s))), kv(t(S.mgmtLoad), `${(managementLoad(s) * 100).toFixed(0)}%`)),
       section(t(l('Cartas e mutators', 'Cards and mutators')), h('p', { class: 'small' }, t(CARDS.find((c) => c.id === s.config.card)?.name))),
     ),
