@@ -10,7 +10,7 @@ import { createGame } from '../src/sim/worldgen';
 import { perk } from '../src/sim/perks';
 import { scoutActionsPerMonth, setStage, syncPipeline, watchAct } from '../src/sim/scouting';
 import { makeOffer, defaultOffer } from '../src/sim/contracts';
-import { deriveAttrs, persona, setFocus, styleProgress } from '../src/sim/sys/persona';
+import { deriveAttrs, persona, skills } from '../src/sim/sys/persona';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { acceptInvestor, capital, goPublic6, injectCapital, opinion, ownerShare, payDividend, seekInvestors, valuation, withdrawFromCompany } from '../src/sim/sys/capital';
 import { rngOf } from '../src/sim/util';
@@ -55,10 +55,9 @@ describe('persona', () => {
     const rock = Object.values(s.acts).find((x) => familyOf(x.genre) === 'rock')!;
     const sacred = Object.values(s.acts).find((x) => familyOf(x.genre) === 'sacred') ?? Object.values(s.acts).find((x) => familyOf(x.genre) !== 'rock' && familyOf(x.genre) !== 'hiphop')!;
     expect(perk(s, 'appeal', rock)).toBeGreaterThan(perk(s, 'appeal', sacred));
-    for (let i = 0; i < 8; i++) advanceMonth(s);
-    expect(styleProgress(s).n).toBeGreaterThanOrEqual(1);
-    expect(setFocus(s, 'mogul')).toBeNull();
-    expect(persona(s).xp).toBe(0);
+    // rodada 9: o estilo antigo vira habilidades iniciais no ramo equivalente (Garimpeiro → Rede)
+    expect(skills(s).owned).toContain('net_book');
+    expect(skills(s).lifestyle).not.toBeNull();
   });
 });
 

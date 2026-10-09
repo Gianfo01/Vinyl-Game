@@ -15,6 +15,7 @@ import { actTalent, makeAct, personName } from './people';
 import type { Act, GameState, Label, RunConfig, StaffMember } from './types';
 import { dayOfDate, fmtL, hasMutator, nextId, remember } from './util';
 import { l } from '../data/world';
+import { takeoverTerms, type TakeoverTerms } from './takeover';
 import { runSimHooks } from './ext4';
 
 export const SAVE_VERSION = 5;
@@ -157,7 +158,7 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
   return act;
 }
 
-export function createGame(cfg: RunConfig): GameState {
+export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): GameState {
   applyRealNames(!!cfg.realNames);
   const startDay = 0;
   const s: GameState = {
@@ -280,9 +281,13 @@ export function createGame(cfg: RunConfig): GameState {
     act.fans = { casual: Math.round(f), active: Math.round(f * 0.15), core: Math.round(f * 0.03) };
     if (act.fame > 18 && r.chance(0.6)) signToBestRival(s, r, act);
   }
+  if (opts.preview) return s;
 
-  // L5 — jogador
+  // L5 — jogador (rodada 9: pode assumir uma gravadora gerada acima)
+  const taken = cfg.takeover ? s.labels[cfg.takeover] : undefined;
+  if (taken && taken.active) { cfg.homeCity = cityById[taken.city] ? taken.city : cfg.homeCity; cfg.companyName = taken.name; } else if (cfg.takeover) delete cfg.takeover;
   setupPlayer(s, r);
+  if (cfg.takeover) applyTakeover(s, r, cfg.takeover);
   for (const lb of Object.values(s.labels)) lb.revenueLastYear = 0;
   s.professionals = genProfessionals(s, r, 8);
 
@@ -370,7 +375,7 @@ function setupPlayer(s: GameState, r: Rng): void {
     s.delegated[act.id] = true;
   }
   const customRoster = cfg.custom?.roster;
-  if ((cfg.role !== 'artist' && cfg.scenario !== 'from_zero') || customRoster) {
+  if (!cfg.takeover && ((cfg.role !== 'artist' && cfg.scenario !== 'from_zero') || customRoster)) {
     const n = customRoster !== undefined ? clamp(Math.round(customRoster), 0, 8) : cfg.scenario === 'established' ? 3 : 1;
     for (let i = 0; i < n; i++) {
       const act = spawnProceduralAct(s, r, { city: cfg.homeCity, potential: r.int(50, 72), fame: r.int(8, 25), formedYear: s.year - 2 });
@@ -389,6 +394,42 @@ function setupPlayer(s: GameState, r: Rng): void {
   }
   if (cfg.custom?.markets === 'region') p.territories = [...new Set([home, home === 'na' ? 'eu' : 'na', home === 'br' ? 'latam' : home === 'latam' ? 'br' : 'eu'] as MarketId[])];
   if (cfg.custom?.markets === 'world') p.territories = MARKETS.map((m) => m.id);
+}
+
+/** Rodada 9: gravadoras que o jogador pode assumir neste começo (mesma semente, ano e modo). */
+export function takeoverCandidates(cfg: RunConfig): { label: Label; terms: TakeoverTerms }[] {
+  const s = createGame({ ...cfg, takeover: undefined, character: undefined }, { preview: true });
+  return Object.values(s.labels).filter((lb) => lb.active && lb.roster.length > 0).map((lb) => ({ label: lb, terms: takeoverTerms(s, lb) }))
+    .sort((a, b) => a.terms.tier - b.terms.tier || a.terms.roster - b.terms.roster);
+}
+
+/** Transfere a gravadora escolhida para o jogador: elenco, contratos, catálogo, caixa, equipe, dívidas e reputação. */
+function applyTakeover(s: GameState, r: Rng, id: string): void {
+  const lb = s.labels[id];
+  if (!lb) return;
+  const p = s.player;
+  const terms = takeoverTerms(s, lb);
+  for (const actId of lb.roster) {
+    const act = s.acts[actId];
+    if (!act) continue;
+    act.owner = 'player';
+    act.trust = clamp(act.trust - terms.trustHit, 5, 100);
+    s.delegated[act.id] = true;
+    s.knowledge[act.id] = { actId: act.id, degree: 4, stage: 'negotiation', bias: r.normal(0, 3), updatedWeek: 0, source: 'roster' };
+  }
+  for (const c of Object.values(s.contracts)) if (c.party === id) c.party = 'player';
+  for (const rel of Object.values(s.releases)) if (rel.owner === id) rel.owner = 'player';
+  p.cash = terms.cash;
+  p.initialCash = p.cash - p.totalPosted;
+  p.hq = Math.max(p.hq, terms.hq);
+  p.territories = [...new Set([...p.territories, ...lb.territories])];
+  const rep = terms.reputation;
+  p.reputation = { artistic: rep, commercial: rep, artists: clamp(rep - terms.trustHit / 2, 0, 100), institutional: rep };
+  for (let i = 0; i < terms.staff; i++) p.staff.push(genStaff(s, r, ['producer', 'anr', 'publicist', 'admin'][i % 4], r.int(45, 65)));
+  if (terms.debt > 0) p.loans.push({ id: nextId(s, 'ln'), principal: terms.debt, balance: terms.debt, rate: 0.09, monthly: terms.monthly, startWeek: s.week });
+  delete s.labels[id];
+  for (const x of Object.values(s.labels)) if (x.parentLabel === id) delete x.parentLabel;
+  remember(s, 'start', fmtL(l('O selo {n} troca de dono: agora é seu ({r} atos no elenco).', '{n} changes hands: it is yours now ({r} acts on the roster).'), { n: lb.name, r: terms.roster }), { important: true });
 }
 
 export function grantPlayerContract(s: GameState, act: Act, months: number): void {

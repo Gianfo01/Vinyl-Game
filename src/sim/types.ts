@@ -33,6 +33,8 @@ export interface RunConfig {
   custom?: StartCustom;
   /** personagem do jogador (rodada 5); ausente = gerado */
   character?: CharacterSpec;
+  /** rodada 9: id de uma gravadora rival gerada que o jogador assume no começo */
+  takeover?: string;
 }
 
 export interface StartCustom {
@@ -76,6 +78,10 @@ export interface CharacterSpec {
   points?: Partial<Record<'ear' | 'negotiation' | 'charisma' | 'management', number>>;
   /** rodada 8: trajetória profissional (vazio = deduzida da origem) */
   career?: string;
+  /** rodada 9: sexo do personagem (filtra opções de aparência) */
+  sex?: 'm' | 'f' | 'x';
+  /** rodada 9: habilidades iniciais (árvore; até START_SKILL_POINTS) */
+  skills?: string[];
 }
 
 /** Aparência combinável (GDD §44): 3 corpos × 3 rostos × 4 peles × 16 cabelos × 8 cores × 4 roupas × 8 cores × acessórios. */

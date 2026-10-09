@@ -1,0 +1,8 @@
+/* Árvore de habilidades (rodada 9): usada na criação e na área Você. */
+.sk-tree { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.6rem; }
+.sk-branch { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.5rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.sk { font: inherit; text-align: left; display: flex; flex-direction: column; gap: 0.15rem; padding: 0.4rem 0.5rem; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); }
+button.sk { cursor: pointer; }
+.sk.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.sk.locked, button.sk:disabled:not(.on) { opacity: 0.55; }
+.cc-traits .pick:disabled:not(.on) { opacity: 0.5; }

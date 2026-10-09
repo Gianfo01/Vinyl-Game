@@ -5,6 +5,8 @@
 
 import { l, type L } from '../../../data/world';
 import type { BackgroundId } from '../life/data';
+import type { SkillId } from '../../../data/people';
+import type { PerkValues } from '../../perks';
 
 // ---------------------------------------------------------------- perfis do selo
 
@@ -83,7 +85,8 @@ export const profileById = Object.fromEntries(PROFILES.map((p) => [p.id, p])) as
 
 // ---------------------------------------------------------------- trajetórias profissionais
 
-export type OriginId = 'exMusician' | 'radio' | 'promoter' | 'journalist' | 'recordStore' | 'majorExec' | 'sceneOrganizer';
+export type OriginId = 'exMusician' | 'radio' | 'promoter' | 'journalist' | 'recordStore' | 'majorExec' | 'sceneOrganizer'
+  | 'musician' | 'producer' | 'songwriter' | 'conductor' | 'soundTech' | 'dj' | 'manager' | 'anr' | 'lawyer' | 'musicHeir';
 
 export interface OriginDef {
   id: OriginId;
@@ -96,11 +99,20 @@ export interface OriginDef {
   seed: Partial<Record<ProfileId, number>>;
   /** dívida inicial: parcelas mensais (dólares reais) */
   debt?: { months: number; real: number; memo: string };
+  /** rodada 9: base da ficha (atributos, habilidades musicais, instrumento, patrimônio e bônus da antiga "origem") */
+  bg: BackgroundId;
+  /** rodada 9 (trajetórias novas): efeitos declarativos aplicados pela persona */
+  perks?: PerkValues;
+  families?: { ids: string[]; perks: PerkValues };
+  attrs?: Partial<Record<'ear' | 'negotiation' | 'charisma' | 'management', number>>;
+  skills?: Partial<Record<SkillId, number>>;
+  /** reputação institucional inicial (+/−) */
+  rep?: number;
 }
 
 export const ORIGINS: OriginDef[] = [
   {
-    id: 'exMusician', name: l('Ex-músico(a)', 'Former musician'),
+    id: 'exMusician', bg: 'musician', name: l('Ex-músico(a)', 'Former musician'),
     desc: l('Tocou anos antes de abrir o selo.', 'Played for years before starting the label.'),
     contacts: l('Dois atos da cidade são velhos companheiros de palco (radar e confiança).', 'Two acts in town are old stage mates (radar and trust).'),
     advantages: l('Artistas confiam mais (+4) e ouvem você sobre arte.', 'Artists trust you more (+4) and listen to you about art.'),
@@ -108,7 +120,7 @@ export const ORIGINS: OriginDef[] = [
     seed: { dev: 10 },
   },
   {
-    id: 'radio', name: l('Radialista', 'Radio host'),
+    id: 'radio', bg: 'dj', name: l('Radialista', 'Radio host'),
     desc: l('Comandou um programa e sabe o que toca.', 'Ran a show and knows what gets played.'),
     contacts: l('Programadores de rádio atendem sua ligação: singles +5% de apelo e +1 sinal por mês.', 'Radio programmers take your call: singles +5% appeal and +1 signal a month.'),
     advantages: l('Ouvido para single e acesso às rádios.', 'An ear for singles and radio access.'),
@@ -117,7 +129,7 @@ export const ORIGINS: OriginDef[] = [
     debt: { months: 18, real: 220, memo: 'Dívida com a antiga rádio' },
   },
   {
-    id: 'promoter', name: l('Promotor(a) de shows', 'Show promoter'),
+    id: 'promoter', bg: 'roadie', name: l('Promotor(a) de shows', 'Show promoter'),
     desc: l('Montou noites, casas e festivais.', 'Put on nights, venues and festivals.'),
     contacts: l('Casas do mercado de casa: +10% de demanda e +6% de bilheteria.', 'Home-market venues: +10% demand and +6% box office.'),
     advantages: l('Sabe vender ingresso e montar turnê.', 'Knows how to sell tickets and route tours.'),
@@ -126,7 +138,7 @@ export const ORIGINS: OriginDef[] = [
     debt: { months: 24, real: 260, memo: 'Dívida do festival antigo' },
   },
   {
-    id: 'journalist', name: l('Jornalista musical', 'Music journalist'),
+    id: 'journalist', bg: 'critic', name: l('Jornalista musical', 'Music journalist'),
     desc: l('Escreveu críticas e reportagens por anos.', 'Wrote reviews and features for years.'),
     contacts: l('Redações te recebem: críticas +0,4 e relatórios 8% mais precisos.', 'Newsrooms welcome you: reviews +0.4 and reports 8% sharper.'),
     advantages: l('Imprensa a favor e leitura fina dos artistas.', 'Press on your side and a sharp read on artists.'),
@@ -134,7 +146,7 @@ export const ORIGINS: OriginDef[] = [
     seed: { scene: 6, dev: 4 },
   },
   {
-    id: 'recordStore', name: l('Herdeiro(a) de loja de discos', 'Record-store heir'),
+    id: 'recordStore', bg: 'fan', name: l('Herdeiro(a) de loja de discos', 'Record-store heir'),
     desc: l('Cresceu atrás do balcão, entre colecionadores.', 'Grew up behind the counter among collectors.'),
     contacts: l('Colecionadores e lojistas: reedições +10% de apelo e vendas +3%.', 'Collectors and retailers: reissues +10% appeal and sales +3%.'),
     advantages: l('Conhece o catálogo de todo mundo.', 'Knows everyone\'s catalog.'),
@@ -143,7 +155,7 @@ export const ORIGINS: OriginDef[] = [
     debt: { months: 24, real: 200, memo: 'Hipoteca da loja de discos' },
   },
   {
-    id: 'majorExec', name: l('Ex-executivo(a) de major', 'Former major-label executive'),
+    id: 'majorExec', bg: 'exec', name: l('Ex-executivo(a) de major', 'Former major-label executive'),
     desc: l('Subiu numa grande gravadora e saiu para ter o próprio selo.', 'Climbed a major label and left to run your own.'),
     contacts: l('Agenda de executivos: +6 de negociação, adiantamentos 6% menores e atos ambiciosos te ouvem.', 'An executive rolodex: +6 negotiation, 6% smaller advances and ambitious acts listen.'),
     advantages: l('Sabe fechar contrato e falar com distribuidores.', 'Knows how to close deals and talk to distributors.'),
@@ -151,12 +163,93 @@ export const ORIGINS: OriginDef[] = [
     seed: { hits: 6, export: 6 },
   },
   {
-    id: 'sceneOrganizer', name: l('Organizador(a) de cena independente', 'Indie scene organizer'),
+    id: 'sceneOrganizer', bg: 'street', name: l('Organizador(a) de cena independente', 'Indie scene organizer'),
     desc: l('Fanzines, porões, coletivos e noites do bairro.', 'Zines, basements, collectives and neighbourhood nights.'),
     contacts: l('Três atos underground da cidade no radar; atos locais +6 de confiança e +1 sinal por mês.', 'Three underground local acts on the radar; local acts +6 trust and +1 signal a month.'),
     advantages: l('Credibilidade de rua e faro para o que vem.', 'Street credibility and a nose for what is next.'),
     drawbacks: l('Estrelas e atos crossover te acham pequeno. Bancos e indústria te ignoram (−5 de reputação institucional). Lacuna: gestão −5.', 'Stars and crossover acts think you are small. Banks and the industry ignore you (−5 institutional reputation). Gap: management −5.'),
     seed: { scene: 10 },
+  },
+  // ---- rodada 9: trajetórias novas (efeitos = base da ficha + os extras abaixo)
+  {
+    id: 'musician', bg: 'musician', name: l('Músico(a) em atividade', 'Working musician'),
+    desc: l('Ainda toca toda semana; o selo nasceu da sua própria banda.', 'Still gigs every week; the label grew out of your own band.'),
+    contacts: l('Músicos da cidade te tratam como colega.', 'Local musicians treat you as a peer.'),
+    advantages: l('Instrumento +8, voz +6 e palco +6 para você; bilheteria +5%.', 'Instrument +8, voice +6 and stage +6 for you; box office +5%.'),
+    drawbacks: l('Pouco escritório: gestão −5.', 'Little office time: management −5.'),
+    seed: { dev: 6, live: 4 }, perks: { showRevenue: 0.05 }, attrs: { management: -5 }, skills: { instr: 8, voice: 6, stage: 6 },
+  },
+  {
+    id: 'producer', bg: 'producer', name: l('Produtor(a) musical', 'Record producer'),
+    desc: l('Transformou demos em discos para outros selos.', 'Turned demos into records for other labels.'),
+    contacts: l('Estúdios e engenheiros da cidade te devem favores.', 'Local studios and engineers owe you favours.'),
+    advantages: l('Base: +2 de qualidade e crítica mais atenta.', 'Base: +2 quality and closer-listening critics.'),
+    drawbacks: l('Equipamento financiado (12 parcelas). Carisma −4.', 'Financed gear (12 instalments). Charisma −4.'),
+    seed: { dev: 6 }, attrs: { charisma: -4 }, debt: { months: 12, real: 180, memo: 'Parcelas do equipamento de estúdio' },
+  },
+  {
+    id: 'songwriter', bg: 'songwriter', name: l('Compositor(a)', 'Songwriter'),
+    desc: l('Viveu de direitos autorais e parcerias.', 'Lived off royalties and co-writes.'),
+    contacts: l('Editoras e intérpretes conhecem seu nome.', 'Publishers and singers know your name.'),
+    advantages: l('+1 de qualidade nas músicas e crítica +0,15.', '+1 song quality and critics +0.15.'),
+    drawbacks: l('Pouco tino comercial: negociação −4.', 'Little business sense: negotiation −4.'),
+    seed: { catalog: 4, dev: 4 }, perks: { critics: 0.15 }, attrs: { negotiation: -4 },
+  },
+  {
+    id: 'conductor', bg: 'academic', name: l('Maestro / arranjador(a)', 'Conductor / arranger'),
+    desc: l('Regência, partitura e orquestra.', 'Conducting, scores and orchestras.'),
+    contacts: l('Conservatórios e orquestras da cidade.', 'The city\'s conservatories and orchestras.'),
+    advantages: l('Base: crítica +0,4; clássico, jazz e música europeia rendem mais.', 'Base: critics +0.4; classical, jazz and European music do better.'),
+    drawbacks: l('O pop te acha careta: carisma −3.', 'Pop thinks you are square: charisma −3.'),
+    seed: { dev: 4, catalog: 4 }, attrs: { charisma: -3 },
+  },
+  {
+    id: 'soundTech', bg: 'tech', name: l('Técnico(a) de som', 'Sound engineer'),
+    desc: l('Mesa, cabos e microfones: o som de todo mundo passou pelas suas mãos.', 'Desks, cables and mics: everyone\'s sound went through your hands.'),
+    contacts: l('Técnicos de estúdio e de palco.', 'Studio and live engineers.'),
+    advantages: l('Base: vendas +6% e fabricação −8%; +0,5 de qualidade.', 'Base: sales +6% and manufacturing −8%; +0.5 quality.'),
+    drawbacks: l('Bastidor demais: carisma −5.', 'Too backstage: charisma −5.'),
+    seed: { tech: 8 }, perks: { songQ: 0.5 }, attrs: { charisma: -5 },
+  },
+  {
+    id: 'dj', bg: 'dj', name: l('DJ de pista', 'Club DJ'),
+    desc: l('Comandou pistas e sabe o que faz a sala dançar.', 'Ran dancefloors and knows what moves a room.'),
+    contacts: l('Clubes e equipes de som: eletrônica e hip hop te ouvem (ofertas +4, confiança +3).', 'Clubs and sound crews: electronic and hip hop listen (offers +4, trust +3).'),
+    advantages: l('Base: apelo +8% e +1 sinal por mês.', 'Base: appeal +8% and +1 signal a month.'),
+    drawbacks: l('Fama de noite: reputação institucional −3.', 'Night-life reputation: institutional reputation −3.'),
+    seed: { scene: 6, hits: 4 }, families: { ids: ['electronic', 'hiphop'], perks: { offer: 0.04, trust: 3 } }, rep: -3,
+  },
+  {
+    id: 'manager', bg: 'roadie', name: l('Empresário(a) de artistas', 'Artist manager'),
+    desc: l('Cuidou da carreira dos outros: agenda, cachê e crise.', 'Ran other people\'s careers: bookings, fees and crises.'),
+    contacts: l('Produtores de shows e artistas que você já empresariou.', 'Promoters and artists you used to manage.'),
+    advantages: l('Base: bilheteria +10% e +1 tempo livre; confiança +3 e negociação +2.', 'Base: box office +10% and +1 free time; trust +3 and negotiation +2.'),
+    drawbacks: l('Artistas sabem que você brigava por eles: adiantamentos esperados +4%.', 'Artists know you fought for them: expected advances +4%.'),
+    seed: { live: 6, dev: 4 }, perks: { trust: 3, advance: 0.04 }, attrs: { negotiation: 2 },
+  },
+  {
+    id: 'anr', bg: 'fan', name: l('A&R', 'A&R'),
+    desc: l('Caçou talentos para outro selo.', 'Hunted talent for another label.'),
+    contacts: l('Olheiros e donos de bares: relatórios 5% mais precisos.', 'Scouts and bar owners: reports 5% sharper.'),
+    advantages: l('Base: +1 sinal, +3 de confiança e elenco animado.', 'Base: +1 signal, +3 trust and a happier roster.'),
+    drawbacks: l('Multa rescisória com o antigo selo (12 parcelas).', 'Exit penalty owed to your old label (12 instalments).'),
+    seed: { scene: 6, dev: 4 }, perks: { scoutAccuracy: 0.05 }, debt: { months: 12, real: 150, memo: 'Multa rescisória do antigo selo' },
+  },
+  {
+    id: 'lawyer', bg: 'lawyer', name: l('Advogado(a) de música', 'Music lawyer'),
+    desc: l('Redigiu contratos e brigou por direitos.', 'Drafted contracts and fought over rights.'),
+    contacts: l('Escritórios, editoras e sociedades de direitos.', 'Law firms, publishers and rights societies.'),
+    advantages: l('Base: adiantamentos 12% menores e ofertas mais seguras.', 'Base: 12% smaller advances and safer offers.'),
+    drawbacks: l('Artistas te veem como "o outro lado da mesa" (confiança −3). Ouvido −4.', 'Artists see you as "the other side of the table" (trust −3). Ear −4.'),
+    seed: { catalog: 6 }, perks: { trust: -3 }, attrs: { ear: -4 },
+  },
+  {
+    id: 'musicHeir', bg: 'heir', name: l('Herdeiro(a) de família da música', 'Music-dynasty heir'),
+    desc: l('Seu sobrenome está em capas de disco há gerações.', 'Your surname has been on record sleeves for generations.'),
+    contacts: l('A velha guarda atende seu telefonema (reputação institucional +3).', 'The old guard takes your calls (institutional reputation +3).'),
+    advantages: l('Base: +$15 mil no caixa, fundo da família e investidores generosos.', 'Base: +$15k cash, family trust and generous investors.'),
+    drawbacks: l('Sombra da família: crítica −0,15 e artistas desconfiam (base −4).', 'Family shadow: critics −0.15 and artists are wary (base −4).'),
+    seed: { catalog: 8 }, perks: { critics: -0.15 }, rep: 3,
   },
 ];
 export const originById = Object.fromEntries(ORIGINS.map((o) => [o.id, o])) as Record<OriginId, OriginDef>;
@@ -165,7 +258,7 @@ export const originById = Object.fromEntries(ORIGINS.map((o) => [o.id, o])) as R
 export const ORIGIN_OF_BACKGROUND: Record<BackgroundId, OriginId> = {
   musician: 'exMusician', producer: 'exMusician', academic: 'exMusician',
   dj: 'radio', roadie: 'promoter', critic: 'journalist', fan: 'recordStore',
-  heir: 'majorExec', lawyer: 'majorExec', tech: 'majorExec', street: 'sceneOrganizer',
+  heir: 'majorExec', lawyer: 'majorExec', tech: 'majorExec', street: 'sceneOrganizer', songwriter: 'exMusician', exec: 'majorExec',
 };
 
 // ---------------------------------------------------------------- estilos de liderança

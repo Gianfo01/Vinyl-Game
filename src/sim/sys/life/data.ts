@@ -5,7 +5,7 @@ import type { SkillId } from '../../../data/people';
 import type { Person } from '../../types';
 import type { PerkValues } from '../../perks';
 
-export type BackgroundId = 'musician' | 'heir' | 'dj' | 'lawyer' | 'producer' | 'fan' | 'street' | 'academic' | 'critic' | 'tech' | 'roadie';
+export type BackgroundId = 'musician' | 'heir' | 'dj' | 'lawyer' | 'producer' | 'fan' | 'street' | 'academic' | 'critic' | 'tech' | 'roadie' | 'songwriter' | 'exec';
 
 export interface BackgroundDef {
   id: BackgroundId;
@@ -42,7 +42,13 @@ export const BACKGROUNDS: BackgroundDef[] = [
   { id: 'roadie', name: l('Ex-produtor de turnê', 'Former tour manager'), desc: l('Rodou o mundo montando palcos. Conhece casas, promotores e estradas.', 'Toured the world building stages. Knows venues, promoters and roads.'), owner: { management: 5, negotiation: 3 }, musical: 0.4, skills: { stage: 10, instr: 4 }, wealth: 12000, role: 'drums', traits: ['party'], perks: { showRevenue: 0.1, energy: 1 }, effects: l('+10% de bilheteria e +1 tempo livre por mês (você aguenta estrada).', '+10% box office and +1 free time a month (you can take the road).') },
 ];
 
-export const backgroundById = Object.fromEntries(BACKGROUNDS.map((b) => [b.id, b])) as Record<BackgroundId, BackgroundDef>;
+/** Rodada 9: bases extras usadas só pelas trajetórias novas (fora do sorteio de BACKGROUNDS, que segue igual). */
+export const EXTRA_BACKGROUNDS: BackgroundDef[] = [
+  { id: 'songwriter', name: l('Compositor(a)', 'Songwriter'), desc: l('Escreveu canções para os outros cantarem.', 'Wrote songs for others to sing.'), owner: { ear: 5, charisma: 2 }, musical: 0.55, skills: { comp: 14, lyr: 12 }, wealth: 10000, role: 'keys', traits: ['intuitive'], perks: { songQ: 1 }, effects: l('+1 de qualidade nas músicas.', '+1 song quality.') },
+  { id: 'exec', name: l('Executivo(a) de gravadora', 'Label executive'), desc: l('Anos de reuniões, planilhas e distribuidores.', 'Years of meetings, spreadsheets and distributors.'), owner: { negotiation: 4, management: 5 }, musical: 0.2, skills: { biz: 22 }, wealth: 40000, role: 'vocal', traits: ['ambitious'], effects: l('Gestão +5 e negociação +4; pouca intimidade com a música.', 'Management +5 and negotiation +4; little hands-on music.') },
+];
+
+export const backgroundById = Object.fromEntries([...BACKGROUNDS, ...EXTRA_BACKGROUNDS].map((b) => [b.id, b])) as Record<BackgroundId, BackgroundDef>;
 
 export const JOBS: L[] = [
   l('professora', 'teacher'), l('fotógrafo', 'photographer'), l('jornalista', 'journalist'), l('médica', 'doctor'), l('arquiteto', 'architect'), l('atriz', 'actress'),
