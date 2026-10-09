@@ -275,7 +275,7 @@ const fate = (s: GameState, r: Rng, rl: Relic): void => {
     rl.st = 'auction';
     rl.au = s.week + 13;
     if (owner && !owner.alive && rl.own.length === 1) rl.own.push([`herdeiros de ${owner.name}`, s.year, 'herança']);
-    chron(s, { k: 'relic', i: rl.v > 80000 ? 3 : 2, a: rl.a ? [rl.a] : [], t: fmtL(l('Vai a leilão: {n} (lance inicial ${v}).', 'Up for auction: {n} (opening bid ${v}).'), { n: rl.n, v: rl.v.toLocaleString('en-US') }) });
+    chron(s, { k: 'relic', i: rl.v > 80000 ? 3 : 2, a: rl.a ? [rl.a] : [], t: fmtL(l('Vai a leilão: {n} (lance inicial ${v}).', 'Up for auction: {n} (opening bid ${v}).'), { n: rl.n, v: Math.round(money(s, rl.v)).toLocaleString('en-US') }) });
     if (rl.a && s.acts[rl.a]) notify(s, fmtL(l('Leilão: {n}. Veja Lendas → Relíquias.', 'Auction: {n}. See Legends → Relics.'), { n: rl.n }), 'info');
   } else if (roll < auc + 0.02) {
     rl.st = 'stolen';

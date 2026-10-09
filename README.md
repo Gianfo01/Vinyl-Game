@@ -239,3 +239,13 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - **Pessoas reais únicas** entre bandas e carreira solo; opiniões variadas por personalidade e gosto; integrantes clicáveis com características principais.
 - **Investimentos:** bolsa com ações de gravadoras, streaming, vídeo, mídia e fabricantes que reagem ao mundo do jogo; aluguel só de imóvel próprio.
 - **Menus:** Música → Compor, Estúdio, Lançamentos; Selo → Finanças separada de Negócios; Você → Você, Vida pessoal, Patrimônio e investimentos.
+
+## Rodada 11: início em abas, bolsa ligada, lendas, mercado e empresário
+
+- **Nova run em abas** (Personagem, Gravadora e papel, Mundo e ano, Rivais, Regras, Resumo) com resumo fixo e Começar sempre à mão; dá para assumir **qualquer** gravadora existente no ano de início.
+- **Bolsa** começa cheia, com histórico; você e a gravadora investem no mesmo mercado. Gravadoras só aparecem depois do IPO; fundos, rivais e artistas compram e vendem, há maiores acionistas e ameaça de tomada do seu selo.
+- **Lendas** refeita: Panteão, abas e popups para fatos, lendas, recordes e relíquias (oferta ao dono, lance fechado, compra direta, empréstimo a museu, exposição, doação, investigador).
+- **Opiniões** sem autorreferência (inclui bandas antigas e carreira solo) e sem repetição; frases variam com personalidade, política e relação.
+- **Mercado**: busca que não perde o foco, filtros, missões de olheiro com região/gênero/duração e névoa de potencial, lista de observados e comparação.
+- **Empresário**: comissão renegociável, metas de carreira, turnês, campanhas de imagem, oferecer clientes a gravadoras, conflito de interesse, empresários rivais e relatórios mensais.
+- **+116 eventos aleatórios** (artistas, gravadora, indústria por época e vida pessoal), todos com condições de época e intervalo mínimo.
