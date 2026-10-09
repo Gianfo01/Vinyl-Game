@@ -1,5 +1,7 @@
-# Vinyl to Neural
+# Masters
 
+
+*(antes chamado "Vinyl to Neural")*
 Simulador de gestão musical em turnos mensais, de 1920 a 2040: da goma-laca às vozes neurais.
 Esta é a primeira versão jogável construída a partir do **GDD v8**, do **Catálogo do Universo** e da
 **Pesquisa de design**. Roda no navegador, sem servidor, em PT-BR e EN.

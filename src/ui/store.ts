@@ -183,7 +183,7 @@ export function migrate(g: GameState): GameState {
 export function exportSave(): boolean {
   const g = store.game;
   if (!g) return false;
-  return tryDownload(`vinyl-to-neural-${g.signature}-${g.year}.json`, JSON.stringify(g));
+  return tryDownload(`masters-${g.signature}-${g.year}.json`, JSON.stringify(g));
 }
 
 const SAVE_PREFIX = 'VTN1:';

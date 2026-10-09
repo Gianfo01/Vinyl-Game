@@ -445,7 +445,7 @@ export function diaryPanel(s: GameState): HTMLElement {
   }
   const exportTxt = () => {
     const lines = s.memory.filter((m) => m.important).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`);
-    const blob = new Blob([`Vinyl to Neural — Run ${s.signature}\n${s.config.companyName}\n\n${lines.join('\n')}`], { type: 'text/plain' });
+    const blob = new Blob([`Masters — Run ${s.signature}\n${s.config.companyName}\n\n${lines.join('\n')}`], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `diario-${s.signature}.txt`;
@@ -456,7 +456,7 @@ export function diaryPanel(s: GameState): HTMLElement {
       h('div', { class: 'row' },
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: diaryImportant, onchange: (e: Event) => { diaryImportant = (e.target as HTMLInputElement).checked; rerender(); } }), t(l('Só fatos marcantes', 'Only landmark facts'))),
         h('button', { class: 'btn small ghost', onclick: exportTxt }, t(l('Exportar diário', 'Export diary'))),
-        h('button', { class: 'btn small ghost', onclick: async () => { const txt = s.memory.filter((m) => m.important).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`).join('\n'); const ok = await copyText(`Vinyl to Neural — Run ${s.signature}\n${s.config.companyName}\n\n${txt}`); toast(ok ? t(l('Diário copiado.', 'Diary copied.')) : t(l('Não deu para copiar aqui.', 'Copy is not available here.')), ok ? 'good' : 'bad'); } }, t(l('Copiar diário', 'Copy diary'))),
+        h('button', { class: 'btn small ghost', onclick: async () => { const txt = s.memory.filter((m) => m.important).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`).join('\n'); const ok = await copyText(`Masters — Run ${s.signature}\n${s.config.companyName}\n\n${txt}`); toast(ok ? t(l('Diário copiado.', 'Diary copied.')) : t(l('Não deu para copiar aqui.', 'Copy is not available here.')), ok ? 'good' : 'bad'); } }, t(l('Copiar diário', 'Copy diary'))),
       ),
       [...byYear.entries()].map(([y, list]) => h('div', { class: 'year' }, h('h4', null, y), h('ul', null, list.map((m) => h('li', null, h('span', { class: 'muted' }, monthName(m.month) + ' · '), t(m.text), m.actId ? h('span', null, ' ', actLink(s, m.actId)) : null))))),
     ),
