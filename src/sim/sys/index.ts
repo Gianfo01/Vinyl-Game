@@ -75,3 +75,6 @@ import './novelty9';
 // Rodada 10: bolsa de valores (ações de selos, plataformas, mídia e fabricantes) e aluguel só de imóveis próprios.
 import './bolsa10';
 import './leaders10';
+// Rodada 12: dono de festival (festival unificado: Empreendimentos + terreno) e dono de casa de shows.
+import './fest12';
+import './venue12';

@@ -172,7 +172,7 @@ function platformBody(s: GameState, v: Venture): HTMLElement {
     labs.length ? h('div', { class: 'row wrap' }, select<string>(pick, labs.map((x) => ({ value: x.id, label: x.name })), (x) => (pick = x)), btn(l('Licenciar catálogo', 'License catalog'), () => res(dealLabel(s, r, v.id, pick)), 'btn small primary')) : null);
 }
 
-const BODY: Record<VKind, (s: GameState, v: Venture) => HTMLElement> = { festival: festivalBody, publisher: publisherBody, studio: studioBody, booking: bookingBody, media: mediaBody, platform: platformBody };
+export const BODY: Record<VKind, (s: GameState, v: Venture) => HTMLElement> = { festival: festivalBody, publisher: publisherBody, studio: studioBody, booking: bookingBody, media: mediaBody, platform: platformBody };
 
 function kindTab(s: GameState, kind: VKind): HTMLElement {
   const list = ventures(s).list.filter((v) => v.kind === kind);

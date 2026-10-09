@@ -36,3 +36,6 @@ import './lendas9';
 import './rockhall9';
 import './menus9';
 import './leaders10';
+// Rodada 12: dono de festival (ficha única em Shows e Empreendimentos) e dono de casa de shows.
+import './fest12';
+import './venue12';
