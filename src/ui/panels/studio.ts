@@ -18,6 +18,7 @@ import { store } from '../store';
 import { chips, ic, portrait, stat, tabs, tile } from '../vis';
 import { repertoireTab } from './repertoire';
 import { mergeTabs } from '../registry';
+import { banner14 } from '../sys/visuals14';
 
 const say = (res: L | null | object, ok: L) => {
   const err = res && typeof res === 'object' && 'pt' in res ? (res as L) : null;
@@ -202,6 +203,7 @@ export function studioHub(s: GameState, launch: () => HTMLElement, group: Studio
   const picker = actPicker(s);
   if (!picker) return launch();
   return h('div', { class: 'hub studio-hub' },
+    banner14(s, group === 'studio' ? 'studio_control' : group === 'release' ? (s.year < 1999 ? 'pressing' : 'store') : (s.year < 1955 ? 'home' : 'garage')),
     picker,
     tabs(`creation-${group}`, mergeTabs([
       { id: 'repertoire', label: t(l('Repertório', 'Repertoire')), icon: 'note', render: () => repertoireTab(s) },

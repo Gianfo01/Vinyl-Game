@@ -17,6 +17,7 @@ import { store } from '../store';
 import { foundInline, signInline } from './careerui13';
 import { PROMOTER_LICENSE } from '../../sim/sys/tour12';
 import { money } from '../../sim/util';
+import { venueBanner14 } from './visuals14';
 
 let role: Role = 'agent';
 let actId = '';
@@ -169,6 +170,7 @@ function relView(s: GameState): HTMLElement {
 
 function tourArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub tour12' },
+    venueBanner14(s),
     h('div', { class: 'row wrap' }, btn(l('Sou agente', 'I am the agent'), () => { role = 'agent'; draft = []; actId = ''; rerender(); }, role === 'agent' ? 'btn primary' : 'btn'),
       btn(l('Sou promotor', 'I am the promoter'), () => { role = 'promoter'; draft = []; actId = ''; rerender(); }, role === 'promoter' ? 'btn primary' : 'btn'),
       h('span', { class: 'small muted' }, t(role === 'agent' ? l('Agente: acha e negocia datas para o artista e ganha comissão; o risco é perder o cliente.', 'Agent: finds and negotiates dates for the act and earns commission; the risk is losing the client.') : l('Promotor: banca o show e fica com a bilheteria; o risco é o prejuízo.', 'Promoter: finances the show and keeps the box office; the risk is the loss.')))),

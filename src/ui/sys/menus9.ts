@@ -13,6 +13,7 @@ import { relTab } from './bonds9';
 import { ceremoniesTab, criticsTab, festivalsTab } from './hubs8';
 import { rankingTab } from './ventures9';
 import { leadersTab } from './leaders10';
+import { banner14 } from './visuals14';
 
 function labelsArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub' }, tabs('labels9', [
@@ -25,6 +26,6 @@ function labelsArea(s: GameState): HTMLElement {
 
 registerArea({ id: 'labels', label: l('Gravadoras', 'Labels'), icon: 'building', key: 'k', render: labelsArea });
 registerArea({ id: 'festivals', label: l('Festivais', 'Festivals'), icon: 'star', key: 'j', render: festivalsTab });
-registerArea({ id: 'awards', label: l('Premiações', 'Awards'), icon: 'trophy', key: 'o', render: ceremoniesTab });
+registerArea({ id: 'awards', label: l('Premiações', 'Awards'), icon: 'trophy', key: 'o', render: (s) => h('div', null, banner14(s, 'awards'), ceremoniesTab(s)) });
 registerArea({ id: 'critics', label: l('Críticos', 'Critics'), icon: 'newspaper', key: 'q', render: criticsTab });
 registerArea({ id: 'movements', label: l('Relações e movimentos', 'Relationships and movements'), icon: 'handshake', key: 'm', render: relTab });
