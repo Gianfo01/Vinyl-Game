@@ -123,3 +123,7 @@ import './producers15';
 import './fame15';
 // Rodada 15: visual de artistas reais por fase.
 import './looks15';
+// Rodada 15: aprofundamentos — sync por briefing, fandom que pede e briga, disputas de contrato (prêmios com júri local ficam em charts7/awards15).
+import './sync15';
+import './fan15';
+import './dispute15';

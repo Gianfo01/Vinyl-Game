@@ -15,7 +15,8 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { physicalShare } from '../production';
 import type { GameState, Release } from '../types';
 import { isUnlocked } from '../era';
-import { fmtL, hasTech, notify, remember } from '../util';
+import { fmtL, hasTech, remember } from '../util';
+import { boycotting, flushAwards, flushTop10, homeK, juryRng, queueAward, queueTop10, snub15 } from './awards15';
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -237,6 +238,7 @@ export function weekCharts(s: GameState): void {
     boardsOf(s)[c.a3] = board;
     trackPlayer(s, c.a3, board);
   }
+  flushTop10(s);
   for (const [m, accM] of Object.entries(regionAcc)) {
     const key = `r:${m}`;
     const prev = boardsOf(s)[key] ?? emptyBoard();
@@ -280,7 +282,7 @@ function trackPlayer(s: GameState, a3: string, board: Board): void {
         pk[key] = row.pos;
         if (row.pos === 1 || was > 10) {
           const name = countryName(a3);
-          notify(s, fmtL(row.pos === 1 ? l('"{t}" é #1 em {c}!', '"{t}" is #1 in {c}!') : l('"{t}" entra no top 10 de {c} (#{p}).', '"{t}" enters the {c} top 10 (#{p}).'), { t: rel!.title, c: name, p: row.pos }), 'good');
+          queueTop10(rel!.title, name, row.pos);
           if (row.pos === 1) remember(s, 'no1_country', fmtL(l('"{t}" ({a}) chega ao #1 em {c}.', '"{t}" ({a}) hits #1 in {c}.'), { t: rel!.title, a: act?.name ?? '', c: name }), { actId: act?.id, important: true });
         }
       }
@@ -310,10 +312,16 @@ function nationalAwards(s: GameState, r: Rng): void {
     if (!yu) continue;
     const rels = Object.entries(yu).map(([id, u]) => ({ rel: s.releases[id], u })).filter((x) => x.rel);
     if (!rels.length) continue;
-    const pickRel = (f: (x: Release) => boolean) => rels.filter((x) => f(x.rel)).sort((a, b) => b.u * (0.8 + b.rel.q / 200) - a.u * (0.8 + a.rel.q / 200))[0];
+    // rodada 15: júri local (artista da casa pesa mais, crítica e lobby entram como ruído estável)
+    const jr = juryRng(s, c.a3);
+    const jury: Record<string, number> = {};
+    const jk = (actId: string) => (jury[actId] ??= boycotting(s, actId) ? 0 : homeK(s, actId, c.a3) * jr.float(0.85, 1.15));
+    const pickRel = (f: (x: Release) => boolean) => rels.filter((x) => f(x.rel)).sort((a, b) => b.u * (0.8 + b.rel.q / 200) * jk(b.rel.actId) - a.u * (0.8 + a.rel.q / 200) * jk(a.rel.actId))[0];
     const byAct: Record<string, number> = {};
-    for (const x of rels) byAct[x.rel.actId] = (byAct[x.rel.actId] ?? 0) + x.u;
-    const actRank = Object.entries(byAct).sort((a, b) => b[1] - a[1]);
+    const qAct: Record<string, number> = {};
+    for (const x of rels) { byAct[x.rel.actId] = (byAct[x.rel.actId] ?? 0) + x.u; qAct[x.rel.actId] = Math.max(qAct[x.rel.actId] ?? 0, x.rel.q); }
+    const raw = Object.entries(byAct).sort((a, b) => b[1] - a[1]);
+    const actRank = raw.map(([id, u]) => [id, u * jk(id) * (0.7 + (qAct[id] ?? 50) / 170)] as [string, number]).sort((a, b) => b[1] - a[1]);
     const give = (cat: NationalAward['cat'], actId: string | undefined, rel: Release | undefined) => {
       const act = actId ? s.acts[actId] : undefined;
       if (!act) return;
@@ -325,11 +333,13 @@ function nationalAwards(s: GameState, r: Rng): void {
       if (byPlayer) {
         s.player.stats.awards += 1;
         s.awards.push({ year, category: `nat_${c.a3}_${cat}`, releaseId: rel?.id, actId, name: `${awardName(s, c)} — ${AWARD_CATS[cat].pt}: ${winner}`, byPlayer: true });
-        notify(s, fmtL(l('{aw} ({c}) — {cat}: {w}!', '{aw} ({c}) — {cat}: {w}!'), { aw: awardName(s, c), c: countryName(c.a3), cat: AWARD_CATS[cat], w: winner }), 'good');
+        queueAward(AWARD_CATS[cat], winner, awardName(s, c), countryName(c.a3));
         remember(s, 'nat_award', fmtL(l('{aw} {y} ({c}): {cat} para {w}.', '{aw} {y} ({c}): {cat} to {w}.'), { aw: awardName(s, c), y: year, c: countryName(c.a3), cat: AWARD_CATS[cat], w: winner }), { actId, important: true });
       }
     };
     give('artist', actRank[0]?.[0], undefined);
+    const lead = raw[0]?.[0];
+    if (lead && actRank[0] && lead !== actRank[0][0] && homeK(s, lead, c.a3) > 1 && mineRel(s, rels.find((x) => x.rel.actId === lead)?.rel)) snub15(s, lead, c.a3, awardName(s, c), s.acts[actRank[0][0]]?.name ?? '?');
     const song = pickRel((x) => x.type === 'single');
     give('song', song?.rel.actId, song?.rel);
     const album = pickRel((x) => x.type === 'lp');
@@ -337,6 +347,7 @@ function nationalAwards(s: GameState, r: Rng): void {
     const fresh = actRank.find(([id]) => (s.acts[id]?.debutYear ?? 0) >= year - 1);
     give('newcomer', fresh?.[0], undefined);
   }
+  flushAwards(s);
   if (st.awards.length > 2400) st.awards.splice(0, st.awards.length - 2400);
   st.yearUnits = {};
   void r;
