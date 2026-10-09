@@ -6,12 +6,12 @@
 .pg-tabs .tabs { flex-wrap: wrap; }
 .pg-tab-body { padding-top: 8px; }
 
-.ovr { display: inline-grid; place-items: center; min-width: 34px; height: 30px; padding: 0 6px; border-radius: 7px; font-weight: 800; font-variant-numeric: tabular-nums; color: #fff; background: #8a7f74; }
+.ovr { display: inline-grid; place-items: center; min-width: 34px; height: 30px; padding: 0 6px; border-radius: 7px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--on-color); background: var(--neutral); }
 .ovr.big { min-width: 56px; height: 52px; font-size: 1.5rem; border-radius: 10px; }
-.ovr.low { background: #8a7f74; }
-.ovr.mid { background: #b7791f; }
-.ovr.good { background: #2f7d4f; }
-.ovr.elite { background: linear-gradient(135deg, #b8901c, #e3c158); color: #2a1f05; }
+.ovr.low { background: var(--neutral); }
+.ovr.mid { background: var(--warn); }
+.ovr.good { background: var(--good); }
+.ovr.elite { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: var(--gold-ink); }
 
 .form { display: inline-block; font-weight: 800; padding: 0 4px; border-radius: 4px; }
 .form.f0 { color: var(--bad); } .form.f1 { color: var(--bad); } .form.f2 { color: var(--muted); } .form.f3 { color: var(--good); } .form.f4 { color: var(--good); }

@@ -1,7 +1,7 @@
 /* Cenas em pixel art */
 .scene-frame { display: grid; gap: 10px; }
 .scene-stage { margin: 0; }
-.scene-stage canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--line); background: #000; }
+.scene-stage canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--line); background: var(--hq-bg); }
 .scene-text { font-size: 1.02rem; margin: 0; }
 .scene-choices { display: flex; flex-wrap: wrap; gap: 6px; }
 .scene-choices .btn { display: inline-flex; flex-direction: column; align-items: flex-start; text-align: left; }

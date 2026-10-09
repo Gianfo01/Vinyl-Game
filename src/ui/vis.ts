@@ -136,6 +136,7 @@ export function tabs(key: string, items: { id: string; label: string; icon?: str
 export function setTab(key: string, id: string): void {
   tabState[key] = id;
 }
+export const getTab = (key: string): string | undefined => tabState[key];
 
 /** Gráfico de linha simples em SVG (ações, receita). */
 export function lineChart(values: number[], w = 260, hgt = 70): HTMLElement {

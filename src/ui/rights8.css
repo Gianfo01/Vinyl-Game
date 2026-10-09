@@ -7,8 +7,8 @@
 .r8-split-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; }
 .r8-split .lab { background: var(--gold, #d4a72c); }
 .r8-split .art { background: var(--neural, #7a6ff0); }
-.r8-split .pro { background: #3fa37a; }
-.r8-split .gst { background: #d0663f; }
-.r8-split .dst { background: #888; }
+.r8-split .pro { background: var(--split-pro); }
+.r8-split .gst { background: var(--split-gst); }
+.r8-split .dst { background: var(--split-dst); }
 .r8-sheet, .r8-dossier { display: flex; flex-direction: column; gap: 0.3rem; }
 .r8-demand { background: var(--panel-2); border-radius: 8px; padding: 0.4rem 0.6rem; }

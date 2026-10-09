@@ -34,9 +34,11 @@ import { applyRealNames } from '../data/realnames';
 import { EXTRA_AREAS, extraSections, mergeTabs, showPendingCutscene } from './registry';
 import { openLabelStory } from './sys/story12';
 import './sys';
-import { defaultHome, navGroups, type NavGroup } from './careernav13';
+import { defaultHome, type NavGroup } from './careernav13';
 import { careers } from '../sim/sys/careers12';
-import { setTab } from './vis';
+import { getTab, setTab } from './vis';
+import { alias14, ALIAS14, groupOf14, navGroups14, type NavGroup14 } from './careernav14';
+import { themeButton } from './sys/theme14';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : null));
 registerPortrait((p, size) => {
@@ -177,6 +179,7 @@ function topBar(): HTMLElement {
       h('button', { class: 'btn ghost small', onclick: () => doAdvance('quarter') }, '⏩ ' + t(S.advanceQuarter)),
       h('button', { class: 'btn small', title: t(l('Avança até o próximo fechamento semanal (dias de turnê, estúdio e crise)', 'Advance to the next weekly close (tour, studio and crisis days)')), onclick: () => doAdvance('week') }, '▷ ' + t(l('Semana', 'Week')), g.clock.opened ? h('small', null, ` ${g.clock.dayInMonth}d`) : null),
       h('button', { class: 'btn primary', title: 'Ctrl+Enter', onclick: () => doAdvance('month') }, '▶ ' + t(S.advanceMonth), g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null),
+      themeButton(() => render()),
       h('button', { class: 'icon', 'aria-label': t(S.settings), onclick: settings }, '⚙'),
     ),
   );
@@ -184,7 +187,7 @@ function topBar(): HTMLElement {
 
 /** Menus agrupados (rodada 7): 6 grupos no lugar de ~20 áreas soltas; o grupo atual abre suas áreas. */
 const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; areas: string[] }[] = [
-  { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['desk', 'plan', 'inbox', 'goals', 'diary'] },
+  { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['cockpit', 'plan', 'goals', 'diary'] },
   { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'finance', 'business', 'identity', 'team', 'industry'] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'market', 'directory', 'people', 'management'] },
   { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['project', 'creation', 'studio', 'releases', 'catalog', 'shows', 'media'] },
@@ -194,8 +197,8 @@ const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; are
   { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth'] },
 ];
 const lastInGroup: Record<string, string> = {};
-/** Rodada 13: o menu segue as carreiras ativas (recalculado a cada desenho). */
-const groups = (): NavGroup[] => (store.game ? navGroups(careers(store.game).active, GROUPS) : GROUPS);
+/** Rodada 14: cada carreira ativa é um grupo de topo; as inativas ficam em "Outras atividades". */
+const groups = (): NavGroup14[] => navGroups14(store.game ? careers(store.game).active : ['label'], GROUPS);
 
 interface NavItem { id: string; label: string; icon: string; key: string; badge?: number }
 
@@ -207,9 +210,8 @@ function navItems(): NavItem[] {
   ];
 }
 
-export function groupOf(area: string): NavGroup {
-  const gs = groups();
-  return gs.find((x) => x.areas.includes(area)) ?? gs[0];
+export function groupOf(area: string): NavGroup14 {
+  return groupOf14(groups(), area, getTab);
 }
 
 function groupItems(gr: NavGroup): NavItem[] {
@@ -217,11 +219,12 @@ function groupItems(gr: NavGroup): NavItem[] {
   const listed = new Set(groups().flatMap((x) => x.areas));
   const items = gr.areas.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
   // áreas registradas que não estão em nenhum grupo caem em Início
-  if (gr.id === 'home') items.push(...all.filter((x) => !listed.has(x.id)));
+  if (gr.id === 'home') items.push(...all.filter((x) => !listed.has(x.id) && !ALIAS14[x.id]));
   return items;
 }
 
 function go(id: string): void {
+  id = alias14(id);
   store.area = id;
   lastInGroup[groupOf(id).id] = id;
   render();
@@ -233,12 +236,18 @@ function nav(): HTMLElement {
     const items = groupItems(gr);
     const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
     const open = gr.id === cur.id;
-    return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''}`, 'data-career': gr.career },
-      h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => go(lastInGroup[gr.id] && items.some((x) => x.id === lastInGroup[gr.id]) ? lastInGroup[gr.id] : items[0]?.id ?? 'desk') },
+    // rodada 14: casa da carreira (com aba, ex.: Empreendimentos › Festival) e títulos por carreira em "Outras atividades"
+    const tabbed = (id: string) => gr.home?.tab && gr.home.area === id;
+    const enter = (id: string) => { if (tabbed(id)) setTab(gr.home!.tab![0], gr.home!.tab![1]); go(id); };
+    const last = lastInGroup[gr.id] && items.some((x) => x.id === lastInGroup[gr.id]) ? lastInGroup[gr.id] : null;
+    const btn = (a: NavItem) => { const on = store.area === a.id && (!tabbed(a.id) || open); const lbl = tabbed(a.id) ? t(gr.label) : a.label;
+      return h('button', { class: on ? 'on' : '', 'aria-current': on ? 'page' : undefined, title: `${lbl} (${a.key.toUpperCase()})`, onclick: () => enter(a.id) },
+        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, lbl), a.badge ? h('span', { class: 'badge' }, a.badge) : null); };
+    const secs = gr.sections?.map((sc) => [sc, items.filter((x) => sc.areas.includes(x.id))] as const).filter(([, xs]) => xs.length).map(([sc, xs]) => [h('small', { class: 'nav-sec' }, t(sc.label)), ...xs.map(btn)]);
+    return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''} ${gr.other ? 'nav-other' : ''}`, 'data-career': gr.career },
+      h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => enter(last ?? (gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit')) },
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
-      open && items.length > 1 ? h('div', { class: 'nav-sub' }, items.map((a) =>
-        h('button', { class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, title: `${a.label} (${a.key.toUpperCase()})`, onclick: () => go(a.id) },
-          h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null,
+      open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
     );
   }));
 }
@@ -300,6 +309,7 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
 
 export function render(): void {
   if (!store.game) return titleScreen(root, startGame);
+  store.area = alias14(store.area);
   applyRealNames(!!store.game.config.realNames);
   if (store.prefs.eraSkin !== false) document.documentElement.dataset.era = String(Math.floor(store.game.year / 10) * 10);
   else delete document.documentElement.dataset.era;

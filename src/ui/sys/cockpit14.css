@@ -1,0 +1,14 @@
+/* Rodada 14 — Cockpit (mesa + caixa de entrada + sede) */
+.ck14 { display: grid; gap: 0.8rem; }
+.ck14-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.ck14-top { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 0.8rem; align-items: start; }
+.ck14-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.ck14-head h3 { margin: 0 0 0.4rem; }
+.ck14-inbox { max-height: 480px; overflow: auto; border-radius: var(--radius); }
+.ck14-inbox .card { margin: 0; }
+@media (max-width: 900px) { .ck14-top { grid-template-columns: minmax(0, 1fr); } .ck14-inbox { max-height: 340px; } }
+
+/* Rodada 14 — menu: grupos por carreira e "Outras atividades" */
+.nav-other > .nav-head { opacity: 0.8; font-style: italic; }
+.nav-sec { display: block; margin: 0.4rem 0 0.1rem 0.4rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.theme14 { min-width: 2rem; }
