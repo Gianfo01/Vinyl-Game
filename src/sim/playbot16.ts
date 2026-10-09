@@ -359,7 +359,7 @@ function team(s: GameState, k: Knobs): void {
       if (a && !addOrder(s, st.id, 'tour', { actId: a.id, market: (cityById[a.city]?.market ?? '') as MarketId, tier: -1, floor: 0, per: 1 })) L.orders++;
     } else {
       const a = top.find((x) => !os.some((o) => o.kind === 'radio' && o.actId === x.id));
-      if (a && !addOrder(s, st.id, 'radio', { actId: a.id, budget: money(s, 800), per: 1 })) L.orders++;
+      if (a && !addOrder(s, st.id, 'radio', { actId: a.id, budget: Math.round(money(s, 400) / 100), per: 1 })) L.orders++;
     }
   }
 }

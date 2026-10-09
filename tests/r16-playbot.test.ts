@@ -12,7 +12,8 @@ describe('playbot16', () => {
     expect(L.projects).toBeGreaterThan(0);
     expect(L.recordings).toBeGreaterThan(0);
     expect(L.releases).toBeGreaterThan(0);
-    expect(L.tours + L.festivals).toBeGreaterThan(0);
+    expect(L.tours).toBeGreaterThan(0);
+    expect(L.festivals).toBeGreaterThan(0);
     expect(L.syncPitches).toBeGreaterThan(0);
     expect(L.scouts).toBeGreaterThan(0);
     expect(L.decisions).toBeGreaterThan(0);
