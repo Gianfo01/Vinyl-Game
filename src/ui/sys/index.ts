@@ -84,6 +84,8 @@ import './kin15';
 import './producers15';
 // Rodada 15: fama (aba, gráfico, segurança) e o quadro 'O que se sabe'.
 import './fame15';
+// Rodada 16: fama por região (bloco exportado + camada do mapa).
+import './fame16';
 // Rodada 15: retratos coerentes (artistas reais e procedurais com pele/sexo da ficha).
 import './looks15';
 // Rodada 15: aprofundamentos (Sync, Disputas, Fandom do ato, júri dos prêmios).

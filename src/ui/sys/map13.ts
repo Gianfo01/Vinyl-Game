@@ -22,6 +22,7 @@ import { addTourStop } from '../panels/misc';
 import { store } from '../store';
 import { chips, ic, stat } from '../vis';
 import './map13.css';
+import { afameAct, afameAll, afameTip } from './fame16';
 
 let paint: Paint = 'none';
 export const paintNow = (): Paint => paint;
@@ -31,14 +32,16 @@ const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const sgn = (x: number) => `${x >= 0 ? '+' : ''}${Math.round(x * 100)}%`;
 
 function fmtPaint(p: Paint, x: number): string {
-  if (p === 'fans') return N(Math.round(x));
+  if (p === 'fans' || p === 'afame') return N(Math.round(x));
   if (p === 'growth') return sgn(x);
   if (p === 'market') return pct(x, 1);
   return pct(x);
 }
 
 /** Cor da escala: sequencial por camada; crescimento é divergente (vermelho → cinza → verde). */
-const HUE: Record<Paint, number> = { none: 0, market: 210, growth: 120, fans: 25, share: 45, rivaldom: 0, piracy: 280, physical: 30 };
+const HUE: Record<Paint, number> = { none: 0, market: 210, growth: 120, fans: 25, share: 45, rivaldom: 0, piracy: 280, physical: 30, afame: 50 };
+// r16: a camada da fama do artista selecionado depende da seleção (interface)
+const pAll = (s: GameState, p: Paint) => (p === 'afame' ? afameAll(s) : paintAll(s, p));
 function colorOf(p: Paint, x: number, min: number, max: number): string {
   if (p === 'growth') {
     const m = Math.max(0.01, Math.abs(min), Math.abs(max));
@@ -56,14 +59,21 @@ export function paintBar(s: GameState): HTMLElement {
   const opts = PAINTS.filter((p) => paintAvailable(s, p));
   if (!opts.includes(paint)) paint = 'none';
   return h('label', { class: 'map13-paint' }, ic('globe'), ' ', t(l('Pintar países por', 'Shade countries by')), ' ',
-    select<Paint>(paint, opts.map((p) => ({ value: p, label: t(PAINT_INFO[p].name) })), (v) => { paint = v; rerender(); }, { 'aria-label': t(l('Pintar países por', 'Shade countries by')) }));
+    select<Paint>(paint, opts.map((p) => ({ value: p, label: t(PAINT_INFO[p].name) })), (v) => { paint = v; rerender(); }, { 'aria-label': t(l('Pintar países por', 'Shade countries by')) }),
+    paint === 'afame' ? afamePick(s) : null);
+}
+/** r16: escolha do artista da camada de fama (seu elenco + os mais famosos). */
+function afamePick(s: GameState): HTMLElement {
+  const cur = afameAct(s);
+  const ids = [...new Set([...(cur ? [cur.id] : []), ...playerActs(s), ...Object.values(s.acts).filter((a) => a.fame >= 30 && a.status !== 'retired' && a.status !== 'split').sort((a, b) => b.fame - a.fame).slice(0, 40).map((a) => a.id)])].filter((id) => s.acts[id]);
+  return select<string>(cur?.id ?? '', ids.map((id) => ({ value: id, label: s.acts[id].name })), (v) => { store.selectedAct = v; rerender(); }, { 'aria-label': t(l('Artista', 'Artist')) });
 }
 
 /** Cores por país da pintura ativa (calculado uma vez por desenho). */
 export function paintShadeMap(s: GameState): Map<string, { color: string }> {
   const out = new Map<string, { color: string }>();
   if (paint === 'none') return out;
-  const { v, min, max } = paintAll(s, paint);
+  const { v, min, max } = pAll(s, paint);
   for (const [a3, x] of v) out.set(a3, { color: colorOf(paint, x, min, max) });
   return out;
 }
@@ -71,7 +81,7 @@ export function paintShadeMap(s: GameState): Map<string, { color: string }> {
 /** Legenda: barra de escala com mínimo/máximo, unidade e o que significa. */
 export function paintLegend(s: GameState): HTMLElement[] {
   if (paint === 'none' || !paintAvailable(s, paint)) return [];
-  const { v, min, max } = paintAll(s, paint);
+  const { v, min, max } = pAll(s, paint);
   const info = PAINT_INFO[paint];
   if (!v.size) return [h('span', { class: 'wmap-key map13-key' }, h('b', null, t(info.name)), ': ', t(l('sem dados ainda neste ano (as paradas por país enchem semana a semana).', 'no data yet this year (country charts fill week by week).')))];
   const grad = paint === 'growth'
@@ -96,6 +106,7 @@ export function countryTip13(s: GameState, a3: string): HTMLElement | null {
     st.units ? row('chart-up', `${t(l('Sua fatia', 'Your share'))} ${pct(st.share)}${st.top ? ` · ${t(l('maior rival', 'top rival'))} ${s.labels[st.top.owner]?.name ?? '?'} ${pct(st.top.share)}` : ''}`) : null,
     paintAvailable(s, 'piracy') ? row('lock', `${t(l('Pirataria (est.)', 'Piracy (est.)'))} ${pct(st.piracy)}`) : null,
     row('note', st.genres.slice(0, 3).map((g) => t(g.name)).join(', ')),
+    paint === 'afame' ? afameTip(s, a3) : null,
     paint !== 'none' ? h('div', { class: 'muted small' }, t(info.why)) : null,
     h('div', { class: 'muted small' }, t(l('Clique para a ficha do país.', 'Click for the country card.'))));
 }

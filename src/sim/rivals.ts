@@ -8,6 +8,7 @@ import { fmtL, money, notify, remember } from './util';
 import { talentScore } from './worldgen';
 import { emitEvent } from './events';
 import { rivalSignsLeft } from './sys/gate14';
+import { fameAt } from './famehook16';
 
 const STRAT = { develop: l('desenvolver', 'develop'), buy_catalog: l('comprar catálogos', 'buy catalogs'), niche: l('nichos', 'niches'), stars: l('estrelas', 'stars') };
 
@@ -34,7 +35,8 @@ export function rivalsMonth(s: GameState, r: Rng): void {
       const best = pool
         .map((a) => {
           const fit = lb.focus.length === 0 || lb.focus.includes(familyOf(a.genre)) ? 1 : 0.35;
-          const strat = lb.strategy === 'stars' ? a.fame * 1.5 : lb.strategy === 'develop' ? talentScore(s, a) : a.fame + talentScore(s, a) * 0.5;
+          const fl = fameAt(s, a, lb.city); // r16: selos olham a fama na cidade deles
+          const strat = lb.strategy === 'stars' ? fl * 1.5 : lb.strategy === 'develop' ? talentScore(s, a) : fl + talentScore(s, a) * 0.5;
           return { a, v: strat * fit * r.float(0.7, 1.3) };
         })
         .sort((x, y) => y.v - x.v)[0];
