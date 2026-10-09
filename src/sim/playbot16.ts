@@ -7,7 +7,7 @@
 
 import { toReal } from '../core/money';
 import { FESTIVALS } from '../data/catalog';
-import { CITIES, MARKETS, cityById, type MarketId } from '../data/world';
+import { MARKETS, cityById, type MarketId } from '../data/world';
 import { hqCaps } from './branches';
 import { acceptCounter, careerSlotsUsed, defaultOffer, evaluateOffer, expectedAdvance, offerNow } from './contracts';
 import { fireStaff, hireStaff, loanOffer, monthlyCosts, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from './economy';
@@ -28,6 +28,7 @@ import { candidates as syncCands, pitch15, sy15 } from './sys/sync15';
 import { scoutInPerson } from './sys/capacity14';
 import { oh } from './sys/overhead13';
 import { cityDemand, estimateTour, planTour, type TourPlan } from './tours';
+import { suggestRoute16 } from './route16';
 import { advanceMonth } from './tick';
 import type { Act, GameState, RunConfig } from './types';
 import { money, playerActs, rngOf } from './util';
@@ -267,12 +268,12 @@ function road(s: GameState, k: Knobs, prof: Profile): void {
     const recorded = act.songs.map((x) => s.songs[x]).filter((x) => x?.recorded).sort((a, b) => b.q - a.q);
     if (recorded.length < 4 || runway(s) < k.cut * 1.5) continue;
     const c = act.contractId ? s.contracts[act.contractId] : undefined;
-    const home = cityById[act.city]?.market;
-    const pool = CITIES.filter((ci) => ci.market === home || s.player.territories.includes(ci.market as MarketId))
-      .map((ci) => ({ id: ci.id, d: cityDemand(s, act, ci.id) })).filter((x) => x.d >= 60).sort((a, b) => b.d - a.d);
-    const n = Math.min(pool.length, prof === 'aggressive' ? 10 : prof === 'balanced' ? 7 : 5);
+    // a mesma rota sugerida do planejador (botão "Sugerir rota"), só com cidades de procura real
+    const want = prof === 'aggressive' ? 10 : prof === 'balanced' ? 7 : 5;
+    const pool = suggestRoute16(s, id, want).ids.filter((ci) => cityDemand(s, act, ci) >= 60);
+    const n = pool.length;
     if (n < 3) continue;
-    const plan: TourPlan = { actId: id, cities: pool.slice(0, n).map((x) => x.id), startInDays: 21, priceMult: 1, minutes: 45, setlist: recorded.slice(0, 12).map((x) => x.id), production: act.fame >= 30 ? 1 : 0, role: 'headline', crew: n > 6 ? 4 : 2, pay: 'door' };
+    const plan: TourPlan = { actId: id, cities: pool, startInDays: 21, priceMult: 1, minutes: 45, setlist: recorded.slice(0, 12).map((x) => x.id), production: act.fame >= 30 ? 1 : 0, role: 'headline', crew: n > 6 ? 4 : 2, pay: 'door' };
     const est = estimateTour(s, plan);
     // selo clássico só paga a logística (bilheteria é do artista): vale como investimento se não pesa no caixa
     const share = c?.model === '360' ? c.share360 : 0;
