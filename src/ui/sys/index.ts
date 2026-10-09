@@ -99,3 +99,5 @@ import './layout16';
 import './people16';
 // Rodada 16: páginas próprias de Festivais, Editora, Veículos de mídia e Plataforma; Empreendimentos vira a carteira.
 import './ventures16';
+// Rodada 16: formação (linha do tempo) e trajetória da pessoa.
+import './lineup16';

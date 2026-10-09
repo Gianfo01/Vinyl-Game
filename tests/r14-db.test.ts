@@ -35,7 +35,9 @@ describe('base de dados r14', () => {
     const cn = new Set(REAL_MORE.map((a) => a.cn));
     for (const k of ['BRA', 'MEX', 'ARG', 'COL', 'FRA', 'DEU', 'JPN', 'KOR', 'IND', 'NGA', 'ZAF', 'EGY', 'AUS']) expect(cn.has(k), k).toBe(true);
     // índices antigos continuam estáveis: o lote novo só vem no fim
-    expect(REAL_ALL.slice(-REAL_MORE.length)[0]).toBe(REAL_MORE[0]);
+    const i0 = REAL_ALL.indexOf(REAL_MORE[0]); // r16: formações vêm depois do lote r14
+    expect(i0).toBeGreaterThan(0);
+    expect(REAL_ALL[i0 + REAL_MORE.length - 1]).toBe(REAL_MORE[REAL_MORE.length - 1]);
   });
 
   it('tamanhos crescem: pequeno < médio < grande < enorme (reais e total de atos)', () => {

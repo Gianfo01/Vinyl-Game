@@ -42,7 +42,7 @@ export const REAL_WORLD: RealArtist[] = [
   { n: 'Raul Seixas', g: 'rock_br', c: 'salvador', d: 1968, e: 1989, t: 1, cn: 'BRA', b: 1945, x: 1989, r: 'vocal', al: [['Krig-ha, Bandolo!', 1973], ['Gita', 1974], ['Novo Aeon', 1975]] },
   { n: 'Martinho da Vila', g: 'samba', c: 'rio', d: 1969, t: 2, cn: 'BRA', b: 1938, r: 'vocal', al: [['Martinho da Vila', 1969], ['Canta Canta, Minha Gente', 1974]] },
   { n: 'Rita Lee', g: 'rock_br', c: 'sao_paulo', d: 1970, e: 2023, t: 1, cn: 'BRA', b: 1947, x: 2023, r: 'vocal', al: [['Build Up', 1970], ['Fruto Proibido', 1975], ['Rita Lee', 1979], ['Lança Perfume', 1980, 'single']] },
-  { n: 'Novos Baianos', g: 'mpb', c: 'salvador', d: 1970, e: 1979, rj: [[2016]], t: 2, cn: 'BRA', m: [['Moraes Moreira', 'vocal', 1947, 2020], ['Baby Consuelo', 'vocal', 1952], ['Pepeu Gomes', 'guitar', 1952], ['Paulinho Boca de Cantor', 'vocal', 1946]], al: [['Acabou Chorare', 1972], ['Novos Baianos F.C.', 1973]] },
+  { n: 'Novos Baianos', g: 'mpb', c: 'salvador', d: 1970, e: 1979, rj: [[2016]], t: 2, cn: 'BRA', m: [['Moraes Moreira', 'vocal', 1947, 2020, U, 1975], ['Baby Consuelo', 'vocal', 1952], ['Pepeu Gomes', 'guitar', 1952], ['Paulinho Boca de Cantor', 'vocal', 1946]], al: [['Acabou Chorare', 1972], ['Novos Baianos F.C.', 1973]] },
   { n: 'Ivan Lins', g: 'mpb', c: 'rio', d: 1970, t: 3, cn: 'BRA', b: 1945, r: 'keys', al: [['Agora', 1970], ['Modo Livre', 1974], ['Novo Tempo', 1980]] },
   { n: 'Alcione', g: 'samba', c: 'sao_luis', d: 1972, t: 2, cn: 'BRA', b: 1947, r: 'vocal', al: [['A Voz do Samba', 1975], ['Não Deixe o Samba Morrer', 1975, 'single']] },
   { n: 'João Bosco', g: 'mpb', c: 'bh', d: 1972, t: 3, cn: 'BRA', b: 1946, r: 'guitar', al: [['João Bosco', 1973], ['Caça à Raposa', 1975], ['Linha de Passe', 1979]] },

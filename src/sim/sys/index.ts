@@ -138,3 +138,5 @@ import './supply16';
 import './links16';
 // Rodada 16: uma identidade por pessoa, empresários da praça, vida (vícios, mortes, casamentos) para toda a indústria e sucessão nos selos.
 import './people16';
+// Rodada 16: formações vivas (saídas, solos, bandas novas, voltas, renomes, linha do tempo).
+import './lineup16';

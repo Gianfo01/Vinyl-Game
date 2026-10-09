@@ -126,7 +126,7 @@ export const REAL_CLASSIC: Record<number, ClassicExtra> = {
   },
   45: {
     d: 1970, e: 2017, rj: [[2025, 2025]],
-    m: [['Ozzy Osbourne', 'vocal', 1948, 2025, U, 1979], ['Tony Iommi', 'guitar', 1948], ['Geezer Butler', 'bass', 1949], ['Bill Ward', 'drums', 1948],
+    m: [['Ozzy Osbourne', 'vocal', 1948, 2025, U, 1979], ['Ozzy Osbourne', 'vocal', 1948, 2025, 1997], ['Tony Iommi', 'guitar', 1948], ['Geezer Butler', 'bass', 1949], ['Bill Ward', 'drums', 1948],
       ['Ronnie James Dio', 'vocal', 1942, 2010, 1979, 1982]],
     al: [['Black Sabbath', 1970], ['Paranoid', 1970], ['Master of Reality', 1971], ['Vol. 4', 1972], ['Heaven and Hell', 1980], ['13', 2013]],
   },
@@ -188,7 +188,7 @@ export const REAL_CLASSIC: Record<number, ClassicExtra> = {
     al: [['Fleetwood Mac', 1968], ['Then Play On', 1969], ['Fleetwood Mac', 1975], ['Rumours', 1977], ['Tusk', 1979], ['Tango in the Night', 1987]],
   },
   60: { d: 1967, b: 1942, r: 'vocal', al: [['Travessia', 1967], ['Clube da Esquina', 1972], ['Milagre dos Peixes', 1973], ['Minas', 1975], ['Clube da Esquina 2', 1978]] },
-  61: { d: 1971, e: 2009, b: 1958, x: 2009, r: 'vocal', al: [['Off the Wall', 1979], ['Thriller', 1982], ['Bad', 1987], ['Dangerous', 1991], ['HIStory', 1995]] },
+  61: { d: 1971, e: 2009, b: 1958, x: 2009, r: 'vocal', al: [['Got to Be There', 1972], ['Ben', 1972], ['Off the Wall', 1979], ['Thriller', 1982], ['Bad', 1987], ['Dangerous', 1991], ['HIStory', 1995], ['Invincible', 2001]] },
   62: { d: 1982, b: 1958, r: 'vocal', al: [['Madonna', 1983], ['Like a Virgin', 1984], ['True Blue', 1986], ['Like a Prayer', 1989], ['Ray of Light', 1998], ['Confessions on a Dance Floor', 2005]] },
   63: { d: 1978, e: 2016, b: 1958, x: 2016, r: 'guitar', al: [['Dirty Mind', 1980], ['1999', 1982], ['Purple Rain', 1984], ['Sign o\' the Times', 1987], ['Lovesexy', 1988]] },
   64: { d: 1985, e: 2012, b: 1963, x: 2012, r: 'vocal', al: [['Whitney Houston', 1985], ['Whitney', 1987], ["I'm Your Baby Tonight", 1990], ['The Bodyguard', 1992], ['I Will Always Love You', 1992, 'single']] },
@@ -232,7 +232,7 @@ export const REAL_CLASSIC: Record<number, ClassicExtra> = {
   },
   72: {
     d: 1986,
-    m: [['Axl Rose', 'vocal', 1962], ['Slash', 'guitar', 1965], ['Duff McKagan', 'bass', 1964], ['Izzy Stradlin', 'guitar', 1962, U, U, 1991],
+    m: [['Axl Rose', 'vocal', 1962], ['Slash', 'guitar', 1965, U, U, 1996], ['Duff McKagan', 'bass', 1964, U, U, 1997], ['Slash', 'guitar', 1965, U, 2016], ['Duff McKagan', 'bass', 1964, U, 2016], ['Izzy Stradlin', 'guitar', 1962, U, U, 1991],
       ['Steven Adler', 'drums', 1965, U, U, 1990], ['Matt Sorum', 'drums', 1960, U, 1990, 1997], ['Dizzy Reed', 'keys', 1963, U, 1990]],
     al: [['Appetite for Destruction', 1987], ["G N' R Lies", 1988], ['Use Your Illusion I', 1991], ['Use Your Illusion II', 1991], ['Chinese Democracy', 2008]],
   },

@@ -8,6 +8,7 @@ import { createGame } from '../src/sim/worldgen';
 import type { GameState, RunConfig } from '../src/sim/types';
 import { composeSongs, songQ } from '../src/sim/production';
 import { rngOf } from '../src/sim/util';
+import { rw } from '../src/sim/sys/realworld';
 import { hasSinger, hireSessionSinger } from '../src/sim/sys/vocals10';
 import { opinionText, opinionsOf } from '../src/sim/sys/bonds9';
 
@@ -21,7 +22,10 @@ describe('identidade única de pessoas reais', () => {
     const mj = personsNamed(s, 'Michael Jackson');
     expect(mj.length).toBe(1);
     const names = actsWith(s, mj[0].id).map((a) => a.name);
-    expect(names).toContain('The Jackson 5');
+    // r16: em 1985 já é ex-integrante (saiu depois da turnê Victory, 1984) do grupo renomeado The Jacksons
+    const band = Object.values(s.acts).find((a) => a.name === 'The Jacksons')!;
+    expect(band.members).not.toContain(mj[0].id);
+    expect(rw(s).former[band.id].some((f) => f.personId === mj[0].id)).toBe(true);
     expect(names).toContain('Michael Jackson');
     expect(mj[0].born).toBe(1958);
   });
