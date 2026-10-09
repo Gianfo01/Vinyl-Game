@@ -134,3 +134,5 @@ import './deleg16';
 // Rodada 16: momentos ilustrados (cena só quando algo acontece) e preço de matéria-prima já na época.
 import './moments16';
 import './supply16';
+// Rodada 16: conexões entre sistemas (fama→notoriedade, sync→paradas, lazer→scouting, família→arcos/estúdio, produtor×conceito, veículo próprio→hype, rixas→imprensa, sobrecarga→aliciamento, esnobada→júri com memória, demos).
+import './links16';
