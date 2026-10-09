@@ -98,3 +98,6 @@ import './rivals12';
 import './arcs12';
 import './life12';
 import './story12';
+// Rodada 12: dono de festival (festival unificado: Empreendimentos + terreno) e dono de casa de shows.
+import './fest12';
+import './venue12';

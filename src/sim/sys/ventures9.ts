@@ -24,7 +24,7 @@ export interface Venture {
   pl: { y: number; m: number; rev: number; cost: number }[];
   total: number;
   // festival
-  month?: number; price?: number; lineup?: { actId: string; fee: number }[]; editions?: { y: number; crowd: number; profit: number; verdict: Verdict; head: string }[];
+  fx?: string; month?: number; price?: number; lineup?: { actId: string; fee: number }[]; editions?: { y: number; crowd: number; profit: number; verdict: Verdict; head: string }[];
   // editora
   writers?: { pid: string; name: string; skill: number; until: number }[]; cat?: { title: string; actId: string; y: number; v: number; wp?: string; x?: import('./ventures12').CatX }[]; cool?: number;
   // estúdio
@@ -757,7 +757,7 @@ registerSimHook('month', 'ventures9', (s, r) => {
   const st = ventures(s);
   for (const v of st.list) {
     vpay(s, v.owner, -upkeep(s, v), `upk:${v.id}`, `Custos fixos ${v.name}`, v);
-    if (v.kind === 'festival') {
+    if (v.kind === 'festival' && !v.fx) {
       if (s.month === v.month && !v.editions!.some((e) => e.y === s.year)) {
         if (v.lineup!.length) festivalEdition(s, r, v);
         else if (s.year > v.founded) { v.rep = clamp(v.rep - 4, 0, 100); log(s, fmtL(l('{n} não teve edição este ano (line-up vazio).', '{n} skipped this year (empty line-up).'), { n: v.name })); }
@@ -772,3 +772,5 @@ registerSimHook('month', 'ventures9', (s, r) => {
   // gerador próprio (semente + ano): os negócios dos rivais não deslocam o fluxo principal da simulação
   if (s.month === 0) npcYear(s, Rng.fromSeed(`${s.config.seed}:ventures9:${s.year}`));
 });
+// rodada 12: o festival unificado (fest12) movimenta o caixa do mesmo negócio
+export const vpay9 = vpay;

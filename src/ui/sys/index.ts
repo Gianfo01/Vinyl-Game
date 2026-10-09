@@ -54,3 +54,6 @@ import './hq12';
 // Rodada 12: aba Arco do artista, rotinas pessoais e História do selo.
 import './arcs12';
 import './story12';
+// Rodada 12: dono de festival (ficha única em Shows e Empreendimentos) e dono de casa de shows.
+import './fest12';
+import './venue12';
