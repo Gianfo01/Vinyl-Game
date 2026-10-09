@@ -12,11 +12,13 @@ import { tabs } from '../vis';
 import { relTab } from './bonds9';
 import { ceremoniesTab, criticsTab, festivalsTab } from './hubs8';
 import { rankingTab } from './ventures9';
+import { leadersTab } from './leaders10';
 
 function labelsArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub' }, tabs('labels9', [
     { id: 'rank', label: t(l('Ranking e prestígio', 'Ranking and standing')), icon: 'star', render: () => rankingTab(s) },
     { id: 'list', label: t(l('Selos rivais', 'Rival labels')), icon: 'building', render: () => rivals(s) },
+    { id: 'leaders', label: t(l('Estratégias e líderes', 'Strategies and leaders')), icon: 'handshake', render: () => leadersTab(s) },
     { id: 'intel', label: t(l('Inteligência', 'Intel')), icon: 'camera', render: () => rivalsExtra(s) },
   ], rerender));
 }

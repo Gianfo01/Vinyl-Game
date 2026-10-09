@@ -9,6 +9,8 @@ import { nominal } from '../core/money';
 import { CATALOG_ACTS, CATALOG_LABELS } from '../data/catalog';
 import { REAL_ACTS, REAL_LABELS, applyRealNames } from '../data/realnames';
 import { REAL_CLASSIC } from '../data/realacts_classic';
+import { EXTRA_LABELS } from '../data/labels10';
+import type { CatalogLabel } from '../data/catalog';
 import { STAFF_ROLES, TECHS } from '../data/rules';
 import { CITIES, GENRES, MARKETS, cityById, familyOf, genreById, type MarketId } from '../data/world';
 import { actTalent, makeAct, personName } from './people';
@@ -52,6 +54,62 @@ function genTechDates(cfg: RunConfig, r: Rng): { dates: Record<string, number>; 
 }
 
 const OLD_LABEL_NAMES = ['Halcyon Disc Company', 'Eagle Phonograph Co.', 'Bluebell Records', 'Monarch Talking Machine', 'Crescent Gramophone', 'Union Cylinder Works'];
+
+/** Rodada 10: caixa (dólares de 1960) e reputação de todos no começo "do zero, todos iguais". */
+export const EQUAL_START_REAL = 600_000;
+export const EQUAL_REP = 40;
+
+export interface PoolLabel extends CatalogLabel { real?: string; playbook?: string; extra?: boolean }
+
+/** Todas as gravadoras que o Novo Jogo deixa escolher (as 22 clássicas + as extras da rodada 10). */
+export function labelPool(): PoolLabel[] {
+  return [...CATALOG_LABELS.map((d) => ({ ...d, real: REAL_LABELS[d.id] })), ...EXTRA_LABELS.map((d) => ({ ...d, extra: true }))];
+}
+
+/** Conjunto padrão (o de sempre): as 22 clássicas. */
+export const DEFAULT_LABEL_IDS = (): string[] => CATALOG_LABELS.map((d) => d.id);
+
+const PROC_A = ['Golden', 'Silver', 'Velvet', 'Thunder', 'Harmony', 'Echo', 'Paramount', 'Liberty', 'Crown', 'Apex', 'Cobalt', 'Lantern', 'Riverbend', 'Skyline', 'Orchid', 'Granada'];
+const PROC_B = ['Records', 'Discos', 'Music', 'Sound', 'Recordings', 'Phonograph Co.', 'Audio'];
+
+function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
+  const set = cfg.labels!;
+  const pool = labelPool();
+  const byId = new Map(pool.map((d) => [d.id, d]));
+  const startY = cfg.startYear;
+  const future = set.future ?? 'default';
+  const chosen = (set.ids ?? DEFAULT_LABEL_IDS()).map((id) => byId.get(id)).filter((d): d is PoolLabel => !!d);
+  // no começo só contam as que já existem; as futuras seguem a regra de `future`
+  let now = chosen.filter((d) => d.founded <= startY);
+  const later = future === 'none' ? [] : future === 'all' ? pool.filter((d) => d.founded > startY) : chosen.filter((d) => d.founded > startY);
+  const want = set.count === undefined ? now.length : Math.max(0, Math.min(60, Math.round(set.count)));
+  if (now.length > want) now = r.shuffle([...now]).slice(0, want).sort((a, b) => a.founded - b.founded);
+  else if (now.length < want) {
+    const extra = r.shuffle(pool.filter((d) => d.founded <= startY && !now.includes(d)));
+    now = [...now, ...extra.slice(0, want - now.length)];
+  }
+  const equal = set.start === 'equal';
+  for (const def of [...now, ...later]) {
+    const isFuture = def.founded > startY;
+    let founded = cfg.mode === 'chaos' ? def.founded + r.int(-12, 12) : cfg.mode === 'free' ? def.founded + r.int(-4, 4) : def.founded;
+    // quem foi escolhido para existir no começo existe; quem é do futuro continua no futuro
+    founded = isFuture ? Math.max(startY + 1, founded) : Math.min(startY, founded);
+    if (def.id === 'cortex') founded = Math.max(founded, s.techDates.synthetic_voice - 2);
+    const lb = makeLabel(s, r, { ...def, name: cfg.realNames ? def.real ?? REAL_LABELS[def.id] ?? def.name : def.name, founded });
+    if (def.playbook) lb.playbook = def.playbook;
+  }
+  // faltou gente (lista curta para o número pedido): selos genéricos fundados há poucos anos
+  for (let i = Object.values(s.labels).filter((x) => x.founded <= startY).length; i < want; i++) {
+    const city = r.pick(['new_york', 'london', 'paris', 'berlin', 'rio', 'buenos_aires', 'los_angeles', 'tokyo', 'sao_paulo', 'mexico_city']);
+    let name = `${r.pick(PROC_A)} ${r.pick(PROC_B)}`;
+    while (Object.values(s.labels).some((x) => x.name === name)) name = `${r.pick(PROC_A)} ${r.pick(PROC_A)} ${r.pick(PROC_B)}`;
+    makeLabel(s, r, { id: 'gen' + i, name, family: r.pick(['A', 'B', 'C', 'D'] as const), city, founded: startY - r.int(1, 15), focus: [] }, true);
+  }
+  if (equal) for (const lb of Object.values(s.labels)) {
+    lb.cash = nominal(EQUAL_START_REAL, Math.max(startY, lb.founded));
+    lb.reputation = EQUAL_REP;
+  }
+}
 
 function makeLabel(s: GameState, r: Rng, def: { id: string; name: string; family: Label['family']; city: string; founded: number; focus: string[] }, procedural = false): Label {
   const capital = { A: 9_000_000, B: 1_200_000, C: 3_000_000, D: 4_000_000 }[def.family];
@@ -239,13 +297,16 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   s.divergence = tech.divergence;
   for (const g of GENRES) s.genrePop[g.id] = g.born <= cfg.startYear ? clamp(r.float(0.6, 1.3) - Math.max(0, (cfg.startYear - g.born - 25) / 60), 0.25, 1.4) : 0.4;
 
-  // L3 — mercado: gravadoras
-  for (const def of CATALOG_LABELS) {
+  // L3 — mercado: gravadoras (rodada 10: conjunto e começo escolhidos no Novo Jogo; ausente = como sempre)
+  const equal = cfg.labels?.start === 'equal';
+  const chosenLabels = !!cfg.labels && (!!cfg.labels.ids || cfg.labels.count !== undefined || equal);
+  if (chosenLabels) setupLabels(s, r, cfg);
+  else for (const def of CATALOG_LABELS) {
     const founded = cfg.mode === 'chaos' ? def.founded + r.int(-12, 12) : cfg.mode === 'free' ? def.founded + r.int(-4, 4) : def.founded;
     makeLabel(s, r, { ...def, name: cfg.realNames ? REAL_LABELS[def.id] ?? def.name : def.name, founded: def.id === 'cortex' ? Math.max(founded, s.techDates.synthetic_voice - 2) : founded });
   }
   const activeCount = Object.values(s.labels).filter((x) => x.active).length;
-  for (let i = 0; i < Math.max(0, 5 - activeCount); i++) {
+  for (let i = 0; i < Math.max(0, chosenLabels ? 0 : 5 - activeCount); i++) {
     const city = r.pick(['new_york', 'london', 'paris', 'berlin', 'rio', 'buenos_aires']);
     makeLabel(s, r, { id: 'old' + i, name: OLD_LABEL_NAMES[i], family: r.pick(['A', 'B', 'C', 'D'] as const), city, founded: cfg.startYear - r.int(3, 20), focus: [] }, true);
   }
@@ -267,7 +328,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
       if (activeYears > careerLen) continue; // já faz parte da história
       const act = spawnCatalogAct(s, r, u, activeYears);
       act.careerEnd = u.debut + careerLen;
-      signToBestRival(s, r, act);
+      if (!equal) signToBestRival(s, r, act);
     } else s.upcoming.push(u);
   }
 
@@ -280,7 +341,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     act.fame = clamp(r.normal(4 + years * 2.5, 5) * (act.potential / 60), 0, 60);
     const f = Math.pow(10, 2 + act.fame / 25);
     act.fans = { casual: Math.round(f), active: Math.round(f * 0.15), core: Math.round(f * 0.03) };
-    if (act.fame > 18 && r.chance(0.6)) signToBestRival(s, r, act);
+    if (!equal && act.fame > 18 && r.chance(0.6)) signToBestRival(s, r, act);
   }
   if (opts.preview) return s;
 
@@ -297,6 +358,12 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   ensureExt(s);
   initWorldExt(s, r);
   runSimHooks('newgame', s, r);
+  // rodada 10: "todos iguais" vale depois da história prévia (que mexe no caixa dos selos)
+  if (equal) for (const lb of Object.values(s.labels)) {
+    lb.cash = nominal(EQUAL_START_REAL, Math.max(cfg.startYear, lb.founded));
+    lb.reputation = EQUAL_REP;
+    lb.revenueLastYear = 0;
+  }
 
   remember(s, 'start', fmtL(l('{company} abre as portas em {city}, {year}. Run {sig}.', '{company} opens its doors in {city}, {year}. Run {sig}.'), {
     company: cfg.companyName,
@@ -308,6 +375,8 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
 }
 
 export function signToBestRival(s: GameState, r: Rng, act: Act): void {
+  // rodada 10: no começo "todos iguais" ninguém tem elenco (só usado na criação do mundo)
+  if (s.config.labels?.start === 'equal') return;
   const fam = familyOf(act.genre);
   const candidates = Object.values(s.labels).filter((lb) => lb.active && lb.roster.length < 40);
   const lb = r.weighted(candidates, (x) => (x.focus.length === 0 ? 1 : x.focus.includes(fam) ? 3 : 0.2) * (cityById[x.city]?.market === cityById[act.city]?.market ? 2 : 1));
@@ -376,7 +445,13 @@ function setupPlayer(s: GameState, r: Rng): void {
     s.delegated[act.id] = true;
   }
   const customRoster = cfg.custom?.roster;
-  if (!cfg.takeover && ((cfg.role !== 'artist' && cfg.scenario !== 'from_zero') || customRoster)) {
+  // rodada 10: começo "do zero, todos iguais" — mesmo caixa e reputação que cada rival, sem elenco
+  if (cfg.labels?.start === 'equal') {
+    if (cfg.custom?.cash === undefined) p.cash = nominal(EQUAL_START_REAL, s.year);
+    p.initialCash = p.cash;
+    if (cfg.custom?.reputation === undefined) p.reputation = { artistic: EQUAL_REP, commercial: EQUAL_REP, artists: EQUAL_REP, institutional: EQUAL_REP };
+  }
+  if (!cfg.takeover && cfg.labels?.start !== 'equal' && ((cfg.role !== 'artist' && cfg.scenario !== 'from_zero') || customRoster)) {
     const n = customRoster !== undefined ? clamp(Math.round(customRoster), 0, 8) : cfg.scenario === 'established' ? 3 : 1;
     for (let i = 0; i < n; i++) {
       const act = spawnProceduralAct(s, r, { city: cfg.homeCity, potential: r.int(50, 72), fame: r.int(8, 25), formedYear: s.year - 2 });
@@ -400,7 +475,7 @@ function setupPlayer(s: GameState, r: Rng): void {
 /** Rodada 9: gravadoras que o jogador pode assumir neste começo (mesma semente, ano e modo). */
 export function takeoverCandidates(cfg: RunConfig): { label: Label; terms: TakeoverTerms }[] {
   const s = createGame({ ...cfg, takeover: undefined, character: undefined }, { preview: true });
-  return Object.values(s.labels).filter((lb) => lb.active && lb.roster.length > 0).map((lb) => ({ label: lb, terms: takeoverTerms(s, lb) }))
+  return Object.values(s.labels).filter((lb) => lb.active && (lb.roster.length > 0 || cfg.labels?.start === 'equal')).map((lb) => ({ label: lb, terms: takeoverTerms(s, lb) }))
     .sort((a, b) => a.terms.tier - b.terms.tier || a.terms.roster - b.terms.roster);
 }
 
