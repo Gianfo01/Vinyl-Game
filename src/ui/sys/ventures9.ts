@@ -13,7 +13,7 @@ import {
   pitchClient, pitchSync, placeSong, pushScene, routeTour, sellVenture, setFestival, setMgOwner, setPayout, setStaff, signBooking, signWriter, takePayola, transferVenture, upgradeCost,
   upgradeGear, upgradeVenture, valuation, ventures, writerAdvance, writerCandidates, type CrisisMove, type Holder, type MediaKind, type VKind, type Venture,
 } from '../../sim/sys/ventures9';
-import { $, actLink, cityName, genreName, pill, rerender, section, sparkline, toast } from '../common';
+import { $, actLink, cityName, genreName, inspect, pill, rerender, section, sparkline, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea, registerPageTab, registerSection } from '../registry';
 import { tabs } from '../vis';
@@ -276,7 +276,7 @@ function standingBlock(s: GameState, id: string): HTMLElement {
 export function rankingTab(s: GameState): HTMLElement {
   return h('table', { class: 'tbl compact' },
     h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(l('Selo', 'Label'))), ...STAND_KEYS.map((k) => h('th', null, t(STAND_NAME[k]))), h('th', null, t(l('Nota', 'Score'))))),
-    h('tbody', null, standingRanking(s).map((x, i) => h('tr', { class: x.id === 'player' ? 'me' : '' }, h('td', null, String(i + 1)), h('td', null, x.id === 'player' ? h('b', null, x.name) : x.name),
+    h('tbody', null, standingRanking(s).map((x, i) => h('tr', { class: x.id === 'player' ? 'me' : '' }, h('td', null, String(i + 1)), h('td', null, h('button', { class: 'link', onclick: () => inspect.label(x.id) }, x.id === 'player' ? h('b', null, x.name) : x.name)),
       ...STAND_KEYS.map((k) => h('td', null, String(Math.round(x.st[k])))), h('td', null, h('b', null, String(x.score)))))));
 }
 
