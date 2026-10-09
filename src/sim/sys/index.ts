@@ -113,3 +113,5 @@ import './notoriety14';
 import './leisure14';
 // Rodada 14: empresários reais (representam artistas, exigências, indicações, rixas, concorrência).
 import './managers14';
+// Rodada 14: capacidade mensal (você, atos, equipe e rivais).
+import './capacity14';

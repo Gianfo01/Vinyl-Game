@@ -75,3 +75,5 @@ import './theme14';
 import './leisure14';
 // Rodada 14: diretório e fichas de empresários reais.
 import './managers14';
+// Rodada 14: barras de capacidade (mesa, equipe, ato, rival).
+import './capacity14';

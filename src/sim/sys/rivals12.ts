@@ -27,6 +27,7 @@ import { editionOf, fest8, TIER_ORDER } from './fests8';
 import { leaderOf } from './leaders10';
 import { logMove, moveText as moveTxt, playbookOf, rivals8, type PlaybookId } from './rivals8';
 import { standingOf, standingScore } from './standing9';
+import { skipBlockedLog } from './gate14';
 
 export type ContestKind = 'bid' | 'auction' | 'date' | 'producer' | 'market' | 'catalog' | 'fest' | 'deal' | 'deal_end' | 'info';
 export type Screen = 'market' | 'releases' | 'studio' | 'world' | 'catalog' | 'shows' | 'hq';
@@ -151,6 +152,7 @@ function bidWar(s: GameState): void {
     const lb = s.labels[b.lb];
     if (act && lb?.active && !act.owner && (!o || o.status === 'rejected') && r.chance(0.7)) {
       signWithRival(s, act, lb.id, r);
+      if (act.owner !== lb.id) { skipBlockedLog(s, lb.id, act.name); delete st.bids[actId]; continue; }
       logMove(s, lb, { k: 'outbid', a: act.name });
       add(s, { k: 'info', lb: lb.id, scr: 'market', a: actId, t: fmtL(l('{b} assinou {a}: a oferta deles era maior que a sua.', '{b} signed {a}: their offer was bigger than yours.'), { b: rivalWho(s, lb.id), a: act.name }) });
     }

@@ -11,6 +11,7 @@ import { hqCaps } from './branches';
 import { perk } from './perks';
 import { offerMods } from './ext4';
 export { registerOfferMod } from './ext4';
+import { rivalSignOk, useMeeting } from './sys/gate14';
 
 // Ganchos de negociação (rodada 8): sistemas como a identidade do selo e o estilo de liderança mexem na
 // avaliação das ofertas (com motivo visível) e na chance de renovação, sem editar este arquivo.
@@ -141,6 +142,7 @@ export function makeOffer(s: GameState, o: Omit<Offer, 'id' | 'week' | 'status'>
   const act = s.acts[o.actId];
   if (!act || act.owner === 'player') return null;
   if (s.offers.some((x) => x.actId === o.actId && x.status === 'pending')) return null;
+  if (useMeeting(s)) return null; // rodada 14: cada oferta é uma reunião (cota da equipe, depois seu tempo)
   const offer: Offer = { ...o, id: nextId(s, 'o'), week: s.week, status: 'pending' };
   s.offers.push(offer);
   const k = s.knowledge[o.actId];
@@ -313,7 +315,8 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): void {
   remember(s, 'signed', fmtL(l('{act} assinou contrato ({model}) com {company}.', '{act} signed a {model} deal with {company}.'), { act: act.name, model: CONTRACT_MODELS.find((m) => m.id === o.model)?.name ?? o.model, company: s.config.companyName }), { actId: act.id, important: true });
 }
 
-export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng): void {
+export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng, force = false): void {
+  if (!force && !rivalSignOk(s, labelId, act)) return; // rodada 14: A&R do rival tem limite por mês
   const lb = s.labels[labelId];
   const id = nextId(s, 'k');
   s.contracts[id] = {

@@ -1,5 +1,6 @@
 // Ficha unificada com cadeia de inspeção por IDs estáveis (GDD §24) + modal de oferta.
 
+import { cap14 } from '../sim/sys/gate14';
 import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
 import { acceptCounter, defaultOffer, evaluateOffer, offerNow, pressForAnswer, withdrawCounter } from '../sim/contracts';
@@ -195,7 +196,8 @@ export function openOffer(actId: string): void {
       rerender();
       return;
     }
-    if (result === 'invalid') { reply.replaceChildren(h('p', { class: 'bad' }, t(l('Já existe uma oferta em aberto para este artista.', 'There is already an open offer for this act.')))); return; }
+    if (result === 'invalid') { reply.replaceChildren(h('p', { class: 'bad' }, t(cap14(s).why ?? l('Já existe uma oferta em aberto para este artista.', 'There is already an open offer for this act.')))); return; }
+    if (cap14(s).why) toast(t(cap14(s).why!), 'info');
     if (result === 'sniped') { reply.replaceChildren(h('p', { class: 'bad' }, t(l('Tarde demais: outro selo fechou antes.', 'Too late: another label closed first.')))); rerender(); return; }
     if (result === 'thinking' && offer) {
       reply.replaceChildren(

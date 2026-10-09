@@ -179,7 +179,7 @@ export function acceptDeal(s: GameState, r: Rng, actId: string, idx: number): { 
   } else {
     const lb = s.labels[o.party];
     if (!lb?.active) return bad(l('Essa gravadora saiu da mesa.', 'That label left the table.'));
-    signWithRival(s, a, lb.id, r);
+    signWithRival(s, a, lb.id, r, true);
     const k = s.contracts[a.contractId!];
     lb.cash += k.advance - o.advance;
     Object.assign(k, { advance: o.advance, royalty: o.royalty, termMonths: o.term, endWeek: s.week + Math.round(o.term * 4.35), recoupBalance: o.advance });
