@@ -17,7 +17,7 @@ import type { GameState } from '../../sim/types';
 import { money, playerActs, rngOf } from '../../sim/util';
 import { $, N, actLink, cityName, kv, modal, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
-import { registerSection, registerTab } from '../registry';
+import { registerSection } from '../registry';
 import { store } from '../store';
 
 const MONTHS = [l('jan', 'Jan'), l('fev', 'Feb'), l('mar', 'Mar'), l('abr', 'Apr'), l('mai', 'May'), l('jun', 'Jun'), l('jul', 'Jul'), l('ago', 'Aug'), l('set', 'Sep'), l('out', 'Oct'), l('nov', 'Nov'), l('dez', 'Dec')];
@@ -298,9 +298,6 @@ export function openCriticPage(name: string): void {
 
 // ================================================================ registro
 
-registerTab('worldHub', { id: 'festivals8', label: l('Festivais', 'Festivals'), icon: 'star', order: 56, render: festivalsTab });
-registerTab('chartsHub', { id: 'ceremonies8', label: l('Premiações', 'Awards'), icon: 'trophy', order: 56, render: ceremoniesTab });
-registerTab('mediaHub', { id: 'critics8', label: l('Críticos', 'Critics'), icon: 'news', order: 57, render: criticsTab });
 
 // convites pendentes também aparecem na mesa
 registerSection('desk', { id: 'invites8', order: 20, render: (s) => {

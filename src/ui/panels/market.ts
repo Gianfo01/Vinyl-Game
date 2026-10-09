@@ -19,15 +19,13 @@ export function marketPanel(s: GameState): HTMLElement {
   const tabs: [typeof store.marketTab, string][] = [
     ['scouting', t(S.scouting)],
     ['pipeline', t(S.pipeline)],
-    ['rivals', t(S.rivals)],
     ['professionals', t(S.professionals)],
   ];
   const tabBar = h('div', { class: 'tabs', role: 'tablist' }, tabs.map(([id, label]) => h('button', { role: 'tab', 'aria-selected': store.marketTab === id ? 'true' : 'false', class: store.marketTab === id ? 'on' : '', onclick: () => { store.marketTab = id; rerender(); } }, label)));
   let body: HTMLElement;
-  if (s.config.role === 'artist' && (store.marketTab === 'scouting' || store.marketTab === 'pipeline')) store.marketTab = 'rivals';
+  if (s.config.role === 'artist' && (store.marketTab === 'scouting' || store.marketTab === 'pipeline')) store.marketTab = 'professionals';
   if (store.marketTab === 'scouting') body = scouting(s);
   else if (store.marketTab === 'pipeline') body = pipeline(s);
-  else if (store.marketTab === 'rivals') body = rivals(s);
   else body = professionals(s);
   return h('div', { class: 'panel market' }, tabBar, body);
 }
@@ -159,7 +157,7 @@ function pipeline(s: GameState): HTMLElement {
   );
 }
 
-function rivals(s: GameState): HTMLElement {
+export function rivals(s: GameState): HTMLElement {
   const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.revenueLastYear - a.revenueLastYear);
   const famName: Record<string, string> = { A: t(l('Estrelas e escala', 'Stars & scale')), B: t(l('Descoberta e cenas', 'Discovery & scenes')), C: t(l('Hits e comunicação', 'Hits & publicity')), D: t(l('Patrimônio e catálogo', 'Heritage & catalog')) };
   return section(t(S.rivals),

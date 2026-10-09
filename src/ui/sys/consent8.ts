@@ -128,6 +128,7 @@ export function aiTab(s: GameState): HTMLElement {
 
 registerTab('business', {
   id: 'ai8', label: l('IA e autoria', 'AI and authorship'), icon: 'brain', order: 70,
+  visible: (s) => aiEra(s),
   badge: (s) => { if (!aiEra(s)) return undefined; const st = ai(s); return st.offers.length + st.imit.filter((x) => x.until === undefined).length || undefined; },
   render: (s) => aiTab(s),
 });

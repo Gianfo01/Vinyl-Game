@@ -22,7 +22,7 @@ import { centralPanel } from './panels/central';
 import { worldPanel } from './panels/world';
 import { businessPanel } from './panels/business';
 import { studioHub } from './panels/studio';
-import { auctionsSection, contestsSection, demosSection, rivalsExtra, scoutsSection } from './panels/discovery';
+import { auctionsSection, contestsSection, demosSection, scoutsSection } from './panels/discovery';
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
@@ -177,10 +177,12 @@ function topBar(): HTMLElement {
 /** Menus agrupados (rodada 7): 6 grupos no lugar de ~20 áreas soltas; o grupo atual abre suas áreas. */
 const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; areas: string[] }[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['desk', 'plan', 'inbox', 'goals', 'diary'] },
-  { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'business', 'industry', 'identity'] },
-  { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'directory', 'people', 'market'] },
-  { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['creation', 'catalog', 'shows'] },
-  { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['charts', 'media', 'world', 'lendas'] },
+  { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'business', 'identity', 'team', 'industry'] },
+  { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'market', 'directory', 'people', 'management'] },
+  { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['creation', 'catalog', 'shows', 'media'] },
+  { id: 'ventures', label: l('Empreendimentos', 'Ventures'), icon: 'bank', areas: ['ventures'] },
+  { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['world', 'charts', 'labels', 'movements', 'lendas'] },
+  { id: 'fame', label: l('Prêmios e eventos', 'Awards and events'), icon: 'trophy', areas: ['festivals', 'awards', 'rockhall', 'critics'] },
   { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you'] },
 ];
 const lastInGroup: Record<string, string> = {};
@@ -261,7 +263,6 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
       { id: 'classic', label: t(l('Radar e pipeline', 'Radar and pipeline')), icon: 'fans', render: () => marketPanel(g) },
       { id: 'discovery', label: t(l('Olheiros, concursos e demos', 'Scouts, contests and demos')), icon: 'trophy', badge: g.demos.filter((d) => !d.heard).length || undefined, render: () => h('div', null, scoutsSection(g), contestsSection(g), demosSection(g)) },
       { id: 'auctions', label: t(l('Leilões', 'Auctions')), icon: 'gavel', badge: g.auctions.filter((a) => a.status === 'open').length || undefined, render: () => auctionsSection(g) },
-      { id: 'rivals2', label: t(l('Rivais e inteligência', 'Rivals and intel')), icon: 'camera', render: () => rivalsExtra(g) },
     ], 'marketHub', g), render));
     case 'media': return h('div', { class: 'hub' }, tabs('mediaHub', mergeTabs([
       { id: 'press', label: t(l('Imprensa e crítica', 'Press and critics')), icon: 'newspaper', render: () => pressSection(g) },

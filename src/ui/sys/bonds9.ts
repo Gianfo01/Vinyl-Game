@@ -9,7 +9,6 @@ import { playerActs, rngOf } from '../../sim/util';
 import { $, actLink, modal, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { ACT_HEAD_EXTRAS, ACT_TABS, PERSON_TABS, openActPage, openPersonPage } from '../pages';
-import { registerTab } from '../registry';
 import {
   BOND_NAME, END_NAME, EPI_NAME, PLAYER_KINDS, activeBonds, admiration, bondChance, bondCost, bondTitle, bonds, bondsOfAct, bondsOfPerson, leaveBond, opinionsOf, proposeBond,
   type Bond, type BondKind,
@@ -234,7 +233,7 @@ PERSON_TABS.push((s, p, closeAll) => {
 
 // ================================================================== aba "Relações & Movimentos"
 
-function relTab(s: GameState): HTMLElement {
+export function relTab(s: GameState): HTMLElement {
   const st = mov9(s);
   const mvs = s.movements.map((mv) => ({ mv, x: st.m[mv.id] })).filter((m) => m.x).sort((a, b) => Number(a.x.phase === 'death' || a.x.phase === 'canon') - Number(b.x.phase === 'death' || b.x.phase === 'canon') || b.mv.strength - a.mv.strength);
   const act = activeBonds(s).sort((a, b) => (b.pl ?? 0) * 100 + (b.real ?? 0) * 50 + b.str - ((a.pl ?? 0) * 100 + (a.real ?? 0) * 50 + a.str));
@@ -256,5 +255,4 @@ function relTab(s: GameState): HTMLElement {
   );
 }
 
-registerTab('worldHub', { id: 'rel9', label: l('Relações & Movimentos', 'Relationships & Movements'), icon: 'handshake', order: 54, render: relTab });
 

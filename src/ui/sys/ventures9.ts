@@ -15,7 +15,7 @@ import {
 } from '../../sim/sys/ventures9';
 import { $, actLink, cityName, genreName, pill, rerender, section, sparkline, toast } from '../common';
 import { bar, h, select } from '../dom';
-import { registerArea, registerPageTab, registerSection, registerTab } from '../registry';
+import { registerArea, registerPageTab, registerSection } from '../registry';
 import { tabs } from '../vis';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
@@ -261,14 +261,13 @@ function standingBlock(s: GameState, id: string): HTMLElement {
     st.hist.length > 1 ? sparkline(st.hist) : null);
 }
 
-function rankingTab(s: GameState): HTMLElement {
+export function rankingTab(s: GameState): HTMLElement {
   return h('table', { class: 'tbl compact' },
     h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(l('Selo', 'Label'))), ...STAND_KEYS.map((k) => h('th', null, t(STAND_NAME[k]))), h('th', null, t(l('Nota', 'Score'))))),
     h('tbody', null, standingRanking(s).map((x, i) => h('tr', { class: x.id === 'player' ? 'me' : '' }, h('td', null, String(i + 1)), h('td', null, x.id === 'player' ? h('b', null, x.name) : x.name),
       ...STAND_KEYS.map((k) => h('td', null, String(Math.round(x.st[k])))), h('td', null, h('b', null, String(x.score)))))));
 }
 
-registerTab('chartsHub', { id: 'standing9', label: l('Prestígio dos selos', 'Label standing'), icon: 'star', render: rankingTab });
 registerPageTab('label', { id: 'standing9', label: l('Prestígio', 'Standing'), icon: 'star', render: (s, id) => section(t(l('Prestígio', 'Standing')), standingBlock(s, id)) });
 registerSection('hq', { id: 'standing9', order: 4, render: (s) => {
   const pos = standingRanking(s).findIndex((x) => x.id === 'player') + 1;
