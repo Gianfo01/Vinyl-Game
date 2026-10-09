@@ -115,7 +115,7 @@ describe('ingressos', () => {
     const base = previewShowRevenue(s, act.id, 'london', 3, 2, 1_000_000);
     // a presença de palco dos integrantes (atributos, rodada 5) já mexe um pouco na base
     expect(base).toBeGreaterThan(900_000);
-    expect(base).toBeLessThan(1_100_000);
+    expect(base).toBeLessThan(1_250_000); // rodada 14: notoriedade e visual também mexem um pouco
     liveOf(s).tickets = { vip: true, dynamic: true };
     expect(previewShowRevenue(s, act.id, 'london', 3, 2, 1_000_000)).toBeGreaterThan(base);
     liveOf(s).tickets = { vip: false, dynamic: false };
