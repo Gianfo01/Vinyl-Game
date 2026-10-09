@@ -16,6 +16,7 @@ import { $, N, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { portraitDataUrl } from '../pixel/avatar';
 import { registerCutscene, registerTab, openScene } from '../registry';
+import { effectName, recipeFit } from '../../sim/sys/recipe12';
 import { store } from '../store';
 import { chips, ic, scoreBadge, stat, tile } from '../vis';
 import './creation.css';
@@ -79,7 +80,8 @@ function recipeTab(s: GameState): HTMLElement {
     section(t(l('Receita sonora', 'Sound recipe')),
       songs.length ? h('div', null,
         select(ui.recipeSong, songs.map((so) => ({ value: so.id, label: so.title })), (v) => { ui.recipeSong = v; rerender(); }, { 'aria-label': t(l('Música', 'Song')) }),
-        h('p', { class: 'muted small' }, t(l('Escolha até 4 ingredientes. Eles somam efeitos; efeitos que os mercados procuram dão bônus no lançamento.', 'Pick up to 4 ingredients. They add up to effects; effects the markets crave boost the release.'))),
+        h('p', { class: 'muted small' }, t(l('Escolha até 4 ingredientes. Eles somam efeitos; efeitos que os mercados procuram dão bônus no lançamento. Não existe receita certa por gênero: o que rende depende do que a formação toca bem, do conceito do projeto, do produtor e do público-alvo.', 'Pick up to 4 ingredients. They add up to effects; effects the markets crave boost the release. There is no right recipe per genre: what pays off depends on what the lineup plays well, the project concept, the producer and the target audience.'))),
+        recipeContext(s, ui.recipeSong),
         h('div', { class: 'cr-ingredients' }, availableIngredients(s).map((ing) => h('button', { class: `chip-btn ${recipe.includes(ing.id) ? 'on' : ''}`, 'aria-pressed': recipe.includes(ing.id) ? 'true' : 'false', onclick: () => toggle(ing.id) }, t(ing.name), h('small', { class: 'muted' }, ` (${ing.effects.map((e) => t(EFFECTS[e])).join(', ')})`)))),
         h('p', null, h('b', null, t(l('Efeitos: ', 'Effects: '))), effectsOf(recipe).length ? chips(...effectsOf(recipe).map((e) => pill(t(EFFECTS[e])))) : h('span', { class: 'muted' }, '—')),
       ) : h('p', { class: 'muted small' }, t(l('Nenhuma música inédita. Componha primeiro.', 'No unreleased songs. Write some first.'))),
@@ -372,3 +374,13 @@ registerCutscene('review', (s, cs, close) => {
 });
 
 export { openViral, openClipEditor, songX };
+
+// rodada 12: leitura da receita no contexto da faixa (artista, conceito, produtor, público-alvo)
+function recipeContext(s: GameState, songId: string): HTMLElement | null {
+  const fit = songId ? recipeFit(s, songId) : null;
+  if (!fit) return null;
+  return h('div', { class: 'small' },
+    h('p', null, t(l('Este contexto pede: ', 'This context asks for: ')), chips(...fit.wanted.map((e) => pill(t(effectName(e)))))),
+    h('ul', null, fit.notes.map((n) => h('li', { class: n.good ? 'good' : 'bad' }, t(n.text)))),
+    pill(`${t(l('Encaixe no contexto', 'Context fit'))}: ${fit.score > 0 ? '+' : ''}${Math.round(fit.score * 7)}% ${t(l('de apelo', 'appeal'))}`, fit.score > 0.05 ? 'good' : fit.score < -0.05 ? 'bad' : ''));
+}

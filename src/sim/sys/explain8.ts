@@ -65,7 +65,7 @@ function opportunityFor(s: GameState, rel: Release, worst: ExplainFactor | undef
   const act = s.acts[rel.actId];
   if (!worst || worst.impact > -0.12) {
     if (verdict === 'smash' || verdict === 'above') return l('Aproveite o embalo: extraia outro single, marque shows nas cidades onde o disco pegou e comece o próximo projeto enquanto o nome está quente.', 'Ride the wave: pull another single, book shows where the record caught on and start the next project while the name is hot.');
-    return l('Nada pesou muito contra: repita a receita, mas com um single mais forte à frente.', 'Nothing weighed much against it: repeat the recipe, but lead with a stronger single.');
+    return l('Nada pesou muito contra: mantenha a estratégia, mas com um single mais forte à frente.', 'Nothing weighed much against it: keep the strategy, but lead with a stronger single.');
   }
   switch (worst.key) {
     case 'fame': return l('Construa público antes do próximo disco: shows de abertura, entrevistas e um single antes do álbum.', 'Build an audience before the next record: opening slots, interviews and a single before the album.');
@@ -76,7 +76,7 @@ function opportunityFor(s: GameState, rel: Release, worst: ExplainFactor | undef
       ? l('Nesta época o público quer faixas avulsas: lance singles antes e deixe o álbum para quando houver hits.', 'In this era people want tracks: release singles first and save the album for when there are hits.')
       : l('Nesta época o álbum pesa mais: junte as melhores faixas num LP.', 'In this era albums matter more: gather the best tracks into an LP.');
     case 'momentum': return fmtL(l('Reaqueça a carreira de {a} com shows e mídia antes de lançar de novo.', 'Warm {a}\'s career back up with shows and media before releasing again.'), { a: act?.name ?? '—' });
-    case 'luck': return l('Foi azar: o plano estava certo — repita a receita, de preferência com um rollout para diluir o risco.', 'It was bad luck: the plan was right — repeat it, ideally with a rollout to spread the risk.');
+    case 'luck': return l('Foi azar: o plano estava certo — mantenha a estratégia, de preferência com um rollout para diluir o risco.', 'It was bad luck: the plan was right — repeat it, ideally with a rollout to spread the risk.');
     case 'hook': return l('Escolha como single a faixa com mais gancho (perfil comercial), não só a de maior Q.', 'Pick the track with the strongest hook (commercial profile) as the single, not just the highest Q.');
     case 'overexposure': return l('Espace os lançamentos: pelo menos 6 a 9 meses entre discos do mesmo artista.', 'Space out releases: at least 6 to 9 months between records by the same act.');
     case 'marketing': return l('Ponha verba de divulgação no canal certo da época — mesmo pouca, a primeira fatia rende muito (retorno decrescente).', 'Put some promotion budget on the right channel for the era — even a little goes a long way (diminishing returns).');

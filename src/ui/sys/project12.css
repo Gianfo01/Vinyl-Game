@@ -1,0 +1,27 @@
+/* Projeto musical como centro (rodada 12) */
+.p12 { display: grid; gap: 12px; }
+.p12-top h2 { margin: 0 0 4px; }
+.p12-new { margin-top: 6px; gap: 6px; }
+.p12-view { display: grid; gap: 10px; }
+.p12-head { display: flex; align-items: center; gap: 10px; }
+.p12-head h3 { margin: 0; }
+.p12-head .pill { margin-left: auto; }
+.p12-intents { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.p12-intent { display: grid; gap: 4px; text-align: left; padding: 10px; border: 1px solid var(--line, #8884); border-radius: 8px; background: var(--card, transparent); cursor: pointer; }
+.p12-intent.on { outline: 2px solid var(--accent, #c80); }
+.p12-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.p12-grid label { display: grid; gap: 4px; }
+.p12-phases { display: flex; list-style: none; padding: 0; margin: 0 0 8px; gap: 4px; }
+.p12-phases li { flex: 1; padding: 6px 8px; border-radius: 6px; background: var(--card, #8881); opacity: .65; display: grid; }
+.p12-phases li.done { opacity: .9; border-bottom: 3px solid var(--good, #3a6); }
+.p12-phases li.on { opacity: 1; border-bottom: 3px solid var(--accent, #c80); }
+.p12-problem { border: 2px solid var(--bad, #c33); border-radius: 8px; padding: 10px; }
+.p12-problem h4 { margin: 0 0 4px; }
+.p12-opts, .p12-next { display: grid; gap: 6px; }
+.p12-opt { display: grid; grid-template-columns: minmax(150px, max-content) 1fr; gap: 8px; align-items: center; }
+.p12-links { display: flex; flex-wrap: wrap; gap: 4px; }
+.p12-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.p12-drivers { margin: 4px 0; }
+.p12-desk { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px; margin-bottom: 6px; }
+.p12-card { display: grid; gap: 2px; text-align: left; padding: 8px; border: 1px solid var(--line, #8884); border-radius: 8px; background: var(--card, transparent); cursor: pointer; }
+@media (max-width: 600px) { .p12-opt { grid-template-columns: 1fr; } .p12-phases { flex-wrap: wrap; } }

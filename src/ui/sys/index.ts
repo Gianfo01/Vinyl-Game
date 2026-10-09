@@ -47,3 +47,5 @@ import './scenes12';
 // Rodada 12: carreiras (Você → Carreiras, cartões na mesa) e empresário com confiança e mercado de serviços.
 import './careers12';
 import './manager12';
+// Rodada 12: projeto musical como centro (hub em Música e cartão no Início).
+import './project12';
