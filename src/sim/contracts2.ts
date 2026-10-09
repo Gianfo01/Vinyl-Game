@@ -4,6 +4,7 @@
 import { clamp, type Rng } from '../core/rng';
 import { MARKETS, l, type L, type MarketId } from '../data/world';
 import { endContract } from './contracts';
+import { rightsOf } from './rights';
 import type { Act, Contract, GameState } from './types';
 import { fmtL, money, notify, playerActs, post, remember } from './util';
 
@@ -42,6 +43,7 @@ export function cedeTerritory(s: GameState, actId: string, labelId: string, mark
   const lb = s.labels[labelId];
   if (!k || k.party !== 'player' || !lb?.active) return l('Inválido.', 'Invalid.');
   if (!markets.length) return l('Escolha mercados.', 'Pick markets.');
+  if (!rightsOf(k).license) return l('O contrato não cede ao selo o direito de licenciar a terceiros.', 'The contract does not grant the label third-party licensing rights.');
   const size = markets.reduce((t, m) => t + (MARKETS.find((x) => x.id === m)?.size(s.year) ?? 0), 0);
   const fee = money(s, 2000 + act.fame * 400 * size * share * 3);
   if (lb.cash < fee) return l('O parceiro não tem caixa para isso.', 'The partner lacks the cash.');

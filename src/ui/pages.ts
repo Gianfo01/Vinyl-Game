@@ -22,6 +22,8 @@ import { money } from '../sim/util';
 import { $, N, actLink, cityName, cover, genreName, kv, labelLink, logo, modal, monthName, pill, rerender, statusName, toast } from './common';
 import { bar, h, rangeBar, select } from './dom';
 import { openOffer, openRelease } from './ficha';
+import { rightsSheet } from './rightsView';
+import { openDossier } from './dossierView';
 import { portraitCanvas } from './pixel/avatar';
 import { appearanceEditor } from './pixel/editor';
 import { personActivity } from './pixel/activity';
@@ -304,7 +306,8 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
           h('div', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${t(l('desde', 'since'))} ${a.formed} · `, pill(statusName(a.status))),
           h('div', null, t(S.owner), ': ', labelLink(s, a.owner), ' · ', t(S.knownAs), ': ', pill(t(DEGREES[Math.max(0, deg - 1)])), k ? h('span', { class: 'muted' }, ` · ${t(S.source)}: ${t(sourceName(k.source))}`) : null))),
       h('div', { class: 'row wrap' },
-        !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn small primary', onclick: () => { close(); openOffer(a.id); } }, t(S.makeOffer)) : null),
+        !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn small primary', onclick: () => { close(); openOffer(a.id); } }, t(S.makeOffer)) : null,
+        !mine && s.config.role !== 'artist' && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small', onclick: () => { close(); openDossier(a.id); } }, t(l('Dossiê de A&R', 'A&R dossier'))) : null),
     ),
   );
   return h('div', { class: 'ficha pg' }, head, pageTabs([
@@ -403,5 +406,6 @@ function contractTab(s: GameState, a: Act): HTMLElement {
     c.party === 'player' ? kv(t(S.recoup), $(c.recoupBalance)) : null,
     kv(t(S.ends), `${Math.max(0, Math.round((c.endWeek - s.week) / 4.35))} ${t(l('meses', 'months'))}`),
     kv(t(S.releasesOwed), `${c.releasesDone}/${c.releasesOwed}`),
+    c.party === 'player' && !a.playerBand ? rightsSheet(s, c) : null,
   );
 }

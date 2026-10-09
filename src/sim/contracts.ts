@@ -9,6 +9,7 @@ import { fmtL, hasCard, hasMutator, money, nextId, notify, playerActs, post, rem
 import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
+import { renewalAdj, rightsScore, scopeTerritories, signingTrust } from './rights';
 
 export function expectedAdvance(s: GameState, act: Act): number {
   // dólares reais
@@ -82,6 +83,9 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (hasCard(s, 'emperor')) score -= 0.04;
   if (act.catalogNo && act.fame < 5) score += 0.05;
   score += perk(s, 'offer', act);
+  // ficha de direitos (rodada 8): só o que difere do padrão do modelo pesa
+  const rs = rightsScore(o.rights, o.model, amb, o.publishing);
+  score += rs.delta;
 
   if (advU < 0.6) reasons.push(l('Adiantamento abaixo do que esperam.', 'Advance below expectations.'));
   if (advU > 1.4) reasons.push(l('Adiantamento generoso.', 'Generous advance.'));
@@ -89,6 +93,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (rivalHeat > 0.05) reasons.push(l('Há interesse de rivais.', 'Rivals are interested.'));
   if (reach < 0.5 && w.reach > 0.2) reasons.push(l('Querem alcance que sua sede ainda não tem.', 'They want reach your HQ lacks.'));
   if (o.promises.length) reasons.push(l('Promessas pesam a favor (e viram obrigação).', 'Promises help (and become obligations).'));
+  reasons.push(...rs.reasons);
 
   const p = 1 / (1 + Math.exp(-(score - 0.58) * 8));
   // analista estreita a leitura; sem analista, a faixa é mais grosseira
@@ -253,7 +258,16 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): void {
     recoupBalance: o.model === 'distribution' ? 0 : o.advance,
     promises: o.promises.map((kind) => ({ kind, dueWeek: s.week + (kind === 'priority' ? 52 : kind === 'tour' ? 26 : termWeeks) })),
     distributionFee: o.distributionFee,
+    fameAtSign: Math.round(act.fame * 10) / 10,
   };
+  if (o.rights) {
+    // rodada 8: a ficha negociada vira cláusulas do contrato
+    c.rights = { ...o.rights };
+    c.publishing = o.rights.pubShare > 0;
+    c.options = o.rights.options;
+    c.territories = scopeTerritories(s, o.rights.scope);
+    act.trust = clamp(act.trust + signingTrust(o.rights, o.model, mainAmbition(s, act)), 0, 100);
+  }
   s.contracts[id] = c;
   act.owner = 'player';
   act.contractId = id;
@@ -314,7 +328,7 @@ export function renewContract(s: GameState, actId: string, months: number, bonus
   if (!act || !c || c.party !== 'player') return false;
   if (s.player.cash < bonus) return false;
   const r = rngOf(s);
-  const p = clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3, 0, 0.97);
+  const p = clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3 + renewalAdj(s, c), 0, 0.97);
   if (!r.chance(p)) {
     act.trust -= 4;
     notify(s, fmtL(l('{act} não quis renovar agora.', '{act} did not want to renew now.'), { act: act.name }), 'bad');
@@ -324,6 +338,8 @@ export function renewContract(s: GameState, actId: string, months: number, bonus
   c.termMonths += months;
   c.releasesOwed += Math.ceil(months / 14);
   c.recoupBalance += bonus;
+  c.fameAtSign = Math.round(act.fame * 10) / 10; // renovação zera o poder de barganha acumulado
+  c.lastRenegWeek = s.week;
   act.cash += bonus;
   post(s, `renew:${actId}`, -bonus, 'advances', `Renovação ${act.name}`);
   notify(s, fmtL(l('{act} renovou por {m} meses.', '{act} renewed for {m} months.'), { act: act.name, m: months }), 'good');

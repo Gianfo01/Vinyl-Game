@@ -7,6 +7,7 @@ import { l, type L } from '../data/world';
 import type { Act, GameState } from './types';
 import type { BrandDeal } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
+import { syncMasterShare } from './rights';
 
 export interface BrandDef {
   name: string;
@@ -96,7 +97,8 @@ export function acceptDeal(s: GameState, r: Rng, dealId: string, counter = false
   d.status = 'active';
   d.untilWeek = s.week + (d.kind === 'sponsor' ? 52 : d.kind === 'license' ? 52 : 52);
   // master 75% / composição 25% (sync), recebidos pelo dono de cada direito
-  const masterShare = act.playerBand || c?.party === 'player' ? 0.75 : 0;
+  // rodada 8: a fatia do master segue a ficha de direitos do disco (sync cedido ou não, master revertido)
+  const masterShare = act.playerBand ? 0.75 : syncMasterShare(s, act, d.songId, c?.party === 'player' ? 0.75 : 0);
   const pubShare = act.playerBand || (c?.party === 'player' && c.publishing) || s.ownPublishing ? 0.25 : 0;
   const mine = d.kind.startsWith('sync') ? Math.round(d.fee * (masterShare + pubShare)) : act.playerBand ? d.fee : Math.round(d.fee * (c?.model === '360' ? c.share360 : 0.15));
   post(s, `deal:${d.id}`, mine, d.kind.startsWith('sync') ? 'sync' : 'brands', `${d.brand} — ${act.name}`);

@@ -12,6 +12,8 @@ import { money, rngOf } from '../sim/util';
 import { l } from '../data/world';
 import { openActPage, openPersonPage } from './pages';
 import { reviewCard, reviewSummary } from './reviewView';
+import { rightsFieldset } from './rightsView';
+import { defaultRights } from '../sim/rights';
 
 function g(): GameState {
   return store.game!;
@@ -146,8 +148,12 @@ export function openOffer(actId: string): void {
   const num = (value: number, step: number, set: (v: number) => void, min = 0) =>
     h('input', { type: 'number', value, step, min, oninput: (e: Event) => { set(Number((e.target as HTMLInputElement).value)); update(); } });
   const unit = money(s, 1);
+  // rodada 8: ficha de direitos negociável (recomeça no padrão quando o modelo muda)
+  o.rights = defaultRights(o.model, o.publishing);
+  const rightsBox = h('div');
+  const drawRights = () => rightsBox.replaceChildren(rightsFieldset(s, o, update));
   const form = h('div', { class: 'form' },
-    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.map((m) => ({ value: m.id, label: t(m.name) + (m.available ? '' : ' ' + t(S.phaseLater)), disabled: !m.available })), (v: ContractModel) => { o.model = v; update(); })),
+    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.map((m) => ({ value: m.id, label: t(m.name) + (m.available ? '' : ' ' + t(S.phaseLater)), disabled: !m.available })), (v: ContractModel) => { o.model = v; o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); drawRights(); update(); })),
     h('p', { class: 'muted small' }, t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc)),
     h('label', null, `${t(S.advanceAmt)} ($)`, num(Math.round(o.advance / 100), Math.max(10, Math.round(unit * 100 / 100)), (v) => (o.advance = Math.round(v * 100)))),
     h('label', null, `${t(S.royalty)} (%)`, num(Math.round(o.royalty * 100), 1, (v) => (o.royalty = v / 100))),
@@ -156,12 +162,13 @@ export function openOffer(actId: string): void {
     h('label', null, t(S.term), num(o.termMonths, 6, (v) => (o.termMonths = v), 6)),
     h('label', null, t(S.releasesOwed), num(o.releasesOwed, 1, (v) => (o.releasesOwed = v), 1)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.creativeControl, onchange: (e: Event) => { o.creativeControl = (e.target as HTMLInputElement).checked; update(); } }), t(S.creativeControl)),
-    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.publishing, onchange: (e: Event) => { o.publishing = (e.target as HTMLInputElement).checked; update(); } }), t(S.publishing)),
     h('fieldset', null, h('legend', null, t(S.promises)),
       (['priority', 'tour', 'freedom'] as const).map((p) => h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; o.promises = on ? [...o.promises, p] : o.promises.filter((x) => x !== p); update(); } }), t(p === 'priority' ? S.promisePriority : p === 'tour' ? S.promiseTour : S.promiseFreedom))),
     ),
+    rightsBox,
     evalBox,
   );
+  drawRights();
   update();
   let close = () => {};
   const reply = h('div', { class: 'offer-reply' });
@@ -198,7 +205,7 @@ export function openOffer(actId: string): void {
   const actions = h('div', { class: 'actions' },
     h('button', { class: 'btn primary', onclick: () => {
       if (s.player.cash < o.advance) return toast(t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
-      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises] });
+      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined });
       showReply(offer, result);
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
     reply,

@@ -13,6 +13,7 @@ import { scheduleRelease, songQ, availableFormats, suggestedPress } from '../../
 import { songProfile } from '../../repertoire';
 import type { Act, GameState, Release, Song } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
+import { exploitBlock } from '../../rights';
 
 // ------------------------------------------------------------------ estado
 
@@ -480,6 +481,8 @@ export function remasterOptions(s: GameState) {
 export function remaster(s: GameState, r: Rng, relId: string): L | null {
   const rel = s.releases[relId];
   if (!rel || rel.owner !== 'player') return l('Só o seu catálogo.', 'Only your catalog.');
+  const blocked = exploitBlock(s, rel, 'remaster');
+  if (blocked) return blocked;
   if (s.year - rel.year < 8) return l('Remasterize discos com pelo menos 8 anos.', 'Remaster records at least 8 years old.');
   if (!remasterOptions(s).length) return l('Ainda não há tecnologia nova para remasterizar.', 'There is no new technology to remaster with yet.');
   if (s.x4.creation.remasters.includes(relId)) return l('Já remasterizado nesta geração.', 'Already remastered for this generation.');

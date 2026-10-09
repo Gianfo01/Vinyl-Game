@@ -10,6 +10,7 @@ import type { GameState, Knowledge } from '../../sim/types';
 import { $, actLink, cityName, genreName, labelLink, logo, pill, rerender, section, toast } from '../common';
 import { h, rangeBar, select } from '../dom';
 import { openOffer } from '../ficha';
+import { openDossier } from '../dossierView';
 import { store } from '../store';
 import { hqCaps } from '../../sim/branches';
 
@@ -48,6 +49,7 @@ function signalCard(s: GameState, k: Knowledge): HTMLElement {
     ),
     h('div', { class: 'actions' },
       h('button', { class: 'btn small', disabled: !chk.ok, title: chk.reason ? t(chk.reason) : '', onclick: () => { scoutAct(s, a.id); rerender(); } }, `${t(S.deepen)} (${$(scoutCost(s, k.degree))})`),
+      h('button', { class: 'btn small', onclick: () => openDossier(a.id) }, t(l('Dossiê', 'Dossier'))),
       !a.owner ? h('button', { class: 'btn small primary', onclick: () => openOffer(a.id) }, t(S.makeOffer)) : null,
       h('button', { class: 'btn small ghost', onclick: () => { dropSignal(s, a.id); rerender(); } }, t(S.drop)),
     ),
@@ -134,6 +136,7 @@ function pipeCard(s: GameState, k: Knowledge): HTMLElement {
       offer?.status === 'counter' ? h('button', { class: 'btn small primary', onclick: () => { if (!acceptCounter(s, offer.id)) toast(t(l('Não foi possível aceitar (caixa?).', 'Could not accept (cash?).')), 'bad'); syncPipeline(s); rerender(); } }, t(S.acceptCounter)) : null,
       offer ? h('button', { class: 'btn small ghost', onclick: () => { withdrawOffer(s, offer.id); s.offers = s.offers.filter((x) => x !== offer); syncPipeline(s); rerender(); } }, t(S.withdraw)) : null,
       !offer && !a.owner ? h('button', { class: 'btn small primary', onclick: () => openOffer(a.id) }, t(S.makeOffer)) : null,
+      h('button', { class: 'btn small ghost', title: t(l('Dossiê de A&R', 'A&R dossier')), onclick: () => openDossier(a.id) }, '🔍'),
       !offer ? h('button', { class: 'btn small ghost', title: t(S.drop), onclick: () => { dropSignal(s, a.id); rerender(); } }, '✕') : null,
     ),
   );

@@ -296,6 +296,43 @@ export interface Contract {
   options?: number; // períodos de opção restantes
   exitFee?: number; // cláusula de saída (centavos)
   buyout?: number; // valor de compra do contrato
+  /** rodada 8: ficha de direitos negociada (ausente = padrão do modelo; ver sim/rights.ts) */
+  rights?: RightsTerms;
+  /** alcance do ato ao assinar (mede o poder de barganha que ele ganhou depois) */
+  fameAtSign?: number;
+  /** total já recuperado do adiantamento (centavos) */
+  recouped?: number;
+  lastRenegWeek?: number;
+  /** masters deste contrato já voltaram ao artista */
+  reverted?: boolean;
+  revertWarned?: boolean;
+}
+
+/** Direitos de um acordo (rodada 8, §3.3): propriedade, divisão, território, opções e reversão. */
+export interface RightsTerms {
+  /** dono do master: selo, coproprietário (50/50 do lucro) ou artista (selo só licencia) */
+  master: 'label' | 'shared' | 'artist';
+  /** fatia do selo na edição das composições (0, 0.25 ou 0.5) */
+  pubShare: number;
+  /** pontos do produtor e dos convidados (fração da receita bruta) */
+  producerPts: number;
+  guestPts: number;
+  /** true = o selo paga os pontos desde o primeiro disco; false = saem da parte do artista (all-in) */
+  pointsFromLabel: boolean;
+  /** territórios cobertos */
+  scope: 'home' | 'region' | 'world';
+  /** opções de discos futuros (anos extras a critério do selo) */
+  options: number;
+  exclusive: boolean;
+  /** direitos de exploração que ficam com o selo */
+  sync: boolean;
+  reissue: boolean;
+  remaster: boolean;
+  license: boolean;
+  /** anos após o fim do contrato até o master voltar ao artista (0 = perpétuo, salvo master do artista) */
+  reversionYears: number;
+  /** a reversão só acontece com o adiantamento recuperado */
+  reversionNeedsRecoup: boolean;
 }
 
 export interface Label {
@@ -377,6 +414,8 @@ export interface Offer {
   note?: string;
   /** rodada 7: o artista pediu tempo para pensar até esta semana */
   thinkUntil?: number;
+  /** rodada 8: ficha de direitos proposta (ausente = padrão do modelo) */
+  rights?: RightsTerms;
 }
 
 export interface AgendaSlot {
