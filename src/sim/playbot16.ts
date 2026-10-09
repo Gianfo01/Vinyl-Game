@@ -14,7 +14,7 @@ import { fireStaff, hireStaff, loanOffer, monthlyCosts, openTerritory, takeLoan,
 import { estimateMonthlyBurn, resolveDecision } from './events';
 import { availableChannels } from './market';
 import { respondDemand, rst } from './rights';
-import { canScout, estimate, scoutAct } from './scouting';
+import { canScout, estimate, requestScout, scoutAct } from './scouting';
 import { availableProducers, producerFit, sessionCost } from './studio';
 import { acceptCommission } from './sys/creation/core';
 import { addOrder, d16, ordersOf } from './sys/deleg16';
@@ -77,7 +77,7 @@ export interface PlayLog {
 }
 const freshLog = (): PlayLog => ({ signs: 0, offers: 0, scouts: 0, projects: 0, recordings: 0, releases: 0, rollouts: 0, tours: 0, festivals: 0, syncPitches: 0, syncWins: 0, hires: 0, fires: 0, orders: 0, loans: 0, renewals: 0, drops: 0, decisions: 0, personal: 0, commissions: 0, demands: 0 });
 
-interface Mem { log: PlayLog; cash: number[]; tourW: Record<string, number>; party: number; refused: Record<string, number> }
+interface Mem { log: PlayLog; cash: number[]; tourW: Record<string, number>; party: number; refused: Record<string, number>; req?: number }
 const MEM = new WeakMap<GameState, Mem>();
 const mem = (s: GameState): Mem => {
   let m = MEM.get(s);
@@ -147,8 +147,16 @@ function finances(s: GameState, k: Knobs): void {
 function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
   const L = mem(s).log;
   const score = (id: string) => (estimate(s, id, 'potential')?.mid ?? 0) * 0.6 + (estimate(s, id, 'talent')?.mid ?? s.acts[id].fame) * 0.6 - s.acts[id].fame * 0.25;
+  // quem cabe no bolso vale mais a pena aprofundar (estrela cara só atrapalha a fila do scouting)
+  const cheap = (id: string) => defaultOffer(s, s.acts[id]).advance * k.adv <= s.player.cash * k.advCash;
   const ks = Object.values(s.knowledge).filter((x) => s.acts[x.actId] && !s.acts[x.actId].owner && x.degree < 4)
-    .sort((a, b) => score(b.actId) + b.degree * 4 - (score(a.actId) + a.degree * 4));
+    .map((x) => ({ ...x, v: score(x.actId) + x.degree * 4 + (cheap(x.actId) ? 25 : 0) })).sort((a, b) => b.v - a.v);
+  // pedido de scout (formulário da interface) quando não há ninguém acessível no radar e há vaga no elenco
+  const want = Math.min(k.roster, hqCaps(s).careers) > careerSlotsUsed(s);
+  if (want && !ks.some((x) => cheap(x.actId)) && s.month !== mem(s).req) {
+    const home = (cityById[s.config.homeCity]?.market ?? 'any') as string;
+    if (requestScout(s, { genreFamily: 'any', market: home, level: p === 'aggressive' ? 'promising' : 'beginner', role: 'any' })) { L.scouts++; mem(s).req = s.month; }
+  }
   for (const x of ks.slice(0, 4)) {
     if (!canScout(s, x.actId).ok) {
       // o agressivo vai pessoalmente quando a equipe esgota as ações (custa tempo livre)
@@ -164,10 +172,13 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
     .filter((x) => x.degree >= 2 && s.acts[x.actId] && !s.acts[x.actId].owner && !s.acts[x.actId].deceased && (mem(s).refused[x.actId] ?? -99) < s.week - 26)
     .map((x) => ({ id: x.actId, v: score(x.actId) }))
     .sort((a, b) => b.v - a.v);
-  for (const c of cands.slice(0, 5)) {
-    if (c.v < (p === 'cautious' ? 36 : p === 'balanced' ? 32 : 28)) break;
+  // como um jogador: olha o adiantamento pedido antes de sonhar alto — só disputa quem cabe no caixa
+  const minV = p === 'cautious' ? 36 : p === 'balanced' ? 32 : 28;
+  const fits = cands.filter((c) => c.v >= minV).map((c) => ({ ...c, o: defaultOffer(s, s.acts[c.id]) }))
+    .filter((c) => Math.round(c.o.advance * k.adv / 100) * 100 <= s.player.cash * k.advCash);
+  for (const c of fits.slice(0, 4)) {
     const act = s.acts[c.id];
-    const o = defaultOffer(s, act);
+    const o = c.o;
     o.advance = Math.round(o.advance * k.adv / 100) * 100;
     let ev = evaluateOffer(s, act, o);
     // negocia como na ficha: se a leitura é ruim, sobe royalty / dá controle criativo antes de desistir
