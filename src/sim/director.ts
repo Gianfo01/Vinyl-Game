@@ -8,6 +8,7 @@ import { emitEvent, registerEvents, type EventDef } from './events';
 import type { Act, GameState, MemoryEntry } from './types';
 import type { Arc } from './xtypes';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from './util';
+import { paceMonth } from './sys/pace9';
 
 const act = (s: GameState, id: string | number | undefined) => s.acts[String(id)];
 const arcOf = (s: GameState, id: string | number | undefined) => s.arcs.find((a) => a.id === String(id));
@@ -235,6 +236,7 @@ function recall(s: GameState, r: Rng): void {
 }
 
 export function directorMonth(s: GameState, r: Rng): void {
+  paceMonth(s); // rodada 9: ritmo dos fatos autônomos do mundo
   // séries para gatilhos (pico de fama, fama de um ano atrás)
   for (const id of playerActs(s)) {
     const a = s.acts[id];

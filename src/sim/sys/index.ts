@@ -50,3 +50,10 @@ import './rivals8';
 import './stories8';
 import './rights8';
 import './dossier8';
+// Rodada 9: mundo vivo — crônica (Lendas), alma das pessoas, relíquias, boatos e jornal, história prévia.
+import './pace9';
+import './chron9';
+import './soul9';
+import './relics9';
+import './press9';
+import './world9';

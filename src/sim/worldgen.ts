@@ -81,7 +81,8 @@ function makeLabel(s: GameState, r: Rng, def: { id: string; name: string; family
 }
 
 export function aliveGenres(s: GameState, year = s.year): string[] {
-  return GENRES.filter((g) => g.born <= year).map((g) => g.id);
+  // GENRES é global: gêneros de movimento de outra partida aberta na mesma sessão não contam
+  return GENRES.filter((g) => g.born <= year && (!g.id.startsWith('mv_') || (s.movements ?? []).some((m) => m.genreId === g.id))).map((g) => g.id);
 }
 
 export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; genre?: string; potential?: number; formedYear?: number; fame?: number } = {}): Act {
