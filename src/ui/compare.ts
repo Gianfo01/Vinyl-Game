@@ -4,6 +4,7 @@
 import { l } from '../data/world';
 import { t } from '../i18n/strings';
 import { estimate } from '../sim/scouting';
+import { canSee } from '../sim/sys/fame15';
 import type { GameState } from '../sim/types';
 import { $, N, genreName, logo, modal } from './common';
 import { h, select } from './dom';
@@ -31,7 +32,7 @@ export function compareActs(s: GameState, initial: string[]): void {
           row(t(l('Fama', 'Fame')), 'fame', (id) => range(id, 'fame')),
           row(t(l('Talento', 'Talent')), 'sparkle', (id) => range(id, 'talent')),
           row(t(l('Potencial', 'Potential')), 'chart-up', (id) => range(id, 'potential')),
-          row(t(l('Fãs (núcleo)', 'Fans (core)')), 'fans', (id) => (s.acts[id].owner === 'player' || (s.knowledge[id]?.degree ?? 0) >= 2 ? N(s.acts[id].fans.core) : '?')),
+          row(t(l('Fãs (núcleo)', 'Fans (core)')), 'fans', (id) => (s.acts[id].owner === 'player' || (s.knowledge[id]?.degree ?? 0) >= 2 || canSee(s, id, 'fans') ? N(s.acts[id].fans.core) : '?')),
           row(t(l('Hits / #1', 'Hits / #1')), 'trophy', (id) => `${s.acts[id].hits} / ${s.acts[id].number1s}`),
           row(t(l('Caixa próprio', 'Own cash')), 'money', (id) => (s.acts[id].owner === 'player' ? $(s.acts[id].cash) : '?')),
           row(t(l('Integrantes', 'Members')), 'fans', (id) => String(s.acts[id].members.length)),

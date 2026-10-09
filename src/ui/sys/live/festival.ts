@@ -17,6 +17,7 @@ import { store } from '../../store';
 import { chips, ic, meter, stat } from '../../vis';
 import { drawPerson, drawTile, tileUrl } from './art';
 import { visibleAct } from '../../../sim/future';
+import { fameText } from '../../../sim/sys/fame15';
 
 const draft = { name: '', city: '', month: 6, days: 1 };
 
@@ -148,7 +149,7 @@ function editorView(s: GameState, f: OwnFestival, redraw: () => void): HTMLEleme
     h('div', { class: 'row' },
       select('', [{ value: '', label: t(l('— escolher atração —', '— pick an act —')) },
         ...mine.map((a) => ({ value: a.id, label: `★ ${a.name} (${t(l('seu', 'yours'))})` })),
-        ...guests.map((a) => ({ value: a.id, label: `${a.name} · ${Math.round(a.fame)} · ${$(money(s, guestFee(s, a)))}${guestAccepts(f, a) ? '' : ' ✗'}`, disabled: !guestAccepts(f, a) }))], (v) => (pick = v), { 'aria-label': t(l('Atração', 'Act')) }),
+        ...guests.map((a) => ({ value: a.id, label: `${a.name} · ${fameText(s, a.id)} · ${$(money(s, guestFee(s, a)))}${guestAccepts(f, a) ? '' : ' ✗'}`, disabled: !guestAccepts(f, a) }))], (v) => (pick = v), { 'aria-label': t(l('Atração', 'Act')) }),
       h('button', { class: 'btn small', onclick: () => { if (!pick) return; const e = addToLineup(s, f.id, pick); if (e) toast(t(e), 'bad'); redraw(); } }, t(l('Convidar', 'Book'))),
     ),
     h('small', { class: 'muted' }, t(l('✗ = o festival ainda não tem prestígio para esse nome. Cachês são pagos na data.', '✗ = the festival lacks prestige for that name yet. Fees are paid on the day.'))),

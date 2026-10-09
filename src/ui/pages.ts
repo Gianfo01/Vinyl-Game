@@ -36,6 +36,7 @@ import { pageTabs as extraPageTabs } from './registry';
 import { store } from './store';
 import { chips, ic, meter, stat } from './vis';
 import './pages.css';
+import { HINT15, canSee, fameText, knownLevel } from '../sim/sys/fame15';
 
 /** Botões extras no topo da página do ato (rodada 8: projeto musical). */
 export const ACT_HEAD_EXTRAS: ((s: GameState, a: Act, close: () => void) => HTMLElement | null)[] = [];
@@ -85,10 +86,11 @@ function fuzz(deg: number, mine: boolean): number {
 
 function personDegree(s: GameState, p: Person): { act?: Act; mine: boolean; deg: number } {
   const act = Object.values(s.acts).find((a) => a.members.includes(p.id));
-  const mine = !!act && (act.owner === 'player' || !!act.playerBand) || !!p.isPlayer;
-  const deg = mine ? 5 : act ? s.knowledge[act.id]?.degree ?? 0 : 0;
-  return { act, mine, deg };
+  // rodada 15: dados privados vêm de olheiros ou relação próxima (knownLevel); fama não revela atributos
+  const k = knownLevel(s, p.id);
+  return { act, mine: k.mine, deg: k.mine ? 5 : k.priv };
 }
+const hid15 = (): HTMLElement => h('span', { class: 'muted', title: t(HINT15) }, '?');
 
 function shown(v: number, w: number): string {
   if (!w) return String(v);
@@ -165,9 +167,9 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
   return h('div', { class: 'ficha pg' }, head, pageTabs([
     { id: 'attrs', label: l('Atributos', 'Attributes'), icon: 'chart-up', render: () => attrsTab(s, p, w, mine) },
     { id: 'profile', label: l('Perfil', 'Profile'), icon: 'bulb', render: () => profileTab(s, p, vis) },
-    { id: 'inst', label: l('Instrumentos', 'Instruments'), icon: 'guitar', render: () => instrumentsTab(s, p, mine || !!p.isPlayer, redraw) },
+    { id: 'inst', label: l('Instrumentos', 'Instruments'), icon: 'guitar', render: () => (mine || deg >= 1 ? instrumentsTab(s, p, mine || !!p.isPlayer, redraw) : h('p', { class: 'muted' }, t(HINT15))) },
     mine ? { id: 'mood', label: l('Humor e saúde', 'Mood and health'), icon: 'heart', render: () => moodTab(s, p) } : null,
-    vis.private || mine ? { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p) } : null,
+    vis.private || mine || canSee(s, p.id, 'rels') ? { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p) } : null,
     { id: 'career', label: l('Carreira', 'Career'), icon: 'trophy', render: () => careerTab(s, p) },
     mine && !p.isPlayer ? { id: 'train', label: l('Treino', 'Training'), icon: 'sparkle', render: () => trainTab(s, p, redraw) } : null,
     ...PERSON_TABS.map((f) => f(s, p, closeAll)),
@@ -175,7 +177,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
 }
 
 function attrsTab(s: GameState, p: Person, w: number, mine: boolean): HTMLElement {
-  if (w >= 99) return h('p', { class: 'muted' }, t(l('Os atributos aparecem a partir de Observação (descoberta).', 'Attributes appear from Observation onward (discovery).')));
+  if (w >= 99) return h('p', { class: 'muted' }, t(l('Os atributos são dados privados: aparecem a partir de Observação (olheiros) ou com uma relação próxima — fama não os revela.', 'Attributes are private: they show from Observation (scouts) or with a close relationship — fame does not reveal them.')));
   const all = attrsOf(s, p);
   const growth = tal(s).g[p.id] ?? {};
   return h('div', null,
@@ -226,10 +228,11 @@ function profileTab(s: GameState, p: Person, vis: ReturnType<typeof visibleField
       })) : h('p', { class: 'muted small' }, '…'),
       vis.traits && bestFamilies(p).length ? kv(t(l('Combina com', 'Suits')), h('span', null, ...bestFamilies(p).map((f) => pill(t(f.name), 'good')))) : null,
       vis.traits && worstFamily(p) ? kv(t(l('Não combina com', 'Does not suit')), pill(t(worstFamily(p)!.name), 'bad')) : null,
-      kv(t(S.origin), t(ORIGINS.find((o) => o.id === p.origin)?.name)),
-      kv(t(l('Nascimento', 'Born')), p.born),
-      kv(t(l('Política e religião', 'Politics and faith')), viewsLine(s, p.id)),
-      p.retireAge ? kv(t(l('Pensa em parar aos', 'Plans to stop at')), p.retireAge) : null,
+      kv(t(S.origin), canSee(s, p.id, 'bio') ? t(ORIGINS.find((o) => o.id === p.origin)?.name) : hid15()),
+      kv(t(l('Nascimento', 'Born')), canSee(s, p.id, 'bio') ? p.born : hid15()),
+      kv(t(l('Política e religião', 'Politics and faith')), canSee(s, p.id, 'life') ? viewsLine(s, p.id) : hid15()),
+      p.retireAge && canSee(s, p.id, 'traits') ? kv(t(l('Pensa em parar aos', 'Plans to stop at')), p.retireAge) : null,
+      canSee(s, p.id, 'traits') ? null : h('p', { class: 'muted small' }, t(HINT15)),
     ),
   );
 }
@@ -308,8 +311,9 @@ export function openActPage(id: string, tab?: string): void {
 
 function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLElement {
   const k = s.knowledge[a.id];
-  const mine = a.owner === 'player' || !!a.playerBand;
-  const deg = mine ? 5 : k?.degree ?? 0;
+  const kl = knownLevel(s, a.id);
+  const mine = kl.mine;
+  const deg = mine ? 5 : kl.priv;
   const vis = visibleFields(deg);
   const ms = a.members.map((x) => s.persons[x]).filter((p): p is Person => !!p);
   const teamOvr = ms.length ? Math.round(ms.reduce((t0, p) => t0 + overall(s, p), 0) / ms.length) : 0;
@@ -330,10 +334,10 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
   );
   return h('div', { class: 'ficha pg' }, head, pageTabs([
     { id: 'overview', label: l('Visão geral', 'Overview'), icon: 'star', render: () => overviewTab(s, a, deg, mine) },
-    { id: 'members', label: l('Integrantes', 'Members'), icon: 'fans', render: () => membersTab(s, a, ms) },
+    { id: 'members', label: l('Integrantes', 'Members'), icon: 'fans', render: () => (canSee(s, a.id, 'bio') ? membersTab(s, a, ms) : h('p', { class: 'muted' }, `${ms.length} ${t(l('integrante(s)', 'member(s)'))} · `, t(HINT15))) },
     { id: 'disco', label: l('Discografia', 'Discography'), icon: 'disc', render: () => discoTab(s, a, mine) },
     vis.private || mine ? { id: 'songs', label: l('Músicas', 'Songs'), icon: 'note', render: () => songsTab(s, a, mine) } : null,
-    { id: 'history', label: l('Carreira', 'Career'), icon: 'trophy', render: () => historyTab(s, a) },
+    { id: 'history', label: l('Carreira', 'Career'), icon: 'trophy', render: () => (canSee(s, a.id, 'bio') ? historyTab(s, a) : h('p', { class: 'muted' }, t(HINT15))) },
     a.contractId && (mine || deg >= 3) ? { id: 'contract', label: S.contract, icon: 'contract', render: () => contractTab(s, a) } : null,
     ...ACT_TABS.map((f) => f(s, a, close)),
     ...extraPageTabs('act', s, a.id).map((x) => ({ id: x.id, label: x.label, icon: x.icon, render: () => x.render(s, a.id) })),
@@ -354,13 +358,14 @@ function overviewGrid(s: GameState, a: Act, deg: number, mine: boolean): HTMLEle
   const ms = a.members.map((x) => s.persons[x]).filter((p): p is Person => !!p);
   const groupScores = GROUPS.map((gr) => ({ gr, v: ms.length ? ms.reduce((t0, p) => t0 + groupAvg(s, p, gr), 0) / ms.length : 0 })).sort((x, y) => y.v - x.v);
   const img = a.image;
+  const pub2 = mine || deg >= 2 || canSee(s, a.id, 'fans');
   return h('div', { class: 'grid2' },
     h('div', null,
-      kv(t(S.fame), fame ? h('span', null, mine ? Math.round(a.fame) : `${fame.lo}–${fame.hi}`, ' ', bar(a.fame)) : '?'),
-      kv(t(S.momentum), deg >= 2 ? bar(a.momentum) : '?'),
-      kv(t(S.positioning), h('span', null, t(S.underground), ' ', deg >= 2 ? bar(a.positioning) : '?', ' ', t(S.crossover))),
+      kv(t(S.fame), fame || mine ? h('span', null, fameText(s, a.id), ' ', bar(a.fame)) : hid15()),
+      kv(t(S.momentum), pub2 ? bar(a.momentum) : hid15()),
+      kv(t(S.positioning), h('span', null, t(S.underground), ' ', pub2 ? bar(a.positioning) : hid15(), ' ', t(S.crossover))),
       kv(t(S.potential), pot ? h('span', null, `${pot.lo}–${pot.hi} `, rangeBar(pot.lo, pot.hi)) : h('span', { class: 'muted' }, t(S.hidden))),
-      kv(t(S.fans), deg >= 2 ? `${N(a.fans.casual)} ${t(S.casual)} · ${N(a.fans.active)} ${t(S.active)} · ${N(a.fans.core)} ${t(S.core)}` : '?'),
+      kv(t(S.fans), pub2 ? `${N(a.fans.casual)} ${t(S.casual)} · ${N(a.fans.active)} ${t(S.active)} · ${N(a.fans.core)} ${t(S.core)}` : hid15()),
       mine && !a.playerBand ? kv(t(S.trust), bar(a.trust)) : null,
       deg >= 4 || mine ? kv(`${t(S.morale)} / ${t(S.fatigue)} / ${t(S.stress)}`, h('span', null, bar(st.morale, 100, 'good'), bar(st.fatigue, 100, 'warn'), bar(st.stress, 100, 'bad'))) : null,
       mine ? kv(t(l('Caixa próprio do ato', 'Act\'s own cash')), $(a.cash)) : null,
@@ -369,7 +374,7 @@ function overviewGrid(s: GameState, a: Act, deg: number, mine: boolean): HTMLEle
     h('div', null,
       h('h4', null, t(l('Recordes', 'Records'))),
       chips(stat('chart-up', a.peakChart < 999 ? `#${a.peakChart}` : '—', l('Melhor posição', 'Best position')), stat('star', a.hits, l('Top 10', 'Top 10')), stat('trophy', a.number1s, l('Números 1', 'Number ones')), stat('trophy', a.awards, l('Prêmios', 'Awards')), stat('disc', a.releases.length, l('Lançamentos', 'Releases'))),
-      img && deg >= 2 ? h('div', null, h('h4', null, t(l('Reputação', 'Reputation'))), h('ul', { class: 'attr-list' },
+      img && pub2 ? h('div', null, h('h4', null, t(l('Reputação', 'Reputation'))), h('ul', { class: 'attr-list' },
         h('li', null, h('span', null, t(l('Artística', 'Artistic'))), bar(img.artistic), h('b', null, Math.round(img.artistic))),
         h('li', null, h('span', null, t(l('Popularidade', 'Popularity'))), bar(img.popularity), h('b', null, Math.round(img.popularity))),
         h('li', null, h('span', null, t(l('Profissionalismo', 'Professionalism'))), bar(img.professionalism), h('b', null, Math.round(img.professionalism))),

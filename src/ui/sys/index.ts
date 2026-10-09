@@ -77,3 +77,5 @@ import './leisure14';
 import './managers14';
 // Rodada 14: barras de capacidade (mesa, equipe, ato, rival).
 import './capacity14';
+// Rodada 15: fama (aba, gráfico, segurança) e o quadro 'O que se sabe'.
+import './fame15';

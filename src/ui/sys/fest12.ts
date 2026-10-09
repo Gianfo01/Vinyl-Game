@@ -20,6 +20,7 @@ import { festHype12 } from './hype12';
 import { chips, ic, meter, stat, tabs } from '../vis';
 import { festivalDayView, openFestivalEditor } from './live/festival';
 import { BODY } from './ventures9';
+import { fameText } from '../../sim/sys/fame15';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const btn = (label: L | string, fn: () => void, cls = 'btn small', dis = false) => h('button', { class: cls, disabled: dis, onclick: fn }, typeof label === 'string' ? label : t(label));
@@ -66,7 +67,7 @@ function lineupTab(s: GameState, f: OwnFestival): HTMLElement {
       const a = d ? s.acts[d.actId] : undefined;
       if (!d || !a) return h('td', { class: 'muted small' }, '—');
       const fee = f.lineup.find((y) => y.actId === a.id)?.fee ?? 0;
-      return h('td', { class: 'small' }, h('b', null, a.name), ` (${Math.round(a.fame)})`, h('br'),
+      return h('td', { class: 'small' }, h('b', null, a.name), ` (${fameText(s, a.id)})`, h('br'),
         `${d.len}′ · ${t(TECH[d.tech])}${d.excl ? ' · ★' : ''} · ${isMine(s, a.id) ? t(l('seu', 'yours')) : $(money(s, fee))}`, h('br'),
         select(`${d.stage}:${d.time}`, Array.from({ length: n * 4 }, (_, i) => ({ value: `${Math.floor(i / 4)}:${i % 4}`, label: `${t(l('P', 'S'))}${Math.floor(i / 4) + 1} · ${t(TIMES[i % 4])}` })), (v) => { const [ps, pt] = v.split(':').map(Number); say(move12(s, f.id, a.id, ps, pt), l('Grade alterada.', 'Schedule changed.')); }, { 'aria-label': t(l('Mover', 'Move')) }),
         btn('✕', () => { drop12(s, f.id, a.id); rerender(); }, 'btn tiny ghost'));
@@ -90,7 +91,7 @@ function lineupTab(s: GameState, f: OwnFestival): HTMLElement {
     cl.why.length ? h('div', { class: 'warn small' }, ic('warning'), ' ', ul(cl.why)) : h('p', { class: 'small good' }, t(l('Sem choques de horário.', 'No scheduling clashes.'))),
     section(t(l('Negociar atração', 'Negotiate an act')),
       h('div', { class: 'lv-form' },
-        h('label', null, t(l('Atração', 'Act')), select(bk.act, [...mine.map((y) => ({ value: y.id, label: `★ ${y.name} (${t(l('seu', 'yours'))})` })), ...guests.map((y) => ({ value: y.id, label: `${y.name} · ${Math.round(y.fame)}${guestAccepts(f, y) ? '' : ' ✗'}` }))], (v) => { bk.act = v; lastCounter = null; rerender(); })),
+        h('label', null, t(l('Atração', 'Act')), select(bk.act, [...mine.map((y) => ({ value: y.id, label: `★ ${y.name} (${t(l('seu', 'yours'))})` })), ...guests.map((y) => ({ value: y.id, label: `${y.name} · ${fameText(s, y.id)}${guestAccepts(f, y) ? '' : ' ✗'}` }))], (v) => { bk.act = v; lastCounter = null; rerender(); })),
         h('label', null, t(l('Palco', 'Stage')), select(bk.stage, Array.from({ length: n }, (_, i) => ({ value: i, label: String(i + 1) })), (v) => { bk.stage = v; rerender(); })),
         h('label', null, t(l('Horário (posição no cartaz)', 'Slot (billing)')), select(bk.time, [3, 2, 1, 0].map((i) => ({ value: i, label: t(TIMES[i]) })), (v) => { bk.time = v; rerender(); })),
         h('label', null, t(l('Duração do set', 'Set length')), select(bk.len, LENS.map((m) => ({ value: m, label: `${m} min` })), (v) => { bk.len = v; rerender(); })),

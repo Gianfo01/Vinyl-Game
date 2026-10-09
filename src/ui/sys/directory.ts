@@ -4,6 +4,7 @@
 import { FAMILIES, MARKETS, cityById, familyOf, l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { estimate, watchAct } from '../../sim/scouting';
+import { fameText, knownLevel } from '../../sim/sys/fame15';
 import type { Act, GameState, Person } from '../../sim/types';
 import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
@@ -71,7 +72,7 @@ function actRows(s: GameState): HTMLElement {
           h('td', null, genreName(a.genre)),
           h('td', null, cityName(a.city)),
           h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? labelLink(s, a.owner) : h('span', { class: 'muted' }, t(l('independente', 'independent')))),
-          h('td', null, `★${Math.round(a.fame)}`),
+          h('td', null, `★${fameText(s, a.id)}`),
           h('td', null, tal ? `${tal.lo}–${tal.hi}` : '?'),
           h('td', null, a.owner === 'player' ? '—' : k ? `${k.degree}/5` : '—'),
           h('td', { class: 'row' },
@@ -114,7 +115,7 @@ function personRows(s: GameState): HTMLElement {
       h('tbody', null, slice.map((p) => {
         const a = actOf[p.id];
         const mine = a?.owner === 'player' || p.isPlayer;
-        const deg = mine ? 5 : a ? s.knowledge[a.id]?.degree ?? 0 : 0;
+        const deg = mine ? 5 : knownLevel(s, p.id).priv;
         const o = ovr(p);
         return h('tr', null,
           h('td', null, h('b', null, p.name), p.isPlayer ? pill(t(l('você', 'you')), 'good') : null, !p.alive ? pill('†', 'bad') : null),

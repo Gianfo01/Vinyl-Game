@@ -17,6 +17,7 @@ import { registerArea } from '../registry';
 import { foundInline } from './careerui13';
 import { tabs } from '../vis';
 import { banner14 } from './visuals14';
+import { fameText } from '../../sim/sys/fame15';
 
 const btn = (label: L, fn: () => void, cls = 'btn small', dis = false) => h('button', { class: cls, disabled: dis, onclick: fn }, t(label));
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
@@ -162,7 +163,7 @@ function producerTab(s: GameState): HTMLElement {
       h('div', { class: 'row wrap small' }, t(l('Reinventar assinatura:', 'Reinvent signature:')), ' ', ...STYLES.filter((x) => x !== P.sig).map((x) => btn(STYLE_NAME[x], () => say(reinvent(s, x), l('Nova assinatura.', 'New signature.')), 'btn tiny'))), demos()),
     section(t(l('Propostas de trabalho', 'Job offers')), P.offers.length ? h('div', null, ...P.offers.map((o) => {
       const a = s.acts[o.actId];
-      return h('div', { class: 'card', style: 'padding:8px' }, h('div', null, actLink(s, a.id), ` · ${t(l('fama', 'fame'))} ${Math.round(a.fame)} ${o.own ? '· ' + t(l('seu selo', 'your label')) : ''}`),
+      return h('div', { class: 'card', style: 'padding:8px' }, h('div', null, actLink(s, a.id), ` · ${t(l('fama', 'fame'))} ${fameText(s, a.id)} ${o.own ? '· ' + t(l('seu selo', 'your label')) : ''}`),
         h('div', { class: 'small' }, `${t(l('Cachê fixo', 'Flat fee'))}: ${$(o.fee)} · ${t(l('ou', 'or'))} ${(o.pts * 100).toFixed(1)}% ${t(l('de pontos (pago em 12 meses; esperado em qualidade 60: ', 'points (paid in 12 months; expected at quality 60: '))}${$(pointsEV(s, a, o.pts, 60))}${t(l(', em 80: ', ', at 80: '))}${$(pointsEV(s, a, o.pts, 80))})`),
         h('div', { class: 'row wrap' }, btn(l('Aceitar com cachê fixo', 'Accept, flat fee'), () => say(takeJob(s, o.id, 'flat'), l('Projeto aberto.', 'Project opened.')), 'btn small primary'), btn(l('Aceitar com pontos', 'Accept, points'), () => say(takeJob(s, o.id, 'points'), l('Projeto aberto.', 'Project opened.')), 'btn small')));
     })) : h('p', { class: 'muted small' }, t(l('Sem propostas. Créditos bons e uma assinatura fresca atraem trabalho.', 'No offers. Good credits and a fresh signature attract work.')))),
