@@ -21,6 +21,13 @@ const POOL: [number, number][] = [
 ];
 
 const MARKET_TAIL = 140;
+/** 0 até 1994, sobe até 0.22 em 2015: hits concentram menos a demanda. */
+/** Fatia semanal máxima de um único lançamento: alta na era do rádio, baixa no streaming. */
+/** Fatia do mercado a partir da qual o selo do jogador rende menos; na era do streaming três majors
+ *  dominam playlists e varejo, e o espaço para um selo independente encolhe. */
+const scaleShare = (y: number): number => Math.max(0.012, Math.min(0.03, 0.03 - (y - 2000) * 0.0012));
+export const maxShare = (y: number): number => Math.max(0.02, Math.min(0.06, 0.06 - (y - 1985) * 0.0012));
+export const fragmentation = (y: number): number => Math.max(0, Math.min(0.22, (y - 1994) * 0.0105));
 
 export function weeklyPool(s: GameState, year = s.year): number {
   let v = POOL[POOL.length - 1][1];
@@ -99,7 +106,10 @@ function eraTypeFit(year: number, type: Release['type']): number {
 const t0 = (x: { pt: string }) => x.pt;
 
 export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { appeal: number; factors: AutopsyFactor[] } {
-  const qF = Math.pow(Math.max(5, rel.q) / 55, 2.4);
+  // ferramentas digitais baratas: a partir dos anos 90 todo mundo grava bem, e a qualidade técnica
+  // do jogador conta menos contra a concorrência (sem isso, começar tarde era fácil demais)
+  const commod = rel.owner === 'player' || act.playerBand ? Math.max(0, Math.min(15, (s.year - 1990) * 0.75)) : 0;
+  const qF = Math.pow(Math.max(5, rel.q - commod) / 55, 2.4);
   // convexo: estrelas concentram atenção; desconhecidos disputam a cauda
   const fameF = 0.12 + Math.pow(act.fame / 40, 1.6) + Math.log10(1 + act.fans.core) / 14;
   const gp = s.genrePop[act.genre] ?? 0.6;
@@ -237,11 +247,18 @@ export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, 
   return rel;
 }
 
+/** Selo novo na era digital: sem acesso a playlists, lojas em destaque e acordos de plataforma,
+ *  o digital rende menos até a casa se firmar (8 anos; mesmo firmada, rende 90%). */
+export function digitalReach(s: GameState): number {
+  const age = Math.max(0, s.year - s.config.startYear);
+  return 0.3 + 0.6 * Math.min(1, age / 8);
+}
+
 function piracyLoss(s: GameState): number {
   const p2p = s.techDates.p2p;
   const st = s.techDates.streaming;
-  let loss = 0.03;
-  if (p2p !== undefined && s.year >= p2p && (st === undefined || s.year < st + 3)) loss = 0.22;
+  let loss = st !== undefined && s.year >= st + 3 ? 0.1 : 0.03;
+  if (p2p !== undefined && s.year >= p2p && (st === undefined || s.year < st + 3)) loss = 0.38;
   if (hasMutator(s, 'heavy_piracy')) loss += 0.18;
   return clamp(loss, 0, 0.6);
 }
@@ -284,6 +301,8 @@ export function marketWeek(s: GameState, r: Rng): void {
     h *= Math.exp(r.normal(0, 0.12)); // variação semanal: paradas se mexem
     if (age > 52) h = Math.max(h, rel.appeal * 0.012 * (1 + act.fame / 40)); // cauda de catálogo
     if (hasMutator(s, 'no_stars')) h = Math.pow(h, 0.85);
+    // mercado fragmentado (anos 90 em diante): muitos canais e nichos, nenhum hit leva tanto quanto antes
+    if (h > 1) h = Math.pow(h, 1 - fragmentation(s.year));
     const n = recentByOwner[rel.owner] ?? 0;
     const cap = focusCap(rel.owner);
     if (age < 12 && n > cap) h *= Math.sqrt(cap / n);
@@ -306,8 +325,18 @@ export function marketWeek(s: GameState, r: Rng): void {
   const albums: ChartEntry[] = [];
   let playerUnits = 0;
   let marketUnits = 0;
-  for (const [rel, h] of heats) {
-    let units = Math.round(applyMods(s, 'chartUnits', (pool * h) / (H + B), { release: rel }).value);
+  // unidades depois de todos os modificadores, com teto por lançamento
+  const cap = pool * maxShare(s.year);
+  const pre = heats.map(([rel, h]) => Math.min(cap, applyMods(s, 'chartUnits', (pool * h) / (H + B), { release: rel }).value));
+  // retornos decrescentes de escala: acima de ~3% do mercado, o selo do jogador esbarra em
+  // concorrência de majors, espaço de varejo/playlist e atenção do público (evita bola de neve)
+  const mine = (rel: Release) => rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand;
+  const tot = pre.reduce((t, u) => t + u, 0) + pool * B / (H + B);
+  const Sp = heats.reduce((t, e, i) => t + (mine(e[0]) ? pre[i] : 0), 0) / Math.max(1, tot);
+  const k = Sp > scaleShare(s.year) ? Math.pow(scaleShare(s.year) / Sp, 0.7) : 1;
+  for (let i = 0; i < heats.length; i++) {
+    const [rel] = heats[i];
+    let units = Math.round(pre[i] * (mine(rel) ? k : 1));
     if (units <= 0) continue;
     // estoque: demanda física só vira venda com estoque
     const physUnits = Math.round(units * phys);
@@ -331,7 +360,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     let gross = physSold * nominal(physDef.net[rel.type], s.year);
     if (digital.length) {
       const per = digital.reduce((t, f) => t + FORMATS.find((x) => x.id === f)!.net[rel.type], 0) / digital.length;
-      gross += nonPhys * nominal(per, s.year);
+      gross += nonPhys * nominal(per, s.year) * (rel.owner === 'player' ? digitalReach(s) : 1);
     } else {
       gross += nonPhys * nominal(FORMATS.find((x) => x.id === 'airplay')!.net[rel.type], s.year);
     }

@@ -258,3 +258,8 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - **Cenas como redes** (casa, produtor, veículo, público; autenticidade × exploração) e **eras que exigem reorganização** (estrutura em 7 departamentos).
 - **Arcos de artistas** com memória nas negociações, **vida pessoal ligada à carreira** (herdeiro, romance, venda de masters), rotinas e **história do selo**.
 - **Carreiras**: escolha de atividade(s), origem e ambição; mudar de carreira no meio da partida; mercado de serviços de empresas do jogo. Empresário (confiança, plano, mandato, equipe), festival unificado e casa de shows, agente/promotor, estúdio/produtor, editora, mídia e plataforma.
+
+## Hype e equilíbrio de começos tardios
+
+- **Hype** (0–100, com tendência e motivos) para artistas, discos, relíquias, festivais, turnês, selos e cenas: vira vendas de estreia, ingressos e preços de leilão; hype maior que a qualidade gera rejeição, discos ótimos sem alarde viram sucessos lentos. Alavancas por época (teaser, vazamento, briga encenada, audição exclusiva, embargo) e ranking de hype nas paradas.
+- **Equilíbrio**: pirataria pesa mais na era P2P; download e streaming rendem menos por unidade; selo novo na era digital tem alcance reduzido até se firmar; a qualidade técnica do jogador conta menos a partir dos anos 90 (ferramentas baratas para todos); teto de fatia semanal por lançamento e retornos decrescentes quando o selo passa de ~3% do mercado (menos na era do streaming).

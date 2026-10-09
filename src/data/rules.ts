@@ -60,8 +60,8 @@ export const FORMATS: FormatDef[] = [
   { id: 'lp', name: l('LP', 'LP'), physical: true, tech: 'lp', net: { single: 3.4, ep: 8, lp: 14 }, unitCost: 1.6 },
   { id: 'cassette', name: l('Cassete', 'Cassette'), physical: true, tech: 'cassette', until: 'download', net: { single: 2.8, ep: 6, lp: 10 }, unitCost: 0.8 },
   { id: 'cd', name: l('CD', 'CD'), physical: true, tech: 'cd', net: { single: 3.5, ep: 7, lp: 12 }, unitCost: 0.7 },
-  { id: 'download', name: l('Download', 'Download'), physical: false, tech: 'download', net: { single: 0.7, ep: 2.5, lp: 6 }, unitCost: 0 },
-  { id: 'streaming', name: l('Streaming', 'Streaming'), physical: false, tech: 'streaming', net: { single: 0.85, ep: 2.4, lp: 5 }, unitCost: 0 },
+  { id: 'download', name: l('Download', 'Download'), physical: false, tech: 'download', net: { single: 0.6, ep: 1.8, lp: 4 }, unitCost: 0 },
+  { id: 'streaming', name: l('Streaming', 'Streaming'), physical: false, tech: 'streaming', net: { single: 0.6, ep: 1.6, lp: 3.2 }, unitCost: 0 },
   { id: 'airplay', name: l('Execução e rádio', 'Airplay & performance'), physical: false, net: { single: 0.25, ep: 0.5, lp: 0.8 }, unitCost: 0 },
 ];
 
