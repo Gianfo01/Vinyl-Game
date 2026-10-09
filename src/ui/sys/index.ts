@@ -16,3 +16,4 @@ import './furnish';
 import './hubs8';
 import './project8';
 import './retro8';
+import './identity';

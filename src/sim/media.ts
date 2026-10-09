@@ -77,6 +77,14 @@ function pickCritics(s: GameState, r: Rng, rel: Release, act: Act, n: number): C
 }
 
 /** Resenhas de um lançamento (cada crítico com viés próprio; texto completo em reviews.ts). */
+// Ajustes de nota por sistemas (rodada 8): a imprensa reage à identidade do selo e à origem do dono.
+const REVIEW_ADJ: { id: string; fn: (s: GameState, rel: Release) => number }[] = [];
+export function registerReviewAdjust(id: string, fn: (s: GameState, rel: Release) => number): void {
+  const i = REVIEW_ADJ.findIndex((x) => x.id === id);
+  if (i >= 0) REVIEW_ADJ[i] = { id, fn };
+  else REVIEW_ADJ.push({ id, fn });
+}
+
 export function reviewRelease(s: GameState, r: Rng, rel: Release): Review[] {
   const act = s.acts[rel.actId];
   if (!act) return [];
@@ -91,6 +99,8 @@ export function reviewRelease(s: GameState, r: Rng, rel: Release): Review[] {
     const bonus = cb + (mineRel ? criticRelBonus(s, x.critic) : 0);
     if (bonus) x.score = clamp(Math.round((x.score + bonus) * 10) / 10, 0, 10);
   }
+  const adj = REVIEW_ADJ.reduce((t, x) => t + (x.fn(s, rel) || 0), 0);
+  if (adj) for (const x of out) x.score = clamp(Math.round((x.score + adj) * 10) / 10, 0.5, 10);
   if (rel.owner !== 'player' && !act.playerBand) for (const x of out) { delete x.ctx; delete x.best; delete x.worst; }
   s.reviews[rel.id] = out;
   const avg = out.reduce((t, x) => t + x.score, 0) / Math.max(1, out.length);

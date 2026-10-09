@@ -7,6 +7,7 @@ import { t } from '../i18n/strings';
 import { BACKGROUNDS, backgroundById, type BackgroundId } from '../sim/sys/life/data';
 import { FREE_POINTS, PLAYER_TRAITS, PRONOUNS, STYLES, VISUALS, playerTraitById, type OwnerAttrId, type StyleId } from '../sim/sys/persona/data';
 import { canAddTrait, deriveAttrs, pointsUsed } from '../sim/sys/persona';
+import { ORIGINS, ORIGIN_OF_BACKGROUND, originById, type OriginId } from '../sim/sys/identity/data';
 import { ROLE_NAMES, type Role } from '../sim/sys/talent/attrs';
 import type { Appearance, RunConfig } from '../sim/types';
 import { cityName } from './common';
@@ -50,8 +51,21 @@ export function characterCard(cfg: RunConfig): HTMLElement {
   };
 
   const bgBox = h('div', { class: 'card-grid' });
-  const drawBg = () => bgBox.replaceChildren(...BACKGROUNDS.map((b) => h('button', { class: `pick ${ch.background === b.id ? 'on' : ''}`, type: 'button', onclick: () => { ch.background = b.id; ch.role = b.role; fake.role = b.role; roleSel.value = b.role; drawBg(); drawLook(); drawPreview(); } },
+  const drawBg = () => bgBox.replaceChildren(...BACKGROUNDS.map((b) => h('button', { class: `pick ${ch.background === b.id ? 'on' : ''}`, type: 'button', onclick: () => { ch.background = b.id; ch.role = b.role; fake.role = b.role; roleSel.value = b.role; drawBg(); drawLook(); drawPreview(); drawCareer(); } },
     h('b', null, t(b.name)), h('small', null, t(b.desc)), b.effects ? h('small', { class: 'muted' }, t(b.effects)) : null)));
+
+  // trajetória profissional (rodada 8): contatos, vantagens e também dívidas, rivalidades e lacunas
+  const careerBox = h('div', { class: 'cc-career' });
+  const drawCareer = () => {
+    const auto = ORIGIN_OF_BACKGROUND[ch.background as BackgroundId] ?? 'recordStore';
+    const cur = originById[(ch.career as OriginId) || auto];
+    careerBox.replaceChildren(
+      select(ch.career ?? '', [{ value: '', label: `${t(l('Conforme a origem', 'From background'))}: ${t(originById[auto].name)}` }, ...ORIGINS.map((o) => ({ value: o.id, label: t(o.name) }))], (v) => { ch.career = v || undefined; drawCareer(); }),
+      h('p', { class: 'small' }, h('b', null, t(l('Contatos: ', 'Contacts: '))), t(cur.contacts)),
+      h('p', { class: 'small' }, h('b', null, t(l('Vantagem: ', 'Advantage: '))), t(cur.advantages)),
+      h('p', { class: 'small bad' }, h('b', null, t(l('Preço: ', 'Price: '))), t(cur.drawbacks)),
+    );
+  };
 
   const traitBox = h('div', { class: 'cc-traits' });
   const drawTraits = () => traitBox.replaceChildren(...PLAYER_TRAITS.filter((x) => !x.earned).map((tr) => {
@@ -70,7 +84,7 @@ export function characterCard(cfg: RunConfig): HTMLElement {
   const genres = GENRES.filter((g) => g.born <= cfg.startYear).sort((a, b) => t(a.name).localeCompare(t(b.name)));
   const cities = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
 
-  drawLook(); drawBg(); drawTraits(); drawStyles(); drawPreview();
+  drawLook(); drawBg(); drawTraits(); drawStyles(); drawPreview(); drawCareer();
   return h('section', { class: 'card wide' },
     h('h3', null, t(l('Seu personagem', 'Your character'))),
     h('p', { class: 'muted small' }, t(l('Você é o dono do selo e também uma pessoa no mundo: pode namorar, casar, ter filhos, tocar, formar ou entrar numa banda (área Você, tecla V). Origem, traços, estilo e visual definem seus atributos e bônus.', 'You own the label and are also a person in the world: date, marry, have children, play, form or join a band (You area, key V). Background, traits, style and look define your attributes and bonuses.'))),
@@ -97,6 +111,9 @@ export function characterCard(cfg: RunConfig): HTMLElement {
     ),
     h('h4', null, t(l('Origem', 'Background'))),
     bgBox,
+    h('h4', null, t(l('Trajetória profissional', 'Professional path'))),
+    h('p', { class: 'muted small' }, t(l('Como você chegou à indústria. Define contatos e o que a indústria pensa de você; o estilo de liderança nasce depois, das suas decisões (área Identidade, tecla L).', 'How you got into the industry. Sets contacts and what the industry thinks of you; your leadership style emerges later from your decisions (Identity area, key L).'))),
+    careerBox,
     h('h4', null, t(l('Traços de personalidade', 'Personality traits'))),
     traitBox,
     h('h4', null, t(l('Estilo de jogo (estilo de vida)', 'Play style (lifestyle)'))),

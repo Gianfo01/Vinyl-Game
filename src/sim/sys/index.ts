@@ -31,3 +31,4 @@ import './goods8';
 import './mapx8';
 import './explain8';
 import './project8';
+import './identity';

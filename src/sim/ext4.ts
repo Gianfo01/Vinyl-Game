@@ -53,6 +53,20 @@ export function runSimHooks(phase: HookPhase, s: GameState, r: Rng, arg: Partial
   for (const h of HOOKS[phase]) h.fn(s, r, arg);
 }
 
+// ---------------------------------------------------------------- decisões do jogador
+
+type DecisionFn = (s: GameState, eventId: string, optionId: string) => void;
+const DECISION_FNS: { id: string; fn: DecisionFn }[] = [];
+/** Avisa sistemas (ex.: estilo de liderança) sobre a opção que o jogador escolheu num cartão de decisão. */
+export function registerDecisionListener(id: string, fn: DecisionFn): void {
+  const i = DECISION_FNS.findIndex((x) => x.id === id);
+  if (i >= 0) DECISION_FNS[i] = { id, fn };
+  else DECISION_FNS.push({ id, fn });
+}
+export function runDecisionListeners(s: GameState, eventId: string, optionId: string): void {
+  for (const x of DECISION_FNS) x.fn(s, eventId, optionId);
+}
+
 // ---------------------------------------------------------------- modificadores
 
 export interface ModCtx {
