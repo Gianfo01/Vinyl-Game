@@ -13,11 +13,13 @@ import { techById } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { GameState, Label } from '../types';
-import { fmtL, money, notify, remember } from '../util';
+import { fmtL, money, notify, post, remember } from '../util';
+import { capital, ownerShare } from './capital';
 import { crashOf } from './goods8';
+import { leaders } from './leaders10';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
-import { labelValue } from './stakes8';
+import { BOARD_SEAT, CONTROL, holdings as stakeHoldings, labelValue, npcAbsorb, stakeOf } from './stakes8';
 import { ventures } from './ventures9';
 
 // ---------------------------------------------------------------- catálogo
@@ -42,6 +44,10 @@ interface Def {
   tags: Tag[];
   /** ano do primeiro pregão (função: acompanha as datas de tecnologia da partida) */
   from: number | ((s: GameState) => number);
+  /** só existe depois desta tecnologia (na data da própria partida) */
+  tech?: string;
+  /** descrição que só vale depois de uma tecnologia (não antecipa o futuro) */
+  later?: { tech: string; blurb: L };
   /** último ano listada (depois disso: aquisição ou falência) */
   to?: number;
   fate?: Fate;
@@ -61,6 +67,9 @@ const after = (tech: string, plus: number, floor: number) => (s: GameState): num
 const D = (d: Def): Def => d;
 export const DEFS: Def[] = [
   // selos e música
+  D({ id: 'victor', real: 'Victor Talking Machine', fake: 'Fonógrafos Vitória', kind: 'label', tags: ['label', 'vinyl', 'hifi'], from: 1920, to: 1928, fate: 'acquired', by: 'RCA', p0: 20, beta: 1, div: 0.04, blurb: l('Vitrolas e discos de 78 rotações: o selo do cachorrinho no gramofone.', 'Talking machines and 78s: the dog-and-gramophone label.') }),
+  D({ id: 'columbia', real: 'Columbia Graphophone', fake: 'Grafofone Colúmbia', kind: 'label', tags: ['label', 'vinyl'], from: 1920, to: 1930, fate: 'acquired', by: 'EMI', p0: 16, beta: 1.1, div: 0.03, blurb: l('Discos e grafofones dos dois lados do Atlântico.', 'Records and graphophones on both sides of the Atlantic.') }),
+  D({ id: 'emi', real: 'EMI', fake: 'Elétrica Musical Insular', kind: 'label', tags: ['label', 'vinyl', 'hifi', 'cd'], from: 1931, to: 2011, fate: 'acquired', by: 'Universal', p0: 22, beta: 1, div: 0.03, blurb: l('Fusão de gravadoras britânicas: estúdios, fábricas e um catálogo imenso.', 'A merger of British labels: studios, plants and a huge catalogue.') }),
   D({ id: 'decca', real: 'Decca Records', fake: 'Linha Alva Discos', kind: 'label', tags: ['label', 'vinyl'], from: 1929, to: 1979, fate: 'acquired', by: 'PolyGram', p0: 25, beta: 0.9, div: 0.04, blurb: l('Gravadora britânica clássica: pop, clássicos e o catálogo do rock.', 'Classic British label: pop, classical and a rock catalogue.') }),
   D({ id: 'rca', real: 'RCA', fake: 'Radiotron Americana', kind: 'hardware', tags: ['label', 'radio', 'tv', 'vinyl', 'hifi'], from: 1920, to: 1985, fate: 'acquired', by: 'General Electric', p0: 30, beta: 1, div: 0.035, blurb: l('Rádios, TVs, discos e a NBC no mesmo guarda-chuva.', 'Radios, TVs, records and a network under one roof.') }),
   D({ id: 'cbs', real: 'CBS', fake: 'Rede Colúmbia de Rádio', kind: 'media', tags: ['media', 'radio', 'tv', 'label'], from: 1929, to: 2018, fate: 'acquired', by: 'Viacom', p0: 30, beta: 0.9, div: 0.03, blurb: l('Rede de rádio e TV com selo próprio.', 'A radio and TV network with a label of its own.') }),
@@ -69,16 +78,16 @@ export const DEFS: Def[] = [
   D({ id: 'polygram', real: 'PolyGram', fake: 'Polifonia Records NV', kind: 'label', tags: ['label', 'cd'], from: 1989, to: 1997, fate: 'acquired', by: 'Universal', p0: 22, beta: 1.1, div: 0.02, blurb: l('Gigante europeu do CD e da música clássica.', 'European giant of CDs and classical music.') }),
   D({ id: 'vivendi', real: 'Vivendi (Universal)', fake: 'Vivenda Mídia', kind: 'media', tags: ['label', 'media', 'tv', 'stream'], from: 1998, p0: 28, beta: 1.1, div: 0.03, blurb: l('Conglomerado francês de mídia dono do maior selo do mundo.', 'French media conglomerate that owns the world\'s biggest label.') }),
   D({ id: 'wmg', real: 'Warner Music Group', fake: 'Selos Pacífico Music', kind: 'label', tags: ['label', 'stream'], from: 2005, p0: 20, beta: 1.2, div: 0.04, blurb: l('Selo grande listado em bolsa: catálogo, streaming e pirataria na conta.', 'A major label on the exchange: catalogue, streaming and piracy all on the books.') }),
-  D({ id: 'umg', real: 'Universal Music Group', fake: 'Universo Música S.A.', kind: 'label', tags: ['label', 'stream'], from: after('streaming', 12, 2021), p0: 24, beta: 1, div: 0.02, blurb: l('Maior selo do mundo, já separado do conglomerado.', 'The world\'s biggest label, now spun off.') }),
+  D({ id: 'umg', tech: 'streaming', real: 'Universal Music Group', fake: 'Universo Música S.A.', kind: 'label', tags: ['label', 'stream'], from: after('streaming', 12, 2021), p0: 24, beta: 1, div: 0.02, blurb: l('Maior selo do mundo, já separado do conglomerado.', 'The world\'s biggest label, now spun off.') }),
   // streaming e plataformas
-  D({ id: 'spotify', real: 'Spotify', fake: 'Fonógrafo Online', kind: 'streaming', tags: ['stream', 'tech'], from: after('streaming', 8, 2018), p0: 40, beta: 1.5, div: 0, blurb: l('Streaming de música: cresce rápido e vive de contrato com os selos.', 'Music streaming: grows fast and lives on label contracts.') }),
-  D({ id: 'tencentmusic', real: 'Tencent Music', fake: 'Música Oriente Digital', kind: 'streaming', tags: ['stream', 'tech'], from: after('streaming', 8, 2018), p0: 10, beta: 1.4, div: 0, blurb: l('O streaming de música da Ásia, ligado a jogos e redes.', 'Asia\'s music streaming, tied to games and social apps.') }),
-  D({ id: 'pandora', real: 'Pandora', fake: 'Rádio da Rede', kind: 'streaming', tags: ['stream', 'radio', 'tech'], from: after('streaming', 3, 2011), to: 2018, fate: 'acquired', by: 'Sirius XM', p0: 12, beta: 1.5, div: 0, blurb: l('Rádio pela internet; sofre com royalties.', 'Internet radio; suffers under royalty bills.') }),
-  D({ id: 'deezer', real: 'Deezer', fake: 'Eco Sonoro', kind: 'streaming', tags: ['stream', 'tech'], from: after('streaming', 14, 2022), p0: 3, beta: 1.6, div: 0, blurb: l('Streaming menor: sobe e desce com notícias de contrato.', 'A smaller streamer: swings with contract news.') }),
+  D({ id: 'spotify', tech: 'streaming', real: 'Spotify', fake: 'Fonógrafo Online', kind: 'streaming', tags: ['stream', 'tech'], from: after('streaming', 8, 2018), p0: 40, beta: 1.5, div: 0, blurb: l('Streaming de música: cresce rápido e vive de contrato com os selos.', 'Music streaming: grows fast and lives on label contracts.') }),
+  D({ id: 'tencentmusic', tech: 'streaming', real: 'Tencent Music', fake: 'Música Oriente Digital', kind: 'streaming', tags: ['stream', 'tech'], from: after('streaming', 8, 2018), p0: 10, beta: 1.4, div: 0, blurb: l('O streaming de música da Ásia, ligado a jogos e redes.', 'Asia\'s music streaming, tied to games and social apps.') }),
+  D({ id: 'pandora', tech: 'streaming', real: 'Pandora', fake: 'Rádio da Rede', kind: 'streaming', tags: ['stream', 'radio', 'tech'], from: after('streaming', 3, 2011), to: 2018, fate: 'acquired', by: 'Sirius XM', p0: 12, beta: 1.5, div: 0, blurb: l('Rádio pela internet; sofre com royalties.', 'Internet radio; suffers under royalty bills.') }),
+  D({ id: 'deezer', tech: 'streaming', real: 'Deezer', fake: 'Eco Sonoro', kind: 'streaming', tags: ['stream', 'tech'], from: after('streaming', 14, 2022), p0: 3, beta: 1.6, div: 0, blurb: l('Streaming menor: sobe e desce com notícias de contrato.', 'A smaller streamer: swings with contract news.') }),
   D({ id: 'siriusxm', real: 'Sirius XM', fake: 'Satélite Rádio Plus', kind: 'streaming', tags: ['radio', 'media', 'stream'], from: 2008, p0: 4, beta: 1.2, div: 0.01, blurb: l('Rádio por assinatura via satélite.', 'Subscription satellite radio.') }),
-  D({ id: 'alphabet', real: 'Alphabet (Google / YouTube)', fake: 'Buscaí (buscas e vídeos)', kind: 'video', tags: ['video', 'stream', 'tech'], from: after('internet', 9, 2004), p0: 30, beta: 1.2, div: 0, blurb: l('Buscas e vídeo: onde a maior parte do mundo ouve música grátis.', 'Search and video: where most of the world listens to music for free.') }),
-  D({ id: 'apple', real: 'Apple (iTunes / Apple Music)', fake: 'Maçã Digital', kind: 'video', tags: ['tech', 'hifi', 'stream'], from: 1980, p0: 25, beta: 1.3, div: 0.005, blurb: l('Aparelhos, loja de música e streaming.', 'Devices, a music store and streaming.') }),
-  D({ id: 'netflix', real: 'Netflix', fake: 'Telão Play', kind: 'video', tags: ['video', 'stream', 'tech'], from: after('internet', 7, 2002), p0: 12, beta: 1.5, div: 0, blurb: l('Vídeo por assinatura: trilhas sonoras viram hits.', 'Subscription video: soundtracks turn into hits.') }),
+  D({ id: 'alphabet', tech: 'internet', real: 'Alphabet (Google / YouTube)', fake: 'Buscaí (buscas e vídeos)', kind: 'video', tags: ['video', 'stream', 'tech'], from: after('internet', 9, 2004), p0: 30, beta: 1.2, div: 0, blurb: l('Buscas e vídeo: onde a maior parte do mundo ouve música grátis.', 'Search and video: where most of the world listens to music for free.') }),
+  D({ id: 'apple', real: 'Apple (iTunes / Apple Music)', fake: 'Maçã Digital', kind: 'hardware', tags: ['tech', 'hifi', 'stream'], from: 1980, p0: 25, beta: 1.3, div: 0.005, blurb: l('Computadores pessoais para casa e escritório.', 'Personal computers for home and office.'), later: { tech: 'download', blurb: l('Computadores, tocadores portáteis e loja de música digital.', 'Computers, portable players and a digital music store.') } }),
+  D({ id: 'netflix', tech: 'internet', real: 'Netflix', fake: 'Telão Play', kind: 'video', tags: ['video', 'stream', 'tech'], from: after('internet', 7, 2002), p0: 12, beta: 1.5, div: 0, blurb: l('Vídeo por assinatura: trilhas sonoras viram hits.', 'Subscription video: soundtracks turn into hits.') }),
   // mídia, rádio e TV
   D({ id: 'viacom', real: 'Viacom (MTV)', fake: 'Videoclip Networks', kind: 'media', tags: ['media', 'tv', 'video', 'label'], from: 1971, to: 2018, fate: 'acquired', by: 'CBS', p0: 22, beta: 1.1, div: 0.02, blurb: l('Canais a cabo e a TV de clipes.', 'Cable channels and the music video network.') }),
   D({ id: 'clearchannel', real: 'Clear Channel', fake: 'Canal Aberto Rádios', kind: 'media', tags: ['radio', 'media'], from: 1984, to: 2007, fate: 'acquired', by: 'um fundo de investimento', p0: 14, beta: 1, div: 0.025, blurb: l('Maior dona de rádios dos EUA: define o que toca.', 'The largest radio owner in the US: decides what gets played.') }),
@@ -185,19 +194,35 @@ export interface BolsaState {
   init: boolean;
   realized: number;
   flags: string[];
+  /** carteira do selo (caixa da empresa), no mesmo mercado da carteira pessoal */
+  cpos: Record<string, Pos>;
+  /** blocos de NPCs por ação (fração da empresa): F:fundo, L:selo rival, P:líder, A:artista */
+  own: Record<string, Record<string, number>>;
+  seq: number;
 }
+/** Conta que negocia: 'p' = você (patrimônio pessoal), 'c' = o selo (caixa da empresa). */
+export type Acct = 'p' | 'c';
+/** Ticker do próprio selo do jogador depois do IPO. */
+export const OWN = 'own';
 
 declare module '../ext4' { interface Ext4 { bolsa10: BolsaState } }
-const fresh = (): BolsaState => ({ q: {}, pos: {}, news: [], lbl: {}, lsh: {}, lref: {}, evDone: [], macroY: 0, init: false, realized: 0, flags: [] });
+const fresh = (): BolsaState => ({ q: {}, pos: {}, news: [], lbl: {}, lsh: {}, lref: {}, evDone: [], macroY: 0, init: false, realized: 0, flags: [], cpos: {}, own: {}, seq: 0 });
 registerExt4('bolsa10', fresh);
 export const bolsa = (s: GameState): BolsaState => {
   const x = s.x4 as unknown as { bolsa10?: BolsaState };
-  x.bolsa10 ??= fresh();
-  return x.bolsa10;
+  const b = (x.bolsa10 ??= fresh());
+  b.cpos ??= {};
+  b.own ??= {};
+  b.seq ??= 0;
+  return b;
 };
 
-/** Ações em circulação de um selo listado. */
-export const sharesOf = (s: GameState, id: string): number => bolsa(s).lsh[id.replace(/^lb:/, '')] ?? 100_000;
+/** Ações em circulação: selo listado (escolhidas no IPO), o seu selo (s.listing) ou empresa grande (50 milhões). */
+export const sharesOf = (s: GameState, id: string): number => id === OWN ? s.listing.shares : bolsa(s).lsh[id.replace(/^lb:/, '')] ?? (id.startsWith('lb:') || s.labels[id] ? 100_000 : 50_000_000);
+const posOf = (s: GameState, acct: Acct): Record<string, Pos> => (acct === 'c' ? bolsa(s).cpos : bolsa(s).pos);
+/** Fração da empresa nas suas duas carteiras (pessoal + selo). */
+export const playerFrac = (s: GameState, id: string): number => ((bolsa(s).pos[id]?.sh ?? 0) + (bolsa(s).cpos[id]?.sh ?? 0)) / sharesOf(s, id);
+const npcTotal = (s: GameState, id: string): number => Object.values(bolsa(s).own[id] ?? {}).reduce((t, x) => t + x, 0);
 const nice = (n: number): number => { const f = Math.pow(10, Math.floor(Math.log10(Math.max(1, n)))); const m = n / f; return Math.max(1000, f * (m >= 5 ? 5 : m >= 2 ? 2 : 1)); };
 /** Teto de participação pessoal numa ação de selo (fração das ações). */
 export const MAX_STAKE = 0.2;
@@ -228,6 +253,7 @@ function nvDef(s: GameState, labelId: string): (Def & { name: string }) | null {
 }
 
 export function stockName(s: GameState, id: string): string {
+  if (id === OWN) return s.config.companyName;
   if (id.startsWith('lb:')) return s.labels[id.slice(3)]?.name ?? id;
   if (id.startsWith('nv:')) return nvDef(s, id.slice(3))?.name ?? (bolsa(s).flags.find((f) => f.startsWith(`nvn:${id}:`))?.slice(`nvn:${id}:`.length) ?? id);
   const d = DEF_BY_ID[id];
@@ -236,8 +262,9 @@ export function stockName(s: GameState, id: string): string {
 
 function defAlive(s: GameState, d: Def): boolean {
   const f = typeof d.from === 'function' ? d.from(s) : d.from;
-  return s.year >= f && (d.to === undefined || s.year <= d.to);
+  return s.year >= f && (d.to === undefined || s.year <= d.to) && (!d.tech || s.year >= T(s, d.tech));
 }
+const blurbOf = (s: GameState, d: Def): L => (d.later && s.year >= T(s, d.later.tech) ? d.later.blurb : d.blurb);
 
 const isLbl = (id: string) => id.startsWith('lb:');
 
@@ -283,20 +310,40 @@ function ensureStatic(s: GameState, d: Def): Quote {
   const st = bolsa(s);
   const hit = st.q[d.id];
   if (hit) return hit;
-  const from = typeof d.from === 'function' ? d.from(s) : d.from;
+  const from = Math.max(typeof d.from === 'function' ? d.from(s) : d.from, d.tech ? T(s, d.tech) : 0);
   const q = newQuote(s, px(s, d.p0));
   // história desde o primeiro pregão até o ano passado
   let lv = 0;
-  for (let y = from; y < s.year; y++) lv += yearGrowth(d, y) + evPct(s, d.tags, y).pct;
-  q.lv = clamp(lv, -3, 3);
+  const end: Record<number, number> = {};
+  for (let y = from; y < s.year; y++) { lv = clamp(lv + yearGrowth(d, y) + evPct(s, d.tags, y).pct, -3, 3); end[y] = lv; }
+  q.lv = lv;
   q.x = 0;
   q.born = from;
   q.p = Math.max(100, Math.round(px(s, d.p0) * Math.exp(q.lv)));
   q.base = q.p;
-  q.hist = [q.p];
+  q.hist = seedHist(s, `${d.id}`, (s.year - from) * 12 + s.month + (from <= 1920 ? 24 : 0), (k) => {
+    const y = Math.floor(k / 12);
+    const a = end[y - 1] ?? 0;
+    return px(s, d.p0) * Math.exp(a + ((end[y] ?? lv) - a) * ((k % 12) + 1) / 12);
+  }, d.kind === 'streaming' ? 0.06 : 0.045);
+  q.hist.push(q.p);
   q.evY = s.year === from ? s.year : s.year - 1;
   st.q[d.id] = q;
   return q;
+}
+
+/** Histórico de preços anterior ao início (até 36 meses): tendência `at(mês absoluto)` com ruído próprio e semeado. */
+function seedHist(s: GameState, key: string, months: number, at: (abs: number) => number, sd: number): number[] {
+  const n = clamp(months, 0, 36);
+  const r = Rng.fromSeed(`${s.config.seed}:bolsa10h:${key}`);
+  const now = s.year * 12 + s.month;
+  const out: number[] = [];
+  let x = 0;
+  for (let k = n; k >= 1; k--) {
+    x = clamp(x * 0.88 + r.normal(0, sd), -0.6, 0.6);
+    out.push(Math.max(100, Math.round(at(now - k) * Math.exp(x * Math.min(1, k / 3)))));
+  }
+  return out;
 }
 
 function stepStatic(s: GameState, d: Def, q: Quote, r: Rng, extra = 0): void {
@@ -352,25 +399,53 @@ function chartTop(s: GameState, id: string): number {
   return n;
 }
 
-function listLabels(s: GameState): void {
+/** Abertura de capital de um selo rival: só selo que fez IPO aparece na bolsa. */
+function ipoLabel(s: GameState, lb: Label, year: number, announce: boolean): void {
   const st = bolsa(s);
-  const first = !st.init;
-  const cand = Object.values(s.labels).filter((x) => x.active && s.year - x.founded >= 3 && revenueOf(x) >= money(s, 150_000)).sort((a, b) => revenueOf(b) - revenueOf(a)).slice(0, 4);
-  for (const lb of cand) {
-    const id = `lb:${lb.id}`;
-    if (st.lbl[lb.id] !== undefined || st.q[id]?.dead) continue;
-    if (Object.keys(st.lbl).filter((k) => s.labels[k]?.active).length >= 6) break;
-    st.lbl[lb.id] = first ? s.year - 3 : s.year;
-    st.lsh[lb.id] = nice(labelValue(s, lb).value / 4000);
-    st.lref[lb.id] = labelWorth(s, lb);
-    const q = newQuote(s, labelTarget(s, lb));
-    q.ceo = lb.ceo;
-    q.hits = chartTop(s, lb.id);
-    q.sc = sumScandals(s, lb);
-    q.ros = lb.roster.length;
-    q.born = st.lbl[lb.id];
-    st.q[id] = q;
-    if (!first) news(s, fmtL(l('{n} abre capital na bolsa: preço inicial {p}.', '{n} goes public: opening price {p}.'), { n: lb.name, p: priceTxt(q.p) }), 'info', id);
+  const id = `lb:${lb.id}`;
+  st.lbl[lb.id] = year;
+  st.lsh[lb.id] = nice(labelValue(s, lb).value / 4000);
+  st.lref[lb.id] = labelWorth(s, lb);
+  const q = newQuote(s, labelTarget(s, lb));
+  q.ceo = lb.ceo;
+  q.hits = chartTop(s, lb.id);
+  q.sc = sumScandals(s, lb);
+  q.ros = lb.roster.length;
+  q.born = year;
+  if (year < s.year) {
+    // pregões anteriores ao início da partida: passeio aleatório que termina no preço de hoje
+    const n = clamp((s.year - year) * 12 + s.month, 0, 36);
+    const r = Rng.fromSeed(`${s.config.seed}:bolsa10l:${lb.id}`);
+    const back: number[] = [];
+    let p = q.p;
+    for (let k = 0; k < n; k++) back.push((p = Math.max(100, Math.round(p / Math.exp(r.normal(0.004, 0.04))))));
+    q.hist = back.reverse().concat(q.p);
+  }
+  st.q[id] = q;
+  if (announce) {
+    const t = fmtL(l('{n} abre capital na bolsa: preço inicial {p}.', '{n} goes public: opening price {p}.'), { n: lb.name, p: priceTxt(q.p) });
+    news(s, t, 'info', id, true);
+    notify(s, t, 'info');
+  }
+}
+
+const canIpo = (s: GameState, lb: Label): boolean => lb.active && !lb.parentLabel && bolsa(s).lbl[lb.id] === undefined && !bolsa(s).q[`lb:${lb.id}`]?.dead;
+
+/** Na partida nova: os selos mais valiosos já negociam em bolsa (mais deles quanto mais moderno o mercado). */
+function historicIpos(s: GameState): void {
+  const n = s.year < 1930 ? 0 : s.year < 1955 ? 1 : s.year < 1980 ? 2 : 3;
+  const cand = Object.values(s.labels).filter((x) => canIpo(s, x) && s.year - x.founded >= 3).sort((a, b) => labelValue(s, b).value - labelValue(s, a).value).slice(0, n);
+  cand.forEach((lb, i) => ipoLabel(s, lb, Math.max(lb.founded + 3, s.year - 2 - i * 2), false));
+}
+
+/** A cada semestre um selo rival grande pode decidir abrir capital (notícia no pregão). */
+function rivalIpos(s: GameState, r: Rng): void {
+  const st = bolsa(s);
+  if (s.year < 1930 || Object.keys(st.lbl).filter((k) => s.labels[k]?.active).length >= 8) return;
+  const cand = Object.values(s.labels).filter((x) => canIpo(s, x) && s.year - x.founded >= 5 && revenueOf(x) >= money(s, 250_000));
+  for (const lb of cand.sort((a, b) => revenueOf(b) - revenueOf(a))) {
+    const p = 0.05 + (lb.archetype === 'empire' || lb.archetype === 'hitmaker' ? 0.06 : 0) + (lb.cash < money(s, 200_000) ? 0.05 : 0);
+    if (r.chance(p)) { ipoLabel(s, lb, s.year, true); return; }
   }
 }
 
@@ -431,29 +506,60 @@ function settle(s: GameState, id: string, q: Quote, kind: Fate, text: L, factor:
   q.p = Math.max(1, Math.round(q.p * factor));
   q.chg = factor - 1;
   pushHist(q);
-  const pos = st.pos[id];
-  if (pos && pos.sh > 0) {
+  for (const acct of ['p', 'c'] as Acct[]) {
+    const pos = posOf(s, acct)[id];
+    if (!pos || pos.sh <= 0) continue;
     const pay = Math.round(pos.sh * q.p);
-    ownerOf(s).wealth += pay;
-    st.realized += pay - pos.cost;
-    delete st.pos[id];
-    notify(s, fmtL(l('{t} Suas ações valiam {v}.', '{t} Your shares paid out {v}.'), { t: text, v: priceTxt(pay) }), kind === 'acquired' ? 'good' : 'bad');
+    if (acct === 'c') coPost(s, `settle:${id}`, pay, `Ações de ${stockName(s, id)} liquidadas`);
+    else { ownerOf(s).wealth += pay; st.realized += pay - pos.cost; }
+    delete posOf(s, acct)[id];
+    notify(s, fmtL(acct === 'c' ? l('{t} As ações do selo valiam {v}.', '{t} The label\'s shares paid out {v}.') : l('{t} Suas ações valiam {v}.', '{t} Your shares paid out {v}.'), { t: text, v: priceTxt(pay) }), kind === 'acquired' ? 'good' : 'bad');
   }
+  delete st.own[id];
   news(s, text, kind === 'acquired' ? 'good' : 'bad', id, true);
 }
+
+/** Movimento de caixa do selo na bolsa: entra no livro-caixa (categoria "investments"), mas não conta como receita nem lucro operacional. */
+function coPost(s: GameState, key: string, amount: number, memo: string): void {
+  const st = bolsa(s);
+  const y = s.year;
+  const rv = s.player.revenueByYear[y];
+  const pf = s.player.profitByYear[y];
+  post(s, `bolsa10:${key}:${(st.seq += 1)}`, amount, 'investments', memo);
+  if (rv === undefined) delete s.player.revenueByYear[y]; else s.player.revenueByYear[y] = rv;
+  if (pf === undefined) delete s.player.profitByYear[y]; else s.player.profitByYear[y] = pf;
+}
+
+// ---------------------------------------------------------------- abertura: o pregão já existe no 1º dia
+
+/** Semeia a bolsa na partida nova (qualquer ano): empresas da época com histórico, selos que já fizeram IPO e acionistas. */
+export function seedMarket(s: GameState): void {
+  const st = bolsa(s);
+  if (st.init) return;
+  for (const d of DEFS) if (defAlive(s, d)) ensureStatic(s, d);
+  historicIpos(s);
+  syncOwn(s);
+  const r = Rng.fromSeed(`${s.config.seed}:bolsa10seed`);
+  for (const id of Object.keys(st.q)) seedHolders(s, id, r);
+  st.macroY = s.year;
+  for (const e of EVENTS) if (evYear(s, e) <= s.year) st.evDone.push(e.id);
+  st.init = true;
+}
+
+registerSimHook('newgame', 'bolsa10', (s) => seedMarket(s));
 
 // ---------------------------------------------------------------- mês
 
 function bolsaMonth(s: GameState): void {
   const st = bolsa(s);
   const r = Rng.fromSeed(`${s.config.seed}:bolsa10:${s.year}:${s.month}`);
-  const first = !st.init;
+  seedMarket(s);
 
   // crise do ano
   if (st.macroY !== s.year) {
     st.macroY = s.year;
     const c = crashOf(s.year);
-    if (c <= -0.15 && !first) news(s, fmtL(l('Quebra na bolsa em {y}: as ações caem em todo o mundo.', 'Stock market crash in {y}: shares fall everywhere.'), { y: s.year }), 'bad', undefined, true);
+    if (c <= -0.15) news(s, fmtL(l('Quebra na bolsa em {y}: as ações caem em todo o mundo.', 'Stock market crash in {y}: shares fall everywhere.'), { y: s.year }), 'bad', undefined, true);
   }
 
   // empresas fixas
@@ -472,13 +578,14 @@ function bolsaMonth(s: GameState): void {
     }
     const isNew = !q0;
     const q = ensureStatic(s, d);
-    if (isNew && !first && s.year === q.born) news(s, fmtL(l('{n} estreia na bolsa por {p}.', '{n} debuts on the exchange at {p}.'), { n: stockName(s, d.id), p: priceTxt(q.p) }), 'info', d.id, true);
+    if (isNew && s.year === q.born) news(s, fmtL(l('{n} estreia na bolsa por {p}.', '{n} debuts on the exchange at {p}.'), { n: stockName(s, d.id), p: priceTxt(q.p) }), 'info', d.id, true);
     if (!isNew || q.evY < s.year) stepStatic(s, d, q, r);
     pushDivs(s, d.id, d.div, q);
+    if (isNew) seedHolders(s, d.id, r);
   }
 
   // selos rivais
-  if (first || s.month === 0 || s.month === 6) listLabels(s);
+  if (s.month === 0 || s.month === 6) rivalIpos(s, r);
   for (const k of Object.keys(st.lbl)) {
     const id = `lb:${k}`;
     const q = st.q[id];
@@ -505,7 +612,7 @@ function bolsaMonth(s: GameState): void {
       if (st.q[id]?.dead) continue;
       const isNew = !st.q[id];
       const q = ensureNv(s, d);
-      if (isNew && !first) news(s, fmtL(l('{n} (plataforma de {l}) entra na bolsa por {p}.', '{n} ({l}\'s platform) lists at {p}.'), { n: d.name, l: s.labels[n.labelId]?.name ?? '—', p: priceTxt(q.p) }), 'info', id);
+      if (isNew) news(s, fmtL(l('{n} (plataforma de {l}) entra na bolsa por {p}.', '{n} ({l}\'s platform) lists at {p}.'), { n: d.name, l: s.labels[n.labelId]?.name ?? '—', p: priceTxt(q.p) }), 'info', id);
       if (!isNew) stepStatic(s, d, q, r, (n.rep - 50) / 50 * 0.004);
     }
   }
@@ -516,17 +623,17 @@ function bolsaMonth(s: GameState): void {
   }
 
   // movimentos grandes nas ações que você tem
-  for (const id of Object.keys(st.pos)) {
+  for (const id of new Set([...Object.keys(st.pos), ...Object.keys(st.cpos)])) {
     const q = st.q[id];
     if (q && !q.dead && Math.abs(q.chg) >= 0.12 && q.note) notify(s, fmtL(l('{n}: {t}', '{n}: {t}'), { n: stockName(s, id), t: q.note }), q.chg > 0 ? 'good' : 'bad');
   }
   // manchetes dos setores
-  if (!first) for (const e of EVENTS) if (evYear(s, e) === s.year && !st.evDone.includes(e.id)) {
+  for (const e of EVENTS) if (evYear(s, e) === s.year && !st.evDone.includes(e.id)) {
     st.evDone.push(e.id);
     news(s, fmtL(e.pct >= 0 ? l('Bolsa: {w} (setor +{p}%).', 'Markets: {w} (sector +{p}%).') : l('Bolsa: {w} (setor −{p}%).', 'Markets: {w} (sector −{p}%).'), { w: l(e.pt, e.en), p: Math.abs(e.pct) }), e.pct >= 0 ? 'good' : 'bad', undefined, Math.abs(e.pct) >= 25);
   }
-  if (first) for (const e of EVENTS) if (evYear(s, e) <= s.year) st.evDone.push(e.id);
-  st.init = true;
+  syncOwn(s);
+  npcTrade(s);
 }
 
 function ensureNv(s: GameState, d: Def & { name: string }): Quote {
@@ -540,21 +647,24 @@ function ensureNv(s: GameState, d: Def & { name: string }): Quote {
   return q;
 }
 
-/** Dividendo mensal ao dono das ações. */
+/** Dividendo mensal aos donos das ações (você no bolso, o selo no caixa). */
 function pushDivs(s: GameState, id: string, yieldYear: number, q: Quote): void {
-  const pos = bolsa(s).pos[id];
-  if (!pos || !yieldYear) return;
-  const d = Math.round(pos.sh * q.p * (yieldYear / 12));
-  if (d <= 0) return;
-  ownerOf(s).wealth += d;
-  pos.divs += d;
+  if (!yieldYear) return;
+  for (const acct of ['p', 'c'] as Acct[]) {
+    const pos = posOf(s, acct)[id];
+    if (!pos) continue;
+    const d = Math.round(pos.sh * q.p * (yieldYear / 12));
+    if (d <= 0) continue;
+    if (acct === 'c') post(s, `div10:${id}:${s.month}`, d, 'dividends', `Dividendos de ${stockName(s, id)}`);
+    else ownerOf(s).wealth += d;
+    pos.divs += d;
+  }
 }
 
 /** Consequências de ser acionista relevante de um selo rival (informação, atrito). */
 function afterLabelMonth(s: GameState, k: string, r: Rng): void {
-  const pos = bolsa(s).pos[`lb:${k}`];
-  if (!pos) return;
-  const f = pos.sh / sharesOf(s, k);
+  const f = playerFrac(s, `lb:${k}`);
+  if (!f) return;
   if (f >= CONFLICT_AT && r.chance(0.06)) {
     s.rivalries[k] = (s.rivalries[k] ?? 0) + 3;
     news(s, fmtL(l('A diretoria de {n} vê com desconfiança o seu bloco de ações.', 'The board of {n} eyes your block of shares with suspicion.'), { n: s.labels[k].name }), 'info', `lb:${k}`);
@@ -563,20 +673,219 @@ function afterLabelMonth(s: GameState, k: string, r: Rng): void {
 
 registerSimHook('month', 'bolsa10', (s) => bolsaMonth(s));
 
+// ---------------------------------------------------------------- o seu selo na bolsa
+
+/** Espelha o preço do seu selo (s.listing: lucro, crescimento, conselho) como a ação OWN do mesmo pregão. */
+function syncOwn(s: GameState): void {
+  const st = bolsa(s);
+  if (!s.listing.listed) { delete st.q[OWN]; return; }
+  const p = Math.max(1, Math.round(s.listing.price));
+  let q = st.q[OWN];
+  if (!q) {
+    q = st.q[OWN] = newQuote(s, p);
+    news(s, fmtL(l('{n} estreia na bolsa por {p}.', '{n} debuts on the exchange at {p}.'), { n: s.config.companyName, p: priceTxt(p) }), 'good', OWN);
+  }
+  const prev = q.p;
+  q.p = p;
+  q.chg = prev ? p / prev - 1 : 0;
+  q.hist = s.listing.history.length ? s.listing.history.slice(-60) : [p];
+}
+
+/** Sua fatia de controle no seu selo: a parte do dono mais as ações em circulação que você comprou no pregão. */
+export const controlShare = (s: GameState): number => ownerShare(s) + (s.listing.listed ? (bolsa(s).pos[OWN]?.sh ?? 0) / s.listing.shares : 0);
+
+// ---------------------------------------------------------------- acionistas NPC (fundos, selos rivais, líderes, artistas)
+
+const FUNDS: { n: L; from: number }[] = [
+  { n: l('Banco Meridional', 'Meridional Bank'), from: 1900 },
+  { n: l('Seguradora Atlântica', 'Atlantic Assurance'), from: 1900 },
+  { n: l('Truste da família Holloway', 'Holloway family trust'), from: 1900 },
+  { n: l('Fundo de pensão dos músicos', 'Musicians\' pension fund'), from: 1946 },
+  { n: l('Fundo mútuo Horizonte', 'Horizon mutual fund'), from: 1950 },
+  { n: l('Fundo soberano do Golfo', 'Gulf sovereign fund'), from: 1974 },
+  { n: l('Fundo de índice Total', 'Total index fund'), from: 1976 },
+  { n: l('Hedge fund Quasar', 'Quasar hedge fund'), from: 1985 },
+  { n: l('Fundo ativista Corvo', 'Raven activist fund'), from: 1988 },
+];
+
+export function holderName(s: GameState, k: string): L {
+  const id = k.slice(2);
+  if (k.startsWith('F:')) return FUNDS[Number(id)]?.n ?? l('Fundo', 'Fund');
+  if (k.startsWith('L:')) return l(s.labels[id]?.name ?? id);
+  if (k.startsWith('P:')) {
+    const p = leaders(s).L[id];
+    const lb = p?.label ? s.labels[p.label] : undefined;
+    return lb ? fmtL(l('{n} (chefe de {l})', '{n} (head of {l})'), { n: p.name, l: lb.name }) : l(p?.name ?? '—');
+  }
+  return fmtL(l('{n} (artista)', '{n} (artist)'), { n: s.acts[id]?.name ?? '—' });
+}
+
+const holderAlive = (s: GameState, k: string): boolean => {
+  const id = k.slice(2);
+  if (k.startsWith('L:')) return !!s.labels[id]?.active;
+  if (k.startsWith('P:')) return !!leaders(s).L[id] && leaders(s).L[id].st !== 'dead';
+  if (k.startsWith('A:')) return !!s.acts[id];
+  return true;
+};
+
+/** Quanto ainda cabe nas mãos dos NPCs (o resto é do fundador, dos sócios privados e da sua carteira). */
+function npcCap(s: GameState, id: string): number {
+  if (id === OWN) return Math.max(0, s.listing.floatShare - playerFrac(s, id));
+  if (isLbl(id)) return Math.max(0, 0.75 - playerFrac(s, id));
+  return 0.45;
+}
+
+/** Peso de um selo rival como comprador: no seu selo pesam rivalidade, império e agressividade. */
+function rivalWeight(s: GameState, lb: Label, id: string): number {
+  if (id === OWN) return 0.4 + (s.rivalries[lb.id] ?? 0) / 25 + (lb.archetype === 'empire' ? 1.5 : 0) + lb.aggression / 100;
+  const t = isLbl(id) ? s.labels[id.slice(3)] : undefined;
+  return 0.6 + (t && t.focus.some((f) => lb.focus.includes(f)) ? 0.8 : 0) + (lb.archetype === 'empire' || lb.archetype === 'catalog' ? 0.8 : 0);
+}
+
+function seedHolders(s: GameState, id: string, r: Rng): void {
+  const own = (bolsa(s).own[id] ??= {});
+  const fs = FUNDS.map((f, i) => ({ f, i })).filter((x) => s.year >= x.f.from);
+  for (let n = r.int(1, 3); n > 0; n--) { const f = r.pick(fs); own[`F:${f.i}`] = (own[`F:${f.i}`] ?? 0) + r.float(0.01, 0.06); }
+  if (isLbl(id)) { const lid = s.labels[id.slice(3)]?.leaderId; if (lid && leaders(s).L[lid]) own[`P:${lid}`] = r.float(0.03, 0.12); }
+}
+
+/** Uma vez por mês: fundos, selos rivais, líderes e artistas famosos compram e vendem ações (Rng próprio). */
+function npcTrade(s: GameState): void {
+  const st = bolsa(s);
+  const r = Rng.fromSeed(`${s.config.seed}:bolsa10npc:${s.year}:${s.month}`);
+  const rich = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 1_000_000));
+  const lds = Object.values(s.labels).filter((x) => x.active && x.leaderId && leaders(s).L[x.leaderId]).map((x) => x.leaderId!);
+  const stars = Object.values(s.acts).filter((a) => a.fame >= 70 && a.status !== 'retired' && a.status !== 'split').map((a) => a.id);
+  const fs = FUNDS.map((_, i) => i).filter((i) => s.year >= FUNDS[i].from);
+  for (const id of Object.keys(st.q).sort()) {
+    const q = st.q[id];
+    if (q.dead) { delete st.own[id]; continue; }
+    const own = (st.own[id] ??= {});
+    for (const k of Object.keys(own)) if (!holderAlive(s, k)) delete own[k];
+    if (!r.chance(id === OWN ? 0.5 : 0.3)) continue;
+    const cand: [string, number][] = fs.map((i) => [`F:${i}`, 9 / fs.length]);
+    for (const lb of rich) if (`lb:${lb.id}` !== id) cand.push([`L:${lb.id}`, rivalWeight(s, lb, id)]);
+    if (lds.length) cand.push([`P:${r.pick(lds)}`, 1]);
+    if (stars.length) cand.push([`A:${r.pick(stars)}`, 0.6]);
+    const k = r.weighted(cand, (c) => c[1])?.[0];
+    if (!k) continue;
+    const has = own[k] ?? 0;
+    const raider = id === OWN && k.startsWith('L:') && ((s.rivalries[k.slice(2)] ?? 0) >= 15 || s.labels[k.slice(2)]?.archetype === 'empire');
+    const big = id === OWN || isLbl(id);
+    const sell = has > 0 && r.chance(raider ? 0.1 : 0.4);
+    const room = npcCap(s, id) - npcTotal(s, id);
+    const d = sell ? -has * (r.chance(0.5) ? 1 : 0.5)
+      : Math.min(room, r.float(0.004, k.startsWith('F:') ? 0.03 : k.startsWith('L:') ? 0.025 : big ? 0.015 : 0.006) * (raider ? 2 : 1));
+    if (!sell && d < 0.002) continue;
+    if (k.startsWith('L:')) {
+      const lb = s.labels[k.slice(2)];
+      const cost = Math.round(d * q.p * sharesOf(s, id));
+      if (d > 0 && cost > lb.cash * 0.3) continue;
+      lb.cash -= cost;
+    }
+    const to = has + d < 0.0005 ? 0 : has + d;
+    if (to) own[k] = to; else delete own[k];
+    if (id === OWN) { s.listing.price = Math.max(1, Math.round(s.listing.price * (1 + d * 0.8))); ownCross(s, k, has, to); }
+    else if (isLbl(id) && k.startsWith('L:') && d > 0) lblCross(s, id, k.slice(2), has, to);
+  }
+}
+
+/** Um selo rival que junta o bloco do pregão com a fatia privada (participações) e passa de 50% engole o alvo. */
+function lblCross(s: GameState, id: string, buyerId: string, from: number, to: number): void {
+  const t = s.labels[id.slice(3)];
+  const b = s.labels[buyerId];
+  if (!t || !b) return;
+  if (from < 0.1 && to >= 0.1) news(s, fmtL(l('{b} já tem {p}% das ações de {t}.', '{b} now holds {p}% of {t}.'), { b: b.name, p: Math.round(to * 100), t: t.name }), 'info', id);
+  if (to + stakeOf(s, t.id, b.id) > CONTROL && stakeOf(s, t.id) < BOARD_SEAT) npcAbsorb(s, b, t);
+}
+
+/** Avisos quando um NPC junta um bloco grande do SEU selo listado: 5% (aviso), 10% (ameaça), 25% (assento), mais que você (aquisição hostil). */
+function ownCross(s: GameState, k: string, from: number, to: number): void {
+  const n = holderName(s, k);
+  const up = (x: number) => from < x && to >= x;
+  const v = { n, p: Math.round(to * 100), c: s.config.companyName };
+  if (up(0.05)) { const t = fmtL(l('{n} comprou {p}% das ações da {c} no pregão.', '{n} bought {p}% of {c} on the exchange.'), v); news(s, t, 'info', OWN); notify(s, t, 'info'); }
+  if (up(0.1)) {
+    const t = k.startsWith('L:') ? fmtL(l('Ameaça de aquisição: {n} já tem {p}% da {c} e continua comprando.', 'Takeover threat: {n} already holds {p}% of {c} and keeps buying.'), v) : fmtL(l('{n} acumula {p}% da {c}: o mercado fala em pressão por mudanças.', '{n} has built a {p}% stake in {c}: the market talks of pressure for change.'), v);
+    news(s, t, 'bad', OWN, true);
+    notify(s, t, 'bad');
+    if (k.startsWith('L:')) s.rivalries[k.slice(2)] = (s.rivalries[k.slice(2)] ?? 0) + 5;
+  }
+  if (up(BOARD_SEAT)) {
+    s.player.reputation.institutional = clamp(s.player.reputation.institutional - 2, 0, 100);
+    const t = fmtL(l('{n} passou de 25% da {c} e exige um assento no conselho.', '{n} passed 25% of {c} and demands a board seat.'), v);
+    news(s, t, 'bad', OWN, true);
+    notify(s, t, 'bad');
+  }
+  const ctl = controlShare(s);
+  if (from <= ctl && to > ctl) {
+    s.listing.price = Math.round(s.listing.price * 1.08);
+    const t = fmtL(l('Aquisição hostil: {n} tem mais ações da {c} do que você. Recompre o bloco ou compre ações no pregão.', 'Hostile takeover: {n} holds more of {c} than you do. Buy back the block or buy shares on the exchange.'), v);
+    news(s, t, 'bad', OWN, true);
+    notify(s, t, 'bad');
+  }
+}
+
+export interface Raider { k: string; name: L; frac: number; hostile: boolean; cost: number }
+/** Blocos de NPCs com 5% ou mais do seu selo (e quanto custaria recomprá-los com ágio de 20%). */
+export function raiders(s: GameState): Raider[] {
+  if (!s.listing.listed) return [];
+  return Object.entries(bolsa(s).own[OWN] ?? {}).filter(([, f]) => f >= 0.05).sort((a, b) => b[1] - a[1])
+    .map(([k, f]) => ({ k, name: holderName(s, k), frac: f, hostile: k.startsWith('L:') || f > controlShare(s), cost: Math.round(f * s.listing.shares * s.listing.price * 1.2) }));
+}
+
+/** Recompra (com ágio) o bloco de um NPC com o caixa do selo: as ações são canceladas e saem de circulação. */
+export function repelRaider(s: GameState, k: string): L | null {
+  const own = bolsa(s).own[OWN];
+  const f = own?.[k];
+  if (!s.listing.listed || !f) return l('Este acionista não tem bloco no seu selo.', 'This holder has no block in your label.');
+  const cost = Math.round(f * s.listing.shares * s.listing.price * 1.2);
+  if (s.player.cash < cost) return l('Caixa do selo insuficiente para a recompra.', 'Not enough label cash for the buyback.');
+  coPost(s, `repel:${k}`, -cost, `Recompra do bloco de ${holderName(s, k).pt}`);
+  delete own[k];
+  s.listing.floatShare = Math.max(0, s.listing.floatShare - f);
+  if (k.startsWith('L:')) { const lb = s.labels[k.slice(2)]; if (lb) lb.cash += cost; }
+  news(s, fmtL(l('{c} recompra o bloco de {n} ({p}%) com ágio.', '{c} buys back {n}\'s block ({p}%) at a premium.'), { c: s.config.companyName, n: holderName(s, k), p: Math.round(f * 100) }), 'info', OWN, true);
+  return null;
+}
+
+export interface Holder { k: string; name: L; frac: number; kind: 'you' | 'co' | 'founder' | 'private' | 'fund' | 'rival' | 'person' }
+/** Maiores acionistas de uma ação: você, o selo, blocos de NPCs no pregão e (selos) fatias privadas e sócios. */
+export function holders(s: GameState, id: string, top = 5): Holder[] {
+  const st = bolsa(s);
+  const sh = sharesOf(s, id);
+  const out: Holder[] = [];
+  if (st.pos[id]) out.push({ k: 'you', name: l('Você', 'You'), frac: st.pos[id].sh / sh, kind: 'you' });
+  if (st.cpos[id]) out.push({ k: 'co', name: fmtL(l('{c} (caixa do selo)', '{c} (label cash)'), { c: s.config.companyName }), frac: st.cpos[id].sh / sh, kind: 'co' });
+  for (const [k, f] of Object.entries(st.own[id] ?? {})) out.push({ k, name: holderName(s, k), frac: f, kind: k[0] === 'F' ? 'fund' : k[0] === 'L' ? 'rival' : 'person' });
+  if (id === OWN) {
+    out.push({ k: 'founder', name: l('Você (fundador)', 'You (founder)'), frac: ownerShare(s), kind: 'founder' });
+    for (const inv of capital(s).investors) out.push({ k: `I:${inv.id}`, name: fmtL(l('{n} (sócio privado)', '{n} (private partner)'), { n: inv.name }), frac: inv.share, kind: 'private' });
+  } else if (isLbl(id)) {
+    for (const h of stakeHoldings(s, id.slice(3))) out.push({ k: `S:${h.holder}`, name: h.holder === 'player' ? l('Você (fatia privada)', 'You (private stake)') : fmtL(l('{n} (fatia privada)', '{n} (private stake)'), { n: s.labels[h.holder]?.name ?? '—' }), frac: h.share, kind: h.holder === 'player' ? 'you' : 'private' });
+  }
+  return out.filter((x) => x.frac >= 0.001).sort((a, b) => b.frac - a.frac).slice(0, top);
+}
+
 // ---------------------------------------------------------------- consulta
 
 export function listed(s: GameState): Row[] {
   const st = bolsa(s);
+  seedMarket(s);
   const out: Row[] = [];
   for (const id of Object.keys(st.q)) {
     const q = st.q[id];
     if (q.dead) continue;
     let kind: Kind; let tags: Tag[]; let div = 0; let blurb: L;
-    if (isLbl(id)) {
+    if (id === OWN) {
+      if (!s.listing.listed) continue;
+      kind = 'label'; tags = ['label'];
+      blurb = l('O seu selo: o preço segue lucro, crescimento e o conselho. Você pode comprar ações em circulação (reforça o controle); o caixa do selo não negocia a própria ação.', 'Your label: the price follows profit, growth and the board. You can buy floating shares (strengthens control); label cash cannot trade its own stock.');
+    } else if (isLbl(id)) {
       const lb = s.labels[id.slice(3)];
       if (!lb) continue;
       kind = 'label'; tags = ['label']; div = lb.cash > 0 ? 0.02 : 0;
-      blurb = fmtL(l('Selo rival ({c}): preço segue receita, catálogo, elenco e prestígio.', 'Rival label ({c}): price follows revenue, catalogue, roster and standing.'), { c: lb.city });
+      blurb = fmtL(l('Selo rival ({c}), listado desde {y}: preço segue receita, catálogo, elenco e prestígio.', 'Rival label ({c}), listed since {y}: price follows revenue, catalogue, roster and standing.'), { c: lb.city, y: st.lbl[lb.id] ?? q.born });
     } else if (id.startsWith('nv:')) {
       const d = nvDef(s, id.slice(3));
       if (!d) continue;
@@ -584,14 +893,15 @@ export function listed(s: GameState): Row[] {
     } else {
       const d = DEF_BY_ID[id];
       if (!d || !defAlive(s, d)) continue;
-      kind = d.kind; tags = d.tags; div = d.div; blurb = d.blurb;
+      kind = d.kind; tags = d.tags; div = d.div; blurb = blurbOf(s, d);
     }
-    const pe = isLbl(id)
-      ? clamp((q.p * sharesOf(s, id)) / Math.max(money(s, 1000), revenueOf(s.labels[id.slice(3)]) * 0.14), 3, 80)
+    const rev = id === OWN ? Math.max(s.player.revenueByYear[s.year - 1] ?? 0, s.player.revenueByYear[s.year] ?? 0) : isLbl(id) ? revenueOf(s.labels[id.slice(3)]) : 0;
+    const pe = id === OWN || isLbl(id)
+      ? clamp((q.p * sharesOf(s, id)) / Math.max(money(s, 1000), rev * 0.14), 3, 80)
       : clamp(PE0[kind] * Math.exp(q.x + 0.4 * q.lv), 3, 90);
     out.push({ id, name: stockName(s, id), kind, blurb, tags, div, q, pe });
   }
-  return out.sort((a, b) => a.name.localeCompare(b.name));
+  return out.sort((a, b) => (a.id === OWN ? -1 : b.id === OWN ? 1 : a.name.localeCompare(b.name)));
 }
 
 export const change12 = (q: Quote): number => q.hist.length > 1 ? q.p / Math.max(1, q.hist[Math.max(0, q.hist.length - 13)]) - 1 : 0;
@@ -602,23 +912,24 @@ export function unlistedNotes(s: GameState): typeof UNLISTED {
 }
 
 export interface Holding { id: string; name: string; sh: number; cost: number; value: number; pl: number; divs: number; frac?: number; q: Quote }
-export function holdingsOf(s: GameState): Holding[] {
+/** Posições de uma carteira: 'p' = você, 'c' = o selo. */
+export function holdingsOf(s: GameState, acct: Acct = 'p'): Holding[] {
   const st = bolsa(s);
-  return Object.keys(st.pos).map((id): Holding | null => {
-    const p = st.pos[id];
+  const pos = posOf(s, acct);
+  return Object.keys(pos).map((id): Holding | null => {
+    const p = pos[id];
     const q = st.q[id];
     if (!q) return null;
-    return { id, name: stockName(s, id), sh: p.sh, cost: p.cost, value: Math.round(p.sh * q.p), pl: Math.round(p.sh * q.p - p.cost + p.divs), divs: p.divs, frac: isLbl(id) ? p.sh / sharesOf(s, id) : undefined, q };
+    return { id, name: stockName(s, id), sh: p.sh, cost: p.cost, value: Math.round(p.sh * q.p), pl: Math.round(p.sh * q.p - p.cost + p.divs), divs: p.divs, frac: isLbl(id) || id === OWN ? p.sh / sharesOf(s, id) : undefined, q };
   }).filter((x): x is Holding => !!x);
 }
-export const stocksValue = (s: GameState): number => holdingsOf(s).reduce((t, x) => t + x.value, 0);
+export const stocksValue = (s: GameState, acct: Acct = 'p'): number => holdingsOf(s, acct).reduce((t, x) => t + x.value, 0);
 
-/** Informação de dentro: com 5% de um selo rival você vê os números dele. */
+/** Informação de dentro: com 5% de um selo rival (somando você e o selo) você vê os números dele. */
 export function insight(s: GameState, id: string): { revenue: number; cash: number; roster: number; ceo?: string; standing: number } | null {
   if (!isLbl(id)) return null;
-  const pos = bolsa(s).pos[id];
   const lb = s.labels[id.slice(3)];
-  if (!pos || !lb || pos.sh / sharesOf(s, id) < INSIGHT_AT) return null;
+  if (!lb || playerFrac(s, id) < INSIGHT_AT) return null;
   return { revenue: revenueOf(lb), cash: lb.cash, roster: lb.roster.length, ceo: lb.ceo, standing: Math.round(standingOf(s, lb.id).mom) };
 }
 
@@ -631,54 +942,63 @@ export function ownListing(s: GameState): { name: string; price: number; hist: n
 
 function unit(s: GameState, id: string, side: 'buy' | 'sell', n: number): number {
   const q = bolsa(s).q[id];
-  const slip = isLbl(id) ? 0.5 * (n / sharesOf(s, id)) : 0;
+  const slip = isLbl(id) || id === OWN ? 0.5 * (n / sharesOf(s, id)) : 0;
   return q.p * (side === 'buy' ? 1 + slip + FEE : 1 - slip - FEE);
 }
 
-/** Compra `sh` ações com o patrimônio pessoal. */
-export function buyShares(s: GameState, id: string, sh: number): L | null {
+/** Saldo de quem compra: patrimônio pessoal ou caixa do selo. */
+export const walletOf = (s: GameState, acct: Acct): number => (acct === 'c' ? s.player.cash : ownerOf(s).wealth);
+
+/** Compra `sh` ações com o patrimônio pessoal ('p') ou com o caixa do selo ('c'). */
+export function buyShares(s: GameState, id: string, sh: number, acct: Acct = 'p'): L | null {
   const st = bolsa(s);
+  seedMarket(s);
   const q = st.q[id];
   if (!q || q.dead || !listed(s).some((x) => x.id === id)) return l('Esta ação não está à venda.', 'This share is not for sale.');
   sh = Math.floor(sh);
   if (sh < 1) return l('Quantidade inválida.', 'Invalid quantity.');
-  const have = st.pos[id]?.sh ?? 0;
-  if (isLbl(id) && have + sh > sharesOf(s, id) * MAX_STAKE) return fmtL(l('Você não pode passar de {p}% das ações de um selo (o resto é do fundador e do mercado).', 'You cannot hold more than {p}% of a label (the rest belongs to the founder and the float).'), { p: Math.round(MAX_STAKE * 100) });
+  const before = playerFrac(s, id);
+  if (id === OWN) {
+    if (acct === 'c') return l('O caixa do selo não compra a própria ação no pregão: use a recompra de blocos.', 'Label cash cannot buy its own stock on the exchange: use the block buyback.');
+    const free = Math.floor(sharesOf(s, id) * (s.listing.floatShare - npcTotal(s, id))) - (st.pos[id]?.sh ?? 0);
+    if (sh > free) return l('Não há tantas ações do seu selo em circulação à venda.', 'There are not that many of your label\'s floating shares for sale.');
+  }
+  if (isLbl(id) && before + sh / sharesOf(s, id) > MAX_STAKE) return fmtL(l('Você e o selo, juntos, não podem passar de {p}% das ações de um selo (o resto é do fundador e do mercado).', 'You and your label together cannot hold more than {p}% of a label (the rest belongs to the founder and the float).'), { p: Math.round(MAX_STAKE * 100) });
   const cost = Math.round(sh * unit(s, id, 'buy', sh));
-  const o = ownerOf(s);
-  if (o.wealth < cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
-  o.wealth -= cost;
-  const pos = (st.pos[id] ??= { sh: 0, cost: 0, since: s.year, divs: 0 });
+  if (walletOf(s, acct) < cost) return acct === 'c' ? l('Caixa do selo insuficiente.', 'Not enough label cash.') : l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
+  if (acct === 'c') coPost(s, `buy:${id}`, -cost, `Compra de ações: ${stockName(s, id)}`);
+  else ownerOf(s).wealth -= cost;
+  const pos = (posOf(s, acct)[id] ??= { sh: 0, cost: 0, since: s.year, divs: 0 });
   pos.sh += sh;
   pos.cost += cost;
-  if (isLbl(id)) crossing(s, id, have / sharesOf(s, id), pos.sh / sharesOf(s, id));
+  if (isLbl(id)) crossing(s, id, before, playerFrac(s, id));
   return null;
 }
 
 /** Compra o máximo de ações possível com `cents`. */
-export function buyValue(s: GameState, id: string, cents: number): L | null {
+export function buyValue(s: GameState, id: string, cents: number, acct: Acct = 'p'): L | null {
   const q = bolsa(s).q[id];
   if (!q) return l('Esta ação não está à venda.', 'This share is not for sale.');
   let sh = Math.floor(cents / (q.p * (1 + FEE)));
   while (sh > 1 && Math.round(sh * unit(s, id, 'buy', sh)) > cents) sh -= 1;
-  return buyShares(s, id, sh);
+  return buyShares(s, id, sh, acct);
 }
 
-export function sellShares(s: GameState, id: string, frac = 1): L | null {
+export function sellShares(s: GameState, id: string, frac = 1, acct: Acct = 'p'): L | null {
   const st = bolsa(s);
-  const pos = st.pos[id];
+  const pos = posOf(s, acct)[id];
   const q = st.q[id];
   if (!pos || !q) return l('Você não tem estas ações.', 'You do not own these shares.');
   const sh = Math.max(1, Math.round(pos.sh * clamp(frac, 0, 1)));
   const gross = Math.round(sh * unit(s, id, 'sell', sh));
   const basis = Math.round(pos.cost * (sh / pos.sh));
-  ownerOf(s).wealth += gross;
-  st.realized += gross - basis;
-  const before = pos.sh;
+  const before = playerFrac(s, id);
+  if (acct === 'c') coPost(s, `sell:${id}`, gross, `Venda de ações: ${stockName(s, id)}`);
+  else { ownerOf(s).wealth += gross; st.realized += gross - basis; }
   pos.sh -= sh;
   pos.cost -= basis;
-  if (pos.sh <= 0) delete st.pos[id];
-  if (isLbl(id)) crossing(s, id, before / sharesOf(s, id), (before - sh) / sharesOf(s, id));
+  if (pos.sh <= 0) delete posOf(s, acct)[id];
+  if (isLbl(id)) crossing(s, id, before, playerFrac(s, id));
   return null;
 }
 
