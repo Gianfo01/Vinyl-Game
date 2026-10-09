@@ -37,6 +37,7 @@ import { store } from './store';
 import { chips, ic, meter, stat } from './vis';
 import './pages.css';
 import { HINT15, canSee, fameText, knownLevel } from '../sim/sys/fame15';
+import { replayBtn16 } from './sys/moments16';
 
 /** Botões extras no topo da página do ato (rodada 8: projeto musical). */
 export const ACT_HEAD_EXTRAS: ((s: GameState, a: Act, close: () => void) => HTMLElement | null)[] = [];
@@ -425,7 +426,7 @@ function songsTab(s: GameState, a: Act, mine: boolean): HTMLElement {
 function historyTab(s: GameState, a: Act): HTMLElement {
   const items = a.history.slice().reverse().map((mid) => s.memory.find((x) => x.id === mid)).filter(Boolean);
   return h('div', null,
-    h('ul', { class: 'memory timeline' }, items.map((m) => h('li', { class: m!.important ? 'important' : '' }, h('span', { class: 'muted' }, `${monthName(m!.month)} ${m!.year} · `), t(m!.text)))),
+    h('ul', { class: 'memory timeline' }, items.map((m) => h('li', { class: m!.important ? 'important' : '' }, h('span', { class: 'muted' }, `${monthName(m!.month)} ${m!.year} · `), t(m!.text), ' ', replayBtn16(s, m!)))),
     items.length ? null : h('p', { class: 'muted' }, t(l('Nenhum fato marcante ainda.', 'No notable events yet.'))),
   );
 }

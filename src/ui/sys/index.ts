@@ -88,3 +88,6 @@ import './fame15';
 import './looks15';
 // Rodada 15: aprofundamentos (Sync, Disputas, Fandom do ato, júri dos prêmios).
 import './deep15';
+// Rodada 16: momentos ilustrados (cena só quando algo acontece; "ver cena" no diário).
+import './moments16';
+import './layout16';

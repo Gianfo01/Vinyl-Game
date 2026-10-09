@@ -9,14 +9,12 @@ import { money, playerActs, rngOf } from '../../sim/util';
 import { $, actLink, cover, logo, pill, releaseLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { chips, ic, scoreBadge, stat, tile } from '../vis';
-import { banner14 } from '../sys/visuals14';
 import { tagName14 } from '../../sim/sys/polish14';
 
 export function pressSection(s: GameState): HTMLElement {
   const r = rngOf(s);
   const mine = Object.values(s.releases).filter((x) => (x.owner === 'player' || s.acts[x.actId]?.playerBand) && s.reviews[x.id]).sort((a, b) => b.week - a.week).slice(0, 8);
   return h('div', null,
-    banner14(s, 'press'),
     section(t(l('Resenhas', 'Reviews')), mine.length ? h('div', { class: 'reviews' }, mine.map((rel) => h('article', { class: 'review-card' },
       h('header', null, cover(s, rel, 48), h('div', null, releaseLink(s, rel.id), h('small', null, ' — ', actLink(s, rel.actId))), scoreBadge(avgReview(s, rel.id) ?? 0)),
       h('ul', null, s.reviews[rel.id].map((rv) => h('li', null, scoreBadge(rv.score), ' ', h('b', null, rv.critic), h('small', { class: 'muted' }, ` (${rv.outlet})`), ' — ', h('i', null, t(rv.quote))))),

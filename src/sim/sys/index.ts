@@ -127,3 +127,6 @@ import './looks15';
 import './sync15';
 import './fan15';
 import './dispute15';
+// Rodada 16: momentos ilustrados (cena só quando algo acontece) e preço de matéria-prima já na época.
+import './moments16';
+import './supply16';

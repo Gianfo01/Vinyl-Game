@@ -16,7 +16,6 @@ import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
 import { foundInline } from './careerui13';
 import { tabs } from '../vis';
-import { banner14 } from './visuals14';
 import { fameText } from '../../sim/sys/fame15';
 
 const btn = (label: L, fn: () => void, cls = 'btn small', dis = false) => h('button', { class: cls, disabled: dis, onclick: fn }, t(label));
@@ -173,7 +172,7 @@ function producerTab(s: GameState): HTMLElement {
 void offerFee;
 
 function area(s: GameState): HTMLElement {
-  return h('div', { class: 'hub studio12' }, banner14(s, 'studio_live'), tabs('studio12', [
+  return h('div', { class: 'hub studio12' }, tabs('studio12', [
     { id: 'studio', label: t(l('Dono do estúdio', 'Studio owner')), icon: 'cd', render: () => studioTab(s) },
     { id: 'producer', label: t(l('Produtor', 'Producer')), icon: 'note', render: () => producerTab(s) },
   ], rerender));

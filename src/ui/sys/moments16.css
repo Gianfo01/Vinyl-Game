@@ -1,0 +1,9 @@
+/* Rodada 16 — cartão de momento ilustrado */
+.mo16 { display: flex; flex-direction: column; gap: 8px; max-width: 720px; margin: 0 auto; }
+.mo16 .s14 { margin: 0; }
+.mo16-text { margin: 0; font-size: 1rem; }
+.mo16-why { margin: 0; padding-left: 18px; color: var(--muted); }
+.mo16 > .btn { align-self: flex-end; }
+.mo16-btn { font-size: .78rem; white-space: nowrap; }
+.mo16-log { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.mo16-log li { overflow-wrap: anywhere; }

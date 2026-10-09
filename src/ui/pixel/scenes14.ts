@@ -27,6 +27,8 @@ export interface SceneView14 extends SceneOpts14 {
   energy?: number;
   /** texto extra na legenda */
   note?: string;
+  /** R16: false = sem pontos clicáveis (cena de momento) */
+  spots?: boolean;
 }
 
 const cache = new Map<string, PlaceModel>();
@@ -164,7 +166,7 @@ export function scene14(kind: Scene14, o: SceneView14): HTMLElement {
       onclick: () => openScene(spec.title, () => scene14(kind, { ...o, size: 'card' })) }, cv);
   }
   let root: HTMLElement;
-  const stage = h('div', { class: 's14-stage' }, cv, hotspots(spec.hotspots, (k) => root.replaceWith(scene14(k, o))));
+  const stage = h('div', { class: 's14-stage' }, cv, o.spots === false ? null : hotspots(spec.hotspots, (k) => root.replaceWith(scene14(k, o))));
   const info = h('div', { class: 's14-info' },
     h('b', { class: 's14-title' }, title, h('small', null, ` · ${o.year}`)),
     h('div', { class: 's14-gear' }, t(spec.gear)),
