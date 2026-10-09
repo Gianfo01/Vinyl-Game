@@ -8,6 +8,7 @@ import { clamp, hashString, Rng, seedState } from '../core/rng';
 import { nominal } from '../core/money';
 import { CATALOG_ACTS, CATALOG_LABELS } from '../data/catalog';
 import { REAL_ACTS, REAL_LABELS, applyRealNames } from '../data/realnames';
+import { dbSizeInfo } from './dbsize14';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { EXTRA_LABELS } from '../data/labels10';
 import type { CatalogLabel } from '../data/catalog';
@@ -333,7 +334,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   }
 
   // procedurais iniciais
-  const procCount = Math.round((hasMutator(s, 'small_world') ? 50 : hasMutator(s, 'giant_world') ? 150 : 95) * (cfg.mode === 'historic' ? 0.9 : 1.1));
+  const procCount = Math.round((hasMutator(s, 'small_world') ? 50 : hasMutator(s, 'giant_world') ? 150 : 95) * (cfg.mode === 'historic' ? 0.9 : 1.1) * dbSizeInfo(cfg).gen);
   for (let i = 0; i < procCount; i++) {
     const act = spawnProceduralAct(s, r, { formedYear: cfg.startYear - r.int(0, 8) });
     const years = cfg.startYear - act.formed;

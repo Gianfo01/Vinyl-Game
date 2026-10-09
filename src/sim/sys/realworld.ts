@@ -14,6 +14,8 @@ import { REAL_CLASSIC, type ClassicExtra } from '../../data/realacts_classic';
 import { REAL_EU } from '../../data/realacts_eu';
 import { REAL_US } from '../../data/realacts_us';
 import { REAL_WORLD } from '../../data/realacts_world';
+import { REAL_MORE } from '../../data/realacts_more14';
+import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
 import type { RealArtist, RealMember, RealRelease } from '../../data/realtypes';
 import { CITIES, cityById, familyOf, l } from '../../data/world';
@@ -25,7 +27,7 @@ import type { Act, GameState, Person, Release } from '../types';
 import { fmtL, nextId, remember } from '../util';
 import { addSignal, signToBestRival } from '../worldgen';
 
-export const REAL_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD];
+export const REAL_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
 
@@ -344,6 +346,7 @@ function newgame(s: GameState, r: Rng): void {
   // artistas reais novos
   for (let i = 0; i < REAL_ALL.length; i++) {
     const a = REAL_ALL[i];
+    if (!realAllowed(s.config, a)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
     if (mode === 'free' && r.chance(0.08)) continue;
     const debut = a.d + jitter(s, r, 2);
