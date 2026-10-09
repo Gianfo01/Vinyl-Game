@@ -14,6 +14,7 @@ import { money } from '../../sim/util';
 import { $, modal, pill, rerender, section, toast } from '../common';
 import { bar, h } from '../dom';
 import { store } from '../store';
+import { HINT15, canSee, knownLevel } from '../../sim/sys/fame15';
 
 const tone = (v: number) => (v >= 65 ? 'good' : v <= 35 ? 'bad' : '');
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -40,22 +41,30 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
   const act: Act | undefined = P.kind === 'person' || P.kind === 'player' ? Object.values(s.acts).find((a) => a.members.includes(P.key.slice(2))) : undefined;
   const iw = imageWeight(s.year);
   const ob = self ? ownerBarrier(s) : null;
+  // rodada 15: atributos e personalidade são privados — olheiros/relação (pessoas) ou convivência (indústria)
+  const pid = P.kind === 'person' ? P.key.slice(2) : '';
+  const kl = pid ? knownLevel(s, pid) : null;
+  const w13 = self || P.kind === 'staff' || kl?.mine ? 0 : kl ? [99, 30, 18, 10, 4, 0][Math.min(5, kl.priv)] : Math.abs(op ?? 0) >= 15 || (led?.w.length ?? 0) > 0 ? 6 : 24;
+  const sh = (v: number): string => (w13 >= 99 ? '?' : w13 ? `${Math.max(0, Math.round(v - w13 / 2))}–${Math.min(100, Math.round(v + w13 / 2))}` : String(v));
+  const seeTraits = !pid || !!kl?.mine || canSee(s, pid, 'traits') || (!kl && w13 <= 6);
+  const seeViews = !pid || canSee(s, pid, 'life');
   return h('div', { class: 'p13' },
     h('div', { class: 'grid2' },
       h('div', null,
         h('h4', null, t(l('Atributos', 'Attributes'))),
-        h('ul', { class: 'attr-list' }, ATTR13_IDS.map((k) => h('li', { title: t(ATTR13[k][1]) }, h('span', null, t(ATTR13[k][0])), bar(P.attrs[k], 100, tone(P.attrs[k])), h('b', null, P.attrs[k])))),
+        h('ul', { class: 'attr-list' }, ATTR13_IDS.map((k) => h('li', { title: t(ATTR13[k][1]) }, h('span', null, t(ATTR13[k][0])), w13 ? null : bar(P.attrs[k], 100, tone(P.attrs[k])), h('b', null, sh(P.attrs[k]))))),
+        w13 ? h('p', { class: 'small muted' }, t(w13 >= 99 ? HINT15 : l('Faixas = o que você estima; olheiros, reuniões e relação próxima estreitam.', 'Ranges = your estimate; scouts, meetings and a close relationship narrow them.'))) : null,
         self ? h('p', { class: 'small muted' }, t(l('Negociação efetiva do selo (com jurídico/empresário): {v}.', 'Label\'s effective negotiation (with legal/manager): {v}.'), { v: labelNeg(s) })) : null,
         h('h4', null, t(l('Personalidade', 'Personality'))),
-        P.native.length ? h('p', null, P.native.map((x) => pill(t(x), 'trait'))) : null,
-        P.traits.length ? h('ul', { class: 'small' }, P.traits.map((x) => h('li', null, t(facetName(x.k, x.hi))))) : h('p', { class: 'muted small' }, t(l('Equilibrado, difícil de decifrar.', 'Balanced, hard to read.'))),
-        h('p', { class: 'small' }, h('b', null, t(l('Política e fé: ', 'Politics and faith: '))), t(viewsLabel(P.views)), ` · ${t(l('engajamento', 'engagement'))} ${Math.round(P.views.eng)}`),
+        !seeTraits ? h('p', { class: 'muted small' }, t(HINT15)) : P.native.length ? h('p', null, P.native.map((x) => pill(t(x), 'trait'))) : null,
+        !seeTraits ? null : P.traits.length ? h('ul', { class: 'small' }, P.traits.map((x) => h('li', null, t(facetName(x.k, x.hi))))) : h('p', { class: 'muted small' }, t(l('Equilibrado, difícil de decifrar.', 'Balanced, hard to read.'))),
+        h('p', { class: 'small' }, h('b', null, t(l('Política e fé: ', 'Politics and faith: '))), seeViews ? `${t(viewsLabel(P.views))} · ${t(l('engajamento', 'engagement'))} ${Math.round(P.views.eng)}` : '?'),
       ),
       h('div', null,
         h('h4', null, t(l('Aptidão para cargos', 'Role proficiency'))),
-        h('ul', { class: 'attr-list' }, jobs.slice(0, 5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), bar(j.v, 100, tone(j.v)), h('b', null, j.v)))),
+        h('ul', { class: 'attr-list' }, jobs.slice(0, 5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), w13 ? null : bar(j.v, 100, tone(j.v)), h('b', null, sh(j.v))))),
         h('details', null, h('summary', { class: 'small muted' }, t(l('Todos os cargos', 'All roles'))),
-          h('ul', { class: 'attr-list small' }, jobs.slice(5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), bar(j.v, 100), h('b', null, j.v))))),
+          h('ul', { class: 'attr-list small' }, jobs.slice(5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), w13 ? null : bar(j.v, 100), h('b', null, sh(j.v)))))),
         adj ? h('p', { class: 'small' }, t(l('Desempenho efetivo no cargo: {b} {d} = {v}', 'Effective performance in role: {b} {d} = {v}'), { b: staff!.skill, d: signed(adj.v), v: staff!.skill + adj.v }),
           adj.why.length ? h('span', { class: 'muted' }, ` (${adj.why.map((x) => t(x)).join('; ')})`) : null) : null,
         h('h4', null, t(l('Aparência e época', 'Looks and era'))),

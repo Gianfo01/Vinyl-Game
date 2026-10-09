@@ -15,6 +15,7 @@ import { $, N, cityName, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerSection } from '../registry';
 import { chips, meter, stat } from '../vis';
+import { fameText } from '../../sim/sys/fame15';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const add = { day: 'fri' as DayK, k: 'original' as NightK, deal: 'door' as DealK, act: '', name: '' };
@@ -62,7 +63,7 @@ function venue12Section(s: GameState): HTMLElement | null {
       h('label', null, t(l('Dia', 'Day')), select<DayK>(add.day, free.map((d) => ({ value: d, label: t(DAYS[d].name) })), (d) => (add.day = d))),
       h('label', null, t(l('Tipo', 'Type')), select<NightK>(add.k, (Object.keys(NIGHTS) as NightK[]).map((k) => ({ value: k, label: t(NIGHTS[k].name) })), (k) => { add.k = k; rerender(); })),
       add.k !== 'private' && add.k !== 'rental' ? h('label', null, t(l('Acordo', 'Deal')), select<DealK>(add.deal, (Object.keys(DEALS) as DealK[]).map((d) => ({ value: d, label: t(DEALS[d].name) })), (d) => { add.deal = d; rerender(); })) : null,
-      add.k === 'original' || add.k === 'residency' ? h('label', null, t(l('Artista local', 'Local act')), select(add.act, [{ value: '', label: t(l('— vários (curadoria) —', '— various (curated) —')) }, ...acts.map((a) => ({ value: a.id, label: `${a.name} · ${Math.round(a.fame)} · ${t(l('relação', 'relation'))} ${Math.round(x.rel[a.id] ?? 30)} · ${$(localFee(s, x, a))}` }))], (id) => (add.act = id))) : null,
+      add.k === 'original' || add.k === 'residency' ? h('label', null, t(l('Artista local', 'Local act')), select(add.act, [{ value: '', label: t(l('— vários (curadoria) —', '— various (curated) —')) }, ...acts.map((a) => ({ value: a.id, label: `${a.name} · ${fameText(s, a.id)} · ${t(l('relação', 'relation'))} ${Math.round(x.rel[a.id] ?? 30)} · ${$(localFee(s, x, a))}` }))], (id) => (add.act = id))) : null,
       h('label', null, t(l('Nome da noite', 'Night name')), h('input', { type: 'text', maxlength: 40, value: add.name, oninput: (ev: Event) => (add.name = (ev.target as HTMLInputElement).value) })),
       h('button', { class: 'btn small primary', onclick: () => { const r = addNight12(s, { k: add.k, day: add.day, deal: add.deal, actId: add.act || undefined, name: add.name }); add.name = ''; say(r, l('Noite na programação.', 'Night added to the programme.')); } }, t(l('Criar noite fixa', 'Create weekly night'))),
       h('small', { class: 'muted' }, t(NIGHTS[add.k].desc), ' ', add.k !== 'private' && add.k !== 'rental' ? t(DEALS[add.deal].desc) : ''),

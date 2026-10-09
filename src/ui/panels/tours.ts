@@ -15,6 +15,7 @@ import { chips, dailyTimeline, ic, stat } from '../vis';
 import { visibleAct } from '../../sim/future';
 import { forecastTour } from '../../sim/sys/explain12';
 import { forecastBox } from '../sys/explain12';
+import { fameText } from '../../sim/sys/fame15';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -38,7 +39,7 @@ export function tourPlannerSection(s: GameState, stops: string[]): HTMLElement {
       h('label', null, t(l('Tempo de palco', 'Set length')), select(draft.minutes, [30, 45, 60, 90].map((m) => ({ value: m as TourPlan['minutes'], label: `${m} min` })), (v) => { draft.minutes = v; rerender(); })),
       h('label', null, t(l('Produção de palco', 'Stage production')), select(draft.production, PROD.map((p, i) => ({ value: i, label: t(p) })), (v) => { draft.production = v; rerender(); })),
       h('label', null, t(l('Papel', 'Billing')), select(draft.role, [{ value: 'headline' as const, label: t(l('Atração principal', 'Headliner')) }, { value: 'co' as const, label: t(l('Co-headline', 'Co-headline')) }, { value: 'opening' as const, label: t(l('Abertura', 'Opening act')) }], (v) => { draft.role = v; rerender(); })),
-      draft.role !== 'headline' ? h('label', null, t(l('Parceiro', 'Partner')), select(draft.partnerActId ?? '', [{ value: '', label: '—' }, ...others.map((x) => ({ value: x.id, label: `${x.name} (★${Math.round(x.fame)})` }))], (v) => { draft.partnerActId = v || undefined; rerender(); })) : null,
+      draft.role !== 'headline' ? h('label', null, t(l('Parceiro', 'Partner')), select(draft.partnerActId ?? '', [{ value: '', label: '—' }, ...others.map((x) => ({ value: x.id, label: `${x.name} (★${fameText(s, x.id)})` }))], (v) => { draft.partnerActId = v || undefined; rerender(); })) : null,
       h('label', null, t(l('Equipe técnica', 'Road crew')), select(draft.crew, [1, 2, 4, 6, 10, 16].map((n) => ({ value: n, label: `${n}` })), (v) => { draft.crew = v; rerender(); })),
       h('label', null, t(l('Ingresso', 'Ticket price')), select(draft.priceMult, [0.6, 0.8, 1, 1.25, 1.5, 2].map((m) => ({ value: m, label: `×${m}` })), (v) => { draft.priceMult = v; rerender(); })),
       h('label', null, t(l('Pagamento', 'Pay deal')), select(draft.pay, [{ value: 'door' as const, label: t(l('Bilheteria (65% líquida)', 'Door (65% net)')) }, { value: 'guarantee' as const, label: t(l('Cachê fixo', 'Flat fee')) }, { value: 'hybrid' as const, label: t(l('Garantia + 45%', 'Guarantee + 45%')) }], (v) => { draft.pay = v; rerender(); })),

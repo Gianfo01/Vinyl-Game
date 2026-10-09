@@ -82,3 +82,5 @@ import '../history15';
 import './kin15';
 // Rodada 15: lista e página de produtores reais.
 import './producers15';
+// Rodada 15: fama (aba, gráfico, segurança) e o quadro 'O que se sabe'.
+import './fame15';

@@ -49,12 +49,14 @@ export function estimate(s: GameState, actId: string, field: 'potential' | 'tale
     const v = trueValue(s, act, field, skill);
     return { lo: v - 2, hi: v + 2, mid: v };
   }
-  if (deg === 0) return null;
+  // rodada 15: fama é pública — Nacional (30+) mostra o alcance exato; Local (10+) dá uma faixa mesmo sem olheiro
+  if (field === 'fame' && act.fame >= 30) { const v = Math.round(act.fame); return { lo: v, hi: v, mid: v }; }
+  if (deg === 0 && !(field === 'fame' && act.fame >= 10)) return null;
   if (field === 'potential' && deg < 3) return null;
   if ((field === 'talent' || field === 'skill') && deg < 2) return null;
   const v = trueValue(s, act, field, skill);
   const widths = field === 'fame' ? [16, 10, 6, 4, 2] : field === 'potential' ? [40, 30, 20, 11, 5] : [40, 26, 15, 8, 3];
-  const w = widthFor(s, deg, widths);
+  const w = widthFor(s, Math.max(1, deg), widths);
   const bias = (k?.bias ?? 0) * (w / 30);
   const mid = clamp(v + bias, 0, 100);
   return { lo: Math.round(clamp(mid - w / 2, 0, 100)), hi: Math.round(clamp(mid + w / 2, 0, 100)), mid: Math.round(mid) };

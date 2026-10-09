@@ -21,6 +21,7 @@ import { store } from '../store';
 import { chips, ic, scoreBadge, stat, tile } from '../vis';
 import './creation.css';
 import { reviewCard, reviewSummary } from '../reviewView';
+import { fameText } from '../../sim/sys/fame15';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { recipeSong: '', featSong: '', featGuest: '', clipSong: '', commAct: '' };
@@ -121,7 +122,7 @@ function partnersTab(s: GameState): HTMLElement {
     section(t(l('Participações e duetos', 'Features and duets')),
       song ? h('div', { class: 'row wrap' },
         select(ui.featSong, songs.map((so) => ({ value: so.id, label: so.title })), (v) => { ui.featSong = v; rerender(); }, { 'aria-label': t(l('Música', 'Song')) }),
-        select(ui.featGuest, cands.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)}) · ${$(featureFee(s, a))}` })), (v) => { ui.featGuest = v; rerender(); }, { 'aria-label': t(l('Convidado', 'Guest')) }),
+        select(ui.featGuest, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)}) · ${$(featureFee(s, a))}` })), (v) => { ui.featGuest = v; rerender(); }, { 'aria-label': t(l('Convidado', 'Guest')) }),
         h('button', { class: 'btn primary', disabled: !ui.featGuest, onclick: () => openFeatModal(s, { host: song.actId, song: ui.featSong, guest: ui.featGuest }) }, t(l('Negociar', 'Negotiate'))),
         h('button', { class: 'btn ghost', disabled: !ui.featGuest, title: t(l('Convite rápido com o cachê de tabela, sem negociar.', 'Quick invite at the list fee, no negotiation.')), onclick: () => { toast(t(inviteFeature(s, rngOf(s), ui.featSong, ui.featGuest)), 'info'); rerender(); } }, t(l('Convite rápido', 'Quick invite')))) : h('p', { class: 'muted small' }, t(l('Precisa de uma música inédita.', 'You need an unreleased song.'))),
       h('p', { class: 'muted small' }, t(l('Convidados famosos e de outros gêneros trazem público novo. Selos rivais podem barrar.', 'Famous guests and other genres bring new audiences. Rival labels may block it.'))),

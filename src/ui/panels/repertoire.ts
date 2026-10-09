@@ -18,6 +18,7 @@ import { chips, ic, portrait, setTab, stat } from '../vis';
 import { preselectSession } from './studio';
 import { songAttrs } from '../songAttrs';
 import { closeSale, fairTerms, offerSong, saleChance, saleTargets, type SaleTerms } from '../../sim/sys/songsale';
+import { fameText } from '../../sim/sys/fame15';
 
 /** Botões extras no cabeçalho de cada música (ouvir a música). */
 export const REP_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
@@ -47,7 +48,7 @@ function saleBox(s: GameState, so: Song): HTMLElement {
   return h('div', { class: 'sale-box' },
     h('b', null, ic('handshake'), ' ', t(l('Vender a composição', 'Sell the song'))),
     h('div', { class: 'row wrap' },
-      select(sale.target, targets.map((a) => ({ value: a.id, label: `${a.name} (★${Math.round(a.fame)}${a.genre === so.genre ? ' ✓' : ''})` })), (v) => { sale.target = v; sale.reply = null; rerender(); }, { 'aria-label': t(l('Comprador', 'Buyer')) }),
+      select(sale.target, targets.map((a) => ({ value: a.id, label: `${a.name} (★${fameText(s, a.id)}${a.genre === so.genre ? ' ✓' : ''})` })), (v) => { sale.target = v; sale.reply = null; rerender(); }, { 'aria-label': t(l('Comprador', 'Buyer')) }),
       h('label', null, t(l('Valor $', 'Price $')), num(sale.fee, 50, (x) => (sale.fee = x))),
       h('label', null, t(l('Royalties %', 'Royalties %')), num(sale.royalty, 0.5, (x) => (sale.royalty = x), 30)),
       h('label', null, t(l('Parte do selo %', 'Label share %')), num(sale.labelShare, 5, (x) => (sale.labelShare = Math.min(100, x)), 100)),

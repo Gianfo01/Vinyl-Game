@@ -4,6 +4,7 @@ import { STAFF_ROLES } from '../../data/rules';
 import { FAMILIES, MARKETS, cityById, familyOf, l, type L, type MarketId } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import { hireStaff } from '../../sim/economy';
+import { fameText } from '../../sim/sys/fame15';
 import { DEGREES, STAGES, canScout, dropSignal, estimate, requestScout, scoutActionsPerMonth, scoutAct, scoutCost, scoutRequestCost, setStage, sourceName, syncPipeline } from '../../sim/scouting';
 import { acceptCounter, defaultOffer, withdrawOffer } from '../../sim/contracts';
 import type { GameState, Knowledge } from '../../sim/types';
@@ -209,7 +210,7 @@ function pipeCard(s: GameState, k: Knowledge): HTMLElement {
   const offer = s.offers.find((o) => o.actId === a.id && (o.status === 'pending' || o.status === 'counter'));
   return h('div', { class: `kcard ${a.owner ? 'signed' : ''}`, 'data-q': qKey(s, a.id) },
     h('div', { class: 'row' }, logo(a, 24), actLink(s, a.id), h('small', { class: 'muted' }, ` ${k.degree}/5`), isWatched(s, a.id) ? h('span', { class: 'star on' }, ' ★') : null),
-    h('small', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ★${Math.round(a.fame)}`),
+    h('small', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ★${fameText(s, a.id)}`),
     h('small', null, `${t(S.talent)} ${tal ? `${tal.lo}–${tal.hi}` : '?'} · ${t(S.potential)} ${pot ? `${pot.lo}–${pot.hi}` : '?'}`),
     a.owner ? pill(t(l('assinou com rival', 'signed to a rival')), 'bad') : null,
     offer ? h('small', null, offer.status === 'counter' ? pill(t(l('contraproposta', 'counter-offer')), 'warn') : pill(t(l('aguardando resposta', 'awaiting answer'))), ` ${$(offer.advance)}`) : null,

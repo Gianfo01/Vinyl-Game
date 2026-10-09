@@ -23,6 +23,7 @@ import { mgr11 } from '../../sim/sys/manager11';
 import { extra12 } from './ventures12';
 import { clientPanel12, managementTabs12 } from './manager12';
 import { careersPanel } from './careers12';
+import { fameText } from '../../sim/sys/fame15';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -92,7 +93,7 @@ function festivalBody(s: GameState, v: Venture): HTMLElement {
     h('h5', null, t(l('Line-up', 'Line-up')), ` (${v.lineup!.length}/${lineupMax(v)})`),
     v.lineup!.length ? h('ul', { class: 'small' }, v.lineup!.map((x) => h('li', null, actLink(s, x.actId), ` · ${$(x.fee)} `, btn(l('tirar', 'drop'), () => { dropFromLineup(s, v.id, x.actId); rerender(); }, 'btn tiny ghost')))) : h('p', { class: 'muted small' }, t(l('Ninguém confirmado. Sem line-up, não há edição.', 'Nobody confirmed. No line-up, no edition.'))),
     cands.length ? h('div', { class: 'row wrap' },
-      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)}) · ${a.owner === 'player' ? t(l('seu selo', 'your label')) : a.owner ? s.labels[a.owner]?.name ?? '' : t(l('indep.', 'indie'))} · ${$(actFee(s, a))} · ${pct(inviteChance(s, v, a))}` })), (x) => (pick = x)),
+      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)}) · ${a.owner === 'player' ? t(l('seu selo', 'your label')) : a.owner ? s.labels[a.owner]?.name ?? '' : t(l('indep.', 'indie'))} · ${$(actFee(s, a))} · ${pct(inviteChance(s, v, a))}` })), (x) => (pick = x)),
       btn(l('Convidar', 'Invite'), () => res(inviteAct(s, r, v.id, pick)), 'btn small primary'),
       btn(l('Completar automaticamente', 'Auto-fill'), () => { const n = autoLineup(s, r, v.id); toast(t(l('{n} confirmados.', '{n} confirmed.'), { n }), 'good'); rerender(); })) : null,
     v.editions!.length ? h('table', { class: 'tbl compact' },
@@ -143,7 +144,7 @@ function bookingBody(s: GameState, v: Venture): HTMLElement {
     v.clients!.length ? h('ul', { class: 'small' }, v.clients!.map((c) => h('li', null, actLink(s, c.actId), ` · ${pct(c.rate)} `,
       btn(l('Roteirizar turnê', 'Route a tour'), () => res(routeTour(s, r, v.id, c.actId)), 'btn tiny')))) : null,
     cands.length ? h('div', { class: 'row wrap' },
-      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)})` })), (x) => (pick = x)),
+      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)})` })), (x) => (pick = x)),
       select<number>(rate, [0.08, 0.1, 0.12, 0.15, 0.2].map((x) => ({ value: x, label: pct(x) })), (x) => (rate = x)),
       btn(l('Oferecer agenciamento', 'Offer booking'), () => res(signBooking(s, r, v.id, pick, rate)), 'btn small primary')) : null);
 }
@@ -226,7 +227,7 @@ function rosterTab(s: GameState): HTMLElement {
       let move: CrisisMove = 'pr';
       return h('div', { class: 'card' },
         h('div', { class: 'row between wrap' }, h('h4', null, actLink(s, a.id)), h('span', { class: 'small' }, `${pct(c.rate)} · ${$(Math.round(mgGross(s, a) * c.rate))}/${t(l('mês', 'mo'))}`)),
-        h('div', { class: 'row wrap small' }, t(l('Satisfação', 'Satisfaction')), ' ', bar(c.sat), ` ${Math.round(c.sat)} · ${t(l('Fama', 'Fame'))} ${Math.round(a.fame)} · ${t(l('Momento', 'Momentum'))} ${Math.round(a.momentum)} · `,
+        h('div', { class: 'row wrap small' }, t(l('Satisfação', 'Satisfaction')), ' ', bar(c.sat), ` ${Math.round(c.sat)} · ${t(l('Fama', 'Fame'))} ${fameText(s, a.id)} · ${t(l('Momento', 'Momentum'))} ${Math.round(a.momentum)} · `,
           k ? `${t(l('Contrato', 'Deal'))}: ${k.party === 'player' ? s.config.companyName : s.labels[k.party]?.name ?? '?'} (${pct(k.royalty)})` : t(l('sem gravadora', 'unsigned'))),
         c.crisis ? h('div', { class: 'row wrap' }, pill(t(CRISIS_NAME[c.crisis.k]), 'bad'), ' ',
           select<CrisisMove>(move, (['pr', 'rest', 'lawyer'] as CrisisMove[]).map((m) => ({ value: m, label: `${t({ pr: l('Assessoria de imprensa', 'PR push'), rest: l('Pausa e conversa', 'Break and talk'), lawyer: l('Advogados', 'Lawyers') }[m])} (${$(crisisCost(s, m))})` })), (m) => (move = m)),
@@ -248,7 +249,7 @@ function prospectTab(s: GameState): HTMLElement {
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Selo', 'Label'), l('Fama', 'Fame'), l('Renda est./mês', 'Est. income/mo'), l('Chance (15%)', 'Chance (15%)'), l('', '')].map((x) => h('th', null, t(x))))),
       h('tbody', null, cands.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, a.owner === 'player' ? s.config.companyName : a.owner ? s.labels[a.owner]?.name ?? '—' : t(l('independente', 'independent'))),
-        h('td', null, String(Math.round(a.fame))), h('td', null, $(mgGross(s, a))), h('td', null, pct(mgChance(s, a, 0.15))),
+        h('td', null, String(fameText(s, a.id))), h('td', null, $(mgGross(s, a))), h('td', null, pct(mgChance(s, a, 0.15))),
         h('td', null, btn(l('Propor', 'Pitch'), () => res(pitchClient(s, r, a.id, rate)), 'btn tiny primary')))))));
 }
 

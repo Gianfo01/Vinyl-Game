@@ -12,6 +12,7 @@ import {
 import { mgCandidates, mgGross, ventures, type Client } from '../../sim/sys/ventures9';
 import { $, actLink, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
+import { fameText } from '../../sim/sys/fame15';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -74,7 +75,7 @@ export function poachTab(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' }, t(l('Comissão proposta', 'Proposed commission')), ' ', select<number>(rate, [0.1, 0.12, 0.15, 0.18, 0.2].map((v) => ({ value: v, label: pct(v) })), (v) => (rate = v))),
     cands.length ? h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Fama', 'Fame'), l('Renda est./mês', 'Est. income/mo'), l('Bônus', 'Bonus'), l('Chance (15%)', 'Chance (15%)'), l('', '')].map((y) => h('th', null, t(y))))),
-      h('tbody', null, cands.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, String(Math.round(a.fame))), h('td', null, $(mgGross(s, a))), h('td', null, $(poachBonus(s, a))), h('td', null, pct(poachChance(s, a, 0.15))),
+      h('tbody', null, cands.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, String(fameText(s, a.id))), h('td', null, $(mgGross(s, a))), h('td', null, $(poachBonus(s, a))), h('td', null, pct(poachChance(s, a, 0.15))),
         h('td', null, btn(t(l('Roubar', 'Poach')), () => res(poachClient(s, r, a.id, rate)), 'btn tiny primary')))))) : h('p', { class: 'muted' }, t(l('Ninguém consagrado disponível agora.', 'No established act available now.'))),
     h('p', { class: 'small muted' }, `${t(l('Clientes', 'Clients'))}: ${ventures(s).mg.clients.length}`),
   );

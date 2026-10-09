@@ -28,6 +28,7 @@ import { chips, ic, lineChart, stat } from '../vis';
 import { hypeMeter } from './hype12';
 import { openLabelStory } from './story12';
 import './map13.css';
+import { HINT15, canSee, fameText, knownLevel } from '../../sim/sys/fame15';
 
 const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const why = (x: L) => h('p', { class: 'dos13-why' }, t(x));
@@ -153,7 +154,7 @@ function rosterTab(s: GameState, id: string): HTMLElement {
   return h('div', null,
     roster.length ? h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Gênero', 'Genre'), l('Fama', 'Fame'), l('Hype', 'Hype'), l('Nº 1', 'No. 1'), l('Status', 'Status')].map((x) => h('th', null, t(x))))),
-      h('tbody', null, roster.slice(0, 60).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, genreName(a.genre)), h('td', null, Math.round(a.fame)), h('td', null, Math.round(actHype(s, a.id))), h('td', null, a.number1s), h('td', null, a.status)))))
+      h('tbody', null, roster.slice(0, 60).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, genreName(a.genre)), h('td', null, fameText(s, a.id)), h('td', null, Math.round(actHype(s, a.id))), h('td', null, a.number1s), h('td', null, a.status)))))
       : empty(l('Elenco vazio.', 'Empty roster.')),
     alumni.length ? h('div', null, h('h4', null, t(l('Já passaram por aqui', 'Former acts'))),
       h('div', { class: 'chips' }, alumni.slice(0, 30).map((x) => h('span', null, actLink(s, x.act.id), h('small', { class: 'muted' }, ` (${x.n}, ${t(l('até', 'until'))} ${x.last}) `))))) : null);
@@ -243,7 +244,8 @@ function historyTab(s: GameState, id: string, close: () => void): HTMLElement {
 
 // ================================================================== ficha do artista: abas novas
 
-const know = (s: GameState, a: Act): number => (a.owner === 'player' || a.playerBand ? 5 : s.knowledge[a.id]?.degree ?? 0);
+// rodada 15: grau privado (olheiros/relação) via knownLevel; o público melhora com a fama (canSee)
+const know = (s: GameState, a: Act): number => knownLevel(s, a.id).priv;
 
 ACT_TABS.push((s, a) => ({
   id: 'records13', label: l('Marcos e recordes', 'Milestones and records'), icon: 'trophy',
@@ -265,7 +267,7 @@ ACT_TABS.push((s, a) => ({
   },
 }));
 
-ACT_TABS.push((s, a) => (know(s, a) < 2 && a.fame < 30 ? null : {
+ACT_TABS.push((s, a) => (know(s, a) < 2 && !canSee(s, a.id, 'fans') ? null : {
   id: 'labels13', label: l('Contratos e selos', 'Contracts and labels'), icon: 'contract',
   render: () => {
     const hist = actLabelHistory(s, a);
@@ -308,19 +310,20 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
       ` · ${p.alive ? `${s.year - p.born} ${t(l('anos', 'yrs'))}` : `${t(l('morreu em', 'died'))} ${p.died ?? '?'}`}`),
     h('ul', { class: 'dos13-list small' },
       // relacionamento, ex e filhos ficam no bloco único "Família" (rodada 15)
-      h('li', { class: p.health === 'ok' ? '' : 'bad' }, ic('heart'), ` ${t(l('Saúde', 'Health'))}: ${t(healthName[p.health] ?? l(p.health))}`,
+      !canSee(s, p.id, 'life') ? h('li', { class: 'muted' }, t(HINT15)) : null,
+      !canSee(s, p.id, 'health') ? null : h('li', { class: p.health === 'ok' ? '' : 'bad' }, ic('heart'), ` ${t(l('Saúde', 'Health'))}: ${t(healthName[p.health] ?? l(p.health))}`,
         lf.voice !== undefined ? ` · ${t(l('voz', 'voice'))} ${Math.round(lf.voice)}` : '', lf.hearing !== undefined ? ` · ${t(l('audição', 'hearing'))} ${Math.round(lf.hearing)}` : ''),
-      lf.dependency !== undefined && lf.dependency > 5 ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
+      lf.dependency !== undefined && lf.dependency > 5 && canSee(s, p.id, 'health') ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
     ),
-    ...LIFE_EXTRAS13.map((f) => f(s, p)),
-    ...[...groups].map(([g, xs]) => h('details', null, h('summary', { class: 'small muted' }, `${t(l('Mais dados', 'More data'))} · ${g}`),
+    ...(canSee(s, p.id, 'life') ? LIFE_EXTRAS13.map((f) => f(s, p)) : []),
+    ...[...groups].filter(() => canSee(s, p.id, 'life')).map(([g, xs]) => h('details', null, h('summary', { class: 'small muted' }, `${t(l('Mais dados', 'More data'))} · ${g}`),
       h('ul', { class: 'dos13-list small' }, xs.slice(0, 25).map((f) => h('li', null, h('span', { class: 'muted' }, `${t(f.label)}: `), typeof f.v === 'string' ? f.v : t(f.v)))))));
 }
 
 ACT_TABS.push((s, a) => ({
   id: 'life13', label: l('Vida pessoal', 'Personal life'), icon: 'heart',
   render: () => {
-    const ok = know(s, a) >= 3 || a.fame >= 40;
+    const ok = canSee(s, a.id, 'life');
     const ms = a.members.map((x) => s.persons[x]).filter((p): p is Person => !!p);
     return ok ? h('div', null, why(l('O que se sabe da vida dos integrantes: relacionamentos, filhos, saúde e vícios. Isso pesa no humor, na disponibilidade e em escândalos.', 'What is known about the members\' lives: relationships, children, health and vices. It weighs on mood, availability and scandals.')), ...ms.map((p) => lifeBlock(s, p, true)))
       : empty(l('Pouco se sabe da vida pessoal — aprofunde o conhecimento (olheiros, reuniões) ou espere a fama trazer a imprensa.', 'Little is known about their private life — dig deeper (scouts, meetings) or wait for fame to bring the press.'));

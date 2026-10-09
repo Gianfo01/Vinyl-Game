@@ -22,6 +22,7 @@ import {
 import { SRC_NAME, TIE_NAME, actTies, otherOf, social, tiesOf, type Tie } from '../../sim/sys/social8';
 import { acceptFeatCounter, clearance, dropFeatDeal, fairFeat, featChance, featSongs, featTargets, feats, pressFeat, proposeFeat, type FeatResult } from '../../sim/sys/feats8';
 import { actOfPerson } from '../../sim/sys/social8';
+import { fameText } from '../../sim/sys/fame15';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const band = (p: number) => (p >= 0.6 ? 'likely' : p >= 0.3 ? 'uncertain' : 'unlikely') as 'likely' | 'uncertain' | 'unlikely';
@@ -252,7 +253,7 @@ export function openFeatModal(s: GameState, pre: { host?: string; guest?: string
       h('label', null, t(l('Seu artista', 'Your act')), select(o.host, hosts.map((a) => ({ value: a.id, label: a.name })), (v) => { o.host = v; o.song = ''; resetTerms(); draw(); })),
       songs.length ? h('label', null, t(l('Música', 'Song')), select(o.song, songs.map((x) => ({ value: x.id, label: `${x.title} (Q ${Math.round(x.q)})` })), (v) => { o.song = v; draw(); }))
         : h('p', { class: 'warn small' }, t(l('Este artista não tem música inédita livre. Componha antes.', 'This act has no free unreleased song. Write one first.'))),
-      h('label', null, t(l('Convidado', 'Guest')), select(o.guest, targets.map((a) => ({ value: a.id, label: `${a.name} · ${t(l('fama', 'fame'))} ${Math.round(a.fame)}${a.owner && s.labels[a.owner] ? ` · ${s.labels[a.owner].name}` : ''}` })), (v) => { o.guest = v; resetTerms(); draw(); })),
+      h('label', null, t(l('Convidado', 'Guest')), select(o.guest, targets.map((a) => ({ value: a.id, label: `${a.name} · ${t(l('fama', 'fame'))} ${fameText(s, a.id)}${a.owner && s.labels[a.owner] ? ` · ${s.labels[a.owner].name}` : ''}` })), (v) => { o.guest = v; resetTerms(); draw(); })),
       h('label', null, `${t(l('Cachê', 'Fee'))} ($)`, h('input', { type: 'number', min: 0, step: 100, value: Math.round(o.fee / 100), onchange: (e: Event) => { o.fee = Math.max(0, Math.round(Number((e.target as HTMLInputElement).value) * 100)); draw(); } })),
       h('label', null, `${t(l('Royalties da faixa para o convidado', 'Track royalties to the guest'))} (%)`, h('input', { type: 'number', min: 0, max: 50, step: 1, value: Math.round(o.split * 100), onchange: (e: Event) => { o.split = Math.max(0, Math.min(0.5, Number((e.target as HTMLInputElement).value) / 100)); draw(); } })),
       h('div', { class: 'eval' },

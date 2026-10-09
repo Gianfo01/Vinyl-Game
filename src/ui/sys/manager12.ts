@@ -14,6 +14,7 @@ import { SVC, askChance, isForeign, providers, quote, remaining, services, type 
 import { ventures, type Client } from '../../sim/sys/ventures9';
 import { $, actLink, cityName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
+import { fameText } from '../../sim/sys/fame15';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -140,7 +141,7 @@ function agencyTab(s: GameState): HTMLElement {
     st.alumni.length ? section(t(l('Ex-funcionários', 'Former staff')), h('ul', { class: 'small' }, st.alumni.slice().reverse().map((x) => h('li', null, `${x.y}: ${x.name}${x.took.length ? ` → ${x.took.map((id) => s.acts[id]?.name ?? '?').join(', ')}` : ''}`)))) : null,
     section(t(l('Desenvolver talentos', 'Develop new talent')),
       h('p', { class: 'small muted' }, t(l('Desconhecidos (fama < 8): pouco dinheiro agora, muita confiança. Se um chegar a fama 30, a descoberta é sua (+prestígio).', 'Unknowns (fame < 8): little money now, lots of trust. If one reaches fame 30, the discovery is yours (+prestige).'))),
-      h('table', { class: 'tbl compact' }, h('tbody', null, devCandidates(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, `${t(l('fama', 'fame'))} ${Math.round(a.fame)} · ${t(l('momento', 'momentum'))} ${Math.round(a.momentum)}`),
+      h('table', { class: 'tbl compact' }, h('tbody', null, devCandidates(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, `${t(l('fama', 'fame'))} ${fameText(s, a.id)} · ${t(l('momento', 'momentum'))} ${Math.round(a.momentum)}`),
         h('td', null, btn(l('Apostar', 'Bet on them'), () => res(signDev(s, r, a.id)), 'btn tiny primary'))))))),
     mg.clients.length ? null : h('p', { class: 'muted' }, t(l('Sem clientes ainda.', 'No clients yet.'))),
   );

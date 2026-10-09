@@ -18,6 +18,7 @@ import {
 } from '../../sim/sys/movements9';
 import { actTies, actOfPerson, social } from '../../sim/sys/social8';
 import { visibleAct } from '../../sim/future';
+import { fameText } from '../../sim/sys/fame15';
 
 const mine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
 const myActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.members.length > 0 && a.status !== 'split' && a.status !== 'retired');
@@ -55,7 +56,7 @@ export function openBondModal(s: GameState, pre: { mine?: string; other?: string
     const n = o.k === 'super' ? 3 : 1;
     const ids = o.others.slice(0, n).filter(Boolean);
     const cost = ids.reduce((x, id) => x + bondCost(s, o.k, id).cost, 0);
-    const opt = targets.map((a) => ({ value: a.id, label: `${a.name} · ${t(l('fama', 'fame'))} ${Math.round(a.fame)} · ${t(l('admira você', 'admires you'))} ${admiration(s, a.leaderId ?? a.members[0], M.id)}` }));
+    const opt = targets.map((a) => ({ value: a.id, label: `${a.name} · ${t(l('fama', 'fame'))} ${fameText(s, a.id)} · ${t(l('admira você', 'admires you'))} ${admiration(s, a.leaderId ?? a.members[0], M.id)}` }));
     box.replaceChildren(h('div', { class: 'form' },
       h('label', null, t(l('Seu artista', 'Your act')), select(o.mine, hosts.map((a) => ({ value: a.id, label: a.name })), (v) => { o.mine = v; draw(); })),
       h('label', null, t(l('Tipo de laço', 'Bond type')), select(o.k, PLAYER_KINDS.map((k) => ({ value: k, label: t(BOND_NAME[k]) })), (v) => { o.k = v; draw(); })),

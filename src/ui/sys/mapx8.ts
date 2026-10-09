@@ -6,6 +6,7 @@
 import { MARKETS, cityById, l, type L, type MarketId } from '../../data/world';
 import { countryOfCity, marketOfCountry } from '../../data/geo';
 import { t } from '../../i18n/strings';
+import { fameText } from '../../sim/sys/fame15';
 import { openTerritory, territoryCost } from '../../sim/economy';
 import { board, countryLeader } from '../../sim/sys/charts7';
 import { GOODS, buyGood, canReachCity, goodAvailable, goodPrice, residences, venueNight } from '../../sim/sys/goods8';
@@ -52,7 +53,7 @@ export function cityScene(s: GameState, cityId: string): HTMLElement {
       h('table', { class: 'tbl compact' }, h('tbody', null, acts.map((a) => h('tr', null,
         h('td', null, actLink(s, a.id)),
         h('td', { class: 'small muted' }, genreName(a.genre)),
-        h('td', { class: 'small' }, `${t(l('fama', 'fame'))} ${Math.round(a.fame)}`),
+        h('td', { class: 'small' }, `${t(l('fama', 'fame'))} ${fameText(s, a.id)}`),
         h('td', { class: 'small' }, a.owner ? ownerName(s, a.owner) : s.knowledge[a.id] ? pill(t(l('no radar', 'on radar')), 'good') : pill(t(l('livre', 'unsigned')), 'warn'))))))) : h('p', { class: 'muted small' }, t(l('Nenhum artista ativo baseado aqui.', 'No active acts based here.'))),
   );
 }

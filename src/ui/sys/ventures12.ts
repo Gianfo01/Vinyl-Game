@@ -20,6 +20,7 @@ import {
 } from '../../sim/sys/ventures12';
 import { $, actLink, genreName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
+import { fameText } from '../../sim/sys/fame15';
 
 const say = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const btn = (label: L, fn: () => void, cls = 'btn small') => h('button', { class: cls, onclick: fn }, t(label));
@@ -109,7 +110,7 @@ function media(s: GameState, v: Venture): HTMLElement {
     h('div', null, Array.from({ length: cap }, (_, i) => {
       const sl = x.prog[i];
       return h('div', { class: 'row wrap small' }, `${i + 1}. `, select<string>(sl?.kind ?? '', [{ value: '', label: '—' }, ...slotKinds(s).map((k) => ({ value: k, label: t(SLOT_NAME[k]) }))], (k) => { setSlot(s, v.id, i, k as SlotKind | '', sl?.actId ?? ''); rerender(); }),
-        sl ? select<string>(sl.actId ?? '', [{ value: '', label: '—' }, ...acts.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)})` }))], (k) => { setSlot(s, v.id, i, sl.kind, k); rerender(); }) : null,
+        sl ? select<string>(sl.actId ?? '', [{ value: '', label: '—' }, ...acts.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)})` }))], (k) => { setSlot(s, v.id, i, sl.kind, k); rerender(); }) : null,
         sl?.actId && s.acts[sl.actId] ? h('span', { class: 'muted' }, ` ${LINES[x.line].fit(s.acts[sl.actId]) > 0.3 ? t(l('combina com a linha', 'fits the line')) : LINES[x.line].fit(s.acts[sl.actId]) < -0.3 ? t(l('destoa da linha', 'clashes with the line')) : ''}`) : null);
     })),
     note(l('Cada vaga dá momento ao artista. Artistas pequenos formam audiência nova; os que combinam com a linha elevam a credibilidade.', 'Each slot gives the act momentum. Small acts build a new audience; those that fit the line raise credibility.')),

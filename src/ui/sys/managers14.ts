@@ -6,6 +6,7 @@
 import { MGR_STYLE, REAL_MGRS, mgrById, type RealMgr } from '../../data/managers14';
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
+import { fameText } from '../../sim/sys/fame15';
 import { isActive } from '../../sim/sys/careers12';
 import {
   LUNCH_COST, askReferral, inFeud, knownMgr, lunch, lunchBlock, m14, makePeace, mgrActive, mgrCap, mgrKey, mgrLog, mgrName, mgrRanking, pastClients,
@@ -61,7 +62,7 @@ function profile(s: GameState, id: string, redraw: () => void): HTMLElement {
     h('p', { class: 'small' }, h('b', null, t(l('Nas suas propostas: ', 'In your offers: '))), t(MGR_STYLE[m.style][1]), ' ',
       t(l('Também pesa a negociação dele ({n}) contra a do seu selo, a opinião que tem de você e qualquer rixa.', 'Their negotiation ({n}) against your label\'s, their opinion of you and any feud also count.'), { n: m.a[1] })),
     section(t(l('Carteira atual', 'Current roster')),
-      ro.length ? h('ul', null, ro.map((a) => h('li', null, actLink(s, a.id), ` · ${t(l('fama', 'fame'))} ${Math.round(a.fame)}`, a.owner === 'player' ? h('span', null, ' ', pill(t(l('no seu selo', 'on your label')), 'trait')) : null, ' ', contestBtn(s, a.id, redraw))))
+      ro.length ? h('ul', null, ro.map((a) => h('li', null, actLink(s, a.id), ` · ${t(l('fama', 'fame'))} ${fameText(s, a.id)}`, a.owner === 'player' ? h('span', null, ' ', pill(t(l('no seu selo', 'on your label')), 'trait')) : null, ' ', contestBtn(s, a.id, redraw))))
         : h('p', { class: 'muted small' }, live ? t(l('Sem clientes no momento.', 'No clients right now.')) : t(l('Fora do ramo.', 'Out of the business.'))),
       live ? h('p', { class: 'small muted' }, t(l('Capacidade: {c} clientes (gestão {g}).', 'Capacity: {c} clients (management {g}).'), { c: mgrCap(m), g: m.a[3] })) : null),
     s.config.realNames && past.length ? section(t(l('Clientes na história real', 'Clients in real history')), h('ul', { class: 'small' }, past.map(([n, a, b]) => h('li', null, `${n} (${a}–${b})`)))) : null,
