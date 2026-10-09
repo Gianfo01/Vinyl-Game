@@ -14,6 +14,12 @@ import { personalAdvance } from './life';
 import { leakSecret } from './secrets';
 import { talk } from './talks';
 
+/**
+ * Rodada 8: respostas de mensagens de outros sistemas (convites de feat, propostas). A mensagem leva
+ * `kind: 'deal'` e `ref.sys` com a chave do tratador; o tratador devolve o texto do resultado.
+ */
+export const MSG_HANDLERS: Record<string, (s: GameState, m: InboxMsg, action: string, r: Rng) => L> = {};
+
 export function msgMedium(m: { year: number; tone?: string; kind?: string }): Medium {
   return mediumFor(m.year, m.tone === 'bad' || m.kind === 'health' || m.kind === 'secret');
 }
@@ -86,6 +92,11 @@ export function answerMsg(s: GameState, msgId: string, action: string, r: Rng = 
         if (!res.ok) return res.text;
         out = res.text;
       }
+      break;
+    }
+    case 'deal': {
+      const fn = MSG_HANDLERS[String(ref.sys ?? '')];
+      if (fn) out = fn(s, m, action, r);
       break;
     }
     default:

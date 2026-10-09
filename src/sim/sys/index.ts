@@ -24,3 +24,8 @@ import './vices';
 import './songsale';
 import './agenda7';
 import './warmup8';
+// Rodada 8: relações entre artistas, feats negociados, participações em selos e herdeiros.
+import './social8';
+import './stakes8';
+import './feats8';
+import './heirs8';

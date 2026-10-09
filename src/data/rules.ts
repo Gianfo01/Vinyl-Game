@@ -356,6 +356,9 @@ export const ENDINGS: { id: string; name: L; text: L }[] = [
   { id: 'creative_singularity', name: l('Singularidade Criativa', 'Creative Singularity'), text: l('Um ato sintético seu chegou ao topo e mudou o que chamamos de criar.', 'One of your synthetic acts hit the top and changed what we call creating.') },
   { id: 'eternal_archivist', name: l('O Arquivista Eterno', 'The Eternal Archivist'), text: l('Você guardou tudo. Em 2040, a história da música passa pelo seu arquivo.', 'You kept everything. In 2040, music history runs through your archive.') },
   { id: 'the_silence', name: l('O Silêncio', 'The Silence'), text: l('O selo fechou as portas na era neural. Fica o silêncio entre duas faixas.', 'The label closed its doors in the neural era. What remains is the silence between two tracks.') },
+  // rodada 8: fim da linhagem (sem herdeiros)
+  { id: 'end_of_line', name: l('Fim da Linhagem', 'End of the Line'), text: l('Não sobrou ninguém da família para abrir a porta de manhã. Os discos continuam tocando; o nome na fachada, não.', 'No one in the family was left to open the door in the morning. The records keep playing; the name on the front does not.') },
+  { id: 'quiet_retirement', name: l('Aposentadoria Tranquila', 'Quiet Retirement'), text: l('Você pendurou os fones sem herdeiros e vendeu as chaves. Uma varanda, uma vitrola e histórias demais para contar.', 'You hung up the headphones without heirs and sold the keys. A porch, a turntable and too many stories to tell.') },
 ];
 
 export const endingById = Object.fromEntries(ENDINGS.map((x) => [x.id, x])) as Record<string, (typeof ENDINGS)[number]>;

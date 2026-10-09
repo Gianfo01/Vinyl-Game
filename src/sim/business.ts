@@ -35,6 +35,12 @@ export function acquireLabel(s: GameState, labelId: string): L | null {
   const price = Math.round(v.value * 0.9);
   if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `acq:${lb.id}`, -price, 'acquisitions', `Aquisição de ${lb.name}`);
+  transferLabel(s, lb, v, price);
+  return null;
+}
+
+/** Transfere elenco, contratos, catálogo e passivos de um selo para o jogador (compra ou controle). */
+export function transferLabel(s: GameState, lb: Label, v: { value: number; liabilities: number; catalog: number }, price: number): void {
   // passivos: viram credor
   if (v.liabilities > 0) {
     s.creditors.push({ id: nextId(s, 'cr'), name: fmtL(l('Credores de {n}', '{n} creditors'), { n: lb.name }).pt, kind: 'supplier', patience: 70, owed: v.liabilities });
@@ -59,7 +65,6 @@ export function acquireLabel(s: GameState, labelId: string): L | null {
   addAsset(s, { kind: 'catalog', name: fmtL(l('Catálogo {n}', '{n} catalog'), { n: lb.name }), cost: v.catalog, lifeMonths: 120, refId: co.id });
   s.player.legacy.industry = (s.player.legacy.industry ?? 0) + 5;
   remember(s, 'acquisition', fmtL(l('{c} compra {n} — com elenco, catálogo e dívidas.', '{c} buys {n} — roster, catalog and debts included.'), { c: s.config.companyName, n: lb.name }), { important: true });
-  return null;
 }
 
 // ---------- Joint venture ----------

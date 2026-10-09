@@ -111,7 +111,7 @@ export interface InboxMsg {
   from: string;
   subject: L;
   body: L;
-  kind: 'request' | 'complaint' | 'promise' | 'health' | 'staff' | 'owner' | 'secret' | 'info' | 'fan';
+  kind: 'request' | 'complaint' | 'promise' | 'health' | 'staff' | 'owner' | 'secret' | 'info' | 'fan' | 'deal';
   actions?: { id: string; label: L }[];
   /** dados para a resposta */
   ref?: Record<string, string | number>;

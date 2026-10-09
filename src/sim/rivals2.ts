@@ -109,7 +109,9 @@ export function rivals2Month(s: GameState, r: Rng): void {
     // aliciamento: artista do jogador nos últimos meses de contrato ou com confiança baixa
     const rivalry = s.rivalries[lb.id] ?? 0;
     const aggr = lb.aggression + rivalry / 200 + (archetypeOf(lb) === 'empire' ? 0.15 : 0);
-    if (mine.length && lb.cash > money(s, 200000) && r.chance(0.01 + aggr * 0.02)) {
+    // rodada 8: com assento no conselho (25%+), o selo não alicia o seu elenco
+    const seat = ((s.x4 as unknown as { stakes8?: { recs: Record<string, { holder: string; share: number }[]> } }).stakes8?.recs[lb.id] ?? []).some((h) => h.holder === 'player' && h.share >= 0.25);
+    if (mine.length && !seat && lb.cash > money(s, 200000) && r.chance(0.01 + aggr * 0.02)) {
       const target = mine.filter((a) => !a.playerBand && a.fame > 20 && (a.trust < 45 || (a.contractId && s.contracts[a.contractId].endWeek - s.week < 26))).sort((a, b) => b.fame - a.fame)[0];
       if (target && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
         emitEvent(s, r, 'poach_attempt', { act: target.id, label: lb.id });

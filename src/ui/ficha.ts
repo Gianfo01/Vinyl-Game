@@ -103,6 +103,9 @@ export function openRelease(id: string): void {
   modal(r.title, body, { wide: true });
 }
 
+/** Extras na ficha do selo (rodada 8: participação acionária e negociação). */
+export const LABEL_EXTRAS: ((s: GameState, labelId: string, close: () => void) => HTMLElement | null)[] = [];
+
 export function openLabel(id: string): void {
   const s = g();
   const lb = s.labels[id];
@@ -118,7 +121,9 @@ export function openLabel(id: string): void {
     h('h4', null, `${t(S.roster)} (${roster.length})`),
     h('div', { class: 'chips' }, roster.slice(0, 40).map((a) => actLink(s, a.id))),
   );
-  modal(lb.name, body);
+  let close = () => {};
+  for (const f of LABEL_EXTRAS) { const el = f(s, id, () => close()); if (el) body.appendChild(el); }
+  close = modal(lb.name, body, { wide: LABEL_EXTRAS.length > 0 });
 }
 
 export function registerInspect(): void {

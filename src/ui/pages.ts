@@ -38,6 +38,11 @@ function g(): GameState {
 }
 
 const GROUPS: AttrGroup[] = ['tech', 'create', 'stage', 'mind', 'body'];
+
+/** Abas extras das páginas (rodada 8: relações entre artistas, feats). */
+export interface PageTab { id: string; label: L; icon?: string; render: () => HTMLElement | null }
+export const PERSON_TABS: ((s: GameState, p: Person, closeAll: () => void) => PageTab | null)[] = [];
+export const ACT_TABS: ((s: GameState, a: Act, close: () => void) => PageTab | null)[] = [];
 const GROUP_ICON: Record<AttrGroup, string> = { tech: 'guitar', create: 'pen', stage: 'mic', mind: 'bulb', body: 'heart' };
 
 /** Abas locais de uma página (redesenham só o corpo da página). */
@@ -154,6 +159,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
     vis.private || mine ? { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p) } : null,
     { id: 'career', label: l('Carreira', 'Career'), icon: 'trophy', render: () => careerTab(s, p) },
     mine && !p.isPlayer ? { id: 'train', label: l('Treino', 'Training'), icon: 'sparkle', render: () => trainTab(s, p, redraw) } : null,
+    ...PERSON_TABS.map((f) => f(s, p, closeAll)),
   ].filter((x): x is NonNullable<typeof x> => !!x)));
 }
 
@@ -314,6 +320,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
     vis.private || mine ? { id: 'songs', label: l('Músicas', 'Songs'), icon: 'note', render: () => songsTab(s, a, mine) } : null,
     { id: 'history', label: l('Carreira', 'Career'), icon: 'trophy', render: () => historyTab(s, a) },
     a.contractId && (mine || deg >= 3) ? { id: 'contract', label: S.contract, icon: 'contract', render: () => contractTab(s, a) } : null,
+    ...ACT_TABS.map((f) => f(s, a, close)),
   ].filter((x): x is NonNullable<typeof x> => !!x), tab));
 }
 

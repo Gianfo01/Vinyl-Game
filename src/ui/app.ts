@@ -358,6 +358,9 @@ function palette(): void {
   input.focus();
 }
 
+// rodada 8: aposentadoria sem herdeiros encerra a run fora do avanço do tempo
+if (typeof window !== 'undefined') window.addEventListener('vtn-ended', () => { if (store.game?.ended && !store.game.flags.sandbox) { render(); endScreen(); } });
+
 function endScreen(): void {
   const g = store.game!;
   const end = g.ended!;

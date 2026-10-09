@@ -13,3 +13,5 @@ import './hq6';
 import './intrigue';
 import './charts7';
 import './furnish';
+// Rodada 8: herdeiros, participações em selos, relações entre artistas e feats negociados.
+import './round8';
