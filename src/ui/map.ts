@@ -29,7 +29,7 @@ export interface MapCity {
   locked?: boolean;
 }
 
-export type OverlayIcon = 'hq' | 'branch' | 'rival' | 'festival' | 'movement' | 'tour' | 'club' | 'warn';
+export type OverlayIcon = 'hq' | 'branch' | 'rival' | 'festival' | 'movement' | 'tour' | 'club' | 'warn' | 'home' | 'you' | 'promo' | 'scout';
 export type MapOverlay =
   /** círculo proporcional (0..1) — mapa de calor de fãs, tamanho de cena etc. */
   | { kind: 'bubble'; city: string; value: number; color: string }
@@ -113,6 +113,10 @@ const GLYPHS: Record<TransportMode | ClimateIcon | OverlayIcon | 'visa' | 'visa_
   movement: G(['...y...', '...y...', 'yyyyyyy', '.yyyyy.', '..yyy..', '.yy.yy.', 'y.....y'], { y: '#f0b429' }),
   tour: G(['kkkkkkk.', 'kwwwwwkk', 'kwwwwwkk', 'kkkkkkkk', '.o....o.'], { k: '#5a4fcf', w: '#c9c4ff', o: INK }),
   club: G(['.kkkkk.', 'kpppppk', 'kpwpwpk', 'kpppppk', 'kpkkkpk', 'kkkkkkk'], { k: INK, p: '#a35bd8', w: '#f6d33c' }),
+  home: G(['...k...', '..kgk..', '.kgggk.', 'kgggggk', '.kwkwk.', '.kwkkk.', '.kkkkk.'], { k: INK, g: '#3fa860', w: '#f4ead8' }),
+  you: G(['..kkk..', '.kyyyk.', '.kyyyk.', '..kkk..', '.kbbbk.', 'kbbbbbk', 'kkkkkkk'], { k: INK, y: '#f0c08a', b: '#c8641e' }),
+  promo: G(['.....k.', '...kkk.', 'kkkyyyk', 'kyyyyyk', 'kkkyyyk', '..k.kk.', '..k..k.'], { k: INK, y: '#d8473a' }),
+  scout: G(['.kkk...', 'kwwwk..', 'kwbwk..', 'kwwwk..', '.kkkk..', '....kk.', '.....kk'], { k: INK, w: '#f4ead8', b: '#7fb6e6' }),
   warn: G(['...k...', '..kyk..', '..kyk..', '.kykyk.', '.kyyyk.', 'kyykyyk', 'kkkkkkk'], { k: INK, y: '#f6d33c' }),
   visa: G(['kkkkkkk', 'kyyyyyk', 'kykkkyk', 'kyyyyyk', 'kykkkyk', 'kyyyyyk', 'kkkkkkk'], { k: INK, y: '#f0b429' }),
   visa_bad: G(['kkkkkkk', 'krrrrrk', 'krwrwrk', 'krrwrrk', 'krwrwrk', 'krrrrrk', 'kkkkkkk'], { k: INK, r: '#d8473a', w: '#fff' }),

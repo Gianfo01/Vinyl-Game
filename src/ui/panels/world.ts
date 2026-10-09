@@ -18,12 +18,16 @@ import { h } from '../dom';
 import { WorldMap, glyphCanvas, type MapCity, type MapOverlay } from '../map';
 import { store } from '../store';
 import { ic, stat, chips, tabs, tile } from '../vis';
+import { select } from '../dom';
+import { board } from '../../sim/sys/charts7';
+import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
+import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
 
 let worldMap: WorldMap | null = null;
 let focusCity: string | null = null;
 let focusCountry: string | null = null;
 
-type Layer = 'fans' | 'scenes' | 'festivals' | 'rivals' | 'hq' | 'tours' | 'movements' | 'clubs' | 'geo';
+type Layer = 'fans' | 'scenes' | 'festivals' | 'rivals' | 'hq' | 'tours' | 'movements' | 'clubs' | 'geo' | 'countryfans' | 'genre' | 'rivalpower' | 'charts' | 'you';
 const LAYERS: { id: Layer; icon: string; name: L }[] = [
   { id: 'fans', icon: 'fans', name: l('Seus fãs', 'Your fans') },
   { id: 'scenes', icon: 'fire', name: l('Cenas', 'Scenes') },
@@ -34,8 +38,14 @@ const LAYERS: { id: Layer; icon: string; name: L }[] = [
   { id: 'movements', icon: 'fire', name: l('Movimentos', 'Movements') },
   { id: 'clubs', icon: 'house', name: l('Clubes', 'Clubs') },
   { id: 'geo', icon: 'globe', name: l('Crises e censura', 'Crises and censorship') },
+  { id: 'countryfans', icon: 'fans', name: l('Fãs por país', 'Fans by country') },
+  { id: 'genre', icon: 'note', name: l('Calor de um gênero', 'Genre heat') },
+  { id: 'rivalpower', icon: 'flag', name: l('Força dos rivais', 'Rival strength') },
+  { id: 'charts', icon: 'chart-up', name: l('Suas paradas', 'Your charts') },
+  { id: 'you', icon: 'star', name: l('Você (casas, viagem, divulgação)', 'You (homes, travel, promo)') },
 ];
-const layers = new Set<Layer>(['fans', 'hq', 'tours']);
+const layers = new Set<Layer>(['fans', 'hq', 'tours', 'you']);
+let genreFam = 'rock';
 
 function sceneOf(s: GameState, cityId: string): number {
   let v = 0;
@@ -65,6 +75,26 @@ function marketShade(s: GameState): Map<string, { color: string; hatch?: boolean
   for (const g of activeGeo(s)) for (const id of g.markets) if (g.liveBlocked) m.set(id, { color: 'var(--bad)', hatch: true });
   for (const c of activeCensorship(s)) if (c.level >= 0.25) for (const id of c.markets) if (!m.has(id)) m.set(id, { color: 'var(--bad)' });
   for (const g of activeGeo(s)) for (const id of g.markets) if (!m.has(id) && g.demand < 0.9) m.set(id, { color: 'var(--warn, #e0a030)' });
+  return m;
+}
+
+/** Sombreamento por país das camadas novas: paradas (ouro) e fãs por país (laranja, mais forte = mais fãs). */
+function countryLayerShade(s: GameState): Map<string, { color: string }> {
+  const m = new Map<string, { color: string }>();
+  if (layers.has('countryfans')) {
+    const f = fansByCountry(s);
+    const max = Math.max(1, ...f.values());
+    for (const [a3, v] of f) if (v / max > 0.03) m.set(a3, { color: `rgba(200,100,30,${(0.35 + 0.65 * Math.sqrt(v / max)).toFixed(2)})` });
+  }
+  if (layers.has('charts')) {
+    const keys = new Set<string>();
+    for (const c of CITIES) { const a3 = countryOfCity(c.id); if (a3) keys.add(a3); }
+    for (const a3 of keys) {
+      const rows = board(s, a3, 'songs');
+      const best = rows.find((row) => s.releases[row.relId]?.owner === 'player');
+      if (best) m.set(a3, { color: best.pos === 1 ? 'rgba(184,144,28,1)' : best.pos <= 10 ? 'rgba(184,144,28,0.6)' : 'rgba(184,144,28,0.3)' });
+    }
+  }
   return m;
 }
 
@@ -104,6 +134,17 @@ function overlays(s: GameState): MapOverlay[] {
       if (cur) icon(cur.cityId, 'tour');
     }
   }
+  if (layers.has('genre')) {
+    const heat = genreHeat(s, genreFam);
+    const max = Math.max(1, ...heat.values());
+    for (const [c, v] of heat) if (v / max > 0.08) o.push({ kind: 'bubble', city: c, value: v / max, color: '#a35bd8' });
+  }
+  if (layers.has('rivalpower')) {
+    const pw = rivalPower(s);
+    const max = Math.max(1, ...pw.values());
+    for (const [c, v] of pw) o.push({ kind: 'bubble', city: c, value: v / max, color: 'var(--bad)' });
+  }
+  if (layers.has('you')) personalOverlays(s, (c, g) => icon(c, g), (x) => o.push(x));
   return o;
 }
 
@@ -158,7 +199,8 @@ function layerBar(): HTMLElement {
     LAYERS.map((ly) => h('button', {
       type: 'button', class: `chip-btn ${layers.has(ly.id) ? 'on' : ''}`, 'aria-pressed': layers.has(ly.id) ? 'true' : 'false',
       onclick: () => { if (layers.has(ly.id)) layers.delete(ly.id); else layers.add(ly.id); rerender(); },
-    }, ic(ly.icon), ' ', t(ly.name))));
+    }, ic(ly.icon), ' ', t(ly.name))),
+    layers.has('genre') ? select(genreFam, FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })), (v) => { genreFam = v; rerender(); }, { 'aria-label': t(l('Gênero da camada', 'Layer genre')) }) : null);
 }
 
 function cityCard(s: GameState, cityId: string): HTMLElement {
@@ -188,6 +230,8 @@ function cityCard(s: GameState, cityId: string): HTMLElement {
       br ? pill(`${t(l('filial', 'branch'))}: ${t(BRANCH_LEVELS[br.level].name)}`, 'good') : null,
     ),
     fans.length ? h('div', { class: 'bars' }, fans.map(([a, v]) => h('div', { class: 'bar-row' }, actLink(s, a.id), h('div', { class: 'bar' }, h('i', { style: `width:${Math.round((v / fans[0][1]) * 100)}%` })), h('small', null, N(v))))) : null,
+    cityActions(s, cityId),
+    cityScene(s, cityId),
     scenes.length ? h('div', null, h('small', { class: 'muted' }, t(l('Cenas', 'Scenes'))), chips(...scenes.map(([k, v]) => stat('fire', v.toFixed(1), genreName(k.split(':')[1]))), ...scenes.slice(0, 4).map(([k]) => pill(genreName(k.split(':')[1]))))) : null,
     fest.length ? h('div', null, h('small', { class: 'muted' }, t(l('Festivais', 'Festivals'))), h('ul', { class: 'small' }, fest.map((f) => h('li', null, ic('star'), ` ${f.name}${f.realRef ? ` (≈ ${f.realRef})` : ''} · ${t(l('prestígio', 'prestige'))} ${f.prestige}`)))) : null,
     rivals.length ? h('div', null, h('small', { class: 'muted' }, t(l('Selos rivais com sede aqui', 'Rival labels based here'))), h('ul', { class: 'small' }, rivals.map((r) => h('li', null, ic('flag'), ` ${r.name} · ${r.roster.length} ${t(l('artistas', 'acts'))}`)))) : null,
@@ -224,6 +268,7 @@ function countryCard(s: GameState, a3: string): HTMLElement {
       h('button', { class: 'btn small ghost', 'aria-label': t(l('Fechar', 'Close')), onclick: () => { focusCountry = null; rerender(); } }, '×')),
     h('div', { class: 'muted small' }, [t(countryName(a3)), unit.bloc ? t(blocName[unit.bloc]) : '', t(mkt.name)].filter(Boolean).join(' · ')),
     chips(s.player.territories.includes(m) ? pill(t(l('mercado aberto', 'market open')), 'good') : pill(t(l('sem distribuição', 'no distribution')), 'warn')),
+    countryExtra(s, a3),
     geo.length || cens.length ? h('ul', { class: 'small' },
       geo.map((g) => h('li', null, ic(g.liveBlocked ? 'lock' : 'globe'), ' ', h('b', null, t(g.name)), ` (${t(l('desde', 'since'))} ${g.from}) — ${geoLine(s, g)}`)),
       cens.map((c) => h('li', null, ic('newspaper'), ' ', h('b', null, t(c.name)), ` (${t(l('desde', 'since'))} ${c.from}) — ${t(l('visados', 'targeted'))}: ${c.banned.join(', ')}`))) : h('p', { class: 'muted small' }, t(l('Sem crises ou censura ativas.', 'No active crises or censorship.'))),
@@ -233,6 +278,7 @@ function countryCard(s: GameState, a3: string): HTMLElement {
 
 function mapSection(s: GameState): HTMLElement {
   const shade = marketShade(s);
+  const cshade = countryLayerShade(s);
   const opts = {
     getYear: () => store.game?.year ?? s.year,
     getMonth: () => store.game?.month ?? s.month,
@@ -242,7 +288,7 @@ function mapSection(s: GameState): HTMLElement {
     onCityClick: (id: string) => { focusCity = id; focusCountry = null; rerender(); },
     onCountryClick: (a3: string) => { focusCountry = a3; focusCity = null; rerender(); },
     overlays: () => overlays(s),
-    countryShade: (a3: string) => shade.get(marketOfCountry(a3)),
+    countryShade: (a3: string) => shade.get(marketOfCountry(a3)) ?? cshade.get(a3),
     cityTipExtra: (id: string) => cityTipExtra(s, id),
     countryTipExtra: (a3: string) => countryTipExtra(s, a3),
     legendExtra: () => [
@@ -250,7 +296,11 @@ function mapSection(s: GameState): HTMLElement {
       layers.has('geo') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw hatch', style: 'background-color:var(--bad)' }), t(l('Shows suspensos', 'Shows suspended'))) : null,
       layers.has('geo') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:var(--bad);opacity:.5' }), t(l('Censura forte', 'Heavy censorship'))) : null,
       layers.has('geo') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:var(--warn, #e0a030);opacity:.5' }), t(l('Crise econômica', 'Economic crisis'))) : null,
-      ...(['hq', 'branch', 'rival', 'festival', 'tour', 'movement'] as const).map((g) => h('span', { class: 'wmap-key' }, glyphCanvas(g, 1), t(GLYPH_NAMES[g]))),
+      layers.has('countryfans') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgb(200,100,30);opacity:.5' }), t(l('País: seus fãs', 'Country: your fans'))) : null,
+      layers.has('charts') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgb(184,144,28);opacity:.5' }), t(l('País: você nas paradas', 'Country: you on the charts'))) : null,
+      layers.has('genre') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:#a35bd8' }), t(l('Bolha: calor do gênero', 'Bubble: genre heat'))) : null,
+      layers.has('rivalpower') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--bad)' }), t(l('Bolha: força dos rivais', 'Bubble: rival strength'))) : null,
+      ...(['hq', 'branch', 'rival', 'festival', 'tour', 'movement', 'home', 'you', 'promo', 'scout'] as const).map((g) => h('span', { class: 'wmap-key' }, glyphCanvas(g, 1), t(GLYPH_NAMES[g]))),
     ].filter(Boolean) as HTMLElement[],
   };
   if (!worldMap) worldMap = new WorldMap(opts);
@@ -260,7 +310,8 @@ function mapSection(s: GameState): HTMLElement {
   );
 }
 
-const GLYPH_NAMES: Record<'hq' | 'branch' | 'rival' | 'festival' | 'tour' | 'movement', L> = {
+const GLYPH_NAMES: Record<'hq' | 'branch' | 'rival' | 'festival' | 'tour' | 'movement' | 'home' | 'you' | 'promo' | 'scout', L> = {
+  home: l('Sua casa', 'Your home'), you: l('Você está aqui', 'You are here'), promo: l('Divulgação', 'Promo'), scout: l('Olheiro avulso', 'Freelance scout'),
   hq: l('Matriz', 'Main HQ'), branch: l('Filial', 'Branch'), rival: l('Selo rival', 'Rival label'), festival: l('Festival', 'Festival'), tour: l('Turnê', 'Tour'), movement: l('Movimento', 'Movement'),
 };
 
