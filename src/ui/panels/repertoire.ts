@@ -119,12 +119,12 @@ function actions(s: GameState, so: Song, st: SongStatus): HTMLElement {
   const list: (HTMLElement | null)[] = [];
   if (st === 'written') {
     for (const f of Object.keys(REVISE_FOCUS) as ReviseFocus[]) list.push(btn('pen', REVISE_FOCUS[f].name, () => say(reviseSong(s, r, so.id, f), l('Música revisada.', 'Song revised.')), { title: `${t(REVISE_FOCUS[f].desc)} ${$(reviseCost(s, so))}`, disabled: (so.revisions ?? 0) >= 4 }));
-    list.push(btn('mic', l('Gravar no estúdio', 'Record in the studio'), () => { preselectSession([so.id]); setTab('creation', 'session'); }));
+    list.push(btn('mic', l('Gravar no estúdio', 'Record in the studio'), () => { preselectSession([so.id]); setTab('creation-studio', 'session'); store.area = 'studio'; rerender(); }));
     list.push(btn('cassette', l('Lançar como demo', 'Release as a demo'), () => say(releaseDemo(s, r, so.id), l('Demo programada.', 'Demo scheduled.'))));
   }
   if (st === 'recorded') {
     list.push(btn('disc', l('Lançar como single', 'Release as a single'), () => say(releaseSingle(s, r, so.id), l('Single programado.', 'Single scheduled.'))));
-    list.push(btn('cd', l('Montar disco com ela', 'Build a record with it'), () => setTab('creation', 'launch')));
+    list.push(btn('cd', l('Montar disco com ela', 'Build a record with it'), () => { setTab('creation-release', 'launch'); store.area = 'releases'; rerender(); }));
     list.push(btn('cassette', l('Lançar como demo', 'Release as a demo'), () => say(releaseDemo(s, r, so.id), l('Demo programada.', 'Demo scheduled.'))));
   }
   if (st === 'recorded' || st === 'released') list.push(btn('sparkle', l('Remix', 'Remix'), () => { const res = makeRemix(s, so.id); say('pt' in res && !('id' in res) ? (res as L) : null, l('Remix criado no repertório.', 'Remix added to the repertoire.')); }));

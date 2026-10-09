@@ -1,6 +1,6 @@
 // Interface de capital (rodada 6): transferências entre bolso e caixa, sócios (opinião detalhada,
 // metas, cláusulas, reunião, recompra), propostas de investidores, dividendos, IPO com escolhas e
-// confiança do conselho. Aba em Negócios e atalho na área Você → Patrimônio.
+// confiança do conselho. Aba em Negócios e atalho na área Patrimônio e investimentos → Patrimônio.
 
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -34,7 +34,7 @@ export function transferSection(s: GameState): HTMLElement {
     ),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: c.companyCard, onchange: () => { toggleCompanyCard(s); rerender(); } }),
       t(l('Pagar despesas pessoais com o cartão da empresa (economiza seu bolso; uma auditoria pode descobrir — mais provável com sócios ou em bolsa)', 'Pay personal expenses with the company card (saves your pocket; an audit may find out — likelier with partners or when listed)'))),
-    h('p', { class: 'muted small' }, t(l('Também dá para tirar dinheiro de forma limpa com dividendos (abaixo) ou com a retirada mensal (Você → Patrimônio).', 'You can also take money cleanly through dividends (below) or the monthly draw (You → Wealth).'))),
+    h('p', { class: 'muted small' }, t(l('Também dá para tirar dinheiro de forma limpa com dividendos (abaixo) ou com a retirada mensal (Patrimônio e investimentos → Patrimônio).', 'You can also take money cleanly through dividends (below) or the monthly draw (Wealth and investments → Wealth).'))),
   );
 }
 

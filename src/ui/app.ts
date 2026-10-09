@@ -61,10 +61,13 @@ const AREAS: { id: Area; label: keyof typeof S; icon: string; key: string }[] = 
   { id: 'market', label: 'areaMarket', icon: 'fans', key: '5' },
   { id: 'media', label: 'areaMedia', icon: 'radio', key: '6' },
   { id: 'catalog', label: 'areaCatalog', icon: 'disc', key: '7' },
-  { id: 'creation', label: 'areaCreation', icon: 'mic', key: '8' },
+  { id: 'creation', label: 'areaCreation', icon: 'note', key: '8' },
+  { id: 'studio', label: 'areaStudio', icon: 'mic', key: 's' },
+  { id: 'releases', label: 'areaReleases', icon: 'cd', key: 'u' },
   { id: 'shows', label: 'areaShows', icon: 'tour-bus', key: '9' },
   { id: 'world', label: 'areaWorld', icon: 'globe', key: 'w' },
   { id: 'business', label: 'areaBusiness', icon: 'bank', key: 'b' },
+  { id: 'finance', label: 'areaFinance', icon: 'money', key: 'z' },
   { id: 'company', label: 'areaCompany', icon: 'contract', key: '0' },
   { id: 'diary', label: 'areaDiary', icon: 'newspaper', key: 'd' },
 ];
@@ -177,13 +180,13 @@ function topBar(): HTMLElement {
 /** Menus agrupados (rodada 7): 6 grupos no lugar de ~20 áreas soltas; o grupo atual abre suas áreas. */
 const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; areas: string[] }[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['desk', 'plan', 'inbox', 'goals', 'diary'] },
-  { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'business', 'identity', 'team', 'industry'] },
+  { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'finance', 'business', 'identity', 'team', 'industry'] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'market', 'directory', 'people', 'management'] },
-  { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['creation', 'catalog', 'shows', 'media'] },
+  { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['creation', 'studio', 'releases', 'catalog', 'shows', 'media'] },
   { id: 'ventures', label: l('Empreendimentos', 'Ventures'), icon: 'bank', areas: ['ventures'] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['world', 'charts', 'labels', 'movements', 'lendas'] },
   { id: 'fame', label: l('Prêmios e eventos', 'Awards and events'), icon: 'trophy', areas: ['festivals', 'awards', 'rockhall', 'critics'] },
-  { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you'] },
+  { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth'] },
 ];
 const lastInGroup: Record<string, string> = {};
 
@@ -271,12 +274,15 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
     case 'catalog': return h('div', { class: 'hub' }, tabs('catalogHub', mergeTabs([
       { id: 'list', label: t(l('Catálogo', 'Catalog')), icon: 'disc', render: () => catalogPanel(g) },
     ], 'catalogHub', g), render));
-    case 'creation': return studioHub(g, () => creationPanel(g));
+    case 'creation': return studioHub(g, () => creationPanel(g), 'write');
+    case 'studio': return studioHub(g, () => creationPanel(g), 'studio');
+    case 'releases': return studioHub(g, () => creationPanel(g), 'release');
     case 'world': return h('div', { class: 'hub' }, tabs('worldHub', mergeTabs([
       { id: 'map', label: t(l('Mapa e cenas', 'Map and scenes')), icon: 'globe', render: () => worldPanel(g) },
       { id: 'history', label: t(l('História, leis e lugares', 'History, laws and places')), icon: 'newspaper', render: () => extraSections('world', g) ?? h('div') },
     ], 'worldHub', g), render));
-    case 'business': return businessPanel(g);
+    case 'business': return businessPanel(g, 'business');
+    case 'finance': return businessPanel(g, 'finance');
     case 'shows': return showsPanel(g);
     case 'company': return companyPanel(g);
     case 'diary': return diaryPanel(g);

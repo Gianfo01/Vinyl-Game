@@ -35,7 +35,7 @@ const say = (x: L | null, ok: L) => { if (x) toast(t(x), 'bad'); else toast(t(ok
 export function goToProjects(actId: string, projectId?: string): void {
   store.selectedAct = actId;
   if (projectId) ui.sel = projectId;
-  setTab('creation', 'projects');
+  setTab('creation-write', 'projects');
   store.area = 'creation';
   rerender();
 }

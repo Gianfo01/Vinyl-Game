@@ -191,18 +191,25 @@ function neuralTab(s: GameState): HTMLElement {
 
 void neuralDraft; void actLink; void PRODUCERS;
 
-export function studioHub(s: GameState, launch: () => HTMLElement): HTMLElement {
+/** Rodada 10: a antiga Criação (16 abas) virou três áreas em Música. */
+export type StudioGroup = 'write' | 'studio' | 'release';
+const STUDIO_GROUP: Record<string, StudioGroup> = {
+  projects: 'write', compose: 'write', repertoire: 'write', 'cr-themes': 'write', 'cr-recipe': 'write', 'cr-partners': 'write', 'cr-comm': 'write', 'cr-div': 'write',
+  session: 'studio', 'studio-gear': 'studio', 'cr-sound': 'studio', versions: 'studio', neural: 'studio',
+  launch: 'release', rollout: 'release', 'cr-visuals': 'release', 'cr-cover': 'release', 'cr-catalog': 'release',
+};
+export function studioHub(s: GameState, launch: () => HTMLElement, group: StudioGroup = 'write'): HTMLElement {
   const picker = actPicker(s);
   if (!picker) return launch();
   return h('div', { class: 'hub studio-hub' },
     picker,
-    tabs('creation', mergeTabs([
+    tabs(`creation-${group}`, mergeTabs([
       { id: 'repertoire', label: t(l('Repertório', 'Repertoire')), icon: 'note', render: () => repertoireTab(s) },
       { id: 'launch', label: t(l('Lançar', 'Release')), icon: 'cd', render: launch },
-      { id: 'session', label: t(l('Estúdio', 'Studio')), icon: 'mic', render: () => sessionTab(s) },
+      { id: 'session', label: t(l('Sessões', 'Sessions')), icon: 'mic', render: () => sessionTab(s) },
       { id: 'rollout', label: t(l('Rollout', 'Rollout')), icon: 'calendar', render: () => rolloutTab(s) },
       { id: 'versions', label: t(l('Covers e versões', 'Covers & versions')), icon: 'disc', render: () => versionsTab(s) },
       ...(hologramReady(s) || aiVoiceReady(s) ? [{ id: 'neural', label: t(l('Era sintética', 'Synthetic era')), icon: 'hologram', render: () => neuralTab(s) }] : []),
-    ], 'creation', s), rerender),
+    ], 'creation', s).filter((x) => (STUDIO_GROUP[x.id] ?? 'write') === group), rerender),
   );
 }

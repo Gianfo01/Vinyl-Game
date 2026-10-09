@@ -87,7 +87,7 @@ registerSection('desk', {
     return section(`${t(l('Era', 'Era'))}: ${t(cur.name)}`,
       h('p', { class: 'small' }, t(cur.model)),
       mine ? h('p', { class: 'small' }, t(l('Sua postura: ', 'Your stance: ')), h('b', null, t(mine.name)), ' ', fxChips(mine, 1)) : null,
-      h('button', { class: 'btn small ghost', onclick: () => { setTab('business', 'era8'); store.area = 'business'; rerender(); } }, ic('clock'), ' ', t(l('Era e estratégia', 'Era and strategy'))),
+      h('button', { class: 'btn small ghost', onclick: () => { setTab('business-business', 'era8'); store.area = 'business'; rerender(); } }, ic('clock'), ' ', t(l('Era e estratégia', 'Era and strategy'))),
     );
   },
 });

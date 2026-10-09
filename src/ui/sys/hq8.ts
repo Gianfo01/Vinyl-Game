@@ -120,7 +120,7 @@ export function openSessions(s: GameState): void {
       );
     }) : h('p', null, t(l('O estúdio está livre.', 'The studio is free.'))),
     load.waiting.length ? h('p', { class: 'small' }, t(l('Esperando estúdio: ', 'Waiting for the studio: ')), ...load.waiting.map((id) => h('span', null, actLink(s, id), ' '))) : null,
-    h('div', { class: 'row' }, h('button', { class: 'btn small', onclick: () => goArea('creation', ['creation', 'session'], load.waiting[0] ?? sessions[0]?.actId) }, ic('mic'), ' ', t(l('Marcar uma sessão', 'Book a session')))),
+    h('div', { class: 'row' }, h('button', { class: 'btn small', onclick: () => goArea('studio', ['creation-studio', 'session'], load.waiting[0] ?? sessions[0]?.actId) }, ic('mic'), ' ', t(l('Marcar uma sessão', 'Book a session')))),
   );
   close = modal(t(l('Estúdio — sessões em andamento', 'Studio — sessions in progress')), draw(), { wide: true });
 }
@@ -131,8 +131,8 @@ function doNext(s: GameState, actId: string, st: ActStatus): void {
     case 'take': document.querySelector('.overlay')?.remove(); return openSessions(s);
     case 'crisis': return goArea('plan');
     case 'contract': document.querySelector('.overlay')?.remove(); return inspect.act(actId);
-    case 'release': return goArea('creation', ['creation', 'launch'], actId);
-    case 'studio': return goArea('creation', ['creation', 'session'], actId);
+    case 'release': return goArea('releases', ['creation-release', 'launch'], actId);
+    case 'studio': return goArea('studio', ['creation-studio', 'session'], actId);
     default: return goArea('artists', undefined, actId);
   }
 }

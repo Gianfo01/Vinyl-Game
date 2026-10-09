@@ -82,7 +82,7 @@ export function gearOffersMonth(s: GameState, r: Rng): void {
     if (!opts.length || !r.chance(0.6)) continue;
     const g = r.pick(opts);
     m.gearOffers.push({ id: `go${s.week}-${g.id}`, gearId: g.id, from: lb.name, price: Math.round(money(s, g.price) * 0.45), expires: s.week + 12 });
-    notify(s, fmtL(l('Leilão da massa falida de {lb}: {g} com 55% de desconto (Criação → Estúdio).', '{lb} bankruptcy auction: {g} at 55% off (Creation → Studio).'), { lb: lb.name, g: def(g.id) }), 'info');
+    notify(s, fmtL(l('Leilão da massa falida de {lb}: {g} com 55% de desconto (Estúdio → Equipamento).', '{lb} bankruptcy auction: {g} at 55% off (Studio → Gear).'), { lb: lb.name, g: def(g.id) }), 'info');
   }
   if (m.gearOffers.length > 6) m.gearOffers = m.gearOffers.slice(-6);
 }

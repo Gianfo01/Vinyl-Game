@@ -178,9 +178,11 @@ function brandsTab(s: GameState): HTMLElement {
   );
 }
 
-export function businessPanel(s: GameState): HTMLElement {
+// Rodada 10: Negócios tinha 13 abas; Finanças (dinheiro, capital, dívidas, bolsa) virou área própria.
+const FINANCE_TABS = new Set(['overview', 'stock', 'capital', 'loans7', 'stakes8']);
+export function businessPanel(s: GameState, group: 'business' | 'finance' = 'business'): HTMLElement {
   return h('div', { class: 'panel business' },
-    tabs('business', mergeTabs([
+    tabs(`business-${group}`, mergeTabs([
       { id: 'overview', label: t(l('Balanço', 'Balance')), icon: 'bank', render: () => overview(s) },
       { id: 'subs', label: t(l('Subselos', 'Sub-labels')), icon: 'house', badge: s.subLabels.filter((x) => x.status === 'distress').length || undefined, render: () => subsTab(s) },
       { id: 'companies', label: t(l('Empresas', 'Companies')), icon: 'handshake', render: () => companiesTab(s) },
@@ -188,7 +190,7 @@ export function businessPanel(s: GameState): HTMLElement {
       { id: 'stock', label: t(l('Bolsa', 'Stock market')), icon: 'chart-up', render: () => stockTab(s) },
       { id: 'legal', label: t(l('Jurídico', 'Legal')), icon: 'gavel', badge: s.lawsuits.filter((x) => !['settled', 'won', 'lost'].includes(x.stage)).length || undefined, render: () => legalTab(s) },
       { id: 'brands', label: t(l('Marcas e sync', 'Brands & sync')), icon: 'handshake', badge: s.deals.filter((d) => d.status === 'offered').length || undefined, render: () => brandsTab(s) },
-    ], 'business', s), rerender),
+    ], 'business', s).filter((x) => FINANCE_TABS.has(x.id) === (group === 'finance')), rerender),
   );
 }
 

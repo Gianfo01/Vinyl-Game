@@ -109,7 +109,7 @@ export function artistsPanel(s: GameState): HTMLElement {
           stat('fans', `${N(a.fans.casual)} / ${N(a.fans.active)} / ${N(a.fans.core)}`, S.fans),
         ),
         h('p', { class: 'small muted' }, t(l('Músicas escritas: {u} · gravadas inéditas: {r} · lançamentos: {n}', 'Written songs: {u} · recorded unreleased: {r} · releases: {n}'), { u: unrec, r: ready, n: a.releases.length }), ' ',
-          h('button', { class: 'btn small', onclick: () => { store.selectedAct = a.id; setTab('creation', 'repertoire'); store.area = 'creation'; rerender(); } }, ic('note'), ' ', t(l('Abrir repertório', 'Open repertoire')))),
+          h('button', { class: 'btn small', onclick: () => { store.selectedAct = a.id; setTab('creation-write', 'repertoire'); store.area = 'creation'; rerender(); } }, ic('note'), ' ', t(l('Abrir repertório', 'Open repertoire')))),
       ),
       section(`${t(S.agenda)} — ${t(l('capacidade', 'capacity'))} ${agendaLoad(slots)}%`,
         loadBar(slots.map((x) => ({ label: t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name), load: slotLoad(x) }))),

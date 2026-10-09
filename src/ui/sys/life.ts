@@ -265,8 +265,14 @@ function diaryTab(s: GameState): HTMLElement {
     L0.log.length ? h('ul', { class: 'memory' }, L0.log.map((e) => h('li', { class: e.tone }, h('span', { class: 'muted' }, `${e.year} · `), t(e.text)))) : h('p', { class: 'muted' }, t(l('Nada registrado ainda.', 'Nothing recorded yet.'))));
 }
 
-function youArea(s: GameState): HTMLElement {
-  return h('div', { class: 'hub life' }, tabs('life', [
+// Rodada 10: "Você" tinha 12 abas; agora são três áreas (Você, Vida pessoal, Patrimônio).
+const YOU_GROUP: Record<string, 'you' | 'personal' | 'wealth'> = {
+  me: 'you', persona: 'you', skills: 'you', decisions: 'you', music: 'you', diary: 'you',
+  love: 'personal', leisure: 'personal', agenda8: 'personal', vices: 'personal',
+  wealth: 'wealth', goods8: 'wealth',
+};
+function youArea(s: GameState, group: 'you' | 'personal' | 'wealth' = 'you'): HTMLElement {
+  return h('div', { class: 'hub life' }, tabs(`life-${group}`, [
     { id: 'me', label: t(l('Perfil', 'Profile')), icon: 'star', render: () => profileTab(s) },
     { id: 'persona', label: t(l('Personalidade', 'Personality')), icon: 'sparkle', badge: persona(s).copingPrompt ? 1 : undefined, render: () => personaTab(s) },
     { id: 'skills', label: t(l('Habilidades', 'Abilities')), icon: 'star', badge: skills(s).points || undefined, render: () => skillsTab(s) },
@@ -279,10 +285,12 @@ function youArea(s: GameState): HTMLElement {
     { id: 'wealth', label: t(l('Patrimônio', 'Wealth')), icon: 'house', render: () => h('div', null, transferSection(s), ownerTab(s)) },
     { id: 'goods8', label: t(l('Bens e investimentos', 'Belongings and investments')), icon: 'money', render: () => possessionsTab(s) },
     { id: 'diary', label: t(l('Diário', 'Diary')), icon: 'newspaper', render: () => diaryTab(s) },
-  ], rerender));
+  ].filter((x) => YOU_GROUP[x.id] === group), rerender));
 }
 
-registerArea({ id: 'you', label: l('Você', 'You'), icon: 'star', key: 'v', render: youArea });
+registerArea({ id: 'you', label: l('Você', 'You'), icon: 'star', key: 'v', render: (s) => youArea(s, 'you') });
+registerArea({ id: 'personal', label: l('Vida pessoal', 'Personal life'), icon: 'heart', key: 'y', render: (s) => youArea(s, 'personal') });
+registerArea({ id: 'wealth', label: l('Patrimônio e investimentos', 'Wealth and investments'), icon: 'money', key: 'x', render: (s) => youArea(s, 'wealth') });
 
 registerCutscene('life', (s, cs, close) => {
   const p = playerPerson(s);

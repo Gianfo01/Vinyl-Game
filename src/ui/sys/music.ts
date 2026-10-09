@@ -6,5 +6,5 @@ import { l } from '../../data/world';
 import { registerTab } from '../registry';
 import { studioTab } from './music/room';
 
-registerTab('creation', { id: 'studio-gear', label: l('Estúdio', 'Studio'), icon: 'mic', order: 55, render: (s) => studioTab(s) });
+registerTab('creation', { id: 'studio-gear', label: l('Equipamento', 'Gear'), icon: 'mic', order: 55, render: (s) => studioTab(s) });
 

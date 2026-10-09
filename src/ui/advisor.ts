@@ -50,7 +50,7 @@ export function advisorTips(s: GameState): Tip[] {
   const o = ownerOf(s);
   if (o.stress > 75 || o.health < 40) out.push({ icon: 'stress', text: l('Você está no limite (estresse/saúde). Tire férias, faça terapia ou um hobby (Você).', 'You are at your limit (stress/health). Take a holiday, therapy or a hobby (You).'), area: 'you', tab: ['life', 'leisure'], level: 'bad' });
   const pt = life(s).partner;
-  if (pt && pt.affinity < 30) out.push({ icon: 'heart', text: fmtL(l('{p} anda distante. Passe tempo junto (Você → Amor e família).', '{p} has been distant. Spend time together (You → Love and family).'), { p: pt.name }), area: 'you', tab: ['life', 'love'], level: 'warn' });
+  if (pt && pt.affinity < 30) out.push({ icon: 'heart', text: fmtL(l('{p} anda distante. Passe tempo junto (Vida pessoal → Amor e família).', '{p} has been distant. Spend time together (Personal life → Love and family).'), { p: pt.name }), area: 'you', tab: ['life', 'love'], level: 'warn' });
   if (energyLeft(s) === maxEnergy(s) && out.length < 6) out.push({ icon: 'star', text: l('Você ainda tem todo o tempo livre do mês: pratique, namore, toque num bar ou mentore um artista (Você).', 'You still have all your free time this month: practise, date, play a bar or mentor an artist (You).'), area: 'you', level: 'info' });
   const order = { bad: 0, warn: 1, info: 2 };
   return out.sort((a, b) => order[a.level] - order[b.level]).slice(0, 7);
