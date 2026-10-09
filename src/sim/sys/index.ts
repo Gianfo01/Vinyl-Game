@@ -32,3 +32,4 @@ import './mapx8';
 import './explain8';
 import './project8';
 import './identity';
+import './sound';

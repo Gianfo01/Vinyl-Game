@@ -21,6 +21,8 @@ import { closeSale, fairTerms, offerSong, saleChance, saleTargets, type SaleTerm
 
 /** Botões extras no cabeçalho de cada música (ouvir a música). */
 export const REP_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
+/** Blocos extras no corpo de cada música (rodada 8: direção sonora); `open` = cartão aberto. */
+export const REP_SONG_BODY: ((s: GameState, so: Song, open: boolean) => HTMLElement | null)[] = [];
 
 // ---------- venda de composição (rodada 7) ----------
 const sale: { songId: string; target: string; fee: number; royalty: number; labelShare: number; reply: { text: L; counter?: SaleTerms } | null } = { songId: '', target: '', fee: 0, royalty: 0.08, labelShare: 50, reply: null };
@@ -148,6 +150,7 @@ function songCard(s: GameState, so: Song): HTMLElement {
         h('button', { class: 'btn small ghost', 'aria-expanded': open ? 'true' : 'false', onclick: () => { view.open = open ? '' : so.id; rerender(); } }, t(open ? l('Fechar', 'Close') : l('O que fazer', 'What to do'))))),
     so.theme ? h('small', { class: 'muted' }, ic('bulb'), ` ${t(l('Tema', 'Theme'))}: ${t(so.theme)}`) : null,
     songAttrs(so, { compact: !open }),
+    ...REP_SONG_BODY.map((f) => f(s, so, open)),
     chips(writers(s, so), ...flags(s, so)),
     usedIn(s, so),
     open ? actions(s, so, st) : null,
