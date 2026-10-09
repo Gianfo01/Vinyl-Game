@@ -33,6 +33,9 @@ import { store } from './store';
 import { chips, ic, meter, stat } from './vis';
 import './pages.css';
 
+/** Botões extras no topo da página do ato (rodada 8: projeto musical). */
+export const ACT_HEAD_EXTRAS: ((s: GameState, a: Act, close: () => void) => HTMLElement | null)[] = [];
+
 function g(): GameState {
   return store.game!;
 }
@@ -304,7 +307,8 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
           h('div', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${t(l('desde', 'since'))} ${a.formed} · `, pill(statusName(a.status))),
           h('div', null, t(S.owner), ': ', labelLink(s, a.owner), ' · ', t(S.knownAs), ': ', pill(t(DEGREES[Math.max(0, deg - 1)])), k ? h('span', { class: 'muted' }, ` · ${t(S.source)}: ${t(sourceName(k.source))}`) : null))),
       h('div', { class: 'row wrap' },
-        !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn small primary', onclick: () => { close(); openOffer(a.id); } }, t(S.makeOffer)) : null),
+        !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn small primary', onclick: () => { close(); openOffer(a.id); } }, t(S.makeOffer)) : null,
+        ...ACT_HEAD_EXTRAS.map((f) => f(s, a, close))),
     ),
   );
   return h('div', { class: 'ficha pg' }, head, pageTabs([

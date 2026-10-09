@@ -1,0 +1,51 @@
+/* Projeto musical e leitura do resultado (rodada 8) */
+.pj { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.pj-side { display: grid; gap: 10px; }
+.pj-side h4 { margin: 0; }
+.pj-list { display: grid; gap: 6px; }
+.pj-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); cursor: pointer; }
+.pj-card.on { border-color: var(--accent); background: var(--panel-2); }
+.pj-card-main { display: grid; gap: 2px; min-width: 0; }
+.pj-card-main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pj-new { border-top: 1px dashed var(--line); padding-top: 10px; }
+.pj-main { min-width: 0; }
+.pj-detail { display: grid; gap: 4px; }
+.pj-steps { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0 0 6px; }
+.pj-steps li { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: 999px; border: 1px solid var(--line); font-size: 0.85rem; color: var(--muted); }
+.pj-steps li span { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--panel-2); font-size: 0.75rem; }
+.pj-steps li.done { color: var(--good); border-color: var(--good); }
+.pj-steps li.done span { background: var(--good); color: var(--panel); }
+.pj-steps li.on { color: var(--ink); border-color: var(--accent); font-weight: 700; }
+.pj-steps li.on span { background: var(--accent); color: var(--accent-ink); }
+.pj-hint { margin: 0 0 6px; padding: 8px 10px; background: var(--panel-2); border-radius: var(--radius); }
+.pj tr.pj-on td { background: var(--panel-2); }
+.pj-inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pj-inline input { width: 110px; }
+.pj-budget { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); }
+.pj-phases { margin: 4px 0; padding-left: 18px; font-size: 0.9rem; }
+.pj-phases li.done { color: var(--muted); }
+.pj-explain { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 10px 12px; margin: 10px 0; background: var(--panel); }
+.pj-explain h4 { margin: 0 0 6px; }
+.pj-explain ol { margin: 4px 0; padding-left: 20px; }
+.pj-reading { font-size: 1.02rem; line-height: 1.45; margin: 0 0 8px; }
+.pj-vs { margin: 8px 0; }
+.pj-opp { margin: 8px 0 0; padding: 8px 10px; background: var(--panel-2); border-radius: var(--radius); }
+/* Retrospectiva */
+.rt-head { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.rt-era { margin: 12px 0; }
+.rt-era h3 { margin: 0 0 2px; }
+.rt-covers { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin-top: 6px; }
+.rt-cover { display: grid; gap: 2px; justify-items: start; text-align: left; background: none; border: 0; padding: 0; color: var(--ink); cursor: pointer; font-size: 0.8rem; }
+.rt-cover img { width: 96px; height: 96px; border-radius: 4px; box-shadow: var(--shadow); }
+.rt-cover b { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rt-timeline { list-style: none; padding: 0; margin: 0; border-left: 3px solid var(--accent); }
+.rt-timeline li { position: relative; padding: 4px 0 8px 14px; }
+.rt-timeline li::before { content: ''; position: absolute; left: -7px; top: 9px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+.rt-alumni { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.rt-alum { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+.rt-stories { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+.rt-stories li { padding: 4px 8px; border-radius: 6px; background: var(--panel-2); font-size: 0.9rem; }
+.rt-stories li.broken { border-left: 3px solid var(--bad); }
+.rt-stories li.reunion { border-left: 3px solid var(--good); }
+.rt-genre { display: grid; grid-template-columns: 140px minmax(0, 1fr) 60px; gap: 8px; align-items: center; }
+@media (max-width: 760px) { .pj { grid-template-columns: 1fr; } .rt-genre { grid-template-columns: 100px minmax(0, 1fr) 50px; } }

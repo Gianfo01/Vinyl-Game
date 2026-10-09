@@ -14,7 +14,7 @@ import type { GameState } from '../sim/types';
 import { h } from './dom';
 
 /** Painéis que aceitam abas extras (já usam abas). */
-export type TabHost = 'creation' | 'marketHub' | 'mediaHub' | 'business' | 'chartsHub' | 'worldHub';
+export type TabHost = 'creation' | 'marketHub' | 'mediaHub' | 'business' | 'chartsHub' | 'worldHub' | 'catalogHub';
 /** Áreas que aceitam seções extras no fim. */
 export type SectionHost = 'hq' | 'desk' | 'plan' | 'charts' | 'artists' | 'market' | 'media' | 'catalog' | 'creation' | 'shows' | 'company' | 'business' | 'world' | 'diary';
 
