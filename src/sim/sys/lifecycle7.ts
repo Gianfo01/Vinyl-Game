@@ -7,7 +7,7 @@
 import { clamp, type Rng } from '../../core/rng';
 import { nominal } from '../../core/money';
 import { familyOf, l } from '../../data/world';
-import { personDies } from '../dynasty';
+import { personDies, realSafe } from '../dynasty';
 import { deferEvents, registerSimHook } from '../ext4';
 import { bandName, langForCity, makeAct, makePerson } from '../people';
 import type { Act, GameState, Person } from '../types';
@@ -37,7 +37,7 @@ function formerPush(s: GameState, actId: string, personId: string, reason: 'left
 
 function agingAll(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
-    if (tracked(act)) continue; // os acompanhados já envelhecem em dynasty.ts
+    if (tracked(act) || realSafe(s, act)) continue; // os acompanhados já envelhecem em dynasty.ts; reais seguem o roteiro
     for (const id of act.members) {
       const p = s.persons[id];
       if (!p?.alive) continue;

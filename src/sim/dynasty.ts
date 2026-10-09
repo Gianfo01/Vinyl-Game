@@ -36,6 +36,9 @@ function deathRisk(age: number, p: Person): number {
   return Math.min(0.07, r);
 }
 
+/** Artistas reais seguem a vida real até o presente: não morrem por sorteio antes de 2026 (as mortes reais vêm do roteiro). */
+export const realSafe = (s: GameState, act: { catalogNo?: number }): boolean => !!act.catalogNo && s.year < 2026;
+
 export function personDies(s: GameState, p: Person, cause: L): void {
   if (!p.alive) return;
   p.alive = false;
@@ -78,11 +81,12 @@ function agingMonth(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
     const tracked = act.owner === 'player' || act.fame > 25 || act.catalogNo || act.legend;
     if (!tracked) continue;
+    const safe = realSafe(s, act);
     for (const id of act.members) {
       const p = s.persons[id];
       if (!p || !p.alive) continue;
       const age = s.year - p.born;
-      if (r.chance(deathRisk(age, p))) {
+      if (!safe && r.chance(deathRisk(age, p))) {
         const cause = age > 70 ? l('causas naturais', 'natural causes') : p.health === 'addiction' ? l('complicações de saúde', 'health complications') : l('um acidente inesperado', 'an unexpected accident');
         personDies(s, p, cause);
         continue;
