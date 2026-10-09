@@ -14,6 +14,7 @@ import { bar, h } from '../dom';
 import { portraitCanvas } from '../pixel/avatar';
 import { registerPageTab } from '../registry';
 import { store } from '../store';
+import { ficha13 } from './persona13';
 
 const relWord = (v: number): L => v >= 40 ? l('aliado', 'ally') : v >= 12 ? l('cordial', 'friendly') : v > -12 ? l('neutro', 'neutral') : v > -40 ? l('frio', 'cold') : l('inimigo', 'enemy');
 const relCls = (v: number) => (v >= 12 ? 'good' : v <= -12 ? 'bad' : '');
@@ -70,6 +71,7 @@ export function openLeader(id: string): void {
     L0.jobs.length ? h('ul', { class: 'small' }, [...L0.jobs].reverse().map((j) => h('li', null,
       s.labels[j.lb] ? labelLink(s, j.lb) : h('span', null, j.n), ` ${j.from}–${j.to ?? t(l('hoje', 'now'))}`, j.end ? h('span', { class: 'muted' }, ` · ${t(jobEndText(j.end))}`) : null)))
       : h('p', { class: 'muted small' }, '—'),
+    h('h4', null, t(l('Ficha completa', 'Full profile'))), ficha13(s, `l:${L0.id}`),
   );
   modal(L0.name, body);
 }
@@ -95,6 +97,7 @@ export function openPlayerLeader(): void {
     h('ul', { class: 'small' }, Object.values(leaders(s).L).filter((x) => x.st === 'active' && x.label && s.labels[x.label])
       .sort((a, b) => (a.rel.player ?? 0) - (b.rel.player ?? 0)).slice(0, 8)
       .map((x) => h('li', null, leaderLink(s, x), ` (${s.labels[x.label!].name}) — `, pill(t(relWord(x.rel.player ?? 0)), relCls(x.rel.player ?? 0))))),
+    h('h4', null, t(l('Ficha completa', 'Full profile'))), ficha13(s, 'player'),
   );
   modal(o.name, body);
 }

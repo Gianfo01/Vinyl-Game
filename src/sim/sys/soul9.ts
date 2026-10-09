@@ -157,6 +157,7 @@ export function dreamOf(s: GameState, p: Person): DreamId {
 }
 /** Terra natal: uma cidade do mesmo mercado da primeira banda (determinística). */
 export function hometownOf(s: GameState, p: Person, fallbackCity: string): string {
+  if (p.isPlayer) { const h = (s.x4 as unknown as { persona?: { hometown?: string } }).persona?.hometown; if (h && cityById[h]) return h; } // rodada 13: mesma cidade natal da ficha
   const m = cityById[fallbackCity]?.market;
   const list = CITIES.filter((c) => c.market === m);
   return list.length ? list[Math.floor(u(s.config.seed, p.id, 'home') * list.length)].id : fallbackCity;

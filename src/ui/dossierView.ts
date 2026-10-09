@@ -13,6 +13,7 @@ import { $, actLink, cityName, genreName, logo, modal, pill, rerender, section, 
 import { h, rangeBar } from './dom';
 import { openOffer } from './ficha';
 import { store } from './store';
+import { actNegLine } from './sys/persona13';
 
 const CONSULT: Src[] = ['producer', 'promoter', 'critic', 'local'];
 
@@ -39,6 +40,7 @@ function dossierBody(s: GameState, actId: string, refresh: () => void, close: ()
   return h('div', { class: 'r8-dossier' },
     h('div', { class: 'row' }, logo(a, 40), h('div', null, actLink(s, a.id), h('div', { class: 'muted small' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${k ? t(DEGREES[Math.max(0, k.degree - 1)]) : t(l('fora do radar', 'off the radar'))}`))),
     h('p', { class: 'muted small' }, t(l('Nenhuma fonte revela o valor verdadeiro. O produtor enxerga técnica, o promotor enxerga palco, o crítico enxerga novidade e o agente local enxerga relacionamento — cada um com seu viés. Repetir a mesma fonte estreita o intervalo, mas não tira o viés: cruze fontes.', 'No source reveals the true value. The producer sees technique, the promoter sees stage power, the critic sees novelty and the local agent sees relationships — each with a bias. Repeating a source narrows the range but keeps its bias: cross-check sources.'))),
+    actNegLine(s, a),
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Sinal', 'Signal'))), h('th', null, t(l('Leituras por fonte', 'Reads by source'))), h('th', null, t(l('Sua síntese', 'Your synthesis'))))),
       h('tbody', null, rows)),

@@ -103,3 +103,4 @@ import './fest12';
 import './venue12';
 // Rodada 12: hype unificado (artistas, lançamentos, relíquias, festivais, turnês, selos e cenas).
 import './hype12';
+import './persona13';

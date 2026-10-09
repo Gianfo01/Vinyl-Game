@@ -219,7 +219,8 @@ describe('público segmentado', () => {
     // colecionadores: edição limitada rende mais para quem tem núcleo fiel
     expect(collectorsOf(s, loyal)).toBeGreaterThan(collectorsOf(s, viral));
     const lim = fakeRelease(s, loyal, { kind: 'limited' });
-    expect(applyMods(s, 'appeal', 1, { release: lim, act: loyal }).value).toBeGreaterThan(1.2);
+    // rodada 13: imagem/barreiras da época também entram no apelo; aqui conta o fator dos colecionadores
+    expect(applyMods(s, 'appeal', 1, { release: lim, act: loyal }).factors.find((f) => f.label.en === 'Collectors')!.ratio).toBeGreaterThan(1.12);
   });
 
   it('redescoberta multiplica o catálogo antigo; artista parado perde fãs para os parecidos', () => {

@@ -21,6 +21,7 @@ import { $, N, actLink, cityName, kv, modal, pill, releaseLink, rerender, sectio
 import { bar, h, select } from '../dom';
 import { registerSection } from '../registry';
 import { store } from '../store';
+import { ficha13 } from './persona13';
 
 const MONTHS = [l('jan', 'Jan'), l('fev', 'Feb'), l('mar', 'Mar'), l('abr', 'Apr'), l('mai', 'May'), l('jun', 'Jun'), l('jul', 'Jul'), l('ago', 'Aug'), l('set', 'Sep'), l('out', 'Oct'), l('nov', 'Nov'), l('dez', 'Dec')];
 const famName = (id: string) => t(FAMILIES.find((f) => f.id === id)?.name ?? l(id));
@@ -290,6 +291,7 @@ export function openCriticPage(name: string): void {
         h('p', null, relPill(relWith(s, name)), ` ${relWith(s, name) > 0 ? '+' : ''}${relWith(s, name)}`),
         h('div', { class: 'row wrap' }, CRIT_ACTIONS.map((a) => h('button', { class: 'btn small', title: t(a.desc), onclick: () => { const e = criticAction(s, rngOf(s), name, a.id); toast(e ? t(e) : t(l('Feito.', 'Done.')), e ? 'bad' : 'good'); if (!e) { close(); draw(); rerender(); } } }, `${t(a.name)}${a.cost ? ` · ${$(money(s, a.cost))}` : ''}`))),
       ),
+      section(t(l('Ficha completa', 'Full profile')), ficha13(s, `c:${name}`, () => { close(); draw(); })),
       section(t(l('Notas que deu', 'Scores given')) + (given.length ? ` — ${t(l('média', 'average'))} ${avg.toFixed(1)}` : ''),
         given.length ? h('table', { class: 'tbl compact' }, h('tbody', null, given.slice(-25).reverse().map((x) => h('tr', { class: mine.includes(x) ? 'mine' : '' }, h('td', null, releaseLink(s, x.relId)), h('td', null, actLink(s, s.releases[x.relId]?.actId)), h('td', null, h('b', null, x.score.toFixed(1))))))) : h('p', { class: 'muted small' }, t(l('Nenhuma resenha guardada ainda.', 'No stored reviews yet.'))),
       ),
