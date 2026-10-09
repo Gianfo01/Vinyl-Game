@@ -328,8 +328,20 @@ const GROUPS: { id: string; name: L; icon: string; re: RegExp }[] = [
   { id: 'shows', name: l('Shows e turnês', 'Shows and tours'), icon: 'tour-bus', re: /tour|gig|festival|show|venue|residency|liveaid|hologram|club|rave|mega_event/ },
   { id: 'people', name: l('Pessoas', 'People'), icon: 'heart', re: /death|addict|rehab|treatment|stress|injury|romance|birth|split|solo|member|lineup|breakup|hiatus|retired|reunion|separation|life|vice|party|voice_nodes|breakdown|heir|dynasty|travel|training|stress_alert/ },
   { id: 'deals', name: l('Contratos e negócios', 'Contracts and deals'), icon: 'contract', re: /signed|sniped|left|renewal|renegotiation|option|contract|promise|poach|rival_sign|auction|buyout|scene_sign|contest|fired|staff|deal|partner|investor|branch|hq|territory|sublabel|jv|acquisition/ },
+  { id: 'media', name: l('Imprensa e mídia', 'Press and media'), icon: 'newspaper', re: /interview|magazine|tv|radio|press|documentary|clip|talk|speech|vignette|feat|collab/ },
   { id: 'world', name: l('Mundo e mercado', 'World and market'), icon: 'globe', re: /tech|era|divergence|revival|recession|recovery|law|genre|movement|streaming|piracy|drm|label_|merger|ipo|strike|union|industry|hist_scene|scene|year/ },
 ];
+/** Avisos não têm tipo: classifica pelo texto (o que sobrar é contexto do mundo). */
+function noteKind(pt: string): string {
+  const x = pt.toLowerCase();
+  if (/parada|#1|ouro|platina|prêmio|lenda/.test(x)) return 'chart';
+  if (/show|turnê|festival|palco/.test(x)) return 'tour';
+  if (/lança|disco|grava|single|álbum|estúdio|compõe/.test(x)) return 'release';
+  if (/contrat|assina|proposta|oferta|acordo/.test(x)) return 'contract';
+  if (/entrevista|revista|tv|rádio|imprensa/.test(x)) return 'interview';
+  if (/morre|vício|estresse|cansa|saúde|separa|solo/.test(x)) return 'member';
+  return 'world';
+}
 const OTHER = { id: 'other', name: l('Outros', 'Other'), icon: 'newspaper' };
 
 /** Resumo do período desde o retrato: dinheiro por categoria e acontecimentos agrupados. */
@@ -349,7 +361,7 @@ export function digestEnd(s: GameState, snap: DigestSnap, months: number): Diges
   };
   // fatos importantes primeiro, depois rotina
   for (const m of [...mems.filter((m) => m.important), ...mems.filter((m) => !m.important)]) put(m.kind, m.text);
-  for (const n of s.notifications.filter((x) => x.week > snap.week || (x.week === snap.week && s.week > snap.week))) put(n.kind === 'bad' ? 'incident' : 'note', n.text);
+  for (const n of s.notifications.filter((x) => x.week > snap.week || (x.week === snap.week && s.week > snap.week))) put(n.kind === 'bad' ? 'incident' : noteKind(n.text.pt), n.text);
   const team = pace8(s).log.filter((e) => e.w >= snap.week && (e.k !== 'ag' || e.w > snap.week));
   return { fromWeek: snap.week, toWeek: s.week, months, cashDelta: s.player.cash - snap.cash, cats: cats.slice(0, 10), groups: groups.filter((g) => g.n > 0), team: team.slice(-40) };
 }
@@ -376,7 +388,7 @@ const playerRel = (s: GameState, relId: string) => {
 export function checkStop(s: GameState, crit: StopCriteria, base: { decisions: Set<string>; crises: Set<string>; counters: Set<string>; releases: number; insolvency: number; cashBelow: boolean; cashNeg: boolean }): StopKind | null {
   if (s.ended && !s.flags.sandbox) return 'end';
   const fresh = s.decisions.filter((d) => !base.decisions.has(d.id));
-  if (crit.offer && (fresh.some((d) => d.cat === 'contract' || d.cat === 'business') || s.offers.some((o) => o.status === 'counter' && !base.counters.has(o.id)))) return 'offer';
+  if (crit.offer && (fresh.some((d) => d.cat === 'contract' || (d.cat === 'business' && !d.eventId.startsWith('era8_')) || /offer|buyout|deal|bid|sync|brand/.test(d.eventId)) || s.offers.some((o) => o.status === 'counter' && !base.counters.has(o.id)))) return 'offer';
   if (crit.crisis && (s.crises.some((c) => !c.resolved && !base.crises.has(c.id)) || s.player.insolvencyMonths > base.insolvency || fresh.some((d) => d.cat === 'scandal'))) return 'crisis';
   if (crit.decision && fresh.length) return 'decision';
   if (crit.cash && ((!base.cashBelow && s.player.cash < money(s, crit.cashFloor)) || (!base.cashNeg && s.player.cash < 0))) return 'cash';

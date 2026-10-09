@@ -5,6 +5,7 @@
 
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
+import { slotWeek } from '../agenda';
 import { unrecorded, unreleasedRecorded } from '../production';
 import type { Act, GameState } from '../types';
 import { fmtL, playerActs } from '../util';
@@ -30,9 +31,15 @@ export interface ActStatus {
 
 const has = (a: string[], ...ids: string[]) => ids.some((x) => a.includes(x));
 
+/** Ações da agenda marcadas para a semana corrente do mês (a sede mostra a semana, não o mês inteiro). */
+export function weekActions(s: GameState, actId: string): string[] {
+  const w = s.clock.opened ? Math.min(4, Math.floor(s.clock.dayInMonth / 7) + 1) : 1;
+  return (s.agenda[actId] ?? []).filter((x, i) => slotWeek(x, i) === w).map((x) => x.action);
+}
+
 export function hqKind(s: GameState, act: Act): HqKind {
   if (act.status === 'hiatus' || (act.hiatusUntil !== undefined && act.hiatusUntil > s.week)) return 'hiatus';
-  const acts = (s.agenda[act.id] ?? []).map((x) => x.action);
+  const acts = weekActions(s, act.id);
   if (s.tours?.some((t) => t.actId === act.id && t.status === 'running') || has(acts, 'gigs', 'tour')) return 'tour';
   if (s.sessions.some((x) => x.actId === act.id && !x.done) || has(acts, 'record')) return 'record';
   if (has(acts, 'compose', 'workshop', 'residency_art')) return 'write';

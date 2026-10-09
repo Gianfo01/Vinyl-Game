@@ -148,7 +148,7 @@ export const EVENTS: EventDef[] = [
     text: l('{person} ({act}) vai se casar. A imprensa quer fotos.', '{person} ({act}) is getting married. The press wants photos.'),
     options: [
       { id: 'publicize', label: l('Divulgar (capa de revista)', 'Publicize (magazine cover)'), apply: (s, _r, c) => { const a = act(s, c); a.fame = clamp(a.fame + 1.5, 0, 100); a.fans.casual += 3000; } },
-      { id: 'private', label: l('Cerimônia privada', 'Private ceremony'), apply: (s, _r, c) => { const p = s.persons[String(c.person)]; p.morale += 10; act(s, c).trust += 3; } },
+      { id: 'private', label: l('Cerimônia privada', 'Private ceremony'), apply: (s, _r, c) => { const p = s.persons[String(c.person)]; if (p) p.morale += 10; act(s, c).trust += 3; } },
     ],
   },
   {
