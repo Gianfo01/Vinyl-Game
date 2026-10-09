@@ -3,14 +3,15 @@
 
 import { FAMILIES, MARKETS, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { attendContest, fireScout, hireScout, listenDemo, raiseBid, scoutPool, sendScout, sponsorContest, startAuction, withdrawAuction } from '../../sim/discovery';
+import { attendContest, fireScout, hireScout, listenDemo, raiseBid, scoutPool, sponsorContest, startAuction, withdrawAuction } from '../../sim/discovery';
+import { MISSION_WEEKS, missionDepth, missionLength, missionProgress, missionTarget, startMission } from '../../sim/sys/scout11';
 import { ARCHETYPES, archetypeOf, buySecurity, spyOnRival } from '../../sim/rivals2';
 import { defaultOffer } from '../../sim/contracts';
 import type { GameState } from '../../sim/types';
 import type { Scout } from '../../sim/xtypes';
 import { rngOf } from '../../sim/util';
 import { $, actLink, cityName, genreName, labelLink, pill, rerender, section, toast } from '../common';
-import { h, select } from '../dom';
+import { bar, h, select } from '../dom';
 import { chips, ic, stat, tile } from '../vis';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
@@ -30,10 +31,8 @@ export function scoutsSection(s: GameState): HTMLElement {
     s.scouts.length ? h('div', { class: 'cards' }, s.scouts.map((sc) => tile('fans', sc.name, [
       chips(stat('globe', mkName(sc.region), l('Região', 'Region')), stat('guitar', famName(sc.family), l('Especialidade', 'Specialty')), stat('sparkle', sc.skill, l('Habilidade', 'Skill')), stat('money', $(sc.salary), l('Salário', 'Salary'))),
       h('small', { class: 'muted' }, t(l('Viés: {b}', 'Bias: {b}'), { b: sc.bias > 3 ? t(l('otimista', 'optimistic')) : sc.bias < -3 ? t(l('pessimista', 'pessimistic')) : t(l('equilibrado', 'balanced')) }), ` · ${sc.found} ${t(l('achados', 'finds'))}`),
-      sc.mission ? pill(`${t(l('em missão até sem.', 'on mission until wk'))} ${sc.mission.untilWeek}`, 'warn') : h('div', { class: 'row wrap' },
-        select('', [{ value: '', label: t(l('Enviar a…', 'Send to…')) }, ...MARKETS.map((x) => ({ value: x.id, label: `${t(x.name)}${x.id === sc.region ? ' (1 mês)' : ' (2 meses)'}` }))], (v) => { if (v) { say(sendScout(s, sc.id, v as MarketId, sc.family), l('Olheiro em missão.', 'Scout on mission.')); rerender(); } }),
-        h('button', { class: 'btn small ghost', onclick: () => { fireScout(s, sc.id); rerender(); } }, t(l('Dispensar', 'Let go'))),
-      ),
+      sc.mission ? h('div', null, pill(`${t(l('em missão até sem.', 'on mission until wk'))} ${sc.mission.untilWeek}`, 'warn'), ' ', bar(missionProgress(s, sc) * 100),
+        h('small', { class: 'muted' }, ` ${sc.mission.leads?.length ?? 0} ${t(l('pista(s)', 'lead(s)'))} · ${t(l('grau máx.', 'max degree'))} ${sc.mission.depth ?? 2}`)) : missionForm(s, sc, famName),
     ]))) : h('p', { class: 'muted small' }, t(l('Sem olheiros. Cada um tem região, especialidade, viés e salário.', 'No scouts. Each has a region, specialty, bias and salary.'))),
     h('h4', null, t(l('Disponíveis este mês', 'Available this month'))),
     h('div', { class: 'cards' }, pool.map((sc) => tile('fans', sc.name, [
@@ -41,6 +40,23 @@ export function scoutsSection(s: GameState): HTMLElement {
       h('button', { class: 'btn small', onclick: () => { say(hireScout(s, sc), l('Contratado.', 'Hired.')); pool = pool.filter((x) => x !== sc); rerender(); } }, `${t(l('Contratar', 'Hire'))} ${$(sc.salary)}/${t(l('mês', 'mo'))}`),
     ]))),
   );
+}
+
+function missionForm(s: GameState, sc: Scout, famName: (id: string) => string): HTMLElement {
+  let region: MarketId = sc.region;
+  let fam = sc.family;
+  let weeks = 8;
+  const hint = h('small', { class: 'muted' });
+  const upd = () => { hint.textContent = t(l('{w} semanas · até {n} pista(s) · grau máx. {d}{f}', '{w} weeks · up to {n} lead(s) · max degree {d}{f}'), { w: missionLength(sc, region, weeks), n: missionTarget(sc, weeks), d: missionDepth(sc, weeks), f: fam !== 'any' && fam !== sc.family ? t(l(' · fora da especialidade', ' · off-specialty')) : '' }); };
+  upd();
+  return h('div', null,
+    h('div', { class: 'row wrap' },
+      select<string>(region, MARKETS.map((x) => ({ value: x.id as string, label: `${t(x.name)}${x.id === sc.region ? ' ★' : ''}` })), (v) => { region = v as MarketId; upd(); }),
+      select<string>(fam, [{ value: 'any', label: t(l('Qualquer gênero', 'Any genre')) }, ...FAMILIES.map((f) => ({ value: f.id as string, label: `${famName(f.id)}${f.id === sc.family ? ' ★' : ''}` }))], (v) => { fam = v; upd(); }),
+      select<number>(weeks, MISSION_WEEKS.map((w) => ({ value: w as number, label: t(l('{w} semanas', '{w} weeks'), { w }) })), (v) => { weeks = v; upd(); }),
+      h('button', { class: 'btn small primary', onclick: () => { say(startMission(s, sc.id, region, fam, weeks), l('Olheiro em missão: as pistas chegam semana a semana.', 'Scout on mission: leads arrive week by week.')); rerender(); } }, t(l('Enviar', 'Send'))),
+      h('button', { class: 'btn small ghost', onclick: () => { fireScout(s, sc.id); rerender(); } }, t(l('Dispensar', 'Let go')))),
+    hint);
 }
 
 export function contestsSection(s: GameState): HTMLElement {

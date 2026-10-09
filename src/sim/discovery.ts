@@ -53,7 +53,16 @@ function scoutsMonth(s: GameState, r: Rng): void {
   for (const sc of s.scouts) {
     post(s, `scoutsal:${sc.id}`, -sc.salary, 'scouting', `Salário ${sc.name}`);
     if (!sc.mission || sc.mission.untilWeek > s.week) continue;
-    const { region, family } = sc.mission;
+    const { region, family, leads } = sc.mission;
+    // rodada 11: missão acompanhada semana a semana — o relatório final consolida as pistas já reveladas
+    const known = (leads ?? []).map((id) => s.acts[id]).filter((a) => a && s.knowledge[a.id]);
+    if (known.length) {
+      for (const a of known) s.knowledge[a.id].degree = Math.max(s.knowledge[a.id].degree, 2);
+      sc.found += known.length;
+      notify(s, fmtL(l('{n} voltou de missão com {k} nome(s).', '{n} returned from a mission with {k} name(s).'), { n: sc.name, k: known.length }), 'info');
+      sc.mission = undefined;
+      continue;
+    }
     const matches = Object.values(s.acts).filter((a) => !a.owner && a.status !== 'retired' && a.status !== 'split' && cityById[a.city]?.market === region && (family === 'any' || familyOf(a.genre) === family) && !s.knowledge[a.id]);
     r.shuffle(matches);
     const n = 1 + Math.floor(sc.skill / 35);

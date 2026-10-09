@@ -650,3 +650,13 @@ img.portrait { border: 1px solid var(--line); }
 .cover-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; align-items: stretch; }
 .cover-opt { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-align: center; }
 .cover-opt img { image-rendering: pixelated; border-radius: 4px; }
+/* rodada 11: scouting com névoa e empresário */
+.signal header .grow { flex: 1; min-width: 0; }
+.signal.watched { border-color: var(--accent, #d9a441); }
+.star.on { color: var(--accent, #d9a441); }
+.signal .est .lbl { display: inline-block; min-width: 5.5em; }
+.compare11 th { text-align: left; white-space: nowrap; }
+.mission11 { margin: 0.3rem 0 0.6rem; }
+.mission11 .bar { display: block; margin: 0.2rem 0; }
+.mgr11 { border-top: 1px dashed var(--line); margin-top: 0.4rem; padding-top: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.mgr11 .warn-list { margin: 0; padding-left: 1rem; }

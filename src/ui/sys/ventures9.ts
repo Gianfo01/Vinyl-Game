@@ -18,6 +18,8 @@ import { bar, h, select } from '../dom';
 import { registerArea, registerPageTab, registerSection } from '../registry';
 import { tabs } from '../vis';
 import { visibleAct } from '../../sim/future';
+import { clientExtras, poachTab, reportsTab } from './manager11';
+import { mgr11 } from '../../sim/sys/manager11';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -225,6 +227,7 @@ function rosterTab(s: GameState): HTMLElement {
         c.crisis ? h('div', { class: 'row wrap' }, pill(t(CRISIS_NAME[c.crisis.k]), 'bad'), ' ',
           select<CrisisMove>(move, (['pr', 'rest', 'lawyer'] as CrisisMove[]).map((m) => ({ value: m, label: `${t({ pr: l('Assessoria de imprensa', 'PR push'), rest: l('Pausa e conversa', 'Break and talk'), lawyer: l('Advogados', 'Lawyers') }[m])} (${$(crisisCost(s, m))})` })), (m) => (move = m)),
           btn(l('Agir', 'Act'), () => res(handleCrisis(s, r, a.id, move)), 'btn small primary')) : null,
+        clientExtras(s, c),
         h('div', { class: 'row wrap' },
           k && k.party !== 'player' ? btn(l('Renegociar com a gravadora', 'Renegotiate with the label'), () => res(negotiateFor(s, r, a.id))) : null,
           btn(l('Deixar de empresariar', 'Stop managing'), () => { dropClient(s, a.id); rerender(); }, 'btn small ghost')));
@@ -246,8 +249,10 @@ function prospectTab(s: GameState): HTMLElement {
 
 function managementArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub management9' }, tabs('management9', [
-    { id: 'roster', label: t(l('Meus agenciados', 'My clients')), icon: 'fans', badge: ventures(s).mg.clients.filter((c) => c.crisis).length || undefined, render: () => rosterTab(s) },
+    { id: 'roster', label: t(l('Meus agenciados', 'My clients')), icon: 'fans', badge: ventures(s).mg.clients.filter((c) => c.crisis || mgr11(s).cx[c.actId]?.poach).length || undefined, render: () => rosterTab(s) },
     { id: 'prospect', label: t(l('Prospectar', 'Prospect')), icon: 'handshake', render: () => prospectTab(s) },
+    { id: 'reports', label: t(l('Relatórios', 'Reports')), icon: 'chart-up', render: () => reportsTab(s) },
+    { id: 'poach', label: t(l('Roubar clientes', 'Poach clients')), icon: 'fire', render: () => poachTab(s) },
   ], rerender));
 }
 
