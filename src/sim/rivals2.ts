@@ -95,7 +95,11 @@ export function rivals2Month(s: GameState, r: Rng): void {
   for (const lb of Object.values(s.labels)) {
     if (!lb.active) continue;
     archetypeOf(lb);
-    lb.ceo ??= personName(r, 'en');
+    if (lb.ceo === undefined || lb.ceoSeed10) {
+      const name = personName(r, 'en');
+      delete lb.ceoSeed10;
+      lb.ceo ??= name;
+    }
     // decisões registradas pela IA base viram linhas do relatório
     const key = `lastDec:${lb.id}`;
     const dec = lb.lastDecision ? lb.lastDecision.pt : '';

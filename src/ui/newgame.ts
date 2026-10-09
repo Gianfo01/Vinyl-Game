@@ -13,6 +13,7 @@ import { h, select } from './dom';
 import { deleteSave, importSave, importSaveText, listSaves, loadGame, savePrefs, store } from './store';
 import { prepareNewGame, scenarioButton } from './sys/live/goals';
 import { characterCard } from './charCreate';
+import { labelsCard } from './newgameLabels';
 
 /** Anos marcantes (rodada 9: lista longa; o campo ao lado aceita qualquer ano de 1920 a 2039). */
 const NOTABLE: Record<number, ReturnType<typeof l>> = {
@@ -228,13 +229,15 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.mutators = on ? [...cfg.mutators, m.id] : cfg.mutators.filter((x) => x !== m.id); } }),
     h('span', null, t(m.name), h('small', { class: 'muted' }, ` — ${t(m.desc)}`)))));
   const yearInput = h('input', { type: 'number', min: 1920, max: 2039, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: t(l('Ano exato de início (1920–2039)', 'Exact start year (1920–2039)')),
-    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= 1920 && v <= 2039) { cfg.startYear = v; renderBand(); tk.refresh(); } } }) as HTMLInputElement;
-  const seedInput = h('input', { type: 'text', value: cfg.seed, oninput: (e: Event) => (cfg.seed = (e.target as HTMLInputElement).value || randomSeed()), onchange: () => tk.refresh() });
+    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= 1920 && v <= 2039) { cfg.startYear = v; renderBand(); refreshAll(); } } }) as HTMLInputElement;
+  const seedInput = h('input', { type: 'text', value: cfg.seed, oninput: (e: Event) => (cfg.seed = (e.target as HTMLInputElement).value || randomSeed()), onchange: () => refreshAll() });
   const nameInput = h('input', { type: 'text', value: cfg.companyName, oninput: (e: Event) => (cfg.companyName = (e.target as HTMLInputElement).value || 'Selo') }) as HTMLInputElement;
   const cityBox = h('span');
   const drawCity = () => cityBox.replaceChildren(select(cfg.homeCity, [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id))).map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => (cfg.homeCity = v), cfg.takeover ? { disabled: true } : undefined));
   drawCity();
   const tk = takeoverCard(cfg, nameInput, drawCity);
+  const lc = labelsCard(cfg, () => tk.refresh());
+  function refreshAll(): void { tk.refresh(); lc.refresh(); }
   root.replaceChildren(
     h('div', { class: 'newgame' },
       h('header', null, h('button', { class: 'btn ghost', onclick: () => titleScreen(root, onStart) }, '← ' + t(S.back)), h('h1', null, t(S.newGame))),
@@ -251,7 +254,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
             { value: 'established', label: t(S.scenarioEstablished) },
           ] as { value: RunConfig['scenario']; label: string }[], (v) => (cfg.scenario = v))),
           h('label', null, t(S.startYear), h('div', { class: 'row' },
-            select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); tk.refresh(); }),
+            select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); refreshAll(); }),
             yearInput)),
           h('label', null, t(S.homeCity), cityBox),
         ),
@@ -260,7 +263,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
             { value: 'historic', label: t(S.modeHistoric) },
             { value: 'free', label: t(S.modeFree) },
             { value: 'chaos', label: t(S.modeChaos) },
-          ] as { value: RunConfig['mode']; label: string }[], (v) => { cfg.mode = v; tk.refresh(); })),
+          ] as { value: RunConfig['mode']; label: string }[], (v) => { cfg.mode = v; refreshAll(); })),
           h('fieldset', null, h('legend', null, t(S.storyteller)), STORYTELLERS.map((st) => h('label', { class: 'radio' },
             h('input', { type: 'radio', name: 'st', checked: cfg.storyteller === st.id, onchange: () => (cfg.storyteller = st.id) }),
             h('span', null, h('b', null, t(st.name)), h('small', { class: 'muted' }, ` — ${t(st.desc)}`))))),
@@ -269,15 +272,16 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
           ] as { value: RunConfig['difficulty']; label: string }[], (v) => (cfg.difficulty = v))),
           h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.ironman = (e.target as HTMLInputElement).checked) }), t(S.ironman)),
           h('label', { class: 'check', title: t(l('Cerca de 740 artistas reais (EUA, Reino Unido, Itália, Brasil e mundo) surgem perto do ano real de estreia, com integrantes e discografia; as gravadoras, festivais, rádios, revistas, plataformas, paradas e prêmios aparecem com os nomes reais (Beatles, Motown, Woodstock, Billboard, Grammy…). Artistas gerados continuam inventados.', 'About 740 real artists (US, UK, Italy, Brazil and worldwide) appear near their real debut year, with members and discographies; labels, festivals, radio, magazines, platforms, charts and awards use their real names (Beatles, Motown, Woodstock, Billboard, Grammy…). Generated artists stay invented.')) },
-            h('input', { type: 'checkbox', checked: true, onchange: (e: Event) => { cfg.realNames = (e.target as HTMLInputElement).checked; tk.refresh(); } }), t(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'))),
+            h('input', { type: 'checkbox', checked: true, onchange: (e: Event) => { cfg.realNames = (e.target as HTMLInputElement).checked; refreshAll(); } }), t(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'))),
           h('label', { class: 'check', title: t(l('Só no modo histórico: artistas reais tendem a morrer no mesmo ano em que morreram na vida real. Desligado, a morte é só simulada (idade, saúde, vícios).', 'Historic mode only: real artists tend to die in the same year they did in real life. Off, death is only simulated (age, health, addiction).')) },
             h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.realFates = (e.target as HTMLInputElement).checked) }), t(l('Mortes nos anos reais (modo histórico)', 'Deaths in their real years (historic mode)'))),
-          h('label', null, t(S.seed), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; tk.refresh(); } }, '🎲'))),
+          h('label', null, t(S.seed), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; refreshAll(); } }, '🎲'))),
           h('fieldset', null, h('legend', null, t(S.contentFilters)), SENSITIVE.map((x) => h('label', { class: 'check' },
             h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.contentFilters = on ? [...cfg.contentFilters, x.id] : cfg.contentFilters.filter((y) => y !== x.id); } }),
             t(x.label)))),
         ),
         tk.el,
+        lc.el,
         customCard(cfg),
         characterCard(cfg),
         ...newgameCards().map((f) => f(cfg, (y) => { yearInput.value = String(y); renderBand(); })),

@@ -35,6 +35,19 @@ export interface RunConfig {
   character?: CharacterSpec;
   /** rodada 9: id de uma gravadora rival gerada que o jogador assume no começo */
   takeover?: string;
+  /** rodada 10: quais gravadoras rivais existem e como começam (ausente = comportamento histórico de sempre) */
+  labels?: LabelSetup;
+}
+
+export interface LabelSetup {
+  /** ids de definição escolhidos (catálogo + extras); ausente = conjunto padrão */
+  ids?: string[];
+  /** número de rivais (0–60); ausente = o tamanho da lista escolhida */
+  count?: number;
+  /** 'history' = tamanhos e elencos pela história (padrão); 'equal' = todos (inclusive o jogador) começam iguais */
+  start?: 'history' | 'equal';
+  /** gravadoras fundadas depois do ano de início: 'default' = as da lista escolhida; 'all' = todas; 'none' = nenhuma */
+  future?: 'default' | 'all' | 'none';
 }
 
 export interface StartCustom {
@@ -390,6 +403,12 @@ export interface Label {
   ceo?: string;
   debt?: number;
   parentLabel?: string;
+  /** rodada 10: manual de estratégia escolhido (PlaybookId); ausente = derivado do arquétipo */
+  playbook?: string;
+  /** rodada 10: id do líder atual (ver sys/leaders10.ts) */
+  leaderId?: string;
+  /** rodada 10: nome do CEO veio dos líderes antes do 1º mês (rivals2 ainda sorteia um nome, para não mudar o fluxo do acaso) */
+  ceoSeed10?: 1;
 }
 
 export interface Knowledge {
