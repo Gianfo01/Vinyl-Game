@@ -54,3 +54,10 @@ import './dilemmas9';
 // Rodada 9: prestígio dos selos e empreendimentos (festival, editora, estúdio, agência, mídia, streaming, gestão).
 import './standing9';
 import './ventures9';
+// Rodada 9: mundo vivo — crônica (Lendas), alma das pessoas, relíquias, boatos e jornal, história prévia.
+import './pace9';
+import './chron9';
+import './soul9';
+import './relics9';
+import './press9';
+import './world9';

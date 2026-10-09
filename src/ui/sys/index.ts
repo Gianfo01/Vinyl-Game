@@ -29,3 +29,5 @@ import './stories8';
 import './rights8';
 // Rodada 9: empreendimentos, gestão de artistas e prestígio dos selos.
 import './ventures9';
+// Rodada 9: Lendas (crônica do mundo, biografias, relíquias, jornal, livro e mundo persistente).
+import './lendas9';

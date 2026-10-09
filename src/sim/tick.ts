@@ -172,7 +172,8 @@ function genresMonth(s: GameState, r: ReturnType<typeof rngOf>): void {
     const g = rel ? s.acts[rel.actId]?.genre : undefined;
     if (g) counts[g] = (counts[g] ?? 0) + (101 - e.pos) / 100;
   }
-  const alive = GENRES.filter((g) => g.born <= s.year);
+  // gêneros de movimento de outra partida aberta na mesma sessão não contam (GENRES é global)
+  const alive = GENRES.filter((g) => g.born <= s.year && (!g.id.startsWith('mv_') || s.movements.some((m) => m.genreId === g.id)));
   const total = Object.values(counts).reduce((t, x) => t + x, 0) || 1;
   for (const g of alive) {
     if (g.born === s.year && s.month === 0) {

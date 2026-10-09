@@ -280,6 +280,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
         tk.el,
         customCard(cfg),
         characterCard(cfg),
+        ...newgameCards().map((f) => f(cfg, (y) => { yearInput.value = String(y); renderBand(); })),
         h('section', { class: 'card wide' }, h('h3', null, t(S.card)), cards),
         h('section', { class: 'card wide' }, h('h3', null, t(S.mutators)), muts),
       ),
@@ -292,4 +293,10 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
       } }, t(S.start))),
     ),
   );
+}
+
+/** Cartões extras do Novo Jogo (rodada 9: mundo/história prévia). Função içada: segura na ordem de carga. */
+export function newgameCards(): ((cfg: RunConfig, onYear: (y: number) => void) => HTMLElement)[] {
+  const f = newgameCards as unknown as { l?: ((cfg: RunConfig, onYear: (y: number) => void) => HTMLElement)[] };
+  return (f.l ??= []);
 }

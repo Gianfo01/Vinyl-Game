@@ -180,7 +180,7 @@ const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; are
   { id: 'label', label: l('Selo', 'Label'), icon: 'building', areas: ['hq', 'company', 'business', 'industry', 'identity'] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', areas: ['artists', 'directory', 'people', 'market'] },
   { id: 'music', label: l('Música', 'Music'), icon: 'disc', areas: ['creation', 'catalog', 'shows'] },
-  { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['charts', 'media', 'world'] },
+  { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['charts', 'media', 'world', 'lendas'] },
   { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you'] },
 ];
 const lastInGroup: Record<string, string> = {};

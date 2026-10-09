@@ -85,7 +85,15 @@ export function remember(
     h.push(e.id);
     if (h.length > 40) h.splice(0, h.length - 40);
   }
+  for (const fn of rememberListeners()) fn(s, e);
   return e;
+}
+
+/** Observadores do diário (rodada 9: a crônica do mundo lê os fatos sem tocar em cada sistema).
+ *  Função içada: pode ser chamada por módulos que carregam antes deste terminar. */
+export function rememberListeners(): ((s: GameState, e: MemoryEntry) => void)[] {
+  const f = rememberListeners as unknown as { l?: ((s: GameState, e: MemoryEntry) => void)[] };
+  return (f.l ??= []);
 }
 
 export function notify(s: GameState, text: L, kind: Notification['kind'] = 'info'): void {
