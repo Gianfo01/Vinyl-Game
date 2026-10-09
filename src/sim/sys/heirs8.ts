@@ -1,5 +1,7 @@
-// Herdeiros (rodada 8): quando o dono morre (idade, saúde, vícios), se afasta por saúde ou se aposenta,
-// o jogador continua a run com um herdeiro vivo — filho(a) adulto(a), cônjuge ou parente. O herdeiro tem
+// Herdeiros (rodada 8, ampliado na 9): quando o dono morre (idade, saúde, vícios), se afasta por saúde ou
+// se aposenta, a carreira SÓ continua passando o selo a outra pessoa — filho(a) adulto(a), cônjuge ou
+// parceiro(a), parente, funcionário(a) de confiança ou artista próximo — e o jogador passa a controlar
+// essa pessoa, com os atributos dela. Não existe outro caminho de continuação. O herdeiro tem
 // idade, atributos e traços próprios; herda o patrimônio (menos o imposto de herança da época), a
 // participação na empresa e parte da reputação. Sem herdeiro, a run termina num final próprio.
 // A escolha entra na mesa de decisões (o avanço longo para) e, sem resposta, vale o melhor candidato.
@@ -13,13 +15,13 @@ import type { Decision, GameState } from '../types';
 import { fmtL, money, nextId, notify, remember } from '../util';
 import { capital } from './capital';
 import { ensurePlayerPerson, life, playerPerson } from './life';
-import { makeOwner, ownerOf, successionGate, succession, type OwnerAttr } from './people/owner';
+import { makeOwner, ownerOf, successionGate, type OwnerAttr } from './people/owner';
 import { P, type Owner } from './people/state';
 import { persona, PLAYER_TRAITS } from './persona';
 import { vices } from './vices';
 
 export interface Relative { name: string; born: number; aptitude: number; rel: 'sibling' | 'parent' | 'cousin'; personId?: string }
-export interface HeirCand { key: string; name: string; born: number; aptitude: number; rel: 'kid' | 'spouse' | 'sibling' | 'parent' | 'cousin' | 'staff'; personId?: string }
+export interface HeirCand { key: string; name: string; born: number; aptitude: number; rel: 'kid' | 'spouse' | 'partner' | 'sibling' | 'parent' | 'cousin' | 'staff' | 'artist'; personId?: string; staffId?: string; actId?: string }
 export interface HeirState {
   relatives: Relative[];
   /** linha do tempo das gerações (para a interface) */
@@ -36,12 +38,12 @@ export const heirs = (s: GameState): HeirState => {
 };
 
 export const REL_NAME: Record<HeirCand['rel'], L> = {
-  kid: l('Filho(a)', 'Child'), spouse: l('Cônjuge', 'Spouse'), sibling: l('Irmão(ã)', 'Sibling'), parent: l('Pai/mãe', 'Parent'), cousin: l('Primo(a)', 'Cousin'), staff: l('Funcionário(a)', 'Staff member'),
+  kid: l('Filho(a)', 'Child'), spouse: l('Cônjuge', 'Spouse'), sibling: l('Irmão(ã)', 'Sibling'), parent: l('Pai/mãe', 'Parent'), cousin: l('Primo(a)', 'Cousin'), staff: l('Funcionário(a) de confiança', 'Trusted staff'), partner: l('Parceiro(a)', 'Partner'), artist: l('Artista próximo(a)', 'Close artist'),
 };
 
 const ADULT = 18;
 
-/** Herdeiros vivos e adultos (família). Funcionários só entram se o jogador já os nomeou sucessores. */
+/** Sucessores possíveis: família adulta, parceiro(a), funcionários de confiança e artistas próximos. */
 export function heirCandidates(s: GameState): HeirCand[] {
   const o = ownerOf(s);
   const out: HeirCand[] = [];
@@ -55,17 +57,30 @@ export function heirCandidates(s: GameState): HeirCand[] {
   });
   const pt = L0.partner;
   if (pt && pt.stage === 'married' && alive(pt.personId)) out.push({ key: 'spouse', name: pt.name, born: pt.born, aptitude: clamp(35 + pt.affinity / 3, 20, 80), rel: 'spouse', personId: pt.personId });
+  else if (pt && pt.affinity >= 40 && s.year - pt.born >= ADULT && alive(pt.personId)) out.push({ key: 'partner', name: pt.name, born: pt.born, aptitude: clamp(30 + pt.affinity / 4, 20, 70), rel: 'partner', personId: pt.personId });
   else if (!pt && o.spouse) out.push({ key: 'spouse', name: o.spouse, born: o.born + 2, aptitude: 45, rel: 'spouse' });
   heirs(s).relatives.forEach((rv, i) => {
     if (s.year - rv.born < ADULT || s.year - rv.born > 85 || !alive(rv.personId)) return;
     out.push({ key: `rel:${i}`, name: rv.name, born: rv.born, aptitude: rv.aptitude, rel: rv.rel, personId: rv.personId });
   });
-  if (o.heir?.startsWith('staff:')) {
-    const sf = s.player.staff.find((x) => x.id === o.heir!.slice(6));
-    if (sf) out.push({ key: o.heir, name: sf.name, born: s.year - 40, aptitude: sf.skill, rel: 'staff' });
+  // funcionários de confiança: o designado sempre; os demais com habilidade e tempo de casa
+  for (const sf of s.player.staff) {
+    const key = `staff:${sf.id}`;
+    if (key !== o.heir && (sf.skill < 55 || s.week - sf.hiredWeek < 104)) continue;
+    out.push({ key, name: sf.name, born: s.year - 30 - (sf.skill % 20), aptitude: sf.skill, rel: 'staff', staffId: sf.id });
+  }
+  // artistas próximos: do próprio selo, com confiança alta no dono
+  const me = playerPerson(s)?.id;
+  const close = Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand && a.trust >= 70 && a.status !== 'retired' && a.status !== 'split').sort((a, b) => b.trust - a.trust).slice(0, 3);
+  for (const a of close) {
+    const pid = a.leaderId && s.persons[a.leaderId] ? a.leaderId : a.members.find((x) => s.persons[x]?.alive);
+    const p = pid ? s.persons[pid] : undefined;
+    if (!p || !p.alive || p.isPlayer || pid === me || s.year - p.born < ADULT) continue;
+    const biz = p.skills.biz ?? 30;
+    out.push({ key: `artist:${pid}`, name: p.name, born: p.born, aptitude: clamp(biz * 0.6 + a.trust * 0.3, 15, 85), rel: 'artist', personId: pid, actId: a.id });
   }
   // melhor candidato primeiro: o designado, depois aptidão com um peso para quem está no auge
-  const score = (c: HeirCand) => (c.key === o.heir ? 1000 : 0) + c.aptitude - Math.abs(s.year - c.born - 38) * 0.4 + (c.rel === 'kid' ? 5 : 0);
+  const score = (c: HeirCand) => (c.key === o.heir ? 1000 : 0) + c.aptitude - Math.abs(s.year - c.born - 38) * 0.4 + (c.rel === 'kid' ? 5 : 0) - (c.rel === 'staff' || c.rel === 'artist' ? 8 : 0);
   return out.sort((a, b) => score(b) - score(a));
 }
 
@@ -85,6 +100,11 @@ export function inheritanceTax(s: GameState, rel: HeirCand['rel']): number {
 /** Prévia do que o herdeiro recebe (para a interface). */
 export function inheritancePreview(s: GameState, c: HeirCand, reason: 'death' | 'retire' | 'health'): { wealth: number; tax: number; repLoss: number } {
   const o = ownerOf(s);
+  if (!isFamily(c.rel)) {
+    // fora da família: assume o selo, mas com o próprio patrimônio (o espólio fica com a família/o Estado)
+    const own = c.rel === 'partner' ? Math.max(0, o.wealth) * 0.25 : c.rel === 'artist' ? money(s, 8000) + Math.max(0, (c.actId ? s.acts[c.actId]?.cash ?? 0 : 0) * 0.2) : money(s, 5000 + c.aptitude * 100);
+    return { wealth: Math.round(own), tax: 0, repLoss: c.rel === 'artist' ? 3 : c.aptitude >= 65 ? 2 : 4 };
+  }
   const tax = reason === 'death' ? inheritanceTax(s, c.rel) : 0;
   // em vida, o dono doa 60% e guarda o resto para a aposentadoria
   const gross = Math.max(0, o.wealth - personalDebt(s));
@@ -93,13 +113,18 @@ export function inheritancePreview(s: GameState, c: HeirCand, reason: 'death' | 
   return { wealth, tax, repLoss };
 }
 
+/** Herda o patrimônio de família (os demais assumem só o selo). */
+export function isFamily(rel: HeirCand['rel']): boolean {
+  return rel === 'kid' || rel === 'spouse' || rel === 'sibling' || rel === 'parent' || rel === 'cousin';
+}
+
 function personalDebt(s: GameState): number {
   return vices(s).loans.reduce((t, x) => t + x.balance, 0);
 }
 
 // ---------------------------------------------------------------- decisão na mesa
 
-const MAX_OPTS = 5;
+const MAX_OPTS = 6;
 
 function heirOption(i: number) {
   return {
@@ -144,14 +169,14 @@ export function beginSuccession(s: GameState, r: Rng, reason: 'death' | 'retire'
     return {
       id: `h${i}`,
       label: fmtL(l('{n} — {r}, {a} anos', '{n} — {r}, age {a}'), { n: c.name, r: REL_NAME[c.rel], a: s.year - c.born }),
-      hint: fmtL(l('Aptidão {ap} · herda {w}{t}', 'Aptitude {ap} · inherits {w}{t}'), { ap: Math.round(c.aptitude), w: `$${Math.round(pv.wealth / 100).toLocaleString('en-US')}`, t: pv.tax ? fmtL(l(' (imposto {p}%)', ' ({p}% tax)'), { p: Math.round(pv.tax * 100) }) : '' }),
+      hint: fmtL(isFamily(c.rel) ? l('Aptidão {ap} · herda {w}{t}', 'Aptitude {ap} · inherits {w}{t}') : l('Aptidão {ap} · patrimônio próprio {w}', 'Aptitude {ap} · own wealth {w}'), { ap: Math.round(c.aptitude), w: `$${Math.round(pv.wealth / 100).toLocaleString('en-US')}`, t: pv.tax ? fmtL(l(' (imposto {p}%)', ' ({p}% tax)'), { p: Math.round(pv.tax * 100) }) : '' }),
     };
   });
   const why = reason === 'death' ? l('morreu', 'has died') : reason === 'health' ? l('não tem mais saúde para comandar', 'can no longer lead for health reasons') : l('decidiu se aposentar', 'decided to retire');
   const d: Decision = {
     id: nextId(s, 'd'), eventId: 'heir_choice8', cat: 'people',
     title: l('Sucessão: quem assume?', 'Succession: who takes over?'),
-    text: fmtL(l('{o} {w}. A família se reúne: quem continua {c}? O herdeiro leva o patrimônio (menos o imposto), a sua participação na empresa e parte da reputação.', '{o} {w}. The family gathers: who carries on {c}? The heir takes the wealth (minus tax), your stake in the company and part of the reputation.'), { o: o.name, w: why, c: s.config.companyName }),
+    text: fmtL(l('{o} {w}. Quem assume {c}? Você passa a jogar com essa pessoa. A família herda o patrimônio (menos o imposto); funcionários, artistas e parceiros assumem só o selo, com o que já têm.', '{o} {w}. Who takes over {c}? You will play as that person. Family inherits the wealth (minus tax); staff, artists and partners take only the label, with what they already own.'), { o: o.name, w: why, c: s.config.companyName }),
     options, ctx, week: s.week, defaultOption: 'h0', tags: ['family'],
   };
   s.decisions.push(d);
@@ -189,11 +214,8 @@ export function applyHeir(s: GameState, r: Rng, key: string, reason: 'death' | '
   const pv = inheritancePreview(s, c, reason);
   // dívidas pessoais saem do espólio
   vices(s).loans = [];
-  if (c.rel === 'staff') {
-    // sucessor profissional: regra antiga (sem herança de família)
-    old.heir = key;
-    succession(s, r, reason);
-  } else {
+  {
+    const fam = isFamily(c.rel);
     const next: Owner = makeOwner(s, r, old.generation + 1);
     next.name = c.personId && s.persons[c.personId] ? s.persons[c.personId].name : c.name;
     next.born = c.born;
@@ -201,17 +223,29 @@ export function applyHeir(s: GameState, r: Rng, key: string, reason: 'death' | '
     const apt = c.aptitude;
     for (const a of Object.keys(next.attrs) as OwnerAttr[]) {
       // filhos aprendem em casa; cônjuge viveu o negócio de perto; parentes trazem só o próprio jeito
-      const w = c.rel === 'kid' ? 0.35 : c.rel === 'spouse' ? 0.3 : 0.15;
+      const w = c.rel === 'kid' ? 0.35 : c.rel === 'spouse' ? 0.3 : c.rel === 'staff' || c.rel === 'partner' ? 0.2 : 0.15;
       next.attrs[a] = Math.round(clamp(old.attrs[a] * w + apt * 0.45 + next.attrs[a] * (0.55 - w), 10, 95));
     }
+    // a pessoa traz o próprio ofício: funcionário pela função, artista pelo carisma de palco
+    const sf = c.staffId ? s.player.staff.find((x) => x.id === c.staffId) : undefined;
+    if (sf) {
+      const k: OwnerAttr = sf.role === 'anr' || sf.role === 'producer' ? 'ear' : sf.role === 'legal' || sf.role === 'manager' ? 'negotiation' : sf.role === 'publicist' ? 'charisma' : 'management';
+      next.attrs[k] = clamp(next.attrs[k] + 10, 10, 95);
+      s.player.staff = s.player.staff.filter((x) => x !== sf);
+    }
+    if (c.rel === 'artist') { next.attrs.charisma = clamp(next.attrs.charisma + 12, 10, 95); next.attrs.ear = clamp(next.attrs.ear + 6, 10, 95); }
     next.wealth = pv.wealth;
-    next.house = old.house;
+    next.house = fam ? old.house : -1;
     next.retired = [...(old.retired ?? []), { name: old.name, years: `${old.since ?? old.born + 30}–${s.year}` }].slice(-6);
     next.stress = 35;
     next.health = clamp(95 - Math.max(0, s.year - c.born - 40), 50, 95);
     // família: quem vira o quê para o novo dono
     const rels: Relative[] = [];
-    if (c.rel === 'spouse') {
+    if (!fam) {
+      // fora da família: os parentes do antigo dono não são parentes do novo
+      if (c.rel === 'partner' || L0.partner?.personId === c.personId) L0.partner = null;
+      L0.kidsX = {};
+    } else if (c.rel === 'spouse') {
       next.kids = old.kids;
       L0.partner = null;
     } else {
@@ -223,7 +257,7 @@ export function applyHeir(s: GameState, r: Rng, key: string, reason: 'death' | '
       L0.kidsX = {};
     }
     if (reason !== 'death' && c.rel === 'kid') rels.push({ name: old.name, born: old.born, aptitude: 50, rel: 'parent', personId: oldPerson?.id });
-    const keep = st.relatives.filter((rv, i) => `rel:${i}` !== key);
+    const keep = fam ? st.relatives.filter((rv, i) => `rel:${i}` !== key) : [];
     st.relatives = [...keep, ...rels].filter((rv) => s.year - rv.born < 90).slice(-8);
     L0.exes = [];
     L0.candidates = [];

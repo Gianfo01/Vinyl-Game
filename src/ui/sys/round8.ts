@@ -37,17 +37,17 @@ function heirSection(s: GameState): HTMLElement {
     const body = h('div', null,
       cands.length
         ? h('div', null,
-          h('p', null, t(l('Você passa o selo em vida: o herdeiro recebe 60% do seu patrimônio (sem imposto) e assume a empresa. A run continua com ele.', 'You hand over the label while alive: the heir receives 60% of your wealth (tax free) and takes over the company. The run continues with them.'))),
+          h('p', null, t(l('Você passa o selo em vida e passa a jogar como o sucessor. Família recebe 60% do seu patrimônio (sem imposto); funcionários, artistas e parceiros assumem só o selo.', 'You hand over the label while alive and play on as the successor. Family receives 60% of your wealth (tax free); staff, artists and partners take only the company. The run continues with them.'))),
           h('label', null, t(l('Herdeiro: ', 'Heir: ')), select(pick, cands.map((c) => ({ value: c.key, label: `${c.name} — ${t(REL_NAME[c.rel])}, ${s.year - c.born}` })), (v) => { pick = v; })),
           h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => { const e = retireOwner(s, rngOf(s), pick); close(); say(e, l('O selo tem um novo comando.', 'The label has new leadership.')); } }, t(l('Aposentar-se e passar o selo', 'Retire and hand over the label')))))
         : h('div', null,
-          h('p', { class: 'bad' }, t(l('Você não tem herdeiros vivos e adultos. Aposentar-se agora encerra a run (final: Aposentadoria Tranquila).', 'You have no living adult heirs. Retiring now ends the run (ending: Quiet Retirement).'))),
+          h('p', { class: 'bad' }, t(l('Ninguém pode assumir o selo (família adulta, parceiro, funcionário de confiança ou artista próximo). Aposentar-se agora encerra a run (final: Aposentadoria Tranquila).', 'You have no living adult heirs. Retiring now ends the run (ending: Quiet Retirement).'))),
           h('button', { class: 'btn danger', onclick: () => { const e = retireOwner(s, rngOf(s), 'none'); close(); say(e, l('Fim de carreira.', 'Career over.')); window.dispatchEvent(new Event('vtn-ended')); } }, t(l('Aposentar e encerrar a run', 'Retire and end the run')))),
     );
     const close = modal(t(l('Aposentadoria', 'Retirement')), body);
   };
   return section(t(l('Herdeiros e aposentadoria', 'Heirs and retirement')),
-    h('p', { class: 'muted small' }, t(l('Se você morrer (idade, saúde, vícios) ou se aposentar, a run continua com um herdeiro vivo: filho(a) adulto(a), cônjuge ou parente. Ele tem idade, atributos e traços próprios e herda o patrimônio (menos o imposto de herança da época), a sua parte da empresa e parte da reputação. Sem herdeiros, a run termina.', 'If you die (age, health, vices) or retire, the run continues with a living heir: an adult child, spouse or relative. They have their own age, attributes and traits and inherit your wealth (minus the era\'s inheritance tax), your stake in the company and part of the reputation. With no heirs, the run ends.'))),
+    h('p', { class: 'muted small' }, t(l('Se você morrer (idade, saúde, vícios) ou se aposentar, a carreira só continua passando o selo a outra pessoa — filho(a) adulto(a), cônjuge/parceiro(a), parente, funcionário de confiança ou artista próximo — e você passa a jogar com ela. Ele tem idade, atributos e traços próprios e herda o patrimônio (menos o imposto de herança da época), a sua parte da empresa e parte da reputação. Sem herdeiros, a run termina.', 'If you die (age, health, vices) or retire, the career only continues by handing the label to someone else — adult child, spouse/partner, relative, trusted staffer or close artist — and you play on as them. They have their own age, attributes and traits and inherit your wealth (minus the era\'s inheritance tax), your stake in the company and part of the reputation. With no heirs, the run ends.'))),
     st.pending ? h('p', null, pill(t(l('sucessão em andamento — veja a mesa de decisões', 'succession under way — see the decision desk')), 'warn')) : null,
     cands.length ? h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Herdeiro', 'Heir'))), h('th', null, t(l('Parentesco', 'Relation'))), h('th', null, t(l('Idade', 'Age'))), h('th', null, t(l('Aptidão', 'Aptitude'))), h('th', null, t(l('Herdaria (morte)', 'Would inherit (death)'))))),
@@ -57,7 +57,7 @@ function heirSection(s: GameState): HTMLElement {
           h('td', null, c.personId ? h('button', { class: 'link', onclick: () => openPersonPage(c.personId!) }, c.name) : c.name),
           h('td', null, t(REL_NAME[c.rel])), h('td', null, s.year - c.born), h('td', null, bar(c.aptitude), ` ${Math.round(c.aptitude)}`),
           h('td', null, `${$(pv.wealth)}${pv.tax ? ` (−${pct(pv.tax)})` : ''}`));
-      }))) : h('p', { class: 'bad small' }, t(l('Nenhum herdeiro vivo e adulto. Case-se, tenha filhos ou espere eles crescerem.', 'No living adult heir. Marry, have children or wait for them to grow up.'))),
+      }))) : h('p', { class: 'bad small' }, t(l('Ninguém para assumir. Case-se, tenha filhos, forme um funcionário de confiança (2+ anos, habilidade 55+) ou conquiste a confiança de um artista (70+).', 'Nobody to take over. Marry, have children, groom a trusted staffer (2+ years, skill 55+) or earn an artist\'s trust (70+).'))),
     st.relatives.length ? h('p', { class: 'small' }, t(l('Parentes: ', 'Relatives: ')), st.relatives.map((r) => `${r.name} (${t(REL_NAME[r.rel])}, ${s.year - r.born})`).join(' · ')) : null,
     st.lineage.length ? h('p', { class: 'small muted' }, t(l('Linhagem: ', 'Lineage: ')), st.lineage.map((x) => `${x.name} ${x.from}–${x.to}${x.heir ? ` → ${x.heir}` : ''}`).join(' · ')) : null,
     h('div', { class: 'row' }, h('button', { class: 'btn', disabled: !!st.pending || !!s.ended, onclick: retire }, t(l('Aposentar-se…', 'Retire…')))),

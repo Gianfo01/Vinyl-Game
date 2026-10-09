@@ -51,3 +51,6 @@ import './stories8';
 import './rights8';
 import './dossier8';
 import './dilemmas9';
+// Rodada 9: prestígio dos selos e empreendimentos (festival, editora, estúdio, agência, mídia, streaming, gestão).
+import './standing9';
+import './ventures9';

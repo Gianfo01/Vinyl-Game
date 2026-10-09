@@ -27,3 +27,5 @@ import './eras8';
 import './hq8';
 import './stories8';
 import './rights8';
+// Rodada 9: empreendimentos, gestão de artistas e prestígio dos selos.
+import './ventures9';
