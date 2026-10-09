@@ -38,12 +38,24 @@ export const hqHooks: {
   tip?: (s: GameState, actId: string) => string[];
   /** lista lateral (acesso direto, para quem prefere rapidez) */
   side?: (s: GameState) => HTMLElement;
+  /** rodada 12: visitantes (negociações em curso sentam na sala de reunião) */
+  visitors?: (s: GameState) => HqVisitor[];
+  /** rodada 12: balão e dica da equipe (trabalhando, sobrecarregada) */
+  staffBubble?: (s: GameState, staffId: string) => BubbleKind | null;
+  staffTip?: (s: GameState, staffId: string) => string[];
+  /** rodada 12: dica de móveis/discos sem rótulo (n = ordem do objeto daquele tipo na cena) */
+  itemTip?: (s: GameState, kind: string, n: number) => { label: string; sub: string } | null;
+  /** rodada 12: linhas extras na dica de cada sala (o estado real do negócio) */
+  roomTip?: (s: GameState, kind: RoomKind) => string[];
 } = {};
+/** rodada 12: alguém de fora na sede (ex.: o empresário de um artista negociando). */
+export interface HqVisitor { key: string; name: string; seed: string; room: RoomKind; label: L; icon: Activity['icon']; tip: string[]; onClick?: () => void }
 const FPS_MS = 33;
 
 interface Agent {
   key: string;
-  kind: 'member' | 'rep' | 'staff';
+  kind: 'member' | 'rep' | 'staff' | 'visitor';
+  visit?: HqVisitor;
   personId?: string;
   staffId?: string;
   actId?: string;
@@ -112,6 +124,8 @@ export class HqView {
   /** balões e etiquetas calculados no sync (não a cada quadro) */
   private bubbles = new Map<string, BubbleKind>();
   private tags: RoomTag[] = [];
+  /** rodada 12: discos e prêmios na parede (hover = qual conquista) */
+  private decalHits: Hit[] = [];
   private statusKey = '';
   /** camada de estado (balões e etiquetas das salas) ligada? */
   overlay = true;
@@ -218,10 +232,11 @@ export class HqView {
       if (!this.userCam) this.resetCam();
       this.refreshToolbar();
     }
-    const ak = `${this.mode}|${s.week}|${acts.map((id) => `${id}:${(s.agenda[id] ?? []).map((x) => x.action).join('+')}:${s.acts[id].status}:${s.acts[id].members.map((m) => (s.persons[m]?.look ? lookKey(s.persons[m].look!) : m)).join('.')}`).join(',')}|${s.player.staff.map((x) => x.id + x.role).join(',')}`;
+    const ak = `${this.mode}|${s.week}|${acts.map((id) => `${id}:${(s.agenda[id] ?? []).map((x) => x.action).join('+')}:${s.acts[id].status}:${s.acts[id].members.map((m) => (s.persons[m]?.look ? lookKey(s.persons[m].look!) : m)).join('.')}`).join(',')}|${s.player.staff.map((x) => x.id + x.role).join(',')}|${this.site === 'main' ? (hqHooks.visitors?.(s) ?? []).map((v) => v.key).join(',') : ''}`;
     // balões e etiquetas: baratos de recalcular a cada 400 ms
     const bub = new Map<string, BubbleKind>();
     if (hqHooks.bubble) for (const id of acts) { const k = hqHooks.bubble(s, id); if (k) bub.set(id, k); }
+    if (hqHooks.staffBubble && this.site === 'main') for (const x of s.player.staff) { const k = hqHooks.staffBubble(s, x.id); if (k) bub.set(`s:${x.id}`, k); }
     const tags = hqHooks.roomTags?.(s) ?? [];
     const stk = `${[...bub].map(([a, b]) => a + b).join(',')}|${tags.map((x) => x.room + x.text + x.tone).join(',')}`;
     if (stk !== this.statusKey) {
@@ -264,6 +279,7 @@ export class HqView {
     }
     const staff = this.site === 'main' ? s.player.staff : [];
     for (const st of staff) mk(`s:${st.id}`, { kind: 'staff', staffId: st.id, name: st.name, look: lookOf({ id: st.id }), role: null, staffRole: st.role, variant: 0, activity: staffActivity(s, st.id) });
+    if (this.site === 'main') for (const v of hqHooks.visitors?.(s) ?? []) mk(`v:${v.key}`, { kind: 'visitor', visit: v, name: v.name, look: lookOf({ id: v.seed }), role: null, variant: variantOf(v.seed), activity: { kind: 'work', label: v.label, icon: v.icon } as Activity });
     this.agents = want;
     this.recording = [...want.values()].some((a) => a.activity.kind === 'record');
     this.assignSpots(snap);
@@ -278,12 +294,15 @@ export class HqView {
       return sp ?? null;
     };
     const agents = [...this.agents.values()];
-    const pri = (a: Agent) => (a.kind === 'staff' ? 0 : a.activity.kind === 'record' ? 1 : a.activity.kind === 'rehearse' ? 2 : a.activity.kind === 'write' ? 3 : a.activity.kind === 'rest' ? 4 : 5);
+    const pri = (a: Agent) => (a.kind === 'staff' || a.kind === 'visitor' ? 0 : a.activity.kind === 'record' ? 1 : a.activity.kind === 'rehearse' ? 2 : a.activity.kind === 'write' ? 3 : a.activity.kind === 'rest' ? 4 : 5);
     agents.sort((a, b) => pri(a) - pri(b) || a.key.localeCompare(b.key));
     for (const a of agents) {
       let sp: Spot | null = null;
       const k = a.activity.kind;
-      if (a.kind === 'staff') {
+      if (a.kind === 'visitor') {
+        const rm = a.visit?.room ?? 'meeting';
+        sp = take((x) => x.kind === 'sit' && x.room === rm) ?? take((x) => x.kind === 'stand' && x.room === rm);
+      } else if (a.kind === 'staff') {
         if (a.staffRole === 'producer' || a.staffRole === 'engineer') sp = take((x) => x.kind === 'console');
         sp ??= take((x) => x.kind === 'desk');
         sp ??= take((x) => x.kind === 'stand' && (x.room === 'office' || x.room === 'hall'));
@@ -447,11 +466,19 @@ export class HqView {
     for (let x = 0; x < W; x++) blitS(wallSprite(sc.era, 'x', 'back', x === W - 1), x * 16, -4);
     // decalques
     const dl = new Px(sw, sh);
+    this.decalHits = [];
+    const nth: Record<string, number> = {};
     for (const d of sc.decals) {
       if (d.dyn) continue;
       const src = this.decalSource(s, d.kind, d.variant ?? 0, d.actId);
       if (!src) continue;
       this.placeDecal(dl, src, d.wall, d.tile, d.z, d.span ?? 1);
+      const tip = hqHooks.itemTip?.(s, d.kind, (nth[d.kind] = (nth[d.kind] ?? -1) + 1));
+      if (tip) {
+        const [x, y, slope] = this.decalPos(src, d.wall, d.tile, d.z, d.span ?? 1);
+        const half = Math.floor(src.w / 2);
+        this.decalHits.push({ x, y: slope === 1 ? y : y - half, w: src.w, h: src.h + half, key: 400, label: tip.label, sub: tip.sub });
+      }
     }
     cx.drawImage(dl.canvas(), 0, 0);
     // placa da empresa na entrada
@@ -575,6 +602,7 @@ export class HqView {
     b.setTransform(1, 0, 0, 1, ox, oy);
     b.drawImage(this.staticCanvas, 0, 0);
     const frameAt = (fps: number, phase = 0) => (this.reduced ? 0 : Math.floor(this.time * fps + phase));
+    for (const dh of this.decalHits) this.hits.push(dh);
     // luz de gravação
     const onair = sc.decals.find((d) => d.dyn === 'onair');
     if (onair) {
@@ -605,6 +633,10 @@ export class HqView {
           const dy = Math.round(y - sp.ay);
           b.drawImage(sp.c, dx, dy);
           if (it.label) this.hits.push({ x: dx, y: dy, w: sp.c.width, h: sp.c.height, key: it.key - 100, label: t(it.label) });
+          else if (hqHooks.itemTip) {
+            const tip = hqHooks.itemTip(s, it.kind, sc.items.filter((x) => x.kind === it.kind).indexOf(it));
+            if (tip) this.hits.push({ x: dx, y: dy, w: sp.c.width, h: sp.c.height, key: it.key - 100, label: tip.label, sub: tip.sub });
+          }
         },
       });
     }
@@ -656,8 +688,9 @@ export class HqView {
               this.hits.push({ x: bx, y: by, w: badge.width, h: badge.height, key: key + 2000, agent: a, actId: act.id });
             }
           }
-          if (this.overlay && a.actId && (a.kind === 'rep' || (a.kind === 'member' && this.firstMember(s, a)))) {
-            const bk = this.bubbles.get(a.actId);
+          const bubKey = a.kind === 'staff' && a.staffId ? `s:${a.staffId}` : a.actId;
+          if (this.overlay && bubKey && (a.kind === 'rep' || a.kind === 'staff' || (a.kind === 'member' && this.firstMember(s, a)))) {
+            const bk = this.bubbles.get(bubKey);
             if (bk) {
               const bc = getCanvas(`bubble:${bk}:${sc.era}`, () => bubblePx(bk, pal).canvas());
               const bob = this.reduced || bk !== 'attention' ? 0 : frameAt(2, a.phase) % 2;
@@ -665,7 +698,7 @@ export class HqView {
               const bx = Math.round(x + 5);
               const by = Math.round(top - bc.height + 2 - bob);
               b.drawImage(bc, bx, by);
-              this.hits.push({ x: bx, y: by, w: bc.width, h: bc.height, key: key + 2500, agent: a, actId: a.actId });
+              this.hits.push({ x: bx, y: by, w: bc.width, h: bc.height, key: key + 2500, agent: a, actId: a.kind === 'staff' ? undefined : a.actId });
             }
           }
           if (this.hover?.agent === a) {
@@ -811,6 +844,7 @@ export class HqView {
     if (a.kind === 'rep' && a.actId) this.onSelect(a.actId);
     else if (a.kind === 'member' && a.personId) this.onSelectPerson(a.personId);
     else if (a.kind === 'staff' && a.staffId) this.onSelectStaff?.(a.staffId);
+    else if (a.kind === 'visitor') a.visit?.onClick?.();
   }
 
   private pan(dx: number, dy: number): void {
@@ -883,7 +917,8 @@ export class HqView {
       const st = s.player.stats;
       sub = t(l(`Discos de ouro ${st.gold} · platina ${st.platinum} · prêmios ${st.awards}`, `Gold discs ${st.gold} · platinum ${st.platinum} · awards ${st.awards}`));
     }
-    return [t(ROOM_NAMES[r.kind]), sub];
+    const more = hqHooks.roomTip?.(s, r.kind) ?? [];
+    return [t(ROOM_NAMES[r.kind]), [sub, ...more].filter(Boolean).join('\n')];
   }
 
   private showTip(hit: Hit, clientX: number, clientY: number): void {
@@ -894,9 +929,11 @@ export class HqView {
     let sub = t(a.activity.label);
     if (a.kind === 'rep' && a.personId && s) title = `${a.name} — ${s.persons[a.personId]?.name ?? ''}`;
     if (a.kind === 'staff') sub = t(STAFF_ROLES.find((r) => r.id === a.staffRole)?.name) || sub;
-    const hint = a.kind === 'staff' ? '' : t(a.kind === 'rep' ? (hqHooks.onAct ? l('Clique para ver a próxima decisão', 'Click to see the next decision') : l('Clique para abrir a ficha da banda', 'Click to open the band record')) : l('Clique para abrir a ficha', 'Click to open the record'));
+    const extra = a.kind === 'visitor' ? a.visit?.tip ?? [] : a.kind === 'staff' && a.staffId && s && hqHooks.staffTip ? hqHooks.staffTip(s, a.staffId) : [];
+    const hint = a.kind === 'staff' || a.kind === 'visitor' ? (a.kind === 'visitor' && a.visit?.onClick ? t(l('Clique para negociar', 'Click to negotiate')) : '') : t(a.kind === 'rep' ? (hqHooks.onAct ? l('Clique para ver a próxima decisão', 'Click to see the next decision') : l('Clique para abrir a ficha da banda', 'Click to open the band record')) : l('Clique para abrir a ficha', 'Click to open the record'));
     const rows: Node[] = [h('b', null, title), h('div', { class: 'hq-tip-row' }, icon(a.kind === 'staff' ? 'contract' : a.activity.icon, 1), ' ', sub)];
     if (a.actId && s && hqHooks.tip) for (const line of hqHooks.tip(s, a.actId)) rows.push(h('div', { class: 'hq-tip-row' }, line));
+    for (const line of extra) rows.push(h('div', { class: 'hq-tip-row' }, line));
     if (hint) rows.push(h('div', { class: 'hq-tip-hint' }, hint));
     this.tip.replaceChildren(...rows);
     this.placeTip(clientX, clientY);
@@ -905,7 +942,7 @@ export class HqView {
   private showTipText(title: string, sub: string, clientX: number, clientY: number): void {
     if (!title) return this.hideTip();
     const rows: Node[] = [h('b', null, title)];
-    if (sub) rows.push(h('div', { class: 'hq-tip-row' }, sub));
+    if (sub) for (const line of sub.split('\n')) rows.push(h('div', { class: 'hq-tip-row' }, line));
     if (hqHooks.onRoom && CLICK_ROOMS.some((k) => t(ROOM_NAMES[k]) === title)) rows.push(h('div', { class: 'hq-tip-hint' }, t(l('Clique para abrir', 'Click to open'))));
     this.tip.replaceChildren(...rows);
     this.placeTip(clientX, clientY);

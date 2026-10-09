@@ -75,3 +75,4 @@ import './novelty9';
 // Rodada 10: bolsa de valores (ações de selos, plataformas, mídia e fabricantes) e aluguel só de imóveis próprios.
 import './bolsa10';
 import './leaders10';
+import './rivals12';

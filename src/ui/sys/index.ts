@@ -36,3 +36,5 @@ import './lendas9';
 import './rockhall9';
 import './menus9';
 import './leaders10';
+import './rivals12';
+import './hq12';
