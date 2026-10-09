@@ -3,6 +3,7 @@
 
 import { FAMILIES, l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
+import { isUnlocked } from '../../../sim/era';
 import { EXTRA_CHARTS, MANIP, METHOD_INFO, PAYOLA_ERA_INFO, PAYOLA_TIERS, chartMethod, manipulate, payDJs, payolaCost, payolaEra, pitchLegit, type ChartMethod } from '../../../sim/sys/world4/charts';
 import { CLUB_TIERS, FAIRS, bookFair, closeFanClub, clubMedium, clubMeetup, createFanClub, fairCost, fairOpen, setClubTier, toggleMagazine } from '../../../sim/sys/world4/fairs';
 import {
@@ -80,7 +81,7 @@ export function methodTab(s: GameState): HTMLElement {
 
 export function moreChartsSection(s: GameState): HTMLElement {
   const w = w4(s);
-  const items: { id: string; label: string; render: () => HTMLElement }[] = EXTRA_CHARTS.filter((c) => !c.from || hasTech(s, c.from)).map((c) => ({
+  const items: { id: string; label: string; render: () => HTMLElement }[] = EXTRA_CHARTS.filter((c) => (!c.from || hasTech(s, c.from)) && (c.id !== 'video' || isUnlocked(s, 'music_video'))).map((c) => ({
     id: c.id, label: t(c.name), render: () => {
       const rows = c.rows(s);
       return h('div', null, note(c.desc), rows.length ? h('ol', { class: 'w4-chart' }, rows.map((r) => {

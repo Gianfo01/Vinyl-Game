@@ -87,7 +87,7 @@ export function life(s: GameState): LifeState {
 
 // ---------------------------------------------------------------- tempo livre
 
-export const ENERGY_PER_MONTH = 4;
+export const ENERGY_PER_MONTH = 5;
 
 const mKey = (s: GameState) => s.year * 12 + s.month;
 

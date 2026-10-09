@@ -14,6 +14,7 @@ import { MARKETS, familyOf, l, type L, type MarketId } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { physicalShare } from '../production';
 import type { GameState, Release } from '../types';
+import { isUnlocked } from '../era';
 import { fmtL, hasTech, notify, remember } from '../util';
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
@@ -75,7 +76,7 @@ export function kindUnit(s: GameState, kind: ChartKind): L {
 
 export function kindAvailable(s: GameState, kind: ChartKind): boolean {
   if (kind === 'stream') return hasTech(s, 'streaming');
-  if (kind === 'video') return hasTech(s, 'tv_music');
+  if (kind === 'video') return hasTech(s, 'clipnet') && isUnlocked(s, 'music_video');
   if (kind === 'albums') return s.year >= 1948;
   return true;
 }

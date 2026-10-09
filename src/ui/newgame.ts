@@ -7,7 +7,7 @@ import type { RunConfig, StartCustom } from '../sim/types';
 import { createGame } from '../sim/worldgen';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
-import { deleteSave, importSave, listSaves, loadGame, savePrefs, store } from './store';
+import { deleteSave, importSave, importSaveText, listSaves, loadGame, savePrefs, store } from './store';
 import { prepareNewGame, scenarioButton } from './sys/live/goals';
 import { characterCard } from './charCreate';
 
@@ -47,7 +47,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
       h('button', { class: 'icon', 'aria-label': 'apagar', onclick: async () => { await deleteSave(m.slot); titleScreen(root, onStart); } }, '🗑'),
     )) : [h('p', { class: 'muted' }, t(l('Nenhum save ainda.', 'No saves yet.')))]));
   });
-  const fileInput = h('input', { type: 'file', accept: 'application/json', style: 'display:none', onchange: async (e: Event) => {
+  const fileInput = h('input', { type: 'file', style: 'display:none', onchange: async (e: Event) => {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
     try {
@@ -67,6 +67,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
         scenarioButton(root, onStart, () => titleScreen(root, onStart)),
         h('button', { class: 'btn ghost', onclick: () => fileInput.click() }, t(S.importSave)),
         fileInput,
+        h('button', { class: 'btn ghost', onclick: async () => { const tx = window.prompt(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'))); if (!tx) return; try { store.game = await importSaveText(tx); onStart(); } catch { toast(t(l('Texto de save inválido.', 'Invalid save text.')), 'bad'); } } }, t(l('Colar save', 'Paste save'))),
         select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { store.prefs.lang = v; savePrefs(); titleScreen(root, onStart); }, { 'aria-label': t(S.language) }),
       ),
       saves,

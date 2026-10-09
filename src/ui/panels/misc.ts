@@ -8,6 +8,7 @@ import { availableEquipment, buyEquipment, fireStaff, loanOffer, managementLoad,
 import { cardGoalDone, hqCapacityText, legacyTotal, milestones } from '../../sim/legacy';
 import { festivalSlot, gigEstimate, maxVenueTier } from '../../sim/live';
 import { availableChannels } from '../../sim/market';
+import { pendingFeatures, unlockCost, unlockFeature } from '../../sim/era';
 import { availableFormats, scheduleRelease, suggestedPress } from '../../sim/production';
 import type { GameState } from '../../sim/types';
 import { hasTech, money, playerActs, rngOf } from '../../sim/util';
@@ -66,6 +67,10 @@ export function mediaPanel(s: GameState): HTMLElement {
   const known = TECHS.filter((x) => s.techDates[x.id] !== undefined && s.techDates[x.id] <= s.year);
   return h('div', { class: 'panel media' },
     h('div', { class: 'col-main' },
+      pendingFeatures(s).length ? section(t(l('Novidade disponível', 'New: available now')),
+        h('p', { class: 'muted small' }, t(l('A tecnologia chegou, mas seu selo precisa de equipe e equipamento antes de usar.', 'The technology has arrived, but your label needs crew and gear before using it.'))),
+        ...pendingFeatures(s).map((f) => h('div', { class: 'row' }, h('b', null, t(f.label)), h('small', { class: 'muted' }, f.blurb ? t(f.blurb) : ''),
+          h('button', { class: 'btn small', disabled: s.player.cash < unlockCost(s, f), onclick: () => { const e = unlockFeature(s, f.id); toast(e ? t(e) : t(l('Desbloqueado.', 'Unlocked.')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Desbloquear', 'Unlock'))} ${$(unlockCost(s, f))}`)))) : null,
       section(t(l('Canais de campanha nesta era', 'Campaign channels in this era')),
         h('table', { class: 'tbl' }, h('thead', null, h('tr', null, h('th', null, t(S.channel)), h('th', null, t(l('Custo de alcance', 'Reach cost'))), h('th', null, t(l('Vendas', 'Sales'))), h('th', null, t(S.fame)), h('th', null, t(l('Prestígio', 'Prestige'))))),
           h('tbody', null, availableChannels(s).map((c) => h('tr', null, h('td', null, t(c.name)), h('td', null, $(money(s, c.reachCost))), h('td', null, bar(c.sales, 1.5)), h('td', null, bar(c.fame, 1.5)), h('td', null, bar(c.prestige, 1)))))),

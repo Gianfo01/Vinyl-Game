@@ -180,15 +180,10 @@ export function migrate(g: GameState): GameState {
   return g;
 }
 
-export function exportSave(): void {
+export function exportSave(): boolean {
   const g = store.game;
-  if (!g) return;
-  const blob = new Blob([JSON.stringify(g)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `vinyl-to-neural-${g.signature}-${g.year}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  if (!g) return false;
+  return tryDownload(`vinyl-to-neural-${g.signature}-${g.year}.json`, JSON.stringify(g));
 }
 
 const SAVE_PREFIX = 'VTN1:';
@@ -218,11 +213,37 @@ export async function exportSaveText(): Promise<string> {
   return SAVE_PREFIX + (await gzipB64(JSON.stringify(g)));
 }
 
+function validateSave(g: unknown): GameState {
+  const x = g as Partial<GameState> | null;
+  if (!x || typeof x !== 'object' || !x.player || !x.economy || !x.acts || typeof x.year !== 'number' || !x.signature) throw new Error('save inválido');
+  return migrate(x as GameState);
+}
+
+/** Aceita JSON puro ou o formato compactado (VTN1:...), com espaços/quebras de linha de copiar e colar. */
 export async function importSaveText(text: string): Promise<GameState> {
-  const tx = text.trim();
-  if (tx.startsWith('{')) return migrate(JSON.parse(tx));
-  if (!tx.startsWith(SAVE_PREFIX)) throw new Error('formato');
-  return migrate(JSON.parse(await unGzipB64(tx.slice(SAVE_PREFIX.length))));
+  let tx = text.replace(/^\uFEFF/, '').trim();
+  if (tx.startsWith('{')) return validateSave(JSON.parse(tx));
+  tx = tx.replace(/\s+/g, '');
+  const i = tx.indexOf(SAVE_PREFIX);
+  if (i < 0) throw new Error('formato');
+  return validateSave(JSON.parse(await unGzipB64(tx.slice(i + SAVE_PREFIX.length))));
+}
+
+/** Tenta baixar como arquivo; devolve false se o navegador (ex.: visualizador isolado) bloquear. */
+export function tryDownload(name: string, content: string, type = 'application/json'): boolean {
+  try {
+    const blob = new Blob([content], { type });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Copia um texto para a área de transferência; se não der, devolve false (a interface mostra o texto para seleção). */
@@ -236,5 +257,5 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function importSave(file: File): Promise<GameState> {
-  return file.text().then((txt) => migrate(JSON.parse(txt)));
+  return file.text().then((txt) => importSaveText(txt));
 }

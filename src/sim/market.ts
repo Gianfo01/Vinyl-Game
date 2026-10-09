@@ -3,6 +3,7 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { nominal } from '../core/money';
+import { isUnlocked } from './era';
 import { CHANNELS, EQUIPMENT, FORMATS, type FormatId } from '../data/rules';
 import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type MarketId } from '../data/world';
 import { physicalShare } from './production';
@@ -72,7 +73,7 @@ export function marketingE(s: GameState, marketing: { channel: string; budget: n
 }
 
 export function availableChannels(s: GameState): typeof CHANNELS {
-  return CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear));
+  return CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear) && isUnlocked(s, c.id));
 }
 
 export function decay(type: Release['type'], age: number): number {
@@ -209,7 +210,7 @@ function contractScope(ts: MarketId[], c: { party: string; territories?: MarketI
 /** Lançamento de rivais e independentes (mesmos validadores e economia). */
 export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, songIds: string[], type: Release['type'], budgetReal: number): Release {
   const lb = s.labels[owner];
-  const channels = CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear));
+  const channels = CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear) && isUnlocked(s, c.id));
   const ch = channels.length ? r.pick(channels) : CHANNELS[0];
   const marketing = budgetReal > 0 ? [{ channel: ch.id, budget: nominal(budgetReal, s.year) }] : [];
   const territories: MarketId[] = lb ? lb.territories : [cityById[act.city]?.market ?? 'na'];

@@ -85,7 +85,7 @@ function profileTab(s: GameState): HTMLElement {
     ),
     section(t(l('Como você joga com o personagem', 'How the character plays')),
       h('ul', { class: 'small muted' },
-        h('li', null, t(l('Cada mês você tem 4 unidades de tempo livre (⏱). Use em romance, família, música ou lazer.', 'Each month you get 4 units of free time (⏱). Spend them on romance, family, music or leisure.'))),
+        h('li', null, t(l('Cada mês você tem 5 unidades de tempo livre (⏱), uma delas ocupada pela banda. Use em romance, família, música ou lazer.', 'Each month you get 5 units of free time (⏱), one taken by the band. Spend them on romance, family, music or leisure.'))),
         h('li', null, t(l('Dinheiro pessoal é o seu patrimônio, separado do caixa da empresa (retire ou invista na aba Patrimônio).', 'Personal money is your wealth, separate from the company cash (withdraw or invest in the Wealth tab).'))),
         h('li', null, t(l('Seus atributos de dono (ouvido, negociação, carisma, gestão) dão bônus reais ao selo; seus atributos musicais contam quando você toca numa banda.', 'Your owner attributes (ear, negotiation, charisma, management) give real bonuses to the label; your musical attributes count when you play in a band.'))),
         h('li', null, t(l('Estresse alto derruba a saúde; família, hobbies, terapia e férias aliviam.', 'High stress hurts health; family, hobbies, therapy and holidays relieve it.'))),
