@@ -7,7 +7,7 @@
 // (assistente, chef, treinador, segurança, estilista, motorista, babá), fundação, cursos com diploma,
 // rotina de saúde, aparições públicas, noites em clubes e palestras.
 
-import { clamp, type Rng } from '../../core/rng';
+import { clamp, Rng } from '../../core/rng';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { growPerson } from '../people';
@@ -90,6 +90,7 @@ export const GOODS: GoodDef[] = [
   g({ id: 'apt_berlin', cat: 'home', city: 'berlin', name: l('Apartamento em Berlim', 'Berlin apartment'), desc: l('Clubes em fábricas e aluguel barato (por enquanto).', 'Clubs in factories and cheap rent (for now).'), from: 1990, price: 70000, upkeep: 250, drift: 0.07, vol: 0.06, relief: 1, xp: ['ear', 1] }),
   g({ id: 'house_lisbon', cat: 'home', city: 'lisbon', name: l('Casa em Lisboa', 'Lisbon house'), desc: l('Fado, luz e calma atlântica.', 'Fado, light and Atlantic calm.'), from: 1960, price: 90000, upkeep: 300, drift: 0.05, vol: 0.05, relief: 3 }),
   g({ id: 'flat_kingston', cat: 'home', city: 'kingston', name: l('Casa em Kingston', 'Kingston house'), desc: l('Sound systems na rua de trás.', 'Sound systems on the street behind.'), from: 1960, price: 45000, upkeep: 180, drift: 0.03, vol: 0.06, relief: 2, perks: { signals: 1 } }),
+  g({ id: 'legacy_rentals', cat: 'home', name: l('Carteira de imóveis alugados', 'Rented property portfolio'), desc: l('Imóveis que você tinha como investimento (antigo fundo de aluguéis).', 'Property you held as an investment (the old rental fund).'), from: 9999, price: 100000, upkeep: 0, drift: 0.025, vol: 0.05 }),
   g({ id: 'chalet', cat: 'home', name: l('Chalé nas montanhas', 'Mountain chalet'), desc: l('Lareira, neve e silêncio. Ótimo para compor.', 'Fireplace, snow and silence. Great for writing.'), from: 1925, price: 85000, upkeep: 300, drift: 0.03, vol: 0.04, relief: 5, health: 0.3, skill: ['comp', 0.15] }),
   // veículos
   g({ id: 'car_family', cat: 'vehicle', name: l('Carro popular', 'Everyday car'), desc: l('Liberdade para ir e vir. Deprecia rápido.', 'Freedom to come and go. Depreciates fast.'), from: 1920, price: 3500, upkeep: 40, drift: -0.12, vol: 0.02, relief: 1 }),
@@ -153,25 +154,28 @@ export const PSTAFF: Record<PStaffId, { name: L; desc: L; from: number; salary: 
 
 // ---------------------------------------------------------------- investimentos
 
-export type InvId = 'savings' | 'stocks' | 'realestate' | 'gold' | 'tech' | 'catalogs' | 'crypto';
+export type InvId = 'savings' | 'stocks' | 'gold' | 'tech' | 'catalogs' | 'crypto';
 
 export const INVEST: Record<InvId, { name: L; desc: L; from: number; drift: number; vol: number; rent?: number }> = {
   savings: { name: l('Títulos e poupança', 'Bonds and savings'), desc: l('Seguro e lento.', 'Safe and slow.'), from: 1920, drift: 0.03, vol: 0.01 },
-  stocks: { name: l('Ações na bolsa', 'Stock market'), desc: l('Cresce no longo prazo — e despenca nas crises.', 'Grows in the long run — and crashes in crises.'), from: 1920, drift: 0.07, vol: 0.16 },
-  realestate: { name: l('Imóveis para alugar', 'Rental property'), desc: l('Aluguel todo mês e valor estável.', 'Rent every month and stable value.'), from: 1920, drift: 0.025, vol: 0.05, rent: 0.004 },
+  stocks: { name: l('Fundo de índice', 'Index fund'), desc: l('Uma cesta de ações: cresce no longo prazo e despenca nas crises. Ações avulsas de selos e plataformas ficam na aba Bolsa.', 'A basket of shares: grows in the long run and crashes in crises. Single shares of labels and platforms are in the Stock market tab.'), from: 1920, drift: 0.07, vol: 0.16 },
   gold: { name: l('Ouro', 'Gold'), desc: l('Sobe quando o mundo tem medo.', 'Rises when the world is afraid.'), from: 1920, drift: 0.02, vol: 0.12 },
   tech: { name: l('Fundo de tecnologia', 'Tech fund'), desc: l('Bolhas e foguetes.', 'Bubbles and rockets.'), from: 1980, drift: 0.11, vol: 0.32 },
   catalogs: { name: l('Fundo de catálogos musicais', 'Music catalog fund'), desc: l('Royalties de canções alheias.', 'Royalties from other people\'s songs.'), from: 2014, drift: 0.04, vol: 0.08, rent: 0.003 },
   crypto: { name: l('Criptomoedas', 'Cryptocurrencies'), desc: l('Montanha-russa. Só o que você aceita perder.', 'A roller coaster. Only what you can afford to lose.'), from: 2011, drift: 0.15, vol: 0.9 },
 };
 
+/** Quebra da bolsa por ano (variação anual extra; 0 fora das crises históricas). */
+export function crashOf(year: number): number {
+  return year >= 1929 && year <= 1932 ? -0.3 : year === 1937 ? -0.15 : year === 1973 || year === 1974 ? -0.18 : year === 1987 ? -0.2 : year === 2008 ? -0.35 : year === 2020 ? -0.08 : 0;
+}
+
 /** Choques históricos por ano (variação anual extra). */
 function shock(id: InvId, year: number): number {
-  const crash = year >= 1929 && year <= 1932 ? -0.3 : year === 1937 ? -0.15 : year === 1973 || year === 1974 ? -0.18 : year === 1987 ? -0.2 : year === 2008 ? -0.35 : year === 2020 ? -0.08 : 0;
+  const crash = crashOf(year);
   if (id === 'gold') return crash < 0 ? 0.12 : year === 1980 ? 0.3 : 0;
   if (id === 'savings') return 0;
   if (id === 'tech') return year >= 2000 && year <= 2002 ? -0.45 : crash * 1.1;
-  if (id === 'realestate') return year >= 2007 && year <= 2009 ? -0.12 : crash * 0.3;
   if (id === 'crypto') return year === 2018 || year === 2022 ? -0.6 : year === 2017 || year === 2021 ? 0.8 : 0;
   if (id === 'catalogs') return crash * 0.2;
   return crash;
@@ -220,7 +224,8 @@ export const FOUNDATION: Record<FoundationFocus, { name: L; desc: L }> = {
 
 // ---------------------------------------------------------------- estado
 
-export interface Owned { uid: string; id: string; week: number; paid: number; value: number; unpaid?: number }
+/** `let`: alugado a terceiros (rende aluguel, mas você deixa de usar); `vac`: meses vagos restantes; `rented`: aluguel acumulado. */
+export interface Owned { uid: string; id: string; week: number; paid: number; value: number; unpaid?: number; let?: boolean; vac?: number; rented?: number; since?: number }
 export interface Goods8State {
   seq: number;
   owned: Owned[];
@@ -243,12 +248,24 @@ registerExt4('goods8', fresh);
 export function goods(s: GameState): Goods8State {
   const x = s.x4 as unknown as { goods8?: Goods8State };
   x.goods8 ??= fresh();
+  migrateInv(x.goods8);
   return x.goods8;
 }
 
+/** Saves antigos: "Imóveis para alugar" (que rendia sem imóvel nenhum) vira um bem alugado, pelo valor justo. */
+function migrateInv(st: Goods8State): void {
+  const inv = st.inv as Record<string, { principal: number; value: number } | undefined>;
+  const old = inv.realestate;
+  if (!old) return;
+  delete inv.realestate;
+  if (old.value <= 0) return;
+  st.seq += 1;
+  st.owned.push({ uid: `g${st.seq}`, id: 'legacy_rentals', week: 0, paid: old.principal, value: old.value, let: true });
+}
+
 export const owned = (s: GameState): Owned[] => goods(s).owned;
-export const hasUnlock = (s: GameState, u: GoodUnlock): boolean => owned(s).some((x) => goodById[x.id]?.unlock === u);
-export const residences = (s: GameState): string[] => owned(s).map((x) => goodById[x.id]?.city).filter((c): c is string => !!c);
+export const hasUnlock = (s: GameState, u: GoodUnlock): boolean => owned(s).some((x) => !x.let && goodById[x.id]?.unlock === u);
+export const residences = (s: GameState): string[] => owned(s).filter((x) => !x.let).map((x) => goodById[x.id]?.city).filter((c): c is string => !!c);
 
 function glog(s: GameState, text: L, tone: 'good' | 'bad' | 'info' = 'info', important = false): void {
   const st = goods(s);
@@ -332,7 +349,9 @@ export function upkeepTotal(s: GameState): number {
 
 export function netWorth(s: GameState): number {
   const st = goods(s);
-  return ownerOf(s).wealth + st.owned.reduce((a, o) => a + o.value, 0) + Object.values(st.inv).reduce((a, x) => a + (x?.value ?? 0), 0);
+  const b = (s.x4 as unknown as { bolsa10?: { pos: Record<string, { sh: number }>; q: Record<string, { p: number }> } }).bolsa10;
+  const shares = b ? Object.keys(b.pos).reduce((a, id) => a + Math.round(b.pos[id].sh * (b.q[id]?.p ?? 0)), 0) : 0;
+  return ownerOf(s).wealth + st.owned.reduce((a, o) => a + o.value, 0) + Object.values(st.inv).reduce((a, x) => a + (x?.value ?? 0), 0) + shares;
 }
 
 // ---------------------------------------------------------------- equipe pessoal
@@ -628,7 +647,7 @@ registerPerkSource('goods8', (s) => {
   const seen = new Set<string>();
   for (const o of st.owned) {
     const d = goodById[o.id];
-    if (!d?.perks || seen.has(d.id)) continue; // repetidos (arte, coleções) não somam perks
+    if (!d?.perks || seen.has(d.id) || o.let) continue; // alugados não dão efeitos; repetidos (arte, coleções) não somam perks
     seen.add(d.id);
     out.push({ label: d.name, values: d.perks });
   }
@@ -687,6 +706,7 @@ export function goodsMonth(s: GameState, r: Rng): void {
     }
     const m = d.drift / 12 + r.normal(0, d.vol / Math.sqrt(12));
     it.value = Math.max(Math.round(it.paid * 0.05), Math.round(it.value * (1 + clamp(m, -0.5, 0.6))));
+    if (it.let) continue; // imóvel alugado: ninguém da casa usa
     relief += d.relief ?? 0;
     health += d.health ?? 0;
     fame += d.fame ?? 0;
@@ -751,7 +771,7 @@ export function goodsMonth(s: GameState, r: Rng): void {
     if (locals.length) addSignal(s, r, r.pick(locals).id, 'network');
   }
   // traços conquistados com o tempo (uma chance por ano)
-  if (s.month === 6) for (const it of st.owned) { const d = goodById[it.id]; if (d?.trait && r.chance(0.12)) gainTrait(s, d.trait); }
+  if (s.month === 6) for (const it of st.owned) { const d = goodById[it.id]; if (!it.let && d?.trait && r.chance(0.12)) gainTrait(s, d.trait); }
   // investimentos
   for (const id of Object.keys(st.inv) as InvId[]) {
     const pos = st.inv[id];
@@ -809,3 +829,62 @@ registerSimHook('month', 'goods8', (s, r) => goodsMonth(s, r));
 
 /** Nome curto de cidade (para a interface). */
 export const cityLabel = (id: string): L => cityById[id]?.name ?? l(id);
+
+// ---------------------------------------------------------------- aluguel de imóveis (só de imóveis que você TEM)
+
+/** Rendimento bruto anual do aluguel por cidade (fração do valor do imóvel). */
+const RENT_YIELD: Record<string, number> = { new_york: 0.062, london: 0.058, tokyo: 0.048, paris: 0.054, berlin: 0.072, rio: 0.07, kingston: 0.09, los_angeles: 0.055, ibiza: 0.075, lisbon: 0.065, nashville: 0.05 };
+const AGENCY = 0.08; // taxa da imobiliária sobre o aluguel
+
+export const canLet = (d: GoodDef | undefined): boolean => !!d && d.cat === 'home';
+
+/** Aluguel mensal cheio de um imóvel (centavos). */
+export function rentOf(s: GameState, it: Owned): number {
+  const d = goodById[it.id];
+  if (!d) return 0;
+  const y = (d.city ? RENT_YIELD[d.city] : undefined) ?? 0.05;
+  const era = s.year >= 2012 && d.city && ['london', 'new_york', 'berlin', 'lisbon', 'paris'].includes(d.city) ? 1.12 : 1;
+  return Math.round((it.value * y * era) / 12);
+}
+
+/** Põe o imóvel para alugar (ou volta a morar nele). Só vale para imóveis que você possui. */
+export function setLet(s: GameState, uid: string, on: boolean): L | null {
+  const it = goods(s).owned.find((x) => x.uid === uid);
+  if (!it) return l('Você não possui este imóvel.', 'You do not own this property.');
+  if (!canLet(goodById[it.id])) return l('Só imóveis residenciais podem ser alugados.', 'Only residential property can be let.');
+  if (!!it.let === on) return null;
+  it.let = on;
+  it.vac = on ? 1 : 0;
+  bumpPerks();
+  glog(s, fmtL(on ? l('{n} foi colocado para alugar.', '{n} was put up for rent.') : l('Você voltou a usar {n}.', 'You moved back into {n}.'), { n: goodById[it.id].name }), 'info');
+  return null;
+}
+
+/** Aluguéis do mês: vacância, inquilino que atrasa, reformas e taxa da imobiliária. */
+function rentMonth(s: GameState): void {
+  const st = goods(s);
+  const r = Rng.fromSeed(`${s.config.seed}:rent10:${s.year}:${s.month}`);
+  const o = ownerOf(s);
+  for (const it of st.owned) {
+    if (!it.let) continue;
+    const d = goodById[it.id];
+    if (!d) continue;
+    const full = rentOf(s, it);
+    if (it.vac && it.vac > 0) {
+      it.vac -= 1;
+      if (it.vac === 0 && r.chance(0.35)) it.vac = 1; // mais um mês sem achar inquilino
+      continue;
+    }
+    if (r.chance(0.05)) { it.vac = r.int(1, 4); glog(s, fmtL(l('O inquilino de {n} saiu: o imóvel fica vago por algum tempo.', 'The tenant of {n} left: the property sits empty for a while.'), { n: d.name }), 'info'); continue; }
+    if (r.chance(0.03)) { glog(s, fmtL(l('O inquilino de {n} atrasou o aluguel deste mês.', 'The tenant of {n} was late with this month\'s rent.'), { n: d.name }), 'bad'); continue; }
+    const net = Math.round(full * (1 - AGENCY));
+    o.wealth += net;
+    it.rented = (it.rented ?? 0) + net;
+    if (r.chance(0.04)) {
+      const fix = Math.min(o.wealth, Math.round(full * 1.5));
+      o.wealth -= fix;
+      glog(s, fmtL(l('Reforma urgente em {n}: o aluguel de um mês e meio foi para o conserto.', 'Urgent repairs at {n}: a month and a half of rent went to the fix.'), { n: d.name }), 'bad');
+    }
+  }
+}
+registerSimHook('month', 'goods8-rent', (s) => rentMonth(s));

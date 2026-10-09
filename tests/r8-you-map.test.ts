@@ -203,7 +203,7 @@ describe('mapa jogável', () => {
     buyGood(s, 'home_studio');
     buyGood(s, 'yacht');
     hirePStaff(s, 'chef');
-    invest(s, 'realestate', money(s, 50000));
+    invest(s, 'stocks', money(s, 50000));
     setRoutine(s, 'yoga');
     for (let i = 0; i < 3; i++) advanceMonth(s);
     expect(goods(s).owned.length).toBeGreaterThan(0);
