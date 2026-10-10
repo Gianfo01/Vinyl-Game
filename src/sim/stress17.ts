@@ -10,7 +10,7 @@ import { clamp } from '../core/rng';
 import { l, type L } from '../data/world';
 import { registerExt4 } from './ext4';
 import { facts17 } from './facts17';
-import type { GameState, Person } from './types';
+import type { Act, GameState, Person } from './types';
 
 export interface Stress17State {
   /** desgaste de longo prazo por pessoa (0..100) */
@@ -80,16 +80,30 @@ export function shortOf(s: GameState, p: Person): { v: number; parts: L[] } {
   return { v: Math.round(clamp(v, 0, 100)), parts };
 }
 
+/** Atos de cada pessoa (cache por semana; a interface e os mods chamam muito). */
+const AOP = new WeakMap<GameState, { k: string; m: Map<string, Act[]> }>();
+function actsOfP(s: GameState, pid: string): Act[] {
+  const k = `${s.week}|${s.clock?.dayInMonth ?? 0}`;
+  let c = AOP.get(s);
+  if (!c || c.k !== k) {
+    const m = new Map<string, Act[]>();
+    for (const a of Object.values(s.acts)) if (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus') for (const id of a.members) { const l0 = m.get(id); if (l0) l0.push(a); else m.set(id, [a]); }
+    c = { k, m };
+    AOP.set(s, c);
+  }
+  return c.m.get(pid) ?? [];
+}
 /** Fatos ruins recentes sobre a pessoa ou o ato dela (escândalo, morte, separação…): pesam por 3 meses. */
-const FXC = new Map<string, { v: number; why: L }>();
+const FXC = new WeakMap<GameState, { w: number; n: number; m: Map<string, { v: number; why: L }> }>();
 function factPressure(s: GameState, pid: string): { v: number; why: L } {
-  const k = `${s.config.seed}|${s.week}|${pid}`;
-  const hit = FXC.get(k);
+  const fs = facts17(s);
+  let c = FXC.get(s);
+  if (!c || c.w !== s.week || c.n !== fs.seq) { c = { w: s.week, n: fs.seq, m: new Map() }; FXC.set(s, c); }
+  const hit = c.m.get(pid);
   if (hit) return hit;
-  const ids = new Set([pid]);
-  for (const a of Object.values(s.acts)) if (a.members.includes(pid) && (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus')) ids.add(a.id);
+  const ids = new Set([pid, ...actsOfP(s, pid).map((a) => a.id)]);
   let v = 0, top = 0, why: L = l('fatos ruins recentes', 'recent bad news');
-  const f = facts17(s).f;
+  const f = fs.f;
   for (let i = f.length - 1; i >= 0; i--) {
     const x = f[i];
     if (s.week - x.w > 13) break;
@@ -99,15 +113,14 @@ function factPressure(s: GameState, pid: string): { v: number; why: L } {
     if (w > top) { top = w; why = x.text; }
   }
   const out = { v: Math.min(30, v), why };
-  if (FXC.size > 6000) FXC.clear();
-  FXC.set(k, out);
+  c.m.set(pid, out);
   return out;
 }
 /** Pressão da carreira: embalo em queda, holofote de estrela, estrada. */
 function careerPressure(s: GameState, p: Person): { v: number; why: L } {
   let v = 0, why = l('pressão da carreira', 'career pressure');
-  for (const a of Object.values(s.acts)) {
-    if (!a.members.includes(p.id) || (a.status !== 'active' && a.status !== 'emerging')) continue;
+  for (const a of actsOfP(s, p.id)) {
+    if (a.status !== 'active' && a.status !== 'emerging') continue;
     if (a.momentum < 20 && a.fame >= 15) { v += 8; why = l('carreira em baixa', 'career slump'); }
     if (a.fame >= 75) { v += 6; why = l('holofote de estrela', 'star spotlight'); }
     if (s.tours.some((t) => t.actId === a.id && t.status === 'running')) { v += 6; why = l('na estrada', 'on the road'); }
