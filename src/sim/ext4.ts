@@ -52,8 +52,6 @@ export function registerSimHook(phase: HookPhase, id: string, fn: HookFn): void 
 
 export function runSimHooks(phase: HookPhase, s: GameState, r: Rng, arg: Partial<HookArgs> = {}): void {
   const P = (globalThis as { __hookProf?: Record<string, number> }).__hookProf;
-  const CX = (globalThis as { __hookCatch?: Record<string, string> }).__hookCatch; /*TMPCATCH*/
-  if (CX) { for (const h of HOOKS[phase]) try { h.fn(s, r, arg); } catch (e) { const k = phase + ":" + h.id; if (!CX[k]) CX[k] = s.year + " " + String((e as Error).stack).split("\n").slice(0, 3).join(" | "); } return; } /*TMPCATCH*/
   if (!P) { for (const h of HOOKS[phase]) h.fn(s, r, arg); return; }
   for (const h of HOOKS[phase]) { const t = performance.now(); h.fn(s, r, arg); const k = phase + ':' + h.id; P[k] = (P[k] ?? 0) + performance.now() - t; }
 }
