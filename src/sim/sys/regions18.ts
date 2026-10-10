@@ -129,7 +129,7 @@ export function access18(s: GameState, sub: Sub18, act: Act): { v: number; why: 
   const loc = st.loc[sub.id];
   const ver = (st.ver[act.id]?.[sub.id] ?? 0) >= s.year;
   const lang = sub.langs.includes(actLang18(act)) || ver;
-  let v = lang ? 1 : 0.93;
+  let v = lang ? 1 : 0.96;
   let why = lang ? (ver ? l('versão no idioma local', 'local-language version') : l('mesmo idioma', 'same language')) : l('idioma estrangeiro, sem parceiro', 'foreign language, no partner');
   if (st.sold[act.id] && sub.mk === 'africa') { v *= 0.6; why = l('master vendido a marketer', 'master sold to a marketer'); }
   if (loc && !(loc.until && loc.until > s.week)) {
@@ -167,7 +167,7 @@ export function relFit18(s: GameState, territories: MarketId[], act: Act): numbe
     const size = m.size(s.year), base = eff(MARKET_PREF[mk][familyOf(act.genre)] ?? 0.6, act.positioning);
     den += size * base; num += size * base * mkFit18(s, mk, act).ratio;
   }
-  return den ? clamp(num / den, 0.55, 1.5) : 1;
+  return den ? clamp((num / den) * 1.02, 0.55, 1.5) : 1; // 1,02: calibra a média dos atos para ~1 (neutro)
 }
 
 registerMod('appeal', 'regions18', (s, value, ctx) => {
@@ -443,7 +443,7 @@ registerAdvisorTip('regions18', (s) => {
   }
   if (best && best.v > 0.25) out.push({ id: `reg18-loc-${best.sub.id}`, level: 'info', cat: 'opportunity', score: 30 + Math.min(25, best.v * 20),
     text: fmtL(l('{s}: seu elenco tem público, mas você entra sem parceiro local.', '{s}: your roster has an audience there, but you go in without a local partner.'), { s: best.sub.name }),
-    why: [l('Sem licenciado/escritório, idioma estrangeiro pesa −7% e as plataformas locais não ajudam.', 'Without a licensee/office, a foreign language costs −7% and local platforms do not help.')],
+    why: [l('Sem licenciado/escritório, idioma estrangeiro pesa −4% e as plataformas locais não ajudam.', 'Without a licensee/office, a foreign language costs −4% and local platforms do not help.')],
     effect: fmtL(l('Licenciado: {c} (adiantamento {a}); acesso ×1,04+.', 'Licensee: {c} (advance {a}); access ×1.04+.'), { c: `$${Math.round(locCost18(s, best.sub, 'lic') / 100).toLocaleString('en-US')}`, a: `$${Math.round(advance18(s, best.sub) / 100).toLocaleString('en-US')}` }),
     goto: { area: 'regions18' } });
   return out;
