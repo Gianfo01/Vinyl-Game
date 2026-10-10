@@ -647,7 +647,7 @@ function representation(s: GameState, r: Rng, a: Act): void {
   const open = (k: OK18) => st.offers.some((o) => o.k === k && o.st === 'open' && o.until >= s.week);
   const fam = familyOf(a.genre);
   if (!st.mgr && a.fame >= 6 && !open('mgr') && r.chance(0.04 + a.fame / 700)) {
-    const reals = REAL_MGRS.filter((m) => mgrActive(s, m) && m.fam.includes(fam));
+    const reals = s.config.history === 'strict' ? [] : REAL_MGRS.filter((m) => mgrActive(s, m) && m.fam.includes(fam)); // vida real exata: empresário real não pega banda fictícia
     const m: RealMgr | undefined = a.fame >= 18 && reals.length && r.chance(0.6) ? r.pick(reals) : undefined;
     const o: Offer18 = { ...blank(s, 'mgr'), who: m ? mgrName(s, m) : `${r.pick(FIRST)} ${r.pick(LAST)}`, mgr: m?.id, rate: m ? m.rate : Math.round((0.12 + r.next() * 0.08) * 100) / 100, neg: m ? m.a[1] : r.int(35, 70), style: m?.style ?? r.pick(['shark', 'guardian', 'impresario', 'svengali', 'muscle']) };
     o.why = [m ? l('empresário de verdade, com histórico', 'a real manager with a track record') : l('empresário em começo de carreira', 'an up-and-coming manager')];

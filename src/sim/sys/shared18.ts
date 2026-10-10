@@ -20,6 +20,7 @@ import { fmtL, money, nextId, notify, post } from '../util';
 import { adjRel18, nameOfKey18, relOf18 } from './agency18';
 import { band18 } from './artist18';
 import { mgrActive } from './managers14';
+import { realKey18 } from './personact18';
 import { per13 } from './persona13';
 
 export type VKind18 = 'label' | 'festival' | 'studio' | 'imprint';
@@ -73,9 +74,12 @@ export function styleOf18(s: GameState, pk: string): Style18 {
 export function partners18(s: GameState, kind: VKind18): { pk: string; name: string; why: L }[] {
   if (kind === 'imprint') return Object.values(s.labels).filter((x) => x.active && x.founded <= s.year && x.cash > money(s, 300000)).sort((a, b) => b.reputation - a.reputation).slice(0, 5).map((x) => ({ pk: `lb:${x.id}`, name: x.name, why: fmtL(l('reputação {r}', 'reputation {r}'), { r: Math.round(x.reputation) }) }));
   const mine = band18(s)?.id;
-  const acts = Object.values(s.acts).filter((a) => a.id !== mine && !a.playerBand && !a.deceased && a.status === 'active' && a.fame > 30).sort((a, b) => b.fame - a.fame).slice(0, 4);
-  const out = acts.map((a) => { const p = a.members.map((id) => s.persons[id]).find((x) => x?.alive); return p ? { pk: `p:${p.id}`, name: p.name, why: fmtL(l('de {a} (fama {f})', 'of {a} (fame {f})'), { a: a.name, f: Math.round(a.fame) }) } : null; }).filter((x): x is { pk: string; name: string; why: L } => !!x);
-  for (const m of REAL_MGRS.filter((m) => mgrActive(s, m)).slice(0, 3)) out.push({ pk: `e:${m.id}`, name: nameOfKey18(s, `e:${m.id}`), why: l('empresário', 'manager') });
+  // modo "vida real exata": gente real só vive fatos documentados — sócios só fictícios
+  const strict = s.config.history === 'strict';
+  const ok = (k: string) => !strict || !realKey18(s, k);
+  const acts = Object.values(s.acts).filter((a) => a.id !== mine && !a.playerBand && !a.deceased && a.status === 'active' && a.fame > 30).sort((a, b) => b.fame - a.fame).slice(0, 12);
+  const out = acts.map((a) => { const p = a.members.map((id) => s.persons[id]).find((x) => x?.alive); return p && ok(`p:${p.id}`) ? { pk: `p:${p.id}`, name: p.name, why: fmtL(p.name === a.name ? l('fama {f}', 'fame {f}') : l('de {a} (fama {f})', 'of {a} (fame {f})'), { a: a.name, f: Math.round(a.fame) }) } : null; }).filter((x): x is { pk: string; name: string; why: L } => !!x).slice(0, 4);
+  for (const m of REAL_MGRS.filter((m) => mgrActive(s, m) && ok(`e:${m.id}`)).slice(0, 3)) out.push({ pk: `e:${m.id}`, name: nameOfKey18(s, `e:${m.id}`), why: l('empresário', 'manager') });
   return out;
 }
 const pName = (s: GameState, pk: string) => (pk.startsWith('lb:') ? s.labels[pk.slice(3)]?.name ?? pk : nameOfKey18(s, pk));
@@ -88,6 +92,8 @@ export function foundOdds18(s: GameState, kind: VKind18, pk: string, eq: number)
   let p = 0.35;
   const r = rel(s, pk); p += r / 200; if (Math.abs(r) > 10) why.push(fmtL(l('Opinião sobre você: {r}', 'Opinion of you: {r}'), { r: Math.round(r) }));
   const f = fameYou(s); p += f / 150; why.push(fmtL(l('Seu nome pesa ({f})', 'Your name carries weight ({f})'), { f: Math.round(f) }));
+  const pf = pk.startsWith('p:') ? Math.max(0, ...Object.values(s.acts).filter((a) => a.members.includes(pk.slice(2))).map((a) => a.fame)) : 0;
+  if (pf > f + 10) { p -= (pf - f) / 150; why.push(fmtL(l('Ele é bem mais famoso ({p}): acha que você precisa mais dele', 'They are far more famous ({p}): they think you need them more'), { p: Math.round(pf) })); }
   if (eq > 0.5) { p -= (eq - 0.5) * 0.8; why.push(l('Você quer o controle: ele hesita', 'You want control: they hesitate')); }
   if (kind === 'imprint' && (band18(s)?.fame ?? 0) < 35) { p -= 0.3; why.push(l('Selo só faz imprint com artista famoso (fama 35+)', 'Labels only do imprints with famous artists (fame 35+)')); }
   return { p: clamp(p, 0.03, 0.92), why };

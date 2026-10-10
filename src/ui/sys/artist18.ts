@@ -67,7 +67,7 @@ function offerCard(s: GameState, o: Offer18): HTMLElement {
   const ask = UI.ask[o.id] ?? 'adv';
   return h('div', { class: 'card' },
     h('div', { class: 'row wrap between' },
-      h('div', { class: 'row wrap' }, h('b', null, o.who), ' ', s.labels[o.lb] ? labelLink(s, o.lb) : null, ' ', pill(t(KIND[o.k])), o.bid ? pill(t(l('leilão', 'bidding war')), 'gold') : null, o.pred && adv ? pill(t(l('predatória', 'predatory')), 'bad') : null, o.low && adv ? pill(t(l('abaixo do mercado', 'lowball')), 'warn') : null),
+      h('div', { class: 'row wrap' }, s.labels[o.lb] ? h('b', null, labelLink(s, o.lb)) : h('b', null, o.who), ' ', pill(t(KIND[o.k])), o.bid ? pill(t(l('leilão', 'bidding war')), 'gold') : null, o.pred && adv ? pill(t(l('predatória', 'predatory')), 'bad') : null, o.low && adv ? pill(t(l('abaixo do mercado', 'lowball')), 'warn') : null),
       h('span', { class: 'small' }, t(l('Nota para vocês: ', 'Score for you: ')), why18(s, 'artist18.offer', { o: o.id }, h('b', null, String(Math.round((adv ? v : seen) * 100)))), ' · ', t(l('vence em ', 'expires in ')), `${Math.max(0, o.until - s.week)} ${t(l('sem.', 'wk'))}`)),
     o.why.length ? muted(fmtList(l('Por que querem vocês: ', 'Why they want you: '), o.why)) : null,
     terms(s, o),
@@ -96,7 +96,7 @@ function offersTab(s: GameState): HTMLElement {
     st.dev ? h('p', { class: 'small warn' }, t(fmtL2(l('Contrato de desenvolvimento com {b}: mesada {m}/mês; exclusividade até a decisão deles.', 'Development deal with {b}: {m}/month stipend; exclusive until they decide.'), { b: s.labels[st.dev.lb]?.name ?? '?', m: $(st.dev.stip) }))) : null,
     open.length ? h('div', null, open.map((o) => offerCard(s, o))) : emptyState18(l('Nenhuma proposta na mesa', 'No offers on the table'), l('Selos observam fama, fama na sua terra, embalo, habilidade e o último disco. Shows e um bom lançamento chamam atenção; um empresário leva vocês às portas.', 'Labels watch fame, home fame, momentum, skill and your last record. Gigs and a good release get attention; a manager opens doors.')),
     section(t(l('Quem está de olho em vocês', 'Who is watching you')),
-      h('table', { class: 'small' }, h('tbody', null, watch.map(({ lb, i }) => h('tr', null, h('td', null, labelLink(s, lb.id)), h('td', null, bar(i.v * 100)), h('td', { class: 'muted' }, i.why.map((x) => t(x)).join(', ') || '—'))))),
+      h('table', { class: 'small' }, h('tbody', null, watch.map(({ lb, i }) => h('tr', null, h('td', null, labelLink(s, lb.id)), h('td', null, bar(i.v * 100), ` ${Math.round(i.v * 100)}%`), h('td', { class: 'muted' }, i.why.map((x) => t(x)).join(', ') || '—'))))),
       muted(l('Interesse acima de ~30% começa a gerar propostas; entre 20% e 35% podem convidar para showcase.', 'Interest above ~30% starts producing offers; between 20% and 35% they may invite you to a showcase.'))),
     past.length ? section(t(l('Propostas anteriores', 'Past offers')), h('ul', { class: 'small' }, past.map((o) => h('li', null, `${o.who} — ${t(KIND[o.k])} — ${$(o.adv)} — `, t(o.st === 'acc' ? l('aceita', 'accepted') : o.st === 'gone' ? l('retirada/fechada', 'withdrawn/closed') : o.st === 'exp' ? l('venceu', 'expired') : l('recusada', 'declined')))))) : null);
 }
@@ -197,10 +197,10 @@ registerArea({
     h('h2', null, t(l('Contratos do artista', 'Artist deals'))),
     band18(s) ? muted(fmtL2(l('{a}: fama {f}, embalo {m}. {d}', '{a}: fame {f}, momentum {m}. {d}'), { a: band18(s)!.name, f: Math.round(band18(s)!.fame), m: Math.round(band18(s)!.momentum), d: t(a18(s).deal ? fmtL2(l('Contratados por {b}.', 'Signed to {b}.'), { b: s.labels[a18(s).deal!.lb]?.name ?? '?' }) : l('Independentes.', 'Independent.')) })) : null,
     tabs('artist18', [
-      { id: 'offers', label: t(l('Propostas', 'Offers')), icon: 'handshake', badge: openOffers18(s).filter((o) => o.k !== 'mgr' && o.k !== 'agent' && o.k !== 'pub').length || undefined, render: () => offersTab(s) },
+      { id: 'offers', label: t(l('Propostas', 'Offers')), icon: 'handshake', render: () => offersTab(s) },
       { id: 'deal', label: t(l('Seu contrato', 'Your deal')), icon: 'contract', render: () => dealTab(s) },
       { id: 'ledger', label: t(l('Extrato e contas', 'Ledger and statements')), icon: 'money', render: () => ledgerTab(s) },
-      { id: 'team', label: t(l('Equipe e editora', 'Team and publisher')), icon: 'star', badge: openOffers18(s).filter((o) => o.k === 'mgr' || o.k === 'agent' || o.k === 'pub').length || undefined, render: () => teamTab(s) },
+      { id: 'team', label: t(l('Equipe e editora', 'Team and publisher')), icon: 'star', render: () => teamTab(s) },
       { id: 'diy', label: t(l('Faça você mesmo × selo', 'DIY vs label')), icon: 'disc', render: () => diyTab(s) },
     ], rerender)),
 });
