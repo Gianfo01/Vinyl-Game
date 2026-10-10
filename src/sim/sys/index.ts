@@ -224,3 +224,7 @@ import './media18';
 import './fans18';
 import './live18';
 import './fest18';
+import './regions18';
+import './circuits18';
+import './kpop18';
+import './idols18';
