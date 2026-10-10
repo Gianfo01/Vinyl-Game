@@ -30,6 +30,7 @@ import { postSalesAR18 } from './econ18';
 import { retailCycle } from './industry/retail';
 import type { Material } from './industry/state';
 import { MATERIAL_NAMES } from './industry/supply';
+import { matAvailable } from './industry/supply13';
 
 const $ = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const rngFor = (s: GameState, k: string) => new Rng(seedState(`sup18|${s.config.seed}|${k}`));
@@ -59,10 +60,10 @@ export const PLANTS18: Plant18[] = [
 ];
 export const plant18 = (id: string) => PLANTS18.find((p) => p.id === id);
 /** materiais que a fábrica faz NESTE ano (a brasileira larga o vinil 1997–2008) */
-export function plantMats(p: Plant18, y: number): Material[] {
-  return p.mats.filter((m) => !(p.id === 'brasil' && m === 'vinyl' && y >= 1997 && y <= 2008) && !(m === 'shellac' && y > 1960));
+export function plantMats(p: Plant18, y: number, s?: GameState): Material[] {
+  return p.mats.filter((m) => !(p.id === 'brasil' && m === 'vinyl' && y >= 1997 && y <= 2008) && !(m === 'shellac' && y > 1960) && (!s || matAvailable(s, m)));
 }
-export const plantsNow = (s: GameState): Plant18[] => PLANTS18.filter((p) => s.year >= p.from && s.year <= p.to && plantMats(p, s.year).length);
+export const plantsNow = (s: GameState): Plant18[] => PLANTS18.filter((p) => s.year >= p.from && s.year <= p.to && plantMats(p, s.year, s).length);
 
 /** Fila base (semanas) por material e ano: os gargalos históricos. */
 export function baseQueue18(m: Material, y: number): number {
@@ -199,14 +200,14 @@ export function queueOf18(s: GameState, p: Plant18, m: Material): number {
 }
 /** Melhor fábrica para o material: a preferida do jogador, senão a de menor fila (desempate: preço). */
 export function bestPlant18(s: GameState, m: Material): Plant18 | undefined {
-  const opts = plantsNow(s).filter((p) => plantMats(p, s.year).includes(m));
+  const opts = plantsNow(s).filter((p) => plantMats(p, s.year, s).includes(m));
   const pref = sup18(s).pref[m];
   const pp = pref ? opts.find((p) => p.id === pref) : undefined;
   if (pp) return pp;
   return opts.sort((a, b) => queueOf18(s, a, m) + a.price * 2 - (queueOf18(s, b, m) + b.price * 2))[0];
 }
-/** Semanas de crédito: laca e teste de prensagem já correm durante a mixagem. */
-export const GRACE18 = 2;
+/** Semanas de crédito: master, laca e teste de prensagem já correm entre a mixagem e a data anunciada. */
+export const GRACE18 = 4;
 
 function matsOfRel(formats: string[]): Material[] {
   const out = new Set<Material>();
@@ -258,7 +259,7 @@ export function setPlant18(s: GameState, prId: string, m: Material, plantId: str
   const st = sup18(s);
   const b = st.book[prId];
   const p = plant18(plantId);
-  if (!pr || !b || !p || !plantMats(p, s.year).includes(m) || s.year < p.from || s.year > p.to) return l('Inválido.', 'Invalid.');
+  if (!pr || !b || !p || !plantMats(p, s.year, s).includes(m) || s.year < p.from || s.year > p.to) return l('Inválido.', 'Invalid.');
   const before = plantDelta(s, pr, b);
   b.w = s.week;
   b.plant[m] = plantId;
@@ -693,7 +694,7 @@ registerExplain('supply.queue', (s, c) => {
   for (const [w, v] of clientFactor18(s, p).why) parts.push({ label: w, value: v, fmt: 'mult', tone: v > 1 ? 'bad' : 'good' });
   if (p.ship) parts.push({ label: l('Frete', 'Shipping'), value: p.ship, fmt: 'signed' });
   if (st.top && st.top.plant === p.id && st.top.until > s.week) parts.push({ label: l('Contrato de capacidade: 1 semana', 'Capacity contract: 1 week'), value: 1, fmt: 'num', tone: 'good' });
-  return { title: fmtL(l('Fila: {p}', 'Queue: {p}'), { p: p.name }), value: queueOf18(s, p, m), fmt: 'num', parts, note: l('Semanas até o lote ficar pronto; 2 semanas de laca e teste já correm durante a mixagem.', 'Weeks until the batch is ready; 2 weeks of lacquer and test pressing already run during mixing.') };
+  return { title: fmtL(l('Fila: {p}', 'Queue: {p}'), { p: p.name }), value: queueOf18(s, p, m), fmt: 'num', parts, note: l('Semanas até o lote ficar pronto; 4 semanas de laca, teste e capa já correm antes da data anunciada.', 'Weeks until the batch is ready; 4 weeks of lacquer, test pressing and sleeves already run before the announced date.') };
 });
 registerExplain('supply.fee', (s) => {
   const st = sup18(s), ph = physicalShare(s), d = dist18(st.dist), g = agg18(st.agg);

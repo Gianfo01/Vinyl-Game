@@ -44,7 +44,7 @@ let capPlant = '', capUnits = 5000;
 function pressTab(s: GameState): HTMLElement {
   const st = sup18(s);
   const plants = plantsNow(s);
-  const mats = MATS.filter((m) => plants.some((p) => plantMats(p, s.year).includes(m)));
+  const mats = MATS.filter((m) => plants.some((p) => plantMats(p, s.year, s).includes(m)));
   const mine = s.pendingReleases.filter((p) => s.acts[p.actId]?.owner === 'player' && st.book[p.id]);
   const recent = Object.entries(st.rel).slice(-8).reverse();
   return h('div', null,
@@ -59,7 +59,7 @@ function pressTab(s: GameState): HTMLElement {
           lt.weeks > 0 ? pill(t(l('{d} sem. atrasado ({p} do físico)', '{d} wk late ({p} of physical)'), { d: lt.weeks, p: pc(lt.share) }), 'bad') : pill(t(l('em dia', 'on time')), 'good'),
           b.bumped ? pill(t(l('furado por major', 'bumped by a major')), 'bad') : null, b.rush ? pill(t(l('prioridade', 'priority')), 'good') : null),
         ...(Object.keys(b.plant) as Material[]).map((m) => h('div', { class: 'row wrap small' }, `${t(MATERIAL_NAMES[m])}: `,
-          select(b.plant[m] ?? '', plants.filter((p) => plantMats(p, s.year).includes(m)).map((p) => ({ value: p.id, label: `${t(p.name)} (${queueOf18(s, p, m)} ${t(l('sem.', 'wk'))}, ×${p.price.toFixed(2)})` })), (v) => res(setPlant18(s, pr.id, m, v), l('Fábrica trocada (fila recontada a partir de hoje).', 'Plant switched (queue recounted from today).'))),
+          select(b.plant[m] ?? '', plants.filter((p) => plantMats(p, s.year, s).includes(m)).map((p) => ({ value: p.id, label: `${t(p.name)} (${queueOf18(s, p, m)} ${t(l('sem.', 'wk'))}, ×${p.price.toFixed(2)})` })), (v) => res(setPlant18(s, pr.id, m, v), l('Fábrica trocada (fila recontada a partir de hoje).', 'Plant switched (queue recounted from today).'))),
           ' ', t(l('pronto na semana {w}', 'ready in week {w}'), { w: b.ready[m] ?? '?' }))),
         h('div', { class: 'row wrap' },
           lt.weeks > 0 ? h('button', { class: 'btn tiny', onclick: () => sayL(resolveLate18(s, pr.id, 'postpone')) }, t(l('Adiar {d} semanas', 'Postpone {d} weeks'), { d: lt.weeks })) : null,
@@ -69,11 +69,11 @@ function pressTab(s: GameState): HTMLElement {
     section(t(l('Fábricas disponíveis em {y}', 'Plants available in {y}'), { y: s.year }), h('table', { class: 'tbl small' },
       h('tr', null, h('th', null, t(l('Fábrica', 'Plant'))), ...mats.map((m) => h('th', null, t(MATERIAL_NAMES[m]))), h('th', null, t(l('Defeitos', 'Defects'))), h('th', null, t(l('Preço', 'Price')))),
       ...plants.map((p) => h('tr', { title: t(p.desc) }, h('td', null, h('b', null, t(p.name)), h('div', { class: 'muted' }, `${t(p.where)} · ${t(p.desc)}`)),
-        ...mats.map((m) => h('td', null, plantMats(p, s.year).includes(m) ? why18(s, 'supply.queue', { plant: p.id, mat: m }, `${queueOf18(s, p, m)} ${t(l('sem.', 'wk'))}`) : '—')),
+        ...mats.map((m) => h('td', null, plantMats(p, s.year, s).includes(m) ? why18(s, 'supply.queue', { plant: p.id, mat: m }, `${queueOf18(s, p, m)} ${t(l('sem.', 'wk'))}`) : '—')),
         h('td', null, p.def > 0.005 ? pill(t(l('mais', 'more')), 'bad') : p.def < -0.005 ? pill(t(l('menos', 'fewer')), 'good') : t(l('média', 'avg'))),
         h('td', null, `×${p.price.toFixed(2)}`)))),
       h('div', { class: 'row wrap small' }, t(l('Preferência por material:', 'Preference by material:')), ...mats.map((m) => h('span', null, ' ', t(MATERIAL_NAMES[m]), ' ',
-        select(st.pref[m] ?? '', [{ value: '', label: t(l('menor fila', 'shortest queue')) }, ...plants.filter((p) => plantMats(p, s.year).includes(m)).map((p) => ({ value: p.id, label: t(p.name) }))], (v) => { setPref18(s, m, v); rerender(); })))),
+        select(st.pref[m] ?? '', [{ value: '', label: t(l('menor fila', 'shortest queue')) }, ...plants.filter((p) => plantMats(p, s.year, s).includes(m)).map((p) => ({ value: p.id, label: t(p.name) }))], (v) => { setPref18(s, m, v); rerender(); })))),
       ul(mats.map((m) => { const w = queueWhy18(m, s.year); return w ? `${t(MATERIAL_NAMES[m])}: ${t(w)}` : null; }))),
     section(t(l('Custo por unidade agora', 'Unit cost now')), ul(FORMATS.filter((f) => f.physical && availableFormats(s).includes(f.id)).map((f) => `${t(f.name)}: $${unitCostNow(s, f.id).toFixed(2)}`)),
       muted(l('Grau do material (barato/padrão/premium) fica em Indústria › Suprimentos. Edição limitada e vinil especial ficam no planejamento e nos Canais.', 'Material grade (cheap/standard/premium) lives in Industry › Supply. Limited editions and special vinyl live in planning and Channels.'))),

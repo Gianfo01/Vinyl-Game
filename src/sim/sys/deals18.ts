@@ -25,6 +25,7 @@ function post(s: GameState, key: string, amount: number, cat: string, memo: stri
 }
 import { PKG18, applyPkg18 } from './contracts18';
 import { SIGN_VETO } from './gate14';
+import { shield18 } from './feud18';
 
 const $ = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const rngFor = (s: GameState, k: string) => new Rng(seedState(`deal18|${s.config.seed}|${k}`));
@@ -68,13 +69,14 @@ export function devChance18(s: GameState, a: Act): { p: number; why: L[] } {
 }
 export function devCandidates18(s: GameState): Act[] {
   const known = Object.keys(s.knowledge ?? {});
-  return known.map((id) => s.acts[id]).filter((a): a is Act => !!a && !a.owner && !a.playerBand && a.fame < 35 && a.status !== 'retired' && a.status !== 'split' && !deals18(s).dev[a.id] && a.members.length > 0).slice(0, 30);
+  return known.map((id) => s.acts[id]).filter((a): a is Act => !!a && !a.owner && !a.playerBand && a.fame < 35 && a.status !== 'retired' && a.status !== 'split' && !deals18(s).dev[a.id] && a.members.length > 0 && !shield18(s, a.id)).slice(0, 30);
 }
 export function startDev18(s: GameState, actId: string, months: 12 | 24): { ok: boolean; text: L } {
   ensureDeals18();
   const a = s.acts[actId], st = deals18(s);
   if (!a || a.owner || a.playerBand) return { ok: false, text: l('Artista indisponível.', 'Artist unavailable.') };
   if (st.dev[actId]) return { ok: false, text: l('Já está em desenvolvimento.', 'Already in development.') };
+  if (shield18(s, actId)) return { ok: false, text: l('Modo história exata: artistas reais seguem a carreira documentada.', 'Exact history mode: real artists follow their documented career.') };
   if (Object.keys(st.dev).length >= 4) return { ok: false, text: l('No máximo 4 artistas em desenvolvimento.', 'At most 4 artists in development.') };
   const stip = devStipend18(s);
   if (s.player.cash < stip * 3) return { ok: false, text: l('Caixa insuficiente para 3 meses de mesada.', 'Not enough cash for 3 months of stipend.') };
@@ -210,7 +212,7 @@ function impMonth(s: GameState): void {
     if (s.week >= im.next) {
       im.next = s.week + 13;
       const fam = familyOf(host.genre);
-      const pool = Object.values(s.acts).filter((x) => !x.owner && !x.playerBand && x.fame < 30 && x.members.length && x.status !== 'retired' && x.status !== 'split' && !st.dev[x.id] && familyOf(x.genre) === fam);
+      const pool = Object.values(s.acts).filter((x) => !x.owner && !x.playerBand && x.fame < 30 && x.members.length && x.status !== 'retired' && x.status !== 'split' && !st.dev[x.id] && familyOf(x.genre) === fam && !shield18(s, x.id));
       const cand = pool.length ? pool[rngFor(s, `impc|${im.host}|${s.week}`).int(0, pool.length - 1)] : undefined;
       if (cand) pushInbox18(s, 'deal_imp', {
         from: host.name, weeks: 8, subject: fmtL(l('{h} indica {a} para o {n}', '{h} recommends {a} for {n}'), { h: host.name, a: cand.name, n: im.name }),
