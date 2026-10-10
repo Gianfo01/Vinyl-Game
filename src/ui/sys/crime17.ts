@@ -8,8 +8,8 @@ import { t } from '../../i18n/strings';
 import { recentFacts } from '../../sim/facts17';
 import { histMode } from '../../sim/history15';
 import {
-  CRIMES17, FENCES17, PLEA17, SEC17, agency, approachOrg, authOf, bossName, buyOffer, commitCrime, crime17, crimeById, crimeOdds, fenceQuote, fences, fineOf,
-  forensic, forgeRelic, hasRacket, heatIn, isReal, launderFee, myCases, nameOf17, orgs17, partnerOdds, pizzoFee, raidBootleggers, raidCost, reportOrg, resolveCase,
+  CRIMES17, FENCES17, PLEA17, SEC17, agency, approachOrg, bossName, buyOffer, commitCrime, crime17, crimeById, crimeOdds, fenceQuote, fences, fineOf,
+  forensic, forgeCost, forgeRelic, hasRacket, heatIn, isReal, launderFee, myCases, nameOf17, orgs17, partnerOdds, pizzoFee, raidBootleggers, raidCost, reportOrg, resolveCase,
   returnHot, ricoName, sellHot, setSecurity, targetsFor, toggleLaunder, trialOdds, usd, type Ctx17, type Plea,
 } from '../../sim/sys/crime17';
 import { WARN_REPLY, cutTie, payOffCost, replyWarn, tieAct, tieOf, truce, truceCost, type WarnReply } from '../../sim/sys/crimenpc17';
@@ -17,7 +17,7 @@ import { relics } from '../../sim/sys/relics9';
 import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
 import { rivalsExtra } from '../panels/discovery';
-import { monthName, pill, rerender, section, toast } from '../common';
+import { cityName, monthName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
 import { chips, stat, tabs } from '../vis';
@@ -47,9 +47,9 @@ function orgsTab(s: GameState): HTMLElement {
       const down = (st.down[o.id] ?? 0) > s.week;
       return h('section', { class: 'card' },
         h('h3', null, T(o.name), ' ', pill(T(KIND_NAME[o.kind])), o.real ? pill(T(l('real', 'real')), 'trait') : pill(T(l('fictícia', 'fictional'))), down ? pill(T(l('desmantelada', 'dismantled')), 'good') : null),
-        chips(stat('globe', `${o.city} · ${T(countryName(o.a3))}`, l('Sede', 'Base')), stat('fire', o.power, l('Poder', 'Power')), stat('handshake', rel, l('Relação com você', 'Relationship with you'))),
+        chips(stat('globe', `${cityName(o.city)} · ${T(countryName(o.a3))}`, l('Sede', 'Base')), stat('fire', o.power, l('Poder', 'Power')), stat('handshake', rel, l('Relação com você', 'Relationship with you'))),
         h('p', { class: 'small' }, T(o.desc)),
-        h('p', { class: 'small muted' }, `${T(l('Negócios', 'Rackets'))}: ${o.rackets.map((r) => T(RACKET_NAME[r])).join(' · ')} · ${T(l('Chefe', 'Boss'))}: ${bossName(o)}`),
+        h('p', { class: 'small muted' }, `${T(l('Negócios', 'Rackets'))}: ${o.rackets.map((r) => T(RACKET_NAME[r])).join(' · ')} · ${T(l('Chefe', 'Boss'))}: ${T(bossName(o))}`),
         o.ties?.length ? h('ul', { class: 'small' }, o.ties.filter((x) => x.y <= s.year).map((x) => h('li', null, pill(T(l('documentado', 'documented')), 'good'), ` ${x.who} (${x.y}): ${T(x.text)}`))) : null,
         tied.length ? h('p', { class: 'small' }, `${T(l('Andam com eles', 'Run with them'))}: ${tied.map((a) => `${a!.name}${a!.catalogNo ? ` (${T(l('boato', 'rumor'))})` : ''}`).join(', ')}`) : null,
         h('div', { class: 'row wrap' },
@@ -151,7 +151,7 @@ function marketTab(s: GameState): HTMLElement {
       st.market.length ? h('ul', null, st.market.map((of) => { const rl = relics(s).list.find((x) => x.id === of.rl); return rl ? h('li', null, `${T(rl.n)} — ${T(FENCES17[of.fence].name)} · ${T(usd(of.price))} · ${T(l('autenticidade estimada', 'estimated authenticity'))} ${P(of.auth)} · ${T(l('até semana', 'until week'))} ${of.until} `, btn(l('Comprar', 'Buy'), () => say(buyOffer(s, of.id)), { title: l('Pode ser falsa; receptação aumenta o calor.', 'May be fake; handling stolen goods raises heat.') })) : null; })) : h('p', { class: 'muted small' }, T(l('Nada à venda agora. Peças roubadas pelo mundo aparecem aqui com preço baixo — e risco.', 'Nothing for sale now. Pieces stolen around the world show up here cheap — and risky.')))),
     section(T(l('Falsificação', 'Forgery')),
       h('p', { class: 'small muted' }, T(l('Encomende uma réplica de peça famosa e venda como verdadeira: o comprador desconfia (autenticidade baixa).', 'Commission a replica of a famous piece and sell it as genuine: buyers get suspicious (low authenticity).'))),
-      h('div', { class: 'row wrap' }, ...famous.map((rl) => btn(`${T(rl.n)}`, () => say(forgeRelic(s, rl.id)), { title: fmtTxt(l('Custo ~2% do valor; autenticidade percebida {v}', 'Cost ~2% of value; perceived authenticity {v}'), P(authOf(s, '') * 0 + 0.25)) })))),
+      h('div', { class: 'row wrap' }, ...famous.map((rl) => btn(`${T(rl.n)} (${T(usd(forgeCost(s, rl.v)))})`, () => say(forgeRelic(s, rl.id)), { title: fmtTxt(l('Autenticidade percebida {v}', 'Perceived authenticity {v}'), P(0.25)) })))),
     section(T(l('Pirataria (bootlegs)', 'Bootleg rings')),
       h('p', { class: 'small muted' }, T(l('Fábricas piratas copiam seus sucessos recentes e você perde vendas. Uma batida com a polícia fecha a fábrica por um ano.', 'Bootleg plants copy your recent hits and you lose sales. A police raid shuts the plant for a year.'))),
       h('ul', { class: 'small' }, bootOrgs.map((o) => h('li', null, `${T(o.name)} (${T(countryName(o.a3))}) `, (st.boot[o.id] ?? 0) > s.week ? pill(T(l('fechada', 'shut')), 'good') : btn(fmtTxt(l('Batida ({v})', 'Raid ({v})'), usd(raidCost(s))), () => say(raidBootleggers(s, o.id)), { title: l('~55% (+ Jurídico) de fechar por 1 ano; relação com eles −20.', '~55% (+ Legal) to shut it for 1 year; relationship −20.') }))))),

@@ -77,12 +77,12 @@ export function orgs17(s: GameState, all = false): Org17[] {
 export const orgById = (s: GameState, id: string): Org17 | undefined => orgs17(s, true).find((o) => o.id === id || o.key === id);
 export const hasRacket = (o: OrgDef17, r: Racket17): boolean => o.rackets.includes(r);
 const BOSS_FICT = ['"Tio" Vicente', 'Dona Lurdes', 'Big Moe', 'Sr. Kowalski', 'Nico "Faca"'];
-export const bossName = (o: OrgDef17): string => o.boss ?? BOSS_FICT[o.id.length % BOSS_FICT.length];
+export const bossName = (o: OrgDef17): L => o.boss ? l(o.boss) : o.real ? fmtL(l('a cúpula de {o}', 'the leadership of {o}'), { o: o.name }) : l(BOSS_FICT[o.id.length % BOSS_FICT.length]);
 
 registerPer13('o', (s, id) => {
   const o = orgById(s, id);
   if (!o) return null;
-  return { kind: 'npc', name: `${bossName(o)} (${o.name.pt})`, city: o.city || s.config.homeCity, job: 'boss', attrs: { ear: 30, neg: 60 + o.power / 4, cha: 55, mgmt: 50 + o.power / 3, img: 30 }, facets: o.f ?? {} };
+  return { kind: 'npc', name: `${bossName(o).pt} (${o.name.pt})`, city: o.city || s.config.homeCity, job: 'boss', attrs: { ear: 30, neg: 60 + o.power / 4, cha: 55, mgmt: 50 + o.power / 3, img: 30 }, facets: o.f ?? {} };
 });
 
 // ================================================================ quem é real (regras de história)
@@ -459,9 +459,10 @@ export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
     why.push(fmtL(l('{n} sócio(s): chance +{a}%, exposição +{b}% (mais bocas), custo dividido', '{n} partner(s): odds +{a}%, exposure +{b}% (more mouths), cost split'), { n: c.partners.length, a: 6 * c.partners.length, b: 5 * c.partners.length }));
   }
   // alvo
-  if (d.tk === 'person' || d.tk === 'act') {
+  if ((d.tk === 'person' || d.tk === 'act') && d.id !== 'bootleg') {
     const f = famOf(s, c.target);
-    if (f > 20) { p -= f / 300; why.push(fmtL(l('Alvo famoso, cercado de gente: {x}', 'Famous target, always surrounded: {x}'), { x: pct(-f / 300) })); }
+    if (d.id === 'blackmail') { if (f > 20) { p += f / 600; why.push(fmtL(l('Alvo famoso tem mais a perder: {x}', 'Famous target has more to lose: {x}'), { x: pct(f / 600) })); } }
+    else if (f > 20) { p -= f / 300; why.push(fmtL(l('Alvo famoso, cercado de gente: {x}', 'Famous target, always surrounded: {x}'), { x: pct(-f / 300) })); }
   }
   if (isMine(s, c.target) && c.actor !== 'player' && st.sec) { p -= SEC17[st.sec].def; why.push(fmtL(l('Sua segurança ({s}): {x}', 'Your security ({s}): {x}'), { s: SEC17[st.sec].name, x: pct(-SEC17[st.sec].def) })); }
   if (d.id === 'blackmail' && holdsBetween(s, c.actor, c.target).some((h) => h.kind === 'secret' || h.kind === 'blackmail')) { p += 0.25; why.push(l('Você já guarda um segredo dele(a): +25%', 'You already hold a secret on them: +25%')); }
@@ -770,11 +771,12 @@ export function returnHot(s: GameState, rlId: string): L {
   return fmtL(l('Devolvida. Recompensa de {v} e boa imprensa.', 'Returned. {v} reward and good press.'), { v: usd(v) });
 }
 /** Falsificar uma réplica de peça famosa (o comprador pode descobrir). */
+export const forgeCost = (s: GameState, v: number): number => money(s, 3000 + v * 0.02);
 export function forgeRelic(s: GameState, rlId: string): L {
   const st = crime17(s);
   const src = relics(s).list.find((x) => x.id === rlId);
   if (!src) return l('Peça inválida.', 'Invalid piece.');
-  const cost = money(s, 3000 + src.v * 0.02);
+  const cost = forgeCost(s, src.v);
   if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `c17forge:${rlId}`, -cost, 'production', `Réplica: ${src.n.pt}`);
   const copy = addRelic(s, src.k, fmtL(l('{n} (procedência "nova")', '{n} ("new" provenance)'), { n: src.n }), src.a, src.p, src.v, src.y);
