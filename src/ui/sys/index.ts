@@ -109,3 +109,5 @@ import './biz17';
 import './media17';
 // Rodada 17 (onda 1, B): Mundo vivo — diretor criativo, situações para todos e jogadas dos NPCs com o porquê.
 import './npc17';
+// Rodada 17 (onda 1, A): menu Crime (organizações, planos, espionagem movida, mercado negro, polícia, histórico).
+import './crime17';

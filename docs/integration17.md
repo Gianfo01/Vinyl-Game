@@ -100,3 +100,11 @@ Voz cansada/estresse → cachê e risco de turnê · estresse → qualidade da f
 colapso/vício/escândalo · luto → estresse da banda · mágoa → estresse e negociação · fama regional → aceitação de oferta ·
 fama regional → júri nacional · escândalo recente → júri · religião/época/censura/imprensa/fãs → reação ao escândalo ·
 escândalo → fama regional, patrocínio, relações, paradas · obrigações → negociação · fato público → boato do press9.
+
+## Crime (onda 1, A) — `sim/sys/crime17.ts`, `sim/sys/crimenpc17.ts`, `ui/sys/crime17.ts`
+- `commitCrime(s, id, { actor, target, method?, org?, partners[] })` — qualquer ator ('player', pessoa, selo, `'o:<org>'`) contra qualquer alvo;
+  `crimeOdds(...)` devolve chance, exposição, custo, calor e `why[]`. Fatos publicados: `crime` (secreto→boato→público, tags `crime` + id),
+  `arrest`/`case_ruling` (casos), `theft`, `piracy`, `feud`, `tie`, `crime_doc` (crônica real), `betrayal`.
+- Casos (`feedCase`, `resolveCase`: delação/julgamento/suborno/fuga), calor por país (`heatIn`, `agency`), presos (`jailedIn`), laços de rua (`tieOf`).
+- Relíquias reais: `sim/relics17.ts` (`registerRelics17([...])`) — o crime17 semeia no relics9 quando o ano chega.
+- Regras: assassinato nunca envolve pessoa real; no modo exato, pessoas/selos/orgs reais só aparecem na crônica documentada.

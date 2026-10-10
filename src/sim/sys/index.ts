@@ -159,3 +159,6 @@ import './media17';
 import './sitsworld17';
 // Rodada 17 (onda 1, B): mundo orgânico dos NPCs — rompimentos, selos novos, carreiras, estratégias de selo.
 import './npc17';
+// Rodada 17 (onda 1, A): crime — organizações, ações de todos contra todos, casos, mercado negro, NPCs tramando.
+import './crime17';
+import './crimenpc17';

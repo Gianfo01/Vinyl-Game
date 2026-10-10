@@ -11,7 +11,6 @@ import type { GameState } from '../../sim/types';
 import { money, rngOf } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
-import { registerTab } from '../registry';
 import { lifeEventsSection } from './lifeevents10';
 import { ic } from '../vis';
 import { visibleAct } from '../../sim/future';
@@ -109,4 +108,4 @@ function bigDecisions(s: GameState): HTMLElement {
   );
 }
 
-registerTab('marketHub', { id: 'intrigue', label: l('Intriga e segredos', 'Intrigue and secrets'), icon: 'camera', render: intriguePanel, badge: (s) => intrigue(s).schemes.length || undefined });
+// rodada 17: a aba de intriga/espionagem mudou para Crime → Espionagem (ui/sys/crime17.ts)
