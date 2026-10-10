@@ -194,9 +194,10 @@ export function outcome18(s: GameState, rel: Release): { o: Out18; ratio: number
   const ratio = rel.fc && rel.fc > 0 ? actual / rel.fc : 1;
   const critic = rel.critic ?? 60;
   let o: Out18 = 'solid';
-  if (critic >= 72 && ratio < 0.9) o = 'cult';
+  const big = rel.type !== 'single'; // single que não pega é rotina; só disco (EP/LP) vira culto ou fracasso
+  if (big && critic >= 75 && ratio < 0.8) o = 'cult';
   else if (ratio >= 1.8 || (rel.peak <= 10 && ratio >= 1.25)) o = 'hit';
-  else if (ratio < 0.55 && critic < 72) o = 'flop';
+  else if (big && ratio < 0.45 && critic < 66) o = 'flop';
   return { o, ratio, critic };
 }
 
@@ -230,7 +231,7 @@ function evaluate(s: GameState, act: Act, t: T18, rel: Release): void {
   let text: L | null = null;
   let res: Out18 = o;
   if (o === 'cult') {
-    t.expect = clamp(t.expect + (first ? 30 : 15), 0, 100);
+    t.expect = clamp(t.expect + (first ? 30 : 10), 0, 100);
     t.exp = clamp(t.exp + 8, 0, 100);
     era(s, t, 'cult', fmtL(first ? l('Estreia cultuada: "{r}" (crítica {c}).', 'Cult debut: "{r}" (critics {c}).') : l('"{r}" vira disco de culto (crítica {c}).', '"{r}" becomes a cult record (critics {c}).'), { r: rel.title, c: critic }), rel.id);
     const p = leader(s, act);
@@ -257,7 +258,7 @@ function evaluate(s: GameState, act: Act, t: T18, rel: Release): void {
     if (rc.k === 'proud') res = 'proud';
     if (rc.k === 'reinvent') { t.exp = clamp(t.exp + 30, 0, 100); t.pres = Math.max(0, t.pres - 10); }
     if (rc.k === 'conserv') { t.exp = clamp(t.exp - 25, 0, 100); t.pres = clamp(t.pres + 10, 0, 100); }
-    if (rc.k === 'shaken') { t.conf = clamp(t.conf - 25, 0, 100); const p = leader(s, act); if (p) addStress(s, p.id, 10, l('O disco fracassou', 'The record flopped')); }
+    if (rc.k === 'shaken') { t.conf = clamp(t.conf - 15, 0, 100); const p = leader(s, act); if (p) addStress(s, p.id, 6, l('O disco fracassou', 'The record flopped')); }
     if (rc.k === 'proud') t.conf = clamp(t.conf - 3, 0, 100);
     t.expect = clamp(t.expect - 12, 0, 100);
     era(s, t, rc.k, fmtL(l('Depois de "{r}": {k}.', 'After "{r}": {k}.'), { r: rel.title, k: REACT18[rc.k].name }), rel.id);
