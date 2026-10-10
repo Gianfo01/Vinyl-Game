@@ -46,7 +46,7 @@ export interface Clauses18 {
 type OfferLike = Omit<Offer, 'id' | 'week' | 'status'>;
 type C18 = Contract & { clauses18?: Clauses18; rb18?: Record<string, number>; rp18?: Record<string, string>; spent18?: Record<string, number> };
 
-export interface Pkg18 { id: string; name: L; desc: L; c: Clauses18; rights?: Partial<RightsTerms> }
+export interface Pkg18 { id: string; name: L; desc: L; c: Clauses18; rights?: Partial<RightsTerms>; /** r18 supply18: modelo e taxa sugeridos */ model?: Offer['model']; fee?: number }
 const base = (o: Partial<Clauses18>): Clauses18 => ({ pkg: 'custom', rec: 0.5, video: false, tour: false, mkt: 0, cap: 0, cross: true, base: 'wholesale', stmt: 's', lag: 3, audit: false, minRel: 0, promo: 0, ...o });
 export const PKG18: Pkg18[] = [
   { id: 'major', name: l('Major clássico', 'Classic major'), desc: l('Master do selo para sempre; recupera gravação, clipe, apoio de turnê e metade do marketing, tudo cruzado. Royalty sobre varejo com dedução de embalagem; contas semestrais.', 'Label owns the master forever; recoups recording, video, tour support and half the marketing, all cross-collateralized. Royalty on retail with packaging deduction; semiannual statements.'),
@@ -69,6 +69,8 @@ export function applyPkg18(o: OfferLike, id: string): void {
   if (!p) return;
   (o as OfferLike & { clauses18?: Clauses18 }).clauses18 = { ...p.c };
   if (o.rights && p.rights) Object.assign(o.rights, p.rights);
+  if (p.model) o.model = p.model;
+  if (p.fee !== undefined) o.distributionFee = p.fee;
 }
 
 // ---------------------------------------------------------------- base dos royalties

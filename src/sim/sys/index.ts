@@ -198,3 +198,7 @@ import './dmsits18';
 import './econ18';
 import './contracts18';
 import './eras18';
+// Rodada 18 (supply18, onda 1): fábricas/distribuidoras/agregadores, acordos de desenvolvimento/imprint/JV e relatório de mercado.
+import './supply18';
+import './deals18';
+import './report18';

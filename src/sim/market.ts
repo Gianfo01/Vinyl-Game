@@ -499,7 +499,7 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
 }
 
 export function distributionFee(s: GameState): number {
-  return [0.22, 0.2, 0.17, 0.13, 0.1, 0.08][s.player.hq] ?? 0.08;
+  return ([0.22, 0.2, 0.17, 0.13, 0.1, 0.08][s.player.hq] ?? 0.08) + (s.flags.distFeeAdj18 ?? 0); // r18 supply18: distribuidor/agregador
 }
 
 function rankChart(s: GameState, entries: ChartEntry[], which: 'singles' | 'albums'): void {
