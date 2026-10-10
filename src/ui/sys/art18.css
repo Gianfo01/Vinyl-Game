@@ -1,0 +1,17 @@
+/* Rodada 18 (art18): trajetória artística e qualidade em dimensões */
+.art18-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin: 4px 0; }
+.art18-k { min-width: 150px; color: var(--muted, #888); font-size: 0.9em; }
+.art18-v { flex: 1; min-width: 0; }
+.art18-v .bar, .art18-dim .bar { width: 90px; display: inline-block; vertical-align: middle; }
+.art18-prods { display: flex; flex-direction: column; gap: 2px; }
+.art18-meters { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px 16px; }
+.art18-dims { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 2px 14px; }
+.art18-dim { display: flex; gap: 6px; align-items: center; }
+.art18-dim .art18-k { min-width: 110px; }
+.art18-tl { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--line, #8884); }
+.art18-era { position: relative; margin: 0 0 6px; padding-left: 6px; }
+.art18-era::before { content: ''; position: absolute; left: -21px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent, #c9a227); }
+.art18-era.k-flop::before, .art18-era.k-shaken::before { background: var(--bad, #c0392b); }
+.art18-era.k-hit::before, .art18-era.k-cult::before { background: var(--good, #2e9e5b); }
+.art18-proj .row { align-items: center; gap: 8px; }
+@media (max-width: 600px) { .art18-k { min-width: 0; width: 100%; } }

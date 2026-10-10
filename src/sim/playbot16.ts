@@ -23,6 +23,9 @@ import { acceptInvite, editionOf, festFee, festTierFor, fest8, pitchAct } from '
 import { energyLeft, industryParty, mentorAct, therapy } from './sys/life';
 import { createProject, openProjects, projectSession, projectStage, recordNow, rolloutProject, scheduleProject, type MusicProject } from './sys/project8';
 import { commitProject } from './sys/project12';
+import { setProjectSongs } from './sys/project8';
+import { bestOrder18, bestProducer18 } from './sys/quality18';
+import { suggestDir18 } from './sys/traj18';
 import { commit13, DEFAULT13 } from './sys/project13';
 import { candidates as syncCands, pitch15, sy15 } from './sys/sync15';
 import { scoutInPerson } from './sys/capacity14';
@@ -248,12 +251,13 @@ function records(s: GameState, k: Knobs, prof: Profile): void {
       p = r;
       L.projects++;
       const budget = runway(s) < k.cut * 2 ? 'lean' : k.budget;
-      commitProject(s, p, { intent: act.fame < 15 ? 'audience' : 'career', dir: prof === 'aggressive' ? 'bold' : 'signature', aud: act.fame < 15 ? 'young' : 'core', budget, deadline: 'normal' });
+      commitProject(s, p, { intent: act.fame < 15 ? 'audience' : 'career', dir: prof === 'aggressive' ? 'bold' : suggestDir18(s, act), aud: act.fame < 15 ? 'young' : 'core', budget, deadline: 'normal' });
       // escolhas de lançamento (rodada 13): o agressivo paga single de trabalho e edição limitada; os outros ficam no padrão
       if (prof === 'aggressive' && p.type !== 'single') commit13(s, p, { ...DEFAULT13, single: 'lead', ed: s.year >= 1975 ? 'limited' : 'standard' });
       p.marketing = marketingFor(s, act, p, k);
       const cap = s.player.cash * (prof === 'aggressive' ? 0.08 : prof === 'balanced' ? 0.04 : 0.015);
-      p.producerId = bestProducer(s, act, Math.max(1, p.songIds.length), cap);
+      // r18 (art18): o produtor certo para ESTE projeto (encaixe, crueza do gênero, química), não só o mais hábil
+      p.producerId = bestProducer18(s, act, Math.max(1, p.songIds.length), cap) ?? bestProducer(s, act, Math.max(1, p.songIds.length), cap * 0.5);
     }
     const st = projectStage(s, p);
     if (st === 'recording' && !projectSession(s, p)) {
@@ -263,6 +267,7 @@ function records(s: GameState, k: Knobs, prof: Profile): void {
         else if (p.producerId) { p.producerId = undefined; if (!recordNow(s, p)) L.recordings++; }
       }
     } else if (st === 'finishing') {
+      if (p.songIds.length >= 3) setProjectSongs(s, p, bestOrder18(s, p.songIds)); // r18: sequência das faixas
       p.marketing = marketingFor(s, act, p, k);
       if (runway(s) < k.cut) for (const m of p.marketing) m.budget = Math.round(m.budget / 3);
       const lp = p.type === 'lp' && prof !== 'cautious' && runway(s) > k.cut * 2;

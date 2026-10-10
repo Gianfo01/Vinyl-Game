@@ -104,6 +104,9 @@ function conceptSection(s: GameState, p: MusicProject, locked: boolean): HTMLEle
     ));
 }
 
+/** Rodada 18 (art18): extras no fim de "Faixas e produção" (sequência das faixas, produtor certo para o projeto). */
+export const PROJ_TRACK_EXTRAS18: ((s: GameState, p: MusicProject, locked: boolean) => HTMLElement | null)[] = [];
+
 function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElement {
   const act = s.acts[p.actId];
   const need = needSongs(p.type);
@@ -146,6 +149,8 @@ function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
         locked ? h('p', { class: 'muted small' }, '—') : h('div', { class: 'row wrap' },
           select(p.guestId ?? '', [{ value: '', label: t(l('Sem convidado', 'No guest')) }, ...guests.map((g) => ({ value: g.id, label: `${g.name} (${$(featureFee(s, g))})` }))], (v) => { p.guestId = v || undefined; rerender(); }),
           h('button', { class: 'btn small', disabled: !p.guestId, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))))) : null,
+
+    ...PROJ_TRACK_EXTRAS18.map((f) => f(s, p, locked)),
   );
 }
 

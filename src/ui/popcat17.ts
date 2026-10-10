@@ -25,7 +25,7 @@ const BY: Record<string, string> = {
   disco: 'music', songs: 'music', releases: 'music', era8: 'music', retro: 'music', story12: 'music', records13: 'music',
   // carreira
   history: 'career', career: 'career', inst: 'career', train: 'career', path16: 'career', cap14: 'career', leader10: 'career',
-  arc12: 'career', labels13: 'career', reach17: 'career', fan15: 'career', identity8: 'career', playbook8: 'career',
+  arc12: 'career', traj18: 'career', labels13: 'career', reach17: 'career', fan15: 'career', identity8: 'career', playbook8: 'career',
   roster: 'career', awards: 'career', market: 'career', r_ceo: 'career', succ16: 'career', org12: 'career',
   // vida
   mood: 'life', rel: 'life', rel8: 'life', circle8: 'life', bonds9: 'life', bonds9p: 'life', fam: 'life', fam16: 'life', life: 'life', life13: 'life', life13p: 'life',

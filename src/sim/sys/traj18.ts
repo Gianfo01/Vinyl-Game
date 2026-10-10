@@ -542,4 +542,9 @@ registerExplain('traj.rep', (s, c) => {
     note: l('Reputações separadas: banda de palco lota casas mesmo com disco morno (receita de show até ±10%); banda de estúdio vive da crítica.', 'Separate reputations: a live band fills rooms even with a lukewarm record (show revenue up to ±10%); a studio band lives on reviews.'),
   };
 });
+registerExplain('traj.sig', () => ({
+  title: l('Assinatura sonora', 'Sound signature'), value: '', fmt: 'text',
+  parts: [{ label: l('Média móvel do som dos discos (os recentes pesam mais)', 'Moving average of the records\' sound (recent ones weigh more)') }, { label: l('Consolidação: quão perto o som dos 2 últimos discos está dos 2 primeiros', 'Consolidation: how close the last 2 records sound to the first 2') }],
+  note: l('Assinatura forte dá timbres de marca e identidade reconhecível (apelo); virada brusca estranha os fãs antigos e abre uma era nova.', 'A strong signature brings trademark timbres and a recognizable identity (appeal); an abrupt shift puzzles old fans and opens a new era.'),
+}));
 export const dimName18 = (d: keyof typeof DIM18): L => DIM18[d].name;

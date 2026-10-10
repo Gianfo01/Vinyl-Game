@@ -121,5 +121,7 @@ import './char17';
 import './pop17';
 // Rodada 17 (onda 2, J): cenas interativas (cartao, momentos, premios), Album de cenas e popups do mapa.
 import './scene17';
+// Rodada 18 (art18): trajetória artística (aba no artista) e qualidade em dimensões (disco e projeto).
+import './art18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';

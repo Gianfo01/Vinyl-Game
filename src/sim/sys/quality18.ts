@@ -273,9 +273,9 @@ export function profileLine18(v: Record<Dim18, number>): { hi: Dim18[]; lo: Dim1
 const k = (x: number, c = 55, span = 40) => clamp((x - c) / span, -1, 1);
 /** Multiplicador de apelo (vendas/paradas) vindo das dimensões. */
 export function appealMult18(rel: Release, v: Record<Dim18, number>): { m: number; why: [L, number][] } {
-  const why: [L, number][] = [[l('Acessibilidade', 'Accessibility'), 0.06 * k(v.acc)]];
+  const why: [L, number][] = [[l('Acessibilidade', 'Accessibility'), 0.06 * k(v.acc, 48)]];
   if (rel.type === 'single') why.push([l('Força do single', 'Single strength'), 0.08 * k(v.sgl)]);
-  else if (rel.type === 'lp') { why.push([l('Coesão do álbum', 'Album cohesion'), 0.05 * k(v.coh)]); why.push([l('Single puxando o álbum', 'Single pulling the album'), 0.04 * k(v.sgl)]); }
+  else if (rel.type === 'lp') { why.push([l('Coesão do álbum', 'Album cohesion'), 0.05 * k(v.coh, 57)]); why.push([l('Single puxando o álbum', 'Single pulling the album'), 0.04 * k(v.sgl)]); }
   else why.push([l('Força do single', 'Single strength'), 0.05 * k(v.sgl)]);
   const m = clamp(1 + why.reduce((t, x) => t + x[1], 0), 0.88, 1.12);
   return { m, why };
