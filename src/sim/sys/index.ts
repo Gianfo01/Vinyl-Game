@@ -209,3 +209,5 @@ import './camps18';
 import './session18';
 import './school18';
 import './tv18';
+import './world18';
+import './rivalmind18';

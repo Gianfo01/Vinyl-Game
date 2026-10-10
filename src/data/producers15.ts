@@ -3,6 +3,7 @@
 // Sem nomes reais, o mesmo arquétipo entra com nome gerado e sem obras citadas. Atributos 1–99 (ouvido, negociação, carisma, gestão, imagem).
 
 import { l, type FamilyId, type L } from './world';
+import { PRODS18 } from './people18';
 
 export type PrAttrs = [ear: number, neg: number, cha: number, mgmt: number, img: number];
 export interface RealProd {
@@ -91,4 +92,5 @@ export const REAL_PRODS: RealProd[] = [
   R('marote', 'Dudu Marote', 1962, 0, 'bh', 'Estúdios mineiros', 1990, 2040, 'organic', l('Pop mineiro de banda', 'Minas band pop'), [5, 4, 3], ['brazil', 'pop', 'rock'], 2, 80, 25, [85, 65, 65, 70, 40], l("Produtor do Skank: pop com reggae e cultura de Minas.", "Skank's producer: pop with reggae and Minas culture."), [['Calango', 'Skank', 1994], ['Samba Poconé', 'Skank', 1996]]),
   R('kassin', 'Kassin', 1969, 0, 'rio', 'Estúdio Rio', 2000, 2040, 'organic', l('Banda ao vivo, experimental', 'Experimental live band'), [3, 6, 8], ['brazil', 'rock', 'pop'], 2, 82, 20, [90, 55, 70, 65, 55], l('Multi-instrumentista da cena carioca moderna.', 'Multi-instrumentalist of the modern Rio scene.'), [['Cê', 'Caetano Veloso', 2006], ['Zii e Zie', 'Caetano Veloso', 2009]]),
 ];
+REAL_PRODS.push(...PRODS18.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r18 (world18): mais produtores reais por era/região
 export const prodById = Object.fromEntries(REAL_PRODS.map((p) => [p.id, p])) as Record<string, RealProd>;

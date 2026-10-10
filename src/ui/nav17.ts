@@ -30,7 +30,7 @@ export const NAV17: Group17[] = [
     sec('live', l('Palco', 'Stage'), ['shows', 'cal17'])] },
   { id: 'press', label: l('Mídia', 'Media'), icon: 'newspaper', secs: [sec('press', l('Imprensa', 'Press'), ['news17', 'media', 'critics'])] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', secs: [
-    sec('map', l('Mapa', 'Map'), ['world', 'world17']),
+    sec('map', l('Mapa', 'Map'), ['world', 'world17', 'after18']),
     sec('market', l('Mercado', 'Market'), ['charts', 'labels', 'industry']),
     sec('culture', l('Cultura', 'Culture'), ['movements', 'lendas'])] },
   { id: 'events', label: l('Eventos', 'Events'), icon: 'trophy', secs: [sec('events', l('Eventos', 'Events'), ['festivals', 'awards', 'rockhall'])] },
@@ -75,7 +75,7 @@ export const ICON17: Record<string, string> = {
   artists: 'drums', people: 'handshake', market: 'eye', directory: 'fans', managers14: 'briefcase', producers15: 'headphones',
   project: 'cassette', creation: 'pen', studio: 'mic', releases: 'cd', catalog: 'gold-disc', shows: 'tour-bus', cal17: 'calendar',
   news17: 'megaphone', media: 'camera', critics: 'scroll',
-  world: 'map', world17: 'chess', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
+  world: 'map', world17: 'chess', after18: 'briefcase', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
   festivals: 'ticket', awards: 'medal', rockhall: 'vault', crime: 'mask',
   you: 'fame', agenda17: 'hourglass', personal: 'heart', night14: 'sleep', wealth: 'diamond', scenes17: 'shirt', careers: 'compass', ventures: 'rocket',
   identity: 'lock', biz17: 'gavel', management: 'brain', tour12: 'train', studio12: 'radio', publishing16: 'bulb', outlets16: 'film', platform16: 'ship',

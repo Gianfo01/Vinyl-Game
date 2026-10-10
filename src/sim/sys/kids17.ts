@@ -14,6 +14,7 @@ import { addStress, relieveLong } from '../stress17';
 import type { Appearance, GameState } from '../types';
 import { fmtL, money, notify } from '../util';
 import { signToBestRival } from '../worldgen';
+import { courtNewcomer18 } from './world18';
 import { addKid, life, playerPerson } from './life';
 import { love17, playerFame } from './love17';
 import { ownerOf } from './people/owner';
@@ -135,9 +136,9 @@ registerSimHook('year', 'kids17', (s) => {
         const act = makeAct(s, r, { genre, city: s.config.homeCity, members: 1, potential: clamp(k.aptitude + 5, 20, 95), formed: s.year, debutYear: s.year, fame: clamp(fame / 4, 0, 18), name: k.name });
         const p = s.persons[act.members[0]];
         if (p) { p.born = k.born; p.parentId = o.personId; p.look = kidLook(s, k); }
-        signToBestRival(s, r, act);
+        void signToBestRival; courtNewcomer18(s, act); // r18 (world18): estreia sem selo; o rival corteja no mercado
         kx.actId = act.id;
-        emitFact(s, { kind: 'signing', actors: [act.id, ...(act.owner ? [act.owner] : []), 'player'], place: s.config.homeCity, severity: 45, visibility: 'public', tags: ['family', 'bad'], text: fmtL(l('{k}, filho(a) de {o}, estreia — pelo selo rival.', '{k}, {o}\'s child, debuts — on a rival label.'), { k: k.name, o: o.name }), src: 'kids17' });
+        emitFact(s, { kind: 'signing', actors: [act.id, ...(act.owner ? [act.owner] : []), 'player'], place: s.config.homeCity, severity: 45, visibility: 'public', tags: ['family', 'bad'], text: fmtL(l('{k}, filho(a) de {o}, estreia sem selo — recusou o seu e a concorrência já faz propostas.', '{k}, {o}\'s child, debuts unsigned — refused your label, and rivals are already making offers.'), { k: k.name, o: o.name }), src: 'kids17' });
       }
       const t = fmtL(l('{k} fez 18 anos e {p}.', '{k} turned 18 and {p}.'), { k: k.name, p: PATH17[x.path] });
       note(x, s.year, t);

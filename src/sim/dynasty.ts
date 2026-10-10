@@ -39,7 +39,7 @@ function deathRisk(age: number, p: Person): number {
 }
 
 /** Artistas reais seguem a vida real até o presente: não morrem por sorteio antes de 2026 (as mortes reais vêm do roteiro). */
-export const realSafe = (s: GameState, act: { catalogNo?: number }): boolean => !!act.catalogNo && s.year < 2026 && s.config.history !== 'free';
+export const realSafe = (s: GameState, act: { catalogNo?: number }): boolean => !!act.catalogNo && s.year < 2026 && s.config.history === 'strict'; // r18: só o modo exato protege
 
 export function personDies(s: GameState, p: Person, cause: L): void {
   if (!p.alive) return;

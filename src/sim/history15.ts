@@ -37,3 +37,12 @@ export function histRoll(s: GameState, key: string): number {
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
   return ((h >>> 0) % 100000) / 100000;
 }
+
+// r18 (world18) — regra de história: só "Vida real exata" segue o roteiro real; todos os outros modos são história
+// alternativa depois do início (gente real ou fictícia pode viver o que os sistemas permitirem).
+/** Modo exato (roteiro real e proteções de pessoas reais). */
+export const exactHist = (s: GameState): boolean => histMode(s) === 'strict';
+/** Fora do modo exato: história alternativa. */
+export const altHistory = (s: GameState): boolean => histMode(s) !== 'strict';
+/** Um fato real do ano `y` ainda acontece como roteiro? Antes do início da partida, sempre; depois, só no modo exato. */
+export const scriptedReal = (s: GameState, y: number): boolean => exactHist(s) || y < s.config.startYear;

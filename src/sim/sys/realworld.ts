@@ -216,9 +216,9 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   st.done[act.id] = 1;
   const real = !!s.config.realNames;
   const hm = histMode(s);
-  const fates = !!s.config.realFates && s.config.mode === 'historic' && hm !== 'free';
-  // rodada 15: exata → mês fixo por evento; aleatória → cada fato real futuro vira uma possibilidade
-  const keep = (k: string, pr: number) => hm !== 'free' || histRoll(s, `${act.id}:${k}`) < pr;
+  // r18 (world18): só o modo exato agenda fatos reais futuros; nos outros (história alternativa) o futuro é da simulação
+  const fates = hm === 'strict';
+  const keep = (k: string, pr: number) => { void k; void pr; return hm === 'strict'; };
   const sched = { push: (e: Sched) => st.sched.push(hm === 'strict' ? { ...e, mo: Math.floor(histRoll(s, `${e.kind}:${act.id}:${e.personId ?? e.rel?.[0] ?? e.m?.[0] ?? e.year}`) * 12) } : e) };
   const debut = act.debutYear;
   const shift = d.d !== undefined ? debut - d.d : 0; // deslocamento (modos livre/caos)
@@ -289,9 +289,10 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     }
   }
   // fim de carreira e voltas
-  if (d.e !== undefined) act.careerEnd = d.e + shift + (s.config.mode === 'historic' ? 0 : jitter(s, r, 2)) + (hm === 'free' && d.e >= s.year ? Math.floor(histRoll(s, `${act.id}:e`) * 11) - 5 : 0);
+  if (d.e !== undefined && hm !== 'strict' && d.e + shift >= s.year) act.careerEnd = Math.max(s.year, act.debutYear) + 2 + Math.floor(histRoll(s, `${act.id}:e18`) * 24); // r18: fim de carreira futuro sorteado
+  else if (d.e !== undefined) act.careerEnd = d.e + shift + (s.config.mode === 'historic' ? 0 : jitter(s, r, 2));
   else act.careerEnd = Math.max(act.careerEnd, 2026 + r.int(0, 14));
-  for (const [a, b] of d.rj ?? []) if (keep(`r${a}`, 0.4)) sched.push({ year: a + shift, kind: 'reunion', actId: act.id, until: b !== undefined ? b + shift : undefined });
+  for (const [a, b] of d.rj ?? []) if (a + shift < s.config.startYear || keep(`r${a}`, 0.4)) sched.push({ year: a + shift, kind: 'reunion', actId: act.id, until: b !== undefined ? b + shift : undefined });
   // discografia: o que já saiu vira catálogo; o resto sai no ano certo (se o ato não for do jogador)
   for (const rel of d.al ?? []) {
     const year = rel[1] + shift;
@@ -460,6 +461,7 @@ function monthly(s: GameState, r: Rng): void {
   }
   // agenda histórica
   if (!st.sched.length) return;
+  if (histMode(s) !== 'strict' && st.sched.some((x) => x.year >= s.config.startYear)) st.sched = st.sched.filter((x) => x.year < s.config.startYear); // r18: saves antigos
   const isDue = (x: Sched) => x.year < s.year || (x.year === s.year && (x.mo ?? 0) <= s.month);
   const due = st.sched.filter(isDue);
   if (!due.length) return;

@@ -109,7 +109,8 @@ export function sexOf(s: GameState, pid: string): Sx17 {
   if (isRealP(s, pid)) {
     const d = REAL_SEX17[p.name];
     if (d && s.year >= d[1]) return { o: d[0], c: 'out', real: true, note: d[3], outed: !!d[2] };
-    return { o: 'private', c: 'private', real: true };
+    if (d || s.config.history === 'strict') return { o: 'private', c: 'private', real: true };
+    // r18: história alternativa — quem não tem orientação documentada entra no sorteio como qualquer personagem
   }
   const u = u01(s, pid, 'o');
   const o: Orient17 = u < 0.905 ? 'het' : u < 0.94 ? 'gay' : u < 0.99 ? 'bi' : 'ace';
@@ -201,7 +202,7 @@ export function comeOut(s: GameState, pid: string, how: 'chose' | 'outed', by?: 
   const isPl = pid === 'player' || !!s.persons[pid]?.isPlayer;
   const key = isPl ? 'player' : pid;
   // pessoas reais nunca são expostas pelo jogo; só quem é LGBT pode "sair do armário"
-  if (!isPl && isRealP(s, pid)) return l('Pessoa real: o jogo só usa o que é publicamente documentado.', 'Real person: the game only uses what is publicly documented.');
+  if (!isPl && isRealP(s, pid) && (s.config.history === 'strict' || REAL_SEX17[s.persons[pid]?.name ?? ''])) return l('Pessoa real: o jogo só usa o que é publicamente documentado.', 'Real person: the game only uses what is publicly documented.');
   if (!isQueer(sexOf(s, key))) return l('Nada a revelar.', 'Nothing to reveal.');
   const rec = (st.p[key] ??= {});
   if (rec.c === 'out') return l('Já é público.', 'Already public.');

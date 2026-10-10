@@ -4,6 +4,7 @@
 // gerado. Atributos 1–99 no esquema da ficha unificada (ouvido, negociação, carisma, gestão, imagem).
 
 import { l, type FamilyId, type L } from './world';
+import { MGRS18 } from './people18';
 
 /** shark: arranca adiantamentos; muscle: intimida e exige royalties; svengali: fabrica imagem e quer verba
  *  prometida; guardian: protege o artista e exige controle criativo; impresario: promotor, quer contratos curtos. */
@@ -161,4 +162,5 @@ export const REAL_MGRS: RealMgr[] = [
     cl: [['Ney Matogrosso', 1978, 1995]] },
 ];
 
+REAL_MGRS.push(...MGRS18.filter((x) => !REAL_MGRS.some((y) => y.id === x.id))); // r18 (world18): mais empresários reais por região
 export const mgrById: Record<string, RealMgr> = Object.fromEntries(REAL_MGRS.map((m) => [m.id, m]));

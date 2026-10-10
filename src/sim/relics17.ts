@@ -235,8 +235,9 @@ export const relics17Gate: { f: (s: GameState, d: RelicDef17) => boolean; step: 
 registerSimHook('month', 'relics17', (s) => {
   if (!s.config.realNames) return;
   const st = st17(s);
+  const alt = s.config.history !== 'strict';
   for (const d of RELICS17) {
-    if (!reached(s, d.year, d.month)) continue;
+    if (!reached(s, d.year, d.month) || (alt && d.year >= s.config.startYear)) continue; // r18: história alternativa: relíquias reais futuras não nascem
     let rl = relic9Of17(s, d.id);
     if (!rl && st.done[d.id] === undefined && relics17Gate.f(s, d)) {
       const act = realAct17(s, d.owner);
@@ -253,7 +254,7 @@ registerSimHook('month', 'relics17', (s) => {
     if (rl.rb && rl.st !== 'auction') { const o = rl.own[rl.own.length - 1]; if (rl.st === 'kept' && o && o[2] === 'leilão') o[0] = rl.rb; rl.rb = undefined; }
     const steps = d.steps ?? [];
     let i = st.done[d.id] ?? 0;
-    while (i < steps.length && reached(s, steps[i][0], steps[i][1]) && relics17Gate.step(s, steps[i])) { if (rl.st !== 'auction') apply(s, d, rl, steps[i]); else break; i++; }
+    while (i < steps.length && reached(s, steps[i][0], steps[i][1]) && relics17Gate.step(s, steps[i]) && !(alt && steps[i][0] >= s.config.startYear)) { if (rl.st !== 'auction') apply(s, d, rl, steps[i]); else break; i++; }
     st.done[d.id] = i;
   }
 });

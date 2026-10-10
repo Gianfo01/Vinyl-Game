@@ -38,12 +38,12 @@ describe('modos de história r15', () => {
     expect(invented.map((r) => `${s.acts[r.actId].name}: ${r.title}`)).toEqual([]);
   });
 
-  it('aleatória: fatos reais não são forçados (sem mortes agendadas, parte dos discos some)', () => {
-    const free = mk('free'), loose = mk('loose');
-    expect(rw(free).sched.some((x) => x.kind === 'fate')).toBe(false);
-    expect(rw(loose).sched.some((x) => x.kind === 'fate')).toBe(true);
-    const n = (s: GameState) => rw(s).sched.filter((x) => x.kind === 'release').length;
-    expect(n(free)).toBeLessThan(n(loose));
+  it('história alternativa (r18): fora do modo exato nenhum fato real futuro é agendado', () => {
+    const free = mk('free'), loose = mk('loose'), strict = mk('strict');
+    const fut = (s: GameState, k: string) => rw(s).sched.filter((x) => x.kind === k && x.year >= 1975).length;
+    for (const s of [free, loose]) for (const k of ['fate', 'release', 'join', 'leave']) expect(fut(s, k)).toBe(0);
+    expect(fut(strict, 'fate')).toBeGreaterThan(0);
+    expect(fut(strict, 'release')).toBeGreaterThan(0);
   });
 
   it('determinístico: mesma semente, mesmo roteiro', () => {

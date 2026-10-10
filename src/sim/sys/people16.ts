@@ -301,7 +301,7 @@ function isReal(s: GameState, key: string): boolean {
   if (key.startsWith('l:')) return !!leaders(s).L[key.slice(2)]?.real;
   return false;
 }
-const realSafe16 = (s: GameState, key: string) => SAFE_PREFIX.some((x) => key.startsWith(x)) && isReal(s, key) && s.year < 2026 && s.config.history !== 'free';
+const realSafe16 = (s: GameState, key: string) => SAFE_PREFIX.some((x) => key.startsWith(x)) && isReal(s, key) && s.year < 2026 && s.config.history === 'strict'; // r18
 
 export function born16(s: GameState, key: string, P?: P13 | null): number {
   const b = (P ?? per13(s, key))?.born;

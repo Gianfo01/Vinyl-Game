@@ -101,7 +101,7 @@ export function startAffair(s: GameState, candId: string): L | null {
   if (L7.affair) return l('Você já tem um caso em andamento.', 'You already have an affair going on.');
   const c = L0.candidates.find((x) => x.id === candId);
   if (!c) return l('Pessoa não encontrada.', 'Person not found.');
-  if (c.personId && isRealP(s, c.personId)) return l('Pessoa real: o jogo não inventa casos para quem existiu.', 'Real person: the game does not invent affairs for people who existed.');
+  if (c.personId && isRealP(s, c.personId) && s.config.history === 'strict') return l('Pessoa real: o jogo não inventa casos para quem existiu.', 'Real person: the game does not invent affairs for people who existed.');
   const e = spendEnergy(s, 1);
   if (e) return e;
   const sx = candSex(s, c);
@@ -161,7 +161,7 @@ function discover(s: GameState, a: Affair17, why: L): void {
     const act = playerAct(s);
     if (act) scandal(s, act.id, 'sex', 35, text, { person: pp?.id, cause: [f.id] });
   }
-  if (a.pid) { const act = Object.values(s.acts).find((x) => x.members.includes(a.pid!)); if (act && act.fame >= 25 && !act.catalogNo) scandal(s, act.id, 'sex', 30, text, { person: a.pid, cause: [f.id] }); }
+  if (a.pid) { const act = Object.values(s.acts).find((x) => x.members.includes(a.pid!)); if (act && act.fame >= 25 && (!act.catalogNo || s.config.history !== 'strict')) scandal(s, act.id, 'sex', 30, text, { person: a.pid, cause: [f.id] }); }
   notify(s, text, 'bad');
   log(s, text);
 }
@@ -350,7 +350,7 @@ registerSimHook('month', 'love17', (s) => {
 
 /** NPCs: traição pelos traços (lealdade baixa, impulsividade alta); segredo vira obrigação e pode estourar. */
 function npcAffairs(s: GameState, r: Rng): void {
-  const pool = Object.values(s.acts).filter((a) => (a.status === 'active' || a.status === 'emerging') && a.fame >= 20 && !a.catalogNo);
+  const pool = Object.values(s.acts).filter((a) => (a.status === 'active' || a.status === 'emerging') && a.fame >= 20 && (!a.catalogNo || s.config.history !== 'strict')); // r18: história alternativa
   if (!pool.length) return;
   for (let i = 0; i < 3; i++) {
     const a = r.pick(pool);
