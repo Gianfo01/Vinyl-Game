@@ -24,6 +24,7 @@ import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
 import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
 import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintShadeMap } from '../sys/map13';
 import { tagName14 } from '../../sim/sys/polish14';
+import { layerButtons17, legend17, openMapInfo17, overlays17, shade17 } from '../sys/mapinfo17';
 
 let worldMap: WorldMap | null = null;
 let focusCity: string | null = null;
@@ -206,6 +207,7 @@ function layerBar(): HTMLElement {
       onclick: () => { if (layers.has(ly.id)) layers.delete(ly.id); else layers.add(ly.id); rerender(); },
     }, ic(ly.icon), ' ', t(ly.name))),
     paintBar(store.game!),
+    ...layerButtons17(),
     layers.has('genre') ? select(genreFam, FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })), (v) => { genreFam = v; rerender(); }, { 'aria-label': t(l('Gênero da camada', 'Layer genre')) }) : null);
 }
 
@@ -284,6 +286,7 @@ function countryCard(s: GameState, a3: string): HTMLElement {
 }
 
 function mapSection(s: GameState): HTMLElement {
+  void focusCountry; // r17: a ficha do país agora abre no popup
   const shade = marketShade(s);
   const cshade = countryLayerShade(s);
   const pshade = paintShadeMap(s);
@@ -293,13 +296,15 @@ function mapSection(s: GameState): HTMLElement {
     cities: () => mapCities(s),
     selected: focusCity ? [focusCity] : [],
     mode: 'scenes' as const,
-    onCityClick: (id: string) => { focusCity = id; focusCountry = null; rerender(); },
-    onCountryClick: (a3: string) => { focusCountry = a3; focusCity = null; rerender(); },
-    overlays: () => overlays(s),
-    countryShade: (a3: string) => shade.get(marketOfCountry(a3)) ?? pshade.get(a3) ?? cshade.get(a3),
+    // r17: clicar abre o popup com tudo sobre o lugar (a ficha antiga vai no topo do popup)
+    onCityClick: (id: string) => { focusCity = id; focusCountry = null; rerender(); openMapInfo17(s, 'city', id, () => cityById[id] ? cityCard(s, id) : null); },
+    onCountryClick: (a3: string) => { focusCountry = a3; focusCity = null; rerender(); openMapInfo17(s, 'country', a3, () => countryCard(s, a3)); },
+    overlays: () => [...overlays(s), ...overlays17(s)],
+    countryShade: (a3: string) => shade17(s, a3) ?? shade.get(marketOfCountry(a3)) ?? pshade.get(a3) ?? cshade.get(a3),
     cityTipExtra: (id: string) => cityTipExtra(s, id),
     countryTipExtra: (a3: string) => countryTipExtra(s, a3),
     legendExtra: () => [
+      ...legend17(),
       ...paintLegend(s),
       ...bubbleNotes(s, layers, genreFam),
       layers.has('fans') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--accent)' }), t(l('Bolha: seus fãs', 'Bubble: your fans'))) : null,
@@ -316,7 +321,7 @@ function mapSection(s: GameState): HTMLElement {
   if (!worldMap) worldMap = new WorldMap(opts);
   else worldMap.update(opts);
   return section(t(l('Mapa do mundo', 'World map')), layerBar(), worldMap.element,
-    focusCity && cityById[focusCity] ? cityCard(s, focusCity) : focusCountry ? countryCard(s, focusCountry) : h('p', { class: 'muted small' }, t(l('Clique numa cidade ou num país para ver a ficha.', 'Click a city or a country to open its card.'))),
+    h('p', { class: 'muted small' }, t(l('Clique numa cidade ou num país para abrir o popup com tudo sobre o lugar (mercado, cenas, artistas, casas, imprensa, crime, leis, tendências, relíquias, notícias).', 'Click a city or a country to open a popup with everything about the place (market, scenes, acts, venues, press, crime, laws, trends, relics, news).'))),
   );
 }
 

@@ -1,0 +1,9 @@
+/* Rodada 17 (J): popup do mapa */
+.mi17 { display: grid; gap: 6px; }
+.mi17-blk { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--panel-2); }
+.mi17-blk > summary { cursor: pointer; font-weight: 700; }
+.mi17-blk ul { margin: 4px 0; padding-left: 1.1em; }
+.mi17-blk p { margin: 4px 0; }
+.mi17-cols { columns: 2 220px; }
+.mi17-pop .city-card { margin-bottom: 6px; }
+.mi17-city { margin-right: 4px; }
