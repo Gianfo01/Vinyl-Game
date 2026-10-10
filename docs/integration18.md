@@ -136,3 +136,13 @@ Regra de história (r18): `crime17` só bloqueia assassinato de gente real no mo
 - Bloqueio de usos: `USE_BLOCK18.fn` (em `rights.ts`) — `exploitBlock` e `sync15.candidates` respeitam disputas/autorizações.
 - "Metadados limpos" (`dg_meta`) agora é a vantagem `metadata` (menos caixa preta, conflitos e atraso), não vendas.
 - Explicações: `rights18.meta`, `rights18.rate` ({mk, mod}), `rights18.cat` ({rels}). Fatos: `credit_dispute`, `audit`, `case_ruling`, `termination`, `deal` (regravação).
+
+## regions18 (onda 2, frente F — feedback #11, R1–R3)
+| Módulo | Para quê |
+|---|---|
+| `src/data/regions18/*` | submercados por região com dados por época (`asia.ts`: Japão, Coreia, Grande China, Sudeste Asiático, Índia, Oriente Médio; `americas.ts`; `afeu.ts`): peso, poder de compra, idiomas, gosto, plataformas (Melon, LINE Music, JioSaavn, Boomplay, Anghami, Palco MP3, Sua Música…), parceiros, barreiras (censura, cotas, vistos, aprovação, pirataria), custo de entrada; `flows.ts`: viradas históricas, diásporas e circuitos (R3) |
+| `src/sim/sys/regions18.ts` | `MarketId` não muda (paradas/relevance17/reach17/fame16 e saves intactos). Mod `appeal` = média dos submercados ÷ conta antiga (neutro em média); mod `cityDemand` (vistos, diáspora, circuitos). Afinidades `perm` (viradas; sorteadas fora do modo exato) e `dyn` (seus top 10 no exterior, virais, cenas, feats; decaem). `localize18` (licenciado/escritório), `version18` (versão no idioma local), `collab18` (feat com astro local). Explicações `regions18.sub`, `regions18.fit`; inbox `regions18`; dica do conselheiro |
+| `src/sim/sys/circuits18.ts` | rodeios, São João, bailes funk, gospel BR/CCM, marketers de Alaba (venda do master), Lagos corporativo, playback de Bollywood, sound systems/dub plates, perreo, palenques, teatro de idols |
+| `src/sim/sys/kpop18.ts` | trainees, audição, debut direto/sobrevivência (fraude de voto), contratos 13 anos → KFTC 2009 (7 anos) → regra 2017, processo de "contrato escravo", maldição dos 7 anos, vitórias semanais/sajaegi, fandom com várias versões, serviço militar |
+| `src/sim/sys/idols18.ts` | aperto de mão/eleição (Oricon; metade após 2018), segurança, graduação, Kōhaku, enka |
+| `src/ui/sys/regions18.ts` | área **Mundo › Mercados** (Regiões, Submercado, Circuitos, K-pop, Japão e idols, Afinidades) |
