@@ -228,3 +228,9 @@ import './regions18';
 import './circuits18';
 import './kpop18';
 import './idols18';
+// Rodada 18 (society18, onda 2): trilhas/Broadway, IA por ato, política de prêmios e paradas, jornalismo, censura/exílio, filantropia, cidade da música.
+import './screen18';
+import './ai18';
+import './awards18';
+import './press18';
+import './society18';

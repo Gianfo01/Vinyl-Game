@@ -43,7 +43,7 @@ export const NAV17: Group17[] = [
 export const MORE17 = { id: 'more', label: l('Mais', 'More'), icon: 'key' };
 
 /** Ordem das carreiras (igual ao Novo Jogo). */
-export const ORDER17 = ['label', 'musician', 'manager', 'booking', 'festival', 'venue', 'studio', 'publisher', 'media', 'platform'];
+export const ORDER17 = ['label', 'musician', 'manager', 'booking', 'festival', 'venue', 'studio', 'publisher', 'media', 'platform', 'screen', 'critic'];
 
 /** Página exclusiva de cada carreira e as telas antigas que ela absorve (viram abas dela). */
 export const CAREER_PAGE17: Record<string, { area: string; label: L; icon: string; absorbs: string[] }> = {
@@ -57,6 +57,8 @@ export const CAREER_PAGE17: Record<string, { area: string; label: L; icon: strin
   publisher: { area: 'cp17-publisher', label: l('Editora musical', 'Music publisher'), icon: 'note', absorbs: ['publishing16'] },
   media: { area: 'cp17-media', label: l('Dono de mídia', 'Media owner'), icon: 'tv', absorbs: ['outlets16'] },
   platform: { area: 'cp17-platform', label: l('Plataforma', 'Platform'), icon: 'stream', absorbs: ['platform16'] },
+  screen: { area: 'cp17-screen', label: l('Trilhas e palco', 'Screen & stage'), icon: 'film', absorbs: [] },
+  critic: { area: 'cp17-critic', label: l('Jornalismo', 'Journalism'), icon: 'newspaper', absorbs: [] },
 };
 export const careerOfPage17 = (area: string): string | undefined => ORDER17.find((id) => CAREER_PAGE17[id].area === area);
 

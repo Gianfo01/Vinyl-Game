@@ -28,7 +28,7 @@ import { careerKpis13 } from './careerui13';
 import { fest17 } from './ventures16';
 import { openActPage } from '../pages';
 
-type Tab = { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement };
+export type Tab = { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement };
 
 const areaOf = (id: string) => EXTRA_AREAS.find((a) => a.id === id);
 const owns = (s: GameState, k: string) => ventures(s).list.some((v) => v.kind === k);
@@ -47,9 +47,12 @@ export function pageVisible17(s: GameState, id: string): boolean {
     case 'studio': return studios(s).length > 0 || !!prod(s).on;
     case 'publisher': case 'media': case 'platform': return owns(s, id);
     case 'musician': return Object.values(s.acts).some((a) => a.playerBand && a.status !== 'retired' && a.status !== 'split');
-    default: return false;
+    default: return CP_VIS18[id]?.(s) ?? false;
   }
 }
+/** Rodada 18: carreiras novas (trilhas, jornalismo) registram visibilidade e abas da página. */
+export const CP_VIS18: Record<string, (s: GameState) => boolean> = {};
+export const CP_TABS18: Record<string, (s: GameState) => Tab[]> = {};
 export const careerPages17 = (s: GameState): string[] => ORDER17.filter((id) => pageVisible17(s, id));
 
 const go = (area: string, tab?: [string, string]) => { if (tab) setTab(tab[0], tab[1]); store.area = area; rerender(); };
@@ -88,7 +91,7 @@ function careerTabs(s: GameState, id: string): Tab[] {
       case 'media': return [areaTab(s, 'outlets16', l('Seus veículos', 'Your outlets'))];
       case 'platform': return [areaTab(s, 'platform16', l('Sua plataforma', 'Your platform'))];
       case 'musician': return [{ id: 'band', label: t(l('Sua banda', 'Your band')), icon: 'guitar', render: () => bandTab(s) }];
-      default: return [];
+      default: return CP_TABS18[id]?.(s) ?? [];
     }
   })();
   return out.filter((x): x is Tab => !!x);

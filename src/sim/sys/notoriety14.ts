@@ -122,3 +122,5 @@ registerPerkSource('noto14', (s) => {
   }
   return out;
 });
+/** Rodada 18: carreiras novas registram sua métrica de notoriedade (trilhas, jornalismo…). */
+export function registerNoto14(id: string, fn: (s: GameState) => number, why: L, name: L): void { METRIC[id] = { fn, why }; NAMES[id] = name; }
