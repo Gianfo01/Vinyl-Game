@@ -153,7 +153,7 @@ export function per13(s: GameState, key: string): P13 | null {
     const pp = playerPerson(s);
     if (pp) key = `p:${pp.id}`;
   }
-  const ck = `${s.config.seed}|${s.year}|${key}|${staffSig(s, key)}`;
+  const ck = `${s.config.seed}|${s.year}|${key}|${staffSig(s, key)}|${POST13.sig?.(s, key) ?? ''}`;
   let CACHE = CACHES.get(s);
   if (!CACHE) CACHES.set(s, (CACHE = new Map()));
   const hit = CACHE.get(ck);
@@ -289,6 +289,7 @@ function build(s: GameState, key: string): P13 | null {
     views = deriveViews(s.config.seed, key, { born, year: s.year, city });
     if (e.sex || e.skin !== undefined) extSex = [e.sex, e.skin];
   } else return null;
+  if (POST13.fn && kind !== 'person' && kind !== 'player') POST13.fn(s, key, { kind, born, job, facets, attrs, prof });
   for (const k of ATTR13_IDS) attrs[k] = c100(attrs[k]);
   for (const j of Object.keys(prof)) prof[j] = c100(prof[j]);
   const year = s.year;
@@ -296,6 +297,9 @@ function build(s: GameState, key: string): P13 | null {
   const skin = look ? look.skin : extSex?.[1] ?? skinFor(s, key, city);
   return { key, kind, name, born, city, attrs, facets, traits: traitsOf(facets), native, views, prof, sex, skin, job };
 }
+
+/** Rodada 18 (ability18): ajuste pós-derivação (crescimento/declínio de quem não é artista) e assinatura do cache. */
+export const POST13: { fn?: (s: GameState, key: string, x: { kind: Kind13; born?: number; job?: string; facets: Record<Facet, number>; attrs: Record<Attr13, number>; prof: Record<string, number> }) => void; sig?: (s: GameState, key: string) => string } = {};
 
 /** Rodada 14: outros sistemas registram tipos de pessoa por prefixo de chave (ex.: 'e:' empresários). */
 export interface Ext13 { kind: Kind13; name: string; born?: number; city?: string; job?: string; attrs: Record<Attr13, number>; facets?: Partial<Record<Facet, number>>; native?: L[]; prof?: Record<string, number>; sex?: Sex13; skin?: number }

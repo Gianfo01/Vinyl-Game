@@ -1,0 +1,32 @@
+/* Rodada 18 (ability18): estrelas de habilidade atual/potencial, aba Desenvolvimento */
+.ab18-st { position: relative; display: inline-block; line-height: 1; white-space: nowrap; font-size: 0.95em; letter-spacing: 1px; vertical-align: middle; }
+.ab18-st.big { font-size: 1.5em; }
+.ab18-st > span { display: inline-block; }
+.ab18-st > span:not(.ab18-base) { position: absolute; left: 0; top: 0; overflow: hidden; }
+.ab18-base { color: var(--line, #8886); }
+.ab18-hi { color: color-mix(in srgb, var(--accent, #c9a227) 28%, transparent); }
+.ab18-lo { color: color-mix(in srgb, var(--accent, #c9a227) 50%, transparent); }
+.ab18-ca { color: var(--accent, #c9a227); }
+.ab18-head { gap: 6px; align-items: center; margin: 2px 0; }
+.ab18-top { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.ab18-rep { margin: 0; padding-left: 18px; }
+.ab18-attrs { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 3px 16px; }
+.ab18-attr { display: flex; gap: 6px; align-items: center; }
+.ab18-attr.main .ab18-k { font-weight: 600; }
+.ab18-k { min-width: 110px; font-size: 0.9em; }
+.ab18-bar { position: relative; flex: 1; min-width: 60px; max-width: 140px; height: 8px; border-radius: 4px; background: var(--line, #8883); }
+.ab18-bar .v { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--accent, #c9a227); }
+.ab18-bar .cap { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text, #444); opacity: 0.7; }
+.ab18-why { margin: 0; padding-left: 18px; }
+.ab18-why .good { color: var(--good, #2e9e5b); }
+.ab18-why .bad { color: var(--bad, #c0392b); }
+.ab18-chartbox { max-width: 420px; }
+.ab18-chart { width: 100%; height: auto; display: block; }
+.ab18-chart .ab18-band { fill: var(--accent, #c9a227); opacity: 0.15; }
+.ab18-chart .ab18-grid { stroke: var(--line, #8884); stroke-width: 0.5; }
+.ab18-chart .ab18-ax { font-size: 8px; fill: var(--muted, #888); }
+.ab18-chart .ab18-line { fill: none; stroke: var(--accent, #c9a227); stroke-width: 2; }
+.ab18-chart .ab18-dot { fill: var(--accent, #c9a227); }
+.ab18-members { display: flex; flex-direction: column; gap: 3px; }
+.ab18-cell { display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; }
+@media (max-width: 600px) { .ab18-k { min-width: 80px; } .ab18-attrs { grid-template-columns: 1fr; } }

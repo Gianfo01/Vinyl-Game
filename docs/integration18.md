@@ -112,3 +112,14 @@ elogiar o líder, dinâmica — na lista do elenco).
 | `src/ui/sys/dm18.ts` | área **Mundo › Diário do Mestre** e aba **Rixas** no ato. |
 
 Regra de história (r18): `crime17` só bloqueia assassinato de gente real no modo "Vida real exata"; `crimenpc17` idem para as rixas de rua.
+## ability18 — habilidade atual e potencial (CA/PA, estilo FM)
+- `src/sim/sys/ability18.ts`: `ability18(s, key)` → CA (0–200, soma ponderada pela função) e PA verdadeiros de qualquer
+  chave (`p:`, `player`, `s:`, `e:`, `pd:`, `l:`, `c:`, `m:`); `est18(s, key)` → o que o jogador sabe (faixas com incerteza
+  por conhecimento fame15 × olho do A&R, relatório de olheiro); `actEst18`/`prospect18` (atos, bot, rivais).
+- Artistas: as habilidades (`p.skills`) crescem dentro do teto (idade por atributo, estrada/estúdio pelos ganchos
+  `show`/`record`/`compose`, aulas `train18`, mentor `mentor18`, personalidade) e caem por idade/saúde/estresse; `p.potential`
+  vira o teto efetivo (PA × alcance da personalidade ÷ 2). Atos de NPC em rodízio trimestral.
+- Quem não é artista: ajuste fechado (idade + experiência `ab18(s).x[key]`) aplicado aos atributos persona13 via `POST13`.
+- Consumidores: `registerDimAdj18('ability18')` (técnica), `showRevenue`, `registerOfferMod('ability18')` (promessa custa mais).
+- Interface: `src/ui/ab18stars.ts` (`stars18`, `personStars18`, `abilityCell18`, `staffStars18` — sem efeitos colaterais) e
+  `src/ui/sys/ability18.ts` (aba Desenvolvimento, cabeçalhos, bloco no artista). Explicações: `ability.ca`, `ability.pa`.

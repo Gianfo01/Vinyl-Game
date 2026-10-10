@@ -40,6 +40,8 @@ import { money, playerActs, rngOf } from './util';
 import { createGame } from './worldgen';
 import { unreleasedRecorded } from './production';
 import { freshLog17, play17, type Log17 } from './playbot17';
+import { ability18, prospect18 } from './sys/ability18';
+import { doPersonAction18, personActions18 } from './personact18';
 
 export type Profile = 'cautious' | 'balanced' | 'aggressive';
 
@@ -154,7 +156,8 @@ function finances(s: GameState, k: Knobs): void {
 
 function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
   const L = mem(s).log;
-  const score = (id: string) => (estimate(s, id, 'potential')?.mid ?? 0) * 0.6 + (estimate(s, id, 'talent')?.mid ?? s.acts[id].fame) * 0.6 - s.acts[id].fame * 0.25;
+  // r18 (ability18): promessa = espaço estimado entre a habilidade atual e o potencial × juventude
+  const score = (id: string) => (estimate(s, id, 'potential')?.mid ?? 0) * 0.6 + (estimate(s, id, 'talent')?.mid ?? s.acts[id].fame) * 0.6 - s.acts[id].fame * 0.25 + prospect18(s, s.acts[id]);
   // quem cabe no bolso vale mais a pena aprofundar (estrela cara só atrapalha a fila do scouting)
   const cheap = (id: string) => defaultOffer(s, s.acts[id]).advance * k.adv <= s.player.cash * k.advCash;
   const ks = Object.values(s.knowledge).filter((x) => s.acts[x.actId] && !s.acts[x.actId].owner && x.degree < 4)
@@ -434,6 +437,17 @@ function personal(s: GameState): void {
     if (!('pt' in r)) { L.personal++; M.party = s.month + s.year * 12; }
   }
   if (energyLeft(s) >= 1 && s.month % 4 === 1 && !therapy(s)) L.personal++;
+  develop18(s);
+}
+
+/** r18 (ability18): aulas para a jovem promessa do elenco (uma por semestre) e mentor quando há veterano. */
+function develop18(s: GameState): void {
+  if (s.month % 6 !== 2 || runway(s) < 8) return;
+  for (const id of playerActs(s)) for (const pid of s.acts[id]?.members ?? []) {
+    const A = ability18(s, `p:${pid}`);
+    if (!A || A.kind !== 'artist' || (A.age ?? 30) > 25 || A.pa - A.ca < 30) continue;
+    for (const act of ['mentor18', 'train18']) if (personActions18(s, `p:${pid}`).some((r) => r.def.id === act && !r.block)) { doPersonAction18(s, act, `p:${pid}`); mem(s).log.personal++; return; }
+  }
 }
 
 // ---------------------------------------------------------------- o mês

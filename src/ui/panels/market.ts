@@ -16,6 +16,7 @@ import { store } from '../store';
 import { hqCaps } from '../../sim/branches';
 import { crewProfileCell } from '../sys/crew8';
 import { isWatched, missionProgress, scout11, toggleCompare, toggleWatch } from '../../sim/sys/scout11';
+import { abilityCell18, staffStars18 } from '../ab18stars';
 
 export function marketPanel(s: GameState): HTMLElement {
   const tabs: [typeof store.marketTab, string][] = [
@@ -63,6 +64,7 @@ function signalCard(s: GameState, k: Knowledge): HTMLElement {
       h('div', null, h('span', { class: 'lbl' }, t(S.talent), ' '), tal ? h('span', null, `${tal.lo}–${tal.hi} `, rangeBar(tal.lo, tal.hi)) : h('span', { class: 'muted' }, t(S.hidden))),
       h('div', null, h('span', { class: 'lbl' }, t(S.potential), ' '), pot ? h('span', null, `${pot.lo}–${pot.hi} `, rangeBar(pot.lo, pot.hi, 'pot')) : h('span', { class: 'muted' }, t(S.hidden))),
     ),
+    h('div', { class: 'small' }, t(l('Habilidade', 'Ability')), ' ', abilityCell18(s, a)),
     h('div', { class: 'muted small' }, `${t(S.source)}: ${t(sourceName(k.source))} · ${t(l('relatório de {n} mês(es)', '{n} month(s) old report'), { n: age })}`),
     h('div', { class: 'actions' },
       h('button', { class: 'btn small', disabled: !chk.ok, title: chk.reason ? t(chk.reason) : '', onclick: () => { scoutAct(s, a.id); rerender(); } }, `${t(S.deepen)} (${$(scoutCost(s, k.degree))})`),
@@ -86,6 +88,7 @@ function compareSection(s: GameState): HTMLElement | null {
     [S.talent, (id) => rng(id, 'talent')],
     [S.potential, (id) => rng(id, 'potential')],
     [l('Névoa', 'Fog'), (id) => fog(estimate(s, id, 'potential'))],
+    [l('Habilidade (atual/potencial)', 'Ability (current/potential)'), (id) => abilityCell18(s, s.acts[id]) ?? '?'],
     [l('Situação', 'Status'), (id) => (s.acts[id].owner ? s.labels[s.acts[id].owner!]?.name ?? '?' : t(l('livre', 'free')))],
     [l('Adiantamento esperado', 'Expected advance'), (id) => $(defaultOffer(s, s.acts[id]).advance)],
   ];
@@ -212,6 +215,7 @@ function pipeCard(s: GameState, k: Knowledge): HTMLElement {
     h('div', { class: 'row' }, logo(a, 24), actLink(s, a.id), h('small', { class: 'muted' }, ` ${k.degree}/5`), isWatched(s, a.id) ? h('span', { class: 'star on' }, ' ★') : null),
     h('small', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ★${fameText(s, a.id)}`),
     h('small', null, `${t(S.talent)} ${tal ? `${tal.lo}–${tal.hi}` : '?'} · ${t(S.potential)} ${pot ? `${pot.lo}–${pot.hi}` : '?'}`),
+    abilityCell18(s, a),
     a.owner ? pill(t(l('assinou com rival', 'signed to a rival')), 'bad') : null,
     offer ? h('small', null, offer.status === 'counter' ? pill(t(l('contraproposta', 'counter-offer')), 'warn') : pill(t(l('aguardando resposta', 'awaiting answer'))), ` ${$(offer.advance)}`) : null,
     h('div', { class: 'row wrap kact' },
@@ -273,7 +277,7 @@ function professionals(s: GameState): HTMLElement {
         return h('tr', null,
           h('td', null, p.name),
           h('td', { title: t(role?.desc) }, t(role?.name), h('div', null, crewProfileCell(s, p))),
-          h('td', null, p.skill),
+          h('td', null, p.skill, ' ', staffStars18(s, p)),
           h('td', null, $(p.salary)),
           h('td', null, h('button', { class: 'btn small', disabled: s.player.staff.length >= cap, onclick: () => { const e = hireStaff(s, p.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(S.hire))),
         );

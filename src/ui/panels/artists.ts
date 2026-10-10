@@ -1,6 +1,7 @@
 // Artistas: elenco, carreira em 3 eixos, estados, agenda de 4 slots, contrato (GDD §9, §11).
 
 import { actQuick18, emptyState18 } from '../quick18';
+import { abilityCell18 } from '../ab18stars';
 import { AGENDA_ACTIONS, agendaById } from '../../data/people';
 import { APPROACHES, CONTRACT_MODELS, STUDIO_TIERS, VENUE_TIERS } from '../../data/rules';
 import { l } from '../../data/world';
@@ -38,6 +39,7 @@ export function artistsPanel(s: GameState): HTMLElement {
       logo(x, 32), h('div', null, h('b', null, x.name), h('small', { class: 'muted' }, `${genreName(x.genre)} · ${t(S.fame)} ${Math.round(x.fame)}`)),
       x.status === 'hiatus' ? pill('⏸') : null,
       actQuick18(s, x),
+      abilityCell18(s, x),
     );
   }));
   const st = actState(s, a);
