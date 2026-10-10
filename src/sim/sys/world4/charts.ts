@@ -11,7 +11,6 @@ import { fmtL, hasTech, money, notify, post, remember } from '../../util';
 import { mineRel, rep } from './common';
 import { DISCO, milestoneById } from './milestones';
 import { w4 } from './state';
-import { allReleases17 } from '../../relidx17';
 
 // ======================================================================= jabá
 
@@ -290,7 +289,7 @@ export function chartsYear(s: GameState): void {
   }
   // todos os tempos: mantém os 20 maiores já vistos (sobrevive à limpeza de lançamentos)
   const map = new Map(w.allTime.map((x) => [x.id, x]));
-  for (const rel of allReleases17(s)) {
+  for (const rel of Object.values(s.releases)) {
     if (rel.totalUnits < 50000) continue;
     map.set(rel.id, { id: rel.id, title: rel.title, act: s.acts[rel.actId]?.name ?? map.get(rel.id)?.act ?? '?', units: rel.totalUnits, year: rel.year });
   }

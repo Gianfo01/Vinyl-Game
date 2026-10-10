@@ -24,6 +24,7 @@ import { personFame } from './fame15';
 import { feudOf15 } from './kin15';
 import { replaceMember } from './lifecycle7';
 import { canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
+import { actsTouched17 } from '../actidx17';
 
 export type Why16 = 'creative' | 'solo' | 'feud' | 'addiction' | 'left';
 type Ev16 = [number, string, string, 'j' | 'l'];
@@ -186,7 +187,7 @@ function freePool(s: GameState, genre: string, except: string): Person[] {
 function joinBand(s: GameState, p: Person, a: Act, txt: L, q = ''): void {
   if (a.members.includes(p.id)) return;
   BUMP++;
-  a.members.push(p.id);
+  a.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
   for (const id of a.members) { const o = s.persons[id]; if (o && o.id !== p.id) { o.rel[p.id] ??= 10; p.rel[o.id] ??= 10; } }
   const from = s.acts[l16(s).free[p.id]?.[1] ?? ''];
   delete l16(s).free[p.id];
@@ -230,7 +231,7 @@ export function newBand16(s: GameState, r: Rng, p: Person, from: Act, partners: 
   const b = makeAct(s, r, { genre: from.genre, city: from.city, members: n, potential: Math.max(...crew.map((q) => q.potential)), formed: s.year, debutYear: s.year, fame });
   const gen = b.members.slice(0, crew.length);
   for (const id of gen) delete s.persons[id];
-  b.members = [...crew.map((q) => q.id), ...b.members.slice(crew.length)];
+  b.members = [...crew.map((q) => q.id), ...b.members.slice(crew.length)]; actsTouched17(s); // r17: índice pessoa→atos
   b.leaderId = p.id;
   b.status = 'active';
   BUMP++;

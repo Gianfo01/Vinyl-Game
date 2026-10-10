@@ -22,7 +22,7 @@ import { dir17 } from '../director17';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact, onFact, type Fact } from '../facts17';
 import { histLocked, histMode } from '../history15';
-import { grantHold, holdsOf } from '../holds17';
+import { allHolds, grantHold, type Hold } from '../holds17';
 import { unreleasedRecorded } from '../production';
 import { lastScandal, scandal } from '../scandal17';
 import { addStress, stressOf } from '../stress17';
@@ -36,7 +36,6 @@ import { genMgrs16 } from './people16';
 import { per13, type P13 } from './persona13';
 import { bump } from './social8';
 import { SIGN_VETO } from './gate14';
-import { allReleases17 } from '../relidx17';
 
 // ---------------------------------------------------------------- estado
 
@@ -204,6 +203,8 @@ export function leaveLabel17(s: GameState, r: Rng, a: Act, lb: Label, ws: L[], c
 
 function labelExits(s: GameState, r: Rng, W: number): void {
   let n = 0;
+  // mágoas abertas: uma leitura do livro por rodada (refeita depois de cada saída/greve, que mexe nele)
+  let gv: Hold[] | null = null;
   for (const a of Object.values(s.acts)) {
     if (n >= 2) break;
     if (!okAct17(s, a) || !a.owner || !s.labels[a.owner] || npc17(s).strike[a.id]) continue;
@@ -215,12 +216,14 @@ function labelExits(s: GameState, r: Rng, W: number): void {
     let w = 0;
     if (lb.cash < 0) { w += 0.7; ws.push(l('selo sem dinheiro', 'label out of cash')); }
     if (a.fame > lb.reputation + 30) { w += (a.fame - lb.reputation - 30) / 50; ws.push(l('ficou maior que o selo', 'outgrew the label')); }
-    const gr = holdsOf(s, a.id).has.some((h) => h.kind === 'grievance' && h.target === lb.id && h.status === 'open');
+    gv ??= allHolds(s).filter((h) => h.kind === 'grievance' && h.status === 'open');
+    const gr = gv.some((h) => h.holder === a.id && h.target === lb.id);
     if (gr) { w += 0.5; ws.push(l('mágoa com o selo', 'a grudge against the label')); }
     if (wars17(s).some((x) => x.a === lb.id || x.b === lb.id) && lb.cash < money(s, 100000)) { w += 0.3; ws.push(l('selo sangrando na guerra de preços', 'label bleeding in a price war')); }
     if (ws.length && F(P, 'rebeldia') > 1.3) { w += 0.25; ws.push(l('espírito rebelde', 'rebel spirit')); }
     if (!ws.length || !r.chance(clamp(0.002 + w * 0.01, 0, 0.04) * W)) continue;
     n++;
+    gv = null;
     // teimoso com contrato longo pela frente: greve em vez de saída
     if (F(P, 'teimosia') > 1.25 && c.endWeek - s.week > 52 && cool(s, `strike:${a.id}`, 104)) {
       npc17(s).strike[a.id] = s.week;
@@ -445,7 +448,7 @@ function mgrClients(s: GameState, r: Rng): void {
 function delays(s: GameState, r: Rng, W: number): void {
   const big = new Map<string, Act>();
   const add = (a?: Act) => { if (a && live(a)) { const f = fam(a); if (!big.has(f) || big.get(f)!.fame < a.fame) big.set(f, a); } };
-  for (const rel of allReleases17(s)) if (rel.week >= s.week - 4 && rel.week <= s.week) add(s.acts[rel.actId]);
+  for (const rel of Object.values(s.releases)) if (rel.week >= s.week - 4 && rel.week <= s.week) add(s.acts[rel.actId]);
   for (const pr of s.pendingReleases) if (pr.week >= s.week && pr.week <= s.week + 6) add(s.acts[pr.actId]);
   if (!big.size) return;
   let n = 0;
@@ -620,7 +623,7 @@ function mergers(s: GameState, r: Rng, W: number): void {
       small.roster = small.roster.filter((x) => x !== id); big.roster.push(id); a.owner = big.id;
       const c = a.contractId ? s.contracts[a.contractId] : undefined; if (c) c.party = big.id;
     }
-    for (const rel of allReleases17(s)) if (rel.owner === small.id) rel.owner = big.id;
+    for (const rel of Object.values(s.releases)) if (rel.owner === small.id) rel.owner = big.id;
     big.cash += Math.max(0, small.cash); big.reputation = clamp(Math.max(big.reputation, small.reputation) + 2, 0, 100);
     small.active = false; small.closedYear = s.year; small.parentLabel = big.id;
     const L0 = small.leaderId ? leaders(s)?.L[small.leaderId] : undefined;

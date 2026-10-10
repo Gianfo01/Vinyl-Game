@@ -5,7 +5,6 @@ import { familyOf } from '../../../data/world';
 import type { Act, GameState, Release } from '../../types';
 import { playerActs } from '../../util';
 import { w4 } from './state';
-import { allReleases17 } from '../../relidx17';
 
 export const fam = (act: Act | undefined): string => (act ? familyOf(act.genre) : '');
 
@@ -37,7 +36,7 @@ export function liveMine(s: GameState): Act[] {
 
 /** Lançamentos do jogador ainda em circulação, mais novos primeiro. */
 export function liveMineReleases(s: GameState, maxAge = 52): Release[] {
-  return allReleases17(s).filter((r) => r.live && mineRel(s, r) && s.week - r.week <= maxAge).sort((a, b) => b.week - a.week);
+  return Object.values(s.releases).filter((r) => r.live && mineRel(s, r) && s.week - r.week <= maxAge).sort((a, b) => b.week - a.week);
 }
 
 export const hasMs = (s: GameState, id: string): boolean => w4(s).ms[id] !== undefined;

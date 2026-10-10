@@ -17,6 +17,7 @@ import { spendDrama, worldDramaOk, worldPace } from './pace9';
 import { tiesOf } from './social8';
 import { histLocked } from '../history15';
 import { scandal } from '../scandal17';
+import { actsTouched17 } from '../actidx17';
 
 // ---------------------------------------------------------------- facetas e valores
 
@@ -234,7 +235,7 @@ export function formAct(s: GameState, r: Rng, pids: string[], genre: string, cit
   const pot = ps.reduce((t, p) => t + p.potential, 0) / Math.max(1, ps.length);
   const a = makeAct(s, r, { genre, city, members: ps.length, potential: pot, formed: s.year, debutYear: s.year, fame });
   for (const id of a.members) delete s.persons[id];
-  a.members = ps.map((p) => p.id);
+  a.members = ps.map((p) => p.id); actsTouched17(s); // r17: índice pessoa→atos
   a.name = name ?? (ps.length === 1 ? ps[0].name : bandName(r, langForCity(city, r), familyOf(genre), ps.length));
   a.leaderId = ps.slice().sort((x, y) => soul(s, y).f.ego - soul(s, x).f.ego)[0]?.id;
   for (const x of ps) for (const y of ps) if (x !== y) x.rel[y.id] = clamp(x.rel[y.id] ?? 20, -100, 100);

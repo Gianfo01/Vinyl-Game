@@ -10,13 +10,12 @@ import { definingFigures } from './chron9';
 import { eraYear, erasSoFar } from './eras8';
 import { relics, type Relic } from './relics9';
 import { P } from './people/state';
-import { allReleases17 } from '../relidx17';
 
 export const isPlayerLabel = (id: string): boolean => id === 'player';
 export const labelName13 = (s: GameState, id: string): string => (isPlayerLabel(id) ? s.config.companyName : s.labels[id]?.name ?? '?');
 
 /** Releases já lançados (nada do futuro). */
-const past = (s: GameState): Release[] => allReleases17(s).filter((r) => r.year <= s.year);
+const past = (s: GameState): Release[] => Object.values(s.releases).filter((r) => r.year <= s.year);
 
 /** Participação do selo nas vendas dos lançamentos de cada ano (0..1). */
 export function labelShareHistory(s: GameState, id: string, years = 30): { y: number; share: number; units: number }[] {

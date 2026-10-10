@@ -11,7 +11,6 @@ import { fmtL, money, notify, remember } from '../util';
 import { standingOf } from './standing9';
 import { funds, ventures, vpay, type Venture } from './ventures9';
 import { activeAct, res, seedRng, v12, venture } from './ventures12';
-import { allReleases17 } from '../relidx17';
 
 export type Prop = 'broad' | 'niche' | 'discovery' | 'hifi' | 'closeness';
 export type Crit = 'popular' | 'new' | 'diverse' | 'editorial';
@@ -48,7 +47,7 @@ export function effPayout(s: GameState, x: PlatX, id: string, v: Venture): numbe
   return (t?.payout ?? v.payout ?? 0.65) + (x.model === 'usercentric' ? (sz === 'indie' ? 0.04 : sz === 'major' ? -0.03 : 0) : 0) + (x.prop === 'closeness' && sz === 'indie' ? 0.03 : 0);
 }
 export function catalogOf(s: GameState, v: Venture): { own: number; total: number } {
-  const own = allReleases17(s).filter((q) => q.owner === 'player').length;
+  const own = Object.values(s.releases).filter((q) => q.owner === 'player').length;
   const total = own + v.deals!.reduce((t, id) => t + (s.labels[id]?.roster.length ?? 0) * 8, 0);
   return { own, total };
 }

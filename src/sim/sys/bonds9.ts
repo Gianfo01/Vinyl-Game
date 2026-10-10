@@ -20,6 +20,7 @@ import { addMsg, P } from './people/state';
 import { clearance, crossAudience } from './feats8';
 import { actOfPerson, bump, tieOf, tiesOf, type TieKind } from './social8';
 import { soul } from './soul9';
+import { actsTouched17 } from '../actidx17';
 
 export type BondKind = 'duo' | 'couple' | 'super' | 'ally' | 'cross' | 'patron';
 export type BondEnd = 'fight' | 'wear' | 'death' | 'prison' | 'divergence' | 'money' | 'done';
@@ -342,7 +343,7 @@ function makeSuper(s: GameState, b: Bond): void {
   if (!base) return;
   const sg = makeAct(s, rngOf(s), { genre: base.genre, city: base.city, members: 2, potential: Math.max(...b.p.map((p) => s.persons[p].potential)), formed: s.year, debutYear: s.year, fame: srcs.reduce((x, a) => x + a.fame, 0) / srcs.length * 0.6 });
   for (const id of sg.members) delete s.persons[id];
-  sg.members = b.p.slice();
+  sg.members = b.p.slice(); actsTouched17(s); // r17: índice pessoa→atos
   sg.leaderId = b.p[0];
   sg.name = b.name ?? srcs.map((a) => a.name.split(/[\s&]/)[0]).slice(0, 3).join('/');
   b.name = sg.name;

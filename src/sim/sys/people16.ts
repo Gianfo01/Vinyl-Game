@@ -36,7 +36,6 @@ import { canonKey, realDataOf } from './realworld';
 import { playbookOf } from './rivals8';
 import { activeAct } from './ventures12';
 import { ventures } from './ventures9';
-import { allReleases17 } from '../relidx17';
 
 // ---------------------------------------------------------------- estado
 
@@ -684,7 +683,7 @@ export function works16(s: GameState, id: string): Work16[] {
   if (s.config.realNames) for (const [w, artist, y] of p.w) {
     if (y > s.year) continue;
     const act = Object.values(s.acts).find((a) => realDataOf(a)?.n === artist || a.name === artist);
-    const rel = act ? allReleases17(s).find((r) => r.actId === act.id && canonKey(r.title) === canonKey(w)) : undefined;
+    const rel = act ? Object.values(s.releases).find((r) => r.actId === act.id && canonKey(r.title) === canonKey(w)) : undefined;
     out.push({ title: w, artist, year: y, actId: act?.id, relId: rel?.id, peak: rel && rel.peak < 999 ? rel.peak : undefined, you: !!act && act.owner === 'player', real: true });
   }
   for (const c of p15(s).credits[id] ?? []) if (!c.you) {

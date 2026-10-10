@@ -12,7 +12,6 @@ import { emitEvent } from './events';
 import { addAsset } from './finance';
 import { branchRent, hqBlocker, hqCaps } from './branches';
 import { perk } from './perks';
-import { allReleases17 } from './relidx17';
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
@@ -84,7 +83,7 @@ export function checkInsolvency(s: GameState, r: Rng): void {
   const m = s.player.insolvencyMonths;
   if (m === 1) notify(s, l('ALERTA: caixa negativo. Reestruture, venda ativos ou peça crédito.', 'ALERT: negative cash. Restructure, sell assets or seek credit.'), 'bad');
   if (m === 2 || m === 4) {
-    const mine = allReleases17(s).filter((x) => x.owner === 'player');
+    const mine = Object.values(s.releases).filter((x) => x.owner === 'player');
     const n = Math.max(1, Math.ceil(mine.length / 2));
     const value = mine.slice(0, n).reduce((t, x) => t + Math.sqrt(x.totalUnits + 100) * 25, 0);
     const best = Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand).sort((a, b) => b.fame - a.fame)[0];

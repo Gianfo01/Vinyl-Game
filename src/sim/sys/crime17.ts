@@ -27,7 +27,6 @@ import { leaderOf } from './leaders10';
 import { playerPerson } from './life';
 import { per13, registerPer13 } from './persona13';
 import { addRelic, relics, type Relic } from './relics9';
-import { allReleases17 } from '../relidx17';
 
 // ================================================================ estado
 
@@ -916,7 +915,7 @@ function extrasMonth(s: GameState, r: Rng): void {
   }
   // pirataria contra seus lançamentos
   const mine = new Set(playerActs(s));
-  const hits = allReleases17(s).filter((x) => x.owner === 'player' && s.week - x.week < 26 && mine.has(x.actId));
+  const hits = Object.values(s.releases).filter((x) => x.owner === 'player' && s.week - x.week < 26 && mine.has(x.actId));
   for (const o of orgs17(s).filter((x) => hasRacket(x, 'bootleg') && (st.boot[x.id] ?? 0) < s.week)) {
     if (!hits.length || !r.chance(o.real ? 0.06 : 0.12)) continue;
     const rel = r.pick(hits);

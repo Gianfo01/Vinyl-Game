@@ -16,7 +16,7 @@ import { langForCity, makePerson } from './people';
 import type { Act, GameState, Person, Release } from './types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember, staffSkill, type Param } from './util';
 import { scandal } from './scandal17';
-import { allReleases17 } from './relidx17';
+import { actsTouched17 } from './actidx17';
 
 type Opt = EventDef['options'][number];
 type Apply = Opt['apply'];
@@ -50,7 +50,7 @@ const era = (s: GameState, from: number, to: number) => s.year >= from && s.year
 let relCache: { s: GameState; week: number; seq: number; list: Release[] } | null = null;
 const playerRels = (s: GameState): Release[] => {
   if (!relCache || relCache.s !== s || relCache.week !== s.week || relCache.seq !== s.idSeq) {
-    relCache = { s, week: s.week, seq: s.idSeq, list: allReleases17(s).filter((x) => x.owner === 'player' || s.acts[x.actId]?.playerBand) };
+    relCache = { s, week: s.week, seq: s.idSeq, list: Object.values(s.releases).filter((x) => x.owner === 'player' || s.acts[x.actId]?.playerBand) };
   }
   return relCache.list;
 };
@@ -1525,7 +1525,7 @@ const FAMILY: EventDef[] = [
         if (!sib) return;
         const np = makePerson(s, r, { lang: langForCity(a.city, r), role: r.pick(['keys', 'guitar', 'horns', 'strings'] as Person['role'][]), potential: clamp(sib.potential - r.int(5, 20), 20, 90), born: sib.born + r.int(-4, 4), startFrac: 0.6 });
         np.name = `${np.name.split(' ')[0]} ${sib.name.split(' ').slice(1).join(' ') || sib.name}`;
-        s.persons[np.id] = np; a.members.push(np.id);
+        s.persons[np.id] = np; a.members.push(np.id); actsTouched17(s); // r17: índice pessoa→atos
         pmood(sib, 'morale', 12); mood(s, a, 'resentment', 4);
         log(s, 'lineup', '{n} entra em {a}.', '{n} joins {a}.', { n: np.name, a: a.name }, a.id);
       }),

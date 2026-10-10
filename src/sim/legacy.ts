@@ -8,12 +8,11 @@ import type { GameState, Release } from './types';
 import { fmtL, hasCard, notify, remember, sum } from './util';
 import { hqCaps } from './branches';
 import { campaignBonus, restrictToNominees } from './sys/ceremonies8';
-import { allReleases17 } from './relidx17';
 
 export function updateLegacy(s: GameState): void {
   const p = s.player;
   const totalRevenueReal = Object.entries(p.revenueByYear).reduce((t, [y, v]) => t + toReal(v, Number(y)), 0);
-  const mine = allReleases17(s).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+  const mine = Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
   const signed = new Set<string>();
   for (const m of s.memory) if (m.kind === 'signed' && m.actId) signed.add(m.actId);
   const developed = Object.values(s.acts).filter((a) => (a.owner === 'player' || signed.has(a.id)) && a.fame > 35).length;
@@ -32,7 +31,7 @@ export function updateLegacy(s: GameState): void {
 /** Gramófonos de Ouro em dezembro: 4 categorias, reconhecimento sem bônus universal. */
 export function yearlyAwards(s: GameState, r: Rng): void {
   const year = s.year;
-  const rels = allReleases17(s).filter((x) => x.year === year && x.totalUnits > 0);
+  const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
   if (!rels.length) return;
   // rodada 8: só concorre quem foi indicado em outubro; campanhas do selo somam pontos
   const winner = (cat: string, list: Release[], score: (x: Release) => number) => {
@@ -71,7 +70,7 @@ export interface Milestone { id: string; text: L; done: boolean }
 
 export function milestones(s: GameState): Milestone[] {
   const st = s.player.stats;
-  const mine = allReleases17(s).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+  const mine = Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
   const bestPeak = Math.min(999, ...mine.map((r) => r.peak));
   const list: Milestone[] = [
     { id: 'first_release', text: l('Primeiro lançamento', 'First release'), done: mine.length > 0 },
@@ -140,7 +139,7 @@ export function endingScores(s: GameState): { id: string; score: number }[] {
   const revenue = Math.max(1, (totals.sales ?? 0) + (totals.live ?? 0) + (totals.publishing ?? 0) + (totals.neural ?? 0));
   const liveShare = (totals.live ?? 0) / revenue;
   const legends = Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length;
-  const recent = allReleases17(s).some((r) => r.owner === 'player' && s.year - r.year <= 5);
+  const recent = Object.values(s.releases).some((r) => r.owner === 'player' && s.year - r.year <= 5);
   const consentOk = consent && n.voiceLicenses + n.synthActs > 0;
   const scores: Record<string, number> = {
     last_vinyl: (s.player.equipment.includes('own_plant') || hasCard(s, 'manufacturer')) && n.humanFocus >= 2 ? 50 + n.humanFocus * 2 + L.catalog * 0.05 : 0,

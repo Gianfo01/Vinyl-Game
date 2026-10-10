@@ -30,6 +30,7 @@ import { fmtL, nextId, remember } from '../util';
 import { addSignal, signToBestRival } from '../worldgen';
 import { histAltered, histDiverged, histMode, histRoll } from '../history15';
 import { noteRelease17 } from '../relidx17';
+import { actsTouched17 } from '../actidx17';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 const BASE_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
@@ -260,7 +261,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     });
     // integrantes gerados que sobraram saem do ato
     for (const p of old) if (!now.includes(p.id) && !(st.former[act.id] ?? []).some((x) => x.personId === p.id)) delete s.persons[p.id];
-    if (now.length) act.members = now;
+    if (now.length) act.members = now; actsTouched17(s); // r17: índice pessoa→atos
     act.leaderId = act.members[0];
     // relações entre os integrantes (pessoas reaproveitadas de outros atos)
     for (const a of act.members) for (const b of act.members) if (a !== b && s.persons[a] && s.persons[a].rel[b] === undefined) s.persons[a].rel[b] = 20;
@@ -271,7 +272,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       const c = canonical(s, p, d.n, d.b, []);
       if (c !== p) {
         delete s.persons[p.id];
-        act.members = [c.id];
+        act.members = [c.id]; actsTouched17(s); // r17: índice pessoa→atos
         act.leaderId = c.id;
         if (!real) act.name = c.name;
         p = c;
@@ -475,7 +476,7 @@ function monthly(s: GameState, r: Rng): void {
       const c = canonical(s, p, name, born, act.members);
       if (c !== p) { delete s.persons[p.id]; p = c; }
       if (act.members.includes(p.id)) continue;
-      act.members.push(p.id);
+      act.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
       if (ev.m[5] !== undefined && ev.m[5] > s.year) st.sched.push({ year: ev.m[5], kind: 'leave', actId: act.id, personId: p.id }); // rodada 16: segunda passagem também sai
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {

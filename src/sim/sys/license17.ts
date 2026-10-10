@@ -11,7 +11,6 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import type { GameState, Label } from '../types';
 import { fmtL, money, notify, post } from '../util';
-import { allReleases17 } from '../relidx17';
 
 export type Dir = 'in' | 'out';
 export interface Lic17 { id: string; dir: Dir; lb: string; market: MarketId; adv: number; share: number; until: number; since: number; earned: number; status: 'offer' | 'active' | 'ended'; expires: number; why?: L }
@@ -25,7 +24,7 @@ const mkSize = (s: GameState, m: MarketId) => MARKETS.find((x) => x.id === m)?.s
 
 /** Receita mensal (centavos) que um selo faz com lançamentos recentes — base das contas de licença. */
 export function labelMonthGross(s: GameState, lb: Label): number {
-  return allReleases17(s).filter((r) => r.owner === lb.id && s.week - r.week < 52).reduce((t, r) => t + r.weekly.slice(-4).reduce((a, x) => a + x, 0) * (r.revenue / Math.max(1, r.totalUnits)), 0);
+  return Object.values(s.releases).filter((r) => r.owner === lb.id && s.week - r.week < 52).reduce((t, r) => t + r.weekly.slice(-4).reduce((a, x) => a + x, 0) * (r.revenue / Math.max(1, r.totalUnits)), 0);
 }
 /** Peso do mercado M dentro da operação (tamanho relativo). */
 const weightIn = (s: GameState, terr: MarketId[], m: MarketId) => mkSize(s, m) / Math.max(0.1, terr.reduce((t, x) => t + mkSize(s, x), 0) + mkSize(s, m));
@@ -137,11 +136,13 @@ registerSimHook('month', 'license17', (s) => {
   if (st.list.filter((d) => d.status === 'offer').length >= 2 || !r.chance(0.25)) return;
   if (r.chance(0.55) && s.player.territories.length) {
     const m = r.pick(s.player.territories);
-    const cands = Object.values(s.labels).filter((x) => x.active && !x.territories.includes(m) && labelMonthGross(s, x) > 0 && !st.list.some((d) => d.dir === 'in' && d.lb === x.id && d.status !== 'ended'));
+    const gross = new Map<string, number>(); // uma conta por selo (antes refeita a cada comparação do sort)
+    const g = (x: Label): number => { let v = gross.get(x.id); if (v === undefined) gross.set(x.id, (v = labelMonthGross(s, x))); return v; };
+    const cands = Object.values(s.labels).filter((x) => x.active && !x.territories.includes(m) && g(x) > 0 && !st.list.some((d) => d.dir === 'in' && d.lb === x.id && d.status !== 'ended'));
     if (!cands.length) return;
-    const lb = cands.sort((a, b) => labelMonthGross(s, b) - labelMonthGross(s, a))[r.int(0, Math.min(2, cands.length - 1))];
+    const lb = cands.sort((a, b) => g(b) - g(a))[r.int(0, Math.min(2, cands.length - 1))];
     const share = Math.round(r.float(0.22, 0.35) * 100) / 100;
-    const est = labelMonthGross(s, lb) * weightIn(s, lb.territories, m) * share;
+    const est = g(lb) * weightIn(s, lb.territories, m) * share;
     st.list.push({ id: `li17:${s.week}:${lb.id}:${m}`, dir: 'in', lb: lb.id, market: m, adv: Math.max(money(s, 1000), Math.round(est * r.float(4, 8))), share, until: s.week + 52 * r.int(2, 3), since: 0, earned: 0, status: 'offer', expires: s.week + 8,
       why: fmtL(l('{lb} não tem operação em {m} e quer que você prense e venda os discos dela lá.', '{lb} has no operation in {m} and wants you to press and sell its records there.'), { lb: lb.name, m: mkName(m) }) });
   } else {

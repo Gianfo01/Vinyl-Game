@@ -15,7 +15,6 @@ import { grantPlayerContract } from '../worldgen';
 import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
 import { persona } from './persona';
-import { allReleases17 } from '../relidx17';
 
 // ---------------------------------------------------------------- segredos
 
@@ -215,7 +214,7 @@ function succeed(s: GameState, r: Rng, sc: Scheme): void {
       return;
     }
     case 'sabotage':
-      for (const rel of allReleases17(s)) if (rel.owner === sc.target.id && s.week - rel.week < 10) rel.appeal *= 0.6;
+      for (const rel of Object.values(s.releases)) if (rel.owner === sc.target.id && s.week - rel.week < 10) rel.appeal *= 0.6;
       s.rivalries[sc.target.id] = (s.rivalries[sc.target.id] ?? 0) + 15;
       logI(s, fmtL(l('Lançamentos de {t} sabotados.', '{t}\'s releases sabotaged.'), { t: name }), 'good');
       return;

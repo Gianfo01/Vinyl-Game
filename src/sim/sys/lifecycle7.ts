@@ -17,7 +17,7 @@ import { genStaff } from '../worldgen';
 import { rw } from './realworld';
 import { histLocked } from '../history15';
 import { resolveThinking } from '../contracts';
-import { allReleases17 } from '../relidx17';
+import { actsTouched17 } from '../actidx17';
 
 type Ctx = Record<string, string | number>;
 
@@ -99,7 +99,7 @@ export function replaceMember(s: GameState, r: Rng, act: Act, oldId: string): Pe
   const np = makePerson(s, r, { lang: langForCity(act.city, r), role: old?.role === 'synthetic' ? 'vocal' : old?.role ?? 'guitar', potential: clamp((old?.potential ?? 60) - r.int(0, 10), 30, 95), born: s.year - r.int(20, 34), startFrac: 0.8 });
   s.persons[np.id] = np;
   act.members = act.members.map((x) => (x === oldId ? np.id : x));
-  if (!act.members.includes(np.id)) act.members.push(np.id);
+  if (!act.members.includes(np.id)) act.members.push(np.id); actsTouched17(s); // r17: índice pessoa→atos
   if (act.leaderId === oldId) act.leaderId = act.members[0];
   formerPush(s, act.id, oldId, old?.alive ? 'left' : 'died');
   remember(s, 'lineup', fmtL(l('{a} segue em frente: {n} assume o lugar de {o}.', '{a} carries on: {n} takes over from {o}.'), { a: act.name, n: np.name, o: old?.name ?? '?' }), { actId: act.id, important: act.fame > 25 || act.owner === 'player' });
@@ -274,7 +274,7 @@ function npcVices(s: GameState, r: Rng): void {
 
 function catalogIncome(s: GameState): void {
   const byAct: Record<string, number> = {};
-  for (const rel of allReleases17(s)) {
+  for (const rel of Object.values(s.releases)) {
     if (rel.live || rel.owner === 'player') continue;
     const act = s.acts[rel.actId];
     if (!act || act.playerBand) continue;

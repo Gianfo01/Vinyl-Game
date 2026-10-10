@@ -19,7 +19,6 @@ import { songQ } from '../production';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
 import { hasSpec, influence } from './crew8';
-import { allReleases17 } from '../relidx17';
 
 export type ConsentVal = 'g' | 'r';
 export interface ConsentRec { v?: ConsentVal; t?: ConsentVal; sh: number; cr: boolean; w: number }
@@ -223,7 +222,7 @@ export function setUse(s: GameState, use: AiUse): L | null {
 export function scaleIncome(s: GameState): number {
   const st = ai(s);
   if (!st.use) return 0;
-  const n = allReleases17(s).filter((x) => x.owner === 'player').length;
+  const n = Object.values(s.releases).filter((x) => x.owner === 'player').length;
   const base = st.use === 1 ? 120 * Math.sqrt(n + 1) : 700 * Math.sqrt(n + 4);
   return Math.round(money(s, base) * (1 - humanPref(s) * 0.6) * accessFactor(s));
 }
@@ -240,7 +239,7 @@ export function certBlocker(s: GameState): L | null {
   if (s.player.neural.consentPolicy === 'no_consent') return l('Há uso de voz sem consentimento no histórico.', 'There is unauthorized voice use on record.');
   if (st.deals.some((d) => d.acts.length)) return l('Há licença de treino sem consentimento dos artistas.', 'There is a training license without artist consent.');
   if (playerActs(s).some((id) => s.acts[id].archetype === 'synthetic')) return l('O elenco tem artistas sintéticos.', 'The roster has synthetic artists.');
-  if (allReleases17(s).some((x) => x.owner === 'player' && s.week - x.week < 104 && isSynthRel(s, x))) return l('Lançamentos dos últimos dois anos têm faixas sintéticas.', 'Releases from the last two years contain synthetic tracks.');
+  if (Object.values(s.releases).some((x) => x.owner === 'player' && s.week - x.week < 104 && isSynthRel(s, x))) return l('Lançamentos dos últimos dois anos têm faixas sintéticas.', 'Releases from the last two years contain synthetic tracks.');
   return null;
 }
 
@@ -292,7 +291,7 @@ export function consentedShare(s: GameState): number {
 }
 
 export function makeOffer(s: GameState, r: Rng): AiOffer {
-  const n = allReleases17(s).filter((x) => x.owner === 'player').length;
+  const n = Object.values(s.releases).filter((x) => x.owner === 'player').length;
   const scope = r.pick(['catalog', 'voices', 'style'] as const);
   const consentOnly = r.chance(0.35);
   const base = money(s, 2000 + n * 600) * (scope === 'catalog' ? 1.5 : scope === 'voices' ? 1.2 : 0.8) * (consentOnly ? Math.max(0.15, consentedShare(s)) : 1) * (hasSpec(s, 'hardball') ? 1.2 : 1) * (1 - humanPref(s) * 0.5);
@@ -399,7 +398,7 @@ export function checkBlocks(s: GameState, r: Rng): string[] {
   const st = ai(s);
   const out: string[] = [];
   for (const k of Object.keys(st.blocks)) if (st.blocks[k] <= s.week) delete st.blocks[k];
-  for (const rel of allReleases17(s)) {
+  for (const rel of Object.values(s.releases)) {
     if (rel.owner !== 'player' || s.week - rel.week > 52 || !isSynthRel(s, rel)) continue;
     const unconsented = rel.songs.some((id) => s.songs[id]?.aiVoice) && consentOf(s, rel.actId)?.v !== 'g';
     for (const a3 of countriesIn(rel.territories)) {
@@ -477,7 +476,7 @@ export function aiMonth(s: GameState, r: Rng): void {
   st.deals = st.deals.filter((d) => d.until > s.week);
   // novas propostas
   st.offers = st.offers.filter((o) => o.expires > s.week);
-  const nRel = allReleases17(s).filter((x) => x.owner === 'player').length;
+  const nRel = Object.values(s.releases).filter((x) => x.owner === 'player').length;
   if (nRel >= 3 && st.offers.length < 2 && r.chance(0.12)) {
     const o = makeOffer(s, r);
     notify(s, fmtL(l('{c} quer licenciar {x} do selo.', '{c} wants to license the label\'s {x}.'), { c: o.co, x: SCOPE_NAME[o.scope] }), 'info');

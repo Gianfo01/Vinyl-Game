@@ -19,7 +19,6 @@ import { scandal } from '../scandal17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, nextId, post } from '../util';
 import { acceptInvite, declineInvite, festFee, fest8 } from './fests8';
-import { allReleases17 } from '../relidx17';
 
 export interface War17 { id: string; act: string; a: string; b: string; fa: number; fb: number; until: number; ia?: number; ib?: number }
 export interface Reunion17 { id: string; act: string; cost: number; p: number; est: number; until: number }
@@ -154,7 +153,7 @@ function crowdMonth(s: GameState): void {
     if (c.done) continue;
     const a = s.acts[c.act];
     if (!a) { c.done = 'broken'; continue; }
-    const delivered = allReleases17(s).some((r) => r.actId === c.act && r.week > c.start && r.type !== 'single');
+    const delivered = Object.values(s.releases).some((r) => r.actId === c.act && r.week > c.start && r.type !== 'single');
     if (delivered) {
       c.done = 'ok';
       voidHolds(s, (h) => h.id === c.hold);

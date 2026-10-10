@@ -12,7 +12,6 @@ import { registerPerkSource, type PerkEntry, type PerkValues } from '../perks';
 import type { GameState } from '../types';
 import { ownerOf } from './people/owner';
 import { fmtL, hasCard, hasMutator, money, notify, playerActs, post } from '../util';
-import { allReleases17 } from '../relidx17';
 
 const CARD_PERKS: Record<string, PerkValues> = {
   indie_spirit: { trust: 8, critics: 0.3, chartUnits: -0.05 },
@@ -106,7 +105,7 @@ const avgScore = (s: GameState, relId: string) => {
   const rv = s.reviews[relId];
   return rv?.length ? rv.reduce((t, x) => t + x.score, 0) / rv.length : 0;
 };
-const myReleases = (s: GameState) => allReleases17(s).filter((r) => r.owner === 'player');
+const myReleases = (s: GameState) => Object.values(s.releases).filter((r) => r.owner === 'player');
 
 EXTRA_CARD_GOALS.indie_spirit = (s) => myReleases(s).filter((r) => avgScore(s, r.id) >= 8).length >= 3;
 EXTRA_CARD_GOALS.hit_factory = (s) => s.player.stats.top10s >= 10;

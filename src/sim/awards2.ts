@@ -7,7 +7,6 @@ import type { GameState } from './types';
 import { fmtL, notify, remember } from './util';
 import { avgReview } from './media';
 import { PRODUCERS } from './studio';
-import { allReleases17 } from './relidx17';
 
 export interface AwardDef {
   id: string;
@@ -41,7 +40,7 @@ function give(s: GameState, year: number, category: string, name: L, winnerName:
 
 export function yearlyAwards2(s: GameState, r: Rng): void {
   const year = s.year;
-  const rels = allReleases17(s).filter((x) => x.year === year && x.totalUnits > 0);
+  const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
   if (!rels.length) return;
   // crítica: melhor média de resenhas
   const critic = rels.map((x) => ({ x, v: avgReview(s, x.id) ?? 0 })).filter((y) => y.v > 0).sort((a, b) => b.v - a.v)[0];

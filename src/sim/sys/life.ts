@@ -18,6 +18,7 @@ import { gainXp, ownerOf, type OwnerAttr } from './people/owner';
 import { grow, learnInstrument, overall, type Role } from './talent';
 import { BACKGROUNDS, HOBBIES, JOBS, KID_EDU, PARTNER_TRAITS, backgroundById, type BackgroundId, type HobbyId, type KidEdu } from './life/data';
 import { ensureBandVocalist } from './vocals10';
+import { actsTouched17 } from '../actidx17';
 
 export * from './life/data';
 
@@ -590,7 +591,7 @@ export function joinBand(s: GameState, r: Rng, actId: string): { ok: boolean; te
     logLife(s, text, 'bad');
     return { ok: false, text };
   }
-  act.members.push(p.id);
+  act.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
   for (const id of act.members) if (id !== p.id && s.persons[id]) { s.persons[id].rel[p.id] = r.int(-10, 40); p.rel[id] = r.int(0, 40); }
   if (!act.owner) signOwn(s, act);
   const text = fmtL(l('{o} entra na banda {a}.', '{o} joins the band {a}.'), { o: p.name, a: act.name });

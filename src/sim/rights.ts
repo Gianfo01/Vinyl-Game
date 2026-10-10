@@ -12,7 +12,6 @@ import type { ContractModel } from '../data/rules';
 import type { Act, Contract, GameState, Release, RightsTerms } from './types';
 import type { Rng } from '../core/rng';
 import { fmtL, money, notify, post, remember } from './util';
-import { allReleases17 } from './relidx17';
 
 // ---------------------------------------------------------------- estado
 
@@ -281,7 +280,7 @@ export function catalogValue(s: GameState): { value: number; perpetual: number; 
   const rows: CatalogRow[] = [];
   let perpetual = 0;
   let reverting = 0;
-  for (const rel of allReleases17(s)) {
+  for (const rel of Object.values(s.releases)) {
     if (rel.owner !== 'player' || s.acts[rel.actId]?.playerBand) continue;
     const deal = dealOfRelease(s, rel);
     const annual = annualRevenue(rel);

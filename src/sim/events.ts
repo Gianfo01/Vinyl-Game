@@ -18,6 +18,7 @@ import { MORE_EVENTS_11 } from './events_more11';
 import { narrate, narratorPace } from './narrator13';
 import { scandal } from './scandal17';
 import { allReleases17 } from './relidx17';
+import { actsTouched17 } from './actidx17';
 
 export type Ctx = Record<string, string | number>;
 
@@ -192,7 +193,7 @@ export const EVENTS: EventDef[] = [
         if (a.owner === 'player') pay(s, `sub:${a.id}`, 6500, 'artist_dev', 'Substituto');
         const np = makePerson(s, r, { lang: langForCity(a.city, r), role: old.role, potential: old.potential - r.int(0, 10), born: s.year - r.int(19, 30), startFrac: 0.8 });
         s.persons[np.id] = np;
-        a.members = a.members.map((x) => (x === old.id ? np.id : x));
+        a.members = a.members.map((x) => (x === old.id ? np.id : x)); actsTouched17(s); // r17: índice pessoa→atos
         remember(s, 'lineup', fmtL(l('{o} sai de {a}; entra {n}.', '{o} leaves {a}; {n} joins.'), { o: old.name, a: a.name, n: np.name }), { actId: a.id, important: true });
       } },
       { id: 'smaller', label: l('Seguir sem substituto', 'Carry on without replacing'), apply: (s, _r, c) => { const a = act(s, c); const old = s.persons[String(c.person)]; if (!a || !old) return; a.members = a.members.filter((x) => x !== old.id); remember(s, 'lineup', fmtL(l('{o} sai de {a}.', '{o} leaves {a}.'), { o: old.name, a: a.name }), { actId: a.id, important: true }); if (a.members.length === 0) a.status = 'split'; } },

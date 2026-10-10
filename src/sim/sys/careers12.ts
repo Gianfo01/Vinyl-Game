@@ -16,7 +16,6 @@ import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 import { ventures } from './ventures9';
 import { liveOf } from './live';
-import { allReleases17 } from '../relidx17';
 
 export type CareerId = 'label' | 'manager' | 'festival' | 'booking' | 'venue' | 'studio' | 'publisher' | 'media' | 'platform' | 'musician';
 export interface CareerDef { id: string; name: L; desc: L; from: number; icon: string; area: string; load: number; status?: (s: GameState) => L | null }
@@ -269,7 +268,7 @@ function ambitionMet(s: GameState, st: CareersState): { ok: boolean; why: L } {
     case 'money': { const ok = worth(s) > sn.worth * 1.05; return { ok, why: ok ? l('o patrimônio cresceu', 'your fortune grew') : l('o dinheiro não cresceu', 'the money did not grow') }; }
     case 'legacy': { const ok = standingOf(s, 'player').rec + ventures(s).mg.rep > sn.std + 1; return { ok, why: ok ? l('o prestígio subiu', 'prestige rose') : l('o prestígio parou', 'prestige stalled') }; }
     case 'power': { const ok = st.active.length >= 3 || ventures(s).mg.clients.length + ventures(s).list.length >= 4; return { ok, why: ok ? l('você comanda várias frentes', 'you run several fronts') : l('poucas frentes sob seu comando', 'too few fronts under your command') }; }
-    case 'art': { const n = allReleases17(s).filter((x) => x.owner === 'player').length; const ok = n > sn.rel; return { ok, why: ok ? l('saiu música nova sua', 'new music of yours came out') : l('nenhum lançamento novo', 'no new release') }; }
+    case 'art': { const n = Object.values(s.releases).filter((x) => x.owner === 'player').length; const ok = n > sn.rel; return { ok, why: ok ? l('saiu música nova sua', 'new music of yours came out') : l('nenhum lançamento novo', 'no new release') }; }
     case 'fame': { const n = s.player.stats.top10s + s.player.stats.number1s; const ok = n > (sn.hits ?? n); return { ok, why: ok ? l('um ato seu chegou ao top 10', 'one of your acts hit the top 10') : l('nenhum top 10 no ano', 'no top 10 this year') }; }
     case 'discover': { const n = s.player.stats.signed; const ok = n > (sn.signed ?? n); return { ok, why: ok ? l('você descobriu talento novo', 'you discovered new talent') : l('ninguém novo no elenco', 'nobody new on the roster') }; }
     case 'world': { const n = s.player.territories.length; const ok = n > (sn.mk ?? n); return { ok, why: ok ? l('um território novo se abriu', 'a new territory opened') : l('o mapa não cresceu', 'the map did not grow') }; }
@@ -287,7 +286,7 @@ function careersMonth(s: GameState): void {
   if (load > 1) o.stress = clamp(o.stress + (load - 1) * 8, 0, 100);
   if (s.month !== 0) return;
   const P = s.player;
-  const snap = { y: s.year, worth: worth(s), std: standingOf(s, 'player').rec + ventures(s).mg.rep, rel: allReleases17(s).filter((x) => x.owner === 'player').length,
+  const snap = { y: s.year, worth: worth(s), std: standingOf(s, 'player').rec + ventures(s).mg.rep, rel: Object.values(s.releases).filter((x) => x.owner === 'player').length,
     hits: P.stats.top10s + P.stats.number1s, signed: P.stats.signed, mk: P.territories.length, aw: P.stats.awards };
   if (st.snap && st.snap.y < s.year) {
     const m = ambitionMet(s, st);

@@ -11,7 +11,6 @@ import { deferEvents } from './ext4';
 import type { GameState, Label, Release } from './types';
 import type { RivalReportItem } from './xtypes';
 import { fmtL, money, playerActs, post, remember } from './util';
-import { allReleases17 } from './relidx17';
 
 export const ARCHETYPES: Record<NonNullable<Label['archetype']>, { name: L; desc: L }> = {
   empire: { name: l('Império', 'Empire'), desc: l('Compra estrelas e concorrentes; evita risco artístico.', 'Buys stars and competitors; avoids artistic risk.') },
@@ -87,7 +86,7 @@ export function rivals2Month(s: GameState, r: Rng): void {
   const items: RivalReportItem[] = [];
   const mine = playerActs(s).map((id) => s.acts[id]);
   const recentByOwner = new Map<string, Release[]>();
-  for (const x of allReleases17(s)) {
+  for (const x of Object.values(s.releases)) {
     if (s.week - x.week >= 5) continue;
     const list = recentByOwner.get(x.owner) ?? [];
     list.push(x);

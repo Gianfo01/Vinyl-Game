@@ -22,6 +22,7 @@ import { audience, startRevival } from './audience8';
 import { bondBalance, bondNote, careerPhase, identity, prefsOf, repeatsFormula, resultKind, soundsCommercial, soundsExperimental } from './identity8';
 import { rw } from './realworld';
 import { playbookOf } from './rivals8';
+import { actsTouched17 } from '../actidx17';
 
 export type StoryKind = 'cult' | 'pact' | 'formula';
 
@@ -266,7 +267,7 @@ const STORY_EVENTS: EventDef[] = [
         const m = identity(s).acts[a.id];
         const chance = 0.35 + (p && p.resentment < 40 ? 0.2 : 0) + (bondBalance(m) > 0 ? 0.15 : 0) + (st.ch.includes('other') ? 0.05 : 0) - (st.ch.includes('split') ? 0.05 : 0);
         if (p?.alive && r.chance(chance)) {
-          if (!a.members.includes(p.id)) a.members.push(p.id);
+          if (!a.members.includes(p.id)) a.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
           const solo = st.solo ? s.acts[st.solo] : undefined;
           if (solo && solo.members.length === 1 && solo.members[0] === p.id) { if (solo.owner && solo.owner !== 'player') endContract(s, solo, 'expired'); solo.status = 'split'; }
           a.status = 'active';

@@ -18,7 +18,6 @@ import { PRODUCERS, sessionCost, startSession } from '../studio';
 import type { Act, AgendaSlot, GameState, Release, ReleaseType, Song } from '../types';
 import { fmtL, money, nextId, playerActs, remember } from '../util';
 import { featureFee, inviteFeature } from './creation/core';
-import { allReleases17 } from '../relidx17';
 
 /** Convidado já gravado na faixa (leitura sem criar registro no save). */
 export const featOf = (s: GameState, songId: string): string | undefined => s.x4.creation.songs[songId]?.featuring;
@@ -309,7 +308,7 @@ export function projectResult(s: GameState, p: MusicProject): ProjectResult | nu
   const rel = p.releaseId ? s.releases[p.releaseId] : undefined;
   if (!rel) return null;
   const act = s.acts[p.actId];
-  const rels = [rel, ...allReleases17(s).filter((x) => p.rolloutId && x.rolloutId === p.rolloutId && x.id !== rel.id)];
+  const rels = [rel, ...Object.values(s.releases).filter((x) => p.rolloutId && x.rolloutId === p.rolloutId && x.id !== rel.id)];
   const revenue = rels.reduce((t, x) => t + x.revenue, 0);
   const peak = Math.min(...rels.map((x) => x.peak));
   let goalMet: boolean | null = null;

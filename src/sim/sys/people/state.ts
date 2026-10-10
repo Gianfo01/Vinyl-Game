@@ -6,6 +6,7 @@ import { l, type L } from '../../../data/world';
 import { registerExt4 } from '../../ext4';
 import type { Act, GameState, Person } from '../../types';
 import { nextId, playerActs } from '../../util';
+import { actsOfPerson17 } from '../../actidx17';
 
 // ---------------------------------------------------------------- tipos
 
@@ -241,10 +242,11 @@ export function trackedPersons(s: GameState): Person[] {
 
 /** Ato principal (do jogador, se houver) de uma pessoa. */
 export function actOf(s: GameState, pid: string): Act | undefined {
+  // r17 (desempenho): pelo índice pessoa→atos (mesma ordem de s.acts) em vez de varrer o elenco por pessoa
   let best: Act | undefined;
-  for (const id of playerActs(s)) {
-    const a = s.acts[id];
-    if (a.members.includes(pid) && (!best || a.members.length > best.members.length)) best = a;
+  for (const a of actsOfPerson17(s, pid)) {
+    if (a.owner !== 'player' || a.status === 'retired' || a.status === 'split') continue;
+    if (!best || a.members.length > best.members.length) best = a;
   }
   return best;
 }

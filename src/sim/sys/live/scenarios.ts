@@ -12,7 +12,6 @@ import type { Act, GameState, Label, RunConfig } from '../../types';
 import { fmtL, money, nextId, notify, post, remember, sum } from '../../util';
 import { grantPlayerContract } from '../../worldgen';
 import { liveOf, type ChallengeRun, type CustomEvent, type ScenarioRun } from './state';
-import { allReleases17 } from '../../relidx17';
 
 // ---------------------------------------------------------------- preparação da próxima partida
 
@@ -80,7 +79,7 @@ function adjustCash(s: GameState, factor: number): void {
 const insolvent = (s: GameState): L | null => (s.ended?.reason === 'insolvency' ? l('O selo quebrou antes do prazo.', 'The label went bust before the deadline.') : null);
 
 function genreUnits(s: GameState, genres: string[]): number {
-  return sum(allReleases17(s).filter((x) => (x.owner === 'player' || s.acts[x.actId]?.playerBand) && genres.includes(s.acts[x.actId]?.genre ?? '')).map((x) => x.totalUnits));
+  return sum(Object.values(s.releases).filter((x) => (x.owner === 'player' || s.acts[x.actId]?.playerBand) && genres.includes(s.acts[x.actId]?.genre ?? '')).map((x) => x.totalUnits));
 }
 
 const bestFame = (s: GameState, pred: (a: Act) => boolean = () => true) => Math.round(Math.max(0, ...Object.values(s.acts).filter((a) => (a.owner === 'player' || a.playerBand) && pred(a)).map((a) => a.fame)));

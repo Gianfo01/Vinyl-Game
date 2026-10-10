@@ -7,6 +7,7 @@ import { cityById, l, type L } from '../data/world';
 import type { Act, AgendaSlot, GameState } from './types';
 import type { Plan } from './xtypes';
 import { fmtL, nextId, notify, remember } from './util';
+import { actsOfPerson17 } from './actidx17';
 
 export function monthIndex(s: GameState): number {
   return s.year * 12 + s.month;
@@ -26,7 +27,7 @@ export function activeMembers(s: GameState, act: Act): string[] {
 
 /** Atos (banda + carreiras solo) de que a pessoa participa. */
 export function actsOfPerson(s: GameState, personId: string): Act[] {
-  return Object.values(s.acts).filter((a) => a.members.includes(personId) && a.status !== 'retired' && a.status !== 'split');
+  return actsOfPerson17(s, personId).filter((a) => a.status !== 'retired' && a.status !== 'split');
 }
 
 export function slotLoad(slot: AgendaSlot): number {

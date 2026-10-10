@@ -1,6 +1,6 @@
 // Índice pessoa → atos compartilhado (rodada 17, desempenho). Refeito a cada semana e quando um ato entra ou sai
-// de s.acts (actsTouched17, chamado nos pontos que criam/apagam atos). Cada consulta confere a formação atual,
-// então quem saiu de um ato no meio da semana já some; quem entrou aparece na reconstrução seguinte.
+// de s.acts ou alguém entra numa formação (actsTouched17 nesses pontos). Cada consulta confere a formação atual,
+// então quem saiu de um ato no meio da semana já some.
 // Guardado por partida (WeakMap), nunca entre jogos.
 import type { Act, GameState } from './types';
 
@@ -9,7 +9,7 @@ const IX = new WeakMap<GameState, ActIx>();
 const AV = new WeakMap<GameState, number>();
 let VER = 0; // só identidade de versão (nunca entra no estado do jogo)
 
-/** Avisa que s.acts ganhou ou perdeu atos (invalida o índice). */
+/** Avisa que s.acts ganhou ou perdeu atos, ou que alguém entrou numa formação (invalida o índice). */
 export const actsTouched17 = (s: GameState): void => { AV.set(s, (AV.get(s) ?? 0) + 1); };
 
 function ix(s: GameState): ActIx {
