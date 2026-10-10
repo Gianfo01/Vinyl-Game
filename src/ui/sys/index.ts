@@ -103,3 +103,5 @@ import './ventures16';
 import './lineup16';
 // Rodada 17: Fatos & Obrigações (estresse, obrigações e fatos) na página de pessoa e do ato.
 import './found17';
+// Rodada 17 (F): Negócios 17 (venda, canais, casas, licenças, imagem, merch, circuito) e Agenda de shows.
+import './biz17';

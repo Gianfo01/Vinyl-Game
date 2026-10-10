@@ -145,3 +145,12 @@ import './lineup16';
 import './bridge17';
 import './situations17';
 import './sits17';
+// Rodada 17 (F) — negócios: venda do selo, canais de lançamento, casas, licenças, agenda com concorrência, imagem, merch, circuito.
+import './sale17';
+import './outlets17';
+import './venues17';
+import './license17';
+import './clash17';
+import './image17';
+import './merch17';
+import './circuit17';

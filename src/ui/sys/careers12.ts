@@ -16,6 +16,7 @@ import { hl } from '../newgame13';
 import { fxText } from './persona';
 import { openCareer } from './careerui13';
 import { notoPanel } from './notoriety14';
+import { setTab } from '../vis';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const go = (area: string) => { store.area = area; rerender(); };
@@ -71,7 +72,7 @@ export function careersPanel(s: GameState): HTMLElement {
         return h('tr', { class: on ? 'me' : '' },
           h('td', null, h('b', null, t(d.name)), h('div', { class: 'small muted' }, t(d.desc))),
           h('td', { class: 'small' }, on ? `${t(l('desde', 'since'))} ${st.started[d.id] ?? s.year}` : `${Math.round(d.load * 100)}% ${t(l('da agenda', 'of schedule'))}`),
-          h('td', null, on ? h('div', { class: 'row' }, h('button', { class: 'btn tiny', onclick: () => openCareer(d.id) }, t(l('Abrir', 'Open'))), h('button', { class: 'btn tiny ghost', onclick: () => res(dropCareer(s, d.id)) }, t(l('Largar', 'Drop'))))
+          h('td', null, on ? h('div', { class: 'row' }, h('button', { class: 'btn tiny', onclick: () => openCareer(d.id) }, t(l('Abrir', 'Open'))), d.id === 'label' ? h('button', { class: 'btn tiny ghost', title: t(l('Em vez de abandonar, venda o selo (r17)', 'Instead of abandoning it, sell the label (r17)')), onclick: () => { setTab('biz17', 'sale'); store.area = 'biz17'; rerender(); } }, t(l('Vender', 'Sell'))) : h('button', { class: 'btn tiny ghost', onclick: () => res(dropCareer(s, d.id)) }, t(l('Largar', 'Drop'))))
             : h('button', { class: 'btn tiny primary', onclick: () => res(startCareer(s, d.id)) }, t(l('Começar', 'Start')))));
       })))),
     notoPanel(s),

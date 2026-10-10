@@ -12,6 +12,7 @@ import { TICKET, cityDemand } from '../tours';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ventures } from './ventures9';
+import { clash17 } from './clash17';
 
 export type Deal = 'guarantee' | 'door' | 'versus';
 export type Role = 'agent' | 'promoter';
@@ -130,6 +131,7 @@ export function demandOf(s: GameState, act: Act, st: Stop, fat = 0): number {
   d *= Math.pow(st.pmult, -0.9);
   d *= 0.8 + Math.min(0.2, Math.max(0, st.week - s.week) * 0.025);
   d *= 1 - 0.18 * Math.max(0, fat - 0.5);
+  d *= clash17(s, act, st.city, st.week); // r17: concorrência na agenda
   return d;
 }
 /** Oferta do promotor local (modo agente): ~60% do lucro líquido esperado, corrigido pela relação. */
