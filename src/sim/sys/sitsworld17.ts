@@ -451,8 +451,8 @@ registerSituation({
   options: [
     { id: 'free', label: l('Show gratuito', 'Free show'), hint: l('Custa $3.000 (era); fãs núcleo +5%, estresse −5.', 'Costs $3,000 (era); core fans +5%, stress −5.'), weightByTraits: (p) => F(p, 'generosidade') + F(p, 'lealdade'),
       apply: (s, c) => { pay(s, c, 'hometown', 3000, 'Show beneficente'); fans(A(s, c), 'core', 1.05); addStress(s, c.hero, -5, l('Carinho da terra natal', 'Hometown love')); } },
-    { id: 'paid', label: l('Show pago, com renda doada', 'Paid show, proceeds donated'), hint: l('Fama +1; fãs núcleo +2%.', 'Fame +1; core fans +2%.'), weightByTraits: (p) => F(p, 'disciplina') + F(p, 'empatia') * 0.5,
-      apply: (s, c) => { fame(A(s, c), 1); fans(A(s, c), 'core', 1.02); } },
+    { id: 'paid', label: l('Show pago, com renda doada', 'Paid show, proceeds donated'), hint: l('Fama +1; fãs núcleo +2%; estresse +4 (mais um show na agenda).', 'Fame +1; core fans +2%; stress +4 (one more show on the schedule).'), weightByTraits: (p) => F(p, 'disciplina') + F(p, 'empatia') * 0.5,
+      apply: (s, c) => { fame(A(s, c), 1); fans(A(s, c), 'core', 1.02); addStress(s, c.hero, 4, l('Show extra na agenda', 'Extra show on the schedule')); } }, // r18 (U12): não era dominante só por não ter custo
     { id: 'skip', label: l('Agenda cheia demais', 'Too busy'), hint: l('Fãs núcleo −2%.', 'Core fans −2%.'), weightByTraits: (p) => F(p, 'ambicao') + F(p, 'ego') * 0.5,
       apply: (s, c) => { fans(A(s, c), 'core', 0.98); } },
   ],
@@ -497,8 +497,8 @@ registerSituation({
   options: [
     { id: 'grant', label: l('Conceder', 'Grant it'), hint: l('Confiança +10; posicionamento −5 (menos comercial).', 'Trust +10; positioning −5 (less commercial).'), weightByTraits: (p) => F(p, 'empatia') + F(p, 'curiosidade'),
       apply: (s, c) => { const a = A(s, c); const k = a?.contractId ? s.contracts[a.contractId] : undefined; if (!a || !k) return; k.creativeControl = true; a.trust = clamp(a.trust + 10, 0, 100); a.positioning = clamp(a.positioning - 5, 0, 100); } },
-    { id: 'partial', label: l('Só no repertório', 'Songs only'), hint: l('Confiança +4.', 'Trust +4.'), weightByTraits: (p) => F(p, 'paciencia') + F(p, 'sociabilidade') * 0.5,
-      apply: (s, c) => { const a = A(s, c); if (a) a.trust = clamp(a.trust + 4, 0, 100); } },
+    { id: 'partial', label: l('Só no repertório', 'Songs only'), hint: l('Confiança +4, mas a briga pela capa e pelo produtor fica (mágoa leve por 1 ano).', 'Trust +4, but the fight over cover and producer remains (mild grudge for 1 year).'), weightByTraits: (p) => F(p, 'paciencia') + F(p, 'sociabilidade') * 0.5,
+      apply: (s, c) => { const a = A(s, c); if (!a) return; a.trust = clamp(a.trust + 4, 0, 100); grantHold(s, { holder: a.id, target: c.cast.label === 'player' ? 'player' : c.cast.label, kind: 'grievance', strength: 12, months: 12, text: l('controle só pela metade', 'only half the control'), src: 'sitw17', quiet: true }); } }, // r18 (U12)
     { id: 'deny', label: l('Negar: quem paga decide', 'Deny: who pays decides'), hint: l('Confiança −8; vira mágoa contra o selo.', 'Trust −8; becomes a grudge against the label.'), weightByTraits: (p) => F(p, 'ego') + F(p, 'teimosia'),
       apply: (s, c) => { const a = A(s, c); if (!a) return; a.trust = clamp(a.trust - 8, 0, 100); grantHold(s, { holder: a.id, target: c.cast.label === 'player' ? 'player' : c.cast.label, kind: 'grievance', strength: 30, months: 24, text: l('controle criativo negado', 'creative control denied'), src: 'sitw17', quiet: true }); } },
   ],
@@ -645,8 +645,8 @@ registerSituation({
   options: [
     { id: 'sue', label: l('Processar', 'Sue'), hint: l('Fãs casuais −10%, núcleo −3%; imagem de ganancioso.', 'Casual fans −10%, core −3%; a greedy image.'), weightByTraits: (p) => F(p, 'teimosia') + F(p, 'ego') * 0.5,
       apply: (s, c) => { const a = A(s, c); fans(a, 'casual', 0.9); fans(a, 'core', 0.97); } },
-    { id: 'embrace', label: l('Liberar e lucrar com shows', 'Give it away, earn on tour'), hint: l('Fãs casuais +15%; embalo +5.', 'Casual fans +15%; momentum +5.'), weightByTraits: (p) => F(p, 'curiosidade') + F(p, 'generosidade'),
-      apply: (s, c) => { const a = A(s, c); fans(a, 'casual', 1.15); mom(a, 5); } },
+    { id: 'embrace', label: l('Liberar e lucrar com shows', 'Give it away, earn on tour'), hint: l('Fãs casuais +15%; embalo +5; custa ~$4.000 (era) em vendas que não acontecem.', 'Casual fans +15%; momentum +5; costs ~$4,000 (era) in sales that never happen.'), weightByTraits: (p) => F(p, 'curiosidade') + F(p, 'generosidade'),
+      apply: (s, c) => { const a = A(s, c); fans(a, 'casual', 1.15); mom(a, 5); pay(s, c, 'piracy', 4000, 'Vendas perdidas para a pirataria'); } }, // r18 (U12)
     { id: 'ignore', label: l('Ignorar', 'Ignore it'), hint: l('Nada muda.', 'Nothing changes.'), weightByTraits: (p) => F(p, 'paciencia') + 0.5,
       apply: () => undefined },
   ],
@@ -667,8 +667,8 @@ registerSituation({
       apply: (s, c) => { const a = A(s, c); fans(a, 'core', 1.05); fans(a, 'casual', 0.9); mom(a, -5); } },
     { id: 'deal', label: l('Negociar royalties melhores', 'Negotiate better royalties'), hint: l('50%: +$6.000 (era); 50%: nada.', '50%: +$6,000 (era); 50%: nothing.'), weightByTraits: (p) => F(p, 'sociabilidade') + F(p, 'ambicao'),
       apply: (s, c, r) => { if (r.chance(0.5)) pay(s, c, 'stream', -6000, 'Acordo de streaming'); } },
-    { id: 'embrace', label: l('Abraçar as playlists', 'Embrace the playlists'), hint: l('Fãs casuais +10%.', 'Casual fans +10%.'), weightByTraits: (p) => F(p, 'curiosidade') + F(p, 'paciencia') * 0.5,
-      apply: (s, c) => { fans(A(s, c), 'casual', 1.1); } },
+    { id: 'embrace', label: l('Abraçar as playlists', 'Embrace the playlists'), hint: l('Fãs casuais +10%; repasse menor: −$2.000 (era).', 'Casual fans +10%; lower payout: −$2,000 (era).'), weightByTraits: (p) => F(p, 'curiosidade') + F(p, 'paciencia') * 0.5,
+      apply: (s, c) => { fans(A(s, c), 'casual', 1.1); pay(s, c, 'stream', 2000, 'Repasse menor das playlists'); } }, // r18 (U12)
   ],
 });
 

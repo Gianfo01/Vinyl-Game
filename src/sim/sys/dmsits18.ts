@@ -234,8 +234,8 @@ const MOTIVES: Motive[] = [
     opts: [
       { id: 'lawyer', label: l('Chamar advogado', 'Call a lawyer'), hint: l('Relação −30; vira mágoa; notícia de processo.', 'Relationship −30; becomes a grudge; lawsuit news.'), kind: 'hot', w: (P) => F(P, 'teimosia') + F(P, 'ego'),
         apply: (s, c) => { rel(s, c.hero, c.cast.other, -30); grantHold(s, { holder: c.cast.other, target: c.hero, kind: 'grievance', strength: 45, months: 60, src: 'dmsits18', text: l('processo pelo refrão', 'lawsuit over the chorus'), quiet: true }); const a = actOf(s, c); if (a) emitFact(s, { kind: 'law', actors: [c.hero, c.cast.other, a.id], place: a.city, severity: 30, visibility: 'public', tags: ['law', 'dms18'], text: fmtL(l('{h} processa {o} pela autoria de um sucesso de {a}.', '{h} sues {o} over the authorship of an {a} hit.'), { h: nmP(s, c.hero), o: nmP(s, c.cast.other), a: a.name }), src: 'dmsits18' }); } },
-      { id: 'share', label: l('Dividir o crédito', 'Share the credit'), hint: l('Relação +10 dos dois.', 'Relationship +10 for both.'), kind: 'cool', w: (P) => F(P, 'empatia') + F(P, 'generosidade'),
-        apply: (s, c) => { rel(s, c.hero, c.cast.other, 10); } },
+      { id: 'share', label: l('Dividir o crédito', 'Share the credit'), hint: l('Relação +10 dos dois; quem cede o crédito guarda um pouco de ressentimento (+6).', 'Relationship +10 for both; whoever gives up credit keeps some resentment (+6).'), kind: 'cool', w: (P) => F(P, 'empatia') + F(P, 'generosidade'),
+        apply: (s, c) => { rel(s, c.hero, c.cast.other, 10); resent(s, c.hero, 6); } }, // r18 (U12)
       { id: 'let', label: l('Deixar pra lá', 'Let it go'), hint: l('Ressentimento +12; inspiração +5 ("a próxima eu assino sozinho").', 'Resentment +12; inspiration +5 ("I\'ll sign the next one alone").'), kind: 'out', w: (P) => F(P, 'paciencia') + F(P, 'humor'),
         apply: (s, c) => { resent(s, c.hero, 12); insp(s, c.hero, 5); } },
     ],
