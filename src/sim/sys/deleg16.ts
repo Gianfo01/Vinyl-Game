@@ -109,9 +109,13 @@ export const qLabel = (q: number): L => (q >= 0.8 ? l('excelente', 'excellent') 
 
 interface Ctx { s: GameState; r: Rng; st: StaffMember; o: Order16; q: Qual }
 const say = (c: Ctx, t: L, tone: 'good' | 'bad' | 'info' = 'info', actId?: string) => logD(c.s, c.st.id, c.o, c.o.kind, t, tone, actId);
+/** r18 (policy18): políticas de delegação — portões por ordem e por gasto (devolvem o motivo do bloqueio). */
+export const D16_GATES: ((s: GameState, o: Order16, st: StaffMember) => L | null)[] = [];
+export const D16_PAY: ((s: GameState, o: Order16, amt: number) => L | null)[] = [];
 const pay = (c: Ctx, usdN: number, memo: string): boolean => {
   const amt = money(c.s, Math.round(usdN * 100));
   if (c.s.player.cash < amt) return false;
+  for (const g of D16_PAY) { const why = g(c.s, c.o, amt); if (why) { say(c, why, 'bad'); return false; } }
   post(c.s, `d16:${c.o.id}:${c.s.year}:${c.s.month}:${memo.length}`, -amt, 'business', memo);
   return true;
 };
@@ -280,6 +284,7 @@ export function runStaff(s: GameState, r: Rng, st: StaffMember): void {
   const q = quality(s, st);
   mine.forEach((o, i) => {
     if (i >= ORDER_CAP) { logD(s, st.id, o, o.kind, fmtL(l('{n} não deu conta: já tem {c} ordens no mês. Esta ficou parada (contrate mais gente ou pause outra).', '{n} could not cope: already {c} orders this month. This one sat idle (hire more or pause another).'), { n: st.name, c: ORDER_CAP }), 'bad'); return; }
+    for (const g of D16_GATES) { const why = g(s, o, st); if (why) { logD(s, st.id, o, o.kind, why, 'bad', o.actId); return; } }
     RUN[o.kind]({ s, r, st, o, q });
   });
 }

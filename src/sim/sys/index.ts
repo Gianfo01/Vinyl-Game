@@ -234,3 +234,8 @@ import './ai18';
 import './awards18';
 import './press18';
 import './society18';
+// Rodada 18 (long18, onda 2): post-mortem de lançamentos, políticas de delegação, caminhos de vitória/doutrinas, saga.
+import './review18';
+import './policy18';
+import './paths18';
+import './saga18';

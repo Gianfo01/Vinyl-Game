@@ -142,6 +142,8 @@ import './live18';
 import './regions18';
 // Rodada 18 (society18, onda 2): páginas Trilhas e palco, Jornalismo e Mundo › Sociedade.
 import './society18';
+// Rodada 18 (long18, onda 2): três perguntas no Cockpit e área Rumo do selo (caminhos, doutrinas, políticas, post-mortems, ano, biografia, casa).
+import './long18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
 import './finance18';

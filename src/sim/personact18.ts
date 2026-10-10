@@ -77,8 +77,12 @@ export function paBlock18(s: GameState, def: PersonAction18, key: string): L | n
   const c = def.cost?.(s, key) ?? {};
   if (c.usd && s.player.cash < costMoney18(s, c)) return l('Caixa insuficiente.', 'Not enough cash.');
   if (c.balls && energyLeft(s) < c.balls) return l('Sem tempo livre este mês.', 'No free time left this month.');
+  for (const g of PA_GATES18) { const why = g(s, def, key); if (why) return why; }
   return def.available?.(s, key) ?? null;
 }
+/** r18 (long18): portões globais (doutrinas do selo travam grupos de ações; devolvem o motivo). */
+const PA_GATES18: ((s: GameState, def: PersonAction18, key: string) => L | null)[] = [];
+export const registerPAGate18 = (fn: (s: GameState, def: PersonAction18, key: string) => L | null): void => { PA_GATES18.push(fn); };
 
 /** Linhas do menu para uma pessoa (só as visíveis), na ordem de registro. */
 export function personActions18(s: GameState, key: string): PARow[] {
