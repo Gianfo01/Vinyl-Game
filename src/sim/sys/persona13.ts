@@ -28,6 +28,7 @@ import { careerOf } from './people/staff';
 import { persona, playerTraitById } from './persona';
 import type { BackgroundId } from './life/data';
 import { FACETS, FACET_TXT, soul, type Facet } from './soul9';
+import { actsOfPerson17 } from '../actidx17';
 
 // ---------------------------------------------------------------- esquema
 
@@ -203,7 +204,7 @@ function build(s: GameState, key: string): P13 | null {
     if (!p) return null;
     kind = p.isPlayer ? 'player' : 'person';
     name = p.name; born = p.born; role = p.role;
-    const a = Object.values(s.acts).find((x) => x.members.includes(p.id));
+    const a = actsOfPerson17(s, p.id)[0];
     city = a?.city ?? s.config.homeCity;
     facets = soul(s, p).f;
     const k = p.skills;

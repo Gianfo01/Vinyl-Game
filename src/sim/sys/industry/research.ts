@@ -4,6 +4,7 @@ import { l, type L } from '../../../data/world';
 import { registerSimHook } from '../../ext4';
 import type { GameState } from '../../types';
 import { fmtL, notify, staffCount } from '../../util';
+import { allReleases17 } from '../../relidx17';
 
 export interface ResearchNode {
   id: string;
@@ -57,7 +58,7 @@ export function startResearch(s: GameState, id: string): L | null {
 function researchMonth(s: GameState): void {
   const st = s.x4.industry.research;
   // pontos: equipe de análise e A&R, mais lançamentos recentes
-  const recent = Object.values(s.releases).filter((x) => x.owner === 'player' && s.week - x.week < 5).length;
+  const recent = allReleases17(s).filter((x) => x.owner === 'player' && s.week - x.week < 5).length;
   const gain = 2 + staffCount(s, 'analyst') * 3 + staffCount(s, 'anr') + staffCount(s, 'engineer') + recent * 2 + (s.x4.industry.plants.length ? 1 : 0);
   st.points += gain;
   if (!st.current) return;

@@ -34,6 +34,7 @@ import type { Act, GameState, RunConfig } from './types';
 import { money, playerActs, rngOf } from './util';
 import { createGame } from './worldgen';
 import { unreleasedRecorded } from './production';
+import { allReleases17 } from './relidx17';
 
 export type Profile = 'cautious' | 'balanced' | 'aggressive';
 
@@ -231,7 +232,7 @@ function records(s: GameState, k: Knobs, prof: Profile): void {
       const avail = act.songs.map((x) => s.songs[x]).filter((so) => so && !so.releaseId && !so.vault).length;
       const gap = prof === 'aggressive' ? 8 : prof === 'balanced' ? 12 : 16;
       if (avail < 1 || runway(s) < k.cut || s.week - act.lastRelease < gap) continue;
-      const singles = Object.values(s.releases).filter((r) => r.actId === id && r.type === 'single' && r.week > s.week - 52).length;
+      const singles = allReleases17(s).filter((r) => r.actId === id && r.type === 'single' && r.week > s.week - 52).length;
       const type = avail >= 8 && (singles >= 2 || act.fame >= 12) ? 'lp' : avail >= 4 && singles >= 2 ? 'ep' : 'single';
       const concept = act.fame < 8 ? 'debut' : prof === 'cautious' ? 'budget' : act.fame >= 25 || prof === 'aggressive' ? 'radio' : 'roots';
       const r = createProject(s, id, { type, concept });
@@ -380,7 +381,7 @@ function roster(s: GameState, k: Knobs): void {
     if (!act || !c || c.party !== 'player' || act.playerBand) continue;
     const left = c.endWeek - s.week;
     if (left > 10 || left < 0) continue;
-    const rev = Object.values(s.releases).filter((r) => r.actId === id && r.owner === 'player').reduce((t, r) => t + r.revenue, 0);
+    const rev = allReleases17(s).filter((r) => r.actId === id && r.owner === 'player').reduce((t, r) => t + r.revenue, 0);
     const grew = act.fame >= (c.fameAtSign ?? 0) + 3 || rev > c.advance * 1.5;
     if (!grew) { if (!mem(s).refused[`drop:${id}`]) { mem(s).refused[`drop:${id}`] = s.week; L.drops++; } continue; } // deixa o contrato acabar
     const bonus = Math.round(money(s, expectedAdvance(s, act) * 0.35) / 100) * 100;

@@ -5,6 +5,7 @@ import { AMBITIONS, BAND_WORDS, FIRST_NAMES, LAST_NAMES, ORIGINS, SONG_WORDS, TR
 import { cityById, familyOf, type FamilyId, type NameGroup } from '../data/world';
 import type { Act, GameState, Person } from './types';
 import { hasMutator, nextId } from './util';
+import { actsTouched17 } from './actidx17';
 
 const ROLE_SETS: Partial<Record<FamilyId, Person['role'][]>> = {
   blues_jazz: ['vocal', 'horns', 'keys', 'bass', 'drums', 'strings'],
@@ -196,6 +197,7 @@ export function makeAct(s: GameState, r: Rng, o: MakeActOpts): Act {
     rs: o.rs,
   };
   s.acts[act.id] = act;
+  actsTouched17(s);
   return act;
 }
 

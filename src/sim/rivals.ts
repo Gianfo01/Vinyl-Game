@@ -9,6 +9,7 @@ import { talentScore } from './worldgen';
 import { emitEvent } from './events';
 import { rivalSignsLeft } from './sys/gate14';
 import { fameAt } from './famehook16';
+import { allReleases17 } from './relidx17';
 
 const STRAT = { develop: l('desenvolver', 'develop'), buy_catalog: l('comprar catálogos', 'buy catalogs'), niche: l('nichos', 'niches'), stars: l('estrelas', 'stars') };
 
@@ -101,7 +102,7 @@ function closeLabel(s: GameState, r: Rng, lb: Label): void {
   }
   // catálogo vendido para quem tem caixa
   const buyer = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 500000)).sort((a, b) => b.cash - a.cash)[0];
-  if (buyer) for (const rel of Object.values(s.releases)) if (rel.owner === lb.id) rel.owner = buyer.id;
+  if (buyer) for (const rel of allReleases17(s)) if (rel.owner === lb.id) rel.owner = buyer.id;
   remember(s, 'label_closed', buyer ? fmtL(l('{n} fecha as portas (catálogo → {b}).', '{n} closes its doors (catalog → {b}).'), { n: lb.name, b: buyer.name }) : fmtL(l('{n} fecha as portas.', '{n} closes its doors.'), { n: lb.name }), { important: true });
   notify(s, fmtL(l('{n} faliu. Os atos do selo estão livres.', '{n} went bankrupt. Its acts are free agents.'), { n: lb.name }), 'event');
   lb.reputation = clamp(lb.reputation - 30, 0, 100);

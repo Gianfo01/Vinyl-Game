@@ -21,6 +21,7 @@ import { dayOfDate, fmtL, hasMutator, nextId, remember } from './util';
 import { l } from '../data/world';
 import { takeoverTerms, type TakeoverTerms } from './takeover';
 import { runSimHooks } from './ext4';
+import { allReleases17 } from './relidx17';
 
 export const SAVE_VERSION = 5;
 
@@ -547,7 +548,7 @@ function applyTakeover(s: GameState, r: Rng, id: string): void {
     s.knowledge[act.id] = { actId: act.id, degree: 4, stage: 'negotiation', bias: r.normal(0, 3), updatedWeek: 0, source: 'roster' };
   }
   for (const c of Object.values(s.contracts)) if (c.party === id) c.party = 'player';
-  for (const rel of Object.values(s.releases)) if (rel.owner === id) rel.owner = 'player';
+  for (const rel of allReleases17(s)) if (rel.owner === id) rel.owner = 'player';
   p.cash = terms.cash;
   p.initialCash = p.cash - p.totalPosted;
   p.hq = Math.max(p.hq, terms.hq);

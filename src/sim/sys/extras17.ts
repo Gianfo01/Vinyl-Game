@@ -16,6 +16,7 @@ import { playerPerson, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
 import { healthOf } from './people/state';
 import { registerSituation } from './situations17';
+import { actsOfPerson17 } from '../actidx17';
 
 export interface Extras17State { th: Record<string, number>; conv: Record<string, number>; estate: { pid: string; act: string; w: number; esc?: number; until?: number; done?: 1 }[] }
 declare module '../ext4' { interface Ext4 { extras17: Extras17State } }
@@ -27,7 +28,7 @@ export function ex17(s: GameState): Extras17State {
   st.th ??= {}; st.conv ??= {}; st.estate ??= [];
   return st;
 }
-const actOfP = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid));
+const actOfP = (s: GameState, pid: string): Act | undefined => actsOfPerson17(s, pid)[0];
 const mKey = (s: GameState) => s.year * 12 + s.month;
 
 // ---------------------------------------------------------------- terapia e clínica para o elenco

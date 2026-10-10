@@ -17,7 +17,24 @@ const pick = <T,>(arr: T[], seed: string): T => arr[hashString(seed) % arr.lengt
 const gname = (id: string): L => genreById[id]?.name ?? l(id, id);
 const cname = (id: string): L | string => cityById[id]?.name ?? id;
 
-function chartOf(s: GameState, a: Act): { rel: Release; pos: number; weeks: number } | null {
+type ChartHit = { rel: Release; pos: number; weeks: number };
+// no laço semanal (QUICK) as paradas não mudam: um índice ato → melhor posição evita varrer as listas por ato
+let chIx: { s: GameState; w: number; si: unknown; al: unknown; m: Map<string, ChartHit> } | null = null;
+function chartOf(s: GameState, a: Act): ChartHit | null {
+  if (QUICK) {
+    const si = s.charts?.singles, al = s.charts?.albums;
+    if (!chIx || chIx.s !== s || chIx.w !== s.week || chIx.si !== si || chIx.al !== al) {
+      const m = new Map<string, ChartHit>();
+      for (const e of [...(si ?? []), ...(al ?? [])]) {
+        const r = s.releases[e.releaseId];
+        if (!r) continue;
+        const b = m.get(r.actId);
+        if (!b || e.pos < b.pos) m.set(r.actId, { rel: r, pos: e.pos, weeks: e.weeks });
+      }
+      chIx = { s, w: s.week, si, al, m };
+    }
+    return chIx.m.get(a.id) ?? null;
+  }
   let best: { rel: Release; pos: number; weeks: number } | null = null;
   for (const e of [...(s.charts?.singles ?? []), ...(s.charts?.albums ?? [])]) {
     const r = s.releases[e.releaseId];
@@ -27,6 +44,13 @@ function chartOf(s: GameState, a: Act): { rel: Release; pos: number; weeks: numb
 }
 
 /** Decomposição do "momento" do ato em motivos concretos. `m` = contribuição antiga ((momento−45)·0,4). */
+// r17 (desempenho): no laço semanal do hype só o valor importa — os textos ficam para quem abre o painel
+let QUICK = false;
+const NOTXT: L = { pt: '', en: '' };
+const Q = (f: () => L): L => (QUICK ? NOTXT : f());
+/** Roda `fn` sem montar os textos das partes (os valores são os mesmos). */
+export function quickParts17<T>(fn: () => T): T { const prev = QUICK; QUICK = true; try { return fn(); } finally { QUICK = prev; } }
+
 export function momentumParts17(s: GameState, a: Act, m: number): Part[] {
   const y = s.year;
   if (HYPE17.flat) return [{ t: l('Momento recente', 'Recent momentum'), v: m }];
@@ -37,29 +61,29 @@ export function momentumParts17(s: GameState, a: Act, m: number): Part[] {
   const wk = last ? s.week - last.week : 999;
   if (last && wk >= 0 && wk <= 26) {
     const where = y < 1955 ? l('nas vitrines e nas rádios', 'in shop windows and on the radio') : y < 1985 ? l('nas lojas de discos', 'in record shops') : y < 2005 ? l('nas lojas e na MTV', 'in stores and on MTV') : l('nas playlists', 'on playlists');
-    ds.push({ t: fmtL(l('"{t}" saiu há {n} sem. e segue {w}', '"{t}" came out {n} wk ago and is still {w}'), { t: last.title, n: wk, w: where }), w: 1.2 * (1 - wk / 30) });
+    ds.push({ t: Q(() => fmtL(l('"{t}" saiu há {n} sem. e segue {w}', '"{t}" came out {n} wk ago and is still {w}'), { t: last.title, n: wk, w: where })), w: 1.2 * (1 - wk / 30) });
   }
   // 2. paradas
   const ch = chartOf(s, a);
-  if (ch) ds.push({ t: ch.pos === 1 ? fmtL(l('"{t}" é o nº 1 ({k} sem. na parada)', '"{t}" is number one ({k} wk on chart)'), { t: ch.rel.title, k: ch.weeks }) : fmtL(l('"{t}" em #{p} nas paradas', '"{t}" at #{p} on the charts'), { t: ch.rel.title, p: ch.pos }), w: 1.4 * (41 - Math.min(40, ch.pos)) / 40 });
+  if (ch) ds.push({ t: Q(() => ch.pos === 1 ? fmtL(l('"{t}" é o nº 1 ({k} sem. na parada)', '"{t}" is number one ({k} wk on chart)'), { t: ch.rel.title, k: ch.weeks }) : fmtL(l('"{t}" em #{p} nas paradas', '"{t}" at #{p} on the charts'), { t: ch.rel.title, p: ch.pos })), w: 1.4 * (41 - Math.min(40, ch.pos)) / 40 });
   // 3. turnê
   const tr = s.tours.find((x) => x.actId === a.id && x.status === 'running');
   if (tr) {
     const played = tr.stops.filter((x) => x.status === 'played');
     const full = played.filter((x) => x.sold >= x.capacity * 0.95).length;
     const lastStop = played[played.length - 1];
-    ds.push({ t: full >= 2 ? fmtL(l('Turnê "{n}": {k} datas esgotadas', '"{n}" tour: {k} sold-out dates'), { n: tr.name, k: full }) : lastStop ? fmtL(l('Turnê "{n}" passou por {c}', '"{n}" tour just played {c}'), { n: tr.name, c: cname(lastStop.cityId) }) : fmtL(l('Turnê "{n}" na estrada', '"{n}" tour on the road'), { n: tr.name }), w: 0.5 + full * 0.08 });
+    ds.push({ t: Q(() => full >= 2 ? fmtL(l('Turnê "{n}": {k} datas esgotadas', '"{n}" tour: {k} sold-out dates'), { n: tr.name, k: full }) : lastStop ? fmtL(l('Turnê "{n}" passou por {c}', '"{n}" tour just played {c}'), { n: tr.name, c: cname(lastStop.cityId) }) : fmtL(l('Turnê "{n}" na estrada', '"{n}" tour on the road'), { n: tr.name })), w: 0.5 + full * 0.08 });
   }
   // 4. gênero em alta (ou em queda)
   const gp = s.genrePop[a.genre] ?? 0.6;
-  if (gp >= 1.15) ds.push({ t: fmtL(pick([l('{g} é a febre de {y}', '{g} is the craze of {y}'), l('Onda de {g}: todo mundo quer ouvir', '{g} wave: everyone wants to listen')], a.id + y), { g: gname(a.genre), y }), w: (gp - 1) * 1.2 });
+  if (gp >= 1.15) ds.push({ t: Q(() => fmtL(pick([l('{g} é a febre de {y}', '{g} is the craze of {y}'), l('Onda de {g}: todo mundo quer ouvir', '{g} wave: everyone wants to listen')], a.id + y), { g: gname(a.genre), y })), w: (gp - 1) * 1.2 });
   // 5. notícia recente (fato público ou boato) sobre o ato
   const f = recentFacts(s, { actor: a.id, months: 2, notSecret: true, minSev: 25, limit: 1 })[0];
-  if (f) { const tx = f.text; const cut = (x: string) => (x.length > 70 ? `${x.slice(0, 68)}…` : x); ds.push({ t: { pt: `${f.visibility === 'rumor' ? 'Boato' : 'Na imprensa'}: ${cut(tx.pt)}`, en: `${f.visibility === 'rumor' ? 'Rumor' : 'In the press'}: ${cut(tx.en)}` }, w: 0.3 + f.severity / 100 }); }
+  if (f) { const tx = f.text; const cut = (x: string) => (x.length > 70 ? `${x.slice(0, 68)}…` : x); ds.push({ t: Q(() => ({ pt: `${f.visibility === 'rumor' ? 'Boato' : 'Na imprensa'}: ${cut(tx.pt)}`, en: `${f.visibility === 'rumor' ? 'Rumor' : 'In the press'}: ${cut(tx.en)}` })), w: 0.3 + f.severity / 100 }); }
   if (!ds.length) {
     // sem nada concreto: o embalo vem do boca a boca local (texto pela era e cidade)
     const t = y < 1950 ? l('Bailes de {c} só pedem {a}', 'Dance halls in {c} keep asking for {a}') : y < 1980 ? l('Jukeboxes de {c} tocam {a} sem parar', 'Jukeboxes in {c} play {a} nonstop') : y < 2005 ? l('{a} é o assunto nas rádios de {c}', '{a} is the talk of {c} radio') : l('{a} circula em vídeos de fãs de {c}', '{a} spreads through fan videos from {c}');
-    return [{ t: fmtL(t, { c: cname(a.city), a: a.name }), v: m * 0.6 }];
+    return [{ t: Q(() => fmtL(t, { c: cname(a.city), a: a.name })), v: m * 0.6 }];
   }
   const W = ds.reduce((t, x) => t + Math.max(0.05, x.w), 0);
   const total = m * (0.6 + 0.8 * Math.min(1, W / 1.8));

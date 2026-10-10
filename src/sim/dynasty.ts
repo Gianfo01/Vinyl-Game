@@ -10,6 +10,7 @@ import type { Family } from './xtypes';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from './util';
 import { personaOf } from './ext';
 import { histLocked } from './history15';
+import { actsTouched17 } from './actidx17';
 
 const JOBS: L[] = [
   l('professora', 'teacher'), l('enfermeiro', 'nurse'), l('fotógrafa', 'photographer'), l('advogado', 'lawyer'),
@@ -198,6 +199,7 @@ export function launchHeir(s: GameState, r: Rng, personId: string): L | null {
     genre: parentAct?.genre ?? 'pop', city: parentAct?.city ?? s.config.homeCity, positioning: 40, leaderId: p.id,
   };
   s.acts[act.id] = act;
+  actsTouched17(s);
   s.delegated[act.id] = true;
   remember(s, 'heir', fmtL(l('{p} estreia carreira pelo selo, herdeiro(a) de {a}.', '{p} debuts on the label, heir to {a}.'), { p: p.name, a: parentAct?.name ?? '' }), { actId: act.id, important: true });
   return null;
@@ -353,6 +355,7 @@ export function startSoloCareer(s: GameState, r: Rng, actId: string, personId: s
     history: [], logoSeed: r.int(1, 2 ** 30), catalogNo: undefined, contractId: act.contractId, leaderId: p.id, owner: act.owner,
   };
   s.acts[solo.id] = solo;
+  actsTouched17(s);
   s.soloOf[solo.id] = act.id;
   s.delegated[solo.id] = true;
   if (p.goal === 'solo') p.morale = clamp(p.morale + 20, 0, 100);

@@ -29,6 +29,7 @@ import type { Act, GameState, Person, Release } from '../types';
 import { fmtL, nextId, remember } from '../util';
 import { addSignal, signToBestRival } from '../worldgen';
 import { histAltered, histDiverged, histMode, histRoll } from '../history15';
+import { noteRelease17 } from '../relidx17';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 const BASE_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
@@ -110,6 +111,7 @@ export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; 
   else if (units >= 1e6) rel.certified = 'platinum';
   else if (units >= 5e5) rel.certified = 'gold';
   s.releases[rel.id] = rel;
+  noteRelease17(s, rel);
   act.releases.push(rel.id);
   if (songId) act.songs.push(songId);
   act.lastRelease = Math.max(act.lastRelease, rel.week);

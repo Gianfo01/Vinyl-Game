@@ -16,6 +16,7 @@ import type { GameState, Label } from '../types';
 import type { SubLabel } from '../xtypes';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ownerBonus } from './people/owner';
+import { allReleases17 } from '../relidx17';
 
 export interface Holding { holder: string; share: number; since: number; cost: number }
 export interface StakeTalk {
@@ -405,7 +406,7 @@ export function makeSubLabel(s: GameState, labelId: string): L | null {
     sl.roster.push(a.id);
   }
   const rosterSet = new Set(sl.roster);
-  for (const rel of Object.values(s.releases)) if (rel.owner === lb.id) rel.owner = rosterSet.has(rel.actId) ? sl.id : 'player';
+  for (const rel of allReleases17(s)) if (rel.owner === lb.id) rel.owner = rosterSet.has(rel.actId) ? sl.id : 'player';
   s.subLabels.push(sl);
   lb.roster = [];
   lb.active = false;
@@ -445,7 +446,7 @@ export function npcAbsorb(s: GameState, buyer: Label, target: Label): void {
     a.owner = buyer.id;
     if (!buyer.roster.includes(a.id)) buyer.roster.push(a.id);
   }
-  for (const rel of Object.values(s.releases)) if (rel.owner === target.id) rel.owner = buyer.id;
+  for (const rel of allReleases17(s)) if (rel.owner === target.id) rel.owner = buyer.id;
   buyer.cash += Math.max(0, target.cash);
   target.roster = [];
   target.active = false;

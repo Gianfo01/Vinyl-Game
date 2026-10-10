@@ -20,6 +20,7 @@ import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { careers, registerLoad } from './careers12';
 import { ownerOf } from './people/owner';
 import { labelValue } from './stakes8';
+import { allReleases17 } from '../relidx17';
 
 export type BuyerKind = 'rival' | 'conglomerate' | 'fund' | 'vulture';
 export interface Bid17 { id: string; kind: BuyerKind; buyer: string; name: string; price: number; cashPct: number; nonCompete: number; consult: number; cut: number; keepStaff: boolean; expires: number; why: L[] }
@@ -67,7 +68,7 @@ export const relIncome = (s: GameState, relId: string): number => { const r = s.
 
 export interface Val17 { total: number; cat: number; mult: number; roster: number; prestige: number; cash: number; debt: number; why: [L, number][] }
 export function valuation17(s: GameState): Val17 {
-  const rels = Object.values(s.releases).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand);
+  const rels = allReleases17(s).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand);
   const catInc = rels.reduce((t, r) => t + relIncome(s, r.id), 0);
   const em = eraMultiple(s);
   const cat = Math.round(catInc * em.m);
@@ -161,7 +162,7 @@ export function sellLabel(s: GameState, bidId: string): L | null {
     if (!lb.roster.includes(a.id)) lb.roster.push(a.id);
   }
   const subs = new Set((s.subLabels ?? []).flatMap((x) => x.roster));
-  for (const rel of Object.values(s.releases)) if (rel.owner === 'player' && !s.acts[rel.actId]?.playerBand && !subs.has(rel.actId)) rel.owner = lb.id;
+  for (const rel of allReleases17(s)) if (rel.owner === 'player' && !s.acts[rel.actId]?.playerBand && !subs.has(rel.actId)) rel.owner = lb.id;
   // dinheiro: caixa e dívidas vão com a empresa; o preço vai para o seu bolso
   if (s.player.cash) post(s, 'sale17:cash', -s.player.cash, 'acquisitions', 'Caixa transferido ao comprador');
   s.player.loans = [];
@@ -306,7 +307,7 @@ registerSimHook('month', 'sale17', (s) => {
   if (hasLabel(s) && st.cat.length < 2) {
     const r = Rng.fromSeed(`${s.config.seed}:cat17:${s.year}:${s.month}`);
     const p = s.year >= 2012 ? 0.3 : s.year >= 1985 ? 0.12 : 0.05;
-    const old = Object.values(s.releases).filter((x) => x.owner === 'player' && s.year - x.year >= 5 && x.revenue > money(s, 20000) && !s.acts[x.actId]?.playerBand);
+    const old = allReleases17(s).filter((x) => x.owner === 'player' && s.year - x.year >= 5 && x.revenue > money(s, 20000) && !s.acts[x.actId]?.playerBand);
     if (old.length && r.chance(p)) {
       const rel = r.pick(old);
       if (!st.cat.some((x) => x.relId === rel.id)) {

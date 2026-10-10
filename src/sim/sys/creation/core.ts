@@ -16,6 +16,7 @@ import { songProfile } from '../../repertoire';
 import type { Act, GameState, Release, Song } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
 import { exploitBlock } from '../../rights';
+import { allReleases17 } from '../../relidx17';
 
 // ------------------------------------------------------------------ estado
 
@@ -458,7 +459,7 @@ export function isPublicDomain(s: GameState, songId: string): boolean {
 export function standards(s: GameState, n = 12): { song: Song; rel: Release; pd: boolean; covers: number }[] {
   const covers: Record<string, number> = {};
   for (const so of Object.values(s.songs)) if (so.coverOf) covers[so.coverOf] = (covers[so.coverOf] ?? 0) + 1;
-  return Object.values(s.releases)
+  return allReleases17(s)
     .filter((r) => s.year - r.year >= 20 && r.totalUnits > 0)
     .sort((a, b) => b.totalUnits - a.totalUnits)
     .slice(0, 80)

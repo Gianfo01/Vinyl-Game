@@ -10,6 +10,7 @@ import type { GameState, Release } from './types';
 import type { Rollout, RolloutPhase } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { exploitBlock } from './rights';
+import { allReleases17 } from './relidx17';
 
 export interface RolloutOpts {
   actId: string;
@@ -115,7 +116,7 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
       break;
     }
     case 'video': {
-      const rel = Object.values(s.releases).find((x) => x.actId === act.id && x.songs.includes(ph.refId ?? '') && x.type === 'single');
+      const rel = allReleases17(s).find((x) => x.actId === act.id && x.songs.includes(ph.refId ?? '') && x.type === 'single');
       if (!rel || !pay(`ro_video:${ro.id}`, `Clipe ${rel.title}`)) break;
       rel.marketing.push({ channel: mainChannel(s, 'video'), budget: ph.budget });
       rel.marketingE = Math.min(0.95, rel.marketingE + 0.15);
@@ -132,14 +133,14 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
     }
     case 'limited': {
       const units = extra.limited ?? 0;
-      const album = Object.values(s.releases).find((x) => x.rolloutId === ro.id && x.type === 'lp' && x.kind === 'standard');
+      const album = allReleases17(s).find((x) => x.rolloutId === ro.id && x.type === 'lp' && x.kind === 'standard');
       const phys = formats.filter((f) => f !== 'download' && f !== 'streaming');
       if (!units || !album || !phys.length) break;
       scheduleRelease(s, r, { actId: act.id, type: 'lp', songs: album.songs, title: `${ro.title} (Edição limitada)`, formats: [phys.includes('lp') ? 'lp' : phys[0]], press: units, marketing: [], territories: s.player.territories, weeksAhead: 1, reissueOf: album.id, kind: 'limited' });
       break;
     }
     case 'deluxe': {
-      const album = Object.values(s.releases).find((x) => x.rolloutId === ro.id && x.type === 'lp' && x.kind === 'standard');
+      const album = allReleases17(s).find((x) => x.rolloutId === ro.id && x.type === 'lp' && x.kind === 'standard');
       const extraSongs = (extra.deluxe ?? []).filter((id) => s.songs[id]?.recorded && !s.songs[id].releaseId);
       if (!album || !extraSongs.length) break;
       if (!pay(`ro_deluxe:${ro.id}`, `Deluxe ${ro.title}`)) break;
@@ -171,7 +172,7 @@ export function cancelRollout(s: GameState, id: string): void {
 const ANNIV = [10, 20, 25, 30, 40, 50];
 
 export function anniversaryCandidates(s: GameState): Release[] {
-  return Object.values(s.releases).filter((x) => x.owner === 'player' && x.type === 'lp' && !x.reissueOf && ANNIV.includes(s.year - x.year) && !s.flags[`anniv:${x.id}:${s.year - x.year}`]);
+  return allReleases17(s).filter((x) => x.owner === 'player' && x.type === 'lp' && !x.reissueOf && ANNIV.includes(s.year - x.year) && !s.flags[`anniv:${x.id}:${s.year - x.year}`]);
 }
 
 export function scheduleAnniversary(s: GameState, r: Rng, relId: string, budget: number): L | null {

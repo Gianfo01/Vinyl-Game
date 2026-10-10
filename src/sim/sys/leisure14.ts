@@ -24,6 +24,7 @@ import { P, addPost, healthOf, socialEra } from './people/state';
 import { ownerOf } from './people/owner';
 import { opine, opinionOf, per13, type P13 } from './persona13';
 import { scene12 } from './scenes12';
+import { actsOfPerson17 } from '../actidx17';
 
 // ---------------------------------------------------------------- dados
 
@@ -96,7 +97,7 @@ const mIdx = (s: GameState) => s.year * 12 + s.month;
 // ---------------------------------------------------------------- quem é quem
 
 export interface Who14 { key: string; name: string; city: string; kind: 'artist' | 'exec' | 'staff'; p?: Person; act?: Act }
-const actOfP = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid) && a.status !== 'retired' && a.status !== 'split');
+const actOfP = (s: GameState, pid: string): Act | undefined => actsOfPerson17(s, pid).find((a) => a.status !== 'retired' && a.status !== 'split');
 
 export function who14(s: GameState, key: string): Who14 | null {
   const [k, ...r] = key.split(':');

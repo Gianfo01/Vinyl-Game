@@ -14,6 +14,8 @@ import { dbSizeInfo } from './dbsize14';
 import { fmtL, hasMutator, money, nextId, notify, remember } from './util';
 import { emitEvent } from './events';
 import { histLocked } from './history15';
+import { actsTouched17 } from './actidx17';
+import { allReleases17, releasesTouched17 } from './relidx17';
 
 export function monthlyPeople(s: GameState, r: Rng): void {
   for (const act of Object.values(s.acts)) {
@@ -178,12 +180,14 @@ export function prune(s: GameState): void {
       for (const id of a.members) if (!s.persons[id]?.isPlayer && !Object.values(s.acts).some((b) => b !== a && b.members.includes(id))) delete s.persons[id];
       for (const id of a.songs) delete s.songs[id];
       for (const id of a.releases) delete s.releases[id];
+      releasesTouched17(s);
       if (a.contractId) delete s.contracts[a.contractId];
       delete s.acts[a.id];
+      actsTouched17(s);
     }
   }
   // lançamentos de terceiros fora de catálogo ativo: só ficam os que marcaram época
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (rel.live || rel.owner === 'player' || s.acts[rel.actId]?.playerBand) continue;
     const act = s.acts[rel.actId];
     const notable = rel.hist || rel.peak <= 3 || (act && (act.catalogNo || act.legend) && rel.peak <= 20);
@@ -194,6 +198,7 @@ export function prune(s: GameState): void {
         act.releases = act.releases.filter((id) => id !== rel.id);
       }
       delete s.releases[rel.id];
+      releasesTouched17(s);
       continue;
     }
     if (rel.weekly.length > 8) rel.weekly = rel.weekly.slice(0, 8);

@@ -13,6 +13,7 @@ import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { scandal } from '../scandal17';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
+import { allReleases17 } from '../relidx17';
 
 export type VKind = 'festival' | 'publisher' | 'studio' | 'booking' | 'media' | 'platform';
 export type MediaKind = 'magazine' | 'radio' | 'tv' | 'blog' | 'playlist';
@@ -595,7 +596,7 @@ export function setPayout(s: GameState, id: string, p: number): void {
 
 function platformMonth(s: GameState, r: Rng, v: Venture): void {
   v.deals = v.deals!.filter((id) => s.labels[id]?.active);
-  const own = Object.values(s.releases).filter((x) => x.owner === 'player').length;
+  const own = allReleases17(s).filter((x) => x.owner === 'player').length;
   const catalog = own + v.deals.reduce((t, id) => t + (s.labels[id]?.roster.length ?? 0) * 8, 0);
   const rivals = ventures(s).npc.filter((n) => n.kind === 'platform').length;
   const target = (catalog * 400 + v.level * 15000 + v.rep * 500) * Math.pow(0.8, rivals);

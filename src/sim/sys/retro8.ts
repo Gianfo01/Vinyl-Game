@@ -5,6 +5,7 @@
 import { l, type L } from '../../data/world';
 import type { GameState, Release } from '../types';
 import { decadeOf, playerActs } from '../util';
+import { allReleases17 } from '../relidx17';
 
 export interface RetroEra { decade: number; name: L; releases: Release[]; units: number; revenue: number; best?: Release; awards: number; certs: number }
 export interface RetroMilestone { kind: 'first' | 'top10' | 'no1' | 'cert' | 'award' | 'million'; label: L; week: number; year: number; releaseId?: string; actId?: string }
@@ -36,7 +37,7 @@ export const eraName = (decade: number): L => l(decade < 2000 ? `Anos ${String(d
 
 /** Lançamentos do jogador (do selo ou da banda do jogador), sem edições repetidas. */
 export function playerReleases(s: GameState): Release[] {
-  return Object.values(s.releases).filter((r) => (r.owner === 'player' || s.acts[r.actId]?.playerBand) && r.kind !== 'limited').sort((a, b) => a.week - b.week);
+  return allReleases17(s).filter((r) => (r.owner === 'player' || s.acts[r.actId]?.playerBand) && r.kind !== 'limited').sort((a, b) => a.week - b.week);
 }
 
 export function retrospective(s: GameState): Retrospective {

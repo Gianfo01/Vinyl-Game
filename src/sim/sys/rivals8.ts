@@ -22,6 +22,7 @@ import { bondNote, prefsOf } from './identity8';
 import type { ProfileId } from './identity/data';
 import { XBY_ID, envOf, adj } from './identity/extra';
 import { skipBlockedLog } from './gate14';
+import { allReleases17 } from '../relidx17';
 
 export type PlaybookId = 'vulture' | 'scene' | 'catalog' | 'tech' | 'live' | 'idol' | 'gospel' | 'prestige' | 'sync' | 'regional' | 'fund' | 'visionary' | 'purist'
   | 'viral' | 'school' | 'royalty' | 'conglomerate' | 'importer' | 'agitator' | 'copycat' | 'budget';
@@ -380,7 +381,7 @@ function catalogKeeper(s: GameState, r: Rng, lb: Label): void {
     const sellers = Object.values(s.labels).filter((x) => x.active && x.id !== lb.id && x.cash < money(s, 150000));
     const seller = sellers.length ? r.pick(sellers) : undefined;
     if (seller) {
-      const rels = Object.values(s.releases).filter((x) => x.owner === seller.id && s.year - x.year >= 5).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 6);
+      const rels = allReleases17(s).filter((x) => x.owner === seller.id && s.year - x.year >= 5).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 6);
       if (rels.length) {
         const price = money(s, 2500 * rels.length);
         for (const x of rels) x.owner = lb.id;
@@ -391,7 +392,7 @@ function catalogKeeper(s: GameState, r: Rng, lb: Label): void {
     }
   }
   if (r.chance(0.05)) {
-    const own = Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 15 && x.q >= 58 && !x.reissueOf);
+    const own = allReleases17(s).filter((x) => x.owner === lb.id && s.year - x.year >= 15 && x.q >= 58 && !x.reissueOf);
     const rel = own.length ? r.pick(own) : undefined;
     if (rel) {
       const v = money(s, 2000 + rel.q * 40);
@@ -593,7 +594,7 @@ function assetStripper(s: GameState, r: Rng, lb: Label): void {
   const sellers = Object.values(s.labels).filter((x) => x.active && x.id !== lb.id && x.cash < money(s, 90000) && x.family !== 'A');
   const seller = sellers.length ? r.pick(sellers) : undefined;
   if (!seller) return;
-  const rels = Object.values(s.releases).filter((x) => x.owner === seller.id).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 5);
+  const rels = allReleases17(s).filter((x) => x.owner === seller.id).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 5);
   const price = money(s, 1200 * Math.max(1, rels.length));
   for (const x of rels) x.owner = lb.id;
   lb.cash += Math.round(price * 0.6); // compra por `price` e revende em pedaços: o fundo só lucra desmontando
@@ -667,7 +668,7 @@ function royaltyFund(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.03) && lb.cash > money(s, 200000)) {
     const sellers = Object.values(s.labels).filter((x) => x.active && x.id !== lb.id && playbookOf(x) !== 'royalty');
     const seller = sellers.length ? r.pick(sellers) : undefined;
-    const rels = seller ? Object.values(s.releases).filter((x) => x.owner === seller.id && s.year - x.year >= 3).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 4) : [];
+    const rels = seller ? allReleases17(s).filter((x) => x.owner === seller.id && s.year - x.year >= 3).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 4) : [];
     if (seller && rels.length) {
       const price = money(s, 4000 * rels.length);
       for (const x of rels) x.owner = lb.id;
@@ -677,7 +678,7 @@ function royaltyFund(s: GameState, r: Rng, lb: Label): void {
     }
   }
   if (r.chance(0.06)) {
-    const n = Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 3).length;
+    const n = allReleases17(s).filter((x) => x.owner === lb.id && s.year - x.year >= 3).length;
     if (n >= 2) {
       const v = money(s, 300 * Math.min(n, 40));
       lb.cash += v;
@@ -778,7 +779,7 @@ function trendCopycat(s: GameState, r: Rng, lb: Label): void {
 
 function budgetLabel(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.06)) {
-    const n = Math.min(14, Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 2).length);
+    const n = Math.min(14, allReleases17(s).filter((x) => x.owner === lb.id && s.year - x.year >= 2).length);
     if (n >= 3) {
       const v = money(s, 800 * n);
       lb.cash += v;

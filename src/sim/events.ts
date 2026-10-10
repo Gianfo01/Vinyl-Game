@@ -17,6 +17,7 @@ import { MORE_EVENTS } from './events_more';
 import { MORE_EVENTS_11 } from './events_more11';
 import { narrate, narratorPace } from './narrator13';
 import { scandal } from './scandal17';
+import { allReleases17 } from './relidx17';
 
 export type Ctx = Record<string, string | number>;
 
@@ -272,7 +273,7 @@ export const EVENTS: EventDef[] = [
   {
     id: 'critic_rave', cat: 'culture', tone: 'good', tags: [], cooldown: 4,
     find: (s, r) => {
-      const rels = Object.values(s.releases).filter((x) => x.owner === 'player' && s.week - x.week < 6 && x.songs.some((id) => (s.songs[id]?.originality ?? 0) > 60));
+      const rels = allReleases17(s).filter((x) => x.owner === 'player' && s.week - x.week < 6 && x.songs.some((id) => (s.songs[id]?.originality ?? 0) > 60));
       if (!rels.length) return null;
       const rel = r.pick(rels);
       const outlet = r.pick(MEDIA.filter((m) => m.kind === 'press' || m.kind === 'web').filter((m) => m.start <= s.year && (!m.end || m.end >= s.year)));
@@ -285,7 +286,7 @@ export const EVENTS: EventDef[] = [
   {
     id: 'critic_pan', cat: 'culture', tone: 'bad', tags: [], cooldown: 4,
     find: (s, r) => {
-      const rels = Object.values(s.releases).filter((x) => x.owner === 'player' && s.week - x.week < 6 && x.q < 42);
+      const rels = allReleases17(s).filter((x) => x.owner === 'player' && s.week - x.week < 6 && x.q < 42);
       if (!rels.length) return null;
       const rel = r.pick(rels);
       return { release: rel.id, act: rel.actId };
@@ -377,7 +378,7 @@ export const EVENTS: EventDef[] = [
     id: 'sync_offer', cat: 'contract', tone: 'good', tags: [], cooldown: 5,
     find: (s, r) => {
       if (s.year < 1930) return null;
-      const rels = Object.values(s.releases).filter((x) => (x.owner === 'player' || s.acts[x.actId]?.playerBand) && x.totalUnits > 5000);
+      const rels = allReleases17(s).filter((x) => (x.owner === 'player' || s.acts[x.actId]?.playerBand) && x.totalUnits > 5000);
       if (!rels.length) return null;
       const rel = r.pick(rels);
       const kind = r.pick(s.year < 1955 ? ['film'] : s.year < 2000 ? ['film', 'ad', 'tv'] : ['film', 'ad', 'tv', 'game']);
@@ -394,7 +395,7 @@ export const EVENTS: EventDef[] = [
     id: 'sampling_claim', cat: 'contract', tone: 'bad', tags: ['legal'], cooldown: 14,
     find: (s, r) => {
       if (s.year < 1980) return null;
-      const rels = Object.values(s.releases).filter((x) => x.owner === 'player' && x.totalUnits > 50000);
+      const rels = allReleases17(s).filter((x) => x.owner === 'player' && x.totalUnits > 50000);
       if (!rels.length || !r.chance(0.4)) return null;
       const rel = r.pick(rels);
       return { release: rel.id, act: rel.actId };
@@ -423,7 +424,7 @@ export const EVENTS: EventDef[] = [
     id: 'payola_offer', cat: 'scandal', tone: 'neutral', tags: ['crime'], cooldown: 24,
     find: (s, r) => {
       if (!hasTech(s, 'radio')) return null;
-      const rels = Object.values(s.releases).filter((x) => x.owner === 'player' && s.week - x.week < 4);
+      const rels = allReleases17(s).filter((x) => x.owner === 'player' && s.week - x.week < 4);
       if (!rels.length || !r.chance(0.35)) return null;
       const rel = r.pick(rels);
       return { release: rel.id, act: rel.actId };
@@ -490,17 +491,17 @@ export const EVENTS: EventDef[] = [
     id: 'catalog_for_sale', cat: 'business', tone: 'good', tags: [], cooldown: 18,
     find: (s, r) => {
       if (s.config.role === 'artist') return null;
-      const sellers = Object.values(s.labels).filter((x) => x.active && x.cash < money(s, 150000) && Object.values(s.releases).some((rel) => rel.owner === x.id && rel.totalUnits > 20000));
+      const sellers = Object.values(s.labels).filter((x) => x.active && x.cash < money(s, 150000) && allReleases17(s).some((rel) => rel.owner === x.id && rel.totalUnits > 20000));
       if (!sellers.length || !r.chance(0.5)) return null;
       const lb = r.pick(sellers);
-      const rels = Object.values(s.releases).filter((rel) => rel.owner === lb.id && rel.totalUnits > 20000);
+      const rels = allReleases17(s).filter((rel) => rel.owner === lb.id && rel.totalUnits > 20000);
       const value = Math.round(rels.reduce((t, x) => t + Math.sqrt(x.totalUnits) * 40, 0));
       return { label: lb.id, price: value, n: rels.length };
     },
     title: l('Catálogo à venda: {labelName}', 'Catalog for sale: {labelName}'),
     text: l('{labelName} precisa de caixa e oferece {n} masters por {priceTxt}. Passivos vêm junto.', '{labelName} needs cash and offers {n} masters for {priceTxt}. Liabilities come along.'),
     options: [
-      { id: 'buy', label: l('Comprar o catálogo', 'Buy the catalog'), apply: (s, _r, c) => { const price = money(s, Number(c.price)); if (s.player.cash < price) { notify(s, l('Caixa insuficiente para a compra.', 'Not enough cash for the purchase.'), 'bad'); return; } post(s, `catbuy:${c.label}`, -price, 'acquisitions', 'Compra de catálogo'); const lb = s.labels[String(c.label)]; lb.cash += price; for (const rel of Object.values(s.releases)) if (rel.owner === lb.id && rel.totalUnits > 20000) { rel.owner = 'player'; rel.live = true; rel.stock = 0; rel.formats = []; } remember(s, 'acquisition', fmtL(l('{c} compra o catálogo de {l}.', '{c} buys the {l} catalog.'), { c: s.config.companyName, l: lb.name }), { important: true }); } },
+      { id: 'buy', label: l('Comprar o catálogo', 'Buy the catalog'), apply: (s, _r, c) => { const price = money(s, Number(c.price)); if (s.player.cash < price) { notify(s, l('Caixa insuficiente para a compra.', 'Not enough cash for the purchase.'), 'bad'); return; } post(s, `catbuy:${c.label}`, -price, 'acquisitions', 'Compra de catálogo'); const lb = s.labels[String(c.label)]; lb.cash += price; for (const rel of allReleases17(s)) if (rel.owner === lb.id && rel.totalUnits > 20000) { rel.owner = 'player'; rel.live = true; rel.stock = 0; rel.formats = []; } remember(s, 'acquisition', fmtL(l('{c} compra o catálogo de {l}.', '{c} buys the {l} catalog.'), { c: s.config.companyName, l: lb.name }), { important: true }); } },
       { id: 'pass', label: l('Passar', 'Pass'), apply: () => {} },
     ],
   },
@@ -534,7 +535,7 @@ export const EVENTS: EventDef[] = [
   {
     id: 'stock_out', cat: 'manufacturing', tone: 'neutral', tags: [], cooldown: 3,
     find: (s, r) => {
-      const rels = Object.values(s.releases).filter((x) => x.owner === 'player' && x.live && x.stock <= 0 && x.pressed > 0 && x.shortage > 500 && s.week - x.week < 20 && !s.flags[`repress:${x.id}`]);
+      const rels = allReleases17(s).filter((x) => x.owner === 'player' && x.live && x.stock <= 0 && x.pressed > 0 && x.shortage > 500 && s.week - x.week < 20 && !s.flags[`repress:${x.id}`]);
       return rels.length ? { release: r.pick(rels).id } : null;
     },
     title: l('Esgotado: "{releaseTitle}"', 'Sold out: "{releaseTitle}"'),
@@ -603,7 +604,7 @@ export const EVENTS: EventDef[] = [
     id: 'censorship', cat: 'culture', tone: 'bad', tags: ['censorship'], cooldown: 24,
     find: (s, r) => {
       if (!hasMutator(s, 'censorship') && !r.chance(0.15)) return null;
-      const rels = Object.values(s.releases).filter((x) => x.owner === 'player' && x.live && x.territories.length > 1);
+      const rels = allReleases17(s).filter((x) => x.owner === 'player' && x.live && x.territories.length > 1);
       return rels.length ? { release: r.pick(rels).id } : null;
     },
     title: l('Conselho de Classificação veta "{releaseTitle}"', 'Rating Board bans "{releaseTitle}"'),
@@ -680,7 +681,7 @@ export const EVENTS: EventDef[] = [
   },
   {
     id: 'catalog_training', cat: 'neural', tone: 'neutral', tags: [], cooldown: 999,
-    find: (s, r) => (hasTech(s, 'synthetic_voice') && !s.player.neural.catalogTraining && !s.flags.trainingAsked && Object.values(s.releases).filter((x) => x.owner === 'player').length > 10 && r.chance(0.4) ? { fee: 50000 + Object.values(s.releases).filter((x) => x.owner === 'player').length * 4000 } : null),
+    find: (s, r) => (hasTech(s, 'synthetic_voice') && !s.player.neural.catalogTraining && !s.flags.trainingAsked && allReleases17(s).filter((x) => x.owner === 'player').length > 10 && r.chance(0.4) ? { fee: 50000 + allReleases17(s).filter((x) => x.owner === 'player').length * 4000 } : null),
     title: l('Treinar modelos com o seu catálogo', 'Train models on your catalog'),
     text: l('Uma empresa de IA quer treinar modelos com todo o seu catálogo. Oferta: {feeTxt} + centavos por geração.', 'An AI company wants to train models on your whole catalog. Offer: {feeTxt} + cents per generation.'),
     options: [
@@ -745,7 +746,7 @@ export const EVENTS: EventDef[] = [
     options: [
       { id: 'sell_catalog', label: l('Vender masters', 'Sell masters'), hint: l('Caixa agora; perde a cauda de catálogo.', 'Cash now; lose the catalog tail.'), apply: (s, _r, c) => {
         const buyer = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.cash - a.cash)[0];
-        const rels = Object.values(s.releases).filter((x) => x.owner === 'player').sort((a, b) => a.week - b.week).slice(0, Number(c.n));
+        const rels = allReleases17(s).filter((x) => x.owner === 'player').sort((a, b) => a.week - b.week).slice(0, Number(c.n));
         for (const rel of rels) rel.owner = buyer?.id ?? 'indie';
         gain(s, 'distress_catalog', Number(c.price), 'asset_sales', 'Venda de catálogo');
         remember(s, 'distress', fmtL(l('Para sobreviver, o selo vende {n} masters a {b}.', 'To survive, the label sells {n} masters to {b}.'), { n: rels.length, b: buyer?.name ?? '?' }), { important: true });
@@ -806,7 +807,7 @@ function mergeLabelsSync(s: GameState, buyer: string, target: string): void {
     if (c) c.party = b.id;
     b.roster.push(id);
   }
-  for (const rel of Object.values(s.releases)) if (rel.owner === t.id) rel.owner = b.id;
+  for (const rel of allReleases17(s)) if (rel.owner === t.id) rel.owner = b.id;
   b.cash += t.cash;
   t.roster = [];
   t.active = false;

@@ -14,6 +14,7 @@ import { isPolitical, viewsOf } from './beliefs';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 import { gone16 } from './sys/gone16';
 import { scandal, type ScandalKind } from './scandal17';
+import { allReleases17 } from './relidx17';
 const CRISIS17: Record<Crisis['kind'], ScandalKind> = { scandal: 'conduct', remark: 'offense', censorship: 'politics', cancel: 'offense', leak: 'conduct', accident: 'violence' };
 
 export interface CriticDef {
@@ -329,7 +330,7 @@ registerEvents(MEDIA_EVENTS);
 export function mediaMonth(s: GameState, r: Rng): void {
   if (s.prAgency) post(s, 'pr_agency', -s.prAgency.monthly, 'marketing', `Assessoria ${s.prAgency.name}`);
   // resenhas dos lançamentos do mês (jogador e principais rivais)
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (s.reviews[rel.id] || s.week - rel.week > 5) continue;
     const act = s.acts[rel.actId];
     if (rel.owner === 'player' || act?.playerBand || (act && act.fame > 40)) reviewRelease(s, r, rel);

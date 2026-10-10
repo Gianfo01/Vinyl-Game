@@ -11,6 +11,7 @@ import type { GameState } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
 import { researchDone } from './research';
 import type { Outlet } from './state';
+import { allReleases17 } from '../../relidx17';
 
 // ------------------------------------------------------------------ streaming próprio
 
@@ -41,7 +42,7 @@ export function licenseCatalog(s: GameState, labelId: string): L | null {
 function streamingMonth(s: GameState, r: Rng): void {
   const st = s.x4.industry.streaming;
   if (!st.active) return;
-  const catalog = Object.values(s.releases).filter((x) => x.owner === 'player').length + st.licenses.reduce((t, id) => t + (s.labels[id]?.roster.length ?? 0) * 6, 0);
+  const catalog = allReleases17(s).filter((x) => x.owner === 'player').length + st.licenses.reduce((t, id) => t + (s.labels[id]?.roster.length ?? 0) * 6, 0);
   const target = catalog * 900 * (researchDone(s, 'fan_crm') ? 1.3 : 1);
   st.subs = Math.max(0, Math.round(st.subs + (target - st.subs) * 0.05 + r.normal(0, st.subs * 0.01)));
   post(s, `streamsubs:${s.year}:${s.month}`, Math.round(st.subs * money(s, 9) * 0.3), 'business', `Assinaturas ${st.name}`);
@@ -204,8 +205,8 @@ export function joinBoard(s: GameState, r: Rng): L | null {
 function goalValue(s: GameState, metric: string): number {
   const st = s.player.stats;
   if (metric === 'profit') return s.player.profitByYear[s.year] ?? 0;
-  if (metric === 'releases') return Object.values(s.releases).filter((x) => x.owner === 'player' && x.year === s.year).length;
-  if (metric === 'top10') return Object.values(s.releases).filter((x) => x.owner === 'player' && x.year === s.year && x.peak <= 10).length;
+  if (metric === 'releases') return allReleases17(s).filter((x) => x.owner === 'player' && x.year === s.year).length;
+  if (metric === 'top10') return allReleases17(s).filter((x) => x.owner === 'player' && x.year === s.year && x.peak <= 10).length;
   if (metric === 'awards') return s.awards.filter((a) => a.byPlayer && a.year === s.year).length;
   return st.releases;
 }
@@ -260,7 +261,7 @@ function mergersYear(s: GameState, r: Rng): void {
     for (const id of target.roster) { const a = s.acts[id]; if (a) a.owner = buyer.id; buyer.roster.push(id); }
     target.roster = [];
     buyer.cash += target.cash;
-    for (const rel of Object.values(s.releases)) if (rel.owner === target.id) rel.owner = buyer.id;
+    for (const rel of allReleases17(s)) if (rel.owner === target.id) rel.owner = buyer.id;
   }
   const text = fmtL(forced ? l('{b} compra {t}; o órgão antitruste exige a venda de parte do catálogo.', '{b} buys {t}; the antitrust authority demands a partial divestiture.') : l('{b} absorve {t}. O mercado fica mais concentrado.', '{b} absorbs {t}. The market becomes more concentrated.'), { b: buyer.name, t: target.name });
   s.x4.industry.mergers.unshift({ year: s.year, text });
@@ -332,7 +333,7 @@ const EVENTS_IND: EventDef[] = [
         const price = Number(c.price);
         if (!t || s.player.cash < price) return;
         post(s, `divest:${t.id}`, -price, 'business', `Catálogo de ${t.name}`);
-        const rels = Object.values(s.releases).filter((x) => x.owner === t.id).sort((a, z) => z.totalUnits - a.totalUnits).slice(0, 12);
+        const rels = allReleases17(s).filter((x) => x.owner === t.id).sort((a, z) => z.totalUnits - a.totalUnits).slice(0, 12);
         for (const rel of rels) rel.owner = 'player';
         t.active = false;
         if (b) { for (const id of t.roster) { const a = s.acts[id]; if (a) a.owner = b.id; b.roster.push(id); } }
@@ -346,7 +347,7 @@ const EVENTS_IND: EventDef[] = [
         t.active = false;
         for (const id of t.roster) { const a = s.acts[id]; if (a) a.owner = b.id; b.roster.push(id); }
         t.roster = [];
-        for (const rel of Object.values(s.releases)) if (rel.owner === t.id) rel.owner = 'indie';
+        for (const rel of allReleases17(s)) if (rel.owner === t.id) rel.owner = 'indie';
       } },
     ],
   },

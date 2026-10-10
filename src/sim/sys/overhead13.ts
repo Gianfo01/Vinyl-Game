@@ -11,6 +11,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { labelFunded } from '../production';
 import type { GameState, Release } from '../types';
 import { money, post } from '../util';
+import { allReleases17 } from '../relidx17';
 
 export interface OhLine { id: string; label: L; amount: number; why: L }
 export interface Oh13 { ema: number; last: { w: number; lines: OhLine[]; capped: boolean; rate: number } | null; promo: number; promoN: number }
@@ -53,7 +54,7 @@ export function eraName(y: number): L {
 }
 const promoEra = (y: number) => (y < 1981 ? 1 : y < 2000 ? 1.6 : y < 2008 ? 1.3 : 2);
 
-const pRel = (s: GameState) => Object.values(s.releases).filter((r) => r.owner === 'player');
+const pRel = (s: GameState) => allReleases17(s).filter((r) => r.owner === 'player');
 
 /** Linhas de despesa mensal (centavos nominais, positivas) com o porquê. Puro: não mexe no estado. */
 export function overheadPlan(s: GameState, R = realAnnual(s)): { lines: OhLine[]; tier: Tier; cap: number; raw: number; total: number } {

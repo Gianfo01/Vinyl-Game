@@ -10,12 +10,21 @@ import type { CatalogAuction, Company, Lawsuit } from './xtypes';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from './util';
 import { addAsset, removeAsset } from './finance';
 import { unclearedSamples } from './studio';
+import { allReleases17 } from './relidx17';
 
 // ---------- Avaliações ----------
 
+// r17 (desempenho): somas de receita do catálogo por dono, calculadas uma vez para um lote de avaliações (bolsa)
+let catSums: Map<string, number> | null = null;
+export function withCatalogSums<T>(s: GameState, fn: () => T): T {
+  const prev = catSums;
+  const m = new Map<string, number>();
+  for (const r of allReleases17(s)) m.set(r.owner, (m.get(r.owner) ?? 0) + r.revenue);
+  catSums = m;
+  try { return fn(); } finally { catSums = prev; }
+}
 export function labelValuation(s: GameState, lb: Label): { value: number; liabilities: number; catalog: number } {
-  const rels = Object.values(s.releases).filter((r) => r.owner === lb.id);
-  const catalog = rels.reduce((t, r) => t + r.revenue, 0) * 0.35;
+  const catalog = (catSums ? catSums.get(lb.id) ?? 0 : allReleases17(s).filter((r) => r.owner === lb.id).reduce((t, r) => t + r.revenue, 0)) * 0.35;
   const roster = lb.roster.reduce((t, id) => t + (s.acts[id]?.fame ?? 0) * money(s, 2500), 0);
   const liabilities = Math.max(0, -lb.cash) + (lb.debt ?? 0) + lb.roster.reduce((t, id) => t + (s.contracts[s.acts[id]?.contractId ?? '']?.recoupBalance ?? 0) * 0.2, 0);
   return { value: Math.max(money(s, 50000), Math.round(catalog + roster + Math.max(0, lb.cash) * 0.5)), liabilities: Math.round(liabilities), catalog: Math.round(catalog) };
@@ -45,7 +54,7 @@ export function transferLabel(s: GameState, lb: Label, v: { value: number; liabi
   if (v.liabilities > 0) {
     s.creditors.push({ id: nextId(s, 'cr'), name: fmtL(l('Credores de {n}', '{n} creditors'), { n: lb.name }).pt, kind: 'supplier', patience: 70, owed: v.liabilities });
   }
-  const releases = Object.values(s.releases).filter((r) => r.owner === lb.id);
+  const releases = allReleases17(s).filter((r) => r.owner === lb.id);
   for (const r of releases) r.owner = 'player';
   for (const id of [...lb.roster]) {
     const a = s.acts[id];
@@ -117,7 +126,7 @@ function catalogAuctionsMonth(s: GameState, r: Rng): void {
   // selos em crise colocam catálogo à venda
   for (const lb of Object.values(s.labels)) {
     if (!lb.active || lb.cash > -money(s, 50000) || s.catalogAuctions.some((a) => a.seller === lb.id && a.status === 'open')) continue;
-    const rels = Object.values(s.releases).filter((x) => x.owner === lb.id && x.totalUnits > 10000).slice(0, 12);
+    const rels = allReleases17(s).filter((x) => x.owner === lb.id && x.totalUnits > 10000).slice(0, 12);
     if (!rels.length) continue;
     const ask = Math.round(rels.reduce((t, x) => t + x.revenue, 0) * 0.3);
     s.catalogAuctions.push({ id: nextId(s, 'ca'), seller: lb.id, releaseIds: rels.map((x) => x.id), ask: Math.max(money(s, 20000), ask), bids: [], endsWeek: s.week + 8, status: 'open' });
@@ -288,7 +297,7 @@ export function settleLawsuit(s: GameState, id: string): L | null {
 function suitsMonth(s: GameState, r: Rng): void {
   const legal = staffSkill(s, 'legal') / 400;
   // novos processos com causa real
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (rel.owner !== 'player' || s.week - rel.week > 4 || s.flags[`suitchk:${rel.id}`]) continue;
     s.flags[`suitchk:${rel.id}`] = 1;
     const unc = unclearedSamples(s, rel.songs);

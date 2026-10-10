@@ -24,6 +24,7 @@ import { mgrById } from '../../data/managers14';
 import { becomeManager17, leaveLabel17, npc17, okAct17, okPerson17, pickNewLabel17 } from './npc17';
 import { per13, type P13 } from './persona13';
 import { registerSituation, type SitCtx } from './situations17';
+import { allReleases17 } from '../relidx17';
 
 // ---------------------------------------------------------------- utilidades
 
@@ -420,7 +421,7 @@ registerSituation({
   id: 'chart_race', pressure: 'fame', cost: 2, cooldown: 6, tone: 'mixed',
   when: () => true,
   actorsPick: (s, _c, r) => {
-    const recent = Object.values(s.releases).filter((x) => x.week >= s.week - 4 && x.lastPos > 0 && x.lastPos <= 10).map((x) => s.acts[x.actId]).filter(live);
+    const recent = allReleases17(s).filter((x) => x.week >= s.week - 4 && x.lastPos > 0 && x.lastPos <= 10).map((x) => s.acts[x.actId]).filter(live);
     const a = pickR(r, recent);
     const b = a ? recent.find((x) => x.id !== a.id) : undefined;
     const p = a ? leadOf(s, a) : undefined;

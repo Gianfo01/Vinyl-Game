@@ -14,6 +14,7 @@ import { compat } from '../beliefs';
 import { registerPerkSource, type PerkEntry } from '../perks';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, notify, playerActs, remember } from '../util';
+import { actsOfPerson17 } from '../actidx17';
 
 export type TieKind = 'friend' | 'rival' | 'romance' | 'mentor' | 'feud' | 'collab';
 export type TieSrc = 'scene' | 'festival' | 'tour' | 'feat' | 'producer' | 'label' | 'mentor' | 'chart' | 'romance';
@@ -68,21 +69,11 @@ function index(s: GameState): Map<string, Tie> {
   return m;
 }
 
-/** Pessoa → ato atual (cache por semana; atos desfeitos não contam). */
-const ACTOF = new WeakMap<GameState, { week: number; n: number; map: Map<string, Act> }>();
+/** Ato atual da pessoa: o último grupo (mais de um membro) na ordem de s.acts; senão o primeiro solo. */
 export function actOfPerson(s: GameState, pid: string): Act | undefined {
-  const n = Object.keys(s.acts).length;
-  let c = ACTOF.get(s);
-  if (!c || c.week !== s.week || c.n !== n) {
-    const map = new Map<string, Act>();
-    for (const a of Object.values(s.acts)) {
-      if (a.status === 'split' || a.status === 'retired') continue;
-      for (const id of a.members) if (!map.has(id) || a.members.length > 1) map.set(id, a);
-    }
-    c = { week: s.week, n, map };
-    ACTOF.set(s, c);
-  }
-  return c.map.get(pid);
+  let best: Act | undefined;
+  for (const a of actsOfPerson17(s, pid)) if (a.status !== 'split' && a.status !== 'retired' && (!best || a.members.length > 1)) best = a;
+  return best;
 }
 
 export function tieOf(s: GameState, a: string, b: string): Tie | undefined {

@@ -15,6 +15,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util
 import { monthlyCosts } from '../economy';
 import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
+import { allReleases17 } from '../relidx17';
 
 // ---------------------------------------------------------------- tipos de investidor
 
@@ -422,7 +423,7 @@ function metricsTrend(s: GameState, inv: Investor): number {
   const pace = s.month > 0 ? (revNow / Math.max(1, s.month + 1)) * 12 : revPrev;
   const growth = revPrev > 0 ? pace / revPrev - 1 : 0;
   const cashOk = s.player.cash > 0 ? 10 : -25;
-  const recent = Object.values(s.releases).filter((r) => r.owner === 'player' && s.week - r.week < 52);
+  const recent = allReleases17(s).filter((r) => r.owner === 'player' && s.week - r.week < 52);
   const rv = recent.map((r) => s.reviews[r.id]).filter((x) => x?.length).map((x) => x!.reduce((t, y) => t + y.score, 0) / x!.length);
   const critics = rv.length ? rv.reduce((a, b) => a + b, 0) / rv.length : 6;
   switch (inv.kind) {
@@ -444,7 +445,7 @@ function goalValue(s: GameState, g: NonNullable<Investor['goal']>): number {
     case 'profitYears': return [s.year - 1, s.year - 2].filter((y) => (s.player.profitByYear[y] ?? 0) > 0).length;
     case 'top10': return s.player.stats.top10s;
     case 'reputation': return s.player.reputation.institutional;
-    case 'goodReviews': return Object.values(s.releases).filter((r) => r.owner === 'player' && (s.reviews[r.id]?.length ?? 0) > 0 && s.reviews[r.id]!.reduce((t, x) => t + x.score, 0) / s.reviews[r.id]!.length >= 7).length;
+    case 'goodReviews': return allReleases17(s).filter((r) => r.owner === 'player' && (s.reviews[r.id]?.length ?? 0) > 0 && s.reviews[r.id]!.reduce((t, x) => t + x.score, 0) / s.reviews[r.id]!.length >= 7).length;
   }
 }
 

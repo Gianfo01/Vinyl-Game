@@ -7,6 +7,7 @@ import { cityById, genreById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState, MemoryEntry } from '../types';
 import { fmtL, rememberListeners } from '../util';
+import { allReleases17 } from '../relidx17';
 
 export interface ChronEv {
   y: number;
@@ -198,7 +199,7 @@ function pickInfluence(s: GameState, c: ChronState, a: Act, silent = false): voi
 
 /** Obras-primas: lançamentos de terceiros (ou seus) com crítica altíssima. */
 function landmarkReleases(s: GameState, c: ChronState): void {
-  for (const r of Object.values(s.releases)) {
+  for (const r of allReleases17(s)) {
     if (r.week <= c.lw || r.hist) continue;
     const a = s.acts[r.actId];
     if (!a) continue;

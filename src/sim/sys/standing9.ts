@@ -8,6 +8,7 @@ import { l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import type { GameState } from '../types';
 import { fmtL, notify, playerActs } from '../util';
+import { allReleases17 } from '../relidx17';
 
 export type StandKey = 'rec' | 'pop' | 'mom' | 'crit' | 'trust';
 export interface Standing { rec: number; pop: number; mom: number; crit: number; trust: number; hist: number[]; sc?: number; ros?: number }
@@ -53,7 +54,7 @@ export function updateStandings(s: GameState): void {
   const agg: Record<string, { u3: number; p3: number; u12: number; cs: number; cn: number; hits: number }> = {};
   for (const id of ids) agg[id] = { u3: 0, p3: 0, u12: 0, cs: 0, cn: 0, hits: 0 };
   const from = s.week - 52;
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     const a = agg[rel.owner];
     if (!a || rel.week + rel.weekly.length < from) continue;
     for (let i = Math.max(0, from - rel.week); i < rel.weekly.length; i++) {

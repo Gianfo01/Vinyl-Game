@@ -9,6 +9,7 @@ import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { GameState, Release } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
+import { allReleases17 } from '../relidx17';
 
 export type GramoCat = 'record' | 'album' | 'newcomer' | 'performance';
 export const GRAMO_CATS: { id: GramoCat; name: L; rule: L }[] = [
@@ -74,7 +75,7 @@ export function restrictToNominees(s: GameState, cat: string, list: Release[]): 
 
 function announce(s: GameState): void {
   const st = cer8(s);
-  const rels = Object.values(s.releases).filter((x) => x.year === s.year && x.totalUnits > 0 && !x.hist);
+  const rels = allReleases17(s).filter((x) => x.year === s.year && x.totalUnits > 0 && !x.hist);
   const cats: Partial<Record<GramoCat, string[]>> = {};
   const mine = new Set(playerActs(s));
   const mineNoms: string[] = [];

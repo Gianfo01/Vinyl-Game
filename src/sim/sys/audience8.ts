@@ -12,6 +12,7 @@ import { familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, hasTech, notify, playerActs, remember } from '../util';
+import { allReleases17 } from '../relidx17';
 
 export interface AudMem {
   /** últimos 6 meses: [casual, ativo, núcleo] */
@@ -164,7 +165,7 @@ function yearlyRediscovery(s: GameState, r: Rng): void {
   const st = audience(s);
   const techBoost = (hasTech(s, 'streaming') ? 0.01 : 0) + (hasTech(s, 'short_video') ? 0.02 : 0);
   const cands: { rel: Release; w: number }[] = [];
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (rel.reissueOf || rel.kind === 'compilation') continue;
     const a = s.acts[rel.actId];
     if (!a) continue;

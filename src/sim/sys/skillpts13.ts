@@ -7,6 +7,7 @@ import { registerSimHook } from '../ext4';
 import type { GameState, Release } from '../types';
 import { fmtL, notify } from '../util';
 import { skills } from './persona';
+import { allReleases17 } from '../relidx17';
 
 export interface AchKind { id: string; name: L; desc: L; cap: number }
 export const ACH_KINDS: AchKind[] = [
@@ -53,7 +54,7 @@ export function awardSkillPoints(s: GameState): void {
     const rel = s.releases[h.releaseId];
     if (mine(s, rel)) pay(s, 'n1', `n1:${rel.id}`, 1, fmtL(l('nº 1 com “{t}”', '#1 with "{t}"'), { t: rel.title }), silent);
   }
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (!mine(s, rel)) continue;
     if (rel.peak <= 10 && rel.kind !== 'demo') pay(s, 'hit', `hit:${rel.id}`, 1, fmtL(l('hit top {p} com “{t}”', 'top-{p} hit with "{t}"'), { p: rel.peak, t: rel.title }), silent);
     if (rel.certified) pay(s, 'cert', `cert:${rel.certified}:${rel.id}`, rel.certified === 'diamond' ? 2 : 1, fmtL(l('disco de {c} para “{t}”', '{c} record for "{t}"'), { c: CERT[rel.certified], t: rel.title }), silent);

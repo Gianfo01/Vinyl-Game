@@ -18,6 +18,7 @@ import type { GameState, Release } from '../types';
 import { isUnlocked } from '../era';
 import { fmtL, hasTech, remember } from '../util';
 import { boycotting, flushAwards, flushTop10, homeK, juryMemHook, juryRng, queueAward, queueTop10, snub15 } from './awards15';
+import { allReleases17 } from '../relidx17';
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -185,7 +186,7 @@ export function weekCharts(s: GameState): void {
   // unidades novas por lançamento nesta semana
   const fresh: { rel: Release; units: number }[] = [];
   const nextTotals: Record<string, number> = {};
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (!rel.live) continue;
     const prev = st.lastTotal[rel.id] ?? (rel.week >= s.week - 1 ? 0 : rel.totalUnits - (rel.weekly[rel.weekly.length - 1] ?? 0));
     const units = rel.totalUnits - prev;

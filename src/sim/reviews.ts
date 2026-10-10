@@ -12,6 +12,7 @@ import type { GameState, Release, Song } from './types';
 import type { Review } from './xtypes';
 import { fmtL } from './util';
 import { perk } from './perks';
+import { releasesOfYear17 } from './relidx17';
 
 export type Aspect = 'melody' | 'lyrics' | 'performance' | 'production' | 'originality' | 'cohesion';
 export const ASPECTS: Aspect[] = ['melody', 'lyrics', 'performance', 'production', 'originality', 'cohesion'];
@@ -75,8 +76,7 @@ function ctxOf(s: GameState, rel: Release): ReviewCtx {
   if (act) {
     const fam = familyOf(act.genre);
     let best: Release | undefined;
-    for (const id in s.releases) {
-      const x = s.releases[id];
+    for (const x of releasesOfYear17(s, rel.year)) {
       if (x.year !== rel.year || x.actId === rel.actId || x.id === rel.id) continue;
       const xa = s.acts[x.actId];
       if (!xa || familyOf(xa.genre) !== fam) continue;

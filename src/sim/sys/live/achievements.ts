@@ -6,6 +6,7 @@ import { registerSimHook } from '../../ext4';
 import type { GameState } from '../../types';
 import { fmtL, notify, remember } from '../../util';
 import { liveOf } from './state';
+import { allReleases17 } from '../../relidx17';
 
 export interface AchievementDef {
   id: string;
@@ -17,7 +18,7 @@ export interface AchievementDef {
   check: (s: GameState) => boolean;
 }
 
-const mine = (s: GameState) => Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+const mine = (s: GameState) => allReleases17(s).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
 const cnt = (s: GameState, k: string) => liveOf(s).counters[k] ?? 0;
 const hasFormatSale = (s: GameState, f: string) => mine(s).some((r) => r.formats.includes(f as never) && r.totalUnits > 0);
 

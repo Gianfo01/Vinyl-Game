@@ -15,7 +15,7 @@ import { relicHook, relics, type Relic } from './relics9';
 import { f12, festHypeHook } from './fest12';
 import { liveOf, type OwnFestival } from './live/state';
 import { w4 } from './world4/state';
-import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts17, rolloutText17 } from '../hype17';
+import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts17, quickParts17, rolloutText17 } from '../hype17';
 
 export interface HSrc { k: string; t: L; v: number }
 export interface HEnt { s: HSrc[]; p?: number; v?: number; pk?: number }
@@ -264,7 +264,7 @@ registerSimHook('week', 'hype12', (s) => {
   for (const a of Object.values(s.acts)) if (!a.deceased) { const k = `${a.city}:${a.genre}`; const xs = sceneIx.get(k); if (xs) xs.push(a); else sceneIx.set(k, [a]); }
   try { for (const key of tracked(s)) {
     const e = (st.e[key] ??= { s: [] });
-    const v = hypeOf(s, key).v;
+    const v = quickParts17(() => hypeOf(s, key).v);
     const mine = key === 'l:player' || key.startsWith('f:') || (key.startsWith('a:') && s.acts[key.slice(2)]?.owner === 'player') || (key.startsWith('o:') && relics(s).list.find((x) => x.id === key.slice(2))?.st === 'player');
     const big = key.startsWith('a:') && (s.acts[key.slice(2)]?.fame ?? 0) >= 55;
     if (e.v !== undefined && e.v < 70 && v >= 70 && (mine || big) && news < 2) { news++; logNews(s, `up:${key}`, fmtL(l('{n} {w}: hype {v}.', '{n} {w}: hype {v}.'), { n: nameOfKey(s, key), w: viralWord(s), v }), true); }

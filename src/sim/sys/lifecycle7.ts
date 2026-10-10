@@ -17,6 +17,7 @@ import { genStaff } from '../worldgen';
 import { rw } from './realworld';
 import { histLocked } from '../history15';
 import { resolveThinking } from '../contracts';
+import { allReleases17 } from '../relidx17';
 
 type Ctx = Record<string, string | number>;
 
@@ -273,7 +274,7 @@ function npcVices(s: GameState, r: Rng): void {
 
 function catalogIncome(s: GameState): void {
   const byAct: Record<string, number> = {};
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (rel.live || rel.owner === 'player') continue;
     const act = s.acts[rel.actId];
     if (!act || act.playerBand) continue;

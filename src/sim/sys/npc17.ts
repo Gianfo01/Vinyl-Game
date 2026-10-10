@@ -36,6 +36,7 @@ import { genMgrs16 } from './people16';
 import { per13, type P13 } from './persona13';
 import { bump } from './social8';
 import { SIGN_VETO } from './gate14';
+import { allReleases17 } from '../relidx17';
 
 // ---------------------------------------------------------------- estado
 
@@ -443,7 +444,7 @@ function mgrClients(s: GameState, r: Rng): void {
 function delays(s: GameState, r: Rng, W: number): void {
   const big = new Map<string, Act>();
   const add = (a?: Act) => { if (a && live(a)) { const f = fam(a); if (!big.has(f) || big.get(f)!.fame < a.fame) big.set(f, a); } };
-  for (const rel of Object.values(s.releases)) if (rel.week >= s.week - 4 && rel.week <= s.week) add(s.acts[rel.actId]);
+  for (const rel of allReleases17(s)) if (rel.week >= s.week - 4 && rel.week <= s.week) add(s.acts[rel.actId]);
   for (const pr of s.pendingReleases) if (pr.week >= s.week && pr.week <= s.week + 6) add(s.acts[pr.actId]);
   if (!big.size) return;
   let n = 0;
@@ -618,7 +619,7 @@ function mergers(s: GameState, r: Rng, W: number): void {
       small.roster = small.roster.filter((x) => x !== id); big.roster.push(id); a.owner = big.id;
       const c = a.contractId ? s.contracts[a.contractId] : undefined; if (c) c.party = big.id;
     }
-    for (const rel of Object.values(s.releases)) if (rel.owner === small.id) rel.owner = big.id;
+    for (const rel of allReleases17(s)) if (rel.owner === small.id) rel.owner = big.id;
     big.cash += Math.max(0, small.cash); big.reputation = clamp(Math.max(big.reputation, small.reputation) + 2, 0, 100);
     small.active = false; small.closedYear = s.year; small.parentLabel = big.id;
     const L0 = small.leaderId ? leaders(s)?.L[small.leaderId] : undefined;

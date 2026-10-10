@@ -16,6 +16,7 @@ import { langForCity, makePerson } from './people';
 import type { Act, GameState, Person, Release } from './types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember, staffSkill, type Param } from './util';
 import { scandal } from './scandal17';
+import { allReleases17 } from './relidx17';
 
 type Opt = EventDef['options'][number];
 type Apply = Opt['apply'];
@@ -49,7 +50,7 @@ const era = (s: GameState, from: number, to: number) => s.year >= from && s.year
 let relCache: { s: GameState; week: number; seq: number; list: Release[] } | null = null;
 const playerRels = (s: GameState): Release[] => {
   if (!relCache || relCache.s !== s || relCache.week !== s.week || relCache.seq !== s.idSeq) {
-    relCache = { s, week: s.week, seq: s.idSeq, list: Object.values(s.releases).filter((x) => x.owner === 'player' || s.acts[x.actId]?.playerBand) };
+    relCache = { s, week: s.week, seq: s.idSeq, list: allReleases17(s).filter((x) => x.owner === 'player' || s.acts[x.actId]?.playerBand) };
   }
   return relCache.list;
 };

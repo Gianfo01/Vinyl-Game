@@ -21,6 +21,7 @@ import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 import { BOARD_SEAT, CONTROL, holdings as stakeHoldings, labelValue, npcAbsorb, stakeOf } from './stakes8';
 import { ventures } from './ventures9';
+import { withCatalogSums } from '../business';
 
 // ---------------------------------------------------------------- catálogo
 
@@ -671,7 +672,7 @@ function afterLabelMonth(s: GameState, k: string, r: Rng): void {
   }
 }
 
-registerSimHook('month', 'bolsa10', (s) => bolsaMonth(s));
+registerSimHook('month', 'bolsa10', (s) => withCatalogSums(s, () => bolsaMonth(s)));
 
 // ---------------------------------------------------------------- o seu selo na bolsa
 

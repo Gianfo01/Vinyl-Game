@@ -12,6 +12,7 @@ import { fmtL, hasTech, money, notify, playerActs, post, remember } from '../../
 import { ipoScene, subLabelScene } from './board';
 import { startInterview } from './interview';
 import { clampN, cooled, findScene, markSeen, memSeq, patchScene, queueScene, sc, setCool, wasSeen } from './state';
+import { allReleases17 } from '../../relidx17';
 
 const mineAct = (s: GameState, actId?: string) => {
   const a = actId ? s.acts[actId] : undefined;
@@ -243,7 +244,7 @@ export function launchScenes(s: GameState, rel: Release): void {
 
 /** Gancho 'week': falta de estoque num lançamento seu → cena da fábrica com turno extra. */
 export function shortageWeek(s: GameState): void {
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of allReleases17(s)) {
     if (rel.owner !== 'player' || rel.shortage < 2000 || s.week - rel.week > 12) continue;
     const key = `short:${rel.id}`;
     if (wasSeen(s, key)) continue;

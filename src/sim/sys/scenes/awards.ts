@@ -8,6 +8,7 @@ import { fandomOf } from '../../fandom';
 import type { GameState, Release } from '../../types';
 import { fmtL, notify, playerActs, remember } from '../../util';
 import { clampN, findScene, patchScene, queueScene, sc } from './state';
+import { allReleases17 } from '../../relidx17';
 
 export interface Nominee {
   name: string;
@@ -44,7 +45,7 @@ function relName(s: GameState, rel: Release): string {
 
 /** Indicados (sem sorte): os melhores pela mesma régua do prêmio, garantindo o vencedor na lista. */
 function nomineesFor(s: GameState, cat: string, year: number, winnerRel?: string): Nominee[] {
-  const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
+  const rels = allReleases17(s).filter((x) => x.year === year && x.totalUnits > 0);
   let pool: Release[] = [];
   const score = (x: Release) => x.q + Math.log10(1 + x.totalUnits) * 7;
   if (cat === 'record') pool = rels.filter((x) => x.type === 'single');

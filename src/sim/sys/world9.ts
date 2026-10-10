@@ -12,6 +12,7 @@ import { fmtL } from '../util';
 import { aliveGenres, spawnProceduralAct } from '../worldgen';
 import { chron, chronQuery, chronState, cityL, definingFigures, genreL, nameOf, type ChronEv } from './chron9';
 import { addRelic, relics, type Relic } from './relics9';
+import { actsTouched17 } from '../actidx17';
 
 export interface WorldAct { id: string; n: string; g: string; c: string; f: number; y0: number; y1: number; n1: number; aw: number; hits: number; leg: boolean; pl?: 1; m: string[] }
 export interface WorldFile { v: 1; seed: string; year: number; company: string; ev: ChronEv[]; names: Record<string, string>; acts: WorldAct[]; relics: Relic[]; inf: Record<string, string[]> }
@@ -90,6 +91,7 @@ export function generatePrehistory(s: GameState, r: Rng, years: number): void {
       if (peak < 35 && a.status !== 'active') {
         for (const pid of a.members) { delete s.persons[pid]; delete c.mem[pid]; }
         delete s.acts[a.id];
+        actsTouched17(s);
         continue;
       }
       for (const pid of a.members) c.names[pid] = nameOf(s, pid);

@@ -14,6 +14,8 @@ import { fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, sta
 import { songProfile } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
 import { artistRate, dealOfRelease, hasGuest, rightsOf } from './rights';
+import { noteRelease17 } from './relidx17';
+import { allReleases17 } from './relidx17';
 
 const POOL: [number, number][] = [
   [1920, 260e3], [1930, 300e3], [1945, 600e3], [1955, 1.5e6], [1965, 3e6], [1975, 5e6], [1985, 6e6],
@@ -190,6 +192,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   // rodada 8: guarda a previsão de 10 semanas no momento do lançamento (para comparar depois)
   if (owner === 'player' || act.playerBand) rel.fc = forecastUnits(s, act, rel.type, rel.q, rel.marketing, rel.territories).mid;
   s.releases[rel.id] = rel;
+  noteRelease17(s, rel);
   act.releases.push(rel.id);
   act.lastRelease = s.week;
   act.momentum = clamp(act.momentum + 12 + rel.marketingE * 15, 0, 100);
@@ -238,6 +241,7 @@ export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, 
   rel.songs = songIds.slice(0, 1);
   act.songs = act.songs.filter((id) => s.songs[id]);
   s.releases[rel.id] = rel;
+  noteRelease17(s, rel);
   act.releases.push(rel.id);
   act.lastRelease = s.week;
   act.momentum = clamp(act.momentum + 10 + rel.marketingE * 12, 0, 100);
@@ -274,7 +278,7 @@ function digitalFormats(s: GameState): FormatId[] {
 export function marketWeek(s: GameState, r: Rng): void {
   const pool = weeklyPool(s);
   s.stats.weeklyPool = pool;
-  const live = Object.values(s.releases).filter((x) => x.live);
+  const live = allReleases17(s).filter((x) => x.live);
   // foco promocional: lançamentos recentes do mesmo dono disputam a mesma equipe
   const recentByOwner: Record<string, number> = {};
   for (const rel of live) if (s.week - rel.week < 12) recentByOwner[rel.owner] = (recentByOwner[rel.owner] ?? 0) + 1;

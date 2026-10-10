@@ -30,6 +30,7 @@ import { ownerOf } from './people/owner';
 import { activeThoughts, moodOf } from './people/thoughts';
 import { P as peopleState } from './people/state';
 import { vices } from './vices';
+import { allReleases17 } from '../relidx17';
 
 // ------------------------------------------------------------------ eixos
 
@@ -836,7 +837,7 @@ function backfill(s: GameState): void {
   const st = snd(s);
   if (st.init) return;
   st.init = true;
-  const rels = Object.values(s.releases).filter((r) => r.owner === 'player' && !r.reissueOf).sort((a, b) => a.week - b.week);
+  const rels = allReleases17(s).filter((r) => r.owner === 'player' && !r.reissueOf).sort((a, b) => a.week - b.week);
   for (const r of rels) bump(s, r);
 }
 

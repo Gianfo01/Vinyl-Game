@@ -18,6 +18,7 @@ import { names, type Def, type Env, type LeCtx } from './lifeevents10';
 import { C, EVENTS } from './lifeevents10/data';
 import { ownerOf } from './people/owner';
 import { vices } from './vices';
+import { allReleases17 } from '../relidx17';
 
 export type RId = 'gym' | 'therapy' | 'family' | 'date' | 'hobby' | 'practice';
 export type RMode = 'off' | 'need' | 'always';
@@ -111,7 +112,7 @@ const testOk = (s: GameState, c: LeCtx) => (ownerOf(s).kids[c.kid ?? -1]?.aptitu
 
 /** Discos antigos do selo que uma major compraria (mais velhos primeiro, até 8). */
 export function oldMasters(s: GameState): string[] {
-  return Object.values(s.releases).filter((r) => r.owner === 'player' && !r.hist && s.year - r.year >= 5 && !s.acts[r.actId]?.playerBand).sort((a, b) => a.week - b.week).slice(0, 8).map((r) => r.id);
+  return allReleases17(s).filter((r) => r.owner === 'player' && !r.hist && s.year - r.year >= 5 && !s.acts[r.actId]?.playerBand).sort((a, b) => a.week - b.week).slice(0, 8).map((r) => r.id);
 }
 const mastersPrice = (n: number) => 25000 + n * 6000;
 const bigLabel = (s: GameState) => Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.cash - a.cash)[0];
