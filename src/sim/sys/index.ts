@@ -239,3 +239,5 @@ import './review18';
 import './policy18';
 import './paths18';
 import './saga18';
+// Rodada 18 (artist18): carreira de artista com selos NPC, empresário/agente/editora, sociedades.
+import './artist18';

@@ -1,6 +1,7 @@
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
 
+import { ART18 } from './artist18hook';
 import { MEDIA18 } from './media18hook';
 import { physShareRel18 } from './sys/eras18';
 import { baseMult18, recoupable18, takeRecoup18 } from './sys/contracts18';
@@ -475,14 +476,14 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
         lb.revenueYear += gross;
       }
       if (act.playerBand) {
-        if (payout > 0) post(s, `roy:${rel.id}`, payout, 'royalties', `Royalties de ${lb?.name ?? 'selo'}`);
+        if (payout > 0 && !ART18.roy?.(s, rel, payout, artistShare)) post(s, `roy:${rel.id}`, payout, 'royalties', `Royalties de ${lb?.name ?? 'selo'}`); // r18 artist18: prestação de contas
       } else act.cash += payout;
     }
   } else {
     // independente: distribuição própria (taxa de agregador)
     const fee = act.playerBand && s.config.role === 'hybrid' ? 0 : hasTech(s, 'streaming') ? 0.15 : 0.35;
     const net = Math.round(gross * (1 - fee));
-    if (act.playerBand) postSalesAR18(s, rel, `sales:${rel.id}`, net, 'sales', `Vendas ${rel.title}`);
+    if (act.playerBand) { if (!ART18.indie?.(s, rel, net, gross)) postSalesAR18(s, rel, `sales:${rel.id}`, net, 'sales', `Vendas ${rel.title}`); } // r18 artist18: master de selo antigo
     else act.cash += net;
   }
   rel.revenue += partyGets;
