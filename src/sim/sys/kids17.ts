@@ -81,8 +81,8 @@ const note = (x: Kid17, y: number, t: L) => { x.hist.unshift([y, t]); if (x.hist
 /** Aparência herdada (usada quando o filho vira pessoa do mundo). */
 export function kidLook(s: GameState, k: { name: string; born: number }, sx?: 'm' | 'f'): Appearance {
   const x = kidOf(s, k);
-  const h = hashString(`${s.config.seed}:kidlook:${kidKey(k)}`);
-  return { body: h % 3, face: (h >> 3) % 3, skin: x.skin, hair: 1 + ((h >> 6) % 14), hairColor: x.hair, outfit: (h >> 10) % 4, outfitColor: (h >> 13) % 8, glasses: (h >> 16) % 6 === 0, hat: false, beard: sx === 'm' && (h >> 19) % 4 === 0, ...(sx ? { sx } : {}) };
+  const h = hashString(`${s.config.seed}:kidlook:${kidKey(k)}`) >>> 0;
+  return { body: h % 3, face: (h >>> 3) % 3, skin: x.skin, hair: 1 + ((h >>> 6) % 14), hairColor: x.hair, outfit: (h >>> 10) % 4, outfitColor: (h >>> 13) % 8, glasses: (h >>> 16) % 6 === 0, hat: false, beard: sx === 'm' && (h >>> 19) % 4 === 0, ...(sx ? { sx } : {}) };
 }
 
 // ---------------------------------------------------------------- ano: crescer, mudar, escolher
