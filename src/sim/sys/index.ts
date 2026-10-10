@@ -252,3 +252,4 @@ import './links18';
 // Rodada 18 (cine18): storyboards de cenas compostos pelo estado e carreiras póstumas (espólios, hologramas, avatares).
 import './cine18';
 import './post18';
+import './final18'; // r18 integração final: reputação artística com memória curta

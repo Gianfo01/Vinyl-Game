@@ -187,4 +187,4 @@ export function decadeOf(year: number): number {
 }
 
 /** r18 final (balanço): reputação artística não satura — subir perto do topo custa mais e cair dói mais. */
-export const artDelta18 = (rep: number, d: number): number => (d > 0 ? d * Math.max(0.05, 1 - rep / 105) : d * (0.6 + rep / 125));
+export const artDelta18 = (rep: number, d: number): number => (d > 0 ? d * Math.max(0, 1 - rep / 100) ** 1.3 : d * (0.6 + rep / 125));

@@ -42,9 +42,9 @@ export const DIRS: Record<Dir, { name: L; fx: L }> = {
   bold: { name: l('Ousado: som novo', 'Bold: a new sound'), fx: l('Originalidade +4, performance −1; apelo entre ×0,85 e ×1,25 (aposta).', 'Originality +4, performance −1; appeal between ×0.85 and ×1.25 (a gamble).') },
 };
 export const BUDGETS: Record<BudgetLvl, { name: L; fx: L; mult: number; tier: number; approach: string; mkt: number }> = {
-  lean: { name: l('Enxuto', 'Lean'), fx: l('Teto baixo, estúdio barato e gravação espontânea; divulgação pela metade.', 'Low cap, cheap studio and spontaneous takes; half the promotion.'), mult: 0.6, tier: 1, approach: 'spontaneous', mkt: 0.5 },
+  lean: { name: l('Enxuto', 'Lean'), fx: l('Teto baixo, estúdio barato e gravação espontânea; divulgação pela metade.', 'Low cap, cheap studio and spontaneous takes; half the promotion.'), mult: 0.7, tier: 1, approach: 'spontaneous', mkt: 0.5 },
   standard: { name: l('Padrão', 'Standard'), fx: l('Estúdio regional, gravação equilibrada, divulgação normal.', 'Regional studio, balanced takes, normal promotion.'), mult: 1, tier: 1, approach: 'balanced', mkt: 1 },
-  lavish: { name: l('Caprichado', 'Lavish'), fx: l('Teto alto, estúdio profissional e gravação minuciosa; divulgação em dobro.', 'High cap, professional studio and meticulous takes; double promotion.'), mult: 1.8, tier: 2, approach: 'meticulous', mkt: 2 },
+  lavish: { name: l('Caprichado', 'Lavish'), fx: l('Teto alto, estúdio profissional e gravação minuciosa; divulgação em dobro.', 'High cap, professional studio and meticulous takes; double promotion.'), mult: 1.45, tier: 2, approach: 'meticulous', mkt: 2 },
 };
 export const DEADLINES: Record<Deadline, { name: L; fx: L; weeks: number }> = {
   tight: { name: l('Apertado', 'Tight'), fx: l('Sai rápido e aproveita o momento (+5 de momento se cumprir); mais risco de atraso e de cansaço.', 'Out fast while the iron is hot (+5 momentum if met); more risk of delays and fatigue.'), weeks: 8 },
