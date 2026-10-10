@@ -198,6 +198,7 @@ import './dm18';
 import './dmsits18';
 import './econ18';
 import './contracts18';
+import './rights18';
 import './eras18';
 // Rodada 18 (ability18): habilidade atual e potencial (CA/PA estilo FM) para todas as pessoas.
 import './ability18';

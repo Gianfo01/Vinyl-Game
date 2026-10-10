@@ -207,6 +207,8 @@ export function releasesOfDeal(s: GameState, c: Contract): Release[] {
 // ---------------------------------------------------------------- exploração (sync, reedição, remaster, licença)
 
 export type ExploitKind = 'sync' | 'reissue' | 'remaster' | 'license';
+/** r18 (rights18): disputas e autorizações pendentes bloqueiam usos (preenchido por sys/rights18) */
+export const USE_BLOCK18: { fn?: (s: GameState, songIds: string[], kind: ExploitKind) => L | null } = {};
 
 export const EXPLOIT_NAME: Record<ExploitKind, L> = {
   sync: l('sincronização', 'sync'),
@@ -224,6 +226,8 @@ export function hasExploit(s: GameState, rel: Release, kind: ExploitKind): boole
 
 /** Bloqueio por contrato (null = pode). */
 export function exploitBlock(s: GameState, rel: Release, kind: ExploitKind): L | null {
+  const b18 = USE_BLOCK18.fn?.(s, rel.songs, kind);
+  if (b18) return b18;
   if (hasExploit(s, rel, kind)) return null;
   return l(`O contrato não cede ao selo o direito de ${EXPLOIT_NAME[kind].pt}. Peça autorização ao artista na ficha de Direitos.`, `The contract does not grant the label ${EXPLOIT_NAME[kind].en} rights. Ask the artist for permission in the Rights sheet.`);
 }

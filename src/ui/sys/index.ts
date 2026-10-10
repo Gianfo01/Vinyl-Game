@@ -127,6 +127,8 @@ import './art18';
 import './dm18';
 // Rodada 18 (ability18): estrelas de habilidade atual/potencial e aba Desenvolvimento.
 import './ability18';
+// Rodada 18 (rights18, onda 1): página Direitos (obras, gravações, splits, autorizações, disputas, sociedades, extratos, catálogo, editora, precedentes).
+import './rights18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
 import './finance18';

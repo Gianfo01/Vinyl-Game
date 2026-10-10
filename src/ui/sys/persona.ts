@@ -39,8 +39,9 @@ export const PERK_NAMES: Record<PerkKey, L> = {
   wealth: l('Renda pessoal ($/mês)', 'Personal income ($/month)'),
   advance: l('Adiantamento esperado', 'Expected advance'),
   scheme: l('Sucesso das tramas', 'Scheme success'),
+  metadata: l('Metadados (menos royalties não identificados)', 'Metadata (fewer unidentified royalties)'),
 };
-const PCT: PerkKey[] = ['appeal', 'showRevenue', 'chartUnits', 'pressingCost', 'scoutAccuracy', 'stress', 'xp', 'valuation', 'staffCost', 'advance', 'scheme'];
+const PCT: PerkKey[] = ['appeal', 'showRevenue', 'chartUnits', 'pressingCost', 'scoutAccuracy', 'stress', 'xp', 'valuation', 'staffCost', 'advance', 'scheme', 'metadata'];
 
 export function fmtPerk(k: PerkKey, v: number): string {
   if (PCT.includes(k)) return `${v > 0 ? '+' : ''}${Math.round(v * 100)}%`;

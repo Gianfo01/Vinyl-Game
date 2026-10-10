@@ -6,6 +6,7 @@
 // Três perfis: cauteloso, equilibrado, agressivo. Sem aleatoriedade própria: o acaso é o do jogo.
 
 import { botClauses18, botPolicy18 } from './sys/contracts18';
+import { botRights18 } from './sys/rights18';
 import { liquid18 } from './sys/econ18';
 import { toReal } from '../core/money';
 import { FESTIVALS } from '../data/catalog';
@@ -458,6 +459,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   M.cash.push(s.player.cash);
   if (M.cash.length > 6) M.cash.shift();
   botPolicy18(s, prof);
+  botRights18(s, prof);
   for (const d of [...s.decisions]) if (resolveDecision(s, d.id, pickOption(s, d, k))) L.decisions++;
   finances(s, k);
   const acts = playerActs(s);
