@@ -5,6 +5,7 @@
 // Respeita os mesmos limites do jogador (tempo livre, cota de reuniões, ações de scouting, vagas da sede).
 // Três perfis: cauteloso, equilibrado, agressivo. Sem aleatoriedade própria: o acaso é o do jogo.
 
+import { botArtist18 } from './botartist18';
 import { botClauses18, botPolicy18 } from './sys/contracts18';
 import { botRights18 } from './sys/rights18';
 import { botSupply18 } from './sys/supply18';
@@ -474,7 +475,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   finances(s, k);
   const acts = playerActs(s);
   for (const c of s.x4?.creation?.commissions ?? []) if (c.status === 'offered' && acts.length && !acceptCommission(s, c.id, acts[c.id.length % acts.length])) L.commissions++;
-  if (s.config.role === 'artist') return;
+  if (s.config.role === 'artist') { botArtist18(s, prof); return; } // r18 artist18: o bot também joga como artista
   roster(s, k);
   scoutAndSign(s, k, prof);
   records(s, k, prof);
