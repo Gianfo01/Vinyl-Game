@@ -11,3 +11,4 @@
 .ag17-b.over { border-color: var(--bad); background: var(--bad); animation: ag17pulse 1.2s infinite alternate; }
 @keyframes ag17pulse { from { opacity: 1; } to { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .ag17-b.over { animation: none; } }
+.ag17-balls small { font: inherit; font-size: .85rem; margin-left: 4px; }
