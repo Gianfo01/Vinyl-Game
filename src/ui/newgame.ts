@@ -219,7 +219,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
   const onYear = (y: number) => { yearInput.value = String(y); renderBand(); refreshAll(); };
 
   const tabs: Tab[] = [
-    { id: 'char', name: l('Personagem', 'Character'), body: [characterCard(cfg)] },
+    { id: 'char', name: l('Personagem', 'Character'), body: [characterCard(cfg), careerCard(cfg, undefined, 'identity')] }, // r17: origem e ambição são do personagem
     { id: 'label', name: l('Carreira, gravadora e papel', 'Career, label and role'), body: [
       h('section', { class: 'card' },
         h('h3', null, t(l('Gravadora e papel', 'Label and role'))),
@@ -231,7 +231,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
           { value: 'established', label: t(S.scenarioEstablished) },
         ] as { value: RunConfig['scenario']; label: string }[], (v) => (cfg.scenario = v))),
       ),
-      careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }),
+      careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }, 'main'),
       tk.el,
       customCard(cfg),
     ] },

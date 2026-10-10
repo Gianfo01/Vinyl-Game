@@ -21,7 +21,7 @@ import type { Act, GameState, Person } from '../../sim/types';
 import { $, N, actLink, cityName, genreName, kv, modal, pill, releaseLink, sparkline, strategyName } from '../common';
 import { bar, h } from '../dom';
 import { LABEL_EXTRAS, labelOpener } from '../ficha';
-import { ACT_TABS, PERSON_TABS, openPersonPage } from '../pages';
+import { ACT_TABS, PERSON_TABS, openPersonPage, pageTabs as pageTabs17 } from '../pages';
 import { pageTabs } from '../registry';
 import { store } from '../store';
 import { chips, ic, lineChart, stat } from '../vis';
@@ -39,15 +39,7 @@ const labelBtn = (s: GameState, id: string) => h('button', { class: 'link', oncl
 
 /** Abas locais (mesmo visual das fichas de artista). */
 function tabbed(items: { id: string; label: L; icon: string; render: () => HTMLElement | null }[], initial?: string): HTMLElement {
-  const body = h('div', { class: 'pg-tab-body' });
-  const bar0 = h('div', { class: 'tabs', role: 'tablist' });
-  let cur = items.find((i) => i.id === initial)?.id ?? items[0]?.id;
-  const draw = () => {
-    bar0.replaceChildren(...items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { cur = i.id; draw(); } }, ic(i.icon), ' ', t(i.label))));
-    body.replaceChildren(items.find((i) => i.id === cur)?.render() ?? h('span'));
-  };
-  draw();
-  return h('div', { class: 'tabs-wrap pg-tabs' }, bar0, body);
+  return pageTabs17(items, initial); // r17: mesmas abas por categoria das páginas de pessoa/artista
 }
 
 function awardsList(s: GameState, xs: Award13[]): HTMLElement {

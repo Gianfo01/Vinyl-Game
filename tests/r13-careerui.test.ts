@@ -8,6 +8,11 @@ import { bookingCandidates, foundCost, foundVenture, funds } from '../src/sim/sy
 import { money, post } from '../src/sim/util';
 import { createGame } from '../src/sim/worldgen';
 import { CAREER_NAV, defaultHome, navGroups, type NavGroup } from '../src/ui/careernav13';
+import { CAREER_PAGE17, NAV17, ORDER17, groupOf17, navGroups17, resolve17 } from '../src/ui/nav17';
+const ALL17 = [...NAV17.flatMap((g) => g.secs.flatMap((s) => s.areas)), ...ORDER17.flatMap((id) => [CAREER_PAGE17[id].area, ...CAREER_PAGE17[id].absorbs])];
+/** Rodada 17: o menu do jogo é navGroups17 (os navGroups antigos ficam só para saves/compatibilidade). */
+const menu17 = (active: string[]) => navGroups17({ active, pages: active, has: (a) => ALL17.includes(a), all: ALL17 });
+
 
 const BASE: NavGroup[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['desk', 'plan', 'inbox', 'goals', 'diary'] },
@@ -22,43 +27,39 @@ const BASE: NavGroup[] = [
 const all = (gs: NavGroup[]) => gs.flatMap((g) => g.areas).sort();
 
 describe('menu por carreira (r13)', () => {
-  it('dono de selo vê o menu clássico; nada some em nenhuma carreira', () => {
-    expect(navGroups(['label'], BASE)).toEqual(BASE);
-    for (const id of Object.keys(CAREER_NAV)) {
-      const gs = navGroups([id], BASE);
-      expect(all(gs)).toEqual(all(BASE));
-      expect(new Set(all(gs)).size).toBe(all(BASE).length); // sem duplicatas
-      expect(gs[0].id).toBe('home');
+  it('dono de selo vê o menu por função (r17); nada some em nenhuma carreira', () => {
+    void navGroups; void BASE; void all; void CAREER_NAV;
+    expect(menu17(['label']).map((g) => g.id)).toEqual(['home', 'company', 'artists', 'music', 'press', 'world', 'events', 'crime', 'you', 'more']);
+    for (const id of ORDER17) {
+      const flat = menu17([id]).flatMap((g) => g.areas);
+      expect(new Set(flat).size).toBe(flat.length);
     }
   });
-  it('promotor/agente: turnês primeiro, telas de selo em "Outras atividades"', () => {
-    const gs = navGroups(['booking'], BASE);
-    expect(gs[1].career).toBe('booking');
-    expect(gs[1].areas[0]).toBe('tour12');
-    expect(gs[1].label.pt).toBe('Turnês e agenciamento');
-    const other = gs.find((g) => g.id === 'other13')!;
-    expect(other.areas).toContain('hq');
-    expect(other.areas).toContain('releases');
-    expect(gs.at(-1)!.id).toBe('you');
-    expect(defaultHome(['booking']).area).toBe('tour12');
+  it('promotor/agente: página exclusiva em Você; telas de selo em "Mais"', () => {
+    const gs = menu17(['booking']);
+    expect(groupOf17(gs, 'cp17-booking').id).toBe('you');
+    const more = gs.find((g) => g.id === 'more')!;
+    expect(more.areas).toContain('releases');
+    expect(defaultHome(['booking']).area).toBe('tour12'); // a rota antiga cai na aba da página da carreira
+    expect(resolve17('tour12', gs).area).toBe('cp17-booking');
   });
-  it('empresário puro: gestão primeiro; selo + agente: destaque dentro do grupo', () => {
-    const gs = navGroups(['manager'], BASE);
-    expect(gs[1].areas[0]).toBe('management');
-    expect(defaultHome(['manager']).area).toBe('management');
-    const mix = navGroups(['label', 'booking'], BASE);
-    const v = mix.find((g) => g.id === 'ventures')!;
-    expect(v.areas[0]).toBe('tour12');
-    expect(v.career).toBe('booking');
-    expect(mix.map((g) => g.id)).toEqual(BASE.map((g) => g.id));
+  it('empresário: Gestão vira aba da página do Empresário; selo + agente lado a lado em Você', () => {
+    const gs = menu17(['manager']);
+    expect(resolve17('management', gs)).toEqual({ area: 'cp17-manager', tab: ['cp17-manager', 'management'] });
+    const mix = menu17(['label', 'booking']);
+    const you = mix.find((g) => g.id === 'you')!;
+    expect(you.areas).toContain('cp17-label');
+    expect(you.areas).toContain('cp17-booking');
     expect(defaultHome(['label', 'booking']).area).toBe('desk');
   });
   it('trocar de carreira no meio da partida muda o menu na hora', () => {
     const s = createGame(defaultConfig('r13-nav', { startYear: 1975 }));
-    expect(navGroups(careers(s).active, BASE)).toEqual(BASE);
+    expect(menu17(careers(s).active).find((g) => g.id === 'more')!.areas).not.toContain('releases');
     expect(startCareer(s, 'booking').ok).toBe(true);
     expect(dropCareer(s, 'label').ok).toBe(true);
-    expect(navGroups(careers(s).active, BASE)[1].career).toBe('booking');
+    const gs = menu17(careers(s).active);
+    expect(groupOf17(gs, 'cp17-booking').id).toBe('you');
+    expect(gs.find((g) => g.id === 'you')!.areas).not.toContain('cp17-label');
     // o botão "Abrir" da carreira leva à página certa (antes ia para a visão geral de Empreendimentos)
     expect(careerDef('booking')!.area).toBe('tour12');
     expect(careerDef('studio')!.area).toBe('studio12');

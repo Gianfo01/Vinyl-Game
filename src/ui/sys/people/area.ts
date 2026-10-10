@@ -23,6 +23,7 @@ import { inboxArea, inboxBadge } from './inbox';
 import { negotiateButton } from './negotiation';
 import { feedView, socialDiagram } from './views';
 import { ficha13Btn } from '../persona13';
+import { hireBlock as hireBlock17 } from '../agenda17';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { person: '', promise: 'single' as PromiseKind, detective: '', invest: 0 };
@@ -191,6 +192,7 @@ function staffTab(s: GameState): HTMLElement {
         h('td', null, paths.length ? select('', [{ value: '', label: t(l('Mudar função…', 'Change role…')) }, ...paths.map((p) => ({ value: p, label: t(STAFF_ROLES.find((r) => r.id === p)?.name) ?? p }))], (v) => { if (v) say(changeRole(s, st.id, v), l('Função alterada.', 'Role changed.')); }) : ''),
         h('td', null, ficha13Btn(`s:${st.id}`)));
     }))) : h('p', { class: 'muted' }, t(l('Sem equipe.', 'No staff.'))),
+    hireBlock17(s, true), // r17: contratar direto da Equipe
   );
 }
 

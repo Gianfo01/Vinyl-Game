@@ -37,8 +37,8 @@ import './sys';
 import { defaultHome, type NavGroup } from './careernav13';
 import { careers } from '../sim/sys/careers12';
 import { setTab } from './vis';
-import { alias14, ALIAS14, type NavGroup14 } from './careernav14';
-import { groupOf16, navGroups16 } from './careernav16';
+import { alias14, type NavGroup14 } from './careernav14';
+import { navGroups16 } from './careernav16';
 import { themeButton } from './sys/theme14';
 import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
 import { tabSnapshot } from './vis';
@@ -46,8 +46,12 @@ import { withPlayerActsCache } from '../sim/util';
 import { visibleAct } from '../sim/future';
 import { openPerson } from './ficha';
 import { personRoute16, searchRoute16 } from './route16';
+import { ALIAS17, CAREER_PAGE17, ICON17, KEY17, areaOfKey17, careerOfPage17, groupOf17, navGroups17, pushRecent17, resolve17, sectionOf17, togglePin17 } from './nav17';
+import { careerPages17 } from './sys/careerpages17';
+import { icon17 } from './pixel/icons17';
+import './nav17.css';
 
-registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : null));
+registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
 registerPortrait((p, size) => {
   const img = document.createElement('img');
   img.src = portraitDataUrl(p, 64, store.game?.year ?? 1960);
@@ -106,7 +110,9 @@ const areaExists = (id: string): boolean => navItems().some((x) => x.id === alia
 
 function startGame(): void {
   // rodada 13: sem área escolhida, abre a casa da carreira principal
-  if (!store.area || store.area === 'desk') { const hm = defaultHome(careers(store.game!).active); if (hm.tab) setTab(hm.tab[0], hm.tab[1]); store.area = hm.area; }
+  if (!store.area || store.area === 'desk') { const act = careers(store.game!).active; const hm = defaultHome(act); if (hm.tab) setTab(hm.tab[0], hm.tab[1]); store.area = hm.area;
+    // r17: quem não tem selo abre na página exclusiva da carreira principal
+    if (act.length && !act.includes('label') && CAREER_PAGE17[act[0]]) store.area = CAREER_PAGE17[act[0]].area; }
   // rodada 15: recarregar a página volta à mesma tela (rota no endereço)
   const r0 = initialRoute15();
   navMemo = null;
@@ -136,9 +142,30 @@ function onKey(e: KeyboardEvent): void {
     else shortcutsHelp15(navItems().map((x) => ({ key: x.key, label: x.label })));
     return;
   }
-  const area = [...AREAS, ...EXTRA_AREAS].find((a) => a.key === e.key.toLowerCase());
-  if (area && !e.ctrlKey && !e.metaKey && !e.altKey && areaExists(area.id)) go(area.id);
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  // r17: { e } trocam de aba na página atual
+  if (e.key === '{' || e.key === '}') { cycleTab17(e.key === '}' ? 1 : -1); e.preventDefault(); return; }
+  // r17: uma tecla = uma página (KEY17); tecla de página de carreira oculta cai na tela que ela absorve
+  const id = areaOfKey17(e.key);
+  if (!id) return;
+  const c = careerOfPage17(id);
+  const tgt = areaExists(id) ? id : c ? CAREER_PAGE17[c].absorbs.find(areaExists) : undefined;
+  if (tgt) { e.preventDefault(); go(tgt); }
 }
+
+function cycleTab17(d: number): void {
+  const wrap = document.querySelector('main [data-tabs]');
+  const bs = wrap ? [...wrap.querySelectorAll<HTMLButtonElement>(':scope > .tabs > button')] : [];
+  if (bs.length < 2) return;
+  const i = bs.findIndex((b) => b.classList.contains('on'));
+  bs[(i + d + bs.length) % bs.length].click();
+}
+
+// r17: páginas fixadas e recentes (conveniência por navegador; nunca estado de jogo)
+const store17 = { pins: [] as string[], recent: [] as string[] };
+try { const j = JSON.parse(localStorage.getItem('vtn17.nav') ?? '{}') as Partial<typeof store17>; store17.pins = j.pins ?? []; store17.recent = j.recent ?? []; } catch { /* sem armazenamento */ }
+const save17 = () => { try { localStorage.setItem('vtn17.nav', JSON.stringify(store17)); } catch { /* sem armazenamento */ } };
+function togglePin(id: string): void { store17.pins = togglePin17(store17.pins, id); save17(); toast(t(store17.pins.includes(id) ? l('Página fixada no topo do menu.', 'Page pinned to the top of the menu.') : l('Página desafixada.', 'Page unpinned.')), 'info'); render(); }
 
 function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void {
   const g = store.game;
@@ -219,11 +246,17 @@ const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; are
   { id: 'ventures', label: l('Empreendimentos', 'Ventures'), icon: 'bank', areas: ['ventures', 'careers', 'tour12', 'studio12', 'publishing16', 'outlets16', 'platform16'] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['world', 'charts', 'labels', 'movements', 'lendas', 'news17', 'world17', 'crime'] },
   { id: 'fame', label: l('Prêmios e eventos', 'Awards and events'), icon: 'trophy', areas: ['festivals', 'awards', 'rockhall', 'critics'] },
-  { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth', 'night14', 'scenes17'] },
+  { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth', 'night14', 'agenda17', 'scenes17'] },
 ];
 const lastInGroup: Record<string, string> = {};
 /** Rodada 14: cada carreira ativa é um grupo de topo; as inativas ficam em "Outras atividades". */
-const groups = (): NavGroup14[] => (groupsMemo ??= navGroups16(store.game ? careers(store.game).active : ['label'], GROUPS));
+const HINT17: Record<string, string> = Object.fromEntries(GROUPS.flatMap((g) => g.areas.map((a) => [a, g.id])));
+/** r17: menu reformado (nav17): grupos por função, carreiras em Você › Carreiras, resto em Mais. */
+const groups = (): NavGroup14[] => (groupsMemo ??= (() => {
+  const g = store.game, ids = navItems().map((x) => x.id), has = new Set(ids);
+  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a), all: ids, hint: HINT17 });
+})());
+void navGroups16;
 
 interface NavItem { id: string; label: string; icon: string; key: string; badge?: number }
 // rodada 15: menu (com selos/badges, alguns caros) calculado uma vez por render, não uma vez por grupo
@@ -233,34 +266,36 @@ let groupsMemo: NavGroup14[] | null = null;
 function navItems(): NavItem[] {
   const g = store.game!;
   return navMemo ??= [
-    ...AREAS.map((a) => ({ id: a.id as string, label: t(S[a.label]), icon: a.icon, key: a.key, badge: a.id === 'desk' && g.decisions.length ? g.decisions.length : undefined })),
-    ...EXTRA_AREAS.filter((a) => !a.visible || a.visible(g)).map((a) => ({ id: a.id, label: t(a.label), icon: a.icon, key: a.key, badge: a.badge?.(g) })),
+    ...AREAS.map((a) => ({ id: a.id as string, label: t(S[a.label]), icon: ICON17[a.id] ?? a.icon, key: KEY17[a.id] ?? '', badge: a.id === 'desk' && g.decisions.length ? g.decisions.length : undefined })),
+    ...EXTRA_AREAS.filter((a) => !a.visible || a.visible(g)).map((a) => ({ id: a.id, label: t(a.label), icon: ICON17[a.id] ?? a.icon, key: KEY17[a.id] ?? '', badge: a.badge?.(g) })),
   ];
 }
 
 export function groupOf(area: string): NavGroup14 {
-  return groupOf16(groups(), area);
+  return groupOf17(groups(), alias14(area));
 }
 
 function groupItems(gr: NavGroup): NavItem[] {
   const all = navItems();
-  const listed = new Set(groups().flatMap((x) => x.areas));
-  const items = gr.areas.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
-  // áreas registradas que não estão em nenhum grupo caem em Início
-  if (gr.id === 'home') items.push(...all.filter((x) => !listed.has(x.id) && !ALIAS14[x.id]));
-  return items;
+  return gr.areas.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
 }
 
 function go(id: string): void {
-  id = alias14(id);
-  store.area = id;
-  lastInGroup[groupOf(id).id] = id;
+  const r = resolve17(alias14(id), groups());
+  if (r.tab) setTab(r.tab[0], r.tab[1]);
+  store.area = r.area;
+  lastInGroup[groupOf(r.area).id] = r.area;
   render();
 }
 
 function nav(): HTMLElement {
   const cur = groupOf(store.area);
-  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' }, groups().map((gr) => {
+  // r17: fixados no topo (☆ na barra de migalhas fixa/desfixa)
+  const all = navItems(), listed = new Set(groups().flatMap((x) => x.areas));
+  const pins = store17.pins.map((id) => all.find((x) => x.id === id && listed.has(id))).filter((x): x is NavItem => !!x);
+  const pinBox = pins.length ? h('div', { class: 'nav-pins17' }, h('small', { class: 'nav-sec' }, '★ ', t(l('Fixados', 'Pinned'))),
+    pins.map((a) => h('button', { class: store.area === a.id ? 'on' : '', title: a.label, onclick: () => go(a.id) }, h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null;
+  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' }, pinBox, groups().map((gr) => {
     const items = groupItems(gr);
     const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
     const open = gr.id === cur.id;
@@ -350,6 +385,8 @@ function renderApp(): void {
   navMemo = null;
   groupsMemo = null;
   store.area = alias14(store.area);
+  { const r = resolve17(store.area, groups()); if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; } // r17: telas absorvidas → página da carreira
+  if (store17.recent[0] !== store.area) { store17.recent = pushRecent17(store17.recent, store.area); save17(); }
   applyRealNames(!!g.config.realNames);
   if (store.prefs.eraSkin !== false) document.documentElement.dataset.era = String(Math.floor(g.year / 10) * 10);
   else delete document.documentElement.dataset.era;
@@ -391,7 +428,20 @@ function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const items = groupItems(gr);
   const tabLbl = body.querySelector('[data-tabs] > .tabs > [aria-selected=true]')?.textContent?.trim();
   const head = () => { const last = lastInGroup[gr.id]; go(last && items.some((x) => x.id === last) ? last : gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit'); };
-  return crumbBar15([{ label: t(gr.label), go: head }, { label: areaLabel(store.area), go: () => go(store.area) }, ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
+  // r17: Grupo › Seção › Página › Aba, avançar, fixar e recentes
+  const secL = sectionOf17(gr, store.area);
+  const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL ? [{ label: t(secL), go: head }] : []), { label: areaLabel(store.area), go: () => go(store.area) }, ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
+  const row = bar0.querySelector('.crumbs15');
+  const pinned = store17.pins.includes(store.area);
+  const all = navItems();
+  const rec = store17.recent.slice(1).map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x).slice(0, 5);
+  const tools = h('span', { class: 'tools17' },
+    h('button', { class: 'icon fwd17', title: t(l('Avançar (Alt+→)', 'Forward (Alt+→)')), 'aria-label': t(l('Avançar', 'Forward')), onclick: () => history.forward() }, '→'),
+    h('button', { class: `icon pin17 ${pinned ? 'on' : ''}`, 'aria-pressed': pinned ? 'true' : 'false', title: t(pinned ? l('Desafixar do menu', 'Unpin from the menu') : l('Fixar esta página no topo do menu', 'Pin this page to the top of the menu')), onclick: () => togglePin(store.area) }, pinned ? '★' : '☆'),
+    rec.length ? h('details', { class: 'rec17' }, h('summary', { title: t(l('Páginas recentes', 'Recent pages')), 'aria-label': t(l('Páginas recentes', 'Recent pages')) }, '🕘'),
+      h('div', { class: 'rec17-list' }, rec.map((a) => h('button', { class: 'link', onclick: () => go(a.id) }, ic(a.icon), ' ', a.label)))) : null);
+  row?.insertBefore(tools, row.querySelector('.find15'));
+  return bar0;
 }
 
 function openDrawer(): void {
@@ -451,7 +501,12 @@ function palette(): void {
   const g = store.game!;
   navMemo = null;
   const mine = new Set(playerActs(g));
+  const all17 = navItems();
   const base: PCmd[] = [
+    // r17: recentes primeiro, abas da página atual e telas absorvidas pelas páginas de carreira
+    ...store17.recent.slice(1, 6).map((id) => all17.find((x) => x.id === id)).filter((x): x is NavItem => !!x).map((a): PCmd => ({ label: a.label, kind: 'recent', icon: a.icon, weight: 7, run: () => go(a.id) })),
+    ...[...document.querySelectorAll<HTMLButtonElement>('main [data-tabs] > .tabs > button')].map((b): PCmd => ({ label: `${areaLabel(store.area)} › ${b.textContent?.trim() ?? ''}`, kind: 'area', icon: 'compass', weight: 4, run: () => b.click() })),
+    ...Object.keys(ALIAS17).filter((a) => groups().some((g) => g.areas.includes(ALIAS17[a][0]))).map((a): PCmd => ({ label: all17.find((x) => x.id === a)?.label ?? a, kind: 'area', icon: ICON17[a] ?? 'compass', hint: areaLabel(ALIAS17[a][0]), weight: 5, run: () => go(a) })),
     ...groups().flatMap((gr) => groupItems(gr).map((a): PCmd => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, kind: 'area', icon: a.icon, hint: t(gr.label) + (a.key ? ` · ${a.key.toUpperCase()}` : ''), weight: 6,
       run: () => { if (gr.home?.tab && gr.home.area === a.id) setTab(gr.home.tab[0], gr.home.tab[1]); go(a.id); } }))),
     { label: t(S.advanceMonth), kind: 'action', icon: 'calendar', hint: 'Ctrl+Enter', run: () => doAdvance('month') },
