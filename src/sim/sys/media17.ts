@@ -12,7 +12,6 @@ import { COUNTRY_INFO } from '../../data/countries';
 import { countryOfCity } from '../../data/geo';
 import { COLUMNISTS, CRITICS17 } from '../../data/media17';
 import { cityById, familyOf, l, type L, type MarketId } from '../../data/world';
-import '../contentBridge';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, facts17, raiseVisibility, recentFacts, type Fact } from '../facts17';
 import { grantHold, holdsOf, useHold } from '../holds17';
@@ -32,7 +31,14 @@ import { registerSituation } from './situations17';
 import { ventures } from './ventures9';
 
 // ---------------------------------------------------------------- críticos reais e novos (entram nas resenhas)
-for (const c of CRITICS17) if (!CRITICS.some((x) => x.name === c.name)) CRITICS.push({ name: c.name, outlet: c.outlet, from: c.from, to: c.to, favors: c.favors, dislikes: c.dislikes, mainstream: c.mainstream, harsh: c.harsh, prestige: c.prestige, id: `c17_${hashString(c.name) % 100000}`, region: c.region });
+// preguiçoso: o contentBridge troca a lista (setCritics) e a ordem dos módulos no bundle não é garantida (TDZ)
+export function ensureCritics17(): void {
+  const arr = CRITICS as typeof CRITICS & { r17?: 1 };
+  if (arr.r17) return;
+  for (const c of CRITICS17) if (!arr.some((x) => x.name === c.name)) arr.push({ name: c.name, outlet: c.outlet, from: c.from, to: c.to, favors: c.favors, dislikes: c.dislikes, mainstream: c.mainstream, harsh: c.harsh, prestige: c.prestige, id: `c17_${hashString(c.name) % 100000}`, region: c.region });
+  arr.r17 = 1;
+}
+registerSimHook('newgame', 'media17', () => ensureCritics17());
 export const REAL_CRITICS = new Set(CRITICS17.filter((c) => c.real).map((c) => c.name));
 
 // ---------------------------------------------------------------- estado
@@ -105,7 +111,7 @@ export const tplsIn = (year: number): Tpl[] => TPL17.filter((x) => x.from <= yea
 const due = (s: GameState, r: Rng, o?: O17): number => s.week + Math.round((o && (o.kind === 'social' || o.kind === 'blog') ? 4 + r.int(0, 8) : 12 + r.int(0, 20)));
 function colName(s: GameState, o: O17, r: Rng): string | undefined {
   if (o.line !== 'tabloid' && o.kind !== 'tv') return undefined;
-  const c = COLUMNISTS.filter((x) => x.from <= s.year && x.to >= s.year && (x.market === o.market || o.market === 'global' || x.market === 'global'));
+  const c = COLUMNISTS.filter((x) => x.from <= s.year && x.to >= s.year && (x.market === o.market || x.market === 'global' || (o.market === 'global' && x.market === 'na')));
   return c.length && r.chance(0.5) ? r.pick(c).name : undefined;
 }
 function startReach(s: GameState, a: Act | undefined, o: O17, place?: string): string[] {
@@ -179,7 +185,7 @@ function ingestFacts(s: GameState, r: Rng, list: O17[]): void {
     if (!o) continue;
     const tone = f.tags.includes('good') ? 1 : f.tags.includes('bad') ? -1 : 0;
     const rumor = f.visibility === 'rumor';
-    addStory(s, { t: f.text, tpl: f.kind, a: a?.id, out: o.id, src: 'fact', via: colName(s, o, r), truth: 1, st: rumor ? 'open' : 'confirmed', cred: o.cred, sev: f.severity, tone, fact: f.id, due: due(s, r, o), news: rumor ? undefined : 1, reach: startReach(s, a, o, f.place) });
+    addStory(s, { t: f.text, tpl: f.kind, a: a?.id, out: o.id, src: 'fact', via: tone <= 0 ? colName(s, o, r) : undefined, truth: 1, st: rumor ? 'open' : 'confirmed', cred: o.cred, sev: f.severity, tone, fact: f.id, due: due(s, r, o), news: rumor ? undefined : 1, reach: startReach(s, a, o, f.place) });
   }
 }
 
@@ -352,7 +358,11 @@ function ownership(s: GameState): void {
   for (const [oid, lid] of Object.entries(st.own)) if (!s.labels[lid]?.active) delete st.own[oid];
 }
 
+/** desliga a imprensa viva (testes A/B de balanço) */
+export const MEDIA17 = { off: false };
 registerSimHook('month', 'media17', (s) => {
+  ensureCritics17();
+  if (MEDIA17.off) return;
   const r = Rng.fromSeed(`${s.config.seed}:media17:${s.year}:${s.month}`);
   const st = m17(s);
   const list = outlets17(s);

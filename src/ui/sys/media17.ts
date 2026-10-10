@@ -15,7 +15,7 @@ import { KIND17, LINE17, outletName, type O17 } from '../../sim/outlets17';
 import { CRITICS17 } from '../../data/media17';
 import { press } from '../../sim/sys/press9';
 import {
-  court, courtOdds, feed17, interview, interviewOdds, m17, outlets17, plantOdds, plantRumor, releaseNews, releaseOdds, respond, respondOdds,
+  court, courtOdds, ensureCritics17, feed17, interview, interviewOdds, m17, outlets17, plantOdds, plantRumor, releaseNews, releaseOdds, respond, respondOdds,
   sellOdds, sellSecret, stakeout, stakeoutOdds, storyOutlet, storyWeight, tplsIn, REAL_CRITICS, type Court, type Odds, type Resp, type Story,
 } from '../../sim/sys/media17';
 import type { GameState } from '../../sim/types';
@@ -37,7 +37,8 @@ const pct = (p: number) => `${Math.round(p * 100)}%`;
 const stanceTxt = (v: number): string => t(v >= 0.25 ? l('conservador', 'conservative') : v <= -0.25 ? l('progressista', 'progressive') : l('neutro', 'neutral'));
 const relTxt = (v: number) => h('b', { class: v >= 10 ? 'good' : v <= -10 ? 'bad' : '' }, `${v > 0 ? '+' : ''}${Math.round(v)}`);
 
-function oddsLine(od: Odds): HTMLElement {
+function oddsLine(od: Odds): HTMLElement | null {
+  if (!od.ok) return null;
   return h('div', { class: 'small' },
     od.cost > 0 ? pill(`${t(l('custo', 'cost'))} ${$(od.cost)}`) : od.cost < 0 ? pill(`${t(l('recebe', 'get'))} ${$(-od.cost)}`, 'good') : null, ' ',
     pill(`${t(l('chance', 'odds'))} ${pct(od.p)}`, od.p >= 0.6 ? 'good' : od.p < 0.3 ? 'bad' : ''), ' ',
@@ -66,7 +67,7 @@ function storyCard(s: GameState, x: Story): HTMLElement {
       x.a ? actLink(s, x.a) : null, x.b ? ' · ' : null, x.b ? actLink(s, x.b) : null, ' · ',
       `${t(l('Verdade', 'True'))}: ${known ? t(x.truth ? l('sim', 'yes') : l('não', 'no')) : '?'}`, ' · ',
       `${t(l('Espalhado em', 'Spread to'))} ${x.reach.length} ${t(l('país(es)', 'country(ies)'))}: ${reach}`,
-      x.tone ? ` · ${t(l('peso na fama local por país ~{w}', 'local fame weight per country ~{w}'), { w: `${x.tone < 0 ? '−' : '+'}${storyWeight(x)}` })}` : ''),
+      x.tone ? ` · ${t(l('peso na fama local por país: {w}', 'local fame weight per country: {w}'), { w: `${x.tone < 0 ? '−' : '+'}${storyWeight(x)}` })}` : ''),
     x.why ? h('p', { class: 'small muted' }, t(x.why)) : null,
     x.resp && mine ? h('p', { class: 'small muted' }, t(l('Sua resposta: {r}', 'Your answer: {r}'), { r: t(RESP.find((z) => z[0] === x.resp)?.[1]) })) : null,
     btns.length ? h('div', { class: 'row wrap' }, ...btns) : null);
@@ -148,6 +149,7 @@ function outletsTab(s: GameState): HTMLElement {
 
 function criticsTab(s: GameState): HTMLElement {
   const fam = (ids: string[]) => ids.map((id) => t(FAMILIES.find((f) => f.id === id)?.name) || id).join(', ');
+  ensureCritics17();
   const cs = activeCritics(s).slice().sort((a, b) => b.prestige - a.prestige);
   return h('div', null,
     h('p', { class: 'small muted' }, t(l('Críticos ativos neste ano. Os marcados "real" escreveram de verdade nessa época; os outros são do mundo do jogo. Resenha muito dura de artista famoso vira situação: responder, convidar ou ignorar.', 'Critics active this year. Those marked "real" actually wrote in this era; the others belong to the game world. A very harsh review of a famous act becomes a situation: hit back, invite or ignore.'))),

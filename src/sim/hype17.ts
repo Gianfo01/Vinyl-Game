@@ -11,6 +11,8 @@ import type { Act, GameState, Release } from './types';
 import { fmtL } from './util';
 
 type Part = { t: L; v: number };
+/** desliga a variação de valores (testes A/B de balanço) */
+export const HYPE17 = { flat: false };
 const pick = <T,>(arr: T[], seed: string): T => arr[hashString(seed) % arr.length];
 const gname = (id: string): L => genreById[id]?.name ?? l(id, id);
 const cname = (id: string): L | string => cityById[id]?.name ?? id;
@@ -27,6 +29,7 @@ function chartOf(s: GameState, a: Act): { rel: Release; pos: number; weeks: numb
 /** Decomposição do "momento" do ato em motivos concretos. `m` = contribuição antiga ((momento−45)·0,4). */
 export function momentumParts17(s: GameState, a: Act, m: number): Part[] {
   const y = s.year;
+  if (HYPE17.flat) return [{ t: l('Momento recente', 'Recent momentum'), v: m }];
   const ds: { t: L; w: number }[] = [];
   // 1. disco recente
   const lastId = a.releases[a.releases.length - 1];
@@ -97,4 +100,4 @@ export function eventText17(base: L, text: L): L {
   return { pt: `${base.pt}: ${cut(text.pt)}`, en: `${base.en}: ${cut(text.en)}` };
 }
 /** Valor pelo tamanho do ato: o 1º nº 1 de um novato é notícia maior que o 10º de uma superestrela (±25%). */
-export const eventValue17 = (v: number, a?: Act): number => Math.round(v * (1.25 - (a?.fame ?? 50) / 200) * 10) / 10;
+export const eventValue17 = (v: number, a?: Act): number => HYPE17.flat ? v : Math.round(v * (1.25 - (a?.fame ?? 50) / 200) * 10) / 10;
