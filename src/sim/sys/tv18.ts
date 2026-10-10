@@ -177,8 +177,8 @@ function finale(s: GameState, r: Rng, f: Fr18): void {
   if (st.past.length > 30) st.past.shift();
 }
 
-registerInboxKind('tv18_season', { label: l('TV', 'TV'), cat: 'deals', icon: 'tv', prio: 1, goto: () => ({ area: 'talent18', tab: ['talent18', 'tv'] }) });
-registerInboxKind('tv18_third', { label: l('TV', 'TV'), cat: 'deals', icon: 'tv', prio: 1, goto: (_s, m) => (m.ref?.act ? { act: String(m.ref.act) } : null),
+registerInboxKind('tv18_season', { label: l('TV', 'TV'), cat: 'deals', icon: 'star', prio: 1, goto: () => ({ area: 'talent18', tab: ['talent18', 'tv'] }) });
+registerInboxKind('tv18_third', { label: l('TV', 'TV'), cat: 'deals', icon: 'star', prio: 1, goto: (_s, m) => (m.ref?.act ? { act: String(m.ref.act) } : null),
   handle: (_s, _m, act) => (act === 'go' ? l('Abra a ficha e faça a proposta.', 'Open the page and make an offer.') : l('Ficou para outro selo.', 'Left for another label.')) });
 
 registerSimHook('month', 'tv18', (s) => {

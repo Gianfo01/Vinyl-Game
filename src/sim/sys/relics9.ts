@@ -70,8 +70,9 @@ export function addRelic(s: GameState, k: RelicKind, n: L, actId: string | undef
   const owner = (pid && nameOf(s, pid)) || (actId && nameOf(s, actId)) || '?';
   const rl: Relic = { id: nextId(s, 'rl'), k, n, a: actId, p: pid, y, own: [[owner, y, 'origem']], st: 'kept', v: Math.round(v) };
   st.list.push(rl);
-  if (st.list.length > 60) {
-    const i = st.list.findIndex((x) => x.st === 'lost' && !x.rr) >= 0 ? st.list.findIndex((x) => x.st === 'lost' && !x.rr) : st.list.findIndex((x) => x.st !== 'player' && !x.rr);
+  if (st.list.length > 90) { // r18: mais fontes de peças — descarta perdida, senão a de menor valor fora do seu acervo
+    let i = st.list.findIndex((x) => x.st === 'lost' && !x.rr);
+    if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'player' && x.st !== 'auction' && !x.rr && (i < 0 || x.v < st.list[i].v)) i = j; }
     if (i >= 0) st.list.splice(i, 1);
   }
   return rl;

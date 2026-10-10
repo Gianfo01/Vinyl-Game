@@ -166,7 +166,7 @@ function tvTab(s: GameState): HTMLElement {
 registerArea({ id: 'talent18', label: l('Talentos e formação', 'Talent & training'), icon: 'star', key: '', render: (s) => h('div', { class: 'panel' },
   h('h2', null, t(l('Talentos e formação', 'Talent & training'))),
   tabs('talent18', [
-    { id: 'disc', label: t(l('Descoberta', 'Discovery')), icon: 'search', badge: Object.keys(disc18(s).hot).length || undefined, render: () => discTab(s) },
+    { id: 'disc', label: t(l('Descoberta', 'Discovery')), icon: 'fans', badge: Object.keys(disc18(s).hot).length || undefined, render: () => discTab(s) },
     { id: 'camps', label: t(l('Composição', 'Songwriting')), icon: 'pen', badge: camps18(s).pitches.filter((p) => !p.done && p.until >= s.week).length || undefined, render: () => campsTab(s) },
     { id: 'band', label: t(l('Banda da casa', 'House band')), icon: 'guitar', render: () => bandTab(s) },
     { id: 'school', label: t(l('Escolas', 'Schools')), icon: 'note', render: () => schoolTab(s) },

@@ -27,6 +27,7 @@ for (const d of RELICS18) if (!RELICS17.some((x) => x.id === d.id)) RELICS17.pus
 // ---------------------------------------------------------------- modos de história
 const strict = (s: GameState) => histMode(s) === 'strict';
 relics17Gate.f = (s, d) => strict(s) || d.year < s.config.startYear;
+relics17Gate.step = (s, x) => strict(s) || x[0] < s.config.startYear;
 
 // ---------------------------------------------------------------- estado
 export interface RelMeta18 { o: string; b: number; st?: L; lg?: number; auth?: 1; alt?: string; tour?: number }
@@ -242,7 +243,7 @@ registerSimHook('month', 'relics18', (s) => {
   const st = rel18(s);
   const r = Rng.fromSeed(`${s.config.seed}|relics18|${s.week}`);
   // fora do modo exato: depois do início, peça real vira história alternativa (destino sorteado pelo relics9)
-  if (!strict(s)) for (const rl of relics(s).list) if (rl.rr) { (st.m[rl.id] ??= { o: 'real', b: rl.v }).alt = rl.rr; rl.rr = undefined; rl.rb = undefined; }
+  if (!strict(s)) for (const rl of relics(s).list) if (rl.rr) (st.m[rl.id] ??= { o: 'real', b: rl.v }).alt = rl.rr;
   for (const rl of relics(s).list) {
     if (!st.m[rl.id]) st.m[rl.id] = { o: rl.rr ? 'real' : 'base', b: rl.v };
     // leilão novo de peça não catalogada: 8% de chance de ser falsificação de um "colecionador"
@@ -269,6 +270,18 @@ registerSimHook('month', 'relics18', (s) => {
 
 registerSimHook('year', 'relics18', (s) => {
   const st = rel18(s);
+  // história alternativa: peça real fora do modo exato tem destino sorteado depois do início
+  if (!strict(s)) {
+    const r = Rng.fromSeed(`${s.config.seed}|relics18y|${s.year}`);
+    for (const rl of relics(s).list) {
+      if (!rl.rr || rl.st !== 'kept') continue;
+      rl.v = Math.round(rl.v * 1.03);
+      const x = r.next();
+      if (x < 0.03) { rl.st = 'auction'; rl.au = s.week + 13; chron(s, { k: 'relic', i: 3, a: rl.a ? [rl.a] : [], t: fmtL(l('História alternativa: {n} vai a leilão.', 'Alternate history: {n} goes to auction.'), { n: rl.n }) }); }
+      else if (x < 0.045) { rl.st = 'stolen'; chron(s, { k: 'relic', i: 3, a: rl.a ? [rl.a] : [], t: fmtL(l('História alternativa: roubam {n}.', 'Alternate history: {n} is stolen.'), { n: rl.n }) }); }
+      else if (x < 0.055 && s.year - rl.y > 15) { rl.st = 'museum'; rl.own.push([r.pick(['Museu do Som', 'Hall dos Ecos']), s.year, 'doação']); }
+    }
+  }
   // valor acompanha o legado (peças reais seguem os leilões reais)
   for (const rl of relics(s).list) {
     if (rl.rr || rl.st === 'lost') continue;
