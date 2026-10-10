@@ -57,6 +57,7 @@ function awardsScene(s: GameState, cs: Cutscene, close: () => void): HTMLElement
     boardView18(s, awardBoard18(s, aw), { slot, rebuild: () => awardBoard18(s, aw) }),
     others.length ? h('details', null, h('summary', null, t(l('Outras categorias da noite', 'Other categories of the night'))),
       h('ul', { class: 'small' }, others.map((c) => h('li', null, h('b', null, T(c.name)), ': ', c.nominees.map((n, i) => h('span', { class: i === c.winner ? (n.mine ? 'good' : '') : 'muted' }, i === c.winner ? `★ ${n.name}` : n.name, i < c.nominees.length - 1 ? ', ' : '')))))) : null,
+    ((cs.data.regional as { name: string; mine: boolean }[] | undefined) ?? []).length ? h('p', { class: 'small muted' }, `${t(l('Prêmios regionais', 'Regional awards'))}: `, ((cs.data.regional as { name: string; mine: boolean }[]) ?? []).map((x, i, xs) => h('span', { class: x.mine ? 'good' : '' }, x.name, i < xs.length - 1 ? ' · ' : ''))) : null,
     result17(s, key) ? h('ul', { class: 'small s17-fx' }, result17(s, key)!.lines.map((x) => h('li', null, T(x)))) : null,
     close1(close));
 }
