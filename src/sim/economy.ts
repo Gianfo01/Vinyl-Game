@@ -86,19 +86,25 @@ export function checkInsolvency(s: GameState, r: Rng): void {
     s.player.insolvencyMonths = 0;
     return;
   }
-  s.player.insolvencyMonths += 1;
+  // r18 final (balanço): dívida funda (abaixo de 3 meses de custo fixo, mínimo US$ 25 mil reais) faz os credores
+  // apertarem — o mês conta dobrado. Ficar levemente no vermelho continua dando 4 meses de fôlego.
+  const c = monthlyCosts(s), burn = c.rent + c.salaries + c.outsourcing + c.loans + c.equipment;
+  const deep = s.player.insolvencyMonths >= 1 && s.player.cash < -Math.max(3 * burn, money(s, 25000));
+  const m0 = s.player.insolvencyMonths;
+  s.player.insolvencyMonths += deep ? 2 : 1;
   const m = s.player.insolvencyMonths;
+  if (deep) notify(s, l('Dívida funda: os credores apertam — este mês conta em dobro para a insolvência.', 'Deep debt: creditors close in — this month counts double toward insolvency.'), 'bad');
   // r17 balanço: insolvência após INSOLVENT_AT meses seguidos no vermelho (era 6); o aviso conta os meses que faltam
   if (m < INSOLVENT_AT) notify(s, fmtL(m === 1 ? l('ALERTA: caixa negativo. Reestruture, venda ativos ou peça crédito — {n} meses seguidos no vermelho e o selo quebra.', 'ALERT: negative cash. Restructure, sell assets or seek credit — {n} straight months in the red and the label goes bust.')
     : l('Caixa negativo há {m} meses: faltam {k} para a insolvência.', 'Cash negative for {m} months: {k} left before insolvency.'), { n: INSOLVENT_AT, m, k: INSOLVENT_AT - m }), 'bad');
-  if (m === 2) {
+  if (m0 < 2 && m >= 2) {
     const mine = Object.values(s.releases).filter((x) => x.owner === 'player');
     const n = Math.max(1, Math.ceil(mine.length / 2));
     const value = mine.slice(0, n).reduce((t, x) => t + Math.sqrt(x.totalUnits + 100) * 25, 0);
     const best = Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand).sort((a, b) => b.fame - a.fame)[0];
     if (mine.length || best) emitEvent(s, r, 'distress_sale', { n, price: Math.round(value + 2000), act: best?.id ?? '', fee: best ? Math.round(1500 + best.fame * best.fame * 25) : 0 });
   }
-  if (m === 3) {
+  if (m0 < 3 && m >= 3) {
     // venda forçada de equipamento
     const sold = s.player.equipment.splice(0);
     s.assets = s.assets.filter((a) => a.kind !== 'equipment');
