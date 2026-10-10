@@ -27,6 +27,7 @@ const SENSITIVE = [
   { id: 'violence', label: l('Violência e acidentes', 'Violence and accidents') },
   { id: 'crime', label: l('Crimes e corrupção', 'Crime and corruption') },
   { id: 'controversy', label: l('Polêmicas e boicotes', 'Controversies and boycotts') },
+  { id: 'romance', label: l('Traição, armário e escândalos amorosos', 'Infidelity, closet and romance scandals') },
 ];
 
 function randomSeed(): string {
