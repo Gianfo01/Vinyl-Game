@@ -15,3 +15,4 @@
 .art18-era.k-hit::before, .art18-era.k-cult::before { background: var(--good, #2e9e5b); }
 .art18-proj .row { align-items: center; gap: 8px; }
 @media (max-width: 600px) { .art18-k { min-width: 0; width: 100%; } }
+.art18-meters .art18-v { white-space: nowrap; }

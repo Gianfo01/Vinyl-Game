@@ -92,7 +92,7 @@ function era(s: GameState, t: T18, k: EraK18, t0: L, rel?: string): void {
 const FACT_THEME: Record<string, string> = {
   death: 'longing', romance: 'love', marriage: 'love', birth: 'love', breakup: 'heartbreak', affair: 'heartbreak', split: 'heartbreak', exit: 'heartbreak',
   arrest: 'rebellion', scandal: 'rebellion', case_ruling: 'rebellion', addiction: 'demons', rehab: 'demons', breakdown: 'demons', health: 'demons',
-  chart: 'money', award: 'money', boycott: 'protest', law: 'protest', statement: 'protest', tour_cancel: 'road',
+  boycott: 'protest', law: 'protest', statement: 'protest', tour_cancel: 'road',
 };
 /** Temas que a vida do artista deu nos últimos 2 anos (de fatos públicos/rumores sobre o ato e os integrantes). */
 export function livedThemes18(s: GameState, act: Act): { id: string; f: Fact }[] {
@@ -455,7 +455,7 @@ export function trajView18(s: GameState, act: Act): TrajView18 {
   const crit = rels.filter((r) => r.critic !== undefined);
   const studio = t ? Math.round(t.studio) : crit.length ? Math.round(crit.reduce((x, r) => x + (r.critic ?? 0), 0) / crit.length) : null;
   const lastCrit = crit[crit.length - 1]?.critic ?? 0;
-  const eras: Era18[] = t ? t.eras.slice() : derivedEras(s, rels);
+  const eras: Era18[] = t ? t.eras.slice() : derivedEras(s, act, rels);
   const outs = rels.filter((r) => t?.out[r.id]).map((r) => ({ rel: r, o: t!.out[r.id] }));
   return {
     sig, themes, prods, stage: t && t.shows ? Math.round(t.stage) : null, studio,
@@ -463,12 +463,13 @@ export function trajView18(s: GameState, act: Act): TrajView18 {
     pres: t ? Math.round(t.pres) : null, conf: t ? Math.round(t.conf) : null, eras, outs, react: t?.react, line: t?.line, cult: !!activeStory(s, act.id), mine: isMine(s, act),
   };
 }
-function derivedEras(s: GameState, rels: Release[]): Era18[] {
+function derivedEras(s: GameState, act: Act, rels: Release[]): Era18[] {
   const out: Era18[] = [];
   let prev: number[] | null = null;
   for (const r of rels) {
     const v = releaseSound(s, r);
-    if (!out.length) out.push({ y: r.year, m: 0, k: 'debut', rel: r.id, t: fmtL(l('Estreia com "{r}".', 'Debut with "{r}".'), { r: r.title }) });
+    const isDebut = !out.length && r.year <= act.debutYear + 1;
+    if (isDebut) out.push({ y: r.year, m: 0, k: 'debut', rel: r.id, t: fmtL(l('Estreia com "{r}".', 'Debut with "{r}".'), { r: r.title }) });
     else if (r.peak <= 3) out.push({ y: r.year, m: 0, k: 'hit', rel: r.id, t: fmtL(l('"{r}" chega ao topo ({p}º).', '"{r}" hits the top (#{p}).'), { r: r.title, p: r.peak }) });
     else if (prev && v && dist(v, prev) > 24) out.push({ y: r.year, m: 0, k: 'shift', rel: r.id, t: fmtL(l('"{r}" muda o som.', '"{r}" changes the sound.'), { r: r.title }) });
     if (v) prev = v;

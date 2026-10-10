@@ -85,6 +85,12 @@ RELEASE_EXTRAS.push((s, r) => {
   if (r.reissueOf || r.hist || !r.songs.length || !s.songs[r.songs[0]]) return null;
   const v = dims18(s, r);
   if (!v) return null;
+  const a = s.acts[r.actId];
+  const exact = r.owner === 'player' || !!a?.playerBand || (!!a && canSee(s, a.id, 'songs'));
+  if (!exact) return section(t(l('Qualidade em dimensões', 'Quality by dimension')),
+    h('p', { class: 'small' }, t(fmtL(l('Leitura de fora (estimativa): {p}.', 'Outside read (estimate): {p}.'), { p: profilePhrase(v) }))),
+    h('div', { class: 'art18-dims' }, ...DIMS18.filter((d) => v[d] >= 0 && d !== 'chem').map((d) => h('div', { class: 'art18-dim' }, h('span', { class: 'art18-k' }, t(DIM18[d].name)), bar(Math.round(v[d] / 10) * 10, 100), ` ~${Math.round(v[d] / 10) * 10}`))),
+    h('p', { class: 'muted small' }, t(l('Números exatos com olheiros ou relação próxima com o artista.', 'Exact numbers with scouts or a close relationship with the act.'))));
   return section(t(l('Qualidade em dimensões', 'Quality by dimension')),
     h('p', { class: 'small' }, why18(s, 'q18.rel', { rel: r.id }, t(fmtL(l('Q geral {q} (resumo) — {p}.', 'Overall Q {q} (summary) — {p}.'), { q: Math.round(r.q), p: profilePhrase(v) }))), ' ', why18(s, 'q18.use', { rel: r.id }, ic('bulb'), ' ', t(l('o que isso fez', 'what it did')))),
     h('div', { class: 'art18-dims' }, ...DIMS18.filter((d) => v[d] >= 0).map((d) => h('div', { class: 'art18-dim' }, h('span', { class: 'art18-k' }, t(DIM18[d].name)), why18(s, 'q18.dim', { rel: r.id, d }, bar(v[d], 100, v[d] >= 70 ? 'good' : v[d] < 40 ? 'bad' : ''), ` ${v[d]}`)))),

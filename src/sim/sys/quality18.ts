@@ -273,10 +273,10 @@ export function profileLine18(v: Record<Dim18, number>): { hi: Dim18[]; lo: Dim1
 const k = (x: number, c = 55, span = 40) => clamp((x - c) / span, -1, 1);
 /** Multiplicador de apelo (vendas/paradas) vindo das dimensões. */
 export function appealMult18(rel: Release, v: Record<Dim18, number>): { m: number; why: [L, number][] } {
-  const why: [L, number][] = [[l('Acessibilidade', 'Accessibility'), 0.06 * k(v.acc, 48)]];
-  if (rel.type === 'single') why.push([l('Força do single', 'Single strength'), 0.08 * k(v.sgl)]);
-  else if (rel.type === 'lp') { why.push([l('Coesão do álbum', 'Album cohesion'), 0.05 * k(v.coh, 57)]); why.push([l('Single puxando o álbum', 'Single pulling the album'), 0.04 * k(v.sgl)]); }
-  else why.push([l('Força do single', 'Single strength'), 0.05 * k(v.sgl)]);
+  const why: [L, number][] = [[l('Acessibilidade', 'Accessibility'), 0.06 * k(v.acc, 54)]];
+  if (rel.type === 'single') why.push([l('Força do single', 'Single strength'), 0.08 * k(v.sgl, 64)]);
+  else if (rel.type === 'lp') { why.push([l('Coesão do álbum', 'Album cohesion'), 0.05 * k(v.coh, 68)]); why.push([l('Single puxando o álbum', 'Single pulling the album'), 0.04 * k(v.sgl, 64)]); }
+  else why.push([l('Força do single', 'Single strength'), 0.05 * k(v.sgl, 64)]);
   const m = clamp(1 + why.reduce((t, x) => t + x[1], 0), 0.88, 1.12);
   return { m, why };
 }
@@ -310,10 +310,10 @@ registerMod('chartUnits', 'q18', (s, value, c) => {
 export function criticAdj18(rel: Release, v: Record<Dim18, number>): [L, number][] {
   const out: [L, number][] = [
     [l('Originalidade', 'Originality'), 0.35 * k(v.orig, 55, 45)],
-    [l('Emoção', 'Emotion'), 0.3 * k(v.emo, 55, 45)],
-    [l('Técnica', 'Technique'), 0.1 * k(v.tech, 55, 45)],
+    [l('Emoção', 'Emotion'), 0.3 * k(v.emo, 62, 45)],
+    [l('Técnica', 'Technique'), 0.1 * k(v.tech, 65, 45)],
   ];
-  if (rel.type === 'lp') out.push([l('Coesão do álbum', 'Album cohesion'), 0.25 * k(v.coh, 55, 45)]);
+  if (rel.type === 'lp') out.push([l('Coesão do álbum', 'Album cohesion'), 0.25 * k(v.coh, 66, 45)]);
   if (v.acc > 75 && v.orig < 45) out.push([l('Fácil demais (fórmula)', 'Too easy (formulaic)'), -0.2]);
   return out.map(([a, b]) => [a, Math.round(b * 100) / 100]);
 }
