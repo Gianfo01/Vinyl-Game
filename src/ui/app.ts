@@ -30,6 +30,8 @@ import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
 import { copyText, exportSaveText, importSaveText } from './store';
+import { saveManagerModal17 } from './saves17';
+import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
 import { EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
 import { openLabelStory } from './sys/story12';
@@ -472,6 +474,8 @@ function settings(): void {
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveTextDialog(); } }, t(S.exportSave)),
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveTextDialog(); } }, t(l('Copiar / colar save', 'Copy / paste save'))),
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveGame('auto'); store.game = null; titleScreen(root, startGame); } }, t(l('Menu inicial', 'Main menu'))),
+      h('button', { class: 'btn ghost', onclick: () => { close(); saveManagerModal17((g) => { store.game = g; startGame(); }); } }, t(l('Gerenciar saves', 'Manage saves'))), // r17
+      h('button', { class: 'btn ghost', onclick: () => { close(); if (store.game) modal(t(l('Cartão da partida', 'Run card')), runCard17body(store.game)); } }, t(l('Cartão da partida', 'Run card'))), // r17
     ),
     h('p', { class: 'muted small' }, t(l('Atalhos: 1–0 e D trocam de área · Ctrl+Enter avança · Ctrl+K abre a busca · ? lista todos os atalhos · Alt+← volta.', 'Shortcuts: 1–0 and D switch area · Ctrl+Enter advances · Ctrl+K opens search · ? lists every shortcut · Alt+← goes back.'))),
   );

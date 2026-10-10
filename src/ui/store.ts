@@ -73,7 +73,7 @@ export function applyPrefs(): void {
 const DB = 'vinyl-to-neural';
 const STORE = 'saves';
 
-function openDb(): Promise<IDBDatabase> {
+export function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB, 1);
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
@@ -82,13 +82,13 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-async function gzip(text: string): Promise<Blob | string> {
+export async function gzip(text: string): Promise<Blob | string> {
   if (typeof CompressionStream === 'undefined') return text;
   const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
   return new Response(stream).blob();
 }
 
-async function gunzip(data: Blob | string): Promise<string> {
+export async function gunzip(data: Blob | string): Promise<string> {
   if (typeof data === 'string') return data;
   const stream = data.stream().pipeThrough(new DecompressionStream('gzip'));
   return new Response(stream).text();
@@ -103,21 +103,42 @@ export interface SaveMeta {
   role: string;
   savedAt: number;
   version: number;
+  /** rodada 17: nome dado pelo jogador, perfil local, tipo (auto/manual), tamanho compactado e resumo */
+  name?: string;
+  profile?: string;
+  kind?: 'auto' | 'manual';
+  size?: number;
+  player?: string;
+  cash?: number;
+  ironman?: boolean;
+  run?: string;
 }
 
-export async function saveGame(slot = 'auto'): Promise<boolean> {
+/** Rodada 17: perfil local ativo (várias pessoas no mesmo navegador) e ganchos depois de gravar (nuvem). */
+export const profileId17 = (): string => { try { return localStorage.getItem('vtn:profile17') || 'default'; } catch { return 'default'; } };
+export const afterSave17: ((g: GameState, slot: string) => void)[] = [];
+/** Autosave por partida (não sobrescreve outra run): um por ano em rodízio de 3 (ironman: um só). */
+export const runId17 = (g: GameState): string => ((g as { run17?: string }).run17 ??= `${g.signature}-${Date.now().toString(36)}`);
+export const autoSlot17 = (g: GameState): string => g.config.ironman ? `auto-${runId17(g)}` : `auto-${runId17(g)}-${g.year % 3}`;
+
+export async function saveGame(slot = 'auto', name?: string): Promise<boolean> {
   const g = store.game;
   if (!g) return false;
+  const kind = slot === 'auto' ? 'auto' : 'manual';
+  if (slot === 'auto' || g.config.ironman) slot = autoSlot17(g);
   try {
     const db = await openDb();
     const payload = await gzip(JSON.stringify(g));
-    const meta: SaveMeta = { slot, signature: g.signature, company: g.config.companyName, year: g.year, month: g.month, role: g.config.role, savedAt: Date.now(), version: SAVE_VERSION };
+    const pp = Object.values(g.persons).find((p) => p.isPlayer);
+    const meta: SaveMeta = { slot, signature: g.signature, company: g.config.companyName, year: g.year, month: g.month, role: g.config.role, savedAt: Date.now(), version: SAVE_VERSION,
+      name, profile: profileId17(), kind, size: typeof payload === 'string' ? payload.length : payload.size, player: pp?.name, cash: Math.round(g.player.cash), ironman: !!g.config.ironman, run: runId17(g) };
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).put({ meta, payload }, slot);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
+    for (const f of afterSave17) try { f(g, slot); } catch { /* nuvem opcional */ }
     return true;
   } catch (e) {
     console.warn('save failed', e);
@@ -188,7 +209,7 @@ export function exportSave(): boolean {
 
 const SAVE_PREFIX = 'VTN1:';
 
-async function gzipB64(text: string): Promise<string> {
+export async function gzipB64(text: string): Promise<string> {
   if (typeof CompressionStream === 'undefined') return 'raw:' + btoa(unescape(encodeURIComponent(text)));
   const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
   const buf = new Uint8Array(await new Response(stream).arrayBuffer());
@@ -197,7 +218,7 @@ async function gzipB64(text: string): Promise<string> {
   return btoa(bin);
 }
 
-async function unGzipB64(b64: string): Promise<string> {
+export async function unGzipB64(b64: string): Promise<string> {
   if (b64.startsWith('raw:')) return decodeURIComponent(escape(atob(b64.slice(4))));
   const bin = atob(b64);
   const buf = new Uint8Array(bin.length);

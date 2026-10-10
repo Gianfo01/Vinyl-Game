@@ -8,6 +8,7 @@ import {
 } from '../../../sim/sys/live';
 import type { GameState, RunConfig } from '../../../sim/types';
 import { createGame } from '../../../sim/worldgen';
+import { scenario17 } from '../../../sim/sys/scenarios17';
 import { $, N, cityName, pill, rerender, section, toast } from '../../common';
 import { h, select } from '../../dom';
 import { registerArea, registerCutscene } from '../../registry';
@@ -54,7 +55,7 @@ function activePack(): UniversePack | undefined {
 
 /** Chamado pela tela de nova partida antes de createGame: aplica o pacote de universo ativo. */
 export function prepareNewGame(_cfg: RunConfig): void {
-  setNextGameSetup({ pack: activePack() });
+  setNextGameSetup({ pack: activePack(), scenarioId: _cfg.scenario17 && scenarioById[_cfg.scenario17] ? _cfg.scenario17 : undefined });
 }
 
 function recordBoard(s: GameState): void {
@@ -112,6 +113,7 @@ export function scenarioScreen(root: HTMLElement, onStart: () => void, back: () 
     h('p', null, pill(`${d.startYear}→${d.endYear}`), pill(cityName(d.homeCity))),
     h('p', { class: 'small' }, t(d.desc)),
     h('p', { class: 'small' }, h('b', null, t(l('Meta: ', 'Goal: '))), t(d.goal)),
+    scenario17(d.id) ? h('ul', { class: 'small' }, ...scenario17(d.id)!.rules17.map((x) => h('li', null, t(x)))) : null,
     h('p', { class: 'small muted' }, `🥉 ${d.tiers[0]} · 🥈 ${d.tiers[1]} · 🥇 ${d.tiers[2]} ${t(d.unit)}`),
     h('button', { class: 'btn primary', onclick: () => {
       setNextGameSetup({ scenarioId: d.id, pack: activePack() });
@@ -139,6 +141,7 @@ function scenarioPanel(s: GameState): HTMLElement {
     pr ? section(t(pr.def.name),
       h('p', { class: 'small' }, t(pr.def.desc)),
       h('p', null, h('b', null, t(l('Meta: ', 'Goal: '))), t(pr.def.goal)),
+      scenario17(pr.def.id) ? h('ul', { class: 'small' }, ...scenario17(pr.def.id)!.rules17.map((x) => h('li', null, t(x)))) : null,
       chips(stat('trophy', `${pr.value} ${t(pr.def.unit)}`, l('Progresso', 'Progress')), stat('calendar', pr.run.done ? '✓' : `${pr.yearsLeft}`, l('Anos restantes', 'Years left')), stat('star', MEDAL_ICON[pr.medal], l('Medalha atual', 'Current medal'))),
       meter('trophy', l('Rumo ao ouro', 'Toward gold'), Math.min(100, (pr.value / pr.def.tiers[2]) * 100)),
       h('p', { class: 'small muted' }, `🥉 ${pr.def.tiers[0]} · 🥈 ${pr.def.tiers[1]} · 🥇 ${pr.def.tiers[2]} · ${t(l('prazo: dezembro de {y}', 'deadline: December {y}'), { y: pr.run.endYear })}`),

@@ -180,3 +180,6 @@ import './exp17';
 // Rodada 17 (onda 2, J): cenas interativas (motor + catálogo), álbum de cenas e fotos icônicas.
 import './scene17';
 import './scenedefs17';
+// Rodada 17 (onda 2, I — novo jogo): cenários de época com regras especiais; efeitos das opções novas (real até o início, dificuldade detalhada, prazo).
+import './scenarios17';
+import './start17';

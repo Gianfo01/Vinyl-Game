@@ -60,7 +60,7 @@ export interface ScenarioDef {
   fail?: (s: GameState) => L | null;
 }
 
-function signAct(s: GameState, r: Rng, genre: string, city: string, fame: number, members?: number, name?: string): Act {
+export function signAct(s: GameState, r: Rng, genre: string, city: string, fame: number, members?: number, name?: string): Act {
   const act = makeAct(s, r, { name, genre, city, members: members ?? r.int(1, 5), potential: r.int(62, 82), formed: s.year - 2, debutYear: s.year - 1, fame });
   if (name) act.name = name;
   const f = Math.pow(10, 2 + fame / 25);
@@ -70,19 +70,19 @@ function signAct(s: GameState, r: Rng, genre: string, city: string, fame: number
   return act;
 }
 
-function adjustCash(s: GameState, factor: number): void {
+export function adjustCash(s: GameState, factor: number): void {
   const d = Math.round(s.player.cash * factor) - s.player.cash;
   s.player.cash += d;
   s.player.initialCash += d;
 }
 
-const insolvent = (s: GameState): L | null => (s.ended?.reason === 'insolvency' ? l('O selo quebrou antes do prazo.', 'The label went bust before the deadline.') : null);
+export const insolvent = (s: GameState): L | null => (s.ended?.reason === 'insolvency' ? l('O selo quebrou antes do prazo.', 'The label went bust before the deadline.') : null);
 
-function genreUnits(s: GameState, genres: string[]): number {
+export function genreUnits(s: GameState, genres: string[]): number {
   return sum(Object.values(s.releases).filter((x) => (x.owner === 'player' || s.acts[x.actId]?.playerBand) && genres.includes(s.acts[x.actId]?.genre ?? '')).map((x) => x.totalUnits));
 }
 
-const bestFame = (s: GameState, pred: (a: Act) => boolean = () => true) => Math.round(Math.max(0, ...Object.values(s.acts).filter((a) => (a.owner === 'player' || a.playerBand) && pred(a)).map((a) => a.fame)));
+export const bestFame = (s: GameState, pred: (a: Act) => boolean = () => true) => Math.round(Math.max(0, ...Object.values(s.acts).filter((a) => (a.owner === 'player' || a.playerBand) && pred(a)).map((a) => a.fame)));
 
 export const SCENARIOS: ScenarioDef[] = [
   {
