@@ -75,12 +75,25 @@ export function climate17(a3: string | null, year: number, cityId?: string): L {
 // ---------------------------------------------------------------- orientação de cada pessoa
 
 /** Pessoa real (catálogo histórico): só dados documentados. */
+// índice por semana (pessoa → atos; ato → frente assumida): estas leituras rodam a cada cálculo de público
+interface Ix17 { w: number; n: number; acts: Map<string, Act[]>; front: Map<string, boolean> }
+const IX = new WeakMap<GameState, Ix17>();
+function ix(s: GameState): Ix17 {
+  let x = IX.get(s);
+  const n = s.idSeq ?? 0;
+  if (!x || x.w !== s.week || x.n !== n) {
+    x = { w: s.week, n, acts: new Map(), front: new Map() };
+    for (const a of Object.values(s.acts)) for (const m of a.members) { const l0 = x.acts.get(m); if (l0) l0.push(a); else x.acts.set(m, [a]); }
+    IX.set(s, x);
+  }
+  return x;
+}
+/** Pessoa real (catálogo histórico): só dados documentados. */
 export function isRealP(s: GameState, pid: string): boolean {
-  for (const a of Object.values(s.acts)) if (a.catalogNo && a.members.includes(pid)) return true;
-  return false;
+  return (ix(s).acts.get(pid) ?? []).some((a) => !!a.catalogNo);
 }
 const u01 = (s: GameState, pid: string, k: string): number => (hashString(`${s.config.seed}:sx17:${k}:${pid}`) % 10000) / 10000;
-const actOf = (s: GameState, pid: string): Act | undefined => { let b: Act | undefined; for (const a of Object.values(s.acts)) if (a.members.includes(pid) && (!b || a.fame > b.fame)) b = a; return b; };
+const actOf = (s: GameState, pid: string): Act | undefined => { let b: Act | undefined; for (const a of ix(s).acts.get(pid) ?? []) if (!b || a.fame > b.fame) b = a; return b; };
 const homeOf = (s: GameState, pid: string): string => actOf(s, pid)?.city ?? s.config.homeCity;
 
 export interface Sx17 { o: Orient17 | 'private'; c: Closet17; real?: boolean; note?: string; lav?: boolean; outed?: boolean }
@@ -128,7 +141,12 @@ export function visibleSex(s: GameState, pid: string): Sx17 {
 export function outMembers(s: GameState, a: Act): string[] {
   return a.members.filter((m) => { const p = s.persons[m]; if (!p?.alive) return false; const x = sexOf(s, m); return isQueer(x) && x.c === 'out'; });
 }
-const frontOut = (s: GameState, a: Act): boolean => { const om = outMembers(s, a); return om.length > 0 && (a.members.length <= 2 || om.includes(a.leaderId ?? a.members[0]) || om.length * 2 >= a.members.length); };
+const frontOut = (s: GameState, a: Act): boolean => {
+  const F0 = ix(s).front;
+  let v = F0.get(a.id);
+  if (v === undefined) { const om = outMembers(s, a); v = om.length > 0 && (a.members.length <= 2 || om.includes(a.leaderId ?? a.members[0]) || om.length * 2 >= a.members.length); F0.set(a.id, v); }
+  return v;
+};
 
 // ---------------------------------------------------------------- efeitos públicos (fama regional, shows, júri, propostas)
 
@@ -193,6 +211,7 @@ export function comeOut(s: GameState, pid: string, how: 'chose' | 'outed', by?: 
   const rec = (st.p[key] ??= {});
   if (rec.c === 'out') return l('Já é público.', 'Already public.');
   rec.c = 'out'; rec.w = s.week; if (how === 'outed') rec.outed = 1;
+  IX.delete(s);
   const name = isPl ? (s.persons[Object.values(s.persons).find((p) => p.isPlayer)?.id ?? '']?.name ?? '?') : s.persons[pid]?.name ?? '?';
   const act = isPl ? undefined : actOf(s, pid);
   const city = act?.city ?? s.config.homeCity;
