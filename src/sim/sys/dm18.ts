@@ -560,7 +560,7 @@ export function dmMonth18(s: GameState): void {
 }
 registerSimHook('month', 'dm18', (s) => dmMonth18(s));
 setFeudPhase18((s) => PHASE18[dm18(s).ph]?.feud ?? 1);
-setAgencyPhase18((s) => PHASE18[dm18(s).ph]?.ag ?? 1);
+setAgencyPhase18((s) => PHASE18[dm18(s).ph]?.ag ?? 1, (s) => dm18(s).ph);
 
 registerInboxKind('dm18', {
   label: l('Mestre', 'DM'), cat: 'decision', icon: 'pen', prio: 2,
