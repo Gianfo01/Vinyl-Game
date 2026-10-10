@@ -58,7 +58,7 @@ export function runSimHooks(phase: HookPhase, s: GameState, r: Rng, arg: Partial
 
 // ---------------------------------------------------------------- decisões do jogador
 
-type DecisionFn = (s: GameState, eventId: string, optionId: string) => void;
+type DecisionFn = (s: GameState, eventId: string, optionId: string, ctx?: Record<string, string | number>) => void;
 const DECISION_FNS: { id: string; fn: DecisionFn }[] = [];
 /** Avisa sistemas (ex.: estilo de liderança) sobre a opção que o jogador escolheu num cartão de decisão. */
 export function registerDecisionListener(id: string, fn: DecisionFn): void {
@@ -66,9 +66,11 @@ export function registerDecisionListener(id: string, fn: DecisionFn): void {
   if (i >= 0) DECISION_FNS[i] = { id, fn };
   else DECISION_FNS.push({ id, fn });
 }
-export function runDecisionListeners(s: GameState, eventId: string, optionId: string): void {
-  for (const x of DECISION_FNS) x.fn(s, eventId, optionId);
+export function runDecisionListeners(s: GameState, eventId: string, optionId: string, ctx?: Record<string, string | number>): void {
+  for (const x of DECISION_FNS) x.fn(s, eventId, optionId, ctx);
 }
+/** r18 decide18: portão de opção (traço/habilidade/relação/desbloqueio) — bloqueada vira a opção padrão. */
+export const DEC_GATE18: { f: null | ((s: GameState, eventId: string, optionId: string, ctx: Record<string, string | number>) => boolean) } = { f: null };
 
 // ---------------------------------------------------------------- modificadores
 

@@ -80,6 +80,8 @@ export function shareOf(s: GameState, song: Song): { master: number; pub: number
 
 export interface Fit15 { v: number; why: [L, number][] }
 /** Encaixe 0..1 da faixa no briefing, com cada motivo e seu peso. */
+/** r18 links18: termos extras do encaixe (ex.: liberação "one-stop" de direitos). */
+export const SYNC_FIT18: ((s: GameState, b: Brief15, song: Song) => [L, number] | null)[] = [];
 export function fitOf(s: GameState, b: Brief15, song: Song): Fit15 {
   const why: [L, number][] = [];
   const md = moodOf(song);
@@ -96,6 +98,7 @@ export function fitOf(s: GameState, b: Brief15, song: Song): Fit15 {
   const ag2 = s.player.staff.filter((x) => x.role === 'sync').reduce((t, x) => Math.max(t, x.skill), 0);
   if (ag2) why.push([l('Seu agente de sync conhece o supervisor', 'Your sync agent knows the supervisor'), ag2 / 100 * 0.12]);
   if (song.instrumental && (b.medium === 'game' || b.medium === 'trailer')) why.push([l('Instrumental: cabe sob diálogo e ação', 'Instrumental: sits under dialogue and action'), 0.08]);
+  for (const f of SYNC_FIT18) { const x = f(s, b, song); if (x) why.push(x); } // r18 links18 (direitos ↔ sync)
   const v = clamp(why.reduce((t, x) => t + x[1], 0), 0, 1);
   return { v: Math.round(v * 100) / 100, why };
 }

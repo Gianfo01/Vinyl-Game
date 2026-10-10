@@ -18,6 +18,8 @@ import { talk } from './talks';
  * Rodada 8: respostas de mensagens de outros sistemas (convites de feat, propostas). A mensagem leva
  * `kind: 'deal'` e `ref.sys` com a chave do tratador; o tratador devolve o texto do resultado.
  */
+/** r18 decide18: ouvintes de resposta (ecos atrasados). */
+export const MSG_AFTER18: ((s: GameState, m: InboxMsg, action: string) => void)[] = [];
 export const MSG_HANDLERS: Record<string, (s: GameState, m: InboxMsg, action: string, r: Rng) => L> = {};
 
 export function msgMedium(m: { year: number; tone?: string; kind?: string }): Medium {
@@ -104,6 +106,7 @@ export function answerMsg(s: GameState, msgId: string, action: string, r: Rng = 
   }
   m.resolved = action;
   m.read = true;
+  for (const f of MSG_AFTER18) f(s, m, action);
   return out;
 }
 

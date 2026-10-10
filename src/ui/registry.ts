@@ -190,3 +190,6 @@ export function openCutscene(s: GameState, cs: Cutscene, rerender: () => void): 
   openScene((cs.data.title as L | string | undefined) ?? '', (close) => fn(s, cs, close), { onClose: rerender });
   return true;
 }
+
+/** r18 decide18: chamados depois de cada avanço de tempo (resumo do mês, etc.). */
+export const AFTER_ADVANCE: ((s: GameState) => void)[] = [];

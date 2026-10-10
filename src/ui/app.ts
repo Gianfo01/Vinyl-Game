@@ -34,7 +34,7 @@ import { copyText, exportSaveText, importSaveText } from './store';
 import { saveManagerModal17 } from './saves17';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
-import { EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
+import { AFTER_ADVANCE, EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
 import { openLabelStory } from './sys/story12';
 import './sys';
 import { defaultHome, type NavGroup } from './careernav13';
@@ -203,6 +203,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void
     return;
   }
   render();
+  for (const f of AFTER_ADVANCE) f(g); // r18 decide18: resumo do mês
   if (digest) showDigest(g, digest.d, digest.why, () => showPendingCutscene(g, render, store.prefs.cutscenes === false));
   else showPendingCutscene(g, render, store.prefs.cutscenes === false);
 }

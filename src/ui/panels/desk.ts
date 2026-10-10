@@ -12,6 +12,7 @@ import { playerActs } from '../../sim/util';
 import { $, actLink, kv, pill, releaseLink, rerender, section } from '../common';
 import { h } from '../dom';
 import { advisorSection } from '../advisor';
+import { decLocked18, decOptBody18, decTimer18 } from '../sys/decide18';
 
 const CAT_ICON: Record<string, string> = {
   career: '🎼', people: '👥', band: '🎸', contract: '📜', market: '🏢', tech: '📡', culture: '🎨', scandal: '📰',
@@ -21,11 +22,11 @@ const CAT_ICON: Record<string, string> = {
 export function deskPanel(s: GameState): HTMLElement {
   const decisions = s.decisions.map((d) =>
     h('article', { class: 'decision' },
-      h('header', null, h('span', { class: 'cat' }, CAT_ICON[d.cat] ?? '•'), h('h4', null, t(d.title))),
+      h('header', null, h('span', { class: 'cat' }, CAT_ICON[d.cat] ?? '•'), h('h4', null, t(d.title)), decTimer18(s, d)),
       h('p', null, t(d.text)),
       h('div', { class: 'options' }, d.options.map((o) =>
-        h('button', { class: `btn ${o.id === d.defaultOption ? 'ghost' : ''}`, title: t(o.hint), onclick: () => { resolveDecision(s, d.id, o.id); rerender(); } },
-          h('span', null, t(o.label)), o.hint ? h('small', null, t(o.hint)) : null,
+        h('button', { class: `btn ${o.id === d.defaultOption ? 'ghost' : ''} ${decLocked18(s, d, o) ? 'dc18-locked' : ''}`, 'aria-disabled': String(decLocked18(s, d, o)), title: t(o.hint), onclick: () => { if (decLocked18(s, d, o)) return; resolveDecision(s, d.id, o.id); rerender(); } },
+          ...decOptBody18(s, d, o), // r18 decide18: agora × depois, aposta, trava
         ),
       )),
       h('p', { class: 'muted small' }, t(S.defaultIfIgnored), t(d.options.find((o) => o.id === d.defaultOption)?.label)),

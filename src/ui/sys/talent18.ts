@@ -30,7 +30,7 @@ const btn = (label: L | string, fn: () => void, dis = false, cls = 'btn small') 
 const row = (...k: (Node | string | null)[]) => h('div', { class: 'row wrap', style: 'gap:6px;align-items:center;margin:4px 0' }, ...k);
 const card = (...k: (Node | string | null)[]) => h('div', { class: 'card', style: 'margin:6px 0;padding:8px' }, ...k);
 const muted = (x: L | string) => h('p', { class: 'muted small' }, T(x));
-const chName = (id: string): L => CH18.find((c) => c.id === id)?.name ?? (id === 'opener' ? l('Banda de abertura', 'Opening act') : id === 'demo' ? l('Demo', 'Demo') : id === 'tv' ? l('TV', 'TV') : l(id, id));
+const chName = (id: string): L => CH18.find((c) => c.id === id)?.name ?? (id === 'opener' ? l('Banda de abertura', 'Opening act') : id === 'demo' ? l('Demo', 'Demo') : id === 'tv' ? l('TV', 'TV') : id === 'office18' ? l('Escritório local', 'Local office') : l(id, id));
 
 // ---------------------------------------------------------------- descoberta
 function discTab(s: GameState): HTMLElement {

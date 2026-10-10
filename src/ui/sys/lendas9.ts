@@ -27,6 +27,7 @@ import { erasTab17, relicStory17 } from './heritage17';
 import { setTab, tabs } from '../vis';
 import './lendas9.css';
 import { relics18Tab } from './talent18';
+import { post18Tab } from './cine18';
 
 const WORLD_KEY = 'vtn.world9';
 const F: { dec: number; city: string; genre: string; who: string; minI: number; bioQ: string; city2: string; rf: string } = { dec: 0, city: '', genre: '', who: '', minI: 2, bioQ: '', city2: '', rf: '' };
@@ -362,6 +363,7 @@ function lendasArea(s: GameState): HTMLElement {
       { id: 'bio', label: t(l('Biografias', 'Biographies')), icon: 'pen', render: () => bios(s) },
       { id: 'relics', label: t(l('Relíquias', 'Relics')), icon: 'vault', badge: auc || undefined, render: () => relicsTab(s) },
       { id: 'relics18', label: t(l('Acervo vivo', 'Living collection')), icon: 'vault', render: () => relics18Tab(s) },
+      { id: 'post18', label: t(l('Legado póstumo', 'Posthumous legacy')), icon: 'hologram', render: () => post18Tab(s) },
       { id: 'city', label: t(l('Cidades e cenas', 'Cities and scenes')), icon: 'globe', render: () => cities(s) },
       { id: 'eras17', label: t(l('Épocas', 'Eras')), icon: 'clock', render: () => erasTab17(s) },
       { id: 'press', label: t(l('Jornal', 'Newspaper')), icon: 'newspaper', render: () => paper(s) },

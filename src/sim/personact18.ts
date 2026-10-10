@@ -97,6 +97,8 @@ export function personActions18(s: GameState, key: string): PARow[] {
   return out;
 }
 
+/** r18 decide18: ouvintes depois de cada ação (ecos atrasados). */
+export const PA_AFTER18: ((s: GameState, id: string, key: string, ok: boolean) => void)[] = [];
 /** Executa: confere, paga, sorteia com Rng próprio e registra. */
 export function doPersonAction18(s: GameState, id: string, key: string, r?: Rng): PAOut {
   const def = REG.find((x) => x.id === id);
@@ -116,6 +118,7 @@ export function doPersonAction18(s: GameState, id: string, key: string, r?: Rng)
   if (def.cooldown) st.cd[`${id}|${key}`] = s.week + def.cooldown;
   st.log.unshift({ w: s.week, y: s.year, id, key, ok: out.ok, t: out.text });
   if (st.log.length > 60) st.log.length = 60;
+  for (const f of PA_AFTER18) f(s, id, key, out.ok);
   const ks = Object.keys(st.cd);
   if (ks.length > 600) for (const k of ks) if (st.cd[k] <= s.week) delete st.cd[k];
   return out;

@@ -7,7 +7,9 @@ import { H } from './help18';
 H('cockpit', ['Cockpit', 'Cockpit'],
   ['Sua mesa de comando: caixa, alertas, próximos passos do conselheiro, caixa de entrada e as três perguntas do mês (decidir agora / o que funciona / ameaças).', 'Your command desk: cash, alerts, advisor next steps, inbox and the three questions of the month (decide now / what works / threats).'],
   ['Comece cada mês aqui: resolva o que "pede resposta", leia o topo do ranking do conselheiro e avance. Ex.: "Caixa para 3 meses" em amarelo → corte marketing ou adie um lançamento antes de avançar.', 'Start each month here: handle what "needs a reply", read the top of the advisor ranking and advance. E.g. "3 months of runway" in yellow → cut marketing or delay a release before advancing.'],
-  [['Passe o mouse nos números sublinhados: o "por quê" abre em camadas.', 'Hover underlined numbers: the "why" opens in layers.'], ['Mensagens ignoradas aplicam a última opção ao expirar.', 'Ignored messages apply the last option when they expire.']],
+  [['Passe o mouse nos números sublinhados: o "por quê" abre em camadas.', 'Hover underlined numbers: the "why" opens in layers.'], ['Mensagens ignoradas aplicam a última opção ao expirar.', 'Ignored messages apply the last option when they expire.'],
+    ['Cada opção mostra "Agora" e "Depois": escolhas voltam meses depois (Consequências pendentes). ⏱ = vence na semana; % = aposta; 🔒 = travada (o motivo aparece).', 'Each option shows "Now" and "Later": choices come back months later (Pending consequences). ⏱ = expires this week; % = gamble; 🔒 = locked (reason shown).'],
+    ['O topo é vivo: letreiro de notícias e paradas, próximas semanas, grandes momentos, humor do elenco, minigráficos e o holofote (›). "Ligações do mês" mostra um sistema mexendo em outro.', 'The top is live: news and chart ticker, coming weeks, big moments, roster mood, sparklines and the spotlight (›). "This month\'s links" shows one system nudging another.']],
   ['plan', 'finance', 'long18'], ['runway']);
 H('plan', ['Central de decisões', 'Decision hub'],
   ['Agenda dos próximos 12 meses: reservas de estúdio, turnês, lançamentos, crises e histórias em andamento.', 'Next 12 months agenda: studio bookings, tours, releases, crises and running stories.'],
@@ -21,7 +23,9 @@ H('diary', ['Diário da run', 'Run diary'],
   ['Filtre por tipo para achar a causa de algo. Ex.: por que o artista saiu? Procure "saída" e veja o fato anterior.', 'Filter by type to find the cause of something. E.g. why did the act leave? Look for "exit" and the fact before it.']);
 H('inbox', ['Caixa de entrada', 'Inbox'],
   ['Mensagens tipadas por categoria e prioridade, com "ir para" e resposta.', 'Messages typed by category and priority, with "go to" and reply.'],
-  ['Responda primeiro as que pedem resposta. Ex.: proposta de rádio sem resposta em 6 semanas aplica "Recusar" (o último botão).', 'Reply first to those needing an answer. E.g. a radio offer unanswered for 6 weeks applies "Refuse" (the last button).']);
+  ['Responda primeiro as que pedem resposta. Ex.: proposta de rádio sem resposta em 6 semanas aplica "Recusar" (o último botão).', 'Reply first to those needing an answer. E.g. a radio offer unanswered for 6 weeks applies "Refuse" (the last button).'],
+  [['Fios: consequências e mensagens da mesma pessoa ficam juntas ("↳ continuação de…"). O tom (caloroso, seco, irritado) vem da relação e da personalidade de quem escreve.', 'Threads: consequences and messages from the same person stay together ("↳ follow-up to…"). The tone (warm, curt, irritated) comes from the writer\'s relationship and personality.'],
+    ['Adiar esconde por 4 semanas; marque várias e arquive ou adie em lote.', 'Snooze hides for 4 weeks; tick several to archive or snooze in bulk.']]);
 
 // ---------------------------------------------------------------- Empresa
 H('hq', ['Sede', 'HQ'],
@@ -191,7 +195,7 @@ H('wealth', ['Patrimônio', 'Wealth'],
   ['Seu dinheiro pessoal (separado do selo), bens e investimentos.', 'Your personal money (separate from the label), goods and investments.'],
   ['Separe o pessoal do selo: se o selo quebra, o patrimônio pessoal segura. Ex.: casa própria reduz custo de vida.', 'Keep personal and label money apart: if the label goes bust, personal wealth holds. E.g. owning a house cuts living costs.']);
 H('scenes17', ['Álbum de cenas', 'Scene album'],
-  ['Cenas interativas que já aconteceram (prêmios, shows, TV, tribunal, casamento...), com replay e fotos icônicas.', 'Interactive scenes that already happened (awards, shows, TV, court, wedding...), with replay and iconic photos.'],
+  ['Cenas interativas que já aconteceram (prêmios, shows, TV, tribunal, casamento...), com replay, fotos icônicas e a Cinemateca (storyboards dos grandes momentos).', 'Interactive scenes that already happened (awards, shows, TV, court, wedding...), with replay, iconic photos and the Cinematheque (storyboards of big moments).'],
   ['Reveja uma cena para lembrar a escolha e o efeito. Ex.: o discurso no prêmio que irritou um rival explica a rixa de hoje.', 'Replay a scene to recall the choice and its effect. E.g. the award speech that annoyed a rival explains today\'s feud.']);
 H('careers', ['Carreiras', 'Careers'],
   ['Suas carreiras ativas (selo, músico, empresário, agente, festival, casa, estúdio, editora, mídia, plataforma, trilhas, jornalismo): começar, delegar ou largar.', 'Your active careers (label, musician, manager, agent, festival, venue, studio, publisher, media, platform, screen, journalism): start, delegate or drop.'],

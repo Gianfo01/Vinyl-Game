@@ -244,3 +244,11 @@ import './artist18';
 import './shared18';
 // Rodada 18 (campus18): Nosso mundo — prédios do jogador derivados do estado, obras, danos e retratos anuais.
 import './campus18';
+// Rodada 18 (decide18): consequências agora × depois (ecos atrasados), decisões novas (prazo, etapas, apostas, portões), integrações.
+import './decide18';
+import './echoes18';
+import './decnew18';
+import './links18';
+// Rodada 18 (cine18): storyboards de cenas compostos pelo estado e carreiras póstumas (espólios, hologramas, avatares).
+import './cine18';
+import './post18';

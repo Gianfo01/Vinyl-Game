@@ -2,7 +2,7 @@
 // Cada evento: pré-condições, participantes compatíveis, cooldown, tags de conteúdo,
 // opções e efeitos. O diretor escolhe entre os válidos; nunca inventa evento sem causa.
 
-import { runDecisionListeners, setEventRegistrar } from './ext4';
+import { DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
 import { clamp, type Rng } from '../core/rng';
 import { toReal } from '../core/money';
 import { FESTIVALS, MEDIA } from '../data/catalog';
@@ -895,6 +895,7 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
   const d = s.decisions.find((x) => x.id === decisionId);
   if (!d) return false;
   const def = eventById[d.eventId];
+  if (optionId !== d.defaultOption && DEC_GATE18.f?.(s, d.eventId, optionId, d.ctx)) optionId = d.defaultOption; // r18: opção travada
   const opt = def?.options.find((o) => o.id === optionId);
   if (!def || !opt) return false;
   // o mundo mudou desde a pergunta (pessoa ou ato removidos do save): a decisão perde o sentido
@@ -904,7 +905,7 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
   }
   const r = rngOf(s);
   opt.apply(s, r, d.ctx);
-  runDecisionListeners(s, def.id, opt.id);
+  runDecisionListeners(s, def.id, opt.id, d.ctx);
   s.decisions = s.decisions.filter((x) => x !== d);
   remember(s, `decision:${def.id}`, fmtL(l('{t} → {o}', '{t} → {o}'), { t: d.title, o: opt.label }), { actId: d.ctx.act ? String(d.ctx.act) : undefined });
   return true;
