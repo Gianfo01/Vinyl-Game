@@ -1,0 +1,24 @@
+.lg18-3q { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.lg18-q h4 { margin: 0 0 6px; font-size: 0.95em; }
+.lg18-q ul, .lg18-kpi { margin: 0; padding-left: 16px; }
+.lg18-q li { margin: 3px 0; }
+.lg18-good { color: var(--good, #2e8b57); }
+.lg18-bad { color: var(--bad, #c0392b); }
+.lg18-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.lg18-path.main { outline: 2px solid var(--accent, #c9a227); }
+.lg18-bar { display: block; height: 6px; background: var(--line, #ddd); border-radius: 3px; overflow: hidden; margin: 4px 0; }
+.lg18-bar i { display: block; height: 100%; background: var(--accent, #c9a227); }
+.lg18-tier { display: inline-block; margin-right: 8px; opacity: 0.55; }
+.lg18-tier.on { opacity: 1; font-weight: 600; }
+.lg18-doc { border-top: 1px solid var(--line, #ddd); padding: 6px 0; }
+.lg18-doc.on { background: color-mix(in srgb, var(--accent, #c9a227) 12%, transparent); }
+.lg18-dec.off { opacity: 0.7; }
+.lg18-pol { display: flex; flex-direction: column; margin: 6px 0; }
+.lg18-num { width: 90px; }
+.lg18-pm { margin: 8px 0; }
+.lg18-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lg18-stats > div { display: flex; flex-direction: column; }
+.lg18-bio p { line-height: 1.5; }
+.lg18-gens li { margin: 6px 0; }
+.lg18-face { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; background: var(--accent, #c9a227); color: #000; font-size: 0.75em; margin-right: 6px; }
+.lg18-cut { max-width: 640px; }

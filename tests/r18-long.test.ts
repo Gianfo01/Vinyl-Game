@@ -1,0 +1,51 @@
+import { describe, expect, it } from 'vitest';
+import { defaultConfig } from '../src/sim/bot';
+import { simulatePlayer } from '../src/sim/playbot16';
+import '../src/sim/sys';
+import { rv18 } from '../src/sim/sys/review18';
+import { gate18, payGate18, pol18 } from '../src/sim/sys/policy18';
+import { adoptDoc18, allScores18, docBlock18, docById18, hasDoc18, labelDecBlock18, LABEL_DECS18, pa18 } from '../src/sim/sys/paths18';
+import { bio18, cockpit18, setAdapt18, sg18 } from '../src/sim/sys/saga18';
+import { offerMods } from '../src/sim/ext4';
+import { paBlock18, personActionDefs18 } from '../src/sim/personact18';
+import { playerActs } from '../src/sim/util';
+
+describe('r18 long18', () => {
+  const { state: s } = simulatePlayer(defaultConfig('long18t', { startYear: 1990 }), 2, 'balanced');
+  it('post-mortem, ano em revista, biografia, casa e três perguntas', () => {
+    const pm = rv18(s).pm;
+    expect(pm.length).toBeGreaterThan(0);
+    expect(pm[0].text.pt.length).toBeGreaterThan(20);
+    expect(pm[0].factors.some((f) => f.k === 'reach')).toBe(true);
+    expect(sg18(s).years.length).toBeGreaterThanOrEqual(1);
+    expect(bio18(s, 'player').length).toBeGreaterThan(1);
+    expect(sg18(s).house.gens.length).toBeGreaterThanOrEqual(1);
+    const c = cockpit18(s);
+    expect(c.now.length && c.works.length && c.threats.length).toBeTruthy();
+    expect(allScores18(s).length).toBeGreaterThanOrEqual(3);
+  });
+  it('políticas travam e explicam; doutrinas travam ações e destravam decisões', () => {
+    const act = playerActs(s).map((id) => s.acts[id]).find((a) => a && !a.playerBand)!;
+    const P = pol18(s);
+    P.goals[act.id] = 'rest';
+    expect(gate18(s, { kind: 'tour', actId: act.id })).not.toBeNull();
+    P.goals[act.id] = 'grow';
+    P.cap = 1;
+    expect(payGate18(s, { kind: 'promo', actId: act.id }, 1_000_000)).not.toBeNull();
+    P.cap = 0;
+    s.player.cash += 10_000_000;
+    pa18(s).docLast = -999;
+    expect(docBlock18(s, docById18('clean')!)).toBeNull();
+    expect(adoptDoc18(s, 'clean')).toBeNull();
+    expect(hasDoc18(s, 'clean')).toBe(true);
+    const dark = personActionDefs18().find((d) => d.group === 'dark')!;
+    expect(paBlock18(s, dark, `p:${act.members[0]}`)?.pt).toMatch(/ética/);
+    expect(labelDecBlock18(s, LABEL_DECS18.find((d) => d.id === 'dirty_tricks')!)?.pt).toMatch(/Requer|Travada/);
+    pa18(s).docLast = -999;
+    adoptDoc18(s, 'fair_deal');
+    const mod = offerMods().find((m) => m.id === 'paths18')!.fn(s, act, { clauses18: { pkg: 'major' } } as never);
+    expect(mod?.delta).toBe(-1);
+    setAdapt18(s, true);
+    expect(sg18(s).adapt.on).toBe(true);
+  });
+});
