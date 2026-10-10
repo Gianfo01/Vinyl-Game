@@ -150,5 +150,7 @@ import './finance18';
 import './eras18';
 // Rodada 18 (artist18): Contratos do artista (selos NPC, extrato, equipe) e Sociedades.
 import './artist18';
+// Rodada 18 (campus18): Nosso mundo — mapa em pixel art de tudo o que o jogador possui.
+import './campus18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';

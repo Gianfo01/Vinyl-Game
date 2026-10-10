@@ -1,0 +1,28 @@
+/* Rodada 18 (campus18): Nosso mundo */
+.c18-main { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; align-items: start; }
+@media (max-width: 860px) { .c18-main { grid-template-columns: 1fr; } }
+.c18-mapwrap { position: relative; }
+.c18-cv, .c18-thumb { width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; display: block; border-radius: 6px; background: #20242c; cursor: pointer; aspect-ratio: 300 / 226; }
+.c18-tip { position: absolute; pointer-events: none; background: rgba(20, 18, 24, 0.9); color: #f4ecd8; font-size: 12px; padding: 3px 6px; border-radius: 4px; white-space: nowrap; z-index: 2; }
+.c18-side { position: sticky; top: 8px; }
+.c18-insp { padding: 8px 10px; border: 1px solid var(--line, #444); border-radius: 6px; background: var(--card, rgba(127, 127, 127, 0.06)); }
+.c18-insp h4 { margin: 0 0 6px; }
+.c18-kpi td { padding: 1px 6px 1px 0; }
+.c18-kpi td:last-child { font-weight: 600; text-align: right; }
+.c18-bar { height: 6px; background: rgba(127, 127, 127, 0.25); border-radius: 3px; margin: 4px 0; overflow: hidden; }
+.c18-bar i { display: block; height: 100%; background: linear-gradient(90deg, #c89838, #f0c040); }
+.c18-ctl { gap: 10px; margin-top: 6px; align-items: center; }
+.c18-tl { display: flex; gap: 6px; align-items: center; flex: 1 1 260px; }
+.c18-tl input { flex: 1; min-width: 80px; }
+.c18-reno { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--line, #555); display: grid; gap: 4px; }
+.c18-world { display: flex; flex-wrap: wrap; gap: 8px; }
+.c18-wb { display: grid; justify-items: center; gap: 2px; padding: 4px; width: 96px; border: 1px solid var(--line, #444); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.c18-wb.on { outline: 2px solid var(--accent, #f0c040); }
+.c18-wb canvas { width: 72px; height: 76px; image-rendering: pixelated; }
+.c18-wb small { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c18-proj { padding: 6px 0; border-bottom: 1px solid var(--line, #333); }
+.c18-form { display: grid; gap: 6px; max-width: 640px; }
+.c18-form label { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.c18-form select { max-width: 100%; }
+.c18-amb { margin: 4px 0; }
+.c18-thumbbtn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
