@@ -37,7 +37,7 @@ import type { Facet } from './soul9';
 
 // ------------------------------------------------------------------ estado
 
-export interface AbRec { pa: number; /** faixa juvenil 1..10 (exibida como −n) */ b?: number; lb?: 1; wk?: 1; t?: number }
+export interface AbRec { pa: number; /** faixa juvenil 1..10 (exibida como −n) */ b?: number; lb?: 1; wk?: 1 }
 export interface Ab18State {
   p: Record<string, AbRec>;
   /** histórico anual [ano, CA, ano, CA…] (elenco, equipe, você, atos famosos) */
@@ -97,6 +97,8 @@ export function caOf18(p: Person): number {
 const AGE: Record<SkillId, [number, number, number]> = {
   voice: [27, 36, 1.4], stage: [30, 44, 1.1], instr: [33, 54, 0.9], prod: [40, 63, 0.7], comp: [42, 62, 0.7], lyr: [45, 66, 0.6], biz: [55, 72, 0.6],
 };
+
+export const AGE18 = AGE;
 
 // ------------------------------------------------------------------ personalidade
 
@@ -316,6 +318,7 @@ function report18(s: GameState, A: Ability18, e: Est18, paK: number): L[] {
   else if (mid >= 150 && room >= 30 && age < 26) out.push(l('Pode virar uma estrela.', 'Could become a star.'));
   else if (room >= 30 && age < 25) out.push(l('Cru, mas com muito espaço para crescer.', 'Raw, but plenty of room to grow.'));
   else if (room <= 10 && age >= 26) out.push(l('Já está no limite do que pode render.', 'Already at their limit.'));
+  else if (room >= 12 && age >= 33) out.push(l('Nunca rendeu tudo o que podia; a esta altura, dificilmente renderá.', 'Never delivered all they could; at this point, unlikely to.'));
   else if (room >= 12) out.push(l('Ainda tem margem para evoluir.', 'Still has room to improve.'));
   else out.push(l('Perto do auge.', 'Close to their peak.'));
   if (A.kind === 'artist' && A.lb && paK >= 0.75) out.push(l('Desabrochar tardio: o melhor deve vir depois dos 25.', 'Late bloomer: the best should come after 25.'));
@@ -357,12 +360,10 @@ const SICK = new Set(['burnout', 'addiction', 'ill']);
 const realCurve = (cy: number): number => cy < 0 ? Math.max(0.55, 0.72 + 0.04 * (cy + 5)) : cy <= 4 ? 0.78 + 0.055 * cy : cy <= 10 ? 1 : Math.max(0.72, 1 - 0.012 * (cy - 10));
 const focus = (w: W, k: SkillId): number => (w[k] >= 0.2 ? 7 : w[k] >= 0.1 ? 2 : -5);
 
-function stepPerson(s: GameState, p: Person, a: Act, dt: number, my: boolean, best: Partial<Record<SkillId, number>>): void {
+function stepPerson(s: GameState, p: Person, a: Act, dt: number, my: boolean, best: Partial<Record<SkillId, number>>, done?: Set<string>): void {
   const st = ab18(s);
-  const mi = s.year * 12 + s.month;
+  if (done) { if (done.has(p.id)) return; done.add(p.id); }
   const rec = ensureRec(s, p);
-  if (rec.t === mi) return;
-  rec.t = mi;
   const age = s.year - p.born + s.month / 12;
   const dv = drive18(s, p).v;
   const ev = st.e[p.id];
@@ -391,7 +392,7 @@ function stepPerson(s: GameState, p: Person, a: Act, dt: number, my: boolean, be
     const cur = p.skills[k];
     const youth = age < end ? 1 + (end - age) / 12 : Math.max(0.1, 1 - (age - end) / 15);
     const lbF = rec.lb ? (age >= 24 && age <= 35 ? 1.5 : age < 22 ? 0.6 : 1) : 1;
-    const base = 0.12 * youth * lbF * dv * Math.max(0, cap - cur) / Math.max(10, cap) * dt * (sick ? 0 : stressF);
+    const base = 0.28 * youth * lbF * dv * Math.max(0, cap - cur) / Math.max(10, cap) * dt * (sick ? 0 : stressF);
     const live = k === 'stage' || k === 'voice' || k === 'instr' ? showF : 0;
     const studio = k === 'comp' || k === 'lyr' || k === 'prod' || k === 'instr' || k === 'voice' ? recF * (k === 'instr' || k === 'voice' ? 0.5 : 1) : 0;
     const tr = train && w[k] >= 0.1 ? 1.1 : 0;
@@ -449,13 +450,13 @@ function milestones(s: GameState, p: Person, rec: AbRec, ca0: number, ca: number
   }
 }
 
-function stepAct(s: GameState, a: Act, dt: number, my: boolean): void {
+function stepAct(s: GameState, a: Act, dt: number, my: boolean, done: Set<string>): void {
   const ms: Person[] = [];
   for (const id of a.members) { const p = s.persons[id]; if (p?.alive) ms.push(p); }
   if (!ms.length) return;
   const best: Partial<Record<SkillId, number>> = {};
   if (ms.length > 1) for (const p of ms) for (const k of SK) best[k] = Math.max(best[k] ?? 0, p.skills[k]);
-  for (const p of ms) stepPerson(s, p, a, dt, my, best);
+  for (const p of ms) stepPerson(s, p, a, dt, my, best, done);
 }
 
 registerSimHook('newgame', 'ability18', (s) => {
@@ -466,11 +467,12 @@ registerSimHook('newgame', 'ability18', (s) => {
 registerSimHook('month', 'ability18', (s) => {
   const st = ab18(s);
   const mi = s.year * 12 + s.month;
+  const done = new Set<string>();
   for (const a of Object.values(s.acts)) {
     if (a.status === 'retired' || a.status === 'split' || a.deceased) continue;
     const my = a.owner === 'player' || !!a.playerBand;
     if (!my && (hashString(a.id) + mi) % 3) continue;
-    stepAct(s, a, my ? 1 : 3, my);
+    stepAct(s, a, my ? 1 : 3, my, done);
   }
   // equipe: o trabalho ensina (mais com curso pago)
   for (const sm of s.player.staff) {
