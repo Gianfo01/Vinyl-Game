@@ -45,6 +45,15 @@ export interface RunConfig {
   history?: 'strict' | 'loose' | 'free';
   /** rodada 17: liberdade do diretor criativo (mundo dos NPCs); ausente = normal */
   freedom17?: 'tight' | 'normal' | 'wild';
+  /** rodada 17 (novo jogo): modo de mundo (exato/real/foto/aleatório/ficcional/caos), "real até o início" (sem estreias
+   * reais depois do ano inicial), dificuldade detalhada (−2..2), prazo da partida em anos (0 = sem fim), cenário
+   * histórico escolhido no próprio Novo Jogo e predefinição usada */
+  world17?: string;
+  snap17?: boolean;
+  diff17?: { market?: number; costs?: number; rivals?: number; talent?: number };
+  runYears17?: number;
+  scenario17?: string;
+  preset17?: string;
 }
 
 export interface LabelSetup {
