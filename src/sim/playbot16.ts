@@ -6,6 +6,7 @@
 // Três perfis: cauteloso, equilibrado, agressivo. Sem aleatoriedade própria: o acaso é o do jogo.
 
 import { botClauses18, botPolicy18 } from './sys/contracts18';
+import { liquid18 } from './sys/econ18';
 import { toReal } from '../core/money';
 import { FESTIVALS } from '../data/catalog';
 import { MARKETS, cityById, type MarketId } from '../data/world';
@@ -96,7 +97,7 @@ function burn(s: GameState): number {
   const ohLast = (oh(s).last?.lines ?? []).reduce((t, x) => t + x.amount, 0);
   return Math.max(estimateMonthlyBurn(s), c.rent + c.salaries + c.outsourcing + c.loans + c.equipment + ohLast);
 }
-const runway = (s: GameState): number => s.player.cash / Math.max(1, burn(s));
+const runway = (s: GameState): number => liquid18(s, 2) / Math.max(1, burn(s)); // r18: caixa + recebíveis dos próximos 2 meses
 
 // ---------------------------------------------------------------- cartas de decisão
 
@@ -299,7 +300,7 @@ function road(s: GameState, k: Knobs, prof: Profile): void {
     // selo clássico só paga a logística (bilheteria é do artista): vale como investimento se não pesa no caixa
     const cost = -labelTourNet16(s, id, est).net; // a mesma linha "Para o selo" do planejador
     // ato grande vende mais disco depois da estrada: aceita investir mais nele
-    if (cost > s.player.cash * k.tourCash * (1 + act.fame / 40)) continue;
+    if (cost > liquid18(s) * k.tourCash * (1 + act.fame / 40)) continue; // r18: conta o que entra nos próximos 2 meses
     const r = planTour(s, plan);
     if (!('pt' in r)) { L.tours++; M.tourW[id] = s.week; }
   }
@@ -355,7 +356,8 @@ function team(s: GameState, k: Knobs): void {
   const role = want.find((r) => !have.has(r) && s.professionals.some((p) => p.role === r));
   if (role && s.player.staff.length < hqCaps(s).staff && runway(s) > k.cut * 2.5) {
     const pro = s.professionals.filter((p) => p.role === role).sort((a, b) => b.skill / Math.max(1, b.salary) - a.skill / Math.max(1, a.salary))[0];
-    const afford = pro && s.player.cash > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || s.player.cash > (salaries + pro.salary) * 24 * k.hireMult);
+    const liq = liquid18(s, 3); // r18: caixa + recebíveis dos próximos 3 meses
+    const afford = pro && liq > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || liq > (salaries + pro.salary) * 24 * k.hireMult);
     if (pro && afford && !hireStaff(s, pro.id)) L.hires++;
   }
   // ordens permanentes para os delegados (como no painel de equipe)

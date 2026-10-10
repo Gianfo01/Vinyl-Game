@@ -40,9 +40,10 @@ Contratos sem cláusulas seguem a regra antiga (50% da gravação, cruzado).
   coletiva; interface neural de massa / nicho / nunca; palco presencial / virtual), revelados só quando o ano chega.
 
 ## 5. Retornos decrescentes (sim/caps18.ts)
-- `applyMods`: B = produto dos multiplicadores favoráveis da categoria; efetivo = 1 + teto·tanh((B−1)/teto).
-  Tetos: appeal 0,8 · chartUnits 0,6 · cityDemand 0,7 · showRevenue 0,7 · songQ 0,3 · pressingCost 0,45 (redução)
-  · tourRisk 0,6 (redução). Penalidades ficam inteiras. A autópsia mostra a linha "Retornos decrescentes".
-- `perk`: soma positiva de cada chave passa pelo mesmo teto suave (`PERK_CAP18`, na unidade da chave); em
-  staffCost/pressingCost/stress o bônus é a parte negativa.
+- `applyMods`: B = produto dos multiplicadores PEQUENOS favoráveis da categoria (cada um até +25%; efeitos grandes
+  isolados passam inteiros). Até o joelho nada muda; acima, efetivo = 1 + joelho + folga·tanh((B−1−joelho)/folga).
+  Joelho/folga: appeal 0,3/0,6 · chartUnits, cityDemand, showRevenue 0,3/0,5 · songQ 0,15/0,2 · pressingCost 0,25/0,25
+  (redução) · tourRisk 0,3/0,3 (redução). Penalidades ficam inteiras. A autópsia mostra "Retornos decrescentes".
+- `perk`: soma positiva de cada chave passa pelo mesmo joelho suave (`PERK_CAP18`, joelho = folga, na unidade da
+  chave); em staffCost/pressingCost/stress o bônus é a parte negativa.
 - `globalThis.__caps18 = {}` liga a coleta (média, máximo e % cortado por categoria) para o balanço.

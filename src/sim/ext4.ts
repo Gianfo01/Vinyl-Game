@@ -10,7 +10,7 @@
 // Ordem determinística: ganchos rodam na ordem de registro, que é a ordem dos imports em
 // src/sim/sys/index.ts.
 
-import { DIMINISH18, MOD_CAP18, capStat18, modAdj18 } from './caps18';
+import { DIMINISH18, MOD_CAP18, SMALL18, capStat18, modAdj18 } from './caps18';
 import type { Rng } from '../core/rng';
 import type { L } from '../data/world';
 import type { Act, GameState, Offer, Release, Song } from './types';
@@ -99,7 +99,7 @@ export function applyMods(s: GameState, name: ModName, value: number, ctx: ModCt
   for (const m of MODS[name]) {
     const res = m.fn(s, value, ctx);
     if (!res || !Number.isFinite(res.value)) continue;
-    if (value > 0 && res.value > 0) { const r = res.value / value; if (lower ? r < 1 : r > 1) boost *= lower ? 1 / r : r; }
+    if (value > 0 && res.value > 0) { const r = res.value / value; const f = lower ? 1 / r : r; if (f > 1 && f <= SMALL18) boost *= f; }
     if (res.label && value > 0 && Math.abs(res.value / value - 1) > 0.005) factors.push({ label: res.label, ratio: res.value / value });
     value = res.value;
   }

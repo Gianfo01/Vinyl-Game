@@ -121,10 +121,11 @@ describe('r18 econ: cláusulas de recuperação', () => {
 
 describe('r18 retornos decrescentes', () => {
   it('bônus pequeno quase intacto, pilha grande encosta no teto', () => {
-    expect(modAdj18('appeal', 1.05)).toBeGreaterThan(0.998);
+    expect(modAdj18('appeal', 1.05)).toBe(1);
+    expect(modAdj18('appeal', 1.25)).toBe(1); // até o joelho (+30%) passa inteiro
     const big = 2.5 * modAdj18('appeal', 2.5);
-    expect(big).toBeLessThan(1.81);
-    expect(big).toBeGreaterThan(1.6);
+    expect(big).toBeLessThan(1.91);
+    expect(big).toBeGreaterThan(1.8);
     expect(modAdj18('pressingCost', 2)).toBeGreaterThan(1); // custo: redução limitada
   });
 });

@@ -217,6 +217,12 @@ export function noteLost18(s: GameState, relIds: string[], price: number, what: 
   return per;
 }
 
+/** Caixa + recebíveis que vencem nos próximos `months` meses (liquidez de curto prazo). */
+export function liquid18(s: GameState, months = 2): number {
+  const lim = mIdx18(s) + months;
+  return s.player.cash + fin18(s).ar.reduce((t, b) => t + (b.due <= lim ? b.amt : 0), 0);
+}
+
 // ---------------------------------------------------------------- previsão de caixa e "por quê" (para conselheiro/explain18)
 
 /** Caixa projetado mês a mês: caixa + títulos que vencem − royalties a pagar − custo fixo mensal. */

@@ -7,27 +7,32 @@
 // Sem imports de runtime (ext4/perks importam este módulo).
 import type { L } from '../data/world';
 
-/** teto do bônus total por categoria de modificador (fração: 0,6 = no máximo ~+60%) */
-export const MOD_CAP18: Record<string, { cap: number; lower?: boolean }> = {
-  appeal: { cap: 0.8 }, chartUnits: { cap: 0.6 }, cityDemand: { cap: 0.7 }, showRevenue: { cap: 0.7 }, songQ: { cap: 0.3 },
-  pressingCost: { cap: 0.45, lower: true }, tourRisk: { cap: 0.6, lower: true },
+/** bônus PEQUENOS empilhados por categoria: até `knee` passa inteiro; acima, cresce no máximo mais `room`
+ *  (ex.: appeal — até +30% intacto, depois no máximo ~+90%). Efeitos grandes isolados (r > 1,25) não entram na pilha. */
+export const MOD_CAP18: Record<string, { knee: number; room: number; lower?: boolean }> = {
+  appeal: { knee: 0.3, room: 0.6 }, chartUnits: { knee: 0.3, room: 0.5 }, cityDemand: { knee: 0.3, room: 0.5 }, showRevenue: { knee: 0.3, room: 0.5 }, songQ: { knee: 0.15, room: 0.2 },
+  pressingCost: { knee: 0.25, room: 0.25, lower: true }, tourRisk: { knee: 0.3, room: 0.3, lower: true },
 };
-/** teto suave da soma positiva por chave de vantagem (na unidade da chave) */
+/** só multiplicadores pequenos (até +25%) contam como "pilha" */
+export const SMALL18 = 1.25;
+/** joelho da soma positiva por chave de vantagem (na unidade da chave): até ele passa inteiro; acima, retorno
+ *  decrescente que acrescenta no máximo outro tanto */
 export const PERK_CAP18: Record<string, number> = {
   offer: 0.25, critics: 6, songQ: 8, trust: 12, morale: 12, appeal: 0.4, showRevenue: 0.4, chartUnits: 0.4, pressingCost: 0.35,
-  advance: 0.4, valuation: 0.5, reputation: 10, xp: 0.6, staffCost: 0.4, scoutAccuracy: 0.4, signals: 1.2, demos: 3, scoutActions: 3, energy: 1.5, wealth: 0.5, scheme: 0.4, stress: 0.4,
+  advance: 0.4, valuation: 0.5, reputation: 10, xp: 0.6, staffCost: 0.4, scoutAccuracy: 0.4, signals: 3, demos: 3, scoutActions: 3, energy: 1.5, wealth: 0.5, scheme: 0.4, stress: 0.4,
 };
 
 /** chaves de vantagem em que menor é melhor (o bônus é a soma negativa) */
 export const LOWER_PERK18 = new Set(['staffCost', 'pressingCost', 'stress']);
 
-export const soft18 = (x: number, cap: number): number => (x <= 0 ? x : cap * Math.tanh(x / cap));
+/** joelho suave: até `knee` igual; acima, knee + room·tanh((x−knee)/room) */
+export const soft18 = (x: number, knee: number, room = knee): number => (x <= knee ? x : knee + room * Math.tanh((x - knee) / room));
 
 /** fator de ajuste para a pilha de bônus B (produto dos multiplicadores favoráveis) */
 export function modAdj18(name: string, boost: number): number {
   const c = MOD_CAP18[name];
   if (!c || boost <= 1.0001) return 1;
-  const eff = 1 + soft18(boost - 1, c.cap);
+  const eff = 1 + soft18(boost - 1, c.knee, c.room);
   return c.lower ? boost / eff : eff / boost;
 }
 export const DIMINISH18: L = { pt: 'Retornos decrescentes (bônus empilhados)', en: 'Diminishing returns (stacked bonuses)' };
