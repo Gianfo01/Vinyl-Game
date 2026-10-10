@@ -163,7 +163,7 @@ function tvTab(s: GameState): HTMLElement {
           : muted(l('Ainda não há TV.', 'No TV yet.'))));
 }
 
-registerArea({ id: 'talent18', label: l('Talentos e formação', 'Talent & training'), icon: 'star', key: '', render: (s) => h('div', { class: 'panel' },
+registerArea({ id: 'talent18', label: l('Talentos e formação', 'Talent & training'), icon: 'star', key: '', render: (s) => h('div', { class: 'page' },
   h('h2', null, t(l('Talentos e formação', 'Talent & training'))),
   tabs('talent18', [
     { id: 'disc', label: t(l('Descoberta', 'Discovery')), icon: 'fans', badge: Object.keys(disc18(s).hot).length || undefined, render: () => discTab(s) },

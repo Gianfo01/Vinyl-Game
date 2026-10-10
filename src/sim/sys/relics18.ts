@@ -100,7 +100,7 @@ chronListeners().push((s: GameState, e: ChronEv) => {
     }
     case 'mega_event': if (a && big) born(s, 'outfit', fmtL(l('O figurino de {p} no megaevento de {y}', '{p}\'s outfit from the {y} mega event'), { p: ln, y: e.y }), a, pidL, 15000 + fame * 900, 'mega', e.t); return;
     case 'number1': {
-      if (!a || !big) return;
+      if (!a || !big || (a.number1s > 2 && a.fame < 70)) return; // os primeiros nº 1 ou os de uma superestrela
       const ttl = latestHit(s, a);
       if (ttl) born(s, 'lyrics', fmtL(l('A letra manuscrita de "{t}"', 'The handwritten lyrics of "{t}"'), { t: ttl }), a, a.songs.length ? s.songs[a.songs[a.songs.length - 1]]?.writers[0] : pidL, 9000 + fame * 700, 'hit', fmtL(l('Rascunho com rasuras do nº 1 de {a}.', 'A scribbled draft of {a}\'s number one.'), { a: a.name }));
       return;
