@@ -3,7 +3,7 @@
 // Agenda de shows com concorrência. Cada escolha mostra chance, custo e o porquê.
 
 import { FESTIVALS } from '../../data/catalog';
-import { CITIES, cityById, l, type L } from '../../data/world';
+import { CITIES, FAMILIES, cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { careers } from '../../sim/sys/careers12';
@@ -23,6 +23,7 @@ import { h, select } from '../dom';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
 
+const famName = (f: string) => t(FAMILIES.find((x) => x.id === f)?.name ?? l(f, f));
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 const sg = (v: number) => `${v >= 0 ? '+' : ''}${Math.round(v * 100)}%`;
 const res = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
@@ -134,8 +135,8 @@ function venuesTab(s: GameState): HTMLElement {
     section(t(l('À venda', 'For sale')),
       h('div', { class: 'row wrap' }, select(vsel || mk[0]?.id || '', mk.map((d) => ({ value: d.id, label: `${d.name} — ${t(cityById[d.city]?.name ?? l(d.city))} · ${N(d.cap)} · ${d.buyable === false ? t(l('não está à venda', 'not for sale')) : $(venuePrice(s, d))}` })), (v) => { vsel = v; rerender(); }),
         h('button', { class: 'btn small primary', onclick: () => res(buyVenue17(s, vsel || mk[0]?.id || ''), l('Casa comprada.', 'Venue bought.')) }, t(l('Comprar', 'Buy')))),
-      (() => { const d = vdef(vsel || mk[0]?.id || ''); return d ? h('p', { class: 'small muted' }, d.buyable === false ? t(d.note ?? l('', '')) : t(l('Prestígio {p} · alma: {f}{c}', 'Prestige {p} · soul: {f}{c}'), { p: d.prestige, f: d.fam, c: d.to ? t(l(' · na história, fecha em {y}', ' · historically closes in {y}'), { y: d.to }) : '' })) : null; })(),
-      h('p', { class: 'small muted' }, t(l('{n} casas no catálogo; as outras ainda não abriram nesta época.', '{n} venues in the catalog; the others have not opened yet in this era.'), { n: VENUES17.length }))),
+      (() => { const d = vdef(vsel || mk[0]?.id || ''); return d ? h('p', { class: 'small muted' }, d.buyable === false ? t(d.note ?? l('', '')) : t(l('Prestígio {p} · alma: {f}{c}', 'Prestige {p} · soul: {f}{c}'), { p: d.prestige, f: famName(d.fam), c: d.to ? t(l(' · na história, fecha em {y}', ' · historically closes in {y}'), { y: d.to }) : '' })) : null; })(),
+      h('p', { class: 'small muted' }, t(l('{a} de {n} casas do catálogo existem nesta época.', '{a} of {n} catalog venues exist in this era.'), { a: marketVenues(s).length, n: VENUES17.length }))),
     section(t(l('Histórico', 'History')), logList(st.log)));
 }
 
@@ -287,6 +288,7 @@ function calArea(s: GameState): HTMLElement {
         npc.length ? ul(npc.map((x) => `${s.acts[x.a]?.name ?? '?'} (${s.labels[s.acts[x.a]?.owner ?? '']?.name ?? t(l('independente', 'independent'))}) — ${t(cityById[x.c]?.name ?? l(x.c))}${x.mv ? ` · ${t(l('mudou a data para não bater com você', 'moved the date to avoid you'))}` : ''}`)) : null,
         fs.length ? ul(fs.map((f) => `★ ${f.name} — ${t(cityById[f.city]?.name ?? l(f.city))}`)) : null);
     }),
+    v17(s).own.length ? section(t(l('Nas suas casas este mês', 'At your venues this month')), ul(v17(s).own.map((o) => `${vdef(o.id)?.name ?? ''} (${t(POLICY[o.policy].name)}): ${o.booked.map((id) => s.acts[id]?.name ?? '').join(', ') || '—'}`))) : null,
     section(t(l('Política de ingressos', 'Ticket policy')), acts.length ? h('div', null, acts.map((id) => { const a = s.acts[id]!; const cur = c.tix[id] ?? 'fair'; return h('div', { class: 'row wrap' }, a.name, ' ',
       select<Tix>(cur, (Object.keys(TIX) as Tix[]).filter((k) => s.year >= TIX[k].from).map((k) => ({ value: k, label: t(TIX[k].name) })), (v) => { setTix(s, id, v); rerender(); }), ' ', h('span', { class: 'small muted' }, t(TIX[cur].desc)),
       c.scalp[id] ? h('span', { class: 'small bad' }, ` · ${t(l('cambistas já lucraram ~{v}', 'scalpers have made ~{v}'), { v: $(c.scalp[id]) })}`) : null); })) : h('p', { class: 'muted small' }, t(l('Sem shows marcados.', 'No shows booked.')))),

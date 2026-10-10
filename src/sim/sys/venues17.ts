@@ -7,7 +7,7 @@
 // Se a casa real fechou na história e é sua, ela sobrevive — e isso vira legado. Gerador próprio por mês.
 
 import { Rng, clamp } from '../../core/rng';
-import { cityById, familyOf, l, type L } from '../../data/world';
+import { FAMILIES, cityById, familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import type { Act, GameState } from '../types';
@@ -65,7 +65,13 @@ export const v17 = (s: GameState): V17 => { const x = s.x4 as unknown as { venue
 const log = (s: GameState, t: L) => { const st = v17(s); st.log.unshift({ y: s.year, m: s.month, t }); if (st.log.length > 30) st.log.pop(); };
 
 export const venueOpen = (s: GameState, d: VDef) => s.year >= d.from && (!d.to || s.year <= d.to || v17(s).own.some((o) => o.id === d.id));
-export function venuePrice(s: GameState, d: VDef): number { return money(s, d.price * (0.8 + (s.scenes[`${d.city}:${d.fam}`] ?? 0) / 60)); }
+/** Força da cena da 'alma' da casa na cidade (maior gênero da família). */
+export function sceneFam(s: GameState, city: string, fam: string): number {
+  let m = 0;
+  for (const [k, v] of Object.entries(s.scenes)) { const i = k.indexOf(':'); if (k.slice(0, i) === city && familyOf(k.slice(i + 1)) === fam && v > m) m = v; }
+  return m;
+}
+export function venuePrice(s: GameState, d: VDef): number { return money(s, d.price * (0.8 + Math.min(30, sceneFam(s, d.city, d.fam)) / 60)); }
 export const marketVenues = (s: GameState): VDef[] => VENUES17.filter((d) => venueOpen(s, d));
 
 export function buyVenue17(s: GameState, id: string): L | null {
@@ -112,20 +118,20 @@ function bookable(s: GameState, d: VDef): Act[] {
 export function monthEst17(s: GameState, o: Own17): { att: number; net: number; nights: number; door: number; bar: number; fees: number; upkeep: number; why: L[] } {
   const d = vdef(o.id)!;
   const P = POLICY[o.policy], pr = PRICE[o.price];
-  const scene = s.scenes[`${d.city}:${d.fam}`] ?? 0;
+  const scene = sceneFam(s, d.city, d.fam);
   const res = o.actId ? s.acts[o.actId] : undefined;
-  const pull = o.policy === 'residency' && res ? clamp(0.35 + res.fame / 120, 0.3, 1.1) : o.policy === 'commercial' ? 0.85 : o.policy === 'rental' ? 0.7 : 0.45 + o.rep / 160;
-  const occ = clamp(pull * pr.occ * (0.75 + Math.min(0.35, scene / 40)) * (0.7 + o.cond / 330), 0.08, 1);
+  const pull = o.policy === 'residency' && res ? clamp(0.35 + res.fame / 120, 0.3, 1.1) : o.policy === 'commercial' ? 0.6 : o.policy === 'rental' ? 0.7 : 0.5 + o.rep / 140;
+  const occ = clamp(pull * pr.occ * (0.75 + Math.min(0.35, scene / 40)) * (0.7 + o.cond / 330) * (0.85 + d.prestige / 500), 0.08, 1);
   const nights = P.nights;
   const att = Math.round(d.cap * occ * nights);
-  const ticket = money(s, 6 + d.prestige / 10) * pr.mult;
+  const ticket = money(s, 4 + d.prestige / 12) * pr.mult;
   const door = o.policy === 'rental' ? money(s, d.cap * 1.4) * nights : Math.round(att * ticket);
-  const bar = Math.round(att * money(s, 4) * (o.policy === 'commercial' ? 1.3 : 1));
-  const fees = o.policy === 'rental' || o.policy === 'residency' ? 0 : Math.round(door * 0.55 * P.fee);
-  const upkeep = money(s, d.cap * 9 + 1500) * (o.maint ? 1 : 0.4);
+  const bar = Math.round(att * money(s, 1.2) * (o.policy === 'commercial' ? 1.3 : 1));
+  const fees = o.policy === 'rental' || o.policy === 'residency' ? 0 : Math.round(door * 0.7 * P.fee);
+  const upkeep = Math.round((money(s, d.cap * 12 + 3000) + nights * money(s, d.cap * 1.2) * (o.policy === 'rental' ? 0.5 : 1)) * (o.maint ? 1 : 0.6));
   const why: L[] = [
     fmtL(l('Ocupação {p}% ({pol}, ingresso {pr})', 'Occupancy {p}% ({pol}, {pr} tickets)'), { p: Math.round(occ * 100), pol: P.name, pr: pr.name }),
-    fmtL(l('Cena de {f} na cidade: {sc}', '{f} scene in town: {sc}'), { f: d.fam, sc: Math.round(scene) }),
+    fmtL(l('Cena de {f} na cidade: {sc}', '{f} scene in town: {sc}'), { f: FAMILIES.find((x) => x.id === d.fam)?.name ?? d.fam, sc: Math.round(scene) }),
   ];
   if (o.cond < 50) why.push(l('Casa malconservada afasta o público', 'A run-down room keeps people away'));
   return { att, net: door + bar - fees - upkeep, nights, door, bar, fees, upkeep, why };

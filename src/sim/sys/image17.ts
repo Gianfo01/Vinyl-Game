@@ -10,7 +10,7 @@
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
-import { emitFact } from '../facts17';
+import { emitFact, onFact } from '../facts17';
 import { grantHold } from '../holds17';
 import { scandal } from '../scandal17';
 import type { Act, GameState } from '../types';
@@ -25,7 +25,7 @@ export const SCOPES: Record<Scope, { name: L; desc: L; from: number; weight: num
   hologram: { name: l('Holograma', 'Hologram'), desc: l('Turnê de holograma (só espólio): dinheiro e polêmica.', 'Hologram tour (estates only): money and controversy.'), from: 2012, weight: 0.08 },
   voice_ai: { name: l('Voz por IA', 'AI voice'), desc: l('Modelo de voz licenciado: renda contínua, rejeição alta.', 'Licensed voice model: steady income, high resistance.'), from: 2023, weight: 0.1 },
 };
-export interface ImgDeal { id: string; act: string; estate: boolean; scopes: Scope[]; share: number; fair: number; until: number; fame0: number; upfront: number; earned: number; done: Scope[]; holo?: number; status: 'active' | 'demand' | 'ended'; demandW?: number; pred: boolean; y: number }
+export interface ImgDeal { adsOff?: number; id: string; act: string; estate: boolean; scopes: Scope[]; share: number; fair: number; until: number; fame0: number; upfront: number; earned: number; done: Scope[]; holo?: number; status: 'active' | 'demand' | 'ended'; demandW?: number; pred: boolean; y: number }
 export interface Img17 { deals: ImgDeal[]; asked: Record<string, number>; pred: Record<number, number>; log: { y: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { img17: Img17 } }
 registerExt4('img17', () => ({ deals: [], asked: {}, pred: {}, log: [] }));
@@ -121,7 +121,7 @@ registerSimHook('month', 'image17', (s) => {
     const r = Rng.fromSeed(`${s.config.seed}:img17m:${d.id}:${s.year}:${s.month}`);
     let gross = 0;
     const why: string[] = [];
-    if (d.scopes.includes('ads') && a.fame >= 30) { gross += money(s, a.fame * a.fame * 0.6); why.push('ads'); }
+    if (d.scopes.includes('ads') && a.fame >= 30 && (d.adsOff ?? 0) < s.week) { gross += money(s, a.fame * a.fame * 0.6); why.push('ads'); }
     if (d.scopes.includes('voice_ai') && s.year >= 2023) { gross += money(s, 25 * Math.pow(Math.max(1, a.fame), 1.25)); why.push('voice'); }
     if (d.scopes.includes('biopic') && !d.done.includes('biopic') && (a.fame >= 60 || (d.estate && a.legend)) && r.chance(0.04)) {
       d.done.push('biopic');
@@ -167,3 +167,12 @@ registerSimHook('month', 'image17', (s) => {
     }
   }
 });
+
+// escândalo: anunciantes suspendem campanhas por 6 meses; morte: o espólio herda o acordo
+onFact('scandal', (s, f) => {
+  if (f.severity < 35) return;
+  for (const id of f.actors) { const d = activeDeal(s, id); if (d && d.scopes.includes('ads')) { d.adsOff = s.week + 26; log(s, fmtL(l('Anunciantes suspendem campanhas com {a} depois do escândalo.', 'Advertisers pause campaigns with {a} after the scandal.'), { a: s.acts[id]?.name ?? '' })); } }
+}, 'image17:scandal');
+onFact('death', (s, f) => {
+  for (const id of f.actors) { const a = s.acts[id]; const d = a && activeDeal(s, id); if (a && d && !d.estate && isEstate(s, a)) { d.estate = true; d.pred = false; if (d.status === 'demand') d.status = 'active'; log(s, fmtL(l('O espólio de {a} herda o acordo de imagem.', 'The estate of {a} inherits the image deal.'), { a: a.name })); } }
+}, 'image17:death');

@@ -14,13 +14,13 @@ import { FESTIVALS } from '../../data/catalog';
 import { familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
-import { grantHold, holdsBetween } from '../holds17';
+import { grantHold, holdsBetween, voidHolds } from '../holds17';
 import { scandal } from '../scandal17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, nextId, post } from '../util';
 import { acceptInvite, declineInvite, festFee, fest8 } from './fests8';
 
-export interface War17 { id: string; act: string; a: string; b: string; fa: number; fb: number; until: number }
+export interface War17 { id: string; act: string; a: string; b: string; fa: number; fb: number; until: number; ia?: number; ib?: number }
 export interface Reunion17 { id: string; act: string; cost: number; p: number; est: number; until: number }
 export interface Crowd17 { act: string; goal: number; raised: number; start: number; due: number; hold?: string; done?: 'ok' | 'broken' }
 export interface C17 { wars: War17[]; snub: Record<number, number>; reunions: Reunion17[]; reunited: Record<string, number>; crowd: Crowd17[]; log: { y: number; t: L }[] }
@@ -49,11 +49,21 @@ export function pickWar(s: GameState, id: string, side: 'a' | 'b'): L | null {
   emitFact(s, { kind: 'deal', actors: [w.act, 'player'], severity: 45, visibility: 'public', tags: ['deal', 'festival'], text: t, src: 'circuit17' });
   return null;
 }
+const f8in = (s: GameState, fi: number, actId: string) => fest8(s).editions.some((e) => e.fi === fi && !e.done && e.lineup.some((x) => x.actId === actId));
 export const snubbed = (s: GameState, fi: number): boolean => (c17(s).snub[fi] ?? 0) >= s.year;
 
 function warMonth(s: GameState, r: Rng): void {
   const st = c17(s);
   st.wars = st.wars.filter((w) => w.until >= s.week);
+  // aceitou um dos convites pela tela do festival: a exclusividade vale do mesmo jeito
+  for (const w of [...st.wars]) {
+    const inA = w.ia !== undefined && f8in(s, w.ia, w.act), inB = w.ib !== undefined && f8in(s, w.ib, w.act);
+    if (!inA && !inB) continue;
+    declineInvite(s, inA ? w.b : w.a);
+    const lost = inA ? w.ib : w.ia;
+    if (lost !== undefined && !(inA && inB)) st.snub[lost] = s.year + 2;
+    st.wars = st.wars.filter((x) => x !== w);
+  }
   // festival preterido não convida mais seus atos por 2 anos
   const f0 = fest8(s);
   f0.invites = f0.invites.filter((x) => !(snubbed(s, x.fi) && s.acts[x.actId]?.owner === 'player'));
@@ -66,7 +76,7 @@ function warMonth(s: GameState, r: Rng): void {
   const two = eds.map((e) => ({ e, v: FESTIVALS[e.fi].prestige + (FESTIVALS[e.fi].focus.includes(familyOf(star.genre)) ? 20 : 0) + r.next() * 10 })).sort((a, b) => b.v - a.v).slice(0, 2);
   const mk = (fi: number) => { const fee = Math.round(festFee(s, FESTIVALS[fi], star, 'headline') * r.float(1.25, 1.6)); const id = nextId(s, 'fi'); f8.invites.push({ id, fi, actId: star.id, tier: 'headline', fee, expires: s.week + 6 }); return { id, fee }; };
   const A = mk(two[0].e.fi), B = mk(two[1].e.fi);
-  st.wars.push({ id: `war17:${s.year}`, act: star.id, a: A.id, b: B.id, fa: A.fee, fb: B.fee, until: s.week + 6 });
+  st.wars.push({ id: `war17:${s.year}`, act: star.id, a: A.id, b: B.id, fa: A.fee, fb: B.fee, until: s.week + 6, ia: two[0].e.fi, ib: two[1].e.fi });
   notify(s, fmtL(l('Guerra de headliners: {f1} e {f2} disputam {a} com exclusividade.', 'Headliner war: {f1} and {f2} fight over {a} with exclusivity.'), { f1: FESTIVALS[two[0].e.fi].name, f2: FESTIVALS[two[1].e.fi].name, a: star.name }), 'event');
 }
 
@@ -146,10 +156,13 @@ function crowdMonth(s: GameState): void {
     const delivered = Object.values(s.releases).some((r) => r.actId === c.act && r.week > c.start && r.type !== 'single');
     if (delivered) {
       c.done = 'ok';
+      voidHolds(s, (h) => h.id === c.hold);
       a.fans.core = Math.round(a.fans.core * 1.05); a.trust = clamp(a.trust + 4, 0, 100);
       log(s, fmtL(l('{a} entregou o disco financiado pelos fãs: promessa cumprida.', '{a} delivered the fan-funded record: promise kept.'), { a: a.name }));
     } else if (s.week > c.due) {
       c.done = 'broken';
+      voidHolds(s, (h) => h.id === c.hold);
+      grantHold(s, { holder: a.id, target: 'player', kind: 'grievance', strength: 35, months: 36, src: 'circuit17', text: fmtL(l('Promessa aos fãs de {a} quebrada.', 'Promise to {a}\'s fans broken.'), { a: a.name }) });
       a.fans.core = Math.round(a.fans.core * 0.9);
       const t = fmtL(l('Um ano depois, nada do disco de {a} que os fãs pagaram. "Golpe", dizem nas redes.', 'A year later, still no {a} record the fans paid for. "Scam", they say online.'), { a: a.name });
       log(s, t);

@@ -9,7 +9,7 @@
 import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
-import { emitFact } from '../facts17';
+import { emitFact, onFact, type Fact } from '../facts17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, post } from '../util';
 import { hasRight } from './image17';
@@ -28,7 +28,7 @@ export const SKUS: Record<Sku, { name: L; from: number; to: number; cost: number
   fanbox: { name: l('Caixa de fã (edição limitada)', 'Fan box (limited edition)'), from: 2015, to: 2100, cost: 25, price: 120, fan: 'core' },
 };
 export interface Line { act: string; sku: Sku; stock: number; made: number; sold: number; design: number; price: 'low' | 'mid' | 'high'; age: number; drop?: 1; rev: number }
-export interface M17 { lines: Line[]; lic: Record<string, number>; fight: Record<string, 1>; log: { y: number; m: number; t: L }[] }
+export interface M17 { lines: Line[]; lic: Record<string, number>; fight: Record<string, 1>; log: { y: number; m: number; t: L }[]; boost?: Record<string, { k: number; until: number; why: L }> }
 declare module '../ext4' { interface Ext4 { merch17: M17 } }
 registerExt4('merch17', () => ({ lines: [], lic: {}, fight: {}, log: [] }));
 export const m17 = (s: GameState): M17 => { const x = s.x4 as unknown as { merch17?: M17 }; return (x.merch17 ??= { lines: [], lic: {}, fight: {}, log: [] }); };
@@ -57,6 +57,8 @@ export function demandOf(s: GameState, ln: Line): { units: number; why: [L, numb
   if (touring(s, a)) { m *= 2; why.push([l('Banca na turnê', 'Tour merch stand'), 2]); }
   if (k.winter) { const w = southern(a) ? [5, 6, 7].includes(s.month) : [10, 11, 0, 1].includes(s.month); const f = w ? 1.5 : 0.7; m *= f; why.push([w ? l('Inverno: moletom sai', 'Winter: hoodies sell') : l('Calor: moletom encalha', 'Warm season: hoodies sit'), f]); }
   if (a.momentum > 60) { m *= 1.25; why.push([l('Artista em alta', 'Act on a roll'), 1.25]); }
+  const bo = m17(s).boost?.[a.id];
+  if (bo && bo.until >= s.week) { m *= bo.k; why.push([bo.why, bo.k]); }
   if (ln.age > 12) { m *= 0.6; why.push([l('Coleção velha', 'Stale collection'), 0.6]); }
   const boot = a.fame >= 60 && !m17(s).fight[a.id] ? 0.8 : 1;
   if (boot < 1) why.push([l('Camisetas piratas na porta do show', 'Bootleg tees outside the venue'), boot]);
@@ -137,3 +139,10 @@ registerSimHook('month', 'merch17', (s) => {
     post(s, `m17lic:${id}:${s.month}`, roy, 'merch', `Licença de merch ${a.name}`);
   }
 });
+
+// fatos de outros sistemas mexem na demanda: morte (luto/coleção), prêmio, escândalo (rebelde vende, careta afunda)
+const actOf = (s: GameState, f: Fact): Act | undefined => f.actors.map((id) => s.acts[id]).find((a) => a && (a.owner === 'player' || a.playerBand || m17(s).lines.some((x) => x.act === a.id)));
+const boost = (s: GameState, a: Act, k: number, weeks: number, why: L) => { const st = m17(s); (st.boost ??= {})[a.id] = { k, until: s.week + weeks, why }; };
+onFact('death', (s, f) => { const a = actOf(s, f); if (a) { boost(s, a, 2.5, 26, l('Luto: fãs querem uma lembrança', 'Mourning: fans want a keepsake')); log(s, fmtL(l('Morte em {a}: a procura por merch dispara.', 'Death in {a}: merch demand soars.'), { a: a.name })); } }, 'merch17:death');
+onFact('award', (s, f) => { const a = actOf(s, f); if (a) boost(s, a, 1.3, 13, l('Prêmio recente', 'Recent award')); }, 'merch17:award');
+onFact('scandal', (s, f) => { const a = actOf(s, f); if (!a || f.severity < 40) return; const rebel = ['rock', 'hiphop'].includes(a.genre) || ['rock', 'hiphop'].some((x) => a.genre.includes(x)); boost(s, a, rebel ? 1.15 : 0.7, 13, rebel ? l('Escândalo vira atitude: camiseta vende', 'Scandal becomes attitude: tees sell') : l('Escândalo: ninguém quer o rosto no peito', 'Scandal: nobody wants that face on their chest')); }, 'merch17:scandal');
