@@ -198,3 +198,8 @@ import './dmsits18';
 import './econ18';
 import './contracts18';
 import './eras18';
+// Rodada 18 (media18, onda 1): marketing com saturação/públicos/atraso, streaming por fontes de descoberta e pró-rata, rádio por formatos, clipes, viral e DJs/remix.
+import './mkt18';
+import './stream18';
+import './radio18';
+import './media18';

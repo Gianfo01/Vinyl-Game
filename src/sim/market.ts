@@ -1,6 +1,7 @@
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
 
+import { MEDIA18 } from './media18hook';
 import { physShareRel18 } from './sys/eras18';
 import { baseMult18, recoupable18, takeRecoup18 } from './sys/contracts18';
 import { postAR18, postRoyAP18, postSalesAR18, proDue18 } from './sys/econ18';
@@ -65,7 +66,7 @@ export function coverage(territories: MarketId[], genre: string, year: number, p
   return den ? num / den : 0;
 }
 
-export function marketingE(s: GameState, marketing: { channel: string; budget: number }[], owner: string): number {
+export function marketingE(s: GameState, marketing: { channel: string; budget: number }[], owner: string, actId?: string): number {
   let x = 0;
   for (const m of marketing) {
     const ch = CHANNELS.find((c) => c.id === m.channel);
@@ -77,6 +78,7 @@ export function marketingE(s: GameState, marketing: { channel: string; budget: n
       eff *= 1 + staffSkill(s, 'publicist') / 250;
       for (const id of s.player.equipment) eff *= 1 + (EQUIPMENT.find((e) => e.id === id)?.effect.marketing ?? 0);
       if (hasCard(s, 'digital_native') && ['playlists', 'social', 'short_clips', 'web_forums', 'neural_feed'].includes(ch.id)) eff *= 1.25;
+      if (actId && MEDIA18.eff) eff *= MEDIA18.eff(s, actId, ch.id); // r18 media18: saturação e aprendizado
     }
     x += (real * eff) / ch.reachCost;
   }
@@ -167,7 +169,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
     stock: pr.press,
     pressed: pr.press,
     marketing: pr.marketing,
-    marketingE: Math.min(0.95, marketingE(s, pr.marketing, 'player') + (owner !== 'player' ? 0.25 : 0)),
+    marketingE: Math.min(0.95, marketingE(s, pr.marketing, 'player', pr.actId) + (owner !== 'player' ? 0.25 : 0)),
     territories: owner !== 'player' && s.labels[owner] ? [...new Set([...pr.territories, ...s.labels[owner].territories])] : contractScope(pr.territories, c),
     weekly: [],
     totalUnits: 0,
@@ -307,7 +309,7 @@ export function marketWeek(s: GameState, r: Rng): void {
       rel.live = false;
       continue;
     }
-    let h = rel.appeal * decay(rel.type, age) * (1 + 2.5 * rel.marketingE * Math.exp(-age / 9) + 0.3 * rel.marketingE);
+    let h = rel.appeal * decay(rel.type, age) * (MEDIA18.term?.(s, rel, age) ?? (1 + 2.5 * rel.marketingE * Math.exp(-age / 9) + 0.3 * rel.marketingE));
     h *= 0.85 + act.momentum / 300;
     h *= Math.exp(r.normal(0, 0.12)); // variação semanal: paradas se mexem
     if (age > 52) h = Math.max(h, rel.appeal * 0.012 * (1 + act.fame / 40)); // cauda de catálogo
@@ -371,7 +373,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     let gross = physSold * nominal(physDef.net[rel.type], s.year);
     if (digital.length) {
       const per = digital.reduce((t, f) => t + FORMATS.find((x) => x.id === f)!.net[rel.type], 0) / digital.length;
-      gross += nonPhys * nominal(per, s.year) * (rel.owner === 'player' ? digitalReach(s) * streamPayout(digital) : 1);
+      gross += nonPhys * nominal(per, s.year) * (rel.owner === 'player' ? digitalReach(s) * (MEDIA18.payout?.(s, rel, digital) ?? streamPayout(digital)) : 1);
     } else {
       gross += nonPhys * nominal(FORMATS.find((x) => x.id === 'airplay')!.net[rel.type], s.year);
     }
@@ -493,7 +495,8 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   if (pubToPlayer < 1 && !act.playerBand) act.cash += Math.round(publishing * (1 - pubToPlayer) * 0.5);
   // parcela dos autores: paga individualmente a cada compositor (GDD §42.10)
   payAuthors(s, rel, Math.round(publishing * 0.5));
-  // fãs
+  // fãs (r18 media18: por fonte de descoberta, quando ligado)
+  if (MEDIA18.fans?.(s, rel, act, units)) return;
   act.fans.casual += Math.round(units * 0.1);
   act.fans.active += Math.round(units * 0.006);
 }
@@ -552,12 +555,12 @@ export function forecastUnits(s: GameState, act: Act, type: Release['type'], q: 
   const qF = Math.pow(Math.max(5, q) / 55, 2.4);
   const fameF = 0.12 + Math.pow(act.fame / 40, 1.6) + Math.log10(1 + act.fans.core) / 14;
   const appeal = qF * fameF * (s.genrePop[act.genre] ?? 0.6) * coverage(territories, act.genre, s.year, act.positioning) * eraTypeFit(s.year, type) * (0.8 + act.momentum / 250);
-  const E = marketingE(s, marketing, 'player');
+  const E = marketingE(s, marketing, 'player', act.id);
   const H = s.stats.lastH ?? 80;
   const pool = weeklyPool(s);
   let total = 0;
   for (let age = 0; age < 10; age++) {
-    const h = appeal * decay(type, age) * (1 + 2.5 * E * Math.exp(-age / 9) + 0.3 * E);
+    const h = appeal * decay(type, age) * (MEDIA18.fterm?.(s, marketing, E, age, type, q) ?? (1 + 2.5 * E * Math.exp(-age / 9) + 0.3 * E));
     total += (pool * h) / (H + MARKET_TAIL + h);
   }
   const width = (staffCount(s, 'analyst') ? 0.35 : 0.6) * (s.config.difficulty === 'hard' ? 1.3 : s.config.difficulty === 'easy' ? 0.8 : 1);
