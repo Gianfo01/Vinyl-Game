@@ -49,8 +49,8 @@ registerExplain('cash.month', (s) => {
 
 registerExplain('cash.cat', (s, c) => {
   const cat = String(c.cat ?? '');
-  const from = s.week - 5;
-  const rows = s.ledger.filter((x) => x.cat === cat && x.week >= from);
+  const end = s.clock?.opened ? s.clock.monthStartWeek : s.week + 1;
+  const rows = s.ledger.filter((x) => x.cat === cat && x.week >= end - 5 && x.week < end);
   const agg = new Map<string, number>();
   for (const x of rows) agg.set(x.memo, (agg.get(x.memo) ?? 0) + x.amount);
   const parts: WhyPart[] = sortParts([...agg.entries()].map(([m, v]) => ({ label: m, value: v, fmt: 'money', tone: v >= 0 ? 'good' : 'bad' }))).slice(0, 10);

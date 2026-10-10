@@ -185,3 +185,5 @@ import './scenarios17';
 import './start17';
 // Rodada 18 (core18): explicações encadeadas (explain18) dos números principais.
 import './why18';
+import './inbox18';
+import './personact18';
