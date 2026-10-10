@@ -286,7 +286,7 @@ export function fxLoss(market: MarketId, year: number): number {
 function fxMonth(s: GameState): void {
   const st = s.x4.industry;
   let loss = 0;
-  for (const m of MARKETS) {
+  if ((s.monthLedger.sales ?? 0) > 0) for (const m of MARKETS) {
     const lossRate = fxLoss(m.id, s.year);
     st.fx[m.id] = clamp((st.fx[m.id] ?? 1) * (1 - lossRate / 12), 0.01, 1);
   }
