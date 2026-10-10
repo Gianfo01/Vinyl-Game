@@ -302,3 +302,6 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 - Menus: Festivais, Editora, Mídia e Plataforma com páginas próprias; Empreendimentos vira a carteira; 3 habilidades iniciais.
 - Fama por país/região com efeitos locais.
 - Sistemas conectados (fama→notoriedade, sync→paradas, amigos→scouting, luto, rixas, produtor×conceito, mídia própria, empresário em rixa, equipe sobrecarregada, esnobadas e memória do júri, fitas demo).
+
+## Rodada 17
+Resumo completo em [docs/rodada17.md](docs/rodada17.md): fatos/obrigações/estresse/escândalos integrados, diretor criativo com situações e mundo vivo, crime, vida pessoal (sexualidade, amor, filhos, envelhecimento), imprensa e boatos, dados reais (relíquias, peso cultural, estilos), negócios (venda do selo, canais, casas de show, licenças, direitos de imagem, merch), agenda e contratações, menu reformado, novo início com cenários e saves na nuvem, cenas interativas e popups no mapa.
