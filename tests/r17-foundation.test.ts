@@ -31,8 +31,10 @@ describe('r17 fundação', () => {
     onFact('arrest', (_s, f) => seen.push(f.id), 'test:arrest');
     const f = emitFact(s, { kind: 'arrest', actors: [a.members[0], a.id], place: a.city, severity: 60, visibility: 'rumor', tags: ['crime', 'bad'], text: l('Preso.', 'Arrested.') });
     expect(seen).toEqual([f.id]);
-    expect(factsAbout(s, a.id)[0].id).toBe(f.id);
-    expect(factsAbout(s, `p:${a.members[0]}`)[0].id).toBe(f.id);
+    // onda 1: o selo do ato reage na hora (npc17: banca ou rescinde) com um fato causado pela prisão
+    expect(factsAbout(s, a.id).find((x) => x.kind === 'arrest')?.id).toBe(f.id);
+    expect(factsAbout(s, a.id).filter((x) => x.id !== f.id).every((x) => x.cause?.includes(f.id))).toBe(true);
+    expect(factsAbout(s, `p:${a.members[0]}`).find((x) => x.kind === 'arrest')?.id).toBe(f.id);
     expect(recentFacts(s, { kind: 'arrest', months: 1 })).toHaveLength(1);
     const n0 = facts17(s).f.length;
     chron(s, { k: 'award', i: 3, a: [a.id], t: l('Prêmio X.', 'Award X.') });

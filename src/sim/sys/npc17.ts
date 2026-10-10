@@ -71,7 +71,8 @@ export function npc17(s: GameState): Npc17 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.npc17 ??= fresh()) as Npc17;
   for (const [k, v] of Object.entries(fresh())) (st as unknown as Record<string, unknown>)[k] ??= v;
-  for (const m of st.mg) if (!mgrById[m.id]) mgrById[m.id] = m; // empresários de carreira nova voltam ao índice depois de carregar
+  // empresários de carreira nova voltam ao índice (depois de carregar ou ao trocar de partida: mgrById é global, o estado é por jogo)
+  for (const m of st.mg) if (mgrById[m.id] !== m) mgrById[m.id] = m;
   return st;
 }
 
@@ -382,12 +383,13 @@ function careers(s: GameState, r: Rng, W: number): void {
   if (!r.chance(0.06 * W)) return;
   const st = npc17(s);
   const cands: [Person, Act][] = [];
+  const had = new Set(st.mg.map((m) => m.id));
   for (const a of Object.values(s.acts)) {
     if ((a.status !== 'retired' && a.status !== 'split') || a.fame < 18 || a.playerBand || !okPerson(s, a) || a.owner === 'player') continue;
     for (const id of a.members) {
       const p = s.persons[id];
       const age = p ? s.year - p.born : 0;
-      if (!p?.alive || p.isPlayer || age < 32 || age > 68 || st.car[`p:${id}`] || mgrById[`n17_${id}`]) continue;
+      if (!p?.alive || p.isPlayer || age < 32 || age > 68 || st.car[`p:${id}`] || had.has(`n17_${id}`)) continue;
       if (Object.values(s.acts).some((x) => live(x) && x.members.includes(id))) continue;
       cands.push([p, a]);
     }
@@ -410,7 +412,9 @@ export function becomeManager17(s: GameState, r: Rng, p: Person, a: Act, ws0?: L
     a: [at.ear, at.neg, at.cha, at.mgmt, at.img], sex: P?.sex === 'f' ? 'f' : 'm', rate: 0.15, f: P?.facets as Record<string, number> | undefined, cl: [],
     bio: fmtL(l('Ex-integrante de {a}: conhece o palco por dentro e virou empresário(a).', 'Former member of {a}: knows the stage from the inside and became a manager.'), { a: a.name }),
   };
-  if (!mgrById[m.id]) { st.mg.push(m); mgrById[m.id] = m; }
+  const ex = st.mg.find((x) => x.id === m.id);
+  if (!ex) st.mg.push(m);
+  mgrById[m.id] = ex ?? m;
   const ws = ws0 ?? fmtL(l('{a} acabou e a vocação de articular falou mais alto (estilo {s})', '{a} ended and a knack for deal-making won out ({s} style)'), { a: a.name, s: MGR_STYLE[style][0] });
   career(s, `p:${p.id}`, 'artist', 'manager', ws);
   move(s, { k: 'career', a: a.id, p: `p:${p.id}`, t: fmtL(l('{p}, de {a}, virou empresário(a): {w}.', '{p}, of {a}, became a manager: {w}.'), { p: p.name, a: a.name, w: ws }) },

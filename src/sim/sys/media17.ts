@@ -23,7 +23,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import { critRel } from '../criticrel';
 import { f15, fameTier } from './fame15';
-import { f16, fameIn, mkOf } from './fame16';
+import { f16, fameIn, mkOf, nudge16 } from './fame16';
 import { addHype } from './hype12';
 import { medOf } from './media12';
 import { per13 } from './persona13';
@@ -149,8 +149,7 @@ function regionalHit(s: GameState, sto: Story, a3: string): void {
   const mk = mkOf(a3);
   const delta = sto.tone < 0 ? -(0.3 + sto.sev / 120) * (0.4 + credF) * (0.6 + piety(mk, s.year)) * (sto.resp === 'deny' && !sto.truth ? 0.4 : 1) : sto.tone > 0 ? 0.4 * (0.4 + credF) : 0.15;
   const fx = f16(s);
-  const d = (fx.d[a.id] ??= {});
-  d[a3] = clamp(Math.round(((d[a3] ?? 0) + delta) * 10) / 10, -40, 40);
+  nudge16(s, a.id, a3, delta);
   const m = (fx.m[a.id] ??= {});
   m[a3] = (m[a3] ?? 0) | 16;
 }
@@ -303,7 +302,7 @@ function resolve(s: GameState, r: Rng, sto: Story): void {
   sto.why = fmtL(l('Era mentira: {o} perde credibilidade ({c}).', 'It was false: {o} loses credibility ({c}).'), { o: o?.name ?? '?', c: o?.line === 'serious' ? -8 : -3 });
   if (a) {
     addHype(s, `a:${a.id}`, `m17d:${sto.tpl}`, tp?.id === 'deathhoax' ? fmtL(l('"{a} está vivo!": o boato da morte vendeu discos', '"{a} is alive!": the death hoax sold records'), { a: a.name }) : l('Solidariedade depois de boato falso', 'Sympathy after a false rumor'), tp?.id === 'deathhoax' ? 18 : 5);
-    if (sto.tone < 0) for (const a3 of sto.reach.slice(0, 6)) { const d = (f16(s).d[a.id] ??= {}); d[a3] = clamp((d[a3] ?? 0) + 0.3, -40, 40); }
+    if (sto.tone < 0) for (const a3 of sto.reach.slice(0, 6)) nudge16(s, a.id, a3, 0.3);
   }
   if (sto.mine && sto.traced) log(s, fmtL(l('O boato que você plantou ("{t}") foi desmentido.', 'The rumor you planted ("{t}") was debunked.'), { t: sto.t }));
   if (mine && sto.tone < 0 && o && !o.mine && o.cred >= 30) notify(s, fmtL(l('Boato desmentido: "{t}". Dá para processar {o} por difamação (Notícias).', 'Rumor debunked: "{t}". You can sue {o} for defamation (News).'), { t: sto.t, o: o.name }), 'info');

@@ -143,7 +143,8 @@ function baseProf(s: GameState, key: string): Record<string, number> {
 const traitsOf = (f: Record<Facet, number>): { k: Facet; hi: boolean }[] =>
   FACETS.map((k) => ({ k, d: f[k] - 50 })).filter((x) => Math.abs(x.d) >= 20).sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 5).map((x) => ({ k: x.k, hi: x.d > 0 }));
 
-const CACHE = new Map<string, P13>();
+// r17: cache por partida (WeakMap) — um Map global vazava fichas entre jogos com a mesma seed e quebrava o determinismo
+const CACHES = new WeakMap<GameState, Map<string, P13>>();
 
 /** Ficha unificada de qualquer pessoa. Chaves: 'player', 'p:<pessoa>', 'l:<líder>', 's:<equipe>', 'c:<crítico>', 'm:<id>|<nome>', 'n:<nome>'. */
 export function per13(s: GameState, key: string): P13 | null {
@@ -152,6 +153,8 @@ export function per13(s: GameState, key: string): P13 | null {
     if (pp) key = `p:${pp.id}`;
   }
   const ck = `${s.config.seed}|${s.year}|${key}|${staffSig(s, key)}`;
+  let CACHE = CACHES.get(s);
+  if (!CACHE) CACHES.set(s, (CACHE = new Map()));
   const hit = CACHE.get(ck);
   if (hit) return hit;
   const out = build(s, key);
@@ -399,9 +402,11 @@ export function imageWeight(y: number): { w: number; era: L } {
 }
 
 /** Barreiras e trunfos de um ato num país (padrão: a cidade do ato). m = multiplicador do alcance. */
-const BCACHE = new Map<string, Barrier13[]>();
+const BCACHES = new WeakMap<GameState, Map<string, Barrier13[]>>();
 export function barriers13(s: GameState, a: Act, cityId?: string): Barrier13[] {
   const ck = `${s.config.seed}|${s.year}|${a.id}|${a.genre}|${a.city}|${cityId ?? ''}|${a.members.join(',')}|${p13(s).bar[a.id]?.join() ?? ''}`;
+  let BCACHE = BCACHES.get(s);
+  if (!BCACHE) BCACHES.set(s, (BCACHE = new Map()));
   const hit = BCACHE.get(ck);
   if (hit) return hit;
   if (BCACHE.size > 20000) BCACHE.clear(); // r15: sem semana na chave (só muda por ano) e teto maior p/ bases grandes

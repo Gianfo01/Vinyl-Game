@@ -21,7 +21,8 @@ import { addStress, relieveLong } from '../stress17';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import { juryMemHook } from './awards15';
-import { f16 } from './fame16';
+import { nudge16 } from './fame16';
+import { actIxVersion17, actsOfPerson17 } from '../actidx17';
 import { per13 } from './persona13';
 import { registerSituation, type SitOption } from './situations17';
 
@@ -76,24 +77,20 @@ export function climate17(a3: string | null, year: number, cityId?: string): L {
 
 /** Pessoa real (catálogo histórico): só dados documentados. */
 // índice por semana (pessoa → atos; ato → frente assumida): estas leituras rodam a cada cálculo de público
-interface Ix17 { w: number; n: number; acts: Map<string, Act[]>; front: Map<string, boolean> }
+interface Ix17 { v: number; w: number; front: Map<string, boolean> }
 const IX = new WeakMap<GameState, Ix17>();
-function ix(s: GameState): Ix17 {
+function frontIx(s: GameState): Map<string, boolean> {
   let x = IX.get(s);
-  const n = s.idSeq ?? 0;
-  if (!x || x.w !== s.week || x.n !== n) {
-    x = { w: s.week, n, acts: new Map(), front: new Map() };
-    for (const a of Object.values(s.acts)) for (const m of a.members) { const l0 = x.acts.get(m); if (l0) l0.push(a); else x.acts.set(m, [a]); }
-    IX.set(s, x);
-  }
-  return x;
+  const v = actIxVersion17(s);
+  if (!x || x.v !== v || x.w !== s.week) { x = { v, w: s.week, front: new Map() }; IX.set(s, x); }
+  return x.front;
 }
 /** Pessoa real (catálogo histórico): só dados documentados. */
 export function isRealP(s: GameState, pid: string): boolean {
-  return (ix(s).acts.get(pid) ?? []).some((a) => !!a.catalogNo);
+  return (actsOfPerson17(s, pid) ?? []).some((a) => !!a.catalogNo);
 }
 const u01 = (s: GameState, pid: string, k: string): number => (hashString(`${s.config.seed}:sx17:${k}:${pid}`) % 10000) / 10000;
-const actOf = (s: GameState, pid: string): Act | undefined => { let b: Act | undefined; for (const a of ix(s).acts.get(pid) ?? []) if (!b || a.fame > b.fame) b = a; return b; };
+const actOf = (s: GameState, pid: string): Act | undefined => { let b: Act | undefined; for (const a of actsOfPerson17(s, pid) ?? []) if (!b || a.fame > b.fame) b = a; return b; };
 const homeOf = (s: GameState, pid: string): string => actOf(s, pid)?.city ?? s.config.homeCity;
 
 export interface Sx17 { o: Orient17 | 'private'; c: Closet17; real?: boolean; note?: string; lav?: boolean; outed?: boolean }
@@ -142,7 +139,7 @@ export function outMembers(s: GameState, a: Act): string[] {
   return a.members.filter((m) => { const p = s.persons[m]; if (!p?.alive) return false; const x = sexOf(s, m); return isQueer(x) && x.c === 'out'; });
 }
 const frontOut = (s: GameState, a: Act): boolean => {
-  const F0 = ix(s).front;
+  const F0 = frontIx(s);
   let v = F0.get(a.id);
   if (v === undefined) { const om = outMembers(s, a); v = om.length > 0 && (a.members.length <= 2 || om.includes(a.leaderId ?? a.members[0]) || om.length * 2 >= a.members.length); F0.set(a.id, v); }
   return v;
@@ -196,9 +193,7 @@ registerOfferMod('sex17', (s, act) => {
 
 function nudgeFame(s: GameState, a: Act, a3: string | null, d: number): void {
   if (!a3) return;
-  const fx = f16(s);
-  const x = (fx.d[a.id] ??= {});
-  x[a3] = clamp((x[a3] ?? 0) + d, -40, 40);
+  nudge16(s, a.id, a3, d);
 }
 /** Sai do armário (por vontade ou exposto). Devolve o texto do desfecho. */
 export function comeOut(s: GameState, pid: string, how: 'chose' | 'outed', by?: string): L {
@@ -210,6 +205,7 @@ export function comeOut(s: GameState, pid: string, how: 'chose' | 'outed', by?: 
   if (!isQueer(sexOf(s, key))) return l('Nada a revelar.', 'Nothing to reveal.');
   const rec = (st.p[key] ??= {});
   if (rec.c === 'out') return l('Já é público.', 'Already public.');
+  IX.delete(s);
   rec.c = 'out'; rec.w = s.week; if (how === 'outed') rec.outed = 1;
   IX.delete(s);
   const name = isPl ? (s.persons[Object.values(s.persons).find((p) => p.isPlayer)?.id ?? '']?.name ?? '?') : s.persons[pid]?.name ?? '?';

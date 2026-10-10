@@ -10,7 +10,7 @@ import { scandal, lastScandal } from '../scandal17';
 import { addStress, relieveLong, stressOf } from '../stress17';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
-import { f16 } from './fame16';
+import { nudge16 } from './fame16';
 import { leaders } from './leaders10';
 import { P, healthOf } from './people/state';
 import { registerSituation, type SitCtx } from './situations17';
@@ -92,7 +92,7 @@ registerSituation({
   text: (s, c) => { const sc = lastScandal(s, c.act!); return fmtL(l('"{t}" Reação calculada: {w}.', '"{t}" Expected reaction: {w}.'), { t: c.fact?.text.pt ?? '', w: sc?.why.map((x) => x.pt).join(' · ') ?? '—' }); },
   options: [
     { id: 'apologize', label: l('Pedir desculpas', 'Apologize'), hint: l('Recupera metade da fama perdida no país; núcleo −3%.', 'Recovers half the fame lost in that country; core fans −3%.'), weightByTraits: (P0) => F(P0, 'empatia') * 1.2 + (2 - F(P0, 'ego')) * 0.5,
-      apply: (s, c) => { const a = s.acts[c.act!]; if (!a) return; const a3 = String(c.data.a3); const lost = Number(c.data.fame); if (a3 && lost < 0) { const d = (f16(s).d[a.id] ??= {}); d[a3] = clamp((d[a3] ?? 0) - lost / 2, -40, 40); } a.fans.core = Math.round(a.fans.core * 0.97); if (a.owner === 'player') s.player.reputation.institutional = clamp(s.player.reputation.institutional + 2, 0, 100); } },
+      apply: (s, c) => { const a = s.acts[c.act!]; if (!a) return; const a3 = String(c.data.a3); const lost = Number(c.data.fame); if (a3 && lost < 0) nudge16(s, a.id, a3, -lost / 2); a.fans.core = Math.round(a.fans.core * 0.97); if (a.owner === 'player') s.player.reputation.institutional = clamp(s.player.reputation.institutional + 2, 0, 100); } },
     { id: 'double_down', label: l('Dobrar a aposta', 'Double down'), hint: l('Núcleo +6%, casuais −6%; 25% de nova polêmica.', 'Core +6%, casual −6%; 25% chance of a new controversy.'), weightByTraits: (P0) => F(P0, 'ego') + F(P0, 'teimosia') + F(P0, 'rebeldia') * 0.7,
       apply: (s, c, r) => { const a = s.acts[c.act!]; if (!a) return; a.fans.core = Math.round(a.fans.core * 1.06); a.fans.casual = Math.round(a.fans.casual * 0.94); if (r.chance(0.25)) scandal(s, a.id, 'offense', 25, fmtL(l('{a} piora a polêmica com nova declaração.', '{a} makes it worse with a new statement.'), { a: a.name }), { cause: c.fact ? [c.fact.id] : undefined }); } },
     { id: 'silence', label: l('Silêncio', 'Silence'), hint: l('Nada muda; o boato segue o curso.', 'Nothing changes; the rumor runs its course.'), weightByTraits: (P0) => F(P0, 'paciencia') + F(P0, 'disciplina') * 0.5, apply: () => undefined },

@@ -16,6 +16,7 @@ import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { addHype } from './hype12';
 import { pressLine17 } from '../outlets17';
+import { actsOfPerson17 } from '../actidx17';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Só amigos e a cena mais próxima sabem quem é.', 'Only friends and the nearest scene know them.') },
@@ -61,18 +62,8 @@ export const fameLog = (s: GameState, ids: string[]) => f15(s).log.filter((x) =>
 
 // ---------------------------------------------------------------- fama da pessoa
 
-const IDX = new WeakMap<GameState, { k: string; m: Map<string, Act[]> }>();
 /** Atos (atuais) de cada pessoa — índice barato, refeito quando a semana ou o nº de atos muda. */
-function actsOfP(s: GameState, pid: string): Act[] {
-  const k = `${s.week}|${Object.keys(s.acts).length}`;
-  let c = IDX.get(s);
-  if (!c || c.k !== k) {
-    const m = new Map<string, Act[]>();
-    for (const a of Object.values(s.acts)) for (const id of a.members) { const xs = m.get(id) ?? []; xs.push(a); m.set(id, xs); }
-    c = { k, m }; IDX.set(s, c);
-  }
-  return c.m.get(pid) ?? [];
-}
+const actsOfP = (s: GameState, pid: string): Act[] => actsOfPerson17(s, pid);
 export const mainActOf = (s: GameState, pid: string): Act | undefined => actsOfP(s, pid).slice().sort((a, b) => b.fame - a.fame)[0];
 
 const front = (a: Act, p: Person) => a.members.length === 1 || a.leaderId === p.id || p.role === 'vocal' || p.role === 'mc';

@@ -153,7 +153,8 @@ export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; 
   let genre = opts.genre;
   if (!genre) {
     const sceneGenres = cityDef.scenes.filter((gid) => genreById[gid] && genreById[gid].born <= year);
-    const alive = aliveGenres(s, year);
+    // atos formados antes de 1920 (início em 1920): nenhum gênero "nasceu" ainda — usa os do ano corrente
+    const alive = aliveGenres(s, year).length ? aliveGenres(s, year) : aliveGenres(s, Math.max(year, s.year));
     genre = sceneGenres.length && r.chance(0.65) ? r.pick(sceneGenres) : r.weighted(alive, (gid) => (s.genrePop[gid] ?? 0.6))!;
   }
   const fam = familyOf(genre);

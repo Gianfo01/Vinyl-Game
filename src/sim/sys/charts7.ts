@@ -149,6 +149,7 @@ const VIEWS_PER_UNIT = 60;
 
 // ---------------------------------------------------------------- semana
 
+interface Acc7 { v: Float64Array; seen: Uint8Array; ord: number[] }
 function emptyBoard(): Board {
   return { songs: [], albums: [], stream: [], sales: [], video: [] };
 }
@@ -202,9 +203,11 @@ export function weekCharts(s: GameState): void {
   const nC = COUNTRY_INFO.length;
   const shares = COUNTRY_INFO.map((c) => formatShares(s, c));
   // acumuladores: [país][tipo] -> lista
-  const acc: Record<ChartKind, { relId: string; u: number }[]>[] = COUNTRY_INFO.map(() => ({ songs: [], albums: [], stream: [], sales: [], video: [] }));
+  const acc: Record<ChartKind, { relId: string; u: number; j: number }[]>[] = COUNTRY_INFO.map(() => ({ songs: [], albums: [], stream: [], sales: [], video: [] }));
   const w: number[] = new Array(COUNTRY_INFO.length).fill(0);
-  for (const { rel, units } of fresh) {
+  const nF = fresh.length;
+  for (let j = 0; j < nF; j++) {
+    const { rel, units } = fresh[j];
     const sum = countryWeights(s, rel, w);
     if (sum <= 0) continue;
     const vf = videoFactor(s, rel);
@@ -213,28 +216,33 @@ export function weekCharts(s: GameState): void {
       const u = (units * w[i]) / sum;
       if (u < 0.5) continue;
       const a = acc[i];
-      (album ? a.albums : a.songs).push({ relId: rel.id, u });
+      (album ? a.albums : a.songs).push({ relId: rel.id, u, j });
       const sh = shares[i];
-      if (hasStream && sh.stream > 0) a.stream.push({ relId: rel.id, u: u * sh.stream * STREAMS_PER_UNIT * (album ? 0.6 : 1) });
-      a.sales.push({ relId: rel.id, u: u * (sh.phys + sh.dl) });
-      if (vf > 0) a.video.push({ relId: rel.id, u: u * vf * VIEWS_PER_UNIT * (album ? 0.4 : 1) });
+      if (hasStream && sh.stream > 0) a.stream.push({ relId: rel.id, u: u * sh.stream * STREAMS_PER_UNIT * (album ? 0.6 : 1), j });
+      a.sales.push({ relId: rel.id, u: u * (sh.phys + sh.dl), j });
+      if (vf > 0) a.video.push({ relId: rel.id, u: u * vf * VIEWS_PER_UNIT * (album ? 0.4 : 1), j });
       const yu = (st.yearUnits[COUNTRY_INFO[i].a3] ??= {});
       yu[rel.id] = (yu[rel.id] ?? 0) + u;
     }
   }
   // países
-  const regionAcc: Record<string, Record<ChartKind, Map<string, number>>> = {};
-  const worldAcc: Record<ChartKind, Map<string, number>> = { songs: new Map(), albums: new Map(), stream: new Map(), sales: new Map(), video: new Map() };
+  // acumuladores por índice do lançamento em `fresh` (mesma ordem de 1ª aparição e mesmas somas de antes, sem Map por string)
+  const mkAcc = (): Acc7 => ({ v: new Float64Array(nF), seen: new Uint8Array(nF), ord: [] });
+  const mkAccs = (): Record<ChartKind, Acc7> => ({ songs: mkAcc(), albums: mkAcc(), stream: mkAcc(), sales: mkAcc(), video: mkAcc() });
+  const addAcc = (x: Acc7, j: number, u: number) => { if (!x.seen[j]) { x.seen[j] = 1; x.ord.push(j); } x.v[j] += u; };
+  const rowsOf = (x: Acc7) => x.ord.map((j) => ({ relId: fresh[j].rel.id, u: x.v[j] }));
+  const regionAcc: Record<string, Record<ChartKind, Acc7>> = {};
+  const worldAcc = mkAccs();
   for (let i = 0; i < nC; i++) {
     const c = COUNTRY_INFO[i];
     const prev = boardsOf(s)[c.a3] ?? emptyBoard();
     const board = emptyBoard();
-    const reg = (regionAcc[c.market] ??= { songs: new Map(), albums: new Map(), stream: new Map(), sales: new Map(), video: new Map() });
+    const reg = (regionAcc[c.market] ??= mkAccs());
     for (const k of CHART_KINDS) {
       board[k] = rank(prev[k], acc[i][k]);
       for (const x of acc[i][k]) {
-        reg[k].set(x.relId, (reg[k].get(x.relId) ?? 0) + x.u);
-        worldAcc[k].set(x.relId, (worldAcc[k].get(x.relId) ?? 0) + x.u);
+        addAcc(reg[k], x.j, x.u);
+        addAcc(worldAcc[k], x.j, x.u);
       }
     }
     boardsOf(s)[c.a3] = board;
@@ -245,14 +253,14 @@ export function weekCharts(s: GameState): void {
     const key = `r:${m}`;
     const prev = boardsOf(s)[key] ?? emptyBoard();
     const board = emptyBoard();
-    for (const k of CHART_KINDS) board[k] = rank(prev[k], [...accM[k]].map(([relId, u]) => ({ relId, u })));
+    for (const k of CHART_KINDS) board[k] = rank(prev[k], rowsOf(accM[k]));
     boardsOf(s)[key] = board;
     // compatibilidade: prêmios regionais usam s.regionCharts (top 10 combinado)
     s.regionCharts[m] = [...board.songs, ...board.albums].sort((a, b) => b.u - a.u).slice(0, 10).map((x) => x.relId);
   }
   const prevW = boardsOf(s).world ?? emptyBoard();
   const wb = emptyBoard();
-  for (const k of CHART_KINDS) wb[k] = rank(prevW[k], [...worldAcc[k]].map(([relId, u]) => ({ relId, u })));
+  for (const k of CHART_KINDS) wb[k] = rank(prevW[k], rowsOf(worldAcc[k]));
   boardsOf(s).world = wb;
   // poda dos acumuladores do ano: só os 60 maiores por país
   if (s.week % 8 === 0) for (const a3 of Object.keys(st.yearUnits)) {

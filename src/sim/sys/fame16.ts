@@ -107,6 +107,23 @@ export function fameIn(s: GameState, a: Act, a3: string): number {
 }
 export const tierIn = (s: GameState, a: Act, a3: string): number => fameTier(fameIn(s, a, a3));
 
+/** Mexe no desvio local de um país (notícia, escândalo...) respeitando o limite de 12 países guardados:
+ *  país novo além do limite só entra se pesar mais que o mais fraco (que sai). Devolve o valor final. */
+export function nudge16(s: GameState, id: string, a3: string, dv: number): number {
+  const d = (f16(s).d[id] ??= {});
+  const v = clamp(Math.round(((d[a3] ?? 0) + dv) * 10) / 10, -40, 40);
+  if (d[a3] === undefined) {
+    const cs = Object.keys(d).filter((k) => !k.startsWith('r:'));
+    if (cs.length >= CAP) {
+      const weak = cs.reduce((w, k) => (Math.abs(d[k]) < Math.abs(d[w]) ? k : w));
+      if (Math.abs(d[weak]) >= Math.abs(v)) return d[`r:${mkOf(a3)}`] ?? 0;
+      delete d[weak];
+    }
+  }
+  d[a3] = v;
+  return v;
+}
+
 /** Média mundial ponderada pelo tamanho do mercado (o "agregado" da fama regional). */
 export function worldFame16(s: GameState, a: Act): number {
   let w = 0, v = 0;
@@ -170,6 +187,18 @@ function chartPts(s: GameState): Map<string, Map<string, number>> {
 }
 
 /** Alvo do desvio por país/balde e as fontes (bits). */
+// shows por ato (chaves played:ato:cidade), montado uma vez por mês em fame16Month — mesma ordem de CITIES
+let playedIx: Map<string, { id: string }[]> | null = null;
+function buildPlayedIx(s: GameState): Map<string, { id: string }[]> {
+  const has = new Set<string>();
+  for (const k in s.flags) if (k.startsWith('played:')) has.add(k);
+  const m = new Map<string, { id: string }[]>();
+  if (!has.size) return m;
+  const acts = new Set<string>();
+  for (const k of has) acts.add(k.slice(7, k.lastIndexOf(':')));
+  for (const id of acts) { const xs = CITIES.filter((c) => has.has(`played:${id}:${c.id}`)); if (xs.length) m.set(id, xs); }
+  return m;
+}
 function targets(s: GameState, a: Act, cp: Map<string, number> | undefined): { t: Map<string, number>; m: Map<string, number> } {
   const t = new Map<string, number>(), m = new Map<string, number>();
   const add = (k: string, v: number, bit: number) => { if (v <= 0) return; t.set(k, (t.get(k) ?? 0) + v); m.set(k, (m.get(k) ?? 0) | bit); };
@@ -183,7 +212,7 @@ function targets(s: GameState, a: Act, cp: Map<string, number> | undefined): { t
   // shows no último ano (o selo marca played:ato:cidade com a semana)
   const pre = `played:${a.id}:`;
   const shows = new Map<string, number>();
-  for (const c of CITIES) {
+  for (const c of playedIx ? playedIx.get(a.id) ?? [] : CITIES) {
     const w = s.flags[pre + c.id];
     if (w === undefined || s.week - w > 52) continue;
     const a3 = countryOfCity(c.id);
@@ -227,7 +256,8 @@ export function fame16Month(s: GameState): void {
   const cp = chartPts(s);
   const cand = new Set<string>([...cp.keys(), ...Object.keys(st.d)]);
   for (const a of Object.values(s.acts)) if (live(a) && (mineAct(a) || a.fame >= 25)) cand.add(a.id);
-  for (const id of cand) {
+  playedIx = buildPlayedIx(s);
+  try { for (const id of cand) {
     const a = s.acts[id];
     if (!a) { delete st.d[id]; delete st.m[id]; delete st.lt[id]; continue; }
     const { t, m } = targets(s, a, cp.get(id));
@@ -248,7 +278,7 @@ export function fame16Month(s: GameState): void {
       for (const k of Object.keys(nd)) { const b = m.get(k) ?? st.m[id]?.[k] ?? 0; if (b) mm[k] = b; }
       st.m[id] = mm;
     } else { delete st.d[id]; delete st.m[id]; }
-  }
+  } } finally { playedIx = null; }
   localEvents(s);
 }
 

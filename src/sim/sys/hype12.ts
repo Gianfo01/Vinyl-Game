@@ -49,6 +49,8 @@ const stored = (s: GameState, key: string) => (hy(s).e[key]?.s ?? []).map((x) =>
 const pendOf = (s: GameState, actId: string) => s.pendingReleases.filter((p) => p.actId === actId).sort((a, b) => a.week - b.week)[0];
 const actBase = (s: GameState, a: Act) => sum(hy(s).e[`a:${a.id}`]) + Math.max(0, a.momentum - 45) * 0.4;
 
+// índice cidade:gênero → atos, só durante o laço semanal (cidade/gênero/morte não mudam dentro dele)
+let sceneIx: Map<string, Act[]> | null = null;
 function parts(s: GameState, key: string): { t: L; v: number }[] {
   const [k, id, id2] = key.split(':');
   const out = stored(s, key);
@@ -86,7 +88,7 @@ function parts(s: GameState, key: string): { t: L; v: number }[] {
     if (top.length) out.push({ t: l('Artistas do elenco em alta', 'Hot acts on the roster'), v: (top.reduce((t, x) => t + x, 0) / top.length) * 0.6 });
     if (id === 'player' && w4(s).hype >= 1) out.push({ t: l('Feiras e números 1 (hype do selo)', 'Fairs and number ones (label hype)'), v: w4(s).hype * 0.5 });
   } else if (k === 's') {
-    const acts = Object.values(s.acts).filter((a) => a.city === id && a.genre === id2 && !a.deceased).map((a) => actBase(s, a)).sort((a, b) => b - a).slice(0, 3);
+    const acts = (sceneIx ? sceneIx.get(`${id}:${id2}`) ?? [] : Object.values(s.acts).filter((a) => a.city === id && a.genre === id2 && !a.deceased)).map((a) => actBase(s, a)).sort((a, b) => b - a).slice(0, 3);
     if (acts.length) out.push({ t: l('Artistas da cena em alta', 'Hot acts in the scene'), v: (acts.reduce((t, x) => t + x, 0) / acts.length) * 0.8 });
   } else if (k === 't') {
     const tr = s.tours.find((x) => x.id === id), a = tr && s.acts[tr.actId];
@@ -258,7 +260,9 @@ export function tracked(s: GameState): string[] {
 registerSimHook('week', 'hype12', (s) => {
   const st = hy(s);
   let news = 0;
-  for (const key of tracked(s)) {
+  sceneIx = new Map();
+  for (const a of Object.values(s.acts)) if (!a.deceased) { const k = `${a.city}:${a.genre}`; const xs = sceneIx.get(k); if (xs) xs.push(a); else sceneIx.set(k, [a]); }
+  try { for (const key of tracked(s)) {
     const e = (st.e[key] ??= { s: [] });
     const v = hypeOf(s, key).v;
     const mine = key === 'l:player' || key.startsWith('f:') || (key.startsWith('a:') && s.acts[key.slice(2)]?.owner === 'player') || (key.startsWith('o:') && relics(s).list.find((x) => x.id === key.slice(2))?.st === 'player');
@@ -273,7 +277,7 @@ registerSimHook('week', 'hype12', (s) => {
     for (const x of e.s) x.v *= d;
     e.s = e.s.filter((x) => Math.abs(x.v) >= 0.5);
     if (!e.s.length && v < 3) delete st.e[key];
-  }
+  } } finally { sceneIx = null; }
   // reação e sucesso tardio: notícias, crítica mais dura, fama/confiança
   for (const [id, rh] of Object.entries(st.rel)) {
     const rel = s.releases[id], a = s.acts[rh.a];
