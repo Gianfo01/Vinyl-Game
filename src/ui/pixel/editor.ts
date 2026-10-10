@@ -135,7 +135,7 @@ export function appearanceEditor(person: EditablePerson, onChange: (look: Appear
         h('button', { class: 'btn small ghost', onclick: () => update({}, true) }, t(l('Restaurar padrão', 'Reset to default'))),
       ),
       look.rl ? h('p', { class: 'small' }, t(l(`Visual inspirado na fase real (${look.rl.split('@')[1] === '0' ? 'início' : look.rl.split('@')[1]}). Ele muda sozinho quando a fase muda — até você editar algo aqui.`, `Look based on the real era (${look.rl.split('@')[1] === '0' ? 'early' : look.rl.split('@')[1]}). It changes by itself with each phase — until you edit something here.`))) : h('span'),
-      h('p', { class: 'muted small' }, t(l(`Aparência é só cosmética, sem custo. A roupa segue a moda de ${eraOf(year).slice(0, 3)}0s.`, `Looks are cosmetic only, free of charge. Clothes follow ${eraOf(year).slice(0, 3)}0s fashion.`))),
+      h('p', { class: 'muted small' }, t(l(`Mudar o visual não custa nada. Tom de pele, sexo e idade pesam no jogo conforme o país e a época (Você → Aparência). A roupa segue a moda de ${eraOf(year).slice(0, 3)}0s.`, `Changing your look is free. Skin tone, sex and age weigh in the game by country and era (You → Appearance). Clothes follow ${eraOf(year).slice(0, 3)}0s fashion.`))),
     );
   };
   drawPortrait();

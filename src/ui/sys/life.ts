@@ -32,6 +32,7 @@ import { playerViewsBlock } from './beliefs10';
 import { chips, ic, meter, stat, tabs } from '../vis';
 import { ownerTab } from './people/area';
 import { personalAgendaTab, possessionsTab } from './goods8';
+import { careTab, heartTab, kidsTab, looksTab } from './life17';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -121,7 +122,7 @@ function loveTab(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' },
       pt.stage === 'dating' ? btn(l('Pedir em casamento (anel $1.500)', 'Propose (ring $1,500)'), 1, () => run(propose(s, r())), { primary: true }) : null,
       pt.stage === 'engaged' ? h('span', { class: 'row' }, select<WeddingKind>(wedding, (Object.keys(WEDDINGS) as WeddingKind[]).map((k) => ({ value: k, label: `${t(WEDDINGS[k].name)} · ${$(money(s, WEDDINGS[k].cost))}` })), (v) => (wedding = v)), btn(l('Casar', 'Get married'), 2, () => run(marry(s, wedding)), { primary: true })) : null,
-      btn(pt.stage === 'married' ? l('Pedir o divórcio (partilha de 35% do patrimônio)', 'File for divorce (35% asset split)') : l('Terminar', 'Break up'), 0, () => { if (confirm(t(l('Tem certeza?', 'Are you sure?')))) run(breakUp(s)); }),
+      pt.stage === 'married' ? h('small', { class: 'muted' }, t(l('Divórcio (amigável ou litigioso, com partilha e pensões): aba Coração.', 'Divorce (amicable or contested, with split and support): Heart tab.'))) : btn(l('Terminar', 'Break up'), 0, () => { if (confirm(t(l('Tem certeza?', 'Are you sure?')))) run(breakUp(s)); }),
     ),
   ) : section(t(l('Vida amorosa', 'Love life')),
     h('p', { class: 'muted' }, t(l('Solteiro(a). Saia para conhecer gente nova (ou vá a uma festa da indústria, na aba Lazer, onde dá para conhecer artistas).', 'Single. Go out and meet new people (or go to an industry party, in the Leisure tab, where you can meet artists).'))),
@@ -271,6 +272,7 @@ const YOU_GROUP: Record<string, 'you' | 'personal' | 'wealth'> = {
   me: 'you', persona: 'you', skills: 'you', decisions: 'you', music: 'you', diary: 'you',
   love: 'personal', leisure: 'personal', agenda8: 'personal', vices: 'personal', routines12: 'personal',
   wealth: 'wealth', goods8: 'wealth',
+  heart17: 'personal', kids17: 'personal', care17: 'personal', looks17: 'you',
 };
 function youArea(s: GameState, group: 'you' | 'personal' | 'wealth' = 'you'): HTMLElement {
   return h('div', { class: 'hub life' }, tabs(`life-${group}`, [
@@ -279,6 +281,10 @@ function youArea(s: GameState, group: 'you' | 'personal' | 'wealth' = 'you'): HT
     { id: 'skills', label: t(l('Habilidades', 'Abilities')), icon: 'star', badge: skills(s).points || undefined, render: () => skillsTab(s) },
     { id: 'decisions', label: t(l('Decisões', 'Decisions')), icon: 'flag', render: () => decisionsTab(s) },
     { id: 'love', label: t(l('Amor e família', 'Love and family')), icon: 'heart', render: () => loveTab(s) },
+    { id: 'heart17', label: t(l('Coração', 'Heart')), icon: 'heart', render: () => heartTab(s) },
+    { id: 'kids17', label: t(l('Filhos', 'Children')), icon: 'fans', render: () => kidsTab(s) },
+    { id: 'care17', label: t(l('Fé e cuidado', 'Faith and care')), icon: 'sparkle', render: () => careTab(s) },
+    { id: 'looks17', label: t(l('Aparência', 'Appearance')), icon: 'star', render: () => looksTab(s) },
     { id: 'music', label: t(l('Carreira musical', 'Music career')), icon: 'guitar', render: () => musicTab(s) },
     { id: 'leisure', label: t(l('Lazer e saúde', 'Leisure and health')), icon: 'sparkle', render: () => leisureTab(s) },
     { id: 'agenda8', label: t(l('Agenda pessoal', 'Personal agenda')), icon: 'calendar', render: () => personalAgendaTab(s) },
