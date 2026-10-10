@@ -9,6 +9,8 @@ import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import { feed17, m17, outlets17, plantOdds, plantRumor, respond, respondOdds, TPL17 } from '../src/sim/sys/media17';
 import { hypeOf } from '../src/sim/sys/hype12';
+import { SITS } from '../src/sim/sys/situations17';
+import { offerMods } from '../src/sim/ext4';
 import { playerActs } from '../src/sim/util';
 import type { GameState } from '../src/sim/types';
 
@@ -63,6 +65,8 @@ describe('r17 mídia', () => {
       }
     }
     expect(TPL17.every((t) => t.name.pt && t.t.en)).toBe(true);
+    expect(SITS.some((x) => x.id === 'critic_pan')).toBe(true);
+    expect(offerMods().some((x) => x.id === 'media17')).toBe(true);
   });
 
   it('hype: motivos variam por ato (não é mais o mesmo texto/valor para todos)', () => {

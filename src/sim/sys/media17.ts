@@ -12,7 +12,7 @@ import { COUNTRY_INFO } from '../../data/countries';
 import { countryOfCity } from '../../data/geo';
 import { COLUMNISTS, CRITICS17 } from '../../data/media17';
 import { cityById, familyOf, l, type L, type MarketId } from '../../data/world';
-import { registerExt4, registerSimHook } from '../ext4';
+import { registerExt4, registerOfferMod, registerSimHook } from '../ext4';
 import { emitFact, facts17, raiseVisibility, recentFacts, type Fact } from '../facts17';
 import { grantHold, holdsOf, useHold } from '../holds17';
 import { CRITICS, registerReviewAdjust } from '../media';
@@ -447,6 +447,20 @@ registerSituation({
     { id: 'ignore', label: l('Ignorar', 'Ignore it'), hint: l('Nada muda lá fora; estresse +6 no líder', 'Nothing changes outside; leader stress +6'),
       apply: (s, c) => { if (c.cast.person) addStress(s, c.cast.person, 6, l('Resenha cruel', 'Cruel review')); } },
   ],
+});
+
+/** Artistas leem jornal: selo flagrado plantando boato/abafando/espionando assusta; boa imprensa ajuda. */
+registerOfferMod('media17', (s) => {
+  const st = m17(s);
+  let bad = 0, good = 0;
+  for (const x of st.st) {
+    if (s.week - x.w > 52) break;
+    if ((x.mine && x.traced) || x.tpl === 'coverup') bad++;
+    else if (x.mine && x.tone > 0 && x.news) good++;
+  }
+  const v = clamp(-bad * 0.035 + Math.min(3, good) * 0.01, -0.12, 0.03);
+  if (Math.abs(v) < 0.005) return null;
+  return { delta: v, reason: v < 0 ? fmtL(l('Imprensa: seu selo foi pego manipulando a mídia ({n}× no último ano)', 'Press: your label was caught manipulating the media ({n}× in the last year)'), { n: bad }) : l('Imprensa: boas exclusivas e entrevistas recentes', 'Press: good recent exclusives and interviews') };
 });
 
 // ---------------------------------------------------------------- ações do jogador (com chance e custo à vista)
