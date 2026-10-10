@@ -239,6 +239,9 @@ import './review18';
 import './policy18';
 import './paths18';
 import './saga18';
+// Rodada 18 (artist18): carreira de artista com selos NPC, empresário/agente/editora, sociedades.
+import './artist18';
+import './shared18';
 // Rodada 18 (campus18): Nosso mundo — prédios do jogador derivados do estado, obras, danos e retratos anuais.
 import './campus18';
 // Rodada 18 (cine18): storyboards de cenas compostos pelo estado e carreiras póstumas (espólios, hologramas, avatares).
