@@ -140,3 +140,8 @@ import './links16';
 import './people16';
 // Rodada 16: formações vivas (saídas, solos, bandas novas, voltas, renomes, linha do tempo).
 import './lineup16';
+// Rodada 17 — fundação da integração: pontes de Fatos (remember/chron/press9), obrigações, estresse único,
+// ligações entre sistemas e situações do diretor com orçamento de drama.
+import './bridge17';
+import './situations17';
+import './sits17';
