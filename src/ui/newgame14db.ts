@@ -3,6 +3,7 @@
 
 import { REAL_EU } from '../data/realacts_eu';
 import { REAL_MORE } from '../data/realacts_more14';
+import { REAL_17 } from '../data/more17';
 import { REAL_US } from '../data/realacts_us';
 import { REAL_WORLD } from '../data/realacts_world';
 import { l } from '../data/world';
@@ -15,7 +16,7 @@ import { newgameCards } from './newgame';
 
 const BASE = [...REAL_US, ...REAL_EU, ...REAL_WORLD];
 /** Quantos artistas reais existem neste tamanho (sem contar os 100 do catálogo clássico). */
-export const realCount = (size: RunConfig['dbSize']): number => [...BASE, ...REAL_MORE].filter((a) => realAllowed({ dbSize: size }, a)).length;
+export const realCount = (size: RunConfig['dbSize']): number => [...BASE, ...REAL_MORE, ...REAL_17].filter((a) => realAllowed({ dbSize: size }, a)).length;
 const GEN0 = 95;
 
 export function dbCard(cfg: RunConfig): HTMLElement {

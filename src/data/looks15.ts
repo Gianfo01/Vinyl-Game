@@ -11,6 +11,7 @@
 // 4 roxo 5 branco 6 preto 7 laranja 8 dourado 9 rosa 10 prata 11 couro 12 celeste.
 
 import type { Appearance } from '../sim/types';
+import { LOOKS17 } from './looks17';
 
 const L: Record<string, string> = {
   // anos 30–50
@@ -231,6 +232,7 @@ const L: Record<string, string> = {
   'Fergie': 'F s0 h7 c4 o2 k6',
   'Seu Jorge': 's3 h3 c0 d0 o0 k5',
 };
+for (const [k, v] of Object.entries(LOOKS17)) L[k] ??= v; // rodada 17: mais visuais reais (não sobrescreve)
 L['Beyoncé Knowles'] = L['Beyoncé'];
 
 export interface RealLookSeg { from: number; look: Appearance }
