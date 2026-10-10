@@ -18,6 +18,7 @@ import { PRODUCTION_COST, autoTier, cityDemand, planTour, type TourPlan } from '
 import { legInfo } from '../travelAdapter';
 import type { Act, GameState } from '../types';
 import { fmtL, money, post, remember, staffSkill } from '../util';
+import { eff360, take360 } from './deal360_17';
 import { chemistry, hasSpec } from './crew8';
 
 export type TourFormat = 'support' | 'small' | 'standard' | 'arena';
@@ -352,8 +353,7 @@ function payAct(s: GameState, a: Act, amount: number, key: string, memo: string)
   if (!amount) return 0;
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
   if (a.playerBand || (c && c.party === 'player' && c.model === '360')) {
-    const share = a.playerBand ? 1 : c!.share360;
-    const lab = Math.round(amount * share);
+    const lab = a.playerBand ? amount : take360(s, a, amount, c!.share360);
     post(s, key, lab, 'live', memo);
     a.cash += amount - lab;
     return lab;
@@ -364,7 +364,7 @@ function payAct(s: GameState, a: Act, amount: number, key: string, memo: string)
 
 function labelShare(s: GameState, a: Act): number {
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
-  return a.playerBand ? 1 : c && c.party === 'player' && c.model === '360' ? c.share360 : 0;
+  return a.playerBand ? 1 : c && c.party === 'player' && c.model === '360' ? eff360(a, c.share360) : 0;
 }
 
 registerSimHook('show', 'route8', (s, _r, arg) => {

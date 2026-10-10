@@ -10,6 +10,7 @@ import { registerMod, registerSimHook } from '../../ext4';
 import { songQ } from '../../production';
 import type { Act, GameState, Release } from '../../types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember } from '../../util';
+import { take360 } from '../deal360_17';
 import { fam, liveMine, mineAct, mineRel, rep, strikeActive } from './common';
 import { w4, type FormatBet } from './state';
 
@@ -575,7 +576,7 @@ const EVENTS: EventDef[] = [
     title: l('Contratos 360°?', '360° deals?'),
     text: l('Com a venda de discos caindo, o selo pode passar a ficar com parte de shows, marcas e produtos dos artistas.', 'With record sales falling, the label could take a cut of artists\' shows, brands and merch.'),
     options: [
-      { id: 'adopt', label: l('Adotar o 360°', 'Adopt 360°'), hint: l('10% dos shows dos seus artistas; confiança cai um pouco.', '10% of your acts\' shows; trust drops a little.'), apply: (s) => { w4(s).deal360 = true; for (const id of playerActs(s)) s.acts[id].trust = clamp(s.acts[id].trust - 4, 0, 100); } },
+      { id: 'adopt', label: l('Adotar o 360°', 'Adopt 360°'), hint: l('10% dos shows dos seus artistas (menos para estrelas, com teto anual por ato); confiança cai um pouco.', '10% of your acts\' shows (less from stars, with a yearly cap per act); trust drops a little.'), apply: (s) => { w4(s).deal360 = true; for (const id of playerActs(s)) s.acts[id].trust = clamp(s.acts[id].trust - 4, 0, 100); } },
       { id: 'skip', label: l('Manter contratos tradicionais', 'Keep traditional deals'), apply: (s) => rep(s, 'artists', 2) },
     ],
   },
@@ -658,7 +659,7 @@ registerSimHook('show', 'w4_360', (s, _r, arg) => {
   if (!sh || !w4(s).deal360) return;
   const a = s.acts[sh.actId];
   if (!a || a.owner !== 'player' || a.playerBand) return;
-  const cut = Math.round(sh.revenue * 0.1);
+  const cut = take360(s, a, sh.revenue, 0.1);
   if (cut <= 0) return;
   post(s, `w4_360:${sh.tourId}:${sh.cityId}:${s.day}`, cut, 'w4_industry', `Participação 360° ${a.name}`);
   a.cash -= cut;

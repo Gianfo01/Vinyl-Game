@@ -125,7 +125,7 @@ export const SCENARIOS17: Scenario17[] = [
     goal: l('Pague as dívidas e feche 1991 com caixa no azul (mil dólares reais).', 'Pay the debts and close 1991 in the black (thousand real dollars).'), unit: l('mil dólares reais', 'thousand real dollars'), tiers: [1, 50, 200],
     rules17: [l('Começa com 10% do caixa e um empréstimo pesado do banco (36 parcelas).', 'Starts with 10% of the cash and a heavy bank loan (36 instalments).'),
       l('1988: o acid house e as raves mudam a noite de Manchester.', '1988: acid house and raves change Manchester\'s nightlife.'),
-      l('Seis meses no vermelho e o banco fecha o selo.', 'Six months in the red and the bank shuts the label.')],
+      l('Quatro meses seguidos no vermelho e o banco fecha o selo.', 'Four straight months in the red and the bank shuts the label.')],
     events17: [{ year: 1988, month: 5, title: l('O segundo verão do amor', 'The second summer of love'), text: l('Raves e acid house enchem armazéns; guitarras e batidas se misturam.', 'Raves and acid house fill warehouses; guitars and beats mix.'), genre: 'acid_house', genreMult: 1.5 },
       { year: 1989, month: 10, title: l('Madchester no horário nobre', 'Madchester in prime time'), text: l('Duas bandas da cidade tocam no mesmo programa de TV; o país inteiro olha para Manchester.', 'Two local bands play the same TV show; the whole country looks at Manchester.'), genre: 'indie', genreMult: 1.3, fame: 4 }],
     setup: (s, r) => {

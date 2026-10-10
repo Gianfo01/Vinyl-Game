@@ -19,6 +19,7 @@ import { defaultRights } from '../sim/rights';
 import { offerAside12, packageFields } from './sys/offers12';
 import { relHype12 } from './sys/hype12';
 import { stylePill17 } from './sys/style17';
+import { why360 } from '../sim/sys/deal360_17';
 
 function g(): GameState {
   return store.game!;
@@ -168,14 +169,17 @@ export function openOffer(actId: string): void {
   // rodada 8: ficha de direitos negociável (recomeça no padrão quando o modelo muda)
   o.rights = defaultRights(o.model, o.publishing);
   const rightsBox = h('div');
+  const n360 = h('p', { class: 'muted small' });
+  const draw360 = () => { n360.textContent = o.model === '360' ? t(why360(s, a, o.share360)) : ''; };
   const drawRights = () => rightsBox.replaceChildren(rightsFieldset(s, o, update));
   const form = h('div', { class: 'form' },
-    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.map((m) => ({ value: m.id, label: t(m.name) + (m.available ? '' : ' ' + t(S.phaseLater)), disabled: !m.available })), (v: ContractModel) => { o.model = v; o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); drawRights(); update(); })),
+    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.map((m) => ({ value: m.id, label: t(m.name) + (m.available ? '' : ' ' + t(S.phaseLater)), disabled: !m.available })), (v: ContractModel) => { o.model = v; o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); drawRights(); draw360(); update(); })),
     h('p', { class: 'muted small' }, t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc)),
     h('label', null, `${t(S.advanceAmt)} ($)`, num(Math.round(o.advance / 100), Math.max(10, Math.round(unit * 100 / 100)), (v) => (o.advance = Math.round(v * 100)))),
     h('label', null, `${t(S.royalty)} (%)`, num(Math.round(o.royalty * 100), 1, (v) => (o.royalty = v / 100))),
     h('label', null, `${t(S.distFee)} (%)`, num(Math.round((o.distributionFee ?? 0.2) * 100), 1, (v) => (o.distributionFee = v / 100))),
-    h('label', null, `${t(S.share360)} (%)`, num(Math.round(o.share360 * 100), 5, (v) => (o.share360 = v / 100))),
+    h('label', null, `${t(S.share360)} (%)`, num(Math.round(o.share360 * 100), 5, (v) => { o.share360 = v / 100; draw360(); })),
+    n360,
     h('label', null, t(S.term), num(o.termMonths, 6, (v) => (o.termMonths = v), 6)),
     h('label', null, t(S.releasesOwed), num(o.releasesOwed, 1, (v) => (o.releasesOwed = v), 1)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.creativeControl, onchange: (e: Event) => { o.creativeControl = (e.target as HTMLInputElement).checked; update(); } }), t(S.creativeControl)),
@@ -187,6 +191,7 @@ export function openOffer(actId: string): void {
     evalBox,
   );
   drawRights();
+  draw360();
   update();
   let close = () => {};
   const reply = h('div', { class: 'offer-reply' });

@@ -175,7 +175,7 @@ export function scorePackage(s: GameState, act: Act, p: DealPackage, wi = artist
   if (p.ar === 'artist' || p.creativeControl) pros.push(l('liberdade no estúdio', 'freedom in the studio')); else if (wi.w.autonomy > 0.22) cons.push(l('o selo decide o som', 'the label decides the sound'));
   if (p.master !== 'label') pros.push(l('masters na mão do artista', 'masters in the artist\'s hands')); else if (p.reversionYears > 0) pros.push(fmtL(l('masters voltam em {y} anos', 'masters revert in {y} years'), { y: p.reversionYears }));
   else if (wi.w.rights > 0.2) cons.push(l('masters do selo para sempre', 'label owns the masters forever'));
-  if (p.share360 > 0) cons.push(fmtL(l('{p}% de shows e merch para o selo', '{p}% of live and merch to the label'), { p: Math.round(p.share360 * 100) }));
+  if (p.share360 > 0) cons.push(fmtL(l('{p}% de shows e merch para o selo (menos quando o ato fica famoso; teto anual)', '{p}% of live and merch to the label (less once the act is famous; yearly cap)'), { p: Math.round(p.share360 * 100) }));
   if (pledge > 0.4) pros.push(l('verba de turnê/marketing garantida', 'guaranteed tour/marketing budget'));
   if (yrs > 4) cons.push(l('prazo longo', 'long term'));
   if (p.clout > 0.7) pros.push(l('selo forte e com alcance', 'strong label with reach'));

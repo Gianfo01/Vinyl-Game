@@ -15,6 +15,7 @@ import { legInfo, climateInfo } from './travelAdapter';
 import { clubBonus, liveBlocked } from './culture';
 import { branchCityBonus } from './branches';
 import { applyMods, runSimHooks } from './ext4';
+import { take360 } from './sys/deal360_17';
 
 export const TICKET = [12, 25, 45, 70, 95];
 export const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
@@ -266,9 +267,9 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     t.revenue += pay + merch;
     const c = act.contractId ? s.contracts[act.contractId] : undefined;
     if (act.playerBand || (c && c.party === 'player' && c.model === '360')) {
-      const share = act.playerBand ? 1 : c!.share360;
-      post(s, `show:${t.id}:${st.day}`, Math.round((pay + merch) * share), 'live', `Show ${act.name} — ${cityL.pt}`);
-      if (!act.playerBand) act.cash += Math.round((pay + merch) * (1 - share));
+      const lab = act.playerBand ? pay + merch : take360(s, act, pay + merch, c!.share360);
+      post(s, `show:${t.id}:${st.day}`, lab, 'live', `Show ${act.name} — ${cityL.pt}`);
+      if (!act.playerBand) act.cash += pay + merch - lab;
     } else {
       // gravadora clássica: a bilheteria é do artista; o selo pagou a logística como investimento de carreira
       act.cash += pay + merch;

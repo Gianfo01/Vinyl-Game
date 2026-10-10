@@ -78,6 +78,9 @@ export function takeLoan(s: GameState): boolean {
   return true;
 }
 
+/** Meses seguidos de caixa negativo até a insolvência. */
+export const INSOLVENT_AT = 4;
+
 export function checkInsolvency(s: GameState, r: Rng): void {
   if (s.player.cash >= 0) {
     s.player.insolvencyMonths = 0;
@@ -85,8 +88,10 @@ export function checkInsolvency(s: GameState, r: Rng): void {
   }
   s.player.insolvencyMonths += 1;
   const m = s.player.insolvencyMonths;
-  if (m === 1) notify(s, l('ALERTA: caixa negativo. Reestruture, venda ativos ou peça crédito.', 'ALERT: negative cash. Restructure, sell assets or seek credit.'), 'bad');
-  if (m === 2 || m === 4) {
+  // r17 balanço: insolvência após INSOLVENT_AT meses seguidos no vermelho (era 6); o aviso conta os meses que faltam
+  if (m < INSOLVENT_AT) notify(s, fmtL(m === 1 ? l('ALERTA: caixa negativo. Reestruture, venda ativos ou peça crédito — {n} meses seguidos no vermelho e o selo quebra.', 'ALERT: negative cash. Restructure, sell assets or seek credit — {n} straight months in the red and the label goes bust.')
+    : l('Caixa negativo há {m} meses: faltam {k} para a insolvência.', 'Cash negative for {m} months: {k} left before insolvency.'), { n: INSOLVENT_AT, m, k: INSOLVENT_AT - m }), 'bad');
+  if (m === 2) {
     const mine = Object.values(s.releases).filter((x) => x.owner === 'player');
     const n = Math.max(1, Math.ceil(mine.length / 2));
     const value = mine.slice(0, n).reduce((t, x) => t + Math.sqrt(x.totalUnits + 100) * 25, 0);
@@ -106,7 +111,7 @@ export function checkInsolvency(s: GameState, r: Rng): void {
     }
     remember(s, 'restructure', l('O selo passa por uma reestruturação forçada.', 'The label goes through forced restructuring.'), { important: true });
   }
-  if (m >= 6 && !s.ended) {
+  if (m >= INSOLVENT_AT && !s.ended) {
     s.ended = { ending: s.year >= 2030 ? 'the_silence' : 'insolvency', year: s.year, reason: 'insolvency' };
     remember(s, 'end', l('Insolvência: a empresa encerra as atividades.', 'Insolvency: the company shuts down.'), { important: true });
   }

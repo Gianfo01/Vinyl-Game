@@ -4,6 +4,7 @@
 import type { L } from '../../../data/world';
 import { registerExt4 } from '../../ext4';
 import type { GameState } from '../../types';
+import { eff360 } from '../deal360_17';
 
 /** Notas de um show (como empolgação/intensidade/náusea das montanhas-russas). */
 export interface ShowNote {
@@ -190,6 +191,6 @@ export function liveShare(s: GameState, actId: string): number {
   if (!a) return 0;
   if (a.playerBand) return 1;
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
-  if (c && c.party === 'player' && c.model === '360') return c.share360;
+  if (c && c.party === 'player' && c.model === '360') return eff360(a, c.share360);
   return 0;
 }
