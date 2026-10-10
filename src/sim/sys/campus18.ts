@@ -23,7 +23,8 @@ import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { hq6 } from './hq6';
 import { hq8 } from './hq8';
 import { liveOf } from './live/state';
-import { ownerOf, HOUSES } from './people/owner';
+import { HOUSES } from './people/owner';
+import { P } from './people/state';
 import { rel18, WING18 } from './relics18';
 import { reg18, subName18 } from './regions18';
 import { OWN18, school18 } from './school18';
@@ -250,8 +251,8 @@ export function buildings18(s: GameState): Bld18[] {
   for (const sb of s.subLabels ?? []) if (sb.status !== 'closed') add({ id: `sb:${sb.id}`, kind: 'sublabel', name: sb.name, city: s.config.homeCity, lvl: clamp(1 + Math.floor(sb.roster.length / 3), 1, 3), goto: { area: 'business', tab: ['business-business', 'subs'] },
     kpi: [[l('Elenco', 'Roster'), String(sb.roster.length)], [l('Caixa', 'Cash'), $k(s, sb.cash)], [l('Situação', 'Status'), sb.status]], note: sb.status === 'distress' ? l('Em crise financeira.', 'In financial distress.') : undefined });
   // casa do dono
-  const ow = ownerOf(s);
-  if (ow.house >= 0 && HOUSES[ow.house]) {
+  const ow = P(s).owner; // sem criar o dono (não mexe na semente)
+  if (ow && ow.house >= 0 && HOUSES[ow.house]) {
     const hs = HOUSES[ow.house];
     add({ id: 'home', kind: 'home', name: hs.name.pt, city: s.config.homeCity, lvl: clamp(Math.ceil(hs.prestige / 2), 1, 4), sy: st.born.home ?? Math.max(hs.from, s.year - 1), goto: { area: 'wealth' },
       kpi: [[l('Prestígio', 'Prestige'), String(hs.prestige)], [l('Alívio de estresse', 'Stress relief'), String(hs.relief)]] });
@@ -303,7 +304,7 @@ export function layout18(s: GameState, bs: Bld18[]): Map<string, number> {
 export function freeLots18(s: GameState): number[] {
   const m = layout18(s, buildings18(s));
   const used = new Set(m.values());
-  return LOTS18.map((_, i) => i).filter((i) => i !== 0 && !used.has(i) && !(i === HOME_LOT18 && ownerOf(s).house >= 0));
+  return LOTS18.map((_, i) => i).filter((i) => i !== 0 && !used.has(i) && !(i === HOME_LOT18 && (P(s).owner?.house ?? -1) >= 0));
 }
 
 // ---------------------------------------------------------------- obras
@@ -551,6 +552,7 @@ registerSimHook('month', 'campus18', (s) => {
   const d = Object.keys(st.dmg);
   if (d.length) post(s, `campus18:dmg:${mIdx(s)}`, -money(s, 900 * d.length), 'hq', 'Espaço provisório (prédio danificado)');
 });
+registerSimHook('newgame', 'campus18n', (s) => { snapshot18(s); });
 registerSimHook('year', 'campus18y', (s) => {
   const sr = signRep18(s), pr = parkRep18(s);
   if (sr) s.player.reputation.commercial = clamp(s.player.reputation.commercial + sr, 0, 100);

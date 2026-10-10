@@ -27,7 +27,7 @@ const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rer
 const cityLabel = (c: string) => (c.startsWith('@') ? t(subName18(c.slice(1))) : t(cityById[c]?.name ?? l(c)));
 
 /** UI efêmera (por sessão de página; não vai para o save). */
-const ui: { sel?: string; year?: number; mode: 'cycle' | 'day' | 'night'; pk: Exclude<PKind, 'reno'>; lot: number; q: number; rq: number } = { mode: 'cycle', pk: 'store', lot: -1, q: 1, rq: 1 };
+const ui: { hl?: boolean; sel?: string; year?: number; mode: 'cycle' | 'day' | 'night'; pk: Exclude<PKind, 'reno'>; lot: number; q: number; rq: number } = { mode: 'cycle', pk: 'store', lot: -1, q: 1, rq: 1 };
 
 interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean }
 function makeView(s: GameState, year?: number): View {
@@ -149,7 +149,7 @@ function works(s: GameState, v: View, setHl: (n?: number) => void): HTMLElement 
     const pDelay = Math.round((1 - Math.pow(1 - c.delay / Math.max(2, months / 2), months)) * 100);
     form = h('div', { class: 'c18-form' },
       h('label', null, t(l('Obra', 'Project')), ' ', select(ui.pk, kinds.map((k) => ({ value: k, label: t(PROJ18[k].name) })), (x) => { ui.pk = x; rerender(); })),
-      h('label', null, t(l('Lote', 'Lot')), ' ', select(ui.lot, lots.map((n) => ({ value: n, label: `${t(LOTS18[n].name)} · ×${LOTS18[n].pm} ${t(l('preço', 'price'))} · ${t(l('visibilidade', 'visibility'))} ${LOTS18[n].vis}` })), (x) => { ui.lot = x; setHl(x); rerender(); })),
+      h('label', null, t(l('Lote', 'Lot')), ' ', select(ui.lot, lots.map((n) => ({ value: n, label: `${t(LOTS18[n].name)} · ×${LOTS18[n].pm} ${t(l('preço', 'price'))} · ${t(l('visibilidade', 'visibility'))} ${LOTS18[n].vis}` })), (x) => { ui.lot = x; ui.hl = true; setHl(x); rerender(); })),
       h('label', null, t(l('Empreiteiro', 'Contractor')), ' ', select(ui.q, CONTRACTORS18.map((x, i) => ({ value: i, label: t(x.name) })), (x) => { ui.q = x; rerender(); })),
       h('p', { class: 'small' }, t(def.desc)),
       h('p', { class: 'small' }, ic('sparkle'), ' ', t(def.effect)),
@@ -171,7 +171,7 @@ function campusArea(s: GameState): HTMLElement {
   const tip = h('div', { class: 'c18-tip', hidden: true });
   const insp = h('div', { class: 'c18-side' }, inspector(v, ui.sel));
   const setHl = (n?: number) => { v.scene.hl = n; };
-  if (v.live && ui.lot >= 0) v.scene.hl = ui.lot;
+  if (v.live && ui.hl && ui.lot >= 0) v.scene.hl = ui.lot;
   const mount = () => host.replaceChildren(mapCanvas(v, (id) => { ui.sel = id ?? undefined; insp.replaceChildren(inspector(v, ui.sel)); }, (id, x, y) => {
     const b = v.bs.find((z) => z.id === id);
     if (!b) { tip.hidden = true; return; }
