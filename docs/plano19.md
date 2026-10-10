@@ -90,11 +90,24 @@ As 34 ligações de `ideas19` §3 mais as que nascem dos trabalhos em curso. Cad
 - Prestígio, crítica e reputação sem bater no teto.
 - Lote rápido (bots reais que tomam ações) a cada frente; nada do futuro na tela.
 
-## Ordem de execução (agentes em paralelo)
-1. **Onda 1**: Frente 0 inteira + protótipo do calendário único.
-2. **Onda 2**: Frente 1 (malha de ligações, dividida em 3 agentes por grupo de sistemas) + piloto da Frente 2 (4 marcos).
-3. **Onda 3**: Frentes 3, 4, 5, 6, 7 em paralelo (um agente cada).
-4. **Onda 4**: Frente 8, integrador final (testes, equilíbrio, Chromium em 1889/1955/1975/2005/2030), documentação e publicação.
+## Ordem de execução (agentes em paralelo) — visão única de todas as frentes (0–10)
+1. **Onda 1 — base**: Frente 0 inteira (Rng por sistema, matriz Fato→consumidor já com os tipos de fato dos 13 sistemas da Frente 9,
+   bots adversários, teto de `appeal`, fachadas únicas) + protótipo do calendário único + **WP0 da Frente 10** (ids de cidades e gêneros,
+   ficha dos 34 países faltantes, teste validador de dados).
+2. **Onda 2 — malha e dados**: Frente 1 (ligações, 3 agentes por grupo de sistemas) + Frente 9 parte 1 (9.1 tributos, 9.2 músicos de
+   estúdio, 9.3 camps de composição, 9.5 sucesso tardio) + **Frente 10 WP-A a WP-G** (artistas por região/época, pessoas e selos,
+   casas/estúdios/equipamento, festivais/prêmios/paradas/sociedades/leis) + piloto da Frente 2 (4 marcos).
+3. **Onda 3 — conteúdo e sistemas**: Frentes 3, 4, 5, 6, 7 em paralelo, cada uma levando seus sistemas da Frente 9
+   (7: 9.4 remix, 9.6 publicidade, 9.7 trilhas · 5: 9.8 beneficentes, 9.12 concursos · 6: 9.9 escolas/igrejas ·
+   2/3: 9.10 fanzines, 9.11 fraudes · 4: 9.13 equipamento-ícone) + **Frente 10 WP-H/WP-I** (marcos 42→~150 com decisão,
+   eventos e situações regionais, mídia, covers/samples, cenas, relíquias, crime) que alimentam a Frente 2.
+4. **Onda 4 — fechamento**: Frente 8 (UX), **WP-J** (verificação dos itens †, sensibilidade), integrador final: suíte inteira,
+   as 6 cadeias de história da Frente 9 com bots (cada uma em ≥1 de 10 partidas longas), equilíbrio rápido com bots que agem,
+   Chromium em 1889/1925/1955/1975/2005/2030, documentação (`rodada19.md`, README) e publicação.
+
+**Dependências críticas**: a Frente 10 WP0 vem antes de qualquer artista ou cidade nova; os sistemas 9.x só usam dados reais depois
+de WP-A a WP-G; as fachadas únicas (0.6) vêm antes da cerimônia e do fandom tocarem os sistemas novos; nada da Frente 10 entra no modo
+"Vida real exata" sem verificação.
 
 ---
 
