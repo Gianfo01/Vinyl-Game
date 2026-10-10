@@ -13,6 +13,7 @@ import { compat } from '../beliefs';
 import { makeAct } from '../people';
 import type { Act, GameState } from '../types';
 import { fmtL, nextId, notify, playerActs, post, remember, rngOf } from '../util';
+import { scandal } from '../scandal17';
 import { fashionOf, registerMovementGenres } from '../culture';
 import { MSG_HANDLERS } from './people/inbox';
 import { addMsg, P } from './people/state';
@@ -373,7 +374,7 @@ export function endBond(s: GameState, r: Rng, b: Bond, c: BondEnd): void {
   const acts = b.a.map((id) => s.acts[id]).filter((x): x is Act => !!x);
   if (b.act && s.acts[b.act] && s.acts[b.act].status === 'active') s.acts[b.act].status = c === 'done' || c === 'wear' ? 'hiatus' : 'split';
   if (c === 'fight' || c === 'money') for (let i = 0; i < b.p.length; i++) for (let j = i + 1; j < b.p.length; j++) bump(s, b.p[i], b.p[j], -35, 'feat');
-  if (b.k === 'couple' && c !== 'death') for (const A of acts) { A.momentum = clamp(A.momentum - 10, 0, 100); A.fans.casual = Math.round(A.fans.casual * 0.95); A.scandals += 1; }
+  if (b.k === 'couple' && c !== 'death') for (const A of acts) { A.momentum = clamp(A.momentum - 10, 0, 100); A.fans.casual = Math.round(A.fans.casual * 0.95); scandal(s, A.id, 'sex', 25); }
   if (c === 'death') {
     b.end.ep = 'tribute';
     b.end.epY = s.year;

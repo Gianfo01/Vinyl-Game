@@ -15,6 +15,7 @@ import { langForCity, personName } from '../people';
 import { ensureFamily } from '../dynasty';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, nextId, notify, remember } from '../util';
+import { emitFact } from '../facts17';
 import { nudgeAdmiration } from './bonds9';
 import { themeById } from './creation/core';
 import { leaders } from './leaders10';
@@ -336,6 +337,7 @@ function lifeMonth(s: GameState, r0: Rng, w: Who14, P0: P13, rc: Rec14, free: nu
     p.fatigue = clamp(p.fatigue + 5, 0, 100);
     rc.muse = ['love', mIdx(s) + 6];
     news(s, w, T(l('{a} se casou com {q}.', '{a} married {q}.'), { q: F0.partner?.name ?? '?' }), 1, true);
+    emitFact(s, { kind: 'marriage', actors: [p.id, ...(w.act ? [w.act.id] : [])], place: w.act?.city, severity: 30, tags: ['good', 'romance'], text: T(l('{a} se casou com {q}.', '{a} married {q}.'), { q: F0.partner?.name ?? '?' }), src: 'leisure14' });
     if (rc.cp) { const o = lz14(s).r[rc.cp]; if (o) o.mar = s.year; }
     return;
   }

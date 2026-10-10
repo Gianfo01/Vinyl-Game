@@ -15,6 +15,7 @@ import { CITIES, cityById, familyOf, genreById, l, type FamilyId, type MarketId 
 import { langForCity, makePerson } from './people';
 import type { Act, GameState, Person, Release } from './types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember, staffSkill, type Param } from './util';
+import { scandal } from './scandal17';
 
 type Opt = EventDef['options'][number];
 type Apply = Opt['apply'];
@@ -334,7 +335,7 @@ const ERA_EARLY: EventDef[] = [
     ['Pânico moral contra {act}', 'Moral panic over {act}'],
     ['Pregadores organizam fogueiras de discos de {act}, "música que corrompe a juventude".', 'Preachers organize bonfires of {act} records, "music that corrupts the youth".'],
     [
-      o('defy', 'Transformar em marketing', 'Turn it into marketing', (s, _r, c) => { const a = A(s, c); fame(a, 2); fansMul(a, 1, 1.1, 1.15); rep(s, 'institutional', -4); a.scandals += 1; }),
+      o('defy', 'Transformar em marketing', 'Turn it into marketing', (s, _r, c) => { const a = A(s, c); fame(a, 2); fansMul(a, 1, 1.1, 1.15); rep(s, 'institutional', -4); scandal(s, a.id, 'sex', 35); }),
       o('clean', 'Limpar a imagem (terno e gravata)', 'Clean up the image (suit and tie)', (s, _r, c) => { const a = A(s, c); trust(a, -6); a.positioning = clamp(a.positioning + 6, 0, 100); rep(s, 'institutional', 2); }),
       o('wait', 'Esperar passar', 'Wait it out', (s, _r, c) => { mom(A(s, c), -4); }),
     ]),
@@ -473,7 +474,7 @@ const GEO: EventDef[] = [
     ['Vaias no Grande Festival da Canção', 'Booing at the Grande Festival da Canção'],
     ['A plateia universitária (≈ Festival de MPB da Record) vaia {act} por usar guitarra elétrica. A TV está ao vivo.', 'The student crowd (≈ Record TV MPB Festival) boos {act} for using electric guitar. TV is live.'],
     [
-      o('speech', 'Discurso inflamado contra a plateia', 'Fiery speech at the crowd', (s, _r, c) => { const a = A(s, c); fame(a, 5); fans(a, 40000, 8000, 2000); rep(s, 'artistic', 3); a.scandals += 1; }),
+      o('speech', 'Discurso inflamado contra a plateia', 'Fiery speech at the crowd', (s, _r, c) => { const a = A(s, c); fame(a, 5); fans(a, 40000, 8000, 2000); rep(s, 'artistic', 3); scandal(s, a.id, 'politics', 35); }),
       o('play_on', 'Tocar até o fim, impassível', 'Play to the end, unfazed', (s, _r, c) => { const a = A(s, c); fame(a, 2); mood(s, a, 'stress', 10); }),
       o('leave', 'Sair do palco', 'Walk off stage', (s, _r, c) => { mom(A(s, c), -6); }),
     ]),
@@ -576,7 +577,7 @@ const GEO: EventDef[] = [
     ['Proposta milionária num resort sob boicote', 'Million-dollar resort offer under boycott'],
     ['Um resort em país sob boicote cultural internacional oferece {feeTxt} por uma temporada de {act}. O movimento antissegregação pede recusa.', 'A resort in a country under international cultural boycott offers {feeTxt} for a {act} residency. The anti-segregation movement asks for a refusal.'],
     [
-      o('accept', 'Aceitar o dinheiro', 'Take the money', (s, _r, c) => { const a = A(s, c); split(s, a, `resort:${a.id}`, Number(c.fee), 'live', 'Temporada no resort'); rep(s, 'artists', -10); rep(s, 'institutional', -6); a.scandals += 1; log(s, 'boycott_break', '{a} fura o boicote cultural.', '{a} breaks the cultural boycott.', { a: a.name }, a.id, true); }),
+      o('accept', 'Aceitar o dinheiro', 'Take the money', (s, _r, c) => { const a = A(s, c); split(s, a, `resort:${a.id}`, Number(c.fee), 'live', 'Temporada no resort'); rep(s, 'artists', -10); rep(s, 'institutional', -6); scandal(s, a.id, 'politics', 40); log(s, 'boycott_break', '{a} fura o boicote cultural.', '{a} breaks the cultural boycott.', { a: a.name }, a.id, true); }),
       o('refuse', 'Recusar publicamente', 'Refuse publicly', (s, _r, c) => { const a = A(s, c); rep(s, 'artists', 5); fans(a, 0, 2000, 1500); trust(a, 4); }),
       o('quiet', 'Recusar em silêncio', 'Decline quietly', noop),
     ]),
@@ -657,7 +658,7 @@ const MEDIA_PR: EventDef[] = [
     [
       o('apology', 'Pedido de desculpas sincero e ação concreta', 'Sincere apology and concrete action', (s, _r, c) => { const a = A(s, c); pay(s, `amends:${a.id}`, 2000, 'marketing', 'Reparação'); mom(a, -5); rep(s, 'institutional', 2); }),
       o('notes', 'Desculpa protocolar no bloco de notas', 'Boilerplate notes-app apology', (s, _r, c) => { const a = A(s, c); mom(a, -10); fansMul(a, 0.95, 0.95, 1); }),
-      o('double', 'Dobrar a aposta', 'Double down', (s, _r, c) => { const a = A(s, c); fame(a, 1); fansMul(a, 0.85, 1, 1.1); rep(s, 'institutional', -6); a.scandals += 1; }),
+      o('double', 'Dobrar a aposta', 'Double down', (s, _r, c) => { const a = A(s, c); fame(a, 1); fansMul(a, 0.85, 1, 1.1); rep(s, 'institutional', -6); scandal(s, a.id, 'offense', 35); }),
       o('silence', 'Silêncio', 'Silence', (s, _r, c) => { mom(A(s, c), -8); }),
     ]),
   E('cancel_campaign', 'scandal', 'bad', ['controversy'], 24,
@@ -671,7 +672,7 @@ const MEDIA_PR: EventDef[] = [
     [
       o('pr', 'Contratar gestão de crise', 'Hire crisis management', (s, _r, c) => { const a = A(s, c); pay(s, `crisis:${a.id}`, staffSkill(s, 'publicist') ? 2500 : 7000, 'marketing', 'Gestão de crise'); mom(a, -6); s.player.stats.scandalsSurvived += 1; }),
       o('offline', 'Sumir das redes por um tempo', 'Go offline for a while', (s, _r, c) => { const a = A(s, c); hiatus(s, a, 8); mom(a, -12); mood(s, a, 'stress', -10); }),
-      o('fans', 'Convocar os fãs para defender', 'Rally the fans to defend', (s, _r, c) => { const a = A(s, c); fansMul(a, 0.8, 1.05, 1.15); rep(s, 'institutional', -5); a.scandals += 1; }, ['Pode virar guerra de fandom.', 'May turn into a fandom war.']),
+      o('fans', 'Convocar os fãs para defender', 'Rally the fans to defend', (s, _r, c) => { const a = A(s, c); fansMul(a, 0.8, 1.05, 1.15); rep(s, 'institutional', -5); scandal(s, a.id, 'offense', 40); }, ['Pode virar guerra de fandom.', 'May turn into a fandom war.']),
       o('wait', 'Esperar o ciclo de notícias', 'Wait for the news cycle', (s, _r, c) => { const a = A(s, c); mom(a, -15); fansMul(a, 0.9, 0.95, 1); }),
     ]),
   E('paparazzi', 'scandal', 'neutral', [], 12,
@@ -797,7 +798,7 @@ const MEDIA_PR: EventDef[] = [
     ['Irritado com uma pergunta, alguém de {act} arrancou o microfone e saiu do estúdio. O vídeo circula.', 'Annoyed by a question, someone in {act} ripped off the mic and left the studio. The video spreads.'],
     [
       o('own', 'Assumir e pedir desculpas ao apresentador', 'Own it and apologize to the host', (s, _r, c) => { const a = A(s, c); rep(s, 'institutional', 2); mom(a, -2); }),
-      o('legend', 'Vender como "autenticidade"', 'Sell it as "authenticity"', (s, _r, c) => { const a = A(s, c); fame(a, 1.5); fans(a, 0, 3000, 1500); rep(s, 'institutional', -4); a.scandals += 1; }),
+      o('legend', 'Vender como "autenticidade"', 'Sell it as "authenticity"', (s, _r, c) => { const a = A(s, c); fame(a, 1.5); fans(a, 0, 3000, 1500); rep(s, 'institutional', -4); scandal(s, a.id, 'conduct', 25); }),
       o('nothing', 'Não comentar', 'No comment', (s, _r, c) => { mom(A(s, c), -3); }),
     ]),
 ];
@@ -865,7 +866,7 @@ const FANDOM: EventDef[] = [
     [
       o('condemn', 'Condenar publicamente', 'Condemn publicly', (s, _r, c) => { const a = A(s, c); fansMul(a, 1, 0.97, 0.92); rep(s, 'institutional', 4); rep(s, 'artistic', 1); }),
       o('vague', 'Nota vaga pedindo "paz"', 'Vague note asking for "peace"', (s) => { rep(s, 'institutional', -1); }),
-      o('silent', 'Silêncio', 'Silence', (s, _r, c) => { rep(s, 'institutional', -4); A(s, c).scandals += 1; }),
+      o('silent', 'Silêncio', 'Silence', (s, _r, c) => { rep(s, 'institutional', -4); scandal(s, A(s, c).id, 'conduct', 20); }),
     ]),
   E('fan_war', 'culture', 'neutral', [], 12,
     (s, r) => {
@@ -1221,7 +1222,7 @@ const LIVE: EventDef[] = [
     [
       o('stop', 'Parar o show até tudo se acalmar', 'Stop the show until it calms down', (s, _r, c) => { const a = A(s, c); rep(s, 'institutional', 4); fans(a, 0, 1000, 800); mood(s, a, 'stress', 8); }),
       o('safety', 'Parar e pagar estrutura nova para a turnê', 'Stop and pay for new safety gear for the tour', (s, _r, c) => { const a = A(s, c); pay(s, `safety:${a.id}`, 5000, 'live_costs', 'Segurança'); rep(s, 'institutional', 6); }),
-      o('continue', 'Continuar tocando', 'Keep playing', (s, r, c) => { const a = A(s, c); if (r.chance(0.3)) { pay(s, `surge:${a.id}`, 8000, 'legal', 'Indenizações'); rep(s, 'institutional', -8); a.scandals += 1; } }),
+      o('continue', 'Continuar tocando', 'Keep playing', (s, r, c) => { const a = A(s, c); if (r.chance(0.3)) { pay(s, `surge:${a.id}`, 8000, 'legal', 'Indenizações'); rep(s, 'institutional', -8); scandal(s, a.id, 'violence', 40); } }),
     ]),
   E('opener_steals_show', 'stage', 'neutral', [], 12,
     (s, r) => {
@@ -1273,7 +1274,7 @@ const LIVE: EventDef[] = [
     ['A câmara de {cityName} proibiu {act} depois de boatos de briga num show. Nenhuma prova, só manchetes.', '{cityName}\'s council banned {act} after rumours of a fight at a show. No proof, just headlines.'],
     [
       o('court', 'Contestar na justiça', 'Challenge in court', (s, r, c) => { const a = A(s, c); pay(s, `ban:${a.id}`, legal(s, 2500), 'legal', 'Contestação'); if (r.chance(winOdds(s, 0.5))) { fame(a, 2); fans(a, 0, 2000, 2000); } }),
-      o('free_show', 'Show gratuito na cidade vizinha', 'Free show in the next town over', (s, _r, c) => { const a = A(s, c); pay(s, `banshow:${a.id}`, 1500, 'live_costs', 'Show gratuito'); fans(a, 15000, 3000, 2000); a.scandals += 1; }),
+      o('free_show', 'Show gratuito na cidade vizinha', 'Free show in the next town over', (s, _r, c) => { const a = A(s, c); pay(s, `banshow:${a.id}`, 1500, 'live_costs', 'Show gratuito'); fans(a, 15000, 3000, 2000); scandal(s, a.id, 'violence', 30); }),
       o('accept', 'Aceitar e seguir', 'Accept and move on', (s, _r, c) => { mom(A(s, c), -3); }),
     ]),
 ];
@@ -1768,7 +1769,7 @@ const CRITIC_AWARD: EventDef[] = [
     ['Um crítico à venda', 'A critic for sale'],
     ['Um intermediário diz que {critic} pode escrever uma resenha "muito favorável" de "{releaseTitle}" mediante "consultoria".', 'A middleman says {critic} could write a "very favourable" review of "{releaseTitle}" for a "consulting fee".'],
     [
-      o('pay', 'Pagar a consultoria', 'Pay the fee', (s, r, c) => { pay(s, `bribe:${c.release}`, 1500, 'marketing', 'Consultoria (?)'); appeal(s, c, 1.12); if (r.chance(0.3)) { rep(s, 'institutional', -8); rep(s, 'artistic', -4); A(s, c).scandals += 1; } }),
+      o('pay', 'Pagar a consultoria', 'Pay the fee', (s, r, c) => { pay(s, `bribe:${c.release}`, 1500, 'marketing', 'Consultoria (?)'); appeal(s, c, 1.12); if (r.chance(0.3)) { rep(s, 'institutional', -8); rep(s, 'artistic', -4); scandal(s, A(s, c).id, 'money', 45); } }),
       o('expose', 'Denunciar o esquema', 'Expose the scheme', (s) => { rep(s, 'institutional', 4); rep(s, 'artistic', 1); }),
       o('refuse', 'Recusar', 'Refuse', noop),
     ]),
@@ -1846,7 +1847,7 @@ const CRITIC_AWARD: EventDef[] = [
     ['{act} nos Prêmios ClipNet', '{act} at the ClipNet Awards'],
     ['{act} vai se apresentar nos Prêmios ClipNet de Vídeo (≈ MTV VMAs). A direção sugere "algo de que todos falem amanhã".', '{act} will perform at the ClipNet Video Awards (≈ MTV VMAs). The producers suggest "something everyone talks about tomorrow".'],
     [
-      o('stunt', 'Fazer o número polêmico', 'Do the shocking number', (s, _r, c) => { const a = A(s, c); fame(a, 4); fans(a, 150000, 10000, 1000); rep(s, 'institutional', -4); a.scandals += 1; }),
+      o('stunt', 'Fazer o número polêmico', 'Do the shocking number', (s, _r, c) => { const a = A(s, c); fame(a, 4); fans(a, 150000, 10000, 1000); rep(s, 'institutional', -4); scandal(s, a.id, 'sex', 30); }),
       o('classy', 'Performance impecável', 'Flawless performance', (s, _r, c) => { const a = A(s, c); fame(a, 2); fans(a, 60000, 5000); rep(s, 'artistic', 1); }),
     ]),
   E('producer_award_poach', 'business', 'neutral', [], 24,

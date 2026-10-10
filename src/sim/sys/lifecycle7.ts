@@ -12,6 +12,7 @@ import { deferEvents, registerSimHook } from '../ext4';
 import { bandName, langForCity, makeAct, makePerson } from '../people';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
+import { scandal } from '../scandal17';
 import { genStaff } from '../worldgen';
 import { rw } from './realworld';
 import { histLocked } from '../history15';
@@ -261,7 +262,7 @@ function npcVices(s: GameState, r: Rng): void {
       if (r.chance(0.004 * party * fameF * eraRisk)) {
         p.health = 'addiction';
         p.stress = clamp(p.stress + 15, 0, 100);
-        act.scandals += r.chance(0.4) ? 1 : 0;
+        if (r.chance(0.4)) scandal(s, act.id, 'drugs', 35, undefined, { person: p.id });
         if (act.fame > 45) remember(s, 'addiction', fmtL(l('Bastidores: {p} ({a}) luta contra a dependência.', 'Backstage: {p} ({a}) struggles with addiction.'), { p: p.name, a: act.name }), { actId: act.id });
       }
     }

@@ -1,6 +1,6 @@
 // Rodada 17 — ESTRESSE ÚNICO (Dwarf Fortress + CK3). Curto prazo = Person.stress (o mesmo campo que agenda,
 // turnês, vícios, soul9 e eventos já movem); longo prazo = desgaste acumulado em s.x4.stress17 (sobe com meses
-// de estresse alto, cai devagar). Só a combinação quebra: curto > 70 E longo > 50. A quebra dispara mecânicas
+// de estresse alto, cai devagar). Só a combinação quebra: curto > 65 E longo > 45. A quebra dispara mecânicas
 // que já existem (colapso/vício/saúde/escândalo — ver sys/bridge17.ts). Uma leitura para a interface: stressOf.
 //
 //   addStress(s, pid, +12, l('Turnê sem folga', 'Tour with no days off'))   // registra o porquê
@@ -9,6 +9,7 @@
 import { clamp } from '../core/rng';
 import { l, type L } from '../data/world';
 import { registerExt4 } from './ext4';
+import { facts17 } from './facts17';
 import type { GameState, Person } from './types';
 
 export interface Stress17State {
@@ -46,19 +47,83 @@ let vulnFn: (s: GameState, p: Person) => number = (_s, p) => {
 export function setStressVuln(fn: (s: GameState, p: Person) => number): void { vulnFn = fn; }
 export const vulnOf = (s: GameState, p: Person): number => clamp(vulnFn(s, p), 0.05, 0.95);
 
+/** Limiares da quebra: curto acima de 65 E longo acima de 45 (os dois juntos). */
+export const BREAK_SHORT = 65, BREAK_LONG = 45;
 /** Chance mensal de quebra (0..1) — mesma fórmula da simulação, mostrada na interface. */
 export function breakChance17(short: number, long: number, vuln: number): number {
-  if (short <= 70 || long <= 50) return 0;
-  return clamp((0.04 + (short - 70) / 250 + (long - 50) / 300) * (0.7 + vuln * 0.6), 0, 0.35);
+  if (short <= BREAK_SHORT || long <= BREAK_LONG) return 0;
+  return clamp((0.04 + (short - BREAK_SHORT) / 250 + (long - BREAK_LONG) / 300) * (0.7 + vuln * 0.6), 0, 0.35);
+}
+
+const HEALTH_ADD: Record<Person['health'], number> = { ok: 0, voice_strain: 6, burnout: 15, addiction: 10, recovering: 4, ill: 10 };
+/** Estresse de curto prazo COMPOSTO: Person.stress (o que eventos/agenda/vícios já movem) + cansaço acima de 45,
+ *  saúde, moral baixa, ressentimento e o corpo (voz/lesão de people/health). */
+export function shortOf(s: GameState, p: Person): { v: number; parts: L[] } {
+  const parts: L[] = [];
+  let v = p.stress;
+  const fat = Math.max(0, p.fatigue - 45) * 0.6;
+  if (fat >= 3) parts.push(l('cansaço', 'fatigue'));
+  const hl = HEALTH_ADD[p.health] ?? 0;
+  if (hl) parts.push(l('saúde', 'health'));
+  const mor = Math.max(0, 45 - p.morale) * 0.5;
+  if (mor >= 3) parts.push(l('moral baixa', 'low morale'));
+  const res = p.resentment * 0.15;
+  if (res >= 4) parts.push(l('ressentimento', 'resentment'));
+  const h = (s.x4 as unknown as { people?: { health?: Record<string, { voice: number; injuryWeeks: number }> } }).people?.health?.[p.id];
+  const body = h ? Math.max(0, h.voice - 70) * 0.3 + (h.injuryWeeks > 0 ? 5 : 0) : 0;
+  if (body >= 3) parts.push(l('corpo (voz/lesão)', 'body (voice/injury)'));
+  const fx = factPressure(s, p.id);
+  if (fx.v >= 3) parts.push(fx.why);
+  const car = careerPressure(s, p);
+  if (car.v >= 3) parts.push(car.why);
+  v += fat + hl + mor + res + body + fx.v + car.v;
+  return { v: Math.round(clamp(v, 0, 100)), parts };
+}
+
+/** Fatos ruins recentes sobre a pessoa ou o ato dela (escândalo, morte, separação…): pesam por 3 meses. */
+const FXC = new Map<string, { v: number; why: L }>();
+function factPressure(s: GameState, pid: string): { v: number; why: L } {
+  const k = `${s.config.seed}|${s.week}|${pid}`;
+  const hit = FXC.get(k);
+  if (hit) return hit;
+  const ids = new Set([pid]);
+  for (const a of Object.values(s.acts)) if (a.members.includes(pid) && (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus')) ids.add(a.id);
+  let v = 0, top = 0, why: L = l('fatos ruins recentes', 'recent bad news');
+  const f = facts17(s).f;
+  for (let i = f.length - 1; i >= 0; i--) {
+    const x = f[i];
+    if (s.week - x.w > 13) break;
+    if (!x.tags.includes('bad') || !x.actors.some((a) => ids.has(a))) continue;
+    const w = x.severity / 5 * (1 - (s.week - x.w) / 16);
+    v += w;
+    if (w > top) { top = w; why = x.text; }
+  }
+  const out = { v: Math.min(30, v), why };
+  if (FXC.size > 6000) FXC.clear();
+  FXC.set(k, out);
+  return out;
+}
+/** Pressão da carreira: embalo em queda, holofote de estrela, estrada. */
+function careerPressure(s: GameState, p: Person): { v: number; why: L } {
+  let v = 0, why = l('pressão da carreira', 'career pressure');
+  for (const a of Object.values(s.acts)) {
+    if (!a.members.includes(p.id) || (a.status !== 'active' && a.status !== 'emerging')) continue;
+    if (a.momentum < 20 && a.fame >= 15) { v += 8; why = l('carreira em baixa', 'career slump'); }
+    if (a.fame >= 75) { v += 6; why = l('holofote de estrela', 'star spotlight'); }
+    if (s.tours.some((t) => t.actId === a.id && t.status === 'running')) { v += 6; why = l('na estrada', 'on the road'); }
+    break;
+  }
+  return { v, why };
 }
 
 export function stressOf(s: GameState, pid: string): StressRead {
   const p = s.persons[pid];
   const st = stress17(s);
   if (!p) return { short: 0, long: 0, vuln: 0.5, level: 'ok', risk: 0, why: [] };
-  const short = Math.round(p.stress), long = Math.round(st.l[pid] ?? 0), vuln = vulnOf(s, p);
-  const level: StressLevel = short > 70 && long > 50 ? 'breaking' : short > 60 || long > 45 ? 'strained' : short > 40 ? 'tense' : 'ok';
-  const why = (st.why[pid] ?? []).filter((x) => s.week - x[0] < 26).map((x) => x[2]);
+  const so = shortOf(s, p);
+  const short = so.v, long = Math.round(st.l[pid] ?? 0), vuln = vulnOf(s, p);
+  const level: StressLevel = short > BREAK_SHORT && long > BREAK_LONG ? 'breaking' : short > 55 || long > 35 ? 'strained' : short > 35 ? 'tense' : 'ok';
+  const why = [...(st.why[pid] ?? []).filter((x) => s.week - x[0] < 26).map((x) => x[2]), ...so.parts];
   return { short, long, vuln, level, risk: st.lb[pid] === s.year ? 0 : breakChance17(short, long, vuln), why };
 }
 
@@ -84,8 +149,9 @@ export function stressMonthStep(s: GameState, p: Person): boolean {
   const st = stress17(s);
   const v = vulnOf(s, p);
   const cur = st.l[p.id] ?? 0;
-  const nx = p.stress > 55 ? cur + (p.stress - 55) * 0.08 * (0.7 + v * 0.6) : cur - 1.2 * (1.3 - v * 0.6);
+  const sh = shortOf(s, p).v;
+  const nx = sh > 40 ? cur + (sh - 40) * 0.1 * (0.7 + v * 0.6) : sh < 30 ? cur - 1.5 * (1.3 - v * 0.6) : cur - 0.3;
   if (nx <= 0.5) delete st.l[p.id];
   else st.l[p.id] = Math.round(clamp(nx, 0, 100) * 10) / 10;
-  return p.stress > 70 && (st.l[p.id] ?? 0) > 50;
+  return sh > BREAK_SHORT && (st.l[p.id] ?? 0) > BREAK_LONG;
 }

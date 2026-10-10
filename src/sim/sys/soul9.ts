@@ -16,6 +16,7 @@ import { chron, chronListeners, chronState, cityL, nameOf, type ChronEv } from '
 import { spendDrama, worldDramaOk, worldPace } from './pace9';
 import { tiesOf } from './social8';
 import { histLocked } from '../history15';
+import { scandal } from '../scandal17';
 
 // ---------------------------------------------------------------- facetas e valores
 
@@ -255,7 +256,7 @@ function breakdown(s: GameState, r: Rng, a: Act, p: Person): void {
   if (f.impulsividade > 60 || f.ego > 66) {
     const other = a.members.find((x) => x !== p.id && s.persons[x]?.alive);
     if (other) { p.rel[other] = clamp((p.rel[other] ?? 0) - 35, -100, 100); const o = s.persons[other]; o.rel[p.id] = clamp((o.rel[p.id] ?? 0) - 35, -100, 100); addMem(s, other, 'feud', -25, 3); }
-    a.scandals++;
+    scandal(s, a.id, 'violence', 45, undefined, { person: p.id });
     a.fame = clamp(a.fame + 1, 0, 100);
     t = fmtL(l('{p} ({a}) briga em pleno palco{o}; o show acaba no meio.', '{p} ({a}) brawls onstage{o}; the show stops halfway.'), { p: p.name, a: a.name, o: other ? fmtL(l(' com {x}', ' with {x}'), { x: s.persons[other].name }) : '' });
   } else if (v.prazer > 62) {

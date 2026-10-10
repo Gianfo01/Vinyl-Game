@@ -11,6 +11,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { langForCity, personName } from '../people';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
+import { scandal } from '../scandal17';
 import { ownerOf } from './people/owner';
 import { funds, grossShows, mgCap, mgChance, mgGross, ventures, type Client } from './ventures9';
 
@@ -213,7 +214,7 @@ export function imageCampaign(s: GameState, r: Rng, actId: string, k: Campaign):
   pay(s, -cost, `pr:${actId}:${k}`, `${CAMPAIGN_NAME[k].pt} ${a.name}`);
   cxOf(s, actId).prW = s.week;
   if (k === 'press') {
-    if (r.chance(0.12)) { a.scandals += 1; c.sat = clamp(c.sat - 6, 0, 100); return bad(fmtL(l('A blitz saiu pela culatra: entrevista desastrosa de {a}.', 'The blitz backfired: {a} gave a disastrous interview.'), { a: a.name })); }
+    if (r.chance(0.12)) { scandal(s, a.id, 'offense', 30); c.sat = clamp(c.sat - 6, 0, 100); return bad(fmtL(l('A blitz saiu pela culatra: entrevista desastrosa de {a}.', 'The blitz backfired: {a} gave a disastrous interview.'), { a: a.name })); }
     a.momentum = clamp(a.momentum + 15, 0, 100);
     a.fame = clamp(a.fame + 1, 0, 100);
   } else if (k === 'rebrand') {

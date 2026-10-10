@@ -11,6 +11,7 @@ import { censorshipIn, platformsIn, type PlatformType } from '../data/content';
 import type { Act, GameState, Person } from './types';
 import { hasTech } from './util';
 import { EH } from './events_more';
+import { scandal as sc17, type ScandalKind } from './scandal17';
 
 const {
   o, E, noop, pick, crew, fam, mkt, era, myRels, isLabel, active, traitIn, ambitionIn, lead,
@@ -37,7 +38,7 @@ const star = (s: GameState, r: Rng, f: (a: Act) => boolean = () => true): Act | 
 };
 const cash = (s: GameState) => s.player.cash;
 const img = (a: Act, k: 'artistic' | 'popularity' | 'professionalism' | 'publicImage', v: number) => { if (a.image) a.image[k] = clamp(a.image[k] + v, 0, 100); };
-const scandal = (a: Act) => { a.scandals += 1; };
+const scandal = (s: GameState, a: Act, k: ScandalKind, sev: number) => { sc17(s, a.id, k, sev); };
 
 // =====================================================================================
 // 1. ARTISTAS: escândalos, saúde, rixas, rompimentos, crises criativas
@@ -54,8 +55,8 @@ const ARTISTS: EventDef[] = [
     ['{person} ({act}) chegou ao programa de auditório trocando as pernas, xingou o apresentador e derrubou o microfone. O país inteiro viu.', '{person} ({act}) arrived at the variety show stumbling, swore at the host and knocked over the mic. The whole country saw it.'],
     [
       o('rehab', 'Nota pública e internação discreta', 'Public statement and quiet rehab', (s, _r, c) => { const a = A(s, c); pay(s, `r11rehab:${a.id}`, 4000, 'artist_dev', 'Clínica'); hiatus(s, a, 6); pmood(P(s, c), 'stress', -25); trust(a, 5); rep(s, 'institutional', 1); }, ['Custo e pausa; imagem se recupera.', 'Cost and a break; image recovers.']),
-      o('spin', 'Vender como "rock\'n\'roll de verdade"', 'Spin it as "real rock\'n\'roll"', (s, r, c) => { const a = A(s, c); scandal(a); if (r.chance(0.5)) { fame(a, 4); fans(a, 15000, 2000); } else { rep(s, 'institutional', -5); img(a, 'publicImage', -10); } }, ['Aposta: notoriedade ou vexame.', 'Gamble: notoriety or disgrace.']),
-      o('nothing', 'Não comentar', 'No comment', (s, _r, c) => { const a = A(s, c); scandal(a); img(a, 'professionalism', -6); mom(a, -3); }),
+      o('spin', 'Vender como "rock\'n\'roll de verdade"', 'Spin it as "real rock\'n\'roll"', (s, r, c) => { const a = A(s, c); scandal(s, a, 'drugs', 40); if (r.chance(0.5)) { fame(a, 4); fans(a, 15000, 2000); } else { rep(s, 'institutional', -5); img(a, 'publicImage', -10); } }, ['Aposta: notoriedade ou vexame.', 'Gamble: notoriety or disgrace.']),
+      o('nothing', 'Não comentar', 'No comment', (s, _r, c) => { const a = A(s, c); scandal(s, a, 'drugs', 40); img(a, 'professionalism', -6); mom(a, -3); }),
     ]),
   E('r11_hotel_trash', 'scandal', 'bad', ['controversy'], 16,
     (s, r) => {
@@ -68,7 +69,7 @@ const ARTISTS: EventDef[] = [
     [
       o('pay', 'Pagar e abafar', 'Pay and hush it up', (s, _r, c) => { pay(s, `r11hotel:${c.act}`, Number(c.amount), 'touring', 'Danos de hotel'); }),
       o('charge', 'Cobrar da banda (desconta dos royalties)', 'Charge the band (recoup from royalties)', (s, _r, c) => { const a = A(s, c); a.cash -= Math.round(Number(c.amount) * 100); trust(a, -6); mood(s, a, 'resentment', 6); }, ['Sem custo ao selo; a banda se ressente.', 'No label cost; the band resents it.']),
-      o('legend', 'Deixar vazar: lenda do rock', 'Let it leak: rock legend', (s, _r, c) => { const a = A(s, c); pay(s, `r11hotel:${c.act}`, Number(c.amount), 'touring', 'Danos de hotel'); fame(a, 2); fans(a, 8000, 1500, 200); scandal(a); rep(s, 'institutional', -3); }),
+      o('legend', 'Deixar vazar: lenda do rock', 'Let it leak: rock legend', (s, _r, c) => { const a = A(s, c); pay(s, `r11hotel:${c.act}`, Number(c.amount), 'touring', 'Danos de hotel'); fame(a, 2); fans(a, 8000, 1500, 200); scandal(s, a, 'conduct', 30); rep(s, 'institutional', -3); }),
     ]),
   E('r11_border_bust', 'scandal', 'bad', ['drugs', 'crime'], 30,
     (s, r) => {
@@ -80,9 +81,9 @@ const ARTISTS: EventDef[] = [
     ['{person} preso na alfândega', '{person} arrested at customs'],
     ['Cães farejadores acharam algo na mala de {person} ({act}) no aeroporto. A turnê internacional está suspensa; o advogado pede {feeTxt}.', 'Sniffer dogs found something in {person}\'s ({act}) bag at the airport. The international tour is suspended; the lawyer asks {feeTxt}.'],
     [
-      o('lawyer', 'Contratar o advogado', 'Hire the lawyer', (s, r, c) => { const a = A(s, c); pay(s, `r11bust:${c.person}`, Number(c.fee), 'legal', 'Defesa criminal'); if (r.chance(winOdds(s, 0.55))) { log(s, 'bust', '{p} é solto e a turnê retoma.', '{p} is released and the tour resumes.', { p: P(s, c).name }, a.id); } else { hiatus(s, a, 10); scandal(a); } }, ['A equipe jurídica aumenta as chances.', 'Legal staff improves the odds.']),
+      o('lawyer', 'Contratar o advogado', 'Hire the lawyer', (s, r, c) => { const a = A(s, c); pay(s, `r11bust:${c.person}`, Number(c.fee), 'legal', 'Defesa criminal'); if (r.chance(winOdds(s, 0.55))) { log(s, 'bust', '{p} é solto e a turnê retoma.', '{p} is released and the tour resumes.', { p: P(s, c).name }, a.id); } else { hiatus(s, a, 10); scandal(s, a, 'drugs', 55); } }, ['A equipe jurídica aumenta as chances.', 'Legal staff improves the odds.']),
       o('drop_tour', 'Cancelar a turnê e cuidar da pessoa', 'Cancel the tour and look after them', (s, _r, c) => { const a = A(s, c); hiatus(s, a, 8); trust(a, 8); const p = P(s, c); if (p) p.health = 'recovering'; mom(a, -6); }),
-      o('distance', 'Distanciar o selo do caso', 'Distance the label from the case', (s, _r, c) => { const a = A(s, c); hiatus(s, a, 12); scandal(a); trust(a, -15); rep(s, 'artists', -3); }),
+      o('distance', 'Distanciar o selo do caso', 'Distance the label from the case', (s, _r, c) => { const a = A(s, c); hiatus(s, a, 12); scandal(s, a, 'drugs', 55); trust(a, -15); rep(s, 'artists', -3); }),
     ]),
   E('r11_secret_marriage', 'scandal', 'neutral', [], 24,
     (s, r) => {
@@ -95,7 +96,7 @@ const ARTISTS: EventDef[] = [
     ['Uma revista descobriu que {person}, de {act}, casou-se há um ano. O fã-clube adolescente está em choque.', 'A magazine found out {person} of {act} married a year ago. The teenage fan club is in shock.'],
     [
       o('own', 'Assumir com uma sessão de fotos do casal', 'Own it with a couple photoshoot', (s, _r, c) => { const a = A(s, c); fansMul(a, 0.88, 1, 1.03); img(a, 'publicImage', 5); fame(a, 1); trust(a, 4); }, ['Perde fãs casuais; ganha maturidade.', 'Loses casual fans; gains maturity.']),
-      o('deny', 'Negar até o fim', 'Deny it to the end', (s, r, c) => { const a = A(s, c); if (r.chance(0.5)) { scandal(a); fansMul(a, 0.8, 0.9); rep(s, 'institutional', -3); } trust(a, -6); }, ['Se provarem, o tombo é maior.', 'If proven, the fall is harder.']),
+      o('deny', 'Negar até o fim', 'Deny it to the end', (s, r, c) => { const a = A(s, c); if (r.chance(0.5)) { scandal(s, a, 'sex', 25); fansMul(a, 0.8, 0.9); rep(s, 'institutional', -3); } trust(a, -6); }, ['Se provarem, o tombo é maior.', 'If proven, the fall is harder.']),
       o('wait', 'Deixar o artista decidir', 'Let the artist decide', (s, _r, c) => { const a = A(s, c); fansMul(a, 0.93); trust(a, 3); }),
     ]),
   E('r11_band_romance_split', 'band', 'bad', [], 20,
@@ -226,8 +227,8 @@ const ARTISTS: EventDef[] = [
     ['Um compositor diz numa entrevista que escreveu os maiores hits de {act} e nunca recebeu crédito. Pede {feeTxt} e o nome na capa.', 'A songwriter says in an interview that they wrote {act}\'s biggest hits and never got credit. They ask {feeTxt} and their name on the sleeve.'],
     [
       o('credit', 'Dar crédito e pagar', 'Credit and pay them', (s, _r, c) => { const a = A(s, c); pay(s, `r11ghost:${a.id}`, Number(c.fee), 'publishing', 'Acordo de autoria'); img(a, 'artistic', -5); rep(s, 'artists', 2); }),
-      o('fight', 'Contestar na Justiça', 'Fight it in court', (s, r, c) => { const a = A(s, c); pay(s, `r11ghostl:${a.id}`, legal(s, 4000), 'legal', 'Processo de autoria'); if (!r.chance(winOdds(s, 0.45))) { pay(s, `r11ghostd:${a.id}`, Number(c.fee) * 2, 'legal', 'Indenização'); scandal(a); img(a, 'artistic', -12); } }),
-      o('deny', 'Negar e seguir', 'Deny and move on', (s, _r, c) => { const a = A(s, c); scandal(a); img(a, 'artistic', -8); rep(s, 'artists', -2); }),
+      o('fight', 'Contestar na Justiça', 'Fight it in court', (s, r, c) => { const a = A(s, c); pay(s, `r11ghostl:${a.id}`, legal(s, 4000), 'legal', 'Processo de autoria'); if (!r.chance(winOdds(s, 0.45))) { pay(s, `r11ghostd:${a.id}`, Number(c.fee) * 2, 'legal', 'Indenização'); scandal(s, a, 'money', 30); img(a, 'artistic', -12); } }),
+      o('deny', 'Negar e seguir', 'Deny and move on', (s, _r, c) => { const a = A(s, c); scandal(s, a, 'money', 30); img(a, 'artistic', -8); rep(s, 'artists', -2); }),
     ]),
   E('r11_lipsync', 'scandal', 'bad', ['controversy'], 24,
     (s, r) => {
@@ -238,9 +239,9 @@ const ARTISTS: EventDef[] = [
     ['Playback desmascarado: {act}', 'Lip-sync exposed: {act}'],
     ['O som travou no meio do programa ao vivo e o refrão de {act} ficou repetindo enquanto ninguém mexia a boca.', 'The tape skipped mid live show and {act}\'s chorus kept looping while nobody moved their lips.'],
     [
-      o('live_tour', 'Provar ao vivo: turnê sem playback', 'Prove it: a no-playback tour', (s, r, c) => { const a = A(s, c); pay(s, `r11live:${a.id}`, 2000, 'touring', 'Ensaios extras'); mood(s, a, 'fatigue', 15); if (r.chance(0.6)) { img(a, 'artistic', 8); fame(a, 2); } else { scandal(a); fansMul(a, 0.9); } }),
+      o('live_tour', 'Provar ao vivo: turnê sem playback', 'Prove it: a no-playback tour', (s, r, c) => { const a = A(s, c); pay(s, `r11live:${a.id}`, 2000, 'touring', 'Ensaios extras'); mood(s, a, 'fatigue', 15); if (r.chance(0.6)) { img(a, 'artistic', 8); fame(a, 2); } else { scandal(s, a, 'conduct', 30); fansMul(a, 0.9); } }),
       o('joke', 'Rir de si mesmo na TV', 'Laugh at yourselves on TV', (s, _r, c) => { const a = A(s, c); img(a, 'publicImage', 3); img(a, 'artistic', -4); }),
-      o('blame', 'Culpar o técnico de som', 'Blame the sound tech', (s, _r, c) => { const a = A(s, c); scandal(a); img(a, 'artistic', -10); fansMul(a, 0.93); }),
+      o('blame', 'Culpar o técnico de som', 'Blame the sound tech', (s, _r, c) => { const a = A(s, c); scandal(s, a, 'conduct', 30); img(a, 'artistic', -10); fansMul(a, 0.93); }),
     ]),
   E('r11_charity_scandal', 'scandal', 'bad', ['controversy'], 30,
     (s, r) => {
@@ -252,8 +253,8 @@ const ARTISTS: EventDef[] = [
     ['Auditores dizem que só 12% das doações à fundação de {act} chegaram a alguém. O resto virou jatinho e festa.', 'Auditors say only 12% of donations to {act}\'s foundation reached anyone. The rest became private jets and parties.'],
     [
       o('repay', 'Devolver tudo e abrir as contas', 'Repay everything and open the books', (s, _r, c) => { const a = A(s, c); pay(s, `r11char:${a.id}`, 5000, 'legal', 'Ressarcimento'); img(a, 'publicImage', -4); rep(s, 'institutional', 2); }),
-      o('blame_manager', 'Culpar o administrador', 'Blame the administrator', (s, r, c) => { const a = A(s, c); if (r.chance(0.5)) img(a, 'publicImage', -3); else { scandal(a); img(a, 'publicImage', -14); fansMul(a, 0.9, 0.95); } }),
-      o('quiet', 'Esperar a poeira baixar', 'Wait for the dust to settle', (s, _r, c) => { const a = A(s, c); scandal(a); img(a, 'publicImage', -10); rep(s, 'institutional', -3); }),
+      o('blame_manager', 'Culpar o administrador', 'Blame the administrator', (s, r, c) => { const a = A(s, c); if (r.chance(0.5)) img(a, 'publicImage', -3); else { scandal(s, a, 'money', 40); img(a, 'publicImage', -14); fansMul(a, 0.9, 0.95); } }),
+      o('quiet', 'Esperar a poeira baixar', 'Wait for the dust to settle', (s, _r, c) => { const a = A(s, c); scandal(s, a, 'money', 40); img(a, 'publicImage', -10); rep(s, 'institutional', -3); }),
     ]),
   E('r11_artist_tax', 'business', 'bad', [], 30,
     (s, r) => {
@@ -320,7 +321,7 @@ const ARTISTS: EventDef[] = [
     [
       o('test', 'Fazer o teste e assumir se for o caso', 'Take the test and own it if true', (s, r, c) => { const a = A(s, c); pay(s, `r11pat:${c.person}`, Number(c.fee), 'legal', 'Exame e acordo'); if (r.chance(0.5)) { img(a, 'publicImage', 4); pmood(P(s, c), 'stress', 10); } else img(a, 'publicImage', 2); }),
       o('settle', 'Acordo sigiloso', 'Confidential settlement', (s, _r, c) => { pay(s, `r11pats:${c.person}`, Number(c.fee) * 2, 'legal', 'Acordo sigiloso'); s.flags[`r11hush:${c.act}`] = s.week; }, ['Pode vazar depois.', 'May leak later.']),
-      o('deny', 'Negar publicamente', 'Deny publicly', (s, _r, c) => { const a = A(s, c); scandal(a); img(a, 'publicImage', -8); }),
+      o('deny', 'Negar publicamente', 'Deny publicly', (s, _r, c) => { const a = A(s, c); scandal(s, a, 'sex', 35); img(a, 'publicImage', -8); }),
     ]),
   E('r11_stage_politics', 'culture', 'neutral', ['controversy'], 24,
     (s, r) => {
@@ -406,7 +407,7 @@ const ARTISTS: EventDef[] = [
     ['Reality show quer {act}', 'Reality show wants {act}'],
     ['Uma emissora quer câmeras 24 horas na casa de {act} por uma temporada. Cachê: {feeTxt}.', 'A network wants 24-hour cameras in {act}\'s home for a season. Fee: {feeTxt}.'],
     [
-      o('accept', 'Aceitar', 'Accept', (s, r, c) => { const a = A(s, c); split(s, a, `r11real:${a.id}`, Number(c.fee), 'sync', 'Reality show'); fame(a, 6); fans(a, 60000, 3000); img(a, 'artistic', -8); mood(s, a, 'stress', 15); if (r.chance(0.3)) scandal(a); }, ['Fama e dinheiro; credibilidade cai.', 'Fame and money; credibility drops.']),
+      o('accept', 'Aceitar', 'Accept', (s, r, c) => { const a = A(s, c); split(s, a, `r11real:${a.id}`, Number(c.fee), 'sync', 'Reality show'); fame(a, 6); fans(a, 60000, 3000); img(a, 'artistic', -8); mood(s, a, 'stress', 15); if (r.chance(0.3)) scandal(s, a, 'conduct', 25); }, ['Fama e dinheiro; credibilidade cai.', 'Fame and money; credibility drops.']),
       o('cameo', 'Só uma participação especial', 'Just a guest appearance', (s, _r, c) => { const a = A(s, c); fame(a, 1.5); fans(a, 12000, 500); }),
       o('decline', 'Recusar', 'Decline', noop),
     ]),
@@ -420,7 +421,7 @@ const ARTISTS: EventDef[] = [
     ['Briga nas redes: {act} × {otherName}', 'Online feud: {act} vs {otherName}'],
     ['Às 3 da manhã, {act} postou que {otherName} "não sabe cantar nem no chuveiro". Os fãs dos dois estão em guerra nos comentários.', 'At 3 a.m., {act} posted that {otherName} "can\'t even sing in the shower". Both fanbases are at war in the comments.'],
     [
-      o('double_down', 'Dobrar a aposta', 'Double down', (s, r, c) => { const a = A(s, c); fame(a, 3); fans(a, 20000, 2500); if (r.chance(0.4)) { scandal(a); img(a, 'publicImage', -8); } }),
+      o('double_down', 'Dobrar a aposta', 'Double down', (s, r, c) => { const a = A(s, c); fame(a, 3); fans(a, 20000, 2500); if (r.chance(0.4)) { scandal(s, a, 'offense', 30); img(a, 'publicImage', -8); } }),
       o('delete', 'Apagar e pedir desculpas', 'Delete and apologize', (s, _r, c) => { const a = A(s, c); img(a, 'publicImage', 2); mood(s, a, 'morale', -3); }),
       o('social_manager', 'Tirar a senha e contratar gestor de redes', 'Take the password, hire a social manager', (s, _r, c) => { const a = A(s, c); pay(s, `r11sm:${a.id}`, 900, 'marketing', 'Gestor de redes'); trust(a, -3); }),
     ]),
@@ -433,7 +434,7 @@ const ARTISTS: EventDef[] = [
     ['{act} e a moeda milagrosa', '{act} and the miracle coin'],
     ['Uma "plataforma de investimentos" oferece {feeTxt} para {act} divulgar um token aos fãs. Os criadores moram num iate sem endereço.', 'An "investment platform" offers {feeTxt} for {act} to promote a token to fans. The founders live on a yacht with no address.'],
     [
-      o('take', 'Aceitar o dinheiro', 'Take the money', (s, r, c) => { const a = A(s, c); split(s, a, `r11coin:${a.id}`, Number(c.fee), 'brand', 'Publicidade de token'); if (r.chance(0.6)) { scandal(a); fansMul(a, 0.85, 0.85, 0.9); rep(s, 'institutional', -5); log(s, 'coin', 'O token divulgado por {a} derrete; fãs perdem economias.', 'The token {a} promoted collapses; fans lose savings.', { a: a.name }, a.id, true); } }, ['Dinheiro rápido; grande risco de golpe.', 'Fast money; high scam risk.']),
+      o('take', 'Aceitar o dinheiro', 'Take the money', (s, r, c) => { const a = A(s, c); split(s, a, `r11coin:${a.id}`, Number(c.fee), 'brand', 'Publicidade de token'); if (r.chance(0.6)) { scandal(s, a, 'money', 35); fansMul(a, 0.85, 0.85, 0.9); rep(s, 'institutional', -5); log(s, 'coin', 'O token divulgado por {a} derrete; fãs perdem economias.', 'The token {a} promoted collapses; fans lose savings.', { a: a.name }, a.id, true); } }, ['Dinheiro rápido; grande risco de golpe.', 'Fast money; high scam risk.']),
       o('vet', 'Mandar o jurídico investigar', 'Have legal investigate', (s) => { pay(s, 'r11coinv', legal(s, 600), 'legal', 'Due diligence'); rep(s, 'institutional', 1); }),
       o('decline', 'Recusar', 'Decline', noop),
     ]),
@@ -448,7 +449,7 @@ const ARTISTS: EventDef[] = [
     ['Uma certidão antiga mostra que {person} ({act}) tem oito anos a mais do que diz o material de imprensa do selo.', 'An old certificate shows {person} ({act}) is eight years older than the label\'s press kit says.'],
     [
       o('laugh', 'Admitir com humor', 'Admit it with humor', (s, _r, c) => { const a = A(s, c); img(a, 'publicImage', 3); fansMul(a, 0.96); }),
-      o('deny', 'Dizer que a certidão é falsa', 'Claim the certificate is fake', (s, r, c) => { const a = A(s, c); if (r.chance(0.5)) { scandal(a); img(a, 'publicImage', -8); rep(s, 'institutional', -2); } }),
+      o('deny', 'Dizer que a certidão é falsa', 'Claim the certificate is fake', (s, r, c) => { const a = A(s, c); if (r.chance(0.5)) { scandal(s, a, 'conduct', 20); img(a, 'publicImage', -8); rep(s, 'institutional', -2); } }),
       o('nothing', 'Não comentar', 'No comment', (s, _r, c) => { const a = A(s, c); fansMul(a, 0.95); }),
     ]),
   E('r11_mental_health', 'health', 'neutral', ['health'], 30,
@@ -521,7 +522,7 @@ const VIRAL: EventDef[] = [
     [
       o('care', 'Ligar na hora e oferecer ajuda', 'Call right away and offer help', (s, _r, c) => { const a = A(s, c); mood(s, a, 'stress', -15); trust(a, 8); hiatus(s, a, 4); }),
       o('statement', 'Nota oficial contestando', 'Official statement disputing it', (s, _r, c) => { const a = A(s, c); trust(a, -10); rep(s, 'artists', -2); }),
-      o('wait', 'Esperar passar', 'Wait it out', (s, _r, c) => { const a = A(s, c); scandal(a); img(a, 'professionalism', -6); }),
+      o('wait', 'Esperar passar', 'Wait it out', (s, _r, c) => { const a = A(s, c); scandal(s, a, 'meltdown', 35); img(a, 'professionalism', -6); }),
     ]),
   E('r11_deepfake', 'scandal', 'bad', ['controversy'], 24,
     (s, r) => {
@@ -1013,7 +1014,7 @@ const INDUSTRY: EventDef[] = [
     ['Uma nova lei proíbe festas com "batidas repetitivas". As raves onde {act} se apresentava estão sendo invadidas.', 'A new law bans parties with "repetitive beats". The raves where {act} used to play are being raided.'],
     [
       o('legal_club', 'Migrar para clubes licenciados', 'Move to licensed clubs', (s, _r, c) => { const a = A(s, c); pay(s, `r11rave:${a.id}`, 1000, 'touring', 'Clubes licenciados'); fans(a, 5000, 800); a.positioning = clamp(a.positioning + 5, 0, 100); }),
-      o('protest', 'Organizar protesto-rave', 'Organize a protest rave', (s, r, c) => { const a = A(s, c); fans(a, 0, 3000, 1500); img(a, 'artistic', 5); if (r.chance(0.4)) { scandal(a); rep(s, 'institutional', -4); } }),
+      o('protest', 'Organizar protesto-rave', 'Organize a protest rave', (s, r, c) => { const a = A(s, c); fans(a, 0, 3000, 1500); img(a, 'artistic', 5); if (r.chance(0.4)) { scandal(s, a, 'drugs', 30); rep(s, 'institutional', -4); } }),
       o('wait', 'Dar um tempo', 'Lie low', (s, _r, c) => { const a = A(s, c); mom(a, -6); }),
     ]),
   E('r11_loudness_war', 'tech', 'neutral', [], 36,

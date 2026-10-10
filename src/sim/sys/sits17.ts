@@ -37,7 +37,7 @@ registerSituation({
       const p = s.persons[id];
       if (!p?.alive || p.isPlayer) continue;
       const x = stressOf(s, id);
-      if (x.short > 68 && x.long > 35 && (!best || x.short + x.long > best[2])) best = [p, a, x.short + x.long];
+      if (x.short > 55 && x.long > 20 && (!best || x.short + x.long > best[2])) best = [p, a, x.short + x.long];
     }
     return best ? { hero: best[0].id, act: best[1].id, cast: { person: best[0].id }, data: {} } : null;
   },
@@ -173,7 +173,7 @@ registerSituation({
   actorsPick: (s) => {
     for (const a of notable(s)) {
       if (a.rs) continue;
-      for (const id of a.members) { const p = s.persons[id]; const h = P(s).health[id]; if (p?.alive && !p.isPlayer && h?.history && !h.treatment && p.stress > 60) return { hero: id, act: a.id, cast: { person: id }, data: {} }; }
+      for (const id of a.members) { const p = s.persons[id]; const h = P(s).health[id]; if (p?.alive && !p.isPlayer && h?.history && !h.treatment && stressOf(s, id).short > 60) return { hero: id, act: a.id, cast: { person: id }, data: {} }; }
     }
     return null;
   },

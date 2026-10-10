@@ -11,6 +11,7 @@ import { fmtL, hasMutator, hasTech, money, notify, post, remember } from '../../
 import { liveMine, liveMineReleases, mineRel, rep } from './common';
 import { STANCE_NAME, setStance } from './milestones';
 import { w4, type LawState, type PiracyStance, type Society } from './state';
+import { emitFact } from '../../facts17';
 
 // ======================================================================= sindicato
 
@@ -297,6 +298,7 @@ function piracyMonth(s: GameState, r: Rng, salesDelta: number): void {
     rep(s, 'institutional', -8);
     rep(s, 'artistic', -4);
     p.scandals += 1;
+    emitFact(s, { kind: 'scandal', actors: ['player'], place: s.config.homeCity, severity: 45, tags: ['money', 'bad', 'drm'], text: l('Recall de discos com anticópia: o selo vira piada nacional.', 'Copy-protected discs recalled: the label becomes a national joke.'), src: 'w4laws' });
     setStance(s, 'none');
     const text = l('Escândalo: a anticópia dos seus discos instala software escondido nos computadores. Recall e processo.', 'Scandal: your discs\' copy protection secretly installs software on computers. Recall and lawsuit.');
     remember(s, 'drm', text, { important: true });

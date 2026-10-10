@@ -75,7 +75,7 @@ export function scandalReaction(s: GameState, act: Act | undefined, kind: Scanda
   if (faithK) { m *= faithK; why.push(fmtL(l('{c} em {y}: público {p}% religioso ({x})', '{c} in {y}: audience {p}% religious ({x})'), { c: cn, y: s.year, p: Math.round(pi * 100), x: pct(faithK) })); }
   const cz = censorshipIn(s.year, market);
   if (kind === 'politics') { const k = 0.8 + cz.level * 0.8; m *= k; why.push(fmtL(l('clima político (censura {v}%): {x}', 'political climate (censorship {v}%): {x}'), { v: Math.round(cz.level * 100), x: pct(k) })); }
-  else if (CENSOR[kind]?.some((t) => cz.banned.includes(t))) { const k = 1 + cz.level * 0.6; m *= k; why.push(fmtL(l('tema proibido pela censura: {x}', 'topic banned by censors: {x}'), { x: pct(k) })); }
+  else if (cz.level >= 0.4 && CENSOR[kind]?.some((t) => cz.banned.includes(t))) { const k = 1 + cz.level * (market === 'eu' || market === 'asia' || market === 'africa' ? 0.3 : 0.6); /* mercado com muitos países: só parte deles censura */ m *= k; why.push(fmtL(l('tema proibido pela censura: {x}', 'topic banned by censors: {x}'), { x: pct(k) })); }
   const base: Partial<Record<ScandalKind, number>> = { violence: 1.1, crime: 1.15, money: 0.85, conduct: 0.9, offense: 0.9 + (s.year >= 2010 ? 0.25 : 0), meltdown: 0.75 };
   if (base[kind]) { m *= base[kind]!; if (kind === 'offense' && s.year >= 2010) why.push(l('era das redes: declaração vira cancelamento (×1.15)', 'social media era: a remark becomes a cancellation (×1.15)')); }
   // imprensa do mercado

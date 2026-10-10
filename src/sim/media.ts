@@ -13,6 +13,8 @@ import { criticRelBonus } from './criticrel';
 import { isPolitical, viewsOf } from './beliefs';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 import { gone16 } from './sys/gone16';
+import { scandal, type ScandalKind } from './scandal17';
+const CRISIS17: Record<Crisis['kind'], ScandalKind> = { scandal: 'conduct', remark: 'offense', censorship: 'politics', cancel: 'offense', leak: 'conduct', accident: 'violence' };
 
 export interface CriticDef {
   name: string;
@@ -185,7 +187,7 @@ export function openCrisis(s: GameState, act: Act, kind: Crisis['kind'], severit
   const day = s.day + s.clock.dayInMonth;
   const c: Crisis = { id: nextId(s, 'cr'), actId: act.id, kind, severity, startDay: day, deadlineDay: day + 5, text };
   s.crises.push(c);
-  act.scandals += 1;
+  scandal(s, act.id, CRISIS17[kind], severity, text);
   notify(s, fmtL(l('CRISE ({a}): {t} Responda em até 5 dias.', 'CRISIS ({a}): {t} Respond within 5 days.'), { a: act.name, t: text }), 'bad');
   return c;
 }

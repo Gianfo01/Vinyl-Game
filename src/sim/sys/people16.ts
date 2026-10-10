@@ -25,6 +25,7 @@ import { langForCity, personName } from '../people';
 import { PRODUCERS, prodHooks } from '../studio';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, nextId, notify, remember, staffAdjusters } from '../util';
+import { actorId, emitFact } from '../facts17';
 import { GONE16 } from './gone16';
 import { SUCC10, depart, leaders, newLeader, succeed, type Leader, type LeaderStyle } from './leaders10';
 import { lz14 } from './leisure14';
@@ -493,6 +494,7 @@ function lifeMonth(s: GameState, r0: Rng, key: string, P: P13, k: number): void 
   if (!x.mar && r.chance(0.007 + (f.romantismo + f.lealdade) / 25000)) {
     x.mar = s.year;
     say16(s, key, T(l('{n} se casou com {q}.', '{n} married {q}.'), { q: F0.partner?.name ?? '?' }), 1);
+    emitFact(s, { kind: 'marriage', actors: [actorId(key)], place: P.city, severity: 30, tags: ['good', 'romance'], text: p16(s).news[0][2], src: 'people16' });
     return;
   }
   if (r.chance(0.003 + (x.st === 'addiction' ? 0.012 : 0) + pressure(s, key) * 0.004 + (f.impulsividade > 65 ? 0.003 : 0))) {
@@ -501,6 +503,7 @@ function lifeMonth(s: GameState, r0: Rng, key: string, P: P13, k: number): void 
     x.mar = undefined;
     x.dep = clamp(x.dep + 8, 0, 100);
     say16(s, key, T(x.st === 'addiction' ? l('{n} e {q} se separaram: o vício acabou com o casamento.', '{n} and {q} split: the addiction ended the marriage.') : l('{n} e {q} se separaram.', '{n} and {q} split up.'), { q: was }), -1);
+    emitFact(s, { kind: 'breakup', actors: [actorId(key)], place: P.city, severity: 30, tags: ['bad', 'romance'], text: p16(s).news[0][2], src: 'people16' });
     return;
   }
   if (age >= 23 && age <= 47 && F0.kids.length < 3 && r.chance(x.mar ? 0.007 : 0.002)) {
@@ -508,6 +511,7 @@ function lifeMonth(s: GameState, r0: Rng, key: string, P: P13, k: number): void 
     F0.kids.push(kid);
     x.dep = clamp(x.dep - 6, 0, 100);
     say16(s, key, T(l('Nasceu {k}, filho(a) de {n}.', '{k} is born to {n}.'), { k: kid.name }), 1, false);
+    emitFact(s, { kind: 'birth', actors: [actorId(key)], place: P.city, severity: 20, tags: ['good', 'family'], text: p16(s).news[0][2], src: 'people16' });
   }
 }
 

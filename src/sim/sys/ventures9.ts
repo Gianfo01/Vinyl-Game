@@ -10,6 +10,7 @@ import { CITIES, cityById, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
+import { scandal } from '../scandal17';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 
@@ -712,7 +713,7 @@ function managementMonth(s: GameState, r: Rng): void {
     c.sat = clamp(c.sat + (a.momentum - 50) / 25 - (c.rate - 0.15) * 15 + (mg.rep - 40) / 100 - (c.crisis ? 4 : 0), 0, 100);
     if (c.crisis && s.week - c.crisis.w > 8) {
       a.fame = clamp(a.fame - 3, 0, 100);
-      if (c.crisis.k === 'scandal') a.scandals += 1;
+      if (c.crisis.k === 'scandal') scandal(s, a.id, 'conduct', 40);
       c.sat = clamp(c.sat - 20, 0, 100);
       notify(s, fmtL(l('Você deixou a crise de {a} sem resposta. O estrago está feito.', 'You left {a}\'s crisis unanswered. The damage is done.'), { a: a.name }), 'bad');
       c.crisis = undefined;

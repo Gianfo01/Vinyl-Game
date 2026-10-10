@@ -16,6 +16,7 @@ import { grantPlayerContract } from './worldgen';
 import { MORE_EVENTS } from './events_more';
 import { MORE_EVENTS_11 } from './events_more11';
 import { narrate, narratorPace } from './narrator13';
+import { scandal } from './scandal17';
 
 export type Ctx = Record<string, string | number>;
 
@@ -250,8 +251,8 @@ export const EVENTS: EventDef[] = [
     options: [
       { id: 'apologize', label: l('Pedir desculpas', 'Apologize'), apply: (s, _r, c) => { const a = act(s, c); a.fame -= 1; a.momentum -= 6; rep(s, 'institutional', 1); } },
       { id: 'silence', label: l('Silêncio', 'Silence'), apply: (s, _r, c) => { const a = act(s, c); a.momentum -= 10; } },
-      { id: 'double_down', label: l('Contra-atacar', 'Double down'), hint: l('Fãs núcleo amam; instituições não.', 'Core fans love it; institutions do not.'), apply: (s, _r, c) => { const a = act(s, c); a.fame += 2; a.fans.core = Math.round(a.fans.core * 1.15); a.fans.casual = Math.round(a.fans.casual * 0.85); rep(s, 'institutional', -5); a.scandals += 1; } },
-      { id: 'support', label: l('Apoiar o artista', 'Stand by the artist'), apply: (s, _r, c) => { const a = act(s, c); a.trust += 10; rep(s, 'artists', 2); rep(s, 'institutional', -4); a.scandals += 1; if (a.owner === 'player') s.player.stats.scandalsSurvived += 1; } },
+      { id: 'double_down', label: l('Contra-atacar', 'Double down'), hint: l('Fãs núcleo amam; instituições não.', 'Core fans love it; institutions do not.'), apply: (s, _r, c) => { const a = act(s, c); a.fame += 2; a.fans.core = Math.round(a.fans.core * 1.15); a.fans.casual = Math.round(a.fans.casual * 0.85); rep(s, 'institutional', -5); scandal(s, a.id, 'offense', 35); } },
+      { id: 'support', label: l('Apoiar o artista', 'Stand by the artist'), apply: (s, _r, c) => { const a = act(s, c); a.trust += 10; rep(s, 'artists', 2); rep(s, 'institutional', -4); scandal(s, a.id, 'offense', 35); if (a.owner === 'player') s.player.stats.scandalsSurvived += 1; } },
     ],
   },
   {

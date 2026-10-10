@@ -11,7 +11,7 @@ import { emitFact, onFact, raiseVisibility, recentFacts, facts17, type FactKind 
 import { histLocked } from '../history15';
 import { allHolds, grantHold, holds17, holdsOf, leverage, registerHoldSource, setDefaultHoldEffect, type Hold } from '../holds17';
 import { lastScandal, scandal, type ScandalKind } from '../scandal17';
-import { addStress, relieveLong, setStressVuln, stress17, stressMonthStep, breakChance17, vulnOf } from '../stress17';
+import { addStress, relieveLong, setStressVuln, shortOf, stress17, stressMonthStep, breakChance17, vulnOf } from '../stress17';
 import type { Act, GameState, MemoryEntry, Person } from '../types';
 import { fmtL, money, notify, playerActs, post, rememberListeners } from '../util';
 import { juryMemHook } from './awards15';
@@ -44,7 +44,9 @@ const GOODK = new Set(['chart', 'award', 'signing', 'release', 'romance', 'birth
 const BADK = new Set(['death', 'split', 'scandal', 'breakdown', 'addiction', 'secret_exposed', 'tour_cancel', 'health', 'breakup', 'exit', 'poach', 'trance_denied', 'label_sold', 'case_ruling']);
 const tagsOf = (k: string): string[] => [GOODK.has(k) ? 'good' : BADK.has(k) ? 'bad' : 'neutral'];
 
+const LOWK = new Set(['rise', 'move', 'dream', 'relic', 'rival_contest', 'retired', 'lineup']);
 chronListeners().push((s: GameState, e: ChronEv) => {
+  if ((e.i < 2 || (e.i < 3 && LOWK.has(e.k))) && !e.a?.some((id) => s.acts[id]?.owner === 'player')) return; // miudezas do mundo ficam só na crônica
   const kind = KMAP[e.k] ?? e.k;
   emitFact(s, { kind, actors: e.a ?? [], place: e.c, severity: e.i * 20, visibility: 'public', tags: [...tagsOf(kind), `chron:${e.k}`], text: e.t, src: 'chron', data: { bridged: 1, i: e.i } });
 });
@@ -238,11 +240,11 @@ function stressMonth(s: GameState): void {
       if (h && h.injuryWeeks > 0) addStress(s, p.id, 2, LBL.injury);
       if (grudges.has(p.id)) addStress(s, p.id, 2, LBL.grudge);
       // estresse alimenta a dependência de quem já teve problema (liga com people/health)
-      if (h?.history && p.stress > 75 && !filtered(s, a!)) h.dependency = clamp(h.dependency + 3, 0, 100);
+      if (h?.history && shortOf(s, p).v > 75 && !filtered(s, a!)) h.dependency = clamp(h.dependency + 3, 0, 100);
     }
     const breaking = stressMonthStep(s, p);
     if (!breaking || st.lb[p.id] === s.year || !a) continue;
-    const c = breakChance17(p.stress, st.l[p.id] ?? 0, vulnOf(s, p));
+    const c = breakChance17(shortOf(s, p).v, st.l[p.id] ?? 0, vulnOf(s, p));
     if (!r.chance(c)) continue;
     if (!mine && (histLocked(s, a) || !worldDramaOk(s, r, 2))) continue;
     breakdown17(s, r, p, a, mine);
@@ -295,7 +297,7 @@ const membersOf = (s: GameState, a?: Act): Person[] => (a ? a.members.map((id) =
 registerMod('songQ', 'stress17', (s, v, { act }) => {
   const ms = membersOf(s, act);
   if (!ms.length) return null;
-  const st = ms.reduce((t, p) => t + p.stress, 0) / ms.length;
+  const st = ms.reduce((t, p) => t + shortOf(s, p).v, 0) / ms.length;
   const ins = ms.reduce((t, p) => t + p.inspiration, 0) / ms.length;
   if (st > 70) return { value: v * 0.94, label: fmtL(l('Banda estressada (média {x}): −6% na faixa', 'Stressed band (avg {x}): −6% on the track'), { x: Math.round(st) }) };
   if (st < 30 && ins > 70) return { value: v * 1.04, label: l('Banda leve e inspirada: +4%', 'Relaxed, inspired band: +4%') };
@@ -307,7 +309,8 @@ registerMod('tourRisk', 'stress17', (s, v, { act }) => {
   if (!ms.length || act?.owner !== 'player') return null;
   let add = 0;
   for (const p of ms) {
-    if (p.stress > 75) add += (p.stress - 75) * 0.0008;
+    const sh = shortOf(s, p).v;
+    if (sh > 75) add += (sh - 75) * 0.0008;
     const h = P(s).health[p.id];
     if (h && singer(p) && h.voice > 70 && !h.nodes) add += (h.voice - 70) * 0.0006;
   }
@@ -319,7 +322,7 @@ registerMod('showRevenue', 'stress17', (s, v, { act }) => {
   for (const p of membersOf(s, act)) {
     const h = P(s).health[p.id];
     if (h && singer(p) && h.voice > 70 && !h.nodes && !h.treatment) k *= 1 - Math.min(0.1, (h.voice - 70) / 300);
-    if (p.stress > 85) k *= 0.97;
+    if (shortOf(s, p).v > 85) k *= 0.97;
   }
   return k < 0.995 ? { value: v * k, label: l('Noite ruim: voz cansada/estresse no palco', 'Rough night: tired voice/stress on stage') } : null;
 });
