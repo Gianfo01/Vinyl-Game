@@ -211,3 +211,4 @@ import './school18';
 import './tv18';
 import './world18';
 import './rivalmind18';
+import './regions18';
