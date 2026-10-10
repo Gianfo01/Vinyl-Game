@@ -144,6 +144,8 @@ import './regions18';
 import './society18';
 // Rodada 18 (long18, onda 2): três perguntas no Cockpit e área Rumo do selo (caminhos, doutrinas, políticas, post-mortems, ano, biografia, casa).
 import './long18';
+// Rodada 18 (cine18): storyboards de cerimônias e grandes momentos, Cinemateca e Legado póstumo.
+import './cine18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
 import './finance18';
@@ -152,5 +154,7 @@ import './eras18';
 import './artist18';
 // Rodada 18 (campus18): Nosso mundo — mapa em pixel art de tudo o que o jogador possui.
 import './campus18';
+// Rodada 18 (cine18): storyboards de cerimônias e grandes momentos, Cinemateca e Legado póstumo.
+import './cine18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
