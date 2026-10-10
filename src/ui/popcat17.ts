@@ -20,11 +20,11 @@ const BY: Record<string, string> = {
   // resumo
   overview: 'sum', pan17: 'sum', attrs: 'sum', profile: 'sum', p13: 'sum', perfil: 'sum', fame15: 'sum', fame15p: 'sum', fame: 'sum', standing: 'sum', hype12: 'sum', why12: 'sum', persona13: 'sum',
   // integrantes (r18): quem está na banda, formação ao longo do tempo, tempo de cada um e a dinâmica do grupo
-  members: 'members', lineup16: 'members', cap14: 'members', dyn18: 'members', leader10: 'members',
+  members: 'members', lineup16: 'members', dyn18: 'members',
   // música (r18): obra gravada
   disco: 'music', songs: 'music', releases: 'music', era8: 'music', retro: 'music', story12: 'music', records13: 'music',
   // carreira
-  history: 'career', career: 'career', inst: 'career', train: 'career', path16: 'career',
+  history: 'career', career: 'career', inst: 'career', train: 'career', path16: 'career', cap14: 'career', leader10: 'career',
   arc12: 'career', labels13: 'career', reach17: 'career', fan15: 'career', identity8: 'career', playbook8: 'career',
   roster: 'career', awards: 'career', market: 'career', r_ceo: 'career', succ16: 'career', org12: 'career',
   // vida

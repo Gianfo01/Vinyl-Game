@@ -39,10 +39,11 @@ export interface Item18 extends InboxItem { cat: InboxCat18; prio: number; goto:
 const MSG_CAT: Record<InboxMsg['kind'], InboxCat18> = { request: 'people', complaint: 'people', promise: 'people', health: 'people', staff: 'staff', owner: 'life', secret: 'press', info: 'other', fan: 'press', deal: 'deals' };
 function noteCat(txt: string): InboxCat18 {
   const x = txt.toLowerCase();
-  if (/contrat|assin|oferta|proposta|acordo|licen/.test(x)) return 'deals';
+  if (/encontro|namor|casament|divórci|filh|família|férias|saúde|terapia/.test(x)) return 'life';
+  if (/contrat|assin|oferta|proposta|acordo|licen|turnê|promotor|festival|circuito|patrocín/.test(x)) return 'deals';
   if (/caixa|dívida|empréstim|imposto|falên|\$|lucro|prejuízo/.test(x)) return 'money';
   if (/boato|escând|imprensa|jornal|crític|manchete|fã/.test(x)) return 'press';
-  if (/parada|nº 1|rival|selo |mercado|prêmio/.test(x)) return 'world';
+  if (/parada|nº 1|rival|selo|gravadora|mercado|prêmio|cena|gênero/.test(x)) return 'world';
   if (/equipe|funcionári|salário/.test(x)) return 'staff';
   return 'other';
 }

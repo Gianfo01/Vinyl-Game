@@ -56,14 +56,20 @@ function place(pop: HTMLElement, anchor: DOMRect, side: boolean): void {
   pop.style.top = `${y}px`;
 }
 
+/** Retângulo para o nível seguinte: altura da linha, mas encostado na borda do popover pai (não cobre os valores). */
+function subRect(el: HTMLElement): DOMRect {
+  const br = el.getBoundingClientRect();
+  const pr = (el.closest('.why18-pop') as HTMLElement | null)?.getBoundingClientRect() ?? br;
+  return new DOMRect(pr.left, br.top, pr.width, br.height);
+}
 function partEl(s: GameState, p: WhyPart, level: number): HTMLElement {
   const label = tx(p.label);
   const val = fmtWhy(p.value, p.fmt);
   const sub = p.why;
   const lab = sub
     ? h('button', { type: 'button', class: 'why18-sub', 'aria-haspopup': 'dialog',
-        onmouseenter: (e: Event) => { cancelClose(); openWhy(s, sub.key, sub.ctx ?? {}, (e.currentTarget as HTMLElement).getBoundingClientRect(), level + 1, true); },
-        onclick: (e: Event) => { e.stopPropagation(); pinned = true; openWhy(s, sub.key, sub.ctx ?? {}, (e.currentTarget as HTMLElement).getBoundingClientRect(), level + 1, true, true); } }, label, ' ›')
+        onmouseenter: (e: Event) => { cancelClose(); openWhy(s, sub.key, sub.ctx ?? {}, subRect(e.currentTarget as HTMLElement), level + 1, true); },
+        onclick: (e: Event) => { e.stopPropagation(); pinned = true; openWhy(s, sub.key, sub.ctx ?? {}, subRect(e.currentTarget as HTMLElement), level + 1, true, true); } }, label, ' ›')
     : h('span', null, label);
   return h('li', { class: p.tone ?? '' }, lab, h('b', null, val), p.note ? h('small', { class: 'muted' }, tx(p.note)) : null);
 }

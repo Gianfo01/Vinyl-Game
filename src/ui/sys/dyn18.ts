@@ -7,6 +7,7 @@ import { STRESS_LEVEL } from '../../sim/stress17';
 import { dynBand, dynRoster, dynStaff, TIER18, type Dyn18, type DynNode } from '../../sim/sys/dyn18';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
+import { canSee } from '../../sim/sys/fame15';
 import { inspect, pill, section } from '../common';
 import { h } from '../dom';
 import { ACT_TABS } from '../pages';
@@ -69,7 +70,7 @@ export function installDyn18(): void {
   registerArea({ id: 'dyn18', label: l('Dinâmica', 'Dynamics'), icon: 'fans', key: '', render: area, visible: (s) => playerActs(s).length > 0 || s.player.staff.length > 0 });
   ACT_TABS.push((s, a) => {
     const mine = a.owner === 'player' || !!a.playerBand;
-    if (a.members.length < 2 || (!mine && (s.knowledge[a.id]?.degree ?? 0) < 3)) return null;
+    if (a.members.length < 2 || (!mine && !canSee(s, a.id, 'rels'))) return null;
     return { id: 'dyn18', label: l('Dinâmica', 'Dynamics'), icon: 'fans', render: () => dynView(s, dynBand(s, a), l('—', '—')) };
   });
 }

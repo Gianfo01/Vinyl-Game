@@ -39,7 +39,7 @@ export interface PersonAction18 {
   /** null = pode; L = por que não */
   available?: (s: GameState, key: string) => L | null;
   /** chance de dar certo (sem chance = sempre) */
-  chance?: (s: GameState, key: string) => PAChance;
+  chance?: (s: GameState, key: string) => PAChance | null;
   /** a própria ação sorteia (ex.: crime17, media17, bonds9): a chance só é mostrada */
   selfRoll?: boolean;
   /** efeito; `ok` já sorteado pela chance */
@@ -123,6 +123,7 @@ registerExplain('pa.chance', (s, c) => {
   const key = String(c.key ?? '');
   if (!def?.chance) return null;
   const ch = def.chance(s, key);
+  if (!ch) return null;
   return { title: def.label, value: Math.round(ch.p * 100), fmt: 'pct', parts: ch.why.map((w) => ({ label: w })), note: def.desc };
 });
 export const _pa18 = { explain18 };

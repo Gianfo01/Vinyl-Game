@@ -87,14 +87,14 @@ const reg = (a: PersonAction18) => registerPersonAction({ ...base, ...a, visible
 // ================================================================ relação
 
 reg({
-  id: 'call', group: 'social', icon: 'phone', label: l('Telefonar', 'Call'), cooldown: 4,
+  id: 'call', group: 'social', icon: 'radio', label: l('Telefonar', 'Call'), cooldown: 4,
   desc: l('Ligação rápida para manter contato. Sem custo; quem não gosta de você nem atende.', 'A quick call to keep in touch. Free; people who dislike you won\'t pick up.'),
   chance: (s, k) => odds(0.7, [opMod(s, k, 1.2), fameMod(s, k, 0.8), facMod(s, k, 'sociabilidade', l('Sociabilidade', 'Sociability'), 0.3)]),
   run: (s, k, r, ok) => ok ? out(true, T('{n} atendeu e conversaram por meia hora (+{v}).', '{n} picked up and you talked for half an hour (+{v}).', { n: nm(s, k), v: opine(s, k, 3, l('ligou para saber como estava.', 'called to check in.')) })) : out(false, T('{n} não atendeu. Recado deixado.', '{n} didn\'t pick up. Message left.', { n: nm(s, k) })),
 });
 
 reg({
-  id: 'lunch', group: 'social', icon: 'coffee', label: l('Almoçar / jantar', 'Lunch / dinner'), cooldown: 8,
+  id: 'lunch', group: 'social', icon: 'house', label: l('Almoçar / jantar', 'Lunch / dinner'), cooldown: 8,
   desc: l('Uma refeição tira a conversa do escritório: aproxima e revela ambições (artistas viram melhor conhecidos no A&R).', 'A meal takes the talk out of the office: it brings you closer and reveals ambitions (artists become better known to A&R).'),
   cost: () => ({ usd: 150, balls: 1 }),
   chance: (s, k) => odds(0.6, [opMod(s, k), fameMod(s, k, 0.6), facMod(s, k, 'sociabilidade', l('Sociabilidade', 'Sociability'), 0.4), facMod(s, k, 'humor', l('Bom humor', 'Good humor'), 0.2)]),
@@ -117,7 +117,7 @@ reg({
 });
 
 reg({
-  id: 'gift', group: 'social', icon: 'gift', label: l('Mandar presente', 'Send a gift'),
+  id: 'gift', group: 'social', icon: 'sparkle', label: l('Mandar presente', 'Send a gift'),
   desc: l('Agrada mais quem é vaidoso ou mão-fechada. Um por ano por pessoa.', 'Pleases the vain and the stingy most. One per year per person.'),
   cost: (s) => ({ cents: money(s, GIFT_COST), shown: true }),
   available: (s, k) => giftBlock(s, k),
@@ -195,7 +195,7 @@ reg({
     if (s.player.staff.length >= hqCaps(s).staff) return l('Sede sem vagas para equipe.', 'No staff room in the HQ.');
     return strictReal(s, k);
   },
-  chance: (s, k) => personOf(s, k) ? { p: 1, why: [l('Abre a proposta: a chance aparece lá, termo a termo.', 'Opens the offer: odds show up there, term by term.')] }
+  chance: (s, k) => personOf(s, k) ? null
     : odds(0.25, [opMod(s, k, 1.5), [fmtL(l('Sua sede (nível {h})', 'Your HQ (level {h})'), { h: s.player.hq }), s.player.hq * 0.04], [l('Prestígio dela no ofício', 'Their standing in the trade'), -fameOfKey(s, k) / 250], facMod(s, k, 'ambicao', l('Ambição', 'Ambition'), 0.2), facMod(s, k, 'lealdade', l('Lealdade ao emprego atual', 'Loyalty to current job'), -0.25)]),
   run: (s, k, r, ok) => {
     const p = personOf(s, k);
@@ -331,7 +331,7 @@ reg({
   },
 });
 reg({
-  id: 'funeral', group: 'care', icon: 'flower', label: l('Ir ao funeral / homenagem', 'Attend the funeral / tribute'), cooldown: 520,
+  id: 'funeral', group: 'care', icon: 'flag', label: l('Ir ao funeral / homenagem', 'Attend the funeral / tribute'), cooldown: 520,
   desc: l('Presença no velório ou homenagem: família, banda e colegas notam.', 'Presence at the funeral or tribute: family, band and peers take notice.'),
   visible: (s, k) => !isMe(s, k) && !!P(s, k) && !alive(s, k),
   cost: () => ({ balls: 1 }),
@@ -347,7 +347,7 @@ reg({
 
 const needsHelp = (s: GameState, k: string): boolean => { const st = status16(s, k); if (st === 'addiction' || st === 'ill') return true; const p = personOf(s, k); if (!p) return false; const x = stressOf(s, p.id); return x.level === 'breaking' || x.level === 'strained'; };
 reg({
-  id: 'help', group: 'care', icon: 'plus', label: l('Oferecer ajuda (clínica / rehab)', 'Offer help (clinic / rehab)'), cooldown: 52,
+  id: 'help', group: 'care', icon: 'brain', label: l('Oferecer ajuda (clínica / rehab)', 'Offer help (clinic / rehab)'), cooldown: 52,
   desc: l('Paga tratamento para quem está em crise. Orgulhosos e teimosos recusam; quem aceita fica leal.', 'Pays for treatment for someone in crisis. The proud and stubborn refuse; those who accept stay loyal.'),
   visible: (s, k) => notSelf(s, k) && alive(s, k) && needsHelp(s, k),
   cost: () => ({ usd: 3000 }),
@@ -389,7 +389,7 @@ reg({
 // ================================================================ jogo sujo
 
 reg({
-  id: 'detective', group: 'dark', icon: 'search', label: l('Investigar (contratar detetive)', 'Investigate (hire a detective)'), cooldown: 26,
+  id: 'detective', group: 'dark', icon: 'camera', label: l('Investigar (contratar detetive)', 'Investigate (hire a detective)'), cooldown: 26,
   desc: l('Procura segredos da pessoa (fatos secretos). Achou: vira trunfo (obrigação "segredo"). Pego no ato: ela descobre.', 'Digs for secrets (secret facts). If found: a trump card (a "secret" hold). Caught: they find out.'),
   cost: () => ({ usd: 2500 }),
   available: (s, k) => strictReal(s, k),
@@ -428,7 +428,7 @@ reg({
 });
 
 reg({
-  id: 'bribe', group: 'dark', icon: 'coin', label: l('Subornar', 'Bribe'), cooldown: 26,
+  id: 'bribe', group: 'dark', icon: 'money', label: l('Subornar', 'Bribe'), cooldown: 26,
   desc: l('Dinheiro por boa vontade (crítica favorável, silêncio, um "sim"). Os leais e íntegros denunciam.', 'Money for goodwill (a kind review, silence, a "yes"). The loyal and upright report it.'),
   cost: (s, k) => ({ usd: 2000 + fameOfKey(s, k) * 80 }),
   available: (s, k) => strictReal(s, k),

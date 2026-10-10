@@ -30,7 +30,7 @@ export function go18(g: Goto18): void {
 }
 export const gotoLabel = (g: Goto18): L => g.label ?? (g.person ? l('Ver pessoa', 'See person') : g.act ? l('Ver artista', 'See act') : l('Ir', 'Go'));
 
-const CAT_ICON: Record<InboxCat18, string> = { decision: 'calendar', people: 'fans', deals: 'contract', money: 'coin', press: 'newspaper', world: 'globe', staff: 'handshake', life: 'heart', analyst: 'chart-up', other: 'key' };
+const CAT_ICON: Record<InboxCat18, string> = { decision: 'calendar', people: 'fans', deals: 'contract', money: 'money', press: 'newspaper', world: 'globe', staff: 'handshake', life: 'heart', analyst: 'chart-up', other: 'key' };
 type View = 'all' | 'unread' | 'reply' | 'archived';
 const ui = { cat: 'all' as InboxCat18 | 'all', view: 'all' as View, n: 12, open: new Set<string>() };
 
