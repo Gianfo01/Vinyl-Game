@@ -132,6 +132,8 @@ import './rights18';
 // Rodada 18 (talent18, onda 1): Talentos e formação (descoberta, camps, banda da casa, escolas, TV) e Acervo vivo em Lendas.
 import './talent18';
 import './world18';
+// Rodada 18 (society18, onda 2): páginas Trilhas e palco, Jornalismo e Mundo › Sociedade.
+import './society18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
 import './finance18';
