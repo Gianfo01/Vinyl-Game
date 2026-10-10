@@ -44,7 +44,7 @@ export function tierOf(R: number): Tier {
 /** Carência: quem fatura quase nada não paga estrutura (rampa suave de 120 mil a 600 mil reais/ano). */
 const grace = (R: number) => clamp((R - 120e3) / 480e3, 0, 1);
 /** Teto de despesas gerais como fatia da receita: 4% (indie) a 25% (major). */
-export const capRate = (R: number, y = 2000) => 0.05 + (0.2 + (y >= 2008 ? 0.08 : 0)) * clamp((R - 0.6e6) / 4e6, 0, 1);
+export const capRate = (R: number, y = 2000) => 0.05 + (y >= 2010 ? 0.05 : 0) + (0.2 + (y >= 2008 ? 0.08 : 0)) * clamp((R - 0.6e6) / 4e6, 0, 1);
 
 /** Intensidade regulatória/administrativa por época. */
 const eraBur = (y: number) => (y < 1980 ? 0.6 : y < 2000 ? 1 : 1.25);
@@ -104,7 +104,11 @@ export function overheadPlan(s: GameState, R = realAnnual(s)): { lines: OhLine[]
   // rodada 16: no streaming a disputa por playlists e anúncios pagos come uma fatia da receita (antes era fixa e o fim de jogo tardio ficava fácil demais)
   if (s.year >= 2008) add('era', 'Equipe de dados e playlists', 'Data and playlist team', 3000 * tm + (Math.max(0, R - 0.6e6) * 0.06) / 12,
     'Era streaming: analistas de dados, relações com curadores, anúncios pagos e redes sociais (cresce com a receita).', 'Streaming era: data analysts, curator relations, paid ads and social media (grows with revenue).');
-  else if (s.year >= 1981) add('era', 'Departamento de clipes e TV', 'Video and TV department', rel12 > 0 ? 1400 * tm : 0,
+  // r17 balanço: de 2010 em diante a corrida por playlists, anúncios e influenciadores cresce com o porte e com o ritmo de lançamentos
+  if (s.year >= 2010) { const k = 0.04 + 0.004 * Math.min(10, rel12); add('arms', 'Corrida por playlists e anúncios', 'Playlist and ad arms race', (Math.max(0, R - 0.4e6) * k) / 12,
+    `Era streaming madura: cada lançamento disputa playlists, anúncios pagos e criadores com as majors — ${Math.round(k * 100)}% da receita acima de 400 mil/ano (sobe com ${rel12} lançamentos em 12 meses).`,
+    `Mature streaming era: every release fights the majors for playlists, paid ads and creators — ${Math.round(k * 100)}% of revenue above 400k/yr (rises with ${rel12} releases in 12 months).`); }
+  if (s.year < 2008 && s.year >= 1981) add('era', 'Departamento de clipes e TV', 'Video and TV department', rel12 > 0 ? 1400 * tm : 0,
     'Era TV/MTV: produção de vídeos, imprensa de TV e programas.', 'TV/MTV era: video production, TV press and shows.');
   const raw = lines.reduce((t, x) => t + x.amount, 0);
   const cap = Math.round(oh(s).ema * capRate(R, s.year));
