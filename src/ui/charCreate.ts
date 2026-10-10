@@ -20,6 +20,22 @@ import { fxText } from './sys/persona';
 import { helpTip, hl, traitFx, traitPicker } from './newgame13';
 import './sys/skills.css';
 
+/** Rodada 17: orientação, armário, filhos e estado civil no começo do jogo (efeitos explicados ao lado). */
+function lifeRow17(ch: CharacterSpec): HTMLElement {
+  const hint = h('small', { class: 'muted' });
+  const draw = () => hint.replaceChildren(t((ch.orient === 'gay' || ch.orient === 'bi')
+    ? (ch.closet ? l('No armário: mais estresse e risco de exposição (pior em países e épocas hostis); casamento de fachada possível. Você pode sair do armário quando quiser (aba Coração).', 'In the closet: more stress and an outing risk (worse in hostile countries and eras); lavender marriage possible. You can come out any time (Heart tab).')
+      : l('Assumido(a): artistas LGBT confiam mais em você; religiosos estritos, menos. Antes do casamento igualitário no país, a união é simbólica (sem partilha nem herança garantida).', 'Out: LGBT artists trust you more; strict religious ones less. Before marriage equality in the country, a union is symbolic (no split nor guaranteed inheritance).'))
+    : l('Filhos começam com idades até a sua menos 18; casado(a) traz o par; divorciado(a) começa pagando pensão dos filhos; viúvo(a) começa de luto.', 'Children start aged up to your age minus 18; married brings a partner; divorced starts paying child support; widowed starts in mourning.')));
+  draw();
+  return h('div', null, h('div', { class: 'row wrap cc-row' },
+    h('label', null, t(l('Orientação', 'Orientation')), select(ch.orient ?? 'het', [{ value: 'het', label: t(l('Heterossexual', 'Heterosexual')) }, { value: 'gay', label: t(l('Gay / lésbica', 'Gay / lesbian')) }, { value: 'bi', label: t(l('Bissexual', 'Bisexual')) }, { value: 'ace', label: t(l('Assexual', 'Asexual')) }], (v) => { ch.orient = v as CharacterSpec['orient']; draw(); })),
+    h('label', null, t(l('Vida pública', 'Public life')), select(ch.closet ? 'closet' : 'out', [{ value: 'out', label: t(l('Assumida', 'Out')) }, { value: 'closet', label: t(l('No armário', 'In the closet')) }], (v) => { ch.closet = v === 'closet'; draw(); })),
+    h('label', null, t(l('Estado civil', 'Marital status')), select(ch.marital ?? 'single', [{ value: 'single', label: t(l('Solteiro(a)', 'Single')) }, { value: 'married', label: t(l('Casado(a)', 'Married')) }, { value: 'divorced', label: t(l('Divorciado(a)', 'Divorced')) }, { value: 'widowed', label: t(l('Viúvo(a)', 'Widowed')) }], (v) => { ch.marital = v as CharacterSpec['marital']; draw(); })),
+    h('label', null, t(l('Filhos', 'Children')), h('input', { type: 'number', min: 0, max: 4, value: ch.kids ?? 0, oninput: (e: Event) => { ch.kids = Math.max(0, Math.min(4, Number((e.target as HTMLInputElement).value) || 0)); } })),
+  ), hint);
+}
+
 const ATTR_NAMES: Record<OwnerAttrId, ReturnType<typeof l>> = {
   ear: l('Ouvido', 'Ear'),
   negotiation: l('Negociação', 'Negotiation'),
@@ -147,6 +163,7 @@ export function characterCard(cfg: RunConfig): HTMLElement {
           h('label', null, ...hl(l('Visual', 'Look'), 'visual'), select(ch.visual ?? 'casual', VISUALS.map((v) => ({ value: v.id, label: `${t(v.name)} — ${t(v.desc)}` })), (v) => { ch.visual = v; drawPreview(); })),
         ),
         h('div', { class: 'row wrap cc-row' }, h('label', null, ...hl(l('Visão política', 'Political view'), 'beliefs'), polSel), h('label', null, t(l('Religião', 'Religion')), relSel)),
+        lifeRow17(ch),
         beliefHint,
         preview,
       ),

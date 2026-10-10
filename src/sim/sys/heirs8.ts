@@ -56,7 +56,8 @@ export function heirCandidates(s: GameState): HeirCand[] {
     out.push({ key: `kid:${i}`, name: pid && s.persons[pid] ? s.persons[pid].name : k.name, born: k.born, aptitude: k.aptitude, rel: 'kid', personId: pid });
   });
   const pt = L0.partner;
-  if (pt && pt.stage === 'married' && alive(pt.personId)) out.push({ key: 'spouse', name: pt.name, born: pt.born, aptitude: clamp(35 + pt.affinity / 3, 20, 80), rel: 'spouse', personId: pt.personId });
+  // r17: união simbólica (sem casamento igualitário na lei) não garante herança — conta como parceiro(a)
+  if (pt && pt.stage === 'married' && !(s.x4 as unknown as { love17?: { sym?: number } }).love17?.sym && alive(pt.personId)) out.push({ key: 'spouse', name: pt.name, born: pt.born, aptitude: clamp(35 + pt.affinity / 3, 20, 80), rel: 'spouse', personId: pt.personId });
   else if (pt && pt.affinity >= 40 && s.year - pt.born >= ADULT && alive(pt.personId)) out.push({ key: 'partner', name: pt.name, born: pt.born, aptitude: clamp(30 + pt.affinity / 4, 20, 70), rel: 'partner', personId: pt.personId });
   else if (!pt && o.spouse) out.push({ key: 'spouse', name: o.spouse, born: o.born + 2, aptitude: 45, rel: 'spouse' });
   heirs(s).relatives.forEach((rv, i) => {

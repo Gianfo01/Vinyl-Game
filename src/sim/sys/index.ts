@@ -167,3 +167,9 @@ import './reach17';
 import './trends17';
 import './heritage17';
 import '../relics17';
+// Rodada 17 (onda 1, C — vida pessoal): sexualidade, amor/traição/divórcio, filhos que crescem, aparência como jogo, extras (terapia do elenco, fé, herança).
+import './sex17';
+import './love17';
+import './kids17';
+import './looks17';
+import './extras17';

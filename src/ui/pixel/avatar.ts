@@ -6,6 +6,7 @@ import { Rng, hashString } from '../../core/rng';
 import type { Appearance, GameState, Person } from '../../sim/types';
 import { PALETTES, eraOf, tone, type EraId, type Palette } from './palette';
 import { C, Px, dith, mix, shade, upscale, withAlpha, type Col, type Sprite } from './px';
+import { ageInfo, ageLook } from './age17';
 
 export type Dir = 'SE' | 'SW' | 'NE' | 'NW';
 export type Pose = 'stand' | 'walk' | 'sit' | 'play' | 'sitplay';
@@ -41,12 +42,14 @@ export function randomLook(seed: string): Appearance {
 let LOOK_FN: ((p: { id: string }) => Appearance | undefined) | null = null;
 export function setLookResolver(fn: typeof LOOK_FN): void { LOOK_FN = fn; }
 
-export function lookOf(p: { id: string; look?: Appearance }): Appearance {
-  return p.look ?? LOOK_FN?.(p) ?? randomLook(p.id);
+export function lookOf(p: { id: string; look?: Appearance; born?: number }): Appearance {
+  const a = p.look ?? LOOK_FN?.(p) ?? randomLook(p.id);
+  const g = ageInfo(p); // rodada 17: o visual envelhece com a pessoa
+  return g ? ageLook(a, g.age, p.id, g.sx) : a;
 }
 
 export function lookKey(a: Appearance): string {
-  return `${a.body}${a.face}${a.skin}.${a.hair}.${a.hairColor}.${a.outfit}${a.outfitColor}${a.glasses ? 1 : 0}${a.hat ? 1 : 0}${a.beard ? 1 : 0}.${a.hatT ?? ''}${a.hatC ?? ''}.${a.glT ?? ''}${a.bdT ?? ''}${a.paint ?? ''}${a.helm ?? ''}.${a.roots ?? ''}${a.sx ?? ''}`;
+  return `${a.body}${a.face}${a.skin}.${a.hair}.${a.hairColor}.${a.outfit}${a.outfitColor}${a.glasses ? 1 : 0}${a.hat ? 1 : 0}${a.beard ? 1 : 0}.${a.hatT ?? ''}${a.hatC ?? ''}.${a.glT ?? ''}${a.bdT ?? ''}${a.paint ?? ''}${a.helm ?? ''}.${a.roots ?? ''}${a.sx ?? ''}${a.ag || a.gy || a.bl ? `.${a.ag ?? 0}${a.gy ?? 0}${a.bl ?? 0}` : ''}`;
 }
 
 // ---------- cores ----------
@@ -67,7 +70,8 @@ function colorsFor(a: Appearance, pal: Palette): Colors {
   const t = (c: Col) => tone(c, pal);
   const skin = C(SKINS[a.skin % 4]);
   const hairHex = a.hairColor === 7 ? DYED[pal.era] : HAIR_COLORS[a.hairColor % HAIR_COLORS.length];
-  const hair = t(C(hairHex));
+  let hair = t(C(hairHex));
+  if (a.gy) hair = mix(hair, t(C('#d6d2ca')), Math.min(0.92, a.gy / 10)); // rodada 17: grisalho
   const cloth = t(C(OUTFIT_COLORS[a.outfitColor % OUTFIT_COLORS.length]));
   const e = pal.era;
   const formalPants = a.outfit === 1 && (e === '1920' || e === '1950');
@@ -147,6 +151,7 @@ function drawFace(h: HeadCtx): void {
       p.put(X(6), Y(4), eye);
     }
     if (look.face === 1) { p.put(X(3), Y(3), col.hairD); p.put(X(6), Y(3), col.hairD); p.put(X(5), Y(5), col.skinD); }
+    if ((look.ag ?? 0) >= 3) { p.put(X(2), Y(5), col.skinD); p.put(X(7), Y(5), col.skinD); }
     if (look.face === 2) { p.set(X(2), Y(5), withAlpha(C('#e86a6a'), 110)); p.set(X(7), Y(5), withAlpha(C('#e86a6a'), 90)); }
     if (!look.beard || look.bdT) {
       if (look.face === 0) p.hline(X(4), X(5), Y(6), mix(col.skinD, C('#8a3a3a'), 0.4));
@@ -172,6 +177,11 @@ function drawFace(h: HeadCtx): void {
     const browY = Y(3) - (look.face === 1 ? 1 : 0);
     p.hline(x - (ex === 3 ? 1 : 0), x + 2, browY, look.face === 1 ? col.hairD : col.hair);
   }
+  // rodada 17: rugas pela idade (pés de galinha, olheiras, bigode chinês, testa)
+  const ag = look.ag ?? 0;
+  if (ag >= 1) { p.put(X(3) - 2, Y(4), col.skinD); p.put(X(6) + 2, Y(4), col.skinD); }
+  if (ag >= 2) { p.hline(X(3) - 1, X(3) + 1, Y(4) + 2, shade(col.skin, -0.12)); p.hline(X(6) - 1, X(6) + 1, Y(4) + 2, shade(col.skin, -0.12)); p.put(X(4) - 1, Y(6), col.skinD); p.put(X(6) + 1, Y(6), col.skinD); }
+  if (ag >= 3) { p.hline(X(2), X(6), Y(2), shade(col.skin, -0.1)); p.put(X(4) - 1, Y(6) + 1, col.skinD); p.put(X(6) + 1, Y(6) + 1, col.skinD); }
   // nariz
   p.put(X(5), Y(5), col.skinD);
   p.put(X(5) + 1, Y(5) + 1, col.skinD);
@@ -527,8 +537,21 @@ function drawHat(h: HeadCtx): void {
   }
 }
 
+/** Rodada 17: entradas/calvície — o cabelo some do alto da testa (o fundo volta acima do crânio). */
+function recede(h: HeadCtx, pre: Px): void {
+  const { p, col, s } = h;
+  const bl = h.look.bl ?? 0;
+  const x0 = h.x0 + (bl >= 2 ? 1 : 2) * s, x1 = h.x0 + (bl >= 2 ? 7 : 6) * s;
+  const isHair = (v: Col) => v === col.hair || v === col.hairD || v === col.hairL;
+  for (let y = h.y0 - 5 * s; y < h.y0 + (bl >= 2 ? 2 : 1) * s; y++) for (let x = x0; x < x1; x++) {
+    if (!isHair(p.get(x, y))) continue;
+    p.put(x, y, y < h.y0 ? pre.get(x, y) : y === h.y0 ? col.skinL : col.skin);
+  }
+}
+
 function drawHead(h: HeadCtx): void {
   if (h.look.helm) { drawSkull(h); drawHelmet(h); return; }
+  const pre = h.look.bl ? h.p.clone() : null;
   if (h.look.paint && WHITE_PAINT.includes(h.look.paint)) { const W = C('#f2f0ea'); h = { ...h, col: { ...h.col, skin: W, skinD: shade(W, -0.12), skinL: W } }; }
   const hairFn = HAIR[h.look.hair % HAIR.length];
   // rodada 15: cabelos volumosos (black, bufante, cachos) vão atrás do rosto; só o topo fica na frente
@@ -553,6 +576,7 @@ function drawHead(h: HeadCtx): void {
       if (v === col.hair) p.put(x, y, rc); else if (v === col.hairD) p.put(x, y, shade(rc, -0.3)); else if (v === col.hairL) p.put(x, y, shade(rc, 0.25));
     }
   }
+  if (pre && h.look.hair > 0 && !h.look.hat && !h.look.hatT) recede(h, pre);
   drawGlasses(h);
   drawHat(h);
   if (h.s > 1 && h.look.hair > 0 && h.look.hair !== 3) {
