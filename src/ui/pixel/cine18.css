@@ -1,6 +1,6 @@
 /* Rodada 18 (cine18) — tocador de storyboards */
 .c18 { margin: 0; display: grid; gap: 6px; }
-.c18-stage { position: relative; overflow: hidden; border-radius: 8px; border: 1px solid var(--line); background: #0c0a12; }
+.c18-stage { width: min(100%, calc(56vh * 16 / 9)); margin: 0 auto; position: relative; overflow: hidden; border-radius: 8px; border: 1px solid var(--line); background: #0c0a12; }
 .c18-cv { display: block; width: 100%; height: auto; image-rendering: pixelated; }
 .c18-ov { position: absolute; inset: 0; pointer-events: none; }
 .c18-bub { position: absolute; transform: translate(-50%, -100%); max-width: 42%; padding: 3px 7px; border-radius: 8px; background: #fffdf6; color: #1a1420; font-size: clamp(10px, 1.6vw, 13px); line-height: 1.25; box-shadow: 0 1px 0 rgba(0,0,0,.35); animation: c18pop .35s ease-out both .25s; white-space: normal; }

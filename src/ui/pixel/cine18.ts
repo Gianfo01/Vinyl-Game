@@ -80,7 +80,9 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, s: GameState, f: Fram
   // plateia: tamanho e humor
   const n = Math.round(model.crowd.length * Math.max(0, Math.min(1, f.crowd.n)));
   const hop = HOP[f.crowd.mood] ?? 0.5;
-  const crowd = model.crowd.filter((_, i) => (i * 7919) % model.crowd.length < n || n >= model.crowd.length);
+  const stageA = f.actors.filter((a) => a.y < 100);
+  const crowd = model.crowd.filter((m, i) => ((i * 7919) % model.crowd.length < n || n >= model.crowd.length)
+    && !stageA.some((a) => Math.abs(m.x - a.x) < 16 && m.y > a.y && m.y - a.y < 26));
   crowd.forEach((m) => {
     const bob = still ? 0 : Math.round(Math.max(0, Math.sin(tm * (2 + hop * 4) + m.phase)) * m.hop * hop * 2.4);
     const sp = avatarSprite(randomLook(m.seed), { year: f.year, pose: m.pose, dir: m.dir, role: m.role ?? null, frame: still ? 0 : Math.floor(tm * 2 + m.phase) % 4, synthetic: m.role === 'synthetic' });
@@ -97,8 +99,11 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, s: GameState, f: Fram
         const g = ghostOf(sp, a.ghost);
         const fl = still ? 0.7 : a.ghost === 2 ? 0.55 + 0.25 * Math.sin(tm * 9) + (Math.sin(tm * 37) > 0.93 ? -0.35 : 0) : 0.4 + 0.12 * Math.sin(tm * 3);
         const jit = !still && Math.sin(tm * 23) > 0.95 ? 1 : 0;
+        const sc = f.place === 'holo_stage' ? 1.25 : 1.6;
+        ctx.globalAlpha = 0.14; ctx.fillStyle = a.ghost === 2 ? '#5ffff0' : '#c8d8ff';
+        ctx.beginPath(); ctx.ellipse(x, y - sp.ay * sc / 2, 14 * sc, sp.ay * sc / 1.6, 0, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = Math.max(0.15, Math.min(0.95, fl));
-        ctx.drawImage(g, x - sp.ax + jit, y - sp.ay - bob);
+        ctx.drawImage(g, Math.round(x - sp.ax * sc + jit), Math.round(y - sp.ay * sc - bob), Math.round(g.width * sc), Math.round(g.height * sc));
         ctx.globalAlpha = 0.18;
         ctx.fillStyle = a.ghost === 2 ? '#5ffff0' : '#c8d8ff';
         ctx.beginPath(); ctx.ellipse(x, y, 9, 2.5, 0, 0, Math.PI * 2); ctx.fill();
@@ -128,8 +133,10 @@ function signs(ctx: CanvasRenderingContext2D, f: Frame18, spots: number[][], tm:
   const ss = f.crowd.signs ?? [];
   if (!ss.length || !spots.length) return;
   const bad = f.props.includes('protest') || f.crowd.mood === 'mixed' || f.crowd.mood === 'boo';
+  const byX = spots.slice().sort((p, q) => p[0] - q[0]);
+  const nS = Math.min(3, ss.length);
   ss.slice(0, 3).forEach((txt, i) => {
-    const sp = spots[Math.floor(((i + 0.5) / Math.min(3, ss.length)) * spots.length) % spots.length];
+    const sp = byX[Math.floor(((i + 0.5) / nS) * byX.length) % byX.length];
     const tx = fitText(txt, 54);
     const w = textWidth(tx) + 4;
     const x = Math.max(1, Math.min(W - w - 1, sp[0] - w / 2));
@@ -147,13 +154,13 @@ function props(ctx: CanvasRenderingContext2D, s: GameState, f: Frame18, tm: numb
       if (p === 'carpet') { ctx.fillStyle = '#9a1c22'; ctx.beginPath(); ctx.moveTo(116, 88); ctx.lineTo(140, 88); ctx.lineTo(176, 144); ctx.lineTo(80, 144); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#d4a63c'; ctx.fillRect(80, 142, 96, 2); }
       else if (p === 'screen') {
         ctx.fillStyle = '#0c1020'; ctx.fillRect(84, 6, 88, 40); ctx.fillStyle = '#20406a'; ctx.fillRect(86, 8, 84, 36);
-        const who = f.actors.find((a) => a.ghost)?.pid ?? f.noms?.find((n) => n.win || n.mine)?.pid;
+        const who = f.pic ?? f.actors.find((a) => a.ghost)?.pid ?? f.noms?.find((n) => n.win || n.mine)?.pid;
         const p0 = who ? s.persons[who] : undefined;
         if (p0) { const sp = avatarSprite(lookOf(p0), { year: f.year, dir: 'SE' }); ctx.globalAlpha = 0.85; ctx.drawImage(sp.c, 128 - sp.ax, 44 - sp.ay); ctx.globalAlpha = 1; }
       } else if (p === 'chart') {
         ctx.fillStyle = '#1a1840'; ctx.fillRect(18, 18, 70, 46);
         for (let i = 0; i < 3; i++) { ctx.fillStyle = i === 0 ? '#ffd040' : '#8a88c8'; ctx.fillRect(34, 24 + i * 13, i === 0 ? 46 : 36 - i * 6, 8); drawText(ctx, String(i + 1), 24, 26 + i * 13, '#ffffff'); }
-      } else if (p === 'glass') { ctx.fillStyle = 'rgba(190,225,255,0.10)'; ctx.beginPath(); ctx.moveTo(84, 30); ctx.lineTo(172, 30); ctx.lineTo(186, 92); ctx.lineTo(70, 92); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(220,240,255,0.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(70.5, 92); ctx.lineTo(84.5, 30); ctx.stroke(); }
+      } else if (p === 'glass') { ctx.fillStyle = 'rgba(190,225,255,0.16)'; ctx.beginPath(); ctx.moveTo(84, 30); ctx.lineTo(172, 30); ctx.lineTo(186, 92); ctx.lineTo(70, 92); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(220,240,255,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(70.5, 92); ctx.lineTo(84.5, 30); ctx.lineTo(171.5, 30); ctx.lineTo(185.5, 92); ctx.stroke(); }
       else if (p === 'table') { ctx.fillStyle = '#5a3a22'; ctx.fillRect(84, 94, 96, 10); ctx.fillStyle = '#3a2414'; ctx.fillRect(84, 104, 96, 3); }
       else if (p === 'barrier') { ctx.fillStyle = '#9aa0a8'; ctx.fillRect(0, 96, W, 2); for (let x = 4; x < W; x += 16) ctx.fillRect(x, 96, 1, 6); }
       continue;
@@ -259,7 +266,7 @@ export function boardView18(s: GameState, b0: Board18, o: BoardOpts18 = {}): HTM
     for (const a of f.actors) {
       if (!a.bubble) continue;
       const [x, y] = a.to ? a.to : [a.x, a.y];
-      kids.push(h('span', { class: `c18-bub ${a.ghost ? 'ghost' : ''} ${a.mood ?? ''}`, style: `left:${(x / W) * 100}%;top:${Math.max(0, (y - 40) / H) * 100}%` }, T(a.bubble)));
+      kids.push(h('span', { class: `c18-bub ${a.ghost ? 'ghost' : ''} ${a.mood ?? ''}`, style: `left:${Math.max(9, Math.min(91, (x / W) * 100))}%;top:${Math.max(8, ((y - (a.ghost && y < 96 ? 54 : 40)) / H) * 100)}%` }, T(a.bubble)));
     }
     if (f.noms?.length) kids.push(h('div', { class: 'c18-noms' }, f.noms.map((n) => {
       const p = n.pid ? s.persons[n.pid] : undefined;

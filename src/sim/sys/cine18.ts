@@ -62,6 +62,8 @@ export interface Frame18 {
   slot?: 'outfit' | 'speech' | 'reaction' | 'farewell';
   /** 0..1 escurece o fundo */
   dark?: number;
+  /** pessoa mostrada no telão */
+  pic?: string;
 }
 export interface Board18 { id: string; k: Kind18; title: L; year: number; frames: Frame18[]; why: L[] }
 export interface Shot18 { id: string; k: Kind18; y: number; m: number; w: number; act?: string; pid?: string; city?: string; text?: L; fact?: string; cs?: string; aw?: Aw18; d?: Record<string, string | number> }
@@ -272,7 +274,7 @@ export function awardBoard18(s: GameState, aw: Aw18): Board18 {
     caption: F(l('Os indicados para {c}', 'The nominees for {c}'), { c: catName }),
     noms: cat.nominees.slice(0, 5).map((n) => ({ name: n.name, pid: n.actId ? s.acts[n.actId]?.members[0] : undefined, seed: `nom:${n.name}`, mine: n.mine })), ms: ms(3400) });
   // 3 apresentador no púlpito
-  const seats = [[60, 122], [100, 126], [156, 126], [196, 122]] as [number, number][];
+  const seats = [[44, 141], [92, 142], [166, 142], [214, 141]] as [number, number][];
   const nomActs: Actor18[] = (cat?.nominees ?? []).slice(0, 4).map((n, i) => {
     const na = n.actId ? s.acts[n.actId] : undefined;
     const pid = na?.members.find((id) => s.persons[id]?.alive) ?? na?.members[0];
@@ -299,10 +301,10 @@ export function awardBoard18(s: GameState, aw: Aw18): Board18 {
   fr.push({ id: 'win', place: 'awards', ...base, actors: [host, ...reactors], props: ['podium', 'trophy'], fx: ['spot', ...(winner?.mine ? ['confetti' as Fx18] : [])], crowd: { n: cr.n, mood: winner?.mine ? (cr.mood === 'mixed' ? 'mixed' : 'wild') : 'cheer' },
     caption: F(winner?.mine ? l('{w} vence! O holofote encontra a sua mesa.', '{w} wins! The spotlight finds your table.') : l('{w} leva o troféu.', '{w} takes the trophy.'), { w: winner?.name ?? '—' }),
     sub: !winner?.mine && myN ? (pk ? F(l('Sua reação: {r}.', 'Your reaction: {r}.'), { r: LOSE18[pk]?.bubble ?? l('—', '—') }) : l('As câmeras esperam a sua reação.', 'The cameras wait for your reaction.')) : heir ? F(l('Prêmio póstumo: quem sobe é {h}.', 'Posthumous award: {h} goes up.'), { h: heir.name }) : undefined,
-    ms: ms(3400), slot: !winner?.mine && myN && !r && p ? 'reaction' : undefined });
+    ms: ms(3400), slot: !winner?.mine && myN && !r ? 'reaction' : undefined });
   if (winner?.mine && a) {
     // 6 subida ao palco
-    fr.push({ id: 'walk', place: 'awards', ...base, actors: [host, ...members18(s, a, [[100, 126], [84, 124], [116, 128]], { key, pose: 'walk', dir: 'NE' }).map((x, i) => (i === 0 ? { ...x, to: [128, 84] as [number, number] } : x))],
+    fr.push({ id: 'walk', place: 'awards', ...base, actors: [host, ...members18(s, a, [[92, 142], [72, 141], [112, 142]], { key, pose: 'walk', dir: 'NE' }).map((x, i) => (i === 0 ? { ...x, to: [128, 84] as [number, number] } : x))],
       props: ['podium', 'trophy'], fx: ['spot', 'confetti'], crowd: { n: cr.n, mood: cr.mood === 'mixed' ? 'mixed' : 'wild' }, caption: l('A caminhada até o palco (parece não ter fim).', 'The walk to the stage (it seems endless).'), sub: lu ?? undefined, ms: ms(2800) });
     // 7 discurso: balão com o tema escolhido
     const topic = (won ? pk : undefined) ?? '';
@@ -311,7 +313,7 @@ export function awardBoard18(s: GameState, aw: Aw18): Board18 {
     const rivalA: Actor18[] = topic === 'rival' && aw.rivalName ? [{ seed: `rival:${aw.rivalId}`, name: aw.rivalName, x: 200, y: 124, pose: 'sit', dir: 'NW', mood: 'angry', bubble: l('(fecha a cara)', '(scowls)') }] : [];
     fr.push({ id: 'speech', place: 'awards', ...base, actors: [{ ...members18(s, a, [[128, 84]], { key })[0], bubble: topic ? bub : undefined, mood: 'joy' }, ...rivalA], props: ['podium', 'trophy', 'mic'], fx: ['spot'],
       crowd: { n: cr.n, mood: !r ? 'quiet' : angry ? (r.ok ? 'mixed' : 'boo') : 'cheer' }, caption: topic ? F(l('Discurso: "{b}"', 'Speech: "{b}"'), { b: bub }) : l('45 segundos antes da música subir.', '45 seconds before the music plays you off.'),
-      sub: r ? r.out : undefined, ms: ms(4200), slot: won && !r && p ? 'speech' : undefined });
+      sub: r ? r.out : undefined, ms: ms(4200), slot: won && !r ? 'speech' : undefined });
   } else if (heir && winAct) {
     fr.push({ id: 'heir', place: 'awards', ...base, actors: [{ pid: heir.pid, seed: heir.pid ? undefined : `heir:${winAct.id}`, x: 128, y: 84, dir: 'SE', bubble: l('Ele(a) estaria aqui cantando.', 'They would be up here singing.'), mood: 'cry' }, ...(year >= 2012 ? [{ pid: winAct.members[0], x: 168, y: 72, ghost: 2 as const, dir: 'SW' as Dir18 }] : [])],
       props: ['podium', 'trophy', 'screen'], fx: ['spot', ...(year >= 2012 ? ['flicker' as Fx18] : [])], crowd: { n: cr.n, mood: 'grief' }, caption: F(l('Prêmio póstumo para {a}', 'Posthumous award for {a}'), { a: winAct.name }), ms: ms(3600) });
@@ -401,7 +403,7 @@ export function momentBoard18(s: GameState, sh: Shot18): Board18 {
     case 'hall': {
       const heir = heirOf18(s, a);
       title = F(l('{a} entra para o Hall', '{a} enters the Hall'), { a: name });
-      fr.push({ id: 'intro', place: 'awards', variant: 3, ...base, actors: [{ seed: `inductor:${sh.id}`, x: 128, y: 78, dir: 'SE', bubble: l('Sem eles, metade de nós não estaria aqui.', 'Without them, half of us wouldn\'t be here.') }], props: ['podium', 'screen'], fx: ['spot'], crowd: { n: 0.7, mood: 'quiet' }, caption: l('O discurso de indução, com a carreira no telão.', 'The induction speech, with the career on the big screen.'), ms: 3200 });
+      fr.push({ id: 'intro', place: 'awards', variant: 3, ...base, pic: a?.members[0], actors: [{ seed: `inductor:${sh.id}`, x: 128, y: 78, dir: 'SE', bubble: l('Sem eles, metade de nós não estaria aqui.', 'Without them, half of us wouldn\'t be here.') }], props: ['podium', 'screen'], fx: ['spot'], crowd: { n: 0.7, mood: 'quiet' }, caption: l('O discurso de indução, com a carreira no telão.', 'The induction speech, with the career on the big screen.'), ms: 3200 });
       fr.push({ id: 'accept', place: 'awards', variant: 3, ...base, actors: heir ? [{ pid: heir.pid, seed: heir.pid ? undefined : `heir:${a?.id}`, x: 128, y: 80, dir: 'SE', mood: 'cry', bubble: l('Em nome dele(a): obrigado.', 'On their behalf: thank you.') }] : band('stand', [[128, 80], [108, 84], [148, 84]]).map((x, i) => (i === 0 ? { ...x, bubble: l('Ainda não acabou.', 'It\'s not over yet.') } : x)), props: ['podium', 'trophy'], fx: ['spot', 'confetti'], crowd: { n: 0.7, mood: heir ? 'grief' : 'wild' }, caption: heir ? l('Indução póstuma: a família recebe a estatueta.', 'Posthumous induction: the family accepts the statuette.') : l('Aceitação: a banda reunida no palco.', 'Acceptance: the band reunited on stage.'), sub: sh.text, ms: 3400 });
       fr.push({ id: 'jam', place: 'awards', variant: 3, ...base, actors: [...band('play', [[128, 74], [104, 78], [152, 78]], 'SE'), ...(heir && y >= 2012 && a ? [{ pid: a.members[0], x: 128, y: 70, ghost: 2 as const, dir: 'SE' as Dir18, pose: 'play' as Pose18 }] : [])], props: ['mic'], fx: ['lights', ...(heir && y >= 2012 ? ['flicker' as Fx18] : [])], crowd: { n: 0.7, mood: 'wild' }, caption: l('A jam final com convidados.', 'The closing all-star jam.'), ms: 3000 });
       break;
@@ -413,21 +415,22 @@ export function momentBoard18(s: GameState, sh: Shot18): Board18 {
       const q = Number(sh.d?.q ?? 0.6);
       const place: PlaceKind = sh.k === 'ghost' ? 'venue_theatre' : sh.k === 'tribute' ? (y >= 1975 ? 'venue_arena' : 'venue_theatre') : sh.k === 'avatar' ? 'holo_stage' : y >= 2027 ? 'holo_stage' : 'venue_festival';
       title = sh.text ?? title;
-      const ghostA: Actor18 = { pid: p?.id, x: 128, y: 74, ghost: g, young: sh.k === 'avatar', pose: 'play', dir: 'SE', mark: true };
+      const ghostA: Actor18 = { pid: p?.id, x: 128, y: place === 'holo_stage' ? 70 : 84, ghost: g, young: sh.k === 'avatar', pose: 'play', dir: 'SE', mark: true };
       const mood: Crowd18 = backl >= 60 ? 'mixed' : backl >= 40 ? 'cheer' : 'wild';
       const signs = backl >= 50 ? [y >= 2009 ? '#DEIXEMDESCANSAR' : 'DEIXEM DESCANSAR', 'RIP'] : [`${(p?.name ?? '').split(' ')[0].toUpperCase().slice(0, 9)}!`];
       if (sh.k === 'tribute') {
         const guests = String(sh.d?.guests ?? '').split(',').filter((x) => s.persons[x]).slice(0, 3);
-        fr.push({ id: 'screen', place, ...base, actors: [], props: ['screen', 'candles'], fx: ['spot'], crowd: { n: cr.n, mood: 'grief' }, dark: 0.4, caption: F(l('No telão, {p} sorri numa foto antiga.', 'On the big screen, {p} smiles in an old photo.'), { p: p?.name ?? name }), ms: 3000 });
-        fr.push({ id: 'guests', place, ...base, actors: guests.map((pid, i) => ({ pid, x: 104 + i * 24, y: 76, pose: 'play' as Pose18, dir: 'SE' as Dir18 })), props: ['mic', 'screen'], fx: ['lights'], crowd: { n: cr.n, mood: 'cheer' }, caption: l('Convidados tocam o repertório, cada um do seu jeito.', 'Guests play the songbook, each in their own way.'), sub: sh.text, ms: 3400 });
-        fr.push({ id: 'finale', place, ...base, actors: guests.map((pid, i) => ({ pid, x: 104 + i * 24, y: 76, pose: 'stand' as Pose18, dir: 'SE' as Dir18 })), props: ['screen', 'candles'], fx: ['confetti'], crowd: { n: cr.n, mood: 'wild', signs }, caption: l('Final: o público canta sozinho a última música.', 'Finale: the audience sings the last song alone.'), ms: 3200 });
+        const gx: { pid?: string; seed?: string }[] = guests.length ? guests.map((pid) => ({ pid })) : [0, 1, 2].map((i) => ({ seed: `guest:${sh.id}:${i}` }));
+        fr.push({ id: 'screen', place, ...base, pic: p?.id, actors: [], props: ['screen', 'candles'], fx: ['spot'], crowd: { n: cr.n, mood: 'grief' }, dark: 0.4, caption: F(l('No telão, {p} sorri numa foto antiga.', 'On the big screen, {p} smiles in an old photo.'), { p: p?.name ?? name }), ms: 3000 });
+        fr.push({ id: 'guests', place, ...base, pic: p?.id, actors: gx.map((g0, i) => ({ ...g0, x: 104 + i * 24, y: 76, pose: 'play' as Pose18, dir: 'SE' as Dir18 })), props: ['mic', 'screen'], fx: ['lights'], crowd: { n: cr.n, mood: 'cheer' }, caption: l('Convidados tocam o repertório, cada um do seu jeito.', 'Guests play the songbook, each in their own way.'), sub: sh.text, ms: 3400 });
+        fr.push({ id: 'finale', place, ...base, pic: p?.id, actors: gx.map((g0, i) => ({ ...g0, x: 104 + i * 24, y: 76, pose: 'stand' as Pose18, dir: 'SE' as Dir18 })), props: ['screen', 'candles'], fx: ['confetti'], crowd: { n: cr.n, mood: 'wild', signs }, caption: l('Final: o público canta sozinho a última música.', 'Finale: the audience sings the last song alone.'), ms: 3200 });
         break;
       }
       const tech = g === 1 ? l('Truque de palco do século XIX: vidro inclinado reflete o ator escondido (Pepper\'s ghost).', '19th-century stage trick: angled glass reflects a hidden performer (Pepper\'s ghost).') : sh.k === 'avatar' ? l('Avatares digitais rejuvenescidos, captura de movimento e uma arena feita sob medida.', 'De-aged digital avatars, motion capture and a purpose-built arena.') : y >= 2027 ? l('Holograma volumétrico: dá a volta no palco.', 'Volumetric hologram: walks around the stage.') : l('Projeção em película inclinada (Pepper\'s ghost digital): só funciona de frente.', 'Projection on an angled foil (digital Pepper\'s ghost): only works head-on.');
       fr.push({ id: 'dark', place, ...base, actors: [], props: g === 1 || y < 2027 ? ['glass'] : [], fx: ['smoke'], crowd: { n: cr.n, mood: 'quiet' }, dark: 0.6, caption: l('Escuro total. Fumaça. Um feixe de luz.', 'Total darkness. Smoke. A beam of light.'), sub: tech, ms: 3000 });
-      fr.push({ id: 'appear', place, ...base, actors: [ghostA], props: g === 1 || y < 2027 ? ['glass'] : [], fx: ['flicker', 'spot', 'smoke'], crowd: { n: cr.n, mood: q < 0.6 ? 'quiet' : 'wild' }, dark: 0.3,
+      fr.push({ id: 'appear', place, ...base, actors: [ghostA], props: g === 1 || y < 2027 ? ['glass'] : [], fx: ['flicker', 'spot', 'smoke'], crowd: { n: cr.n, mood: q < 0.7 ? 'quiet' : 'wild' }, dark: 0.3,
         caption: F(sh.k === 'avatar' ? l('{p} surge como era no auge.', '{p} appears as they were at their peak.') : l('{p} "volta" ao palco.', '{p} "returns" to the stage.'), { p: p?.name ?? name }),
-        sub: q < 0.6 ? l('A imagem treme e o vale da estranheza incomoda parte do público.', 'The image flickers and the uncanny valley bothers part of the audience.') : l('Parece real. Gente chorando na grade.', 'It looks real. People crying at the barrier.'), ms: 3600 });
+        sub: q < 0.7 ? l('A imagem treme e o vale da estranheza incomoda parte do público.', 'The image flickers and the uncanny valley bothers part of the audience.') : l('Parece real. Gente chorando na grade.', 'It looks real. People crying at the barrier.'), ms: 3600 });
       fr.push({ id: 'react', place, ...base, actors: [{ ...ghostA, pose: 'stand' }, ...(sh.d?.heir ? [{ pid: String(sh.d.heir), x: 210, y: 128, dir: 'NW' as Dir18, mood: (backl >= 55 ? 'sad' : 'cry') as Mood18, bubble: backl >= 55 ? l('Não era isso que ele(a) queria.', 'This is not what they wanted.') : l('É como se estivesse aqui.', 'It\'s as if they were here.') }] : [])],
         props: g === 1 || y < 2027 ? ['glass'] : [], fx: ['flicker', 'lights', ...(backl >= 60 ? ['flash' as Fx18] : [])], crowd: { n: cr.n, mood, signs },
         caption: backl >= 60 ? l('Metade aplaude, metade acha macabro — a polêmica toma as manchetes.', 'Half applaud, half find it ghoulish — the controversy takes the headlines.') : l('Aplausos para alguém que não pode ouvir.', 'Applause for someone who cannot hear it.'), sub: sh.text, ms: 3400 });
