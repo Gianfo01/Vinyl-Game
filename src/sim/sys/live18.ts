@@ -458,7 +458,7 @@ export function botKit18(s: GameState, actId: string, gross: number, shows: numb
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   const share = act.playerBand ? 1 : c?.model === '360' ? c.share360 : 0;
   // contrato clássico: o selo só paga a logística — economiza; com parte da bilheteria, protege a receita
-  if (act.fame < 30 && act.members.length <= 5) { k.move = 'van'; k.bed = 'cheap'; }
+  if (act.fame < 30 && act.members.length <= 5 && share) k.move = 'van'; // banda própria pequena: van (cansa mais, custa menos)
   else if (share && km > shows * 900 && s.year >= FLY_FROM18 && act.fame >= 55) k.move = 'fly';
   if (share && gross * share > money(s, 40000)) k.ins = 1;
   if (share && shows >= 6 && act.fame >= 35) k.reh = 1;

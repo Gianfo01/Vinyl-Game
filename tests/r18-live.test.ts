@@ -46,12 +46,12 @@ describe('r18 live: turnê', () => {
     expect(pm.fin?.verdict).toBeTruthy();
   });
 
-  it('bot: contrato clássico economiza na estrada', () => {
+  it('bot: contrato clássico não segura bilheteria que não é do selo', () => {
     const { s, act } = setup('r18l-3');
     act.fame = 20;
     const k = botKit18(s, act.id, 1e9, 8, 3000);
-    expect(k.move).toBe('van');
     expect(k.ins).toBe(0);
+    expect(k.prom).toBe('local');
   });
 });
 
