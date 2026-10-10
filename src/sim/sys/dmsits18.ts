@@ -260,13 +260,16 @@ const COMPS: Comp[] = [
 
 const fill = (s: GameState, c: SitCtx, t: L): L => fmtL(t, { h: nmP(s, c.hero), o: nmP(s, c.cast.other ?? c.cast.boss ?? c.cast.target ?? c.cast.rival ?? c.cast.holder), a: actOf(s, c)?.name ?? '?', b: nmP(s, c.cast.oact) });
 export const DMSITS18: string[] = [];
+let ix = 0;
 for (const M of MOTIVES) for (const C of COMPS) {
   const id = `dm18_${M.id}_${C.id}`;
+  const k = ix++;
   DMSITS18.push(id);
   registerSituation({
     id, pressure: M.pressure, cost: M.cost, cooldown: 8, tone: 'mixed',
     // o Mestre segura as situações na calmaria (só de vez em quando)
-    when: (s) => dm18(s).ph !== 'calm' || s.month % 3 === 0,
+    // rodízio: cerca de 1/3 dos modelos por mês (1/2 no clímax, 1/6 na calmaria) para não abafar as outras situações
+    when: (s) => { const ph = dm18(s).ph; return (s.month + s.year + k) % (ph === 'climax' ? 2 : ph === 'calm' ? 6 : 3) === 0; },
     actorsPick: (s, _c, r) => {
       const c = M.pick(s, r);
       if (!c) return null;

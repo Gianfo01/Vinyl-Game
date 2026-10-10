@@ -157,7 +157,8 @@ registerVerb18({
     if (T.startsWith('p:') && !isPlayerKey(s, T)) addStress(s, T.slice(2), 6, fmtL(l('Provocado(a) por {a}', 'Called out by {a}'), { a: N(s, A) }));
     const a = actOfKey18(s, A), b = actOfKey18(s, T);
     let extra: L | string = '';
-    if (a && b && a.id !== b.id) {
+    // rixa entre atos só quando os dois lados são artistas (chefe de selo não arrasta os atos para a briga)
+    if (a && b && a.id !== b.id && (A.startsWith('p:') || isPlayerKey(s, A)) && (T.startsWith('p:') || isPlayerKey(s, T))) {
       const f = startFeud18(s, a.id, b.id, fmtL(l('{a} provocou {t}', '{a} called out {t}'), { a: N(s, A), t: N(s, T) }), 12);
       if (f) { heatFeud18(s, f, 4); extra = fmtL(l(' Rixa {x}: {st}.', ' Feud {x}: {st}.'), { x: `${a.name} × ${b.name}`, st: STAGE18[f.st].name }); }
       addHype(s, `a:${a.id}`, 'ag18diss', l('Provocação', 'Provocation'), 4);
@@ -321,6 +322,11 @@ function targets(s: GameState, A: string, r: Rng): string[] {
   if (A.startsWith('p:')) for (const [k, v] of Object.entries(s.persons[id]?.rel ?? {})) if (Math.abs(v) > 30 && s.persons[k]?.alive) out.add(s.persons[k].isPlayer ? 'player' : `p:${k}`);
   if (A.startsWith('l:')) for (const [k, v] of Object.entries(leaders(s).L[A.slice(2)]?.rel ?? {})) if (Math.abs(v) > 30) out.add(k === 'player' ? 'player' : `l:${k}`);
   const a = actOfKey18(s, A);
+  // artista ressentido → o chefe do próprio selo (ou você, se o selo é seu)
+  if (A.startsWith('p:') && a && (s.persons[id]?.resentment ?? 0) > 35) {
+    if (a.owner === 'player') out.add('player');
+    else if (a.owner && s.labels[a.owner]?.leaderId) { const bk = `l:${s.labels[a.owner].leaderId}`; out.add(bk); adjRel18(s, A, bk, -((s.persons[id]?.resentment ?? 0) - 35) / 10, l('Ressentimento com o selo', 'Resentment toward the label')); }
+  }
   if (a) for (const f of feudsOf18(s, a.id)) { const o = s.acts[f.a === a.id ? f.b : f.a]; const p = leadOf18(s, o); if (p) out.add(p.isPlayer ? 'player' : `p:${p.id}`); }
   if (opinionOf(s, A) < -25 || (A.startsWith('l:') && (s.rivalries[leaders(s).L[A.slice(2)]?.label ?? ''] ?? 0) > 30)) out.add('player');
   // inveja: alguém da mesma cena um pouco acima

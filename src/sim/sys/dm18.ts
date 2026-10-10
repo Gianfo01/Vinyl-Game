@@ -439,7 +439,7 @@ const NPC_ARCS: { k: string; name: L; fit: (s: GameState, a: Act, k: string) => 
 for (const A of NPC_ARCS) {
   registerThread18({
     k: A.k, name: A.name, mine: false,
-    sum: (s, th) => fmtL(l('{p} ({a}): {n}.', '{p} ({a}): {n}.'), { p: nm(s, th.hero), a: s.acts[th.cast.act]?.name ?? '?', n: A.name }),
+    sum: (s, th) => { const an = s.acts[th.cast.act]?.name ?? '?'; const pn = nm(s, th.hero); return fmtL(an === pn ? l('{p}: {n}.', '{p}: {n}.') : l('{p} ({a}): {n}.', '{p} ({a}): {n}.'), { p: pn, a: an, n: A.name }); },
     open: (s, r) => {
       const pool = Object.values(s.acts).filter((a) => live(a) && a.fame >= 20 && a.owner !== 'player' && !a.playerBand).sort((a, b) => b.fame - a.fame).slice(0, 30);
       const c = pool.map((a) => [a, leadOf18(s, a)] as const).filter(([a, p]) => p && !p.isPlayer && ok(s, `p:${p.id}`) && ok(s, a.id) && !busy(s, `p:${p.id}`) && A.fit(s, a, `p:${p.id}`));
@@ -451,7 +451,9 @@ for (const A of NPC_ARCS) {
       const a = s.acts[th.cast.act]; const pid = th.hero.slice(2);
       if (!live(a) || !s.persons[pid]?.alive) return { t: l('O arco terminou antes do fim.', 'The arc ended before its end.'), end: l('interrompido', 'cut short') };
       A.fx(s, a, pid, i);
-      const t = fmtL(b, { p: s.persons[pid].name, a: a.name });
+      const t0 = fmtL(b, { p: s.persons[pid].name, a: a.name });
+      const dup = ` (${a.name})`;
+      const t = a.name === s.persons[pid].name ? l(t0.pt.replace(dup, ''), t0.en.replace(dup, '')) : t0;
       emitFact(s, { kind: 'arc', actors: [pid, a.id], place: a.city, severity: 30 + i * 12, visibility: a.fame >= 35 ? 'public' : 'rumor', tags: ['dm18', A.k], text: t, src: 'dm18' });
       return { t, ...(i === 2 ? { end: A.name } : {}) };
     } })),

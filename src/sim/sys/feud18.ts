@@ -171,7 +171,8 @@ function fx(s: GameState, f: Feud18, st: number, r: Rng): L {
         addHype(s, `a:${a.id}`, 'feud18w', l('Guerra de fãs', 'Fan war'), 6);
       }
       if (pa) addStress(s, pa.id, 8, l('Guerra de faixas', 'Track war')); if (pv) addStress(s, pv.id, 10, l('Guerra de faixas', 'Track war'));
-      const t = fmtL(l('Guerra de faixas {x}: respostas em série, fãs brigando nas ruas e nas redes — o núcleo de fãs cresce, o público casual cansa.', 'Track war {x}: answer after answer, fans fighting in the streets and online — core fans grow, casual listeners tire.'), { x });
+      const where = s.year >= 2000 ? l('nas ruas e nas redes', 'in the streets and online') : s.year >= 1980 ? l('nas ruas, nas rádios e na MTV', 'in the streets, on radio and on MTV') : l('nas ruas, nas rádios e nas cartas às revistas', 'in the streets, on radio and in letters to magazines');
+      const t = fmtL(l('Guerra de faixas {x}: respostas em série, fãs brigando {w} — o núcleo de fãs cresce, o público casual cansa.', 'Track war {x}: answer after answer, fans fighting {w} — core fans grow, casual listeners tire.'), { x, w: where });
       fact('fan_war', 50, ['fans'], t);
       return t;
     }
