@@ -120,10 +120,12 @@ function officeMonth(s: GameState): void {
   const own = Object.entries(reg18(s).loc).filter(([, x]) => x.mode === 'own');
   if (!own.length) return;
   const r = Rng.fromSeed(`${s.config.seed}:links18:office:${s.week}`);
+  let free: Act[] | null = null;
   for (const [sub] of own.slice(0, 4)) {
     if (!r.chance(0.35)) continue;
     const a3 = new Set(subById18[sub]?.a3 ?? []);
-    const pool = Object.values(s.acts).filter((a) => !a.owner && a.status !== 'retired' && a.status !== 'split' && a.members.length && a3.has(countryOfCity(a.city) ?? '') && (s.knowledge[a.id]?.degree ?? 0) < 3);
+    free ??= Object.values(s.acts).filter((a) => !a.owner && a.status !== 'retired' && a.status !== 'split' && a.members.length && (s.knowledge[a.id]?.degree ?? 0) < 3);
+    const pool = free.filter((a) => a3.has(countryOfCity(a.city) ?? ''));
     if (!pool.length) continue;
     const a = r.pick(pool.sort((x, y) => y.momentum - x.momentum).slice(0, 6));
     addLead18(s, r, a, 'office18', 3, 8, fmtL(l('Indicação do escritório em {s}.', 'Tip from the {s} office.'), { s: subById18[sub]?.name ?? l(sub, sub) }));
@@ -256,9 +258,12 @@ registerMod('chartUnits', 'links18-feud', (s, v, c) => {
 });
 
 // ---------------------------------------------------------------- 11. separação → canções
+const HB = new WeakMap<GameState, { w: number; ids: Set<string> }>(); // por jogo e por semana (sem cache entre partidas)
 export function heartBoost18(s: GameState, a: Act): number {
-  const ids = new Set([a.id, ...a.members, ...a.members.map((m) => `p:${m}`)]);
-  return recentFacts(s, { kind: 'breakup', months: 9, limit: 40 }).some((f) => f.actors.some((x) => ids.has(x))) ? 0.04 : 0;
+  let c = HB.get(s);
+  if (!c || c.w !== s.week) { c = { w: s.week, ids: new Set(recentFacts(s, { kind: 'breakup', months: 9, limit: 40 }).flatMap((f) => f.actors.map((x) => x.replace(/^p:/, '')))) }; HB.set(s, c); }
+  if (!c.ids.size) return 0;
+  return c.ids.has(a.id) || a.members.some((m) => c!.ids.has(m)) ? 0.04 : 0;
 }
 registerMod('songQ', 'links18-heart', (s, v, c) => {
   if (!c.act) return null;

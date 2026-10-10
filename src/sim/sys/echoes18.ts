@@ -4,7 +4,7 @@
 
 import { Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { registerConseq18, type Ctx18, type EchoSpec18, type Fx18 } from '../decide18';
+import { registerConseq18, unlocked18, type Ctx18, type EchoSpec18, type Fx18 } from '../decide18';
 import { emitEvent } from '../events';
 import { grantHold } from '../holds17';
 import { scandal } from '../scandal17';
@@ -75,7 +75,7 @@ E('child_born:accept',
     fx: (f) => { f.trust(8).mood('morale', 8); return T(f, '{p} voltou e declarou: "esse selo é família".', '{p} came back and said: "this label is family".'); } });
 E('member_leaves:convince',
   { in: [5, 10], p: 0.8, tone: 'mixed', hint: N('Uma promessa precisa ser cumprida.', 'A promise needs keeping.'),
-    when: (s, c) => (s.persons[String(c.person)]?.morale ?? 0) >= 55,
+    when: (s, c) => (s.persons[String(c.person)]?.morale ?? 0) >= (unlocked18(s, 'keeper18') ? 45 : 55), // fama de cumprir a palavra ajuda
     fx: (f) => { f.mood('morale', 6).trust(4); return T(f, 'Promessa cumprida: {p} ficou e renovou o compromisso com {a}.', 'Promise kept: {p} stayed and renewed the commitment to {a}.'); },
     miss: (f) => { f.mood('resentment', 12).trust(-6); if (f.r.chance(0.5)) follow18(f, 'member_leaves'); return T(f, 'Promessa quebrada: {p} sente que o bônus comprou só tempo.', 'Promise broken: {p} feels the bonus only bought time.'); } });
 E('member_leaves:smaller',

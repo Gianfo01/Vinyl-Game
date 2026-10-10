@@ -41,8 +41,8 @@ export const pressP18 = (s: GameState, c: Ctx18): { p: number; why: L[] } => {
   return { p: clamp(0.2 + f / 200 + m / 300, 0.08, 0.85), why: [N('Base 20%', 'Base 20%'), fmtL(l('Fama {n}', 'Fame {n}'), { n: Math.round(f) }), fmtL(l('Embalo {n}', 'Momentum {n}'), { n: Math.round(m) })] };
 };
 export const demoP18 = (s: GameState): { p: number; why: L[] } => {
-  const ar = staffSkill(s, 'anr'), ear = me(s)?.attrs.ear ?? 50;
-  return { p: clamp(0.2 + ar / 250 + (ear - 50) / 250, 0.08, 0.75), why: [N('Base 20%', 'Base 20%'), fmtL(l('A&R {n}', 'A&R {n}'), { n: ar }), fmtL(l('Seu ouvido {n}', 'Your ear {n}'), { n: Math.round(ear) })] };
+  const ar = staffSkill(s, 'anr'), ear = me(s)?.attrs.ear ?? 50, mt = unlocked18(s, 'mentor18') ? 0.1 : 0;
+  return { p: clamp(0.2 + ar / 250 + (ear - 50) / 250 + mt, 0.08, 0.8), why: [N('Base 20%', 'Base 20%'), fmtL(l('A&R {n}', 'A&R {n}'), { n: ar }), fmtL(l('Seu ouvido {n}', 'Your ear {n}'), { n: Math.round(ear) }), ...(mt ? [N('Escola do mentor +10%', 'Mentor school +10%')] : [])] };
 };
 
 // ---------------------------------------------------------------- 1. show relâmpago (prazo + aposta)
