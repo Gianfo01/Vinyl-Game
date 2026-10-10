@@ -39,8 +39,8 @@ registerExt4('media18', fresh);
 export function media18(s: GameState): Media18State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.media18 ??= fresh()) as Media18State;
-  const f = fresh();
-  for (const k of Object.keys(f) as (keyof Media18State)[]) (st as unknown as Record<string, unknown>)[k] ??= f[k];
+  const o = st as unknown as Record<string, unknown>;
+  if (!o.ok18) { const f = fresh(); for (const k of Object.keys(f) as (keyof Media18State)[]) o[k] ??= f[k]; o.ok18 = 1; }
   return st;
 }
 const cnt = (s: GameState, k: string) => { const n = media18(s).n; n[k] = (n[k] ?? 0) + 1; };

@@ -56,8 +56,8 @@ registerExt4('st18', fresh);
 export function st18(s: GameState): St18State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.st18 ??= fresh()) as St18State;
-  const f = fresh();
-  for (const k of Object.keys(f) as (keyof St18State)[]) (st as unknown as Record<string, unknown>)[k] ??= f[k];
+  const o = st as unknown as Record<string, unknown>;
+  if (!o.ok18) { const f = fresh(); for (const k of Object.keys(f) as (keyof St18State)[]) o[k] ??= f[k]; o.ok18 = 1; }
   return st;
 }
 export function a18(s: GameState, actId: string): A18 {

@@ -40,6 +40,8 @@ import { money, playerActs, rngOf } from './util';
 import { createGame } from './worldgen';
 import { unreleasedRecorded } from './production';
 import { freshLog17, play17, type Log17 } from './playbot17';
+import { botMedia18 } from './botmedia18';
+import { rankChannels18 } from './sys/mkt18';
 
 export type Profile = 'cautious' | 'balanced' | 'aggressive';
 
@@ -228,7 +230,9 @@ function bestProducer(s: GameState, act: Act, songs: number, cap: number): strin
 }
 
 function marketingFor(s: GameState, act: Act, p: MusicProject, k: Knobs): { channel: string; budget: number }[] {
-  const ch = availableChannels(s).slice().sort((a, b) => b.sales / b.reachCost - a.sales / a.reachCost);
+  // r18 media18: canais por rendimento real (conversão, saturação deste artista, álbum × single)
+  const av = new Set(availableChannels(s).map((c) => c.id));
+  const ch = rankChannels18(s, act.id, p.type).filter((c) => av.has(c.id));
   if (!ch.length) return [];
   const total = Math.max(money(s, 400), Math.min(s.player.cash * k.mkt, money(s, (p.type === 'lp' ? 9000 : 3000) * (1 + act.fame / 25))));
   const n = k.mkt >= 0.15 ? 2 : 1;
@@ -457,6 +461,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   team(s, k);
   grow(s, k);
   play17(s, prof, { cash: s.player.cash, burn: burn(s), energy: energyLeft(s) }, L.r17);
+  botMedia18(s, prof);
   personal(s);
 }
 

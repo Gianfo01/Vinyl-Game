@@ -112,3 +112,16 @@ elogiar o líder, dinâmica — na lista do elenco).
 | `src/ui/sys/dm18.ts` | área **Mundo › Diário do Mestre** e aba **Rixas** no ato. |
 
 Regra de história (r18): `crime17` só bloqueia assassinato de gente real no modo "Vida real exata"; `crimenpc17` idem para as rixas de rua.
+
+## media18 (onda 1) — marketing, streaming, rádio, clipes, viral e pistas
+
+| Módulo | Para quê |
+|---|---|
+| `src/sim/media18hook.ts` | ganchos puros que `market.ts` chama (`eff`, `term`, `fterm`, `payout`, `fans`); desligados = fórmulas antigas. |
+| `src/sim/sys/mkt18.ts` | **canais com limites**: `CH18` (público, conversão, ingressos, atraso, gancho), saturação por artista e do selo + aprendizado da equipe (`satOf18`), `profile18`/`term18` (calor com atraso e vídeo curto que não sustenta álbum fraco), atenção sem consumo → fama, campanha que vende ingresso (mod `cityDemand`), `addChannel18` (clipe/rollout entram como canal), `rankChannels18`. **Pós-morte** por lançamento: `postMortem18(s, relId)` → `{ fc, u10, ch: [{ id, en, e, conv, exp, act }], att, tix, L, R, fans, notes }` (previsto × realizado por canal, para o long18). |
+| `src/sim/sys/stream18.ts` | **fontes de descoberta** por lançamento (`mixOf18`, `RET18`), ouvintes/voltam/seguidores por artista (`a18`, `funnel18`), estratégia pico × base (`setStrat18`), **pró-rata** por território/assinantes/perfil de ouvinte (`payout18`, explicação `stream.payout`), dependência de playlist (queda), reativação de catálogo, pitch editorial (`pitchPlaylist18`), impulso algorítmico, comissão de alcance (`setDm18`, 2019+), fazenda de streams (`buyStreams18`: derrubada, multa, escândalo, lista negra) e denúncia de rival (Caixa). |
+| `src/sim/sys/radio18.ts` | **rádio por formato** (`FMT18`), consultores (`CONS18`: Drake-Chenault e Burkhart/Abrams reais; demais fictícios), estações e diretores (`ensureStations18`, `lunchPd18`), `pitchRadio18(s, rel, fmt, 'self'|'plug'|'indie', edit)` → adição/rotação leve-média-pesada; promotor independente registra "quem pagou" e pode vazar (fato público, escândalo, calor do jabá). |
+| `src/sim/sys/media18.ts` | **clipes** (`makeVideo18`: orçamento, diretor autoral/estúdio/estreante, coreografia, versão censurada, banimento, rotação pesada 1981–2008, carreira de diretor), **viral/catálogo** (decisão na Caixa: impulsionar/remix oficial/derrubar/deixar), **DJs/remix** (`commissionRemix18`, `togglePool18`, `remixContest18`, parada de clubes, DJ que vira estrela). |
+| `src/sim/botmedia18.ts` | playbot usa tudo isso (nunca compra streams falsos). |
+
+Fatos novos: `playlist`, `stream_fraud`, `payola`, `video_banned`, `viral`, `club_chart`, `remix_contest`, `career`. Interface: abas em Mídia (`src/ui/sys/media18.ts`).

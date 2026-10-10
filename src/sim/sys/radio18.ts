@@ -59,8 +59,8 @@ registerExt4('radio18', fresh);
 export function radio18(s: GameState): Radio18State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.radio18 ??= fresh()) as Radio18State;
-  const f = fresh();
-  for (const k of Object.keys(f) as (keyof Radio18State)[]) (st as unknown as Record<string, unknown>)[k] ??= f[k];
+  const o = st as unknown as Record<string, unknown>;
+  if (!o.ok18) { const f = fresh(); for (const k of Object.keys(f) as (keyof Radio18State)[]) o[k] ??= f[k]; o.ok18 = 1; }
   return st;
 }
 
