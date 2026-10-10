@@ -218,6 +218,7 @@ export function ask12(s: GameState, f: OwnFestival, a: Act, o: { time: number; l
   const id = IDENTS[x.ident];
   let fee = guestFee(s, a) * LEN_F[o.len] * (x.ident === 'discovery' && a.fame >= 50 ? 1.1 : id.feeF);
   if (id.feeF !== 1) why.push(fmtL(l('Identidade {i}: cachê ×{f}.', '{i} identity: fee ×{f}.'), { i: id.name, f: id.feeF }));
+  fee *= festFee18.f(s, f, a, why); // r18 live18: prestígio da curadoria (aceitam menos para tocar aqui)
   if (o.len !== 60) why.push(fmtL(l('Set de {n} min: cachê ×{f}.', '{n}-min set: fee ×{f}.'), { n: o.len, f: LEN_F[o.len] }));
   const want = wantTime(a);
   if (o.time < want) { fee *= 1 + 0.25 * (want - o.time); why.push(fmtL(l('Quer tocar em "{w}"; posição abaixo custa +{p}%.', 'Wants the "{w}" slot; a lower billing costs +{p}%.'), { w: TIMES[want], p: 25 * (want - o.time) })); }
@@ -821,3 +822,7 @@ registerSimHook('week', 'fest12-week', (s) => {
 registerSimHook('month', 'live-festival', (s) => festMonth(s));
 deferEvents([...OP_EVENTS, CANCEL]);
 
+
+// r18 live18: prestígio da curadoria baixa o cachê pedido; pagamento do festival exposto para fest18.
+export const festFee18: { f: (s: GameState, f: OwnFestival, a: Act, why: L[]) => number } = { f: () => 1 };
+export const festPay12 = pay;

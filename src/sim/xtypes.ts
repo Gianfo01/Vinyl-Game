@@ -262,8 +262,10 @@ export interface Tour {
   role: 'headline' | 'co' | 'opening';
   partnerActId?: string;
   crew: number;
-  pay: 'door' | 'guarantee' | 'hybrid';
+  pay: 'door' | 'guarantee' | 'hybrid' | 'versus';
   costReserved: number;
+  /** r18 live18: logística escolhida */
+  kit18?: import('./tourhook18').Kit18;
   revenue: number;
   costs: number;
   status: 'planned' | 'running' | 'done' | 'cancelled';
