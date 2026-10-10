@@ -90,11 +90,24 @@ As 34 ligações de `ideas19` §3 mais as que nascem dos trabalhos em curso. Cad
 - Prestígio, crítica e reputação sem bater no teto.
 - Lote rápido (bots reais que tomam ações) a cada frente; nada do futuro na tela.
 
-## Ordem de execução (agentes em paralelo)
-1. **Onda 1**: Frente 0 inteira + protótipo do calendário único.
-2. **Onda 2**: Frente 1 (malha de ligações, dividida em 3 agentes por grupo de sistemas) + piloto da Frente 2 (4 marcos).
-3. **Onda 3**: Frentes 3, 4, 5, 6, 7 em paralelo (um agente cada).
-4. **Onda 4**: Frente 8, integrador final (testes, equilíbrio, Chromium em 1889/1955/1975/2005/2030), documentação e publicação.
+## Ordem de execução (agentes em paralelo) — visão única de todas as frentes (0–10)
+1. **Onda 1 — base**: Frente 0 inteira (Rng por sistema, matriz Fato→consumidor já com os tipos de fato dos 13 sistemas da Frente 9,
+   bots adversários, teto de `appeal`, fachadas únicas) + protótipo do calendário único + **WP0 da Frente 10** (ids de cidades e gêneros,
+   ficha dos 34 países faltantes, teste validador de dados).
+2. **Onda 2 — malha e dados**: Frente 1 (ligações, 3 agentes por grupo de sistemas) + Frente 9 parte 1 (9.1 tributos, 9.2 músicos de
+   estúdio, 9.3 camps de composição, 9.5 sucesso tardio) + **Frente 10 WP-A a WP-G** (artistas por região/época, pessoas e selos,
+   casas/estúdios/equipamento, festivais/prêmios/paradas/sociedades/leis) + piloto da Frente 2 (4 marcos).
+3. **Onda 3 — conteúdo e sistemas**: Frentes 3, 4, 5, 6, 7 em paralelo, cada uma levando seus sistemas da Frente 9
+   (7: 9.4 remix, 9.6 publicidade, 9.7 trilhas · 5: 9.8 beneficentes, 9.12 concursos · 6: 9.9 escolas/igrejas ·
+   2/3: 9.10 fanzines, 9.11 fraudes · 4: 9.13 equipamento-ícone) + **Frente 10 WP-H/WP-I** (marcos 42→~150 com decisão,
+   eventos e situações regionais, mídia, covers/samples, cenas, relíquias, crime) que alimentam a Frente 2.
+4. **Onda 4 — fechamento**: Frente 8 (UX), **WP-J** (verificação dos itens †, sensibilidade), integrador final: suíte inteira,
+   as 6 cadeias de história da Frente 9 com bots (cada uma em ≥1 de 10 partidas longas), equilíbrio rápido com bots que agem,
+   Chromium em 1889/1925/1955/1975/2005/2030, documentação (`rodada19.md`, README) e publicação.
+
+**Dependências críticas**: a Frente 10 WP0 vem antes de qualquer artista ou cidade nova; os sistemas 9.x só usam dados reais depois
+de WP-A a WP-G; as fachadas únicas (0.6) vêm antes da cerimônia e do fandom tocarem os sistemas novos; nada da Frente 10 entra no modo
+"Vida real exata" sem verificação.
 
 ---
 
@@ -176,3 +189,42 @@ ouvintes, tem **cena ou manchete** e aparece no "por quê?" e no tutorial. A úl
 - **Onda 2**: 9.1, 9.2, 9.3, 9.5 (os de maior reuso) junto com a malha de ligações.
 - **Onda 3**: 9.4, 9.6, 9.7 na Frente 7 (mercado); 9.8, 9.12 na Frente 5 (ao vivo); 9.9 na Frente 6; 9.10, 9.11 na Frente 2/3; 9.13 na Frente 4 (relíquias e espólio).
 - **Onda 4**: o integrador roda as 6 cadeias acima com bots e confere se cada uma acontece em pelo menos 1 de cada 10 partidas longas.
+
+---
+
+## Frente 10 — Banco de dados real (detalhes e listas em `docs/db19.md`)
+
+| Categoria | Hoje | Meta | Alimenta |
+|---|---|---|---|
+| Artistas reais | 1214 | ~2000 | realworld, discover18, tribute19, fest18, awards18, regions18/circuits18, kpop18 |
+| Países com ficha | 34 (artistas de 68) | 68 | charts, prêmios, câmbio, sociedade, leis |
+| Cidades | 155 (26 sem artista) | ~235 | mapa, cenas, circuitos |
+| Gêneros | 296 | ~345 | cenas, quality18, regiões |
+| Produtores | 113 | ~200 | session18, quality18, studio12, gear19 |
+| Empresários/promotores / executivos | 63 / 24 | ~125 / ~50 | managers14, contracts18, deals18 |
+| Selos reais + extras | 22 + 45 | ~70 + ~110 | rivais, fusões, deals18, rights18 |
+| Casas de show | ~49 | ~110 | venues17, live18, circuits18, tribute19, charity19 |
+| Estúdios nomeados | 10 | ~60 | studio12, session18, quality18, session19 |
+| Equipamento real (marcas/modelos) | 0 | ~130 | gear19, relíquias, instrumentos |
+| Festivais | 63 | ~130 | fest18, circuits18, contests19, charity19 |
+| Prêmios / paradas / sociedades | ~55 / 26 / 16 | ~95 / ~42 / ~34 | awards18, cerimônia do envelope, M8 certificações, rights18 |
+| Marcos de história | 42 | ~150 | decisões por época (Frente 2) |
+| Leis / geopolítica | 9 / 37 | ~28 / ~60 | society18, radio18, censura |
+| EventDefs / situações | 474 / 86 | ~600 / ~130 | diretor, dm18 |
+| Cenas locais | 29 | ~60 | scenedefs17, corrida do ouro, zines19 |
+| Veículos / formatos de TV-rádio | 28 / 10 | ~65 / ~35 | press18, tv18, contests19 |
+| Covers/samples | 24 | ~90 | processos, revival19, tribute19 |
+| Relíquias | 42 | ~110 | relics18, gear19, heirs8, leilões |
+| Crime (orgs / crônicas) | 15 / 11 | ~26 / ~25 | crime17 (sem pessoa real como autora/vítima) |
+
+**Foco nas lacunas**: 1920–49 (+80, junto com 1889–1919), Caribe (+40), África (+85), Oriente Médio (+35), Sudeste Asiático/Ásia (+50),
+Leste Europeu (+55), França/Alemanha (+65), Oceania (+45), Nórdicos (+45), anos 2020 (+60, inclusive 2024–2026), candidatos a tributo marcados.
+
+**Pacotes de trabalho** (só o integrador edita `realworld.ts`, `world.ts`, `countries.ts`; os demais criam arquivos em `src/data/more19/`):
+- **WP0** (primeiro): ids de cidades e gêneros novos, `CountryInfo` dos 34 países faltantes, teste validador.
+- **Em paralelo**: WP-A 1920–49 · WP-B Caribe+África · WP-C Oriente Médio+Ásia · WP-D1 Leste+Nórdicos · WP-D2 França/Alemanha/Ibéria · WP-D3 Oceania+2020s · WP-E pessoas e selos · WP-F casas, estúdios, gear · WP-G festivais, prêmios, paradas, sociedades, leis.
+- **Depois**: WP-H marcos, eventos, situações · WP-I mídia, covers, cenas, relíquias, crime · WP-J verificação dos itens † e sensibilidade.
+
+**Regras**: item não confirmado entra como `exact:false` (não aparece no modo "Vida real exata" até ser conferido); pessoas reais nunca
+como assassinas ou vítimas; casos sensíveis só como cena/contexto; cada dado novo precisa de visual (pixel art) e de um consumidor nos sistemas.
+**Encaixe nas ondas**: WP0 na Onda 1; WP-A a WP-G na Onda 2 (junto da malha de ligações, já que alimentam os sistemas 9.x); WP-H a WP-J na Onda 3.

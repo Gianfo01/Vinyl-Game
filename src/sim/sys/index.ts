@@ -249,3 +249,6 @@ import './decide18';
 import './echoes18';
 import './decnew18';
 import './links18';
+// Rodada 18 (cine18): storyboards de cenas compostos pelo estado e carreiras póstumas (espólios, hologramas, avatares).
+import './cine18';
+import './post18';

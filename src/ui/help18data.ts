@@ -195,7 +195,7 @@ H('wealth', ['Patrimônio', 'Wealth'],
   ['Seu dinheiro pessoal (separado do selo), bens e investimentos.', 'Your personal money (separate from the label), goods and investments.'],
   ['Separe o pessoal do selo: se o selo quebra, o patrimônio pessoal segura. Ex.: casa própria reduz custo de vida.', 'Keep personal and label money apart: if the label goes bust, personal wealth holds. E.g. owning a house cuts living costs.']);
 H('scenes17', ['Álbum de cenas', 'Scene album'],
-  ['Cenas interativas que já aconteceram (prêmios, shows, TV, tribunal, casamento...), com replay e fotos icônicas.', 'Interactive scenes that already happened (awards, shows, TV, court, wedding...), with replay and iconic photos.'],
+  ['Cenas interativas que já aconteceram (prêmios, shows, TV, tribunal, casamento...), com replay, fotos icônicas e a Cinemateca (storyboards dos grandes momentos).', 'Interactive scenes that already happened (awards, shows, TV, court, wedding...), with replay, iconic photos and the Cinematheque (storyboards of big moments).'],
   ['Reveja uma cena para lembrar a escolha e o efeito. Ex.: o discurso no prêmio que irritou um rival explica a rixa de hoje.', 'Replay a scene to recall the choice and its effect. E.g. the award speech that annoyed a rival explains today\'s feud.']);
 H('careers', ['Carreiras', 'Careers'],
   ['Suas carreiras ativas (selo, músico, empresário, agente, festival, casa, estúdio, editora, mídia, plataforma, trilhas, jornalismo): começar, delegar ou largar.', 'Your active careers (label, musician, manager, agent, festival, venue, studio, publisher, media, platform, screen, journalism): start, delegate or drop.'],

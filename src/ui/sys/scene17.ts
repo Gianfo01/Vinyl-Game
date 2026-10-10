@@ -33,8 +33,14 @@ function actors(s: GameState, actId?: string | null, seed = 'x'): Actor[] {
   return out;
 }
 
+/** r18 (cine18): ganchos que trocam o quadro fixo por um storyboard (recebem a chave da cena). */
+export const VIEW17_X: ((s: GameState, key: string) => HTMLElement | null)[] = [];
+/** r18 (cine18): seções extras no fim do Álbum de cenas. */
+export const ALBUM17_X: ((s: GameState) => HTMLElement | null)[] = [];
+
 /** Quadro do local (estúdio usa o desenho do scenes14). */
 export function view17(s: GameState, place: string, year: number, actId?: string | null, seed = 'x'): HTMLElement {
+  for (const f of VIEW17_X) { const el = f(s, seed); if (el) return el; }
   if (place === 'studio') return scene14('studio_live', { year, size: 'card', spots: false });
   const pk = (PLACE_NAMES[place as PlaceKind] ? place : 'street') as PlaceKind;
   return placeView(pk, { year, actors: actors(s, actId, seed), energy: 0.7, alt: t(PLACE_NAMES[pk]), cls: 'scene-stage' });
@@ -152,6 +158,8 @@ function album(s: GameState): HTMLElement {
         h('b', null, `"${t(ph.title)}"`), h('small', null, `${ph.y}${ph.city ? ` · ${cityName(ph.city)}` : ''} · ${t(ph.by)}`),
         ph.act && s.acts[ph.act] ? actLink(s, ph.act) : null,
         ph.kept === 1 ? pill(`${t(l('no acervo', 'in the archive'))} · ~${$(money(s, ph.val))}`, 'good') : ph.kept === 2 ? pill(t(l('licenciada', 'licensed'))) : photoRow(s, ph.id)))) : h('p', { class: 'muted small' }, t(l('Nenhuma foto icônica ainda.', 'No iconic photos yet.')))),
+
+    ...ALBUM17_X.map((f) => f(s)),
   );
 }
 
