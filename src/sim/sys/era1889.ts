@@ -8,6 +8,7 @@
 //  · cenários "Columbia 1889" e "Casa Edison, Rio 1902"; fusões/fechamentos reais de selos no modo exato.
 
 import { l, type L } from '../../data/world';
+import { CHANNELS } from '../../data/rules';
 import { COUNTRY_INFO } from '../../data/countries';
 import { UNIONS } from '../../data/geo';
 import { GEOPOLITICS, TECH_ERAS } from '../../data/content';
@@ -31,6 +32,8 @@ import { Rng } from '../../core/rng';
 // ---------------------------------------------------------------- dados nos sistemas existentes
 
 for (const d of RELICS_1889) if (!RELICS17.some((x) => x.id === d.id)) RELICS17.push(d);
+// marketing da época: o circuito de vaudeville faz a fama (e vende a partitura) antes do rádio
+if (!CHANNELS.some((c) => c.id === 'vaudeville')) CHANNELS.push({ id: 'vaudeville', name: l('Circuito de vaudeville', 'Vaudeville circuit'), untilYear: 1932, reachCost: 5000, sales: 0.9, fame: 0.9, prestige: 0.1 });
 for (const o of OUTLETS_1889) if (!OUTLETS17.some((x) => x.id === o.id)) OUTLETS17.push(o);
 for (const u of UNIONS_1889) if (!UNIONS.some((x) => x.id === u.id)) (UNIONS as unknown as typeof UNIONS_1889).push(u);
 for (const c of COUNTRY_INFO) {
