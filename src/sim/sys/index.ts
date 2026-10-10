@@ -190,3 +190,5 @@ import './personact18';
 // Rodada 18 (art18): qualidade multidimensional e trajetória artística (cada disco muda o próximo).
 import './quality18';
 import './traj18';
+// Rodada 18 (ability18): habilidade atual e potencial (CA/PA estilo FM) para todas as pessoas.
+import './ability18';
