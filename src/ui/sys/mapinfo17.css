@@ -7,3 +7,4 @@
 .mi17-cols { columns: 2 220px; }
 .mi17-pop .city-card { margin-bottom: 6px; }
 .mi17-city { margin-right: 4px; }
+.mi17-pop .city-card > .row.between > button { display: none; }

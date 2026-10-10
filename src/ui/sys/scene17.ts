@@ -10,7 +10,8 @@ import { awardScene17, momentScene17 } from '../../sim/sys/scenedefs17';
 import { DEFS17, choose17, options17, pend17, photoAct17, result17, s17, startDate17, type Res17 } from '../../sim/sys/scene17';
 import type { MomentRec16 } from '../../sim/sys/moments16';
 import type { GameState } from '../../sim/types';
-import { actLink, cityName, monthName, pill, rerender, section, toast } from '../common';
+import { $, actLink, cityName, monthName, pill, rerender, section, toast } from '../common';
+import { money } from '../../sim/util';
 import { h } from '../dom';
 import { lookOf, randomLook } from '../pixel/avatar';
 import { PLACE_NAMES, placeView, type Actor } from '../pixel/places';
@@ -52,7 +53,7 @@ function photoRow(s: GameState, id: string): HTMLElement {
   const ph = s17(s).photos.find((p) => p.id === id)!;
   box.append(ic('camera'), h('b', null, ` "${t(ph.title)}" `),
     h('button', { class: 'btn small', onclick: () => act('keep') }, t(l('Guardar no acervo', 'Keep in the archive'))),
-    h('button', { class: 'btn small ghost', onclick: () => act('license') }, `${t(l('Licenciar', 'License'))} ~$${ph.val.toLocaleString('en-US')}`));
+    h('button', { class: 'btn small ghost', onclick: () => act('license') }, `${t(l('Licenciar', 'License'))} ~${$(money(s, ph.val))}`));
   return box;
 }
 
@@ -148,7 +149,7 @@ function album(s: GameState): HTMLElement {
       photos.length ? h('div', { class: 's17-photos' }, photos.map((ph) => h('div', { class: 'card s17-ph' },
         h('b', null, `"${t(ph.title)}"`), h('small', null, `${ph.y}${ph.city ? ` · ${cityName(ph.city)}` : ''} · ${t(ph.by)}`),
         ph.act && s.acts[ph.act] ? actLink(s, ph.act) : null,
-        ph.kept === 1 ? pill(`${t(l('no acervo', 'in the archive'))} · ~$${ph.val.toLocaleString('en-US')}`, 'good') : ph.kept === 2 ? pill(t(l('licenciada', 'licensed'))) : photoRow(s, ph.id)))) : h('p', { class: 'muted small' }, t(l('Nenhuma foto icônica ainda.', 'No iconic photos yet.')))),
+        ph.kept === 1 ? pill(`${t(l('no acervo', 'in the archive'))} · ~${$(money(s, ph.val))}`, 'good') : ph.kept === 2 ? pill(t(l('licenciada', 'licensed'))) : photoRow(s, ph.id)))) : h('p', { class: 'muted small' }, t(l('Nenhuma foto icônica ainda.', 'No iconic photos yet.')))),
   );
 }
 

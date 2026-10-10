@@ -7,6 +7,7 @@
 // (3) cerimônia dos Gramófonos (discurso ao ganhar, reação ao perder). Tudo vai para o Álbum de cenas (rever) e
 // pode render uma foto icônica (colecionável: guardar ou licenciar).
 
+import { formatMoney } from '../../core/money';
 import { Rng, clamp, hashString, seedState } from '../../core/rng';
 import { countryName, countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
@@ -22,6 +23,10 @@ import { fameTier } from './fame15';
 import { nudge16 } from './fame16';
 import { life, playerAct, playerPerson } from './life';
 import { queueScene, type PlaceKind } from './scenes/state';
+import { ownerOf } from './people/owner';
+
+/** Centavos → texto nos dois idiomas. */
+export const usd17 = (c: number): L => l(`$${formatMoney(Math.round(c), 'pt-BR')}`, `$${formatMoney(Math.round(c), 'en-US')}`);
 
 // ---------------------------------------------------------------- tipos
 
@@ -37,7 +42,7 @@ export interface Ctx17 {
 }
 export interface Odds17 { p: number; why: L[] }
 export interface Opt17 {
-  id: string; label: L | ((s: GameState, c: Ctx17) => L); hint: L;
+  id: string; label: L | ((s: GameState, c: Ctx17) => L); hint: L | ((s: GameState, c: Ctx17) => L);
   when?: (s: GameState, c: Ctx17) => boolean;
   odds?: (s: GameState, c: Ctx17) => Odds17;
   fx: (s: GameState, c: Ctx17, ok: boolean, e: Fx17) => L;
@@ -112,7 +117,7 @@ export function ctx17(s: GameState, o: Partial<Ctx17> & { place?: string }): Ctx
 }
 
 const WX: Record<string, L> = {
-  mild: l('noite amena', 'a mild night'), hot: l('calor de rachar', 'sweltering heat'), cold: l('frio cortante', 'biting cold'), snow: l('neve lá fora', 'snow outside'),
+  mild: l('tempo ameno', 'mild weather'), hot: l('calor de rachar', 'sweltering heat'), cold: l('frio cortante', 'biting cold'), snow: l('neve lá fora', 'snow outside'),
   rain: l('chuva fina', 'light rain'), monsoon: l('chuva de monção', 'monsoon rain'), storm: l('tempestade se armando', 'a storm brewing'),
 };
 const FT: L[] = [
@@ -205,7 +210,15 @@ export class Fx17 {
   cash(real: number, memo: string): this {
     const v = money(this.s, real);
     post(this.s, `s17:${this.key}:${memo}`, v, 'scenes17', memo);
-    this.say(l('Caixa: {v}', 'Cash: {v}'), { v: `${v > 0 ? '+' : '−'}$${Math.abs(v).toLocaleString('en-US')}` });
+    this.say(l('Caixa do selo: {s}{v}', 'Label cash: {s}{v}'), { s: v > 0 ? '+' : '−', v: usd17(Math.abs(v)) });
+    return this;
+  }
+  /** dinheiro pessoal (patrimônio do dono), como nas ações da vida pessoal */
+  pocket(real: number): this {
+    const v = money(this.s, real);
+    const o = ownerOf(this.s);
+    o.wealth = Math.max(0, o.wealth + v);
+    this.say(l('Bolso pessoal: {s}{v}', 'Personal wealth: {s}{v}'), { s: v > 0 ? '+' : '−', v: usd17(Math.abs(v)) });
     return this;
   }
   partner(dv: number): this {
@@ -295,7 +308,7 @@ export function options17(s: GameState, key: string): { q: L; opts: { id: string
   const d = DEFS17[p.def];
   const stg = d.stages[Math.min(p.ctx.picks.length, d.stages.length - 1)];
   const q = typeof stg.q === 'function' ? stg.q(s, p.ctx) : stg.q;
-  return { q, opts: stg.opts.filter((o) => !o.when || o.when(s, p.ctx)).map((o) => ({ id: o.id, label: lab(o, s, p.ctx), hint: o.hint, odds: o.odds?.(s, p.ctx) })) };
+  return { q, opts: stg.opts.filter((o) => !o.when || o.when(s, p.ctx)).map((o) => ({ id: o.id, label: lab(o, s, p.ctx), hint: typeof o.hint === 'function' ? o.hint(s, p.ctx) : o.hint, odds: o.odds?.(s, p.ctx) })) };
 }
 
 /** Escolhe; nas etapas intermediárias só avança. Na última aplica os efeitos e grava no álbum. */
@@ -359,7 +372,7 @@ export function photoAct17(s: GameState, id: string, how: 'keep' | 'license'): L
     post(s, `s17ph:${id}`, v, 'scenes17', 'photo license');
     ph.kept = 2;
     if (ph.act && s.acts[ph.act]) s.acts[ph.act].fans.casual += Math.round(200 + ph.val / 10);
-    return fmtL(l('Licenciada para revistas e pôsteres: +${v}. Mais gente viu, mas a foto deixa de ser sua.', 'Licensed to magazines and posters: +${v}. More people saw it, but it is no longer yours.'), { v: v.toLocaleString('en-US') });
+    return fmtL(l('Licenciada para revistas e pôsteres: +{v}. Mais gente viu, mas a foto deixa de ser sua.', 'Licensed to magazines and posters: +{v}. More people saw it, but it is no longer yours.'), { v: usd17(v) });
   }
   ph.kept = 1;
   const a = ph.act ? s.acts[ph.act] : undefined;

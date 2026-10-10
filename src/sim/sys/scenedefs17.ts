@@ -7,14 +7,14 @@ import { cityById, l, type L } from '../../data/world';
 import { activeCensorship } from '../media';
 import { piety } from '../scandal17';
 import type { GameState } from '../types';
-import { fmtL } from '../util';
+import { fmtL, money } from '../util';
 import { life } from './life';
 import { PARTNER_TRAITS } from './life/data';
 import { love17 } from './love17';
 import { ownerOf } from './people/owner';
 import { acceptAtCity } from './sex17';
 import { orgs17 } from './crime17';
-import { amp17, actOf17, cityN, ctx17, def17, open17, result17, type Ctx17, type Odds17, type Opt17 } from './scene17';
+import { usd17, amp17, actOf17, cityN, ctx17, def17, open17, result17, type Ctx17, type Odds17, type Opt17 } from './scene17';
 import { sc } from './scenes/state';
 import type { MomentRec16 } from './moments16';
 import { fameTier } from './fame15';
@@ -336,9 +336,9 @@ def17({ id: 'wedding17', name: l('Casamento', 'Wedding'), icon: 'heart', major: 
       fx: (s, c, _ok, e) => { e.partner(8).stress(-8, l('dia em paz', 'a peaceful day'), 'me'); return l('Ninguém de fora viu. Foi perfeito.', 'No outsider saw it. It was perfect.'); } },
     { id: 'magazine', label: l('Vender as fotos para uma revista', 'Sell the photos to a magazine'), hint: l('Dinheiro e fama; seu par pode não gostar.', 'Money and fame; your partner may not like it.'),
       odds: (s) => od(PARTNER_TRAITS.find((x) => x.id === life(s).partner?.trait)?.likes === 'fame' ? 0.9 : 0.45, l('Depende de quanto seu par gosta de holofotes.', 'Depends on how much your partner likes the spotlight.')),
-      fx: (s, c, ok, e) => { e.cash(4000 + c.ft * 6000, 'wedding photos').fame(1); e.photo(l('O beijo na capa da revista', 'The kiss on the magazine cover')); if (!ok) { e.partner(-8); return l('A revista vende muito; seu par se sente exposto.', 'The magazine sells big; your partner feels exposed.'); } e.partner(3); return l('Capa dupla. Seu par adora.', 'A double cover. Your partner loves it.'); } },
+      fx: (s, c, ok, e) => { e.pocket(4000 + c.ft * 6000).fame(1); e.photo(l('O beijo na capa da revista', 'The kiss on the magazine cover')); if (!ok) { e.partner(-8); return l('A revista vende muito; seu par se sente exposto.', 'The magazine sells big; your partner feels exposed.'); } e.partner(3); return l('Capa dupla. Seu par adora.', 'A double cover. Your partner loves it.'); } },
     { id: 'industry', label: l('Festão com a indústria', 'A huge industry party'), hint: l('Contatos no setor; caro.', 'Industry contacts; expensive.'),
-      fx: (s, c, _ok, e) => { e.cash(-9000, 'industry wedding').rep('institutional', 4).rep('commercial', 2); return l('Metade do setor dança na sua festa. Negócios fecham no bar.', 'Half the industry dances at your party. Deals close at the bar.'); } },
+      fx: (s, c, _ok, e) => { e.pocket(-9000).rep('institutional', 4).rep('commercial', 2); return l('Metade do setor dança na sua festa. Negócios fecham no bar.', 'Half the industry dances at your party. Deals close at the bar.'); } },
     { id: 'ex', label: l('Convidar um(a) ex', 'Invite an ex'), hint: l('Gesto de paz — ou drama na pista.', 'A peace gesture — or drama on the dance floor.'), when: (s) => love17(s).exes.length > 0,
       odds: () => od(0.45, l('Ex no casamento é sempre arriscado.', 'An ex at the wedding is always risky.')),
       fx: (s, c, ok, e) => { const ex = love17(s).exes[0]; if (ok) { if (ex) ex.bitter = undefined; e.note(l('Mágoa do(a) ex desfeita.', 'The ex\'s bitterness is gone.')); return l('Brinde emocionado. Velhas feridas fecham.', 'An emotional toast. Old wounds close.'); } e.partner(-10).news(l('Barraco no casamento: ex convidado(a) causa cena.', 'Wedding drama: an invited ex makes a scene.'), 45, ['bad', 'romance'], 'rumor'); return l('Discussão na pista, taça quebrada, convidados filmando.', 'An argument on the dance floor, a broken glass, guests filming.'); } },
@@ -390,7 +390,7 @@ const SPOTS: { id: string; y0: number; y1: number; name: L; likes: string[]; cos
 ];
 const likesOf = (s: GameState): string => PARTNER_TRAITS.find((x) => x.id === life(s).partner?.trait)?.likes ?? 'calm';
 const outdoor = (id: string) => id === 'park' || id === 'drivein' || id === 'rooftop';
-const spotOpt = (sp: (typeof SPOTS)[number]): Opt17 => ({ id: sp.id, label: sp.name, hint: sp.cost ? F(l('~${c}', '~${c}'), { c: sp.cost }) : l('de graça', 'free'),
+const spotOpt = (sp: (typeof SPOTS)[number]): Opt17 => ({ id: sp.id, label: sp.name, hint: (s) => (sp.cost ? F(l('~{c} do seu bolso', '~{c} from your pocket'), { c: usd17(money(s, sp.cost)) }) : l('de graça', 'free')),
   when: (s, c) => s.year >= sp.y0 && s.year <= sp.y1 && !(outdoor(sp.id) && ['rain', 'storm', 'monsoon', 'snow'].includes(c.wx ?? '')),
   fx: () => l('', '') });
 const TALK: Opt17[] = [
@@ -414,7 +414,7 @@ function dateFx(s: GameState, c: Ctx17, ok: boolean, e: import('./scene17').Fx17
   const fit = (talk === 'music' && lk === 'music') || (talk === 'fame' && lk === 'fame') || (talk === 'future' && lk === 'family') || talk === 'dreams';
   let gain = (ok ? 7 : 1) + (fit ? 6 : talk === 'fame' ? -4 : 0) + (talk === 'open' ? (ok ? 8 : -6) : 0);
   if (sp.likes.includes(lk)) gain += 3;
-  if (sp.cost) e.cash(-sp.cost, 'date');
+  if (sp.cost) e.pocket(-sp.cost);
   e.partner(Math.round(gain)).stress(-5, l('noite a dois', 'a night together'), 'me');
   love17(s).st.dates += 1;
   // paparazzi: fama alta em lugar público; casal do mesmo sexo onde a aceitação é baixa → risco real
