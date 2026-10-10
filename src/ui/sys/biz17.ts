@@ -296,3 +296,6 @@ function calArea(s: GameState): HTMLElement {
 }
 registerArea({ id: 'cal17', label: l('Agenda de shows', 'Show calendar'), icon: 'calendar', key: '', render: calArea });
 
+
+// r17 nav: abas reaproveitadas pelas páginas de carreira (Gravadora, Casa de shows)
+export const bizTabs17 = { saleTab, outletsTab, venuesTab, licTab, imageTab, merchTab, circuitTab };

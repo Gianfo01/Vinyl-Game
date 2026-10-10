@@ -90,8 +90,16 @@ export function mergeTabs<T extends { id: string }>(base: T[], host: TabHost, s:
   return [...before, ...base, ...after];
 }
 
+/** Rodada 17: seções que se mudaram para outra página (ex.: casa de shows → página da carreira) somem do host. */
+const SECTION_HIDE: ((host: string, id: string, s: GameState) => boolean)[] = [];
+export function hideSection(fn: (host: string, id: string, s: GameState) => boolean): void { SECTION_HIDE.push(fn); }
+/** Desenha seções registradas específicas (por id) em outra página. */
+export function sectionsOf(host: SectionHost, ids: string[], s: GameState): HTMLElement[] {
+  return ids.map((id) => (SECTIONS[host] ?? []).find((x) => x.id === id)?.render(s)).filter((x): x is HTMLElement => !!x);
+}
+
 export function extraSections(host: string, s: GameState): HTMLElement | null {
-  const list = (SECTIONS[host] ?? []).slice().sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
+  const list = (SECTIONS[host] ?? []).filter((x) => !SECTION_HIDE.some((f) => f(host, x.id, s))).sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
   const els = list.map((x) => x.render(s)).filter((x): x is HTMLElement => !!x);
   return els.length ? h('div', { class: 'extra-sections' }, els) : null;
 }

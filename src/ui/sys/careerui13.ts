@@ -15,6 +15,7 @@ import { fmtL, money, rngOf } from '../../sim/util';
 import { ADVISOR_EXTRA, type Tip } from '../advisor';
 import { CAREER_NAV } from '../careernav13';
 import { PAGE16 } from '../pages16';
+import { CAREER_PAGE17 } from '../nav17';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerSection } from '../registry';
@@ -27,6 +28,8 @@ const HOLD: Record<Holder, L> = { label: l('Caixa do selo', 'Label cash'), perso
 /** Abre a "casa" de uma carreira (área + aba certa). */
 export function openCareer(id: string): void {
   const hm = CAREER_NAV[id]?.home;
+  // r17: cada carreira abre a sua página exclusiva (Você › Carreiras)
+  if (CAREER_PAGE17[id]) { store.area = CAREER_PAGE17[id].area; rerender(); return; }
   const area = careerDef(id)?.area ?? hm?.area ?? 'desk';
   if (hm?.tab && hm.area === area) setTab(hm.tab[0], hm.tab[1]);
   store.area = area;
@@ -128,3 +131,6 @@ ADVISOR_EXTRA.push((s) => {
   if (timeLoad(s) > 1) out.push({ icon: 'clock', text: fmtL(l('Agenda em {p}%: carreiras demais estressam todo mês.', 'Schedule at {p}%: too many careers add stress every month.'), { p: Math.round(timeLoad(s) * 100) }), area: 'careers', level: 'warn' });
   return out;
 });
+
+// r17 nav: indicadores reaproveitados pelas páginas de carreira
+export { kpis as careerKpis13 };
