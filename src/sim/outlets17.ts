@@ -51,15 +51,16 @@ export function outletsIn(year: number): O17[] {
 export const outletName = (x: O17): string => x.real ? `${x.name} (≈ ${x.real})` : x.name;
 
 /** Escolha determinística de um veículo que combine com o assunto (boato → tabloide/rede; fato sério → jornal). */
-export function pickOutlet(list: O17[], seed: string, want: OLine[], market?: MarketId): O17 | undefined {
+export function pickOutlet(list: O17[], seed: string, want: OLine[], market?: MarketId, fam?: string): O17 | undefined {
   const pool = list.filter((o) => want.includes(o.line) && (!market || o.market === market || o.market === 'global'));
   const p = pool.length ? pool : list.filter((o) => !market || o.market === market || o.market === 'global');
   const q = p.length ? p : list;
   if (!q.length) return undefined;
-  // pesa por alcance: veículos grandes aparecem mais
-  const tot = q.reduce((t, o) => t + o.reach, 0);
+  // pesa por alcance, pela ordem da linha pedida e pelo gosto do veículo (revista de jazz não noticia o hit de rock)
+  const w = (o: O17) => o.reach * (1 + Math.max(0, want.length - want.indexOf(o.line) - 1) * 0.6) * (!fam ? 1 : o.fav.includes(fam) ? 2.5 : o.fav.length ? 0.35 : 1);
+  const tot = q.reduce((t, o) => t + w(o), 0);
   let x = (hashString(seed) % 10000) / 10000 * tot;
-  for (const o of q) { x -= o.reach; if (x <= 0) return o; }
+  for (const o of q) { x -= w(o); if (x <= 0) return o; }
   return q[q.length - 1];
 }
 

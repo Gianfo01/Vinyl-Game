@@ -90,3 +90,11 @@ export function launchText17(s: GameState, rel: Release, exp: number): L {
     : (big ? l('Contagem regressiva para "{t}" à meia-noite', 'Midnight countdown for "{t}"') : l('"{t}" chega às plataformas', '"{t}" lands on streaming'));
   return fmtL(t, { t: rel.title });
 }
+
+/** Hype de um acontecimento: o rótulo genérico ("Prêmio") ganha o fato concreto ("Prêmio: Álbum do Ano…"). */
+export function eventText17(base: L, text: L): L {
+  const cut = (x: string) => (x.length > 64 ? `${x.slice(0, 62)}…` : x).replace(/\.$/, '');
+  return { pt: `${base.pt}: ${cut(text.pt)}`, en: `${base.en}: ${cut(text.en)}` };
+}
+/** Valor pelo tamanho do ato: o 1º nº 1 de um novato é notícia maior que o 10º de uma superestrela (±25%). */
+export const eventValue17 = (v: number, a?: Act): number => Math.round(v * (1.25 - (a?.fame ?? 50) / 200) * 10) / 10;

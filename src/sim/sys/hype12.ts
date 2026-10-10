@@ -15,7 +15,7 @@ import { relicHook, relics, type Relic } from './relics9';
 import { f12, festHypeHook } from './fest12';
 import { liveOf, type OwnFestival } from './live/state';
 import { w4 } from './world4/state';
-import { fameWaitText17, launchText17, momentumParts17, rolloutText17 } from '../hype17';
+import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts17, rolloutText17 } from '../hype17';
 
 export interface HSrc { k: string; t: L; v: number }
 export interface HEnt { s: HSrc[]; p?: number; v?: number; pk?: number }
@@ -211,7 +211,7 @@ const RELIC_EV: Record<string, [number, L]> = {
 rememberListeners().push((s, e) => {
   const ev = EV[e.kind];
   if (!ev || !e.actId || !s.acts[e.actId]) return;
-  addHype(s, `a:${e.actId}`, e.kind, ev[1], ev[0]);
+  addHype(s, `a:${e.actId}`, e.kind, eventText17(ev[1], e.text), eventValue17(ev[0], s.acts[e.actId]));
   const rv = RELIC_EV[e.kind];
   if (rv) for (const rl of relics(s).list) if (rl.a === e.actId && rl.st !== 'lost') addHype(s, `o:${rl.id}`, e.kind, rv[1], rv[0]);
 });

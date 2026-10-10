@@ -11,7 +11,7 @@ import { Rng, clamp, hashString } from '../../core/rng';
 import { COUNTRY_INFO } from '../../data/countries';
 import { countryOfCity } from '../../data/geo';
 import { COLUMNISTS, CRITICS17 } from '../../data/media17';
-import { cityById, l, type L, type MarketId } from '../../data/world';
+import { cityById, familyOf, l, type L, type MarketId } from '../../data/world';
 import '../contentBridge';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, facts17, raiseVisibility, recentFacts, type Fact } from '../facts17';
@@ -126,7 +126,7 @@ function addStory(s: GameState, x: Omit<Story, 'id' | 'y' | 'm' | 'w' | 'reach'>
     st.st = keep.slice(0, 160);
   }
   const a = x.a ? s.acts[x.a] : undefined;
-  if (a && o) {
+  if (a && o && x.src !== 'fact') {
     // atenção: boato é hype (sobe mais com alcance do veículo)
     addHype(s, `a:${a.id}`, `m17:${x.tpl}`, fmtL(l('{o}: {t}', '{o}: {t}'), { o: o.name, t: x.t }), Math.round((3 + x.sev / 12) * (0.5 + o.reach / 100)));
     if (x.tone < 0 && x.st === 'open') { const p = lead(s, a); if (p) addStress(s, p.id, 3 + x.sev / 12, fmtL(l('Boato: {t}', 'Rumor: {t}'), { t: x.t })); }
@@ -174,7 +174,8 @@ function ingestFacts(s: GameState, r: Rng, list: O17[]): void {
     .filter((x) => x.a && (mine.has(x.a.id) || r.chance(clamp((x.a.fame - 15) / 50 + x.f.severity / 150, 0, 1))))
     .sort((a, b) => b.f.severity + (b.a?.fame ?? 0) - a.f.severity - (a.a?.fame ?? 0)).slice(0, 12);
   for (const { f, a } of cand) {
-    const o = pickOutlet(list, `${f.id}`, linesFor(f), a ? cityById[a.city]?.market : undefined);
+    if (st.st.some((y) => s.week - y.w < 9 && y.t.pt === f.text.pt)) continue;
+    const o = pickOutlet(list, `${f.id}`, linesFor(f), a ? cityById[a.city]?.market : undefined, a ? familyOf(a.genre) : undefined);
     if (!o) continue;
     const tone = f.tags.includes('good') ? 1 : f.tags.includes('bad') ? -1 : 0;
     const rumor = f.visibility === 'rumor';
@@ -211,7 +212,7 @@ function gossip(s: GameState, r: Rng, list: O17[]): void {
     if (n >= 6) break;
     // paparazzi: estrela grande sem segurança vira foto toda hora
     const t = fameTier(a.fame), sec = [1, 0.6, 0.25][f15(s).sec[a.id] ?? 0];
-    if (s.year >= 1955 && t >= 3 && r.chance((t - 2) * 0.05 * sec)) {
+    if (s.year >= 1955 && t >= 3 && r.chance((t - 2) * 0.035 * sec)) {
       const o = pickOutlet(list, `pap${a.id}${s.week}`, ['tabloid', 'fan'], cityById[a.city]?.market);
       if (o) {
         const sf = secretAbout(s, a);
