@@ -711,3 +711,5 @@ img.portrait { border: 1px solid var(--line); }
 main select { max-width: 100%; }
 @media (max-width: 640px) { main .hub > *, main .panel > * { min-width: 0; } }
 .p12-grid label { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+/* r18 final: a dica de primeira vez não cobre o menu lateral (fica à direita no desktop) */
+@media (min-width: 641px) { body > .tip18 { left: auto; right: 1rem; } }
