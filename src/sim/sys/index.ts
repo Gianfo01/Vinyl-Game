@@ -239,3 +239,5 @@ import './review18';
 import './policy18';
 import './paths18';
 import './saga18';
+// Rodada 18 (campus18): Nosso mundo — prédios do jogador derivados do estado, obras, danos e retratos anuais.
+import './campus18';
