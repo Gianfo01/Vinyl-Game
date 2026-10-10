@@ -145,3 +145,6 @@ import './lineup16';
 import './bridge17';
 import './situations17';
 import './sits17';
+import './sitsworld17';
+// Rodada 17 (onda 1, B): mundo orgânico dos NPCs — rompimentos, selos novos, carreiras, estratégias de selo.
+import './npc17';

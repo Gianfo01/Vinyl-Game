@@ -12,6 +12,7 @@ import { l, type L } from '../../data/world';
 import { deferEvents, registerExt4, registerSimHook } from '../ext4';
 import { emitFact, recentFacts, type Fact, type FactKind } from '../facts17';
 import { narratorPace } from '../narrator13';
+import { dir17 } from '../director17';
 import type { Decision, GameState } from '../types';
 import { fmtL, nextId, playerActs } from '../util';
 import { per13, type P13 } from './persona13';
@@ -54,6 +55,8 @@ export interface SituationDef {
   playerOnly?: boolean;
   /** só entre NPCs */
   npcOnly?: boolean;
+  /** r17 diretor: tom (o narrador puxa situações boas ou ruins para a frente) */
+  tone?: 'good' | 'bad' | 'mixed';
 }
 
 export interface Sit17State {
@@ -156,12 +159,14 @@ export function runSituations(s: GameState): { mine: string[]; npc: string[] } {
   const st = sit17(s);
   const r = Rng.fromSeed(`${s.config.seed}:sit17:${s.week}`);
   const pace = narratorPace(s.config.storyteller);
-  st.b = clamp(st.b * 0.5 + 1.2 + pace.freq * 0.9 + (pace.random ? r.float(-0.6, 0.9) : 0), 0, 6);
+  const D = dir17(s);
+  st.b = clamp(st.b * 0.5 + (1.2 + pace.freq * 0.9) * D.drama + (pace.random ? r.float(-0.6, 0.9) : 0), 0, 6 + D.npc);
   const facts = recentFacts(s, { sinceWeek: st.lw + 1 }).reverse();
   st.lw = s.week;
   const struggling = s.player.cash < 0 || s.player.insolvencyMonths > 0;
   const out = { mine: [] as string[], npc: [] as string[] };
-  const order = r.shuffle([...SITS]);
+  const tw = (d: SituationDef) => (d.tone === 'bad' ? 1 - D.tone * 0.5 : d.tone === 'good' ? 1 + D.tone * 0.5 : 1);
+  const order = SITS.map((d) => [d, r.float() * tw(d)] as [SituationDef, number]).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
   for (const def of order) {
     if (st.b < def.cost) continue;
     if ((st.cd[def.id] ?? 0) > s.week) continue;
@@ -182,13 +187,13 @@ export function runSituations(s: GameState): { mine: string[]; npc: string[] } {
         s.decisions.push(d);
         out.mine.push(def.id);
       } else {
-        if (def.playerOnly || out.npc.length >= 3) continue;
+        if (def.playerOnly || out.npc.length >= D.npc) continue;
         const opt = npcChoice(s, def, ctx, r);
         const res = opt.apply(s, ctx, r);
         record(s, def, ctx, opt, res ?? null, false);
         out.npc.push(def.id);
       }
-      st.b -= def.cost;
+      st.b -= mine ? def.cost : def.cost * 0.6; // r17: drama entre NPCs custa menos (acontece fora da mesa)
       st.cd[def.id] = s.week + Math.round(def.cooldown * 4.35);
       st.calm[ctx.hero] = s.week + (mine ? 13 : 26);
       break;
