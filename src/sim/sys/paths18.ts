@@ -79,15 +79,15 @@ export const PATHS18: PathDef18[] = [
   { id: 'indie', icon: 'vinyl', name: l('Selo independente sustentável', 'Sustainable independent label'), desc: l('Pequeno, sem dono nem dívida, que paga as contas todo ano e é bom lugar para artista ficar.', 'Small, owned by no one and debt-free, pays its bills every year and is a good home for artists.'),
     relevant: () => true,
     kpis: (s) => {
-      const ys = [1, 2, 3].map((d) => s.year - d).filter((y) => y >= s.config.startYear);
+      const ys = [1, 2, 3, 4, 5].map((d) => s.year - d).filter((y) => y >= s.config.startYear);
       const ok = ys.filter((y) => opProfReal18(s, y) > 0).length;
       const ros = roster(s);
       const trust = ros.length ? ros.reduce((t, a) => t + a.trust, 0) / ros.length : 0;
       const debt = s.player.loans.length + capital(s).investors.length;
       return [
-        K(l('Anos com lucro operacional (últimos 3)', 'Years with operating profit (last 3)'), ok, 3, 'num', l('Lucro operacional: receita da música menos custos, sem empréstimos nem aportes.', 'Operating profit: music revenue minus costs, excluding loans and investment.')),
-        K(l('Fôlego de caixa', 'Cash runway'), s.player.cash / Math.max(1, burn18(s)), 12, 'mo', l('Caixa ÷ custo fixo mensal.', 'Cash ÷ monthly fixed cost.')),
-        K(l('Confiança média do elenco', 'Average roster trust'), trust, 70, 'num', l('Artistas que confiam renovam e indicam outros.', 'Trusting acts renew and refer others.')),
+        K(l('Anos com lucro operacional (últimos 5)', 'Years with operating profit (last 5)'), ok, 5, 'num', l('Lucro operacional: receita da música menos custos, sem empréstimos nem aportes.', 'Operating profit: music revenue minus costs, excluding loans and investment.')),
+        K(l('Fôlego de caixa', 'Cash runway'), s.player.cash / Math.max(1, burn18(s)), 24, 'mo', l('Caixa ÷ custo fixo mensal.', 'Cash ÷ monthly fixed cost.')),
+        K(l('Confiança média do elenco', 'Average roster trust'), trust, 80, 'num', l('Artistas que confiam renovam e indicam outros.', 'Trusting acts renew and refer others.')),
         K(l('Independência (sem dívida/sócio)', 'Independence (no debt/partner)'), clamp(100 - debt * 25, 0, 100), 100, 'pct', l('Cada empréstimo ou investidor tira 25 pontos.', 'Each loan or investor costs 25 points.')),
       ];
     },
@@ -179,9 +179,9 @@ export const PATHS18: PathDef18[] = [
     kpis: (s) => {
       const last = mineRels(s).filter((r) => r.critic !== undefined && (r.criticN ?? 0) > 0).slice(-10);
       return [
-        K(l('Reputação artística', 'Artistic reputation'), s.player.reputation.artistic, 85, 'num', l('Como a crítica e os pares veem o selo.', 'How critics and peers see the label.')),
+        K(l('Discos aclamados (crítica 80+)', 'Acclaimed records (critics 80+)'), mineRels(s).filter((r) => (r.criticN ?? 0) > 0 && (r.critic ?? 0) >= 80).length, 8, 'num', l('A reputação artística satura; o que conta é disco aclamado.', 'Artistic reputation saturates; acclaimed records are what count.')),
         K(l('Prêmios', 'Awards'), s.player.stats.awards, 10, 'num', l('Prêmios do selo.', 'Label awards.')),
-        K(l('Nota média da crítica (10 últimos)', 'Average critic score (last 10)'), last.length ? last.reduce((t, r) => t + (r.critic ?? 0), 0) / last.length : 0, 75, 'num', l('Média 0–100.', 'Average 0–100.')),
+        K(l('Nota média da crítica (10 últimos)', 'Average critic score (last 10)'), last.length ? last.reduce((t, r) => t + (r.critic ?? 0), 0) / last.length : 0, 82, 'num', l('Média 0–100.', 'Average 0–100.')),
         K(l('Lendas no elenco', 'Legends on the roster'), Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length, 2, 'num', l('Atos que viraram lenda com você.', 'Acts that became legends with you.')),
       ];
     },
@@ -255,7 +255,7 @@ export const DOCTRINES18: Doctrine18[] = [
     perks: { valuation: 0.06, appeal: -0.02 }, locks: l('A política de reserva fica travada em no mínimo 4 meses.', 'The reserve policy is locked at 4 months minimum.'), unlocks: ['emergency_fund'],
     adopt: (s) => { const P = pol18(s); P.reserve = Math.max(P.reserve, 4); return l('A equipe delegada não gasta abaixo de 4 meses de custo fixo.', 'Delegated staff won\'t spend below 4 months of fixed costs.'); } },
   { id: 'growth', branch: 'money', excl: 'prudence', cost: 2000, name: l('Crescer a qualquer custo', 'Growth at any cost'), desc: l('Dinheiro parado é dinheiro perdido: mais verba, mais gente, mais risco.', 'Idle money is lost money: more budget, more people, more risk.'),
-    perks: { appeal: 0.03, staffCost: 0.06, stress: 0.06 }, locks: l('Sem reserva mínima (a política de reserva é zerada).', 'No minimum reserve (the reserve policy is cleared).'), unlocks: ['market_blitz'],
+    perks: { appeal: 0.05, chartUnits: 0.02, staffCost: 0.04, stress: 0.06 }, locks: l('Sem reserva mínima (a política de reserva é zerada).', 'No minimum reserve (the reserve policy is cleared).'), unlocks: ['market_blitz'],
     adopt: (s) => { pol18(s).reserve = 0; return l('Reserva zerada; a equipe acelera.', 'Reserve cleared; staff speeds up.'); } },
   { id: 'craft', branch: 'art', excl: 'hits', cost: 2500, name: l('Arte primeiro', 'Art first'), desc: l('O disco certo, não o disco rápido.', 'The right record, not the quick one.'),
     perks: { critics: 0.3, songQ: 0.6, appeal: -0.03 }, locks: l('Trava a decisão "Acampamento de hits".', 'Locks the "Hit camp" decision.'), unlocks: ['masterclass'],
@@ -273,7 +273,7 @@ export const DOCTRINES18: Doctrine18[] = [
     perks: { metadata: 0.12, valuation: 0.05 }, locks: l('Trava a decisão "Vender parte do catálogo".', 'Locks the "Sell part of the catalog" decision.'), unlocks: ['anniversary_box'],
     adopt: () => l('Os herdeiros dos artistas aprovam.', 'The artists\' heirs approve.') },
   { id: 'churn', branch: 'catalog', excl: 'vault', cost: 2000, name: l('Lançamento contínuo', 'Constant release'), desc: l('O próximo disco paga o anterior; catálogo é moeda.', 'The next record pays for the last; catalog is currency.'),
-    perks: { chartUnits: 0.03, stress: 0.05 }, locks: l('Trava a decisão "Box de aniversário".', 'Locks the "Anniversary box" decision.'), unlocks: ['catalog_sale'],
+    perks: { chartUnits: 0.04, appeal: 0.02, stress: 0.05 }, locks: l('Trava a decisão "Box de aniversário".', 'Locks the "Anniversary box" decision.'), unlocks: ['catalog_sale'],
     adopt: () => l('O elenco sente o ritmo apertar.', 'The roster feels the pace tighten.') },
 ];
 export const docById18 = (id: string) => DOCTRINES18.find((d) => d.id === id);
