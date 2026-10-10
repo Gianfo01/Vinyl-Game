@@ -11,13 +11,17 @@ import { genreById } from '../data/world';
 import { locale } from '../i18n/strings';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
-import { deleteSave, importSave, importSaveText, listSaves, loadGame, savePrefs, store } from './store';
+import { importSave, importSaveText, loadGame, savePrefs, store } from './store';
 import { prepareNewGame, scenarioButton } from './sys/live/goals';
 import { characterCard } from './charCreate';
 import { labelsCard } from './newgameLabels';
 import { careerCard, careerSummary } from './sys/careers12';
 import { START_YEARS13 } from './ngdata13';
 import { addHelp, hl } from './newgame13';
+import { charPreview17, diffCard17, presetBar17, runCard17, startCard17, summaryExtra17, worldCard17 } from './newgame17';
+import { lastSave17, profileBar17, saveManager17 } from './saves17';
+import { scenarioById } from '../sim/sys/live';
+import { WORLDS17, worldOf17 } from '../sim/start17';
 
 /** Anos de início com nomes únicos (rodada 13: ver ngdata13.ts; o campo ao lado aceita qualquer ano de 1920 a 2039). */
 const START_YEARS = START_YEARS13;
@@ -37,19 +41,11 @@ function randomSeed(): string {
 }
 
 export function titleScreen(root: HTMLElement, onStart: () => void): void {
-  const saves = h('div', { class: 'saves' }, h('p', { class: 'muted' }, '…'));
-  listSaves().then((list) => {
-    saves.replaceChildren(...(list.length ? list.map((m) => h('div', { class: 'save-row' },
-      h('button', { class: 'btn', onclick: async () => {
-        const g = await loadGame(m.slot);
-        if (!g) return toast(t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
-        store.game = g;
-        onStart();
-      } }, `${t(S.continue)}: ${m.company} — ${m.year} (${m.signature})`),
-      h('small', { class: 'muted' }, ` ${m.slot} · ${new Date(m.savedAt).toLocaleString()}`),
-      h('button', { class: 'icon', 'aria-label': 'apagar', onclick: async () => { await deleteSave(m.slot); titleScreen(root, onStart); } }, '🗑'),
-    )) : [h('p', { class: 'muted' }, t(l('Nenhum save ainda.', 'No saves yet.')))]));
-  });
+  // r17: gerenciador completo (perfis, autosave por partida, nuvem por pessoa) e "Continuar" com o save mais recente
+  const play = (g: NonNullable<typeof store.game>) => { store.game = g; onStart(); };
+  const cont = h('span');
+  void lastSave17().then((m) => { if (m) cont.replaceChildren(h('button', { class: 'btn primary big', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } }, `▶ ${t(S.continue)}: ${m.name || m.company} — ${m.year}`)); });
+  const saves = h('details', { class: 'saves sv17-wrap' }, h('summary', null, t(l('Saves, perfis e nuvem', 'Saves, profiles and cloud'))), saveManager17(play, { profiles: false }));
   const fileInput = h('input', { type: 'file', style: 'display:none', onchange: async (e: Event) => {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
@@ -65,7 +61,9 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
       h('div', { class: 'disc', 'aria-hidden': 'true' }),
       h('h1', null, t(S.gameTitle)),
       h('p', { class: 'tagline' }, t(S.tagline)),
+      profileBar17(() => titleScreen(root, onStart)),
       h('div', { class: 'row center' },
+        cont,
         h('button', { class: 'btn primary big', onclick: () => newGameScreen(root, onStart) }, t(S.newGame)),
         scenarioButton(root, onStart, () => titleScreen(root, onStart)),
         h('button', { class: 'btn ghost', onclick: () => fileInput.click() }, t(S.importSave)),
@@ -167,9 +165,18 @@ function takeoverCard(cfg: RunConfig, nameInput: HTMLInputElement, citySel: () =
 }
 
 type Tab = { id: string; name: ReturnType<typeof l>; body: HTMLElement[] };
+/** r17: uma frase por passo dizendo o que se decide ali. */
+const STEP17: Record<string, ReturnType<typeof l>> = {
+  world: l('Passo 1 — quando e onde você começa e quanto do mundo segue a história real.', 'Step 1 — when and where you start, and how much of the world follows real history.'),
+  char: l('Passo 2 — quem é você. Abaixo, a ficha completa que essas escolhas geram, atualizada ao vivo.', 'Step 2 — who you are. Below, the full sheet these choices produce, updated live.'),
+  label: l('Passo 3 — sua empresa: atividades, origem, ambição, ponto de partida (ou um cenário histórico) e se você funda ou assume uma gravadora.', 'Step 3 — your company: activities, origin, ambition, starting point (or a historical scenario) and whether you found or take over a label.'),
+  rivals: l('Passo 4 — contra quem você disputa artistas, paradas e rádio.', 'Step 4 — who you compete with for acts, charts and radio.'),
+  rules: l('Passo 5 — o narrador, a dificuldade (geral e por eixo), o prazo e regras especiais.', 'Step 5 — the storyteller, difficulty (overall and per axis), deadline and special rules.'),
+  summary: l('Passo 6 — confira tudo, veja os avisos de combinações e comece.', 'Step 6 — check everything, read the combination notes and start.'),
+};
 
-export function newGameScreen(root: HTMLElement, onStart: () => void): void {
-  const cfg: RunConfig = {
+export function newGameScreen(root: HTMLElement, onStart: () => void, init?: RunConfig, tab0 = 0): void {
+  const cfg: RunConfig = init ?? {
     seed: randomSeed(),
     role: 'label',
     scenario: 'from_zero',
@@ -187,7 +194,12 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     contentFilters: [],
     custom: {},
     realNames: true,
+    world17: 'real',
+    preset17: 'rec',
+    history: 'loose',
   };
+  // r17: predefinição, código e cenário reconstroem a tela com a mesma configuração (mesma aba)
+  const rebuild = () => newGameScreen(root, onStart, cfg, cur);
   const bandBox = h('div', { class: 'band-box' });
   const renderBand = () => {
     const show = cfg.role !== 'label';
@@ -219,41 +231,29 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
   const onYear = (y: number) => { yearInput.value = String(y); renderBand(); refreshAll(); };
 
   const tabs: Tab[] = [
-    { id: 'char', name: l('Personagem', 'Character'), body: [characterCard(cfg)] },
-    { id: 'label', name: l('Carreira, gravadora e papel', 'Career, label and role'), body: [
+    { id: 'world', name: l('Mundo', 'World'), body: [
+      h('section', { class: 'card' },
+        h('label', null, ...hl(S.startYear, 'year'), h('div', { class: 'row' }, yearSel, yearInput)),
+        h('label', null, ...hl(S.homeCity, 'city'), cityBox),
+        /* r17: modo, nomes reais e mortes reais agora ficam no cartão "Como é o mundo" (worldCard17) */
+        h('label', null, ...hl(S.seed, 'seed'), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; refreshAll(); } }, '🎲'))),
+      ),
+      worldCard17(cfg, () => refreshAll()),
+      ...newgameCards().filter((f) => !(f as { hidden17?: boolean }).hidden17).map((f) => { const el = f(cfg, onYear); return el.querySelector('h3')?.textContent === t(l('Mundo', 'World')) ? addHelp(el, 'world') : el; }),
+    ] },
+    { id: 'char', name: l('Você', 'You'), body: [characterCard(cfg)] },
+    { id: 'label', name: l('Empresa e carreira', 'Company and career'), body: [
       h('section', { class: 'card' },
         h('h3', null, t(l('Gravadora e papel', 'Label and role'))),
         h('label', null, ...hl(S.companyName, 'company'), nameInput),
         bandBox,
-        h('label', null, ...hl(S.scenario, 'scenario'), select(cfg.scenario, [
-          { value: 'from_zero', label: t(S.scenarioFromZero) },
-          { value: 'emerging', label: t(S.scenarioEmerging) },
-          { value: 'established', label: t(S.scenarioEstablished) },
-        ] as { value: RunConfig['scenario']; label: string }[], (v) => (cfg.scenario = v))),
       ),
       careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }),
+      startCard17(cfg, rebuild, customCard(cfg)),
       tk.el,
-      customCard(cfg),
     ] },
-    { id: 'world', name: l('Mundo e ano', 'World and year'), body: [
-      h('section', { class: 'card' },
-        h('label', null, ...hl(S.startYear, 'year'), h('div', { class: 'row' }, yearSel, yearInput)),
-        h('label', null, ...hl(S.homeCity, 'city'), cityBox),
-        h('label', null, ...hl(S.mode, 'mode'), select(cfg.mode, [
-          { value: 'historic', label: t(S.modeHistoric) },
-          { value: 'free', label: t(S.modeFree) },
-          { value: 'chaos', label: t(S.modeChaos) },
-        ] as { value: RunConfig['mode']; label: string }[], (v) => { cfg.mode = v; refreshAll(); })),
-        h('label', { class: 'check', title: t(l('Cerca de 740 artistas reais (EUA, Reino Unido, Itália, Brasil e mundo) surgem perto do ano real de estreia, com integrantes e discografia; as gravadoras, festivais, rádios, revistas, plataformas, paradas e prêmios aparecem com os nomes reais (Beatles, Motown, Woodstock, Billboard, Grammy…). Artistas gerados continuam inventados.', 'About 740 real artists (US, UK, Italy, Brazil and worldwide) appear near their real debut year, with members and discographies; labels, festivals, radio, magazines, platforms, charts and awards use their real names (Beatles, Motown, Woodstock, Billboard, Grammy…). Generated artists stay invented.')) },
-          h('input', { type: 'checkbox', checked: true, onchange: (e: Event) => { cfg.realNames = (e.target as HTMLInputElement).checked; refreshAll(); } }), ...hl(l('Nomes reais (artistas, selos, festivais, mídia e prêmios)', 'Real names (artists, labels, festivals, media and awards)'), 'realNames')),
-        h('label', { class: 'check', title: t(l('Só no modo histórico: artistas reais tendem a morrer no mesmo ano em que morreram na vida real. Desligado, a morte é só simulada (idade, saúde, vícios).', 'Historic mode only: real artists tend to die in the same year they did in real life. Off, death is only simulated (age, health, addiction).')) },
-          h('input', { type: 'checkbox', onchange: (e: Event) => (cfg.realFates = (e.target as HTMLInputElement).checked) }), ...hl(l('Mortes nos anos reais (modo histórico)', 'Deaths in their real years (historic mode)'), 'realFates')),
-        h('label', null, ...hl(S.seed, 'seed'), h('div', { class: 'row' }, seedInput, h('button', { class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; refreshAll(); } }, '🎲'))),
-      ),
-      ...newgameCards().map((f) => { const el = f(cfg, onYear); return el.querySelector('h3')?.textContent === t(l('Mundo', 'World')) ? addHelp(el, 'world') : el; }),
-    ] },
-    { id: 'rivals', name: l('Gravadoras rivais', 'Rival labels'), body: [addHelp(lc.el, 'rivals')] },
-    { id: 'rules', name: l('Regras e dificuldade', 'Rules and difficulty'), body: [
+    { id: 'rivals', name: l('Rivais', 'Rivals'), body: [addHelp(lc.el, 'rivals')] },
+    { id: 'rules', name: l('Regras', 'Rules'), body: [
       h('section', { class: 'card' },
         h('fieldset', null, h('legend', null, ...hl(S.storyteller, 'storyteller')), STORYTELLERS.map((st) => h('label', { class: 'radio' },
           h('input', { type: 'radio', name: 'st', checked: cfg.storyteller === st.id, onchange: () => (cfg.storyteller = st.id) }),
@@ -270,39 +270,41 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
           h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.contentFilters = on ? [...cfg.contentFilters, x.id] : cfg.contentFilters.filter((y) => y !== x.id); } }),
           t(x.label)))),
       ),
+      diffCard17(cfg),
+      runCard17(cfg),
       h('section', { class: 'card wide' }, h('h3', null, ...hl(S.card, 'card')), cards),
       h('section', { class: 'card wide' }, h('h3', null, ...hl(S.mutators, 'mutators')), muts),
     ] },
     { id: 'summary', name: l('Resumo', 'Summary'), body: [] },
   ];
-  let cur = 0;
+  let cur = tab0;
   const fullSummary = h('section', { class: 'card wide ng-summary-full' });
   tabs[tabs.length - 1].body.push(fullSummary);
   const side = h('div', { class: 'ng-side-body' });
+  const sideNotes = h('div', { class: 'ng17-side-notes' });
   const mini = h('span', { class: 'ng-mini muted small' });
-  const yesNo = (v: unknown) => t(v ? l('sim', 'yes') : l('não', 'no'));
   const SCN = () => [{ value: 'from_zero', label: t(S.scenarioFromZero) }, { value: 'emerging', label: t(S.scenarioEmerging) }, { value: 'established', label: t(S.scenarioEstablished) }];
-  const MODES = () => [{ value: 'historic', label: t(S.modeHistoric) }, { value: 'free', label: t(S.modeFree) }, { value: 'chaos', label: t(S.modeChaos) }];
   const DIFF = () => [{ value: 'easy', label: t(S.easy) }, { value: 'normal', label: t(S.normal) }, { value: 'hard', label: t(S.hard) }];
   const opt = (v: string, xs: { value: string; label: string }[]) => xs.find((x) => x.value === v)?.label ?? v;
   const rows = (): [ReturnType<typeof l>, string, number][] => {
     const ids = cfg.labels?.ids ?? DEFAULT_LABEL_IDS();
     const rivals = cfg.labels?.count ?? labelPool().filter((d) => ids.includes(d.id) && d.founded <= cfg.startYear).length;
+    const dsum = Object.entries(cfg.diff17 ?? {}).filter(([, v]) => v).map(([k, v]) => `${k} ${v! > 0 ? '+' : ''}${v}`).join(', ');
     return [
-      [l('Personagem', 'Character'), cfg.character?.name || t(l('(sem nome)', '(unnamed)')), 0],
-      [S.companyName, cfg.companyName, 1],
-      [l('Começo', 'Start'), cfg.takeover ? t(l('assume a gravadora', 'takes over the label')) : t(l('selo novo', 'new label')), 1],
-      [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name), 1],
-      [S.scenario, opt(cfg.scenario, SCN()), 1],
-      [l('Carreira', 'Career'), careerSummary(cfg), 1],
-      [S.startYear, String(cfg.startYear), 2],
-      [S.homeCity, cityName(cfg.homeCity), 2],
-      [S.mode, opt(cfg.mode, MODES()), 2],
-      [l('Nomes reais', 'Real names'), yesNo(cfg.realNames), 2],
-      [S.seed, cfg.seed, 2],
+      [l('Mundo', 'World'), t(WORLDS17.find((w) => w.id === worldOf17(cfg))!.name), 0],
+      [S.startYear, String(cfg.startYear), 0],
+      [S.homeCity, cityName(cfg.homeCity), 0],
+      [S.seed, cfg.seed, 0],
+      [l('Personagem', 'Character'), cfg.character?.name || t(l('(sem nome)', '(unnamed)')), 1],
+      [S.companyName, cfg.companyName, 2],
+      [l('Começo', 'Start'), cfg.takeover ? t(l('assume a gravadora', 'takes over the label')) : t(l('selo novo', 'new label')), 2],
+      [S.scenario, cfg.scenario17 && scenarioById[cfg.scenario17] ? `🏅 ${t(scenarioById[cfg.scenario17].name)}` : opt(cfg.scenario, SCN()), 2],
+      [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name), 2],
+      [l('Carreira', 'Career'), careerSummary(cfg), 2],
       [l('Gravadoras rivais', 'Rival labels'), `${rivals}${cfg.labels?.start === 'equal' ? ` · ${t(l('todos iguais', 'all equal'))}` : ''}`, 3],
       [S.storyteller, t(STORYTELLERS.find((x) => x.id === cfg.storyteller)!.name), 4],
-      [S.difficulty, `${opt(cfg.difficulty, DIFF())}${cfg.ironman ? ' · ironman' : ''}`, 4],
+      [S.difficulty, `${opt(cfg.difficulty, DIFF())}${cfg.ironman ? ' · ironman' : ''}${dsum ? ` · ${dsum}` : ''}`, 4],
+      [l('Prazo', 'Deadline'), cfg.runYears17 ? t(l('{n} anos', '{n} years'), { n: cfg.runYears17 }) : t(l('sem fim', 'endless')), 4],
       [S.card, t(CARDS.find((c) => c.id === cfg.card)!.name), 4],
       [S.mutators, cfg.mutators.map((id) => t(MUTATORS.find((m) => m.id === id)!.name)).join(', ') || '—', 4],
     ];
@@ -312,7 +314,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     const dl = (edit: boolean) => h('dl', { class: 'ng-dl' }, ...rs.flatMap(([k, v, tab]) => [h('dt', null, t(k)),
       h('dd', null, edit ? h('button', { type: 'button', class: 'linkish', title: t(l('Editar', 'Edit')), onclick: () => go(tab) }, v) : v)]));
     side.replaceChildren(dl(false));
-    fullSummary.replaceChildren(h('h3', null, t(l('Resumo da partida', 'Run summary'))), h('p', { class: 'muted small' }, t(l('Clique num valor para voltar à aba e mudar.', 'Click a value to go back to its tab and change it.'))), dl(true));
+    fullSummary.replaceChildren(h('h3', null, t(l('Resumo da partida', 'Run summary'))), h('p', { class: 'muted small' }, t(l('Clique num valor para voltar à aba e mudar.', 'Click a value to go back to its tab and change it.'))), dl(true), summaryExtra17(cfg));
+    sideNotes.replaceChildren(summaryExtra17(cfg));
     mini.textContent = `${cfg.companyName} · ${cfg.startYear} · ${cityName(cfg.homeCity)}`;
   }
   const tabBtns = tabs.map((tb, i) => h('button', { type: 'button', role: 'tab', id: `ng-tab-${tb.id}`, 'aria-controls': `ng-panel-${tb.id}`, class: 'ng-tab', onclick: () => go(i), onkeydown: (e: KeyboardEvent) => {
@@ -321,7 +324,10 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     e.preventDefault();
     go((k + tabs.length) % tabs.length, true);
   } }, h('span', { class: 'ng-num' }, String(i + 1)), ' ', t(tb.name)));
-  const panels = tabs.map((tb) => h('div', { role: 'tabpanel', id: `ng-panel-${tb.id}`, 'aria-labelledby': `ng-tab-${tb.id}`, class: 'ng-grid ng-panel' }, ...tb.body));
+  const panels = tabs.map((tb) => h('div', { role: 'tabpanel', id: `ng-panel-${tb.id}`, 'aria-labelledby': `ng-tab-${tb.id}`, class: 'ng-grid ng-panel' }, h('p', { class: 'muted small ng17-step' }, t(STEP17[tb.id] ?? l('', ''))), ...tb.body));
+  // r17: ficha completa ao vivo na aba Você (recalcula quando algo muda nas abas Você ou Empresa)
+  const charPanel = panels[tabs.findIndex((x) => x.id === 'char')];
+  charPanel.append(charPreview17(cfg, charPanel));
   const back = h('button', { type: 'button', class: 'btn ghost', onclick: () => go(cur - 1) }, '← ' + t(l('Anterior', 'Previous')));
   const next = h('button', { type: 'button', class: 'btn', onclick: () => go(cur + 1) }, t(l('Próximo', 'Next')) + ' →');
   const step = h('span', { class: 'muted small' });
@@ -337,6 +343,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
     else tabBtns[cur].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   }
   const start = () => {
+    const sc = cfg.scenario17 ? scenarioById[cfg.scenario17] : undefined;
+    if (sc) Object.assign(cfg, { startYear: sc.startYear, homeCity: sc.homeCity, scenario: sc.scenario, ...(sc.role ? { role: sc.role } : {}) });
     prepareNewGame(cfg);
     store.game = createGame(cfg);
     store.area = 'desk';
@@ -346,16 +354,17 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
   const startBtn = (extra = '') => h('button', { class: `btn primary big ${extra}`, onclick: start }, t(S.start));
   const wrap = h('div', { class: 'newgame tabbed' },
     h('header', null, h('button', { class: 'btn ghost', onclick: () => titleScreen(root, onStart) }, '← ' + t(S.back)), h('h1', null, t(S.newGame))),
+    presetBar17(cfg, rebuild),
     h('div', { class: 'ng-tabs', role: 'tablist', 'aria-label': t(S.newGame) }, ...tabBtns),
     h('div', { class: 'ng-layout' },
       h('div', { class: 'ng-main' }, ...panels, h('div', { class: 'ng-nav' }, back, step, next)),
-      h('aside', { class: 'ng-side card', 'aria-label': t(l('Resumo', 'Summary')) }, h('h3', null, t(l('Resumo', 'Summary'))), side, h('div', { class: 'row center' }, startBtn('ng-start')))),
+      h('aside', { class: 'ng-side card', 'aria-label': t(l('Resumo', 'Summary')) }, h('h3', null, t(l('Resumo', 'Summary'))), side, sideNotes, h('div', { class: 'row center' }, startBtn('ng-start')))),
     h('div', { class: 'ng-bar' }, mini, startBtn('ng-start-bar')),
   );
   // resumo sempre em dia: os handlers dos campos rodam antes deste (borbulha até o contêiner)
   for (const ev of ['input', 'change', 'click']) wrap.addEventListener(ev, () => drawSummary());
   root.replaceChildren(wrap);
-  go(0);
+  go(cur);
 }
 
 /** Cartões extras do Novo Jogo (rodada 9: mundo/história prévia). Função içada: segura na ordem de carga. */

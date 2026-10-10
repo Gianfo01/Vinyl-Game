@@ -16,7 +16,7 @@ export const WORLDS17: World17[] = [
   { id: 'real', name: l('Vida real com variações (recomendado)', 'Real life with variations (recommended)'),
     desc: l('Artistas, selos, festivais e prêmios reais; discos e formações reais nos anos reais, mas a simulação improvisa (discos, brigas, separações).', 'Real artists, labels, festivals and awards; real albums and lineups in their real years, but the sim improvises (albums, feuds, splits).'),
     fx: l('Nomes reais ✓ · roteiro real como base · mortes reais só se você ligar · tecnologia em janelas de anos', 'Real names ✓ · real script as a base · real deaths only if you turn it on · technology within year windows'),
-    apply: (c) => base(c, { realNames: true, history: 'loose', mode: 'free' }) },
+    apply: (c) => base(c, { realNames: true, history: 'loose', mode: 'free', realFates: false }) },
   { id: 'exact', name: l('Vida real exata', 'Exact real life'),
     desc: l('Tudo como aconteceu: discos nas datas reais, mortes, separações e voltas — até você interferir (contratar um artista muda a história dele).', 'Everything as it happened: albums on real dates, deaths, splits and reunions — until you interfere (signing an act changes their story).'),
     fx: l('Nomes reais ✓ · mortes reais ✓ · formatos e tecnologias nas datas fixas · nada inventado para artistas reais', 'Real names ✓ · real deaths ✓ · formats and tech on fixed dates · nothing invented for real acts'),
