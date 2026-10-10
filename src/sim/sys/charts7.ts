@@ -10,6 +10,7 @@ import { clamp, type Rng } from '../../core/rng';
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize, countryTaste, type CountryInfo } from '../../data/countries';
 import { countryName, countryOfCity } from '../../data/geo';
 import { localPref, softPower } from '../../data/relevance';
+import { reachHook17 } from './reachhook17';
 import { MARKETS, familyOf, l, type L, type MarketId } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { physicalShare } from '../production';
@@ -105,6 +106,7 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
   const home = act ? actCountry(s, act.id) : null;
   const homeMarket = home ? countryInfoByA3[home]?.market : undefined;
   const crossover = act ? act.positioning / 100 : 0.4;
+  const own = act ? reachHook17.f(s, act) : 0; // r17: Shakira/BTS/hit viral global viajam além do país
   const wc = weekCache(s.year);
   const tastes = (wc.taste[fam] ??= COUNTRY_INFO.map((c) => countryTaste(c, fam as never, s.year)));
   let sum = 0;
@@ -116,7 +118,7 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
     // rodada 8: artista local tem preferência em casa; fora, viaja conforme o peso mundial do país
     if (home === c.a3) w *= 1.6 * localPref(c.a3);
     else {
-      w *= (homeMarket === c.market ? 1.25 : 1) * (0.25 + 0.75 * wc.soft(home)) / Math.sqrt(localPref(c.a3) / 1.6);
+      w *= (homeMarket === c.market ? 1.25 : 1) * (0.25 + 0.75 * Math.max(wc.soft(home), own)) / Math.sqrt(localPref(c.a3) / 1.6);
     }
     out[i] = w;
     sum += w;

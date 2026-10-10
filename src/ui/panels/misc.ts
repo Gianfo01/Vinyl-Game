@@ -13,7 +13,7 @@ import { availableFormats, scheduleRelease, suggestedPress } from '../../sim/pro
 import type { GameState } from '../../sim/types';
 import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { careerSlotsUsed } from '../../sim/contracts';
-import { $, N, memoText, actLink, branchName, cityName, cover, genreName, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
+import { $, N, memoText, actLink, branchName, cityName, cover, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
 import { HqView, hqHooks } from '../hq';
@@ -29,6 +29,9 @@ import { assignBranch, closeBranch, hqBlocker, hqCaps, upgradeBranch } from '../
 import { ic, tile } from '../vis';
 import { crewProfileCell, crewRespecButton, crewSummary } from '../sys/crew8';
 import { replayBtn16 } from '../sys/moments16';
+import { hotGenres17 } from '../sys/trends17';
+import { stylePill17 } from '../sys/style17';
+import { styleOfRel17 } from '../../sim/sys/trends17';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -43,7 +46,7 @@ export function chartsPanel(s: GameState): HTMLElement {
         return h('tr', { class: mine ? 'mine' : '' },
           h('td', null, h('b', null, e.pos)),
           h('td', { class: move === '▲' || move === 'NEW' ? 'good' : move === '▼' ? 'bad' : 'muted' }, `${move} ${e.last || ''}`),
-          h('td', null, releaseLink(s, r.id), r.certified ? pill(r.certified[0].toUpperCase(), 'gold') : null),
+          h('td', null, releaseLink(s, r.id), r.certified ? pill(r.certified[0].toUpperCase(), 'gold') : null, ' ', stylePill17(styleOfRel17(s, r.id))),
           h('td', null, actLink(s, r.actId)),
           h('td', null, labelLink(s, r.owner === 'indie' ? null : r.owner)),
           h('td', null, e.weeks),
@@ -55,7 +58,7 @@ export function chartsPanel(s: GameState): HTMLElement {
   return h('div', { class: 'panel charts' },
     h('div', { class: 'col-main' }, section(t(S.singles), table('singles')), section(t(S.albums), table('albums'))),
     h('aside', { class: 'col-side' },
-      section(t(S.genres), h('ul', null, hot.map(([g, v]) => h('li', null, genreName(g), ' ', bar(v, 2.2))))),
+      hot.length ? hotGenres17(s) : null, // r17: gêneros em alta = estilos das músicas em alta
       section(t(S.number1s), h('ul', { class: 'small' }, s.charts.number1History.slice(-15).reverse().map((n) => h('li', null, `${n.title} — ${n.act}`)))),
     ),
   );

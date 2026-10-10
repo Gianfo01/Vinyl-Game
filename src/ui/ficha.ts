@@ -18,6 +18,7 @@ import { rightsFieldset } from './rightsView';
 import { defaultRights } from '../sim/rights';
 import { offerAside12, packageFields } from './sys/offers12';
 import { relHype12 } from './sys/hype12';
+import { stylePill17 } from './sys/style17';
 
 function g(): GameState {
   return store.game!;
@@ -88,7 +89,7 @@ export function openRelease(id: string): void {
       h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(S.title)), h('th', null, t(l('Duração', 'Length'))), h('th', null, 'Q'), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.performance)), h('th', null, t(S.production)), h('th', null, t(S.originality)))),
       h('tbody', null, tracks.map((tr) => {
         const so = tr.songId ? s.songs[tr.songId] : undefined;
-        return h('tr', null, h('td', null, tr.n), h('td', null, tr.title, tr.single && r.type !== 'single' ? ' ' : '', tr.single && r.type !== 'single' ? pill(t(l('faixa de trabalho', 'lead single'))) : null, ' ', ...(so ? RELEASE_SONG_EXTRAS.map((f) => f(s, so)) : [])),
+        return h('tr', null, h('td', null, tr.n), h('td', null, tr.title, tr.single && r.type !== 'single' ? ' ' : '', tr.single && r.type !== 'single' ? pill(t(l('faixa de trabalho', 'lead single'))) : null, ' ', ...(so ? RELEASE_SONG_EXTRAS.map((f) => f(s, so)) : [stylePill17(s.acts[r.actId]?.genre)])),
           h('td', null, fmtSecs(tr.secs)),
           so ? h('td', null, h('b', null, show(so.q))) : h('td', { class: 'muted' }, '—'),
           ...(so ? [so.melody, so.lyrics, so.performance, so.production, so.originality].map((v) => h('td', null, v > 0 ? show(v) : '—')) : [h('td', { class: 'muted', colspan: 5 }, t(l('sem ficha técnica guardada', 'no stored credits')))]));

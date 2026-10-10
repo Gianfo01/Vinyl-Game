@@ -162,3 +162,8 @@ import './npc17';
 // Rodada 17 (onda 1, A): crime — organizações, ações de todos contra todos, casos, mercado negro, NPCs tramando.
 import './crime17';
 import './crimenpc17';
+// Rodada 17 (E): alcance mundial (exceções globais, hit viral, one-hit wonder) e gêneros em alta pelas paradas.
+import './reach17';
+import './trends17';
+import './heritage17';
+import '../relics17';

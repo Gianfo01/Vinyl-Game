@@ -9,7 +9,7 @@ import type { GameState } from '../types';
 import { fmtL, money, nextId, notify, post } from '../util';
 import { chron, chronListeners, nameOf, type ChronEv } from './chron9';
 
-export type RelicKind = 'guitar' | 'tape' | 'lyrics' | 'trophy' | 'outfit' | 'mic';
+export type RelicKind = 'guitar' | 'tape' | 'lyrics' | 'trophy' | 'outfit' | 'mic' | 'drums' | 'record' | 'car' | 'glasses' | 'piano' | 'prop' | 'art' | 'bass';
 export type RelicStatus = 'kept' | 'auction' | 'stolen' | 'lost' | 'museum' | 'player';
 export interface Relic {
   id: string;
@@ -38,6 +38,10 @@ export interface Relic {
   ex?: 1;
   /** emprestada pelo museu ao jogador até a semana */
   brw?: number;
+  /** rodada 17: id no catálogo de relíquias reais (sim/relics17) — sem destino aleatório; segue a história real */
+  rr?: string;
+  /** rodada 17: comprador real do próximo leilão histórico */
+  rb?: string;
 }
 export interface Relics9State { list: Relic[] }
 /** Rodada 12 (hype12): multiplicador de preço pelo hype da peça. */
@@ -54,6 +58,7 @@ export function relics(s: GameState): Relics9State {
 export const RELIC_KIND: Record<RelicKind, L> = {
   guitar: l('Guitarra', 'Guitar'), tape: l('Fitas master', 'Master tapes'), lyrics: l('Letra manuscrita', 'Handwritten lyrics'),
   trophy: l('Troféu', 'Trophy'), outfit: l('Figurino', 'Stage outfit'), mic: l('Microfone', 'Microphone'),
+  drums: l('Bateria', 'Drums'), record: l('Disco raro', 'Rare record'), car: l('Carro', 'Car'), glasses: l('Óculos', 'Glasses'), piano: l('Piano', 'Piano'), prop: l('Objeto de cena', 'Stage prop'), art: l('Arte original', 'Original artwork'), bass: l('Baixo', 'Bass'),
 };
 export const RELIC_ST: Record<RelicStatus, L> = {
   kept: l('com o dono', 'with its owner'), auction: l('em leilão', 'at auction'), stolen: l('roubada', 'stolen'), lost: l('perdida', 'lost'), museum: l('em museu', 'in a museum'), player: l('no seu acervo', 'in your collection'),
@@ -66,7 +71,7 @@ export function addRelic(s: GameState, k: RelicKind, n: L, actId: string | undef
   const rl: Relic = { id: nextId(s, 'rl'), k, n, a: actId, p: pid, y, own: [[owner, y, 'origem']], st: 'kept', v: Math.round(v) };
   st.list.push(rl);
   if (st.list.length > 60) {
-    const i = st.list.findIndex((x) => x.st === 'lost') >= 0 ? st.list.findIndex((x) => x.st === 'lost') : st.list.findIndex((x) => x.st !== 'player');
+    const i = st.list.findIndex((x) => x.st === 'lost' && !x.rr) >= 0 ? st.list.findIndex((x) => x.st === 'lost' && !x.rr) : st.list.findIndex((x) => x.st !== 'player' && !x.rr);
     if (i >= 0) st.list.splice(i, 1);
   }
   return rl;
@@ -301,7 +306,7 @@ registerSimHook('month', 'relics9', (s, r) => {
   }
 });
 registerSimHook('year', 'relics9', (s, r) => {
-  for (const rl of relics(s).list) if (rl.st !== 'auction') fate(s, r, rl);
+  for (const rl of relics(s).list) if (rl.st !== 'auction' && !rl.rr) fate(s, r, rl); // r17: relíquias reais seguem a história (sim/relics17)
   // peças expostas na sede (suas ou emprestadas de museu) rendem prestígio
   const shown = relics(s).list.filter((x) => (x.st === 'player' && x.ex && !x.ln) || x.brw).length;
   if (shown) s.player.reputation.artistic = clamp(s.player.reputation.artistic + Math.min(3, shown), 0, 100);

@@ -11,13 +11,13 @@ import { clamp, Rng, seedState } from '../../core/rng';
 import { formatMoney } from '../../core/money';
 import { countryName, countryOfCity } from '../../data/geo';
 import { DOC17, ORGS17, type OrgDef17, type Racket17 } from '../../data/orgs17';
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { personDies } from '../dynasty';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact, type Fact } from '../facts17';
 import { grantHold, holdsBetween } from '../holds17';
 import { histMode } from '../history15';
-import { RELICS17 } from '../relics17';
+import { RELICS17, relic9Of17 } from '../relics17';
 import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
 import type { Act, GameState, Label, Person } from '../types';
@@ -826,17 +826,17 @@ function marketMonth(s: GameState, r: Rng): void {
   }
 }
 
-/** Semeia relíquias reais do catálogo quando o ano chega. */
+/** Relíquias reais (relics17, semeadas pelo próprio catálogo no ano certo): marca a cidade onde ficam p/ roubos e polícia. */
+const RCITY: [RegExp, string][] = [[/seattle/i, 'seattle'], [/london|londres/i, 'london'], [/memphis/i, 'memphis'], [/rio/i, 'rio'], [/los angeles|hollywood/i, 'los_angeles'], [/new york|nova york|cleveland/i, 'new_york'], [/nashville/i, 'nashville'], [/liverpool/i, 'liverpool'], [/paris/i, 'paris'], [/tokyo|tóquio/i, 'tokyo']];
 export function seedRelics17(s: GameState): void {
   const st = crime17(s);
   for (const d of RELICS17) {
-    if (st.seeded[d.id] || d.y > s.year) continue;
+    if (st.seeded[d.id]) continue;
+    const rl = relic9Of17(s, d.id);
+    if (!rl) continue;
     st.seeded[d.id] = 1;
-    const act = Object.values(s.acts).find((a) => a.name === d.who);
-    const rl = addRelic(s, d.k, d.n, act?.id, undefined, d.v, d.y);
-    rl.own = [[d.owner, d.y, 'origem']];
-    if (/museu|museum/i.test(d.owner)) rl.st = 'museum';
-    st.rcity[rl.id] = d.city;
+    const c = RCITY.find(([re]) => re.test(d.location.en) || re.test(d.location.pt))?.[1];
+    st.rcity[rl.id] = c && cityById[c] ? c : s.config.homeCity;
   }
 }
 

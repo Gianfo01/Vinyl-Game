@@ -69,7 +69,7 @@ describe('r17 crime', () => {
   it('relíquias reais chegam na era e o roubo passa pelo mercado negro', () => {
     const s = createGame(defaultConfig('r17-c4', { startYear: 1970, mode: 'historic', realNames: true }));
     s.player.cash = 1e7;
-    seedRelics17(s);
+    advanceMonth(s); seedRelics17(s);
     const names = relics(s).list.map((x) => x.n.en);
     expect(names.some((n) => n.includes('Hendrix'))).toBe(true);
     expect(names.some((n) => n.includes('Cobain'))).toBe(false);

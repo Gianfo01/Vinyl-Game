@@ -18,6 +18,7 @@ import { store } from '../store';
 import { chips, ic, portrait, stat, tabs, tile } from '../vis';
 import { repertoireTab } from './repertoire';
 import { mergeTabs } from '../registry';
+import { stylePill17 } from '../sys/style17';
 
 const say = (res: L | null | object, ok: L) => {
   const err = res && typeof res === 'object' && 'pt' in res ? (res as L) : null;
@@ -50,7 +51,7 @@ function sessionTab(s: GameState): HTMLElement {
   return h('div', null,
     section(t(l('Repertório escrito', 'Written songs')), written.length ? h('div', { class: 'song-pick' }, written.map((so) => h('label', { class: `song-card ${sess.songs.has(so.id) ? 'on' : ''}` },
       h('input', { type: 'checkbox', checked: sess.songs.has(so.id), onchange: () => { if (sess.songs.has(so.id)) sess.songs.delete(so.id); else sess.songs.add(so.id); rerender(); } }),
-      ic('disc'), h('b', null, so.title),
+      ic('disc'), h('b', null, so.title), stylePill17(so.genre),
       h('span', { class: 'mini-bars' }, h('i', { style: `height:${so.melody}%`, title: t(l('Melodia', 'Melody')) }), h('i', { style: `height:${so.lyrics}%`, title: t(l('Letra', 'Lyrics')) }), h('i', { style: `height:${so.originality}%`, title: t(l('Originalidade', 'Originality')) })),
       so.sampleOf ? pill('sample') : null,
     ))) : h('p', { class: 'muted small' }, t(l('Nada escrito. Use "Compor" na agenda ou um camp de composição.', 'Nothing written. Use "Write songs" in the agenda or a songwriting camp.')))),

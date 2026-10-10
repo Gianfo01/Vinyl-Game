@@ -111,3 +111,5 @@ import './media17';
 import './npc17';
 // Rodada 17 (onda 1, A): menu Crime (organizações, planos, espionagem movida, mercado negro, polícia, histórico).
 import './crime17';
+// Rodada 17 (E): estilo nos cartões, gêneros em alta pelas paradas, alcance mundial do ato.
+import './trends17';
