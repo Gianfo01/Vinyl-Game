@@ -241,3 +241,6 @@ import './paths18';
 import './saga18';
 // Rodada 18 (campus18): Nosso mundo — prédios do jogador derivados do estado, obras, danos e retratos anuais.
 import './campus18';
+// Rodada 18 (cine18): storyboards de cenas compostos pelo estado e carreiras póstumas (espólios, hologramas, avatares).
+import './cine18';
+import './post18';
