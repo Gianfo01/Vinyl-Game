@@ -1,0 +1,41 @@
+/* Rodada 17 — menu reformado: seções, fixados, recentes, avançar, páginas de carreira, popups por categoria. */
+.nav .nav-sec { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0.4rem 0.5rem 0.1rem; }
+.nav-sub .nav-sec:first-child { padding-top: 0.1rem; }
+.nav-pins17 { display: flex; flex-direction: column; gap: 1px; padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px dashed var(--line); }
+.nav-pins17 button { padding: 0.3rem 0.5rem; font-size: 0.9rem; }
+.nav-group.nav-other > .nav-head { opacity: 0.8; font-weight: 500; }
+.tools17 { display: inline-flex; align-items: center; gap: 0.3rem; flex: 0 0 auto; }
+.tools17 .icon, .rec17 > summary { width: 2rem; height: 2rem; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; }
+.pin17.on { color: var(--accent); border-color: var(--accent); }
+.rec17 { position: relative; }
+.rec17 > summary { list-style: none; }
+.rec17 > summary::-webkit-details-marker { display: none; }
+.rec17-list { position: absolute; right: 0; top: 2.4rem; z-index: 30; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.4rem; display: flex; flex-direction: column; gap: 2px; min-width: 12rem; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); }
+.rec17-list button { text-align: left; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; padding: 0.3rem 0.4rem; }
+.cp17-head { margin-bottom: 0.6rem; }
+.cp17-head h3 { margin: 0; }
+.cp17-head .kpi13 { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0.3rem 0; }
+.cp17-rel { gap: 0.6rem; margin-top: 0.35rem; }
+.cp17-link { white-space: nowrap; }
+.cp17-tips { margin: 0.35rem 0; padding-left: 1.1rem; }
+.cp17-tips .warn { color: var(--warn, #b07c1c); }
+.char17 { margin-bottom: 0.6rem; padding: 0.5rem 0.7rem; }
+/* popups (pessoa, artista, selo): categorias acima das abas */
+.cats17 { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.2rem 0 0.35rem; }
+.cats17 button { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 0.25rem 0.7rem; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.cats17 button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.cats17 .n17 { opacity: 0.7; font-size: 0.75em; }
+.sum17 { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.4rem; margin: 0.4rem 0 0.6rem; }
+.sum17 > div { border: 1px solid var(--line); border-radius: 8px; padding: 0.35rem 0.55rem; background: var(--panel); font-size: 0.85rem; }
+.sum17 > div b { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.sum17 .bad { color: var(--bad, #c03030); }
+.sum17 .good { color: var(--good, #2c7a3c); }
+@media (max-width: 640px) {
+  .nav-pins17, .tools17 .fwd17 { display: none; }
+  .crumbs15 li:not(:nth-last-child(-n+2)) { display: none; }
+  .crumbs15 li:nth-last-child(2)::before { content: none; }
+  .crumbs15 li { flex: 0 1 auto; overflow: hidden; white-space: nowrap; }
+  .crumbs15 li > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; max-width: 100%; }
+  .tools17 .icon, .rec17 > summary { width: 1.8rem; height: 1.8rem; }
+  .cp17-head .row.between { flex-direction: column; align-items: flex-start; }
+}

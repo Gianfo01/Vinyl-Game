@@ -168,8 +168,8 @@ type Tab = { id: string; name: ReturnType<typeof l>; body: HTMLElement[] };
 /** r17: uma frase por passo dizendo o que se decide ali. */
 const STEP17: Record<string, ReturnType<typeof l>> = {
   world: l('Passo 1 — quando e onde você começa e quanto do mundo segue a história real.', 'Step 1 — when and where you start, and how much of the world follows real history.'),
-  char: l('Passo 2 — quem é você. Abaixo, a ficha completa que essas escolhas geram, atualizada ao vivo.', 'Step 2 — who you are. Below, the full sheet these choices produce, updated live.'),
-  label: l('Passo 3 — sua empresa: atividades, origem, ambição, ponto de partida (ou um cenário histórico) e se você funda ou assume uma gravadora.', 'Step 3 — your company: activities, origin, ambition, starting point (or a historical scenario) and whether you found or take over a label.'),
+  char: l('Passo 2 — quem é você (inclusive origem e ambição). Abaixo, a ficha completa que essas escolhas geram, atualizada ao vivo.', 'Step 2 — who you are (origin and ambition included). Below, the full sheet these choices produce, updated live.'),
+  label: l('Passo 3 — sua empresa: atividades (e quanto tempo cada uma ocupa), ponto de partida (ou um cenário histórico) e se você funda ou assume uma gravadora.', 'Step 3 — your company: activities (and how much time each takes), starting point (or a historical scenario) and whether you found or take over a label.'),
   rivals: l('Passo 4 — contra quem você disputa artistas, paradas e rádio.', 'Step 4 — who you compete with for acts, charts and radio.'),
   rules: l('Passo 5 — o narrador, a dificuldade (geral e por eixo), o prazo e regras especiais.', 'Step 5 — the storyteller, difficulty (overall and per axis), deadline and special rules.'),
   summary: l('Passo 6 — confira tudo, veja os avisos de combinações e comece.', 'Step 6 — check everything, read the combination notes and start.'),
@@ -241,14 +241,14 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       worldCard17(cfg, () => refreshAll()),
       ...newgameCards().filter((f) => !(f as { hidden17?: boolean }).hidden17).map((f) => { const el = f(cfg, onYear); return el.querySelector('h3')?.textContent === t(l('Mundo', 'World')) ? addHelp(el, 'world') : el; }),
     ] },
-    { id: 'char', name: l('Você', 'You'), body: [characterCard(cfg)] },
+    { id: 'char', name: l('Você', 'You'), body: [characterCard(cfg), careerCard(cfg, undefined, 'identity')] }, // r17 (G): origem e ambição são do personagem
     { id: 'label', name: l('Empresa e carreira', 'Company and career'), body: [
       h('section', { class: 'card' },
         h('h3', null, t(l('Gravadora e papel', 'Label and role'))),
         h('label', null, ...hl(S.companyName, 'company'), nameInput),
         bandBox,
       ),
-      careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }),
+      careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }, 'main'),
       startCard17(cfg, rebuild, customCard(cfg)),
       tk.el,
     ] },

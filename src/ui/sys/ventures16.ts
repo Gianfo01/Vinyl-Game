@@ -81,16 +81,23 @@ function mapTab(s: GameState): HTMLElement {
 }
 
 function festivalsArea(s: GameState): HTMLElement {
-  const lead = careers(s).active.includes('festival') || owns(s, 'festival');
-  const mine = s.year >= VKINDS.festival.from || owns(s, 'festival') ? { id: 'mine', label: t(l('Seus festivais', 'Your festivals')), icon: 'flag', render: () => kindPage(s, 'festival', l('Seu festival: data, cidade, line-up por palco, ingressos, finanças e a história das edições (com os porquês de cada resultado).', 'Your festival: date, city, line-up per stage, tickets, finances and the history of editions (with the reasons behind each result).')) } : null;
-  const circuit = { id: 'circuit', label: t(l('Circuito', 'Circuit')), icon: 'star', render: () => festivalsTab(s) };
-  const rest = [
-    { id: 'rivals', label: t(l('Festivais rivais', 'Rival festivals')), icon: 'building', render: () => rivalsTab(s) },
-    { id: 'map', label: t(l('Mapa', 'Map')), icon: 'globe', render: () => mapTab(s) },
-  ];
-  const items = (lead && mine ? [mine, circuit] : [circuit, mine]).filter((x): x is NonNullable<typeof x> => !!x);
-  return h('div', { class: 'hub festivals16' }, tabs('festivals16', [...items, ...rest], rerender));
+  // r17: esta é a página do MUNDO (circuito, participar, mapa); o seu festival e os rivais moram na página da carreira
+  const mine = careers(s).active.includes('festival') || owns(s, 'festival');
+  const go = (area: string) => { store.area = area; rerender(); };
+  return h('div', { class: 'hub festivals16' },
+    h('p', { class: 'small' }, mine ? h('button', { class: 'link', onclick: () => go('cp17-festival') }, `↗ ${t(l('Seu festival e festivais rivais (página da carreira)', 'Your festival and rival festivals (career page)'))}`)
+      : s.year >= VKINDS.festival.from ? h('button', { class: 'link', onclick: () => go('ventures') }, `↗ ${t(l('Fundar um festival próprio (Empreendimentos)', 'Found your own festival (Ventures)'))}`) : null),
+    tabs('festivals16', [
+      { id: 'circuit', label: t(l('Circuito e inscrições', 'Circuit and entries')), icon: 'star', render: () => festivalsTab(s) },
+      { id: 'map', label: t(l('Mapa', 'Map')), icon: 'globe', render: () => mapTab(s) },
+    ], rerender));
 }
+
+/** r17: abas do dono de festival (página da carreira). */
+export const fest17 = {
+  mine: (s: GameState) => kindPage(s, 'festival', l('Seu festival: data, cidade, line-up por palco, ingressos, finanças e a história das edições (com os porquês de cada resultado).', 'Your festival: date, city, line-up per stage, tickets, finances and the history of editions (with the reasons behind each result).')),
+  rivals: rivalsTab,
+};
 
 registerArea({ id: 'festivals', label: l('Festivais', 'Festivals'), icon: 'star', key: 'j', render: festivalsArea, visible: (s) => s.year >= FEST_FROM || owns(s, 'festival') });
 

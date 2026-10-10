@@ -4,16 +4,16 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { answerLifeEvent, choiceBlocker, costOf, defOf, leState, names, openEvents } from '../../sim/sys/lifeevents10';
-import { energyLeft, maxEnergy } from '../../sim/sys/life';
 import type { GameState } from '../../sim/types';
 import { fmtL, money } from '../../sim/util';
 import { $, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { openCutscene, registerCutscene } from '../registry';
+import { ballsEl as ballsEl17 } from './agenda17';
 
 const dots = (s: GameState): HTMLElement => h('div', { class: 'lf-energy' },
   h('span', null, t(l('Tempo livre este mês', 'Free time this month'))),
-  h('span', { class: 'lf-dots' }, Array.from({ length: maxEnergy(s) }, (_, i) => h('i', { class: i < energyLeft(s) ? 'on' : '' }))));
+  ballsEl17(s));
 
 registerCutscene('lifeEvent', (s, cs, close) => {
   const box = h('div', { class: 'le10' });

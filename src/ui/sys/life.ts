@@ -7,7 +7,7 @@ import { GENRES, familyOf, l, type L } from '../../data/world';
 import { traitAffinity } from '../../data/people';
 import { t } from '../../i18n/strings';
 import {
-  ENERGY_PER_MONTH, HOBBIES, MENTOR_NAMES, maxEnergy, mentorAct, type MentorKind, KID_EDU, PARTNER_TRAITS, WEDDINGS, adopt, backgroundById, breakUp, charity, energyLeft, familyTime, goOnDate, gym, hobby,
+  ENERGY_PER_MONTH, HOBBIES, MENTOR_NAMES, maxEnergy, mentorAct, type MentorKind, KID_EDU, PARTNER_TRAITS, WEDDINGS, adopt, backgroundById, breakUp, charity, familyTime, goOnDate, gym, hobby,
   industryParty, joinBand, joinChance, joinableActs, launchKidCareer, learnNewInstrument, leaveBand, life, marry, meetPeople, ownerAgeNow, playBar, playerAct,
   playerPerson, practice, propose, setKidEdu, startDating, startProject, switchMainInstrument, therapy, tryForBaby, writeAlone, writeMemoir,
   type KidEdu, type WeddingKind,
@@ -28,6 +28,7 @@ import { persona, skills } from '../../sim/sys/persona';
 import { vicesTab } from './vices';
 import { registerArea, registerCutscene } from '../registry';
 import { routinesTab } from './life12';
+import { ballsEl as ballsEl17 } from './agenda17';
 import { playerViewsBlock } from './beliefs10';
 import { chips, ic, meter, stat, tabs } from '../vis';
 import { ownerTab } from './people/area';
@@ -51,11 +52,10 @@ function btn(label: L, n: number, onclick: () => void, opts: { primary?: boolean
 }
 
 function energyBar(s: GameState): HTMLElement {
-  const left = energyLeft(s);
   return h('div', { class: 'lf-energy', 'aria-label': t(l('Tempo livre este mês', 'Free time this month')) },
     h('span', null, t(l('Tempo livre este mês', 'Free time this month'))),
-    h('span', { class: 'lf-dots' }, Array.from({ length: maxEnergy(s) }, (_, i) => h('i', { class: i < left ? 'on' : '' }))),
-    h('small', { class: 'muted' }, t(maxEnergy(s) < ENERGY_PER_MONTH ? l('renova todo mês (a banda ocupa uma unidade)', 'refills every month (the band takes one unit)') : l('renova todo mês', 'refills every month'))));
+    ballsEl17(s), // r17: bolinhas com o porquê (expediente | pessoais | sobrecarga)
+    h('small', { class: 'muted' }, t(maxEnergy(s) < ENERGY_PER_MONTH ? l('renova todo mês', 'refills every month') : l('renova todo mês · passe o mouse nas bolinhas', 'refills every month · hover the balls'))));
 }
 
 // ------------------------------------------------------------------ perfil
@@ -90,7 +90,7 @@ function profileTab(s: GameState): HTMLElement {
     section(t(l('Visão de mundo', 'Worldview')), playerViewsBlock(s)),
     section(t(l('Como você joga com o personagem', 'How the character plays')),
       h('ul', { class: 'small muted' },
-        h('li', null, t(l('Cada mês você tem 5 unidades de tempo livre (⏱), uma delas ocupada pela banda. Use em romance, família, música ou lazer.', 'Each month you get 5 units of free time (⏱), one taken by the band. Spend them on romance, family, music or leisure.'))),
+        h('li', null, t(l('Cada mês você tem 5 bolinhas pessoais (⏱) — a banda não ocupa nenhuma — e 2 de expediente para as carreiras (veja Agenda e contratações). Use as pessoais em romance, família, música ou lazer.', 'Each month you get 5 personal balls (⏱) — the band takes none — plus 2 office balls for careers (see Schedule and hiring). Spend the personal ones on romance, family, music or leisure.'))),
         h('li', null, t(l('Dinheiro pessoal é o seu patrimônio, separado do caixa da empresa (retire ou invista na aba Patrimônio).', 'Personal money is your wealth, separate from the company cash (withdraw or invest in the Wealth tab).'))),
         h('li', null, t(l('Seus atributos de dono (ouvido, negociação, carisma, gestão) dão bônus reais ao selo; seus atributos musicais contam quando você toca numa banda.', 'Your owner attributes (ear, negotiation, charisma, management) give real bonuses to the label; your musical attributes count when you play in a band.'))),
         h('li', null, t(l('Estresse alto derruba a saúde; família, hobbies, terapia e férias aliviam.', 'High stress hurts health; family, hobbies, therapy and holidays relieve it.'))),

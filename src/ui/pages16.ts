@@ -4,6 +4,6 @@ import type { VKind } from '../sim/sys/ventures9';
 
 /** Página dedicada de cada tipo de negócio (studio e booking já moram em Estúdio e produtor / Agente e promotor). */
 export const PAGE16: Record<VKind, { area: string; tab?: [string, string] }> = {
-  festival: { area: 'festivals', tab: ['festivals16', 'mine'] }, publisher: { area: 'publishing16' }, media: { area: 'outlets16' }, platform: { area: 'platform16' },
+  festival: { area: 'cp17-festival' } /* r17: o festival próprio mora na página da carreira */, publisher: { area: 'publishing16' }, media: { area: 'outlets16' }, platform: { area: 'platform16' },
   studio: { area: 'studio12', tab: ['studio12', 'studio'] }, booking: { area: 'tour12' },
 };

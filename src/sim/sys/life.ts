@@ -93,15 +93,21 @@ export const ENERGY_PER_MONTH = 5;
 
 const mKey = (s: GameState) => s.year * 12 + s.month;
 
-/** Tempo livre do mês: tocar numa banda ocupa uma unidade (ensaios e compromissos). */
+// r17 (agenda17): as carreiras reservam bolinhas (o que passa do expediente come as pessoais) e cada gasto
+// fica registrado para a interface mostrar no que foi. Injetado para não criar ciclo de import.
+let ag17Reserve: (s: GameState) => number = () => 0;
+let ag17Spent: (s: GameState, n: number) => void = () => {};
+export function bindAgenda17(f: { reserve: (s: GameState) => number; spent: (s: GameState, n: number) => void }): void { ag17Reserve = f.reserve; ag17Spent = f.spent; }
+
+/** Tempo livre pessoal do mês: 5 bolinhas (r17: a banda não ocupa mais uma; ela agora é a carreira "Músico"). */
 export function maxEnergy(s: GameState): number {
-  return Math.max(1, ENERGY_PER_MONTH - (playerAct(s) ? 1 : 0) + Math.round(perk(s, 'energy')));
+  return Math.max(1, ENERGY_PER_MONTH + Math.round(perk(s, 'energy')));
 }
 
 export function energyLeft(s: GameState): number {
   const L0 = life(s);
   if (L0.monthKey !== mKey(s)) { L0.monthKey = mKey(s); L0.used = 0; }
-  return Math.max(0, maxEnergy(s) - L0.used);
+  return Math.max(0, maxEnergy(s) - L0.used - ag17Reserve(s));
 }
 
 /** Gasta tempo livre do mês (para outros sistemas: sócios, tramas, decisões). */
@@ -112,6 +118,7 @@ export function spendEnergy(s: GameState, n: number): L | null {
 function spend(s: GameState, n: number): L | null {
   if (energyLeft(s) < n) return l('Sem tempo livre este mês. Volte no mês que vem.', 'No free time left this month. Come back next month.');
   life(s).used += n;
+  ag17Spent(s, n);
   return null;
 }
 
