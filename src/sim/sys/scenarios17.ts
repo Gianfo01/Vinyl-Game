@@ -34,7 +34,7 @@ export const SCENARIOS17: Scenario17[] = [
   {
     id: 'sun_1954', name: l('Sun Records: Memphis, 1954', 'Sun Records: Memphis, 1954'), startYear: 1954, endYear: 1958, homeCity: 'memphis', scenario: 'from_zero',
     desc: l('Um estúdio pequeno grava caminhoneiros, cantores gospel e bluesmen por poucos dólares. Um dia, alguém mistura country com rhythm and blues.', 'A small studio records truck drivers, gospel singers and bluesmen for a few dollars. One day someone mixes country with rhythm and blues.'),
-    goal: l('Emplaque sucessos no top 10 nacional até 1958.', 'Land national top-10 hits by 1958.'), unit: l('top 10', 'top 10s'), tiers: [1, 3, 6],
+    goal: l('Emplaque sucessos no top 10 nacional até 1958.', 'Land national top-10 hits by 1958.'), unit: l('top 10', 'top 10s'), tiers: [3, 7, 12],
     rules17: [l('Caixa curtíssimo (metade do normal): grave barato e venda contratos se precisar.', 'Very tight cash (half the usual): record cheap and sell contracts if you must.'),
       l('Rádio segregada até 1956: seus atos de R&B e blues têm −10% de apelo.', 'Segregated radio until 1956: your R&B and blues acts get −10% appeal.'),
       l('Janeiro de 1956: o rockabilly explode no país todo.', 'January 1956: rockabilly explodes nationwide.')],
@@ -72,7 +72,7 @@ export const SCENARIOS17: Scenario17[] = [
   {
     id: 'bossa_1958', name: l('Chega de Saudade: Rio, 1958', 'Chega de Saudade: Rio, 1958'), startYear: 1958, endYear: 1964, homeCity: 'rio', scenario: 'from_zero',
     desc: l('Apartamentos de Copacabana, violão baixinho e uma batida nova. Em 1962 a bossa nova toca no Carnegie Hall; em 1964 o golpe muda o clima.', 'Copacabana flats, a soft guitar and a new beat. In 1962 bossa nova plays Carnegie Hall; in 1964 the coup changes the mood.'),
-    goal: l('Venda discos de bossa nova até 1964.', 'Sell bossa nova records by 1964.'), unit: l('mil cópias', 'thousand copies'), tiers: [10, 40, 120],
+    goal: l('Venda discos de bossa nova até 1964.', 'Sell bossa nova records by 1964.'), unit: l('mil cópias', 'thousand copies'), tiers: [150, 500, 1200],
     rules17: [l('Novembro de 1962: o concerto no Carnegie Hall abre os EUA para a bossa.', 'November 1962: the Carnegie Hall concert opens the US to bossa.'),
       l('Abril de 1964: golpe militar — gêneros brasileiros perdem fôlego.', 'April 1964: military coup — Brazilian genres lose steam.')],
     events17: [{ year: 1962, month: 10, title: l('Bossa nova no Carnegie Hall', 'Bossa nova at Carnegie Hall'), text: l('Músicos brasileiros lotam o templo de Nova York; o jazz americano adota a batida.', 'Brazilian musicians pack the New York temple; American jazz adopts the beat.'), genre: 'bossa', genreMult: 1.6 },
@@ -122,7 +122,7 @@ export const SCENARIOS17: Scenario17[] = [
   {
     id: 'rescue_1986', name: l('Resgate de um selo falido: Manchester, 1986', 'Rescuing a bankrupt label: Manchester, 1986'), startYear: 1986, endYear: 1991, homeCity: 'manchester', scenario: 'established',
     desc: l('Você comprou por uma libra um selo cult de Manchester: elenco respeitado, um clube que dá prejuízo e dívidas com o banco. A cena "Madchester" está para explodir.', 'You bought a cult Manchester label for one pound: a respected roster, a loss-making club and bank debts. The "Madchester" scene is about to explode.'),
-    goal: l('Pague as dívidas e feche 1991 com caixa no azul (mil dólares reais).', 'Pay the debts and close 1991 in the black (thousand real dollars).'), unit: l('mil dólares reais', 'thousand real dollars'), tiers: [20, 120, 400],
+    goal: l('Pague as dívidas e feche 1991 com caixa no azul (mil dólares reais).', 'Pay the debts and close 1991 in the black (thousand real dollars).'), unit: l('mil dólares reais', 'thousand real dollars'), tiers: [1, 50, 200],
     rules17: [l('Começa com 10% do caixa e um empréstimo pesado do banco (36 parcelas).', 'Starts with 10% of the cash and a heavy bank loan (36 instalments).'),
       l('1988: o acid house e as raves mudam a noite de Manchester.', '1988: acid house and raves change Manchester\'s nightlife.'),
       l('Seis meses no vermelho e o banco fecha o selo.', 'Six months in the red and the bank shuts the label.')],
@@ -141,7 +141,7 @@ export const SCENARIOS17: Scenario17[] = [
   {
     id: 'heir_1995', name: l('Herdeiro de uma dinastia: Nashville, 1995', 'Heir to a dynasty: Nashville, 1995'), startYear: 1995, endYear: 2005, homeCity: 'nashville', scenario: 'established',
     desc: l('Seu avô fundou a gravadora; seu pai morreu de repente. Aos 24 anos você herda estrelas envelhecidas, uma família que cobra resultados e um mercado que vai virar digital.', 'Your grandfather founded the label; your father died suddenly. At 24 you inherit ageing stars, a family that demands results and a market about to go digital.'),
-    goal: l('Some discos de ouro e platina até 2005 sem afundar o legado.', 'Add up gold and platinum records by 2005 without sinking the legacy.'), unit: l('certificações', 'certifications'), tiers: [3, 8, 15],
+    goal: l('Some discos de ouro e platina até 2005 sem afundar o legado.', 'Add up gold and platinum records by 2005 without sinking the legacy.'), unit: l('certificações', 'certifications'), tiers: [10, 25, 45],
     rules17: [l('Você começa com 24 anos, reputação alta e duas estrelas veteranas do country.', 'You start at 24, with a high reputation and two veteran country stars.'),
       l('A família cobra: todo ano em que o caixa real cair abaixo da metade do inicial, +10 de estresse.', 'The family demands: every year your real cash drops below half the start, +10 stress.'),
       l('Nome de família: +2 pts nas propostas a artistas.', 'Family name: +2 pts on offers to artists.')],

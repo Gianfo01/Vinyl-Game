@@ -86,14 +86,15 @@ export const rivalAggr17 = (d: RunConfig['diff17']): number => 1 - Math.max(-2, 
 // ---------------------------------------------------------------- prazo e pontuação
 
 export const RUN_YEARS17 = [0, 10, 20, 30];
-/** Patentes da pontuação final (por ano jogado: compara partidas de prazos diferentes). */
+/** Patentes da pontuação final (por ano jogado: compara partidas de prazos diferentes). Calibrado com o playbot
+ * equilibrado (≈ 390–540 pontos/ano em 10 anos, sem falência): o bot fica entre "Potência regional" e "Major". */
 export const RANKS17: { min: number; name: L }[] = [
   { min: 0, name: l('Selo de garagem', 'Garage label') },
-  { min: 60, name: l('Selo independente respeitado', 'Respected indie') },
-  { min: 160, name: l('Potência regional', 'Regional powerhouse') },
-  { min: 350, name: l('Gravadora major', 'Major label') },
-  { min: 700, name: l('Império da música', 'Music empire') },
-  { min: 1300, name: l('Lenda da indústria', 'Industry legend') },
+  { min: 120, name: l('Selo independente respeitado', 'Respected indie') },
+  { min: 250, name: l('Potência regional', 'Regional powerhouse') },
+  { min: 400, name: l('Gravadora major', 'Major label') },
+  { min: 600, name: l('Império da música', 'Music empire') },
+  { min: 900, name: l('Lenda da indústria', 'Industry legend') },
 ];
 export const rank17 = (score: number, years: number): L => {
   const per = score / Math.max(1, years);
