@@ -43,6 +43,8 @@ import { ficha13 } from './persona13';
 import { profile as prodProfile } from './producers15';
 
 interface Tab16 { id: string; label: L; icon?: string; render: () => HTMLElement | null }
+/** Rodada 17: abas extras da página única (quem não é artista), ex.: Fatos & Obrigações. */
+export const PAGE16_TABS: ((s: GameState, key: string) => Tab16 | null)[] = [];
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
 const tone = (v: number) => (v >= 15 ? 'good' : v <= -15 ? 'bad' : '');
 const idOf = (key: string) => key.split(':').slice(1).join(':');
@@ -281,6 +283,7 @@ function page16(s: GameState, key: string, redraw: () => void, tab?: string, onT
     { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relBlock16(s, key) },
     { id: 'belief', label: l('Crenças', 'Beliefs'), icon: 'globe', render: () => beliefBlock16(s, key) },
     ...roleTabs(s, key, redraw),
+    ...PAGE16_TABS.map((f) => f(s, key)).filter((x): x is Tab16 => !!x),
   ];
   // a aba aberta sobrevive aos redesenhos (ações dentro da aba)
   return h('div', { class: 'ficha pg' }, head, pageTabs(tabs.map((x2) => ({ ...x2, render: () => { onTab?.(x2.id); return x2.render(); } })), tab));

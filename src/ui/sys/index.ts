@@ -101,3 +101,5 @@ import './people16';
 import './ventures16';
 // Rodada 16: formação (linha do tempo) e trajetória da pessoa.
 import './lineup16';
+// Rodada 17: Fatos & Obrigações (estresse, obrigações e fatos) na página de pessoa e do ato.
+import './found17';
