@@ -26,6 +26,7 @@ import { auctionsSection, contestsSection, demosSection, scoutsSection } from '.
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
+import { afterRender18, helpButton18, paletteCmds18, settings18 } from './tutorial18'; // r18 tutorial18
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
@@ -248,7 +249,7 @@ const GROUPS: { id: string; label: { pt: string; en: string }; icon: string; are
   { id: 'ventures', label: l('Empreendimentos', 'Ventures'), icon: 'bank', areas: ['ventures', 'careers', 'tour12', 'studio12', 'publishing16', 'outlets16', 'platform16'] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', areas: ['world', 'charts', 'labels', 'movements', 'lendas', 'news17', 'world17', 'crime', 'dm18', 'after18', 'regions18', 'society18'] },
   { id: 'fame', label: l('Prêmios e eventos', 'Awards and events'), icon: 'trophy', areas: ['festivals', 'awards', 'rockhall', 'critics'] },
-  { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth', 'night14', 'agenda17', 'scenes17'] },
+  { id: 'you', label: l('Você', 'You'), icon: 'star', areas: ['you', 'personal', 'wealth', 'night14', 'agenda17', 'scenes17', 'tut18'] },
 ];
 const lastInGroup: Record<string, string> = {};
 /** Rodada 14: cada carreira ativa é um grupo de topo; as inativas ficam em "Outras atividades". */
@@ -415,6 +416,7 @@ function renderApp(): void {
   const tid = tw?.dataset.cur;
   syncRoute15({ area: store.area, tab: tk && tid ? [tk, tid] : undefined }, pageTitle15(areaLabel(store.area), g.config.companyName));
   saveTabs15(tabSnapshot());
+  afterRender18(g, store.area, go); // r18 tutorial18: tour da 1ª visita, dicas de 1ª vez, trilhas
 }
 
 /** Rótulo da área igual ao do menu (casa da carreira usa o nome do grupo). */
@@ -443,6 +445,7 @@ function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
     rec.length ? h('details', { class: 'rec17' }, h('summary', { title: t(l('Páginas recentes', 'Recent pages')), 'aria-label': t(l('Páginas recentes', 'Recent pages')) }, '🕘'),
       h('div', { class: 'rec17-list' }, rec.map((a) => h('button', { class: 'link', onclick: () => go(a.id) }, ic(a.icon), ' ', a.label)))) : null);
   row?.insertBefore(tools, row.querySelector('.find15'));
+  row?.insertBefore(helpButton18(store.area), row.querySelector('.find15')); // r18 tutorial18: "?" em toda página
   return bar0;
 }
 
@@ -463,6 +466,7 @@ function settings(): void {
     h('label', null, t(S.theme), select(p.theme, [{ value: 'auto', label: t(S.themeAuto) }, { value: 'light', label: t(S.themeLight) }, { value: 'dark', label: t(S.themeDark) }] as { value: typeof p.theme; label: string }[], (v) => { p.theme = v; savePrefs(); })),
     h('label', null, t(l('Modo para daltonismo', 'Colorblind mode')), select(p.colorblind ?? 'none', [{ value: 'none' as const, label: t(l('Desligado', 'Off')) }, { value: 'deutan' as const, label: t(l('Deuteranopia (verde)', 'Deuteranopia (green)')) }, { value: 'protan' as const, label: t(l('Protanopia (vermelho)', 'Protanopia (red)')) }, { value: 'tritan' as const, label: t(l('Tritanopia (azul)', 'Tritanopia (blue)')) }], (v) => { p.colorblind = v; savePrefs(); })),
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
+    ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
     h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
@@ -521,6 +525,7 @@ function palette(): void {
     { label: t(l('Comparar carreiras', 'Compare careers')), kind: 'action', icon: 'chart-up', run: () => compareActs(g, playerActs(g)) },
     { label: t(l('Atalhos de teclado', 'Keyboard shortcuts')), kind: 'action', hint: '?', run: () => shortcutsHelp15(navItems().map((x) => ({ key: x.key, label: x.label }))) },
     { label: t(S.settings), kind: 'action', run: settings },
+    ...paletteCmds18(go), // r18 tutorial18: glossário e ajuda no Ctrl+K
     ...[...mine].map((id): PCmd => ({ label: g.acts[id].name, kind: 'mine', icon: 'guitar', weight: 12, run: () => inspect.act(id) })),
     // rodada 16: abas extras (Sync, Disputas...) também aparecem no Ir para… — antes só se achavam abrindo a área certa
     ...([['charts', 'chartsHub'], ['market', 'marketHub'], ['media', 'mediaHub'], ['catalog', 'catalogHub'], ['world', 'worldHub']] as const).flatMap(([area, host]) =>

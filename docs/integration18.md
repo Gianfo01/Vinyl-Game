@@ -180,3 +180,7 @@ Fatos novos: `playlist`, `stream_fraud`, `payola`, `video_banned`, `viral`, `clu
 | `src/ui/sys/long18.ts` | seção no Cockpit e área **Selo › Rumo do selo** (Caminhos, Doutrinas e decisões, Políticas, Post-mortems, Ano em revista, Biografia, Casa e dinastia, Dificuldade). |
 
 U12: auditoria (script de rascunho) das 86 situações — 5 opções dominantes (só ganho) ganharam custo visível: show pago na cidade natal (+estresse), controle criativo parcial (mágoa leve), abraçar pirataria (vendas perdidas), abraçar playlists (repasse menor), dividir crédito (ressentimento). Estratégias longas: `docs/strategies18.md`.
+
+## tutorial18 (final) — ajuda, tours, dicas, trilhas e glossário
+- `src/ui/help18.ts`: `registerHelp18(areaId, { title, what, how, tips, links, gloss })`; abas: `registerHelp18('tab:<chave data-tabs>|*:<id>', …)` (atalhos `H`/`T`). Conteúdo em `help18data.ts` (páginas) e `help18tabs.ts` (abas e fichas `tab:act:`/`tab:person:`/`tab:label:`). **Página ou aba nova → registre a ajuda** (o teste `r18-tutorial` lê `registerArea`/`registerTab`/`registerPageTab` do código e falha sem ela).
+- `src/ui/gloss18.ts` (glossário pesquisável, também no Ctrl+K), `src/ui/tracks18.ts` (trilhas por carreira e dicas de 1ª vez: só leem `s.x4`, sem RNG), `src/ui/tutorial18.ts` (botão "?" no cabeçalho, tour da 1ª visita, dicas via `onFact('*')` + Caixa 2.0, página **Você › Ajuda e tutorial** `tut18`, opções nas Configurações). Progresso em `store.prefs.tut18`.

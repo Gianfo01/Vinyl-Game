@@ -24,6 +24,8 @@ export interface Prefs {
   cutscenes?: boolean;
   /** pele da interface por era */
   eraSkin?: boolean;
+  /** r18 tutorial18: tours vistos, dicas vistas, visitas, trilhas concluídas e o que está desligado */
+  tut18?: { tours: Record<string, number>; tips: Record<string, number>; visits: Record<string, number>; done: Record<string, number>; noTours?: boolean; noTips?: boolean };
 }
 
 export const store = {
