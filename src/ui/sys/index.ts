@@ -140,7 +140,7 @@ import './media18';
 import './live18';
 // Rodada 18 (regions18, onda 2): Mundo › Mercados (submercados, circuitos, K-pop, Japão, afinidades).
 import './regions18';
-// Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
-import './core18';
 import './finance18';
 import './eras18';
+// Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
+import './core18';
