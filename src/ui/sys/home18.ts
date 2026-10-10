@@ -49,9 +49,10 @@ function ticker(s: GameState): HTMLElement | null {
   for (const f of recentFacts(s, { months: 2, notSecret: true, limit: 10 })) items.push({ tx: `${f.visibility === 'rumor' ? t(l('Boato: ', 'Rumor: ')) : ''}${t(f.text)}`, cls: f.visibility === 'rumor' ? 'rumor' : 'news' });
   if (!items.length) return null;
   const row = () => items.map((x) => h('span', { class: `hm18-tk ${x.cls}` }, x.tx));
+  const dur = Math.max(25, items.length * 6); // atraso negativo: o letreiro continua de onde estava a cada redesenho
   return h('div', { class: 'hm18-ticker', role: 'marquee', 'aria-label': t(l('Notícias e paradas', 'News and charts')) },
     h('b', { class: 'hm18-live' }, t(l('AO VIVO', 'LIVE'))),
-    h('div', { class: 'hm18-track', style: `animation-duration:${Math.max(25, items.length * 6)}s` }, ...row(), ...row()));
+    h('div', { class: 'hm18-track', style: `animation-duration:${dur}s;animation-delay:-${((Date.now() / 1000) % dur).toFixed(1)}s` }, ...row(), ...row()));
 }
 
 // ---------------------------------------------------------------- linha do tempo (próximas 6 semanas)
@@ -157,8 +158,11 @@ function quick(): HTMLElement {
 }
 
 /** Faixa viva no topo do Cockpit. */
+let paintW = -1;
 export function home18(s: GameState): HTMLElement {
-  return h('div', { class: 'hm18' },
+  const fresh = paintW !== s.week; // anima só quando o tempo andou (não a cada clique)
+  paintW = s.week;
+  return h('div', { class: `hm18 ${fresh ? 'anim' : ''}` },
     ticker(s),
     h('div', { class: 'hm18-row' }, urgency(s), quick()),
     pulse(s),
@@ -177,8 +181,7 @@ export function monthToast18(s: GameState): void {
   const parts = [`${t(l('caixa', 'cash'))} ${sg(L0.cash, (x) => $(x))}`, `${t(l('fãs', 'fans'))} ${sg(L0.fans)}`, `${t(l('humor', 'mood'))} ${sg(L0.mood)}`];
   if (L0.best) parts.push(`${t(l('melhor posição', 'best spot'))} #${L0.best}`);
   if (L0.fired) parts.push(t(l('{n} consequência(s) voltaram', '{n} consequence(s) came back'), { n: L0.fired }));
-  const d = dateOfDay(s.config.startYear, s.week * 7);
-  toast(`📅 ${monthName((d.month + 11) % 12)} ${t(l('fechado', 'closed'))}: ${parts.join(' · ')}`, L0.cash >= 0 ? 'good' : 'bad');
+  toast(`📅 ${monthName((s.month + 11) % 12)} ${t(l('fechado', 'closed'))}: ${parts.join(' · ')}`, L0.cash >= 0 ? 'good' : 'bad');
 }
 
 AFTER_ADVANCE.push((s) => monthToast18(s));
