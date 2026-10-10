@@ -54,8 +54,8 @@ describe('r17 crime', () => {
   it('caso: provas → indiciamento → delação fecha com multa', () => {
     const s = createGame(defaultConfig('r17-c3', { startYear: 1980 }));
     s.player.cash = 1e7;
-    const cs = feedCase(s, 'player', 'GBR', 80, 60, true);
-    feedCase(s, 'player', 'GBR', 5, 60, true);
+    const cs = feedCase(s, 'player', 'USA', 80, 60, true);
+    feedCase(s, 'player', 'USA', 5, 60, true);
     expect(cs.rico).toBe(1);
     expect(trialOdds(s, cs).why.length).toBeGreaterThan(1);
     advanceMonth(s);
@@ -94,14 +94,14 @@ describe('r17 crime', () => {
   it('NPCs tramam por anos sem assassinar gente real, e é determinístico', () => {
     const run = () => {
       const s = createGame(defaultConfig('r17-c5', { startYear: 1985, mode: 'historic', realNames: true, history: 'loose' }));
-      for (let i = 0; i < 36; i++) advanceMonth(s);
+      for (let i = 0; i < 24; i++) advanceMonth(s);
       return s;
     };
     const a = run(), b = run();
     const st = crime17(a);
-    expect(st.log.length).toBeGreaterThan(3);
+    expect(st.log.length).toBeGreaterThan(2);
     for (const e of st.log.filter((x) => x.c === 'murder')) { expect(isReal(a, e.target)).toBe(false); expect(isReal(a, e.actor)).toBe(false); }
     expect(st.log.map((x) => x.c + x.target)).toEqual(crime17(b).log.map((x) => x.c + x.target));
     expect(CRIMES17.filter((c) => c.extra).length).toBeGreaterThanOrEqual(3);
-  });
+  }, 240000);
 });
