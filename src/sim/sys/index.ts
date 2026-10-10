@@ -198,3 +198,5 @@ import './dmsits18';
 import './econ18';
 import './contracts18';
 import './eras18';
+import './world18';
+import './rivalmind18';

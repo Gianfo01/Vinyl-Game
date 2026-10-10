@@ -15,6 +15,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { chron } from './chron9';
 import { realAct17, realName17, norm17 } from './realidx17';
+import { histRoll } from '../history15';
 
 interface H17 { scenes: Record<string, 1>; covers: Record<string, 1>; suits: Record<string, number> }
 declare module '../ext4' { interface Ext4 { heritage17: H17 } }
@@ -39,7 +40,8 @@ export function definedDecades17(s: GameState, act: Act): number[] {
 
 // ---------------------------------------------------------------- cenas
 
-export const activeScenes17 = (s: GameState): Scene17[] => SCENES17.filter((x) => x[3] <= s.year && s.year <= x[4] && genreById[x[2]] && genreById[x[2]].born <= s.year);
+export const activeScenes17 = (s: GameState): Scene17[] => SCENES17.filter((x) => x[3] <= s.year && s.year <= x[4] && genreById[x[2]] && genreById[x[2]].born <= s.year
+  && !(s.config.history !== 'strict' && x[3] >= s.config.startYear && histRoll(s, `scene18:${x[0]}`) < 0.4));
 export const sceneOfAct17 = (s: GameState, act: Act): Scene17 | undefined =>
   activeScenes17(s).find((x) => x[1] === act.city && (act.genre === x[2] || familyOf(act.genre) === familyOf(x[2])));
 
@@ -113,6 +115,7 @@ registerSimHook('month', 'heritage17', (s) => {
   const st = heritage17(s);
   for (const sc of SCENES17) {
     if (st.scenes[sc[0]] || s.year < sc[3] || s.year > sc[4] || !genreById[sc[2]] || genreById[sc[2]].born > s.year) continue;
+    if (s.config.history !== 'strict' && sc[3] >= s.config.startYear && histRoll(s, `scene18:${sc[0]}`) < 0.4) { st.scenes[sc[0]] = 1; continue; } // r18: história alternativa: nem toda cena real acontece
     st.scenes[sc[0]] = 1;
     if (s.year - sc[3] > 1) continue; // partida começou com a cena já madura: sem manchete
     s.genrePop[sc[2]] = clamp((s.genrePop[sc[2]] ?? 0.6) + 0.15, 0.15, 2.2);
@@ -125,7 +128,7 @@ registerSimHook('month', 'heritage17', (s) => {
     const k = keyOf(c);
     if (st.covers[k] || s.year < c[0] || (s.year === c[0] && s.month < c[1])) continue;
     st.covers[k] = 1;
-    if (s.year - c[0] <= 1) coverEvent(s, c);
+    if (s.year - c[0] <= 1 && (s.config.history === 'strict' || c[0] < s.config.startYear)) coverEvent(s, c); // r18: história alternativa não reencena covers reais
   }
   sampleSuits(s);
 });

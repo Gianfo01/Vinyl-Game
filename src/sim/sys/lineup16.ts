@@ -95,10 +95,10 @@ function scripted(s: GameState, p: Person): boolean {
   if (!s.config.realNames) return false;
   const d = realKeys().get(canonKey(p.name));
   if (d === undefined) return false;
-  return histMode(s) === 'strict' || d >= s.year;
+  return histMode(s) === 'strict' || (d >= s.year && !s.config.snap17); // r18: sem estreias reais futuras no modo "real até o início"
 }
 /** Pessoa real fora do modo aleatório: pode sair e seguir solo, mas não entra em bandas inventadas (nem leva estranhos para bandas reais). */
-const realBound = (s: GameState, p: Person) => !!s.config.realNames && histMode(s) !== 'free' && realKeys().has(canonKey(p.name));
+const realBound = (s: GameState, p: Person) => !!s.config.realNames && histMode(s) === 'strict' && realKeys().has(canonKey(p.name)); // r18: fora do exato, história alternativa
 
 // ---------------------------------------------------------------- renomes reais
 
@@ -111,7 +111,7 @@ function renames(s: GameState): void {
     if (!d) continue;
     const shift = d.d !== undefined ? a.debutYear - d.d : 0;
     for (const [from, y, to] of RENAMES16) {
-      if (d.n !== from || a.name !== from || s.year < y + shift) continue;
+      if (d.n !== from || a.name !== from || s.year < y + shift || (histMode(s) !== 'strict' && y + shift >= s.config.startYear)) continue;
       (st.names[a.id] ??= []).push([y + shift, from]);
       a.name = to;
       if (s.week > 0) remember(s, 'lineup', fmtL(l('{a} passa a se chamar {b}.', '{a} is now called {b}.'), { a: from, b: to }), { actId: a.id, important: a.fame > 30 });
@@ -257,7 +257,7 @@ export function freeStep16(s: GameState, r: Rng, pid: string, force = false): Ac
   if (!force && (scripted(s, p) || !r.chance(0.07))) return undefined;
   const src = srcFame(s, pid).fame;
   const fam = familyOf(from.genre);
-  const homes = Object.values(s.acts).filter((a) => a.id !== from.id && (a.status === 'active' || a.status === 'emerging') && !mineAct(a) && !histLocked(s, a) && !(a.catalogNo && histMode(s) !== 'free') && a.members.length >= 2 && a.members.length < 5 && familyOf(a.genre) === fam && !a.members.some((id) => s.persons[id]?.role === p.role));
+  const homes = Object.values(s.acts).filter((a) => a.id !== from.id && (a.status === 'active' || a.status === 'emerging') && !mineAct(a) && !histLocked(s, a) && !(a.catalogNo && histMode(s) === 'strict') && a.members.length >= 2 && a.members.length < 5 && familyOf(a.genre) === fam && !a.members.some((id) => s.persons[id]?.role === p.role));
   const partners = freePool(s, from.genre, from.id).filter((q) => q.id !== pid);
   const wSolo = (front(from, p) || f[2] === 'solo') && src > 20 ? 2 + (f[2] === 'solo' ? 3 : 0) : 0.3;
   const bound = realBound(s, p);
@@ -280,7 +280,7 @@ function npcDepartures(s: GameState, r: Rng): void {
     if ((a.status !== 'active' && a.status !== 'emerging') || a.members.length < 2 || mineAct(a) || histLocked(s, a)) continue;
     if (a.fame < 8 && !a.catalogNo) continue;
     if (!r.chance(0.25)) continue; // amostra (x4 na chance)
-    const k = a.catalogNo ? (hm === 'free' ? 1 : 0.5) : 1;
+    const k = a.catalogNo ? (hm !== 'strict' ? 1 : 0.5) : 1;
     for (const id of a.members) {
       const p = s.persons[id];
       if (!p?.alive || p.isPlayer || scripted(s, p)) continue;
@@ -297,7 +297,7 @@ function returns(s: GameState, r: Rng): void {
   const st = l16(s);
   for (const [pid, f] of Object.entries(st.free)) {
     const a = s.acts[f[1]], p = s.persons[pid];
-    if (!a || !p?.alive || !live(a) || mineAct(a) || histLocked(s, a) || (a.catalogNo && histMode(s) !== 'free') || a.members.length >= 6 || inActive(s, pid)) continue;
+    if (!a || !p?.alive || !live(a) || mineAct(a) || histLocked(s, a) || (a.catalogNo && histMode(s) === 'strict') || a.members.length >= 6 || inActive(s, pid)) continue;
     if (mIdx(s) - f[0] < 18 || f[2] === 'addiction' && p.health === 'addiction') continue;
     const lead = s.persons[a.leaderId ?? ''];
     if (lead && (lead.rel[pid] ?? 0) < -15) continue;

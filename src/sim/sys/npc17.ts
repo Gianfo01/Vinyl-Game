@@ -83,7 +83,7 @@ const live = (a?: Act): a is Act => !!a && (a.status === 'active' || a.status ==
 /** Ato que o mundo dos NPCs pode mexer (não é seu, não está preso ao roteiro real). */
 export const okAct17 = (s: GameState, a?: Act): a is Act => live(a) && !a.playerBand && a.owner !== 'player' && !histLocked(s, a);
 /** Pessoa que pode mudar de carreira/fundar selo (pessoas reais só no modo livre). */
-export const okPerson17 = (s: GameState, a: Act): boolean => histMode(s) === 'free' || !a.catalogNo;
+export const okPerson17 = (s: GameState, a: Act): boolean => histMode(s) !== 'strict' || !a.catalogNo; // r18: fora do exato, qualquer um muda de carreira
 const okPerson = okPerson17;
 const leadOf = (s: GameState, a: Act): Person | undefined => s.persons[a.leaderId && a.members.includes(a.leaderId) ? a.leaderId : a.members[0]];
 const F = (P: P13 | null, k: string): number => (P?.facets[k as keyof P13['facets']] ?? 50) / 50;
@@ -138,7 +138,7 @@ function mgrBreaks(s: GameState, r: Rng, W: number): void {
     if (n >= 2) break;
     const a = s.acts[aid];
     const m = mgrById[rp.m];
-    if (!m || !okAct17(s, a) || s.year - rp.y < 1 || (rp.h && histMode(s) !== 'free')) continue;
+    if (!m || !okAct17(s, a) || s.year - rp.y < 1 || (rp.h && histMode(s) === 'strict')) continue;
     const P = Pa(s, a);
     const lead = leadOf(s, a);
     const ws: L[] = [];
@@ -433,7 +433,7 @@ function mgrClients(s: GameState, r: Rng): void {
   for (const m of npc17(s).mg) {
     if (!mgrActive(s, m) || rosterOf(s, m.id).length >= mgrCap(m) || !r.chance(0.12)) continue;
     const pid = m.id.slice(4);
-    const pool = Object.values(s.acts).filter((a) => okAct17(s, a) && !st.rep[a.id] && a.fame >= 8 && mkOf(a.city) === mkOf(m.city) && (histMode(s) === 'free' || !a.catalogNo));
+    const pool = Object.values(s.acts).filter((a) => okAct17(s, a) && !st.rep[a.id] && a.fame >= 8 && mkOf(a.city) === mkOf(m.city) && (histMode(s) !== 'strict' || !a.catalogNo));
     const pals = pool.filter((a) => a.members.some((x) => (s.persons[x]?.rel[pid] ?? 0) > 20));
     const a = (pals.length ? pals : pool.filter((x) => m.fam.includes(fam(x) as never))).sort((x, y) => y.fame - x.fame)[r.int(0, 2)];
     if (!a) continue;
@@ -729,3 +729,5 @@ export function moveCount(s: GameState, months = 12): Record<string, number> {
   for (const x of npc17(s).log) if (t - (x.y * 12 + x.m) < months) out[x.k] = (out[x.k] ?? 0) + 1;
   return out;
 }
+// r18 (world18): segunda carreira e jogadas registradas no mesmo log
+export { move as move17, career as career17 };

@@ -940,8 +940,9 @@ function extrasMonth(s: GameState, r: Rng): void {
     }
   }
   // crônica real documentada (fatos públicos, nunca inventados)
-  if (histMode(s) !== 'free') for (let i = 0; i < DOC17.length; i++) {
+  for (let i = 0; i < DOC17.length; i++) {
     const d = DOC17[i];
+    if (histMode(s) !== 'strict' && d.y >= s.config.startYear) continue; // r18: depois do início, só no modo exato
     if (st.doc[i] || d.y > s.year || (d.y === s.year && d.m > s.month) || s.year - d.y > 1) continue;
     if (d.dead) { const a = Object.values(s.acts).find((x) => x.name === d.dead); if (!a || a.members.some((m) => s.persons[m]?.alive)) continue; }
     st.doc[i] = 1;

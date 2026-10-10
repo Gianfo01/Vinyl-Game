@@ -11,13 +11,14 @@
 
 import { clamp, type Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { endContract, signWithRival } from '../contracts';
+import { endContract } from '../contracts';
 import { emitEvent, type Ctx, type EventDef } from '../events';
 import { deferEvents, registerExt4, registerSimHook } from '../ext4';
 import { makeAct } from '../people';
 import type { Act, GameState, Label, Person, Release } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
 import { grantPlayerContract } from '../worldgen';
+import { courtNewcomer18 } from './world18';
 import { audience, startRevival } from './audience8';
 import { bondBalance, bondNote, careerPhase, identity, prefsOf, repeatsFormula, resultKind, soundsCommercial, soundsExperimental } from './identity8';
 import { rw } from './realworld';
@@ -161,9 +162,9 @@ function voiceLeaves(s: GameState, r: Rng, a: Act, p: Person, lb: Label | undefi
   solo.status = 'active';
   solo.fans = { casual: Math.round(a.fans.casual * 0.2), active: Math.round(a.fans.active * 0.15), core: Math.round(a.fans.core * 0.08) };
   a.fans.core = Math.round(a.fans.core * 0.9);
-  if (lb && lb.active) signWithRival(s, solo, lb.id, r);
+  if (lb && lb.active) courtNewcomer18(s, solo, lb.id); // r18 (world18): o solo estreia sem selo; o rival que o seduziu faz a proposta no mercado
   st.solo = solo.id;
-  remember(s, 'solo', fmtL(l('{p} deixa {a} e segue solo{b}.', '{p} leaves {a} and goes solo{b}.'), { p: p.name, a: a.name, b: lb ? fmtL(l(' com {x}', ' with {x}'), { x: lb.name }) : '' }), { actId: a.id, important: true });
+  remember(s, 'solo', fmtL(l('{p} deixa {a} e segue solo{b}.', '{p} leaves {a} and goes solo{b}.'), { p: p.name, a: a.name, b: lb ? fmtL(l(' (a {x} já faz proposta)', ' ({x} is already making an offer)'), { x: lb.name }) : '' }), { actId: a.id, important: true });
   if (!a.members.length) a.status = 'split';
 }
 

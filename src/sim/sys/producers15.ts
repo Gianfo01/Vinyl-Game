@@ -53,7 +53,7 @@ for (const p of REAL_PRODS) if (!PRODUCERS.some((x) => x.id === prodDefId(p.id))
 const NAMES = new Map<string, string>();
 /** Nome real (modo nomes reais) ou um equivalente gerado, estável pela semente. */
 export function prodName(s: GameState, p: RealProd): string {
-  if (s.config.realNames) return p.name;
+  if (s.config.realNames || p.id.startsWith('x18') || p.id.startsWith('g18')) return p.name; // r18: ex-artistas e gerados já têm nome do mundo
   const k = `${s.config.seed}|${p.id}`;
   let n = NAMES.get(k);
   if (!n) { const r = Rng.fromSeed(`${s.config.seed}|p15name|${p.id}`); n = personName(r, langForCity(p.city, r)); NAMES.set(k, n); }
