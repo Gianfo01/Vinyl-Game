@@ -43,6 +43,8 @@ export interface RunConfig {
   careers?: { main: string[]; origin?: string; ambition?: string };
   /** rodada 15: história dos artistas reais — exata, com variações (padrão) ou aleatória */
   history?: 'strict' | 'loose' | 'free';
+  /** rodada 17: liberdade do diretor criativo (mundo dos NPCs); ausente = normal */
+  freedom17?: 'tight' | 'normal' | 'wild';
 }
 
 export interface LabelSetup {

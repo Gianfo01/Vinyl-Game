@@ -107,3 +107,5 @@ import './found17';
 import './biz17';
 // Rodada 17 (D): página Notícias e boatos (veículos, críticos, processos) e aba Na imprensa do artista.
 import './media17';
+// Rodada 17 (onda 1, B): Mundo vivo — diretor criativo, situações para todos e jogadas dos NPCs com o porquê.
+import './npc17';

@@ -61,7 +61,7 @@ export const knownMgr = (s: GameState, m: RealMgr): boolean => s.year >= m.from;
 const NAMES = new Map<string, string>();
 /** Nome real (modo nomes reais) ou um equivalente gerado, estável pela semente. */
 export function mgrName(s: GameState, m: RealMgr): string {
-  if (s.config.realNames) return m.name;
+  if (s.config.realNames || m.id.startsWith('n17_')) return m.name; // r17: ex-artista que virou empresário mantém o nome
   const k = `${s.config.seed}|${m.id}`;
   let n = NAMES.get(k);
   if (!n) { const r = Rng.fromSeed(`${s.config.seed}|m14name|${m.id}`); n = personName(r, langForCity(m.city, r)); NAMES.set(k, n); }

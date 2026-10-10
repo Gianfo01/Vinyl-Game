@@ -156,3 +156,6 @@ import './merch17';
 import './circuit17';
 // Rodada 17 (D): imprensa viva — notícias, boatos, veículos, críticos reais, processos e situações de crítica.
 import './media17';
+import './sitsworld17';
+// Rodada 17 (onda 1, B): mundo orgânico dos NPCs — rompimentos, selos novos, carreiras, estratégias de selo.
+import './npc17';

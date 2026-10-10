@@ -53,7 +53,7 @@ export const S = {
   startYear: s('Ano de início', 'Start year'),
   homeCity: s('Cidade-sede', 'Home city'),
   mode: s('Modo de mundo', 'World mode'),
-  storyteller: s('Narrador', 'Storyteller'),
+  storyteller: s('Diretor criativo (narrador)', 'Creative director (storyteller)'),
   card: s('Carta do Selo', 'Label Card'),
   mutators: s('Mutators', 'Mutators'),
   difficulty: s('Dificuldade', 'Difficulty'),

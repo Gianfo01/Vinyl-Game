@@ -1,5 +1,6 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
+import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { CARDS, HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
 import { S, t, type Lang } from '../i18n/strings';
@@ -255,7 +256,9 @@ export function newGameScreen(root: HTMLElement, onStart: () => void): void {
       h('section', { class: 'card' },
         h('fieldset', null, h('legend', null, ...hl(S.storyteller, 'storyteller')), STORYTELLERS.map((st) => h('label', { class: 'radio' },
           h('input', { type: 'radio', name: 'st', checked: cfg.storyteller === st.id, onchange: () => (cfg.storyteller = st.id) }),
-          h('span', null, h('b', null, t(st.name)), h('small', { class: 'muted' }, ` — ${t(st.desc)}`))))),
+          h('span', null, h('b', null, t(st.name)), h('small', { class: 'muted' }, ` — ${t(st.desc)} ${t(DIR17[st.id].how)}`))))),
+        // r17: o narrador é o diretor criativo; a liberdade escala o quanto os NPCs mudam o mundo
+        h('label', null, ...hl(l('Liberdade do diretor (mundo dos NPCs)', 'Director freedom (NPC world)'), 'freedom17'), select(cfg.freedom17 ?? 'normal', (Object.keys(FREEDOM17) as Freedom17[]).map((k) => ({ value: k, label: `${t(FREEDOM17[k].name)} — ${t(FREEDOM17[k].desc)}` })), (v) => (cfg.freedom17 = v))),
       ),
       h('section', { class: 'card' },
         h('label', null, ...hl(S.difficulty, 'difficulty'), select(cfg.difficulty, [
