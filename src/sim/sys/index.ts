@@ -202,3 +202,10 @@ import './rights18';
 import './eras18';
 // Rodada 18 (ability18): habilidade atual e potencial (CA/PA estilo FM) para todas as pessoas.
 import './ability18';
+// Rodada 18 (talent18, onda 1): relíquias criadas no jogo + mais reais, descoberta por canais/demos, camps e pitching, banda da casa, escolas e TV de talentos.
+import './relics18';
+import './discover18';
+import './camps18';
+import './session18';
+import './school18';
+import './tv18';

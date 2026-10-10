@@ -229,13 +229,16 @@ function apply(s: GameState, d: RelicDef17, rl: Relic9, st: RelicStep17): void {
   if (ev === 'auction') notify(s, fmtL(l('Leilão histórico: {n} (dá para dar lance em Lendas → Relíquias).', 'Historic auction: {n} (you can bid in Legends → Relics).'), { n: d.name }), 'info');
 }
 
+/** r18 (talent18): quem decide se uma peça real nasce nesta partida (modos de história). */
+export const relics17Gate: { f: (s: GameState, d: RelicDef17) => boolean; step: (s: GameState, st: RelicStep17) => boolean } = { f: () => true, step: () => true };
+
 registerSimHook('month', 'relics17', (s) => {
   if (!s.config.realNames) return;
   const st = st17(s);
   for (const d of RELICS17) {
     if (!reached(s, d.year, d.month)) continue;
     let rl = relic9Of17(s, d.id);
-    if (!rl && st.done[d.id] === undefined) {
+    if (!rl && st.done[d.id] === undefined && relics17Gate.f(s, d)) {
       const act = realAct17(s, d.owner);
       rl = addRelic(s, d.kind, d.name, act?.id, undefined, d.value, d.year);
       rl.rr = d.id;
@@ -250,7 +253,7 @@ registerSimHook('month', 'relics17', (s) => {
     if (rl.rb && rl.st !== 'auction') { const o = rl.own[rl.own.length - 1]; if (rl.st === 'kept' && o && o[2] === 'leilão') o[0] = rl.rb; rl.rb = undefined; }
     const steps = d.steps ?? [];
     let i = st.done[d.id] ?? 0;
-    while (i < steps.length && reached(s, steps[i][0], steps[i][1])) { if (rl.st !== 'auction') apply(s, d, rl, steps[i]); else break; i++; }
+    while (i < steps.length && reached(s, steps[i][0], steps[i][1]) && relics17Gate.step(s, steps[i])) { if (rl.st !== 'auction') apply(s, d, rl, steps[i]); else break; i++; }
     st.done[d.id] = i;
   }
 });
