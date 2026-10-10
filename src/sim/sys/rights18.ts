@@ -21,14 +21,11 @@ import { registerExplain, type WhyPart } from '../explain18';
 import { bucket18, fin18 } from '../ledger18';
 import { perk } from '../perks';
 import { USE_BLOCK18, annualRevenue, dealOfRelease, rightsOf, rst } from '../rights';
-import { makeCover } from '../studio';
 import type { Act, GameState, Release, Song } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
 import { mkWeights18, proDue18 } from './econ18';
-import { physShareRel18 } from './eras18';
-import { altHist18, shield18 } from './feud18';
+import { histMode } from '../history15';
 import { addStress } from '../stress17';
-import { ventures } from './ventures9';
 
 // ---------------------------------------------------------------- estado
 
@@ -81,6 +78,11 @@ const logIt = (st: R18, s: GameState, t: L) => { st.log.unshift([s.year, s.month
 export const homeMk18 = (s: GameState): string => cityById[s.config.homeCity]?.market ?? 'na';
 const mkName = (mk: string): L => MARKETS.find((m) => m.id === mk)?.name ?? l(mk);
 const mineRel = (s: GameState, rel: Release) => rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand;
+/** fora do modo exato tudo vale (história alternativa); no exato, atos reais não sofrem fatos inventados */
+const altHist18 = (s: GameState): boolean => histMode(s) !== 'strict';
+const shield18 = (s: GameState, actId: string): boolean => !altHist18(s) && !!s.acts[actId]?.catalogNo;
+/** fatia digital aproximada nos EUA (SoundExchange só cobra digital) */
+const digital18 = (y: number): number => (y < 2000 ? 0 : clamp((y - 1998) / 16, 0.1, 0.9));
 
 // ---------------------------------------------------------------- precedentes
 
@@ -115,7 +117,7 @@ export function fundPrec18(s: GameState, id: string, side: 'p' | 'd'): L | null 
   return null;
 }
 
-function precMonth(s: GameState): void {
+export function precMonth18(s: GameState): void {
   const st = r18(s), now = s.year * 12 + s.month, r = seed(s, 'prec');
   if (!st.chk.pinit) { st.chk.pinit = 1; for (const d of PRECS18) if (d.y * 12 + d.m <= now) st.prec[d.id] = { y: d.y }; return; }
   for (const d of PRECS18) {
@@ -307,7 +309,7 @@ export function neighRate18(s: GameState, mk: string, rel: Release): { rate: num
   if (mk === 'eu' && age > euTerm18(s)) return { rate: 0, why: fmtL(l('Domínio público na Europa (gravação com mais de {n} anos)', 'Public domain in Europe (recording over {n} years old)'), { n: euTerm18(s) }) };
   if (mk === 'na' && rel.year < 1972 && !precOn(s, 'mma')) return { rate: 0, why: l('Gravação anterior a 1972: sem proteção federal nos EUA', 'Pre-1972 recording: no US federal protection') };
   let rate = n.rate;
-  if (n.digitalOnly) rate *= 1 - physShareRel18(s, rel);
+  if (n.digitalOnly) rate *= digital18(s.year);
   return { rate };
 }
 
@@ -461,7 +463,7 @@ function creditsMonth(s: GameState): void {
       const cut = s.year >= 1950 && s.year <= 1975 ? 1.4 : 1;
       if (!r.chance(0.2 * cut)) continue;
       const c = claimantOf(s, so, r);
-      if (!c || (c.who && shield18(s, c.who))) continue;
+      if (!c || shield18(s, so.actId)) continue;
       openDispute18(s, so, rel, c.who, c.name, 'credit', Math.round((0.2 + r.next() * 0.3) * 100) / 100);
     }
   }
@@ -634,7 +636,7 @@ export function rerecordable18(s: GameState, actId: string): Release[] {
     .sort((a, b) => b.totalUnits - a.totalUnits).slice(0, 6);
 }
 /** "Versão do artista": o ato regrava as faixas mais fortes dos masters que pertencem a outro selo. */
-export function rerecord18(s: GameState, actId: string): L {
+export function rerecord18(s: GameState, actId: string, makeCover: (s: GameState, actId: string, src: string) => Song | L): L {
   const act = s.acts[actId];
   if (!act || !playerActs(s).includes(actId)) return l('Só artistas do seu elenco.', 'Only your roster.');
   const rels = rerecordable18(s, actId);
@@ -794,7 +796,7 @@ export function setSub18(s: GameState, mk: string, on: boolean): L | null {
 
 // ---------------------------------------------------------------- editora como negócio: administração de catálogos
 
-export const canAdmin18 = (s: GameState): boolean => !!s.ownPublishing || ventures(s).list.some((v) => v.kind === 'publisher');
+export const canAdmin18 = (s: GameState): boolean => !!s.ownPublishing || !!(s.x4 as unknown as { ventures9?: { list: { kind: string }[] } }).ventures9?.list.some((v) => v.kind === 'publisher');
 const EST = ['Espólio', 'Catálogo', 'Edições', 'Herdeiros de'];
 function admMonth(s: GameState): void {
   const st = r18(s), r = seed(s, 'adm');
@@ -884,7 +886,7 @@ export function catVal18(s: GameState, rels: Release[], own = false): CatVal18 {
 
 registerSimHook('month', 'rights18', (s) => {
   const st = r18(s);
-  precMonth(s);
+  precMonth18(s);
   neighMonth(s);
   bbMonth(s);
   creditsMonth(s);

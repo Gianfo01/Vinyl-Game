@@ -5,6 +5,7 @@ import { NEIGH18, PRECS18 } from '../../data/rights18';
 import { t } from '../../i18n/strings';
 import { bidCatalog } from '../../sim/business';
 import { annualRevenue } from '../../sim/rights';
+import { makeCover } from '../../sim/studio';
 import {
   BB_YEARS18, SUB_FEE18, answerTerm18, bbExpiring18, bbTotal18, canAdmin18, catVal18, claimBB18, claimRate18, courtOdds18, disputeOf18,
   euTerm18, fixConflict18, frozen18, hasSub18, homeMk18, meta18, modShares18, neighRate18, payClearance18, r18, rate18, rerecord18,
@@ -109,7 +110,7 @@ function recordings(s: GameState): HTMLElement {
     })) : empty(l('Sem masters próprios ainda.', 'No masters of your own yet.')),
     section(t(l('Regravar masters que são de outro selo', 'Re-record masters owned by another label')),
       h('p', { class: 'muted small' }, t(l('Se um artista seu tem discos antigos (5+ anos, fim da cláusula de restrição) num selo rival, ele pode regravar: a "versão do artista" puxa os fãs, o master antigo perde ~40% da demanda e a composição segue pagando os autores.', 'If one of your acts has old records (5+ years, past the re-record restriction) at a rival label, they can re-record: the "artist\'s version" pulls fans, the old master loses ~40% of demand and the song keeps paying its writers.'))),
-      acts.length ? h('div', { class: 'row wrap' }, acts.map((id) => btn(l(`${s.acts[id].name}: ${t(l('regravar', 're-record'))} (${rerecordable18(s, id).length})`), () => say(rerecord18(s, id))))) : empty(l('Nenhum artista seu tem masters antigos em outro selo.', 'None of your acts has old masters at another label.')),
+      acts.length ? h('div', { class: 'row wrap' }, acts.map((id) => btn(l(`${s.acts[id].name}: ${t(l('regravar', 're-record'))} (${rerecordable18(s, id).length})`), () => say(rerecord18(s, id, makeCover))))) : empty(l('Nenhum artista seu tem masters antigos em outro selo.', 'None of your acts has old masters at another label.')),
     ),
   );
 }
