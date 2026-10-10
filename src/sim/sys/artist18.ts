@@ -569,7 +569,7 @@ export const fireAgent18 = (s: GameState): void => { a18(s).agent = undefined; }
 function signPub(s: GameState, o: Offer18): { ok: boolean; text: L } {
   const st = a18(s);
   const t = o.ptype ?? 'admin';
-  st.pub = { name: o.who, type: t, take: t === 'admin' ? 0.15 : t === 'copub' ? 0.25 : 0.5, up: t === 'admin' ? 0.1 : t === 'copub' ? 0.18 : 0.25, bal: o.adv, until: s.week + 156, since: s.week };
+  st.pub = { name: o.who, type: t, take: t === 'admin' ? 0.15 : t === 'copub' ? 0.25 : 0.5, up: t === 'admin' ? 0.18 : t === 'copub' ? 0.22 : 0.28, bal: o.adv, until: s.week + 156, since: s.week };
   if (o.adv) { post(s, `a18padv:${o.id}`, o.adv, 'advances', `Adiantamento de edição ${o.who}`); led(s, 'adv', o.adv, fmtL(l('Adiantamento da editora {b} (recuperável)', 'Advance from publisher {b} (recoupable)'), { b: o.who })); commission(s, o.adv, 'pub'); }
   o.st = 'acc';
   say(st, s, fmtL(l('Contrato de edição com {b} ({t}).', 'Publishing deal with {b} ({t}).'), { b: o.who, t: PTYPE18[t] }));
@@ -666,7 +666,7 @@ function representation(s: GameState, r: Rng, a: Act): void {
     const exp = exp18(s, a);
     const o: Offer18 = { ...blank(s, 'pub'), who, ptype: t, adv: t === 'admin' ? 0 : r100(s, exp * (t === 'copub' ? 0.6 : 1.1)) };
     st.offers.unshift(o);
-    pushInbox18(s, 'a18_rep', { from: who, subject: fmtL(l('Editora oferece {t}', 'Publisher offers {t}'), { t: PTYPE18[t] }), body: fmtL(l('{t}: a editora fica com {p}% da sua edição, arrecada melhor no exterior (+{u}%) e oferece suas músicas para sync. Adiantamento: {a}.', '{t}: the publisher keeps {p}% of your publishing, collects better abroad (+{u}%) and pitches your songs for sync. Advance: {a}.'), { t: PTYPE18[t], p: t === 'admin' ? 15 : t === 'copub' ? 25 : 50, u: t === 'admin' ? 10 : t === 'copub' ? 18 : 25, a: fmtMoney(s, o.adv) }), ref: { o: o.id }, actions: [{ id: 'accept', label: l('Assinar', 'Sign') }, { id: 'decline', label: l('Recusar', 'Decline') }] });
+    pushInbox18(s, 'a18_rep', { from: who, subject: fmtL(l('Editora oferece {t}', 'Publisher offers {t}'), { t: PTYPE18[t] }), body: fmtL(l('{t}: a editora fica com {p}% da sua edição, arrecada melhor no exterior (+{u}%) e oferece suas músicas para sync. Adiantamento: {a}.', '{t}: the publisher keeps {p}% of your publishing, collects better abroad (+{u}%) and pitches your songs for sync. Advance: {a}.'), { t: PTYPE18[t], p: t === 'admin' ? 15 : t === 'copub' ? 25 : 50, u: t === 'admin' ? 18 : t === 'copub' ? 22 : 28, a: fmtMoney(s, o.adv) }), ref: { o: o.id }, actions: [{ id: 'accept', label: l('Assinar', 'Sign') }, { id: 'decline', label: l('Recusar', 'Decline') }] });
   }
 }
 const blank = (s: GameState, k: OK18): Offer18 => ({ id: nextId(s, 'ao'), k, lb: '', who: '', w: s.week, until: s.week + 8, st: 'open', model: 'classic', pkg: k, adv: 0, fund: 0, roy: 0, term: 0, opts: 0, albums: 0, master: 'artist', rev: 0, s360: 0, scope: 'world', ar: 'artist', mkt: 0, rounds: 0, mood: 0.6, why: [] });
@@ -816,15 +816,16 @@ registerMod('chartUnits', 'artist18', (s, v, ctx) => {
   return null;
 });
 registerMod('showRevenue', 'artist18', (s, v, ctx) => {
-  const ag = (s.x4 as unknown as { artist18?: Art18 }).artist18?.agent;
-  if (!ag || !ctx.act?.playerBand) return null;
-  return { value: v * (1 + ag.boost), label: l('Agente de shows', 'Booking agent') };
+  const st = (s.x4 as unknown as { artist18?: Art18 }).artist18;
+  if (!st || !ctx.act?.playerBand || (!st.agent && !st.mgr)) return null;
+  const b = (st.agent?.boost ?? 0) + (st.mgr ? 0.06 : 0);
+  return { value: v * (1 + b), label: st.agent ? l('Agente de shows', 'Booking agent') : l('Empresário negocia cachês', 'Manager negotiates fees') };
 });
 
 function otherMoney(s: GameState, r: Rng, a: Act, dl: Record<string, number>): void {
   const st = a18(s);
   // comissões sobre shows, patrocínio e edição
-  if (st.mgr) commission(s, dl.live + dl.brands + dl.publishing, 'm');
+  if (st.mgr) commission(s, Math.round(dl.live * 0.5) + dl.brands + dl.publishing, 'm'); // shows: comissão sobre o líquido da turnê (~metade)
   if (st.agent && dl.live > 0) { const v = Math.round(dl.live * st.agent.rate); post(s, `a18ag:${s.year}:${s.month}`, -v, 'live_costs', `Agente ${st.agent.name}`); led(s, 'agent', -v, fmtL(l('Comissão do agente {n}', 'Agent {n}\'s commission'), { n: st.agent.name })); }
   // editora: parte do editor, recuperação do adiantamento e arrecadação melhor
   const pb = st.pub;
