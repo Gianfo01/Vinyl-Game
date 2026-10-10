@@ -241,7 +241,7 @@ function giveTo(s: GameState, actor: string, amt: number, memo: string): void {
 
 export const CRIMES17: CrimeDef17[] = [
   { id: 'murder', name: l('Encomendar morte', 'Order a death'), tk: 'person', p: 0.45, q: 0.35, sev: 95, cost: 40000, heat: 40, violent: 1,
-    desc: l('Disfarçado de fatalidade. Só contra personagens fictícios; matador de aluguel ou uma organização.', 'Disguised as a tragedy. Fictional characters only; a hitman or an organization.'),
+    desc: l('Disfarçado de fatalidade. No modo "Vida real exata", só contra personagens fictícios; matador de aluguel ou uma organização.', 'Disguised as a tragedy. In "Exact real life" mode, fictional characters only; a hitman or an organization.'),
     methods: [
       { id: 'accident', name: l('Acidente de carro', 'Car accident'), desc: l('Freios cortados numa estrada escura.', 'Cut brakes on a dark road.') },
       { id: 'drugs', name: l('Droga adulterada', 'Tainted drugs'), desc: l('Mais fácil com quem já usa; parece overdose.', 'Easier with users; looks like an overdose.'), dq: -0.05 },
@@ -426,7 +426,7 @@ export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
   const sev = m?.sev ?? d.sev;
   let block: L | null = null;
   // regras de história e sanidade
-  if (d.id === 'murder' && (isReal(s, c.target) || isReal(s, c.actor))) block = l('Pessoa real: o jogo não encena assassinato de gente real. Tente intimidação, chantagem ou sabotagem.', 'Real person: the game does not stage murders of real people. Try intimidation, blackmail or sabotage.');
+  if (d.id === 'murder' && histMode(s) === 'strict' && (isReal(s, c.target) || isReal(s, c.actor))) block = l('Vida real exata: o jogo não encena assassinato de gente real. Tente intimidação, chantagem ou sabotagem (ou jogue num modo de história alternativa).', 'Exact real life: the game does not stage murders of real people. Try intimidation, blackmail or sabotage (or play an alternate-history mode).'); // r18: fora do modo exato, história alternativa
   if (d.id === 'murder' && s.persons[c.target]?.isPlayer) block = l('Alvo inválido.', 'Invalid target.');
   if (histMode(s) === 'strict' && c.actor !== 'player' && isReal(s, c.actor)) block = l('Vida real exata: pessoas reais só fazem o que está documentado.', 'Exact real life: real people only do what is documented.');
   if (m?.ok) block = m.ok(s, c.target) ?? block;

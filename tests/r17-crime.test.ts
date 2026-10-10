@@ -34,7 +34,11 @@ describe('r17 crime', () => {
     if (ra) {
       const pid = ra.members.find((m) => s.persons[m]?.alive)!;
       expect(isReal(s, pid)).toBe(true);
+      // r18: só o modo "Vida real exata" protege gente real; os outros são história alternativa
+      expect(crimeOdds(s, { actor: 'player', target: pid, partners: [] }, 'murder').block).toBeNull();
+      s.config.history = 'strict';
       expect(crimeOdds(s, { actor: 'player', target: pid, partners: [] }, 'murder').block).not.toBeNull();
+      s.config.history = 'loose';
     }
     const fa = fictional(s);
     const pid = fa.members.find((m) => s.persons[m]?.alive)!;
@@ -91,9 +95,9 @@ describe('r17 crime', () => {
     expect(returnHot(s, rl.id).pt).toMatch(/esconderijo/);
   });
 
-  it('NPCs tramam por anos sem assassinar gente real, e é determinístico', () => {
+  it('NPCs tramam por anos sem assassinar gente real (modo exato), e é determinístico', () => {
     const run = () => {
-      const s = createGame(defaultConfig('r17-c5', { startYear: 1985, mode: 'historic', realNames: true, history: 'loose' }));
+      const s = createGame(defaultConfig('r17-c5', { startYear: 1985, mode: 'historic', realNames: true, history: 'strict' }));
       for (let i = 0; i < 24; i++) advanceMonth(s);
       return s;
     };
