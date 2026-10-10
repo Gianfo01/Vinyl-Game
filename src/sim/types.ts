@@ -402,6 +402,8 @@ export interface Contract {
   /** masters deste contrato já voltaram ao artista */
   reverted?: boolean;
   revertWarned?: boolean;
+  /** r18: cláusulas negociadas (recuperável, base do royalty, prestação de contas, compromissos) */
+  clauses18?: import('./sys/contracts18').Clauses18;
 }
 
 /** Direitos de um acordo (rodada 8, §3.3): propriedade, divisão, território, opções e reversão. */
@@ -518,6 +520,8 @@ export interface Offer {
   thinkUntil?: number;
   /** rodada 8: ficha de direitos proposta (ausente = padrão do modelo) */
   rights?: RightsTerms;
+  /** r18: cláusulas propostas (ver sim/sys/contracts18.ts) */
+  clauses18?: import('./sys/contracts18').Clauses18;
 }
 
 export interface AgendaSlot {
@@ -634,6 +638,8 @@ export interface GameState extends ExtState {
     bandActId?: string;
     reissues: number;
     totals: Record<string, number>;
+    /** r18: DRE, fluxo de caixa, contas a receber/pagar (sim/ledger18.ts) */
+    fin18?: import('./ledger18').Fin18;
   };
   ledger: LedgerEntry[];
   ledgerKeys: Record<string, 1>;

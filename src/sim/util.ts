@@ -2,6 +2,7 @@ import { Rng } from '../core/rng';
 import { nominal } from '../core/money';
 import type { L } from '../data/world';
 import type { GameState, MemoryEntry, Notification } from './types';
+import { book18, postHooks18, sect18, type Sect18 } from './ledger18';
 
 export const START_DAY_MS = (year: number) => Date.UTC(year, 0, 1);
 
@@ -50,21 +51,40 @@ export function fmtL(text: L, params: Record<string, Param> = {}): L {
   return { pt: rep(text.pt, 'pt'), en: rep(text.en, 'en') };
 }
 
-export function post(s: GameState, key: string, amount: number, cat: string, memo: string): boolean {
+/** Lançamento contábil. R18: só receita/custo OPERACIONAL entram em revenueByYear/profitByYear (aporte, empréstimo,
+ *  venda de ativo, impostos e câmbio não). `cash=false` reconhece agora e deixa o caixa para um título a receber/pagar
+ *  (ver sim/sys/econ18.ts). */
+export function post(s: GameState, key: string, amount: number, cat: string, memo: string, cash = true): boolean {
   if (amount === 0) return true;
   const fullKey = `${s.week}:${key}`;
   if (s.ledgerKeys[fullKey]) return false; // reprocessar não duplica (GDD §27)
   s.ledgerKeys[fullKey] = 1;
   amount = Math.round(amount);
-  s.player.cash += amount;
-  s.player.totalPosted += amount;
-  s.ledger.push({ key: fullKey, week: s.week, amount, cat, memo });
+  if (cash) {
+    s.player.cash += amount;
+    s.player.totalPosted += amount;
+  }
+  s.ledger.push({ key: fullKey, week: s.week, amount, cat, memo: cash ? memo : memo + ' ⏳' });
   if (s.ledger.length > 400) s.ledger.splice(0, s.ledger.length - 400);
   s.monthLedger[cat] = (s.monthLedger[cat] ?? 0) + amount;
   s.player.totals[cat] = (s.player.totals[cat] ?? 0) + amount;
-  if (amount > 0) s.player.revenueByYear[s.year] = (s.player.revenueByYear[s.year] ?? 0) + amount;
-  s.player.profitByYear[s.year] = (s.player.profitByYear[s.year] ?? 0) + amount;
+  const sec = sect18(cat, amount, key);
+  if (sec === 'rev') s.player.revenueByYear[s.year] = (s.player.revenueByYear[s.year] ?? 0) + amount;
+  if (sec === 'rev' || sec === 'cost') s.player.profitByYear[s.year] = (s.player.profitByYear[s.year] ?? 0) + amount;
+  book18(s, sec, cat, key, amount, cash);
+  if (sec === 'cost') for (const fn of postHooks18()) fn(s, key, amount, cat);
   return true;
+}
+
+/** Movimento só de caixa (liquidação de título já reconhecido): não é receita nem custo de novo. */
+export function settleCash(s: GameState, amount: number, cat: string, memo: string, sect: Sect18 = 'rev'): void {
+  amount = Math.round(amount);
+  if (!amount) return;
+  s.player.cash += amount;
+  s.player.totalPosted += amount;
+  s.ledger.push({ key: `${s.week}:settle:${s.ledger.length}`, week: s.week, amount, cat: 'settle', memo });
+  if (s.ledger.length > 400) s.ledger.splice(0, s.ledger.length - 400);
+  book18(s, sect, cat, '', amount, true, false);
 }
 
 export function remember(

@@ -10,6 +10,7 @@
 // Ordem determinística: ganchos rodam na ordem de registro, que é a ordem dos imports em
 // src/sim/sys/index.ts.
 
+import { DIMINISH18, MOD_CAP18, SMALL18, capStat18, modAdj18 } from './caps18';
 import type { Rng } from '../core/rng';
 import type { L } from '../data/world';
 import type { Act, GameState, Offer, Release, Song } from './types';
@@ -93,12 +94,18 @@ export function registerMod(name: ModName, id: string, fn: ModFn): void {
 /** Aplica os modificadores em cadeia; devolve o valor final e os rótulos (para a autópsia). */
 export function applyMods(s: GameState, name: ModName, value: number, ctx: ModCtx = {}): { value: number; factors: { label: L; ratio: number }[] } {
   const factors: { label: L; ratio: number }[] = [];
+  const lower = MOD_CAP18[name]?.lower;
+  let boost = 1; // r18: produto dos multiplicadores favoráveis (retornos decrescentes no fim)
   for (const m of MODS[name]) {
     const res = m.fn(s, value, ctx);
     if (!res || !Number.isFinite(res.value)) continue;
+    if (value > 0 && res.value > 0) { const r = res.value / value; const f = lower ? 1 / r : r; if (f > 1 && f <= SMALL18) boost *= f; }
     if (res.label && value > 0 && Math.abs(res.value / value - 1) > 0.005) factors.push({ label: res.label, ratio: res.value / value });
     value = res.value;
   }
+  const adj = modAdj18(name, boost);
+  capStat18('mod:' + name, boost - 1, adj === 1 ? boost - 1 : (lower ? boost / adj : boost * adj) - 1);
+  if (adj !== 1 && value > 0) { value *= adj; if (Math.abs(adj - 1) > 0.005) factors.push({ label: DIMINISH18, ratio: adj }); }
   return { value, factors };
 }
 

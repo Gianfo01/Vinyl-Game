@@ -19,9 +19,14 @@ describe('fama 15', () => {
     expect(Math.max(...pf)).toBeGreaterThan(30);
     // escândalo amplificado mexe no momento
     for (let i = 0; i < 3; i++) advanceMonth(s);
-    const m0 = star.momentum; star.scandals += 1; star.fame = 80;
+    // r18: compara com a mesma partida sem o escândalo (a trajetória do momento depende do mercado, não só do escândalo)
+    const twin = createGame(defaultConfig('r15-fame'));
+    const st2 = twin.acts[star.id]; st2.fame = 80;
+    for (let i = 0; i < 3; i++) advanceMonth(twin);
+    st2.fame = 80; advanceMonth(twin);
+    star.scandals += 1; star.fame = 80;
     advanceMonth(s);
-    expect(star.momentum).toBeLessThan(m0 + 8);
+    expect(star.momentum).toBeLessThan(st2.momentum);
     expect(f15(s).log.some((x) => x[2] === star.id)).toBe(true);
     for (let i = 0; i < 4; i++) advanceMonth(s);
     expect(fameHistory(s, star.id).length).toBeGreaterThanOrEqual(2);

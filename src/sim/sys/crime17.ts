@@ -908,7 +908,7 @@ function extrasMonth(s: GameState, r: Rng): void {
   for (const oid of Object.keys(st.laund)) {
     const o = orgById(s, oid);
     if (!o || o.to < s.year) { delete st.laund[oid]; continue; }
-    post(s, `c17laund:${oid}`, launderFee(s, o), 'other', `Consultoria (${o.name.pt})`);
+    post(s, `c17laund:${oid}`, launderFee(s, o), 'services', `Consultoria (${o.name.pt})`); // r18: lavagem aparece como receita de serviços (é o objetivo dela)
     addHeat(s, 'player', home, 3);
     st.org[oid] = clamp((st.org[oid] ?? 0) + 2, -100, 100);
     if (heatIn(s, home) > 40 && r.chance(0.15)) feedCase(s, 'player', home, 15, 55, true);

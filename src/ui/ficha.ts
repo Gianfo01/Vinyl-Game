@@ -21,6 +21,7 @@ import { relHype12 } from './sys/hype12';
 import { stylePill17 } from './sys/style17';
 import { why360 } from '../sim/sys/deal360_17';
 import { why18 } from './explain18';
+import { clauses18Fields } from './sys/contracts18';
 
 function g(): GameState {
   return store.game!;
@@ -188,6 +189,7 @@ export function openOffer(actId: string): void {
       (['priority', 'tour', 'freedom'] as const).map((p) => h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; o.promises = on ? [...o.promises, p] : o.promises.filter((x) => x !== p); update(); } }), t(p === 'priority' ? S.promisePriority : p === 'tour' ? S.promiseTour : S.promiseFreedom))),
     ),
     rightsBox,
+    clauses18Fields(s, a, o, update),
     packageFields(s, o, () => update()),
     evalBox,
   );

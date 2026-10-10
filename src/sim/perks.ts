@@ -10,6 +10,7 @@
 //    scoutAccuracy (estreita intervalos), stress (mais estresse), xp, valuation, staffCost, wealth (renda
 //    pessoal mensal em dólares reais, não fração), advance (adiantamento esperado pelos artistas)
 
+import { LOWER_PERK18, PERK_CAP18, capStat18, soft18 } from './caps18';
 import type { L } from '../data/world';
 import type { Act, GameState } from './types';
 
@@ -71,14 +72,21 @@ function computeEntries(s: GameState, out: PerkEntry[]): PerkEntry[] {
 
 /** Soma de uma chave; com `act`, inclui as entradas restritas que valem para ele. */
 export function perk(s: GameState, key: PerkKey, act?: Act): number {
-  let v = 0;
+  let pos = 0, neg = 0;
   for (const e of perkEntries(s)) {
     const x = e.values[key];
     if (!x) continue;
     if (e.act && (!act || !e.act(s, act))) continue;
-    v += x;
+    if (x > 0) pos += x; else neg += x;
   }
-  return v;
+  // r18: retornos decrescentes na soma positiva (caps18.ts); penalidades ficam inteiras
+  const cap = PERK_CAP18[key];
+  if (!cap) return pos + neg;
+  // chaves de custo/estresse: o bônus é a parte negativa
+  if (LOWER_PERK18.has(key)) { const e = -soft18(-neg, cap); capStat18('perk:' + key, -neg, -e); return pos + e; }
+  const eff = soft18(pos, cap);
+  capStat18('perk:' + key, pos, eff);
+  return eff + neg;
 }
 
 /** Detalhe de uma chave para tooltips: [rótulo, valor]. */

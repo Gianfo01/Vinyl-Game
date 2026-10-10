@@ -5,7 +5,7 @@ import { simulatePlayer } from '../src/sim/playbot16';
 
 describe('playbot16', () => {
   it('uma run curta tem ações variadas de jogador e é determinística', () => {
-    const cfg = defaultConfig('r16pb-1', { startYear: 1975, realNames: true });
+    const cfg = defaultConfig('r16pb-2', { startYear: 1975, realNames: true }) // r18: a economia nova (prazos, DRE) mudou a trajetória da semente 'r16pb-1';
     const a = simulatePlayer(cfg, 2, 'balanced').summary;
     const L = a.log;
     expect(L.signs).toBeGreaterThan(0);

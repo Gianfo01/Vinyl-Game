@@ -1,6 +1,7 @@
 // Economia expandida (GDD §20, §42.8): royalties pagos a cada autor, inventário de ativos com
 // depreciação (visão contábil separada do caixa), credores com paciência e retomada de ativos.
 
+import { arTotal18 } from './ledger18';
 import type { Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import type { GameState, Release } from './types';
@@ -97,7 +98,7 @@ export function balanceSheet(s: GameState): BalanceSheet {
   const assets = Object.values(byKind).reduce((t, x) => t + x, 0);
   const receivables = Math.round(s.flags.receivables ?? 0);
   const debt = totalDebt(s);
-  return { cash: s.player.cash, assets, receivables, debt, equity: s.player.cash + assets + receivables - debt, depreciationMonth: s.flags.depreciationLast ?? 0, byKind };
+  return { cash: s.player.cash, assets, receivables, debt, equity: s.player.cash + assets + receivables - debt - (s.flags.payables18 ?? 0), depreciationMonth: s.flags.depreciationLast ?? 0, byKind };
 }
 
 // ---------- Credores ----------
@@ -160,5 +161,5 @@ export function financeMonth(s: GameState, r: Rng): void {
   depreciationMonth(s);
   creditorsMonth(s, r);
   // royalties autorais liquidados no mês seguinte (registro; não é caixa da empresa)
-  s.flags.receivables = Math.round((s.monthLedger.sales ?? 0) * 0.2);
+  s.flags.receivables = arTotal18(s); // r18: títulos a receber de verdade (sim/sys/econ18)
 }

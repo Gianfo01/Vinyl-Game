@@ -195,3 +195,6 @@ import './feud18';
 import './agency18';
 import './dm18';
 import './dmsits18';
+import './econ18';
+import './contracts18';
+import './eras18';

@@ -8,6 +8,8 @@
 // outra carreira ou se aposentar. Também: fundos de catálogo que fazem lances por masters antigos (extra).
 // Aleatoriedade: geradores próprios (semente + mês).
 
+import { apTotal18, arTotal18 } from '../ledger18';
+import { noteLost18 } from './econ18';
 import { Rng, clamp } from '../../core/rng';
 import { MARKETS, cityById, l, type L, type MarketId } from '../../data/world';
 import { labelValuation, transferLabel } from '../business';
@@ -75,12 +77,14 @@ export function valuation17(s: GameState): Val17 {
   const prestige = Math.round((s.player.stats.awards + s.player.stats.number1s * 2 + s.player.stats.platinum) * money(s, 15000));
   const cash = s.player.cash;
   const debt = s.player.loans.reduce((t, x) => t + x.balance, 0) + (s.creditors ?? []).reduce((t, c) => t + Math.max(0, c.owed), 0);
-  const total = Math.max(money(s, 20000), cat + roster + prestige + cash - debt);
+  const wc = arTotal18(s) - apTotal18(s); // r18: capital de giro (a receber − royalties a pagar)
+  const total = Math.max(money(s, 20000), cat + roster + prestige + cash + wc - debt);
   return { total, cat, mult: em.m, roster, prestige, cash, debt, why: [
     [fmtL(l('Catálogo: {n} lançamentos × {m}× ({w})', 'Catalog: {n} releases × {m}× ({w})'), { n: rels.length, m: Math.round(em.m * 10) / 10, w: em.why }), cat],
     [fmtL(l('Elenco: {n} artistas (fama)', 'Roster: {n} acts (fame)'), { n: mineActs(s).length }), roster],
     [l('Prestígio: prêmios, nº 1, platinas', 'Prestige: awards, No. 1s, platinum'), prestige],
     [l('Caixa (vai junto)', 'Cash (goes with it)'), cash],
+    [l('A receber − royalties a pagar', 'Receivables − royalties payable'), wc],
     [l('Dívidas assumidas pelo comprador', 'Debts the buyer assumes'), -debt],
   ] };
 }
@@ -266,6 +270,7 @@ export function sellMaster17(s: GameState, bidId: string): L | null {
   const rel = b && s.releases[b.relId];
   if (!b || !rel || rel.owner !== 'player' || b.expires < s.week) return l('Lance expirado.', 'Bid expired.');
   post(s, `sale17:cat:${rel.id}`, b.price, 'asset_sales', `Master vendido: ${rel.title}`);
+  noteLost18(s, [rel.id], b.price, `"${rel.title}"`); // r18: renda futura que sai com o master
   const buyer = Object.values(s.labels).find((x) => x.active && x.strategy === 'buy_catalog');
   rel.owner = buyer?.id ?? 'indie';
   const a = s.acts[rel.actId];

@@ -1,12 +1,14 @@
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
 
+import { physShareRel18 } from './sys/eras18';
+import { baseMult18, recoupable18, takeRecoup18 } from './sys/contracts18';
+import { postAR18, postRoyAP18, postSalesAR18, proDue18 } from './sys/econ18';
 import { clamp, type Rng } from '../core/rng';
 import { nominal } from '../core/money';
 import { isUnlocked } from './era';
 import { CHANNELS, EQUIPMENT, FORMATS, type FormatId } from '../data/rules';
 import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type MarketId } from '../data/world';
-import { physicalShare } from './production';
 import { payAuthors } from './finance';
 import { superfanDebut } from './fandom';
 import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
@@ -327,7 +329,7 @@ export function marketWeek(s: GameState, r: Rng): void {
   }
   const B = MARKET_TAIL * (s.year < 1950 ? 0.6 : 1);
   s.stats.lastH = H;
-  const phys = physicalShare(s);
+  // r18: a fatia física depende dos mercados e da idade do público de cada lançamento (eras18)
   const digital = digitalFormats(s);
   const piracy = piracyLoss(s);
   const singles: ChartEntry[] = [];
@@ -348,7 +350,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     let units = Math.round(pre[i] * (mine(rel) ? k : 1));
     if (units <= 0) continue;
     // estoque: demanda física só vira venda com estoque
-    const physUnits = Math.round(units * phys);
+    const physUnits = Math.round(units * physShareRel18(s, rel));
     let physSold = physUnits;
     if (rel.owner === 'player' || (s.acts[rel.actId]?.playerBand && rel.stock !== Infinity)) {
       if (rel.formats.some((f) => FORMATS.find((x) => x.id === f)?.physical)) {
@@ -435,14 +437,15 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   let partyGets = gross;
   if (c) {
     const fee = c.party === 'player' ? distributionFee(s) : 0.2;
-    artistShare = Math.round(gross * (terms ? artistRate(c, fee) : c.royalty));
+    artistShare = Math.round(gross * (terms ? artistRate(c, fee) : c.royalty) * baseMult18(c, s.year)); // r18: base do royalty
     if (c.model === 'distribution') {
       artistShare = Math.round(gross * (1 - (c.distributionFee ?? 0.2)));
     }
     let payout = artistShare;
     if (c.recoupBalance > 0 && c.model !== 'distribution') {
-      const rec = Math.min(c.recoupBalance, artistShare);
+      const rec = Math.min(recoupable18(c, rel.id), artistShare); // r18: por projeto ou cruzado
       c.recoupBalance -= rec;
+      takeRecoup18(c, rel.id, rec);
       if (c.party === 'player') c.recouped = (c.recouped ?? 0) + rec;
       payout = artistShare - rec;
     }
@@ -456,14 +459,12 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
     partyGets = gross - payout - points;
     // quem recebe o quê
     if (c.party === 'player') {
-      post(s, `sales:${rel.id}`, gross, 'sales', `Vendas ${rel.title}`);
-      // distribuidor e varejo terceirizados ficam com uma fatia (menor com sede maior)
-      post(s, `distfee:${rel.id}`, -Math.round(gross * distributionFee(s)), 'distribution', `Distribuição ${rel.title}`);
-      if (payout > 0 && !act.playerBand) {
-        post(s, `roy:${rel.id}`, -payout, 'royalties', `Royalties ${act.name}`);
-        act.cash += payout;
-      }
-      if (points > 0) post(s, `pts:${rel.id}`, -points, 'royalties', `Pontos de produção ${rel.title}`);
+      // r18: receita reconhecida agora, caixa no prazo do distribuidor/plataforma (econ18); o distribuidor desconta a taxa na remessa
+      postSalesAR18(s, rel, `sales:${rel.id}`, gross, 'sales', `Vendas ${rel.title}`);
+      postSalesAR18(s, rel, `distfee:${rel.id}`, -Math.round(gross * (distributionFee(s) + ((s.flags.fastPay18 ?? 0) > 0 ? 0.03 : 0))), 'distribution', `Distribuição ${rel.title}`);
+      // royalties do artista: custo agora, pagos na prestação de contas do contrato
+      if (payout > 0 && !act.playerBand) postRoyAP18(s, act, `roy:${rel.id}`, payout, `Royalties ${act.name}`);
+      if (points > 0) postRoyAP18(s, undefined, `pts:${rel.id}`, points, `Pontos de produção ${rel.title}`);
     } else {
       const lb = s.labels[c.party];
       if (lb) {
@@ -478,7 +479,7 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
     // independente: distribuição própria (taxa de agregador)
     const fee = act.playerBand && s.config.role === 'hybrid' ? 0 : hasTech(s, 'streaming') ? 0.15 : 0.35;
     const net = Math.round(gross * (1 - fee));
-    if (act.playerBand) post(s, `sales:${rel.id}`, net, 'sales', `Vendas ${rel.title}`);
+    if (act.playerBand) postSalesAR18(s, rel, `sales:${rel.id}`, net, 'sales', `Vendas ${rel.title}`);
     else act.cash += net;
   }
   rel.revenue += partyGets;
@@ -487,7 +488,7 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   if (pubToPlayer > 0) {
     let amount = Math.round(publishing * pubToPlayer * rightsLeak);
     if (hasCard(s, 'publisher')) amount = Math.round(amount * 1.3);
-    post(s, `pub:${rel.id}`, amount, 'publishing', `Edição ${rel.title}`);
+    postAR18(s, `pub:${rel.id}`, amount, 'publishing', `Edição ${rel.title}`, 'pro', proDue18(s));
   }
   if (pubToPlayer < 1 && !act.playerBand) act.cash += Math.round(publishing * (1 - pubToPlayer) * 0.5);
   // parcela dos autores: paga individualmente a cada compositor (GDD §42.10)

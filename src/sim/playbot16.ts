@@ -5,6 +5,8 @@
 // Respeita os mesmos limites do jogador (tempo livre, cota de reuniões, ações de scouting, vagas da sede).
 // Três perfis: cauteloso, equilibrado, agressivo. Sem aleatoriedade própria: o acaso é o do jogo.
 
+import { botClauses18, botPolicy18 } from './sys/contracts18';
+import { liquid18 } from './sys/econ18';
 import { toReal } from '../core/money';
 import { FESTIVALS } from '../data/catalog';
 import { MARKETS, cityById, type MarketId } from '../data/world';
@@ -186,6 +188,7 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
     const act = s.acts[c.id];
     const o = c.o;
     o.advance = Math.round(o.advance * k.adv / 100) * 100;
+    botClauses18(s, act, o, p); // r18: cláusulas (recuperável, base, contas, garantias) conforme o perfil
     let ev = evaluateOffer(s, act, o);
     // r17: o agressivo tenta o 360 (parte de shows/merch) depois que o modelo existe na indústria; volta ao clássico se não cola
     if (p === 'aggressive' && s.year >= 2002) {
@@ -302,7 +305,7 @@ function road(s: GameState, k: Knobs, prof: Profile): void {
     // selo clássico só paga a logística (bilheteria é do artista): vale como investimento se não pesa no caixa
     const cost = -labelTourNet16(s, id, est).net; // a mesma linha "Para o selo" do planejador
     // ato grande vende mais disco depois da estrada: aceita investir mais nele
-    if (cost > s.player.cash * k.tourCash * (1 + act.fame / 40)) continue;
+    if (cost > liquid18(s) * k.tourCash * (1 + act.fame / 40)) continue; // r18: conta o que entra nos próximos 2 meses
     const r = planTour(s, plan);
     if (!('pt' in r)) { L.tours++; M.tourW[id] = s.week; }
   }
@@ -356,9 +359,10 @@ function team(s: GameState, k: Knobs): void {
   if (acts.length >= 4) want.push('admin', 'sync', 'rights', 'manufacturing');
   // o mercado só tem alguns profissionais por vez: contrata a primeira função desejada que aparece
   const role = want.find((r) => !have.has(r) && s.professionals.some((p) => p.role === r));
-  if (role && s.player.staff.length < hqCaps(s).staff && runway(s) > k.cut * 2.5) {
+  if (role && s.player.staff.length < hqCaps(s).staff && liquid18(s, 2) / Math.max(1, burn(s)) > k.cut * 2.5) { // r18: conta recebíveis próximos
     const pro = s.professionals.filter((p) => p.role === role).sort((a, b) => b.skill / Math.max(1, b.salary) - a.skill / Math.max(1, a.salary))[0];
-    const afford = pro && s.player.cash > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || s.player.cash > (salaries + pro.salary) * 24 * k.hireMult);
+    const liq = liquid18(s, 3); // r18: caixa + recebíveis dos próximos 3 meses
+    const afford = pro && liq > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || liq > (salaries + pro.salary) * 24 * k.hireMult);
     if (pro && afford && !hireStaff(s, pro.id)) L.hires++;
   }
   // ordens permanentes para os delegados (como no painel de equipe)
@@ -439,6 +443,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   const M = mem(s), L = M.log;
   M.cash.push(s.player.cash);
   if (M.cash.length > 6) M.cash.shift();
+  botPolicy18(s, prof);
   for (const d of [...s.decisions]) if (resolveDecision(s, d.id, pickOption(s, d, k))) L.decisions++;
   finances(s, k);
   const acts = playerActs(s);
