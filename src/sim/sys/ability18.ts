@@ -425,7 +425,8 @@ function stepPerson(s: GameState, p: Person, a: Act, dt: number, my: boolean, be
   }
   const ca = caOf18(p);
   if (ca > rec.pa) rec.pa = Math.round(ca);
-  p.potential = Math.round(clamp(eff / 2, 5, 100));
+  // o teto antigo (usado por atributos detalhados, crescimento e valor) só sobe: quem não alcança é o crescimento acima
+  p.potential = Math.max(p.potential, Math.round(clamp(eff / 2, 5, 100)));
   if (my) {
     const d = (st.d[key] ??= {});
     for (const [c, v] of Object.entries(C)) d[c] = Math.round(((d[c] ?? 0) + v) * 100) / 100;
