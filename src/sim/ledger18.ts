@@ -24,6 +24,8 @@ export interface Fin18 {
   late: Record<string, number>;
   /** renda perdida projetada por vendas de catálogo (centavos/ano) */
   lostPerYear: number;
+  /** save antigo: ano a partir do qual a DRE separa seções (antes, receita/lucro eram brutos) */
+  since?: number;
 }
 
 const FIN = new Set(['financing', 'loans', 'ipo', 'investment', 'investor_share', 'owner_capital', 'owner_draw', 'securitization', 'factoring_fin']);
@@ -121,4 +123,13 @@ export function bucket18(list: Bucket18[], b: Bucket18): void {
 export function postHooks18(): ((s: GameState, key: string, amount: number, cat: string) => void)[] {
   const f = postHooks18 as unknown as { l?: ((s: GameState, key: string, amount: number, cat: string) => void)[] };
   return (f.l ??= []);
+}
+
+/** Migração de saves anteriores à rodada 18: cria o livro e marca o ano de corte (histórico antigo fica como estava). */
+export function migrate18(s: GameState): void {
+  const p = s.player as unknown as { fin18?: Fin18 };
+  if (p.fin18) return;
+  const hadHistory = Object.keys(s.player.revenueByYear ?? {}).length > 0;
+  const f = fin18(s);
+  if (hadHistory) f.since = s.year;
 }

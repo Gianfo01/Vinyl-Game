@@ -4,6 +4,7 @@
 // Também há uma promoção mínima por lançamento (rádio/TV/playlists) que depende da época e do tamanho do mercado-alvo.
 // Integra com o que existe: salários (economy.ts), aluguel/filiais (branches), departamentos (hq6) e o marketing que o jogador escolhe.
 
+import { sect18 } from '../ledger18';
 import { clamp } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { MARKETS, l, type L } from '../../data/world';
@@ -28,7 +29,8 @@ const NOT_INCOME = new Set(['financing', 'loans', 'asset_sales', 'owner_draw', '
 /** Receita bruta do mês (centavos): só entradas operacionais. */
 export function grossMonth(s: GameState): number {
   let t = 0;
-  for (const [k, v] of Object.entries(s.monthLedger)) if (v > 0 && !NOT_INCOME.has(k)) t += v;
+  // r18: só receita operacional (aporte, IPO, venda de ativo e dividendos recebidos não contam)
+  for (const [k, v] of Object.entries(s.monthLedger)) if (v > 0 && !NOT_INCOME.has(k) && sect18(k, v) === 'rev') t += v;
   return t;
 }
 /** Receita anual em dólares reais de 2020 (média móvel), base das faixas. */

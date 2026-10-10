@@ -133,7 +133,7 @@ export function factor18(s: GameState, need: number, why: L): number {
   return got;
 }
 
-function settleMonth(s: GameState): void {
+export function settleMonth18(s: GameState): void {
   const f = fin18(s);
   const mi = mIdx18(s);
   // recebimentos
@@ -216,4 +216,4 @@ export function noteLost18(s: GameState, relIds: string[], price: number, what: 
   return per;
 }
 
-registerSimHook('month', 'econ18', (s) => { settleMonth(s); });
+registerSimHook('month', 'econ18', (s) => { settleMonth18(s); });

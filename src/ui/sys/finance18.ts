@@ -140,6 +140,7 @@ function render(s: GameState): HTMLElement {
       : Array.from({ length: 12 }, (_, i) => cur - 11 + i).filter((m) => f.m[m]).map((m) => h('button', { class: `btn small ${m === st.m ? '' : 'ghost'}`, onclick: () => { st.m = m; rerender(); } }, mName(m)))));
   return h('div', null,
     section(t(l('Demonstrativo de resultado e fluxo de caixa', 'Income statement and cash flow')), pick, dre(o),
+      f.since ? h('p', { class: 'muted small' }, t(l('Jogo salvo antes desta versão: as seções valem a partir de {y}; anos anteriores somavam qualquer entrada como receita.', 'Saved before this version: sections apply from {y}; earlier years counted any inflow as revenue.'), { y: f.since })) : null,
       h('p', { class: 'muted small' }, t(l('Aporte de investidor, empréstimo, IPO e venda de ativos NÃO são receita nem lucro: entram em Financiamento/Investimento. O conselho, as metas e a avaliação da empresa usam o lucro operacional.', 'Investor money, loans, IPOs and asset sales are NOT revenue or profit: they go to Financing/Investing. The board, goals and company valuation use operating profit.')))),
     section(t(l('Lucro × caixa nos últimos 12 meses', 'Profit × cash over the last 12 months')), bars(s),
       h('p', { class: 'muted small' }, t(l('Um disco lucrativo pode deixar o selo sem caixa por meses: a receita é reconhecida na venda, mas o distribuidor só paga no prazo.', 'A profitable record can leave the label cash-starved for months: revenue is booked at sale, but the distributor only pays on terms.')))),
