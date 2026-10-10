@@ -14,7 +14,7 @@ export interface Group17 { id: string; label: L; icon: string; secs: Sec17[] }
 
 const sec = (id: string, label: L, areas: string[]): Sec17 => ({ id, label, areas });
 
-/** Árvore canônica (a seção "Carreiras" de Você recebe as páginas das carreiras visíveis). */
+/** Árvore canônica (a seção "Suas carreiras" de Você recebe as páginas das carreiras visíveis). */
 export const NAV17: Group17[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'house', secs: [sec('today', l('Hoje', 'Today'), ['cockpit', 'plan', 'goals', 'diary'])] },
   { id: 'company', label: l('Empresa', 'Company'), icon: 'building', secs: [
@@ -37,7 +37,8 @@ export const NAV17: Group17[] = [
   { id: 'crime', label: l('Submundo', 'Underworld'), icon: 'skull', secs: [sec('crime', l('Submundo', 'Underworld'), ['crime'])] },
   { id: 'you', label: l('Você', 'You'), icon: 'crown', secs: [
     sec('life', l('Vida', 'Life'), ['you', 'personal', 'night14', 'wealth']),
-    sec('careers', l('Carreiras', 'Careers'), ['careers', 'ventures'])] },
+    sec('careers', l('Carreiras', 'Careers'), ['careers', 'ventures']),
+    sec('cpages', l('Suas carreiras', 'Your careers'), [])] },
 ];
 export const MORE17 = { id: 'more', label: l('Mais', 'More'), icon: 'key' };
 
@@ -133,7 +134,7 @@ export function navGroups17(ctx: NavCtx17): NavGroup14[] {
     const secs: NavSection14[] = [];
     for (const s of g.secs) {
       let xs = s.areas.filter((a) => { if (offCareer(a)) { parked.push(a); return false; } return true; });
-      if (g.id === 'you' && s.id === 'careers') xs = [...xs, ...pages.map((id) => CAREER_PAGE17[id].area)];
+      if (g.id === 'you' && s.id === 'cpages') xs = pages.map((id) => CAREER_PAGE17[id].area);
       const areas = take(xs);
       if (areas.length) secs.push({ label: s.label, areas });
     }

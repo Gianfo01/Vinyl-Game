@@ -7,6 +7,11 @@ import { CAREER_NAV, type NavGroup } from '../src/ui/careernav13';
 import { HOME_EXTRA16, ORDER16, groupOf16, navGroups16 } from '../src/ui/careernav16';
 import { careerDef } from '../src/sim/sys/careers12';
 import { PAGE16 } from '../src/ui/pages16';
+import { CAREER_PAGE17, NAV17, ORDER17, ALIAS17, groupOf17, navGroups17, resolve17 } from '../src/ui/nav17';
+const ALL17 = [...NAV17.flatMap((g) => g.secs.flatMap((s) => s.areas)), ...ORDER17.flatMap((id) => [CAREER_PAGE17[id].area, ...CAREER_PAGE17[id].absorbs])];
+/** Rodada 17: o menu do jogo é navGroups17 (os navGroups antigos ficam só para saves/compatibilidade). */
+const menu17 = (active: string[]) => navGroups17({ active, pages: active, has: (a) => ALL17.includes(a), all: ALL17 });
+
 import { START_SKILL_POINTS, skills, validStartSkills } from '../src/sim/sys/persona';
 
 const BASE: NavGroup[] = [
@@ -29,7 +34,7 @@ function combos(): string[][] {
 }
 
 describe('menus r16', () => {
-  it('cada combinação de carreiras: nada some, nada duplica, no máximo 2 níveis, casa no próprio grupo', () => {
+  it('(legado navGroups16, mantido para compatibilidade) cada combinação: nada some, nada duplica, 2 níveis', () => {
     for (const act of combos()) {
       const gs = navGroups16(act, BASE);
       const flat = gs.flatMap((g) => g.areas);
@@ -51,21 +56,21 @@ describe('menus r16', () => {
       }
     }
   });
-  it('Festivais, Editora, Veículos e Plataforma têm páginas próprias; Empreendimentos é a carteira', () => {
+  it('r17: cada negócio abre a página exclusiva da carreira; Festivais é a página do mundo; Empreendimentos é a carteira', () => {
     expect(Object.values(CAREER_NAV).some((d) => d.home.area === 'ventures' || d.areas.includes('ventures'))).toBe(false);
-    for (const [id, area] of [['festival', 'festivals'], ['publisher', 'publishing16'], ['media', 'outlets16'], ['platform', 'platform16']]) {
-      expect(CAREER_NAV[id].home.area).toBe(area);
+    expect(PAGE16.festival.area).toBe('cp17-festival');
+    for (const [id, area] of [['publisher', 'publishing16'], ['media', 'outlets16'], ['platform', 'platform16']]) {
       expect(careerDef(id)!.area).toBe(area);
-      expect(PAGE16[id as 'festival'].area).toBe(area); // dicas e carteira levam à mesma página do menu
+      expect(PAGE16[id as 'publisher'].area).toBe(area);
+      expect(ALIAS17[area][0]).toBe(CAREER_PAGE17[id].area); // a rota antiga abre a aba da página da carreira
     }
-    const gs = navGroups16(['label'], BASE);
-    expect(groupOf16(gs, 'festivals').id).toBe('fame');
-    const other = gs.find((g) => g.id === 'other14')!;
-    expect(other.sections!.find((s) => s.label.pt === 'Editora e catálogo')!.areas).toEqual(['publishing16']);
-    expect(other.sections!.some((s) => s.label.pt === 'Seu festival')).toBe(false); // seção vazia não aparece
-    // agente + dono de festival: Festivais fica com o festival, mesmo se o agente vem antes
-    const both = navGroups16(['booking', 'festival'], BASE);
-    expect(groupOf16(both, 'festivals').career).toBe('festival');
+    const gs = menu17(['label']);
+    expect(groupOf17(gs, 'festivals').id).toBe('events');
+    expect(gs.find((g) => g.id === 'more')!.sections!.find((s) => s.label.pt === 'Editora musical')!.areas).toEqual(['publishing16']);
+    const both = menu17(['booking', 'festival']);
+    expect(groupOf17(both, 'cp17-festival').id).toBe('you');
+    expect(groupOf17(both, 'festivals').id).toBe('events');
+    void resolve17;
   });
   it('3 habilidades no começo do jogo', () => {
     expect(START_SKILL_POINTS).toBe(3);
