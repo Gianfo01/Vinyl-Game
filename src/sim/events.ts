@@ -775,7 +775,7 @@ export const EVENTS: EventDef[] = [
     id: 'label_offer_band', cat: 'contract', tone: 'good', tags: [], cooldown: 8,
     find: (s, r) => {
       const id = s.player.bandActId;
-      if (!id || s.config.role !== 'artist') return null;
+      if (!id || s.config.role !== 'artist' || s.flags.art18) return null; // r18: artist18 cuida das propostas
       const a = s.acts[id];
       if (a.contractId && s.contracts[a.contractId]?.endWeek > s.week) return null;
       if (a.fame < 8 || !r.chance(0.5)) return null;
