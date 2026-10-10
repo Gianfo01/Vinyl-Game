@@ -20,7 +20,7 @@ import { cityById, familyOf, l, type L } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { dir17 } from '../director17';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
-import { emitFact, type Fact } from '../facts17';
+import { emitFact, onFact, type Fact } from '../facts17';
 import { histLocked, histMode } from '../history15';
 import { grantHold, holdsOf } from '../holds17';
 import { unreleasedRecorded } from '../production';
@@ -660,6 +660,32 @@ function solos(s: GameState, r: Rng, W: number): void {
   move(s, { k: 'solo', a: a.id, p: `p:${p.id}`, t: fmtL(l('{p} saiu de {a} e lançou carreira solo ({s}): {w}.', '{p} left {a} and launched a solo career ({s}): {w}.'), { p: p.name, a: a.name, s: solo?.name ?? '?', w: ws }) },
     { kind: 'split', actors: [a.id, p.id, solo?.id ?? ''], sev: 30 + a.fame / 4, vis: 'public', tags: ['band', 'solo'], place: a.city });
 }
+
+// ---------------------------------------------------------------- reações a fatos de outros sistemas (crime, escândalo)
+
+/** Escândalo grave ou prisão de um artista NPC: o chefe do selo decide pelos traços — dispensa ou banca. */
+function onTrouble(s: GameState, f: Fact): void {
+  if (f.severity < 55 || f.src === 'npc17') return;
+  const a = f.actors.map((id) => s.acts[id] ?? Object.values(s.acts).find((x) => live(x) && x.members.includes(id))).find((x) => okAct17(s, x) && !!x.owner && !!s.labels[x.owner]);
+  if (!a || !cool(s, `trouble:${a.id}`, 26)) return;
+  const lb = s.labels[a.owner!];
+  const r = Rng.fromSeed(`${s.config.seed}:npc17f:${f.id}`);
+  const PL = Pl(s, lb);
+  const drop = F(PL, 'disciplina') + F(PL, 'ansiedade') * 0.5 + (f.kind === 'arrest' ? 0.4 : 0) - F(PL, 'lealdade') - F(PL, 'coragem') * 0.3 + (a.fame < 30 ? 0.4 : -0.3);
+  if (!r.chance(clamp(0.25 + drop * 0.4, 0.05, 0.85))) {
+    grantHold(s, { holder: a.id, target: lb.id, kind: 'loyalty', strength: 45, months: 48, text: l('o selo bancou na pior hora', 'the label stood by them at the worst time'), src: 'npc17', quiet: true });
+    move(s, { k: 'loyal', a: a.id, lb: lb.id, t: fmtL(l('A {b} bancou {a} depois do escândalo ({w}).', '{b} stood by {a} after the scandal ({w}).'), { a: a.name, b: lb.name, w: l('chefe leal e corajoso', 'a loyal, brave boss') }) },
+      { kind: 'statement', actors: [lb.id, a.id], sev: 20, tags: ['good'], cause: [f.id] });
+    return;
+  }
+  endContract(s, a, 'terminated');
+  const lead = leadOf(s, a); if (lead) addStress(s, lead.id, 10, l('Dispensado(a) pelo selo', 'Dropped by the label'));
+  grantHold(s, { holder: a.id, target: lb.id, kind: 'grievance', strength: 40, months: 48, text: l('dispensado(a) depois do escândalo', 'dropped after the scandal'), src: 'npc17', quiet: true });
+  move(s, { k: 'label_exit', a: a.id, lb: lb.id, t: fmtL(l('A {b} rescindiu com {a} depois {w}: o chefe não quis o nome do selo ligado ao caso.', '{b} dropped {a} after {w}: the boss did not want the label tied to the case.'), { a: a.name, b: lb.name, w: f.kind === 'arrest' ? l('da prisão', 'the arrest') : l('do escândalo', 'the scandal') }) },
+    { kind: 'exit', actors: [a.id, lb.id], sev: 30 + a.fame / 4, vis: 'public', tags: ['label', 'dropped'], cause: [f.id], place: a.city });
+}
+onFact('scandal', onTrouble, 'npc17:scandal');
+onFact('arrest', onTrouble, 'npc17:arrest');
 
 // ---------------------------------------------------------------- mês
 
