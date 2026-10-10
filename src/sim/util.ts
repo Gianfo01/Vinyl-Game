@@ -185,3 +185,6 @@ export function hasCard(s: GameState, id: string): boolean {
 export function decadeOf(year: number): number {
   return Math.floor(year / 10) * 10;
 }
+
+/** r18 final (balanço): reputação artística não satura — subir perto do topo custa mais e cair dói mais. */
+export const artDelta18 = (rep: number, d: number): number => (d > 0 ? d * Math.max(0.05, 1 - rep / 105) : d * (0.6 + rep / 125));

@@ -15,7 +15,7 @@ import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type MarketId }
 import { payAuthors } from './finance';
 import { superfanDebut } from './fandom';
 import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
-import { fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
+import { artDelta18, fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
 import { songProfile } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
 import { artistRate, dealOfRelease, hasGuest, rightsOf } from './rights';
@@ -213,7 +213,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   // prestígio crítico: originalidade + canal de imprensa
   const crit = pr.songs.reduce((t, id) => t + (s.songs[id]?.originality ?? 50), 0) / Math.max(1, pr.songs.length);
   const pressBoost = pr.marketing.some((m) => m.channel === 'press') ? 6 : 0;
-  s.player.reputation.artistic = clamp(s.player.reputation.artistic + (crit + rel.q - 110 + pressBoost) / 40, 0, 100);
+  s.player.reputation.artistic = clamp(s.player.reputation.artistic + artDelta18(s.player.reputation.artistic, (crit + rel.q - 110 + pressBoost) / 40), 0, 100);
   remember(s, 'release', fmtL(l('{act} lança "{title}" ({type}).', '{act} releases "{title}" ({type}).'), { act: act.name, title: rel.title, type: rel.type.toUpperCase() }), { actId: act.id });
   runSimHooks('launch', s, r, { release: rel });
   return rel;

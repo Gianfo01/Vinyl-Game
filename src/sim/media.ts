@@ -11,7 +11,7 @@ import { coverCriticBonus } from './covers';
 import { REGIONAL_CRITICS } from '../data/critics8';
 import { criticRelBonus } from './criticrel';
 import { isPolitical, viewsOf } from './beliefs';
-import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
+import { artDelta18, fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 import { gone16 } from './sys/gone16';
 import { scandal, type ScandalKind } from './scandal17';
 const CRISIS17: Record<Crisis['kind'], ScandalKind> = { scandal: 'conduct', remark: 'offense', censorship: 'politics', cancel: 'offense', leak: 'conduct', accident: 'violence' };
@@ -114,7 +114,7 @@ export function reviewRelease(s: GameState, r: Rng, rel: Release): Review[] {
   // crítica afeta prestígio e um pouco o apelo (não compra hit)
   rel.appeal *= 0.92 + avg / 60;
   if (act.image) act.image.artistic = clamp(act.image.artistic + (avg - 6) * 1.2, 0, 100);
-  if (rel.owner === 'player') s.player.reputation.artistic = clamp(s.player.reputation.artistic + (avg - 6) * 0.4, 0, 100);
+  if (rel.owner === 'player') s.player.reputation.artistic = clamp(s.player.reputation.artistic + artDelta18(s.player.reputation.artistic, (avg - 6.5) * 0.4), 0, 100);
   return out;
 }
 
