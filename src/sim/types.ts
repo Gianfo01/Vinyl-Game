@@ -104,6 +104,11 @@ export interface CharacterSpec {
   /** rodada 10: visão política e religião (ids de src/sim/beliefs.ts; vazio = derivado do mundo) */
   politics?: string;
   religion?: string;
+  /** rodada 17: orientação ('het' padrão), vida no armário, filhos e estado civil no início */
+  orient?: 'het' | 'gay' | 'bi' | 'ace';
+  closet?: boolean;
+  kids?: number;
+  marital?: 'single' | 'married' | 'divorced' | 'widowed';
 }
 
 /** Aparência combinável (GDD §44): 3 corpos × 3 rostos × 4 peles × 16 cabelos × 8 cores × 4 roupas × 8 cores × acessórios. */
@@ -136,6 +141,10 @@ export interface Appearance {
   sx?: 'm' | 'f';
   /** visual real aplicado automaticamente (rodada 15); some quando o jogador edita */
   rl?: string;
+  /** rodada 17 (derivados da idade, nunca gravados): rugas 0..3, grisalho 0..10, calvície 0..2, peso extra */
+  ag?: number;
+  gy?: number;
+  bl?: number;
 }
 
 export interface Person {
