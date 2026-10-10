@@ -108,3 +108,6 @@ escândalo → fama regional, patrocínio, relações, paradas · obrigações �
 - Casos (`feedCase`, `resolveCase`: delação/julgamento/suborno/fuga), calor por país (`heatIn`, `agency`), presos (`jailedIn`), laços de rua (`tieOf`).
 - Relíquias reais: `sim/relics17.ts` (`registerRelics17([...])`) — o crime17 semeia no relics9 quando o ano chega.
 - Regras: assassinato nunca envolve pessoa real; no modo exato, pessoas/selos/orgs reais só aparecem na crônica documentada.
+
+## Rodada 18 APIs
+Ver `docs/integration18.md`: `registerExplain` (por quês encadeados), `registerInboxKind`/`pushInbox18`/`registerAdvisorTip` (Caixa 2.0 e Conselheiro v2), `registerPersonAction` (menu de ações em toda página de pessoa) e `dynBand/dynRoster/dynStaff` (Dinâmica).

@@ -11,6 +11,8 @@ import { $, rerender, toast } from '../common';
 import { h } from '../dom';
 import { whyAttrs } from '../explain18';
 import { openOffer } from '../ficha';
+import { confirm18 } from '../quick18';
+import { fmtL } from '../../sim/util';
 import { ACT_HEAD_EXTRAS, PERSON_HEAD_EXTRAS } from '../pages';
 import { ic } from '../vis';
 import { PAGE16_HEAD } from './people16';
@@ -29,9 +31,14 @@ function row(s: GameState, key: string, r: PARow, done: (txt: string, ok: boolea
       r.chance ? h('span', null, ' · ', h('span', { ...whyAttrs('pa.chance', { id: r.def.id, key }), class: `pill why18 ${r.chance.p >= 0.6 ? 'good' : r.chance.p < 0.35 ? 'bad' : 'warn'}` }, pct(r.chance.p))) : null),
     h('button', { class: `btn small ${r.def.group === 'dark' ? 'ghost' : ''}`, disabled: !!r.block, 'aria-label': lbl,
       onclick: () => {
-        const o = doPersonAction18(s, r.def.id, key);
-        if (o.ui === 'offer' && o.uiArg) { openOffer(o.uiArg); return; }
-        done(t(o.text), o.ok);
+        const go = () => {
+          const o = doPersonAction18(s, r.def.id, key);
+          if (o.ui === 'offer' && o.uiArg) { openOffer(o.uiArg); return; }
+          done(t(o.text), o.ok);
+        };
+        // confirmação só no que não tem volta (jogo sujo)
+        if (r.def.group === 'dark') confirm18(r.def.label, fmtL(l('{d} Chance: {p}. Pode vazar e virar fato público.', '{d} Odds: {p}. It may leak and become public.'), { d: r.def.desc ?? '', p: r.chance ? pct(r.chance.p) : '—' }), l('Fazer mesmo assim', 'Do it anyway'), go);
+        else go();
       } }, lbl),
     r.block ? h('small', null, t(r.block)) : r.def.desc ? h('small', null, t(r.def.desc)) : null);
 }
