@@ -158,12 +158,13 @@ export function payout18(s: GameState, rel: Release): Payout18 {
   const terr: Payout18['terr'] = [];
   for (const t of terrs) { const w = marketById[t].size(y); const v = tierVal(y, t, skew); num += w * v; den += w; terr.push({ m: t, w, v }); }
   const ref = tierVal(y, home, 0);
-  const dil = 1 - clamp((y - 2014) * 0.012, 0, 0.18); // o bolo cresce menos que o número de streams
+  const dil = 1 - clamp((y - 2015) * 0.008, 0, 0.12); // o bolo cresce menos que o número de streams
   const a = st18(s).a[rel.actId];
   const dm = a?.dm ? 0.7 : 1;
   const f = st18(s).farm[rel.id];
   const farm = f && f.until > s.week ? 1 / f.k : 1;
-  return { k: STREAM_PAYOUT17 * clamp((den ? num / den : ref) / ref, 0.3, 1.8) * dil * dm * farm, terr, skew, ref, dil, dm, farm };
+  // expandir para mercados baratos traz mais plays, cada um valendo menos (efeito suavizado: ^0,6)
+  return { k: STREAM_PAYOUT17 * Math.pow(clamp((den ? num / den : ref) / ref, 0.3, 1.8), 0.6) * dil * dm * farm, terr, skew, ref, dil, dm, farm };
 }
 MEDIA18.payout = (s, rel, digital) => (digital.includes('streaming') && mineRel(s, rel) ? payout18(s, rel).k : null);
 
@@ -185,7 +186,7 @@ registerMod('chartUnits', 'st18', (s, v, c) => {
     if (a?.dm && age < 26) set(1.12, l('Comissão de alcance (algoritmo)', 'Reach commission (algorithm)'));
     if ((st.edit[rel.id] ?? 0) > s.week) set(1.3, l('Playlist editorial', 'Editorial playlist'));
     if ((st.algo[rel.id] ?? 0) > s.week) set(1.12, l('O algoritmo gostou (muita gente salvou)', 'The algorithm liked it (many saves)'));
-    if (a?.drop && a.drop > s.week) set(1 - 0.45 * a.dep, l('Saiu da playlist da qual dependia', 'Dropped from the playlist it depended on'));
+    if (a?.drop && a.drop > s.week) set(1 - 0.35 * a.dep, l('Saiu da playlist da qual dependia', 'Dropped from the playlist it depended on'));
   }
   // reativação: disco novo leva quem volta ao catálogo
   const act = s.acts[rel.actId];
@@ -308,9 +309,9 @@ registerSimHook('month', 'st18', (s) => {
     a.src = src;
     const top = (['pl', 'alg', 'vid'] as Src18[]).sort((x, y) => (src[y] ?? 0) - (src[x] ?? 0))[0];
     a.dep = src[top] ?? 0; a.depSrc = top;
-    if (streamingEra(s) && a.dep > 0.42 && U > 0 && !(a.drop && a.drop > s.week) && s.week - (a.dropAt ?? -999) > 26 && r.chance((a.dep - 0.42) * 0.35)) {
+    if (streamingEra(s) && a.dep > 0.42 && U > 0 && !(a.drop && a.drop > s.week) && s.week - (a.dropAt ?? -999) > 26 && r.chance((a.dep - 0.42) * 0.2)) {
       a.drop = s.week + 8; a.dropAt = s.week; st.n.drop++;
-      pushInbox18(s, 'st18_drop', { from: t18(SRC18[top]), subject: fmtL(l('{a} perdeu a vaga', '{a} lost its slot'), { a: act.name }), body: fmtL(l('A principal fonte de plays de {a} ({s}, {p}% dos ouvintes) tirou o artista da rotação. Unidades −{d}% por 8 semanas.\nPor quê: quem depende de uma só playlist/plataforma cai junto com ela. Estratégia de base e busca/indicação diluem o risco.', '{a}\'s main source of plays ({s}, {p}% of listeners) dropped the act from rotation. Units −{d}% for 8 weeks.\nWhy: depending on one playlist/platform means falling with it. A base strategy and search/word of mouth spread the risk.'), { a: act.name, s: SRC18[top], p: Math.round(a.dep * 100), d: Math.round(a.dep * 45) }), tone: 'bad', ref: { act: id } });
+      pushInbox18(s, 'st18_drop', { from: t18(SRC18[top]), subject: fmtL(l('{a} perdeu a vaga', '{a} lost its slot'), { a: act.name }), body: fmtL(l('A principal fonte de plays de {a} ({s}, {p}% dos ouvintes) tirou o artista da rotação. Unidades −{d}% por 8 semanas.\nPor quê: quem depende de uma só playlist/plataforma cai junto com ela. Estratégia de base e busca/indicação diluem o risco.', '{a}\'s main source of plays ({s}, {p}% of listeners) dropped the act from rotation. Units −{d}% for 8 weeks.\nWhy: depending on one playlist/platform means falling with it. A base strategy and search/word of mouth spread the risk.'), { a: act.name, s: SRC18[top], p: Math.round(a.dep * 100), d: Math.round(a.dep * 35) }), tone: 'bad', ref: { act: id } });
     }
     // impulso algorítmico: muita gente salvou (taxa de retorno alta) nas primeiras semanas
     if (streamingEra(s)) for (const rid of act.releases.slice(-4)) {

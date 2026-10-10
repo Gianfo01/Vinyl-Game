@@ -28,16 +28,16 @@ export const SRC18: Record<Src18, L> = {
 export interface ChProf18 { conv: number; tix: number; lag: number; src: Partial<Record<Src18, number>>; aud: L; alb?: number; local?: number; sv?: number }
 /** perfil de cada canal: conversão em consumo, efeito em ingressos, atraso (semanas), fontes de descoberta, público */
 export const CH18: Record<string, ChProf18> = {
-  radio_plug: { conv: 1, tix: 0.5, lag: 1, src: { radio: 1 }, alb: 0.9, aud: l('Ouvintes de rádio: amplo, todas as idades; vende o single.', 'Radio listeners: broad, all ages; sells the single.') },
+  radio_plug: { conv: 1, tix: 0.5, lag: 0, src: { radio: 1 }, alb: 0.9, aud: l('Ouvintes de rádio: amplo, todas as idades; vende o single.', 'Radio listeners: broad, all ages; sells the single.') },
   press: { conv: 0.55, tix: 0.5, lag: 3, src: { srch: 0.6, wom: 0.4 }, alb: 1.5, aud: l('Leitores e críticos: formadores de opinião; ajuda o álbum, demora a render.', 'Readers and critics: opinion makers; helps albums, slow to pay off.') },
   sheet_music: { conv: 1, tix: 0.2, lag: 2, src: { store: 1 }, aud: l('Lojas e partituras: quem toca em casa.', 'Shops and sheet music: people who play at home.') },
   tv_show: { conv: 0.7, tix: 0.7, lag: 0, src: { vid: 0.7, wom: 0.3 }, aud: l('Telespectadores: todo mundo vê, nem todos compram (atenção vira fama).', 'TV viewers: everyone watches, not all buy (attention becomes fame).') },
-  jukebox: { conv: 1.1, tix: 0.4, lag: 1, src: { store: 0.5, wom: 0.5 }, alb: 0.6, local: 0.4, aud: l('Bares e bailes: jovens, single, cidade.', 'Bars and dances: the young, singles, local.') },
-  music_video: { conv: 0.85, tix: 0.5, lag: 1, src: { vid: 1 }, aud: l('Quem vê clipes: jovens; imagem conta tanto quanto a música.', 'Video watchers: the young; image counts as much as the music.') },
+  jukebox: { conv: 1.1, tix: 0.4, lag: 0, src: { store: 0.5, wom: 0.5 }, alb: 0.6, local: 0.4, aud: l('Bares e bailes: jovens, single, cidade.', 'Bars and dances: the young, singles, local.') },
+  music_video: { conv: 0.9, tix: 0.5, lag: 0, src: { vid: 1 }, aud: l('Quem vê clipes: jovens; imagem conta tanto quanto a música.', 'Video watchers: the young; image counts as much as the music.') },
   street_team: { conv: 0.45, tix: 2.2, lag: 0, src: { wom: 1 }, local: 1, aud: l('Cena local: alcança pouca gente, mas lota os shows da cidade.', 'Local scene: reaches few people but sells out hometown shows.') },
   web_forums: { conv: 0.75, tix: 0.7, lag: 2, src: { wom: 0.6, srch: 0.4 }, alb: 1.2, aud: l('Fóruns e blogs: nichos fiéis, boca a boca lento.', 'Forums and blogs: loyal niches, slow word of mouth.') },
   playlists: { conv: 1.2, tix: 0.15, lag: 0, src: { pl: 1 }, alb: 0.85, aud: l('Ouvintes de playlist: muitos plays, pouca gente sabe quem é o artista.', 'Playlist listeners: lots of plays, few know who the artist is.') },
-  social: { conv: 0.6, tix: 0.9, lag: 1, src: { wom: 0.6, alg: 0.4 }, aud: l('Redes sociais: conversa e identidade; vende ingresso mais que disco.', 'Social media: conversation and identity; sells tickets more than records.') },
+  social: { conv: 0.65, tix: 0.9, lag: 0, src: { wom: 0.6, alg: 0.4 }, aud: l('Redes sociais: conversa e identidade; vende ingresso mais que disco.', 'Social media: conversation and identity; sells tickets more than records.') },
   short_clips: { conv: 1, tix: 0.3, lag: 0, src: { vid: 0.7, alg: 0.3 }, sv: 1, aud: l('Vídeo curto: revela um refrão forte; não sustenta um álbum fraco.', 'Short video: reveals a strong hook; cannot carry a weak album.') },
   neural_feed: { conv: 1.1, tix: 0.2, lag: 0, src: { alg: 1 }, aud: l('Feeds personalizados: o algoritmo decide quem ouve.', 'Personalized feeds: the algorithm decides who listens.') },
 };
@@ -67,7 +67,7 @@ export function mk18(s: GameState): Mk18State {
 export function satOf18(s: GameState, actId: string, ch: string): { k: number; sat: number; learn: number; useA: number; useL: number } {
   const st = mk18(s);
   const useA = st.use[`${actId}|${ch}`] ?? 0, useL = st.use[`*|${ch}`] ?? 0;
-  const sat = 1 / (1 + 0.3 * useA + 0.05 * useL);
+  const sat = 1 / (1 + 0.2 * useA + 0.02 * useL);
   const learn = 1 + 0.3 * (1 - Math.exp(-(st.xp[ch] ?? 0) / 8));
   return { k: sat * learn, sat, learn, useA, useL };
 }
@@ -257,8 +257,8 @@ registerExplain('mkt.channel', (s, c) => {
   return {
     title: fmtL(l('Rendimento de {c}', '{c} effectiveness'), { c: def.name }), value: Math.round(sa.k * 100) / 100, fmt: 'mult',
     parts: [
-      { label: l('Saturação (este artista)', 'Saturation (this act)'), value: Math.round(1 / (1 + 0.3 * sa.useA) * 100) / 100, fmt: 'mult', tone: sa.useA > 0.3 ? 'bad' : undefined },
-      { label: l('Público do selo cansado', 'Label audience fatigue'), value: Math.round(1 / (1 + 0.05 * sa.useL) * 100) / 100, fmt: 'mult', tone: sa.useL > 2 ? 'bad' : undefined },
+      { label: l('Saturação (este artista)', 'Saturation (this act)'), value: Math.round(1 / (1 + 0.2 * sa.useA) * 100) / 100, fmt: 'mult', tone: sa.useA > 0.3 ? 'bad' : undefined },
+      { label: l('Público do selo cansado', 'Label audience fatigue'), value: Math.round(1 / (1 + 0.02 * sa.useL) * 100) / 100, fmt: 'mult', tone: sa.useL > 2 ? 'bad' : undefined },
       { label: l('Aprendizado da equipe', 'Team learning'), value: Math.round(sa.learn * 100) / 100, fmt: 'mult', tone: 'good' },
       { label: l('Conversão em consumo', 'Conversion into sales'), value: p.conv, fmt: 'mult' },
       { label: l('Efeito em ingressos', 'Ticket effect'), value: p.tix, fmt: 'num' },

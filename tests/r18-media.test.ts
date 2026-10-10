@@ -25,7 +25,7 @@ describe('r18 media: marketing', () => {
     const s = mk('r18m-1', 1990);
     const act = Object.values(s.acts)[0];
     expect(satOf18(s, act.id, 'radio_plug').k).toBe(1);
-    mk18(s).use[`${act.id}|radio_plug`] = 2; mk18(s).xp.radio_plug = 10;
+    mk18(s).use[`${act.id}|radio_plug`] = 3; mk18(s).xp.radio_plug = 10;
     const k = satOf18(s, act.id, 'radio_plug');
     expect(k.sat).toBeLessThan(0.7);
     expect(k.learn).toBeGreaterThan(1.15);

@@ -24,29 +24,29 @@ export function botMedia18(s: GameState, p: Prof): void {
   for (const id of playerActs(s)) {
     const act = s.acts[id];
     if (!act) continue;
-    if (streaming) setStrat18(s, id, p === 'cautious' ? 'base' : p === 'aggressive' ? 'peak' : act.fame > 45 ? 'bal' : 'base');
+    if (streaming) setStrat18(s, id, p === 'cautious' ? 'base' : p === 'aggressive' ? 'peak' : 'bal');
     const recent = act.releases.slice(-2).map((r) => s.releases[r]).filter((r) => r && r.owner === 'player' && s.week - r.week <= 4);
     for (const rel of recent) {
       // playlists editoriais (barato)
-      if (streaming && !st18(s).pitch[rel.id] && pitchOdds18(s, rel).p > 0.1 && cash > money(s, 3000)) { pitchPlaylist18(s, rel.id); inc(s, 'bpitch'); }
+      if (streaming && !st18(s).pitch[rel.id] && pitchOdds18(s, rel).p > 0.15 && cash > money(s, 8000)) { pitchPlaylist18(s, rel.id); inc(s, 'bpitch'); }
       // rádio: melhor formato para o gênero
       if (radioWeight18(s) >= 0.45) {
         const fam = familyOf(act.genre);
         const f = fmtsNow18(s).filter((x) => FMT18[x].fam.includes(fam)).sort((a, b) => FMT18[b].reach - FMT18[a].reach)[0];
         const how: How18 = p === 'cautious' ? 'self' : p === 'aggressive' && s.year >= 1980 && s.year < 2006 ? 'indie' : 'plug';
-        if (f && !radio18(s).tried[`${rel.id}|${f}`] && cash > money(s, HOW18[how].real) * 8) { pitchRadio18(s, rel.id, f, how, p !== 'cautious'); inc(s, 'bradio'); }
+        if (f && !radio18(s).tried[`${rel.id}|${f}`] && cash > money(s, HOW18[how].real) * 25 && act.fame > 12) { pitchRadio18(s, rel.id, f, how, p !== 'cautious'); inc(s, 'bradio'); }
       }
       // clipe: single de quem já tem fama, com caixa folgado
-      if (videoOpen18(s) && rel.type === 'single' && act.fame > (p === 'aggressive' ? 15 : 30) && !media18(s).vids[rel.id]) {
+      if (videoOpen18(s) && rel.type === 'single' && act.fame > (p === 'aggressive' ? 30 : 45) && !media18(s).vids[rel.id]) {
         const dirs = ensureDirs18(s).filter((d) => d.style === (p === 'aggressive' ? 'auteur' : 'studio'));
-        const tier = p === 'aggressive' && cash > money(s, 600000) ? 2 : cash > money(s, 200000) ? 1 : 0;
+        const tier = p === 'aggressive' && cash > money(s, 3000000) ? 2 : cash > money(s, 1200000) ? 1 : 0;
         const d = dirs[0] ?? ensureDirs18(s)[0];
-        if (d && cash > dirFee18(s, d, tier) * 12) { makeVideo18(s, rel.id, { tier, dir: d.id, choreo: p === 'aggressive', censor: p !== 'aggressive' }); inc(s, 'bvideo'); }
+        if (d && cash > dirFee18(s, d, tier) * 30) { makeVideo18(s, rel.id, { tier, dir: d.id, choreo: p === 'aggressive', censor: p !== 'aggressive' }); inc(s, 'bvideo'); }
       }
       // remix para gêneros de pista
       if (remixOpen18(s) && p !== 'cautious' && !media18(s).rmx[rel.id]) {
         const dj = ensureDjs18(s).map((d) => ({ d, f: djFit18(s, d, rel) })).filter((x) => x.f >= 1).sort((a, b) => b.d.fame - a.d.fame)[0];
-        if (dj && cash > djFee18(s, dj.d) * 15) { commissionRemix18(s, rel.id, dj.d.id); inc(s, 'bremix'); }
+        if (dj && cash > djFee18(s, dj.d) * 30) { commissionRemix18(s, rel.id, dj.d.id); inc(s, 'bremix'); }
       }
     }
   }
