@@ -781,3 +781,4 @@ function topRival(s: GameState): string | undefined {
 
 export const _ag18 = { recentFacts, raiseVisibility, circle, keyOf18 };
 export type { Feud18 };
+export const H18 = { fac, fact, isMineAct, live };
