@@ -92,7 +92,9 @@ export const leadOf18 = (s: GameState, a?: Act): Person | undefined => {
 const fct = (s: GameState, p: Person | undefined, f: string): number => (p ? ((per13(s, `p:${p.id}`)?.facets as Record<string, number> | undefined)?.[f] ?? 50) : 50);
 /** Temperamento 0..1 (ego, impulsividade, coragem, vaidade contra empatia, disciplina). */
 export function temper18(s: GameState, p?: Person): number {
-  return clamp((fct(s, p, 'ego') + fct(s, p, 'impulsividade') + fct(s, p, 'coragem') + fct(s, p, 'vaidade') + (100 - fct(s, p, 'empatia')) + (100 - fct(s, p, 'disciplina'))) / 600, 0, 1);
+  const f = (p ? per13(s, `p:${p.id}`)?.facets : undefined) as Record<string, number> | undefined;
+  const g = (k: string) => f?.[k] ?? 50;
+  return clamp((g('ego') + g('impulsividade') + g('coragem') + g('vaidade') + (100 - g('empatia')) + (100 - g('disciplina'))) / 600, 0, 1);
 }
 const age = (s: GameState, p?: Person): number => (p?.born ? s.year - p.born : 30);
 export const feudKey18 = (a: string, b: string): string => (a < b ? `${a}|${b}` : `${b}|${a}`);
@@ -122,7 +124,7 @@ export const setFeudPhase18 = (fn: (s: GameState) => number): void => { dmMult =
 /** Abre (ou esquenta) uma rixa entre dois atos. Respeita o modo exato. */
 export function startFeud18(s: GameState, aId: string, bId: string, why: L, heat = 10): Feud18 | null {
   const A = s.acts[aId], B = s.acts[bId];
-  if (!live(A) || !live(B) || aId === bId || shield18(s, aId) || shield18(s, bId)) return null;
+  if (!live(A) || !live(B) || aId === bId || shield18(s, aId) || shield18(s, bId) || A.members.some((m) => B.members.includes(m))) return null;
   const cur = feudOf18(s, aId, bId);
   if (cur) { heatFeud18(s, cur, heat * 0.6, why); return cur; }
   const st = feud18(s);

@@ -13,7 +13,8 @@ import { familyOf, l, type L } from '../../data/world';
 import { dir17 } from '../director17';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, recentFacts, raiseVisibility } from '../facts17';
-import { grantHold, holdsOf, useHold, voidHolds } from '../holds17';
+import { allHolds, grantHold, holds17, useHold, voidHolds, type Hold } from '../holds17';
+import { actsOfPerson17 } from '../actidx17';
 import { pushInbox18, registerInboxKind } from '../inbox18';
 import { registerPersonAction } from '../personact18';
 import { scandal } from '../scandal17';
@@ -44,8 +45,9 @@ const fac = (s: GameState, k: string, f: string): number => ((per13(s, k)?.facet
 /** Ato principal de uma chave (pessoa → banda dela; chefe → maior ato do selo; você → seu maior ato). */
 export function actOfKey18(s: GameState, k: string): Act | undefined {
   if (isPlayerKey(s, k)) return playerActs(s).map((id) => s.acts[id]).filter(live).sort((a, b) => b.fame - a.fame)[0];
-  if (k.startsWith('p:')) { const id = k.slice(2); return Object.values(s.acts).find((a) => live(a) && a.members.includes(id)); }
-  if (k.startsWith('l:')) { const lb = leaders(s).L[k.slice(2)]?.label; return lb ? (s.labels[lb]?.roster ?? []).map((id) => s.acts[id]).filter(live).sort((a, b) => b.fame - a.fame)[0] : undefined; }
+  if (k.startsWith('p:')) return actsOfPerson17(s, k.slice(2)).find(live);
+  // chefe de selo: o maior ato do selo que não seja protegido (modo exato: atos reais ficam de fora)
+  if (k.startsWith('l:')) { const lb = leaders(s).L[k.slice(2)]?.label; return lb ? (s.labels[lb]?.roster ?? []).map((id) => s.acts[id]).filter((a): a is Act => live(a) && !shield18(s, a.id)).sort((a, b) => b.fame - a.fame)[0] : undefined; }
   return undefined;
 }
 const shielded = (s: GameState, k: string): boolean => !isPlayerKey(s, k) && (shield18(s, k) || shield18(s, hid18(k)) || (k.startsWith('p:') && !!actOfKey18(s, k) && shield18(s, actOfKey18(s, k)!.id)));
@@ -54,6 +56,20 @@ const alive = (s: GameState, k: string): boolean => (k.startsWith('p:') ? !!s.pe
 export function playerSide18(s: GameState, k: string): boolean {
   if (isPlayerKey(s, k)) return true;
   return k.startsWith('p:') && isMineAct(s, actOfKey18(s, k));
+}
+
+/** Trunfos/mágoas que alguém tem (cache por partida e semana; o livro muda pouco dentro do mês). */
+const HC = new WeakMap<GameState, { w: number; n: number; by: Map<string, Hold[]> }>();
+export function hasOf(s: GameState, id: string): Hold[] {
+  const n = holds17(s).h.length;
+  let c = HC.get(s);
+  if (!c || c.w !== s.week || c.n !== n) {
+    const by = new Map<string, Hold[]>();
+    for (const h of allHolds(s)) { const xs = by.get(h.holder); if (xs) xs.push(h); else by.set(h.holder, [h]); }
+    c = { w: s.week, n, by };
+    HC.set(s, c);
+  }
+  return (c.by.get(id.startsWith('p:') ? id.slice(2) : id) ?? []).filter((h) => h.status === 'open');
 }
 
 // ---------------------------------------------------------------- relações genéricas
@@ -90,7 +106,7 @@ export function adjRel18(s: GameState, A: string, T: string, d: number, why: L):
 export function grudge18(s: GameState, A: string, T: string): number {
   let g = Math.max(0, -relOf18(s, A, T)) / 100;
   const tid = isPlayerKey(s, T) ? 'player' : hid18(T);
-  g += holdsOf(s, hid18(A)).has.filter((h) => h.kind === 'grievance' && h.status === 'open' && h.target === tid).length * 0.25;
+  g += hasOf(s, hid18(A)).filter((h) => h.kind === 'grievance' && h.status === 'open' && h.target === tid).length * 0.25;
   const a = actOfKey18(s, A), b = actOfKey18(s, T);
   if (a && b) { const f = feudOf18(s, a.id, b.id); if (f) g += f.h / 100; }
   if (isPlayerKey(s, T) && A.startsWith('l:')) { const lb = leaders(s).L[A.slice(2)]?.label; if (lb) g += (s.rivalries[lb] ?? 0) / 150; }
@@ -202,9 +218,9 @@ registerVerb18({
 registerVerb18({
   id: 'blackmail', name: l('Chantageia', 'Blackmails'), harm: true,
   w: (s, A, _T, g) => (0.4 + g) * ((100 - F(s, A, 'empatia')) + F(s, A, 'ambicao')) / 120,
-  ok: (s, A, T) => holdsOf(s, hid18(A)).has.some((h) => h.kind === 'secret' && h.status === 'open' && h.target === (isPlayerKey(s, T) ? 'player' : hid18(T))),
+  ok: (s, A, T) => hasOf(s, hid18(A)).some((h) => h.kind === 'secret' && h.status === 'open' && h.target === (isPlayerKey(s, T) ? 'player' : hid18(T))),
   run: (s, A, T) => {
-    const h = holdsOf(s, hid18(A)).has.find((x) => x.kind === 'secret' && x.status === 'open' && x.target === (isPlayerKey(s, T) ? 'player' : hid18(T)))!;
+    const h = hasOf(s, hid18(A)).find((x) => x.kind === 'secret' && x.status === 'open' && x.target === (isPlayerKey(s, T) ? 'player' : hid18(T)))!;
     if (isPlayerKey(s, T)) return { ok: true, t: fmtL(l('{a} sabe de algo ("{h}") e quer conversar.', '{a} knows something ("{h}") and wants to talk.'), { a: N(s, A), h: h.text }) };
     const u = useHold(s, h.id, 'blackmail');
     adjRel18(s, T, A, -30, l('Chantagem', 'Blackmail'));
@@ -214,9 +230,9 @@ registerVerb18({
 registerVerb18({
   id: 'expose', name: l('Expõe um segredo', 'Exposes a secret'), harm: true,
   w: (s, A, _T, g) => g * (F(s, A, 'impulsividade') + (100 - F(s, A, 'lealdade'))) / 140,
-  ok: (s, A, T) => holdsOf(s, hid18(A)).has.some((h) => h.kind === 'secret' && h.status === 'open' && h.target === (isPlayerKey(s, T) ? 'player' : hid18(T))),
+  ok: (s, A, T) => hasOf(s, hid18(A)).some((h) => h.kind === 'secret' && h.status === 'open' && h.target === (isPlayerKey(s, T) ? 'player' : hid18(T))),
   run: (s, A, T) => {
-    const h = holdsOf(s, hid18(A)).has.find((x) => x.kind === 'secret' && x.status === 'open' && x.target === (isPlayerKey(s, T) ? 'player' : hid18(T)))!;
+    const h = hasOf(s, hid18(A)).find((x) => x.kind === 'secret' && x.status === 'open' && x.target === (isPlayerKey(s, T) ? 'player' : hid18(T)))!;
     const u = useHold(s, h.id, 'expose');
     const a = actOfKey18(s, T);
     if (a) scandal(s, a.id, 'conduct', 30 + h.strength / 3, u.text, { person: T.startsWith('p:') ? T.slice(2) : undefined, tags: ['ag18', 'exposed'] });
@@ -301,7 +317,7 @@ function actors(s: GameState): string[] {
 function targets(s: GameState, A: string, r: Rng): string[] {
   const out = new Set<string>();
   const id = hid18(A);
-  for (const h of holdsOf(s, id).has) if (h.status === 'open' && (h.kind === 'grievance' || h.kind === 'secret')) out.add(h.target === 'player' ? 'player' : s.persons[h.target] ? `p:${h.target}` : h.target);
+  for (const h of hasOf(s, id)) if (h.status === 'open' && (h.kind === 'grievance' || h.kind === 'secret')) out.add(h.target === 'player' ? 'player' : s.persons[h.target] ? `p:${h.target}` : h.target);
   if (A.startsWith('p:')) for (const [k, v] of Object.entries(s.persons[id]?.rel ?? {})) if (Math.abs(v) > 30 && s.persons[k]?.alive) out.add(s.persons[k].isPlayer ? 'player' : `p:${k}`);
   if (A.startsWith('l:')) for (const [k, v] of Object.entries(leaders(s).L[A.slice(2)]?.rel ?? {})) if (Math.abs(v) > 30) out.add(k === 'player' ? 'player' : `l:${k}`);
   const a = actOfKey18(s, A);
@@ -365,9 +381,10 @@ export function agencyMonth18(s: GameState, r: Rng): Ag18Log[] {
   const n = Math.min(6, Math.round((1.6 + r.float(0, 1.6)) * D.world * phaseMult(s)));
   const pool = actors(s);
   const out: Ag18Log[] = [];
-  const w = (k: string) => 0.2 + (temper18(s, k.startsWith('p:') ? s.persons[k.slice(2)] : undefined) || (F(s, k, 'ambicao') + F(s, k, 'impulsividade')) / 200) + holdsOf(s, hid18(k)).has.filter((h) => h.kind === 'grievance' && h.status === 'open').length * 0.4 + ((st.inc[k]?.until ?? 0) > s.week ? 1 : 0);
+  const w = (k: string) => 0.2 + (temper18(s, k.startsWith('p:') ? s.persons[k.slice(2)] : undefined) || (F(s, k, 'ambicao') + F(s, k, 'impulsividade')) / 200) + hasOf(s, hid18(k)).filter((h) => h.kind === 'grievance' && h.status === 'open').length * 0.4 + ((st.inc[k]?.until ?? 0) > s.week ? 1 : 0);
+  const ws = new Map(pool.map((k) => [k, w(k)] as const));
   for (let i = 0; i < n && pool.length; i++) {
-    const A = r.weighted(pool, w)!;
+    const A = r.weighted(pool, (k) => ws.get(k) ?? 0.2)!;
     const ts = targets(s, A, r).filter((T) => (st.cd[`${A}>${T}`] ?? 0) <= s.week);
     if (!ts.length) continue;
     const T = r.weighted(ts, (T) => 0.3 + grudge18(s, A, T) + Math.max(0, relOf18(s, A, T)) / 150)!;
@@ -393,7 +410,7 @@ registerSimHook('month', 'agency18', (s) => { agencyMonth18(s, Rng.fromSeed(`${s
 // ---------------------------------------------------------------- respostas do jogador
 
 registerInboxKind('agency18', {
-  label: l('Ataque', 'Attack'), cat: 'people', icon: 'alert', prio: 2,
+  label: l('Ataque', 'Attack'), cat: 'people', icon: 'warning', prio: 2,
   goto: (_s, m) => (m.ref?.A ? { person: String(m.ref.A) } : null),
   handle: (s, m, action, r) => {
     const A = String(m.ref?.A ?? ''), T = String(m.ref?.T ?? 'player'), v = String(m.ref?.v ?? '');
@@ -415,7 +432,7 @@ registerInboxKind('agency18', {
       return fmtL(l('{a} não atende ({p}% de chance).', '{a} won\'t pick up ({p}% chance).'), { a: nm, p: Math.round(p * 100) });
     }
     if (v === 'blackmail') {
-      const h = holdsOf(s, hid18(A)).has.find((x) => x.kind === 'secret' && x.status === 'open' && x.target === 'player');
+      const h = hasOf(s, hid18(A)).find((x) => x.kind === 'secret' && x.status === 'open' && x.target === 'player');
       if (h) { const u = useHold(s, h.id, 'expose'); const a = actOfKey18(s, T); if (a) scandal(s, a.id, 'conduct', 35, u.text, { tags: ['ag18'] }); return fmtL(l('Você ignorou — {a} cumpriu a ameaça: {x}', 'You ignored it — {a} followed through: {x}'), { a: nm, x: u.text }); }
     }
     if (v === 'sue') { const lose = r.chance(0.45); if (lose) { const c = money(s, 20000); post(s, `ag18lost:${A}`, -c, 'legal', 'Processo perdido'); return l('Você ignorou o processo e perdeu à revelia.', 'You ignored the suit and lost by default.'); } return l('O processo morreu na justiça.', 'The suit died in court.'); }
@@ -424,7 +441,7 @@ registerInboxKind('agency18', {
 });
 
 registerInboxKind('feud18', {
-  label: l('Rixa', 'Feud'), cat: 'people', icon: 'alert', prio: 2,
+  label: l('Rixa', 'Feud'), cat: 'people', icon: 'warning', prio: 2,
   goto: (_s, m) => (m.ref?.act ? { act: String(m.ref.act) } : null),
   handle: (s, m, action, r) => {
     const f = activeFeuds18(s).find((x) => x.id === m.ref?.feud);
@@ -494,7 +511,7 @@ registerPersonAction({
   },
 });
 registerPersonAction({
-  id: 'ag18_incite', label: l('Instigar contra um rival seu', 'Incite against a rival of yours'), group: 'dark', icon: 'flame', cooldown: 26,
+  id: 'ag18_incite', label: l('Instigar contra um rival seu', 'Incite against a rival of yours'), group: 'dark', icon: 'fire', cooldown: 26,
   desc: l('Você alimenta a mágoa desta pessoa contra o seu maior rival (o chefe do selo com maior rivalidade). Nos próximos meses ela tende a agir contra ele — do jeito dela.', 'You feed this person\'s grudge against your biggest rival (the label boss you clash with most). Over the next months they tend to act against them — their own way.'),
   cost: () => ({ usd: 2000 }),
   visible: (s, k) => !isPlayerKey(s, k) && !playerSide18(s, k) && (k.startsWith('p:') || k.startsWith('l:') || k.startsWith('e:') || k.startsWith('pd:')),

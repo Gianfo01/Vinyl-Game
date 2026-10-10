@@ -561,7 +561,7 @@ setFeudPhase18((s) => PHASE18[dm18(s).ph]?.feud ?? 1);
 setAgencyPhase18((s) => PHASE18[dm18(s).ph]?.ag ?? 1);
 
 registerInboxKind('dm18', {
-  label: l('Mestre', 'DM'), cat: 'decision', icon: 'book', prio: 2,
+  label: l('Mestre', 'DM'), cat: 'decision', icon: 'pen', prio: 2,
   goto: () => ({ area: 'dm18' }),
   handle: (s, m, action, r) => {
     const th = dm18(s).th.find((x) => x.id === m.ref?.th);
