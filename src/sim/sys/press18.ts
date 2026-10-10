@@ -21,6 +21,7 @@ import type { GameState, Release } from '../types';
 import { fmtL, money, post } from '../util';
 import { adjRel18 } from './agency18';
 import { careers, registerCareer } from './careers12';
+import { playerPerson } from './life';
 import { registerNoto14 } from './notoriety14';
 import { realKey18 } from './personact18';
 
@@ -51,6 +52,7 @@ export function pr18(s: GameState): Press18 {
   return st;
 }
 const logP = (s: GameState, t: L) => { const st = pr18(s); st.log.unshift({ y: s.year, t }); if (st.log.length > 30) st.log.length = 30; };
+const me = (s: GameState): string => playerPerson(s)?.name ?? s.config.companyName;
 const on = (s: GameState) => careers(s).active.includes('critic');
 const isMine = (s: GameState, rel: Release) => rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand;
 /** Influência de uma resenha sua (0..0.12): credibilidade × alcance. */
@@ -118,7 +120,7 @@ export function foundOutlet18(s: GameState, k: OutK18, name: string): L | null {
   post(s, `venture:pr18:${k}`, -v, 'capex', `Fundação: ${name}`);
   st.out = { name: name.trim() || 'Ruído', k, since: s.year, subs: Math.round(200 + st.reach * 40) };
   st.stage = 3;
-  emitFact(s, { kind: 'deal', actors: ['player'], severity: 35, visibility: 'public', tags: ['press', 'press18', 'venture'], src: 'press18', place: s.config.homeCity, text: fmtL(l('Nasce "{n}" ({k}), do crítico {p}.', '"{n}" ({k}) launches, from critic {p}.'), { n: st.out.name, k: d.name, p: s.config.ownerName ?? s.config.companyName }) });
+  emitFact(s, { kind: 'deal', actors: ['player'], severity: 35, visibility: 'public', tags: ['press', 'press18', 'venture'], src: 'press18', place: s.config.homeCity, text: fmtL(l('Nasce "{n}" ({k}), do crítico {p}.', '"{n}" ({k}) launches, from critic {p}.'), { n: st.out.name, k: d.name, p: me(s) }) });
   return null;
 }
 
@@ -136,7 +138,7 @@ export function scoop18(s: GameState, fid: string, how: 'publish' | 'hold' | 'bu
     raiseVisibility(f, 'public');
     st.reach = clamp(st.reach + 6, 0, 100); st.cred = clamp(st.cred + 2, 0, 100); st.scoops++;
     adjRel18(s, t.includes(':') ? t : `p:${t}`, 'player', -15, l('Publicou meu segredo', 'Published my secret'));
-    emitFact(s, { kind: 'secret_exposed', actors: [...f.actors, 'player'], severity: Math.max(45, f.severity), visibility: 'public', tags: ['press', 'press18', 'scoop'], src: 'press18', cause: [f.id], text: fmtL(l('Furo de {p}: {t}', 'Scoop by {p}: {t}'), { p: s.config.ownerName ?? s.config.companyName, t: f.text }) });
+    emitFact(s, { kind: 'secret_exposed', actors: [...f.actors, 'player'], severity: Math.max(45, f.severity), visibility: 'public', tags: ['press', 'press18', 'scoop'], src: 'press18', cause: [f.id], text: fmtL(l('Furo de {p}: {t}', 'Scoop by {p}: {t}'), { p: me(s), t: f.text }) });
     logP(s, fmtL(l('Furo publicado: {t}', 'Scoop published: {t}'), { t: f.text }));
     return l('Publicado: alcance e credibilidade sobem; o alvo não esquece.', 'Published: reach and credibility rise; the target won\'t forget.');
   }
@@ -167,7 +169,7 @@ export function embargo18(s: GameState, lb: string, keep: boolean): L {
   if (keep) { st.access[lb] = clamp((st.access[lb] ?? 0) + 1, -3, 5); return l('Embargo respeitado: o selo manda as próximas cópias antes.', 'Embargo kept: the label sends the next copies early.'); }
   st.access[lb] = -3; st.reach = clamp(st.reach + 8, 0, 100); st.scoops++;
   adjRel18(s, `l:${lb}`, 'player', -20, l('Furou nosso embargo', 'Broke our embargo'));
-  emitFact(s, { kind: 'statement', actors: ['player', lb], severity: 35, visibility: 'public', tags: ['press', 'press18', 'embargo'], src: 'press18', text: fmtL(l('{p} fura o embargo de {lb} e publica a primeira resenha do disco do ano.', '{p} breaks {lb}\'s embargo and runs the first review of the record of the year.'), { p: s.config.ownerName ?? s.config.companyName, lb: s.labels[lb]?.name ?? '?' }) });
+  emitFact(s, { kind: 'statement', actors: ['player', lb], severity: 35, visibility: 'public', tags: ['press', 'press18', 'embargo'], src: 'press18', text: fmtL(l('{p} fura o embargo de {lb} e publica a primeira resenha do disco do ano.', '{p} breaks {lb}\'s embargo and runs the first review of the record of the year.'), { p: me(s), lb: s.labels[lb]?.name ?? '?' }) });
   return l('Furo! Alcance +8; o selo corta seu acesso.', 'Scoop! Reach +8; the label cuts your access.');
 }
 registerInboxKind('press18_embargo', { label: l('Redação', 'Newsroom'), cat: 'press', icon: 'lock', prio: 1, goto: () => ({ area: 'cp17-critic' }), handle: (s, m, a) => embargo18(s, String(m.ref?.lb), a !== 'break') });

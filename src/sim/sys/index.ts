@@ -211,3 +211,9 @@ import './school18';
 import './tv18';
 import './world18';
 import './rivalmind18';
+// Rodada 18 (society18, onda 2): trilhas/Broadway, IA por ato, política de prêmios e paradas, jornalismo, censura/exílio, filantropia, cidade da música.
+import './screen18';
+import './ai18';
+import './awards18';
+import './press18';
+import './society18';
