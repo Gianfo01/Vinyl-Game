@@ -543,7 +543,7 @@ function monthTick(s: GameState): void {
     const rel = s.releases[rid];
     if (!rel || rel.owner !== 'player' || rel.stock === Infinity) continue;
     const age = s.week - rel.week;
-    if (rel.stock > 0 && age > 6) stock += rel.stock;
+    if (rel.stock > 0 && age > 26) stock += rel.stock; // os 6 primeiros meses ficam no depósito do distribuidor
     const ret = rel.returns ?? 0;
     const seen = st.ret[rid] ?? 0;
     if (ret > seen) { retNew += ret - seen; st.ret[rid] = ret; }
@@ -558,9 +558,9 @@ function monthTick(s: GameState): void {
       }
     }
   }
-  st.stor = Math.round(stock * money(s, 0.015));
+  st.stor = Math.round(stock * money(s, 0.01));
   if (st.stor > 0) post(s, `sup18stor:${s.year}:${s.month}`, -st.stor, 'manufacturing', 'Armazém (estoque parado)');
-  if (retNew > 0) post(s, `sup18ret:${s.year}:${s.month}`, -Math.round(retNew * money(s, 0.12)), 'distribution', 'Frete e triagem de devoluções');
+  if (retNew > 0) post(s, `sup18ret:${s.year}:${s.month}`, -Math.round(retNew * money(s, 0.08)), 'distribution', 'Frete e triagem de devoluções');
   for (const k of Object.keys(st.ret)) if (!s.releases[k]) delete st.ret[k];
   // P&D: o adiantamento é recuperado das vendas (25% do faturamento do mês)
   if (st.dist === 'major_pd' && st.adv > 0) {
@@ -649,7 +649,7 @@ export function stockList18(s: GameState): { rel: Release; stock: number; weekly
   for (const aid of playerActs(s)) for (const rid of s.acts[aid]?.releases ?? []) {
     const rel = s.releases[rid];
     if (!rel || rel.owner !== 'player' || rel.stock === Infinity || rel.stock <= 0) continue;
-    out.push({ rel, stock: rel.stock, weekly: Math.round((rel.weekly.slice(-4).reduce((t, x) => t + x, 0) / 4) * physicalShare(s)), cost: Math.round(rel.stock * money(s, 0.015)) });
+    out.push({ rel, stock: rel.stock, weekly: Math.round((rel.weekly.slice(-4).reduce((t, x) => t + x, 0) / 4) * physicalShare(s)), cost: Math.round(rel.stock * money(s, 0.01)) });
   }
   return out.sort((a, b) => b.cost - a.cost);
 }
