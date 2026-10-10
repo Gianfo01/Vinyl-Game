@@ -460,15 +460,17 @@ for (const A of NPC_ARCS) {
   });
 }
 
+const FORCE_WHY = l('Um fio do Mestre chegou ao ponto de virada (mágoa antiga, rivalidade ou segredo)', 'A DM thread reached its turning point (old grudge, rivalry or secret)');
 /** Força um verbo (o primeiro que couber) de agency18 — usado pelos estágios dos fios. */
 export function forceVerb(s: GameState, A: string, T: string, ids: string[], r: Rng): boolean {
   if (shield18(s, A) || shield18(s, T)) return false;
   for (const id of ids) {
     const v = VERBS18.find((x) => x.id === id);
     if (!v || (v.ok && !v.ok(s, A, T))) continue;
-    return !!act18(s, { A, T, v, g: 1, aff: 0 }, r);
+    return !!act18(s, { A, T, v, g: 1, aff: 0, why: FORCE_WHY }, r);
   }
   const p = choose18(s, A, T, r);
+  if (p) p.why = FORCE_WHY;
   return !!(p && act18(s, p, r));
 }
 
@@ -560,7 +562,7 @@ export function dmMonth18(s: GameState): void {
 }
 registerSimHook('month', 'dm18', (s) => dmMonth18(s));
 setFeudPhase18((s) => PHASE18[dm18(s).ph]?.feud ?? 1);
-setAgencyPhase18((s) => PHASE18[dm18(s).ph]?.ag ?? 1);
+setAgencyPhase18((s) => PHASE18[dm18(s).ph]?.ag ?? 1, (s) => dm18(s).ph);
 
 registerInboxKind('dm18', {
   label: l('Mestre', 'DM'), cat: 'decision', icon: 'pen', prio: 2,

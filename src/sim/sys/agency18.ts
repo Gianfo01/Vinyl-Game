@@ -9,10 +9,10 @@
 // instigar alguém contra um rival.
 
 import { clamp, Rng } from '../../core/rng';
-import { familyOf, l, type L } from '../../data/world';
+import { l, type L } from '../../data/world';
 import { dir17 } from '../director17';
 import { registerExt4, registerSimHook } from '../ext4';
-import { emitFact, recentFacts, raiseVisibility } from '../facts17';
+import { emitFact, onFact, recentFacts, raiseVisibility, type Fact } from '../facts17';
 import { allHolds, grantHold, holds17, useHold, voidHolds, type Hold } from '../holds17';
 import { actsOfPerson17 } from '../actidx17';
 import { pushInbox18, registerInboxKind } from '../inbox18';
@@ -74,15 +74,23 @@ export function hasOf(s: GameState, id: string): Hold[] {
 
 // ---------------------------------------------------------------- relações genéricas
 
-export interface Ag18State { rel: Record<string, number>; log: Ag18Log[]; cd: Record<string, number>; inc: Record<string, { t: string; until: number }>; n: number }
-export interface Ag18Log { w: number; y: number; m: number; a: string; t: string; v: string; ok: boolean; txt: L; mine?: 1 }
+export interface Ag18State { rel: Record<string, number>; log: Ag18Log[]; cd: Record<string, number>; inc: Record<string, { t: string; until: number }>; n: number;
+  /** pressão A>T: [mágoa, gratidão, ambição, inveja, afeto] 0..100 + porquê */
+  mot: Record<string, Mot18>;
+  /** cooldown por ator (semana) */
+  ca: Record<string, number>;
+  /** cartas para você neste mês */
+  pc: { m: number; n: number };
+  /** contagem por tom */
+  nt: Partial<Record<Tone18, number>> }
+export interface Ag18Log { w: number; y: number; m: number; a: string; t: string; v: string; ok: boolean; txt: L; mine?: 1; tone?: Tone18; why?: L; pend?: 1 }
 declare module '../ext4' { interface Ext4 { ag18: Ag18State } }
-const fresh = (): Ag18State => ({ rel: {}, log: [], cd: {}, inc: {}, n: 0 });
+const fresh = (): Ag18State => ({ rel: {}, log: [], cd: {}, inc: {}, n: 0, mot: {}, ca: {}, pc: { m: 0, n: 0 }, nt: {} });
 registerExt4('ag18', fresh);
 export function ag18(s: GameState): Ag18State {
   const x = s.x4 as unknown as { ag18?: Ag18State };
   const st = (x.ag18 ??= fresh());
-  st.rel ??= {}; st.log ??= []; st.cd ??= {}; st.inc ??= {};
+  st.rel ??= {}; st.log ??= []; st.cd ??= {}; st.inc ??= {}; st.mot ??= {}; st.ca ??= {}; st.pc ??= { m: 0, n: 0 }; st.nt ??= {};
   return st;
 }
 /** Relação A→T (−100..100) lida da melhor fonte disponível. */
@@ -117,16 +125,37 @@ export function grudge18(s: GameState, A: string, T: string): number {
 
 // ---------------------------------------------------------------- verbos
 
+export type Tone18 = 'good' | 'neutral' | 'bad';
+/** Motivos (pressão acumulada de A por T): mágoa, gratidão, ambição, inveja, afeto/preocupação. */
+export type Motive18 = 'g' | 'gr' | 'am' | 'en' | 'care';
+export type MV18 = Record<Motive18, number>;
+export type Resp18 = 'accept' | 'decline' | 'negotiate' | 'retaliate' | 'ignore';
 export interface Verb18 {
   id: string;
   name: L;
-  /** prejudica o alvo */
+  /** prejudica o alvo (vira "ataque" na Caixa) */
   harm: boolean;
-  /** peso pela personalidade do ator e pelo rancor/afeto */
-  w: (s: GameState, A: string, T: string, g: number, aff: number) => number;
+  tone?: Tone18;
+  /** afinidade com cada motivo (0..1+) */
+  m?: Partial<MV18>;
+  /** fator de personalidade do ator (0..2); recebe os motivos 0..1 */
+  pf?: (s: GameState, A: string, T: string, mv: MV18) => number;
+  /** legado: peso pela personalidade e pelo rancor/afeto */
+  w?: (s: GameState, A: string, T: string, g: number, aff: number) => number;
   ok?: (s: GameState, A: string, T: string) => boolean;
   run: (s: GameState, A: string, T: string, r: Rng) => { ok: boolean; t: L };
+  /** proposta: contra você vira pedido (o efeito só acontece se aceitar); entre NPCs o alvo decide */
+  ask?: boolean;
+  /** texto da proposta ({a} → {t}) */
+  pitch?: L;
+  /** chance de um NPC aceitar a proposta (além da relação) */
+  accP?: (s: GameState, A: string, T: string) => number;
+  /** respostas específicas quando o alvo é você */
+  resp?: Partial<Record<Resp18, (s: GameState, A: string, T: string, r: Rng) => L>>;
+  /** secreto: só aparece no diário se envolver você */
+  hidden?: boolean;
 }
+export const toneOf18 = (v?: Verb18): Tone18 => v?.tone ?? (v?.harm ? 'bad' : 'good');
 export const VERBS18: Verb18[] = [];
 export const registerVerb18 = (v: Verb18): void => { const i = VERBS18.findIndex((x) => x.id === v.id); if (i >= 0) VERBS18[i] = v; else VERBS18.push(v); };
 
@@ -138,8 +167,8 @@ const fact = (s: GameState, kind: string, A: string, T: string, sev: number, vis
 const N = nameOfKey18;
 
 registerVerb18({
-  id: 'praise', name: l('Elogia em público', 'Praises in public'), harm: false,
-  w: (s, A, _T, g, aff) => (aff > 0.2 ? aff * (F(s, A, 'empatia') + F(s, A, 'sociabilidade')) / 100 : 0) * (g > 0.3 ? 0.1 : 1),
+  id: 'praise', name: l('Elogia / dá um alô', 'Praises / shout-out'), harm: false,
+  tone: 'good', m: { care: 1, gr: 0.8 }, pf: (s, A, _T, mv) => (F(s, A, 'empatia') + F(s, A, 'sociabilidade')) / 100 * (mv.g > 0.3 ? 0.1 : 1),
   run: (s, A, T) => {
     const a = actOfKey18(s, T);
     if (a) a.momentum = clamp(a.momentum + 3, 0, 100);
@@ -151,7 +180,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'diss', name: l('Provoca (diss)', 'Disses'), harm: true,
-  w: (s, A, _T, g) => g * (F(s, A, 'ego') + F(s, A, 'impulsividade') + F(s, A, 'vaidade')) / 120,
+  tone: 'bad', m: { g: 1, en: 0.8 }, pf: (s, A) => (F(s, A, 'ego') + F(s, A, 'impulsividade') + F(s, A, 'vaidade')) / 120,
   run: (s, A, T) => {
     adjRel18(s, T, A, -15, l('Provocação pública', 'Public jab'));
     if (T.startsWith('p:') && !isPlayerKey(s, T)) addStress(s, T.slice(2), 6, fmtL(l('Provocado(a) por {a}', 'Called out by {a}'), { a: N(s, A) }));
@@ -170,7 +199,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'rumor', name: l('Espalha boato', 'Spreads a rumor'), harm: true,
-  w: (s, A, _T, g) => g * ((100 - F(s, A, 'empatia')) + F(s, A, 'ambicao')) / 140,
+  tone: 'bad', hidden: true, m: { g: 0.7, en: 1 }, pf: (s, A) => ((100 - F(s, A, 'empatia')) + F(s, A, 'ambicao')) / 140,
   ok: (s, _A, T) => !!actOfKey18(s, T),
   run: (s, A, T, r) => {
     const a = actOfKey18(s, T)!;
@@ -183,7 +212,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'poach', name: l('Tenta aliciar', 'Tries to poach'), harm: true,
-  w: (s, A, _T, g) => (A.startsWith('l:') || A.startsWith('e:') ? (0.3 + g) * F(s, A, 'ambicao') / 70 : 0),
+  tone: 'bad', m: { am: 1, en: 0.4, g: 0.3 }, pf: (s, A) => (A.startsWith('l:') || A.startsWith('e:') ? F(s, A, 'ambicao') / 60 : 0),
   ok: (s, A, T) => { const a = actOfKey18(s, T); return !!a && a.fame >= 20 && (A.startsWith('l:') || A.startsWith('e:')); },
   run: (s, A, T, r) => {
     const a = actOfKey18(s, T)!;
@@ -199,7 +228,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'sue', name: l('Processa', 'Sues'), harm: true,
-  w: (s, A, _T, g) => g * (F(s, A, 'teimosia') + F(s, A, 'ambicao')) / 200 * (A.startsWith('l:') || A.startsWith('e:') ? 1.2 : 0.5),
+  tone: 'bad', m: { g: 0.8, am: 0.3 }, pf: (s, A) => (F(s, A, 'teimosia') + F(s, A, 'ambicao')) / 200 * (A.startsWith('l:') || A.startsWith('e:') ? 1.2 : 0.5),
   run: (s, A, T, r) => {
     const amt = money(s, 8000 + r.int(0, 20) * 1000);
     const t = fmtL(l('{a} processa {t} (plágio, royalties ou contrato) pedindo {v}.', '{a} sues {t} (plagiarism, royalties or contract) asking for {v}.'), { a: N(s, A), t: N(s, T), v: `$${Math.round(amt / 100).toLocaleString()}` });
@@ -218,7 +247,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'blackmail', name: l('Chantageia', 'Blackmails'), harm: true,
-  w: (s, A, _T, g) => (0.4 + g) * ((100 - F(s, A, 'empatia')) + F(s, A, 'ambicao')) / 120,
+  tone: 'bad', hidden: true, m: { g: 0.6, am: 0.6, en: 0.3 }, pf: (s, A) => ((100 - F(s, A, 'empatia')) + F(s, A, 'ambicao')) / 120,
   ok: (s, A, T) => hasOf(s, hid18(A)).some((h) => h.kind === 'secret' && h.status === 'open' && h.target === (isPlayerKey(s, T) ? 'player' : hid18(T))),
   run: (s, A, T) => {
     const h = hasOf(s, hid18(A)).find((x) => x.kind === 'secret' && x.status === 'open' && x.target === (isPlayerKey(s, T) ? 'player' : hid18(T)))!;
@@ -230,7 +259,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'expose', name: l('Expõe um segredo', 'Exposes a secret'), harm: true,
-  w: (s, A, _T, g) => g * (F(s, A, 'impulsividade') + (100 - F(s, A, 'lealdade'))) / 140,
+  tone: 'bad', m: { g: 0.9, en: 0.5 }, pf: (s, A) => (F(s, A, 'impulsividade') + (100 - F(s, A, 'lealdade'))) / 140,
   ok: (s, A, T) => hasOf(s, hid18(A)).some((h) => h.kind === 'secret' && h.status === 'open' && h.target === (isPlayerKey(s, T) ? 'player' : hid18(T))),
   run: (s, A, T) => {
     const h = hasOf(s, hid18(A)).find((x) => x.kind === 'secret' && x.status === 'open' && x.target === (isPlayerKey(s, T) ? 'player' : hid18(T)))!;
@@ -242,7 +271,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'intimidate', name: l('Manda intimidar', 'Has them intimidated'), harm: true,
-  w: (s, A, _T, g) => (g > 0.6 ? g * (F(s, A, 'coragem') + F(s, A, 'impulsividade') + (100 - F(s, A, 'empatia'))) / 260 : 0),
+  tone: 'bad', hidden: true, m: { g: 1 }, pf: (s, A, _T, mv) => (mv.g > 0.6 ? (F(s, A, 'coragem') + F(s, A, 'impulsividade') + (100 - F(s, A, 'empatia'))) / 260 : 0),
   ok: (s, A, T) => T.startsWith('p:') && !isPlayerKey(s, T) && !crimeOdds(s, { actor: crimeId(s, A), target: T.slice(2), partners: [] }, 'assault').block,
   run: (s, A, T, r) => {
     const o = commitCrime(s, 'assault', { actor: crimeId(s, A), target: T.slice(2), partners: [] }, r);
@@ -252,7 +281,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'sabotage', name: l('Sabota', 'Sabotages'), harm: true,
-  w: (s, A, _T, g) => (g > 0.5 && (A.startsWith('l:') || A.startsWith('e:') || A.startsWith('pd:')) ? g * (F(s, A, 'ambicao') + (100 - F(s, A, 'empatia'))) / 200 : 0),
+  tone: 'bad', hidden: true, m: { g: 0.7, en: 0.7 }, pf: (s, A, _T, mv) => (mv.g + mv.en > 0.5 && (A.startsWith('l:') || A.startsWith('e:') || A.startsWith('pd:')) ? (F(s, A, 'ambicao') + (100 - F(s, A, 'empatia'))) / 200 : 0),
   ok: (s, A, T) => { const a = actOfKey18(s, T); return !!a && !crimeOdds(s, { actor: crimeId(s, A), target: a.id, partners: [] }, 'sabotage').block; },
   run: (s, A, T, r) => {
     const a = actOfKey18(s, T)!;
@@ -263,7 +292,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'reconcile', name: l('Faz as pazes', 'Makes peace'), harm: false,
-  w: (s, A, _T, g) => (g > 0.2 ? g * (F(s, A, 'empatia') + F(s, A, 'generosidade')) / 160 : 0),
+  tone: 'good', m: { g: 0.5, gr: 0.4, care: 0.3 }, pf: (s, A, _T, mv) => (mv.g > 0.2 || mv.care > 0.3 ? (F(s, A, 'empatia') + F(s, A, 'generosidade')) / 160 : 0),
   run: (s, A, T) => {
     adjRel18(s, A, T, 20, l('Reconciliação', 'Reconciliation')); adjRel18(s, T, A, 15, l('Reconciliação', 'Reconciliation'));
     voidHolds(s, (h) => h.kind === 'grievance' && h.holder === hid18(A) && h.target === (isPlayerKey(s, T) ? 'player' : hid18(T)));
@@ -277,7 +306,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'favor', name: l('Faz um favor', 'Does a favor'), harm: false,
-  w: (s, A, _T, g, aff) => (aff > 0.3 && g < 0.2 ? aff * (F(s, A, 'generosidade') + F(s, A, 'ambicao')) / 150 : 0),
+  tone: 'good', m: { gr: 1, care: 0.6 }, pf: (s, A, _T, mv) => (mv.g < 0.2 ? (F(s, A, 'generosidade') + F(s, A, 'ambicao')) / 150 : 0),
   run: (s, A, T) => {
     grantHold(s, { holder: hid18(A), target: isPlayerKey(s, T) ? 'player' : hid18(T), kind: 'favor', strength: 40, months: 48, src: 'agency18', text: fmtL(l('Favor de {a}', 'A favor from {a}'), { a: N(s, A) }), quiet: !playerSide18(s, T) });
     const a = actOfKey18(s, T);
@@ -288,7 +317,7 @@ registerVerb18({
 });
 registerVerb18({
   id: 'affair', name: l('Caso secreto', 'Secret affair'), harm: false,
-  w: (s, A, T, _g, aff) => (A.startsWith('p:') && T.startsWith('p:') && !isPlayerKey(s, T) && aff > 0.2 ? aff * (F(s, A, 'impulsividade') + F(s, A, 'sociabilidade')) / 400 : 0),
+  tone: 'bad', hidden: true, m: { care: 0.5 }, pf: (s, A, T) => (A.startsWith('p:') && T.startsWith('p:') && !isPlayerKey(s, T) ? (F(s, A, 'impulsividade') + F(s, A, 'sociabilidade')) / 400 : 0),
   ok: (s, A, T) => A.startsWith('p:') && T.startsWith('p:') && !isPlayerKey(s, A) && !isPlayerKey(s, T) && s.persons[A.slice(2)]?.alive && s.persons[T.slice(2)]?.alive && (s.year - (s.persons[A.slice(2)]?.born ?? 0)) >= 18 && (s.year - (s.persons[T.slice(2)]?.born ?? 0)) >= 18,
   run: (s, A, T, r) => {
     const t = fmtL(l('{a} e {t} têm um caso às escondidas.', '{a} and {t} are having a secret affair.'), { a: N(s, A), t: N(s, T) });
@@ -302,147 +331,361 @@ registerVerb18({
   },
 });
 
-// ---------------------------------------------------------------- quem age, contra quem
+// ---------------------------------------------------------------- motivos: POR QUE alguém age
+// Ninguém age "porque é o mês". Fatos (facts17) acumulam pressão de A por T — mágoa, gratidão, ambição, inveja,
+// afeto — que decai com o tempo. Quando passa do limiar da pessoa, ela age: os impulsivos na hora; os
+// calculistas esperam o momento certo (mesma cidade, mesmo selo, rixa aberta, alvo fragilizado) ou até a pressão
+// transbordar. Cada iniciativa guarda o porquê (o fato de origem) e aparece no diário e na Caixa.
 
-/** Atores possíveis do mês (amostra): líderes de atos notáveis, chefes de selo, seus artistas, quem guarda mágoa. */
-function actors(s: GameState): string[] {
-  const out = new Set<string>();
-  const acts = Object.values(s.acts).filter((a) => live(a) && a.fame >= 20).sort((a, b) => b.fame - a.fame).slice(0, 40);
-  for (const a of acts) { const p = leadOf18(s, a); if (p && !p.isPlayer) out.add(`p:${p.id}`); }
-  for (const id of playerActs(s)) for (const m of s.acts[id]?.members ?? []) if (s.persons[m]?.alive && !s.persons[m].isPlayer) out.add(`p:${m}`);
-  for (const lb of Object.values(s.labels)) if (lb.active && lb.leaderId) out.add(`l:${lb.leaderId}`);
-  for (const k of Object.keys(ag18(s).inc)) out.add(k);
-  return [...out].filter((k) => alive(s, k) && !shielded(s, k));
-}
-/** Alvos que importam para A: quem ele odeia, ama, inveja; você; os rivais da rixa. */
-function targets(s: GameState, A: string, r: Rng): string[] {
-  const out = new Set<string>();
-  const id = hid18(A);
-  for (const h of hasOf(s, id)) if (h.status === 'open' && (h.kind === 'grievance' || h.kind === 'secret')) out.add(h.target === 'player' ? 'player' : s.persons[h.target] ? `p:${h.target}` : h.target);
-  if (A.startsWith('p:')) for (const [k, v] of Object.entries(s.persons[id]?.rel ?? {})) if (Math.abs(v) > 30 && s.persons[k]?.alive) out.add(s.persons[k].isPlayer ? 'player' : `p:${k}`);
-  if (A.startsWith('l:')) for (const [k, v] of Object.entries(leaders(s).L[A.slice(2)]?.rel ?? {})) if (Math.abs(v) > 30) out.add(k === 'player' ? 'player' : `l:${k}`);
-  const a = actOfKey18(s, A);
-  // artista ressentido → o chefe do próprio selo (ou você, se o selo é seu)
-  if (A.startsWith('p:') && a && (s.persons[id]?.resentment ?? 0) > 35) {
-    if (a.owner === 'player') out.add('player');
-    else if (a.owner && s.labels[a.owner]?.leaderId) { const bk = `l:${s.labels[a.owner].leaderId}`; out.add(bk); adjRel18(s, A, bk, -((s.persons[id]?.resentment ?? 0) - 35) / 10, l('Ressentimento com o selo', 'Resentment toward the label')); }
-  }
-  if (a) for (const f of feudsOf18(s, a.id)) { const o = s.acts[f.a === a.id ? f.b : f.a]; const p = leadOf18(s, o); if (p) out.add(p.isPlayer ? 'player' : `p:${p.id}`); }
-  if (opinionOf(s, A) < -25 || (A.startsWith('l:') && (s.rivalries[leaders(s).L[A.slice(2)]?.label ?? ''] ?? 0) > 30)) out.add('player');
-  // inveja: alguém da mesma cena um pouco acima
-  if (a && r.chance(0.5)) {
-    const up = Object.values(s.acts).filter((b) => live(b) && b.id !== a.id && familyOf(b.genre) === familyOf(a.genre) && b.fame > a.fame && b.fame < a.fame + 25).slice(0, 12);
-    const b = up.length ? r.pick(up) : undefined; const p = leadOf18(s, b);
-    if (p) out.add(p.isPlayer ? 'player' : `p:${p.id}`);
-  }
-  const inc = ag18(s).inc[A];
-  if (inc && inc.until > s.week) out.add(inc.t);
-  out.delete(A);
-  return [...out].filter((k) => alive(s, k) && !shielded(s, k) && !(A.startsWith('p:') && k === A));
+export const MOT18: Record<Motive18, L> = { g: l('Mágoa', 'Grudge'), gr: l('Gratidão', 'Gratitude'), am: l('Ambição', 'Ambition'), en: l('Inveja', 'Envy'), care: l('Afeto', 'Affection') };
+export const MK18: Motive18[] = ['g', 'gr', 'am', 'en', 'care'];
+export interface Mot18 { v: number[]; why: L; w: number; t0?: number; f?: string }
+const mvOf = (m: Mot18): MV18 => ({ g: m.v[0] / 100, gr: m.v[1] / 100, am: m.v[2] / 100, en: m.v[3] / 100, care: m.v[4] / 100 });
+
+/** Soma pressão de A por T (só gente de fora do modo exato, viva, e nunca o jogador como ator). */
+export function pushMotive18(s: GameState, A: string, T: string, k: Motive18, amt: number, why: L, fid?: string): void {
+  if (!A || !T || A === T || amt <= 0 || isPlayerKey(s, A)) return;
+  if (!alive(s, A) || !alive(s, T) || shielded(s, A) || shielded(s, T)) return;
+  const st = ag18(s);
+  const key = `${A}>${T}`;
+  const m = (st.mot[key] ??= { v: [0, 0, 0, 0, 0], why, w: s.week });
+  const i = MK18.indexOf(k);
+  const add = amt * (1 - m.v[i] / 150);
+  m.v[i] = Math.min(100, m.v[i] + add);
+  if (add >= 8 || m.v[i] >= Math.max(...m.v)) { m.why = fmtL(l('{m}: {x}', '{m}: {x}'), { m: MOT18[k], x: why }); if (fid) m.f = fid; }
+  m.w = s.week;
 }
 
-export interface Plan18 { A: string; T: string; v: Verb18; g: number; aff: number }
-/** Escolha pura (dado um Rng): o que A faria com T. */
+/** Chave persona13 de um id de fato (pessoa, ato → líder, selo → chefe, 'player'). */
+export function keyOf18(s: GameState, id: string): string | undefined {
+  if (!id) return undefined;
+  if (id === 'player') return 'player';
+  if (id.includes(':')) return id;
+  const p = s.persons[id];
+  if (p) return p.isPlayer ? 'player' : `p:${id}`;
+  const a = s.acts[id];
+  if (a) { const ld = leadOf18(s, a); return ld ? (ld.isPlayer ? 'player' : `p:${ld.id}`) : undefined; }
+  const lb = s.labels[id];
+  return lb?.leaderId ? `l:${lb.leaderId}` : undefined;
+}
+/** Amigos (sign 1) ou desafetos (−1) de alguém, pelas relações dele (sem varrer o mundo). */
+function circle(s: GameState, k: string, sign: 1 | -1, min = 35, n = 5): string[] {
+  const rel = k.startsWith('p:') ? s.persons[k.slice(2)]?.rel : k.startsWith('l:') ? leaders(s).L[k.slice(2)]?.rel : undefined;
+  if (!rel) return [];
+  const out: [string, number][] = [];
+  for (const id in rel) { const v = rel[id] * sign; if (v >= min) out.push([id, v]); }
+  out.sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+  return out.slice(0, n).map(([id]) => (k.startsWith('l:') ? (id === 'player' ? 'player' : `l:${id}`) : s.persons[id]?.isPlayer ? 'player' : `p:${id}`)).filter((x) => x !== 'player');
+}
+/** Quem cobiça um ato em alta: seu maior rival (se o ato é seu) ou o chefe que mais detesta o dono. */
+function rivalBoss(s: GameState, a: Act): string | undefined {
+  if (isMineAct(s, a)) return topRival(s);
+  const ld = a.owner ? s.labels[a.owner]?.leaderId : undefined;
+  return ld ? circle(s, `l:${ld}`, -1, 30, 1)[0] : undefined;
+}
+function topActOf(s: GameState, lb: string, not: string): Act | undefined {
+  let best: Act | undefined;
+  for (const id of s.labels[lb]?.roster ?? []) { const a = s.acts[id]; if (live(a) && id !== not && (!best || a.fame > best.fame)) best = a; }
+  return best;
+}
+
+const SUCC = new Set(['chart', 'award', 'signing', 'release', 'show', 'festival', 'rise', 'masterwork', 'masterpiece', 'legend', 'comeback', 'revival']);
+const TROUBLE = new Set(['scandal', 'arrest', 'health', 'breakdown', 'rehab', 'addiction', 'stress', 'tour_cancel', 'case_ruling']);
+const HURT = new Set(['poach', 'law', 'secret_exposed', 'blackmail', 'plagiarism', 'hold_used', 'leak', 'crime', 'theft']);
+const KIND = new Set(['favor', 'forgiven']);
+const MUTUAL = new Set(['breakup', 'split', 'feud', 'solo']);
+const JOY = new Set(['marriage', 'birth', 'romance']);
+
+/** Fato → pressão. Barato: só olha os atores do fato e as relações deles. */
+export function motiveFromFact18(s: GameState, f: Fact): void {
+  if (f.severity < 15) return;
+  const ks: string[] = [];
+  for (const id of f.actors) { const k = keyOf18(s, id); if (k && !ks.includes(k)) ks.push(k); }
+  if (!ks.length) return;
+  const [S, ...O] = ks;
+  const sev = f.severity, why = f.text, fid = f.id, tg = f.tags, k = f.kind;
+  if (HURT.has(k) || (k === 'statement' && (tg.includes('beef') || tg.includes('diss') || tg.includes('bad'))) || (tg.includes('ag18') && tg.includes('bad'))) {
+    for (const o of O) pushMotive18(s, o, S, 'g', sev * 0.9, why, fid);
+    return;
+  }
+  if (KIND.has(k) || (tg.includes('ag18') && tg.includes('good'))) { for (const o of O) pushMotive18(s, o, S, 'gr', sev, why, fid); return; }
+  if (MUTUAL.has(k)) {
+    const ps = ks.slice(0, 4);
+    for (const a of ps) for (const b of ps) if (a !== b) pushMotive18(s, a, b, 'g', sev * 0.5, why, fid);
+    if (k !== 'feud') for (const fr of circle(s, S, 1)) pushMotive18(s, fr, S, 'care', sev * 0.6, why, fid);
+    return;
+  }
+  if (f.visibility === 'secret' || tg.includes('ag18')) return;
+  if (k === 'exit') {
+    const lb = f.actors.map((id) => s.labels[id]).find(Boolean);
+    if (lb?.leaderId) pushMotive18(s, S, `l:${lb.leaderId}`, 'g', sev * 0.8, why, fid);
+    for (const fr of circle(s, S, 1)) pushMotive18(s, fr, S, 'care', sev * 0.7, why, fid);
+    return;
+  }
+  if (k === 'death') {
+    const dead = f.actors.map((id) => s.persons[id]).find(Boolean);
+    if (!dead) return;
+    const mates = actsOfPerson17(s, dead.id).flatMap((a) => a.members).filter((m) => m !== dead.id && s.persons[m]?.alive).slice(0, 3).map((m) => keyOf18(s, m)).filter((x): x is string => !!x);
+    for (const a of circle(s, `p:${dead.id}`, 1, 40, 4)) for (const b of mates) pushMotive18(s, a, b, 'care', sev * 0.6, why, fid);
+    return;
+  }
+  if (TROUBLE.has(k)) {
+    for (const fr of circle(s, S, 1)) pushMotive18(s, fr, S, 'care', sev * 0.8, why, fid);
+    for (const en of circle(s, S, -1)) pushMotive18(s, en, S, 'en', sev * 0.5, why, fid);
+    return;
+  }
+  if (JOY.has(k)) { for (const fr of circle(s, S, 1, 45, 3)) pushMotive18(s, fr, S, 'care', sev * 0.4, why, fid); return; }
+  if (SUCC.has(k) && (k !== 'release' && k !== 'show' && k !== 'festival' || tg.includes('good'))) {
+    for (const en of circle(s, S, -1)) pushMotive18(s, en, S, 'en', sev * 0.9, why, fid);
+    for (const fr of circle(s, S, 1, 45, 3)) { pushMotive18(s, fr, S, 'care', sev * 0.5, why, fid); pushMotive18(s, fr, S, 'am', sev * 0.55, why, fid); } // amigos querem pegar carona
+    for (const o of O) { pushMotive18(s, S, o, 'gr', sev * 0.4, why, fid); pushMotive18(s, o, S, 'gr', sev * 0.4, why, fid); } // sucesso a dois (feat, turnê)
+    const a = s.acts[f.actors.find((id) => s.acts[id]) ?? ''];
+    if (a && a.fame >= 35 && sev >= 40) { const boss = rivalBoss(s, a); if (boss) pushMotive18(s, boss, S, 'am', sev * 0.6, why, fid); }
+    if (k === 'signing' && a?.owner && s.labels[a.owner]) {
+      const top = topActOf(s, a.owner, a.id); const tk = top ? keyOf18(s, top.id) : undefined;
+      if (tk && tk !== S) { pushMotive18(s, tk, S, 'care', 25, why, fid); pushMotive18(s, S, tk, 'am', 30, why, fid); }
+    }
+  }
+}
+onFact('*', motiveFromFact18, 'agency18:motive');
+
+// ---------------------------------------------------------------- escolha e execução
+
+export interface Plan18 { A: string; T: string; v: Verb18; g: number; aff: number; why?: L }
+
+/** Fase do Mestre (dm18 registra): clímax = limiar menor e mais iniciativas; o tom acompanha a fase. */
+let phaseMult: (s: GameState) => number = () => 1;
+let moodFn: (s: GameState) => string = () => 'rising';
+export const setAgencyPhase18 = (fn: (s: GameState) => number, mood?: (s: GameState) => string): void => { phaseMult = fn; if (mood) moodFn = mood; };
+const TONE_BIAS: Record<string, Record<Tone18, number>> = {
+  calm: { good: 1.1, neutral: 1.8, bad: 0.7 }, rising: { good: 1, neutral: 1.5, bad: 1 },
+  climax: { good: 0.8, neutral: 1, bad: 1.4 }, resolution: { good: 1.5, neutral: 1.2, bad: 0.6 },
+};
+
+function wOf(s: GameState, A: string, T: string, v: Verb18, mv: MV18): number {
+  if (v.harm && mv.g + mv.en + mv.am < 0.15) return 0;
+  if (v.ok && !v.ok(s, A, T)) return 0;
+  if (v.m) {
+    let x = 0;
+    for (const k of Object.keys(v.m) as Motive18[]) x += mv[k] * (v.m[k] ?? 0);
+    return x > 0 ? x * Math.max(0, v.pf ? v.pf(s, A, T, mv) : 1) : 0;
+  }
+  return v.w ? Math.max(0, v.w(s, A, T, mv.g, mv.care)) : 0;
+}
+export function chooseM18(s: GameState, A: string, T: string, mv: MV18, r: Rng, mood = 'rising'): Plan18 | null {
+  const bias = TONE_BIAS[mood] ?? TONE_BIAS.rising;
+  const opts = VERBS18.map((v) => [v, wOf(s, A, T, v, mv) * bias[toneOf18(v)]] as [Verb18, number]).filter((x) => x[1] > 0.02);
+  if (!opts.length) return null;
+  const v = r.weighted(opts, (x) => x[1])![0];
+  return { A, T, v, g: mv.g, aff: mv.care };
+}
+/** Escolha pura (dado um Rng): o que A faria com T agora (rancor e afeto atuais). */
 export function choose18(s: GameState, A: string, T: string, r: Rng): Plan18 | null {
   const g = grudge18(s, A, T);
   const aff = Math.max(0, relOf18(s, A, T)) / 100;
-  const opts = VERBS18.filter((v) => !(v.harm && g < 0.15)).map((v) => [v, (v.ok && !v.ok(s, A, T)) ? 0 : Math.max(0, v.w(s, A, T, g, aff))] as [Verb18, number]).filter((x) => x[1] > 0.02);
-  if (!opts.length) return null;
-  const v = r.weighted(opts, (x) => x[1])![0];
-  return { A, T, v, g, aff };
+  const m = ag18(s).mot[`${A}>${T}`];
+  const mv = m ? mvOf(m) : { g, gr: aff * 0.5, am: 0.2, en: g * 0.5, care: aff };
+  mv.g = Math.max(mv.g, g); mv.care = Math.max(mv.care, aff);
+  return chooseM18(s, A, T, mv, r);
 }
 
-/** Executa uma iniciativa (de qualquer um contra qualquer um). Contra você: vira mensagem com respostas. */
+/** Dinheiro entre chaves: você (livro-caixa), chefe de selo (caixa do selo), artista (caixa do ato). */
+export function pay18(s: GameState, from: string, to: string, c: number, memo: string): number {
+  const box = (k: string): { get: () => number; add: (d: number) => void } | null => {
+    if (isPlayerKey(s, k)) return { get: () => s.player.cash, add: (d) => { post(s, `ag18:${memo}:${hid18(k === from ? to : from)}`, d, d < 0 ? 'misc' : 'other_income', memo); } };
+    if (k.startsWith('l:')) { const lb = s.labels[leaders(s).L[k.slice(2)]?.label ?? '']; if (lb) return { get: () => lb.cash, add: (d) => { lb.cash += d; } }; }
+    const a = actOfKey18(s, k);
+    return a ? { get: () => a.cash ?? 0, add: (d) => { a.cash = (a.cash ?? 0) + d; } } : null;
+  };
+  const f = box(from), t = box(to);
+  if (!f || !t) return 0;
+  const v = Math.round(isPlayerKey(s, from) ? c : Math.min(c, Math.max(0, f.get())));
+  if (v <= 0) return 0;
+  f.add(-v); t.add(v);
+  return v;
+}
+export const usd18 = (c: number): string => `$${Math.round(c / 100).toLocaleString()}`;
+
+/** Executa uma iniciativa (de qualquer um contra qualquer um). Contra você: mensagem com respostas. */
 export function act18(s: GameState, p: Plan18, r: Rng): Ag18Log | null {
   const { A, T, v } = p;
   if (shielded(s, A) || shielded(s, T) || !alive(s, A) || !alive(s, T)) return null;
   if (v.ok && !v.ok(s, A, T)) return null;
   const st = ag18(s);
-  const res = v.run(s, A, T, r);
-  const mine = playerSide18(s, T) || playerSide18(s, A);
-  const row: Ag18Log = { w: s.week, y: s.year, m: s.month, a: A, t: T, v: v.id, ok: res.ok, txt: res.t, ...(mine ? { mine: 1 as const } : {}) };
+  const toMe = playerSide18(s, T);
+  const tone = toneOf18(v);
+  const nm = { a: N(s, A), t: N(s, T) };
+  let res: { ok: boolean; t: L };
+  let pend = false;
+  if (v.ask && toMe) { pend = true; res = { ok: true, t: fmtL(v.pitch ?? l('{a} faz uma proposta a {t}.', '{a} makes {t} an offer.'), nm) }; }
+  else if (v.ask) {
+    const pa = clamp(0.35 + relOf18(s, T, A) / 200 + (v.accP?.(s, A, T) ?? 0), 0.05, 0.92);
+    if (r.chance(pa)) res = v.run(s, A, T, r);
+    else { adjRel18(s, A, T, -4, l('Proposta recusada', 'Offer turned down')); res = { ok: false, t: fmtL(l('{t} recusa a proposta de {a}: {x}', '{t} turns down {a}: {x}'), { ...nm, x: fmtL(v.pitch ?? v.name, nm) }) }; }
+  } else res = v.run(s, A, T, r);
+  const mine = toMe || playerSide18(s, A);
+  const row: Ag18Log = { w: s.week, y: s.year, m: s.month, a: A, t: T, v: v.id, ok: res.ok, txt: res.t, tone, ...(p.why ? { why: p.why } : {}), ...(pend ? { pend: 1 as const } : {}), ...(mine ? { mine: 1 as const } : {}) };
   st.log.unshift(row);
-  if (st.log.length > 80) st.log.length = 80;
-  st.cd[`${A}>${T}`] = s.week + 26;
+  if (st.log.length > 120) st.log.length = 120;
+  st.cd[`${A}>${T}`] = s.week + (tone === 'bad' ? 26 : 13);
   st.n++;
-  if (playerSide18(s, T) && v.harm) {
-    pushInbox18(s, 'agency18', {
-      from: N(s, A), subject: fmtL(l('{a}: {v}', '{a}: {v}'), { a: N(s, A), v: v.name }), body: res.t, tone: 'bad', ref: { A, T, v: v.id },
-      actions: [
-        { id: 'retort', label: l('Responder em público', 'Answer in public') },
-        ...(v.id === 'sue' ? [{ id: 'settle', label: l('Fazer acordo', 'Settle') }] : []),
-        ...(v.id === 'blackmail' ? [{ id: 'pay', label: l('Pagar para calar', 'Pay for silence') }] : []),
-        { id: 'peace', label: l('Chamar para conversar', 'Invite for a talk') },
-        { id: 'ignore', label: l('Ignorar', 'Ignore') },
-      ],
-    });
+  st.nt[tone] = (st.nt[tone] ?? 0) + 1;
+  if (toMe) {
+    const mk = s.year * 12 + s.month;
+    if (st.pc.m !== mk) st.pc = { m: mk, n: 0 };
+    if (st.pc.n < 3 || (v.harm && st.pc.n < 4)) {
+      st.pc.n++;
+      const body = p.why ? fmtL(l('{t}\n\nPor quê: {w}', '{t}\n\nWhy: {w}'), { t: res.t, w: p.why }) : res.t;
+      pushInbox18(s, 'agency18', { from: N(s, A), subject: fmtL(l('{a}: {v}', '{a}: {v}'), { a: N(s, A), v: v.name }), body, tone: tone === 'good' ? 'good' : tone === 'bad' ? 'bad' : 'info', ref: { A, T, v: v.id, ...(pend ? { pend: 1 } : {}) }, actions: respOpts(s, v, A, pend) });
+    } else if (!pend) notify(s, res.t, 'event');
   } else if (playerSide18(s, A)) notify(s, fmtL(l('Por conta própria: {t}', 'On their own: {t}'), { t: res.t }), 'event');
-  else if (playerSide18(s, T)) notify(s, res.t, 'event');
   return row;
 }
 
+const isCalc18 = (s: GameState, A: string): boolean => F(s, A, 'disciplina') - F(s, A, 'impulsividade') > 8 || (F(s, A, 'ambicao') > 70 && F(s, A, 'impulsividade') < 45);
+/** Limiar de pressão para agir (impulsivos agem antes; o clímax do Mestre baixa o limiar). */
+export const th18 = (s: GameState, A: string): number => clamp(42 + (F(s, A, 'disciplina') - F(s, A, 'impulsividade')) / 5, 30, 62) / Math.sqrt(Math.max(0.3, phaseMult(s)));
+/** O momento certo (para quem calcula): mesma cidade, mesmo selo, rixa aberta ou alvo fragilizado. */
+export function moment18(s: GameState, A: string, T: string): L | null {
+  const a = actOfKey18(s, A), b = actOfKey18(s, T);
+  const cA = per13(s, A)?.city ?? a?.city, cT = isPlayerKey(s, T) ? s.config.homeCity : per13(s, T)?.city ?? b?.city;
+  if (cA && cA === cT) return l('na mesma cidade, na hora certa', 'same city, right time');
+  if (a && b && a.id !== b.id && a.owner && a.owner === b.owner) return l('no mesmo selo', 'on the same label');
+  if (A.startsWith('l:') && b && b.owner && b.owner === leaders(s).L[A.slice(2)]?.label) return l('artista do próprio selo', 'an act on their own label');
+  if (b && b.momentum < 25) return l('com o alvo fragilizado', 'with the target down');
+  if (a && b && feudOf18(s, a.id, b.id)) return l('com a rixa aberta', 'with the feud open');
+  return null;
+}
+const bmonth = (k: string): number => { let h = 7; for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return h % 12; };
+
+/** O mês das iniciativas: só age quem tem motivo acima do limiar (a maioria das pessoas, na maioria dos meses, não faz nada). */
 export function agencyMonth18(s: GameState, r: Rng): Ag18Log[] {
   const st = ag18(s);
-  const D = dir17(s);
-  const n = Math.min(6, Math.round((1.6 + r.float(0, 1.6)) * D.world * phaseMult(s)));
-  const pool = actors(s);
+  const pm = phaseMult(s);
   const out: Ag18Log[] = [];
-  const w = (k: string) => 0.2 + (temper18(s, k.startsWith('p:') ? s.persons[k.slice(2)] : undefined) || (F(s, k, 'ambicao') + F(s, k, 'impulsividade')) / 200) + hasOf(s, hid18(k)).filter((h) => h.kind === 'grievance' && h.status === 'open').length * 0.4 + ((st.inc[k]?.until ?? 0) > s.week ? 1 : 0);
-  const ws = new Map(pool.map((k) => [k, w(k)] as const));
-  for (let i = 0; i < n && pool.length; i++) {
-    const A = r.weighted(pool, (k) => ws.get(k) ?? 0.2)!;
-    const ts = targets(s, A, r).filter((T) => (st.cd[`${A}>${T}`] ?? 0) <= s.week);
-    if (!ts.length) continue;
-    const T = r.weighted(ts, (T) => 0.3 + grudge18(s, A, T) + Math.max(0, relOf18(s, A, T)) / 150)!;
-    const p = choose18(s, A, T, r);
-    if (!p) continue;
-    // contra você: no máximo 1 iniciativa hostil por mês (machuca, mas não mata)
-    if (p.v.harm && playerSide18(s, T) && out.some((x) => x.mine && VERBS18.find((v) => v.id === x.v)?.harm)) continue;
-    const row = act18(s, p, r);
-    if (row) out.push(row);
+  for (const [k, x] of Object.entries(st.inc)) { if (x.until < s.week) delete st.inc[k]; else pushMotive18(s, k, x.t, 'g', 22, l('instigado(a) por você', 'incited by you')); }
+  const cands: { key: string; A: string; T: string; m: Mot18; mx: number; th: number }[] = [];
+  const keys = Object.keys(st.mot);
+  for (const key of keys) {
+    const m = st.mot[key];
+    m.v[0] *= 0.92; m.v[1] *= 0.9; m.v[2] *= 0.82; m.v[3] *= 0.85; m.v[4] *= 0.85; // mágoa e gratidão duram mais
+    const i = key.indexOf('>');
+    const A = key.slice(0, i), T = key.slice(i + 1);
+    if ((m.v[1] > 15 || m.v[4] > 15) && T.startsWith('p:') && bmonth(T) === s.month) { m.v[4] = Math.min(100, m.v[4] + 25); m.why = fmtL(l('Aniversário de {t}', '{t}\'s birthday'), { t: N(s, T) }); }
+    const mx = Math.max(m.v[0], m.v[1], m.v[2], m.v[3], m.v[4]);
+    if (mx < 4) { delete st.mot[key]; continue; }
+    if ((st.cd[key] ?? 0) > s.week || (st.ca[A] ?? 0) > s.week) continue;
+    const th = th18(s, A);
+    if (mx < th) { delete m.t0; continue; }
+    m.t0 ??= s.week;
+    cands.push({ key, A, T, m, mx, th });
   }
-  for (const [k, x] of Object.entries(st.inc)) if (x.until < s.week) delete st.inc[k];
-  const ks = Object.keys(st.cd);
-  if (ks.length > 800) for (const k of ks) if (st.cd[k] <= s.week) delete st.cd[k];
+  if (keys.length > 700) {
+    const weak = Object.entries(st.mot).sort((a, b) => Math.max(...a[1].v) - Math.max(...b[1].v) || (a[0] < b[0] ? -1 : 1)).slice(0, keys.length - 600);
+    for (const [k] of weak) delete st.mot[k];
+  }
+  cands.sort((a, b) => b.mx - a.mx || (a.key < b.key ? -1 : 1));
+  const cap = Math.max(1, Math.min(8, Math.round(4 * pm * dir17(s).world)));
+  const mood = moodFn(s);
+  let hostileMine = false;
+  for (const c of cands) {
+    if (out.length >= cap) break;
+    if ((st.ca[c.A] ?? 0) > s.week || !st.mot[c.key]) continue;
+    if (!alive(s, c.A) || !alive(s, c.T) || shielded(s, c.A) || shielded(s, c.T)) { delete st.mot[c.key]; continue; }
+    const calc = isCalc18(s, c.A);
+    let how: L;
+    if (calc) {
+      const mo = moment18(s, c.A, c.T);
+      if (!mo && c.mx < 90 && s.week - (c.m.t0 ?? s.week) < 26) continue;
+      how = mo ?? (c.mx >= 90 ? l('não aguentou mais esperar', 'couldn\'t wait any longer') : l('esperou meses pela hora certa', 'waited months for the right moment'));
+    } else how = l('por impulso', 'on impulse');
+    if (!r.chance(clamp(0.3 + (c.mx - c.th) / 45, 0.2, 0.95))) continue;
+    const p = chooseM18(s, c.A, c.T, mvOf(c.m), r, mood);
+    if (!p) continue;
+    if (p.v.harm && playerSide18(s, c.T) && hostileMine) continue;
+    p.why = fmtL(l('{w} — {x}', '{w} — {x}'), { w: c.m.why, x: how });
+    const row = act18(s, p, r);
+    if (!row) continue;
+    if (p.v.harm && playerSide18(s, c.T)) hostileMine = true;
+    out.push(row);
+    for (const k of Object.keys(p.v.m ?? { g: 1 }) as Motive18[]) c.m.v[MK18.indexOf(k)] *= 0.3; // a pressão usada se desfaz
+    st.ca[c.A] = s.week + (calc ? 13 : 6);
+  }
+  for (const box of [st.cd, st.ca]) { const ks = Object.keys(box); if (ks.length > 800) for (const k of ks) if (box[k] <= s.week) delete box[k]; }
   return out;
 }
-
-/** Fase do Mestre (dm18 registra): clímax = mais iniciativas. */
-let phaseMult: (s: GameState) => number = () => 1;
-export const setAgencyPhase18 = (fn: (s: GameState) => number): void => { phaseMult = fn; };
 
 registerSimHook('month', 'agency18', (s) => { agencyMonth18(s, Rng.fromSeed(`${s.config.seed}:ag18:${s.week}`)); });
 
 // ---------------------------------------------------------------- respostas do jogador
 
+const negP = (s: GameState, A: string): number => clamp(0.3 + ((per13(s, 'player')?.attrs.neg ?? 50) - 50) / 150 + relOf18(s, A, 'player') / 250, 0.1, 0.85);
+function respOpts(s: GameState, v: Verb18, A: string, pend: boolean): { id: string; label: L }[] {
+  const tone = toneOf18(v);
+  const ign = { id: 'ignore', label: l('Ignorar', 'Ignore') };
+  const np = `${Math.round(negP(s, A) * 100)}%`;
+  if (tone === 'bad') return [
+    { id: 'negotiate', label: v.id === 'sue' || v.id === 'plagiarism' ? fmtL(l('Fazer acordo ({v})', 'Settle ({v})'), { v: usd18(money(s, 12000)) }) : v.id === 'blackmail' ? fmtL(l('Pagar para calar ({v})', 'Pay for silence ({v})'), { v: usd18(money(s, 15000)) }) : fmtL(l('Chamar para conversar ({p})', 'Invite for a talk ({p})'), { p: np }) },
+    { id: 'retaliate', label: l('Revidar em público', 'Retaliate in public') }, ign];
+  if (pend) return [{ id: 'accept', label: l('Aceitar', 'Accept') }, ...(tone === 'neutral' ? [{ id: 'negotiate', label: fmtL(l('Negociar ({p})', 'Negotiate ({p})'), { p: np }) }] : []), { id: 'decline', label: l('Recusar', 'Decline') }, ign];
+  return [{ id: 'accept', label: l('Agradecer em público', 'Thank them in public') }, { id: 'decline', label: l('Recusar o gesto', 'Turn the gesture down') }, ign];
+}
+
+function badResp(s: GameState, A: string, T: string, v: string, act: Resp18, r: Rng): L {
+  const nm = N(s, A);
+  if (act === 'retaliate') {
+    adjRel18(s, A, 'player', -10, l('Resposta pública', 'Public answer'));
+    const a = actOfKey18(s, T), b = actOfKey18(s, A);
+    if (a) addHype(s, `a:${a.id}`, 'ag18ret', l('Resposta à altura', 'A fitting reply'), 6);
+    if (a && b) startFeud18(s, b.id, a.id, fmtL(l('Você respondeu {a} em público', 'You answered {a} in public'), { a: nm }), 14);
+    emitFact(s, { kind: 'statement', actors: ['player', hid18(A)], severity: 30, visibility: 'public', tags: ['ag18', 'reply'], text: fmtL(l('{c} responde {a} à altura.', '{c} hits back at {a}.'), { c: s.config.companyName, a: nm }), src: 'agency18' });
+    return fmtL(l('Você revidou {a}: hype para o seu lado, mas a briga esquenta (e {a} guarda mais mágoa).', 'You hit back at {a}: hype for your side, but the fight heats up (and {a} holds a bigger grudge).'), { a: nm });
+  }
+  if (act === 'negotiate') {
+    if (v === 'sue' || v === 'plagiarism') { const c = money(s, 12000); post(s, `ag18settle:${A}`, -c, 'legal', 'Acordo judicial'); adjRel18(s, A, 'player', 10, l('Acordo', 'Settlement')); return l('Acordo fechado: caro, mas silencioso.', 'Settled: expensive, but quiet.'); }
+    if (v === 'blackmail') { const c = money(s, 15000); post(s, `ag18pay:${A}`, -c, 'legal', 'Silêncio comprado'); grantHold(s, { holder: hid18(A), target: 'player', kind: 'blackmail', strength: 50, months: 60, src: 'agency18', text: l('Já pagou uma vez — pode pagar de novo', 'Paid once — may pay again'), quiet: true }); return l('Pago. O segredo fica guardado… por enquanto.', 'Paid. The secret stays buried… for now.'); }
+    const p = clamp(0.35 + (F(s, A, 'empatia') - 50) / 150 + (opinionOf(s, A) + 50) / 300, 0.08, 0.85);
+    if (r.chance(p)) { adjRel18(s, A, 'player', 25, l('Conversa franca', 'Frank talk')); voidHolds(s, (h) => h.kind === 'grievance' && h.holder === hid18(A) && h.target === 'player'); delete ag18(s).mot[`${A}>player`]; return fmtL(l('{a} aceita conversar: mágoa encerrada ({p}% de chance).', '{a} agrees to talk: grudge settled ({p}% chance).'), { a: nm, p: Math.round(p * 100) }); }
+    adjRel18(s, A, 'player', -5, l('Recusou conversar', 'Refused to talk'));
+    return fmtL(l('{a} não atende ({p}% de chance).', '{a} won\'t pick up ({p}% chance).'), { a: nm, p: Math.round(p * 100) });
+  }
+  if (v === 'blackmail') {
+    const h = hasOf(s, hid18(A)).find((x) => x.kind === 'secret' && x.status === 'open' && x.target === 'player');
+    if (h) { const u = useHold(s, h.id, 'expose'); const a = actOfKey18(s, T); if (a) scandal(s, a.id, 'conduct', 35, u.text, { tags: ['ag18'] }); return fmtL(l('Você ignorou — {a} cumpriu a ameaça: {x}', 'You ignored it — {a} followed through: {x}'), { a: nm, x: u.text }); }
+  }
+  if (v === 'sue' || v === 'plagiarism') { const lose = r.chance(0.45); if (lose) { const c = money(s, 20000); post(s, `ag18lost:${A}`, -c, 'legal', 'Processo perdido'); return l('Você ignorou o processo e perdeu à revelia.', 'You ignored the suit and lost by default.'); } return l('O processo morreu na justiça.', 'The suit died in court.'); }
+  return l('Você deixou passar. Às vezes o silêncio vence; às vezes parece fraqueza.', 'You let it go. Sometimes silence wins; sometimes it looks weak.');
+}
+
 registerInboxKind('agency18', {
-  label: l('Ataque', 'Attack'), cat: 'people', icon: 'warning', prio: 2,
+  label: l('Iniciativa', 'Initiative'), cat: 'people', icon: 'warning', prio: 2,
   goto: (_s, m) => (m.ref?.A ? { person: String(m.ref.A) } : null),
   handle: (s, m, action, r) => {
-    const A = String(m.ref?.A ?? ''), T = String(m.ref?.T ?? 'player'), v = String(m.ref?.v ?? '');
+    const A = String(m.ref?.A ?? ''), T = String(m.ref?.T ?? 'player'), vid = String(m.ref?.v ?? '');
+    const v = VERBS18.find((x) => x.id === vid);
+    const act = (({ retort: 'retaliate', peace: 'negotiate', settle: 'negotiate', pay: 'negotiate' } as Record<string, Resp18>)[action] ?? action) as Resp18;
     const nm = N(s, A);
-    if (action === 'retort') {
-      adjRel18(s, A, 'player', -10, l('Resposta pública', 'Public answer'));
-      const a = actOfKey18(s, T), b = actOfKey18(s, A);
-      if (a) addHype(s, `a:${a.id}`, 'ag18ret', l('Resposta à altura', 'A fitting reply'), 6);
-      if (a && b) startFeud18(s, b.id, a.id, fmtL(l('Você respondeu {a} em público', 'You answered {a} in public'), { a: nm }), 14);
-      emitFact(s, { kind: 'statement', actors: ['player', hid18(A)], severity: 30, visibility: 'public', tags: ['ag18', 'reply'], text: fmtL(l('{c} responde {a} à altura.', '{c} hits back at {a}.'), { c: s.config.companyName, a: nm }), src: 'agency18' });
-      return fmtL(l('Você respondeu {a}: hype para o seu lado, mas a briga esquenta.', 'You answered {a}: hype for your side, but the fight heats up.'), { a: nm });
+    if (!alive(s, A)) return l('Não há mais com quem tratar.', 'There is no one left to deal with.');
+    const sp = v?.resp?.[act];
+    if (sp) return sp(s, A, T, r);
+    if (!v || toneOf18(v) === 'bad') return badResp(s, A, T, vid, act, r);
+    const ego = F(s, A, 'ego');
+    if (m.ref?.pend) {
+      if (act === 'accept') { const res = v.run(s, A, T, r); adjRel18(s, A, T, 6, l('Proposta aceita', 'Offer accepted')); return res.t; }
+      if (act === 'negotiate') {
+        const p = negP(s, A);
+        if (r.chance(p)) { const res = v.run(s, A, T, r); adjRel18(s, A, T, 3, l('Bom acordo', 'Good deal')); const a = actOfKey18(s, T); if (a) a.momentum = clamp(a.momentum + 2, 0, 100); return fmtL(l('Você negociou termos melhores ({p}%): {t}', 'You got better terms ({p}%): {t}'), { p: Math.round(p * 100), t: res.t }); }
+        adjRel18(s, A, T, -6, l('Contraproposta', 'Counteroffer'));
+        return fmtL(l('{a} não gostou da contraproposta ({p}% de chance) e desistiu.', '{a} didn\'t like the counteroffer ({p}% chance) and walked away.'), { a: nm, p: Math.round(p * 100) });
+      }
+      if (act === 'decline') { const d = 3 + Math.round(ego / 25); adjRel18(s, A, T, -d, l('Recusou a proposta', 'Declined the offer')); return fmtL(l('Você recusou. {a} anota (relação −{d}; quanto mais ego, mais dói).', 'You declined. {a} takes note (relation −{d}; the bigger the ego, the more it stings).'), { a: nm, d }); }
+      adjRel18(s, A, T, -3, l('Sem resposta', 'No answer'));
+      return fmtL(l('Sem resposta. {a} entende o recado (relação −3).', 'No answer. {a} gets the message (relation −3).'), { a: nm });
     }
-    if (action === 'settle') { const c = money(s, 12000); post(s, `ag18settle:${A}`, -c, 'legal', 'Acordo judicial'); adjRel18(s, A, 'player', 10, l('Acordo', 'Settlement')); return l('Acordo fechado: caro, mas silencioso.', 'Settled: expensive, but quiet.'); }
-    if (action === 'pay') { const c = money(s, 15000); post(s, `ag18pay:${A}`, -c, 'legal', 'Silêncio comprado'); grantHold(s, { holder: hid18(A), target: 'player', kind: 'blackmail', strength: 50, months: 60, src: 'agency18', text: l('Já pagou uma vez — pode pagar de novo', 'Paid once — may pay again'), quiet: true }); return l('Pago. O segredo fica guardado… por enquanto.', 'Paid. The secret stays buried… for now.'); }
-    if (action === 'peace') {
-      const p = clamp(0.35 + (F(s, A, 'empatia') - 50) / 150 + (opinionOf(s, A) + 50) / 300, 0.08, 0.85);
-      if (r.chance(p)) { adjRel18(s, A, 'player', 25, l('Conversa franca', 'Frank talk')); voidHolds(s, (h) => h.kind === 'grievance' && h.holder === hid18(A) && h.target === 'player'); return fmtL(l('{a} aceita conversar: mágoa encerrada ({p}% de chance).', '{a} agrees to talk: grudge settled ({p}% chance).'), { a: nm, p: Math.round(p * 100) }); }
-      adjRel18(s, A, 'player', -5, l('Recusou conversar', 'Refused to talk'));
-      return fmtL(l('{a} não atende ({p}% de chance).', '{a} won\'t pick up ({p}% chance).'), { a: nm, p: Math.round(p * 100) });
-    }
-    if (v === 'blackmail') {
-      const h = hasOf(s, hid18(A)).find((x) => x.kind === 'secret' && x.status === 'open' && x.target === 'player');
-      if (h) { const u = useHold(s, h.id, 'expose'); const a = actOfKey18(s, T); if (a) scandal(s, a.id, 'conduct', 35, u.text, { tags: ['ag18'] }); return fmtL(l('Você ignorou — {a} cumpriu a ameaça: {x}', 'You ignored it — {a} followed through: {x}'), { a: nm, x: u.text }); }
-    }
-    if (v === 'sue') { const lose = r.chance(0.45); if (lose) { const c = money(s, 20000); post(s, `ag18lost:${A}`, -c, 'legal', 'Processo perdido'); return l('Você ignorou o processo e perdeu à revelia.', 'You ignored the suit and lost by default.'); } return l('O processo morreu na justiça.', 'The suit died in court.'); }
-    return l('Você deixou passar. Às vezes o silêncio vence; às vezes parece fraqueza.', 'You let it go. Sometimes silence wins; sometimes it looks weak.');
+    if (act === 'accept') { adjRel18(s, A, T, 8, l('Agradeceu em público', 'Thanked in public')); const a = actOfKey18(s, T); if (a) addHype(s, `a:${a.id}`, 'ag18thx', l('Gratidão pública', 'Public gratitude'), 2); return fmtL(l('Você agradeceu {a} em público: relação +8, hype +2.', 'You thanked {a} in public: relation +8, hype +2.'), { a: nm }); }
+    if (act === 'decline') { adjRel18(s, A, T, -8, l('Gesto recusado', 'Gesture refused')); return fmtL(l('Você recusou o gesto de {a}: orgulho ferido (relação −8).', 'You turned down {a}\'s gesture: wounded pride (relation −8).'), { a: nm }); }
+    adjRel18(s, A, T, -2, l('Nem agradeceu', 'No thanks'));
+    return fmtL(l('Você não respondeu a {a} (relação −2).', 'You didn\'t answer {a} (relation −2).'), { a: nm });
   },
 });
 
@@ -536,5 +779,6 @@ function topRival(s: GameState): string | undefined {
   return lb ? `l:${s.labels[lb].leaderId}` : undefined;
 }
 
-export const _ag18 = { recentFacts, raiseVisibility, actors, targets };
+export const _ag18 = { recentFacts, raiseVisibility, circle, keyOf18 };
 export type { Feud18 };
+export const H18 = { fac, fact, isMineAct, live };
