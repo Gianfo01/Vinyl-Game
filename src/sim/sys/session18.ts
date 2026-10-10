@@ -14,7 +14,7 @@ import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { bumpPerks, registerPerkSource, type PerkEntry } from '../perks';
 import { langForCity, personName } from '../people';
 import type { GameState } from '../types';
-import { fmtL, money, notify, playerActs, post } from '../util';
+import { fmtL, money, playerActs, post } from '../util';
 import { familyOf } from '../../data/world';
 import { w4 } from './world4/state';
 

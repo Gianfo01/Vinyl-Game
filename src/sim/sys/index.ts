@@ -198,3 +198,10 @@ import './dmsits18';
 import './econ18';
 import './contracts18';
 import './eras18';
+// Rodada 18 (talent18, onda 1): relíquias criadas no jogo + mais reais, descoberta por canais/demos, camps e pitching, banda da casa, escolas e TV de talentos.
+import './relics18';
+import './discover18';
+import './camps18';
+import './session18';
+import './school18';
+import './tv18';
