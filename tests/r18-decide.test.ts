@@ -11,6 +11,11 @@ import { dec18, fire18, pending18 } from '../src/sim/sys/decide18';
 import { P } from '../src/sim/sys/people/state';
 import { playerActs, rngOf } from '../src/sim/util';
 import type { GameState } from '../src/sim/types';
+import { explain18 } from '../src/sim/explain18';
+import { LINKS18, feudBoost18, heartBoost18, tensionPen18 } from '../src/sim/sys/links18';
+import { feud18, startFeud18 } from '../src/sim/sys/feud18';
+import { emitFact } from '../src/sim/facts17';
+import { applyMods } from '../src/sim/ext4';
 import '../src/sim/sys';
 
 const myAct = (s: GameState) => {
@@ -113,5 +118,22 @@ describe('r18 decide', () => {
     const pl = dec18(s).pl;
     expect(pl.cash.length).toBeGreaterThanOrEqual(3);
     expect(pl.last).toBeTruthy();
+  });
+
+  it('integração: 15+ ligações com porquê; rixa vende, separação inspira, mágoa derruba show', () => {
+    expect(LINKS18.length).toBeGreaterThanOrEqual(15);
+    const s = createGame(defaultConfig('r18-dec-6'));
+    advanceMonth(s);
+    for (const x of LINKS18) expect(explain18(s, 'link18', { id: x.id })).toBeTruthy();
+    const a = myAct(s);
+    const other = Object.values(s.acts).find((x) => x.id !== a.id && x.members.length && x.status !== 'retired')!;
+    const fd = startFeud18(s, a.id, other.id, { pt: 'x', en: 'x' }, 50);
+    if (fd) { fd.st = 2; fd.h = 50; } else feud18(s).f.push({ id: 'fx', a: a.id, b: other.id, h: 50, st: 2, since: s.week, last: s.week, why: { pt: 'x', en: 'x' }, hist: [] } as never);
+    expect(feudBoost18(s, a.id)).toBeGreaterThan(0);
+    emitFact(s, { kind: 'breakup', actors: [a.members[0]], severity: 30, text: { pt: 'fim', en: 'end' }, src: 'test' });
+    expect(heartBoost18(s, a)).toBeGreaterThan(0);
+    expect(applyMods(s, 'songQ', 50, { act: a }).factors.some((f) => f.label.pt.includes('fossa'))).toBe(true);
+    for (const id of a.members) s.persons[id].resentment = 80;
+    expect(tensionPen18(a, s)).toBeGreaterThan(0);
   });
 });

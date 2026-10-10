@@ -15,6 +15,7 @@ import { $, inspect, monthName, rerender, toast } from '../common';
 import { h } from '../dom';
 import { AFTER_ADVANCE } from '../registry';
 import { store } from '../store';
+import { pendingView18 } from './decide18';
 import { ic } from '../vis';
 import './home18.css';
 
@@ -162,7 +163,7 @@ export function home18(s: GameState): HTMLElement {
     h('div', { class: 'hm18-row' }, urgency(s), quick()),
     pulse(s),
     highlights(s),
-    h('div', { class: 'hm18-grid' }, timeline(s), h('div', { class: 'hm18-side' }, spotlight(s), roster(s))));
+    h('div', { class: 'hm18-grid' }, timeline(s), h('div', { class: 'hm18-side' }, spotlight(s), roster(s), pendingView18(s, 4))));
 }
 
 /** Resumo ao avançar o mês (toast com deltas do pulso). */
