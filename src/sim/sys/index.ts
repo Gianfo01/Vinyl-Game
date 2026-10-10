@@ -187,3 +187,6 @@ import './start17';
 import './why18';
 import './inbox18';
 import './personact18';
+// Rodada 18 (art18): qualidade multidimensional e trajetória artística (cada disco muda o próximo).
+import './quality18';
+import './traj18';
