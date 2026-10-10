@@ -14,7 +14,7 @@ import { emitFact } from '../facts17';
 import type { GameState, Release } from '../types';
 import { fmtL, money, post } from '../util';
 
-export type OutId = 'jukebox_ops' | 'rack' | 'eight_track' | 'record_club' | 'indie_shops' | 'mall_chain' | 'bigbox_excl' | 'mp3_store' | 'direct' | 'video' | 'streaming' | 'window' | 'platform_excl' | 'short_video' | 'vinyl_special';
+export type OutId = 'jukebox_ops' | 'rack' | 'eight_track' | 'record_club' | 'indie_shops' | 'mall_chain' | 'bigbox_excl' | 'mp3_store' | 'direct' | 'video' | 'streaming' | 'window' | 'platform_excl' | 'short_video' | 'vinyl_special' | 'phono_dealers' | 'mail_order' | 'vaud_plug';
 export interface OutDef { id: OutId; name: L; desc: L; from: number; to: number; reach: number; margin: number; fee: number; upfront?: number; cred?: number; youth?: number; single?: boolean; excl?: OutId[]; fam?: string[] }
 export const OUTLETS: OutDef[] = [
   { id: 'jukebox_ops', name: l('Operadoras de jukebox', 'Jukebox operators'), desc: l('Compactos em bares e lanchonetes: vende o single e espalha o nome.', 'Singles in bars and diners: sells the single and spreads the name.'), from: 1940, to: 1985, reach: 0.07, margin: -0.1, fee: 1500, single: true, youth: 1 },
@@ -33,6 +33,12 @@ export const OUTLETS: OutDef[] = [
   { id: 'short_video', name: l('Campanha de vídeo curto', 'Short-video campaign'), desc: l('Criadores usam o refrão: viraliza ou some.', 'Creators use the hook: goes viral or vanishes.'), from: 2018, to: 2100, reach: 0.12, margin: 0, fee: 3000, youth: 2 },
   { id: 'vinyl_special', name: l('Edição especial em vinil', 'Special vinyl edition'), desc: l('Vinil colorido numerado: colecionadores pagam caro.', 'Numbered colored vinyl: collectors pay a premium.'), from: 2010, to: 2100, reach: 0.02, margin: 0.3, fee: 4000, cred: 1 },
 ];
+// r18 era1889: canais da era acústica (antes das lojas de discos e do rádio)
+OUTLETS.push(
+  { id: 'vaud_plug', name: l('Plugar no circuito de vaudeville', 'Plug it on the vaudeville circuit'), desc: l('Pagar astros dos circuitos Keith e Orpheum para cantar a canção: a partitura voa, a margem cai.', 'Pay stars on the Keith and Orpheum circuits to sing the song: sheet music flies, margin drops.'), from: 1889, to: 1930, reach: 0.06, margin: -0.04, fee: 900, fam: ['pop', 'blues_jazz'] },
+  { id: 'phono_dealers', name: l('Lojas de máquinas falantes', 'Talking-machine dealers'), desc: l('Revendedores de fonógrafos e Victrolas tocam o suplemento do mês para o freguês.', 'Phonograph and Victrola dealers play the monthly supplement for customers.'), from: 1897, to: 1950, reach: 0.05, margin: 0, fee: 300 },
+  { id: 'mail_order', name: l('Catálogo por correio (Sears)', 'Mail-order catalog (Sears)'), desc: l('O catálogo chega à fazenda: alcance rural enorme, desconto pesado.', 'The catalog reaches the farm: huge rural reach, heavy discount.'), from: 1897, to: 1935, reach: 0.07, margin: -0.08, fee: 500, fam: ['pop', 'sacred', 'country_folk'] },
+);
 export const outDef = (id: string) => OUTLETS.find((x) => x.id === id);
 /** Canais que definem a venda inteira (streaming, janela, exclusivas) vs. laterais (fatia ~ 4× o alcance extra). */
 const WHOLE17: OutId[] = ['streaming', 'window', 'platform_excl', 'bigbox_excl'];
