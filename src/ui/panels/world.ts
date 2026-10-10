@@ -229,7 +229,7 @@ function cityCard(s: GameState, cityId: string): HTMLElement {
     h('div', { class: 'row between' },
       h('h4', null, ic('globe'), ' ', t(city.name)),
       h('button', { class: 'btn small ghost', 'aria-label': t(l('Fechar', 'Close')), onclick: () => { focusCity = null; rerender(); } }, '×')),
-    h('div', { class: 'muted small' }, `${unit ? t(unit.name) : ''} · ${t(mkt.name)} · ${t(cl.name)} ${Math.round(cl.tempC)} °C`),
+    h('div', { class: 'muted small' }, [...new Set([unit ? t(unit.name) : '', t(mkt.name)].filter(Boolean))].join(' · ') + ` · ${t(cl.name)} ${Math.round(cl.tempC)} °C`),
     chips(
       stat('fans', N(fans.reduce((t2, [, v]) => t2 + v, 0)), l('Seus fãs potenciais', 'Your potential fans')),
       stat('fire', sceneOf(s, cityId).toFixed(1), l('Força da cena', 'Scene strength')),
