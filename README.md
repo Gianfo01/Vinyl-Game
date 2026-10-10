@@ -2,7 +2,7 @@
 
 
 *(antes chamado "Vinyl to Neural")*
-Simulador de gestão musical em turnos mensais, de 1920 a 2040: da goma-laca às vozes neurais.
+Simulador de gestão musical em turnos mensais, de 1889 a 2040: do cilindro de cera às vozes neurais.
 Esta é a primeira versão jogável construída a partir do **GDD v8**, do **Catálogo do Universo** e da
 **Pesquisa de design**. Roda no navegador, sem servidor, em PT-BR e EN.
 
@@ -18,7 +18,7 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 
 ## Como jogar (resumo)
 
-1. **Nova run**: escolha papel (Gravadora, Artista/banda ou Híbrido), cenário, ano (1920, 1950, 1962,
+1. **Nova run**: escolha papel (Gravadora, Artista/banda ou Híbrido), cenário, ano (1889, 1902, 1920, 1950, 1962,
    1980, 2000 ou 2030), cidade-sede, modo de mundo (Histórico, Livre, Caos), narrador (Maestro, Brisa,
    Acaso), Carta do Selo, mutators, dificuldade, seed e filtros de conteúdo.
 2. **Mesa do mês** (tecla 1): briefing de até 5 itens, cartões de decisão, ofertas, metas e rumores.
@@ -305,3 +305,10 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 
 ## Rodada 17
 Resumo completo em [docs/rodada17.md](docs/rodada17.md): fatos/obrigações/estresse/escândalos integrados, diretor criativo com situações e mundo vivo, crime, vida pessoal (sexualidade, amor, filhos, envelhecimento), imprensa e boatos, dados reais (relíquias, peso cultural, estilos), negócios (venda do selo, canais, casas de show, licenças, direitos de imagem, merch), agenda e contratações, menu reformado, novo início com cenários e saves na nuvem, cenas interativas e popups no mapa.
+
+## Rodada 18 — era acústica (1889–1919)
+- Início em qualquer ano de 1889 a 2039 (eras nomeadas 1889, 1895, 1901, 1902, 1910, 1914, 1917; cenários "Columbia: Washington, 1889", "Casa Edison: Rio de Janeiro, 1902" e "Tin Pan Alley: Nova York, 1910").
+- Formatos da época: cilindro de cera (até ~1929), disco de goma-laca depois de Berliner (1895), rolo de pianola (1896–1931) e a partitura como a fatia não física antes do rádio; guerra dos formatos (o cilindro perde demanda a partir de 1905) e guerra de patentes (licenciar 6% ou arriscar liminar).
+- Gravação acústica (corneta, sem microfone): vozes potentes, metais e banjo gravam bem; cordas e vozes suaves somem. Song pluggers do Tin Pan Alley e salões de fonógrafo a moedas (1889–1905).
+- Economia: índice de preços desde 1889 (deflação dos anos 1890, inflação da guerra), sem imposto de renda de empresa antes de 1909, crédito mais caro antes do Federal Reserve (1914), royalty mecânico só depois da Lei de 1909, ASCAP/PRS em 1914.
+- Mundo real: ~14 gêneros novos (canção de salão, marcha, vaudeville, barbershop, ópera, spirituals, opereta, klezmer, flamenco, polca, maxixe, modinha, habanera, teatro de menestréis — este explicado como racismo da época e em declínio) e datas reais para ragtime (1897), blues (1912), jazz (1917), samba (1917), tango (1897); ~40 artistas reais (Caruso, Sousa, Joplin, Billy Murray, Bert Williams, Al Jolson, Chiquinha Gonzaga, Bahiano, ODJB…), 15 gravadoras reais nas datas de fundação (Columbia 1889, Pathé 1894, Berliner 1895, Edison 1896, Gramophone 1897, Casa Edison 1900, Victor 1901, Odeon 1903, Okeh 1918…) com fusões reais no modo exato, Gaisberg/Calvin Child, Hammerstein/Ziegfeld/Keith, relíquias (fonógrafo de folha de estanho, quadro do Nipper, matrizes de Caruso), imprensa (Billboard 1894, Variety 1905, Talking Machine World), impérios (Áustria-Hungria, Império Russo, Otomano), populações desde 1890, pânicos de 1893/1907, Grande Guerra, gripe espanhola e a linha do tempo em Mundo › Era acústica.
