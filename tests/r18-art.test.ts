@@ -6,7 +6,6 @@ import { playMonth } from '../src/sim/playbot16';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import type { Act, GameState, Release, Song } from '../src/sim/types';
-import { playerActs } from '../src/sim/util';
 import { PRODUCERS } from '../src/sim/studio';
 import { DIMS18, appealMult18, bestOrder18, criticAdj18, curveMult18, dims18, prodFit18, rawness18, sequence18 } from '../src/sim/sys/quality18';
 import { ensureT18, expectCritic18, outcome18, trajView18, suggestDir18 } from '../src/sim/sys/traj18';

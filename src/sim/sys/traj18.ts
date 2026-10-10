@@ -163,7 +163,6 @@ registerSimHook('launch', 'traj18', (s, _r, a) => {
   for (const x of livedThemes18(s, act)) t.th[x.id] = (t.th[x.id] ?? 0) + 1;
   if (t.expect >= 65 && act.owner === 'player') remember(s, 'traj18', fmtL(l('"{r}" chega sob expectativa enorme: crítica e fãs vão comparar com o que {a} já fez.', '"{r}" arrives under huge expectations: critics and fans will compare it with {a}\'s past.'), { r: rel.title, a: act.name }), { actId: act.id });
   t.react = undefined; // a reação valeu para este disco
-  t.line = t.line === 'calm' || t.line === 'ride' ? undefined : t.line;
   t.pend.push(rel.id);
 });
 
@@ -224,6 +223,7 @@ function evaluate(s: GameState, act: Act, t: T18, rel: Release): void {
   const r = new Rng(seedState(`${s.config.seed}:traj18:${rel.id}`));
   const { o, ratio, critic } = outcome18(s, rel);
   const first = Object.keys(t.out).length === 0;
+  t.line = undefined; // a escolha anterior (fórmula, liberdade, proteger, surfar) valeu para este disco
   t.studio = clamp(t.studio + (critic - t.studio) * 0.35, 0, 100);
   if (rel.q > 0) t.expect = clamp(t.expect + (rel.q - 55) * 0.15, 0, 100);
   const mine = act.owner === 'player';
