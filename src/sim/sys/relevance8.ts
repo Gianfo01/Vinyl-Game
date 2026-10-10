@@ -6,6 +6,7 @@
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize } from '../../data/countries';
 import { countryOfCity } from '../../data/geo';
 import { localPref, softPower } from '../../data/relevance';
+import { reachHook17 } from './reachhook17';
 import { clamp } from '../../core/rng';
 import { l } from '../../data/world';
 import { registerMod } from '../ext4';
@@ -28,7 +29,7 @@ export function reachMult(s: GameState, rel: Release): { mult: number; homeFrac:
   const homeSize = rel.territories.includes(info.market) ? countryMarketSize(info, s.year) : 0;
   const homeFrac = total > 0 ? clamp(homeSize / total, 0, 1) : 0;
   const local = clamp(localPref(home) / 1.6, 0.75, 1.35);
-  const abroad = 0.35 + 0.65 * softPower(home, s.year);
+  const abroad = 0.35 + 0.65 * Math.max(softPower(home, s.year), act ? reachHook17.f(s, act) : 0); // r17: exceções globais
   return { mult: homeFrac * local + (1 - homeFrac) * abroad, homeFrac, home };
 }
 

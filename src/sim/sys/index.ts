@@ -145,3 +145,6 @@ import './lineup16';
 import './bridge17';
 import './situations17';
 import './sits17';
+// Rodada 17 (E): alcance mundial (exceções globais, hit viral, one-hit wonder) e gêneros em alta pelas paradas.
+import './reach17';
+import './trends17';
