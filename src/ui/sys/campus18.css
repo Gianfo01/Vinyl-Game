@@ -2,7 +2,7 @@
 .c18-main { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; align-items: start; }
 @media (max-width: 860px) { .c18-main { grid-template-columns: 1fr; } }
 .c18-mapwrap { position: relative; }
-.c18-cv, .c18-thumb { width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; display: block; border-radius: 6px; background: #20242c; cursor: pointer; aspect-ratio: 300 / 268; }
+.c18-cv, .c18-thumb { width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; display: block; border-radius: 6px; background: #20242c; cursor: pointer; aspect-ratio: 300 / 226; }
 .c18-tip { position: absolute; pointer-events: none; background: rgba(20, 18, 24, 0.9); color: #f4ecd8; font-size: 12px; padding: 3px 6px; border-radius: 4px; white-space: nowrap; z-index: 2; }
 .c18-side { position: sticky; top: 8px; }
 .c18-insp { padding: 8px 10px; border: 1px solid var(--line, #444); border-radius: 6px; background: var(--card, rgba(127, 127, 127, 0.06)); }

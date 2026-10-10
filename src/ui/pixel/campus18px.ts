@@ -10,8 +10,8 @@ import { drawText, textWidth } from './font';
 import { LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, type Style18 } from '../../sim/sys/campus18';
 
 export const GW = 20, GH = 16;
-export const MW = 300, MH = 268;
-const OX = GH * 8 + 6, OY = 118, HZ = 58;
+export const MW = 300, MH = 226;
+const OX = GH * 8 + 6, OY = 76, HZ = 74;
 export const iso = (gx: number, gy: number): [number, number] => [OX + (gx - gy) * 8, OY + (gx + gy) * 4];
 /** Tela → grade (para o chão). */
 const unIso = (x: number, y: number): [number, number] => { const a = (x - OX) / 8, b = (y - OY) / 4; return [(a + b) / 2, (b - a) / 2]; };
@@ -177,7 +177,7 @@ function fp(b: Bld18, lw: number, ld: number): { w: number; d: number; H: number
 }
 
 /** Desenha um prédio num sprite próprio (cor + luzes) dentro do lote dado. */
-export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: number; d: number }, year: number, seed: number): Sprite18 {
+export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: number; d: number }, year: number, seed: number, brand = 'REC'): Sprite18 {
   const { w, d, H } = fp(b, lot.w, lot.d);
   const gx = lot.gx + (lot.w - w) / 2, gy = lot.gy + (lot.d - d) / 2;
   const [Nx] = iso(gx, gy + d), [Ex] = iso(gx + w, gy), [, Ny] = iso(gx, gy), [, Sy] = iso(gx + w, gy + d);
@@ -201,7 +201,8 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
   } else if (b.kind === 'fest') {
     t.poly([iso(gx, gy), iso(gx + w, gy), iso(gx + w, gy + d), iso(gx, gy + d)], (x, y) => (noise(x, y, 5) < 0.25 ? C('#6a5a3a') : C('#7a9a48')));
     const sw = Math.min(2.4, w * 0.5);
-    box(t, L, gx + 0.2, gy + 0.2, sw, 1.2, 10 + b.lvl * 2, 0, { st: 'brutal', seed, lit: 0, noWin: true, wall: C('#2a2a30'), roof: C('#3a3a44') });
+    box(t, L, gx + 0.2, gy + 0.2, sw, 1.2, 10 + b.lvl * 2, 0, { st: 'brutal', seed, lit: 0, noWin: true, wall: C('#4a4a56'), roof: C('#6a6a78') });
+    { const [ax, ay] = iso(gx + 0.2, gy + 1.4), [bx, by] = iso(gx + 0.2 + sw, gy + 1.4); for (let k = 0; k <= 8; k++) t.line(ax + (bx - ax) * k / 8, ay + (by - ay) * k / 8 - 10 - b.lvl * 2, ax + (bx - ax) * (k + 1) / 8, ay + (by - ay) * (k + 1) / 8 - (k % 2 ? 6 : 10 + b.lvl * 2), C('#c0c0c8')); }
     const [sx, sy] = iso(gx + 0.2 + sw / 2, gy + 1.4);
     for (let i = 0; i < 5; i++) L.set(sx - 6 + i * 3, sy - 10 - b.lvl * 2, [C('#ff4080'), C('#40c0ff'), C('#ffe040')][i % 3]);
     for (let i = 0; i < Math.min(5, 1 + b.lvl); i++) { const [x, y] = iso(gx + 0.6 + (i % 3) * (w / 3), gy + 1.9 + Math.floor(i / 3) * 1.2); t.poly([[x - 4, y], [x + 4, y], [x, y - 6]], i % 2 ? C('#f0f0f0') : C('#d04040')); t.line(x, y, x, y - 6, C('#a03030')); }
@@ -218,7 +219,7 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
     const bc = holo ? withAlpha(C('#60e0ff'), 170) : led ? C('#202838') : neon ? C('#2a1a2a') : C('#e8dcc0');
     t.rect(x - 9, y - 20, 18, 10, bc);
     const tx = holo ? C('#e0ffff') : led ? C('#40e0ff') : neon ? C('#ff60c0') : C('#a03020');
-    t.text('REC', x - 6, y - 18, tx);
+    t.text(brand, x - Math.round(textWidth(brand) / 2), y - 18, tx);
     if (neon) L.rect(x - 7, y - 19, 14, 7, withAlpha(tx, 120));
   } else {
     let HH = H;
@@ -240,6 +241,8 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
       box(t, L, gx, gy, w, d, HH, 0, o);
     }
     if (!building && b.st !== 'sold' && b.st !== 'closed') {
+      if (b.kind === 'hq') { const bw = textWidth(brand) + 4; t.rect(door[0] - bw / 2, door[1] - 15, bw, 7, C('#1a1214')); t.text(brand, door[0] - bw / 2 + 2, door[1] - 14, year >= 1925 ? C('#ffd060') : C('#f0e8d0')); L.rect(door[0] - bw / 2 + 1, door[1] - 14, bw - 2, 5, withAlpha(C('#ffd060'), 140));
+        const [fx, fy] = roofTop(gx, gy, w, d, H); t.line(fx - 4, fy, fx - 4, fy - 12, C('#d0d0d0')); t.rect(fx - 3, fy - 12, 6, 4, C('#d04040')); }
       if (b.kind === 'hq' && b.lvl <= 1) { for (let i = 0; i < 4; i++) t.line(Wx + 2, Wy - 2 - i * 1.5, Sx - 2, Sy2 - 2 - i * 1.5, C('#8a8a90')); }
       if (b.kind === 'venue') { // marquise com lâmpadas
         for (let u = 2; u < Sx - Wx - 2; u += 2) { t.set(Wx + u, Wy + u / 2 - 7, C('#f0e0a0')); L.set(Wx + u, Wy + u / 2 - 7, (u / 2) % 2 ? LIT : C('#ff8040')); }
@@ -348,14 +351,14 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>): HTMLCanvasEl
 
 export interface Scene18 { hl?: number; ground: HTMLCanvasElement; lights: HTMLCanvasElement; sprites: Sprite18[]; env: Env18; amb: { k: Amb18; at: string }[]; seed: number; lamps: [number, number][] }
 
-export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18, amb: { k: Amb18; at: string }[], seed: number): Scene18 {
+export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18, amb: { k: Amb18; at: string }[], seed: number, brand = 'REC'): Scene18 {
   const used = new Set<number>(lots.values());
   const sprites: Sprite18[] = [];
   for (const b of bs) {
     if (b.zone !== 'campus') continue;
     const n = lots.get(b.id) ?? b.lot;
     if (n === undefined || n < 0 || !LOTS18[n]) continue;
-    sprites.push(buildingSprite18(b, LOTS18[n], env.year, seed + n * 31));
+    sprites.push(buildingSprite18(b, LOTS18[n], env.year, seed + n * 31, brand));
   }
   sprites.sort((a, b) => a.depth - b.depth);
   const lights = document.createElement('canvas');
@@ -463,9 +466,9 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
 }
 
 /** Sprite isolado para a faixa "pelo mundo". */
-export function worldCanvas18(b: Bld18, year: number, seed: number): HTMLCanvasElement {
+export function worldCanvas18(b: Bld18, year: number, seed: number, brand = 'REC'): HTMLCanvasElement {
   const lot = { gx: 0, gy: 0, w: 4, d: 4 };
-  const s = buildingSprite18({ ...b, zone: 'campus' }, lot, year, seed);
+  const s = buildingSprite18({ ...b, zone: 'campus' }, lot, year, seed, brand);
   const c = document.createElement('canvas');
   c.width = 72; c.height = 76;
   const ctx = c.getContext('2d')!;

@@ -35,12 +35,14 @@ function makeView(s: GameState, year?: number): View {
   if (snap) {
     const bs = decode18(snap.b);
     const lots = new Map(bs.filter((b) => b.lot !== undefined).map((b) => [b.id, b.lot!] as [string, number]));
-    return { s, bs, year: snap.y, live: false, scene: buildScene18(bs, lots, env18(snap.y, 6, latOf(s)), [], hashSeed(s)) };
+    return { s, bs, year: snap.y, live: false, scene: buildScene18(bs, lots, env18(snap.y, 6, latOf(s)), [], hashSeed(s), brand18(s)) };
   }
   const bs = buildings18(s);
   const amb = ambient18(s);
-  return { s, bs, year: s.year, live: true, scene: buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s)), amb, hashSeed(s)) };
+  return { s, bs, year: s.year, live: true, scene: buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s)), amb, hashSeed(s), brand18(s)) };
 }
+/** Iniciais do selo (placa da sede e letreiro). */
+export const brand18 = (s: GameState): string => (s.config.companyName.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).map((w) => w[0]).join('').toUpperCase().slice(0, 3) || 'REC');
 const hashSeed = (s: GameState) => { let x = 7; for (const c of s.config.seed) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x % 9973; };
 
 /** Canvas animado (para enquanto visível; para sozinho quando sai do DOM). */
@@ -200,7 +202,7 @@ function campusArea(s: GameState): HTMLElement {
   const amb = v.live ? ambient18(s) : [];
   const worldStrip = world.length ? section(t(l('Pelo mundo', 'Around the world')),
     h('div', { class: 'c18-world' }, world.map((b) => {
-      const c = worldCanvas18(b, v.year, b.id.length * 13);
+      const c = worldCanvas18(b, v.year, b.id.length * 13, brand18(s));
       c.classList.add('px');
       return h('button', { class: `c18-wb ${ui.sel === b.id ? 'on' : ''}`, title: b.name, onclick: () => { ui.sel = b.id; insp.replaceChildren(inspector(v, b.id)); } }, c, h('small', null, b.name), h('small', { class: 'muted' }, cityLabel(b.city)));
     }))) : null;
