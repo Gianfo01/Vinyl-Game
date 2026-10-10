@@ -5,7 +5,7 @@
 import { Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { ag18, nameOfKey18, VERBS18 } from '../../sim/sys/agency18';
+import { ag18, nameOfKey18, toneOf18, VERBS18, type Tone18 } from '../../sim/sys/agency18';
 import { dm18, knownThreads18, PHASE18, THREADS18, type Thread18 } from '../../sim/sys/dm18';
 import { activeFeuds18, altHist18, ALT_NOTE18, cool18, feud18, feudsOf18, STAGE18, tryCool18, type Feud18 } from '../../sim/sys/feud18';
 import type { GameState } from '../../sim/types';
@@ -76,14 +76,20 @@ function feudRow(s: GameState, f: Feud18, mine: boolean): HTMLElement {
     mine ? h('div', { class: 'row wrap' }, btn('mediate', l('Mediação', 'Mediation')), btn('truce', l('Trégua', 'Truce')), btn('collab', l('Feat da paz', 'Peace feat'))) : null);
 }
 
-const PUBLIC_VERBS = new Set(['praise', 'diss', 'sue', 'poach', 'reconcile']);
+const TONE_CLS: Record<Tone18, string> = { good: 'good', neutral: '', bad: 'bad' };
 function agencyList(s: GameState): HTMLElement {
-  const rows = ag18(s).log.filter((r) => r.mine || PUBLIC_VERBS.has(r.v)).slice(0, 25);
-  if (!rows.length) return h('p', { class: 'muted small' }, t(l('Ninguém se mexeu ainda.', 'Nobody has moved yet.')));
-  return h('ul', { class: 'small' }, ...rows.map((r) => {
+  const st = ag18(s);
+  const rows = st.log.filter((r) => r.mine || !VERBS18.find((x) => x.id === r.v)?.hidden).slice(0, 25);
+  const nt = st.nt;
+  const mix = h('p', { class: 'small muted' }, t(l('Ninguém age "porque é o mês": cada iniciativa nasce de um fato (um sucesso alheio, uma traição, uma morte, um escândalo, um favor) que vira pressão — mágoa, gratidão, ambição, inveja, afeto — até passar do limiar da pessoa. Impulsivos agem na hora; calculistas esperam o momento certo.', 'Nobody acts "because it\'s that time of month": each initiative is born from a fact (someone else\'s hit, a betrayal, a death, a scandal, a favor) that builds pressure — grudge, gratitude, ambition, envy, affection — until it crosses the person\'s threshold. Impulsive people act at once; calculating ones wait for the right moment.')),
+    ' ', pill(`${t(l('boas', 'good'))} ${nt.good ?? 0}`, 'good'), ' ', pill(`${t(l('neutras', 'neutral'))} ${nt.neutral ?? 0}`, ''), ' ', pill(`${t(l('ruins', 'bad'))} ${nt.bad ?? 0}`, 'bad'));
+  if (!rows.length) return h('div', null, mix, h('p', { class: 'muted small' }, t(l('Ninguém se mexeu ainda.', 'Nobody has moved yet.'))));
+  return h('div', null, mix, h('ul', { class: 'small' }, ...rows.map((r) => {
     const v = VERBS18.find((x) => x.id === r.v);
-    return h('li', null, h('span', { class: 'muted' }, `${monthName(r.m)} ${r.y} `), pill(v ? t(v.name) : r.v, v?.harm ? 'bad' : 'good'), ' ', `${nameOfKey18(s, r.a)} → ${nameOfKey18(s, r.t)}: `, t(r.txt), r.mine ? pill(t(l('você', 'you')), 'warn') : null);
-  }));
+    const tone = r.tone ?? toneOf18(v);
+    return h('li', null, h('span', { class: 'muted' }, `${monthName(r.m)} ${r.y} `), pill(v ? t(v.name) : r.v, TONE_CLS[tone]), ' ', `${nameOfKey18(s, r.a)} → ${nameOfKey18(s, r.t)}: `, t(r.txt), r.mine ? pill(t(l('você', 'you')), 'warn') : null, r.pend ? pill(t(l('proposta', 'offer')), '') : null,
+      r.why ? h('div', { class: 'muted' }, `${t(l('Por quê', 'Why'))}: `, t(r.why)) : null);
+  })));
 }
 
 function area(s: GameState): HTMLElement {

@@ -389,11 +389,11 @@ function topActOf(s: GameState, lb: string, not: string): Act | undefined {
   return best;
 }
 
-const SUCC = new Set(['chart', 'award', 'signing', 'release', 'show', 'festival']);
+const SUCC = new Set(['chart', 'award', 'signing', 'release', 'show', 'festival', 'rise', 'masterwork', 'masterpiece', 'legend', 'comeback', 'revival']);
 const TROUBLE = new Set(['scandal', 'arrest', 'health', 'breakdown', 'rehab', 'addiction', 'stress', 'tour_cancel', 'case_ruling']);
-const HURT = new Set(['poach', 'law', 'secret_exposed', 'blackmail', 'plagiarism', 'hold_used', 'leak']);
+const HURT = new Set(['poach', 'law', 'secret_exposed', 'blackmail', 'plagiarism', 'hold_used', 'leak', 'crime', 'theft']);
 const KIND = new Set(['favor', 'forgiven']);
-const MUTUAL = new Set(['breakup', 'split', 'feud']);
+const MUTUAL = new Set(['breakup', 'split', 'feud', 'solo']);
 const JOY = new Set(['marriage', 'birth', 'romance']);
 
 /** Fato → pressão. Barato: só olha os atores do fato e as relações deles. */
@@ -435,9 +435,9 @@ export function motiveFromFact18(s: GameState, f: Fact): void {
     return;
   }
   if (JOY.has(k)) { for (const fr of circle(s, S, 1, 45, 3)) pushMotive18(s, fr, S, 'care', sev * 0.4, why, fid); return; }
-  if (SUCC.has(k) && (k === 'chart' || k === 'award' || k === 'signing' || tg.includes('good'))) {
-    for (const en of circle(s, S, -1)) pushMotive18(s, en, S, 'en', sev * 0.7, why, fid);
-    for (const fr of circle(s, S, 1, 45, 3)) pushMotive18(s, fr, S, 'care', sev * 0.35, why, fid);
+  if (SUCC.has(k) && (k !== 'release' && k !== 'show' && k !== 'festival' || tg.includes('good'))) {
+    for (const en of circle(s, S, -1)) pushMotive18(s, en, S, 'en', sev * 0.9, why, fid);
+    for (const fr of circle(s, S, 1, 45, 3)) { pushMotive18(s, fr, S, 'care', sev * 0.5, why, fid); pushMotive18(s, fr, S, 'am', sev * 0.55, why, fid); } // amigos querem pegar carona
     for (const o of O) { pushMotive18(s, S, o, 'gr', sev * 0.4, why, fid); pushMotive18(s, o, S, 'gr', sev * 0.4, why, fid); } // sucesso a dois (feat, turnê)
     const a = s.acts[f.actors.find((id) => s.acts[id]) ?? ''];
     if (a && a.fame >= 35 && sev >= 40) { const boss = rivalBoss(s, a); if (boss) pushMotive18(s, boss, S, 'am', sev * 0.6, why, fid); }
@@ -458,8 +458,8 @@ let phaseMult: (s: GameState) => number = () => 1;
 let moodFn: (s: GameState) => string = () => 'rising';
 export const setAgencyPhase18 = (fn: (s: GameState) => number, mood?: (s: GameState) => string): void => { phaseMult = fn; if (mood) moodFn = mood; };
 const TONE_BIAS: Record<string, Record<Tone18, number>> = {
-  calm: { good: 1.1, neutral: 1.3, bad: 0.7 }, rising: { good: 1, neutral: 1, bad: 1 },
-  climax: { good: 0.8, neutral: 0.8, bad: 1.4 }, resolution: { good: 1.5, neutral: 1, bad: 0.6 },
+  calm: { good: 1.1, neutral: 1.8, bad: 0.7 }, rising: { good: 1, neutral: 1.5, bad: 1 },
+  climax: { good: 0.8, neutral: 1, bad: 1.4 }, resolution: { good: 1.5, neutral: 1.2, bad: 0.6 },
 };
 
 function wOf(s: GameState, A: string, T: string, v: Verb18, mv: MV18): number {
@@ -544,7 +544,7 @@ export function act18(s: GameState, p: Plan18, r: Rng): Ag18Log | null {
 
 const isCalc18 = (s: GameState, A: string): boolean => F(s, A, 'disciplina') - F(s, A, 'impulsividade') > 8 || (F(s, A, 'ambicao') > 70 && F(s, A, 'impulsividade') < 45);
 /** Limiar de pressão para agir (impulsivos agem antes; o clímax do Mestre baixa o limiar). */
-export const th18 = (s: GameState, A: string): number => clamp(52 + (F(s, A, 'disciplina') - F(s, A, 'impulsividade')) / 5, 36, 72) / Math.sqrt(Math.max(0.3, phaseMult(s)));
+export const th18 = (s: GameState, A: string): number => clamp(42 + (F(s, A, 'disciplina') - F(s, A, 'impulsividade')) / 5, 30, 62) / Math.sqrt(Math.max(0.3, phaseMult(s)));
 /** O momento certo (para quem calcula): mesma cidade, mesmo selo, rixa aberta ou alvo fragilizado. */
 export function moment18(s: GameState, A: string, T: string): L | null {
   const a = actOfKey18(s, A), b = actOfKey18(s, T);
