@@ -123,5 +123,7 @@ import './pop17';
 import './scene17';
 // Rodada 18 (art18): trajetória artística (aba no artista) e qualidade em dimensões (disco e projeto).
 import './art18';
+// Rodada 18 (dm18, onda 1): Diário do Mestre (curva de tensão, fios, rixas, quem agiu contra quem) e aba Rixas no ato.
+import './dm18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';

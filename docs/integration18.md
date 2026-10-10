@@ -100,3 +100,15 @@ registerPersonAction({
 `emptyState18(o quê, por quê, ação?)`, `pager18(chave, itens, tamanho)` (lista longa → "mostrar mais/tudo"; usado no
 catálogo), `confirm18(...)` (só para o irreversível), `actQuick18(s, act)` (hype com porquê, alerta de estresse, página,
 elogiar o líder, dinâmica — na lista do elenco).
+
+## dm18 (onda 1) — qualquer um contra qualquer um, rixas e o Mestre
+
+| Módulo | Para quê |
+|---|---|
+| `src/sim/sys/feud18.ts` | **rixas** entre dois atos quaisquer: farpas → diss → guerra de faixas → confronto → briga → tiros (`startFeud18`, `heatFeud18`, `tryCool18` mediação/trégua/feat, `cool18` chance com porquê). `shield18(s, id)`/`altHist18(s)`: no modo exato gente real é protegida; nos outros, história alternativa. |
+| `src/sim/sys/agency18.ts` | **iniciativa de NPCs** (e dos seus artistas) contra qualquer chave persona13: `registerVerb18` (elogio, diss, boato, aliciar, processar, chantagear, expor, intimidar, sabotar, pazes, favor, caso), `choose18`/`act18`, `grudge18`/`relOf18`/`adjRel18`. Contra você → Caixa 2.0 (`agency18`, `feud18`). Ações novas no menu de pessoa: encomendar diss, mediar rixa, instigar contra rival. |
+| `src/sim/sys/dm18.ts` | **o Mestre**: curva de tensão (calmaria → tensão → clímax → resolução) que mexe no orçamento de situações, na escalada das rixas e na iniciativa dos NPCs; ganchos (`onFact('*')`) que voltam como lembrança; fios de campanha com estágios (`registerThread18`: segredo, mágoa, rival em ascensão, ascensão e queda, a conta chega, nêmesis, rixa, legado, sua jornada) e arcos de NPC (ascensão, queda, redenção, vingança). Respostas pela Caixa (`dm18`). |
+| `src/sim/sys/dmsits18.ts` | **32 situações combináveis** (8 motivos × 4 complicações, cenário por época) via `registerSituation`. |
+| `src/ui/sys/dm18.ts` | área **Mundo › Diário do Mestre** e aba **Rixas** no ato. |
+
+Regra de história (r18): `crime17` só bloqueia assassinato de gente real no modo "Vida real exata"; `crimenpc17` idem para as rixas de rua.

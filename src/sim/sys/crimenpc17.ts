@@ -2,7 +2,7 @@
 // ambição, coragem, impulsividade, empatia, disciplina, lealdade), pelas MÁGOAS (holds17) e pelas RIVALIDADES;
 // gravadoras se juntam em conluio (inclusive convidando você), traem e delatam. Planos contra você podem ser
 // descobertos pela sua segurança e viram cartão com opções. Rappers/funkeiros/corridistas ligados a gangues
-// criam rixas sangrentas (diss → briga → tiros, só entre personagens fictícios). Situações do diretor: pizzo,
+// criam rixas sangrentas (diss → briga → tiros; r18: com qualquer um fora do modo "Vida real exata"). Situações do diretor: pizzo,
 // carreira atrás das grades e a oferta de lavagem.
 
 import { clamp, Rng, seedState } from '../../core/rng';
@@ -25,6 +25,8 @@ import { relics } from './relics9';
 import { registerSituation } from './situations17';
 
 const F = (s: GameState, key: string, f: string): number => ((per13(s, key)?.facets as Record<string, number> | undefined)?.[f] ?? 50);
+/** r18: pessoa real protegida só no modo "Vida real exata" (nos outros, história alternativa). */
+const sr = (s: GameState, id: string): boolean => histMode(s) === 'strict' && isReal(s, id);
 const live = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.status !== 'split';
 const STREET = (g: string): boolean => familyOf(g) === 'hiphop' || ['funk_carioca', 'corridos_tumbados', 'norteno', 'dancehall', 'reggaeton', 'gfunk', 'drill', 'trap'].includes(g);
 const bestAct = (s: GameState, owner: string): Act | undefined =>
@@ -93,7 +95,7 @@ function concrete(s: GameState, c: string, enemy: string, actorId: string, r: Rn
   const d = crimeById(c)!;
   const a = bestAct(s, enemy);
   switch (d.tk) {
-    case 'person': { const p = leadOf(s, a); return p && !(d.violent && isReal(s, p)) && !(c === 'murder' && a && a.fame < 20) ? p : undefined; }
+    case 'person': { const p = leadOf(s, a); return p && !(d.violent && sr(s, p)) && !(c === 'murder' && a && a.fame < 20) ? p : undefined; }
     case 'act': return a?.id;
     case 'own_act': return bestAct(s, actorId)?.id;
     case 'label': return s.labels[enemy] ? enemy : undefined;
@@ -121,7 +123,7 @@ function plotMonth(s: GameState, r: Rng): void {
     if (!ch) continue;
     const target = concrete(s, ch.c, E.id, A.id, r, A.org);
     if (!target) continue;
-    if (ch.c === 'murder' && (isReal(s, A.id) || isReal(s, target))) continue;
+    if (ch.c === 'murder' && (sr(s, A.id) || sr(s, target))) continue;
     // conluio: outro selo que gosta do ator e também odeia o alvo
     const partners: string[] = [];
     if (s.labels[A.id]) {
@@ -135,7 +137,7 @@ function plotMonth(s: GameState, r: Rng): void {
         continue;
       }
     }
-    const ms = (crimeById(ch.c)?.methods ?? []).filter((m) => !(isReal(s, target) && (m.id === 'fire' || m.sev && m.sev >= 70)));
+    const ms = (crimeById(ch.c)?.methods ?? []).filter((m) => !(sr(s, target) && (m.id === 'fire' || m.sev && m.sev >= 70)));
     const ctx: Ctx17 = { actor: A.id, target, method: ms.length ? r.pick(ms).id : undefined, partners, org: A.org && ch.c !== 'chart_rig' ? A.org.id : undefined };
     if (ctx.method === 'plane' && famOf(s, target) < 30) ctx.method = 'accident';
     if (ch.c === 'murder') flags.c17mw = s.week;
@@ -287,13 +289,13 @@ function streetMonth(s: GameState, r: Rng): void {
       const [atk, vic, o] = r.chance(0.5) ? [a, b, oa] : [b, a, ob];
       const p = leadOf(s, vic), hot = leadOf(s, atk);
       // o próprio artista (fictício) parte para a briga com a gangue atrás: pode acabar preso
-      const doer = hot && !isReal(s, hot) && !(atk.owner === 'player' || atk.playerBand) ? hot : o.key;
-      if (p && !isReal(s, p)) commitCrime(s, 'assault', { actor: doer, target: p, partners: [], org: o.id }, r);
+      const doer = hot && !sr(s, hot) && !(atk.owner === 'player' || atk.playerBand) ? hot : o.key;
+      if (p && !sr(s, p)) commitCrime(s, 'assault', { actor: doer, target: p, partners: [], org: o.id }, r);
       emitFact(s, { kind: 'feud', actors: [atk.id, vic.id], place: vic.city, severity: 55, visibility: 'public', tags: ['street', 'feud', 'bad'], text: fmtL(l('Briga generalizada entre as equipes de {x} depois de um show.', 'A brawl between {x}\'s crews after a show.'), { x: both }), src: 'crime17' });
     } else if (prev < 85 && cur >= 85) {
       const [vic, o] = r.chance(0.5) ? [b, oa] : [a, ob];
       const p = leadOf(s, vic);
-      const fictional = !a.catalogNo && !b.catalogNo && p && !isReal(s, p);
+      const fictional = !strict ? !!p : !a.catalogNo && !b.catalogNo && p && !isReal(s, p); // r18: história alternativa fora do modo exato
       if (fictional && p) commitCrime(s, 'murder', { actor: o.key, target: p, method: 'accident', partners: [], org: o.id, dp: -0.15, dpWhy: l('Tiroteio, não emboscada perfeita −15%', 'A shootout, not a perfect ambush −15%') }, r);
       else emitFact(s, { kind: 'feud', actors: [a.id, b.id], place: vic.city, severity: 50, visibility: 'rumor', tags: ['street', 'feud', 'rumor'], text: fmtL(l('Boato: a rixa {x} teria passado dos limites; ninguém confirma.', 'Rumor: the {x} feud allegedly crossed the line; nobody confirms.'), { x: both }), src: 'crime17' });
       st.feud[key] = 30;
