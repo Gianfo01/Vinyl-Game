@@ -18,7 +18,7 @@ const sec = (id: string, label: L, areas: string[]): Sec17 => ({ id, label, area
 export const NAV17: Group17[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'house', secs: [sec('today', l('Hoje', 'Today'), ['cockpit', 'plan', 'goals', 'diary'])] },
   { id: 'company', label: l('Empresa', 'Company'), icon: 'building', secs: [
-    sec('base', l('Sede e equipe', 'HQ and staff'), ['hq', 'company', 'team']),
+    sec('base', l('Sede e equipe', 'HQ and staff'), ['campus18', 'hq', 'company', 'team']),
     sec('money', l('Dinheiro', 'Money'), ['finance', 'business'])] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', secs: [
     sec('roster', l('Seu elenco', 'Your roster'), ['artists', 'people']),
@@ -73,7 +73,7 @@ export const BAND_OR_LABEL17 = ['artists', 'project', 'creation', 'studio', 'rel
 /** Um ícone por grupo e um por página — sem repetir (teste r17-nav). */
 export const ICON17: Record<string, string> = {
   cockpit: 'gamepad', plan: 'clock', goals: 'target', diary: 'book',
-  hq: 'pin', company: 'contract', team: 'people', finance: 'money', business: 'bank',
+  campus18: 'skyline', hq: 'pin', company: 'contract', team: 'people', finance: 'money', business: 'bank',
   artists: 'drums', people: 'handshake', market: 'eye', directory: 'fans', managers14: 'briefcase', producers15: 'headphones',
   project: 'cassette', creation: 'pen', studio: 'mic', releases: 'cd', catalog: 'gold-disc', shows: 'tour-bus', cal17: 'calendar',
   news17: 'megaphone', media: 'camera', critics: 'scroll',
