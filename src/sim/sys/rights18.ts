@@ -90,20 +90,20 @@ const digital18 = (y: number): number => (y < 2000 ? 0 : clamp((y - 1998) / 16, 
 export function precMul18(s: GameState, key: string): number {
   const P = r18(s).prec;
   let m = 1;
-  for (const d of PRECS18) { const p = P[d.id]; if (p && !p.flip && d.fx[key] !== undefined && !key.endsWith('Odds')) m *= d.fx[key]; }
+  for (const d of PRECS18) { const p = P[d.id]; if (p?.y && !p.flip && d.fx[key] !== undefined && !key.endsWith('Odds')) m *= d.fx[key]; }
   return m;
 }
 export function precAdd18(s: GameState, key: string): number {
   const P = r18(s).prec;
   let a = 0;
-  for (const d of PRECS18) { const p = P[d.id]; if (p && !p.flip && d.fx[key] !== undefined) a += d.fx[key]; }
+  for (const d of PRECS18) { const p = P[d.id]; if (p?.y && !p.flip && d.fx[key] !== undefined) a += d.fx[key]; }
   return a;
 }
-const precOn = (s: GameState, id: string) => { const p = r18(s).prec[id]; return !!p && !p.flip; };
+const precOn = (s: GameState, id: string) => { const p = r18(s).prec[id]; return !!p?.y && !p.flip; };
 /** prazo europeu da gravação (50 anos; 70 depois da diretiva) */
 export const euTerm18 = (s: GameState): number => (precOn(s, 'eu2011') ? 70 : 50);
 /** rescisão de 35 anos existe (lei de 1976 em vigor) */
-export const termOn18 = (s: GameState): boolean => s.year >= 1978 && (precOn(s, 'act1976') || !r18(s).prec.act1976);
+export const termOn18 = (s: GameState): boolean => s.year >= 1978 && (precOn(s, 'act1976') || !r18(s).prec.act1976?.y);
 
 export function fundPrec18(s: GameState, id: string, side: 'p' | 'd'): L | null {
   const st = r18(s), d = PRECS18.find((x) => x.id === id);
@@ -172,7 +172,7 @@ export function socOptions18(s: GameState, mk: string, kind = 'p'): Soc18[] {
 /** sociedade em uso no mercado para o direito (p/m/n); undefined = sem sociedade (editora cobra sozinha) */
 export function socOf18(s: GameState, mk: string, kind = 'p'): Soc18 | undefined {
   const opts = socOptions18(s, mk, kind);
-  if (!opts.length) return kind === 'm' ? socOf18(s, mk, 'p') : undefined;
+  if (!opts.length) return kind !== 'p' ? socOf18(s, mk, 'p') : undefined;
   if (kind === 'm') return opts.find((x) => x.id === 'mlc') ?? opts[0];
   if (kind === 'p' && mk === 'na') {
     const w = (s.x4 as unknown as { w4?: { society?: string } }).w4?.society;
@@ -497,13 +497,14 @@ export function courtOdds18(s: GameState, d: Disp18): number {
   return clamp((st.reg[d.song] === 2 ? 0.8 : 0.45) + staffSkill(s, 'legal') / 400 + (d.kind === 'cover' ? -0.2 : 0), 0.05, 0.92);
 }
 
-function releaseEscrow(s: GameState, d: Disp18, keep: number): number {
+function releaseEsc(s: GameState, sid: string, keep: number, key: string): number {
   const st = r18(s);
-  const amt = Math.round((st.esc[d.song] ?? 0) * keep);
-  delete st.esc[d.song];
-  if (amt > 0 && post(s, `esc18:${d.id}`, amt, 'publishing', 'Caução liberada', false)) bucket18(fin18(s).ar, { due: proDue18(s), amt, cat: 'publishing', who: 'pro' });
+  const amt = Math.round((st.esc[sid] ?? 0) * keep);
+  delete st.esc[sid];
+  if (amt > 0 && post(s, `esc18:${key}`, amt, 'publishing', 'Caução liberada', false)) bucket18(fin18(s).ar, { due: proDue18(s), amt, cat: 'publishing', who: 'pro' });
   return amt;
 }
+const releaseEscrow = (s: GameState, d: Disp18, keep: number): number => releaseEsc(s, d.song, keep, d.id);
 function grantShare(s: GameState, d: Disp18): void {
   const so = s.songs[d.song];
   if (!so || !d.who.startsWith('p:')) return;
@@ -583,9 +584,10 @@ export function payClearance18(s: GameState, kind: 'sample' | 'replay' | 'cover'
     const fee = kind === 'replay' ? Math.round(q.fee * 0.5) : q.status === 'denied' ? q.fee * 2 : q.fee;
     if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
     post(s, `clr18:${id}:${s.week}`, -fee, 'rights', kind === 'replay' ? 'Interpolação (regravar o trecho)' : 'Liberação de sample');
-    if (kind === 'replay') { q.kind = 'interpolation'; q.share = 0.2; q.status = 'cleared'; return l('Trecho regravado pelos músicos: só a composição precisa de licença (20% da edição ao autor original).', 'Passage replayed by session musicians: only the composition needs a license (20% of publishing to the original writer).'); }
+    if (kind === 'replay') { q.kind = 'interpolation'; q.share = 0.2; q.status = 'cleared'; if (!frozen18(s, q.songId)) releaseEsc(s, q.songId, 1, `smp:${q.id}`); return l('Trecho regravado pelos músicos: só a composição precisa de licença (20% da edição ao autor original).', 'Passage replayed by session musicians: only the composition needs a license (20% of publishing to the original writer).'); }
     if (q.status === 'denied' && !r.chance(0.45)) return l('O detentor recusou de novo (o dinheiro da proposta foi gasto com advogados).', 'The owner refused again (the offer money went to lawyers).');
     q.status = 'cleared';
+    if (!frozen18(s, q.songId)) releaseEsc(s, q.songId, 1, `smp:${q.id}`);
     return l('Sample liberado: a caução da obra volta a pagar.', 'Sample cleared: the work pays again.');
   }
   const c = st.clr.find((x) => x.id === id);
@@ -621,6 +623,7 @@ function clearancesMonth(s: GameState): void {
     if (src && s.acts[src.actId]?.deceased) p -= 0.15;
     c.st = r.chance(p) ? 'ok' : 'denied';
     const so = s.songs[c.song];
+    if (c.st === 'ok' && !frozen18(s, c.song)) releaseEsc(s, c.song, 1, `clr:${c.id}`);
     if (c.st === 'denied' && so) {
       const rel = s.releases[so.releaseId ?? ''];
       if (rel && !disputeOf18(s, so.id)) openDispute18(s, so, rel, '', l('Editora da obra original', 'Original work\'s publisher').pt, 'cover', 0.5);
