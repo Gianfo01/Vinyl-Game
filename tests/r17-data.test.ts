@@ -79,7 +79,7 @@ describe('r17 dados reais', () => {
   });
 
   it('relíquias reais só aparecem depois do fato e seguem a história (com nomes reais)', () => {
-    const s = createGame(defaultConfig('r17rel', { startYear: 1966, realNames: true }));
+    const s = createGame(defaultConfig('r17rel', { startYear: 1966, realNames: true, history: 'strict', mode: 'historic', realFates: true }));
     runTo(s, 1966, 2);
     expect(relic9Of17(s, 'my_happiness')).toBeTruthy(); // 1953: já aconteceu
     expect(relic9Of17(s, 'woodstock_strat')).toBeUndefined(); // 1969: futuro
@@ -87,10 +87,15 @@ describe('r17 dados reais', () => {
     runTo(s, 1969, 9);
     expect(relic9Of17(s, 'woodstock_strat')).toBeTruthy();
     expect(realRelics17(s).every((r) => r.year <= s.year)).toBe(true);
+    // r18: história alternativa — relíquias reais posteriores ao início não nascem pelo roteiro
+    const alt = createGame(defaultConfig('r17rel', { startYear: 1969, realNames: true, history: 'loose' }));
+    runTo(alt, 1969, 9);
+    expect(relic9Of17(alt, 'my_happiness')).toBeTruthy();
+    expect(relic9Of17(alt, 'woodstock_strat')).toBeUndefined();
     const f = createGame(defaultConfig('r17rel', { startYear: 1966, realNames: false }));
     runTo(f, 1966, 2);
     expect(relic9Of17(f, 'my_happiness')).toBeUndefined();
-  });
+  }, 240000);
 
   it('gêneros em alta saem das paradas e hit viral global dá alcance de astro americano', () => {
     const s = createGame(defaultConfig('r17trend', { startYear: 1995 }));

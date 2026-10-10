@@ -30,6 +30,7 @@ import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { ROLE17, becomeManager17, career17, foundLabel17, move17, npc17, okPerson17 } from './npc17';
 import { opine, opinionOf, per13, type P13 } from './persona13';
 import { rivals8 } from './rivals8';
+import { actsOfPerson17 } from '../actidx17';
 
 // ---------------------------------------------------------------- estado
 
@@ -79,7 +80,7 @@ const live = (a?: Act): a is Act => !!a && (a.status === 'active' || a.status ==
 const mkOf = (city: string): string => cityById[city]?.market ?? 'na';
 const F = (P: P13 | null, k: string): number => (P?.facets[k as keyof P13['facets']] ?? 50) / 50;
 const A = (P: P13 | null, k: string): number => (P?.attrs[k as keyof P13['attrs']] ?? 50) / 50;
-const inLiveAct = (s: GameState, pid: string) => Object.values(s.acts).some((x) => live(x) && x.members.includes(pid));
+const inLiveAct = (s: GameState, pid: string) => actsOfPerson17(s, pid).some((x) => live(x));
 /** Segunda carreira ativa de uma pessoa (id ou chave p:). */
 export const career18 = (s: GameState, key: string): Car18 | undefined => { const c = w18(s).car[key.replace(/^p:/, '')]; return c && c.until >= s.year ? c : undefined; };
 export const careersOf18 = (s: GameState, k?: Dest18): [string, Car18][] => Object.entries(w18(s).car).filter(([pid, c]) => c.until >= s.year && (!k || c.k === k) && s.persons[pid]?.alive);
@@ -180,7 +181,8 @@ export function secondCareer18(s: GameState, r: Rng, p: Person, a: Act, k: Dest1
   const st = w18(s);
   const fam = familyOf(a.genre) as FamilyId;
   const c: Car18 = { k, y: s.year, act: a.id, city: a.city, fam, until: s.year + r.int(8, 25), why };
-  const tx = (to: L, extra?: L) => fmtL(l('{p}, ex-{a}, virou {d}: {w}{x}.', '{p}, formerly of {a}, became a {d}: {w}{x}.'), { p: p.name, a: a.name, d: to, w: why, x: extra ?? '' });
+  const solo = a.name === p.name;
+  const tx = (to: L, extra?: L) => fmtL(solo ? l('{p} pendurou as chuteiras e virou {d}: {w}{x}.', '{p} hung up their boots and became a {d}: {w}{x}.') : l('{p}, ex-{a}, virou {d}: {w}{x}.', '{p}, formerly of {a}, became a {d}: {w}{x}.'), { p: p.name, a: a.name, d: to, w: why, x: extra ?? '' });
   let text = tx(DEST18[k][0]);
   if (k === 'manager') { becomeManager17(s, r, p, a, why); st.car[p.id] = c; note(s, text); return c; }
   if (k === 'label') {
@@ -210,7 +212,7 @@ export function secondCareer18(s: GameState, r: Rng, p: Person, a: Act, k: Dest1
 }
 
 function careers(s: GameState, r: Rng, W: number): void {
-  if (!r.chance(0.09 * W)) return;
+  if (!r.chance(0.12 * W)) return;
   const st = w18(s);
   const n17 = npc17(s);
   const cands: [Person, Act][] = [];

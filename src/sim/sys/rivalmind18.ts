@@ -293,7 +293,7 @@ function mistakes(s: GameState, r: Rng): void {
     const risk = riskOf(s, lb);
     if (m.over && m.over > s.week) lb.cash -= money(s, (lb.family === 'A' ? 40000 : 15000));
     else if (m.over) m.over = undefined;
-    if (!m.over && lb.cash > money(s, 2_500_000) && lb.territories.length < 6 && r.chance(0.006 * risk)) {
+    if (!m.over && lb.cash > money(s, 2_500_000) && lb.territories.length < 6 && r.chance(0.004 * risk)) {
       const add = (['na', 'eu', 'br', 'latam', 'asia', 'africa', 'oceania'] as const).filter((t) => !lb.territories.includes(t)).slice(0, 2);
       lb.territories.push(...add);
       m.over = s.week + 78;

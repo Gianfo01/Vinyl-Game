@@ -32,7 +32,7 @@ describe('r17 vida pessoal', () => {
   });
 
   it('pessoas reais: só o documentado; o resto fica não declarado', () => {
-    const s = createGame(defaultConfig('r17-life-real', { startYear: 1990 }));
+    const s = createGame(defaultConfig('r17-life-real', { startYear: 1990, history: 'strict', mode: 'historic', realNames: true, realFates: true }));
     const a = npcAct(s);
     a.catalogNo = 999;
     const p = s.persons[a.members[0]];
@@ -42,6 +42,12 @@ describe('r17 vida pessoal', () => {
     expect(sexOf(s, p.id)).toMatchObject({ o: 'gay', c: 'out', real: true });
     p.name = 'Lil Nas X';
     expect(sexOf(s, p.id).o).toBe('private'); // em 1990 ainda não declarou
+    // r18: história alternativa — quem não tem registro entra no sorteio; o documentado continua
+    s.config.history = 'loose';
+    p.name = 'Fulano Sem Registro';
+    expect(sexOf(s, p.id).real).toBeFalsy();
+    p.name = 'Elton John';
+    expect(sexOf(s, p.id)).toMatchObject({ o: 'gay', c: 'out', real: true });
   });
 
   it('exposição: em época hostil vira escândalo pelo pipeline; em época acolhedora, apoio', () => {

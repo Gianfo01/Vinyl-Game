@@ -289,7 +289,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     }
   }
   // fim de carreira e voltas
-  if (d.e !== undefined && hm !== 'strict' && d.e + shift >= s.year) act.careerEnd = Math.max(s.year + 1, act.debutYear + 4 + Math.floor(histRoll(s, `${act.id}:e18`) * 28)); // r18: fim de carreira futuro sorteado
+  if (d.e !== undefined && hm !== 'strict' && d.e + shift >= s.year) act.careerEnd = Math.max(s.year, act.debutYear) + 2 + Math.floor(histRoll(s, `${act.id}:e18`) * 24); // r18: fim de carreira futuro sorteado
   else if (d.e !== undefined) act.careerEnd = d.e + shift + (s.config.mode === 'historic' ? 0 : jitter(s, r, 2));
   else act.careerEnd = Math.max(act.careerEnd, 2026 + r.int(0, 14));
   for (const [a, b] of d.rj ?? []) if (a + shift < s.config.startYear || keep(`r${a}`, 0.4)) sched.push({ year: a + shift, kind: 'reunion', actId: act.id, until: b !== undefined ? b + shift : undefined });
