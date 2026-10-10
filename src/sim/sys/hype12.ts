@@ -15,6 +15,7 @@ import { relicHook, relics, type Relic } from './relics9';
 import { f12, festHypeHook } from './fest12';
 import { liveOf, type OwnFestival } from './live/state';
 import { w4 } from './world4/state';
+import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts17, rolloutText17 } from '../hype17';
 
 export interface HSrc { k: string; t: L; v: number }
 export interface HEnt { s: HSrc[]; p?: number; v?: number; pk?: number }
@@ -55,15 +56,15 @@ function parts(s: GameState, key: string): { t: L; v: number }[] {
     const a = s.acts[id];
     if (!a) return out;
     const m = Math.max(0, a.momentum - 45) * 0.4;
-    if (m >= 1) out.push({ t: l('Momento recente (lançamentos, shows, imprensa)', 'Recent momentum (releases, shows, press)'), v: m });
+    if (m >= 1) out.push(...momentumParts17(s, a, m));
     const pr = pendOf(s, id);
     const n = sum(hy(s).e[`n:${id}`]) + (pr?.hype ?? 0) * 80;
     if (pr && n >= 2) out.push({ t: fmtL(l('Expectativa por "{t}"', 'Anticipation for "{t}"'), { t: pr.title }), v: n * 0.3 });
   } else if (k === 'n') {
     const a = s.acts[id], pr = pendOf(s, id);
-    if (pr?.hype) out.push({ t: l('Rollout, agenda e feiras (teasers, singles, pré-saves)', 'Rollout, agenda and fairs (teasers, singles, pre-saves)'), v: pr.hype * 80 });
+    if (pr?.hype) out.push({ t: rolloutText17(s, pr.title), v: pr.hype * 80 });
     if (a) { const b = actBase(s, a) * 0.4; if (b >= 1) out.push({ t: fmtL(l('Hype de {a}', '{a} hype'), { a: a.name }), v: b }); }
-    if (a && a.fame >= 4) out.push({ t: l('Fama: o público espera o próximo disco', 'Fame: people await the next record'), v: a.fame * 0.25 });
+    if (a && a.fame >= 4) out.push({ t: fameWaitText17(s, a), v: a.fame * 0.25 });
     if (a?.owner === 'player' && w4(s).hype >= 10) out.push({ t: l('Hype do selo', 'Label hype'), v: w4(s).hype * 0.1 });
   } else if (k === 'o') {
     const rl = relics(s).list.find((x) => x.id === id), a = rl?.a ? s.acts[rl.a] : undefined;
@@ -144,7 +145,7 @@ registerSimHook('launch', 'hype12', (s, _r, { release: rel }) => {
   if (exp >= 40 && gap < -6) rh.bl = Math.round(clamp((-gap - 6) / 22, 0.15, 1) * (p.party ? 0.7 : 1) * 100) / 100;
   else if (exp < 22 && rel.q >= 80) rh.sl = Math.round(clamp((rel.q - 74) / 20, 0.15, 1) * 100) / 100;
   st.rel[rel.id] = rh;
-  if (exp >= 5) st.e[`r:${rel.id}`] = { s: [{ k: 'exp', t: l('Expectativa acumulada antes do lançamento', 'Anticipation built before release'), v: exp }] };
+  if (exp >= 5) st.e[`r:${rel.id}`] = { s: [{ k: 'exp', t: launchText17(s, rel, exp), v: exp }] };
   delete st.e[`n:${rel.actId}`];
   delete st.pend[rel.actId];
 });
@@ -210,7 +211,7 @@ const RELIC_EV: Record<string, [number, L]> = {
 rememberListeners().push((s, e) => {
   const ev = EV[e.kind];
   if (!ev || !e.actId || !s.acts[e.actId]) return;
-  addHype(s, `a:${e.actId}`, e.kind, ev[1], ev[0]);
+  addHype(s, `a:${e.actId}`, e.kind, eventText17(ev[1], e.text), eventValue17(ev[0], s.acts[e.actId]));
   const rv = RELIC_EV[e.kind];
   if (rv) for (const rl of relics(s).list) if (rl.a === e.actId && rl.st !== 'lost') addHype(s, `o:${rl.id}`, e.kind, rv[1], rv[0]);
 });

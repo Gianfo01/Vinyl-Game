@@ -154,3 +154,5 @@ import './clash17';
 import './image17';
 import './merch17';
 import './circuit17';
+// Rodada 17 (D): imprensa viva — notícias, boatos, veículos, críticos reais, processos e situações de crítica.
+import './media17';

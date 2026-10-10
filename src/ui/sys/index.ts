@@ -105,3 +105,5 @@ import './lineup16';
 import './found17';
 // Rodada 17 (F): Negócios 17 (venda, canais, casas, licenças, imagem, merch, circuito) e Agenda de shows.
 import './biz17';
+// Rodada 17 (D): página Notícias e boatos (veículos, críticos, processos) e aba Na imprensa do artista.
+import './media17';

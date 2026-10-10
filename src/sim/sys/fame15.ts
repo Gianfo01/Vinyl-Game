@@ -9,12 +9,13 @@
 //   Famosos têm quase tudo de público à vista; dados privados (atributos, potencial, humor, contrato) exigem olheiros.
 
 import { Rng, clamp } from '../../core/rng';
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import { fameAt } from '../famehook16';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { addHype } from './hype12';
+import { pressLine17 } from '../outlets17';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Só amigos e a cena mais próxima sabem quem é.', 'Only friends and the nearest scene know them.') },
@@ -289,7 +290,7 @@ export function fameMonth(s: GameState): void {
     // imprensa: quem é famoso vira pauta
     if (t >= 2 && r.chance(0.03 * t)) {
       a.momentum = clamp(a.momentum + 2 + t, 0, 100);
-      addHype(s, `a:${a.id}`, 'fame15:press', l('Imprensa cobrindo (fama)', 'Press coverage (fame)'), 2 + t);
+      addHype(s, `a:${a.id}`, 'fame15:press', pressLine17(s, a.name, cityById[a.city]?.market, `${a.id}:${s.year}:${s.month}`), 2 + t);
       if (mine && r.chance(0.5)) { const tx = fmtL(l('{a} vira pauta na imprensa ({t}): +{m} de momento.', '{a} makes the news ({t}): +{m} momentum.'), { a: a.name, t: FTIERS[t].name, m: 2 + t }); flog(s, a.id, tx, 0); notify(s, tx, 'info'); }
     }
     if (mine && a.status !== 'hiatus') {
