@@ -130,7 +130,7 @@ function steps18(area: string): Step18[] {
   const xs: Step18[] = [{ sel: 'main .crumbs15', title: a.title, text: a.what }];
   const tw = document.querySelector<HTMLElement>('main [data-tabs] > .tabs');
   if (tw) {
-    const names = [...tw.querySelectorAll('button')].map((b) => b.textContent?.trim()).filter(Boolean).slice(0, 6).join(' · ');
+    const names = [...tw.querySelectorAll('button')].map((b) => [...b.childNodes].filter((n) => !(n as HTMLElement).classList?.contains('badge')).map((n) => n.textContent).join('').trim()).filter(Boolean).slice(0, 6).join(' · ');
     const k = tw.parentElement?.dataset.tabs ?? '', cur = tw.parentElement?.dataset.cur ?? '';
     const th = tabHelp18(k, cur);
     xs.push({ sel: 'main [data-tabs] > .tabs', title: l('Abas', 'Tabs'), text: l(`${names}.${th ? ` Aberta: ${th.what.pt}` : ''}`, `${names}.${th ? ` Open: ${th.what.en}` : ''}`) });
@@ -141,9 +141,13 @@ function steps18(area: string): Step18[] {
   return xs.filter((x) => document.querySelector(x.sel)).slice(0, 4);
 }
 
-let tourEl: HTMLElement | null = null;
-function endTour(): void { tourEl?.remove(); tourEl = null; document.removeEventListener('keydown', tourKey); }
-const tourKey = (e: KeyboardEvent): void => { if (e.key === 'Escape' && tourEl) { e.stopPropagation(); endTour(); } };
+let tourEl: HTMLElement | null = null, tourArea = '', tourT0 = 0;
+/** Fecha o tour; só conta como visto se a pessoa respondeu (ou ele ficou na tela > 2 s) — um re-render não "gasta" o tour. */
+function endTour(ack = false): void {
+  if (tourEl && (ack || Date.now() - tourT0 > 2000)) { tp18().tours[tourArea] = 1; savePrefs(); }
+  tourEl?.remove(); tourEl = null; document.removeEventListener('keydown', tourKey);
+}
+const tourKey = (e: KeyboardEvent): void => { if (e.key === 'Escape' && tourEl) { e.stopPropagation(); endTour(true); } };
 
 /** Mostra o tour da página (força = mesmo já visto ou desligado). */
 export function startTour18(area: string, force = false): boolean {
@@ -151,8 +155,8 @@ export function startTour18(area: string, force = false): boolean {
   if (!force && (p.noTours || p.tours[area])) return false;
   const xs = steps18(area);
   if (xs.length < 2) return false;
-  p.tours[area] = 1; savePrefs();
   endTour();
+  tourArea = area; tourT0 = Date.now();
   let i = 0;
   const hl = h('div', { class: 'tour18-hl', 'aria-hidden': 'true' });
   const bub = h('div', { class: 'tour18-bub', role: 'dialog', 'aria-live': 'polite' });
@@ -171,9 +175,9 @@ export function startTour18(area: string, force = false): boolean {
       h('p', null, t(st.text)),
       h('div', { class: 'row wrap' },
         i > 0 ? h('button', { class: 'btn small ghost', onclick: () => { i--; show(); } }, '←') : null,
-        h('button', { class: 'btn small primary', onclick: () => { if (++i >= xs.length) endTour(); else show(); } }, i === xs.length - 1 ? t(l('Entendi', 'Got it')) : t(l('Próximo', 'Next'))),
-        h('button', { class: 'btn small ghost tour18-skip', onclick: endTour }, t(l('Pular', 'Skip'))),
-        h('button', { class: 'btn small ghost tour18-off', onclick: () => { tp18().noTours = true; savePrefs(); endTour(); toast(t(l('Tours desligados. Religue em Configurações ou em Ajuda e tutorial.', 'Tours off. Turn them back on in Settings or Help and tutorial.')), 'info'); } }, t(l('Não mostrar de novo', 'Don\'t show again')))));
+        h('button', { class: 'btn small primary', onclick: () => { if (++i >= xs.length) endTour(true); else show(); } }, i === xs.length - 1 ? t(l('Entendi', 'Got it')) : t(l('Próximo', 'Next'))),
+        h('button', { class: 'btn small ghost tour18-skip', onclick: () => endTour(true) }, t(l('Pular', 'Skip'))),
+        h('button', { class: 'btn small ghost tour18-off', onclick: () => { tp18().noTours = true; savePrefs(); endTour(true); toast(t(l('Tours desligados. Religue em Configurações ou em Ajuda e tutorial.', 'Tours off. Turn them back on in Settings or Help and tutorial.')), 'info'); } }, t(l('Não mostrar de novo', 'Don\'t show again')))));
     el?.scrollIntoView?.({ block: 'nearest' });
   };
   document.body.appendChild(tourEl);
@@ -235,11 +239,10 @@ export function afterRender18(g: GameState, area: string, go: Go): void {
   const p = tp18();
   if (!p.visits[area]) { p.visits[area] = 1; savePrefs(); }
   try { checkTracks(g); } catch { /* trilha nunca derruba a tela */ }
-  if (tourEl && !tourEl.isConnected) tourEl = null;
+  if (tourEl && (!tourEl.isConnected || tourArea !== area)) endTour(); // trocou de página: o tour antigo some
   const busy = !!document.querySelector('.overlay, .scene-overlay') || !g.tutorial?.done;
-  if (!busy && !tourEl) {
-    if (!startTour18(area)) { try { checkTips(g); } catch { /* idem */ } }
-  } else if (tourEl) endTour();
+  if (busy) { if (tourEl) endTour(); } // modal/cena por cima: o tour volta depois
+  else if (!tourEl && !startTour18(area)) { try { checkTips(g); } catch { /* idem */ } }
 }
 
 /** Linhas para o modal de configurações. */

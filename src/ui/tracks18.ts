@@ -41,7 +41,7 @@ export const TRACKS18: Track18[] = [
     o('release', 'Lançar o primeiro disco', 'Release your first record', 'releases', (s) => st(s).releases >= 1),
     o('pm', 'Ler o post-mortem de um lançamento', 'Read a release post-mortem', 'long18', (s) => anyFact(s, ['release_review'])),
     o('top10', 'Colocar um disco no top 10', 'Get a record into the top 10', 'charts', (s) => st(s).top10s >= 1),
-    o('dre', 'Conferir a DRE: lucro operacional positivo', 'Check the P&L: positive operating profit', 'finance'),
+    o('dre', 'Conferir a DRE (lucro operacional e caixa)', 'Check the P&L (operating profit and cash)', 'finance'),
     o('gold', 'Conquistar um disco de ouro', 'Earn a gold record', 'catalog', (s) => st(s).gold >= 1),
   ] },
   { id: 'musician', name: l('Músico', 'Musician'), intro: l('Banda, palco e a primeira gravação.', 'Band, stage and the first recording.'), objs: [
