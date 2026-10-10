@@ -34,6 +34,7 @@ import type { Act, GameState, RunConfig } from './types';
 import { money, playerActs, rngOf } from './util';
 import { createGame } from './worldgen';
 import { unreleasedRecorded } from './production';
+import { freshLog17, play17, type Log17 } from './playbot17';
 
 export type Profile = 'cautious' | 'balanced' | 'aggressive';
 
@@ -74,8 +75,10 @@ export interface PlayLog {
   signs: number; offers: number; scouts: number; projects: number; recordings: number; releases: number; rollouts: number;
   tours: number; festivals: number; syncPitches: number; syncWins: number; hires: number; fires: number; orders: number;
   loans: number; renewals: number; drops: number; decisions: number; personal: number; commissions: number; demands: number;
+  /** rodada 17: canais, merch, casas, imprensa, cenas, envolvimento */
+  r17: Log17;
 }
-const freshLog = (): PlayLog => ({ signs: 0, offers: 0, scouts: 0, projects: 0, recordings: 0, releases: 0, rollouts: 0, tours: 0, festivals: 0, syncPitches: 0, syncWins: 0, hires: 0, fires: 0, orders: 0, loans: 0, renewals: 0, drops: 0, decisions: 0, personal: 0, commissions: 0, demands: 0 });
+const freshLog = (): PlayLog => ({ signs: 0, offers: 0, scouts: 0, projects: 0, recordings: 0, releases: 0, rollouts: 0, tours: 0, festivals: 0, syncPitches: 0, syncWins: 0, hires: 0, fires: 0, orders: 0, loans: 0, renewals: 0, drops: 0, decisions: 0, personal: 0, commissions: 0, demands: 0, r17: freshLog17() });
 
 interface Mem { log: PlayLog; cash: number[]; tourW: Record<string, number>; party: number; refused: Record<string, number>; req?: number }
 const MEM = new WeakMap<GameState, Mem>();
@@ -181,6 +184,12 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
     const o = c.o;
     o.advance = Math.round(o.advance * k.adv / 100) * 100;
     let ev = evaluateOffer(s, act, o);
+    // r17: o agressivo tenta o 360 (parte de shows/merch) depois que o modelo existe na indústria; volta ao clássico se não cola
+    if (p === 'aggressive' && s.year >= 2002) {
+      const c360 = { ...o, model: '360' as const, share360: 0.15, royalty: Math.min(0.3, o.royalty + 0.02) };
+      const e360 = evaluateOffer(s, act, c360);
+      if (e360.band !== 'unlikely') { Object.assign(o, c360); ev = e360; }
+    }
     // negocia como na ficha: se a leitura é ruim, sobe royalty / dá controle criativo antes de desistir
     if (ev.band === 'unlikely') { o.royalty = Math.min(0.3, o.royalty + 0.03); ev = evaluateOffer(s, act, o); }
     if (ev.band === 'unlikely' && p !== 'cautious') { o.creativeControl = true; ev = evaluateOffer(s, act, o); }
@@ -437,6 +446,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   sync(s, prof);
   team(s, k);
   grow(s, k);
+  play17(s, prof, { cash: s.player.cash, burn: burn(s), energy: energyLeft(s) }, L.r17);
   personal(s);
 }
 
@@ -460,7 +470,7 @@ export function simulatePlayer(cfg: RunConfig, years: number, profile: Profile =
     state: s,
     summary: {
       seed: cfg.seed, profile, startYear: cfg.startYear, endYear: s.year, cash: s.player.cash, realCash: Math.round(toReal(s.player.cash, s.year)), ended: s.ended?.ending, endedYear: s.ended ? s.year : undefined, low: Math.round(low), y1: Math.round(y1), y2: Math.round(y2),
-      acts: playerActs(s).length, releases: s.player.stats.releases, number1s: s.player.stats.number1s, log: { ...playLog(s) },
+      acts: playerActs(s).length, releases: s.player.stats.releases, number1s: s.player.stats.number1s, log: { ...playLog(s), r17: { ...playLog(s).r17 } },
     },
   };
 }

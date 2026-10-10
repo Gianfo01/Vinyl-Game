@@ -39,3 +39,6 @@
   .tools17 .icon, .rec17 > summary { width: 1.8rem; height: 1.8rem; }
   .cp17-head .row.between { flex-direction: column; align-items: flex-start; }
 }
+/* r17 final: rótulos longos (ex.: Empreendimentos) quebram em vez de vazar do menu */
+.nav-sub button { min-width: 0; }
+.nav-sub button .lbl { min-width: 0; overflow-wrap: anywhere; hyphens: auto; }

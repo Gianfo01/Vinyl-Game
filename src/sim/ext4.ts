@@ -50,7 +50,9 @@ export function registerSimHook(phase: HookPhase, id: string, fn: HookFn): void 
 }
 
 export function runSimHooks(phase: HookPhase, s: GameState, r: Rng, arg: Partial<HookArgs> = {}): void {
-  for (const h of HOOKS[phase]) h.fn(s, r, arg);
+  const P = (globalThis as { __hookProf?: Record<string, number> }).__hookProf;
+  if (!P) { for (const h of HOOKS[phase]) h.fn(s, r, arg); return; }
+  for (const h of HOOKS[phase]) { const t = performance.now(); h.fn(s, r, arg); const k = phase + ':' + h.id; P[k] = (P[k] ?? 0) + performance.now() - t; }
 }
 
 // ---------------------------------------------------------------- decisões do jogador

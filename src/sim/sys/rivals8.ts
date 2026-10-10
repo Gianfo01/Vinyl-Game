@@ -261,9 +261,9 @@ export function sceneName(key: string): string {
 
 function sceneNameL(key: string): L {
   const [city, genre] = key.split(':');
-  const c = cityById[city]?.name ?? city;
+  const c: L = cityById[city]?.name ?? l(city, city);
   const g = genreById[genre]?.name ?? l(genre, genre);
-  return { pt: `${c} · ${g.pt}`, en: `${c} · ${g.en}` };
+  return { pt: `${c.pt} · ${g.pt}`, en: `${c.en} · ${g.en}` };
 }
 
 /** Texto de uma jogada (para a ficha do selo e o relatório). */

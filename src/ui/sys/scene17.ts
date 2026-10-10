@@ -12,6 +12,7 @@ import type { MomentRec16 } from '../../sim/sys/moments16';
 import type { GameState } from '../../sim/types';
 import { $, actLink, cityName, monthName, pill, rerender, section, toast } from '../common';
 import { money } from '../../sim/util';
+import { life } from '../../sim/sys/life';
 import { h } from '../dom';
 import { lookOf, randomLook } from '../pixel/avatar';
 import { PLACE_NAMES, placeView, type Actor } from '../pixel/places';
@@ -132,6 +133,7 @@ function album(s: GameState): HTMLElement {
     section(t(l('Álbum de cenas', 'Scene album')),
       h('p', { class: 'muted small' }, t(l('Cenas interativas só aparecem em momentos certos: prêmio (ganhar ou perder), shows marcantes, festival, mídia da época, estúdio, lançamento, assinatura, prisão, tribunal, funeral, casamento, nascimento, reabilitação, coletiva após escândalo, briga no camarim, conselho e encontros. Cada escolha muda fama regional, fãs, estresse, boatos e obrigações — e o porquê fica registrado aqui.', 'Interactive scenes only appear at the right moments: awards (win or lose), landmark shows, festivals, era media, studio, launches, signings, arrests, court, funerals, weddings, births, rehab, press conferences after scandals, backstage fights, board meetings and dates. Every choice changes regional fame, fans, stress, rumors and holds — and the why is recorded here.'))),
       h('div', { class: 'row wrap' },
+        !life(s).partner ? h('button', { class: 'btn small', disabled: true, title: t(l('Encontros pedem um relacionamento: conheça alguém em Você › Noite e encontros.', 'Dates need a relationship: meet someone in You › Going out.')) }, ic('heart'), ` ${t(l('Marcar um encontro (sem relacionamento)', 'Plan a date (no relationship)'))}`) :
         h('button', { class: 'btn small primary', onclick: () => { const r = startDate17(s); if (typeof r === 'string') { const cs = (s.cutscenes ?? []).find((c) => c.id === r); if (cs) openCutscene(s, cs, rerender); } else toast(t(r), 'bad'); } }, ic('heart'), ` ${t(l('Marcar um encontro', 'Plan a date'))}`),
         pend.length ? pill(`${pend.length} ${t(l('cena(s) esperando sua escolha', 'scene(s) awaiting your choice'))}`, 'warn') : null),
       pend.length ? h('ul', { class: 'small' }, pend.map(([k, p]) => h('li', null, ic(DEFS17[p.def]?.icon ?? 'star'), ' ', t(p.title), ' ',

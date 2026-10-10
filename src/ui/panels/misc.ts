@@ -345,7 +345,7 @@ function finances(s: GameState): HTMLElement {
       ),
       section(t(S.loans),
         s.player.loans.map((ln) => kv(t(l('Saldo', 'Balance')), `${$(ln.balance)} · ${(ln.rate * 100).toFixed(1)}% a.a. · ${$(ln.monthly)}/m`)),
-        offer ? h('div', null, h('p', { class: 'small' }, t(l('Oferta: {a} a {r}% ao ano, 36 meses.', 'Offer: {a} at {r}% a year, 36 months.'), { a: $(offer.amount), r: String(Math.round(offer.rate * 1000) / 10).replace('.', t(l(',', '.'))) })), h('button', { class: 'btn', disabled: s.player.loans.length >= 3, onclick: () => { takeLoan(s); rerender(); } }, t(S.takeLoan))) : h('p', { class: 'muted small' }, t(l('Sem crédito disponível (Sem Rede de Segurança).', 'No credit available (No Safety Net).'))),
+        offer ? h('div', null, h('p', { class: 'small' }, t(l('Oferta: {a} a {r}% ao ano, 36 meses.', 'Offer: {a} at {r}% a year, 36 months.'), { a: $(offer.amount), r: String(Math.round(offer.rate * 1000) / 10).replace('.', t(l(',', '.'))) }), s.player.loans.length ? h('small', { class: 'muted' }, ' ', t(l('(cada empréstimo em aberto reduz o próximo em 25% e soma 3 p.p. de juros)', '(each open loan cuts the next one by 25% and adds 3 pp of interest)'))) : null), h('button', { class: 'btn', disabled: s.player.loans.length >= 3, onclick: () => { takeLoan(s); rerender(); } }, t(S.takeLoan))) : h('p', { class: 'muted small' }, s.player.insolvencyMonths >= 2 ? t(l('Sem crédito: os bancos não emprestam para quem está no vermelho há 2 meses ou mais. Corte custos ou venda ativos.', 'No credit: banks will not lend to a company in the red for 2+ months. Cut costs or sell assets.')) : t(l('Sem crédito disponível (Sem Rede de Segurança).', 'No credit available (No Safety Net).'))),
       ),
     ),
   );
