@@ -116,7 +116,7 @@ function hunt(s: GameState, r: Rng): void {
     } else if (dep.fam?.id !== t.id || dep.fam.share < 0.45) stop = fmtL(l('você diversificou além de {f}', 'you diversified beyond {f}'), { f: famName(t.id) });
     if (stop) { m.target = undefined; sign(s, lb, 'giveup', fmtL(l('parou de mirar no seu ponto fraco: {w}.', 'stopped going after your weak spot: {w}.'), { w: stop })); }
   }
-  if (hunting.length >= 2 || dep.total < money(s, 40000)) return;
+  if (hunting.length >= 1 || dep.total < money(s, 150000) || s.year - s.config.startYear < 2) return; // carência: selo novo ainda não chama atenção
   let tg: { k: 'fam' | 'act'; id: string; why: L } | null = null;
   if (dep.act && dep.act.share >= 0.45 && s.acts[dep.act.id] && !s.acts[dep.act.id].playerBand) tg = { k: 'act', id: dep.act.id, why: fmtL(l('{a} responde por {p}% da sua receita de discos', '{a} is {p}% of your record revenue'), { a: s.acts[dep.act.id].name, p: Math.round(dep.act.share * 100) }) };
   else if (dep.fam && dep.fam.share >= 0.6) tg = { k: 'fam', id: dep.fam.id, why: fmtL(l('{f} responde por {p}% da sua receita de discos', '{f} is {p}% of your record revenue'), { f: famName(dep.fam.id), p: Math.round(dep.fam.share * 100) }) };
@@ -145,11 +145,11 @@ function pressTargets(s: GameState, r: Rng): void {
       if (!a || a.owner !== 'player') continue;
       const c = a.contractId ? s.contracts[a.contractId] : undefined;
       const near = !!c && c.endWeek - s.week < 52;
-      if ((near || a.trust < 50) && r.chance(0.3) && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
+      if ((near || a.trust < 50) && r.chance(0.18) && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
         emitEvent(s, r, 'poach_attempt', { act: a.id, label: lb.id });
         sign(s, lb, 'court', fmtL(l('fez proposta direta a {a}.', 'made a direct offer to {a}.'), { a: a.name }), { public: true, actors: [a.id], sev: 40 });
-      } else if (r.chance(0.35) && a.trust > 35) {
-        a.trust = Math.max(35, a.trust - 1);
+      } else if (r.chance(0.2) && a.trust > 40) {
+        a.trust = Math.max(40, a.trust - 1);
         if (r.chance(0.4)) sign(s, lb, 'court', fmtL(l('jantou com gente próxima de {a} (confiança dele(a) em você −1).', 'had dinner with people close to {a} (their trust in you −1).'), { a: a.name }));
       }
     } else if (r.chance(0.22)) {
