@@ -6,6 +6,7 @@ import { stylePill17 } from './style17';
 import { t } from '../../i18n/strings';
 import { hotList17 } from '../../sim/sys/trends17';
 import { actReach17, reach17 } from '../../sim/sys/reach17';
+import { heritageLine17 } from '../../sim/sys/heritage17';
 import type { GameState, Song } from '../../sim/types';
 import { pill, section } from '../common';
 import { bar, h } from '../dom';
@@ -40,6 +41,7 @@ function reachTab(s: GameState, id: string): HTMLElement | null {
     section(t(l('Alcance mundial', 'Global reach')),
       h('p', null, t(l('Peso mundial', 'Global weight')), ': ', bar(r.v * 100, 100), ` ${Math.round(r.v * 100)} `, h('small', { class: 'muted' }, `(${t(l('país', 'country'))} ${Math.round(r.base * 100)})`)),
       h('p', { class: 'small' }, t(r.why)),
+      heritageLine17(s, a) ? h('p', null, pill(t(heritageLine17(s, a)!), 'gold')) : null,
       v ? h('p', null, pill(t(l('Hit viral global', 'Global viral hit')), 'gold'), ' ', `"${v.hit}" — ${t(l('vale até a semana {w}. Outro nº 1 antes disso evita o rótulo de one-hit wonder.', 'lasts until week {w}. Another No. 1 before then avoids the one-hit-wonder label.'), { w: v.until })}`) : null,
       o ? h('p', null, pill('one-hit wonder', 'bad'), ' ', t(l('Lembrado só por "{h}" ({y}). Um novo nº 1 apaga o rótulo.', 'Remembered only for "{h}" ({y}). A new No. 1 erases the label.'), { h: o.hit, y: o.y })) : null,
       h('p', { class: 'muted small' }, t(l('Americanos viajam mais pelo mundo. Fora dos EUA, só carreiras globais consolidadas (Shakira, ABBA, BTS) ou um hit planetário (Gangnam Style, Despacito) chegam lá: nº 1 em 4+ países fora de casa dá 18 meses de alcance de astro americano.', 'Americans travel further. Outside the US, only consolidated global careers (Shakira, ABBA, BTS) or a planet-wide hit (Gangnam Style, Despacito) get there: No. 1 in 4+ countries abroad gives 18 months of US-star reach.')))),

@@ -395,4 +395,6 @@ export const LOOKS17: Record<string, string> = {
   'Sarah Harding': 'F s0 h7 c8 o2 k6',
   'Nicola Roberts': 'F s0 h7 c5 o2 k5',
   'Kimberley Walsh': 'F s0 h7 c2 o2 k5',
+  'Joe Cocker': 's0 h12 c1 o0 k6 d0|1990:s0 h1 c6 o1 k6 d0 g0',
+  'Jeff Buckley': 's0 h12 c0 o0 k6',
 };

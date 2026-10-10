@@ -23,6 +23,7 @@ import { newgameCards } from '../newgame';
 import { PERSON_TABS, openActPage } from '../pages';
 import { registerArea, registerPageTab } from '../registry';
 import { relicHype12 } from './hype12';
+import { erasTab17, relicStory17 } from './heritage17';
 import { setTab, tabs } from '../vis';
 import './lendas9.css';
 
@@ -30,7 +31,7 @@ const WORLD_KEY = 'vtn.world9';
 const F: { dec: number; city: string; genre: string; who: string; minI: number; bioQ: string; city2: string; rf: string } = { dec: 0, city: '', genre: '', who: '', minI: 2, bioQ: '', city2: '', rf: '' };
 
 const stars = (i: number) => h('span', { class: 'ln-stars', title: t(l('Importância', 'Importance')) }, '★'.repeat(i) + '☆'.repeat(5 - i));
-const RELIC_ICON: Record<Relic['k'], string> = { guitar: '🎸', tape: '📼', lyrics: '📝', trophy: '🏆', outfit: '👗', mic: '🎤' };
+const RELIC_ICON: Record<Relic['k'], string> = { guitar: '🎸', tape: '📼', lyrics: '📝', trophy: '🏆', outfit: '👗', mic: '🎤', drums: '🥁', record: '💿', car: '🚗', glasses: '👓', piano: '🎹', prop: '🎈', art: '🎨', bass: '🎸' };
 const ST_CLS: Record<Relic['st'], string> = { auction: 'gold', player: 'good', stolen: 'bad', lost: 'bad', museum: '', kept: '' };
 
 function who(s: GameState, id: string): HTMLElement {
@@ -153,6 +154,7 @@ export function openRelic(s: GameState, id: string): void {
         h('div', null, h('div', null, t(RELIC_KIND[rl.k]), ' · ', String(rl.y), rl.a ? h('span', null, ' · ', who(s, rl.a)) : null, rl.p && rl.p !== rl.a ? h('span', null, ' · ', who(s, rl.p)) : null),
           h('div', { class: 'row wrap' }, pill(t(RELIC_ST[rl.st]), ST_CLS[rl.st]), h('b', null, $(relicPrice(s, rl)))))),
       relicHype12(s, rl.id),
+      relicStory17(s, rl, redraw),
       section(t(l('Donos', 'Provenance')), h('ol', { class: 'ln-own' }, rl.own.map((o) => h('li', null, h('b', null, o[0]), h('small', { class: 'muted' }, ` · ${o[1]} · ${o[2]}`))))),
       section(t(l('Ações', 'Actions')), ...acts),
       section(t(l('Na crônica', 'In the chronicle')), chronList(s, chronQuery(s, { kinds: ['relic'] }).filter((e) => t(e.t).includes(t(rl.n))), 10)));
@@ -359,6 +361,7 @@ function lendasArea(s: GameState): HTMLElement {
       { id: 'bio', label: t(l('Biografias', 'Biographies')), icon: 'pen', render: () => bios(s) },
       { id: 'relics', label: t(l('Relíquias', 'Relics')), icon: 'vault', badge: auc || undefined, render: () => relicsTab(s) },
       { id: 'city', label: t(l('Cidades e cenas', 'Cities and scenes')), icon: 'globe', render: () => cities(s) },
+      { id: 'eras17', label: t(l('Épocas', 'Eras')), icon: 'clock', render: () => erasTab17(s) },
       { id: 'press', label: t(l('Jornal', 'Newspaper')), icon: 'newspaper', render: () => paper(s) },
       { id: 'book', label: t(l('Livro e mundo', 'Book and world')), icon: 'note', render: () => book(s) },
     ], rerender));
