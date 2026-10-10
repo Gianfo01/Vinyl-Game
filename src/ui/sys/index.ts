@@ -136,6 +136,8 @@ import './world18';
 import './supply18';
 // Rodada 18 (media18, onda 1): abas de mídia (público e streaming, campanhas, rádio por formatos, clipes/virais/pistas).
 import './media18';
+// Rodada 18 (live18, onda 2): logística/post-mortem de turnê, políticas da estrada, festival e aba Fãs.
+import './live18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
 import './finance18';

@@ -220,3 +220,7 @@ import './mkt18';
 import './stream18';
 import './radio18';
 import './media18';
+// Rodada 18 (live18, onda 2): fãs com motivos e facções, logística/acerto/seguro/post-mortem de turnê, gigantes de bilhetagem, segurança de público, festival (curadoria, vizinhos, patrocinadores, experiência).
+import './fans18';
+import './live18';
+import './fest18';

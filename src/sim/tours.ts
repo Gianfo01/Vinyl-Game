@@ -16,6 +16,7 @@ import { clubBonus, liveBlocked } from './culture';
 import { branchCityBonus } from './branches';
 import { applyMods, runSimHooks } from './ext4';
 import { take360 } from './sys/deal360_17';
+import { TOUR18, type Kit18 } from './tourhook18';
 
 export const TICKET = [12, 25, 45, 70, 95];
 export const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
@@ -37,6 +38,8 @@ export interface TourPlan {
   name?: string;
   /** folga a cada N datas (padrão 4; 0 = sem folga) */
   restEvery?: number;
+  /** r18: logística (transporte, hospedagem, seguro…); ausente = padrão */
+  kit?: Kit18;
 }
 
 /** Público potencial numa cidade: fãs locais + regionais, saturação de visitas recentes. */
@@ -83,11 +86,14 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
   let merch = 0;
   let visas = 0;
   let km = 0;
+  let travel = 0;
+  const tiers: number[] = [];
   const crew = Math.max(1, p.crew);
   const people = activeMembers(s, act).length + crew;
   p.cities.forEach((cityId, i) => {
     const leg = legInfo(s, prev, cityId, people);
     km += leg.km;
+    travel += leg.cost;
     day += Math.round(leg.days); // datas em dias inteiros (viagens de meio dia não podem pular o show)
     const rest = p.restEvery ?? 4;
     if (rest > 0 && i > 0 && i % rest === 0) day += 1; // folga contratada
@@ -106,11 +112,14 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
     logistics += leg.cost + money(s, (v.cost + 90 * people + PRODUCTION_COST[p.production]) * (1 - staffSkill(s, 'tour_manager') / 400));
     revenue += sold * price;
     merch += Math.round(sold * money(s, 3 + tier) * 0.6);
+    tiers.push(tier);
     stops.push({ cityId, day, tier, price, capacity, sold: 0, merch: 0, status: 'scheduled', travelDays: leg.days, visa: !!leg.visa?.needed });
     prev = cityId;
     day += 1;
   });
-  return { stops, logistics, expectedRevenue: revenue, expectedMerch: merch, days: day - (s.day + s.clock.dayInMonth), visas, warnings, km };
+  const days = day - (s.day + s.clock.dayInMonth);
+  if (TOUR18.kit) { const k = TOUR18.kit(s, p.kit, { people, km, travel, shows: stops.length, days, tiers, gross: revenue, fame: act.fame, members: activeMembers(s, act).length }); logistics += k.total; warnings.push(...k.warn); }
+  return { stops, logistics, expectedRevenue: revenue, expectedMerch: merch, days, visas, warnings, km };
 }
 
 function monthOfDay(s: GameState, day: number): number {
@@ -149,6 +158,8 @@ export function planTour(s: GameState, p: TourPlan): Tour | L {
   };
   post(s, `tour:${tour.id}`, -est.logistics, 'live_costs', `Logística ${tour.name}`);
   s.tours.push(tour);
+  if (p.kit) tour.kit18 = { ...p.kit };
+  TOUR18.planned?.(s, tour, p.kit, { people: activeMembers(s, act).length + Math.max(1, p.crew), km: est.km, travel: 0, shows: est.stops.length, days: est.days, tiers: est.stops.map((x) => x.tier), gross: est.expectedRevenue, fame: act.fame, members: activeMembers(s, act).length });
   if (agendaKeep) {
     const n = (s.agenda[act.id] ?? []).length - agendaKeep.length;
     s.agenda[act.id] = agendaKeep;
@@ -244,7 +255,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     const demand = cityDemand(s, act, st.cityId) * (t.role === 'opening' ? 0.3 : 1);
     const partner = t.partnerActId ? s.acts[t.partnerActId] : undefined;
     const partnerDraw = partner ? cityDemand(s, partner, st.cityId) * (t.role === 'co' ? 0.8 : 1) : 0;
-    const quality = clubBonus(s, st.cityId) * (0.75 + q / 200 + t2.stage / 250) * coverPenalty * (1 + PRODUCTION_BONUS[t.production]) * clim.outdoorFactor;
+    const quality = clubBonus(s, st.cityId) * (0.75 + q / 200 + t2.stage / 250) * coverPenalty * (1 + PRODUCTION_BONUS[t.production]) * clim.outdoorFactor * (TOUR18.q?.(s, t, st) ?? 1);
     const priceMult = st.price / Math.max(1, money(s, TICKET[st.tier]));
     let sold = Math.min(st.capacity, Math.round((demand + partnerDraw * (t.role === 'opening' ? 1 : 0.5)) * quality / Math.pow(priceMult, 1.2) * r.float(0.85, 1.12)));
     sold = Math.max(0, sold);
@@ -258,7 +269,8 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     if (t.role === 'opening') pay = Math.round(money(s, 150 + act.fame * 20));
     if (t.role === 'co') pay = Math.round(pay * 0.5);
     const mq = s.merch[act.id]?.quality ?? 40;
-    const merch = Math.round(sold * money(s, 2 + st.tier) * (0.3 + mq / 120));
+    let merch = Math.round(sold * money(s, 2 + st.tier) * (0.3 + mq / 120));
+    if (TOUR18.settle) ({ pay, merch } = TOUR18.settle(s, r, t, st, { gross, pay, merch, demand, quality, cover: coverPenalty, fatigue, priceMult, clim: clim.label, forecast }));
     st.merch = merch;
     if (s.merch[act.id]) {
       s.merch[act.id].sold += Math.round(sold * 0.12);
@@ -268,7 +280,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     const c = act.contractId ? s.contracts[act.contractId] : undefined;
     if (act.playerBand || (c && c.party === 'player' && c.model === '360')) {
       const lab = act.playerBand ? pay + merch : take360(s, act, pay + merch, c!.share360);
-      post(s, `show:${t.id}:${st.day}`, lab, 'live', `Show ${act.name} — ${cityL.pt}`);
+      if (!TOUR18.book?.(s, t, `show:${t.id}:${st.day}`, lab, `Show ${act.name} — ${cityL.pt}`)) post(s, `show:${t.id}:${st.day}`, lab, 'live', `Show ${act.name} — ${cityL.pt}`);
       if (!act.playerBand) act.cash += pay + merch - lab;
     } else {
       // gravadora clássica: a bilheteria é do artista; o selo pagou a logística como investimento de carreira
