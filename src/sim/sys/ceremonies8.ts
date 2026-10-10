@@ -54,8 +54,10 @@ export function eligible(s: GameState, cat: GramoCat, x: Release): boolean {
 
 export function campaignBonus(s: GameState, relId: string, cat: string): number {
   const c = cer8(s).campaigns.find((x) => x.relId === relId && x.cat === cat && x.year === s.year);
-  return c ? CAMPAIGN_BONUS[c.level - 1] ?? 0 : 0;
+  return (c ? CAMPAIGN_BONUS[c.level - 1] ?? 0 : 0) + GRAMO_ADJ.reduce((t, f) => t + f(s, relId, cat), 0);
 }
+/** Rodada 18 (awards18): ajustes extras de indicação/vitória (corpo de votantes, campanhas, elegibilidade de IA). */
+export const GRAMO_ADJ: ((s: GameState, relId: string, cat: string) => number)[] = [];
 
 /** Indicados anunciados (se já saíram neste ano) para a categoria. */
 export function nominees(s: GameState, cat: GramoCat): string[] | undefined {
