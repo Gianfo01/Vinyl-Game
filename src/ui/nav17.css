@@ -31,7 +31,11 @@
 .sum17 .bad { color: var(--bad, #c03030); }
 .sum17 .good { color: var(--good, #2c7a3c); }
 @media (max-width: 640px) {
-  .nav-pins17, .fwd17 { display: none; }
+  .nav-pins17, .tools17 .fwd17 { display: none; }
+  .crumbs15 li:not(:nth-last-child(-n+2)) { display: none; }
+  .crumbs15 li:nth-last-child(2)::before { content: none; }
+  .crumbs15 li { flex: 0 1 auto; overflow: hidden; white-space: nowrap; }
+  .crumbs15 li > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; max-width: 100%; }
   .tools17 .icon, .rec17 > summary { width: 1.8rem; height: 1.8rem; }
   .cp17-head .row.between { flex-direction: column; align-items: flex-start; }
 }
