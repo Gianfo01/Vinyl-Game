@@ -113,6 +113,8 @@ import './npc17';
 import './crime17';
 // Rodada 17 (E): estilo nos cartões, gêneros em alta pelas paradas, alcance mundial do ato.
 import './trends17';
+// Rodada 17 (H): agenda, contratação, freelancers e músicos de estúdio.
+import './agenda17';
 // Rodada 17 (onda 2, G): página exclusiva de cada carreira (Você › Carreiras) e personagem com origem/ambição travadas.
 import './careerpages17';
 import './char17';

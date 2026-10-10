@@ -17,6 +17,7 @@ import { fxText } from './persona';
 import { openCareer } from './careerui13';
 import { notoPanel } from './notoriety14';
 import { setTab } from '../vis';
+import { ngBalls17 } from './agenda17';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const go = (area: string) => { store.area = area; rerender(); };
@@ -65,6 +66,7 @@ export function careersPanel(s: GameState): HTMLElement {
       h('div', { class: 'row small' }, t(l('Agenda', 'Schedule')), ' ', bar(Math.min(100, load * 100)), ` ${Math.round(load * 100)}%`),
       st.mood.length ? h('ul', { class: 'small' }, st.mood.slice(-4).reverse().map((m) => h('li', { class: m.ok ? 'good' : 'bad' }, `${m.y}: ${t(m.t)}`))) : null),
     section(t(l('Carreiras', 'Careers')),
+      h('p', { class: 'small' }, t(l('Cada carreira ocupa bolinhas de agenda (1 normal, 2 à frente, 0 delegada). Ajuste o envolvimento e contrate diretores em ', 'Each career takes schedule balls (1 normal, 2 hands-on, 0 delegated). Set involvement and hire directors in ')), h('button', { class: 'linkish', onclick: () => go('agenda17') }, t(l('Agenda e contratações', 'Schedule and hiring')))),
       h('p', { class: 'muted small' }, t(l('Comece ou largue carreiras a qualquer momento. Cada uma ocupa parte da sua agenda; sem ser dono dos negócios, use o mercado de serviços (Gestão de artistas → Serviços).', 'Start or drop careers anytime. Each takes a share of your schedule; without owning businesses, use the services market (Artist management → Services).'))),
       h('table', { class: 'tbl compact' }, h('tbody', null, careerDefs(s).map((d) => {
         const on = st.active.includes(d.id);
@@ -95,7 +97,7 @@ export function careerCard(cfg: RunConfig, onRole?: () => void, part: 'all' | 'm
       h('p', { class: 'muted small' }, t(l('Escolha uma ou mais. O papel (selo, banda ou os dois) sai das atividades escolhidas; as outras definem onde você gasta seu tempo. Carreiras de época (ex.: plataforma) só abrem no ano certo.', 'Pick one or more. Your role (label, band or both) follows from what you pick; the rest decide where your time goes. Era careers (e.g. platform) only open in the right year.'))),
       h('div', { class: 'mut-grid' }, NG_CAREERS.map((id) => { const d = careerDef(id); if (!d) return null; const off = d.from > cfg.startYear; return h('label', { class: `check ${off ? 'disabled' : ''}`, title: t(d.desc) },
         h('input', { type: 'checkbox', checked: c.main.includes(id), disabled: off, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; c.main = on ? [...c.main, id] : c.main.filter((x) => x !== id); if (!c.main.length) c.main = ['label']; cfg.role = roleFromMain(c.main); onRole?.(); draw(); } }),
-        h('span', null, t(d.name), h('small', { class: 'muted' }, ` — ${t(d.desc)}`))); }))),
+        h('span', null, t(d.name), h('small', { class: 'muted' }, ` — ${t(d.desc)}`))); })), ngBalls17(c.main)),
     !ident ? null : h('section', { class: 'card' }, h('h3', null, ...hl(l('Origem profissional', 'Professional origin'), 'origin')),
       h('p', { class: 'muted small' }, t(l('O que você fazia antes de ter um negócio na música. Vale dinheiro, habilidades, reputação e contatos de saída.', 'What you did before running a music business. Brings money, skills, reputation and contacts from day one.'))),
       select<Origin>(c.origin as Origin, (Object.keys(ORIGINS) as Origin[]).map((k) => ({ value: k, label: t(ORIGINS[k].name) })), (k) => { c.origin = k; draw(); }, { 'aria-label': t(l('Origem profissional', 'Professional origin')) }),

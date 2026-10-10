@@ -12,7 +12,7 @@ const K = {
 
 export const ICON17_NAMES = [
   'crown', 'compass', 'target', 'book', 'pin', 'people', 'eye', 'briefcase', 'headphones', 'megaphone', 'scroll', 'map',
-  'chess', 'coin', 'ticket', 'medal', 'mask', 'diamond', 'tie', 'stage', 'mixer',
+  'chess', 'coin', 'ticket', 'medal', 'mask', 'diamond', 'tie', 'stage', 'mixer', 'hourglass',
 ] as const;
 export type Icon17 = (typeof ICON17_NAMES)[number];
 
@@ -39,6 +39,7 @@ const DRAW: Record<Icon17, (p: Px) => void> = {
   diamond: (p) => { p.poly([[4, 3], [12, 3], [15, 7], [8, 15], [1, 7]], K.teal); p.hline(1, 15, 7, C('#a8f0ec')); p.poly([[5, 4], [8, 4], [6, 7]], C('#e8ffff')); },
   tie: (p) => { p.poly([[6, 1], [10, 1], [9, 4], [7, 4]], K.dblue); p.poly([[7, 4], [9, 4], [11, 12], [8, 15], [5, 12]], K.blue); p.line(6, 8, 10, 6, K.dblue); },
   stage: (p) => { p.rect(1, 2, 14, 2, K.dred); p.rect(1, 2, 2, 10, K.red); p.rect(13, 2, 2, 10, K.red); p.rect(1, 12, 14, 3, K.brown); p.disc(8, 8, 1.6, K.skin); p.rect(7, 9, 3, 3, K.purple); },
+  hourglass: (p) => { p.rect(3, 1, 10, 2, K.brown); p.rect(3, 13, 10, 2, K.brown); p.poly([[4, 3], [12, 3], [8, 8]], K.cream); p.poly([[8, 8], [12, 13], [4, 13]], K.cream); p.poly([[6, 5], [10, 5], [8, 7]], K.gold); p.poly([[8, 10], [11, 13], [5, 13]], K.gold); },
   mixer: (p) => { p.rect(1, 4, 14, 9, K.dgrey); for (const x of [3, 6, 9, 12]) { p.vline(x, 5, 11, K.black); p.rect(x - 1, x % 2 ? 6 : 9, 3, 2, K.gold); } },
 };
 

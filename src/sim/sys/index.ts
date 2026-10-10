@@ -173,5 +173,7 @@ import './love17';
 import './kids17';
 import './looks17';
 import './extras17';
+// Rodada 17 (H): agenda com bolinhas por carreira, delegação, contratação, freelancers e músicos de estúdio.
+import './agenda17';
 // Rodada 17 (onda 2, G): experiência no ofício alivia a agenda de cada carreira.
 import './exp17';

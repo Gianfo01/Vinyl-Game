@@ -37,7 +37,7 @@ export const NAV17: Group17[] = [
   { id: 'crime', label: l('Submundo', 'Underworld'), icon: 'skull', secs: [sec('crime', l('Submundo', 'Underworld'), ['crime'])] },
   { id: 'you', label: l('Você', 'You'), icon: 'crown', secs: [
     sec('life', l('Vida', 'Life'), ['you', 'personal', 'night14', 'wealth']),
-    sec('careers', l('Carreiras', 'Careers'), ['careers', 'ventures']),
+    sec('careers', l('Carreiras', 'Careers'), ['careers', 'agenda17', 'ventures']),
     sec('cpages', l('Suas carreiras', 'Your careers'), [])] },
 ];
 export const MORE17 = { id: 'more', label: l('Mais', 'More'), icon: 'key' };
@@ -77,7 +77,7 @@ export const ICON17: Record<string, string> = {
   news17: 'megaphone', media: 'camera', critics: 'scroll',
   world: 'map', world17: 'chess', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
   festivals: 'ticket', awards: 'medal', rockhall: 'vault', crime: 'mask',
-  you: 'fame', personal: 'heart', night14: 'sleep', wealth: 'diamond', careers: 'compass', ventures: 'rocket',
+  you: 'fame', agenda17: 'hourglass', personal: 'heart', night14: 'sleep', wealth: 'diamond', careers: 'compass', ventures: 'rocket',
   identity: 'lock', biz17: 'gavel', management: 'brain', tour12: 'train', studio12: 'radio', publishing16: 'bulb', outlets16: 'film', platform16: 'ship',
   ...Object.fromEntries(ORDER17.map((id) => [CAREER_PAGE17[id].area, CAREER_PAGE17[id].icon])),
 };
