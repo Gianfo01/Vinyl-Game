@@ -18,7 +18,14 @@ import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { fin18 } from '../ledger18';
 import { physicalShare, pressingCost } from '../production';
 import type { GameState, PendingRelease, Release } from '../types';
-import { fmtL, money, notify, playerActs, post, remember } from '../util';
+import { fmtL, money, notify, playerActs, post as post0, remember } from '../util';
+
+/** post com coleta opcional para o balanço (globalThis.__sup18 = {}) */
+function post(s: GameState, key: string, amount: number, cat: string, memo: string, cash = true): boolean {
+  const G = (globalThis as { __sup18?: Record<string, number> }).__sup18;
+  if (G) { const k = key.split(':')[0]; G[k] = (G[k] ?? 0) + Math.round(amount); }
+  return post0(s, key, amount, cat, memo, cash);
+}
 import { postSalesAR18 } from './econ18';
 import { retailCycle } from './industry/retail';
 import type { Material } from './industry/state';
@@ -161,6 +168,7 @@ registerExt4('sup18', fresh);
 export function sup18(s: GameState): Sup18 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.sup18 ??= fresh()) as Sup18;
+  if (st.log && st.busts && st.bl) return st;
   const f = fresh();
   for (const k of Object.keys(f) as (keyof Sup18)[]) if (st[k] === undefined) (st as unknown as Record<string, unknown>)[k] = f[k];
   return st;

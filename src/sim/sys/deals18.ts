@@ -16,7 +16,13 @@ import { emitFact } from '../facts17';
 import { registerExplain } from '../explain18';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import type { Act, GameState } from '../types';
-import { fmtL, money, playerActs, post, remember } from '../util';
+import { fmtL, money, playerActs, post as post0, remember } from '../util';
+
+function post(s: GameState, key: string, amount: number, cat: string, memo: string, cash = true): boolean {
+  const G = (globalThis as { __sup18?: Record<string, number> }).__sup18;
+  if (G) { const k = key.split(':')[0]; G[k] = (G[k] ?? 0) + Math.round(amount); }
+  return post0(s, key, amount, cat, memo, cash);
+}
 import { PKG18, applyPkg18 } from './contracts18';
 import { SIGN_VETO } from './gate14';
 
@@ -40,7 +46,13 @@ export function deals18(s: GameState): Deals18 {
 const log = (s: GameState, t: L) => { const st = deals18(s); st.log.unshift({ w: s.week, t }); if (st.log.length > 30) st.log.length = 30; };
 
 // rivais não contratam quem está em desenvolvimento com você
-SIGN_VETO.push((s, _lb, act) => !!deals18(s).dev[act.id]);
+const veto18 = (s: GameState, _lb: string, act: Act): boolean => !!deals18(s).dev[act.id];
+/** Registro tardio (evita TDZ no ciclo de imports): veto de contratação e pacotes novos em contracts18. */
+export function ensureDeals18(): void {
+  if (!SIGN_VETO.includes(veto18)) SIGN_VETO.push(veto18);
+  if (!PKG18.some((p) => p.id === 'services')) PKG18.push(...PKGS18);
+}
+registerSimHook('newgame', 'deals18', () => ensureDeals18());
 
 // ================================================================== desenvolvimento
 
@@ -59,6 +71,7 @@ export function devCandidates18(s: GameState): Act[] {
   return known.map((id) => s.acts[id]).filter((a): a is Act => !!a && !a.owner && !a.playerBand && a.fame < 35 && a.status !== 'retired' && a.status !== 'split' && !deals18(s).dev[a.id] && a.members.length > 0).slice(0, 30);
 }
 export function startDev18(s: GameState, actId: string, months: 12 | 24): { ok: boolean; text: L } {
+  ensureDeals18();
   const a = s.acts[actId], st = deals18(s);
   if (!a || a.owner || a.playerBand) return { ok: false, text: l('Artista indisponível.', 'Artist unavailable.') };
   if (st.dev[actId]) return { ok: false, text: l('Já está em desenvolvimento.', 'Already in development.') };
@@ -307,6 +320,7 @@ registerMod('chartUnits', 'deals18:jv', (s, v, c) => {
 });
 
 registerSimHook('month', 'deals18', (s) => {
+  ensureDeals18();
   const st = deals18(s);
   if (Object.keys(st.dev).length) devMonth(s);
   if (Object.keys(st.imp).length) impMonth(s);
@@ -315,12 +329,12 @@ registerSimHook('month', 'deals18', (s) => {
 
 // ================================================================== pacotes contracts18: serviços de selo e P&D
 
-if (!PKG18.some((p) => p.id === 'services')) PKG18.push(
+const PKGS18: typeof PKG18 = [
   { id: 'services', model: 'distribution', fee: 0.25, name: l('Serviços de selo (artista dono do master)', 'Label services (artist owns the master)'), desc: l('O artista mantém o master e paga 25% da receita por distribuição, marketing e equipe; só metade do marketing é recuperável, por projeto; contas trimestrais rápidas com auditoria; um lançamento garantido com verba mínima.', 'The artist keeps the master and pays 25% of receipts for distribution, marketing and staff; only half the marketing is recoupable, per project; fast quarterly statements with audit; one guaranteed release with a promo floor.'),
     c: { pkg: 'services', rec: 0, video: false, tour: false, mkt: 0.5, cap: 0, cross: false, base: 'net', stmt: 'q', lag: 1, audit: true, minRel: 1, promo: 3000 }, rights: { master: 'artist', reversionYears: 0 } },
   { id: 'pd', model: 'distribution', fee: 0.18, name: l('P&D (prensagem e distribuição)', 'P&D (pressing & distribution)'), desc: l('O artista banca a gravação e o marketing e fica com o master; o selo só prensa e distribui por 18%. Nada recuperável, nenhuma verba garantida.', 'The artist funds recording and marketing and keeps the master; the label only presses and distributes for 18%. Nothing recoupable, no guaranteed spend.'),
     c: { pkg: 'pd', rec: 0, video: false, tour: false, mkt: 0, cap: 0, cross: false, base: 'net', stmt: 'q', lag: 2, audit: true, minRel: 0, promo: 0 }, rights: { master: 'artist', reversionYears: 0 } },
-);
+];
 
 // ================================================================== porquês e conselheiro
 

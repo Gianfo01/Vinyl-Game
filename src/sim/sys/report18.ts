@@ -104,7 +104,7 @@ registerSimHook('month', 'report18', (s) => {
     body: { pt: [...lines, ...rp.notes.map((n) => n.pt)].join(' '), en: [...linesEn, ...rp.notes.map((n) => n.en)].join(' ') },
   });
 });
-registerInboxKind('market18', { label: l('Mercado', 'Market'), cat: 'analyst', icon: 'chart', prio: 0, goto: () => ({ area: 'supply18', tab: ['supply18', 'rep'], label: l('Ver relatório', 'See report') }) });
+registerInboxKind('market18', { label: l('Mercado', 'Market'), cat: 'analyst', icon: 'chart-up', prio: 0, goto: () => ({ area: 'supply18', tab: ['supply18', 'rep'], label: l('Ver relatório', 'See report') }) });
 
 registerExplain('market.mix', (s, c) => {
   const mk = String(c.mk ?? 'na') as MarketId;
