@@ -253,6 +253,11 @@ export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, 
 
 /** Selo novo na era digital: sem acesso a playlists, lojas em destaque e acordos de plataforma,
  *  o digital rende menos até a casa se firmar (8 anos; mesmo firmada, rende 90%). */
+/** r17 final: no streaming o selo independente recebe menos por unidade-equivalente (rateio pró-rata do bolo,
+ *  acordos melhores das majors, distribuidora digital no meio). Corrige começos 2010+ rendendo ~8× os de 1990. */
+export const STREAM_PAYOUT17 = 0.6;
+export const streamPayout = (digital: string[]): number => (digital.includes('streaming') ? STREAM_PAYOUT17 : 1);
+
 export function digitalReach(s: GameState): number {
   const age = Math.max(0, s.year - s.config.startYear);
   return 0.3 + 0.6 * Math.min(1, age / 8);
@@ -364,7 +369,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     let gross = physSold * nominal(physDef.net[rel.type], s.year);
     if (digital.length) {
       const per = digital.reduce((t, f) => t + FORMATS.find((x) => x.id === f)!.net[rel.type], 0) / digital.length;
-      gross += nonPhys * nominal(per, s.year) * (rel.owner === 'player' ? digitalReach(s) : 1);
+      gross += nonPhys * nominal(per, s.year) * (rel.owner === 'player' ? digitalReach(s) * streamPayout(digital) : 1);
     } else {
       gross += nonPhys * nominal(FORMATS.find((x) => x.id === 'airplay')!.net[rel.type], s.year);
     }

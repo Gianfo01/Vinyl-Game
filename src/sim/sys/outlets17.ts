@@ -34,6 +34,9 @@ export const OUTLETS: OutDef[] = [
   { id: 'vinyl_special', name: l('Edição especial em vinil', 'Special vinyl edition'), desc: l('Vinil colorido numerado: colecionadores pagam caro.', 'Numbered colored vinyl: collectors pay a premium.'), from: 2010, to: 2100, reach: 0.02, margin: 0.3, fee: 4000, cred: 1 },
 ];
 export const outDef = (id: string) => OUTLETS.find((x) => x.id === id);
+/** Canais que definem a venda inteira (streaming, janela, exclusivas) vs. laterais (fatia ~ 4× o alcance extra). */
+const WHOLE17: OutId[] = ['streaming', 'window', 'platform_excl', 'bigbox_excl'];
+export const shareOf = (o: OutDef): number => (WHOLE17.includes(o.id) ? 1 : clamp(Math.abs(o.reach) * 4, 0.05, 0.6));
 
 export interface Out17 { rel: Record<string, OutId[]>; preset: OutId[]; log: { w: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { out17: Out17 } }
@@ -55,7 +58,9 @@ export const relOutlets = (s: GameState, relId: string): OutId[] => out17(s).rel
 export function estimate(s: GameState, rel: Release, ids: OutId[]): { reach: number; margin: number; why: [L, number, number][] } {
   let reach = 1, margin = 0;
   const why: [L, number, number][] = [];
-  for (const id of ids) { const o = outDef(id); if (!o) continue; const r = reachOf(s, o, rel); reach *= 1 + r; margin += o.margin; why.push([o.name, r, o.margin]); }
+  // r17 final: a margem de um canal lateral só vale para a fatia que passa por ele (antes valia para todas as
+  // unidades: clube do disco + supermercado derrubavam 50% da receita; loja própria dava +25% em tudo)
+  for (const id of ids) { const o = outDef(id); if (!o) continue; const r = reachOf(s, o, rel); reach *= 1 + r; const m = o.margin * shareOf(o); margin += m; why.push([o.name, r, m]); }
   return { reach, margin, why };
 }
 
