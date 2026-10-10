@@ -19,7 +19,7 @@ export const SMALL18 = 1.25;
  *  decrescente que acrescenta no máximo outro tanto */
 export const PERK_CAP18: Record<string, number> = {
   offer: 0.25, critics: 6, songQ: 8, trust: 12, morale: 12, appeal: 0.4, showRevenue: 0.4, chartUnits: 0.4, pressingCost: 0.35,
-  advance: 0.4, valuation: 0.5, reputation: 10, xp: 0.6, staffCost: 0.4, scoutAccuracy: 0.4, signals: 3, demos: 3, scoutActions: 3, energy: 1.5, wealth: 0.5, scheme: 0.4, stress: 0.4,
+  advance: 0.4, valuation: 0.5, reputation: 10, xp: 0.6, staffCost: 0.4, scoutAccuracy: 0.4, signals: 3, demos: 3, scoutActions: 3, energy: 1.5, wealth: 0.5, scheme: 0.4, stress: 0.4, metadata: 0.4,
 };
 
 /** chaves de vantagem em que menor é melhor (o bônus é a soma negativa) */

@@ -88,7 +88,7 @@ export const SKILL_TREE: SkillDef[] = [
   sk('mg_mediator', 'mgmt', 4, ['mg_care'], 'Mediador de bandas', 'Band mediator', { morale: 0.5, scheme: -0.1 }),
   sk('mg_dynasty', 'mgmt', 5, ['mg_plan', 'mg_mediator'], 'Casa de lendas', 'House of legends', { trust: 3, offer: 0.03, reputation: 1 }),
 
-  sk('dg_meta', 'digital', 1, [], 'Metadados limpos', 'Clean metadata', { chartUnits: 0.02 }),
+  sk('dg_meta', 'digital', 1, [], 'Metadados limpos', 'Clean metadata', { metadata: 0.3 }), // r18: menos caixa preta, conflitos e atrasos (não vende discos)
   sk('dg_social', 'digital', 2, ['dg_meta'], 'Redes sociais', 'Social media', { appeal: 0.03 }),
   sk('dg_playlist', 'digital', 2, ['dg_meta'], 'Curadoria de playlists', 'Playlist curation', { chartUnits: 0.03 }),
   sk('dg_data', 'digital', 3, ['dg_social'], 'Dados de audiência', 'Audience data', { scoutAccuracy: 0.05, signals: 1 }),

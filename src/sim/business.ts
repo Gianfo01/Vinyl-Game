@@ -11,6 +11,7 @@ import type { CatalogAuction, Company, Lawsuit } from './xtypes';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from './util';
 import { addAsset, removeAsset } from './finance';
 import { unclearedSamples } from './studio';
+import { precAdd18, precMul18 } from './sys/rights18';
 import { allReleases17 } from './relidx17';
 
 // ---------- Avaliações ----------
@@ -302,13 +303,13 @@ function suitsMonth(s: GameState, r: Rng): void {
     if (rel.owner !== 'player' || s.week - rel.week > 4 || s.flags[`suitchk:${rel.id}`]) continue;
     s.flags[`suitchk:${rel.id}`] = 1;
     const unc = unclearedSamples(s, rel.songs);
-    if (unc.length && r.chance(0.5 + rel.totalUnits / 2e6)) {
-      fileLawsuit(s, { kind: 'sample', plaintiff: s.acts[s.songs[unc[0].sourceSongId]?.actId ?? '']?.name ?? 'Espólio', defendant: 'player', actId: rel.actId, songId: unc[0].songId, claim: money(s, 15000 + rel.totalUnits * 0.3), odds: 0.25 + legal, text: fmtL(l('Uso de sample sem liberação em "{t}".', 'Uncleared sample in "{t}".'), { t: rel.title }) });
+    if (unc.length && r.chance((0.5 + rel.totalUnits / 2e6) * precMul18(s, 'sampleSuit'))) { // r18: precedentes (Grand Upright, Bridgeport…)
+      fileLawsuit(s, { kind: 'sample', plaintiff: s.acts[s.songs[unc[0].sourceSongId]?.actId ?? '']?.name ?? 'Espólio', defendant: 'player', actId: rel.actId, songId: unc[0].songId, claim: money(s, 15000 + rel.totalUnits * 0.3), odds: Math.max(0.03, 0.25 + legal + precAdd18(s, 'sampleOdds')), text: fmtL(l('Uso de sample sem liberação em "{t}".', 'Uncleared sample in "{t}".'), { t: rel.title }) });
     }
     // plágio: melodias parecidas de músicas muito populares
     // selos pequenos e novos são alvo raro: o processo segue o dinheiro
-    if (rel.peak <= 10 && s.week > 78 && r.chance(rel.revenue > money(s, 30000) ? 0.03 : 0.008)) {
-      fileLawsuit(s, { kind: 'plagiarism', plaintiff: 'Compositor independente', defendant: 'player', actId: rel.actId, songId: rel.songs[0], claim: Math.min(money(s, 40000 + rel.totalUnits * 0.5), Math.round(rel.revenue * 0.5) + money(s, 8000)), odds: 0.55 + legal, text: fmtL(l('Acusação de plágio contra "{t}".', 'Plagiarism claim against "{t}".'), { t: rel.title }) });
+    if (rel.peak <= 10 && s.week > 78 && r.chance((rel.revenue > money(s, 30000) ? 0.03 : 0.008) * precMul18(s, 'plagSuit'))) {
+      fileLawsuit(s, { kind: 'plagiarism', plaintiff: 'Compositor independente', defendant: 'player', actId: rel.actId, songId: rel.songs[0], claim: Math.min(money(s, 40000 + rel.totalUnits * 0.5), Math.round(rel.revenue * 0.5) + money(s, 8000)), odds: Math.max(0.05, 0.55 + legal + precAdd18(s, 'plagOdds')), text: fmtL(l('Acusação de plágio contra "{t}".', 'Plagiarism claim against "{t}".'), { t: rel.title }) });
     }
   }
   // auditoria de royalties: artista desconfiado com saldo de recoupment

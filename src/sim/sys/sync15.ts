@@ -10,7 +10,7 @@ import { clamp, Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { songStatus } from '../repertoire';
-import { syncMasterShare } from '../rights';
+import { USE_BLOCK18, syncMasterShare } from '../rights';
 import type { Act, GameState, Song } from '../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../util';
 import { addHype } from './hype12';
@@ -106,6 +106,7 @@ export function candidates(s: GameState, b: Brief15, max = 8): { song: Song; fit
   for (const id of playerActs(s)) for (const sid of s.acts[id]?.songs ?? []) {
     const song = s.songs[sid];
     if (!song || songStatus(s, song) !== 'released') continue;
+    if (USE_BLOCK18.fn?.(s, [song.id], 'sync')) continue; // r18: disputa/autorização pendente
     const sh = shareOf(s, song);
     if (sh.master + sh.pub <= 0) continue;
     out.push({ song, fit: fitOf(s, b, song), share: sh.master + sh.pub });

@@ -17,7 +17,7 @@ import type { Act, GameState } from './types';
 export type PerkKey =
   | 'offer' | 'critics' | 'songQ' | 'trust' | 'morale' | 'scoutActions' | 'signals' | 'energy' | 'demos' | 'reputation'
   | 'appeal' | 'showRevenue' | 'chartUnits' | 'pressingCost' | 'scoutAccuracy' | 'stress' | 'xp' | 'valuation'
-  | 'staffCost' | 'wealth' | 'advance' | 'scheme';
+  | 'staffCost' | 'wealth' | 'advance' | 'scheme' | 'metadata';
 
 export type PerkValues = Partial<Record<PerkKey, number>>;
 

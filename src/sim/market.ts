@@ -3,7 +3,8 @@
 
 import { physShareRel18 } from './sys/eras18';
 import { baseMult18, recoupable18, takeRecoup18 } from './sys/contracts18';
-import { postAR18, postRoyAP18, postSalesAR18, proDue18 } from './sys/econ18';
+import { postRoyAP18, postSalesAR18 } from './sys/econ18';
+import { pubRoute18 } from './sys/rights18';
 import { clamp, type Rng } from '../core/rng';
 import { nominal } from '../core/money';
 import { isUnlocked } from './era';
@@ -488,7 +489,7 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   if (pubToPlayer > 0) {
     let amount = Math.round(publishing * pubToPlayer * rightsLeak);
     if (hasCard(s, 'publisher')) amount = Math.round(amount * 1.3);
-    postAR18(s, `pub:${rel.id}`, amount, 'publishing', `Edição ${rel.title}`, 'pro', proDue18(s));
+    pubRoute18(s, rel, amount); // r18 (rights18): sociedades por mercado, caixa preta, caução e prazos
   }
   if (pubToPlayer < 1 && !act.playerBand) act.cash += Math.round(publishing * (1 - pubToPlayer) * 0.5);
   // parcela dos autores: paga individualmente a cada compositor (GDD §42.10)
