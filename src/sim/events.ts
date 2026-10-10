@@ -307,7 +307,7 @@ export const EVENTS: EventDef[] = [
     title: l('Convite: {outlet}', 'Invitation: {outlet}'),
     text: l('{outlet} quer {act} no programa da semana que vem.', '{outlet} wants {act} on next week\'s show.'),
     options: [
-      { id: 'accept', label: l('Aceitar', 'Accept'), apply: (s, _r, c) => { const a = act(s, c); a.fame = clamp(a.fame + 3, 0, 100); a.fans.casual += Math.round(20000 * (1 + a.fame / 30)); a.momentum += 8; remember(s, 'tv', fmtL(l('{a} se apresenta em {o}.', '{a} performs on {o}.'), { a: a.name, o: String(c.outlet) }), { actId: a.id }); } },
+      { id: 'accept', label: l('Aceitar', 'Accept'), apply: (s, _r, c) => { const a = act(s, c); a.fame = clamp(a.fame + 2 * (1 - a.fame / 100), 0, 100); a.fans.casual += Math.round(20000 * (1 + a.fame / 30)); a.momentum += 8; remember(s, 'tv', fmtL(l('{a} se apresenta em {o}.', '{a} performs on {o}.'), { a: a.name, o: String(c.outlet) }), { actId: a.id }); } },
       { id: 'decline', label: l('Recusar (preservar imagem)', 'Decline (protect the image)'), apply: (s, _r, c) => { const a = act(s, c); a.positioning -= 4; } },
     ],
   },
@@ -337,7 +337,7 @@ export const EVENTS: EventDef[] = [
         if (a.playerBand) post(s, `fest:${a.id}`, fee, 'live', String(c.festival));
         else if (a.contractId && s.contracts[a.contractId]?.model === '360') post(s, `fest360:${a.id}`, Math.round(fee * s.contracts[a.contractId].share360), 'live', String(c.festival));
         else a.cash += fee;
-        a.fame = clamp(a.fame + 2 * mult, 0, 100);
+        a.fame = clamp(a.fame + 2 * mult * (1 - a.fame / 100), 0, 100); // r18 final: festival rende menos fama para quem já é estrela
         a.fans.casual += Math.round(15000 * mult);
         a.fans.active += Math.round(2500 * mult);
         mood(s, a, 'fatigue', 10);

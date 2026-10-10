@@ -4,6 +4,7 @@ import { clamp, type Rng } from '../core/rng';
 import { EQUIPMENT, VENUE_TIERS } from '../data/rules';
 import { l } from '../data/world';
 import { actHasTrait, actState, actTalent } from './people';
+import { clickK18 } from './agenda';
 import type { Act, GameState } from './types';
 import { fmtL, hasCard, money, notify, post, remember, staffSkill } from './util';
 
@@ -38,7 +39,10 @@ export function gigEstimate(s: GameState, act: Act, tier: number, dates: number)
   // promotor e casa ficam com parte da bilheteria
   const revenue = Math.round(perDate * dates * price * ARTIST_SPLIT);
   const tm = staffSkill(s, 'tour_manager');
-  const crew = money(s, (v.cost + 120 * act.members.length) * (1 - tm / 400)) * dates;
+  // r18 final (balanço): produção, transporte, equipe e agência crescem com o tamanho da casa — arena e estádio
+  // ficam com 35–50% da parte do artista (antes um custo fixo pequeno deixava o show grande quase todo lucro)
+  const PROD = [0.08, 0.18, 0.3, 0.4, 0.48];
+  const crew = money(s, (v.cost + 120 * act.members.length) * (1 - tm / 400)) * dates + Math.round(revenue * PROD[v.id] * (1 - tm / 600));
   let comfort = 0;
   for (const id of s.player.equipment) comfort += EQUIPMENT.find((e) => e.id === id)?.effect.fatigue ?? 0;
   const fatigue = Math.max(1, dates * (5 + v.id) - tm / 25 - comfort);
@@ -65,9 +69,11 @@ export function playGigs(s: GameState, r: Rng, act: Act, tier: number, dates: nu
     act.cash += net;
   }
   // só parte do público é nova
-  act.fans.casual += Math.round(attendance * 0.15);
-  act.fans.active += Math.round(attendance * 0.05);
-  act.fans.core += Math.round(attendance * 0.006);
+  // r18 final (balanço): seus atos convertem público em fãs conforme a química com a plateia (0,4–1,6)
+  const ck = act.owner === 'player' || act.playerBand ? clickK18(s, act) : 1;
+  act.fans.casual += Math.round(attendance * 0.15 * ck);
+  act.fans.active += Math.round(attendance * 0.05 * ck);
+  act.fans.core += Math.round(attendance * 0.006 * ck);
   act.fame = clamp(act.fame + Math.log10(1 + attendance) * 0.08 * (1 - act.fame / 90), 0, 100);
   act.momentum = clamp(act.momentum + 2 + v.id, 0, 100);
   for (const id of act.members) {

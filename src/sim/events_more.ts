@@ -82,7 +82,8 @@ const gain = (s: GameState, key: string, real: number, cat: string, memo: string
 const rep = (s: GameState, k: keyof GameState['player']['reputation'], v: number) => {
   s.player.reputation[k] = clamp(s.player.reputation[k] + v, 0, 100);
 };
-const fame = (a: Act, v: number) => { a.fame = clamp(a.fame + v, 0, 100); };
+// r18 final (balanço): ganho de fama de evento encolhe perto do topo (perdas continuam inteiras)
+const fame = (a: Act, v: number) => { a.fame = clamp(a.fame + (v > 0 ? v * (1 - a.fame / 110) : v), 0, 100); };
 const mom = (a: Act, v: number) => { a.momentum = clamp(a.momentum + v, 0, 100); };
 const trust = (a: Act, v: number) => { a.trust = clamp(a.trust + v, 0, 100); };
 const fans = (a: Act, casual: number, active = 0, core = 0) => {

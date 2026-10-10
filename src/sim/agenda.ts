@@ -1,11 +1,11 @@
 // Agenda mensal dos artistas: 4 slots (3 para iniciantes), retorno decrescente,
 // delegação por política (GDD §3 "manual / delegada / simples", §9).
 
-import { clamp, type Rng } from '../core/rng';
+import { clamp, hashString, type Rng } from '../core/rng';
 import { agendaById, type SkillId } from '../data/people';
 import { l, type L } from '../data/world';
 import { maxVenueTier, playGigs } from './live';
-import { actHasTrait, actState, growPerson, traitMod } from './people';
+import { actHasTrait, actState, actTalent, growPerson, traitMod } from './people';
 import { composeSongs, notifyRecorded, recordSongs, recordingSessionsAvailable, scheduleRelease, suggestedPress, unrecorded, unreleasedRecorded, availableFormats, labelFunded, pressingCost } from './production';
 import { availableChannels } from './market';
 import type { Act, AgendaSlot, GameState } from './types';
@@ -14,6 +14,15 @@ import { emitEvent } from './events';
 import { EXTRA_ACTIONS } from '../data/actions';
 import { activeMembers, agendaLoad, monthIndex, personLoad, planSlots, slotLoad } from './capacity';
 import { runExtraAction } from './actions2';
+
+/** Química com o público, fixa por ato: 0,4–1,6 (média 1). */
+export const clickK18 = (s: GameState, act: Act): number => 0.4 + (hashString(`${s.config.seed}|click|${act.id}`) % 1000) / 1000 * 1.2;
+/** r18 final (balanço): nem toda banda "pega" — a vitrine (abrir shows, entrevistas) rende conforme o palco e um
+ *  fator de química com o público, fixo por ato (0,55–1,45). Antes toda carreira subia igual. */
+export function click18(s: GameState, act: Act): number {
+  const k = clickK18(s, act);
+  return k * (0.6 + actTalent(s, act).stage / 125);
+}
 
 export function slotsFor(act: Act): number {
   return act.fame < 10 && act.status === 'emerging' ? 5 : 6;
@@ -197,7 +206,7 @@ function runAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number
       grow(['stage', 'instr'], 0.8);
       break;
     case 'opening':
-      act.fame = clamp(act.fame + 1.4 * dim * (1 - act.fame / 70), 0, 100);
+      act.fame = clamp(act.fame + 1.4 * dim * (1 - act.fame / 70) * click18(s, act), 0, 100);
       act.fans.casual += Math.round(400 * dim * (1 + act.fame / 15));
       act.fans.active += Math.round(40 * dim);
       mood('fatigue', 5);
@@ -208,7 +217,7 @@ function runAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number
       if (act.owner === 'player') s.player.reputation.institutional = clamp(s.player.reputation.institutional + 0.2, 0, 100);
       break;
     case 'interview': {
-      act.fame = clamp(act.fame + 0.7 * dim * (1 + traitMod(s, act, 'media') / 20), 0, 100);
+      act.fame = clamp(act.fame + 0.45 * dim * (1 + traitMod(s, act, 'media') / 20) * (1 - act.fame / 100) * click18(s, act), 0, 100); // r18 final: entrevista rende menos para quem já é famoso
       act.momentum = clamp(act.momentum + 5 * dim, 0, 100);
       const risk = 0.04 + Math.max(0, traitMod(s, act, 'scandal')) * 0.12;
       // r18 final (ritmo): a mesma polêmica no máximo uma vez por semestre por ato (era a carta mais repetida)
