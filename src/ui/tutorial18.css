@@ -1,0 +1,36 @@
+/* Rodada 18 — tutorial18: botão "?", ajuda, tour de página, dicas de 1ª vez, trilhas e glossário */
+.help18-btn { font-weight: 700; min-width: 1.9rem; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; line-height: 1; }
+.help18 p { margin: 0.25rem 0; }
+.help18-block { border-left: 3px solid var(--accent); padding: 0.2rem 0 0.2rem 0.6rem; margin: 0.5rem 0; }
+.help18-block h3, .help18-block h4 { margin: 0 0 0.2rem; }
+.help18-tips { margin: 0.2rem 0 0.2rem 1rem; padding: 0; }
+.help18-gloss { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin-top: 0.3rem; }
+.gloss18-chip { cursor: pointer; border: 1px solid var(--line); background: var(--panel-2); }
+.help18-links { margin: 0.4rem 0; align-items: center; }
+.help18-more summary { cursor: pointer; font-weight: 600; margin-top: 0.4rem; }
+.help18-index { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.help18-index .seen { opacity: 0.75; }
+.gloss18-q { width: 100%; margin-bottom: 0.5rem; }
+.gloss18-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.5rem; max-height: 60vh; overflow: auto; }
+.gloss18-item { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 0.45rem 0.6rem; }
+.gloss18-item p { margin: 0.2rem 0 0; }
+.tour18 { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+.tour18-hl { position: fixed; border: 3px solid var(--accent); border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35); transition: all 0.2s ease; pointer-events: none; }
+.tour18-bub { position: fixed; max-width: 340px; background: var(--panel); color: var(--ink); border: 2px solid var(--accent); border-radius: 10px; box-shadow: var(--shadow); padding: 0.6rem 0.7rem; pointer-events: auto; display: flex; flex-direction: column; gap: 0.3rem; }
+.tour18-bub p { margin: 0; font-size: 0.9rem; }
+.tip18 { position: fixed; right: 1rem; bottom: 1rem; z-index: 45; max-width: 360px; display: flex; gap: 0.6rem; background: var(--panel); border: 2px solid var(--gold); border-radius: 10px; box-shadow: var(--shadow); padding: 0.6rem 0.7rem; }
+.tip18 p { margin: 0.2rem 0; font-size: 0.9rem; }
+.track18 { border: 1px solid var(--line); border-radius: 8px; padding: 0.4rem 0.6rem; margin: 0.4rem 0; background: var(--panel-2); }
+.track18 summary { cursor: pointer; }
+.track18-list { margin: 0.4rem 0 0 0; padding-left: 1.2rem; list-style: none; }
+.track18-list li { margin: 0.15rem 0; }
+.track18-list li.ok { color: var(--muted); text-decoration: line-through; }
+.track18-list li.next { font-weight: 600; }
+.track18-mk { display: inline-block; width: 1rem; }
+.bar18 { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 0.3rem; }
+.bar18 span { display: block; height: 100%; background: var(--good); }
+@media (max-width: 640px) {
+  .tip18 { left: 0.5rem; right: 0.5rem; max-width: none; }
+  .tour18-bub { left: 0.5rem !important; right: 0.5rem; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) { .tour18-hl { transition: none; } }
