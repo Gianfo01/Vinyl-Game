@@ -8,7 +8,7 @@
 import { clamp, Rng, seedState } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { l, type L } from '../../data/world';
-import { registerContractHook } from '../contracts';
+import { evaluateOffer, registerContractHook } from '../contracts';
 import { deferEvents, registerSimHook } from '../ext4';
 import { mainAmbition } from '../people';
 import type { Act, Contract, GameState, Offer, RightsTerms } from '../types';
@@ -321,3 +321,19 @@ deferEvents<EventDef>([
     ],
   },
 ]);
+
+/** Playbot: escolhe o pacote de cláusulas como um jogador sensato do perfil (o mais vantajoso que o artista ainda aceita). */
+export function botClauses18(s: GameState, act: Act, o: OfferLike, prof: 'cautious' | 'balanced' | 'aggressive'): void {
+  const order = prof === 'aggressive' ? ['major', 'indie', 'license'] : prof === 'balanced' ? ['indie', 'major', 'license', 'artist'] : ['license', 'indie', 'artist'];
+  for (const id of order) {
+    applyPkg18(o, id);
+    if (evaluateOffer(s, act, o).band !== 'unlikely') return;
+  }
+  applyPkg18(o, order[0]);
+}
+/** Políticas de caixa do bot: o agressivo atrasa contas quando aperta; todos antecipam recebíveis no vermelho. */
+export function botPolicy18(s: GameState, prof: 'cautious' | 'balanced' | 'aggressive'): void {
+  const f = fin18(s);
+  f.auto = true;
+  f.delayRoy = prof === 'aggressive';
+}

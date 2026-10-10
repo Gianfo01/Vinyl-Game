@@ -5,6 +5,7 @@
 // Respeita os mesmos limites do jogador (tempo livre, cota de reuniões, ações de scouting, vagas da sede).
 // Três perfis: cauteloso, equilibrado, agressivo. Sem aleatoriedade própria: o acaso é o do jogo.
 
+import { botClauses18, botPolicy18 } from './sys/contracts18';
 import { toReal } from '../core/money';
 import { FESTIVALS } from '../data/catalog';
 import { MARKETS, cityById, type MarketId } from '../data/world';
@@ -183,6 +184,7 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
     const act = s.acts[c.id];
     const o = c.o;
     o.advance = Math.round(o.advance * k.adv / 100) * 100;
+    botClauses18(s, act, o, p); // r18: cláusulas (recuperável, base, contas, garantias) conforme o perfil
     let ev = evaluateOffer(s, act, o);
     // r17: o agressivo tenta o 360 (parte de shows/merch) depois que o modelo existe na indústria; volta ao clássico se não cola
     if (p === 'aggressive' && s.year >= 2002) {
@@ -434,6 +436,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   const M = mem(s), L = M.log;
   M.cash.push(s.player.cash);
   if (M.cash.length > 6) M.cash.shift();
+  botPolicy18(s, prof);
   for (const d of [...s.decisions]) if (resolveDecision(s, d.id, pickOption(s, d, k))) L.decisions++;
   finances(s, k);
   const acts = playerActs(s);

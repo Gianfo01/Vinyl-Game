@@ -2,6 +2,7 @@
 // fábricas de prensagem, publishing próprio, leilão de catálogo, securitização, bolsa de valores
 // e processos (plágio, sample, auditoria de royalties, contrato, imagem).
 
+import { noteLost18 } from './sys/econ18';
 import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import { endContract } from './contracts';
@@ -149,7 +150,7 @@ function catalogAuctionsMonth(s: GameState, r: Rng): void {
     au.status = 'sold';
     const seller = s.labels[au.seller];
     if (seller) seller.cash += best.amount;
-    if (au.seller === 'player') post(s, `catsale:${au.id}`, best.amount, 'asset_sales', 'Venda de catálogo em leilão');
+    if (au.seller === 'player') { post(s, `catsale:${au.id}`, best.amount, 'asset_sales', 'Venda de catálogo em leilão'); noteLost18(s, au.releaseIds, best.amount, 'catálogo em leilão'); }
     for (const id of au.releaseIds) if (s.releases[id]) s.releases[id].owner = best.party;
     if (best.party === 'player') {
       if (s.player.cash < best.amount) {

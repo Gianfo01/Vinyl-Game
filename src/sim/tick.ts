@@ -1,6 +1,7 @@
 // Loop do mês: agenda → semanas (lançamentos, mercado, paradas) → fechamento
 // (finanças, contratos, pessoas, rivais, mundo, eventos, legado). GDD §6, §7.
 
+import { fin18, sumP18 } from './ledger18';
 import { clamp, type Rng } from '../core/rng';
 import { dailyStep, directorMonth, monthlyExt, startPlans, weeklyExt, yearlyExt } from './hooks';
 import { formatMoney } from '../core/money';
@@ -226,7 +227,8 @@ function techMonth(s: GameState): void {
 
 /** Impostos sobre o resultado positivo do ano (cascata do GDD §18). */
 function payTaxes(s: GameState, year: number): void {
-  const profit = s.player.profitByYear[year] ?? 0;
+  // r18: base de cálculo = resultado operacional + não operacional (câmbio, juros), nunca aportes/empréstimos
+  const profit = (s.player.profitByYear[year] ?? 0) + sumP18(fin18(s).y[year], 'nonop:');
   if (profit <= 0) return;
   const rate = profit > money(s, 1_000_000) ? 0.32 : 0.22;
   post(s, `tax:${year}`, -Math.round(profit * rate), 'taxes', `Impostos ${year}`);

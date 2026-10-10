@@ -8,6 +8,7 @@
 // outra carreira ou se aposentar. Também: fundos de catálogo que fazem lances por masters antigos (extra).
 // Aleatoriedade: geradores próprios (semente + mês).
 
+import { noteLost18 } from './econ18';
 import { Rng, clamp } from '../../core/rng';
 import { MARKETS, cityById, l, type L, type MarketId } from '../../data/world';
 import { labelValuation, transferLabel } from '../business';
@@ -266,6 +267,7 @@ export function sellMaster17(s: GameState, bidId: string): L | null {
   const rel = b && s.releases[b.relId];
   if (!b || !rel || rel.owner !== 'player' || b.expires < s.week) return l('Lance expirado.', 'Bid expired.');
   post(s, `sale17:cat:${rel.id}`, b.price, 'asset_sales', `Master vendido: ${rel.title}`);
+  noteLost18(s, [rel.id], b.price, `"${rel.title}"`); // r18: renda futura que sai com o master
   const buyer = Object.values(s.labels).find((x) => x.active && x.strategy === 'buy_catalog');
   rel.owner = buyer?.id ?? 'indie';
   const a = s.acts[rel.actId];

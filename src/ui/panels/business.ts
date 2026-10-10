@@ -179,7 +179,7 @@ function brandsTab(s: GameState): HTMLElement {
 }
 
 // Rodada 10: Negócios tinha 13 abas; Finanças (dinheiro, capital, dívidas, bolsa) virou área própria.
-const FINANCE_TABS = new Set(['overview', 'stock', 'capital', 'loans7', 'stakes8']);
+const FINANCE_TABS = new Set(['overview', 'stock', 'capital', 'loans7', 'stakes8', 'dre18']);
 export function businessPanel(s: GameState, group: 'business' | 'finance' = 'business'): HTMLElement {
   return h('div', { class: 'panel business' },
     tabs(`business-${group}`, mergeTabs([
