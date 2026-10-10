@@ -90,7 +90,7 @@ function careerTabs(s: GameState, id: string): Tab[] {
       case 'publisher': return [areaTab(s, 'publishing16', l('Compositores e catálogo', 'Songwriters and catalog'))];
       case 'media': return [areaTab(s, 'outlets16', l('Seus veículos', 'Your outlets'))];
       case 'platform': return [areaTab(s, 'platform16', l('Sua plataforma', 'Your platform'))];
-      case 'musician': return [{ id: 'band', label: t(l('Sua banda', 'Your band')), icon: 'guitar', render: () => bandTab(s) }];
+      case 'musician': return [{ id: 'band', label: t(l('Sua banda', 'Your band')), icon: 'guitar', render: () => bandTab(s) }, areaTab(s, 'artist18', l('Contratos do artista', 'Artist deals')), areaTab(s, 'shared18', l('Sociedades', 'Partnerships'))]; // r18 artist18
       default: return CP_TABS18[id]?.(s) ?? [];
     }
   })();

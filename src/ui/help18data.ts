@@ -267,3 +267,6 @@ H('cp17-screen', ['Trilhas e palco', 'Screen & stage'],
 H('cp17-critic', ['Jornalismo', 'Journalism'],
   ['Crítico e redação: resenhas, credibilidade, alcance e independência.', 'Critic and newsroom: reviews, credibility, reach and independence.'],
   ['Credibilidade vem de acertar e de independência. Ex.: elogiar disco de quem paga seu jantar, se vazar, derruba credibilidade.', 'Credibility comes from being right and independent. E.g. praising the record of whoever pays your dinner, if leaked, sinks credibility.'], [], ['critics']);
+
+// Rodada 18 (artist18): Contratos do artista e Sociedades.
+import './help18artist';
