@@ -96,8 +96,10 @@ export function searchGloss18(q: string): Gloss18[] {
   const k = norm(q.trim());
   if (!k) return [...G];
   const score = (x: Gloss18): number => {
-    const t = norm(`${x.term.pt} ${x.term.en} ${x.id} ${(x.alt ?? []).join(' ')}`);
-    if (t.includes(k)) return 2;
+    if (x.id === k || (x.alt ?? []).some((a) => norm(a) === k)) return 4;
+    const tm = [x.term.pt, x.term.en].map(norm);
+    if (tm.some((y) => y.startsWith(k) || y.includes(`(${k}`) || y.includes(` ${k}`))) return 3;
+    if (norm(`${tm.join(' ')} ${x.id} ${(x.alt ?? []).join(' ')}`).includes(k)) return 2;
     return norm(`${x.def.pt} ${x.def.en}`).includes(k) ? 1 : 0;
   };
   return G.map((x) => [x, score(x)] as const).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).map((x) => x[0]);

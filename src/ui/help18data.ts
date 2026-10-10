@@ -21,7 +21,7 @@ H('diary', ['Diário da run', 'Run diary'],
   ['Filtre por tipo para achar a causa de algo. Ex.: por que o artista saiu? Procure "saída" e veja o fato anterior.', 'Filter by type to find the cause of something. E.g. why did the act leave? Look for "exit" and the fact before it.']);
 H('inbox', ['Caixa de entrada', 'Inbox'],
   ['Mensagens tipadas por categoria e prioridade, com "ir para" e resposta.', 'Messages typed by category and priority, with "go to" and reply.'],
-  ['Responda primeiro as que pedem resposta. O último botão é o padrão quando a mensagem expira.', 'Reply first to those needing an answer. The last button is the default when it expires.']);
+  ['Responda primeiro as que pedem resposta. Ex.: proposta de rádio sem resposta em 6 semanas aplica "Recusar" (o último botão).', 'Reply first to those needing an answer. E.g. a radio offer unanswered for 6 weeks applies "Refuse" (the last button).']);
 
 // ---------------------------------------------------------------- Empresa
 H('hq', ['Sede', 'HQ'],
@@ -130,7 +130,7 @@ H('world17', ['Mundo vivo', 'Living world'],
   ['Leia para antecipar. Ex.: rival em guerra de preço → segure seu lançamento de catálogo por um trimestre.', 'Read it to anticipate. E.g. a rival in a price war → hold your catalog release one quarter.'], [], ['labels', 'dm18']);
 H('after18', ['Depois do palco', 'After the stage'],
   ['Para onde vão os artistas quando param: produtores, empresários, executivos, professores, políticos, esquecidos.', 'Where acts go when they stop: producers, managers, executives, teachers, politicians, forgotten.'],
-  ['Ex-artistas viram contatos: um ex-cantor que virou executivo pode facilitar licença. Abra a pessoa e use o menu de ações.', 'Former acts become contacts: an ex-singer turned executive can ease a licence. Open the person and use the action menu.'], [], ['people']);
+  ['Ex-artistas viram contatos. Ex.: um ex-cantor que virou executivo pode facilitar licença. Abra a pessoa e use o menu de ações.', 'Former acts become contacts. E.g. an ex-singer turned executive can ease a licence. Open the person and use the action menu.'], [], ['people']);
 H('regions18', ['Mercados regionais', 'Regional markets'],
   ['Submercados por região (Japão, Coreia, Índia, Brasil...): poder de compra, idioma, plataformas, barreiras, circuitos, K-pop e idols, afinidades.', 'Sub-markets by region (Japan, Korea, India, Brazil...): buying power, language, platforms, barriers, circuits, K-pop and idols, affinities.'],
   ['Entre com parceiro local ou versão no idioma. Ex.: licenciar no Japão rende mais que exportar direto; feat com astro local abre a porta.', 'Enter with a local partner or a local-language version. E.g. licensing in Japan pays more than direct export; a feat with a local star opens the door.'], [], ['world', 'charts'], ['licensing']);
@@ -188,7 +188,7 @@ H('wealth', ['Patrimônio', 'Wealth'],
   ['Separe o pessoal do selo: se o selo quebra, o patrimônio pessoal segura. Ex.: casa própria reduz custo de vida.', 'Keep personal and label money apart: if the label goes bust, personal wealth holds. E.g. owning a house cuts living costs.']);
 H('scenes17', ['Álbum de cenas', 'Scene album'],
   ['Cenas interativas que já aconteceram (prêmios, shows, TV, tribunal, casamento...), com replay e fotos icônicas.', 'Interactive scenes that already happened (awards, shows, TV, court, wedding...), with replay and iconic photos.'],
-  ['Reveja uma cena para lembrar a escolha e o efeito. As escolhas mudam relações e fama.', 'Replay a scene to recall the choice and its effect. Choices change relations and fame.']);
+  ['Reveja uma cena para lembrar a escolha e o efeito. Ex.: o discurso no prêmio que irritou um rival explica a rixa de hoje.', 'Replay a scene to recall the choice and its effect. E.g. the award speech that annoyed a rival explains today\'s feud.']);
 H('careers', ['Carreiras', 'Careers'],
   ['Suas carreiras ativas (selo, músico, empresário, agente, festival, casa, estúdio, editora, mídia, plataforma, trilhas, jornalismo): começar, delegar ou largar.', 'Your active careers (label, musician, manager, agent, festival, venue, studio, publisher, media, platform, screen, journalism): start, delegate or drop.'],
   ['Cada carreira custa tempo (bolinhas). Ex.: selo + festival sem diretor = sobrecarga; contrate um diretor e o festival segue sozinho.', 'Each career costs time (balls). E.g. label + festival without a director = overload; hire a director and the festival runs itself.'], [], ['agenda17', 'tut18']);

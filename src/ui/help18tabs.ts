@@ -69,6 +69,7 @@ T('*', 'scene12', ['Cenas locais', 'Local scenes'], ['Cenas por cidade e gênero
 // ---------------------------------------------------------------- Paradas
 T('chartsHub', 'global', ['Parada mundial', 'World chart'], ['Top global de singles e álbuns.', 'Global singles and albums top.'], ['Clique num título para abrir o artista.', 'Click a title to open the act.']);
 T('chartsHub', 'more', ['Rádio e outras paradas', 'Radio and other charts'], ['Paradas de rádio, clube, gênero.', 'Radio, club, genre charts.'], ['Parada de nicho é porta de entrada.', 'Niche charts are an entry door.']);
+T('*', 'countries', ['Países e paradas', 'Countries and charts'], ['Dados por país: mercado, formatos, paradas.', 'Data by country: market, formats, charts.'], ['Compare antes de promover. Ex.: país pequeno com pouca concorrência.', 'Compare before promoting. E.g. a small country with little competition.']);
 T('chartsHub', 'countries', ['Por país e formato', 'By country and format'], ['Paradas por país e por formato.', 'Charts by country and format.'], ['Use antes de decidir onde promover.', 'Use before deciding where to promote.']);
 T('*', 'hype12', ['Hype', 'Hype'], ['Hype de cada artista e o motivo.', 'Each act\'s hype and its reason.'], ['Hype cai rápido: lance enquanto está alto.', 'Hype fades fast: release while it is high.'], ['hype']);
 
