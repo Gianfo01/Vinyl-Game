@@ -187,3 +187,8 @@ import './start17';
 import './why18';
 import './inbox18';
 import './personact18';
+// Rodada 18 (dm18, onda 1): rixas para qualquer um (escada até a violência), qualquer um contra qualquer um, o Mestre (fios, ganchos, curva de tensão) e 32 situações combináveis.
+import './feud18';
+import './agency18';
+import './dm18';
+import './dmsits18';
