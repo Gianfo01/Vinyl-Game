@@ -539,19 +539,22 @@ export function commitCrime(s: GameState, cid: string, c: Ctx17, r: Rng = crng(s
   const head = fmtL(ex ? (realish ? l('Boato: {a} estaria por trás de "{c}" contra {t}. {x}', 'Rumor: {a} allegedly behind "{c}" against {t}. {x}') : l('{a} é apontado(a) por "{c}" contra {t}. {x}', '{a} is named for "{c}" against {t}. {x}')) : l('{a}: "{c}" contra {t}. {x}', '{a}: "{c}" against {t}. {x}'), { a: nameOf17(s, c.actor), c: d.name, t: nameOf17(s, c.target), x: txt });
   const fact = emitFact(s, { kind: 'crime', actors: [c.actor, c.target, ...joined, ...(c.org ? [`o:${c.org.replace(/^o:/, '')}`] : [])], place: o.place, severity: o.sev, visibility: vis, tags: ['crime', 'bad', cid, ...(ok ? ['ok'] : ['fail'])], text: head, src: 'crime17', data: { c: cid, ok: ok ? 1 : 0, ex: ex ? 1 : 0 } });
   // calor e caso
-  const resp = mineAct ? 'player' : c.actor;
+  // responde quem executou (seu artista responde por si; o selo leva metade do calor e paga a conta)
+  const resp = c.actor;
+  const boss = mineAct ? 'player' : resp;
   addHeat(s, resp, o.a3, o.heat * (ex ? 2 : 1));
+  if (boss === 'player' && resp !== 'player') addHeat(s, 'player', o.a3, o.heat * (ex ? 1 : 0.5));
   for (const pid of joined) addHeat(s, pid, o.a3, o.heat * (ex ? 1.5 : 0.7));
   if (ex) feedCase(s, resp, o.a3, 20 + o.sev / 3, o.sev, !!c.org, betrayed);
   // testemunhas: sócios e org guardam o segredo (obrigação contra o executor)
-  for (const w of [...joined, ...(c.org ? [`o:${c.org.replace(/^o:/, '')}`] : [])]) grantHold(s, { holder: w, target: resp, kind: 'secret', strength: clamp(o.sev / 1.3, 20, 80), proof: 1, months: 120, src: 'crime17', factId: fact.id, text: fmtL(l('Sabe do "{c}" contra {t}', 'Knows about the "{c}" against {t}'), { c: d.name, t: nameOf17(s, c.target) }), quiet: true });
+  for (const w of [...joined, ...(c.org ? [`o:${c.org.replace(/^o:/, '')}`] : [])].filter((x) => x !== resp)) grantHold(s, { holder: w, target: resp, kind: 'secret', strength: clamp(o.sev / 1.3, 20, 80), proof: 1, months: 120, src: 'crime17', factId: fact.id, text: fmtL(l('Sabe do "{c}" contra {t}', 'Knows about the "{c}" against {t}'), { c: d.name, t: nameOf17(s, c.target) }), quiet: true });
   if (c.org) { const oid = c.org.replace(/^o:/, ''); if (mineAct) st.org[oid] = clamp((st.org[oid] ?? 0) + 6, -100, 100); grantHold(s, { holder: `o:${oid}`, target: resp, kind: 'favor', strength: 55, months: 60, src: 'crime17', text: l('Serviço prestado: um dia eles cobram', 'Service rendered: one day they collect'), quiet: true }); }
   // relações e estresse
   const tOwner = ownerOfTarget(s, c.target);
   if (ex || !ok) {
     if (s.persons[c.target]) s.persons[c.target].rel[resp] = clamp((s.persons[c.target].rel[resp] ?? 0) - (ex ? 40 : 15), -100, 100);
     if (ex && s.persons[c.target]?.alive) grantHold(s, { holder: c.target, target: resp, kind: 'grievance', strength: clamp(o.sev, 30, 90), months: 240, src: 'crime17', text: fmtL(l('Vítima de "{c}"', 'Victim of "{c}"'), { c: d.name }), quiet: true });
-    if (resp === 'player' && tOwner && s.labels[tOwner]) s.rivalries[tOwner] = (s.rivalries[tOwner] ?? 0) + (ex ? 25 : 8);
+    if (boss === 'player' && tOwner && s.labels[tOwner]) s.rivalries[tOwner] = (s.rivalries[tOwner] ?? 0) + (ex ? 25 : 8);
     if (tOwner === 'player' && s.labels[resp] && ex) s.rivalries[resp] = (s.rivalries[resp] ?? 0) + 30;
     const La = s.labels[resp] ? leaderOf(s, resp) : undefined, Lb = tOwner && s.labels[tOwner] ? leaderOf(s, tOwner) : undefined;
     if (La && Lb && ex) { Lb.rel[La.id] = clamp((Lb.rel[La.id] ?? 0) - 35, -100, 100); }
@@ -560,8 +563,7 @@ export function commitCrime(s: GameState, cid: string, c: Ctx17, r: Rng = crng(s
   // exposição pública: escândalo (com reação regional) ou reputação
   if (ex) {
     if (s.persons[resp] || s.acts[resp]) scandal(s, resp, 'crime', o.sev, head, { place: o.place, cause: [fact.id], tags: ['crime'] });
-    else if (s.persons[c.actor] && mineAct) scandal(s, c.actor, 'crime', o.sev, head, { place: o.place, cause: [fact.id], tags: ['crime'] });
-    if (resp === 'player') { s.player.reputation.institutional = clamp(s.player.reputation.institutional - Math.round(o.sev / 7), 0, 100); notify(s, head, 'bad'); }
+    if (boss === 'player') { s.player.reputation.institutional = clamp(s.player.reputation.institutional - Math.round(o.sev / (resp === 'player' ? 7 : 14)), 0, 100); notify(s, head, 'bad'); }
     else if (s.labels[resp]) s.labels[resp].reputation = clamp(s.labels[resp].reputation - o.sev / 8, 0, 100);
     if (cid === 'chart_rig') { st.rig[c.target] = 0; st.rigBad[c.target] = s.week + 26; scandal(s, c.target, 'money', 45, fmtL(l('Fraude nas paradas: {a} perde posições.', 'Chart fraud: {a} is stripped of positions.'), { a: nameOf17(s, c.target) })); }
     if (cid === 'royalty_skim') { const a = s.acts[c.target]; if (a) for (const m of a.members) { const pm = s.persons[m]; if (!pm?.alive || pm.isPlayer) continue; pm.resentment = clamp(pm.resentment + 25, 0, 100); grantHold(s, { holder: m, target: 'player', kind: 'grievance', strength: 70, months: 240, src: 'crime17', text: l('Roubou meus royalties', 'Stole my royalties'), quiet: true }); } }
@@ -569,7 +571,7 @@ export function commitCrime(s: GameState, cid: string, c: Ctx17, r: Rng = crng(s
   if (tOwner === 'player' && !mineAct) notify(s, ex ? head : fmtL(l('Algo aconteceu com {t}: {x}', 'Something happened to {t}: {x}'), { t: nameOf17(s, c.target), x: txt }), ok ? 'bad' : 'info');
   for (const b of betrayed) emitFact(s, { kind: 'betrayal', actors: [b, resp], place: o.place, severity: 40, visibility: 'rumor', tags: ['crime', 'informant'], text: fmtL(l('{b} entregou {a} à polícia.', '{b} gave {a} up to the police.'), { b: nameOf17(s, b), a: nameOf17(s, resp) }), src: 'crime17' });
   logCrime(s, { actor: resp, target: c.target, c: cid, ok, ex, text: head, mine: mineAct || tOwner === 'player' || ex });
-  if (resp !== 'player') st.npcN++;
+  if (boss !== 'player') st.npcN++;
   return { ok, ex, text: txt, fact, joined, betrayed };
 }
 
@@ -593,7 +595,7 @@ export function trialOdds(s: GameState, cs: Case17): { p: number; why: L[] } {
   const why: L[] = [];
   let p = 0.8 - cs.ev / 110;
   why.push(fmtL(l('Provas {e}/100', 'Evidence {e}/100'), { e: Math.round(cs.ev) }));
-  const lg = cs.who === 'player' ? legal15(s) : 0.3;
+  const lg = cs.who === 'player' || isMine(s, cs.who) ? legal15(s) : 0.3;
   if (lg) { p += lg * 0.35; why.push(fmtL(l('Advogados (Jurídico) +{x}%', 'Lawyers (Legal) +{x}%'), { x: Math.round(lg * 35) })); }
   if (cs.rico) { p -= 0.15; why.push(fmtL(l('{r}: crime organizado −15%', '{r}: organized crime −15%'), { r: ricoName(s, cs.a3) ?? l('RICO') })); }
   if (cs.inf.length) { p -= 0.1 * cs.inf.length; why.push(fmtL(l('{n} informante(s) −{x}%', '{n} informant(s) −{x}%'), { n: cs.inf.length, x: cs.inf.length * 10 })); }
