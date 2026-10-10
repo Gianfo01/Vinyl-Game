@@ -30,7 +30,7 @@ import type { Act, GameState, Label, Person } from '../types';
 import { fmtL, money, nextId, notify, playerActs } from '../util';
 import { addHype } from './hype12';
 import { depart, leaders, newLeader } from './leaders10';
-import { goSolo16 } from './lineup16';
+import { goSolo16, leaveBand16 } from './lineup16';
 import { m14, mgrActive, mgrCap, mgrName, rosterOf } from './managers14';
 import { genMgrs16 } from './people16';
 import { per13, type P13 } from './persona13';
@@ -214,8 +214,8 @@ function labelExits(s: GameState, r: Rng, W: number): void {
     if (a.fame > lb.reputation + 30) { w += (a.fame - lb.reputation - 30) / 50; ws.push(l('ficou maior que o selo', 'outgrew the label')); }
     const gr = holdsOf(s, a.id).has.some((h) => h.kind === 'grievance' && h.target === lb.id && h.status === 'open');
     if (gr) { w += 0.5; ws.push(l('mágoa com o selo', 'a grudge against the label')); }
-    if (F(P, 'rebeldia') > 1.3) { w += 0.25; ws.push(l('espírito rebelde', 'rebel spirit')); }
     if (wars17(s).some((x) => x.a === lb.id || x.b === lb.id) && lb.cash < money(s, 100000)) { w += 0.3; ws.push(l('selo sangrando na guerra de preços', 'label bleeding in a price war')); }
+    if (ws.length && F(P, 'rebeldia') > 1.3) { w += 0.25; ws.push(l('espírito rebelde', 'rebel spirit')); }
     if (!ws.length || !r.chance(clamp(0.002 + w * 0.01, 0, 0.04) * W)) continue;
     n++;
     // teimoso com contrato longo pela frente: greve em vez de saída
@@ -444,15 +444,17 @@ function delays(s: GameState, r: Rng, W: number): void {
   if (!big.size) return;
   let n = 0;
   for (const a of Object.values(s.acts)) {
-    if (n >= 3) break;
-    if (!okAct17(s, a)) continue;
+    if (n >= 2) break;
+    if (!okAct17(s, a) || a.fame < 15) continue;
     const since = s.week - a.lastRelease;
     const b = big.get(fam(a));
-    if (since < 20 || since > 70 || !b || b === a || b.fame < a.fame + 15 || unreleasedRecorded(s, a).length < 1) continue;
+    if (since < 20 || since > 70 || !b || b === a || b.fame < a.fame + 15 || (b.fame < 70 && mkOf(b.city) !== mkOf(a.city)) || unreleasedRecorded(s, a).length < 1) continue;
+    if ((npc17(s).cd[`delay:${a.id}`] ?? 0) > s.week) continue;
     const lb = a.owner ? s.labels[a.owner] : undefined;
     if (lb && risk(s, lb) > 1.5) continue; // selo de apetite alto encara a briga
-    if (!r.chance(0.45 * Math.min(1.5, W))) continue;
+    if (!r.chance(0.2 * Math.min(1.5, W))) continue;
     n++;
+    npc17(s).cd[`delay:${a.id}`] = s.week + 52;
     const wk = r.int(5, 9);
     a.lastRelease = Math.min(s.week, a.lastRelease + wk);
     const t = fmtL(l('{a} adiou o lançamento ~{n} semanas para não bater de frente com {b} (fama {f} × {g}).', '{a} pushed its release back ~{n} weeks to avoid going head to head with {b} (fame {f} vs {g}).'), { a: a.name, n: wk, b: b.name, f: Math.round(b.fame), g: Math.round(a.fame) });
@@ -626,12 +628,12 @@ function mergers(s: GameState, r: Rng, W: number): void {
 // leilão por agente livre: estrela sem selo atrai lances, vence quem paga mais (com prêmio)
 function bidding(s: GameState, r: Rng, W: number): void {
   const a = Object.values(s.acts).filter((x) => okAct17(s, x) && !x.owner && x.fame >= 50 && !indieByChoice(s, x.id) && cool(s, `bid:${x.id}`, 26)).sort((x, y) => y.fame - x.fame)[0];
-  if (!a || !r.chance(0.5 * Math.min(1.4, W))) return;
+  if (!a || !r.chance(0.3 * Math.min(1.4, W))) return;
   const adv = money(s, expectedAdvance(s, a));
   const bids = activeLabels(s).filter((x) => x.cash > adv * 2 && (x.focus.length === 0 || x.focus.includes(fam(a)))).map((x) => [x, x.cash / adv * (0.5 + x.reputation / 100) * r.float(0.7, 1.3)] as [Label, number]).sort((x, y) => y[1] - x[1]);
   if (bids.length < 2) return;
   const win = bids[0][0];
-  const prem = Math.round(adv * (0.3 + 0.25 * Math.min(3, bids.length - 1)));
+  const prem = Math.round(adv * (0.15 + 0.08 * Math.min(5, bids.length - 1)));
   win.cash -= prem;
   signWithRival(s, a, win.id, r, true);
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
@@ -650,6 +652,7 @@ function solos(s: GameState, r: Rng, W: number): void {
   if (!a || !p?.alive || p.isPlayer) return;
   const P = per13(s, `p:${p.id}`);
   if (F(P, 'ego') + F(P, 'ambicao') < 2.4) return;
+  leaveBand16(s, a, p, 'solo');
   const solo = goSolo16(s, r, p, a);
   const ws = l('ego e ambição maiores que a banda', 'ego and ambition bigger than the band');
   career(s, `p:${p.id}`, 'artist', 'artist', fmtL(l('saiu de {a} para a carreira solo: {w}', 'left {a} to go solo: {w}'), { a: a.name, w: ws }));
