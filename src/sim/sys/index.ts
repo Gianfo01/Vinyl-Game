@@ -145,3 +145,5 @@ import './lineup16';
 import './bridge17';
 import './situations17';
 import './sits17';
+// Rodada 17 (D): imprensa viva — notícias, boatos, veículos, críticos reais, processos e situações de crítica.
+import './media17';
