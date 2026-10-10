@@ -111,8 +111,7 @@ function cosine(a: number[], b: number[]): number {
   return x / Math.max(1e-6, Math.sqrt(y * z));
 }
 
-registerSimHook('launch', 'fans18', (s, _r, arg) => {
-  const rel = arg.release;
+export function fansLaunch18(s: GameState, rel?: Release): void {
   const act = rel && s.acts[rel.actId];
   if (!rel || !mineAct(s, act) || rel.hist) return;
   const f = fan18(s, act.id)!;
@@ -151,7 +150,8 @@ registerSimHook('launch', 'fans18', (s, _r, arg) => {
   }
   // mobilização: fã-clube e equipe de rua fazem barulho na estreia
   if (f.mob >= 25) addHype(s, `r:${rel.id}`, 'fans18', l('Fãs mobilizados na estreia', 'Fans mobilised for release day'), Math.round(f.mob / 10));
-});
+}
+registerSimHook('launch', 'fans18', (s, _r, arg) => fansLaunch18(s, arg.release));
 
 // cansaço de lançamentos: o público dá menos atenção a cada novo disco
 registerMod('appeal', 'fans18', (s, v, c) => {
@@ -245,7 +245,7 @@ registerInboxKind('fans18', {
   },
 });
 
-registerSimHook('month', 'fans18', (s) => {
+export function fansMonth18(s: GameState): void {
   const st = fans18(s);
   const r = Rng.fromSeed(`${s.config.seed}:fans18:${s.year}:${s.month}`);
   const mine = playerActs(s);
@@ -309,7 +309,8 @@ registerSimHook('month', 'fans18', (s) => {
       }
     }
   }
-});
+}
+registerSimHook('month', 'fans18', (s) => fansMonth18(s));
 
 // ------------------------------------------------------------------ explicações e conselheiro
 

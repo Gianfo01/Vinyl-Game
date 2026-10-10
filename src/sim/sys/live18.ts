@@ -362,7 +362,7 @@ function closeTour(s: GameState, t: Tour, pm: TourPM18): void {
 
 registerInboxKind('live18', { label: l('Estrada', 'Road'), cat: 'deals', icon: 'tour-bus', prio: 1, goto: () => ({ area: 'shows', label: l('Abrir shows', 'Open shows') }) });
 
-registerSimHook('month', 'live18', (s) => {
+export function liveMonth18(s: GameState): void {
   const v = live18(s);
   for (const t of s.tours) {
     const pm = tourPM18(s, t.id);
@@ -421,7 +421,8 @@ registerSimHook('month', 'live18', (s) => {
       }
     }
   }
-});
+}
+registerSimHook('month', 'live18', (s) => liveMonth18(s));
 
 // exclusividade com o gigante (V2): bônus anual de assinatura × backlash por taxas e processo antitruste
 registerSimHook('year', 'live18', (s) => {
@@ -454,12 +455,14 @@ export function botKit18(s: GameState, actId: string, gross: number, shows: numb
   const act = s.acts[actId];
   const k: Kit18 = { ...KIT0 };
   if (!act) return k;
-  if (km > shows * 900 && s.year >= FLY_FROM18 && act.fame >= 50) k.move = 'fly';
-  else if (act.fame < 20 && act.members.length <= 5) { k.move = 'van'; k.bed = 'cheap'; }
-  if (gross > money(s, 50000)) k.ins = 1;
-  if (shows >= 6 && act.fame >= 25) k.reh = 1;
-  if (act.fame >= 60) { k.sec = 1; k.reh = 2; }
-  if (s.year >= GIANT_FROM18 && act.fame >= 45) k.prom = 'giant';
+  const c = act.contractId ? s.contracts[act.contractId] : undefined;
+  const share = act.playerBand ? 1 : c?.model === '360' ? c.share360 : 0;
+  // contrato clássico: o selo só paga a logística — economiza; com parte da bilheteria, protege a receita
+  if (act.fame < 30 && act.members.length <= 5) { k.move = 'van'; k.bed = 'cheap'; }
+  else if (share && km > shows * 900 && s.year >= FLY_FROM18 && act.fame >= 55) k.move = 'fly';
+  if (share && gross * share > money(s, 40000)) k.ins = 1;
+  if (share && shows >= 6 && act.fame >= 35) k.reh = 1;
+  if (s.year >= GIANT_FROM18 && act.fame >= 45 && share) k.prom = 'giant';
   return k;
 }
 

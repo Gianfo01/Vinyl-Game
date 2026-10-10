@@ -17,6 +17,7 @@ import { forecastTour } from '../../sim/sys/explain12';
 import { forecastBox } from '../sys/explain12';
 import { fameText } from '../../sim/sys/fame15';
 import { labelTourNet16, sizedDraft16, suggestRoute16 } from '../../sim/route16';
+import { kitDraft18, kitForm18 } from '../sys/live18';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -31,7 +32,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
   const need = Math.ceil(draft.minutes / 4);
   draft.setlist = recorded.slice(0, need).map((x) => x.id);
   const others = Object.values(s.acts).filter((x) => visibleAct(s, x) && x.id !== act.id && x.status === 'active' && Math.abs(x.fame - act.fame) < 30).sort((a, b) => b.fame - a.fame).slice(0, 20);
-  const plan: TourPlan = { ...draft, actId: act.id, cities: stops };
+  const plan: TourPlan = { ...draft, actId: act.id, cities: stops, kit: kitDraft18() };
   const est = stops.length ? estimateTour(s, plan) : null;
   return section(t(l('Planejar turnê', 'Plan a tour')),
     h('div', { class: 'form grid2' },
@@ -43,8 +44,9 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
       draft.role !== 'headline' ? h('label', null, t(l('Parceiro', 'Partner')), select(draft.partnerActId ?? '', [{ value: '', label: '—' }, ...others.map((x) => ({ value: x.id, label: `${x.name} (★${fameText(s, x.id)})` }))], (v) => { draft.partnerActId = v || undefined; rerender(); })) : null,
       h('label', null, t(l('Equipe técnica', 'Road crew')), select(draft.crew, [1, 2, 4, 6, 10, 16].map((n) => ({ value: n, label: `${n}` })), (v) => { draft.crew = v; rerender(); })),
       h('label', null, t(l('Ingresso', 'Ticket price')), select(draft.priceMult, [0.6, 0.8, 1, 1.25, 1.5, 2].map((m) => ({ value: m, label: `×${m}` })), (v) => { draft.priceMult = v; rerender(); })),
-      h('label', null, t(l('Pagamento', 'Pay deal')), select(draft.pay, [{ value: 'door' as const, label: t(l('Bilheteria (65% líquida)', 'Door (65% net)')) }, { value: 'guarantee' as const, label: t(l('Cachê fixo', 'Flat fee')) }, { value: 'hybrid' as const, label: t(l('Garantia + 45%', 'Guarantee + 45%')) }], (v) => { draft.pay = v; rerender(); })),
+      h('label', null, t(l('Pagamento', 'Pay deal')), select(draft.pay, [{ value: 'door' as const, label: t(l('Bilheteria (65% líquida)', 'Door (65% net)')) }, { value: 'guarantee' as const, label: t(l('Cachê fixo', 'Flat fee')) }, { value: 'hybrid' as const, label: t(l('Garantia + 45%', 'Guarantee + 45%')) }, { value: 'versus' as const, label: t(l('Garantia ou porta (o maior)', 'Guarantee vs door (higher)')) }], (v) => { draft.pay = v; rerender(); })),
     ),
+    kitForm18(s, plan, est),
     h('p', { class: 'small' }, ic('disc'), ' ', t(l('Setlist: {n} gravações próprias ({q} necessárias){c}.', 'Setlist: {n} own recordings ({q} needed){c}.'), { n: draft.setlist.length, q: need, c: draft.setlist.length < need ? t(l(' — o resto vira covers, com penalidade', ' — the rest will be covers, with a penalty')) : '' })),
     !stops.length ? h('p', { class: 'muted small' }, t(l('Monte a rota clicando nas cidades do mapa acima.', 'Build the route by clicking cities on the map above.'))) : null,
     setStops ? routeHintRow(s, act.id, setStops) : null,

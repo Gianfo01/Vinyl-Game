@@ -34,6 +34,7 @@ import { candidates as syncCands, pitch15, sy15 } from './sys/sync15';
 import { scoutInPerson } from './sys/capacity14';
 import { oh } from './sys/overhead13';
 import { cityDemand, estimateTour, planTour, type TourPlan } from './tours';
+import { botKit18 } from './sys/live18';
 import { labelTourNet16, sizedDraft16, suggestRoute16 } from './route16';
 import { advanceMonth } from './tick';
 import type { Act, GameState, RunConfig } from './types';
@@ -305,6 +306,9 @@ function road(s: GameState, k: Knobs, prof: Profile): void {
     const n = pool.length;
     if (n < 3) continue;
     const plan: TourPlan = { actId: id, cities: pool, startInDays: 21, priceMult: 1, setlist: recorded.slice(0, 15).map((x) => x.id), role: 'headline', pay: 'door', ...sizedDraft16(s, id) };
+    const est0 = estimateTour(s, plan);
+    plan.kit = botKit18(s, id, est0.expectedRevenue, est0.stops.length, est0.km); // r18 live18: seguro, transporte, ensaio, promotor
+    if (act.fame < 25) plan.pay = 'versus'; // r18: ato pequeno troca parte da porta por um piso garantido
     const est = estimateTour(s, plan);
     // selo clássico só paga a logística (bilheteria é do artista): vale como investimento se não pesa no caixa
     const cost = -labelTourNet16(s, id, est).net; // a mesma linha "Para o selo" do planejador
