@@ -13,7 +13,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { registerExplain } from '../explain18';
 import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
-import { estimate } from '../scouting';
+import { actEst18, stars18 } from './ability18';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, playerActs, post, staffSkill } from '../util';
 import { addSignal, spawnProceduralAct } from '../worldgen';
@@ -144,7 +144,7 @@ export function dig18(s: GameState, chId: string): Dig18 {
     if (lb) rivals.push(`${a.name} (${lb})`);
   }
   const text = fmtL(l('{c}: {n} nome(s) — {names}. Informação: grau {d}, margem ±{e}.{r}', '{c}: {n} name(s) — {names}. Info: degree {d}, margin ±{e}.{r}'),
-    { c: c.name, n: found.length, names: found.map((id) => s.acts[id].name).join(', '), d: c.deg, e: Math.round(noise), r: rivals.length ? fmtL(l(' Rivais notaram: {x}.', ' Rivals noticed: {x}.'), { x: rivals.join(', ') }) : '' });
+    { c: c.name, n: found.length, names: { pt: found.map((id) => `${s.acts[id].name} (${estTxt18(s, s.acts[id]).pt})`).join(', '), en: found.map((id) => `${s.acts[id].name} (${estTxt18(s, s.acts[id]).en})`).join(', ') }, d: c.deg, e: Math.round(noise), r: rivals.length ? fmtL(l(' Rivais notaram: {x}.', ' Rivals noticed: {x}.'), { x: rivals.join(', ') }) : '' });
   return { ok: true, text, found };
 }
 
@@ -177,6 +177,16 @@ export function watchShow18(s: GameState, headId: string): Dig18 {
   return { ok: true, found: [op.id], text: fmtL(l('Show de {h}. Quem abriu: {o} — {v}. Você viu de perto (grau 3).{r}', '{h}\'s show. The opener: {o} — {v}. You saw them up close (degree 3).{r}'), { h: h.name, o: op.name, v: vibe, r: lb ? fmtL(l(' {l} estava na plateia também.', ' {l} was in the crowd too.'), { l: lb }) : '' }) };
 }
 
+/** r18 final: o que você acha do achado, pela régua do ability18 (estrelas de CA e faixa de PA com a incerteza do
+ *  seu conhecimento × olho do A&R) — uma demo diz pouco do teto, um contrato de desenvolvimento diz muito. */
+export function estTxt18(s: GameState, a: Act): L {
+  const e = actEst18(s, a);
+  if (!e) return l('sem avaliação', 'no read');
+  const fog = e.paHi >= 199;
+  return fmtL(fog ? l('agora ★{c}; potencial desconhecido', 'now ★{c}; potential unknown') : l('agora ★{c}; potencial ★{lo}–{hi}', 'now ★{c}; potential ★{lo}–{hi}'),
+    { c: stars18(e.ca), lo: stars18(e.paLo), hi: stars18(e.paHi) });
+}
+
 // ---------------------------------------------------------------- caixa: demos e disputa
 registerInboxKind('disc18_demo', { label: l('Demo', 'Demo'), cat: 'decision', icon: 'disc', prio: 1, goto: (_s, m) => (m.ref?.act ? { act: String(m.ref.act) } : null),
   handle: (s, m, act) => {
@@ -185,9 +195,9 @@ registerInboxKind('disc18_demo', { label: l('Demo', 'Demo'), cat: 'decision', ic
     const r = Rng.fromSeed(`${s.config.seed}|demo18|${id}|${act}`);
     if (act === 'listen' || act === 'more') {
       addLead18(s, r, a, 'demo', 2, 10, fmtL(l('Demo: {m}.', 'Demo: {m}.'), { m: demoMedium18(s) }));
-      const e = estimate(s, id, 'talent');
-      if (act === 'more') { st.asked[id] = s.week + 3; return fmtL(l('Você pediu mais material a {a}. Resposta em ~3 semanas (talento estimado {lo}–{hi}).', 'You asked {a} for more material. Answer in ~3 weeks (estimated talent {lo}–{hi}).'), { a: a.name, lo: e?.lo ?? '?', hi: e?.hi ?? '?' }); }
-      return fmtL(l('Você ouviu {a}: talento estimado {lo}–{hi}. Veja a ficha para fazer proposta.', 'You listened to {a}: estimated talent {lo}–{hi}. Open their page to make an offer.'), { a: a.name, lo: e?.lo ?? '?', hi: e?.hi ?? '?' });
+      const e = estTxt18(s, a);
+      if (act === 'more') { st.asked[id] = s.week + 3; return fmtL(l('Você pediu mais material a {a}. Resposta em ~3 semanas ({e}).', 'You asked {a} for more material. Answer in ~3 weeks ({e}).'), { a: a.name, e }); }
+      return fmtL(l('Você ouviu {a}: {e}. Veja a ficha para fazer proposta.', 'You listened to {a}: {e}. Open their page to make an offer.'), { a: a.name, e });
     }
     st.passed[id] = s.week;
     return fmtL(l('Você passou {a}. (Torça para não virar um caso Decca × Beatles.)', 'You passed on {a}. (Hope it is not a Decca × Beatles story.)'), { a: a.name });

@@ -30,7 +30,7 @@ import { opine, opinionOf, per13 } from './persona13';
 // ---------------------------------------------------------------- chaves
 
 const live = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.status !== 'split';
-const isMineAct = (s: GameState, a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand || playerActs(s).includes(a.id));
+const isMineAct = (s: GameState, a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand); // r18 final: sem varrer s.acts
 export const isPlayerKey = (s: GameState, k: string): boolean => k === 'player' || (k.startsWith('p:') && !!s.persons[k.slice(2)]?.isPlayer);
 /** id usado em fatos/holds (pessoa: id puro). */
 export const hid18 = (k: string): string => (k.startsWith('p:') ? k.slice(2) : k);

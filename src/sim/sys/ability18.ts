@@ -387,7 +387,7 @@ function stepPerson(s: GameState, p: Person, a: Act, dt: number, my: boolean, be
   const w = weights18(p.role);
   const eff = rec.pa * reachOf(dv) + (mentor ? 6 : 0) + (train ? 4 : 0);
   const C: Record<string, number> = {};
-  const add = (c: string, k: SkillId, v: number) => { if (v) C[c] = (C[c] ?? 0) + v * w[k] * 2; };
+  const add = (c: string, k: SkillId, v: number) => { if (my && v) C[c] = (C[c] ?? 0) + v * w[k] * 2; };
   const ca0 = caOf18(p);
   for (const k of SK) {
     const [end0, dec, rate] = AGE[k];
@@ -476,8 +476,10 @@ registerSimHook('month', 'ability18', (s) => {
   for (const a of Object.values(s.acts)) {
     if (a.status === 'retired' || a.status === 'split' || a.deceased) continue;
     const my = a.owner === 'player' || !!a.playerBand;
-    if (!my && (hashString(a.id) + mi) % 3) continue;
-    stepAct(s, a, my ? 1 : 3, my, done);
+    // r18 final (desempenho): NPC famoso em rodízio trimestral; o resto semestral (mesmo crescimento médio)
+    const per = my ? 1 : a.fame >= 30 ? 3 : 6;
+    if (!my && (hashString(a.id) + mi) % per) continue;
+    stepAct(s, a, per, my, done);
   }
   // equipe: o trabalho ensina (mais com curso pago)
   for (const sm of s.player.staff) {

@@ -16,7 +16,7 @@ import { histMode } from '../history15';
 import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
 import type { Act, GameState, Person } from '../types';
-import { fmtL, money, notify, playerActs, post } from '../util';
+import { fmtL, money, notify, post } from '../util';
 import { a3Of, commitCrime, crime17, feedCase, isReal } from './crime17';
 import { addHype } from './hype12';
 import { leaders } from './leaders10';
@@ -82,7 +82,7 @@ const STAGE_AT = STAGE18.map((x) => x.at);
 export const stageOfHeat = (h: number): number => STAGE_AT.reduce((k, at, i) => (h >= at ? i : k), 0);
 
 const live = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.status !== 'split';
-const isMineAct = (s: GameState, a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand || playerActs(s).includes(a.id));
+const isMineAct = (s: GameState, a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand); // r18 final: sem varrer s.acts
 export const STREET18 = (g: string): boolean => familyOf(g) === 'hiphop' || ['funk_carioca', 'corridos_tumbados', 'norteno', 'dancehall', 'reggaeton', 'gfunk', 'drill', 'trap'].includes(g);
 export const leadOf18 = (s: GameState, a?: Act): Person | undefined => {
   if (!a) return undefined;

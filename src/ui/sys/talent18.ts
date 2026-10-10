@@ -5,7 +5,8 @@
 
 import { FAMILIES, l, type FamilyId, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { estimate } from '../../sim/scouting';
+import { estTxt18 } from '../../sim/sys/discover18';
+import { abilityCell18 } from '../ab18stars';
 import { CAMP_SIZE18, campCost18, campModel18, camps18, holdCamp18, pitchable18, pitchOdds18, pitchSong18 } from '../../sim/sys/camps18';
 import { CH18, chCost18, chNoise18, chNow18, demoMedium18, dig18, disc18, showsNow18, watchShow18 } from '../../sim/sys/discover18';
 import { playerPerson } from '../../sim/sys/life';
@@ -29,7 +30,6 @@ const btn = (label: L | string, fn: () => void, dis = false, cls = 'btn small') 
 const row = (...k: (Node | string | null)[]) => h('div', { class: 'row wrap', style: 'gap:6px;align-items:center;margin:4px 0' }, ...k);
 const card = (...k: (Node | string | null)[]) => h('div', { class: 'card', style: 'margin:6px 0;padding:8px' }, ...k);
 const muted = (x: L | string) => h('p', { class: 'muted small' }, T(x));
-const rng = (s: GameState, id: string, f: 'talent' | 'potential') => { const e = estimate(s, id, f); return e ? `${e.lo}–${e.hi}` : '?'; };
 const chName = (id: string): L => CH18.find((c) => c.id === id)?.name ?? (id === 'opener' ? l('Banda de abertura', 'Opening act') : id === 'demo' ? l('Demo', 'Demo') : id === 'tv' ? l('TV', 'TV') : l(id, id));
 
 // ---------------------------------------------------------------- descoberta
@@ -51,8 +51,8 @@ function discTab(s: GameState): HTMLElement {
       ...(showsNow18(s).length ? showsNow18(s).map((a) => row(actLink(s, a.id), pill(`${Math.round(a.fame)}★`), btn(l('Ir ao show (1●)', 'Go to the show (1●)'), () => { const r = watchShow18(s, a.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); }))) : [muted(l('Nenhum cabeça de cartaz no seu mercado agora.', 'No headliners in your market right now.'))])),
     hot.length ? section(t(l('Disputas com rivais', 'Bidding against rivals')), ...hot.map(([id, x]) => row(actLink(s, id), pill(s.labels[x.lb]?.name ?? '?', 'bad'), pill(fmtLs(l('{w} sem.', '{w} wk'), { w: Math.max(0, x.w - s.week) }), 'warn'), muted(l('Faça a proposta na ficha do artista antes do prazo.', 'Make the offer on the artist page before the deadline.'))))) : null,
     section(t(l('Seus achados', 'Your finds')),
-      leads.length ? h('table', { class: 'table small' }, h('tr', null, ...[l('Artista', 'Artist'), l('Canal', 'Channel'), l('Talento', 'Talent'), l('Potencial', 'Potential'), l('Situação', 'Status'), l('Nota', 'Note')].map((x) => h('th', null, t(x)))),
-        ...leads.map((x) => { const a = s.acts[x.a]; return a ? h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, t(chName(x.ch))), h('td', null, rng(s, a.id, 'talent')), h('td', null, rng(s, a.id, 'potential')),
+      leads.length ? h('table', { class: 'table small' }, h('tr', null, ...[l('Artista', 'Artist'), l('Canal', 'Channel'), l('Agora / potencial', 'Now / potential'), l('Situação', 'Status'), l('Nota', 'Note')].map((x) => h('th', null, t(x)))),
+        ...leads.map((x) => { const a = s.acts[x.a]; return a ? h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, t(chName(x.ch))), h('td', { title: t(estTxt18(s, a)) }, abilityCell18(s, a) ?? '?'),
           h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? pill(s.labels[a.owner]?.name ?? '?', 'bad') : st.hot[a.id] ? pill(t(l('disputado', 'contested')), 'warn') : pill(t(l('livre', 'free')))), h('td', { class: 'muted' }, t(x.note))) : null; }))
         : muted(l('Ninguém ainda. Use um canal acima, vá a um show ou ouça as demos da Caixa.', 'Nobody yet. Use a channel above, go to a show or listen to the Inbox demos.'))),
     gone.length ? section(t(l('Os que escaparam', 'The ones that got away')), ...gone.map((a) => row(actLink(s, a.id), pill(`${Math.round(a.fame)}★`), pill(s.labels[a.owner ?? '']?.name ?? '?'), st.passed[a.id] !== undefined ? pill(t(l('você recusou a demo', 'you passed on the demo')), 'bad') : null))) : null);
@@ -152,7 +152,7 @@ function tvTab(s: GameState): HTMLElement {
         se.stage === 'casting' && !se.partner && fr ? row(btn(fmtLs(l('Ser o selo parceiro ({c})', 'Become the partner label ({c})'), { c: $(partnerFee18(s, fr)) }), () => say(becomePartner18(s), l('Parceria fechada: o vencedor assina com você.', 'Partnership closed: the winner signs with you.'))), muted(l('Contrato do formato: 360 (20%), royalty 12%, adiantamento pela metade.', 'Format deal: 360 (20%), 12% royalty, half advance.'))) : null,
         se.stage !== 'done' && !se.judge && judges.length ? row(select(F.show || judges[0], judges.map((id) => ({ value: id, label: s.persons[id].name })), (v) => { F.show = v; rerender(); }), btn(l('Indicar como jurado', 'Put forward as judge'), () => say(setJudge18(s, F.show || judges[0]), l('Jurado confirmado.', 'Judge confirmed.')))) : null,
         se.cont.length ? h('table', { class: 'table small' }, h('tr', null, ...[l('Participante', 'Contestant'), l('Voto', 'Vote'), l('Talento', 'Talent'), l('Situação', 'Status'), l('Campanha', 'Campaign')].map((x) => h('th', null, t(x)))),
-          ...se.cont.slice().sort((a, b) => voteScore18(s, se, b) - voteScore18(s, se, a)).map((c) => h('tr', null, h('td', null, actLink(s, c.a)), h('td', null, why18(s, 'tv18.vote', { act: c.a }, String(Math.round(voteScore18(s, se, c))))), h('td', null, rng(s, c.a, 'talent')),
+          ...se.cont.slice().sort((a, b) => voteScore18(s, se, b) - voteScore18(s, se, a)).map((c) => h('tr', null, h('td', null, actLink(s, c.a)), h('td', null, why18(s, 'tv18.vote', { act: c.a }, String(Math.round(voteScore18(s, se, c))))), h('td', null, s.acts[c.a] ? abilityCell18(s, s.acts[c.a]) ?? '?' : '?'),
             h('td', null, c.out !== undefined ? pill(t(l('eliminado', 'out')), 'bad') : se.top?.[0] === c.a ? pill(t(l('VENCEDOR', 'WINNER')), 'good') : se.top?.indexOf(c.a) === 1 || se.top?.indexOf(c.a) === 2 ? pill(t(l('pódio', 'podium'))) : pill(t(l('na disputa', 'in the race')))),
             h('td', null, se.stage === 'live' && c.out === undefined ? h('span', null, btn(fmtLs(l('Campanha {c}', 'Campaign {c}'), { c: $(pushCost18(s)) }), () => say(pushVotes18(s, c.a, false), l('Campanha no ar.', 'Campaign on air.'))), ' ', btn(l('Votos em massa (arriscado)', 'Mass votes (risky)'), () => say(pushVotes18(s, c.a, true), l('Centrais de voto contratadas. Torça para não vazar.', 'Call centres hired. Hope it does not leak.')), false, 'btn small danger')) : null))))
           : muted(l('Os participantes aparecem em abril, quando começam os programas ao vivo.', 'Contestants appear in April, when the live shows start.'))) : muted(l('A temporada abre em fevereiro.', 'The season opens in February.'))),

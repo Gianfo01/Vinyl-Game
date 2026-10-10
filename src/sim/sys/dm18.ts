@@ -24,6 +24,7 @@ import { scandal } from '../scandal17';
 import { addStress, relieveLong, stressOf } from '../stress17';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
+import { actsOfPerson17 } from '../actidx17';
 import { act18, choose18, nameOfKey18, playerSide18, setAgencyPhase18, VERBS18 } from './agency18';
 import { careers } from './careers12';
 import { activeFeuds18, feud18, leadOf18, setFeudPhase18, shield18, STAGE18, temper18, type Feud18 } from './feud18';
@@ -98,9 +99,10 @@ const choiceTxt = (th: Thread18, st: number): string | undefined => th.ch[String
 // ---------------------------------------------------------------- ganchos (fatos → lembranças)
 
 const HOOK_KINDS = new Set(['crime', 'scandal', 'affair', 'arrest', 'death', 'betrayal', 'poach', 'feud', 'statement', 'secret_exposed', 'hold_used', 'situation', 'split', 'exit', 'award', 'chart', 'law', 'shooting', 'fan_war', 'deal']);
+const myLive = (a?: Act): boolean => !!a && a.owner === 'player' && a.status !== 'retired' && a.status !== 'split';
+/** r18 final: sem varrer s.acts por fato (índice pessoa → atos). */
 function mineFact(s: GameState, f: Fact): boolean {
-  const mine = new Set(playerActs(s));
-  return f.actors.some((id) => id === 'player' || mine.has(id) || !!s.persons[id]?.isPlayer || [...mine].some((a) => s.acts[a]?.members.includes(id)));
+  return f.actors.some((id) => id === 'player' || myLive(s.acts[id]) || !!s.persons[id]?.isPlayer || (!!s.persons[id] && actsOfPerson17(s, id).some(myLive)));
 }
 onFact('*', (s, f) => {
   if (f.src === 'dm18' || !HOOK_KINDS.has(f.kind)) return;
