@@ -211,7 +211,9 @@ function runAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number
       act.fame = clamp(act.fame + 0.7 * dim * (1 + traitMod(s, act, 'media') / 20), 0, 100);
       act.momentum = clamp(act.momentum + 5 * dim, 0, 100);
       const risk = 0.04 + Math.max(0, traitMod(s, act, 'scandal')) * 0.12;
-      if (r.chance(risk)) emitEvent(s, r, 'controversial_remark', { act: act.id });
+      // r18 final (ritmo): a mesma polêmica no máximo uma vez por semestre por ato (era a carta mais repetida)
+      const ck = `cr18:${act.id}`;
+      if (r.chance(risk) && (s.flags[ck] ?? -99) <= s.week - 26) { s.flags[ck] = s.week; emitEvent(s, r, 'controversial_remark', { act: act.id }); }
       break;
     }
     case 'residency_art':

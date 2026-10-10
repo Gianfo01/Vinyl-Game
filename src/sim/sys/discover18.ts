@@ -18,6 +18,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, playerActs, post, staffSkill } from '../util';
 import { addSignal, spawnProceduralAct } from '../worldgen';
 import { spendEnergy } from './life';
+import { P } from './people/state';
 
 export interface Lead18 { a: string; ch: string; w: number; note: L; ref?: string }
 export interface Disc18State { leads: Lead18[]; hot: Record<string, { lb: string; w: number }>; passed: Record<string, number>; gone: Record<string, 1>; asked: Record<string, number>; last: Record<string, number> }
@@ -217,7 +218,9 @@ registerSimHook('month', 'discover18', (s) => {
   const st = disc18(s);
   const r = Rng.fromSeed(`${s.config.seed}|disc18m|${s.week}`);
   // demos chegando pelo meio da época
-  if (s.config.role !== 'artist' && r.chance(0.45 + Math.min(0.3, s.player.reputation.artists / 200))) {
+  // r18 final (ritmo): uma demo por vez na caixa (era a mensagem mais frequente do jogo) e chance menor
+  const waiting = P(s).inbox.some((m) => m.ref?.k18 === 'disc18_demo' && !m.resolved && (m.expires ?? 0) > s.week);
+  if (s.config.role !== 'artist' && !waiting && r.chance(0.3 + Math.min(0.25, s.player.reputation.artists / 250))) {
     const pool = Object.values(s.acts).filter((a) => free(a) && !st.leads.some((x) => x.a === a.id) && !st.passed[a.id]);
     const a = pool.length && r.chance(0.7) ? r.pick(pool) : spawnProceduralAct(s, r, {});
     pushInbox18(s, 'disc18_demo', { from: a.name, subject: fmtL(l('Demo: {a} ({g})', 'Demo: {a} ({g})'), { a: a.name, g: a.genre.replace(/_/g, ' ') }),

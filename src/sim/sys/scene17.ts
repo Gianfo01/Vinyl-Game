@@ -451,17 +451,17 @@ registerSimHook('month', 'scene17', (s) => {
     const ps = a.members.map((x) => s.persons[x]).filter((p) => p?.alive);
     const sore = ps.reduce((m, p) => Math.max(m, p.resentment), 0);
     const feud = ps.some((p) => ps.some((q) => q !== p && (p.rel[q.id] ?? 0) < -30));
-    if ((sore > 45 || feud) && r.chance(0.18)) { queue17(s, 'backstage17', ctx17(s, { act: id, pid: ps.slice().sort((x, y) => y.resentment - x.resentment)[0]?.id })); break; }
+    if ((sore > 45 || feud) && r.chance(0.25)) { queue17(s, 'backstage17', ctx17(s, { act: id, pid: ps.slice().sort((x, y) => y.resentment - x.resentment)[0]?.id })); break; }
   }
   // reunião do conselho: trimestral, quando há algo para discutir
-  if (s.month % 3 === 2 && mine.length >= 2 && r.chance(0.22)) {
+  if (s.month % 3 === 2 && mine.length >= 2 && r.chance(0.35)) {
     const star = mine.map((x) => s.acts[x]).filter(Boolean).sort((x, y) => y.fame - x.fame)[0];
     const rival = Object.values(s.labels).filter((lb) => lb.active).sort((x, y) => (s.rivalries[y.id] ?? 0) - (s.rivalries[x.id] ?? 0))[0];
     queue17(s, 'board17', ctx17(s, { act: star?.id, rival: rival?.id, city: s.config.homeCity }));
   }
   // encontro: quem namora/está casado ganha uma noite a dois de vez em quando
   const pt = life(s).partner;
-  if (pt && s.week - pt.lastDate > 6 && r.chance(0.1)) queue17(s, 'date17', ctx17(s, { act: playerAct(s)?.id, pid: playerPerson(s)?.id, who: pt.name }));
+  if (pt && s.week - pt.lastDate > 6 && r.chance(0.15)) queue17(s, 'date17', ctx17(s, { act: playerAct(s)?.id, pid: playerPerson(s)?.id, who: pt.name }));
 });
 
 /** Para a interface: começar um encontro agora (botão no Álbum de cenas/vida). */
