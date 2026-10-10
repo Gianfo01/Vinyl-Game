@@ -81,7 +81,8 @@ registerSituation({
 // 3 ---------------------------------------------------------------- resposta a escândalo (fama)
 registerSituation({
   id: 'scandal_reply', pressure: 'fame', cost: 1, cooldown: 2, trigger: ['scandal'],
-  when: (s, c) => (c.fact?.severity ?? 0) >= 35,
+  // seu ato: só escândalo grave (os pequenos já vêm com resposta no próprio cartão do evento)
+  when: (s, c) => (c.fact?.severity ?? 0) >= (s.acts[c.fact?.actors[0] ?? '']?.owner === 'player' ? 55 : 35),
   actorsPick: (s, c) => {
     const a = s.acts[c.fact!.actors[0]];
     const lead = a && live(a) ? leadOf(s, a) : undefined;

@@ -142,7 +142,7 @@ export function grantHold(s: GameState, x: HoldIn): Hold {
   };
   st.h.push(h);
   if (st.h.length > 300) st.h = st.h.filter((y) => live(s, y) || s.week - (y.lastUse ?? y.w) < 52).slice(-300);
-  if (!x.quiet) emitFact(s, { kind: 'favor', actors: [holder, target], severity: Math.min(60, h.strength / 2), visibility: 'secret', tags: ['hold', x.kind], text: x.text, src: 'holds17', data: { hold: h.id } });
+  if (!x.quiet) emitFact(s, { kind: x.kind === 'favor' ? 'favor' : 'hold', actors: [holder, target], severity: Math.min(60, h.strength / 2), visibility: 'secret', tags: ['hold', x.kind], text: x.text, src: 'holds17', data: { hold: h.id } });
   return h;
 }
 

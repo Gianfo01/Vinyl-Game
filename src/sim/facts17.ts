@@ -18,7 +18,7 @@ export type FactKind =
   | 'release' | 'chart' | 'award' | 'show' | 'tour_cancel' | 'scandal' | 'arrest' | 'case_ruling'
   | 'affair' | 'romance' | 'marriage' | 'breakup' | 'birth' | 'death' | 'health' | 'breakdown' | 'rehab' | 'addiction'
   | 'signing' | 'exit' | 'split' | 'poach' | 'deal' | 'label_sold' | 'statement' | 'boycott' | 'law'
-  | 'favor' | 'hold_used' | 'secret_exposed' | 'forgiven' | 'situation' | 'stress' | 'memory'
+  | 'favor' | 'hold' | 'hold_used' | 'secret_exposed' | 'forgiven' | 'situation' | 'stress' | 'memory'
   | (string & {});
 export type Visibility = 'secret' | 'rumor' | 'public';
 
