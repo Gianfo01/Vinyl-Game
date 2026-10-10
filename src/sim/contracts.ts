@@ -57,6 +57,8 @@ export interface OfferEval {
   p: number;
   band: 'likely' | 'uncertain' | 'unlikely';
   reasons: L[];
+  /** r18: contribuição de cada termo ao placar (antes da curva logística; meio = 0.58) */
+  parts?: { t: L; v: number }[];
 }
 
 /** Avaliação do ato. A faixa mostrada ao jogador nunca é porcentagem exata (Pesquisa, regra 3). */
@@ -75,48 +77,57 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
     control: amb === 'art' || amb === 'freedom' || amb === 'critics' ? 0.22 : 0.08,
     reach: amb === 'fame' || amb === 'status' ? 0.25 : 0.14,
   };
-  let score = advU * w.adv + royU * w.roy;
-  score += (o.creativeControl ? 1 : 0.35) * w.control;
+  // r18 (explain18): cada termo vira uma parte do "por quê" da chance
+  const parts: { t: L; v: number }[] = [];
+  let score = 0;
+  const add = (t: L, v: number) => { if (!Number.isFinite(v) || !v) return; score += v; parts.push({ t, v }); };
+  add(l('Adiantamento vs. expectativa', 'Advance vs. expectation'), advU * w.adv);
+  add(l('Royalty vs. expectativa', 'Royalty vs. expectation'), royU * w.roy);
+  add(l('Controle criativo', 'Creative control'), (o.creativeControl ? 1 : 0.35) * w.control);
   const reach = s.player.territories.length / 4 + hqCaps(s).careers / 24 + s.player.reputation.commercial / 160;
-  score += clamp(reach, 0.2, 1.6) * w.reach;
-  score += (s.player.reputation.artists - 40) / 250;
-  score += (act.trust - 50) / 300;
-  if (o.model === 'licensing') score += amb === 'freedom' || amb === 'art' ? 0.12 : 0.04;
+  add(l('Alcance do selo (territórios, sede, reputação comercial)', 'Label reach (territories, HQ, commercial rep)'), clamp(reach, 0.2, 1.6) * w.reach);
+  add(l('Reputação com artistas', 'Reputation with artists'), (s.player.reputation.artists - 40) / 250);
+  add(l('Confiança do ato em você', 'Act\'s trust in you'), (act.trust - 50) / 300);
+  let mv = 0;
+  if (o.model === 'licensing') mv += amb === 'freedom' || amb === 'art' ? 0.12 : 0.04;
   if (o.model === '360') {
-    score -= amb === 'freedom' || amb === 'art' ? 0.18 : 0.05;
-    score -= o.share360 * 0.4;
-    if (amb === 'security') score += 0.08;
+    mv -= amb === 'freedom' || amb === 'art' ? 0.18 : 0.05;
+    mv -= o.share360 * 0.4;
+    if (amb === 'security') mv += 0.08;
   }
-  if (o.model === 'distribution') score += amb === 'freedom' ? 0.15 : act.fame > 20 ? 0.05 : -0.08;
-  if (o.model === 'publishing') score -= 0.05;
-  if (o.publishing && o.model !== 'publishing') score -= 0.07;
+  if (o.model === 'distribution') mv += amb === 'freedom' ? 0.15 : act.fame > 20 ? 0.05 : -0.08;
+  if (o.model === 'publishing') mv -= 0.05;
+  if (o.publishing && o.model !== 'publishing') mv -= 0.07;
+  add(l('Modelo de contrato × ambição', 'Contract model × ambition'), mv);
   const termYears = o.termMonths / 12;
-  score += amb === 'security' ? (termYears - 3) * 0.03 : -(termYears - 3) * 0.035;
-  score += o.promises.length * 0.06;
+  add(l('Prazo', 'Term'), amb === 'security' ? (termYears - 3) * 0.03 : -(termYears - 3) * 0.035);
+  add(l('Promessas', 'Promises'), o.promises.length * 0.06);
   // concorrência: atos visíveis valem mais
   const rivalHeat = act.fame > 12 ? (act.fame - 12) / 120 : 0;
-  score -= rivalHeat;
-  if (hasCard(s, 'artists_house')) score += 0.06;
-  if (hasCard(s, 'emperor')) score -= 0.04;
-  if (act.catalogNo && act.fame < 5) score += 0.05;
-  score += perk(s, 'offer', act);
+  add(l('Interesse de rivais (fama do ato)', 'Rival interest (act fame)'), -rivalHeat);
+  let cv = 0;
+  if (hasCard(s, 'artists_house')) cv += 0.06;
+  if (hasCard(s, 'emperor')) cv -= 0.04;
+  if (act.catalogNo && act.fame < 5) cv += 0.05;
+  cv += perk(s, 'offer', act);
+  add(l('Cartas, vantagens e catálogo', 'Cards, perks and catalog'), cv);
   const hookReasons: L[] = [];
   for (const { h: hk } of contractHooks()) {
     const res = hk.offer?.(s, act, o);
     if (!res || !Number.isFinite(res.score)) continue;
-    score += res.score;
+    add(res.reason ?? l('Outros sistemas', 'Other systems'), res.score);
     if (res.reason && Math.abs(res.score) >= 0.02) hookReasons.push(res.reason);
   }
   const modReasons: L[] = [];
   for (const m of offerMods()) {
     const res = m.fn(s, act, o);
     if (!res || !Number.isFinite(res.delta)) continue;
-    score += res.delta;
+    add(res.reason ?? l('Ajustes', 'Adjustments'), res.delta);
     if (res.reason) modReasons.push(res.reason);
   }
   // ficha de direitos (rodada 8): só o que difere do padrão do modelo pesa
   const rs = rightsScore(o.rights, o.model, amb, o.publishing);
-  score += rs.delta;
+  add(l('Ficha de direitos', 'Rights sheet'), rs.delta);
 
   if (advU < 0.6) reasons.push(l('Adiantamento abaixo do que esperam.', 'Advance below expectations.'));
   if (advU > 1.4) reasons.push(l('Adiantamento generoso.', 'Generous advance.'));
@@ -131,7 +142,7 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   const fuzz = staffCount(s, 'analyst') ? 0.05 : 0.12;
   const shown = p + (((act.logoSeed % 100) / 100 - 0.5) * fuzz);
   const band = shown > 0.66 ? 'likely' : shown > 0.36 ? 'uncertain' : 'unlikely';
-  return { score, p, band, reasons };
+  return { score, p, band, reasons, parts };
 }
 
 export function careerSlotsUsed(s: GameState): number {

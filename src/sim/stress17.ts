@@ -58,7 +58,7 @@ export function breakChance17(short: number, long: number, vuln: number): number
 const HEALTH_ADD: Record<Person['health'], number> = { ok: 0, voice_strain: 6, burnout: 15, addiction: 10, recovering: 4, ill: 10 };
 /** Estresse de curto prazo COMPOSTO: Person.stress (o que eventos/agenda/vícios já movem) + cansaço acima de 45,
  *  saúde, moral baixa, ressentimento e o corpo (voz/lesão de people/health). */
-export function shortOf(s: GameState, p: Person): { v: number; parts: L[] } {
+export function shortOf(s: GameState, p: Person): { v: number; parts: L[]; np: [L, number][] } {
   const parts: L[] = [];
   let v = p.stress;
   const fat = Math.max(0, p.fatigue - 45) * 0.6;
@@ -77,7 +77,9 @@ export function shortOf(s: GameState, p: Person): { v: number; parts: L[] } {
   const car = careerPressure(s, p);
   if (car.v >= 3) parts.push(car.why);
   v += fat + hl + mor + res + body + fx.v + car.v;
-  return { v: Math.round(clamp(v, 0, 100)), parts };
+  // r18 (explain18): a mesma soma com números
+  const np: [L, number][] = [[l('Tensão acumulada (agenda, eventos, vícios)', 'Built-up tension (schedule, events, vices)'), p.stress], [l('cansaço', 'fatigue'), fat], [l('saúde', 'health'), hl], [l('moral baixa', 'low morale'), mor], [l('ressentimento', 'resentment'), res], [l('corpo (voz/lesão)', 'body (voice/injury)'), body], [fx.why, fx.v], [car.why, car.v]];
+  return { v: Math.round(clamp(v, 0, 100)), parts, np: np.filter((x) => x[1] >= 0.5) };
 }
 
 /** Atos de cada pessoa (cache por semana; a interface e os mods chamam muito). */
