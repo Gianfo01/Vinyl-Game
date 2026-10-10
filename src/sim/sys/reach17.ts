@@ -47,8 +47,17 @@ export function actReach17(s: GameState, act: Act): { v: number; base: number; w
   return { v, base, why };
 }
 
+// cache por partida/ano (countryWeights chama isto por lançamento × semana)
+const GC = new WeakMap<GameState, { y: number; m: Map<string, number> }>();
+const globalCached = (s: GameState, act: Act): number => {
+  let c = GC.get(s);
+  if (!c || c.y !== s.year) { c = { y: s.year, m: new Map() }; GC.set(s, c); }
+  let v = c.m.get(act.id);
+  if (v === undefined) { v = act.catalogNo ? globalOf17(realName17(act), s.year).v : 0; c.m.set(act.id, v); }
+  return v;
+};
 reachHook17.f = (s, act) => {
-  const g = globalOf17(realName17(act), s.year).v;
+  const g = globalCached(s, act);
   const vr = reach17(s).viral[act.id];
   return Math.max(g, vr && s.week < vr.until ? 0.95 : 0);
 };

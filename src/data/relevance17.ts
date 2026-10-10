@@ -95,7 +95,6 @@ export const GLOBAL17: Global17[] = [
   ['Shakira', 2001, 0, 0.95, 'Laundry Service e "Hips Don\'t Lie": carreira mundial consolidada', 'Laundry Service and "Hips Don\'t Lie": a consolidated global career'],
   ['Rammstein', 2001, 0, 0.6, 'Metal em alemão lotando estádios no mundo', 'German-language metal filling stadiums worldwide'],
   ['Las Ketchup', 2002, 2002, 0.85, '"Aserejé" em dezenas de países', '"Aserejé" in dozens of countries'],
-  ['O-Zone', 2004, 2004, 0.85, '"Dragostea din tei" e o meme "Numa Numa"', '"Dragostea din tei" and the "Numa Numa" meme'],
   ['Daddy Yankee', 2004, 0, 0.7, '"Gasolina" leva o reggaeton ao mundo; "Despacito" (2017)', '"Gasolina" takes reggaeton worldwide; "Despacito" (2017)'],
   ['Michel Teló', 2011, 2012, 0.8, '"Ai se eu te pego" vira febre europeia', '"Ai se eu te pego" becomes a European craze'],
   ['Gotye', 2011, 2012, 0.9, '"Somebody That I Used to Know"', '"Somebody That I Used to Know"'],

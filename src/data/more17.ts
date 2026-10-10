@@ -111,5 +111,6 @@ export const REAL_17: RealArtist[] = [
   s1('Shawn Mendes', 'pop_rock', 'toronto', 'CAN', 2014, 0, 2, 1998, 0, 'v', ['Handwritten|2015', 'Stitches|2015|s']),
   s1('Camila Cabello', 'dance_pop', 'miami', 'USA', 2017, 0, 2, 1997, 0, 'v', ['Camila|2018', 'Havana|2017|s']),
   s1('Joe Cocker', 'blues_rock', 'sheffield', 'GBR', 1964, 2014, 2, 1944, 2014, 'v', ['With a Little Help from My Friends|1968|s', 'Up Where We Belong|1982|s']),
+  bx('Aqua', 'eurodance', 'copenhagen', 'DNK', 1997, 2001, 2, 'Lene Nystrøm:v:1973|René Dif:v:1967|Søren Rasted:k:1969|Claus Norreen:k:1970:0:1995:2016', ['Aquarium|1997', 'Barbie Girl|1997|s'], [[2008]]),
   s1('Jeff Buckley', 'alt_rock', 'new_york', 'USA', 1993, 1997, 2, 1966, 1997, 'v', ['Grace|1994', 'Hallelujah|1994|s']),
 ];
