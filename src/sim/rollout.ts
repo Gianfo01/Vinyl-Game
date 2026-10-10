@@ -10,6 +10,7 @@ import type { GameState, Release } from './types';
 import type { Rollout, RolloutPhase } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { exploitBlock } from './rights';
+import { addChannel18, teaserK18 } from './sys/mkt18';
 
 export interface RolloutOpts {
   actId: string;
@@ -93,7 +94,7 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
   const formats = availableFormats(s);
   switch (ph.kind) {
     case 'teaser':
-      if (pay(`ro_teaser:${ro.id}`, `Teaser ${ro.title}`)) ro.hype += 0.08 + Math.min(0.08, ph.budget / money(s, 20000) * 0.05);
+      if (pay(`ro_teaser:${ro.id}`, `Teaser ${ro.title}`)) ro.hype += (0.08 + Math.min(0.08, ph.budget / money(s, 20000) * 0.05)) * teaserK18(s, act.id); // r18: teaser repetido cansa
       break;
     case 'presave': {
       if (!pay(`ro_presave:${ro.id}`, `Pré-save ${ro.title}`)) break;
@@ -117,8 +118,8 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
     case 'video': {
       const rel = Object.values(s.releases).find((x) => x.actId === act.id && x.songs.includes(ph.refId ?? '') && x.type === 'single');
       if (!rel || !pay(`ro_video:${ro.id}`, `Clipe ${rel.title}`)) break;
-      rel.marketing.push({ channel: mainChannel(s, 'video'), budget: ph.budget });
-      rel.marketingE = Math.min(0.95, rel.marketingE + 0.15);
+      // r18 media18: o clipe entra como canal (com saturação, público e atraso próprios), não como +15% fixo
+      addChannel18(s, rel, mainChannel(s, 'video'), ph.budget);
       ro.hype += 0.1;
       if (act.image) act.image.popularity += 2;
       break;
