@@ -211,3 +211,7 @@ import './school18';
 import './tv18';
 import './world18';
 import './rivalmind18';
+// Rodada 18 (supply18, onda 1): fábricas/distribuidoras/agregadores, acordos de desenvolvimento/imprint/JV e relatório de mercado.
+import './supply18';
+import './deals18';
+import './report18';

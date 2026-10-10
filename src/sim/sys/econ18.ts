@@ -67,7 +67,10 @@ export function postSalesAR18(s: GameState, rel: Release, key: string, amount: n
   for (const [mk, w] of mkWeights18(s, rel)) {
     const extra = mkExtra18(mk, s.year);
     const a = amount * w;
-    if (phys > 0) bucket18(f.ar, { due: mi + Math.max(1, physLag18(s.year) + extra - fast), amt: Math.round(a * phys), cat: 'sales', who: 'dist', mk });
+    // r18 supply18: prazo extra e reserva de devolução do distribuidor escolhido (s.flags.distLag18 / distRes18)
+    const pa = Math.round(a * phys), dl = s.flags.distLag18 ?? 0, rs = a > 0 ? s.flags.distRes18 ?? 0 : 0;
+    if (phys > 0) bucket18(f.ar, { due: mi + Math.max(1, physLag18(s.year) + extra - fast + dl), amt: Math.round(pa * (1 - rs)), cat: 'sales', who: 'dist', mk });
+    if (phys > 0 && rs > 0) bucket18(f.ar, { due: mi + Math.max(1, physLag18(s.year) + extra - fast + dl) + 6, amt: pa - Math.round(pa * (1 - rs)), cat: 'sales', who: 'dist', mk });
     if (phys < 1) bucket18(f.ar, { due: mi + Math.max(1, DIGITAL_LAG18 + Math.min(1, extra) - fast), amt: Math.round(a * (1 - phys)), cat: 'sales', who: 'dsp', mk });
     M[`mk:${mk}`] = (M[`mk:${mk}`] ?? 0) + Math.round(a);
   }

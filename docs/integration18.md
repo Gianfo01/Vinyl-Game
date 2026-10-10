@@ -136,3 +136,14 @@ Regra de história (r18): `crime17` só bloqueia assassinato de gente real no mo
 - Bloqueio de usos: `USE_BLOCK18.fn` (em `rights.ts`) — `exploitBlock` e `sync15.candidates` respeitam disputas/autorizações.
 - "Metadados limpos" (`dg_meta`) agora é a vantagem `metadata` (menos caixa preta, conflitos e atraso), não vendas.
 - Explicações: `rights18.meta`, `rights18.rate` ({mk, mod}), `rights18.cat` ({rels}). Fatos: `credit_dispute`, `audit`, `case_ruling`, `termination`, `deal` (regravação).
+
+## supply18 (onda 1, frente B) — cadeia física, acordos e relatório de mercado
+
+| Módulo | Para quê |
+|---|---|
+| `src/sim/sys/supply18.ts` | **P1**: 9 fábricas por época (`PLANTS18`: capacidade, defeitos, preço, frete, fábrica de major), fila por material e ano (`baseQueue18`: vinil 8→22 semanas em 2019–21, choque do petróleo, febre disco, CD novo), carga e cliente (`queueOf18`, `clientFactor18`), reserva automática de cada lançamento programado (`book18`, por material; 4 semanas de crédito), atraso → política (`late`: perguntar / decidir / adiar / prioridade / lançar) ou Caixa (`supply_late`); esbarrão de pedido de superestrela em época de aperto; no lançamento o material atrasado vira pedido futuro (estoque zerado até lá = venda perdida) + Fato. Variantes de vinil (2014+), contrato de capacidade (take-or-pay), armazém (custo/mês), devoluções (frete; 1979–80 "shipped gold, returned platinum"), ponta de estoque/destruição (`cutOut18`). Distribuidor (`DISTS18`: própria / rede independente com reserva de 20% e risco de quebra / P&D com major: adiantamento em financiamento, mínimo de lançamentos e cobrança) e agregador (`AGGS18`: %, assinatura com derrubada por fraude, pitching). Quebras de redes de varejo (1980, 2006, 2009, 2013) baixam recebíveis. `botSupply18` no playbot. |
+| `src/sim/sys/deals18.ts` | **D5**: contrato de desenvolvimento (`startDev18`: opção 12/24 meses, mesada, veto a rivais via `SIGN_VETO`, exercer/estender/liberar pela Caixa `deal_dev`), selo-vaidade (`startImprint18`: estrela indica talentos, +4% de apelo, 15% da receita para ela), JV de gênero com major (`startJv18`: aporte = financiamento, +15% de vendas no gênero, 30% da receita para a major, compra em 5 anos). Pacotes `services` e `pd` em `PKG18` (modelo distribuição). |
+| `src/sim/sys/report18.ts` | **U10**: relatório trimestral (mensal com analista): formatos por país (`mix18`), gêneros subindo/caindo, concorrência nas paradas, varejo, filas, adiantamento médio dos rivais; Caixa `market18`, porquês `market.mix`/`market.adv`, dica de gênero sem elenco. |
+| `src/ui/sys/supply18.ts` | área **Cadeia física & acordos** (Empresa): Prensagem, Distribuição, Estoque, Acordos, Mercado. |
+
+Ganchos em arquivos compartilhados: `market.distributionFee` soma `s.flags.distFeeAdj18`; `econ18.postSalesAR18` usa `s.flags.distLag18`/`distRes18`; `Pkg18` ganhou `model`/`fee`. Porquês: `supply.queue`, `supply.fee`, `deal.dev`.
