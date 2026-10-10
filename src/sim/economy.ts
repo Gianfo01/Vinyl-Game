@@ -59,9 +59,13 @@ export function payMonth(s: GameState): void {
 
 export function loanOffer(s: GameState): { amount: number; rate: number; months: number } | null {
   if (hasMutator(s, 'no_safety_net')) return null;
+  // r17 final: banco não empresta para quem já está no vermelho há 2+ meses, e cada empréstimo em aberto
+  // encolhe o próximo e encarece os juros (crédito é para planejar antes, não para salvar no fim)
+  if (s.player.insolvencyMonths >= 2) return null;
+  const n = s.player.loans.length;
   const rep = s.player.reputation.commercial + s.player.reputation.institutional;
-  const amount = money(s, 20000 + rep * 600 + s.player.hq * 30000);
-  const rate = clamp(0.16 - rep / 1500 + (s.economy.recession ? 0.04 : 0), 0.05, 0.25);
+  const amount = money(s, (20000 + rep * 600 + s.player.hq * 30000) * Math.pow(0.75, n));
+  const rate = clamp(0.16 - rep / 1500 + (s.economy.recession ? 0.04 : 0) + n * 0.03, 0.05, 0.3);
   return { amount, rate, months: 36 };
 }
 
