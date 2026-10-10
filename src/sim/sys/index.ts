@@ -212,3 +212,6 @@ import './tv18';
 import './world18';
 import './rivalmind18';
 import './regions18';
+import './circuits18';
+import './kpop18';
+import './idols18';
