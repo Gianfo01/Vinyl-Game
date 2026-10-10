@@ -38,6 +38,7 @@ export function registerPerkSource(id: string, fn: Source): void {
 
 const cache = new WeakMap<GameState, { week: number; ver: number; entries: PerkEntry[] }>();
 let version = 0;
+const busy = new WeakMap<GameState, PerkEntry[]>();
 /** Invalida o cache depois de uma escolha do jogador (traço, perk, carta, sócio). */
 export function bumpPerks(): void {
   version += 1;
@@ -46,13 +47,18 @@ export function bumpPerks(): void {
 export function perkEntries(s: GameState): PerkEntry[] {
   const c = cache.get(s);
   if (c && c.week === s.week && c.ver === version) return c.entries;
-  const entries = computeEntries(s);
+  // reentrada (uma fonte que consulta perk() enquanto as fontes são calculadas): usa o que já foi somado
+  // (antes isso recursava até estourar a pilha, e o try/catch engolia — custava ~60% do tempo do mês)
+  const part = busy.get(s);
+  if (part) return part;
+  const entries: PerkEntry[] = [];
+  busy.set(s, entries);
+  try { computeEntries(s, entries); } finally { busy.delete(s); }
   cache.set(s, { week: s.week, ver: version, entries });
   return entries;
 }
 
-function computeEntries(s: GameState): PerkEntry[] {
-  const out: PerkEntry[] = [];
+function computeEntries(s: GameState, out: PerkEntry[]): PerkEntry[] {
   for (const src of SOURCES) {
     try {
       out.push(...src.fn(s));
