@@ -18,6 +18,7 @@ import { bumpPerks, registerPerkSource, type PerkEntry, type PerkValues } from '
 import { registerPAGate18 } from '../personact18';
 import type { GameState, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
+import { releasesOfYear17 } from '../relidx17';
 import { capital } from './capital';
 import { DECISIONS, intrigue } from './intrigue';
 import { liveOf } from './live/state';
@@ -69,6 +70,28 @@ const mineRels = (s: GameState): Release[] => Object.values(s.releases).filter((
 const vl = (s: GameState, k: string) => ventures(s).list.filter((v) => v.kind === k && v.owner);
 const band = (s: GameState) => (s.player.bandActId ? s.acts[s.player.bandActId] : Object.values(s.acts).find((a) => a.playerBand));
 const roster = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a) => a && !a.playerBand && a.status !== 'retired');
+
+/** r18 final: régua da crítica do MERCADO no ano (média e corte dos 10% mais bem avaliados) — a nota do jogo é
+ *  generosa para todos, então prestígio mede a distância para os outros, não a nota crua. Por partida (WeakMap). */
+const CRIT = new WeakMap<GameState, Map<number, { avg: number; p90: number; w: number }>>();
+export function critYear18(s: GameState, y: number): { avg: number; p90: number } {
+  let m = CRIT.get(s);
+  if (!m) { m = new Map(); CRIT.set(s, m); }
+  const c = m.get(y);
+  if (c && (y < s.year || c.w === s.week)) return c;
+  const xs: number[] = [];
+  for (const r of releasesOfYear17(s, y)) if ((r.criticN ?? 0) > 0 && r.critic !== undefined) xs.push(r.critic);
+  xs.sort((a, b) => a - b);
+  const v = { avg: xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 65, p90: xs.length >= 5 ? xs[Math.floor(xs.length * 0.9)] : 85, w: s.week };
+  m.set(y, v);
+  return v;
+}
+/** Lançamentos por ato do elenco por ano (últimos 3 anos): prestígio pede pouco volume. */
+function relRate18(s: GameState): number {
+  const y0 = Math.max(s.config.startYear, s.year - 3), yrs = Math.max(1, s.year - y0 + s.month / 12);
+  const n = mineRels(s).filter((r) => r.year >= y0).length;
+  return n / yrs / Math.max(1, roster(s).length + (band(s) ? 1 : 0));
+}
 
 export interface Kpi18 { label: L; v: number; target: number; fmt: 'num' | 'pct' | 'usd' | 'mo'; why: L }
 export interface PathDef18 { id: PathId; name: L; desc: L; icon: string; kpis: (s: GameState) => Kpi18[]; tiers: [L, L, L]; ending: [L, L, L, L]; relevant: (s: GameState) => boolean }
@@ -177,11 +200,16 @@ export const PATHS18: PathDef18[] = [
   { id: 'prestige', icon: 'trophy', name: l('Selo cult de prestígio', 'Cult prestige label'), desc: l('Crítica, prêmios e lendas: pouco volume, muita influência.', 'Critics, awards and legends: little volume, lots of influence.'),
     relevant: () => true,
     kpis: (s) => {
-      const last = mineRels(s).filter((r) => r.critic !== undefined && (r.criticN ?? 0) > 0).slice(-10);
+      const rev = mineRels(s).filter((r) => r.critic !== undefined && (r.criticN ?? 0) > 0);
+      const last = rev.slice(-10);
+      const edge = last.length ? last.reduce((t, r) => t + (r.critic ?? 0) - critYear18(s, r.year).avg, 0) / last.length : 0;
+      const top = rev.filter((r) => (r.critic ?? 0) >= Math.max(75, critYear18(s, r.year).p90)).length;
+      const rate = relRate18(s);
       return [
-        K(l('Discos aclamados (crítica 80+)', 'Acclaimed records (critics 80+)'), mineRels(s).filter((r) => (r.criticN ?? 0) > 0 && (r.critic ?? 0) >= 80).length, 8, 'num', l('A reputação artística satura; o que conta é disco aclamado.', 'Artistic reputation saturates; acclaimed records are what count.')),
+        K(l('Discos aclamados (10% mais bem avaliados do ano)', 'Acclaimed records (top 10% of the year)'), top, 6, 'num', l('Comparado com todos os discos resenhados no mesmo ano: a crítica é generosa com todo mundo.', 'Compared with every record reviewed the same year: critics are generous to everyone.')),
         K(l('Prêmios', 'Awards'), s.player.stats.awards, 10, 'num', l('Prêmios do selo.', 'Label awards.')),
-        K(l('Nota média da crítica (10 últimos)', 'Average critic score (last 10)'), last.length ? last.reduce((t, r) => t + (r.critic ?? 0), 0) / last.length : 0, 82, 'num', l('Média 0–100.', 'Average 0–100.')),
+        K(l('Vantagem na crítica (10 últimos)', 'Critical edge (last 10)'), Math.max(0, edge), 12, 'num', l('Sua nota média menos a média do mercado no ano de cada disco (pontos).', 'Your average score minus the market average in each record\'s year (points).')),
+        K(l('Seletividade', 'Selectivity'), clamp((2 - rate) / 1.2, 0, 1) * 100, 100, 'pct', l('Até 0,8 lançamento por ato por ano = 100%; 2+ = 0%. Selo cult lança pouco e bem.', 'Up to 0.8 releases per act per year = 100%; 2+ = 0%. A cult label releases little and well.')),
         K(l('Lendas no elenco', 'Legends on the roster'), Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length, 2, 'num', l('Atos que viraram lenda com você.', 'Acts that became legends with you.')),
       ];
     },
