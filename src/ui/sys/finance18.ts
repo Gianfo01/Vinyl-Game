@@ -3,7 +3,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { arTotal18, apTotal18, fin18, netProfit18, opProfit18, sumP18 } from '../../sim/ledger18';
-import { factor18, factorRate18, fxWhy18, whoName18 } from '../../sim/sys/econ18';
+import { cashForecast18, econWhy18, factor18, factorRate18, fxWhy18, whoName18 } from '../../sim/sys/econ18';
 import type { GameState } from '../../sim/types';
 import { $, actLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
@@ -144,7 +144,9 @@ function render(s: GameState): HTMLElement {
       h('p', { class: 'muted small' }, t(l('Aporte de investidor, empréstimo, IPO e venda de ativos NÃO são receita nem lucro: entram em Financiamento/Investimento. O conselho, as metas e a avaliação da empresa usam o lucro operacional.', 'Investor money, loans, IPOs and asset sales are NOT revenue or profit: they go to Financing/Investing. The board, goals and company valuation use operating profit.')))),
     section(t(l('Lucro × caixa nos últimos 12 meses', 'Profit × cash over the last 12 months')), bars(s),
       h('p', { class: 'muted small' }, t(l('Um disco lucrativo pode deixar o selo sem caixa por meses: a receita é reconhecida na venda, mas o distribuidor só paga no prazo.', 'A profitable record can leave the label cash-starved for months: revenue is booked at sale, but the distributor only pays on terms.')))),
-    section(t(l('Contas a receber e a pagar', 'Receivables and payables')), timeline(s)),
+    section(t(l('Contas a receber e a pagar', 'Receivables and payables')), timeline(s),
+      h('p', { class: 'small' }, t(l('Caixa projetado', 'Projected cash')), ': ', ...cashForecast18(s, 6).map((x) => h('span', { class: `pill ${x.cash < 0 ? 'bad' : ''}` }, `${mName(x.mi)} ${$(x.cash)}`))),
+      ...econWhy18(s).map((w) => h('p', { class: 'small warn' }, t(w)))),
     fx(s), lost(s), tours(s),
   );
 }

@@ -1,5 +1,5 @@
 // Rodada 18 (econ18, ponto 15): retornos decrescentes para bônus pequenos empilhados.
-// Regra (documentada também em docs/rodada18-econ.md):
+// Regra (documentada também em docs/econ18.md):
 //  • Modificadores em cadeia (applyMods): os BÔNUS de uma categoria se multiplicam (B = Π r>1) e o total efetivo é
 //    1 + teto·tanh((B−1)/teto). Pequenos bônus quase não mudam (+10% vira +9,9%); pilhas grandes encostam no teto.
 //    Penalidades continuam inteiras. Para custo e risco (menor é melhor) a mesma regra vale para as reduções.

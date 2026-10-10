@@ -4,7 +4,8 @@
 import { l, type L, type MarketId, MARKETS, MARKET_PREF, cityById, familyOf } from '../../data/world';
 import { clamp } from '../../core/rng';
 import { registerSimHook } from '../ext4';
-import { arTotal18, apTotal18, bucket18, fin18, mIdx18, type Bucket18 } from '../ledger18';
+import { arTotal18, apTotal18, bucket18, fin18, mIdx18, opProfit18, type Bucket18 } from '../ledger18';
+import { monthlyCosts } from '../economy';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, notify, post, remember, settleCash } from '../util';
 import { physShareRel18 } from './eras18';
@@ -214,6 +215,40 @@ export function noteLost18(s: GameState, relIds: string[], price: number, what: 
   remember(s, 'catsale18', fmtL(l('Venda de {w}: {p} no caixa hoje; deixam de entrar ~{y}/ano (≈{t} em 10 anos).', 'Sold {w}: {p} in cash today; ~{y}/year stops coming in (≈{t} over 10 years).'), { w: what, p: $(price), y: $(per), t: $(ten) }));
   notify(s, fmtL(l('Catálogo vendido: +{p} agora, −{y}/ano de renda futura (investimento, não lucro).', 'Catalog sold: +{p} now, −{y}/year of future income (investing, not profit).'), { p: $(price), y: $(per) }), 'info');
   return per;
+}
+
+// ---------------------------------------------------------------- previsão de caixa e "por quê" (para conselheiro/explain18)
+
+/** Caixa projetado mês a mês: caixa + títulos que vencem − royalties a pagar − custo fixo mensal. */
+export function cashForecast18(s: GameState, months = 6): { mi: number; cash: number; inn: number; out: number }[] {
+  const f = fin18(s);
+  const mi = mIdx18(s);
+  const c = monthlyCosts(s);
+  const burn = c.rent + c.salaries + c.outsourcing + c.loans + c.equipment;
+  let cash = s.player.cash;
+  const out: { mi: number; cash: number; inn: number; out: number }[] = [];
+  for (let k = 1; k <= months; k++) {
+    const m = mi + k;
+    const inn = f.ar.filter((b) => b.due === m || (k === 1 && b.due < m)).reduce((t, b) => t + b.amt, 0);
+    const pay = f.ap.filter((b) => b.due === m || (k === 1 && b.due < m)).reduce((t, b) => t + b.amt, 0);
+    cash += inn + pay - burn;
+    out.push({ mi: m, cash, inn, out: pay - burn });
+  }
+  return out;
+}
+/** Frases curtas que explicam lucro × caixa agora (o explain18/conselheiro pode mostrar). */
+export function econWhy18(s: GameState): L[] {
+  const f = fin18(s);
+  const Y = f.y[s.year] ?? {};
+  const why: L[] = [];
+  const $ = (v: number) => `$${Math.round(v / 100).toLocaleString('en-US')}`;
+  const op = opProfit18(Y), cf = Y['cf:op'] ?? 0, ar = arTotal18(s);
+  if (op > 0 && cf < op * 0.6 && ar > 0) why.push(fmtL(l('Lucro operacional de {p} no ano, mas só {c} viraram caixa: {a} ainda estão com distribuidores e plataformas.', 'Operating profit of {p} this year, but only {c} became cash: {a} is still with distributors and platforms.'), { p: $(op), c: $(cf), a: $(ar) }));
+  if ((Y['cf:fin'] ?? 0) > Math.max(0, op)) why.push(fmtL(l('O caixa do ano veio mais de financiamento ({v}) do que da operação.', 'This year\'s cash came more from financing ({v}) than from operations.'), { v: $(Y['cf:fin'] ?? 0) }));
+  const low = cashForecast18(s, 6).find((x) => x.cash < 0);
+  if (low) why.push(fmtL(l('Projeção: caixa negativo em {m} meses se nada mudar.', 'Forecast: cash goes negative in {m} months if nothing changes.'), { m: low.mi - mIdx18(s) }));
+  if (f.lostPerYear > 0) why.push(fmtL(l('Vendas de catálogo tiraram ~{v}/ano de receita futura.', 'Catalog sales removed ~{v}/year of future revenue.'), { v: $(f.lostPerYear) }));
+  return why;
 }
 
 registerSimHook('month', 'econ18', (s) => { settleMonth18(s); });
