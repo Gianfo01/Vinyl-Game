@@ -125,6 +125,8 @@ import './scene17';
 import './art18';
 // Rodada 18 (dm18, onda 1): Diário do Mestre (curva de tensão, fios, rixas, quem agiu contra quem) e aba Rixas no ato.
 import './dm18';
+// Rodada 18 (talent18, onda 1): Talentos e formação (descoberta, camps, banda da casa, escolas, TV) e Acervo vivo em Lendas.
+import './talent18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
 import './finance18';
