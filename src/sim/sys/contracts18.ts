@@ -324,7 +324,7 @@ deferEvents<EventDef>([
 
 /** Playbot: escolhe o pacote de cláusulas como um jogador sensato do perfil (o mais vantajoso que o artista ainda aceita). */
 export function botClauses18(s: GameState, act: Act, o: OfferLike, prof: 'cautious' | 'balanced' | 'aggressive'): void {
-  const order = prof === 'aggressive' ? ['major', 'indie', 'license'] : prof === 'balanced' ? ['license', 'indie', 'major', 'artist'] : ['artist', 'license', 'indie'];
+  const order = prof === 'aggressive' ? ['major', 'indie', 'license'] : prof === 'balanced' ? ['license', 'indie', 'major', 'artist'] : ['license', 'artist', 'indie'];
   for (const id of order) {
     applyPkg18(o, id);
     if (evaluateOffer(s, act, o).band !== 'unlikely') return;
