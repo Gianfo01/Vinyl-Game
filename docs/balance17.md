@@ -75,3 +75,38 @@ r9-identity-plus 21 s. O `content-c 2005` cai de ~500 s (estourava 300 s) para 3
 agora quebra por volta de 2013 com o repasse 0,6 do streaming (como `content-a 1920` e `content-b 1960`, que já terminavam cedo
 antes desta rodada; o teste exige só "sem exceção e caixa fechando"). Uma partida 2005 "estabelecida" vai aos 30 anos em ~180 s
 (0,3 → 0,5 s/mês com 1.800 atos e 9.400 lançamentos); quentes restantes: `charts7` semanal, `hype12`, `sound` na composição.
+
+## Passada de seguimento (insolvência, 360, corrida de playlists)
+Mesmo lote: 3 perfis × 12 corridas (2 sementes por início 1965/1975/1990/2005/2012/2018) × 5 anos, processos paralelos
+(`tmp-bal17/batch.sh` → `one.ts`, ~8 min por lote). Sementes novas (`b17-<início>-<k>`), então a linha "depois" acima é a
+referência, não um pareamento exato.
+
+1. **Insolvência com 4 meses seguidos no vermelho** (era 6; `economy.ts`, `INSOLVENT_AT`). Venda de emergência no 2º mês,
+   reestruturação forçada no 3º, fim no 4º. O aviso mensal conta quantos meses faltam; o texto do cenário foi atualizado.
+2. **360 com alavanca e teto** (`sys/deal360_17.ts`): fatia efetiva = fatia do contrato × alavanca da fama (100% até fama 45,
+   cai até 40% em fama 93+ — a estrela renegocia) e teto anual por ato do que o selo leva via 360 (US$ 50 mil reais antes de
+   1990, 70 mil até 2004, 90 mil de 2005 em diante). Vale para turnês, rotas, casa própria e a adoção do 360 (w4). A ficha de
+   contrato explica na hora ("360 na prática: com fama X … até $Y por ano; já levado este ano").
+3. **Corrida por playlists e anúncios (2010+)** (`overhead13.ts`, linha `arms`): 4% da receita acima de 400 mil/ano + 0,4 p.p.
+   por lançamento nos últimos 12 meses (até 8%); teto de despesas gerais +5 p.p. a partir de 2010.
+
+| perfil | quebra | já ficou negativo | mediana final | mediana ≤1990 | mediana 2012/2018 | tardio ÷ 1990 | faixa |
+|---|---|---|---|---|---|---|---|
+| **passo 1+2** (36 corridas) | | | | | | | |
+| cautious | 0/12 (0%) | 2/12 | 1,83 mi | 1,15 mi | 2,98 mi | 4,6× | 342 mil … 4,20 mi |
+| balanced | 2/12 (17%) | 7/12 | 182 mil | 157 mil | 391 mil | 3,6× | −12 mil … 1,20 mi |
+| aggressive | 4/12 (33%) | 8/12 | 328 mil | −11 mil | 1,21 mi | 8,9× | −33 mil … 1,55 mi |
+| **+ passo 3 (final)** | | | | | | | |
+| cautious | 0/12 (0%) | 2/12 | 1,83 mi | 1,15 mi | 3,08 mi | 4,8× | 342 mil … 3,72 mi |
+| balanced | 2/12 (17%) | 6/12 | 182 mil | 157 mil | 815 mil | 7,4× | −12 mil … 1,09 mi |
+| aggressive | 4/12 (33%) | 8/12 | 396 mil | −11 mil | 725 mil | 5,3× | −33 mil … 1,47 mi |
+
+Leitura:
+- **Quebra**: equilibrado 0% → 17% (meta 10–25%, as duas quebras são os começos de 2005); agressivo 8% → 33% (abaixo de 50%);
+  cauteloso continua 0% (nunca passa de 2 meses no vermelho).
+- **Agressivo tardio**: mediana 2012/2018 caiu de 2,73 mi para 0,73 mi; o teto agora é 1,47 mi (antes 10,55 mi). O "÷ 1990" de
+  5,3× é distorcido porque um dos dois começos de 1990 quebrou (mediana −11 mil); contra o sobrevivente de 1990 (292 mil) dá 2,5×.
+- **Ruído**: com 2 sementes por início, o mesmo código move medianas de célula em 2× (o equilibrado tardio foi de 391 mil a 815 mil
+  entre os lotes 1 e 2 sem mudança relevante para ele; o bot reage ao caixa e muda contratações/cortes). As razões tardio ÷ 1990
+  do cauteloso (4,8×) e do equilibrado (3,6–7,4×) ficam acima da meta ~3–4× nesta amostra; o próximo botão seria a receita digital
+  tardia (repasse do streaming) e não o 360, que deixou de ser o motor.
