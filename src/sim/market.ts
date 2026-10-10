@@ -22,7 +22,8 @@ import { noteRelease17 } from './relidx17';
 import { allReleases17 } from './relidx17';
 
 const POOL: [number, number][] = [
-  [1889, 25e3], [1895, 45e3], [1900, 80e3], [1905, 130e3], [1910, 170e3], [1915, 200e3], // r18 era1889
+  // r18 era1889: antes de 1920 a demanda inclui a partitura (sucessos vendiam milhões de cópias impressas)
+  [1889, 240e3], [1895, 280e3], [1900, 320e3], [1905, 360e3], [1910, 390e3], [1915, 390e3], [1919, 330e3],
   [1920, 260e3], [1930, 300e3], [1945, 600e3], [1955, 1.5e6], [1965, 3e6], [1975, 5e6], [1985, 6e6],
   [1995, 8e6], [2001, 8e6], [2006, 5e6], [2010, 4.2e6], [2015, 5e6], [2020, 7e6], [2030, 9e6], [2040, 10e6],
 ];

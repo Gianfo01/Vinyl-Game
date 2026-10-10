@@ -68,7 +68,7 @@ export const FORMATS: FormatDef[] = [
   // r18 era1889: cilindro de cera (até o fim da era acústica), rolo de pianola e partitura (a fatia não física antes do rádio)
   { id: 'cylinder', name: l('Cilindro de cera', 'Wax cylinder'), physical: true, until: 'electric_rec', net: { single: 3.2, ep: 5, lp: 9 }, unitCost: 1.1 },
   { id: 'piano_roll', name: l('Rolo de pianola', 'Piano roll'), physical: true, net: { single: 4.5, ep: 7, lp: 12 }, unitCost: 1.6 },
-  { id: 'sheet', name: l('Partitura', 'Sheet music'), physical: false, net: { single: 1.2, ep: 2, lp: 3.5 }, unitCost: 0 },
+  { id: 'sheet', name: l('Partitura', 'Sheet music'), physical: false, net: { single: 2.2, ep: 3.5, lp: 5 }, unitCost: 0 },
 ];
 
 export const formatById = Object.fromEntries(FORMATS.map((x) => [x.id, x])) as Record<FormatId, FormatDef>;

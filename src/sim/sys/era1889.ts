@@ -62,7 +62,7 @@ const GEO_1889: G[] = [
   { id: 'panic1893', name: l('Pânico de 1893', 'Panic of 1893'), from: 1893, to: 1896, markets: ['na', 'eu'], demand: 0.78, note: l('Bancos quebram em série; ninguém compra fonógrafo.', 'Banks fail one after another; nobody buys phonographs.') },
   { id: 'panic1907', name: l('Pânico de 1907', 'Panic of 1907'), from: 1907, to: 1908, markets: ['na'], demand: 0.88, note: l('Corrida aos bancos em Nova York; J. P. Morgan segura o sistema.', 'A run on New York banks; J. P. Morgan props up the system.') },
   { id: 'mexrev', name: l('Revolução Mexicana', 'Mexican Revolution'), from: 1910, to: 1920, markets: ['latam'], demand: 0.9, note: l('Corridos contam a guerra; o comércio se desorganiza.', 'Corridos tell the war; trade falls apart.') },
-  { id: 'ww1', name: l('Grande Guerra', 'Great War'), from: 1914, to: 1918, markets: ['eu'], demand: 0.7, liveBlocked: true, pressingMult: 1.3, note: l('Fábricas viram arsenais e turnês pela Europa param; canções patrióticas vendem.', 'Factories turn into arsenals and European tours stop; patriotic songs sell.') },
+  { id: 'ww1', name: l('Grande Guerra', 'Great War'), from: 1914, to: 1918, markets: ['eu'], demand: 0.88, pressingMult: 1.3, note: l('Fábricas viram arsenais e turnês internacionais param; o music hall segura o moral e canções patrióticas vendem.', 'Factories turn into arsenals and international tours stop; music halls keep morale up and patriotic songs sell.') },
   { id: 'ww1us', name: l('EUA na Grande Guerra', 'US in the Great War'), from: 1917, to: 1918, markets: ['na'], demand: 0.92, note: l('Racionamento, músicos convocados e "Over There" em todo canto.', 'Rationing, drafted musicians and "Over There" everywhere.') },
   { id: 'flu1918', name: l('Gripe espanhola', 'Spanish flu'), from: 1918, to: 1918, markets: ['na', 'eu', 'br', 'latam', 'asia', 'africa', 'oceania'], demand: 0.85, liveBlocked: true, note: l('Teatros, cinemas e salões fechados por ordem sanitária.', 'Theatres, cinemas and dance halls closed by health order.') },
   { id: 'russrev', name: l('Revolução Russa e guerra civil', 'Russian Revolution and civil war'), from: 1917, to: 1921, markets: ['eu'], demand: 0.95, note: l('A Gramophone perde a fábrica de Riga e o mercado russo.', 'The Gramophone Co. loses its Riga plant and the Russian market.') },
@@ -118,6 +118,8 @@ export function acousticFit1889(genre: string): { m: number; why: L } | null {
 registerPerkSource('era1889', (s) => {
   if (s.year >= 1930) return [];
   const out: PerkEntry[] = [];
+  // negócio pequeno: músicos pagos por sessão, sem sindicato forte até a AFM crescer, aluguel e gráfica baratos
+  if (s.year < 1920) out.push({ label: l('Era acústica: negócio de oficina (cachê por sessão, gráfica e aluguel baratos)', 'Acoustic era: a workshop business (per-session fees, cheap printing and rent)'), values: { staffCost: -0.3, pressingCost: -0.2 } });
   if (acoustic1889(s)) {
     out.push({ label: l('Gravação acústica: vozes potentes e metais', 'Acoustic recording: powerful voices and brass'), values: { appeal: 0.06 }, act: (_s, a) => (acousticFit1889(a.genre)?.m ?? 1) > 1.04 });
     out.push({ label: l('Gravação acústica: ragtime, jazz e banjo', 'Acoustic recording: ragtime, jazz and banjo'), values: { appeal: 0.03 }, act: (_s, a) => { const m = acousticFit1889(a.genre)?.m ?? 1; return m > 1 && m <= 1.04; } });
