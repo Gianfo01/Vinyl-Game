@@ -145,3 +145,6 @@ import './lineup16';
 import './bridge17';
 import './situations17';
 import './sits17';
+// Rodada 17 (onda 1, A): crime — organizações, ações de todos contra todos, casos, mercado negro, NPCs tramando.
+import './crime17';
+import './crimenpc17';

@@ -8,6 +8,7 @@
 // selos reais não cometem crimes inventados (só a crônica documentada em DOC17).
 
 import { clamp, Rng, seedState } from '../../core/rng';
+import { formatMoney } from '../../core/money';
 import { countryName, countryOfCity } from '../../data/geo';
 import { DOC17, ORGS17, type OrgDef17, type Racket17 } from '../../data/orgs17';
 import { l, type L } from '../../data/world';
@@ -43,9 +44,11 @@ export interface Crime17State {
   seeded: Record<string, 1>; sec: number; jail: Record<string, { u: number; a3: string; why: L; album?: 1 }>; rig: Record<string, number>; rigBad: Record<string, number>;
   boot: Record<string, number>; pizzo: Record<string, number>; exile: Record<string, 1>; doc: Record<string, 1>; parole: number; seq: number;
   market: Offer17[]; warn: Warn17[]; ties: Record<string, string>; feud: Record<string, number>; vend: Record<string, number>; npcN: number; fake: Record<string, 1>;
+  /** organização desmantelada (semana até quando) */
+  down: Record<string, number>;
 }
 declare module '../ext4' { interface Ext4 { crime17: Crime17State } }
-const fresh = (): Crime17State => ({ heat: {}, nh: {}, cases: [], log: [], org: {}, laund: {}, stash: [], hot: {}, rcity: {}, seeded: {}, sec: 0, jail: {}, rig: {}, rigBad: {}, boot: {}, pizzo: {}, exile: {}, doc: {}, parole: 0, seq: 0, market: [], warn: [], ties: {}, feud: {}, vend: {}, npcN: 0, fake: {} });
+const fresh = (): Crime17State => ({ heat: {}, nh: {}, cases: [], log: [], org: {}, laund: {}, stash: [], hot: {}, rcity: {}, seeded: {}, sec: 0, jail: {}, rig: {}, rigBad: {}, boot: {}, pizzo: {}, exile: {}, doc: {}, parole: 0, seq: 0, market: [], warn: [], ties: {}, feud: {}, vend: {}, npcN: 0, fake: {}, down: {} });
 registerExt4('crime17', fresh);
 export function crime17(s: GameState): Crime17State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
@@ -54,6 +57,8 @@ export function crime17(s: GameState): Crime17State {
   for (const k of Object.keys(f) as (keyof Crime17State)[]) if (st[k] === undefined) (st as unknown as Record<string, unknown>)[k] = f[k];
   return st;
 }
+/** Dinheiro (centavos) como texto bilíngue. */
+export const usd = (c: number): L => l(formatMoney(Math.round(c), 'pt-BR'), formatMoney(Math.round(c), 'en-US'));
 const nid = (s: GameState, p: string): string => `${p}${++crime17(s).seq}`;
 export const mIdx = (s: GameState): number => s.year * 12 + s.month;
 /** RNG próprio e determinístico (não consome o do jogo). */
@@ -204,7 +209,7 @@ export interface CrimeDef17 {
   /** efeito; devolve o texto da consequência */
   fx: (s: GameState, c: Ctx17, ok: boolean, r: Rng) => L;
 }
-export interface Ctx17 { actor: string; target: string; method?: string; org?: string; partners: string[] }
+export interface Ctx17 { actor: string; target: string; method?: string; org?: string; partners: string[]; /** ajuste extra de chance (ex.: alvo avisado) */ dp?: number; dpWhy?: L }
 export interface Odds17 { p: number; q: number; cost: number; heat: number; sev: number; why: L[]; block: L | null; a3: string; place: string }
 
 const pct = (x: number): string => `${x > 0 ? '+' : ''}${Math.round(x * 100)}%`;
@@ -272,7 +277,7 @@ export const CRIMES17: CrimeDef17[] = [
       giveTo(s, c.actor, got || amt, `"Consultoria": ${nameOf17(s, c.target)}`);
       grantHold(s, { holder: c.actor, target: c.target, kind: 'blackmail', strength: 55, months: 48, src: 'crime17', proof: 2, text: l('Paga para o segredo não sair', 'Pays to keep the secret in'), quiet: true });
       addStress(s, c.target, 15, l('Vítima de chantagem', 'Being blackmailed'));
-      return fmtL(l('{p} pagou {v} pelo silêncio.', '{p} paid {v} for silence.'), { p: nameOf17(s, c.target), v: `$${Math.round(got || amt).toLocaleString('en-US')}` });
+      return fmtL(l('{p} pagou {v} pelo silêncio.', '{p} paid {v} for silence.'), { p: nameOf17(s, c.target), v: usd(Math.round(got || amt)) });
     } },
   { id: 'sabotage', name: l('Sabotar', 'Sabotage'), tk: 'act', p: 0.6, q: 0.25, sev: 40, cost: 5000, heat: 10,
     desc: l('Atrasar a fábrica, vazar o disco, cancelar a turnê ou queimar o estúdio do rival.', 'Delay the plant, leak the record, wreck the tour or burn the rival\'s studio.'),
@@ -290,7 +295,7 @@ export const CRIMES17: CrimeDef17[] = [
         a.momentum = clamp(a.momentum - 15, 0, 100);
         for (const m of a.members) addStress(s, m, 12, l('Estúdio incendiado', 'Studio burned down'));
         emitFact(s, { kind: 'disaster', actors: [a.id], place: a.city, severity: 55, visibility: 'public', tags: ['bad', 'fire'], text: fmtL(l('Incêndio destrói o estúdio onde {a} gravava.', 'A fire destroys the studio where {a} recorded.'), { a: a.name }), src: 'crime17' });
-        return fmtL(l('Estúdio de {a} em chamas: prejuízo de {v}.', '{a}\'s studio in flames: {v} loss.'), { a: a.name, v: `$${loss.toLocaleString('en-US')}` });
+        return fmtL(l('Estúdio de {a} em chamas: prejuízo de {v}.', '{a}\'s studio in flames: {v} loss.'), { a: a.name, v: usd(loss) });
       }
       if (c.method === 'tour') {
         a.hiatusUntil = Math.max(a.hiatusUntil ?? 0, s.week + 4);
@@ -311,7 +316,7 @@ export const CRIMES17: CrimeDef17[] = [
       if (!ok) return fmtL(l('A escuta em {b} foi achada numa varredura.', 'The bug at {b} was found in a sweep.'), { b: lb.name });
       grantHold(s, { holder: c.actor, target: lb.id, kind: 'secret', strength: 62, proof: 2, months: 60, src: 'crime17', text: l('Conversas gravadas da diretoria', 'Recorded boardroom conversations'), quiet: true });
       (s.flags as Record<string, number>)[`intel:${lb.id}`] = s.week;
-      return fmtL(l('Fitas de {b}: caixa {c}, planos e podres — guardados como segredo provado.', '{b} tapes: cash {c}, plans and dirt — kept as a proven secret.'), { b: lb.name, c: `$${Math.round(lb.cash).toLocaleString('en-US')}` });
+      return fmtL(l('Fitas de {b}: caixa {c}, planos e podres — guardados como segredo provado.', '{b} tapes: cash {c}, plans and dirt — kept as a proven secret.'), { b: lb.name, c: usd(Math.round(lb.cash)) });
     } },
   { id: 'bribe', name: l('Subornar', 'Bribe'), tk: 'case', p: 0.55, q: 0.3, sev: 40, cost: 10000, heat: 6,
     desc: l('Polícia esfria o país; juiz ou testemunha enfraquecem um caso. Funciona mais onde há corrupção.', 'Police cool the country; a judge or witness weakens a case. Works better where corruption runs deep.'),
@@ -341,7 +346,8 @@ export const CRIMES17: CrimeDef17[] = [
       st.hot[rl.id] = c.actor;
       if (c.actor === 'player' || isMine(s, c.actor)) st.stash.push(rl.id);
       emitFact(s, { kind: 'theft', actors: rl.a ? [rl.a] : [], place: placeOf(s, rl.id), severity: 45, visibility: 'public', tags: ['crime', 'relic'], text: fmtL(l('Roubo! Some {n} ({w}).', 'Theft! {n} vanishes ({w}).'), { n: rl.n, w: prev === 'museum' ? l('do museu', 'from the museum') : l('do acervo', 'from the collection') }), src: 'crime17' });
-      return fmtL(l('{n} está no seu esconderijo. Venda no mercado negro — ou devolva por recompensa.', '{n} is in your hideout. Sell it on the black market — or return it for a reward.'), { n: rl.n });
+      return c.actor === 'player' || isMine(s, c.actor) ? fmtL(l('{n} está no seu esconderijo. Venda no mercado negro — ou devolva por recompensa.', '{n} is in your hideout. Sell it on the black market — or return it for a reward.'), { n: rl.n })
+        : fmtL(l('{n} sumiu; logo deve aparecer no mercado negro.', '{n} is gone; it should surface on the black market soon.'), { n: rl.n });
     } },
   { id: 'bootleg', name: l('Pirataria (bootleg)', 'Bootlegging'), tk: 'act', p: 0.7, q: 0.18, sev: 25, cost: 3000, heat: 6, extra: 1,
     desc: l('Prensar e vender cópias piratas dos sucessos de outro selo: lucro rápido, rival perde vendas.', 'Press and sell bootlegs of another label\'s hits: quick profit, the rival loses sales.'),
@@ -353,7 +359,7 @@ export const CRIMES17: CrimeDef17[] = [
       const v = money(s, 2500 + a.fame * 160);
       takeFrom(s, ownerOfTarget(s, a.id), Math.round(v * 0.7), `Pirataria: ${a.name}`);
       giveTo(s, c.actor, v, `Bootleg: ${a.name}`);
-      return fmtL(l('{f} piratas de {a} rendem {v}.', 'Bootleg {f} of {a} earn {v}.'), { f: fmt, a: a.name, v: `$${v.toLocaleString('en-US')}` });
+      return fmtL(l('{f} piratas de {a} rendem {v}.', 'Bootleg {f} of {a} earn {v}.'), { f: fmt, a: a.name, v: usd(v) });
     } },
   { id: 'chart_rig', name: l('Fraudar as paradas', 'Rig the charts'), tk: 'own_act', p: 0.75, q: 0.22, sev: 35, cost: 6000, heat: 8, extra: 1,
     desc: l('Compras em massa/robôs pelo seu ato: +35% nas paradas por 8 semanas. Exposto: escândalo e −40% por 6 meses.', 'Bulk buys/bots for your act: +35% chart units for 8 weeks. Exposed: scandal and −40% for 6 months.'),
@@ -374,7 +380,7 @@ export const CRIMES17: CrimeDef17[] = [
       const v = money(s, 3000 + a.fame * 260);
       post(s, `c17skim:${a.id}:${nid(s, '')}`, v, 'other', `Ajuste contábil (${a.name})`);
       grantHold(s, { holder: 'c17:acct', target: 'player', kind: 'secret', strength: 40, proof: 2, months: 120, src: 'crime17', text: fmtL(l('O contador sabe dos royalties de {a}', 'The accountant knows about {a}\'s royalties'), { a: a.name }), quiet: true });
-      return fmtL(l('{v} saíram dos royalties de {a} para o caixa.', '{v} moved from {a}\'s royalties into the till.'), { v: `$${v.toLocaleString('en-US')}`, a: a.name });
+      return fmtL(l('{v} saíram dos royalties de {a} para o caixa.', '{v} moved from {a}\'s royalties into the till.'), { v: usd(v), a: a.name });
     } },
 ];
 export const crimeById = (id: string): CrimeDef17 | undefined => CRIMES17.find((c) => c.id === id);
@@ -461,6 +467,7 @@ export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
   if (d.id === 'blackmail' && holdsBetween(s, c.actor, c.target).some((h) => h.kind === 'secret' || h.kind === 'blackmail')) { p += 0.25; why.push(l('Você já guarda um segredo dele(a): +25%', 'You already hold a secret on them: +25%')); }
   if (d.id === 'murder' && c.method === 'drugs' && s.persons[c.target]?.health === 'addiction') { p += 0.15; why.push(l('O alvo já usa drogas: +15%', 'The target already uses drugs: +15%')); }
   if (d.id === 'bribe') { const k = corruption(s, a3); p += k * 0.4 - 0.1; why.push(fmtL(l('Corrupção em {c} na época: {x}', 'Corruption in {c} at the time: {x}'), { c: countryName(a3), x: pct(k * 0.4 - 0.1) })); }
+  if (c.dp) { p += c.dp; why.push(c.dpWhy ?? fmtL(l('Ajuste {x}', 'Adjustment {x}'), { x: pct(c.dp) })); }
   // polícia e época
   const heat = c.actor === 'player' ? heatIn(s, a3) : st.nh[c.actor] ?? 0;
   if (heat > 0) { q += heat / 250; why.push(fmtL(l('{g} já de olho (calor {h}): exposição {x}', '{g} already watching (heat {h}): exposure {x}'), { g: agency(s, a3), h: Math.round(heat), x: pct(heat / 250) })); }
@@ -610,15 +617,18 @@ function convict(s: GameState, cs: Case17, mult = 1): L {
     const pp = playerPerson(s);
     if (mult >= 1 && cs.sev >= 70 && pp) { st.jail[pp.id] = { u: s.week + Math.round(cs.sev / 2), a3: cs.a3, why: l('Condenado', 'Convicted') }; }
     st.parole = s.week + 104;
-    text = fmtL(l('Condenado(a) em {c}: multa de {v}{j}; 2 anos de condicional.', 'Convicted in {c}: {v} fine{j}; 2 years of parole.'), { c: countryName(cs.a3), v: `$${fine.toLocaleString('en-US')}`, j: pp && st.jail[pp.id]?.u > s.week ? l(' e prisão', ' and prison') : '' });
+    text = fmtL(l('Condenado(a) em {c}: multa de {v}{j}; 2 anos de condicional.', 'Convicted in {c}: {v} fine{j}; 2 years of parole.'), { c: countryName(cs.a3), v: usd(fine), j: pp && st.jail[pp.id]?.u > s.week ? l(' e prisão', ' and prison') : '' });
   } else if (s.persons[cs.who]) {
     const months = Math.round(6 + cs.sev / 4);
     jailPerson(s, cs.who, cs.a3, months, l('Condenado', 'Convicted'));
     text = fmtL(l('{p} é condenado(a) a {m} meses de prisão.', '{p} is sentenced to {m} months in prison.'), { p: nameOf17(s, cs.who), m: months });
+  } else if (cs.who.startsWith('o:')) {
+    st.down[cs.who.slice(2)] = s.week + 104;
+    text = fmtL(l('Operação policial desmonta a cúpula de {o}: dois anos de calmaria.', 'A police operation dismantles {o}\'s leadership: two quiet years.'), { o: nameOf17(s, cs.who) });
   } else {
     const lb = s.labels[cs.who];
     if (lb) { lb.cash -= fine; lb.reputation = clamp(lb.reputation - 10, 0, 100); }
-    text = fmtL(l('{b} é condenada: multa de {v}.', '{b} is convicted: {v} fine.'), { b: nameOf17(s, cs.who), v: `$${fine.toLocaleString('en-US')}` });
+    text = fmtL(l('{b} é condenada: multa de {v}.', '{b} is convicted: {v} fine.'), { b: nameOf17(s, cs.who), v: usd(fine) });
   }
   return text;
 }
@@ -744,7 +754,7 @@ export function sellHot(s: GameState, rlId: string, fi: number, r: Rng = crng(s,
   post(s, `c17fence:${rlId}`, qd.price, 'asset_sales', `Venda discreta: ${rl.n.pt}`);
   rl.own.push([crime17(s).fake[rlId] ? 'comprador enganado' : 'comprador anônimo', s.year, 'mercado negro']);
   addHeat(s, 'player', a3, 6);
-  return fmtL(l('Vendido por {v} a {f}.', 'Sold for {v} through {f}.'), { v: `$${qd.price.toLocaleString('en-US')}`, f: FENCES17[fi].name });
+  return fmtL(l('Vendido por {v} a {f}.', 'Sold for {v} through {f}.'), { v: usd(qd.price), f: FENCES17[fi].name });
 }
 /** Devolver anonimamente e cobrar a recompensa (10%): reputação sobe, calor cai. */
 export function returnHot(s: GameState, rlId: string): L {
@@ -757,7 +767,7 @@ export function returnHot(s: GameState, rlId: string): L {
   post(s, `c17reward:${rlId}`, v, 'other', `Recompensa: ${rl.n.pt}`);
   s.player.reputation.artistic = clamp(s.player.reputation.artistic + 2, 0, 100);
   emitFact(s, { kind: 'relic', actors: ['player', ...(rl.a ? [rl.a] : [])], place: s.config.homeCity, severity: 35, visibility: 'public', tags: ['good', 'relic'], text: fmtL(l('{c} "encontra" {n} e devolve ao dono.', '{c} "finds" {n} and returns it to its owner.'), { c: s.config.companyName, n: rl.n }), src: 'crime17' });
-  return fmtL(l('Devolvida. Recompensa de {v} e boa imprensa.', 'Returned. {v} reward and good press.'), { v: `$${v.toLocaleString('en-US')}` });
+  return fmtL(l('Devolvida. Recompensa de {v} e boa imprensa.', 'Returned. {v} reward and good press.'), { v: usd(v) });
 }
 /** Falsificar uma réplica de peça famosa (o comprador pode descobrir). */
 export function forgeRelic(s: GameState, rlId: string): L {
@@ -842,7 +852,7 @@ export function toggleLaunder(s: GameState, oid: string): L {
   if ((st.org[o.id] ?? 0) < -20) return l('Eles não confiam em você.', 'They don\'t trust you.');
   st.laund[o.id] = s.week;
   grantHold(s, { holder: o.key, target: 'player', kind: 'secret', strength: 65, proof: 2, months: 240, src: 'crime17', text: l('Sabe que seu selo lava dinheiro', 'Knows your label launders money'), quiet: true });
-  return fmtL(l('Seu selo agora lava dinheiro de {o}: {v}/mês, calor +3/mês, e eles passam a ter algo contra você.', 'Your label now launders for {o}: {v}/month, heat +3/month, and they now hold something on you.'), { o: o.name, v: `$${launderFee(s, o).toLocaleString('en-US')}` });
+  return fmtL(l('Seu selo agora lava dinheiro de {o}: {v}/mês, calor +3/mês, e eles passam a ter algo contra você.', 'Your label now launders for {o}: {v}/month, heat +3/month, and they now hold something on you.'), { o: o.name, v: usd(launderFee(s, o)) });
 }
 export function approachOrg(s: GameState, oid: string): L {
   const st = crime17(s);
@@ -906,7 +916,7 @@ function extrasMonth(s: GameState, r: Rng): void {
     if (!a) continue;
     const loss = money(s, 800 + a.fame * 90);
     post(s, `c17pir:${o.id}`, -loss, 'legal', `Vendas perdidas para pirataria (${o.name.pt})`);
-    emitFact(s, { kind: 'piracy', actors: [a.id, o.key], place: o.city, severity: 25, visibility: 'rumor', tags: ['crime', 'bad'], text: fmtL(l('{f} piratas de {a} inundam {c} ({o}): −{v}.', 'Bootleg {f} of {a} flood {c} ({o}): −{v}.'), { f: bootFmt(s.year), a: a.name, c: countryName(o.a3), o: o.name, v: `$${loss.toLocaleString('en-US')}` }), src: 'crime17' });
+    emitFact(s, { kind: 'piracy', actors: [a.id, o.key], place: o.city, severity: 25, visibility: 'rumor', tags: ['crime', 'bad'], text: fmtL(l('{f} piratas de {a} inundam {c} ({o}): −{v}.', 'Bootleg {f} of {a} flood {c} ({o}): −{v}.'), { f: bootFmt(s.year), a: a.name, c: countryName(o.a3), o: o.name, v: usd(loss) }), src: 'crime17' });
   }
   // pizzo recusado: risco de "acidente" num show
   for (const [oid, since] of Object.entries(st.pizzo)) {
