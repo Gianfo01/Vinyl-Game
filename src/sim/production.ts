@@ -1,5 +1,6 @@
 // Composição, gravação e preparação de lançamentos (GDD §12, §13).
 
+import { addRecoup18 } from './sys/contracts18';
 import { coverCost } from './covers';
 import { clamp, type Rng } from '../core/rng';
 import { APPROACHES, EQUIPMENT, FORMATS, STUDIO_TIERS, type FormatId } from '../data/rules';
@@ -132,7 +133,7 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
   else if (s.labels[payer]) s.labels[payer].cash -= cost;
   // custo de gravação é recuperável no contrato clássico
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
-  if (c && c.model !== 'distribution' && c.model !== 'licensing' && payer !== 'act') c.recoupBalance += Math.round(cost * 0.5);
+  if (c && payer !== 'act') addRecoup18(s, c, 'rec', cost); // r18: fração negociada nas cláusulas (antes 50% fixo)
   for (const song of done) runSimHooks('record', s, r, { song });
   return { cost, songs: done };
 }

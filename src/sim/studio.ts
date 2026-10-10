@@ -2,6 +2,7 @@
 // com assinatura sonora, samples e interpolações com liberação de direitos, covers, remixes,
 // versões em outro idioma e discos-tributo.
 
+import { addRecoup18 } from './sys/contracts18';
 import { clamp, type Rng } from '../core/rng';
 import { APPROACHES, STUDIO_TIERS } from '../data/rules';
 import { familyOf, l, type L } from '../data/world';
@@ -121,7 +122,7 @@ export function startSession(s: GameState, actId: string, songIds: string[], tie
   const pr0 = PRODUCERS.find((x) => x.id === producerId);
   if (pr0) prodHooks.started?.(s, pr0, sess);
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
-  if (c && c.party === 'player' && c.model !== 'distribution' && c.model !== 'licensing') c.recoupBalance += Math.round(cost * 0.5);
+  if (c) addRecoup18(s, c, 'rec', cost); // r18: fração negociada nas cláusulas (antes 50% fixo)
   return sess;
 }
 

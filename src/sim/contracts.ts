@@ -300,6 +300,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): void {
     c.territories = scopeTerritories(s, o.rights.scope);
     act.trust = clamp(act.trust + signingTrust(o.rights, o.model, mainAmbition(s, act)), 0, 100);
   }
+  if (o.clauses18) c.clauses18 = { ...o.clauses18 };
   s.contracts[id] = c;
   act.owner = 'player';
   act.contractId = id;

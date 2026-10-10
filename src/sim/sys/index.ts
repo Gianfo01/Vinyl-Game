@@ -183,3 +183,5 @@ import './scenedefs17';
 // Rodada 17 (onda 2, I — novo jogo): cenários de época com regras especiais; efeitos das opções novas (real até o início, dificuldade detalhada, prazo).
 import './scenarios17';
 import './start17';
+import './econ18';
+import './contracts18';

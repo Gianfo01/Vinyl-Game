@@ -3,6 +3,8 @@ import { deferEvents } from '../../ext4';
 // ticketeira, fábrica de instrumentos com endossos, conselho (modo carreira), fusões entre rivais
 // com órgão antitruste, e câmbio/inflação por mercado.
 
+import { fxExposure18, fxWhy18 } from '../econ18';
+import { homeMarket } from '../../economy';
 import { clamp, type Rng } from '../../../core/rng';
 import { MARKETS, cityById, l, type L, type MarketId } from '../../../data/world';
 import { emitEvent, type EventDef } from '../../events';
@@ -283,17 +285,16 @@ export function fxLoss(market: MarketId, year: number): number {
 
 function fxMonth(s: GameState): void {
   const st = s.x4.industry;
-  const sales = s.monthLedger.sales ?? 0;
-  if (sales <= 0) return;
   let loss = 0;
-  const terr = s.player.territories;
   for (const m of MARKETS) {
     const lossRate = fxLoss(m.id, s.year);
     st.fx[m.id] = clamp((st.fx[m.id] ?? 1) * (1 - lossRate / 12), 0.01, 1);
-    if (!lossRate || !terr.includes(m.id)) continue;
-    const weight = m.size(s.year) / terr.reduce((t, id) => t + (MARKETS.find((x) => x.id === id)?.size(s.year) ?? 0), 0);
-    loss += sales * weight * (lossRate / 2);
   }
+  // r18: a perda depende da exposição real da empresa (vendas faturadas no país, títulos a receber/pagar lá, caixa na moeda da casa)
+  const ex = fxExposure18(s, homeMarket(s));
+  for (const e of ex) loss += e.loss;
+  (s.flags as Record<string, number>).fxLast18 = Math.round(loss);
+  fxWhy18.set(s, ex);
   if (loss > 0) {
     post(s, `fx:${s.year}:${s.month}`, -Math.round(loss), 'fx', 'Perda cambial e inflação local');
     st.fxLossYear += Math.round(loss);
