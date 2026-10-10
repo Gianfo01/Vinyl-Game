@@ -104,6 +104,9 @@ export function shortcutsHelp15(areas: { key: string; label: string }[]): void {
     ['/', l('Também abre a busca', 'Also opens search')],
     ['Ctrl Enter', l('Avançar um mês', 'Advance one month')],
     ['Alt ← / Alt →', l('Voltar / avançar entre telas (também os botões do navegador)', 'Back / forward between screens (browser buttons too)')],
+    ['{ / }', l('Aba anterior / próxima da página atual', 'Previous / next tab on the current page')],
+    ['☆', l('Fixa a página atual no topo do menu (barra de migalhas)', 'Pins the current page to the top of the menu (breadcrumb bar)')],
+    ['🕘', l('Páginas recentes (também no topo do Ctrl K)', 'Recent pages (also at the top of Ctrl K)')],
     ['?', l('Este painel', 'This panel')],
     ['Esc', l('Fecha janelas', 'Closes dialogs')],
   ];

@@ -3,6 +3,7 @@
 // por grupo, instrumentos, personalidade, saúde, relações, carreira e aulas.
 // O que o jogador vê de atos alheios depende do grau de conhecimento (faixas, não números exatos).
 
+import { CAT_MIN17, groupTabs17 } from './popcat17';
 import { AMBITIONS, ORIGINS, traitById } from '../data/people';
 import { actAffinity, affinityLabel, bestFamilies, genreFamilyName, worstFamily } from '../sim/sys/temper';
 import { CONTRACT_MODELS } from '../data/rules';
@@ -60,13 +61,19 @@ const GROUP_ICON: Record<AttrGroup, string> = { tech: 'guitar', create: 'pen', s
 export function pageTabs(items: { id: string; label: L; icon?: string; render: () => HTMLElement | null }[], initial?: string): HTMLElement {
   const body = h('div', { class: 'pg-tab-body' });
   const bar0 = h('div', { class: 'tabs', role: 'tablist' });
+  // r17: com muitas abas, primeiro a categoria (Resumo, Carreira, Vida, Negócios, Mundo e imprensa, Mais)
+  const groups = items.length >= CAT_MIN17 ? groupTabs17(items) : null;
+  const cats = groups && groups.length > 1 ? h('div', { class: 'cats17', role: 'tablist', 'aria-label': t(l('Categorias', 'Categories')) }) : null;
   let cur = items.find((i) => i.id === initial)?.id ?? items[0]?.id;
   const draw = () => {
-    bar0.replaceChildren(...items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { cur = i.id; draw(); } }, i.icon ? ic(i.icon) : null, ' ', t(i.label))));
+    const g = cats ? groups!.find((x) => x.items.some((i) => i.id === cur)) ?? groups![0] : null;
+    if (cats && g) cats.replaceChildren(...groups!.map((x) => h('button', { role: 'tab', 'aria-selected': x === g ? 'true' : 'false', class: x === g ? 'on' : '', onclick: () => { cur = x.items[0].id; draw(); } }, ic(x.cat.icon), ' ', t(x.cat.label), h('span', { class: 'n17' }, ` ${x.items.length}`))));
+    const shown = g ? g.items : items;
+    bar0.replaceChildren(...shown.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { cur = i.id; draw(); } }, i.icon ? ic(i.icon) : null, i.icon ? ' ' : null, t(i.label))));
     body.replaceChildren(items.find((i) => i.id === cur)?.render() ?? h('span'));
   };
   draw();
-  return h('div', { class: 'tabs-wrap pg-tabs' }, bar0, body);
+  return h('div', { class: 'tabs-wrap pg-tabs' }, cats, bar0, body);
 }
 
 const tone = (v: number): string => (v >= 80 ? 'elite' : v >= 65 ? 'good' : v >= 45 ? 'mid' : 'low');
