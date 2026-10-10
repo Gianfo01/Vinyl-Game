@@ -200,7 +200,7 @@ export function pending18(s: GameState): Pending18[] {
 export const thread18 = (s: GameState, id: string): Thread18 | undefined => dec18(s).th.find((t) => t.id === id);
 
 registerInboxKind('echo18', {
-  label: l('Consequência', 'Consequence'), cat: 'decision', icon: 'history', prio: 1,
+  label: l('Consequência', 'Consequence'), cat: 'decision', icon: 'clock', prio: 1,
   goto: (_s, m) => (m.ref?.act ? { act: String(m.ref.act) } : m.ref?.person ? { person: `p:${m.ref.person}` } : null),
 });
 

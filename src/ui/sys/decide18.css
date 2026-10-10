@@ -40,6 +40,3 @@
 .btn.ib18-opt { flex-direction: column; align-items: flex-start; text-align: left; max-width: 26rem; }
 .btn.ib18-opt small { color: var(--muted); font-size: 0.72rem; }
 .ib18-it { transition: background 0.2s; }
-.ib18-it.unread { animation: dc18in 0.35s ease-out; }
-@keyframes dc18in { from { transform: translateX(-6px); opacity: 0.4; } }
-@media (prefers-reduced-motion: reduce) { .ib18-it.unread { animation: none; } }

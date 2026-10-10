@@ -11,6 +11,7 @@ import { rerender } from '../common';
 import { h } from '../dom';
 import { deskPanel } from '../panels/desk';
 import { campusThumb18 } from './campus18';
+import { home18 } from './home18';
 import { EXTRA_AREAS, extraSections, registerArea } from '../registry';
 import { store } from '../store';
 import { ic } from '../vis';
@@ -41,6 +42,7 @@ export function cockpit(s: GameState): HTMLElement {
       h('button', { class: `btn small ${n ? 'primary' : 'ghost'}`, onclick: () => jump('ck14-desk') }, ic('calendar'), ' ', t(l('Decisões', 'Decisions')), ` (${n})`),
       h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: () => jump('ck14-inbox') }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`),
       h('small', { class: 'muted' }, n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.')))),
+    home18(s), // r18 decide18: letreiro, semanas, momentos, humor, pulso, holofote
     h('div', { class: 'ck14-top' },
       hqMini(s),
       h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—'))),

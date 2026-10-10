@@ -52,7 +52,7 @@ export function pendingView18(s: GameState, max = 6): HTMLElement {
   const P = pending18(s);
   const done = dec18(s).done.slice(0, 3);
   return h('section', { class: 'card dc18-pend', id: 'dc18-pend' },
-    h('div', { class: 'ck14-head' }, h('h3', null, ic('history'), ' ', h('span', { class: 'why18', 'data-why': 'dec18.pending', tabindex: '0' }, t(l('Consequências pendentes', 'Pending consequences'))), ' ', h('small', { class: 'muted' }, `(${P.length})`))),
+    h('div', { class: 'ck14-head' }, h('h3', null, ic('clock'), ' ', h('span', { class: 'why18', 'data-why': 'dec18.pending', tabindex: '0' }, t(l('Consequências pendentes', 'Pending consequences'))), ' ', h('small', { class: 'muted' }, `(${P.length})`))),
     P.length ? h('ul', { class: 'dc18-pl' }, P.slice(0, max).map((x) => h('li', { class: x.tone },
       h('span', { class: 'dc18-ic' }, TONE_IC[x.tone]),
       h('span', null, h('b', null, t(x.t)), ' → ', t(x.o), h('br'), h('small', null, t(x.hint), ' · ', t(x.chance), ' · ', t(fmtL(l('entre {a} e {b}', 'between {a} and {b}'), { a: when(s, x.from), b: when(s, x.to) }))))))) :

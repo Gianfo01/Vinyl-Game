@@ -1,0 +1,49 @@
+/* Rodada 18 (decide18) — Cockpit vivo */
+.hm18 { display: grid; gap: 0.5rem; margin-bottom: 0.6rem; }
+.hm18-ticker { display: flex; align-items: center; gap: 0.5rem; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); padding: 0.25rem 0.4rem; white-space: nowrap; }
+.hm18-live { flex: none; font-size: 0.7rem; color: #fff; background: var(--bad); border-radius: 3px; padding: 0 0.3rem; animation: hm18blink 2s steps(2) infinite; }
+.hm18-track { display: inline-flex; gap: 2rem; animation: hm18scroll linear infinite; }
+.hm18-ticker:hover .hm18-track, .hm18-ticker:focus-within .hm18-track { animation-play-state: paused; }
+.hm18-tk { font-size: 0.82rem; }
+.hm18-tk.mine { color: var(--good); font-weight: 600; }
+.hm18-tk.rumor { font-style: italic; color: var(--muted); }
+@keyframes hm18scroll { to { transform: translateX(-50%); } }
+@keyframes hm18blink { 50% { opacity: 0.5; } }
+.hm18-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between; align-items: center; }
+.hm18-urg, .hm18-quick { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.hm18-badge { border: 0; border-radius: 12px; padding: 0.1rem 0.55rem; font-size: 0.78rem; cursor: pointer; color: var(--fg, inherit); }
+.hm18-badge.warn { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.hm18-badge.bad { background: color-mix(in srgb, var(--bad) 30%, transparent); animation: hm18blink 1.6s ease-in-out infinite; }
+.hm18-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.4rem; }
+.hm18-kpi { display: grid; grid-template-columns: 1fr auto; align-items: center; border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.5rem; background: var(--panel); }
+.hm18-kpi > small:first-child { grid-column: 1 / -1; color: var(--muted); }
+.hm18-kpi .hm18-spark { grid-row: 2 / 4; grid-column: 2; }
+.hm18-hi { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.4rem; }
+.hm18-card { display: flex; gap: 0.5rem; align-items: center; border-radius: 8px; padding: 0.4rem 0.6rem; background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 22%, var(--panel)), var(--panel)); border: 1px solid var(--line); animation: hm18pop 0.5s ease-out; }
+.hm18-card.k-scandal, .hm18-card.echo.bad, .hm18-card.k-death { background: linear-gradient(120deg, color-mix(in srgb, var(--bad) 20%, var(--panel)), var(--panel)); }
+.hm18-card.k-chart, .hm18-card.k-award, .hm18-card.echo.good { background: linear-gradient(120deg, color-mix(in srgb, var(--good) 22%, var(--panel)), var(--panel)); }
+.hm18-card p { margin: 0; font-size: 0.85rem; }
+.hm18-big { font-size: 1.6rem; }
+@keyframes hm18pop { from { transform: scale(0.96); opacity: 0; } }
+.hm18-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 0.5rem; }
+@media (max-width: 800px) { .hm18-grid { grid-template-columns: 1fr; } }
+.hm18-side { display: grid; gap: 0.5rem; align-content: start; }
+.hm18-weeks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.25rem; }
+.hm18-wk { display: flex; flex-direction: column; gap: 0.2rem; min-height: 4rem; border-top: 3px solid var(--line); padding-top: 0.2rem; animation: hm18pop 0.4s ease-out both; }
+.hm18-wk.now { border-top-color: var(--accent); }
+.hm18-ev { border: 0; text-align: left; font-size: 0.72rem; border-radius: 4px; padding: 0.1rem 0.3rem; background: var(--panel-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; color: inherit; }
+.hm18-ev.dl, .hm18-ev.echo.bad { background: color-mix(in srgb, var(--bad) 22%, var(--panel)); }
+.hm18-ev.rel { background: color-mix(in srgb, var(--good) 22%, var(--panel)); }
+.hm18-ev.msg { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }
+.hm18-faces { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.hm18-face { display: grid; justify-items: center; gap: 0.1rem; width: 5.2rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); padding: 0.2rem; cursor: pointer; color: inherit; }
+.hm18-face small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.7rem; }
+.hm18-face.hot { border-color: var(--bad); }
+.hm18-emo { font-size: 1.3rem; }
+.hm18-bar { display: block; width: 100%; height: 3px; background: var(--line); border-radius: 2px; }
+.hm18-bar > i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.hm18-spotname { font-size: 1.1rem; font-weight: 700; background: none; border: 0; padding: 0; cursor: pointer; color: var(--accent); }
+.hm18-dots { display: flex; gap: 0.25rem; }
+.hm18-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.hm18-dots i.on { background: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .hm18-track, .hm18-live, .hm18-badge.bad, .hm18-card, .hm18-wk { animation: none; } .hm18-ticker { overflow-x: auto; } }
