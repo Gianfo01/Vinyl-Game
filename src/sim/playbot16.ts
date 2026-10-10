@@ -97,7 +97,7 @@ function burn(s: GameState): number {
   const ohLast = (oh(s).last?.lines ?? []).reduce((t, x) => t + x.amount, 0);
   return Math.max(estimateMonthlyBurn(s), c.rent + c.salaries + c.outsourcing + c.loans + c.equipment + ohLast);
 }
-const runway = (s: GameState): number => liquid18(s, 2) / Math.max(1, burn(s)); // r18: caixa + recebíveis dos próximos 2 meses
+const runway = (s: GameState): number => s.player.cash / Math.max(1, burn(s));
 
 // ---------------------------------------------------------------- cartas de decisão
 
@@ -354,7 +354,7 @@ function team(s: GameState, k: Knobs): void {
   if (acts.length >= 4) want.push('admin', 'sync', 'rights', 'manufacturing');
   // o mercado só tem alguns profissionais por vez: contrata a primeira função desejada que aparece
   const role = want.find((r) => !have.has(r) && s.professionals.some((p) => p.role === r));
-  if (role && s.player.staff.length < hqCaps(s).staff && runway(s) > k.cut * 2.5) {
+  if (role && s.player.staff.length < hqCaps(s).staff && liquid18(s, 2) / Math.max(1, burn(s)) > k.cut * 2.5) { // r18: conta recebíveis próximos
     const pro = s.professionals.filter((p) => p.role === role).sort((a, b) => b.skill / Math.max(1, b.salary) - a.skill / Math.max(1, a.salary))[0];
     const liq = liquid18(s, 3); // r18: caixa + recebíveis dos próximos 3 meses
     const afford = pro && liq > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || liq > (salaries + pro.salary) * 24 * k.hireMult);
