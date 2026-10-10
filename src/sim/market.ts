@@ -205,7 +205,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   for (const id of pr.songs) if (s.songs[id] && !pr.reissueOf && pr.kind !== 'compilation') s.songs[id].releaseId = rel.id;
   if (c) c.releasesDone += 1;
   if (act.status === 'emerging') act.status = 'active';
-  if (owner === 'player') s.player.stats.releases += 1;
+  if (owner === 'player' || act.playerBand) s.player.stats.releases += 1; // r18 artist18: disco da sua banda por selo NPC também conta
   if (pr.reissueOf) {
     s.player.reissues += 1;
     s.player.stats.reissues += 1;

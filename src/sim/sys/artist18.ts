@@ -128,7 +128,7 @@ export function testi18(s: GameState, id: string): L[] {
 // ---------------------------------------------------------------- interesse dos selos
 
 export interface Ctx18 { fameN: number; homeF: number; momN: number; caN: number; qN: number; paRoom: number }
-function ctxOf(s: GameState, a: Act): Ctx18 {
+export function ctx18(s: GameState, a: Act): Ctx18 {
   const a3 = homeA3(a);
   const homeF = a3 ? clamp(fameIn(s, a, a3) / 100, 0, 1) : clamp(a.fame / 60, 0, 1);
   let ca = 0, pa = 0, n = 0;
@@ -138,7 +138,7 @@ function ctxOf(s: GameState, a: Act): Ctx18 {
   return { fameN: clamp(a.fame / 55, 0, 1), homeF, momN: clamp(a.momentum / 100, 0, 1), caN: clamp((ca - 60) / 100, 0, 1), qN: last ? clamp((last.q - 40) / 50, 0, 1) : 0.15, paRoom: clamp((pa - ca) / 60, 0, 1) };
 }
 /** quanto um selo quer você (0..1) e por quê */
-export function interest18(s: GameState, lb: Label, a: Act, c = ctxOf(s, a)): { v: number; why: L[] } {
+export function interest18(s: GameState, lb: Label, a: Act, c = ctx18(s, a)): { v: number; why: L[] } {
   const st = a18(s);
   const why: L[] = [];
   let v = 0.45 * c.fameN + 0.15 * c.homeF + 0.12 * c.momN + 0.12 * c.caN + 0.12 * c.qN;
@@ -606,7 +606,7 @@ function scout(s: GameState, r: Rng, a: Act): void {
   const st = a18(s);
   const open = openOffers18(s).filter((o) => o.k === 'record' || o.k === 'dist' || o.k === 'dev').length;
   if (open >= 4 || st.dev) return;
-  const c = ctxOf(s, a);
+  const c = ctx18(s, a);
   let made = 0;
   const labels = Object.values(s.labels).filter((lb) => lb.active && lb.founded <= s.year && lb.cash > money(s, 30000) && !st.offers.some((o) => o.lb === lb.id && o.st === 'open'));
   for (const lb of r.shuffle(labels)) {
@@ -1075,7 +1075,7 @@ registerInboxKind('a18_show', {
   label: l('Showcase', 'Showcase'), cat: 'deals', icon: 'mic', prio: 1,
   handle: (s, m, action) => (action === 'go' ? showcase18(s, String(m.ref?.lb)) : l('Vocês não foram.', 'You skipped it.')),
 });
-registerInboxKind('a18_stmt', { label: l('Prestação de contas', 'Statement'), cat: 'money', icon: 'coin', prio: 0, goto: () => ({ area: 'artist18', tab: ['artist18', 'ledger'] }) });
+registerInboxKind('a18_stmt', { label: l('Prestação de contas', 'Statement'), cat: 'money', icon: 'money', prio: 0, goto: () => ({ area: 'artist18', tab: ['artist18', 'ledger'] }) });
 registerInboxKind('a18_info', { label: l('Seu selo', 'Your label'), cat: 'deals', icon: 'building', prio: 1, goto: () => ({ area: 'artist18', tab: ['artist18', 'deal'] }) });
 registerInboxKind('a18_ar', {
   label: l('A&R do selo', 'Label A&R'), cat: 'decision', icon: 'note', prio: 2,
@@ -1126,7 +1126,7 @@ registerInboxKind('a18_buried', {
   },
 });
 registerInboxKind('a18_drop', {
-  label: l('Dispensa', 'Dropped'), cat: 'decision', icon: 'x', prio: 3,
+  label: l('Dispensa', 'Dropped'), cat: 'decision', icon: 'warning', prio: 3,
   handle: (s, m, action) => {
     const st = a18(s), d = st.deal;
     if (!d) return l('Sem contrato.', 'No deal.');

@@ -261,7 +261,7 @@ registerInboxKind('sh18_prop', {
   handle: (s, m, action) => vote18(s, String(m.ref?.v), String(m.ref?.k) as Prop18, action === 'yes', 'partner').text,
 });
 registerInboxKind('sh18_fall', {
-  label: l('Briga de sócios', 'Partner fallout'), cat: 'decision', icon: 'x', prio: 2,
+  label: l('Briga de sócios', 'Partner fallout'), cat: 'decision', icon: 'warning', prio: 2,
   goto: () => ({ area: 'shared18' }),
   handle: (s, m, action) => { const id = String(m.ref?.v); return action === 'buy' ? buyOut18(s, id).text : action === 'sell' ? sellStake18(s, id).text : dissolve18(s, id); },
 });

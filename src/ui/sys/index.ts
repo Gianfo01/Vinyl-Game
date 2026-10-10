@@ -148,5 +148,7 @@ import './long18';
 import './core18';
 import './finance18';
 import './eras18';
+// Rodada 18 (artist18): Contratos do artista (selos NPC, extrato, equipe) e Sociedades.
+import './artist18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
