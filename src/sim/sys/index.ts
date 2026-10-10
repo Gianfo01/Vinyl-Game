@@ -185,3 +185,4 @@ import './scenarios17';
 import './start17';
 import './econ18';
 import './contracts18';
+import './eras18';

@@ -1,6 +1,7 @@
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
 
+import { physShareRel18 } from './sys/eras18';
 import { baseMult18, recoupable18, takeRecoup18 } from './sys/contracts18';
 import { postAR18, postRoyAP18, postSalesAR18, proDue18 } from './sys/econ18';
 import { clamp, type Rng } from '../core/rng';
@@ -8,7 +9,6 @@ import { nominal } from '../core/money';
 import { isUnlocked } from './era';
 import { CHANNELS, EQUIPMENT, FORMATS, type FormatId } from '../data/rules';
 import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type MarketId } from '../data/world';
-import { physicalShare } from './production';
 import { payAuthors } from './finance';
 import { superfanDebut } from './fandom';
 import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
@@ -329,7 +329,7 @@ export function marketWeek(s: GameState, r: Rng): void {
   }
   const B = MARKET_TAIL * (s.year < 1950 ? 0.6 : 1);
   s.stats.lastH = H;
-  const phys = physicalShare(s);
+  // r18: a fatia física depende dos mercados e da idade do público de cada lançamento (eras18)
   const digital = digitalFormats(s);
   const piracy = piracyLoss(s);
   const singles: ChartEntry[] = [];
@@ -350,7 +350,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     let units = Math.round(pre[i] * (mine(rel) ? k : 1));
     if (units <= 0) continue;
     // estoque: demanda física só vira venda com estoque
-    const physUnits = Math.round(units * phys);
+    const physUnits = Math.round(units * physShareRel18(s, rel));
     let physSold = physUnits;
     if (rel.owner === 'player' || (s.acts[rel.actId]?.playerBand && rel.stock !== Infinity)) {
       if (rel.formats.some((f) => FORMATS.find((x) => x.id === f)?.physical)) {

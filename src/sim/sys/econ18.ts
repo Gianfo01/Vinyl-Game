@@ -7,7 +7,7 @@ import { registerSimHook } from '../ext4';
 import { arTotal18, apTotal18, bucket18, fin18, mIdx18, type Bucket18 } from '../ledger18';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, notify, post, remember, settleCash } from '../util';
-import { physicalShare } from '../production';
+import { physShareRel18 } from './eras18';
 
 export { fin18 } from '../ledger18';
 
@@ -60,7 +60,7 @@ export function postSalesAR18(s: GameState, rel: Release, key: string, amount: n
   if (!post(s, key, amount, cat, memo, false)) return;
   const f = fin18(s);
   const mi = mIdx18(s);
-  const phys = physicalShare(s);
+  const phys = physShareRel18(s, rel);
   const fast = (s.flags.fastPay18 ?? 0) > 0 ? 1 : 0;
   const M = (f.m[mi] ??= {});
   for (const [mk, w] of mkWeights18(s, rel)) {

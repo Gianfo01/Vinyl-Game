@@ -122,3 +122,4 @@ import './pop17';
 // Rodada 17 (onda 2, J): cenas interativas (cartao, momentos, premios), Album de cenas e popups do mapa.
 import './scene17';
 import './finance18';
+import './eras18';
