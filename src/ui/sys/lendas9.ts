@@ -390,7 +390,7 @@ export function worldCard9(cfg: RunConfig, onYear?: (y: number) => void): HTMLEl
   let gap = 10;
   const info = h('small', { class: 'muted' });
   const apply = (on: boolean) => {
-    if (on && w) { cfg.world9 = w; cfg.startYear = Math.max(1920, Math.min(2039, w.year + gap)); onYear?.(cfg.startYear); info.textContent = t(l('{c}, {y} → começa em {s}.', '{c}, {y} → starts in {s}.'), { c: w.company, y: w.year, s: cfg.startYear }); }
+    if (on && w) { cfg.world9 = w; cfg.startYear = Math.max(1889, Math.min(2039, w.year + gap)); onYear?.(cfg.startYear); info.textContent = t(l('{c}, {y} → começa em {s}.', '{c}, {y} → starts in {s}.'), { c: w.company, y: w.year, s: cfg.startYear }); }
     else { delete cfg.world9; info.textContent = w ? t(l('Mundo salvo: {c} ({y}).', 'Saved world: {c} ({y}).'), { c: w.company, y: w.year }) : t(l('Nenhum mundo salvo. Salve um em Lendas → Livro e mundo, ou carregue um arquivo.', 'No saved world. Save one in Legends → Book and world, or load a file.')); }
   };
   const box = h('input', { type: 'checkbox', disabled: !w, onchange: (e: Event) => apply((e.target as HTMLInputElement).checked) }) as HTMLInputElement;

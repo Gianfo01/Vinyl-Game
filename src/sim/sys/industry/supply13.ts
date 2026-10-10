@@ -19,7 +19,7 @@ export const GRADE_FX: Record<Grade, { cost: number; defect: number; appeal: num
 };
 
 /** Formatos que cada material atende. */
-export const MAT_FORMATS: Record<Material, string[]> = { shellac: ['shellac'], vinyl: ['single45', 'lp'], tape: ['cassette'], polycarbonate: ['cd'], paper: ['shellac', 'single45', 'lp', 'cassette', 'cd'] };
+export const MAT_FORMATS: Record<Material, string[]> = { shellac: ['shellac', 'cylinder'], vinyl: ['single45', 'lp'], tape: ['cassette'], polycarbonate: ['cd'], paper: ['shellac', 'single45', 'lp', 'cassette', 'cd', 'cylinder', 'piano_roll'] };
 const MAT_TECH: Partial<Record<Material, string[]>> = { vinyl: ['single45', 'lp'], tape: ['cassette'], polycarbonate: ['cd'] };
 export const MAT_INFO: Record<Material, L> = {
   shellac: l('Discos de 78 rpm: pesados, quebradiços, dominantes até os anos 50.', '78 rpm records: heavy, brittle, dominant until the 1950s.'),
@@ -51,7 +51,7 @@ export function matAvailable(s: GameState, m: Material): boolean {
 /** Curva de preço por época (multiplicador alvo) + choques históricos. */
 export function matTarget(m: Material, y: number): number {
   let v = 1;
-  if (m === 'shellac') v = y < 1941 ? 1 : y <= 1946 ? 2.6 : 1 + Math.max(0, y - 1950) * 0.05;
+  if (m === 'shellac') v = y >= 1917 && y <= 1919 ? 1.4 : y < 1941 ? 1 : y <= 1946 ? 2.6 : 1 + Math.max(0, y - 1950) * 0.05;
   if (m === 'vinyl') {
     v = y < 1955 ? 1.2 : y < 1970 ? 1 : y < 1990 ? 0.92 : y < 2007 ? 1.2 : 1.1;
     if (y >= 1973 && y <= 1975) v *= 1.7; // choque do petróleo
@@ -72,6 +72,7 @@ export function matTarget(m: Material, y: number): number {
 /** Por que o preço está assim neste ano (para a tela). */
 export function matWhy(m: Material, y: number): L | null {
   if (m === 'shellac' && y >= 1941 && y <= 1946) return l('Guerra: goma-laca racionada.', 'War: shellac rationed.');
+  if (m === 'shellac' && y >= 1917 && y <= 1919) return l('Grande Guerra: navios da Índia (de onde vem a goma-laca) requisitados; o preço dispara.', 'Great War: ships from India (where shellac comes from) requisitioned; prices soar.');
   if (m === 'shellac' && y > 1950) return l('Indústria migrando para o vinil: fornecedores somem.', 'Industry moving to vinyl: suppliers vanish.');
   if (m === 'vinyl' && y >= 1973 && y <= 1975) return l('Choque do petróleo: PVC disparou.', 'Oil shock: PVC soared.');
   if (m === 'vinyl' && y >= 1979 && y <= 1981) return l('Segundo choque do petróleo.', 'Second oil shock.');

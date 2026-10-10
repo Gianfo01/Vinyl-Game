@@ -230,7 +230,8 @@ function payTaxes(s: GameState, year: number): void {
   // r18: base de cálculo = resultado operacional + não operacional (câmbio, juros), nunca aportes/empréstimos
   const profit = (s.player.profitByYear[year] ?? 0) + sumP18(fin18(s).y[year], 'nonop:');
   if (profit <= 0) return;
-  const rate = profit > money(s, 1_000_000) ? 0.32 : 0.22;
+  if (year < 1909) return;
+  const rate = year < 1909 ? 0 : year < 1916 ? 0.01 : year < 1917 ? 0.02 : year < 1918 ? 0.06 : year < 1920 ? 0.12 : profit > money(s, 1_000_000) ? 0.32 : 0.22; // r18 era1889: imposto de renda só a partir de 1909/1913
   post(s, `tax:${year}`, -Math.round(profit * rate), 'taxes', `Impostos ${year}`);
 }
 

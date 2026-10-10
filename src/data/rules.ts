@@ -35,12 +35,14 @@ export const TECHS: TechDef[] = [
   { id: 'hologram', name: l('Hologramas de palco', 'Stage holograms'), base: 2027, deps: ['short_video'], spread: 3 },
   { id: 'synthetic_voice', name: l('Vozes sintéticas', 'Synthetic voices'), base: 2030, deps: ['short_video'], spread: 3 },
   { id: 'neural', name: l('Interface neural', 'Neural interface'), base: 2036, deps: ['synthetic_voice'], spread: 2, divergence: true },
+  // r18 era1889: o disco plano de Berliner chega ao mercado (EUA, 1895); antes só há cilindros
+  { id: 'disc', name: l('Disco de gramofone', 'Gramophone disc'), base: 1895, deps: [], spread: 2 },
 ];
 
 export const techById = Object.fromEntries(TECHS.map((x) => [x.id, x])) as Record<string, TechDef>;
 
 // ---------- Formatos ----------
-export type FormatId = 'shellac' | 'single45' | 'lp' | 'cassette' | 'cd' | 'download' | 'streaming' | 'airplay';
+export type FormatId = 'shellac' | 'single45' | 'lp' | 'cassette' | 'cd' | 'download' | 'streaming' | 'airplay' | 'cylinder' | 'piano_roll' | 'sheet';
 
 export interface FormatDef {
   id: FormatId;
@@ -63,6 +65,10 @@ export const FORMATS: FormatDef[] = [
   { id: 'download', name: l('Download', 'Download'), physical: false, tech: 'download', net: { single: 0.6, ep: 1.8, lp: 4 }, unitCost: 0 },
   { id: 'streaming', name: l('Streaming', 'Streaming'), physical: false, tech: 'streaming', net: { single: 0.6, ep: 1.6, lp: 3.2 }, unitCost: 0 },
   { id: 'airplay', name: l('Execução e rádio', 'Airplay & performance'), physical: false, net: { single: 0.25, ep: 0.5, lp: 0.8 }, unitCost: 0 },
+  // r18 era1889: cilindro de cera (até o fim da era acústica), rolo de pianola e partitura (a fatia não física antes do rádio)
+  { id: 'cylinder', name: l('Cilindro de cera', 'Wax cylinder'), physical: true, until: 'electric_rec', net: { single: 3.2, ep: 5, lp: 9 }, unitCost: 1.1 },
+  { id: 'piano_roll', name: l('Rolo de pianola', 'Piano roll'), physical: true, net: { single: 4.5, ep: 7, lp: 12 }, unitCost: 1.6 },
+  { id: 'sheet', name: l('Partitura', 'Sheet music'), physical: false, net: { single: 1.2, ep: 2, lp: 3.5 }, unitCost: 0 },
 ];
 
 export const formatById = Object.fromEntries(FORMATS.map((x) => [x.id, x])) as Record<FormatId, FormatDef>;

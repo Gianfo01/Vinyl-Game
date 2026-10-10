@@ -17,6 +17,7 @@ import { REAL_WORLD } from '../../data/realacts_world';
 import { REAL_MORE } from '../../data/realacts_more14';
 import { ALIASES16, REAL_L16 } from '../../data/lineups16';
 import { REAL_17 } from '../../data/more17';
+import { REAL_1889 } from '../../data/era1889';
 import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
 import type { RealArtist, RealMember, RealRelease } from '../../data/realtypes';
@@ -39,7 +40,7 @@ const taken16 = new Set([...BASE_ALL.map((a) => norm16(a.n)), ...Object.values(R
 const L16F = REAL_L16.filter((a) => !taken16.has(norm16(a.n)));
 const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
 /** rodada 17: lote E (one-hit wonders, covers/samples, cenas locais, nomes que faltavam) também no fim. */
-export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })];
+export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
 

@@ -23,7 +23,7 @@ import { lastSave17, profileBar17, saveManager17 } from './saves17';
 import { scenarioById } from '../sim/sys/live';
 import { WORLDS17, worldOf17 } from '../sim/start17';
 
-/** Anos de início com nomes únicos (rodada 13: ver ngdata13.ts; o campo ao lado aceita qualquer ano de 1920 a 2039). */
+/** Anos de início com nomes únicos (rodada 13: ver ngdata13.ts; o campo ao lado aceita qualquer ano de 1889 a 2039). */
 const START_YEARS = START_YEARS13;
 
 const SENSITIVE = [
@@ -217,8 +217,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const muts = h('div', { class: 'mut-grid' }, MUTATORS.map((m) => h('label', { class: 'check', title: t(m.desc) },
     h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.mutators = on ? [...cfg.mutators, m.id] : cfg.mutators.filter((x) => x !== m.id); } }),
     h('span', null, t(m.name), h('small', { class: 'muted' }, ` — ${t(m.desc)}`)))));
-  const yearInput = h('input', { type: 'number', min: 1920, max: 2039, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: t(l('Ano exato de início (1920–2039)', 'Exact start year (1920–2039)')),
-    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= 1920 && v <= 2039) { cfg.startYear = v; renderBand(); refreshAll(); } } }) as HTMLInputElement;
+  const yearInput = h('input', { type: 'number', min: 1889, max: 2039, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: t(l('Ano exato de início (1920–2039)', 'Exact start year (1920–2039)')),
+    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= 1889 && v <= 2039) { cfg.startYear = v; renderBand(); refreshAll(); } } }) as HTMLInputElement;
   const yearSel = select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); refreshAll(); });
   const seedInput = h('input', { type: 'text', value: cfg.seed, oninput: (e: Event) => (cfg.seed = (e.target as HTMLInputElement).value || randomSeed()), onchange: () => refreshAll() });
   const nameInput = h('input', { type: 'text', value: cfg.companyName, oninput: (e: Event) => (cfg.companyName = (e.target as HTMLInputElement).value || 'Selo') }) as HTMLInputElement;

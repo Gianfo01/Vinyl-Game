@@ -4,6 +4,7 @@
 
 import { l, type FamilyId, type L } from './world';
 import { PRODS18 } from './people18';
+import { PRODS_1889 } from './era1889';
 
 export type PrAttrs = [ear: number, neg: number, cha: number, mgmt: number, img: number];
 export interface RealProd {
@@ -93,4 +94,5 @@ export const REAL_PRODS: RealProd[] = [
   R('kassin', 'Kassin', 1969, 0, 'rio', 'Estúdio Rio', 2000, 2040, 'organic', l('Banda ao vivo, experimental', 'Experimental live band'), [3, 6, 8], ['brazil', 'rock', 'pop'], 2, 82, 20, [90, 55, 70, 65, 55], l('Multi-instrumentista da cena carioca moderna.', 'Multi-instrumentalist of the modern Rio scene.'), [['Cê', 'Caetano Veloso', 2006], ['Zii e Zie', 'Caetano Veloso', 2009]]),
 ];
 REAL_PRODS.push(...PRODS18.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r18 (world18): mais produtores reais por era/região
+REAL_PRODS.push(...PRODS_1889.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r18 era1889: A&R da era acústica
 export const prodById = Object.fromEntries(REAL_PRODS.map((p) => [p.id, p])) as Record<string, RealProd>;
