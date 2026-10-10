@@ -27,7 +27,7 @@ import { registerPersonAction } from '../personact18';
 import { PRODUCERS, prodHooks, type ProducerDef } from '../studio';
 import type { Act, GameState, Label, Person } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
-import { becomeManager17, career17, foundLabel17, move17, npc17, okPerson17 } from './npc17';
+import { ROLE17, becomeManager17, career17, foundLabel17, move17, npc17, okPerson17 } from './npc17';
 import { opine, opinionOf, per13, type P13 } from './persona13';
 import { rivals8 } from './rivals8';
 
@@ -46,6 +46,7 @@ export const DEST18: Record<Dest18, [L, L]> = {
   business: [l('empresário(a) de outros ramos', 'businessperson'), l('Investe: compra parte de um selo rival ou oferece dinheiro a você (financiamento caro).', 'Invests: buys into a rival label or offers you money (expensive financing).')],
   quit: [l('largou a indústria', 'left the industry'), l('Vida longe da música — pode voltar um dia.', 'A life away from music — may come back one day.')],
 };
+for (const [k, v] of Object.entries(DEST18)) ROLE17[k] ??= v[0]; // trilha da pessoa (npc17) mostra o destino novo
 export interface Car18 { k: Dest18; y: number; act: string; city: string; fam: FamilyId; lb?: string; until: number; why: L }
 export interface W18 {
   /** pessoa (id) → segunda carreira */

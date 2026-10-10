@@ -13,21 +13,21 @@ export interface World17 { id: string; name: L; desc: L; fx: L; apply: (c: RunCo
 const base = (c: RunConfig, o: Partial<RunConfig>) => { delete c.snap17; Object.assign(c, o); };
 
 export const WORLDS17: World17[] = [
-  { id: 'real', name: l('Vida real com variações (recomendado)', 'Real life with variations (recommended)'),
-    desc: l('Artistas, selos, festivais e prêmios reais; discos e formações reais nos anos reais, mas a simulação improvisa (discos, brigas, separações).', 'Real artists, labels, festivals and awards; real albums and lineups in their real years, but the sim improvises (albums, feuds, splits).'),
-    fx: l('Nomes reais ✓ · roteiro real como base · mortes reais só se você ligar · tecnologia em janelas de anos', 'Real names ✓ · real script as a base · real deaths only if you turn it on · technology within year windows'),
+  { id: 'real', name: l('Real até o início, história alternativa depois (recomendado)', 'Real until the start, alternate history after (recommended)'),
+    desc: l('História alternativa: o mundo real (artistas, selos, festivais, prêmios e a carreira de cada um até o ano inicial) é a base; dali em diante tudo é sorteado — discos, formações, separações, voltas, mortes, casos, crimes e mudanças de carreira, para gente real ou inventada. Estreias reais ainda acontecem perto do ano real.', 'Alternate history: the real world (acts, labels, festivals, awards and everyone\'s career up to the start year) is the base; from then on everything is rolled — albums, lineups, splits, comebacks, deaths, affairs, crimes and career changes, for real or invented people. Real debuts still happen near their real year.'),
+    fx: l('Nomes reais ✓ · real até o início · depois, história alternativa · estreias reais ✓ · sexualidade só a documentada para quem é publicamente assumido', 'Real names ✓ · real up to the start · alternate history after · real debuts ✓ · sexuality only as documented for publicly out people'),
     apply: (c) => base(c, { realNames: true, history: 'loose', mode: 'free', realFates: false }) },
   { id: 'exact', name: l('Vida real exata', 'Exact real life'),
-    desc: l('Tudo como aconteceu: discos nas datas reais, mortes, separações e voltas — até você interferir (contratar um artista muda a história dele).', 'Everything as it happened: albums on real dates, deaths, splits and reunions — until you interfere (signing an act changes their story).'),
+    desc: l('O único modo que segue o roteiro real: discos nas datas reais, mortes, separações e voltas; pessoas reais só vivem fatos documentados — até você interferir (contratar um artista muda a história dele).', 'The only mode that follows the real script: albums on real dates, deaths, splits and reunions; real people only live documented facts — until you interfere (signing an act changes their story).'),
     fx: l('Nomes reais ✓ · mortes reais ✓ · formatos e tecnologias nas datas fixas · nada inventado para artistas reais', 'Real names ✓ · real deaths ✓ · formats and tech on fixed dates · nothing invented for real acts'),
     apply: (c) => base(c, { realNames: true, history: 'strict', mode: 'historic', realFates: true }) },
-  { id: 'snap', isNew: true, name: l('Real até o início, imprevisível depois', 'Real until the start, unpredictable after'),
+  { id: 'snap', isNew: true, name: l('Real até o início, sem estreias reais depois', 'Real until the start, no real debuts after'),
     desc: l('O mundo no ano inicial é o real (quem já estreou, com a carreira real até ali). Daí em diante nada está escrito: os artistas reais seguem carreiras simuladas e quem estrearia depois do seu início nunca aparece — no lugar, surgem artistas novos inventados.', 'The world in the start year is the real one (who already debuted, with their real career so far). From then on nothing is written: real acts follow simulated careers and anyone who would debut after your start never appears — invented newcomers take their place.'),
-    fx: l('Nomes reais até o início · sem estreias reais futuras · sem mortes reais programadas · você não sabe quem será o próximo ídolo', 'Real names up to the start · no future real debuts · no scheduled real deaths · you never know who the next idol is'),
+    fx: l('História alternativa · nomes reais até o início · sem estreias, discos, mortes, voltas, covers ou relíquias reais futuras · você não sabe quem será o próximo ídolo', 'Alternate history · real names up to the start · no future real debuts, albums, deaths, reunions, covers or relics · you never know who the next idol is'),
     apply: (c) => base(c, { realNames: true, history: 'free', mode: 'free', realFates: false, snap17: true }) },
-  { id: 'random', name: l('Personagens reais, história aleatória', 'Real characters, random history'),
+  { id: 'random', name: l('Personagens reais, história alternativa', 'Real characters, alternate history'),
     desc: l('As pessoas reais existem e estreiam perto do ano real, com talento real; mas discos, formações, separações e mortes são sorteados.', 'Real people exist and debut near their real year with real talent; but albums, lineups, splits and deaths are rolled.'),
-    fx: l('Nomes reais ✓ · estreias reais ✓ · carreiras sorteadas · mortes reais ignoradas', 'Real names ✓ · real debuts ✓ · rolled careers · real deaths ignored'),
+    fx: l('História alternativa · nomes reais ✓ · estreias reais ✓ · carreiras sorteadas · mortes reais ignoradas', 'Alternate history · real names ✓ · real debuts ✓ · rolled careers · real deaths ignored'),
     apply: (c) => base(c, { realNames: true, history: 'free', mode: 'free', realFates: false }) },
   { id: 'fiction', name: l('Universo ficcional', 'Fictional universe'),
     desc: l('Mesmas mecânicas e épocas, mas artistas, selos, festivais e prêmios com nomes inventados.', 'Same mechanics and eras, but acts, labels, festivals and awards with invented names.'),
@@ -35,7 +35,7 @@ export const WORLDS17: World17[] = [
     apply: (c) => base(c, { realNames: false, history: 'loose', mode: 'free', realFates: false }) },
   { id: 'chaos', name: l('Caos histórico', 'Historical chaos'),
     desc: l('Tecnologias e formatos chegam em datas sorteadas (o streaming pode vir antes do CD), um quarto dos artistas reais nunca surge e a história é aleatória.', 'Technologies and formats arrive on rolled dates (streaming may come before the CD), a quarter of real acts never show up and history is random.'),
-    fx: l('Nomes reais ✓ · datas de tecnologia sorteadas · carreiras sorteadas · muito imprevisível', 'Real names ✓ · rolled tech dates · rolled careers · very unpredictable'),
+    fx: l('História alternativa · nomes reais ✓ · datas de tecnologia sorteadas · carreiras sorteadas · muito imprevisível', 'Alternate history · real names ✓ · rolled tech dates · rolled careers · very unpredictable'),
     apply: (c) => base(c, { realNames: true, history: 'free', mode: 'chaos', realFates: false }) },
 ];
 export const world17ById = Object.fromEntries(WORLDS17.map((w) => [w.id, w])) as Record<string, World17>;
