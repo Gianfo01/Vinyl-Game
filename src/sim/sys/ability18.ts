@@ -302,8 +302,10 @@ export function est18(s: GameState, key0: string): Est18 | null {
   const caLo = clamp(ca - errCA / 2, 1, 200), caHi = clamp(ca + errCA / 2, 1, 200);
   const pm = clamp(A.pa + bPA, ca, 200);
   const paLo = clamp(pm - errPA / 2, caLo, 200), paHi = clamp(Math.max(pm + errPA / 2, paLo + 2), 1, 200);
-  const e: Est18 = { ca: Math.round(ca), caLo: Math.round(caLo), caHi: Math.round(caHi), paLo: Math.round(paLo), paHi: Math.round(paHi), mine, know: (caK + paK) / 2, judge: J.v, why, report: [] };
-  e.report = report18(s, A, e, paK);
+  // sem olheiro nem relação (grau < 2) o teto de um desconhecido é névoa total: só a faixa inteira
+  const fog = !mine && key.startsWith('p:') && paK < 0.4 && proven === 1;
+  const e: Est18 = { ca: Math.round(ca), caLo: Math.round(caLo), caHi: Math.round(caHi), paLo: Math.round(fog ? caHi : paLo), paHi: fog ? 200 : Math.round(paHi), mine, know: (caK + paK) / 2, judge: J.v, why, report: [] };
+  e.report = fog ? [l('Potencial desconhecido: mande olheiros (grau 2+) ou aproxime-se.', 'Unknown potential: send scouts (degree 2+) or get closer.')] : report18(s, A, e, paK);
   return e;
 }
 
@@ -318,6 +320,7 @@ function report18(s: GameState, A: Ability18, e: Est18, paK: number): L[] {
   else if (mid >= 150 && room >= 30 && age < 26) out.push(l('Pode virar uma estrela.', 'Could become a star.'));
   else if (room >= 30 && age < 25) out.push(l('Cru, mas com muito espaço para crescer.', 'Raw, but plenty of room to grow.'));
   else if (room <= 10 && age >= 26) out.push(l('Já está no limite do que pode render.', 'Already at their limit.'));
+  else if (room >= 12 && age >= 42) out.push(l('Já passou do auge: o melhor ficou para trás.', 'Past their prime: their best is behind them.'));
   else if (room >= 12 && age >= 33) out.push(l('Nunca rendeu tudo o que podia; a esta altura, dificilmente renderá.', 'Never delivered all they could; at this point, unlikely to.'));
   else if (room >= 12) out.push(l('Ainda tem margem para evoluir.', 'Still has room to improve.'));
   else out.push(l('Perto do auge.', 'Close to their peak.'));
@@ -351,7 +354,8 @@ export function prospect18(s: GameState, a: Act): number {
   if (!e) return 0;
   const ages = a.members.map((id) => s.year - (s.persons[id]?.born ?? s.year - 30));
   const young = ages.length ? clamp((30 - Math.min(...ages)) / 10, 0, 1) : 0;
-  return clamp(((e.paLo + e.paHi) / 2 - e.ca) * young / 4, 0, 15) + clamp((e.ca - 100) / 10, -4, 6);
+  const room = e.paHi - e.paLo > 70 ? 0 : (e.paLo + e.paHi) / 2 - e.ca; // névoa total: ninguém aposta no escuro
+  return clamp(room * young / 4, 0, 15) + clamp((e.ca - 100) / 10, -4, 6);
 }
 
 // ------------------------------------------------------------------ passo mensal (artistas)
@@ -561,11 +565,16 @@ registerMod('showRevenue', 'ability18', (s, v, c) => {
 // propostas: quem tem muito potencial custa mais para compradores informados (o mercado também tem olheiros)
 registerOfferMod('ability18', (s, act, o) => {
   if (act.owner === 'player') return null;
-  const e = actEst18(s, act);
-  if (!e) return null;
-  const ages = act.members.map((id) => s.year - (s.persons[id]?.born ?? s.year - 30));
-  const young = clamp((29 - Math.min(...ages)) / 8, 0, 1);
-  const room = ((e.paLo + e.paHi) / 2 - e.ca) / 200;
+  // o mercado (empresário, rivais com olheiros) conhece o teto verdadeiro na medida da exposição do ato
+  let ca = 0, pa = 0, n = 0, minAge = 99;
+  for (const id of act.members) {
+    const p = s.persons[id];
+    if (!p?.alive) continue;
+    ca += caOf18(p); pa += Math.max(recOf(s, p).pa, caOf18(p)); n++; minAge = Math.min(minAge, s.year - p.born);
+  }
+  if (!n) return null;
+  const young = clamp((29 - minAge) / 8, 0, 1);
+  const room = (pa - ca) / n / 200;
   const aware = clamp(0.35 + act.fame / 50 + (s.knowledge[act.id]?.degree ?? 0) * 0.08, 0, 1);
   const prem = clamp(room * young * aware * 1.6, 0, 0.45);
   if (prem < 0.04) return null;

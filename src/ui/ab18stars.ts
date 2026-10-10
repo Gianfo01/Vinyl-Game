@@ -44,6 +44,6 @@ export function abilityCell18(s: GameState, a: Act): HTMLElement | null {
   const best = e.best ? est18(s, `p:${e.best}`) : null;
   const tag = best && best.report[0] ? best.report[0] : null;
   const ages = a.members.map((id) => s.year - (s.persons[id]?.born ?? s.year));
-  const prospect = Math.min(...ages) < 24 && (e.paLo + e.paHi) / 2 - e.ca >= 30;
+  const prospect = Math.min(...ages) < 24 && e.paHi - e.paLo < 70 && (e.paLo + e.paHi) / 2 - e.ca >= 30;
   return h('span', { class: 'ab18-cell', title: tag ? T(tag) : '' }, stars18(e.ca, e.paLo, e.paHi), prospect ? pill(T(l('promessa', 'prospect')), 'good') : null);
 }

@@ -72,10 +72,9 @@ describe('r18 ability: CA/PA', () => {
   });
 
   it('promessa custa mais para comprador informado (proposta) e pesa no bot', () => {
-    const a = { ...act, id: 'ab_act', members: ['ab_y'], owner: null, fame: 25 } as Act;
-    s.acts[a.id] = a; s.knowledge[a.id] = { actId: a.id, degree: 4, stage: 'investigating', bias: 0, updatedWeek: s.week, source: 'scout' };
-    s.persons.ab_y.skills = { comp: 25, lyr: 25, voice: 30, instr: 20, prod: 15, stage: 25, biz: 10 };
-    ab18(s).p.ab_y = { pa: 190 };
+    const a = act; a.owner = null; a.fame = 25;
+    s.knowledge[a.id] = { actId: a.id, degree: 4, stage: 'investigating', bias: 0, updatedWeek: s.week, source: 'scout' };
+    for (const id of a.members) { const p = s.persons[id]; p.born = s.year - 19; p.skills = { comp: 25, lyr: 25, voice: 30, instr: 20, prod: 15, stage: 25, biz: 10 }; ab18(s).p[id] = { pa: 190 }; }
     const mod = offerMods().find((x) => x.id === 'ability18')!.fn;
     const o = defaultOffer(s, a);
     const r = mod(s, a, o);
