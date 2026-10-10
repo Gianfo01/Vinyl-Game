@@ -710,3 +710,4 @@ img.portrait { border: 1px solid var(--line); }
 /* r18 final: nada passa da largura da tela no celular (listas longas em select, grades com conteúdo largo) */
 main select { max-width: 100%; }
 @media (max-width: 640px) { main .hub > *, main .panel > * { min-width: 0; } }
+.p12-grid label { grid-template-columns: minmax(0, 1fr); min-width: 0; }
