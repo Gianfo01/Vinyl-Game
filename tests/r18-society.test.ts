@@ -56,7 +56,7 @@ describe('r18 society18', () => {
     if (q.length) { const c0 = pr18(s).cred; expect(review18(s, q[0].id, Math.round(q[0].q))).toBeNull(); expect(pr18(s).cred).toBeGreaterThanOrEqual(c0); expect(pr18(s).n).toBe(1); }
     const a = s.acts[playerActs(s)[0]];
     const rel = Object.values(s.releases).find((r) => r.actId === a?.id) ?? Object.values(s.releases)[0];
-    if (rel) { censorChoice18(s, rel.id, 'defy', new Rng(1)); expect(censorMult18(s, rel.id)).toBeLessThan(1); }
+    if (rel) { censorChoice18(s, rel.id, 'defy', Rng.fromSeed('soc3')); expect(censorMult18(s, rel.id)).toBeLessThan(1); }
     s.player.cash += 10_000_000;
     expect(startCharity18(s, 'children', 'single', 0)).toBeNull();
     for (let i = 0; i < 4; i++) advanceMonth(s);
