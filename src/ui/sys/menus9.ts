@@ -3,7 +3,6 @@
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
-import { rivalsExtra } from '../panels/discovery';
 import { rivals } from '../panels/market';
 import { h } from '../dom';
 import { registerArea } from '../registry';
@@ -19,7 +18,7 @@ function labelsArea(s: GameState): HTMLElement {
     { id: 'rank', label: t(l('Ranking e prestígio', 'Ranking and standing')), icon: 'star', render: () => rankingTab(s) },
     { id: 'list', label: t(l('Selos rivais', 'Rival labels')), icon: 'building', render: () => rivals(s) },
     { id: 'leaders', label: t(l('Estratégias e líderes', 'Strategies and leaders')), icon: 'handshake', render: () => leadersTab(s) },
-    { id: 'intel', label: t(l('Inteligência', 'Intel')), icon: 'camera', render: () => rivalsExtra(s) },
+    // rodada 17: 'Inteligência' (espionagem) mudou para Crime → Espionagem
   ], rerender));
 }
 

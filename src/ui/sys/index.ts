@@ -103,3 +103,5 @@ import './ventures16';
 import './lineup16';
 // Rodada 17: Fatos & Obrigações (estresse, obrigações e fatos) na página de pessoa e do ato.
 import './found17';
+// Rodada 17 (onda 1, A): menu Crime (organizações, planos, espionagem movida, mercado negro, polícia, histórico).
+import './crime17';
