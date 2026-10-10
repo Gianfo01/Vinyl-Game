@@ -51,11 +51,14 @@ export interface Crime17State {
 declare module '../ext4' { interface Ext4 { crime17: Crime17State } }
 const fresh = (): Crime17State => ({ heat: {}, nh: {}, cases: [], log: [], org: {}, laund: {}, stash: [], hot: {}, rcity: {}, seeded: {}, sec: 0, jail: {}, rig: {}, rigBad: {}, boot: {}, pizzo: {}, exile: {}, doc: {}, parole: 0, seq: 0, market: [], warn: [], ties: {}, feud: {}, vend: {}, npcN: 0, fake: {}, down: {} });
 registerExt4('crime17', fresh);
+const FILLED = new WeakSet<object>();
 export function crime17(s: GameState): Crime17State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.crime17 ??= fresh()) as Crime17State;
+  if (FILLED.has(st)) return st; // completa campos de saves antigos uma vez por objeto (sem alocar a cada leitura)
   const f = fresh();
   for (const k of Object.keys(f) as (keyof Crime17State)[]) if (st[k] === undefined) (st as unknown as Record<string, unknown>)[k] = f[k];
+  FILLED.add(st);
   return st;
 }
 /** Dinheiro (centavos) como texto bilíngue. */

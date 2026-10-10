@@ -172,9 +172,9 @@ function topN(rows: { relId: string; u: number }[], n: number): { relId: string;
 }
 
 function rank(prev: Row7[] | undefined, rows: { relId: string; u: number }[]): Row7[] {
-  const before = new Map((prev ?? []).map((x) => [x.relId, x]));
+  const pv = prev ?? [];
   return topN(rows, TOP).map((x, i) => {
-    const p = before.get(x.relId);
+    const p = pv.find((y) => y.relId === x.relId); // ≤20 linhas: busca linear sai mais barata que montar um Map
     return { relId: x.relId, u: Math.round(x.u), pos: i + 1, last: p?.pos ?? 0, wk: (p?.wk ?? 0) + 1 };
   });
 }

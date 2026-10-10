@@ -7,6 +7,7 @@
 import { Rng, clamp } from '../core/rng';
 import { CITIES, familyOf, l, type L, type MarketId } from '../data/world';
 import type { Act, GameState } from './types';
+import { actsOfPerson17 } from './actidx17';
 
 export type PolId = 'left' | 'cleft' | 'center' | 'cright' | 'right' | 'apolitical';
 export type RelId = 'catholic' | 'evangelical' | 'jewish' | 'muslim' | 'umbanda' | 'spiritist' | 'buddhist' | 'hindu' | 'atheist' | 'none';
@@ -116,17 +117,18 @@ export function playerViews(s: GameState): Views {
   return b.player;
 }
 
-const cache = new Map<string, Views>();
-function actOfPersonLite(s: GameState, pid: string): Act | undefined {
-  for (const a of Object.values(s.acts)) if (a.members.includes(pid)) return a;
-  return undefined;
-}
+// r17: cache por partida (um Map global misturava visões de jogos com a mesma semente e o esvaziamento em
+// momentos diferentes quebrava o determinismo entre partidas na mesma sessão)
+const CACHES = new WeakMap<GameState, Map<string, Views>>();
+const actOfPersonLite = (s: GameState, pid: string): Act | undefined => actsOfPerson17(s, pid)[0];
 
 /** Visão de qualquer pessoa (id de s.persons, equipe, executivo; 'player' = o jogador). */
 export function viewsOf(s: GameState, id: string): Views {
   const p = s.persons[id];
   if (p?.isPlayer || id === 'player') return playerViews(s);
   const key = `${s.config.seed}|${id}`;
+  let cache = CACHES.get(s);
+  if (!cache) CACHES.set(s, (cache = new Map()));
   const hit = cache.get(key);
   if (hit) return hit;
   let v: Views;

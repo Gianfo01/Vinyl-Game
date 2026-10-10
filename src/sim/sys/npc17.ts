@@ -68,10 +68,11 @@ export interface Npc17 {
 declare module '../ext4' { interface Ext4 { npc17: Npc17 } }
 const fresh = (): Npc17 => ({ log: [], car: {}, mg: [], fd: {}, indie: {}, war: [], beef: {}, strike: {}, merch: {}, exLb: {}, cd: {} });
 registerExt4('npc17', fresh);
+const FILLED = new WeakSet<object>();
 export function npc17(s: GameState): Npc17 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.npc17 ??= fresh()) as Npc17;
-  for (const [k, v] of Object.entries(fresh())) (st as unknown as Record<string, unknown>)[k] ??= v;
+  if (!FILLED.has(st)) { for (const [k, v] of Object.entries(fresh())) (st as unknown as Record<string, unknown>)[k] ??= v; FILLED.add(st); }
   // empresários de carreira nova voltam ao índice (depois de carregar ou ao trocar de partida: mgrById é global, o estado é por jogo)
   for (const m of st.mg) if (mgrById[m.id] !== m) mgrById[m.id] = m;
   return st;
