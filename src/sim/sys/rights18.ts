@@ -393,7 +393,8 @@ function bbMonth(s: GameState): void {
 // ---------------------------------------------------------------- splits, cadastro e disputas de crédito
 
 registerSimHook('record', 'rights18', (s, _r, { song }) => {
-  if (!song || !playerActs(s).includes(song.actId)) return;
+  const own = song && s.acts[song.actId];
+  if (!own || !(own.owner === 'player' || own.playerBand)) return;
   const st = r18(s);
   if (st.reg[song.id]) return;
   st.reg[song.id] = st.pol.split ? 2 : 1;
