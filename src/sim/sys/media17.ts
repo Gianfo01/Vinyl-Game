@@ -533,7 +533,8 @@ export function respondOdds(s: GameState, storyId: string, v: Resp): Odds {
   const sto = m17(s).st.find((x) => x.id === storyId);
   const o = sto ? outletById17(s, sto.out) : undefined;
   const z: Odds = { ok: false, cost: 0, p: 0, trace: 0, suit: 0, truth: sto?.truth ?? null, notes: [] };
-  if (!sto || !o || sto.st !== 'open' || !sto.a || !playerActs(s).includes(sto.a)) return { ...z, why: l('Indisponível.', 'Unavailable.') };
+  const late = v === 'sue' && (sto?.st === 'debunked' || sto?.st === 'faded') && sto.tone < 0;
+  if (!sto || !o || (sto.st !== 'open' && !late) || sto.resp === 'sue' || !sto.a || !playerActs(s).includes(sto.a)) return { ...z, why: l('Indisponível.', 'Unavailable.') };
   const a = s.acts[sto.a];
   if (v === 'silent') return { ...z, ok: true, p: 1, notes: [l('Deixa o boato correr até morrer sozinho (ou ser provado).', 'Let it run until it dies (or is proven).')] };
   if (v === 'deny') return { ...z, ok: true, p: 1, notes: [sto.truth ? l('É verdade: negar segura agora, mas se for provado vira escândalo de mentira.', 'It\'s true: denying holds for now, but if proven it becomes a lying scandal.') : l('É mentira: o desmentido reduz o estrago pela metade e acelera o desmentido.', 'It\'s false: denying halves the damage and speeds up the debunk.')] };
