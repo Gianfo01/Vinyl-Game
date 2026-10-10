@@ -112,3 +112,15 @@ elogiar o líder, dinâmica — na lista do elenco).
 | `src/ui/sys/dm18.ts` | área **Mundo › Diário do Mestre** e aba **Rixas** no ato. |
 
 Regra de história (r18): `crime17` só bloqueia assassinato de gente real no modo "Vida real exata"; `crimenpc17` idem para as rixas de rua.
+
+## rights18 (onda 1, frente A — D1–D4, feedback #10)
+
+| Módulo | Para quê |
+|---|---|
+| `src/data/rights18.ts` | sociedades reais por mercado/época (taxa, defasagem, caixa preta; execução/mecânico/conexos), conexos por país, 14 precedentes com data real e efeitos |
+| `src/sim/sys/rights18.ts` | estado `s.x4.rights18`; `pubRoute18` (edição do selo por mercado × modalidade, com taxa, caixa preta, caução e prazo — chamado em `market.ts`); conexos mensais; caixa preta (expira em 3 anos; `claimBB18`); splits/cadastro (`record`/`launch`), disputas de crédito (`openDispute18`, caução, inbox `rights18`); autorizações (sample, cover fora dos EUA, sync de obra alheia); regravações (`rr`, mod `chartUnits`); rescisão de 35 anos (EUA, 1978+); subeditoras; administração de catálogos; `catVal18` (avaliação de catálogo); `precMul18`/`precAdd18` (lidos em `business.ts`) |
+| `src/ui/sys/rights18.ts` | área **Empresa › Direitos** (10 abas) |
+
+- Bloqueio de usos: `USE_BLOCK18.fn` (em `rights.ts`) — `exploitBlock` e `sync15.candidates` respeitam disputas/autorizações.
+- "Metadados limpos" (`dg_meta`) agora é a vantagem `metadata` (menos caixa preta, conflitos e atraso), não vendas.
+- Explicações: `rights18.meta`, `rights18.rate` ({mk, mod}), `rights18.cat` ({rels}). Fatos: `credit_dispute`, `audit`, `case_ruling`, `termination`, `deal` (regravação).
