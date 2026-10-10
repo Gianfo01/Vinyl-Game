@@ -187,6 +187,9 @@ export function comeOut(s: GameState, pid: string, how: 'chose' | 'outed', by?: 
   const st = sx17(s);
   const isPl = pid === 'player' || !!s.persons[pid]?.isPlayer;
   const key = isPl ? 'player' : pid;
+  // pessoas reais nunca são expostas pelo jogo; só quem é LGBT pode "sair do armário"
+  if (!isPl && isRealP(s, pid)) return l('Pessoa real: o jogo só usa o que é publicamente documentado.', 'Real person: the game only uses what is publicly documented.');
+  if (!isQueer(sexOf(s, key))) return l('Nada a revelar.', 'Nothing to reveal.');
   const rec = (st.p[key] ??= {});
   if (rec.c === 'out') return l('Já é público.', 'Already public.');
   rec.c = 'out'; rec.w = s.week; if (how === 'outed') rec.outed = 1;

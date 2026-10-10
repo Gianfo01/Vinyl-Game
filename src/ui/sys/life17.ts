@@ -15,7 +15,7 @@ import { candMarried, candSex, confess, divorce17, divorceTerms, endAffair, love
 import { ownerOf } from '../../sim/sys/people/owner';
 import { healthOf } from '../../sim/sys/people/state';
 import { per13 } from '../../sim/sys/persona13';
-import { acceptance, climate17, comeOut, declareAlly, isQueer, lavender, marriageLegal, orientName, outingRisk, sexOf, sx17, visibleSex, CLOSET17 } from '../../sim/sys/sex17';
+import { acceptance, climate17, comeOut, declareAlly, isQueer, isRealP, lavender, marriageLegal, orientName, outingRisk, sexOf, sx17, visibleSex, CLOSET17 } from '../../sim/sys/sex17';
 import { stressOf } from '../../sim/stress17';
 import type { GameState, Person } from '../../sim/types';
 import { fmtL, money, playerActs, rngOf } from '../../sim/util';
@@ -124,7 +124,7 @@ function affairBox(s: GameState): HTMLElement | null {
     cands.length ? h('div', { class: 'cards' }, cands.map((c) => h('article', { class: 'tile' }, h('div', { class: 'tile-body' },
       h('b', null, c.name, ' ', pill(candSex(s, c) === 'f' ? '♀' : '♂'), candMarried(s, c) ? pill(t(l('casado(a)', 'married')), 'warn') : null),
       h('small', null, `${s.year - c.born} ${t(l('anos', 'yrs'))} · ${t(c.job)}`),
-      btn(l('Ter um caso', 'Have an affair'), () => run(startAffair(s, c.id), l('Começou...', 'It began...')), { danger: true, title: l('Custa 1 tempo livre. O(a) amante passa a guardar um segredo seu; descoberta derruba a afinidade (−40), vira boato se você for famoso(a) e pode gerar escândalo e filho fora do casamento.', 'Costs 1 free time. The lover holds a secret of yours; discovery crushes affinity (−40), becomes a rumor if you are famous and may lead to a scandal and a child outside the marriage.') }),
+      btn(l('Ter um caso', 'Have an affair'), () => run(startAffair(s, c.id), l('Começou...', 'It began...')), { danger: true, disabled: !!c.personId && isRealP(s, c.personId), title: l('Custa 1 tempo livre. O(a) amante passa a guardar um segredo seu; descoberta derruba a afinidade (−40), vira boato se você for famoso(a) e pode gerar escândalo e filho fora do casamento.', 'Costs 1 free time. The lover holds a secret of yours; discovery crushes affinity (−40), becomes a rumor if you are famous and may lead to a scandal and a child outside the marriage.') }),
     )))) : h('p', { class: 'small muted' }, t(l('Ninguém em vista. Sair para conhecer gente (aba Amor e família) ou ir a uma festa da indústria traz pretendentes — e tentação.', 'Nobody in sight. Going out (Love and family tab) or to an industry party brings suitors — and temptation.'))),
   );
 }

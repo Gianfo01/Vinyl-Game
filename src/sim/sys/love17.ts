@@ -17,7 +17,7 @@ import { fmtL, money, notify, playerActs } from '../util';
 import { addKid, breakUp, life, playerAct, playerPerson, spendEnergy, type Candidate } from './life';
 import { ownerOf } from './people/owner';
 import { per13 } from './persona13';
-import { comeOut, isQueer, marriageLegal, sexOf } from './sex17';
+import { comeOut, isQueer, isRealP, marriageLegal, sexOf } from './sex17';
 import { registerSituation } from './situations17';
 import { soul } from './soul9';
 
@@ -75,7 +75,7 @@ export function candSex(s: GameState, c: { id: string; personId?: string }): 'm'
   return opp;
 }
 /** Pretendente já é casado(a) com outra pessoa? (≈1 em 5 depois dos 28) */
-export const candMarried = (s: GameState, c: Candidate): boolean => s.year - c.born >= 28 && u01(s, `mar:${c.id}`) < 0.22;
+export const candMarried = (s: GameState, c: Candidate): boolean => !c.personId && s.year - c.born >= 28 && u01(s, `mar:${c.id}`) < 0.22;
 const sameSex = (s: GameState, sx: 'm' | 'f'): boolean => { const me = mySex(s); return me !== 'x' && me === sx; };
 const homeA3 = (s: GameState) => countryOfCity(s.config.homeCity);
 /** Fama "de tabloide" do jogador. */
@@ -101,6 +101,7 @@ export function startAffair(s: GameState, candId: string): L | null {
   if (L7.affair) return l('Você já tem um caso em andamento.', 'You already have an affair going on.');
   const c = L0.candidates.find((x) => x.id === candId);
   if (!c) return l('Pessoa não encontrada.', 'Person not found.');
+  if (c.personId && isRealP(s, c.personId)) return l('Pessoa real: o jogo não inventa casos para quem existiu.', 'Real person: the game does not invent affairs for people who existed.');
   const e = spendEnergy(s, 1);
   if (e) return e;
   const sx = candSex(s, c);
