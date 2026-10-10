@@ -408,7 +408,6 @@ export function monthProj18(s: GameState): void {
   for (const p of [...st.proj]) {
     const c = CONTRACTORS18[p.q];
     const r = Rng.fromSeed(`${s.config.seed}|campus18|${p.id}|${mIdx(s)}`);
-    if (mIdx(s) <= p.start) continue;
     const inst = Math.round(Math.max(0, p.cost + p.over - p.paid) / Math.max(1, p.left));
     if (inst > 0) { post(s, `campus18:${p.id}:m${mIdx(s)}`, -inst, 'capex', 'Obra: parcela do mês'); p.paid += inst; }
     // inverno e chuva atrasam mais; empreiteiro barato atrasa muito mais
