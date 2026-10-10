@@ -928,6 +928,7 @@ export function auditBlock18(s: GameState): L | null {
   const st = a18(s);
   if (!st.deal && !st.past.length) return l('Sem contrato para auditar.', 'No deal to audit.');
   if ((st.cd.audit ?? 0) > s.week) return l('Auditoria recente (uma por ano).', 'Recent audit (once a year).');
+  if (!st.stmts.length) return l('Ainda não há prestação de contas para auditar.', 'No statements to audit yet.');
   if (s.player.cash < auditCost18(s)) return l('Caixa insuficiente.', 'Not enough cash.');
   return null;
 }
