@@ -1,0 +1,13 @@
+/* Rodada 17 (H): bolinhas da agenda */
+.ag17-balls { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.ag17-grp { display: inline-flex; gap: 3px; }
+.ag17-sep { color: var(--muted); margin: 0 2px; }
+.ag17-b { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--accent); background: transparent; display: inline-block; cursor: help; }
+.ag17-balls.big .ag17-b { width: 18px; height: 18px; }
+.ag17-b.free { background: var(--accent); }
+.ag17-b.spent { border-color: var(--muted); background: transparent; opacity: .55; }
+.ag17-b.career { border-color: var(--warn); background: repeating-linear-gradient(45deg, var(--warn) 0 3px, transparent 3px 6px); }
+.ag17-b.spare { border-style: dashed; border-color: var(--muted); }
+.ag17-b.over { border-color: var(--bad); background: var(--bad); animation: ag17pulse 1.2s infinite alternate; }
+@keyframes ag17pulse { from { opacity: 1; } to { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .ag17-b.over { animation: none; } }
