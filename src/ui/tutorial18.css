@@ -34,3 +34,4 @@
   .tour18-bub { left: 0.5rem !important; right: 0.5rem; max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { .tour18-hl { transition: none; } }
+.tip18 > div > small, .tip18 > div > b { display: block; }
