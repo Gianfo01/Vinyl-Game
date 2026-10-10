@@ -1,0 +1,45 @@
+/* Rodada 18 (decide18) — prévias agora × depois, apostas, travas, prazos, pendências, voz e retratos na Caixa */
+.dc18-lb { font-weight: 600; }
+.dc18-odds { margin-left: 0.25rem; padding: 0 0.3rem; border-radius: 4px; background: var(--panel); }
+.dc18-odds.good { color: var(--good); }
+.dc18-odds.bad { color: var(--bad); }
+.dc18-lock { color: var(--bad) !important; }
+.dc18-now, .dc18-later, .dc18-unl { display: block; line-height: 1.3; }
+.dc18-later i { opacity: 0.75; font-style: normal; }
+.dc18-e.bad { color: color-mix(in srgb, var(--bad) 80%, var(--muted)); }
+.dc18-e.good { color: color-mix(in srgb, var(--good) 80%, var(--muted)); }
+.btn.dc18-locked { opacity: 0.55; cursor: not-allowed; }
+.dc18-timer { font-size: 0.78rem; padding: 0 0.35rem; border-radius: 4px; background: color-mix(in srgb, var(--accent) 20%, transparent); animation: dc18pulse 1.4s ease-in-out infinite; }
+.dc18-timer.bad { background: color-mix(in srgb, var(--bad) 30%, transparent); }
+@keyframes dc18pulse { 50% { opacity: 0.55; } }
+.dc18-pend .dc18-pl, .dc18-done ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.dc18-pl li { display: flex; gap: 0.4rem; align-items: flex-start; font-size: 0.85rem; border-left: 3px solid var(--line); padding-left: 0.4rem; }
+.dc18-pl li.bad { border-left-color: var(--bad); }
+.dc18-pl li.good { border-left-color: var(--good); }
+.dc18-pl li.mixed { border-left-color: var(--accent); }
+.dc18-ic { width: 1rem; text-align: center; }
+.dc18-done { margin-top: 0.4rem; }
+.dc18-done li.bad { color: var(--bad); }
+.dc18-done li.good { color: var(--good); }
+.dc18-voice { font-size: 0.7rem; padding: 0 0.3rem; border-radius: 8px; background: var(--panel-2); }
+.dc18-voice.warm { color: var(--good); }
+.dc18-voice.angry { color: var(--bad); }
+.dc18-voice.cold { color: var(--muted); }
+.dc18-av { display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 700; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .dc18-timer { animation: none; } }
+.ib18-th { font-size: 0.78rem; color: var(--muted); }
+.ib18-open { color: var(--muted); }
+.ib18-sel { margin: 0; }
+.ib18-hd .portrait { flex: none; border-radius: 50%; }
+.ib18-it.tone-bad { background: color-mix(in srgb, var(--bad) 6%, var(--panel)); }
+.ib18-it.tone-good { background: color-mix(in srgb, var(--good) 6%, var(--panel)); }
+.ib18-it.tone-mixed { background: color-mix(in srgb, var(--accent) 6%, var(--panel)); }
+.ib18-thr { margin-top: 0.3rem; font-size: 0.8rem; }
+.ib18-thr > .ib18-list { margin-left: 0.8rem; opacity: 0.9; }
+.ib18-bulk { padding: 0.3rem; border-radius: 6px; background: var(--panel-2); }
+.btn.ib18-opt { flex-direction: column; align-items: flex-start; text-align: left; max-width: 26rem; }
+.btn.ib18-opt small { color: var(--muted); font-size: 0.72rem; }
+.ib18-it { transition: background 0.2s; }
+.ib18-it.unread { animation: dc18in 0.35s ease-out; }
+@keyframes dc18in { from { transform: translateX(-6px); opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) { .ib18-it.unread { animation: none; } }

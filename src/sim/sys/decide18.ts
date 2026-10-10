@@ -231,3 +231,15 @@ registerAdvisorTip('decide18', (s) => {
   }];
 });
 
+/** Odds de uma aposta num cartão (mesmo número usado no sorteio). */
+export function odds18(s: GameState, eventId: string, opt: string, c: Ctx18): { p: number; why: L[] } | null {
+  const o = conseq18(evKey18(eventId, opt))?.odds;
+  return o ? safe(() => o(s, c), null) : null;
+}
+registerExplain('dec18.odds', (s, c) => {
+  const d = s.decisions.find((x) => x.id === c.d);
+  const o = d ? odds18(s, d.eventId, String(c.opt), d.ctx) : null;
+  if (!d || !o) return null;
+  return { title: l('Chance da aposta', 'Gamble odds'), value: Math.round(o.p * 100), fmt: 'pct', parts: o.why.map((w) => ({ label: w })), note: l('O sorteio usa exatamente este número (Rng próprio, semeado).', 'The roll uses exactly this number (own seeded Rng).') };
+});
+
