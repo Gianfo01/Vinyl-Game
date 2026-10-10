@@ -12,7 +12,7 @@ import { fmtL, money, playerActs, staffCount } from '../util';
 import { MK_LAG18, physIn18 } from './eras18';
 import { retailCycle } from './industry/retail';
 import { hotList17 } from './trends17';
-import { baseQueue18, digitalOn18, physMix18, queueWhy18, sup18 } from './supply18';
+import { off18, baseQueue18, digitalOn18, physMix18, queueWhy18, sup18 } from './supply18';
 
 const pc = (v: number) => `${Math.round(v * 100)}%`;
 const $ = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
@@ -81,7 +81,7 @@ export function reps18(s: GameState): RepState18 {
 }
 
 registerSimHook('month', 'report18', (s) => {
-  if (s.config.role === 'artist') return;
+  if (s.config.role === 'artist' || off18('report')) return;
   const analyst = staffCount(s, 'analyst') > 0;
   if (!analyst && s.month % 3 !== 2) return;
   const rp = makeReport18(s);

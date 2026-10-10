@@ -33,6 +33,8 @@ import { MATERIAL_NAMES } from './industry/supply';
 import { matAvailable } from './industry/supply13';
 
 const $ = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
+/** depuração do balanço: globalThis.__sup18off = ['day','launch','month','bot','report'] desliga partes */
+export const off18 = (k: string): boolean => !!(globalThis as { __sup18off?: string[] }).__sup18off?.includes(k);
 const rngFor = (s: GameState, k: string) => new Rng(seedState(`sup18|${s.config.seed}|${k}`));
 
 // ================================================================== fábricas
@@ -309,7 +311,7 @@ function autoLate(s: GameState, pr: PendingRelease, b: Book18, pol: LatePol): vo
   if (pol === 'smart') {
     const phys = physicalShare(s) * lt.share;
     if (phys < 0.06) return; // o físico atrasado pesa pouco: lança
-    if (lt.weeks <= 3 && s.player.cash > rushCost18(s, pr) * 6) { resolveLate18(s, pr.id, 'rush'); if (lateOf18(s, pr, b).weeks <= 0) return; }
+    if (!boom18(s) && lt.weeks <= 3 && s.player.cash > rushCost18(s, pr) * 20) { resolveLate18(s, pr.id, 'rush'); if (lateOf18(s, pr, b).weeks <= 0) return; }
     resolveLate18(s, pr.id, 'postpone');
   }
 }
@@ -358,12 +360,13 @@ function scanPending(s: GameState): void {
     else { b.asked = true; autoLate(s, pr, b, st.late); }
   }
 }
-registerSimHook('day', 'supply18', (s) => { if (s.pendingReleases.length) scanPending(s); });
+registerSimHook('day', 'supply18', (s) => { if (s.pendingReleases.length && !off18('day')) scanPending(s); });
 
 // ================================================================== lançamento: a data e a fábrica
 
 registerSimHook('launch', 'supply18', (s, _r, a) => {
   const rel = a.release;
+  if (off18('launch')) return;
   if (!rel || rel.owner !== 'player' || rel.stock === Infinity || !rel.pressed) return;
   const st = sup18(s);
   const id = Object.keys(st.book).find((k) => { const b = st.book[k]; return b.act === rel.actId && b.title === rel.title && !s.pendingReleases.some((p) => p.id === k); });
@@ -547,11 +550,11 @@ function monthTick(s: GameState): void {
     // 1979–80: "shipped gold, returned platinum" — o varejo devolve a febre da disco
     if (s.year >= 1979 && s.year <= 1980 && age < 30 && age > 2 && rel.weekly.length) {
       const sold = rel.weekly.slice(-4).reduce((t, x) => t + x, 0) * 0.8;
-      const back = Math.round(sold * 0.12);
+      const back = Math.round(sold * 0.08);
       if (back > 50) {
         const per = rel.revenue / Math.max(1, rel.totalUnits);
         rel.stock += back; rel.returns = (rel.returns ?? 0) + back; st.ret[rid] = rel.returns;
-        postSalesAR18(s, rel, `sup18disco:${rid}:${s.month}`, -Math.round(back * per * 1.4), 'sales', `Devolução da febre disco: ${rel.title}`);
+        postSalesAR18(s, rel, `sup18disco:${rid}:${s.month}`, -Math.round(back * per), 'sales', `Devolução da febre disco: ${rel.title}`);
       }
     }
   }
@@ -588,7 +591,7 @@ function monthTick(s: GameState): void {
     }
   }
 }
-registerSimHook('month', 'supply18', (s) => monthTick(s));
+registerSimHook('month', 'supply18', (s) => { if (!off18('month')) monthTick(s); });
 
 function distBust(s: GameState): void {
   const st = sup18(s);
@@ -723,6 +726,7 @@ registerAdvisorTip('supply18', (s) => {
 
 /** Playbot: política de atraso inteligente, distribuidor/agregador pela época e ponta de estoque do encalhe. */
 export function botSupply18(s: GameState, prof: 'cautious' | 'balanced' | 'aggressive'): void {
+  if (off18('bot')) return;
   const st = sup18(s);
   st.late = 'smart';
   if (s.config.role === 'artist') return;
