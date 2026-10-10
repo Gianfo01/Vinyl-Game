@@ -63,7 +63,7 @@ export function regionFameBlock(s: GameState, id: string): HTMLElement | null {
       const src = SRC16.filter((b) => x.m & b.bit).map((b) => t(b.name));
       return h('li', { style: 'margin:3px 0' },
         h('b', { style: 'display:inline-block;min-width:9em' }, t(countryName(x.a3)), x.a3 === home ? ' ★' : '', x.a3 === me ? ` (${t(l('você', 'you'))})` : ''),
-        bar(v), h('b', null, String(Math.round(v))), ' ', tierPill(v), ' ',
+        bar(v), h('b', person ? null : { class: 'why18', 'data-why': 'fame.region', 'data-why-ctx': JSON.stringify({ act: a.id, a3: x.a3 }), tabindex: '0' }, String(Math.round(v))), ' ', tierPill(v), ' ',
         h('span', { class: 'muted' }, `${t(x.base.why)}${x.base.aff !== 1 ? ` · ${t(l('gosto pelo gênero', 'genre taste'))} ×${x.base.aff.toFixed(2)}` : ''}`),
         x.d ? h('span', { class: x.d > 0 ? 'good' : 'bad' }, ` · ${x.d > 0 ? '+' : ''}${x.d} ${t(l('local', 'local'))}${src.length ? ` (${src.join(', ')})` : ''}`) : null);
     })),

@@ -43,7 +43,7 @@ export function ballsEl(s: GameState, big = false): HTMLElement {
     h('span', { class: 'ag17-sep' }, '|'),
     h('span', { class: 'ag17-grp' }, b.personal.map(dot)),
     b.over.length ? h('span', { class: 'ag17-grp over' }, b.over.map(dot)) : null,
-    h('small', { class: 'muted' }, ` ${energyLeft(s)}/${maxEnergy(s)} ${t(l('livres', 'free'))}`));
+    h('small', { class: 'muted why18', 'data-why': 'balls', tabindex: '0' }, ` ${energyLeft(s)}/${maxEnergy(s)} ${t(l('livres', 'free'))}`));
 }
 
 // ================================================================ confirmação antes de gastar bolinha

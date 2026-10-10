@@ -372,7 +372,7 @@ function overviewGrid(s: GameState, a: Act, deg: number, mine: boolean): HTMLEle
   const pub2 = mine || deg >= 2 || canSee(s, a.id, 'fans');
   return h('div', { class: 'grid2' },
     h('div', null,
-      kv(t(S.fame), fame || mine ? h('span', null, fameText(s, a.id), ' ', bar(a.fame)) : hid15()),
+      kv(t(S.fame), fame || mine ? h('span', null, h('span', { class: 'why18', 'data-why': 'act.fame', 'data-why-ctx': JSON.stringify({ act: a.id }), tabindex: '0' }, fameText(s, a.id)), ' ', bar(a.fame)) : hid15()),
       kv(t(S.momentum), pub2 ? bar(a.momentum) : hid15()),
       kv(t(S.positioning), h('span', null, t(S.underground), ' ', pub2 ? bar(a.positioning) : hid15(), ' ', t(S.crossover))),
       kv(t(S.potential), pot ? h('span', null, `${pot.lo}–${pot.hi} `, rangeBar(pot.lo, pot.hi)) : h('span', { class: 'muted' }, t(S.hidden))),

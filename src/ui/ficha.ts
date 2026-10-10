@@ -20,6 +20,7 @@ import { offerAside12, packageFields } from './sys/offers12';
 import { relHype12 } from './sys/hype12';
 import { stylePill17 } from './sys/style17';
 import { why360 } from '../sim/sys/deal360_17';
+import { why18 } from './explain18';
 
 function g(): GameState {
   return store.game!;
@@ -157,7 +158,7 @@ export function openOffer(actId: string): void {
   const update = () => {
     const ev = evaluateOffer(s, a, o);
     evalBox.replaceChildren(
-      h('div', null, t(S.chance), ': ', pill(t(S[ev.band]), ev.band)),
+      h('div', null, t(S.chance), ': ', why18(s, 'offer.chance', { act: a.id, offer: o }, pill(t(S[ev.band]), ev.band)), ' ', h('small', { class: 'muted' }, t(l('(passe o mouse para ver cada termo)', '(hover to see each term)')))),
       h('ul', { class: 'small' }, ev.reasons.map((x) => h('li', null, t(x)))),
       h('p', { class: 'muted small' }, (s.knowledge[actId]?.degree ?? 0) < 3 ? t(l('Você ainda não conhece as ambições do ato: a leitura é grosseira.', 'You do not yet know the act\'s ambitions: this read is rough.')) : ''),
       offerAside12(s, a, o),

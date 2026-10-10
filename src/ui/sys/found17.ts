@@ -26,7 +26,7 @@ export function stressBlock17(s: GameState, pid: string): HTMLElement | null {
   if (!p?.alive) return null;
   const x = stressOf(s, pid);
   return section(t(l('Estresse', 'Stress')),
-    h('div', { class: 'row wrap' }, pill(t(STRESS_LEVEL[x.level]), LEVEL_CLS[x.level]), x.risk > 0 ? pill(`${t(l('risco de quebra', 'breakdown risk'))} ${Math.round(x.risk * 100)}%/${t(l('mês', 'mo'))}`, 'bad') : null),
+    h('div', { class: 'row wrap' }, h('span', { class: 'why18', 'data-why': 'stress', 'data-why-ctx': JSON.stringify({ person: pid }), tabindex: '0' }, pill(t(STRESS_LEVEL[x.level]), LEVEL_CLS[x.level]), ` ${x.short}`), x.risk > 0 ? pill(`${t(l('risco de quebra', 'breakdown risk'))} ${Math.round(x.risk * 100)}%/${t(l('mês', 'mo'))}`, 'bad') : null),
     meter('heart', l('Curto prazo', 'Short-term'), x.short, 100, true),
     meter('clock', l('Desgaste (longo prazo)', 'Wear (long-term)'), x.long, 100, true),
     x.why.length ? h('p', { class: 'small' }, `${t(l('Por quê', 'Why'))}: ${x.why.slice(0, 5).map((w) => t(w)).join(' · ')}`) : null,

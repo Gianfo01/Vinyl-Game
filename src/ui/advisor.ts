@@ -16,6 +16,9 @@ import { store } from './store';
 import { ic, setTab } from './vis';
 import { unreadCount } from '../sim/sys/people/inbox';
 import { careers } from '../sim/sys/careers12';
+import { advisorTips18, snoozeTip18, snoozed18, tipScore, type AdvTip18 } from '../sim/inbox18';
+import { go18 } from './sys/inbox18';
+import { toast } from './common';
 
 export interface Tip {
   icon: string;
@@ -58,14 +61,30 @@ export function advisorTips(s: GameState): Tip[] {
   if (energyLeft(s) === maxEnergy(s) && out.length < 6) out.push({ icon: 'star', text: l('Você ainda tem todo o tempo livre do mês: pratique, namore, toque num bar ou mentore um artista (Você).', 'You still have all your free time this month: practise, date, play a bar or mentor an artist (You).'), area: 'you', level: 'info' });
   for (const f of ADVISOR_EXTRA) out.push(...f(s));
   const order = { bad: 0, warn: 1, info: 2 };
-  return out.sort((a, b) => order[a.level] - order[b.level]).slice(0, 7);
+  return out.sort((a, b) => order[a.level] - order[b.level]);
+}
+
+// r18 (U2): Conselheiro v2 — junta as dicas antigas e as registradas (registerAdvisorTip) num ranking com
+// porquê, efeito estimado, ação direta e "adiar"; 7 visíveis e "ver mais".
+let advMore = false;
+function allTips18(s: GameState): AdvTip18[] {
+  const old: AdvTip18[] = advisorTips(s).map((x, i) => ({ id: `old:${x.area}:${x.act ?? ''}:${t(x.text).slice(0, 40)}`, level: x.level, text: x.text, score: (x.level === 'bad' ? 92 : x.level === 'warn' ? 62 : 28) - i * 0.1, goto: { area: x.area, tab: x.tab, act: x.act } }));
+  const seen = new Set<string>();
+  return [...advisorTips18(s), ...old].filter((x) => !snoozed18(s, x.id) && (seen.has(x.id) ? false : (seen.add(x.id), true))).sort((a, b) => tipScore(b) - tipScore(a));
 }
 
 export function advisorSection(s: GameState): HTMLElement | null {
-  const tips = advisorTips(s);
+  const tips = allTips18(s);
   if (!tips.length) return null;
+  const shown = advMore ? tips : tips.slice(0, 7);
+  const go = (x: AdvTip18) => { const g = x.goto!; if (g.act && g.area) { store.selectedAct = g.act; if (g.tab) setTab(g.tab[0], g.tab[1]); store.area = g.area as typeof store.area; rerender(); } else go18(g); };
   return section(t(l('Próximos passos', 'Next steps')),
-    h('ul', { class: 'advisor' }, tips.map((x) => h('li', { class: x.level },
-      ic(x.icon), h('span', null, t(x.text)),
-      h('button', { class: 'btn small ghost', onclick: () => { if (x.act) store.selectedAct = x.act; if (x.tab) setTab(x.tab[0], x.tab[1]); store.area = x.area; rerender(); } }, t(l('Ir', 'Go')), ' →')))));
+    h('ul', { class: 'adv18' }, shown.map((x) => h('li', { class: x.level },
+      ic(x.level === 'bad' ? 'warning' : x.level === 'good' ? 'star' : x.level === 'warn' ? 'clock' : 'bulb'), h('span', null, t(x.text), x.effect ? h('div', { class: 'adv18-fx muted' }, '→ ', t(x.effect)) : null),
+      x.goto ? h('button', { class: 'btn small ghost', onclick: () => go(x) }, t(x.goto.label ?? l('Ir', 'Go')), ' →') : h('span'),
+      x.why?.length ? h('div', { class: 'adv18-why' }, t(l('Por quê: ', 'Why: ')), x.why.map((w) => t(w)).join(' ')) : null,
+      h('div', { class: 'adv18-acts' },
+        x.run ? h('button', { class: 'btn small', onclick: () => { toast(t(x.run!.fn(s))); rerender(); } }, t(x.run.label)) : null,
+        h('button', { class: 'btn small ghost', title: t(l('Some por 2 meses', 'Hidden for 2 months')), onclick: () => { snoozeTip18(s, x.id); rerender(); } }, t(l('Adiar', 'Snooze'))))))),
+    tips.length > 7 ? h('button', { class: 'btn small ghost', onclick: () => { advMore = !advMore; rerender(); } }, advMore ? t(l('Ver menos', 'Show less')) : t(l('Ver mais ({n})', 'Show more ({n})'), { n: tips.length - 7 })) : null);
 }

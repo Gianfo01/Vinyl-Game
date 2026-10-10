@@ -1,5 +1,6 @@
 // Paradas, Mídia, Catálogo, Shows, Empresa, Diário e Sede.
 
+import { pager18 } from '../quick18';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
 import { BRANCH_LEVELS, CARDS, ENDINGS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
 import { MARKETS, familyOf, l } from '../../data/world';
@@ -44,7 +45,7 @@ export function chartsPanel(s: GameState): HTMLElement {
         const mine = r.owner === 'player' || !!s.acts[r.actId]?.playerBand;
         const move = !e.last ? 'NEW' : e.last > e.pos ? '▲' : e.last < e.pos ? '▼' : '=';
         return h('tr', { class: mine ? 'mine' : '' },
-          h('td', null, h('b', null, e.pos)),
+          h('td', null, h('b', { class: 'why18', 'data-why': 'chart.pos', 'data-why-ctx': JSON.stringify({ rel: e.releaseId, kind: which }), tabindex: '0' }, e.pos)),
           h('td', { class: move === '▲' || move === 'NEW' ? 'good' : move === '▼' ? 'bad' : 'muted' }, `${move} ${e.last || ''}`),
           h('td', null, releaseLink(s, r.id), r.certified ? pill(r.certified[0].toUpperCase(), 'gold') : null, ' ', stylePill17(styleOfRel17(s, r.id))),
           h('td', null, actLink(s, r.actId)),
@@ -112,12 +113,13 @@ export function catalogPanel(s: GameState): HTMLElement {
     else toast(t(l('Reedição programada.', 'Reissue scheduled.')), 'good');
     rerender();
   };
+  const pg18 = pager18('catalog', mine, 30);
   return h('div', { class: 'panel catalog' },
     section(`${t(S.areaCatalog)} (${mine.length})`,
       h('p', { class: 'muted small' }, t(l('Masters próprios geram cauda de catálogo. Obras com 8+ anos podem ser reeditadas (remaster), sobretudo com nostalgia em alta.', 'Owned masters earn a catalog tail. Works 8+ years old can be reissued (remaster), especially when nostalgia runs high.'))),
       h('table', { class: 'tbl' },
         h('thead', null, h('tr', null, h('th', null, ''), h('th', null, t(S.title)), h('th', null, t(l('Ato', 'Act'))), h('th', null, t(S.type)), h('th', null, t(l('Ano', 'Year'))), h('th', null, t(S.peak)), h('th', null, t(S.totalUnits)), h('th', null, t(S.revenue)), h('th', null, ''))),
-        h('tbody', null, mine.slice(0, 120).map((r) => h('tr', { onclick: () => openRelease(r.id), class: 'clickable' },
+        h('tbody', null, pg18.items.map((r) => h('tr', { onclick: () => openRelease(r.id), class: 'clickable' },
           h('td', null, cover(s, r, 32)),
           h('td', null, r.title, r.certified ? pill(r.certified, 'gold') : null),
           h('td', null, actLink(s, r.actId)),
@@ -129,6 +131,7 @@ export function catalogPanel(s: GameState): HTMLElement {
           h('td', null, s.year - r.year >= 8 && !r.reissueOf && r.owner === 'player' ? h('button', { class: 'btn small', onclick: (e: Event) => { e.stopPropagation(); reissue(r.id); } }, t(S.reissue)) : null),
         ))),
       ),
+      pg18.more,
     ),
   );
 }

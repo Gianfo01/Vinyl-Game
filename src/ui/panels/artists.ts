@@ -1,5 +1,6 @@
 // Artistas: elenco, carreira em 3 eixos, estados, agenda de 4 slots, contrato (GDD §9, §11).
 
+import { actQuick18, emptyState18 } from '../quick18';
 import { AGENDA_ACTIONS, agendaById } from '../../data/people';
 import { APPROACHES, CONTRACT_MODELS, STUDIO_TIERS, VENUE_TIERS } from '../../data/rules';
 import { l } from '../../data/world';
@@ -28,7 +29,7 @@ import { pledgeLine } from '../sys/offers12';
 
 export function artistsPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
-  if (!ids.length) return h('div', { class: 'panel' }, section(t(S.roster), h('p', null, t(S.noActs))));
+  if (!ids.length) return h('div', { class: 'panel' }, section(t(S.roster), emptyState18(S.noActs, l('Artistas chegam por scouting (Mercado → Descobrir), indicações ou leilões. Faça uma oferta e eles aparecem aqui.', 'Acts come from scouting (Market → Discover), referrals or auctions. Make an offer and they show up here.'), { label: l('Ir ao Mercado', 'Go to the Market'), run: () => { store.area = 'market'; rerender(); } })));
   if (!store.selectedAct || !ids.includes(store.selectedAct)) store.selectedAct = ids[0];
   const a = s.acts[store.selectedAct];
   const list = h('ul', { class: 'roster' }, ids.map((id) => {
@@ -36,6 +37,7 @@ export function artistsPanel(s: GameState): HTMLElement {
     return h('li', { class: id === a.id ? 'sel' : '', onclick: () => { store.selectedAct = id; rerender(); } },
       logo(x, 32), h('div', null, h('b', null, x.name), h('small', { class: 'muted' }, `${genreName(x.genre)} · ${t(S.fame)} ${Math.round(x.fame)}`)),
       x.status === 'hiatus' ? pill('⏸') : null,
+      actQuick18(s, x),
     );
   }));
   const st = actState(s, a);

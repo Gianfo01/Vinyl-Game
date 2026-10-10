@@ -45,6 +45,8 @@ import { profile as prodProfile } from './producers15';
 interface Tab16 { id: string; label: L; icon?: string; render: () => HTMLElement | null }
 /** Rodada 17: abas extras da página única (quem não é artista), ex.: Fatos & Obrigações. */
 export const PAGE16_TABS: ((s: GameState, key: string) => Tab16 | null)[] = [];
+/** Rodada 18: blocos extras no cabeçalho da página única (ex.: menu de ações). */
+export const PAGE16_HEAD: ((s: GameState, key: string) => HTMLElement | null)[] = [];
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
 const tone = (v: number) => (v >= 15 ? 'good' : v <= -15 ? 'bad' : '');
 const idOf = (key: string) => key.split(':').slice(1).join(':');
@@ -274,7 +276,8 @@ function page16(s: GameState, key: string, redraw: () => void, tab?: string, onT
       h('div', { class: 'row wrap' }, ...roles.map((r) => pill(t(r.role === 'ceo' ? l('CEO', 'CEO') : ROLE16[r.role]), r.role === 'owner' ? 'gold' : 'trait'))),
       chips(stat('calendar', age, l('Idade', 'Age')), stat('globe', P.city ? cityName(P.city) : '—', l('Cidade', 'City')), stat('heart', t(civil16(s, key)), l('Estado civil', 'Marital status')),
         stat('fans', String((s.families[key]?.kids.length ?? 0)), l('Filhos', 'Children'))),
-      careerLines(s, key)));
+      careerLines(s, key),
+      ...PAGE16_HEAD.map((f) => f(s, key))));
   const tabs: Tab16[] = [
     { id: 'perfil', label: l('Perfil', 'Profile'), icon: 'bulb', render: () => ficha13(s, key, redraw) },
     { id: 'fam', label: l('Família', 'Family'), icon: 'fans', render: () => familyBlock16(s, key) },

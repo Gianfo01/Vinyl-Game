@@ -115,7 +115,7 @@ function builder(s: GameState): HTMLElement {
   let week = free[0];
   return h('div', null,
     h('div', { class: 'row wrap' }, select<string>(actId, list.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)})` })), (x) => { actId = x; draft = []; rerender(); }),
-      act ? h('span', { class: 'small muted' }, `${t(l('Força local em', 'Local draw in'))} ${cityName(selCity)}: ~${Math.round(localDraw(s, act, selCity))} · ${t(l('porte sustentável', 'sustainable size'))}: ${t(VENUE_TIERS[suggestTier(s, act, selCity)].name)}`) : null),
+      act ? h('span', { class: 'small muted' }, `${t(l('Força local em', 'Local draw in'))} ${cityName(selCity)}: `, h('b', { class: 'why18', 'data-why': 'show.demand', 'data-why-ctx': JSON.stringify({ act: act.id, city: selCity }), tabindex: '0' }, `~${Math.round(localDraw(s, act, selCity))}`), ` · ${t(l('porte sustentável', 'sustainable size'))}: ${t(VENUE_TIERS[suggestTier(s, act, selCity)].name)}`) : null),
     mapView(s), calendar(s),
     h('div', { class: 'row wrap' }, select<string>(selCity, CITIES.map((c) => ({ value: c.id, label: cityName(c.id) })), (x) => { selCity = x; rerender(); }),
       select<number>(week, free.map((w) => ({ value: w, label: wk(s, w) })), (x) => (week = x)),
