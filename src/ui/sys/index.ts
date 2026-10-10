@@ -113,3 +113,5 @@ import './npc17';
 import './crime17';
 // Rodada 17 (E): estilo nos cartões, gêneros em alta pelas paradas, alcance mundial do ato.
 import './trends17';
+// Rodada 17 (onda 2, J): cenas interativas (cartao, momentos, premios), Album de cenas e popups do mapa.
+import './scene17';

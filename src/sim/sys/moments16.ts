@@ -19,7 +19,7 @@ export type Moment16 =
   | { k: 'release'; year: number }
   | { k: 'contract'; year: number; renewal?: boolean };
 
-export interface MomentRec16 { id: string; week: number; year: number; month: number; ev: Moment16; title: L; text: L; why: L[]; mem?: string }
+export interface MomentRec16 { id: string; week: number; year: number; month: number; ev: Moment16; title: L; text: L; why: L[]; mem?: string; /** r17: ato (cena interativa) */ act?: string }
 interface St16 { log: MomentRec16[]; best: Record<string, number>; mk: number; n: number; seen: string[]; wk: Record<string, number> }
 
 declare module '../ext4' { interface Ext4 { moments16: St16 } }
@@ -77,9 +77,9 @@ const TITLE: Record<Moment16['k'], L> = {
   record: l('Sessão concluída', 'Session wrapped'), release: l('Lançamento', 'Release day'), contract: l('Contrato assinado', 'Contract signed'),
 };
 
-function log16(s: GameState, ev: Moment16, text: L, why: L[], queue: boolean, major: boolean, key: string, mem?: string): void {
+function log16(s: GameState, ev: Moment16, text: L, why: L[], queue: boolean, major: boolean, key: string, mem?: string, act?: string): void {
   const st = mo16(s);
-  const rec: MomentRec16 = { id: `mo${s.week}-${st.log.length}-${ev.k}`, week: s.week, year: s.year, month: s.month, ev, title: TITLE[ev.k], text, why, mem };
+  const rec: MomentRec16 = { id: `mo${s.week}-${st.log.length}-${ev.k}`, week: s.week, year: s.year, month: s.month, ev, title: TITLE[ev.k], text, why, mem, ...(act ? { act } : {}) };
   st.log.push(rec);
   if (st.log.length > 80) st.log.splice(0, st.log.length - 80);
   if (!queue) return;
@@ -99,7 +99,7 @@ rememberListeners().push((s, e) => {
   if (e.kind === 'award2' && !e.important) return;
   const same = SAME[e.kind];
   const dup = !!same && (s.cutscenes ?? []).some((c) => c.kind === same && !c.seen && c.week === s.week);
-  log16(s, ev, e.text, [], !OWN_SCENE.has(e.kind) && !dup, MAJOR.has(e.kind), e.kind, e.id);
+  log16(s, ev, e.text, [], !OWN_SCENE.has(e.kind) && !dup, MAJOR.has(e.kind), e.kind, e.id, e.actId);
 });
 
 /** Show tocado: vira momento quando é a primeira vez do artista nesse porte, ou o primeiro lotado/vazio nele. */
@@ -123,7 +123,7 @@ function onShow(s: GameState, actId: string, cityId: string, att: number, cap: n
   if (sold) why.push(l('Lotou: sinal de que o próximo porte já cabe.', 'Sold out: the next size up now fits.'));
   if (empty) why.push(l('Casa grande vazia: a imprensa comenta e o artista perde moral.', 'Big room, empty seats: the press talks and the act loses morale.'));
   // o mini-jogo ao vivo já mostra as noites grandes da turnê clássica
-  log16(s, { k: 'show', year: s.year, tier, att, cap, city: cityId }, text, why, !live, false, `show:${actId}`);
+  log16(s, { k: 'show', year: s.year, tier, att, cap, city: cityId }, text, why, !live, false, `show:${actId}`, undefined, actId);
 }
 
 registerSimHook('show', 'moments16', (s, _r, a) => {

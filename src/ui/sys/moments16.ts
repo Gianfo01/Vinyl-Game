@@ -11,19 +11,21 @@ import { h } from '../dom';
 import { momentSpec16 } from '../pixel/moment16';
 import { scene14 } from '../pixel/scenes14';
 import { openScene, registerCutscene, registerSection } from '../registry';
+import { momentChoices17 } from './scene17';
 
-function card16(rec: Pick<MomentRec16, 'ev' | 'text' | 'why'>, close: () => void): HTMLElement {
+function card16(rec: Pick<MomentRec16, 'ev' | 'text' | 'why'>, close: () => void, s?: GameState): HTMLElement {
   const sp = momentSpec16(rec.ev);
   return h('div', { class: 'mo16' },
     scene14(sp.scene, { ...sp.opts, size: 'card', spots: false }),
     h('p', { class: 'mo16-text' }, t(rec.text)),
     rec.why.length ? h('ul', { class: 'mo16-why small' }, rec.why.map((w) => h('li', null, t(w)))) : null,
+    s && 'id' in rec ? momentChoices17(s, rec as MomentRec16) : null,
     h('button', { class: 'btn primary', onclick: close }, t(l('Continuar', 'Continue'))));
 }
 
 registerCutscene('moment16', (s, cs, close) => {
   const rec = mo16(s).log.find((x) => x.id === cs.data.rec);
-  return rec ? card16(rec, close) : h('div', null, h('button', { class: 'btn', onclick: close }, t(l('Continuar', 'Continue'))));
+  return rec ? card16(rec, close, s) : h('div', null, h('button', { class: 'btn', onclick: close }, t(l('Continuar', 'Continue'))));
 });
 
 function replay(rec: Pick<MomentRec16, 'ev' | 'text' | 'why' | 'title'>): void {

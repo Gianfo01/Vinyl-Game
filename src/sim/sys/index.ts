@@ -173,3 +173,6 @@ import './love17';
 import './kids17';
 import './looks17';
 import './extras17';
+// Rodada 17 (onda 2, J): cenas interativas (motor + catálogo), álbum de cenas e fotos icônicas.
+import './scene17';
+import './scenedefs17';

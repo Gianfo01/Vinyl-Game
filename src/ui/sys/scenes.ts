@@ -23,6 +23,7 @@ import { openCutscene, openScene, registerCutscene, registerSection } from '../r
 import { store } from '../store';
 import { ic, lineChart, scoreBadge } from '../vis';
 import './scenes.css';
+import { awardChoices17 } from './scene17';
 
 // ------------------------------------------------------------------ peças comuns
 
@@ -91,12 +92,13 @@ registerCutscene('awards', (s, cs, close) => {
     }, document.documentElement.classList.contains('reduced-motion') ? 0 : 700);
   };
   const showSpeech = () => {
+    // r17: discurso com mais temas (família, Deus, humilde…) e reação ao perder (subir ao palco, aplaudir, sair…)
+    const x = awardChoices17(s, cs);
+    if (x) return speech.replaceChildren(h('h4', null, t(cs.data.won ? l('Seu discurso', 'Your speech') : l('Sua reação', 'Your reaction'))), x);
     if (!cs.data.won) return speech.replaceChildren(h('p', { class: 'muted' }, t(l('Desta vez o troféu foi para outros. Ano que vem tem mais.', 'This time the trophy went to others. There is always next year.'))));
     if (cs.data.speech) return speech.replaceChildren(already(cs) ?? h('span'));
     const sp: { id: SpeechChoice; label: L; hint: L }[] = [
       { id: 'team', label: l('Agradecer a equipe', 'Thank the team'), hint: l('Moral e confiança.', 'Morale and trust.') },
-      { id: 'rival', label: l(`Provocar ${cs.data.rivalName ?? 'o rival'}`, `Taunt ${cs.data.rivalName ?? 'the rival'}`), hint: l('Manchetes e rivalidade.', 'Headlines and rivalry.') },
-      { id: 'political', label: l('Discurso político', 'Political speech'), hint: l('Prestígio; censores atentos.', 'Prestige; censors take note.') },
       { id: 'short', label: l('Curto e elegante', 'Short and elegant'), hint: l('Seguro.', 'Safe.') },
     ];
     speech.replaceChildren(h('h4', null, t(l('Seu discurso', 'Your speech'))), choices(sp.map((o) => ({ label: o.label, hint: o.hint, run: () => awardSpeech(s, rngOf(s), cs.id, o.id) }))));

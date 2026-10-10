@@ -1,0 +1,13 @@
+/* Rodada 17 (J): cenas interativas e Álbum de cenas */
+.s17-vary { margin: 0; font-style: italic; }
+.s17-choices h4 { margin: 4px 0; }
+.s17-choices .btn small { display: block; font-weight: 400; }
+.s17-odds { color: var(--accent); font-variant-numeric: tabular-nums; }
+.s17-fx { margin: 6px 0 0; padding-left: 1.2em; columns: 2 220px; }
+.s17-photo { gap: 6px; align-items: center; margin-top: 6px; }
+.s17-moment { margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 6px; }
+.s17-book { display: grid; gap: 8px; }
+.s17-year h4 { margin: 0 0 2px; }
+.s17-year ul { margin: 0; padding-left: 1.1em; font-size: 0.88rem; }
+.s17-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.s17-ph { display: grid; gap: 4px; }
