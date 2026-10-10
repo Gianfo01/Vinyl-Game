@@ -12,7 +12,7 @@ import { l, type L } from '../../data/world';
 import { RELICS18 } from '../../data/relics18';
 import { registerExt4, registerSimHook } from '../ext4';
 import { registerExplain } from '../explain18';
-import { emitFact } from '../facts17';
+import { emitFact, facts17 } from '../facts17';
 import { histLocked, histMode } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { RELICS17, relics17Gate } from '../relics17';
@@ -74,7 +74,9 @@ function born(s: GameState, k: RelicKind, n: L, a: Act | undefined, pid: string 
   st.seen[key] = 1;
   const rl = addRelic(s, k, n, a?.id, pid, v);
   st.m[rl.id] = { o, b: rl.v, st: story };
-  emitFact(s, { kind: 'relic', actors: a ? [a.id] : [], severity: 20 + Math.min(30, Math.round(v / 4000)), visibility: 'public', tags: ['relic', 'born', o], src: 'relics18',
+  // r18 final: a peça nasce DE um fato (o da crônica que acabou de entrar) — encadeia a causa
+  const last = facts17(s).f.at(-1), cause = last && last.src === 'chron' && last.w === s.week ? [last.id] : undefined;
+  emitFact(s, { kind: 'relic', actors: a ? [a.id] : [], severity: 20 + Math.min(30, Math.round(v / 4000)), visibility: 'public', tags: ['relic', 'born', o], src: 'relics18', cause,
     text: fmtL(l('Nasce uma relíquia: {n}.', 'A relic is born: {n}.'), { n }), data: { relic: rl.id } });
   if (a?.owner === 'player') notify(s, fmtL(l('Nova relíquia ligada ao seu elenco: {n} (Lendas → Relíquias).', 'New relic tied to your roster: {n} (Legends → Relics).'), { n }), 'good');
   return rl;

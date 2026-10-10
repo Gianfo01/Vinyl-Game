@@ -24,11 +24,12 @@ describe('r14 empresários', () => {
     expect(P.kind).toBe('manager');
     expect(P.name).toBe('Peter Grant');
     for (const a of ATTR13_IDS) expect(P.attrs[a]).toBeGreaterThan(0);
-    expect(P.attrs.neg).toBe(90);
+    // r18 ability18: atributos de quem não é artista recebem ajuste de idade/experiência (pequeno) sobre o documentado
+    expect(Math.abs(P.attrs.neg - 90)).toBeLessThanOrEqual(5);
     const f = createGame(defaultConfig('r14-m', { startYear: 1964, realNames: false, mode: 'historic' }));
     expect(mgrName(f, mgrById.grant)).not.toBe('Peter Grant');
     expect(per13(f, 'e:grant')!.name).toBe(mgrName(f, mgrById.grant));
-    expect(per13(f, 'e:grant')!.attrs.neg).toBe(90);
+    expect(per13(f, 'e:grant')!.attrs.neg).toBe(P.attrs.neg);
   });
 
   it('liga clientes históricos só no intervalo real e pesa nas propostas', () => {

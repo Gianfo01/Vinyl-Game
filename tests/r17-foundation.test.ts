@@ -38,8 +38,11 @@ describe('r17 fundação', () => {
     expect(recentFacts(s, { kind: 'arrest', months: 1 })).toHaveLength(1);
     const n0 = facts17(s).f.length;
     chron(s, { k: 'award', i: 3, a: [a.id], t: l('Prêmio X.', 'Award X.') });
-    expect(facts17(s).f.length).toBe(n0 + 1);
-    expect(facts17(s).f.at(-1)!.kind).toBe('award');
+    // r18: consequências (ex.: relíquia nascida do prêmio) entram como fatos com causa; a ponte não duplica
+    const novos = facts17(s).f.slice(n0);
+    expect(novos.filter((x) => !x.cause?.length)).toHaveLength(1);
+    expect(novos[0].kind).toBe('award');
+    expect(novos.slice(1).every((x) => x.cause?.includes(novos[0].id))).toBe(true);
     // remember de tipo da crônica vira um fato só (pela crônica)
     remember(s, 'death', l('Morreu alguém.', 'Someone died.'), { actId: a.id, important: true });
     expect(facts17(s).f.filter((x) => x.text.pt === 'Morreu alguém.')).toHaveLength(1);

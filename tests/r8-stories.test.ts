@@ -17,6 +17,7 @@ import { bondNote, careerPhase, identity, memOf, prefsOf, reactToResult } from '
 import { moveText, playbookOf, rivals8 } from '../src/sim/sys/rivals8';
 import { maybeStartCult, stories } from '../src/sim/sys/stories8';
 import type { Act, GameState, Release } from '../src/sim/types';
+import { courtOf18 } from '../src/sim/sys/world18';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, year = 1975) => createGame(defaultConfig(seed, { startYear: year }));
@@ -139,7 +140,8 @@ describe('histórias com continuidade: o disco cult', () => {
     expect(a.members).not.toContain(singer);
     const solo = s.acts[st.solo!];
     expect(solo.members).toEqual([singer]);
-    expect(solo.owner).toBe(st.lb);
+    // r18 (world18): o solo estreia sem selo e o rival que o seduziu faz a proposta (corte) no mercado
+    expect(solo.owner ?? courtOf18(s, solo.id)?.lb).toBe(st.lb);
     // anos depois: o disco volta, e a escolha passada decide o cardápio (banda sem a voz → reunião)
     st.next = s.week;
     advanceMonth(s);

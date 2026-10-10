@@ -13,6 +13,8 @@ const K = {
 export const ICON17_NAMES = [
   'crown', 'compass', 'target', 'book', 'pin', 'people', 'eye', 'briefcase', 'headphones', 'megaphone', 'scroll', 'map',
   'chess', 'coin', 'ticket', 'medal', 'mask', 'diamond', 'tie', 'stage', 'mixer', 'hourglass',
+  // r18 final: páginas novas da rodada 18
+  'door', 'clapper', 'typewriter', 'copyright', 'factory', 'signpost', 'network', 'seedling', 'passport', 'columns', 'dice',
 ] as const;
 export type Icon17 = (typeof ICON17_NAMES)[number];
 
@@ -41,6 +43,17 @@ const DRAW: Record<Icon17, (p: Px) => void> = {
   stage: (p) => { p.rect(1, 2, 14, 2, K.dred); p.rect(1, 2, 2, 10, K.red); p.rect(13, 2, 2, 10, K.red); p.rect(1, 12, 14, 3, K.brown); p.disc(8, 8, 1.6, K.skin); p.rect(7, 9, 3, 3, K.purple); },
   hourglass: (p) => { p.rect(3, 1, 10, 2, K.brown); p.rect(3, 13, 10, 2, K.brown); p.poly([[4, 3], [12, 3], [8, 8]], K.cream); p.poly([[8, 8], [12, 13], [4, 13]], K.cream); p.poly([[6, 5], [10, 5], [8, 7]], K.gold); p.poly([[8, 10], [11, 13], [5, 13]], K.gold); },
   mixer: (p) => { p.rect(1, 4, 14, 9, K.dgrey); for (const x of [3, 6, 9, 12]) { p.vline(x, 5, 11, K.black); p.rect(x - 1, x % 2 ? 6 : 9, 3, 2, K.gold); } },
+  door: (p) => { p.rect(4, 1, 9, 14, K.brown); p.rect(5, 2, 7, 12, K.dbrown); p.rect(6, 3, 5, 5, K.brown); p.rect(6, 9, 5, 4, K.brown); p.put(10, 8, K.gold); p.hline(1, 15, 15, K.dgrey); },
+  clapper: (p) => { p.rect(2, 6, 12, 8, K.black); p.poly([[2, 3], [13, 1], [14, 4], [2, 6]], K.white); p.line(5, 3, 6, 5, K.black); p.line(9, 2, 10, 4, K.black); p.hline(4, 12, 9, K.grey); p.hline(4, 10, 11, K.grey); },
+  typewriter: (p) => { p.rect(4, 1, 8, 5, K.white); p.hline(5, 10, 3, K.grey); p.rect(1, 6, 14, 8, K.dgrey); p.rect(1, 6, 14, 2, K.black); for (const x of [3, 6, 9, 12]) { p.put(x, 9, K.cream); p.put(x, 11, K.cream); } p.hline(5, 10, 13, K.cream); },
+  copyright: (p) => { p.disc(8, 8, 7, K.blue); p.disc(8, 8, 5.5, K.white); p.ring(8, 8, 3.4, K.dblue); p.rect(10, 7, 2, 3, K.white); },
+  factory: (p) => { p.rect(1, 7, 14, 8, K.dred); p.poly([[1, 7], [5, 4], [5, 7], [9, 4], [9, 7], [13, 4], [13, 7]], K.red); p.rect(11, 1, 3, 6, K.dgrey); p.rect(3, 10, 2, 2, K.gold); p.rect(7, 10, 2, 2, K.gold); p.rect(11, 10, 2, 2, K.gold); },
+  signpost: (p) => { p.rect(7, 2, 2, 13, K.dbrown); p.poly([[2, 3], [12, 3], [14, 5], [12, 7], [2, 7]], K.gold); p.poly([[14, 8], [4, 8], [2, 10], [4, 12], [14, 12]], K.green); p.hline(4, 10, 5, K.dgold); p.hline(6, 12, 10, K.dgreen); },
+  network: (p) => { p.line(4, 4, 12, 4, K.grey); p.line(4, 4, 8, 12, K.grey); p.line(12, 4, 8, 12, K.grey); p.disc(4, 4, 2.4, K.blue); p.disc(12, 4, 2.4, K.red); p.disc(8, 12, 2.4, K.green); },
+  seedling: (p) => { p.rect(4, 11, 8, 4, K.brown); p.rect(3, 10, 10, 2, K.dbrown); p.vline(8, 4, 10, K.dgreen); p.ellipse(5, 5, 3, 1.8, K.green); p.ellipse(11, 3.5, 3, 1.8, K.green); },
+  passport: (p) => { p.rect(3, 1, 10, 14, K.dblue); p.disc(8, 7, 3, K.gold); p.ring(8, 7, 2, K.dgold); p.hline(5, 10, 12, K.gold); },
+  columns: (p) => { p.poly([[1, 5], [8, 1], [15, 5]], K.cream); p.rect(2, 5, 12, 1, K.grey); for (const x of [3, 7, 11]) p.rect(x, 6, 2, 7, K.white); p.rect(1, 13, 14, 2, K.grey); },
+  dice: (p) => { p.rect(2, 2, 12, 12, K.white); p.rect(2, 2, 12, 1, K.grey); p.disc(5, 5, 1.2, K.red); p.disc(8, 8, 1.2, K.red); p.disc(11, 11, 1.2, K.red); p.disc(11, 5, 1.2, K.ink); p.disc(5, 11, 1.2, K.ink); },
 };
 
 const cache = new Map<string, string>();

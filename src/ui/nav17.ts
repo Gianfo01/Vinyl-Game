@@ -19,10 +19,11 @@ export const NAV17: Group17[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'house', secs: [sec('today', l('Hoje', 'Today'), ['cockpit', 'plan', 'goals', 'diary'])] },
   { id: 'company', label: l('Empresa', 'Company'), icon: 'building', secs: [
     sec('base', l('Sede e equipe', 'HQ and staff'), ['hq', 'company', 'team']),
-    sec('money', l('Dinheiro', 'Money'), ['finance', 'business'])] },
+    sec('money', l('Dinheiro', 'Money'), ['finance', 'business']),
+    sec('course', l('Rumo, direitos e cadeia', 'Course, rights and supply'), ['long18', 'rights18', 'supply18'])] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', secs: [
-    sec('roster', l('Seu elenco', 'Your roster'), ['artists', 'people']),
-    sec('find', l('Descobrir', 'Discover'), ['market', 'directory']),
+    sec('roster', l('Seu elenco', 'Your roster'), ['artists', 'people', 'dyn18']),
+    sec('find', l('Descobrir', 'Discover'), ['market', 'directory', 'talent18']),
     sec('pros', l('Bastidores', 'Behind the scenes'), ['managers14', 'producers15'])] },
   { id: 'music', label: l('Música', 'Music'), icon: 'disc', secs: [
     sec('make', l('Criar', 'Create'), ['project', 'creation', 'studio']),
@@ -31,8 +32,8 @@ export const NAV17: Group17[] = [
   { id: 'press', label: l('Mídia', 'Media'), icon: 'newspaper', secs: [sec('press', l('Imprensa', 'Press'), ['news17', 'media', 'critics'])] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', secs: [
     sec('map', l('Mapa', 'Map'), ['world', 'world17', 'after18']),
-    sec('market', l('Mercado', 'Market'), ['charts', 'labels', 'industry']),
-    sec('culture', l('Cultura', 'Culture'), ['movements', 'lendas'])] },
+    sec('market', l('Mercado', 'Market'), ['charts', 'labels', 'industry', 'regions18']),
+    sec('culture', l('Cultura e histórias', 'Culture and stories'), ['movements', 'lendas', 'society18', 'dm18'])] },
   { id: 'events', label: l('Eventos', 'Events'), icon: 'trophy', secs: [sec('events', l('Eventos', 'Events'), ['festivals', 'awards', 'rockhall'])] },
   { id: 'crime', label: l('Submundo', 'Underworld'), icon: 'skull', secs: [sec('crime', l('Submundo', 'Underworld'), ['crime'])] },
   { id: 'you', label: l('Você', 'You'), icon: 'crown', secs: [
@@ -57,8 +58,8 @@ export const CAREER_PAGE17: Record<string, { area: string; label: L; icon: strin
   publisher: { area: 'cp17-publisher', label: l('Editora musical', 'Music publisher'), icon: 'note', absorbs: ['publishing16'] },
   media: { area: 'cp17-media', label: l('Dono de mídia', 'Media owner'), icon: 'tv', absorbs: ['outlets16'] },
   platform: { area: 'cp17-platform', label: l('Plataforma', 'Platform'), icon: 'stream', absorbs: ['platform16'] },
-  screen: { area: 'cp17-screen', label: l('Trilhas e palco', 'Screen & stage'), icon: 'film', absorbs: [] },
-  critic: { area: 'cp17-critic', label: l('Jornalismo', 'Journalism'), icon: 'newspaper', absorbs: [] },
+  screen: { area: 'cp17-screen', label: l('Trilhas e palco', 'Screen & stage'), icon: 'clapper', absorbs: [] },
+  critic: { area: 'cp17-critic', label: l('Jornalismo', 'Journalism'), icon: 'typewriter', absorbs: [] },
 };
 export const careerOfPage17 = (area: string): string | undefined => ORDER17.find((id) => CAREER_PAGE17[id].area === area);
 
@@ -67,7 +68,7 @@ export const ALIAS17: Record<string, [string, string]> = Object.fromEntries(ORDE
 export const tabKey17 = (page: string): string => page;
 
 /** Telas que só fazem sentido com selo (contratar) ou com selo/banda (gravar, lançar). */
-export const LABEL_ONLY17 = ['market'];
+export const LABEL_ONLY17 = ['market', 'supply18'];
 export const BAND_OR_LABEL17 = ['artists', 'project', 'creation', 'studio', 'releases', 'catalog'];
 
 /** Um ícone por grupo e um por página — sem repetir (teste r17-nav). */
@@ -77,9 +78,10 @@ export const ICON17: Record<string, string> = {
   artists: 'drums', people: 'handshake', market: 'eye', directory: 'fans', managers14: 'briefcase', producers15: 'headphones',
   project: 'cassette', creation: 'pen', studio: 'mic', releases: 'cd', catalog: 'gold-disc', shows: 'tour-bus', cal17: 'calendar',
   news17: 'megaphone', media: 'camera', critics: 'scroll',
-  world: 'map', world17: 'chess', after18: 'briefcase', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
+  world: 'map', world17: 'chess', after18: 'door', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
   festivals: 'ticket', awards: 'medal', rockhall: 'vault', crime: 'mask',
   you: 'fame', agenda17: 'hourglass', personal: 'heart', night14: 'sleep', wealth: 'diamond', scenes17: 'shirt', careers: 'compass', ventures: 'rocket',
+  long18: 'signpost', rights18: 'copyright', supply18: 'factory', dyn18: 'network', talent18: 'seedling', regions18: 'passport', society18: 'columns', dm18: 'dice',
   identity: 'lock', biz17: 'gavel', management: 'brain', tour12: 'train', studio12: 'radio', publishing16: 'bulb', outlets16: 'film', platform16: 'ship',
   ...Object.fromEntries(ORDER17.map((id) => [CAREER_PAGE17[id].area, CAREER_PAGE17[id].icon])),
 };
@@ -138,7 +140,9 @@ export function navGroups17(ctx: NavCtx17): NavGroup14[] {
       let xs = s.areas.filter((a) => { if (offCareer(a)) { parked.push(a); return false; } return true; });
       if (g.id === 'you' && s.id === 'cpages') xs = pages.map((id) => CAREER_PAGE17[id].area);
       const areas = take(xs);
-      if (areas.length) secs.push({ label: s.label, areas });
+      // muitas carreiras (12 na r18): a seção divide em duas para não virar uma lista longa
+      if (g.id === 'you' && s.id === 'cpages' && areas.length > 10) { secs.push({ label: s.label, areas: areas.slice(0, 7) }); secs.push({ label: l('Mais carreiras', 'More careers'), areas: areas.slice(7) }); }
+      else if (areas.length) secs.push({ label: s.label, areas });
     }
     const ex = take(extra[g.id] ?? []);
     if (ex.length) { if (secs.length) secs[secs.length - 1] = { ...secs[secs.length - 1], areas: [...secs[secs.length - 1].areas, ...ex] }; else secs.push({ label: g.label, areas: ex }); }
