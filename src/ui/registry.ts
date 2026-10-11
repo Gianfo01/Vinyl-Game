@@ -177,14 +177,14 @@ export function showPendingCutscene(s: GameState, rerender: () => void, skip: bo
   const pending = (s.cutscenes ?? []).filter((c) => !c.seen && CUTSCENES[c.kind]);
   if (!pending.length) return false;
   if (skip) {
-    for (const c of pending) c.seen = true;
+    for (const c of pending) { c.seen = true; sceneDone(s, c); }
     return false;
   }
   const cs = pending[0];
   cs.seen = true;
   let closeFn: () => void = () => {};
   closeFn = openScene((cs.data.title as L | string | undefined) ?? '', (close) => CUTSCENES[cs.kind](s, cs, close), {
-    onClose: () => { rerender(); setTimeout(() => showPendingCutscene(s, rerender, false), 50); },
+    onClose: () => { sceneDone(s, cs); rerender(); setTimeout(() => showPendingCutscene(s, rerender, false), 50); },
   });
   void closeFn;
   return true;
@@ -195,9 +195,13 @@ export function openCutscene(s: GameState, cs: Cutscene, rerender: () => void): 
   const fn = CUTSCENES[cs.kind];
   if (!fn) return false;
   cs.seen = true;
-  openScene((cs.data.title as L | string | undefined) ?? '', (close) => fn(s, cs, close), { onClose: rerender });
+  openScene((cs.data.title as L | string | undefined) ?? '', (close) => fn(s, cs, close), { onClose: () => { sceneDone(s, cs); rerender(); } });
   return true;
 }
+
+/** r19 (cenas): chamados quando uma cena é fechada ou pulada (ex.: anunciar o resultado guardado da cerimônia). */
+export const ON_SCENE_DONE: ((s: GameState, cs: Cutscene) => void)[] = [];
+function sceneDone(s: GameState, cs: Cutscene): void { for (const f of ON_SCENE_DONE) f(s, cs); }
 
 /** r18 decide18: chamados depois de cada avanço de tempo (resumo do mês, etc.). */
 export const AFTER_ADVANCE: ((s: GameState) => void)[] = [];

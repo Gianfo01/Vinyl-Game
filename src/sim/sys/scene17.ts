@@ -429,7 +429,7 @@ registerSimHook('week', 'scene17', (s) => {
   if (OFF_S17.auto) return;
   // casamento/nascimento da sua vida: a cena simples vira cena com escolhas
   for (const cs of s.cutscenes ?? []) {
-    if (cs.kind !== 'life' || cs.seen || cs.data.s17 || cs.week !== s.week) continue;
+    if (cs.kind !== 'life' || cs.seen || cs.data.s17 || s.week - cs.week > 4) continue; // r19: marca processada (s17), não a semana
     const k = cs.data.kind;
     if (k !== 'wedding' && k !== 'birth') continue;
     cs.data.s17 = 1;

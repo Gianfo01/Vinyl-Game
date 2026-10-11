@@ -175,7 +175,12 @@ H('festivals', ['Festivais', 'Festivals'],
   ['Inscreva-se cedo: o line-up fecha meses antes. Ex.: palco secundário num festival grande rende mais fãs que headliner num pequeno.', 'Apply early: line-ups close months ahead. E.g. a side stage at a big festival yields more fans than headlining a small one.'], [], ['cp17-festival', 'shows']);
 H('awards', ['Premiações', 'Awards'],
   ['Prêmios por época e país, indicações e júris. Prêmio rende vendas, cachê e prestígio.', 'Awards by era and country, nominations and juries. An award brings sales, fees and prestige.'],
-  ['Júris evitam quem teve escândalo recente. Ex.: segure a polêmica até depois da cerimônia.', 'Juries avoid acts with a recent scandal. E.g. hold the controversy until after the ceremony.']);
+  ['Júris evitam quem teve escândalo recente. Ex.: segure a polêmica até depois da cerimônia.', 'Juries avoid acts with a recent scandal. E.g. hold the controversy until after the ceremony.'],
+  // r19 (cenas): calendário real e surpresa da cerimônia
+  [['Calendário real: Gramófonos desde 1959 (indicados em novembro, cerimônia em fevereiro do ano seguinte); Crítica 1971, Indústria 1975, Ao Vivo 1989, regionais e Hall dos Ecos (1986) cada um no seu mês.', 'Real calendar: Gramophones since 1959 (nominees in November, ceremony in February of the next year); Critics 1971, Industry 1975, Live 1989, regional awards and the Hall of Echoes (1986) each in its own month.'],
+    ['Entre a indicação e a cerimônia a figurinista pergunta o figurino do tapete vermelho: pesa um pouco no voto (veteranos gostam de elegância, jovens de ousadia).', 'Between nomination and ceremony the stylist asks for the red-carpet outfit: it weighs a little on the vote (veterans like elegance, young voters daring).'],
+    ['A cerimônia só acontece se você (ou um cliente, ou a sua banda) tem indicado oficial, e o resultado só aparece depois que você assiste.', 'The ceremony only happens if you (or a client, or your band) have an official nominee, and the result only shows after you watch it.']],
+  ['calendar19', 'society18']);
 H('rockhall', ['Hall da Fama', 'Hall of Fame'],
   ['Quem entrou no Hall da Fama e os candidatos; mede o legado de longo prazo.', 'Who is in the Hall of Fame and the candidates; measures long-term legacy.'],
   ['Carreira longa + influência + crítica contam mais que vendas. Ex.: banda cult influente entra antes de um sucesso de um verão.', 'Long career + influence + critics count more than sales. E.g. an influential cult band gets in before a one-summer hit.']);

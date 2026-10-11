@@ -3,7 +3,7 @@
 // os efeitos das escolhas; a interface (src/ui/sys/scenes.ts) desenha os locais.
 
 import { registerMod, registerSimHook } from '../ext4';
-import { awardsYear, heatOnLaunch } from './scenes/awards';
+import { heatOnLaunch } from './scenes/awards';
 import { agmYear } from './scenes/board';
 import { courtWeek } from './scenes/court';
 import { crisisPressers } from './scenes/interview';
@@ -40,7 +40,7 @@ registerSimHook('month', 'scenes', (s, r) => {
 });
 
 registerSimHook('year', 'scenes', (s, r) => {
-  awardsYear(s, r);
+  // r19: a cerimônia dos Gramófonos saiu do fechamento do ano (fevereiro, sys/scenes19.ts)
   agmYear(s, r);
   mansionYear(s);
 });

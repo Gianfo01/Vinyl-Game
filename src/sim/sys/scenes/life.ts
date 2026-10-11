@@ -13,6 +13,8 @@ import { ipoScene, subLabelScene } from './board';
 import { startInterview } from './interview';
 import { clampN, cooled, findScene, markSeen, memSeq, patchScene, queueScene, sc, setCool, wasSeen } from './state';
 import { allReleases17 } from '../../relidx17';
+import { mineAct19, relAct19 } from '../../mine19';
+import { OFF_S17 } from '../scene17';
 
 const mineAct = (s: GameState, actId?: string) => {
   const a = actId ? s.acts[actId] : undefined;
@@ -39,7 +41,10 @@ export function memoryWatch(s: GameState, r: Rng): void {
 function onMemory(s: GameState, r: Rng, m: MemoryEntry): void {
   switch (m.kind) {
     case 'death': {
-      if (!m.important) return;
+      // r19: velório só de quem é próximo (seu, cliente, ex-artista do selo). Morte no seu elenco já vira o
+      // funeral interativo do scene17; morte de NPC distante fica só na notícia.
+      const rel = relAct19(s, m.actId);
+      if (!rel || (rel === 'own' && !OFF_S17.auto)) return;
       const act = m.actId ? s.acts[m.actId] : undefined;
       queueScene(s, 'farewell', 'funeral', {
         title: l('Despedida', 'Farewell'),
@@ -55,9 +60,21 @@ function onMemory(s: GameState, r: Rng, m: MemoryEntry): void {
       if (!mineAct(s, m.actId)) return;
       queueScene(s, 'clinic', 'clinic', { title: l('Clínica', 'Clinic'), text: m.text, actId: m.actId ?? null }, { minor: true });
       return;
-    case 'hall_of_fame':
-      queueScene(s, 'hall', 'awards', { title: l('Hall dos Ecos', 'Hall of Echoes'), text: m.text, actId: m.actId ?? null, mine: mineAct(s, m.actId) }, { minor: !mineAct(s, m.actId) });
+    case 'hall_of_fame': {
+      // r19: posse de NPC vai só para a notícia (não gasta o orçamento das suas cenas)
+      const rel = relAct19(s, m.actId);
+      if (!rel) return;
+      queueScene(s, 'hall', 'awards', { title: l('Hall dos Ecos', 'Hall of Echoes'), text: m.text, actId: m.actId ?? null, mine: rel !== 'former' }, { minor: rel === 'former', prio: true });
       return;
+    }
+    case 'hall': {
+      // r19: posse no Hall da Fama (rockhall9) vira cena quando é sua, de um cliente, de ex-artista ou a sua própria
+      const self = !m.actId && m.text.en.startsWith('You enter the');
+      const rel = relAct19(s, m.actId);
+      if (!self && !(rel && m.text.en.includes('is inducted into'))) return;
+      queueScene(s, 'hall', 'awards', { title: l('Hall da Fama', 'Hall of Fame'), text: m.text, actId: m.actId ?? null, mine: self || rel !== 'former' }, { minor: rel === 'former', prio: true });
+      return;
+    }
     case 'ipo':
       ipoScene(s);
       return;
@@ -72,7 +89,7 @@ function onMemory(s: GameState, r: Rng, m: MemoryEntry): void {
       queueScene(s, 'goldfx', 'store', { title: l('Disco de ouro!', 'Gold record!'), text: m.text, actId: m.actId ?? null, level: m.text.en.includes('diamond') ? 'diamond' : m.text.en.includes('platinum') ? 'platinum' : 'gold' }, { minor: true });
       return;
     case 'number1': {
-      if (!m.important || !mineAct(s, m.actId)) return;
+      if (!mineAct19(s, m.actId)) return; // r19: seu ou cliente do empresário (o seu nº 1 é sempre importante)
       queueScene(s, 'number1', number1Place(s), { title: l('Número 1!', 'Number 1!'), text: m.text, actId: m.actId ?? null });
       // convite para entrevista na TV (enfileirada depois da festa)
       if (m.actId && cooled(s, `iv:${m.actId}`, 6) && s.acts[m.actId]) startInterview(s, r, m.actId, 'number1');

@@ -120,17 +120,17 @@ export function setCool(s: GameState, key: string): void {
  * Enfileira uma cena. `minor` respeita um orçamento de 2 cenas menores por mês para não
  * interromper demais; as importantes (premiação, tribunal, crise) sempre entram.
  */
-export function queueScene(s: GameState, kind: string, place: PlaceKind, data: Record<string, unknown> & { title: L }, opts: { minor?: boolean } = {}): Cutscene | null {
+export function queueScene(s: GameState, kind: string, place: PlaceKind, data: Record<string, unknown> & { title: L }, opts: { minor?: boolean; prio?: boolean } = {}): Cutscene | null {
   const st = sc(s);
   const mk = s.year * 12 + s.month;
   if (st.monthKey !== mk) {
     st.monthKey = mk;
     st.monthCount = 0;
   }
-  if (opts.minor && st.monthCount >= 2) return null;
+  // r19: menores com prioridade (veredito, eco de uma decisão sua) não são cortadas pelo orçamento
+  if (opts.minor && !opts.prio && st.monthCount >= 2) return null;
   if (opts.minor) st.monthCount += 1;
-  queueCutscene(s, kind, { ...data, place });
-  const cs = s.cutscenes[s.cutscenes.length - 1];
+  const cs = queueCutscene(s, kind, { ...data, place });
   archive(s, cs, place);
   return cs;
 }

@@ -12,7 +12,7 @@ import { registerMovementGenres } from './culture';
 import { checkPromises, endContract, resolveOffers } from './contracts';
 import { checkInsolvency, payMonth, refreshProfessionals } from './economy';
 import { resolveDecision, storyteller } from './events';
-import { checkCardGoal, finishArc, updateLegacy, yearlyAwards } from './legacy';
+import { checkCardGoal, finishArc, updateLegacy } from './legacy';
 import { monthlyPeople, newRivalLabel, npcProduction, prune, worldSpawns } from './lifecycle';
 import { launchPending, marketWeek } from './market';
 import { rivalYearEnd, rivalsMonth } from './rivals';
@@ -112,7 +112,7 @@ function closeMonth(s: GameState, r: Rng, daysInMonth: number): void {
 
   const closingYear = s.year;
   if (s.month === 11) {
-    yearlyAwards(s, r);
+    // r19: Gramófonos saíram de dezembro — cerimônia em fevereiro (sys/scenes19.ts, calendário real)
     yearlyExt(s, r);
     rivalYearEnd(s);
     s.stats.marketUnitsYear = 0;

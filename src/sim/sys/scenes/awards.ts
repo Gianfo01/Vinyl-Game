@@ -3,11 +3,15 @@
 
 import type { Rng } from '../../../core/rng';
 import { l, type L } from '../../../data/world';
-import { avgReview, activeCensorship } from '../../media';
+import { activeCensorship } from '../../media';
 import { fandomOf } from '../../fandom';
 import type { GameState, Release } from '../../types';
 import { addHeat, fmtL, heatOf, notify, playerActs, remember } from '../../util';
 import { clampN, findScene, patchScene, queueScene, sc } from './state';
+import type { Cutscene } from '../../ext4';
+import { GRAMO_CATS, cer8 } from '../ceremonies8';
+import { isRegional19 } from '../../awards2';
+import { mineRel19 } from '../../mine19';
 
 export interface Nominee {
   name: string;
@@ -36,83 +40,45 @@ const GRAMO: Record<string, L> = {
   live_act: l('Ato ao Vivo do Ano', 'Live Act of the Year'),
 };
 
-const isMine = (s: GameState, rel: Release | undefined) => !!rel && (rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand);
-
 function relName(s: GameState, rel: Release): string {
   return `${s.acts[rel.actId]?.name ?? '?'} — ${rel.title}`;
 }
 
-/** Indicados (sem sorte): os melhores pela mesma régua do prêmio, garantindo o vencedor na lista. */
-function nomineesFor(s: GameState, cat: string, year: number, winnerRel?: string): Nominee[] {
-  const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
-  let pool: Release[] = [];
-  const score = (x: Release) => x.q + Math.log10(1 + x.totalUnits) * 7;
-  if (cat === 'record') pool = rels.filter((x) => x.type === 'single');
-  else if (cat === 'album') pool = rels.filter((x) => x.type === 'lp');
-  else if (cat === 'newcomer') pool = rels.filter((x) => (s.acts[x.actId]?.debutYear ?? 0) >= year - 1);
-  else if (cat === 'performance') pool = rels;
-  else if (cat === 'critics') pool = rels.filter((x) => (avgReview(s, x.id) ?? 0) > 0);
-  pool = pool.slice().sort((a, b) => (cat === 'critics' ? (avgReview(s, b.id) ?? 0) - (avgReview(s, a.id) ?? 0) : score(b) - score(a)));
-  // um indicado por ato
-  const seenActs = new Set<string>();
-  const list: Release[] = [];
-  for (const x of pool) {
-    if (seenActs.has(x.actId)) continue;
-    seenActs.add(x.actId);
-    list.push(x);
-    if (list.length >= 4) break;
-  }
-  if (winnerRel && !list.some((x) => x.id === winnerRel) && s.releases[winnerRel]) {
-    if (list.length >= 4) list.pop();
-    list.push(s.releases[winnerRel]);
-  }
-  return list.map((x) => ({ name: relName(s, x), mine: isMine(s, x), actId: x.actId }));
-}
+/** Vencedor de uma categoria dos Gramófonos (decidido na noite; pode ainda não estar no livro). */
+export interface CerWin { cat: string; releaseId?: string; actId?: string }
 
-/** Chamado no gancho 'year', depois de yearlyAwards e yearlyAwards2. */
-export function awardsYear(s: GameState, r: Rng): void {
-  const year = s.year;
-  const given = s.awards.filter((a) => a.year === year);
-  if (!given.length) return;
+/** r19: a cerimônia mostra os indicados OFICIAIS (anunciados em novembro, `cer8().noms`) das 4 categorias dos
+ *  Gramófonos e só existe quando você (selo, banda ou cliente do empresário) tem pelo menos um indicado oficial.
+ *  `year` = ano homenageado; `wins` = vencedores decididos na noite (sem eles, lê o livro `s.awards`). */
+export function awardsYear(s: GameState, r: Rng, year = s.year, wins?: CerWin[]): Cutscene | null {
+  const noms = cer8(s).noms;
+  if (!noms || noms.year !== year) return null;
+  const win = wins ?? s.awards.filter((a) => a.year === year && GRAMO_CATS.some((c) => c.id === a.category)).map((a) => ({ cat: a.category, releaseId: a.releaseId, actId: a.actId }));
   const cats: AwardCat[] = [];
-  for (const a of given) {
-    const name = GRAMO[a.category];
-    if (!name) continue; // regionais entram resumidos abaixo
-    let nominees = nomineesFor(s, a.category, year, a.releaseId);
-    const winnerName = a.name.includes(': ') && !a.releaseId ? a.name.split(': ').pop() ?? a.name : a.releaseId && s.releases[a.releaseId] ? relName(s, s.releases[a.releaseId]) : a.name;
-    if (!nominees.length || a.category === 'label_year' || a.category === 'producer_year' || a.category === 'live_act') {
-      nominees = [{ name: winnerName, mine: a.byPlayer, actId: a.actId }];
-      // concorrentes plausíveis: selos ativos por receita
-      if (a.category === 'label_year') {
-        const others = Object.values(s.labels).filter((lb) => lb.active && lb.name !== winnerName).sort((x, y) => y.revenueYear - x.revenueYear).slice(0, 3);
-        nominees.push(...others.map((lb) => ({ name: lb.name, mine: false })));
-        if (winnerName !== s.config.companyName) nominees.push({ name: s.config.companyName, mine: true });
-        nominees = nominees.slice(0, 4);
-      }
-    }
-    let wi = nominees.findIndex((n) => n.name === winnerName);
-    if (wi < 0) {
-      nominees[0] = { name: winnerName, mine: a.byPlayer, actId: a.actId };
-      wi = 0;
-    }
-    const winner = nominees[wi];
+  for (const c of GRAMO_CATS) {
+    const ids = [...(noms.cats[c.id] ?? [])];
+    const w = win.find((x) => x.cat === c.id);
+    if (!ids.length || !w) continue;
+    if (w.releaseId && !ids.includes(w.releaseId)) ids.push(w.releaseId);
+    const list = ids.map((id) => s.releases[id]).filter((x): x is Release => !!x);
+    const nominees: Nominee[] = list.map((x) => ({ name: relName(s, x), mine: mineRel19(s, x), actId: x.actId }));
+    const winner = nominees[list.findIndex((x) => x.id === w.releaseId)];
+    if (!winner) continue;
     // ordem dos indicados: embaralhada, mas determinística
     const nn = nominees.map((n) => ({ n, k: r.next() })).sort((x, y) => x.k - y.k).map((x) => x.n);
-    cats.push({ id: a.category, name, nominees: nn, winner: nn.indexOf(winner), mine: a.byPlayer });
+    cats.push({ id: c.id, name: GRAMO[c.id], nominees: nn, winner: nn.indexOf(winner), mine: winner.mine });
   }
-  const regional = given.filter((a) => a.category.startsWith('reg_'));
-  const anyNominee = cats.some((c) => c.nominees.some((n) => n.mine));
-  if (!anyNominee && !regional.some((a) => a.byPlayer)) return;
-  // a cerimônia mostra no máximo 6 categorias: as suas primeiro, depois as principais
+  if (!cats.some((c) => c.nominees.some((n) => n.mine))) return null; // r19: sem indicado oficial seu, sem cerimônia
+  // suas categorias primeiro
   cats.sort((a, b) => Number(b.nominees.some((n) => n.mine)) - Number(a.nominees.some((n) => n.mine)));
-  const show = cats.slice(0, 6);
-  const won = given.filter((a) => a.byPlayer).length;
-  const winAct = given.find((a) => a.byPlayer && a.actId && s.acts[a.actId])?.actId;
+  const won = cats.filter((c) => c.nominees[c.winner]?.mine).length; // r19: só conta o que a cena mostra
+  const winAct = cats.map((c) => c.nominees[c.winner]).find((n) => n?.mine && n.actId && s.acts[n.actId])?.actId;
+  const regional = s.awards.filter((a) => a.year === year && a.byPlayer && isRegional19(a.category)); // já anunciados
   const rival = Object.values(s.labels).filter((lb) => lb.active).sort((a, b) => heatOf(s, b.id) - heatOf(s, a.id) || b.revenueYear - a.revenueYear)[0];
-  queueScene(s, 'awards', 'awards', {
+  return queueScene(s, 'awards', 'awards', {
     title: fmtL(l('Gramófonos de Ouro {y}', 'Golden Gramophones {y}'), { y: year }),
     year,
-    cats: show,
+    cats,
     regional: regional.map((a) => ({ name: a.name, mine: a.byPlayer })),
     won,
     actId: winAct ?? null,

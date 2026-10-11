@@ -15,10 +15,11 @@
 // Fatos-índice (emitIndexFact; ler com indexFacts): `award_win` (entrada nova no livro) e `award_posthumous`, emitidos por sys/facades19.ts.
 
 import { l, type L } from '../data/world';
-import { REGIONAL_AWARDS } from './awards2';
+import { REGIONAL_AWARDS, isRegional19 } from './awards2';
+import { GRAMO_CAL19, calOf19 } from './awardcal19';
 import { juryMemHook, juryRng } from './sys/awards15';
 import { aw18, voters18 } from './sys/awards18';
-import { CEREMONY_MONTH, GRAMO_CATS, NOMS_MONTH, cer8, type GramoCat } from './sys/ceremonies8';
+import { CEREMONY_MONTH, GRAMO_CATS, NOMS_MONTH, cer8, cycleYear, type GramoCat } from './sys/ceremonies8';
 import { ch7 } from './sys/charts7';
 import type { Aw18 } from './sys/cine18';
 import { HALL_CEREMONY_MONTH, HALL_FIRST_CLASS, HALL_NOMS_MONTH, hall, hallExists, hallName } from './sys/rockhall9';
@@ -36,12 +37,16 @@ export const recordAward19 = recordAward;
 
 // ---------------------------------------------------------------- cerimônias
 export interface Ceremony19 { id: string; name: L; nomsMonth?: number; month: number; on: boolean }
-/** Calendário das cerimônias que existem no ano corrente (nada do futuro). */
+/** Calendário das cerimônias (r19: mês e fundação reais do dado; `on` = já existe neste ano, nada do futuro). */
 export function ceremonies19(s: GameState): Ceremony19[] {
+  const on = (cat: string) => s.year >= calOf19(cat).start;
   const out: Ceremony19[] = [
-    { id: 'gramo', name: l('Gramófonos de Ouro', 'Golden Gramophones'), nomsMonth: NOMS_MONTH, month: CEREMONY_MONTH, on: true },
+    { id: 'gramo', name: l('Gramófonos de Ouro', 'Golden Gramophones'), nomsMonth: NOMS_MONTH, month: CEREMONY_MONTH, on: s.year + 1 >= GRAMO_CAL19.start },
+    { id: 'critics', name: l('Prêmio da Crítica', "Critics' Prize"), month: calOf19('critics').month, on: on('critics') },
+    { id: 'industry', name: l('Prêmios da Indústria', 'Industry Awards'), month: calOf19('label_year').month, on: on('label_year') },
+    { id: 'live_act', name: l('Ato ao Vivo do Ano', 'Live Act of the Year'), month: calOf19('live_act').month, on: on('live_act') },
     { id: 'national', name: l('Prêmios nacionais (júri local)', 'National awards (local jury)'), month: 11, on: true },
-    ...Object.values(REGIONAL_AWARDS).map((a) => ({ id: a.id, name: a.name, month: 11, on: true })),
+    ...Object.values(REGIONAL_AWARDS).map((a) => ({ id: a.id, name: a.name, month: calOf19(a.id).month, on: on(a.id) })),
   ];
   if (hallExists(s)) out.push({ id: 'hall', name: hallName(s), nomsMonth: HALL_NOMS_MONTH, month: HALL_CEREMONY_MONTH, on: s.year >= HALL_FIRST_CLASS - 1 });
   return out;
@@ -52,7 +57,7 @@ export function ceremonies19(s: GameState): Ceremony19[] {
 export function nominations19(s: GameState, cat: GramoCat | 'hall'): string[] {
   if (cat === 'hall') { const n = hall(s).noms; return n && n.year === s.year ? [...n.ids] : []; }
   const n = cer8(s)?.noms;
-  return n && n.year === s.year ? [...(n.cats[cat] ?? [])] : [];
+  return n && n.year === cycleYear(s) ? [...(n.cats[cat] ?? [])] : [];
 }
 export const GRAMO_CATS19 = GRAMO_CATS;
 
@@ -79,7 +84,7 @@ export function jury19(s: GameState, a3?: string) {
 export type WinSrc19 = 'gramo' | 'regional' | 'industry' | 'national' | 'hall';
 export interface Win19 { year: number; src: WinSrc19; cat: string; name: string; actId?: string; relId?: string; a3?: string; mine: boolean; posthumous: boolean }
 const GRAMO_IDS = new Set(['record', 'album', 'newcomer', 'performance']);
-const srcOf = (cat: string): WinSrc19 => (GRAMO_IDS.has(cat) ? 'gramo' : cat.startsWith('nat_') ? 'national' : cat.startsWith('reg_') ? 'regional' : 'industry');
+const srcOf = (cat: string): WinSrc19 => (GRAMO_IDS.has(cat) ? 'gramo' : cat.startsWith('nat_') ? 'national' : isRegional19(cat) ? 'regional' : 'industry'); // r19: ids reais dos regionais
 
 /** Ato sem nenhum membro vivo (prêmio póstumo). Sem `year`, olha o presente. */
 export function isPosthumous19(s: GameState, actId: string | undefined, year = s.year): boolean {

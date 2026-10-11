@@ -199,4 +199,5 @@ import './ux19';
 // Rodada 19 (onda 5, B): cockpit por profissão, aviso antes de avançar e delegação por carreira.
 import './prof19';
 import './advance19';
+import './scenes19'; // r19 cenas: resultado da cerimônia só depois de vista
 import './core18';
