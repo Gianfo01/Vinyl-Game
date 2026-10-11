@@ -313,7 +313,7 @@ export interface Company {
 
 export interface Lawsuit {
   id: string;
-  kind: 'plagiarism' | 'sample' | 'audit' | 'contract' | 'image';
+  kind: 'plagiarism' | 'sample' | 'audit' | 'contract' | 'image' | 'safety';
   plaintiff: string;
   defendant: string;
   actId?: string;

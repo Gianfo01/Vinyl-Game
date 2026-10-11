@@ -18,6 +18,7 @@ export const KIND_NAMES: Record<Lawsuit['kind'], L> = {
   audit: l('Auditoria de royalties', 'Royalty audit'),
   contract: l('Quebra de contrato', 'Breach of contract'),
   image: l('Direito de imagem', 'Image rights'),
+  safety: l('Segurança do público', 'Crowd safety'),
 };
 
 const involvesPlayer = (x: Lawsuit) => x.defendant === 'player' || x.plaintiff === 'player';

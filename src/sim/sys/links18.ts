@@ -25,7 +25,7 @@ import { countryOfCity } from '../../data/geo';
 import { subById18 } from '../../data/regions18';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
-import { registerExplain } from '../explain18';
+import { registerExplain, type WhyPart } from '../explain18';
 import { emitFact, recentFacts } from '../facts17';
 import { holdsBetween } from '../holds17';
 import type { Act, GameState } from '../types';
@@ -311,10 +311,12 @@ registerSimHook('month', 'links18', (s) => {
 });
 
 // ---------------------------------------------------------------- porquês
+/** r19: partes extras do porquê por ligação (links19a etc. registram aqui). */
+export const LINK18_PARTS: Record<string, (s: GameState, c: Record<string, unknown>) => WhyPart[]> = {};
 registerExplain('link18', (s, c) => {
   const d = LINKS18.find((x) => x.id === c.id);
   if (!d) return null;
-  const parts: { label: L; value?: number; fmt?: 'num' | 'signed' | 'pct'; tone?: 'good' | 'bad' }[] = [];
+  const parts: WhyPart[] = [];
   const act = c.act ? s.acts[String(c.act)] : undefined;
   if (d.id === 'campus') { const e = campusEff18(s); parts.push({ label: l('Opinião da equipe/mês', 'Staff opinion/mo'), value: e.staff, fmt: 'signed' }, { label: l('Estresse do elenco/mês', 'Roster stress/mo'), value: e.stress, fmt: 'signed' }, ...e.why.map((w) => ({ label: w }))); }
   if (d.id === 'doc') { const e = docOpinion18(s); parts.push({ label: l('Chefes de selo/trimestre', 'Label bosses/quarter'), value: e.boss, fmt: 'signed' }, { label: l('Críticos/trimestre', 'Critics/quarter'), value: e.critic, fmt: 'signed' }, ...e.why.map((w) => ({ label: w }))); }
@@ -322,6 +324,7 @@ registerExplain('link18', (s, c) => {
   if (d.id === 'heart' && act) parts.push({ label: l('Qualidade das canções', 'Song quality'), value: Math.round(heartBoost18(s, act) * 100), fmt: 'pct', tone: 'good' });
   if (d.id === 'tension' && act) parts.push({ label: l('Receita de show', 'Show revenue'), value: -Math.round(tensionPen18(act, s) * 100), fmt: 'pct', tone: 'bad' });
   if (d.id === 'award') parts.push({ label: l('Chance das propostas', 'Offer chance'), value: Math.round(awardPull18(s) * 100), fmt: 'pct', tone: 'good' });
+  parts.push(...(LINK18_PARTS[d.id]?.(s, c) ?? [])); // r19: ligações novas trazem os próprios números
   const recent = lk18(s).log.filter((x) => x[1] === d.id).slice(0, 3);
   for (const [, , t] of recent) parts.push({ label: t });
   return { title: fmtL(l('{a} → {b}', '{a} → {b}'), { a: d.a, b: d.b }), value: recent.length, fmt: 'num', parts, note: d.how };

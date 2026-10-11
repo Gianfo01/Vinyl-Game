@@ -10,6 +10,14 @@ import type { HologramShow } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { addAsset } from './finance';
 
+/** r19 (links19a, I1–I3): o espólio (post18) entra nas decisões de holograma/póstumo/voz IA — preenchido por sys/links19a. */
+export const NEURAL19: {
+  gate?: (s: GameState, pid: string, neg: boolean) => L | null;
+  odds?: (s: GameState, pid: string) => number;
+  used?: (s: GameState, pid: string, k: 'holo' | 'vault' | 'voice', authorized: boolean) => void;
+  share?: (s: GameState, pid: string) => number;
+} = {};
+
 export function hologramReady(s: GameState): boolean {
   return hasTech(s, 'hologram');
 }
@@ -43,10 +51,12 @@ export function negotiateImageRights(s: GameState, r: Rng, personId: string, off
   if (!p || p.alive) return l('Só para artistas falecidos.', 'Only for deceased artists.');
   const ir = (s.imageRights[personId] ??= { personId, holder: 'estate', feeAsk: money(s, 30000), consent: false });
   if (ir.holder === 'player') return l('Os direitos já são seus.', 'You already own the rights.');
+  const g19 = NEURAL19.gate?.(s, personId, true);
+  if (g19) return g19;
   if (s.player.cash < offer) return l('Caixa insuficiente.', 'Not enough cash.');
   const ratio = offer / ir.feeAsk;
   const trustBonus = s.player.reputation.artists / 200;
-  const chance = clamp(ratio * 0.6 + trustBonus - (s.player.neural.voiceScandal ? 0.25 : 0), 0.02, 0.95);
+  const chance = clamp(ratio * 0.6 + trustBonus - (s.player.neural.voiceScandal ? 0.25 : 0) + (NEURAL19.odds?.(s, personId) ?? 0), 0.02, 0.95);
   if (!r.chance(chance)) {
     ir.feeAsk = Math.round(ir.feeAsk * 1.1);
     return fmtL(l('O espólio de {p} recusou. Pedem agora {x}.', '{p}\'s estate refused. They now ask {x}.'), { p: p.name, x: String(Math.round(ir.feeAsk / 100)) });
@@ -86,6 +96,8 @@ export function startHologramShow(s: GameState, r: Rng, personId: string, months
   if (!p || p.alive) return l('Só artistas que já partiram.', 'Only artists who have passed.');
   const act = Object.values(s.acts).find((a) => a.members.includes(personId));
   if (!act) return l('Sem carreira associada.', 'No associated career.');
+  const g19 = NEURAL19.gate?.(s, personId, false);
+  if (g19) return g19;
   const rights = rightsHolder(s, personId);
   if (authorized && !rights.ownedByPlayer) return l('Negocie os direitos de imagem com o espólio primeiro.', 'Negotiate image rights with the estate first.');
   const cost = hologramCost(s) + money(s, 8000 * months);
@@ -98,6 +110,7 @@ export function startHologramShow(s: GameState, r: Rng, personId: string, months
   s.player.neural.neuralAdopted = true;
   if (!authorized) unauthorizedUse(s, r, p, act);
   remember(s, 'hologram', fmtL(l('{p} volta ao palco como holograma ({a}).', '{p} returns to the stage as a hologram ({a}).'), { p: p.name, a: act.name }), { actId: act.id, important: true });
+  NEURAL19.used?.(s, personId, 'holo', authorized);
   return show;
 }
 
@@ -115,7 +128,7 @@ function hologramsMonth(s: GameState, r: Rng): void {
     h.shows += shows;
     h.revenue += rev;
     post(s, `holoshow:${h.id}`, rev, 'live', `Residência holográfica ${act.name}`);
-    if (h.rights === 'owned') post(s, `holofee:${h.id}`, -Math.round(rev * 0.1), 'rights', 'Repasse ao espólio');
+    if (h.rights === 'owned') post(s, `holofee:${h.id}`, -Math.round(rev * (NEURAL19.share?.(s, h.personId) ?? 0.1)), 'rights', 'Repasse ao espólio');
     act.fans.casual += Math.round(sold * 0.1);
     s.player.neural.humanFocus -= 0.5;
   }
@@ -129,6 +142,8 @@ export function posthumousRelease(s: GameState, r: Rng, personId: string, author
   if (!p || p.alive) return l('Só artistas que já partiram.', 'Only artists who have passed.');
   const vault = (s.vault[personId] ?? []).filter((id) => s.songs[id] && !s.songs[id].releaseId);
   if (!vault.length) return l('Não há inéditas no cofre.', 'No unreleased songs in the vault.');
+  const g19 = NEURAL19.gate?.(s, personId, false);
+  if (g19) return g19;
   const rights = rightsHolder(s, personId);
   if (authorized && !rights.ownedByPlayer) return l('Negocie os direitos com o espólio primeiro.', 'Negotiate rights with the estate first.');
   const act = Object.values(s.acts).find((a) => a.members.includes(personId))!;
@@ -148,6 +163,7 @@ export function posthumousRelease(s: GameState, r: Rng, personId: string, author
   }
   if (!authorized) unauthorizedUse(s, r, p, act);
   remember(s, 'posthumous', fmtL(l('Inéditas de {p} saem do cofre para um disco póstumo.', '{p}\'s unreleased songs leave the vault for a posthumous record.'), { p: p.name }), { actId: act.id, important: true });
+  NEURAL19.used?.(s, personId, 'vault', authorized);
   const type = vault.length >= 6 ? 'lp' : vault.length >= 3 ? 'ep' : 'single';
   const res = scheduleRelease(s, r, { actId: act.id, type, songs: type === 'single' ? [vault[0]] : vault.slice(0, 12), title: type === 'single' ? undefined : fmtL(l('{p}: Inéditas', '{p}: The Vault'), { p: p.name }).pt, formats: availableFormats(s), press: 2000, marketing: [], territories: s.player.territories, weeksAhead: 3, kind: 'posthumous', hype: 0.3 });
   if ('pt' in res) return res;
@@ -164,6 +180,8 @@ export function aiVoiceSongs(s: GameState, r: Rng, personId: string, n: number, 
   if (!p.alive && authorized && !rights.ownedByPlayer) return l('Negocie os direitos com o espólio primeiro.', 'Negotiate rights with the estate first.');
   const act = Object.values(s.acts).find((a) => a.members.includes(personId));
   if (!act) return l('Sem carreira associada.', 'No associated career.');
+  const g19 = p.alive ? null : NEURAL19.gate?.(s, personId, false);
+  if (g19) return g19;
   const cost = money(s, 12000 * n);
   if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `aivoice:${personId}:${s.week}`, -cost, 'recording', `Voz sintética: ${p.name}`);
@@ -184,6 +202,7 @@ export function aiVoiceSongs(s: GameState, r: Rng, personId: string, n: number, 
   else if (s.player.neural.consentPolicy !== 'no_consent') s.player.neural.consentPolicy = 'consent';
   const single = scheduleRelease(s, r, { actId: act.id, type: 'single', songs: [songs[0].id], formats: availableFormats(s), press: 0, marketing: [], territories: s.player.territories, weeksAhead: 2, kind: 'standard' });
   void single;
+  if (!p.alive) NEURAL19.used?.(s, personId, 'voice', authorized);
   remember(s, 'ai_voice', fmtL(l('{n} faixa(s) novas com a voz sintética de {p}.', '{n} new track(s) with {p}\'s synthetic voice.'), { n, p: p.name }), { actId: act.id, important: true });
   return null;
 }
