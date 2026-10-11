@@ -47,6 +47,7 @@ describe('eixos puxados por quem está envolvido', () => {
     const [so] = composeSongs(s, r, act, 1);
     expect(so.sound?.v).toHaveLength(9);
     expect(so.sound!.v.every((x) => x >= 0 && x <= 100)).toBe(true);
+    so.sound!.v[4] = 50; // polimento no meio: o teste mede o empurrão do produtor, não o teto de 100
     const dry = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: PRODUCERS.find((p) => p.signature === 'dry' || p.signature === 'lofi')!.id, studioTier: 2, approach: 'balanced' } as Song;
     const gloss = { ...so, sound: { v: [...so.sound!.v] }, recorded: true, producerId: PRODUCERS.find((p) => p.signature === 'glossy' || p.signature === 'neural')!.id, studioTier: 2, approach: 'balanced' } as Song;
     applyRecord(s, dry);

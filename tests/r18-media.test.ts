@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { applyMods } from '../src/sim/ext4';
+import { hasTech } from '../src/sim/util';
 import { MEDIA18 } from '../src/sim/media18hook';
 import { mk18, profile18, satOf18, term18 } from '../src/sim/sys/mkt18';
 import { a18, buyStreams18, payout18, st18 } from '../src/sim/sys/stream18';
@@ -100,7 +101,9 @@ describe('r18 media: rádio, clipe e remix', () => {
     const d = ensureDirs18(s)[0];
     makeVideo18(s, r.id, { tier: 1, dir: d.id, censor: true });
     expect(media18(s).vids[r.id]).toBeTruthy();
-    expect(r.marketing.some((m) => m.channel === 'music_video')).toBe(true);
+    // rede de clipes é ponto de divergência da run; sem ela o clipe entra como programa de TV
+    const vch = hasTech(s, 'clipnet') ? 'music_video' : 'tv_show';
+    expect(r.marketing.some((m) => m.channel === vch)).toBe(true);
     const dj = ensureDjs18(s)[0];
     commissionRemix18(s, r.id, dj.id);
     expect(media18(s).rmx[r.id].k).toBeGreaterThan(1);

@@ -140,11 +140,13 @@ describe('críticos regionais', () => {
     const s = mk('r8-crit', { startYear: 1995, homeCity: 'rio', scenario: 'established' });
     const regions = new Set(activeCritics(s).map((c) => c.region));
     for (const m of ['br', 'na', 'eu', 'latam', 'asia', 'africa', 'oceania']) expect(regions.has(m as never)).toBe(true);
-    const act = Object.values(s.acts).find((a) => a.city === 'rio' && a.status === 'active')!;
+    // ato do Rio que já tenha disco (senão o fallback pega um lançamento de outra região)
+    const act = Object.values(s.acts).find((a) => a.city === 'rio' && a.status === 'active' && Object.values(s.releases).some((r) => r.actId === a.id))!;
     const rel = Object.values(s.releases).find((r) => r.actId === act?.id) ?? Object.values(s.releases)[0];
     let br = 0;
     for (let i = 0; i < 10; i++) { delete s.reviews[rel.id]; br += reviewRelease(s, rngOf(s), rel).filter((x) => activeCritics(s).find((c) => c.name === x.critic)?.region === 'br').length; }
-    if (act) expect(br).toBeGreaterThan(0);
+    expect(act).toBeTruthy();
+    expect(br).toBeGreaterThan(0);
     const name = activeCritics(s)[0].name;
     expect(criticAction(s, rngOf(s), name, 'advance')).toBeNull();
     expect(relWith(s, name)).toBeGreaterThan(0);

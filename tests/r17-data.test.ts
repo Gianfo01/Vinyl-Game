@@ -5,6 +5,7 @@ import { COUNTRY_INFO, countryInfoByA3, countryMarketSize, countryPop } from '..
 import { COVERS17, ERAS17, SCENES17 } from '../src/data/heritage17';
 import { LOOKS17 } from '../src/data/looks17';
 import { REAL_17 } from '../src/data/more17';
+import { REAL_1889 } from '../src/data/era1889';
 import { REAL_ACTS } from '../src/data/realnames';
 import { GLOBAL17, globalOf17 } from '../src/data/relevance17';
 import { softPower } from '../src/data/relevance';
@@ -61,8 +62,12 @@ describe('r17 dados reais', () => {
       if (a.x && a.b) expect(a.x).toBeGreaterThan(a.b + 15);
       for (const m of a.m ?? []) { expect(m[1], `${a.n}/${m[0]}`).toBeTruthy(); if (m[3]) expect(m[3]).toBeGreaterThan(m[2] ?? 0); }
     }
-    const tail = REAL_ALL.slice(-20).map((a) => a.n);
+    // r18: o lote de 1889 entra depois do r17; o r17 continua imediatamente antes dele
+    const i89 = REAL_ALL.findIndex((a) => REAL_1889.some((b) => b.n === a.n));
+    expect(i89).toBeGreaterThan(0);
+    const tail = REAL_ALL.slice(0, i89).slice(-20).map((a) => a.n);
     expect(tail).toContain('Jeff Buckley');
+    expect(REAL_ALL.slice(i89).every((a) => REAL_1889.some((b) => b.n === a.n))).toBe(true);
     expect(REAL_ALL.filter((a) => a.n === 'Luis Fonsi').length).toBe(1);
     const r = DB_SIZES.map((d) => realCount(d.id));
     expect(r[0]).toBeLessThan(r[1]); expect(r[2]).toBeLessThan(r[3]);

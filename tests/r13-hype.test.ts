@@ -39,7 +39,9 @@ describe('hype r12', () => {
     const bad = fakeRel(s, a.id, 35);
     runSimHooks('launch', s, Rng.fromSeed('l'), { release: bad });
     expect(hy(s).rel[bad.id].bl).toBeGreaterThan(0);
-    expect(applyMods(s, 'chartUnits', 100, { release: bad }).value).toBeGreaterThan(100);
+    // a estreia sobe pelo hype; o total depende do gênero sorteado na parada (lojas informando), então mede o fator do hype
+    const deb = applyMods(s, 'chartUnits', 100, { release: bad }).factors.find((f) => f.label.en === 'Debut hype');
+    expect(deb?.ratio ?? 0).toBeGreaterThan(1);
     const b = Object.values(s.acts).find((x) => x.id !== a.id && !x.deceased && x.fame < 30)!;
     const good = fakeRel(s, b.id, 90);
     runSimHooks('launch', s, Rng.fromSeed('l2'), { release: good });

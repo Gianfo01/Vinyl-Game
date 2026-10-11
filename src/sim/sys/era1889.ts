@@ -365,7 +365,7 @@ const SC_1889: Scenario17[] = [
     rules17: [l('Discos vêm prensados da Europa (frete de um mês) até a fábrica nacional de 1913: +15% no custo de fabricação.', 'Discs are pressed in Europe (a month\'s freight) until the national plant of 1913: +15% manufacturing cost.'),
       l('Atos de choro, maxixe e modinha ganham +10% de apelo no Brasil.', 'Choro, maxixe and modinha acts get +10% appeal in Brazil.'),
       l('1917: "Pelo Telefone" — o samba vira gênero de disco.', '1917: "Pelo Telefone" — samba becomes a record genre.')],
-    events17: [{ year: 1913, month: 6, title: l('Fábrica Odeon no Rio', 'Odeon plant in Rio'), text: l('A primeira fábrica de discos do Brasil começa a prensar na Tijuca.', 'Brazil\'s first record plant starts pressing in Tijuca.'), cash: 0 },
+    events17: [{ year: 1913, month: 6, title: l('Fábrica Odeon no Rio', 'Odeon plant in Rio'), text: l('A primeira fábrica de discos do Brasil começa a prensar na Tijuca.', 'Brazil\'s first record plant starts pressing in Tijuca.'), genre: 'maxixe', genreMult: 1.15 },
       { year: 1917, month: 1, title: l('"Pelo Telefone"', '"Pelo Telefone"'), text: l('O samba registrado por Donga toma o carnaval e as lojas.', 'The samba registered by Donga takes over carnival and the shops.'), genre: 'samba', genreMult: 1.5 }],
     perks17: (s) => [{ label: l('Cenário: a música da cidade', 'Scenario: the city\'s music'), values: { appeal: 0.1 }, act: (_s, a) => ['choro', 'maxixe', 'modinha', 'samba', 'marchinha'].includes(a.genre) },
       ...(s.year < 1913 ? [{ label: l('Cenário: discos prensados na Europa', 'Scenario: discs pressed in Europe'), values: { pressingCost: 0.15 } }] : [])],

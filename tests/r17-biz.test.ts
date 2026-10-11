@@ -67,6 +67,8 @@ describe('r17 negócios', () => {
     const k = clashOf(s, me, me.city, s.week + 3);
     expect(k.mult).toBeLessThan(0.9);
     expect(k.why.length).toBeGreaterThan(0);
+    // semana sem ninguém da agenda NPC na cidade (a agenda sorteada pode ter shows reais em +9)
+    cal17(s).npc = cal17(s).npc.filter((x) => !(x.c === me.city && x.w === s.week + 9));
     expect(clashOf(s, me, me.city, s.week + 9).mult).toBe(1);
     // casas: estádio não se vende; clube histórico sim
     expect(buyVenue17(s, 'wembley')).not.toBeNull();

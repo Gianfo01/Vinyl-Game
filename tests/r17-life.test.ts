@@ -67,6 +67,7 @@ describe('r17 vida pessoal', () => {
     expect(r.scandals).toBe(rn);
     const s2 = createGame(defaultConfig('r17-life-out2', { startYear: 2020 }));
     const [b, m2] = queer(s2);
+    b.city = 'london'; // época e lugar acolhedores (o sorteio pode cair num país hostil)
     const m0 = b.scandals;
     comeOut(s2, m2, 'chose');
     expect(b.scandals).toBe(m0);

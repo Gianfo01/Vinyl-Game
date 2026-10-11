@@ -16,12 +16,13 @@ import { foundVenture, ventures } from '../src/sim/sys/ventures9';
 describe('r17 agenda', () => {
   it('bolinhas: 5 pessoais sem desconto da banda; carreiras usam expediente e depois as pessoais', () => {
     const s = createGame(defaultConfig('r17-ag-1', { startYear: 1975 }));
-    expect(maxEnergy(s)).toBe(5);
+    const e0 = Math.round(perk(s, 'energy')); // traço sorteado do dono (ex.: Workaholic) soma por cima das 5
+    expect(maxEnergy(s)).toBe(5 + e0);
     expect(careers(s).active).toEqual(['label']);
-    expect(energyLeft(s)).toBe(5);
+    expect(energyLeft(s)).toBe(5 + e0);
     for (const id of ['manager', 'festival', 'booking']) startCareer(s, id);
     expect(overflow(s)).toBe(2);
-    expect(energyLeft(s)).toBe(3);
+    expect(energyLeft(s)).toBe(3 + e0);
     const b = balls(s);
     expect(b.office.every((x) => x.k === 'career')).toBe(true);
     expect(b.personal.filter((x) => x.k === 'career').length).toBe(2);
@@ -33,7 +34,7 @@ describe('r17 agenda', () => {
     setInv(s, 'label', 'lead');
     expect(careerQ(s, 'label').f).toBeGreaterThan(1.1);
     expect(perk(s, 'songQ')).toBeGreaterThan(0.3);
-    expect(energyLeft(s)).toBe(1);
+    expect(energyLeft(s)).toBe(1 + e0);
   });
 
   it('sobrecarga gera estresse; diretor contratado libera a bolinha', () => {
