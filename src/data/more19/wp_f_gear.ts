@@ -130,7 +130,7 @@ const ROWS: Row[] = [
   ['ssl_4000', 'SSL 4000 Series', 'Solid State Logic', 'console', 1977, 0, 'pp,rk,rn', [3, 0, 0], 'arena_rock,dance_pop,pop_rnb', 'tech,acc,imm', { n: ['A mesa que definiu o som polido e radiofônico.', 'The console that defined the polished, radio-ready sound.'] }],
   ['tascam_portastudio', 'Tascam Portastudio 144', 'Tascam', 'tape', 1979, 0, 'rk,hh,cf', [-1, 1, 2], 'indie,folk,hiphop,alt_rock', 'emo,orig', { n: ['Quatro pistas em fita cassete: o estúdio no quarto.', 'Four tracks on a cassette: the bedroom studio.'] }],
   ['studer_a800', 'Studer A800', 'Studer', 'tape', 1978, 0, 'pp,rk', [3, 0, 0], 'arena_rock,dance_pop,new_wave', 'tech,coh'],
-  ['sony_3348', 'Sony PCM-3348', 'Sony', 'tape', 1982, 0, 'pp,el', [3, 0, 0], 'dance_pop,eurodance,pop_rnb', 'tech,acc'],
+  ['sony_3348', 'Sony PCM-3348', 'Sony', 'tape', 1991, 0, 'pp,el', [3, 0, 0], 'dance_pop,eurodance,pop_rnb', 'tech,acc'],
   ['alesis_adat', 'Alesis ADAT', 'Alesis', 'tape', 1991, 0, 'rk,el,hh', [2, 0, 1], 'alt_rock,grunge,indie,boom_bap', 'orig,tech', { n: ['Oito pistas digitais em fita VHS: multipista acessível.', 'Eight digital tracks on VHS tape: affordable multitrack.'] }],
   ['ssl_9000j', 'SSL 9000 J', 'Solid State Logic', 'console', 1994, 0, 'pp,hh,el', [3, 0, 0], 'pop_rnb,trap,dance_pop', 'tech,acc'],
   // DAWs e software

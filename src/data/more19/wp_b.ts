@@ -2,10 +2,10 @@
 // descartados pela deduplicação de REAL_ALL. Excluídos de propósito (regras do doc): Vybz Kartel (condenação por homicídio),
 // Saad Lamjarred (condenação por estupro) e casos de morte violenta tratados como crime. Formato das linhas: ver ./ab_util.ts.
 import type { Pack19 } from './types';
-import { rows } from './ab_util';
+import { rows, unsure } from './ab_util';
 
 const JAM = `
-The Skatalites|ska|kingston|JAM|1964|2||||Tommy McCook:h:1927:1998;Roland Alphonso:h:1931:1998;Lester Sterling:h;Jackie Mittoo:k:1948:1990;Lloyd Knibb:d:1931:2011|
+The Skatalites|ska|kingston|JAM|1964|2|||||Tommy McCook:h:1927:1998;Roland Alphonso:h:1931:1998;Lester Sterling:h;Jackie Mittoo:k:1948:1990;Lloyd Knibb:d:1931:2011|
 Toots and the Maytals|ska|kingston|JAM|1962|2|||||Toots Hibbert:v:1942:2020;Raleigh Gordon:v;Jerry Matthias:v|Funky Kingston:1973;Reggae Got Soul:1976
 Prince Buster|ska|kingston|JAM|1958|2|1938|2016|v
 Derrick Morgan|ska|kingston|JAM|1959|3|1940||v
@@ -80,7 +80,7 @@ Pat Thomas|highlife|accra|GHA|1967|3|1951||v
 Sir Victor Uwaifo|highlife|lagos|NGA|1966|3|1941|2021|g
 Orlando Julius|highlife|lagos|NGA|1965|3|1943||h
 Prince Nico Mbarga|highlife|lagos|CMR|1976|3|1950|1997|g|||Sweet Mother:1976:s
-Daddy Lumba|highlife|accra|GHA|1987|2|1964||v
+Daddy Lumba|highlife|accra|GHA|1987|2|1964|2025|v
 Femi Kuti|afrobeat|lagos|NGA|1986|2|1962||h
 Seun Kuti|afrobeat|lagos|NGA|2008|3|1983||h
 D'banj|afrobeats|lagos|NGA|2004|2|1980||v
@@ -118,7 +118,7 @@ Fatoumata Diawara|wassoulou|bamako|MLI|2011|3|1982||v
 `;
 
 const CEA = `
-Grand Kallé et l'African Jazz|rumba_congolaise|kinshasa|COD|1953|2||||Joseph Kabasele:v:1930:1983
+Grand Kallé et l'African Jazz|rumba_congolaise|kinshasa|COD|1953|2|||||Joseph Kabasele:v:1930:1983
 Dr Nico Kasanda|rumba_congolaise|kinshasa|COD|1955|3|1939|1985|g
 Zaïko Langa Langa|soukous|kinshasa|COD|1969|2
 Pépé Kallé|soukous|kinshasa|COD|1972|3|1951|1998|v
@@ -162,7 +162,7 @@ Tito Paris|funana|lisbon|CPV|1984|3|1963||g
 
 export const PACK: Pack19 = {
   id: 'wp_b',
-  artists: [JAM, CAR, ZAF, WAF, SAH, CEA, NAF, LUS].flatMap(rows),
+  artists: unsure([JAM, CAR, ZAF, WAF, SAH, CEA, NAF, LUS].flatMap(rows), ['Pat Thomas', 'Orlando Julius', 'Jil Jilala']),
   // estreias antes do gênero da carreira: Les Ballets Africains (1958, mande_pop 1960 ✓), Prince Nico Mbarga etc. já cabem na janela
   forerunners: [],
 };
