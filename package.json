@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "headless": "tsx tools/headless.ts",
+    "balance": "tsx tools/balance19.ts",
     "geo": "tsx tools/build-geo.ts"
   },
   "devDependencies": {

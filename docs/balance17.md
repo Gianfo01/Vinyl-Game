@@ -1,5 +1,10 @@
 # Equilíbrio R17 — teste final (rápido e completo)
 
+> **R19:** o runner ad hoc desta página (`tmp-bal17/batch.sh` → `one.ts`) foi substituído por `npm run balance`
+> (`tools/balance19.ts`), que usa o bot realista (`simulatePlayer`) por padrão, roda em processos paralelos e inclui os
+> bots adversários. `npm run headless` também usa o bot realista; o bot simples (`bot.ts`) só com `--bot simple`.
+> Ver `docs/balance19.md`.
+
 ## Como foi rodado (≈ 15 min no total)
 - **Playbot** (`src/sim/playbot16.ts` + `src/sim/playbot17.ts`): perfis cautious / balanced / aggressive × inícios 1960, 1975, 1990,
   2005, 2012, 2018 × 5 anos, um processo por corrida em paralelo (`nproc` = 4; ~5 min por lote de 18 corridas, 52–65 s por
