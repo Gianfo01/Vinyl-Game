@@ -25,7 +25,12 @@ const game = (seed: string, year = 1977, history?: 'strict' | 'free'): GameState
   if (history) (cfg as { history?: string }).history = history;
   return createGame(cfg);
 };
-const myAct = (s: GameState) => Object.values(s.acts).find((a) => a.owner === 'player' && !a.playerBand)!;
+/** um ato fictício (sem catalogNo) passa a ser do selo do jogador */
+const myAct = (s: GameState) => {
+  const a = Object.values(s.acts).find((x) => x.owner === 'player' && !x.playerBand) ?? Object.values(s.acts).filter((x) => !x.catalogNo && x.members.length && x.status !== 'retired' && x.status !== 'split').sort((x, y) => y.fame - x.fame)[0];
+  a.owner = 'player'; a.fame = Math.max(a.fame, 40);
+  return a;
+};
 
 describe('r19 T9 — banco de mídia', () => {
   it('chega às metas da Frente 10 (eventos, situações, veículos, formatos, covers, cenas, relíquias, crime)', () => {
