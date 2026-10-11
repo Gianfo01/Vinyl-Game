@@ -224,7 +224,8 @@ describe('dossiê de descoberta', () => {
     const s = mk('r8-narrow', { startYear: 1990, scenario: 'established' });
     s.player.cash = money(s, 1e6);
     s.player.initialCash = s.player.cash - s.player.totalPosted;
-    const a = freeAct(s, 3);
+    // r18/r19: atos veteranos podem encerrar a carreira no meio das 8 semanas (fim sorteado); a residência usa um estreante
+    const a = Object.values(s.acts).find((x) => !x.owner && !x.playerBand && x.status === 'emerging' && x.members.length) ?? freeAct(s, 3);
     s.knowledge[a.id] ??= { actId: a.id, degree: 1, stage: 'signal', bias: 0, updatedWeek: s.week, source: 'watch' };
     research(s, a.id, 'producer');
     const w1 = readsFor(s, a.id, 'live').find((x) => x.src === 'producer')!.w;
@@ -239,6 +240,7 @@ describe('dossiê de descoberta', () => {
     const fame0 = a.fame;
     for (let i = 0; i < 9 && !a.owner; i++) advanceWeek(s);
     if (!a.owner) {
+      expect(a.status === 'retired' || a.status === 'split', a.status).toBe(false);
       expect(readsFor(s, a.id, 'fans').some((x) => x.src === 'residency')).toBe(true);
       expect(a.fame).toBeGreaterThan(fame0);
       expect(dos(s).d[a.id].pending).toBeUndefined();
