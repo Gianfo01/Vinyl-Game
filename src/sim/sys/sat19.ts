@@ -34,7 +34,7 @@ export function satMonth19(s: GameState): void {
     st.prev[k] = R[k];
   }
 }
-registerSimHook('month', 'sat19', (s) => satMonth19(s));
+registerSimHook('month', 'sat19', (s) => { if (!(globalThis as { __sat19Off?: boolean }).__sat19Off) satMonth19(s); }); // A/B
 
 registerExplain('sat19', (s, c) => {
   const k = (String(c.k ?? 'artistic') as RepK);

@@ -13,6 +13,7 @@ const PICK19: Record<string, (s: GameState, p: Profile) => string> = {
   wr19_ghost: (_s, p) => (p === 'aggressive' ? 'pay' : 'credit'),
 };
 export function botR19(s: GameState, prof: Profile): void {
+  if ((globalThis as { __botr19Off?: boolean }).__botr19Off) return; // A/B
   for (const m of [...P(s).inbox]) {
     if (m.resolved || !m.actions?.length) continue;
     const f = PICK19[String(m.ref?.k18 ?? '')];
