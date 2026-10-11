@@ -181,7 +181,7 @@ export function revivalMonth19(s: GameState): void {
     // r19 onda 4: faixa já em evidência atrai novos usos (metade das vezes a mídia volta a uma faixa com calor) — sem isso
     // o calor se espalhava por milhares de faixas e a cadeia 2 (remix → comercial → série → revival) não acontecia sozinha
     const hot = Object.keys(st.c).filter((id) => oldRel19(s, s.releases[id]));
-    const hid = hot.length && r.chance(0.5) ? r.weighted(hot, (id) => st.c[id].h) : undefined;
+    const hid = hot.length && !(globalThis as { __rev19Old?: boolean }).__rev19Old && r.chance(0.5) ? r.weighted(hot, (id) => st.c[id].h) : undefined;
     const rel = hid ? s.releases[hid] : r.weighted(pool, (x) => (x.q / 50) ** 2 * (flop19(x) ? 1.6 : 1) * (mineRel(s, x) ? 2.5 : 1) * (st.c[x.id] ? 3 : 1));
     if (rel) stage19(s, rel.id, k);
   }
