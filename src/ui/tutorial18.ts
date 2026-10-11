@@ -5,6 +5,7 @@
 //  · trilhas guiadas por carreira, glossário pesquisável (também no Ctrl+K) e a página "Ajuda e tutorial".
 // Progresso em store.prefs.tut18 (localStorage, vale para todas as partidas).
 
+import { CAT20 } from './actions20'; // r20 G4
 import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import { onFact } from '../sim/facts17';
@@ -123,6 +124,8 @@ interface Step18 { sel: string; title: L; text: L }
 /** Destaques extras por página (seletores estáveis; os que não existirem são pulados). */
 const TOUR_EXTRA18: Record<string, Step18[]> = {
   cockpit: [{ sel: '.topbar .advance .btn.primary', title: l('Avançar o mês', 'Advance the month'), text: l('Quando terminar as decisões, avance. Ctrl+Enter faz o mesmo; "Até…" para no que importar.', 'When done deciding, advance. Ctrl+Enter does the same; "Until…" stops on what matters.') }],
+  // r20 G4: o tour da página Artistas apresenta o menu de ações (as categorias vêm do registro único)
+  artists: [{ sel: '.am20-btn', title: l('Ações ▾', 'Actions ▾'), text: l(`Tudo o que dá para fazer com este artista, em grupos: ${CAT20.map((c) => c.label.pt).join(', ')}. Itens indisponíveis mostram o motivo; o que custa dinheiro pede confirmação. Clique direito no elenco abre o mesmo menu; também no Ctrl+K.`, `Everything you can do with this act, grouped: ${CAT20.map((c) => c.label.en).join(', ')}. Unavailable items show why; anything that costs money asks first. Right-click on the roster opens the same menu; also in Ctrl+K.`) }],
   finance: [{ sel: '.topbar .money', title: l('Caixa e mês', 'Cash and month'), text: l('O número entre parênteses é o resultado do último mês: passe o mouse para ver de onde veio.', 'The number in brackets is last month\'s result: hover it to see where it came from.') }],
 };
 function steps18(area: string): Step18[] {

@@ -72,7 +72,7 @@ H('long18', ['Rumo do selo', 'Label direction'],
 H('artists', ['Artistas', 'Artists'],
   ['Seu elenco: agenda do mês, humor, estresse, contratos, hype, fama por país e ações rápidas.', 'Your roster: monthly agenda, mood, stress, contracts, hype, fame by country and quick actions.'],
   ['Cada pessoa tem 100% de capacidade por mês. Ex.: estúdio 60% + shows 40% é cheio; somar promoção gera estresse.', 'Everyone has 100% capacity a month. E.g. studio 60% + shows 40% is full; adding promo creates stress.'],
-  [['Abra a ficha (clique no nome) para ver Desenvolvimento (CA/PA), Trajetória, Rixas e Fãs.', 'Open the sheet (click the name) for Development (CA/PA), Trajectory, Feuds and Fans.']], ['people', 'dyn18', 'talent18'], ['capa', 'hype', 'stress']);
+  [['Abra a ficha (clique no nome) para ver Desenvolvimento (CA/PA), Trajetória, Rixas e Fãs.', 'Open the sheet (click the name) for Development (CA/PA), Trajectory, Feuds and Fans.'], ['Ações ▾ no cabeçalho reúne tudo o que dá para fazer com o artista (também no clique direito do elenco e no Ctrl+K); fixe as favoritas como botões.', 'Actions ▾ in the header gathers everything you can do with the act (also on roster right-click and Ctrl+K); pin favourites as buttons.']], ['people', 'dyn18', 'talent18'], ['capa', 'hype', 'stress']);
 H('people', ['Pessoas', 'People'],
   ['Todas as pessoas do seu mundo: elenco, saúde, relações, segredos, equipe e redes/cartas.', 'Everyone in your world: roster, health, relations, secrets, staff and social/letters.'],
   ['Use "Relações" antes de juntar artistas num feat ou turnê. Ex.: dois com mágoa no mesmo ônibus → briga.', 'Check "Relations" before pairing acts on a feat or tour. E.g. two with a grudge on one bus → fight.'], [], ['artists', 'dyn18']);

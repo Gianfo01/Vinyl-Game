@@ -31,6 +31,8 @@ export interface Prefs {
   /** r18 tutorial18: tours vistos, dicas vistas, visitas, trilhas concluídas e o que está desligado */
   /** r19 tutoff19: "Sem tutoriais (já sei jogar)" — desliga tudo que é tutorial de uma vez */
   noTut19?: boolean;
+  /** r20 G4: ações fixadas no cabeçalho do artista (ids do registro ui/actions20.ts) */
+  pins20?: string[];
   tut18?: { tours: Record<string, number>; tips: Record<string, number>; visits: Record<string, number>; done: Record<string, number>; noTours?: boolean; noTips?: boolean };
 }
 
