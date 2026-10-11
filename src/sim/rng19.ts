@@ -34,6 +34,9 @@ export const STREAMS19: Record<string, string> = {
   ses19: 'músicos de estúdio: hits alheios, documentários, processos e carreiras (session19)',
   wr19: 'compositores: ghostwriters, ofertas de canções, plágio (writers19)',
   links19a: 'ligações R19 grupo A: tragédia em festival lotado (links19a)',
+  live19: 'ao vivo e temporada: audiência antitruste, boicote de NPC, festival gratuito (incidente), descoberta no palco aberto (live19)',
+  charity19: 'beneficentes: crises sorteadas, recrutamento de NPC, rivais no palco, dinheiro que some (charity19)',
+  contests19: 'concursos de rádio/TV: inscritos, notas do júri, rixas de jurado (contests19)',
   l19b: 'malha de ligações B: crises cambiais sorteadas, bônus de descoberta do campus, corrida por talento, traição de pactos (links19b)',
 };
 

@@ -272,4 +272,8 @@ import './echoes19';
 import './era19';
 import './realhist19';
 import './links19b'; // r19 Frente 1 grupo B: sessão×qualidade, câmbio por submercado, inteligência de rivais, campus, júri×caminho, 11.10, 11.11
+// Rodada 19 (Frente 5, onda 3 — T4): ao vivo e temporada (boicote de ingressos, festival grátis, vinil/RSD, calendário sazonal), beneficentes e concursos.
+import './live19';
+import './charity19';
+import './contests19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
