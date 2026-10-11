@@ -57,6 +57,6 @@ html.reduced-motion *, html.reduced-motion *::before, html.reduced-motion *::aft
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
 
 /* contraste (WCAG AA 4,5:1 no tema claro): cinza de apoio, destaque e verde um pouco mais escuros
-   (#7a6d62 → #6b5f55, #c8641e → #a4501a, #2f7d4f → #286c44: texto branco no botão 5,6:1, destaque no papel 5,4:1) */
-:root[data-theme='light']:not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; }
-@media (prefers-color-scheme: light) { :root:not([data-theme]):not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; } }
+   (#7a6d62 → #6b5f55, #c8641e → #a4501a, #2f7d4f → #286c44, aviso #8a5b13, ruim #9e3127: texto branco no botão 5,6:1, destaque no papel 5,4:1) */
+:root[data-theme='light']:not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; --warn: #8a5b13; --bad: #9e3127; }
+@media (prefers-color-scheme: light) { :root:not([data-theme]):not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; --warn: #8a5b13; --bad: #9e3127; } }

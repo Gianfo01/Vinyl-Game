@@ -160,7 +160,7 @@ export const EVENTS: EventDef[] = [
   {
     id: 'child_born', cat: 'people', tone: 'neutral', tags: [], cooldown: 12,
     find: (s, r) => {
-      const a = pickMine(s, r, (x) => x.status === 'active');
+      const a = pickMine(s, r, (x) => x.status === 'active' && x.members.length > 0); // r19: ato sem integrantes não tem quem ser pai/mãe
       return a && r.chance(0.3) ? { act: a.id, person: r.pick(a.members) } : null;
     },
     title: l('{person} vai ser pai/mãe', '{person} is having a baby'),

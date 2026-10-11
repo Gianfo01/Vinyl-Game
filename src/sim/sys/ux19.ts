@@ -209,8 +209,11 @@ function yearTurn(s: GameState): void {
 }
 
 registerSimHook('newgame', 'ux19', (s) => { const U = ux19(s); U.ly = s.year; U.era = currentEra(s).id; openingGoals19(s); });
-registerSimHook('year', 'ux19', (s) => yearTurn(s));
+/** A/B de equilíbrio: `UX19_OFF=1 npm run balance` desliga viradas e metas (o resto é só leitura). */
+const off19 = (): boolean => typeof process !== 'undefined' && !!process.env?.UX19_OFF;
+registerSimHook('year', 'ux19', (s) => { if (!off19()) yearTurn(s); });
 registerSimHook('month', 'ux19', (s) => {
+  if (off19()) return;
   const U = ux19(s);
   if (!U.ly) { U.ly = s.year; U.era = currentEra(s).id; openingGoals19(s); }
   checkGoals(s);
