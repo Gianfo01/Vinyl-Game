@@ -9,7 +9,8 @@
 
 import { clamp, Rng } from '../../core/rng';
 import { HQ_LEVELS } from '../../data/rules';
-import { hoodAt19, CLIMATE19, type Hood19 } from '../../data/hood19';
+import { hoodAt19, histAge19, histNote19, CLIMATE19, type Hood19 } from '../../data/hood19';
+import { histMode } from '../history15';
 import { landmarksAt19, type Landmark19 } from '../../data/landmarks19';
 import { l, type L } from '../../data/world';
 import { registerExplain, type WhyPart } from '../explain18';
@@ -46,21 +47,23 @@ const hash = (str: string) => { let x = 2166136261; for (let i = 0; i < str.leng
 
 // ---------------------------------------------------------------- bairro: identidade e números
 
-export interface HoodStats19 { h: Hood19; age: number; stage: 'artsy' | 'hip' | 'pricey'; rent: number; vibe: number; safety: number; parts: [L, number][] }
+export interface HoodStats19 { h: Hood19; age: number; hist: number; note: L | null; stage: 'artsy' | 'hip' | 'pricey'; rent: number; vibe: number; safety: number; parts: [L, number][] }
 export const STAGE19: Record<HoodStats19['stage'], L> = { artsy: l('Barato e artístico', 'Cheap and artsy'), hip: l('Na moda', 'Hip'), pricey: l('Caro e arrumado', 'Pricey and polished') };
 export function hoodStats19(s: GameState, year = s.year): HoodStats19 {
   const h = hoodAt19(s.config.homeCity, year);
-  const span = h.to >= 9999 ? 30 : Math.max(8, h.to - h.from);
-  const base = clamp((year - Math.max(h.from, year - 60)) / span, 0, 1);
-  const own = Math.min(0.25, buildings18(s).filter((b) => b.zone === 'campus' && b.st === 'open').length * 0.025);
+  // r19: o estágio segue a linha do tempo documentada do bairro (década a década), não uma curva genérica
+  const base = clamp(histAge19(h, year), 0, 1);
+  // modo exato: só a história; nos outros, seus prédios e estilos desviam o bairro do roteiro real
+  const alt = histMode(s) !== 'strict';
+  const own = alt ? Math.min(0.25, buildings18(s).filter((b) => b.zone === 'campus' && b.st === 'open').length * 0.025) : 0;
   // estilos escolhidos empurram (vidro, loft) ou seguram (brutalista, tijolo) a gentrificação
-  const sg = clamp(Object.values(world19(s).sty).reduce((t, x) => t + styleDef18(x).gent, 0), -0.15, 0.15);
+  const sg = alt ? clamp(Object.values(world19(s).sty).reduce((t, x) => t + styleDef18(x).gent, 0), -0.15, 0.15) : 0;
   const age = clamp(base + own + sg, 0, 1);
   const lm = landmarksAt19(s.config.homeCity, year).filter((x) => x.music === 'venue' || x.music === 'studio').length;
   const vibe = Math.round(clamp(88 - 48 * age + lm * 4, 10, 100)), safety = Math.round(clamp(35 + 50 * age, 0, 100));
   const rent = Math.round((0.85 + 0.45 * age) * 100) / 100; // ±30% no máximo: efeito sentido sem quebrar o equilíbrio
-  const parts: [L, number][] = [[fmtL(l('Anos desde que o bairro virou "{n}"', 'Years since the area became "{n}"'), { n: h.n }), Math.round(base * 100)], [l('Seus prédios valorizam a área', 'Your buildings lift the area'), Math.round(own * 100)], [l('Estilos das fachadas', 'Façade styles'), Math.round(sg * 100)]];
-  return { h, age, stage: age < 0.4 ? 'artsy' : age < 0.75 ? 'hip' : 'pricey', rent, vibe, safety, parts };
+  const parts: [L, number][] = [[fmtL(l('História de "{n}" em {y}', 'History of "{n}" in {y}'), { n: h.n, y: String(year) }), Math.round(base * 100)], [l('Seus prédios valorizam a área', 'Your buildings lift the area'), Math.round(own * 100)], [l('Estilos das fachadas', 'Façade styles'), Math.round(sg * 100)]];
+  return { h, age, hist: base, note: histNote19(h, year), stage: age < 0.4 ? 'artsy' : age < 0.75 ? 'hip' : 'pricey', rent, vibe, safety, parts };
 }
 /** Ajuste mensal do aluguel da sede pelo bairro (positivo = desconto). */
 export const rentAdj19 = (s: GameState): number => (hq6(s).ownBuilding ? 0 : Math.round(money(s, HQ_LEVELS[s.player.hq].rent) * (1 - hoodStats19(s).rent)));
@@ -74,7 +77,7 @@ registerExplain('h19.hood', (s) => {
     { label: l('Clima da cena', 'Scene vibe'), value: x.vibe, fmt: 'num', tone: x.vibe >= 65 ? 'good' : '', note: l('65+: o elenco da cidade perde 1 de estresse por mês.', '65+: the local roster sheds 1 stress a month.') },
     { label: l('Segurança', 'Safety'), value: x.safety, fmt: 'num', tone: x.safety < 45 ? 'bad' : '', note: l('Abaixo de 45: mais chance de reclamações e de enchente sem manutenção.', 'Below 45: more complaints and floods without upkeep.') },
   ];
-  return { title: x.h.n, value: Math.round(x.age * 100), fmt: 'num', parts, note: x.h.d };
+  return { title: x.h.n, value: Math.round(x.age * 100), fmt: 'num', parts, note: x.note ? fmtL(l('{d} Nesta época: {e}', '{d} At this time: {e}'), { d: x.h.d, e: x.note }) : x.h.d };
 });
 
 // ---------------------------------------------------------------- vizinhos

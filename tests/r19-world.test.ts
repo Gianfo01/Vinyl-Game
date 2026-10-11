@@ -7,6 +7,7 @@ import { createGame } from '../src/sim/worldgen';
 import { LANDMARKS19, landmarksAt19 } from '../src/data/landmarks19';
 import { STYLE_CAT18, buildings18, campus18, decode18, encode18, freeLots18, layout18, startProj18, stylesAt18 } from '../src/sim/sys/campus18';
 import { act19, bldPop19, lotPop19, near19, placeFor19, startPlace19, syn19, synAt19, world19 } from '../src/sim/sys/world19';
+import { HOODS19, histAge19 } from '../src/data/hood19';
 import { actEv19, evPop19, hood19, rollEv19, hoodStats19, lmPop19, nb19, nbPop19 } from '../src/sim/sys/hood19';
 import { ventures } from '../src/sim/sys/ventures9';
 
@@ -83,7 +84,8 @@ describe('world19', () => {
     const s = rich(1962, 'w19c', 'london');
     const hs = hoodStats19(s);
     expect(hs.h.n.pt).toBe('Soho');
-    expect(hoodStats19(s, 1976).age).toBeGreaterThan(hs.age);
+    expect(hoodStats19(s, 1966).hist).toBeGreaterThan(hs.hist); // Swinging London
+    expect(hoodStats19(s, 1977).hist).toBeLessThan(hoodStats19(s, 1966).hist); // anos 70: Soho decadente
     const nbs = nb19(s);
     expect(nbs.length).toBeGreaterThan(0);
     expect(nbPop19(s, nbs[0].lot)?.acts.some((a) => a.id === 'buy')).toBe(true);
@@ -162,5 +164,43 @@ describe('world19', () => {
     for (let i = 0; i < 9 && campus18(s).proj.length; i++) advanceMonth(s);
     advanceMonth(s);
     expect(buildings18(s).find((x) => x.id === 'c:store')!.style).toBe('brutal');
+  }, 240000);
+
+  it('bairro segue a história real década a década (exato = só história; outros modos desviam)', () => {
+    const gs: Record<string, ReturnType<typeof createGame>> = {};
+    const at = (city: string, y: number) => hoodStats19((gs[city] ??= createGame(defaultConfig('h19h', { startYear: 1960, homeCity: city, history: 'strict' }))), y);
+    const harlem = at('new_york', 1955);
+    expect(harlem.h.n.pt).toBe('Harlem');
+    expect(harlem.stage).not.toBe('pricey');
+    expect(harlem.stage).toBe('artsy');
+    const soho75 = at('new_york', 1975), soho01 = at('new_york', 2001);
+    expect(soho75.h.n.pt).toBe('SoHo'); expect(soho75.stage).toBe('artsy');
+    expect(soho01.h.n.pt).toBe('SoHo'); expect(soho01.stage).toBe('pricey');
+    expect(at('new_york', 1964).stage).toBe('hip'); // Greenwich Village no boom do folk
+    expect(at('berlin', 1980).stage).toBe('artsy'); // Kreuzberg à sombra do Muro
+    expect(at('rio', 1965).stage).toBe('hip'); // Copacabana da bossa nova
+    expect(at('rio', 1993).stage).toBe('artsy'); // Lapa abandonada antes do renascimento
+    expect(at('detroit', 1975).stage).toBe('artsy'); // Motown já foi embora
+    expect(at('tokyo', 1995).h.n.pt).toBe('Shimokitazawa');
+    expect(at('nashville', 2018).stage).toBe('pricey');
+    // nada do futuro: nomes e notas só a partir do ano em que valem
+    expect(at('new_york', 1890).h.n.pt).not.toBe('Tin Pan Alley');
+    expect(at('london', 1900).h.n.pt).not.toBe('Denmark Street');
+    expect(at('new_york', 1932).note?.pt ?? '').not.toContain('Apollo');
+    expect(at('new_york', 1936).note?.pt ?? '').toContain('Apollo');
+    for (const xs of Object.values(HOODS19)) for (const h of xs) {
+      expect(h.k.length).toBeGreaterThan(0);
+      for (const [y, a] of h.k) { expect(a).toBeGreaterThanOrEqual(0); expect(a).toBeLessThanOrEqual(1); if (h.from > 0) expect(y).toBeGreaterThanOrEqual(h.from); if (h.to < 9999) expect(y).toBeLessThan(h.to); }
+      expect(histAge19(h, h.k[0][0])).toBeCloseTo(h.k[0][1]);
+    }
+    // aluguel sempre dentro do teto (0,85..1,30)
+    for (let y = 1889; y <= 2040; y += 3) for (const c of ['new_york', 'london', 'rio', 'boston']) { const r = at(c, y).rent; expect(r).toBeGreaterThanOrEqual(0.85); expect(r).toBeLessThanOrEqual(1.3); }
+    // exato ignora o jogador; modo livre deixa os prédios desviarem a curva
+    const ex = createGame(defaultConfig('h19d', { startYear: 1975, homeCity: 'new_york', history: 'strict' }));
+    const lo = createGame(defaultConfig('h19d', { startYear: 1975, homeCity: 'new_york', history: 'loose' }));
+    const sty = { a: 'glass', b: 'glass', c: 'glass', d: 'glass', e: 'glass' } as const;
+    world19(ex).sty = { ...sty }; world19(lo).sty = { ...sty };
+    expect(hoodStats19(ex).age).toBeCloseTo(hoodStats19(ex).hist);
+    expect(hoodStats19(lo).age).not.toBeCloseTo(hoodStats19(lo).hist);
   }, 240000);
 });

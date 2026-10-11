@@ -335,7 +335,7 @@ function campusArea(s: GameState): HTMLElement {
   const evs = v.live ? live19ev(s) : [];
   return h('div', { class: 'c18 w19' },
     section(`${t(l('Nosso mundo', 'Our world'))} — ${s.config.companyName}`,
-      h('p', { class: 'w19-hood' }, ic('house'), ' ', why18(s, 'h19.hood', {}, h('b', null, t(hs.h.n)), ` · ${t(STAGE19[hs.stage])}`), h('span', { class: 'muted small' }, ` — ${t(hs.h.d)}`)),
+      h('p', { class: 'w19-hood' }, ic('house'), ' ', why18(s, 'h19.hood', {}, h('b', null, t(hs.h.n)), ` · ${t(STAGE19[hs.stage])}`), h('span', { class: 'muted small' }, ` — ${t(hs.h.d)}${hs.note ? ` ${t(hs.note)}` : ''}`)),
       sum,
       mapFrame(v),
       tl,
