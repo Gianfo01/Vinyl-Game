@@ -306,6 +306,9 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 ## Rodada 17
 Resumo completo em [docs/rodada17.md](docs/rodada17.md): fatos/obrigações/estresse/escândalos integrados, diretor criativo com situações e mundo vivo, crime, vida pessoal (sexualidade, amor, filhos, envelhecimento), imprensa e boatos, dados reais (relíquias, peso cultural, estilos), negócios (venda do selo, canais, casas de show, licenças, direitos de imagem, merch), agenda e contratações, menu reformado, novo início com cenários e saves na nuvem, cenas interativas e popups no mapa.
 
+## Rodada 19
+Resumo completo em [docs/rodada19.md](docs/rodada19.md): 13 sistemas novos (covers e tributos, revivals, sessões, compositores, remix, sincronização, trilhas, regiões e escolas, zines, farsas, beneficentes, concursos, espólio e equipamento) com 6 cadeias de história, banco de dados expandido, auditoria de 8 pontos aplicada (carreiras sustentáveis, regras de contexto, chance mostrada = sorteada, cockpit por profissão, volume de eventos, vitórias pequenas, economia entre negócios, histórias da partida), Nosso mundo como bairro com estilos de fachada e pontos turísticos, cenas de premiação corrigidas, "Sem tutoriais" e equilíbrio.
+
 ## Rodada 18
 Resumo completo em [docs/rodada18.md](docs/rodada18.md): por quê em tudo, livro-caixa e contratos com cláusulas, habilidade atual/potencial, iniciativas de NPC por gatilho, Mestre do jogo, direitos e cadeia física, mídia/streaming/rádio, ao vivo e fãs, regiões e K-pop, caminhos de vitória, rivais que aprendem, Nosso mundo, carreira de artista contratada por gravadoras e sociedades, decisões com consequências agora/depois, Cockpit e caixa de entrada vivos, cenas que mudam com as decisões, cerimônia do envelope, carreira póstuma e hologramas, início em 1889, tutorial completo e equilíbrio.
 
