@@ -88,12 +88,13 @@ registerArea({ id: 'careers', label: l('Carreiras', 'Careers'), icon: 'star', ke
 
 const NG_CAREERS = ['label', 'manager', 'festival', 'booking', 'venue', 'studio', 'publisher', 'media', 'platform', 'musician'];
 /** Aba "Carreira" do Novo Jogo: atividades principais (várias), origem profissional e ambição. */
-export function careerCard(cfg: RunConfig, onRole?: () => void, part: 'all' | 'main' | 'identity' = 'all'): HTMLElement {
+export function careerCard(cfg: RunConfig, onRole?: () => void, part: 'all' | 'main' | 'identity' | 'ambition' = 'all'): HTMLElement {
   const c = (cfg.careers ??= { main: ['label'], origin: 'musician', ambition: 'legacy' });
   cfg.role = roleFromMain(c.main);
   const box = h('div', { class: 'car12-ng' });
   // r17: atividades ficam na aba do negócio; origem e ambição são do PERSONAGEM (aba Personagem)
-  const main = part !== 'identity', ident = part !== 'main';
+  // r20c (N1): 'ambition' = só a ambição (a origem foi para o bloco "Passado profissional")
+  const main = part === 'all' || part === 'main', ident = part === 'all' || part === 'identity', amb = part !== 'main';
   const draw = () => box.replaceChildren(...[
     !main ? null : h('section', { class: 'card wide' }, h('h3', null, ...hl(l('Atividade principal', 'Main activity'), 'main')),
       h('p', { class: 'muted small' }, t(l('Escolha uma ou mais. O papel (selo, banda ou os dois) sai das atividades escolhidas; as outras definem onde você gasta seu tempo. Carreiras de época (ex.: plataforma) só abrem no ano certo.', 'Pick one or more. Your role (label, band or both) follows from what you pick; the rest decide where your time goes. Era careers (e.g. platform) only open in the right year.'))),
@@ -104,7 +105,7 @@ export function careerCard(cfg: RunConfig, onRole?: () => void, part: 'all' | 'm
       h('p', { class: 'muted small' }, t(l('O que você fazia antes de ter um negócio na música. Vale dinheiro, habilidades, reputação e contatos de saída.', 'What you did before running a music business. Brings money, skills, reputation and contacts from day one.'))),
       select<Origin>(c.origin as Origin, (Object.keys(ORIGINS) as Origin[]).map((k) => ({ value: k, label: t(ORIGINS[k].name) })), (k) => { c.origin = k; draw(); }, { 'aria-label': t(l('Origem profissional', 'Professional origin')) }),
       h('p', { class: 'small good' }, t(ORIGINS[c.origin as Origin]?.desc ?? l('', '')))),
-    !ident ? null : h('section', { class: 'card' }, h('h3', null, ...hl(l('Ambição', 'Ambition'), 'ambition')),
+    !amb ? null : h('section', { class: 'card' }, h('h3', null, ...hl(l('Ambição', 'Ambition'), 'ambition')),
       h('p', { class: 'small muted' }, '🔒 ', t(l('Escolha com calma: a ambição fica travada durante toda a partida.', 'Choose carefully: the ambition stays locked for the whole run.'))),
       select<Ambition>(c.ambition as Ambition, (Object.keys(AMBITIONS) as Ambition[]).map((k) => ({ value: k, label: t(AMBITIONS[k].name) })), (k) => { c.ambition = k; draw(); }, { 'aria-label': t(l('Ambição', 'Ambition')) }),
       h('p', { class: 'small' }, h('b', null, t(l('Meta anual: ', 'Yearly goal: '))), t(AMBITIONS[c.ambition as Ambition]?.desc ?? l('', ''))),

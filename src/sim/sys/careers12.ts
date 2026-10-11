@@ -99,7 +99,7 @@ export const AMBITION_PERK: Record<Ambition, PerkValues> = {
   money: { valuation: 0.05 }, legacy: { critics: 0.1 }, power: { offer: 0.03 }, art: { songQ: 0.5 }, family: { stress: -0.1 },
   fame: { appeal: 0.04 }, discover: { scoutAccuracy: 0.04 }, world: { showRevenue: 0.05 }, glory: { reputation: 1 }, freedom: { staffCost: -0.03 },
 };
-const ORIGIN_CONTACTS: Record<Origin, Partial<Record<string, number>>> = {
+export const ORIGIN_CONTACTS: Record<Origin, Partial<Record<string, number>>> = {
   musician: { studio: 6, producer: 6, festival: 4 }, roadie: { booking: 12, festival: 10 }, journalist: { media: 14, label: 4 }, lawyer: { label: 8 },
   heir: { label: 4, festival: 4 }, dj: { media: 10, festival: 8 }, accountant: { studio: 6, label: 8 },
   musicKid: { studio: 8, producer: 6, festival: 6 }, session: { studio: 14, producer: 12 }, anr: { label: 12, media: 4 }, teacher: { studio: 4, label: 4 },

@@ -54,3 +54,18 @@
   .ng20-intent .pick { padding: 0.45rem; font-size: 0.85rem; }
   .ng-bar .btn.big { white-space: nowrap; font-size: 0.9rem; padding: 0.45rem 0.7rem; }
 }
+/* r20c (N1): "Passado profissional" e "Personalizar personagem" */
+.ng20-past-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 0.6rem 1rem; }
+.ng20-past-cols label { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.3rem; }
+.ng20-past-cols p { margin: 0.2rem 0; }
+.ng20-past-sum { margin-top: 0.6rem; border-top: 1px solid var(--line); padding-top: 0.4rem; }
+.ng20-past-h { margin: 0.2rem 0; }
+.ng20-past-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0.3rem 1rem; }
+.ng20-past-grid h4 { margin: 0.3rem 0 0.15rem; font-size: 0.9em; }
+.ng20-past-ul { margin: 0; padding-left: 1.1rem; font-size: 0.9em; }
+.ng20-past-ul li { margin: 0.1rem 0; overflow-wrap: anywhere; }
+.ng20-perso > summary { cursor: pointer; }
+.ng20-perso > .ng20-perso-body > .card { border: 0; padding: 0; margin-top: 0.5rem; box-shadow: none; background: transparent; }
+/* mobile: nenhuma coluna da ficha pode ficar mais larga que a tela */
+.ng20 .ng-panel > *, .ng20 .ng-char > * { min-width: 0; }
+@media (max-width: 760px) { .ng20 .ng-char { grid-template-columns: minmax(0, 1fr); } }
