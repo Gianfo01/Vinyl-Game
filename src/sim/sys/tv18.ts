@@ -13,6 +13,7 @@ import { acceptOffer, defaultOffer, signWithRival } from '../contracts';
 import { registerExt4, registerSimHook } from '../ext4';
 import { registerExplain } from '../explain18';
 import { emitFact } from '../facts17';
+import { freeCash20, reservedAdvances20 } from '../oblig20';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { addStress } from '../stress17';
 import type { Act, GameState, Offer } from '../types';
@@ -58,13 +59,29 @@ export const partnerFee18 = (s: GameState, f: Fr18) => money(s, 20000 * f.power)
 export const pushCost18 = (s: GameState) => money(s, 4000);
 export const ownCost18 = (s: GameState) => money(s, 300000);
 
+/** r20b (B4): cotação da parceria — cota, caixa livre (caixa − adiantamentos reservados em ofertas pendentes) e motivo
+ *  do bloqueio. A interface mostra isto antes do clique; becomePartner18 revalida com a MESMA função na hora de assinar. */
+export interface PartnerQuote18 { cost: number; cash: number; reserved: number; free: number; block: L | null }
+export function partnerQuote18(s: GameState): PartnerQuote18 {
+  const se = tv18(s).cur, f = se && frOf(s, se.fr);
+  const cost = f ? partnerFee18(s, f) : 0;
+  const reserved = reservedAdvances20(s), free = freeCash20(s);
+  const q = { cost, cash: s.player.cash, reserved, free };
+  if (!se || !f || se.stage === 'done') return { ...q, block: l('Nenhuma temporada aberta.', 'No season open.') };
+  if (se.partner) return { ...q, block: se.partner === 'player' ? l('Você já é o selo parceiro.', 'You are already the partner label.') : l('Outro selo já fechou a parceria.', 'Another label already closed the partnership.') };
+  if (se.stage !== 'casting') return { ...q, block: l('A parceria fecha antes dos programas ao vivo.', 'The partnership closes before the live shows.') };
+  if (free < cost) return { ...q, block: reserved > 0 && s.player.cash >= cost
+    ? fmtL(l('Caixa livre insuficiente: {r} está reservado em adiantamentos de ofertas pendentes.', 'Not enough free cash: {r} is reserved for advances on pending offers.'), { r: `$${Math.round(reserved / 100).toLocaleString('en-US')}` })
+    : l('Caixa insuficiente para a cota.', 'Not enough cash for the fee.') };
+  return { ...q, block: null };
+}
+
 export function becomePartner18(s: GameState): L | null {
   const se = tv18(s).cur, f = se && frOf(s, se.fr);
-  if (!se || !f || se.stage === 'done') return l('Nenhuma temporada aberta.', 'No season open.');
-  if (se.partner) return se.partner === 'player' ? l('Você já é o selo parceiro.', 'You are already the partner label.') : l('Outro selo já fechou a parceria.', 'Another label already closed the partnership.');
-  if (se.stage !== 'casting') return l('A parceria fecha antes dos programas ao vivo.', 'The partnership closes before the live shows.');
-  const c = partnerFee18(s, f);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  // revalida na assinatura (caixa livre pode ter mudado desde a cotação); bloqueado = nenhuma mudança de estado
+  const q = partnerQuote18(s);
+  if (q.block || !se || !f) return q.block ?? l('Nenhuma temporada aberta.', 'No season open.');
+  const c = q.cost;
   post(s, `tv18partner:${se.id}`, -c, 'marketing', `Parceria: ${frName18(s, f).pt}`);
   se.partner = 'player';
   return null;

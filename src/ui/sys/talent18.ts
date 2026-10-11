@@ -16,7 +16,7 @@ import { ORIGIN18, WING18, authFee18, authenticate18, buildWing18, legacy18, rel
 import { RELIC_KIND, RELIC_ST, relics, toggleExhibit } from '../../sim/sys/relics9';
 import { OWN18, SCHOOLS18, bolsaCost18, foundSchool18, school18, schoolName18, schoolYield18, schoolsNow18, setBolsas18, setTeacher18 } from '../../sim/sys/school18';
 import { disbandHB18, foundHB18, hbMaxQ18, hbSalary18, hbSetup18, sess18, setCredit18, setRent18 } from '../../sim/sys/session18';
-import { FR18, becomePartner18, frName18, frNow18, ownCost18, partnerFee18, produceShow18, pushCost18, pushVotes18, setJudge18, tv18, voteScore18 } from '../../sim/sys/tv18';
+import { FR18, becomePartner18, frName18, frNow18, ownCost18, partnerFee18, partnerQuote18, produceShow18, pushCost18, pushVotes18, setJudge18, tv18, voteScore18 } from '../../sim/sys/tv18';
 import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
@@ -150,7 +150,7 @@ function tvTab(s: GameState): HTMLElement {
         row(pill(t(se.stage === 'casting' ? l('seleção', 'casting') : se.stage === 'live' ? l('ao vivo', 'live') : l('encerrada', 'finished')), se.stage === 'live' ? 'warn' : ''),
           pill(se.partner === 'player' ? t(l('você é o selo parceiro', 'you are the partner label')) : se.partner ? fmtLs(l('parceiro: {l}', 'partner: {l}'), { l: s.labels[se.partner]?.name ?? '?' }) : t(l('sem parceiro', 'no partner')), se.partner === 'player' ? 'good' : ''),
           se.judge ? pill(fmtLs(l('jurado: {p}', 'judge: {p}'), { p: s.persons[se.judge]?.name ?? '?' })) : null),
-        se.stage === 'casting' && !se.partner && fr ? row(btn(fmtLs(l('Ser o selo parceiro ({c})', 'Become the partner label ({c})'), { c: $(partnerFee18(s, fr)) }), () => say(becomePartner18(s), l('Parceria fechada: o vencedor assina com você.', 'Partnership closed: the winner signs with you.'))), muted(l('Contrato do formato: 360 (20%), royalty 12%, adiantamento pela metade.', 'Format deal: 360 (20%), 12% royalty, half advance.'))) : null,
+        se.stage === 'casting' && !se.partner && fr ? partnerRow20(s, fr) : null,
         se.stage !== 'done' && !se.judge && judges.length ? row(select(F.show || judges[0], judges.map((id) => ({ value: id, label: s.persons[id].name })), (v) => { F.show = v; rerender(); }), btn(l('Indicar como jurado', 'Put forward as judge'), () => say(setJudge18(s, F.show || judges[0]), l('Jurado confirmado.', 'Judge confirmed.')))) : null,
         se.cont.length ? h('table', { class: 'table small' }, h('tr', null, ...[l('Participante', 'Contestant'), l('Voto', 'Vote'), l('Talento', 'Talent'), l('Situação', 'Status'), l('Campanha', 'Campaign')].map((x) => h('th', null, t(x)))),
           ...se.cont.slice().sort((a, b) => voteScore18(s, se, b) - voteScore18(s, se, a)).map((c) => h('tr', null, h('td', null, actLink(s, c.a)), h('td', null, why18(s, 'tv18.vote', { act: c.a }, String(Math.round(voteScore18(s, se, c))))), h('td', null, s.acts[c.a] ? abilityCell18(s, s.acts[c.a]) ?? '?' : '?'),
@@ -204,4 +204,18 @@ export function relics18Tab(s: GameState): HTMLElement {
     auc.length ? section(t(l('Em leilão — confira a procedência', 'At auction — check provenance')), muted(l('Cerca de 1 em 12 lotes não catalogados é falso. Perícia antes do lance evita o vexame.', 'About 1 in 12 uncatalogued lots is fake. An appraisal before bidding avoids the embarrassment.')), ...auc.map(relRow)) : null,
     mine.length ? section(t(l('Seu acervo', 'Your collection')), ...mine.map(relRow)) : null,
     section(t(l('Nascidas nesta partida', 'Born in this run')), born.length ? h('div', null, ...born.map(relRow)) : muted(l('Shows lendários, nº 1, prêmios, mortes, escândalos e capas criam peças com história.', 'Legendary shows, #1s, awards, deaths, scandals and covers create pieces with a story.'))));
+}
+
+/** r20b (B4): parceria de TV com cota, caixa livre e motivo do bloqueio visíveis antes do clique (mesma cotação que o motor revalida). */
+function partnerRow20(s: GameState, fr: (typeof FR18)[number]): HTMLElement {
+  const q = partnerQuote18(s);
+  const why = q.block ? T(q.block) : '';
+  const b = h('button', { class: 'btn small', 'aria-disabled': q.block ? 'true' : null, title: why, 'aria-describedby': 'tv18-partner-q',
+    onclick: () => say(becomePartner18(s), l('Parceria fechada: o vencedor assina com você.', 'Partnership closed: the winner signs with you.')) },
+    fmtLs(l('Ser o selo parceiro ({c})', 'Become the partner label ({c})'), { c: $(partnerFee18(s, fr)) }));
+  return h('div', null,
+    row(b, muted(l('Contrato do formato: 360 (20%), royalty 12%, adiantamento pela metade.', 'Format deal: 360 (20%), 12% royalty, half advance.'))),
+    h('p', { id: 'tv18-partner-q', class: `small ${q.block ? 'bad' : 'muted'}` },
+      fmtLs(l('Cota {c} · caixa {k} · reservado em ofertas {r} · caixa livre {f}', 'Fee {c} · cash {k} · reserved for offers {r} · free cash {f}'), { c: $(q.cost), k: $(q.cash), r: $(q.reserved), f: $(q.free) }),
+      q.block ? ` — ${why}` : ''));
 }
