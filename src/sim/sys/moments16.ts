@@ -63,7 +63,7 @@ export function momentOfMemory16(kind: string, year: number): Moment16 | null {
 /** Grandes momentos furam o limite mensal; os menores entram no máximo 2 por mês. */
 const MAJOR = new Set(['award', 'award2', 'nat_award', 'festival_tv', 'contest_win', 'hall_of_fame', 'ai_award', 'signed']);
 /** Já têm cena interativa própria (entrevista, rádio): só guardamos para rever. */
-const OWN_SCENE = new Set(['interview', 'radio_visit', 'renewal']);
+const OWN_SCENE = new Set(['interview', 'radio_visit', 'renewal', 'hall_of_fame']); // r19: a posse no Hall já tem cena própria
 /** Cena própria do mesmo assunto na semana (evita duas janelas seguidas). */
 const SAME: Record<string, string> = { award: 'awards', hall_of_fame: 'hall', festival: 'festivalDay', festival8: 'festivalDay', festival9: 'festivalDay' };
 

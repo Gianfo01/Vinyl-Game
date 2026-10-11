@@ -82,7 +82,7 @@ function notesOf(s: GameState, cs: Cutscene | null, year: number): Held19['notes
 }
 
 /** Noite dos Gramófonos (fevereiro, ano homenageado = ano anterior): sorteio, show, cena e (talvez) o anúncio. */
-function gramoNight(s: GameState, r: Parameters<typeof yearlyAwards>[1]): void {
+export function gramoNight19(s: GameState, r: Parameters<typeof yearlyAwards>[1]): void {
   if (s.month !== CEREMONY_MONTH || s.year < GRAMO_START) return;
   const E = s.year - 1, st = scn19(s), noms = cer8(s).noms;
   if (!noms || noms.year !== E || st.done.includes(E)) return;
@@ -179,7 +179,7 @@ registerSimHook('week', 'scenes19', (s) => {
 registerSimHook('month', 'scenes19', (s, r) => {
   yearlyAwards2(s, r); // crítica, indústria, ao vivo e regionais: cada um no seu mês e desde a fundação
   if (s.month === ECHOES_CAL19.month) hallOfFameYear(s); // Hall dos Ecos: abril, desde 1986
-  gramoNight(s, r);
+  gramoNight19(s, r);
   const st = scn19(s);
   if (st.missed > 0) {
     if (LIVE19.on) notify(s, fmtL(l('{n} cenas menores deste período foram direto para o álbum (Cinemateca) para não atrasar o jogo.', '{n} minor scenes from this period went straight to the album (Cinemateca) so the game is not held up.'), { n: st.missed }), 'info');

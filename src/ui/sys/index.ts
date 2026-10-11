@@ -194,4 +194,5 @@ import './live19';
 // Rodada 19 (onda 3, T3): Lendas › Espólio (herdeiros, masters, arena digital) e Estúdio › Equipamento (endossos, ícones).
 import './afterlife19';
 import './gear19';
+import './scenes19'; // r19 cenas: resultado da cerimônia só depois de vista
 import './core18';
