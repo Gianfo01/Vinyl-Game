@@ -33,6 +33,7 @@ export const STREAMS19: Record<string, string> = {
   revival19: 'sucesso tardio: usos em mídia, decisão de NPC, vendas da onda (revival19)',
   ses19: 'músicos de estúdio: hits alheios, documentários, processos e carreiras (session19)',
   wr19: 'compositores: ghostwriters, ofertas de canções, plágio (writers19)',
+  links19a: 'ligações R19 grupo A: tragédia em festival lotado (links19a)',
 };
 
 export const perSystem19 = (s: GameState): boolean => (s.rngVersion ?? 0) >= RNG_VERSION19;

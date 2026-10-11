@@ -35,7 +35,7 @@ export type Fx18 = 'spot' | 'confetti' | 'flash' | 'flicker' | 'rain' | 'snow' |
 export type Prop18 = 'carpet' | 'rope' | 'podium' | 'trophy' | 'cameras' | 'protest' | 'screen' | 'casket' | 'flowers' | 'candles' | 'pen' | 'gavel'
   | 'chart' | 'banner' | 'glass' | 'lightsticks' | 'umbrellas' | 'table' | 'mic' | 'barrier';
 export type Kind18 = 'awards' | 'number1' | 'signing' | 'soldout' | 'premiere' | 'verdict' | 'funeral' | 'musicshow' | 'festival' | 'hall'
-  | 'hologram' | 'avatar' | 'ghost' | 'tribute';
+  | 'hologram' | 'avatar' | 'ghost' | 'tribute' | 'echo';
 
 export interface Actor18 {
   pid?: string; seed?: string; name?: string;
@@ -437,6 +437,15 @@ export function momentBoard18(s: GameState, sh: Shot18): Board18 {
         caption: backl >= 60 ? l('Metade aplaude, metade acha macabro — a polêmica toma as manchetes.', 'Half applaud, half find it ghoulish — the controversy takes the headlines.') : l('Aplausos para alguém que não pode ouvir.', 'Applause for someone who cannot hear it.'), sub: sh.text, ms: 3400 });
       break;
     }
+    case 'echo': { // r19 (11.7): eco forte de decisão vira cena curta "você escolheu X…"
+      const tone = String(sh.d?.tone ?? 'mixed');
+      fr.push({ id: 'then', place: 'boardroom', ...base, actors: band('stand', [[128, 110]]), props: [], fx: [], crowd: { n: 0, mood: 'quiet' }, dark: 0.35,
+        caption: F(l('Você escolheu "{o}"…', 'You chose "{o}"…'), { o: String(sh.d?.o ?? '') }), ms: 2600 });
+      fr.push({ id: 'now', place: tone === 'bad' ? 'street' : 'backstage', ...base, actors: band('stand', [[128, 110]]), props: tone === 'bad' ? ['cameras'] : [], fx: tone === 'good' ? ['lights'] : tone === 'bad' ? ['flash'] : [],
+        crowd: { n: tone === 'bad' ? 30 : 12, mood: tone === 'bad' ? 'boo' : tone === 'good' ? 'cheer' : 'mixed' }, caption: sh.text ?? l('…e isso voltou.', '…and it came back.'), ms: 3200 });
+      title = F(l('Eco: {o}', 'Echo: {o}'), { o: String(sh.d?.o ?? '') });
+      break;
+    }
     default:
       fr.push({ id: 'one', place: 'street', ...base, actors: band('stand', [[128, 110]]), props: [], fx: [], crowd: crowdOf(cr), caption: sh.text ?? l('—', '—'), ms: 3000 });
   }
@@ -526,6 +535,8 @@ registerSimHook('week', 'cine18', (s) => {
 export const awOfCs18 = (s: GameState, cs: { id: string; data: Record<string, unknown> }): Aw18 => ceremonyOfCutscene19(s, cs); // r19: alias de awards19
 export const shot18 = (s: GameState, id: string): Shot18 | undefined => cine18(s).log.find((x) => x.id === id);
 
+/** r19 (11.7): a roupa no tapete vermelho também agenda um eco (decide18) — preenchido por links19a. */
+export const FIT19: { after?: (s: GameState, key: string, fit: Fit18, actId?: string) => void } = {};
 /** Decisão de imagem no tapete vermelho: muda o figurino em todos os quadros e tem consequência. */
 export function chooseFit18(s: GameState, key: string, fit: Fit18, actId?: string): { out: L; lines: L[] } | null {
   const st = cine18(s);
@@ -538,5 +549,6 @@ export function chooseFit18(s: GameState, key: string, fit: Fit18, actId?: strin
   else if (fit === 'bold') { e.fame(1.5).haters(300).photo(l('O figurino que parou o tapete vermelho', 'The outfit that stopped the red carpet')); out = l('O figurino vira o assunto da noite — para o bem e para o mal.', 'The outfit becomes the talk of the night — for better and worse.'); }
   else if (fit === 'statement') { e.fans(120, 0).rep('artistic', 2); e.news(F(l('{a} usa roupa-manifesto no tapete vermelho.', '{a} wears a statement outfit on the red carpet.'), { a: a?.name ?? s.config.companyName }), 40, ['statement', 'awards'], 'public', 'statement'); out = l('A mensagem na roupa roda o mundo; nem todos gostam.', 'The message on the outfit goes around the world; not everyone likes it.'); }
   else { e.cash(1500 + (a?.fame ?? 10) * 60, 'designer loan').rep('artistic', -1); out = l('A grife paga e posta; a crítica chama de "vitrine".', 'The designer pays and posts; critics call it a "shop window".'); }
+  FIT19.after?.(s, key, fit, a?.id);
   return { out, lines: e.lines };
 }

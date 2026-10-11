@@ -38,7 +38,6 @@ export const WHITELIST19: Record<string, string> = {
   consent: 'consentimento de imagem (image17): o contrato de imagem já carrega o efeito',
   review: 'crítica de mídia (media17): a nota já entra em critic/apelo do lançamento',
   career: 'troca de carreira em mídia (media18): efeito aplicado no próprio media18',
-  video_banned: 'clipe banido (media18): efeito local; ouvinte previsto em radio/censura (Frente 1)',
   merch_drop: 'lançamento de merch (merch17): receita já no ledger; sem reação de terceiros',
   street_team: 'equipe de rua (fans18): efeito local nos fãs',
   playlist: 'playlist editorial (stream18): efeito local no streaming',
@@ -47,7 +46,6 @@ export const WHITELIST19: Record<string, string> = {
   release_jail: 'saída da prisão (crime17): crônica; a pessoa volta pelo próprio crime17',
   piracy: 'pirataria (crime17): efeito no mercado aplicado no crime17',
   road_fight: 'briga na estrada (live18): estresse e relações aplicados no live18',
-  crowd_incident: 'incidente com público (live18): processo/lei previstos na Frente 1 (fest18 × live18 × crime)',
   succession: 'sucessão (saga18): consumida pela própria saga e pela crônica',
   dispute: 'disputa de espólio (post18): efeito no próprio espólio',
   termination: 'rescisão (rights18): direitos voltam no próprio rights18',
@@ -107,6 +105,17 @@ export const RESERVED19: Record<string, { sys: string; to: string[] }> = {
   gear_endorse: { sys: 'gear19', to: ['ledger18', 'identity'] },
   signature_model: { sys: 'gear19', to: ['deals18', 'quality18'] },
   icon_instrument: { sys: 'gear19', to: ['relics18', 'post18'] },
+};
+
+/** R19 Frente 1 (ligações, grupo A + 11.7) — tipos novos: quem emite e quem ouve (sys/links19a.ts). */
+export const LINKFACTS19: Record<string, { from: string; to: string[] }> = {
+  estate_rights: { from: 'neural.ts (holograma, cofre, voz IA) via links19a', to: ['links19a:estate (post18 espólio, herdeiros, scandal17, manchete)'] },
+  release_delayed: { from: 'supply18 (fila da fábrica) via links19a', to: ['links19a:delay (hype12, radio18, calendar19)'] },
+  banned_song: { from: 'society18 (censura) via links19a', to: ['links19a:banned (pirataria world4, rádio pirata hype12, fama16)'] },
+  fan_region: { from: 'fandom19 (fãs por região) via links19a', to: ['links19a:region (demanda de shows, circuitos18)'] },
+  crowd_incident: { from: 'live18, fest12 via links19a', to: ['links19a:crowd (processo, lei de segurança, live18 normas)'] },
+  video_banned: { from: 'media18', to: ['links19a:video (pirataria e culto)'] },
+  echo: { from: 'decide18', to: ['links19a:echo (cena curta cine18)'] },
 };
 
 export interface FactRow19 { kind: string; listeners: string[]; wildcard: string[]; readers: string[]; chron: boolean; why?: string }

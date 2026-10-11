@@ -104,7 +104,7 @@ VIEW17_X.push((s, key) => {
 const KIND_NAME: Record<Kind18, L> = {
   awards: l('Premiação', 'Awards'), number1: l('Nº 1', 'No. 1'), signing: l('Assinatura', 'Signing'), soldout: l('Casa lotada', 'Sold out'), premiere: l('Estreia', 'Premiere'),
   verdict: l('Veredito', 'Verdict'), funeral: l('Funeral', 'Funeral'), musicshow: l('Programa musical', 'Music show'), festival: l('Festival', 'Festival'), hall: l('Hall da Fama', 'Hall of Fame'),
-  hologram: l('Holograma', 'Hologram'), avatar: l('Avatares', 'Avatars'), ghost: l('Ilusão de palco', 'Stage illusion'), tribute: l('Tributo', 'Tribute'),
+  hologram: l('Holograma', 'Hologram'), avatar: l('Avatares', 'Avatars'), ghost: l('Ilusão de palco', 'Stage illusion'), tribute: l('Tributo', 'Tribute'), echo: l('Eco de decisão', 'Decision echo'),
 };
 export function play18(s: GameState, b: Board18): void {
   openScene(b.title, (close) => h('div', { class: 'scene-frame c18-scene' }, boardView18(s, b),

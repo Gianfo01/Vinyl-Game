@@ -273,6 +273,9 @@ export function setPlant18(s: GameState, prId: string, m: Material, plantId: str
 export function setPref18(s: GameState, m: Material, plantId: string): void { if (plantId) sup18(s).pref[m] = plantId; else delete sup18(s).pref[m]; }
 export function setLatePol18(s: GameState, p: LatePol): void { sup18(s).late = p; }
 
+/** r19 (links19a, I6): atraso da fábrica avisa os outros sistemas (hype, rádio, calendário) — preenchido por links19a. */
+export const SUP19: { late?: (s: GameState, o: { id: string; act: string; title: string; weeks: number; how: 'postpone' | 'launch'; w: number }) => void } = {};
+
 /** Resolve um atraso: adiar a data, pagar prioridade ou lançar assim mesmo. */
 export function resolveLate18(s: GameState, prId: string, how: 'postpone' | 'rush' | 'launch'): L {
   const pr = s.pendingReleases.find((x) => x.id === prId);
@@ -296,6 +299,7 @@ export function resolveLate18(s: GameState, prId: string, how: 'postpone' | 'rus
     const a = s.acts[pr.actId];
     if (a) a.momentum = clamp(a.momentum - Math.min(6, 1 + lt.weeks / 3), 0, 100);
     log(s, fmtL(l('"{t}" adiado {d} semanas para esperar a fábrica.', '"{t}" pushed back {d} weeks to wait for the plant.'), { t: pr.title, d: lt.weeks }));
+    SUP19.late?.(s, { id: pr.id, act: pr.actId, title: pr.title, weeks: lt.weeks, how: 'postpone', w: pr.week });
     return fmtL(l('Nova data: semana {w}. Os fãs reclamam um pouco, mas o disco chega às lojas no dia.', 'New date: week {w}. Fans grumble a little, but the record hits stores on the day.'), { w: pr.week });
   }
   b.asked = true;
@@ -403,6 +407,7 @@ registerSimHook('launch', 'supply18', (s, _r, a) => {
     log(s, txt);
     emitFact(s, { kind: 'release', actors: ['player', rel.actId], severity: 20 + Math.min(30, late * 2), visibility: (act?.fame ?? 0) >= 40 ? 'public' : 'rumor', tags: ['supply', 'late', 'release'], text: txt, src: 'supply18' });
     if (act) act.trust = clamp(act.trust - Math.min(6, 1 + late / 3), 0, 100);
+    SUP19.late?.(s, { id: rel.id, act: rel.actId, title: rel.title, weeks: late, how: 'launch', w: s.week + late });
   }
 });
 

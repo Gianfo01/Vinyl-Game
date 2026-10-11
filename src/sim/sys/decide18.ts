@@ -109,6 +109,7 @@ export function fire18(s: GameState, e: Echo18): { text: L; tone: Tone18 | 'miss
   emitFact(s, {
     kind: 'echo', actors: [e.c.person ? `p:${e.c.person}` : e.c.act ? String(e.c.act) : 'player'], severity: tone === 'bad' ? 35 : 20,
     visibility: tone === 'bad' ? 'rumor' : 'public', tags: ['echo18', String(tone), e.k], text, src: 'decide18',
+    data: { o: e.o.pt, oe: e.o.en, n: f.lines.length, thr: threadOf(e) }, // r19 (11.7): força do eco → cena curta (links19a)
   });
   return { text, tone };
 }
