@@ -13,6 +13,20 @@ import { r18 } from '../src/sim/sys/rights18';
 import { FESTIVALS } from '../src/data/catalog';
 import { editionOf, festFee, pitchOdds8 } from '../src/sim/sys/fests8';
 import { advanceMonth } from '../src/sim/tick';
+import { careers } from '../src/sim/sys/careers12';
+import { c12 } from '../src/sim/sys/manager12';
+import { cockpit18 } from '../src/sim/sys/saga18';
+import { mainCareer19 } from '../src/sim/sys/prof19';
+import { quickList19 } from '../src/ui/sys/prof19';
+import { found12, muOf } from '../src/sim/sys/fest12';
+import { liveOf } from '../src/sim/sys/live';
+import { foundCost } from '../src/sim/sys/ventures9';
+import { CONFLICTS19 } from '../src/sim/conflicts19';
+import { autoResolve19, conflicts19, delegateMonth, dlg19, folded19, NOTE_CAP19 } from '../src/sim/sys/budget19';
+import { storyteller } from '../src/sim/events';
+import { notify } from '../src/sim/util';
+import { pol18 } from '../src/sim/sys/policy18';
+import { l } from '../src/data/world';
 
 /** Rng que devolve sempre u: "aceitou" tem de ser exatamente u < chance mostrada. */
 class FixedRng extends Rng { constructor(private u: number) { super([1, 2, 3, 4]); } next(): number { return this.u; } }
@@ -88,5 +102,95 @@ describe('r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorte
     expect(counterOdds18(s, o!, 'master').p).toBeLessThan(counterOdds18(s, o!, 'audit').p);
     check('artist.counter', s, asks.map((k) => [o!.id, k]));
     expect(a18(s).offers.length).toBeGreaterThan(0);
+  });
+});
+
+const mgGame = (seed = 'r19bmg') => {
+  const s = createGame(defaultConfig(seed, { startYear: 1975, careers: { main: ['manager'], origin: 'roadie', ambition: 'legacy' } } as never));
+  careers(s);
+  return s;
+};
+const addClients = (s: GameState, n: number, crisis = false) => {
+  for (const a of mgCandidates(s).slice(0, n)) ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0, ...(crisis ? { crisis: { k: 'scandal' as const, w: s.week } } : {}) });
+};
+
+describe('r19-fix-b §4: cockpit por profissão', () => {
+  it('empresário: "Hoje" traz crises e mandato vencendo; atalhos e humor são de clientes', () => {
+    const s = mgGame();
+    addClients(s, 2, true);
+    const id = ventures(s).mg.clients[1].actId;
+    c12(s, id).mandate.until = s.week + 5;
+    const c = cockpit18(s);
+    const txt = c.now.map((q) => q.t.pt).join(' | ');
+    expect(txt).toMatch(/Crise com/);
+    expect(txt).toMatch(/Mandato de .* vence em 5 semanas/);
+    expect(c.works.some((q) => /Satisfação média/.test(q.t.pt))).toBe(true);
+    const q = quickList19(s).map((x) => x[2].pt);
+    expect(q).toContain('Clientes'); expect(q).toContain('Prospectar'); expect(q).not.toContain('Contratar');
+    expect(mainCareer19(s)).toBe('manager');
+  });
+  it('selo continua com os atalhos clássicos; festival mostra edição e headliner faltando', () => {
+    const s = game();
+    expect(quickList19(s).map((x) => x[2].pt)).toContain('Contratar');
+    const f = createGame(defaultConfig('r19bfe', { startYear: 1990, careers: { main: ['festival'], origin: 'roadie', ambition: 'legacy' } } as never));
+    careers(f);
+    f.player.cash += foundCost(f, 'festival') * 2;
+    const fx = found12(f, 'label', { month: (f.month + 3) % 12, ident: 'discovery' });
+    expect('pt' in fx ? fx.pt : '').toBe('');
+    const own = liveOf(f).fests[0];
+    own.month = (f.month + 3) % 12; own.nextYear = f.year + (f.month + 3 >= 12 ? 1 : 0);
+    expect(muOf(f, own)).toBe(3);
+    const c = cockpit18(f);
+    expect(c.works.some((q) => /edição em 3/.test(q.t.pt))).toBe(true);
+    expect(c.now.some((q) => /sem headliner/.test(q.t.pt))).toBe(true);
+    expect(quickList19(f).map((x) => x[2].pt)).toContain('Line-up');
+  });
+});
+
+describe('r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do mês, delegação', () => {
+  it('crises de clientes contam no orçamento: cheio, o narrador não abre cartões novos', () => {
+    const s = mgGame('r19bconf');
+    expect(CONFLICTS19.full(s)).toBe(false);
+    addClients(s, 8, true);
+    const c = conflicts19(s);
+    expect(c.n).toBeGreaterThanOrEqual(c.cap);
+    expect(CONFLICTS19.full(s)).toBe(true);
+    const d0 = s.decisions.length;
+    for (let i = 0; i < 6; i++) storyteller(s, new Rng([9, 8, 7, i + 1]), i);
+    expect(s.decisions.length).toBe(d0);
+  });
+  it('autoResolve19 lista os cartões da mesa com a resposta padrão', () => {
+    const s = game(1975, 'r19bauto');
+    for (let i = 0; i < 4 && !s.decisions.length; i++) advanceMonth(s);
+    if (!s.decisions.length) s.decisions.push({ id: 'dx', eventId: 'x', cat: 'people', title: l('Teste', 'Test'), text: l('t', 't'), options: [{ id: 'a', label: l('A', 'A') }, { id: 'b', label: l('Ignorar', 'Ignore') }], ctx: {}, week: s.week, defaultOption: 'b', tags: [] } as never);
+    s.clock.opened = false;
+    const xs = autoResolve19(s, 'month');
+    expect(xs.length).toBe(s.decisions.length);
+    const d = s.decisions[0];
+    expect(xs[0].def.pt).toBe(d.options.find((o) => o.id === d.defaultOption)!.label.pt);
+    expect(autoResolve19(s, 'week').length).toBe(s.decisions.filter((x) => Number(x.ctx.dl18 ?? 0) && Number(x.ctx.dl18) <= s.week + 1).length);
+  });
+  it('avisos menores além da cota viram um "Resumo do mês"; ruins nunca são agrupados', () => {
+    const s = game(1975, 'r19bnote');
+    const n0 = s.notifications.length;
+    for (let i = 0; i < 30; i++) notify(s, l(`Aviso ${i}`, `Notice ${i}`), 'info');
+    for (let i = 0; i < 3; i++) notify(s, l(`Ruim ${i}`, `Bad ${i}`), 'bad');
+    const fresh = s.notifications.slice(n0);
+    expect(fresh.length).toBeLessThanOrEqual(NOTE_CAP19 + 1 + 3);
+    expect(fresh.filter((n) => n.kind === 'bad').length).toBe(3);
+    expect(fresh.some((n) => n.text.pt.startsWith('Resumo do mês'))).toBe(true);
+    expect(folded19(s).length).toBeGreaterThanOrEqual(30 - NOTE_CAP19);
+  });
+  it('delegação do empresário renova mandato ou sobe exceção (fato deleg_exc → Caixa)', () => {
+    const s = mgGame('r19bdlg');
+    addClients(s, 2);
+    const [a, b] = ventures(s).mg.clients.map((c) => c.actId);
+    c12(s, a).mandate.until = s.week + 4; c12(s, a).trust = 95;
+    c12(s, b).mandate.until = s.week + 4; c12(s, b).trust = 10;
+    dlg19(s).mg = true;
+    delegateMonth(s);
+    expect(pol18(s).exc.some((e) => /abaixo do mínimo/.test(e.t.pt))).toBe(true);
+    expect(dlg19(s).n.exc).toBeGreaterThan(0);
+    expect(c12(s, a).mandate.until > s.week + 4 || pol18(s).exc.some((e) => e.act === a)).toBe(true);
   });
 });

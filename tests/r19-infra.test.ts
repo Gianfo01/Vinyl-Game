@@ -162,6 +162,7 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
 /** Tipos que não aparecem com segurança em bots curtos (1 ano), com o motivo (levantamento: 6 bots de 3 anos, 1889–2015,
  *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
 const INBOX_RARE19: Record<string, string> = {
+  dlg19: 'budget19: exceção da equipe delegada por carreira — só com delegação de empresário/festival/estúdio ligada (desligada por padrão)',
   m19_call: 'money19: banco chama a dívida só com empréstimo e covenant quebrado (3 trimestres no prejuízo ou dívida > receita de 12 meses)',
   m19_auc: 'money19: leilão só quando um selo NPC quebra (raro em bots curtos)',
   af19_suit: 'espólio processa pelos masters: exige morte de artista do seu elenco com masters retidos (raro em bots curtos)',

@@ -52,6 +52,7 @@ import { personRoute16, searchRoute16 } from './route16';
 import { ALIAS17, CAREER_PAGE17, ICON17, KEY17, areaOfKey17, careerOfPage17, groupOf17, navGroups17, pushRecent17, resolve17, sectionOf17, togglePin17 } from './nav17';
 import { careerPages17 } from './sys/careerpages17';
 import { icon17 } from './pixel/icons17';
+import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
 import './nav17.css';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
@@ -170,10 +171,11 @@ try { const j = JSON.parse(localStorage.getItem('vtn17.nav') ?? '{}') as Partial
 const save17 = () => { try { localStorage.setItem('vtn17.nav', JSON.stringify(store17)); } catch { /* sem armazenamento */ } };
 function togglePin(id: string): void { store17.pins = togglePin17(store17.pins, id); save17(); toast(t(store17.pins.includes(id) ? l('Página fixada no topo do menu.', 'Page pinned to the top of the menu.') : l('Página desafixada.', 'Page unpinned.')), 'info'); render(); }
 
-function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void {
+function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 = false): void {
   const g = store.game;
   if (!g) return;
   if (g.ended && !g.flags.sandbox) return endScreen();
+  if (!ok19 && askAdvance19(g, mode, () => doAdvance(mode, true))) return; // r19 B.5: cartões que vão valer o padrão
   if (!g.config.ironman) store.undoSnapshot = JSON.stringify(g);
   const before = g.notifications.length;
   const noteWeek = g.week;
@@ -469,6 +471,7 @@ function settings(): void {
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
     ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
     h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
+    settings19(), // r19 B.5
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),

@@ -47,7 +47,8 @@ export const dlg19 = (s: GameState): Dlg19 => bud19(s).dlg;
 export interface Conf19 { n: number; cap: number; parts: [L, number][] }
 const memo = new WeakMap<GameState, { k: string; v: Conf19 }>();
 export function conflicts19(s: GameState): Conf19 {
-  const k = `${s.week}|${s.decisions.length}`;
+  const mg = ventures(s).mg.clients;
+  const k = `${s.week}|${s.decisions.length}|${mg.length}|${mg.filter((c) => c.crisis).length}|${liveOf(s).fests.length}|${dm18(s).th.length}|${activeFeuds18(s).length}`;
   const c = memo.get(s);
   if (c && c.k === k) return c.v;
   const mine = new Set(playerActs(s));
@@ -57,7 +58,7 @@ export function conflicts19(s: GameState): Conf19 {
   add(l('Fios do Mestre com você', 'DM threads involving you'), dm18(s).th.filter((t) => !t.done && t.mine).length);
   add(l('Rixas dos seus artistas', 'Your acts\' feuds'), activeFeuds18(s).filter((f) => mine.has(f.a) || mine.has(f.b)).length);
   add(l('Consequências ruins chegando (½ cada)', 'Bad consequences coming (½ each)'), pending18(s).filter((x) => x.tone === 'bad' && x.from - s.week <= 8).length * 0.5);
-  if (ventures(s).mg.clients.length) { const q = managerQ19(s); add(l('Crises e mandatos de clientes', 'Client crises and mandates'), q.now.length + q.threats.length * 0.5); }
+  if (mg.length) { const q = managerQ19(s); add(l('Crises e mandatos de clientes', 'Client crises and mandates'), q.now.length + q.threats.length * 0.5); }
   if (liveOf(s).fests.length) { const q = festivalQ19(s); add(l('Apertos do festival', 'Festival squeezes'), q.now.length + q.threats.length * 0.5); }
   const extra = Math.max(0, careers(s).active.length - 1);
   const v: Conf19 = { n: parts.reduce((t, p) => t + p[1], 0), cap: 7 + Math.min(2, extra), parts };
@@ -136,7 +137,7 @@ onFact('deleg_exc', (s, f) => {
   pushInbox18(s, 'dlg19', { from: 'staff', subject: l('A equipe precisa de você', 'Staff needs you'), body: f.text, tone: 'bad' });
 }, 'budget19:deleg');
 
-function delegateMonth(s: GameState): void {
+export function delegateMonth(s: GameState): void {
   const D = dlg19(s);
   if (D.mg) {
     const r = rng19(s, 'dlg19', () => rngOf(s));
