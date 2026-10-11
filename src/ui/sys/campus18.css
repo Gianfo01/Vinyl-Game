@@ -77,3 +77,4 @@
   .w19-pop { z-index: 60; position: fixed !important; left: 8px !important; right: 8px; width: auto !important; top: auto !important; bottom: 8px !important; max-height: 62vh; }
   .w19-legend { left: 8px; right: 8px; max-width: none; }
 }
+.c18-thumbbtn { max-width: 640px; margin: 0 auto; }
