@@ -87,7 +87,9 @@ describe('gestão de artistas', () => {
     const mg = ventures(s).mg;
     mg.rep = 100;
     const r = rngOf(s);
-    const a = mgCandidates(s).find((x) => x.owner && x.owner !== 'player') ?? mgCandidates(s)[0];
+    // r19: candidatos realistas incluem veteranos do catálogo com fim de carreira roteirizado (ex.: aposentadoria no mês seguinte): usa o de carreira mais recente
+    const cands = mgCandidates(s).filter((x) => x.owner && x.owner !== 'player');
+    const a = [...cands].sort((x, y) => (y.formed ?? 0) - (x.formed ?? 0))[0] ?? mgCandidates(s)[0];
     let ok = false;
     for (let i = 0; i < 30 && !ok; i++) ok = pitchClient(s, r, a.id, 0.1).ok;
     expect(ok).toBe(true);

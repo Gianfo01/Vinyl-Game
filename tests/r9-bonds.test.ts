@@ -86,7 +86,9 @@ describe('movimentos', () => {
     const names = members(x).map((a) => s.acts[a]?.name);
     expect(names).toContain('Caetano Veloso');
     expect(tierOf(s, s.acts[x.founders[0]].id)?.tier).toBe('founder');
-    while (s.year < 1970 || s.month < 2) advanceMonth(s);
+    // caixa garantido: o teste é sobre o movimento, não a economia (falir parava o relógio e o laço nunca terminava)
+    while ((s.year < 1970 || s.month < 2) && !s.ended) { s.player.cash = Math.max(s.player.cash, 1e9); advanceMonth(s); }
+    expect(s.ended).toBeFalsy();
     expect(x.phase).toBe('death');
     expect(x.end?.c).toBe('censorship');
   });
