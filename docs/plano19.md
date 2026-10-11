@@ -228,3 +228,29 @@ Leste Europeu (+55), França/Alemanha (+65), Oceania (+45), Nórdicos (+45), ano
 **Regras**: item não confirmado entra como `exact:false` (não aparece no modo "Vida real exata" até ser conferido); pessoas reais nunca
 como assassinas ou vítimas; casos sensíveis só como cena/contexto; cada dado novo precisa de visual (pixel art) e de um consumidor nos sistemas.
 **Encaixe nas ondas**: WP0 na Onda 1; WP-A a WP-G na Onda 2 (junto da malha de ligações, já que alimentam os sistemas 9.x); WP-H a WP-J na Onda 3.
+
+---
+
+## Frente 11 — Acabamento da R18 (revisão da versão final; detalhes em `docs/revisao18.md`)
+
+Itens que **não estavam** no plano e que a revisão encontrou medindo partidas. Entram cedo porque várias frentes dependem deles.
+
+| # | Problema medido | Correção | Liga com | Onda |
+|---|---|---|---|---|
+| 11.1 | 13.598 fatos `chart` em 40 anos afogam o anel de 600; `relic`, `situation`, `rise`, `masterwork`, `hologram`, `echo` sem ouvinte | `chart` só em marcos; anel por gravidade e tipo; ouvintes reais (relíquia → herdeiros/leilão; holograma e eco → cenas) | Frente 0.2, fatos, cine18, heirs8 | 1 |
+| 11.2 | Ecos em só 6% das opções (82 de 1315); famílias r11/w4/org12/era8 sem nenhum | Piso de cobertura testado; eco padrão pelo tom da opção; ecos escritos para os 40 eventos mais sorteados | decide18, Frente 1 | 2 |
+| 11.3 | Caixa barulhenta: ~65 mensagens/ano; artista recebe ~19 ofertas/ano | Boletim semanal agrupado; teto de ofertas abertas e reofertas; orçamento por categoria | inbox18, artist18, Frente 8 (orçamento de notificações) | 1 |
+| 11.4 | Bot simples quebra em 100% das partidas | Ferramentas de equilíbrio usam o bot que joga de verdade (`simulatePlayer`) por padrão | Frente 0.3, todas as metas de equilíbrio | 1 |
+| 11.5 | Era 1889 isolada de decisões, Cockpit e Conselheiro | Card "A era" no Cockpit, dicas do Conselheiro e ecos de época (patentes, goma-laca, vaudeville) | era1889, home18, decide18, Frente 2 | 2 |
+| 11.6 | Contratos de artista anacrônicos em 1889 ("royalty 18%", "master") | Pacote de contrato por era: cachê por sessão antes de ~1903, sem "master" antes de ~1925 | artist18, contracts18, rights18, Frente 3 | 2 |
+| 11.7 | Ecos e cenas não se falam | Eco forte abre cena curta ("você escolheu X"); roupa no tapete vermelho gera eco | decide18, cine18 | 2 |
+| 11.8 | Espólio desligado dos contratos de artista e sociedades | Rescisão por morte; master volta aos herdeiros; sociedade paga herdeiro; projeto póstumo precisa do selo dono | post18, artist18, shared18, heirs8, Frente 4 | 3 |
+| 11.9 | 25 de 74 tipos de mensagem nunca aparecem | Teste de cobertura por era e carreira, com lista justificada de exceções | inbox18, Frente 0.2 | 1 |
+| 11.10 | "Nosso mundo" sem decisões nem ecos | Obra atrasada vira carta com ecos; investimento melhora qualidade/descoberta; desastre gera carta de seguro (liga com M17 seguro) | campus18, decide18, quality18, discover18 | 2 |
+| 11.11 | Habilidade potencial só pela metade nas ofertas | Adiantamento e contrato de desenvolvimento pela PA e pelo olho do A&R; gravadora NPC disputa o mesmo jovem | ability18, artist18, discover18, rivalmind18 | 2 |
+| 11.12 | Mesa com 11 seções + 6 cards do Cockpit | Pesos, condições de exibição e recolher persistente | home18, desk, Frente 8 | 1 |
+| 11.13 | Sem aviso de nova era nem metas de abertura por época | Tela de transição de era (1925, 1948, 1955…) e metas de início por época, inclusive 1889 | eras, milestones, Frente 2 e 8 | 3 |
+| 11.14 | Fim de partida seco | Epitáfio da partida, herança entre partidas, conquistas por cadeia de história (as 6 cadeias da Frente 9) | paths18, review18, Frente 9 | 3 |
+| 11.15 | Carta recusada some; o pulso não explica a causa | Eco descartado vira mensagem com prazo; ▲▼ do pulso abre a cadeia de causas | decide18, explain18, home18 | 1 |
+
+Também entram (menor prioridade): acessibilidade, dificuldade assistida/modo história, retrospectiva por década, suíte de integração da R18, cenas para iniciativas de NPC e para hologramas de rivais.
