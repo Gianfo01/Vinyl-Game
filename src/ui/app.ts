@@ -34,10 +34,13 @@ import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
 import { copyText, exportSaveText, importSaveText } from './store';
-import { saveManagerModal17 } from './saves17';
+import { saveErrText20, saveManagerModal17 } from './saves17';
+import { saveChip20 } from './savechip20';
+import { noteTurnErr20 } from './savehealth20';
+import { tx20 } from '../core/save20';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
-import { AFTER_ADVANCE, EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
+import { AFTER_ADVANCE, EXTRA_AREAS, areaView20, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
 import { UX19UI } from './hooks19'; // r19 ux19: divulgação progressiva, rodapé do menu e fim de partida
 import { openLabelStory } from './sys/story12';
 import './sys';
@@ -180,21 +183,36 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
   if (!g) return;
   if (g.ended && !g.flags.sandbox) return endScreen();
   if (!ok19 && askAdvance19(g, mode, () => doAdvance(mode, true))) return; // r19 B.5: cartões que vão valer o padrão
-  if (!g.config.ironman) store.undoSnapshot = JSON.stringify(g);
+  // r20 (B27): instantâneo SEMPRE (também no ironman — isto é proteção contra erro de software, não "desfazer");
+  // se qualquer gancho lançar no meio do avanço, o jogo meio-mutado é descartado e nada é gravado.
+  const snap0 = JSON.stringify(g);
+  const prevUndo = store.undoSnapshot;
+  if (!g.config.ironman) store.undoSnapshot = snap0;
   const before = g.notifications.length;
   const noteWeek = g.week;
   // rodada 8: avanços longos terminam num resumo agrupado em vez de uma chuva de avisos
-  let digest: { d: Digest; why?: L } | null = null;
-  let res: { stopReason?: L } = {};
-  if (mode === 'until') {
-    const u = advanceUntil(g);
-    digest = { d: u.digest, why: u.reason };
-  } else if (mode === 'quarter' || mode === 'event') {
-    const snap = digestStart(g);
-    const r0 = advance(g, mode);
-    res = r0;
-    digest = { d: digestEnd(g, snap, r0.months), why: r0.stopReason };
-  } else res = advance(g, mode);
+  let digest = null as { d: Digest; why?: L } | null;
+  let res = {} as { stopReason?: L };
+  const tx = tx20(g, () => {
+    if (mode === 'until') {
+      const u = advanceUntil(g);
+      digest = { d: u.digest, why: u.reason };
+    } else if (mode === 'quarter' || mode === 'event') {
+      const snap = digestStart(g);
+      const r0 = advance(g, mode);
+      res = r0;
+      digest = { d: digestEnd(g, snap, r0.months), why: r0.stopReason };
+    } else res = advance(g, mode);
+  }, (sn) => migrate(JSON.parse(sn)), snap0);
+  if (!tx.ok) {
+    store.game = tx.g;
+    store.undoSnapshot = prevUndo;
+    noteTurnErr20(String((tx.err as Error)?.message ?? tx.err));
+    toast(t(l('Erro interno ao avançar: o turno foi revertido inteiro e o último save continua válido. Detalhes em 💾 no topo.', 'Internal error while advancing: the turn was fully rolled back and the last save is still valid. Details in 💾 at the top.')), 'bad');
+    render();
+    return;
+  }
+  noteTurnErr20(null);
   if (!digest) {
     const fresh = g.notifications.filter((n) => n.week > noteWeek && !n.fold).slice(-3);
     for (const n of fresh) toast(t(n.text), n.kind);
@@ -230,6 +248,7 @@ function topBar(): HTMLElement {
     menuButton15(openDrawer),
     h('div', { class: 'brand' }, h('span', { class: 'disc-sm', 'aria-hidden': 'true' }), h('b', null, g.config.companyName)),
     h('div', { class: 'date' }, h('b', null, dateLabel(g)), h('small', { class: 'muted' }, ` · ${t(S.week)} ${g.week} · Run ${g.signature}`)),
+    saveChip20(), // r20 (B1, §4.4.6): saúde do save sempre visível
     h('div', { class: 'money' }, h('span', { class: 'muted' }, `${t(S.cash)} `), h('b', { class: g.player.cash < 0 ? 'bad' : '' }, $(g.player.cash)),
       h('small', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, ` (${net >= 0 ? '+' : ''}${$(net)})`)),
     h('div', { class: 'rep', title: t(S.reputation) }, '★ ', Math.round((rep.artistic + rep.commercial + rep.artists + rep.institutional) / 4)),
@@ -337,6 +356,8 @@ function panel(): HTMLElement {
   const g = store.game!;
   const extra = EXTRA_AREAS.find((a) => a.id === store.area);
   if (extra) { stopHq(); return extra.render(g); }
+  const v20 = areaView20(store.area); // r20 hubs20: Shows, Sede e Mundo por intenção (o painel antigo vira "Tudo")
+  if (v20) { if (store.area !== 'hq') stopHq(); return v20(g); }
   const el = basePanel(g);
   const more = store.area === 'charts' || store.area === 'world' ? null : extraSections(store.area, g);
   if (more) el.appendChild(more);
@@ -509,7 +530,7 @@ async function saveTextDialog(): Promise<void> {
     h('div', { class: 'row' }, h('button', { class: 'btn', onclick: async () => { const ok = await copyText(text); if (!ok) { area.focus(); area.select(); } toast(ok ? t(l('Save copiado.', 'Save copied.')) : t(l('Selecionei o texto: use Ctrl+C.', 'Text selected: press Ctrl+C.')), 'good'); } }, t(l('Copiar save', 'Copy save'))), h('small', { class: 'muted' }, `${Math.round(text.length / 1024)} KB`)),
     h('hr'),
     paste,
-    h('button', { class: 'btn primary', onclick: async () => { try { store.game = await importSaveText(paste.value); close(); render(); toast(t(l('Save carregado.', 'Save loaded.')), 'good'); } catch { toast(t(l('Texto de save inválido.', 'Invalid save text.')), 'bad'); } } }, t(l('Carregar save colado', 'Load pasted save'))),
+    h('button', { class: 'btn primary', onclick: async () => { try { store.game = await importSaveText(paste.value); close(); render(); toast(t(l('Save carregado.', 'Save loaded.')), 'good'); } catch (er) { toast(saveErrText20(er), 'bad'); } } }, t(l('Carregar save colado', 'Load pasted save'))),
   );
   close = modal(t(l('Save em texto', 'Save as text')), body);
 }

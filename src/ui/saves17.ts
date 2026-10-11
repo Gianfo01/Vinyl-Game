@@ -14,9 +14,11 @@ import type { GameState } from '../sim/types';
 import { modal, toast } from './common';
 import { h } from './dom';
 import {
-  afterSave17, copyText, deleteSave, gunzip, gzip, gzipB64, importSaveText, listSaves, loadGame, openDb, profileId17, runId17, saveGame, store, tryDownload, type SaveMeta,
+  afterSave17, copyText, deleteSave, gunzip, gzip, gzipB64, importSaveText, lastLoadErr20, listSaves, loadGame, openDb, profileId17, runId17, saveGame, store, tryDownload, type SaveMeta,
 } from './store';
 import './start17.css';
+import { encodeSave20, SaveError20 } from '../core/save20';
+import { errName20, health20, retry20, setHealth20 } from './savehealth20';
 
 // ---------------------------------------------------------------- armazenamento local cru
 
@@ -29,9 +31,18 @@ async function getRec(slot: string): Promise<Rec | undefined> {
 }
 async function putRec(slot: string, rec: Rec): Promise<void> {
   const db = await openDb();
-  await new Promise<void>((res, rej) => { const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(rec, slot); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); });
+  await new Promise<void>((res, rej) => { const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(rec, slot); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error ?? new Error('abort')); });
 }
 const recJson = async (slot: string): Promise<string | null> => { const r = await getRec(slot); return r ? gunzip(r.payload) : null; };
+/** r20 (B5/B6): mensagem de recusa de save, pelo código. */
+export function saveErrText20(e: unknown): string {
+  const c = e instanceof SaveError20 ? e.code : '';
+  if (c === 'too_big') return t(l('Arquivo grande demais para um save (recusado antes de abrir).', 'File too large for a save (refused before opening).'));
+  if (c === 'future') return t(l('Save de uma versão mais nova do jogo: atualize o jogo. O arquivo não foi alterado.', 'Save from a newer game version: update the game. The file was not changed.'));
+  if (c === 'schema') return t(l('Save com estrutura inválida ou incompleta ({d}). Nada foi substituído.', 'Save with invalid or incomplete structure ({d}). Nothing was replaced.'), { d: (e as SaveError20).detail.slice(0, 60) });
+  if (c === 'malformed' || c === 'format') return t(l('Texto de save corrompido ou truncado. Nada foi substituído.', 'Corrupted or truncated save text. Nothing was replaced.'));
+  return t(l('Arquivo inválido.', 'Invalid file.'));
+}
 
 function metaOf(g: GameState, slot: string, extra: Partial<SaveMeta> = {}): SaveMeta {
   const pp = Object.values(g.persons).find((p) => p.isPlayer);
@@ -41,7 +52,7 @@ function metaOf(g: GameState, slot: string, extra: Partial<SaveMeta> = {}): Save
 
 /** Grava um jogo num slot novo (importado, baixado da nuvem, duplicado). */
 async function storeGame(g: GameState, slot: string, name?: string): Promise<void> {
-  const payload = await gzip(JSON.stringify(g));
+  const payload = await gzip(encodeSave20(g));
   await putRec(slot, { meta: { ...metaOf(g, slot, { name }), size: typeof payload === 'string' ? payload.length : payload.size }, payload });
 }
 
@@ -117,6 +128,7 @@ function cloudErr(e: unknown): string {
   if (code === 'quota_exceeded') return t(l('A nuvem está cheia: apague saves antigos da nuvem.', 'Cloud is full: delete old cloud saves.'));
   if (code === 'invalid_argument' || code === 'not_granted') return t(l('Seu acesso a este jogo é só de leitura: peça ao dono acesso de colaborador para salvar na nuvem.', 'Your access to this game is view-only: ask the owner for contributor access to save to the cloud.'));
   if (code === 'resource_exhausted' || code === 'unavailable') return t(l('A nuvem está ocupada; tente de novo em instantes.', 'The cloud is busy; try again in a moment.'));
+  if (code === 'conflict') return t(l('Outra gravação deste save chegou à nuvem antes; a sua não substituiu nada. Tente de novo.', 'Another write of this save reached the cloud first; yours replaced nothing. Try again.'));
   if ((e as Error)?.message === 'incomplete') return t(l('Save da nuvem incompleto (gravação interrompida). Tente de novo.', 'Incomplete cloud save (interrupted write). Try again.'));
   return t(l('Erro na nuvem.', 'Cloud error.'));
 }
@@ -125,7 +137,7 @@ export async function uploadGame17(g: GameState, name?: string): Promise<CloudMe
   const c = await cloud17();
   if (!isCloud(c)) throw new Error('nocloud');
   const pp = Object.values(g.persons).find((p) => p.isPlayer);
-  return cloudSave17(c.db, c.uid, cloudSlot(runId17(g)), JSON.stringify(g), { name: name ?? g.config.companyName, year: g.year, label: g.config.companyName, run: runId17(g), player: pp?.name });
+  return cloudSave17(c.db, c.uid, cloudSlot(runId17(g)), encodeSave20(g), { name: name ?? g.config.companyName, year: g.year, label: g.config.companyName, run: runId17(g), player: pp?.name });
 }
 
 // sincronização automática (opcional, por visitante): no máximo a cada 5 minutos, depois de um autosave
@@ -133,11 +145,25 @@ const SYNC = 'vtn:cloudsync17';
 let lastSync = 0;
 let syncing = false;
 export const autoSync17 = (): boolean => readJ<boolean>(SYNC, false);
-afterSave17.push((g, slot) => {
-  if (!slot.startsWith('auto-') || !autoSync17() || syncing || Date.now() - lastSync < 5 * 60e3) return;
+/** r20 (B1): envio para a nuvem com estado próprio (pendente/confirmado/falhou/indisponível) e "tentar de novo". */
+function syncNow17(g: GameState): Promise<unknown> {
   syncing = true;
   lastSync = Date.now();
-  void uploadGame17(g).catch(() => undefined).finally(() => { syncing = false; });
+  const at = { year: g.year, month: g.month, week: g.week, slot: cloudSlot(runId17(g)), run: runId17(g) };
+  setHealth20('cloud', { st: 'pending' });
+  return uploadGame17(g).then(() => setHealth20('cloud', { st: 'ok', lastOk: { ts: Date.now(), ...at } }), (e) => {
+    if ((e as Error)?.message === 'nocloud') setHealth20('cloud', { st: 'unavailable' });
+    else setHealth20('cloud', { st: 'failed', err: cloudErr(e) || errName20(e), errAt: Date.now() });
+  }).finally(() => { syncing = false; });
+}
+afterSave17.push((g, slot) => {
+  if (!slot.startsWith('auto-')) return;
+  if (!autoSync17()) { if (health20.cloud.st !== 'off') setHealth20('cloud', { st: 'off' }); return; }
+  retry20.cloud = () => syncNow17(g);
+  if (syncing) return;
+  // dentro da janela de 5 min: a nuvem fica com o checkpoint anterior (marcado como atrasado, não como falha)
+  if (Date.now() - lastSync < 5 * 60e3) { if (health20.cloud.st === 'ok') setHealth20('cloud', { st: 'stale' }); return; }
+  void syncNow17(g);
 });
 
 // ---------------------------------------------------------------- gerenciador de saves
@@ -154,7 +180,13 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
   const ask = (q: L, v = '') => window.prompt(t(q), v);
   const act = (label: string, fn: () => unknown, cls = 'btn small ghost', title?: string) => h('button', { type: 'button', class: cls, title, onclick: async () => { try { await fn(); } catch (e) { toast((e as Error)?.message === 'nocloud' ? t(l('Nuvem indisponível.', 'Cloud unavailable.')) : String((e as Error)?.message || e), 'bad'); } } }, label);
   const drawLocal = async () => {
-    const list = await mySaves17();
+    let list: SaveMeta[];
+    try { list = await mySaves17(); } catch (e) {
+      // r20 (B1): erro de leitura não é "nenhum save" — diz o motivo e oferece tentar de novo
+      localBox.replaceChildren(h('p', { class: 'bad small', role: 'alert' }, '⚠ ', t(l('Não foi possível ler os saves deste navegador ({e}). Eles não foram apagados.', 'Could not read this browser\'s saves ({e}). They were not deleted.'), { e: errName20(e) }), ' ',
+        h('button', { type: 'button', class: 'btn small', onclick: () => { void drawLocal(); } }, t(l('Tentar de novo', 'Try again')))));
+      return;
+    }
     if (!list.length) { localBox.replaceChildren(h('p', { class: 'muted small' }, t(l('Nenhum save neste perfil ainda.', 'No saves in this profile yet.')))); return; }
     // agrupa por partida (autosaves em rodízio + saves manuais da mesma run)
     const groups = new Map<string, SaveMeta[]>();
@@ -164,7 +196,7 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
       return h('article', { class: 'sv17-run card' },
         h('header', null, h('b', null, top.company), ' ', h('span', { class: 'muted small' }, `${top.player ? `${top.player} · ` : ''}${top.ironman ? '☠ ironman · ' : ''}${ms.length} ${t(l('save(s)', 'save(s)'))}`)),
         ...ms.map((m) => h('div', { class: 'sv17-row' },
-          h('button', { type: 'button', class: 'btn small', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } },
+          h('button', { type: 'button', class: 'btn small', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } },
             `▶ ${m.name || (m.kind === 'auto' || m.slot.startsWith('auto') ? t(l('Autosave', 'Autosave')) : t(l('Save', 'Save')))} — ${monthName(m.month)} ${m.year}`),
           h('small', { class: 'muted' }, `${m.cash !== undefined ? formatMoney(m.cash, locale()) + ' · ' : ''}${kb(m.size)} · ${ago(m.savedAt)}`),
           h('span', { class: 'sv17-acts' },
@@ -172,7 +204,7 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
             m.ironman ? null : act('⧉', async () => { await duplicateLocal17(m.slot); void drawLocal(); toast(t(l('Cópia criada.', 'Copy created.')), 'good'); }, 'btn small ghost', t(l('Duplicar', 'Duplicate'))),
             act('⇩', async () => { const tx = await exportText17(m.slot); if (!tryDownload(`masters-${m.company.replace(/[^\w-]+/g, '_')}-${m.year}.vtn.txt`, tx, 'text/plain')) { await copyText(tx); toast(t(l('Download bloqueado: texto copiado.', 'Download blocked: text copied.')), 'good'); } }, 'btn small ghost', t(l('Exportar (arquivo)', 'Export (file)'))),
             act('⎘', async () => { const ok = await copyText(await exportText17(m.slot)); toast(ok ? t(l('Save copiado como texto.', 'Save copied as text.')) : t(l('Não deu para copiar.', 'Could not copy.')), ok ? 'good' : 'bad'); }, 'btn small ghost', t(l('Copiar como texto', 'Copy as text'))),
-            act('☁', async () => { const j = await recJson(m.slot); if (!j) return; await uploadGame17(JSON.parse(j) as GameState, m.name).catch((e) => { if ((e as Error).message === 'nocloud') throw e; throw new Error(cloudErr(e)); }); toast(t(l('Enviado para a sua nuvem.', 'Sent to your cloud.')), 'good'); void drawCloud(); }, 'btn small ghost', t(l('Enviar para a nuvem', 'Send to cloud'))),
+            act('☁', async () => { const j = await recJson(m.slot); if (!j) return; await uploadGame17(await importSaveText(j), m.name).catch((e) => { if ((e as Error).message === 'nocloud') throw e; throw new Error(cloudErr(e)); }); toast(t(l('Enviado para a sua nuvem.', 'Sent to your cloud.')), 'good'); void drawCloud(); }, 'btn small ghost', t(l('Enviar para a nuvem', 'Send to cloud'))),
             act('🗑', async () => { if (!window.confirm(t(l('Apagar este save?', 'Delete this save?')))) return; await deleteSave(m.slot); void drawLocal(); }, 'btn small ghost', t(l('Apagar', 'Delete'))),
           ))));
     }));
@@ -197,7 +229,7 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
   const file = h('input', { type: 'file', style: 'display:none', onchange: async (e: Event) => {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
-    try { await importToSlot17(await f.text(), f.name.replace(/\.(json|txt|vtn)+$/g, '')); toast(t(l('Save importado para um slot novo.', 'Save imported into a new slot.')), 'good'); void drawLocal(); } catch { toast(t(l('Arquivo inválido.', 'Invalid file.')), 'bad'); }
+    try { await importToSlot17(await f.text(), f.name.replace(/\.(json|txt|vtn)+$/g, '')); toast(t(l('Save importado para um slot novo.', 'Save imported into a new slot.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); }
   } }) as HTMLInputElement;
   box.append(
     o.profiles === false ? '' : profileBar17(() => { void drawLocal(); }),
@@ -206,7 +238,7 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
     h('div', { class: 'row wrap' },
       store.game && !store.game.config.ironman ? act(t(l('Salvar como novo…', 'Save as new…')), async () => { const n = ask(l('Nome do save:', 'Save name:'), `${store.game!.config.companyName} ${store.game!.year}`); if (n === null) return; const ok = await saveGame(`man-${Date.now().toString(36)}`, n); toast(ok ? t(l('Salvo.', 'Saved.')) : 'Erro', ok ? 'good' : 'bad'); void drawLocal(); }, 'btn small') : null,
       act(t(l('Importar arquivo', 'Import file')), () => file.click()),
-      act(t(l('Colar texto de save', 'Paste save text')), async () => { const tx = ask(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)')); if (!tx) return; try { await importToSlot17(tx); toast(t(l('Save importado.', 'Save imported.')), 'good'); void drawLocal(); } catch { toast(t(l('Texto de save inválido.', 'Invalid save text.')), 'bad'); } }),
+      act(t(l('Colar texto de save', 'Paste save text')), async () => { const tx = ask(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)')); if (!tx) return; try { await importToSlot17(tx); toast(t(l('Save importado.', 'Save imported.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); } }),
       file),
     localBox,
     h('h4', null, t(l('Na nuvem (sua conta do claude.ai)', 'In the cloud (your claude.ai account)'))),
@@ -247,5 +279,5 @@ export function saveManagerModal17(play: (g: GameState) => void): void {
 
 /** "Continuar" da tela inicial: o save mais recente do perfil. */
 export async function lastSave17(): Promise<SaveMeta | undefined> {
-  return (await mySaves17())[0];
+  return (await mySaves17())[0]; // r20: erro de leitura sobe (a tela inicial diz que não conseguiu ler)
 }

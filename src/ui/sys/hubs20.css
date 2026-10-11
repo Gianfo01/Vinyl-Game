@@ -1,0 +1,21 @@
+/* r20 hubs20: Shows, Sede e Mundo por intenção */
+.hub20-intro { margin: 0 0 .5rem; }
+.steps20 { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; padding: 0; margin: .4rem 0; }
+.steps20-nav { margin: .5rem 0 1rem; }
+.live20-wrap { position: sticky; top: 0; z-index: 3; background: var(--bg, #fff); padding: .3rem 0; }
+.live20 { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.conf20 { margin: .5rem 0; display: grid; gap: .3rem; }
+.drawer20 { margin: .5rem 0; border: 1px solid var(--line, #ccc); border-radius: 6px; padding: .4rem .6rem; }
+.drawer20 summary { cursor: pointer; font-weight: 600; }
+.drawer20 input[type=search] { width: 100%; max-width: 100%; box-sizing: border-box; margin: .4rem 0; }
+.drawer20-list { list-style: none; padding: 0; margin: 0; max-height: 18rem; overflow-y: auto; display: grid; gap: .2rem; }
+.drawer20-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem; min-width: 0; }
+.tbl-scroll20 { max-width: 100%; overflow-x: auto; }
+.cr20 .chips { flex-wrap: wrap; }
+.cr20-last { margin-top: .5rem; border-top: 1px dashed var(--line, #ccc); padding-top: .4rem; }
+.hq20-rooms { list-style: none; padding: 0; display: grid; gap: .3rem; }
+.hq20-rooms li { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; min-width: 0; }
+.presets20 { display: flex; flex-wrap: wrap; gap: .35rem; margin: .3rem 0; }
+.legend20 { font-size: .85em; border-left: 3px solid var(--accent, #c63); padding: .2rem .5rem; margin: .3rem 0; }
+.place20 { display: grid; gap: .3rem; }
+.place20 .drawer20-list { max-height: 14rem; }

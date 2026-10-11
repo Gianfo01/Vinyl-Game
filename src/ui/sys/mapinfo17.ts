@@ -200,6 +200,11 @@ const LY17: { id: Ly17; icon: string; name: L }[] = [
   { id: 'scenes17', icon: 'camera', name: l('Suas cenas', 'Your scenes') },
 ];
 const on17 = new Set<Ly17>();
+/** r20: presets do Mundo ligam/desligam estas camadas (o especialista continua com os botões). */
+export type Ly17Id = Ly17;
+export const layers17Now = (): Ly17[] => [...on17];
+export function setLayers17(ids: Ly17[]): void { on17.clear(); for (const x of ids) on17.add(x); }
+export const LAYERS17 = LY17;
 export function layerButtons17(): HTMLElement[] {
   return LY17.map((ly) => h('button', { type: 'button', class: `chip-btn ${on17.has(ly.id) ? 'on' : ''}`, 'aria-pressed': on17.has(ly.id) ? 'true' : 'false',
     onclick: () => { if (on17.has(ly.id)) on17.delete(ly.id); else on17.add(ly.id); rerender(); } }, ic(ly.icon), ' ', T(ly.name)));
