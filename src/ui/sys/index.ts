@@ -172,4 +172,5 @@ import './tribute19';
 import './session19';
 // Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
 import './era19';
+import './history19'; // r19 T8: Mundo › Marcos da história + bloco do Cockpit
 import './core18';

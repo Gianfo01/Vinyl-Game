@@ -146,3 +146,9 @@ export function factMatrix19(emitted: string[], readers: Record<string, string[]
   }));
 }
 export const consumed19 = (r: FactRow19): boolean => r.listeners.length + r.wildcard.length + r.readers.length > 0 || r.chron;
+
+/** R19 T8 (sys/history19.ts): marcos da história 1926–2026. */
+export const HIST19: Record<string, { sys: string; to: string[] }> = {
+  milestone_turn: { sys: 'history19', to: ['history19:world (manchete press9 + embalo dos atos de NPC do estilo; crise tira embalo)'] },
+  real_history: { sys: 'history19 (escolha no cartão do marco)', to: ['realhist19:diary (memória importante no Diário)'] },
+};
