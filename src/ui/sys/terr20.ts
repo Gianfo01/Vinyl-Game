@@ -52,7 +52,7 @@ function priceSection(s: GameState): HTMLElement {
 }
 
 registerPageTab('act', { id: 'terr20', label: l('Fãs por região', 'Fans by region'), icon: 'globe', order: 59, when: (s, id) => s.acts[id]?.owner === 'player' || !!s.acts[id]?.playerBand, render: fansTab });
-registerSection('market', { id: 'terr20', order: 80, render: priceSection, title: l('Fãs e preço por mercado', 'Fans and pricing by market') });
+registerSection('world', { id: 'terr20', order: 80, render: priceSection, title: l('Fãs e preço por mercado', 'Fans and pricing by market') });
 T('*', 'terr20', ['Fãs por região', 'Fans by region'],
   ['Coortes casual/ativo/núcleo por região, somando sempre o total global, com confiança da estimativa.', 'Casual/active/core cohorts per region, always adding up to the global total, with estimate confidence.'],
   ['Faça shows onde quer crescer: os fãs convertidos ficam naquela praça e a procura da próxima turnê lá sobe (até +12%). Ex.: três datas no Brasil levam a fatia BR acima do que a fama explica.', 'Play where you want to grow: converted fans stay in that market and the next tour\'s demand there rises (up to +12%). E.g. three dates in Brazil push the BR share above what fame explains.']);
