@@ -171,6 +171,14 @@ export const MARKETA19: Record<string, { sys: string; to: string[] }> = {
   scene_bust: { sys: 'market19a', to: ['market19a:bust (gênero cai, calor da cena ×0,5)', 'zines19/fakes19 (cadeia 6, T9)'] },
 };
 
+/** Frente 5 (onda 3, T4): ao vivo e temporada (sys/live19.ts) e crises (sys/charity19.ts) — tipos novos → ouvintes. */
+export const LIVE19: Record<string, { sys: string; to: string[] }> = {
+  antitrust_ruling: { sys: 'live19', to: ['live19:ruling (taxa do gigante do live18, lealdade fans18, promotores tour12, manchete)'] },
+  free_fest: { sys: 'live19', to: ['live19:freefest (fãs e mobilização fans18, fama, discover18 palco aberto, manchete)'] },
+  rsd_exclusive: { sys: 'live19', to: ['live19:rsd (superfãs fandom19, reputação com artistas, manchete)'] },
+  world_crisis: { sys: 'charity19', to: ['charity19:crisis (carta ao jogador; megashow de outro selo; manchete)'] },
+};
+
 export interface FactRow19 { kind: string; listeners: string[]; wildcard: string[]; readers: string[]; chron: boolean; why?: string }
 
 /** Monta a matriz para os tipos emitidos (`readers`: tipo → arquivos que leem; `chron`: tipos que passam pela crônica). */

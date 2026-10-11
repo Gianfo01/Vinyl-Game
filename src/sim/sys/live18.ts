@@ -60,8 +60,14 @@ export const kitOf18 = (t: Tour): Kit18 => ({ ...KIT0, ...(t.kit18 ?? {}) });
 
 export const FLY_FROM18 = 1958;
 export const GIANT_FROM18 = 1997;
+/** r19 (live19): boicote ao monopólio e decisão antitruste mexem no gigante (injetado pelo live19: sem ciclo). */
+export const GIANT19: { f?: (s: GameState, g: { name: string; fee: number; promo: boolean }) => { name: string; fee: number; promo: boolean }; ok?: (s: GameState, act: Act) => boolean } = {};
 /** Gigante de promoção/bilhetagem da época (nomes fictícios, modelados na consolidação real dos anos 1970–2010). */
 export function giant18(s: GameState): { name: string; fee: number; promo: boolean } | null {
+  const g = giant0(s);
+  return g && GIANT19.f ? GIANT19.f(s, g) : g;
+}
+function giant0(s: GameState): { name: string; fee: number; promo: boolean } | null {
   if (s.year >= 2010) return { name: 'Apex Live Group', fee: 0.06, promo: true };
   if (s.year >= GIANT_FROM18) return { name: 'Apex Live', fee: 0.045, promo: true };
   if (s.year >= 1976) return { name: 'TicketMax', fee: 0.03, promo: false };
@@ -121,7 +127,7 @@ TOUR18.kit = (s, kit0, i) => {
   return { total: parts.reduce((t, p) => t + p[1], 0), parts, warn };
 };
 export const kitCost18 = (s: GameState, kit: Kit18 | undefined, i: KitInfo) => TOUR18.kit!(s, kit, i);
-const giantOk = (s: GameState, act: Act, k: Kit18) => (k.prom === 'giant' || !!live18(s).excl) && s.year >= GIANT_FROM18 && act.fame >= 30;
+const giantOk = (s: GameState, act: Act, k: Kit18) => (k.prom === 'giant' || !!live18(s).excl) && s.year >= GIANT_FROM18 && act.fame >= 30 && GIANT19.ok?.(s, act) !== false;
 
 // ------------------------------------------------------------------ marcação: previsão guardada para o post-mortem
 

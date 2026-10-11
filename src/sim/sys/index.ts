@@ -291,4 +291,8 @@ import './cancel19';
 import './insure19';
 import './culture19';
 import './naming19';
+// Rodada 19 (Frente 5, onda 3 — T4): ao vivo e temporada (boicote de ingressos, festival grátis, vinil/RSD, calendário sazonal), beneficentes e concursos.
+import './live19';
+import './charity19';
+import './contests19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

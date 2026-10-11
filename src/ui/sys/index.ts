@@ -189,4 +189,6 @@ import './market19a';
 import './media19';
 // Rodada 19 (Frente 7, mercado B): Remix, anúncios e trilhas (Música) e Crises, seguros e cultura (Selo).
 import './market19b';
+// Rodada 19 (Frente 5, onda 3 — T4): Palco e temporada (ingressos, festival grátis, vinil/RSD, temporada, beneficentes, concursos).
+import './live19';
 import './core18';

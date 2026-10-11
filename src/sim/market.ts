@@ -53,8 +53,11 @@ export function weeklyPool(s: GameState, year = s.year): number {
   if (hasMutator(s, 'fragile_market')) v *= 0.75;
   if (s.economy.recession) v *= 0.85;
   v *= s.flags.geoDemand ?? 1; // guerras, crises e pandemias (culture.ts)
+  if (year === s.year && POOL19.f) v *= POOL19.f(s); // r19 (live19): curva sazonal do mês (Natal, janeiro) — fora dos tetos dos mods
   return v;
 }
+/** r19 (live19): fator sazonal do tamanho do mercado no mês (injetado pelo live19: sem ciclo). */
+export const POOL19: { f?: (s: GameState) => number } = {};
 
 export function coverage(territories: MarketId[], genre: string, year: number, positioning = 40): number {
   const fam = familyOf(genre);
