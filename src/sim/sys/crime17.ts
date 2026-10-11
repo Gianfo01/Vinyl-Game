@@ -46,6 +46,8 @@ export interface Crime17State {
   market: Offer17[]; warn: Warn17[]; ties: Record<string, string>; feud: Record<string, number>; vend: Record<string, number>; npcN: number; fake: Record<string, 1>;
   /** organização desmantelada (semana até quando) */
   down: Record<string, number>;
+  /** r19: produto de crime do jogador ainda não confiscado (centavos) */
+  loot19?: number;
 }
 declare module '../ext4' { interface Ext4 { crime17: Crime17State } }
 const fresh = (): Crime17State => ({ heat: {}, nh: {}, cases: [], log: [], org: {}, laund: {}, stash: [], hot: {}, rcity: {}, seeded: {}, sec: 0, jail: {}, rig: {}, rigBad: {}, boot: {}, pizzo: {}, exile: {}, doc: {}, parole: 0, seq: 0, market: [], warn: [], ties: {}, feud: {}, vend: {}, npcN: 0, fake: {}, down: {} });
@@ -235,9 +237,20 @@ function takeFrom(s: GameState, ownerId: string | undefined, amt: number, memo: 
 }
 function giveTo(s: GameState, actor: string, amt: number, memo: string): void {
   if (amt <= 0) return;
-  if (actor === 'player' || isMine(s, actor)) post(s, `c17gain:${nid(s, '')}`, amt, 'other', memo);
+  if (actor === 'player' || isMine(s, actor)) { post(s, `c17gain:${nid(s, '')}`, amt, 'other', memo); crime17(s).loot19 = (crime17(s).loot19 ?? 0) + amt; }
   else if (s.labels[actor]) s.labels[actor].cash += amt;
 }
+
+// r19 (exploit "só crime"): o mesmo golpe repetido rende cada vez menos — o mercado de piratas dos mesmos sucessos
+// satura, as vítimas contratam advogado e a notícia de que você chantageia corre. Cada sucesso do jogador no mesmo
+// crime nos últimos 12 meses corta 25% do ganho (1/(1+0,25n)). Antes, piratear 3 sucessos e chantagear 1 estrela
+// por mês rendia ~US$ 700 mil/ano sem selo nenhum, 5–10× um selo equilibrado; as multas (US$ 30–45 mil) não pesavam.
+export const GLUT19 = new Set(['bootleg', 'blackmail', 'royalty_skim']);
+export function glutN19(s: GameState, cid: string): number {
+  if (!GLUT19.has(cid)) return 0;
+  return crime17(s).log.filter((e) => e.actor === 'player' && e.c === cid && e.ok && s.week - e.w < 52).length;
+}
+export const glut19 = (s: GameState, cid: string, actor: string): number => (actor === 'player' ? 1 / (1 + 0.25 * glutN19(s, cid)) : 1);
 
 export const CRIMES17: CrimeDef17[] = [
   { id: 'murder', name: l('Encomendar morte', 'Order a death'), tk: 'person', p: 0.45, q: 0.35, sev: 95, cost: 40000, heat: 40, violent: 1,
@@ -275,7 +288,7 @@ export const CRIMES17: CrimeDef17[] = [
     fx: (s, c, ok) => {
       const fam = famOf(s, c.target);
       if (!ok) { const p = s.persons[c.target]; if (p) p.rel[c.actor] = clamp((p.rel[c.actor] ?? 0) - 25, -100, 100); return fmtL(l('{p} pagou para ver — e não pagou.', '{p} called the bluff — and paid nothing.'), { p: nameOf17(s, c.target) }); }
-      const amt = money(s, 4000 + fam * 450);
+      const amt = Math.round(money(s, 4000 + fam * 450) * glut19(s, 'blackmail', c.actor));
       const got = takeFrom(s, ownerOfTarget(s, c.target) ?? c.target, amt, `Chantagem: ${nameOf17(s, c.actor)}`);
       giveTo(s, c.actor, got || amt, `"Consultoria": ${nameOf17(s, c.target)}`);
       grantHold(s, { holder: c.actor, target: c.target, kind: 'blackmail', strength: 55, months: 48, src: 'crime17', proof: 2, text: l('Paga para o segredo não sair', 'Pays to keep the secret in'), quiet: true });
@@ -359,7 +372,7 @@ export const CRIMES17: CrimeDef17[] = [
       if (!a) return l('Alvo sumiu.', 'Target gone.');
       const fmt = bootFmt(s.year);
       if (!ok) return fmtL(l('A carga de {f} piratas de {a} foi apreendida.', 'The load of bootleg {f} of {a} was seized.'), { a: a.name, f: fmt });
-      const v = money(s, 2500 + a.fame * 160);
+      const v = Math.round(money(s, 2500 + a.fame * 160) * glut19(s, 'bootleg', c.actor));
       takeFrom(s, ownerOfTarget(s, a.id), Math.round(v * 0.7), `Pirataria: ${a.name}`);
       giveTo(s, c.actor, v, `Bootleg: ${a.name}`);
       return fmtL(l('{f} piratas de {a} rendem {v}.', 'Bootleg {f} of {a} earn {v}.'), { f: fmt, a: a.name, v: usd(v) });
@@ -380,8 +393,9 @@ export const CRIMES17: CrimeDef17[] = [
       const a = s.acts[c.target];
       if (!a) return l('Alvo sumiu.', 'Target gone.');
       if (!ok) return l('O contador se recusou a assinar.', 'The accountant refused to sign.');
-      const v = money(s, 3000 + a.fame * 260);
+      const v = Math.round(money(s, 3000 + a.fame * 260) * glut19(s, 'royalty_skim', c.actor));
       post(s, `c17skim:${a.id}:${nid(s, '')}`, v, 'other', `Ajuste contábil (${a.name})`);
+      crime17(s).loot19 = (crime17(s).loot19 ?? 0) + v;
       grantHold(s, { holder: 'c17:acct', target: 'player', kind: 'secret', strength: 40, proof: 2, months: 120, src: 'crime17', text: fmtL(l('O contador sabe dos royalties de {a}', 'The accountant knows about {a}\'s royalties'), { a: a.name }), quiet: true });
       return fmtL(l('{v} saíram dos royalties de {a} para o caixa.', '{v} moved from {a}\'s royalties into the till.'), { v: usd(v), a: a.name });
     } },
@@ -471,6 +485,7 @@ export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
   if (d.id === 'blackmail' && holdsBetween(s, c.actor, c.target).some((h) => h.kind === 'secret' || h.kind === 'blackmail')) { p += 0.25; why.push(l('Você já guarda um segredo dele(a): +25%', 'You already hold a secret on them: +25%')); }
   if (d.id === 'murder' && c.method === 'drugs' && s.persons[c.target]?.health === 'addiction') { p += 0.15; why.push(l('O alvo já usa drogas: +15%', 'The target already uses drugs: +15%')); }
   if (d.id === 'bribe') { const k = corruption(s, a3); p += k * 0.4 - 0.1; why.push(fmtL(l('Corrupção em {c} na época: {x}', 'Corruption in {c} at the time: {x}'), { c: countryName(a3), x: pct(k * 0.4 - 0.1) })); }
+  if (c.actor === 'player' && glutN19(s, cid)) why.push(fmtL(l('Já fez isso {n}× em 12 meses: rende {x}% do normal (mercado saturado, vítimas espertas)', 'Done {n}× in 12 months: pays {x}% of normal (saturated market, wary victims)'), { n: glutN19(s, cid), x: Math.round(glut19(s, cid, 'player') * 100) }));
   if (c.dp) { p += c.dp; why.push(c.dpWhy ?? fmtL(l('Ajuste {x}', 'Adjustment {x}'), { x: pct(c.dp) })); }
   // polícia e época
   const heat = c.actor === 'player' ? heatIn(s, a3) : st.nh[c.actor] ?? 0;
@@ -619,11 +634,14 @@ function convict(s: GameState, cs: Case17, mult = 1): L {
   let text: L;
   if (cs.who === 'player') {
     post(s, `c17fine:${cs.id}`, -fine, 'legal', `Condenação (${agency(s, cs.a3).pt})`);
+    // r19: condenação confisca o produto do crime (60% do que você ganhou com crimes e ainda não perdeu; delação 24%)
+    const seized = Math.round((st.loot19 ?? 0) * 0.6 * Math.min(1, mult));
+    if (seized > 0) { post(s, `c17seize:${cs.id}`, -seized, 'legal', 'Confisco do produto do crime'); st.loot19 = (st.loot19 ?? 0) - seized; }
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - Math.round(8 * mult + cs.sev / 10), 0, 100);
     const pp = playerPerson(s);
     if (mult >= 1 && cs.sev >= 70 && pp) { st.jail[pp.id] = { u: s.week + Math.round(cs.sev / 2), a3: cs.a3, why: l('Condenado', 'Convicted') }; }
     st.parole = s.week + 104;
-    text = fmtL(l('Condenado(a) em {c}: multa de {v}{j}; 2 anos de condicional.', 'Convicted in {c}: {v} fine{j}; 2 years of parole.'), { c: countryName(cs.a3), v: usd(fine), j: pp && st.jail[pp.id]?.u > s.week ? l(' e prisão', ' and prison') : '' });
+    text = fmtL(l('Condenado(a) em {c}: multa de {v}{j}; 2 anos de condicional.', 'Convicted in {c}: {v} fine{j}; 2 years of parole.'), { c: countryName(cs.a3), v: seized > 0 ? fmtL(l('{f} + confisco de {z}', '{f} + {z} seized'), { f: usd(fine), z: usd(seized) }) : usd(fine), j: pp && st.jail[pp.id]?.u > s.week ? l(' e prisão', ' and prison') : '' });
   } else if (s.persons[cs.who]) {
     const months = Math.round(6 + cs.sev / 4);
     jailPerson(s, cs.who, cs.a3, months, l('Condenado', 'Convicted'));

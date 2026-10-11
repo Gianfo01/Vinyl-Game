@@ -65,24 +65,43 @@ export function eraMultiple(s: GameState, y = s.year): { m: number; why: L } {
   return { m: (m as number) * rec, why: why as L };
 }
 /** Receita anual estimada de um lançamento (decai com a idade). */
-export const relIncome = (s: GameState, relId: string): number => { const r = s.releases[relId]; return r ? r.revenue / Math.max(1, s.year - r.year + 1) : 0; };
+// r19 (exploit "hype máximo e vende"): o comprador desconta o pico de lançamento — um disco com menos de 2 anos vale
+// como se já tivesse 2 (a receita do 1º ano é o pico e cai pela metade depois). Antes, um lançamento hypado era
+// capitalizado como se rendesse o pico para sempre, e vender o selo no 3º ano rendia ~2× o equilibrado.
+export const relIncome = (s: GameState, relId: string): number => { const r = s.releases[relId]; return r ? r.revenue / Math.max(2, s.year - r.year + 1) : 0; };
+/** r19: o comprador paga pela fatia LÍQUIDA do selo (sai o royalty do artista e ~25% de fabricação/distribuição;
+ *  no contrato de distribuição só a taxa fica). Antes o múltiplo da época incidia sobre a receita bruta. */
+export function netShare19(s: GameState, actId: string): number {
+  const a = s.acts[actId], c = a?.contractId ? s.contracts[a.contractId] : undefined;
+  if (c?.model === 'distribution') return clamp(c.distributionFee ?? 0.2, 0.1, 1);
+  return clamp((1 - (c?.royalty ?? 0.18)) * 0.75, 0.3, 0.75);
+}
+/** r19: fração do valor de elenco que o comprador paga por ato — contrato acabando = artista que pode sair na porta. */
+export function rosterTerm19(s: GameState, a: Act): number {
+  const c = a.contractId ? s.contracts[a.contractId] : undefined;
+  if (!c?.endWeek) return 1;
+  return clamp((c.endWeek - s.week) / 52, 0.25, 1);
+}
 
 export interface Val17 { total: number; cat: number; mult: number; roster: number; prestige: number; cash: number; debt: number; why: [L, number][] }
 export function valuation17(s: GameState): Val17 {
   const rels = Object.values(s.releases).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand);
-  const catInc = rels.reduce((t, r) => t + relIncome(s, r.id), 0);
+  const catInc = rels.reduce((t, r) => t + relIncome(s, r.id) * netShare19(s, r.actId), 0);
   const em = eraMultiple(s);
   const cat = Math.round(catInc * em.m);
-  const roster = Math.round(mineActs(s).reduce((t, a) => t + a.fame * a.fame * money(s, 160) * (a.status === 'emerging' ? 1.3 : 1), 0));
-  const prestige = Math.round((s.player.stats.awards + s.player.stats.number1s * 2 + s.player.stats.platinum) * money(s, 15000));
+  // r19: cada artista vale no máximo ~3 anos do que rende ao selo (fama sem receita não paga a compra), pelo contrato restante
+  const actInc = (id: string) => rels.reduce((t, r) => t + (r.actId === id ? relIncome(s, r.id) * netShare19(s, id) : 0), 0);
+  const roster = Math.round(mineActs(s).reduce((t, a) => t + Math.min(a.fame * a.fame * money(s, 160) * (a.status === 'emerging' ? 1.3 : 1), 3 * actInc(a.id) + money(s, 20000)) * rosterTerm19(s, a), 0));
+  // r19: prestígio é ágio sobre um negócio, não um negócio: no máximo metade de catálogo + elenco
+  const prestige = Math.round(Math.min((s.player.stats.awards + s.player.stats.number1s * 2 + s.player.stats.platinum) * money(s, 15000), (cat + roster) * 0.5));
   const cash = s.player.cash;
   const debt = s.player.loans.reduce((t, x) => t + x.balance, 0) + (s.creditors ?? []).reduce((t, c) => t + Math.max(0, c.owed), 0);
   const wc = arTotal18(s) - apTotal18(s); // r18: capital de giro (a receber − royalties a pagar)
   const total = Math.max(money(s, 20000), cat + roster + prestige + cash + wc - debt);
   return { total, cat, mult: em.m, roster, prestige, cash, debt, why: [
-    [fmtL(l('Catálogo: {n} lançamentos × {m}× ({w})', 'Catalog: {n} releases × {m}× ({w})'), { n: rels.length, m: Math.round(em.m * 10) / 10, w: em.why }), cat],
-    [fmtL(l('Elenco: {n} artistas (fama)', 'Roster: {n} acts (fame)'), { n: mineActs(s).length }), roster],
-    [l('Prestígio: prêmios, nº 1, platinas', 'Prestige: awards, No. 1s, platinum'), prestige],
+    [fmtL(l('Catálogo: {n} lançamentos × {m}× ({w}; sobre a fatia líquida do selo, sem royalties e distribuição; disco com menos de 2 anos conta pela metade — o comprador desconta o pico de lançamento)', 'Catalog: {n} releases × {m}× ({w}; on the label\'s net share, after royalties and distribution; records under 2 years old count half — buyers discount the launch spike)'), { n: rels.length, m: Math.round(em.m * 10) / 10, w: em.why }), cat],
+    [fmtL(l('Elenco: {n} artistas (fama, até ~3 anos do que cada um rende ao selo; contrato com menos de 1 ano vale menos)', 'Roster: {n} acts (fame, up to ~3 years of what each earns the label; under 1 year of contract left is worth less)'), { n: mineActs(s).length }), roster],
+    [l('Prestígio: prêmios, nº 1, platinas (ágio de até 50% de catálogo + elenco)', 'Prestige: awards, No. 1s, platinum (premium up to 50% of catalog + roster)'), prestige],
     [l('Caixa (vai junto)', 'Cash (goes with it)'), cash],
     [l('A receber − royalties a pagar', 'Receivables − royalties payable'), wc],
     [l('Dívidas assumidas pelo comprador', 'Debts the buyer assumes'), -debt],
