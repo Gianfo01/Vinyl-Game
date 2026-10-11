@@ -33,6 +33,9 @@ function withAct(seed: string, year = 1965) {
   return { s, r, act };
 }
 
+/** r19: lançamento do ato (clona um existente se o ato ainda não lançou nada) para a lista oficial de indicados. */
+const relOf = (s: GameState, actId: string) => Object.values(s.releases).find((x) => !x.hist && x.actId === actId)
+  ?? (s.releases['r4aw'] = { ...structuredClone(Object.values(s.releases)[0]), id: 'r4aw', actId, owner: 'player', hist: false, year: s.year });
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const last = (s: GameState, kind: string) => [...s.cutscenes].reverse().find((c) => c.kind === kind);
 
@@ -52,9 +55,9 @@ describe('premiação', () => {
   it('monta indicados, revela o vencedor e aplica o discurso uma vez', () => {
     const { s, act } = withAct('scn-aw');
     const r = rngOf(s);
-    const rel = Object.values(s.releases).find((x) => !x.hist && (x.owner === 'player' || x.actId === act.id));
+    const rel = relOf(s, act.id);
     s.awards.push({ year: s.year, category: 'record', releaseId: rel?.id, actId: act.id, name: `${act.name} — x`, byPlayer: true });
-    cer8(s).noms = { year: s.year, cats: { record: [rel!.id] } }; // r19: a cerimônia usa os indicados oficiais
+    cer8(s).noms = { year: s.year, cats: { record: [rel.id] } }; // r19: a cerimônia usa os indicados oficiais
     awardsYear(s, r);
     const cs = last(s, 'awards')!;
     expect(cs).toBeTruthy();
@@ -72,7 +75,7 @@ describe('premiação', () => {
     const { s, act } = withAct('scn-aw2');
     const r = rngOf(s);
     // r19: só há cerimônia com indicado oficial; o discurso vem de uma categoria dos Gramófonos que você ganhou
-    const rel = Object.values(s.releases).find((x) => !x.hist && (x.owner === 'player' || x.actId === act.id))!;
+    const rel = relOf(s, act.id);
     s.awards.push({ year: s.year, category: 'album', releaseId: rel.id, actId: act.id, name: `${act.name} — x`, byPlayer: true });
     cer8(s).noms = { year: s.year, cats: { album: [rel.id] } };
     awardsYear(s, r);
