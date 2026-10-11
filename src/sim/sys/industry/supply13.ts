@@ -54,7 +54,10 @@ export function matTarget(m: Material, y: number): number {
   if (m === 'shellac') v = y >= 1917 && y <= 1919 ? 1.4 : y < 1941 ? 1 : y <= 1946 ? 2.6 : 1 + Math.max(0, y - 1950) * 0.05;
   if (m === 'vinyl') {
     v = y < 1955 ? 1.2 : y < 1970 ? 1 : y < 1990 ? 0.92 : y < 2007 ? 1.2 : 1.1;
-    if (y >= 1973 && y <= 1975) v *= 1.7; // choque do petróleo
+    // choque do petróleo: embargo de out/1973 a mar/1974, pico em 1974; em 1975 o PVC já baixava (r19: era 1,7× nos três anos)
+    if (y === 1973) v *= 1.35;
+    if (y === 1974) v *= 1.7;
+    if (y === 1975) v *= 1.3;
     if (y >= 1979 && y <= 1981) v *= 1.35;
     if (y >= 2008 && y <= 2008) v *= 1.15;
     if (y >= 2018 && y <= 2022) v *= 1.4; // fila do renascimento do vinil
@@ -74,7 +77,8 @@ export function matWhy(m: Material, y: number): L | null {
   if (m === 'shellac' && y >= 1941 && y <= 1946) return l('Guerra: goma-laca racionada.', 'War: shellac rationed.');
   if (m === 'shellac' && y >= 1917 && y <= 1919) return l('Grande Guerra: navios da Índia (de onde vem a goma-laca) requisitados; o preço dispara.', 'Great War: ships from India (where shellac comes from) requisitioned; prices soar.');
   if (m === 'shellac' && y > 1950) return l('Indústria migrando para o vinil: fornecedores somem.', 'Industry moving to vinyl: suppliers vanish.');
-  if (m === 'vinyl' && y >= 1973 && y <= 1975) return l('Choque do petróleo: PVC disparou.', 'Oil shock: PVC soared.');
+  if (m === 'vinyl' && y >= 1973 && y <= 1974) return l('Choque do petróleo: PVC disparou.', 'Oil shock: PVC soared.');
+  if (m === 'vinyl' && y === 1975) return l('Ressaca do choque do petróleo: o PVC ainda está caro, mas baixando.', 'Oil-shock hangover: PVC is still pricey, but easing.');
   if (m === 'vinyl' && y >= 1979 && y <= 1981) return l('Segundo choque do petróleo.', 'Second oil shock.');
   if (m === 'vinyl' && y >= 2018 && y <= 2022) return l('Renascimento do vinil: fila mundial nas prensas.', 'Vinyl revival: worldwide queues at the presses.');
   if (m === 'vinyl' && y >= 1990 && y < 2007) return l('Poucas prensas sobrando: vinil virou nicho.', 'Few presses left: vinyl went niche.');
