@@ -196,7 +196,7 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
       return h('article', { class: 'sv17-run card' },
         h('header', null, h('b', null, top.company), ' ', h('span', { class: 'muted small' }, `${top.player ? `${top.player} · ` : ''}${top.ironman ? '☠ ironman · ' : ''}${ms.length} ${t(l('save(s)', 'save(s)'))}`)),
         ...ms.map((m) => h('div', { class: 'sv17-row' },
-          h('button', { type: 'button', class: 'btn small', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(lastLoadErr20 ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } },
+          h('button', { type: 'button', class: 'btn small', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } },
             `▶ ${m.name || (m.kind === 'auto' || m.slot.startsWith('auto') ? t(l('Autosave', 'Autosave')) : t(l('Save', 'Save')))} — ${monthName(m.month)} ${m.year}`),
           h('small', { class: 'muted' }, `${m.cash !== undefined ? formatMoney(m.cash, locale()) + ' · ' : ''}${kb(m.size)} · ${ago(m.savedAt)}`),
           h('span', { class: 'sv17-acts' },
