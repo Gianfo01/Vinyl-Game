@@ -1,5 +1,131 @@
-// WP-D3 — artistas da Oceania, anos 2020 e profundidade EUA/UK/BRA/ITA/JP/KR (docs/db19.md §5). Edite só este arquivo (ou crie vizinhos wp_d3_*.ts e concatene-os aqui).
+// WP-D3 — artistas da Oceania e dos anos 2020 (docs/db19.md §3.1 H/J/K e §5). Edite só este arquivo.
 // Formato e regras: docs/db19.md "## Formato more19" e ./types.ts (import de valor só de '../world').
+// Só fatos conhecidos até 2026; RealArtist não tem campo exact/tribute (tribute19 ainda não existe), então estreia = primeiro lançamento conferível.
+// A gating por ano é automática (realworld só faz o ato surgir no ano `d`): nada de 2024–2026 aparece antes da hora.
+// Povos indígenas (Yothu Yindi, Archie Roach, Gurrumul, Jimmy Little, Warumpi Band, Christine Anu, Baker Boy): sem cidade própria
+// (Arnhem Land/Torres Strait não existem em CITIES), usa-se o polo da indústria (sydney/melbourne).
 import type { Pack19 } from './types';
 
-export const PACK: Pack19 = { id: 'wp_d3' };
+const OCE: NonNullable<Pack19['artists']> = [
+  // ── Austrália ──
+  { n: 'Slim Dusty', g: 'country', c: 'sydney', d: 1946, e: 2003, t: 2, cn: 'AUS', b: 1927, x: 2003, r: 'vocal', z: 2, al: [['A Pub with No Beer', 1957, 'single']] },
+  { n: 'The Seekers', g: 'folk', c: 'melbourne', d: 1962, e: 1968, rj: [[1993]], t: 2, cn: 'AUS', z: 2, al: [['Georgy Girl', 1966, 'single']] },
+  { n: 'The Easybeats', g: 'beat', c: 'sydney', d: 1965, e: 1969, t: 2, cn: 'AUS', z: 2, al: [['Friday on My Mind', 1966, 'single']] },
+  { n: 'Helen Reddy', g: 'soft_rock', c: 'sydney', d: 1966, e: 2020, t: 2, cn: 'AUS', b: 1941, x: 2020, r: 'vocal', z: 2, al: [['I Am Woman', 1972]] },
+  { n: 'John Farnham', g: 'pop_rock', c: 'melbourne', d: 1967, t: 2, cn: 'AUS', b: 1949, r: 'vocal', z: 2, al: [['Whispering Jack', 1986]] },
+  { n: 'Daddy Cool', g: 'rnr', c: 'melbourne', d: 1971, e: 1972, t: 3, cn: 'AUS', z: 1, al: [['Eagle Rock', 1971, 'single']] },
+  { n: 'Sherbet', g: 'pop_rock', c: 'sydney', d: 1970, e: 1980, t: 3, cn: 'AUS', z: 1 },
+  { n: 'Skyhooks', g: 'glam', c: 'melbourne', d: 1974, e: 1980, t: 3, cn: 'AUS', z: 1, al: [['Living in the 70\'s', 1974]] },
+  { n: 'Cold Chisel', g: 'pub_rock', c: 'adelaide', d: 1978, e: 1983, rj: [[1998, 1999], [2009]], t: 2, cn: 'AUS', z: 2, al: [['East', 1980]] },
+  { n: 'The Saints', g: 'punk', c: 'brisbane', d: 1976, t: 2, cn: 'AUS', z: 2, al: [["(I'm) Stranded", 1976, 'single']] },
+  { n: 'Radio Birdman', g: 'punk', c: 'sydney', d: 1976, e: 1978, rj: [[1996]], t: 3, cn: 'AUS', z: 1 },
+  { n: 'Little River Band', g: 'soft_rock', c: 'melbourne', d: 1975, t: 2, cn: 'AUS', z: 2 },
+  { n: 'Air Supply', g: 'soft_rock', c: 'sydney', d: 1976, t: 2, cn: 'AUS', z: 2, al: [['Lost in Love', 1980]] },
+  { n: 'The Go-Betweens', g: 'post_punk', c: 'brisbane', d: 1978, e: 1989, rj: [[2000, 2006]], t: 3, cn: 'AUS', z: 2, al: [['16 Lovers Lane', 1988]] },
+  { n: 'Hoodoo Gurus', g: 'new_wave', c: 'sydney', d: 1982, t: 3, cn: 'AUS', z: 1 },
+  { n: 'Divinyls', g: 'new_wave', c: 'sydney', d: 1981, e: 2009, t: 2, cn: 'AUS', z: 2, al: [['I Touch Myself', 1991, 'single']] },
+  { n: 'Icehouse', g: 'new_wave', c: 'sydney', d: 1980, t: 2, cn: 'AUS', z: 2 },
+  { n: 'Paul Kelly', g: 'pop_rock', c: 'melbourne', d: 1981, t: 2, cn: 'AUS', b: 1955, r: 'vocal', z: 2 },
+  { n: 'Yothu Yindi', g: 'world_fusion', c: 'sydney', d: 1989, e: 2013, t: 2, cn: 'AUS', z: 2, al: [['Treaty', 1991, 'single']] },
+  { n: 'Archie Roach', g: 'folk', c: 'melbourne', d: 1990, e: 2022, t: 3, cn: 'AUS', b: 1956, x: 2022, r: 'vocal', z: 2, al: [['Charcoal Lane', 1990]] },
+  { n: 'Gurrumul', g: 'folk', c: 'sydney', d: 2008, e: 2017, t: 3, cn: 'AUS', b: 1971, x: 2017, r: 'vocal', z: 2, al: [['Gurrumul', 2008]] },
+  { n: 'Jimmy Little', g: 'country', c: 'sydney', d: 1963, e: 2012, t: 3, cn: 'AUS', b: 1937, x: 2012, r: 'vocal', z: 1, al: [['Royal Telephone', 1963, 'single']] },
+  { n: 'Warumpi Band', g: 'pub_rock', c: 'sydney', d: 1983, t: 3, cn: 'AUS', z: 1 },
+  { n: 'Christine Anu', g: 'dance_pop', c: 'sydney', d: 1995, t: 3, cn: 'AUS', b: 1970, r: 'vocal', z: 1 },
+  { n: 'Baker Boy', g: 'hiphop', c: 'melbourne', d: 2017, t: 3, cn: 'AUS', b: 1996, r: 'mc', z: 1 },
+  { n: 'Powderfinger', g: 'alt_rock', c: 'brisbane', d: 1990, e: 2010, t: 2, cn: 'AUS', z: 2, al: [['Odyssey Number Five', 2000]] },
+  { n: 'Silverchair', g: 'grunge', c: 'sydney', d: 1994, e: 2011, t: 2, cn: 'AUS', z: 2, al: [['Frogstomp', 1995]] },
+  { n: 'Hilltop Hoods', g: 'hiphop', c: 'adelaide', d: 1999, t: 3, cn: 'AUS', z: 1 },
+  { n: 'Natalie Imbruglia', g: 'pop_rock', c: 'sydney', d: 1997, t: 2, cn: 'AUS', b: 1975, r: 'vocal', z: 2, al: [['Left of the Middle', 1997]] },
+  { n: 'Delta Goodrem', g: 'dance_pop', c: 'sydney', d: 2002, t: 2, cn: 'AUS', b: 1984, r: 'vocal', z: 2 },
+  { n: 'Jet', g: 'garage_rock', c: 'melbourne', d: 2003, e: 2012, t: 2, cn: 'AUS', z: 2, al: [['Get Born', 2003]] },
+  { n: 'The Presets', g: 'house', c: 'sydney', d: 2005, t: 3, cn: 'AUS', z: 1 },
+  { n: 'Empire of the Sun', g: 'synthpop', c: 'sydney', d: 2008, t: 2, cn: 'AUS', z: 2, al: [['Walking on a Dream', 2008]] },
+  { n: 'Vance Joy', g: 'folk', c: 'melbourne', d: 2013, t: 2, cn: 'AUS', b: 1987, r: 'vocal', z: 2 },
+  { n: 'Flume', g: 'edm', c: 'sydney', d: 2012, t: 1, cn: 'AUS', b: 1991, r: 'producer', z: 2 },
+  { n: 'Troye Sivan', g: 'dance_pop', c: 'melbourne', d: 2013, t: 2, cn: 'AUS', b: 1995, r: 'vocal', z: 2 },
+  { n: 'Tones and I', g: 'dance_pop', c: 'melbourne', d: 2019, t: 2, cn: 'AUS', b: 1993, r: 'vocal', z: 2, al: [['Dance Monkey', 2019, 'single']] },
+  // ── Nova Zelândia e Pacífico ──
+  { n: 'Hello Sailor', g: 'pop_rock', c: 'auckland', d: 1975, t: 3, cn: 'NZL', z: 1 },
+  { n: 'Dave Dobbyn', g: 'pop_rock', c: 'auckland', d: 1979, t: 3, cn: 'NZL', b: 1957, r: 'vocal', z: 1 },
+  { n: 'The Clean', g: 'post_punk', c: 'dunedin', d: 1981, t: 3, cn: 'NZL', z: 1, al: [['Tally Ho!', 1981, 'single']] },
+  { n: 'The Chills', g: 'indie', c: 'dunedin', d: 1982, t: 3, cn: 'NZL', z: 1 },
+  { n: 'The Verlaines', g: 'indie', c: 'dunedin', d: 1982, t: 3, cn: 'NZL', z: 1 },
+  { n: 'Shihad', g: 'heavy_metal', c: 'wellington', d: 1993, t: 3, cn: 'NZL', z: 1 },
+  { n: 'OMC', g: 'dance_pop', c: 'auckland', d: 1995, t: 3, cn: 'NZL', z: 1, al: [['How Bizarre', 1995, 'single']] },
+  { n: 'Bic Runga', g: 'pop_rock', c: 'wellington', d: 1996, t: 3, cn: 'NZL', b: 1976, r: 'vocal', z: 1 },
+  { n: 'Te Vaka', g: 'world_fusion', c: 'wellington', d: 1996, t: 3, cn: 'NZL', z: 1 },
+  { n: 'Katchafire', g: 'pacific_reggae', c: 'auckland', d: 2002, t: 3, cn: 'NZL', z: 1 },
+  { n: "Fat Freddy's Drop", g: 'dub', c: 'wellington', d: 2001, t: 3, cn: 'NZL', z: 1 },
+  { n: 'Flight of the Conchords', g: 'folk', c: 'wellington', d: 2007, t: 2, cn: 'NZL', z: 2 },
+  { n: 'Kimbra', g: 'alt_rnb', c: 'auckland', d: 2011, t: 3, cn: 'NZL', b: 1990, r: 'vocal', z: 1 },
+  { n: 'Six60', g: 'pop_rock', c: 'dunedin', d: 2009, t: 2, cn: 'NZL', z: 1 },
+  { n: 'Marlon Williams', g: 'folk', c: 'wellington', d: 2015, t: 3, cn: 'NZL', b: 1990, r: 'vocal', z: 1 },
+];
+
+const Y20: NonNullable<Pack19['artists']> = [
+  // ── K-pop e J-pop ──
+  { n: 'aespa', g: 'kpop', c: 'seoul', d: 2020, t: 1, cn: 'KOR', z: 2 },
+  { n: 'ENHYPEN', g: 'kpop', c: 'seoul', d: 2020, t: 2, cn: 'KOR', z: 2 },
+  { n: 'STAYC', g: 'kpop', c: 'seoul', d: 2020, t: 3, cn: 'KOR', z: 1 },
+  { n: 'IVE', g: 'kpop', c: 'seoul', d: 2021, t: 1, cn: 'KOR', z: 2 },
+  { n: 'LE SSERAFIM', g: 'kpop', c: 'seoul', d: 2022, t: 1, cn: 'KOR', z: 2 },
+  { n: 'NMIXX', g: 'kpop', c: 'seoul', d: 2022, t: 2, cn: 'KOR', z: 2 },
+  { n: 'Kep1er', g: 'kpop', c: 'seoul', d: 2022, e: 2024, t: 3, cn: 'KOR', z: 1 },
+  { n: 'tripleS', g: 'kpop', c: 'seoul', d: 2022, t: 3, cn: 'KOR', z: 1 },
+  { n: 'ZEROBASEONE', g: 'kpop', c: 'seoul', d: 2023, t: 2, cn: 'KOR', z: 2 },
+  { n: 'RIIZE', g: 'kpop', c: 'seoul', d: 2023, t: 2, cn: 'KOR', z: 2 },
+  { n: 'BOYNEXTDOOR', g: 'kpop', c: 'seoul', d: 2023, t: 3, cn: 'KOR', z: 1 },
+  { n: 'TWS', g: 'kpop', c: 'seoul', d: 2024, t: 3, cn: 'KOR', z: 1 },
+  { n: 'ILLIT', g: 'kpop', c: 'seoul', d: 2024, t: 2, cn: 'KOR', z: 2 },
+  { n: 'BABYMONSTER', g: 'kpop', c: 'seoul', d: 2024, t: 2, cn: 'KOR', z: 2 },
+  { n: 'KATSEYE', g: 'kpop', c: 'los_angeles', d: 2024, t: 2, cn: 'USA', z: 2 },
+  { n: 'Hearts2Hearts', g: 'kpop', c: 'seoul', d: 2025, t: 3, cn: 'KOR', z: 1 },
+  { n: 'CORTIS', g: 'kpop', c: 'seoul', d: 2025, t: 3, cn: 'KOR', z: 1 },
+  { n: '&TEAM', g: 'jpop', c: 'tokyo', d: 2022, t: 3, cn: 'JPN', z: 1 },
+  { n: 'Fujii Kaze', g: 'jpop', c: 'tokyo', d: 2020, t: 2, cn: 'JPN', b: 1997, r: 'vocal', z: 2 },
+  { n: 'Vaundy', g: 'jpop', c: 'tokyo', d: 2019, t: 2, cn: 'JPN', b: 2000, r: 'vocal', z: 2 },
+  { n: 'Number_i', g: 'jpop', c: 'tokyo', d: 2024, t: 2, cn: 'JPN', z: 2 },
+  // ── América Latina ──
+  { n: 'Junior H', g: 'corridos_tumbados', c: 'guadalajara', d: 2018, t: 2, cn: 'MEX', r: 'vocal', z: 2 },
+  { n: 'Fuerza Regida', g: 'corridos_tumbados', c: 'los_angeles', d: 2019, t: 2, cn: 'USA', z: 2 },
+  { n: 'Quevedo', g: 'latin_trap', c: 'madrid', d: 2019, t: 2, cn: 'ESP', b: 2001, r: 'mc', z: 2 },
+  { n: 'Milo J', g: 'latin_trap', c: 'buenos_aires', d: 2021, t: 2, cn: 'ARG', b: 2004, r: 'mc', z: 2 },
+  { n: 'Tiago PZK', g: 'latin_trap', c: 'buenos_aires', d: 2020, t: 2, cn: 'ARG', b: 2001, r: 'mc', z: 2 },
+  { n: 'Nicki Nicole', g: 'latin_trap', c: 'buenos_aires', d: 2019, t: 2, cn: 'ARG', b: 2000, r: 'vocal', z: 2 },
+  { n: 'Young Miko', g: 'reggaeton', c: 'san_juan', d: 2022, t: 2, cn: 'PRI', b: 1997, r: 'mc', z: 2 },
+  { n: 'Ana Castela', g: 'sertanejo_univ', c: 'goiania', d: 2020, t: 2, cn: 'BRA', b: 2003, r: 'vocal', z: 2 },
+  { n: 'TREASURE', g: 'kpop', c: 'seoul', d: 2020, t: 3, cn: 'KOR', z: 1 },
+  { n: 'Weeekly', g: 'kpop', c: 'seoul', d: 2020, t: 3, cn: 'KOR', z: 1 },
+  { n: 'Billlie', g: 'kpop', c: 'seoul', d: 2021, t: 3, cn: 'KOR', z: 1 },
+  { n: 'Xdinary Heroes', g: 'kpop', c: 'seoul', d: 2021, t: 3, cn: 'KOR', z: 1 },
+  { n: 'Yorushika', g: 'jpop', c: 'tokyo', d: 2019, t: 2, cn: 'JPN', z: 1 },
+  // ── África (pop global dos anos 2020) ──
+  { n: 'Black Sherif', g: 'afrobeats', c: 'accra', d: 2021, t: 2, cn: 'GHA', b: 2002, r: 'vocal', z: 2 },
+  { n: 'Omah Lay', g: 'afrobeats', c: 'lagos', d: 2020, t: 2, cn: 'NGA', b: 1997, r: 'vocal', z: 2 },
+  { n: 'Victony', g: 'afrobeats', c: 'lagos', d: 2020, t: 3, cn: 'NGA', r: 'vocal', z: 1 },
+  { n: 'Ruger', g: 'afrobeats', c: 'lagos', d: 2021, t: 3, cn: 'NGA', r: 'vocal', z: 1 },
+  { n: 'Uncle Waffles', g: 'amapiano', c: 'johannesburg', d: 2022, t: 2, cn: 'ZAF', r: 'dj', z: 2 },
+  { n: 'Musa Keys', g: 'amapiano', c: 'johannesburg', d: 2021, t: 3, cn: 'ZAF', r: 'dj', z: 1 },
+  // ── EUA: country e rap dos anos 2020 ──
+  { n: 'Shaboozey', g: 'country', c: 'nashville', d: 2018, t: 2, cn: 'USA', b: 1995, r: 'vocal', z: 2 },
+  { n: 'Megan Moroney', g: 'country_pop', c: 'nashville', d: 2022, t: 3, cn: 'USA', b: 1998, r: 'vocal', z: 1 },
+  { n: 'Rod Wave', g: 'hiphop', c: 'miami', d: 2018, t: 2, cn: 'USA', b: 1999, r: 'mc', z: 2 },
+  // ── Europa ──
+  { n: 'Blanco', g: 'pop_rnb', c: 'milan', d: 2021, t: 2, cn: 'ITA', b: 2003, r: 'vocal', z: 2 },
+  { n: 'Angelina Mango', g: 'pop_rnb', c: 'milan', d: 2023, t: 2, cn: 'ITA', b: 2001, r: 'vocal', z: 1 },
+  { n: 'The Last Dinner Party', g: 'indie', c: 'london', d: 2023, t: 2, cn: 'GBR', z: 2 },
+  { n: 'PinkPantheress', g: 'hyperpop', c: 'london', d: 2020, t: 2, cn: 'GBR', b: 2001, r: 'vocal', z: 2 },
+  // ── EUA / Canadá ──
+  { n: 'Tate McRae', g: 'dance_pop', c: 'toronto', d: 2017, t: 1, cn: 'CAN', b: 2003, r: 'vocal', z: 2 },
+  { n: 'Gracie Abrams', g: 'bedroom_pop', c: 'los_angeles', d: 2020, t: 2, cn: 'USA', b: 1999, r: 'vocal', z: 2 },
+  { n: 'Benson Boone', g: 'pop_rock', c: 'seattle', d: 2021, t: 2, cn: 'USA', b: 2002, r: 'vocal', z: 2 },
+  { n: 'Reneé Rapp', g: 'dance_pop', c: 'new_york', d: 2022, t: 2, cn: 'USA', b: 2000, r: 'vocal', z: 1 },
+  // ── África ──
+];
+
+export const PACK: Pack19 = {
+  id: 'wp_d3',
+  artists: [...OCE, ...Y20],
+  forerunners: ['Slim Dusty', 'Jimmy Little', 'The Seekers', 'John Farnham', 'Helen Reddy', 'Yothu Yindi', 'Warumpi Band'],
+};
