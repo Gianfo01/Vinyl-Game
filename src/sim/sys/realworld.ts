@@ -90,7 +90,7 @@ function histPeak(r: Rng, tier: number): number {
 }
 
 /** Cria um lançamento anterior à run (sem mercado ativo; entra no catálogo e na história). */
-export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; year: number; type: Release['type']; tier: number; owner?: string; live?: boolean }): Release {
+export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; year: number; type: Release['type']; tier: number; owner?: string; live?: boolean; doc?: boolean }): Release {
   const units = o.live ? 0 : histUnits(r, o.tier, o.year, o.type);
   const peak = o.live ? 999 : histPeak(r, o.tier);
   const q = clamp(r.normal(o.tier === 1 ? 74 : o.tier === 2 ? 64 : 55, 7), 30, 97);
@@ -108,7 +108,7 @@ export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; 
     id: nextId(s, 'r'), actId: act.id, owner: o.owner ?? act.owner ?? 'indie', type: o.type, title: o.title, songs: songId ? [songId] : [],
     week: weekOfYear(s, o.year, r), year: o.year, q, appeal: 0, formats: [], stock: Infinity, pressed: 0, marketing: [], marketingE: 0,
     territories: [cityById[act.city]?.market ?? 'na'], weekly: [], totalUnits: units, revenue: 0, peak, weeksOnChart: Math.round(peak < 10 ? r.int(10, 40) : r.int(2, 14)),
-    lastPos: 0, coverSeed: r.int(1, 2 ** 30), shortage: 0, live: !!o.live, hist: !o.live,
+    lastPos: 0, coverSeed: r.int(1, 2 ** 30), shortage: 0, live: !!o.live, hist: !o.live, prov: o.doc ? 'doc' : 'sim',
   };
   if (o.live) rel.week = s.week;
   if (songId) s.songs[songId].releaseId = rel.id;
@@ -316,7 +316,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   for (const rel of sim ? [] : d.al ?? []) { // r20: no mundo aleatório v2 o repertório anterior é simulado (newgame)
     const year = rel[1] + shift;
     const title = real ? rel[0] : songTitle(r, langForCity(act.city, r));
-    if (year < s.year || (year === s.year && s.month > 0)) seedRelease(s, r, act, { title, year, type: rel[2] ?? 'lp', tier: d.t });
+    if (year < s.year || (year === s.year && s.month > 0)) seedRelease(s, r, act, { title, year, type: rel[2] ?? 'lp', tier: d.t, doc: real });
     else if (keep(`a${rel[0]}`, 0.5)) sched.push({ year, kind: 'release', actId: act.id, rel: [title, year, rel[2]] });
   }
   // todo mundo morto antes da run: o ato é parte da história
@@ -532,7 +532,7 @@ function monthly(s: GameState, r: Rng): void {
       else if (p?.alive) st.sched.push({ ...ev, year: s.year + 1 });
     } else if (ev.kind === 'release' && ev.rel && !histDiverged(s, act) && !act.playerBand && (act.status === 'active' || act.status === 'emerging')) {
       // disco real no ano real: entra no mercado como lançamento de terceiros
-      const rel = seedRelease(s, r, act, { title: ev.rel[0], year: s.year, type: ev.rel[2] ?? 'lp', tier: realDataOf(act)?.t ?? 2, live: true });
+      const rel = seedRelease(s, r, act, { title: ev.rel[0], year: s.year, type: ev.rel[2] ?? 'lp', tier: realDataOf(act)?.t ?? 2, live: true, doc: !!s.config.realNames });
       rel.weeksOnChart = 0;
       rel.territories = act.owner && s.labels[act.owner] ? s.labels[act.owner].territories : rel.territories;
       rel.appeal = computeAppeal(s, r, rel, act).appeal;

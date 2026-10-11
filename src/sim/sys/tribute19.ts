@@ -256,7 +256,7 @@ export function sign19(s: GameState, id: string): L | null {
   if (s.player.cash < signCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `t19sign:${t.id}`, -signCost19(s), 'artist_dev', `Álbum-tributo ${t.name}`);
   const rid = nextId(s, 'r');
-  const rel: Release = { id: rid, actId: a.id, owner: 'player', type: 'lp', title: fmtL(l('{t} toca {a}', '{t} plays {a}'), { t: t.name, a: a.name }).pt, songs: a.songs.slice(0, 10), week: s.week, year: s.year, q: t.q, appeal: Math.round(demand19(s, t).v * 40),
+  const rel: Release = { id: rid, actId: a.id, owner: 'player', prov: 'sim', type: 'lp', title: fmtL(l('{t} toca {a}', '{t} plays {a}'), { t: t.name, a: a.name }).pt, songs: a.songs.slice(0, 10), week: s.week, year: s.year, q: t.q, appeal: Math.round(demand19(s, t).v * 40),
     formats: [], stock: 0, pressed: 0, marketing: [], marketingE: 0, territories: [...s.player.territories], weekly: [], totalUnits: 0, revenue: 0, peak: 0, weeksOnChart: 0, lastPos: 0, coverSeed: t.w * 7919, shortage: 0, live: false, kind: 'tribute' };
   s.releases[rid] = rel;
   t.sign = s.week + 35;

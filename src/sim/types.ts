@@ -353,6 +353,8 @@ export interface Release {
   rolloutId?: string;
   /** rodada 7: discografia anterior ao início da run (real ou simulada) */
   hist?: boolean;
+  /** r20 (novarun §9.2): origem do conteúdo — 'doc' = disco real posto pelo roteiro documentado (exato/legado); 'sim' = gerado nesta partida. Ausente (saves antigos) → ver provOf20. */
+  prov?: 'doc' | 'sim';
   /** rodada 8: nota agregada da crítica (0–100) e nº de resenhas; capa escolhida */
   critic?: number;
   criticN?: number;

@@ -168,6 +168,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
     id: nextId(s, 'r'),
     actId: pr.actId,
     owner,
+    prov: 'sim', // r20 (novarun §9.2): lançado nesta partida
     type: pr.type,
     title: pr.title,
     songs: pr.songs,
@@ -245,7 +246,7 @@ export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, 
     id: nextId(s, 'r'), actId: act.id, owner, type, title: s.songs[songIds[0]]?.title ?? 'Untitled', songs: songIds,
     week: s.week, year: s.year, q: releaseQ(s, songIds), appeal: 0, formats: [], stock: Infinity, pressed: 0,
     marketing, marketingE: marketingE(s, marketing, owner), territories, weekly: [], totalUnits: 0, revenue: 0,
-    peak: 999, weeksOnChart: 0, lastPos: 0, coverSeed: r.int(1, 2 ** 30), shortage: 0, live: true,
+    peak: 999, weeksOnChart: 0, lastPos: 0, coverSeed: r.int(1, 2 ** 30), shortage: 0, live: true, prov: 'sim',
   };
   if (type !== 'single') rel.title = `${rel.title}${type === 'lp' ? '' : ' EP'}`;
   rel.appeal = computeAppeal(s, r, rel, act).appeal;
