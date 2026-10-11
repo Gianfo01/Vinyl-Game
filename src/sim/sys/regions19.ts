@@ -239,7 +239,7 @@ export function raid19(s: GameState, a: Act): void {
   const loss = money(s, 5000);
   post(s, `reg19raid:${a.id}:${s.week}`, -loss, 'misc', `Batida na comuna de ${a.name}`);
   for (const m of a.members) addStress(s, m, 15, l('Batida na comuna', 'Commune raid'));
-  a.fans.core = Math.round(a.fans.core * 1.15); a.fame = clamp(a.fame + 3, 0, 100);
+  a.fans.core = Math.max(a.fans.core + 1, Math.round(a.fans.core * 1.15)); a.fame = clamp(a.fame + 3, 0, 100);
   const reg = regimeAt18(s, a3Of(a));
   const t = fmtL(l('Batida na república de {a}: o prédio é tomado e incendiado, fitas perdidas; os moradores se dispersam.', 'Raid on {a}\'s republic: the compound is seized and set on fire, tapes lost; the residents scatter.'), { a: a.name });
   logR19(s, t); cnt(s, 'raid');

@@ -103,7 +103,8 @@ describe('content.ts', () => {
       for (const c of m.cities) expect(cityById[c], `${m.id}:${c}`).toBeDefined();
     }
     for (const g of GEOPOLITICS) for (const mk of g.markets) expect(marketIds.has(mk), g.id).toBe(true);
-    for (const a of AWARDS) expect(a.categories.length, a.id).toBeGreaterThan(1);
+    // R19 (WP-G) trouxe prêmios reais de laureado único (Pulitzer, Polaris, Sonning, Kennedy): basta uma categoria válida
+    for (const a of AWARDS) expect(a.categories.length, a.id).toBeGreaterThanOrEqual(1);
   });
 });
 

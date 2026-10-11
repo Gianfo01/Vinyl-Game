@@ -53,7 +53,7 @@ export const MGRS_E: RealMgr[] = [
   M('hylton|Jack Hylton|1892|1965|london|1920|1965|impresario|0.1', 'pop,blues_jazz', 'Líder de orquestra que virou o maior impresário de variedades britânico.~Bandleader turned Britain\'s biggest variety impresario.'),
   M('davison|Harold Davison|1925|2012|london|1948|2000|impresario|0.1', 'pop,blues_jazz', 'Agente e promotor britânico de turnês de artistas americanos.~British agent and promoter of American artists\' tours.'),
   M('howes|Arthur Howes|1927|1995|london|1958|1995|impresario|0.1', 'pop,rock', 'Promotor das turnês-pacote dos anos 60, incluindo os Beatles.~Promoter of the 60s package tours, including the Beatles.'),
-  M('dickjames|Dick James|1920|1986|london|1961|1980|impresario|0.12', 'pop,rock', 'Editor musical dos Beatles, via Northern Songs.~The Beatles\' music publisher, via Northern Songs.', [['The Beatles', 1963, 1969]]),
+  M('dickjames|Dick James|1920|1986|london|1961|1980|impresario|0.12', 'pop,rock', 'Editor musical dos Beatles, via Northern Songs.~The Beatles\' music publisher, via Northern Songs.'),
   M('ronniescott|Ronnie Scott|1927|1996|london|1959|1996|impresario|0.1', 'blues_jazz', 'Saxofonista que fundou o clube de jazz mais famoso de Londres (1959).~Saxophonist who founded London\'s most famous jazz club (1959).'),
   // ---- Jamaica e Caribe
   M('sims|Danny Sims|0|0|kingston|1964|1980|shark|0.2', 'caribbean,pop', 'Dono da Cayman Music; contratou os Wailers em 1966 e vendeu o resto do contrato a Chris Blackwell em 1972.~Owner of Cayman Music; signed the Wailers in 1966 and sold the remainder of their contract to Chris Blackwell in 1972.', [['The Wailers', 1966, 1972]]),
