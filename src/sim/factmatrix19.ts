@@ -146,3 +146,13 @@ export function factMatrix19(emitted: string[], readers: Record<string, string[]
   }));
 }
 export const consumed19 = (r: FactRow19): boolean => r.listeners.length + r.wildcard.length + r.readers.length > 0 || r.chron;
+
+/** R19 Frente 7, mercado B (M20, M17, M4, M30): tipos novos → ouvintes (todos com efeito real). */
+export const MARKETB19: Record<string, { sys: string; to: string[] }> = {
+  cancel_wave: { sys: 'cancel19', to: ['cancel19:fans (facções fans18, haters)', 'adsync19:clause (campanhas canceladas, 25% de volta)', 'naming19:cancel (marca sai do nome da casa/festival)'] },
+  cancel_comeback: { sys: 'cancel19', to: ['cancel19:back (fama, fãs, lealdade, manchete)'] },
+  keyman_claim: { sys: 'insure19', to: ['insure19:heirs (prêmio reajustado; espólio post18: união e herdeiros)'] },
+  culture_shift: { sys: 'culture19', to: ['culture19:staff (lealdade da equipe, confiança do elenco, manchete)'] },
+  naming_deal: { sys: 'naming19', to: ['naming19:rep (reputação da casa/festival, manchete)'] },
+  naming_pulled: { sys: 'naming19', to: ['naming19:back (nome antigo volta, manchete)'] },
+};

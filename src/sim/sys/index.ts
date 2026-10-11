@@ -272,4 +272,12 @@ import './echoes19';
 import './era19';
 import './realhist19';
 import './links19b'; // r19 Frente 1 grupo B: sessão×qualidade, câmbio por submercado, inteligência de rivais, campus, júri×caminho, 11.10, 11.11
+// Rodada 19 (Frente 7, mercado B): remix/DJs/white labels, publicidade e jingles, trilhas e needle drops, cancelamento digital, seguros e saúde, cultura da empresa, naming rights.
+import './remix19';
+import './adsync19';
+import './score19';
+import './cancel19';
+import './insure19';
+import './culture19';
+import './naming19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

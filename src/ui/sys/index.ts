@@ -172,4 +172,6 @@ import './tribute19';
 import './session19';
 // Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
 import './era19';
+// Rodada 19 (Frente 7, mercado B): Remix, anúncios e trilhas (Música) e Crises, seguros e cultura (Selo).
+import './market19b';
 import './core18';

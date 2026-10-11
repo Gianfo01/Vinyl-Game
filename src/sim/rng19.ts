@@ -35,6 +35,11 @@ export const STREAMS19: Record<string, string> = {
   wr19: 'compositores: ghostwriters, ofertas de canções, plágio (writers19)',
   links19a: 'ligações R19 grupo A: tragédia em festival lotado (links19a)',
   l19b: 'malha de ligações B: crises cambiais sorteadas, bônus de descoberta do campus, corrida por talento, traição de pactos (links19b)',
+  remix19: 'remix de catálogo, white labels, pedidos de DJs e remixes de NPCs (remix19)',
+  adsync19: 'ofertas de marcas, contraproposta e licenças de NPCs (adsync19)',
+  score19: 'canções-tema, bilheteria, indicações e needle drops (score19)',
+  cancel19: 'ondas de cancelamento: resposta de NPCs e contra-ataque (cancel19)',
+  culture19: 'cultura caótica: erros de metadados e vazamentos (culture19)',
 };
 
 export const perSystem19 = (s: GameState): boolean => (s.rngVersion ?? 0) >= RNG_VERSION19;

@@ -11,6 +11,7 @@ import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerDeadline } from '../calendar19';
 import { registerConseq18 } from '../decide18';
+import { schedule18 } from './decide18';
 import { registerExplain, type WhyPart } from '../explain18';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
@@ -82,8 +83,11 @@ export function remix19(s: GameState, relId: string, djId: string): L | null {
   const st = rmx19(s);
   st.rx.push({ id: `rx${++st.seq}`, rel: relId, dj: dj.id, djn: dj.name, w: s.week, due: s.week + 4, k: 'club', split: 1 });
   cnt19(st, 'club');
+  schedule18(s, 'rmx19:club', { act: rel.actId, rel: rel.id }, fmtL(l('Remix de "{t}"', '"{t}" remix'), { t: rel.title }), fmtL(l('Encomendar a {d}', 'Commission {d}'), { d: dj.name }));
   return null;
 }
+registerConseq18('rmx19:club', { now: l('Custo agora; sai em 1 mês, chance pelo DJ e pela pista.', 'Cost now; out in 1 month, odds by DJ and floor.'), later: [{ in: [6, 14], p: 0.2, tone: 'mixed', hint: l('Puristas da faixa original podem reclamar.', 'Purists of the original may complain.'),
+  fx: (f) => (f.r.chance(0.5) ? (f.fans(2), l('O remix apresenta a faixa a uma pista inteira de gente nova.', 'The remix introduces the track to a whole new dancefloor.')) : (f.trust(-2), l('O artista detesta o remix e diz em entrevista que não autorizou "aquilo".', 'The artist hates the remix and says in an interview they never approved "that".'))) }] });
 function resolveRx(s: GameState, x: Rmx19, r: Rng): void {
   const rel = s.releases[x.rel], dj = media18(s).djs.find((d) => d.id === x.dj);
   if (!rel) { x.ok = false; return; }
@@ -119,6 +123,7 @@ export function whiteLabel19(s: GameState, relId: string): L | null {
   const leak = r.chance(0.15) ? 1 : 0;
   st.wl[relId] = [v, s.week, leak];
   cnt19(st, 'white');
+  schedule18(s, 'rmx19:white', { act: rel.actId, rel: rel.id }, fmtL(l('White label de "{t}"', '"{t}" white label'), { t: rel.title }), l('Prensar sem rótulo', 'Press it unlabelled'));
   const tx = fmtL(l('Um 12" sem rótulo de "{t}" circula entre DJs: pista {v}/100{x}.', 'An unlabelled 12" of "{t}" circulates among DJs: floor {v}/100{x}.'), { t: rel.title, v, x: leak ? l(' — e vazou em pirata', ' — and it leaked as a bootleg') : '' });
   log19(s, st, tx);
   emitFact(s, { kind: 'white_label', actors: [rel.actId, 'player'], severity: 15 + Math.round(v / 6), visibility: 'rumor', tags: ['remix19', v >= 60 ? 'good' : 'mixed', ...(leak ? ['leak'] : [])], text: tx, src: 'remix19', data: { rel: rel.id, v, leak } });
@@ -126,6 +131,9 @@ export function whiteLabel19(s: GameState, relId: string): L | null {
 }
 
 // ---------------------------------------------------------------- residências de DJ
+
+registerConseq18('rmx19:white', { now: l('Barato; mede a pista; 15% de chance de vazar.', 'Cheap; tests the floor; 15% chance of a leak.'), later: [{ in: [2, 6], p: 0.25, tone: 'good', hint: l('DJs falam do disco misterioso.', 'DJs talk about the mystery record.'),
+  fx: (f) => (f.fame(1), l('O disco sem rótulo vira lenda de pista: "quem é?".', 'The unlabelled record becomes a club legend: "who is it?".')) }] });
 
 export const resOpen19 = (s: GameState): ResV19[] => (Object.keys(RES19) as ResV19[]).filter((k) => s.year >= RES19[k].from && (!RES19[k].to || s.year <= RES19[k].to!) && (k !== 'own' || v17(s).own.length > 0));
 export const resFee19 = (s: GameState, k: ResV19, a: Act) => money(s, RES19[k].fee * (0.5 + a.fame / 80));
