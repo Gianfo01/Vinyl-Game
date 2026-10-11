@@ -115,9 +115,9 @@ describe('festivais', () => {
 });
 
 describe('premiações', () => {
-  it('indicados saem em outubro, campanha custa e soma pontos; a cerimônia escolhe entre os indicados', () => {
+  it('indicados saem em novembro, campanha custa e soma pontos; a cerimônia (fevereiro) escolhe entre os indicados', () => {
     const s = mk('r8-cer', { startYear: 1990, scenario: 'established' });
-    while (s.month <= 9) advanceMonth(s);
+    while (s.month <= 10) advanceMonth(s); // r19: calendário real (indicados em novembro)
     expect(cer8(s).noms?.year).toBe(s.year);
     const recs = nominees(s, 'record') ?? [];
     expect(recs.length).toBeGreaterThan(0);
@@ -128,7 +128,7 @@ describe('premiações', () => {
       if (!err) expect(s.player.cash).toBeLessThan(cash0);
     }
     const year = s.year;
-    while (s.year === year) advanceMonth(s);
+    while (s.year === year || s.month <= 1) advanceMonth(s); // r19: cerimônia em fevereiro do ano seguinte
     const won = s.awards.filter((a) => a.year === year && a.category === 'record');
     if (won.length && recs.length) expect(recs).toContain(won[0].releaseId);
     invariant(s);

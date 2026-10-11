@@ -12,6 +12,7 @@ import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { sc, findScene } from '../src/sim/sys/scenes';
 import { awardSpeech, awardsYear } from '../src/sim/sys/scenes/awards';
+import { cer8 } from '../src/sim/sys/ceremonies8';
 import { autoAnswers, resolveInterview, startInterview, toneEffect } from '../src/sim/sys/scenes/interview';
 import { radioFit, resolveRadio, startRadioVisit } from '../src/sim/sys/scenes/radio';
 import { appealVerdict, courtChoice, courtWeek } from '../src/sim/sys/scenes/court';
@@ -53,6 +54,7 @@ describe('premiação', () => {
     const r = rngOf(s);
     const rel = Object.values(s.releases).find((x) => !x.hist && (x.owner === 'player' || x.actId === act.id));
     s.awards.push({ year: s.year, category: 'record', releaseId: rel?.id, actId: act.id, name: `${act.name} — x`, byPlayer: true });
+    cer8(s).noms = { year: s.year, cats: { record: [rel!.id] } }; // r19: a cerimônia usa os indicados oficiais
     awardsYear(s, r);
     const cs = last(s, 'awards')!;
     expect(cs).toBeTruthy();
@@ -69,7 +71,10 @@ describe('premiação', () => {
   it('discurso político deixa o ato na mira e provocação esquenta a rivalidade', () => {
     const { s, act } = withAct('scn-aw2');
     const r = rngOf(s);
-    s.awards.push({ year: s.year, category: 'live_act', actId: act.id, name: `Ato ao Vivo / Live: ${act.name}`, byPlayer: true });
+    // r19: só há cerimônia com indicado oficial; o discurso vem de uma categoria dos Gramófonos que você ganhou
+    const rel = Object.values(s.releases).find((x) => !x.hist && (x.owner === 'player' || x.actId === act.id))!;
+    s.awards.push({ year: s.year, category: 'album', releaseId: rel.id, actId: act.id, name: `${act.name} — x`, byPlayer: true });
+    cer8(s).noms = { year: s.year, cats: { album: [rel.id] } };
     awardsYear(s, r);
     const cs = last(s, 'awards')!;
     awardSpeech(s, r, cs.id, 'political');
