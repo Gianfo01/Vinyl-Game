@@ -21,7 +21,7 @@ import { fmtL, money, nextId, playerActs, post } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { addLead18 } from './discover18';
 import { actOfPerson17 } from './love17';
-import { cashWhy20, freeCash20 } from '../oblig20';
+import { cashWhy20 } from '../oblig20';
 
 export interface Fr18 { id: string; real: string; alt: L; from: number; to: number; mk: MarketId[]; power: number; desc: L }
 export const FR18: Fr18[] = [
