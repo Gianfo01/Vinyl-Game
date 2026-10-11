@@ -271,5 +271,6 @@ import './links19a'; // r19 Frente 1 grupo A: espólio, fábrica, censura, festi
 import './echoes19';
 import './era19';
 import './realhist19';
+import './history19'; // r19 T8: marcos 1926–2026 com decisão e ecos, geopolítica, regimes, flag T
 import './links19b'; // r19 Frente 1 grupo B: sessão×qualidade, câmbio por submercado, inteligência de rivais, campus, júri×caminho, 11.10, 11.11
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

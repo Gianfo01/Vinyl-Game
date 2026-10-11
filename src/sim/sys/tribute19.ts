@@ -107,6 +107,8 @@ const VOX = new Set(['vocal', 'mc']);
 /** O jogador é dono do original (selo) ou é a própria banda (artista)? */
 export const mineAct19 = (s: GameState, a: Act | undefined): boolean => !!a && (a.owner === 'player' || !!a.playerBand || a.releases.some((id) => s.releases[id]?.owner === 'player'));
 /** Por que o original "sumiu" (abre espaço para tributo). */
+/** r19 (T8, history19): artista propenso a tributo (flag `T` do RealArtist / lista K do db19) — injetado sem ciclo de import. */
+export const TRIB19_T: { f?: (a: Act) => boolean } = {};
 export function absent19(s: GameState, a: Act): L | null {
   if (a.deceased || (a.members.length && a.members.every((p) => !alive(s, p)))) return l('o original morreu', 'the original is dead');
   if (a.status === 'split') return l('a banda se separou', 'the band split up');
@@ -367,7 +369,7 @@ registerSimHook('month', 'tribute19', (s, r0) => {
       const ab = absent19(s, a), spark = (st.spark[a.id] ?? 0) > s.week;
       if (!ab && !spark && a.hits < 3) continue;
       const loy = loyalty19(s, a.id);
-      const p = 0.0035 * (a.fame / 50) ** 2 * (ab ? 3 : 1) * (spark ? 3 : 1) * (1 + loy / 100) * (a.legend ? 1.5 : 1) / (1 + n);
+      const p = 0.0035 * (a.fame / 50) ** 2 * (ab ? 3 : 1) * (spark ? 3 : 1) * (1 + loy / 100) * (a.legend ? 1.5 : 1) * (TRIB19_T.f?.(a) ? 1.6 : 1) / (1 + n); // r19 T8: flag T
       if (r.chance(Math.min(0.12, p)) && birth19(s, r, a)) break; // no máximo um por mês
     }
   }
