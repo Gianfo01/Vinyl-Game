@@ -134,21 +134,23 @@ export const EVENTS: EventDef[] = [
     id: 'grief', cat: 'people', tone: 'bad', tags: ['death'], cooldown: 14,
     find: (s, r) => {
       const a = pickMine(s, r);
-      if (!a || !r.chance(0.3)) return null;
-      return { act: a.id, person: r.pick(a.members) };
+      const ms = a ? members(s, a) : [];
+      if (!a || !ms.length || !r.chance(0.3)) return null;
+      return { act: a.id, person: r.pick(ms).id };
     },
     title: l('Luto em {act}', 'Grief in {act}'),
     text: l('{person} ({act}) perdeu alguém da família.', '{person} ({act}) lost a family member.'),
     options: [
-      { id: 'support', label: l('Dar um mês de folga', 'Give a month off'), apply: (s, _r, c) => { const a = act(s, c); hiatus(s, a, 4); a.trust += 8; s.persons[String(c.person)].inspiration = 90; } },
-      { id: 'work', label: l('Manter a agenda', 'Keep the schedule'), hint: l('A dor pode virar música — ou ressentimento.', 'Grief may become music — or resentment.'), apply: (s, _r, c) => { const p = s.persons[String(c.person)]; p.inspiration = 95; p.morale -= 15; p.resentment += 8; } },
+      { id: 'support', label: l('Dar um mês de folga', 'Give a month off'), apply: (s, _r, c) => { const a = act(s, c); hiatus(s, a, 4); a.trust += 8; const p = s.persons[String(c.person)]; if (p) p.inspiration = 90; } },
+      { id: 'work', label: l('Manter a agenda', 'Keep the schedule'), hint: l('A dor pode virar música — ou ressentimento.', 'Grief may become music — or resentment.'), apply: (s, _r, c) => { const p = s.persons[String(c.person)]; if (!p) return; p.inspiration = 95; p.morale -= 15; p.resentment += 8; } },
     ],
   },
   {
     id: 'wedding', cat: 'people', tone: 'neutral', tags: [], cooldown: 10,
     find: (s, r) => {
       const a = pickMine(s, r);
-      return a && r.chance(0.35) ? { act: a.id, person: r.pick(a.members) } : null;
+      const ms = a ? members(s, a) : [];
+      return a && ms.length && r.chance(0.35) ? { act: a.id, person: r.pick(ms).id } : null;
     },
     title: l('Casamento: {person}', 'Wedding: {person}'),
     text: l('{person} ({act}) vai se casar. A imprensa quer fotos.', '{person} ({act}) is getting married. The press wants photos.'),
@@ -161,13 +163,14 @@ export const EVENTS: EventDef[] = [
     id: 'child_born', cat: 'people', tone: 'neutral', tags: [], cooldown: 12,
     find: (s, r) => {
       const a = pickMine(s, r, (x) => x.status === 'active');
-      return a && r.chance(0.3) ? { act: a.id, person: r.pick(a.members) } : null;
+      const ms = a ? members(s, a) : [];
+      return a && ms.length && r.chance(0.3) ? { act: a.id, person: r.pick(ms).id } : null;
     },
     title: l('{person} vai ser pai/mãe', '{person} is having a baby'),
     text: l('{person} ({act}) pede menos datas de turnê pelos próximos meses.', '{person} ({act}) asks for fewer tour dates in the coming months.'),
     options: [
-      { id: 'accept', label: l('Aceitar', 'Accept'), apply: (s, _r, c) => { const a = act(s, c); a.trust += 6; s.persons[String(c.person)].morale += 12; s.flags[`fewgigs:${a.id}`] = s.week + 26; } },
-      { id: 'insist', label: l('Insistir na turnê', 'Insist on touring'), apply: (s, _r, c) => { const p = s.persons[String(c.person)]; p.resentment += 20; p.morale -= 12; act(s, c).trust -= 8; } },
+      { id: 'accept', label: l('Aceitar', 'Accept'), apply: (s, _r, c) => { const a = act(s, c); a.trust += 6; const p = s.persons[String(c.person)]; if (p) p.morale += 12; s.flags[`fewgigs:${a.id}`] = s.week + 26; } },
+      { id: 'insist', label: l('Insistir na turnê', 'Insist on touring'), apply: (s, _r, c) => { const p = s.persons[String(c.person)]; if (p) { p.resentment += 20; p.morale -= 12; } act(s, c).trust -= 8; } },
     ],
   },
   {
