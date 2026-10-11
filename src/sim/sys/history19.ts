@@ -318,9 +318,18 @@ RG('af19', ['AFG'], 1996, 2001, l('Talibã', 'Taliban'), l('Ministério da Promo
 
 // ---------------------------------------------------------------- tributo: flag T (db19 §3.1 K) — marcada nos dados e lida pelo tribute19
 const K19 = new Set(TRIB_K19.map(norm19));
-for (const a of REAL_ALL) if (K19.has(norm19(a.n))) a.T = true;
+let marked19 = false;
+/** marca `T` nos dados reais (adiado: realworld pode ainda não ter avaliado no ciclo de imports) */
+export function markT19(): void {
+  if (marked19 || !Array.isArray(REAL_ALL)) return;
+  marked19 = true;
+  for (const a of REAL_ALL) if (K19.has(norm19(a.n))) a.T = true;
+}
+try { markT19(); } catch { /* ciclo de imports: fica para o microtask */ }
+queueMicrotask(() => { try { markT19(); } catch { /* idem */ } });
 /** artista propenso a tributo/cover (flag T do RealArtist ou nome do catálogo clássico na lista K) */
 export function tribProne19(a: Act): boolean {
+  markT19();
   const d = realDataOf(a);
   return !!d && (('T' in d && d.T === true) || K19.has(norm19(d.n)));
 }
