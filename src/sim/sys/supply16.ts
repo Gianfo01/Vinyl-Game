@@ -5,14 +5,21 @@ import { registerSimHook } from '../ext4';
 import type { Material } from './industry/state';
 import { matTarget, matWhy } from './industry/supply13';
 import { mainMaterial } from './industry/supply';
-import { fmtL, notify } from '../util';
+import { fmtL } from '../util';
+import { registerAdvisorTip } from '../inbox18';
 import { l } from '../../data/world';
 
 registerSimHook('newgame', 'supply16', (s) => {
   const p = s.x4.industry.matPrice;
   for (const m of Object.keys(p) as Material[]) p[m] = Math.round(matTarget(m, s.year) * 100) / 100;
-  // r19 (equilíbrio): começar no meio de um choque de matéria-prima (1917, 1941–46, 1973–75, 1979–81…) vem com aviso:
-  // prensar sai mais caro e as prensas de terceiros têm fila — tiragens menores até o preço baixar.
-  const main = mainMaterial(s.year), why = matWhy(main, s.year);
-  if (why && (p[main] ?? 1) >= 1.15) notify(s, fmtL(l('Matéria-prima cara neste começo: {w} Prensar custa ×{x}; prefira tiragens pequenas e reprense se vender.', 'Pricey raw material at the start: {w} Pressing costs ×{x}; prefer small runs and repress if it sells.'), { w: why, x: (p[main] ?? 1).toFixed(2) }), 'bad');
+});
+
+// r19 (equilíbrio): choque de matéria-prima (1917, 1941–46, 1973–75, 1979–81…) vira alerta do conselheiro enquanto durar —
+// prensar sai mais caro e as prensas de terceiros têm fila: tiragens menores até o preço baixar (pega quem começa no meio dele).
+registerAdvisorTip('supply16', (s) => {
+  const main = mainMaterial(s.year), why = matWhy(main, s.year), x = s.x4?.industry?.matPrice?.[main] ?? 1;
+  if (!why || x < 1.15) return [];
+  return [{ id: 'mat-shock', level: 'warn' as const, text: fmtL(l('Matéria-prima cara: {w}', 'Pricey raw material: {w}'), { w: why }),
+    why: [fmtL(l('Prensar custa ×{x} do normal e as prensas de terceiros têm fila.', 'Pressing costs ×{x} of normal and third-party presses are queued.'), { x: x.toFixed(2) }), l('Prefira tiragens pequenas e reprense se vender.', 'Prefer small runs and repress if it sells.')],
+    goto: { area: 'supply18' } }];
 });
