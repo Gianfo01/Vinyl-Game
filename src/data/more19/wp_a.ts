@@ -3,7 +3,7 @@
 // com estreia aproximada ("primeiros discos"): o schema RealArtist não tem flag `exact`, por isso só entram datas
 // defensáveis. Formato das linhas: ver ./ab_util.ts.
 import type { Pack19 } from './types';
-import { rows } from './ab_util';
+import { rows, unsure } from './ab_util';
 
 const USA = `
 Mamie Smith|classic_blues|new_york|USA|1920|3|1891|1946|v|||Crazy Blues:1920:s
@@ -18,7 +18,7 @@ Blind Willie Johnson|gospel|houston|USA|1927|3|1897|1945|g
 Charley Patton|delta_blues|memphis|USA|1929|3|1891|1934|g
 Memphis Minnie|delta_blues|memphis|USA|1929|3|1897|1973|g
 Son House|delta_blues|memphis|USA|1930|3|1902|1988|g
-Mills Brothers|vocal_jazz|new_york|USA|1931|2||||Herbert Mills:v:1912:1989;Harry Mills:v:1913:1982;Donald Mills:v:1915:1999;John Mills Jr.:v:1910:1936
+Mills Brothers|vocal_jazz|new_york|USA|1931|2|||||Herbert Mills:v:1912:1989;Harry Mills:v:1913:1982;Donald Mills:v:1915:1999;John Mills Jr.:v:1910:1936
 Boswell Sisters|vocal_jazz|new_orleans|USA|1930|3||||1936|Connee Boswell:v:1907:1976;Martha Boswell:v:1905:1958;Vet Boswell:v:1911:1988
 Art Tatum|stride|new_york|USA|1932|3|1909|1956|k
 Lionel Hampton|big_band|new_york|USA|1936|2|1908|2002|d
@@ -81,13 +81,13 @@ Juan D'Arienzo|tango|buenos_aires|ARG|1928|3|1900|1976|s
 Carlos Di Sarli|tango|buenos_aires|ARG|1928|3|1903|1960|k
 Hugo del Carril|tango|buenos_aires|ARG|1936|3|1912|1989|v
 Agustín Lara|bolero|mexico_city|MEX|1930|2|1897|1970|k
-Trío Los Panchos|bolero|new_york|MEX|1944|2||||Chucho Navarro:g:1913:1993;Alfredo Gil:g:1915:1999;Hernando Avilés:v:1914:1986
+Trío Los Panchos|bolero|new_york|MEX|1944|2|||||Chucho Navarro:g:1913:1993;Alfredo Gil:g:1915:1999;Hernando Avilés:v:1914:1986
 Tito Guízar|ranchera|mexico_city|MEX|1930|3|1908|1999|v
 Pedro Vargas|bolero|mexico_city|MEX|1930|3|1906|1989|v
 Ernesto Lecuona|danzon|havana|CUB|1920|2|1895|1963|k
 Rita Montaner|son|havana|CUB|1926|3|1900|1958|v
 Miguelito Valdés|son|havana|CUB|1936|3|1912|1978|v
-Trío Matamoros|son|havana|CUB|1925|2||||Miguel Matamoros:g:1894:1971;Rafael Cueto:g:1900:1991;Siro Rodríguez:v:1899:1981
+Trío Matamoros|son|havana|CUB|1925|2|||||Miguel Matamoros:g:1894:1971;Rafael Cueto:g:1900:1991;Siro Rodríguez:v:1899:1981
 Septeto Nacional|son|havana|CUB|1927|3|||||Ignacio Piñeiro:b:1888:1969
 Arsenio Rodríguez|son|havana|CUB|1940|2|1911|1970|g
 Pérez Prado|mambo|mexico_city|CUB|1948|1|1916|1989|k
@@ -172,7 +172,7 @@ Siti binti Saad|taarab|zanzibar|TZA|1928|3|1880|1950|v
 
 export const PACK: Pack19 = {
   id: 'wp_a',
-  artists: [USA, BRA, LAT, CAR, EUR, ASIA, AFR].flatMap(rows),
+  artists: unsure([USA, BRA, LAT, CAR, EUR, ASIA, AFR].flatMap(rows), ['Lord Flea', 'Count Lasher']),
   // estreia anterior ao nascimento do gênero (P. Ramlee: primeiro filme 1948; malay_pop nasce em 1955)
   forerunners: ['P. Ramlee'],
 };

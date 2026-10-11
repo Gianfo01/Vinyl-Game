@@ -5,6 +5,7 @@
 // RealArtist não tem `exact`, então anos de t:3 e de formações antigas (Plastic People, Mashina Vremeni etc.) são aproximados.
 // Sem casos criminais: black metal norueguês só com bandas sem o episódio dos anos 90.
 import type { Pack19 } from './types';
+import { unsure } from './ab_util';
 import type { RealArtist, RealRelease } from '../realtypes';
 
 type Row = [n: string, g: string, c: string, d: number, t: 1 | 2 | 3, cn: string, e?: number];
@@ -13,7 +14,7 @@ const mk = (rows: Row[], al: Record<string, RealRelease[]> = {}): RealArtist[] =
 
 const EAST: Row[] = [
   // Polônia
-  ['Czesław Niemen', 'beat', 'warsaw', 1962, 2, 'POL'],
+  ['Czesław Niemen', 'beat', 'warsaw', 1962, 2, 'POL', 2004],
   ['Maryla Rodowicz', 'trad_pop', 'warsaw', 1967, 2, 'POL'],
   ['Skaldowie', 'beat', 'krakow', 1965, 3, 'POL'],
   ['Czerwone Gitary', 'beat', 'gdansk', 1965, 3, 'POL'],
@@ -24,7 +25,7 @@ const EAST: Row[] = [
   ['Behemoth', 'black_metal', 'gdansk', 1995, 3, 'POL'],
   ['Dawid Podsiadło', 'indie', 'gdansk', 2013, 2, 'POL'],
   // Tchéquia e Eslováquia
-  ['Karel Gott', 'trad_pop', 'prague', 1960, 1, 'CZE'],
+  ['Karel Gott', 'trad_pop', 'prague', 1960, 1, 'CZE', 2019],
   ['Marta Kubišová', 'beat', 'prague', 1965, 3, 'CZE'],
   ['Olympic', 'beat', 'prague', 1965, 3, 'CZE'],
   ['Plastic People of the Universe', 'psychedelic', 'prague', 1968, 3, 'CZE'],
@@ -82,7 +83,7 @@ const EAST: Row[] = [
 
 const NORDIC: Row[] = [
   // Suécia
-  ['Cornelis Vreeswijk', 'folk', 'stockholm', 1964, 3, 'SWE'],
+  ['Cornelis Vreeswijk', 'folk', 'stockholm', 1964, 3, 'SWE', 1987],
   ['Ulf Lundell', 'pop_rock', 'stockholm', 1975, 3, 'SWE'],
   ['The Cardigans', 'indie', 'malmo', 1994, 2, 'SWE'],
   ['The Hives', 'garage_rock', 'stockholm', 1997, 2, 'SWE'],
@@ -111,7 +112,7 @@ const NORDIC: Row[] = [
   ['Mew', 'indie', 'copenhagen', 1997, 3, 'DNK'],
   ['D-A-D', 'hard_rock', 'copenhagen', 1986, 3, 'DNK'],
   ["Gasolin'", 'pop_rock', 'copenhagen', 1971, 2, 'DNK', 1978],
-  ['Kim Larsen', 'pop_rock', 'copenhagen', 1973, 2, 'DNK'],
+  ['Kim Larsen', 'pop_rock', 'copenhagen', 1973, 2, 'DNK', 2018],
   ['Alphabeat', 'dance_pop', 'copenhagen', 2007, 3, 'DNK'],
   ['Medina', 'dance_pop', 'copenhagen', 2007, 3, 'DNK'],
   ['King Diamond', 'heavy_metal', 'copenhagen', 1985, 3, 'DNK'],
@@ -157,4 +158,4 @@ const AL: Record<string, RealRelease[]> = {
   'Ólafur Arnalds': [['Eulogy for Evolution', 2007]],
 };
 
-export const PACK: Pack19 = { id: 'wp_d1', artists: [...mk(EAST, AL), ...mk(NORDIC, AL)] };
+export const PACK: Pack19 = { id: 'wp_d1', artists: unsure([...mk(EAST, AL), ...mk(NORDIC, AL)], ['Plastic People of the Universe', 'DDT']) };

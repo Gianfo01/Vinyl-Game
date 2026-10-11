@@ -22,3 +22,9 @@ export function rows(txt: string): RealArtist[] {
     return a;
   });
 }
+
+/** R19 WP-J: marca como não conferido (`exact: false`) os artistas cuja estreia não pôde ser confirmada; some no modo exato. */
+export function unsure(list: RealArtist[], names: string[]): RealArtist[] {
+  const s = new Set(names);
+  return list.map((a) => (s.has(a.n) ? { ...a, exact: false as const } : a));
+}

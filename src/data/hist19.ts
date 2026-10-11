@@ -48,7 +48,7 @@ export const H19: H19[] = [
   H('deixa_falar', 1928, 7, 'wave', 'Deixa Falar, Estácio, agosto de 1928', 'A primeira escola de samba~The first samba school',
     'Em 1928 sambistas do Estácio, no Rio, fundam a primeira "escola de samba"; o samba de batucada ganha os desfiles e o disco.~In 1928 samba players from Estácio, in Rio, found the first "samba school"; percussion samba takes over parades and records.',
     { w: true, g: ['samba', 'brazil'], mk: ['br'], ap: 1.05, until: 1940, pop: 0.1 }),
-  H('peanut', 1930, 4, 'wave', '"El Manisero" (Don Azpiazú), 1930', 'A febre da rumba~The rumba craze',
+  H('peanut', 1930, 3, 'wave', '"El Manisero" (Don Azpiazú), 1930', 'A febre da rumba~The rumba craze',
     'Uma orquestra de Havana grava "El Manisero" em Nova York em 1930 e vende mais de um milhão de partituras: a "rumba" vira moda nos salões.~A Havana orchestra records "El Manisero" in New York in 1930 and sells over a million copies of sheet music: "rumba" becomes the ballroom craze.',
     { g: ['latin', 'caribbean'], ap: 1.06, until: 1937, pop: 0.12 }),
   H('alam_ara', 1931, 2, 'wave', '"Alam Ara", 14/3/1931', 'O primeiro filme falado indiano~India\'s first talkie',
