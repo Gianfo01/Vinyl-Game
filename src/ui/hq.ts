@@ -31,9 +31,9 @@ export const hqHooks: {
   /** etiquetas sobre as salas: estúdio livre ou com fila, quem compõe, quem descansa… */
   roomTags?: (s: GameState) => RoomTag[];
   /** clique numa sala (ex.: estúdio → sessão em andamento) */
-  onRoom?: (kind: RoomKind) => void;
+  onRoom?: (kind: RoomKind, at?: HqAt) => void;
   /** clique numa carreira (ex.: próxima decisão importante) */
-  onAct?: (actId: string) => void;
+  onAct?: (actId: string, at?: HqAt) => void;
   /** linhas extras no balão de dica da carreira */
   tip?: (s: GameState, actId: string) => string[];
   /** lista lateral (acesso direto, para quem prefere rapidez) */
@@ -48,6 +48,9 @@ export const hqHooks: {
   /** rodada 12: linhas extras na dica de cada sala (o estado real do negócio) */
   roomTip?: (s: GameState, kind: RoomKind) => string[];
 } = {};
+/** r20b: onde o clique (ou o Enter do teclado) aconteceu no canvas — o menu de ações abre ancorado ali.
+ *  `person` = integrante clicado (o menu é o da carreira dele, com a ficha da pessoa como item extra). */
+export interface HqAt { x: number; y: number; anchor: HTMLElement; person?: string }
 /** rodada 12: alguém de fora na sede (ex.: o empresário de um artista negociando). */
 export interface HqVisitor { key: string; name: string; seed: string; room: RoomKind; label: L; icon: Activity['icon']; tip: string[]; onClick?: () => void }
 const FPS_MS = 33;
@@ -139,8 +142,11 @@ export class HqView {
   private cssW = 800;
   private cssH = 460;
 
-  onSelect: (actId: string) => void = () => {};
+  onSelect: (actId: string, at?: HqAt) => void = () => {};
   onSelectPerson: (personId: string) => void = () => {};
+  /** r20b: alvo do teclado (n/] próximo, p/[ anterior, Enter/Espaço/Shift+F10 abre o menu) */
+  private kb = -1;
+  private live: HTMLDivElement;
   onSelectStaff?: (staffId: string) => void;
 
   constructor(private getState: () => GameState | null) {
@@ -153,7 +159,8 @@ export class HqView {
     this.bbx = this.bb.getContext('2d')!;
     this.tip = h('div', { class: 'hq-tip', role: 'tooltip' });
     this.tip.hidden = true;
-    this.stage = h('div', { class: 'hq-stage' }, this.canvas, this.tip);
+    this.live = h('div', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+    this.stage = h('div', { class: 'hq-stage' }, this.canvas, this.tip, this.live);
     this.toolbar = h('div', { class: 'hq-toolbar' });
     this.bindInput();
   }
@@ -807,11 +814,13 @@ export class HqView {
       if (!d || d.moved) return;
       const [wx, wy] = this.toWorld(e.clientX, e.clientY);
       const hit = this.hitAt(wx, wy);
+      const at: HqAt = { x: e.clientX, y: e.clientY, anchor: cv };
       if ((!hit || (!hit.agent && !hit.actId)) && hqHooks.onRoom) {
         const room = hit?.room ?? this.roomKindAt(wx, wy);
-        if (room && CLICK_ROOMS.includes(room)) { hqHooks.onRoom(room); return; }
+        if (room && CLICK_ROOMS.includes(room)) { this.hideTip(); hqHooks.onRoom(room, at); return; }
       }
-      this.activate(hit);
+      if (hit?.agent?.actId || hit?.actId) this.hideTip();
+      this.activate(hit, at);
       if (e.pointerType !== 'mouse') this.onHover(e.clientX, e.clientY);
     };
     cv.addEventListener('pointerup', end);
@@ -831,20 +840,77 @@ export class HqView {
       else if (e.key === '+' || e.key === '=') this.zoomBy(1);
       else if (e.key === '-' || e.key === '_') this.zoomBy(-1);
       else if (e.key === 'Home') this.resetCam();
+      else if (e.key === 'n' || e.key === ']' || e.key === 'N' || e.key === 'p' || e.key === '[' || e.key === 'P') this.kbMove(e.key === 'n' || e.key === ']' ? 1 : -1);
+      else if (e.key === 'Enter' || e.key === ' ' || e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) this.kbActivate();
+      else if (e.key === 'Escape' && this.kb >= 0) { this.kb = -1; this.hover = null; this.hideTip(); this.dirty = true; }
       else return;
       e.preventDefault();
     });
   }
 
-  private activate(hit: Hit | null): void {
+  private activate(hit: Hit | null, at?: HqAt): void {
     if (!hit) return;
-    if (hit.actId) return this.onSelect(hit.actId);
+    if (hit.actId) return this.onSelect(hit.actId, at);
     const a = hit.agent;
     if (!a) return;
-    if (a.kind === 'rep' && a.actId) this.onSelect(a.actId);
+    if (a.kind === 'rep' && a.actId) this.onSelect(a.actId, at);
+    // r20b: integrante clicado abre o mesmo menu da carreira (com a ficha da pessoa como item extra)
+    else if (a.kind === 'member' && a.actId && at && hqHooks.onAct) this.onSelect(a.actId, { ...at, person: a.personId });
     else if (a.kind === 'member' && a.personId) this.onSelectPerson(a.personId);
     else if (a.kind === 'staff' && a.staffId) this.onSelectStaff?.(a.staffId);
     else if (a.kind === 'visitor') a.visit?.onClick?.();
+  }
+
+  /** r20b: alvos navegáveis por teclado — carreiras (representante) e salas clicáveis, na ordem da cena. */
+  kbTargets(): { key: string; label: string; wx: number; wy: number; actId?: string; room?: RoomKind; agent?: Agent }[] {
+    const out: { key: string; label: string; wx: number; wy: number; actId?: string; room?: RoomKind; agent?: Agent }[] = [];
+    for (const a of [...this.agents.values()].filter((x) => x.kind === 'rep' && x.actId).sort((x, y) => (x.actId! < y.actId! ? -1 : 1))) {
+      const [wx, wy] = this.screenOf(a.x, a.y);
+      out.push({ key: `a:${a.actId}`, label: a.name, wx, wy: wy - 12, actId: a.actId, agent: a });
+    }
+    if (hqHooks.onRoom && this.scene) {
+      for (const r of this.scene.rooms) {
+        if (!CLICK_ROOMS.includes(r.kind)) continue;
+        const [wx, wy] = this.screenOf(r.x + r.w / 2, r.y + r.h / 2);
+        out.push({ key: `r:${r.id}`, label: t(ROOM_NAMES[r.kind]), wx, wy, room: r.kind });
+      }
+    }
+    return out;
+  }
+
+  private toClient(wx: number, wy: number): [number, number] {
+    const r = this.canvas.getBoundingClientRect();
+    const z = this.zoom || 2;
+    const bw = Math.ceil(this.cssW / z);
+    const bh = Math.ceil(this.cssH / z);
+    const mx = (wx + Math.round(bw / 2 - this.camX)) * z;
+    const my = (wy + Math.round(bh / 2 - this.camY)) * z;
+    return [r.left + (mx / (this.cssW || 1)) * r.width, r.top + (my / (this.cssH || 1)) * r.height];
+  }
+
+  private kbMove(d: number): void {
+    const ts = this.kbTargets();
+    if (!ts.length) return;
+    this.kb = this.kb < 0 ? (d > 0 ? 0 : ts.length - 1) : (((this.kb + d) % ts.length) + ts.length) % ts.length;
+    const tg = ts[this.kb];
+    this.camX = tg.wx; this.camY = tg.wy; this.userCam = true; this.clampCam();
+    this.hover = tg.agent ? { x: 0, y: 0, w: 0, h: 0, key: 0, agent: tg.agent } : null;
+    this.dirty = true;
+    this.live.textContent = `${tg.label} (${this.kb + 1}/${ts.length}) — ${t(l('Enter abre as ações', 'Enter opens the actions'))}`;
+    const [cx, cy] = this.toClient(tg.wx, tg.wy);
+    if (tg.agent) this.showTip({ x: 0, y: 0, w: 0, h: 0, key: 0, agent: tg.agent }, cx, cy);
+    else this.showTipText(tg.label, '', cx, cy);
+  }
+
+  private kbActivate(): void {
+    const ts = this.kbTargets();
+    if (this.kb < 0 || this.kb >= ts.length) { this.kbMove(1); return; }
+    const tg = ts[this.kb];
+    const [cx, cy] = this.toClient(tg.wx, tg.wy);
+    const at: HqAt = { x: cx, y: cy, anchor: this.canvas };
+    this.hideTip();
+    if (tg.room) hqHooks.onRoom?.(tg.room, at);
+    else if (tg.actId) this.onSelect(tg.actId, at);
   }
 
   private pan(dx: number, dy: number): void {
@@ -930,7 +996,7 @@ export class HqView {
     if (a.kind === 'rep' && a.personId && s) title = `${a.name} — ${s.persons[a.personId]?.name ?? ''}`;
     if (a.kind === 'staff') sub = t(STAFF_ROLES.find((r) => r.id === a.staffRole)?.name) || sub;
     const extra = a.kind === 'visitor' ? a.visit?.tip ?? [] : a.kind === 'staff' && a.staffId && s && hqHooks.staffTip ? hqHooks.staffTip(s, a.staffId) : [];
-    const hint = a.kind === 'staff' || a.kind === 'visitor' ? (a.kind === 'visitor' && a.visit?.onClick ? t(l('Clique para negociar', 'Click to negotiate')) : '') : t(a.kind === 'rep' ? (hqHooks.onAct ? l('Clique para ver a próxima decisão', 'Click to see the next decision') : l('Clique para abrir a ficha da banda', 'Click to open the band record')) : l('Clique para abrir a ficha', 'Click to open the record'));
+    const hint = a.kind === 'staff' || a.kind === 'visitor' ? (a.kind === 'visitor' && a.visit?.onClick ? t(l('Clique para negociar', 'Click to negotiate')) : '') : t(hqHooks.onAct && a.actId ? l('Clique (ou Enter) para as ações da carreira', 'Click (or Enter) for the act\'s actions') : a.kind === 'rep' ? l('Clique para abrir a ficha da banda', 'Click to open the band record') : l('Clique para abrir a ficha', 'Click to open the record'));
     const rows: Node[] = [h('b', null, title), h('div', { class: 'hq-tip-row' }, icon(a.kind === 'staff' ? 'contract' : a.activity.icon, 1), ' ', sub)];
     if (a.actId && s && hqHooks.tip) for (const line of hqHooks.tip(s, a.actId)) rows.push(h('div', { class: 'hq-tip-row' }, line));
     for (const line of extra) rows.push(h('div', { class: 'hq-tip-row' }, line));

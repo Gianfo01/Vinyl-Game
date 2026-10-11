@@ -97,34 +97,37 @@ function openPreview20(s: GameState, r: Row20, actId: string): void {
 let openMenu: (() => void) | null = null;
 let menuSeq = 0;
 
-/** Abre o menu de ações do artista ancorado em `anchor` (ou no ponto do clique direito). */
-export function openActionMenu20(s: GameState, actId: string, anchor: HTMLElement, at?: { x: number; y: number }): void {
+/** r20b: item genérico do menu (ações do registro, itens extras da sede, ações de sala). */
+export interface MenuItem20 { id: string; label: string; icon?: string; suffix?: string; cost?: number; block?: string | null; note?: string | null; run: () => void }
+export interface MenuGroup20 { label: string; items: MenuItem20[] }
+
+/** Menu de comandos (W3C menu button) ancorado em `anchor` ou num ponto (clique direito, clique no canvas da sede).
+ *  aria-expanded/aria-controls só vão para âncoras que são botões de menu (aria-haspopup). */
+function menu20(anchor: HTMLElement, at: { x: number; y: number } | undefined, title: string, sub: string, ariaLabel: string, groups: MenuGroup20[]): void {
   openMenu?.();
-  const a = s.acts[actId];
-  if (!a) return;
-  const rows = actionRows20(s, { act: actId });
   const id = `am20-${++menuSeq}`;
   const items: HTMLElement[] = [];
   const mobile = typeof window !== 'undefined' && window.innerWidth <= 600;
-  const pick = (r: Row20) => {
-    if (r.block) { status.textContent = t(r.block); return; }
+  const popup = anchor.hasAttribute('aria-haspopup');
+  const pick = (it: MenuItem20) => {
+    if (it.block) { status.textContent = it.block; return; }
     close(false);
-    chooseAction20(s, r.def.id, actId, anchor);
+    it.run();
   };
-  const item = (r: Row20) => {
-    const el = h('div', { role: 'menuitem', tabindex: '-1', class: `am20-item ${r.block ? 'off' : ''}`, 'aria-disabled': r.block ? 'true' : null, 'data-id': r.def.id,
-      onclick: (e: Event) => { e.stopPropagation(); pick(r); } },
-      h('span', { class: 'am20-l' }, r.def.icon ? ic(r.def.icon) : null, ' ', t(r.def.label), r.def.form === 'confirm' ? ' …' : r.def.form === 'panel' ? ' ›' : ''),
-      r.cost ? h('span', { class: 'am20-c num' }, $(r.cost)) : null,
-      r.block ? h('small', { class: 'am20-why' }, t(r.block)) : r.time ? h('small', { class: 'muted' }, t(r.time)) : null);
+  const item = (it: MenuItem20) => {
+    const el = h('div', { role: 'menuitem', tabindex: '-1', class: `am20-item ${it.block ? 'off' : ''}`, 'aria-disabled': it.block ? 'true' : null, 'data-id': it.id,
+      onclick: (e: Event) => { e.stopPropagation(); pick(it); } },
+      h('span', { class: 'am20-l' }, it.icon ? ic(it.icon) : null, ' ', it.label, it.suffix ?? ''),
+      it.cost ? h('span', { class: 'am20-c num' }, $(it.cost)) : null,
+      it.block ? h('small', { class: 'am20-why' }, it.block) : it.note ? h('small', { class: 'muted' }, it.note) : null);
     items.push(el);
     return el;
   };
   const status = h('div', { class: 'am20-status small', role: 'status', 'aria-live': 'polite' });
-  const menu = h('div', { role: 'menu', id, class: 'am20-menu', 'aria-label': t(l('Ações para {a}', 'Actions for {a}')).replace('{a}', a.name) },
-    CAT20.map((c) => { const rs = rows.filter((r) => r.def.cat === c.id); return rs.length ? h('div', { role: 'group', class: 'am20-grp', 'aria-label': t(c.label) }, h('div', { class: 'am20-gh', role: 'presentation' }, t(c.label)), rs.map(item)) : null; }));
+  const menu = h('div', { role: 'menu', id, class: 'am20-menu', 'aria-label': ariaLabel },
+    groups.map((g) => g.items.length ? h('div', { role: 'group', class: 'am20-grp', 'aria-label': g.label }, h('div', { class: 'am20-gh', role: 'presentation' }, g.label), g.items.map(item)) : null));
   const box = h('div', { class: `am20 ${mobile ? 'sheet' : ''}` },
-    h('div', { class: 'am20-head' }, h('b', null, a.name), h('small', { class: 'muted' }, ' · ', t(l('ações', 'actions')))),
+    h('div', { class: 'am20-head' }, h('b', null, title), h('small', { class: 'muted' }, ' · ', sub)),
     menu, status);
   const scrim = mobile ? h('div', { class: 'am20-scrim', onclick: () => close(true) }) : null;
   const focusAt = (i: number) => { const n = items.length; if (!n) return; const k = ((i % n) + n) % n; items[k].focus(); };
@@ -150,8 +153,7 @@ export function openActionMenu20(s: GameState, actId: string, anchor: HTMLElemen
     box.remove(); scrim?.remove();
     document.removeEventListener('pointerdown', onDown, true);
     box.removeEventListener('keydown', onKey);
-    anchor.setAttribute('aria-expanded', 'false');
-    anchor.removeAttribute('aria-controls');
+    if (popup) { anchor.setAttribute('aria-expanded', 'false'); anchor.removeAttribute('aria-controls'); }
     openMenu = null;
     if (refocus && anchor.isConnected) anchor.focus();
   }
@@ -159,8 +161,7 @@ export function openActionMenu20(s: GameState, actId: string, anchor: HTMLElemen
   document.body.appendChild(box);
   box.addEventListener('keydown', onKey);
   document.addEventListener('pointerdown', onDown, true);
-  anchor.setAttribute('aria-expanded', 'true');
-  anchor.setAttribute('aria-controls', id);
+  if (popup) { anchor.setAttribute('aria-expanded', 'true'); anchor.setAttribute('aria-controls', id); }
   openMenu = () => close(false);
   if (!mobile) {
     // ancorado; nunca passa da área útil
@@ -175,6 +176,36 @@ export function openActionMenu20(s: GameState, actId: string, anchor: HTMLElemen
     box.style.maxHeight = `${below ? vh - (r.bottom + 4) - 8 : Math.min(r.top - 12, vh - 16)}px`;
   }
   focusAt(0);
+}
+
+const rowItem20 = (s: GameState, r: Row20, actId: string, anchor: HTMLElement, label?: string): MenuItem20 => ({
+  id: r.def.id, label: label ?? t(r.def.label), icon: r.def.icon, suffix: r.def.form === 'confirm' ? ' …' : r.def.form === 'panel' ? ' ›' : '',
+  cost: r.cost, block: r.block ? t(r.block) : null, note: r.time ? t(r.time) : null, run: () => chooseAction20(s, r.def.id, actId, anchor),
+});
+
+/** Abre o menu de ações do artista ancorado em `anchor` (ou no ponto do clique direito / do clique na sede).
+ *  `extra` = itens do contexto (ex.: sede: próxima decisão, ficha do integrante) num grupo à parte, no topo. */
+export function openActionMenu20(s: GameState, actId: string, anchor: HTMLElement, at?: { x: number; y: number }, extra?: { label: L; items: { id: string; label: L; icon?: string; run: () => void }[] }): void {
+  const a = s.acts[actId];
+  if (!a) { openMenu?.(); return; }
+  const rows = actionRows20(s, { act: actId });
+  const groups: MenuGroup20[] = [];
+  if (extra?.items.length) groups.push({ label: t(extra.label), items: extra.items.map((x) => ({ id: x.id, label: t(x.label), icon: x.icon, run: x.run })) });
+  for (const c of CAT20) groups.push({ label: t(c.label), items: rows.filter((r) => r.def.cat === c.id).map((r) => rowItem20(s, r, actId, anchor)) });
+  menu20(anchor, at, a.name, t(l('ações', 'actions')), t(l('Ações para {a}', 'Actions for {a}')).replace('{a}', a.name), groups);
+}
+
+/** r20b: menu de uma sala (canvas da sede ou modo lista): abrir a sala + a ação de um clique da sala para cada carreira
+ *  (mesmo registro do modo lista; indisponível mostra o motivo). `open` = comportamento antigo do clique na sala. */
+export function openRoomMenu20(s: GameState, room: string, roomName: L, anchor: HTMLElement, at: { x: number; y: number } | undefined, open: (() => void) | undefined, actionId: string | undefined): void {
+  const acts = playerActs(s);
+  const sel = store.selectedAct && acts.includes(store.selectedAct) ? store.selectedAct : acts[0];
+  const order = sel ? [sel, ...acts.filter((x) => x !== sel)] : acts;
+  const rows = actionId ? order.map((id) => ({ id, r: actionRow20(s, actionId, { act: id }) })).filter((x): x is { id: string; r: Row20 } => !!x.r) : [];
+  const groups: MenuGroup20[] = [];
+  if (open) groups.push({ label: t(l('Sala', 'Room')), items: [{ id: `room.${room}`, label: t(l('Abrir: {r}', 'Open: {r}')).replace('{r}', t(roomName)), icon: 'house', run: open }] });
+  if (rows.length) groups.push({ label: t(l('Ação desta sala', 'This room\'s action')), items: rows.map(({ id, r }) => rowItem20(s, r, id, anchor, `${t(r.def.label)} · ${s.acts[id].name}`)) });
+  menu20(anchor, at, t(roomName), t(l('sala', 'room')), t(l('Ações da sala {r}', 'Room actions: {r}')).replace('{r}', t(roomName)), groups);
 }
 
 /** Botão `Ações ▾` (nome acessível inclui o artista). */
