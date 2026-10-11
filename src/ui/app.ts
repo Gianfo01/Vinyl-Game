@@ -39,7 +39,7 @@ import { noteTurnErr20 } from './savehealth20';
 import { tx20 } from '../core/save20';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
-import { AFTER_ADVANCE, EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
+import { AFTER_ADVANCE, EXTRA_AREAS, areaView20, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
 import { UX19UI } from './hooks19'; // r19 ux19: divulgação progressiva, rodapé do menu e fim de partida
 import { openLabelStory } from './sys/story12';
 import './sys';
@@ -355,6 +355,8 @@ function panel(): HTMLElement {
   const g = store.game!;
   const extra = EXTRA_AREAS.find((a) => a.id === store.area);
   if (extra) { stopHq(); return extra.render(g); }
+  const v20 = areaView20(store.area); // r20 hubs20: Shows, Sede e Mundo por intenção (o painel antigo vira "Tudo")
+  if (v20) { if (store.area !== 'hq') stopHq(); return v20(g); }
   const el = basePanel(g);
   const more = store.area === 'charts' || store.area === 'world' ? null : extraSections(store.area, g);
   if (more) el.appendChild(more);

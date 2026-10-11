@@ -2,9 +2,10 @@
 // equipe, forma de pagamento, previsão e confirmação; turnês ativas com o status de cada data.
 
 import { VENUE_TIERS } from '../../data/rules';
-import { l } from '../../data/world';
+import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { cancelTour, estimateTour, planTour, type TourPlan } from '../../sim/tours';
+import { cancelTour, estimateTour, planTour, type TourEstimate, type TourPlan } from '../../sim/tours';
+import { draftConflicts20 } from '../../sim/sys/shows20';
 import { produceMerch } from '../../sim/brands';
 import type { GameState } from '../../sim/types';
 import type { Tour } from '../../sim/xtypes';
@@ -23,7 +24,38 @@ const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startIn
 
 const PROD = [l('Básica', 'Basic'), l('Luzes e telão', 'Lights and screens'), l('Cenografia', 'Stage design'), l('Espetáculo', 'Spectacle')];
 
-export function tourPlannerSection(s: GameState, stops: string[], setStops?: (ids: string[]) => void): HTMLElement {
+/** r20: etapas do planejamento (rota → datas/locais → logística → ingressos/merch → revisão). */
+export const TOUR_STEPS20: L[] = [l('Rota', 'Route'), l('Datas e locais', 'Dates and venues'), l('Logística', 'Logistics'), l('Ingressos e merch', 'Tickets and merch'), l('Revisão', 'Review')];
+
+/** r20: conflitos da turnê em rascunho (lógica em sim/sys/shows20), em texto. */
+export function tourConflicts20(s: GameState, actId: string, est: TourEstimate): { hard: L[]; soft: L[] } {
+  const c = draftConflicts20(s, actId, est.stops);
+  return { hard: c.hard.map((x) => l(`${cityName(x.city)}: já há data marcada nessa semana (${cityName(x.other)})`, `${cityName(x.city)}: already booked that week (${cityName(x.other)})`)), soft: c.soft };
+}
+
+/** r20: painel vivo de custo, receita e risco (sempre à vista em todas as etapas). */
+export function tourLivePanel20(s: GameState, est: TourEstimate | null, actId: string): HTMLElement {
+  if (!est) return h('div', { class: 'live20 muted small', role: 'status' }, ic('money'), ' ', t(l('Escolha cidades para ver custo, receita e risco.', 'Pick cities to see cost, revenue and risk.')));
+  const net = est.expectedRevenue + est.expectedMerch - est.logistics;
+  const cf = tourConflicts20(s, actId, est);
+  const risk = est.warnings.length + cf.hard.length + cf.soft.length + (est.visas ? 1 : 0);
+  return h('div', { class: 'live20', role: 'status', 'aria-live': 'polite' },
+    chips(stat('money', $(est.logistics), l('Custo (logística)', 'Cost (logistics)')), stat('chart-up', $(est.expectedRevenue + est.expectedMerch), l('Receita prevista (bruta + merch)', 'Expected revenue (gross + merch)')),
+      stat('bank', $(net), l('Saldo previsto', 'Expected net'), net < 0 ? 'bad' : 'good'),
+      stat('warning', String(risk), l('Riscos', 'Risks'), cf.hard.length ? 'bad' : risk ? 'warn' : 'good')),
+    cf.hard.length ? h('small', { class: 'bad' }, ic('warning'), ' ', t(l('{n} conflito(s) duro(s) — veja a revisão', '{n} hard conflict(s) — see review'), { n: cf.hard.length })) : null);
+}
+
+/** r20: rascunho atual (para o hub calcular o painel vivo sem duplicar o estimador). */
+export function tourDraftEstimate20(s: GameState, stops: string[]): { est: TourEstimate | null; actId: string | null } {
+  const ids = playerActs(s);
+  if (!ids.length) return { est: null, actId: null };
+  const actId = draft.actId && ids.includes(draft.actId) ? draft.actId : ids[0];
+  const plan: TourPlan = { ...draft, actId, cities: stops, kit: kitDraft18() };
+  return { est: stops.length ? estimateTour(s, plan) : null, actId };
+}
+
+export function tourPlannerSection(s: GameState, stops: string[], setStops?: (ids: string[]) => void, step?: number): HTMLElement {
   const ids = playerActs(s);
   if (!ids.length) return section(t(l('Planejar turnê', 'Plan a tour')), h('p', { class: 'muted' }, t(l('Nenhum artista no elenco para levar à estrada.', 'No artists on the roster to take on the road.'))));
   if (!draft.actId || !ids.includes(draft.actId)) draft.actId = ids[0];
@@ -34,40 +66,59 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
   const others = Object.values(s.acts).filter((x) => visibleAct(s, x) && x.id !== act.id && x.status === 'active' && Math.abs(x.fame - act.fame) < 30).sort((a, b) => b.fame - a.fame).slice(0, 20);
   const plan: TourPlan = { ...draft, actId: act.id, cities: stops, kit: kitDraft18() };
   const est = stops.length ? estimateTour(s, plan) : null;
+  const all = step === undefined;
+  const on = (k: number) => all || step === k;
+  const fActor = h('label', null, t(l('Carreira', 'Career')), select(act.id, ids.map((id) => ({ value: id, label: s.acts[id].name })), (v) => { draft.actId = v; rerender(); }));
+  const fStart = h('label', null, t(l('Começa em (dias)', 'Starts in (days)')), select(draft.startInDays, [7, 14, 21, 30, 45, 60, 90, 180].map((d) => ({ value: d, label: `${d}` })), (v) => { draft.startInDays = v; rerender(); }));
+  const fMin = h('label', null, t(l('Tempo de palco', 'Set length')), select(draft.minutes, [30, 45, 60, 90].map((m) => ({ value: m as TourPlan['minutes'], label: `${m} min` })), (v) => { draft.minutes = v; rerender(); }));
+  const fProd = h('label', null, t(l('Produção de palco', 'Stage production')), select(draft.production, PROD.map((p, i) => ({ value: i, label: t(p) })), (v) => { draft.production = v; rerender(); }));
+  const fRole = h('label', null, t(l('Papel', 'Billing')), select(draft.role, [{ value: 'headline' as const, label: t(l('Atração principal', 'Headliner')) }, { value: 'co' as const, label: t(l('Co-headline', 'Co-headline')) }, { value: 'opening' as const, label: t(l('Abertura', 'Opening act')) }], (v) => { draft.role = v; rerender(); }));
+  const fPartner = draft.role !== 'headline' ? h('label', null, t(l('Parceiro', 'Partner')), select(draft.partnerActId ?? '', [{ value: '', label: '—' }, ...others.map((x) => ({ value: x.id, label: `${x.name} (★${fameText(s, x.id)})` }))], (v) => { draft.partnerActId = v || undefined; rerender(); })) : null;
+  const fCrew = h('label', null, t(l('Equipe técnica', 'Road crew')), select(draft.crew, [1, 2, 4, 6, 10, 16].map((n) => ({ value: n, label: `${n}` })), (v) => { draft.crew = v; rerender(); }));
+  const fPrice = h('label', null, t(l('Ingresso', 'Ticket price')), select(draft.priceMult, [0.6, 0.8, 1, 1.25, 1.5, 2].map((m) => ({ value: m, label: `×${m}` })), (v) => { draft.priceMult = v; rerender(); }));
+  const fPay = h('label', null, t(l('Pagamento', 'Pay deal')), select(draft.pay, [{ value: 'door' as const, label: t(l('Bilheteria (65% líquida)', 'Door (65% net)')) }, { value: 'guarantee' as const, label: t(l('Cachê fixo', 'Flat fee')) }, { value: 'hybrid' as const, label: t(l('Garantia + 45%', 'Guarantee + 45%')) }, { value: 'versus' as const, label: t(l('Garantia ou porta (o maior)', 'Guarantee vs door (higher)')) }], (v) => { draft.pay = v; rerender(); }));
+  const form = all ? [fActor, fStart, fMin, fProd, fRole, fPartner, fCrew, fPrice, fPay]
+    : step === 0 ? [fActor] : step === 1 ? [fStart, fMin, fRole, fPartner] : step === 2 ? [fProd, fCrew] : step === 3 ? [fPrice, fPay] : [];
+  const cf = est && on(4) ? tourConflicts20(s, act.id, est) : null;
   return section(t(l('Planejar turnê', 'Plan a tour')),
-    h('div', { class: 'form grid2' },
-      h('label', null, t(l('Carreira', 'Career')), select(act.id, ids.map((id) => ({ value: id, label: s.acts[id].name })), (v) => { draft.actId = v; rerender(); })),
-      h('label', null, t(l('Começa em (dias)', 'Starts in (days)')), select(draft.startInDays, [7, 14, 21, 30, 45, 60, 90, 180].map((d) => ({ value: d, label: `${d}` })), (v) => { draft.startInDays = v; rerender(); })),
-      h('label', null, t(l('Tempo de palco', 'Set length')), select(draft.minutes, [30, 45, 60, 90].map((m) => ({ value: m as TourPlan['minutes'], label: `${m} min` })), (v) => { draft.minutes = v; rerender(); })),
-      h('label', null, t(l('Produção de palco', 'Stage production')), select(draft.production, PROD.map((p, i) => ({ value: i, label: t(p) })), (v) => { draft.production = v; rerender(); })),
-      h('label', null, t(l('Papel', 'Billing')), select(draft.role, [{ value: 'headline' as const, label: t(l('Atração principal', 'Headliner')) }, { value: 'co' as const, label: t(l('Co-headline', 'Co-headline')) }, { value: 'opening' as const, label: t(l('Abertura', 'Opening act')) }], (v) => { draft.role = v; rerender(); })),
-      draft.role !== 'headline' ? h('label', null, t(l('Parceiro', 'Partner')), select(draft.partnerActId ?? '', [{ value: '', label: '—' }, ...others.map((x) => ({ value: x.id, label: `${x.name} (★${fameText(s, x.id)})` }))], (v) => { draft.partnerActId = v || undefined; rerender(); })) : null,
-      h('label', null, t(l('Equipe técnica', 'Road crew')), select(draft.crew, [1, 2, 4, 6, 10, 16].map((n) => ({ value: n, label: `${n}` })), (v) => { draft.crew = v; rerender(); })),
-      h('label', null, t(l('Ingresso', 'Ticket price')), select(draft.priceMult, [0.6, 0.8, 1, 1.25, 1.5, 2].map((m) => ({ value: m, label: `×${m}` })), (v) => { draft.priceMult = v; rerender(); })),
-      h('label', null, t(l('Pagamento', 'Pay deal')), select(draft.pay, [{ value: 'door' as const, label: t(l('Bilheteria (65% líquida)', 'Door (65% net)')) }, { value: 'guarantee' as const, label: t(l('Cachê fixo', 'Flat fee')) }, { value: 'hybrid' as const, label: t(l('Garantia + 45%', 'Guarantee + 45%')) }, { value: 'versus' as const, label: t(l('Garantia ou porta (o maior)', 'Guarantee vs door (higher)')) }], (v) => { draft.pay = v; rerender(); })),
-    ),
-    kitForm18(s, plan, est),
-    h('p', { class: 'small' }, ic('disc'), ' ', t(l('Setlist: {n} gravações próprias ({q} necessárias){c}.', 'Setlist: {n} own recordings ({q} needed){c}.'), { n: draft.setlist.length, q: need, c: draft.setlist.length < need ? t(l(' — o resto vira covers, com penalidade', ' — the rest will be covers, with a penalty')) : '' })),
-    !stops.length ? h('p', { class: 'muted small' }, t(l('Monte a rota clicando nas cidades do mapa acima.', 'Build the route by clicking cities on the map above.'))) : null,
-    setStops ? routeHintRow(s, act.id, setStops) : null,
-    est ? h('div', null,
+    form.some(Boolean) ? h('div', { class: 'form grid2' }, ...form) : null,
+    on(2) ? kitForm18(s, plan, est) : null,
+    on(1) ? h('p', { class: 'small' }, ic('disc'), ' ', t(l('Setlist: {n} gravações próprias ({q} necessárias){c}.', 'Setlist: {n} own recordings ({q} needed){c}.'), { n: draft.setlist.length, q: need, c: draft.setlist.length < need ? t(l(' — o resto vira covers, com penalidade', ' — the rest will be covers, with a penalty')) : '' })) : null,
+    !stops.length && on(0) ? h('p', { class: 'muted small' }, t(all ? l('Monte a rota clicando nas cidades do mapa acima.', 'Build the route by clicking cities on the map above.') : l('Monte a rota clicando nas cidades do mapa ou na lista de cidades.', 'Build the route by clicking cities on the map or in the city list.'))) : null,
+    setStops && on(0) ? routeHintRow(s, act.id, setStops) : null,
+    !all && step === 1 && est ? h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: 'stop' }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name), ` · ${N(st.capacity)}`)))) : null,
+    !all && step === 3 && est ? chips(stat('chart-up', $(est.expectedRevenue), l('Bilheteria bruta prevista', 'Expected gross box office')), stat('shirt', $(est.expectedMerch), l('Merch previsto', 'Expected merch')), s.merch[act.id] ? stat('shirt', N(s.merch[act.id].stock), l('Estoque de merch', 'Merch stock')) : null) : null,
+    est && on(4) ? h('div', null,
       chips(stat('tour-bus', stops.length, l('Datas', 'Dates')), stat('globe', `${N(est.km)} km`, l('Distância', 'Distance')), stat('calendar', `${est.days}d`, l('Duração', 'Duration')),
         stat('money', $(est.logistics), l('Logística (reservada agora)', 'Logistics (booked now)')), stat('chart-up', $(est.expectedRevenue), l('Bilheteria bruta prevista', 'Expected gross box office')), stat('shirt', $(est.expectedMerch), l('Merch previsto', 'Expected merch')),
         est.visas ? stat('key', est.visas, l('Vistos', 'Visas'), 'warn') : null),
       h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: 'stop' }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name))))),
       ((n) => h('p', { class: `small ${n.net < 0 && -n.net > s.player.cash * 0.25 ? 'bad' : 'muted'}` }, ic('money'), ' ', t(n.why), n.net < 0 && -n.net > s.player.cash * 0.25 ? t(l(' Atenção: é mais de 1/4 do caixa.', ' Warning: that is over 1/4 of your cash.')) : ''))(labelTourNet16(s, act.id, est)),
       est.warnings.length ? h('ul', { class: 'small warn' }, est.warnings.map((w) => h('li', null, ic('warning'), ' ', t(w)))) : null,
+      cf && (cf.hard.length || cf.soft.length) ? h('div', { class: 'conf20' },
+        cf.hard.length ? h('div', null, h('b', { class: 'bad' }, ic('lock'), ' ', t(l('Conflitos duros (o artista estaria em dois lugares)', 'Hard conflicts (the act would be in two places)'))), h('ul', { class: 'small' }, cf.hard.map((x) => h('li', null, t(x))))) : null,
+        cf.soft.length ? h('div', null, h('b', { class: 'warn' }, ic('fans'), ' ', t(l('Conflitos brandos (disputa de público — a mesma conta entra no acerto do show)', 'Soft conflicts (audience competition — the same math applies at settlement)'))), h('ul', { class: 'small' }, cf.soft.map((x) => h('li', null, t(x))))) : null) : null,
       forecastBox(forecastTour(s, plan, est)),
       h('button', { class: 'btn primary', onclick: () => {
         const res = planTour(s, plan);
         if ('pt' in res) toast(t(res), 'bad');
         else {
           toast(t(l('Turnê marcada! A logística foi reservada.', 'Tour booked! Logistics reserved.')), 'good');
+          afterBook20?.();
           rerender();
         }
       } }, ic('tour-bus'), ' ', t(l('Confirmar turnê', 'Confirm tour'))),
     ) : null,
+    !all && step === 4 && !est ? h('p', { class: 'muted small' }, t(l('Sem rota ainda: volte à etapa Rota.', 'No route yet: go back to the Route step.'))) : null,
   );
+}
+
+/** r20: depois de marcar, o hub abre a operação da turnê. */
+let afterBook20: (() => void) | null = null;
+export function onTourBooked20(fn: () => void): void { afterBook20 = fn; }
+/** r20: aplica a política de uma turnê anterior ao rascunho (sem repetir a rota). */
+export function copyTourPolicy20(tr: Tour): void {
+  Object.assign(draft, { actId: tr.actId, minutes: tr.minutes, production: tr.production, role: tr.role, partnerActId: tr.partnerActId, crew: tr.crew, pay: tr.pay });
 }
 
 function stopIcon(st: Tour['stops'][number]): string {

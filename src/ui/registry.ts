@@ -207,3 +207,11 @@ function sceneDone(s: GameState, cs: Cutscene): void { for (const f of ON_SCENE_
 
 /** r18 decide18: chamados depois de cada avanço de tempo (resumo do mês, etc.). */
 export const AFTER_ADVANCE: ((s: GameState) => void)[] = [];
+
+// ---------------------------------------------------------------- r20: vistas de área (hubs)
+
+/** Rodada 20 (hubs20): uma área pode trocar o painel antigo por um hub com subáreas. A vista assume
+ *  as seções registradas da área (o painel antigo continua acessível como "Tudo (especialista)"). */
+const AREA_VIEWS20: Record<string, (s: GameState) => HTMLElement> = {};
+export function registerAreaView20(id: string, render: (s: GameState) => HTMLElement): void { AREA_VIEWS20[id] = render; }
+export const areaView20 = (id: string): ((s: GameState) => HTMLElement) | undefined => AREA_VIEWS20[id];

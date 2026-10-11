@@ -21,6 +21,8 @@ import { why18 } from '../explain18';
 const kitDraft: Kit18 = { ...KIT0 };
 /** Kit atual do planejador (o painel de turnês junta ao plano). */
 export const kitDraft18 = (): Kit18 => ({ ...kitDraft });
+/** r20: copiar a política de logística de uma turnê anterior para o rascunho. */
+export const setKitDraft18 = (k: Kit18): void => { Object.assign(kitDraft, k); };
 
 /** Formulário de logística dentro do planejador de turnê, com o custo de cada escolha. */
 export function kitForm18(s: GameState, plan: TourPlan, est: TourEstimate | null): HTMLElement {
