@@ -21,6 +21,7 @@ import {
 import { $, actLink, genreName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
+import { why18 } from '../explain18';
 
 const say = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const btn = (label: L, fn: () => void, cls = 'btn small') => h('button', { class: cls, onclick: fn }, t(label));
@@ -72,10 +73,10 @@ function publisher(s: GameState, v: Venture): HTMLElement {
         o.countered ? null : btn(l('Contrapropor', 'Counter'), () => say(answerOffer(s, r, v.id, o.id, 'counter'))),
         btn(l('Recusar', 'Decline'), () => say(answerOffer(s, r, v.id, o.id, 'decline')), 'btn small danger')))) : null,
     h('h5', null, t(l('Obras: proteger ou oferecer', 'Works: protect or pitch')), ` (${protectedN} ${t(l('protegidas', 'protected'))})`),
-    note(l('Protegida: sem propostas externas, valoriza com o tempo e dá prestígio. Oferecida: atrai covers/syncs, mas satura após 4 vidas. Coautorias permitem ajustar a divisão.', 'Protected: no outside offers, appreciates and adds prestige. Pitched: draws covers/syncs but saturates after 4 lives. Co-writes allow adjusting the split.')),
+    note(l('Protegida: sem propostas externas, valoriza com o tempo e dá prestígio. Oferecida: atrai covers/syncs, mas satura — o teto de vidas depende do tipo (standard 9, sucesso 5, comum 4, nicho 3) e cada 3 anos sem uso esfria uma vida. Coautorias permitem ajustar a divisão.', 'Protected: no outside offers, appreciates and adds prestige. Pitched: draws covers/syncs but saturates — the life cap depends on the type (standard 9, hit 5, regular 4, niche 3) and every 3 years unused cools one life. Co-writes allow adjusting the split.')),
     v.cat!.length ? h('table', { class: 'tbl compact' }, h('tbody', null, v.cat!.slice().sort((a, b) => b.v - a.v).slice(0, 10).map((c) => {
       const key = keyOf(c), e = c.x ?? {};
-      return h('tr', null, h('td', null, c.title), h('td', null, actLink(s, c.actId)), h('td', null, `${t(l('vidas', 'lives'))} ${e.lives ?? 1}`, e.excl && e.excl.until > s.year ? ` · ${t(l('exclusivo até', 'exclusive until'))} ${e.excl.until}` : ''),
+      return h('tr', null, h('td', null, c.title), h('td', null, actLink(s, c.actId)), h('td', null, why18(s, 'ctx19.satur', { v: v.id, k: key }, `${t(l('vidas', 'lives'))} ${e.lives ?? 1}`), e.excl && e.excl.until > s.year ? ` · ${t(l('exclusivo até', 'exclusive until'))} ${e.excl.until}` : ''),
         h('td', null, select<string>(e.stance ?? '', [{ value: '', label: t(l('normal', 'normal')) }, { value: 'protect', label: t(l('protegida', 'protected')) }, { value: 'pitch', label: t(l('oferecida', 'pitched')) }], (k) => { setStance(s, v.id, key, (k || undefined) as 'protect' | 'pitch' | undefined); rerender(); })),
         h('td', null, e.co ? h('span', null, `${e.split ?? 50}/${100 - (e.split ?? 50)} `, btn(l('−', '−'), () => say(setSplit(s, v.id, key, (e.split ?? 50) - 10))), btn(l('+', '+'), () => say(setSplit(s, v.id, key, (e.split ?? 50) + 10)))) : '—'));
     }))) : null,

@@ -6,6 +6,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
+import { satur19 } from '../ctx19';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify } from '../util';
@@ -273,8 +274,9 @@ export function answerOffer(s: GameState, r: Rng, vid: string, oid: string, mode
   const fee = Math.round(o.fee * (excl ? 1.4 : 1));
   const e = cx(c);
   vpay(s, v.owner, writerNet(s, v, c.wp, fee), `of:${o.id}`, `${OFFER_NAME[o.kind].pt} "${c.title}"`, v);
-  e.lives = (e.lives ?? 1) + 1; e.last = s.year;
-  if (e.lives > 4) c.v *= 0.9; else c.v *= o.kind === 'cover' ? 1.1 : 1.05;
+  const sat = satur19(s.year, v.cat!, c, o.kind, e); // r19: saturação pelo tipo da obra e pelo espaçamento entre usos
+  e.lives = sat.lives; e.last = s.year;
+  c.v *= sat.v;
   if (excl) e.excl = { to: o.by, until: s.year + 2 };
   const act = o.actId ? s.acts[o.actId] : undefined;
   if (act) { act.momentum = clamp(act.momentum + 2, 0, 100); if (act.fame >= 30) x.relevant++; } else x.relevant++;

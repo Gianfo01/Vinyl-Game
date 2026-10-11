@@ -31,7 +31,8 @@ import { ventures } from './ventures9';
 
 // ---------------------------------------------------------------- estado
 
-export type PathId = 'indie' | 'major' | 'catalog' | 'artist' | 'festival' | 'studio' | 'manager' | 'prestige' | 'live';
+export type PathId = 'indie' | 'major' | 'catalog' | 'artist' | 'festival' | 'studio' | 'manager' | 'prestige' | 'live'
+  | 'mentor' | 'house' | 'outlet' | 'nichepub' | 'platform' | 'free'; // r19 onda 5 (C): vitórias pequenas e especializadas (sys/wins19.ts)
 export interface Ach18 { id: string; y: number; t: L }
 export interface Paths18State {
   chosen: PathId | null;

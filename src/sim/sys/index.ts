@@ -303,4 +303,7 @@ import './world19';
 import './hood19';
 // Rodada 19 (Frente 8, onda 4): viradas de década/era, metas por época, recibo de decisão, "por que perdi?", epitáfio e divulgação progressiva.
 import './ux19';
+// r19 onda 5 (C): regras de contexto, ctxFx das decisões e vitórias pequenas
+import './ctxsys19';
+import './wins19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
