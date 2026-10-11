@@ -283,4 +283,12 @@ import './zines19'; // r19 9.10 fanzines, revistas e críticos-editores
 import './fakes19'; // r19 9.11 dublagem, bandas-fantasma, vozes de IA, leis
 import './media19ev'; // r19 T9: eventos regionalizados a partir dos dados
 import './media19sit'; // r19 T9: situações do diretor citando dados
+// Rodada 19 (Frente 7, mercado B): remix/DJs/white labels, publicidade e jingles, trilhas e needle drops, cancelamento digital, seguros e saúde, cultura da empresa, naming rights.
+import './remix19';
+import './adsync19';
+import './score19';
+import './cancel19';
+import './insure19';
+import './culture19';
+import './naming19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

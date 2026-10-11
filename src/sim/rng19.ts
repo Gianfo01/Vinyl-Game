@@ -42,6 +42,11 @@ export const STREAMS19: Record<string, string> = {
   mka19: 'mercado A: erro dos testes de faixa, vazamentos, faixas sem rosto, saídas 360, leilões antitruste, ciclo das cenas (market19a)',
   zn19: 'fanzines e imprensa: nascimento de fanzines, críticos que viram editores, conflito de interesse (zines19)',
   fk19: 'fraudes: dublagem exposta, bandas-fantasma, vozes de IA, processos (fakes19)',
+  remix19: 'remix de catálogo, white labels, pedidos de DJs e remixes de NPCs (remix19)',
+  adsync19: 'ofertas de marcas, contraproposta e licenças de NPCs (adsync19)',
+  score19: 'canções-tema, bilheteria, indicações e needle drops (score19)',
+  cancel19: 'ondas de cancelamento: resposta de NPCs e contra-ataque (cancel19)',
+  culture19: 'cultura caótica: erros de metadados e vazamentos (culture19)',
 };
 
 export const perSystem19 = (s: GameState): boolean => (s.rngVersion ?? 0) >= RNG_VERSION19;

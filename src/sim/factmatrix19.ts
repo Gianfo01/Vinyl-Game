@@ -206,3 +206,13 @@ export const HIST19: Record<string, { sys: string; to: string[] }> = {
   milestone_turn: { sys: 'history19', to: ['history19:world (manchete press9 + embalo dos atos de NPC do estilo; crise tira embalo)'] },
   real_history: { sys: 'history19 (escolha no cartão do marco)', to: ['realhist19:diary (memória importante no Diário)'] },
 };
+
+/** R19 Frente 7, mercado B (M20, M17, M4, M30): tipos novos → ouvintes (todos com efeito real). */
+export const MARKETB19: Record<string, { sys: string; to: string[] }> = {
+  cancel_wave: { sys: 'cancel19', to: ['cancel19:fans (facções fans18, haters)', 'adsync19:clause (campanhas canceladas, 25% de volta)', 'naming19:cancel (marca sai do nome da casa/festival)'] },
+  cancel_comeback: { sys: 'cancel19', to: ['cancel19:back (fama, fãs, lealdade, manchete)'] },
+  keyman_claim: { sys: 'insure19', to: ['insure19:heirs (prêmio reajustado; espólio post18: união e herdeiros)'] },
+  culture_shift: { sys: 'culture19', to: ['culture19:staff (lealdade da equipe, confiança do elenco, manchete)'] },
+  naming_deal: { sys: 'naming19', to: ['naming19:rep (reputação da casa/festival, manchete)'] },
+  naming_pulled: { sys: 'naming19', to: ['naming19:back (nome antigo volta, manchete)'] },
+};

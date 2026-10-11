@@ -221,7 +221,7 @@ onFact('release', (s, f) => {
   if (rel) stage19(s, rel.id, f.tags.includes('game') ? 'game' : f.tags.includes('series') || f.tags.includes('tv') ? 'series' : 'film');
 }, 'revival19:screen');
 // concurso de remix / parada de clube (media18) e remix_hit (remix19) → remix de uma faixa antiga do ato
-for (const k of ['remix_contest', 'club_chart', 'remix_hit']) onFact(k, (s, f) => { const rel = oldOf(s, f.actors[0]); if (rel) stage19(s, rel.id, 'remix'); }, `revival19:${k}`);
+for (const k of ['remix_contest', 'club_chart', 'remix_hit']) onFact(k, (s, f) => { const d = s.releases[String(f.data?.rel ?? '')], rel = oldRel19(s, d) ? d : oldOf(s, f.actors[0]); if (rel) stage19(s, rel.id, 'remix'); }, `revival19:${k}`);
 // publicidade e trilhas (adsync19/score19, onda 3)
 onFact('ad_sync', (s, f) => { const rel = s.releases[String(f.data?.rel ?? '')] ?? oldOf(s, f.actors[0]); if (rel) stage19(s, rel.id, s.year >= 1950 ? 'tv_ad' : 'radio_ad'); }, 'revival19:ad');
 onFact('needle_drop', (s, f) => { const rel = s.releases[String(f.data?.rel ?? '')] ?? oldOf(s, f.actors[0]); if (rel) stage19(s, rel.id, 'series'); }, 'revival19:needle');

@@ -265,6 +265,16 @@ const INBOX_RARE19: Record<string, string> = {
   fk19_ghost: 'banda falsa com o nome de um ato SEU: exige ato do selo famoso (55+) separado/em hiato ou cena em febre',
   fk19_whistle: 'cantor ameaça contar: só com voz-fantasma do jogador e risco 40+',
   zn19_coi: 'conflito de interesse: exige revista/fanzine próprio e lançamentos seguidos',
+  // r19 Frente 7, mercado B (remix19/adsync19/score19/cancel19/insure19/naming19)
+  rmx19_res: 'remix19: convite de residência só após remix que pegou ou nº 1 nas pistas de um ato seu (1975+)',
+  rmx19_offer: 'remix19: DJ pede fracasso seu com 8+ anos (5%/mês, 1975+)',
+  ad19_offer: 'adsync19: oferta de marca sorteada (~4%/mês por ato com fama 15+); bots curtos às vezes não veem',
+  sc19_theme: 'score19: canção-tema exige ato com fama 30+ (≈3%/mês, no máximo 1 por trimestre)',
+  sc19_needle: 'score19: needle drop sorteado (3%/mês) entre faixas suas com 1+ ano',
+  cx19_wave: 'cancel19: onda só 2010+ e escândalo público de ato seu com fama 15+',
+  cx19_back: 'cancel19: retorno só depois que uma onda contra ato seu acaba',
+  ins19_risk: 'insure19: oferta da corretora só após colapso de astro seu (fama 35+) sem seguro',
+  nm19_renew: 'naming19: renovação só quando vence um contrato de nome (3–5 anos)',
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 

@@ -187,4 +187,6 @@ import './history19'; // r19 T8: Mundo › Marcos da história + bloco do Cockpi
 import './market19a';
 // Rodada 19 (onda 3, T9): Imprensa e fanzines (zines19) e Fraudes e sósias (fakes19).
 import './media19';
+// Rodada 19 (Frente 7, mercado B): Remix, anúncios e trilhas (Música) e Crises, seguros e cultura (Selo).
+import './market19b';
 import './core18';
