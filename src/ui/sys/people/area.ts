@@ -1,6 +1,7 @@
 // Área "Pessoas" (tecla P): humor como pilha de pensamentos, saúde, conversas e promessas, relações,
 // segredos, dono do selo, carreira da equipe e feed. A caixa de entrada fica na tecla E.
 
+import { eraL } from '../../../sim/era19';
 import { STAFF_ROLES } from '../../../data/rules';
 import { l, type L } from '../../../data/world';
 import { t } from '../../../i18n/strings';
@@ -203,7 +204,7 @@ function peopleArea(s: GameState): HTMLElement {
     { id: 'relations', label: t(l('Relações', 'Relationships')), icon: 'handshake', render: () => relationsTab(s) },
     { id: 'secrets', label: t(l('Segredos', 'Secrets')), icon: 'key', render: () => secretsTab(s) },
     { id: 'staff', label: t(l('Equipe', 'Staff')), icon: 'contract', render: () => staffTab(s) },
-    { id: 'feed', label: t(l('Redes e cartas', 'Social and letters')), icon: 'stream', render: () => feedView(s) },
+    { id: 'feed', label: t(eraL(s, l('Cartas e recados', 'Letters and notes'), [['internet', l('Redes e cartas', 'Social and letters')]])), icon: 'stream', render: () => feedView(s) },
   ], rerender));
 }
 
