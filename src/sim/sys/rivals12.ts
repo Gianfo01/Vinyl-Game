@@ -29,6 +29,7 @@ import { logMove, moveText as moveTxt, playbookOf, rivals8, type PlaybookId } fr
 import { standingOf, standingScore } from './standing9';
 import { skipBlockedLog } from './gate14';
 import { allReleases17 } from '../relidx17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type ContestKind = 'bid' | 'auction' | 'date' | 'producer' | 'market' | 'catalog' | 'fest' | 'deal' | 'deal_end' | 'info';
 export type Screen = 'market' | 'releases' | 'studio' | 'world' | 'catalog' | 'shows' | 'hq';
@@ -439,7 +440,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
       if (!o || !b) { c.done = 'gone'; return l('A negociação já terminou.', 'The negotiation is over.'); }
       if (opt === 'cover') {
         const adv = Math.round(b.adv * 1.1);
-        if (s.player.cash < adv) return l('Caixa insuficiente para cobrir.', 'Not enough cash to cover.');
+        if (freeCash20(s) < adv) return cashWhy20(s, adv, l('Caixa insuficiente para cobrir.', 'Not enough cash to cover.'));
         o.advance = adv;
         b.w = s.week;
         tension(s, c.lb, 25);
@@ -484,7 +485,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
       if (opt === 'shift') pr.week += 2;
       else if (opt === 'push') {
         const cost = money(s, 3000 + (s.acts[pr.actId]?.fame ?? 0) * 150);
-        if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+        if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
         post(s, `riv12push:${pr.id}`, -cost, 'marketing', `Divulgação contra ${lb?.name ?? 'rival'}`);
         pr.hype = (pr.hype ?? 0) + 0.15;
         tension(s, c.lb, 10);
@@ -495,7 +496,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
       const pr = PRODUCERS.find((x) => x.id === c.ref);
       if (opt === 'jump' && pr) {
         const cost = money(s, pr.fee * 10);
-        if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+        if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
         post(s, `riv12prod:${pr.id}`, -cost, 'recording', `Prioridade com ${pr.name}`);
         s.producerBusy[pr.id] = s.week;
         addHeat(s, c.lb, 3);
@@ -507,7 +508,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
       const p = rivals12(s).push[c.ref ?? ''];
       if (opt === 'fight' && p) {
         const cost = money(s, 8000 + s.player.territories.length * 2000);
-        if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+        if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
         post(s, `riv12mkt:${c.ref}`, -cost, 'marketing', `Contra-ataque em ${c.ref}`);
         p.fought = 1;
         addHeat(s, c.lb, 5);

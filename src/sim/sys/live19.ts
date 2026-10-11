@@ -33,6 +33,7 @@ import { GIANT19, giant18 } from './live18';
 import { tragedyOdds19 } from './links19a';
 import { bestPlant18, queueOf18, sup18 } from './supply18';
 import { c12 } from './tour12';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 export interface Boy19 { id: string; act: string; w: number; y: number; hear: number; cost: number; res?: 'win' | 'lose'; end?: number }
@@ -173,7 +174,7 @@ export function ffGate19(s: GameState, site: Site19): L | null {
 export function freeFest19(s: GameState, site: Site19, sec: number, spons: boolean, force?: 0 | 2 | 3): L | null {
   const g = ffGate19(s, site); if (g) return g;
   const cost = ffCost19(s, site, sec);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   const st = lv19(s), r = rng(s), city = s.config.homeCity;
   const att = Math.round(ffAtt19(s) * r.float(0.85, 1.25)), cap = SITE19[site].cap;
   post(s, `lv19ff:${s.year}`, -cost, 'live', `Festival gratuito (${SITE19[site].name.pt})`);
@@ -280,7 +281,7 @@ export function xmasPush19(s: GameState, relId: string): L | null {
   if (!rel || !xmasRels19(s).some((x) => x.id === relId)) return l('Disco não elegível (lançado há mais de 10 semanas).', 'Record not eligible (released more than 10 weeks ago).');
   const st = lv19(s);
   if (st.xmas[relId]) return l('Já em campanha.', 'Already in a campaign.');
-  if (s.player.cash < xmasCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < xmasCost19(s)) return cashWhy20(s, xmasCost19(s), l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `lv19x:${relId}`, -xmasCost19(s), 'marketing', `Campanha de Natal: ${rel.title}`);
   st.xmas[relId] = s.year;
   logL19(s, fmtL(l('Campanha de Natal para "{t}" (vitrines, TV, cesta de presentes).', 'Christmas campaign for "{t}" (windows, TV, gift bundles).'), { t: rel.title }));

@@ -29,6 +29,7 @@ import { addHeat, crime17 } from './crime17';
 import { SRC18, type Src18 } from './mkt18';
 import { out17 } from './outlets17';
 import { w4 } from './world4/state';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Strat18 = 'peak' | 'bal' | 'base';
 export const STRAT18: Record<Strat18, { name: L; desc: L }> = {
@@ -233,7 +234,7 @@ export function pitchPlaylist18(s: GameState, relId: string): L {
   if (st.pitch[relId]) return l('Este lançamento já foi apresentado aos curadores.', 'This release was already pitched.');
   if (s.week - rel.week > 4) return l('Tarde demais: curadores olham as novidades das últimas semanas.', 'Too late: curators look at the last few weeks\' releases.');
   const cost = money(s, 400);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `st18pitch:${relId}`, -cost, 'promo', `Pitch para playlists: ${rel.title}`);
   const o = pitchOdds18(s, rel);
   const ok = new Rng(seedState(`st18pitch|${s.config.seed}|${relId}`)).chance(o.p);
@@ -257,7 +258,7 @@ export function buyStreams18(s: GameState, relId: string, tier: number): L {
   const st = st18(s);
   if ((st.farm[relId]?.until ?? 0) > s.week) return l('Já há streams comprados neste lançamento.', 'This release already has bought streams.');
   const cost = money(s, d.real);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `st18farm:${relId}`, -cost, 'w4_payola', 'Divulgação digital (?)');
   st.farm[relId] = { w: s.week, until: s.week + 6, k: d.k };
   st.n.farm++;

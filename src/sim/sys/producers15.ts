@@ -15,6 +15,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { opine, opinionOf, registerPer13 } from './persona13';
 import { ownerOf } from './people/owner';
 import { gone16 } from './gone16';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface C15 { y: number; m: number; who: string; title: string; q?: number; you?: 1 }
 export interface P15 {
@@ -110,7 +111,7 @@ export const DINNER_COST = 900;
 export function dinnerBlock(s: GameState, id: string): L | null {
   if (!prodActive(s, prodById[id])) return l('Fora de atividade.', 'Not active.');
   if (s.week < (p15(s).cd[`dinner|${id}`] ?? 0)) return l('Já jantaram há pouco (a cada 6 meses).', 'You dined recently (every 6 months).');
-  if (s.player.cash < money(s, DINNER_COST)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, DINNER_COST)) return cashWhy20(s, money(s, DINNER_COST), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 /** Jantar no estúdio dele: aproxima conforme o seu ouvido e o carisma. */

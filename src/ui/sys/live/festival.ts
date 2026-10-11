@@ -18,6 +18,7 @@ import { chips, ic, meter, stat } from '../../vis';
 import { drawPerson, drawTile, tileUrl } from './art';
 import { visibleAct } from '../../../sim/future';
 import { fameText } from '../../../sim/sys/fame15';
+import { freeCash20 } from '../../../sim/oblig20';
 
 const draft = { name: '', city: '', month: 6, days: 1 };
 
@@ -32,7 +33,7 @@ function foundForm(s: GameState): HTMLElement {
     h('label', null, t(l('Cidade', 'City')), select(draft.city, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => (draft.city = v))),
     h('label', null, t(l('Mês', 'Month')), select(draft.month, Array.from({ length: 12 }, (_, i) => ({ value: i, label: monthName(i) })), (v) => (draft.month = v))),
     h('label', null, t(l('Dias', 'Days')), select(draft.days, [1, 2, 3].map((d) => ({ value: d, label: String(d) })), (v) => (draft.days = v))),
-    h('button', { class: 'btn primary', disabled: !!why || s.player.cash < cost, title: why ? t(why) : '', onclick: () => {
+    h('button', { class: 'btn primary', disabled: !!why || freeCash20(s) < cost, title: why ? t(why) : '', onclick: () => {
       const f = createFestival(s, draft.name, draft.city, draft.month, draft.days);
       if ('pt' in f) return toast(t(f), 'bad');
       toast(t(l('Festival fundado! Monte o terreno.', 'Festival founded! Lay out the grounds.')), 'good');

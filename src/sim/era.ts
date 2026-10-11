@@ -5,6 +5,7 @@ import { l, type L } from '../data/world';
 import { registerExt4, registerSimHook } from './ext4';
 import type { GameState } from './types';
 import { fmtL, money, notify, post } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export interface EraFeature { id: string; year: number; cost: number; label: L; tech?: string; blurb?: L }
 interface EraState { unlocked: Record<string, number>; seeded: boolean; announced: Record<string, boolean> }
@@ -62,7 +63,7 @@ export function unlockFeature(s: GameState, id: string): L | null {
   if (featureYear(s, f) > s.year) return l('Ainda não existe.', 'Does not exist yet.');
   if (st(s).unlocked[id] !== undefined) return l('Já desbloqueado.', 'Already unlocked.');
   const c = unlockCost(s, f);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `era:${id}`, -c, 'misc', f.label.pt);
   st(s).unlocked[id] = s.year;
   return null;

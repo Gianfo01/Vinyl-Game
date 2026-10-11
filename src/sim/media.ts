@@ -14,6 +14,7 @@ import { isPolitical, viewsOf } from './beliefs';
 import { artDelta18, fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 import { gone16 } from './sys/gone16';
 import { scandal, type ScandalKind } from './scandal17';
+import { cashWhy20, freeCash20 } from './oblig20';
 const CRISIS17: Record<Crisis['kind'], ScandalKind> = { scandal: 'conduct', remark: 'offense', censorship: 'politics', cancel: 'offense', leak: 'conduct', accident: 'violence' };
 
 export interface CriticDef {
@@ -134,7 +135,7 @@ export function tvAppearance(s: GameState, actId: string): L | null {
   const key = `tv:${actId}`;
   if (s.flags[key] && s.week - s.flags[key] < 12) return l('Uma aparição por trimestre.', 'One appearance per quarter.');
   const cost = money(s, 1500 + act.fame * 40);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, key, -cost, 'marketing', `TV: ${act.name}`);
   s.flags[key] = s.week;
   act.fame = clamp(act.fame + 1.5, 0, 100);
@@ -151,7 +152,7 @@ export function magazineCover(s: GameState, r: Rng, actId: string): L | null {
   const key = `cover:${actId}`;
   if (s.flags[key] && s.week - s.flags[key] < 26) return l('Uma capa por semestre.', 'One cover per half-year.');
   const cost = money(s, 800);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, key, -cost, 'marketing', `Assessoria para capa: ${act.name}`);
   s.flags[key] = s.week;
   const pr = s.prAgency?.tier ?? 0;
@@ -297,7 +298,7 @@ export function appealBan(s: GameState, r: Rng, releaseId: string, market: Marke
   const b = s.bans.find((x) => x.releaseId === releaseId && x.market === market);
   if (!b) return l('Nada a recorrer.', 'Nothing to appeal.');
   const cost = money(s, 4000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `appeal:${releaseId}:${market}`, -cost, 'legal', 'Recurso contra censura');
   const legal = s.player.staff.some((x) => x.role === 'legal') ? 0.2 : 0;
   if (r.chance(0.3 + legal)) {

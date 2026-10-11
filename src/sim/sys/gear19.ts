@@ -32,6 +32,7 @@ import { estate18, post18 } from './post18';
 import { registerDimAdj18, type Dim18 } from './quality18';
 import { ORIGIN18, rel18 } from './relics18';
 import { addRelic, relics, type RelicKind } from './relics9';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
 const $k = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
@@ -229,7 +230,7 @@ export function buyMaker19(s: GameState, id: string): L | null {
   if (!mk) return l('Fabricante indisponível.', 'Maker unavailable.');
   if (g19(s).mk[id]) return l('Já é seu.', 'Already yours.');
   const c = makerPrice19(s, mk);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `venture:g19mk:${id}`, -c, 'acquisitions', `Compra do fabricante ${makerName19(s, id)}`);
   g19(s).mk[id] = s.year;
   const t = F(l('{c} compra o fabricante {m} por {v}.', '{c} buys instrument maker {m} for {v}.'), { c: s.config.companyName, m: makerName19(s, id), v: $k(c) });

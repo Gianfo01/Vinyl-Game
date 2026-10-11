@@ -13,6 +13,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember } from './util'
 import { personaOf } from './ext';
 import { histLocked } from './history15';
 import { actsTouched17 } from './actidx17';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 const JOBS: L[] = [
   l('professora', 'teacher'), l('enfermeiro', 'nurse'), l('fotógrafa', 'photographer'), l('advogado', 'lawyer'),
@@ -165,7 +166,7 @@ export function familyAction(s: GameState, personId: string, kind: 'talk' | 'sup
   fam.lastTalk = s.week;
   if (kind === 'support') {
     const c = money(s, 500);
-    if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `fam:${personId}`, -c, 'artist_dev', 'Apoio familiar');
     fam.householdCash += c;
   }
@@ -190,7 +191,7 @@ export function launchHeir(s: GameState, r: Rng, personId: string): L | null {
   if (Object.values(s.acts).some((a) => a.members.includes(personId))) return l('Já tem carreira.', 'Already has a career.');
   const parentAct = Object.values(s.acts).find((a) => a.members.includes(p.parentId!));
   const cost = money(s, 3000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `heir:${personId}`, -cost, 'artist_dev', `Carreira de ${p.name}`);
   const act: Act = {
     ...(parentAct ? structuredClone(parentAct) : ({} as Act)),
@@ -342,7 +343,7 @@ export function reunionTerms(s: GameState, actId: string): { ok: boolean; cost: 
 export function negotiateReunion(s: GameState, r: Rng, actId: string): L {
   const t = reunionTerms(s, actId);
   if (!t.ok) return t.reason;
-  if (s.player.cash < t.cost) return l('Caixa insuficiente para a proposta.', 'Not enough cash for the offer.');
+  if (freeCash20(s) < t.cost) return cashWhy20(s, t.cost, l('Caixa insuficiente para a proposta.', 'Not enough cash for the offer.'));
   post(s, `reunion:${actId}`, -t.cost, 'artist_dev', 'Proposta de reunião');
   const act = s.acts[actId];
   if (!r.chance(t.chance)) {
@@ -370,7 +371,7 @@ export function startSoloCareer(s: GameState, r: Rng, actId: string, personId: s
   if (!act || !p || !act.members.includes(personId) || act.members.length < 2) return l('Só integrantes de bandas com 2+ pessoas.', 'Only members of 2+ person bands.');
   if (Object.values(s.soloOf).some((orig) => orig === actId) && Object.entries(s.soloOf).some(([solo]) => s.acts[solo]?.members.includes(personId))) return l('Essa pessoa já tem carreira solo.', 'This person already has a solo career.');
   const cost = money(s, 1500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `solo:${personId}`, -cost, 'artist_dev', `Carreira solo ${p.name}`);
   const solo: Act = {
     ...structuredClone(act),

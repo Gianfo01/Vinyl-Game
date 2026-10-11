@@ -23,6 +23,7 @@ import { CH18, addLead18 } from './discover18';
 import { headline19 } from './factlink19';
 import { actSub18, addAff18 } from './regions18';
 import { SCHOOLS18, school18 } from './school18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // bolsas novas no school18 (aparecem sozinhas na aba de escolas)
 if (!SCHOOLS18.some((x) => x.id === 'church')) SCHOOLS18.push(
@@ -58,7 +59,7 @@ export function foundChoir19(s: GameState, city = s.config.homeCity): L | null {
   if (st.prog) return l('O programa já existe.', 'The program already exists.');
   if (s.year < 1900) return l('Ainda não.', 'Not yet.');
   const c = progCost19(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'sch19prog', -c, 'capex', 'Programa de coral do selo');
   st.prog = { city, since: s.year, lv: 1 };
   cnt(s, 'prog');

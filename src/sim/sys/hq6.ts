@@ -9,6 +9,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { bumpPerks, registerPerkSource, type PerkEntry, type PerkValues } from '../perks';
 import type { GameState } from '../types';
 import { fmtL, hasTech, money, post, remember } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type DeptId = 'anr' | 'marketing' | 'legal' | 'finance' | 'wellbeing' | 'studio' | 'booking' | 'digital';
 
@@ -84,7 +85,7 @@ export function deptBlocker(s: GameState, id: DeptId): L | null {
   if (s.player.hq < d.minHq + lv) return fmtL(l('Precisa de sede nível {n}+ ({h}).', 'Needs HQ level {n}+ ({h}).'), { n: d.minHq + lv, h: HQ_LEVELS[Math.min(HQ_LEVELS.length - 1, d.minHq + lv)].name });
   if (d.tech && !hasTech(s, d.tech)) return l('Tecnologia ainda não existe.', 'Technology does not exist yet.');
   if (lv === 0 && deptCount(s) >= deptSlots(s)) return fmtL(l('A sede comporta {n} departamentos. Amplie a sede.', 'The HQ fits {n} departments. Upgrade the HQ.'), { n: deptSlots(s) });
-  if (s.player.cash < money(s, d.cost[lv])) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, d.cost[lv])) return cashWhy20(s, money(s, d.cost[lv]), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 
@@ -116,7 +117,7 @@ export function buyBuilding(s: GameState): L | null {
   const st = hq6(s);
   if (st.ownBuilding) return l('O prédio já é seu.', 'You already own the building.');
   const price = buildingPrice(s);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `building:${s.player.hq}`, -price, 'hq', 'Compra do prédio da sede');
   addAsset(s, { kind: 'building', name: fmtL(l('Prédio: {h}', 'Building: {h}'), { h: HQ_LEVELS[s.player.hq].name }), cost: price, lifeMonths: 600 });
   st.ownBuilding = true;
@@ -133,7 +134,7 @@ export function setBranchFocus(s: GameState, branchId: string, f: BranchFocus): 
 export function hireDirector(s: GameState, branchId: string): L | null {
   const st = hq6(s);
   if (st.directors[branchId]) { delete st.directors[branchId]; bumpPerks(); return null; }
-  if (s.player.cash < money(s, 3000)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, 3000)) return cashWhy20(s, money(s, 3000), l('Caixa insuficiente.', 'Not enough cash.'));
   st.directors[branchId] = true;
   bumpPerks();
   return null;

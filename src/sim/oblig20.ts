@@ -52,6 +52,17 @@ export function reservedAdvances20(s: GameState, exceptId?: string): number {
 }
 /** Caixa livre = caixa − reservas de ofertas pendentes. */
 export const freeCash20 = (s: GameState, exceptId?: string): number => s.player.cash - reservedAdvances20(s, exceptId);
+const usd20 = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
+/** r20c (N2): motivo do bloqueio de um gasto checado contra o caixa LIVRE. Se o caixa bruto também não cobre, mantém
+ *  a mensagem original do sistema; se só a reserva impede, diz quanto está reservado e para quê. */
+export function cashWhy20(s: GameState, cost: number, base: L): L {
+  if (s.player.cash < cost) return base;
+  const r = usd20(reservedAdvances20(s)), f = usd20(Math.max(0, freeCash20(s)));
+  return l(`Caixa livre insuficiente: ${r} estão reservados para adiantamentos de ofertas pendentes (livre: ${f}). Retire ou espere a resposta das ofertas.`,
+    `Not enough free cash: ${r} is reserved for advances on pending offers (free: ${f}). Withdraw them or wait for an answer.`);
+}
+/** r20c (N2): gate padrão de gasto do jogador (caixa livre ≥ custo). */
+export const canSpend20 = (s: GameState, cost: number): boolean => freeCash20(s) >= cost;
 
 // fontes nativas (as do motor-base)
 registerOblig20('loans', (s) => s.player.loans.filter((x) => x.balance > 0).map((x) => ({ id: x.id, kind: 'loan' as const, src: 'economy', label: l('Empréstimo', 'Loan'), amt: x.balance, liability: true, bank: true, monthly: x.monthly, rate: x.rate })));

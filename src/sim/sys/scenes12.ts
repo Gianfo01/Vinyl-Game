@@ -12,6 +12,7 @@ import type { GameState, Label } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { HIST_SCENES, sceneStage, type HistScene } from './world4/scenes';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Node = 'venue' | 'producer' | 'media';
 export const NODES: Node[] = ['venue', 'producer', 'media'];
@@ -103,7 +104,7 @@ export function cultivate(s: GameState, city: string, node: Node): L | null {
   const n = netOf(s, city);
   if (s.week - (n.cult[node] ?? -99) < 4) return l('Você já investiu nesse contato este mês.', 'You already invested in this contact this month.');
   const c = cultivateCost(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `scene12:${city}:${node}`, -c, 'marketing', `Apoio à cena de ${cityById[city]?.name.pt ?? city}`);
   n.cult[node] = s.week;
   n.ties[node] = clamp(n.ties[node] + 12 * nodeMult(n, node) * (1 - n.ties[node] / 120), 0, 100);

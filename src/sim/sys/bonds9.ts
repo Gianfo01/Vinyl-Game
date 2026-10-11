@@ -21,6 +21,7 @@ import { clearance, crossAudience } from './feats8';
 import { actOfPerson, bump, tieOf, tiesOf, type TieKind } from './social8';
 import { soul } from './soul9';
 import { actsTouched17 } from '../actidx17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type BondKind = 'duo' | 'couple' | 'super' | 'ally' | 'cross' | 'patron';
 export type BondEnd = 'fight' | 'wear' | 'death' | 'prison' | 'divergence' | 'money' | 'done';
@@ -626,7 +627,7 @@ export function proposeBond(s: GameState, r: Rng, k: BondKind, mineId: string, o
   const costs = others.map((x) => bondCost(s, k, x.id));
   if (costs.some((c) => c.blocked)) return { ok: false, text: costs.find((c) => c.blocked)!.text };
   const cost = costs.reduce((x, c) => x + c.cost, 0);
-  if (s.player.cash < cost) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.') };
+  if (freeCash20(s) < cost) return { ok: false, text: cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.')) };
   const yes = others.filter((x) => r.chance(bondChance(s, k, M.id, x.id)));
   const lm = leadOf(M)!;
   if (k === 'super' ? yes.length < 2 : !yes.length) {

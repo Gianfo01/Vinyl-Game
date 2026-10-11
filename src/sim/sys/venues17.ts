@@ -13,6 +13,7 @@ import { emitFact } from '../facts17';
 import { VENUES19 } from '../../data/more19';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface VDef { id: string; name: string; city: string; cap: number; from: number; to?: number; prestige: number; price: number; fam: string; buyable?: false; note?: L }
 export const VENUES17: VDef[] = [
@@ -84,7 +85,7 @@ export function buyVenue17(s: GameState, id: string): L | null {
   if (st.own.some((o) => o.id === id)) return l('Já é sua.', 'Already yours.');
   if (st.own.length >= 4) return l('Quatro casas é o máximo que dá para administrar.', 'Four venues is as many as you can run.');
   const p = venuePrice(s, d);
-  if (s.player.cash < p) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < p) return cashWhy20(s, p, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v17buy:${id}`, -p, 'investments', `Compra: ${d.name}`);
   st.own.push({ id, rep: d.prestige * 0.7, policy: 'curated', price: 'mid', cond: 80, maint: true, y: s.year, paid: p, booked: [], total: 0 });
   const t = fmtL(l('{c} compra {v} ({city}).', '{c} buys {v} ({city}).'), { c: s.config.companyName, v: d.name, city: cityById[d.city]?.name ?? d.city });

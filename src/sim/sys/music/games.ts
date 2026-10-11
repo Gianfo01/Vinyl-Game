@@ -8,6 +8,7 @@ import { fmtL, money, notify, post } from '../../util';
 import { FOCUS_IDEAL, GEAR, STAGES, gearById, type Stage } from './data';
 import { ms, songRec, syncSong, type Deltas } from './state';
 import { focusIdealForSong } from '../recipe12';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 const fam = (song: Song): FamilyId => familyOf(song.genre);
 
@@ -49,7 +50,7 @@ export function buyGear(s: GameState, gearId: string, offerId?: string): L | nul
   const offer = offerId ? m.gearOffers.find((o) => o.id === offerId && o.gearId === gearId) : undefined;
   if (!offer && (s.year < def.from || s.year > def.to)) return l('Ainda não existe nesta época.', 'It does not exist yet in this era.');
   const price = offer ? offer.price : money(s, def.price);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   if (!post(s, `x4gear:${gearId}`, -price, 'equipment', `Equipamento lendário: ${def.name.pt}`)) return l('Compra já registrada nesta semana.', 'Purchase already booked this week.');
   m.gear.push(gearId);
   if (offer) m.gearOffers = m.gearOffers.filter((o) => o !== offer);

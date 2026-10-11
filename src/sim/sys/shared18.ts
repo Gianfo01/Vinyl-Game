@@ -22,6 +22,7 @@ import { band18 } from './artist18';
 import { mgrActive } from './managers14';
 import { realKey18 } from './personact18';
 import { per13 } from './persona13';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type VKind18 = 'label' | 'festival' | 'studio' | 'imprint';
 export type Style18 = 'cautious' | 'greedy' | 'visionary' | 'loyal' | 'hothead';
@@ -106,7 +107,7 @@ export function found18(s: GameState, kind: VKind18, pk: string, eq: number, nam
   if ((st.cd[`ask:${pk}`] ?? 0) > s.week) return { ok: false, text: l('Você já perguntou há pouco.', 'You asked recently.') };
   if (kind === 'imprint') eq = 0.5;
   const mine = Math.round(capOf18(s, kind) * eq);
-  if (s.player.cash < mine) return { ok: false, text: l('Caixa insuficiente para a sua parte do aporte.', 'Not enough cash for your share of the capital.') };
+  if (freeCash20(s) < mine) return { ok: false, text: cashWhy20(s, mine, l('Caixa insuficiente para a sua parte do aporte.', 'Not enough cash for your share of the capital.')) };
   st.cd[`ask:${pk}`] = s.week + 26;
   const r = new Rng(seedState(`sh18|${s.config.seed}|${pk}|${s.week}`));
   const { p } = foundOdds18(s, kind, pk, eq);
@@ -191,7 +192,7 @@ export function buyOut18(s: GameState, id: string): { ok: boolean; text: L } {
   const v = sh18(s).v.find((x) => x.id === id && x.st === 'on');
   if (!v) return { ok: false, text: l('Sociedade inexistente.', 'No such partnership.') };
   const price = Math.round(value18v(s, v) * (1 - v.eq) * (v.style === 'greedy' ? 1.35 : 1.15));
-  if (s.player.cash < price) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.') };
+  if (freeCash20(s) < price) return { ok: false, text: cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.')) };
   post(s, `venture:a18:${v.id}:buy`, -price, 'acquisitions', `Compra da parte de ${v.pn}`);
   if (v.pk.startsWith('lb:')) { const lb = s.labels[v.pk.slice(3)]; if (lb) lb.cash += price; }
   v.eq = 1; v.mood = 100;

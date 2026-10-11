@@ -22,6 +22,7 @@ import { chron, chronListeners, cityL, genreL, nameOf, type ChronEv } from './ch
 import { crime17 } from './crime17';
 import { simStart20 } from '../worldpolicy20';
 import { addRelic, relics, type Relic, type RelicKind } from './relics9';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 for (const d of RELICS18) if (!RELICS17.some((x) => x.id === d.id)) RELICS17.push(d);
 
@@ -177,7 +178,7 @@ export function authenticate18(s: GameState, id: string): L {
   const m = (st.m[rl.id] ??= { o: 'base', b: rl.v });
   if (m.auth) return l('Já certificada.', 'Already certified.');
   const fee = authFee18(s, rl);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `rel18auth:${rl.id}`, -fee, 'legal', `Perícia: ${rl.n.pt}`);
   if (isFake18(s, rl.id)) {
     const mine = rl.st === 'player';
@@ -204,7 +205,7 @@ export function buildWing18(s: GameState): L | null {
   const nx = WING18[st.wing + 1];
   if (!nx) return l('Já está no nível máximo.', 'Already at the top level.');
   const c = money(s, nx.cost);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `venture:relwing:${st.wing + 1}`, -c, 'capex', `Museu: ${nx.name.pt}`);
   st.wing++;
   emitFact(s, { kind: 'deal', actors: ['player'], place: s.config.homeCity, severity: 20 + st.wing * 10, visibility: 'public', tags: ['good', 'relic', 'museum'], src: 'relics18', text: fmtL(l('{c} abre: {n}.', '{c} opens: {n}.'), { c: s.config.companyName, n: nx.name }) });

@@ -25,6 +25,7 @@ import { isGenRel18 } from './ai18';
 import { aw15 } from './awards15';
 import { CEREMONY_MONTH, GRAMO_ADJ, NOMS_MONTH, cycleYear, nominees } from './ceremonies8';
 import { AWARD_ADJ18, type Comm18 } from './screen18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -106,7 +107,7 @@ export function campaign18(s: GameState, relId: string, k: Camp18): L | null {
   const st = aw18(s);
   if (st.camps.some((c) => c.rel === relId && c.k === k && c.y === cy)) return l('Essa campanha já está rodando.', 'That campaign is already running.');
   const cost = money(s, CAMP18[k].cost);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `aw18:${relId}:${k}`, -cost, 'marketing', `Campanha de prêmio (${CAMP18[k].name.pt}): ${rel.title}`);
   st.camps.push({ rel: relId, k, y: cy });
   if (st.camps.length > 40) st.camps.shift();
@@ -133,7 +134,7 @@ export function fycScore18(s: GameState, id: string, list: Comm18[]): L | null {
   if (!c || c.st !== 'done' || c.nom) return l('Só trilhas lançadas e ainda não indicadas.', 'Only released, not yet nominated scores.');
   if (c.fyc) return l('Campanha já feita.', 'Campaign already done.');
   const v = money(s, 7000);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `aw18fyc:${id}`, -v, 'marketing', `Campanha de prêmio de trilha: ${c.title}`);
   c.fyc = 1;
   return null;
@@ -186,7 +187,7 @@ export function lobbyReform18(s: GameState, dir: 1 | -1): L | null {
   const st = aw18(s);
   if (s.year >= (exact(s) ? 2019 : st.reformY)) return l('A reforma já aconteceu.', 'The reform already happened.');
   const v = money(s, 15000);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `aw18ref:${s.year}`, -v, 'misc', 'Lobby na academia');
   if (exact(s)) { grantHold(s, { holder: 'player', target: 'academy', kind: 'favor', strength: 30, text: l('A academia lembra do seu apoio', 'The academy remembers your support'), src: 'aw18' }); return l('Modo exato: a reforma segue a data real (2019), mas a academia lhe deve um favor.', 'Exact mode: the reform keeps its real date (2019), but the academy owes you a favour.'); }
   const r = Rng.fromSeed(`${s.config.seed}|aw18ref|${s.week}`);
@@ -245,7 +246,7 @@ export function bundle18(s: GameState, relId: string): L | null {
   const st = aw18(s);
   if (st.bundles[relId]) return l('Já tem bundle.', 'Already bundled.');
   const v = bundleCost18(s, rel);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `aw18bun:${relId}`, -v, 'merch', `Bundle de merch: ${rel.title}`);
   st.bundles[relId] = s.week + 8;
   const r = Rng.fromSeed(`${s.config.seed}|aw18bun|${relId}`);
@@ -259,7 +260,7 @@ export function lobbyRule18(s: GameState, id: string, dir: 1 | -1): L | null {
   const r0 = RULES18.find((x) => x.id === id);
   if (!r0 || ruleOn18(s, r0) || !rulesDebated18(s).includes(r0)) return l('Essa regra não está em debate.', 'That rule is not under debate.');
   const v = money(s, 15000);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `aw18rl:${id}:${s.week}`, -v, 'misc', `Lobby junto ao órgão da parada: ${r0.name.pt}`);
   const st = aw18(s);
   if (!st.insider.includes(id)) st.insider.push(id);

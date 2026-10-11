@@ -10,6 +10,7 @@ import { launchNpcRelease } from './market';
 import type { Act, GameState, Release, Song } from './types';
 import type { Idea } from './xtypes';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export type SongStatus = 'written' | 'recorded' | 'scheduled' | 'released' | 'vault' | 'discarded';
 
@@ -98,7 +99,7 @@ export function reviseSong(s: GameState, r: Rng, songId: string, focus: ReviseFo
   if (song.recorded) return l('Já gravada: para mudar, regrave ou faça uma versão.', 'Already recorded: re-record or make a version to change it.');
   if ((song.revisions ?? 0) >= 4) return l('Esta música já foi revisada demais; os autores não aguentam mais.', 'This song has been revised too much; the writers have had enough.');
   const cost = reviseCost(s, song);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `revise:${song.id}:${song.revisions ?? 0}`, -cost, 'recording', `Revisão de "${song.title}"`);
   const n = song.revisions ?? 0;
   const gain = Math.max(0, r.normal(6 - n * 1.2, 3));
@@ -152,7 +153,7 @@ export function releaseDemo(s: GameState, r: Rng, songId: string): L | null {
   if (songStatus(s, song) !== 'written' && songStatus(s, song) !== 'recorded') return l('Só músicas inéditas.', 'Unreleased songs only.');
   if (!song.recorded) {
     const cost = money(s, 150);
-    if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `demo:${song.id}`, -cost, 'recording', `Demo "${song.title}"`);
     song.recorded = true;
     song.performance = clamp(song.melody * 0.55 + r.normal(0, 5), 5, 100);

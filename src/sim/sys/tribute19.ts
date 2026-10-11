@@ -32,6 +32,7 @@ import { headline19 } from './factlink19';
 import { band18 } from './live18';
 import { post18 } from './post18';
 import { r18 } from './rights18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- tipos e dados
 
@@ -253,7 +254,7 @@ export function sign19(s: GameState, id: string): L | null {
   const t = trib19(s, id), a = t && s.acts[t.act];
   if (!t || !a || t.end) return l('Tributo encerrado.', 'Tribute ended.');
   if (t.sign) return l('Já assinado.', 'Already signed.');
-  if (s.player.cash < signCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < signCost19(s)) return cashWhy20(s, signCost19(s), l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `t19sign:${t.id}`, -signCost19(s), 'artist_dev', `Álbum-tributo ${t.name}`);
   const rid = nextId(s, 'r');
   const rel: Release = { id: rid, actId: a.id, owner: 'player', type: 'lp', title: fmtL(l('{t} toca {a}', '{t} plays {a}'), { t: t.name, a: a.name }).pt, songs: a.songs.slice(0, 10), week: s.week, year: s.year, q: t.q, appeal: Math.round(demand19(s, t).v * 40),
@@ -307,7 +308,7 @@ export function festival19(s: GameState): L | null {
   if (!promoter19(s)) return l('Precisa de uma carreira de casa de shows, festival ou agência.', 'Needs a venue, festival or booking career.');
   if (st.fest >= s.year) return l('Já houve festival de tributos este ano.', 'Already held a tribute festival this year.');
   if (xs.length < 3) return l('Precisa de 3+ tributos em atividade.', 'Needs 3+ active tributes.');
-  if (s.player.cash < festCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < festCost19(s)) return cashWhy20(s, festCost19(s), l('Caixa insuficiente.', 'Not enough cash.'));
   st.fest = s.year;
   const top = [...xs].sort((a, b) => demand19(s, b).v - demand19(s, a).v).slice(0, 6);
   const inc = Math.round(top.reduce((t, x) => t + money(s, 1100) * Math.min(1.6, demand19(s, x).v), 0));

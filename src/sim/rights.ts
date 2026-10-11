@@ -12,6 +12,7 @@ import type { ContractModel } from '../data/rules';
 import type { Act, Contract, GameState, Release, RightsTerms } from './types';
 import type { Rng } from '../core/rng';
 import { fmtL, money, notify, post, remember } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -261,7 +262,7 @@ export function buyPermission(s: GameState, relId: string, kind: ExploitKind, po
   const act = s.acts[rel.actId];
   if (act && act.trust < 30) return l('O artista não confia no selo para autorizar isso agora.', 'The artist does not trust the label enough to allow it now.');
   const price = permissionPrice(s, rel, kind);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(price);
   if (act) {
     act.cash += price;
@@ -365,7 +366,7 @@ export function extendMasters(s: GameState, contractId: string): L | null {
   if (!act) return l('Artista indisponível.', 'Artist unavailable.');
   if (act.trust < 30) return l('O artista não quer negociar os masters com o selo.', 'The artist will not negotiate the masters with the label.');
   const price = extendPrice(s, c);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `extend:${c.id}`, -price, 'acquisitions', `Extensão dos masters de ${act.name}`);
   act.cash += price;
   c.rights = { ...rightsOf(c), reversionYears: rightsOf(c).reversionYears + 10 };
@@ -400,12 +401,12 @@ export function respondDemand(s: GameState, r: Rng, demandId: string, answer: 'a
     act.trust = clamp(act.trust + trust, 0, 100);
   };
   if (answer === 'accept') {
-    if (s.player.cash < d.bonus) return l('Caixa insuficiente para o bônus.', 'Not enough cash for the bonus.');
+    if (freeCash20(s) < d.bonus) return cashWhy20(s, d.bonus, l('Caixa insuficiente para o bônus.', 'Not enough cash for the bonus.'));
     apply(d.royalty, d.bonus, d.reversionYears, 12);
     remember(s, 'renegotiation', fmtL(l('{a} renegocia com força: royalty de {r}% e bônus.', '{a} renegotiates from strength: {r}% royalty and a bonus.'), { a: act.name, r: Math.round(d.royalty * 100) }), { actId: act.id });
   } else if (answer === 'counter') {
     const bonus = Math.round(d.bonus / 2);
-    if (s.player.cash < bonus) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < bonus) return cashWhy20(s, bonus, l('Caixa insuficiente.', 'Not enough cash.'));
     const royalty = Math.round(((c.royalty + d.royalty) / 2) * 100) / 100;
     if (r.chance(clamp(0.3 + act.trust / 200, 0.1, 0.8))) {
       apply(royalty, bonus, d.reversionYears ? d.reversionYears + 10 : 0, 4);

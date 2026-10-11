@@ -13,6 +13,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import type { GameState, Release } from '../types';
 import { fmtL, money, post } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type OutId = 'jukebox_ops' | 'rack' | 'eight_track' | 'record_club' | 'indie_shops' | 'mall_chain' | 'bigbox_excl' | 'mp3_store' | 'direct' | 'video' | 'streaming' | 'window' | 'platform_excl' | 'short_video' | 'vinyl_special' | 'phono_dealers' | 'mail_order' | 'vaud_plug';
 export interface OutDef { id: OutId; name: L; desc: L; from: number; to: number; reach: number; margin: number; fee: number; upfront?: number; cred?: number; youth?: number; single?: boolean; excl?: OutId[]; fam?: string[] }
@@ -81,7 +82,7 @@ export function toggleOutlet(s: GameState, relId: string, id: OutId): L | null {
   const clash = cur.find((x) => o.excl?.includes(x) || outDef(x)?.excl?.includes(id));
   if (clash) return fmtL(l('Incompatível com {x}.', 'Incompatible with {x}.'), { x: outDef(clash)!.name });
   const fee = feeOf(s, o);
-  if (fee && s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (fee && freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   if (fee) post(s, `out17:${relId}:${id}`, -fee, 'marketing', `Canal ${o.name.pt}: ${rel.title}`);
   const up = upfrontOf(s, o, rel);
   if (up) post(s, `out17up:${relId}:${id}`, up, 'sales', `Adiantamento ${o.name.pt}: ${rel.title}`);

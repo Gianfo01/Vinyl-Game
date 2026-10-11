@@ -25,6 +25,7 @@ import { addHype } from './hype12';
 import { djFee18, djFit18, ensureDjs18, media18, type Dj18 } from './media18';
 import { cnt19, link19, log19, mineA19, mineR19, safe19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { v17, vdef } from './venues17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export const REMIX_FROM19 = 1975;
 export const WHITE_FROM19 = 1985;
@@ -78,7 +79,7 @@ export function remix19(s: GameState, relId: string, djId: string): L | null {
   const dj = ensureDjs18(s).find((d) => d.id === djId);
   if (!dj) return l('Escolha um DJ.', 'Pick a DJ.');
   const c = remixCost19(s, dj);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `rmx19:${relId}:${s.week}`, -c, 'recording', `Remix de catálogo ${dj.name}: ${rel.title}`);
   const st = rmx19(s);
   st.rx.push({ id: `rx${++st.seq}`, rel: relId, dj: dj.id, djn: dj.name, w: s.week, due: s.week + 4, k: 'club', split: 1 });
@@ -116,7 +117,7 @@ export function whiteLabel19(s: GameState, relId: string): L | null {
   if (!mineR19(s, rel)) return l('Lançamento inválido.', 'Invalid release.');
   if (st.wl[relId] && s.week - st.wl[relId][1] < 26) return l('Já testado neste semestre.', 'Already tested this half-year.');
   const c = whiteCost19(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `wl19:${relId}:${s.week}`, -c, 'manufacturing', `White label: ${rel.title}`);
   const r = rng(s), djs = ensureDjs18(s);
   const fit = djs.length ? Math.max(...djs.map((d) => djFit18(s, d, rel))) : 0.5;
@@ -184,7 +185,7 @@ registerInboxKind('rmx19_offer', { label: l('Pedido de remix', 'Remix request'),
     const rel = s.releases[String(m.ref?.rel)], dj = media18(s).djs.find((d) => d.id === String(m.ref?.dj)), st = rmx19(s);
     if (!rel || !dj) return l('Já passou.', 'Already over.');
     if (act === 'no') return l('Você recusa; o DJ procura outra faixa.', 'You decline; the DJ looks for another track.');
-    if (act === 'buy') { const c = remixCost19(s, dj); if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.'); post(s, `rmx19b:${rel.id}:${s.week}`, -c, 'recording', `Remix ${dj.name}: ${rel.title}`); }
+    if (act === 'buy') { const c = remixCost19(s, dj); if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.')); post(s, `rmx19b:${rel.id}:${s.week}`, -c, 'recording', `Remix ${dj.name}: ${rel.title}`); }
     st.rx.push({ id: `rx${++st.seq}`, rel: rel.id, dj: dj.id, djn: dj.name, w: s.week, due: s.week + 4, k: 'offer', split: act === 'buy' ? 1 : 0.5 });
     cnt19(st, 'offer');
     return act === 'buy' ? l('Remix comprado: sai no mês que vem, renda toda sua.', 'Remix bought: out next month, all income yours.') : l('Remix liberado: sai no mês que vem, renda dividida.', 'Remix allowed: out next month, income split.');

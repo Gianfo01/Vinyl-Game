@@ -13,6 +13,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ventures } from './ventures9';
 import { clash17 } from './clash17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Deal = 'guarantee' | 'door' | 'versus';
 export type Role = 'agent' | 'promoter';
@@ -180,7 +181,7 @@ export function openPromoter(s: GameState): L | null {
   const c = c12(s);
   if (c.promoter.on) return null;
   const cost = money(s, PROMOTER_LICENSE);
-  if (s.player.cash < cost) return l('Sem caixa para a licença e as relações iniciais.', 'Not enough cash for the license and starting relations.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Sem caixa para a licença e as relações iniciais.', 'Not enough cash for the license and starting relations.'));
   post(s, 'p12:license', -cost, 'business', 'Promotora de shows');
   c.promoter.on = true;
   remember(s, 'venture', l('O selo abre uma promotora de shows: agora o risco da bilheteria é seu.', 'The label opens a concert promotion arm: box-office risk is now yours.'));

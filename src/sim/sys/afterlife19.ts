@@ -33,6 +33,7 @@ import { LINK18_PARTS, LINKS18, lk18 } from './links18';
 import { POST19, PK18, SHARE18, STANCE18, actOfP18, ask18, estate18, mediate18, post18, start18, tech18, type Est18, type PK18 as PKind, type Share18 } from './post18';
 import { oldRel19, stage19 } from './revival19';
 import { sh18, type Style18 as VStyle } from './shared18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
 const rr = (s: GameState, tag: string) => rng19(s, 'af19', () => Rng.fromSeed(`${s.config.seed}|af19|${tag}|${s.week}`));
@@ -155,7 +156,7 @@ export function licMasters19(s: GameState, actId: string): L | null {
   const h = holder19(s, a);
   if (h === 'player') return l('Os masters já são seus.', 'The masters are already yours.');
   const c = licCost19(s, a);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   if (h === 'estate') { const x = a.members.map((p) => af19(s).e[p]).find(Boolean); if (x && opAvg19(x) < 30) return l('Os herdeiros não querem conversa com você.', 'The heirs will not talk to you.'); }
   post(s, `af19lic:${actId}:${s.week}`, -c, 'rights', `Licença de masters: ${a.name}`);
   if (h !== 'estate' && h !== 'indie' && s.labels[h]) s.labels[h].cash += c;
@@ -388,7 +389,7 @@ export function residency19(s: GameState, actId: string, months = 24, share: Sha
   const dead = isEstate(s, a);
   if (!dead && !mine(a)) return l('Com artistas vivos, só os do seu elenco (consentimento).', 'With living artists, only your own roster (consent).');
   const c = resCost19(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   const od = ask18(s, pid, 'avatar', share);
   const r = rr(s, `res:${actId}`);
   if (!r.chance(od.p)) {

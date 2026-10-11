@@ -19,6 +19,7 @@ import { addMsg, P } from './people/state';
 import { actAdmiration, admiration, bonds } from './bonds9';
 import { actBond, bump } from './social8';
 import { HIST_SCENES, actInScene, sceneStage, type HistScene } from './world4/scenes';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type MvPhase = 'birth' | 'peak' | 'commercial' | 'repression' | 'split' | 'death' | 'revival' | 'canon';
 export type MvEnd = 'censorship' | 'exile' | 'leader_death' | 'dilution' | 'fight';
@@ -371,7 +372,7 @@ export function foundMovement(s: GameState, r: Rng, o: FoundSpec, npc = false): 
   if (o.acts.some((id) => { const t = tierOf(s, id); return t && t.tier !== 'symp'; })) return { ok: false, text: l('Um dos atos já está em outro movimento.', 'One of the acts is already in another movement.') };
   if (!npc) {
     if ((st.tried ?? -99) > s.week - 26) return { ok: false, text: l('Você tentou há pouco; espere uns meses.', 'You tried recently; wait a few months.') };
-    if (s.player.cash < FOUND_COST) return { ok: false, text: l('Caixa insuficiente para o lançamento do manifesto.', 'Not enough cash to launch the manifesto.') };
+    if (freeCash20(s) < FOUND_COST) return { ok: false, text: cashWhy20(s, FOUND_COST, l('Caixa insuficiente para o lançamento do manifesto.', 'Not enough cash to launch the manifesto.')) };
     st.tried = s.week;
     post(s, `mov9:found`, -FOUND_COST, 'marketing', `Manifesto: ${name}`);
   }

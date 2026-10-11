@@ -31,6 +31,7 @@ import { nudge16 } from './fame16';
 import { shield18 } from './feud18';
 import { playerPerson } from './life';
 import { v17, vdef } from './venues17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const exact = (s: GameState) => histMode(s) === 'strict';
@@ -301,7 +302,7 @@ export function startCharity18(s: GameState, cause: string, fmt: Camp18['fmt'], 
   if (!causesNow18(s).some((c) => c.id === cause)) return l('Causa indisponível nesta época.', 'Cause unavailable in this era.');
   if (s.year < FMT18[fmt].from) return l('Formato ainda não existe.', 'Format not available yet.');
   const c = money(s, FMT18[fmt].cost);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `soc18ch:${s.week}`, -c, 'marketing', `Campanha beneficente: ${FMT18[fmt].name.pt}`);
   const own = playerActs(s).filter((id) => s.acts[id] && s.acts[id].status !== 'retired').sort((a, b) => s.acts[b].fame - s.acts[a].fame).slice(0, 3);
   st.camp = { cause, fmt, stage: fmt === 'foundation' ? 'done' : 'recruit', w: s.week, stars: own, asked: [], fee: clamp(fee, 0, 0.25) };
@@ -398,7 +399,7 @@ export function buildMuseum18(s: GameState, kind: 'museum' | 'route'): L | null 
   if (kind === 'museum' ? st.museum : st.route) return l('Já existe.', 'Already exists.');
   if (kind === 'route' && cityScore18(s, city).v < 15) return l('A cidade ainda não tem lugares que atraiam turistas (pontuação 15+).', 'The city has no sites that draw tourists yet (score 15+).');
   const v = kind === 'museum' ? museumCost18(s) : routeCost18(s);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `venture:soc18${kind}`, -v, 'capex', kind === 'museum' ? 'Museu da música' : 'Rota turística musical');
   if (kind === 'museum') st.museum = { city, since: s.year, vis: 0 }; else st.route = { city, since: s.year };
   emitFact(s, { kind: 'deal', actors: ['player'], severity: 35, visibility: 'public', tags: ['good', 'soc18', 'tourism'], src: 'soc18', place: city, text: fmtL(kind === 'museum' ? l('{c} inaugura um museu da música em {x}.', '{c} opens a music museum in {x}.') : l('{c} lança uma rota turística musical em {x}.', '{c} launches a music tourist route in {x}.'), { c: s.config.companyName, x: cityById[city]?.name ?? city }) });
@@ -408,7 +409,7 @@ export function lobbyCouncil18(s: GameState): L | null {
   const st = soc18(s), city = s.config.homeCity;
   if ((st.council[city] ?? 0) > s.year - 10) return l('A lei já está em vigor.', 'The ordinance is already in force.');
   const v = money(s, 12000);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `soc18cn:${s.week}`, -v, 'misc', 'Lobby na câmara municipal');
   const r = Rng.fromSeed(`${s.config.seed}|soc18cn|${s.week}`);
   if (!r.chance(clamp(0.3 + s.player.reputation.institutional / 200 + cityScore18(s, city).v / 300, 0.15, 0.85))) return l('A câmara engaveta o projeto.', 'The council shelves the bill.');
@@ -424,7 +425,7 @@ export function applyUnesco18(s: GameState): L | null {
   const sc = cityScore18(s, city).v;
   if (sc < 45) return fmtL(l('Candidatura fraca: pontuação {v}/45.', 'Weak bid: score {v}/45.'), { v: sc });
   const v = money(s, 30000);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `soc18un:${s.year}`, -v, 'misc', 'Candidatura UNESCO');
   if (!Rng.fromSeed(`${s.config.seed}|soc18un|${s.year}`).chance(clamp(sc / 100, 0.3, 0.8))) return l('Candidatura recusada este ano.', 'Bid rejected this year.');
   st.unesco[city] = s.year;

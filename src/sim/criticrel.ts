@@ -7,6 +7,7 @@ import { l, type L } from '../data/world';
 import { registerExt4 } from './ext4';
 import type { GameState } from './types';
 import { fmtL, money, notify, post } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export interface CritRelState { rel: Record<string, number>; last: Record<string, number> }
 
@@ -35,7 +36,7 @@ export function criticAction(s: GameState, r: Rng, critic: string, act: CritActi
   const key = `${critic}:${act}`;
   if ((st.last[key] ?? -999) + def.cooldown > s.week) return l('Cedo demais para repetir.', 'Too soon to repeat.');
   const cost = money(s, def.cost);
-  if (cost && s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (cost && freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   if (cost) post(s, `crit:${key}`, -cost, 'marketing', `Relação com crítico: ${critic}`);
   st.last[key] = s.week;
   const cur = relWith(s, critic);

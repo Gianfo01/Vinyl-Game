@@ -28,6 +28,7 @@ import { ownerOf } from './people/owner';
 import { LEADS, OPTION_STYLE, ORIGIN_OF_BACKGROUND, PROFILES, leadById, originById, profileById, type LeadId, type OriginId, type ProfileId } from './identity/data';
 
 import { XBY_ID, XPROFILES, adj, envOf, type Env } from './identity/extra';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export * from './identity/data';
 
@@ -518,7 +519,7 @@ export function actionBlock(s: GameState, id: string): L | null {
   const st = ident(s);
   if (st.cur !== d.profile) return fmtL(l('Só para quem é {p}.', 'Only for a {p}.'), { p: profileById[d.profile].name });
   if ((st.cool[id] ?? -1) > s.week) return fmtL(l('Disponível em {n} semanas.', 'Available in {n} weeks.'), { n: st.cool[id] - s.week });
-  if (d.cost && s.player.cash < money(s, d.cost)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (d.cost && freeCash20(s) < money(s, d.cost)) return cashWhy20(s, money(s, d.cost), l('Caixa insuficiente.', 'Not enough cash.'));
   const acts = rosterActs(s);
   if (id === 'license' && oldCatalog(s).length < 3) return l('Precisa de 3 discos com mais de 2 anos.', 'Needs 3 records older than 2 years.');
   if (id === 'partner' && !s.player.territories.some((m) => m !== homeMarket(s))) return l('Abra ao menos um território fora do mercado de casa.', 'Open at least one territory outside the home market.');

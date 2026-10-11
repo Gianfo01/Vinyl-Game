@@ -16,6 +16,7 @@ import type { GameState, Label } from '../types';
 import type { SubLabel } from '../xtypes';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ownerBonus } from './people/owner';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface Holding { holder: string; share: number; since: number; cost: number }
 export interface StakeTalk {
@@ -155,7 +156,7 @@ export function canBuyStake(s: GameState, labelId: string, share: number, price:
   if (share < 0.02 - 1e-9) return l('A fatia mínima é 2%.', 'The minimum slice is 2%.');
   if (share > founderShare(s, labelId) + 1e-6) return l('Não há tantas ações à venda (outros acionistas têm o resto).', 'Not that many shares are for sale (other shareholders own the rest).');
   if (price <= 0) return l('Preço inválido.', 'Invalid price.');
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   if (mode === 'hostile' && (stakes(s).shield[labelId] ?? 0) > s.week) return l('O selo está blindado (pílula de veneno) contra compras hostis por enquanto.', 'The label is shielded (poison pill) against hostile buys for now.');
   if (stakes(s).talks.some((t) => t.labelId === labelId)) return l('Já há uma negociação aberta com este selo.', 'There is already an open negotiation with this label.');
   return null;
@@ -203,7 +204,7 @@ export function acceptStakeCounter(s: GameState, r: Rng, talkId: string): L | nu
   if (!t?.counter) return l('Contraproposta expirada.', 'Counter-offer expired.');
   const lb = s.labels[t.labelId];
   if (!lb?.active) return l('Selo indisponível.', 'Label unavailable.');
-  if (s.player.cash < t.counter.price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < t.counter.price) return cashWhy20(s, t.counter.price, l('Caixa insuficiente.', 'Not enough cash.'));
   const at = antitrust(s, t.labelId, t.counter.share);
   if (at.blocked) return at.text!;
   st.talks = st.talks.filter((x) => x !== t);
@@ -354,7 +355,7 @@ export function absorbLabel(s: GameState, r: Rng, labelId: string): L | null {
   const lb = s.labels[labelId];
   if (!lb?.active || stakeOf(s, labelId) <= CONTROL) return l('Precisa de mais de 50% para absorver o selo.', 'You need more than 50% to absorb the label.');
   const cost = squeezeCost(s, labelId);
-  if (s.player.cash < cost) return l('Caixa insuficiente para comprar a parte dos minoritários.', 'Not enough cash to buy out the minority.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para comprar a parte dos minoritários.', 'Not enough cash to buy out the minority.'));
   if (cost > 0) post(s, `squeeze:${labelId}`, -cost, 'acquisitions', `Compra dos minoritários de ${lb.name}`);
   payOutOthers(s, lb, 'player');
   const v = labelValuation(s, lb);

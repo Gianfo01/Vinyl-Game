@@ -22,6 +22,7 @@ import type { GameState, Release } from '../types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember } from '../util';
 import { addHeat } from './crime17';
 import { w4 } from './world4/state';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Fmt18 = 'network' | 'top40' | 'adult' | 'aor' | 'urban' | 'country' | 'college' | 'latin' | 'dance';
 export interface FmtDef18 { name: L; from: number; to?: number; fam: FamilyId[]; reach: number; strict: number; edit?: boolean; desc: L }
@@ -132,7 +133,7 @@ export function pitchRadio18(s: GameState, relId: string, f: Fmt18, how: How18, 
   const st = radio18(s), key = `${relId}|${f}`;
   if (st.tried[key]) return l('Já apresentada a esse formato.', 'Already pitched to this format.');
   const cost = money(s, HOW18[how].real);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `r18p:${key}`, -cost, how === 'indie' ? 'w4_payola' : 'promo', how === 'indie' ? 'Consultoria de rádio (?)' : `Divulgação em rádio: ${rel.title}`);
   st.tried[key] = s.week;
   st.n.pitch++;
@@ -169,7 +170,7 @@ export function lunchPd18(s: GameState, stId: string): L {
   if (!x) return l('Estação inválida.', 'Invalid station.');
   if ((x.lunch ?? -99) > s.week - 8) return l('Vocês jantaram há pouco.', 'You dined recently.');
   const cost = money(s, 200);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `r18l:${stId}`, -cost, 'promo', `Jantar com ${x.pd}`);
   x.lunch = s.week; x.rel = clamp(x.rel + 8, 0, 100);
   return fmtL(l('{pd} gostou da conversa (relação {r}).', '{pd} enjoyed the talk (relationship {r}).'), { pd: x.pd, r: x.rel });

@@ -15,6 +15,7 @@ import { grantHold } from '../holds17';
 import { scandal } from '../scandal17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Scope = 'merch' | 'ads' | 'biopic' | 'game' | 'hologram' | 'voice_ai';
 export const SCOPES: Record<Scope, { name: L; desc: L; from: number; weight: number }> = {
@@ -77,7 +78,7 @@ export function askImage(s: GameState, actId: string, t: Terms): { ok: boolean; 
   if ((st.asked[actId] ?? -99) > s.week - 26) return { ok: false, text: l('Você pediu há pouco: espere seis meses.', 'You asked recently: wait six months.') };
   const c = imgChance(s, a, t);
   if (c.block) return { ok: false, text: c.block };
-  if (s.player.cash < t.upfront) return { ok: false, text: l('Caixa insuficiente para as luvas.', 'Not enough cash for the signing payment.') };
+  if (freeCash20(s) < t.upfront) return { ok: false, text: cashWhy20(s, t.upfront, l('Caixa insuficiente para as luvas.', 'Not enough cash for the signing payment.')) };
   st.asked[actId] = s.week;
   const est = isEstate(s, a);
   const r = Rng.fromSeed(`${s.config.seed}:img17:${actId}:${s.week}`);

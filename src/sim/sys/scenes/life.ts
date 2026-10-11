@@ -15,6 +15,7 @@ import { clampN, cooled, findScene, markSeen, memSeq, patchScene, queueScene, sc
 import { allReleases17 } from '../../relidx17';
 import { mineAct19, relAct19 } from '../../mine19';
 import { OFF_S17 } from '../scene17';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 const mineAct = (s: GameState, actId?: string) => {
   const a = actId ? s.acts[actId] : undefined;
@@ -217,7 +218,7 @@ export function fairChoice(s: GameState, r: Rng, csId: string, size: BoothSize):
     return res;
   }
   const cost = money(s, BOOTH_COST[size]);
-  if (s.player.cash < cost) return l('Caixa insuficiente para o estande.', 'Not enough cash for the booth.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para o estande.', 'Not enough cash for the booth.'));
   post(s, `fair:${s.year}:${size}`, -cost, 'marketing', 'Estande na feira do setor');
   const k = { small: 1, medium: 2, large: 3 }[size];
   s.player.reputation.institutional = clampN(s.player.reputation.institutional + k, 0, 100);
@@ -286,7 +287,7 @@ export function factoryOvertime(s: GameState, csId: string, go: boolean): L {
     const units = Number(cs.data.units) || 0;
     const cost = Math.round(pressingCost(s, rel.formats, units) * 1.25); // turno extra custa 25% a mais
     if (cost <= 0) result = l('Este lançamento não tem formato físico para prensar.', 'This release has no physical format to press.');
-    else if (s.player.cash < cost) return l('Caixa insuficiente para o turno extra.', 'Not enough cash for the extra shift.');
+    else if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para o turno extra.', 'Not enough cash for the extra shift.'));
     else {
       post(s, `overtime:${rel.id}`, -cost, 'manufacturing', 'Prensagem em turno extra');
       rel.stock += units;

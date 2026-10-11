@@ -41,6 +41,7 @@ import { startFeud18 } from './feud18';
 import { LINKS18, lk18 } from './links18';
 import { goSolo16, l16, leaveBand16, newBand16 } from './lineup16';
 import { activeMgrs, mgrName } from './managers14';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 export interface Sold19 { act: string; lb: string; w: number; y: number; price: number; pct: number; until: number; fame0: number; n10: number; u: Record<string, number>; paid: number; regret?: 1 }
@@ -255,7 +256,7 @@ export function payClause19(s: GameState, actId: string): L | null {
   if (!window19(s)) return l('Só na janela de transferências (janeiro, julho e agosto).', 'Only in the transfer window (January, July and August).');
   if (exactHist(s) && histLocked(s, a)) return l('Modo "Vida real exata": este artista segue a história real.', '"Exact real life" mode: this act follows real history.');
   const p = npcClause19(s, a);
-  if (s.player.cash < p) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < p) return cashWhy20(s, p, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `mb19buy:${a.id}`, -p, 'transfers', `Cláusula de ${a.name} paga a ${lb.name}`);
   lb.cash += p;
   moveAct19(s, a, 'player');
@@ -296,7 +297,7 @@ export function borrow19(s: GameState, actId: string): L | null {
   if (exactHist(s) && histLocked(s, a)) return l('Modo "Vida real exata": este artista segue a história real.', '"Exact real life" mode: this act follows real history.');
   if ((s.rivalries[lb.id] ?? 0) >= 75) return fmtL(l('{b} está em guerra com você: não empresta nada.', '{b} is at war with you: they lend nothing.'), { b: lb.name });
   const fee = borrowFee19(s, a);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   const st = mb19(s);
   post(s, `mb19borrow:${a.id}`, -fee, 'licensing', `Empréstimo de ${a.name} (de ${lb.name})`);
   lb.cash += fee;
@@ -312,7 +313,7 @@ export function recall19(s: GameState, loanId: string): L | null {
   const x = mb19(s).loans.find((y) => y.id === loanId && y.st === 'on');
   if (!x || x.from !== 'player') return l('Empréstimo inválido.', 'Invalid loan.');
   const pen = Math.round(x.fee * 0.5);
-  if (s.player.cash < pen) return l('Caixa insuficiente para a multa.', 'Not enough cash for the penalty.');
+  if (freeCash20(s) < pen) return cashWhy20(s, pen, l('Caixa insuficiente para a multa.', 'Not enough cash for the penalty.'));
   post(s, `mb19recall:${x.act}`, -pen, 'licensing', 'Multa por chamar artista emprestado de volta');
   const lb = s.labels[x.to];
   if (lb) { lb.cash += pen; addHeat19(s, lb.id, 6, 100); }
@@ -452,7 +453,7 @@ export function fireMgr19(s: GameState, actId: string): L | null {
   const a = s.acts[actId], m = mb19(s).mgr[actId];
   if (!a || !m) return l('Sem empresário total.', 'No total manager.');
   const c = fireCost19(s, a);
-  if (s.player.cash < c) return l('Caixa insuficiente para pagar a saída.', 'Not enough cash to buy him out.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente para pagar a saída.', 'Not enough cash to buy him out.'));
   post(s, `mb19fire:${actId}`, -c, 'legal', `Saída do empresário de ${a.name}`);
   delete mb19(s).mgr[actId];
   a.trust = clamp(a.trust + 10, 0, 100);
@@ -466,7 +467,7 @@ export function auditMgr19(s: GameState, actId: string): L | null {
   const a = s.acts[actId], m = mb19(s).mgr[actId];
   if (!a || !m) return l('Sem empresário total.', 'No total manager.');
   if (m.audited && s.week - m.audited < 52) return l('Auditado há menos de um ano.', 'Audited less than a year ago.');
-  if (s.player.cash < auditCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < auditCost19(s)) return cashWhy20(s, auditCost19(s), l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `mb19audit:${actId}`, -auditCost19(s), 'legal', `Auditoria do empresário de ${a.name}`);
   m.audited = s.week;
   const back = Math.round(m.took * (0.15 + m.secret / 400));

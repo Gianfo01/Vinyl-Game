@@ -19,6 +19,7 @@ import { songQ } from '../production';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
 import { hasSpec, influence } from './crew8';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type ConsentVal = 'g' | 'r';
 export interface ConsentRec { v?: ConsentVal; t?: ConsentVal; sh: number; cr: boolean; w: number }
@@ -251,7 +252,7 @@ export function applyCert(s: GameState): L | null {
   const b = certBlocker(s);
   if (b) return b;
   const cost = certCost(s);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'ai8:cert', -cost, 'neural', 'Certificação Feito por Humanos');
   st.cert = { since: s.week, next: s.week + 52 };
   s.flags.humanCertified = s.week;
@@ -351,7 +352,7 @@ export function resolveImitation(s: GameState, r: Rng, id: string, choice: ImitC
   }
   if (choice === 'sue') {
     const cost = money(s, 3000);
-    if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `ai8:sue:${im.id}`, -cost, 'legal', 'Ação contra imitação de voz');
     const odds = clamp(0.2 + lawLevel(s, homeA3(s)) * 0.15 + staffSkill(s, 'legal') / 300 + (hasSpec(s, 'hardball') ? 0.1 : 0), 0.1, 0.85);
     fileLawsuit(s, { kind: 'image', plaintiff: s.config.companyName, defendant: im.by, actId: a.id, claim: money(s, 15000 + a.fame * 600), odds, text: fmtL(l('Selo processa {b} por imitar a voz de {a}.', 'Label sues {b} for imitating {a}\'s voice.'), { a: a.name, b: im.by }) });
@@ -359,7 +360,7 @@ export function resolveImitation(s: GameState, r: Rng, id: string, choice: ImitC
     bump(s, 2);
   } else if (choice === 'takedown') {
     const cost = money(s, 800);
-    if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `ai8:td:${im.id}`, -cost, 'legal', 'Pedido de remoção');
     if (r.chance(0.6 + lawLevel(s, homeA3(s)) * 0.1)) { a.trust = clamp(a.trust + 2, 0, 100); bump(s, 1); }
     else { st.dil = clamp(st.dil + 0.005, 0, 0.35); log(s, fmtL(l('A imitação de {a} reaparece em outra conta.', 'The {a} imitation reappears on another account.'), { a: a.name }), 'bad'); }
@@ -381,7 +382,7 @@ export function lobby(s: GameState, a3: string, dir: 1 | -1): L | null {
   if (!LAW_YEARS[a3]) return l('Esse país não discute lei de IA.', 'That country is not debating AI law.');
   if (s.flags[`ai8lobby:${a3}`] === s.year) return l('Já fez lobby nesse país este ano.', 'Already lobbied there this year.');
   const cost = lobbyCost(s);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `ai8:lobby:${a3}`, -cost, 'legal', `Lobby sobre lei de IA (${a3})`);
   s.flags[`ai8lobby:${a3}`] = s.year;
   const st = ai(s);

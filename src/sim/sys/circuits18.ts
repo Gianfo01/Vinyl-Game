@@ -14,6 +14,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { nudge16 } from './fame16';
 import { reg18, subW18 } from './regions18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const live = (y: number, c: Circ18) => y >= c.from && (c.to === undefined || y <= c.to);
 export const circFits18 = (c: Circ18, a: Act): boolean => c.g.includes(a.genre) || c.g.includes(familyOf(a.genre));
@@ -28,7 +29,7 @@ export function circBlock18(s: GameState, actId: string, cid: string): L | null 
   if (!circFits18(c, a)) return l('O gênero do ato não entra neste circuito.', 'The act\'s genre does not fit this circuit.');
   if ((reg18(s).circ[actId] ?? []).includes(cid)) return l('Já está no circuito.', 'Already on the circuit.');
   if (c.lump && reg18(s).sold[actId]) return l('O master já foi vendido.', 'The master was already sold.');
-  if (s.player.cash < money(s, c.usd)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, c.usd)) return cashWhy20(s, money(s, c.usd), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function joinCirc18(s: GameState, actId: string, cid: string): L | null {

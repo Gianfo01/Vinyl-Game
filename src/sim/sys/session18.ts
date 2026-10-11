@@ -17,6 +17,7 @@ import type { GameState } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { familyOf } from '../../data/world';
 import { w4 } from './world4/state';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface HB18 { name: string; fam: FamilyId; q: number; since: number; credit: boolean; res: number; sess: number; rent: boolean; strike: number; ace: string; players: string[]; hits: number }
 export interface Sess18State { hb?: HB18; log: { w: number; t: L }[] }
@@ -50,7 +51,7 @@ export function foundHB18(s: GameState, fam: FamilyId, credit: boolean): L | nul
   if (st.hb) return l('Você já tem uma banda da casa.', 'You already have a house band.');
   if (s.year < 1925) return l('Ainda não há estúdios para isso.', 'No studios for that yet.');
   const c = hbSetup18(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'venture:hb18', -c, 'capex', 'Banda da casa: sala e instrumentos');
   const r = Rng.fromSeed(`${s.config.seed}|hb18|${s.week}`);
   const lang = langForCity(s.config.homeCity, r);

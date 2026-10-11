@@ -14,6 +14,7 @@ import { estimate, scoutActionsPerMonth } from '../scouting';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post, remember, rngOf, staffSkill } from '../util';
 import { actAttr, attrById } from './talent/attrs';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Dim = 'live' | 'orig' | 'fans' | 'scene' | 'comm' | 'risk' | 'rival';
 export type Src = 'producer' | 'promoter' | 'critic' | 'local' | 'demo' | 'residency';
@@ -181,7 +182,7 @@ export function researchBlock(s: GameState, actId: string, src: Src): L | null {
   if (def.action && s.scoutActionsUsed >= scoutActionsPerMonth(s)) return l('Sem ações de scouting neste mês.', 'No scouting actions left this month.');
   if (def.weeks && act.owner) return l('Demo e residência só com quem ainda não tem contrato.', 'Demos and residencies only with unsigned acts.');
   if (dos(s).d[actId]?.pending?.some((p) => p.src === src)) return l('Já em andamento.', 'Already in progress.');
-  if (s.player.cash < researchCost(s, src)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < researchCost(s, src)) return cashWhy20(s, researchCost(s, src), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 

@@ -13,6 +13,7 @@ import { deferEvents, registerExt4, registerMod, registerSimHook } from '../ext4
 import type { GameState, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { currentEra, eraById, type EraId } from './eras8';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Dept = 'promo' | 'plant' | 'studio' | 'image' | 'digital' | 'data' | 'rights';
 export const DEPTS: Dept[] = ['promo', 'plant', 'studio', 'image', 'digital', 'data', 'rights'];
@@ -132,7 +133,7 @@ export function moveStaff(s: GameState, from: Dept, to: Dept): L | null {
   if (s.week - o.lastMove < 4) return l('A equipe ainda está se ajustando: espere um mês.', 'Staff are still adjusting: wait a month.');
   if (o.alloc[from] < 0.02) return l('Esse departamento já está vazio.', 'That department is already empty.');
   const c = moveCost(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `org12:move:${from}:${to}`, -c, 'admin', `Remanejamento ${from}→${to}`);
   const d = Math.min(MOVE_STEP, o.alloc[from]);
   o.alloc[from] -= d; o.alloc[to] += d;

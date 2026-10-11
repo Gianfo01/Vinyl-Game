@@ -18,6 +18,7 @@ import { addStress } from '../stress17';
 import type { Act, GameState, Song } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import { canSell, closeSale, fairTerms, sales } from './songsale';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface Camp18 { id: string; host: string; w1: number; size: number; top: number; songs?: string[] }
 export interface Pitch18 { id: string; a: string; g: string; minQ: number; until: number; fee: number; cut: number; done?: string }
@@ -55,7 +56,7 @@ export function holdCamp18(s: GameState, hostId: string, size: number, top: numb
   if (!CAMP_SIZE18[size] || size < 1) return l('Tamanho inválido.', 'Invalid size.');
   if (st.camps.some((c) => !c.songs)) return l('Já há um camp em andamento.', 'A camp is already running.');
   const cost = campCost18(s, size, top);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `camp18:${hostId}`, -cost, 'recording', `Camp de composição: ${a.name}`);
   st.camps.push({ id: `cp${++st.seq}`, host: hostId, w1: s.week + 2, size, top: clamp(top, 0, 4) });
   if (st.camps.length > 12) st.camps.splice(0, st.camps.length - 12);

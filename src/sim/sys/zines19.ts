@@ -31,6 +31,7 @@ import { activeScenes17 } from './heritage17';
 import { addHype } from './hype12';
 import { LINKS18, lk18 } from './links18';
 import { pr18 } from './press18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type ZK19 = 'zine' | 'blog';
 export interface Zine19 { id: string; name: string; city: string; g: string; y: number; k: ZK19; by: 'npc' | 'player'; reach: number; end?: number }
@@ -85,7 +86,7 @@ export function foundZine19(s: GameState, city: string, g: string, name: string)
   if (!cityById[city] || !genreById[g] || genreById[g].born > s.year) return N('Cidade ou gênero inválido.', 'Invalid city or genre.');
   if (zinesLive19(s).filter((z) => z.by === 'player').length >= 2) return N('Dois veículos próprios já tomam seu tempo.', 'Two outlets of your own already take your time.');
   const c = zineCost19(s);
-  if (s.player.cash < c) return N('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, N('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `zn19found:${s.week}`, -c, 'capex', `Fundação: ${name}`);
   const z = birth(s, city, g, 'player', name.trim() || 'Ruído', 12 + Math.round(pr18(s).reach / 5));
   logZ(s, fmtL(N('Você funda "{n}" em {c}.', 'You launch "{n}" in {c}.'), { n: z.name, c: cityById[city]?.name ?? city }));
@@ -137,7 +138,7 @@ export function buyOutlet19(s: GameState, oid: string): L | null {
   if (st.own) return N('Você já tem uma revista.', 'You already own a magazine.');
   if (exact(s) && o.real) return N('Em "Vida real exata", os veículos reais seguem a história: funde o seu próprio.', 'In "Exact real life", real outlets follow history: found your own.');
   const v = outletPrice19(s, o);
-  if (s.player.cash < v) return N('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, N('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `zn19buy:${oid}`, -v, 'acquisitions', `Compra da revista ${o.name}`);
   st.own = { oid, y: s.year, line: 'indep', paid: v };
   cnt(s, 'buy');

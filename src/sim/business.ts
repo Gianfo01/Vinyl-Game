@@ -13,6 +13,7 @@ import { addAsset, removeAsset } from './finance';
 import { unclearedSamples } from './studio';
 import { precAdd18, precMul18 } from './sys/rights18';
 import { allReleases17 } from './relidx17';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 // ---------- Avaliações ----------
 
@@ -44,7 +45,7 @@ export function acquireLabel(s: GameState, labelId: string): L | null {
   if (s.config.role === 'artist') return l('Só gravadora ou híbrido.', 'Label or hybrid only.');
   const v = labelValuation(s, lb);
   const price = Math.round(v.value * 0.9);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `acq:${lb.id}`, -price, 'acquisitions', `Aquisição de ${lb.name}`);
   transferLabel(s, lb, v, price);
   return null;
@@ -84,7 +85,7 @@ export function startJointVenture(s: GameState, labelId: string, capital: number
   const lb = s.labels[labelId];
   if (!lb || !lb.active) return l('Parceiro indisponível.', 'Partner unavailable.');
   if (s.companies.some((c) => c.partner === labelId)) return l('Já existe JV com esse selo.', 'A JV with this label already exists.');
-  if (s.player.cash < capital) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < capital) return cashWhy20(s, capital, l('Caixa insuficiente.', 'Not enough cash.'));
   if ((s.rivalries[labelId] ?? 0) > 40) return l('A rivalidade impede a parceria.', 'The rivalry blocks the partnership.');
   post(s, `jv:${labelId}`, -capital, 'acquisitions', `Joint venture com ${lb.name}`);
   lb.cash -= capital;
@@ -100,7 +101,7 @@ export function startJointVenture(s: GameState, labelId: string, capital: number
 export function buildPlant(s: GameState): L | null {
   if (s.companies.some((c) => c.kind === 'plant')) return l('Você já tem uma fábrica.', 'You already own a plant.');
   const cost = money(s, 90000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'plant', -cost, 'acquisitions', 'Fábrica de prensagem');
   const co: Company = { id: nextId(s, 'co'), name: fmtL(l('Prensas {c}', '{c} Pressing'), { c: s.config.companyName.split(' ')[0] }).pt, kind: 'plant', stake: 1, value: cost, liabilities: 0, monthlyRevenue: money(s, 2500), monthlyCost: money(s, 1800), acquiredWeek: s.week, catalog: [] };
   s.companies.push(co);
@@ -114,7 +115,7 @@ export function buildPlant(s: GameState): L | null {
 export function openPublishing(s: GameState): L | null {
   if (s.ownPublishing) return null;
   const cost = money(s, 25000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'publishing_arm', -cost, 'acquisitions', 'Editora própria');
   s.ownPublishing = true;
   s.companies.push({ id: nextId(s, 'co'), name: fmtL(l('{c} Edições', '{c} Publishing'), { c: s.config.companyName.split(' ')[0] }).pt, kind: 'publisher', stake: 1, value: cost, liabilities: 0, monthlyRevenue: 0, monthlyCost: money(s, 900), acquiredWeek: s.week, catalog: [] });
@@ -181,7 +182,7 @@ export function bidCatalog(s: GameState, auctionId: string, amount: number): L |
   if (!au) return l('Leilão encerrado.', 'Auction closed.');
   const top = Math.max(au.ask, ...au.bids.map((b) => b.amount));
   if (amount <= top) return l('O lance precisa superar o atual.', 'The bid must beat the current one.');
-  if (s.player.cash < amount) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente.', 'Not enough cash.'));
   au.bids.push({ party: 'player', amount });
   return null;
 }
@@ -290,7 +291,7 @@ export function settleLawsuit(s: GameState, id: string): L | null {
   const suit = s.lawsuits.find((x) => x.id === id);
   if (!suit || ['settled', 'won', 'lost'].includes(suit.stage)) return l('Processo encerrado.', 'Case closed.');
   const amount = Math.round(suit.claim * (suit.defendant === 'player' ? 0.45 : -0.35));
-  if (amount > 0 && s.player.cash < amount) return l('Caixa insuficiente para o acordo.', 'Not enough cash to settle.');
+  if (amount > 0 && freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente para o acordo.', 'Not enough cash to settle.'));
   post(s, `settle:${suit.id}`, -amount, 'legal', 'Acordo judicial');
   suit.stage = 'settled';
   return null;
@@ -364,7 +365,7 @@ export function sueForPlagiarism(s: GameState, r: Rng, mySongId: string, theirRe
   const theirs = s.releases[theirReleaseId];
   if (!mine || !theirs) return l('Inválido.', 'Invalid.');
   const cost = money(s, 3000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `sue:${theirReleaseId}`, -cost, 'legal', 'Ação por plágio');
   const sim = 0.15 + (mine.genre === s.acts[theirs.actId]?.genre ? 0.15 : 0) + staffSkill(s, 'legal') / 400 + r.float(0, 0.1);
   fileLawsuit(s, { kind: 'plagiarism', plaintiff: 'player', defendant: theirs.owner, actId: theirs.actId, songId: mySongId, claim: Math.round(theirs.revenue * 0.2 + money(s, 10000)), odds: sim, text: fmtL(l('Você processa "{t}" por plágio.', 'You sue "{t}" for plagiarism.'), { t: theirs.title }) });

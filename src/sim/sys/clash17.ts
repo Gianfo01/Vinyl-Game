@@ -17,6 +17,7 @@ import { scandal } from '../scandal17';
 import { TOUR18 } from '../tourhook18';
 import type { Act, GameState } from '../types';
 import { dateOfDay, fmtL, money, post } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface NpcShow { a: string; c: string; w: number; cap: number; mv?: 1 }
 export type Tix = 'fair' | 'tiered' | 'dynamic' | 'fanclub' | 'paperless';
@@ -95,7 +96,7 @@ export function blitz(s: GameState, actId: string, city: string, w: number): L |
   const k = `${actId}:${city}:${w}`;
   if (cal17(s).blitz[k]) return l('Já tem blitz nessa data.', 'Already a blitz on that date.');
   const cost = blitzCost(s, a);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `blitz17:${k}`, -cost, 'marketing', `Blitz ${a.name}`);
   cal17(s).blitz[k] = 1;
   return null;

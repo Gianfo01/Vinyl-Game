@@ -12,6 +12,7 @@ import { h } from '../dom';
 import { why18 } from '../explain18';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
+import { freeCash20 } from '../../sim/oblig20';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null, ok: L = l('Feito.', 'Done.')) => { toast(T(r ?? ok), r ? 'info' : 'good'); rerender(); };
@@ -39,8 +40,8 @@ function windowTab(s: GameState): HTMLElement {
     section(t(l('Astros dos rivais', 'Rival stars')), h('table', { class: 'table small' },
       h('tr', null, ...[l('Ato', 'Act'), l('Selo', 'Label'), l('Valor', 'Value'), l('Cláusula', 'Clause'), ''].map((x) => h('th', null, T(x)))),
       ...rivalStars19(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, s.labels[a.owner!]?.name ?? '?'), h('td', null, val(s, a.id)), h('td', null, $(npcClause19(s, a))),
-        h('td', null, row(btn(l('Pagar a cláusula', 'Pay the clause'), () => say(payClause19(s, a.id)), !open || s.player.cash < npcClause19(s, a)),
-          btn(fm(l('Pegar emprestado ({p})', 'Borrow ({p})'), { p: $(borrowFee19(s, a)) }), () => say(borrow19(s, a.id)), !open || s.player.cash < borrowFee19(s, a)))))))));
+        h('td', null, row(btn(l('Pagar a cláusula', 'Pay the clause'), () => say(payClause19(s, a.id)), !open || freeCash20(s) < npcClause19(s, a)),
+          btn(fm(l('Pegar emprestado ({p})', 'Borrow ({p})'), { p: $(borrowFee19(s, a)) }), () => say(borrow19(s, a.id)), !open || freeCash20(s) < borrowFee19(s, a)))))))));
 }
 
 function clauseTab(s: GameState): HTMLElement {

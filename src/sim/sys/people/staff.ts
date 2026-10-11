@@ -11,6 +11,7 @@ import type { GameState, StaffMember } from '../../types';
 import { fmtL, money, nextId, notify, post, remember } from '../../util';
 import { P, addMsg, clamp01, type StaffCareer } from './state';
 import { gainXp, ownerBonus } from './owner';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export const LEVEL_NAME: L[] = [l('Júnior', 'Junior'), l('Pleno', 'Mid-level'), l('Sênior', 'Senior'), l('Diretor(a)', 'Director')];
 
@@ -49,7 +50,7 @@ export function trainStaff(s: GameState, id: string): L | null {
   if (c.trainingUntil && c.trainingUntil > s.week) return l('Já está em treinamento.', 'Already in training.');
   if (st.skill >= 95) return l('Já está no topo.', 'Already at the top.');
   const cost = trainCost(s, st);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `train:${st.id}`, -cost, 'staff_training', `Treinamento ${st.name}`);
   c.trainingUntil = s.week + 4;
   c.loyalty = clamp01(c.loyalty + 6);

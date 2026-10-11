@@ -24,6 +24,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import { ch7 } from './charts7';
 import { nudge16 } from './fame16';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface Loc18 { mode: 'lic' | 'own'; since: number; partner: string; until?: number }
 export interface RegLog18 { y: number; m: number; sub: string; g: string; d: number; text: L }
@@ -210,7 +211,7 @@ export function locBlock18(s: GameState, sub: Sub18, mode: 'lic' | 'own'): L | n
   if (reg18(s).loc[sub.id]?.mode === mode) return l('Já está assim.', 'Already set up.');
   if (mode === 'lic' && !partner18(sub, s.year)) return l('Nenhum parceiro local nesta época.', 'No local partner in this era.');
   if (mode === 'own' && bars18(sub, s.year).some((b) => b.kind === 'approval' && b.mult <= 0.5)) return l('Mercado fechado a estrangeiros: só por licença com o parceiro estatal.', 'Market closed to foreigners: only via licence with the state partner.');
-  if (s.player.cash < locCost18(s, sub, mode)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < locCost18(s, sub, mode)) return cashWhy20(s, locCost18(s, sub, mode), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function localize18(s: GameState, subId: string, mode: 'lic' | 'own'): L | null {
@@ -242,7 +243,7 @@ export function verBlock18(s: GameState, actId: string, subId: string): L | null
   if (!a || a.owner !== 'player' || !sub) return l('Ato ou submercado inválido.', 'Invalid act or sub-market.');
   if (sub.langs.includes(actLang18(a))) return l('O ato já canta no idioma local.', 'The act already sings in the local language.');
   if ((reg18(s).ver[actId]?.[subId] ?? 0) >= s.year) return l('Já há versão local em circulação.', 'A local version is already out.');
-  if (s.player.cash < verCost18(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < verCost18(s)) return cashWhy20(s, verCost18(s), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function version18(s: GameState, actId: string, subId: string): L | null {
@@ -281,7 +282,7 @@ export function collab18(s: GameState, actId: string, subId: string): L {
   const pt = collabPartner18(s, subId, actId);
   if (!pt) return l('Nenhum astro local disponível.', 'No local star available.');
   const cost = collabCost18(s, subId);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   st.cd[k] = s.week + 52;
   const r = Rng.fromSeed(`${s.config.seed}|reg18c|${k}|${s.week}`);
   const ok = r.chance(collabOdds18(s, a, pt).p);

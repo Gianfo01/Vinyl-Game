@@ -39,6 +39,7 @@ import { LINK18_PARTS, LINKS18, lk18 } from './links18';
 import { realAct17 } from './realidx17';
 import { REP_NOTES19, mix18 } from './report18';
 import { stage19 } from './revival19';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
 const usd = (c: number): string => `$${Math.round(c / 100).toLocaleString('en-US')}`;
@@ -206,7 +207,7 @@ export function audit19(s: GameState, key: string, inflate = false): L | null {
   if (!rel || !b) { delete st.pend[key]; return l('Lançamento sumiu.', 'Release is gone.'); }
   const n = inflate ? (n0 >= 99 ? 99 : n0 + 1) : n0;
   const fee = auditFee19(s, n);
-  if (s.player.cash < fee) return l('Caixa insuficiente para a auditoria.', 'Not enough cash for the audit.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para a auditoria.', 'Not enough cash for the audit.'));
   post(s, `mka19aud:${key}:${s.week}`, -fee, 'misc', `Auditoria de certificação ${rel.title}`);
   delete st.pend[key];
   (st.c[rid] ??= {})[mk] = n;
@@ -299,7 +300,7 @@ export function test19(s: GameState, actId: string, m: TestM19): { ok: boolean; 
   if (s.year < TEST19[m].from) return { ok: false, text: l('Esse método ainda não existe.', 'That method does not exist yet.') };
   if (ids.length < 2) return { ok: false, text: l('Precisa de 2+ canções inéditas.', 'Needs 2+ unreleased songs.') };
   const cost = testCost19(s, m);
-  if (s.player.cash < cost) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.') };
+  if (freeCash20(s) < cost) return { ok: false, text: cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.')) };
   post(s, `mka19test:${actId}:${s.week}`, -cost, 'marketing', `Pesquisa de mercado ${a.name}`);
   const r = rng(s), sd = testSd19(s, m), b = TEST19[m].bias;
   const res: [string, number][] = ids.map((id) => { const x = s.songs[id]; return [id, Math.round(songTrue(x.q, x.melody) + (50 - x.originality) * b + r.normal(0, sd))] as [string, number]; }).sort((p, q) => q[1] - p[1]);
@@ -472,7 +473,7 @@ export function answer360(s: GameState, actId: string, k: 'match' | 'partner' | 
   if (!p || !a || !c || p.k) return l('Já decidido.', 'Already decided.');
   if (k === 'match') {
     const v = matchCost19(s, a);
-    if (s.player.cash < v) return l('Caixa insuficiente para cobrir.', 'Not enough cash to match.');
+    if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente para cobrir.', 'Not enough cash to match.'));
     post(s, `mka19m:${actId}`, -v, 'advances', `360 de ${a.name}`);
     c.advance += v; c.recoupBalance += v; c.model = '360'; c.share360 = Math.max(c.share360, 0.25); c.endWeek += 52 * 4; c.termMonths += 48;
     p.k = 'match'; p.end = c.endWeek; a.trust = clamp(a.trust + 4, 0, 100);
@@ -540,7 +541,7 @@ export function bid19(s: GameState, id: string, k: keyof typeof BID19 | 'contest
     return l('Contestação rejeitada: custas pagas, a fusão segue como estava.', 'Contest rejected: costs paid, the merger goes ahead as it was.');
   }
   const v = Math.round(x.price * BID19[k][0]);
-  if (s.player.cash < v) return l('Caixa insuficiente para o lance.', 'Not enough cash for the bid.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente para o lance.', 'Not enough cash for the bid.'));
   x.bid = v;
   return F(l('Lance de {v} registrado; resultado em {w} semanas.', 'Bid of {v} filed; result in {w} weeks.'), { v: usd(v), w: Math.max(0, x.w - s.week) });
 }
@@ -653,7 +654,7 @@ export function rushAnswer19(s: GameState, k: string, how: 'cheap' | 'stake' | '
     const a = spawnProceduralAct(s, rng(s), { city, genre: genreById[g] && genreById[g].born <= s.year ? g : undefined, fame: 12 });
     const o = defaultOffer(s, a);
     const offer: Offer = { ...o, advance: Math.round(o.advance * 0.7), id: `mka19o${++mka19(s).seq}`, week: s.week, status: 'pending' };
-    if (s.player.cash < offer.advance) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < offer.advance) return cashWhy20(s, offer.advance, l('Caixa insuficiente.', 'Not enough cash.'));
     acceptOffer(s, a, offer);
     return F(l('{a} assina com você antes da inflação (adiantamento −30%).', '{a} signs with you before the inflation (advance −30%).'), { a: a.name });
   }

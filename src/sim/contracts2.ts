@@ -7,6 +7,7 @@ import { endContract } from './contracts';
 import { rightsOf } from './rights';
 import type { Act, Contract, GameState } from './types';
 import { fmtL, money, notify, playerActs, post, remember } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export function contractOf(s: GameState, act: Act): Contract | undefined {
   return act.contractId ? s.contracts[act.contractId] : undefined;
@@ -69,7 +70,7 @@ export function buyoutContract(s: GameState, r: Rng, actId: string): L | null {
   if (!act || !k || k.party === 'player') return l('Sem contrato rival para comprar.', 'No rival contract to buy.');
   const lb = s.labels[k.party];
   const price = buyoutPrice(s, act);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   const willing = (lb?.cash ?? 0) < money(s, 100000) ? 0.85 : 0.45 - (s.rivalries[k.party] ?? 0) / 200;
   if (!r.chance(willing)) {
     s.rivalries[k.party] = (s.rivalries[k.party] ?? 0) + 5;
@@ -109,7 +110,7 @@ export function crisisRenegotiate(s: GameState, actId: string, kind: 'advance' |
   if (!k || k.party !== 'player') return l('Inválido.', 'Invalid.');
   if (kind === 'advance') {
     const amt = money(s, 3000 + act.fame * 100);
-    if (s.player.cash < amt) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < amt) return cashWhy20(s, amt, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `crisisadv:${actId}`, -amt, 'advances', `Adiantamento emergencial ${act.name}`);
     k.recoupBalance += amt;
     act.cash += amt;

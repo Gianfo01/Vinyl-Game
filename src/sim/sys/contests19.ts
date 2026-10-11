@@ -8,7 +8,7 @@
 // A final é uma cena (cine18: envelope e vaias); o vencedor vira pista e pessoa (fato `contest_winner`, que o writers19 usa
 // para achar ghostwriters — cadeia 3). As finais de Idol/The Voice do tv18 também viram contest_final/contest_winner.
 
-import { freeCash20 } from '../oblig20';
+import { cashWhy20, freeCash20 } from '../oblig20';
 import { mineAct19 } from '../mine19';
 import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L, type MarketId } from '../../data/world';
@@ -84,13 +84,13 @@ export function ctPick19(s: GameState, ctId: string, p: Pick19, actId?: string):
   if (p === 'enter') {
     const a = actId ? s.acts[actId] : topActs(s).filter((x) => x.fame < 55).sort((x, y) => y.potential - x.potential)[0] ?? topActs(s)[0];
     if (!mine(s, a)) return l('Escolha um ato seu.', 'Pick one of your acts.');
-    if (s.player.cash < entryFee19(s, c)) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < entryFee19(s, c)) return cashWhy20(s, entryFee19(s, c), l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `ct19e:${c.id}:${s.year}`, -entryFee19(s, c), 'marketing', `Inscrição: ${ctName19(s, c).pt}`);
     e.entry = a.id;
     return fmtL(l('{a} inscrito.', '{a} entered.'), { a: a.name });
   }
   if (p === 'sponsor') {
-    if (s.player.cash < sponsFee19(s, c)) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < sponsFee19(s, c)) return cashWhy20(s, sponsFee19(s, c), l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `ct19s:${c.id}:${s.year}`, -sponsFee19(s, c), 'marketing', `Patrocínio: ${ctName19(s, c).pt}`);
     e.spons = true;
     s.player.reputation.institutional = clamp(s.player.reputation.institutional + 1, 0, 100);
@@ -109,7 +109,7 @@ export function produce19(s: GameState, on: boolean): L | null {
   if (!on) { st.prod = undefined; return null; }
   if (s.year < 1925) return l('Sem rádio, sem concurso.', 'No radio, no contest.');
   if (st.prod) return l('Você já produz um concurso.', 'You already produce a contest.');
-  if (s.player.cash < prodCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < prodCost19(s)) return cashWhy20(s, prodCost19(s), l('Caixa insuficiente.', 'Not enough cash.'));
   st.prod = { since: s.year, name: `${s.config.companyName} — ${s.year >= 1955 ? 'Festival' : 'Calouros'}` };
   schedule18(s, 'ct19:produce', {}, l('Seu concurso', 'Your contest'), l('Produzir', 'Produce'));
   return null;

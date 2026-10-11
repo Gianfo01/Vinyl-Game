@@ -15,6 +15,7 @@ import { grantPlayerContract } from '../worldgen';
 import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
 import { persona } from './persona';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- segredos
 
@@ -364,7 +365,7 @@ export function decisionBlocker(s: GameState, d: DecisionDef): L | null {
   if (d.exclusive && st.decisions[d.exclusive] !== undefined) return l('Incompatível com uma decisão já tomada.', 'Incompatible with a decision already taken.');
   const e = d.req(s);
   if (e) return e;
-  if (s.player.cash < money(s, d.cost)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, d.cost)) return cashWhy20(s, money(s, d.cost), l('Caixa insuficiente.', 'Not enough cash.'));
   if (d.energy && energyLeft(s) < d.energy) return l('Sem tempo livre suficiente.', 'Not enough free time.');
   return null;
 }

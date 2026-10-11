@@ -11,6 +11,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { songQ } from '../production';
 import type { GameState } from '../types';
 import { money, playerActs, post } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type FurnRoom = 'booth' | 'rehearsal' | 'control' | 'writing' | 'lounge' | 'office' | 'meeting' | 'hall' | 'trophy' | 'any';
 
@@ -80,7 +81,7 @@ export function furnBlocker(s: GameState, id: string, roomKinds: string[]): L | 
   if (def.from && s.year < def.from) return l('Ainda não existe nesta época.', 'Does not exist yet in this era.');
   if ((furn(s).items[id] ?? 0) >= def.max) return l('Já tem o máximo deste item.', 'You already have the maximum of this item.');
   if (!def.rooms.includes('any') && !def.rooms.some((r) => roomKinds.includes(r))) return l('A sede não tem a sala certa (amplie a sede ou troque a função de uma sala).', 'The HQ lacks the right room (upgrade or repurpose a room).');
-  if (s.player.cash < money(s, def.cost)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, def.cost)) return cashWhy20(s, money(s, def.cost), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 

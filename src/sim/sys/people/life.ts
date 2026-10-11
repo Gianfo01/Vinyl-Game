@@ -11,6 +11,7 @@ import type { GameState } from '../../types';
 import { fmtL, money, nextId, playerActs, post, remember } from '../../util';
 import { P, actOf, addMsg, addPost, clamp01, socialEra, trackedPersons } from './state';
 import { addThought } from './thoughts';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 // ---------------------------------------------------------------- romances
 
@@ -204,7 +205,7 @@ export function personalAdvance(s: GameState, pid: string, amount: number): L | 
   const p = s.persons[pid];
   const act = actOf(s, pid);
   if (!p || !act) return l('Pessoa fora do elenco.', 'Person not on the roster.');
-  if (s.player.cash < amount) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `personaladv:${pid}`, -amount, 'advances', `Adiantamento ${p.name}`);
   P(s).wealth[pid] = (P(s).wealth[pid] ?? 0) + amount;
   const c = act.contractId ? s.contracts[act.contractId] : undefined;

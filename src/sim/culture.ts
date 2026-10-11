@@ -8,6 +8,7 @@ import type { GameState } from './types';
 import type { Movement } from './xtypes';
 import { fmtL, money, nextId, notify, post, remember } from './util';
 import { addAsset } from './finance';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 // ---------- Moda e visual ----------
 export function fashionOf(year: number, family: string): L {
@@ -142,7 +143,7 @@ export function buyClub(s: GameState, clubId: string): L | null {
   const c = s.clubs.find((x) => x.id === clubId);
   if (!c || c.closed || c.owner) return l('Clube indisponível.', 'Club unavailable.');
   const price = money(s, 15000 + c.capacity * 40 + c.prestige * 500);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `clubbuy:${c.id}`, -price, 'acquisitions', `Compra do clube ${c.name}`);
   c.owner = 'player';
   addAsset(s, { kind: 'building', name: c.name, cost: price, lifeMonths: 240, refId: c.id });

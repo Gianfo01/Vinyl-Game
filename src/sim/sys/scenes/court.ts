@@ -9,6 +9,7 @@ import type { GameState } from '../../types';
 import type { Lawsuit } from '../../xtypes';
 import { fmtL, money, post, remember } from '../../util';
 import { clampN, findScene, markSeen, patchScene, queueScene, sc, wasSeen } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export type CourtChoice = 'settle' | 'expert' | 'witness' | 'trust';
 
@@ -80,7 +81,7 @@ export function courtChoice(s: GameState, r: Rng, csId: string, choice: CourtCho
     result = l('As partes assinam um acordo no corredor do fórum. Caso encerrado.', 'The parties sign a settlement in the courthouse hallway. Case closed.');
   } else if (choice === 'expert') {
     const fee = expertFee(s);
-    if (s.player.cash < fee) return l('Caixa insuficiente para o perito.', 'Not enough cash for the expert.');
+    if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para o perito.', 'Not enough cash for the expert.'));
     post(s, `expert:${suit.id}`, -fee, 'legal', 'Perito musical');
     suit.odds = clampN(suit.odds + 0.12, 0.05, 0.95);
     result = l('O perito toca os dois trechos ao piano: as notas parecem, mas a harmonia e o ritmo divergem. O juiz anota.', 'The expert plays both passages on the piano: the notes look alike, but harmony and rhythm diverge. The judge takes notes.');
@@ -114,7 +115,7 @@ export function appealVerdict(s: GameState, r: Rng, csId: string, go: boolean): 
     result = l('Você aceita a sentença e vira a página.', 'You accept the verdict and move on.');
   } else {
     const fee = Number(cs.data.fee) || appealFee(s, suit);
-    if (s.player.cash < fee) return l('Caixa insuficiente para recorrer.', 'Not enough cash to appeal.');
+    if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para recorrer.', 'Not enough cash to appeal.'));
     post(s, `appealfee:${suit.id}`, -fee, 'legal', 'Recurso judicial');
     if (r.chance(clampN(0.25 + suit.odds * 0.3, 0.1, 0.55))) {
       const back = Math.round(suit.claim * 0.6);

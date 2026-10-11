@@ -9,6 +9,7 @@ import { launchNpcRelease } from './market';
 import type { GameState } from './types';
 import type { SubLabel } from './xtypes';
 import { fmtL, money, nextId, notify, post, remember } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 const INVESTOR_NAMES = ['Fundo Aurora', 'Kestrel Capital', 'Família Montenegro', 'Lyra Ventures', 'Coletivo Raiz', 'Banco Atlântico', 'Harbor Partners'];
 
@@ -36,7 +37,7 @@ export function foundSubLabel(s: GameState, r: Rng, name: string, genre: string,
   if (s.player.hq < 2) return l('Exige Loft ou Complexo.', 'Requires a Loft or Complex HQ.');
   const setup = money(s, 5000);
   const cap = Math.max(money(s, 3000), Math.min(capital, money(s, 1_000_000)));
-  if (s.player.cash < setup + cap) return l('Caixa insuficiente para instalação e capital.', 'Not enough cash for setup and capital.');
+  if (freeCash20(s) < setup + cap) return cashWhy20(s, setup + cap, l('Caixa insuficiente para instalação e capital.', 'Not enough cash for setup and capital.'));
   const sl: SubLabel = {
     id: nextId(s, 'sub'), name: name.trim() || 'Subselo', logoSeed: r.int(1, 2 ** 30), genreFocus: genre, cash: 0, reserve: money(s, 2000), budget: money(s, 2000),
     strategy, roster: [], managerSalary: money(s, 650), founderShare: 1, board: [], loans: [], creditors: [], status: 'active', distressMonths: 0,
@@ -56,7 +57,7 @@ export function foundSubLabel(s: GameState, r: Rng, name: string, genre: string,
 export function transferToSub(s: GameState, subId: string, amount: number): L | null {
   const sl = s.subLabels.find((x) => x.id === subId);
   if (!sl || sl.status === 'closed' || sl.status === 'bankrupt') return l('Subselo inativo.', 'Sub-label inactive.');
-  if (s.player.cash < amount) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `subtx:${sl.id}`, -amount, 'transfers', `Aporte em ${sl.name}`);
   slog(sl, s.week, amount, 'Aporte da matriz');
   sl.revenueYear -= amount; // aporte não é receita
@@ -150,7 +151,7 @@ export function buyBack(s: GameState, subId: string): L | null {
   if (sl.pendingProposal) return l('Há proposta pendente.', 'A proposal is pending.');
   const outside = sl.board.reduce((t, b) => t + b.share, 0);
   const cost = Math.round(subLabelValuation(s, sl) * outside * 1.15);
-  if (s.player.cash < cost) return l('Caixa insuficiente para a recompra.', 'Not enough cash for the buyback.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para a recompra.', 'Not enough cash for the buyback.'));
   post(s, `subbuy:${sl.id}`, -cost, 'transfers', `Recompra de ${sl.name}`);
   sl.board = [];
   sl.founderShare = 1;

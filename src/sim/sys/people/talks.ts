@@ -8,6 +8,7 @@ import { fmtL, money, nextId, post, remember } from '../../util';
 import { P, actOf, addMsg, clamp01, type PromiseRec } from './state';
 import { addThought, moodOf } from './thoughts';
 import { ownerBonus } from './owner';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export type TalkKind = 'praise' | 'demand' | 'patience' | 'promise' | 'fine';
 export type PromiseKind = PromiseRec['kind'];
@@ -152,7 +153,7 @@ export function payRaise(s: GameState, pid: string): L | null {
   const act = actOf(s, pid);
   if (!p || !act) return l('Pessoa fora do elenco.', 'Person not on the roster.');
   const amount = raiseAmount(s, pid);
-  if (s.player.cash < amount) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `raise:${pid}`, -amount, 'artist_dev', `Aumento ${p.name}`);
   const st = P(s);
   st.wealth[pid] = (st.wealth[pid] ?? 0) + amount;

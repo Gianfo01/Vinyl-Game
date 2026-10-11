@@ -13,6 +13,7 @@ import type { GameState } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
 import { researchDone } from './research';
 import type { Outlet } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 // ------------------------------------------------------------------ streaming próprio
 
@@ -21,7 +22,7 @@ export function launchStreaming(s: GameState, name: string): L | null {
   if (!hasTech(s, 'streaming')) return l('Streaming ainda não existe.', 'Streaming does not exist yet.');
   if (st.active) return l('Sua plataforma já está no ar.', 'Your platform is already live.');
   const cost = money(s, 2500000);
-  if (s.player.cash < cost) return l('Caixa insuficiente (precisa de um investimento enorme).', 'Not enough cash (it needs a huge investment).');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente (precisa de um investimento enorme).', 'Not enough cash (it needs a huge investment).'));
   post(s, `streamlaunch:${s.week}`, -cost, 'business', 'Lançamento da plataforma de streaming');
   Object.assign(st, { active: true, subs: 20000, since: s.week, licenses: [], name: name || `${s.config.companyName} Play` });
   remember(s, 'streaming', fmtL(l('{c} lança a própria plataforma de streaming: {n}.', '{c} launches its own streaming platform: {n}.'), { c: s.config.companyName, n: st.name }), { important: true });
@@ -34,7 +35,7 @@ export function licenseCatalog(s: GameState, labelId: string): L | null {
   if (!st.active || !lb) return l('Inválido.', 'Invalid.');
   if (st.licenses.includes(labelId)) return l('Catálogo já licenciado.', 'Catalog already licensed.');
   const cost = money(s, 40000 + lb.roster.length * 4000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `streamlic:${labelId}:${s.week}`, -cost, 'business', `Licença do catálogo de ${lb.name}`);
   st.licenses.push(labelId);
   return null;
@@ -71,7 +72,7 @@ export function buyOutlet(s: GameState, kind: Outlet['kind'], market: MarketId, 
   if (!outletKinds(s).includes(kind)) return l('Ainda não existe nesta época.', 'Not available in this era yet.');
   if (st.outlets.some((o) => o.kind === kind && o.market === market)) return l('Você já tem esse veículo neste mercado.', 'You already own that outlet in this market.');
   const cost = outletCost(s, kind);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `outlet:${kind}:${market}:${s.week}`, -cost, 'business', `Compra de ${OUTLET_INFO[kind].name.pt}`);
   st.outlets.push({ id: nextId(s, 'mo'), kind, market, name: name || `${OUTLET_INFO[kind].name.pt} ${s.config.companyName}`, audience: 35, bought: s.week, favoritism: 0.2 });
   return null;
@@ -117,7 +118,7 @@ export function openVenture(s: GameState, kind: 'promoter' | 'ticketing' | 'inst
   if (v.active) return l('Já está em operação.', 'Already operating.');
   if (kind === 'ticketing' && s.year < 1970) return l('Ticketeiras nacionais surgem nos anos 70.', 'National ticketing companies appear in the 1970s.');
   const cost = money(s, kind === 'promoter' ? 150000 : kind === 'ticketing' ? 300000 : 200000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `venture:${kind}:${s.week}`, -cost, 'business', kind === 'promoter' ? 'Promotora de shows' : kind === 'ticketing' ? 'Ticketeira' : 'Fábrica de instrumentos');
   v.active = true;
   v.since = s.week;
@@ -130,7 +131,7 @@ export function endorse(s: GameState, actId: string): L | null {
   if (ins.endorsements.includes(actId)) return l('Já endossa.', 'Already endorsing.');
   const a = s.acts[actId];
   const fee = money(s, 1500 + (a?.fame ?? 0) * 120);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `endorse:${actId}:${s.week}`, -fee, 'business', `Endosso de ${a?.name}`);
   ins.endorsements.push(actId);
   return null;

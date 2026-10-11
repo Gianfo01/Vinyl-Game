@@ -27,6 +27,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } f
 import { mkWeights18, proDue18 } from './econ18';
 import { histMode } from '../history15';
 import { addStress } from '../stress17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -110,7 +111,7 @@ export function fundPrec18(s: GameState, id: string, side: 'p' | 'd'): L | null 
   const st = r18(s), d = PRECS18.find((x) => x.id === id);
   if (!d || st.prec[id]?.y) return l('Caso já julgado.', 'Case already decided.');
   const c = money(s, 5000);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `prec18:${id}`, -c, 'legal', `Apoio jurídico: ${d.name}`);
   (st.prec[id] ??= { y: 0 }).side = side;
   if (side === 'p') for (const id2 of playerActs(s)) { const a = s.acts[id2]; if (a && !a.playerBand) a.trust = clamp(a.trust + 2, 0, 100); }
@@ -533,7 +534,7 @@ export function resolveDispute18(s: GameState, id: string, how: 'give' | 'court'
   }
   if (d.st === 'court') return l('O processo já corre.', 'The case is already running.');
   const fee = money(s, 4000);
-  if (s.player.cash < fee) return l('Caixa insuficiente para as custas.', 'Not enough cash for legal fees.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para as custas.', 'Not enough cash for legal fees.'));
   post(s, `court18:${d.id}`, -fee, 'legal', `Processo de crédito "${so?.title ?? ''}"`);
   d.st = 'court'; d.court = s.week + 13; d.odds = courtOdds18(s, d);
   return fmtL(l('Processo aberto: veredito em ~3 meses ({o}% de chance).', 'Case filed: verdict in ~3 months ({o}% chance).'), { o: Math.round(d.odds * 100) });
@@ -571,7 +572,7 @@ export function fixConflict18(s: GameState, sid: string): L | null {
   const st = r18(s);
   if (!st.conf[sid]) return null;
   const c = money(s, 250);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `fix18:${sid}`, -c, 'publishing', 'Correção de cadastro de obra');
   delete st.conf[sid];
   return null;
@@ -585,7 +586,7 @@ export function payClearance18(s: GameState, kind: 'sample' | 'replay' | 'cover'
     const q = s.samples.find((x) => x.id === id);
     if (!q || q.status === 'cleared') return l('Nada a liberar.', 'Nothing to clear.');
     const fee = kind === 'replay' ? Math.round(q.fee * 0.5) : q.status === 'denied' ? q.fee * 2 : q.fee;
-    if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `clr18:${id}:${s.week}`, -fee, 'rights', kind === 'replay' ? 'Interpolação (regravar o trecho)' : 'Liberação de sample');
     if (kind === 'replay') { q.kind = 'interpolation'; q.share = 0.2; q.status = 'cleared'; if (!frozen18(s, q.songId)) releaseEsc(s, q.songId, 1, `smp:${q.id}`); return l('Trecho regravado pelos músicos: só a composição precisa de licença (20% da edição ao autor original).', 'Passage replayed by session musicians: only the composition needs a license (20% of publishing to the original writer).'); }
     if (q.status === 'denied' && !r.chance(0.45)) return l('O detentor recusou de novo (o dinheiro da proposta foi gasto com advogados).', 'The owner refused again (the offer money went to lawyers).');
@@ -598,7 +599,7 @@ export function payClearance18(s: GameState, kind: 'sample' | 'replay' | 'cover'
     const so = s.songs[id];
     if (!so || st.syncOk[id]) return l('Nada a liberar.', 'Nothing to clear.');
     const fee = money(s, 800);
-    if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `clrs18:${id}:${s.week}`, -fee, 'rights', `Liberação de sync "${so.title}"`);
     if (!r.chance(0.7)) return l('A editora da obra recusou o uso em publicidade/cinema.', 'The work\'s publisher refused the sync use.');
     st.syncOk[id] = 1;
@@ -606,7 +607,7 @@ export function payClearance18(s: GameState, kind: 'sample' | 'replay' | 'cover'
   }
   if (!c || c.st === 'ok') return l('Nada a liberar.', 'Nothing to clear.');
   const fee = c.fee * 3;
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `clrc18:${id}:${s.week}`, -fee, 'rights', 'Autorização de cover (proposta melhor)');
   if (!r.chance(0.6)) return l('A editora manteve a recusa.', 'The publisher kept refusing.');
   c.st = 'ok';
@@ -756,7 +757,7 @@ export function answerTerm18(s: GameState, id: string, how: 'reneg' | 'contest' 
   const a = s.acts[t.act];
   if (how === 'reneg') {
     const p = price || money(s, 5000);
-    if (s.player.cash < p) return l('Caixa insuficiente: o aviso continua valendo.', 'Not enough cash: the notice stands.');
+    if (freeCash20(s) < p) return cashWhy20(s, p, l('Caixa insuficiente: o aviso continua valendo.', 'Not enough cash: the notice stands.'));
     post(s, `term18:${t.id}`, -p, 'acquisitions', `Renegociação de masters (${a?.name ?? ''})`);
     t.st = 'kept';
     if (a) a.trust = clamp(a.trust + 8, 0, 100);
@@ -764,7 +765,7 @@ export function answerTerm18(s: GameState, id: string, how: 'reneg' | 'contest' 
   }
   if (how === 'contest') {
     const fee = money(s, 6000);
-    if (s.player.cash < fee) return l('Caixa insuficiente para as custas.', 'Not enough cash for legal fees.');
+    if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para as custas.', 'Not enough cash for legal fees.'));
     post(s, `termc18:${t.id}`, -fee, 'legal', 'Contestação de rescisão');
     t.st = 'contest'; t.court = s.year + 1; t.odds = termOdds18(s);
     if (a) a.trust = clamp(a.trust - 8, 0, 100);
@@ -795,7 +796,7 @@ export function setSub18(s: GameState, mk: string, on: boolean): L | null {
   if (!on) { delete st.sub[mk]; return null; }
   if (mk === homeMk18(s)) return l('No seu mercado você já cobra direto.', 'You already collect directly at home.');
   const c = subCost18(s, mk);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `sub18:${mk}:${s.week}`, -c, 'publishing', `Subedição (${mkName(mk).pt}, 3 anos)`);
   st.sub[mk] = s.year + 3;
   return null;

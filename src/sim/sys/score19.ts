@@ -27,6 +27,7 @@ import { logShot18 } from './cine18';
 import { headline19 } from './factlink19';
 import { cnt19, link19, log19, mineA19, mineR19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { sc18 } from './screen18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type ThMed19 = 'film' | 'tv' | 'novela' | 'game';
 export const THMED19: Record<ThMed19, { name: L; from: number; sync: string; fee: number; aw: L; awFrom: number; awMonth: number }> = {
@@ -73,7 +74,7 @@ export function takeTheme19(s: GameState, actId: string, m: ThMed19, bid: string
   if (!a || !b) return l('Oferta inválida.', 'Invalid offer.');
   const rel = k === 'existing' ? bestRel(s, a) : undefined;
   if (k === 'existing' && !rel) return l('O ato não tem faixa lançada para licenciar.', 'The act has no released track to license.');
-  if (k === 'orig') { if (s.player.cash < themeCost19(s)) return l('Caixa insuficiente para gravar.', 'Not enough cash to record.'); post(s, `sc19rec:${actId}:${s.week}`, -themeCost19(s), 'recording', `Canção-tema: ${t.pt}`); }
+  if (k === 'orig') { if (freeCash20(s) < themeCost19(s)) return cashWhy20(s, themeCost19(s), l('Caixa insuficiente para gravar.', 'Not enough cash to record.')); post(s, `sc19rec:${actId}:${s.week}`, -themeCost19(s), 'recording', `Canção-tema: ${t.pt}`); }
   const pay = k === 'existing' ? Math.round(fee * 0.6) : fee;
   post(s, `sc19:${actId}:${s.week}`, pay, 'sync', `${b.name} — tema de ${t.pt}`);
   const x: Th19 = { id: `th${++st.seq}`, act: actId, med: m, studio: b.name, t, k, ...(rel ? { rel: rel.id } : {}), fee: pay, w: s.week, prem: s.week + rng(s).int(13, 26) };

@@ -32,6 +32,7 @@ import { sess18 } from './session18';
 import { deals18 } from './deals18';
 import { ventures, type VKind } from './ventures9';
 import { v17, vdef } from './venues17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- tipos
 
@@ -394,7 +395,7 @@ export function startProj18(s: GameState, k: PKind, lot: number, q: number, targ
   if (q === 0) months = Math.max(1, months - 1);
   const cost = projCost18(s, k, lot, q, target);
   const first = Math.round(cost * 0.3);
-  if (s.player.cash < first) return l('Caixa insuficiente para a entrada (30%).', 'Not enough cash for the 30% down payment.');
+  if (freeCash20(s) < first) return cashWhy20(s, first, l('Caixa insuficiente para a entrada (30%).', 'Not enough cash for the 30% down payment.'));
   const id = `cp${++st.seq}`;
   post(s, `campus18:${id}:0`, -first, 'capex', `Obra (entrada): ${k === 'reno' ? 'reforma ' + target!.name : PROJ18[k as Exclude<PKind, 'reno'>].name.pt}`);
   st.proj.push({ id, kind: k, target: targetId, lot, q, start: mIdx(s), months, left: months, cost, paid: first, over: 0, delays: 0 });
@@ -417,7 +418,7 @@ export function rushProj18(s: GameState, id: string): L | null {
   const p = campus18(s).proj.find((x) => x.id === id);
   if (!p || p.left <= 1) return l('Nada a acelerar.', 'Nothing to speed up.');
   const c = Math.round(p.cost * 0.12);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `campus18:${p.id}:rush:${p.left}`, -c, 'capex', 'Obra: hora extra');
   p.paid += c; p.left -= 1;
   return null;

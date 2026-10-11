@@ -12,6 +12,7 @@ import type { GameState } from '../../types';
 import { fmtL, money, notify, post, remember } from '../../util';
 import { P, clamp01, type Owner } from './state';
 import { perk } from '../../perks';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export type OwnerAttr = keyof Owner['attrs'];
 
@@ -131,7 +132,7 @@ export function setSalary(s: GameState, realDollars: number): L | null {
 export function withdraw(s: GameState, amount: number): L | null {
   const o = ownerOf(s);
   if (amount <= 0) return l('Valor inválido.', 'Invalid amount.');
-  if (s.player.cash < amount) return l('A empresa não tem esse caixa.', 'The company does not have that cash.');
+  if (freeCash20(s) < amount) return cashWhy20(s, amount, l('A empresa não tem esse caixa.', 'The company does not have that cash.'));
   post(s, `ownerdraw:${s.week}`, -amount, 'owner_draw', 'Retirada do dono');
   o.wealth += amount;
   s.player.reputation.artists = clamp01(s.player.reputation.artists - Math.min(3, amount / Math.max(1, money(s, 50000))));

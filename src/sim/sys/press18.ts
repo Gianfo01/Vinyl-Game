@@ -25,6 +25,7 @@ import { careers, registerCareer } from './careers12';
 import { playerPerson } from './life';
 import { registerNoto14 } from './notoriety14';
 import { realKey18 } from './personact18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type OutK18 = 'magazine' | 'zine' | 'blog' | 'video' | 'newsletter';
 export const OUTK18: Record<OutK18, { name: L; from: number; cost: number; price: number; run: number }> = {
@@ -117,7 +118,7 @@ export function foundOutlet18(s: GameState, k: OutK18, name: string): L | null {
   if (st.out) return l('Você já tem um veículo.', 'You already own an outlet.');
   if (s.year < d.from) return l('Esse formato ainda não existe.', 'That format does not exist yet.');
   const v = money(s, d.cost);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `venture:pr18:${k}`, -v, 'capex', `Fundação: ${name}`);
   st.out = { name: name.trim() || 'Ruído', k, since: s.year, subs: Math.round(200 + st.reach * 40) };
   st.stage = 3;

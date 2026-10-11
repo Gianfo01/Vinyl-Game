@@ -13,6 +13,7 @@ import { answerRaise } from './staff';
 import { personalAdvance } from './life';
 import { leakSecret } from './secrets';
 import { talk } from './talks';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 /**
  * Rodada 8: respostas de mensagens de outros sistemas (convites de feat, propostas). A mensagem leva
@@ -70,7 +71,7 @@ export function answerMsg(s: GameState, msgId: string, action: string, r: Rng = 
       if (!sec) break;
       if (action === 'pay') {
         const amount = Number(ref.amount);
-        if (s.player.cash < amount) return l('Caixa insuficiente.', 'Not enough cash.');
+        if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente.', 'Not enough cash.'));
         post(s, `hushpay:${sec.id}`, -amount, 'legal', 'Acordo confidencial');
         sec.knownBy = sec.knownBy.filter((x) => x !== ref.label);
         out = l('Pago. Por enquanto, silêncio.', 'Paid. Silence, for now.');

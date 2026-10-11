@@ -29,6 +29,7 @@ import { openDispute18, r18 } from './rights18';
 import { sc18 } from './screen18';
 import { addStress } from '../stress17';
 import { sess18 } from './session18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Inst19 = 'drums' | 'bass' | 'guitar' | 'keys' | 'horns' | 'strings' | 'vocal';
 export const INST19: Record<Inst19, { name: L; dim: Dim18 }> = {
@@ -145,7 +146,7 @@ export function hireAce19(s: GameState, aceId: string, actId: string, credit: bo
   if (!act || act.owner !== 'player') return l('Escolha um ato do seu elenco.', 'Pick an act from your roster.');
   if (a.hire && a.hire.until >= s.week) return l('Já está contratado.', 'Already hired.');
   const fee = aceFee19(s, a, credit) * 6;
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `ses19:${a.id}:${actId}`, -fee, 'recording', `Músico de sessão: ${a.name} · ${act.name}`);
   a.hire = { act: actId, until: s.week + 26, credit };
   const p = personOf(s, a);
@@ -163,7 +164,7 @@ export function backCredit19(s: GameState, aceId: string): L | null {
   const mine = a.plays.filter((sid) => !(st.cr[sid] ?? []).includes(a.id));
   if (!mine.length) return l('Nada a creditar nos seus discos.', 'Nothing to credit on your records.');
   const c = backCreditCost19(s, a);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `ses19bc:${a.id}`, -c, 'royalties', `Crédito retroativo: ${a.name}`);
   for (const sid of mine) (st.cr[sid] ??= []).push(a.id);
   a.cred += mine.length; a.grudge = Math.max(0, a.grudge - 40);
