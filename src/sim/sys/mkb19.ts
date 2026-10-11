@@ -20,6 +20,8 @@ export const cnt19 = (st: Log19, k: string, d = 1): void => { st.n[k] = (st.n[k]
 export const usd19 = (c: number): string => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 export const mineA19 = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
 export const mineR19 = (s: GameState, rel?: Release): boolean => !!rel && (rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand);
+/** desliga os meses dos sistemas do mercado B (A/B de equilíbrio) */
+export const off19 = (k = ''): boolean => { const o = (globalThis as { __mkb19Off?: boolean | string }).__mkb19Off; return o === true || (typeof o === 'string' && !!k && o.includes(k)); };
 export const safe19 = (fn: () => void): void => { try { fn(); } catch { /* uma ligação com erro não derruba o mês */ } };
 /** registra a ligação no "Ligações do mês" (links18) */
 export const link19 = (s: GameState, id: string, t: L): void => { const st = lk18(s); st.log.unshift([s.week, id, t]); if (st.log.length > 40) st.log.length = 40; };

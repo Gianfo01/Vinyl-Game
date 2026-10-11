@@ -20,7 +20,7 @@ import { addStress } from '../stress17';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { headline19 } from './factlink19';
-import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 } from './mkb19';
+import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { P } from './people/state';
 import { post18 } from './post18';
 import { schedule18 } from './decide18';
@@ -148,7 +148,7 @@ export function insureMonth19(s: GameState): void {
   }
   for (const m of s.player.staff) { const cr = P(s).career[m.id]; if (cr && cr.loyalty < 75) cr.loyalty = clamp(cr.loyalty + 0.3, 0, 100); }
 }
-registerSimHook('month', 'insure19', (s) => insureMonth19(s));
+registerSimHook('month', 'insure19', (s) => off19('insure19') || insureMonth19(s));
 
 // estrela em risco sem seguro → conselheiro e Caixa (uma vez por ato)
 registerAdvisorTip('insure19', (s) => {

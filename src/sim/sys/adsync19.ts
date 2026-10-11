@@ -19,10 +19,10 @@ import { emitFact, onFact } from '../facts17';
 import { pushInbox18, registerInboxKind } from '../inbox18';
 import { rng19 } from '../rng19';
 import type { Act, GameState, Release } from '../types';
-import { fmtL, money, nextId, playerActs, post } from '../util';
+import { fmtL, money, playerActs, post } from '../util';
 import { headline19 } from './factlink19';
 import { fan18 } from './fans18';
-import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 } from './mkb19';
+import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 , off19 } from './mkb19';
 
 export type AdK19 = 'jingle' | 'license' | 'launch';
 export const ADK19: Record<AdK19, { name: L; from: number; base: number; cred: number; desc: L }> = {
@@ -82,7 +82,7 @@ export function takeAd19(s: GameState, actId: string, bid: string, k: AdK19, fee
   const mine = mineA19(a);
   if (mine) post(s, `ad19:${actId}:${bid}:${s.week}`, fee, k === 'jingle' ? 'publishing' : 'sync', `${b.name} — ${a.name} (${ADK19[k].name.pt})`);
   else a.cash += fee;
-  const dl = nextId(s, 'bd');
+  const dl = `ad19d${st.seq + 1}`;
   s.deals.push({ id: dl, actId, brand: b.name, kind: 'sync_ad', fee, songId: rel?.songs[0], untilWeek: s.week + 52, exclusive: false, status: 'active', boost: 0.3 });
   const x: Run19 = { id: `ad${++st.seq}`, y: s.year, act: actId, ...(rel ? { rel: rel.id } : {}), brand: b.name, k, fee, w: s.week, until: s.week + 52, deal: dl };
   st.runs.push(x); if (st.runs.length > 40) st.runs.splice(0, st.runs.length - 40);
@@ -140,7 +140,7 @@ export function adMonth19(s: GameState): void {
   }
   for (const x of st.runs) if (!x.off && x.until <= s.week) x.off = 1;
 }
-registerSimHook('month', 'adsync19', (s) => adMonth19(s));
+registerSimHook('month', 'adsync19', (s) => off19('adsync19') || adMonth19(s));
 
 // ---------------------------------------------------------------- ouvintes
 
@@ -151,7 +151,7 @@ onFact('ad_sync', (s, f) => {
   const launch = f.tags.includes('launch');
   a.fans.casual += Math.round((launch ? 6000 : 1500) * (s.year >= 2000 ? 1.5 : 1));
   if (launch) a.fame = clamp(a.fame + 8, 0, 100);
-  if (rel) { rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.15); rel.live = true; }
+  if (rel) { rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.15); }
   if (mineA19(a)) link19(s, 'adsync', fmtL(launch ? l('Comercial lança {a}: fama +8 e fãs casuais.', 'An ad launches {a}: fame +8 and casual fans.') : l('"{t}" no comercial → streaming/lojas ×1,15 e fãs casuais.', '"{t}" in the ad → streaming/stores ×1.15 and casual fans.'), { a: a.name, t: rel?.title ?? '?' }));
 }, 'adsync19:reach');
 // jingle: identidade do selo (reputação comercial sobe, artística cai)

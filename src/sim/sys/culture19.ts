@@ -19,7 +19,7 @@ import type { GameState } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { headline19 } from './factlink19';
 import { addHype } from './hype12';
-import { cnt19, link19, log19, xs19, type Log19 } from './mkb19';
+import { cnt19, link19, log19, xs19, type Log19 , off19 } from './mkb19';
 import { P } from './people/state';
 
 export type Cul19 = 'artist' | 'profit' | 'prestige' | 'chaos';
@@ -99,7 +99,7 @@ export function cultureMonth19(s: GameState): void {
     }
   }
 }
-registerSimHook('month', 'culture19', (s) => cultureMonth19(s));
+registerSimHook('month', 'culture19', (s) => off19('culture19') || cultureMonth19(s));
 
 // mudança de cultura: equipe abalada (lealdade −6), elenco reage; manchete pequena
 onFact('culture_shift', (s, f) => {

@@ -21,7 +21,7 @@ import { fmtL, money, post } from '../util';
 import { headline19 } from './factlink19';
 import { fan18 } from './fans18';
 import { addHype } from './hype12';
-import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 } from './mkb19';
+import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 , off19 } from './mkb19';
 
 export const CANCEL_FROM19 = 2010;
 export type Resp19 = 'apology' | 'silent' | 'counter';
@@ -154,7 +154,7 @@ export function cancelMonth19(s: GameState): void {
   }
   st.w = st.w.filter((x) => x.over === undefined || x.over > s.week - 260);
 }
-registerSimHook('month', 'cancel19', (s) => cancelMonth19(s));
+registerSimHook('month', 'cancel19', (s) => off19('cancel19') || cancelMonth19(s));
 
 // ---------------------------------------------------------------- ouvintes
 // escândalo com alcance (2010+) vira onda

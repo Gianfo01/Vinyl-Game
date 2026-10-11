@@ -20,7 +20,7 @@ import { fmtL, money, post } from '../util';
 import { schedule18 } from './decide18';
 import { headline19 } from './factlink19';
 import { liveOf } from './live/state';
-import { cnt19, link19, log19, usd19, xs19, type Log19 } from './mkb19';
+import { cnt19, link19, log19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { v17, vdef } from './venues17';
 
 export const NAMING_FROM19 = { v: 1973, f: 1995 } as const;
@@ -99,7 +99,7 @@ export function nameMonth19(s: GameState): void {
     }
   }
 }
-registerSimHook('month', 'naming19', (s) => nameMonth19(s));
+registerSimHook('month', 'naming19', (s) => off19('naming19') || nameMonth19(s));
 registerInboxKind('nm19_renew', { label: l('Naming rights', 'Naming rights'), cat: 'deals', icon: 'building', prio: 1, goto: () => ({ area: 'firm19' }),
   handle: (s, m, act) => {
     const x = nm19(s).d.find((y) => y.id === String(m.ref?.nm));

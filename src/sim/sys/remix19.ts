@@ -23,7 +23,7 @@ import { fmtL, money, playerActs, post } from '../util';
 import { headline19 } from './factlink19';
 import { addHype } from './hype12';
 import { djFee18, djFit18, ensureDjs18, media18, type Dj18 } from './media18';
-import { cnt19, link19, log19, mineA19, mineR19, safe19, usd19, xs19, type Log19 } from './mkb19';
+import { cnt19, link19, log19, mineA19, mineR19, safe19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { v17, vdef } from './venues17';
 
 export const REMIX_FROM19 = 1975;
@@ -240,7 +240,7 @@ export function remixMonth19(s: GameState): void {
   }
   st.rx = st.rx.filter((x) => x.ok === undefined || (x.until ?? 0) > s.week - 52).slice(-40);
 }
-registerSimHook('month', 'remix19', (s) => remixMonth19(s));
+registerSimHook('month', 'remix19', (s) => off19('remix19') || remixMonth19(s));
 
 // ---------------------------------------------------------------- ouvintes
 
@@ -249,7 +249,6 @@ onFact('remix_hit', (s, f) => {
   const rel = s.releases[String(f.data?.rel ?? '')];
   if (!rel) return;
   rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.2);
-  rel.live = true;
   addHype(s, `a:${rel.actId}`, 'remix19', l('Remix nas pistas', 'Remix in the clubs'), 8);
   const a = s.acts[rel.actId];
   if (a) a.fame = clamp(a.fame + 1.5, 0, 100);

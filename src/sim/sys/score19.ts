@@ -25,7 +25,7 @@ import type { Act, GameState, Release } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { logShot18 } from './cine18';
 import { headline19 } from './factlink19';
-import { cnt19, link19, log19, mineA19, mineR19, usd19, xs19, type Log19 } from './mkb19';
+import { cnt19, link19, log19, mineA19, mineR19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { sc18 } from './screen18';
 
 export type ThMed19 = 'film' | 'tv' | 'novela' | 'game';
@@ -206,7 +206,7 @@ export function scoreMonth19(s: GameState): void {
     emitFact(s, { kind: 'score_hired', actors: ['player', ...(c.who ? [c.who] : [])], severity: 25 + Math.round(c.pres * 25), visibility: 'public', tags: ['score19', 'commission', c.med, c.ap ?? 'orch'], text: fmtL(l('Trilha de "{t}" em produção ({m}).', 'Score for "{t}" in production ({m}).'), { t: c.title, m: c.med }), src: 'score19', data: { comm: c.id } });
   }
 }
-registerSimHook('month', 'score19', (s) => scoreMonth19(s));
+registerSimHook('month', 'score19', (s) => off19('score19') || scoreMonth19(s));
 
 // ---------------------------------------------------------------- ouvintes
 // needle drop: streaming/lojas (mais forte na era do streaming), fãs casuais
@@ -214,7 +214,7 @@ onFact('needle_drop', (s, f) => {
   const rel = s.releases[String(f.data?.rel ?? '')], a = s.acts[f.actors[0]];
   if (!rel || !a) return;
   const k = s.year >= 2016 ? 0.25 : 0.1;
-  rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + k); rel.live = true;
+  rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + k);
   a.fans.casual += Math.round(800 * (1 + k * 4));
   if (mineA19(a)) link19(s, 'score', fmtL(l('Needle drop de "{t}" → streaming/lojas ×{k} e fãs casuais.', '"{t}" needle drop → streaming/stores ×{k} and casual fans.'), { t: rel.title, k: Math.round((1 + k) * 100) / 100 }));
 }, 'score19:stream');
