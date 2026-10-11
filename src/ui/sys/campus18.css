@@ -26,3 +26,53 @@
 .c18-form select { max-width: 100%; }
 .c18-amb { margin: 4px 0; }
 .c18-thumbbtn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+/* Rodada 19 (world19): mapa com popups sobre o mundo */
+.w19-hood { margin: 2px 0 6px; }
+.w19-frame { position: relative; max-width: 980px; margin: 8px auto 4px; border-radius: 8px; background: #1c2028; padding: 6px; box-sizing: border-box; }
+.w19-bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; margin-bottom: 6px; }
+.w19-grp { display: flex; gap: 3px; flex-wrap: wrap; }
+.w19-bar .btn.ghost { color: #e8e2d4; border-color: rgba(255,255,255,0.25); }
+.w19-vp { position: relative; overflow: hidden; border-radius: 6px; touch-action: pan-y; }
+.w19-zoom { position: relative; transform-origin: 0 0; will-change: transform; }
+.w19-zoom .c18-cv { border-radius: 0; cursor: default; }
+.w19-hot { position: absolute; inset: 0; }
+.w19-hs { position: absolute; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 3px; color: #fff; font: 700 11px/1 system-ui, sans-serif; }
+.w19-hs:hover, .w19-hs:focus-visible { outline: 2px solid #ffd040; outline-offset: 1px; background: rgba(255, 220, 90, 0.10); }
+.w19-hs.lot { display: grid; place-items: center; border-radius: 50%; background: rgba(20, 24, 30, 0.45); border: 1px dashed rgba(255, 255, 255, 0.55); min-width: 18px; min-height: 18px; transform: translate(-0px, -0px); opacity: 0.75; }
+.w19-hs.lot:hover, .w19-hs.lot:focus-visible { opacity: 1; background: rgba(255, 208, 64, 0.85); color: #1a1416; }
+.w19-hs.lot.mv { opacity: 1; background: rgba(64, 200, 120, 0.85); animation: w19pulse 1s infinite alternate; }
+.w19-hs.ev { display: grid; place-items: center; border-radius: 50%; background: #e04040; border: 2px solid #fff; min-width: 18px; min-height: 18px; animation: w19pulse 0.8s infinite alternate; }
+@keyframes w19pulse { from { transform: scale(0.9); } to { transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .w19-hs.ev, .w19-hs.lot.mv { animation: none; } }
+.w19-pop { position: absolute; z-index: 5; max-height: min(70vh, 560px); overflow: auto; background: var(--card, #fffaf0); color: var(--ink, #222); border: 2px solid #1a1416; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.35); padding: 8px 10px; box-sizing: border-box; }
+.w19-pop header { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
+.w19-pop .w19-x { border: 0; background: transparent; font-size: 16px; cursor: pointer; color: inherit; min-width: 32px; min-height: 32px; }
+.w19-tags { gap: 4px; margin-bottom: 4px; }
+.w19-pop .c18-kpi { width: 100%; }
+.w19-pop tr.bad td:last-child { color: var(--bad, #b03030); }
+.w19-pop tr.good td:last-child { color: var(--good, #2a7a3a); }
+.w19-notes { margin: 4px 0; padding-left: 16px; }
+.w19-notes li.good { color: var(--good, #2a7a3a); } .w19-notes li.bad { color: var(--bad, #b03030); } .w19-notes li.warn { color: #9a6a10; }
+.w19-acts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.w19-acts .btn { min-height: 32px; }
+.w19-seg { display: flex; gap: 2px; margin: 6px 0; flex-wrap: wrap; }
+.w19-seg button { flex: 1 1 auto; font-size: 12px; padding: 4px 6px; border: 1px solid var(--line, #888); background: transparent; color: inherit; border-radius: 4px; cursor: pointer; min-height: 30px; }
+.w19-seg button.on { background: #1a1416; color: #fff8e0; }
+.w19-opts { display: grid; gap: 6px; margin-top: 6px; }
+.w19-opt { display: grid; gap: 2px; padding: 6px; border: 1px solid var(--line, #ccc); border-radius: 6px; }
+.w19-opt .row { justify-content: space-between; gap: 6px; }
+.w19-opt.dis { opacity: 0.6; }
+.w19-opt .btn { justify-self: start; }
+.w19-cost { font-weight: 600; white-space: nowrap; }
+.w19-moving { color: #fff4c0; font-size: 13px; margin-bottom: 4px; }
+.w19-legend { position: absolute; right: 10px; top: 46px; z-index: 4; background: rgba(20, 18, 24, 0.92); color: #f4ecd8; border-radius: 6px; padding: 8px 10px; max-width: 260px; }
+.w19-legend ul { columns: 2; margin: 4px 0; padding-left: 0; list-style: none; }
+.w19-list li { margin: 2px 0; }
+.w19-log { margin-top: 8px; padding: 6px 10px; }
+.linklike { border: 0; background: none; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+.c18-thumbbtn small { display: block; text-align: left; margin-top: 2px; }
+@media (max-width: 640px) {
+  .w19-frame { padding: 4px; margin: 6px 0; }
+  .w19-pop { position: fixed !important; left: 8px !important; right: 8px; width: auto !important; top: auto !important; bottom: 8px !important; max-height: 62vh; }
+  .w19-legend { left: 8px; right: 8px; max-width: none; }
+}
