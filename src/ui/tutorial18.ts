@@ -22,6 +22,7 @@ import { registerArea } from './registry';
 import { savePrefs, store } from './store';
 import { COMMON18, TIPS18, TRACKS18, dueTips18, trackState18, type Tip18 } from './tracks18';
 import { ic } from './vis';
+import { minimalHelp20 } from './ux20';
 import { setTutorials19, tutAllowed19 } from './tutoff19';
 import './tutorial18.css';
 
@@ -65,12 +66,15 @@ function helpBlock(x: Help18, lvl: 'h3' | 'h4' = 'h4'): HTMLElement {
 /** Abre a ajuda da página (e das abas abertas). */
 export function openHelp18(area: string): void {
   const hf = helpFor18(area, openTabs());
-  const a = hf.area;
+  // r20 (B22): sem ajuda própria, mostra a ajuda mínima da seção (objetivo, ações, custo/risco, dependências), rotulada como geral
+  const own = hf.area;
+  const a = own ?? minimalHelp20(area);
   let close = () => {};
   const sub = area === 'artists' || area === 'people' || area === 'directory' ? ['act', 'person'] : area === 'labels' ? ['label'] : [];
   const extra = helpIds18().filter((id) => sub.some((p) => id.startsWith(`tab:${p}:`))).map((id) => help18(id)!).filter(Boolean);
   const body = h('div', { class: 'help18' },
-    a ? helpBlock(a, 'h3') : h('p', { class: 'muted' }, t(l('Esta página ainda não tem ajuda própria — veja o glossário abaixo.', 'This page has no help of its own yet — see the glossary below.'))),
+    helpBlock(a, 'h3'),
+    own ? null : h('p', { class: 'muted small' }, t(l('Ajuda geral da seção — esta página ainda não tem um texto próprio.', 'General help for this section — this page has no text of its own yet.'))),
     hf.tabs.length ? h('div', { class: 'help18-tabs' }, h('h4', { class: 'muted' }, t(l('Aba aberta', 'Open tab'))), ...hf.tabs.map((x) => helpBlock(x))) : null,
     extra.length ? h('details', { class: 'help18-more' }, h('summary', null, t(sub[0] === 'label' ? l('Na ficha do selo', 'On the label sheet') : l('Na ficha do artista/pessoa', 'On the act/person sheet'))), ...extra.map((x) => helpBlock(x))) : null,
     a?.links?.length ? h('div', { class: 'row wrap help18-links' }, h('small', { class: 'muted' }, t(l('Veja também: ', 'See also: '))),
@@ -80,7 +84,7 @@ export function openHelp18(area: string): void {
       h('button', { class: 'btn small ghost', onclick: () => { close(); openGloss18(); } }, t(l('Glossário', 'Glossary'))),
       h('button', { class: 'btn small ghost', onclick: () => { close(); goFn('tut18'); } }, t(l('Ajuda e tutorial', 'Help and tutorial')))),
   );
-  close = modal(`? ${a ? t(a.title) : area}`, body);
+  close = modal(`? ${t(a.title)}`, body);
 }
 
 /** Botão "?" do cabeçalho de cada página. */

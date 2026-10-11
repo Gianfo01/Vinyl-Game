@@ -5,6 +5,7 @@ import type { Act, GameState, Release } from '../sim/types';
 import { coverUrl, logoUrl } from './art';
 import { h } from './dom';
 import { store } from './store';
+import { nameSvg20 } from './ux20';
 
 export const $ = (cents: number) => formatMoney(cents, locale());
 export const N = (n: number) => formatNumber(n, locale());
@@ -128,7 +129,7 @@ export function toast(msg: string, kind = 'info'): void {
   setTimeout(() => el.remove(), 4800);
 }
 
-export function sparkline(values: number[], w = 120, hgt = 28): HTMLElement {
+export function sparkline(values: number[], w = 120, hgt = 28, name?: string): HTMLElement {
   const max = Math.max(1, ...values);
   const pts = values.map((v, i) => `${(i / Math.max(1, values.length - 1)) * w},${hgt - (v / max) * (hgt - 2) - 1}`).join(' ');
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -136,6 +137,7 @@ export function sparkline(values: number[], w = 120, hgt = 28): HTMLElement {
   svg.setAttribute('height', String(hgt));
   svg.setAttribute('class', 'spark');
   svg.innerHTML = `<polyline fill="none" stroke="currentColor" stroke-width="1.5" points="${pts}"/>`;
+  nameSvg20(svg, name ?? t({ pt: 'Tendência', en: 'Trend' }), values); // r20 B24: nome + resumo acessível
   return svg as unknown as HTMLElement;
 }
 

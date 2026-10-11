@@ -14,6 +14,7 @@ import type { Contract, GameState, Offer, RightsTerms } from '../sim/types';
 import { rngOf, yearOfWeek } from '../sim/util';
 import { $, actLink, kv, pill, releaseLink, rerender, toast } from './common';
 import { h, select } from './dom';
+import { status20 } from './st20';
 
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); };
@@ -101,7 +102,8 @@ export function rightsSheet(s: GameState, c: Contract, refresh: () => void = rer
   const demand = rst(s).demands.find((d) => d.contractId === c.id);
   const power = artistPower(s, c);
   const active = c.endWeek > s.week && act?.contractId === c.id;
-  const status = c.reverted ? pill(t(l('masters revertidos', 'masters reverted')), 'bad') : active ? pill(t(l('ativo', 'active')), 'good') : pill(t(l('encerrado', 'ended')));
+  // r20 (§5): vocabulário único de estado com ícone + texto
+  const status = c.reverted ? status20('expired', t(l('masters revertidos', 'masters reverted'))) : active ? status20('active') : status20('expired', t(l('encerrado', 'ended')));
   const missing = rels.filter((x) => !x.reissueOf).flatMap((x) => KINDS.filter((k) => !hasExploit(s, x, k)).map((k) => ({ rel: x, k })));
   return h('div', { class: 'r8-sheet' },
     h('h4', null, t(l('Direitos', 'Rights')), ' ', status),

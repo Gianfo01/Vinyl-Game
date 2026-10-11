@@ -1,0 +1,51 @@
+/* Rodada 20 (G6): cockpit em primeiro plano, pós-turno, densidade, números tabulares, estados e oferta em camadas. */
+
+/* números tabulares em painéis e tabelas */
+.tbl, .kv, .num20, .badge, .topbar .money, .topbar .date, .h19-n, .fp20-now b, .of20-cmp td, .rv20 td, .p12 .kv { font-variant-numeric: tabular-nums; }
+
+/* densidade: a mesma informação, só o espaçamento muda */
+:root[data-dens20="compact"] .card { padding: 0.5rem 0.65rem; }
+:root[data-dens20="compact"] .tbl td, :root[data-dens20="compact"] .tbl th { padding: 0.15rem 0.3rem; }
+:root[data-dens20="compact"] .section, :root[data-dens20="compact"] section { margin-block: 0.35rem; }
+:root[data-dens20="compact"] .btn.small { padding-block: 0.1rem; }
+:root[data-dens20="compact"] .fp20-grid { gap: 0.4rem; }
+
+/* estado com ícone + texto */
+.st20 { white-space: nowrap; }
+.empty20 { border: 1px dashed var(--line); border-radius: var(--radius, 8px); padding: 0.5rem 0.7rem; }
+.empty20 p { margin: 0.15rem 0; }
+
+/* primeiro plano do Cockpit */
+.fp20 { display: grid; gap: 0.6rem; margin-bottom: 0.8rem; min-width: 0; }
+.fp20-now { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: baseline; }
+.fp20-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 0.6rem; }
+.fp20-card { min-width: 0; }
+.fp20-card h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+.fp20-list { list-style: none; margin: 0 0 0.4rem; padding: 0; display: grid; gap: 0.35rem; }
+.fp20-list li { overflow-wrap: anywhere; }
+.fp20-list li.bad { border-left: 3px solid var(--bad); padding-left: 0.35rem; }
+.fp20-ev { display: block; }
+.fp20-ib { margin: 0; overflow-wrap: anywhere; }
+
+/* pós-turno */
+.nt20-more button { color: inherit; }
+.nt20-list { padding-left: 1.1rem; }
+.nt20-list li.bad { color: var(--bad); }
+
+/* gráficos */
+.ch20-tbl summary { cursor: pointer; }
+.ch20-tbl table { max-width: 100%; }
+
+/* oferta em camadas */
+.of20-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 0.5rem; }
+.of20-sum ul { margin: 0.2rem 0; padding-left: 1.1rem; }
+.of20-grp > summary { font-weight: 600; cursor: pointer; padding: 0.3rem 0; }
+.of20-cmp, .rv20 { overflow-x: auto; max-width: 100%; }
+.of20-diff { margin: 0.2rem 0; }
+
+/* revisão de fase do projeto */
+.p20 { border-left: 3px solid var(--accent); }
+.p20-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 0.5rem; }
+.p20-opt { border: 1px solid var(--line); border-radius: var(--radius, 8px); padding: 0.45rem 0.6rem; }
+.p20-opt p { margin: 0.2rem 0; }
+.ib20-q { width: 100%; max-width: 28rem; margin: 0.3rem 0; box-sizing: border-box; }

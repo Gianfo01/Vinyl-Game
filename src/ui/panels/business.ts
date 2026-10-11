@@ -143,7 +143,7 @@ function stockTab(s: GameState): HTMLElement {
   }
   return section(t(l('Bolsa Sonora', 'Sound Exchange')),
     chips(stat('chart-up', $(lt.price), l('Preço da ação', 'Share price')), stat('trophy', `${Math.round((1 - lt.floatShare) * 100)}%`, l('Seu controle', 'Your control')), stat('bank', $(lt.price * lt.shares), l('Valor de mercado', 'Market cap'))),
-    lineChart(lt.history),
+    lineChart(lt.history, 260, 70, t(l('Preço da ação', 'Share price'))),
     h('button', { class: 'btn small', onclick: () => { say(issueShares(s, 0.05), l('Ações emitidas.', 'Shares issued.')); rerender(); } }, t(l('Emitir mais 5%', 'Issue 5% more'))),
     h('p', { class: 'muted small' }, t(l('Acionistas cobram resultado: quedas fortes pressionam a reputação; lucro paga dividendos em dezembro.', 'Shareholders want results: big drops hurt reputation; profit pays dividends in December.'))),
   );

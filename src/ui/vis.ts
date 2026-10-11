@@ -6,6 +6,7 @@ import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import type { GameState, Person } from '../sim/types';
 import { h } from './dom';
+import { nameSvg20 } from './ux20';
 
 const EMOJI: Record<string, string> = {
   money: '💰', fame: '⭐', fans: '👥', disc: '💿', cd: '📀', cassette: '📼', stream: '📶', 'chart-up': '📈', 'chart-down': '📉',
@@ -141,7 +142,7 @@ export const getTab = (key: string): string | undefined => tabState[key];
 export const tabSnapshot = (): Record<string, string> => ({ ...tabState });
 
 /** Gráfico de linha simples em SVG (ações, receita). */
-export function lineChart(values: number[], w = 260, hgt = 70): HTMLElement {
+export function lineChart(values: number[], w = 260, hgt = 70, name?: string): HTMLElement {
   const max = Math.max(1, ...values);
   const min = Math.min(0, ...values);
   const pts = values.map((v, i) => `${(i / Math.max(1, values.length - 1)) * w},${hgt - ((v - min) / (max - min || 1)) * (hgt - 4) - 2}`).join(' ');
@@ -149,5 +150,6 @@ export function lineChart(values: number[], w = 260, hgt = 70): HTMLElement {
   svg.setAttribute('viewBox', `0 0 ${w} ${hgt}`);
   svg.setAttribute('class', 'linechart');
   svg.innerHTML = `<polyline fill="none" stroke="currentColor" stroke-width="2" points="${pts}"/>`;
+  nameSvg20(svg, name ?? t(l('Evolução', 'Over time')), values); // r20 B24: nome + resumo acessível
   return svg as unknown as HTMLElement;
 }

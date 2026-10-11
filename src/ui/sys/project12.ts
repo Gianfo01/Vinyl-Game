@@ -28,6 +28,8 @@ import { store } from '../store';
 import { chips, ic, setTab } from '../vis';
 import { explainBox, goToProjects } from './project8';
 import { applyNewBlend, newBlendSelect, p13Panel } from './project13';
+import { phaseReview20 } from './review20';
+import { empty20 } from '../st20';
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -212,7 +214,7 @@ function projectView(s: GameState, p: MusicProject): HTMLElement {
     pill(t(STAGE_NAMES[st]), st === 'followup' || st === 'released' ? 'good' : st === 'finishing' ? 'gold' : ''));
   const locked13 = !!(p.pendingId || p.rolloutId || p.releaseId);
   if (!pl || ui.edit) return h('div', { class: 'p12-view' }, head, commitPanel(s, p), p13Panel(s, p, locked13), contextLinks(s, p));
-  return h('div', { class: 'p12-view' }, head, timeline(s, p, st), problemCard(s, p), results(s, p), st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, nextAction(s, p, st), commitSummary(s, p), p13Panel(s, p, locked13), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
+  return h('div', { class: 'p12-view' }, head, timeline(s, p, st), problemCard(s, p), phaseReview20(s, p, st) /* r20 Protótipo B: revisão da fase */, results(s, p), st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, nextAction(s, p, st), commitSummary(s, p), p13Panel(s, p, locked13), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
 }
 
 function hub(s: GameState): HTMLElement {
@@ -236,7 +238,7 @@ function hub(s: GameState): HTMLElement {
         select(ui.concept, CONCEPTS.map((x) => ({ value: x.id, label: t(x.name) })), (v) => { ui.concept = v; rerender(); }, { 'aria-label': t(l('Conceito', 'Concept')) }),
         newBlendSelect(ui.concept),
         h('button', { class: 'btn small', onclick: () => { const r = createProject(s, act.id, { type: ui.type, concept: ui.concept }); if ('pt' in r) toast(t(r), 'bad'); else { applyNewBlend(s, r); ui.sel = r.id; ui.edit = false; } rerender(); } }, '+ ', t(l('Novo disco', 'New record'))))),
-    cur ? projectView(s, cur) : h('p', { class: 'muted' }, t(l('Nenhum disco em andamento. Escolha formato e conceito e comece um.', 'No record in progress. Pick a format and concept and start one.'))),
+    cur ? projectView(s, cur) : empty20(l('Nenhum disco em andamento.', 'No record in progress.'), l('Escolha formato e conceito acima e toque em "+ Novo disco": o projeto junta intenção, orçamento, gravação e lançamento.', 'Pick a format and concept above and tap "+ New record": the project ties intent, budget, recording and release together.')), // r20 §5: estado vazio útil
   );
 }
 

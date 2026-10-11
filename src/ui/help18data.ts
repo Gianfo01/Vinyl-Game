@@ -1,7 +1,7 @@
 // Rodada 18 (tutorial18) — ajuda de TODAS as páginas do menu (nav17 + páginas registradas por outras frentes).
 // Regra: o quê / como (com exemplo) / 1–3 dicas / páginas ligadas / termos do glossário.
 
-import { H } from './help18';
+import { H, help18, registerHelp18 } from './help18';
 
 // ---------------------------------------------------------------- Início
 H('cockpit', ['Cockpit', 'Cockpit'],
@@ -426,3 +426,22 @@ H('prof19', ['Cockpit por profissão', 'Cockpit per profession'],
   [['Antes de avançar, a lista mostra cada cartão que vai valer a resposta padrão; "Não perguntar de novo" desliga (religa em Configurações).', 'Before advancing, a list shows each card that will take the default answer; "Do not ask again" turns it off (re-enable in Settings).'],
     ['Avisos de rotina e informativos além de 8 no mês viram um único "Resumo do mês".', 'Routine and informative notices beyond 8 a month become a single "Monthly summary".']],
   ['cockpit', 'long18']);
+
+// ---------------------------------------------------------------- r20 G6: cockpit em primeiro plano, caixa de entrada, oferta em camadas, revisão de fase
+H('cockpit20', ['Cockpit: primeiro plano e caixa de entrada', 'Cockpit: front page and inbox'],
+  ['O topo do Cockpit mostra só o que pede você: data e caixa livre, decisões com prazo, compromissos das próximas 4 semanas, projetos e as 3 mudanças mais importantes. A caixa de entrada inteira virou a aba própria "Caixa de entrada", com filtros e busca.', 'The top of the Cockpit shows only what needs you: date and free cash, deadline decisions, commitments in the next 4 weeks, projects and the 3 most important changes. The full inbox is now its own "Inbox" tab, with filters and search.'],
+  ['Cada linha traz a evidência (o que acontece se passar) e um "›" para agir. Depois de avançar, os 3 avisos mais graves viram toasts e "+N outros" abre a lista inteira — nada some, tudo fica na caixa e no diário.', 'Each line shows the evidence (what happens if it passes) and a "›" to act. After advancing, the 3 most serious notices become toasts and "+N others" opens the full list — nothing is lost, everything stays in the inbox and diary.'],
+  [['Ex.: "Decisões com prazo" mostra "Se ignorar:" com a opção padrão que vale ao avançar.', 'E.g. "Deadline decisions" shows "If ignored:" with the default option applied when you advance.'],
+    ['Configurações › Densidade: confortável ou compacta (mesma informação, menos espaço).', 'Settings › Density: comfortable or compact (same information, less space).']],
+  ['cockpit', 'calendar19', 'project']);
+H('offer20', ['Oferta de contrato em camadas', 'Layered contract offer'],
+  ['A oferta agora tem três grupos — Dinheiro e prazo, Controle e direitos, Compromissos e recuperação — com o resumo do que cada lado concede e a diferença que o preset aplicou.', 'The offer now has three groups — Money and term, Control and rights, Commitments and recoupment — with a summary of what each side gives and the difference the preset applied.'],
+  ['Compare com duas alternativas (hipótese de divisão da receita, não previsão) e revise caixa livre, reservado, dívidas e promessas antes de enviar. "Formulário completo" abre todos os campos.', 'Compare with two alternatives (a revenue-split hypothesis, not a forecast) and review free cash, reserved cash, debts and promises before sending. "Full form" opens every field.'],
+  [['Ex.: royalty 14% → 16% aparece como "+2 p.p." (pontos percentuais), não "+2%".', 'E.g. a 14% → 16% royalty shows as "+2 p.p." (percentage points), not "+2%".']],
+  ['market', 'contracts19'], ['recoup']);
+H('review20', ['Revisão da fase do projeto', 'Project phase review'],
+  ['No projeto musical, o cartão "Revisão da fase" mostra só a decisão da etapa atual com custo, prazo, público e incerteza, o gasto realizado × compromisso futuro × caixa livre e, depois do lançamento, meta × previsão × realizado.', 'In the music project, the "Phase review" card shows only the current stage\'s decision with cost, time, audience and uncertainty, spent vs future commitment vs free cash and, after release, goal vs forecast vs actual.'],
+  ['Os botões fazem o mesmo que a tela completa; "Abrir todos os campos" leva às faixas, capa e verba.', 'The buttons do the same as the full screen; "Open every field" goes to tracks, cover and budget.'],
+  [], ['project', 'releases']);
+// r20: as duas abas do Cockpit usam a mesma ajuda
+for (const tab of ['panel', 'inbox']) registerHelp18(`tab:ck20:${tab}`, help18('cockpit20')!);

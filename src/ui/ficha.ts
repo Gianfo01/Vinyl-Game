@@ -24,6 +24,7 @@ import { stylePill17 } from './sys/style17';
 import { why360 } from '../sim/sys/deal360_17';
 import { why18 } from './explain18';
 import { clauses18Fields } from './sys/contracts18';
+import { offerLayers20, type Layers20 } from './sys/offer20';
 
 function g(): GameState {
   return store.game!;
@@ -71,7 +72,7 @@ export function openRelease(id: string): void {
         mine ? kv(t(S.revenue), $(r.revenue)) : null,
         mine && r.pressed ? kv(t(S.stock), `${N(Math.max(0, r.stock))} / ${N(r.pressed)}`) : null,
         mine && r.shortage ? kv(t(S.shortage), N(r.shortage)) : null,
-        r.weekly.length ? h('div', null, sparkline(r.weekly.slice(-40), 220, 40)) : null,
+        r.weekly.length ? h('div', null, sparkline(r.weekly.slice(-40), 220, 40, t(l('Vendas por semana', 'Weekly sales')))) : null,
         relHype12(s, r),
       ),
     ),
@@ -158,7 +159,9 @@ export function openOffer(actId: string): void {
   if (!a) return;
   const o: Omit<Offer, 'id' | 'week' | 'status'> = defaultOffer(s, a);
   const evalBox = h('div', { class: 'eval' });
+  let layers: Layers20 | null = null; // r20 (G6 §4.5): oferta em camadas
   const update = () => {
+    layers?.refresh();
     const ev = evaluateOffer(s, a, o);
     const el = scoutEligible20(s, a); // r20 (B9): mesma regra do radar, da proposta e do aceite
     evalBox.replaceChildren(
@@ -178,7 +181,8 @@ export function openOffer(actId: string): void {
   const n360 = h('p', { class: 'muted small' });
   const draw360 = () => { n360.textContent = o.model === '360' ? t(why360(s, a, o.share360)) : ''; };
   const drawRights = () => rightsBox.replaceChildren(rightsFieldset(s, o, update));
-  const form = h('div', { class: 'form' },
+  // r20 (G6 §4.5): os MESMOS campos em três grupos (Dinheiro e prazo / Controle e direitos / Compromissos e recuperação)
+  const moneyF = [
     h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.map((m) => ({ value: m.id, label: t(m.name) + (m.available ? '' : ' ' + t(S.phaseLater)), disabled: !m.available })), (v: ContractModel) => { o.model = v; o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); drawRights(); draw360(); update(); })),
     h('p', { class: 'muted small' }, t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc)),
     h('label', null, `${t(S.advanceAmt)} ($)`, num(Math.round(o.advance / 100), Math.max(10, Math.round(unit * 100 / 100)), (v) => (o.advance = Math.round(v * 100)))),
@@ -188,15 +192,20 @@ export function openOffer(actId: string): void {
     n360,
     h('label', null, t(S.term), num(o.termMonths, 6, (v) => (o.termMonths = v), 6)),
     h('label', null, t(S.releasesOwed), num(o.releasesOwed, 1, (v) => (o.releasesOwed = v), 1)),
+  ];
+  const control = [
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.creativeControl, onchange: (e: Event) => { o.creativeControl = (e.target as HTMLInputElement).checked; update(); } }), t(S.creativeControl)),
+    rightsBox,
+  ];
+  const commit = [
     h('fieldset', null, h('legend', null, t(S.promises)),
       (['priority', 'tour', 'freedom'] as const).map((p) => h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; o.promises = on ? [...o.promises, p] : o.promises.filter((x) => x !== p); update(); } }), t(p === 'priority' ? S.promisePriority : p === 'tour' ? S.promiseTour : S.promiseFreedom))),
     ),
-    rightsBox,
     clauses18Fields(s, a, o, update),
     packageFields(s, o, () => update()),
-    evalBox,
-  );
+  ];
+  layers = offerLayers20(s, a, o, { money: moneyF, control, commit }, evalBox);
+  const form = h('div', { class: 'form' }, layers.el);
   drawRights();
   draw360();
   update();
@@ -234,6 +243,7 @@ export function openOffer(actId: string): void {
     if (offer) s.offers = s.offers.filter((x) => x.id !== offer.id);
   };
   const actions = h('div', { class: 'actions' },
+    layers.review, // r20: caixa livre/reservado, dívidas, promessas e requisitos antes de enviar
     h('button', { class: 'btn primary', onclick: () => {
       if (freeCash20(s) < o.advance) return toast(reservedAdvances20(s) > 0 ? t(l('Caixa livre insuficiente: {r} já está reservado em ofertas pendentes.', 'Not enough free cash: {r} is already reserved for pending offers.'), { r: $(reservedAdvances20(s)) }) : t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
       const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined });

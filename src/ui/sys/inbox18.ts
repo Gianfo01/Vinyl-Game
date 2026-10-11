@@ -35,7 +35,7 @@ export const gotoLabel = (g: Goto18): L => g.label ?? (g.person ? l('Ver pessoa'
 
 const CAT_ICON: Record<InboxCat18, string> = { decision: 'calendar', people: 'fans', deals: 'contract', money: 'money', press: 'newspaper', world: 'globe', staff: 'handshake', life: 'heart', analyst: 'chart-up', other: 'key' };
 type View = 'all' | 'unread' | 'reply' | 'urgent' | 'snoozed' | 'archived';
-const ui = { cat: 'all' as InboxCat18 | 'all', view: 'all' as View, n: 12, open: new Set<string>(), sel: new Set<string>(), pend: false };
+const ui = { cat: 'all' as InboxCat18 | 'all', view: 'all' as View, n: 12, open: new Set<string>(), sel: new Set<string>(), pend: false, q: '' };
 // r18 decide18: adiar mensagem (some até a semana), fios (consequência → decisão original; mesma pessoa) e seleção em lote
 const snoozedMsg = (s: GameState, key: string): boolean => (ib18(s).snooze[`m:${key}`] ?? -1) > s.week;
 const snoozeMsg = (s: GameState, key: string, w: number): void => { if (w) ib18(s).snooze[`m:${key}`] = s.week + w; else delete ib18(s).snooze[`m:${key}`]; };
@@ -84,6 +84,7 @@ export function inbox18View(s: GameState, compact = false): HTMLElement {
   for (const it of all) if (it.unread || it.prio >= 2) counts.set(it.cat, (counts.get(it.cat) ?? 0) + 1);
   let items = ui.cat === 'all' ? all : all.filter((x) => x.cat === ui.cat);
   if (ui.view === 'snoozed') items = items.filter((x) => snoozedMsg(s, x.key)); else if (ui.view !== 'archived') items = items.filter((x) => !snoozedMsg(s, x.key));
+  if (ui.q) { const q = ui.q.toLowerCase(); items = items.filter((x) => `${t(x.subject)} ${t(x.body)} ${x.from}`.toLowerCase().includes(q)); } // r20 G6: busca
   if (ui.view === 'unread') items = items.filter((x) => x.unread);
   if (ui.view === 'urgent') items = items.filter((x) => x.prio >= 2);
   if (ui.view === 'reply') items = items.filter((x) => (x.msg?.actions?.length && !x.msg.resolved) || x.source === 'decision');
@@ -107,6 +108,8 @@ export function inbox18View(s: GameState, compact = false): HTMLElement {
     h('div', { class: 'ib18-bar', role: 'toolbar', 'aria-label': t(l('Categorias', 'Categories')) },
       h('button', { class: `btn small ${ui.cat === 'all' ? 'on' : ''}`, 'aria-pressed': String(ui.cat === 'all'), onclick: () => { ui.cat = 'all'; ui.n = 12; rerender(); } }, t(l('Todas', 'All')), ` (${all.length})`),
       cats.map((c) => h('button', { class: `btn small ${ui.cat === c ? 'on' : ''}`, 'aria-pressed': String(ui.cat === c), onclick: () => { ui.cat = c; ui.n = 12; rerender(); } }, ic(CAT_ICON[c]), ' ', t(CAT18_NAME[c]), counts.get(c) ? h('span', { class: 'badge' }, counts.get(c)) : null))),
+    compact ? null : h('input', { type: 'search', class: 'ib20-q', value: ui.q, placeholder: t(l('Buscar no assunto, texto ou remetente…', 'Search subject, text or sender…')), 'aria-label': t(l('Buscar na caixa de entrada', 'Search the inbox')),
+      onchange: (e: Event) => { ui.q = (e.target as HTMLInputElement).value.trim(); ui.n = 12; rerender(); } }),
     compact ? null : h('div', { class: 'ib18-bar' },
       ([['all', l('Tudo', 'All')], ['unread', l('Não lidas', 'Unread')], ['urgent', l('Importantes', 'Important')], ['reply', l('Pedem resposta', 'Need a reply')], ['snoozed', l('Adiadas', 'Snoozed')], ['archived', l('Arquivadas', 'Archived')]] as [View, L][]).map(([v, lb]) =>
         h('button', { class: `btn small ghost ${ui.view === v ? 'on' : ''}`, 'aria-pressed': String(ui.view === v), onclick: () => { ui.view = v; ui.n = 12; ui.sel.clear(); rerender(); } }, t(lb), v === 'unread' ? ` (${all.filter((x) => x.unread && !snoozedMsg(s, x.key)).length})` : v === 'reply' ? ` (${all.filter((x) => x.source === 'decision' || (x.msg?.actions?.length && !x.msg.resolved)).length})` : ''))),

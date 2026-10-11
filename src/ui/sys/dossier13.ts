@@ -86,7 +86,7 @@ export function labelDossier(s: GameState, id: string, close: () => void, tab?: 
     { id: 'standing', label: l('Prestígio e hype', 'Standing and hype'), icon: 'star', render: () => h('div', null,
       why(l('Reconhecimento = peso histórico (prêmios, hits, catálogo). Popularidade = quanto o público ouve agora. Momento = tendência do ano. Crítica = notas das resenhas. Confiança = como artistas veem o selo (pesa em contratações).', 'Recognition = historical weight (awards, hits, catalog). Popularity = how much the public listens now. Momentum = this year\'s trend. Critics = review scores. Trust = how artists see the label (matters for signings).')),
       ...STAND_KEYS.map((k) => h('div', { class: 'row small' }, h('span', { style: 'min-width:11em' }, t(STAND_NAME[k])), bar(st[k]), ` ${Math.round(st[k])}`)),
-      st.hist.length > 1 ? h('div', null, h('small', { class: 'muted' }, t(l('Nota de prestígio ao longo do tempo', 'Standing score over time'))), sparkline(st.hist, 260, 40)) : null,
+      st.hist.length > 1 ? h('div', null, h('small', { class: 'muted' }, t(l('Nota de prestígio ao longo do tempo', 'Standing score over time'))), sparkline(st.hist, 260, 40, t(l('Nota de prestígio', 'Standing score')))) : null,
       lb ? kv(t(l('Reputação pública', 'Public reputation')), h('span', null, bar(lb.reputation), ` ${Math.round(lb.reputation)}`)) : kv(t(l('Reputação (artística/comercial)', 'Reputation (artistic/commercial)')), `${Math.round(s.player.reputation.artistic)} / ${Math.round(s.player.reputation.commercial)}`),
       hype) },
     { id: 'market', label: l('Mercado', 'Market'), icon: 'chart-up', render: () => marketTab(s, id) },
@@ -132,7 +132,7 @@ function marketTab(s: GameState, id: string): HTMLElement {
   by.sort((a, b) => b.u - a.u);
   return h('div', null,
     why(l('Fatia = unidades dos lançamentos do selo daquele ano ÷ unidades de todos os lançamentos do ano (vendas acumuladas).', 'Share = units of the label\'s releases that year ÷ units of all releases that year (lifetime sales).')),
-    hist.length > 1 ? lineChart(hist.map((x) => Math.round(x.share * 1000) / 10), 420, 90) : null,
+    hist.length > 1 ? lineChart(hist.map((x) => Math.round(x.share * 1000) / 10), 420, 90, t(l('Fatia de mercado por ano (%)', 'Market share by year (%)'))) : null,
     hist.length ? h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, h('th', null, t(l('Ano', 'Year'))), h('th', null, t(l('Fatia', 'Share'))), h('th', null, t(l('Unidades', 'Units'))))),
       h('tbody', null, hist.slice(-12).reverse().map((x) => h('tr', null, h('td', null, x.y), h('td', null, pct(x.share, 1)), h('td', null, N(x.units)))))) : empty(l('Sem lançamentos registrados.', 'No releases recorded.')),
     by.length ? h('div', null, h('h4', null, t(l('Onde vende neste ano', 'Where it sells this year'))),
@@ -179,7 +179,7 @@ function financeTab(s: GameState, id: string, close: () => void): HTMLElement {
         why(l('Caixa e contas internas só aparecem com participação acionária (assento no conselho).', 'Cash and internal accounts only show with an equity stake (board seat).'))),
     q && !me ? h('div', null, h('h4', null, t(l('Ações', 'Stock'))),
       q.dead ? pill(`${t(q.dead.text)} (${q.dead.y})`, 'bad') : chips(stat('money', `$${q.p.toFixed(2)}`, l('cotação', 'price')), stat(change12(q) >= 0 ? 'chart-up' : 'chart-down', `${change12(q) >= 0 ? '+' : ''}${Math.round(change12(q) * 100)}%`, l('em 12 meses', 'over 12 months')), ipo ? stat('calendar', ipo, l('abriu capital', 'went public')) : null),
-      q.hist.length > 1 ? sparkline(q.hist.slice(-48), 260, 40) : null,
+      q.hist.length > 1 ? sparkline(q.hist.slice(-48), 260, 40, t(l('Cotação (48 meses)', 'Share price (48 months)'))) : null,
       h('ul', { class: 'dos13-list small' }, holders(s, `lb:${id}`).map((x) => h('li', null, `${t(x.name)} · ${pct(x.frac, 1)}`)))) : !me ? empty(l('Capital fechado: sem ações em bolsa.', 'Privately held: not on the exchange.')) : null,
   );
   if (!me) for (const f of LABEL_EXTRAS) { const el = f(s, id, close); if (el) body.appendChild(el); }
