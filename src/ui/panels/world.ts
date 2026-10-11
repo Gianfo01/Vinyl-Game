@@ -13,7 +13,7 @@ import { activeGeo, buyClub, geoEffects, liveBlocked } from '../../sim/culture';
 import { activeCensorship } from '../../sim/media';
 import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
-import { $, N, actLink, cityName, genreName, pill, releaseLink, rerender, section, toast } from '../common';
+import { $, N, actLink, cityName, dateLabel, genreName, pill, releaseLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { WorldMap, glyphCanvas, type MapCity, type MapOverlay } from '../map';
 import { store } from '../store';
@@ -22,9 +22,10 @@ import { select } from '../dom';
 import { board } from '../../sim/sys/charts7';
 import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
 import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
-import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintShadeMap } from '../sys/map13';
+import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintNow, paintShadeMap, setPaint } from '../sys/map13';
+import { PAINT_INFO, paintAvailable, type Paint } from '../../sim/sys/map13';
 import { tagName14 } from '../../sim/sys/polish14';
-import { layerButtons17, legend17, openMapInfo17, overlays17, shade17 } from '../sys/mapinfo17';
+import { LAYERS17, layerButtons17, layers17Now, legend17, openMapInfo17, overlays17, setLayers17, shade17, type Ly17Id } from '../sys/mapinfo17';
 
 let worldMap: WorldMap | null = null;
 let focusCity: string | null = null;
@@ -58,7 +59,7 @@ function sceneOf(s: GameState, cityId: string): number {
 
 function fansByCity(s: GameState): Map<string, number> {
   const out = new Map<string, number>();
-  const acts = playerActs(s).map((id) => s.acts[id]);
+  const acts = refActs(s).map((id) => s.acts[id]); // r20: artista de referência
   if (!acts.length) return out;
   for (const c of CITIES) {
     let v = 0;
@@ -320,7 +321,9 @@ function mapSection(s: GameState): HTMLElement {
   };
   if (!worldMap) worldMap = new WorldMap(opts);
   else worldMap.update(opts);
-  return section(t(l('Mapa do mundo', 'World map')), layerBar(), worldMap.element,
+  return section(t(l('Mapa do mundo', 'World map')), presetBar20(s), legend20(s),
+    h('details', { class: 'layers20', open: preset20 ? undefined : true }, h('summary', { class: 'small' }, t(l('Todas as camadas (especialista)', 'All layers (expert)'))), layerBar()),
+    worldMap.element,
     h('p', { class: 'muted small' }, t(l('Clique numa cidade ou num país para abrir o popup com tudo sobre o lugar (mercado, cenas, artistas, casas, imprensa, crime, leis, tendências, relíquias, notícias).', 'Click a city or a country to open a popup with everything about the place (market, scenes, acts, venues, press, crime, laws, trends, relics, news).'))),
   );
 }
@@ -385,6 +388,90 @@ function hallSection(s: GameState): HTMLElement {
 export function worldPanel(s: GameState): HTMLElement {
   return h('div', { class: 'panel world' },
     h('div', { class: 'col-main' }, mapSection(s), chartsSection(s), movementsSection(s)),
-    h('aside', { class: 'col-side' }, geoSection(s), recordsSection(s), hallSection(s)),
+    h('aside', { class: 'col-side' }, placePanel20(s), geoSection(s), recordsSection(s), hallSection(s)),
   );
+}
+
+// ---------------------------------------------------------------- r20: perguntas, referência, legenda e lugar
+
+/** Presets de tarefa: cada pergunta liga um conjunto de camadas existentes (o especialista continua com todos os botões). */
+export type Preset20 = 'audience' | 'expand' | 'opps' | 'risk';
+export const PRESETS20: { id: Preset20; icon: string; name: L; layers: Layer[]; l17: Ly17Id[]; paint: Paint }[] = [
+  { id: 'audience', icon: 'fans', name: l('Onde tenho público?', 'Where is my audience?'), layers: ['fans', 'countryfans', 'hq'], l17: ['tour17'], paint: 'none' },
+  { id: 'expand', icon: 'globe', name: l('Onde expandir?', 'Where to expand?'), layers: ['hq', 'rivals', 'scenes'], l17: [], paint: 'market' },
+  { id: 'opps', icon: 'star', name: l('Onde há oportunidades?', 'Where are the opportunities?'), layers: ['scenes', 'festivals', 'movements', 'clubs'], l17: [], paint: 'growth' },
+  { id: 'risk', icon: 'warning', name: l('Que risco afeta minha operação?', 'What risk affects my operation?'), layers: ['geo', 'rivalpower', 'tours'], l17: ['clash17', 'heat17'], paint: 'rivaldom' },
+];
+let preset20: Preset20 | null = null;
+/** Artista de referência das camadas de público ('' = elenco inteiro). */
+let refAct20 = '';
+
+export function applyPreset20(s: GameState, id: Preset20 | null): void {
+  preset20 = id;
+  layers.clear();
+  const p = PRESETS20.find((x) => x.id === id);
+  if (!p) { setLayers17([]); setPaint('none'); return; }
+  for (const x of p.layers) layers.add(x);
+  setLayers17(p.l17);
+  setPaint(paintAvailable(s, p.paint) ? p.paint : 'none');
+}
+export const activeLayers20 = (): string[] => [...layers];
+
+function refActs(s: GameState): string[] {
+  const ids = playerActs(s);
+  return refAct20 && ids.includes(refAct20) ? [refAct20] : ids;
+}
+
+function presetBar20(s: GameState): HTMLElement {
+  const on = [...LAYERS.filter((x) => layers.has(x.id)).map((x) => t(x.name)), ...LAYERS17.filter((x) => layers17Now().includes(x.id)).map((x) => t(x.name)), paintNow() !== 'none' ? t(PAINT_INFO[paintNow()].name) : ''].filter(Boolean);
+  const ids = playerActs(s);
+  return h('div', { class: 'presets20-box' },
+    h('div', { class: 'presets20', role: 'group', 'aria-label': t(l('Perguntas do mapa', 'Map questions')) },
+      PRESETS20.map((p) => h('button', { type: 'button', class: `chip-btn ${preset20 === p.id ? 'on' : ''}`, 'aria-pressed': preset20 === p.id ? 'true' : 'false', onclick: () => { applyPreset20(s, preset20 === p.id ? null : p.id); rerender(); } }, ic(p.icon), ' ', t(p.name)))),
+    h('div', { class: 'row wrap small' },
+      h('label', null, t(l('Artista de referência', 'Reference act')), ' ',
+        select(refAct20, [{ value: '', label: t(l('Todo o elenco', 'Whole roster')) }, ...ids.map((id) => ({ value: id, label: s.acts[id].name }))], (v) => { refAct20 = v; if (v) store.selectedAct = v; rerender(); }, { 'aria-label': t(l('Artista de referência', 'Reference act')) })),
+      h('span', { class: 'muted' }, ` · ${t(l('Período', 'Period'))}: ${dateLabel(s)}`)),
+    h('div', { class: 'row wrap small' },
+      h('span', null, h('b', null, t(l('Ativas', 'Active')), ': '), on.length ? on.join(' · ') : t(l('nenhuma camada', 'no layers'))),
+      on.length ? h('button', { class: 'btn small ghost', onclick: () => { applyPreset20(s, null); rerender(); } }, t(l('Limpar', 'Clear'))) : null));
+}
+
+/** Legenda com unidade, escala, data e confiança (observado × estimado). */
+function legend20(s: GameState): HTMLElement | null {
+  const when = `${dateLabel(s)}`;
+  const ref = refAct20 && s.acts[refAct20] ? s.acts[refAct20].name : t(l('todo o elenco', 'whole roster'));
+  const est = t(l('estimado', 'estimated'));
+  const obs = t(l('observado', 'observed'));
+  const rows: [string, L, string][] = [];
+  if (layers.has('fans')) rows.push([est, l(`Bolha laranja = fãs potenciais por cidade (${ref}). Unidade: pessoas; escala: relativa ao maior valor do mapa. Derivado da base global do artista (núcleo, ativos, casuais) × fatia da cidade — não é uma contagem local persistida.`, `Orange bubble = potential fans per city (${ref}). Unit: people; scale: relative to the map's largest value. Derived from the act's global base (core, active, casual) × city share — not a persisted local count.`), when]);
+  if (layers.has('countryfans')) rows.push([est, l('País laranja = fãs por país (mesma derivação; mais forte = mais fãs).', 'Orange country = fans by country (same derivation; stronger = more fans).'), when]);
+  if (layers.has('scenes')) rows.push([obs, l('Bolha verde = força das cenas locais (estado do mundo).', 'Green bubble = local scene strength (world state).'), when]);
+  if (layers.has('tours')) rows.push([obs, l('Arcos = rotas das turnês marcadas.', 'Arcs = booked tour routes.'), when]);
+  if (layers.has('rivalpower')) rows.push([est, l('Bolha vermelha = força relativa dos rivais na cidade.', 'Red bubble = relative rival strength in the city.'), when]);
+  if (layers.has('geo')) rows.push([obs, l('Países vermelhos/amarelos = crises, censura e shows suspensos.', 'Red/yellow countries = crises, censorship and suspended shows.'), when]);
+  if (paintNow() !== 'none') rows.push([paintNow() === 'piracy' ? est : obs, l(`Países: ${PAINT_INFO[paintNow()].name.pt} — unidade: ${PAINT_INFO[paintNow()].unit.pt}.`, `Countries: ${PAINT_INFO[paintNow()].name.en} — unit: ${PAINT_INFO[paintNow()].unit.en}.`), when]);
+  if (!rows.length) return null;
+  return h('div', { class: 'legend20', role: 'note', 'aria-label': t(l('Legenda das camadas', 'Layer legend')) },
+    rows.map(([conf, txt, d]) => h('div', null, pill(conf, conf === est ? 'warn' : 'good'), ' ', t(txt), h('small', { class: 'muted' }, ` (${d})`))));
+}
+
+/** Painel do lugar + lista textual com busca que compartilha a seleção do mapa. */
+function placePanel20(s: GameState): HTMLElement {
+  const acts = refActs(s).map((id) => s.acts[id]);
+  const rows = CITIES.map((c) => ({ c, v: acts.reduce((x, a) => x + cityDemand(s, a, c.id), 0) })).sort((a, b) => b.v - a.v);
+  const list = h('ul', { class: 'drawer20-list' }, rows.map(({ c, v }) => h('li', { 'data-q': `${t(c.name)} ${t(MARKETS.find((m) => m.id === c.market)?.name ?? l('', ''))}`.toLowerCase() },
+    h('button', { type: 'button', class: `chip-btn ${focusCity === c.id ? 'on' : ''}`, 'aria-pressed': focusCity === c.id ? 'true' : 'false', onclick: () => { focusCity = c.id; focusCountry = null; rerender(); } }, t(c.name)),
+    h('small', { class: 'muted' }, ` ${N(v)} ${t(l('fãs est.', 'est. fans'))}`, s.player.territories.includes(c.market) ? '' : ` · ${t(l('sem distribuição', 'no distribution'))}`))));
+  const search = h('input', { type: 'search', class: 'input', placeholder: t(l('Buscar cidade ou mercado…', 'Search city or market…')), 'aria-label': t(l('Buscar lugar', 'Search place')) }) as HTMLInputElement;
+  search.oninput = () => { const q = search.value.trim().toLowerCase(); for (const li of Array.from(list.children) as HTMLElement[]) li.hidden = !!q && !(li.dataset.q ?? '').includes(q); };
+  const blk = focusCity ? liveBlocked(s, focusCity) : null;
+  return section(t(l('Lugar selecionado', 'Selected place')),
+    h('div', { class: 'place20' },
+      focusCity && cityById[focusCity] ? cityCard(s, focusCity) : h('p', { class: 'muted small' }, t(l('Escolha uma cidade no mapa ou na lista.', 'Pick a city on the map or in the list.'))),
+      blk ? h('p', { class: 'small bad' }, ic('lock'), ' ', t(l('Sem shows aqui agora: ', 'No shows here now: ')), t(blk.name), t(l('. Alternativas: cidades vizinhas do mesmo mercado sem bloqueio ou lançar sem turnê.', '. Alternatives: nearby cities in an unblocked market, or release without touring.'))) : null,
+      focusCity ? h('div', { class: 'row wrap' },
+        h('button', { class: 'btn small', onclick: () => openMapInfo17(s, 'city', focusCity!, () => cityById[focusCity!] ? cityCard(s, focusCity!) : null) }, ic('globe'), ' ', t(l('Tudo sobre o lugar', 'Everything about the place'))),
+        h('button', { class: 'btn small ghost', onclick: () => { focusCity = null; rerender(); } }, t(l('Limpar seleção', 'Clear selection')))) : null,
+      h('details', { class: 'drawer20' }, h('summary', null, ic('globe'), ' ', t(l('Lista de lugares', 'Place list'))), search, list)));
 }
