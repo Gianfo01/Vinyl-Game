@@ -278,4 +278,9 @@ import './money19'; // r19 onda 3 T1: dívida e catálogo (covenants, leilão de
 import './regions19'; // r19 Frente 6 (T5): comuna e exílio, selos regionais, vistos, needle time, greves, campanhas, leis
 import './schools19'; // r19 9.9: coros e escolas como celeiros
 import './market19a'; // r19 onda 3 T6 (Frente 7, mercado A): certificações por país, pesquisa de mercado, faixas sem rosto, 360 de promotora, antitruste, ciclo da cena
+import './media19'; // r19 T9: dados de mídia (veículos, programas, covers, cenas, relíquias, crime) nos módulos consumidores
+import './zines19'; // r19 9.10 fanzines, revistas e críticos-editores
+import './fakes19'; // r19 9.11 dublagem, bandas-fantasma, vozes de IA, leis
+import './media19ev'; // r19 T9: eventos regionalizados a partir dos dados
+import './media19sit'; // r19 T9: situações do diretor citando dados
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

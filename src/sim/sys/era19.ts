@@ -46,7 +46,9 @@ const addPkg19 = (): void => { if (!PKG18.some((p) => p.id === 'session')) PKG18
     c: { pkg: 'side', rec: 0.5, ...K0 }, rights: { reversionYears: 0 } },
 ); };
 // contracts18 pode ainda não ter avaliado quando os dados são importados primeiro (ciclo de imports): adia para depois do grafo.
-if (PKG18) addPkg19(); else queueMicrotask(addPkg19);
+// r19 T9: ler PKG18 antes da avaliação lança ReferenceError (TDZ) no bundle — o teste precisa de try.
+const pkgReady19 = (): boolean => { try { return !!PKG18; } catch { return false; } };
+if (pkgReady19()) addPkg19(); else queueMicrotask(addPkg19);
 
 // ---------------------------------------------------------------- fatores vivos (card "A era")
 

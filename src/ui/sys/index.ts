@@ -185,4 +185,6 @@ import './regions19';
 import './history19'; // r19 T8: Mundo › Marcos da história + bloco do Cockpit
 // Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
 import './market19a';
+// Rodada 19 (onda 3, T9): Imprensa e fanzines (zines19) e Fraudes e sósias (fakes19).
+import './media19';
 import './core18';
