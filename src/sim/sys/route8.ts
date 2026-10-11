@@ -199,7 +199,8 @@ export function suggestRoute(s: GameState, actId: string, mode: 'compact' | 'exp
     const near = (o: CityOption) => o.demand / (1 + o.km / 500) * (o.market === home ? 1.5 : 1);
     pick = [...opts].sort((x, y) => near(y) - near(x)).slice(0, n).map((o) => o.cityId);
   } else {
-    const fresh = opts.filter((o) => o.newMarket).sort((x, y) => y.demand - x.demand);
+    // r19: o banco de cidades cresceu (mercado de casa enche o topo 60) — mercados novos vêm de uma lista mais longa
+    const fresh = candidateCities(s, actId, 300).filter((o) => o.newMarket).sort((x, y) => y.demand - x.demand);
     const markets = new Set<MarketId>();
     const far: string[] = [];
     for (const o of fresh) { if (far.length >= Math.ceil(n / 2)) break; if (markets.size < 2 || markets.has(o.market)) { markets.add(o.market); far.push(o.cityId); } }
