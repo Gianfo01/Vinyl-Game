@@ -690,7 +690,7 @@ export function negotiateFor(s: GameState, r: Rng, actId: string): { ok: boolean
   const bonus = money(s, 1000 + a.fame * 80);
   a.cash += bonus;
   c.sat = clamp(c.sat + 15, 0, 100);
-  mg.rep = clamp(mg.rep + 3, 0, 100);
+  mg.rep = clamp(mg.rep + 3 * mgRepGain9(mg.rep), 0, 100);
   if (lb) standingOf(s, lb.id).trust = clamp(standingOf(s, lb.id).trust - 1, 0, 100);
   return { ok: true, text: fmtL(l('Você arranca de {b} +3 pontos de royalty e um bônus para {a}.', 'You squeeze +3 royalty points and a bonus for {a} out of {b}.'), { b: lb?.name ?? '?', a: a.name }) };
 }
@@ -711,7 +711,7 @@ export function handleCrisis(s: GameState, r: Rng, actId: string, m: CrisisMove)
   c.crisis = undefined;
   if (ok) {
     c.sat = clamp(c.sat + 10, 0, 100);
-    mg.rep = clamp(mg.rep + 2, 0, 100);
+    mg.rep = clamp(mg.rep + 2 * mgRepGain9(mg.rep), 0, 100);
     return { ok, text: fmtL(l('Crise de {a} contornada.', '{a}\'s crisis handled.'), { a: a.name }) };
   }
   c.sat = clamp(c.sat - 8, 0, 100);

@@ -16,7 +16,7 @@ import { contactsFor, isActive, originTrust, registerLoad } from './careers12';
 import { cxOf } from './manager11';
 import { ownerOf } from './people/owner';
 import { SVC, isForeign, onServiceOutcome, providerById, registerContactBonus, requestService, signService, type Ask, type SvcKind } from './services12';
-import { dropClient, funds, grossShows, markRefused9, mgCap, refusedWait9, ventures, type Client } from './ventures9';
+import { dropClient, funds, grossShows, markRefused9, mgCap, mgRepGain9, refusedWait9, ventures, type Client } from './ventures9';
 
 export type Area = 'recordings' | 'shows' | 'endorsements' | 'international';
 export type Amb = 'money' | 'recognition' | 'genre' | 'family' | 'international' | 'art';
@@ -510,7 +510,7 @@ function managerMonth(s: GameState, r: Rng): void {
     }
     // desenvolvimento de talentos
     if (x.dev && !x.devDone && a.fame >= 30) {
-      x.devDone = true; st.devHits += 1; st.prestige += 10; mg.rep = clamp(mg.rep + 3, 0, 100);
+      x.devDone = true; st.devHits += 1; st.prestige += 10; mg.rep = clamp(mg.rep + 3 * mgRepGain9(mg.rep), 0, 100);
       const t = fmtL(l('Você descobriu {a}: de desconhecido a nome nacional.', 'You discovered {a}: from unknown to a household name.'), { a: a.name });
       remember(s, 'manager12', t); notify(s, t, 'good');
     }
@@ -552,7 +552,7 @@ function managerMonth(s: GameState, r: Rng): void {
     const durable = mg.clients.filter((c) => s.week - c.since >= 260).length;
     const avg = mg.clients.reduce((t, c) => t + c12(s, c.actId).trust, 0) / mg.clients.length;
     st.prestige = Math.max(0, Math.round(st.prestige * 0.92 + durable * 2 + (avg - 50) / 10));
-    mg.rep = clamp(mg.rep + st.prestige / 100, 0, 100);
+    mg.rep = clamp(mg.rep + (st.prestige / 100) * mgRepGain9(mg.rep), 0, 100); // r19: retorno decrescente
   }
 }
 
