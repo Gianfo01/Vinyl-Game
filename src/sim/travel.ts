@@ -386,7 +386,7 @@ export const DAYS_PER_STOP = 2;
  * Planeja uma rota: start → cityIds[0] → cityIds[1] → …
  * O mês de cada parada avança conforme os dias acumulados (30 dias por mês).
  */
-export function planRoute(cityIds: string[], startCityId: string, year: number, month: number, crewSize: number): RoutePlan {
+export function planRoute(cityIds: string[], startCityId: string, year: number, month: number, crewSize: number, homeCityId = startCityId): RoutePlan {
   const legs: Leg[] = [];
   const stops: RouteStop[] = [];
   let prev = startCityId;
@@ -395,7 +395,7 @@ export function planRoute(cityIds: string[], startCityId: string, year: number, 
   for (const id of cityIds) {
     if (!cityById[id]) continue;
     if (id !== prev) {
-      const leg = travelLeg(prev, id, year, crewSize, startCityId);
+      const leg = travelLeg(prev, id, year, crewSize, homeCityId); // r21 (F-4): passaporte da casa do selo, como legInfo
       // visto só uma vez por país na mesma turnê
       const sov = unitOfCity(id, year)?.sovereign ?? id;
       if (visited.has(sov) && leg.visa.needed && !leg.visa.boycott) leg.visa = { ...leg.visa, needed: false, costReal: 0, denyChance: 0, processingDays: 0, reason: l('Visto já obtido nesta turnê.', 'Visa already obtained on this tour.') };

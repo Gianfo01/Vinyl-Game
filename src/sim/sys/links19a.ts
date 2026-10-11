@@ -48,6 +48,7 @@ import { queueScene } from './scenes/state';
 import { soc18 } from './society18';
 import { SUP19 } from './supply18';
 import { piracyLevel } from './world4/laws';
+import { terr20 } from './terr20';
 
 const F = fmtL;
 const N = (pt: string, en: string): L => l(pt, en);
@@ -372,6 +373,7 @@ export function regionDemand19(s: GameState, a: Act, cityId: string): { k: numbe
 }
 registerMod('cityDemand', 'links19a:region', (s, v, c) => {
   if (off() || !c.act || !c.cityId || !mine(c.act)) return null;
+  if (terr20(s).a[c.act.id]) return null; // r21 (D-6): com livro regional (terr20) é ele quem fala; aqui só a estimativa pela fama
   const r = regionDemand19(s, c.act, c.cityId);
   if (!r || Math.abs(r.k - 1) < 0.01) return null;
   return { value: v * r.k, label: r.buzz ? N('Base de fãs nova na região', 'New fan base in the region') : N('Fãs nesta região', 'Fans in this region') };

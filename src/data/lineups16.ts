@@ -89,7 +89,7 @@ export const REAL_L16: RealArtist[] = [
   so('Moraes Moreira', 'mpb', 'salvador', 'BRA', 1975, 2020, 2, 1947, 2020, 'v', ['Moraes Moreira|1975', 'Pombo Correio|1977|s']),
   so('Baby do Brasil', 'mpb', 'rio', 'BRA', 1978, 0, 2, 1952, 0, 'v', ['O Que Vier Eu Traço|1978', 'Menino do Rio|1979|s']),
   so('Pepeu Gomes', 'rock_br', 'salvador', 'BRA', 1978, 0, 3, 1952, 0, 'g', ['Geração de Som|1978']),
-  bd('Vímana', 'rock_br', 'rio', 'BRA', 1974, 1978, 3, 'Lulu Santos:g:1953|Lobão:d:1957|Fernando Gama:b|Ritchie:k:1952::1975', ['Zebra|1977|s']),
+  bd('Vímana', 'prog', /* r21 (J-3): rock_br nasce em 1980 */ 'rio', 'BRA', 1974, 1978, 3, 'Lulu Santos:g:1953|Lobão:d:1957|Fernando Gama:b|Ritchie:k:1952::1975', ['Zebra|1977|s']),
   bd('Doces Bárbaros', 'mpb', 'salvador', 'BRA', 1976, 1976, 2, 'Caetano Veloso:v:1942|Gilberto Gil:v:1942|Gal Costa:v:1945:2022|Maria Bethânia:v:1946', ['Doces Bárbaros|1976']),
 ];
 

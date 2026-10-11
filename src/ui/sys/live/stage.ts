@@ -14,6 +14,7 @@ import { openScene, registerCutscene, registerSection } from '../../registry';
 import { store } from '../../store';
 import { chips, ic, meter, stat } from '../../vis';
 import { drawPerson } from './art';
+import { visLoop21 } from '../../pixel/visloop21';
 
 void $;
 
@@ -161,14 +162,9 @@ function crowdCanvas(energyRef: { v: number }, tier: number, year: number): HTML
     }
     ctx.putImageData(new ImageData(new Uint8ClampedArray(p.d.buffer.slice(0)), W, H), 0, 0);
   };
-  const loop = () => {
-    if (!c.isConnected && f > 2) return;
-    f += 1;
-    if (f % 3 === 0) paint();
-    requestAnimationFrame(loop);
-  };
   paint();
-  if (!store.prefs.reducedMotion) requestAnimationFrame(loop);
+  // r21 (I-10): só anima visível e com a aba em primeiro plano
+  if (!store.prefs.reducedMotion) visLoop21(c, () => { f += 1; if (f % 3 === 0) paint(); });
   return c;
 }
 

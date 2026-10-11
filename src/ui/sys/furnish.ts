@@ -4,7 +4,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { effectiveRooms } from '../../sim/sys/industry/hqedit';
-import { FURNITURE, buyFurniture, furn, furnBlocker, furnEffects, sellFurniture } from '../../sim/sys/furnish';
+import { FURNITURE, buyFurniture, furn, furnBlocker, furnEffects, furnNeedsRoom, sellFurniture } from '../../sim/sys/furnish';
 import type { GameState } from '../../sim/types';
 import { money } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
@@ -39,7 +39,7 @@ function furnishSection(s: GameState): HTMLElement | null {
             have < def.max ? h('button', { class: 'btn small', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => say(buyFurniture(s, id, rooms), l('Comprado! Já está na sede.', 'Bought! It is already at the HQ.')) }, `${t(l('Comprar', 'Buy'))} ${$(money(s, def.cost))}`) : null,
             have ? h('button', { class: 'btn small ghost', onclick: () => say(sellFurniture(s, id), l('Vendido.', 'Sold.')) }, t(l('Vender', 'Sell'))) : null,
           ),
-          blk && have < def.max && blk.pt.startsWith('A sede') ? h('small', { class: 'muted' }, t(blk)) : null,
+          blk && have < def.max && furnNeedsRoom(id, rooms) ? h('small', { class: 'muted' }, t(blk)) : null,
         );
       })),
     )),

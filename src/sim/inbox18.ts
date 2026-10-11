@@ -12,6 +12,7 @@ import type { L } from '../data/world';
 import { registerExt4 } from './ext4';
 import { addMsg, type InboxMsg } from './sys/people/state';
 import type { GameState } from './types';
+import { emitCard21 } from './card21';
 
 export type InboxCat18 = 'decision' | 'people' | 'deals' | 'money' | 'press' | 'world' | 'staff' | 'life' | 'analyst' | 'other';
 /** Destino de um "ir para": área (com aba), ato ou pessoa (chave persona13: 'p:id', 'l:id', 'e:id'…). */
@@ -47,8 +48,9 @@ export const INBOX_ROUTE19: { f?: (s: GameState, kind: string, m: Push18) => Inb
 export function pushInbox18(s: GameState, kind: string, m: Push18): InboxMsg {
   const routed = INBOX_ROUTE19.f?.(s, kind, m);
   if (routed) return routed;
+  const body = m.actions?.length ? emitCard21(s, { key: `inbox18:${kind}`, text: m.body, tone: m.tone }) ?? m.body : m.body; // r21 (G-12): cartão com ações = voz do narrador
   return addMsg(s, {
-    from: m.from, subject: m.subject, body: m.body, kind: 'deal', tone: m.tone ?? 'info', actions: m.actions,
+    from: m.from, subject: m.subject, body, kind: 'deal', tone: m.tone ?? 'info', actions: m.actions,
     expires: m.actions?.length ? s.week + (m.weeks ?? 6) : undefined,
     ref: { ...(m.ref ?? {}), sys: 'k18', k18: kind },
   });

@@ -14,11 +14,15 @@ import { reachHook17 } from './reachhook17';
 import { MARKETS, familyOf, l, type L, type MarketId } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { physicalShare } from '../production';
-import type { GameState, Release } from '../types';
+import type { Act, GameState, Release } from '../types';
 import { isUnlocked } from '../era';
 import { fmtL, hasTech, recordAward, remember } from '../util';
 import { boycotting, flushAwards, flushTop10, homeK, juryMemHook, juryRng, queueAward, queueTop10, snub15 } from './awards15';
 import { allReleases17 } from '../relidx17';
+import { OUTSIDE_TERRITORY_W } from '../charts2';
+
+/** r21 (§4): fama regional (fame16) e show recente na praça (terr20) entram no peso por país — injetados sem ciclo. */
+export const countryHook21: { fame: null | ((s: GameState, act: Act, a3: string) => number); show: null | ((s: GameState, act: Act, mk: MarketId) => number) } = { fame: null, show: null };
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -92,13 +96,25 @@ const actCountry = (s: GameState, actId: string): string | null => {
 };
 
 // tamanho e gosto por país mudam por ano: calculados uma vez por semana (desempenho)
-let cache: { year: number; size: number[]; taste: Record<string, number[]>; soft: (a3: string | null) => number } | null = null;
-function weekCache(year: number) {
-  if (cache?.year === year) return cache;
+let cache: { year: number; week: number; size: number[]; taste: Record<string, number[]>; soft: (a3: string | null) => number; fame: Map<string, Float64Array> } | null = null;
+function weekCache(year: number, week: number) {
+  if (cache?.year === year && cache.week === week) return cache;
   const size = COUNTRY_INFO.map((c) => countryMarketSize(c, year));
   const soft: Record<string, number> = {};
-  cache = { year, size, taste: {}, soft: (a3: string | null) => (soft[a3 ?? ''] ??= softPower(a3, year)) };
+  cache = { year, week, size, taste: {}, soft: (a3: string | null) => (soft[a3 ?? ''] ??= softPower(a3, year)), fame: new Map() };
   return cache;
+}
+/** Fator de fama regional por país (0,6–1,4), guardado por ato dentro da semana. */
+function fameRow(s: GameState, act: Act, wc: NonNullable<typeof cache>): Float64Array | null {
+  const f = countryHook21.fame;
+  if (!f) return null;
+  let row = wc.fame.get(act.id);
+  if (!row) {
+    row = new Float64Array(COUNTRY_INFO.length);
+    for (let i = 0; i < COUNTRY_INFO.length; i++) row[i] = 0.6 + 0.8 * f(s, act, COUNTRY_INFO[i].a3) / 100;
+    wc.fame.set(act.id, row);
+  }
+  return row;
 }
 
 // r19: preferência local por país é estática (tabela) — pré-calculada (128 países × 350 lançamentos por semana)
@@ -112,14 +128,19 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
   const homeMarket = home ? countryInfoByA3[home]?.market : undefined;
   const crossover = act ? act.positioning / 100 : 0.4;
   const own = act ? reachHook17.f(s, act) : 0; // r17: Shakira/BTS/hit viral global viajam além do país
-  const wc = weekCache(s.year);
+  const wc = weekCache(s.year, s.week);
   const tastes = (wc.taste[fam] ??= COUNTRY_INFO.map((c) => countryTaste(c, fam as never, s.year)));
+  const fr = act ? fameRow(s, act, wc) : null;
+  const showK: Partial<Record<MarketId, number>> = {};
   let sum = 0;
   for (let i = 0; i < COUNTRY_INFO.length; i++) {
     const c = COUNTRY_INFO[i];
     const taste = tastes[i];
     let w = wc.size[i] * (taste + (1 - Math.min(1, taste)) * crossover * 0.4);
-    if (!rel.territories.includes(c.market)) w *= 0.04;
+    if (!rel.territories.includes(c.market)) w *= OUTSIDE_TERRITORY_W / 2; // por país o vazamento é metade do que por mercado
+    // r21 (§4): fama regional e show recente na praça (pesos modestos) — a turnê passa a mexer na parada do país
+    if (fr) w *= fr[i];
+    if (act && countryHook21.show) w *= (showK[c.market] ??= countryHook21.show(s, act, c.market));
     // rodada 8: artista local tem preferência em casa; fora, viaja conforme o peso mundial do país
     if (home === c.a3) w *= 1.6 * LP[i];
     else {
@@ -159,15 +180,21 @@ function emptyBoard(): Board {
   return { songs: [], albums: [], stream: [], sales: [], video: [] };
 }
 
+/** r21 (B10): desempate explícito — quem já estava na parada (melhor posição anterior) fica na frente; depois o id. */
+function tieWins(prev: Row7[] | undefined, a: string, b: string): boolean {
+  const pa = prev?.find((y) => y.relId === a)?.pos || 999, pb = prev?.find((y) => y.relId === b)?.pos || 999;
+  return pa !== pb ? pa < pb : a < b;
+}
+
 /** Top-N sem ordenar a lista inteira (desempenho). */
-function topN(rows: { relId: string; u: number }[], n: number): { relId: string; u: number }[] {
+function topN(rows: { relId: string; u: number }[], n: number, prev?: Row7[]): { relId: string; u: number }[] {
   const top: { relId: string; u: number }[] = [];
   let min = 0.5;
   for (const x of rows) {
-    if (x.u <= min && top.length >= n) continue;
+    if (x.u < min && top.length >= n) continue;
     if (x.u <= 0.5) continue;
     let i = top.length;
-    while (i > 0 && top[i - 1].u < x.u) i--;
+    while (i > 0 && (top[i - 1].u < x.u || (top[i - 1].u === x.u && tieWins(prev, x.relId, top[i - 1].relId)))) i--;
     top.splice(i, 0, x);
     if (top.length > n) top.pop();
     if (top.length >= n) min = top[top.length - 1].u;
@@ -183,10 +210,10 @@ function rankIdx(prev: Row7[] | undefined, ids: string[], val: Float64Array, has
     const j = js[q];
     if (!has[j]) continue;
     const u = val[j];
-    if (u <= min && top.length >= TOP) continue;
+    if (u < min && top.length >= TOP) continue;
     if (u <= 0.5) continue;
     let i = top.length;
-    while (i > 0 && val[top[i - 1]] < u) i--;
+    while (i > 0 && (val[top[i - 1]] < u || (val[top[i - 1]] === u && tieWins(prev, ids[j], ids[top[i - 1]])))) i--;
     top.splice(i, 0, j);
     if (top.length > TOP) top.pop();
     if (top.length >= TOP) min = val[top[top.length - 1]];
@@ -201,7 +228,7 @@ function rankIdx(prev: Row7[] | undefined, ids: string[], val: Float64Array, has
 
 function rank(prev: Row7[] | undefined, rows: { relId: string; u: number }[]): Row7[] {
   const pv = prev ?? [];
-  return topN(rows, TOP).map((x, i) => {
+  return topN(rows, TOP, prev).map((x, i) => {
     const p = pv.find((y) => y.relId === x.relId); // ≤20 linhas: busca linear sai mais barata que montar um Map
     return { relId: x.relId, u: Math.round(x.u), pos: i + 1, last: p?.pos ?? 0, wk: (p?.wk ?? 0) + 1 };
   });

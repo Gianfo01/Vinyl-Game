@@ -10,6 +10,7 @@ import { CONTRACT_MODELS } from '../data/rules';
 import { l, type L } from '../data/world';
 import { S, t } from '../i18n/strings';
 import { avgReview } from '../sim/media';
+import { simFate20 } from '../sim/prov20';
 import { actState } from '../sim/people';
 import { DEGREES, estimate, sourceName, visibleFields } from '../sim/scouting';
 import {
@@ -334,7 +335,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
     h('div', { class: 'pg-head-main' },
       h('div', { class: 'row wrap' }, w >= 99 ? ovrBadge('?', true) : ovrBadge(w ? shown(teamOvr, w) : teamOvr, true),
         h('div', null,
-          h('h3', null, a.name, a.catalogNo ? pill('★', 'gold') : null, a.legend ? pill(t(l('Lenda', 'Legend')), 'gold') : null, a.archetype === 'synthetic' ? pill('AI', 'neural') : null),
+          h('h3', null, a.name, a.catalogNo ? pill('★', 'gold') : null, a.legend ? pill(t(l('Lenda', 'Legend')), 'gold') : null, a.archetype === 'synthetic' ? pill('AI', 'neural') : null, simFate20(s, a) ? pill(t(l('destino simulado', 'simulated fate')), 'neural') : null), // r21 (K5)
           h('div', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${t(l('desde', 'since'))} ${a.formed} · `, pill(statusName(a.status))),
           h('div', null, t(S.owner), ': ', labelLink(s, a.owner), ' · ', t(S.knownAs), ': ', pill(t(DEGREES[Math.max(0, deg - 1)])), k ? h('span', { class: 'muted' }, ` · ${t(S.source)}: ${t(sourceName(k.source))}`) : null))),
       h('div', { class: 'row wrap' },

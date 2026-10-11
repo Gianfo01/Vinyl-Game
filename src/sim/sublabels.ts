@@ -6,10 +6,11 @@ import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import { composeSongs, recordSongs, unreleasedRecorded } from './production';
 import { launchNpcRelease } from './market';
+import { transferAct } from './contracts';
 import type { GameState } from './types';
 import type { SubLabel } from './xtypes';
-import { fmtL, money, nextId, notify, post, remember } from './util';
-import { cashWhy20, freeCash20 } from './oblig20';
+import { fmtL, money, nextId, notify, post, postOrFail, remember } from './util';
+import { cashWhy20, freeCash20, registerAssets20 } from './oblig20';
 
 const INVESTOR_NAMES = ['Fundo Aurora', 'Kestrel Capital', 'Família Montenegro', 'Lyra Ventures', 'Coletivo Raiz', 'Banco Atlântico', 'Harbor Partners'];
 
@@ -19,18 +20,33 @@ function slog(sl: SubLabel, week: number, amount: number, memo: string): void {
   if (sl.log.length > 80) sl.log.splice(0, sl.log.length - 80);
   if (amount > 0) sl.revenueYear += amount;
 }
+/** r21 (H-1): lançamento no caixa do subselo feito por outros sistemas (a liquidação dos masters em `distribute`). */
+export const subCredit = slog;
+/** Subselo vivo (ativo ou em dificuldade) dono de um master. */
+export const subOwner = (s: GameState, owner: string): SubLabel | undefined => s.subLabels.find((x) => x.id === owner && (x.status === 'active' || x.status === 'distress'));
 
 function hist(s: GameState, sl: SubLabel, text: L): void {
   sl.history.push({ week: s.week, text });
   if (sl.history.length > 20) sl.history.splice(0, sl.history.length - 20);
 }
 
+/** r21 (B-4): dívida do subselo. O credor 'Fornecedores' já carrega o caixa negativo (`owed = −cash` em subLabelsMonth);
+ *  antes do fechamento ele pode ainda não existir — então vale o maior dos dois, nunca a soma (contava duas vezes). */
+export function subLabelDebt(sl: SubLabel): number {
+  const owed = sl.creditors.reduce((t, c) => t + c.owed, 0);
+  return sl.loans.reduce((t, x) => t + x.balance, 0) + Math.max(owed, -Math.min(0, sl.cash));
+}
+
 export function subLabelValuation(s: GameState, sl: SubLabel): number {
   const masters = sl.roster.flatMap((id) => s.acts[id]?.releases ?? []).map((id) => s.releases[id]).filter((r) => r && r.owner === sl.id);
   const recent = masters.reduce((t, r) => t + r.revenue, 0) / Math.max(1, masters.length) * 0.5;
-  const debt = sl.loans.reduce((t, x) => t + x.balance, 0) + sl.creditors.reduce((t, c) => t + c.owed, 0);
-  return Math.max(money(s, 10000), sl.cash + recent * 18 + money(s, 3000) * sl.roster.length - debt);
+  // r21 (B-4): caixa negativo entra uma vez só (via subLabelDebt); o caixa só soma quando positivo
+  const debt = subLabelDebt(sl);
+  return Math.max(money(s, 10000), Math.max(0, sl.cash) + recent * 18 + money(s, 3000) * sl.roster.length - debt);
 }
+
+// r21 (seção 4.1): subselos ativos são ativo financeiro da matriz na Posição (valor × participação do fundador)
+registerAssets20('sublabels', (s) => (s.subLabels ?? []).filter((x) => x.status === 'active' || x.status === 'distress').reduce((t, x) => t + subLabelValuation(s, x) * x.founderShare, 0));
 
 export function foundSubLabel(s: GameState, r: Rng, name: string, genre: string, capital: number, strategy: SubLabel['strategy']): SubLabel | L {
   if (s.config.role === 'artist') return l('Só gravadora ou híbrido.', 'Label or hybrid only.');
@@ -58,7 +74,8 @@ export function transferToSub(s: GameState, subId: string, amount: number): L | 
   const sl = s.subLabels.find((x) => x.id === subId);
   if (!sl || sl.status === 'closed' || sl.status === 'bankrupt') return l('Subselo inativo.', 'Sub-label inactive.');
   if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente.', 'Not enough cash.'));
-  post(s, `subtx:${sl.id}`, -amount, 'transfers', `Aporte em ${sl.name}`);
+  // r21 (B-1a): chave única por aporte — dois aportes na mesma semana não criam dinheiro no subselo
+  if (!postOrFail(s, `subtx:${sl.id}:${nextId(s, 'tx')}`, -amount, 'transfers', `Aporte em ${sl.name}`)) return l('Lançamento recusado.', 'Posting refused.');
   slog(sl, s.week, amount, 'Aporte da matriz');
   sl.revenueYear -= amount; // aporte não é receita
   return null;
@@ -69,7 +86,7 @@ export function assignAct(s: GameState, subId: string, actId: string): L | null 
   const act = s.acts[actId];
   if (!sl || !act || act.owner !== 'player') return l('Inválido.', 'Invalid.');
   if (sl.roster.length >= 3) return l('Cada subselo acompanha até três carreiras.', 'Each sub-label manages up to three careers.');
-  for (const o of s.subLabels) o.roster = o.roster.filter((x) => x !== actId);
+  transferAct(s, act, 'player', 'assigned'); // r21 (H-3): limpa qualquer outro subselo/pista antes de entrar neste
   sl.roster.push(actId);
   hist(s, sl, fmtL(l('{a} passa ao subselo.', '{a} moves to the sub-label.'), { a: act.name }));
   return null;
@@ -137,12 +154,14 @@ export function proposeDividend(s: GameState, subId: string, amount: number): L 
   return l('Sem maioria: o conselho vota no próximo mês.', 'No majority: the board votes next month.');
 }
 
-function payDividend(s: GameState, sl: SubLabel, amount: number): void {
+function payDividend(s: GameState, sl: SubLabel, amount: number): boolean {
+  // r21 (B-1b): a matriz só recebe se o lançamento entrar; chave única por distribuição
+  if (!postOrFail(s, `subdiv:${sl.id}:${nextId(s, 'tx')}`, Math.round(amount * sl.founderShare), 'dividends', `Dividendos de ${sl.name}`)) return false;
   slog(sl, s.week, -amount, 'Dividendos');
   sl.revenueYear += amount;
   sl.retained -= amount;
-  post(s, `subdiv:${sl.id}`, Math.round(amount * sl.founderShare), 'dividends', `Dividendos de ${sl.name}`);
   hist(s, sl, fmtL(l('Dividendos distribuídos.', 'Dividends paid out.'), {}));
+  return true;
 }
 
 export function buyBack(s: GameState, subId: string): L | null {
@@ -163,9 +182,9 @@ export function closeSubLabel(s: GameState, subId: string): L | null {
   const sl = s.subLabels.find((x) => x.id === subId);
   if (!sl || sl.status === 'closed') return l('Inválido.', 'Invalid.');
   if (sl.board.length) return l('Recompre os sócios antes de encerrar.', 'Buy out partners before closing.');
-  const debt = sl.loans.reduce((t, x) => t + x.balance, 0) + sl.creditors.reduce((t, c) => t + c.owed, 0) - Math.min(0, sl.cash);
+  const debt = subLabelDebt(sl); // r21 (B-4): caixa negativo e credor 'Fornecedores' são a mesma dívida
   if (debt > 0) {
-    if (s.player.cash < debt) return l('A matriz precisa cobrir a dívida do subselo.', 'The parent must cover the sub-label\'s debt.');
+    if (freeCash20(s) < debt) return cashWhy20(s, debt, l('A matriz precisa cobrir a dívida do subselo.', 'The parent must cover the sub-label\'s debt.')); // r21 (B-9)
     post(s, `subdebt:${sl.id}`, -debt, 'transfers', `Dívidas de ${sl.name}`);
   }
   if (sl.cash > 0) post(s, `subclose:${sl.id}`, sl.cash, 'transfers', `Saldo de ${sl.name}`);
@@ -174,7 +193,9 @@ export function closeSubLabel(s: GameState, subId: string): L | null {
   sl.creditors = [];
   sl.roster = [];
   sl.status = 'closed';
-  hist(s, sl, l('Encerrado; elenco volta à matriz.', 'Closed; roster returns to the parent.'));
+  // r21 (H-2): os masters do subselo encerrado voltam de fato à matriz (seguem rendendo em `distribute`)
+  for (const rel of Object.values(s.releases)) if (rel.owner === sl.id) rel.owner = 'player';
+  hist(s, sl, l('Encerrado; elenco e masters voltam à matriz.', 'Closed; roster and masters return to the parent.'));
   return null;
 }
 
@@ -206,19 +227,10 @@ export function subLabelsMonth(s: GameState, r: Rng): void {
       loan.balance -= Math.max(0, principal);
     }
     sl.loans = sl.loans.filter((x) => x.balance > 0);
-    // receitas: lançamentos do subselo já entram via distribute (owner = sl.id) → s.labels não existe; liquidamos aqui
-    for (const actId of sl.roster) {
-      const act = s.acts[actId];
-      if (!act) continue;
-      for (const rid of act.releases) {
-        const rel = s.releases[rid];
-        if (!rel || rel.owner !== sl.id || !rel.live) continue;
-        const w = rel.weekly.slice(-4).reduce((t, x) => t + x, 0);
-        const gross = Math.round(w * money(s, rel.type === 'lp' ? 6 : 1.2) * 0.8);
-        if (gross > 0) slog(sl, s.week, gross, `Vendas ${rel.title}`);
-        rel.revenue += gross;
-      }
-    }
+    // r21 (H-1): as vendas dos masters do subselo são liquidadas em `distribute` (market.ts) com royalties, recoupment,
+    // autores e fãs — e creditadas aqui pelo `subCredit`. Nada mais é liquidado neste loop.
+    // r21 (H-3): quem já não é do selo (saiu, foi vendido, assinou com rival) sai do roster do subselo
+    sl.roster = sl.roster.filter((id) => s.acts[id]?.owner === 'player');
     // decisões delegadas pela estratégia, respeitando orçamento e reserva
     const spend = Math.min(sl.budget, sl.cash - sl.reserve);
     if (spend > money(s, 500) && sl.status === 'active') {
@@ -286,6 +298,10 @@ export function subLabelsMonth(s: GameState, r: Rng): void {
       if (cr.patience <= 0 || sl.distressMonths >= 6) {
         sl.status = 'bankrupt';
         sl.roster = [];
+        // r21 (H-2): os masters vão de fato aos credores (saem do grupo; o artista segue recebendo a parte dele)
+        let lost = 0;
+        for (const rel of Object.values(s.releases)) if (rel.owner === sl.id) { rel.owner = 'indie'; lost++; }
+        if (lost) remember(s, 'sub_masters_lost', fmtL(l('Os credores de {n} ficam com {k} master(s) do subselo.', '{n}\'s creditors keep {k} master(s) of the sub-label.'), { n: sl.name, k: lost }), { important: true });
         hist(s, sl, l('Falência decretada pelos credores. Elenco volta à matriz; masters ficam com os credores.', 'Creditors forced bankruptcy. Roster returns to the parent; masters go to creditors.'));
         remember(s, 'sub_bankrupt', fmtL(l('O subselo {n} vai à falência.', 'Sub-label {n} goes bankrupt.'), { n: sl.name }), { important: true });
         s.player.reputation.institutional = clamp(s.player.reputation.institutional - 6, 0, 100);

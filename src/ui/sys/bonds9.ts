@@ -14,7 +14,7 @@ import {
   type Bond, type BondKind,
 } from '../../sim/sys/bonds9';
 import {
-  FOUND_COST, MV_END_NAME, PHASE_NAME, TIER_NAME, enemyKind, foundChance, foundMovement, leaveMovement, members, memberAffinity, mov9, movX, mvById, requestJoin, tierOf, type FoundSpec, type MvTier,
+  foundCost9, MV_END_NAME, PHASE_NAME, TIER_NAME, enemyKind, foundChance, foundMovement, leaveMovement, members, memberAffinity, mov9, movX, mvById, requestJoin, tierOf, type FoundSpec, type MvTier,
 } from '../../sim/sys/movements9';
 import { actTies, actOfPerson, social } from '../../sim/sys/social8';
 import { visibleAct } from '../../sim/future';
@@ -177,7 +177,7 @@ export function openFoundModal(s: GameState): void {
       h('label', null, t(l('Gênero de origem', 'Parent genre')), select(o.genre, [...new Set(hosts.map((a) => a.genre))].map((g) => ({ value: g, label: t(genreById[g]?.name ?? l(g)) })), (v) => { o.genre = v; draw(); })),
       h('div', null, t(l('Seus atos fundadores', 'Your founding acts')), ...hosts.map((a) => h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: o.acts.includes(a.id), onchange: (e: Event) => { o.acts = (e.target as HTMLInputElement).checked ? [...o.acts, a.id] : o.acts.filter((x) => x !== a.id); draw(); } }), ` ${a.name}`))),
       h('div', null, t(l('Aliados convidados (até 4)', 'Invited allies (up to 4)')), ...[0, 1, 2, 3].map((i) => select(o.allies[i] ?? '', [{ value: '', label: '—' }, ...allyOpts.map((x) => ({ value: x.a.id, label: `${x.a.name} (${t(cityById[x.a.city]?.name ?? l(x.a.city))})` }))], (v) => { const al = o.allies.slice(); al[i] = v; o.allies = al.filter(Boolean); draw(); }))),
-      h('div', { class: 'eval' }, t(l('Chance de pegar', 'Chance to catch on')), ': ', pill(pct(p), band(p)), ` · ${t(l('Custo', 'Cost'))} ${$(FOUND_COST)}`,
+      h('div', { class: 'eval' }, t(l('Chance de pegar', 'Chance to catch on')), ': ', pill(pct(p), band(p)), ` · ${t(l('Custo', 'Cost'))} ${$(foundCost9(s))}`,
         h('p', { class: 'muted small' }, t(l('Pesa: momento cultural do gênero, força da cena na cidade, obras fortes recentes, sua reputação com a crítica, quantos são da cidade e aliados (que só entram se admiram vocês).', 'What matters: the genre\'s cultural moment, the city scene, strong recent works, your critical reputation, how many are local and allies (who only join if they admire you).')))),
     ));
   };

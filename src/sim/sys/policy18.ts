@@ -7,6 +7,9 @@
 import { toReal } from '../../core/money';
 import { l, type L } from '../../data/world';
 import { expectedAdvance } from '../contracts';
+import { exerciseOption } from '../contracts2';
+import { recoup } from './contracts18';
+import { clamp } from '../../core/rng';
 import { monthlyCosts } from '../economy';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
@@ -14,7 +17,7 @@ import { pushInbox18, registerInboxKind, registerAdvisorTip } from '../inbox18';
 import { registerExplain } from '../explain18';
 import { stressOf } from '../stress17';
 import type { Act, GameState } from '../types';
-import { fmtL, money, playerActs } from '../util';
+import { fmtL, money, playerActs, post } from '../util';
 import { D16_GATES, D16_PAY, type Order16 } from './deleg16';
 import { renewChance, renewWithReading } from './explain12';
 import { c12 } from './tour12';
@@ -134,6 +137,21 @@ function renewals(s: GameState): void {
     P.tried[c.id] = s.week;
     const st = lawyer(s);
     const bonus = money(s, Math.round(expectedAdvance(s, act) * P.renewMax));
+    // r21 (1.17): opção de renovação no contrato é exercida pela política antes de vencer (com bônus de opção recuperável)
+    if ((c.options ?? 0) > 0 && act.trust >= P.minTrust) {
+      const opt = money(s, Math.round(expectedAdvance(s, act) * 0.3));
+      if (s.player.cash - opt >= reserveCents18(s)) {
+        if (!exerciseOption(s, id)) {
+          post(s, `pol18opt:${c.id}:${c.endWeek}`, -opt, 'advances', `Opção exercida: ${act.name}`);
+          recoup(s, c, 'adv', opt);
+          act.cash += opt;
+          act.trust = clamp(act.trust + 4, 0, 100);
+          P.n.renewed++;
+          emitFact(s, { kind: 'deal', actors: [id, 'player'], severity: 15, visibility: 'public', tags: ['good'], text: fmtL(l('{n} exerceu a opção de renovação de {a} (+1 ano, bônus {b}).', '{n} exercised {a}\'s renewal option (+1 year, {b} bonus).'), { n: st?.name ?? s.config.companyName, a: act.name, b: `$${Math.round(toReal(opt, s.year))}` }), src: 'policy18' });
+          continue;
+        }
+      }
+    }
     if (!st) { exc(s, 'renew', fmtL(l('O contrato de {a} vence em {w} semanas e ninguém da equipe negocia renovações (jurídico, empresário ou A&R).', '{a}\'s contract ends in {w} weeks and no one on staff negotiates renewals (legal, manager or A&R).'), { a: act.name, w: left }), id); continue; }
     if (act.trust < P.minTrust) { exc(s, 'renew', fmtL(l('{a} vence em {w} semanas, mas a confiança ({t}) está abaixo do mínimo da política ({m}): renovar fica com você.', '{a} ends in {w} weeks, but trust ({t}) is below the policy minimum ({m}): renewing is up to you.'), { a: act.name, w: left, t: Math.round(act.trust), m: P.minTrust }), id); continue; }
     if (s.player.cash - bonus < reserveCents18(s)) { exc(s, 'renew', fmtL(l('Renovar {a} custaria {b} e furaria a reserva mínima.', 'Renewing {a} would cost {b} and break the minimum reserve.'), { a: act.name, b: `$${Math.round(toReal(bonus, s.year))}` }), id); continue; }

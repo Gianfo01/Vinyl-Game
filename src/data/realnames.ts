@@ -149,8 +149,9 @@ export const realFounded = (id: string, founded: number): number => Math.max(fou
 
 /** Trocas de texto fixo (frases geradas com nomes ficcionais embutidos). */
 export const REAL_TEXT: [string, string][] = [
-  ['WorldSound 100', 'Billboard Hot 100'],
-  ['WorldSound Albums', 'Billboard 200'],
+  // r21 (K4): a parada mundial continua "WorldSound 100"/"WorldSound Albums" mesmo com nomes reais; "Billboard Hot 100" é só
+  // a parada dos EUA (countries.ts USA.chart; o nome fictício "WorldSound 100 EUA" vira o real aqui)
+  ['WorldSound 100 EUA', 'Billboard Hot 100'],
   ['WorldSound Weekly', 'Billboard'],
   ['Gramófonos de Ouro', 'Grammy Awards'],
   ['Golden Gramophones', 'Grammy Awards'],

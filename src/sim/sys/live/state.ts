@@ -4,7 +4,7 @@
 import type { L } from '../../../data/world';
 import { registerExt4 } from '../../ext4';
 import type { GameState } from '../../types';
-import { eff360 } from '../deal360_17';
+import { labelRate } from '../deal360_17';
 
 /** Notas de um show (como empolgação/intensidade/náusea das montanhas-russas). */
 export interface ShowNote {
@@ -193,8 +193,5 @@ export function isMine(s: GameState, actId: string): boolean {
 export function liveShare(s: GameState, actId: string): number {
   const a = s.acts[actId];
   if (!a) return 0;
-  if (a.playerBand) return 1;
-  const c = a.contractId ? s.contracts[a.contractId] : undefined;
-  if (c && c.party === 'player' && c.model === '360') return eff360(a, c.share360);
-  return 0;
+  return labelRate(s, a, 'live'); // r21 (H-8): régua única
 }

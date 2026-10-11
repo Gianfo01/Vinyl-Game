@@ -26,6 +26,7 @@ import { setAgeResolver } from '../pixel/age17';
 import { portraitCanvas } from '../pixel/avatar';
 import { store } from '../store';
 import { meter } from '../vis';
+import { confirm21 } from '../ask21';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -72,7 +73,7 @@ function identityBox(s: GameState): HTMLElement {
     isQueer(me) && me.c === 'closet' ? h('div', null,
       h('p', { class: 'small warn' }, t(fmtL(l('No armário: +1,5 de estresse por mês e risco de exposição de {r}/mês (sobe com sua fama, com casos do mesmo sexo e com quem sabe; casamento de fachada corta 65%).', 'In the closet: +1.5 stress per month and an outing risk of {r}/month (rises with fame, same-sex affairs and people who know; a lavender marriage cuts it by 65%).'), { r: pct(risk) }))),
       h('div', { class: 'row wrap' },
-        btn(l('Sair do armário', 'Come out'), () => { if (confirm(t(acc < 0.55 ? l('Clima hostil: espere reação negativa (reputação e boatos). Continuar?', 'Hostile climate: expect backlash (reputation and rumors). Continue?') : l('Assumir publicamente?', 'Come out publicly?')))) run(comeOut(s, 'player', 'chose'), l('ok', 'ok')); }, { primary: true }),
+        btn(l('Sair do armário', 'Come out'), () => { confirm21(t(acc < 0.55 ? l('Clima hostil: espere reação negativa (reputação e boatos). Continuar?', 'Hostile climate: expect backlash (reputation and rumors). Continue?') : l('Assumir publicamente?', 'Come out publicly?')), () => { run(comeOut(s, 'player', 'chose'), l('ok', 'ok')); }); }, { primary: true }),
         !me.lav && !life(s).partner ? btn(l('Casamento de fachada ($8.000)', 'Lavender marriage ($8,000)'), () => { const o = ownerOf(s); const c = money(s, 8000); if (o.wealth < c) return run(l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.')); o.wealth -= c; run(lavender(s, 'player', rngOf(s)), l('ok', 'ok')); }) : null,
       )) : null,
     h('div', { class: 'row wrap' }, btn(l('Declarar apoio à causa LGBT', 'Publicly back LGBT rights'), () => run(declareAlly(s), l('ok', 'ok')), { disabled: (rec?.ally ?? 0) >= s.year - 1, title: l('Artistas LGBT do seu selo ganham moral e propostas a artistas LGBT melhoram por 6 anos; religiosos estritos se ressentem; em país hostil, a reputação institucional cai.', 'LGBT acts on your label gain morale and offers to LGBT acts improve for 6 years; strict religious acts resent it; in a hostile country, institutional reputation drops.') })),
@@ -100,8 +101,8 @@ function partnerBox(s: GameState): HTMLElement | null {
       h('p', { class: 'small' }, h('b', null, t(l('Litigioso: ', 'Contested: '))), terms(ct)),
       am.why.length ? h('ul', { class: 'small muted' }, am.why.map((w) => h('li', null, t(w)))) : null,
       h('div', { class: 'row wrap' },
-        btn(l('Divórcio amigável', 'Amicable divorce'), () => { if (confirm(t(l('Confirmar divórcio amigável?', 'Confirm amicable divorce?')))) run(divorce17(s, 'amicable', rngOf(s)), l('Divórcio feito.', 'Divorce done.')); }, { disabled: pt.affinity < 15, title: l('Exige afinidade ≥ 15.', 'Needs affinity ≥ 15.') }),
-        btn(l('Divórcio litigioso', 'Contested divorce'), () => { if (confirm(t(l('Confirmar divórcio na justiça?', 'Confirm a court divorce?')))) run(divorce17(s, 'court', rngOf(s)), l('Divórcio feito.', 'Divorce done.')); }, { danger: true }),
+        btn(l('Divórcio amigável', 'Amicable divorce'), () => { confirm21(t(l('Confirmar divórcio amigável?', 'Confirm amicable divorce?')), () => { run(divorce17(s, 'amicable', rngOf(s)), l('Divórcio feito.', 'Divorce done.')); }); }, { disabled: pt.affinity < 15, title: l('Exige afinidade ≥ 15.', 'Needs affinity ≥ 15.') }),
+        btn(l('Divórcio litigioso', 'Contested divorce'), () => { confirm21(t(l('Confirmar divórcio na justiça?', 'Confirm a court divorce?')), () => { run(divorce17(s, 'court', rngOf(s)), l('Divórcio feito.', 'Divorce done.')); }); }, { danger: true }),
       )) : null,
   );
 }

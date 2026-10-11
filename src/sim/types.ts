@@ -199,6 +199,10 @@ export interface Person {
   retireAge?: number;
   /** personagem do jogador (rodada 5) */
   isPlayer?: boolean;
+  /** r21 (C-9): sexo (gerado pelo nome ou dado real); ausente = derivado pelo nome/hash em persona13 */
+  sex?: 'm' | 'f';
+  /** r21 (C-2): ano de morte documentado (pessoa real) ainda no futuro — só quem tem isso fica fora do sorteio de morte */
+  fate?: number;
 }
 
 export type ActStatus = 'emerging' | 'active' | 'hiatus' | 'retired' | 'split';
@@ -231,6 +235,8 @@ export interface Act {
   releases: string[];
   lastRelease: number; // semana absoluta
   hiatusUntil?: number;
+  /** r21 (C-5): motivo da pausa atual; 'death' = luto (não registra "volta da pausa" nem força status) */
+  hiatusWhy?: 'death';
   careerEnd: number; // ano previsto de aposentadoria
   peakChart: number; // melhor posição
   hits: number; // top 10
@@ -296,6 +302,10 @@ export interface Song {
   instrumental?: boolean;
   /** rodada 10: voz gravada por um cantor de estúdio contratado */
   sessionVocal?: boolean;
+  /** r21 (E-12): semana em que a faixa foi gravada (closeTrack) — distinta da semana da composição */
+  recordedWeek?: number;
+  /** r21 (E-7): bônus de Q vindo de perks (mod songQ) que não mexem nos atributos; refreshQ soma de volta */
+  qBonus?: number;
 }
 
 /** Som de uma faixa: 6 eixos 0–100 (energia, densidade, eletrônico, foco vocal, polimento, experimentação). */
@@ -349,6 +359,8 @@ export interface Release {
   live: boolean;
   kind?: 'standard' | 'demo' | 'deluxe' | 'limited' | 'anniversary' | 'tribute' | 'remix' | 'live' | 'compilation' | 'posthumous' | 'translation';
   returns?: number;
+  /** Multiplicador (≥ 1) do rollout e superfãs aplicado ao apelo NA ESTREIA (market.launchPending). Só lá: ninguém o lê depois
+   *  do lançamento — impulsos pós-lançamento (certificação, sync, remix, prêmio…) vão para `sys/boost21.addBoost21`. */
   hypeBoost?: number;
   rolloutId?: string;
   /** rodada 7: discografia anterior ao início da run (real ou simulada) */
@@ -363,6 +375,8 @@ export interface Release {
   fc?: number;
   fa?: number;
   expl?: boolean;
+  /** r21 (E-10): catálogo "revivido" (sync, luto, documentário): a idade comercial conta a partir daqui; `week` fica imutável */
+  revivedWeek?: number;
 }
 
 export interface AutopsyFactor {
@@ -477,6 +491,8 @@ export interface Label {
   playbook?: string;
   /** rodada 10: id do líder atual (ver sys/leaders10.ts) */
   leaderId?: string;
+  /** r21 (G-7): extrato curto do selo rival (rivalledger21.labelPost), últimas 60 entradas */
+  ledger21?: { w: number; v: number; cat: string; memo: string }[];
   /** rodada 10: nome do CEO veio dos líderes antes do 1º mês (rivals2 ainda sorteia um nome, para não mudar o fluxo do acaso) */
   ceoSeed10?: 1;
 }
@@ -498,6 +514,8 @@ export interface StaffMember {
   salary: number; // centavos/mês
   hiredWeek: number;
   trait?: string;
+  /** r21 (1.11): ano de nascimento (gerado uma vez; herdeiro-funcionário envelhece de verdade) */
+  born?: number;
 }
 
 export interface LedgerEntry {
@@ -675,7 +693,9 @@ export interface GameState extends ExtState {
   briefing: Notification[];
   genrePop: Record<string, number>; // popularidade 0..2
   scenes: Record<string, number>; // força da cena "cidade:gênero"
-  economy: { cycle: number; recession: boolean; recessionUntil: number; rightsMult: number; strikeUntil: number; investorShare: number; investorUntil: number };
+  economy: { cycle: number; recession: boolean; recessionUntil: number; rightsMult: number; strikeUntil: number; investorShare: number; investorUntil: number;
+    /** r21 (B-7): prejuízo fiscal acumulado (centavos) que abate a base do imposto dos anos seguintes */
+    lossCarry?: number };
   awards: { year: number; category: string; releaseId?: string; actId?: string; name: string; byPlayer: boolean }[];
   professionals: StaffMember[];
   /** atos do catálogo que ainda vão surgir nesta run */

@@ -4,7 +4,7 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
-import { availableFormats, composeSongs, scheduleRelease, songQ } from './production';
+import { availableFormats, composeSongs, refreshQ, scheduleRelease } from './production';
 import type { Act, GameState, Person } from './types';
 import type { HologramShow } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
@@ -155,8 +155,9 @@ export function posthumousRelease(s: GameState, r: Rng, personId: string, author
     const song = s.songs[id];
     song.performance = clamp(song.melody * 0.7 + (aiVoiceReady(s) ? 15 : 5) + r.normal(0, 5), 5, 100);
     song.production = clamp(55 + r.normal(0, 6), 5, 100);
-    song.q = songQ(song);
     song.recorded = true;
+    song.recordedWeek = s.week;
+    refreshQ(song); // r21 (E-7)
     song.posthumous = true;
     song.vault = false;
     // a carreira precisa estar com o selo para o lançamento
@@ -193,8 +194,9 @@ export function aiVoiceSongs(s: GameState, r: Rng, personId: string, n: number, 
     song.performance = clamp(p.skills.voice * 0.9 + r.normal(0, 4), 5, 100);
     song.production = clamp(70 + r.normal(0, 5), 5, 100);
     song.originality = clamp(song.originality - 10, 0, 100);
-    song.q = songQ(song);
     song.recorded = true;
+    song.recordedWeek = s.week;
+    refreshQ(song); // r21 (E-7)
   }
   if (act.owner !== 'player') act.owner = 'player';
   s.player.neural.neuralAdopted = true;

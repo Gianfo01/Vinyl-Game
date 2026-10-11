@@ -325,6 +325,8 @@ export function runEdition(s: GameState, r: Rng, f: OwnFestival): FestEdition | 
   return edition;
 }
 
+// SUBSTITUÍDO: sys/fest12.ts troca este gancho por `festMonth` (replaceSimHook) e assume as edições; o registro
+// fica aqui só para fixar a posição na ordem dos ganchos. `runEdition` segue exportado para uso direto.
 registerSimHook('month', 'live-festival', (s, r) => {
   for (const f of liveOf(s).fests) if (s.month === f.month && s.year >= f.nextYear) runEdition(s, r, f);
 });

@@ -30,7 +30,7 @@ function chartTable(s: GameState, key: string, kind: ChartKind): HTMLElement {
   const rows = board(s, key, kind);
   if (!rows.length) return h('p', { class: 'muted small' }, t(l('Sem dados nesta semana ainda (avance uma semana).', 'No data this week yet (advance a week).')));
   const unit = t(kindUnit(s, kind));
-  return h('table', { class: 'tbl chart' },
+  return h('div', { class: 'tbl-scroll' }, h('table', { class: 'tbl chart' }, // r21 (§2.3.15): rola na horizontal no celular
     h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(l('Antes', 'Last'))), h('th', null, t(l('Título', 'Title'))), h('th', null, t(l('Ato', 'Act'))), h('th', null, t(l('Selo', 'Label'))), h('th', null, t(l('Sem.', 'Wks'))), h('th', null, unit))),
     h('tbody', null, rows.map((e) => {
       const r = s.releases[e.relId];
@@ -47,7 +47,7 @@ function chartTable(s: GameState, key: string, kind: ChartKind): HTMLElement {
         h('td', null, N(e.u)),
       );
     })),
-  );
+  ));
 }
 
 export function countryChartsTab(s: GameState): HTMLElement {

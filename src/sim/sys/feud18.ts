@@ -22,6 +22,7 @@ import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import { per13 } from './persona13';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { allowed21 } from '../allowed21';
 
 // ---------------------------------------------------------------- regras de história
 
@@ -105,15 +106,20 @@ export const activeFeuds18 = (s: GameState): Feud18[] => feud18(s).f.filter((f) 
 const both = (s: GameState, f: Feud18): string => `${s.acts[f.a]?.name ?? '?'} × ${s.acts[f.b]?.name ?? '?'}`;
 /** Pode haver violência (degraus 3+)? Nunca com gente protegida (modo exato). */
 export function violentOk18(s: GameState, f: Feud18): boolean {
-  return ![f.a, f.b].some((id) => shield18(s, id));
+  // r21 (G-5): filtro de conteúdo `violence` ou ato com regra RS → a escada para antes da briga de verdade
+  return ![f.a, f.b].some((id) => shield18(s, id) || !allowed21(s, 'violence', id));
 }
+/** r21 (G-5): tiros/morte só sem filtro `death` e sem ato RS. */
+export const deathOk18 = (s: GameState, f: Feud18): boolean => violentOk18(s, f) && ![f.a, f.b].some((id) => !allowed21(s, 'death', id));
 /** Teto da escada: atos fora da rua só chegam a tiros com laço de gangue; protegidos não entram. */
 export function cap18(s: GameState, f: Feud18): number {
   const A = s.acts[f.a], B = s.acts[f.b];
-  if (!A || !B || !violentOk18(s, f)) return 0;
+  if (!A || !B) return 0;
+  if ([f.a, f.b].some((id) => shield18(s, id))) return 2; // protegidos: no máximo guerra de fãs
+  if (!violentOk18(s, f)) return 3; // r21 (G-5): sem violência (filtro/RS): no máximo o empurra-empurra
   const tied = !!crime17(s).ties[f.a] || !!crime17(s).ties[f.b];
   const street = STREET18(A.genre) || STREET18(B.genre);
-  return tied || street ? 5 : 4;
+  return (tied || street) && deathOk18(s, f) ? 5 : 4;
 }
 
 /** Ganho de tensão por fase do Mestre (dm18 registra; padrão neutro). */

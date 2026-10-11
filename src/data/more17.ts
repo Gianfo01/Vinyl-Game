@@ -17,6 +17,8 @@ const s1 = (n: string, g: string, c: string, cn: string, d: number, e: number, t
 /** one-hit wonders e hits planetários de fora dos EUA (ver data/relevance17 GLOBAL17) */
 export const OHW17 = new Set(['Luis Fonsi', 'Kaoma', 'Las Ketchup', 'Lou Bega', 'Gotye', 'Carly Rae Jepsen', 'Dexys Midnight Runners', 'Soft Cell', 'Vanilla Ice', 'Bobby McFerrin', 'Survivor', 'Haddaway', 'Los Bravos', 'Mungo Jerry', 'Right Said Fred', 'Dead or Alive', 'Baauer', 'Gilbert O\'Sullivan', 'The Winstons', 'Desmond Dekker', 'Coolio', 'Robin Thicke']);
 
+// r21 (J-6): Chic, The Stone Roses e The Four Seasons já existem em realacts_us/eu (o carregador descartava a cópia daqui);
+// os dados que só esta rodada tinha ("Good Times"; passagens de DeVito e Massi) foram mesclados lá.
 export const REAL_17: RealArtist[] = [
   // ——— hits planetários / one-hit wonders ———
   s1('Luis Fonsi', 'pop_latino', 'san_juan', 'PRI', 1998, 0, 2, 1978, 0, 'v', ['Comenzaré|1998', 'Despacito|2017|s']),
@@ -41,7 +43,6 @@ export const REAL_17: RealArtist[] = [
   // ——— donos de covers e samples famosos ———
   s1('Big Mama Thornton', 'rnb', 'houston', 'USA', 1951, 1984, 2, 1926, 1984, 'v', ['Hound Dog|1953|s', 'Ball and Chain|1968|s']),
   s1('Gloria Jones', 'soul', 'los_angeles', 'USA', 1964, 0, 3, 1945, 0, 'v', ['Tainted Love|1964|s']),
-  bx('Chic', 'disco', 'new_york', 'USA', 1977, 1983, 1, 'Nile Rodgers:g:1952|Bernard Edwards:b:1952:1996|Tony Thompson:d:1954:2003', ['Le Freak|1978|s', 'Good Times|1979|s', 'Risqué|1979'], [[1992]]),
   bx('The Sugarhill Gang', 'hiphop', 'new_york', 'USA', 1979, 1985, 2, 'Master Gee:m|Wonder Mike:m|Big Bank Hank:m:1956:2014', ['Rapper\'s Delight|1979|s']),
   s1('Biz Markie', 'hiphop', 'new_york', 'USA', 1988, 2021, 3, 1964, 2021, 'm', ['Goin\' Off|1988', 'Just a Friend|1989|s', 'I Need a Haircut|1991']),
   s1('Gilbert O\'Sullivan', 'soft_rock', 'london', 'IRL', 1967, 0, 2, 1946, 0, 'k', ['Alone Again (Naturally)|1972|s', 'Clair|1972|s']),
@@ -57,7 +58,6 @@ export const REAL_17: RealArtist[] = [
   bx('Procol Harum', 'art_rock', 'london', 'GBR', 1967, 1977, 2, 'Gary Brooker:k:1945:2022|Matthew Fisher:k:1946:0:1967:1969|Robin Trower:g:1945:0:1967:1971', ['A Whiter Shade of Pale|1967|s'], [[1991]]),
   // ——— cenas locais ———
   bx('Mudhoney', 'grunge', 'seattle', 'USA', 1988, 0, 3, 'Mark Arm:v:1962|Steve Turner:g:1965|Dan Peters:d:1967|Matt Lukin:b:1964:0:1988:1999', ['Superfuzz Bigmuff|1988', 'Touch Me I\'m Sick|1988|s']),
-  bx('The Stone Roses', 'indie', 'manchester', 'GBR', 1985, 1996, 2, 'Ian Brown:v:1963|John Squire:g:1962|Mani:b:1962|Reni:d:1964', ['The Stone Roses|1989', 'Second Coming|1994'], [[2011, 2017]]),
   bx('Happy Mondays', 'indie', 'manchester', 'GBR', 1987, 1993, 3, 'Shaun Ryder:v:1962|Paul Ryder:b:1964:2022|Bez:d:1964', ['Pills \'n\' Thrills and Bellyaches|1990'], [[1999, 2001], [2012]]),
   s1('Tricky', 'trip_hop', 'bristol', 'GBR', 1995, 0, 3, 1968, 0, 'm', ['Maxinquaye|1995']),
   s1('Roni Size', 'dnb', 'bristol', 'GBR', 1997, 0, 3, 1969, 0, 'p', ['New Forms|1997']),
@@ -73,7 +73,6 @@ export const REAL_17: RealArtist[] = [
   // ——— nomes que faltavam ———
   s1('Johnny Mathis', 'trad_pop', 'san_francisco', 'USA', 1956, 0, 2, 1935, 0, 'v', ['Chances Are|1957|s', 'Johnny\'s Greatest Hits|1958']),
   s1('Perry Como', 'trad_pop', 'new_york', 'USA', 1943, 1994, 2, 1912, 2001, 'v', ['Catch a Falling Star|1957|s']),
-  bx('The Four Seasons', 'doo_wop', 'new_york', 'USA', 1962, 0, 2, 'Frankie Valli:v:1934|Bob Gaudio:k:1942|Tommy DeVito:g:1928:2020:1960:1970|Nick Massi:b:1927:2000:1960:1965', ['Sherry|1962|s', 'Big Girls Don\'t Cry|1962|s']),
   s1('Herb Alpert', 'exotica', 'los_angeles', 'USA', 1962, 0, 2, 1935, 0, 'h', ['Whipped Cream & Other Delights|1965']),
   s1('Gil Scott-Heron', 'soul', 'new_york', 'USA', 1970, 2011, 3, 1949, 2011, 'v', ['The Revolution Will Not Be Televised|1971|s']),
   s1('Captain Beefheart', 'art_rock', 'los_angeles', 'USA', 1966, 1982, 3, 1941, 2010, 'v', ['Trout Mask Replica|1969']),

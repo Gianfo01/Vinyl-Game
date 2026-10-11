@@ -7,6 +7,7 @@ import { PALETTES, eraOf } from '../palette';
 import { newCtx, finish, type PlaceModel } from './model';
 import * as R from './rooms';
 import * as V from './venues';
+import { LruMap } from '../../../core/lru21';
 
 export type { PlaceKind } from '../../../sim/sys/scenes/state';
 export type { PlaceModel, Spot } from './model';
@@ -92,7 +93,7 @@ const BUILD: Record<PlaceKind, Builder> = {
   holo_stage: V.holoStage,
 };
 
-const cache = new Map<string, PlaceModel>();
+const cache = new LruMap<string, PlaceModel>(500); // r21 (I-10): teto
 
 /** Modelo do local (cacheado por tipo, era e variante). */
 export function buildPlace(kind: PlaceKind, year: number, variant = 0): PlaceModel {

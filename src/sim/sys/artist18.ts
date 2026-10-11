@@ -27,7 +27,7 @@ import { defaultRights } from '../rights';
 import type { Act, Contract, GameState, Label } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ability18 } from './ability18';
-import { PKG18, packaging18, type Clauses18 } from './contracts18';
+import { PKG18, packaging18, recoup, type Clauses18 } from './contracts18';
 import { eraK19, eraMasterL19, eraWord19, eraOffer19, eraOfferText19, expRoy19, hasMaster19 } from './eracon19';
 import { fameIn, homeA3 } from './fame16';
 import { m14, mgrActive, mgrName } from './managers14';
@@ -473,7 +473,7 @@ function applyReneg(s: GameState, o: Offer18): { ok: boolean; text: L } {
   const st = a18(s), d = st.deal!, c = s.contracts[d.cid];
   if (!c) return { ok: false, text: l('Contrato não encontrado.', 'Contract not found.') };
   c.royalty = o.roy; c.endWeek += Math.round(Math.max(0, o.term) * WK); c.releasesOwed += Math.max(0, o.albums);
-  if (o.adv) { c.recoupBalance += o.adv; post(s, `a18radv:${o.id}`, o.adv, 'advances', `Bônus de renegociação ${o.who}`); led(s, 'adv', o.adv, l('Bônus de renegociação (recuperável)', 'Renegotiation bonus (recoupable)')); commission(s, o.adv, 'adv'); }
+  if (o.adv) { recoup(s, c, 'adv', o.adv); post(s, `a18radv:${o.id}`, o.adv, 'advances', `Bônus de renegociação ${o.who}`); led(s, 'adv', o.adv, l('Bônus de renegociação (recuperável)', 'Renegotiation bonus (recoupable)')); commission(s, o.adv, 'adv'); }
   d.lastReneg = s.week; o.st = 'acc';
   say(st, s, fmtL(l('Contrato com {b} renegociado: royalty {r}%.', 'Deal with {b} renegotiated: royalty {r}%.'), { b: o.who, r: Math.round(o.roy * 100) }));
   return { ok: true, text: fmtL(l('Renegociado: royalty {r}%, prazo estendido.', 'Renegotiated: royalty {r}%, term extended.'), { r: Math.round(o.roy * 100) }) };
@@ -763,7 +763,7 @@ function labelMonth(s: GameState, r: Rng, a: Act, dl: Record<string, number>): v
     if (wants && (c.options ?? 0) > 0) {
       c.options = (c.options ?? 0) - 1; c.endWeek += 52; c.releasesOwed += 1;
       const pay = r100(s, exp18(s, a) * 0.3);
-      c.recoupBalance += pay; lb.cash -= pay;
+      recoup(s, c, 'adv', pay); lb.cash -= pay;
       post(s, `a18opt:${c.id}:${c.options}`, pay, 'advances', `Opção exercida por ${lb.name}`); led(s, 'adv', pay, fmtL(l('{b} exerceu a opção (+1 ano, +1 disco)', '{b} exercised the option (+1 year, +1 record)'), { b: lb.name })); commission(s, pay, 'opt');
       pushInbox18(s, 'a18_info', { from: lb.name, subject: l('O selo exerceu a opção', 'The label exercised its option'), body: fmtL(l('{b} decidiu ficar com vocês por mais um ano (cláusula de opção): +1 disco devido, adiantamento de opção {v}. Opções restantes: {n}.', '{b} chose to keep you another year (option clause): +1 record owed, option payment {v}. Options left: {n}.'), { b: lb.name, v: fmtMoney(s, pay), n: c.options ?? 0 }) });
     } else if (wants) {
@@ -817,7 +817,7 @@ registerSimHook('launch', 'artist18', (s, _r, arg) => {
   rel.marketingE = Math.min(0.95, rel.marketingE + 0.04 + d.prio / 1000);
   a.momentum = clamp(a.momentum + 3 + d.prio / 20, 0, 100);
   const rec = Math.round(M * (k?.mkt ?? 0));
-  if (rec) c.recoupBalance += rec;
+  if (rec) recoup(s, c, 'adv', rec); // (cláusula do selo NPC já aplicada em `rec`)
   led(s, 'mkt', 0, fmtL(l('{b} investiu {m} em divulgação de "{t}" ({r} recuperável)', '{b} spent {m} promoting "{t}" ({r} recoupable)'), { b: lb.name, m: fmtMoney(s, M), t: rel.title, r: fmtMoney(s, rec) }));
 });
 
@@ -839,7 +839,7 @@ postHooks18().push((s, key, amount, cat) => {
     const cap = r100(s, 1500 + labelClout(s, d.lb) * 6000);
     const v = Math.min(Math.round(-amount * (d.tour ? 0.5 : 0.25)), cap);
     if (v <= 0 || !post(s, `a18tour:${key}`, v, 'advances', `Apoio de turnê ${nameOf(s, d.lb)}`)) return;
-    if (d.tour) c.recoupBalance += v;
+    if (d.tour) recoup(s, c, 'adv', v);
     led(s, 'tour', v, fmtL(l('Apoio de turnê de {b}{r}', 'Tour support from {b}{r}'), { b: nameOf(s, d.lb), r: d.tour ? l(' (recuperável)', ' (recoupable)') : '' }));
   }
 });
@@ -894,7 +894,7 @@ function otherMoney(s: GameState, r: Rng, a: Act, dl: Record<string, number>): v
       st.dev = undefined;
       sign18(s, o);
       const c = st.deal ? s.contracts[st.deal.cid] : undefined;
-      if (c) c.recoupBalance += dv.paid;
+      if (c) recoup(s, c, 'adv', dv.paid);
       pushInbox18(s, 'a18_info', { from: lb.name, subject: l('O selo exerceu a opção de desenvolvimento', 'The label exercised the development option'), tone: 'good', body: fmtL(l('{b} gostou do que viu: vocês estão contratados nos termos combinados (a mesada entra no recuperável).', '{b} liked what it saw: you are signed on the pre-agreed terms (the stipend joins the recoupable balance).'), { b: lb.name }) });
     } else if (dv.until <= s.week) {
       st.dev = undefined;

@@ -34,6 +34,7 @@ import { chips, ic, meter, stat, tabs } from '../vis';
 import { ownerTab } from './people/area';
 import { personalAgendaTab, possessionsTab } from './goods8';
 import { careTab, heartTab, kidsTab, looksTab } from './life17';
+import { confirm21 } from '../ask21';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -122,7 +123,7 @@ function loveTab(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' },
       pt.stage === 'dating' ? btn(l('Pedir em casamento (anel $1.500)', 'Propose (ring $1,500)'), 1, () => run(propose(s, r())), { primary: true }) : null,
       pt.stage === 'engaged' ? h('span', { class: 'row' }, select<WeddingKind>(wedding, (Object.keys(WEDDINGS) as WeddingKind[]).map((k) => ({ value: k, label: `${t(WEDDINGS[k].name)} · ${$(money(s, WEDDINGS[k].cost))}` })), (v) => (wedding = v)), btn(l('Casar', 'Get married'), 2, () => run(marry(s, wedding)), { primary: true })) : null,
-      pt.stage === 'married' ? h('small', { class: 'muted' }, t(l('Divórcio (amigável ou litigioso, com partilha e pensões): aba Coração.', 'Divorce (amicable or contested, with split and support): Heart tab.'))) : btn(l('Terminar', 'Break up'), 0, () => { if (confirm(t(l('Tem certeza?', 'Are you sure?')))) run(breakUp(s)); }),
+      pt.stage === 'married' ? h('small', { class: 'muted' }, t(l('Divórcio (amigável ou litigioso, com partilha e pensões): aba Coração.', 'Divorce (amicable or contested, with split and support): Heart tab.'))) : btn(l('Terminar', 'Break up'), 0, () => { confirm21(t(l('Tem certeza?', 'Are you sure?')), () => { run(breakUp(s)); }); }),
     ),
   ) : section(t(l('Vida amorosa', 'Love life')),
     h('p', { class: 'muted' }, t(l('Solteiro(a). Saia para conhecer gente nova (ou vá a uma festa da indústria, na aba Lazer, onde dá para conhecer artistas).', 'Single. Go out and meet new people (or go to an industry party, in the Leisure tab, where you can meet artists).'))),
@@ -201,7 +202,7 @@ function musicTab(s: GameState): HTMLElement {
     ),
     act ? section(t(l('Seu projeto: {a}', 'Your project: {a}'), { a: act.name }),
       h('div', { class: 'row wrap' }, h('button', { class: 'btn small', onclick: () => openActPage(act.id) }, ic('guitar'), ' ', t(l('Página do artista', 'Artist page'))),
-        btn(l('Sair da banda', 'Leave the band'), 0, () => { if (confirm(t(l('Sair de {a}?', 'Leave {a}?'), { a: act.name }))) run(leaveBand(s), l('Você saiu.', 'You left.')); })),
+        btn(l('Sair da banda', 'Leave the band'), 0, () => { confirm21(t(l('Sair de {a}?', 'Leave {a}?'), { a: act.name }), () => { run(leaveBand(s), l('Você saiu.', 'You left.')); }); })),
       h('p', { class: 'small muted' }, t(l('A agenda, gravações e shows do projeto ficam na área Artistas, como qualquer ato do selo. Seus atributos contam na performance.', 'The project\'s agenda, recordings and shows live in the Artists area like any act on the label. Your attributes count in performance.'))),
     ) : section(t(l('Começar um projeto', 'Start a project')),
       h('div', { class: 'row wrap' },

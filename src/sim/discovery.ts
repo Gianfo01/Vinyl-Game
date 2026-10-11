@@ -3,7 +3,7 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { CITIES, FAMILIES, MARKETS, cityById, familyOf, l, type L, type MarketId } from '../data/world';
-import { acceptOffer, defaultOffer, evaluateOffer, expectedAdvance, signWithRival } from './contracts';
+import { defaultOffer, evaluateOffer, expectedAdvance, signAct, signWithRival } from './contracts';
 import { personName, langForCity } from './people';
 import type { GameState } from './types';
 import type { Auction, Scout } from './xtypes';
@@ -253,12 +253,12 @@ export function auctionsWeek(s: GameState, r: Rng): void {
     scored.sort((a, b) => b.v - a.v);
     const w = scored[0];
     if (w.p === 'player') {
-      if (s.player.cash < w.b.advance) {
+      const sg = signAct(s, act, { advance: w.b.advance, royalty: w.b.royalty }, 'auction'); // r21 (H-7): caminho único (elegibilidade + caixa livre)
+      if (!sg.ok) {
         au.status = 'lost';
         notify(s, fmtL(l('Você venceu o leilão de {a}, mas não tinha caixa para o adiantamento.', 'You won the auction for {a} but lacked cash for the advance.'), { a: act.name }), 'bad');
         continue;
       }
-      acceptOffer(s, act, { ...defaultOffer(s, act), advance: w.b.advance, royalty: w.b.royalty, id: nextId(s, 'o'), week: s.week, status: 'pending' });
       au.status = 'won';
       remember(s, 'auction_won', fmtL(l('Você vence o leilão por {a}.', 'You win the bidding war for {a}.'), { a: act.name }), { actId: act.id, important: true });
     } else {

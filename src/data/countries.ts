@@ -233,7 +233,11 @@ function interp(curve: Curve, year: number): number {
   return curve[curve.length - 1][1];
 }
 
+/** r21 (J-10): fator por década antes da curva (que começa em 1920): 1889 = 0,6×, 1900 = 0,7×, 1910 = 0,85× do valor de 1920. */
+const PRE1920: Curve = [[1889, 0.6], [1900, 0.7], [1910, 0.85], [1920, 1]];
+
 export function countryPop(c: CountryInfo, year: number): number {
+  if (year < c.pop[0][0] && c.pop[0][0] >= 1920) return c.pop[0][1] * interp(PRE1920, year);
   return interp(c.pop, year);
 }
 

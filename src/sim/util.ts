@@ -41,6 +41,9 @@ export function money(s: GameState, realDollars: number): number {
 
 export type Param = string | number | L;
 
+/** r21 (H-10): leitura qualitativa de uma chance (nunca a % exata): baixa / média / alta. */
+export const chanceBand = (p: number): L => (p >= 0.6 ? { pt: 'alta', en: 'high' } : p >= 0.35 ? { pt: 'média', en: 'medium' } : { pt: 'baixa', en: 'low' });
+
 export function fmtL(text: L, params: Record<string, Param> = {}): L {
   const rep = (str: string, lang: 'pt' | 'en') =>
     str.replace(/\{(\w+)\}/g, (_, k) => {
@@ -74,6 +77,15 @@ export function post(s: GameState, key: string, amount: number, cat: string, mem
   book18(s, sec, cat, key, amount, cash);
   if (sec === 'cost') for (const fn of postHooks18()) fn(s, key, amount, cat);
   return true;
+}
+
+/** r21 (B-1): lançamento que NÃO pode ser ignorado em duplicata. Igual a `post`, mas quem chama deve abortar a mutação
+ *  quando devolve false (a chave já foi usada nesta semana: o caixa não se moveu). Ações que podem repetir na mesma
+ *  semana devem embutir `nextId(s, 'tx')` na chave. */
+export function postOrFail(s: GameState, key: string, amount: number, cat: string, memo: string, cash = true): boolean {
+  const ok = post(s, key, amount, cat, memo, cash);
+  if (!ok && typeof console !== 'undefined') console.warn(`post duplicado ignorado: ${s.week}:${key}`);
+  return ok;
 }
 
 /** Movimento só de caixa (liquidação de título já reconhecido): não é receita nem custo de novo. */

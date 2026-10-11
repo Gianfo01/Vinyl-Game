@@ -30,6 +30,7 @@ import { explainBox, goToProjects } from './project8';
 import { applyNewBlend, newBlendSelect, p13Panel } from './project13';
 import { phaseReview20 } from './review20';
 import { empty20 } from '../st20';
+import { emptyRoster21 } from '../ux21';
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -220,7 +221,7 @@ function projectView(s: GameState, p: MusicProject): HTMLElement {
 function hub(s: GameState): HTMLElement {
   const ids = playerActs(s);
   const act = s.acts[store.selectedAct ?? ''] && ids.includes(store.selectedAct ?? '') ? s.acts[store.selectedAct!] : s.acts[ids[0]];
-  if (!act) return section(t(l('Projeto musical', 'Music project')), h('p', { class: 'muted' }, t(l('Contrate um artista para começar um disco.', 'Sign an act to start a record.'))));
+  if (!act) return emptyRoster21(s, t(l('Projeto musical', 'Music project')), t(l('Contrate um artista para começar um disco.', 'Sign an act to start a record.'))); // r21 (§2.3.12)
   const all = openProjects(s).sort((a, b) => Number(a.actId !== act.id) - Number(b.actId !== act.id) || b.created - a.created);
   let cur = projectById(s, ui.sel);
   if (!cur || cur.closed) cur = all.find((p) => p.actId === act.id) ?? all[0];

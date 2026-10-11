@@ -10,7 +10,7 @@ import { energyLeft, life, maxEnergy } from '../sim/sys/life';
 import { ownerOf } from '../sim/sys/people/owner';
 import type { GameState } from '../sim/types';
 import { fmtL, playerActs } from '../sim/util';
-import { $, rerender, section } from './common';
+import { $, rerender } from './common';
 import { h } from './dom';
 import { store } from './store';
 import { ic, setTab } from './vis';
@@ -19,6 +19,7 @@ import { careers } from '../sim/sys/careers12';
 import { advisorTips18, snoozeTip18, snoozed18, tipScore, type AdvTip18 } from '../sim/inbox18';
 import { go18 } from './sys/inbox18';
 import { toast } from './common';
+import { fold21 } from './ux21';
 
 export interface Tip {
   icon: string;
@@ -78,7 +79,7 @@ export function advisorSection(s: GameState): HTMLElement | null {
   if (!tips.length) return null;
   const shown = advMore ? tips : tips.slice(0, 7);
   const go = (x: AdvTip18) => { const g = x.goto!; if (g.act && g.area) { store.selectedAct = g.act; if (g.tab) setTab(g.tab[0], g.tab[1]); store.area = g.area as typeof store.area; rerender(); } else go18(g); };
-  return section(t(l('Próximos passos', 'Next steps')),
+  return fold21('next', t(l('Próximos passos', 'Next steps')), // r21 (§2.3.2): recolhido por padrão, estado nas prefs
     h('ul', { class: 'adv18' }, shown.map((x) => h('li', { class: x.level },
       ic(x.level === 'bad' ? 'warning' : x.level === 'good' ? 'star' : x.level === 'warn' ? 'clock' : 'bulb'), h('span', null, t(x.text), x.effect ? h('div', { class: 'adv18-fx muted' }, '→ ', t(x.effect)) : null),
       x.goto ? h('button', { class: 'btn small ghost', onclick: () => go(x) }, t(x.goto.label ?? l('Ir', 'Go')), ' →') : h('span'),

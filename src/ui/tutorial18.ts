@@ -28,6 +28,11 @@ import './tutorial18.css';
 
 type Go = (area: string) => void;
 let goFn: Go = (a) => { store.area = a; store.rerender(); };
+/** r21 (I-5): a área existe (e está visível) agora? Registrado pelo app; sem registro, aceita tudo (testes sem DOM). */
+let existsFn: (id: string) => boolean = () => true;
+export function setNav18(go: Go, exists: (id: string) => boolean): void { goFn = go; existsFn = exists; }
+/** Ajuda cujo id não é uma área (boletim, era, ofertas…) abre o texto no lugar, sem navegar. */
+const goHelp18 = (id: string): void => { if (existsFn(id)) { goFn(id); setTimeout(() => openHelp18(id), 60); } else openHelp18(id); };
 
 // ---------------------------------------------------------------- preferências
 
@@ -78,7 +83,7 @@ export function openHelp18(area: string): void {
     hf.tabs.length ? h('div', { class: 'help18-tabs' }, h('h4', { class: 'muted' }, t(l('Aba aberta', 'Open tab'))), ...hf.tabs.map((x) => helpBlock(x))) : null,
     extra.length ? h('details', { class: 'help18-more' }, h('summary', null, t(sub[0] === 'label' ? l('Na ficha do selo', 'On the label sheet') : l('Na ficha do artista/pessoa', 'On the act/person sheet'))), ...extra.map((x) => helpBlock(x))) : null,
     a?.links?.length ? h('div', { class: 'row wrap help18-links' }, h('small', { class: 'muted' }, t(l('Veja também: ', 'See also: '))),
-      ...a.links.map((id) => { const x = help18(id); return x ? h('button', { class: 'btn small ghost', onclick: () => { close(); goFn(id); } }, t(x.title), ' ↗') : null; })) : null,
+      ...a.links.map((id) => { const x = help18(id); return x ? h('button', { class: 'btn small ghost', onclick: () => { close(); goHelp18(id); } }, t(x.title), existsFn(id) ? ' ↗' : ' ?') : null; })) : null,
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn small', onclick: () => { close(); startTour18(area, true); } }, '▶ ', t(l('Rever o tour desta página', 'Replay this page\'s tour'))),
       h('button', { class: 'btn small ghost', onclick: () => { close(); openGloss18(); } }, t(l('Glossário', 'Glossary'))),
@@ -117,7 +122,7 @@ export function paletteCmds18(go: Go): { label: string; kind: string; icon?: str
   const gk = t(l('Glossário', 'Glossary')), hk = t(l('Ajuda', 'Help'));
   return [
     ...GLOSS18.map((x) => ({ label: `${t(x.term)}${x.alt?.length ? ` (${x.alt.join(', ')})` : ''}`, kind: gk, icon: 'book', hint: t(x.def).slice(0, 60), weight: 1, run: () => openGloss18(x.id) })),
-    ...helpIds18().filter((id) => !id.startsWith('tab:')).map((id) => ({ label: `? ${t(help18(id)!.title)}`, kind: hk, icon: 'bulb', weight: 1, run: () => { go(id); setTimeout(() => openHelp18(id), 60); } })),
+    ...helpIds18().filter((id) => !id.startsWith('tab:')).map((id) => ({ label: `? ${t(help18(id)!.title)}`, kind: hk, icon: 'bulb', weight: 1, hint: existsFn(id) ? undefined : t(l('texto de ajuda', 'help text')), run: () => goHelp18(id) })),
     { label: t(l('Ajuda e tutorial (progresso)', 'Help and tutorial (progress)')), kind: hk, icon: 'bulb', weight: 2, run: () => go('tut18') },
   ];
 }
@@ -304,7 +309,7 @@ function tutPage(g: GameState): HTMLElement {
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !p.noTours, onchange: (e: Event) => { tp18().noTours = !(e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Tours na 1ª visita', 'Tours on first visit'))),
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !p.noTips, onchange: (e: Event) => { tp18().noTips = !(e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Dicas de 1ª vez', 'First-time tips'))))),
     section(t(l('Ajuda por página', 'Help by page')),
-      h('div', { class: 'help18-index' }, ...areas.map((id) => h('button', { class: `btn small ghost ${p.tours[id] ? 'seen' : ''}`, onclick: () => { goFn(id); setTimeout(() => openHelp18(id), 60); } }, t(help18(id)!.title))))),
+      h('div', { class: 'help18-index' }, ...areas.map((id) => h('button', { class: `btn small ghost ${p.tours[id] ? 'seen' : ''}`, title: existsFn(id) ? undefined : t(l('Texto de ajuda (não é uma página)', 'Help text (not a page)')), onclick: () => goHelp18(id) }, existsFn(id) ? '' : '? ', t(help18(id)!.title))))),
     section(t(l('Glossário', 'Glossary')),
       h('input', { type: 'search', class: 'gloss18-q', placeholder: t(l('Buscar termo…', 'Search a term…')), 'aria-label': t(l('Buscar no glossário', 'Search the glossary')), oninput: (e: Event) => glossList((e.target as HTMLInputElement).value, gbox) }),
       gbox),

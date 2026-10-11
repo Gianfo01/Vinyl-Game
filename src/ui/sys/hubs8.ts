@@ -25,6 +25,7 @@ import { registerSection } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
 import { personRoute16 } from '../route16';
+import { confirm21 } from '../ask21';
 
 const MONTHS = [l('jan', 'Jan'), l('fev', 'Feb'), l('mar', 'Mar'), l('abr', 'Apr'), l('mai', 'May'), l('jun', 'Jun'), l('jul', 'Jul'), l('ago', 'Aug'), l('set', 'Sep'), l('out', 'Oct'), l('nov', 'Nov'), l('dez', 'Dec')];
 const famName = (id: string) => t(FAMILIES.find((f) => f.id === id)?.name ?? l(id));
@@ -102,7 +103,7 @@ export function openFestivalPage(fi: number): void {
     };
     const tierBlock = (tier: FestTier) => {
       const slots = ed?.lineup.filter((x) => x.tier === tier) ?? [];
-      return h('div', null, h('h4', null, t(TIER_NAME[tier])), slots.length ? h('div', { class: 'chips' }, slots.map((x) => h('span', { class: `chip ${mineAct(s, x.actId) ? 'good' : ''}` }, actLink(s, x.actId), mineAct(s, x.actId) && !ed?.done ? h('button', { class: 'link small', title: t(l('Cancelar (multa de 25% do cachê)', 'Cancel (25% fee penalty)')), onclick: () => { if (confirm(t(l('Cancelar a participação? Multa de 25% do cachê e o festival não chama de novo tão cedo.', 'Cancel the appearance? 25% fee penalty and the festival will not call again soon.')))) { withdraw(s, fi, x.actId); close(); openFestivalPage(fi); rerender(); } } }, ' ✕') : null))) : h('p', { class: 'muted small' }, '—'));
+      return h('div', null, h('h4', null, t(TIER_NAME[tier])), slots.length ? h('div', { class: 'chips' }, slots.map((x) => h('span', { class: `chip ${mineAct(s, x.actId) ? 'good' : ''}` }, actLink(s, x.actId), mineAct(s, x.actId) && !ed?.done ? h('button', { class: 'link small', title: t(l('Cancelar (multa de 25% do cachê)', 'Cancel (25% fee penalty)')), onclick: () => { confirm21(t(l('Cancelar a participação? Multa de 25% do cachê e o festival não chama de novo tão cedo.', 'Cancel the appearance? 25% fee penalty and the festival will not call again soon.')), () => { withdraw(s, fi, x.actId); close(); openFestivalPage(fi); rerender(); }); } }, ' ✕') : null))) : h('p', { class: 'muted small' }, '—'));
     };
     const body = h('div', { class: 'ficha' },
       h('div', { class: 'grid2' },

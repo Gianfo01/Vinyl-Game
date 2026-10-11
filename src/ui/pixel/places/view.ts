@@ -9,6 +9,7 @@ import type { Appearance } from '../../../sim/types';
 import { H, W } from './kit';
 import type { PlaceKind } from '../../../sim/sys/scenes/state';
 import { buildPlace } from './index';
+import { visLoop21 } from '../visloop21';
 
 export interface Actor {
   look: Appearance;
@@ -89,25 +90,15 @@ export function placeView(kind: PlaceKind, o: PlaceViewOpts): HTMLElement {
     ctx.drawImage(model.fg, 0, 0);
     fx(ctx, o.fx ?? 'none', t);
   };
-  let raf = 0;
   let start = 0;
   let lastDraw = 0;
-  const loop = (now: number) => {
-    if (!cv.isConnected && start) return;
-    if (!start) start = now;
-    // ritmo de pixel art: ~12 quadros por segundo
-    if (now - lastDraw >= 80) {
-      lastDraw = now;
-      draw((now - start) / 1000);
-    }
-    if (!reduced()) raf = requestAnimationFrame(loop);
-  };
   draw(0);
-  if (!reduced() && typeof requestAnimationFrame === 'function') {
-    // espera entrar na página para animar
-    raf = requestAnimationFrame(loop);
-  }
-  void raf;
+  // r21 (I-10): ~12 quadros por segundo, só visível e com a aba em primeiro plano
+  if (!reduced()) visLoop21(cv, (now) => {
+    if (!start) start = now;
+    if (now - lastDraw >= 80) { lastDraw = now; draw((now - start) / 1000); }
+    if (reduced()) return false;
+  });
   return wrap;
 }
 

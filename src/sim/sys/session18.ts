@@ -124,7 +124,7 @@ registerSimHook('month', 'session18', (s) => {
   const sal = hbSalary18(s, hb);
   post(s, 'hb18sal', -sal, 'salaries', `Banda da casa: ${hb.name}`);
   if (hb.rent && hb.strike <= s.week) post(s, 'hb18rent', Math.round(sal * 0.6 + money(s, 1500 * hb.q)), 'services', `Banda da casa alugada`);
-  const busy = playerActs(s).some((id) => (s.acts[id]?.songs ?? []).some((sid) => s.songs[sid]?.recorded && (s.songs[sid]?.createdWeek ?? 0) > s.week - 5));
+  const busy = playerActs(s).some((id) => (s.acts[id]?.songs ?? []).some((sid) => s.songs[sid]?.recorded && (s.songs[sid]?.recordedWeek ?? s.songs[sid]?.createdWeek ?? 0) > s.week - 5));
   if (busy && hb.strike <= s.week) { hb.sess++; hb.q = clamp(hb.q + 0.01, 0.4, hbMaxQ18(hb)); }
   // ressentimento: sem crédito, cada hit do selo pesa; sem acordo sindical, o salário também
   const hitsNow = playerActs(s).reduce((t, id) => t + (s.acts[id]?.hits ?? 0), 0);

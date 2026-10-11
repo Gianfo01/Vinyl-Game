@@ -29,7 +29,7 @@ const nm = (s: GameState, id: string): string => s.persons[id]?.name ?? s.acts[i
 
 // 1 ---------------------------------------------------------------- no limite (corpo)
 registerSituation({
-  id: 'burnout', pressure: 'body', cost: 2, cooldown: 4,
+  id: 'burnout', pressure: 'body', cost: 2, cooldown: 4, neutral: 'rest',
   when: () => true,
   actorsPick: (s) => {
     let best: [Person, Act, number] | null = null;
@@ -102,7 +102,7 @@ registerSituation({
 // 4 ---------------------------------------------------------------- favor cobrado (poder)
 const dueFavor = (s: GameState): Hold | undefined => holds17(s).h.find((h) => h.status === 'open' && (h.kind === 'favor' || h.kind === 'debt') && s.week - h.w > 26 && h.holder !== 'player' && (h.until ?? Infinity) >= s.week);
 registerSituation({
-  id: 'favor_due', pressure: 'power', cost: 2, cooldown: 3,
+  id: 'favor_due', pressure: 'power', cost: 2, cooldown: 3, neutral: 'delay',
   when: (s) => !!dueFavor(s),
   actorsPick: (s) => { const h = dueFavor(s); return h ? { hero: h.holder, cast: { target: h.target }, data: { hold: h.id, str: h.strength } } : null; },
   title: (s, c) => fmtL(l('{h} cobra o favor', '{h} calls in the favor'), { h: nm(s, c.hero) }),
@@ -110,6 +110,8 @@ registerSituation({
   options: [
     { id: 'honor', label: l('Honrar', 'Honor it'), hint: l('Custa ~$2.000–8.000 (era); a obrigação acaba e a relação melhora.', 'Costs ~$2,000–8,000 (era); the obligation ends and the relationship improves.'), weightByTraits: (P0) => F(P0, 'lealdade') * 1.3 + F(P0, 'generosidade') * 0.5,
       apply: (s, c) => { const h = holds17(s).h.find((x) => x.id === c.data.hold); if (!h) return; const v = 2000 + h.strength * 60; if (c.cast.target === 'player') post(s, `favor17:${h.id}`, -money(s, v), 'misc', 'Favor pago'); else { const lb = s.labels[c.cast.target]; if (lb) lb.cash -= money(s, v); } const hl = s.labels[h.holder]; if (hl) hl.cash += money(s, v); h.status = 'used'; h.uses++; h.lastUse = s.week; } },
+    { id: 'delay', label: l('Pedir prazo', 'Ask for time'), hint: l('Grátis; o favor continua devido e volta a ser cobrado (mágoa leve).', 'Free; the favor stays owed and will be called in again (mild grievance).'), weightByTraits: (P0) => F(P0, 'paciencia') + F(P0, 'ansiedade') * 0.5,
+      apply: (s, c) => { const h = holds17(s).h.find((x) => x.id === c.data.hold); if (!h) return; h.lastUse = s.week; grantHold(s, { holder: h.holder, target: h.target, kind: 'grievance', strength: 15, months: 12, text: fmtL(l('{h}: favor adiado', '{h}: favor postponed'), { h: nm(s, h.holder) }), src: 'sit17' }); } },
     { id: 'refuse', label: l('Recusar', 'Refuse'), hint: l('Grátis, mas vira mágoa forte contra quem recusou (pesa em negociações).', 'Free, but becomes a strong grievance against whoever refused (weighs on negotiations).'), weightByTraits: (P0) => F(P0, 'teimosia') + F(P0, 'ego') * 0.5,
       apply: (s, c) => { const h = holds17(s).h.find((x) => x.id === c.data.hold); if (!h) return; h.status = 'void'; grantHold(s, { holder: h.holder, target: h.target, kind: 'grievance', strength: 55, months: 48, text: fmtL(l('{h}: favor recusado', '{h}: refused favor'), { h: nm(s, h.holder) }), src: 'sit17' }); if (h.target === 'player' && s.labels[h.holder]) s.rivalries[h.holder] = (s.rivalries[h.holder] ?? 0) + 15; } },
   ],
@@ -126,7 +128,7 @@ const threat = (s: GameState): { sec: ReturnType<typeof P>['secrets'][number]; l
   return null;
 };
 registerSituation({
-  id: 'blackmail', pressure: 'law', cost: 2, cooldown: 8, playerOnly: true,
+  id: 'blackmail', pressure: 'law', cost: 2, cooldown: 8, playerOnly: true, neutral: 'pay',
   when: (s) => !!threat(s),
   actorsPick: (s) => { const t = threat(s); return t ? { hero: 'player', cast: { label: t.lb, ...(t.sec.owner !== 'owner' ? { person: t.sec.owner } : {}) }, data: { sec: t.sec.id, sev: t.sec.severity } } : null; },
   title: (s, c) => fmtL(l('{b} sabe demais', '{b} knows too much'), { b: nm(s, c.cast.label) }),
@@ -169,7 +171,7 @@ registerSituation({
 
 // 7 ---------------------------------------------------------------- recaída à vista (corpo)
 registerSituation({
-  id: 'relapse', pressure: 'body', cost: 2, cooldown: 6,
+  id: 'relapse', pressure: 'body', cost: 2, cooldown: 6, neutral: 'confront',
   when: (s) => !s.config.contentFilters.some((t) => t === 'drugs' || t === 'health'),
   actorsPick: (s) => {
     for (const a of notable(s)) {

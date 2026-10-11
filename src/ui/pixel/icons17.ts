@@ -3,6 +3,7 @@
 
 import { drawText } from './font';
 import { C, Px, upscale, type Col } from './px';
+import { LruMap } from '../../core/lru21';
 
 const K = {
   ink: C('#1a1214'), white: C('#f8f4ec'), grey: C('#a8a4a0'), dgrey: C('#5c5856'), gold: C('#f0c040'), dgold: C('#b07c1c'),
@@ -66,7 +67,7 @@ const DRAW: Record<Icon17, (p: Px) => void> = {
   dice: (p) => { p.rect(2, 2, 12, 12, K.white); p.rect(2, 2, 12, 1, K.grey); p.disc(5, 5, 1.2, K.red); p.disc(8, 8, 1.2, K.red); p.disc(11, 11, 1.2, K.red); p.disc(11, 5, 1.2, K.ink); p.disc(5, 11, 1.2, K.ink); },
 };
 
-const cache = new Map<string, string>();
+const cache = new LruMap<string, string>(500); // r21 (I-10): teto
 const isIcon17 = (n: string): n is Icon17 => (ICON17_NAMES as readonly string[]).includes(n);
 
 /** <img> do ícone extra, ou null se o nome não é um deles. */

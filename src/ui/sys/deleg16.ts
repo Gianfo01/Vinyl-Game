@@ -11,7 +11,7 @@ import type { GameState, StaffMember } from '../../sim/types';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerPageTab, registerSection } from '../registry';
-import { store } from '../store';
+import { COMPANY_TABS21, getTab } from '../vis';
 
 interface Draft { kind: OrderKind; actId: string; market: string; tier: number; floor: number; budget: number; per: number }
 const drafts: Record<string, Draft> = {};
@@ -76,7 +76,7 @@ function card(s: GameState, st: StaffMember): HTMLElement {
 registerSection('company', {
   id: 'deleg16', order: 25,
   render: (s) => {
-    if (store.companyTab !== 'staff') return null;
+    if ((getTab(COMPANY_TABS21) ?? 'finances') !== 'staff') return null;
     const ds = delegates(s);
     return section(t(l('Delegar a agentes e promotores', 'Delegate to agents and promoters')),
       h('p', { class: 'muted small' }, t(l('Contrate "Agente de shows" e "Promotor" na lista de profissionais. Cada um cuida de até 3 ordens permanentes, executadas no fechamento do mês. A qualidade depende de habilidade, atributos e notoriedade do selo; eles erram, e selos rivais tentam levá-los.', 'Hire a "Booking agent" and a "Promoter" from the professionals list. Each handles up to 3 standing orders, run at month close. Quality depends on skill, attributes and label notoriety; they make mistakes, and rival labels try to poach them.'))),

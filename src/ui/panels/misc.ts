@@ -28,7 +28,7 @@ import { planRoute } from '../../sim/travel';
 import { WorldMap, glyphCanvas, transportName, type MapCity } from '../map';
 import { activeToursSection, merchSection, tourPlannerSection } from './tours';
 import { assignBranch, closeBranch, hqBlocker, hqCaps, upgradeBranch } from '../../sim/branches';
-import { ic, setTab, tile } from '../vis';
+import { COMPANY_TABS21, ic, setTab, tabs, tile } from '../vis';
 import { crewProfileCell, crewRespecButton, crewSummary } from '../sys/crew8';
 import { replayBtn16 } from '../sys/moments16';
 import { hotGenres17 } from '../sys/trends17';
@@ -36,11 +36,12 @@ import { stylePill17 } from '../sys/style17';
 import { styleOfRel17 } from '../../sim/sys/trends17';
 import { priceBasis20 } from '../../sim/sys/price20';
 import { price20 } from '../price20';
+import { confirm21 } from '../ask21';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
   const table = (which: 'singles' | 'albums') =>
-    h('table', { class: 'tbl chart' },
+    h('div', { class: 'tbl-scroll' }, h('table', { class: 'tbl chart' }, // r21 (§2.3.15)
       h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(S.last)), h('th', null, t(S.title)), h('th', null, t(l('Ato', 'Act'))), h('th', null, t(l('Selo', 'Label'))), h('th', null, t(S.weeks)), h('th', null, t(S.units)))),
       h('tbody', null, s.charts[which].slice(0, 40).map((e) => {
         const r = s.releases[e.releaseId];
@@ -57,7 +58,7 @@ export function chartsPanel(s: GameState): HTMLElement {
           h('td', null, N(e.units)),
         );
       })),
-    );
+    ));
   const hot = Object.entries(s.genrePop).filter(([g]) => genreById[g]?.born <= s.year).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', { class: 'panel charts' },
     h('div', { class: 'col-main' }, section(t(S.singles), table('singles')), section(t(S.albums), table('albums'))),
@@ -259,16 +260,18 @@ function tourMapSection(s: GameState): HTMLElement {
   return section(t(l('Mapa', 'Map')), tourMap.element, tourSummary);
 }
 
+let allTiers21 = false; // r21 (§2.3.10): só os portes alcançáveis; "ver todos os portes" mostra o resto
 /** r20: tabela de datas avulsas por artista (Shows › Agenda). */
 export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
   const ids = playerActs(s);
   return ids.length ? ids.map((id) => {
         const a = s.acts[id];
         const mt = maxVenueTier(s, a);
+        const hidden = VENUE_TIERS.filter((v) => v.id > mt).length;
         return section(`${a.name} — ${t(S.gigs)}`,
           h('div', { class: 'tbl-scroll20' }, h('table', { class: 'tbl compact' },
             h('thead', null, h('tr', null, h('th', null, t(S.venue)), h('th', null, t(S.perDate)), h('th', null, t(S.revenue)), h('th', null, t(S.net)), h('th', null, t(S.fatigue)), h('th', null, ''))),
-            h('tbody', null, VENUE_TIERS.map((v) => {
+            h('tbody', null, VENUE_TIERS.filter((v) => allTiers21 || v.id <= mt).map((v) => {
               const est = gigEstimate(s, a, v.id, 4);
               const ok = v.id <= mt;
               return h('tr', { class: ok ? '' : 'muted' },
@@ -287,6 +290,7 @@ export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
               );
             })),
           )), // r20b (Z3 a11y): tabela rola dentro do cartão (não empurra a página); botão diz qual casa
+          hidden ? h('button', { class: 'btn small ghost', 'aria-pressed': allTiers21 ? 'true' : 'false', onclick: () => { allTiers21 = !allTiers21; rerender(); } }, allTiers21 ? t(l('Só os portes alcançáveis', 'Only reachable sizes')) : t(l('Ver todos os portes (+{n})', 'See all sizes (+{n})'), { n: hidden })) : null,
           h('p', { class: 'muted small' }, a.playerBand ? t(l('Bilheteria vai para você.', 'Box office goes to you.')) : t(l('Bilheteria é do artista; o selo só participa em contrato 360.', 'Box office belongs to the artist; the label only shares in a 360 deal.'))),
         );
       }) : section(t(S.gigs), h('p', null, t(S.noActs)));
@@ -331,14 +335,13 @@ export function showsPanel(s: GameState): HTMLElement {
 // ---------- Empresa ----------
 export function companyPanel(s: GameState): HTMLElement {
   // r20 (G2, uiux §4.6): Empresa = equipe, sede, legado e um RESUMO financeiro que declara a fonte (a posição completa fica em Finanças)
-  const tabs: [typeof store.companyTab, string][] = [['finances', t(l('Resumo financeiro', 'Financial summary'))], ['staff', t(S.staff)], ['hq', t(S.areaHq)], ['legacy', t(LABEL_LEGACY20)]];
-  const tabBar = h('div', { class: 'tabs' }, tabs.map(([id, label]) => h('button', { class: store.companyTab === id ? 'on' : '', onclick: () => { store.companyTab = id; rerender(); } }, label)));
-  let body: HTMLElement;
-  if (store.companyTab === 'finances') body = finances(s);
-  else if (store.companyTab === 'staff') body = staff(s);
-  else if (store.companyTab === 'hq') body = hqTab(s);
-  else body = legacyTab(s);
-  return h('div', { class: 'panel company' }, tabBar, body);
+  // r21 (I-6): abas no padrão tabs() (data-tabs): { }, rota, Ctrl+K e ajuda por aba passam a funcionar aqui também
+  return h('div', { class: 'panel company' }, tabs(COMPANY_TABS21, [
+    { id: 'finances', label: t(l('Resumo financeiro', 'Financial summary')), icon: 'money', render: () => finances(s) },
+    { id: 'staff', label: t(S.staff), icon: 'people', render: () => staff(s) },
+    { id: 'hq', label: t(S.areaHq), icon: 'house', render: () => hqTab(s) },
+    { id: 'legacy', label: t(LABEL_LEGACY20), icon: 'trophy', render: () => legacyTab(s) },
+  ], rerender));
 }
 
 const CAT_NAMES: Record<string, [string, string]> = {
@@ -420,7 +423,7 @@ export function branchesSection(s: GameState): HTMLElement {
         h('div', { class: 'row wrap' }, here.length ? here.map((id) => actLink(s, id)) : h('small', { class: 'muted' }, t(l('Nenhum artista designado.', 'No artists assigned.')))),
         h('div', { class: 'row wrap' },
           next ? h('button', { class: 'btn small', onclick: () => { const e = upgradeBranch(s, b.id); toast(t(e ?? l('Filial ampliada!', 'Branch upgraded!')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Ampliar para', 'Upgrade to'))} ${t(next.name)} (${$(money(s, next.cost))})`) : null,
-          h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(t(l('Fechar esta filial? O investimento não volta.', 'Close this branch? The investment is not refunded.')))) return; closeBranch(s, b.id); rerender(); } }, t(l('Fechar filial', 'Close branch'))),
+          h('button', { class: 'btn small ghost', onclick: () => { confirm21(t(l('Fechar esta filial? O investimento não volta.', 'Close this branch? The investment is not refunded.')), () => { closeBranch(s, b.id); rerender(); }); } }, t(l('Fechar filial', 'Close branch'))),
         ),
       ]);
     })) : null,
@@ -509,7 +512,7 @@ export function hqPanel(s: GameState): HTMLElement {
   hqView ??= new HqView(() => store.game);
   hqView.onSelect = (id, at) => (hqHooks.onAct ? hqHooks.onAct(id, at) : inspect.act(id));
   hqView.onSelectPerson = (id) => inspect.person(id);
-  hqView.onSelectStaff = () => { store.area = 'company'; store.companyTab = 'staff'; rerender(); };
+  hqView.onSelectStaff = () => { store.area = 'company'; setTab(COMPANY_TABS21, 'staff'); rerender(); };
   hqView.refreshToolbar();
   const wrap = h('div', { class: 'hq-wrap' }, hqView.toolbar, hqView.stage);
   setTimeout(() => hqView?.start(), 0);

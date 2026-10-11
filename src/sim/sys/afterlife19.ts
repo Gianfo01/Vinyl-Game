@@ -341,7 +341,7 @@ export function arenaBlock19(s: GameState): L | null {
   if (s.year < ARENA_FROM19) return F(l('Ainda não existe tecnologia de avatares para isso ({y}+).', 'Avatar tech for this does not exist yet ({y}+).'), { y: ARENA_FROM19 });
   const ar = af19(s).ar;
   if (ar && ar.st !== 'sold') return l('Você já tem uma arena digital.', 'You already own a digital arena.');
-  if (s.player.cash < arenaCost19(s) * 0.3) return F(l('Precisa de 30% à vista ({c}).', 'Needs 30% up front ({c}).'), { c: $k(arenaCost19(s) * 0.3) });
+  if (freeCash20(s) < arenaCost19(s) * 0.3) return F(l('Precisa de 30% à vista ({c}).', 'Needs 30% up front ({c}).'), { c: $k(arenaCost19(s) * 0.3) });
   return null;
 }
 export function buildArena19(s: GameState): L | null {

@@ -1,5 +1,6 @@
 // Descoberta, A&R e scouting em cinco graus (GDD §10).
 
+import { JUDGE21 } from './ext4';
 import { matchesReq20, signalEligible20, spawnPlanForReq20 } from './scout20';
 import { clamp, type Rng } from '../core/rng';
 import { cityById, l, type L } from '../data/world';
@@ -30,6 +31,17 @@ export function scoutActionsPerMonth(s: GameState): number {
   return 3 + staffCount(s, 'anr') + s.scouts.length + (hasCard(s, 'prospector') ? 2 : 0) + (s.player.hq >= 2 ? 1 : 0) + (s.flags.scoutBonus ?? 0) + Math.round(perk(s, 'scoutActions'));
 }
 
+/** r21 (1.15): largura da faixa de potencial pela régua do est18 (`errPA` em 0..200, aqui em 0..100), com os mesmos bônus de equipe. */
+function widthPotential(s: GameState, degree: number): number {
+  const paK = clamp(degree, 1, 5) / 5;
+  const j = JUDGE21.v?.(s) ?? 0.5;
+  let w = ((1 - paK * 0.85) * 52 * (1.3 - j * 0.7)) / 2;
+  w *= 1 - staffSkill(s, 'anr') / 300;
+  if (hasCard(s, 'prospector')) w *= 0.8;
+  w *= clamp(1 - perk(s, 'scoutAccuracy'), 0.4, 1.6);
+  return Math.max(4, w);
+}
+
 function widthFor(s: GameState, degree: number, base: number[]): number {
   let w = base[clamp(degree, 1, 5) - 1];
   w *= 1 - staffSkill(s, 'anr') / 300;
@@ -58,7 +70,11 @@ export function estimate(s: GameState, actId: string, field: 'potential' | 'tale
   if ((field === 'talent' || field === 'skill') && deg < 2) return null;
   const v = trueValue(s, act, field, skill);
   const widths = field === 'fame' ? [16, 10, 6, 4, 2] : field === 'potential' ? [40, 30, 20, 11, 5] : [40, 26, 15, 8, 3];
-  const w = widthFor(s, Math.max(1, deg), widths);
+  // r21 (1.15): potencial usa a mesma régua do est18 (conhecimento × olho de quem avalia); o relatório envelhece —
+  // a faixa alarga com o tempo desde a última atualização (dobra em 2 anos, até 2,5×)
+  const age = k ? Math.max(0, s.week - k.updatedWeek) : 0;
+  const aging = 1 + Math.min(1.5, age / 104);
+  const w = (field === 'potential' ? widthPotential(s, Math.max(1, deg)) : widthFor(s, Math.max(1, deg), widths)) * aging;
   const bias = (k?.bias ?? 0) * (w / 30);
   const mid = clamp(v + bias, 0, 100);
   return { lo: Math.round(clamp(mid - w / 2, 0, 100)), hi: Math.round(clamp(mid + w / 2, 0, 100)), mid: Math.round(mid) };
@@ -212,7 +228,7 @@ export function scoutRequestCost(s: GameState): number {
 
 export function requestScout(s: GameState, req: { genreFamily: string; market: string; level: string; role: string }): boolean {
   const cost = scoutRequestCost(s);
-  if (s.player.cash < cost) return false;
+  if (freeCash20(s) < cost) return false; // r21 (1.14): caixa livre
   if (s.scoutActionsUsed >= scoutActionsPerMonth(s)) return false;
   s.scoutActionsUsed += 1;
   post(s, `scoutreq:${s.scoutRequests.length}`, -cost, 'scouting', 'Pedido de scout');

@@ -59,10 +59,10 @@ export const H19: H19[] = [
     { w: true, g: ['rebetiko'], mk: ['eu'], ap: 1.08, until: 1955 }),
   H('apollo', 1934, 0, 'stage', 'Apollo Theater, janeiro de 1934', 'A noite dos amadores do Harlem~Harlem\'s amateur night',
     'O teatro do Harlem reabre em 1934 com a noite dos amadores: a plateia aplaude ou vaia até tirar o calouro do palco.~The Harlem theater reopens in 1934 with amateur night: the crowd cheers or boos until the newcomer leaves the stage.',
-    { g: ['rnb', 'blues_jazz', 'sacred'], mk: ['na'], ap: 1.05, until: 1965 }),
+    { g: ['blues_jazz', 'sacred'], mk: ['na'], ap: 1.05, until: 1965 }), // r21 (J-4): rnb só nasce em 1945
   H('hammond', 1935, 5, 'tech', 'Órgão Hammond, 1935', 'O órgão elétrico chega às igrejas~The electric organ reaches churches',
     'Lançado em 1935 como substituto barato do órgão de tubos, o órgão elétrico vira o som das igrejas negras e, depois, do soul e do jazz.~Launched in 1935 as a cheap pipe-organ substitute, the electric organ becomes the sound of Black churches and later of soul and jazz.',
-    { g: ['sacred', 'rnb'], ap: 1.04, until: 1965 }),
+    { g: ['sacred', 'blues_jazz'], ap: 1.04, until: 1965 }), // r21 (J-4): rnb só nasce em 1945
   H('hitparade', 1936, 0, 'law', 'Primeira parada de popularidade da Billboard, 4/1/1936', 'A revista do setor publica uma parada~The trade paper publishes a chart',
     'Em janeiro de 1936 a revista do setor passa a listar os discos mais tocados: o sucesso agora tem número e posição.~In January 1936 the trade paper starts listing the most-played records: a hit now has a number and a position.',
     { ty: 1, ap: 1.03, until: 1958 }),
@@ -107,10 +107,10 @@ export const H19: H19[] = [
     { ap: 1.02, until: 1955 }),
   H('ramlee', 1948, 9, 'wave', 'P. Ramlee estreia em "Chinta", 1948', 'O cinema malaio canta~Malay cinema sings',
     'Em Singapura, um jovem cantor estreia no cinema em 1948 e cria a canção pop malaia dos filmes.~In Singapore, a young singer debuts on film in 1948 and creates the Malay film pop song.',
-    { w: true, g: ['malay_pop', 'asia_me'], mk: ['asia'], ap: 1.06, until: 1970 }),
+    { w: true, g: ['kroncong', 'asia_me'], mk: ['asia'], ap: 1.06, until: 1970 }), // r21 (J-4): malay_pop nasce em 1955
   H('kolosoy', 1948, undefined, 'wave', 'Wendo Kolosoy, "Marie-Louise", 1948', 'A rumba congolesa~Congolese rumba',
     'Em Léopoldville, um estúdio grego grava "Marie-Louise" em 1948: a rumba congolesa toma as rádios da África.~In Léopoldville, a Greek-owned studio records "Marie-Louise" in 1948: Congolese rumba takes over Africa\'s radios.',
-    { w: true, g: ['soukous', 'africa'], mk: ['africa'], ap: 1.06, until: 1965 }),
+    { w: true, g: ['rumba_congolaise', 'africa'], mk: ['africa'], ap: 1.06, until: 1965 }), // r21 (J-4): soukous nasce em 1966
   H('rnb_name', 1949, 5, 'law', 'Billboard troca "Race Records" por "Rhythm & Blues", 25/6/1949', 'A parada "racial" muda de nome~The "race" chart changes its name',
     'Em junho de 1949 a revista do setor troca o nome da parada de discos "raciais" para rhythm and blues.~In June 1949 the trade paper renames its "race records" chart rhythm and blues.',
     { g: ['rnb'], mk: ['na'], ap: 1.05, until: 1960 }),
@@ -162,10 +162,10 @@ export const H19: H19[] = [
     { w: true, g: ['caribbean', 'latin'], mk: ['latam'], ap: 0.94, until: 1965 }),
   H('salut', 1959, 9, 'wave', '"Salut les copains", Europe 1, 19/10/1959', 'O programa dos colegas~The pals\' radio show',
     'Em outubro de 1959 uma rádio francesa estreia um programa para adolescentes: em poucos anos os cantores "yé-yé" dominam a França.~In October 1959 a French station launches a teen show: within years "yé-yé" singers rule France.',
-    { g: ['yeye', 'europe'], mk: ['eu'], ap: 1.06, until: 1968, pop: 0.15 }),
+    { g: ['chanson_pop', 'europe'], mk: ['eu'], ap: 1.06, until: 1968, pop: 0.15 }), // r21 (J-4): yé-yé nasce em 1961
   H('congo60', 1960, 5, 'wave', 'Independência do Congo e "Indépendance Cha Cha", 1960', 'A canção da independência~The independence song',
     'Em junho de 1960 o Congo se torna independente; uma rumba gravada em Bruxelas vira hino de libertação por toda a África.~In June 1960 Congo becomes independent; a rumba recorded in Brussels becomes a liberation anthem across Africa.',
-    { w: true, g: ['soukous', 'highlife', 'africa'], mk: ['africa'], ap: 1.08, until: 1975, pop: 0.12 }),
+    { w: true, g: ['rumba_congolaise', 'highlife', 'africa'], mk: ['africa'], ap: 1.08, until: 1975, pop: 0.12 }), // r21 (J-4): soukous nasce em 1966
   H('hamburg', 1960, 7, 'stage', 'Clubes de Hamburgo (Indra/Kaiserkeller 1960; Star-Club 13/4/1962)', 'A escola de Hamburgo~The Hamburg school',
     'A partir de 1960 bandas britânicas tocam oito horas por noite em clubes de Hamburgo; voltam para casa afiadas como ninguém.~From 1960 British bands play eight hours a night in Hamburg clubs; they come home sharper than anyone.',
     { g: ['rock'], mk: ['eu'], ap: 1.04, until: 1966 }),
@@ -211,7 +211,7 @@ export const H19: H19[] = [
     { g: ['rock'], mk: ['eu'], ap: 1.05, until: 1975 }),
   H('avandaro', 1971, 8, 'crisis', 'Festival de Avándaro, 11–12/9/1971', 'O "Woodstock mexicano" e o veto ao rock~The "Mexican Woodstock" and the rock ban',
     'Em setembro de 1971 um festival de rock reúne uma multidão perto da Cidade do México; o escândalo na imprensa leva a um veto informal ao rock em rádio, TV e grandes palcos por anos.~In September 1971 a rock festival draws a crowd near Mexico City; the press scandal leads to an informal ban on rock on radio, TV and big stages for years.',
-    { w: true, g: ['rock', 'rock_latino'], mk: ['latam'], ap: 0.9, until: 1980 }),
+    { w: true, g: ['rock'], mk: ['latam'], ap: 0.9, until: 1980 }), // r21 (J-4): rock_latino nasce em 1980
   H('mushroom', 1972, undefined, 'deal', 'Mushroom Records, Melbourne, 1972', 'Um selo australiano independente~An independent Australian label',
     'Em 1972 um selo independente nasce em Melbourne e prova que bandas australianas vendem em casa sem a matriz estrangeira.~In 1972 an independent label is born in Melbourne and proves Australian bands can sell at home without a foreign parent.',
     { w: true, g: ['rock', 'pop'], mk: ['oceania'], ap: 1.05, until: 1990 }),
@@ -396,7 +396,7 @@ export const GEO19: GeoEvent[] = [
   ge('polish_martial', 'Lei marcial na Polônia~Martial law in Poland', 'curfew', ['eu'], 1981, 1983, fx(0.6, ['political', 'protest'], 0.85, { touringBlocked: true }), 'Toque de recolher e TV militarizada; o rock polonês vira a voz da juventude.~Curfew and militarized TV; Polish rock becomes the voice of youth.', ['warsaw']),
   ge('falklands', 'Guerra das Malvinas~Falklands War', 'war', ['latam', 'eu'], 1982, 1982, fx(0.3, ['foreign'], 0.95), 'As rádios argentinas evitam música em inglês e o rock nacional ocupa o espaço.~Argentine radio avoids English-language music and local rock fills the space.', ['buenos_aires']),
   ge('apartheid_end', 'Fim do apartheid~End of apartheid', 'reunification', ['africa'], 1990, 1994, fx(0, [], 1.12), 'Libertação de Mandela (1990), fim do boicote cultural e eleições de 1994: exilados voltam e o mundo compra música sul-africana.~Mandela freed (1990), the cultural boycott lifted and the 1994 election: exiles return and the world buys South African music.', ['johannesburg', 'cape_town', 'durban']),
-  ge('gulf_war', 'Guerra do Golfo~Gulf War', 'war', ['asia', 'na'], 1990, 1991, fx(0.2, ['violence'], 0.9, { touringBlocked: true }), 'Rádios evitam canções sobre guerra; turnês no Oriente Médio canceladas.~Radio avoids war songs; Middle East tours cancelled.', ['baghdad']),
+  ge('gulf_war', 'Guerra do Golfo~Gulf War', 'war', ['asia'], 1990, 1991, fx(0.2, ['violence'], 0.9, { touringBlocked: true }), 'Rádios evitam canções sobre guerra; turnês no Oriente Médio canceladas.~Radio avoids war songs; Middle East tours cancelled.', ['baghdad']), // r21 (F-3): só o Oriente Médio (mercado 'asia'); antes bloqueava a América do Norte
   ge('algeria', 'Guerra Civil Argelina~Algerian Civil War', 'war', ['africa'], 1991, 2002, fx(0.6, ['decadent', 'religious', 'political'], 0.6, { touringBlocked: true }), 'Cantores de raï ameaçados partem para a França; o raï faz sucesso em Paris.~Threatened raï singers leave for France; raï becomes a hit in Paris.', ['algiers']),
   ge('rwanda', 'Genocídio em Ruanda~Rwandan genocide', 'war', ['africa'], 1994, 1994, fx(0.3, ['political'], 0.6, { touringBlocked: true }), 'A região inteira para; rádios e shows silenciam por anos.~The whole region stops; radio and concerts fall silent for years.'),
   ge('congo_wars', 'Guerras do Congo~Congo Wars', 'war', ['africa'], 1996, 2003, fx(0.3, ['political'], 0.6, { touringBlocked: true }), 'A rumba e o ndombolo seguem em Paris, Bruxelas e Brazzaville.~Rumba and ndombolo carry on in Paris, Brussels and Brazzaville.', ['kinshasa']),

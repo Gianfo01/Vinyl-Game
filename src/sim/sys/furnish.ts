@@ -75,6 +75,11 @@ registerSimHook('newgame', 'furnish', (s) => {
 });
 
 
+/** r21 (I-9): o bloqueio é "falta a sala certa"? (a interface mostra a dica sem depender do texto PT) */
+export function furnNeedsRoom(id: string, roomKinds: string[]): boolean {
+  const def = FURNITURE.find((x) => x.id === id);
+  return !!def && !def.rooms.includes('any') && !def.rooms.some((r) => roomKinds.includes(r));
+}
 export function furnBlocker(s: GameState, id: string, roomKinds: string[]): L | null {
   const def = furnById[id];
   if (!def) return l('Item inválido.', 'Invalid item.');

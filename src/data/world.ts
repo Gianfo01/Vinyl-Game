@@ -85,7 +85,7 @@ export interface City {
   scenes: string[]; // gêneros
   lat: number;
   lon: number;
-  /** r19: país ISO-3 (cidades novas; as antigas vêm de geo/meta.json) */
+  /** r19: país ISO-3 (cidades novas; as antigas vêm de geo/meta.json). r21 (J-1): quando presente, vence o atlas. */
   a3?: string;
   /** r19: peso no sorteio de atos procedurais (1 = padrão) */
   w?: number;
@@ -124,7 +124,7 @@ export const CITIES: City[] = [
   c('tokyo', 'Tóquio', 'Tokyo', 'asia', 'ja', ['enka', 'city_pop', 'jpop', 'synthpop', 'synthetic'], 35.68, 139.69),
   c('seoul', 'Seul', 'Seoul', 'asia', 'ko', ['kpop', 'trot', 'k_indie'], 37.57, 126.98),
   c('mumbai', 'Mumbai', 'Mumbai', 'asia', 'hi', ['bollywood', 'indian_classical'], 19.08, 72.88),
-  c('hong_kong', 'Hong Kong', 'Hong Kong', 'asia', 'zh', ['cantopop'], 22.32, 114.17),
+  { ...c('hong_kong', 'Hong Kong', 'Hong Kong', 'asia', 'zh', ['cantopop'], 22.32, 114.17), a3: 'HKG' }, // r21 (J-1): fora do atlas 1:110m
   c('bangkok', 'Bangkok', 'Bangkok', 'asia', 'th', ['luk_thung'], 13.76, 100.5),
   c('beirut', 'Beirute', 'Beirut', 'asia', 'ar', ['arabic_pop'], 33.89, 35.5),
   c('istanbul', 'Istambul', 'Istanbul', 'asia', 'tr', ['arabesk', 'anatolian_rock'], 41.01, 28.98),
@@ -176,7 +176,7 @@ export const CITIES: City[] = [
   c('port_of_spain', 'Port of Spain', 'Port of Spain', 'latam', 'en', ['calypso', 'steelpan', 'soca'], 10.66, -61.51),
   c('cartagena', 'Cartagena', 'Cartagena', 'latam', 'es', ['champeta', 'cumbia', 'vallenato'], 10.39, -75.51),
   c('port_au_prince', 'Porto Príncipe', 'Port-au-Prince', 'latam', 'fr', ['kompa', 'merengue'], 18.54, -72.34),
-  c('pointe_a_pitre', 'Pointe-à-Pitre', 'Pointe-à-Pitre', 'latam', 'fr', ['zouk', 'beguine'], 16.24, -61.53),
+  { ...c('pointe_a_pitre', 'Pointe-à-Pitre', 'Pointe-à-Pitre', 'latam', 'fr', ['zouk', 'beguine'], 16.24, -61.53), a3: 'GLP' }, // r21 (J-1): Guadalupe não está no atlas
   c('cali', 'Cali', 'Cali', 'latam', 'es', ['salsa', 'cumbia'], 3.45, -76.53),
   // ---- Expansão: Europa ----
   c('madrid', 'Madri', 'Madrid', 'eu', 'es', ['copla', 'nuevo_flamenco', 'pop_latino', 'indie'], 40.42, -3.7),
@@ -217,7 +217,7 @@ export const CITIES: City[] = [
   c('taipei', 'Taipé', 'Taipei', 'asia', 'zh', ['mandopop', 'nhac_vang'], 25.03, 121.57),
   c('manila', 'Manila', 'Manila', 'asia', 'tl', ['opm', 'kundiman'], 14.6, 120.98),
   c('jakarta', 'Jacarta', 'Jakarta', 'asia', 'id', ['dangdut', 'kroncong'], -6.21, 106.85),
-  c('singapore', 'Singapura', 'Singapore', 'asia', 'zh', ['mandopop', 'edm'], 1.35, 103.82),
+  { ...c('singapore', 'Singapura', 'Singapore', 'asia', 'zh', ['mandopop', 'edm'], 1.35, 103.82), a3: 'SGP' }, // r21 (J-1): fora do atlas 1:110m
   c('kuala_lumpur', 'Kuala Lumpur', 'Kuala Lumpur', 'asia', 'ms', ['dangdut', 'mandopop'], 3.14, 101.69),
   c('ho_chi_minh', 'Ho Chi Minh', 'Ho Chi Minh City', 'asia', 'vi', ['nhac_vang', 'bolero'], 10.82, 106.63),
   c('delhi', 'Délhi', 'Delhi', 'asia', 'hi', ['bhangra', 'bollywood', 'ghazal_pop'], 28.61, 77.21),
@@ -307,7 +307,7 @@ export const GENRES: Genre[] = [
   g('pop_rock', 'Pop rock', 'rock', 1961, ['rnr', 'beat']),
   g('blues_rock', 'Blues rock', 'rock', 1962, ['rnr', 'delta_blues']),
   g('psychedelic', 'Psicodelia', 'rock', 1965, ['pop_rock'], 'Psychedelic rock'),
-  g('art_rock', 'Art rock', 'rock', 1964, ['psychedelic']),
+  g('art_rock', 'Art rock', 'rock', 1964, ['pop_rock', 'classical']), // r21 (J-2): pai não pode ser mais novo (psychedelic 1965)
   g('prog', 'Rock progressivo', 'rock', 1967, ['psychedelic'], 'Progressive rock'),
   g('hard_rock', 'Hard rock', 'rock', 1967, ['blues_rock']),
   g('heavy_metal', 'Heavy metal', 'rock', 1969, ['hard_rock']),
@@ -450,7 +450,7 @@ export const GENRES: Genre[] = [
   g('doo_wop', 'Doo-wop', 'rnb', 1951, ['rnb', 'gospel_quartet']),
   g('rockabilly', 'Rockabilly', 'rock', 1954, ['rnr', 'honky_tonk']),
   g('tin_pan_alley', 'Canção de Tin Pan Alley', 'pop', 1889, [], 'Tin Pan Alley song'),
-  g('torch_song', 'Torch song', 'pop', 1930, ['vocal_jazz', 'tin_pan_alley']),
+  g('torch_song', 'Torch song', 'pop', 1930, ['big_band', 'tin_pan_alley']), // r21 (J-2): vocal_jazz nasce em 1933
   g('exotica', 'Exotica', 'pop', 1954, ['trad_pop']),
   g('hawaiian', 'Música havaiana', 'pop', 1915, [], 'Hawaiian music'),
   // --- 1920–1959: América Latina e Caribe ---
@@ -497,7 +497,7 @@ export const GENRES: Genre[] = [
   g('rai', 'Raï', 'africa', 1930),
   g('isicathamiya', 'Isicathamiya', 'africa', 1939, ['marabi', 'gospel_quartet']),
   g('chaabi', 'Chaâbi', 'africa', 1940, ['arabic_classical']),
-  g('rumba_congolaise', 'Rumba congolesa', 'africa', 1950, ['son'], 'Congolese rumba'),
+  g('rumba_congolaise', 'Rumba congolesa', 'africa', 1948, ['son'], 'Congolese rumba'), // r21 (J-4): "Marie-Louise" (Wendo Kolosoy) é de 1948
   g('semba', 'Semba', 'africa', 1950),
   g('marrabenta', 'Marrabenta', 'africa', 1950),
   g('dance_band_highlife', 'Highlife de big band', 'africa', 1950, ['highlife', 'big_band'], 'Dance-band highlife'),
@@ -536,7 +536,7 @@ export const GENRES: Genre[] = [
   g('hi_nrg', 'Hi-NRG', 'electronic', 1980, ['disco', 'synthpop']),
   g('desert_blues', 'Blues do deserto', 'africa', 1980, ['delta_blues', 'blues_rock'], 'Desert blues'),
   g('champeta', 'Champeta', 'latin', 1980, ['soukous', 'cumbia']),
-  g('bhangra', 'Bhangra', 'asia_me', 1980, ['indian_classical', 'dance_pop']),
+  g('bhangra', 'Bhangra', 'asia_me', 1980, ['indian_classical', 'disco']), // r21 (J-2): dance_pop nasce em 1982
   g('russian_rock', 'Rock russo', 'rock', 1980, ['post_punk', 'estrada'], 'Russian rock'),
   g('kizomba', 'Kizomba', 'africa', 1984, ['semba', 'zouk']),
   g('death_metal', 'Death metal', 'rock', 1985, ['thrash']),
@@ -552,7 +552,7 @@ export const GENRES: Genre[] = [
   g('shoegaze', 'Shoegaze', 'rock', 1988, ['indie', 'alt_rock']),
   g('turbo_folk', 'Turbo-folk', 'europe', 1988, ['dance_pop', 'estrada']),
   g('anison', 'Anison', 'asia_me', 1990, ['jpop']),
-  g('psytrance', 'Psytrance', 'electronic', 1990, ['trance']),
+  g('psytrance', 'Psytrance', 'electronic', 1993, ['trance']), // r21 (J-2): Goa trance ganha nome em 1993–94; trance nasce em 1991
   g('rap_fr', 'Rap francês', 'hiphop', 1990, ['hiphop'], 'French rap'),
   g('trip_hop', 'Trip-hop', 'electronic', 1991, ['hiphop', 'ambient']),
   g('memphis_rap', 'Memphis rap', 'hiphop', 1991, ['hiphop']),
@@ -579,7 +579,7 @@ export const GENRES: Genre[] = [
   g('funk_ostentacao', 'Funk ostentação', 'brazil', 2008, ['funk_carioca']),
   g('cloud_rap', 'Cloud rap', 'hiphop', 2010, ['trap']),
   g('vaporwave', 'Vaporwave', 'electronic', 2011, ['ambient', 'city_pop']),
-  g('alt_rnb', 'R&B alternativo', 'rnb', 2011, ['neo_soul', 'bedroom_pop'], 'Alternative R&B'),
+  g('alt_rnb', 'R&B alternativo', 'rnb', 2011, ['neo_soul', 'indie'], 'Alternative R&B'), // r21 (J-2): bedroom_pop nasce em 2012
   g('brega_funk', 'Brega funk', 'brazil', 2012, ['funk_carioca', 'brega']),
   g('gqom', 'Gqom', 'africa', 2012, ['kwaito', 'house']),
   g('lofi_hiphop', 'Lo-fi hip hop', 'hiphop', 2013, ['jazz_rap']),
@@ -619,6 +619,29 @@ for (const [id, pt, en, fam, born, parents, cities] of G19) {
 }
 
 export const genreById = Object.fromEntries(GENRES.map((x) => [x.id, x])) as Record<string, Genre>;
+
+// r21 (J-10): todo gênero tem pelo menos uma cidade-cena (antes 75 ficavam fora de qualquer cena e nenhum ato
+// procedural nascia neles). Cidade mais óbvia de cada um; o nascimento do gênero continua filtrando o ano.
+const SCENES21: [genre: string, city: string][] = [
+  ['fusion', 'new_york'], ['new_jack', 'new_york'], ['art_rock', 'london'], ['teen_pop', 'philadelphia'], ['boy_band', 'boston'],
+  ['drill', 'chicago'], ['minimalism', 'new_york'], ['parlor_song', 'new_york'], ['march', 'washington'], ['vaudeville', 'new_york'],
+  ['barbershop', 'kansas_city'], ['minstrel', 'new_york'], ['opera', 'milan'], ['spirituals', 'nashville'], ['flamenco', 'sevilla'],
+  ['maxixe', 'rio'], ['modinha', 'rio'], ['habanera', 'havana'], ['stride', 'new_york'], ['hot_jazz', 'chicago'],
+  ['chicago_blues', 'chicago'], ['old_time', 'nashville'], ['cowboy_song', 'los_angeles'], ['skiffle', 'london'], ['rockabilly', 'memphis'],
+  ['tin_pan_alley', 'new_york'], ['torch_song', 'new_york'], ['danzon', 'havana'], ['mambo', 'havana'], ['cha_cha', 'havana'],
+  ['marchinha', 'rio'], ['choro', 'rio'], ['samba_enredo', 'rio'], ['marabi', 'johannesburg'], ['yeye', 'paris'],
+  ['lovers_rock', 'london'], ['pagode', 'sao_paulo'], ['visual_kei', 'tokyo'], ['acid_house', 'chicago'], ['anison', 'tokyo'],
+  ['memphis_rap', 'memphis'], ['idm', 'sheffield'], ['nu_metal', 'los_angeles'], ['uk_garage', 'london'], ['cumbia_villera', 'buenos_aires'],
+  ['dubstep', 'london'], ['jersey_club', 'new_york'], ['vocaloid_pop', 'tokyo'], ['afro_house', 'johannesburg'], ['cloud_rap', 'san_francisco'],
+  ['vaporwave', 'portland'], ['brega_funk', 'recife'], ['lofi_hiphop', 'tokyo'], ['uk_drill', 'london'], ['phonk', 'memphis'],
+  ['afroswing', 'london'], ['funk_150', 'rio'], ['alte', 'lagos'], ['pluggnb', 'atlanta'],
+  // era sintética (2030+)
+  ['k_synth', 'seoul'], ['latent_core', 'berlin'], ['synthetic_choir', 'vienna'], ['prompt_rap', 'atlanta'], ['handmade_rock', 'austin'],
+  ['holo_folk', 'nashville'], ['ghost_soul', 'detroit'], ['consent_wave', 'los_angeles'], ['haptic_dub', 'bristol'], ['samba_latente', 'rio'],
+  ['afro_neural', 'lagos'], ['bio_ambient', 'reykjavik'], ['mesh_reggaeton', 'san_juan'], ['neuro_pop', 'stockholm'], ['dream_feed', 'tokyo'],
+  ['lucid_trance', 'amsterdam'],
+];
+for (const [gid, ci] of SCENES21) { const cy = CITIES.find((x) => x.id === ci); if (cy && genreById[gid] && !cy.scenes.includes(gid)) cy.scenes.push(gid); }
 
 export function familyOf(genreId: string): FamilyId {
   return genreById[genreId]?.family ?? 'pop';

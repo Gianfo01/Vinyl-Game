@@ -10,6 +10,7 @@ import { familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, money, notify, post, rememberListeners } from '../util';
+import { freeCash20 } from '../oblig20';
 import { chronListeners, chronState } from './chron9';
 import { relicHook, relics, type Relic } from './relics9';
 import { f12, festHypeHook } from './fest12';
@@ -19,7 +20,9 @@ import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts1
 
 export interface HSrc { k: string; t: L; v: number }
 export interface HEnt { s: HSrc[]; p?: number; v?: number; pk?: number }
-export interface RelH { a: string; w: number; exp: number; q: number; need: number; bl?: number; sl?: number; emb?: 1; leak?: 1; party?: 1; cr?: 1; nw?: 1 }
+export interface RelH { a: string; w: number; exp: number; q: number; need: number; bl?: number; sl?: number; emb?: 1; leak?: 1; party?: 1; cr?: 1; nw?: 1;
+  /** r21 (B15): expectativa SEM a parte do rollout (`hypeBoost`), que o market.ts já pôs no apelo — é esta que vira unidades nas semanas 0–6 */
+  x?: number }
 export interface Pend12 { emb?: 1; leak?: 1; party?: 1 }
 export interface Hype12 { e: Record<string, HEnt>; rel: Record<string, RelH>; pend: Record<string, Pend12>; cd: Record<string, number>; log: { w: number; t: L; up: boolean; k: string }[]; nb: number; ns: number }
 declare module '../ext4' { interface Ext4 { hype12: Hype12 } }
@@ -133,16 +136,19 @@ registerSimHook('launch', 'hype12', (s, _r, { release: rel }) => {
   const act = s.acts[rel.actId];
   const n = st.e[`n:${rel.actId}`];
   const extra = sum(n);
-  // a parte "rollout" já entrou no apelo pelo market.ts (hypeBoost); aqui só o que é deste sistema
-  const derived = Math.max(0, ((rel.hypeBoost ?? 1) - 1) * 80) + (act ? actBase(s, act) * 0.4 + act.fame * 0.25 : 0) + (rel.owner === 'player' && w4(s).hype >= 10 ? w4(s).hype * 0.1 : 0);
-  const exp = clamp(Math.round(extra + derived), 0, 100);
+  // a parte "rollout" (hypeBoost) já entrou no apelo pelo market.ts: conta na expectativa (o que o público espera do disco),
+  // mas não vira unidades de novo nas semanas 0–1 (r21 B15: `x` = expectativa sem o rollout)
+  const rollout = Math.max(0, ((rel.hypeBoost ?? 1) - 1) * 80);
+  const derived = (act ? actBase(s, act) * 0.4 + act.fame * 0.25 : 0) + (rel.owner === 'player' && w4(s).hype >= 10 ? w4(s).hype * 0.1 : 0);
+  const exp = clamp(Math.round(extra + rollout + derived), 0, 100);
+  const x = clamp(Math.round(extra + derived), 0, 100);
   if (extra > 2) {
     const k = 1 + Math.min(0.25, extra / 300);
     rel.appeal *= k;
     (rel.autopsy ??= []).push({ key: 'hype12', label: l('Expectativa (teasers, audição, imprensa)', 'Anticipation (teasers, listening party, press)'), value: k, confidence: 'medium' });
   }
   const p = st.pend[rel.actId] ?? {};
-  const rh: RelH = { a: rel.actId, w: rel.week, exp, q: Math.round(rel.q), need: needQ(exp), ...p };
+  const rh: RelH = { a: rel.actId, w: rel.week, exp, x, q: Math.round(rel.q), need: needQ(exp), ...p };
   const gap = rel.q - rh.need;
   if (exp >= 40 && gap < -6) rh.bl = Math.round(clamp((-gap - 6) / 22, 0.15, 1) * (p.party ? 0.7 : 1) * 100) / 100;
   else if (exp < 22 && rel.q >= 80) rh.sl = Math.round(clamp((rel.q - 74) / 20, 0.15, 1) * 100) / 100;
@@ -158,9 +164,10 @@ registerMod('chartUnits', 'hype12', (s, v, { release: rel }) => {
   const rh = rel && hy(s).rel[rel.id];
   if (!rel || !rh) return null;
   const wk = wkOf(s, rel);
+  const ex = rh.x ?? rh.exp; // r21 (B15): sem reaplicar o rollout
   let m = 1;
-  if (wk <= 1) m *= 1 + rh.exp / 100 * 0.35;
-  else if (wk <= 6) m *= 1 - rh.exp / 100 * 0.1;
+  if (wk <= 1) m *= 1 + ex / 100 * 0.35;
+  else if (wk <= 6) m *= 1 - ex / 100 * 0.1;
   if (wk === 0 && rh.leak) m *= s.year >= 1999 ? 0.88 : 0.95;
   if (rh.bl) {
     const start = rh.emb ? 2 : 1;
@@ -317,7 +324,7 @@ export function levers(s: GameState, actId: string): LeverInfo[] {
   if (!a || a.owner !== 'player') return [];
   const pr = pendOf(s, actId), p = st.pend[actId] ?? {};
   const cdOk = (id: Lever) => s.week - (st.cd[`${id}:${actId}`] ?? -999) >= CD[id];
-  const need = (id: Lever, cond: boolean, why: L): Pick<LeverInfo, 'ok' | 'why'> => !cond ? { ok: false, why } : !cdOk(id) ? { ok: false, why: l('Cedo demais: o público ainda lembra da última.', 'Too soon: people still remember the last one.') } : s.player.cash < leverCost(s, a, id) ? { ok: false, why: l('Caixa insuficiente.', 'Not enough cash.') } : { ok: true };
+  const need = (id: Lever, cond: boolean, why: L): Pick<LeverInfo, 'ok' | 'why'> => !cond ? { ok: false, why } : !cdOk(id) ? { ok: false, why: l('Cedo demais: o público ainda lembra da última.', 'Too soon: people still remember the last one.') } : freeCash20(s) < leverCost(s, a, id) ? { ok: false, why: l('Caixa insuficiente.', 'Not enough cash.') } : { ok: true };
   const tg = feudTarget(s, a);
   const out: LeverInfo[] = [
     { id: 'teaser', name: teaserName(s), fx: social(s) ? l('+10 a +32 de hype (as redes são imprevisíveis). Vai para o próximo lançamento, ou para o artista se não houver.', '+10 to +32 hype (social media is unpredictable). Goes to the next release, or the artist if none.') : l('+16 de hype, previsível. Vai para o próximo lançamento, ou para o artista se não houver.', '+16 hype, predictable. Goes to the next release, or the artist if none.'), cost: leverCost(s, a, 'teaser'), ...need('teaser', true, l('', '')) },

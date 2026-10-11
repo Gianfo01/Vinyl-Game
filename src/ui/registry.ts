@@ -11,6 +11,7 @@ import type { L } from '../data/world';
 import { t } from '../i18n/strings';
 import type { Cutscene } from '../sim/ext4';
 import type { GameState } from '../sim/types';
+import { trapTab21 } from './common';
 import { h } from './dom';
 
 /** Painéis que aceitam abas extras (já usam abas). */
@@ -160,7 +161,12 @@ export function openScene(title: L | string, render: (close: () => void) => HTML
     opts.onClose?.();
     prev?.focus?.();
   };
-  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+  const onKey = (e: KeyboardEvent) => {
+    if (!root.isConnected) { document.removeEventListener('keydown', onKey); return; }
+    if (e.key === 'Escape') { close(); return; }
+    const tops = document.querySelectorAll('.overlay, .scene-overlay');
+    if (tops[tops.length - 1] === root) trapTab21(root, e); // r21 (1.8): Tab circula dentro da cena
+  };
   const label = typeof title === 'string' ? title : t(title);
   root = h('div', { class: 'scene-overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': label },
     h('div', { class: `scene-box ${opts.wide === false ? '' : 'wide'}` },

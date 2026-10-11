@@ -142,6 +142,7 @@ function menu20(anchor: HTMLElement, at: { x: number; y: number } | undefined, t
     else if (e.key === 'Tab') close(false);
     else if ((e.key === 'Enter' || e.key === ' ') && i >= 0) { e.preventDefault(); items[i].click(); }
     else if (e.key.length === 1 && /\S/.test(e.key)) {
+      e.stopPropagation(); e.preventDefault(); // r21 (I-1): a letra do type-ahead não vira atalho de página por baixo do menu
       const k = e.key.toLowerCase();
       const n = items.length;
       for (let j = 1; j <= n; j++) { const el = items[(Math.max(i, 0) + j) % n]; if ((el.textContent ?? '').trim().toLowerCase().startsWith(k)) { el.focus(); break; } }

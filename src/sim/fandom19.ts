@@ -13,7 +13,7 @@
 // Fatos-índice (emitIndexFact; ler com indexFacts): `fan_wave` (onda de fãs) e `fan_drop` (debandada), de sys/facades19.ts.
 
 import { COUNTRY_INFO, countryMarketSize } from '../data/countries';
-import { MARKETS, type L, type MarketId } from '../data/world';
+import { MARKETS, cityById, type L, type MarketId } from '../data/world';
 import { fanTotal, fandomOf, scaleFans } from './fandom';
 import { indexFacts, recentFacts, type Fact } from './facts17';
 import { fn15 } from './sys/fan15';
@@ -52,7 +52,16 @@ export function fansByRegion19(s: GameState, actId: string): Record<MarketId, nu
   }
   const n = fanTotal(a);
   if (!tot) return out;
-  for (const m of MARKETS) out[m.id] = Math.round((n * w[m.id]) / tot);
+  let sum = 0;
+  for (const m of MARKETS) { out[m.id] = Math.round((n * w[m.id]) / tot); sum += out[m.id]; }
+  // r21 (D-7): o arredondamento por mercado não fecha o total — o resto vai para o mercado-sede (ou o maior)
+  const rest = n - sum;
+  if (rest) {
+    const home = cityById[a.city]?.market;
+    const best = MARKETS.reduce((b, m) => (w[m.id] > w[b.id] ? m : b), MARKETS[0]).id;
+    const to = home && w[home] > 0 ? home : best;
+    out[to] = Math.max(0, out[to] + rest);
+  }
   return out;
 }
 

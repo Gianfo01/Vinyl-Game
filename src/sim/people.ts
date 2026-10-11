@@ -1,7 +1,7 @@
 // Geração de pessoas, atos, nomes e músicas (GDD §5.3, §9; Catálogo §9).
 
 import { clamp, type Rng } from '../core/rng';
-import { AMBITIONS, BAND_WORDS, FIRST_NAMES, LAST_NAMES, ORIGINS, SONG_WORDS, TRAITS, GENRE_AFFINITY, TEMPER_TRAITS, traitById, type SkillId } from '../data/people';
+import { AMBITIONS, BAND_WORDS, FIRST_NAMES, FIRST_NAMES_F, FIRST_NAMES_M, LAST_NAMES, ORIGINS, SONG_WORDS, TRAITS, GENRE_AFFINITY, TEMPER_TRAITS, sexByName, traitById, type SkillId } from '../data/people';
 import { cityById, familyOf, type FamilyId, type NameGroup } from '../data/world';
 import type { Act, GameState, Person } from './types';
 import { hasMutator, nextId } from './util';
@@ -21,10 +21,21 @@ function rolesFor(family: FamilyId, n: number): Person['role'][] {
   return out;
 }
 
-export function personName(r: Rng, lang: NameGroup): string {
-  const first = FIRST_NAMES[lang] ?? FIRST_NAMES.en;
+/** r21 (C-9): com `sex` sorteia da lista do sexo; sem, da união (mesmo consumo de Rng de antes). */
+export function personName(r: Rng, lang: NameGroup, sex?: 'm' | 'f'): string {
+  const tab = sex === 'f' ? FIRST_NAMES_F : sex === 'm' ? FIRST_NAMES_M : FIRST_NAMES;
+  const first = tab[lang] ?? tab.en;
   const last = LAST_NAMES[lang] ?? LAST_NAMES.en;
   return `${r.pick(first)} ${r.pick(last)}`;
+}
+
+/** r21 (C-1): nome gerado não pode repetir o de um colega de ato (homônimos viram a mesma identidade nos índices por nome). */
+export function uniqueName21(r: Rng, p: Person, others: Person[], lang: NameGroup): void {
+  const taken = new Set(others.filter((o) => o !== p).map((o) => o.name.toLowerCase()));
+  for (let i = 0; i < 6 && taken.has(p.name.toLowerCase()); i++) {
+    p.name = personName(r, lang, p.sex);
+    p.sex = p.sex ?? sexByName(p.name);
+  }
 }
 
 export function langForCity(cityId: string, r: Rng): NameGroup {
@@ -38,7 +49,7 @@ export function langForCity(cityId: string, r: Rng): NameGroup {
 export function makePerson(
   s: GameState,
   r: Rng,
-  opts: { lang: NameGroup; role: Person['role']; potential: number; born: number; startFrac: number; name?: string; synthetic?: boolean },
+  opts: { lang: NameGroup; role: Person['role']; potential: number; born: number; startFrac: number; name?: string; synthetic?: boolean; sex?: 'm' | 'f' },
 ): Person {
   const extreme = hasMutator(s, 'difficult_artists');
   const origin = r.pick(ORIGINS);
@@ -52,7 +63,7 @@ export function makePerson(
     if (k === 'prod' && (opts.role === 'producer' || opts.role === 'dj')) focus = 18;
     if (k === 'lyr' && opts.role === 'mc') focus = 10;
     const v = base + focus + (origin.bonus[k] ?? 0) + r.normal(0, 9) - (k === 'biz' ? 12 : 0);
-    skills[k] = Math.round(clamp(v, 3, Math.max(10, opts.potential + 5)));
+    skills[k] = Math.round(clamp(v, 3, Math.min(100, Math.max(10, opts.potential)))); // r21 (C-4): potencial é teto (nunca > 100)
   }
   const traitCount = extreme ? 3 : r.chance(0.5) ? 2 : 3;
   const traits: string[] = [];
@@ -63,10 +74,13 @@ export function makePerson(
     traits.push(tr.id);
     groups.add(tr.group);
   }
+  const name = opts.name ?? personName(r, opts.lang, opts.sex);
+  const sex = opts.sex ?? sexByName(name); // r21 (C-9): sexo vem do nome sorteado (sem Rng extra); nome real desconhecido → indefinido
   return {
     id: nextId(s, 'p'),
-    name: opts.name ?? personName(r, opts.lang),
+    name,
     born: opts.born,
+    ...(sex ? { sex } : {}),
     role: opts.synthetic ? 'synthetic' : opts.role,
     skills,
     potential: Math.round(opts.potential),
@@ -144,6 +158,7 @@ export function makeAct(s: GameState, r: Rng, o: MakeActOpts): Act {
       synthetic,
       name: o.members === 1 && o.name ? o.name : undefined,
     });
+    if (!(o.members === 1 && o.name)) uniqueName21(r, p, members, lang); // r21 (C-1): sem homônimos na mesma banda
     if (synthetic) p.traits = ['prolific', 'media_savvy'];
     else if (r.chance(0.7)) {
       // temperamento costuma combinar com o gênero (rebeldia → rock, rua → hip hop…)
@@ -230,10 +245,7 @@ export function traitMod(s: GameState, act: Act, key: keyof import('../data/peop
   for (const id of act.members) {
     const p = s.persons[id];
     if (!p) continue;
-    for (const tr of p.traits) {
-      const def = TRAITS.find((x) => x.id === tr);
-      t += (def?.mod[key] as number | undefined) ?? 0;
-    }
+    for (const tr of p.traits) t += (traitById[tr]?.mod[key] as number | undefined) ?? 0; // r21 (C-10): índice, não busca linear
   }
   return t / Math.max(1, act.members.length);
 }
@@ -253,7 +265,7 @@ export function mainAmbition(s: GameState, act: Act): string {
 
 /** Crescimento mensal de habilidade rumo ao potencial (retorno decrescente). */
 export function growPerson(p: Person, k: SkillId, amount: number): void {
-  const cap = Math.min(100, p.potential + 4);
+  const cap = Math.min(100, p.potential); // r21 (C-4): coerente com a criação (potencial é teto)
   const gap = Math.max(0, cap - p.skills[k]);
   p.skills[k] = Math.min(cap, p.skills[k] + amount * (gap / Math.max(1, cap)) * 1.6);
 }

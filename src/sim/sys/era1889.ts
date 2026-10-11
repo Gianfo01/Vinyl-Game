@@ -39,7 +39,7 @@ for (const o of OUTLETS_1889) if (!OUTLETS17.some((x) => x.id === o.id)) OUTLETS
 for (const u of UNIONS_1889) if (!UNIONS.some((x) => x.id === u.id)) (UNIONS as unknown as typeof UNIONS_1889).push(u);
 for (const c of COUNTRY_INFO) {
   const p = POP_1889[c.a3];
-  if (c.pop[0][0] >= 1920) c.pop.unshift(...(p ? [[1890, p[0]], [1900, p[1]], [1910, p[2]]] as [number, number][] : [[1890, c.pop[0][1] * 0.75], [1900, c.pop[0][1] * 0.82], [1910, c.pop[0][1] * 0.9]] as [number, number][]));
+  if (c.pop[0][0] >= 1920) c.pop.unshift(...(p ? [[1890, p[0]], [1900, p[1]], [1910, p[2]]] as [number, number][] : [[1890, c.pop[0][1] * 0.6], [1900, c.pop[0][1] * 0.7], [1910, c.pop[0][1] * 0.85]] as [number, number][]));
   const t = TASTE_1889[c.a3];
   if (t && c.taste[0][0] >= 1920) c.taste.unshift([1889, t]);
 }

@@ -4,11 +4,13 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
+import { labelTake } from './sys/deal360_17';
 import type { Act, GameState } from './types';
 import type { BrandDeal } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 import { syncMasterShare } from './rights';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { m17, skusNow, type Sku } from './sys/merch17';
 
 export interface BrandDef {
   name: string;
@@ -101,7 +103,7 @@ export function acceptDeal(s: GameState, r: Rng, dealId: string, counter = false
   // rodada 8: a fatia do master segue a ficha de direitos do disco (sync cedido ou não, master revertido)
   const masterShare = act.playerBand ? 0.75 : syncMasterShare(s, act, d.songId, c?.party === 'player' ? 0.75 : 0);
   const pubShare = act.playerBand || (c?.party === 'player' && c.publishing) || s.ownPublishing ? 0.25 : 0;
-  const mine = d.kind.startsWith('sync') ? Math.round(d.fee * (masterShare + pubShare)) : act.playerBand ? d.fee : Math.round(d.fee * (c?.model === '360' ? c.share360 : 0.15));
+  const mine = d.kind.startsWith('sync') ? Math.round(d.fee * (masterShare + pubShare)) : labelTake(s, act, 'brand', d.fee); // r21 (H-8)
   post(s, `deal:${d.id}`, mine, d.kind.startsWith('sync') ? 'sync' : 'brands', `${d.brand} — ${act.name}`);
   if (!act.playerBand) act.cash += d.fee - mine;
   // impulso de consumo é efeito separado da taxa (GDD §21)
@@ -141,34 +143,31 @@ export function produceMerch(s: GameState, actId: string, units: number, quality
   if (!act || (act.owner !== 'player' && !act.playerBand)) return l('Ato não é seu.', 'Not your act.');
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (!act.playerBand && c?.model !== '360') return l('Merch do artista só com contrato 360.', 'Artist merch requires a 360 deal.');
+  // r21 (F-8): uma só linha de estoque — o lote vira uma linha do merch17 (camiseta de turnê quando existe na época)
+  const skus = skusNow(s);
+  const sku: Sku | undefined = skus.includes('tee') ? 'tee' : skus[0];
+  if (!sku) return l('Ainda não existe merch nesta época.', 'No merch exists in this era yet.');
   const unit = money(s, 2 + quality / 25);
   const cost = unit * units + money(s, 300);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `merch:${actId}:${units}`, -cost, 'merch', `Merch ${act.name}`);
+  const st = m17(s);
+  let ln = st.lines.find((x) => x.act === actId && x.sku === sku && !x.drop);
+  if (!ln) { ln = { act: actId, sku, stock: 0, made: 0, sold: 0, design: quality, price: 'mid', age: 0, rev: 0 }; st.lines.push(ln); }
+  ln.stock += units; ln.made += units; ln.design = Math.round((ln.design + quality) / 2); ln.age = 0;
   const m = (s.merch[actId] ??= { actId, stock: 0, designs: 0, sold: 0, revenue: 0, quality: 40 });
-  m.stock += units;
+  m.stock = merchStock(s, actId);
   m.designs += 1;
   m.quality = Math.round((m.quality + quality) / 2);
   return null;
 }
 
-/** Venda online/lojas de merch (shows vendem em tours.ts). */
+/** Estoque total do ato nas linhas do merch17 (fonte única). */
+export const merchStock = (s: GameState, actId: string): number => m17(s).lines.filter((x) => x.act === actId).reduce((t, x) => t + x.stock, 0);
+
+/** r21 (F-8): a venda mensal é do merch17 (uma só fonte); aqui só se espelha o estoque para o resumo s.merch. */
 function merchMonth(s: GameState): void {
-  for (const m of Object.values(s.merch)) {
-    const act = s.acts[m.actId];
-    if (!act || m.stock <= 0) continue;
-    const demand = Math.round((act.fans.core * 0.03 + act.fans.active * 0.004) * (0.5 + m.quality / 100) * (hasTech(s, 'internet') ? 1.5 : 1));
-    const sold = Math.min(m.stock, demand);
-    if (!sold) continue;
-    m.stock -= sold;
-    m.sold += sold;
-    const rev = sold * money(s, 8 + m.quality / 10);
-    m.revenue += rev;
-    const c = act.contractId ? s.contracts[act.contractId] : undefined;
-    const share = act.playerBand ? 1 : c?.model === '360' ? Math.max(0.3, c.share360) : 0;
-    if (share) post(s, `merchsales:${m.actId}`, Math.round(rev * share), 'merch', `Merch ${act.name}`);
-    if (share < 1) act.cash += Math.round(rev * (1 - share));
-  }
+  for (const m of Object.values(s.merch)) m.stock = merchStock(s, m.actId);
 }
 
 export function brandsMonth(s: GameState, r: Rng): void {

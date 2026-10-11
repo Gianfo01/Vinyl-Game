@@ -23,12 +23,12 @@ registerCutscene('lifeEvent', (s, cs, close) => {
     const d = op && defOf(op.ev);
     if (!op || !d) { box.replaceChildren(h('p', { class: 'muted' }, t(l('Este momento já passou.', 'This moment has passed.'))), h('button', { class: 'btn primary', onclick: close }, t(l('Continuar', 'Continue')))); return; }
     if (op.done) {
-      box.replaceChildren(h('p', null, t(d.text(s, op.ctx))), h('p', { class: 'le10-res' }, h('b', null, t(l('Você decidiu: ', 'You decided: '))), t(op.done.text)), h('button', { class: 'btn primary', onclick: close }, t(l('Continuar', 'Continue'))));
+      box.replaceChildren(h('p', null, t(op.t ?? d.text(s, op.ctx))), h('p', { class: 'le10-res' }, h('b', null, t(l('Você decidiu: ', 'You decided: '))), t(op.done.text)), h('button', { class: 'btn primary', onclick: close }, t(l('Continuar', 'Continue'))));
       return;
     }
     const nm = names(s, op.ctx);
     box.replaceChildren(
-      h('p', { class: 'le10-text' }, t(d.text(s, op.ctx))),
+      h('p', { class: 'le10-text' }, t(op.t ?? d.text(s, op.ctx))),
       dots(s),
       h('div', { class: 'col' }, d.ch.map((ch) => {
         const blk = choiceBlocker(s, ch, op.ctx);
@@ -61,7 +61,7 @@ export function lifeEventsSection(s: GameState): HTMLElement {
     h('p', { class: 'muted small' }, t(l('Todo mês a vida pode trazer um acontecimento (família, saúde, dinheiro, fé, política, a cena). Ele chega como pop-up; quem ignora, fica com a resposta mais cautelosa.', 'Every month life may bring something (family, health, money, faith, politics, the scene). It arrives as a pop-up; ignore it and the most cautious answer applies.'))),
     open.length ? h('div', { class: 'card-grid' }, open.map((op) => {
       const d = defOf(op.ev)!;
-      return h('div', { class: 'pick' }, h('b', null, t(d.name)), h('small', null, t(d.text(s, op.ctx))),
+      return h('div', { class: 'pick' }, h('b', null, t(d.name)), h('small', null, t(op.t ?? d.text(s, op.ctx))),
         h('button', { class: 'btn small primary', onclick: () => { openCutscene(s, { id: op.id, kind: 'lifeEvent', week: s.week, data: { title: d.name, openId: op.id } }, rerender); } }, t(l('Responder', 'Answer'))));
     })) : h('p', { class: 'muted small' }, t(l('Nada pendente.', 'Nothing pending.'))),
     st.pend.length ? h('p', { class: 'small' }, t(l('Desdobramentos a caminho: {n}', 'Consequences on the way: {n}'), { n: st.pend.length })) : null,

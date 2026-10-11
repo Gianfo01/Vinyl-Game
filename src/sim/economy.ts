@@ -6,14 +6,14 @@ import { EQUIPMENT, HQ_LEVELS } from '../data/rules';
 import { MARKETS, cityById, l, type L, type MarketId } from '../data/world';
 import { careerSlotsUsed } from './contracts';
 import type { GameState, StaffMember } from './types';
-import { fmtL, hasMutator, hasTech, money, nextId, notify, post, remember } from './util';
+import { fmtL, hasMutator, hasTech, money, nextId, notify, post, postOrFail, remember } from './util';
 import { genProfessionals } from './worldgen';
 import { emitEvent } from './events';
 import { addAsset } from './finance';
 import { branchRent, hqBlocker, hqCaps } from './branches';
 import { perk } from './perks';
 import { loanAdj19 } from './rates19';
-import { cashWhy20, freeCash20 } from './oblig20';
+import { burn20, cashWhy20, freeCash20, registerBurn20, registerOblig20 } from './oblig20';
 import { rentOn19 } from './slots19'; // r19 (careers19): sede de selo só com selo ativo
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
@@ -28,6 +28,17 @@ export function monthlyCosts(s: GameState): { rent: number; salaries: number; ou
   const equipment = money(s, s.player.equipment.length * 60);
   return { rent, salaries, outsourcing, loans, equipment };
 }
+
+// r21 (seção 4.3): custo fixo entra no burn canônico (oblig20.burn20); as parcelas dos empréstimos já estão aqui.
+registerBurn20('economy', (s) => { const c = monthlyCosts(s); return c.rent + c.salaries + c.outsourcing + c.loans + c.equipment; });
+// r21 (B-5): participação do investidor (events.ts) é compromisso planejado: estimativa = fração × vendas do último mês × meses restantes.
+registerOblig20('investorShare', (s) => {
+  if (!(s.economy.investorShare > 0) || s.economy.investorUntil <= s.week) return [];
+  const months = Math.max(1, Math.ceil((s.economy.investorUntil - s.week) / 4.35));
+  const sales = Math.max(0, s.lastMonthLedger?.sales ?? 0);
+  const amt = Math.round(sales * s.economy.investorShare * months);
+  return amt > 0 ? [{ id: 'investorShare', kind: 'commitment' as const, src: 'economy', label: l('Participação do investidor nas vendas', 'Investor share of sales'), amt, liability: false, bank: false, monthly: Math.round(sales * s.economy.investorShare), note: l('Estimativa: fração das vendas até o fim do acordo', 'Estimate: share of sales until the deal ends') }] : [];
+});
 
 /** Carga de gestão: acima de 1 há atrito (qualidade, confiança). */
 export function managementLoad(s: GameState): number {
@@ -79,8 +90,10 @@ export function takeLoan(s: GameState): boolean {
   const o = loanOffer(s);
   if (!o || s.player.loans.length >= 3) return false;
   const monthly = Math.round((o.amount * (o.rate / 12)) / (1 - Math.pow(1 + o.rate / 12, -o.months)));
-  s.player.loans.push({ id: nextId(s, 'ln'), principal: o.amount, balance: o.amount, rate: o.rate, monthly, startWeek: s.week });
-  post(s, `loan_in:${s.player.loans.length}`, o.amount, 'financing', 'Empréstimo');
+  const id = nextId(s, 'ln');
+  // r21 (B-1): chave única por empréstimo; se o lançamento não entrar, o empréstimo não existe (antes: parcelas sem caixa)
+  if (!postOrFail(s, `loan_in:${id}`, o.amount, 'financing', 'Empréstimo')) return false;
+  s.player.loans.push({ id, principal: o.amount, balance: o.amount, rate: o.rate, monthly, startWeek: s.week });
   return true;
 }
 
@@ -94,7 +107,7 @@ export function checkInsolvency(s: GameState, r: Rng): void {
   }
   // r18 final (balanço): dívida funda (abaixo de 2 meses de custo fixo, mínimo US$ 15 mil reais) faz os credores
   // apertarem — o mês conta dobrado. Ficar levemente no vermelho continua dando 4 meses de fôlego.
-  const c = monthlyCosts(s), burn = c.rent + c.salaries + c.outsourcing + c.loans + c.equipment;
+  const burn = burn20(s); // r21 (seção 4.3): burn canônico (custo fixo + obrigações mensais + overhead + seguros)
   const deep = s.player.insolvencyMonths >= 1 && s.player.cash < -Math.max(2 * burn, money(s, 15000));
   const m0 = s.player.insolvencyMonths;
   s.player.insolvencyMonths += deep ? 2 : 1;

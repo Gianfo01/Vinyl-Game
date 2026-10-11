@@ -21,6 +21,7 @@ import { emitFact, onFact } from '../facts17';
 import { histLocked } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { rng19 } from '../rng19';
+import { labelRate } from './deal360_17';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import { est19, suit19 } from './afterlife19';
@@ -106,9 +107,7 @@ export function endFee19(s: GameState, a: Act): { v: number; parts: WhyPart[] } 
     { label: l('Comissão do selo (20%, ou a fatia 360 se maior)', 'Label commission (20%, or the 360 share if larger)'), value: commission19(s, a), fmt: 'mult' }] };
 }
 export function commission19(s: GameState, a: Act): number {
-  if (a.playerBand) return 1;
-  const c = a.contractId ? s.contracts[a.contractId] : undefined;
-  return Math.max(0.2, c?.share360 ?? 0);
+  return labelRate(s, a, 'endorse'); // r21 (H-8): régua única
 }
 export function endBlock19(s: GameState, a: Act, pid: string): L | null {
   if (s.year < ENDORSE_FROM19) return F(l('Endossos de instrumento começam por volta de {y}.', 'Instrument endorsements start around {y}.'), { y: ENDORSE_FROM19 });

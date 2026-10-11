@@ -14,7 +14,7 @@ import { settleVocals } from './vocals10';
 import { songStatus } from '../repertoire';
 import type { Act, GameState, Song } from '../types';
 import { fmtL, nextId, notify, playerActs, post, remember } from '../util';
-import { featureFee, songX } from './creation/core';
+import { featHooks, featureFee, songX } from './creation/core';
 import { MSG_HANDLERS } from './people/inbox';
 import { addMsg, P } from './people/state';
 import { ownerBonus } from './people/owner';
@@ -411,6 +411,14 @@ registerSimHook('week', 'feats8', (s, r) => {
     notify(s, res.text, res.result === 'accepted' ? 'good' : 'bad');
   }
 });
+
+// r21 (E-8): convite pelo caminho da criação (inviteFeature) vira acordo com royalties pagos todo mês
+featHooks.deal = (s, songId, guestActId, fee, share) => {
+  if (feats(s).deals.some((d) => d.songId === songId && d.status === 'done')) return;
+  const song = s.songs[songId], host = song && s.acts[song.actId];
+  if (!song || !host) return;
+  pushDeal(s, { id: nextId(s, 'fd'), songId, title: song.title, hostActId: host.id, guestActId, fee, split: share, clearance: 0, side: 'host', status: 'done', lastRev: 0, paid: 0, week: s.week });
+};
 
 // lançamento com convidado: os públicos se cruzam
 registerSimHook('launch', 'feats8', (s, _r, arg) => {

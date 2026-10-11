@@ -123,12 +123,17 @@ export function portrait(p: Person | undefined, size = 40): HTMLElement {
   return h('span', { class: `portrait ${p.alive ? '' : 'deceased'}`, style: `width:${size}px;height:${size}px;background:hsl(${hue} 45% 45%)`, title: p.name }, initials);
 }
 
+/** r21 (I-6): chaves das abas de Empresa e do Mercado clássico (antes: store.companyTab / store.marketTab fora do padrão). */
+export const COMPANY_TABS21 = 'companyTabs';
+export const MARKET_TABS21 = 'marketTabs';
+
 /** Abas simples guardadas por chave. */
 const tabState: Record<string, string> = {};
 export function tabs(key: string, items: { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement }[], rerender: () => void): HTMLElement {
   const cur = tabState[key] && items.some((i) => i.id === tabState[key]) ? tabState[key] : items[0]?.id;
   const active = items.find((i) => i.id === cur);
-  return h('div', { class: 'tabs-wrap', 'data-tabs': key, 'data-cur': cur },
+  // r21 (UX 2.3.8): barras com mais de 7 abas rolam na horizontal em vez de quebrar em duas linhas
+  return h('div', { class: `tabs-wrap ${items.length > 7 ? 'tabs-many21' : ''}`, 'data-tabs': key, 'data-cur': cur },
     h('div', { class: 'tabs', role: 'tablist' }, items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null))),
     h('div', { role: 'tabpanel' }, active ? active.render() : null),
   );

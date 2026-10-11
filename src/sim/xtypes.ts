@@ -309,6 +309,8 @@ export interface Company {
   monthlyCost: number;
   acquiredWeek: number;
   catalog: string[]; // releaseIds
+  /** r21 (H-12): atos que vieram com o selo comprado (vão junto quando a empresa é vendida) */
+  roster?: string[];
 }
 
 export interface Lawsuit {
@@ -340,6 +342,8 @@ export interface Securitization {
   share: number; // fração da receita de catálogo cedida
   untilWeek: number;
   paid: number;
+  /** r21 (B-5): teto do que o detentor recebe (centavos); ausente em saves antigos = adiantamento × 1,5 */
+  cap?: number;
 }
 
 export interface CatalogAuction {

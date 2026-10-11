@@ -1,36 +1,30 @@
 // Paradas semanais por gênero e por região, com recordes (GDD §19).
 
-import { MARKETS, MARKET_PREF, familyOf } from '../data/world';
+import { familyOf } from '../data/world';
 import type { GameState } from './types';
 import { fmtL, notify, remember } from './util';
 import { l } from '../data/world';
+
+/** Peso de um mercado FORA dos territórios do lançamento (importação/vazamento), relativo a 1 dentro.
+ *  r21 (B9): constante única — market19a (certificação por mercado) e charts7 (por país, metade) leem daqui. */
+export const OUTSIDE_TERRITORY_W = 0.08;
 
 export function chartsWeek(s: GameState): void {
   const entries = [...s.charts.singles, ...s.charts.albums];
   // por família de gênero (unidades da semana)
   const byFam: Record<string, { id: string; u: number }[]> = {};
-  const byMarket: Record<string, { id: string; u: number }[]> = {};
   for (const e of entries) {
     const rel = s.releases[e.releaseId];
     const act = rel ? s.acts[rel.actId] : undefined;
     if (!rel || !act) continue;
     const fam = familyOf(act.genre);
     (byFam[fam] ??= []).push({ id: rel.id, u: e.units });
-    // região: consumo repartido pelos mercados atendidos, pesado pelo gosto local
-    let den = 0;
-    const w: Record<string, number> = {};
-    for (const m of MARKETS) {
-      const inside = rel.territories.includes(m.id) ? 1 : 0.08;
-      const v = m.size(s.year) * (MARKET_PREF[m.id][fam] ?? 0.6) * inside;
-      w[m.id] = v;
-      den += v;
-    }
-    for (const m of MARKETS) (byMarket[m.id] ??= []).push({ id: rel.id, u: (e.units * w[m.id]) / Math.max(1e-9, den) });
   }
   s.genreCharts = {};
   for (const [f, list] of Object.entries(byFam)) s.genreCharts[f] = list.sort((a, b) => b.u - a.u).slice(0, 10).map((x) => x.id);
-  s.regionCharts = {};
-  for (const [m, list] of Object.entries(byMarket)) s.regionCharts[m] = list.sort((a, b) => b.u - a.u).slice(0, 10).map((x) => x.id);
+  // r21 (B9): `s.regionCharts` é preenchido só pelo charts7 (por país → região) no mesmo fechamento semanal; o cálculo
+  // antigo por mercado era descartado na mesma semana
+  s.regionCharts ??= {};
   records(s);
 }
 

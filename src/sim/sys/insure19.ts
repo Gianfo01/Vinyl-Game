@@ -19,6 +19,7 @@ import { pushInbox18, registerInboxKind, registerAdvisorTip } from '../inbox18';
 import { addStress } from '../stress17';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
+import { registerBurn20 } from '../oblig20';
 import { headline19 } from './factlink19';
 import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { P } from './people/state';
@@ -109,9 +110,17 @@ function claim(s: GameState, x: Pol19, f: Fact | null, death: boolean): void {
 // morte: integral; colapso/doença/internação: 20% (1 por ano)
 const dead = (s: GameState, x: Pol19) => !!s.persons[x.pid] && !s.persons[x.pid].alive;
 onFact('death', (s, f) => { const st = ins19(s); for (const x of st.pol.slice()) if ((f.actors.includes(x.pid) || f.actors.includes(x.act)) && dead(s, x)) { claim(s, x, f, true); st.pol.splice(st.pol.indexOf(x), 1); } }, 'insure19:death');
+// r21 (1.11): "cobre os shows cancelados" só paga quando há data cancelada de verdade (turnê com sinistro ou show de agente/promotor
+// cancelado) perto do fato; sem show perdido, não há o que indenizar
+function showsCancelled21(s: GameState, actId: string): boolean {
+  const today = s.day + s.clock.dayInMonth;
+  if ((s.tours ?? []).some((t) => t.actId === actId && t.stops.some((st) => st.status === 'cancelled' && !!st.note && Math.abs(st.day - today) <= 60))) return true;
+  const c12 = (s.x4 as unknown as { tour12?: { shows: { actId: string; week: number; res?: { cancelled?: boolean } }[] } }).tour12;
+  return (c12?.shows ?? []).some((sh) => sh.actId === actId && !!sh.res?.cancelled && Math.abs(sh.week - s.week) <= 8);
+}
 for (const k of ['breakdown', 'health', 'rehab']) onFact(k, (s, f) => {
   if (f.severity < 35) return;
-  for (const x of ins19(s).pol) if (f.actors.includes(x.pid) && x.lastIll < s.week - 52) { x.lastIll = s.week; claim(s, x, f, false); }
+  for (const x of ins19(s).pol) if (f.actors.includes(x.pid) && x.lastIll < s.week - 52 && showsCancelled21(s, x.act)) { x.lastIll = s.week; claim(s, x, f, false); }
 }, `insure19:${k}`);
 // sinistro: prêmio sobe; na morte, herdeiros (post18) se ressentem do selo que "lucrou"
 onFact('keyman_claim', (s, f) => {
@@ -149,6 +158,8 @@ export function insureMonth19(s: GameState): void {
   for (const m of s.player.staff) { const cr = P(s).career[m.id]; if (cr && cr.loyalty < 75) cr.loyalty = clamp(cr.loyalty + 0.3, 0, 100); }
 }
 registerSimHook('month', 'insure19', (s) => off19('insure19') || insureMonth19(s));
+// r21 (seção 4.3): prêmios e plano de saúde entram no burn canônico (oblig20.burn20)
+registerBurn20('insure19', (s) => { const st = ins19(s); return st.pol.reduce((t, x) => t + x.prem, 0) + (st.plan ? planCost19(s).v : 0); });
 
 // estrela em risco sem seguro → conselheiro e Caixa (uma vez por ato)
 registerAdvisorTip('insure19', (s) => {

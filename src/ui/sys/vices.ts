@@ -10,6 +10,7 @@ import { money, rngOf } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerTab } from '../registry';
+import { confirm21 } from '../ask21';
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 const form = { lender: 'bank' as LenderId, amount: 5000 };
@@ -31,7 +32,7 @@ export function vicesTab(s: GameState): HTMLElement {
         inRehab ? h('p', null, pill(t(l('na reabilitação', 'in rehab')), 'good'), ' ', t(l('até a semana {w}', 'until week {w}'), { w: v.rehab!.until })) : h('div', { class: 'row wrap' },
           h('button', { class: `btn small ${v.smoking ? 'primary' : ''}`, title: t(VICE_INFO.smoke.desc), onclick: () => say(toggleSmoking(s)) }, v.smoking ? t(l('Parar de fumar', 'Quit smoking')) : t(l('Fumar (hábito mensal)', 'Smoke (monthly habit)'))),
           h('button', { class: 'btn small', title: t(VICE_INFO.drink.desc), onclick: () => say(indulge(s, rngOf(s), 'drink')) }, `${t(l('Sair para beber', 'Go drinking'))} (${$(money(s, VICE_INFO.drink.cost))})`),
-          s.config.contentFilters.includes('drugs') ? null : h('button', { class: 'btn small ghost', title: t(VICE_INFO.drugs.desc), onclick: () => { if (confirm(t(l('Usar {d}? Vicia rápido, pode dar polícia e manchete.', 'Use {d}? Highly addictive; police and headlines possible.'), { d: drugName(s.year) }))) say(indulge(s, rngOf(s), 'drugs')); } }, `${t(l('Usar', 'Use'))} ${t(drugName(s.year))} (${$(money(s, VICE_INFO.drugs.cost))})`),
+          s.config.contentFilters.includes('drugs') ? null : h('button', { class: 'btn small ghost', title: t(VICE_INFO.drugs.desc), onclick: () => { confirm21(t(l('Usar {d}? Vicia rápido, pode dar polícia e manchete.', 'Use {d}? Highly addictive; police and headlines possible.'), { d: drugName(s.year) }), () => { say(indulge(s, rngOf(s), 'drugs')); }); } }, `${t(l('Usar', 'Use'))} ${t(drugName(s.year))} (${$(money(s, VICE_INFO.drugs.cost))})`),
           h('button', { class: 'btn small', onclick: () => say(goToRehab(s), l('Reabilitação marcada.', 'Rehab booked.')) }, `${t(l('Reabilitação', 'Rehab'))} (${$(rehabCost(s))})`),
         ),
       ),
@@ -73,7 +74,7 @@ function companyLoansTab(s: GameState): HTMLElement {
       const err = companyLoanBlocker(s, k);
       return h('div', { class: 'mg-dept' }, h('b', null, t(def.name)), h('small', { class: 'muted' }, t(def.desc)),
         h('small', null, `${$(def.amount(s))} · ${(def.rate(s) * 100).toFixed(1)}% a.a. · ${def.months} ${t(l('meses', 'months'))}`),
-        h('button', { class: `btn small ${k === 'shark' ? 'ghost' : ''}`, disabled: !!err, title: err ? t(err) : '', onclick: () => { if (k !== 'shark' || confirm(t(l('Pegar dinheiro com agiota?', 'Borrow from a loan shark?')))) say(takeCompanyLoan(s, k), l('Dinheiro no caixa.', 'Money in the bank.')); } }, t(l('Pegar', 'Borrow'))),
+        h('button', { class: `btn small ${k === 'shark' ? 'ghost' : ''}`, disabled: !!err, title: err ? t(err) : '', onclick: () => { const go = () => say(takeCompanyLoan(s, k), l('Dinheiro no caixa.', 'Money in the bank.')); if (k !== 'shark') go(); else confirm21(t(l('Pegar dinheiro com agiota?', 'Borrow from a loan shark?')), go, { danger: true }); } }, t(l('Pegar', 'Borrow'))),
         err ? h('small', { class: 'muted' }, t(err)) : null);
     })),
   );

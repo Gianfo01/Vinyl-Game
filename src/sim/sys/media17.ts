@@ -233,9 +233,10 @@ function gossip(s: GameState, r: Rng, list: O17[]): void {
     if ((st.cd[`g:${a.id}`] ?? 0) > s.week) continue;
     if (!r.chance(0.3 * ((a.fame - 25) / 75) ** 2)) continue;
     const tp = r.pick(tpls);
-    const pool = tp.pair === 'genre' ? famous.filter((b) => b.id !== a.id && b.genre === a.genre) : tp.pair ? famous.filter((b) => b.id !== a.id) : [];
+    // r21 (K2): par só do mesmo mercado, com relação real entre integrantes ou ambos muito famosos (≥ 60); mesmo mercado pesa 3×
+    const pool = tp.pair ? famous.filter((b) => b.id !== a.id && (tp.pair !== 'genre' || b.genre === a.genre) && (sameMarket(a, b) || related17(s, a, b) || (a.fame >= 60 && b.fame >= 60))) : [];
     if (tp.pair && !pool.length) continue;
-    const b = tp.pair ? r.pick(pool) : undefined;
+    const b = tp.pair ? r.weighted(pool, (x) => (sameMarket(a, x) ? 3 : 1)) : undefined;
     let o = pickOutlet(list, `g${a.id}${s.week}`, s.year >= 2006 ? ['tabloid', 'fan'] : ['tabloid', 'mainstream'], cityById[a.city]?.market);
     if (!o) continue;
     // conglomerado protege os artistas do próprio grupo: troca o boato ruim por um bom
@@ -247,6 +248,10 @@ function gossip(s: GameState, r: Rng, list: O17[]): void {
   }
 }
 
+const sameMarket = (a: Act, b: Act) => cityById[a.city]?.market === cityById[b.city]?.market;
+/** r21 (K2): algum integrante de `a` tem relação registrada com algum de `b`. */
+const related17 = (s: GameState, a: Act, b: Act): boolean => mem(s, a).some((p) => mem(s, b).some((q) => (p.rel?.[q.id] ?? 0) !== 0));
+
 function spread(s: GameState, r: Rng): void {
   const st = m17(s);
   const all = outlets17(s);
@@ -257,11 +262,16 @@ function spread(s: GameState, r: Rng): void {
     const o = all.find((x) => x.id === sto.out);
     const speed = (o?.kind === 'social' ? 3 : o?.kind === 'tv' || o?.line === 'tabloid' ? 2 : 1) + (s.year >= 2010 ? 1 : 0);
     let added = 0;
+    // r21 (K2): países sorteados com peso pela fama do ato neles; fama < 20 só quando o veículo é global e o país é do mercado do ato
+    const home = cityById[a.city]?.market;
+    const fameBy: Record<string, number> = {};
+    const cands = COUNTRY_INFO.filter((c) => !sto.reach.includes(c.a3));
+    for (const c of cands) fameBy[c.a3] = fameIn(s, a, c.a3);
     for (let k = 0; k < 8 && added < speed; k++) {
-      const c = r.pick(COUNTRY_INFO);
-      if (sto.reach.includes(c.a3)) continue;
-      const near = o && (o.market === 'global' || o.market === c.market);
-      if (!near && fameIn(s, a, c.a3) < 20) continue;
+      const c = r.weighted(cands, (x) => (sto.reach.includes(x.a3) ? 0 : Math.max(0.05, fameBy[x.a3])));
+      if (!c || sto.reach.includes(c.a3)) continue;
+      const near = o && o.market === 'global' && c.market === home;
+      if (!near && fameBy[c.a3] < 20) continue;
       sto.reach.push(c.a3);
       regionalHit(s, sto, c.a3);
       added++;
@@ -327,7 +337,7 @@ function suitEnd(s: GameState, r: Rng, sc: Suit): void {
   if (sc.vsPlayer) {
     // você foi processado (boato plantado e rastreado)
     if (win) { post(s, `m17suit:${sc.id}`, -sc.dmg, 'legal', 'Difamação (condenação)'); s.player.reputation.institutional = clamp(s.player.reputation.institutional - 6, 0, 100); }
-    const t = win ? fmtL(l('Condenado por difamação ("{t}"): indenização de {v} e reputação −6.', 'Found liable for defamation ("{t}"): damages and reputation −6.'), { t: sc.t, v: Math.round(sc.dmg / 100) }) : fmtL(l('Processo por difamação ("{t}") arquivado: você escapou.', 'Defamation suit ("{t}") dismissed: you got away with it.'), { t: sc.t });
+    const t = win ? fmtL(l('Condenado por difamação ("{t}"): indenização de {v} e reputação −6.', 'Found liable for defamation ("{t}"): damages of {v} and reputation −6.'), { t: sc.t, v: Math.round(sc.dmg / 100) }) : fmtL(l('Processo por difamação ("{t}") arquivado: você escapou.', 'Defamation suit ("{t}") dismissed: you got away with it.'), { t: sc.t });
     notify(s, t, win ? 'bad' : 'good'); log(s, t);
     emitFact(s, { kind: 'case_ruling', actors: ['player', sc.who], severity: win ? 50 : 25, visibility: 'public', tags: ['media17', win ? 'bad' : 'good'], text: t, src: 'media17' });
     return;

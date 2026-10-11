@@ -21,6 +21,7 @@ import { rng19 } from '../rng19';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { headline19 } from './factlink19';
+import { addBoost21 } from './boost21';
 import { fan18 } from './fans18';
 import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 , off19 } from './mkb19';
 
@@ -144,14 +145,14 @@ registerSimHook('month', 'adsync19', (s) => off19('adsync19') || adMonth19(s));
 
 // ---------------------------------------------------------------- ouvintes
 
-// licença: a faixa volta às lojas/streaming (hypeBoost) e ganha fãs casuais; lançamento por comercial = fama
+// licença: a faixa volta às lojas/streaming (boost21) e ganha fãs casuais; lançamento por comercial = fama
 onFact('ad_sync', (s, f) => {
   const rel = s.releases[String(f.data?.rel ?? '')], a = s.acts[f.actors[0]];
   if (!a) return;
   const launch = f.tags.includes('launch');
   a.fans.casual += Math.round((launch ? 6000 : 1500) * (s.year >= 2000 ? 1.5 : 1));
   if (launch) a.fame = clamp(a.fame + 8, 0, 100);
-  if (rel) { rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.15); }
+  if (rel) addBoost21(s, rel, 1.15, 8, l('Faixa no comercial', 'Track in the ad'));
   if (mineA19(a)) link19(s, 'adsync', fmtL(launch ? l('Comercial lança {a}: fama +8 e fãs casuais.', 'An ad launches {a}: fame +8 and casual fans.') : l('"{t}" no comercial → streaming/lojas ×1,15 e fãs casuais.', '"{t}" in the ad → streaming/stores ×1.15 and casual fans.'), { a: a.name, t: rel?.title ?? '?' }));
 }, 'adsync19:reach');
 // jingle: identidade do selo (reputação comercial sobe, artística cai)

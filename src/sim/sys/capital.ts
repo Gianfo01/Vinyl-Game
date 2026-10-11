@@ -11,11 +11,10 @@ import { ipoTerms } from '../business';
 import { registerExt4, registerSimHook } from '../ext4';
 import { bumpPerks, perk, registerPerkSource, type PerkEntry, type PerkValues } from '../perks';
 import type { GameState } from '../types';
-import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
-import { monthlyCosts } from '../economy';
+import { fmtL, money, nextId, notify, playerActs, post, postOrFail, remember } from '../util';
 import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
-import { cashWhy20, freeCash20 } from '../oblig20';
+import { burn20, cashWhy20, freeCash20, registerOblig20 } from '../oblig20';
 
 // ---------------------------------------------------------------- tipos de investidor
 
@@ -186,6 +185,12 @@ export function injectCapital(s: GameState, realAmount: number): L | null {
   return null;
 }
 
+// r21 (B-5): o empréstimo do dono é passivo da empresa (fora do covenant bancário)
+registerOblig20('ownerLoan', (s) => {
+  const v = capital(s).ownerLoan;
+  return v > 0 ? [{ id: 'ownerLoan', kind: 'loan' as const, src: 'capital', label: l('Empréstimo do dono', 'Owner loan'), amt: v, liability: true, bank: false, rate: 0.12, monthly: Math.min(v, Math.round(v * 0.03) + money(s, 50)) + Math.round(v * 0.01) }] : [];
+});
+
 /** Empréstimo do dono: a empresa devolve 3% do saldo + 1% de juros por mês ao seu bolso. */
 export function lendToCompany(s: GameState, realAmount: number): L | null {
   const o = ownerOf(s);
@@ -225,7 +230,7 @@ export function withdrawFromCompany(s: GameState, r: Rng, realAmount: number): L
       notes.push(l('A comissão de valores abriu investigação e multou a empresa.', 'The securities commission investigated and fined the company.'));
     }
   }
-  const burn = Object.values(monthlyCosts(s)).reduce((t, x) => t + x, 0);
+  const burn = burn20(s); // r21 (seção 4.3): burn canônico
   if (s.player.cash < burn * 3) {
     for (const id of playerActs(s)) { const a = s.acts[id]; if (a && !a.playerBand) a.trust = clamp(a.trust - 4, 0, 100); }
     s.player.reputation.artists = clamp(s.player.reputation.artists - 3, 0, 100);
@@ -244,11 +249,13 @@ export function toggleCompanyCard(s: GameState): void {
 
 /** Dividendos: fração do caixa distribuída a todos os acionistas; a sua parte vai para o seu bolso. */
 export function payDividend(s: GameState, frac: number): L | null {
-  if (s.player.cash <= 0) return l('Sem caixa para dividendos.', 'No cash for dividends.');
-  const total = Math.round(s.player.cash * clamp(frac, 0.01, 0.5));
+  // r21 (B-9): distribui fração do caixa LIVRE (adiantamentos prometidos não são distribuíveis)
+  if (freeCash20(s) <= 0) return l('Sem caixa para dividendos.', 'No cash for dividends.');
+  const total = Math.round(freeCash20(s) * clamp(frac, 0.01, 0.5));
   if (total < money(s, 100)) return l('Valor pequeno demais.', 'Amount too small.');
   const c = capital(s);
-  post(s, `div6:${s.week}`, -total, 'dividends', 'Dividendos');
+  // r21 (B-1c): chave única por distribuição; sem lançamento, nada vai para o bolso do dono
+  if (!postOrFail(s, `div6:${nextId(s, 'tx')}`, -total, 'dividends', 'Dividendos')) return l('Lançamento recusado.', 'Posting refused.');
   const mine = Math.round(total * ownerShare(s) * 0.85);
   ownerOf(s).wealth += mine;
   c.dividendsYear[s.year] = (c.dividendsYear[s.year] ?? 0) + total;
@@ -320,8 +327,9 @@ export function seekInvestors(s: GameState, r: Rng): L | null {
   if (energyLeft(s) < 1) return l('Sem tempo livre este mês.', 'No free time this month.');
   const fee = money(s, 1500);
   if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para o banco.', 'Not enough cash for the bankers.'));
+  // r21 (B-1f): a taxa entra antes de gastar tempo e gerar propostas; chave única por prospecção
+  if (!postOrFail(s, `seekinv:${nextId(s, 'tx')}`, -fee, 'financing', 'Banco de investimento (prospecção)')) return l('Lançamento recusado.', 'Posting refused.');
   spendEnergy(s, 1);
-  post(s, `seekinv:${s.week}`, -fee, 'financing', 'Banco de investimento (prospecção)');
   capital(s).offers = capital(s).offers.filter((o) => o.expires > s.week);
   genOffers(s, r, 3, 0.08);
   return null;

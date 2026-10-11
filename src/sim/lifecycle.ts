@@ -22,21 +22,27 @@ export function monthlyPeople(s: GameState, r: Rng): void {
     if (act.status === 'retired' || act.status === 'split') continue;
     if (act.hiatusUntil && act.hiatusUntil <= s.week) {
       act.hiatusUntil = undefined;
-      act.status = 'active';
-      act.momentum = clamp(act.momentum + 25, 0, 100);
-      remember(s, 'return', fmtL(l('{a} volta da pausa.', '{a} returns from hiatus.'), { a: act.name }), { actId: act.id, important: !!act.catalogNo || act.owner === 'player' });
+      if (act.hiatusWhy === 'death') act.hiatusWhy = undefined; // r21 (C-5): luto termina em silêncio (sem "volta da pausa", sem forçar status)
+      else {
+        act.status = 'active';
+        act.momentum = clamp(act.momentum + 25, 0, 100);
+        remember(s, 'return', fmtL(l('{a} volta da pausa.', '{a} returns from hiatus.'), { a: act.name }), { actId: act.id, important: !!act.catalogNo || act.owner === 'player' });
+      }
     }
     const mine = act.owner === 'player';
     const c = act.contractId ? s.contracts[act.contractId] : undefined;
+    // r21 (C-10): os modificadores de traço são do ato — uma vez por ato, fora do laço de integrantes
+    const tmStress = traitMod(s, act, 'stress') / 6;
+    const tmMorale = traitMod(s, act, 'morale');
     for (const id of act.members) {
       const p = s.persons[id];
       if (!p || !p.alive) continue;
       p.fatigue = clamp(p.fatigue - 9, 0, 100);
-      p.stress = clamp(p.stress + (p.fatigue > 60 ? 4 : -4) + traitMod(s, act, 'stress') / 6, 0, 100);
+      p.stress = clamp(p.stress + (p.fatigue > 60 ? 4 : -4) + tmStress, 0, 100);
       p.inspiration = clamp(p.inspiration + 7, 0, 100);
       const success = (act.momentum - 40) / 20;
       const trustF = mine && !act.playerBand ? (act.trust - 50) / 12 : 0;
-      const target = 60 + success * 4 + trustF + traitMod(s, act, 'morale') - p.fatigue / 8 - p.stress / 10;
+      const target = 60 + success * 4 + trustF + tmMorale - p.fatigue / 8 - p.stress / 10;
       p.morale = clamp(p.morale + (target - p.morale) * 0.25, 0, 100);
       // experiência natural
       if (act.status === 'active') for (const k of ['comp', 'voice', 'instr', 'stage'] as const) growPerson(p, k, 0.18);
@@ -168,16 +174,32 @@ export function worldSpawns(s: GameState, r: Rng): void {
 }
 
 /** Mantém o save leve: apaga atos irrelevantes aposentados há muito tempo. */
+/** r21 (C-11): pessoas referenciadas fora de `s.acts` (família, linhagem, cofre, parentesco, romances do jogador, mentoria). */
+export function referencedPersons21(s: GameState): Set<string> {
+  const keep = new Set<string>();
+  for (const [pid, f] of Object.entries(s.families ?? {})) { keep.add(pid); for (const k of f.kids ?? []) if (k.personId) keep.add(k.personId); }
+  for (const [pid, kids] of Object.entries(s.lineage ?? {})) { keep.add(pid); for (const k of kids) keep.add(k); }
+  for (const pid of Object.keys(s.vault ?? {})) keep.add(pid);
+  const x = (s.x4 ?? {}) as { kin15?: { g?: [string, string, string][] }; love17?: { affair?: { pid?: string } }; life?: { partner?: { personId?: string } | null }; ab18?: { mt?: Record<string, [string, number]> } };
+  for (const [a, b] of x.kin15?.g ?? []) { keep.add(a); keep.add(b); }
+  if (x.love17?.affair?.pid) keep.add(x.love17.affair.pid);
+  if (x.life?.partner?.personId) keep.add(x.life.partner.personId);
+  for (const [pid, m] of Object.entries(x.ab18?.mt ?? {})) { keep.add(pid); if (m?.[0]) keep.add(m[0]); }
+  return keep;
+}
+
 export function prune(s: GameState): void {
   const keepActs = new Set<string>();
   for (const k of Object.keys(s.knowledge)) keepActs.add(k);
+  const keepPersons = referencedPersons21(s);
   for (const a of Object.values(s.acts)) {
     const old = a.status === 'retired' || a.status === 'split';
+    if (old && a.hiatusUntil !== undefined) { a.hiatusUntil = undefined; a.hiatusWhy = undefined; } // r21 (C-5): pausa órfã em ato encerrado
     const notable = a.catalogNo || a.hits > 0 || a.owner === 'player' || a.playerBand || a.legend || keepActs.has(a.id);
     const stale = !old && !a.owner && a.fame < 3 && s.year - a.formed > 8 && a.releases.length === 0;
     if (((old && s.year - a.careerEnd > 3) || stale) && !notable) {
       // a pessoa pode estar em outro ato (carreira solo, supergrupo) ou ser você: só sai se ninguém mais usa
-      for (const id of a.members) if (!s.persons[id]?.isPlayer && !Object.values(s.acts).some((b) => b !== a && b.members.includes(id))) delete s.persons[id];
+      for (const id of a.members) if (!s.persons[id]?.isPlayer && !keepPersons.has(id) && !Object.values(s.acts).some((b) => b !== a && b.members.includes(id))) delete s.persons[id];
       for (const id of a.songs) delete s.songs[id];
       for (const id of a.releases) delete s.releases[id];
       releasesTouched17(s);

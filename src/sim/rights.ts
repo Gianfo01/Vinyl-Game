@@ -9,7 +9,8 @@
 import { clamp } from '../core/rng';
 import { MARKETS, cityById, l, type L, type MarketId } from '../data/world';
 import type { ContractModel } from '../data/rules';
-import type { Act, Contract, GameState, Release, RightsTerms } from './types';
+import { recoup } from './sys/contracts18';
+import type { Act, Contract, GameState, Release, RightsTerms, Song } from './types';
 import type { Rng } from '../core/rng';
 import { fmtL, money, notify, post, remember } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
@@ -178,11 +179,56 @@ function playerDeals(s: GameState, actId: string): Contract[] {
 /** Contrato do selo que cobre o master do disco (reedições usam o acordo do original). */
 export function dealOfRelease(s: GameState, rel: Release): Contract | undefined {
   const base = rel.reissueOf && s.releases[rel.reissueOf] ? s.releases[rel.reissueOf] : rel;
-  if (base.owner !== 'player' && rel.owner !== 'player') return undefined;
+  const mine = (o: string) => o === 'player' || s.subLabels.some((x) => x.id === o); // r21 (H-1): master de subselo segue o contrato da matriz
+  if (!mine(base.owner) && !mine(rel.owner)) return undefined;
   const deals = playerDeals(s, base.actId);
   let best: Contract | undefined;
   for (const c of deals) if (c.startWeek <= base.week && base.week <= c.endWeek + 1) if (!best || c.startWeek > best.startWeek) best = c;
   return best;
+}
+
+// ---------------------------------------------------------------- dono da OBRA (r21, E-3)
+
+/** Composição original por trás de uma versão (cover, remix, tradução, tributo); a própria faixa se não for versão. */
+export function originalWork(s: GameState, song: Song): Song {
+  let cur = song;
+  for (let i = 0; i < 6; i++) {
+    const next = s.songs[cur.coverOf ?? cur.remixOf ?? cur.translationOf ?? ''];
+    if (!next || next === cur) break;
+    cur = next;
+  }
+  return cur;
+}
+
+/** A obra é de outro ato (edição pertence a quem a escreveu/edita, não a quem gravou a versão)? */
+export function isForeignWork(s: GameState, song: Song): boolean {
+  const orig = originalWork(s, song);
+  return orig !== song && orig.actId !== song.actId;
+}
+
+/** Licença mecânica para gravar obra alheia: zero se a obra é do seu elenco; cresce com a fama do dono. */
+export function workLicenseFee(s: GameState, src: Song, kind: 'cover' | 'remix' | 'tribute'): number {
+  const orig = originalWork(s, src);
+  const a = s.acts[orig.actId];
+  if (!a || a.owner === 'player' || a.playerBand) return 0;
+  const base = kind === 'cover' ? 300 : kind === 'remix' ? 200 : 150;
+  return money(s, base * (1 + a.fame / 50));
+}
+
+/** Paga o dono da obra original: metade aos autores (caixa pessoal), metade ao selo/editora do ato original
+ *  (caixa do selo NPC; ato independente recebe no próprio caixa). Obra do jogador: a parte da editora é do selo. */
+export function payWorkOwner(s: GameState, src: Song, amount: number): void {
+  if (amount <= 0) return;
+  const orig = originalWork(s, src);
+  const a = s.acts[orig.actId];
+  const authors = Math.round(amount * 0.5);
+  const splits = orig.splits?.length ? orig.splits : orig.writers.map((w) => ({ personId: w, share: 1 / Math.max(1, orig.writers.length) }));
+  for (const sp of splits) s.personalCash[sp.personId] = (s.personalCash[sp.personId] ?? 0) + Math.round(authors * sp.share);
+  const label = amount - authors;
+  if (!a || a.owner === 'player' || a.playerBand) return; // editora do jogador: já é seu
+  const lb = s.labels[a.owner ?? ''];
+  if (lb) lb.cash += label;
+  else a.cash += label;
 }
 
 export function hasGuest(s: GameState, rel: Release): boolean {
@@ -413,7 +459,7 @@ export function respondDemand(s: GameState, r: Rng, demandId: string, answer: 'a
   const apply = (royalty: number, bonus: number, rev: number, trust: number) => {
     if (bonus > 0) post(s, `reneg:${act.id}`, -bonus, 'advances', `Renegociação ${act.name}`);
     act.cash += bonus;
-    c.recoupBalance += bonus;
+    recoup(s, c, 'adv', bonus); // r21 (H-9)
     c.royalty = Math.max(c.royalty, royalty);
     if (rev > 0) c.rights = { ...rightsOf(c), reversionYears: rightsOf(c).reversionYears > 0 ? Math.min(rightsOf(c).reversionYears, rev) : rev };
     c.fameAtSign = Math.round(act.fame * 10) / 10;

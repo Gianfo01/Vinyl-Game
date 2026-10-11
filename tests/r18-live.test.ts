@@ -16,7 +16,8 @@ function setup(seed: string) {
   act.owner = 'player'; act.fame = 40; act.fans = { casual: 60000, active: 20000, core: 5000 };
   s.player.cash = 1e10;
   const cities = Object.keys(s.scenes).map((k) => k.split(':')[0]).filter((c, i, a) => a.indexOf(c) === i && c !== act.city).slice(0, 4);
-  const plan: TourPlan = { actId: act.id, cities: cities.length ? cities : [act.city], startInDays: 21, priceMult: 1, minutes: 45, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
+  // r21 (F-4): o planejador exige início depois do prazo do visto (EUA 1990+: 30 dias); 21 dias era recusado
+  const plan: TourPlan = { actId: act.id, cities: cities.length ? cities : [act.city], startInDays: 45, priceMult: 1, minutes: 45, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
   return { s, act, plan };
 }
 

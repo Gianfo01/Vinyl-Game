@@ -3,7 +3,8 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { cityById, familyOf, l, type L, type MarketId } from '../data/world';
-import { registerEvents, type EventDef } from './events';
+import { type EventDef } from './events';
+import { deferEvents } from './ext4';
 import type { Act, GameState, Release } from './types';
 import type { Crisis, Review } from './xtypes';
 import { buildReviews } from './reviews';
@@ -15,6 +16,7 @@ import { artDelta18, fmtL, hasTech, money, nextId, notify, playerActs, post, rem
 import { gone16 } from './sys/gone16';
 import { scandal, type ScandalKind } from './scandal17';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { bumpAppeal, coverage } from './market';
 const CRISIS17: Record<Crisis['kind'], ScandalKind> = { scandal: 'conduct', remark: 'offense', censorship: 'politics', cancel: 'offense', leak: 'conduct', accident: 'violence' };
 
 export interface CriticDef {
@@ -113,7 +115,7 @@ export function reviewRelease(s: GameState, r: Rng, rel: Release): Review[] {
   const avg = out.reduce((t, x) => t + x.score, 0) / Math.max(1, out.length);
   if (out.length) { rel.critic = Math.round(avg * 10); rel.criticN = out.length; }
   // crítica afeta prestígio e um pouco o apelo (não compra hit)
-  rel.appeal *= 0.92 + avg / 60;
+  bumpAppeal(s, rel, 0.92 + avg / 60, 'critics', fmtL(l('Crítica ({n})', 'Critics ({n})'), { n: Math.round(avg * 10) })); // r21 (E-9): anotado na autópsia
   if (act.image) act.image.artistic = clamp(act.image.artistic + (avg - 6) * 1.2, 0, 100);
   if (rel.owner === 'player') s.player.reputation.artistic = clamp(s.player.reputation.artistic + artDelta18(s.player.reputation.artistic, (avg - 6.5) * 0.4), 0, 100);
   return out;
@@ -280,7 +282,15 @@ export function censorCheck(s: GameState, r: Rng, rel: Release): void {
     for (const m of rule.markets) {
       if (!rel.territories.includes(m)) continue;
       if (!r.chance(rule.level)) continue;
+      // r21 (D-5): o apelo já embutiu a cobertura dos territórios no lançamento — recalcula com o mercado a menos
+      const cov0 = coverage(rel.territories, act.genre, s.year, act.positioning);
       rel.territories = rel.territories.filter((x) => x !== m);
+      const cov1 = coverage(rel.territories, act.genre, s.year, act.positioning);
+      if (cov0 > 0 && cov1 < cov0) {
+        const k = Math.max(0.05, cov1 / cov0);
+        rel.appeal *= k;
+        (rel.autopsy ??= []).push({ key: `censor:${m}`, label: fmtL(l('Censura: {r}', 'Censorship: {r}'), { r: rule.name }), value: k, confidence: 'high' });
+      }
       s.bans.push({ releaseId: rel.id, market: m, reason: rule.name, week: s.week });
       if (rel.owner === 'player' || act.playerBand) {
         notify(s, fmtL(l('"{t}" foi censurado: {r}.', '"{t}" was censored: {r}.'), { t: rel.title, r: rule.name }), 'bad');
@@ -291,7 +301,19 @@ export function censorCheck(s: GameState, r: Rng, rel: Release): void {
       }
     }
   }
-  if (s.bans.length > 60) s.bans = s.bans.slice(-60);
+  // r21: com NPCs também censurados a lista cresce; corta primeiro as proibições antigas de terceiros
+  if (s.bans.length > 60) {
+    const keep = s.bans.filter((b) => { const x = s.releases[b.releaseId]; return !!x && (x.owner === 'player' || !!s.acts[x.actId]?.playerBand); });
+    const rest = s.bans.filter((b) => !keep.includes(b)).slice(-Math.max(0, 60 - keep.length));
+    s.bans = s.bans.filter((b) => keep.includes(b) || rest.includes(b));
+  }
+}
+
+/** r21 (D-5): mercados onde o lançamento está proibido (leitura para rádio, streaming e paradas). */
+export function bannedMarkets(s: GameState, relId: string): Set<MarketId> {
+  const out = new Set<MarketId>();
+  for (const b of s.bans) if (b.releaseId === relId) out.add(b.market);
+  return out;
 }
 
 export function appealBan(s: GameState, r: Rng, releaseId: string, market: MarketId): L {
@@ -325,7 +347,7 @@ const MEDIA_EVENTS: EventDef[] = [
     ],
   },
 ];
-registerEvents(MEDIA_EVENTS);
+deferEvents(MEDIA_EVENTS); // r21: fila do ext4 (media.ts pode carregar antes de events.ts fechar)
 
 export function mediaMonth(s: GameState, r: Rng): void {
   if (s.prAgency) post(s, 'pr_agency', -s.prAgency.monthly, 'marketing', `Assessoria ${s.prAgency.name}`);
@@ -334,10 +356,10 @@ export function mediaMonth(s: GameState, r: Rng): void {
     if (s.reviews[rel.id] || s.week - rel.week > 5) continue;
     const act = s.acts[rel.actId];
     if (rel.owner === 'player' || act?.playerBand || (act && act.fame > 40)) reviewRelease(s, r, rel);
-    if (rel.owner === 'player' || act?.playerBand) censorCheck(s, r, rel);
+    censorCheck(s, r, rel); // r21 (D-5): a censura vale para todo lançamento, não só o do jogador
   }
-  // limpa resenhas antigas de terceiros
-  const keys = Object.keys(s.reviews);
+  // limpa resenhas antigas de terceiros (r21 B14: as do jogador ficam)
+  const keys = Object.keys(s.reviews).filter((k) => { const x = s.releases[k]; return !x || (x.owner !== 'player' && !s.acts[x.actId]?.playerBand); });
   if (keys.length > 400) for (const k of keys.slice(0, keys.length - 400)) delete s.reviews[k];
   for (const a of Object.values(s.acts)) if (a.cancelledUntil && a.cancelledUntil < s.week) a.cancelledUntil = undefined;
 }

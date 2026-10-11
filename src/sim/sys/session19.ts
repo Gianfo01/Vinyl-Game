@@ -60,7 +60,7 @@ const REAL19: Record<string, { doc?: [number, string]; aces: [string, Inst19, nu
 /** Coletivos fictícios (só fora do modo exato). */
 export const FICT19: { id: string; name: L; city: string; from: number; to: number; fam: FamilyId[] }[] = [
   { id: 'f_cellar', name: l('Os Gatos do Porão', 'The Cellar Cats'), city: 'new_york', from: 1925, to: 1958, fam: ['blues_jazz', 'pop'] },
-  { id: 'f_feras', name: l('Os Feras do Estúdio', 'The Studio Beasts'), city: 'rio_de_janeiro', from: 1958, to: 1990, fam: ['brazil', 'pop', 'latin'] },
+  { id: 'f_feras', name: l('Os Feras do Estúdio', 'The Studio Beasts'), city: 'rio', from: 1958, to: 1990, fam: ['brazil', 'pop', 'latin'] },
   { id: 'f_sunset', name: l('Seção Sunset Strip', 'The Sunset Strip Section'), city: 'los_angeles', from: 1972, to: 1995, fam: ['rock', 'pop'] },
   { id: 'f_grid', name: l('Turma do Grid', 'The Gridline Players'), city: 'london', from: 1985, to: 2012, fam: ['pop', 'electronic', 'rnb'] },
   { id: 'f_laptop', name: l('Orquestra de Laptops', 'The Laptop Orchestra'), city: 'stockholm', from: 2008, to: 9999, fam: ['pop', 'hiphop', 'electronic'] },
@@ -206,7 +206,7 @@ function playMonth(s: GameState): void {
   for (const x of ag.sess) if (x.kind === 'studio' && x.until >= mk && x.start <= mk && s.acts[x.actId]) for (const a of st.aces) if (a.crew === x.crew && hireable19(s, a) && !playing.some((p) => p[0] === a)) playing.push([a, x.actId, false]);
   for (const [a, actId, credit] of playing) {
     const act = s.acts[actId];
-    const fresh = (act.songs ?? []).filter((sid) => { const so = s.songs[sid]; return so?.recorded && so.createdWeek > cutoff(s) && !(st.on[sid] ?? []).includes(a.id); });
+    const fresh = (act.songs ?? []).filter((sid) => { const so = s.songs[sid]; return so?.recorded && (so.recordedWeek ?? so.createdWeek) > cutoff(s) && !(st.on[sid] ?? []).includes(a.id); }); // r21 (E-12): semana da gravação
     for (const sid of fresh.slice(0, 6)) {
       (st.on[sid] ??= []).push(a.id);
       a.plays.push(sid);

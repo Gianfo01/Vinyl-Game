@@ -16,7 +16,7 @@ import { openContests, rivals12, rivalWho } from '../../sim/sys/rivals12';
 import { fest8 } from '../../sim/sys/fests8';
 import type { GameState, Release } from '../../sim/types';
 import { playerActs } from '../../sim/util';
-import { $, actLink, modal, pill, releaseLink, rerender, section } from '../common';
+import { $, actLink, closeOverlay, modal, pill, releaseLink, rerender, section } from '../common';
 import { h } from '../dom';
 import { hqHooks, type BubbleKind, type HqVisitor, type RoomTag } from '../hq';
 import type { RoomKind } from '../pixel/sprites';
@@ -27,7 +27,7 @@ import { contestCard } from './rivals12';
 
 
 const fx = (x: L, p: Record<string, string | number> = {}) => t(x, p);
-const go = (area: string) => { document.querySelector('.overlay')?.remove(); store.area = area; rerender(); };
+const go = (area: string) => { closeOverlay(); store.area = area; rerender(); };
 const mine = (s: GameState, r: Release) => r.owner === 'player' || !!s.acts[r.actId]?.playerBand;
 
 // ---------------------------------------------------------------- conquistas reais (cache por semana)
@@ -64,7 +64,7 @@ function openAchievements(s: GameState): void {
     h('p', { class: 'small' }, fx(l('Discos de ouro {g} · platina {p} · prêmios {a} · nº 1 {n} · top 10 {t}', 'Gold discs {g} · platinum {p} · awards {a} · #1s {n} · top 10s {t}'), { g: st.gold, p: st.platinum, a: st.awards, n: st.number1s, t: st.top10s })),
     w.gold.length ? section(t(l('Discos certificados', 'Certified records')), h('ul', { class: 'small' }, [...w.gold].reverse().map((r) => h('li', null, ic(r.certified === 'gold' ? 'gold-disc' : 'platinum-disc'), ' ', releaseLink(s, r.id), ` — ${s.acts[r.actId]?.name ?? ''} (${r.year}) `, pill(r.certified ?? '', r.certified === 'gold' ? 'gold' : 'good'))))) : h('p', { class: 'muted small' }, t(l('Ainda nenhum disco certificado: a parede espera o primeiro ouro (500 mil cópias).', 'No certified records yet: the wall awaits the first gold (500k copies).'))),
     w.awards.length ? section(t(l('Prêmios', 'Awards')), h('ul', { class: 'small' }, [...w.awards].reverse().slice(0, 30).map((x) => h('li', null, ic('trophy'), ' ', t(x))))) : null,
-    h('button', { class: 'btn small ghost', onclick: () => { document.querySelector('.overlay')?.remove(); openTimeline(s); } }, ic('building'), ' ', t(l('Como a empresa cresceu', 'How the company grew'))),
+    h('button', { class: 'btn small ghost', onclick: () => { closeOverlay(); openTimeline(s); } }, ic('building'), ' ', t(l('Como a empresa cresceu', 'How the company grew'))),
   ), { wide: true });
 }
 

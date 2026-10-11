@@ -8,6 +8,8 @@ import { defaultOffer, evaluateOffer } from '../contracts';
 import { registerExplain, sortParts, type WhyPart } from '../explain18';
 import { stressOf, shortOf, STRESS_LEVEL } from '../stress17';
 import { cityDemand } from '../tours';
+import { reservedAdvances20 } from '../oblig20';
+import { estimateMonthlyBurn } from '../events';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL } from '../util';
 import { balls, careerBalls, officeCap } from './agenda17';
@@ -46,6 +48,24 @@ registerExplain('cash.month', (s) => {
     note: run === null ? l('Mês no azul: o caixa cresce no ritmo atual.', 'Month in the black: cash grows at this pace.')
       : fmtL(l('No ritmo atual o caixa dura ~{n} meses. Receitas chegam com atraso (lojas pagam em ~2 meses; edição por trimestre).', 'At this pace cash lasts ~{n} months. Revenue arrives late (stores pay in ~2 months; publishing quarterly).'), { n: Math.max(0, run) }),
   };
+});
+
+// r21 (UX 2.3.14): caixa livre × total e fôlego em meses (o topo mostra os dois)
+registerExplain('cash.free', (s) => {
+  const reserved = reservedAdvances20(s);
+  const offers = s.offers.filter((o) => (o.status === 'pending' || o.status === 'counter') && o.advance > 0);
+  const parts: WhyPart[] = [{ label: l('Caixa total', 'Total cash'), value: s.player.cash, fmt: 'money' },
+    ...offers.map((o) => ({ label: fmtL(l('Reserva: adiantamento a {a}', 'Reserve: advance to {a}'), { a: s.acts[o.actId]?.name ?? '?' }), value: -o.advance, fmt: 'money' as const, tone: 'bad' as const }))];
+  return { title: l('Caixa livre', 'Free cash'), value: s.player.cash - reserved, fmt: 'money', parts,
+    note: l('Ofertas pendentes reservam o adiantamento até a resposta; ações que custam dinheiro usam o caixa livre. Retire a oferta para liberar.', 'Pending offers reserve the advance until answered; actions that cost money use free cash. Withdraw the offer to release it.') };
+});
+registerExplain('cash.runway', (s) => {
+  const burn = estimateMonthlyBurn(s);
+  if (burn <= 0) return null;
+  const run = s.player.cash / burn;
+  return { title: l('Fôlego (meses de caixa)', 'Runway (months of cash)'), value: Math.max(0, Math.round(run * 10) / 10), fmt: 'num',
+    parts: [{ label: l('Caixa', 'Cash'), value: s.player.cash, fmt: 'money' }, { label: l('Queima estimada por mês (custos fixos − receita recorrente)', 'Estimated monthly burn (fixed costs − recurring revenue)'), value: -burn, fmt: 'money', tone: 'bad', why: { key: 'cash.month' } }],
+    note: l('Abaixo de 3 meses fica vermelho no Cockpit. Receitas de vendas chegam com ~2 meses de atraso.', 'Below 3 months it turns red on the Cockpit. Sales revenue arrives ~2 months late.') };
 });
 
 registerExplain('cash.cat', (s, c) => {
@@ -110,7 +130,8 @@ registerExplain('offer.chance', (s, c) => {
   const band = ev.band === 'likely' ? l('provável', 'likely') : ev.band === 'uncertain' ? l('incerta', 'uncertain') : l('improvável', 'unlikely');
   return {
     title: fmtL(l('Chance de {a} aceitar', 'Chance {a} accepts'), { a: a.name }), value: band as unknown as string, fmt: 'text', parts,
-    note: fmtL(l('Placar {p} pontos (meio da curva = 58). Leitura por faixa: sem analista na equipe a faixa é mais grosseira. Ambição principal pesa nos termos.', 'Score {p} points (curve midpoint = 58). Shown as a band: without an analyst on staff the read is rougher. Main ambition weights the terms.'), { p: Math.round(ev.score * 100) }),
+    // r21 (H-10): só a faixa — o placar numérico permitia deduzir a % exata
+    note: l('Leitura por faixa: sem analista na equipe a faixa é mais grosseira. Ambição principal pesa nos termos; as partes mostram o que puxa para cada lado.', 'Shown as a band: without an analyst on staff the read is rougher. Main ambition weights the terms; the parts show what pulls each way.'),
   };
 });
 

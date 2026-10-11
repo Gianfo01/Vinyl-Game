@@ -20,7 +20,9 @@ import { rng19 } from '../rng19';
 import { addStress } from '../stress17';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
+import { bumpAppeal } from '../market';
 import { headline19 } from './factlink19';
+import { addBoost21 } from './boost21';
 import { addHype } from './hype12';
 import { djFee18, djFit18, ensureDjs18, media18, type Dj18 } from './media18';
 import { cnt19, link19, log19, mineA19, mineR19, safe19, usd19, xs19, type Log19 , off19 } from './mkb19';
@@ -31,11 +33,11 @@ export const REMIX_FROM19 = 1975;
 export const WHITE_FROM19 = 1985;
 export type ResV19 = 'garage' | 'hacienda' | 'ibiza' | 'berlin' | 'vegas' | 'own';
 export const RES19: Record<ResV19, { name: L; city: string; from: number; to?: number; fee: number; fame: number; sea?: [number, number]; real: L }> = {
-  garage: { name: l('Paradise Garage (Nova York)', 'Paradise Garage (New York)'), city: 'nyc', from: 1977, to: 1987, fee: 1500, fame: 0.8, real: l('Larry Levan tocou lá de 1977 a 1987; o som da casa virou "garage".', 'Larry Levan played there 1977–1987; the house sound became "garage".') },
+  garage: { name: l('Paradise Garage (Nova York)', 'Paradise Garage (New York)'), city: 'new_york', from: 1977, to: 1987, fee: 1500, fame: 0.8, real: l('Larry Levan tocou lá de 1977 a 1987; o som da casa virou "garage".', 'Larry Levan played there 1977–1987; the house sound became "garage".') },
   hacienda: { name: l('Haçienda (Manchester)', 'Haçienda (Manchester)'), city: 'manchester', from: 1982, to: 1997, fee: 1200, fame: 0.7, real: l('Casa da Factory Records; noites de acid house em 1988.', 'Factory Records\' club; acid-house nights in 1988.') },
   ibiza: { name: l('Superclube em Ibiza (temporada)', 'Ibiza superclub (season)'), city: 'ibiza', from: 1989, fee: 6000, fame: 1.2, sea: [5, 9], real: l('Amnesia, Pacha, Ku/Privilege: residências de verão de junho a outubro.', 'Amnesia, Pacha, Ku/Privilege: summer residencies June to October.') },
   berlin: { name: l('Clube de techno em Berlim', 'Berlin techno club'), city: 'berlin', from: 1991, fee: 2500, fame: 0.9, real: l('Tresor (1991), depois Berghain (2004): noites de fim de semana sem fim.', 'Tresor (1991), later Berghain (2004): endless weekend nights.') },
-  vegas: { name: l('Residência em Las Vegas', 'Las Vegas residency'), city: 'lasvegas', from: 2012, fee: 30000, fame: 1.5, real: l('A era EDM levou DJs a contratos de cassino milionários (Hakkasan, Wynn, 2013+).', 'The EDM era took DJs to million-dollar casino deals (Hakkasan, Wynn, 2013+).') },
+  vegas: { name: l('Residência em Las Vegas', 'Las Vegas residency'), city: 'las_vegas', from: 2012, fee: 30000, fame: 1.5, real: l('A era EDM levou DJs a contratos de cassino milionários (Hakkasan, Wynn, 2013+).', 'The EDM era took DJs to million-dollar casino deals (Hakkasan, Wynn, 2013+).') },
   own: { name: l('Sua própria casa', 'Your own venue'), city: '', from: 1975, fee: 800, fame: 0.5, real: l('A sua casa ganha reputação com uma noite fixa de DJ.', 'Your venue gains reputation with a fixed DJ night.') },
 };
 export interface Rmx19 { id: string; rel: string; dj: string; djn: string; w: number; due: number; k: 'club' | 'offer'; split: number; ok?: boolean; until?: number; base?: number; mo?: number; u?: number; v?: number }
@@ -245,11 +247,11 @@ registerSimHook('month', 'remix19', (s) => off19('remix19') || remixMonth19(s));
 
 // ---------------------------------------------------------------- ouvintes
 
-// remix_hit: o remixado sobe no streaming/nas lojas (stream18 lê hypeBoost) e no hype; manchete; residência para o seu ato
+// remix_hit: o remixado sobe no streaming/nas lojas (boost21: unidades ×1,2 por 8 semanas) e no hype; manchete; residência para o seu ato
 onFact('remix_hit', (s, f) => {
   const rel = s.releases[String(f.data?.rel ?? '')];
   if (!rel) return;
-  rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.2);
+  addBoost21(s, rel, 1.2, 8, l('Remix nas pistas', 'Remix in the clubs'));
   addHype(s, `a:${rel.actId}`, 'remix19', l('Remix nas pistas', 'Remix in the clubs'), 8);
   const a = s.acts[rel.actId];
   if (a) a.fame = clamp(a.fame + 1.5, 0, 100);
@@ -266,7 +268,7 @@ onFact('white_label', (s, f) => {
   if (!rel) return;
   if (v >= 60) addHype(s, `r:${rel.id}`, 'white19', l('White label quente nas pistas', 'Hot white label in the clubs'), Math.round((v - 50) / 4));
   const a = s.acts[rel.actId];
-  if (f.data?.leak && a) { a.fans.casual += Math.round(300 + v * 10); rel.appeal *= 0.97; }
+  if (f.data?.leak && a) { a.fans.casual += Math.round(300 + v * 10); bumpAppeal(s, rel, 0.97, 'leak', l('Vazamento do white label', 'White label leak'), 'low'); } // r21 (E-9)
   link19(s, 'remix', fmtL(l('White label de "{t}": pista {v}/100 → chance do remix {d}.', 'White label of "{t}": floor {v}/100 → remix odds {d}.'), { t: rel.title, v, d: v >= 50 ? '+' : '−' }));
 }, 'remix19:white');
 // residência: casa própria ganha reputação; manchete

@@ -10,7 +10,7 @@ import { nominal } from '../../core/money';
 import { familyOf, l } from '../../data/world';
 import { personDies, realSafe } from '../dynasty';
 import { deferEvents, registerSimHook } from '../ext4';
-import { bandName, langForCity, makeAct, makePerson } from '../people';
+import { bandName, langForCity, makeAct, makePerson, uniqueName21 } from '../people';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { scandal } from '../scandal17';
@@ -19,6 +19,7 @@ import { rw } from './realworld';
 import { histLocked } from '../history15';
 import { resolveThinking } from '../contracts';
 import { actsTouched17 } from '../actidx17';
+import { seedDependency21 } from './people/state';
 
 type Ctx = Record<string, string | number>;
 
@@ -29,6 +30,7 @@ function deathRisk(age: number, p: Person): number {
   let v = age < 45 ? 0.000015 : age < 60 ? 0.00012 : age < 70 ? 0.0005 : age < 80 ? 0.0017 : age < 90 ? 0.005 : 0.018;
   if (p.health === 'addiction') v += 0.0008;
   if (p.health === 'burnout' || p.health === 'ill') v += 0.0004;
+  if (age >= 95) return Math.max(v, 0.06); // r21 (C-2): teto por idade (ver dynasty.deathRisk)
   return Math.min(0.07, v);
 }
 
@@ -47,7 +49,7 @@ function agingAll(s: GameState, r: Rng): void {
       const p = s.persons[id];
       if (!p?.alive) continue;
       const age = s.year - p.born;
-      if (age > 40 && r.chance(deathRisk(age, p)) && !safe) personDies(s, p, age > 70 ? l('causas naturais', 'natural causes') : l('uma doença', 'an illness'));
+      if (age > 40 && r.chance(deathRisk(age, p)) && !(safe && realSafe(s, act, p))) personDies(s, p, age > 70 ? l('causas naturais', 'natural causes') : l('uma doença', 'an illness'));
     }
   }
 }
@@ -99,8 +101,10 @@ export function replaceMember(s: GameState, r: Rng, act: Act, oldId: string): Pe
   const old = s.persons[oldId];
   const np = makePerson(s, r, { lang: langForCity(act.city, r), role: old?.role === 'synthetic' ? 'vocal' : old?.role ?? 'guitar', potential: clamp((old?.potential ?? 60) - r.int(0, 10), 30, 95), born: s.year - r.int(20, 34), startFrac: 0.8 });
   s.persons[np.id] = np;
+  uniqueName21(r, np, act.members.map((id) => s.persons[id]).filter(Boolean), langForCity(act.city, r)); // r21 (C-1)
   act.members = act.members.map((x) => (x === oldId ? np.id : x));
   if (!act.members.includes(np.id)) act.members.push(np.id); actsTouched17(s); // r17: índice pessoa→atos
+  for (const id of act.members) if (id !== np.id && s.persons[id]) { np.rel[id] ??= 10; s.persons[id].rel[np.id] ??= 10; } // r21 (1.19): relação semeada (como lineup16.joinBand)
   if (act.leaderId === oldId) act.leaderId = act.members[0];
   formerPush(s, act.id, oldId, old?.alive ? 'left' : 'died');
   remember(s, 'lineup', fmtL(l('{a} segue em frente: {n} assume o lugar de {o}.', '{a} carries on: {n} takes over from {o}.'), { a: act.name, n: np.name, o: old?.name ?? '?' }), { actId: act.id, important: act.fame > 25 || act.owner === 'player' });
@@ -199,7 +203,7 @@ function careerMoves(s: GameState, r: Rng): void {
     // a pessoa gerada pelo makeAct dá lugar à pessoa real
     const gen = solo.members[0];
     delete s.persons[gen];
-    solo.members = [p.id];
+    solo.members = [p.id]; actsTouched17(s); // r21 (1.12): índice pessoa→atos
     solo.leaderId = p.id;
     solo.status = 'active';
     solo.fans = { casual: Math.round(act.fans.casual * 0.18), active: Math.round(act.fans.active * 0.15), core: Math.round(act.fans.core * 0.1) };
@@ -218,7 +222,7 @@ function careerMoves(s: GameState, r: Rng): void {
       if (a && b && pa && pb && pa.id !== pb.id) {
         const sg = makeAct(s, r, { genre: a.genre, city: a.city, members: 2, potential: Math.max(pa.potential, pb.potential), formed: s.year, debutYear: s.year, fame: (a.fame + b.fame) * 0.35 });
         for (const id of sg.members) delete s.persons[id];
-        sg.members = [pa.id, pb.id];
+        sg.members = [pa.id, pb.id]; actsTouched17(s); // r21 (1.12): índice pessoa→atos
         sg.leaderId = pa.id;
         sg.name = r.chance(0.5) ? `${pa.name.split(' ').pop()} & ${pb.name.split(' ').pop()}` : bandName(r, langForCity(a.city, r), familyOf(a.genre), 3);
         sg.status = 'active';
@@ -263,6 +267,7 @@ function npcVices(s: GameState, r: Rng): void {
       const fameF = 0.5 + act.fame / 60;
       if (r.chance(0.004 * party * fameF * eraRisk)) {
         p.health = 'addiction';
+        seedDependency21(s, p.id); // r21 (C-3): se há ficha de saúde, a dependência acompanha o estado
         p.stress = clamp(p.stress + 15, 0, 100);
         if (r.chance(0.4)) scandal(s, act.id, 'drugs', 35, undefined, { person: p.id });
         if (act.fame > 45) remember(s, 'addiction', fmtL(l('Bastidores: {p} ({a}) luta contra a dependência.', 'Backstage: {p} ({a}) struggles with addiction.'), { p: p.name, a: act.name }), { actId: act.id });

@@ -244,7 +244,8 @@ function fire19(s: GameState, h: H19Def): void {
   ACT19.delete(s);
   if (h.pop && h.g) for (const g of h.g) {
     const ids = FAM_IDS.has(g) ? GENRES.filter((x) => x.family === g).map((x) => x.id) : [g];
-    for (const id of ids) if (s.genrePop[id] !== undefined) s.genrePop[id] = clamp(s.genrePop[id] + (FAM_IDS.has(g) ? h.pop / 2 : h.pop), 0.15, 2.2);
+    for (const id of ids) if (s.genrePop[id] !== undefined && (genreById[id]?.born ?? 0) <= s.year) s.genrePop[id] = clamp( // r21 (J-4): gênero ainda não nascido não recebe empurrão
+      s.genrePop[id] + (FAM_IDS.has(g) ? h.pop / 2 : h.pop), 0.15, 2.2);
   }
   if (h.riv) for (const lb of Object.values(s.labels)) if (lb.active) lb.cash = Math.round(lb.cash * h.riv);
   emitFact(s, { kind: 'milestone_turn', actors: ['player'], severity: h.w ? 30 : 35, visibility: 'public', tags: ['history19', h.k, h.id], src: 'history19', text: fmtL(l('Marco: {t}.', 'Milestone: {t}.'), { t: h.t }) });

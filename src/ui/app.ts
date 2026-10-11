@@ -2,6 +2,8 @@
 
 import { LABEL_LEGACY20 } from '../sim/oblig20';
 import { ERA19 } from '../sim/era19';
+import { freeCash20 } from '../sim/oblig20';
+import { estimateMonthlyBurn } from '../sim/events';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
 import { l, type L } from '../data/world';
 import { S, t, type Lang } from '../i18n/strings';
@@ -10,7 +12,7 @@ import { advance } from '../sim/tick';
 import { advanceUntil, digestEnd, digestStart, type Digest } from '../sim/sys/pacing8';
 import { openUntilConfig, showDigest, stopSummary } from './sys/pacing8';
 import { playerActs } from '../sim/util';
-import { $, dateLabel, inspect, kv, modal, toast } from './common';
+import { $, closeOverlay, dateLabel, inspect, isModal21, kv, modal, toast } from './common';
 import { bar, h, select } from './dom';
 import { registerInspect } from './ficha';
 import { titleScreen } from './newgame';
@@ -28,13 +30,13 @@ import { auctionsSection, contestsSection, demosSection, scoutsSection } from '.
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
-import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
+import { afterRender18, helpButton18, paletteCmds18, resetTut18, setNav18, settings18 } from './tutorial18'; // r18 tutorial18
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
 import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
-import { copyText, exportSaveText, importSaveText } from './store';
+import { copyText, exportSaveText, importSaveText, IRONMAN_OFF21, unIronman21 } from './store';
 import { saveErrText20, saveManagerModal17 } from './saves17';
 import { saveChip20 } from './savechip20';
 import { noteTurnErr20 } from './savehealth20';
@@ -78,8 +80,11 @@ registerPortrait((p, size) => {
 
 /** Leitor de tela: resume o briefing após avançar. */
 function announce(msg: string): void {
-  const el = document.getElementById('sr-live');
-  if (el) el.textContent = msg;
+  // r21 (I-4): a região vive fora de `root` (o render a substituía, apagando o anúncio)
+  let el = document.getElementById('sr-live');
+  if (!el) { el = h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }); document.body.appendChild(el); }
+  el.textContent = '';
+  setTimeout(() => { el!.textContent = msg; }, 50);
 }
 
 const AREAS: { id: Area; label: keyof typeof S; icon: string; key: string }[] = [
@@ -111,6 +116,7 @@ export function boot(el: HTMLElement): void {
   store.rerender = render;
   store.toast = toast;
   window.addEventListener('keydown', onKey);
+  setNav18(go, (id) => !!store.game && (areaExists(id) || (!!ALIAS17[id] && areaExists(ALIAS17[id][0])))); // r21 (I-5): Ctrl+K/ajuda só navegam para áreas que existem
   // rodada 15: voltar/avançar do navegador, abas lembradas, paleta pelo botão da barra
   for (const [k, v] of Object.entries(loadTabs15())) setTab(k, v);
   initRouter15((r) => { if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
@@ -138,7 +144,9 @@ function onKey(e: KeyboardEvent): void {
   if (!store.game) return;
   const tag = (e.target as HTMLElement)?.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-  if (document.querySelector('.overlay')) return;
+  // r21 (I-1): nada de atalhos globais dentro de menus, diálogos, cenas, tour ou tutorial (Ctrl+Enter avançava o mês por trás de uma cerimônia)
+  if ((e.target as HTMLElement)?.closest?.('[role=menu], [role=dialog], .scene-overlay, .am20')) return;
+  if (isModal21()) return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
     palette();
@@ -220,7 +228,6 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
     advanceToasts20(g.notifications.filter((n) => n.week > noteWeek && !n.fold));
   }
   if (res.stopReason && mode !== 'month' && !digest) toast(`⏸ ${t(res.stopReason)}`, 'event');
-  announce(g.briefing.map((n) => t(n.text)).join('. '));
   void before;
   saveSoon(() => void saveGame('auto')); // r15: grava depois de pintar (o mês aparece antes)
   if (g.ended && !g.flags.sandbox) {
@@ -229,6 +236,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
     return;
   }
   render();
+  announce(g.briefing.map((n) => t(n.text)).join('. ')); // r21 (I-4): depois do render
   for (const f of AFTER_ADVANCE) f(g); // r18 decide18: resumo do mês
   if (digest) showDigest(g, digest.d, digest.why, () => showPendingCutscene(g, render, store.prefs.cutscenes === false));
   else showPendingCutscene(g, render, store.prefs.cutscenes === false);
@@ -246,16 +254,22 @@ function topBar(): HTMLElement {
   const g = store.game!;
   const net = Object.values(g.lastMonthLedger).reduce((a, b) => a + b, 0);
   const rep = g.player.reputation;
+  // r21 (UX 2.3.14): caixa livre / total quando há reserva de ofertas; fôlego em meses com "por quê"
+  const free = freeCash20(g), reserved = g.player.cash - free;
+  const burn = estimateMonthlyBurn(g), run = burn > 0 ? g.player.cash / burn : null;
   return h('header', { class: 'topbar' },
     menuButton15(openDrawer),
     h('div', { class: 'brand' }, h('span', { class: 'disc-sm', 'aria-hidden': 'true' }), h('b', null, g.config.companyName)),
     h('div', { class: 'date' }, h('b', null, dateLabel(g)), h('small', { class: 'muted' }, ` · ${t(S.week)} ${g.week} · Run ${g.signature}`)),
     saveChip20(), // r20 (B1, §4.4.6): saúde do save sempre visível
-    h('div', { class: 'money' }, h('span', { class: 'muted' }, `${t(S.cash)} `), h('b', { class: g.player.cash < 0 ? 'bad' : '' }, $(g.player.cash)),
-      h('small', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, ` (${net >= 0 ? '+' : ''}${$(net)})`)),
+    h('div', { class: 'money' }, h('span', { class: 'muted' }, `${t(S.cash)} `),
+      reserved > 0 ? h('b', { class: `${free < 0 ? 'bad' : ''} why18`, 'data-why': 'cash.free', tabindex: '0', title: t(l('Caixa livre / total ({r} reservado para ofertas)', 'Free / total cash ({r} reserved for offers')).replace('{r}', $(reserved)) }, `${$(free)} / ${$(g.player.cash)}`)
+        : h('b', { class: g.player.cash < 0 ? 'bad' : '' }, $(g.player.cash)),
+      h('small', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, ` (${net >= 0 ? '+' : ''}${$(net)})`),
+      run !== null && run < 24 ? h('small', { class: `${run < 3 ? 'bad' : run < 6 ? 'warn' : 'muted'} why18 runway21`, 'data-why': 'cash.runway', tabindex: '0', title: t(l('Fôlego: meses de caixa no ritmo atual', 'Runway: months of cash at the current pace')) }, ` · ${t(l('{n} meses', '{n} months'), { n: Math.max(0, Math.round(run * 10) / 10) })}`) : null),
     h('div', { class: 'rep', title: t(S.reputation) }, '★ ', Math.round((rep.artistic + rep.commercial + rep.artists + rep.institutional) / 4)),
     h('div', { class: 'advance' },
-      store.undoSnapshot && !g.config.ironman ? h('button', { class: 'btn ghost small', onclick: undo }, '↶ ' + t(S.undo)) : null,
+      store.undoSnapshot && !g.config.ironman ? h('button', { class: 'icon undo21', title: t(S.undo), 'aria-label': t(S.undo), onclick: undo }, '↶') : null, // r21: ícone (a barra não muda de altura entre janeiro e fevereiro)
       h('span', { class: 'btn-split' },
         h('button', { class: 'btn ghost small', title: stopSummary(g), onclick: () => doAdvance('until') }, '⏭ ' + t(l('Até…', 'Until…'))),
         h('button', { class: 'btn ghost small', title: t(l('Critérios de parada', 'Stop criteria')), 'aria-label': t(l('Critérios de parada', 'Stop criteria')), onclick: () => openUntilConfig(g, () => doAdvance('until')) }, '▾')),
@@ -405,7 +419,7 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
 }
 
 export function render(): void {
-  if (!store.game) return titleScreen(root, startGame);
+  if (!store.game) { stopHq(); return titleScreen(root, startGame); } // r21 (I-3): o loop da Sede não continua no título
   const t0 = performance.now();
   renderApp();
   perfNote('render', performance.now() - t0);
@@ -436,7 +450,6 @@ function renderApp(): void {
     nav(),
     h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), body),
     tutorialCard(g, render),
-    h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
   ));
   root.replaceChildren(app);
   const main = app.querySelector('main');
@@ -508,10 +521,10 @@ function settings(): void {
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.reducedMotion)),
     h('hr'),
     h('div', { class: 'row' },
-      h('button', { class: 'btn', onclick: async () => { const ok = await saveGame(`slot-${store.game?.signature}`); toast(ok ? t(S.saved) : 'Erro', ok ? 'good' : 'bad'); } }, t(S.save)),
+      h('button', { class: 'btn', onclick: async () => { const ok = await saveGame(`slot-${store.game?.signature}`); toast(ok ? t(S.saved) : t(l('Erro', 'Error')), ok ? 'good' : 'bad'); } }, t(S.save)),
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveTextDialog(); } }, t(S.exportSave)),
       h('button', { class: 'btn ghost', onclick: () => { close(); void saveTextDialog(); } }, t(l('Copiar / colar save', 'Copy / paste save'))),
-      h('button', { class: 'btn ghost', onclick: () => { close(); void saveGame('auto'); store.game = null; titleScreen(root, startGame); } }, t(l('Menu inicial', 'Main menu'))),
+      h('button', { class: 'btn ghost', onclick: () => { close(); void saveGame('auto'); store.game = null; stopHq(); titleScreen(root, startGame); } }, t(l('Menu inicial', 'Main menu'))),
       h('button', { class: 'btn ghost', onclick: () => { close(); saveManagerModal17((g) => { store.game = g; startGame(); }); } }, t(l('Gerenciar saves', 'Manage saves'))), // r17
       h('button', { class: 'btn ghost', onclick: () => { close(); if (store.game) modal(t(l('Cartão da partida', 'Run card')), runCard17body(store.game)); } }, t(l('Cartão da partida', 'Run card'))), // r17
     ),
@@ -533,7 +546,7 @@ async function saveTextDialog(): Promise<void> {
     h('div', { class: 'row' }, h('button', { class: 'btn', onclick: async () => { const ok = await copyText(text); if (!ok) { area.focus(); area.select(); } toast(ok ? t(l('Save copiado.', 'Save copied.')) : t(l('Selecionei o texto: use Ctrl+C.', 'Text selected: press Ctrl+C.')), 'good'); } }, t(l('Copiar save', 'Copy save'))), h('small', { class: 'muted' }, `${Math.round(text.length / 1024)} KB`)),
     h('hr'),
     paste,
-    h('button', { class: 'btn primary', onclick: async () => { try { store.game = await importSaveText(paste.value); close(); render(); toast(t(l('Save carregado.', 'Save loaded.')), 'good'); } catch (er) { toast(saveErrText20(er), 'bad'); } } }, t(l('Carregar save colado', 'Load pasted save'))),
+    h('button', { class: 'btn primary', onclick: async () => { try { store.game = await importSaveText(paste.value); const ir = unIronman21(store.game); close(); render(); toast(t(l('Save carregado.', 'Save loaded.')), 'good'); if (ir) toast(t(IRONMAN_OFF21), 'info'); } catch (er) { toast(saveErrText20(er), 'bad'); } } }, t(l('Carregar save colado', 'Load pasted save'))),
   );
   close = modal(t(l('Save em texto', 'Save as text')), body);
 }
@@ -603,9 +616,9 @@ function endScreen(): void {
     !insolvent ? h('p', { class: 'small muted' }, t(l('Finais mais próximos: ', 'Closest endings: ')), top.map((x) => t(ENDINGS.find((e) => e.id === x.id)?.name)).join(' · ')) : null,
     h('div', { class: 'row center' },
       h('button', { class: 'btn', onclick: () => openLabelStory(g) }, t(l('História do selo', 'Label story'))),
-      h('button', { class: 'btn', onclick: () => { document.querySelector('.overlay')?.remove(); store.area = 'diary'; render(); } }, t(S.areaDiary)),
-      !insolvent ? h('button', { class: 'btn', onclick: () => { g.flags.sandbox = 1; document.querySelector('.overlay')?.remove(); render(); } }, t(S.sandbox)) : null,
-      h('button', { class: 'btn primary', onclick: () => { document.querySelector('.overlay')?.remove(); store.game = null; titleScreen(root, startGame); } }, t(S.newGame)),
+      h('button', { class: 'btn', onclick: () => { closeOverlay(); store.area = 'diary'; render(); } }, t(S.areaDiary)),
+      !insolvent ? h('button', { class: 'btn', onclick: () => { g.flags.sandbox = 1; closeOverlay(); render(); } }, t(S.sandbox)) : null,
+      h('button', { class: 'btn primary', onclick: () => { closeOverlay(); store.game = null; stopHq(); titleScreen(root, startGame); } }, t(S.newGame)),
     ),
   );
   modal(t(S.endTitle), body, { wide: true });

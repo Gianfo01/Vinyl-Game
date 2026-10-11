@@ -182,8 +182,11 @@ export const C19: C19Row[] = [
 export const NAMES19: Record<string, [en: string, pt: string]> = {
   BRB: ['Barbados', 'Barbados'], CPV: ['Cape Verde', 'Cabo Verde'], PYF: ['French Polynesia', 'Polinésia Francesa'],
   WSM: ['Samoa', 'Samoa'], FRO: ['Faroe Islands', 'Ilhas Faroé'],
+  // r21 (J-1): cidades/países fora do atlas 1:110m e códigos citados em regions18
+  SGP: ['Singapore', 'Singapura'], HKG: ['Hong Kong', 'Hong Kong'], MAC: ['Macau', 'Macau'], BHR: ['Bahrain', 'Bahrein'],
+  MCO: ['Monaco', 'Mônaco'], MLT: ['Malta', 'Malta'], GLP: ['Guadeloupe', 'Guadalupe'],
 };
 /** Mercado do jogo dos países que o atlas não lista. */
-export const MKT19: Record<string, MarketId> = { BRB: 'latam', CPV: 'africa', PYF: 'oceania', WSM: 'oceania', FRO: 'eu', GEO: 'eu', ARM: 'eu', AZE: 'eu' };
+export const MKT19: Record<string, MarketId> = { BRB: 'latam', CPV: 'africa', PYF: 'oceania', WSM: 'oceania', FRO: 'eu', GEO: 'eu', ARM: 'eu', AZE: 'eu', GLP: 'latam', MLT: 'eu', MCO: 'eu' }; // r21 (J-1): GLP/MLT/MCO
 /** Submercado (regions18) dos países que ainda não tinham um. */
-export const SUB19: Record<string, string> = { CPV: 'west', PYF: 'au', WSM: 'au', NCL: 'au', FRO: 'nordic', GEO: 'east_eu', ARM: 'east_eu', AZE: 'east_eu' };
+export const SUB19: Record<string, string> = { CPV: 'west', PYF: 'au', WSM: 'au', NCL: 'au', FRO: 'nordic', GEO: 'east_eu', ARM: 'east_eu', AZE: 'east_eu', GLP: 'carib' }; // r21 (J-1): Guadalupe no Caribe

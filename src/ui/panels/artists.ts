@@ -33,6 +33,7 @@ import { hideSection, sectionsOf } from '../registry';
 import { FILTER0_20, SUB20, SUBTAB_KEY20, actionRow20, alerts20, filterRoster20, nextCommitment20, project20, type Filter20, type Sub20 } from '../actions20';
 import { actionsButton20, applyNav20, bindContext20, chooseAction20, quickPins20 } from '../sys/actmenu20';
 import { actStatus } from '../../sim/sys/hq8';
+import { prompt21 } from '../ask21';
 
 /** Seções registradas por outros sistemas que agora moram numa subaba (e não mais soltas no fim da página). */
 const PLACED20: Record<string, Sub20> = { feats8: 'agenda', 'people-negotiate': 'career', 'scenes-actions': 'audience', w4clubs: 'audience' };
@@ -297,7 +298,7 @@ function templatesRow(s: GameState, actId: string, slots: AgendaSlot[]): HTMLEle
     ...st.templates.map((tp) => h('span', { class: 'row', style: 'gap:2px' },
       h('button', { class: 'btn small ghost', onclick: () => { applyTemplate(s, tp.id, targets()); rerender(); } }, tp.name),
       h('button', { class: 'icon', 'aria-label': t(l('apagar', 'delete')), onclick: () => { deleteTemplate(s, tp.id); rerender(); } }, '✕'))),
-    slots.length ? h('button', { class: 'btn small', onclick: () => { const nm = prompt(t(l('Nome do modelo', 'Template name')), t(l('Minha agenda', 'My schedule'))); if (nm) { saveTemplate(s, nm, slots); rerender(); } } }, '💾 ', t(l('Salvar como modelo', 'Save as template'))) : null,
+    slots.length ? h('button', { class: 'btn small', onclick: () => prompt21(t(l('Nome do modelo', 'Template name')), t(l('Minha agenda', 'My schedule')), (nm) => { if (nm) { saveTemplate(s, nm, slots); rerender(); } }) }, '💾 ', t(l('Salvar como modelo', 'Save as template'))) : null,
     n > 1 ? h('button', { class: 'btn small ghost', onclick: () => { for (const id of playerActs(s)) { s.agenda[id] = slots.map((x) => ({ action: x.action, params: { ...(x.params ?? {}) } })); s.delegated[id] = false; } rerender(); } }, t(l('Copiar esta agenda para todos ({n})', 'Copy this agenda to all ({n})')).replace('{n}', String(n))) : null,
   );
 }

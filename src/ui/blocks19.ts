@@ -10,6 +10,7 @@ import type { GameState } from '../sim/types';
 import { rerender } from './common';
 import { h } from './dom';
 import { sectionList } from './registry';
+import { foldWrap21 } from './ux21';
 
 export interface Block19 {
   id: string;
@@ -57,13 +58,15 @@ function ctl(s: GameState, b: Block19, collapsed: boolean): HTMLElement {
     h('button', { class: 'b19-btn', title: t(pref === 'o' ? l('Desafixar', 'Unpin') : l('Mover para "Mais"', 'Move to "More"')), 'aria-label': t(pref === 'o' ? l('Desafixar', 'Unpin') : l('Esconder', 'Hide')),
       onclick: () => { setPref19(s, b.id, pref === 'o' ? null : 'h'); rerender(); } }, pref === 'o' ? '📌' : '×'));
 }
+/** r21 (§2.3.2): Metas da era, Estrutura × era e Quem tem tempo abrem recolhidos (details, estado nas prefs). */
+const FOLD21 = new Set(['desk:ux19-goals', 'desk:org12', 'desk:cap14']);
 /** Desenha os blocos abertos de um host (recolhidos viram barra). */
 export function renderBlocks19(s: GameState, p: Pick19, host: Block19['host']): HTMLElement[] {
   const pref = ui19(s).c;
   return p.all.filter((b) => b.host === host && p.open.has(b.id)).map((b) => {
     const col = pref[b.id] === 'c';
     return h('div', { class: `b19 ${col ? 'col' : ''}`, 'data-b19': b.id },
-      col ? h('button', { class: 'b19-bar', onclick: () => { setPref19(s, b.id, null); rerender(); } }, '▸ ', t(b.title)) : b.el, ctl(s, b, col));
+      col ? h('button', { class: 'b19-bar', onclick: () => { setPref19(s, b.id, null); rerender(); } }, '▸ ', t(b.title)) : FOLD21.has(b.id) ? foldWrap21(b.id, t(b.title), b.el) : b.el, ctl(s, b, col));
   });
 }
 /** Faixa "Mais (n)": abre um bloco escondido (fixa aberto). */

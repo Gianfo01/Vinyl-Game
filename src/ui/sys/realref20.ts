@@ -5,7 +5,7 @@
 import { countryName } from '../../data/geo';
 import { l } from '../../data/world';
 import { S, t } from '../../i18n/strings';
-import { realRef20, thisRun20 } from '../../sim/prov20';
+import { realRef20, simFate20, thisRun20 } from '../../sim/prov20';
 import type { Act, GameState } from '../../sim/types';
 import { N, cityName, kv, pill, section, statusName } from '../common';
 import { h } from '../dom';
@@ -23,6 +23,7 @@ export function realRefPanel20(s: GameState, a: Act): HTMLElement {
       h('p', { class: 'muted small' }, t(ref.infoOnly
         ? l('Só para consulta: nesta partida ("Reais em mundo aleatório") nada da cronologia real anterior ao início foi restaurado — identidade real, carreira simulada.', 'Reference only: in this run ("Real acts in a random world") nothing from the real pre-start chronology was restored — real identity, simulated career.')
         : l('Fatos documentados até o ano corrente (nada do futuro). Não muda a simulação: as vendas e a carreira desta partida estão ao lado.', 'Documented facts up to the current year (nothing from the future). It does not drive the simulation: this run\'s sales and career are alongside.'))),
+      simFate20(s, a) ? h('p', null, pill(t(l('destino simulado', 'simulated fate')), 'neural'), ' ', h('span', { class: 'muted small' }, t(l('A pessoa real já teria morrido neste ano; nesta partida a carreira continua por simulação.', 'The real person would already have died by this year; in this run the career goes on by simulation.')))) : null,
       kv(t(l('Nome', 'Name')), ref.name),
       ref.city || ref.country ? kv(t(l('Origem', 'Origin')), [ref.city ? cityName(ref.city) : '', ref.country ? t(countryName(ref.country)) : ''].filter(Boolean).join(' · ')) : null,
       ref.born !== undefined ? kv(t(l('Nascimento', 'Born')), String(ref.born)) : null,

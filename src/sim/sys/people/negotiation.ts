@@ -8,6 +8,7 @@ import { toReal } from '../../../core/money';
 import { l, type L } from '../../../data/world';
 import { acceptOffer, defaultOffer, expectedAdvance } from '../../contracts';
 import { mainAmbition } from '../../people';
+import { recoup } from '../contracts18';
 import type { GameState, Offer } from '../../types';
 import { fmtL, money, nextId, post, remember } from '../../util';
 import { P, actOf, clamp01, type NegSession } from './state';
@@ -239,7 +240,7 @@ export function closeNegotiation(s: GameState): L {
   c.royalty = n.offer.royalty;
   if (n.offer.advance > 0) {
     post(s, `renewtable:${act.id}`, -n.offer.advance, 'advances', `Renovação ${act.name}`);
-    c.recoupBalance += n.offer.advance;
+    recoup(s, c, 'adv', n.offer.advance); // r21 (H-9)
     act.cash += n.offer.advance;
   }
   if (promised) c.promises.push({ kind: 'tour', dueWeek: s.week + 26 });

@@ -1,6 +1,6 @@
 // Composição, gravação e preparação de lançamentos (GDD §12, §13).
 
-import { addRecoup18 } from './sys/contracts18';
+import { addRecoup18, recoup } from './sys/contracts18';
 import { coverCost } from './covers';
 import { clamp, type Rng } from '../core/rng';
 import { APPROACHES, EQUIPMENT, FORMATS, STUDIO_TIERS, type FormatId } from '../data/rules';
@@ -11,7 +11,7 @@ import { fmtL, hasCard, hasTech, money, nextId, notify, post, staffSkill } from 
 import { forecastUnits } from './market';
 import { hqCaps } from './branches';
 import { takeIdea } from './repertoire';
-import { applyMods, runSimHooks } from './ext4';
+import { applyMods, LATE21, runSimHooks } from './ext4';
 import { settleVocals } from './sys/vocals10';
 import { cashWhy20, freeCash20 } from './oblig20';
 
@@ -20,6 +20,15 @@ export function songQ(song: Pick<Song, 'melody' | 'lyrics' | 'performance' | 'pr
   // rodada 10: instrumental — a letra não conta; os outros pesos são renormalizados
   if (song.instrumental) return (0.25 * song.melody + 0.25 * song.performance + 0.2 * song.production + 0.1 * song.originality) / 0.8;
   return 0.25 * song.melody + 0.2 * song.lyrics + 0.25 * song.performance + 0.2 * song.production + 0.1 * song.originality;
+}
+
+/** r21 (E-7): fonte de verdade de Q. Faixa só escrita usa performance e produção estimadas; faixa gravada
+ *  recalcula pelos atributos e soma de volta o bônus de perks (`qBonus`, fixado em closeTrack). */
+export function refreshQ(song: Song): number {
+  song.q = song.recorded
+    ? clamp(songQ(song) + (song.qBonus ?? 0), 0, 100)
+    : songQ({ ...song, performance: song.melody * 0.6, production: 30 });
+  return song.q;
 }
 
 export function composeSongs(s: GameState, r: Rng, act: Act, n: number): Song[] {
@@ -56,7 +65,7 @@ export function composeSongs(s: GameState, r: Rng, act: Act, n: number): Song[] 
     };
     s.songs[song.id] = song;
     settleVocals(s, song);
-    song.q = songQ({ ...song, performance: melody * 0.6, production: 30 });
+    refreshQ(song);
     act.songs.push(song.id);
     out.push(song);
     runSimHooks('compose', s, r, { song });
@@ -81,6 +90,20 @@ export function ownStudioProduction(s: GameState): number {
   return v;
 }
 
+/** r21 (1.17): equipamento da sede que melhora a execução (câmara de eco) — só no estúdio próprio (tier 0). */
+export function ownStudioPerformance(s: GameState): number {
+  let v = 0;
+  for (const id of s.player.equipment) v += EQUIPMENT.find((e) => e.id === id)?.effect.performance ?? 0;
+  return v;
+}
+
+/** r21 (1.17): preservação do acervo (cofre de masters, arquivo digital): fração somada à qualidade de remasters e reedições. */
+export function catalogPreservation(s: GameState): number {
+  let v = 0;
+  for (const id of s.player.equipment) v += EQUIPMENT.find((e) => e.id === id)?.effect.catalog ?? 0;
+  return v;
+}
+
 export function eraProductionBase(s: GameState): number {
   let v = 22;
   if (hasTech(s, 'electric_rec')) v += 6;
@@ -97,17 +120,61 @@ export function recordingCost(s: GameState, tier: number, approach: string, song
   return money(s, (st.cost * Math.max(1, songs / 3) + 150 * songs) * ap.costMult);
 }
 
+/** r21 (E-1): contexto de uma gravação — o mesmo para a agenda (`recordSongs`) e para a sessão de estúdio (`fixSong`). */
+export interface CloseTrackCtx {
+  tier: number;
+  approach: string;
+  /** execução já decidida (take escolhido ou base do ato); a assinatura do produtor entra aqui dentro */
+  perf: number;
+  /** produtor de fora (sessão de estúdio) */
+  producer?: { id: string; skill: number; fit: number; sound?: { prod: number; perf: number; orig: number } };
+  payer?: 'player' | 'act' | string;
+}
+
+/** r21 (E-1): UMA função de gravação. Calcula produção/execução/originalidade com uma fórmula, aplica os perks
+ *  (`songQ`) da equipe da casa, grava tier/abordagem/produtor/semana e dispara o gancho `'record'`. */
+export function closeTrack(s: GameState, r: Rng, act: Act, song: Song, ctx: CloseTrackCtx): void {
+  const payer = ctx.payer ?? 'player';
+  const t = actTalent(s, act);
+  const ap = APPROACHES.find((a) => a.id === ctx.approach) ?? APPROACHES[1];
+  const studio = STUDIO_TIERS[clamp(ctx.tier, 0, 3)];
+  const pr = ctx.producer;
+  const sig = pr?.sound;
+  const fit = pr?.fit ?? 1;
+  const own = payer === 'player' && ctx.tier === 0 ? ownStudioProduction(s) + 2 : 0;
+  const prodSkill = pr ? pr.skill * 0.25 * fit : payer === 'player' ? staffSkill(s, 'producer') * 0.22 : 8 + ctx.tier * 2;
+  const engineerFix = payer === 'player' ? staffSkill(s, 'engineer') / 25 : 2;
+  const showman = hasCard(s, 'showman') && payer === 'player' ? -3 : 0;
+  const techIssue = r.chance(Math.max(0.02, 0.12 - engineerFix * 0.03)) ? -r.int(4, 12) : 0;
+  settleVocals(s, song);
+  song.performance = clamp(ctx.perf + (sig?.perf ?? 0) * fit, 5, 100);
+  song.production = clamp(eraProductionBase(s) + studio.production + own + prodSkill + t.prod * 0.18 + ap.prod + (sig?.prod ?? 0) * fit + techIssue + showman + r.normal(0, 5), 5, 100);
+  song.originality = clamp(song.originality + ap.originality + (sig?.orig ?? 0), 0, 100);
+  song.recorded = true;
+  song.recordedWeek = s.week;
+  song.studioTier = ctx.tier;
+  song.approach = ctx.approach;
+  song.producerId = pr?.id;
+  song.qBonus = 0;
+  // sem produtor de fora, a equipe da casa (especialistas, química) assina a faixa; os perks que mexem nos atributos
+  // (ex.: engenheiro da casa em song.production) entram pelo recálculo; os que só mexem em Q ficam em qBonus
+  if (payer === 'player' && !pr) {
+    const q0 = songQ(song);
+    const q1 = applyMods(s, 'songQ', q0, { song, act }).value;
+    song.qBonus = Math.round((q1 - q0) * 100) / 100;
+  }
+  refreshQ(song);
+  runSimHooks('record', s, r, { song });
+  refreshQ(song); // ganchos podem ter mexido nos atributos
+}
+
 /** Grava as músicas escritas. tier 0 = estúdio da sede (se houver salas). */
 export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], tier: number, approach: string, payer: 'player' | 'act' | string = 'player'): { cost: number; songs: Song[] } {
   const t = actTalent(s, act);
   const st = actState(s, act);
   const ap = APPROACHES.find((a) => a.id === approach) ?? APPROACHES[1];
-  const studio = STUDIO_TIERS[clamp(tier, 0, 3)];
-  const producer = payer === 'player' ? staffSkill(s, 'producer') * 0.22 : 8 + tier * 2;
-  const own = payer === 'player' && tier === 0 ? ownStudioProduction(s) + hqCaps(s).sessions * 2 : 0;
-  const engineerFix = payer === 'player' ? staffSkill(s, 'engineer') / 25 : 2;
-  const showman = hasCard(s, 'showman') && payer === 'player' ? -3 : 0;
   const cost = recordingCost(s, tier, approach, songIds.length);
+  const gear = payer === 'player' && tier === 0 ? ownStudioPerformance(s) : 0;
   const done: Song[] = [];
   for (const id of songIds) {
     const song = s.songs[id];
@@ -116,26 +183,18 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
     // instrumental: a execução depende dos instrumentos, não da voz
     const perfBase = (song.instrumental ? t.instr * 0.9 + t.voice * 0.1 : t.voice * 0.55 + t.instr * 0.45) * 0.92 + act.rehearsed * 0.6;
     const mood = (st.morale - 50) / 8 - st.fatigue / 12;
-    song.performance = clamp(perfBase + mood + ap.perf + r.normal(0, 6), 5, 100);
-    const techIssue = r.chance(Math.max(0.02, 0.12 - engineerFix * 0.03)) ? -r.int(4, 12) : 0;
-    song.production = clamp(eraProductionBase(s) + studio.production + own + producer + t.prod * 0.18 + ap.prod + techIssue + showman + r.normal(0, 5), 5, 100);
-    song.originality = clamp(song.originality + ap.originality, 0, 100);
-    song.q = songQ(song);
-    // equipe da casa (especialistas, química): ajusta os atributos da faixa
-    if (payer === 'player') song.q = applyMods(s, 'songQ', song.q, { song, act }).value;
-    song.recorded = true;
-    song.studioTier = tier;
-    song.approach = approach;
+    const perf = perfBase + mood + ap.perf + gear + r.normal(0, 6);
+    closeTrack(s, r, act, song, { tier, approach, perf, payer });
     done.push(song);
   }
   act.rehearsed = 0;
-  if (payer === 'player' && cost > 0) post(s, `rec:${act.id}:${songIds.join(',').slice(0, 40)}`, -cost, 'recording', `Gravação ${act.name}`);
+  // r21 (1.14): chave com id único — duas gravações do mesmo ato na mesma semana cobram as duas
+  if (payer === 'player' && cost > 0) post(s, `rec:${act.id}:${nextId(s, 'rec')}`, -cost, 'recording', `Gravação ${act.name}`);
   else if (payer === 'act') act.cash -= cost;
   else if (s.labels[payer]) s.labels[payer].cash -= cost;
   // custo de gravação é recuperável no contrato clássico
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && payer !== 'act') addRecoup18(s, c, 'rec', cost); // r18: fração negociada nas cláusulas (antes 50% fixo)
-  for (const song of done) runSimHooks('record', s, r, { song });
   return { cost, songs: done };
 }
 
@@ -213,6 +272,9 @@ export function validateRelease(s: GameState, p: ReleasePlan): L | null {
   if (!p.reissueOf && p.songs.length < need) return fmtL(l('{t} precisa de {n} música(s) gravada(s).', '{t} needs {n} recorded song(s).'), { t: p.type.toUpperCase(), n: need });
   if (p.songs.some((id) => !s.songs[id]?.recorded || (s.songs[id].releaseId && !p.reissueOf && p.kind !== 'compilation' && !s.flags[`extracted:${id}`]))) return l('Use apenas músicas gravadas e inéditas.', 'Use only recorded, unreleased songs.');
   if (!p.formats.length) return l('Escolha ao menos um formato.', 'Pick at least one format.');
+  // r21 (1.16): formato que a era não oferece não entra no plano
+  const avail = availableFormats(s);
+  if (p.formats.some((f) => !avail.includes(f))) return l('Formato indisponível nesta época.', 'Format not available in this era.');
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && c.party !== 'player' && act.playerBand) return null;
   const cost = releaseCost(s, p);
@@ -260,19 +322,25 @@ export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRe
   if (labelFunded(s, p.actId)) {
     const c = s.contracts[act.contractId!];
     const press = pressingCost(s, p.formats, p.press);
-    c.recoupBalance += press;
+    recoup(s, c, 'adv', press); // r21 (H-9): único gravador do recuperável (prensagem bancada pelo selo é adiantamento)
     if (s.labels[c.party]) s.labels[c.party].cash -= press;
   }
-  for (const id of p.songs) if (s.songs[id] && !p.reissueOf && p.kind !== 'compilation') s.songs[id].releaseId = pr.id;
+  // reedição (deluxe, aniversário): só faixas ainda inéditas (bônus) ganham o lançamento
+  for (const id of p.songs) if (s.songs[id] && (!p.reissueOf || !s.songs[id].releaseId) && p.kind !== 'compilation') s.songs[id].releaseId = pr.id;
   s.pendingReleases.push(pr);
   notify(s, fmtL(l('{title} programado para a semana {w}.', '{title} scheduled for week {w}.'), { title: pr.title, w: pr.week }), 'info');
   return pr;
 }
 
+/** r21 (E-11): o que volta ao cancelar — prensagem, marketing E a capa ("cancelar não cobra", GDD §27). */
+export function pendingRefund(s: GameState, pr: PendingRelease): number {
+  return (labelFunded(s, pr.actId) ? 0 : pressingCost(s, pr.formats, pr.press)) + pr.marketing.reduce((t, m) => t + m.budget, 0) + coverCost(s, pr.cover?.style);
+}
+
 export function cancelRelease(s: GameState, id: string): boolean {
   const pr = s.pendingReleases.find((x) => x.id === id);
   if (!pr) return false;
-  const cost = (labelFunded(s, pr.actId) ? 0 : pressingCost(s, pr.formats, pr.press)) + pr.marketing.reduce((t, m) => t + m.budget, 0);
+  const cost = pendingRefund(s, pr);
   post(s, `relcancel:${pr.id}`, cost, 'release', `Cancelado ${pr.title}`);
   for (const sid of pr.songs) if (s.songs[sid]?.releaseId === pr.id) s.songs[sid].releaseId = undefined;
   s.pendingReleases = s.pendingReleases.filter((x) => x !== pr);
@@ -294,3 +362,4 @@ export function recordingSessionsAvailable(s: GameState): number {
 export function notifyRecorded(s: GameState, act: Act, n: number, q: number): void {
   notify(s, fmtL(l('{act} gravou {n} faixa(s); Q média {q}.', '{act} recorded {n} track(s); average Q {q}.'), { act: act.name, n, q: Math.round(q) }), 'info');
 }
+LATE21.pressingCost = (s, formats, units) => pressingCost(s, formats as FormatId[], units);

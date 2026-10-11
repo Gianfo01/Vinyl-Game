@@ -12,7 +12,7 @@ import { genreById } from '../data/world';
 import { locale } from '../i18n/strings';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
-import { importSave, importSaveText, loadGame, savePrefs, store } from './store';
+import { importSave, importSaveText, IRONMAN_OFF21, loadGame, savePrefs, store, unIronman21 } from './store';
 import { prepareNewGame, scenarioButton, scenarioScreen } from './sys/live/goals';
 import { pastCard20, personalize20 } from './newgame20you';
 import { labelsCard } from './newgameLabels';
@@ -28,6 +28,7 @@ import { YEAR_MAX20, YEAR_MIN20 } from '../sim/worldpolicy20';
 import { originById } from '../sim/sys/identity/data';
 import { careerOfSpec } from '../sim/sys/persona';
 import './newgame20.css';
+import { promptAsync21 } from './ask21';
 
 /** Anos de início com nomes únicos (rodada 13: ver ngdata13.ts; o campo ao lado aceita qualquer ano de 1889 a 2039). */
 const START_YEARS = START_YEARS13;
@@ -39,6 +40,7 @@ const SENSITIVE = [
   { id: 'crime', label: l('Crimes e corrupção', 'Crime and corruption') },
   { id: 'controversy', label: l('Polêmicas e boicotes', 'Controversies and boycotts') },
   { id: 'romance', label: l('Traição, armário e escândalos amorosos', 'Infidelity, closet and romance scandals') },
+  { id: 'health', label: l('Doença, colapso e internação', 'Illness, breakdown and hospitalisation') }, // r21 (J-8): já existia em SENSITIVE_TAGS
 ];
 
 function randomSeed(): string {
@@ -57,6 +59,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
     if (!f) return;
     try {
       store.game = await importSave(f);
+      if (unIronman21(store.game)) toast(t(IRONMAN_OFF21), 'info'); // r21 (1.15)
       onStart();
     } catch (er) {
       toast(saveErrText20(er), 'bad');
@@ -75,7 +78,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
         scenarioButton(root, onStart, () => titleScreen(root, onStart)),
         h('button', { class: 'btn ghost', onclick: () => fileInput.click() }, t(S.importSave)),
         fileInput,
-        h('button', { class: 'btn ghost', onclick: async () => { const tx = window.prompt(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'))); if (!tx) return; try { store.game = await importSaveText(tx); onStart(); } catch (er) { toast(saveErrText20(er), 'bad'); } } }, t(l('Colar save', 'Paste save'))),
+        h('button', { class: 'btn ghost', onclick: async () => { const tx = await promptAsync21(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)')), '', { multiline: true, title: t(l('Colar save', 'Paste save')), yes: t(l('Carregar', 'Load')) }); if (!tx) return; try { store.game = await importSaveText(tx); if (unIronman21(store.game)) toast(t(IRONMAN_OFF21), 'info'); onStart(); } catch (er) { toast(saveErrText20(er), 'bad'); } } }, t(l('Colar save', 'Paste save'))),
         select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { store.prefs.lang = v; savePrefs(); titleScreen(root, onStart); }, { 'aria-label': t(S.language) }),
       ),
       saves,

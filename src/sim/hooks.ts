@@ -17,12 +17,13 @@ import { subLabelsMonth } from './sublabels';
 import { brandsMonth } from './brands';
 import { businessMonth } from './business';
 import { neuralMonth } from './neural';
-import { cultureMonth, registerMovementGenres } from './culture';
+import { cultureMonth } from './culture';
 import { rivals2Month } from './rivals2';
 import { contracts2Month } from './contracts2';
 import { directorMonth as directorImpl } from './director';
 import './contentBridge';
 import './sys';
+import { settleMonth18 } from './sys/econ18';
 import { runSimHooks } from './ext4';
 
 export function startPlans(s: GameState, r: Rng): void {
@@ -44,7 +45,9 @@ export function weeklyExt(s: GameState, r: Rng): void {
 }
 
 export function monthlyExt(s: GameState, r: Rng): void {
-  registerMovementGenres(s);
+  // r21 (B-6): liquida títulos a receber/pagar vencidos ANTES de os credores olharem o caixa (o hook 'month' de econ18
+  // roda de novo depois e não duplica: só liquida o que ainda está vencido)
+  settleMonth18(s);
   financeMonth(s, r);
   fandomMonth(s, r);
   dynastyMonth(s, r);

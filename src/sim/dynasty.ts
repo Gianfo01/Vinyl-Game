@@ -34,15 +34,18 @@ export function ensureFamily(s: GameState, personId: string): Family {
 }
 
 // ---------- Envelhecimento e morte (GDD §44) ----------
-function deathRisk(age: number, p: Person): number {
+export function deathRisk(age: number, p: Person): number {
   let r = age < 45 ? 0.000015 : age < 60 ? 0.00012 : age < 70 ? 0.0005 : age < 80 ? 0.0017 : age < 90 ? 0.005 : 0.018;
   if (p.health === 'addiction') r += 0.0008;
   if (p.health === 'burnout' || p.health === 'ill') r += 0.0004;
+  if (age >= 95) return Math.max(r, 0.06); // r21 (C-2): teto por idade — ninguém passa muito dos 95 (morte em ~1–3 anos)
   return Math.min(0.07, r);
 }
 
-/** Artistas reais seguem a vida real até o presente: não morrem por sorteio antes de 2026 (as mortes reais vêm do roteiro). */
-export const realSafe = (s: GameState, act: { catalogNo?: number }): boolean => !!act.catalogNo && s.year < 2026 && s.config.history === 'strict'; // r18: só o modo exato protege
+/** Artistas reais seguem a vida real até o presente: não morrem por sorteio antes de 2026 (as mortes reais vêm do roteiro).
+ *  r21 (C-2): com `p`, só protege quem tem morte documentada ainda no futuro (`p.fate`); quem não tem data envelhece e morre. */
+export const realSafe = (s: GameState, act: { catalogNo?: number }, p?: Person): boolean =>
+  !!act.catalogNo && s.year < 2026 && s.config.history === 'strict' && (!p || (p.fate !== undefined && p.fate > s.year)); // r18: só o modo exato protege
 
 export function personDies(s: GameState, p: Person, cause: L): void {
   if (!p.alive) return;
@@ -55,7 +58,10 @@ export function personDies(s: GameState, p: Person, cause: L): void {
       act.status = 'retired';
       act.deceased = true;
     } else {
-      act.hiatusUntil = Math.max(act.hiatusUntil ?? 0, s.week + 4); // um mês de luto
+      if (act.status !== 'retired' && act.status !== 'split') { // r21 (C-5): ato encerrado não ganha pausa órfã
+        act.hiatusUntil = Math.max(act.hiatusUntil ?? 0, s.week + 4); // um mês de luto
+        if (act.status !== 'hiatus') act.hiatusWhy = 'death';
+      }
       dropFromFactions20(s, act.id, p.id); // r20 (B11): mesma regra da saída comum
       fixLeader20(s, act);
     }
@@ -64,7 +70,7 @@ export function personDies(s: GameState, p: Person, cause: L): void {
       const rel = s.releases[rid];
       if (rel && rel.owner === 'player' && !rel.live) {
         rel.live = true;
-        rel.week = s.week - 53;
+        rel.revivedWeek = s.week - 53; // r21 (E-10): não reescreve `week` (contrato da época e ano ficam certos)
         rel.appeal *= 0.3;
       }
     }
@@ -92,7 +98,7 @@ function agingMonth(s: GameState, r: Rng): void {
       const p = s.persons[id];
       if (!p || !p.alive) continue;
       const age = s.year - p.born;
-      if (r.chance(deathRisk(age, p)) && !safe) { // sorteia sempre (mantém a sequência), mas reais não morrem
+      if (r.chance(deathRisk(age, p)) && !(safe && realSafe(s, act, p))) { // (safe = checagem do ato, barata; a da pessoa só quando preciso) // sorteia sempre (mantém a sequência), mas reais com destino documentado não morrem
         const cause = age > 70 ? l('causas naturais', 'natural causes') : p.health === 'addiction' ? l('complicações de saúde', 'health complications') : l('um acidente inesperado', 'an unexpected accident');
         personDies(s, p, cause);
         continue;
@@ -118,7 +124,10 @@ function familyMonth(s: GameState, r: Rng): void {
       // rodada 14: quem já vive a rotina de lazer (leisure14) namora e tem filhos por lá — sem sorteio em dobro
       // (o teste fica no fim da condição para não mudar o consumo do Rng compartilhado)
       const lz = !!(s.x4 as unknown as { leisure14?: { r?: Record<string, unknown> } }).leisure14?.r?.[`p:${p.id}`];
-      if (!fam.partner && !fam.separated && age > 24 && r.chance(0.01) && !lz) {
+      // r21 (C-7): quem namora o jogador (life.partner / love17.affair) não ganha outro parceiro por aqui
+      const x7 = s.x4 as unknown as { life?: { partner?: { personId?: string } | null }; love17?: { affair?: { pid?: string } } };
+      const mine7 = x7.life?.partner?.personId === p.id || x7.love17?.affair?.pid === p.id;
+      if (!fam.partner && !fam.separated && age > 24 && r.chance(0.01) && !lz && !mine7) {
         fam.partner = { name: personName(r, langForCity(act.city, r)), job: r.pick(JOBS), trust: 60, wellbeing: 60, agenda: r.pick(AGENDAS) };
         remember(s, 'partner', fmtL(l('{p} começa um relacionamento com {q}.', '{p} starts a relationship with {q}.'), { p: p.name, q: fam.partner.name }), { actId });
       }
@@ -193,8 +202,8 @@ export function launchHeir(s: GameState, r: Rng, personId: string): L | null {
   const cost = money(s, 3000);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `heir:${personId}`, -cost, 'artist_dev', `Carreira de ${p.name}`);
+  // r21 (C-6): ato novo com campos limpos (sem clonar deceased/hiatus/contrato/rs/movimento do ato de origem)
   const act: Act = {
-    ...(parentAct ? structuredClone(parentAct) : ({} as Act)),
     id: nextId(s, 'a'), name: p.name, members: [p.id], formed: s.year, debutYear: s.year, status: 'emerging',
     fame: Math.min(20, (parentAct?.fame ?? 0) * 0.15 + 2), momentum: 40, fans: { casual: Math.round((parentAct?.fans.casual ?? 0) * 0.03), active: 10, core: 3 },
     owner: 'player', trust: 60, songs: [], releases: [], lastRelease: -999, peakChart: 999, hits: 0, number1s: 0, awards: 0,
@@ -378,7 +387,10 @@ export function startSoloCareer(s: GameState, r: Rng, actId: string, personId: s
     id: nextId(s, 'a'), name: p.name, members: [p.id], status: 'emerging', fame: Math.min(15, act.fame * 0.3),
     fans: { casual: Math.round(act.fans.casual * 0.05), active: Math.round(act.fans.active * 0.05), core: Math.round(act.fans.core * 0.05) },
     songs: [], releases: [], lastRelease: -999, peakChart: 999, hits: 0, number1s: 0, awards: 0, legend: false, scandals: 0,
-    history: [], logoSeed: r.int(1, 2 ** 30), catalogNo: undefined, contractId: act.contractId, leaderId: p.id, owner: act.owner,
+    history: [], logoSeed: r.int(1, 2 ** 30), catalogNo: undefined, leaderId: p.id, owner: act.owner,
+    // r21 (C-6): carreira própria — nada do ciclo de vida/contrato da banda vem junto (contrato nunca é compartilhado)
+    contractId: undefined, deceased: undefined, hiatusUntil: undefined, hiatusWhy: undefined, cancelledUntil: undefined, rs: undefined, movementId: undefined,
+    gigSat: undefined, image: undefined, formed: s.year, debutYear: s.year, careerEnd: Math.max(act.careerEnd, s.year + 20),
   };
   s.acts[solo.id] = solo;
   actsTouched17(s);

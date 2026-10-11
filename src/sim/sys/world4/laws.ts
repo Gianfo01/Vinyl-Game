@@ -13,6 +13,7 @@ import { STANCE_NAME, setStance } from './milestones';
 import { w4, type LawState, type PiracyStance, type Society } from './state';
 import { emitFact } from '../../facts17';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { PIRACY21 } from '../../ext4';
 
 // ======================================================================= sindicato
 
@@ -262,6 +263,9 @@ export const STANCES: { id: PiracyStance; recover: number; name: L; desc: L; nee
   { id: 'drm', recover: 0.3, name: STANCE_NAME.drm, desc: l('Recupera mais, mas pode virar escândalo (discos que travam computadores).', 'Recovers more, but may become a scandal (discs that break computers).'), needs: 'cd' },
   { id: 'license', recover: 0.3, name: STANCE_NAME.license, desc: l('Licenciar serviços: recupera bem e melhora a imagem comercial.', 'License services: recovers well and improves commercial image.'), needs: 'internet' },
 ];
+
+// r21 (§4): a postura do selo entra na perda por pirataria das vendas semanais (market.piracyLoss) — metade do `recover`
+PIRACY21.stance = (s) => { const d = STANCES.find((x) => x.id === w4(s).piracy.stance); return !d || (d.needs && !hasTech(s, d.needs)) ? 0 : d.recover; };
 
 export function choosePiracy(s: GameState, st: PiracyStance): L | null {
   const d = STANCES.find((x) => x.id === st);

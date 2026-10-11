@@ -8,6 +8,7 @@ import type { GameState, Release } from './types';
 import { fmtL, hasCard, notify, recordAward, remember, sum } from './util';
 import { hqCaps } from './branches';
 import { campaignBonus, restrictToNominees } from './sys/ceremonies8';
+import { addBoost21 } from './sys/boost21';
 
 export function updateLegacy(s: GameState): void {
   const p = s.player;
@@ -67,6 +68,7 @@ export function publishGramo19(s: GameState, w: GramoWin19): void {
   const rel = e.releaseId ? s.releases[e.releaseId] : undefined;
   recordAward(s, e); // r19: livro único (awards19)
   if (act) act.fame = clamp(act.fame + 3, 0, 100);
+  if (rel) addBoost21(s, rel, 1.15, 10, fmtL(l('Gramófono de Ouro: {c}', 'Golden Gramophone: {c}'), { c: w.name })); // r21 (§4): o prêmio vende
   if (e.byPlayer) {
     s.player.reputation.artistic = clamp(s.player.reputation.artistic + 4, 0, 100);
     notify(s, fmtL(l('Gramófono de Ouro: {c} para {n}!', 'Golden Gramophone: {c} goes to {n}!'), { c: w.name, n: `${act?.name} — ${rel?.title ?? ''}` }), 'good');
@@ -139,6 +141,14 @@ export function checkCardGoal(s: GameState): void {
 }
 
 // ---------- Finais ----------
+// r21 (G-4): tabela de pontuações (o maior vence). Faixas: ralos 45 (fragile_balance) / 60 (end_of_bar, só sem legado);
+// finais de postura 45–55 crescem com legado/uso; "eventos" fortes 62–70 (voice_scandal 70, creative_singularity 66).
+//   last_vinyl 50+ · house_of_masters 45+ · live_stage 45+ · analog_manifesto 45+ · end_of_bar 60 · silenced_voice 50+
+//   perfect_duet 50+ · the_bridge 40+ · licensed_choir 46+ · two_worlds 48+ · fragile_balance 45 · voice_scandal 70
+//   neural_empire 42+ · infinite_catalog 44+ · famous_ghost 52 (ghostVoice E ≥2 hologramas/licenças) · white_noise 52+
+//   human_renaissance 42+ · creative_singularity 66 · eternal_archivist 45+ (reedições com teto 15) · the_silence 55
+//   neural_empire/human_renaissance dependem de `divergence.neural`, decidida SEMPRE: `neural_vote` é cartão forçado
+//   no mês em que a tecnologia chega (tick.techMonth), com opção padrão "abster-se" (o mercado decide).
 export function endingScores(s: GameState): { id: string; score: number }[] {
   const L = s.player.legacy;
   const n = s.player.neural;
@@ -166,12 +176,12 @@ export function endingScores(s: GameState): { id: string; score: number }[] {
     voice_scandal: n.voiceScandal ? 70 : 0,
     neural_empire: n.neuralAdopted && s.divergence.neural === 'accepted' && L.industry > 40 && L.commercial > 45 ? 42 + (L.commercial + L.industry) * 0.12 : 0,
     infinite_catalog: n.catalogTraining ? 44 + L.catalog * 0.2 : 0,
-    famous_ghost: n.ghostVoice ? 58 : 0,
+    famous_ghost: n.ghostVoice && (s.holograms.length >= 2 || s.holograms.some((h) => h.revenue > 0)) ? 52 : 0, // r21 (G-4): exige uso relevante (≥2 hologramas ou receita), não um holograma solto
     white_noise: synth >= 3 && L.cultural < 30 ? 52 + synth : 0,
     human_renaissance: s.divergence.neural === 'rejected' && n.humanFocus >= 3 ? 42 + L.cultural * 0.2 + n.humanFocus * 1.5 : 0,
     creative_singularity: s.flags.synthNumber1 ? 66 : 0,
-    eternal_archivist: hasCard(s, 'archivist') || s.player.reissues >= 10 ? 45 + L.catalog * 0.15 + s.player.reissues : 0,
-    the_silence: !recent && s.config.role !== 'artist' ? 62 : 0,
+    eternal_archivist: hasCard(s, 'archivist') || s.player.reissues >= 10 ? 45 + L.catalog * 0.15 + Math.min(s.player.reissues, 15) : 0, // r21 (G-4): teto nas reedições
+    the_silence: !recent && s.config.role !== 'artist' ? 55 : 0, // r21 (G-4)
   };
   return Object.entries(scores).map(([id, score]) => ({ id, score })).sort((a, b) => b.score - a.score);
 }

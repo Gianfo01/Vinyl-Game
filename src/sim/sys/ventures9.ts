@@ -10,6 +10,7 @@ import { CITIES, cityById, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
+import { freeCash20, registerAssets20 } from '../oblig20';
 import { scandal } from '../scandal17';
 import { commW19, crisisP19, favorCost19, rivalFest19, studioComp19 } from '../ctx19';
 import { ownerOf } from './people/owner';
@@ -102,8 +103,10 @@ export function maxGear(s: GameState): number {
 // ---------------------------------------------------------------- dinheiro
 
 export function funds(s: GameState, h: Holder): number {
-  return h === 'label' ? s.player.cash : ownerOf(s).wealth;
+  return h === 'label' ? freeCash20(s) : ownerOf(s).wealth; // r21 (B-9): caixa livre do selo
 }
+// r21 (seção 4.1): negócios mantidos pelo selo são ativo financeiro na Posição
+registerAssets20('ventures9', (s) => ventures(s).list.filter((v) => v.owner === 'label').reduce((t, v) => t + valuation(s, v), 0));
 
 /** Movimenta dinheiro de um negócio: caixa do selo (livro-caixa) ou patrimônio pessoal. */
 export function vpay(s: GameState, h: Holder, amount: number, key: string, memo: string, v?: Venture): void {
@@ -729,7 +732,9 @@ function managementMonth(s: GameState, r: Rng): void {
   for (const c of mg.clients.slice()) {
     const a = s.acts[c.actId];
     if (!activeAct(a)) { dropClient(s, c.actId); continue; }
-    const fee = mgGross(s, a) * c.rate;
+    // r21 (H-11): a comissão sai do caixa do ato (débito real, até o que ele tem) — não é dinheiro criado
+    const fee = Math.min(Math.round(mgGross(s, a) * c.rate), Math.max(0, a.cash));
+    a.cash -= fee;
     vpay(s, mg.owner, fee, `mg:${a.id}`, `Comissão de empresário ${a.name}`);
     c.earned += Math.round(fee);
     mg.total += Math.round(fee);

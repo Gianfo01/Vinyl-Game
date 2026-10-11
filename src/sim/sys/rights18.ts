@@ -581,13 +581,14 @@ export function fixConflict18(s: GameState, sid: string): L | null {
 // ---------------------------------------------------------------- autorizações (sample, cover, sync)
 
 export function payClearance18(s: GameState, kind: 'sample' | 'replay' | 'cover' | 'sync', id: string): L {
-  const st = r18(s), r = Rng.fromSeed(`${s.config.seed}:r18:clr:${id}:${s.week}`);
+  const attempt = nextId(s, 'clr'); // r21 (1.14): cada tentativa cobra e sorteia de novo (antes a 2ª na mesma semana era grátis e igual)
+  const st = r18(s), r = Rng.fromSeed(`${s.config.seed}:r18:clr:${id}:${attempt}`);
   if (kind === 'sample' || kind === 'replay') {
     const q = s.samples.find((x) => x.id === id);
     if (!q || q.status === 'cleared') return l('Nada a liberar.', 'Nothing to clear.');
     const fee = kind === 'replay' ? Math.round(q.fee * 0.5) : q.status === 'denied' ? q.fee * 2 : q.fee;
     if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
-    post(s, `clr18:${id}:${s.week}`, -fee, 'rights', kind === 'replay' ? 'Interpolação (regravar o trecho)' : 'Liberação de sample');
+    post(s, `clr18:${id}:${attempt}`, -fee, 'rights', kind === 'replay' ? 'Interpolação (regravar o trecho)' : 'Liberação de sample');
     if (kind === 'replay') { q.kind = 'interpolation'; q.share = 0.2; q.status = 'cleared'; if (!frozen18(s, q.songId)) releaseEsc(s, q.songId, 1, `smp:${q.id}`); return l('Trecho regravado pelos músicos: só a composição precisa de licença (20% da edição ao autor original).', 'Passage replayed by session musicians: only the composition needs a license (20% of publishing to the original writer).'); }
     if (q.status === 'denied' && !r.chance(0.45)) return l('O detentor recusou de novo (o dinheiro da proposta foi gasto com advogados).', 'The owner refused again (the offer money went to lawyers).');
     q.status = 'cleared';
@@ -600,7 +601,7 @@ export function payClearance18(s: GameState, kind: 'sample' | 'replay' | 'cover'
     if (!so || st.syncOk[id]) return l('Nada a liberar.', 'Nothing to clear.');
     const fee = money(s, 800);
     if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
-    post(s, `clrs18:${id}:${s.week}`, -fee, 'rights', `Liberação de sync "${so.title}"`);
+    post(s, `clrs18:${id}:${attempt}`, -fee, 'rights', `Liberação de sync "${so.title}"`);
     if (!r.chance(0.7)) return l('A editora da obra recusou o uso em publicidade/cinema.', 'The work\'s publisher refused the sync use.');
     st.syncOk[id] = 1;
     return l('Editora da obra autorizou o sync.', 'The work\'s publisher approved the sync.');
@@ -608,7 +609,7 @@ export function payClearance18(s: GameState, kind: 'sample' | 'replay' | 'cover'
   if (!c || c.st === 'ok') return l('Nada a liberar.', 'Nothing to clear.');
   const fee = c.fee * 3;
   if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
-  post(s, `clrc18:${id}:${s.week}`, -fee, 'rights', 'Autorização de cover (proposta melhor)');
+  post(s, `clrc18:${id}:${attempt}`, -fee, 'rights', 'Autorização de cover (proposta melhor)');
   if (!r.chance(0.6)) return l('A editora manteve a recusa.', 'The publisher kept refusing.');
   c.st = 'ok';
   const d = disputeOf18(s, c.song);

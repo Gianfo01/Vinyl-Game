@@ -14,10 +14,11 @@ import { $, N, actLink, kv, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { store } from '../store';
 import { hasSinger, hireSessionSinger, sessionSingerCost, voiceLabel } from '../../sim/sys/vocals10';
+import { emptyRoster21 } from '../ux21';
 
 export function creationPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
-  if (!ids.length) return h('div', { class: 'panel' }, section(t(S.areaCreation), h('p', null, t(S.noActs))));
+  if (!ids.length) return h('div', { class: 'panel' }, emptyRoster21(s, t(S.areaCreation), t(S.noActs))); // r21 (§2.3.12): botão direto para o Mercado
   if (!store.selectedAct || !ids.includes(store.selectedAct)) store.selectedAct = ids[0];
   const a = s.acts[store.selectedAct];
   const written = unrecorded(s, a);

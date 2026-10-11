@@ -9,6 +9,7 @@ import { talentScore } from './worldgen';
 import { emitEvent } from './events';
 import { rivalSignsLeft } from './sys/gate14';
 import { fameAt } from './famehook16';
+import { broke21, fixedCost21, labelPost } from './rivalledger21';
 
 const STRAT = { develop: l('desenvolver', 'develop'), buy_catalog: l('comprar catálogos', 'buy catalogs'), niche: l('nichos', 'niches'), stars: l('estrelas', 'stars') };
 
@@ -24,7 +25,7 @@ export function rivalsMonth(s: GameState, r: Rng): void {
       continue;
     }
     // despesas fixas
-    lb.cash -= money(s, 4000 + lb.roster.length * 1800) * (lb.family === 'A' ? 2 : 1);
+    labelPost(s, lb, -fixedCost21(s, lb), 'overhead', 'Despesas fixas'); // r21 (G-7)
     lb.roster = lb.roster.filter((id) => s.acts[id] && s.acts[id].owner === lb.id);
     const cap = ROSTER_CAP[lb.family];
     // contratação: atos públicos (fama visível) ou estreias do catálogo
@@ -76,7 +77,7 @@ export function rivalsMonth(s: GameState, r: Rng): void {
       if (add) lb.territories.push(add);
     }
     // falência
-    if (lb.cash < -money(s, 300000)) closeLabel(s, r, lb);
+    if (broke21(s, lb)) closeLabel(s, r, lb); // r21 (G-7): 6 meses de custo fixo no vermelho, não −$300 mil fixos
   }
   // aquisições: família D/A compra selos fracos
   if (r.chance(0.04)) {

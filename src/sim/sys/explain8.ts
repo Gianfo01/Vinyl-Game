@@ -98,8 +98,10 @@ function factorsOf(s: GameState, rel: Release): ExplainFactor[] {
     const impact = Math.log(value);
     out.push({ key: f.key, label: f.label, value, impact, text: phrase(s, rel, { ...f, value }, impact >= 0) });
   }
+  // r21 (E-9): a crítica entra pela autópsia (bumpAppeal em media/sound), com o multiplicador que de fato valeu;
+  // só lançamentos de saves antigos (sem a anotação) reconstroem a estimativa
   const crit = criticScore(s, rel);
-  if (!crit.estimated && crit.n > 0) {
+  if (!rel.autopsy?.some((f) => f.key === 'critics') && !crit.estimated && crit.n > 0) {
     const impact = (crit.score - 62) / 60;
     out.push({ key: 'critics', label: fmtL(l('Crítica ({n})', 'Critics ({n})'), { n: crit.score }), value: Math.exp(impact), impact, text: phrase(s, rel, { key: 'critics', label: l(''), value: 1, confidence: 'medium' }, impact >= 0) });
   }

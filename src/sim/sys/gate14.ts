@@ -89,10 +89,12 @@ function isTransfer(s: GameState, act: Act): boolean {
 /** Pode o selo assinar mais alguém neste mês? Conta a contratação quando pode. */
 /** r17: vetos externos (ex.: artista independente por opção, npc17) */
 export const SIGN_VETO: ((s: GameState, labelId: string, act: Act) => boolean)[] = [];
+/** r21 (H-6): o veto de contratação (desenvolvimento, bolsa, independente por opção) vale mesmo quando o chamador força a assinatura. */
+export const signVetoed = (s: GameState, labelId: string, act: Act): boolean => SIGN_VETO.some((f) => f(s, labelId, act));
 export function rivalSignOk(s: GameState, labelId: string, act: Act): boolean {
   const lb = s.labels[labelId];
   if (!lb) return true;
-  if (SIGN_VETO.some((f) => f(s, labelId, act))) return false;
+  if (signVetoed(s, labelId, act)) return false;
   const c = cap14(s);
   if (!isTransfer(s, act) && (c.rv[labelId] ?? 0) >= rivalSignCap(lb)) { c.blk = { lb: labelId, a: act.name }; return false; }
   c.rv[labelId] = (c.rv[labelId] ?? 0) + 1;

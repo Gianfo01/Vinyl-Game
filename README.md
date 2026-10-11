@@ -25,7 +25,7 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 3. **Mercado → Scouting** (5): sinais chegam todo mês. Aprofunde o conhecimento (rumor → observação →
    acompanhamento → audição → convivência) para estreitar intervalos de talento e potencial; faça ofertas
    com 5 modelos de contrato, cláusulas e promessas. A leitura da negociação é uma faixa, nunca uma %.
-4. **Artistas** (4): agenda de 4 slots (3 para iniciantes) com 12 ações + compor/gravar/shows, ou delegue.
+4. **Artistas** (4): agenda de 6 slots (5 para iniciantes; gravar ocupa 2) com 12 ações + compor/gravar/shows, ou delegue.
 5. **Criação** (8): planeje lançamentos — formatos da era, tiragem física (estoque!), marketing com
    retorno decrescente `E = 1 − exp(−verba/custo de alcance)`, territórios e previsão com intervalo.
 6. **Avançar**: mês a mês, trimestre ou até o próximo evento (Ctrl+Enter avança; Ctrl+K abre a paleta).

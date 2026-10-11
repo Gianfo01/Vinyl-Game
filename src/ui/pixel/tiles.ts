@@ -4,6 +4,7 @@
 import { drawText, textWidth } from './font';
 import { PALETTES, eraIndex, type EraId, type FloorKind, type Palette } from './palette';
 import { C, Px, dith, mix, noise, shade, withAlpha, type Col, type Sprite } from './px';
+import { LruMap } from '../../core/lru21';
 
 /** Cor do piso num ponto do mundo (unidades: 16 por tile). */
 export function floorAt(kind: FloorKind, a: Col, b: Col, gx: number, gy: number, seed = 0): Col {
@@ -159,7 +160,7 @@ function wallTex(pal: Palette, u: number, v: number, H: number): Col {
   return w;
 }
 
-const wallCache = new Map<string, Sprite>();
+const wallCache = new LruMap<string, Sprite>(500); // r21 (I-10): teto
 
 /**
  * Segmento de parede de 1 tile. A âncora é o canto de trás da caixa no chão:
@@ -217,7 +218,7 @@ export function wallSprite(era: EraId, orient: WallOrient, style: WallStyle, end
 
 export type DecalKind = 'window' | 'disc_gold' | 'disc_platinum' | 'awards' | 'clock' | 'cork' | 'whiteboard' | 'foam' | 'photo' | 'chart' | 'pegboard' | 'garage_door' | 'door' | 'onair' | 'onair_lit' | 'calendar' | 'neon' | 'speaker_wall' | 'tvwall';
 
-const decalCache = new Map<string, Px>();
+const decalCache = new LruMap<string, Px>(500);
 
 export function decalPx(kind: DecalKind, era: EraId, variant = 0, text = ''): Px {
   const key = `${kind}|${era}|${variant}|${text}`;

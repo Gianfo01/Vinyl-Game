@@ -26,6 +26,9 @@ import { ch7 } from './charts7';
 import { nudge16 } from './fame16';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
+/** r21 (D-6): "há um visto nominal da regions19 para este ato nesta cidade?" — injetado pela regions19 (sem ciclo). */
+export const VISA_HOOK21: { f: null | ((s: GameState, act: Act, cityId: string) => boolean) } = { f: null };
+
 export interface Loc18 { mode: 'lic' | 'own'; since: number; partner: string; until?: number }
 export interface RegLog18 { y: number; m: number; sub: string; g: string; d: number; text: L }
 export interface Reg18State {
@@ -186,7 +189,8 @@ registerMod('cityDemand', 'regions18', (s, value, ctx) => {
   const subId = subOfA3_18(countryOfCity(cid));
   const sub = subId ? subById18[subId] : undefined;
   if (!sub) return null;
-  let m = barMult18(s, sub, act, true).v;
+  // r21 (D-6): onde a regions19 tem um visto nominal (VISA19) é ela quem cobra; a barreira genérica só vale no resto
+  let m = VISA_HOOK21.f?.(s, act, cid) ? 1 : barMult18(s, sub, act, true).v;
   const home = actSub18(act);
   if (home && home !== sub.id) for (const d of DIAS18) if (d.o === home && d.to === sub.id && s.year >= d.y && (d.g.includes(act.genre) || d.g.includes(familyOf(act.genre)))) m *= 1 + d.w * 0.4;
   if (act.owner === 'player') for (const cid2 of reg18(s).circ[act.id] ?? []) {

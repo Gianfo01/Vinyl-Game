@@ -90,7 +90,7 @@ export function closeSale(s: GameState, r: Rng, songId: string, targetId: string
   if (labelPart > 0) post(s, `songsale:${songId}`, labelPart, 'publishing', `Venda de "${song.title}" para ${target.name}`);
   payWriters(s, song.writers, t0.fee - labelPart);
   const cover: Song = {
-    ...song, id: nextId(s, 's'), actId: target.id, coverOf: song.id, recorded: true, releaseId: undefined, vault: false, createdWeek: s.week,
+    ...song, id: nextId(s, 's'), actId: target.id, coverOf: song.id, recorded: true, recordedWeek: s.week, qBonus: undefined, releaseId: undefined, vault: false, createdWeek: s.week,
     performance: clamp(45 + target.fame / 2 + r.normal(0, 6), 5, 100), production: clamp(55 + r.normal(0, 8), 5, 100), genre: target.genre,
   };
   cover.q = songQ(cover);

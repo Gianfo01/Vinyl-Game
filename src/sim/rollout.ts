@@ -4,7 +4,7 @@ import { isUnlocked } from './era';
 
 import type { Rng } from '../core/rng';
 import { l, type L } from '../data/world';
-import { availableChannels } from './market';
+import { availableChannels, bumpAppeal } from './market';
 import { availableFormats, scheduleRelease, suggestedPress } from './production';
 import type { GameState, Release } from './types';
 import type { Rollout, RolloutPhase } from './xtypes';
@@ -85,7 +85,7 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
   const extra = ro as Rollout & { deluxe?: string[]; limited?: number };
   const pay = (key: string, memo: string): boolean => {
     if (!ph.budget) return true;
-    if (s.player.cash < ph.budget) {
+    if (freeCash20(s) < ph.budget) { // r21 (B-9)
       notify(s, fmtL(l('Fase "{k}" de "{t}" sem verba: pulada.', 'Phase "{k}" of "{t}" lacked budget: skipped.'), { k: ph.kind, t: ro.title }), 'bad');
       return false;
     }
@@ -144,9 +144,11 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
       const album = Object.values(s.releases).find((x) => x.rolloutId === ro.id && x.type === 'lp' && x.kind === 'standard');
       const extraSongs = (extra.deluxe ?? []).filter((id) => s.songs[id]?.recorded && !s.songs[id].releaseId);
       if (!album || !extraSongs.length) break;
-      if (!pay(`ro_deluxe:${ro.id}`, `Deluxe ${ro.title}`)) break;
-      const res = scheduleRelease(s, r, { actId: act.id, type: 'lp', songs: extraSongs, title: `${ro.title} (Deluxe)`, formats, press: Math.round(suggestedPress(s, act, 'lp') * 0.4), marketing: [{ channel: mainChannel(s, 'album'), budget: ph.budget }], territories: s.player.territories, weeksAhead: 1, kind: 'deluxe' });
-      if (!('pt' in res)) album.appeal *= 1.15;
+      // r21 (E-2): a verba entra só uma vez — pelo marketing do lançamento (releaseCost), como nas fases single/álbum.
+      // A deluxe é o álbum + faixas-bônus (reedição do original): só as faixas-bônus passam a "lançadas" por ela.
+      const res = scheduleRelease(s, r, { actId: act.id, type: 'lp', songs: [...album.songs, ...extraSongs], title: `${ro.title} (Deluxe)`, formats, press: Math.round(suggestedPress(s, act, 'lp') * 0.4), marketing: ph.budget ? [{ channel: mainChannel(s, 'album'), budget: ph.budget }] : [], territories: s.player.territories, weeksAhead: 1, reissueOf: album.id, kind: 'deluxe' });
+      if ('pt' in res) notify(s, fmtL(l('Fase "deluxe" de "{t}" não saiu: {e}', 'Deluxe phase of "{t}" failed: {e}'), { t: ro.title, e: res }), 'bad');
+      else bumpAppeal(s, album, 1.15, 'deluxe', l('Edição deluxe', 'Deluxe edition'));
       break;
     }
   }

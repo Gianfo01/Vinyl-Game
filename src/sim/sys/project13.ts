@@ -260,7 +260,6 @@ registerSimHook('week', 'proj13', (s) => {
   for (const p of proj8(s).list) {
     const pl = proj13(s).meta[p.id];
     if (!pl || p.closed || !mine.has(p.actId)) continue;
-    if (!p.releaseId) for (const id of p.songIds) { const so = s.songs[id]; if (so?.recorded) recBonus13(s, so); }
     if (!pl.hyped && (p.pendingId || p.rolloutId)) {
       pl.hyped = 1;
       const v = hype13(s, p, pl);

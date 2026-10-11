@@ -4,15 +4,16 @@
 
 import { addRecoup18 } from './sys/contracts18';
 import { clamp, type Rng } from '../core/rng';
-import { APPROACHES, STUDIO_TIERS } from '../data/rules';
+import { APPROACHES } from '../data/rules';
 import { familyOf, l, type L } from '../data/world';
 import { actState, actTalent, songTitle, actLang } from './people';
-import { eraProductionBase, ownStudioProduction, recordingCost, songQ } from './production';
+import { closeTrack, ownStudioPerformance, recordingCost, refreshQ } from './production';
+import { hqCaps } from './branches';
+import { payWorkOwner, workLicenseFee } from './rights';
 import type { Act, GameState, Song } from './types';
 import type { SampleRequest, StudioSession, Take } from './xtypes';
-import { fmtL, hasTech, money, nextId, notify, post, remember, staffSkill } from './util';
+import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { activeMembers, checkCapacity, fitOverAgenda, monthIndex } from './capacity';
-import { applyMods } from './ext4';
 import { cashWhy20, freeCash20 } from './oblig20';
 
 // ---------- Produtores ----------
@@ -96,6 +97,11 @@ export function startSession(s: GameState, actId: string, songIds: string[], tie
   const songs = songIds.map((id) => s.songs[id]).filter((x) => x && !x.recorded && x.actId === actId);
   if (!songs.length) return l('Escolha músicas escritas e não gravadas.', 'Pick written, unrecorded songs.');
   if (producerId && (s.producerBusy[producerId] ?? 0) > s.week) return l('Produtor ocupado com outra sessão.', 'Producer busy with another session.');
+  // r21 (E-5): estúdio da sede exige sede e respeita o número de salas (mesma regra da agenda)
+  if (tier === 0) {
+    if (s.player.hq < 1) return l('Sem sede não há estúdio próprio: escolha um estúdio externo.', 'No HQ, no in-house studio: pick an outside studio.');
+    if (s.sessions.filter((x) => !x.done && x.tier === 0).length >= hqCaps(s).sessions) return l('Todas as salas da sede estão ocupadas.', 'Every room at HQ is busy.');
+  }
   const load = Math.min(90, 55 + 5 * songs.length);
   // a sessão toma o lugar da agenda do mês do próprio ato (gravação automática primeiro, depois os itens do fim)
   // em vez de recusar "Agenda de X 91%"; só recusa se o conflito vem de outra coisa (turnê, plano, outro ato)
@@ -131,7 +137,8 @@ function takeQuality(s: GameState, r: Rng, act: Act, sess: StudioSession, n: num
   const t = actTalent(s, act);
   const st = actState(s, act);
   const ap = APPROACHES.find((a) => a.id === sess.approach) ?? APPROACHES[1];
-  const base = (t.voice * 0.55 + t.instr * 0.45) * 0.92 + act.rehearsed * 0.6 + (st.morale - 50) / 8 - st.fatigue / 12 + ap.perf;
+  const gear = sess.tier === 0 ? ownStudioPerformance(s) : 0; // r21 (1.17): câmara de eco etc. no estúdio próprio
+  const base = (t.voice * 0.55 + t.instr * 0.45) * 0.92 + act.rehearsed * 0.6 + (st.morale - 50) / 8 - st.fatigue / 12 + ap.perf + gear;
   // primeiros takes aquecem; muitos takes cansam e perdem espontaneidade
   const curve = n === 1 ? -2 : n <= 3 ? 2 : -(n - 3) * 2;
   const q = clamp(base + curve + r.normal(0, 7), 5, 100);
@@ -148,7 +155,11 @@ export function sessionDay(s: GameState, r: Rng, day: number): void {
       sess.done = true;
       continue;
     }
-    if (act.hiatusUntil && act.hiatusUntil > s.week) continue; // afastamento pausa, não cancela
+    if (act.hiatusUntil && act.hiatusUntil > s.week) {
+      // afastamento pausa, não cancela; r21 (E-6): o produtor segue preso à sessão enquanto ela espera
+      if (sess.producerId) s.producerBusy[sess.producerId] = Math.max(s.producerBusy[sess.producerId] ?? 0, act.hiatusUntil + Math.ceil((sess.days - sess.dayDone) / 7) + 1);
+      continue;
+    }
     const songId = sess.songIds.find((id) => !(s.songs[id]?.recorded));
     if (!songId) {
       finishSession(s, r, sess);
@@ -200,31 +211,14 @@ function fixSong(s: GameState, r: Rng, sess: StudioSession, songId: string, perf
   const song = s.songs[songId];
   const act = s.acts[sess.actId];
   if (!song || !act) return;
-  const t = actTalent(s, act);
-  const ap = APPROACHES.find((a) => a.id === sess.approach) ?? APPROACHES[1];
-  const studio = STUDIO_TIERS[clamp(sess.tier, 0, 3)];
   const pr = PRODUCERS.find((x) => x.id === sess.producerId);
-  const sig = pr ? soundOf(pr) : undefined;
-  const fit = pr ? producerFit(pr, song.genre) : 1;
-  const own = sess.tier === 0 ? ownStudioProduction(s) + 2 : 0;
-  const prodSkill = pr ? pr.skill * 0.25 * fit : staffSkill(s, 'producer') * 0.22;
-  const engineerFix = staffSkill(s, 'engineer') / 25;
-  const techIssue = r.chance(Math.max(0.02, 0.12 - engineerFix * 0.03)) ? -r.int(4, 12) : 0;
-  song.performance = clamp(perf + (sig?.perf ?? 0) * fit, 5, 100);
-  song.production = clamp(eraProductionBase(s) + studio.production + own + prodSkill + t.prod * 0.18 + ap.prod + (sig?.prod ?? 0) * fit + techIssue + r.normal(0, 4), 5, 100);
-  song.originality = clamp(song.originality + ap.originality + (sig?.orig ?? 0), 0, 100);
   // ego do produtor: briga com artistas teimosos
   if (pr && pr.ego > 70 && act.members.some((id) => s.persons[id]?.traits.includes('big_ego'))) {
     for (const id of act.members) if (s.persons[id]) s.persons[id].stress = clamp(s.persons[id].stress + 6, 0, 100);
     sess.log.push(fmtL(l('{p} e a banda discutiram sobre o arranjo.', '{p} and the band argued over the arrangement.'), { p: pr.name }));
   }
-  song.q = songQ(song);
-  // sem produtor de fora, a equipe da casa (especialistas, química) assina a faixa
-  if (!pr) song.q = applyMods(s, 'songQ', song.q, { song, act }).value;
-  song.recorded = true;
-  song.studioTier = sess.tier;
-  song.approach = sess.approach;
-  song.producerId = pr?.id;
+  // r21 (E-1): mesma função de gravação da agenda (fórmula única, perks, gancho 'record')
+  closeTrack(s, r, act, song, { tier: sess.tier, approach: sess.approach, perf, producer: pr ? { id: pr.id, skill: pr.skill, fit: producerFit(pr, song.genre), sound: soundOf(pr) } : undefined, payer: 'player' });
   sess.log.push(fmtL(l('"{s}" fechada: Q {q}.', '"{s}" done: Q {q}.'), { s: song.title, q: Math.round(song.q) }));
 }
 
@@ -244,6 +238,7 @@ export function cancelSession(s: GameState, sessionId: string): void {
   const sess = s.sessions.find((x) => x.id === sessionId);
   if (!sess || sess.done) return;
   sess.done = true; // gravações feitas ficam; investimento não volta (GDD §34)
+  if (sess.producerId) s.producerBusy[sess.producerId] = Math.min(s.producerBusy[sess.producerId] ?? 0, s.week); // r21 (E-6): produtor liberado
   s.agenda[sess.actId] = (s.agenda[sess.actId] ?? []).filter((x) => x.action !== 'session');
 }
 
@@ -262,7 +257,7 @@ export function requestSample(s: GameState, r: Rng, songId: string, sourceSongId
   song.sampleOf = sourceSongId;
   song.melody = clamp(song.melody + (kind === 'sample' ? 6 : 4), 0, 100);
   song.originality = clamp(song.originality - (kind === 'sample' ? 4 : 2), 0, 100);
-  song.q = songQ({ ...song, performance: song.melody * 0.6, production: 30 });
+  refreshQ(song);
   // resposta do detentor: dono do master rival pesa rivalidade; espólio pesa valor
   const holder = srcAct?.owner;
   let pDeny = 0.15;
@@ -270,7 +265,7 @@ export function requestSample(s: GameState, r: Rng, songId: string, sourceSongId
   if (srcAct?.deceased) pDeny += 0.15;
   if (holder === 'player') pDeny = 0;
   if (r.chance(pDeny)) req.status = 'denied';
-  else if (s.player.cash >= fee) {
+  else if (freeCash20(s) >= fee) { // r21 (E-4): respeita a reserva de ofertas como o resto da área
     if (fee) post(s, `sample:${req.id}`, -fee, 'rights', `Liberação de sample`);
     req.status = 'cleared';
   } else req.status = 'uncleared';
@@ -295,9 +290,11 @@ function cloneSong(s: GameState, act: Act, base: Song, patch: Partial<Song>): So
     performance: 0,
     production: 0,
     splits: undefined,
+    recordedWeek: undefined,
+    qBonus: undefined,
     ...patch,
   };
-  song.q = songQ({ ...song, performance: song.melody * 0.6, production: 30 });
+  refreshQ(song);
   s.songs[song.id] = song;
   act.songs.push(song.id);
   return song;
@@ -308,10 +305,12 @@ export function makeCover(s: GameState, actId: string, sourceSongId: string): So
   const act = s.acts[actId];
   const src = s.songs[sourceSongId];
   if (!act || !src) return l('Inválido.', 'Invalid.');
-  const fee = money(s, 300);
+  // r21 (E-3): licença mecânica coerente com o dono da obra (zero se a obra é sua); paga o detentor original
+  const fee = workLicenseFee(s, src, 'cover');
   if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para a licença mecânica.', 'Not enough cash for the mechanical license.'));
-  post(s, `cover:${act.id}:${src.id}`, -fee, 'rights', `Licença de cover "${src.title}"`);
-  return cloneSong(s, act, src, { coverOf: src.id, originality: clamp(src.originality - 15, 0, 100), genre: act.genre, writers: src.writers, splits: src.splits });
+  const song = cloneSong(s, act, src, { coverOf: src.id, originality: clamp(src.originality - 15, 0, 100), genre: act.genre, writers: src.writers, splits: src.splits });
+  if (fee) { post(s, `cover:${song.id}`, -fee, 'rights', `Licença de cover "${src.title}"`); payWorkOwner(s, src, fee); } // r21 (1.14): chave por faixa nova
+  return song;
 }
 
 /** Remix: mesma composição, nova produção, normalmente por DJ/produtor. */
@@ -320,7 +319,12 @@ export function makeRemix(s: GameState, sourceSongId: string, remixerActId?: str
   if (!src || !src.recorded) return l('Só faixas gravadas.', 'Recorded tracks only.');
   const act = s.acts[remixerActId ?? src.actId];
   if (!act) return l('Inválido.', 'Invalid.');
+  // r21 (E-3): remix de obra alheia por ato seu paga licença ao detentor original
+  const mine = act.owner === 'player' || !!act.playerBand;
+  const fee = mine ? workLicenseFee(s, src, 'remix') : 0;
+  if (fee && freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para a licença do remix.', 'Not enough cash for the remix license.'));
   const song = cloneSong(s, act, src, { remixOf: src.id, title: `${src.title} (Remix)`, originality: clamp(src.originality + 5, 0, 100), writers: src.writers, splits: src.splits });
+  if (fee) { post(s, `remix:${song.id}`, -fee, 'rights', `Licença de remix "${src.title}"`); payWorkOwner(s, src, fee); }
   song.performance = src.performance;
   return song;
 }
@@ -332,8 +336,9 @@ export function makeTranslation(s: GameState, r: Rng, sourceSongId: string, lang
   const act = s.acts[src.actId];
   const cost = money(s, 600);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para a versão.', 'Not enough cash for the adaptation.'));
-  post(s, `transl:${src.id}:${lang}`, -cost, 'rights', `Versão em ${lang}`);
-  return cloneSong(s, act, src, { translationOf: src.id, lang, lyrics: clamp(src.lyrics * 0.9 + r.normal(0, 4), 5, 100), title: `${songTitle(r, lang as ReturnType<typeof actLang>)} (${src.title})`, writers: src.writers });
+  const song = cloneSong(s, act, src, { translationOf: src.id, lang, lyrics: clamp(src.lyrics * 0.9 + r.normal(0, 4), 5, 100), title: `${songTitle(r, lang as ReturnType<typeof actLang>)} (${src.title})`, writers: src.writers });
+  post(s, `transl:${song.id}`, -cost, 'rights', `Versão em ${lang}`); // r21 (1.14): chave por versão nova
+  return song;
 }
 
 /** Disco-tributo: atos do jogador regravam o repertório de um homenageado. */
@@ -342,12 +347,17 @@ export function planTribute(s: GameState, honoreeActId: string, actIds: string[]
   if (!hon) return l('Inválido.', 'Invalid.');
   const base = hon.songs.map((id) => s.songs[id]).filter((x) => x?.releaseId).slice(0, Math.max(6, actIds.length));
   if (base.length < 6) return l('O homenageado precisa de ao menos 6 músicas lançadas.', 'The honoree needs at least 6 released songs.');
+  // r21 (E-3): tributo do jogador sobre obra de outro paga a licença ao detentor (zero se o homenageado é seu)
+  const fees = base.map((src) => workLicenseFee(s, src, 'tribute'));
+  const total = fees.reduce((a, b) => a + b, 0);
+  if (freeCash20(s) < total) return cashWhy20(s, total, l('Caixa insuficiente para licenciar o repertório do tributo.', 'Not enough cash to license the tribute repertoire.'));
   const out: Song[] = [];
   base.forEach((src, i) => {
     const act = s.acts[actIds[i % actIds.length]];
     if (!act) return;
     const so = cloneSong(s, act, src, { coverOf: src.id, writers: src.writers, splits: src.splits, originality: clamp(src.originality - 8, 0, 100) });
     s.flags[`tribute:${so.id}`] = 1;
+    if (fees[i]) { post(s, `tribute:${so.id}`, -fees[i], 'rights', `Licença de tributo "${src.title}"`); payWorkOwner(s, src, fees[i]); }
     out.push(so);
   });
   remember(s, 'tribute', fmtL(l('Começa a gravação de um tributo a {a}.', 'Recording begins on a tribute to {a}.'), { a: hon.name }), { actId: hon.id, important: true });
@@ -357,5 +367,6 @@ export function planTribute(s: GameState, honoreeActId: string, actIds: string[]
 export function studioCleanup(s: GameState): void {
   s.sessions = s.sessions.filter((x) => !x.done || s.day - x.startDay < 90).slice(-20);
   if (s.daily.length > 160) s.daily.splice(0, s.daily.length - 160);
-  if (s.samples.length > 80) s.samples = s.samples.slice(-80);
+  // r21 (E-4): sample sem liberação é prova de processo (business/heritage17) e congela a edição — nunca some na limpeza
+  if (s.samples.length > 80) { const keep = new Set(s.samples.filter((x) => x.status === 'cleared').slice(-80)); s.samples = s.samples.filter((x) => x.status !== 'cleared' || keep.has(x)); }
 }

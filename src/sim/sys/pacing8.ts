@@ -9,7 +9,7 @@ import { clamp } from '../../core/rng';
 import { agendaById } from '../../data/people';
 import { l, type L } from '../../data/world';
 import { freeCapacity, setDelegationHooks, slotCost, slotsFor, usedSlots } from '../agenda';
-import { agendaLoad, monthIndex, planSlots, slotLoad } from '../capacity';
+import { agendaLoad, monthIndex, slotLoad } from '../capacity';
 import { registerExt4 } from '../ext4';
 import { maxVenueTier } from '../live';
 import { actState } from '../people';
@@ -193,7 +193,7 @@ function fits(s: GameState, act: Act, out: AgendaSlot[], a: AgendaSlot, cap: num
 export function priorityAgenda(s: GameState, act: Act, prio: Prio, base: AgendaSlot[], budget = Infinity): AgendaSlot[] {
   if (prio === 'auto' && budget === Infinity) return base;
   const st = actState(s, act);
-  const cap = Math.min(100, freeCapacity(s, act) - agendaLoad(planSlots(s, act.id)));
+  const cap = Math.min(100, freeCapacity(s, act)); // planos já descontados em freeCapacity (r21)
   const unrec = unrecorded(s, act).length;
   const tier = Math.min(maxVenueTier(s, act), 3);
   const out: AgendaSlot[] = [];

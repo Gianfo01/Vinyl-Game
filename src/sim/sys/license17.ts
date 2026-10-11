@@ -14,7 +14,7 @@ import { fmtL, money, notify, post } from '../util';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Dir = 'in' | 'out';
-export interface Lic17 { id: string; dir: Dir; lb: string; market: MarketId; adv: number; share: number; until: number; since: number; earned: number; status: 'offer' | 'active' | 'ended'; expires: number; why?: L }
+export interface Lic17 { id: string; dir: Dir; lb: string; market: MarketId; adv: number; share: number; until: number; since: number; earned: number; status: 'offer' | 'active' | 'ended'; expires: number; why?: L; /** r21 (1.20): adiantamento pago por você ainda a recuperar da parte do licenciante */ rec?: number }
 export interface LicState { list: Lic17[]; log: { y: number; m: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { lic17: LicState } }
 registerExt4('lic17', () => ({ list: [], log: [] }));
@@ -44,6 +44,7 @@ export function acceptLic(s: GameState, id: string): L | null {
   if (d.dir === 'in') {
     if (freeCash20(s) < d.adv) return cashWhy20(s, d.adv, l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.'));
     post(s, `lic17:${d.id}`, -d.adv, 'distribution', `Licença de ${lb.name} (${d.market})`);
+    d.rec = d.adv; // r21 (1.20): recuperado da parte do licenciante nas remessas
   } else {
     if (s.player.territories.includes(d.market)) return l('Você já opera nesse mercado.', 'You already operate in that market.');
     post(s, `lic17:${d.id}`, d.adv, 'distribution', `Adiantamento de ${lb.name} (${d.market})`);
@@ -116,7 +117,9 @@ registerSimHook('month', 'license17', (s) => {
     if (!lb?.active || d.until < s.week) { d.status = 'ended'; log(s, fmtL(l('Acordo com {lb} em {m} terminou.', 'Deal with {lb} in {m} ended.'), { lb: lb?.name ?? '?', m: mkName(d.market) })); continue; }
     if (d.dir === 'in') {
       const v = estIn(s, d);
-      if (v > 0) { post(s, `lic17in:${d.id}:${s.month}`, v, 'sales', `Distribuição ${lb.name} (${d.market})`); d.earned += v; lb.cash -= v; }
+      // r21 (1.20): receita de terceiros vai para 'distribution' (não infla o catálogo securitizável); o adiantamento é recuperado retendo até metade da parte do licenciante
+      const rec = Math.min(d.rec ?? 0, Math.round(v * 0.5));
+      if (v > 0) { post(s, `lic17in:${d.id}:${s.month}`, v + rec, 'distribution', `Distribuição ${lb.name} (${d.market})${rec ? ' — retenção do adiantamento' : ''}`); d.earned += v; lb.cash -= v + rec; d.rec = (d.rec ?? 0) - rec; }
       // rival cresce com você: reputação deles sobe
       lb.reputation = clamp(lb.reputation + 0.2, 0, 100);
     } else {

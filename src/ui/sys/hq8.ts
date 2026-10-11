@@ -11,7 +11,7 @@ import { actStatus, hq8, hqChanges, studioLoad, type ActStatus, type Attention, 
 import { overCapacity } from '../../sim/sys/pacing8';
 import type { GameState } from '../../sim/types';
 import { playerActs, rngOf } from '../../sim/util';
-import { $, actLink, inspect, logo, modal, pill, rerender, section } from '../common';
+import { $, actLink, closeOverlay, inspect, logo, modal, pill, rerender, section } from '../common';
 import { h } from '../dom';
 import { hqHooks, type BubbleKind, type RoomTag } from '../hq';
 import { registerSection } from '../registry';
@@ -85,7 +85,7 @@ function roomTags(s: GameState): RoomTag[] {
 // ---------------------------------------------------------------- ações
 
 function goArea(area: string, tab?: [string, string], actId?: string): void {
-  document.querySelector('.overlay')?.remove();
+  closeOverlay();
   if (tab) setTab(tab[0], tab[1]);
   if (actId) store.selectedAct = actId;
   store.area = area;
@@ -128,9 +128,9 @@ export function openSessions(s: GameState): void {
 function doNext(s: GameState, actId: string, st: ActStatus): void {
   switch (st.next.kind) {
     case 'decision': return goArea('desk');
-    case 'take': document.querySelector('.overlay')?.remove(); return openSessions(s);
+    case 'take': closeOverlay(); return openSessions(s);
     case 'crisis': return goArea('plan');
-    case 'contract': document.querySelector('.overlay')?.remove(); return inspect.act(actId);
+    case 'contract': closeOverlay(); return inspect.act(actId);
     case 'release': return goArea('releases', ['creation-release', 'launch'], actId);
     case 'studio': return goArea('studio', ['creation-studio', 'session'], actId);
     default: return goArea('artists', undefined, actId);
@@ -152,7 +152,7 @@ export function openActCard(s: GameState, actId: string): void {
     h('div', { class: 'next-step' }, h('h4', null, t(l('Próxima decisão importante', 'Next important decision'))), h('p', null, t(st.next.label)),
       h('button', { class: 'btn primary', onclick: () => doNext(s, actId, st) }, t(l('Resolver agora', 'Handle it now')))),
     h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small ghost', onclick: () => { document.querySelector('.overlay')?.remove(); inspect.act(actId); } }, t(l('Ficha completa', 'Full record'))),
+      h('button', { class: 'btn small ghost', onclick: () => { closeOverlay(); inspect.act(actId); } }, t(l('Ficha completa', 'Full record'))),
       h('button', { class: 'btn small ghost', onclick: () => goArea('team') }, t(l('Delegação', 'Delegation'))),
       ACT_CARD_EXTRA20.f?.(s, actId) ?? null, // r20 G4: o mesmo menu Ações ▾ do registro único
     ),

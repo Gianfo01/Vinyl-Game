@@ -22,6 +22,7 @@ import { bondNote, prefsOf } from './identity8';
 import type { ProfileId } from './identity/data';
 import { XBY_ID, envOf, adj } from './identity/extra';
 import { skipBlockedLog } from './gate14';
+import { labelPost } from '../rivalledger21';
 
 export type PlaybookId = 'vulture' | 'scene' | 'catalog' | 'tech' | 'live' | 'idol' | 'gospel' | 'prestige' | 'sync' | 'regional' | 'fund' | 'visionary' | 'purist'
   | 'viral' | 'school' | 'royalty' | 'conglomerate' | 'importer' | 'agitator' | 'copycat' | 'budget';
@@ -339,8 +340,8 @@ function vulture(s: GameState, r: Rng, lb: Label, all: Act[]): void {
       const seller = s.labels[target.owner!];
       const price = money(s, expectedAdvance(s, target) * 1.5);
       if (lb.cash > price * 2) {
-        lb.cash -= price;
-        seller.cash += price;
+        labelPost(s, lb, -price, 'advances', `Compra do contrato de ${target.name}`);
+        labelPost(s, seller, price, 'asset_sales', `Venda do contrato de ${target.name}`);
         endContract(s, target, 'terminated');
         signWithRival(s, target, lb.id, r);
         logMove(s, lb, { k: 'buyout', a: target.name, x: seller.name });
@@ -385,8 +386,8 @@ function catalogKeeper(s: GameState, r: Rng, lb: Label): void {
       if (rels.length) {
         const price = money(s, 2500 * rels.length);
         for (const x of rels) x.owner = lb.id;
-        lb.cash -= price;
-        seller.cash += price;
+        labelPost(s, lb, -price, 'acquisitions', `Catálogo de ${seller.name}`);
+        labelPost(s, seller, price, 'asset_sales', `Catálogo vendido a ${lb.name}`);
         logMove(s, lb, { k: 'catalog_buy', a: String(rels.length), x: seller.name });
       }
     }
@@ -396,8 +397,7 @@ function catalogKeeper(s: GameState, r: Rng, lb: Label): void {
     const rel = own.length ? r.pick(own) : undefined;
     if (rel) {
       const v = money(s, 2000 + rel.q * 40);
-      lb.cash += v;
-      lb.revenueYear += v;
+      labelPost(s, lb, v, 'catalog', `Reedição: ${rel.title}`);
       logMove(s, lb, { k: 'reissue', a: rel.title });
     }
   }
@@ -411,7 +411,7 @@ function techBettor(s: GameState, r: Rng, lb: Label): void {
     const fresh = Object.entries(s.techDates).find(([, y]) => y === s.year || y === s.year - 1);
     if (fresh && r.chance(0.35) && lb.cash > money(s, 200000)) {
       st.tech[lb.id] = { id: fresh[0], until: s.year + 3 };
-      lb.cash -= money(s, 30000);
+      labelPost(s, lb, -money(s, 30000), 'capex', `Aposta em ${fresh[0]}`);
       logMove(s, lb, { k: 'tech_bet', x: fresh[0] });
     }
   }
@@ -419,7 +419,7 @@ function techBettor(s: GameState, r: Rng, lb: Label): void {
     const pro = s.professionals.filter((x) => x.role === 'producer' && x.skill >= 55).sort((x, y) => y.skill - x.skill)[0];
     if (pro) {
       s.professionals = s.professionals.filter((x) => x !== pro);
-      lb.cash -= pro.salary * 12;
+      labelPost(s, lb, -pro.salary * 12, 'staff', `Produtor ${pro.name}`);
       logMove(s, lb, { k: 'producer', a: pro.name });
       if (s.config.role !== 'artist') notify(s, fmtL(l('{b} contratou o produtor {p} antes de você.', '{b} hired producer {p} before you could.'), { b: lb.name, p: pro.name }), 'info');
     }
@@ -470,7 +470,7 @@ const BUYOUT_EVENTS: EventDef[] = [{
       if (!a || !lb || a.owner !== 'player') return;
       const fee = money(s, Number(c.fee));
       post(s, `r8sell:${a.id}:${s.week}`, fee, 'asset_sales', `Venda do contrato de ${a.name}`);
-      lb.cash -= fee;
+      labelPost(s, lb, -fee, 'advances', `Compra do contrato de ${a.name}`);
       bondNote(s, a, 'abandon', lb.name);
       endContract(s, a, 'terminated');
       signWithRival(s, a, lb.id, r);
@@ -529,7 +529,7 @@ function idolFactory(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.05)) {
     const g = acts.filter((a) => a.members.length >= 3 && a.fame < 30 && a.momentum < 60).sort((x, y) => x.fame - y.fame)[0];
     if (g && lb.cash > money(s, 40000)) {
-      lb.cash -= money(s, 12000);
+      labelPost(s, lb, -money(s, 12000), 'marketing', `Lançamento ídolo: ${g.name}`);
       g.momentum = clamp(g.momentum + 12, 0, 100);
       g.fans.casual += Math.round(g.fans.casual * 0.08) + 200;
       logMove(s, lb, { k: 'idol_debut', a: g.name });
@@ -548,8 +548,7 @@ function gospelNetwork(s: GameState, r: Rng, lb: Label): void {
   if (!a) return;
   a.fans.core += Math.round(a.fans.core * 0.025) + 50;
   const v = money(s, 1500 + Math.min(20000, a.fans.core) * 0.1);
-  lb.cash += v;
-  lb.revenueYear += v;
+  labelPost(s, lb, v, 'live', `Circuito gospel: ${a.name}`);
   logMove(s, lb, { k: 'gospel_circuit', a: a.name });
 }
 
@@ -557,7 +556,7 @@ function prestigeBoutique(s: GameState, r: Rng, lb: Label): void {
   if (!r.chance(0.035) || lb.cash < money(s, 60000)) return;
   const a = liveActs(s, lb).sort((x, y) => y.momentum - x.momentum)[0];
   if (!a) return;
-  lb.cash -= money(s, 8000);
+  labelPost(s, lb, -money(s, 8000), 'marketing', `Prêmio de prestígio: ${a.name}`);
   a.fame = clamp(a.fame + 0.8, 0, 100);
   a.momentum = clamp(a.momentum + 4, 0, 100);
   logMove(s, lb, { k: 'prestige_award', a: a.name });
@@ -568,8 +567,7 @@ function syncHouse(s: GameState, r: Rng, lb: Label): void {
   const a = liveActs(s, lb).sort((x, y) => y.fame - x.fame)[0];
   if (!a) return;
   const v = money(s, 2500 + a.fame * 80);
-  lb.cash += v;
-  lb.revenueYear += v;
+  labelPost(s, lb, v, 'sync', `Sync: ${a.name}`); // r21: dinheiro de acordo, não receita pública
   a.momentum = clamp(a.momentum + 3, 0, 100);
   logMove(s, lb, { k: 'sync_deal', a: a.name });
 }
@@ -597,8 +595,8 @@ function assetStripper(s: GameState, r: Rng, lb: Label): void {
   const rels = Object.values(s.releases).filter((x) => x.owner === seller.id).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 5);
   const price = money(s, 1200 * Math.max(1, rels.length));
   for (const x of rels) x.owner = lb.id;
-  lb.cash += Math.round(price * 0.6); // compra por `price` e revende em pedaços: o fundo só lucra desmontando
-  seller.cash += price;
+  labelPost(s, lb, -price, 'acquisitions', `Compra de ${seller.name}`); labelPost(s, lb, Math.round(price * 1.6), 'asset_sales', `Desmonte de ${seller.name}`); // compra por `price` e revende em pedaços: o fundo só lucra desmontando
+  labelPost(s, seller, price, 'asset_sales', `Venda a ${lb.name}`);
   const best = seller.roster.map((id) => s.acts[id]).filter((a): a is Act => !!a && a.status === 'active' && !!a.contractId).sort((x, y) => y.fame - x.fame)[0];
   if (best) endContract(s, best, 'terminated');
   logMove(s, lb, { k: 'asset_strip', a: String(rels.length), x: seller.name });
@@ -672,8 +670,8 @@ function royaltyFund(s: GameState, r: Rng, lb: Label): void {
     if (seller && rels.length) {
       const price = money(s, 4000 * rels.length);
       for (const x of rels) x.owner = lb.id;
-      lb.cash -= price;
-      seller.cash += price;
+      labelPost(s, lb, -price, 'acquisitions', `Royalties de ${seller.name}`);
+      labelPost(s, seller, price, 'asset_sales', `Royalties vendidos a ${lb.name}`);
       logMove(s, lb, { k: 'royalty_buy', a: String(rels.length), x: seller.name });
     }
   }
@@ -681,8 +679,7 @@ function royaltyFund(s: GameState, r: Rng, lb: Label): void {
     const n = Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 3).length;
     if (n >= 2) {
       const v = money(s, 300 * Math.min(n, 40));
-      lb.cash += v;
-      lb.revenueYear += v;
+      labelPost(s, lb, v, 'catalog', `Royalties de catálogo (${n} discos)`);
       logMove(s, lb, { k: 'royalty_yield', a: String(n) });
     }
   }
@@ -692,7 +689,7 @@ function mediaConglomerate(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.045) && lb.cash > money(s, 80000)) {
     const a = liveActs(s, lb).sort((x, y) => y.momentum - x.momentum)[0];
     if (a) {
-      lb.cash -= money(s, 10000);
+      labelPost(s, lb, -money(s, 10000), 'marketing', `Campanha: ${a.name}`);
       a.fame = clamp(a.fame + 1.2, 0, 100);
       a.momentum = clamp(a.momentum + 8, 0, 100);
       a.fans.casual += Math.round(a.fans.casual * 0.05) + 200;
@@ -706,8 +703,8 @@ function mediaConglomerate(s: GameState, r: Rng, lb: Label): void {
     const best = seller.roster.map((id) => s.acts[id]).filter((a): a is Act => !!a && a.owner === seller.id && a.status === 'active').sort((x, y) => y.fame - x.fame).slice(0, 2);
     if (!best.length) return;
     const price = money(s, 30000 * best.length);
-    lb.cash -= price;
-    seller.cash += price;
+    labelPost(s, lb, -price, 'advances', `Absorção: ${best.map((a) => a.name).join(', ')}`);
+    labelPost(s, seller, price, 'asset_sales', `Contratos vendidos a ${lb.name}`);
     for (const a of best) { endContract(s, a, 'terminated'); signWithRival(s, a, lb.id, r); }
     logMove(s, lb, { k: 'media_absorb', a: best.map((a) => a.name).join(', '), x: seller.name });
   }
@@ -726,8 +723,7 @@ function hitImporter(s: GameState, r: Rng, lb: Label): void {
     const e = s.charts.singles.slice(0, 20).map((c) => s.releases[c.releaseId]).find((x) => x && x.owner !== lb.id && s.acts[x.actId] && marketOf(s.acts[x.actId].city) !== home);
     if (e) {
       const v = money(s, 3000);
-      lb.cash += v;
-      lb.revenueYear += v;
+      labelPost(s, lb, v, 'licensing', `Licença de importação: ${e.title}`); // r21: não é receita pública
       logMove(s, lb, { k: 'import_license', a: e.title });
     }
   }
@@ -766,7 +762,7 @@ function trendCopycat(s: GameState, r: Rng, lb: Label): void {
   if (mine && lb.cash > money(s, 60000)) {
     const songs = unreleasedRecorded(s, mine).sort((x, y) => y.q - x.q);
     const budget = 8000 * (0.5 + mine.fame / 40);
-    lb.cash -= money(s, budget);
+    labelPost(s, lb, -money(s, budget), 'marketing', `Clone de ${top.title}`);
     launchNpcRelease(s, r, mine, lb.id, [songs[0].id], 'single', budget);
     logMove(s, lb, { k: 'copy_clone', a: mine.name, x: top.title });
     return;
@@ -782,8 +778,7 @@ function budgetLabel(s: GameState, r: Rng, lb: Label): void {
     const n = Math.min(14, Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 2).length);
     if (n >= 3) {
       const v = money(s, 800 * n);
-      lb.cash += v;
-      lb.revenueYear += v;
+      labelPost(s, lb, v, 'catalog', `Coletânea econômica (${n} discos)`);
       logMove(s, lb, { k: 'budget_comp', a: String(n), x: String(s.year - 1) });
     }
   }
@@ -857,7 +852,7 @@ registerSimHook('week', 'rivals8', (s, r) => {
       if (!act) continue;
       const songs = unreleasedRecorded(s, act).sort((x, y) => y.q - x.q);
       const budget = 12000 * (0.5 + act.fame / 40);
-      lb.cash -= money(s, budget);
+      labelPost(s, lb, -money(s, budget), 'marketing', `Lançamento na sua data: ${act.name}`);
       launchNpcRelease(s, r, act, lb.id, [songs[0].id], 'single', budget);
       st.lastClash = s.week;
       logMove(s, lb, { k: 'date_move', a: act.name, x: pr.title });

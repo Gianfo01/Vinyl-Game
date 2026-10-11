@@ -20,6 +20,7 @@ import { persona, skills } from './persona';
 import { EVENTS } from './lifeevents10/data';
 import { EVENTS11 } from './lifeevents10/data11';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { emitCard21 } from '../card21';
 
 // rodada 11: mais eventos no mesmo sorteio
 for (const d of EVENTS11) if (!EVENTS.some((x) => x.id === d.id)) EVENTS.push(d);
@@ -76,7 +77,7 @@ export interface Env {
   stress: number; health: number; wealth: number; cash: number; fame: number;
   partner: Partner | null; married: boolean; kids: number; dep: number; acts: Act[]; censor: boolean; sex: string;
 }
-interface Open { id: string; ev: string; ctx: LeCtx; m: number; done?: { ch: string; text: L } }
+interface Open { id: string; ev: string; ctx: LeCtx; m: number; done?: { ch: string; text: L }; /** r21 (G-12): texto com a voz do narrador */ t?: L }
 export interface LeState { cd: Record<string, number>; open: Open[]; pend: { due: number; ev: string; ctx: LeCtx }[]; log: { m: number; ev: string; text: L }[]; seq: number }
 
 const fresh = (): LeState => ({ cd: {}, open: [], pend: [], log: [], seq: 0 });
@@ -218,6 +219,7 @@ function fire(s: GameState, ev: string, ctx: LeCtx): void {
   const d = defOf(ev);
   if (!d) return;
   const op: Open = { id: `le${++st.seq}`, ev, ctx, m: mk(s) };
+  op.t = emitCard21(s, { key: `life10:${ev}`, text: d.text(s, ctx), tone: 'neutral' }) ?? undefined; // r21 (G-12)
   st.open.push(op);
   if (st.open.length > 12) st.open.splice(0, st.open.length - 12);
   queueCutscene(s, 'lifeEvent', { title: d.name, openId: op.id });

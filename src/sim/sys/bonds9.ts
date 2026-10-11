@@ -12,7 +12,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { compat } from '../beliefs';
 import { makeAct } from '../people';
 import type { Act, GameState } from '../types';
-import { fmtL, nextId, notify, playerActs, post, remember, rngOf } from '../util';
+import { fmtL, money, nextId, notify, playerActs, post, remember, rngOf } from '../util';
 import { scandal } from '../scandal17';
 import { fashionOf, registerMovementGenres } from '../culture';
 import { MSG_HANDLERS } from './people/inbox';
@@ -386,7 +386,7 @@ export function endBond(s: GameState, r: Rng, b: Bond, c: BondEnd): void {
     b.end.ep = 'lawsuit';
     b.end.epY = s.year;
     hist(b, s.year, l('Os direitos das obras conjuntas vão parar na justiça.', 'Rights to the joint works end up in court.'));
-    for (const A of acts) { A.cash -= Math.min(Math.max(0, A.cash), 20000_00); A.image && (A.image.publicImage = clamp(A.image.publicImage - 4, 0, 100)); }
+    for (const A of acts) { A.cash -= Math.min(Math.max(0, A.cash), money(s, 20000)); /* r21 (B-8): valor real da época */ A.image && (A.image.publicImage = clamp(A.image.publicImage - 4, 0, 100)); }
   }
   const big = acts.some((A) => A.fame > 45) || b.real || acts.some((A) => mineAct(s, A.id));
   if (big) news(s, fmtL(l('Fim de {k}: {n} ({c}).', 'End of {k}: {n} ({c}).'), { k: BOND_NAME[b.k], n: bondTitle(s, b), c: END_NAME[c] }), acts.find((A) => mineAct(s, A.id))?.id ?? acts[0]?.id, !!b.real);
@@ -597,7 +597,7 @@ export const PLAYER_KINDS: BondKind[] = ['duo', 'couple', 'super', 'ally', 'cros
 
 /** Custo de fechar o laço (centavos): liberação do selo do outro lado e produção conjunta. */
 export function bondCost(s: GameState, k: BondKind, otherId: string): { cost: number; blocked: boolean; text: L } {
-  const base = k === 'super' ? 30000_00 : k === 'cross' || k === 'ally' ? 12000_00 : k === 'couple' ? 0 : 4000_00;
+  const base = money(s, k === 'super' ? 30000 : k === 'cross' || k === 'ally' ? 12000 : k === 'couple' ? 0 : 4000); // r21 (B-8): dólares reais → nominais
   const cl = clearance(s, otherId, base);
   return { cost: base + cl.cost, blocked: cl.blocked, text: cl.text };
 }

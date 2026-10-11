@@ -10,7 +10,7 @@ import { emitEvent, type EventDef } from '../../events';
 import { queueCutscene, registerExt4, registerMod, registerSimHook } from '../../ext4';
 import { reviewRelease } from '../../media';
 import { personName } from '../../people';
-import { scheduleRelease, songQ, availableFormats, suggestedPress } from '../../production';
+import { scheduleRelease, refreshQ, availableFormats, suggestedPress } from '../../production';
 import { settleVocals } from '../vocals10';
 import { songProfile } from '../../repertoire';
 import type { Act, GameState, Release, Song } from '../../types';
@@ -319,7 +319,7 @@ function onCompose(s: GameState, r: Rng, song: Song): void {
     const bump = (w.skill - 50) / 10;
     song.melody = clamp(song.melody + Math.max(0, bump) + 2, 0, 100);
     song.lyrics = clamp(song.lyrics + Math.max(0, bump) + 1, 0, 100);
-    song.q = songQ({ ...song, performance: song.melody * 0.6, production: 30 });
+    refreshQ(song);
     songX(s, song.id).writer = w.id;
     w.songs++;
     if (w.ghost) songX(s, song.id).ghost = w.name;
@@ -331,6 +331,9 @@ function onCompose(s: GameState, r: Rng, song: Song): void {
 }
 
 // ------------------------------------------------------------------ parcerias e duetos
+
+/** r21 (E-8): feats8 registra aqui como transformar o convite em acordo com royalties (evita import circular). */
+export const featHooks: { deal?: (s: GameState, songId: string, guestActId: string, fee: number, share: number) => void } = {};
 
 export function featureCandidates(s: GameState, song: Song): Act[] {
   const mine = new Set(playerActs(s));
@@ -360,7 +363,8 @@ export function inviteFeature(s: GameState, r: Rng, songId: string, guestId: str
   songX(s, songId).featuring = guestId;
   song.title = `${song.title} (feat. ${guest.name})`;
   song.performance = clamp(song.performance + 4, 0, 100);
-  if (song.instrumental) { settleVocals(s, song); if (!song.instrumental && song.recorded) song.q = songQ(song); }
+  if (song.instrumental) { settleVocals(s, song); if (!song.instrumental && song.recorded) refreshQ(song); }
+  featHooks.deal?.(s, songId, guestId, fee, 0.2); // r21 (E-8): a participação vira acordo de feats8 (royalties pagos de verdade)
   remember(s, 'feature', fmtL(l('{g} grava participação em "{t}".', '{g} records a feature on "{t}".'), { g: guest.name, t: song.title }), { actId: song.actId });
   return fmtL(l('{g} topou! Participação gravada.', '{g} said yes! Feature recorded.'), { g: guest.name });
 }
@@ -517,14 +521,16 @@ export function remaster(s: GameState, r: Rng, relId: string): L | null {
   if (s.x4.creation.remasters.includes(relId)) return l('Já remasterizado nesta geração.', 'Already remastered for this generation.');
   const cost = money(s, 3000 + rel.songs.length * 600);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
-  post(s, `remaster:${relId}`, -cost, 'recording', `Remaster de ${rel.title}`);
-  s.x4.creation.remasters.push(relId);
   const act = s.acts[rel.actId];
   const res = scheduleRelease(s, r, {
     actId: rel.actId, type: rel.type, songs: rel.songs, title: `${rel.title} (${l('Remasterizado', 'Remastered').pt})`, formats: availableFormats(s),
     press: Math.round(suggestedPress(s, act, rel.type, rel.q) * 0.5), marketing: [], territories: [...s.player.territories], weeksAhead: 3, reissueOf: rel.id, kind: 'deluxe',
   });
-  return 'pt' in res && !('id' in res) ? (res as L) : null;
+  if ('pt' in res && !('id' in res)) return res as L;
+  // r21 (1.13): cobra e marca "remasterizado" só depois de o lançamento entrar na fila
+  post(s, `remaster:${relId}`, -cost, 'recording', `Remaster de ${rel.title}`);
+  s.x4.creation.remasters.push(relId);
+  return null;
 }
 
 // ------------------------------------------------------------------ capa, clipe, trecho viral

@@ -20,7 +20,7 @@ import { setSplits } from '../finance';
 import { histMode } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { langForCity, makePerson } from '../people';
-import { composeSongs, songQ } from '../production';
+import { composeSongs, refreshQ } from '../production';
 import { rng19 } from '../rng19';
 import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
@@ -144,7 +144,7 @@ function ghostWrite(s: GameState, g: Ghost19, r: Rng): void {
       if (so) {
         so.melody = clamp(Math.max(so.melody, p.skills.comp * 0.95 + r.normal(0, 5)), 5, 100);
         so.lyrics = clamp(Math.max(so.lyrics, p.skills.lyr * 0.95 + r.normal(0, 5)), 5, 100);
-        so.q = songQ({ ...so, performance: so.melody * 0.6, production: 30 });
+        refreshQ(so);
         wr19(s).ghs[so.id] = g.id; g.songs.push(so.id);
         if (g.songs.length > 30) g.songs.shift();
       }
@@ -226,7 +226,7 @@ export function takeOffer19(s: GameState, oid: string, cut: boolean): L {
   const [so] = composeSongs(s, r, a, 1);
   if (!so) return l('Algo deu errado.', 'Something went wrong.');
   so.melody = clamp(o.q + r.normal(0, 4), 5, 100); so.lyrics = clamp(o.q - 2 + r.normal(0, 4), 5, 100);
-  so.q = songQ({ ...so, performance: so.melody * 0.6, production: 30 });
+  refreshQ(so);
   so.writers = [w.id]; so.splits = [{ personId: w.id, share: 1 }];
   const ld = lead(s, a);
   if (cut && ld) cutIn(so, ld.id, 0.25);

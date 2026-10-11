@@ -5,15 +5,16 @@
 import { noteLost18 } from './sys/econ18';
 import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
-import { endContract } from './contracts';
+import { endContract, transferAct } from './contracts';
+import { requestAudit15 } from './sys/dispute15';
 import type { GameState, Label } from './types';
-import type { CatalogAuction, Company, Lawsuit } from './xtypes';
-import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from './util';
+import type { CatalogAuction, Company, Lawsuit, Securitization } from './xtypes';
+import { fmtL, money, nextId, notify, playerActs, post, postOrFail, remember, staffSkill } from './util';
 import { addAsset, removeAsset } from './finance';
 import { unclearedSamples } from './studio';
 import { precAdd18, precMul18 } from './sys/rights18';
 import { allReleases17 } from './relidx17';
-import { cashWhy20, freeCash20 } from './oblig20';
+import { cashWhy20, freeCash20, registerOblig20 } from './oblig20';
 
 // ---------- Avaliações ----------
 
@@ -29,8 +30,10 @@ export function withCatalogSums<T>(s: GameState, fn: () => T): T {
 export function labelValuation(s: GameState, lb: Label): { value: number; liabilities: number; catalog: number } {
   const catalog = (catSums ? catSums.get(lb.id) ?? 0 : allReleases17(s).filter((r) => r.owner === lb.id).reduce((t, r) => t + r.revenue, 0)) * 0.35;
   const roster = lb.roster.reduce((t, id) => t + (s.acts[id]?.fame ?? 0) * money(s, 2500), 0);
-  const liabilities = Math.max(0, -lb.cash) + (lb.debt ?? 0) + lb.roster.reduce((t, id) => t + (s.contracts[s.acts[id]?.contractId ?? '']?.recoupBalance ?? 0) * 0.2, 0);
-  return { value: Math.max(money(s, 50000), Math.round(catalog + roster + Math.max(0, lb.cash) * 0.5)), liabilities: Math.round(liabilities), catalog: Math.round(catalog) };
+  // r21 (H-12): o saldo a recuperar dos contratos é um ATIVO do comprador (direito de reter royalties futuros), não um passivo
+  const recoup = lb.roster.reduce((t, id) => t + (s.contracts[s.acts[id]?.contractId ?? '']?.recoupBalance ?? 0) * 0.2, 0);
+  const liabilities = Math.max(0, -lb.cash) + (lb.debt ?? 0);
+  return { value: Math.max(money(s, 50000), Math.round(catalog + roster + recoup + Math.max(0, lb.cash) * 0.5)), liabilities: Math.round(liabilities), catalog: Math.round(catalog) };
 }
 
 /** Selos à venda: caixa baixo ou dívida. */
@@ -59,19 +62,20 @@ export function transferLabel(s: GameState, lb: Label, v: { value: number; liabi
   }
   const releases = allReleases17(s).filter((r) => r.owner === lb.id);
   for (const r of releases) r.owner = 'player';
+  const roster: string[] = [];
   for (const id of [...lb.roster]) {
     const a = s.acts[id];
     const c = a?.contractId ? s.contracts[a.contractId] : undefined;
     if (!a || !c) continue;
     c.party = 'player';
-    a.owner = 'player';
+    transferAct(s, a, 'player', 'bought'); // r21 (H-3): um só caminho de troca de dono
     a.trust = clamp(a.trust - 8, 0, 100); // troca de dono gera desconfiança
-    s.delegated[a.id] = true;
+    roster.push(a.id);
   }
   lb.roster = [];
   lb.active = false;
   lb.closedYear = s.year;
-  const co: Company = { id: nextId(s, 'co'), name: lb.name, kind: 'label', stake: 1, value: v.value, liabilities: v.liabilities, monthlyRevenue: 0, monthlyCost: 0, acquiredWeek: s.week, catalog: releases.map((r) => r.id) };
+  const co: Company = { id: nextId(s, 'co'), name: lb.name, kind: 'label', stake: 1, value: v.value, liabilities: v.liabilities, monthlyRevenue: 0, monthlyCost: 0, acquiredWeek: s.week, catalog: releases.map((r) => r.id), roster };
   s.companies.push(co);
   addAsset(s, { kind: 'company', name: lb.name, cost: price, lifeMonths: 0, refId: co.id });
   addAsset(s, { kind: 'catalog', name: fmtL(l('Catálogo {n}', '{n} catalog'), { n: lb.name }), cost: v.catalog, lifeMonths: 120, refId: co.id });
@@ -155,7 +159,7 @@ function catalogAuctionsMonth(s: GameState, r: Rng): void {
     if (au.seller === 'player') { post(s, `catsale:${au.id}`, best.amount, 'asset_sales', 'Venda de catálogo em leilão'); noteLost18(s, au.releaseIds, best.amount, 'catálogo em leilão'); }
     for (const id of au.releaseIds) if (s.releases[id]) s.releases[id].owner = best.party;
     if (best.party === 'player') {
-      if (s.player.cash < best.amount) {
+      if (freeCash20(s) < best.amount) { // r21 (1.14): caixa livre, não o bruto
         au.status = 'withdrawn';
         for (const id of au.releaseIds) if (s.releases[id]) s.releases[id].owner = au.seller;
         notify(s, l('Seu lance venceu mas faltou caixa: leilão anulado.', 'Your bid won but cash fell short: auction voided.'), 'bad');
@@ -209,22 +213,37 @@ export function securitize(s: GameState, share: number, months: number): L | nul
   const base = catalogMonthlyRevenue(s);
   if (base < money(s, 2000)) return l('Catálogo pequeno demais para securitizar.', 'Catalog too small to securitize.');
   const advance = Math.round(base * share * months * 0.75); // desconto do investidor
-  s.securitizations.push({ id: nextId(s, 'sec'), advance, share, untilWeek: s.week + Math.round(months * 4.35), paid: 0 });
-  post(s, `sec:${s.week}`, advance, 'financing', 'Securitização de catálogo');
+  const id = nextId(s, 'sec');
+  // r21 (B-5): o título tem teto (secCap): o detentor recebe no máximo 1,5× o adiantamento; o que falta é passivo (oblig20)
+  if (!postOrFail(s, `sec:${id}`, advance, 'financing', 'Securitização de catálogo')) return l('Lançamento recusado.', 'Posting refused.');
+  s.securitizations.push({ id, advance, share, untilWeek: s.week + Math.round(months * 4.35), paid: 0, cap: secCap({ advance }) });
   remember(s, 'securitization', fmtL(l('O catálogo vira título: {p}% das receitas por {m} meses.', 'The catalog becomes a bond: {p}% of revenue for {m} months.'), { p: Math.round(share * 100), m: months }), { important: true });
   return null;
 }
 
+/** r21 (B-5): teto do que o detentor recebe = adiantamento × 1,5 (saves antigos sem `cap` ganham o mesmo teto). */
+export const SEC_CAP_MULT = 1.5;
+export const secCap = (sec: { advance: number; cap?: number }): number => sec.cap ?? Math.round(sec.advance * SEC_CAP_MULT);
+export const secLeft = (sec: Securitization): number => Math.max(0, secCap(sec) - sec.paid);
+
 function securitizationMonth(s: GameState): void {
   for (const sec of s.securitizations) {
     if (sec.untilWeek <= s.week) continue;
-    const due = Math.round(((s.monthLedger.sales ?? 0) + (s.monthLedger.publishing ?? 0) + (s.monthLedger.sync ?? 0)) * sec.share);
+    const left = secLeft(sec);
+    if (left <= 0) { sec.untilWeek = s.week; continue; } // r21 (B-5): teto atingido — o título vence
+    const due = Math.min(left, Math.round(((s.monthLedger.sales ?? 0) + (s.monthLedger.publishing ?? 0) + (s.monthLedger.sync ?? 0)) * sec.share));
     if (due > 0) {
       post(s, `secpay:${sec.id}`, -due, 'financing', 'Pagamento a detentores do título');
       sec.paid += due;
     }
   }
 }
+
+// r21 (B-5): securitização ativa é passivo (título de catálogo, fora do covenant bancário); valor = o que falta até o teto
+registerOblig20('securitizations', (s) => (s.securitizations ?? []).filter((x) => x.untilWeek > s.week && secLeft(x) > 0).map((x) => ({
+  id: x.id, kind: 'bond' as const, src: 'business', label: l('Securitização de catálogo', 'Catalog securitization'), amt: secLeft(x), liability: true, bank: false,
+  monthly: Math.min(secLeft(x), Math.round(catalogMonthlyRevenue(s) * x.share)), note: l('Fração das vendas até o teto (1,5× o adiantamento) ou o prazo', 'Share of sales until the cap (1.5× the advance) or the term'),
+})));
 
 // ---------- Bolsa ----------
 
@@ -271,9 +290,10 @@ export function issueShares(s: GameState, frac: number): L | null {
   if (!s.listing.listed) return l('Abra capital primeiro.', 'Go public first.');
   if (s.listing.floatShare + frac > 0.49) return l('Você perderia o controle (máx. 49% em circulação).', 'You would lose control (max 49% floating).');
   const cash = Math.round(s.listing.price * s.listing.shares * frac * 0.95);
+  // r21 (B-1d): sem captação não há diluição; chave única por oferta
+  if (!postOrFail(s, `follow:${nextId(s, 'tx')}`, cash, 'financing', 'Oferta subsequente de ações')) return l('Lançamento recusado.', 'Posting refused.');
   s.listing.floatShare += frac;
   s.listing.price = Math.round(s.listing.price * 0.97);
-  post(s, `follow:${s.week}`, cash, 'financing', 'Oferta subsequente de ações');
   return null;
 }
 
@@ -303,7 +323,9 @@ function suitsMonth(s: GameState, r: Rng): void {
   for (const rel of allReleases17(s)) {
     if (rel.owner !== 'player' || s.week - rel.week > 4 || s.flags[`suitchk:${rel.id}`]) continue;
     s.flags[`suitchk:${rel.id}`] = 1;
-    const unc = unclearedSamples(s, rel.songs);
+    // r21 (E-4): sample "uncleared" (sem resposta/sem caixa) vira acordo em heritage17.sampleSuits;
+    // aqui só o sample cujo pedido foi RECUSADO pelo detentor vira processo — nunca os dois para o mesmo sample
+    const unc = unclearedSamples(s, rel.songs).filter((x) => x.status === 'denied');
     if (unc.length && r.chance((0.5 + rel.totalUnits / 2e6) * precMul18(s, 'sampleSuit'))) { // r18: precedentes (Grand Upright, Bridgeport…)
       fileLawsuit(s, { kind: 'sample', plaintiff: s.acts[s.songs[unc[0].sourceSongId]?.actId ?? '']?.name ?? 'Espólio', defendant: 'player', actId: rel.actId, songId: unc[0].songId, claim: money(s, 15000 + rel.totalUnits * 0.3), odds: Math.max(0.03, 0.25 + legal + precAdd18(s, 'sampleOdds')), text: fmtL(l('Uso de sample sem liberação em "{t}".', 'Uncleared sample in "{t}".'), { t: rel.title }) });
     }
@@ -318,9 +340,9 @@ function suitsMonth(s: GameState, r: Rng): void {
     const a = s.acts[id];
     const c = a.contractId ? s.contracts[a.contractId] : undefined;
     if (!c || c.party !== 'player' || a.playerBand) continue;
+    // r21 (H-9/1.10): a auditoria vira o caso de disputa do dispute15 (um só pipeline: cartão, custas, histórico, cooldown)
     if (a.trust < 30 && c.recoupBalance > 0 && a.fame > 25 && !s.lawsuits.some((x) => x.actId === id && x.kind === 'audit' && !['settled', 'won', 'lost'].includes(x.stage)) && r.chance(0.04)) {
-      const rights = staffSkill(s, 'rights') / 300;
-      fileLawsuit(s, { kind: 'audit', plaintiff: a.name, defendant: 'player', actId: id, claim: Math.round(c.recoupBalance * 0.3 + money(s, 10000)), odds: 0.45 + rights + legal, text: fmtL(l('{a} pede auditoria de royalties.', '{a} demands a royalty audit.'), { a: a.name }) });
+      requestAudit15(s, a, l('saldo a recuperar e pouca confiança', 'unrecouped balance and low trust'));
     }
   }
   // andamento
@@ -400,6 +422,23 @@ export function sellCompany(s: GameState, id: string): L | null {
   for (const a of s.assets.filter((x) => x.refId === co.id)) removeAsset(s, a.id);
   s.companies = s.companies.filter((x) => x !== co);
   if (co.kind === 'publisher') s.ownPublishing = false;
+  if (co.kind === 'plant') s.player.equipment = s.player.equipment.filter((e) => e !== 'own_plant'); // r21 (H-12): a fábrica vendida não prensa mais para você
+  if (co.kind === 'label' && !co.partner) {
+    // r21 (H-12): vender a empresa vende o que veio com ela — elenco, contratos e catálogo vão ao comprador (selo ativo com mais caixa; senão viram independentes)
+    const buyer = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.cash - a.cash)[0];
+    const to = buyer?.id ?? 'indie';
+    for (const id of co.catalog) if (s.releases[id] && s.releases[id].owner === 'player') { s.releases[id].owner = to; }
+    if (co.catalog.length) noteLost18(s, co.catalog, price, `venda de ${co.name}`);
+    for (const id of co.roster ?? []) {
+      const a = s.acts[id];
+      const c = a?.contractId ? s.contracts[a.contractId] : undefined;
+      if (!a || a.owner !== 'player' || a.playerBand || !c || c.party !== 'player') continue;
+      if (buyer) { c.party = buyer.id; transferAct(s, a, buyer.id, 'sold'); a.trust = clamp(a.trust - 6, 0, 100); }
+      else endContract(s, a, 'terminated');
+    }
+    if (buyer) buyer.cash -= price;
+    remember(s, 'company_sold', fmtL(l('{c} vende {n} a {b}: elenco, contratos e catálogo vão junto.', '{c} sells {n} to {b}: roster, contracts and catalog go with it.'), { c: s.config.companyName, n: co.name, b: buyer?.name ?? l('investidores', 'investors').pt }), { important: true });
+  }
   return null;
 }
 

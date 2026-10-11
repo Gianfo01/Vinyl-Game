@@ -10,12 +10,14 @@
 import { Rng, clamp } from '../../core/rng';
 import { VENUE_TIERS } from '../../data/rules';
 import { cityById, familyOf, l, type L } from '../../data/world';
+import { labelRate } from './deal360_17';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { registerExplain } from '../explain18';
 import { addStress, relieveLong } from '../stress17';
 import { TICKET, cityDemand } from '../tours';
+import { expectedStop } from '../showmath';
 import { KIT0, TOUR18, type Kit18, type KitInfo } from '../tourhook18';
 import type { Act, GameState } from '../types';
 import type { Tour, TourStop } from '../xtypes';
@@ -142,24 +144,22 @@ const giantOk = (s: GameState, act: Act, k: Kit18) => (k.prom === 'giant' || !!l
 // ------------------------------------------------------------------ marcação: previsão guardada para o post-mortem
 
 const PB = [0, 0.06, 0.14, 0.25];
-function expSold(s: GameState, act: Act, t: Tour, st: TourStop): number {
-  const pm = st.price / Math.max(1, money(s, TICKET[st.tier]));
-  return Math.min(st.capacity, Math.round(cityDemand(s, act, st.cityId) * (t.role === 'opening' ? 0.3 : t.role === 'co' ? 1.2 : 1) * (1 + PB[t.production]) / Math.pow(pm, 1.2)));
-}
-function expPay(t: Tour, st: TourStop, sold: number, dem: number): number {
-  const gross = sold * st.price, f = Math.min(st.capacity, dem) * st.price * 0.5;
-  return t.pay === 'door' ? gross * 0.65 : t.pay === 'guarantee' ? f * 0.8 : t.pay === 'versus' ? Math.max(f * 0.55, gross * 0.6) : f * 0.4 + gross * 0.45;
-}
+// r21 (F-1): a previsão guardada é a conta do acerto com ruído 1 (showmath.expectedStop) — nada de fórmula própria.
+/** O kit efetivo que a turnê usará (veículo possível na época × gente; exclusividade com o gigante) — a previsão lê o mesmo. */
+TOUR18.effKit = (s, kit, people, fame) => {
+  const k = effectiveKit18(s, kit, people);
+  if (live18(s).excl && s.year >= GIANT_FROM18 && fame >= 30) k.prom = 'giant';
+  return k;
+};
 TOUR18.planned = (s, t, kit, i) => {
   const act = s.acts[t.actId];
   if (!act) return;
-  const k = effectiveKit18(s, kit, i.people); // r20 (B13): persiste o veículo que o aviso anunciou
-  if (live18(s).excl && s.year >= GIANT_FROM18 && act.fame >= 30) k.prom = 'giant';
+  const k = TOUR18.effKit!(s, kit, i.people, act.fame); // r20 (B13): persiste o veículo que o aviso anunciou
   t.kit18 = k;
   const parts = (kit && KC18.get(kit)) ?? kitCost18(s, k, i).parts;
   const v = live18(s);
   v.pm.unshift({ id: t.id, act: act.id, name: t.name, y: s.year, m: s.month, kit: k, role: t.role, deal: t.pay, cost: parts, logistics: t.costReserved, fans0: act.fans.core + act.fans.active + act.fans.casual,
-    shows: t.stops.map((st) => { const e = expSold(s, act, t, st); return { c: st.cityId, d: st.day, st: 'played', tier: st.tier, cap: st.capacity, e, a: 0, ep: Math.round(expPay(t, st, e, cityDemand(s, act, st.cityId))), pay: 0, merch: 0, f: [], n: [] }; }) });
+    shows: t.stops.map((st) => { const e = expectedStop(s, act, t, st); return { c: st.cityId, d: st.day, st: 'played', tier: st.tier, cap: st.capacity, e: e.sold, a: 0, ep: e.pay, pay: 0, merch: 0, f: [], n: [] }; }) });
   if (v.pm.length > 14) v.pm.length = 14;
 };
 
@@ -242,7 +242,8 @@ TOUR18.settle = (s, _r, t, st, c) => {
   const partner = t.partnerActId ? s.acts[t.partnerActId] : undefined;
   if (t.role === 'opening' && partner) {
     const compat = familyOf(partner.genre) === familyOf(act.genre) ? 1 : 0.45;
-    const gain = Math.round(st.sold * 0.03 * compat);
+    const borrowed = Math.round(st.sold * (1 - (c.ownShare ?? 1))); // r21 (F-2): só o público que veio pelo headliner converte aqui
+    const gain = Math.round(borrowed * 0.05 * compat);
     act.fans.active += gain; act.fans.core += Math.round(gain * 0.08);
     notes.push(fmtL(l('Abertura para {p}: +{n} fãs ativos ({c} de compatibilidade).', 'Opening for {p}: +{n} active fans ({c} compatibility).'), { p: partner.name, n: gain, c: `${Math.round(compat * 100)}%` }));
   }
@@ -355,8 +356,7 @@ function closeTour(s: GameState, t: Tour, pm: TourPM18): void {
   const pay = played.reduce((a, x) => a + x.pay, 0), merch = played.reduce((a, x) => a + x.merch, 0);
   const ins = pm.shows.reduce((a, x) => a + (x.ins ?? 0), 0);
   const fans = act ? act.fans.core + act.fans.active + act.fans.casual - pm.fans0 : 0;
-  const c = act?.contractId ? s.contracts[act.contractId] : undefined;
-  const share = act?.playerBand ? 1 : c?.model === '360' ? c.share360 : 0;
+  const share = act ? labelRate(s, act, 'live') : 0; // r21 (H-8): a mesma fatia que o razão usou
   const label = Math.round((pay + merch) * share) + ins - t.costReserved;
   const eSold = pm.shows.reduce((a, x) => a + x.e, 0);
   const why: L[] = [];
@@ -392,8 +392,7 @@ export function liveMonth18(s: GameState): void {
       ps.st = 'cancelled';
       const k = kitOf18(t);
       if (st.note && k.ins) {
-        const c = act?.contractId ? s.contracts[act.contractId] : undefined;
-        const share = act?.playerBand ? 1 : c?.model === '360' ? c.share360 : 0;
+        const share = act ? labelRate(s, act, 'live') : 0; // r21 (H-8)
         const amt = Math.round(t.costReserved / Math.max(1, t.stops.length) * 0.9 + ps.ep * share * 0.5);
         if (amt > 0) { post(s, `l18:ins:${t.id}:${st.day}`, amt, 'other_income', `Seguro de turnê: ${t.name}`); ps.ins = amt; }
         ps.n.push(fmtL(l('Cancelado ({w}); o seguro pagou {x}.', 'Cancelled ({w}); insurance paid {x}.'), { w: st.note, x: usd(amt) }));
@@ -471,8 +470,7 @@ export function botKit18(s: GameState, actId: string, gross: number, shows: numb
   const act = s.acts[actId];
   const k: Kit18 = { ...KIT0 };
   if (!act) return k;
-  const c = act.contractId ? s.contracts[act.contractId] : undefined;
-  const share = act.playerBand ? 1 : c?.model === '360' ? c.share360 : 0;
+  const share = labelRate(s, act, 'live'); // r21 (H-8)
   // contrato clássico: o selo só paga a logística — economiza; com parte da bilheteria, protege a receita
   if (act.fame < 30 && act.members.length <= 5 && share) k.move = 'van'; // banda própria pequena: van (cansa mais, custa menos)
   else if (share && km > shows * 900 && s.year >= FLY_FROM18 && act.fame >= 55) k.move = 'fly';

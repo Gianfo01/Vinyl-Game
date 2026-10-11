@@ -23,6 +23,14 @@ import { fmtL, hasTech, money, notify, playerActs, post, remember } from '../uti
 import { addHeat } from './crime17';
 import { w4 } from './world4/state';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { bannedMarkets } from '../media';
+import { cityById } from '../../data/world';
+
+/** As estações do radio18 são as do mercado-sede do selo (não há praça por estação). */
+const stationMarket18 = (s: GameState) => cityById[s.config.homeCity]?.market;
+
+/** r21 (B16): "é seu" inclui a banda do jogador em selo NPC (como o resto do mercado). */
+const mineRel = (s: GameState, rel: Release | undefined): rel is Release => !!rel && (rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand);
 
 export type Fmt18 = 'network' | 'top40' | 'adult' | 'aor' | 'urban' | 'country' | 'college' | 'latin' | 'dance';
 export interface FmtDef18 { name: L; from: number; to?: number; fam: FamilyId[]; reach: number; strict: number; edit?: boolean; desc: L }
@@ -126,7 +134,7 @@ const sg = (x: number) => `${x >= 0 ? '+' : '−'}${Math.round(Math.abs(x) * 100
 /** Leva uma faixa a um formato: cada estação decide (as de um mesmo consultor decidem juntas). */
 export function pitchRadio18(s: GameState, relId: string, f: Fmt18, how: How18, edit = false): L {
   const rel = s.releases[relId];
-  if (!rel || rel.owner !== 'player') return l('Lançamento inválido.', 'Invalid release.');
+  if (!mineRel(s, rel)) return l('Lançamento inválido.', 'Invalid release.');
   if (!hasTech(s, 'radio')) return l('Ainda não há rádio.', 'There is no radio yet.');
   if (!fmtsNow18(s).includes(f)) return l('Esse formato não existe nesta época.', 'That format does not exist in this era.');
   if (s.week - rel.week > 16) return l('Faixa velha demais para a reunião de programação.', 'Too old for the programming meeting.');
@@ -179,12 +187,13 @@ export function lunchPd18(s: GameState, stId: string): L {
 /** força da rotação de um lançamento (soma alcance × nível de cada estação) */
 export function spins18(s: GameState, relId: string): number {
   const st = radio18(s);
-  return (st.rot[relId] ?? []).reduce((t, r) => { const x = st.st.find((k) => k.id === r.st); return t + (x ? x.reach * FMT18[x.fmt].reach * r.lvl : 0); }, 0);
+  const bans = bannedMarkets(s, relId); // r21 (D-5): estação de mercado onde o disco está proibido não toca
+  return (st.rot[relId] ?? []).reduce((t, r) => { const x = st.st.find((k) => k.id === r.st); return t + (x && !(bans.size && bans.has(stationMarket18(s) as never)) ? x.reach * FMT18[x.fmt].reach * r.lvl : 0); }, 0);
 }
 
 registerMod('chartUnits', 'radio18', (s, v, c) => {
   const rel = c.release;
-  if (!rel || rel.owner !== 'player') return null;
+  if (!mineRel(s, rel)) return null;
   const sp = spins18(s, rel.id);
   if (!sp) return null;
   const k = 1 + Math.min(0.6, 0.05 * sp) * radioWeight18(s);
@@ -244,7 +253,7 @@ registerAdvisorTip('radio18', (s) => {
   const out: ReturnType<Parameters<typeof registerAdvisorTip>[1]> = [];
   for (const id of playerActs(s)) for (const rid of (s.acts[id]?.releases ?? []).slice(-1)) {
     const rel = s.releases[rid];
-    if (!rel || rel.owner !== 'player' || s.week - rel.week > 6 || Object.keys(st.tried).some((k) => k.startsWith(`${rid}|`))) continue;
+    if (!mineRel(s, rel) || s.week - rel.week > 6 || Object.keys(st.tried).some((k) => k.startsWith(`${rid}|`))) continue;
     out.push({ id: `radio18-${rid}`, level: 'info', cat: 'release', score: 48, text: fmtL(l('Leve "{t}" às rádios.', 'Take "{t}" to radio.'), { t: rel.title }), why: [l('Na reunião de programação, cada formato decide; com consultor, dezenas de rádios decidem juntas.', 'At the programming meeting each format decides; with a consultant, dozens of stations decide together.')], goto: { area: 'media' } });
   }
   return out;

@@ -2,6 +2,7 @@
 // e nos territórios do selo (o mesmo cálculo de público que a previsão usa). Antes o jogador tinha de adivinhar no mapa.
 import { CITIES, cityById, l, type L } from '../data/world';
 import { cityDemand, type TourPlan } from './tours';
+import { labelRate } from './sys/deal360_17';
 import type { GameState } from './types';
 import { fmtL } from './util';
 
@@ -26,11 +27,12 @@ export function sizedDraft16(s: GameState, actId: string): Pick<TourPlan, 'produ
 }
 
 /** O que a turnê deixa no caixa do SELO (não do artista): no contrato clássico a bilheteria é do artista. */
-export function labelTourNet16(s: GameState, actId: string, est: { logistics: number; expectedRevenue: number; expectedMerch: number }): { net: number; why: L } {
+export function labelTourNet16(s: GameState, actId: string, est: { logistics: number; expectedRevenue: number; expectedMerch: number; expectedPay?: number }): { net: number; why: L } {
   const act = s.acts[actId];
   const c = act?.contractId ? s.contracts[act.contractId] : undefined;
-  const share = act?.playerBand ? 1 : c?.model === '360' ? c.share360 : 0;
-  const back = Math.round((est.expectedRevenue * 0.65 + est.expectedMerch) * share);
+  void c;
+  const share = act ? labelRate(s, act, 'live') : 0; // r21 (H-8)
+  const back = Math.round(((est.expectedPay ?? est.expectedRevenue * 0.65) + est.expectedMerch) * share); // r21 (F-1): o cachê previsto do acerto
   const net = back - est.logistics;
   const usd = (v: number) => `${v < 0 ? '−' : ''}$${Math.round(Math.abs(v) / 100).toLocaleString('en-US')}`;
   const why = share === 0

@@ -15,6 +15,7 @@ import { advisorSection } from '../advisor';
 import { decLocked18, decOptBody18, decTimer18 } from '../sys/decide18';
 import { ctxLine19 } from '../sys/ctx19';
 import { folded19View } from '../sys/advance19';
+import { fold21 } from '../ux21';
 
 const CAT_ICON: Record<string, string> = {
   career: '🎼', people: '👥', band: '🎸', contract: '📜', market: '🏢', tech: '📡', culture: '🎨', scandal: '📰',
@@ -45,7 +46,7 @@ export function deskPanel(s: GameState): HTMLElement {
   return h('div', { class: 'panel desk' },
     h('div', { class: 'col-main' },
       advisorSection(s),
-      section(t(S.briefing),
+      fold21('briefing', t(S.briefing), // r21 (§2.3.2): recolhido por padrão, estado nas prefs
         s.briefing.length ? h('ul', { class: 'briefing' }, s.briefing.map((n) => h('li', { class: n.kind }, t(n.text)))) : h('p', { class: 'muted' }, t(l('Mês tranquilo.', 'A quiet month.'))),
       ),
       section(`${t(S.decisions)} (${s.decisions.length})`, decisions.length ? h('div', { class: 'decisions' }, decisions) : h('p', { class: 'muted' }, t(S.noDecisions))),

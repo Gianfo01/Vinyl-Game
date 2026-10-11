@@ -76,6 +76,8 @@ export function depreciationMonth(s: GameState): number {
     total += d;
   }
   s.flags.depreciationLast = total;
+  // r21 (B-7): depreciação é custo não-caixa da DRE (reduz o resultado e a base do imposto; o caixa não se move)
+  if (total > 0) post(s, `depr:${s.year}:${s.month}`, -total, 'depreciation', 'Depreciação de ativos', false);
   return total;
 }
 
@@ -119,14 +121,14 @@ export function creditorFor(s: GameState, kind: Creditor['kind'], name: string):
 
 /** Dívida vencida e não paga vira credor; credor sem paciência retoma ativos. */
 export function creditorsMonth(s: GameState, r: Rng): void {
-  // caixa negativo além do limite: parte vira dívida com fornecedores/banco
+  // caixa negativo além do limite: a paciência dos credores cai. r21 (B-3): `owed` NÃO é mais derivado do caixa
+  // negativo — o descoberto já é o próprio caixa; registrá-lo também como credor contava a mesma dívida duas vezes na Posição.
   if (s.player.cash < 0) {
     const bank = creditorFor(s, 'bank', s.player.loans[0] ? l('Banco Meridional', 'Meridian Bank').pt : 'Banco Meridional');
     bank.patience -= 12;
     if (s.player.cash < -money(s, 30000)) {
       const sup = creditorFor(s, 'supplier', 'Prensa & Cia.');
       sup.patience -= 8;
-      sup.owed = Math.max(sup.owed, -s.player.cash - money(s, 30000));
     }
   } else {
     for (const c of s.creditors) c.patience = Math.min(100, c.patience + 4);
@@ -155,8 +157,11 @@ function seize(s: GameState, _r: Rng, c: Creditor): void {
   const value = Math.round(asset.bookValue * 0.6);
   removeAsset(s, asset.id);
   if (asset.kind === 'equipment' && asset.refId) s.player.equipment = s.player.equipment.filter((x) => x !== asset.refId);
-  post(s, `seize:${asset.id}`, value, 'asset_sales', `Retomada por ${c.name}`);
-  c.owed = Math.max(0, c.owed - value);
+  // r21 (B-2): a retomada abate a dívida com o credor; só a sobra acima do devido volta ao caixa (antes o jogador
+  // recebia 60% do valor contábil E a dívida caía: benefício dobrado)
+  const applied = Math.min(value, Math.max(0, c.owed));
+  c.owed = Math.max(0, c.owed - applied);
+  if (value - applied > 0) post(s, `seize:${asset.id}`, value - applied, 'asset_sales', `Sobra da retomada por ${c.name}`);
   const name = typeof asset.name === 'string' ? l(asset.name) : asset.name;
   remember(s, 'seizure', fmtL(l('{c} retoma {a} para cobrir dívidas.', '{c} seizes {a} to cover debts.'), { c: c.name, a: name }), { important: true });
   notify(s, fmtL(l('Credor {c} retomou {a}.', 'Creditor {c} seized {a}.'), { c: c.name, a: name }), 'bad');

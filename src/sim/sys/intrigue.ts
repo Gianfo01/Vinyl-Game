@@ -6,7 +6,7 @@
 
 import { clamp, hashString, type Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { expectedAdvance } from '../contracts';
+import { expectedAdvance, endContract } from '../contracts';
 import { registerExt4, registerSimHook } from '../ext4';
 import { bumpPerks, perk, registerPerkSource, type PerkEntry } from '../perks';
 import type { Act, GameState } from '../types';
@@ -16,6 +16,7 @@ import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
 import { persona } from './persona';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { labelPost } from '../rivalledger21';
 
 // ---------------------------------------------------------------- segredos
 
@@ -203,8 +204,7 @@ function succeed(s: GameState, r: Rng, sc: Scheme): void {
       const fee = money(s, expectedAdvance(s, a) * 0.5);
       post(s, `poach:${a.id}`, -fee, 'advances', `Rescisão paga para trazer ${a.name}`);
       const lb = s.labels[from];
-      if (lb) lb.roster = lb.roster.filter((x) => x !== a.id);
-      if (a.contractId) delete s.contracts[a.contractId];
+      endContract(s, a, 'left'); // r21 (B18): sai pelo caminho normal (memória, relatório do rival)
       grantPlayerContract(s, a, 36);
       a.trust = 65;
       s.rivalries[from] = (s.rivalries[from] ?? 0) + 30;
@@ -269,15 +269,14 @@ export function useHook(s: GameState, r: Rng, secretId: string, use: HookUse): L
     if (use === 'concede') {
       const pick = lb.roster.map((id) => s.acts[id]).filter((a): a is Act => !!a && a.status !== 'retired' && a.status !== 'split').sort((a, b) => a.fame - b.fame)[0];
       if (!pick) return l('Eles não têm ninguém para ceder.', 'They have no one to hand over.');
-      lb.roster = lb.roster.filter((x) => x !== pick.id);
-      if (pick.contractId) delete s.contracts[pick.contractId];
+      endContract(s, pick, 'left'); // r21 (B18)
       grantPlayerContract(s, pick, 24);
       notify(s, fmtL(l('{l} cedeu {a} ao seu selo, sem alarde.', '{l} quietly handed {a} to your label.'), { l: lb.name, a: pick.name }), 'good');
     }
     if (use === 'cash') {
       const v = money(s, 15000 + lb.roster.length * 2000);
       post(s, `blackmail:${lb.id}:${s.week}`, v, 'misc', `Pagamento discreto de ${lb.name}`);
-      lb.cash -= v;
+      labelPost(s, lb, -v, 'misc', 'Pagamento discreto');
       if (r.chance(0.3)) {
         s.player.reputation.institutional = clamp(s.player.reputation.institutional - 15, 0, 100);
         s.player.stats.scandalsSurvived += 1;
@@ -302,7 +301,7 @@ export function exposeSecret(s: GameState, secretId: string): L | null {
     if (a?.owner === 'player') s.player.reputation.commercial = clamp(s.player.reputation.commercial - 4, 0, 100);
   } else {
     const lb = s.labels[sec.target.id];
-    if (lb) { lb.reputation = clamp(lb.reputation - 15, 0, 100); lb.cash -= money(s, 20000); }
+    if (lb) { lb.reputation = clamp(lb.reputation - 15, 0, 100); labelPost(s, lb, -money(s, 20000), 'legal', 'Segredo exposto'); }
     if (SECRETS[sec.kind].criminal) s.player.reputation.institutional = clamp(s.player.reputation.institutional + 3, 0, 100);
   }
   remember(s, 'exposed', fmtL(l('Vem à tona: {t} — {s}.', 'It comes out: {t} — {s}.'), { t: name, s: SECRETS[sec.kind].name }), { important: true });

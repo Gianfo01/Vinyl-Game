@@ -32,7 +32,7 @@ import { nudge16 } from './fame16';
 import { fan18 } from './fans18';
 import { headline19 } from './factlink19';
 import { LINKS18, lk18 } from './links18';
-import { actLang18, addAff18 } from './regions18';
+import { VISA_HOOK21, actLang18, addAff18 } from './regions18';
 import { exileChoice18, regimeAt18, soc18 } from './society18';
 import { strikeActive } from './world4/common';
 import { milestoneById } from './world4/milestones';
@@ -320,6 +320,7 @@ export function visaMult19(s: GameState, a: Act, city: string): { k: number; v?:
   if (!v || hasVisa19(s, a.id, v.id)) return { k: 1, v };
   return { k: v.ban ? 0.6 : 0.9, v };
 }
+VISA_HOOK21.f = (s, a, city) => !!visaFor19(s, a, city); // r21 (D-6): uma só conta de visto por show
 registerMod('cityDemand', 'regions19:visa', (s, val, c) => {
   if (off() || !c.act || !c.cityId || !mineA(s, c.act)) return null;
   const { k, v } = visaMult19(s, c.act, c.cityId);

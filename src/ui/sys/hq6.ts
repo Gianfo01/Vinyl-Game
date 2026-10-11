@@ -17,6 +17,7 @@ import { priceBasis20 } from '../../sim/sys/price20';
 import { registerSection } from '../registry';
 import { ic } from '../vis';
 import { careerSlotsUsed } from '../../sim/contracts';
+import { confirm21 } from '../ask21';
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 let newCity = '';
@@ -33,7 +34,7 @@ export function hqBlock(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' },
       up !== null && next ? h('button', { class: 'btn small primary', disabled: !!blk, title: blk ? t(blk) : t(next.reach), onclick: () => say(upgradeHq(s), l('Sede ampliada!', 'HQ upgraded!')) }, ic('building'), ` ${t(l('Mudar de sede', 'Move HQ'))}: ${t(next.name)} (${$(up)} + ${$(money(s, next.rent))}/${t(l('mês', 'mo'))})`) : null, // r20c (N2): mudar ≠ reformar; mostra o aluguel novo
       blk && next ? h('small', { class: 'muted' }, t(blk)) : null,
-      !st.ownBuilding ? h('button', { class: 'btn small', title: t(l('Acaba o aluguel da matriz até a próxima mudança de sede.', 'Ends the main HQ rent until the next move.')), onclick: () => { if (confirm(t(l('Comprar o prédio por {v}?', 'Buy the building for {v}?'), { v: $(buildingPrice(s)) }))) say(buyBuilding(s), l('O prédio é seu.', 'The building is yours.')); } }, `${t(l('Comprar o prédio', 'Buy the building'))} (${$(buildingPrice(s))})`) : null,
+      !st.ownBuilding ? h('button', { class: 'btn small', title: t(l('Acaba o aluguel da matriz até a próxima mudança de sede.', 'Ends the main HQ rent until the next move.')), onclick: () => { confirm21(t(l('Comprar o prédio por {v}?', 'Buy the building for {v}?'), { v: $(buildingPrice(s)) }), () => { say(buyBuilding(s), l('O prédio é seu.', 'The building is yours.')); }); } }, `${t(l('Comprar o prédio', 'Buy the building'))} (${$(buildingPrice(s))})`) : null,
       h('small', { class: 'muted' }, t(priceBasis20(s, up ?? buildingPrice(s)))),
     ),
   );
@@ -50,7 +51,7 @@ export function deptBlock(s: GameState): HTMLElement {
       lv ? h('small', null, t(l('Manutenção: {v}/mês', 'Upkeep: {v}/mo'), { v: $(money(s, d.upkeep * lv)) })) : null,
       h('div', { class: 'row wrap' },
         lv < 3 ? h('button', { class: 'btn small', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => say(buildDept(s, d.id), lv ? l('Departamento ampliado.', 'Department upgraded.') : l('Departamento criado.', 'Department created.')) }, `${lv ? t(l('Ampliar', 'Upgrade')) : t(l('Criar', 'Create'))} ${$(money(s, d.cost[lv]))}`) : null,
-        lv ? h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Fechar o departamento? O investimento não volta.', 'Close the department? The investment is not refunded.')))) { closeDept(s, d.id); rerender(); } } }, t(l('Fechar', 'Close'))) : null,
+        lv ? h('button', { class: 'btn small ghost', onclick: () => { confirm21(t(l('Fechar o departamento? O investimento não volta.', 'Close the department? The investment is not refunded.')), () => { closeDept(s, d.id); rerender(); }); } }, t(l('Fechar', 'Close'))) : null,
       ),
     );
   }));
@@ -81,7 +82,7 @@ export function branchBlock(s: GameState): HTMLElement {
         h('div', { class: 'row wrap' }, here.length ? here.map((id) => actLink(s, id)) : h('small', { class: 'muted' }, t(l('Nenhum artista designado.', 'No artists assigned.')))),
         h('div', { class: 'row wrap' },
           next ? h('button', { class: 'btn small', onclick: () => say(upgradeBranch(s, b.id), l('Filial ampliada!', 'Branch upgraded!')) }, `${t(l('Ampliar para', 'Upgrade to'))} ${t(next.name)} (${$(money(s, next.cost))})`) : null,
-          h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Fechar esta filial? O investimento não volta.', 'Close this branch? The investment is not refunded.')))) { closeBranch(s, b.id); rerender(); } } }, t(l('Fechar', 'Close'))),
+          h('button', { class: 'btn small ghost', onclick: () => { confirm21(t(l('Fechar esta filial? O investimento não volta.', 'Close this branch? The investment is not refunded.')), () => { closeBranch(s, b.id); rerender(); }); } }, t(l('Fechar', 'Close'))),
         ),
       );
     })) : null,

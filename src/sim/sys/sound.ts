@@ -16,8 +16,9 @@ import { cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
 import { coverById, type CoverStyle } from '../covers';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { CRITICS } from '../media';
-import { eraProductionBase, songQ } from '../production';
+import { eraProductionBase, refreshQ } from '../production';
 import { songProfile } from '../repertoire';
+import { bumpAppeal } from '../market';
 import { PRODUCERS, SIGNATURES, type ProducerDef } from '../studio';
 import type { Act, GameState, Person, Release, Song, SongSound } from '../types';
 import { fmtL, hasTech, notify, playerActs, remember, staffSkill } from '../util';
@@ -454,7 +455,7 @@ function onCompose(s: GameState, so: Song): void {
       so.originality = clamp(so.originality - 3, 0, 100);
       for (const id of act.members) { const p = s.persons[id]; if (p) p.stress = clamp(p.stress + 1, 0, 100); }
     } else if (gap < 12) so.melody = clamp(so.melody + 1.5, 0, 100);
-    if (!so.recorded) so.q = songQ({ ...so, performance: so.melody * 0.6, production: 30 });
+    if (!so.recorded) refreshQ(so);
   }
 }
 
@@ -911,7 +912,7 @@ function timbreLaunch(s: GameState, rel: Release, act: Act): void {
       for (const x of rv) x.score = clamp(Math.round((x.score - pen) * 10) / 10, 0, 10);
       rel.critic = Math.round((rv.reduce((a, x) => a + x.score, 0) / rv.length) * 10);
     }
-    rel.appeal *= 0.97;
+    bumpAppeal(s, rel, 0.97, 'timbre-copy', l('Timbre copiado', 'Copied timbre'), 'low'); // r21 (E-9)
     if (mine || holder.owner === 'player' || holder.playerBand) {
       const text = fmtL(mine ? l('A crítica notou: {a} copiou o timbre de {h} ({t}).', 'Critics noticed: {a} copied {h}\'s timbre ({t}).') : l('{a} está copiando o timbre de {h}: {t}.', '{a} is copying {h}\'s timbre: {t}.'), { a: act.name, h: holder.name, t: timbreById[c.t].name });
       notify(s, text, mine ? 'bad' : 'info');
@@ -1018,8 +1019,7 @@ function onLaunch(s: GameState, rel: Release): void {
   const cf = rel.coverChoice ? coverFit(rel.coverChoice, v) : 0;
   if (rel.coverChoice && Math.abs(cf) > 0.05) {
     const m = 1 + 0.04 * cf;
-    rel.appeal *= m;
-    rel.autopsy?.push({ key: 'cover-sound', label: l(`Capa × som (${coverById[rel.coverChoice as CoverStyle]?.name.pt ?? ''})`, `Cover × sound (${coverById[rel.coverChoice as CoverStyle]?.name.en ?? ''})`), value: m, confidence: 'low' });
+    bumpAppeal(s, rel, m, 'cover-sound', l(`Capa × som (${coverById[rel.coverChoice as CoverStyle]?.name.pt ?? ''})`, `Cover × sound (${coverById[rel.coverChoice as CoverStyle]?.name.en ?? ''})`), 'low');
   }
   // a crítica ouve: gosto de cada crítico, coerência com a capa e a sequência do disco
   const rv = s.reviews[rel.id];
@@ -1035,7 +1035,7 @@ function onLaunch(s: GameState, rel: Release): void {
     }
     const after = rv.reduce((t, x) => t + x.score, 0) / rv.length;
     rel.critic = Math.round(after * 10);
-    rel.appeal *= (0.92 + after / 60) / (0.92 + before / 60);
+    bumpAppeal(s, rel, (0.92 + after / 60) / (0.92 + before / 60), 'critics', fmtL(l('Crítica ({n})', 'Critics ({n})'), { n: Math.round(after * 10) })); // r21 (E-9)
   }
   if (mine) {
     // saves antigos: a primeira vez reconstrói tudo (já inclui este lançamento)
@@ -1050,16 +1050,7 @@ registerSimHook('compose', 'sound', (s, _r, a) => { if (a.song) onCompose(s, a.s
 registerSimHook('record', 'sound', (s, _r, a) => { if (a.song) applyRecord(s, a.song); });
 registerSimHook('launch', 'sound', (s, _r, a) => { if (a.release) onLaunch(s, a.release); });
 
-/** Sessões de estúdio fecham faixas dia a dia (sem o gancho de gravação): aplica a camada nelas. */
-function sweepSessions(s: GameState): void {
-  for (const sess of s.sessions) {
-    if (s.day - sess.startDay > 120) continue;
-    for (const id of sess.songIds) {
-      const so = s.songs[id];
-      if (so?.recorded && !so.sound?.r) applyRecord(s, so);
-    }
-  }
-}
+// r21 (E-1): a sessão de estúdio passou a disparar o gancho 'record' (closeTrack); a varredura diária compensatória saiu.
 registerSimHook('month', 'sound', (s) => {
   const r = Rng.fromSeed(`subgen:${s.year}:${s.week}`);
   for (const sg of subMonth(s, r, subs(s))) {
@@ -1067,8 +1058,6 @@ registerSimHook('month', 'sound', (s) => {
     if (a) notify(s, fmtL(l('Nasce na cena de {c} um subgênero: {n}. {a} já toca assim.', 'A subgenre is born in the {c} scene: {n}. {a} already plays it.'), { c: cityById[sg.city]?.name ?? sg.city, n: sg.name, a: a.name }), 'info');
   }
 });
-registerSimHook('day', 'sound', (s) => sweepSessions(s));
-registerSimHook('week', 'sound', (s) => sweepSessions(s));
 
 registerSimHook('year', 'sound', (s) => {
   const st = snd(s);

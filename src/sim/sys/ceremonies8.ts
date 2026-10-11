@@ -12,6 +12,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util
 import { GRAMO_CAL19 } from '../awardcal19';
 import { mineRel19 } from '../mine19';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { addBoost21 } from './boost21';
 
 export type GramoCat = 'record' | 'album' | 'newcomer' | 'performance';
 export const GRAMO_CATS: { id: GramoCat; name: L; rule: L }[] = [
@@ -103,6 +104,7 @@ function announce(s: GameState): void {
     cats[c.id] = picks;
     for (const id of picks) {
       const rel = s.releases[id];
+      if (rel) addBoost21(s, rel, 1.06, 6, l('Indicação aos Gramófonos de Ouro', 'Golden Gramophone nomination')); // r21 (§4): a indicação vende
       if (rel && (rel.owner === 'player' || mine.has(rel.actId) || mineRel19(s, rel))) mineNoms.push(`${s.acts[rel.actId]?.name ?? '?'} (${c.name.pt})`); // r19: clientes do empresário também
     }
   }

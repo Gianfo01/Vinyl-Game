@@ -61,6 +61,18 @@ export function realRef20(s: GameState, act: Act): RealRef20 | null {
   };
 }
 
+/** r21 (K5): no mundo aleatório ("Reais em mundo aleatório"), a pessoa real já teria morrido (solo: `x`; grupo: toda a formação
+ *  documentada) mas o ato segue nesta partida — o destino é simulado. */
+export function simFate20(s: GameState, act: Act): boolean {
+  if (!simStart20(s) || !s.config.realNames || !act.catalogNo) return false;
+  const d = realDataOf(act);
+  if (!d) return false;
+  const y = s.year;
+  if (d.x !== undefined) return d.x <= y;
+  const ms = (d.m ?? []).filter((m) => m[4] === undefined || m[4] <= y);
+  return ms.length > 0 && ms.every((m) => m[3] !== undefined && m[3] <= y);
+}
+
 export interface ThisRun20 {
   doc: number;
   sim: number;

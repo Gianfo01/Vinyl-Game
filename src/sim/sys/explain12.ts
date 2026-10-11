@@ -89,7 +89,9 @@ export function infoQuality(s: GameState, kind: DecisionKind, act?: Act): InfoQu
 
 /** Faixa em torno do valor real: largura e viés diminuem com a qualidade da informação (viés pode enganar!). */
 export function rangeAround(s: GameState, key: string, v: number, q: number, rel = false): [number, number] {
-  const w = (0.08 + (1 - q) * 0.4) * (rel ? Math.max(1, v) : 1);
+  // r21 (H-10): chance de assinatura nunca vira % exata — faixa mínima de 15 p.p. sem analista e 8 p.p. com
+  const floor = key.startsWith('sign:') ? (staffCount(s, 'analyst') ? 0.08 : 0.15) : 0;
+  const w = Math.max(floor, 0.08 + (1 - q) * 0.4) * (rel ? Math.max(1, v) : 1);
   const bias = (hu(s, `bias:${key}:${monthKey(s)}`) - 0.5) * (1 - q) * 0.3 * (rel ? Math.max(1, v) : 1);
   const c = v + bias;
   return rel ? [Math.max(0, c - w / 2), c + w / 2] : [clamp(c - w / 2, 0.02, 0.98), clamp(c + w / 2, 0.02, 0.98)];
@@ -149,7 +151,7 @@ export function forecastTour(s: GameState, plan: TourPlan, est: TourEstimate): F
   const act = s.acts[plan.actId];
   const info = infoQuality(s, 'tour', act);
   const cap = est.stops.reduce((x, st) => x + st.capacity, 0);
-  const exp = est.stops.reduce((x, st) => x + Math.min(st.capacity, Math.round(cityDemand(s, act, st.cityId) * (plan.role === 'opening' ? 0.3 : 1) / Math.pow(plan.priceMult, 1.2))), 0);
+  const exp = est.expectedSold; // r21 (F-1): a mesma conta do acerto (showmath, via estimateTour)
   const [lo, hi] = rangeAround(s, `tour:${act.id}`, exp, info.q, true);
   const risks: L[] = [...est.warnings.slice(0, 2)];
   const fat = act.members.reduce((x, id) => x + (s.persons[id]?.fatigue ?? 0), 0) / Math.max(1, act.members.length);

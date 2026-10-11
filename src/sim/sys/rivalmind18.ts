@@ -11,11 +11,11 @@
 // A intenção nunca aparece pronta: o jogador vê indícios (com atraso e ruído) e antecipa.
 // Gerador próprio por mês (semente), sem tocar no RNG do jogo.
 
-import { Rng, clamp } from '../../core/rng';
+import { Rng, clamp, hashString } from '../../core/rng';
 import { FAMILIES, familyOf, l, type L } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { emitEvent } from '../events';
-import { registerExt4, registerMod, registerSimHook } from '../ext4';
+import { MERGE_HOOKS21, registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind, type AdvTip18 } from '../inbox18';
 import type { Act, GameState, Label } from '../types';
@@ -24,6 +24,7 @@ import { leaders } from './leaders10';
 import { playbookOf } from './rivals8';
 import { rivals12 } from './rivals12';
 import { courtNewcomer18 } from './world18';
+import { labelPost } from '../rivalledger21';
 
 export type Sign18K = 'target' | 'court' | 'flood' | 'giveup' | 'develop' | 'abandon' | 'pact' | 'dispute' | 'overexp' | 'badsign' | 'trouble' | 'bankrupt' | 'bid';
 export interface Sign18 { w: number; k: Sign18K; t: L }
@@ -73,7 +74,12 @@ function sign(s: GameState, lb: Label, k: Sign18K, t: L, o: { rumor?: boolean; p
 // ---------------------------------------------------------------- dependência do jogador
 
 export interface Dep18 { act?: { id: string; share: number }; fam?: { id: string; share: number }; total: number }
-/** Concentração da sua receita de discos (lançamentos dos últimos 2 anos). */
+/** r21 (G-6): peso PÚBLICO de um lançamento — pico nas paradas e certificações, nunca a receita exata. */
+export const publicWeight21 = (r: { peak: number; certified?: string }): number =>
+  (r.peak && r.peak <= 100 ? 101 - r.peak : 0) + (r.certified === 'diamond' ? 300 : r.certified === 'platinum' ? 150 : r.certified === 'gold' ? 60 : 0);
+/** Limiar de atenção: ~um Top 20 com disco de ouro nos últimos 2 anos. */
+export const DEP_MIN21 = 140;
+/** Concentração dos seus SUCESSOS PÚBLICOS (picos e certificações dos últimos 2 anos) — o que um rival vê de fora. */
 export function dependence18(s: GameState): Dep18 {
   const byAct = new Map<string, number>();
   const byFam = new Map<string, number>();
@@ -84,17 +90,25 @@ export function dependence18(s: GameState): Dep18 {
     if (!a) continue;
     for (const rid of a.releases) {
       const r = s.releases[rid];
-      if (!r || r.hist || s.week - r.week > 104 || r.revenue <= 0) continue;
-      total += r.revenue;
-      byAct.set(a.id, (byAct.get(a.id) ?? 0) + r.revenue);
+      if (!r || r.hist || s.week - r.week > 104) continue;
+      const w = publicWeight21(r);
+      if (w <= 0) continue;
+      total += w;
+      byAct.set(a.id, (byAct.get(a.id) ?? 0) + w);
       const f = familyOf(a.genre);
-      byFam.set(f, (byFam.get(f) ?? 0) + r.revenue);
+      byFam.set(f, (byFam.get(f) ?? 0) + w);
     }
   }
   if (!total) return { total: 0 };
   const ta = [...byAct].sort((x, y) => y[1] - x[1])[0];
   const tf = [...byFam].sort((x, y) => y[1] - x[1])[0];
   return { total, act: ta && { id: ta[0], share: ta[1] / total }, fam: tf && { id: tf[0], share: tf[1] / total } };
+}
+
+/** r21 (G-6): o que o rival PERCEBE da confiança do artista em você — o valor real com ruído ±20 (estável por trimestre). */
+export function perceivedTrust21(s: GameState, a: Act, lbId: string): number {
+  const h = hashString(`${lbId}:${a.id}:${Math.floor(s.week / 13)}`);
+  return clamp(a.trust + ((h % 41) - 20), 0, 100);
 }
 
 function hunt(s: GameState, r: Rng): void {
@@ -111,15 +125,15 @@ function hunt(s: GameState, r: Rng): void {
       const a = s.acts[t.id];
       const c = a?.contractId ? s.contracts[a.contractId] : undefined;
       if (!a || a.owner !== 'player') stop = l('o alvo saiu do seu selo', 'the target left your label');
-      else if (c && c.endWeek - s.week > 150 && a.trust >= 70) stop = fmtL(l('{a} está blindado(a): contrato longo e confiança alta', '{a} is shielded: long contract and high trust'), { a: a.name });
+      else if (c && c.endWeek - s.week > 150 && perceivedTrust21(s, a, lb.id) >= 70) stop = fmtL(l('{a} está blindado(a): contrato longo e confiança alta', '{a} is shielded: long contract and high trust'), { a: a.name });
       else if ((dep.act?.id !== t.id || dep.act.share < 0.3)) stop = l('você deixou de depender de um só artista', 'you no longer depend on one act');
     } else if (dep.fam?.id !== t.id || dep.fam.share < 0.45) stop = fmtL(l('você diversificou além de {f}', 'you diversified beyond {f}'), { f: famName(t.id) });
     if (stop) { m.target = undefined; sign(s, lb, 'giveup', fmtL(l('parou de mirar no seu ponto fraco: {w}.', 'stopped going after your weak spot: {w}.'), { w: stop })); }
   }
-  if (hunting.length >= 1 || dep.total < money(s, 150000) || s.year - s.config.startYear < 2) return; // carência: selo novo ainda não chama atenção
+  if (hunting.length >= 1 || dep.total < DEP_MIN21 || s.year - s.config.startYear < 2) return; // carência: selo novo ainda não chama atenção
   let tg: { k: 'fam' | 'act'; id: string; why: L } | null = null;
-  if (dep.act && dep.act.share >= 0.45 && s.acts[dep.act.id] && !s.acts[dep.act.id].playerBand) tg = { k: 'act', id: dep.act.id, why: fmtL(l('{a} responde por {p}% da sua receita de discos', '{a} is {p}% of your record revenue'), { a: s.acts[dep.act.id].name, p: Math.round(dep.act.share * 100) }) };
-  else if (dep.fam && dep.fam.share >= 0.6) tg = { k: 'fam', id: dep.fam.id, why: fmtL(l('{f} responde por {p}% da sua receita de discos', '{f} is {p}% of your record revenue'), { f: famName(dep.fam.id), p: Math.round(dep.fam.share * 100) }) };
+  if (dep.act && dep.act.share >= 0.45 && s.acts[dep.act.id] && !s.acts[dep.act.id].playerBand) tg = { k: 'act', id: dep.act.id, why: fmtL(l('{a} responde por {p}% dos seus sucessos recentes', '{a} is {p}% of your recent hits'), { a: s.acts[dep.act.id].name, p: Math.round(dep.act.share * 100) }) };
+  else if (dep.fam && dep.fam.share >= 0.6) tg = { k: 'fam', id: dep.fam.id, why: fmtL(l('{f} responde por {p}% dos seus sucessos recentes', '{f} is {p}% of your recent hits'), { f: famName(dep.fam.id), p: Math.round(dep.fam.share * 100) }) };
   if (!tg || hunting.some((x) => mind18(s, x.id).target?.id === tg!.id)) return;
   const pool = labels.filter((x) => x.cash > money(s, 300000) && !(mind18(s, x.id).target) && !mind18(s, x.id).pact);
   const sc = (x: Label) => x.aggression + (HUNTERS.has(playbookOf(x)) ? 0.35 : 0) + (s.rivalries[x.id] ?? 0) / 100 + (tg!.k === 'fam' && x.focus.includes(tg!.id as never) ? 0.3 : 0);
@@ -145,10 +159,10 @@ function pressTargets(s: GameState, r: Rng): void {
       if (!a || a.owner !== 'player') continue;
       const c = a.contractId ? s.contracts[a.contractId] : undefined;
       const near = !!c && c.endWeek - s.week < 52;
-      if ((near || a.trust < 50) && r.chance(0.18) && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
+      if ((near || perceivedTrust21(s, a, lb.id) < 50) && r.chance(0.18) && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
         emitEvent(s, r, 'poach_attempt', { act: a.id, label: lb.id });
         sign(s, lb, 'court', fmtL(l('fez proposta direta a {a}.', 'made a direct offer to {a}.'), { a: a.name }), { public: true, actors: [a.id], sev: 40 });
-      } else if (r.chance(0.2) && a.trust > 40) {
+      } else if (r.chance(0.2) && perceivedTrust21(s, a, lb.id) > 40) {
         a.trust = Math.max(40, a.trust - 1);
         if (r.chance(0.4)) sign(s, lb, 'court', fmtL(l('jantou com gente próxima de {a} (confiança dele(a) em você −1).', 'had dinner with people close to {a} (their trust in you −1).'), { a: a.name }));
       }
@@ -291,7 +305,7 @@ function mistakes(s: GameState, r: Rng): void {
     if (!lb.active) continue;
     const m = mind18(s, lb.id);
     const risk = riskOf(s, lb);
-    if (m.over && m.over > s.week) lb.cash -= money(s, (lb.family === 'A' ? 40000 : 15000));
+    if (m.over && m.over > s.week) labelPost(s, lb, -money(s, (lb.family === 'A' ? 40000 : 15000)), 'overhead', 'Escritórios novos');
     else if (m.over) m.over = undefined;
     if (!m.over && lb.cash > money(s, 2_500_000) && lb.territories.length < 6 && r.chance(0.004 * risk)) {
       const add = (['na', 'eu', 'br', 'latam', 'asia', 'africa', 'oceania'] as const).filter((t) => !lb.territories.includes(t)).slice(0, 2);
@@ -303,7 +317,7 @@ function mistakes(s: GameState, r: Rng): void {
       const a = Object.values(s.acts).filter((x) => live(x) && !x.owner && x.fame >= 30 && x.momentum < 30).sort((x, y) => y.fame - x.fame)[0];
       if (a) {
         signWithRival(s, a, lb.id, r, true);
-        lb.cash -= money(s, expectedAdvance(s, a) * 1.5);
+        labelPost(s, lb, -money(s, expectedAdvance(s, a) * 0.5), 'advances', `Ágio por ${a.name}`); // r21 (B20): signWithRival já cobrou 1×; aqui só o ágio
         sign(s, lb, 'badsign', fmtL(l('pagou caro por {a}, que está em queda.', 'paid top dollar for {a}, who is in decline.'), { a: a.name }), { public: true, actors: [a.id], sev: 25 });
       }
     }
@@ -373,4 +387,11 @@ registerSimHook('month', 'rivalmind18', (s) => {
   mistakes(s, r);
   bankruptcies(s);
   if (s.month === 0) for (const lb of Object.values(s.labels)) if (lb.active && mind18(s, lb.id).signs.length) { const m = mind18(s, lb.id); m.signs = m.signs.filter((x) => s.week - x.w <= 156); }
+});
+
+// r21 (B24): selo absorvido perde alvo e pacto; quem mirava nele desiste
+MERGE_HOOKS21.push((s, _buyer, target) => {
+  const st = rm18(s);
+  const m = st.m[target];
+  if (m) { m.target = undefined; m.pact = undefined; }
 });

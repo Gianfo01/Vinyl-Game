@@ -12,6 +12,8 @@ import type { GameState, Label, Release } from './types';
 import type { RivalReportItem } from './xtypes';
 import { fmtL, money, playerActs, post, remember } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { hashString } from '../core/rng';
+import { perceivedTrust21 } from './sys/rivalmind18';
 
 export const ARCHETYPES: Record<NonNullable<Label['archetype']>, { name: L; desc: L }> = {
   empire: { name: l('Império', 'Empire'), desc: l('Compra estrelas e concorrentes; evita risco artístico.', 'Buys stars and competitors; avoids artistic risk.') },
@@ -104,8 +106,8 @@ export function rivals2Month(s: GameState, r: Rng): void {
     // decisões registradas pela IA base viram linhas do relatório
     const key = `lastDec:${lb.id}`;
     const dec = lb.lastDecision ? lb.lastDecision.pt : '';
-    if (dec && s.flags[key] !== dec.length + lb.roster.length) {
-      s.flags[key] = dec.length + lb.roster.length;
+    if (dec && s.flags[key] !== hashString(dec)) { // r21 (B19): hash do texto, não tamanho (colidia)
+      s.flags[key] = hashString(dec);
       report(items, lb, fmtL(l('{d}.', '{d}.'), { d: lb.lastDecision! }));
     }
     const rel = recentByOwner.get(lb.id) ?? [];
@@ -118,7 +120,7 @@ export function rivals2Month(s: GameState, r: Rng): void {
     // rodada 8: com assento no conselho (25%+), o selo não alicia o seu elenco
     const seat = ((s.x4 as unknown as { stakes8?: { recs: Record<string, { holder: string; share: number }[]> } }).stakes8?.recs[lb.id] ?? []).some((h) => h.holder === 'player' && h.share >= 0.25);
     if (mine.length && !seat && lb.cash > money(s, 200000) && r.chance(0.01 + aggr * 0.02)) {
-      const target = mine.filter((a) => !a.playerBand && a.fame > 20 && (a.trust < 45 || (a.contractId && s.contracts[a.contractId].endWeek - s.week < 26))).sort((a, b) => b.fame - a.fame)[0];
+      const target = mine.filter((a) => !a.playerBand && a.fame > 20 && (perceivedTrust21(s, a, lb.id) < 45 || (a.contractId && s.contracts[a.contractId].endWeek - s.week < 26))).sort((a, b) => b.fame - a.fame)[0]; // r21 (G-6): percepção, não o valor exato
       if (target && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
         emitEvent(s, r, 'poach_attempt', { act: target.id, label: lb.id });
         report(items, lb, fmtL(l('tentou aliciar {a}.', 'tried to poach {a}.'), { a: target.name }));

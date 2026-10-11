@@ -19,6 +19,7 @@ import { tiesOf } from './social8';
 import { histLocked } from '../history15';
 import { scandal } from '../scandal17';
 import { actsTouched17 } from '../actidx17';
+import { seedDependency21 } from './people/state';
 
 // ---------------------------------------------------------------- facetas e valores
 
@@ -351,6 +352,7 @@ registerSimHook('month', 'soul9', (s, r) => {
         if (p.stress > 72 && ps?.bd !== s.year && r.chance(0.05 * pace * (0.5 + f.ansiedade / 100)) && worldDramaOk(s, r, 2)) { breakdown(s, r, a, p); continue; }
         if (p.health === 'ok' && v.prazer > 70 && f.impulsividade > 62 && r.chance(0.004)) {
           p.health = 'addiction';
+          seedDependency21(s, pid); // r21 (C-3)
           chron(s, { k: 'addiction', i: a.fame > 40 ? 3 : 2, a: [a.id, pid], t: fmtL(l('{p} ({a}) mergulha nos excessos.', '{p} ({a}) dives into excess.'), { p: p.name, a: a.name }) });
         }
       } else {

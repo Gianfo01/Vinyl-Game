@@ -10,13 +10,14 @@
 
 import { clamp, Rng, seedState } from '../../core/rng';
 import { FAMILIES, familyOf, l, type FamilyId, type L } from '../../data/world';
-import { acceptOffer, defaultOffer } from '../contracts';
+import { defaultOffer, signAct } from '../contracts';
+import { scoutEligible20 } from '../scout20';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { registerExplain } from '../explain18';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import type { Act, GameState } from '../types';
-import { fmtL, money, playerActs, post as post0, remember } from '../util';
+import { chanceBand, fmtL, money, playerActs, post as post0, remember } from '../util';
 
 function post(s: GameState, key: string, amount: number, cat: string, memo: string, cash = true): boolean {
   const G = (globalThis as { __sup18?: Record<string, number> }).__sup18;
@@ -70,7 +71,7 @@ export function devChance18(s: GameState, a: Act): { p: number; why: L[] } {
 }
 export function devCandidates18(s: GameState): Act[] {
   const known = Object.keys(s.knowledge ?? {});
-  return known.map((id) => s.acts[id]).filter((a): a is Act => !!a && !a.owner && !a.playerBand && a.fame < 35 && a.status !== 'retired' && a.status !== 'split' && !deals18(s).dev[a.id] && a.members.length > 0 && !shield18(s, a.id)).slice(0, 30);
+  return known.map((id) => s.acts[id]).filter((a): a is Act => !!a && scoutEligible20(s, a).ok && !a.playerBand && a.fame < 35 && !deals18(s).dev[a.id] && !shield18(s, a.id)).slice(0, 30); // r21 (H-7): elegibilidade central
 }
 export function startDev18(s: GameState, actId: string, months: 12 | 24): { ok: boolean; text: L } {
   ensureDeals18();
@@ -102,10 +103,10 @@ export function exerciseDev18(s: GameState, actId: string): { ok: boolean; text:
   if (!d || !a) return { ok: false, text: l('Sem opção ativa.', 'No active option.') };
   if (a.owner) { delete st.dev[actId]; return { ok: false, text: l('O artista já tem selo.', 'The artist already has a label.') }; }
   const adv = devSignCost18(s, d);
-  if (freeCash20(s) < adv) return { ok: false, text: cashWhy20(s, adv, l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')) };
   const o = { ...defaultOffer(s, a), advance: adv, releasesOwed: 3 };
   applyPkg18(o, 'indie');
-  acceptOffer(s, a, { ...o, id: `dev18-${actId}`, week: s.week, status: 'pending' });
+  const sg = signAct(s, a, o, 'dev'); // r21 (H-7): caminho único (elegibilidade, caixa livre, acceptOffer)
+  if (!sg.ok) return { ok: false, text: sg.why ?? l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.') };
   delete st.dev[actId];
   a.trust = clamp(a.trust + 5, 0, 100);
   log(s, fmtL(l('Opção exercida: {a} assina ({v} de adiantamento).', 'Option exercised: {a} signs ({v} advance).'), { a: a.name, v: $(adv) }));
@@ -268,7 +269,7 @@ export function startJv18(s: GameState, lbId: string, fam: string): { ok: boolea
 export function endJv18(s: GameState, i: number): { ok: boolean; text: L } {
   const st = deals18(s), j = st.jv[i];
   if (!j) return { ok: false, text: l('Inválido.', 'Invalid.') };
-  if (s.player.cash < j.cap) return { ok: false, text: fmtL(l('Para desfazer é preciso devolver o aporte ({v}).', 'Undoing it means returning the capital ({v}).'), { v: $(j.cap) }) };
+  if (freeCash20(s) < j.cap) return { ok: false, text: fmtL(l('Para desfazer é preciso devolver o aporte ({v}).', 'Undoing it means returning the capital ({v}).'), { v: $(j.cap) }) };
   post(s, `jv18end:${j.lb}:${j.fam}`, -j.cap, 'investment', 'Devolução do aporte da JV');
   st.jv.splice(i, 1);
   s.rivalries[j.lb] = (s.rivalries[j.lb] ?? 0) + 5;
@@ -345,7 +346,7 @@ registerExplain('deal.dev', (s, c) => {
   const a = s.acts[String(c.act ?? '')];
   if (!a) return null;
   const ch = devChance18(s, a);
-  return { title: l('Chance de aceitar o desenvolvimento', 'Chance of accepting development'), value: ch.p, fmt: 'pct', parts: ch.why.map((w) => ({ label: w })), note: l('Opção barata: mesada + estúdio; no fim você decide se assina.', 'Cheap option: stipend + studio; at the end you decide whether to sign.') };
+  return { title: l('Chance de aceitar o desenvolvimento', 'Chance of accepting development'), value: chanceBand(ch.p) as unknown as string, fmt: 'text', parts: ch.why.map((w) => ({ label: w })), note: l('Opção barata: mesada + estúdio; no fim você decide se assina.', 'Cheap option: stipend + studio; at the end you decide whether to sign.') };
 });
 registerAdvisorTip('deals18', (s) => {
   const out: ReturnType<Parameters<typeof registerAdvisorTip>[1]> = [];

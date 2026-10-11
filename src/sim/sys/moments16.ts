@@ -130,6 +130,7 @@ function onShow(s: GameState, actId: string, cityId: string, att: number, cap: n
 registerSimHook('show', 'moments16', (s, _r, a) => {
   const sh = a.show;
   if (!sh || s.acts[sh.actId]?.owner !== 'player') return;
+  if (c12(s).shows.some((x) => x.id === sh.tourId)) mo16(s).seen.push(sh.tourId); // r21 (F-7): a varredura semanal não repete
   const tier = tierOfCap16(sh.capacity);
   onShow(s, sh.actId, sh.cityId, sh.sold, sh.capacity, tier, tier >= 3);
 });

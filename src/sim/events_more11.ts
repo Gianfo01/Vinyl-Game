@@ -99,7 +99,7 @@ const ARTISTS: EventDef[] = [
       o('deny', 'Negar até o fim', 'Deny it to the end', (s, r, c) => { const a = A(s, c); if (r.chance(0.5)) { scandal(s, a, 'sex', 25); fansMul(a, 0.8, 0.9); rep(s, 'institutional', -3); } trust(a, -6); }, ['Se provarem, o tombo é maior.', 'If proven, the fall is harder.']),
       o('wait', 'Deixar o artista decidir', 'Let the artist decide', (s, _r, c) => { const a = A(s, c); fansMul(a, 0.93); trust(a, 3); }),
     ]),
-  E('r11_band_romance_split', 'band', 'bad', [], 20,
+  E('r11_band_romance_split', 'band', 'bad', ['romance'], 20,
     (s, r) => {
       const a = pick(s, r, (x) => active(x) && x.members.length >= 2 && x.members.length <= 6);
       if (!a || !r.chance(0.18)) return null;
@@ -630,7 +630,7 @@ const LABEL: EventDef[] = [
   E('r11_intern_demo', 'scouting', 'good', [], 18,
     (s, r) => {
       if (!label(s)) return null;
-      const cands = Object.values(s.acts).slice(-40).filter((a) => a.owner === null && !a.playerBand && !s.knowledge[a.id] && a.potential > 55);
+      const cands = Object.values(s.acts).slice(-40).filter((a) => a.owner === null && !a.playerBand && !s.knowledge[a.id] && a.potential > 55 && (a.status === 'active' || a.status === 'emerging') && !a.deceased); // r21 (G-9)
       const a = cands.length ? r.pick(cands) : undefined;
       return a && r.chance(0.2) ? { act: a.id, city: a.city } : null;
     },

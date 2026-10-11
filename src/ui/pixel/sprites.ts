@@ -3,6 +3,7 @@
 
 import { PALETTES, eraIndex, type EraId, type Palette } from './palette';
 import { C, Px, dith, mix, noise, shade, withAlpha, type BoxShader, type Col, type Shader, type Sprite } from './px';
+import { LruMap } from '../../core/lru21';
 
 export * from './tiles';
 
@@ -108,7 +109,7 @@ class D {
   }
 }
 
-const cache = new Map<string, Sprite>();
+const cache = new LruMap<string, Sprite>(500); // r21 (I-10): teto
 
 function make(kind: FurnKind, era: EraId, facing: Facing, variant: number, frame: number, draw: (d: D) => void): Sprite {
   const f = FURN[kind];

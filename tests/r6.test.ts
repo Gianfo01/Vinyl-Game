@@ -128,7 +128,9 @@ describe('nomes reais', () => {
     expect(beatles.members.map((m) => s.persons[m].name)).toContain('Paul McCartney');
     expect(Object.values(s.labels).map((x) => x.name)).toContain('Motown');
     expect(FESTIVALS.map((f) => f.name)).toContain('Woodstock');
-    expect(t({ pt: 'Top 10 da WorldSound 100', en: 'WorldSound 100 top 10' })).toContain('Billboard Hot 100');
+    expect(t({ pt: 'Top 10 da WorldSound 100', en: 'WorldSound 100 top 10' })).toContain('WorldSound 100'); // r21 (K4): a parada mundial não vira Billboard
+    expect(t({ pt: 'WorldSound 100 EUA', en: 'WorldSound 100 EUA' })).toBe('Billboard Hot 100');
+    expect(t({ pt: 'Gramófonos de Ouro', en: 'Golden Gramophones' })).toBe('Grammy Awards');
     applyRealNames(false);
     expect(FESTIVALS.map((f) => f.name)).toContain('Timberfield Rock');
     expect(t({ pt: 'WorldSound 100', en: 'WorldSound 100' })).toBe('WorldSound 100');

@@ -11,7 +11,7 @@ import { defaultAgenda, setAgenda, slotCost, slotsFor, usedSlots } from '../agen
 import { coverCost, coverOptions } from '../covers';
 import { registerExt4, registerSimHook } from '../ext4';
 import { availableChannels, forecastUnits } from '../market';
-import { availableFormats, cancelRelease, labelFunded, releaseCost, pressingCost, scheduleRelease, suggestedPress, type ReleasePlan } from '../production';
+import { availableFormats, cancelRelease, labelFunded, pendingRefund, releaseCost, pressingCost, scheduleRelease, suggestedPress, type ReleasePlan } from '../production';
 import { canPresave, canVideo, planRollout } from '../rollout';
 import { isDiscarded, songProfile } from '../repertoire';
 import { PRODUCERS, sessionCost, startSession } from '../studio';
@@ -292,7 +292,7 @@ export function rolloutProject(s: GameState, p: MusicProject): L | null {
 export function unscheduleProject(s: GameState, p: MusicProject): void {
   const pr = s.pendingReleases.find((x) => x.id === p.pendingId);
   if (!pr) return;
-  const refund = (labelFunded(s, pr.actId) ? 0 : pressingCost(s, pr.formats, pr.press)) + pr.marketing.reduce((t, m) => t + m.budget, 0);
+  const refund = pendingRefund(s, pr); // r21 (E-11): inclui a capa
   if (cancelRelease(s, pr.id)) p.spent = Math.max(0, p.spent - refund);
   p.pendingId = undefined;
 }

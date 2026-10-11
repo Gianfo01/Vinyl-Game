@@ -36,7 +36,8 @@ import { noteRelease17 } from '../relidx17';
 import { actsTouched17 } from '../actidx17';
 import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 
-const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+/** r21 (C-1): chave de nome de ato — ignora o artigo inicial ("The Dave Brubeck Quartet" = "Dave Brubeck Quartet"). */
+const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/^(the|os|as|les|los)\s+/, '').replace(/[^a-z0-9]/g, '');
 const BASE_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
 const taken16 = new Set([...BASE_ALL.map((a) => norm16(a.n)), ...Object.values(REAL_ACTS).map((a) => norm16(a.name))]);
 /** rodada 16: formações (solos e bandas novas de quem saiu) entram no fim — catalogNo estável. */
@@ -46,6 +47,14 @@ const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
 export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
+/** r21 (C-1): índices de REAL_ALL que repetem um ato do catálogo clássico ou um anterior da própria lista (só com o artigo
+ *  diferente) — ficam na lista (catalogNo estável) mas nunca entram no mundo. */
+export const DUP21: Set<number> = (() => {
+  const seen = new Set(Object.values(REAL_ACTS).map((a) => norm16(a.name)));
+  const out = new Set<number>();
+  REAL_ALL.forEach((a, i) => { const k = norm16(a.n); if (seen.has(k)) out.add(i); else seen.add(k); });
+  return out;
+})();
 
 type Sched = { year: number; kind: 'join' | 'leave' | 'reunion' | 'fate' | 'release'; actId: string; personId?: string; m?: RealMember; until?: number; rel?: RealRelease; mo?: number };
 
@@ -57,6 +66,8 @@ export interface RwState {
   former: Record<string, { personId: string; year: number; reason: 'left' | 'died' | 'retired' | 'fired' }[]>;
   /** rodada 10: identidade única — nome real canônico → id da pessoa (a mesma pessoa em banda, solo e supergrupo) */
   pid?: Record<string, string>;
+  /** r21 (C-2): migração de `Person.fate` feita */
+  fm21?: 1;
 }
 
 declare module '../ext4' { interface Ext4 { rw: RwState } }
@@ -242,13 +253,24 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   if (d.m?.length) {
     const now: string[] = [];
     const old = act.members.map((id) => s.persons[id]).filter(Boolean);
-    d.m.forEach((m, i) => {
+    // r21 (C-1): o worldgen já batizou os integrantes gerados com os nomes reais; linhas repetidas (segunda passagem de
+    // alguém) desalinhavam o índice e um gerado virava homônimo de outro. Reaproveita por nome; sem nome igual, pega um
+    // gerado que nenhuma linha vai reclamar.
+    const used = new Set<string>();
+    const dmKeys = new Set(d.m.map((x) => canonKey(x[0])));
+    const pickOld = (name: string): Person | undefined => {
+      const k = canonKey(name);
+      const o = old.find((x) => !used.has(x.id) && canonKey(x.name) === k) ?? old.find((x) => !used.has(x.id) && !dmKeys.has(canonKey(x.name)));
+      if (o) used.add(o.id);
+      return o;
+    };
+    d.m.forEach((m) => {
       const [name, role, born, died0, joined, left] = m;
       const join = joined !== undefined ? joined + shift : undefined;
       if (sim && join !== undefined && join > debut) return; // r20: entradas posteriores à estreia são história, não identidade
       const leave = sim ? undefined : left !== undefined ? left + shift : undefined;
       const died = sim ? simDead(name, born) : died0;
-      const reuse = old[i] && (join === undefined || join <= debut) ? old[i] : undefined;
+      const reuse = join === undefined || join <= debut ? pickOld(name) : undefined; // r21 (C-1): por nome, não por índice
       let p: Person;
       if (reuse) {
         p = reuse;
@@ -268,7 +290,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
         p = c;
       }
       if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
-      else if (died !== undefined && fates) sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
+      else if (died !== undefined && fates) { p.fate = died; sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id }); } // r21 (C-2): destino documentado
       if (leave !== undefined && leave <= s.year) {
         (st.former[act.id] ??= []).push({ personId: p.id, year: leave, reason: 'left' });
       } else {
@@ -278,6 +300,16 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     });
     // integrantes gerados que sobraram saem do ato
     for (const p of old) if (!now.includes(p.id) && !(st.former[act.id] ?? []).some((x) => x.personId === p.id)) delete s.persons[p.id];
+    // r21 (C-1): nenhum ato nasce com a mesma pessoa duas vezes nem com dois homônimos
+    const seenKey = new Set<string>();
+    const uniq: string[] = [];
+    for (const id of now) {
+      const q = s.persons[id];
+      const k = q ? canonKey(q.name) : id;
+      if (uniq.includes(id) || seenKey.has(k)) { if (q && !uniq.includes(id) && !otherActsOf(s, id, act.id).length) delete s.persons[id]; continue; }
+      seenKey.add(k); uniq.push(id);
+    }
+    now.length = 0; now.push(...uniq);
     if (now.length) act.members = now; actsTouched17(s); // r17: índice pessoa→atos
     act.leaderId = act.members[0];
     // relações entre os integrantes (pessoas reaproveitadas de outros atos)
@@ -303,7 +335,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       if (d.r) p.role = d.r;
       const x = sim ? simDead(d.n, d.b) : d.x;
       if (x !== undefined && x <= s.year) { p.alive = false; p.died = x; }
-      else if (x !== undefined && fates) sched.push({ year: x, kind: 'fate', actId: act.id, personId: p.id });
+      else if (x !== undefined && fates) { p.fate = x; sched.push({ year: x, kind: 'fate', actId: act.id, personId: p.id }); } // r21 (C-2)
     }
   }
   // fim de carreira e voltas
@@ -387,6 +419,7 @@ function newgame(s: GameState, r: Rng): void {
   // artistas reais novos
   for (let i = 0; i < REAL_ALL.length; i++) {
     const a = REAL_ALL[i];
+    if (DUP21.has(i)) continue; // r21 (C-1): repetido do catálogo clássico (só o artigo muda)
     if (!realAllowed(s.config, a)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
     if (mode === 'free' && r.chance(0.08)) continue;
@@ -463,6 +496,8 @@ function CATALOG_LOOKUP(): Record<number, { genre: string; city: string }> {
 
 function monthly(s: GameState, r: Rng): void {
   const st = rw(s);
+  // r21 (C-2): saves antigos — quem tem morte agendada ganha `fate` (uma vez)
+  if (!st.fm21) { st.fm21 = 1; for (const e of st.sched) if (e.kind === 'fate' && e.personId) { const p = s.persons[e.personId]; if (p && p.fate === undefined) p.fate = e.year; } }
   // surgem os artistas reais do ano (um ano antes da estreia, como promessa de cena)
   if (st.upcoming.length) {
     const keep: number[] = [];
@@ -506,6 +541,7 @@ function monthly(s: GameState, r: Rng): void {
       if (act.members.includes(p.id)) continue;
       act.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
       if (ev.m[5] !== undefined && ev.m[5] > s.year) st.sched.push({ year: ev.m[5], kind: 'leave', actId: act.id, personId: p.id }); // rodada 16: segunda passagem também sai
+      if (died !== undefined && died > s.year && hm === 'strict' && p.fate === undefined) { p.fate = died; st.sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id }); } // r21 (C-2): quem entra depois também tem destino documentado
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {
       exitMember20(s, act, ev.personId);

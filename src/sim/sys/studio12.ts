@@ -200,8 +200,9 @@ registerMod('songQ', 'studio12:eng', (s, value, ctx) => {
   const add = Math.min(6, bonus + best);
   if (add < 0.5) return null;
   if (bonus) delete P.boost[act.id];
-  const before = song.production; song.production = clamp(song.production + add, 5, 100);
-  return { value: value + (song.production - before) * 0.4, label: bonus ? l('Produtor do disco', 'Record producer') : l('Engenheiro da casa', 'House engineer') };
+  // r21 (E-7): mexe só em song.production; closeTrack/refreshQ recalculam o Q (antes o engenheiro contava em dobro)
+  song.production = clamp(song.production + add, 5, 100);
+  return { value, label: bonus ? l('Produtor do disco', 'Record producer') : l('Engenheiro da casa', 'House engineer') };
 });
 
 // ---------------------------------------------------------------- produtor

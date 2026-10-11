@@ -29,6 +29,7 @@ import { persona, playerTraitById } from './persona';
 import type { BackgroundId } from './life/data';
 import { FACETS, FACET_TXT, soul, type Facet } from './soul9';
 import { actsOfPerson17 } from '../actidx17';
+import { sexByName } from '../../data/people';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- esquema
@@ -222,6 +223,8 @@ function build(s: GameState, key: string): P13 | null {
     up('critic', k.lyr * 0.5 + facets.curiosidade * 0.3); job = p.isPlayer ? 'exec' : 'artist';
     look = p.look ?? (p.isPlayer ? lookOf13(p.id) : undefined); // rodada 15: sem visual salvo, pele vem da cidade (retrato segue)
     views = viewsOf(s, p.id);
+    // r21 (C-9): sexo é um campo da pessoa (gerado pelo nome); sem campo, o mapa de nomes decide; só então o hash
+    if (!p.isPlayer) { const sx = look?.sx ?? (look?.beard ? 'm' : undefined) ?? p.sex ?? sexByName(p.name); if (sx) extSex = [sx, undefined]; }
     if (p.isPlayer) {
       const o = ownerOf(s);
       attrs.ear = o.attrs.ear; attrs.neg = o.attrs.negotiation; attrs.cha = o.attrs.charisma; attrs.mgmt = o.attrs.management;

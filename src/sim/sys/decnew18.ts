@@ -13,6 +13,7 @@ import { adjRel18, relOf18 } from './agency18';
 import { follow18 } from './echoes18';
 import { per13 } from './persona13';
 import { scandal } from '../scandal17';
+import { genreAvailable20 } from '../genretime20';
 
 type Opt = EventDef['options'][number];
 const N = (pt: string, en: string): L => l(pt, en);
@@ -199,7 +200,7 @@ registerConseq18('ev:d18_van:new', { unlock: 'van18' });
 // ---------------------------------------------------------------- 9. a demo quente (prazo + aposta)
 const demo = ev({
   id: 'd18_demo', cat: 'scouting', tone: 'good', cooldown: 12,
-  find: (s, r) => (r.chance(0.18) ? { fee: 1000, dl18: s.week + 1, genre: r.pick(Object.keys(s.genrePop)) } : null),
+  find: (s, r) => { if (!r.chance(0.18)) return null; const gs = Object.keys(s.genrePop).filter((g) => genreAvailable20(s, g)); return { fee: 1000, dl18: s.week + 1, genre: r.pick(gs.length ? gs : Object.keys(s.genrePop)) }; }, // r21 (B13): só gêneros que já existem na época
   title: N('Uma demo quente de {genreName}', 'A hot {genreName} demo'),
   text: N('Um garoto deixou uma fita na recepção. Dois selos já ligaram para ele. Assinar hoje custa {feeTxt} de adiantamento — amanhã pode ser tarde.', 'A kid left a tape at the front desk. Two labels already called him. Signing today costs a {feeTxt} advance — tomorrow may be too late.'),
   options: [

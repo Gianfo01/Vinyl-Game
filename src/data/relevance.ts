@@ -3,6 +3,8 @@
 // 2010). "localPref": quanto o público do país prefere artistas da casa (no Brasil, Japão, Coreia e
 // Índia os locais dominam as paradas, às vezes acima dos astros globais).
 
+import { BLOCK19 } from './countries19';
+
 type Pts = [number, number][];
 
 const SOFT: Record<string, Pts> = {
@@ -40,6 +42,20 @@ const SOFT: Record<string, Pts> = {
   CHN: [[1920, 0.05], [2040, 0.15]],
   IDN: [[1920, 0.05], [2040, 0.12]],
   PHL: [[1920, 0.08], [2040, 0.18]],
+  PRI: [[1920, 0.15], [2004, 0.2], [2010, 0.45], [2040, 0.5]], // r21: reggaeton
+};
+/** r21 (J-10): soft power por bloco (countries19 sem curva própria; padrão antigo era 0,2 para todos). */
+const SOFT_BLOCK: Record<string, Pts> = {
+  nordic: [[1920, 0.15], [1990, 0.3], [2040, 0.3]], central: [[1920, 0.2], [2040, 0.2]], east: [[1920, 0.1], [2040, 0.1]], balkan: [[1920, 0.08], [2040, 0.1]],
+  arab: [[1920, 0.12], [2040, 0.12]], persian: [[1920, 0.1], [2040, 0.08]], israel: [[1920, 0.1], [1990, 0.2], [2040, 0.2]], maghreb: [[1920, 0.1], [1990, 0.15], [2040, 0.15]],
+  westaf: [[1920, 0.08], [2015, 0.15], [2040, 0.2]], congo: [[1920, 0.1], [1960, 0.2], [2040, 0.15]], eastaf: [[1920, 0.05], [2040, 0.08]], southaf: [[1920, 0.08], [2040, 0.1]],
+  caribEs: [[1920, 0.2], [2040, 0.25]], caribEn: [[1920, 0.15], [2040, 0.2]], andes: [[1920, 0.1], [2040, 0.12]], sea: [[1920, 0.05], [2040, 0.1]],
+  southAs: [[1920, 0.08], [2040, 0.1]], sino: [[1920, 0.1], [1980, 0.25], [2040, 0.2]], pacific: [[1920, 0.05], [2040, 0.08]],
+};
+/** r21 (J-10): preferência local por bloco (padrão antigo 1,6 para todos). */
+const LOCAL_BLOCK: Record<string, number> = {
+  nordic: 1.4, central: 1.5, east: 2, balkan: 2, arab: 2.3, persian: 2.4, israel: 1.8, maghreb: 2.1, westaf: 2, congo: 2.2, eastaf: 1.9, southaf: 1.8,
+  caribEs: 2, caribEn: 1.5, andes: 1.9, sea: 2, southAs: 2.6, sino: 2.3, pacific: 1.4,
 };
 
 const LOCAL: Record<string, number> = {
@@ -60,10 +76,11 @@ const interp = (pts: Pts, year: number): number => {
 
 /** 0..1: quanto a música do país viaja (EUA = 1). */
 export function softPower(a3: string | null | undefined, year: number): number {
-  return a3 && SOFT[a3] ? interp(SOFT[a3], year) : 0.2;
+  const p = a3 ? SOFT[a3] ?? SOFT_BLOCK[BLOCK19[a3]] : undefined;
+  return p ? interp(p, year) : 0.2;
 }
 
 /** Preferência do público do país por artistas locais (1 = neutro). */
 export function localPref(a3: string | null | undefined): number {
-  return a3 ? LOCAL[a3] ?? 1.6 : 1.6;
+  return a3 ? LOCAL[a3] ?? LOCAL_BLOCK[BLOCK19[a3]] ?? 1.6 : 1.6;
 }

@@ -17,6 +17,7 @@ import { registerSection } from '../registry';
 import { chips, meter, stat } from '../vis';
 import { fameText } from '../../sim/sys/fame15';
 import { freeCash20 } from '../../sim/oblig20';
+import { confirm21 } from '../ask21';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const add = { day: 'fri' as DayK, k: 'original' as NightK, deal: 'door' as DealK, act: '', name: '' };
@@ -91,7 +92,7 @@ function venue12Section(s: GameState): HTMLElement | null {
       select(branchCity || CITIES.find((c) => c.id !== v.cityId)!.id, CITIES.filter((c) => c.id !== v.cityId && !x.branches.some((b) => b.city === c.id)).map((c) => ({ value: c.id, label: cityName(c.id) })), (c) => (branchCity = c)),
       h('button', { class: 'btn small', onclick: () => say(branch12(s, branchCity || CITIES.find((c) => c.id !== v.cityId)!.id), l('Filial aberta.', 'Branch opened.')) }, t(l('Abrir filial ({c})', 'Open branch ({c})'), { c: $(branchCost(s)) })),
       x.branches.length ? ` ${x.branches.map((b) => cityName(b.city)).join(', ')}` : '') : null,
-    x.goal === 'big' && nk && s.year >= nk.minYear ? h('button', { class: 'btn small', onclick: () => { if (confirm(t(l('Mudar para um espaço maior? Parte dos frequentadores não acompanha e as reformas recomeçam.', 'Move to a bigger space? Some regulars will not follow and renovations start over.')))) say(bigger12(s), l('Mudança feita.', 'Moved.')); } }, t(l('Mudar para {k} ({c})', 'Move to a {k} ({c})'), { k: nk.name, c: $(biggerCost(s, v)) })) : null,
+    x.goal === 'big' && nk && s.year >= nk.minYear ? h('button', { class: 'btn small', onclick: () => { confirm21(t(l('Mudar para um espaço maior? Parte dos frequentadores não acompanha e as reformas recomeçam.', 'Move to a bigger space? Some regulars will not follow and renovations start over.')), () => { say(bigger12(s), l('Mudança feita.', 'Moved.')); }); } }, t(l('Mudar para {k} ({c})', 'Move to a {k} ({c})'), { k: nk.name, c: $(biggerCost(s, v)) })) : null,
     x.notes.length ? h('details', { class: 'small' }, h('summary', null, t(l('O que aconteceu e por quê', 'What happened and why'))), h('ul', null, x.notes.slice(-10).reverse().map((n) => h('li', null, t(n.t))))) : null,
   );
 }

@@ -17,6 +17,7 @@ import { PALETTES, eraOf } from './pixel/palette';
 import { C, Px, mix, shade, withAlpha, type Sprite } from './pixel/px';
 import { BRANCH_LAYOUT, ROOM_NAMES, buildScene, findPath, freeTiles, roomAt, type Scene, type Spot } from './pixel/scene';
 import { WALL_H, decalPx, floorAt, furniture, groundAt, rugAt, wallSprite, type DecalKind, type RoomKind } from './pixel/sprites';
+import { LruMap } from '../core/lru21';
 
 const MARGIN = 3; // tiles de chão externo
 
@@ -1095,7 +1096,7 @@ function siteActs(s: GameState, site: string): string[] {
   return all.filter((id) => s.branchOf?.[id] === site);
 }
 
-const canvasCache = new Map<string, HTMLCanvasElement>();
+const canvasCache = new LruMap<string, HTMLCanvasElement>(500); // r21 (I-10): teto
 function getCanvas(key: string, make: () => HTMLCanvasElement): HTMLCanvasElement {
   let c = canvasCache.get(key);
   if (!c) {

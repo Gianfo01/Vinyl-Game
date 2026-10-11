@@ -68,7 +68,8 @@ export function heirCandidates(s: GameState): HeirCand[] {
   for (const sf of s.player.staff) {
     const key = `staff:${sf.id}`;
     if (key !== o.heir && (sf.skill < 55 || s.week - sf.hiredWeek < 104)) continue;
-    out.push({ key, name: sf.name, born: s.year - 30 - (sf.skill % 20), aptitude: sf.skill, rel: 'staff', staffId: sf.id });
+    sf.born ??= s.year - 30 - (sf.skill % 20); // r21 (1.11): saves antigos ganham o nascimento uma vez; depois envelhece
+    out.push({ key, name: sf.name, born: sf.born, aptitude: sf.skill, rel: 'staff', staffId: sf.id });
   }
   // artistas próximos: do próprio selo, com confiança alta no dono
   const me = playerPerson(s)?.id;

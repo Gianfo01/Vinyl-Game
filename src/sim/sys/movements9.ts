@@ -13,7 +13,7 @@ import { fashionOf, registerMovementGenres } from '../culture';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import type { Movement } from '../xtypes';
-import { fmtL, nextId, notify, post, remember } from '../util';
+import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { MSG_HANDLERS } from './people/inbox';
 import { addMsg, P } from './people/state';
 import { actAdmiration, admiration, bonds } from './bonds9';
@@ -347,7 +347,9 @@ export function requestJoin(s: GameState, mvId: string, actId: string): { ok: bo
 }
 
 export interface FoundSpec { name: string; idea: string; city: string; genre: string; acts: string[]; allies: string[] }
-export const FOUND_COST = 8000_00;
+/** Custo do manifesto em dólares REAIS (r21 B-8: antes eram centavos nominais fixos, cobrados iguais em 1889 e 2040). */
+export const FOUND_COST = 8000;
+export const foundCost9 = (s: GameState): number => money(s, FOUND_COST);
 
 /** Chance (0..1) de um movimento pegar: momento cultural, críticos, cidade, obras fortes e aliados. */
 export function foundChance(s: GameState, o: FoundSpec): number {
@@ -372,9 +374,10 @@ export function foundMovement(s: GameState, r: Rng, o: FoundSpec, npc = false): 
   if (o.acts.some((id) => { const t = tierOf(s, id); return t && t.tier !== 'symp'; })) return { ok: false, text: l('Um dos atos já está em outro movimento.', 'One of the acts is already in another movement.') };
   if (!npc) {
     if ((st.tried ?? -99) > s.week - 26) return { ok: false, text: l('Você tentou há pouco; espere uns meses.', 'You tried recently; wait a few months.') };
-    if (freeCash20(s) < FOUND_COST) return { ok: false, text: cashWhy20(s, FOUND_COST, l('Caixa insuficiente para o lançamento do manifesto.', 'Not enough cash to launch the manifesto.')) };
+    const cost = foundCost9(s);
+    if (freeCash20(s) < cost) return { ok: false, text: cashWhy20(s, cost, l('Caixa insuficiente para o lançamento do manifesto.', 'Not enough cash to launch the manifesto.')) };
     st.tried = s.week;
-    post(s, `mov9:found`, -FOUND_COST, 'marketing', `Manifesto: ${name}`);
+    post(s, `mov9:found`, -cost, 'marketing', `Manifesto: ${name}`);
   }
   // aliados aceitam se admiram o(s) ato(s) fundador(es)
   const allies = o.allies.filter((id) => { const a = s.acts[id]; return live(a) && !tierOf(s, id) && o.acts.some((f) => actAdmiration(s, a, f) + actBond(s, a, s.acts[f]).v * 0.5 > 0); });

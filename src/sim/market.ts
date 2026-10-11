@@ -13,15 +13,17 @@ import { clamp, type Rng } from '../core/rng';
 import { nominal } from '../core/money';
 import { isUnlocked } from './era';
 import { CHANNELS, EQUIPMENT, FORMATS, type FormatId } from '../data/rules';
-import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type MarketId } from '../data/world';
+import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type L, type MarketId } from '../data/world';
 import { payAuthors } from './finance';
 import { superfanDebut } from './fandom';
-import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
+import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release, Song } from './types';
 import { rng19 } from './rng19';
 import { artDelta18, fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
 import { songProfile } from './repertoire';
-import { applyMods, runSimHooks } from './ext4';
-import { artistRate, dealOfRelease, hasGuest, rightsOf } from './rights';
+import { applyMods, PIRACY21, runSimHooks } from './ext4';
+import { artistRate, dealOfRelease, hasGuest, isForeignWork, originalWork, rightsOf } from './rights';
+import { availableFormats, catalogPreservation } from './production';
+import { subCredit, subOwner } from './sublabels';
 import { noteRelease17 } from './relidx17';
 import { allReleases17 } from './relidx17';
 
@@ -99,6 +101,19 @@ export function availableChannels(s: GameState): typeof CHANNELS {
   return CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear) && isUnlocked(s, c.id));
 }
 
+/** r21 (E-9): multiplica o apelo E anota na autópsia (o "Por que deu nisso?" lê só a autópsia). Mesma chave acumula. */
+export function bumpAppeal(s: GameState, rel: Release, mult: number, key: string, label: L, confidence: AutopsyFactor['confidence'] = 'medium'): void {
+  if (!(mult > 0) || mult === 1) return;
+  rel.appeal *= mult;
+  if (!rel.autopsy) return;
+  const f = rel.autopsy.find((x) => x.key === key);
+  if (f) f.value *= mult;
+  else rel.autopsy.push({ key, label, value: mult, confidence });
+}
+
+/** r21 (E-10): semana a partir da qual o disco "conta idade" no mercado — `week` é imutável; catálogo revivido usa `revivedWeek`. */
+export const ageStart = (rel: Release): number => Math.max(rel.week, rel.revivedWeek ?? 0);
+
 export function decay(type: Release['type'], age: number): number {
   if (type === 'single') return age < 2 ? 0.75 + 0.12 * age : Math.pow(0.88, age - 2);
   if (type === 'ep') return age < 2 ? 0.85 : Math.pow(0.9, age - 2);
@@ -164,6 +179,12 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   const act = s.acts[pr.actId];
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   const owner = c && c.party !== 'player' ? c.party : 'player';
+  // r21 (1.16): a fila pode cruzar uma troca de formato — revalida na hora de sair
+  const avail = availableFormats(s);
+  const formats = pr.formats.filter((f) => avail.includes(f));
+  pr.formats = formats.length ? formats : [avail[0]];
+  // r21 (1.17): acervo preservado (cofre de masters, arquivo digital) melhora remasters e reedições
+  const preserve = pr.reissueOf && (pr.kind === 'deluxe' || pr.kind === 'anniversary') && owner === 'player' ? Math.round(catalogPreservation(s) * 20) : 0;
   const rel: Release = {
     id: nextId(s, 'r'),
     actId: pr.actId,
@@ -174,7 +195,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
     songs: pr.songs,
     week: s.week,
     year: s.year,
-    q: pr.reissueOf ? s.releases[pr.reissueOf]?.q ?? 50 : releaseQ(s, pr.songs),
+    q: pr.reissueOf ? clamp((s.releases[pr.reissueOf]?.q ?? 50) + preserve, 0, 100) : releaseQ(s, pr.songs),
     appeal: 0,
     formats: pr.formats,
     stock: pr.press,
@@ -211,7 +232,7 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   act.releases.push(rel.id);
   act.lastRelease = s.week;
   act.momentum = clamp(act.momentum + 12 + rel.marketingE * 15, 0, 100);
-  for (const id of pr.songs) if (s.songs[id] && !pr.reissueOf && pr.kind !== 'compilation') s.songs[id].releaseId = rel.id;
+  for (const id of pr.songs) if (s.songs[id] && (!pr.reissueOf || s.songs[id].releaseId === pr.id) && pr.kind !== 'compilation') s.songs[id].releaseId = rel.id; // r21: faixas-bônus da reedição
   if (c) c.releasesDone += 1;
   if (act.status === 'emerging') act.status = 'active';
   if (owner === 'player' || act.playerBand) s.player.stats.releases += 1; // r18 artist18: disco da sua banda por selo NPC também conta
@@ -278,12 +299,17 @@ export function digitalReach(s: GameState): number {
   return 0.3 + 0.6 * Math.min(1, age / 8);
 }
 
-function piracyLoss(s: GameState): number {
+/** r21 (§4): postura antipirataria do selo (world4/laws) — devolve a fração da perda que a postura evita (0–0,3); injetado pelo laws.ts (sem ciclo). */
+export function piracyLoss(s: GameState, mine = false): number {
   const p2p = s.techDates.p2p;
   const st = s.techDates.streaming;
   let loss = st !== undefined && s.year >= st + 3 ? 0.1 : 0.03;
   if (p2p !== undefined && s.year >= p2p && (st === undefined || s.year < st + 3)) loss = 0.38;
   if (hasMutator(s, 'heavy_piracy')) loss += 0.18;
+  // r21: processos, preço baixo, anticópia ou licenciamento (world4) seguram metade do que "recuperam" já na venda do
+  // selo do jogador; a outra metade continua sendo a recuperação mensal explícita do world4 (piracyMonth)
+  const rec = mine ? PIRACY21.stance?.(s) ?? 0 : 0;
+  if (rec > 0) loss *= 1 - rec * 0.5;
   return clamp(loss, 0, 0.6);
 }
 
@@ -294,6 +320,26 @@ function digitalFormats(s: GameState): FormatId[] {
   return out;
 }
 
+// ---- r21 (D-3): tetos partilhados entre o mercado e a previsão (forecastUnits) ----
+/** Lançamentos recentes (< 12 semanas) que o dono consegue promover ao mesmo tempo. */
+export function focusCap(s: GameState, owner: string): number {
+  if (owner === 'player') return 2 + s.player.hq + staffCount(s, 'publicist') * 2 + staffCount(s, 'admin');
+  const fam = s.labels[owner]?.family;
+  return fam === 'A' ? 8 : fam === 'C' ? 6 : 4;
+}
+/** Tetos sobre o calor: mutador "sem estrelas", fragmentação da era e foco promocional (n recentes vs. teto). */
+export function capHeat(s: GameState, h: number, age: number, nRecent: number, cap: number): number {
+  if (hasMutator(s, 'no_stars')) h = Math.pow(h, 0.85);
+  // mercado fragmentado (anos 90 em diante): muitos canais e nichos, nenhum hit leva tanto quanto antes
+  if (h > 1) h = Math.pow(h, 1 - fragmentation(s.year));
+  if (age < 12 && nRecent > cap) h *= Math.sqrt(cap / nRecent);
+  return h;
+}
+/** Cauda do bolo (B): atenção que não vai a nenhum lançamento; menor antes de 1950. */
+export const marketTail = (year: number): number => MARKET_TAIL * (year < 1950 ? 0.6 : 1);
+/** Retornos decrescentes de escala do selo do jogador: acima de ~3% do mercado, concorrência de majors e varejo. */
+export const scaleK = (year: number, share: number): number => (share > scaleShare(year) ? Math.pow(scaleShare(year) / share, 0.7) : 1);
+
 /** Processa uma semana: unidades, receita, estoque, paradas e fama. */
 export function marketWeek(s: GameState, r: Rng): void {
   r = rng19(s, 'market', r); // r19: ruído das paradas no fluxo próprio
@@ -303,15 +349,10 @@ export function marketWeek(s: GameState, r: Rng): void {
   // foco promocional: lançamentos recentes do mesmo dono disputam a mesma equipe
   const recentByOwner: Record<string, number> = {};
   for (const rel of live) if (s.week - rel.week < 12) recentByOwner[rel.owner] = (recentByOwner[rel.owner] ?? 0) + 1;
-  const focusCap = (owner: string) => {
-    if (owner === 'player') return 2 + s.player.hq + staffCount(s, 'publicist') * 2 + staffCount(s, 'admin');
-    const fam = s.labels[owner]?.family;
-    return fam === 'A' ? 8 : fam === 'C' ? 6 : 4;
-  };
   const heats: [Release, number][] = [];
   let H = 0;
   for (const rel of live) {
-    const age = s.week - rel.week;
+    const age = s.week - ageStart(rel);
     const act = s.acts[rel.actId];
     if (!act) {
       rel.live = false;
@@ -321,16 +362,16 @@ export function marketWeek(s: GameState, r: Rng): void {
       rel.live = false;
       continue;
     }
+    // r21 (B17): disco do jogador sem uma unidade há 52 semanas sai do laço (a cauda de catálogo continua para quem vende)
+    if (age > 52 && rel.weekly.length >= 52 && rel.weekly.slice(-52).every((u) => u <= 0)) {
+      rel.live = false;
+      continue;
+    }
     let h = rel.appeal * decay(rel.type, age) * (MEDIA18.term?.(s, rel, age) ?? (1 + 2.5 * rel.marketingE * Math.exp(-age / 9) + 0.3 * rel.marketingE));
     h *= 0.85 + act.momentum / 300;
     h *= Math.exp(r.normal(0, 0.12)); // variação semanal: paradas se mexem
     if (age > 52) h = Math.max(h, rel.appeal * 0.012 * (1 + act.fame / 40)); // cauda de catálogo
-    if (hasMutator(s, 'no_stars')) h = Math.pow(h, 0.85);
-    // mercado fragmentado (anos 90 em diante): muitos canais e nichos, nenhum hit leva tanto quanto antes
-    if (h > 1) h = Math.pow(h, 1 - fragmentation(s.year));
-    const n = recentByOwner[rel.owner] ?? 0;
-    const cap = focusCap(rel.owner);
-    if (age < 12 && n > cap) h *= Math.sqrt(cap / n);
+    h = capHeat(s, h, age, recentByOwner[rel.owner] ?? 0, focusCap(s, rel.owner));
     heats.push([rel, h]);
   }
   // rodada 7: com centenas de artistas reais o mundo ficou mais denso; a atenção de terceiros é
@@ -341,11 +382,12 @@ export function marketWeek(s: GameState, r: Rng): void {
     if (density > 1 && e[0].owner !== 'player' && !s.acts[e[0].actId]?.playerBand) e[1] /= density;
     H += e[1];
   }
-  const B = MARKET_TAIL * (s.year < 1950 ? 0.6 : 1);
+  const B = marketTail(s.year);
   s.stats.lastH = H;
   // r18: a fatia física depende dos mercados e da idade do público de cada lançamento (eras18)
   const digital = digitalFormats(s);
   const piracy = piracyLoss(s);
+  const piracyMine = piracyLoss(s, true); // r21: a postura antipirataria do selo só vale para o que é dele
   const singles: ChartEntry[] = [];
   const albums: ChartEntry[] = [];
   let playerUnits = 0;
@@ -358,11 +400,16 @@ export function marketWeek(s: GameState, r: Rng): void {
   const mine = (rel: Release) => rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand;
   const tot = pre.reduce((t, u) => t + u, 0) + pool * B / (H + B);
   const Sp = heats.reduce((t, e, i) => t + (mine(e[0]) ? pre[i] : 0), 0) / Math.max(1, tot);
-  const k = Sp > scaleShare(s.year) ? Math.pow(scaleShare(s.year) / Sp, 0.7) : 1;
+  const k = scaleK(s.year, Sp);
   for (let i = 0; i < heats.length; i++) {
     const [rel] = heats[i];
     let units = Math.round(pre[i] * (mine(rel) ? k : 1));
-    if (units <= 0) continue;
+    if (units <= 0) {
+      // r21 (D-2): a série semanal registra o zero (índice = semana) — só receita e parada são puladas
+      rel.weekly.push(0);
+      if (rel.weekly.length > 60) rel.weekly.splice(0, rel.weekly.length - 60);
+      continue;
+    }
     // estoque: demanda física só vira venda com estoque
     const physUnits = Math.round(units * physShareRel18(s, rel));
     let physSold = physUnits;
@@ -373,6 +420,15 @@ export function marketWeek(s: GameState, r: Rng): void {
         rel.shortage += physUnits - physSold;
       } else physSold = 0;
       units = units - physUnits + physSold;
+    }
+    // devoluções do varejo: parte do físico volta quando a venda esfria (GDD §19)
+    // r21 (B11): o que volta deixa de ser unidade vendida (parada, certificação e fatia de mercado não contam devolução)
+    if (rel.owner === 'player' && physSold > 0 && rel.weekly.length >= 6 && rel.stock > rel.pressed * 0.3) {
+      const back = Math.round(physSold * 0.08);
+      rel.returns = (rel.returns ?? 0) + back;
+      rel.stock += back;
+      physSold -= back;
+      units -= back;
     }
     const nonPhys = units - physSold;
     rel.weekly.push(units);
@@ -389,15 +445,8 @@ export function marketWeek(s: GameState, r: Rng): void {
     } else {
       gross += nonPhys * nominal(FORMATS.find((x) => x.id === (s.year < (s.techDates.radio ?? 1920) + 6 ? 'sheet' : 'airplay'))!.net[rel.type], s.year); // r18 era1889: antes do rádio, partitura
     }
-    gross = Math.round(gross * (1 - piracy));
+    gross = Math.round(gross * (1 - (mine(rel) ? piracyMine : piracy)));
     if (rel.kind === 'limited') gross = Math.round(gross * 1.8);
-    // devoluções do varejo: parte do físico volta quando a venda esfria (GDD §19)
-    if (rel.owner === 'player' && physSold > 0 && rel.weekly.length > 6 && rel.stock > rel.pressed * 0.3) {
-      const back = Math.round(physSold * 0.08);
-      rel.returns = (rel.returns ?? 0) + back;
-      rel.stock += back;
-      gross -= Math.round(back * nominal(physDef.net[rel.type], s.year));
-    }
     distribute(s, rel, gross, units);
     if (rel.owner === 'player' || s.acts[rel.actId]?.playerBand) playerUnits += units;
     const entry: ChartEntry = { releaseId: rel.id, units, pos: 0, last: rel.lastPos, weeks: rel.weeksOnChart };
@@ -421,7 +470,7 @@ function certify(s: GameState, rel: Release): void {
       const act = s.acts[rel.actId];
       if (rel.owner === 'player' || act?.playerBand) {
         if (lvl === 'gold') s.player.stats.gold += 1;
-        else s.player.stats.platinum += 1;
+        else countPlatinum21(s, rel);
         notify(s, fmtL(l('"{t}" de {a} é {lvl}!', '"{t}" by {a} went {lvl}!'), { t: rel.title, a: act?.name ?? '', lvl: CERT_NAME[lvl ?? 'gold'] }), 'good');
         remember(s, 'cert', fmtL(l('"{t}" ({a}) recebe disco de {lvl} da AMIF.', '"{t}" ({a}) certified {lvl} by AMIF.'), { t: rel.title, a: act?.name ?? '', lvl: CERT_NAME[lvl ?? 'gold'] }), { actId: rel.actId, important: true });
       }
@@ -430,18 +479,31 @@ function certify(s: GameState, rel: Release): void {
   }
 }
 
+/** r21 (B12): `stats.platinum` conta UMA platina por disco (AMIF, entidades por país e certificação tardia somavam a cada degrau). */
+export function countPlatinum21(s: GameState, rel: Release): void {
+  const key = `plat21:${rel.id}`;
+  if (s.flags[key]) return;
+  s.flags[key] = 1;
+  s.player.stats.platinum += 1;
+}
+
 /** Separa master e edição; recoupment só abate o saldo (não é receita extra; GDD §11, §16).
  *  Rodada 8: cada master segue o acordo que o cobre (não o contrato atual do ato), com a divisão da
  *  ficha de direitos (master compartilhado, pontos de produtor e convidados, fatia da edição) e
  *  masters revertidos pagam só o artista. */
-function distribute(s: GameState, rel: Release, gross: number, units: number): void {
+export function distribute(s: GameState, rel: Release, gross: number, units: number, opts: { fans?: boolean } = {}): void {
   const act = s.acts[rel.actId];
   if (!act) return;
-  // subselo: liquidação no caixa próprio (sublabels.ts), nunca no da matriz
-  if (s.subLabels.some((x) => x.id === rel.owner)) return;
+  // r21 (H-1/H-2): master de subselo segue o contrato da matriz (royalties, recoupment, autores, fãs) e credita o caixa
+  // do subselo, nunca o da matriz. Master de subselo encerrado volta à matriz; de subselo falido foi aos credores.
+  let sub = subOwner(s, rel.owner);
+  if (!sub) {
+    const dead = s.subLabels.find((x) => x.id === rel.owner);
+    if (dead) { rel.owner = dead.status === 'bankrupt' ? 'indie' : 'player'; sub = undefined; }
+  }
   const current = act.contractId ? s.contracts[act.contractId] : undefined;
   // master do selo: vale o acordo da época do disco; master que voltou ao artista não é do selo
-  const deal = !act.playerBand && rel.owner === 'player' ? dealOfRelease(s, rel) : undefined;
+  const deal = !act.playerBand && (rel.owner === 'player' || sub) ? dealOfRelease(s, rel) : undefined;
   const reverted = !act.playerBand && rel.owner === 'indie' && current?.party === 'player';
   const c = reverted ? undefined : deal ?? current;
   const terms = c && c.party === 'player' && !act.playerBand ? rightsOf(c) : undefined;
@@ -465,20 +527,35 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
     }
     // pontos de produtor e convidados: all-in (saem do que o artista recebe) ou pagos pelo selo
     let points = 0;
+    let guestPts = 0;
+    const guest = guestOf(s, rel);
     if (terms) {
-      const pts = Math.round(gross * (terms.producerPts + (hasGuest(s, rel) ? terms.guestPts : 0)));
+      guestPts = guest ? Math.round(gross * terms.guestPts) : 0;
+      const pts = Math.round(gross * terms.producerPts) + guestPts;
       points = terms.pointsFromLabel ? pts : Math.min(payout, pts);
       if (!terms.pointsFromLabel) payout -= points;
+      guestPts = Math.min(guestPts, points);
     }
     partyGets = gross - payout - points;
     // quem recebe o quê
-    if (c.party === 'player') {
+    if (c.party === 'player' && sub) {
+      // r21 (H-1): o subselo é a empresa que vende — recebe o líquido do distribuidor e paga royalties e pontos na hora
+      const fee = Math.round(gross * distributionFee(s));
+      subCredit(sub, s.week, gross - fee, `Vendas ${rel.title}`);
+      if (payout > 0 && !act.playerBand) { subCredit(sub, s.week, -payout, `Royalties ${act.name}`); act.cash += payout; }
+      if (points > 0) subCredit(sub, s.week, -points, `Pontos de produção ${rel.title}`);
+    } else if (c.party === 'player') {
       // r18: receita reconhecida agora, caixa no prazo do distribuidor/plataforma (econ18); o distribuidor desconta a taxa na remessa
       postSalesAR18(s, rel, `sales:${rel.id}`, gross, 'sales', `Vendas ${rel.title}`);
       postSalesAR18(s, rel, `distfee:${rel.id}`, -Math.round(gross * (distributionFee(s) + ((s.flags.fastPay18 ?? 0) > 0 ? 0.03 : 0))), 'distribution', `Distribuição ${rel.title}`);
       // royalties do artista: custo agora, pagos na prestação de contas do contrato
       if (payout > 0 && !act.playerBand) postRoyAP18(s, act, `roy:${rel.id}`, payout, `Royalties ${act.name}`);
-      if (points > 0) postRoyAP18(s, undefined, `pts:${rel.id}`, points, `Pontos de produção ${rel.title}`);
+      if (points - guestPts > 0) postRoyAP18(s, undefined, `pts:${rel.id}`, points - guestPts, `Pontos de produção ${rel.title}`);
+      // r21 (E-8): pontos do convidado têm beneficiário — o ato convidado (NPC recebe no caixa)
+      if (guestPts > 0 && guest) {
+        postRoyAP18(s, guest, `gpts:${rel.id}`, guestPts, `Pontos de participação ${guest.name}`);
+        if (guest.owner !== 'player' && !guest.playerBand) guest.cash += guestPts;
+      }
     } else {
       const lb = s.labels[c.party];
       if (lb) {
@@ -498,19 +575,56 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   }
   rel.revenue += partyGets;
   // edição: autores e editora (a fatia do selo vem da ficha de direitos)
+  // r21 (E-3): a edição de cover/regravação/remix/tributo é do dono da OBRA original, não do contrato do ato que gravou
+  const relSongs = rel.songs.map((id) => s.songs[id]).filter(Boolean);
+  const foreign = relSongs.filter((so) => isForeignWork(s, so));
+  const pubForeign = relSongs.length ? Math.round((publishing * foreign.length) / relSongs.length) : 0;
+  const pubOwn = publishing - pubForeign;
   const pubToPlayer = act.playerBand ? (c?.publishing && c.party !== 'player' ? 0.5 : 1) : c?.party === 'player' ? (terms ? terms.pubShare : c.publishing ? 0.5 : 0) : 0;
   if (pubToPlayer > 0) {
-    let amount = Math.round(publishing * pubToPlayer * rightsLeak);
+    let amount = Math.round(pubOwn * pubToPlayer * rightsLeak);
     if (hasCard(s, 'publisher')) amount = Math.round(amount * 1.3);
     pubRoute18(s, rel, amount); // r18 (rights18): sociedades por mercado, caixa preta, caução e prazos
   }
-  if (pubToPlayer < 1 && !act.playerBand) act.cash += Math.round(publishing * (1 - pubToPlayer) * 0.5);
+  if (pubToPlayer < 1 && !act.playerBand) act.cash += Math.round(pubOwn * (1 - pubToPlayer) * 0.5);
+  // obra alheia: a metade da editora vai ao selo/editora do ato original (os autores recebem em payAuthors)
+  if (foreign.length && pubForeign > 0) {
+    const per = (pubForeign * 0.5) / foreign.length;
+    for (const so of foreign) payWorkPublisher(s, rel, originalWork(s, so), per);
+  }
   // parcela dos autores: paga individualmente a cada compositor (GDD §42.10)
   payAuthors(s, rel, Math.round(publishing * 0.5));
-  // fãs (r18 media18: por fonte de descoberta, quando ligado)
+  // fãs (r18 media18: por fonte de descoberta, quando ligado); r21: quem já converte fãs por conta própria (revival19) pula
+  if (opts.fans === false) return;
   if (MEDIA18.fans?.(s, rel, act, units)) return;
   act.fans.casual += Math.round(units * 0.1);
   act.fans.active += Math.round(units * 0.006);
+}
+
+/** r21 (E-3): metade "editora" da edição de uma obra alheia. Dono NPC: caixa do selo original (ou do ato independente);
+ *  obra do jogador (outro ato seu): segue a fatia de edição do contrato da época do original. */
+function payWorkPublisher(s: GameState, rel: Release, orig: Song, amount: number): void {
+  const a = s.acts[orig.actId];
+  if (!a || amount <= 0) return;
+  if (a.owner === 'player' || a.playerBand) {
+    const origRel = orig.releaseId ? s.releases[orig.releaseId] : undefined;
+    const c = (origRel && dealOfRelease(s, origRel)) ?? (a.contractId ? s.contracts[a.contractId] : undefined);
+    const share = a.playerBand ? 1 : c && c.party === 'player' ? rightsOf(c).pubShare : 0;
+    if (share > 0) pubRoute18(s, rel, Math.round(amount * share));
+    if (share < 1 && !a.playerBand) a.cash += Math.round(amount * (1 - share));
+    return;
+  }
+  const lb = s.labels[a.owner ?? ''];
+  if (lb) lb.cash += Math.round(amount);
+  else a.cash += Math.round(amount);
+}
+
+/** r21 (E-8): primeiro ato convidado (feat) do disco. */
+function guestOf(s: GameState, rel: Release): Act | undefined {
+  if (!hasGuest(s, rel)) return undefined;
+  const cr = (s.x4 as unknown as { creation?: { songs: Record<string, { featuring?: string }> } }).creation;
+  for (const id of rel.songs) { const g = cr?.songs[id]?.featuring; if (g && s.acts[g]) return s.acts[g]; }
+  return undefined;
 }
 
 export function distributionFee(s: GameState): number {
@@ -518,7 +632,8 @@ export function distributionFee(s: GameState): number {
 }
 
 function rankChart(s: GameState, entries: ChartEntry[], which: 'singles' | 'albums'): void {
-  entries.sort((a, b) => b.units - a.units);
+  // r21 (B10): empate explícito — quem já estava na parada (melhor posição anterior) fica na frente; depois o id
+  entries.sort((a, b) => b.units - a.units || (a.last || 999) - (b.last || 999) || (a.releaseId < b.releaseId ? -1 : a.releaseId > b.releaseId ? 1 : 0));
   const top = entries.slice(0, 100);
   top.forEach((e, i) => {
     e.pos = i + 1;
@@ -570,10 +685,20 @@ export function forecastUnits(s: GameState, act: Act, type: Release['type'], q: 
   const E = marketingE(s, marketing, 'player', act.id);
   const H = s.stats.lastH ?? 80;
   const pool = weeklyPool(s);
+  // r21 (D-3): os mesmos tetos de marketWeek — fragmentação/"sem estrelas", foco promocional (este disco + os recentes),
+  // cauda do bolo da época, fatia máxima por lançamento e retornos decrescentes de escala do selo
+  const B = marketTail(s.year);
+  const cap = pool * maxShare(s.year);
+  const owner = act.playerBand && act.contractId && s.contracts[act.contractId]?.party !== 'player' ? s.contracts[act.contractId].party : 'player';
+  const nRecent = 1 + allReleases17(s).filter((x) => x.live && x.owner === owner && s.week - x.week < 12).length;
+  const fc = focusCap(s, owner);
+  const share0 = s.stats.marketShare ?? 0;
   let total = 0;
   for (let age = 0; age < 10; age++) {
-    const h = appeal * decay(type, age) * (MEDIA18.fterm?.(s, marketing, E, age, type, q) ?? (1 + 2.5 * E * Math.exp(-age / 9) + 0.3 * E));
-    total += (pool * h) / (H + MARKET_TAIL + h);
+    let h = appeal * decay(type, age) * (MEDIA18.fterm?.(s, marketing, E, age, type, q) ?? (1 + 2.5 * E * Math.exp(-age / 9) + 0.3 * E));
+    h = capHeat(s, h, age, nRecent, fc);
+    const u = Math.min(cap, (pool * h) / (H + B + h));
+    total += u * scaleK(s.year, share0 + u / pool);
   }
   const width = (staffCount(s, 'analyst') ? 0.35 : 0.6) * (s.config.difficulty === 'hard' ? 1.3 : s.config.difficulty === 'easy' ? 0.8 : 1);
   return { lo: Math.round(total * (1 - width * 0.6)), mid: Math.round(total), hi: Math.round(total * (1 + width)) };

@@ -130,6 +130,7 @@ writeFileSync(join(outDir, 'countries.json'), json);
 const geo = decodeGeo(file);
 const cities: Record<string, string> = {};
 for (const c of CITIES) {
+  if (c.a3) { cities[c.id] = c.a3; continue; } // r21 (J-1): país explícito (fora do atlas 1:110m) vence o polígono mais próximo
   const ci = locateCountry(geo, c.lon, c.lat);
   if (countryIndexAt(geo, c.lon, c.lat) < 0) console.log(`  ${c.id}: no mar na escala 1:110m → ${ci >= 0 ? geo.countries[ci].a3 : "?"}`);
   if (ci >= 0) cities[c.id] = geo.countries[ci].a3;

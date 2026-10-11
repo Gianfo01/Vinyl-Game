@@ -10,7 +10,7 @@
 import { clamp, hashString, Rng } from '../../core/rng';
 import { REAL_EXECS } from '../../data/labels10';
 import { cityById, l, type L } from '../../data/world';
-import { registerExt4, registerSimHook } from '../ext4';
+import { MERGE_HOOKS21, registerExt4, registerSimHook } from '../ext4';
 import { langForCity, personName } from '../people';
 import type { GameState, Label } from '../types';
 import { fmtL, notify, remember } from '../util';
@@ -388,3 +388,10 @@ registerSimHook('year', 'leaders10', (s) => {
   for (const L0 of Object.values(st.L)) if (L0.st === 'free' && s.year - L0.born >= L0.retireAge) L0.st = 'retired';
 });
 
+
+// r21 (B24): selo absorvido numa fusão — o líder sai no mesmo mês (não só no fechamento do ano)
+MERGE_HOOKS21.push((s, _buyer, target) => {
+  const lb = s.labels[target];
+  const L0 = lb?.leaderId ? leaders(s)?.L[lb.leaderId] : undefined;
+  if (lb && L0) depart(s, lb, L0, 'closed');
+});

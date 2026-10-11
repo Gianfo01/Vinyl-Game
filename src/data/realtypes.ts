@@ -7,6 +7,8 @@
 export type RealRole = 'vocal' | 'guitar' | 'bass' | 'drums' | 'keys' | 'horns' | 'dj' | 'producer' | 'mc' | 'strings';
 
 /** [nome, papel, ano de nascimento?, ano de morte?, ano em que entrou?, ano em que saiu?] */
+/* r21 (1.20): o formato guarda UMA passagem por linha; quem saiu e voltou (Jermaine Jackson, David Lee Roth, Phil Collins no Genesis,
+ * Bruce Dickinson, Robbie Williams) aparece em duas linhas com o mesmo nome e nascimento — realworld.canonical() une as duas na mesma pessoa. */
 export type RealMember = [string, RealRole, number?, number?, number?, number?];
 
 /** [título, ano, tipo?] — tipo: 'lp' (padrão) | 'ep' | 'single' */

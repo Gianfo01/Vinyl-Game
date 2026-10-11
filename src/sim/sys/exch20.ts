@@ -21,6 +21,8 @@ import { pushInbox18, registerInboxKind } from '../inbox18';
 import { rng19 } from '../rng19';
 import type { Act, GameState } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
+import { isBusy } from './clash17';
 
 export type ExchWho20 = 'act' | 'producer';
 export interface Res20 { id: string; who: ExchWho20; act: string; city: string; genre: string; from: number; until: number; cost: number; grant: number }
@@ -88,7 +90,8 @@ export function startRes20(s: GameState, who: ExchWho20, actId: string, city: st
   if (!mine(a)) return l('Ato indisponível.', 'Act unavailable.');
   if (!cityById[city]) return l('Cidade desconhecida.', 'Unknown city.');
   const { cost, grant } = resCost20(s, who, actId, city, weeks);
-  if (s.player.cash < cost - grant) return fmtL(l('Caixa insuficiente: a residência custa {c}.', 'Not enough cash: the residency costs {c}.'), { c: usd(cost - grant) });
+  if (freeCash20(s) < cost - grant) return cashWhy20(s, cost - grant, fmtL(l('Caixa insuficiente: a residência custa {c}.', 'Not enough cash: the residency costs {c}.'), { c: usd(cost - grant) })); // r21 (1.13): caixa livre
+  if (who === 'act') { const busy = isBusy(s, a, s.week, s.week + weeks); if (busy) return busy; } // r21 (F-6)
   const id = `ex20-${++st.seq}`;
   post(s, `exch20:cost:${id}`, -cost, 'artist_dev', `Residência em ${cityById[city].name.pt}`);
   if (grant) post(s, `exch20:grant:${id}`, grant, 'other_income', 'Bolsa de intercâmbio cultural');

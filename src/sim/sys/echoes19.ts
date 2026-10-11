@@ -12,6 +12,7 @@ import { clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { DEF_CONSEQ19, ownConseq18, registerConseq18, type Conseq18, type EchoSpec18, type Fx18, type Tone18 } from '../decide18';
 import { EVENTS, eventById, type EventDef } from '../events';
+import { onEventsReady } from '../ext4';
 import { registerExplain } from '../explain18';
 import { emitFact, onFact, recentFacts } from '../facts17';
 import { grantHold, type HoldKind } from '../holds17';
@@ -430,11 +431,13 @@ for (const e of ['radio', 'jukebox', 'albums', 'rocknroll', 'fm', 'disco', 'vide
     fx: (f) => { f.rep('commercial', -2); return l('A estrutura antiga ficou para trás: rivais mais ágeis passaram na frente.', 'The old structure fell behind: nimbler rivals overtook you.'); } });
 }
 // família era8 (estratégias de época): o resultado lê a sua reputação comercial (quem executa bem colhe a aposta)
+onEventsReady(() => { // r21: EVENTS só existe depois de events.ts fechar (ciclo de imports)
 for (const ev of EVENTS.filter((e) => e.id.startsWith('era8_'))) for (const o of ev.options) {
   ECHO(`${ev.id}:${o.id}`, { w: [8, 18], p: (s) => clamp(0.4 + (R(s).commercial - 50) / 200, 0.25, 0.7), t: 'mixed', h: ['Estratégia de era: o mercado julga em um ano.', 'An era strategy: the market judges within a year.'],
     fx: (f) => { f.rep('commercial', 2).cash(2000, 'Estratégia de era', 'other_income'); return fmtL(l('Nova era ({t}): a aposta "{o}" se pagou — a imprensa cita o selo como exemplo.', 'New era ({t}): the "{o}" bet paid off — the press cites the label as an example.'), { t: ev.title, o: o.label }); },
     miss: (f) => { f.rep('commercial', -1); return fmtL(l('Nova era ({t}): a aposta "{o}" ficou atrás dos rivais.', 'New era ({t}): the "{o}" bet fell behind rivals.'), { t: ev.title, o: o.label }); } });
 }
+});
 
 // ---------------------------------------------------------------- 4. fatos de aposta → Conselheiro e elenco
 

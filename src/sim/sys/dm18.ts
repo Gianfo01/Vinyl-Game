@@ -34,6 +34,7 @@ import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import { opine, opinionOf, per13 } from './persona13';
 import { sit17 } from './situations17';
+import { emitCard21 } from '../card21';
 
 // ---------------------------------------------------------------- curva de tensão
 
@@ -364,7 +365,7 @@ registerThread18({
     } },
     { gap: [3, 8], run: (s, th) => {
       const f = feud18(s).f.find((x) => x.id === th.data.feud);
-      if (f && !f.end && s.week - f.since < 52 * 3) { th.st--; return null; } // espera o fim (até 3 anos)
+      if (f && !f.end && s.week - f.since < 52 * 3) return null; // espera o fim (até 3 anos) — r21 (B16): sem voltar ao clímax
       return { t: f?.end ? fmtL(l('Fim da rixa: {e}{d}', 'End of the feud: {e}{d}'), { e: f.end, d: f.dead?.length ? l(' Houve sangue.', ' There was blood.') : '' }) : l('A rixa vira lenda e esfria.', 'The feud becomes legend and cools.'), end: l('rixa encerrada', 'feud over') };
     } },
   ],
@@ -492,8 +493,9 @@ function beat(s: GameState, th: Thread18, r: Rng): void {
   if (!b) { th.done ??= l('fim', 'end'); return; }
   const st = dm18(s);
   if (b.climax && st.ph !== 'climax' && s.week - th.nx < 52) return; // espera o clímax (até 1 ano)
-  const out = b.run(s, th, r);
-  if (!out) { th.nx = s.week + 4; return; }
+  const out0 = b.run(s, th, r);
+  if (!out0) { th.nx = s.week + 4; return; }
+  const out = { ...out0, t: emitCard21(s, { key: `dm18:${th.k}:${th.st}`, text: out0.t, tone: out0.tone }) ?? out0.t }; // r21 (G-12): voz do narrador
   const known = knownOf(s, th);
   th.beats.push({ w: s.week, y: s.year, m: s.month, t: out.t, known, st: th.st });
   th.known ||= known;

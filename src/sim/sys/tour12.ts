@@ -12,7 +12,9 @@ import { TICKET, cityDemand } from '../tours';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ventures } from './ventures9';
-import { clash17 } from './clash17';
+import { clash17, isBusy } from './clash17';
+import { soldFrom } from '../showmath';
+import { runSimHooks } from '../ext4';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Deal = 'guarantee' | 'door' | 'versus';
@@ -74,11 +76,10 @@ export function venueFree(s: GameState, city: string, tier: number, week: number
   return Rng.fromSeed(`${s.config.seed}:av12:${city}:${tier}:${week}`).next() > busy;
 }
 export function actBusy(s: GameState, act: Act, week: number, extra: Stop[] = []): L | null {
-  if ((act.hiatusUntil ?? 0) > week) return l('Artista em hiato.', 'Act on hiatus.');
   const n = c12(s).shows.filter((x) => x.actId === act.id && x.status === 'booked' && x.week === week).length + extra.filter((x) => x.week === week).length;
   if (n >= 2) return l('Já tem dois shows nessa semana.', 'Already two shows that week.');
-  for (const t of s.tours ?? []) if (t.actId === act.id && (t.status === 'planned' || t.status === 'running') && t.stops.some((p) => Math.abs(p.day - week * 7) < 4)) return l('Em turnê própria nessa data.', 'On its own tour that date.');
-  return null;
+  // r21 (F-6): o mesmo calendário das turnês/festivais/residências/intercâmbio/hiato (as próprias datas contam acima)
+  return isBusy(s, act, week, week, 'booking');
 }
 export function km(a: string, b: string): number {
   const x = cityById[a], y = cityById[b];
@@ -147,8 +148,7 @@ export function askFee(s: GameState, act: Act, tier: number): number {
 }
 export function predict(s: GameState, role: Role, act: Act, st: Stop, fat: number, rate = 0.1): Pred {
   const d = demandOf(s, act, st, fat), cap = tierCap(st.tier);
-  const at = (k: number) => Math.min(cap, Math.round(d * k));
-  const att: [number, number, number] = [at(0.72), at(1), at(1.28)];
+  const att: [number, number, number] = [soldFrom(cap, d, 1, 1, 0.72), soldFrom(cap, d, 1, 1, 1), soldFrom(cap, d, 1, 1, 1.28)]; // r21 (F-1): a mesma conta do acerto (resolve)
   const sd = 0.22, z = (Math.log(cap / Math.max(1, d))) / sd;
   const pSell = clamp(1 - 0.5 * (1 + erf(z / Math.SQRT2)), 0, 1);
   const T = att.map((a) => settle(s, st, a)), warn: L[] = [];
@@ -238,7 +238,8 @@ export function bookRoute(s: GameState, r: Rng, role: Role, actId: string, stops
   if (bad.length) return { ok: false, text: bad };
   const v0 = hasAgency(s), rate = v0?.clients?.find((x) => x.actId === actId)?.rate ?? 0.1, notes: L[] = [];
   const deposits = stops.reduce((t, st) => t + (role === 'promoter' ? houseCost(s, st) : 0), 0);
-  if (role === 'promoter' && s.player.cash < deposits) return { ok: false, text: [l('Sem caixa para os depósitos das casas.', 'Not enough cash for venue deposits.')] };
+  if (role === 'promoter' && freeCash20(s) < deposits) // r21 (B-9)
+    return { ok: false, text: [l('Sem caixa para os depósitos das casas.', 'Not enough cash for venue deposits.')] };
   for (const st0 of stops) {
     let st = st0;
     if (role === 'agent') { const n = negotiate(s, r, act, st0); st = n.st; notes.push(fmtL(l('{c}: {n}', '{c}: {n}'), { c: cityById[st.city].name, n: n.note })); }
@@ -276,8 +277,8 @@ function resolve(s: GameState, r: Rng, sh: Show): void {
     if (sh.by === 'agent') c.sat[sh.actId] = (c.sat[sh.actId] ?? 60) - 8;
     act.momentum = clamp(act.momentum - 2, 0, 100);
   } else {
-    const d = demandOf(s, act, sh, fat.v) * Math.exp(r.normal(0, 0.2));
-    const cap = tierCap(sh.tier), att = Math.max(0, Math.round(Math.min(cap, d)));
+    const d = demandOf(s, act, sh, fat.v);
+    const cap = tierCap(sh.tier), att = soldFrom(cap, d, 1, 1, Math.exp(r.normal(0, 0.2))); // r21 (F-1): previsão = acerto com ruído 1
     const T = settle(s, sh, att), comm = sh.by === 'agent' ? Math.round(T.artist * sh.rate) : 0;
     const full = att / cap;
     res = { att, cap, gross: T.gross, artist: T.artist, comm, prom: T.prom, why };
@@ -314,6 +315,11 @@ function resolve(s: GameState, r: Rng, sh: Show): void {
     }
   }
   sh.res = res; sh.status = 'played';
+  if (!cancel) {
+    // r21 (F-7): um só evento de show — fadiga/saúde/talento/fãs por região/prêmio ao vivo valem para o agente/promotor também
+    for (const id of act.members) { const p = s.persons[id]; if (p?.alive) p.fatigue = clamp(p.fatigue + 2.5, 0, 100); }
+    runSimHooks('show', s, r, { show: { actId: act.id, cityId: sh.city, sold: res.att, capacity: res.cap, revenue: res.gross, tourId: sh.id } });
+  }
   if (sh.by === 'agent' && !cancel) {
     post(s, `p12:comm:${sh.id}`, res.comm, 'business', `Comissão: ${act.name}`);
     act.cash += Math.round(res.artist - res.comm);

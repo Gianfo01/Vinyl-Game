@@ -19,6 +19,7 @@ import { spawnProceduralAct } from '../worldgen';
 import { actOfPerson17 } from './love17';
 import { addLead18, disc18 } from './discover18';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { SIGN_VETO } from './gate14';
 
 export interface School18 { id: string; real: string; alt: L; from: number; to: number; city: string; fams: FamilyId[]; usd: number; q: number; desc: L }
 export const SCHOOLS18: School18[] = [
@@ -35,7 +36,7 @@ export const schoolName18 = (s: GameState, sc: School18): L => (s.config.realNam
 export const schoolsNow18 = (s: GameState) => SCHOOLS18.filter((x) => s.year >= x.from && s.year <= x.to);
 
 export interface Own18 { lv: number; since: number; prest: number; teacher?: string; students: number; inc: number }
-export interface School18State { bolsas: Record<string, number>; cohorts: { sc: string; y: number; n: number }[]; alumni: Record<string, string>; own?: Own18 }
+export interface School18State { bolsas: Record<string, number>; cohorts: { sc: string; y: number; n: number }[]; alumni: Record<string, string>; /** r21 (H-6): semana da formatura — a primeira opção do selo vale 2 anos */ alumniW?: Record<string, number>; own?: Own18 }
 declare module '../ext4' { interface Ext4 { school18: School18State } }
 const fresh = (): School18State => ({ bolsas: {}, cohorts: [], alumni: {} });
 registerExt4('school18', fresh);
@@ -102,8 +103,12 @@ const graduate = (s: GameState, r: Rng, fams: FamilyId[], q: number, deg: number
   const a = spawnProceduralAct(s, r, { genre: gs.length ? r.pick(gs).id : undefined, formedYear: s.year, potential: clamp(r.normal(55 + q, 11), 25, 96) });
   addLead18(s, r, a, 'school', deg, 5, note);
   school18(s).alumni[a.id] = schoolId;
+  (school18(s).alumniW ??= {})[a.id] = s.week;
   return a;
 };
+// r21 (H-6): "primeira opção é sua" de verdade — rival nenhum assina um bolsista nos 2 anos seguintes à formatura (vale com force)
+const vetoScholar18 = (s: GameState, _lb: string, act: { id: string }): boolean => { const w = school18(s).alumniW?.[act.id]; return w !== undefined && s.week - w < 104; };
+if (!SIGN_VETO.includes(vetoScholar18)) SIGN_VETO.push(vetoScholar18);
 
 registerSimHook('year', 'school18', (s) => {
   const st = school18(s);

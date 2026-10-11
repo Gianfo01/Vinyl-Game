@@ -25,6 +25,7 @@ import { go18 } from './inbox18';
 import { endTour18 } from '../tutorial18';
 import { chips, ic, stat } from '../vis';
 import './campus18.css';
+import { confirm21, prompt21 } from '../ask21';
 
 const reduced = () => document.documentElement.classList.contains('reduced-motion') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const latOf = (s: GameState) => cityById[s.config.homeCity]?.lat ?? 40;
@@ -120,10 +121,10 @@ function runAct(v: View, id: string, a: PopAct19, close: () => void, sty?: Style
   const s = v.s;
   if (a.dis) { toast(t(a.dis), 'bad'); return; }
   if (a.go) { close(); go18(a.go); return; }
-  if (a.confirm && !confirm(t(a.confirm))) return;
+  if (a.confirm) { const { confirm: msg, ...rest } = a; confirm21(t(msg), () => runAct(v, id, rest, close, sty)); return; } // r21 (I-9): diálogo do jogo
   let e: L | null = null, ok: L = l('Feito.', 'Done.');
   if (a.ask === 'lot') { ui.moving = id; ui.pop = undefined; toast(t(l('Escolha um lote livre no mapa (marcado com +).', 'Pick a free lot on the map (marked with +).')), 'info'); rerender(); return; }
-  if (a.ask === 'name') { const n = prompt(t(l('Novo nome do prédio (vazio = nome original):', 'New building name (empty = original):')), v.bs.find((b) => b.id === id)?.name ?? ''); if (n === null) return; e = act19(s, id, 'rename', { name: n }); ok = l('Nome trocado.', 'Renamed.'); }
+  if (a.ask === 'name') { prompt21(t(l('Novo nome do prédio (vazio = nome original):', 'New building name (empty = original):')), v.bs.find((b) => b.id === id)?.name ?? '', (n) => { toast(t(act19(s, id, 'rename', { name: n }) ?? l('Nome trocado.', 'Renamed.')), 'good'); rerender(); }); return; }
   else if (a.id.startsWith('ev:')) { e = actEv19(s, id.slice(3), a.id.slice(3)); ok = l('Decidido.', 'Decided.'); ui.pop = undefined; }
   else if (a.id === 'buy') { e = buyNb19(s, +id.slice(3)); ok = l('Imóvel comprado: o lote é seu.', 'Property bought: the lot is yours.'); if (!e) ui.pop = `lot:${id.slice(3)}`; }
   else {

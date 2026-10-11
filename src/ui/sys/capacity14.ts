@@ -8,7 +8,7 @@ import type { GameState } from '../../sim/types';
 import { actLink, pill, rerender, section, toast } from '../common';
 import { bar, h } from '../dom';
 import { registerPageTab, registerSection } from '../registry';
-import { store } from '../store';
+import { COMPANY_TABS21, getTab } from '../vis';
 import { loadBar } from '../vis';
 
 const tone = (pct: number) => (pct > 100 ? 'bad' : pct >= 85 ? 'warn' : 'good');
@@ -62,7 +62,7 @@ registerSection('market', {
 registerSection('company', {
   id: 'cap14', order: 20,
   render: (s) => {
-    if (store.companyTab !== 'staff' || !s.player.staff.length) return null;
+    if ((getTab(COMPANY_TABS21) ?? 'finances') !== 'staff' || !s.player.staff.length) return null;
     const rows = staffRows(s);
     return section(t(l('Carga da equipe neste mês', 'Staff workload this month')),
       h('p', { class: 'muted small' }, t(l('Trabalho delegado gasta as horas de quem foi contratado para ele. Acima de 115% por três meses seguidos, alguém se esgota: perde rendimento ou pede as contas.', 'Delegated work spends the hours of whoever was hired for it. Above 115% for three months in a row, someone burns out: loses skill or quits.'))),

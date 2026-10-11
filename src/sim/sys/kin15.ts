@@ -75,6 +75,9 @@ function graph(s: GameState): Edges {
     else if (ids[0]) for (const k of ids.slice(1)) if (k) add(e, ids[0], k, t === 'P' ? 'child' : t === 'M' ? 'spouse' : t === 'X' ? 'ex' : 'nephew');
   }
   for (const [a, b, r] of st.g) if (s.persons[a] && s.persons[b]) add(e, a, b, r);
+  // r21 (C-8): ponte mínima — filhos gerados por dynasty.familyMonth (families[pid].kids com personId) entram no grafo;
+  // o parceiro de lá é só um nome (sem pessoa), então não vira nó
+  for (const [pid, f] of Object.entries(s.families ?? {})) for (const k of f.kids ?? []) if (k.personId && s.persons[pid] && s.persons[k.personId]) add(e, pid, k.personId, 'child');
   // filhos do mesmo pai/mãe são irmãos
   for (const [pid, ks] of Object.entries(e)) {
     const kids = ks.filter((x) => x[1] === 'child').map((x) => x[0]);

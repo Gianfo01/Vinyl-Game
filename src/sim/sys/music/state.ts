@@ -2,7 +2,7 @@
 
 import { clamp } from '../../../core/rng';
 import { registerExt4 } from '../../ext4';
-import { songQ } from '../../production';
+import { refreshQ } from '../../production';
 import type { GameState, Song } from '../../types';
 import type { Stage } from './data';
 
@@ -86,10 +86,8 @@ export function capDeltas(d: Deltas, cap = PER_GAME_CAP): Deltas {
   return out;
 }
 
-/** Recalcula Q como o jogo faz: música só escrita usa performance e produção estimadas. */
-export function refreshQ(song: Song): void {
-  song.q = song.recorded ? songQ(song) : songQ({ ...song, performance: song.melody * 0.6, production: 30 });
-}
+/** r21 (E-7): a fonte de verdade de Q mora em production.refreshQ (estimativa para faixa não gravada, qBonus para gravada). */
+export { refreshQ };
 
 /**
  * Soma os deltas de todos os mini-jogos (limitados) e aplica a diferença nos atributos.

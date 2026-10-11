@@ -30,7 +30,7 @@ import type { Tour } from '../../sim/xtypes';
 import { fmtL, money, playerActs } from '../../sim/util';
 import { $, N, actLink, cityName, inspect, kv, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
-import { chips, ic, stat, tabs, setTab } from '../vis';
+import { COMPANY_TABS21, chips, ic, stat, tabs, setTab } from '../vis';
 import { extraSections, registerAreaView20, sectionList, type SectionHost } from '../registry';
 import { store } from '../store';
 import { hqHooks, type HqAt } from '../hq';
@@ -43,6 +43,7 @@ import { branchBlock, deptBlock, hqBlock, marketsBlock } from './hq6';
 import { actionsButton20, chooseAction20, openActionMenu20, openRoomMenu20 } from './actmenu20'; // r20 G4: registro único de ações
 import { ROOM_ACTIONS20, actionRow20 } from '../actions20';
 import './hubs20.css';
+import { confirm21 } from '../ask21';
 
 const T = (x: L) => t(x);
 
@@ -155,7 +156,7 @@ export function controlRoom20(s: GameState): HTMLElement | null {
         h('button', { class: 'btn small', onclick: () => (hqHooks.onAct ? hqHooks.onAct(x.actId) : inspect.act(x.actId)) }, ic('guitar'), ' ', T(l('Abrir artista', 'Open act'))),
         playerActs(s).includes(x.actId) ? actionsButton20(s, x.actId, 'btn small') : null,
         tr ? h('button', { class: 'btn small', onclick: () => { copyTourPolicy20(tr); setKitDraft18(tr.kit18 ?? KIT0); setTab('showsHub', 'tours'); toast(T(l('Política copiada para o próximo planejamento (a rota não).', 'Policy copied to the next plan (not the route).')), 'good'); rerender(); } }, ic('pen'), ' ', T(l('Copiar política', 'Copy policy'))) : null,
-        tr ? h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(T(l('Cancelar a turnê inteira? Pelas regras atuais, metade da logística volta.', 'Cancel the whole tour? Under current rules, half the logistics is refunded.')))) return; const e = cancelTour(s, tr.id); if (e) toast(T(e), 'bad'); rerender(); } }, T(l('Cancelar turnê (devolve metade)', 'Cancel tour (half refunded)'))) : null),
+        tr ? h('button', { class: 'btn small ghost', onclick: () => { confirm21(T(l('Cancelar a turnê inteira? Pelas regras atuais, metade da logística volta.', 'Cancel the whole tour? Under current rules, half the logistics is refunded.')), () => { const e = cancelTour(s, tr.id); if (e) toast(T(e), 'bad'); rerender(); }); } }, T(l('Cancelar turnê (devolve metade)', 'Cancel tour (half refunded)'))) : null),
     );
   }
   if (lastStop && lastTour) {
@@ -375,7 +376,7 @@ function hqHub20(s: GameState): HTMLElement {
     { id: 'team', label: T(l('Equipe e departamentos', 'Staff and departments')), icon: 'handshake', render: nonCanvas(() => h('div', null,
       section(T(l('Departamentos', 'Departments')), deptBlock(s)),
       section(T(l('Equipe', 'Staff')), h('p', { class: 'small' }, t(l('{n} pessoa(s) na equipe · carga de gestão {p}%', '{n} staff · management load {p}%'), { n: s.player.staff.length, p: Math.round(managementLoad(s) * 100) })),
-        h('button', { class: 'btn small', onclick: () => { store.area = 'company'; store.companyTab = 'staff'; rerender(); } }, ic('handshake'), ' ', T(l('Contratar e gerir a equipe', 'Hire and manage staff')))),
+        h('button', { class: 'btn small', onclick: () => { store.area = 'company'; setTab(COMPANY_TABS21, 'staff'); rerender(); } }, ic('handshake'), ' ', T(l('Contratar e gerir a equipe', 'Hire and manage staff')))),
       ...secs('hq', s, HQ_TABS20.team))) },
     { id: 'gear', label: T(l('Equipamentos e conforto', 'Gear and comfort')), icon: 'mic', render: nonCanvas(() => h('div', null,
       intro(l('Inventário e loja: cada bônus diz onde entra no cálculo.', 'Inventory and shop: each bonus says where it enters the math.')),

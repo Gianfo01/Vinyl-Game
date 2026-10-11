@@ -28,6 +28,7 @@ import { fmtL, money, playerActs, post } from '../util';
 import { logShot18 } from './cine18';
 import { feedCase } from './crime17';
 import { headline19 } from './factlink19';
+import { addBoost21 } from './boost21';
 import { feudOf18, startFeud18, temper18, leadOf18 } from './feud18';
 import { CAUSES18, soc18, startCharity18, type Camp18 } from './society18';
 import { cashWhy20, freeCash20 } from '../oblig20';
@@ -245,7 +246,7 @@ onFact('charity_single', (s, f) => {
   for (const id of acts) {
     const a = s.acts[id]; a.fans.casual += 2000;
     const rel = (a.releases ?? []).map((x) => s.releases[x]).filter(Boolean).sort((x, y) => y.week - x.week)[0];
-    if (rel) rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.08);
+    if (rel) addBoost21(s, rel, 1.08, 4, l('Vitrine do single beneficente', 'Charity single spotlight'));
   }
   headline19(s, f.text, 2);
 }, 'charity19:single');

@@ -10,6 +10,7 @@ import type { GameState } from '../types';
 import type { Scout } from '../xtypes';
 import { fmtL, notify } from '../util';
 import { addSignal } from '../worldgen';
+import { signalEligible20 } from '../scout20';
 
 export interface Scout11State {
   watch: string[];
@@ -70,7 +71,7 @@ function missionWeek(s: GameState, sc: Scout): void {
   const weeks = m.untilWeek - (m.start ?? s.week) - (sc.region === m.region ? 0 : 4);
   const onSpec = m.family === 'any' || m.family === sc.family;
   if (m.leads.length < missionTarget(sc, weeks) && r.chance((0.3 + sc.skill / 250) * (onSpec ? 1 : 0.6))) {
-    const cands = Object.values(s.acts).filter((a) => !a.owner && live(s, a.id) && !s.knowledge[a.id] && cityById[a.city]?.market === m.region && (m.family === 'any' || familyOf(a.genre) === m.family));
+    const cands = Object.values(s.acts).filter((a) => signalEligible20(s, a) && cityById[a.city]?.market === m.region && (m.family === 'any' || familyOf(a.genre) === m.family));
     // olheiro bom enxerga potencial; o mediano vai atrás de quem já faz barulho
     const a = r.weighted(cands, (x) => 1 + (x.potential / 40) * (sc.skill / 60) + x.fame / 30);
     if (a) {

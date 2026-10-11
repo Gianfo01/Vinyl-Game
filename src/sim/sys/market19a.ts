@@ -23,6 +23,7 @@ import { SCENES17 } from '../../data/heritage17';
 import { MARKETS, MARKET_PREF, cityById, familyOf, genreById, l, type L, type MarketId } from '../../data/world';
 import { registerDeadline, type Deadline19 } from '../calendar19';
 import { acceptOffer, defaultOffer, endContract, expectedAdvance, signWithRival } from '../contracts';
+import { recoup } from './contracts18';
 import { registerConseq18 } from '../decide18';
 import { registerDecisionListener, registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import { registerExplain, type WhyPart } from '../explain18';
@@ -39,6 +40,9 @@ import { LINK18_PARTS, LINKS18, lk18 } from './links18';
 import { realAct17 } from './realidx17';
 import { REP_NOTES19, mix18 } from './report18';
 import { stage19 } from './revival19';
+import { addBoost21 } from './boost21';
+import { countPlatinum21 } from '../market';
+import { OUTSIDE_TERRITORY_W } from '../charts2';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
@@ -148,7 +152,7 @@ export function tierName19(n: number): L {
 export function mkW19(s: GameState, rel: Release): Partial<Record<MarketId, number>> {
   const fam = familyOf(s.acts[rel.actId]?.genre ?? 'pop'), o: Partial<Record<MarketId, number>> = {};
   let den = 0;
-  for (const m of MARKETS) { const v = m.size(s.year) * (MARKET_PREF[m.id][fam] ?? 0.6) * (rel.territories.includes(m.id) ? 1 : 0.08); o[m.id] = v; den += v; }
+  for (const m of MARKETS) { const v = m.size(s.year) * (MARKET_PREF[m.id][fam] ?? 0.6) * (rel.territories.includes(m.id) ? 1 : OUTSIDE_TERRITORY_W); o[m.id] = v; den += v; }
   for (const m of MARKETS) o[m.id] = den > 0 ? (o[m.id] ?? 0) / den : 0;
   return o;
 }
@@ -249,8 +253,8 @@ onFact('cert_award', (s, f) => {
 }, 'market19a:cert:press');
 onFact('cert_award', (s, f) => {
   const rel = s.releases[String(f.data?.rel ?? '')]; if (!rel) return;
-  if (f.actors.includes('player')) rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.05); // vitrine: só quem pagou a auditoria
-  if (f.actors.includes('player') && Number(f.data?.n) >= 2 && f.data?.mk !== 'na') s.player.stats.platinum += 1; // a AMIF mundial já conta a América do Norte
+  if (f.actors.includes('player')) addBoost21(s, rel, 1.05, 6, l('Vitrine da certificação', 'Certification showcase')); // vitrine: só quem pagou a auditoria (r21 D-1: impulso real nas unidades)
+  if (f.actors.includes('player') && Number(f.data?.n) >= 2) countPlatinum21(s, rel); // r21 B12: uma platina por disco no contador
 }, 'market19a:cert:value');
 onFact('cert_award', (s, f) => { const rel = s.releases[String(f.data?.rel ?? '')]; if (rel && s.year - rel.year >= 10) stage19(s, rel.id, 'viral', -28); }, 'market19a:cert:revival');
 GRAMO_ADJ.push((s, relId, cat) => {
@@ -475,7 +479,7 @@ export function answer360(s: GameState, actId: string, k: 'match' | 'partner' | 
     const v = matchCost19(s, a);
     if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente para cobrir.', 'Not enough cash to match.'));
     post(s, `mka19m:${actId}`, -v, 'advances', `360 de ${a.name}`);
-    c.advance += v; c.recoupBalance += v; c.model = '360'; c.share360 = Math.max(c.share360, 0.25); c.endWeek += 52 * 4; c.termMonths += 48;
+    c.advance += v; recoup(s, c, 'adv', v); c.model = '360'; c.share360 = Math.max(c.share360, 0.25); c.publishing = true; c.endWeek += 52 * 4; c.termMonths += 48; // r21 (1.19): 360 traz a edição, como em acceptOffer
     p.k = 'match'; p.end = c.endWeek; a.trust = clamp(a.trust + 4, 0, 100);
     return F(l('Você cobre a oferta: {a} fica mais 4 anos, agora com 360.', 'You match: {a} stays 4 more years, now on a 360.'), { a: a.name });
   }
@@ -632,7 +636,7 @@ function rush(s: GameState, x: Sc19, r: Rng, p: number): void {
   signWithRival(s, a, lb.id, r, true);
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
   const inflate = 1 + 0.15 * Math.min(5, x.sg);
-  if (c) { const add = Math.round(c.advance * (inflate - 1)); c.advance += add; c.recoupBalance += add; lb.cash -= add; }
+  if (c) { const add = Math.round(c.advance * (inflate - 1)); c.advance += add; recoup(s, c, 'adv', add); lb.cash -= add; }
   x.sg++; cnt(s, 'rush_sign');
 }
 function playerRush(s: GameState, x: Sc19): void {

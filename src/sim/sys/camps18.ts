@@ -11,7 +11,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { registerExplain } from '../explain18';
 import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
-import { composeSongs, songQ } from '../production';
+import { composeSongs, refreshQ } from '../production';
 import { songStatus } from '../repertoire';
 import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
@@ -74,8 +74,14 @@ function finishCamp(s: GameState, c: Camp18): void {
     sg.melody = clamp(sg.melody + def.mel + c.top * 3, 5, 100);
     sg.lyrics = clamp(sg.lyrics + c.top * 2, 5, 100);
     sg.originality = clamp(sg.originality - c.top * 2 - (c.size >= 3 ? 3 : 0), 5, 100);
-    sg.q = songQ({ ...sg, performance: sg.melody * 0.6, production: 30 });
-    if (c.top) camps18(s).topShare[sg.id] = Math.min(0.5, 0.15 * c.top);
+    refreshQ(sg);
+    if (c.top) {
+      const top = Math.min(0.5, 0.15 * c.top);
+      camps18(s).topShare[sg.id] = top;
+      // r21 (E-8): a parte dos topliners entra em song.splits (payAuthors paga de fato); sem pessoa no elenco, id sintético
+      const base = sg.splits?.length ? sg.splits : sg.writers.map((w) => ({ personId: w, share: 1 / Math.max(1, sg.writers.length) }));
+      sg.splits = [...base.map((x) => ({ personId: x.personId, share: x.share * (1 - top) })), { personId: `top18:${c.id}`, share: top }];
+    }
     c.songs.push(sg.id);
   }
   for (const pid of a.members) addStress(s, pid, 3 + c.size, l('Camp de composição', 'Writing camp'));

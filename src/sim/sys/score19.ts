@@ -25,6 +25,7 @@ import type { Act, GameState, Release } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { logShot18 } from './cine18';
 import { headline19 } from './factlink19';
+import { addBoost21 } from './boost21';
 import { cnt19, link19, log19, mineA19, mineR19, usd19, xs19, type Log19 , off19 } from './mkb19';
 import { sc18 } from './screen18';
 import { cashWhy20, freeCash20 } from '../oblig20';
@@ -161,7 +162,7 @@ export function scoreMonth19(s: GameState): void {
       x.box = clamp(r.normal(0.45, 0.2) + (a?.fame ?? 0) / 400, 0.05, 1);
       x.base = Math.round(8000 * x.box * (x.k === 'orig' ? 1.3 : 0.8) * (0.6 + (a?.fame ?? 30) / 100)); x.mo = 0; x.u = 0;
       if (a) a.fame = clamp(a.fame + x.box * 3, 0, 100);
-      if (x.rel) { const rel = s.releases[x.rel]; if (rel) rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.1); }
+      if (x.rel) { const rel = s.releases[x.rel]; if (rel) addBoost21(s, rel, 1.1, 6, l('Canção-tema em cartaz', 'Theme song on screen')); }
       const tx = fmtL(l('Estreia de "{t}" ({m}): {b} — canção-tema de {a}.', '"{t}" premieres ({m}): {b} — theme song by {a}.'), { t: x.t, m: THMED19[x.med].name, b: x.box >= 0.6 ? l('sucesso', 'a hit') : x.box >= 0.35 ? l('público médio', 'average crowds') : l('fracasso', 'a flop'), a: a?.name ?? '?' });
       log19(s, st, tx);
       if (mineA19(a)) { logShot18(s, { k: 'premiere', act: x.act, text: tx, d: { box: Math.round(x.box * 100) / 100 } }); headline19(s, tx, x.box >= 0.6 ? 2 : 1); }
@@ -215,7 +216,7 @@ onFact('needle_drop', (s, f) => {
   const rel = s.releases[String(f.data?.rel ?? '')], a = s.acts[f.actors[0]];
   if (!rel || !a) return;
   const k = s.year >= 2016 ? 0.25 : 0.1;
-  rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + k);
+  addBoost21(s, rel, 1 + k, 8, l('Needle drop na tela', 'Needle drop on screen'));
   a.fans.casual += Math.round(800 * (1 + k * 4));
   if (mineA19(a)) link19(s, 'score', fmtL(l('Needle drop de "{t}" → streaming/lojas ×{k} e fãs casuais.', '"{t}" needle drop → streaming/stores ×{k} and casual fans.'), { t: rel.title, k: Math.round((1 + k) * 100) / 100 }));
 }, 'score19:stream');

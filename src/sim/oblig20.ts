@@ -83,6 +83,41 @@ export const debt20 = (s: GameState): number => sum(obligations20(s).filter((o) 
 export const bankDebt20 = (s: GameState): number => sum(obligations20(s).filter((o) => o.bank));
 export const liabilities20 = (s: GameState): number => sum(obligations20(s).filter((o) => o.liability));
 
+// ---------------------------------------------------------------- r21 (B): ativos financeiros do selo e burn mensal
+
+/** r21 (seção 4.1): ativos financeiros do selo fora de `s.assets` (ações compradas com caixa do selo, negócios do selo,
+ *  valor dos subselos). Cada sistema registra a sua fonte; a Posição soma todas. */
+type AssetSrc20 = (s: GameState) => number;
+const ASRC: { id: string; fn: AssetSrc20 }[] = [];
+export function registerAssets20(id: string, fn: AssetSrc20): void {
+  const i = ASRC.findIndex((x) => x.id === id);
+  if (i >= 0) ASRC[i] = { id, fn };
+  else ASRC.push({ id, fn });
+}
+export function finAssets20(s: GameState): number {
+  let t = 0;
+  for (const x of ASRC) { try { t += Math.max(0, Math.round(x.fn(s))); } catch { /* fonte quebrada não derruba o balanço */ } }
+  return t;
+}
+
+/** r21 (seção 4.3): fontes do custo mensal recorrente fora de `monthlyCosts` (overhead13, seguros…). */
+type BurnSrc20 = (s: GameState) => number;
+const BSRC: { id: string; fn: BurnSrc20 }[] = [];
+export function registerBurn20(id: string, fn: BurnSrc20): void {
+  const i = BSRC.findIndex((x) => x.id === id);
+  if (i >= 0) BSRC[i] = { id, fn };
+  else BSRC.push({ id, fn });
+}
+/** Burn mensal: custos fixos (economy.monthlyCosts, registrado como 'economy') + parcelas das obrigações que não são os
+ *  empréstimos bancários (já dentro de monthlyCosts) + overhead + seguros. Usado por checkInsolvency ("dívida funda"),
+ *  cashForecast18 e withdrawFromCompany. */
+export function burn20(s: GameState): number {
+  let t = 0;
+  for (const x of BSRC) { try { t += Math.max(0, Math.round(x.fn(s))); } catch { /* idem */ } }
+  for (const o of obligations20(s)) if (o.monthly && o.liability && o.src !== 'economy') t += Math.max(0, Math.round(o.monthly));
+  return t;
+}
+
 // ---------------------------------------------------------------- posição: agora × último fechamento
 
 export interface Pos20 { cash: number; ar: number; ap: number; debt: number; bank: number; bonds: number; assets: number; equity: number; reserved: number; committed: number }
@@ -90,7 +125,8 @@ export interface Close20 extends Pos20 { y: number; m: number; w: number; mi: nu
 
 export function position20(s: GameState): Pos20 {
   const ob = obligations20(s);
-  const assets = (s.assets ?? []).reduce((t, a) => t + a.bookValue, 0);
+  // r21 (seção 4.1): ativos físicos + ativos financeiros do selo (ações, negócios, subselos)
+  const assets = (s.assets ?? []).reduce((t, a) => t + a.bookValue, 0) + finAssets20(s);
   const ar = arTotal18(s), ap = apTotal18(s);
   const debt = sum(ob.filter((o) => o.liability && o.kind !== 'payable'));
   return {

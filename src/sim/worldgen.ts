@@ -151,6 +151,14 @@ export function aliveGenres(s: GameState, year = s.year): string[] {
   return GENRES.filter((g) => genreAvailable20(s, g.id, year)).map((g) => g.id); // r20 (B30): predicado temporal comum
 }
 
+/** r21 (K3): mercados onde o gênero tem cidade-cena (hubs), memoizado. */
+const GENRE_MK21 = new Map<string, Set<MarketId>>();
+function genreMarkets21(gid: string): Set<MarketId> {
+  let m = GENRE_MK21.get(gid);
+  if (!m) { m = new Set(CITIES.filter((c) => c.scenes.includes(gid)).map((c) => c.market)); GENRE_MK21.set(gid, m); }
+  return m;
+}
+
 export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; genre?: string; potential?: number; formedYear?: number; fame?: number; members?: number } = {}): Act {
   const year = opts.formedYear ?? s.year;
   const city = opts.city ?? r.weighted(CITIES, (c) => MARKETS.find((m) => m.id === c.market)!.size(year) * (c.w ?? 1))!.id; // r19: cidades novas pesam 0,4
@@ -160,7 +168,9 @@ export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; 
     const sceneGenres = cityDef.scenes.filter((gid) => genreById[gid] && genreById[gid].born <= year);
     // atos formados antes de 1920 (início em 1920): nenhum gênero "nasceu" ainda — usa os do ano corrente
     const alive = aliveGenres(s, year).length ? aliveGenres(s, year) : aliveGenres(s, Math.max(year, s.year));
-    genre = sceneGenres.length && r.chance(0.65) ? r.pick(sceneGenres) : r.weighted(alive, (gid) => (s.genrePop[gid] ?? 0.6))!;
+    // r21 (K3): fora da cena da cidade, gêneros com hub no mesmo mercado pesam 1; os demais só 0,1 (nada de tejano em Roterdã)
+    const mk = cityDef.market;
+    genre = sceneGenres.length && r.chance(0.65) ? r.pick(sceneGenres) : r.weighted(alive, (gid) => (s.genrePop[gid] ?? 0.6) * (genreMarkets21(gid).has(mk) ? 1 : 0.1))!;
   }
   const fam = familyOf(genre);
   const soloChance = ['pop', 'hiphop', 'country_folk', 'latin', 'brazil', 'europe', 'sacred'].includes(fam) ? 0.6 : 0.35;
@@ -604,14 +614,16 @@ export function grantPlayerContract(s: GameState, act: Act, months: number): voi
 export function genStaff(s: GameState, r: Rng, role: string, skill: number): StaffMember {
   const def = STAFF_ROLES.find((x) => x.id === role)!;
   const lang = r.pick(['en', 'pt', 'es', 'fr', 'de', 'it'] as const);
+  const id = nextId(s, 'st');
   return {
-    id: nextId(s, 'st'),
+    id,
     name: personName(r, lang),
     role,
     skill,
     salary: nominal(def.salary * (0.5 + skill / 100), s.year),
     hiredWeek: s.week,
     trait: r.pick(['disciplined', 'workaholic', 'diplomatic', 'perfectionist', 'lazy', 'ambitious', 'loyal', 'opportunist']),
+    born: s.year - 24 - (skill % 20) - ((Number(id.replace(/\D/g, '')) || 0) % 7), // r21 (1.11): idade fixa na geração (sem Rng extra)
   };
 }
 

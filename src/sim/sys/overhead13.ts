@@ -12,6 +12,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { labelFunded } from '../production';
 import type { GameState, Release } from '../types';
 import { money, post } from '../util';
+import { registerBurn20 } from '../oblig20';
 
 export interface OhLine { id: string; label: L; amount: number; why: L }
 export interface Oh13 { ema: number; last: { w: number; lines: OhLine[]; capped: boolean; rate: number } | null; promo: number; promoN: number }
@@ -138,6 +139,9 @@ registerSimHook('launch', 'promo13', (s, _r, a) => {
   post(s, `promo13:${rel.id}`, -p.amount, 'promo', `Promoção mínima: ${rel.title}`);
   const o = oh(s); o.promo += p.amount; o.promoN += 1;
 });
+
+// r21 (seção 4.3): o overhead do último mês entra no burn canônico (oblig20.burn20)
+registerBurn20('overhead13', (s) => oh(s).last?.lines.reduce((t, x) => t + x.amount, 0) ?? 0);
 
 registerSimHook('month', 'overhead13', (s) => {
   const o = oh(s);

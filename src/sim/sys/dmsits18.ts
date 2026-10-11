@@ -19,6 +19,7 @@ import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import type { P13 } from './persona13';
 import { registerSituation, type Pressure, type SitCtx } from './situations17';
+import { allowed21 } from '../allowed21';
 
 // ---------------------------------------------------------------- utilidades
 
@@ -100,7 +101,7 @@ const MOTIVES: Motive[] = [
     text: l('Entre {h} ({a}) e {o} há mais do que amizade. Todo mundo percebe — menos, talvez, os dois.', 'Between {h} ({a}) and {o} there is more than friendship. Everyone notices — except, maybe, the two of them.'),
     opts: [
       { id: 'confess', label: l('Se declarar', 'Confess'), hint: l('Relação +20; 40% vira caso secreto (um segredo que alguém pode guardar).', 'Relationship +20; 40% becomes a secret affair (a secret someone may keep).'), kind: 'hot', w: (P) => F(P, 'romantismo') + F(P, 'coragem'),
-        apply: (s, c, r) => { rel(s, c.hero, c.cast.other, 20); if (r.chance(0.4)) { const t = fmtL(l('{h} e {o} viraram amantes.', '{h} and {o} became lovers.'), { h: nmP(s, c.hero), o: nmP(s, c.cast.other) }); const f = emitFact(s, { kind: 'affair', actors: [c.hero, c.cast.other], severity: 40, visibility: 'secret', tags: ['sex', 'secret', 'dms18'], text: t, src: 'dmsits18' }); const w = actOf(s, c)?.members.find((m) => m !== c.hero && okP(s, s.persons[m])); if (w) grantHold(s, { holder: w, target: c.hero, kind: 'secret', strength: 50, proof: 1, months: 120, src: 'dmsits18', factId: f.id, text: t, quiet: true }); return t; } } },
+        apply: (s, c, r) => { rel(s, c.hero, c.cast.other, 20); if (allowed21(s, 'sex', c.act) && allowed21(s, 'romance', c.act) && r.chance(0.4)) { /* r21 (G-5) */ const t = fmtL(l('{h} e {o} viraram amantes.', '{h} and {o} became lovers.'), { h: nmP(s, c.hero), o: nmP(s, c.cast.other) }); const f = emitFact(s, { kind: 'affair', actors: [c.hero, c.cast.other], severity: 40, visibility: 'secret', tags: ['sex', 'secret', 'dms18'], text: t, src: 'dmsits18' }); const w = actOf(s, c)?.members.find((m) => m !== c.hero && okP(s, s.persons[m])); if (w) grantHold(s, { holder: w, target: c.hero, kind: 'secret', strength: 50, proof: 1, months: 120, src: 'dmsits18', factId: f.id, text: t, quiet: true }); return t; } } },
       { id: 'hide', label: l('Esconder o que sente', 'Hide the feelings'), hint: l('Estresse +8; nada muda (ainda).', 'Stress +8; nothing changes (yet).'), kind: 'out', w: (P) => F(P, 'ansiedade') + F(P, 'disciplina'),
         apply: (s, c) => { addStress(s, c.hero, 8, l('Amor escondido', 'Hidden love')); } },
       { id: 'song', label: l('Transformar em canção', 'Turn it into a song'), hint: l('Inspiração +12; relação −5.', 'Inspiration +12; relationship −5.'), kind: 'cool', w: (P) => F(P, 'curiosidade') + F(P, 'romantismo') * 0.5,

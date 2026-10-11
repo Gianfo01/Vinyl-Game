@@ -26,8 +26,9 @@ export function askAdvance19(g: GameState, mode: Mode, go: () => void): boolean 
     h('ul', { class: 'small' }, xs.map((x) => h('li', null, h('b', null, t(x.title)), ' → ', h('i', null, t(x.def)), ' ', h('span', { class: 'muted' }, `(${t(x.why)})`)))),
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn', onclick: () => { close(); store.area = 'cockpit' as typeof store.area; rerender(); setTimeout(() => document.getElementById('ck14-desk')?.scrollIntoView({ behavior: 'smooth' }), 50); } }, t(l('Decidir agora', 'Decide now'))),
-      h('button', { class: 'btn primary', onclick: () => { close(); go(); } }, t(l('Aceitar padrões e avançar', 'Accept defaults and advance')))),
-    h('label', { class: 'check small' }, h('input', { type: 'checkbox', onchange: (e: Event) => { store.prefs.ask19 = !(e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(l('Não perguntar de novo (dá para religar em Configurações)', 'Do not ask again (re-enable in Settings)'))));
+      h('button', { class: 'btn primary', onclick: () => { close(); go(); } }, t(l('Avançar e aceitar {n} padrão(ões)', 'Advance and accept {n} default(s)'), { n: xs.length }))),
+    // r21 (§2.3.13): o "não perguntar" em destaque (é a saída de dois cliques por mês para quem aceita o padrão)
+    h('label', { class: 'check adv19-ask21' }, h('input', { type: 'checkbox', onchange: (e: Event) => { store.prefs.ask19 = !(e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', h('b', null, t(l('Não perguntar de novo', 'Do not ask again'))), ' ', h('small', { class: 'muted' }, t(l('(o padrão já aparece em cada cartão do Cockpit; dá para religar em Configurações)', '(the default is already shown on each Cockpit card; re-enable in Settings)')))));
   close = modal(t(l('Antes de avançar', 'Before advancing')), body);
   return true;
 }

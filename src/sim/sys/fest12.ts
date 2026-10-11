@@ -9,7 +9,7 @@
 
 import { Rng, clamp, hashString } from '../../core/rng';
 import { cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
-import { deferEvents, queueCutscene, registerExt4, registerSimHook } from '../ext4';
+import { deferEvents, queueCutscene, registerExt4, registerSimHook, replaceSimHook, runSimHooks } from '../ext4';
 import { emitEvent, resolveDecision, type EventDef } from '../events';
 import { climateInfo } from '../travelAdapter';
 import type { Act, GameState } from '../types';
@@ -735,6 +735,9 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
     const e = f.lineup.find((y) => y.actId === a.id);
     if (!isMine(s, a.id)) { a.cash += money(s, e?.fee ?? 0); guestPaid19.f(s, f, a, money(s, e?.fee ?? 0)); a.fans.casual += Math.round(att * 0.02); continue; }
     ownPaid19.f(s, f, a, money(s, e?.fee ?? 0)); // r19 (intra19): cachê do próprio ato = transferência interna (festival → selo/artista)
+    // r21 (F-7): um só evento de show — o festival próprio também conta como show para saúde, talento, fãs por região e prêmio ao vivo
+    for (const id of a.members) { const p = s.persons[id]; if (p?.alive) p.fatigue = clamp(p.fatigue + 2.5, 0, 100); }
+    runSimHooks('show', s, r, { show: { actId: a.id, cityId: f.cityId, sold: att, capacity: p.cap, revenue: money(s, e?.fee ?? 0), tourId: `fest12:${f.id}:${x.cyc.year}` } });
     const boost = x.ident === 'discovery' && a.fame < 35 ? 2 : 1;
     a.fans.casual += Math.round(att * 0.08 * (ex / 70) * boost);
     a.fans.active += Math.round(att * 0.015 * (ex / 70) * boost);
@@ -825,8 +828,8 @@ registerSimHook('week', 'fest12-week', (s) => {
   if (s.week - s.clock.monthStartWeek < 1) return;
   for (const f of liveOf(s).fests) { const x = f12(s, f); if (muOf(s, f) === 0 && !x.cyc.opsOn) startOps(s, f, x); }
 });
-// substitui o gancho antigo do festival de terreno (mesma posição na ordem dos ganchos)
-registerSimHook('month', 'live-festival', (s) => festMonth(s));
+// substitui de propósito o gancho antigo do festival de terreno (sys/live/festival.ts), na mesma posição da ordem
+replaceSimHook('month', 'live-festival', (s) => festMonth(s));
 deferEvents([...OP_EVENTS, CANCEL]);
 
 

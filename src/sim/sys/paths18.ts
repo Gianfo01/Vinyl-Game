@@ -17,7 +17,9 @@ import { fin18, opProfit18, sumP18 } from '../ledger18';
 import { bumpPerks, registerPerkSource, type PerkEntry, type PerkValues } from '../perks';
 import { registerPAGate18 } from '../personact18';
 import type { GameState, Release } from '../types';
-import { fmtL, money, notify, playerActs, post, remember } from '../util';
+import { fmtL, money, notify, playerActs, post, remember, rngOf } from '../util';
+import { rng19 } from '../rng19';
+import { labelPost } from '../rivalledger21';
 import { releasesOfYear17 } from '../relidx17';
 import { capital } from './capital';
 import { DECISIONS, intrigue } from './intrigue';
@@ -405,7 +407,7 @@ export const LABEL_DECS18: LabelDec18[] = [
     run: (s) => {
       const rv = Object.values(s.labels).filter((x) => x.active && x.id !== 'player').sort((a, b) => b.revenueLastYear - a.revenueLastYear)[0];
       rv.aggression = clamp(rv.aggression * 0.8, 0.05, 1);
-      const caught = ((s.week * 7 + s.year) % 10) < 3;
+      const caught = rng19(s, 'paths18', () => rngOf(s)).chance(0.3); // r21 (B22): sorteio, não (semana×7+ano) % 10
       if (caught) { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 8, 0, 100); emitFact(s, { kind: 'scandal', actors: ['player', rv.id], severity: 60, visibility: 'public', tags: ['bad'], text: fmtL(l('Vaza que {c} pagou por notas contra {r}.', 'It leaks that {c} paid for stories against {r}.'), { c: s.config.companyName, r: rv.name }), src: 'paths18' }); return l('Deu errado: a imprensa descobriu (reputação −8).', 'It backfired: the press found out (reputation −8).'); }
       return fmtL(l('{r} passa o ano se explicando.', '{r} spends the year explaining itself.'), { r: rv.name });
     } },
@@ -423,7 +425,8 @@ export const LABEL_DECS18: LabelDec18[] = [
         v += p;
         post(s, `catsale18:${r.id}`, p, 'asset_sales', `Master vendido: ${r.title}`);
         noteLost18(s, [r.id], p, `"${r.title}"`);
-        r.owner = buyer?.id ?? 'indie';
+        // r21 (G-11): o master vai para quem pagou — o selo comprador debita; sem caixa, fica com o fundo ("indie")
+        if (buyer && buyer.cash >= p) { labelPost(s, buyer, -p, 'acquisitions', `Master: ${r.title}`); r.owner = buyer.id; } else r.owner = 'indie';
       }
       return fmtL(l('{n} discos vendidos por {v}. A renda deles não volta.', '{n} records sold for {v}. Their income won\'t come back.'), { n: old.length, v: `$${Math.round(toReal(v, s.year))}` });
     } },

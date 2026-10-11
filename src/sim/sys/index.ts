@@ -103,6 +103,7 @@ import './fest12';
 import './venue12';
 // Rodada 12: hype unificado (artistas, lançamentos, relíquias, festivais, turnês, selos e cenas).
 import './hype12';
+import './boost21'; // revisão 21 (D-1): impulso de vendas pós-lançamento com janela
 // Rodada 13: pontos de habilidade por conquistas.
 import './skillpts13';
 import './project13';

@@ -7,9 +7,13 @@
 import { clamp, hashString, type Rng } from '../../core/rng';
 import { FESTIVALS, type Festival } from '../../data/catalog';
 import { cityById, familyOf, l, type L } from '../../data/world';
-import { registerExt4, registerSimHook } from '../ext4';
+import { registerExt4, registerSimHook, runSimHooks } from '../ext4';
+import { take360 } from './deal360_17';
+import { isBusy, weekOfDay } from './clash17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
+import { emitFact } from '../facts17';
+import { addHype } from './hype12';
 
 export type FestTier = 'headline' | 'afternoon' | 'opening';
 export const TIER_ORDER: FestTier[] = ['headline', 'afternoon', 'opening'];
@@ -132,6 +136,8 @@ export function pitchAct(s: GameState, r: Rng, fi: number, actId: string, tier: 
   if (!f || !ed || !act) return { result: 'rejected', text: l('Festival ou artista indisponível.', 'Festival or act unavailable.') };
   if (ed.done || ed.month <= s.month) return { result: 'rejected', text: l('O line-up desta edição já está fechado.', 'This edition\'s line-up is closed.') };
   if (ed.lineup.some((x) => x.actId === actId)) return { result: 'rejected', text: l('Já está no line-up.', 'Already on the line-up.') };
+  const busy = isBusy(s, act, editionWeek(s, ed)); // r21 (F-6): turnê, data de agente, residência, intercâmbio ou hiato na semana
+  if (busy) return { result: 'rejected', text: busy };
   const key = `${fi}:${actId}`;
   if ((st.cooldown[key] ?? 0) > s.week) return { result: 'rejected', text: l('A produção pediu para não insistir agora.', 'The producers asked you not to insist right now.') };
   if (!fits(f, act)) {
@@ -161,6 +167,9 @@ export function pitchAct(s: GameState, r: Rng, fi: number, actId: string, tier: 
   return { result: 'rejected', text: fmtL(l('{f} recusou: cachê fora da realidade.', '{f} declined: the fee is unrealistic.'), { f: f.name }) };
 }
 
+/** Semana da edição (o mesmo dia 15 que clash17.festWeeks usa). */
+const editionWeek = (s: GameState, ed: { year: number; month: number }) => weekOfDay(Math.round((Date.UTC(ed.year, ed.month, 15) - Date.UTC(s.config.startYear, 0, 1)) / 86400000));
+
 function addToLineup(s: GameState, ed: FestEdition8, actId: string, tier: FestTier, fee: number): void {
   // o festival abre espaço tirando o último nome de terceiros daquela faixa
   const mine = new Set(playerActs(s));
@@ -178,6 +187,9 @@ export function acceptInvite(s: GameState, id: string): L | null {
   const ed = editionOf(s, inv.fi);
   st.invites = st.invites.filter((x) => x.id !== id);
   if (!ed || ed.done) return l('A edição já aconteceu.', 'The edition already happened.');
+  const act = s.acts[inv.actId];
+  const busy = act ? isBusy(s, act, editionWeek(s, ed)) : null; // r21 (F-6)
+  if (busy) return busy;
   if (!ed.lineup.some((x) => x.actId === inv.actId)) addToLineup(s, ed, inv.actId, inv.tier, inv.fee);
   return null;
 }
@@ -231,18 +243,33 @@ function runEditions(s: GameState, r: Rng): void {
     const pull = heads.reduce((t, a) => t + a.fame, 0) / Math.max(1, heads.length);
     const crowd = Math.round(festCapacity(f) * clamp(0.45 + pull / 180 + r.normal(0, 0.06), 0.2, 1));
     ed.crowd = crowd;
+    // r21 (§4): edição boa (≥ 70 % da lotação) ou fraca (< 40 %) vira hype e fato para quem subiu ao palco
+    const fill = crowd / Math.max(1, festCapacity(f));
+    const good = fill >= 0.7, bad = fill < 0.4;
     const playedMine: string[] = [];
     for (const slot of ed.lineup) {
       const act = s.acts[slot.actId];
-      if (!act || act.status === 'retired' || act.status === 'split') continue;
+      if (!act || act.status === 'retired' || act.status === 'split' || act.status === 'hiatus') continue; // r21 (F-6): hiato não toca
       const w = slot.tier === 'headline' ? 1 : slot.tier === 'afternoon' ? 0.55 : 0.3;
+      if (good || bad) {
+        addHype(s, `a:${act.id}`, 'fest8', fmtL(good ? l('{f} lotado', '{f} packed') : l('{f} esvaziado', '{f} half-empty'), { f: f.name }), Math.round((good ? 12 : -5) * w * (f.prestige / 100)));
+        if (slot.tier === 'headline' || mine.has(act.id)) emitFact(s, { kind: 'show', actors: [act.id, ...(mine.has(act.id) ? ['player'] : [])], place: f.city, severity: Math.round((good ? 30 : 20) + f.prestige / 4), visibility: 'public', tags: ['fests8', 'festival', good ? 'good' : 'bad'], src: 'fests8',
+          text: fmtL(good ? l('{a} toca para {c} pessoas no {f} {y}.', '{a} plays to {c} people at {f} {y}.') : l('{a} encara um {f} {y} esvaziado ({c} pessoas).', '{a} faces a half-empty {f} {y} ({c} people).'), { a: act.name, c: crowd.toLocaleString('en-US'), f: f.name, y: s.year }) });
+      }
       act.fame = clamp(act.fame + w * (f.prestige / 100) * 1.2 * (1 - act.fame / 120), 0, 100);
       act.fans.casual += Math.round(crowd * 0.05 * w);
       act.fans.active += Math.round(crowd * 0.008 * w);
       act.momentum = clamp(act.momentum + 4 * w, 0, 100);
       if (mine.has(act.id)) {
         playedMine.push(act.name);
-        post(s, `fest8:${ed.fi}:${act.id}:${s.year}`, slot.fee, 'live', `Cachê no ${f.name}`);
+        // r21 (1.10): o cachê segue o contrato, como na turnê — banda própria: tudo ao selo; 360: a fatia; clássico: é do artista
+        const c = act.contractId ? s.contracts[act.contractId] : undefined;
+        const lab = act.playerBand ? slot.fee : c && c.party === 'player' && c.model === '360' ? take360(s, act, slot.fee, c.share360) : 0;
+        if (lab) post(s, `fest8:${ed.fi}:${act.id}:${s.year}`, lab, 'live', `Cachê no ${f.name}`);
+        if (!act.playerBand) act.cash += slot.fee - lab;
+        // r21 (F-7): um só evento de show (fadiga de pessoas, saúde, talento, fãs por região, prêmio ao vivo)
+        for (const id of act.members) { const p = s.persons[id]; if (p?.alive) p.fatigue = clamp(p.fatigue + 2.5, 0, 100); }
+        runSimHooks('show', s, r, { show: { actId: act.id, cityId: f.city, sold: Math.round(crowd * w), capacity: festCapacity(f), revenue: slot.fee, tourId: `fest8:${ed.fi}:${s.year}` } });
         s.player.stats.festivals += 1;
         if (slot.tier === 'headline') s.player.stats.headlines += 1;
         for (const id of act.members) { const p = s.persons[id]; if (p?.alive) p.morale = clamp(p.morale + 3 * w, 0, 100); }

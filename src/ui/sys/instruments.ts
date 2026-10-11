@@ -7,6 +7,7 @@ import { FAMILY_NAMES, INSTRUMENTS, MAX_INSTRUMENTS, aptitude, aptitudeLabel, ca
 import type { GameState, Person } from '../../sim/types';
 import { $, pill, toast } from '../common';
 import { bar, h, select } from '../dom';
+import { confirm21 } from '../ask21';
 
 const pick: Record<string, string> = {};
 
@@ -26,7 +27,7 @@ export function instrumentsTab(s: GameState, p: Person, canAct: boolean, redraw:
         h('span', null, t(instById[x.id]?.name ?? l(x.id))),
         bar(x.lvl, 100),
         h('b', null, Math.round(x.lvl)),
-        canAct && list.length > 1 ? h('button', { class: 'link small', title: t(l('Parar de tocar', 'Stop playing')), onclick: () => { if (confirm(t(l('Abandonar este instrumento?', 'Drop this instrument?')))) say(dropInstrument(s, p.id, x.id), t(l('Instrumento abandonado.', 'Instrument dropped.'))); } }, '✕') : null))),
+        canAct && list.length > 1 ? h('button', { class: 'link small', title: t(l('Parar de tocar', 'Stop playing')), onclick: () => { confirm21(t(l('Abandonar este instrumento?', 'Drop this instrument?')), () => { say(dropInstrument(s, p.id, x.id), t(l('Instrumento abandonado.', 'Instrument dropped.'))); }); } }, '✕') : null))),
       lr ? h('p', { class: 'small' }, pill(t(l('estudando', 'studying')), 'good'), ' ', t(instById[lr.id]?.name ?? l(lr.id)), lr.teacher ? ` · ${t(l('com professor', 'with a teacher'))}` : '', canAct ? h('button', { class: 'btn small ghost', onclick: () => { stopLessons(s, p.id); redraw(); } }, t(l('Parar aulas', 'Stop lessons'))) : null) : null,
       h('p', { class: 'muted small' }, t(l('Cada instrumento a partir do nível 35 melhora composição e gravação; instrumentos típicos do gênero (sanfona no forró, cavaquinho no samba, banjo no bluegrass…) ajudam ainda mais, e bandas multi-instrumentistas rendem mais nos shows.', 'Every instrument from level 35 improves writing and recording; instruments typical of the genre (accordion in forró, cavaquinho in samba, banjo in bluegrass…) help even more, and multi-instrumentalist bands earn more live.'))),
     ),

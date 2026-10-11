@@ -15,6 +15,9 @@ import type { GameState, Release } from '../types';
 import { fmtL, money, post } from '../util';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
+/** r21 (B16): "é seu" inclui a banda do jogador em selo NPC (como o resto do mercado). */
+const mineRel = (s: GameState, rel: Release | undefined): rel is Release => !!rel && (rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand);
+
 export type OutId = 'jukebox_ops' | 'rack' | 'eight_track' | 'record_club' | 'indie_shops' | 'mall_chain' | 'bigbox_excl' | 'mp3_store' | 'direct' | 'video' | 'streaming' | 'window' | 'platform_excl' | 'short_video' | 'vinyl_special' | 'phono_dealers' | 'mail_order' | 'vaud_plug';
 export interface OutDef { id: OutId; name: L; desc: L; from: number; to: number; reach: number; margin: number; fee: number; upfront?: number; cred?: number; youth?: number; single?: boolean; excl?: OutId[]; fam?: string[] }
 export const OUTLETS: OutDef[] = [
@@ -95,7 +98,7 @@ export function setPreset(s: GameState, ids: OutId[]): void { out17(s).preset = 
 
 registerMod('chartUnits', 'outlets17', (s, v, c) => {
   const rel = c.release;
-  if (!rel || rel.owner !== 'player') return null;
+  if (!mineRel(s, rel)) return null;
   const ids = out17(s).rel[rel.id];
   if (!ids?.length) return null;
   const e = estimate(s, rel, ids);
@@ -107,7 +110,7 @@ registerMod('chartUnits', 'outlets17', (s, v, c) => {
 // lançamento: aplica o padrão escolhido (sem cobrar o que não cabe no caixa)
 registerSimHook('launch', 'outlets17', (s, _r, arg) => {
   const rel = arg.release;
-  if (!rel || rel.owner !== 'player') return;
+  if (!mineRel(s, rel)) return;
   const st = out17(s);
   if (!st.preset.length || st.rel[rel.id]) return;
   for (const id of st.preset) toggleOutlet(s, rel.id, id);
@@ -117,7 +120,7 @@ registerSimHook('month', 'outlets17', (s) => {
   const st = out17(s);
   for (const [rid, ids] of Object.entries(st.rel)) {
     const rel = s.releases[rid];
-    if (!rel || rel.owner !== 'player' || s.week - rel.week > 104) { if (!rel || rel.owner !== 'player') delete st.rel[rid]; continue; }
+    if (!mineRel(s, rel) || s.week - rel.week > 104) { if (!mineRel(s, rel)) delete st.rel[rid]; continue; }
     const e = estimate(s, rel, ids);
     if (!e.margin) continue;
     const units = rel.weekly.slice(-4).reduce((t, x) => t + x, 0);

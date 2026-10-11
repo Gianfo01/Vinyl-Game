@@ -53,6 +53,22 @@ const mgrOp = (s: GameState, c: Record<string, string | number>, d: number, why:
 const pay = (s: GameState, key: string, real: number, memo: string) => post(s, key, -money(s, real), 'legal', memo);
 const rr = (s: GameState, c: Record<string, string | number>, k: string) => Rng.fromSeed(`${s.config.seed}:dispute15:${c.act}:${c.w}:${k}`);
 
+/** r21 (H-9/1.10): ÚNICA porta de entrada para uma auditoria de royalties pedida por outro sistema (business.ts, contracts18).
+ *  Reaproveita o cartão, as custas e o histórico do dispute15; respeita o cooldown por ato e um caso aberto por vez.
+ *  Devolve true quando o caso foi aberto. */
+export function requestAudit15(s: GameState, a: Act, why?: L): boolean {
+  const st = dp15(s);
+  const c = a.contractId ? s.contracts[a.contractId] : undefined;
+  if (a.playerBand || !c || c.party !== 'player') return false;
+  if ((st.cd[a.id] ?? 0) > s.week) return false;
+  if (s.decisions.some((d) => d.eventId.startsWith('dsp15_') && String(d.ctx?.act ?? '') === a.id)) return false;
+  st.cd[a.id] = s.week + 78;
+  const m = repOf(s, a.id);
+  const r = Rng.fromSeed(`${s.config.seed}:dispute15:req:${a.id}:${s.week}`);
+  emitEvent(s, r, 'dsp15_audit', { act: a.id, w: s.week, fee: claimOf(s, a), lead: m ? mgrName(s, m) : a.name, mk: m ? mgrKey(m.id) : '', clean: Math.round(cleanBooks(s).p * 100), court: Math.round(courtOdds(s) * 100), why: why ? why.pt : '' });
+  return true;
+}
+
 export function disputeMonth15(s: GameState): void {
   const st = dp15(s);
   if (s.decisions.some((d) => d.eventId.startsWith('dsp15_'))) return;

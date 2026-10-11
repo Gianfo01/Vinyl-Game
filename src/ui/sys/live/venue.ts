@@ -13,6 +13,7 @@ import { h, select } from '../../dom';
 import { registerSection } from '../../registry';
 import { chips, ic, meter, stat } from '../../vis';
 import { freeCash20 } from '../../../sim/oblig20';
+import { confirm21 } from '../../ask21';
 
 const buy = { kind: 'club' as 'club' | 'theater' | 'arena', city: '', name: '' };
 
@@ -49,7 +50,7 @@ function venueSection(s: GameState): HTMLElement {
     h('div', { class: 'row' },
       h('button', { class: 'btn small', disabled: v.bar >= 3, onclick: () => { const r = upgradeVenue(s, 'bar'); if (r) toast(t(r), 'bad'); rerender(); } }, `🍺 ${t(l('Bar', 'Bar'))} ${v.bar}/3 · ${$(upgradeCost(s, v, 'bar'))}`),
       h('button', { class: 'btn small', disabled: v.acoustics >= 3, onclick: () => { const r = upgradeVenue(s, 'acoustics'); if (r) toast(t(r), 'bad'); rerender(); } }, `🔊 ${t(l('Acústica', 'Acoustics'))} ${v.acoustics}/3 · ${$(upgradeCost(s, v, 'acoustics'))}`),
-      h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(t(l('Vender a casa por 60% do preço?', 'Sell the venue for 60% of the price?')))) return; sellVenue(s); rerender(); } }, t(l('Vender', 'Sell'))),
+      h('button', { class: 'btn small ghost', onclick: () => { confirm21(t(l('Vender a casa por 60% do preço?', 'Sell the venue for 60% of the price?')), () => { sellVenue(s); rerender(); }); } }, t(l('Vender', 'Sell'))),
     ),
     h('p', { class: 'small muted' }, t(l('A acústica também melhora a empolgação e a procura dos seus shows de turnê nesta cidade.', 'Acoustics also boost excitement and demand for your tour shows in this city.'))),
     v.history.length ? h('p', { class: 'small' }, t(l('Últimos meses: {x}', 'Last months: {x}'), { x: v.history.slice(-6).map((x) => $(x.revenue - x.costs)).join(' · ') })) : null,

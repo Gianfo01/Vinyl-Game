@@ -70,10 +70,12 @@ export function signAct(s: GameState, r: Rng, genre: string, city: string, fame:
   return act;
 }
 
+/** r21 (1.16): ajuste de caixa do cenário passa pelo livro (categoria de capital, fora da DRE); `totalPosted` acompanha,
+ *  então `initialCash` não precisa mudar (caixa − totalPosted continua igual). */
 export function adjustCash(s: GameState, factor: number): void {
   const d = Math.round(s.player.cash * factor) - s.player.cash;
-  s.player.cash += d;
-  s.player.initialCash += d;
+  if (!d) return;
+  post(s, `scn:adjust:${nextId(s, 'tx')}`, d, 'owner_capital', 'Ajuste de caixa do cenário');
 }
 
 export const insolvent = (s: GameState): L | null => (s.ended?.reason === 'insolvency' ? l('O selo quebrou antes do prazo.', 'The label went bust before the deadline.') : null);

@@ -8,6 +8,8 @@ import { emitEvent, EVENTS } from '../src/sim/events';
 import { cancelRelease, composeSongs, recordSongs, scheduleRelease } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
 import { post, rngOf } from '../src/sim/util';
+import { marketWeek } from '../src/sim/market';
+import type { Release } from '../src/sim/types';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { endingScores } from '../src/sim/legacy';
 
@@ -67,12 +69,22 @@ describe('contratos', () => {
     acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o2', week: 0, status: 'pending', royalty: 0.2, advance: 500_00 });
     const c = s.contracts[act.contractId!];
     expect(c.recoupBalance).toBe(500_00);
-    // $10.000 líquidos, royalties 20% = $2.000 recuperam o saldo
-    const gross = 10_000_00;
-    const share = Math.round(gross * c.royalty);
-    const rec = Math.min(c.recoupBalance, share);
-    expect(rec).toBe(500_00);
-    expect(share - rec).toBe(1_500_00);
+    // r21 (1.22): o teste antigo recalculava min(saldo, royalty) à mão sem passar por `distribute`.
+    // Agora o disco vende de verdade (marketWeek) e o saldo cai pelo que foi recuperado; o cobertor
+    // de ponta a ponta (subselo, multa de saída, autores) está em tests/r21-h.test.ts.
+    const rel: Release = {
+      id: 'r-rec', actId: act.id, owner: 'player', type: 'lp', title: 'Teste', songs: [], week: s.week, year: s.year, q: 70, appeal: 400,
+      formats: [], stock: 0, pressed: 0, marketing: [], marketingE: 0.5, territories: [...s.player.territories], weekly: [], totalUnits: 0, revenue: 0,
+      peak: 999, weeksOnChart: 0, lastPos: 0, coverSeed: 1, shortage: 0, live: true,
+    };
+    s.releases[rel.id] = rel;
+    act.releases.push(rel.id);
+    for (let i = 0; i < 6; i++) { marketWeek(s, r); s.week += 1; }
+    expect(rel.totalUnits).toBeGreaterThan(0);
+    expect(c.recoupBalance).toBeLessThan(500_00);
+    expect(c.recouped ?? 0).toBe(500_00 - c.recoupBalance);
+    if (c.recoupBalance > 0) expect(s.ledger.some((e) => e.key.includes(`roy:${rel.id}`))).toBe(false);
+    expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
   });
 });
 

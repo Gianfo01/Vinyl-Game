@@ -12,6 +12,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { personName } from '../people';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post } from '../util';
+import { freeCash20 } from '../oblig20';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 import { ventures, type Holder } from './ventures9';
@@ -141,7 +142,7 @@ export type Payer = 'act' | Holder;
 export function payFrom(s: GameState, payer: Payer, a: Act, amount: number, key: string, memo: string): boolean {
   amount = Math.round(amount);
   if (payer === 'act') { if (a.cash < amount) return false; a.cash -= amount; return true; }
-  if (payer === 'label') { if (s.player.cash < amount) return false; post(s, `s12:${key}`, -amount, 'business', memo); return true; }
+  if (payer === 'label') { if (freeCash20(s) < amount) return false; /* r21 (B-9) */ post(s, `s12:${key}`, -amount, 'business', memo); return true; }
   const o = ownerOf(s);
   if (o.wealth < amount) return false;
   o.wealth -= amount;

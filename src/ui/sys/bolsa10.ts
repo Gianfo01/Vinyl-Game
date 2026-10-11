@@ -13,6 +13,7 @@ import { $, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
 import { freeCash20 } from '../../sim/oblig20';
+import { confirm21 } from '../ask21';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -157,7 +158,7 @@ function propertyTab(s: GameState): HTMLElement {
       h('td', { class: 'small' }, `${t(l('aluguel', 'rent'))} ${$(rent)}/${t(l('mês', 'mo'))}`, h('div', { class: 'muted' }, `${t(l('manutenção', 'upkeep'))} ${$(goodUpkeep(s, d))}/${t(l('mês', 'mo'))}${it.rented ? ` · ${t(l('recebido', 'collected'))} ${$(it.rented)}` : ''}`)),
       h('td', null, h('div', { class: 'row wrap' },
         h('button', { class: 'btn small', onclick: () => run(setLet(s, it.uid, !it.let), it.let ? l('Você voltou para o imóvel.', 'You moved back.') : l('Imóvel anunciado para aluguel.', 'Property listed for rent.')) }, it.let ? t(l('Voltar a usar', 'Move back in')) : t(l('Alugar', 'Let out'))),
-        h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Vender por {v}?', 'Sell for {v}?'), { v: $(saleValue(it)) }))) run(sellGood(s, it.uid), l('Vendido.', 'Sold.')); } }, `${t(l('Vender', 'Sell'))} ${$(saleValue(it))}`))));
+        h('button', { class: 'btn small ghost', onclick: () => { confirm21(t(l('Vender por {v}?', 'Sell for {v}?'), { v: $(saleValue(it)) }), () => { run(sellGood(s, it.uid), l('Vendido.', 'Sold.')); }); } }, `${t(l('Vender', 'Sell'))} ${$(saleValue(it))}`))));
   });
   return h('div', null,
     wealthChips(s),

@@ -19,6 +19,7 @@ import { drawPerson, drawTile, tileUrl } from './art';
 import { visibleAct } from '../../../sim/future';
 import { fameText } from '../../../sim/sys/fame15';
 import { freeCash20 } from '../../../sim/oblig20';
+import { visLoop21 } from '../../pixel/visloop21';
 
 const draft = { name: '', city: '', month: 6, days: 1 };
 
@@ -180,7 +181,7 @@ export function festivalDayView(s: GameState, f: OwnFestival, e: FestEdition, cl
   f.grid.forEach((tile, i) => drawTile(base, (i % f.w) * 16, Math.floor(i / f.w) * 16, tile));
   const ctx = canvas.getContext('2d');
   let frame = 0;
-  let raf = 0;
+  // r21: laço em visLoop21
   const balloons = h('div', { class: 'lv-balloons', 'aria-hidden': 'true' });
   wrap.appendChild(balloons);
   const paint = () => {
@@ -212,18 +213,10 @@ export function festivalDayView(s: GameState, f: OwnFestival, e: FestEdition, cl
     while (balloons.children.length > 3) balloons.firstElementChild?.remove();
   };
   const reduced = !!store.prefs.reducedMotion;
-  const loop = () => {
-    if (!canvas.isConnected && frame > 2) return;
-    frame += 1;
-    paint();
-    if (frame % 70 === 1) showBalloon();
-    raf = requestAnimationFrame(loop);
-  };
   if (reduced) {
     paint();
     e.thoughts.slice(0, 3).forEach(() => showBalloon());
-  } else raf = requestAnimationFrame(loop);
-  void raf;
+  } else { paint(); visLoop21(canvas, () => { frame += 1; paint(); if (frame % 70 === 1) showBalloon(); }); } // r21 (I-10): só visível e em primeiro plano
   return h('div', { class: 'lv-day-scene' },
     wrap,
     chips(

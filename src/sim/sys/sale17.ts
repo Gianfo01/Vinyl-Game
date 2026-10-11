@@ -13,7 +13,7 @@ import { noteLost18 } from './econ18';
 import { Rng, clamp } from '../../core/rng';
 import { MARKETS, cityById, l, type L, type MarketId } from '../../data/world';
 import { labelValuation, transferLabel } from '../business';
-import { endContract } from '../contracts';
+import { endContract, transferAct } from '../contracts';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { grantHold } from '../holds17';
@@ -192,6 +192,7 @@ export function sellLabel(s: GameState, bidId: string): L | null {
       roster: [], active: true, aggression: b.kind === 'fund' ? 30 : 50, strategy: b.kind === 'fund' ? 'buy_catalog' : 'develop', territories: [...s.player.territories], revenueYear: 0, revenueLastYear: s.player.revenueByYear[s.year - 1] ?? 0, procedural: true, ceo: b.name };
     s.labels[lb.id] = lb;
   } else lb.cash -= Math.round(b.price * 0.5);
+  const subs = new Set((s.subLabels ?? []).flatMap((x) => x.roster)); // antes da transferência (transferAct limpa os rosters dos subselos)
   for (const a of mineActs(s)) {
     const c = a.contractId ? s.contracts[a.contractId] : undefined;
     if (cut.includes(a) || keyman.includes(a)) {
@@ -201,11 +202,9 @@ export function sellLabel(s: GameState, bidId: string): L | null {
       continue;
     }
     if (c) c.party = lb.id;
-    a.owner = lb.id;
+    transferAct(s, a, lb.id, 'sold'); // r21 (H-3): um só caminho de troca de dono
     a.trust = clamp(a.trust - (b.kind === 'conglomerate' ? 3 : 8), 0, 100);
-    if (!lb.roster.includes(a.id)) lb.roster.push(a.id);
   }
-  const subs = new Set((s.subLabels ?? []).flatMap((x) => x.roster));
   for (const rel of Object.values(s.releases)) if (rel.owner === 'player' && !s.acts[rel.actId]?.playerBand && !subs.has(rel.actId)) rel.owner = lb.id;
   SALE19.label?.(s, lb.id); // r19 (money19): preferência do artista e regravações quando os masters mudam de dono
   // dinheiro: caixa e dívidas vão com a empresa; o preço vai para o seu bolso

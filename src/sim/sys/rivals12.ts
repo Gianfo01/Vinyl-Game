@@ -30,6 +30,9 @@ import { standingOf, standingScore } from './standing9';
 import { skipBlockedLog } from './gate14';
 import { allReleases17 } from '../relidx17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { expectedAdvance } from '../contracts';
+import { labelPost } from '../rivalledger21';
+import { emitCard21 } from '../card21';
 
 export type ContestKind = 'bid' | 'auction' | 'date' | 'producer' | 'market' | 'catalog' | 'fest' | 'deal' | 'deal_end' | 'info';
 export type Screen = 'market' | 'releases' | 'studio' | 'world' | 'catalog' | 'shows' | 'hq';
@@ -98,7 +101,7 @@ function add(s: GameState, c: Omit<Contest, 'id' | 'w'>, tone: 'bad' | 'event' |
     const open = st.c.filter((y) => !y.done && y.opts);
     st.c = [...st.c.filter((y) => y.done || !y.opts).slice(-(40 - open.length)), ...open].sort((p, q) => p.w - q.w || p.id.localeCompare(q.id));
   }
-  notify(s, x.t, tone);
+  notify(s, emitCard21(s, { key: `rivals12:${x.k}`, text: x.t, tone: tone === 'bad' ? 'bad' : 'neutral' }) ?? x.t, tone); // r21 (G-12)
   chron(s, { k: 'rival_contest', t: x.t, i: x.k === 'deal' || x.k === 'deal_end' ? 2 : 1, a: x.a ? [x.a] : undefined });
   return x;
 }
@@ -130,19 +133,21 @@ function bidWar(s: GameState): void {
     const act = s.acts[o.actId];
     if (!act || act.owner || act.fame < 8) continue;
     const b = st.bids[act.id];
+    // r21 (G-6): o rival não lê a sua proposta — estima o adiantamento pelo mercado, com ruído
+    const guess = Math.round(money(s, expectedAdvance(s, act)) * r.float(0.85, 1.25));
     if (!b) {
       const it = rivals8(s).interest[act.id];
-      const cand = it && s.labels[it.lb]?.active ? s.labels[it.lb] : r.shuffle(Object.values(s.labels).filter((x) => x.active && x.cash > o.advance * 2 && (BIDDERS.includes(playbookOf(x)) || x.aggression > 0.6)).sort((x, y) => y.aggression - x.aggression).slice(0, 3))[0];
-      if (!cand || cand.cash < o.advance * 1.5 || !r.chance(it ? 0.45 : 0.1 + cand.aggression * 0.12)) continue;
+      const cand = it && s.labels[it.lb]?.active ? s.labels[it.lb] : r.shuffle(Object.values(s.labels).filter((x) => x.active && x.cash > guess * 2 && (BIDDERS.includes(playbookOf(x)) || x.aggression > 0.6)).sort((x, y) => y.aggression - x.aggression).slice(0, 3))[0];
+      if (!cand || cand.cash < guess * 1.5 || !r.chance(it ? 0.45 : 0.1 + cand.aggression * 0.12)) continue;
       const ratio = 1.08 + standingScore(standingOf(s, cand.id)) / 500 + r.float(0, 0.1);
-      st.bids[act.id] = { lb: cand.id, adv: Math.round(o.advance * ratio), w: s.week, n: 1, ref: o.id };
+      st.bids[act.id] = { lb: cand.id, adv: Math.round(guess * ratio), w: s.week, n: 1, ref: o.id };
       addHeat(s, cand.id, 3);
       add(s, { k: 'bid', lb: cand.id, scr: 'market', a: act.id, ref: o.id, until: s.week + 4, opts: ['cover', 'yield'],
         t: fmtL(l('{b} subiu a oferta por {a} depois da sua: +{p}% de adiantamento.', '{b} raised the offer for {a} after yours: +{p}% advance.'), { b: rivalWho(s, cand.id), a: act.name, p: Math.round((ratio - 1) * 100) }) });
-    } else if (b.n < 3 && o.advance >= b.adv && b.w < s.week) {
+    } else if (b.n < 3 && o.advance >= b.adv && b.w < s.week) { // o artista conta que foi coberto (sinal público), não o valor
       const lb = s.labels[b.lb];
-      if (!lb?.active || lb.cash < o.advance * 1.6 || !r.chance(0.2 + lb.aggression * 0.3)) continue;
-      b.adv = Math.round(o.advance * r.float(1.08, 1.18));
+      if (!lb?.active || lb.cash < b.adv * 1.6 || !r.chance(0.2 + lb.aggression * 0.3)) continue;
+      b.adv = Math.round(b.adv * r.float(1.08, 1.18));
       b.n += 1;
       b.w = s.week;
       add(s, { k: 'bid', lb: lb.id, scr: 'market', a: act.id, ref: o.id, until: s.week + 3, opts: ['cover', 'yield'],
@@ -257,7 +262,7 @@ function releaseWindow(s: GameState): void {
       if (!act) continue;
       const song = unreleasedRecorded(s, act).sort((x, y) => y.q - x.q)[0];
       const budget = 10000 * (0.5 + act.fame / 40);
-      lb.cash -= money(s, budget);
+      labelPost(s, lb, -money(s, budget), 'marketing', `Lançamento na sua data: ${act.name}`);
       launchNpcRelease(s, r, act, lb.id, [song.id], 'single', budget);
       logMove(s, lb, { k: 'date_move', a: act.name, x: pr.title });
       st.seen.push(`${lb.id}:${s.week}:date_move:${act.name}`);
@@ -284,7 +289,7 @@ function producerFight(s: GameState): void {
   const lb = Object.values(s.labels).filter((x) => x.active && ['tech', 'vulture', 'prestige', 'visionary', 'idol'].includes(playbookOf(x)) && x.cash > money(s, 80000)).sort((a, b) => standingScore(standingOf(s, b.id)) - standingScore(standingOf(s, a.id)))[0];
   if (!lb) return;
   s.producerBusy[pr.id] = s.week + 8;
-  lb.cash -= money(s, pr.fee * 8);
+  labelPost(s, lb, -money(s, pr.fee * 8), 'studio', `Produtor ${pr.name} (8 semanas)`);
   st.cd.prod = s.week + 20;
   add(s, { k: 'producer', lb: lb.id, scr: 'studio', ref: pr.id, until: s.week + 8, opts: ['jump', 'wait'],
     t: fmtL(l('{b} reservou o produtor {p} por 8 semanas — o mesmo das suas últimas sessões.', '{b} booked producer {p} for 8 weeks — the one from your recent sessions.'), { b: rivalWho(s, lb.id), p: pr.name }) });
@@ -384,7 +389,7 @@ function dealsMonth(s: GameState): void {
       continue;
     }
     post(s, `riv12deal:${d.id}`, d.fee, 'licensing', `Distribuição por ${lb.name} (${d.m})`);
-    lb.cash -= d.fee;
+    labelPost(s, lb, -d.fee, 'licensing', `Distribuição (${d.m})`);
     d.ten = Math.max(0, d.ten - 3);
     if (heatOf(s, d.lb) > 0) coolHeat(s, d.lb, 1);
   }

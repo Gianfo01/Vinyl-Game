@@ -11,7 +11,8 @@ import { VENUE_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { facts17, type Fact } from '../facts17';
 import { KIT0, type Kit18, type KitInfo } from '../tourhook18';
-import { PRODUCTION_COST, TICKET, cityDemand } from '../tours';
+import { PRODUCTION_COST, TICKET } from '../tours';
+import { expectedSold } from '../showmath';
 import { legInfo } from '../travelAdapter';
 import { activeMembers } from '../capacity';
 import type { GameState } from '../types';
@@ -78,16 +79,17 @@ export interface TourChangeQuote20 {
 }
 
 const today = (s: GameState) => s.day + s.clock.dayInMonth;
-const PB = [0, 0.06, 0.14, 0.25];
 /** Datas ainda não jogadas e no futuro (hoje já está em jogo). */
 export const futureStops20 = (s: GameState, t: Tour): TourStop[] => t.stops.filter((x) => x.status === 'scheduled' && x.day > today(s));
 
+/** r21 (F-1): a mesma conta do acerto (showmath), com o preço proposto nesta parada. */
 function soldEst(s: GameState, t: Tour, st: TourStop, price: number): number {
   const act = s.acts[t.actId];
   if (!act) return 0;
-  const demand = cityDemand(s, act, st.cityId) * (t.role === 'opening' ? 0.3 : t.role === 'co' ? 1.2 : 1);
-  const pm = price / Math.max(1, money(s, TICKET[st.tier]));
-  return Math.min(st.capacity, Math.round(demand * (1 + PB[t.production]) / Math.pow(pm, 1.2)));
+  const i = t.stops.indexOf(st);
+  const st2 = price === st.price ? st : { ...st, price };
+  const view = st2 === st ? t : { ...t, stops: t.stops.map((x, j) => (j === i ? st2 : x)) };
+  return expectedSold(s, act, view, st2);
 }
 
 /** Logística das datas futuras com equipe/kit/preços dados — as mesmas parcelas de estimateTour. */

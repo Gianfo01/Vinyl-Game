@@ -11,7 +11,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { actState } from '../people';
 import { availableFormats, recordingCost, recordSongs, scheduleRelease, suggestedPress } from '../production';
 import type { Act, GameState, Release, Song } from '../types';
-import { fmtL, money, playerActs, post, remember } from '../util';
+import { fmtL, money, nextId, playerActs, post, remember } from '../util';
 import { availableChannels } from '../market';
 import { capDeltas, songRec, syncSong, type Deltas } from './music/state';
 import {
@@ -198,7 +198,7 @@ export function resolveProblem(s: GameState, p: MusicProject, opt: string): L | 
       const extra = outsideCost(s, ids.length) - recordingCost(s, 2, 'balanced', ids.length);
       const before = s.player.cash;
       recordSongs(s, new Rng(seedState(`${s.config.seed}:p12out:${p.id}:${s.week}`)), act, ids, 2, 'balanced');
-      post(s, `p12rush:${p.id}`, -extra, 'recording', `Urgência no estúdio ${act.name}`);
+      post(s, `p12rush:${p.id}:${nextId(s, 'p12r')}`, -extra, 'recording', `Urgência no estúdio ${act.name}`); // r21 (1.14): id único
       p.spent += before - s.player.cash;
       break;
     }
@@ -364,8 +364,6 @@ registerSimHook('week', 'proj12', (s) => {
   for (const p of proj8(s).list) {
     const pl = st.meta[p.id];
     if (!pl || p.closed || !mine.has(p.actId)) continue;
-    // faixas gravadas em sessão de estúdio (que não passam pelo gancho de gravação)
-    if (!p.releaseId) for (const id of p.songIds) { const so = s.songs[id]; if (so?.recorded) recBonus(s, so); }
     if (!pl.problem) detect(s, p, pl);
     else if (projectStage(s, p) === 'scheduled' || p.releaseId) pl.problem = undefined;
     // prestígio: a crítica decide, seis semanas depois do lançamento

@@ -13,6 +13,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
 import { grantHold } from '../holds17';
 import { registerExplain } from '../explain18';
+import { recoup } from './contracts18';
 import type { GameState } from '../types';
 import { fmtL, money, notify } from '../util';
 import { registerAdvisorTip } from '../inbox18';
@@ -137,7 +138,7 @@ prodOwn19.f = (s, a, amt, why) => {
     a.trust = clamp(a.trust + 2, 0, 100);
     why.push(l('Desconto da casa: o selo pagou metade; o artista fica devendo um favor.', 'House discount: the label paid half; the act owes you a favor.'));
   } else {
-    if (k && k.party === 'player' && !a.playerBand) k.recoupBalance += pay;
+    if (k && k.party === 'player' && !a.playerBand) recoup(s, k, 'rec', pay); // r21 (H-9): segue a cláusula de gravação do contrato
     if (a.trust < 50 && !a.playerBand) grantHold(s, { holder: a.id, target: 'player', kind: 'grievance', strength: 15, months: 18, text: l('O dono do selo se pagou a preço cheio como produtor — e pôs na conta do artista.', 'The label owner paid himself full price as producer — and charged it to the artist.'), src: 'intra19', quiet: true });
     why.push(l('Preço de mercado: o selo pagou o produtor (você); entra no recuperável do artista.', 'Market price: the label paid the producer (you); it goes into the artist\'s recoupable.'));
   }
@@ -196,7 +197,7 @@ registerSimHook('record', 'intra19:studio', (s, _r, arg) => {
   const disc = intra19(s).house.studio === 'discount';
   const p = intraPay19(s, bizLabel19, bizV19(st), sessPrice19(s, st) * (disc ? 0.5 : 1), `sess:${st.id}:${song.id}`, `Sessão no ${st.name}: ${a.name}`);
   const k = a.contractId ? s.contracts[a.contractId] : undefined;
-  if (!disc && k && k.party === 'player' && !a.playerBand) k.recoupBalance += p;
+  if (!disc && k && k.party === 'player' && !a.playerBand) recoup(s, k, 'rec', p); // r21 (H-9)
   if (disc && !a.playerBand) a.trust = clamp(a.trust + 0.3, 0, 100);
 });
 

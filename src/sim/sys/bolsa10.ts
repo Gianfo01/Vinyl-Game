@@ -22,7 +22,7 @@ import { standingOf } from './standing9';
 import { BOARD_SEAT, CONTROL, holdings as stakeHoldings, labelValue, npcAbsorb, stakeOf } from './stakes8';
 import { ventures } from './ventures9';
 import { withCatalogSums } from '../business';
-import { cashWhy20, freeCash20 } from '../oblig20';
+import { cashWhy20, freeCash20, registerAssets20 } from '../oblig20';
 
 // ---------------------------------------------------------------- catálogo
 
@@ -949,7 +949,10 @@ function unit(s: GameState, id: string, side: 'buy' | 'sell', n: number): number
 }
 
 /** Saldo de quem compra: patrimônio pessoal ou caixa do selo. */
-export const walletOf = (s: GameState, acct: Acct): number => (acct === 'c' ? s.player.cash : ownerOf(s).wealth);
+export const walletOf = (s: GameState, acct: Acct): number => (acct === 'c' ? freeCash20(s) : ownerOf(s).wealth); // r21 (B-9): caixa livre do selo
+
+// r21 (seção 4.1): a carteira do selo (ações compradas com caixa da empresa) é ativo financeiro na Posição, a preço de mercado
+registerAssets20('bolsa10', (s) => { const st = bolsa(s); let t = 0; for (const id in st.cpos) { const q = st.q[id]; if (q && !q.dead) t += st.cpos[id].sh * q.p; } return t; });
 
 /** Compra `sh` ações com o patrimônio pessoal ('p') ou com o caixa do selo ('c'). */
 export function buyShares(s: GameState, id: string, sh: number, acct: Acct = 'p'): L | null {

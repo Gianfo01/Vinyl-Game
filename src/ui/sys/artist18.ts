@@ -15,7 +15,7 @@ import {
   type Prop18, type VKind18,
 } from '../../sim/sys/shared18';
 import { acceptDeal, declineDeal } from '../../sim/brands';
-import { rngOf } from '../../sim/util';
+import { chanceBand, rngOf } from '../../sim/util';
 import { $, actLink, labelLink, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
@@ -78,7 +78,7 @@ function offerCard(s: GameState, o: Offer18): HTMLElement {
     h('div', { class: 'row wrap' },
       btn(l('Aceitar', 'Accept'), () => { const r = accept18(s, o.id); if (!r.ok && r.vote) confirm18(l('A banda votou contra', 'The band voted no'), r.text, l('Assinar mesmo assim', 'Sign anyway'), () => say(accept18(s, o.id, true))); else say(r); }, 'btn small primary'),
       o.k !== 'reneg' ? select(ask, eraAsks19(s.year, ASKS).map((x) => ({ value: x, label: t(ASK18[x]) })), (x) => { UI.ask[o.id] = x; rerender(); }) : null,
-      o.k !== 'reneg' ? btn(fmtL2(l('Contrapropor ({p}%)', 'Counter ({p}%)'), { p: Math.round(odds.p * 100) }), () => say(counter18(s, o.id, ask)), 'btn small', l(odds.why.map((x) => x.pt).join(' · ') || 'Chance base', odds.why.map((x) => x.en).join(' · ') || 'Base chance')) : null,
+      o.k !== 'reneg' ? btn(fmtL2(l('Contrapropor (chance {p})', 'Counter ({p} chance)'), { p: t(chanceBand(odds.p)) }), /* r21 (H-10): faixa, não % */ () => say(counter18(s, o.id, ask)), 'btn small', l(odds.why.map((x) => x.pt).join(' · ') || 'Chance base', odds.why.map((x) => x.en).join(' · ') || 'Base chance')) : null,
       !adv ? btn(fmtL2(l('Advogado ({c})', 'Lawyer ({c})'), { c: $(lawyerCost18(s)) }), () => say(hireLawyer18(s), l('Advogado contratado: as letras miúdas aparecem.', 'Lawyer hired: the fine print shows up.')), 'btn small ghost') : null,
       btn(l('Recusar', 'Decline'), () => { decline18(s, o.id); rerender(); }, 'btn small ghost')));
 }

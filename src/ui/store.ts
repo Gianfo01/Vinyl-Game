@@ -5,6 +5,7 @@ import { registerMovementGenres } from '../sim/culture';
 
 import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
+import { l } from '../data/world';
 import { SAVE_VERSION } from '../sim/worldgen';
 import { decodeSave20, encodeSave20, inflate20, MAX_IN20, MAX_OUT20, now20, SaveError20 } from '../core/save20';
 import { errName20, noteCost20, retry20, setHealth20 } from './savehealth20';
@@ -33,6 +34,8 @@ export interface Prefs {
   noTut19?: boolean;
   /** r20 G4: ações fixadas no cabeçalho do artista (ids do registro ui/actions20.ts) */
   pins20?: string[];
+  /** r21: seções recolhíveis (Cockpit) — aberto/fechado por id */
+  fold21?: Record<string, boolean>;
   tut18?: { tours: Record<string, number>; tips: Record<string, number>; visits: Record<string, number>; done: Record<string, number>; noTours?: boolean; noTips?: boolean };
 }
 
@@ -41,8 +44,6 @@ export const store = {
   area: 'desk' as Area,
   selectedAct: null as string | null,
   undoSnapshot: null as string | null,
-  marketTab: 'scouting' as 'scouting' | 'pipeline' | 'rivals' | 'professionals',
-  companyTab: 'finances' as 'finances' | 'staff' | 'hq' | 'legacy',
   prefs: loadPrefs(),
   rerender: () => {},
   toast: (_msg: string, _kind?: string) => {},
@@ -204,10 +205,13 @@ export async function loadGame(slot: string): Promise<GameState | null> {
 
 export async function deleteSave(slot: string): Promise<void> {
   const db = await openDb();
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
     tx.objectStore(STORE).delete(slot);
     tx.oncomplete = () => resolve();
+    // r21 (1.14): sem isto a promessa ficava pendurada para sempre se a transação falhasse
+    tx.onerror = () => reject(tx.error ?? new Error('delete failed'));
+    tx.onabort = () => reject(tx.error ?? new Error('delete aborted'));
   });
 }
 
@@ -219,7 +223,9 @@ export function migrate(g: GameState): GameState {
   g.economy.strikeUntil ??= 0;
   g.economy.investorShare ??= 0;
   g.economy.investorUntil ??= 0;
+  g.economy.lossCarry ??= 0; // r21 (B-7)
   g.upcoming ??= [];
+  for (const a of Object.values(g.acts ?? {})) if ((a.status === 'retired' || a.status === 'split') && a.hiatusUntil !== undefined) { a.hiatusUntil = undefined; a.hiatusWhy = undefined; } // r21 (C-5)
   ensureExt(g);
   migrate18(g);
   registerMovementGenres(g);
@@ -269,12 +275,24 @@ const validateSave = (text: string): GameState => decodeSave20(text, migrate);
 export async function importSaveText(text: string): Promise<GameState> {
   if (text.length > MAX_OUT20) throw new SaveError20('too_big');
   let tx = text.replace(/^\uFEFF/, '').trim();
-  if (tx.startsWith('{')) return validateSave(tx);
+  if (tx.startsWith('{')) {
+    if (tx.length > MAX_IN20) throw new SaveError20('too_big'); // r21 (1.14): JSON cru respeita o mesmo teto de entrada do VTN1
+    return validateSave(tx);
+  }
   tx = tx.replace(/\s+/g, '');
   const i = tx.indexOf(SAVE_PREFIX);
   if (i < 0) throw new SaveError20('format');
   return validateSave(await unGzipB64(tx.slice(i + SAVE_PREFIX.length)));
 }
+
+/** r21 (1.15): save importado por texto/arquivo NUNCA fica ironman — por texto a run poderia ser duplicada e restaurada.
+ *  Devolve true se desligou (a interface avisa com IRONMAN_OFF21). Não vale para os saves do próprio jogador na nuvem. */
+export function unIronman21(g: GameState): boolean {
+  if (!g.config?.ironman) return false;
+  g.config.ironman = false;
+  return true;
+}
+export const IRONMAN_OFF21 = l('Save importado: o modo ironman foi desligado (importar permite restaurar).', 'Imported save: ironman mode was turned off (importing allows restores).');
 
 /** Tenta baixar como arquivo; devolve false se o navegador (ex.: visualizador isolado) bloquear. */
 export function tryDownload(name: string, content: string, type = 'application/json'): boolean {

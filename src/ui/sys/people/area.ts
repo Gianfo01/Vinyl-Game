@@ -27,7 +27,7 @@ import { ficha13Btn } from '../persona13';
 import { hireBlock as hireBlock17 } from '../agenda17';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
-const ui = { person: '', promise: 'single' as PromiseKind, detective: '', invest: 0 };
+const ui = { person: '', promise: 'single' as PromiseKind, detective: '', invest: 0, talk: '' as string, health: '' as string }; // r21: cartão aberto para conversa/saúde
 
 function rosterPeople(s: GameState): Person[] {
   const out: Person[] = [];
@@ -50,6 +50,7 @@ function personCard(s: GameState, p: Person): HTMLElement {
   const rom = act ? activeRomance(s, act.id) : undefined;
   const promises = openPromises(s, p.id);
   const talkErr = canTalk(s, p.id);
+  const healthIssue = hl.voice > 30 || hl.hearing > 30 || !!hl.injuryWeeks || hl.dependency > 30 || !!hl.nodes;
   const doTalk = (k: TalkKind) => { const res = talk(s, p.id, k, k === 'promise' ? ui.promise : undefined); toast(t(res.text), res.ok ? 'good' : 'warn'); rerender(); };
   return h('article', { class: 'pp-card' },
     h('div', { class: 'pp-head' }, portrait(p, 48), h('div', null, h('b', null, p.name), h('div', { class: 'small muted' }, act ? actLink(s, act.id) : '', ` · ${p.role}`)),
@@ -60,24 +61,32 @@ function personCard(s: GameState, p: Person): HTMLElement {
       meter('heart', l('Moral', 'Morale'), p.morale),
       risk > 0.02 ? pill(`${t(l('risco de colapso', 'breakdown risk'))} ${Math.round(risk * 100)}%`, 'bad') : null,
     ),
+    // r21 (§2.3.6): saúde em detalhe e ações de tratamento só quando há desgaste, dano, lesão ou dependência
     h('div', { class: 'pp-health' },
-      stat('mic', Math.round(hl.voice), l('Desgaste vocal', 'Vocal wear'), hl.voice > 70 ? 'bad' : ''),
-      stat('radio', Math.round(hl.hearing), l('Dano auditivo', 'Hearing damage'), hl.hearing > 55 ? 'bad' : ''),
+      hl.voice > 30 ? stat('mic', Math.round(hl.voice), l('Desgaste vocal', 'Vocal wear'), hl.voice > 70 ? 'bad' : '') : null,
+      hl.hearing > 30 ? stat('radio', Math.round(hl.hearing), l('Dano auditivo', 'Hearing damage'), hl.hearing > 55 ? 'bad' : '') : null,
       hl.injuryWeeks ? stat('warning', `${hl.injuryWeeks}s`, l('Lesão', 'Injury'), 'bad') : null,
       hl.dependency > 30 ? stat('skull', Math.round(hl.dependency), l('Dependência', 'Dependency'), hl.dependency > 60 ? 'bad' : 'warn') : null,
       hl.nodes ? pill(t(l('calos nas cordas vocais', 'vocal nodes')), 'bad') : null,
       hl.treatment ? pill(`${t(TREATMENT[hl.treatment.kind].name)} · ${t(l('até a semana', 'until week'))} ${hl.treatment.untilWeek}`, 'warn') : null,
+      !healthIssue && !hl.treatment ? h('small', { class: 'muted' }, ic('heart'), ' ', t(l('Saúde em dia', 'Health fine'))) : null,
     ),
-    !hl.treatment ? h('div', { class: 'row wrap' }, (Object.keys(TREATMENT) as Treatment[]).map((k) => h('button', { class: 'btn small ghost', onclick: () => say(startTreatment(s, p.id, k), l('Tratamento iniciado.', 'Treatment started.')) }, `${t(TREATMENT[k].name)} ${$(treatmentCost(s, k))}`))) : null,
+    !hl.treatment && healthIssue ? (ui.health === p.id
+      ? h('div', { class: 'row wrap' }, (Object.keys(TREATMENT) as Treatment[]).map((k) => h('button', { class: 'btn small ghost', onclick: () => say(startTreatment(s, p.id, k), l('Tratamento iniciado.', 'Treatment started.')) }, `${t(TREATMENT[k].name)} ${$(treatmentCost(s, k))}`)))
+      : h('button', { class: 'btn small ghost', 'aria-expanded': 'false', onclick: () => { ui.health = p.id; rerender(); } }, ic('warning'), ' ', t(l('Tratar…', 'Treat…')))) : null,
     rom ? h('p', { class: 'small' }, ic('heart'), ' ', t(l('Romance na banda', 'Romance in the band')), `: ${s.persons[rom.a]?.name} & ${s.persons[rom.b]?.name}`) : null,
     h('p', { class: 'small' }, `${t(l('Patrimônio pessoal', 'Personal wealth'))}: ${$(wealthOf(s, p.id))} `, h('button', { class: 'btn small ghost', onclick: () => say(personalAdvance(s, p.id, money(s, 3000)), l('Adiantamento pago.', 'Advance paid.')) }, t(l('Adiantar dinheiro', 'Advance money')))),
     promises.length ? h('ul', { class: 'small' }, promises.map((pr) => h('li', null, ic('contract'), ` ${t(l('Promessa', 'Promise'))}: ${t(PROMISE_INFO[pr.kind].name)} · ${t(l('prazo semana', 'due week'))} ${pr.dueWeek}`))) : null,
+    // r21 (§2.3.6): "Conversa" é um botão; as 5 opções abrem só no cartão escolhido
     h('div', { class: 'pp-talk' },
-      h('small', { class: 'muted' }, t(l('Conversa', 'Talk')), talkErr ? ` — ${t(talkErr)}` : ''),
-      h('div', { class: 'row wrap' },
-        (['praise', 'demand', 'patience', 'fine'] as TalkKind[]).map((k) => h('button', { class: 'btn small', disabled: !!talkErr, onclick: () => doTalk(k) }, t(TALK_NAME[k]))),
-        select(ui.promise, (Object.keys(PROMISE_INFO) as PromiseKind[]).map((k) => ({ value: k, label: t(PROMISE_INFO[k].name) })), (v) => { ui.promise = v; }, { 'aria-label': t(l('Promessa', 'Promise')) }),
-        h('button', { class: 'btn small', disabled: !!talkErr, onclick: () => doTalk('promise') }, t(TALK_NAME.promise))),
+      ui.talk === p.id ? h('div', null,
+        h('small', { class: 'muted' }, t(l('Conversa', 'Talk')), talkErr ? ` — ${t(talkErr)}` : ''),
+        h('div', { class: 'row wrap' },
+          (['praise', 'demand', 'patience', 'fine'] as TalkKind[]).map((k) => h('button', { class: 'btn small', disabled: !!talkErr, onclick: () => doTalk(k) }, t(TALK_NAME[k]))),
+          select(ui.promise, (Object.keys(PROMISE_INFO) as PromiseKind[]).map((k) => ({ value: k, label: t(PROMISE_INFO[k].name) })), (v) => { ui.promise = v; }, { 'aria-label': t(l('Promessa', 'Promise')) }),
+          h('button', { class: 'btn small', disabled: !!talkErr, onclick: () => doTalk('promise') }, t(TALK_NAME.promise)),
+          h('button', { class: 'btn small ghost', onclick: () => { ui.talk = ''; rerender(); } }, t(l('Fechar', 'Close')))))
+        : h('button', { class: 'btn small', 'aria-expanded': 'false', disabled: !!talkErr, title: talkErr ? t(talkErr) : '', onclick: () => { ui.talk = p.id; rerender(); } }, ic('people'), ' ', t(l('Conversa…', 'Talk…'))),
     ),
   );
 }

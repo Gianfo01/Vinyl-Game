@@ -5,8 +5,11 @@ import { EQUIPMENT, VENUE_TIERS } from '../data/rules';
 import { l } from '../data/world';
 import { actHasTrait, actState, actTalent } from './people';
 import { clickK18 } from './agenda';
+import { labelRate, labelTake } from './sys/deal360_17';
 import type { Act, GameState } from './types';
 import { fmtL, hasCard, money, notify, post, remember, staffSkill } from './util';
+import { runSimHooks } from './ext4';
+import { soldFrom } from './showmath';
 
 const TICKET = [12, 25, 45, 70, 95];
 const ARTIST_SPLIT = 0.6;
@@ -34,7 +37,7 @@ export function gigEstimate(s: GameState, act: Act, tier: number, dates: number)
   const draw = (act.fans.core * 0.8 + act.fans.active * 0.3 + act.fans.casual * 0.02) * (1 + act.fame / 60) * (0.7 + t.stage / 150);
   // o mesmo público não vai a todo show: shows recentes saturam a praça
   const sat = 1 + (act.gigSat ?? 0) / 6;
-  const perDate = Math.round(Math.min(capacity, draw / sat / Math.max(1, Math.sqrt(dates) * 1.2)));
+  const perDate = soldFrom(capacity, draw / sat / Math.max(1, Math.sqrt(dates) * 1.2), 1, 1, 1); // r21 (F-1): a mesma conta do acerto
   const price = money(s, TICKET[v.id] * (hasCard(s, 'showman') ? 1.1 : 1));
   // promotor e casa ficam com parte da bilheteria
   const revenue = Math.round(perDate * dates * price * ARTIST_SPLIT);
@@ -52,9 +55,12 @@ export function gigEstimate(s: GameState, act: Act, tier: number, dates: number)
 export function playGigs(s: GameState, r: Rng, act: Act, tier: number, dates: number): void {
   const est = gigEstimate(s, act, tier, dates);
   const noise = r.float(0.8, 1.15);
-  const attendance = Math.round(Math.min(est.capacity, est.perDate * noise)) * dates;
+  const perDate = soldFrom(est.capacity, est.perDate, 1, 1, noise);
+  const attendance = perDate * dates;
   const v = VENUE_TIERS[clamp(tier, 0, 4)];
   const revenue = Math.round(attendance * money(s, TICKET[v.id]) * ARTIST_SPLIT);
+  // r21 (F-7): cada data da agenda é um show de verdade para os outros sistemas (saúde, talento, fãs por região, prêmio ao vivo)
+  for (let i = 0; i < dates; i++) runSimHooks('show', s, r, { show: { actId: act.id, cityId: act.city, sold: perDate, capacity: est.capacity, revenue: perDate * money(s, TICKET[v.id]), tourId: `gigs:${act.id}:${s.week}:${i}` } });
   act.gigSat = (act.gigSat ?? 0) + dates;
   const net = revenue - est.cost;
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
@@ -62,7 +68,7 @@ export function playGigs(s: GameState, r: Rng, act: Act, tier: number, dates: nu
     post(s, `gigs:${act.id}`, revenue, 'live', `Shows ${act.name}`);
     post(s, `gigcost:${act.id}`, -est.cost, 'live_costs', `Custos de shows ${act.name}`);
   } else if (c && c.party === 'player' && c.model === '360') {
-    const share = Math.round(net * c.share360);
+    const share = net > 0 ? labelTake(s, act, 'live', net) : Math.round(net * labelRate(s, act, 'live')); // r21 (H-8)
     post(s, `gig360:${act.id}`, share, 'live', `360: shows ${act.name}`);
     act.cash += net - share;
   } else {

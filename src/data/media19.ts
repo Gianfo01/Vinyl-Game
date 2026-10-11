@@ -111,6 +111,7 @@ export const FR19: Fr18[] = [
 
 /** Covers e samples reais com crédito, acordo ou sentença públicos (mesmo formato do COVERS17). */
 const c = (y: number, m: number, k: Cover17[2], song: string, orig: string, neo: string, out: Cover17[6], pt: string, en: string, v: number): Cover17 => [y, m, k, song, orig, neo, out, pt, en, v];
+// r21 (1.15): "Got to Give It Up" (Robin Thicke) e "Let's Get It On" (Ed Sheeran) já estavam em heritage17.COVERS17.
 export const COVERS19: Cover17[] = [
   c(1944, 1, 'cover', 'Bésame Mucho', 'Consuelo Velázquez', 'Jimmy Dorsey', 'royalty', 'O bolero escrito pela mexicana Consuelo Velázquez vira nº 1 nos EUA com a orquestra de Jimmy Dorsey.', 'The bolero by Mexico\'s Consuelo Velázquez becomes a US No. 1 for Jimmy Dorsey\'s orchestra.', 30000),
   c(1955, 6, 'cover', 'Ain\'t That a Shame', 'Fats Domino', 'Pat Boone', 'royalty', 'Pat Boone regrava Fats Domino para as rádios brancas e chega ao nº 1; o original também cruza as paradas.', 'Pat Boone covers Fats Domino for white radio and hits No. 1; the original crosses over too.', 30000),
@@ -166,7 +167,6 @@ export const COVERS19: Cover17[] = [
   c(2009, 8, 'credit', 'If I Could Fly', 'Joe Satriani', 'Coldplay', 'lawsuit', 'Satriani processa o Coldplay por "Viva la Vida"; acordo não divulgado e processo arquivado.', 'Satriani sues Coldplay over "Viva la Vida"; an undisclosed settlement and the case is dismissed.', 100000),
   c(2011, 6, 'sample', 'Seville', 'Luiz Bonfá', 'Gotye', 'credit', '"Somebody That I Used to Know" é construída sobre um violão de Luiz Bonfá, creditado.', '"Somebody That I Used to Know" is built on a Luiz Bonfá guitar figure, credited.', 100000),
   c(2015, 0, 'credit', 'I Won\'t Back Down', 'Tom Petty and the Heartbreakers', 'Sam Smith', 'credit', '"Stay with Me" lembra "I Won\'t Back Down"; acordo amigável dá crédito a Tom Petty e Jeff Lynne.', '"Stay with Me" echoes "I Won\'t Back Down"; a friendly settlement credits Tom Petty and Jeff Lynne.', 150000),
-  c(2015, 2, 'credit', 'Got to Give It Up', 'Marvin Gaye', 'Robin Thicke', 'lawsuit', 'Júri decide que "Blurred Lines" copiou a "sensação" de Marvin Gaye: milhões para a família — e medo em toda a indústria.', 'A jury finds "Blurred Lines" copied Marvin Gaye\'s "feel": millions to his family — and fear across the industry.', 500000),
   c(2015, 4, 'credit', 'Oops Up Side Your Head', 'The Gap Band', 'Mark Ronson', 'credit', '"Uptown Funk" ganha cinco autores novos da Gap Band.', '"Uptown Funk" gains five new writers from the Gap Band.', 200000),
   c(2015, 9, 'sample', 'Khosara Khosara', 'Abdel Halim Hafez', 'Jay-Z', 'won', '"Big Pimpin\'" usa uma canção egípcia de 1957; o processo do herdeiro do compositor é rejeitado em 2015.', '"Big Pimpin\'" uses a 1957 Egyptian song; the composer\'s heir\'s lawsuit is thrown out in 2015.', 0),
   c(2016, 5, 'credit', 'Taurus', 'Spirit', 'Led Zeppelin', 'won', 'Júri decide que "Stairway to Heaven" não copiou "Taurus", do Spirit.', 'A jury finds "Stairway to Heaven" did not copy Spirit\'s "Taurus".', 0),
@@ -178,7 +178,6 @@ export const COVERS19: Cover17[] = [
   c(2019, 6, 'sample', 'Metall auf Metall', 'Kraftwerk', 'Sabrina Setlur', 'lawsuit', 'Tribunal de Justiça da UE: até um sample de dois segundos precisa de autorização se for reconhecível.', 'EU Court of Justice: even a two-second sample needs permission if it is recognisable.', 50000),
   c(2020, 2, 'credit', 'Joyful Noise', 'Flame', 'Katy Perry', 'won', 'O juiz anula o veredito contra "Dark Horse": um ostinato simples não é protegido.', 'The judge overturns the verdict against "Dark Horse": a simple ostinato is not protected.', 0),
   c(2022, 3, 'credit', 'Oh Why', 'Sami Switch', 'Ed Sheeran', 'won', 'A Alta Corte de Londres decide que "Shape of You" não copiou "Oh Why".', 'London\'s High Court rules "Shape of You" did not copy "Oh Why".', 0),
-  c(2023, 4, 'credit', 'Let\'s Get It On', 'Marvin Gaye', 'Ed Sheeran', 'won', 'Júri de Nova York decide que "Thinking Out Loud" não copiou "Let\'s Get It On".', 'A New York jury finds "Thinking Out Loud" did not copy "Let\'s Get It On".', 0),
 ];
 
 /** Cenas locais com janela real (mesmo formato do SCENES17). Atos = nomes reais que a definem (se existirem no banco). */

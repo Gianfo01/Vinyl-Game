@@ -10,6 +10,7 @@ import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, onFact, type Fact } from '../facts17';
+import { labelRate } from './deal360_17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, post } from '../util';
 import { hasRight } from './image17';
@@ -44,7 +45,7 @@ export function canSell(s: GameState, a: Act): L | null {
   if (hasRight(s, a.id, 'merch')) return null;
   return l('Precisa de contrato 360 ou de um acordo de imagem com escopo merch.', 'Needs a 360 deal or an image-rights deal with merch scope.');
 }
-const touring = (s: GameState, a: Act) => (s.tours ?? []).some((t) => t.actId === a.id && (t.status === 'running' || t.status === 'planned') && t.stops.some((x) => x.status === 'scheduled' && Math.abs(x.day - s.day) < 35));
+// r21 (F-8): a banca da turnê vende do estoque no próprio show (tours.ts → showmath.merchStand); a demanda mensal não dobra mais.
 const southern = (a: Act) => (cityById[a.city]?.lat ?? 10) < 0;
 
 /** Demanda mensal estimada de uma linha, com o porquê. */
@@ -55,7 +56,6 @@ export function demandOf(s: GameState, ln: Line): { units: number; why: [L, numb
   const why: [L, number][] = [];
   let m = (0.5 + ln.design / 100) * PRICE[ln.price].d;
   why.push([l('Design e preço', 'Design and price'), m]);
-  if (touring(s, a)) { m *= 2; why.push([l('Banca na turnê', 'Tour merch stand'), 2]); }
   if (k.winter) { const w = southern(a) ? [5, 6, 7].includes(s.month) : [10, 11, 0, 1].includes(s.month); const f = w ? 1.5 : 0.7; m *= f; why.push([w ? l('Inverno: moletom sai', 'Winter: hoodies sell') : l('Calor: moletom encalha', 'Warm season: hoodies sit'), f]); }
   if (a.momentum > 60) { m *= 1.25; why.push([l('Artista em alta', 'Act on a roll'), 1.25]); }
   const bo = m17(s).boost?.[a.id];
@@ -112,8 +112,7 @@ registerSimHook('month', 'merch17', (s) => {
     ln.stock -= u; ln.sold += u;
     const rev = u * unitPrice(s, ln);
     ln.rev += rev;
-    const c = a.contractId ? s.contracts[a.contractId] : undefined;
-    const share = a.playerBand ? 1 : c?.model === '360' && a.owner === 'player' ? Math.max(0.3, c.share360) : 0.7;
+    const share = labelRate(s, a, 'merch'); // r21 (H-8): o selo bancou o estoque — 360: fatia (mín. 50%); clássico: 70%
     post(s, `m17s:${ln.act}:${ln.sku}:${s.month}:${ln.drop ?? 0}`, Math.round(rev * share), 'merch', `Merch ${a.name}`);
     if (share < 1) a.cash += Math.round(rev * (1 - share));
     if (ln.drop && ln.stock === 0 && ln.age <= 2) {

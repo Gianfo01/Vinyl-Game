@@ -27,6 +27,7 @@ import type { Act, GameState, Release } from '../types';
 import { fmtL, playerActs, post } from '../util';
 import { physIn18 } from './eras18';
 import { f16, fameIn, mkOf } from './fame16';
+import { countryHook21 } from './charts7';
 import { rivals12 } from './rivals12';
 import { PRICE_TIERS } from './industry/retail';
 import type { PriceTier } from './industry/state';
@@ -301,3 +302,6 @@ registerExplain('terr20.demand', (s, c) => {
     note: l('Shows convertem fãs na praça onde acontecem; vendas e streams, nos mercados do lançamento (físico onde já há público, streaming onde a plataforma chegou, campanha nos territórios-alvo); preço regional mais baixo converte mais e ofensiva rival freia o crescimento ali. Sem atividade, a distribuição volta aos poucos para a fama regional. A soma das regiões é sempre o total global.', 'Shows convert fans where they happen; sales and streams, in the release\'s markets (physical where the act already has fans, streaming where the platform has arrived, campaigns in the target territories); a lower regional price converts more and a rival push slows growth there. Without activity, the split drifts back to regional fame. Regions always add up to the global total.'),
   };
 });
+
+// r21 (§4): show na praça nas últimas 8 semanas puxa a parada daquele mercado (×1,15, só atos com livro regional)
+countryHook21.show = (s, a, mk) => { const w = terr20(s).sw[a.id]?.[mk]; return w !== undefined && s.week - w <= 8 ? 1.15 : 1; };

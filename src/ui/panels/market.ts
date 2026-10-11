@@ -12,25 +12,22 @@ import { $, actLink, cityName, genreName, labelLink, logo, pill, rerender, secti
 import { bar, h, rangeBar, select } from '../dom';
 import { openOffer } from '../ficha';
 import { openDossier } from '../dossierView';
-import { store } from '../store';
+import { MARKET_TABS21, tabs } from '../vis';
 import { hqCaps } from '../../sim/branches';
 import { crewProfileCell } from '../sys/crew8';
 import { isWatched, missionProgress, scout11, toggleCompare, toggleWatch } from '../../sim/sys/scout11';
 import { abilityCell18, staffStars18 } from '../ab18stars';
 
 export function marketPanel(s: GameState): HTMLElement {
-  const tabs: [typeof store.marketTab, string][] = [
-    ['scouting', t(S.scouting)],
-    ['pipeline', t(S.pipeline)],
-    ['professionals', t(S.professionals)],
-  ];
-  const tabBar = h('div', { class: 'tabs', role: 'tablist' }, tabs.map(([id, label]) => h('button', { role: 'tab', 'aria-selected': store.marketTab === id ? 'true' : 'false', class: store.marketTab === id ? 'on' : '', onclick: () => { store.marketTab = id; rerender(); } }, label)));
-  let body: HTMLElement;
-  if (s.config.role === 'artist' && (store.marketTab === 'scouting' || store.marketTab === 'pipeline')) store.marketTab = 'professionals';
-  if (store.marketTab === 'scouting') body = scouting(s);
-  else if (store.marketTab === 'pipeline') body = pipeline(s);
-  else body = professionals(s);
-  return h('div', { class: 'panel market' }, tabBar, body);
+  // r21 (I-6): tabs() com data-tabs (rota, { }, Ctrl+K e ajuda por aba); artista não vê scouting/pipeline
+  const artist = s.config.role === 'artist';
+  return h('div', { class: 'panel market' }, tabs(MARKET_TABS21, [
+    ...(artist ? [] : [
+      { id: 'scouting', label: t(S.scouting), icon: 'fans', render: () => scouting(s) },
+      { id: 'pipeline', label: t(S.pipeline), icon: 'contract', render: () => pipeline(s) },
+    ]),
+    { id: 'professionals', label: t(S.professionals), icon: 'people', render: () => professionals(s) },
+  ], rerender));
 }
 
 const qKey = (s: GameState, actId: string) => { const a = s.acts[actId]; return `${a.name} ${genreName(a.genre)} ${cityName(a.city)}`.toLowerCase(); };

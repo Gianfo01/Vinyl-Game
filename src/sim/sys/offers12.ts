@@ -18,6 +18,8 @@ import { mainAmbition } from '../people';
 import { defaultRights } from '../rights';
 import type { Act, ContractPromise, GameState, Offer, RightsTerms } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
+import { freeCash20 } from '../oblig20';
+import { recoup } from './contracts18';
 import { dreamOf, type DreamId } from './soul9';
 
 // ---------------------------------------------------------------- tipos reutilizáveis
@@ -321,7 +323,7 @@ export function payPledges(s: GameState): void {
     else if (p.ar === 'label' && free) act.trust = clamp(act.trust - 0.3, 0, 100);
     if (p.broken || p.months >= 12 || p.tour + p.mkt <= 0) continue;
     const due = Math.round((p.tour + p.mkt) / 12);
-    if (s.player.cash < due) {
+    if (freeCash20(s) < due) { // r21 (1.14): caixa livre
       p.broken = true;
       act.trust = clamp(act.trust - 14, 0, 100);
       s.player.reputation.artists = clamp(s.player.reputation.artists - 2, 0, 100);
@@ -330,6 +332,9 @@ export function payPledges(s: GameState): void {
       continue;
     }
     post(s, `pledge12:${p.contractId}:${p.months}`, -due, 'marketing', `Verba contratual ${act.name}`);
+    // r21 (H-9): a verba prometida entra no recuperável conforme a cláusula do pacote (apoio de turnê / marketing)
+    recoup(s, c, 'tour', Math.round(p.tour / 12));
+    recoup(s, c, 'mkt', Math.round(p.mkt / 12));
     p.paid += due; p.months += 1;
     const exp = Math.max(1, expectedAdvance(s, act));
     const mk = toReal(p.mkt / 12, s.year) / exp;

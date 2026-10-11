@@ -48,6 +48,38 @@ export function playerShows(s: GameState): PShow[] {
   for (const f of festWeeks(s)) for (const id of f.acts) if (mine(s, s.acts[id])) out.push({ actId: id, city: f.city, w: f.w, kind: 'festival', label: f.name });
   return out.filter((x) => x.w >= s.week - 1).sort((a, b) => a.w - b.w);
 }
+/** Semana do 1º dia de um mês (índice ano*12+mês). */
+export const weekOfMonthIdx = (s: GameState, mi: number) => weekOfDay(Math.round((Date.UTC(Math.floor(mi / 12), mi % 12, 1) - Date.UTC(s.config.startYear, 0, 1)) / 86400000));
+
+/** r21 (F-6): UM só calendário de compromissos. O ato está ocupado entre as semanas [from, to] se está em hiato,
+ *  tem data marcada (turnê própria, agente/promotor, festival — leitura de playerShows), residência de cassino,
+ *  residência em casa própria (venues17/venue12) ou intercâmbio (exch20). `skip` ignora um tipo de data (o
+ *  agente/promotor conta as próprias datas por conta própria: até duas por semana). */
+export function isBusy(s: GameState, act: Act, weekFrom: number, weekTo = weekFrom, skip?: PShow['kind']): L | null {
+  if (act.status === 'hiatus' || (act.hiatusUntil ?? 0) > weekFrom) return l('Artista em hiato.', 'Act on hiatus.');
+  const x4 = s.x4 as unknown as {
+    live?: { residencies?: { actId: string; startMonth: number; months: number; status: string; cityId: string }[] };
+    venues17?: { own?: { policy: string; actId?: string; id: string }[] };
+    venue12?: { v?: { prog?: { k: string; actId?: string }[] } | null };
+    exch20?: { cur?: { who: string; act: string; from: number; until: number; city: string } };
+  };
+  const inWeeks = (w: number) => w >= weekFrom && w <= weekTo;
+  for (const p of playerShows(s)) {
+    if (p.actId !== act.id || (skip && p.kind === skip) || !inWeeks(p.w)) continue;
+    const kind = p.kind === 'tour' ? l('turnê', 'tour') : p.kind === 'festival' ? l('festival', 'festival') : l('data marcada', 'booked date');
+    return fmtL(l('{a} já tem compromisso nessa semana ({k}: {c}).', '{a} is already booked that week ({k}: {c}).'), { a: act.name, k: kind, c: cityById[p.city]?.name ?? p.city });
+  }
+  for (const res of x4.live?.residencies ?? []) {
+    if (res.actId !== act.id || res.status !== 'active') continue;
+    const a = weekOfMonthIdx(s, res.startMonth), b = weekOfMonthIdx(s, res.startMonth + res.months) - 1;
+    if (b >= weekFrom && a <= weekTo) return fmtL(l('{a} está em residência em {c} nesse período.', '{a} is in residency in {c} in that period.'), { a: act.name, c: cityById[res.cityId]?.name ?? res.cityId });
+  }
+  if ((x4.venues17?.own ?? []).some((o) => o.policy === 'residency' && o.actId === act.id)) return fmtL(l('{a} tem residência numa casa sua (política da casa).', '{a} has a residency at one of your venues (house policy).'), { a: act.name });
+  if ((x4.venue12?.v?.prog ?? []).some((n) => n.k === 'residency' && n.actId === act.id)) return fmtL(l('{a} tem noite de residência numa casa sua.', '{a} has a residency night at one of your venues.'), { a: act.name });
+  const cur = x4.exch20?.cur;
+  if (cur && cur.who === 'act' && cur.act === act.id && cur.until >= weekFrom && cur.from <= weekTo) return fmtL(l('{a} está em intercâmbio em {c} nesse período.', '{a} is on an exchange residency in {c} in that period.'), { a: act.name, c: cityById[cur.city]?.name ?? cur.city });
+  return null;
+}
 export interface FWeek { fi: number; name: string; city: string; w: number; acts: string[]; prestige: number }
 export function festWeeks(s: GameState): FWeek[] {
   const f8 = (s.x4 as unknown as { fest8?: { editions: { fi: number; year: number; month: number; lineup: { actId: string }[]; done: boolean }[] } }).fest8;
@@ -108,7 +140,7 @@ export const clashForDay20 = (s: GameState, act: Act, city: string, day: number)
 TOUR18.clash = clashForDay20;
 registerMod('showRevenue', 'clash17', (s, v, c) => {
   if (!c.act || !c.cityId || !mine(s, c.act)) return null;
-  const k = clashOf(s, c.act, c.cityId, weekOfDay(s.day + s.clock.dayInMonth));
+  const k = clashOf(s, c.act, c.cityId, weekOfDay(c.day ?? s.day + s.clock.dayInMonth)); // r21 (F-1): semana do dia do show, igual na previsão
   const t = TIX[cal17(s).tix[c.act.id] ?? 'fair'];
   const m = k.mult * (s.year >= t.from ? t.rev : 1);
   return m !== 1 ? { value: v * m, label: k.mult < 1 ? l('Concorrência na agenda', 'Calendar competition') : t.name } : null;

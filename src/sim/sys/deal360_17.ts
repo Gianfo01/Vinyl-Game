@@ -39,6 +39,43 @@ export function take360(s: GameState, a: Act, gross: number, share: number): num
   return lab;
 }
 
+// ---------------------------------------------------------------- r21 (H-8): UMA régua para a fatia do selo
+// Antes a fatia 360 era lida de três jeitos (com alavanca + teto, com alavanca sem teto, crua) e o merch estava
+// invertido (30% no 360, 70% num acordo de imagem). Regra única, por fluxo de receita:
+//  - live / merch vendido na estrada (`live`, `merch_live`): só no 360 — fatia do contrato × alavanca pela fama, somada
+//    no teto anual (`take360`); contrato clássico: a bilheteria é do artista.
+//  - merch cujo ESTOQUE o selo banca (`merch`: linhas do merch17 e brands.produceMerch): no 360 o selo leva a fatia 360
+//    com mínimo de 50% (pagou o estoque); fora do 360 leva 70% só porque bancou o estoque (acordo de imagem).
+//  - marcas/patrocínio (`brand`): fatia 360 no 360; 15% de comissão de agência no contrato clássico.
+//  - endosso de instrumento (`endorse`): comissão de 20%, ou a fatia 360 se maior.
+// Banda do jogador: 100% em tudo. Ato que não é seu (ou contrato de outro selo): 0.
+export type Stream360 = 'live' | 'merch_live' | 'merch' | 'brand' | 'endorse';
+function deal(s: GameState, a: Act): { c?: { share360: number; model: string }; mine: boolean; is360: boolean } {
+  const c = a.contractId ? s.contracts[a.contractId] : undefined;
+  const mine = !!c && c.party === 'player' && a.owner === 'player';
+  return { c, mine, is360: mine && c!.model === '360' };
+}
+/** Fração do selo numa receita do ato (sem registrar no teto anual; para previsões, kits e post-mortem). */
+export function labelRate(s: GameState, a: Act, stream: Stream360): number {
+  if (a.playerBand) return 1;
+  const { c, mine, is360 } = deal(s, a);
+  const sh = c?.share360 ?? 0;
+  switch (stream) {
+    case 'live': case 'merch_live': return is360 ? eff360(a, sh) : 0;
+    case 'merch': return is360 ? Math.max(0.5, sh) : mine ? 0.7 : 0;
+    case 'brand': return is360 ? sh : mine ? 0.15 : 0;
+    case 'endorse': return mine ? Math.max(0.2, sh) : 0;
+  }
+}
+/** Quanto o selo leva de uma receita bruta do ato (a parte 360 de shows/merch de estrada entra no teto anual). */
+export function labelTake(s: GameState, a: Act, stream: Stream360, gross: number): number {
+  if (gross <= 0) return 0;
+  if (a.playerBand) return Math.round(gross);
+  const { c, is360 } = deal(s, a);
+  if (stream === 'live' || stream === 'merch_live') return is360 ? take360(s, a, gross, c!.share360) : 0;
+  return Math.round(gross * labelRate(s, a, stream));
+}
+
 /** Explicação para a ficha de contrato e o painel de shows. */
 export function why360(s: GameState, a: Act, share: number): L {
   const k = lever360(a.fame);

@@ -24,6 +24,8 @@ import { per13 } from './persona13';
 import { relics } from './relics9';
 import { registerSituation } from './situations17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { allowed21 } from '../allowed21';
+import { emitCard21 } from '../card21';
 
 const F = (s: GameState, key: string, f: string): number => ((per13(s, key)?.facets as Record<string, number> | undefined)?.[f] ?? 50);
 /** r18: pessoa real protegida só no modo "Vida real exata" (nos outros, história alternativa). */
@@ -96,7 +98,7 @@ function concrete(s: GameState, c: string, enemy: string, actorId: string, r: Rn
   const d = crimeById(c)!;
   const a = bestAct(s, enemy);
   switch (d.tk) {
-    case 'person': { const p = leadOf(s, a); return p && !(d.violent && sr(s, p)) && !(c === 'murder' && a && a.fame < 20) ? p : undefined; }
+    case 'person': { const p = leadOf(s, a); return p && !(d.violent && (sr(s, p) || !allowed21(s, 'violence', a))) && !(c === 'murder' && (!allowed21(s, 'death', a) || (a && a.fame < 20))) ? p : undefined; } // r21 (G-5)
     case 'act': return a?.id;
     case 'own_act': return bestAct(s, actorId)?.id;
     case 'label': return s.labels[enemy] ? enemy : undefined;
@@ -134,7 +136,7 @@ function plotMonth(s: GameState, r: Rng): void {
       // convite para você: o inimigo deles também é seu rival
       if (E.id !== 'player' && (s.rivalries[E.id] ?? 0) > 40 && (L0?.rel.player ?? 0) > 10 && st.warn.length < 4 && r.chance(0.5)) {
         st.warn.push({ id: `cw${++st.seq}`, actor: A.id, c: ch.c, target, w: s.week, dl: s.week + 4, partners: ['invite'] });
-        notify(s, fmtL(l('{a} convida você para um "trabalho" contra {t}. Veja Crime → Planos.', '{a} invites you to a "job" against {t}. See Crime → Plans.'), { a: nameOf17(s, A.id), t: nameOf17(s, target) }), 'event');
+        notify(s, emitCard21(s, { key: 'crime17:invite', text: fmtL(l('{a} convida você para um "trabalho" contra {t}. Veja Crime → Planos.', '{a} invites you to a "job" against {t}. See Crime → Plans.'), { a: nameOf17(s, A.id), t: nameOf17(s, target) }), tone: 'bad' })!, 'event'); // r21 (G-12)
         continue;
       }
     }
@@ -148,7 +150,7 @@ function plotMonth(s: GameState, r: Rng): void {
       const disc = clamp(0.12 + SEC17[st.sec].def * 1.6 + ((s.flags.securityUntil ?? 0) > s.week ? 0.15 : 0), 0, 0.85);
       if (r.chance(disc)) {
         st.warn.push({ id: `cw${++st.seq}`, actor: A.id, c: ch.c, target, method: ctx.method, w: s.week, dl: s.week + 4, partners, org: ctx.org });
-        notify(s, fmtL(l('Sua segurança descobriu: {a} trama "{c}" contra {t}. Decida em Crime → Planos.', 'Your security found out: {a} is plotting "{c}" against {t}. Decide in Crime → Plans.'), { a: nameOf17(s, A.id), c: crimeById(ch.c)!.name, t: nameOf17(s, target) }), 'event');
+        notify(s, emitCard21(s, { key: 'crime17:warn', text: fmtL(l('Sua segurança descobriu: {a} trama "{c}" contra {t}. Decida em Crime → Planos.', 'Your security found out: {a} is plotting "{c}" against {t}. Decide in Crime → Plans.'), { a: nameOf17(s, A.id), c: crimeById(ch.c)!.name, t: nameOf17(s, target) }), tone: 'bad' })!, 'event'); // r21 (G-12)
         continue;
       }
     }
@@ -291,13 +293,13 @@ function streetMonth(s: GameState, r: Rng): void {
       const p = leadOf(s, vic), hot = leadOf(s, atk);
       // o próprio artista (fictício) parte para a briga com a gangue atrás: pode acabar preso
       const doer = hot && !sr(s, hot) && !(atk.owner === 'player' || atk.playerBand) ? hot : o.key;
-      if (p && !sr(s, p)) commitCrime(s, 'assault', { actor: doer, target: p, partners: [], org: o.id }, r);
+      if (p && !sr(s, p) && allowed21(s, 'violence', vic)) commitCrime(s, 'assault', { actor: doer, target: p, partners: [], org: o.id }, r); // r21 (G-5)
       emitFact(s, { kind: 'feud', actors: [atk.id, vic.id], place: vic.city, severity: 55, visibility: 'public', tags: ['street', 'feud', 'bad'], text: fmtL(l('Briga generalizada entre as equipes de {x} depois de um show.', 'A brawl between {x}\'s crews after a show.'), { x: both }), src: 'crime17' });
     } else if (prev < 85 && cur >= 85) {
       const [vic, o] = r.chance(0.5) ? [b, oa] : [a, ob];
       const p = leadOf(s, vic);
       const fictional = !strict ? !!p : !a.catalogNo && !b.catalogNo && p && !isReal(s, p); // r18: história alternativa fora do modo exato
-      if (fictional && p) commitCrime(s, 'murder', { actor: o.key, target: p, method: 'accident', partners: [], org: o.id, dp: -0.15, dpWhy: l('Tiroteio, não emboscada perfeita −15%', 'A shootout, not a perfect ambush −15%') }, r);
+      if (fictional && p && allowed21(s, 'death', vic) && allowed21(s, 'violence', vic)) commitCrime(s, 'murder', { actor: o.key, target: p, method: 'accident', partners: [], org: o.id, dp: -0.15, dpWhy: l('Tiroteio, não emboscada perfeita −15%', 'A shootout, not a perfect ambush −15%') }, r);
       else emitFact(s, { kind: 'feud', actors: [a.id, b.id], place: vic.city, severity: 50, visibility: 'rumor', tags: ['street', 'feud', 'rumor'], text: fmtL(l('Boato: a rixa {x} teria passado dos limites; ninguém confirma.', 'Rumor: the {x} feud allegedly crossed the line; nobody confirms.'), { x: both }), src: 'crime17' });
       st.feud[key] = 30;
     } else if (cur === prev) st.feud[key] = Math.max(0, cur - 2);

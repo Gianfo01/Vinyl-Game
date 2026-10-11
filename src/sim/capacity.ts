@@ -42,6 +42,16 @@ export function agendaLoad(slots: AgendaSlot[]): number {
   return slots.reduce((t, x) => t + slotLoad(x), 0);
 }
 
+/** r21 (A-2/1.6): carga da agenda vista por uma pessoa — slots pessoais de outro integrante não contam.
+ *  Única fórmula usada por `personLoad` e `freeCapacity`. */
+export function agendaLoadFor(slots: AgendaSlot[], personId: string): number {
+  return slots.reduce((t, x) => {
+    const m = actionMeta(x.action);
+    if (m.scope === 'person' && x.params?.person && x.params.person !== personId) return t;
+    return t + slotLoad(x);
+  }, 0);
+}
+
 /** Dias de turnê de um ato num mês absoluto (shows + viagem). */
 export function tourDaysInMonth(s: GameState, actId: string, idx: number): number {
   let days = 0;
@@ -64,18 +74,12 @@ export function personLoad(s: GameState, personId: string, idx: number, excludeP
     if (p.id === excludePlan || p.status === 'cancelled' || p.status === 'done' || p.status === 'blocked') continue;
     if (!p.personIds.includes(personId)) continue;
     if (idx < p.startMonth || idx >= p.startMonth + p.months) continue;
-    // plano já iniciado no mês atual entra pela agenda
-    if (p.status === 'started' && idx === monthIndex(s)) continue;
+    // r21 (A-2): o plano iniciado nunca entra em `s.agenda` (só na agenda local do mês), então conta aqui também
     parts.push({ label: fmtL(l('Plano: {a}', 'Plan: {a}'), { a: actionName(p.action) }), load: p.load });
   }
   for (const act of actsOfPerson(s, personId)) {
     if (idx === monthIndex(s)) {
-      const slots = s.agenda[act.id] ?? [];
-      const ld = slots.reduce((t, x) => {
-        const m = actionMeta(x.action);
-        if (m.scope === 'person' && x.params?.person && x.params.person !== personId) return t;
-        return t + slotLoad(x);
-      }, 0);
+      const ld = agendaLoadFor(s.agenda[act.id] ?? [], personId);
       if (ld) parts.push({ label: fmtL(l('Agenda de {a}', '{a} agenda'), { a: act.name }), load: ld });
     }
     const td = tourDaysInMonth(s, act.id, idx);
@@ -135,6 +139,8 @@ export function reservePlan(s: GameState, actId: string, action: string, startMo
   const months = opts.months ?? meta.months ?? 1;
   const now = monthIndex(s);
   if (startMonth < now) return l('Não dá para reservar no passado.', 'Cannot book in the past.');
+  // r21 (A-3): com o mês aberto, `startPlans` já passou — a reserva nunca rodaria nem cobraria, só ocuparia agenda
+  if (startMonth === now && s.clock.opened) return l('O mês já está em curso: reserve a partir do mês que vem (ou use a agenda do mês).', 'This month is already under way: book from next month on (or use this month\'s agenda).');
   if (startMonth > now + 12) return l('Horizonte máximo: 12 meses.', 'Maximum horizon: 12 months.');
   const personIds = meta.scope === 'person' ? [opts.personId ?? act.members[0]] : activeMembers(s, act);
   if (!personIds.length) return l('Formação sem integrantes ativos.', 'No active members.');
@@ -151,8 +157,12 @@ export function cancelPlan(s: GameState, planId: string): boolean {
   // começado: libera meses futuros, o atual não volta (GDD §45.4)
   if (p.status === 'started') {
     const now = monthIndex(s);
+    // r21 (A-4): continua `started` até o fim deste mês (segue contando em personLoad/planSlots); vira `done` no próximo
     p.months = Math.max(1, now - p.startMonth + 1);
-    p.status = 'done';
+    p.reason = l('cancelado: o mês em curso não volta', 'cancelled: the current month does not come back');
+    // as semanas 2–4 já enfileiradas em ag7 não rodam mais
+    const ag7 = (s as unknown as { x4?: { ag7?: { queue?: { slot: AgendaSlot }[] } } }).x4?.ag7;
+    if (ag7?.queue) ag7.queue = ag7.queue.filter((q) => q.slot.params?.plan !== p.id);
     return true;
   }
   p.status = 'cancelled';

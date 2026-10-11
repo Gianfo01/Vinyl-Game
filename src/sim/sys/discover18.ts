@@ -10,6 +10,8 @@ import { rng19 } from '../rng19';
 import { clamp, Rng } from '../../core/rng';
 import { CITIES, GENRES, cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
 import { signWithRival } from '../contracts';
+import { scoutEligible20 } from '../scout20';
+import { dos } from './dossier8';
 import { registerExt4, registerSimHook } from '../ext4';
 import { registerExplain } from '../explain18';
 import { emitFact } from '../facts17';
@@ -82,7 +84,7 @@ const genreOf = (s: GameState, r: Rng, fams?: FamilyId[]): string | undefined =>
   const gs = GENRES.filter((g) => fams.includes(familyOf(g.id)) && g.born <= s.year);
   return gs.length ? r.pick(gs).id : undefined;
 };
-const free = (a: Act) => !a.owner && a.status === 'emerging' && !a.deceased;
+const free = (s: GameState, a: Act) => scoutEligible20(s, a).ok && a.status === 'emerging' && !a.deceased; // r21 (H-7): elegibilidade central
 
 /** Registra um achado (qualquer canal, inclusive TV e escolas) com o grau/ruído do canal. */
 export function addLead18(s: GameState, r: Rng, a: Act, chId: string, deg: number, noise: number, note: L, ref?: string): void {
@@ -128,7 +130,7 @@ export function dig18(s: GameState, chId: string): Dig18 {
   if (c.id === 'referral') { const act = s.acts[r.pick(playerActs(s))]; const pid = act && r.pick(act.members); if (act && pid) ref = { pid, act }; }
   const city = c.local ? s.config.homeCity : ref?.act.city;
   const fams = ref ? [familyOf(ref.act.genre)] : c.fams;
-  let pool = Object.values(s.acts).filter((a) => free(a) && (!city || a.city === city) && (!fams || fams.includes(familyOf(a.genre))) && !st.leads.some((x) => x.a === a.id));
+  let pool = Object.values(s.acts).filter((a) => free(s, a) && (!city || a.city === city) && (!fams || fams.includes(familyOf(a.genre))) && !st.leads.some((x) => x.a === a.id));
   pool = r.shuffle(pool).slice(0, Math.ceil(n / 2));
   while (pool.length < n) {
     const a = spawnProceduralAct(s, r, { city: city ?? r.pick(CITIES.filter((x) => s.player.territories.includes(x.market)).concat(CITIES.slice(0, 1))).id, genre: genreOf(s, r, fams) });
@@ -169,7 +171,7 @@ export function watchShow18(s: GameState, headId: string): Dig18 {
   post(s, `d18show:${headId}`, -cost, 'scouting', `Show de ${h.name}`);
   const r = Rng.fromSeed(`${s.config.seed}|show18|${headId}|${s.week}`);
   const fam = familyOf(h.genre);
-  const pool = Object.values(s.acts).filter((a) => free(a) && familyOf(a.genre) === fam && cityById[a.city]?.market === cityById[h.city]?.market);
+  const pool = Object.values(s.acts).filter((a) => free(s, a) && familyOf(a.genre) === fam && cityById[a.city]?.market === cityById[h.city]?.market);
   const op = pool.length && r.chance(0.6) ? r.pick(pool) : spawnProceduralAct(s, r, { city: h.city, genre: h.genre });
   const crowd = r.int(0, 100);
   const tal = op.potential;
@@ -223,7 +225,7 @@ registerSimHook('month', 'discover18', (s) => {
   // r18 final (ritmo): uma demo por vez na caixa (era a mensagem mais frequente do jogo) e chance menor
   const waiting = P(s).inbox.some((m) => m.ref?.k18 === 'disc18_demo' && !m.resolved && (m.expires ?? 0) > s.week);
   if (s.config.role !== 'artist' && !waiting && r.chance(0.3 + Math.min(0.25, s.player.reputation.artists / 250))) {
-    const pool = Object.values(s.acts).filter((a) => free(a) && !st.leads.some((x) => x.a === a.id) && !st.passed[a.id]);
+    const pool = Object.values(s.acts).filter((a) => free(s, a) && !st.leads.some((x) => x.a === a.id) && !st.passed[a.id]);
     const a = pool.length && r.chance(0.7) ? r.pick(pool) : spawnProceduralAct(s, r, {});
     pushInbox18(s, 'disc18_demo', { from: a.name, subject: fmtL(l('Demo: {a} ({g})', 'Demo: {a} ({g})'), { a: a.name, g: a.genre.replace(/_/g, ' ') }),
       body: fmtL(l('Chegou {m} de {a}, de {c}. Ouvir custa só tempo; pedir mais material dá uma segunda impressão (grau 3) em 3 semanas.', '{m} arrived from {a}, from {c}. Listening costs only time; asking for more gives a second impression (degree 3) in 3 weeks.'), { m: demoMedium18(s), a: a.name, c: cityById[a.city]?.name ?? a.city }),
@@ -259,6 +261,7 @@ registerSimHook('year', 'discover18', (s) => {
   for (const id of cand) {
     const a = s.acts[id];
     if (!a || st.gone[id] || a.owner === 'player' || a.fame < 45 || !a.owner) continue;
+    if (dos(s).calls.some((x) => x.actId === id && x.kind === 'pass')) { st.gone[id] = 1; continue; } // r21 (1.21): o dossiê (dossier8) já julga "o que escapou" deste caso
     st.gone[id] = 1;
     const passed = st.passed[id] !== undefined;
     const y = Math.floor((st.passed[id] ?? st.leads.find((x) => x.a === id)?.w ?? 0) / 52) + s.config.startYear;

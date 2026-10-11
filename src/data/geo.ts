@@ -251,7 +251,7 @@ export function allCountryCodes(): string[] {
  * ponto-em-polígono (com fallback pela borda mais próxima) quando as formas estão carregadas.
  */
 export function countryOfCity(cityId: string): string | null {
-  const known = META.cities[cityId] ?? cityById[cityId]?.a3; // r19: cidades novas trazem o país
+  const known = cityById[cityId]?.a3 ?? META.cities[cityId]; // r19: cidades novas trazem o país; r21 (J-1): o a3 explícito vence o atlas (Singapura, Hong Kong, Guadalupe)
   if (known) return known;
   if (cityCache.has(cityId)) return cityCache.get(cityId)!;
   const c = cityById[cityId];
@@ -533,10 +533,10 @@ export function politicalUnitsAt(year: number): PoliticalUnit[] {
 // ---------------------------------------------------------------- mercados do jogo por país
 
 const MKT: Partial<Record<MarketId, string>> = {
-  na: 'USA CAN GRL PRI',
+  na: 'USA CAN GRL', // r21 (J-9): Porto Rico é latam na ficha e nas cidades (san_juan)
   br: 'BRA',
   oceania: 'AUS NZL PNG FJI SLB VUT NCL',
-  latam: 'MEX GTM BLZ HND SLV NIC CRI PAN CUB JAM HTI DOM BHS TTO COL VEN GUY SUR ECU PER BOL CHL ARG URY PRY FLK',
+  latam: 'PRI MEX GTM BLZ HND SLV NIC CRI PAN CUB JAM HTI DOM BHS TTO COL VEN GUY SUR ECU PER BOL CHL ARG URY PRY FLK',
   eu: 'GBR IRL ISL NOR SWE FIN DNK EST LVA LTU POL DEU NLD BEL LUX FRA ESP PRT ITA CHE AUT CZE SVK HUN SVN HRV BIH SRB MNE XKX MKD ALB GRC BGR ROU MDA UKR BLR RUS',
   africa: 'MAR DZA TUN LBY EGY SDN SSD ESH MRT MLI NER TCD SEN GMB GNB GIN SLE LBR CIV BFA GHA TGO BEN NGA CMR CAF GNQ GAB COG COD AGO ZMB ZWE MWI MOZ TZA KEN UGA RWA BDI ETH ERI DJI SOM XSL NAM BWA ZAF LSO SWZ MDG',
 };

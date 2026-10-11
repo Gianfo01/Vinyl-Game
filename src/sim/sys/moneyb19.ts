@@ -29,7 +29,7 @@ import { rng19 } from '../rng19';
 import { addHeat19, coolHeat19, rm18 } from '../rivals19';
 import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
-import { endContract } from '../contracts';
+import { endContract, transferAct } from '../contracts';
 import { fileLawsuit } from '../business';
 import { registerDeadline, weekOfMonth19 } from '../calendar19';
 import { registerConseq18 } from '../decide18';
@@ -116,11 +116,8 @@ export function npcClause19(s: GameState, a: Act): number {
 /** Move o contrato de um ato para outro dono (selo NPC ou o jogador). */
 function moveAct19(s: GameState, a: Act, to: string): void {
   const k = kOf(s, a);
-  if (a.owner && a.owner !== 'player') { const lb = s.labels[a.owner]; if (lb) lb.roster = lb.roster.filter((x) => x !== a.id); }
   if (k) k.party = to;
-  a.owner = to;
-  if (to === 'player') s.delegated[a.id] = true;
-  else { const lb = s.labels[to]; if (lb && !lb.roster.includes(a.id)) lb.roster.push(a.id); delete s.agenda[a.id]; }
+  transferAct(s, a, to, to === 'player' ? 'bought' : 'sold'); // r21 (H-3): um só caminho de troca de dono (limpa subselo, agenda, pistas)
 }
 /** Comprador: selo ativo com caixa, preferindo quem tem o ato na mira (rivalmind18). */
 function buyer19(s: GameState, a: Act, price: number, r: Rng): Label | undefined {

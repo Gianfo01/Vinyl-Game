@@ -8,6 +8,7 @@ import { fameText, knownLevel } from '../../sim/sys/fame15';
 import type { Act, GameState, Person } from '../../sim/types';
 import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
+import { simFate20 } from '../../sim/prov20';
 import { preDebut, visibleAct } from '../../sim/future';
 import { actLink, cityName, genreName, labelLink, logo, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
@@ -28,7 +29,7 @@ const F = {
   role: 'any',
   page: 0,
 };
-const PAGE = 40;
+const PAGE = 60; // r21 (§2.3.3)
 
 function actMatches(s: GameState, a: Act, q: string): boolean {
   if (!visibleAct(s, a)) return false;
@@ -66,9 +67,10 @@ function actRows(s: GameState): HTMLElement {
       h('tbody', null, slice.map((a) => {
         const k = s.knowledge[a.id];
         const tal = estimate(s, a.id, 'talent');
-        return h('tr', null,
+        // r21 (§2.3.3): a linha inteira abre a página; "Seguir" vira estrela
+        return h('tr', { class: 'dir-row21', tabindex: '0', role: 'link', title: t(l('Abrir página', 'Open page')), onclick: (e: Event) => { if (!(e.target as HTMLElement).closest('button, a, select, input')) openAct(a.id); }, onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter' && e.target === e.currentTarget) openAct(a.id); } },
           h('td', null, logo(a, 28)),
-          h('td', null, actLink(s, a.id), h('div', { class: 'muted small' }, `${a.members.length > 1 ? t(l('Banda', 'Band')) + ` (${a.members.length})` : t(l('Solo', 'Solo'))} · ${preDebut(s, a) ? t(l('promessa', 'up-and-coming')) : `${t(l('desde', 'since'))} ${a.debutYear}`}`), a.status === 'retired' || a.status === 'split' ? pill(t(l('encerrado', 'ended')), 'bad') : a.status === 'hiatus' ? pill(t(l('hiato', 'hiatus')), 'warn') : null),
+          h('td', null, actLink(s, a.id), simFate20(s, a) ? h('span', null, ' ', pill(t(l('destino simulado', 'simulated fate')), 'neural')) : null, h('div', { class: 'muted small' }, `${a.members.length > 1 ? t(l('Banda', 'Band')) + ` (${a.members.length})` : t(l('Solo', 'Solo'))} · ${preDebut(s, a) ? t(l('promessa', 'up-and-coming')) : `${t(l('desde', 'since'))} ${a.debutYear}`}`), a.status === 'retired' || a.status === 'split' ? pill(t(l('encerrado', 'ended')), 'bad') : a.status === 'hiatus' ? pill(t(l('hiato', 'hiatus')), 'warn') : null),
           h('td', null, genreName(a.genre)),
           h('td', null, cityName(a.city)),
           h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? labelLink(s, a.owner) : h('span', { class: 'muted' }, t(l('independente', 'independent')))),
@@ -76,8 +78,7 @@ function actRows(s: GameState): HTMLElement {
           h('td', null, tal ? `${tal.lo}–${tal.hi}` : '?'),
           h('td', null, a.owner === 'player' ? '—' : k ? `${k.degree}/5` : '—'),
           h('td', { class: 'row' },
-            h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page'))),
-            a.owner !== 'player' && !k && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small', onclick: () => { watchAct(s, a.id); toast(t(l('{a} entrou no seu radar (Mercado → Pipeline).', '{a} is on your radar (Market → Pipeline).'), { a: a.name }), 'good'); rerender(); } }, t(l('Seguir', 'Follow'))) : null,
+            a.owner !== 'player' && !k && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'icon star21', title: t(l('Seguir (entra no radar: Mercado → Pipeline)', 'Follow (goes on your radar: Market → Pipeline)')), 'aria-label': t(l('Seguir {a}', 'Follow {a}'), { a: a.name }), onclick: () => { watchAct(s, a.id); toast(t(l('{a} entrou no seu radar (Mercado → Pipeline).', '{a} is on your radar (Market → Pipeline).'), { a: a.name }), 'good'); rerender(); } }, '☆') : k && a.owner !== 'player' ? h('span', { class: 'icon star21 on', title: t(l('No radar', 'On your radar')), 'aria-label': t(l('No radar', 'On your radar')) }, '★') : null,
             !a.owner && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small primary', onclick: () => openOffer(a.id) }, t(l('Oferta', 'Offer'))) : null,
           ),
         );

@@ -18,6 +18,7 @@ import { dir17 } from '../director17';
 import type { Decision, GameState } from '../types';
 import { fmtL, nextId, playerActs } from '../util';
 import { per13, type P13 } from './persona13';
+import { emitCard21 } from '../card21';
 
 export type Pressure = 'money' | 'heart' | 'law' | 'fame' | 'body' | 'faith' | 'power';
 export interface SitCtx {
@@ -59,6 +60,10 @@ export interface SituationDef {
   npcOnly?: boolean;
   /** r17 diretor: tom (o narrador puxa situações boas ou ruins para a frente) */
   tone?: 'good' | 'bad' | 'mixed';
+  /** r21 (J-8): tags de conteúdo (filtros de "novo jogo"; ex.: 'romance') */
+  tags?: string[];
+  /** r21 (G-1): id da opção padrão (a mais cautelosa) quando o cartão vence sem resposta; sem ela, vale a última */
+  neutral?: string;
 }
 
 export interface Sit17State {
@@ -83,6 +88,9 @@ export function sit17(s: GameState): Sit17State {
   return st;
 }
 
+/** r21 (G-12): tags de conteúdo implícitas de cada pressão (para filtros/RS). */
+const PRESSURE_TAGS21: Partial<Record<Pressure, string[]>> = { body: ['health'], law: ['crime'] };
+
 export const SITS: SituationDef[] = [];
 const byId: Record<string, SituationDef> = {};
 const PREFIX = 'sit17:';
@@ -92,7 +100,7 @@ export function registerSituation(def: SituationDef): void {
   if (byId[def.id]) { const i = SITS.findIndex((x) => x.id === def.id); SITS[i] = def; } else SITS.push(def);
   byId[def.id] = def;
   deferEvents([{
-    id: PREFIX + def.id, cat: 'people', tone: 'neutral', tags: [], cooldown: 0, forcedOnly: true, title: l('Situação', 'Situation'), text: l('…', '…'),
+    id: PREFIX + def.id, cat: 'people', tone: 'neutral', tags: def.tags ?? [], cooldown: 0, forcedOnly: true, neutral: def.neutral, title: l('Situação', 'Situation'), text: l('…', '…'),
     options: def.options.map((o) => ({ id: o.id, label: o.label, hint: o.hint, apply: (s: GameState, _r: Rng, c: Record<string, string | number>) => resolveForPlayer(s, def.id, o.id, c) })),
   }]);
 }
@@ -182,9 +190,12 @@ export function runSituations(s: GameState): { mine: string[]; npc: string[] } {
         if (def.npcOnly || out.mine.length >= 1 || s.decisions.length >= 4 || CONFLICTS19.full(s)) continue; // r19: orçamento global
         if (struggling && (def.pressure === 'money' || def.cost >= 3)) continue; // machuca, mas não mata
         const opts = def.options;
+        // r21 (G-12): voz do narrador e filtros de conteúdo/RS (pressão → tag) antes de ir para a mesa
+        const text = emitCard21(s, { key: PREFIX + def.id, text: def.text(s, ctx), tone: def.tone, tags: [...(def.tags ?? []), ...(PRESSURE_TAGS21[def.pressure] ?? [])], act: ctx.act });
+        if (!text) continue;
         const d: Decision = {
-          id: nextId(s, 'd'), eventId: PREFIX + def.id, cat: 'people', title: def.title(s, ctx), text: def.text(s, ctx),
-          options: opts.map((o) => ({ id: o.id, label: o.label, hint: o.hint })), ctx: flat(ctx), week: s.week, defaultOption: opts[opts.length - 1].id, tags: [],
+          id: nextId(s, 'd'), eventId: PREFIX + def.id, cat: 'people', title: def.title(s, ctx), text,
+          options: opts.map((o) => ({ id: o.id, label: o.label, hint: o.hint })), ctx: flat(ctx), week: s.week, defaultOption: opts.find((o) => o.id === def.neutral)?.id ?? opts[opts.length - 1].id, tags: def.tags ?? [],
         };
         s.decisions.push(d);
         out.mine.push(def.id);

@@ -20,6 +20,8 @@ import type { Act, GameState, Release } from '../types';
 import { fmtL, money, post } from '../util';
 import { headline19 } from './factlink19';
 import { post18, start18 } from './post18';
+import { addBoost21 } from './boost21';
+import { countPlatinum21, distribute, piracyLoss } from '../market';
 
 export type RK19 = 'radio_ad' | 'film' | 'tv_ad' | 'series' | 'remix' | 'game' | 'doc' | 'short' | 'viral' | 'sync';
 export const RK19: Record<RK19, { name: L; from: number; h: number; p: number }> = {
@@ -162,7 +164,7 @@ export function lateCert19(s: GameState, rel: Release): boolean {
   if (!hit || (rel.certified && RANK[rel.certified] >= RANK[hit[0]])) return false;
   rel.certified = hit[0];
   const mine = mineRel(s, rel);
-  if (mine) { if (hit[0] === 'gold') s.player.stats.gold += 1; else s.player.stats.platinum += 1; }
+  if (mine) { if (hit[0] === 'gold') s.player.stats.gold += 1; else countPlatinum21(s, rel); } // r21 B12: uma platina por disco
   const tx = fmtL(l('"{t}" ({y}) recebe disco de {c} — {n} anos depois do lançamento.', '"{t}" ({y}) is certified {c} — {n} years after release.'), { t: rel.title, y: rel.year, c: hit[2], n: s.year - rel.year });
   logR(s, tx); cnt(s, 'cert');
   emitFact(s, { kind: 'late_cert', actors: [rel.actId, ...(mine ? ['player'] : [])], severity: hit[0] === 'gold' ? 35 : 50, visibility: 'public', tags: ['revival19', hit[0], 'good'], text: tx, src: 'revival19', data: { rel: rel.id } });
@@ -191,9 +193,15 @@ export function revivalMonth19(s: GameState): void {
     const u = Math.round(x.base * x.mul * 0.85 ** x.mo * (0.85 + r.next() * 0.3));
     x.mo++;
     const per = s.year >= 2008 ? 0.25 : s.year >= 1985 ? 0.8 : 0.6;
-    const v = Math.round(u * money(s, per));
-    rel.totalUnits += u; rel.revenue += v; x.u += u; x.v += v;
-    if (mineRel(s, rel)) post(s, `rv19:${x.id}:${s.year}-${s.month}`, v, 'sales', `Sucesso tardio: ${rel.title}`);
+    // r21 (D-4): passa pelo mesmo caminho das vendas semanais (distribute): taxa de distribuição, royalty/recoupment,
+    // edição e autores, pirataria e contagem no mercado do ano — em vez de 100 % direto ao caixa do selo
+    const mine = mineRel(s, rel);
+    const gross = Math.round(u * money(s, per) * (1 - piracyLoss(s, mine)));
+    const rev0 = rel.revenue;
+    rel.totalUnits += u; x.u += u;
+    s.stats.marketUnitsYear += u; if (mine) s.stats.playerUnitsYear += u;
+    distribute(s, rel, gross, u, { fans: false });
+    x.v += rel.revenue - rev0;
     if (a) {
       const g = Math.round(u * 0.03); x.gen += g; // fãs de outra geração (fonte única: act.fans)
       a.fans.casual += g; a.fans.active += Math.round(g * 0.12);
@@ -247,7 +255,7 @@ onFact('late_cert', (s, f) => {
   if (f.actors.includes('player')) s.player.reputation.commercial = clamp(s.player.reputation.commercial + 1, 0, 100);
 }, 'revival19:cert');
 // relançamento → vitrine nas lojas (market: impulso de hype na faixa) e manchete pequena
-onFact('catalog_rerelease', (s, f) => { const rel = relOf(s, f); if (rel) rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.15); headline19(s, f.text, 1); }, 'revival19:market');
+onFact('catalog_rerelease', (s, f) => { const rel = relOf(s, f); if (rel) addBoost21(s, rel, 1.15, 8, l('Relançamento nas lojas', 'Re-release in stores')); headline19(s, f.text, 1); }, 'revival19:market');
 
 // ---------------------------------------------------------------- calendário e porquê
 

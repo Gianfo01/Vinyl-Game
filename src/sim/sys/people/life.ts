@@ -7,11 +7,34 @@ import { l, type L } from '../../../data/world';
 import { emitEvent } from '../../events';
 import { registerMod, registerSimHook } from '../../ext4';
 import { songQ } from '../../production';
+import { recoup } from '../contracts18';
 import type { GameState } from '../../types';
 import { fmtL, money, nextId, playerActs, post, remember } from '../../util';
 import { P, actOf, addMsg, addPost, clamp01, socialEra, trackedPersons } from './state';
 import { addThought } from './thoughts';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { sexOf } from '../sex17';
+import { per13 } from '../persona13';
+
+// r21 (C-7): romances de banda respeitam sexo/orientação (como love17) e não roubam quem namora o jogador
+function sexOf21(s: GameState, pid: string): 'm' | 'f' | 'x' {
+  const p = s.persons[pid];
+  return p?.sex ?? ((per13(s, `p:${pid}`)?.sex ?? 'x') as 'm' | 'f' | 'x');
+}
+function wants21(s: GameState, pid: string, other: 'm' | 'f' | 'x'): boolean {
+  const me = sexOf21(s, pid);
+  const o = sexOf(s, pid).o;
+  if (o === 'ace') return false;
+  if (o === 'bi' || me === 'x' || other === 'x') return true;
+  return o === 'gay' ? me === other : me !== other;
+}
+export function compatible21(s: GameState, a: string, b: string): boolean {
+  return wants21(s, a, sexOf21(s, b)) && wants21(s, b, sexOf21(s, a));
+}
+function datesPlayer21(s: GameState, pid: string): boolean {
+  const x = s.x4 as unknown as { life?: { partner?: { personId?: string } | null }; love17?: { affair?: { pid?: string } } };
+  return x.life?.partner?.personId === pid || x.love17?.affair?.pid === pid;
+}
 
 // ---------------------------------------------------------------- romances
 
@@ -50,7 +73,7 @@ function romanceMonth(s: GameState, r: Rng): void {
   const st = P(s);
   for (const actId of playerActs(s)) {
     const act = s.acts[actId];
-    const ms = act.members.map((id) => s.persons[id]).filter((p) => p?.alive && !p.isPlayer && s.year - p.born >= 18);
+    const ms = act.members.map((id) => s.persons[id]).filter((p) => p?.alive && !p.isPlayer && s.year - p.born >= 18 && !datesPlayer21(s, p.id));
     if (ms.length < 2) continue;
     const cur = activeRomance(s, actId);
     if (!cur) {
@@ -61,6 +84,7 @@ function romanceMonth(s: GameState, r: Rng): void {
           const b = ms[j];
           if ((a.rel[b.id] ?? 0) < 35 || st.romances.some((x) => x.status === 'together' && [x.a, x.b].some((y) => y === a.id || y === b.id))) continue;
           if (!r.chance(0.012)) continue;
+          if (!compatible21(s, a.id, b.id)) continue; // r21 (C-7): depois do sorteio, para não deslocar o Rng dos outros pares
           st.romances.push({ id: nextId(s, 'ro'), a: a.id, b: b.id, actId, since: s.week, status: 'together' });
           a.rel[b.id] = Math.min(100, (a.rel[b.id] ?? 0) + 20);
           b.rel[a.id] = Math.min(100, (b.rel[a.id] ?? 0) + 20);
@@ -209,7 +233,7 @@ export function personalAdvance(s: GameState, pid: string, amount: number): L | 
   post(s, `personaladv:${pid}`, -amount, 'advances', `Adiantamento ${p.name}`);
   P(s).wealth[pid] = (P(s).wealth[pid] ?? 0) + amount;
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
-  if (c) c.recoupBalance += amount;
+  recoup(s, c, 'adv', amount); // r21 (H-9)
   act.trust = clamp01(act.trust + 5);
   return null;
 }

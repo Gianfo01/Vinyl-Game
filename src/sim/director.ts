@@ -4,7 +4,8 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { cityById, l, type L } from '../data/world';
-import { emitEvent, registerEvents, type EventDef } from './events';
+import { emitEvent, type EventDef } from './events';
+import { deferEvents } from './ext4';
 import type { Act, GameState, MemoryEntry } from './types';
 import type { Arc } from './xtypes';
 import { rng19 } from './rng19';
@@ -100,13 +101,16 @@ const ARC_EVENTS: EventDef[] = [
   },
 ];
 
-registerEvents(ARC_EVENTS);
+deferEvents(ARC_EVENTS); // r21: fila do ext4
 
-const NEGATIVE_KINDS = ['decision:arc_betrayal', 'promise_broken', 'left', 'stage_incident', 'separation', 'reunion_fail', 'seizure', 'event:coverup_exposed', 'stress_alert'];
+// r21 (G-8): só memórias negativas DE VERDADE contam como "velha ferida" — decisões do selo que pesam contra o ato,
+// em lista explícita (antes, qualquer `decision:*`, inclusive "Convite: TV → Aceitar", virava mágoa).
+const NEGATIVE_DECISIONS = ['arc_betrayal', 'burnout', 'voice_strain', 'genre_shift', 'credit_dispute', 'royalty_audit', 'boycott', 'censorship', 'member_leaves', 'rival_poach', 'poach_attempt', 'clone_without_consent', 'contract_leak', 'addiction', 'coverup_exposed'].map((x) => `decision:${x}`);
+const NEGATIVE_KINDS = [...NEGATIVE_DECISIONS, 'promise_broken', 'left', 'stage_incident', 'separation', 'reunion_fail', 'seizure', 'event:coverup_exposed', 'stress_alert'];
 
 function negativeMemory(s: GameState, a: Act): MemoryEntry | undefined {
   const ids = new Set(a.history);
-  return s.memory.filter((m) => ids.has(m.id) && s.week - m.week < 104 && s.week - m.week > 8 && (NEGATIVE_KINDS.includes(m.kind) || m.kind.startsWith('decision:'))).sort((x, y) => y.week - x.week)[0];
+  return s.memory.filter((m) => ids.has(m.id) && s.week - m.week < 104 && s.week - m.week > 8 && NEGATIVE_KINDS.includes(m.kind)).sort((x, y) => y.week - x.week)[0];
 }
 
 function startArc(s: GameState, kind: Arc['kind'], title: L, actors: string[], stages: number, gapWeeks: number, memoryIds: string[] = []): Arc {
@@ -210,7 +214,7 @@ function runStage(s: GameState, r: Rng, arc: Arc): void {
       break;
     }
     case 'betrayal':
-      if (a0) emitEvent(s, r, 'arc_betrayal', { act: a0.id, mem: arc.memoryIds[0] ?? '', arc: arc.id });
+      if (a0 && arc.stage === 0) emitEvent(s, r, 'arc_betrayal', { act: a0.id, mem: arc.memoryIds[0] ?? '', arc: arc.id }); // r21 (B6): o cartão sai uma vez
       next(4);
       break;
     case 'scene': {

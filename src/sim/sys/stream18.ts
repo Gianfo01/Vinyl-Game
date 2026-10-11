@@ -18,6 +18,7 @@ import { countryOfCity } from '../../data/geo';
 import { cityById, l, marketById, type L, type MarketId } from '../../data/world';
 import { registerExplain } from '../explain18';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
+import { bannedMarkets } from '../media';
 import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { STREAM_PAYOUT17 } from '../market';
@@ -154,7 +155,8 @@ export function payout18(s: GameState, rel: Release): Payout18 {
   const ret = rel.st18?.ret || retOf18(s, rel);
   // fã que volta tende a assinar; quem chega por vídeo/playlist tende a ouvir grátis
   const skew = clamp((ret - RET_NORM) * 0.8 - (m.vid ?? 0) * 0.25 - (m.pl ?? 0) * 0.08, -0.2, 0.2);
-  const terrs = (rel.territories.length ? rel.territories : [home]).filter((t) => marketById[t]);
+  const bans = bannedMarkets(s, rel.id); // r21 (D-5): mercado onde o disco está proibido não entra no bolo
+  const terrs = (rel.territories.length ? rel.territories : [home]).filter((t) => marketById[t] && !bans.has(t));
   let num = 0, den = 0;
   const terr: Payout18['terr'] = [];
   for (const t of terrs) { const w = marketById[t].size(y); const v = tierVal(y, t, skew); num += w * v; den += w; terr.push({ m: t, w, v }); }

@@ -3,37 +3,82 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { MARKETS, l, type L, type MarketId } from '../data/world';
-import { endContract } from './contracts';
+import { endContract, transferAct } from './contracts';
 import { rightsOf } from './rights';
 import type { Act, Contract, GameState } from './types';
-import { fmtL, money, notify, playerActs, post, remember } from './util';
+import { fmtL, money, notify, playerActs, post, remember, rngOf } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { recoup } from './sys/contracts18';
+import { setClause19 } from './sys/moneyb19';
 
 export function contractOf(s: GameState, act: Act): Contract | undefined {
   return act.contractId ? s.contracts[act.contractId] : undefined;
 }
 
-/** Ajusta cláusulas negociadas ao assinar (chamado pela UI de oferta avançada). */
+export type ClauseKind2 = 'option' | 'cross' | 'exit';
+export const CLAUSE_COOLDOWN2 = 26;
+/** r21 (H-4): cláusula depois da assinatura é uma renegociação — o artista precisa concordar. Chance pela confiança,
+ *  custo de confiança ao pedir e cooldown de 26 semanas por ato (o mesmo do `setClause19`). */
+export function clauseConsent2(s: GameState, act: Act, kind: ClauseKind2, undo = false): { p: number; band: L; cost: number; cooldown: number } {
+  const cooldown = Math.max(0, (s.flags[`clauseCd:${act.id}`] ?? 0) - s.week);
+  if (undo) return { p: 1, band: l('certa', 'certain'), cost: 0, cooldown };
+  const base = kind === 'exit' ? 0.1 : kind === 'cross' ? 0.15 : 0.2;
+  const p = clamp(base + act.trust / 125, 0.05, 0.9);
+  const band = p >= 0.6 ? l('alta', 'high') : p >= 0.35 ? l('média', 'medium') : l('baixa', 'low');
+  return { p, band, cost: kind === 'exit' ? 5 : kind === 'cross' ? 4 : 3, cooldown };
+}
+
+/** Ajusta cláusulas negociadas (ao assinar, ou depois — com consentimento do artista; r21, H-4).
+ *  A multa de saída tem um único gravador: `moneyb19.setClause19` (valor, custo e cooldown). */
 export function setClauses(s: GameState, actId: string, c: { territories?: MarketId[]; crossCollat?: boolean; options?: number; exitFee?: number }): L | null {
   const act = s.acts[actId];
   const k = act ? contractOf(s, act) : undefined;
   if (!k || k.party !== 'player') return l('Contrato inválido.', 'Invalid contract.');
   if (c.territories) k.territories = c.territories;
-  if (c.crossCollat !== undefined) {
+  const fresh = k.startWeek === s.week; // na assinatura ainda é a mesa de negociação: nada a consentir
+  const ask = (kind: ClauseKind2, undo: boolean): L | null => {
+    if (fresh) return null;
+    const cc = clauseConsent2(s, act, kind, undo);
+    if (cc.cooldown > 0) return fmtL(l('Renegociou uma cláusula há pouco: espere {w} semana(s).', 'A clause was renegotiated recently: wait {w} week(s).'), { w: cc.cooldown });
+    s.flags[`clauseCd:${act.id}`] = s.week + CLAUSE_COOLDOWN2;
+    if (undo) return null;
+    act.trust = clamp(act.trust - cc.cost, 0, 100);
+    if (!rngOf(s).chance(cc.p)) {
+      remember(s, 'clause_refused', fmtL(l('{a} recusou a cláusula nova que o selo pediu.', '{a} refused the new clause the label asked for.'), { a: act.name }), { actId });
+      return fmtL(l('{a} não aceitou a cláusula (chance {b}); a confiança caiu {c}.', '{a} did not accept the clause ({b} chance); trust fell {c}.'), { a: act.name, b: cc.band, c: cc.cost });
+    }
+    remember(s, 'clause_added', fmtL(l('{a} aceitou renegociar uma cláusula do contrato.', '{a} agreed to renegotiate a contract clause.'), { a: act.name }), { actId });
+    return null;
+  };
+  if (c.crossCollat !== undefined && !!k.crossCollat !== c.crossCollat) {
+    const e = ask('cross', !c.crossCollat);
+    if (e) return e;
     k.crossCollat = c.crossCollat;
     if (c.crossCollat) {
       // saldos de contratos anteriores do mesmo ato passam a compensar entre si
       for (const other of Object.values(s.contracts)) {
         if (other.id !== k.id && other.actId === actId && other.party === 'player' && other.recoupBalance > 0) {
-          k.recoupBalance += other.recoupBalance;
+          recoup(s, k, 'adv', other.recoupBalance);
           other.recoupBalance = 0;
         }
       }
-      act.trust = clamp(act.trust - 4, 0, 100);
+      if (fresh) act.trust = clamp(act.trust - 4, 0, 100);
     }
   }
-  if (c.options !== undefined) k.options = clamp(c.options, 0, 3);
-  if (c.exitFee !== undefined) k.exitFee = Math.max(0, c.exitFee);
+  if (c.options !== undefined && (k.options ?? 0) !== clamp(c.options, 0, 3)) {
+    const e = ask('option', clamp(c.options, 0, 3) < (k.options ?? 0));
+    if (e) return e;
+    k.options = clamp(c.options, 0, 3);
+  }
+  if (c.exitFee !== undefined && (k.exitFee ?? 0) !== Math.max(0, c.exitFee)) {
+    const e = ask('exit', c.exitFee <= 0);
+    if (e) return e;
+    if (fresh) k.exitFee = Math.max(0, c.exitFee);
+    else {
+      const r = setClause19(s, actId, c.exitFee > 0 ? 'fair' : 'none');
+      if (r) return r;
+    }
+  }
   return null;
 }
 
@@ -77,14 +122,10 @@ export function buyoutContract(s: GameState, r: Rng, actId: string): L | null {
     return fmtL(l('{b} recusou vender o contrato.', '{b} refused to sell the contract.'), { b: lb?.name ?? '' });
   }
   post(s, `buyout:${actId}`, -price, 'acquisitions', `Buyout de ${act.name}`);
-  if (lb) {
-    lb.cash += price;
-    lb.roster = lb.roster.filter((x) => x !== actId);
-  }
+  if (lb) lb.cash += price;
   k.party = 'player';
-  act.owner = 'player';
+  transferAct(s, act, 'player', 'bought'); // r21 (H-3)
   act.trust = clamp(act.trust + 5, 0, 100);
-  s.delegated[actId] = true;
   remember(s, 'buyout', fmtL(l('{c} compra o contrato de {a} de {b}.', '{c} buys {a}\'s contract from {b}.'), { c: s.config.companyName, a: act.name, b: lb?.name ?? '' }), { actId, important: true });
   return null;
 }
@@ -112,7 +153,7 @@ export function crisisRenegotiate(s: GameState, actId: string, kind: 'advance' |
     const amt = money(s, 3000 + act.fame * 100);
     if (freeCash20(s) < amt) return cashWhy20(s, amt, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `crisisadv:${actId}`, -amt, 'advances', `Adiantamento emergencial ${act.name}`);
-    k.recoupBalance += amt;
+    recoup(s, k, 'adv', amt);
     act.cash += amt;
     act.trust = clamp(act.trust + 8, 0, 100);
     return null;
@@ -136,9 +177,7 @@ export function contracts2Month(s: GameState, r: Rng): void {
     const k = contractOf(s, act);
     if (!k || k.party !== 'player' || act.playerBand) continue;
     if (k.exitFee && act.trust < 25 && act.cash > k.exitFee && r.chance(0.2)) {
-      act.cash -= k.exitFee;
-      post(s, `exit:${id}`, k.exitFee, 'licensing', `Multa de saída ${act.name}`);
-      endContract(s, act, 'left');
+      endContract(s, act, 'left'); // r21 (H-5): a multa é cobrada dentro de endContract
       continue;
     }
     // artista em crise pede socorro (vira notificação; a UI oferece a renegociação)

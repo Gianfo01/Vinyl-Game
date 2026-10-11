@@ -12,7 +12,7 @@ import { processPlayerAgendas } from './agenda';
 import { registerMovementGenres } from './culture';
 import { checkPromises, endContract, resolveOffers } from './contracts';
 import { checkInsolvency, payMonth, refreshProfessionals } from './economy';
-import { resolveDecision, storyteller } from './events';
+import { emitEvent, resolveDecision, storyteller } from './events';
 import { checkCardGoal, finishArc, updateLegacy } from './legacy';
 import { monthlyPeople, newRivalLabel, npcProduction, prune, worldSpawns } from './lifecycle';
 import { launchPending, marketWeek } from './market';
@@ -39,6 +39,9 @@ function openMonth(s: GameState, r: Rng): void {
   s.clock.monthStartWeek = s.week;
   s.clock.dayInMonth = 0;
   s.clock.opened = true;
+  // gêneros de movimentos são globais: garante que pertençam a este jogo (várias partidas no mesmo processo).
+  // r21 (2.4): só aqui e no `migrate` — antes rodava a cada semana e de novo no fecho do mês
+  registerMovementGenres(s);
   startPlans(s, r);
   processPlayerAgendas(s, r);
 }
@@ -55,8 +58,6 @@ function daysInCurrentMonth(s: GameState): number {
 export function advanceWeek(s: GameState): boolean {
   if (s.ended && !s.flags.sandbox) return true;
   const r = rngOf(s);
-  // gêneros de movimentos são globais: garante que pertençam a este jogo (várias partidas no mesmo processo)
-  registerMovementGenres(s);
   if (!s.clock.opened) openMonth(s, r);
   const dim = daysInCurrentMonth(s);
   while (s.clock.dayInMonth < dim) {
@@ -147,10 +148,13 @@ function contractsMonth(s: GameState): void {
     if (!c || act.playerBand) continue;
     if (c.party !== 'player') continue;
     const left = c.endWeek - s.week;
+    const warnKey = `cwarn:${act.contractId}:${c.endWeek}`; // r21 (1.9): o aviso sai uma vez por contrato (a janela cabia em 2 fechos)
     if (left <= 0) {
       endContract(s, act, s.flags[`leaving:${act.id}`] ? 'left' : 'expired');
       delete s.flags[`leaving:${act.id}`];
-    } else if (left <= 13 && left > 8) {
+      delete s.flags[warnKey];
+    } else if (left <= 13 && left > 8 && !s.flags[warnKey]) {
+      s.flags[warnKey] = s.week;
       notify(s, fmtL(l('Contrato de {a} vence em ~3 meses.', '{a}\'s contract ends in ~3 months.'), { a: act.name }), 'event');
     }
     // confiança muito baixa: o ato pede saída negociada
@@ -182,7 +186,8 @@ function genresMonth(s: GameState, r: ReturnType<typeof rngOf>): void {
   const alive = GENRES.filter((g) => g.born <= s.year && (!g.id.startsWith('mv_') || s.movements.some((m) => m.genreId === g.id)));
   const total = Object.values(counts).reduce((t, x) => t + x, 0) || 1;
   for (const g of alive) {
-    if (g.born === s.year && s.month === 0) {
+    // r21 (1.9): gênero nascido no ano inicial já vem semeado por worldgen — não zera nem anuncia
+    if (g.born === s.year && s.month === 0 && s.year !== s.config.startYear) {
       s.genrePop[g.id] = 0.55;
       remember(s, 'genre_born', fmtL(l('Surge um novo gênero: {g}.', 'A new genre emerges: {g}.'), { g: g.name }), { important: true });
     }
@@ -210,14 +215,20 @@ function economyMonth(s: GameState): void {
 }
 
 function techMonth(s: GameState): void {
+  // r21 (1.9): roda depois de virar o calendário, então o "mês 0" do ano inicial nunca chega — o primeiro fecho
+  // (fev do ano inicial) faz as vezes dele para anunciar tecnologia que chega no próprio ano inicial
+  const m0 = s.month === 0 || (s.month === 1 && s.year === s.config.startYear);
   for (const t of TECHS) {
     const y = s.techDates[t.id];
     if (y === undefined) continue;
-    if (s.year === y && s.month === 0) {
+    if (s.year === y && m0) {
       notify(s, fmtL(l('Nova tecnologia: {t}.', 'New technology: {t}.'), { t: t.name }), 'event');
       remember(s, 'tech', fmtL(l('Chega {t}.', '{t} arrives.'), { t: t.name }), { important: true });
     }
-    if (s.year === y - 2 && s.month === 0) {
+    // r21 (G-4): a divergência neural é sempre decidida — cartão forçado no mês em que a tecnologia chega (ou no 1º mês
+    // em que ainda não foi decidida), em vez de concorrer no sorteio ponderado
+    if (t.id === 'neural' && s.year >= y && s.divergence.neural === undefined && !s.decisions.some((d) => d.eventId === 'neural_vote')) emitEvent(s, rngOf(s), 'neural_vote', {});
+    if (s.year === y - 2 && m0) {
       s.rumors.push({ id: t.id, text: fmtL(l('Rumor: engenheiros testam {t}. Ninguém sabe quando chega.', 'Rumor: engineers are testing {t}. Nobody knows when it lands.'), { t: t.name }), week: s.week, resolvesYear: y });
     }
   }
@@ -230,7 +241,12 @@ function techMonth(s: GameState): void {
 /** Impostos sobre o resultado positivo do ano (cascata do GDD §18). */
 function payTaxes(s: GameState, year: number): void {
   // r18: base de cálculo = resultado operacional + não operacional (câmbio, juros), nunca aportes/empréstimos
-  const profit = (s.player.profitByYear[year] ?? 0) + sumP18(fin18(s).y[year], 'nonop:');
+  const result = (s.player.profitByYear[year] ?? 0) + sumP18(fin18(s).y[year], 'nonop:');
+  // r21 (B-7): prejuízo do ano vira crédito fiscal (lossCarry) e abate a base dos anos seguintes
+  const carry = Math.max(0, s.economy.lossCarry ?? 0);
+  if (result <= 0) { s.economy.lossCarry = carry - result; return; }
+  const profit = result - carry;
+  s.economy.lossCarry = Math.max(0, carry - result);
   if (profit <= 0) return;
   if (year < 1909) return;
   const rate = year < 1909 ? 0 : year < 1916 ? 0.01 : year < 1917 ? 0.02 : year < 1918 ? 0.06 : year < 1920 ? 0.12 : profit > money(s, 1_000_000) ? 0.32 : 0.22; // r18 era1889: imposto de renda só a partir de 1909/1913

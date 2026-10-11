@@ -5,7 +5,7 @@ import { l, type L, type MarketId, MARKETS, MARKET_PREF, cityById, familyOf } fr
 import { clamp } from '../../core/rng';
 import { registerSimHook } from '../ext4';
 import { arTotal18, apTotal18, bucket18, fin18, mIdx18, opProfit18, type Bucket18 } from '../ledger18';
-import { monthlyCosts } from '../economy';
+import { burn20 } from '../oblig20';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, notify, post, remember, settleCash } from '../util';
 import { physShareRel18 } from './eras18';
@@ -232,8 +232,7 @@ export function liquid18(s: GameState, months = 2): number {
 export function cashForecast18(s: GameState, months = 6): { mi: number; cash: number; inn: number; out: number }[] {
   const f = fin18(s);
   const mi = mIdx18(s);
-  const c = monthlyCosts(s);
-  const burn = c.rent + c.salaries + c.outsourcing + c.loans + c.equipment;
+  const burn = burn20(s); // r21 (seção 4.3): burn canônico (custo fixo + obrigações mensais + overhead + seguros)
   let cash = s.player.cash;
   const out: { mi: number; cash: number; inn: number; out: number }[] = [];
   for (let k = 1; k <= months; k++) {

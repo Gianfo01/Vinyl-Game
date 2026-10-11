@@ -18,7 +18,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { setFameAt } from '../famehook16';
 import type { Act, GameState } from '../types';
 import { fmtL, notify } from '../util';
-import { board, ch7 } from './charts7';
+import { board, ch7, countryHook21 } from './charts7';
 import { FTIERS, fameTier, f15, feeMult, mainActOf, personFame } from './fame15';
 import { addHype } from './hype12';
 import { mapx } from './mapx8';
@@ -365,3 +365,6 @@ registerMod('showRevenue', 'fame16', (s, v, c) => {
   const k = [1, 1, 1.05, 1.12, 1.22, 1.3][fameTier(loc)] / feeMult(c.act);
   return Math.abs(k - 1) < 0.01 ? null : { value: v * k, label: ratioLabel(s, c.act, c.cityId, loc) };
 });
+
+// r21 (§4): a parada de cada país lê a fama regional (sem ciclo: o gancho mora no charts7)
+countryHook21.fame = (s, a, a3) => fameIn(s, a, a3);

@@ -57,7 +57,7 @@ export interface FormatDef {
 }
 
 export const FORMATS: FormatDef[] = [
-  { id: 'shellac', name: l('Goma-laca 78 rpm', 'Shellac 78 rpm'), physical: true, until: 'single45', net: { single: 3.6, ep: 6, lp: 11 }, unitCost: 0.9 },
+  { id: 'shellac', name: l('Goma-laca 78 rpm', 'Shellac 78 rpm'), physical: true, tech: 'disc', until: 'single45', /* r21: disco de Berliner (1895) */ net: { single: 3.6, ep: 6, lp: 11 }, unitCost: 0.9 },
   { id: 'single45', name: l('Vinil 45 rpm', '45 rpm vinyl'), physical: true, tech: 'single45', until: 'cd', net: { single: 3.4, ep: 6, lp: 11 }, unitCost: 0.55 },
   { id: 'lp', name: l('LP', 'LP'), physical: true, tech: 'lp', net: { single: 3.4, ep: 8, lp: 14 }, unitCost: 1.6 },
   { id: 'cassette', name: l('Cassete', 'Cassette'), physical: true, tech: 'cassette', until: 'download', net: { single: 2.8, ep: 6, lp: 10 }, unitCost: 0.8 },

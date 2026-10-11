@@ -11,9 +11,10 @@ import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
 import { offerMods } from './ext4';
-import { freeCash20 } from './oblig20';
+import { cashWhy20, freeCash20 } from './oblig20';
 export { registerOfferMod } from './ext4';
-import { rivalSignOk, useMeeting } from './sys/gate14';
+import { rivalSignOk, signVetoed, useMeeting } from './sys/gate14';
+import { recoup } from './sys/contracts18';
 
 // Ganchos de negociação (rodada 8): sistemas como a identidade do selo e o estilo de liderança mexem na
 // avaliação das ofertas (com motivo visível) e na chance de renovação, sem editar este arquivo.
@@ -330,7 +331,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
   }
   if (o.clauses18) c.clauses18 = { ...o.clauses18 };
   s.contracts[id] = c;
-  act.owner = 'player';
+  transferAct(s, act, 'player', 'signed');
   act.contractId = id;
   act.trust = clamp(act.trust + 10 + perk(s, 'trust', act), 0, 100);
   act.cash += o.advance;
@@ -347,8 +348,10 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
 }
 
 export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng, force = false): void {
-  if (!force && !rivalSignOk(s, labelId, act)) return; // rodada 14: A&R do rival tem limite por mês
+  if (signVetoed(s, labelId, act)) return; // r21 (H-6): desenvolvimento, bolsa e independente por opção valem mesmo com force
+  if (!force && !rivalSignOk(s, labelId, act)) return; // rodada 14: A&R do rival tem limite por mês (force só pula isto)
   const lb = s.labels[labelId];
+  if (!lb) return;
   const id = nextId(s, 'k');
   s.contracts[id] = {
     id, actId: act.id, party: labelId, model: lb.family === 'A' && r.chance(0.3) ? '360' : 'classic',
@@ -357,31 +360,84 @@ export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng, f
     publishing: lb.family === 'D', share360: 0, recoupBalance: money(s, expectedAdvance(s, act)), promises: [],
   };
   lb.cash -= money(s, expectedAdvance(s, act));
-  act.owner = labelId;
   act.contractId = id;
-  lb.roster.push(act.id);
+  transferAct(s, act, labelId, 'signed');
   if (act.status === 'emerging') act.status = 'active';
   const k = s.knowledge[act.id];
   if (k && k.stage !== 'signal') k.stage = 'monitoring';
 }
 
-/** Libera o ato do contrato (vencimento, rescisão ou saída negociada). */
+/** Motivo de uma troca de dono (r21, H-3). */
+export type TransferReason = 'expired' | 'terminated' | 'left' | 'signed' | 'bought' | 'sold' | 'absorbed' | 'sublabel' | 'assigned' | 'clause';
+
+/** r21 (H-3): ÚNICO lugar que muda o dono de um ato. Tira do roster do selo antigo e de todo subselo, limpa agenda,
+ *  delegação e pistas de olheiro; quem recebe entra no roster certo. `to = null` = ato livre. Não mexe no contrato
+ *  (quem transfere um contrato vivo ajusta `party` antes/depois); `act.contractId` fica com o chamador. */
+export function transferAct(s: GameState, act: Act, to: string | null, reason: TransferReason): void {
+  const from = act.owner;
+  if (from && from !== 'player') {
+    const lb = s.labels[from];
+    if (lb) lb.roster = lb.roster.filter((x) => x !== act.id);
+  }
+  for (const sl of s.subLabels) sl.roster = sl.roster.filter((x) => x !== act.id);
+  act.owner = to;
+  if (to === 'player') {
+    s.delegated[act.id] = s.delegated[act.id] ?? true;
+  } else {
+    delete s.agenda[act.id];
+    delete s.delegated[act.id];
+    if (to) {
+      const lb = s.labels[to];
+      if (lb && !lb.roster.includes(act.id)) lb.roster.push(act.id);
+    }
+  }
+  if (to) {
+    // já tem casa: sai das pistas das missões de olheiro; o dossiê (radar) passa a acompanhar
+    for (const sc of s.scouts) if (sc.mission?.leads) sc.mission.leads = sc.mission.leads.filter((x) => x !== act.id);
+    const k = s.knowledge[act.id];
+    if (k && to !== 'player' && k.stage !== 'signal' && k.stage !== 'monitoring') k.stage = 'monitoring';
+  }
+  void reason;
+}
+
+export type SignVia = 'offer' | 'auction' | 'dev' | 'manager' | 'scout' | 'event';
+/** r21 (H-7): ÚNICO caminho de assinatura fora das ofertas pendentes — elegibilidade central (`scoutEligible20`),
+ *  caixa livre (`freeCash20`), reunião opcional e `acceptOffer` (que dispara dossiê, memória e delegação). */
+export function signAct(s: GameState, act: Act, terms: Partial<Omit<Offer, 'id' | 'week' | 'status'>>, via: SignVia, opts: { meeting?: boolean } = {}): { ok: boolean; why?: L } {
+  const el = scoutEligible20(s, act);
+  if (!el.ok) return { ok: false, why: el.why };
+  const o: Offer = { ...defaultOffer(s, act), ...terms, actId: act.id, id: nextId(s, 'o'), week: s.week, status: 'pending' };
+  if (o.advance > 0 && freeCash20(s) < o.advance) return { ok: false, why: cashWhy20(s, o.advance, l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')) };
+  if (opts.meeting && useMeeting(s)) return { ok: false, why: l('Sem reunião livre este mês.', 'No meeting slot left this month.') };
+  acceptOffer(s, act, o);
+  s.flags[`signVia:${act.id}`] = via === 'offer' ? 1 : via === 'auction' ? 2 : via === 'dev' ? 3 : via === 'manager' ? 4 : via === 'scout' ? 5 : 6;
+  return { ok: true };
+}
+
+/** Libera o ato do contrato (vencimento, rescisão ou saída negociada).
+ *  r21 (H-5): quando o artista sai por vontade própria (`left`) e o contrato tem multa de saída, a multa é cobrada aqui
+ *  (até o caixa do ato) — todos os caminhos de saída passam por este ponto. */
 export function endContract(s: GameState, act: Act, reason: 'expired' | 'terminated' | 'left'): void {
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c) c.endWeek = Math.min(c.endWeek, s.week);
-  if (act.owner && act.owner !== 'player') {
-    const lb = s.labels[act.owner];
-    if (lb) lb.roster = lb.roster.filter((x) => x !== act.id);
-  }
   const wasPlayer = act.owner === 'player';
-  act.owner = act.playerBand ? 'player' : null;
+  let fee = 0;
+  if (reason === 'left' && wasPlayer && !act.playerBand && c && c.party === 'player' && (c.exitFee ?? 0) > 0) {
+    fee = Math.min(c.exitFee ?? 0, Math.max(0, act.cash));
+    if (fee > 0) {
+      act.cash -= fee;
+      post(s, `exit:${act.id}`, fee, 'licensing', `Multa de saída ${act.name}`);
+    }
+  }
+  transferAct(s, act, act.playerBand ? 'player' : null, reason);
   act.contractId = undefined;
   if (wasPlayer && !act.playerBand) {
-    delete s.agenda[act.id];
     const why = { expired: l('fim do contrato', 'contract ended'), terminated: l('rescisão', 'termination'), left: l('saída por insatisfação', 'left unhappy') }[reason];
     notify(s, fmtL(l('{act} deixou o selo ({reason}).', '{act} left the label ({reason}).'), { act: act.name, reason: why }), reason === 'expired' ? 'info' : 'bad');
     remember(s, 'left', fmtL(l('{act} saiu do selo: {reason}.', '{act} left the label: {reason}.'), { act: act.name, reason: why }), { actId: act.id, important: true });
     if (reason === 'left') s.player.stats.leftUnhappy += 1;
+    if (fee > 0) remember(s, 'exit_fee', fmtL(l('{act} pagou a multa de saída ({v}) para deixar o selo.', '{act} paid the exit fee ({v}) to leave the label.'), { act: act.name, v: `$${Math.round(fee / 100).toLocaleString('en-US')}` }), { actId: act.id });
+    else if (reason === 'left' && (c?.exitFee ?? 0) > 0) remember(s, 'exit_fee', fmtL(l('{act} saiu sem caixa para a multa de saída: o selo não recebeu nada.', '{act} left without cash for the exit fee: the label got nothing.'), { act: act.name }), { actId: act.id });
   }
 }
 
@@ -390,7 +446,7 @@ export function renewContract(s: GameState, actId: string, months: number, bonus
   const act = s.acts[actId];
   const c = act?.contractId ? s.contracts[act.contractId] : undefined;
   if (!act || !c || c.party !== 'player') return false;
-  if (s.player.cash < bonus) return false;
+  if (freeCash20(s) < bonus) return false; // r21 (1.14): respeita o caixa reservado por ofertas pendentes
   const r = rngOf(s);
   const extra = contractHooks().reduce((t, x) => t + (x.h.renew?.(s, act) ?? 0), 0);
   const p = clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3 + extra + renewalAdj(s, c), 0, 0.97);
@@ -402,7 +458,7 @@ export function renewContract(s: GameState, actId: string, months: number, bonus
   c.endWeek = Math.max(c.endWeek, s.week) + Math.round(months * 4.35);
   c.termMonths += months;
   c.releasesOwed += Math.ceil(months / 14);
-  c.recoupBalance += bonus;
+  recoup(s, c, 'adv', bonus); // r21 (H-9): único gravador do recuperável
   c.fameAtSign = Math.round(act.fame * 10) / 10; // renovação zera o poder de barganha acumulado
   c.lastRenegWeek = s.week;
   act.cash += bonus;

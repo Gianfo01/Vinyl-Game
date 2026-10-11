@@ -18,6 +18,7 @@ import { Rng, clamp } from '../../core/rng';
 import { MGR_STYLE, mgrById, type MgrStyle, type RealMgr } from '../../data/managers14';
 import { cityById, familyOf, l, type L } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
+import { recoup } from './contracts18';
 import { dir17 } from '../director17';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact, onFact, type Fact } from '../facts17';
@@ -36,6 +37,8 @@ import { genMgrs16 } from './people16';
 import { per13, type P13 } from './persona13';
 import { bump } from './social8';
 import { SIGN_VETO } from './gate14';
+import { labelPost } from '../rivalledger21';
+import { allowed21 } from '../allowed21';
 
 // ---------------------------------------------------------------- estado
 
@@ -194,8 +197,8 @@ export function leaveLabel17(s: GameState, r: Rng, a: Act, lb: Label, ws: L[], c
     return;
   }
   const buy = Math.round(money(s, expectedAdvance(s, a)) * 0.4);
-  nl.cash -= buy;
-  lb.cash += buy;
+  labelPost(s, nl, -buy, 'advances', `Rescisão de ${a.name}`);
+  labelPost(s, lb, buy, 'asset_sales', `Rescisão paga por ${nl.name}`);
   signWithRival(s, a, nl.id, r, true);
   move(s, { k: 'label_exit', a: a.id, lb: lb.id, lb2: nl.id, t: fmtL(l('{a} trocou a {b} pela {c} ({w}); a {c} pagou a rescisão.', '{a} swapped {b} for {c} ({w}); {c} paid the buyout.'), { a: a.name, b: lb.name, c: nl.name, w: why(ws) }) },
     { kind: 'signing', actors: [a.id, nl.id, lb.id], sev: 20 + a.fame / 3, vis: a.fame >= 30 ? 'public' : 'rumor', tags: ['label', 'transfer'], place: a.city, cause });
@@ -253,7 +256,7 @@ function strikes(s: GameState, r: Rng, W: number): void {
       c.royalty = Math.min(0.5, c.royalty + 0.04);
       move(s, { k: 'strike_end', a: aid, lb: lb.id, t: fmtL(l('A {b} cedeu à greve de {a}: royalties +4 pontos ({w}).', '{b} gave in to {a}\'s strike: royalties +4 points ({w}).'), { a: a.name, b: lb.name, w: why(ws) }) }, { kind: 'deal', actors: [aid, lb.id], sev: 20, vis: 'public', tags: ['strike'] });
     } else if (opt === 'sue') {
-      lb.cash -= money(s, 30000); a.cash -= money(s, 15000);
+      labelPost(s, lb, -money(s, 30000), 'legal', `Processo contra ${a.name}`); a.cash -= money(s, 15000);
       const lead = leadOf(s, a); if (lead) addStress(s, lead.id, 12, l('Processo do selo', 'Lawsuit from the label'));
       grantHold(s, { holder: aid, target: lb.id, kind: 'grievance', strength: 50, months: 60, text: l('processou durante a greve', 'sued during the strike'), src: 'npc17', quiet: true });
       move(s, { k: 'strike_end', a: aid, lb: lb.id, t: fmtL(l('A {b} processou {a} pela greve; os dois saem feridos e a mágoa fica ({w}).', '{b} sued {a} over the strike; both come out bruised and the grudge stays ({w}).'), { a: a.name, b: lb.name, w: why(ws) }) }, { kind: 'case_ruling', actors: [aid, lb.id], sev: 35, vis: 'public', tags: ['strike', 'lawsuit'] });
@@ -322,7 +325,7 @@ function founding(s: GameState, r: Rng, W: number): void {
     cs.push({ w: v + a.fame / 50, go: () => {
       const ws = imprint ? l('virou grande demais para ser só mais um no elenco; a major prefere dar um selo a perder a estrela', 'became too big to be just another roster act; the major would rather give a label than lose the star')
         : l('ambição e vontade de mandar na própria obra', 'ambition and wanting control over their own work');
-      if (imprint) owner!.cash -= money(s, 100000);
+      if (imprint) labelPost(s, owner!, -money(s, 100000), 'capex', `Selo próprio para ${p.name}`);
       const lb = foundLabel17(s, r, { by: `p:${p.id}`, name: p.name, born: p.born, city: a.city, genre: a.genre, cash: imprint ? 100000 : 40000 + a.fame * 2000, k: imprint ? 'imprint' : 'artist', parent: imprint ? owner!.id : undefined, why: ws });
       if (!a.owner && !imprint) signWithRival(s, a, lb.id, r, true);
       career(s, `p:${p.id}`, 'artist', imprint ? 'imprint' : 'label', ws);
@@ -516,7 +519,7 @@ function merch(s: GameState, r: Rng, W: number): void {
     }
     for (const a of acts) {
       const v = money(s, 60 + a.fame * 12);
-      lb.cash += v; a.cash += Math.round(v * 0.3);
+      labelPost(s, lb, v, 'sales', `Merchandising: ${a.name}`); a.cash += Math.round(v * 0.3);
       if (s.month === 11) a.fans.core = Math.round(a.fans.core * 1.02);
     }
   }
@@ -527,7 +530,7 @@ function priceWars(s: GameState, r: Rng, W: number): void {
   for (const w of st.war) {
     const A = s.labels[w.a], B = s.labels[w.b];
     if (w.until <= s.week || !A?.active || !B?.active) continue;
-    for (const x of [A, B]) x.cash -= money(s, 5000 + x.roster.length * 800);
+    for (const x of [A, B]) labelPost(s, x, -money(s, 5000 + x.roster.length * 800), 'marketing', 'Guerra de preços');
     if (w.until - s.week <= 4) {
       w.until = s.week;
       const [win, lose] = A.cash >= B.cash ? [A, B] : [B, A];
@@ -579,12 +582,12 @@ function poaching(s: GameState, r: Rng, W: number): void {
     return;
   }
   const buy = Math.round(adv * 0.6);
-  A.cash -= buy; B.cash += buy;
+  labelPost(s, A, -buy, 'advances', `Rescisão de ${t.name}`); labelPost(s, B, buy, 'asset_sales', `Rescisão paga por ${A.name}`);
   endContract(s, t, 'left');
   signWithRival(s, t, A.id, r, true);
   if (lead) addStress(s, lead.id, 4, l('Transferência de selo', 'Label transfer'));
   grantHold(s, { holder: B.id, target: A.id, kind: 'grievance', strength: 40, months: 48, text: fmtL(l('aliciou {t}', 'poached {t}'), { t: t.name }), src: 'npc17', quiet: true });
-  move(s, { k: 'poach', a: t.id, lb: A.id, lb2: B.id, t: fmtL(l('A {a} aliciou {t} da {b}, pagando a rescisão ({w}).', '{a} poached {t} from {b}, paying the buyout ({w}).'), { a: A.name, t: t.name, b: B.name, w: B.cash < 0 ? l('a {b} estava quebrada', 'the label was broke') : l('o artista já era maior que o selo', 'the act had outgrown the label') }) },
+  move(s, { k: 'poach', a: t.id, lb: A.id, lb2: B.id, t: fmtL(l('A {a} aliciou {t} da {b}, pagando a rescisão ({w}).', '{a} poached {t} from {b}, paying the buyout ({w}).'), { a: A.name, t: t.name, b: B.name, w: B.cash < 0 ? l('a {b} estava quebrada', '{b} was broke') : l('o artista já era maior que o selo', 'the act had outgrown the label') }) },
     { kind: 'poach', actors: [t.id, A.id, B.id], sev: 30 + t.fame / 4, vis: 'public', tags: ['transfer'] });
 }
 
@@ -605,7 +608,7 @@ function beefs(s: GameState, r: Rng, W: number): void {
   const t = fmtL(l('{a} provocou {b} em entrevistas e numa faixa: rixa como marketing — os dois ganham embalo (+6) e manchetes; {w}.', '{a} called out {b} in interviews and on a track: beef as marketing — both gain momentum (+6) and headlines; {w}.'), { a: A.name, b: B.name, w: l('ego e vaidade falaram mais alto', 'ego and vanity spoke loudest') });
   move(s, { k: 'beef', a: A.id, lb: A.owner ?? undefined, t }, { kind: 'statement', actors: [A.id, B.id], sev: 30 + (A.fame + B.fame) / 8, vis: 'public', tags: ['beef', 'feud'], place: A.city });
   if (mine(s, B)) notify(s, fmtL(l('{a} provocou {b}, do seu selo, para ganhar mídia: embalo para os dois (veja a rixa em Mundo vivo).', '{a} called out {b}, on your label, for publicity: momentum for both (see the beef in Living world).'), { a: A.name, b: B.name }), 'event');
-  if (la && F(Pa(s, A), 'impulsividade') > 1.4 && r.chance(0.25)) scandal(s, A.id, 'violence', 35, fmtL(l('A rixa entre {a} e {b} acabou em briga de verdade.', 'The {a}–{b} beef ended in a real fight.'), { a: A.name, b: B.name }), { person: la.id });
+  if (la && allowed21(s, 'violence', A) && allowed21(s, 'violence', B) && F(Pa(s, A), 'impulsividade') > 1.4 && r.chance(0.25)) scandal(s, A.id, 'violence', 35, fmtL(l('A rixa entre {a} e {b} acabou em briga de verdade.', 'The {a}–{b} beef ended in a real fight.'), { a: A.name, b: B.name }), { person: la.id });
 }
 
 function mergers(s: GameState, r: Rng, W: number): void {
@@ -643,10 +646,10 @@ function bidding(s: GameState, r: Rng, W: number): void {
   if (bids.length < 2) return;
   const win = bids[0][0];
   const prem = Math.round(adv * (0.15 + 0.08 * Math.min(5, bids.length - 1)));
-  win.cash -= prem;
+  labelPost(s, win, -prem, 'advances', `Prêmio de leilão por ${a.name}`);
   signWithRival(s, a, win.id, r, true);
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
-  if (c) { c.advance += prem; c.recoupBalance += prem; }
+  if (c) { c.advance += prem; recoup(s, c, 'adv', prem); }
   move(s, { k: 'bidding', a: a.id, lb: win.id, lb2: bids[1][0].id, t: fmtL(l('Leilão por {a}: {n} selos fizeram lances; a {b} venceu a {c} pagando um prêmio de {p}% sobre o adiantamento normal.', 'Bidding war for {a}: {n} labels bid; {b} beat {c} by paying a {p}% premium over the normal advance.'), { a: a.name, n: bids.length, b: win.name, c: bids[1][0].name, p: Math.round(prem / adv * 100) }) },
     { kind: 'signing', actors: [a.id, win.id, bids[1][0].id], sev: 30 + a.fame / 4, vis: 'public', tags: ['bidding'] });
   if ((s.knowledge[a.id]?.degree ?? 0) >= 2) notify(s, fmtL(l('{a}, que estava no seu radar, foi disputado(a) em leilão e fechou com a {b}.', '{a}, on your radar, went to a bidding war and signed with {b}.'), { a: a.name, b: win.name }), 'bad');

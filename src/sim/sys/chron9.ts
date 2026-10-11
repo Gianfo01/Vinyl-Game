@@ -262,7 +262,7 @@ function records(s: GameState, c: ChronState): void {
 // o mundo inicial já existe: quem já é famoso não "desponta" no primeiro mês
 registerSimHook('newgame', 'chron9', (s) => {
   const c = chronState(s);
-  { const pool = infPool19(s); for (const a of Object.values(s.acts)) if (a.fame >= 28 || a.hits > 0) { c.seen[a.id] = 1; if (!c.inf[a.id]) pickInfluence(s, c, a, true, pool); } }
+  { const pool = infPool19(s); for (const a of Object.values(s.acts)) if (a.fame >= 28 || a.hits > 0) { c.seen[a.id] = 1; if (!c.inf[a.id]) pickInfluence(s, c, a, true, pool); } else if (a.debutYear < s.year) c.seen[a.id] = 1; } // r21 (K1): quem estreou antes do ano inicial não "desponta" depois
 });
 
 registerSimHook('month', 'chron9', (s) => {

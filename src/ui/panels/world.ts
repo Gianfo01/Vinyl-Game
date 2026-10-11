@@ -322,7 +322,12 @@ function mapSection(s: GameState): HTMLElement {
   if (!worldMap) worldMap = new WorldMap(opts);
   else worldMap.update(opts);
   return section(t(l('Mapa do mundo', 'World map')), presetBar20(s), legend20(s),
-    h('details', { class: 'layers20', open: preset20 ? undefined : true }, h('summary', { class: 'small' }, t(l('Todas as camadas (especialista)', 'All layers (expert)'))), layerBar()),
+    // r21 (§2.3.1): camadas recolhidas por padrão; 4 presets simples no topo do painel (as perguntas acima ligam presets maiores)
+    h('details', { class: 'layers20', open: layersOpen21 ? true : undefined, ontoggle: (e: Event) => { layersOpen21 = (e.currentTarget as HTMLDetailsElement).open; } },
+      h('summary', { class: 'small' }, ic('globe'), ' ', t(l('Camadas', 'Layers')), ' ', h('small', { class: 'muted' }, `(${[...layers].length})`)),
+      h('div', { class: 'row wrap small layers21-quick', role: 'group', 'aria-label': t(l('Presets de camadas', 'Layer presets')) },
+        QUICK21.map((q) => h('button', { type: 'button', class: `chip-btn ${quickOn(q) ? 'on' : ''}`, 'aria-pressed': quickOn(q) ? 'true' : 'false', onclick: () => { applyPreset20(s, null); for (const x of q.layers) layers.add(x); rerender(); } }, ic(q.icon), ' ', t(q.name)))),
+      layerBar()),
     worldMap.element,
     h('p', { class: 'muted small' }, t(l('Clique numa cidade ou num país para abrir o popup com tudo sobre o lugar (mercado, cenas, artistas, casas, imprensa, crime, leis, tendências, relíquias, notícias).', 'Click a city or a country to open a popup with everything about the place (market, scenes, acts, venues, press, crime, laws, trends, relics, news).'))),
   );
@@ -403,6 +408,15 @@ export const PRESETS20: { id: Preset20; icon: string; name: L; layers: Layer[]; 
   { id: 'risk', icon: 'warning', name: l('Que risco afeta minha operação?', 'What risk affects my operation?'), layers: ['geo', 'rivalpower', 'tours'], l17: ['clash17', 'heat17'], paint: 'rivaldom' },
 ];
 let preset20: Preset20 | null = null;
+let layersOpen21 = false;
+/** r21: presets simples (um clique = só estas camadas). */
+const QUICK21: { id: string; icon: string; name: L; layers: Layer[] }[] = [
+  { id: 'fans', icon: 'fans', name: l('Meus fãs', 'My fans'), layers: ['fans', 'hq'] },
+  { id: 'scenes', icon: 'fire', name: l('Cenas', 'Scenes'), layers: ['scenes', 'movements', 'hq'] },
+  { id: 'rivals', icon: 'flag', name: l('Rivais', 'Rivals'), layers: ['rivals', 'rivalpower', 'hq'] },
+  { id: 'tours', icon: 'tour-bus', name: l('Turnês', 'Tours'), layers: ['tours', 'festivals', 'hq'] },
+];
+const quickOn = (q: { layers: Layer[] }): boolean => layers.size === q.layers.length && q.layers.every((x) => layers.has(x));
 /** Artista de referência das camadas de público ('' = elenco inteiro). */
 let refAct20 = '';
 

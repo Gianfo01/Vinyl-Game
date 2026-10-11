@@ -7,6 +7,7 @@ import type { Appearance, GameState, Person } from '../../sim/types';
 import { PALETTES, eraOf, tone, type EraId, type Palette } from './palette';
 import { C, Px, dith, mix, shade, upscale, withAlpha, type Col, type Sprite } from './px';
 import { ageInfo, ageLook } from './age17';
+import { LruMap } from '../../core/lru21';
 
 export type Dir = 'SE' | 'SW' | 'NE' | 'NW';
 export type Pose = 'stand' | 'walk' | 'sit' | 'play' | 'sitplay';
@@ -976,7 +977,7 @@ function hologram(p: Px, pal: Palette, frame: number): void {
 
 // ---------- API de sprites ----------
 
-const spriteCache = new Map<string, Sprite>();
+const spriteCache = new LruMap<string, Sprite>(500); // r21 (I-10): teto
 
 export interface AvatarOpts {
   year: number;
@@ -1021,8 +1022,8 @@ export function avatarSprite(look: Appearance, o: AvatarOpts): Sprite {
 
 // ---------- retrato ----------
 
-const portraitCache = new Map<string, HTMLCanvasElement>();
-const portraitUrlCache = new Map<string, string>();
+const portraitCache = new LruMap<string, HTMLCanvasElement>(500);
+const portraitUrlCache = new LruMap<string, string>(500);
 
 type PersonLike = { id: string; look?: Appearance; role?: Role; born?: number };
 

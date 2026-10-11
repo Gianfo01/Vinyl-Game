@@ -10,6 +10,7 @@ import { VENUE_TIERS } from '../../data/rules';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState, StaffMember } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
+import { freeCash20 } from '../oblig20';
 import { genStaff } from '../worldgen';
 import { per13, staffAdj13 } from './persona13';
 import { c12, clientsOf, defaultStop, hasAgency, localDraw, npcOffer, rel, suggestTier, tierCap, tiersOpen, validate, type Show } from './tour12';
@@ -116,7 +117,7 @@ export const D16_PAY: ((s: GameState, o: Order16, amt: number) => L | null)[] = 
 // orçamento digitado (ordem de rádio de "$300/mês" saía ~US$ 30 mil/mês) e a bilheteria da noite do selo entrava 100× maior.
 const pay = (c: Ctx, usdN: number, memo: string): boolean => {
   const amt = money(c.s, usdN);
-  if (c.s.player.cash < amt) return false;
+  if (freeCash20(c.s) < amt) return false; // r21 (B-9)
   for (const g of D16_PAY) { const why = g(c.s, c.o, amt); if (why) { say(c, why, 'bad'); return false; } }
   post(c.s, `d16:${c.o.id}:${c.s.year}:${c.s.month}:${memo.length}`, -amt, 'business', memo);
   return true;
@@ -266,7 +267,7 @@ function runNight(c: Ctx): void {
   const act = s.acts[o.actId ?? ''];
   if (!activeAct(act)) return say(c, l('O ato da ordem não está mais disponível.', 'The order\'s act is no longer available.'), 'bad');
   const cost = Math.max(200, o.budget);
-  if (s.player.cash < money(s, cost) * 2) return say(c, l('Noite do selo adiada: o caixa não cobre o orçamento com folga.', 'Label night postponed: cash does not cover the budget with margin.'));
+  if (freeCash20(s) < money(s, cost) * 2) return say(c, l('Noite do selo adiada: o caixa não cobre o orçamento com folga.', 'Label night postponed: cash does not cover the budget with margin.'));
   if (!pay(c, cost, `Noite do selo: ${act.name}`)) return;
   const bad = r.chance(q.err * 0.7);
   const att = Math.round((60 + act.fame * 7) * (0.6 + q.q * 0.6) * (0.75 + r.next() * 0.5) * (bad ? 0.45 : 1));

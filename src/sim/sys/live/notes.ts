@@ -6,6 +6,7 @@ import { cityById, familyOf, l, type L } from '../../../data/world';
 import { applyMods, queueCutscene, registerMod, registerSimHook } from '../../ext4';
 import { actTalent } from '../../people';
 import { cityDemand } from '../../tours';
+import { TOUR18 } from '../../tourhook18';
 import type { GameState, Song } from '../../types';
 import type { Tour } from '../../xtypes';
 import { fmtL, notify, remember, staffSkill } from '../../util';
@@ -391,12 +392,14 @@ export function avgNotes(list: ShowNote[]): { ex: number; int: number; fat: numb
   return { ex: a('ex'), int: a('int'), fat: a('fat') };
 }
 
-/** Chamado pela simulação de tours (gancho 'show') — e exportado para testes do modificador. */
-export function previewShowRevenue(s: GameState, actId: string, cityId: string, tier: number, ratio: number, gross: number): number {
+/** r21 (F-1): a bilheteria com TODOS os modificadores 'showRevenue' em modo determinístico — a previsão do planejador
+ *  e o acerto do dia (showmath.expectedGross) passam por aqui; `day` é o dia do show (semana de concorrência). */
+export function previewShowRevenue(s: GameState, actId: string, cityId: string, tier: number, ratio: number, gross: number, day?: number): number {
   const lv = liveOf(s);
   const prev = lv.cur;
   lv.cur = { actId, cityId, tier, ratio };
-  const v = applyMods(s, 'showRevenue', gross, { act: s.acts[actId], cityId }).value;
+  const v = applyMods(s, 'showRevenue', gross, { act: s.acts[actId], cityId, day }).value;
   lv.cur = prev;
   return Math.round(v);
 }
+TOUR18.revenue = previewShowRevenue;

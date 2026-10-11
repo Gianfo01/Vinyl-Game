@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { boostOf21 } from '../src/sim/sys/boost21';
 import { Rng } from '../src/core/rng';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
@@ -56,7 +57,7 @@ describe('r19 T7 — mercado B: remix19, adsync19, score19', () => {
     resolveRemix19(s, rx, Rng.fromSeed('t'), true);
     expect(kinds(s, 'remix_hit').length).toBe(1);
     expect(rv19(s).c[rel.id]?.h ?? 0).toBeGreaterThan(0); // revival19 ouviu remix_hit com data.rel
-    expect(rel.hypeBoost ?? 0).toBeGreaterThan(0);
+    expect(boostOf21(s, rel.id).k).toBeGreaterThan(1); // r21 (D-1): o remix vira impulso real nas unidades (boost21), não mais hypeBoost morto
     // 2009: a faixa vira comercial (licença) → ad_sync
     s.year = 2009;
     const b = brandsNow19(s, 'license')[0];

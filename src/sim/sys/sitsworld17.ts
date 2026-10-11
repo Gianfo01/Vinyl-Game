@@ -24,6 +24,7 @@ import { mgrById } from '../../data/managers14';
 import { becomeManager17, leaveLabel17, npc17, okAct17, okPerson17, pickNewLabel17 } from './npc17';
 import { per13, type P13 } from './persona13';
 import { registerSituation, type SitCtx } from './situations17';
+import { allowed21 } from '../allowed21';
 
 // ---------------------------------------------------------------- utilidades
 
@@ -91,7 +92,7 @@ registerSituation({
   title: (s, c) => fmtL(l('Proposta solo para {p}', 'Solo offer for {p}'), { p: nm(s, c.hero) }),
   text: (s, c) => fmtL(l('Um selo oferece a {p} um contrato solo — sem {a}.', 'A label offers {p} a solo deal — without {a}.'), { p: nm(s, c.hero), a: nm(s, c.act) }),
   options: [
-    { id: 'solo', label: l('Sair em carreira solo', 'Go solo'), hint: l('{p} deixa a banda e estreia sozinho(a) com parte dos fãs; a banda se ressente.', 'They leave the band and debut alone with part of the fans; the band resents it.'), weightByTraits: (p) => F(p, 'ego') + F(p, 'ambicao') - 0.6,
+    { id: 'solo', label: l('Sair em carreira solo', 'Go solo'), hint: l('{p} deixa a banda e estreia sozinho(a) com parte dos fãs; a banda se ressente.', '{p} leaves the band and debuts alone with part of the fans; the band resents it.'), weightByTraits: (p) => F(p, 'ego') + F(p, 'ambicao') - 0.6,
       apply: (s, c, r) => { const a = A(s, c); const p = s.persons[c.hero]; if (!a || !p) return; leaveBand16(s, a, p, 'solo'); const so = goSolo16(s, r, p, a); for (const m of a.members) rel(s, m, p.id, -20); return fmtL(l('{p} saiu de {a} para a carreira solo ({s}).', '{p} left {a} for a solo career ({s}).'), { p: p.name, a: a.name, s: so.name }); } },
     { id: 'side', label: l('Projeto paralelo', 'Side project'), hint: l('Inspiração +10, estresse +8; fica na banda.', 'Inspiration +10, stress +8; stays in the band.'), weightByTraits: (p) => F(p, 'curiosidade') + F(p, 'ambicao') * 0.5,
       apply: (s, c) => { insp(s, c.hero, 10); addStress(s, c.hero, 8, l('Duas carreiras ao mesmo tempo', 'Two careers at once')); } },
@@ -101,7 +102,7 @@ registerSituation({
 });
 
 registerSituation({
-  id: 'band_romance', pressure: 'heart', cost: 1, cooldown: 6, tone: 'mixed',
+  id: 'band_romance', pressure: 'heart', cost: 1, cooldown: 6, tone: 'mixed', tags: ['romance'],
   when: () => true,
   actorsPick: (s, _c, r) => {
     for (const a of r.shuffle(pool(s)).slice(0, 15)) {
@@ -123,7 +124,7 @@ registerSituation({
 });
 
 registerSituation({
-  id: 'credit_split', pressure: 'money', cost: 1, cooldown: 6, tone: 'bad',
+  id: 'credit_split', pressure: 'money', cost: 1, cooldown: 6, tone: 'bad', neutral: 'equal',
   when: () => true,
   actorsPick: (s, _c, r) => {
     const a = pickR(r, pool(s, 30).filter((x) => x.hits >= 1 && npcMembers(s, x).length >= 2));
@@ -133,9 +134,9 @@ registerSituation({
   title: (s, c) => fmtL(l('Quem escreveu o sucesso de {a}?', 'Who wrote {a}\'s hit?'), { a: nm(s, c.act) }),
   text: (s, c) => fmtL(l('{p} diz que compôs quase tudo e quer a maior parte dos créditos (e dos direitos autorais). O resto da banda discorda.', '{p} says they wrote almost everything and wants most of the credits (and publishing). The rest of the band disagrees.'), { p: nm(s, c.hero) }),
   options: [
-    { id: 'equal', label: l('Divisão igual para todos', 'Equal split for everyone'), hint: l('Banda unida (relação +8); {p} se ressente (+10).', 'Band united (relationship +8); the writer resents it (+10).'), weightByTraits: (p) => F(p, 'generosidade') + F(p, 'lealdade'),
+    { id: 'equal', label: l('Divisão igual para todos', 'Equal split for everyone'), hint: l('Banda unida (relação +8); {p} se ressente (+10).', 'Band united (relationship +8); {p} resents it (+10).'), weightByTraits: (p) => F(p, 'generosidade') + F(p, 'lealdade'),
       apply: (s, c) => { const a = A(s, c); for (const m of a?.members ?? []) if (m !== c.hero) for (const n of a!.members) if (n !== m) rel(s, m, n, 4); resent(s, c.hero, 10); } },
-    { id: 'writer', label: l('O compositor leva a maior parte', 'The writer takes the lion\'s share'), hint: l('{p} feliz; os outros: ressentimento +15 e mágoa.', 'The writer is happy; the others: resentment +15 and a grudge.'), weightByTraits: (p) => F(p, 'ego') + F(p, 'ambicao'),
+    { id: 'writer', label: l('O compositor leva a maior parte', 'The writer takes the lion\'s share'), hint: l('{p} feliz; os outros: ressentimento +15 e mágoa.', '{p} is happy; the others: resentment +15 and a grudge.'), weightByTraits: (p) => F(p, 'ego') + F(p, 'ambicao'),
       apply: (s, c) => { const a = A(s, c); for (const m of a?.members ?? []) if (m !== c.hero) { resent(s, m, 15); grantHold(s, { holder: m, target: c.hero, kind: 'grievance', strength: 30, months: 36, text: l('ficou sem crédito do sucesso', 'left without credit for the hit'), src: 'sitw17', quiet: true }); } addStress(s, c.hero, -5, l('Crédito reconhecido', 'Credit recognized')); } },
     { id: 'lawyer', label: l('Advogado decide pela contribuição', 'A lawyer splits by contribution'), hint: l('Custa $2.000 (era); justo para todos, estresse −5.', 'Costs $2,000 (era); fair to all, stress −5.'), weightByTraits: (p) => F(p, 'disciplina') + F(p, 'perfeccionismo') * 0.5,
       apply: (s, c) => { pay(s, c, 'lawyer', 2000, 'Advogado de créditos'); const a = A(s, c); for (const m of a?.members ?? []) addStress(s, m, -5, l('Créditos resolvidos', 'Credits settled')); } },
@@ -211,10 +212,10 @@ registerSituation({
 // ================================================================ AMOR
 
 registerSituation({
-  id: 'muse', pressure: 'heart', cost: 1, cooldown: 4, tone: 'good',
+  id: 'muse', pressure: 'heart', cost: 1, cooldown: 4, tone: 'good', tags: ['romance'],
   when: () => true,
   actorsPick: (s, _c, r) => {
-    for (const a of r.shuffle(pool(s)).slice(0, 10)) { const p = npcMembers(s, a).find((x) => F(P(s, x.id), 'romantismo') > 1.15); if (p) return { hero: p.id, act: a.id, cast: { person: p.id }, data: {} }; }
+    for (const a of r.shuffle(pool(s)).slice(0, 10)) { if (!allowed21(s, 'romance', a) || !allowed21(s, 'sex', a)) continue; const p = npcMembers(s, a).find((x) => F(P(s, x.id), 'romantismo') > 1.15); if (p) return { hero: p.id, act: a.id, cast: { person: p.id }, data: {} }; } // r21 (G-5)
     return null;
   },
   title: (s, c) => fmtL(l('{p} se apaixonou', '{p} fell in love'), { p: nm(s, c.hero) }),
@@ -275,7 +276,7 @@ registerSituation({
   id: 'tax_exile', pressure: 'money', cost: 2, cooldown: 12, tone: 'bad',
   when: () => true,
   actorsPick: (s, _c, r) => {
-    const a = pickR(r, pool(s, 50).filter((x) => x.cash > money(s, 150000) && !histLocked(s, x) && (marketOf(x) === 'eu' ? yr(s, 1965, 1985) : r.chance(0.3))));
+    const a = pickR(r, pool(s, 50).filter((x) => x.cash > money(s, 150000) && !histLocked(s, x) && allowed21(s, 'crime', x) && (marketOf(x) === 'eu' ? yr(s, 1965, 1985) : r.chance(0.3)))); // r21 (G-5)
     const p = a ? leadOf(s, a) : undefined;
     return a && p ? { hero: p.id, act: a.id, cast: { person: p.id }, data: {} } : null;
   },
@@ -378,7 +379,7 @@ registerSituation({
   id: 'paparazzi', pressure: 'fame', cost: 1, cooldown: 4, tone: 'bad',
   when: (s) => s.year >= 1958,
   actorsPick: (s, _c, r) => {
-    const a = pickR(r, pool(s, 55));
+    const a = pickR(r, pool(s, 55).filter((x) => allowed21(s, 'violence', x))); // r21 (G-5): a opção "partir para cima" é violência
     const p = a ? leadOf(s, a) : undefined;
     return a && p ? { hero: p.id, act: a.id, cast: { person: p.id }, data: {} } : null;
   },
@@ -571,7 +572,7 @@ registerSituation({
 // ================================================================ ÉPOCAS (só nos anos em que fazem sentido)
 
 registerSituation({
-  id: 'draft_notice', pressure: 'body', cost: 2, cooldown: 12, tone: 'bad',
+  id: 'draft_notice', pressure: 'body', cost: 2, cooldown: 12, tone: 'bad', neutral: 'serve',
   when: (s) => yr(s, 1950, 1972),
   actorsPick: (s, _c, r) => {
     for (const a of r.shuffle(pool(s, 20).filter((x) => marketOf(x) === 'na' && !histLocked(s, x))).slice(0, 10)) {
@@ -653,7 +654,7 @@ registerSituation({
 });
 
 registerSituation({
-  id: 'streaming_stand', pressure: 'money', cost: 1, cooldown: 12, tone: 'mixed',
+  id: 'streaming_stand', pressure: 'money', cost: 1, cooldown: 12, tone: 'mixed', neutral: 'pull',
   when: (s) => s.year >= 2010,
   actorsPick: (s, _c, r) => {
     const a = pickR(r, pool(s, 55));

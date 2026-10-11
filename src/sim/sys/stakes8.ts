@@ -10,8 +10,8 @@
 import { clamp, type Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { labelValuation, transferLabel } from '../business';
-import { endContract } from '../contracts';
-import { registerExt4, registerSimHook } from '../ext4';
+import { endContract, transferAct } from '../contracts';
+import { MERGE_HOOKS21, registerExt4, registerSimHook } from '../ext4';
 import type { GameState, Label } from '../types';
 import type { SubLabel } from '../xtypes';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
@@ -400,9 +400,8 @@ export function makeSubLabel(s: GameState, labelId: string): L | null {
     const c = a?.contractId ? s.contracts[a.contractId] : undefined;
     if (!a || !c) continue;
     c.party = 'player';
-    a.owner = 'player';
+    transferAct(s, a, 'player', 'sublabel'); // r21 (H-3)
     a.trust = clamp(a.trust - 4, 0, 100);
-    s.delegated[a.id] = true;
     sl.roster.push(a.id);
   }
   const rosterSet = new Set(sl.roster);
@@ -443,8 +442,7 @@ export function npcAbsorb(s: GameState, buyer: Label, target: Label): void {
     const c = a?.contractId ? s.contracts[a.contractId] : undefined;
     if (!a || !c) continue;
     c.party = buyer.id;
-    a.owner = buyer.id;
-    if (!buyer.roster.includes(a.id)) buyer.roster.push(a.id);
+    transferAct(s, a, buyer.id, 'absorbed'); // r21 (H-3): um só caminho de troca de dono
   }
   for (const rel of Object.values(s.releases)) if (rel.owner === target.id) rel.owner = buyer.id;
   buyer.cash += Math.max(0, target.cash);
@@ -537,3 +535,10 @@ registerSimHook('month', 'stakes8', (s, r) => {
 });
 
 registerSimHook('year', 'stakes8', (s) => dividendsYear(s));
+
+// r21 (B24): quem tinha participação no selo absorvido é avisado
+MERGE_HOOKS21.push((s, buyer, target) => {
+  const mine = (stakes(s).recs[target] ?? []).find((h) => h.holder === 'player');
+  if (!mine) return;
+  notify(s, fmtL(l('{t} foi absorvida por {b}: sua participação de {p}% passa a ser conversada com o comprador.', '{t} was absorbed by {b}: your {p}% stake is now a matter for the buyer.'), { t: s.labels[target]?.name ?? '?', b: s.labels[buyer]?.name ?? '?', p: Math.round(mine.share * 100) }), 'bad');
+});

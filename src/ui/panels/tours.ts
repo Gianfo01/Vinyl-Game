@@ -39,13 +39,15 @@ export function tourConflicts20(s: GameState, actId: string, est: TourEstimate):
 /** r20: painel vivo de custo, receita e risco (sempre à vista em todas as etapas). */
 export function tourLivePanel20(s: GameState, est: TourEstimate | null, actId: string): HTMLElement {
   if (!est) return h('div', { class: 'live20 muted small', role: 'status' }, ic('money'), ' ', t(l('Escolha cidades para ver custo, receita e risco.', 'Pick cities to see cost, revenue and risk.')));
-  const net = est.expectedRevenue + est.expectedMerch - est.logistics;
+  const net = labelTourNet16(s, actId, est).net; // r21 (F-1): o que fica com o SELO (65%/360 e cachê real), não a bilheteria bruta
   const cf = tourConflicts20(s, actId, est);
+  const blocked = Object.keys(est.blocked).length;
   const risk = est.warnings.length + cf.hard.length + cf.soft.length + (est.visas ? 1 : 0);
   return h('div', { class: 'live20', role: 'status', 'aria-live': 'polite' },
     chips(stat('money', $(est.logistics), l('Custo (logística)', 'Cost (logistics)')), stat('chart-up', $(est.expectedRevenue + est.expectedMerch), l('Receita prevista (bruta + merch)', 'Expected revenue (gross + merch)')),
-      stat('bank', $(net), l('Saldo previsto', 'Expected net'), net < 0 ? 'bad' : 'good'),
-      stat('warning', String(risk), l('Riscos', 'Risks'), cf.hard.length ? 'bad' : risk ? 'warn' : 'good')),
+      stat('bank', $(net), l('Saldo previsto (selo)', 'Expected net (label)'), net < 0 ? 'bad' : 'good'),
+      stat('warning', String(risk), l('Riscos', 'Risks'), cf.hard.length || blocked ? 'bad' : risk ? 'warn' : 'good')),
+    blocked ? h('small', { class: 'bad' }, ic('lock'), ' ', t(l('{n} cidade(s) bloqueada(s): shows suspensos — a turnê não pode ser marcada', '{n} blocked city(ies): shows suspended — the tour cannot be booked'), { n: blocked })) : null,
     cf.hard.length ? h('small', { class: 'bad' }, ic('warning'), ' ', t(l('{n} conflito(s) duro(s) — veja a revisão', '{n} hard conflict(s) — see review'), { n: cf.hard.length })) : null);
 }
 
@@ -89,13 +91,13 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
     on(1) ? h('p', { class: 'small' }, ic('disc'), ' ', t(l('Setlist: {n} gravações próprias ({q} necessárias){c}.', 'Setlist: {n} own recordings ({q} needed){c}.'), { n: draft.setlist.length, q: need, c: draft.setlist.length < need ? t(l(' — o resto vira covers, com penalidade', ' — the rest will be covers, with a penalty')) : '' })) : null,
     !stops.length && on(0) ? h('p', { class: 'muted small' }, t(all ? l('Monte a rota clicando nas cidades do mapa acima.', 'Build the route by clicking cities on the map above.') : l('Monte a rota clicando nas cidades do mapa ou na lista de cidades.', 'Build the route by clicking cities on the map or in the city list.'))) : null,
     setStops && on(0) ? routeHintRow(s, act.id, setStops) : null,
-    !all && step === 1 && est ? h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: 'stop' }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name), ` · ${N(st.capacity)}`)))) : null,
+    !all && step === 1 && est ? h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: `stop${est.blocked[st.cityId] ? ' bad' : ''}` }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name), ` · ${N(st.capacity)}`), est.blocked[st.cityId] ? pill(t(l('bloqueado', 'blocked')), 'bad') : null))) : null,
     !all && step === 3 && est ? chips(stat('chart-up', $(est.expectedRevenue), l('Bilheteria bruta prevista', 'Expected gross box office')), stat('shirt', $(est.expectedMerch), l('Merch previsto', 'Expected merch')), s.merch[act.id] ? stat('shirt', N(s.merch[act.id].stock), l('Estoque de merch', 'Merch stock')) : null) : null,
     est && on(4) ? h('div', null,
       chips(stat('tour-bus', stops.length, l('Datas', 'Dates')), stat('globe', `${N(est.km)} km`, l('Distância', 'Distance')), stat('calendar', `${est.days}d`, l('Duração', 'Duration')),
         stat('money', $(est.logistics), l('Logística (reservada agora)', 'Logistics (booked now)')), stat('chart-up', $(est.expectedRevenue), l('Bilheteria bruta prevista', 'Expected gross box office')), stat('shirt', $(est.expectedMerch), l('Merch previsto', 'Expected merch')),
         est.visas ? stat('key', est.visas, l('Vistos', 'Visas'), 'warn') : null),
-      h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: 'stop' }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name))))),
+      h('div', { class: 'tour-stops' }, est.stops.map((st) => h('span', { class: `stop${est.blocked[st.cityId] ? ' bad' : ''}` }, ic(st.travelDays > 1 ? 'plane' : 'tour-bus'), h('b', null, cityName(st.cityId)), h('small', null, t(VENUE_TIERS[st.tier].name)), est.blocked[st.cityId] ? pill(t(l('bloqueado', 'blocked')), 'bad') : null))),
       ((n) => h('p', { class: `small ${n.net < 0 && -n.net > s.player.cash * 0.25 ? 'bad' : 'muted'}` }, ic('money'), ' ', t(n.why), n.net < 0 && -n.net > s.player.cash * 0.25 ? t(l(' Atenção: é mais de 1/4 do caixa.', ' Warning: that is over 1/4 of your cash.')) : ''))(labelTourNet16(s, act.id, est)),
       est.warnings.length ? h('ul', { class: 'small warn' }, est.warnings.map((w) => h('li', null, ic('warning'), ' ', t(w)))) : null,
       cf && (cf.hard.length || cf.soft.length) ? h('div', { class: 'conf20' },

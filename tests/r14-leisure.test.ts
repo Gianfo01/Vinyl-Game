@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
-import { registerSimHook } from '../src/sim/ext4';
+import { replaceSimHook } from '../src/sim/ext4';
 import { goOut14, leisureMonth14, lz14, pool14, regulars14, spotsHere14, CAP14, HOB14 } from '../src/sim/sys/leisure14';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { advanceMonth } from '../src/sim/tick';
@@ -62,11 +62,12 @@ describe('lazer r14', () => {
   it('custo de CPU baixo (< 15% a mais por mês)', () => {
     const s = mk('lz-perf');
     let hook = 0;
-    registerSimHook('month', 'leisure14', (x) => { const t = performance.now(); leisureMonth14(x); hook += performance.now() - t; });
+    // r21: substituir um gancho já registrado é `replaceSimHook` (registerSimHook lança em id repetido)
+    replaceSimHook('month', 'leisure14', (x) => { const t = performance.now(); leisureMonth14(x); hook += performance.now() - t; });
     const t0 = performance.now();
     for (let i = 0; i < 12; i++) advanceMonth(s);
     const all = performance.now() - t0;
-    registerSimHook('month', 'leisure14', (x) => leisureMonth14(x));
+    replaceSimHook('month', 'leisure14', (x) => leisureMonth14(x));
     console.log(`lazer14: ${hook.toFixed(0)}ms de ${all.toFixed(0)}ms (${((hook / (all - hook)) * 100).toFixed(1)}%)`);
     expect(hook / (all - hook)).toBeLessThan(0.15);
   }, 60000);

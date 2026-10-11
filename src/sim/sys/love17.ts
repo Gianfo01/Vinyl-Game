@@ -383,7 +383,7 @@ function npcAffairs(s: GameState, r: Rng): void {
 // ---------------------------------------------------------------- situações: flagrado(a), paternidade, livro-bomba do(a) ex
 
 registerSituation({
-  id: 'paternity17', pressure: 'heart', cost: 2, cooldown: 12, playerOnly: true,
+  id: 'paternity17', pressure: 'heart', cost: 2, cooldown: 12, playerOnly: true, neutral: 'ack',
   when: (s) => love17(s).sec.some((x) => !x.claim && s.year - x.born >= 1 && s.year - x.born <= 12),
   actorsPick: (s) => { const i = love17(s).sec.findIndex((x) => !x.claim && s.year - x.born >= 1 && s.year - x.born <= 12); return i < 0 ? null : { hero: 'player', cast: {}, data: { i } }; },
   title: () => l('Um teste de DNA na sua porta', 'A DNA test at your door'),
@@ -399,7 +399,7 @@ registerSituation({
         emitFact(s, { kind: 'birth', actors: ['player'], place: s.config.homeCity, severity: 40, visibility: playerFame(s) >= 25 ? 'public' : 'rumor', tags: ['family', 'paternity'], text: fmtL(l('{o} reconhece {k}, filho(a) de um relacionamento fora do casamento.', '{o} acknowledges {k}, a child from outside the marriage.'), { o: o.name, k: name }), src: 'love17' });
         return fmtL(l('{k} agora tem seu sobrenome.', '{k} now carries your name.'), { k: name });
       } },
-    { id: 'quiet', label: l('Pagar em silêncio', 'Pay quietly'), hint: l('Custa o dobro da pensão, por fora; o segredo continua com {c} (pode virar chantagem).', 'Costs double support, off the books; the secret stays with them (may turn into blackmail).'),
+    { id: 'quiet', label: l('Pagar em silêncio', 'Pay quietly'), hint: l('Custa o dobro da pensão, por fora; o segredo continua com {c} (pode virar chantagem).', 'Costs double support, off the books; the secret stays with {c} (may turn into blackmail).'),
       apply: (s, c) => { const L7 = love17(s); const x = L7.sec[Number(c.data.i)]; x.claim = s.year; L7.pay.push({ kind: 'child', to: x.from, amt: Math.round((money(s, 220) + Math.max(0, ownerOf(s).wealth) * 0.0006) * 2), until: x.born + 18 }); } },
     { id: 'deny', label: l('Negar e brigar na justiça', 'Deny it and fight in court'), hint: l('Custas $5.000; o exame confirma 90% das vezes: escândalo de paternidade (sexo) e pensão mesmo assim.', 'Fees $5,000; the test confirms it 90% of the time: paternity scandal (sex) and support anyway.'),
       apply: (s, c, r) => {

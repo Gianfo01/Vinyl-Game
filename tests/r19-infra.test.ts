@@ -9,7 +9,7 @@ import { FACT_CAP, emitFact, facts17, recentFacts } from '../src/sim/facts17';
 import { RESERVED19, WHITELIST19, consumed19, factMatrix19 } from '../src/sim/factmatrix19';
 import { STREAMS19, perSystem19, rng19 } from '../src/sim/rng19';
 import { APPEAL_CAT19, catAdj19, modCat19 } from '../src/sim/caps18';
-import { applyMods, registerSimHook } from '../src/sim/ext4';
+import { applyMods, replaceSimHook } from '../src/sim/ext4';
 import { simulatePlayer } from '../src/sim/playbot16';
 import { inboxKinds18 } from '../src/sim/inbox18';
 import { P } from '../src/sim/sys/people/state';
@@ -295,9 +295,10 @@ describe('r19 11.9 — cobertura dos tipos da Caixa', () => {
   const collect = (runs: [number, 'label' | 'artist'][], years: number, db?: 'small') => {
     const seen: Record<string, number> = {};
     const ids = new Set<string>();
-    registerSimHook('month', 'test:inbox19', (s) => { for (const m of P(s).inbox) { const k = m.ref?.k18; if (k && !ids.has(m.id)) { ids.add(m.id); seen[String(k)] = (seen[String(k)] ?? 0) + 1; } } });
+    // r21: o mesmo id é registrado a cada chamada — `replaceSimHook` (registerSimHook lança em id repetido)
+    replaceSimHook('month', 'test:inbox19', (s) => { for (const m of P(s).inbox) { const k = m.ref?.k18; if (k && !ids.has(m.id)) { ids.add(m.id); seen[String(k)] = (seen[String(k)] ?? 0) + 1; } } });
     try { for (const [y, role] of runs) simulatePlayer(defaultConfig(`ib19-${y}`, { startYear: y, role, ...(db ? { dbSize: db } : {}) }), years, 'balanced'); }
-    finally { registerSimHook('month', 'test:inbox19', () => {}); }
+    finally { replaceSimHook('month', 'test:inbox19', () => {}); }
     return seen;
   };
   it('lista de exceções sem entradas velhas e com motivo', () => {

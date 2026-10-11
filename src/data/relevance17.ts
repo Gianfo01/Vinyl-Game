@@ -6,6 +6,8 @@
 // 2) GLOBAL: artistas de fora dos EUA que de fato viraram mainstream mundial — carreira consolidada (Shakira, ABBA,
 //    Bob Marley, BTS) ou um único hit planetário (Gangnam Style, Despacito, Macarena, Lambada). Só nesses anos.
 
+import { BLOCK19 } from './countries19';
+
 type Pts = [number, number][];
 const interp = (pts: Pts, y: number): number => {
   if (y <= pts[0][0]) return pts[0][1];
@@ -44,9 +46,20 @@ const MUSIC: Record<string, Pts> = {
   JAM: [[1920, 0.75], [2040, 0.75]],
 };
 
+/** r21 (J-10): gasto formal por bloco de países (fichas de countries19 sem curva própria). Conservador: abaixo de
+ *  Itália (0,7) e Brasil (0,65); mercado informal, estatal ou pequeno puxa para baixo. */
+const MUSIC_BLOCK: Record<string, Pts> = {
+  nordic: [[1920, 0.6], [1990, 0.65], [2040, 0.65]], central: [[1920, 0.6], [2040, 0.65]], east: [[1920, 0.4], [1948, 0.25], [1991, 0.35], [2040, 0.45]],
+  balkan: [[1920, 0.35], [1948, 0.25], [1991, 0.3], [2040, 0.4]], arab: [[1920, 0.3], [2040, 0.3]], persian: [[1920, 0.3], [1979, 0.15], [2040, 0.2]],
+  israel: [[1920, 0.5], [2040, 0.6]], maghreb: [[1920, 0.35], [2040, 0.3]], westaf: [[1920, 0.3], [2015, 0.3], [2040, 0.4]], congo: [[1920, 0.3], [2040, 0.25]],
+  eastaf: [[1920, 0.25], [2040, 0.3]], southaf: [[1920, 0.3], [2040, 0.35]], caribEs: [[1920, 0.45], [2040, 0.45]], caribEn: [[1920, 0.5], [2040, 0.5]],
+  andes: [[1920, 0.45], [2040, 0.45]], sea: [[1920, 0.3], [2010, 0.35], [2040, 0.4]], southAs: [[1920, 0.25], [2040, 0.25]], sino: [[1920, 0.4], [1980, 0.55], [2040, 0.5]],
+  pacific: [[1920, 0.4], [2040, 0.4]],
+};
+
 /** Fator de gasto formal com música (1 = proporcional a população × renda). */
 export function musicSpend17(a3: string, year: number): number {
-  const p = MUSIC[a3];
+  const p = MUSIC[a3] ?? MUSIC_BLOCK[BLOCK19[a3]];
   return p ? interp(p, year) : 1;
 }
 

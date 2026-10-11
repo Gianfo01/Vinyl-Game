@@ -17,6 +17,7 @@ import { css } from './px';
 import type { Appearance } from '../../sim/types';
 import type { Sprite } from './px';
 import './cine18.css';
+import { visLoop21 } from './visloop21';
 
 const reduced = () => typeof document !== 'undefined' && document.documentElement.classList.contains('reduced-motion');
 const T = (x: L | string | undefined) => (x === undefined ? '' : typeof x === 'string' ? x : t(x));
@@ -239,7 +240,7 @@ export function boardView18(s: GameState, b0: Board18, o: BoardOpts18 = {}): HTM
   let b = b0;
   let cur = Math.max(0, Math.min(b.frames.length - 1, o.start ?? 0));
   let playing = (o.auto ?? true) && !reduced();
-  let t0 = 0, raf = 0, last = 0, fstart = 0;
+  let t0 = 0, last = 0, fstart = 0;
   const cv = h('canvas', { width: W, height: H, class: 'px c18-cv', role: 'img' }) as HTMLCanvasElement;
   const ctx = cv.getContext('2d');
   if (ctx) ctx.imageSmoothingEnabled = false;
@@ -294,8 +295,10 @@ export function boardView18(s: GameState, b0: Board18, o: BoardOpts18 = {}): HTM
     dots.replaceChildren(...b.frames.map((x, j) => h('button', { class: `c18-dot ${j === cur ? 'on' : ''} ${x.slot && o.slot?.(x, refresh) ? 'todo' : ''}`, type: 'button', title: T(x.caption), 'aria-label': `${j + 1}/${b.frames.length}`, onclick: () => go(j) })));
     if (ctx) drawFrame18(ctx, s, f, reduced() ? 99 : 0);
   }
-  const loop = (now: number) => {
-    if (!wrap.isConnected && t0) return;
+  paintPlay();
+  go(cur, true);
+  // r21 (I-10): só anima visível e com a aba em primeiro plano
+  if (!reduced()) visLoop21(wrap, (now) => {
     if (!t0) t0 = now;
     if (now - last >= 80 && ctx) {
       last = now;
@@ -303,11 +306,6 @@ export function boardView18(s: GameState, b0: Board18, o: BoardOpts18 = {}): HTM
       drawFrame18(ctx, s, f, (now - fstart) / 1000);
       if (playing && now - fstart >= f.ms) { if (cur < b.frames.length - 1) go(cur + 1); else { playing = false; paintPlay(); } }
     }
-    raf = requestAnimationFrame(loop);
-  };
-  paintPlay();
-  go(cur, true);
-  if (!reduced() && typeof requestAnimationFrame === 'function') raf = requestAnimationFrame(loop);
-  void raf;
+  });
   return wrap;
 }

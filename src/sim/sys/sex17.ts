@@ -165,7 +165,7 @@ registerMod('appeal', 'sex17', (s, v, c) => {
   const e = outEffect(s, c.act, c.act.city);
   if (!e) return null;
   // ícones pop/dance: a cena gay sempre abraçou disco, pop e eletrônica
-  const icon = ['pop', 'electronic', 'disco', 'dance'].includes(familyOf(c.act.genre)) && s.year >= 1975 ? 1.02 : 1;
+  const icon = (['pop', 'electronic'].includes(familyOf(c.act.genre)) || ['disco', 'hi_nrg', 'dance_pop', 'house', 'eurodance'].includes(c.act.genre)) && s.year >= 1975 ? 1.02 : 1; // r21 (J-7): disco é família rnb; dance por id
   const m = 1 + (e.m - 1) * 0.5;
   return { value: v * m * icon, label: icon > 1 ? fmtL(l('{w} Gênero com tradição de ícones LGBT (+2%).', '{w} Genre with a tradition of LGBT icons (+2%).'), { w: e.why }) : e.why };
 });

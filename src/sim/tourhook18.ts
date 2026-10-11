@@ -22,7 +22,7 @@ export const KIT0: Kit18 = { move: 'bus', bed: 'std', diem: 1, gear: 'own', reh:
 export interface KitInfo { people: number; km: number; travel: number; shows: number; days: number; tiers: number[]; gross: number; fame: number; members: number }
 export interface KitCost { total: number; parts: [L, number][]; warn: L[] }
 /** Contexto do acerto de um show (depois da bilheteria, antes do caixa). */
-export interface SettleCtx { gross: number; pay: number; merch: number; demand: number; quality: number; cover: number; fatigue: number; priceMult: number; clim: L; forecast: number }
+export interface SettleCtx { gross: number; pay: number; merch: number; demand: number; quality: number; cover: number; fatigue: number; priceMult: number; clim: L; forecast: number; /** r21 (F-2): fração do público que é do próprio ato (o resto veio pelo parceiro) */ ownShare?: number }
 
 export const TOUR18: {
   kit?: (s: GameState, kit: Kit18 | undefined, info: KitInfo) => KitCost;
@@ -35,4 +35,8 @@ export const TOUR18: {
   book?: (s: GameState, t: Tour, key: string, amount: number, memo: string) => boolean;
   /** r20 (B16): fator de concorrência na agenda (cidade × semana do DIA do show) — o mesmo na previsão e no acerto. */
   clash?: (s: GameState, act: import('./types').Act, cityId: string, day: number) => number;
+  /** r21 (F-1): bilheteria com todos os modificadores 'showRevenue' em modo determinístico (política de ingressos da parada, dia do show). */
+  revenue?: (s: GameState, actId: string, cityId: string, tier: number, ratio: number, gross: number, day?: number) => number;
+  /** r21 (F-1): o kit EFETIVO que a turnê usará (o mesmo que TOUR18.planned persiste), para a previsão ler TOUR18.q igual ao acerto. */
+  effKit?: (s: GameState, kit: Kit18 | undefined, people: number, fame: number) => Kit18;
 } = {};

@@ -5,7 +5,7 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { cityById, l, type L } from '../data/world';
-import { availableFormats, scheduleRelease, songQ, suggestedPress } from './production';
+import { availableFormats, refreshQ, scheduleRelease, songQ, suggestedPress } from './production';
 import { launchNpcRelease } from './market';
 import type { Act, GameState, Release, Song } from './types';
 import type { Idea } from './xtypes';
@@ -110,7 +110,7 @@ export function reviseSong(s: GameState, r: Rng, songId: string, focus: ReviseFo
     song.melody = clamp(song.melody - r.float(0, 2), 0, 100);
   }
   song.revisions = n + 1;
-  song.q = songQ({ ...song, performance: song.melody * 0.6, production: 30 });
+  refreshQ(song);
   for (const w of song.writers) {
     const p = s.persons[w];
     if (!p) continue;
@@ -156,6 +156,7 @@ export function releaseDemo(s: GameState, r: Rng, songId: string): L | null {
     if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `demo:${song.id}`, -cost, 'recording', `Demo "${song.title}"`);
     song.recorded = true;
+    song.recordedWeek = s.week;
     song.performance = clamp(song.melody * 0.55 + r.normal(0, 5), 5, 100);
     song.production = clamp(22 + r.normal(0, 4), 5, 100);
     song.q = songQ(song);
@@ -209,7 +210,7 @@ export function releaseLive(s: GameState, r: Rng, tourId: string): L | null {
   const energy = clamp(50 + tr.production * 8 + played.length * 1.5 + act.fame / 4, 30, 95);
   const ids = base.map((src) => {
     const so: Song = {
-      ...src, id: nextId(s, 's'), title: `${src.title} (${l('ao vivo', 'live').pt})`, recorded: true, releaseId: undefined, createdWeek: s.week,
+      ...src, id: nextId(s, 's'), title: `${src.title} (${l('ao vivo', 'live').pt})`, recorded: true, recordedWeek: s.week, qBonus: undefined, releaseId: undefined, createdWeek: s.week,
       performance: clamp((src.performance + energy) / 2 + r.normal(0, 4), 5, 100), production: clamp(src.production * 0.85, 5, 100), vault: false, revisions: undefined,
     };
     so.q = songQ(so);
@@ -254,12 +255,15 @@ export function pitchSong(s: GameState, r: Rng, songId: string, targetActId: str
   const accepted = r.chance(chance);
   s.songPitches.push({ id: nextId(s, 'sp'), songId, targetActId, fee, week: s.week, status: accepted ? 'accepted' : 'declined' });
   if (!accepted) return fmtL(l('{a} recusou "{t}".', '{a} passed on "{t}".'), { a: target.name, t: song.title });
-  post(s, `pitch:${songId}`, fee, 'publishing', `Música "${song.title}" para ${target.name}`);
+  // r21 (E-8): mesma política de closeSale — metade ao selo (edição), metade a quem escreveu
+  const labelPart = Math.round(fee * 0.5);
+  post(s, `pitch:${songId}`, labelPart, 'publishing', `Música "${song.title}" para ${target.name}`);
+  for (const w of song.writers) s.personalCash[w] = (s.personalCash[w] ?? 0) + Math.round((fee - labelPart) / Math.max(1, song.writers.length));
   const cover: Song = {
-    ...song, id: nextId(s, 's'), actId: target.id, coverOf: song.id, recorded: true, releaseId: undefined, vault: false, createdWeek: s.week,
+    ...song, id: nextId(s, 's'), actId: target.id, coverOf: song.id, recorded: true, recordedWeek: s.week, qBonus: undefined, releaseId: undefined, vault: false, createdWeek: s.week,
     performance: clamp(45 + target.fame / 2 + r.normal(0, 6), 5, 100), production: clamp(55 + r.normal(0, 8), 5, 100), genre: target.genre,
   };
-  cover.q = songQ(cover);
+  refreshQ(cover);
   s.songs[cover.id] = cover;
   target.songs.push(cover.id);
   const rel = launchNpcRelease(s, r, target, target.owner!, [cover.id], 'single', 3000 + target.fame * 80);

@@ -14,6 +14,7 @@ import { USE_BLOCK18, syncMasterShare } from '../rights';
 import type { Act, GameState, Song } from '../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../util';
 import { addHype } from './hype12';
+import { bumpAppeal } from '../market';
 import { opine } from './persona13';
 
 export type Mood15 = 'joy' | 'romance' | 'tension' | 'melancholy' | 'energy';
@@ -167,8 +168,9 @@ export function pitch15(s: GameState, briefId: string, songId: string, ask = fal
   const rel = s.releases[song.releaseId ?? ''];
   let revived = false;
   if (rel) {
-    if (!rel.live && s.year - rel.year >= 3) { rel.live = true; rel.week = s.week - 53; rel.appeal *= 0.2; revived = true; }
-    rel.appeal *= 1 + M.boost * (0.5 + fit);
+    // r21 (E-10): `week` fica imutável (dealOfRelease, ano); a idade comercial recomeça em revivedWeek
+    if (!rel.live && s.year - rel.year >= 3) { rel.live = true; rel.revivedWeek = s.week - 53; rel.appeal *= 0.2; revived = true; }
+    bumpAppeal(s, rel, 1 + M.boost * (0.5 + fit), 'sync', fmtL(l('Sync: {m}', 'Sync: {m}'), { m: M.name })); // r21 (E-9)
   }
   act.fans.casual += Math.round(fee / money(s, 3) * M.boost);
   addHype(s, `a:${act.id}`, 'sync15', fmtL(l('Faixa em {m}', 'Track in a {m}'), { m: M.name }), Math.round(4 + M.boost * 8));

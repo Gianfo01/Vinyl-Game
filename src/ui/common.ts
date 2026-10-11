@@ -88,27 +88,63 @@ export function kv(label: string, value: Node | string | number): HTMLElement {
   return h('div', { class: 'kv' }, h('span', { class: 'k' }, label), h('span', { class: 'v' }, value as Node));
 }
 
+/** r21 (I-2): o overlay guarda a própria função de fechar; quem fecha "por fora" chama closeOverlay() (listener removido). */
+type OverlayEl = HTMLElement & { __close21?: () => void };
+export const BUSY21 = '.overlay, .scene-overlay, .tour18, aside.tutorial';
+/** Há um diálogo, cena, tour ou tutorial aberto (cartões automáticos esperam). */
+export const isBusy21 = (): boolean => typeof document !== 'undefined' && !!document.querySelector(BUSY21);
+/** Há algo modal aberto (diálogo, cena, tour): atalhos globais não devem agir. O cartão do tutorial (aside.tutorial) não bloqueia. */
+export const isModal21 = (): boolean => typeof document !== 'undefined' && !!document.querySelector('.overlay, .scene-overlay, .tour18');
+
+const FOCUSABLE21 = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+/** r21 (1.8): Tab circula dentro do diálogo. Devolve true se tratou a tecla. */
+export function trapTab21(root: HTMLElement, e: KeyboardEvent): boolean {
+  if (e.key !== 'Tab') return false;
+  const xs = [...root.querySelectorAll<HTMLElement>(FOCUSABLE21)].filter((x) => x.offsetParent !== null || x === document.activeElement);
+  if (!xs.length) { e.preventDefault(); return true; }
+  const first = xs[0], last = xs[xs.length - 1];
+  const cur = document.activeElement as HTMLElement | null;
+  if (e.shiftKey && (cur === first || !root.contains(cur))) { e.preventDefault(); last.focus(); return true; }
+  if (!e.shiftKey && (cur === last || !root.contains(cur))) { e.preventDefault(); first.focus(); return true; }
+  return false;
+}
+
 export function modal(title: string, content: HTMLElement, opts: { wide?: boolean; onClose?: () => void } = {}): () => void {
   const prev = document.activeElement as HTMLElement | null;
+  let closed = false;
   const close = () => {
+    if (closed) return;
+    closed = true;
     overlay.remove();
     document.removeEventListener('keydown', onKey);
     opts.onClose?.();
     prev?.focus?.();
   };
   const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') close();
+    if (!overlay.isConnected) { document.removeEventListener('keydown', onKey); return; } // removido por fora sem closeOverlay(): limpa sozinho
+    if (e.key === 'Escape') { close(); return; }
+    const tops = document.querySelectorAll('.overlay, .scene-overlay');
+    if (tops[tops.length - 1] === overlay) trapTab21(overlay, e); // só o diálogo de cima prende o Tab
   };
-  const overlay = h('div', { class: 'overlay', onclick: (e: Event) => { if (e.target === overlay) close(); } },
+  const overlay: OverlayEl = h('div', { class: 'overlay', onclick: (e: Event) => { if (e.target === overlay) close(); } },
     h('div', { class: `modal ${opts.wide ? 'wide' : ''}`, role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
       h('header', null, h('h2', null, title), h('button', { class: 'icon', onclick: close, 'aria-label': t(S.close) }, '✕')),
       h('div', { class: 'modal-body' }, content),
     ),
   );
+  overlay.__close21 = close;
   document.body.appendChild(overlay);
   document.addEventListener('keydown', onKey);
   (overlay.querySelector('button, input, select') as HTMLElement | null)?.focus();
   return close;
+}
+
+/** Fecha o diálogo aberto pelo caminho certo (listener, onClose e foco), em vez de `.overlay.remove()`. */
+export function closeOverlay(): void {
+  const o = document.querySelector<OverlayEl>('.overlay');
+  if (!o) return;
+  if (o.__close21) o.__close21();
+  else o.remove();
 }
 
 export function toast(msg: string, kind = 'info'): void {

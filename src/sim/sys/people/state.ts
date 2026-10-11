@@ -257,7 +257,22 @@ export function ageOf(s: GameState, p: Person): number {
 
 export function healthOf(s: GameState, pid: string): Health {
   const st = P(s);
-  return (st.health[pid] ??= { voice: 10, hearing: 0, injuryWeeks: 0, strain: 0, dependency: 0 });
+  let h = st.health[pid];
+  if (!h) {
+    h = st.health[pid] = { voice: 10, hearing: 0, injuryWeeks: 0, strain: 0, dependency: 0 };
+    // r21 (C-3): quem chega viciado (NPC marcado por lifecycle7/soul9/eventos) entra com dependência real — não "sara" no 1º mês
+    if (s.persons[pid]?.health === 'addiction') seedDependency21(s, pid, h);
+  }
+  return h;
+}
+/** r21 (C-3): dependência inicial 60–75 (determinística pelo id) e histórico marcado. */
+export function seedDependency21(s: GameState, pid: string, h?: Health): void {
+  const rec = h ?? P(s).health[pid];
+  if (!rec) return;
+  let x = 0;
+  for (let i = 0; i < pid.length; i++) x = (x * 31 + pid.charCodeAt(i)) >>> 0;
+  rec.dependency = Math.max(rec.dependency, 60 + (x % 16));
+  rec.history = true;
 }
 
 // ---------------------------------------------------------------- meio de comunicação por era

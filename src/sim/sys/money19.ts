@@ -149,6 +149,9 @@ export function answerCall19(s: GameState, how: 'pay' | 'pledge' | 'sell' | 'acc
     if (s.player.cash < debt) return answerCall19(s, 'accept');
     for (const ln of s.player.loans) { post(s, `m19:pay:${ln.id}`, -ln.balance, 'loans', 'Quitação antecipada (banco chamou)'); ln.balance = 0; }
     s.player.loans = [];
+    // r21 (1.11): `debt` inclui o credor-banco (bankDebt20); quitar também zera o que ele cobra e devolve a paciência
+    for (const c of s.creditors) if (c.kind === 'bank') { if (c.owed > 0) post(s, `m19:pay:cr:${c.id}`, -c.owed, 'loans', `Quitação com ${c.name}`); c.owed = 0; c.patience = 100; }
+    s.creditors = s.creditors.filter((c) => c.kind !== 'bank');
     st.call.st = 'paid';
     s.player.reputation.institutional = clamp(s.player.reputation.institutional + 2, 0, 100);
     return l('Dívida quitada: o banco volta a sorrir.', 'Debt cleared: the bank smiles again.');
@@ -250,7 +253,7 @@ function closeAuction(s: GameState, a: Auc19): void {
   const order = [...a.bids].sort((x, y) => y.amt - x.amt);
   let win: Bid19 | undefined;
   for (const b of order) {
-    if (b.who === 'player' && s.player.cash < b.amt) continue;
+    if (b.who === 'player' && freeCash20(s) < b.amt) continue; // r21 (1.12): caixa livre, como no lance
     if (s.labels[b.who] && s.labels[b.who].cash < b.amt * 0.5) continue;
     win = b; break;
   }

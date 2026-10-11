@@ -5,9 +5,10 @@ import { Rng } from '../core/rng';
 import { FAMILIES, familyOf } from '../data/world';
 import { drawText, drawTextOutlined, fitText, textWidth } from './pixel/font';
 import { C, Px, dith, hsl, mix, noise, shade, upscale, withAlpha, type Col } from './pixel/px';
+import { LruMap } from '../core/lru21';
 
-const cache = new Map<string, string>();
-const pxCache = new Map<string, Px>();
+const cache = new LruMap<string, string>(500); // r21 (I-10): teto (capas e logos em dataURL)
+const pxCache = new LruMap<string, Px>(500);
 
 export type ArtStyle = 'deco' | 'classic' | 'psych' | 'punk' | 'neon' | 'grunge' | 'gloss' | 'minimal' | 'neural';
 

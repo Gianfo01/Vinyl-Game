@@ -18,7 +18,7 @@ import { l, type L } from '../../data/world';
 import { actsOfPerson17 } from '../actidx17';
 import { expectedAdvance } from '../contracts';
 import { registerExplain, type WhyPart } from '../explain18';
-import { registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
+import { JUDGE21, registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { histMode } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
@@ -700,3 +700,5 @@ registerExplain('ability.pa', (s, c) => {
 });
 
 export const _ab18 = { caNP, stepPerson, realCurve, reachOf };
+
+JUDGE21.v = (s) => judge18(s).v;

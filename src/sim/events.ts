@@ -2,7 +2,7 @@
 // Cada evento: pré-condições, participantes compatíveis, cooldown, tags de conteúdo,
 // opções e efeitos. O diretor escolhe entre os válidos; nunca inventa evento sem causa.
 
-import { CTXFX19, DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
+import { CTXFX19, DEC_GATE18, LATE21, MERGE_HOOKS21, runDecisionListeners, setEventRegistrar } from './ext4';
 import { exitMember20 } from './members20';
 import { genreAvailable20 } from './genretime20';
 import { clamp, type Rng } from '../core/rng';
@@ -10,19 +10,22 @@ import { toReal } from '../core/money';
 import { FESTIVALS, MEDIA } from '../data/catalog';
 import { cityById, familyOf, genreById, l, type L } from '../data/world';
 import { formatMoney } from '../core/money';
-import { makeAct, makePerson, langForCity } from './people';
+import { makeAct, makePerson, langForCity, uniqueName21 } from './people';
+import { labelTake } from './sys/deal360_17';
 import type { Act, Decision, GameState } from './types';
 import { rng19 } from './rng19';
 import { CONFLICTS19 } from './conflicts19';
-import { withPlayerActsCache, fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
+import { withPlayerActsCache, chanceBand, fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
+import { freeCash20 } from './oblig20';
 import { MORE_EVENTS } from './events_more';
 import { MORE_EVENTS_11 } from './events_more11';
 import { narrate, narratorPace } from './narrator13';
 import { scandal } from './scandal17';
 import { allReleases17 } from './relidx17';
 import { actsTouched17 } from './actidx17';
+import { NEUTRAL21 } from './neutral21';
 
 export type Ctx = Record<string, string | number>;
 
@@ -45,12 +48,20 @@ export interface EventDef {
   title: L;
   text: L;
   options: Option[];
+  /** r21 (G-1): id da opção padrão — a mais cautelosa (sem custo, sem aposta, sem dano permanente). Vale quando o
+   *  cartão vence sem resposta e quando o evento é filtrado por conteúdo/RS. Sem `neutral`, vale a ÚLTIMA opção. */
+  neutral?: string;
 }
+
+/** r21: opção padrão de um evento (`neutral`, senão a última). */
+export const neutralOf = (def: EventDef): Option => def.options.find((o) => o.id === def.neutral) ?? def.options[def.options.length - 1];
 
 // ---------- helpers ----------
 const mineActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]);
+/** r21 (G-9): alvo válido de um evento — ato em atividade (ou estreando) e vivo. */
+export const eventable21 = (a: Act | undefined): a is Act => !!a && (a.status === 'active' || a.status === 'emerging') && !a.deceased;
 const pickMine = (s: GameState, r: Rng, f: (a: Act) => boolean = () => true): Act | undefined => {
-  const list = mineActs(s).filter(f);
+  const list = mineActs(s).filter((a) => eventable21(a) && f(a)); // r21 (G-9): nada de hiato, aposentados ou mortos
   return list.length ? (CTXFX19.pickW && list.length > 1 ? r.weighted(list, (a) => CTXFX19.pickW!(s, a)) : r.pick(list)) : undefined; // r19: quem tem mágoa aberta reage primeiro
 };
 const members = (s: GameState, a: Act) => a.members.map((id) => s.persons[id]).filter((p) => p && p.alive);
@@ -63,6 +74,8 @@ const gain = (s: GameState, key: string, real: number, cat: string, memo: string
 const rep = (s: GameState, k: keyof GameState['player']['reputation'], v: number) => {
   s.player.reputation[k] = clamp(s.player.reputation[k] + v, 0, 100);
 };
+/** r21 (G-3): o caso abafado só é "consumido" quando o cartão é respondido, nunca na avaliação do find. */
+const closeCoverup = (s: GameState, c: Ctx) => { const k = c.flag ? String(c.flag) : `coverup:${c.act}`; delete s.flags[k]; };
 const hiatus = (s: GameState, a: Act, weeks: number) => {
   a.hiatusUntil = s.week + weeks;
   a.status = 'hiatus';
@@ -71,7 +84,7 @@ const hiatus = (s: GameState, a: Act, weeks: number) => {
 export const EVENTS: EventDef[] = [
   // ---------------- Saúde e pessoas ----------------
   {
-    id: 'burnout', cat: 'health', tone: 'bad', tags: ['health'], cooldown: 6,
+    id: 'burnout', cat: 'health', tone: 'bad', tags: ['health'], cooldown: 6, neutral: 'pause',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => members(s, x).some((p) => p.fatigue > 72 && p.stress > 55));
       return a ? { act: a.id } : null;
@@ -85,7 +98,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'voice_strain', cat: 'health', tone: 'bad', tags: ['health'], cooldown: 8,
+    id: 'voice_strain', cat: 'health', tone: 'bad', tags: ['health'], cooldown: 8, neutral: 'rest',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => members(s, x).some((p) => (p.role === 'vocal' || p.role === 'mc') && p.fatigue > 55));
       if (!a) return null;
@@ -101,7 +114,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'addiction', cat: 'health', tone: 'bad', tags: ['drugs', 'health'], cooldown: 18,
+    id: 'addiction', cat: 'health', tone: 'bad', tags: ['drugs', 'health'], cooldown: 18, neutral: 'ignore',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => members(s, x).some((p) => p.stress > 60 && (p.traits.includes('spendthrift') || p.traits.includes('impulsive') || p.traits.includes('melancholic'))));
       if (!a) return null;
@@ -117,24 +130,24 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'coverup_exposed', cat: 'scandal', tone: 'bad', tags: ['drugs'], cooldown: 12,
+    id: 'coverup_exposed', cat: 'scandal', tone: 'bad', tags: ['drugs'], cooldown: 12, neutral: 'admit',
     find: (s, r) => {
       const keys = Object.keys(s.flags).filter((k) => k.startsWith('coverup:') && s.week - s.flags[k] > 12);
       if (!keys.length || !r.chance(0.5)) return null;
       const k = r.pick(keys);
-      delete s.flags[k];
       const id = k.split(':')[1];
-      return s.acts[id] ? { act: id } : null;
+      return s.acts[id] ? { act: id, flag: k } : null; // r21 (G-3): find só lê; a flag some em apply
     },
     title: l('Vazou: o caso abafado de {act}', 'Leaked: the {act} cover-up'),
     text: l('Um jornal publicou que o selo escondeu a dependência de um integrante de {act}.', 'A paper reports the label hid a {act} member\'s addiction.'),
     options: [
-      { id: 'apologize', label: l('Pedir desculpas e pagar tratamento', 'Apologize and fund treatment'), apply: (s, _r, c) => { const a = act(s, c); pay(s, `rehab2:${a.id}`, 6000, 'artist_dev', 'Tratamento'); rep(s, 'institutional', -6); a.trust += 4; } },
-      { id: 'deny', label: l('Negar', 'Deny'), apply: (s, _r, c) => { const a = act(s, c); rep(s, 'institutional', -12); rep(s, 'artists', -6); a.trust -= 12; } },
+      { id: 'apologize', label: l('Pedir desculpas e pagar tratamento', 'Apologize and fund treatment'), apply: (s, _r, c) => { closeCoverup(s, c); const a = act(s, c); pay(s, `rehab2:${a.id}`, 6000, 'artist_dev', 'Tratamento'); rep(s, 'institutional', -6); a.trust += 4; } },
+      { id: 'deny', label: l('Negar', 'Deny'), apply: (s, _r, c) => { closeCoverup(s, c); const a = act(s, c); rep(s, 'institutional', -12); rep(s, 'artists', -6); a.trust -= 12; } },
+      { id: 'admit', label: l('Admitir e não comentar', 'Admit and say no more'), hint: l('Reputação institucional −8; nada mais.', 'Institutional reputation −8; nothing else.'), apply: (s, _r, c) => { closeCoverup(s, c); rep(s, 'institutional', -8); } },
     ],
   },
   {
-    id: 'grief', cat: 'people', tone: 'bad', tags: ['death'], cooldown: 14,
+    id: 'grief', cat: 'people', tone: 'bad', tags: ['death'], cooldown: 14, neutral: 'support',
     find: (s, r) => {
       const a = pickMine(s, r);
       const ms = a ? members(s, a) : [];
@@ -163,7 +176,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'child_born', cat: 'people', tone: 'neutral', tags: [], cooldown: 12,
+    id: 'child_born', cat: 'people', tone: 'neutral', tags: [], cooldown: 12, neutral: 'accept',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => x.status === 'active');
       const ms = a ? members(s, a) : [];
@@ -189,7 +202,7 @@ export const EVENTS: EventDef[] = [
   },
   // ---------------- Banda ----------------
   {
-    id: 'member_leaves', cat: 'band', tone: 'bad', tags: [], cooldown: 0, forcedOnly: true,
+    id: 'member_leaves', cat: 'band', tone: 'bad', tags: [], cooldown: 0, forcedOnly: true, neutral: 'smaller',
     title: l('{person} quer sair de {act}', '{person} wants to leave {act}'),
     text: l('Meses de insatisfação: {person} anuncia que vai deixar {act}.', 'After months of unhappiness, {person} announces they are leaving {act}.'),
     options: [
@@ -200,7 +213,13 @@ export const EVENTS: EventDef[] = [
         if (a.owner === 'player') pay(s, `sub:${a.id}`, 6500, 'artist_dev', 'Substituto');
         const np = makePerson(s, r, { lang: langForCity(a.city, r), role: old.role, potential: old.potential - r.int(0, 10), born: s.year - r.int(19, 30), startFrac: 0.8 });
         s.persons[np.id] = np;
+        uniqueName21(r, np, a.members.map((x) => s.persons[x]).filter(Boolean), langForCity(a.city, r)); // r21 (C-1)
         a.members = a.members.map((x) => (x === old.id ? np.id : x)); actsTouched17(s); // r17: índice pessoa→atos
+        // r21 (1.19): substituto entra com relação semeada e o ex-integrante vai para a linha do tempo (rw.former) na hora
+        for (const id of a.members) if (id !== np.id && s.persons[id]) { np.rel[id] ??= 10; s.persons[id].rel[np.id] ??= 10; }
+        if (a.leaderId === old.id) a.leaderId = a.members[0];
+        const rw21 = (s.x4 as unknown as { rw?: { former: Record<string, { personId: string; year: number; reason: 'left' | 'died' | 'retired' | 'fired' }[]> } }).rw;
+        if (rw21) { const f = (rw21.former[a.id] ??= []); if (!f.some((x) => x.personId === old.id)) f.push({ personId: old.id, year: s.year, reason: 'left' }); }
         remember(s, 'lineup', fmtL(l('{o} sai de {a}; entra {n}.', '{o} leaves {a}; {n} joins.'), { o: old.name, a: a.name, n: np.name }), { actId: a.id, important: true });
       } },
       { id: 'smaller', label: l('Seguir sem substituto', 'Carry on without replacing'), apply: (s, _r, c) => { const a = act(s, c); const old = s.persons[String(c.person)]; if (!a || !old) return; exitMember20(s, a, old.id); remember(s, 'lineup', fmtL(l('{o} sai de {a}.', '{o} leaves {a}.'), { o: old.name, a: a.name }), { actId: a.id, important: true }); if (a.members.length === 0) a.status = 'split'; } },
@@ -208,7 +227,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'credit_dispute', cat: 'band', tone: 'bad', tags: ['legal'], cooldown: 12,
+    id: 'credit_dispute', cat: 'band', tone: 'bad', tags: ['legal'], cooldown: 12, neutral: 'equal',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => x.members.length >= 2 && x.songs.length > 3);
       return a ? { act: a.id } : null;
@@ -236,7 +255,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'genre_shift', cat: 'career', tone: 'neutral', tags: [], cooldown: 18,
+    id: 'genre_shift', cat: 'career', tone: 'neutral', tags: [], cooldown: 18, neutral: 'refuse',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => !x.playerBand && (s.genrePop[x.genre] ?? 1) < 0.7);
       if (!a) return null;
@@ -265,7 +284,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'leak', cat: 'scandal', tone: 'bad', tags: [], cooldown: 12,
+    id: 'leak', cat: 'scandal', tone: 'bad', tags: [], cooldown: 12, neutral: 'embrace',
     find: (s, r) => {
       if (s.year < 1960) return null;
       const a = pickMine(s, r, (x) => x.songs.some((id) => s.songs[id]?.recorded && !s.songs[id]?.releaseId));
@@ -304,7 +323,7 @@ export const EVENTS: EventDef[] = [
     options: [{ id: 'ok', label: l('Acontece', 'It happens'), apply: (s, _r, c) => { const a = act(s, c); a.momentum -= 8; rep(s, 'artistic', -2); mood(s, a, 'morale', -6); } }],
   },
   {
-    id: 'tv_invite', cat: 'career', tone: 'good', tags: [], cooldown: 3,
+    id: 'tv_invite', cat: 'career', tone: 'good', tags: [], cooldown: 3, neutral: 'accept',
     find: (s, r) => {
       if (!hasTech(s, 'tv_music')) return null;
       const a = pickMine(s, r, (x) => x.fame > 15 && x.status === 'active');
@@ -341,9 +360,9 @@ export const EVENTS: EventDef[] = [
         const a = act(s, c);
         const fee = money(s, Number(c.fee));
         const mult = c.slot === 'headline' ? 3 : c.slot === 'afternoon' ? 1.6 : 1;
-        if (a.playerBand) post(s, `fest:${a.id}`, fee, 'live', String(c.festival));
-        else if (a.contractId && s.contracts[a.contractId]?.model === '360') post(s, `fest360:${a.id}`, Math.round(fee * s.contracts[a.contractId].share360), 'live', String(c.festival));
-        else a.cash += fee;
+        const lab = labelTake(s, a, 'live', fee); // r21 (H-8): régua única; o resto do cachê é do ato
+        if (lab > 0) post(s, a.playerBand ? `fest:${a.id}` : `fest360:${a.id}`, lab, 'live', String(c.festival));
+        if (!a.playerBand) a.cash += fee - lab;
         a.fame = clamp(a.fame + 2 * mult * (1 - a.fame / 100), 0, 100); // r18 final: festival rende menos fama para quem já é estrela
         a.fans.casual += Math.round(15000 * mult);
         a.fans.active += Math.round(2500 * mult);
@@ -369,7 +388,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'stage_accident', cat: 'stage', tone: 'bad', tags: ['violence'], cooldown: 18,
+    id: 'stage_accident', cat: 'stage', tone: 'bad', tags: ['violence'], cooldown: 18, neutral: 'pay',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => x.fame > 20 && s.memory.some((m) => m.actId === x.id && m.kind === 'gigs' && s.week - m.week < 5));
       return a && r.chance(0.25) ? { act: a.id } : null;
@@ -400,7 +419,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'sampling_claim', cat: 'contract', tone: 'bad', tags: ['legal'], cooldown: 14,
+    id: 'sampling_claim', cat: 'contract', tone: 'bad', tags: ['legal'], cooldown: 14, neutral: 'settle',
     find: (s, r) => {
       if (s.year < 1980) return null;
       const rels = allReleases17(s).filter((x) => x.owner === 'player' && x.totalUnits > 50000);
@@ -416,7 +435,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'royalty_audit', cat: 'contract', tone: 'bad', tags: ['legal'], cooldown: 18,
+    id: 'royalty_audit', cat: 'contract', tone: 'bad', tags: ['legal'], cooldown: 18, neutral: 'open',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => !x.playerBand && x.releases.length > 1 && x.trust < 55);
       return a && r.chance(0.35) ? { act: a.id } : null;
@@ -445,7 +464,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'payola_exposed', cat: 'scandal', tone: 'bad', tags: ['crime'], cooldown: 36,
+    id: 'payola_exposed', cat: 'scandal', tone: 'bad', tags: ['crime'], cooldown: 36, neutral: 'fine',
     find: (s, r) => {
       if (!s.flags.payola || s.week - s.flags.payola < 20) return null;
       return r.chance(hasCard(s, 'corsair') ? 0.15 : 0.3) ? {} : null;
@@ -458,7 +477,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'boycott', cat: 'culture', tone: 'bad', tags: ['controversy'], cooldown: 18,
+    id: 'boycott', cat: 'culture', tone: 'bad', tags: ['controversy'], cooldown: 18, neutral: 'stand',
     find: (s, r) => {
       const a = pickMine(s, r, (x) => members(s, x).some((p) => p.traits.includes('controversial')) && x.fame > 15);
       return a && r.chance(0.4) ? { act: a.id } : null;
@@ -485,7 +504,11 @@ export const EVENTS: EventDef[] = [
     title: l('{labelName} cerca {act}', '{labelName} courts {act}'),
     text: l('O contrato de {act} vence em breve e {labelName} já ofereceu mais dinheiro.', '{act}\'s contract ends soon and {labelName} is already offering more money.'),
     options: [
-      { id: 'counter', label: l('Renovar com bônus', 'Renew with a bonus'), apply: (s, r, c) => { const a = act(s, c); const k = s.contracts[a.contractId!]; const bonus = money(s, 3000 + a.fame * a.fame * 30); if (s.player.cash < bonus) return; post(s, `poach:${a.id}`, -bonus, 'advances', 'Bônus de renovação'); k.recoupBalance += bonus; a.cash += bonus; if (r.chance(0.35 + a.trust / 150)) { k.endWeek += 156; k.releasesOwed += 3; a.trust += 5; } else { a.trust -= 5; } } },
+      { id: 'counter', label: l('Renovar com bônus', 'Renew with a bonus'), apply: (s, r, c) => { const a = act(s, c); const k = s.contracts[a.contractId!]; const bonus = money(s, 3000 + a.fame * a.fame * 30);
+        // r21 (1.16): caixa livre e aviso; o bônus só é pago (e só entra no recuperável) se o artista aceita renovar
+        if (freeCash20(s) < bonus) { notify(s, fmtL(l('Caixa insuficiente para o bônus de renovação de {a}: precisa de {v} livres. O cartão continua na mesa.', 'Not enough cash for {a}\'s renewal bonus: needs {v} free. The card stays on the desk.'), { a: a.name, v: `$${Math.round(bonus / 100).toLocaleString('en-US')}` }), 'bad'); KEEP_CARD21.v = true; return; }
+        if (r.chance(0.35 + a.trust / 150)) { post(s, `poach:${a.id}`, -bonus, 'advances', 'Bônus de renovação'); (LATE21.recoup ? LATE21.recoup(s, k, 'adv', bonus) : (k.recoupBalance += bonus)); a.cash += bonus; k.endWeek += 156; k.releasesOwed += 3; a.trust = clamp(a.trust + 5, 0, 100); notify(s, fmtL(l('{a} renovou por mais 3 anos com o bônus.', '{a} renewed for 3 more years with the bonus.'), { a: a.name }), 'good'); }
+        else { a.trust = clamp(a.trust - 5, 0, 100); notify(s, fmtL(l('{a} recusou o bônus de renovação: vai embora no fim do contrato.', '{a} turned down the renewal bonus: leaving at term end.'), { a: a.name }), 'bad'); } } },
       { id: 'let_go', label: l('Deixar ir no fim do contrato', 'Let them go at term end'), apply: (s, _r, c) => { s.flags[`leaving:${c.act}`] = 1; } },
     ],
   },
@@ -528,7 +551,7 @@ export const EVENTS: EventDef[] = [
   },
   // ---------------- Fabricação ----------------
   {
-    id: 'pressing_backlog', cat: 'manufacturing', tone: 'bad', tags: [], cooldown: 10,
+    id: 'pressing_backlog', cat: 'manufacturing', tone: 'bad', tags: [], cooldown: 10, neutral: 'wait',
     find: (s, r) => {
       const prs = s.pendingReleases.filter((p) => p.press > 0);
       return prs.length && r.chance(0.35) ? { pending: r.pick(prs).id } : null;
@@ -549,7 +572,7 @@ export const EVENTS: EventDef[] = [
     title: l('Esgotado: "{releaseTitle}"', 'Sold out: "{releaseTitle}"'),
     text: l('O estoque físico acabou e o varejo está pedindo mais. Sucesso inesperado gera falta.', 'Physical stock ran out and retail wants more. Unexpected success creates shortages.'),
     options: [
-      { id: 'repress', label: l('Reprensar (dobro da tiragem)', 'Repress (double the run)'), apply: (s, _r, c) => { const rel = s.releases[String(c.release)]; if (!rel) return; const units = Math.max(1000, rel.pressed * 2); const cost = money(s, units * 1.1 + 400); post(s, `repress:${rel.id}`, -cost, 'release', 'Reprensagem'); rel.stock += units; rel.pressed += units; s.flags[`repress:${rel.id}`] = 1; } },
+      { id: 'repress', label: l('Reprensar (dobro da tiragem)', 'Repress (double the run)'), apply: (s, _r, c) => { const rel = s.releases[String(c.release)]; if (!rel) return; const units = Math.max(1000, rel.pressed * 2); const cost = LATE21.pressingCost!(s, rel.formats, units); s.flags[`repress:${rel.id}`] = 1; if (freeCash20(s) < cost) { notify(s, l('Sem caixa para a reprensagem: a fábrica não aceitou o pedido.', 'No cash for the repress: the plant turned the order down.'), 'bad'); return; } post(s, `repress:${rel.id}`, -cost, 'release', 'Reprensagem'); rel.stock += units; rel.pressed += units; } }, // r21 (1.15): preço real da fábrica e checagem de caixa
       { id: 'no', label: l('Não reprensar', 'Do not repress'), apply: (s, _r, c) => { s.flags[`repress:${c.release}`] = 1; } },
     ],
   },
@@ -585,7 +608,7 @@ export const EVENTS: EventDef[] = [
     title: l('{act} considera uma reunião', '{act} considers a reunion'),
     text: l('Ex-integrantes de {act} toparam conversar sobre um retorno. Fãs antigos e nostalgia garantem atenção.', 'Former {act} members are open to a comeback. Old fans and nostalgia guarantee attention.'),
     options: [
-      { id: 'sign', label: l('Bancar a reunião (contrato de 3 anos)', 'Fund the reunion (3-year deal)'), apply: (s, _r, c) => { const a = act(s, c); const fee = money(s, 8000 + a.fame * 400); if (s.player.cash < fee) return; post(s, `reunion:${a.id}`, -fee, 'advances', 'Reunião'); a.status = 'active'; a.careerEnd = s.year + 6; a.momentum = 70; a.archetype = 'phoenix'; grantPlayerContract(s, a, 36); s.contracts[a.contractId!].recoupBalance = fee; s.knowledge[a.id] = { actId: a.id, degree: 4, stage: 'negotiation', bias: 0, updatedWeek: s.week, source: 'reunion' }; remember(s, 'reunion', fmtL(l('{a} se reúne sob o selo {c}.', '{a} reunites on {c}.'), { a: a.name, c: s.config.companyName }), { actId: a.id, important: true }); } },
+      { id: 'sign', label: l('Bancar a reunião (contrato de 3 anos)', 'Fund the reunion (3-year deal)'), apply: (s, _r, c) => { const a = act(s, c); const fee = money(s, 8000 + a.fame * 400); if (!needCash21(s, fee, l('Bancar a reunião', 'Fund the reunion'))) return; post(s, `reunion:${a.id}`, -fee, 'advances', 'Reunião'); a.status = 'active'; a.careerEnd = s.year + 6; a.momentum = 70; a.archetype = 'phoenix'; grantPlayerContract(s, a, 36); s.contracts[a.contractId!].recoupBalance = fee; s.knowledge[a.id] = { actId: a.id, degree: 4, stage: 'negotiation', bias: 0, updatedWeek: s.week, source: 'reunion' }; remember(s, 'reunion', fmtL(l('{a} se reúne sob o selo {c}.', '{a} reunites on {c}.'), { a: a.name, c: s.config.companyName }), { actId: a.id, important: true }); } },
       { id: 'pass', label: l('Passar', 'Pass'), apply: () => {} },
     ],
   },
@@ -593,6 +616,7 @@ export const EVENTS: EventDef[] = [
   {
     id: 'scene_explosion', cat: 'culture', tone: 'neutral', tags: [], cooldown: 6,
     find: (s, r) => {
+      if (!hasTech(s, 'radio')) return null; // r21 (B17): o texto fala em rádios
       const hot = Object.entries(s.scenes).filter(([k, v]) => v > 18 && !s.flags[`scene:${k}`]);
       if (!hot.length) return null;
       const [k] = r.pick(hot);
@@ -609,7 +633,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'censorship', cat: 'culture', tone: 'bad', tags: ['censorship'], cooldown: 24,
+    id: 'censorship', cat: 'culture', tone: 'bad', tags: ['censorship'], cooldown: 24, neutral: 'comply',
     find: (s, r) => {
       if (!hasMutator(s, 'censorship') && !r.chance(0.15)) return null;
       const rels = allReleases17(s).filter((x) => x.owner === 'player' && x.live && x.territories.length > 1);
@@ -629,12 +653,11 @@ export const EVENTS: EventDef[] = [
       if (s.economy.recession) return null;
       const p = hasMutator(s, 'permanent_crisis') ? 0.12 : 0.03;
       const crash = s.config.mode === 'historic' && s.year === 1930 && !s.flags.crash1930;
-      if (crash) s.flags.crash1930 = 1;
-      return crash || r.chance(p) ? { months: crash ? 48 : r.int(10, 24) } : null;
+      return crash || r.chance(p) ? { months: crash ? 48 : r.int(10, 24), crash: crash ? 1 : 0 } : null; // r21 (G-3): a flag é gravada em apply
     },
     title: l('Recessão', 'Recession'),
     text: l('A economia encolhe. O público gasta menos com música por {months} meses (estimativa).', 'The economy shrinks. People spend less on music for about {months} months.'),
-    options: [{ id: 'ok', label: l('Apertar os cintos', 'Tighten belts'), apply: (s, _r, c) => { s.economy.recession = true; s.economy.recessionUntil = s.week + Math.round(Number(c.months) * 4.35); remember(s, 'recession', l('Começa uma recessão.', 'A recession begins.'), { important: true }); } }],
+    options: [{ id: 'ok', label: l('Apertar os cintos', 'Tighten belts'), apply: (s, _r, c) => { if (c.crash) s.flags.crash1930 = 1; s.economy.recession = true; s.economy.recessionUntil = s.week + Math.round(Number(c.months) * 4.35); remember(s, 'recession', l('Começa uma recessão.', 'A recession begins.'), { important: true }); } }],
   },
   {
     id: 'musicians_strike', cat: 'world', tone: 'bad', tags: [], cooldown: 120,
@@ -712,7 +735,7 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'clone_without_consent', cat: 'neural', tone: 'bad', tags: ['legal'], cooldown: 24,
+    id: 'clone_without_consent', cat: 'neural', tone: 'bad', tags: ['legal'], cooldown: 24, neutral: 'ignore',
     find: (s, r) => {
       if (!hasTech(s, 'synthetic_voice')) return null;
       const a = pickMine(s, r, (x) => x.fame > 30 && x.archetype !== 'synthetic');
@@ -727,13 +750,13 @@ export const EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'neural_vote', cat: 'neural', tone: 'neutral', tags: [], cooldown: 999,
-    find: (s) => (hasTech(s, 'neural') && s.divergence.neural === undefined ? {} : null),
+    id: 'neural_vote', cat: 'neural', tone: 'neutral', tags: [], cooldown: 999, neutral: 'abstain', forcedOnly: true, // r21 (G-4): cartão forçado quando a tecnologia chega (tick.techMonth), não concorre no sorteio
     title: l('Interface neural: o setor decide', 'Neural interface: the industry decides'),
     text: l('Um consórcio propõe tocar música direto no cérebro. A AMIF pede a posição de cada selo.', 'A consortium proposes playing music straight to the brain. AMIF asks each label to take a stand.'),
     options: [
       { id: 'support', label: l('Apoiar a adoção', 'Support adoption'), apply: (s, r) => { s.player.neural.neuralAdopted = true; const p = 0.55 + s.player.legacy.industry / 400; s.divergence.neural = r.chance(p) ? 'accepted' : 'rejected'; remember(s, 'neural', s.divergence.neural === 'accepted' ? l('A interface neural é aceita pelo mercado.', 'The neural interface is accepted by the market.') : l('O público rejeita a interface neural.', 'The public rejects the neural interface.'), { important: true }); } },
       { id: 'oppose', label: l('Opor-se', 'Oppose'), apply: (s, r) => { s.player.neural.neuralAdopted = false; s.player.neural.humanFocus += 2; const p = 0.45 - s.player.legacy.industry / 400; s.divergence.neural = r.chance(p) ? 'accepted' : 'rejected'; remember(s, 'neural', s.divergence.neural === 'accepted' ? l('Mesmo com oposição, a interface neural vence.', 'Despite opposition, the neural interface wins.') : l('A interface neural é rejeitada.', 'The neural interface is rejected.'), { important: true }); } },
+      { id: 'abstain', label: l('Abster-se', 'Abstain'), hint: l('O mercado decide sem a sua voz.', 'The market decides without your voice.'), apply: (s, r) => { const p = 0.5 + s.player.legacy.industry / 800; s.divergence.neural = r.chance(p) ? 'accepted' : 'rejected'; remember(s, 'neural', s.divergence.neural === 'accepted' ? l('Sem a sua voz, a interface neural é aceita pelo mercado.', 'Without your voice, the neural interface is accepted by the market.') : l('Sem a sua voz, o público rejeita a interface neural.', 'Without your voice, the public rejects the neural interface.'), { important: true }); } },
     ],
   },
   {
@@ -820,15 +843,18 @@ function mergeLabelsSync(s: GameState, buyer: string, target: string): void {
   t.roster = [];
   t.active = false;
   t.closedYear = s.year;
+  for (const f of MERGE_HOOKS21) f(s, b.id, t.id); // r21 (B24): líder, alvo/pacto do rival e acionistas
   remember(s, 'merger', fmtL(l('{b} absorve {t}.', '{b} absorbs {t}.'), { b: b.name, t: t.name }), { important: true });
 }
 
+for (const e of EVENTS) e.neutral ??= NEUTRAL21[e.id];
 export const eventById = Object.fromEntries(EVENTS.map((e) => [e.id, e])) as Record<string, EventDef>;
 
 /** Módulos da expansão registram seus eventos (o diretor sorteia os que têm find). */
 export function registerEvents(defs: EventDef[]): void {
   for (const d of defs) {
     if (eventById[d.id]) continue;
+    d.neutral ??= NEUTRAL21[d.id];
     EVENTS.push(d);
     eventById[d.id] = d;
   }
@@ -850,6 +876,8 @@ export function ctxParams(s: GameState, ctx: Ctx): Record<string, Param> {
   if (ctx.fee !== undefined) p.feeTxt = fmt(Number(ctx.fee));
   if (ctx.price !== undefined) p.priceTxt = fmt(Number(ctx.price));
   if (ctx.amount !== undefined) p.amountTxt = fmt(Number(ctx.amount));
+  // r21 (H-10): chances em % no contexto viram faixa qualitativa nos textos ({pBand}, {pcBand}, {ppBand})
+  for (const k of ['p', 'pc', 'pp'] as const) if (ctx[k] !== undefined && Number.isFinite(Number(ctx[k]))) p[`${k}Band`] = chanceBand(Number(ctx[k]) / 100);
   if (ctx.advance !== undefined) p.advanceTxt = fmt(Number(ctx.advance));
   if (ctx.mem) p.memText = s.memory.find((m) => m.id === ctx.mem)?.text ?? '';
   if (ctx.other && s.acts[String(ctx.other)]) p.otherName = s.acts[String(ctx.other)].name;
@@ -866,17 +894,42 @@ function filtered(s: GameState, def: EventDef, ctx?: Ctx): boolean {
   return !!a?.rs && def.tags.some((t) => SENSITIVE_TAGS.includes(t));
 }
 
+/** r21 (1.9): as opções escrevem `p.resentment += 15`, `a.trust -= 10`… sem clamp; depois de aplicar, tudo volta a 0–100. */
+export function clampActors21(s: GameState, ctx: Ctx): void {
+  const a = ctx?.act ? s.acts[String(ctx.act)] : undefined;
+  if (a) {
+    a.trust = clamp(a.trust, 0, 100); a.momentum = clamp(a.momentum, 0, 100); a.fame = clamp(a.fame, 0, 100);
+    for (const id of a.members) { const p = s.persons[id]; if (p) for (const k of ['morale', 'stress', 'fatigue', 'inspiration', 'resentment'] as const) p[k] = clamp(p[k], 0, 100); }
+  }
+  const p = ctx?.person ? s.persons[String(ctx.person)] : undefined;
+  if (p) for (const k of ['morale', 'stress', 'fatigue', 'inspiration', 'resentment'] as const) p[k] = clamp(p[k], 0, 100);
+}
+
+/** r21 (G-10): uma opção que precisa de caixa e não tem avisa e pede para o cartão ficar na mesa (resolveDecision não o consome). */
+export const KEEP_CARD21 = { v: false };
+export function needCash21(s: GameState, amount: number, what: L): boolean {
+  if (s.player.cash >= amount) return true;
+  notify(s, fmtL(l('Caixa insuficiente para "{w}": precisa de {v}. O cartão continua na mesa.', 'Not enough cash for "{w}": needs {v}. The card stays on the desk.'), { w: what, v: { pt: formatMoney(amount, 'pt-BR'), en: formatMoney(amount, 'en-US') } }), 'bad');
+  KEEP_CARD21.v = true;
+  return false;
+}
+
 /** Cria o evento: com opções vira cartão de decisão; com uma só, aplica e avisa. */
 export function emitEvent(s: GameState, r: Rng, id: string, ctx: Ctx): void {
   const def = eventById[id];
-  if (!def || filtered(s, def, ctx)) {
-    // filtrado: aplica o desfecho mais neutro sem mostrar o conteúdo
-    if (def) def.options[def.options.length - 1].apply(s, r, ctx);
+  if (!def) return;
+  if (filtered(s, def, ctx)) {
+    // r21 (G-2): filtrado por conteúdo/RS → aplica a opção NEUTRA (não a última) e avisa que um cartão foi filtrado
+    const o = neutralOf(def);
+    o.apply(s, r, ctx); clampActors21(s, ctx);
+    notify(s, fmtL(l('Cartão filtrado ({t}): valeu "{o}".', 'Card filtered ({t}): "{o}" applied.'), { t: fmtL(def.title, ctxParams(s, ctx)), o: o.label }), 'info');
+    s.eventCooldowns[def.id] = s.week + def.cooldown * 4;
     return;
   }
   const params = ctxParams(s, ctx);
   if (def.options.length === 1) {
     def.options[0].apply(s, r, ctx);
+    clampActors21(s, ctx);
     notify(s, narrate(s, fmtL(def.title, params), def.tone, def.id), def.tone === 'good' ? 'good' : def.tone === 'bad' ? 'bad' : 'event');
     remember(s, `event:${def.id}`, fmtL(def.title, params), { actId: ctx.act ? String(ctx.act) : undefined });
   } else {
@@ -889,7 +942,7 @@ export function emitEvent(s: GameState, r: Rng, id: string, ctx: Ctx): void {
       options: def.options.map((o) => ({ id: o.id, label: o.label, hint: o.hint })),
       ctx,
       week: s.week,
-      defaultOption: def.options[def.options.length - 1].id,
+      defaultOption: neutralOf(def).id,
       tags: def.tags,
     };
     s.decisions.push(d);
@@ -912,8 +965,11 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
   }
   const r = rng19(s, 'decide', () => rngOf(s));
   const cx19 = CTXFX19.pre?.(s, def.id, opt.id, d.ctx); // r19: contexto do ator (ctxsys19)
+  KEEP_CARD21.v = false;
   opt.apply(s, r, d.ctx);
+  clampActors21(s, d.ctx);
   if (cx19) CTXFX19.post?.(s, cx19);
+  if (KEEP_CARD21.v) { KEEP_CARD21.v = false; return false; } // r21 (G-10): faltou caixa — o cartão fica
   runDecisionListeners(s, def.id, opt.id, d.ctx);
   s.decisions = s.decisions.filter((x) => x !== d);
   remember(s, `decision:${def.id}`, fmtL(l('{t} → {o}', '{t} → {o}'), { t: d.title, o: opt.label }), { actId: d.ctx.act ? String(d.ctx.act) : undefined });

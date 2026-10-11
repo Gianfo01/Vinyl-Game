@@ -22,7 +22,7 @@ import { chips, stat, tabs } from '../vis';
 
 const say = (x: L | null | undefined, ok: L = l('Feito.', 'Done.')) => { toast(t(x ?? ok), x ? 'info' : 'good'); rerender(); };
 const btn = (label: L | string, fn: () => void, dis: L | null = null, cls = 'btn small') => h('button', { class: cls, onclick: fn, disabled: dis ? true : undefined, title: dis ? t(dis) : '' }, typeof label === 'string' ? label : t(label));
-const tbl = (head: L[], rows: HTMLElement[]) => h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, head.map((x) => h('th', null, t(x))))), h('tbody', null, rows));
+const tbl = (head: L[], rows: HTMLElement[]) => h('div', { class: 'tbl-scroll' }, h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, head.map((x) => h('th', null, t(x))))), h('tbody', null, rows))); // r21 (§2.3.15)
 const p = (x: L, cls = 'small') => h('p', { class: cls }, t(x));
 const pc = (v: number) => `${Math.round(v * 100)}%`;
 const gname = (g: string) => t(genreById[g]?.name ?? l(g));

@@ -116,6 +116,8 @@ export const COUNTRY_INFO19: CountryInfo[] = [
   k('HTI', 'latam', [2.1, 2.4, 2.8, 3.2, 3.8, 4.7, 5.7, 7.1, 8.5, 9.9, 11.4, 12.6, 13.6], [0.03, 0.03, 0.02, 0.02, 0.02], ['fr', 'ht'], tw('caribEs', { latin: -0.6, caribbean: 0.6 }), ['Parada do Haiti', 'Haitian chart †']),
   k('TTO', 'latam', [0.36, 0.41, 0.47, 0.64, 0.85, 0.95, 1.08, 1.22, 1.27, 1.33, 1.4, 1.4, 1.38], [0.15, 0.2, 0.25, 0.25, 0.27], ['en'], T.caribEn, ['Parada de Trinidad e Tobago', 'Trinidad chart †'], ['Prêmio Steelpan', 'International Soca Monarch †', 1993]),
   k('BRB', 'latam', [0.16, 0.17, 0.19, 0.21, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.28, 0.28, 0.28], [0.15, 0.2, 0.3, 0.27, 0.28], ['en'], T.caribEn, ['Parada de Barbados', 'Barbadian chart †']),
+  // r21 (J-1): Guadalupe (departamento francês; fora do atlas 1:110m) — ficha mínima para pointe_a_pitre (zouk, Kassav')
+  k('GLP', 'latam', [0.2, 0.27, 0.3, 0.21, 0.28, 0.32, 0.33, 0.39, 0.42, 0.4, 0.38, 0.38, 0.37], [0.15, 0.3, 0.5, 0.55, 0.55], ['fr'], tw('caribEn', { europe: 0.3, africa: 0.2 }), ['Parada das Antilhas', 'Antilles chart †']),
   k('BHS', 'latam', [0.05, 0.06, 0.07, 0.08, 0.11, 0.17, 0.21, 0.26, 0.3, 0.36, 0.39, 0.42, 0.44], [0.2, 0.3, 0.5, 0.5, 0.5], ['en'], T.caribEn, ['Parada das Bahamas', 'Bahamian chart †']),
   k('PAN', 'latam', [0.45, 0.5, 0.6, 0.86, 1.13, 1.5, 1.95, 2.47, 3.03, 3.64, 4.29, 4.8, 5.2], [0.1, 0.12, 0.12, 0.25, 0.3], ['es'], tw('caribEs', { caribbean: 0.3 }, 1980), ['Parada do Panamá', 'Monitor Latino Panamá']),
   k('HND', 'latam', [0.8, 0.9, 1.1, 1.5, 2, 2.6, 3.6, 4.9, 6.5, 8.3, 9.9, 11.4, 12.6], [0.04, 0.04, 0.04, 0.05, 0.06], ['es'], T.andes, ['Parada de Honduras', 'Monitor Latino Honduras']),
@@ -144,3 +146,16 @@ export const COUNTRY_INFO19: CountryInfo[] = [
   k('PYF', 'oceania', [0.03, 0.04, 0.05, 0.06, 0.08, 0.11, 0.15, 0.2, 0.24, 0.27, 0.28, 0.29, 0.29], [0.2, 0.3, 0.5, 0.5, 0.5], ['fr', 'ty'], T.pacific, ['Parada da Polinésia Francesa', 'Tahitian chart †']),
   k('WSM', 'oceania', [0.04, 0.05, 0.06, 0.08, 0.11, 0.14, 0.16, 0.16, 0.17, 0.19, 0.2, 0.22, 0.24], [0.05, 0.06, 0.06, 0.08, 0.09], ['sm', 'en'], T.pacific, ['Parada de Samoa', 'Samoan chart †']),
 ];
+
+/** r21 (J-10): bloco de gosto (chave de `T`) de cada ficha desta rodada — relevance/relevance17 derivam curvas por bloco
+ *  para os países sem curva própria (antes todos caíam em gasto 1, soft power 0,2 e preferência local 1,6). */
+export const BLOCK19: Record<string, string> = {
+  AUT: 'central', BEL: 'central', CHE: 'central', GRC: 'balkan', DNK: 'nordic', NOR: 'nordic', FIN: 'nordic', ISL: 'nordic', FRO: 'nordic', GRL: 'nordic', UKR: 'east', CZE: 'east',
+  SVK: 'east', HUN: 'east', ROU: 'balkan', BGR: 'balkan', SRB: 'balkan', HRV: 'balkan', SVN: 'central', BIH: 'balkan', MKD: 'balkan', ALB: 'balkan', LTU: 'east', LVA: 'east',
+  EST: 'east', BLR: 'east', GEO: 'east', ARM: 'east', AZE: 'east', IRN: 'persian', ISR: 'israel', PSE: 'arab', LBN: 'arab', SYR: 'arab', JOR: 'arab', IRQ: 'arab',
+  SAU: 'arab', ARE: 'arab', DZA: 'maghreb', MAR: 'maghreb', TUN: 'maghreb', SDN: 'maghreb', SEN: 'westaf', MLI: 'westaf', CIV: 'westaf', GIN: 'westaf', BEN: 'westaf', TGO: 'westaf',
+  BFA: 'westaf', NER: 'westaf', CMR: 'westaf', CPV: 'westaf', COD: 'congo', COG: 'congo', ETH: 'eastaf', SOM: 'eastaf', TZA: 'eastaf', UGA: 'eastaf', AGO: 'southaf', MOZ: 'southaf',
+  ZWE: 'southaf', ZMB: 'southaf', NAM: 'southaf', BWA: 'southaf', PRI: 'caribEs', DOM: 'caribEs', HTI: 'caribEs', TTO: 'caribEn', BRB: 'caribEn', GLP: 'caribEn', BHS: 'caribEn', PAN: 'caribEs',
+  HND: 'andes', VEN: 'caribEs', PER: 'andes', ECU: 'andes', BOL: 'andes', PRY: 'andes', URY: 'andes', THA: 'sea', VNM: 'sea', MYS: 'sea', SGP: 'sea', MMR: 'sea',
+  KHM: 'sea', PAK: 'southAs', BGD: 'southAs', LKA: 'southAs', NPL: 'southAs', TWN: 'sino', HKG: 'sino', FJI: 'pacific', NCL: 'pacific', PYF: 'pacific', WSM: 'pacific',
+};

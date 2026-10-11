@@ -6,13 +6,13 @@ import { t } from '../../i18n/strings';
 import { familyAction, launchHeir, negotiateReunion, reunionTerms, setLeader, startSoloCareer } from '../../sim/dynasty';
 import { personaOf } from '../../sim/ext';
 import { callOutToxic, fanMeetup, moderateCommunity, fandomOf } from '../../sim/fandom19'; // r19: fachada
-import { cedeTerritory, crisisRenegotiate, exerciseOption, setClauses } from '../../sim/contracts2';
+import { cedeTerritory, clauseConsent2, crisisRenegotiate, exerciseOption, setClauses, type ClauseKind2 } from '../../sim/contracts2';
 import type { Act, GameState, Person } from '../../sim/types';
 import { instById, instrumentsOf } from '../../sim/sys/instruments';
 import { overall, ROLE_NAMES, type Role } from '../../sim/sys/talent/attrs';
 import { sings } from '../../sim/sys/vocals10';
 import { openPersonPage } from '../pages';
-import { rngOf } from '../../sim/util';
+import { fmtL, rngOf } from '../../sim/util';
 import { $, N, inspect, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, ic, meter, portrait, stat, tile } from '../vis';
@@ -56,7 +56,7 @@ export function membersSection(s: GameState, a: Act): HTMLElement {
     return h('article', { class: `member ${p.alive ? '' : 'gone'}` },
       // rodada 10: o cabeçalho abre a ficha completa da pessoa
       h('header', { class: 'click', role: 'button', tabindex: 0, title: t(l('Abrir ficha completa', 'Open full card')), onclick: () => openPersonPage(pid), onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter') openPersonPage(pid); } },
-        portrait(p, 56), h('div', null, h('button', { class: 'link', type: 'button' }, h('b', null, p.name)), h('small', null, `${s.year - p.born} ${t(l('anos', 'yrs'))} · ${t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))}`), a.leaderId === pid ? pill(t(l('líder', 'leader')), 'good') : null, group >= 0 && (fac?.groups.length ?? 0) > 1 ? pill(`${t(l('facção', 'faction'))} ${group + 1}`) : null, !p.alive ? pill('✝') : null)),
+        portrait(p, 56), h('div', null, h('span', { class: 'link' }, h('b', null, p.name)), /* r21 (1.9): o cabeçalho já é o controle; sem botão aninhado */ h('small', null, `${s.year - p.born} ${t(l('anos', 'yrs'))} · ${t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))}`), a.leaderId === pid ? pill(t(l('líder', 'leader')), 'good') : null, group >= 0 && (fac?.groups.length ?? 0) > 1 ? pill(`${t(l('facção', 'faction'))} ${group + 1}`) : null, !p.alive ? pill('✝') : null)),
       mainTraits(s, a, p, !!known),
       chips(stat('heart', Math.round(p.morale), l('Moral', 'Morale'), p.morale < 35 ? 'warn' : ''), stat('stress', Math.round(p.stress), l('Estresse', 'Stress'), p.stress > 65 ? 'warn' : ''), p.health !== 'ok' ? stat('warning', t(HEALTH[p.health] ?? l(p.health, p.health)), l('Saúde', 'Health'), 'warn') : null),
       known ? h('details', { class: 'persona' }, h('summary', { class: 'small' }, t(l('Personalidade', 'Personality'))), PERSONA.map(([k, lbl]) => meter('sparkle', lbl, pe[k]))) : null,
@@ -99,13 +99,18 @@ export function contractExtra(s: GameState, a: Act): HTMLElement | null {
   if (!c || c.party !== 'player' || a.playerBand) return null;
   const rivals = Object.values(s.labels).filter((x) => x.active).slice(0, 10);
   const terr = { label: rivals[0]?.id ?? '', market: 'asia' as MarketId };
+  const fresh = c.startWeek === s.week;
+  const tag = (k: ClauseKind2, undo: boolean): string => { if (fresh || undo) return ''; const cc = clauseConsent2(s, a, k); return cc.cooldown > 0 ? `(${t(l('aguarde', 'wait'))} ${cc.cooldown}s)` : `(${t(l('chance', 'chance'))} ${t(cc.band)} · −${cc.cost} ${t(l('conf.', 'trust'))})`; };
+  const hint = (k: ClauseKind2, undo: boolean): string => { if (fresh) return ''; const cc = clauseConsent2(s, a, k, undo); return undo ? t(l('Abrir mão da cláusula: o artista aceita na hora.', 'Giving up the clause: the act accepts at once.')) : t(fmtL(l('Chance de o artista aceitar: {b}. Pedir custa {c} de confiança; cooldown de 26 semanas.', 'Chance the act agrees: {b}. Asking costs {c} trust; 26-week cooldown.'), { b: cc.band, c: cc.cost })); };
   return section(t(l('Cláusulas avançadas', 'Advanced clauses')),
     chips(stat('globe', c.territories?.length ? c.territories.join(', ') : t(l('mundo', 'world')), l('Territórios', 'Territories')), stat('calendar', c.options ?? 0, l('Opções restantes', 'Options left')), stat('key', c.exitFee ? $(c.exitFee) : '—', l('Multa de saída', 'Exit fee')), c.crossCollat ? pill('cross-collateral', 'warn') : null),
+    // r21 (H-4): cláusula depois da assinatura é renegociação — o botão mostra a chance (faixa) e o custo de confiança
+    h('p', { class: 'small muted' }, t(l('Pedir uma cláusula nova depois de assinar é renegociar: o artista pode recusar (chance pela confiança), custa confiança e só uma vez a cada 26 semanas.', 'Asking for a new clause after signing is a renegotiation: the act may refuse (odds follow trust), it costs trust and only once every 26 weeks.'))),
     h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small ghost', onclick: () => { say(setClauses(s, a.id, { options: (c.options ?? 0) + 1 }), l('Opção adicionada.', 'Option added.')); rerender(); } }, t(l('+1 opção de renovação', '+1 renewal option'))),
+      h('button', { class: 'btn small ghost', title: hint('option', false), onclick: () => { say(setClauses(s, a.id, { options: (c.options ?? 0) + 1 }), l('Opção adicionada.', 'Option added.')); rerender(); } }, `${t(l('+1 opção de renovação', '+1 renewal option'))} ${tag('option', false)}`),
       c.options ? h('button', { class: 'btn small', onclick: () => { say(exerciseOption(s, a.id), l('Opção exercida: +1 ano.', 'Option exercised: +1 year.')); rerender(); } }, t(l('Exercer opção', 'Exercise option'))) : null,
-      h('button', { class: 'btn small ghost', onclick: () => { say(setClauses(s, a.id, { crossCollat: !c.crossCollat }), l('Cláusula alterada.', 'Clause changed.')); rerender(); } }, c.crossCollat ? t(l('Remover cross-collateral', 'Remove cross-collateral')) : t(l('Cross-collateral', 'Cross-collateral'))),
-      h('button', { class: 'btn small ghost', onclick: () => { say(setClauses(s, a.id, { exitFee: (c.exitFee ?? 0) + Math.round(c.advance * 0.5 + 100000) }), l('Multa de saída definida.', 'Exit fee set.')); rerender(); } }, t(l('Definir multa de saída', 'Set exit fee'))),
+      h('button', { class: 'btn small ghost', title: hint('cross', !!c.crossCollat), onclick: () => { say(setClauses(s, a.id, { crossCollat: !c.crossCollat }), l('Cláusula alterada.', 'Clause changed.')); rerender(); } }, `${c.crossCollat ? t(l('Remover cross-collateral', 'Remove cross-collateral')) : t(l('Cross-collateral', 'Cross-collateral'))} ${tag('cross', !!c.crossCollat)}`),
+      h('button', { class: 'btn small ghost', title: hint('exit', !!c.exitFee), onclick: () => { say(setClauses(s, a.id, { exitFee: c.exitFee ? 0 : 1 }), c.exitFee ? l('Multa de saída removida.', 'Exit fee removed.') : l('Multa de saída definida (valor de mercado × 1,3).', 'Exit fee set (market value × 1.3).')); rerender(); } }, `${c.exitFee ? t(l('Remover multa de saída', 'Remove exit fee')) : t(l('Definir multa de saída', 'Set exit fee'))} ${tag('exit', !!c.exitFee)}`),
       h('button', { class: 'btn small ghost', onclick: () => { say(crisisRenegotiate(s, a.id, 'advance'), l('Adiantamento emergencial pago.', 'Emergency advance paid.')); rerender(); } }, t(l('Adiantamento emergencial', 'Emergency advance'))),
       h('button', { class: 'btn small ghost', onclick: () => { say(crisisRenegotiate(s, a.id, 'cut'), l('Royalty reduzido; contrato encurtado.', 'Royalty cut; term shortened.')); rerender(); } }, t(l('Pedir corte (crise do selo)', 'Ask for a cut (label crisis)'))),
     ),

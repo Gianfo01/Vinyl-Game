@@ -18,7 +18,7 @@ import { PRODUCTION_COST, autoTier, cityDemand, planTour, type TourPlan } from '
 import { legInfo } from '../travelAdapter';
 import type { Act, GameState } from '../types';
 import { fmtL, money, post, remember, staffSkill } from '../util';
-import { eff360, take360 } from './deal360_17';
+import { labelRate, labelTake } from './deal360_17';
 import { chemistry, hasSpec } from './crew8';
 
 export type TourFormat = 'support' | 'small' | 'standard' | 'arena';
@@ -337,6 +337,10 @@ export function bookRoutedTour(s: GameState, actId: string, cities: string[], as
   covered = Math.min(covered, res.costReserved);
   const lean = hasSpec(s, 'lean') ? Math.round((res.costReserved - covered) * 0.12) : 0;
   post(s, `r8cover:${res.id}`, covered + lean, 'live_costs', `Promotor cobre casas e produção — ${res.name}`);
+  // r21 (F-5): a reserva passa a ser só o que o selo pagou (reembolso, seguro, alteração e post-mortem leem costReserved)
+  res.costReserved -= covered + lean; res.costs -= covered + lean;
+  const pm18 = (s.x4 as unknown as { live18?: { pm?: { id: string; logistics: number }[] } }).live18?.pm?.find((x) => x.id === res.id);
+  if (pm18) pm18.logistics = res.costReserved;
   const restDays = INTENSITY[t.intensity].restEvery ? Math.floor((cities.length - 1) / INTENSITY[t.intensity].restEvery) : 0;
   const people = activeMembers(s, a).length + crewN;
   const restCost = restDays * money(s, 35 * people);
@@ -354,7 +358,7 @@ function payAct(s: GameState, a: Act, amount: number, key: string, memo: string)
   if (!amount) return 0;
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
   if (a.playerBand || (c && c.party === 'player' && c.model === '360')) {
-    const lab = a.playerBand ? amount : take360(s, a, amount, c!.share360);
+    const lab = labelTake(s, a, 'live', amount); // r21 (H-8)
     post(s, key, lab, 'live', memo);
     a.cash += amount - lab;
     return lab;
@@ -365,7 +369,8 @@ function payAct(s: GameState, a: Act, amount: number, key: string, memo: string)
 
 function labelShare(s: GameState, a: Act): number {
   const c = a.contractId ? s.contracts[a.contractId] : undefined;
-  return a.playerBand ? 1 : c && c.party === 'player' && c.model === '360' ? eff360(a, c.share360) : 0;
+  void c;
+  return labelRate(s, a, 'live'); // r21 (H-8)
 }
 
 registerSimHook('show', 'route8', (s, _r, arg) => {
@@ -382,7 +387,7 @@ registerSimHook('show', 'route8', (s, _r, arg) => {
   // dinheiro do acordo: garantia por show e ajuste da divisão da bilheteria (base de tours.ts: 65%)
   if (t.format !== 'support') {
     const hb = hasSpec(s, 'hardball') ? 1.15 : 1;
-    const amount = Math.round(money(s, G_BASE[t.fee] * T_SCALE[st.tier]) * hb + (d.doorShare - 0.65) * sh.revenue);
+    const amount = Math.max(0, Math.round(money(s, G_BASE[t.fee] * T_SCALE[st.tier]) * hb + (d.doorShare - 0.65) * sh.revenue)); // r21 (1.15): o artista nunca devolve dinheiro ao promotor
     d.extra += amount;
     d.label += payAct(s, a, amount, `r8:${tour.id}:${st.day}`, `Acordo com promotor — ${cityById[sh.cityId]?.name.pt ?? sh.cityId}`);
   }

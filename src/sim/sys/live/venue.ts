@@ -2,10 +2,11 @@ import { deferEvents } from '../../ext4';
 // Casa de shows própria (agenda, aluguel a terceiros, bar, acústica), residência em cassino para
 // veteranos e megaeventos beneficentes globais (modelo 1985).
 
-import { clamp, type Rng } from '../../../core/rng';
+import { Rng, clamp } from '../../../core/rng';
 import { cityById, l, type L } from '../../../data/world';
 import { emitEvent, type EventDef } from '../../events';
-import { applyMods, registerMod, registerSimHook } from '../../ext4';
+import { applyMods, registerMod, registerSimHook, runSimHooks } from '../../ext4';
+import { isBusy, weekOfMonthIdx } from '../clash17';
 import { gigEstimate } from '../../live';
 import type { Act, GameState } from '../../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../../util';
@@ -143,8 +144,10 @@ export function startResidency(s: GameState, actId: string, months: number): Res
   if (!act) return l('Inválido.', 'Invalid.');
   const why = residencyEligible(s, act);
   if (why) return why;
-  if (s.tours.some((t) => t.actId === actId && (t.status === 'planned' || t.status === 'running'))) return l('Termine a turnê antes.', 'Finish the tour first.');
   const res: Residency = { id: nextId(s, 'rz'), actId, cityId: residencyCity(s, act), startMonth: monthIndex(s) + 1, months: clamp(Math.round(months), 3, 24), nights: 12, earned: 0, status: 'active' };
+  // r21 (F-6): o mesmo calendário das turnês/festivais/datas de agente/intercâmbio/hiato
+  const busy = isBusy(s, act, weekOfMonthIdx(s, res.startMonth), weekOfMonthIdx(s, res.startMonth + res.months) - 1);
+  if (busy) return busy;
   liveOf(s).residencies.push(res);
   // ocupa a capacidade da formação nos meses da residência
   s.plans.push({ id: nextId(s, 'pl'), actId, personIds: act.members.filter((id) => s.persons[id]?.alive), action: 'residency', startMonth: res.startMonth, months: res.months, load: 55, status: 'planned', costEst: 0 });
@@ -178,6 +181,8 @@ function residencyMonth(s: GameState): void {
     post(s, `resid:${res.id}`, mine, 'live', `Residência ${act.name}`);
     act.cash += Math.round(gross * 0.6) - (share > 0 ? mine : 0);
     res.earned += mine;
+    // r21 (F-7): a residência é show de verdade para saúde, talento, fãs por região e prêmio ao vivo (um evento por mês)
+    runSimHooks('show', s, Rng.fromSeed(`${s.config.seed}:resid:${res.id}:${now}`), { show: { actId: act.id, cityId: res.cityId, sold: n.attendance * res.nights, capacity: 4000 * res.nights, revenue: gross, tourId: `resid:${res.id}:${now}` } });
     act.fans.core += Math.round(n.attendance * res.nights * 0.002);
     act.momentum = clamp(act.momentum - 1, 0, 100);
     for (const id of act.members) if (s.persons[id]) s.persons[id].inspiration = clamp(s.persons[id].inspiration - 2, 0, 100);

@@ -1,6 +1,7 @@
-// Agenda mensal dos artistas: 4 slots (3 para iniciantes), retorno decrescente,
+// Agenda mensal dos artistas: 6 slots (5 para iniciantes; gravar ocupa 2), retorno decrescente,
 // delegação por política (GDD §3 "manual / delegada / simples", §9).
 
+import { AGENDA_HOOKS21 } from './ext4';
 import { clamp, hashString, type Rng } from '../core/rng';
 import { agendaById, type SkillId } from '../data/people';
 import { l, type L } from '../data/world';
@@ -10,9 +11,10 @@ import { composeSongs, notifyRecorded, recordSongs, recordingSessionsAvailable, 
 import { availableChannels } from './market';
 import type { Act, AgendaSlot, GameState } from './types';
 import { fmtL, money, notify, playerActs, post, remember } from './util';
+import { freeCash20 } from './oblig20';
 import { emitEvent } from './events';
 import { EXTRA_ACTIONS } from '../data/actions';
-import { activeMembers, agendaLoad, monthIndex, personLoad, planSlots, slotLoad } from './capacity';
+import { activeMembers, agendaLoad, agendaLoadFor, monthIndex, personLoad, planSlots, slotLoad } from './capacity';
 import { runExtraAction } from './actions2';
 
 /** Química com o público, fixa por ato: 0,4–1,6 (média 1). */
@@ -36,19 +38,20 @@ export function usedSlots(slots: AgendaSlot[]): number {
   return slots.reduce((t, x) => t + slotCost(x.action), 0);
 }
 
-/** Capacidade livre da formação neste mês, fora a agenda do próprio ato (turnês, planos, solo). */
+/** Capacidade livre da formação neste mês, fora a agenda do próprio ato: desconta turnês, planos (inclusive o
+ *  iniciado neste mês) e solo. r21 (A-2): mesma fórmula de `personLoad`, só retirando a agenda do próprio ato. */
 export function freeCapacity(s: GameState, act: Act): number {
   const now = monthIndex(s);
-  const own = agendaLoad(s.agenda[act.id] ?? []);
+  const own = s.agenda[act.id] ?? [];
   let free = 100;
-  for (const pid of activeMembers(s, act)) free = Math.min(free, 100 - (personLoad(s, pid, now).total - own));
+  for (const pid of activeMembers(s, act)) free = Math.min(free, 100 - (personLoad(s, pid, now).total - agendaLoadFor(own, pid)));
   return Math.max(0, free);
 }
 
 export function defaultAgenda(s: GameState, act: Act): AgendaSlot[] {
   const st = actState(s, act);
   const max = slotsFor(act);
-  const cap = Math.min(100, freeCapacity(s, act) - agendaLoad(planSlots(s, act.id)));
+  const cap = Math.min(100, freeCapacity(s, act)); // planos já descontados em freeCapacity (r21)
   const out: AgendaSlot[] = [];
   const add = (a: AgendaSlot) => {
     if (usedSlots(out) + slotCost(a.action) <= max && agendaLoad(out) + slotLoad(a) <= cap) out.push(a);
@@ -68,7 +71,7 @@ export function defaultAgenda(s: GameState, act: Act): AgendaSlot[] {
 export function setAgenda(s: GameState, actId: string, slots: AgendaSlot[]): boolean {
   const act = s.acts[actId];
   if (!act) return false;
-  if (agendaLoad(slots) + agendaLoad(planSlots(s, actId)) > freeCapacity(s, act)) return false;
+  if (agendaLoad(slots) > freeCapacity(s, act)) return false; // planos já descontados em freeCapacity (r21)
   s.agenda[actId] = slots;
   s.delegated[actId] = false;
   return true;
@@ -77,11 +80,13 @@ export function setAgenda(s: GameState, actId: string, slots: AgendaSlot[]): boo
 /** Processa a agenda de todos os atos do jogador no início do mês. */
 export function processPlayerAgendas(s: GameState, r: Rng): void {
   let sessionsLeft = recordingSessionsAvailable(s);
-  const ids = deleg.order ? deleg.order(s, playerActs(s)) : playerActs(s);
+  const od = deleg().order;
+  const ids = od ? od(s, playerActs(s)) : playerActs(s);
   for (const actId of ids) {
     const act = s.acts[actId];
     if (act.hiatusUntil && act.hiatusUntil > s.week) continue;
-    let slots = s.delegated[actId] !== false ? (deleg.agenda ? deleg.agenda(s, act, defaultAgenda(s, act)) : defaultAgenda(s, act)) : s.agenda[actId] ?? [];
+    const dg = deleg().agenda;
+    let slots = s.delegated[actId] !== false ? (dg ? dg(s, act, defaultAgenda(s, act)) : defaultAgenda(s, act)) : s.agenda[actId] ?? [];
     if (s.delegated[actId] !== false) s.agenda[actId] = slots;
     // autonomia: artista com controle criativo pode trocar uma ação
     const c = act.contractId ? s.contracts[act.contractId] : undefined;
@@ -89,7 +94,9 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
     // planos iniciados têm precedência; a agenda é cortada até caber em 100%
     const fromPlans = planSlots(s, actId);
     if (fromPlans.length) {
-      const capLeft = freeCapacity(s, act) + agendaLoad(s.agenda[actId] ?? []);
+      // r21 (A-1): freeCapacity já exclui a agenda do ato e já desconta os planos; `kept` começa pelos planos,
+      // então o teto soma a carga deles de volta (antes somava a própria agenda e passava de 100%)
+      const capLeft = freeCapacity(s, act) + agendaLoad(fromPlans);
       const kept: AgendaSlot[] = [...fromPlans];
       for (const x of slots) if (agendaLoad(kept) + slotLoad(x) <= capLeft) kept.push(x);
       slots = kept;
@@ -102,8 +109,8 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
       const n = (counts[slot.action] = (counts[slot.action] ?? 0) + 1);
       const dim = 1 / n; // retorno decrescente
       const week = slotWeek(slot, i);
-      if (week > 1 && agendaQueue) { agendaQueue(s, act.id, slot, dim, week); continue; }
-      beforeSlot?.(s, r, act, slot, week);
+      if (week > 1 && agendaQueue()) { agendaQueue()!(s, act.id, slot, dim, week); continue; }
+      beforeSlot()?.(s, r, act, slot, week);
       runAction(s, r, act, slot, dim, () => {
         if (sessionsLeft > 0) {
           sessionsLeft -= 1;
@@ -112,7 +119,7 @@ export function processPlayerAgendas(s: GameState, r: Rng): void {
         return false;
       });
     }
-    sessionsBank?.(s, sessionsLeft);
+    sessionsBank()?.(s, sessionsLeft);
     if (s.delegated[actId] !== false) autoRelease(s, r, act);
   }
 }
@@ -124,13 +131,17 @@ export function slotWeek(slot: AgendaSlot, index: number): number {
 }
 
 // ganchos da rodada 7 (agenda por semana, combinações): registrados por sim/sys/agenda7.ts
-let agendaQueue: ((s: GameState, actId: string, slot: AgendaSlot, dim: number, week: number) => void) | null = null;
-let beforeSlot: ((s: GameState, r: Rng, act: Act, slot: AgendaSlot, week: number) => void) | null = null;
-let sessionsBank: ((s: GameState, left: number) => void) | null = null;
-export function setAgendaHooks(h: { queue: typeof agendaQueue; before: typeof beforeSlot; bank: typeof sessionsBank }): void {
-  agendaQueue = h.queue;
-  beforeSlot = h.before;
-  sessionsBank = h.bank;
+type AgendaQueue = (s: GameState, actId: string, slot: AgendaSlot, dim: number, week: number) => void;
+type BeforeSlot = (s: GameState, r: Rng, act: Act, slot: AgendaSlot, week: number) => void;
+type SessionsBank = (s: GameState, left: number) => void;
+// r21: guardados em ext4 (módulo folha) para o registro de agenda7 não cair na zona morta temporal deste módulo
+const agendaQueue = (): AgendaQueue | null => (AGENDA_HOOKS21.queue as AgendaQueue | undefined) ?? null;
+const beforeSlot = (): BeforeSlot | null => (AGENDA_HOOKS21.before as BeforeSlot | undefined) ?? null;
+const sessionsBank = (): SessionsBank | null => (AGENDA_HOOKS21.bank as SessionsBank | undefined) ?? null;
+export function setAgendaHooks(h: { queue: AgendaQueue | null; before: BeforeSlot | null; bank: SessionsBank | null }): void {
+  AGENDA_HOOKS21.queue = h.queue ?? undefined;
+  AGENDA_HOOKS21.before = h.before ?? undefined;
+  AGENDA_HOOKS21.bank = h.bank ?? undefined;
 }
 
 // delegação da rodada 8 (prioridades, tetos de gasto, ordem e registro das decisões): sim/sys/pacing8.ts
@@ -146,9 +157,10 @@ export interface DelegationHooks {
   release?: (s: GameState, act: Act) => { ok: boolean; minGap: number; budgetMult: number; maxSpend: number };
   released?: (s: GameState, act: Act, info: { type: 'single' | 'lp'; budget: number; press: number; cost: number; error?: L }) => void;
 }
-let deleg: DelegationHooks = {};
+// r21: idem, em ext4 (pacing8 registra durante o ciclo de imports)
+const deleg = (): DelegationHooks => (AGENDA_HOOKS21.deleg as DelegationHooks | undefined) ?? {};
 export function setDelegationHooks(h: DelegationHooks): void {
-  deleg = h;
+  AGENDA_HOOKS21.deleg = h;
 }
 
 /** Roda uma ação da agenda (usado pela fila semanal). */
@@ -166,11 +178,12 @@ function payAction(s: GameState, act: Act, id: string, planned?: string): boolea
   }
   const cost = money(s, def.cost);
   if (act.playerBand || act.owner === 'player') {
-    if (s.player.cash < cost) return false;
+    if (freeCash20(s) < cost) return false; // r21 (B-9)
     const byTeam = s.delegated[act.id] !== false;
-    if (byTeam && deleg.canSpend && !deleg.canSpend(s, act, cost, id)) return false;
+    const cs = deleg().canSpend;
+    if (byTeam && cs && !cs(s, act, cost, id)) return false;
     post(s, `agenda:${act.id}:${id}`, -cost, 'artist_dev', `${def.name.pt} ${act.name}`);
-    if (byTeam) deleg.spent?.(s, act, cost, id);
+    if (byTeam) deleg().spent?.(s, act, cost, id);
   }
   return true;
 }
@@ -292,7 +305,7 @@ function runAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number
 /** Política de lançamento delegada: singles regulares, LP quando há repertório. */
 function autoRelease(s: GameState, r: Rng, act: Act): void {
   if (s.pendingReleases.some((p) => p.actId === act.id)) return;
-  const pol = deleg.release?.(s, act);
+  const pol = deleg().release?.(s, act);
   if (pol && !pol.ok) return;
   const ready = unreleasedRecorded(s, act).sort((a, b) => b.q - a.q);
   const since = s.week - act.lastRelease;
@@ -321,5 +334,5 @@ function autoRelease(s: GameState, r: Rng, act: Act): void {
     weeksAhead: 2,
   });
   if ('pt' in res) notify(s, fmtL(l('Lançamento automático de {act} não saiu: {e}', 'Auto release for {act} failed: {e}'), { act: act.name, e: res }), 'info');
-  deleg.released?.(s, act, { type, budget, press: Math.max(200, press), cost: Math.max(0, cashBefore - s.player.cash), error: 'pt' in res ? res : undefined });
+  deleg().released?.(s, act, { type, budget, press: Math.max(200, press), cost: Math.max(0, cashBefore - s.player.cash), error: 'pt' in res ? res : undefined });
 }

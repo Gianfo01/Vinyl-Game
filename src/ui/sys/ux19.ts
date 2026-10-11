@@ -21,7 +21,7 @@ import { fanTotal } from '../../sim/fandom';
 import { fin18, mIdx18, sumP18 } from '../../sim/ledger18';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
-import { $, N, modal, rerender, toast } from '../common';
+import { $, N, closeOverlay, isBusy21, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { UX19UI } from '../hooks19';
 import { C, Px, upscale, type Col } from '../pixel/px';
@@ -116,14 +116,13 @@ function tombArt(name: string): HTMLElement {
 }
 
 // ---------------------------------------------------------------- utilidades
-const BUSY19 = '.overlay, .scene-overlay, .tour18, aside.tutorial';
-const busy = (): boolean => typeof document === 'undefined' || !!document.querySelector(BUSY19);
+const busy = (): boolean => typeof document === 'undefined' || isBusy21(); // r21 (I-1): seletor único em common.ts (BUSY21)
 const whenFree = (fn: () => void, n = 0): void => {
   if (typeof document === 'undefined') return;
   if (busy() && n < 60) { setTimeout(() => whenFree(fn, n + 1), 500); return; }
   fn();
 };
-const goArea = (a: string) => { document.querySelector('.overlay')?.remove(); store.area = a as typeof store.area; rerender(); };
+const goArea = (a: string) => { closeOverlay(); store.area = a as typeof store.area; rerender(); }; // r21 (I-2)
 const CH_IC: Record<string, string> = { tech: '⚙', genre: '♪', law: '§', market: '$', era: '★' };
 const CH_T: Record<string, L> = { tech: l('Tecnologia', 'Technology'), genre: l('Gêneros', 'Genres'), law: l('Leis', 'Laws'), market: l('Mercado', 'Market'), era: l('Era de negócio', 'Business era') };
 
@@ -392,7 +391,7 @@ function tryOpening(): void {
   openingCard(s);
 }
 AFTER_ADVANCE.push(() => tryOpening());
-if (typeof window !== 'undefined') setInterval(() => { if (store.game && !openTried.has(store.game)) tryOpening(); }, 1500);
+if (typeof window !== 'undefined') setInterval(() => { if (store.game && !openTried.has(store.game)) tryOpening(); }, 1500); // r21: barato (um WeakSet.has) quando não há partida ou o cartão já foi tratado
 
 // ---------------------------------------------------------------- acessibilidade (P10)
 if (typeof document !== 'undefined') {
@@ -416,19 +415,29 @@ if (typeof document !== 'undefined') {
     setTimeout(() => refocus(0), 20);
   });
   // botões só com ícone ganham rótulo acessível (title → aria-label); abas ganham roving tabindex
-  let queued = false;
-  const fix = () => {
-    queued = false;
-    for (const b of document.querySelectorAll<HTMLElement>('button:not([aria-label])')) {
+  // r21 (I-10): só os nós ADICIONADOS são varridos (antes: todos os botões do documento a cada re-render)
+  let queued: Element[] | null = null;
+  const fixIn = (root: Element) => {
+    const btns = root.matches('button:not([aria-label])') ? [root as HTMLElement] : [];
+    btns.push(...root.querySelectorAll<HTMLElement>('button:not([aria-label])'));
+    for (const b of btns) {
       const txt = (b.textContent ?? '').trim();
       if (txt.length <= 2 || !/[\p{L}\p{N}]{2}/u.test(txt)) { const ti = b.getAttribute('title'); if (ti) b.setAttribute('aria-label', ti); }
     }
-    for (const tl of document.querySelectorAll<HTMLElement>('[role=tablist]')) {
+    const lists = root.matches('[role=tablist]') ? [root as HTMLElement] : [];
+    lists.push(...root.querySelectorAll<HTMLElement>('[role=tablist]'));
+    for (const tl of lists) {
       const tbs = [...tl.querySelectorAll<HTMLElement>(':scope > [role=tab]')];
       if (tbs.some((x) => x.getAttribute('aria-selected') === 'true')) for (const tb of tbs) tb.tabIndex = tb.getAttribute('aria-selected') === 'true' ? 0 : -1;
     }
   };
-  new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(fix); } }).observe(document.documentElement, { childList: true, subtree: true });
+  const flush = () => { const q = queued ?? []; queued = null; for (const el of q) if (el.isConnected) fixIn(el); };
+  new MutationObserver((ms) => {
+    const first = !queued;
+    queued ??= [];
+    for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) queued.push(n as Element);
+    if (first) requestAnimationFrame(flush);
+  }).observe(document.documentElement, { childList: true, subtree: true });
 }
 
 // verificação no navegador (só com ?debug19 na URL): acesso ao estado para forçar fim de partida/quase falência

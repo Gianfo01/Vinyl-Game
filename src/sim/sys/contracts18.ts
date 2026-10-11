@@ -8,8 +8,8 @@
 import { clamp, Rng, seedState } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { l, type L } from '../../data/world';
-import { evaluateOffer, registerContractHook } from '../contracts';
-import { deferEvents, registerSimHook } from '../ext4';
+import { endContract, evaluateOffer, registerContractHook } from '../contracts';
+import { deferEvents, LATE21, registerSimHook } from '../ext4';
 import { mainAmbition } from '../people';
 import type { Act, Contract, GameState, Offer, RightsTerms } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
@@ -18,6 +18,7 @@ import { mgrName, repOf } from './managers14';
 import { emitEvent } from '../events';
 import { postHooks18 } from '../ledger18';
 import { fileLawsuit } from '../business';
+import { requestAudit15 } from './dispute15';
 import type { EventDef } from '../events';
 
 export interface Clauses18 {
@@ -95,7 +96,22 @@ export function baseMult18(c: Contract | undefined, year: number): number {
 // ---------------------------------------------------------------- recuperação
 
 type RKind = 'rec' | 'video' | 'tour' | 'mkt';
-/** Lança no recuperável o que as cláusulas permitem; acima do teto, só com aprovação do artista. */
+/** r21 (H-9): tipos de lançamento no recuperável. `adv` = adiantamento, bônus, mesada, opção, socorro: sempre 100%,
+ *  cruzado com o adiantamento (não é despesa de projeto). Os demais seguem as cláusulas negociadas. */
+export type RecoupKind = RKind | 'adv';
+const crossOf = (c: Contract): boolean => { const k = clausesOf(c); return !!c.crossCollat || !k || k.cross; }; // 1.17: cross-collateral do contracts2 também conta
+/** r21 (H-9): ÚNICO gravador do recuperável. Todo `recoupBalance +=` passa por aqui. Devolve o que entrou. */
+export function recoup(s: GameState, c: Contract | undefined, kind: RecoupKind, amount: number): number {
+  if (!c || amount <= 0 || !Number.isFinite(amount)) return 0;
+  if (kind === 'adv') {
+    if (c.model === 'distribution') return 0;
+    const v = Math.round(amount);
+    c.recoupBalance += v;
+    return v;
+  }
+  return addRecoup18(s, c, kind, amount);
+}
+/** Lança no recuperável o que as cláusulas permitem; acima do teto, só com aprovação do artista (senão só o excedente fica com o selo). */
 export function addRecoup18(s: GameState, c: Contract, kind: RKind, cost: number): number {
   if (cost <= 0 || c.model === 'distribution' || c.model === 'licensing') return 0;
   if (c.party !== 'player') { if (kind !== 'rec') return 0; const v0 = Math.round(cost * 0.5); c.recoupBalance += v0; return v0; } // selo rival: regra antiga
@@ -107,21 +123,25 @@ export function addRecoup18(s: GameState, c: Contract, kind: RKind, cost: number
   const act = s.acts[c.actId];
   const proj = `p${c.releasesDone}`;
   if (k?.cap && act) {
-    const spent = ((cc.spent18 ??= {})[proj] ?? 0) + toReal(cost, s.year);
+    const before = (cc.spent18 ??= {})[proj] ?? 0;
+    const spent = before + toReal(cost, s.year);
     cc.spent18[proj] = spent;
     if (spent > k.cap) {
-      // estourou o teto: o artista autoriza se confia; senão a despesa fica com o selo
+      // estourou o teto: o artista autoriza se confia; senão só o excedente fica com o selo (r21: não a despesa inteira)
       if (act.trust >= 60) {
-        if (spent - toReal(cost, s.year) <= k.cap) notify(s, fmtL(l('{a} autorizou passar do teto do projeto (cláusula de aprovação).', '{a} approved going over the project cap (approval clause).'), { a: act.name }));
+        if (before <= k.cap) notify(s, fmtL(l('{a} autorizou passar do teto do projeto (cláusula de aprovação).', '{a} approved going over the project cap (approval clause).'), { a: act.name }));
       } else {
         act.trust = clamp(act.trust - 2, 0, 100);
-        if (spent - toReal(cost, s.year) <= k.cap) notify(s, fmtL(l('{a} não autorizou gastar acima do teto: o excedente não é recuperável e a confiança cai.', '{a} did not approve spending above the cap: the excess is not recoupable and trust drops.'), { a: act.name }), 'bad');
-        return 0;
+        if (before <= k.cap) notify(s, fmtL(l('{a} não autorizou gastar acima do teto: o excedente não é recuperável e a confiança cai.', '{a} did not approve spending above the cap: the excess is not recoupable and trust drops.'), { a: act.name }), 'bad');
+        const allowedReal = Math.max(0, k.cap - before);
+        const allowed = Math.min(cost, Math.round(cost * (allowedReal / Math.max(1e-9, toReal(cost, s.year)))));
+        v = Math.round(allowed * frac);
+        if (v <= 0) return 0;
       }
     }
   }
   c.recoupBalance += v;
-  if (k && !k.cross) (cc.rb18 ??= {})[proj] = ((cc.rb18 ??= {})[proj] ?? 0) + v;
+  if (!crossOf(c)) (cc.rb18 ??= {})[proj] = ((cc.rb18 ??= {})[proj] ?? 0) + v;
   return v;
 }
 
@@ -129,7 +149,7 @@ export function addRecoup18(s: GameState, c: Contract, kind: RKind, cost: number
 export function recoupable18(c: Contract, relId: string): number {
   const cc = c as C18;
   const k = cc.clauses18;
-  if (!k || k.cross || !cc.rb18) return c.recoupBalance;
+  if (crossOf(c) || !k || !cc.rb18) return c.recoupBalance;
   const proj = (cc.rp18 ??= {})[relId] ?? (cc.rp18[relId] = `p${Math.max(0, c.releasesDone - 1)}`);
   const projSum = Object.values(cc.rb18).reduce((t, x) => t + x, 0);
   const adv = Math.max(0, c.recoupBalance - projSum);
@@ -137,7 +157,7 @@ export function recoupable18(c: Contract, relId: string): number {
 }
 export function takeRecoup18(c: Contract, relId: string, v: number): void {
   const cc = c as C18;
-  if (!cc.clauses18 || cc.clauses18.cross || !cc.rb18) return;
+  if (crossOf(c) || !cc.rb18) return;
   const proj = cc.rp18?.[relId];
   if (proj && cc.rb18[proj]) { const x = Math.min(v, cc.rb18[proj]); cc.rb18[proj] -= x; if (cc.rb18[proj] <= 0) delete cc.rb18[proj]; }
 }
@@ -234,6 +254,7 @@ function actOfKey(s: GameState, key: string): [string | undefined, RKind | undef
   if (m) return [s.releases[m[1]]?.actId, 'mkt'];
   m = /^(?:mappromo|hype12):[^:]+:(\w+)/.exec(key);
   if (m) return [m[1], 'mkt'];
+  // (a verba prometida `pledge12:` é lançada pelo próprio offers12.payPledges com o split turnê/marketing — r21, H-9)
   return [undefined, undefined];
 }
 postHooks18().push((s, key, amount, cat) => onCost18(s, key, amount, cat));
@@ -300,8 +321,8 @@ function monthly(s: GameState): void {
       const paid = Math.max(0, -(s.player.totals.royalties ?? 0)) / Math.max(1, Object.keys(s.contracts).length);
       const found = Math.round(paid * (0.02 * late + 0.06 * pack) + (late ? money(s, 1500 * late) : 0));
       if (found > money(s, 3000)) {
-        fileLawsuit(s, { kind: 'audit', plaintiff: act.name, defendant: 'player', actId: act.id, claim: found, odds: 0.35 + (late ? 0 : 0.15), text: fmtL(l('Auditoria de {a} aponta royalties pagos a menos ({w}).', '{a}\'s audit finds underpaid royalties ({w}).'), { a: act.name, w: late ? l('prestações atrasadas', 'late statements') : l('dedução de embalagem no digital', 'packaging deduction on digital') }) });
-        act.trust = clamp(act.trust - 6, 0, 100);
+        // r21 (H-9/1.10): uma só auditoria — o caso vira a disputa de contrato do dispute15 (cartão, custas, histórico)
+        if (requestAudit15(s, act, late ? l('prestações atrasadas', 'late statements') : l('dedução de embalagem no digital', 'packaging deduction on digital'))) act.trust = clamp(act.trust - 6, 0, 100);
       } else {
         act.trust = clamp(act.trust + 5, 0, 100);
         post(s, `c18audit:${act.id}:${s.year}`, -money(s, 1200), 'legal', `Auditoria de ${act.name} (livros limpos)`);
@@ -322,7 +343,7 @@ deferEvents<EventDef>([
     text: l('Faz mais de dois anos que {act} não lança nada pelo selo. O empresário fala em "liberação do contrato" e a imprensa já pergunta.', 'It has been over two years since {act} released anything with the label. Their manager talks about a "release from contract" and the press is asking.'),
     options: [
       { id: 'promise', label: l('Prometer um disco em 6 meses (vira cláusula)', 'Promise a record within 6 months (becomes a clause)'), hint: l('Confiança volta um pouco; se não cumprir, vira processo.', 'Trust recovers a bit; breaking it means a lawsuit.'), apply: (s, _r, c) => { const a = act_(s, c); const k = a?.contractId ? s.contracts[a.contractId] as C18 : undefined; if (!a || !k) return; a.trust = clamp(a.trust + 8, 0, 100); k.promises.push({ kind: 'priority', dueWeek: s.week + 26 }); if (k.clauses18) k.clauses18.minRel = Math.max(k.clauses18.minRel, k.releasesDone + 1); } },
-      { id: 'free', label: l('Liberar do contrato (fica com os masters)', 'Release them (keep the masters)'), hint: l('Perde o artista; reputação com artistas sobe.', 'Lose the act; reputation with artists rises.'), apply: (s, _r, c) => { const a = act_(s, c); const k = a?.contractId ? s.contracts[a.contractId] : undefined; if (!a || !k) return; k.endWeek = s.week; s.player.reputation.artists = clamp(s.player.reputation.artists + 3, 0, 100); remember(s, 'c18free', fmtL(l('O selo libera {a} do contrato depois de anos na gaveta.', 'The label releases {a} from their contract after years on the shelf.'), { a: a.name }), { actId: a.id }); } },
+      { id: 'free', label: l('Liberar do contrato (fica com os masters)', 'Release them (keep the masters)'), hint: l('Perde o artista; reputação com artistas sobe.', 'Lose the act; reputation with artists rises.'), apply: (s, _r, c) => { const a = act_(s, c); const k = a?.contractId ? s.contracts[a.contractId] : undefined; if (!a || !k) return; endContract(s, a, 'terminated'); /* r21 (1.19): libera agora, não no fechamento do mês */ s.player.reputation.artists = clamp(s.player.reputation.artists + 3, 0, 100); remember(s, 'c18free', fmtL(l('O selo libera {a} do contrato depois de anos na gaveta.', 'The label releases {a} from their contract after years on the shelf.'), { a: a.name }), { actId: a.id }); } },
       { id: 'hold', label: l('Segurar o contrato', 'Hold them to the contract'), hint: l('Confiança despenca; imprensa fala em "artista refém".', 'Trust collapses; the press talks of a "hostage artist".'), apply: (s, _r, c) => { const a = act_(s, c); if (!a) return; a.trust = clamp(a.trust - 15, 0, 100); s.player.reputation.artists = clamp(s.player.reputation.artists - 4, 0, 100); notify(s, fmtL(l('Imprensa: "{a}, refém da gravadora".', 'Press: "{a}, held hostage by their label".'), { a: a.name }), 'bad'); } },
     ],
   },
@@ -343,3 +364,4 @@ export function botPolicy18(s: GameState, prof: 'cautious' | 'balanced' | 'aggre
   f.auto = true;
   f.delayRoy = prof === 'aggressive';
 }
+LATE21.recoup = (s, c, kind, amount) => recoup(s, c as Contract | undefined, kind, amount);

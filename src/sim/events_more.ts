@@ -14,11 +14,13 @@ import { FESTIVALS } from '../data/catalog';
 import { AWARDS, BRANDS, CRITICS, MOVEMENTS, PRODUCERS, censorshipIn, displayName, geoActive, outletById } from '../data/content';
 import { CITIES, cityById, familyOf, genreById, l, type FamilyId, type MarketId } from '../data/world';
 import { langForCity, makePerson } from './people';
+import { recoup } from './sys/contracts18';
 import type { Act, GameState, Person, Release } from './types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember, staffSkill, type Param } from './util';
 import { scandal } from './scandal17';
 import { CTXFX19 } from './ext4';
 import { actsTouched17 } from './actidx17';
+import { refreshQ } from './production';
 
 type Opt = EventDef['options'][number];
 type Apply = Opt['apply'];
@@ -39,8 +41,9 @@ const noop: Apply = () => {};
 
 // ---------- leitura de estado ----------
 const mine = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter(Boolean);
+const eventable = (a: Act): boolean => (a.status === 'active' || a.status === 'emerging') && !a.deceased; // r21 (G-9)
 const pick = (s: GameState, r: Rng, f: (a: Act) => boolean = () => true): Act | undefined => {
-  const list = mine(s).filter(f);
+  const list = mine(s).filter((a) => eventable(a) && f(a));
   return list.length ? (CTXFX19.pickW && list.length > 1 ? r.weighted(list, (a) => CTXFX19.pickW!(s, a)) : r.pick(list)) : undefined; // r19: quem tem mágoa aberta reage primeiro
 };
 const crew = (s: GameState, a: Act): Person[] => a.members.map((id) => s.persons[id]).filter((p) => p && p.alive);
@@ -1556,7 +1559,7 @@ const FAMILY: EventDef[] = [
     ['{person} pede um adiantamento', '{person} asks for an advance'],
     ['A família de {person} ({act}) está endividada. Pede um adiantamento pessoal de royalties.', '{person}\'s ({act}) family is in debt. They ask for a personal royalty advance.'],
     [
-      o('lend', 'Adiantar (recuperável)', 'Advance it (recoupable)', (s, _r, c) => { const a = A(s, c); const amt = money(s, 2500); post(s, `famdebt:${c.person}`, -amt, 'advances', 'Adiantamento pessoal'); a.cash += amt; const k = a.contractId ? s.contracts[a.contractId] : undefined; if (k) k.recoupBalance += amt; trust(a, 8); }),
+      o('lend', 'Adiantar (recuperável)', 'Advance it (recoupable)', (s, _r, c) => { const a = A(s, c); const amt = money(s, 2500); post(s, `famdebt:${c.person}`, -amt, 'advances', 'Adiantamento pessoal'); a.cash += amt; const k = a.contractId ? s.contracts[a.contractId] : undefined; recoup(s, k, 'adv', amt); trust(a, 8); }),
       o('gift', 'Dar de presente', 'Give it as a gift', (s, _r, c) => { const a = A(s, c); pay(s, `famgift:${c.person}`, 1500, 'artist_dev', 'Ajuda'); trust(a, 12); }),
       o('refuse', 'Recusar', 'Refuse', (s, _r, c) => { trust(A(s, c), -6); pmood(P(s, c), 'resentment', 8); }),
     ]),
@@ -1883,7 +1886,7 @@ const CRITIC_AWARD: EventDef[] = [
         const a = A(s, c);
         pay(s, `prod:${a.id}`, Number(c.fee), 'recording', `Produtor ${String(c.producer)}`);
         const boost = (Number(c.skill) - 55) / 2;
-        for (const id of a.songs) { const sg = s.songs[id]; if (sg && sg.recorded && !sg.releaseId) { sg.production = clamp(sg.production + boost, 0, 100); if (Number(c.ego) > 70) sg.originality = clamp(sg.originality - 5, 0, 100); sg.q = Math.round(0.25 * sg.melody + 0.2 * sg.lyrics + 0.25 * sg.performance + 0.2 * sg.production + 0.1 * sg.originality); } }
+        for (const id of a.songs) { const sg = s.songs[id]; if (sg && sg.recorded && !sg.releaseId) { sg.production = clamp(sg.production + boost, 0, 100); if (Number(c.ego) > 70) sg.originality = clamp(sg.originality - 5, 0, 100); refreshQ(sg); } } // r21 (E-7): fórmula canônica (instrumental, perks)
         if (Number(c.ego) > 70 && (traitIn(s, a, 'purist') || traitIn(s, a, 'experimental'))) trust(a, -5);
         log(s, 'producer', '{p} produz {a}.', '{p} produces {a}.', { p: String(c.producer), a: a.name }, a.id);
       }, ['Mixagem melhor; ego grande pode irritar a banda.', 'Better mix; a big ego may annoy the band.']),

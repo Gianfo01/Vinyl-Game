@@ -96,7 +96,7 @@ export const EVENTS: Def[] = [
       C('gift', 'Pedir desculpas com um presente', 'Apologise with a gift', { w: -600, love: 4, st: -1 }, 'O presente suaviza, não resolve.', 'The gift softens, does not solve.'),
       C('double', 'Dizer que o trabalho é isso mesmo', 'Say that work is just like this', { love: -10, st: 6, cash: 1200 }, 'Você ganhou a reunião e perdeu a noite.', 'You won the meeting and lost the night.'),
     ] },
-  { id: 'divorce_threat', name: l('Ultimato', 'Ultimatum'), cool: 18, w: (e) => (e.married && e.partner!.affinity < 40 ? 2.2 : 0),
+  { id: 'divorce_threat', name: l('Ultimato', 'Ultimatum'), cool: 18, w: (e) => (e.married && e.partner!.affinity < 40 && !e.s.config.contentFilters.includes('romance') ? 2.2 : 0),
     text: T('{x} deixa a mala ao lado da porta: "ou a gente muda, ou eu vou".', '{x} sets a suitcase by the door: "either we change, or I go".'),
     def: 'time', ch: [
       C('therapy', 'Terapia de casal (e cumprir as sessões)', 'Couples therapy (and actually attend)', { w: -1500, love: 14, st: -5 }, 'Doze sessões depois, vocês ainda estão juntos, e conversando.', 'Twelve sessions later you are still together, and talking.', { energy: 2 }),
@@ -304,7 +304,7 @@ export const EVENTS: Def[] = [
       C('small', 'Apostar o que dá para perder', 'Bet what you can lose', { w: -600, st: -2 }, 'Uma noite divertida e barata.', 'A fun, cheap night.'),
       C('no', 'Recusar e tomar uma água', 'Decline and have a water', { st: -1 }, 'Você assiste, tranquilo, ao drama dos outros.', 'You calmly watch the others\' drama.'),
     ] },
-  { id: 'affair', name: l('Tentação', 'Temptation'), cool: 20, w: (e) => (e.partner ? 0.5 + (e.partner.affinity < 50 ? 0.9 : 0) + (e.fame > 40 ? 0.5 : 0) + (has(e, 'bohemian') ? 0.4 : 0) - (isDevout(e.v, 65) ? 0.5 : 0) : 0),
+  { id: 'affair', name: l('Tentação', 'Temptation'), cool: 20, w: (e) => (e.partner && !e.s.config.contentFilters.includes('romance') ? 0.5 + (e.partner.affinity < 50 ? 0.9 : 0) + (e.fame > 40 ? 0.5 : 0) + (has(e, 'bohemian') ? 0.4 : 0) - (isDevout(e.v, 65) ? 0.5 : 0) : 0),
     text: T('Depois de um show do selo, alguém muito interessante, e muito interessado(a), te convida para "uma bebida mais calma".', 'After a label show, someone very interesting, and very interested, invites you for "a quieter drink".'),
     def: 'resist', ch: [
       C('yield', 'Aceitar o convite', 'Accept the invitation', { st: -4, love: -12, fame: 1 }, 'Foi uma noite. A consequência veio em outro formato.', 'It was one night. The consequence came in another format.', { next: { ev: 'affair_exposed', m: 2, p: 0.5 } }),

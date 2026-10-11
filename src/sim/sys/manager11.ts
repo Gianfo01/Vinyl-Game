@@ -6,12 +6,12 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { acceptOffer, defaultOffer, expectedAdvance, signWithRival } from '../contracts';
+import { defaultOffer, expectedAdvance, signAct, signWithRival } from '../contracts';
 import { tourCancelP19 } from '../ctx19';
 import { registerExt4, registerSimHook } from '../ext4';
 import { langForCity, personName } from '../people';
-import type { Act, GameState, Offer } from '../types';
-import { fmtL, money, nextId, notify, post, remember } from '../util';
+import type { Act, GameState } from '../types';
+import { fmtL, money, notify, post, remember } from '../util';
 import { scandal } from '../scandal17';
 import { ownerOf } from './people/owner';
 import { funds, grossShows, mgCap, mgChance, mgGross, mgRepGain9, ventures, type Client } from './ventures9';
@@ -169,10 +169,8 @@ export function acceptDeal(s: GameState, r: Rng, actId: string, idx: number): { 
   const mg = ventures(s).mg;
   const best = Math.max(...p.offers.filter((x) => x.party !== 'player').map(dealValue), 0);
   if (o.party === 'player') {
-    if (s.player.cash < o.advance) return bad(l('O selo não tem caixa para o adiantamento.', 'The label lacks cash for the advance.'));
-    const d = defaultOffer(s, a);
-    const off: Offer = { ...d, advance: o.advance, royalty: o.royalty, termMonths: o.term, id: nextId(s, 'of'), week: s.week, status: 'pending' };
-    acceptOffer(s, a, off);
+    const sg = signAct(s, a, { advance: o.advance, royalty: o.royalty, termMonths: o.term }, 'manager'); // r21 (H-7): caminho único
+    if (!sg.ok) return bad(sg.why ?? l('O selo não tem caixa para o adiantamento.', 'The label lacks cash for the advance.'));
     const worse = best > dealValue(o) * 1.05;
     c.sat = clamp(c.sat - (worse ? 18 : 4), 0, 100);
     if (worse) {
@@ -191,7 +189,9 @@ export function acceptDeal(s: GameState, r: Rng, actId: string, idx: number): { 
     c.sat = clamp(c.sat + (dealValue(o) >= best ? 12 : 6), 0, 100);
     mg.rep = clamp(mg.rep + 2, 0, 100);
   }
-  pay(s, o.advance * c.rate, `deal:${actId}`, `Comissão sobre adiantamento ${a.name}`, c);
+  const com = Math.round(o.advance * c.rate);
+  a.cash -= com; // r21 (H-11): a comissão sai do adiantamento que o artista recebeu (débito real, uma vez)
+  pay(s, com, `deal:${actId}`, `Comissão sobre adiantamento ${a.name}`, c);
   const x = cxOf(s, actId);
   if (x.goal === 'deal') x.goalBase = -1;
   st.pitches = st.pitches.filter((q) => q !== p);
