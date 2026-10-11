@@ -19,7 +19,7 @@ import { emitFact } from '../facts17';
 import type { Goto18 } from '../inbox18';
 import { addStress } from '../stress17';
 import type { GameState } from '../types';
-import { fmtL, money, playerActs, post } from '../util';
+import { fmtL, hasTech, money, playerActs, post } from '../util';
 import { LOTS18, buildings18, campus18, freeLots18, log18, lotMult18, styleDef18 } from './campus18';
 import { hq6 } from './hq6';
 import { liveOf } from './live/state';
@@ -89,24 +89,39 @@ export const NB19: Record<NbK, { n: L; icon: string; from: number; go: Goto18 }>
   rehearsal: { n: l('Sala de ensaio', 'Rehearsal space'), icon: 'drums', from: 1955, go: { area: 'talent18', label: l('Talentos', 'Talent') } },
   radio: { n: l('Estação de rádio', 'Radio station'), icon: 'radio', from: 1922, go: { area: 'media', tab: ['mediaHub', 'radio18'], label: l('Rádio', 'Radio') } },
 };
-const NBNAMES: Record<NbK, string[]> = {
-  rival: [], records: ['Disco Bar', 'Vinil & Cia', 'Casa do Disco', 'Groove Shop', 'Bolacha Preta'], bar: ['Bar do Zé', 'Blue Note Corner', 'Porão 77', 'The Anchor', 'Café Elétrico'],
-  rehearsal: ['Garagem Sonora', 'Sala 3', 'Ensaio Central'], radio: ['Rádio Cidade', 'Rádio Bairro', 'Onda Local'],
+// r19 smoke: nomes bilíngues e de época — nada de "Vinil & Cia" antes do LP nem rádio antes do rádio
+type NbName = [L, number?, string?]; // [nome, a partir do ano, tecnologia exigida]
+const NBNAMES: Record<Exclude<NbK, 'rival'>, NbName[]> = {
+  records: [[l('Partituras & Pianos', 'Sheet Music & Pianos')], [l('Salão Fonográfico', 'Phonograph Parlour')], [l('Casa de Gramofones', 'Gramophone House'), 1895],
+    [l('Discos & Vitrolas', 'Records & Victrolas'), 1906], [l('Casa do Disco', 'The Record House'), 1910], [l('Vinil & Cia', 'Vinyl & Co.'), 0, 'lp'], [l('Bolacha Preta', 'Black Platter'), 0, 'lp'],
+    [l('Groove Shop', 'Groove Shop'), 1965], [l('Disco Bar', 'Disco Bar'), 1975]],
+  bar: [[l('Bar do Zé', 'Joe\'s Bar')], [l('Café-Concerto', 'Café-Concert')], [l('Taverna do Porto', 'Harbour Tavern')], [l('Café Elétrico', 'Electric Café'), 1900],
+    [l('Blue Note Corner', 'Blue Note Corner'), 1940], [l('The Anchor', 'The Anchor'), 1950], [l('Porão 77', 'Cellar 77'), 1977]],
+  rehearsal: [[l('Garagem Sonora', 'Sound Garage')], [l('Sala 3', 'Room 3')], [l('Ensaio Central', 'Central Rehearsals')]],
+  radio: [[l('Rádio Cidade', 'City Radio')], [l('Rádio Bairro', 'Neighbourhood Radio')], [l('Onda Local', 'Local Wave')], [l('Onda Local FM', 'Local Wave FM'), 0, 'fm']],
 };
-export interface Nb19 { lot: number; k: NbK; name: string; sale: boolean; price: number; who?: string }
+/** Nomes possíveis de um vizinho no ano (só o que já existe; partituras e fonógrafos saem quando o disco domina). */
+export function nbNames19(s: GameState, k: Exclude<NbK, 'rival'>): L[] {
+  const ok = NBNAMES[k].filter(([, y, tech]) => s.year >= (y ?? 0) && (!tech || hasTech(s, tech))).map(([n]) => n);
+  return k === 'records' && s.year >= 1910 ? ok.filter((n) => n.en !== 'Sheet Music & Pianos' && n.en !== 'Phonograph Parlour') : ok;
+}
+/** Gravadoras rivais que já existem neste ano (fundadas, ativas, não fechadas). */
+export const nbRivals19 = (s: GameState) => Object.values(s.labels ?? {}).filter((x) => x && x.id !== 'player' && x.active !== false && !x.closedYear && (x.founded ?? 0) <= s.year).sort((a, b) => (a.id < b.id ? -1 : 1));
+const RIVAL0 = (y: number): L => (y < 1920 ? l('Companhia Fonográfica Central', 'Central Phonograph Company') : y < 1960 ? l('Discos Metrópole', 'Metropole Records') : l('Selo do Bairro', 'Neighbourhood Label'));
+export interface Nb19 { lot: number; k: NbK; name: L; sale: boolean; price: number; who?: string }
 /** Vizinhos agora: ocupam lotes livres (deixando pelo menos 3 livres para você); somem quando você usa o lote. */
 export function nb19(s: GameState): Nb19[] {
   const st = hood19(s), free = freeLots18(s).filter((n) => st.bought[n] === undefined);
   const order = [...free].sort((a, b) => hash(`${s.config.seed}|nb|${a}`) - hash(`${s.config.seed}|nb|${b}`));
-  const rivals = Object.values(s.labels ?? {}).filter((x) => x && x.id !== 'player').sort((a, b) => (a.id < b.id ? -1 : 1));
-  const kinds = (Object.keys(NB19) as NbK[]).filter((k) => s.year >= NB19[k].from && (k !== 'rival' || rivals.length));
+  const rivals = nbRivals19(s);
+  const kinds = (Object.keys(NB19) as NbK[]).filter((k) => s.year >= NB19[k].from && (k !== 'radio' || hasTech(s, 'radio')));
   const n = Math.max(0, Math.min(kinds.length, free.length - 3, 4));
   const hs = hoodStats19(s);
   return order.slice(0, n).map((lot, i) => {
     const k = kinds[i];
-    const rv = k === 'rival' ? rivals[Math.floor(hash(`${s.config.seed}|rv`) * rivals.length)] : undefined;
-    const names = NBNAMES[k];
-    const name = rv ? fmtL(l('{n} (escritório)', '{n} (office)'), { n: rv.name }).pt : k === 'records' && s.year < 1910 ? 'Partituras & Pianos' : names[Math.floor(hash(`${s.config.seed}|${k}|${lot}`) * names.length)];
+    const rv = k === 'rival' && rivals.length ? rivals[Math.floor(hash(`${s.config.seed}|rv`) * rivals.length)] : undefined;
+    const names = k === 'rival' ? [] : nbNames19(s, k);
+    const name: L = k === 'rival' ? fmtL(l('{n} (escritório)', '{n} (office)'), { n: rv ? rv.name : RIVAL0(s.year) }) : names[Math.floor(hash(`${s.config.seed}|${k}|${lot}`) * names.length)] ?? NB19[k].n;
     const L0 = LOTS18[lot];
     const price = Math.round(money(s, 9000 + 2200 * L0.w * L0.d) * lotMult18(lot) * hs.rent);
     return { lot, k, name, sale: k !== 'rival' && hash(`${s.config.seed}|sale|${lot}|${s.year}`) < 0.4, price, who: rv?.id };
@@ -117,7 +132,7 @@ export function buyNb19(s: GameState, lot: number): L | null {
   if (!x) return l('Não há vizinho nesse lote.', 'No neighbour on that lot.');
   if (!x.sale) return l('O imóvel não está à venda.', 'The property is not for sale.');
   if (s.player.cash < x.price) return l('Caixa insuficiente.', 'Not enough cash.');
-  post(s, `hood19:buy:${lot}:${mIdx(s)}`, -x.price, 'capex', `Compra de imóvel vizinho: ${x.name}`);
+  post(s, `hood19:buy:${lot}:${mIdx(s)}`, -x.price, 'capex', `Compra de imóvel vizinho: ${x.name.pt}`);
   hood19(s).bought[lot] = s.year;
   log18(s, fmtL(l('Você comprou o imóvel de "{n}": o lote "{l}" agora é seu.', 'You bought "{n}"\'s property: lot "{l}" is now yours.'), { n: x.name, l: LOTS18[lot].name }));
   return null;

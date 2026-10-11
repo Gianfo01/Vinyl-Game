@@ -3,6 +3,7 @@
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { CARDS, HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
+import { realFounded } from '../data/realnames';
 import { S, t, type Lang } from '../i18n/strings';
 import type { RunConfig, StartCustom } from '../sim/types';
 import { createGame, DEFAULT_LABEL_IDS, labelPool, takeoverCandidates } from '../sim/worldgen';
@@ -290,7 +291,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const opt = (v: string, xs: { value: string; label: string }[]) => xs.find((x) => x.value === v)?.label ?? v;
   const rows = (): [ReturnType<typeof l>, string, number][] => {
     const ids = cfg.labels?.ids ?? DEFAULT_LABEL_IDS();
-    const rivals = cfg.labels?.count ?? labelPool().filter((d) => ids.includes(d.id) && d.founded <= cfg.startYear).length;
+    const rivals = cfg.labels?.count ?? labelPool().filter((d) => ids.includes(d.id) && (cfg.realNames ? realFounded(d.id, d.founded) : d.founded) <= cfg.startYear).length;
     const dsum = Object.entries(cfg.diff17 ?? {}).filter(([, v]) => v).map(([k, v]) => `${k} ${v! > 0 ? '+' : ''}${v}`).join(', ');
     return [
       [l('Mundo', 'World'), t(WORLDS17.find((w) => w.id === worldOf17(cfg))!.name), 0],

@@ -139,6 +139,14 @@ export const REAL_LABELS: Record<string, string> = {
   cortex: 'Crypton Future Media',
 };
 
+/** r19: ano documentado de fundação das gravadoras reais (modo nomes reais). Quando o selo real nasceu depois
+ *  do ficcional, ele só aparece no ano real (Chantecler 1958, Elenco 1963, Interscope 1990…); nunca antes. */
+export const REAL_LABEL_FOUNDED: Record<string, number> = {
+  nova: 1990, heritage: 1978, granite: 1982, southern_cross: 1964, sol_maior: 1963, carioca_fono: 1958,
+  northern_lights: 1992, gold_prairie: 1958, sunset_parkway: 1971, wayfarer: 1959, livewire: 2005,
+};
+export const realFounded = (id: string, founded: number): number => Math.max(founded, REAL_LABEL_FOUNDED[id] ?? founded);
+
 /** Trocas de texto fixo (frases geradas com nomes ficcionais embutidos). */
 export const REAL_TEXT: [string, string][] = [
   ['WorldSound 100', 'Billboard Hot 100'],

@@ -5,6 +5,7 @@ import { l } from '../data/world';
 import { t } from '../i18n/strings';
 import { PLAYBOOKS, type PlaybookId } from '../sim/sys/rivals8';
 import type { LabelSetup, RunConfig } from '../sim/types';
+import { realFounded } from '../data/realnames';
 import { DEFAULT_LABEL_IDS, labelPool, type PoolLabel } from '../sim/worldgen';
 import { cityName } from './common';
 import { h, select } from './dom';
@@ -19,11 +20,13 @@ export function labelsCard(cfg: RunConfig, onChange: () => void): { el: HTMLElem
   const countOut = h('b');
   const countIn = h('input', { type: 'range', min: 0, max: 60, step: 1, 'aria-label': t(l('Número de gravadoras rivais', 'Number of rival labels')) }) as HTMLInputElement;
   const hint = h('p', { class: 'muted small' });
-  const avail = () => pool.filter((d) => d.founded <= cfg.startYear).sort((a, b) => a.founded - b.founded || a.name.localeCompare(b.name));
+  // r19: no modo nomes reais vale o ano documentado do selo real (nunca antes dele)
+  const fy = (d: PoolLabel) => (cfg.realNames ? realFounded(d.id, d.founded) : d.founded);
+  const avail = () => pool.filter((d) => fy(d) <= cfg.startYear).sort((a, b) => fy(a) - fy(b) || a.name.localeCompare(b.name));
   const nameOf = (d: PoolLabel) => (cfg.realNames && d.real ? d.real : d.name);
   const selectedNow = () => { const c = chosen(); return avail().filter((d) => c.has(d.id)).length; };
   const setIds = (ids: string[]) => {
-    const later = (cfg.labels?.ids ?? DEFAULT_LABEL_IDS()).filter((id) => (pool.find((d) => d.id === id)?.founded ?? 0) > cfg.startYear);
+    const later = (cfg.labels?.ids ?? DEFAULT_LABEL_IDS()).filter((id) => { const d = pool.find((x) => x.id === id); return (d ? fy(d) : 0) > cfg.startYear; });
     setup().ids = [...new Set([...ids, ...later])];
     delete setup().count;
     draw();
@@ -45,7 +48,7 @@ export function labelsCard(cfg: RunConfig, onChange: () => void): { el: HTMLElem
         const cur = list.filter((x) => (x.id === d.id ? on : c.has(x.id))).map((x) => x.id);
         setIds(cur);
       } }),
-      h('span', null, nameOf(d), h('small', { class: 'muted' }, ` — ${cityName(d.city)}, ${d.founded} · ${t(SIZE[d.family])}${d.playbook ? ` · ${t(PLAYBOOKS[d.playbook as PlaybookId]?.name)}` : ''}`)))));
+      h('span', null, nameOf(d), h('small', { class: 'muted' }, ` — ${cityName(d.city)}, ${fy(d)} · ${t(SIZE[d.family])}${d.playbook ? ` · ${t(PLAYBOOKS[d.playbook as PlaybookId]?.name)}` : ''}`)))));
   };
   countIn.oninput = () => { setup().count = Number(countIn.value); countOut.textContent = countIn.value; draw(); };
   countIn.onchange = () => onChange();
