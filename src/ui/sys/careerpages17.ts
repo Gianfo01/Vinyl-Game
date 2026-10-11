@@ -53,6 +53,8 @@ export function pageVisible17(s: GameState, id: string): boolean {
 /** Rodada 18: carreiras novas (trilhas, jornalismo) registram visibilidade e abas da página. */
 export const CP_VIS18: Record<string, (s: GameState) => boolean> = {};
 export const CP_TABS18: Record<string, (s: GameState) => Tab[]> = {};
+/** Rodada 19: abas extras em páginas de carreira existentes (session19 no Estúdio, writers19 na Editora). */
+export const CP_TABS19: Record<string, (s: GameState) => Tab[]> = {};
 export const careerPages17 = (s: GameState): string[] => ORDER17.filter((id) => pageVisible17(s, id));
 
 const go = (area: string, tab?: [string, string]) => { if (tab) setTab(tab[0], tab[1]); store.area = area; rerender(); };
@@ -86,8 +88,8 @@ function careerTabs(s: GameState, id: string): Tab[] {
         { id: 'house', label: t(l('Sua casa e programação', 'Your venue and programming')), icon: 'stage', render: () => { const xs = sectionsOf('shows', ['live-venue', 'live-venue12'], s); return h('div', null, ...(xs.length ? xs : [h('p', { class: 'muted' }, t(l('Nenhuma casa ainda.', 'No venue yet.')))])); } },
         { id: 'venues', label: t(l('Comprar e vender casas', 'Buy and sell venues')), icon: 'mic', render: () => B.venuesTab(s) },
       ];
-      case 'studio': return [areaTab(s, 'studio12', l('Estúdio e produção', 'Studio and production'))];
-      case 'publisher': return [areaTab(s, 'publishing16', l('Compositores e catálogo', 'Songwriters and catalog'))];
+      case 'studio': return [areaTab(s, 'studio12', l('Estúdio e produção', 'Studio and production')), ...(CP_TABS19.studio?.(s) ?? [])];
+      case 'publisher': return [areaTab(s, 'publishing16', l('Compositores e catálogo', 'Songwriters and catalog')), ...(CP_TABS19.publisher?.(s) ?? [])];
       case 'media': return [areaTab(s, 'outlets16', l('Seus veículos', 'Your outlets'))];
       case 'platform': return [areaTab(s, 'platform16', l('Sua plataforma', 'Your platform'))];
       case 'musician': return [{ id: 'band', label: t(l('Sua banda', 'Your band')), icon: 'guitar', render: () => bandTab(s) }, areaTab(s, 'artist18', l('Contratos do artista', 'Artist deals')), areaTab(s, 'shared18', l('Sociedades', 'Partnerships'))]; // r18 artist18

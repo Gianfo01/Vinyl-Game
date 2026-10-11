@@ -260,4 +260,7 @@ import './factlink19';
 // Rodada 19 (Frente 8): calendário único de prazos, orçamento de notificações/boletim semanal, carta na fila e pulso explicado.
 import './calendar19';
 import './notify19';
+// Rodada 19 (Frente 9.2/9.3): músicos de estúdio como mercado (session19) e créditos divididos/ghostwriters/plágio (writers19).
+import './session19';
+import './writers19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

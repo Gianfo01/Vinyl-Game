@@ -111,7 +111,7 @@ describe('r19 0.2 — matriz fato → consumidores', () => {
   it('tipos reservados da Frente 9: não colidem e já têm consumidores previstos', () => {
     expect(Object.keys(RESERVED19).length).toBeGreaterThanOrEqual(39);
     expect(new Set(Object.values(RESERVED19).map((x) => x.sys)).size).toBe(13);
-    for (const [k, v] of Object.entries(RESERVED19)) { expect(emitted[k], k).toBeUndefined(); expect(v.to.length, k).toBeGreaterThan(0); }
+    for (const [k, v] of Object.entries(RESERVED19)) { if (emitted[k]) expect(consumed19(rows.find((r) => r.kind === k)!), k).toBe(true); expect(v.to.length, k).toBeGreaterThan(0); }
   });
   it('ouvintes novos agem: obra-prima vira manchete e fama', () => {
     const s = createGame(defaultConfig('r19-mw'));
@@ -185,6 +185,11 @@ const INBOX_RARE19: Record<string, string> = {
   disc18_more: 'descoberta: segunda etapa de uma pista aberta pelo jogador',
   disc18_hot: 'descoberta: rival disputando um nome que o jogador está seguindo',
   camps18_cut: 'camp de composição: corte só depois de um pitch aceito',
+  ses19_doc: 'session19: documentário só 15+ anos depois do fim de um coletivo com quem você gravou',
+  wr19_ghost: 'writers19: aviso do ghostwriter só com rancor 60+ (meses de contrato e hits)',
+  wr19_offer: 'writers19: oferta de canção de fora (20%/mês, exige compositor do gênero em outro selo)',
+  wr19_plag: 'writers19: acusação de plágio só para hit top 5 do jogador',
+  wr19_sue: 'writers19: chance de processar só com catálogo lançado original no gênero do hit alheio',
   sess18_revolt: 'sessão: revolta de músicos exige sessões longas e moral baixa',
   sess18_poach: 'sessão: rival tenta levar músico de estúdio contratado',
   supply_late: 'cadeia física: fábrica atrasada (fila cheia, grandes tiragens)',
