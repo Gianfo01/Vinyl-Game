@@ -271,7 +271,7 @@ registerDimAdj18('gear19', (s, _rel, act) => {
     out.push({ d: meta.dims[0], v, why: F(l('Timbre do instrumento ({g})', 'Instrument tone ({g})'), { g: gearName19(s, gearById19(gid!)) }) });
     tot += v;
   }
-  if (eraSound19(s.year).some((g) => GEAR_META19[g.id]?.genres.includes(act.genre))) out.push({ d: 'orig', v: 1, why: l('No som da era (equipamento novo do gênero)', 'In the era\'s sound (the genre\'s new gear)') });
+  if (tot > 0 && eraSound19(s.year).some((g) => GEAR_META19[g.id]?.genres.includes(act.genre))) out.push({ d: 'orig', v: 1, why: l('No som da era (equipamento novo do gênero)', 'In the era\'s sound (the genre\'s new gear)') });
   return out;
 });
 
