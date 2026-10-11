@@ -30,13 +30,13 @@ import { h } from '../dom';
 import { chips, ic, stat, tabs, setTab } from '../vis';
 import { extraSections, registerAreaView20, sectionList, type SectionHost } from '../registry';
 import { store } from '../store';
-import { hqHooks } from '../hq';
+import { hqHooks, type HqAt } from '../hq';
 import type { RoomKind } from '../pixel/sprites';
 import { equipmentSection20, festivalsAside20, gigsSection20, hqPanel, setTourStops20, showsPanel, stopHq, toggleTourStop20, tourMapSection20, tourStops20 } from '../panels/misc';
 import { TOUR_STEPS20, activeToursSection, copyTourPolicy20, merchSection, onTourBooked20, tourDraftEstimate20, tourLivePanel20, tourPlannerSection } from '../panels/tours';
 import { setKitDraft18 } from './live18';
 import { branchBlock, deptBlock, hqBlock, marketsBlock } from './hq6';
-import { actionsButton20, chooseAction20 } from './actmenu20'; // r20 G4: registro único de ações
+import { actionsButton20, chooseAction20, openActionMenu20, openRoomMenu20 } from './actmenu20'; // r20 G4: registro único de ações
 import { ROOM_ACTIONS20, actionRow20 } from '../actions20';
 import './hubs20.css';
 
@@ -242,6 +242,28 @@ const ROOM20: Record<RoomKind, L> = {
   lounge: l('Descanso', 'Lounge'), office: l('Escritório', 'Office'), trophy: l('Troféus e história', 'Trophies and history'), meeting: l('Reunião', 'Meeting room'), hall: l('Hall', 'Hall'),
 };
 
+// r20b: clique (ou Enter) num artista/sala na planta abre o MESMO menu do registro único (ui/actions20.ts) que o modo
+// lista e o cartão do artista usam — ancorado no ponto do clique. O caminho antigo (cartão/abrir sala) virou item do menu.
+const baseRoom20 = hqHooks.onRoom;
+const baseAct20 = hqHooks.onAct;
+/** Menu do artista na sede: ações do registro + "Na sede" (próxima decisão do cartão; ficha do integrante clicado). */
+export function hqActMenu20(s: GameState, actId: string, anchor: HTMLElement, at?: { x: number; y: number }, person?: string): void {
+  const items: { id: string; label: L; icon?: string; run: () => void }[] = [];
+  if (baseAct20) items.push({ id: 'hq.next', label: l('Próxima decisão (cartão da sede)', 'Next decision (HQ card)'), icon: 'star', run: () => baseAct20(actId) });
+  const p = person ? s.persons[person] : undefined;
+  if (p) items.push({ id: 'hq.person', label: l(`Ficha de ${p.name}`, `${p.name}'s record`), icon: 'people', run: () => inspect.person(p.id) });
+  openActionMenu20(s, actId, anchor, at, { label: l('Na sede', 'At HQ'), items });
+}
+/** Sala: com ação de um clique e artistas → menu (abrir sala + ação por artista); senão abre direto (um clique). */
+export function hqRoom20(s: GameState, k: RoomKind, at?: HqAt): void {
+  const act = ROOM_ACTIONS20[k];
+  if (!at || !act || !playerActs(s).length) { baseRoom20?.(k); return; }
+  openRoomMenu20(s, k, ROOM20[k], at.anchor, at, baseRoom20 ? () => baseRoom20(k) : undefined, act);
+}
+hqHooks.onAct = (id, at) => { const s = store.game; if (!s) return; if (!at) { baseAct20?.(id); return; } hqActMenu20(s, id, at.anchor, at, at.person); };
+hqHooks.onRoom = (k, at) => { const s = store.game; if (s) hqRoom20(s, k, at); };
+const atOf20 = (el: HTMLElement): HqAt => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.bottom, anchor: el }; };
+
 let hqMode20: 'canvas' | 'list' = lsGet('vtn20-hq-mode') === 'list' ? 'list' : 'canvas';
 
 /** Modo lista: mesma informação do canvas sem coordenadas (artistas, salas, equipe), tudo por teclado. */
@@ -251,17 +273,25 @@ export function hqList20(s: GameState): HTMLElement {
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
       hqHooks.side ? hqHooks.side(s) : section(T(l('Artistas', 'Acts')), h('ul', null, playerActs(s).map((id) => h('li', null, actLink(s, id))))),
-      playerActs(s).length ? section(T(l('Ações por artista', 'Actions per act')), h('ul', { class: 'hq20-acts' }, playerActs(s).map((id) => h('li', null, actLink(s, id), ' ', actionsButton20(s, id, 'btn small'))))) : null,
+      playerActs(s).length ? section(T(l('Ações por artista', 'Actions per act')), h('ul', { class: 'hq20-acts' }, playerActs(s).map((id) => h('li', null, actLink(s, id), ' ', hqActButton20(s, id))))) : null,
       section(T(l('Salas', 'Rooms')), h('ul', { class: 'hq20-rooms' }, rooms.map((k) => {
         const tg = tags.filter((x) => x.room === k);
         const tip = hqHooks.roomTip?.(s, k) ?? [];
         const sel = store.selectedAct && playerActs(s).includes(store.selectedAct) ? store.selectedAct : playerActs(s)[0];
         const ra = sel && ROOM_ACTIONS20[k] ? actionRow20(s, ROOM_ACTIONS20[k], { act: sel }) : undefined;
-        return h('li', null, h('button', { type: 'button', class: 'btn small', onclick: () => hqHooks.onRoom?.(k) }, T(ROOM20[k])), ' ',
+        return h('li', null, h('button', { type: 'button', class: 'btn small', 'aria-haspopup': ROOM_ACTIONS20[k] && sel ? 'menu' : null, 'aria-expanded': ROOM_ACTIONS20[k] && sel ? 'false' : null, onclick: (e: Event) => { e.stopPropagation(); const b = e.currentTarget as HTMLElement; hqRoom20(s, k, atOf20(b)); } }, T(ROOM20[k])), ' ',
           ra && sel ? h('button', { type: 'button', class: 'btn small ghost', 'aria-disabled': ra.block ? 'true' : null, title: ra.block ? T(ra.block) : '', onclick: (e: Event) => chooseAction20(s, ra.def.id, sel, e.currentTarget as HTMLElement) }, `${T(ra.def.label)} · ${s.acts[sel].name}`) : null, ' ',
           ...tg.map((x) => pill(x.text, x.tone === 'info' ? '' : x.tone)), tip.length ? h('small', { class: 'muted' }, ` ${tip.join(' · ')}`) : null);
       })))),
     h('aside', { class: 'col-side' }, capacityCard(s)));
+}
+
+/** Botão `Ações ▾` do modo lista: o mesmo menu (e os mesmos itens "Na sede") que o clique no artista da planta. */
+function hqActButton20(s: GameState, actId: string): HTMLElement {
+  const a = s.acts[actId];
+  const b: HTMLElement = h('button', { type: 'button', class: 'btn small am20-btn', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'data-actmenu20': actId, 'aria-label': T(l('Ações para {a}', 'Actions for {a}')).replace('{a}', a?.name ?? ''),
+    onclick: (e: Event) => { e.stopPropagation(); hqActMenu20(s, actId, b); } }, T(l('Ações', 'Actions')), ' ▾');
+  return b;
 }
 
 function capacityCard(s: GameState): HTMLElement {
