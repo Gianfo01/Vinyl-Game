@@ -138,6 +138,8 @@ function doNext(s: GameState, actId: string, st: ActStatus): void {
 }
 
 /** Cartão rápido da carreira: estado, atenção, projeto e a próxima decisão importante. */
+/** r20 G4: botão extra no cartão do artista na sede (preenchido por actmenu20, sem ciclo de import). */
+export const ACT_CARD_EXTRA20: { f?: (s: GameState, actId: string) => HTMLElement | null } = {};
 export function openActCard(s: GameState, actId: string): void {
   const act = s.acts[actId];
   const st = status(s, actId);
@@ -152,6 +154,7 @@ export function openActCard(s: GameState, actId: string): void {
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn small ghost', onclick: () => { document.querySelector('.overlay')?.remove(); inspect.act(actId); } }, t(l('Ficha completa', 'Full record'))),
       h('button', { class: 'btn small ghost', onclick: () => goArea('team') }, t(l('Delegação', 'Delegation'))),
+      ACT_CARD_EXTRA20.f?.(s, actId) ?? null, // r20 G4: o mesmo menu Ações ▾ do registro único
     ),
   );
   modal(act.name, body);
