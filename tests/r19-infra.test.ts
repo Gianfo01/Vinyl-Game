@@ -162,6 +162,7 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
  *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
 const INBOX_RARE19: Record<string, string> = {
   // vistos às vezes em 1 ano (1 mensagem): exigir seria frágil a qualquer mudança de sorteio
+  a18_rep: 'artista: relatório da gravadora só depois de assinar (depende do sorteio de ofertas)',
   analyst: 'relatório do analista: sem ação, vai para o boletim semanal (notify19) e não aparece como item próprio',
   market18: 'nota de mercado: informativa, agrupada no boletim semanal (notify19)',
   review18: 'balanço do ano: informativo, agrupado no boletim semanal (notify19)',
