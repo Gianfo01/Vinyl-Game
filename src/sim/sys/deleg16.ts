@@ -112,8 +112,10 @@ const say = (c: Ctx, t: L, tone: 'good' | 'bad' | 'info' = 'info', actId?: strin
 /** r18 (policy18): políticas de delegação — portões por ordem e por gasto (devolvem o motivo do bloqueio). */
 export const D16_GATES: ((s: GameState, o: Order16, st: StaffMember) => L | null)[] = [];
 export const D16_PAY: ((s: GameState, o: Order16, amt: number) => L | null)[] = [];
+// r19 (equilíbrio): orçamento das ordens em dólares reais, como a tela mostra. Antes `money(usdN * 100)` cobrava 100× o
+// orçamento digitado (ordem de rádio de "$300/mês" saía ~US$ 30 mil/mês) e a bilheteria da noite do selo entrava 100× maior.
 const pay = (c: Ctx, usdN: number, memo: string): boolean => {
-  const amt = money(c.s, Math.round(usdN * 100));
+  const amt = money(c.s, usdN);
   if (c.s.player.cash < amt) return false;
   for (const g of D16_PAY) { const why = g(c.s, c.o, amt); if (why) { say(c, why, 'bad'); return false; } }
   post(c.s, `d16:${c.o.id}:${c.s.year}:${c.s.month}:${memo.length}`, -amt, 'business', memo);
@@ -140,7 +142,7 @@ function runTour(c: Ctx): void {
     if (tier > sug && q.q >= 0.6) { notes.push(fmtL(l('segurei o porte em {t}: a força local de {c} só sustenta isso', 'held the size at {t}: {c} local draw only supports that'), { t: VENUE_TIERS[sug].name, c: cityN(city) })); tier = sug; }
     else if (tier > sug) notes.push(l('aceitei o porte pedido mesmo acima da força local (risco de sala vazia)', 'took the requested size even above local draw (empty-room risk)'));
     if (r.chance(q.err * 0.8) && open.includes(Math.min(Math.max(...open), tier + 1)) && tier + 1 > sug) { tier = Math.min(Math.max(...open), tier + 1); notes.push(l('ERRO: contratou uma casa maior do que o público aguenta', 'MISTAKE: booked a venue bigger than the crowd can fill')); }
-    const floorN = money(s, o.floor * 100);
+    const floorN = money(s, o.floor);
     let done = false;
     for (let w = s.week + 3; w <= s.week + 12 && !done; w++) {
       if (q.q >= 0.5 && c12(s).shows.some((x) => x.actId === act.id && x.status === 'booked' && Math.abs(x.week - w) < 2)) continue;
@@ -161,7 +163,9 @@ function runTour(c: Ctx): void {
       if (r.chance(q.err * 0.7)) {
         const alt = cs.find((x) => x.id !== city && !used.has(x.id));
         if (alt) {
-          const fine = money(s, 15000);
+          // r19 (equilíbrio): a multa é a quebra de contrato da data desfeita — metade do cachê, entre US$ 500 e 15 mil
+          // reais (antes, 15 mil fixos: um show de clube de US$ 800 custava 18× o próprio cachê)
+          const fine = clamp(Math.round(st.fee * 0.5), money(s, 500), money(s, 15000));
           post(s, `d16:dbl:${sh.id}`, -fine, 'business', 'Multa: dupla marcação');
           c12(s).rel[alt.id] = clamp(rel(s, alt.id) - 5, 0, 100);
           say(c, fmtL(l('ERRO: {n} marcou {c} na mesma semana por engano e teve de desmarcar: multa de {f} e relação com a cidade −5.', 'MISTAKE: {n} double-booked {c} the same week and had to cancel: {f} fine and city relation −5.'), { n: c.st.name, c: cityN(alt.id), f: usd(fine) }), 'bad', act.id);
@@ -175,7 +179,7 @@ function runTour(c: Ctx): void {
 
 function runFees(c: Ctx): void {
   const { s, r, o, q } = c;
-  const d = d16(s), floorN = money(s, o.floor * 100);
+  const d = d16(s), floorN = money(s, o.floor);
   const mineAct = (id: string) => s.acts[id]?.owner === 'player' || clientsOf(s).some((a) => a.id === id);
   const list = c12(s).shows.filter((x) => x.status === 'booked' && x.by === 'agent' && x.deal === 'guarantee' && x.week - s.week >= 3 && !d.seen[x.id] && (!o.actId || x.actId === o.actId) && mineAct(x.actId))
     .sort((a, b) => a.fee - b.fee).slice(0, o.per);
@@ -237,9 +241,9 @@ function runPromo(c: Ctx): void {
     if (!pay(c, step, `Divulgação: ${s.acts[sh.actId]?.name}`)) { say(c, l('Sem caixa para a divulgação.', 'No cash for the promo.'), 'bad'); break; }
     spent += step;
     const act = s.acts[sh.actId];
-    if (r.chance(q.err * 0.8)) { say(c, fmtL(l('ERRO: a campanha de {a} em {c} foi pro público errado ({s} gastos, sem efeito).', 'MISTAKE: the {a} campaign in {c} hit the wrong audience ({s} spent, no effect).'), { a: act?.name ?? '', c: cityN(sh.city), s: usd(money(s, step * 100)) }), 'bad', sh.actId); continue; }
+    if (r.chance(q.err * 0.8)) { say(c, fmtL(l('ERRO: a campanha de {a} em {c} foi pro público errado ({s} gastos, sem efeito).', 'MISTAKE: the {a} campaign in {c} hit the wrong audience ({s} spent, no effect).'), { a: act?.name ?? '', c: cityN(sh.city), s: usd(money(s, step)) }), 'bad', sh.actId); continue; }
     sh.promo += 1;
-    say(c, fmtL(l('Divulgou {a} em {c} (semana {w}): nível de promo {p}, custo {s}. Mais público esperado (cada nível ≈ +10%).', 'Promoted {a} in {c} (week {w}): promo level {p}, cost {s}. Bigger expected crowd (each level ≈ +10%).'), { a: act?.name ?? '', c: cityN(sh.city), w: sh.week, p: sh.promo, s: usd(money(s, step * 100)) }), 'good', sh.actId);
+    say(c, fmtL(l('Divulgou {a} em {c} (semana {w}): nível de promo {p}, custo {s}. Mais público esperado (cada nível ≈ +10%).', 'Promoted {a} in {c} (week {w}): promo level {p}, cost {s}. Bigger expected crowd (each level ≈ +10%).'), { a: act?.name ?? '', c: cityN(sh.city), w: sh.week, p: sh.promo, s: usd(money(s, step)) }), 'good', sh.actId);
   }
 }
 
@@ -254,7 +258,7 @@ function runRadio(c: Ctx): void {
   const v = clamp(1.5 * q.q * Math.sqrt(cost / 200) * (bad ? 0.3 : 1), 0, 8);
   addHype(s, `a:${act.id}`, 'deleg16:radio', l('Rádio e clubes (promotor)', 'Radio and clubs (promoter)'), v);
   act.fame = clamp(act.fame + 0.04 * q.q, 0, 100);
-  say(c, bad ? fmtL(l('ERRO: {a} ficou fora da playlist e a rodada saiu {x}% mais cara: hype +{v} só.', 'MISTAKE: {a} missed the playlist and the round cost {x}% more: hype +{v} only.'), { a: act.name, x: 50, v: v.toFixed(1) }) : fmtL(l('Rodada de rádio/clubes para {a}: {c} gastos, hype +{v}.', 'Radio/club round for {a}: {c} spent, hype +{v}.'), { a: act.name, c: usd(money(s, real * 100)), v: v.toFixed(1) }), bad ? 'bad' : 'good', act.id);
+  say(c, bad ? fmtL(l('ERRO: {a} ficou fora da playlist e a rodada saiu {x}% mais cara: hype +{v} só.', 'MISTAKE: {a} missed the playlist and the round cost {x}% more: hype +{v} only.'), { a: act.name, x: 50, v: v.toFixed(1) }) : fmtL(l('Rodada de rádio/clubes para {a}: {c} gastos, hype +{v}.', 'Radio/club round for {a}: {c} spent, hype +{v}.'), { a: act.name, c: usd(money(s, real)), v: v.toFixed(1) }), bad ? 'bad' : 'good', act.id);
 }
 
 function runNight(c: Ctx): void {
@@ -262,16 +266,16 @@ function runNight(c: Ctx): void {
   const act = s.acts[o.actId ?? ''];
   if (!activeAct(act)) return say(c, l('O ato da ordem não está mais disponível.', 'The order\'s act is no longer available.'), 'bad');
   const cost = Math.max(200, o.budget);
-  if (s.player.cash < money(s, cost * 100) * 2) return say(c, l('Noite do selo adiada: o caixa não cobre o orçamento com folga.', 'Label night postponed: cash does not cover the budget with margin.'));
+  if (s.player.cash < money(s, cost) * 2) return say(c, l('Noite do selo adiada: o caixa não cobre o orçamento com folga.', 'Label night postponed: cash does not cover the budget with margin.'));
   if (!pay(c, cost, `Noite do selo: ${act.name}`)) return;
   const bad = r.chance(q.err * 0.7);
   const att = Math.round((60 + act.fame * 7) * (0.6 + q.q * 0.6) * (0.75 + r.next() * 0.5) * (bad ? 0.45 : 1));
   const rev = Math.round(att * 9 * (1 + Math.min(1, cost / 2000)));
-  post(s, `d16:night:${c.o.id}:${s.year}:${s.month}`, money(s, rev * 100), 'business', `Noite do selo: bilheteria`);
+  post(s, `d16:night:${c.o.id}:${s.year}:${s.month}`, money(s, rev), 'business', `Noite do selo: bilheteria`);
   act.fans.active += Math.round(att * 0.06);
   addHype(s, `a:${act.id}`, 'deleg16:night', l('Noite do selo', 'Label night'), bad ? 0.5 : 2.5 * q.q);
   const net = rev - cost;
-  const base = fmtL(l('Noite do selo com {a}: {x} pessoas, bilheteria {r} para {k} de custo ({n}).', 'Label night with {a}: {x} people, gate {r} against {k} cost ({n}).'), { a: act.name, x: att, r: usd(money(s, rev * 100)), k: usd(money(s, cost * 100)), n: `${net >= 0 ? '+' : ''}${usd(money(s, net * 100))}` });
+  const base = fmtL(l('Noite do selo com {a}: {x} pessoas, bilheteria {r} para {k} de custo ({n}).', 'Label night with {a}: {x} people, gate {r} against {k} cost ({n}).'), { a: act.name, x: att, r: usd(money(s, rev)), k: usd(money(s, cost)), n: `${net >= 0 ? '+' : ''}${usd(money(s, net))}` });
   say(c, bad ? cat(base, l(' ERRO: bateu com outra festa na cidade.', ' MISTAKE: clashed with another party in town.')) : base, bad || net < 0 ? 'bad' : 'good', act.id);
 }
 

@@ -597,6 +597,13 @@ registerSimHook('month', 'campus18', (s) => {
   const inc = storeIncome18(s);
   if (inc) post(s, `campus18:store:${mIdx(s)}`, inc - storeUpkeep18(s), 'merch', 'Loja do selo');
   for (const pid of dormPeople(s)) addStress(s, pid, -3, l('Casa dos artistas', 'Artists\' house'));
+  // r19 (equilíbrio): sede ALUGADA danificada é problema do dono do imóvel — ele reforma em ~6 meses e o espaço
+  // provisório para de ser cobrado. Antes o aluguel provisório corria para sempre (enchente do bairro ignorada = dreno eterno).
+  const hd = st.dmg.hq;
+  if (hd && !hq6(s).ownBuilding && s.week - hd.w >= 26) {
+    delete st.dmg.hq;
+    log(s, l('O dono do imóvel reformou a sede alugada: fim do espaço provisório.', 'The landlord repaired the rented HQ: no more temporary space.'));
+  }
   // dano sem reforma: aluguel provisório
   const d = Object.keys(st.dmg);
   if (d.length) post(s, `campus18:dmg:${mIdx(s)}`, -money(s, 900 * d.length), 'hq', 'Espaço provisório (prédio danificado)');
