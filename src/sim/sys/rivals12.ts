@@ -21,7 +21,7 @@ import { launchNpcRelease } from '../market';
 import { unreleasedRecorded } from '../production';
 import { PRODUCERS } from '../studio';
 import type { GameState, Label } from '../types';
-import { fmtL, money, notify, playerActs, post } from '../util';
+import { addHeat, coolHeat, fmtL, heatOf, money, notify, playerActs, post } from '../util';
 import { chron } from './chron9';
 import { editionOf, fest8, TIER_ORDER } from './fests8';
 import { leaderOf } from './leaders10';
@@ -108,7 +108,7 @@ export function tension(s: GameState, lbId: string, d: number): void {
   deal.ten = clamp(deal.ten + d, 0, 100);
   if (deal.ten >= 100) {
     deal.st = 'off';
-    s.rivalries[lbId] = (s.rivalries[lbId] ?? 0) + 10;
+    addHeat(s, lbId, 10);
     add(s, { k: 'deal_end', lb: lbId, scr: 'world', t: fmtL(l('{b} rompeu a distribuição dos seus discos em {m}: "não dá para ser sócio de quem nos ataca toda semana".', '{b} broke off distributing your records in {m}: "we cannot partner with someone who attacks us every week".'), { b: rivalWho(s, lbId), m: marketById[deal.m].name }) });
   }
 }
@@ -132,7 +132,7 @@ function bidWar(s: GameState): void {
       if (!cand || cand.cash < o.advance * 1.5 || !r.chance(it ? 0.45 : 0.1 + cand.aggression * 0.12)) continue;
       const ratio = 1.08 + standingScore(standingOf(s, cand.id)) / 500 + r.float(0, 0.1);
       st.bids[act.id] = { lb: cand.id, adv: Math.round(o.advance * ratio), w: s.week, n: 1, ref: o.id };
-      s.rivalries[cand.id] = (s.rivalries[cand.id] ?? 0) + 3;
+      addHeat(s, cand.id, 3);
       add(s, { k: 'bid', lb: cand.id, scr: 'market', a: act.id, ref: o.id, until: s.week + 4, opts: ['cover', 'yield'],
         t: fmtL(l('{b} subiu a oferta por {a} depois da sua: +{p}% de adiantamento.', '{b} raised the offer for {a} after yours: +{p}% advance.'), { b: rivalWho(s, cand.id), a: act.name, p: Math.round((ratio - 1) * 100) }) });
     } else if (b.n < 3 && o.advance >= b.adv && b.w < s.week) {
@@ -246,7 +246,7 @@ function releaseWindow(s: GameState): void {
     if (!mine || !mineAct(s, pr.actId)) continue;
     st.cl[pr.id] = 1;
     const fam = familyOf(mine.genre);
-    const labels = Object.values(s.labels).filter((lb) => lb.active && (s.rivalries[lb.id] ?? 0) >= 15 && lb.cash > money(s, 60000));
+    const labels = Object.values(s.labels).filter((lb) => lb.active && heatOf(s, lb.id) >= 15 && lb.cash > money(s, 60000));
     if (!labels.length || !r.chance(0.25)) continue;
     for (const lb of r.shuffle(labels)) {
       const act = lb.roster.map((id) => s.acts[id]).filter((a) => a && a.status === 'active' && familyOf(a.genre) === fam && unreleasedRecorded(s, a).length > 0).sort((x, y) => y.fame - x.fame)[0];
@@ -258,7 +258,7 @@ function releaseWindow(s: GameState): void {
       logMove(s, lb, { k: 'date_move', a: act.name, x: pr.title });
       st.seen.push(`${lb.id}:${s.week}:date_move:${act.name}`);
       st.cd.date = s.week + 10;
-      s.rivalries[lb.id] = (s.rivalries[lb.id] ?? 0) + 3;
+      addHeat(s, lb.id, 3);
       add(s, { k: 'date', lb: lb.id, scr: 'releases', a: pr.actId, ref: pr.id, until: pr.week - 1, opts: ['shift', 'push', 'hold'],
         t: fmtL(l('{b} mudou o lançamento de {a} para disputar o mesmo público do seu "{t}" — é a rixa entre vocês.', '{b} moved {a}\'s release to compete for the same audience as your "{t}" — it is your feud.'), { b: rivalWho(s, lb.id), a: act.name, t: pr.title }) });
       return;
@@ -296,7 +296,7 @@ function marketPush(s: GameState): void {
   if (!r.chance(0.08)) return;
   const m = s.player.territories.find((x) => !st.push[x]);
   if (!m) return;
-  const lb = Object.values(s.labels).filter((x) => x.active && ['regional', 'importer', 'conglomerate', 'vulture', 'live'].includes(playbookOf(x)) && x.cash > money(s, 120000)).sort((a, b) => (s.rivalries[b.id] ?? 0) - (s.rivalries[a.id] ?? 0))[0];
+  const lb = Object.values(s.labels).filter((x) => x.active && ['regional', 'importer', 'conglomerate', 'vulture', 'live'].includes(playbookOf(x)) && x.cash > money(s, 120000)).sort((a, b) => heatOf(s, b.id) - heatOf(s, a.id))[0];
   if (!lb) return;
   if (!lb.territories.includes(m)) lb.territories.push(m);
   st.push[m] = { lb: lb.id, until: s.week + 52 };
@@ -363,7 +363,7 @@ function dealsMonth(s: GameState): void {
     post(s, `riv12deal:${d.id}`, d.fee, 'licensing', `Distribuição por ${lb.name} (${d.m})`);
     lb.cash -= d.fee;
     d.ten = Math.max(0, d.ten - 3);
-    if ((s.rivalries[d.lb] ?? 0) > 0) s.rivalries[d.lb] = Math.max(0, (s.rivalries[d.lb] ?? 0) - 1);
+    if (heatOf(s, d.lb) > 0) coolHeat(s, d.lb, 1);
   }
   st.deals = st.deals.filter((d) => d.st !== 'off' || s.week - d.until < 52).slice(-12);
   if (st.deals.some((d) => d.st === 'offer') || st.deals.filter((d) => d.st === 'on').length >= 2) return;
@@ -371,15 +371,15 @@ function dealsMonth(s: GameState): void {
   const acts = playerActs(s).map((id) => s.acts[id]).filter(Boolean);
   if (!acts.length || !r.chance(0.07)) return;
   const fame = acts.reduce((t, a) => t + a.fame, 0);
-  for (const lb of r.shuffle(Object.values(s.labels).filter((x) => x.active && (s.rivalries[x.id] ?? 0) < 45))) {
+  for (const lb of r.shuffle(Object.values(s.labels).filter((x) => x.active && heatOf(s, x.id) < 45))) {
     const home = cityById[lb.city]?.market;
     const free = (x: MarketId) => !st.deals.some((d) => d.m === x && d.st === 'on');
     const m = lb.territories.find((x) => !s.player.territories.includes(x) && free(x)) ?? (home && lb.territories.includes(home) && free(home) ? home : undefined);
     if (!m) continue;
     const fee = money(s, 500 + Math.min(4000, fame * 20));
-    const d: Deal12 = { id: `d${++st.seq}`, lb: lb.id, m, fee, from: s.week, until: s.week + 104, ten: clamp((s.rivalries[lb.id] ?? 0) / 2, 0, 60), st: 'offer', exp: s.week + 6 };
+    const d: Deal12 = { id: `d${++st.seq}`, lb: lb.id, m, fee, from: s.week, until: s.week + 104, ten: clamp(heatOf(s, lb.id) / 2, 0, 60), st: 'offer', exp: s.week + 6 };
     st.deals.push(d);
-    const rival = (s.rivalries[lb.id] ?? 0) > 10;
+    const rival = heatOf(s, lb.id) > 10;
     add(s, { k: 'deal', lb: lb.id, scr: 'world', ref: d.id, until: d.exp, opts: ['accept', 'decline'],
       t: fmtL(rival ? l('{b} — que disputa artistas com você — propõe distribuir seus discos em {m} por 2 anos, com mínimo garantido mensal.', '{b} — who fights you for artists — offers to distribute your records in {m} for 2 years, with a monthly guarantee.')
         : l('{b} propõe distribuir seus discos em {m} por 2 anos, com mínimo garantido mensal.', '{b} offers to distribute your records in {m} for 2 years, with a monthly guarantee.'), { b: rivalWho(s, lb.id), m: marketById[m].name }),
@@ -399,7 +399,7 @@ export function endDeal(s: GameState, id: string): void {
   if (!d) return;
   d.st = 'off';
   d.until = s.week;
-  s.rivalries[d.lb] = (s.rivalries[d.lb] ?? 0) + 5;
+  addHeat(s, d.lb, 5);
 }
 
 // ---------------------------------------------------------------- respostas do jogador
@@ -426,7 +426,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
         const act = s.acts[o.actId];
         if (act && lb?.active && !act.owner) { signWithRival(s, act, lb.id, rngFor(s, 'yield')); logMove(s, lb, { k: 'outbid', a: act.name }); }
         delete st.bids[o.actId];
-        s.rivalries[c.lb] = Math.max(0, (s.rivalries[c.lb] ?? 0) - 5);
+        coolHeat(s, c.lb, 5);
         tension(s, c.lb, -15);
       }
       break;
@@ -476,7 +476,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
         if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
         post(s, `riv12prod:${pr.id}`, -cost, 'recording', `Prioridade com ${pr.name}`);
         s.producerBusy[pr.id] = s.week;
-        s.rivalries[c.lb] = (s.rivalries[c.lb] ?? 0) + 3;
+        addHeat(s, c.lb, 3);
         tension(s, c.lb, 15);
       }
       break;
@@ -488,9 +488,9 @@ export function respond(s: GameState, id: string, opt: string): L | null {
         if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
         post(s, `riv12mkt:${c.ref}`, -cost, 'marketing', `Contra-ataque em ${c.ref}`);
         p.fought = 1;
-        s.rivalries[c.lb] = (s.rivalries[c.lb] ?? 0) + 5;
+        addHeat(s, c.lb, 5);
         tension(s, c.lb, 20);
-      } else if (opt === 'cede') { s.rivalries[c.lb] = Math.max(0, (s.rivalries[c.lb] ?? 0) - 4); tension(s, c.lb, -10); }
+      } else if (opt === 'cede') { coolHeat(s, c.lb, 4); tension(s, c.lb, -10); }
       break;
     }
     case 'fest': {
@@ -498,7 +498,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
       const ed = editionOf(s, Number(fi));
       const slot = ed?.lineup.find((x) => x.actId === c.a);
       if (!ed || ed.done || !slot) { c.done = 'gone'; return l('A edição já aconteceu.', 'The edition already happened.'); }
-      if (opt === 'defend') { slot.fee = Math.round(slot.fee * 0.7); tension(s, c.lb, 15); s.rivalries[c.lb] = (s.rivalries[c.lb] ?? 0) + 3; }
+      if (opt === 'defend') { slot.fee = Math.round(slot.fee * 0.7); tension(s, c.lb, 15); addHeat(s, c.lb, 3); }
       else {
         const tier = slot.tier;
         slot.tier = TIER_ORDER[Math.min(TIER_ORDER.length - 1, TIER_ORDER.indexOf(tier) + 1)];

@@ -14,6 +14,7 @@ import { formatMoney } from '../core/money';
 import { l, type L } from '../data/world';
 import type { Act, GameState, Person } from './types';
 import { fmtL, money, playerActs, post } from './util';
+import { scaleFans } from './fandom';
 
 export type Ctx18 = Record<string, string | number>;
 export type Tone18 = 'good' | 'bad' | 'mixed';
@@ -79,10 +80,7 @@ export class Fx18 {
   fans(pct: number): this {
     const a = this.act;
     if (!a || !pct) return this;
-    const f = 1 + pct / 100;
-    a.fans.casual = Math.max(0, Math.round(a.fans.casual * f));
-    a.fans.active = Math.max(0, Math.round(a.fans.active * f));
-    a.fans.core = Math.max(0, Math.round(a.fans.core * (1 + pct / 200)));
+    scaleFans(a, pct); // r19: fonte única (fandom19)
     this.lines.push(fmtL(l('Fãs {v}%', 'Fans {v}%'), { v: pct > 0 ? `+${pct}` : pct }));
     return this;
   }

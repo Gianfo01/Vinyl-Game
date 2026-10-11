@@ -5,7 +5,7 @@ import { FAMILIES, MARKETS, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { attendContest, fireScout, hireScout, listenDemo, raiseBid, scoutPool, sponsorContest, startAuction, withdrawAuction } from '../../sim/discovery';
 import { MISSION_WEEKS, missionDepth, missionLength, missionProgress, missionTarget, startMission } from '../../sim/sys/scout11';
-import { ARCHETYPES, archetypeOf, buySecurity, spyOnRival } from '../../sim/rivals2';
+import { ARCHETYPES, archetypeOf, buySecurity, heat19, spyOnRival } from '../../sim/rivals19'; // r19: fachada
 import { defaultOffer } from '../../sim/contracts';
 import type { GameState } from '../../sim/types';
 import type { Scout } from '../../sim/xtypes';
@@ -115,7 +115,7 @@ export function auctionsSection(s: GameState): HTMLElement {
 
 export function rivalsExtra(s: GameState): HTMLElement {
   const r = rngOf(s);
-  const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => (s.rivalries[b.id] ?? 0) - (s.rivalries[a.id] ?? 0)).slice(0, 12);
+  const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => heat19(s, b.id) - heat19(s, a.id)).slice(0, 12);
   return section(t(l('Arquétipos, rivalidades e inteligência', 'Archetypes, rivalries and intel')),
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn small', onclick: () => { say(buySecurity(s), l('Segurança reforçada por 12 meses.', 'Security reinforced for 12 months.')); rerender(); } }, ic('lock'), ' ', t(l('Contraespionagem', 'Counter-intelligence'))),
@@ -123,7 +123,7 @@ export function rivalsExtra(s: GameState): HTMLElement {
     ),
     h('table', { class: 'tbl compact' }, h('tbody', null, labels.map((lb) => {
       const ar = archetypeOf(lb);
-      const riv = Math.round(s.rivalries[lb.id] ?? 0);
+      const riv = Math.round(heat19(s, lb.id));
       return h('tr', null,
         h('td', null, labelLink(s, lb.id), lb.ceo ? h('small', { class: 'muted' }, ` · CEO ${lb.ceo}`) : null),
         h('td', { title: t(ARCHETYPES[ar].desc) }, t(ARCHETYPES[ar].name)),

@@ -203,3 +203,39 @@ U12: auditoria (script de rascunho) das 86 situações — 5 opções dominantes
 - `src/sim/sys/cine18.ts` (puro): **camada de composição** `Board18 = quadros (Frame18: local-base + atores com estado + objetos + efeitos + plateia {n, humor, cartazes} + legenda + encaixe de decisão)`. Leitores de estado com o porquê: `outfitOf18` (figurino do tapete vermelho `chooseFit18` ou imagem do ato), `injured18`, `heat18` (escândalo → protesto/imprensa), `crowd18` (fans18: lealdade/cansaço), `stage18` (kit da turnê live18 + casa própria campus18), `lineup18` (lineup16), `weather18`, idade no avatar (age17). Construtores: `awardBoard18` (tapete, indicados com retrato, apresentador, envelope, vencedor + reações pelos traços, subida, discurso com o balão do tema escolhido no scene17, festa; prêmio póstumo com herdeiro/holograma) e `momentBoard18` (number1, signing, soldout, premiere, verdict, funeral, musicshow, festival, hall, hologram, avatar, ghost, tribute). `logShot18` grava na Cinemateca; fatos do barramento alimentam o álbum (maiores abrem cena `cine18`, ≤2/mês). **Momento novo → acrescente um `case` em `momentBoard18` e um `onFact` que chame `big18`/`logShot18`.**
 - `src/ui/pixel/cine18.ts`: `boardView18(s, board, { slot, rebuild })` (canvas 256×144, balões/indicados em HTML, envelope animado, holograma com tremulação e linhas de varredura, pular/pausar, movimento reduzido). Cutscenes `awards`, `number1`, `hall`, `hologram`, `farewell` passam a ser storyboards (ui/sys/cine18.ts); `VIEW17_X`/`ALBUM17_X` em ui/sys/scene17.ts (cenas do scene17 viram storyboard; Cinemateca no Álbum de cenas).
 - `src/sim/sys/post18.ts`: espólios (`estate18`: herdeiros com postura, união, desejo do artista, legado, disputas/mediação) e projetos `start18` (tributo, caixa, remaster, cofre via neural.ts, cinebiografia, Pepper's ghost <2012, holograma 2012+, turnê 2018+, avatares 2022+ também vivos, IA 2023+) com `ask18`/`back18`/`forecast18`/`tech18` explicados. Exato: reais bloqueados e `REAL18` vira crônica na data; demais modos: rivais fazem hologramas/filmes (história alternativa). UI: Lendas › Legado póstumo (`post18`).
+
+## R19 fachadas — fandom19, rivals19, awards19 (Frente 0.6)
+Toda mecânica nova da R19 lê e escreve fãs, rivais e prêmios **pelas fachadas**; os módulos antigos continuam exportando o que
+exportavam (as fachadas re-exportam os mesmos nomes = aliases). Leituras das fachadas **nunca criam estado** (não chamam
+`fandomOf`/`fan18(..., true)`/`mind18`/`archetypeOf` no selo real), então ler não muda o jogo.
+
+**Fonte única por número**
+| número | fonte | ler/escrever |
+|---|---|---|
+| fãs (casual/ativo/núcleo) | `act.fans` | `fanTotal19`, `fanCount19`, `scaleFans19` (primitivas `fanTotal`/`scaleFans` em fandom.ts; `decide18` Fx18.fans e `pulseNow18` já usam) |
+| fãs por região (mercado) | derivado de `fame16.fameIn` × tamanho do mercado | `fansByRegion19(s, actId)` (soma = total; sem estado) |
+| superfãs, haters, toxicidade, nome, ritual | `s.fandoms` (fandom.ts) | `fandomView19`; para escrever `fandomRec19` (= `fandomOf`) |
+| lealdade, mobilização, cansaço, motivações, facções | fans18 | `loyalty19`, `mobilization19`, `fatigue19`, `motivation19`, `fanState19` (só guardado), `mobilize19` (= `setTeam18`) |
+| eventos de fã | diários fans18 + fan15 + fatos | `fanEvents19(s, actId?, n)` |
+| calor da rivalidade | `s.rivalries[selo]` | `heat19`, `addHeat19(s, lb, d, max?)`, `coolHeat19` (primitivas `heatOf`/`addHeat`/`coolHeat` em util.ts; rivals12 e scenes/awards migrados), `heatBand19`, `HEAT_BAND19` |
+| tensão do distribuidor | rivals12 `Deal12.ten` | `tension19` (= `rivals12.tension`) |
+| selos/atos rivais, intenções | rivals2 + rivals8 + rivals12 + rivalmind18 | `rivalLabels19({min,limit})`, `rivalActs19(lb?)`, `rivalView19`, `intents19` (alvo, pacto, sinais e leitura, últimas jogadas, disputas abertas, parceria) |
+| vencedores | livro `s.awards` (escrito só por `recordAward` em util.ts: legacy/Gramófonos, awards2, charts7) + NPC nacionais `ch7.awards` + Hall | `winners19({year,mine,actId,src})` → `Win19 {src: gramo/regional/industry/national/hall, posthumous}`, `recordAward19` |
+| cerimônias / indicados | ceremonies8, rockhall9, awards2, charts7 | `ceremonies19` (calendário do ano, nada do futuro), `nominations19(cat \| 'hall')` |
+| júri e memória do júri | awards18 `voters18`, awards15 `juryRng`/`juryMemHook`, aw18 `makeup`, fadiga no livro | `jury19(s, a3?)`, `juryMemory19(s, actId, a3?)` → `{k, makeup, fatigue, why}` |
+| póstumo | `persons.alive/died` | `isPosthumous19`, `posthumousWins19` |
+| cerimônia do envelope (cine18) | cartão `awards` | `ceremonyOfCutscene19` (o gancho de cine18 e `awOfCs18` — agora alias — usam) |
+
+Nomes que colidiam ganharam sufixo: `answerGramoPerform19` (ceremonies8) × `answerHallPerform19` (rockhall9), `hallLobby19`.
+Consumidores migrados: cine18 (`crowd18` → `fanState19`; cerimônia → `ceremonyOfCutscene19`), decide18 (Fx18.fans, pulso),
+UI deep15, panels/people, panels/discovery, sys/rivals12, sys/crime17, sys/intrigue, sys/hubs8, sys/rockhall9, sys/live18.
+
+**Fatos das fachadas** (`src/sim/sys/facades19.ts`, último import de sim/sys/index; varredor mensal sem sorteio). São
+**fatos-índice**: `emitIndexFact(s, fi)` (novo em facts17, aditivo) chama os ouvintes `onFact` normalmente (inclusive '*') mas
+guarda num anel próprio (`facts17.ix`, ids `x…`, teto 150) — não ocupa o anel principal nem a numeração `f…`, então nenhum
+sorteio/leitura existente muda (lote balanced 6 sementes × 5 anos idêntico ao de antes, bit a bit). Ler com `indexFacts(s, filtro)`
+(mesmo filtro de `recentFacts`). Gravidade 12 e sem cidade: não viram boato nem motivo de NPC; o fato canônico de cada sistema
+continua o mesmo. Lista com produtor e ouvintes em `FACTS19` (para a matriz da Frente 0.2):
+- `fan_wave` (base do jogador +15%/mês com ≥1.500 fãs, ou mobilização ≥60) / `fan_drop` (−15%) → ouvintes `fandom19:wave`/`fandom19:drop` (linha no diário de fãs, `f19.waves`).
+- `rivalry_flare` (calor cruza 50 ou 75, sem repetir até esfriar) / `rivalry_cool` (de ≥50 para <20) → `rivals19:flare`/`rivals19:cool` (relatório de rivais, `f19.flares`).
+- `award_win` (entrada nova no livro) → `awards19:jury` (memória de vitórias do júri: `juryLedger19`); `award_posthumous` → `awards19:posthumous` (`f19.post`).

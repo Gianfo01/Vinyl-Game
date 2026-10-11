@@ -255,3 +255,4 @@ import './links18';
 import './cine18';
 import './post18';
 import './final18'; // r18 integração final: reputação artística com memória curta
+import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

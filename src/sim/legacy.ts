@@ -5,7 +5,7 @@ import { toReal } from '../core/money';
 import { HQ_LEVELS } from '../data/rules';
 import { l, type L } from '../data/world';
 import type { GameState, Release } from './types';
-import { fmtL, hasCard, notify, remember, sum } from './util';
+import { fmtL, hasCard, notify, recordAward, remember, sum } from './util';
 import { hqCaps } from './branches';
 import { campaignBonus, restrictToNominees } from './sys/ceremonies8';
 
@@ -50,13 +50,9 @@ export function yearlyAwards(s: GameState, r: Rng): void {
     if (!w) continue;
     const act = s.acts[w.actId];
     const byPlayer = w.owner === 'player' || !!act?.playerBand;
-    s.awards.push({ year, category: c.id, releaseId: w.id, actId: w.actId, name: `${act?.name ?? '?'} — ${w.title}`, byPlayer });
-    if (act) {
-      act.awards += 1;
-      act.fame = clamp(act.fame + 3, 0, 100);
-    }
+    recordAward(s, { year, category: c.id, releaseId: w.id, actId: w.actId, name: `${act?.name ?? '?'} — ${w.title}`, byPlayer }); // r19: livro único (awards19)
+    if (act) act.fame = clamp(act.fame + 3, 0, 100);
     if (byPlayer) {
-      s.player.stats.awards += 1;
       s.player.reputation.artistic = clamp(s.player.reputation.artistic + 4, 0, 100);
       notify(s, fmtL(l('Gramófono de Ouro: {c} para {n}!', 'Golden Gramophone: {c} goes to {n}!'), { c: c.name, n: `${act?.name} — ${w.title}` }), 'good');
     }

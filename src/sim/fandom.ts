@@ -111,3 +111,14 @@ export function superfanDebut(s: GameState, act: Act): number {
 export function playerFandomSummary(s: GameState): { actId: string; f: Fandom }[] {
   return playerActs(s).map((id) => ({ actId: id, f: fandomOf(s, id) }));
 }
+
+// R19 (fachada fandom19): primitivas leves da contagem de fãs — fonte única de `act.fans`; fandom19 re-exporta.
+/** Total de fãs do ato (casual + ativo + núcleo). */
+export const fanTotal = (a: Act): number => a.fans.casual + a.fans.active + a.fans.core;
+/** Escala os três círculos em `pct`% (o núcleo mexe a metade). */
+export function scaleFans(a: Act, pct: number): void {
+  const f = 1 + pct / 100;
+  a.fans.casual = Math.max(0, Math.round(a.fans.casual * f));
+  a.fans.active = Math.max(0, Math.round(a.fans.active * f));
+  a.fans.core = Math.max(0, Math.round(a.fans.core * (1 + pct / 200)));
+}

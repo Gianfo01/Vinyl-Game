@@ -16,7 +16,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { physicalShare } from '../production';
 import type { GameState, Release } from '../types';
 import { isUnlocked } from '../era';
-import { fmtL, hasTech, remember } from '../util';
+import { fmtL, hasTech, recordAward, remember } from '../util';
 import { boycotting, flushAwards, flushTop10, homeK, juryMemHook, juryRng, queueAward, queueTop10, snub15 } from './awards15';
 import { allReleases17 } from '../relidx17';
 
@@ -342,8 +342,7 @@ function nationalAwards(s: GameState, r: Rng): void {
       act.awards += 1;
       act.fame = clamp(act.fame + (cat === 'artist' ? 1.2 : 0.6) * (countryMarketSize(c, year) > 30 ? 1.5 : 1), 0, 100);
       if (byPlayer) {
-        s.player.stats.awards += 1;
-        s.awards.push({ year, category: `nat_${c.a3}_${cat}`, releaseId: rel?.id, actId, name: `${awardName(s, c)} — ${AWARD_CATS[cat].pt}: ${winner}`, byPlayer: true });
+        recordAward(s, { year, category: `nat_${c.a3}_${cat}`, releaseId: rel?.id, actId, name: `${awardName(s, c)} — ${AWARD_CATS[cat].pt}: ${winner}`, byPlayer: true }, { countAct: false }); // r19: livro único
         queueAward(AWARD_CATS[cat], winner, awardName(s, c), countryName(c.a3));
         remember(s, 'nat_award', fmtL(l('{aw} {y} ({c}): {cat} para {w}.', '{aw} {y} ({c}): {cat} to {w}.'), { aw: awardName(s, c), y: year, c: countryName(c.a3), cat: AWARD_CATS[cat], w: winner }), { actId, important: true });
       }

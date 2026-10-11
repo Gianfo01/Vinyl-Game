@@ -10,7 +10,7 @@ import { playerActs } from '../../sim/util';
 import {
   FLY_FROM18, GIANT_FROM18, KIT_TXT18, band18, giant18, live18, setExcl18, setWell18, tourPMs18, wellCost18,
 } from '../../sim/sys/live18';
-import { FAC18, FAC_NAME18, MOT18, MOT_NAME18, TEAM_FROM18, fan18, factions18, fans18, pp18, relLoad18, setSupplier18, setTeam18, teamCost18 } from '../../sim/sys/fans18';
+import { FAC18, FAC_NAME18, MOT18, MOT_NAME18, TEAM_FROM18, fan18, factions18, fans18, pp18, relLoad18, setSupplier18, setTeam18, teamCost18 } from '../../sim/fandom19'; // r19: fachada
 import { XP18, buyXp18, curation18, ff18, headDep18, xpCost18 } from '../../sim/sys/fest18';
 import { liveOf } from '../../sim/sys/live/state';
 import { $, N, actLink, cityName, pill, rerender, section, toast } from '../common';

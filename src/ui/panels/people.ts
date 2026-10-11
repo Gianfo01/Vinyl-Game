@@ -5,7 +5,7 @@ import { MARKETS, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { familyAction, launchHeir, negotiateReunion, reunionTerms, setLeader, startSoloCareer } from '../../sim/dynasty';
 import { personaOf } from '../../sim/ext';
-import { callOutToxic, fanMeetup, moderateCommunity, fandomOf } from '../../sim/fandom';
+import { callOutToxic, fanMeetup, moderateCommunity, fandomOf } from '../../sim/fandom19'; // r19: fachada
 import { cedeTerritory, crisisRenegotiate, exerciseOption, setClauses } from '../../sim/contracts2';
 import type { Act, GameState, Person } from '../../sim/types';
 import { instById, instrumentsOf } from '../../sim/sys/instruments';

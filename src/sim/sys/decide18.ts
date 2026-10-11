@@ -16,6 +16,7 @@ import type { GameState } from '../types';
 import { fmtL, notify, playerActs } from '../util';
 import { resolveDecision } from '../events';
 import { MSG_AFTER18 } from './people/inbox';
+import { fanTotal } from '../fandom';
 
 export interface Echo18 {
   id: string;
@@ -170,7 +171,7 @@ export function pulseNow18(s: GameState): { cash: number; fans: number; mood: nu
   const acts = playerActs(s).map((id) => s.acts[id]).filter(Boolean);
   let fans = 0, mood = 0, n = 0;
   for (const a of acts) {
-    fans += a.fans.casual + a.fans.active + a.fans.core;
+    fans += fanTotal(a); // r19: fandom19
     for (const id of a.members) { const p = s.persons[id]; if (p?.alive) { mood += p.morale - p.stress * 0.5; n++; } }
   }
   const mine = [...s.charts.singles, ...s.charts.albums].filter((e) => s.releases[e.releaseId]?.owner === 'player' || s.acts[s.releases[e.releaseId]?.actId]?.owner === 'player');
