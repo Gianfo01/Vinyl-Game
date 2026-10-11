@@ -56,6 +56,7 @@ import { ALIAS17, CAREER_PAGE17, ICON17, KEY17, areaOfKey17, careerOfPage17, gro
 import { careerPages17 } from './sys/careerpages17';
 import { icon17 } from './pixel/icons17';
 import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
+import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
 import './nav17.css';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
@@ -195,8 +196,8 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
     digest = { d: digestEnd(g, snap, r0.months), why: r0.stopReason };
   } else res = advance(g, mode);
   if (!digest) {
-    const fresh = g.notifications.filter((n) => n.week > noteWeek && !n.fold).slice(-3);
-    for (const n of fresh) toast(t(n.text), n.kind);
+    // r20 (B23): 3 destaques por severidade + "+N outros" que abre a lista inteira (antes: as 3 últimas por recência)
+    advanceToasts20(g.notifications.filter((n) => n.week > noteWeek && !n.fold));
   }
   if (res.stopReason && mode !== 'month' && !digest) toast(`⏸ ${t(res.stopReason)}`, 'event');
   announce(g.briefing.map((n) => t(n.text)).join('. '));
@@ -477,6 +478,7 @@ function settings(): void {
     ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
     h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
     settings19(), // r19 B.5
+    settings20(), // r20 G6: densidade
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),

@@ -16,7 +16,8 @@ import { head19View } from './cockpit19';
 import { deskBlocks19, pick19, renderBlocks19 } from '../blocks19';
 import { EXTRA_AREAS, registerArea } from '../registry';
 import { store } from '../store';
-import { ic } from '../vis';
+import { ic, setTab, tabs } from '../vis';
+import { plane20 } from './ui20';
 import './cockpit14.css';
 
 const inbox = () => EXTRA_AREAS.find((a) => a.id === 'inbox');
@@ -41,16 +42,23 @@ export function cockpit(s: GameState): HTMLElement {
   const pk = pick19(s, blocks);
   const more = renderBlocks19(s, pk, 'desk');
   if (more.length) desk.appendChild(h('div', { class: 'extra-sections' }, more));
+  // r20 (G6 §4.4): primeiro plano (agora, decisões com prazo, compromissos, projetos, 3 mudanças) e a caixa de entrada
+  // inteira como área própria (aba "Caixa de entrada", com filtros e busca) em vez de empilhada no painel
+  const toInbox = () => { setTab('ck20', 'inbox'); rerender(); };
   return h('div', { class: 'ck14' },
     h('div', { class: 'ck14-bar', role: 'toolbar', 'aria-label': t(l('Atalhos do cockpit', 'Cockpit shortcuts')) },
       h('b', null, t(l('Cockpit do mês', 'Monthly cockpit'))),
-      h('button', { class: `btn small ${n ? 'primary' : 'ghost'}`, onclick: () => jump('ck14-desk') }, ic('calendar'), ' ', t(l('Decisões', 'Decisions')), ` (${n})`),
-      h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: () => jump('ck14-inbox') }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`),
+      h('button', { class: `btn small ${n ? 'primary' : 'ghost'}`, onclick: () => { setTab('ck20', 'panel'); rerender(); setTimeout(() => jump('ck14-desk'), 30); } }, ic('calendar'), ' ', t(l('Decisões', 'Decisions')), ` (${n})`),
+      h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: toInbox }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`),
       h('small', { class: 'muted' }, n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.')))),
-    head19View(s), // r19: Hoje / Ameaças / Andamento
-    home18(s, pk), // r18 decide18 + r19 blocks19: calendário, pulso, momentos, humor… (por peso)
-    h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—')),
-    h('div', { id: 'ck14-desk', class: 'ck14-desk' }, desk));
+    plane20(s),
+    tabs('ck20', [
+      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => h('div', null,
+        head19View(s), // r19: Hoje / Ameaças / Andamento
+        home18(s, pk), // r18 decide18 + r19 blocks19: calendário, pulso, momentos, humor… (por peso)
+        h('div', { id: 'ck14-desk', class: 'ck14-desk' }, desk)) },
+      { id: 'inbox', label: t(l('Caixa de entrada', 'Inbox')), badge: m || undefined, render: () => h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—')) },
+    ], rerender));
 }
 
 registerArea({ id: 'cockpit', label: l('Cockpit', 'Cockpit'), icon: 'calendar', key: '1', render: cockpit, badge: (s) => (s.decisions.length + unread(s)) || undefined });
