@@ -2,6 +2,7 @@ import { POOL19 } from './pool19';
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
 
+import { unlimitedStock20 } from './stock20';
 import { ART18 } from './artist18hook';
 import { MEDIA18 } from './media18hook';
 import { physShareRel18 } from './sys/eras18';
@@ -364,7 +365,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     // estoque: demanda física só vira venda com estoque
     const physUnits = Math.round(units * physShareRel18(s, rel));
     let physSold = physUnits;
-    if (rel.owner === 'player' || (s.acts[rel.actId]?.playerBand && rel.stock !== Infinity)) {
+    if (rel.owner === 'player' || (s.acts[rel.actId]?.playerBand && !unlimitedStock20(rel))) { // r20 (B25): null (save recarregado) = Infinity
       if (rel.formats.some((f) => FORMATS.find((x) => x.id === f)?.physical)) {
         physSold = Math.min(physUnits, rel.stock);
         rel.stock -= physSold;
