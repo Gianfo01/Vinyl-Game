@@ -203,3 +203,35 @@ U12: auditoria (script de rascunho) das 86 situações — 5 opções dominantes
 - `src/sim/sys/cine18.ts` (puro): **camada de composição** `Board18 = quadros (Frame18: local-base + atores com estado + objetos + efeitos + plateia {n, humor, cartazes} + legenda + encaixe de decisão)`. Leitores de estado com o porquê: `outfitOf18` (figurino do tapete vermelho `chooseFit18` ou imagem do ato), `injured18`, `heat18` (escândalo → protesto/imprensa), `crowd18` (fans18: lealdade/cansaço), `stage18` (kit da turnê live18 + casa própria campus18), `lineup18` (lineup16), `weather18`, idade no avatar (age17). Construtores: `awardBoard18` (tapete, indicados com retrato, apresentador, envelope, vencedor + reações pelos traços, subida, discurso com o balão do tema escolhido no scene17, festa; prêmio póstumo com herdeiro/holograma) e `momentBoard18` (number1, signing, soldout, premiere, verdict, funeral, musicshow, festival, hall, hologram, avatar, ghost, tribute). `logShot18` grava na Cinemateca; fatos do barramento alimentam o álbum (maiores abrem cena `cine18`, ≤2/mês). **Momento novo → acrescente um `case` em `momentBoard18` e um `onFact` que chame `big18`/`logShot18`.**
 - `src/ui/pixel/cine18.ts`: `boardView18(s, board, { slot, rebuild })` (canvas 256×144, balões/indicados em HTML, envelope animado, holograma com tremulação e linhas de varredura, pular/pausar, movimento reduzido). Cutscenes `awards`, `number1`, `hall`, `hologram`, `farewell` passam a ser storyboards (ui/sys/cine18.ts); `VIEW17_X`/`ALBUM17_X` em ui/sys/scene17.ts (cenas do scene17 viram storyboard; Cinemateca no Álbum de cenas).
 - `src/sim/sys/post18.ts`: espólios (`estate18`: herdeiros com postura, união, desejo do artista, legado, disputas/mediação) e projetos `start18` (tributo, caixa, remaster, cofre via neural.ts, cinebiografia, Pepper's ghost <2012, holograma 2012+, turnê 2018+, avatares 2022+ também vivos, IA 2023+) com `ask18`/`back18`/`forecast18`/`tech18` explicados. Exato: reais bloqueados e `REAL18` vira crônica na data; demais modos: rivais fazem hologramas/filmes (história alternativa). UI: Lendas › Legado póstumo (`post18`).
+
+## R19 calendar19 / notify19 / blocks19 (Frente 8: P1, P2, P9; 11.3, 11.12, 11.15)
+
+**Calendário único de prazos** — `src/sim/calendar19.ts` (puro) + provedores em `src/sim/sys/calendar19.ts`.
+- `registerDeadline(id, (s, from, to) => Deadline19[])` — todo sistema com data registra um provedor. `Deadline19 = { id, w, w0?, kind, t, d?, tone?, goto?, act? }`:
+  `w` = semana absoluta do prazo; `w0` = início de janela (ecos: nunca mostrar a semana exata); `kind` ∈ `decision|echo|msg|contract|clause|money|release|supply|tour|festival|build|court|award|other`;
+  `act: true` = pede ação do jogador (conta para "semana apertada", badge e coluna "Hoje"). Prefixe `id` com o nome do provedor.
+- `noteDeadline19(s, d)` / `dropDeadline19(s, id)` — prazo avulso guardado no save (para quem não tem estado de data próprio).
+- Leitura: `calendar19(s, { weeks?, from?, kinds? })` (ordenado por semana, depois risco), `crunch19(s, weeks, n)` (semanas com n+ prazos de ação),
+  `weekOfMonth19(s, y, m)`, `nextMonthWeek19(s, m)`.
+- Provedores já ligados: decide18 (`ctx.dl18`, janelas de `pending18`), Caixa (mensagens com ações que vencem), contratos do selo (fim/opção, promessas,
+  `clauses18.minRel`, prestação de contas pelo `stmt`/`lag`), artist18 (ofertas, fim do contrato, prestações, sentenças), lançamentos e fila da fábrica
+  (supply18 `book.ready` e contrato de capacidade), turnês (`s.tours`) e festivais próprios, obras (campus18), tribunal (crime17 `dl`), empréstimos, prêmios.
+- Fato `crunch` (secreto, ator `player`) no mês com semana apertada → ouvinte soma estresse ao dono. Dica do Conselheiro `cal19`. Explicação `cal19.week` ({w}).
+- UI: `calStrip19(s, weeks=6)` (ui/sys/calendar19.ts) é a faixa do Cockpit (substitui a antiga linha do tempo do home18); área `calendar19` (grupo Selo).
+
+**Orçamento de notificações e boletim semanal** — `src/sim/sys/notify19.ts`.
+- `pushInbox18` passa por `INBOX_ROUTE19.f` (src/sim/inbox18.ts). Mensagens SEM ações vão para o item único `bulletin19` da semana quando:
+  o tipo está em `BULLETIN19` (review18, market18, analyst, traj18, a18_stmt, tv18_third, regions18) ou a categoria
+  estourou `BUDGET19[cat]` no mês. Nunca vão: mensagens com ações, `prio ≥ 2` ou `tone: 'bad'`. Tipo novo barulhento? Adicione ao `BULLETIN19`.
+- O retorno de `pushInbox18` para um item roteado é o próprio boletim (não guarde `m.id` de mensagens sem ação).
+- Contadores: `ib19(s).ind/bul` e `ib19(s).y[ano] = [individuais, linhas de boletim]`.
+- Ofertas de selo ao artista (artist18 `scout`): no máximo 3 abertas, 1 por selo, 1 nova por mês; reoferta do mesmo selo só com fama +5 ou hit novo.
+
+**Carta perdida e pulso (11.15)** — `follow18` (echoes18) com mesa cheia (6+) chama `FOLLOW19.f` → `follow19(s, eventId, ctx, weeks=4)`: mensagem
+`follow19` ("Carta na fila") com prazo no calendário; "Pôr na mesa agora" emite o cartão; o padrão ("Deixar valer o padrão") emite e resolve com a opção padrão.
+Explicações: `pulse19` ({k: cash|fans|mood|hits}; parte de caixa liga em `cash.month`) e `fact19.chain` ({f: factId} → `causeChain`). Os ▲▼ do pulso usam `why18`.
+
+**Blocos do Cockpit (11.12)** — `src/ui/blocks19.ts`. `registerSection` aceita `weight` (número ou função), `when` e `title`; `sectionList(host, s)` em registry.ts.
+`homeBlocks18(s)` + `deskBlocks19(s)` → `pick19(s, blocks, 6)` abre os ~6 de maior peso; o resto vai para a faixa "Mais (n)". Preferências
+(`c` recolhido, `h` escondido, `o` fixado) ficam no save em `x4.ui19.c`. Topo fixo `head19View(s)` (ui/sys/cockpit19.ts): Hoje / Ameaças / Andamento
+(saga18 `cockpit18` + calendário); a seção antiga `long18-3q` foi escondida da Mesa.

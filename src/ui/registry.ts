@@ -34,6 +34,10 @@ export interface ExtraSection {
   id: string;
   render: (s: GameState) => HTMLElement | null;
   order?: number;
+  /** r19 (blocks19): peso no Cockpit (maior abre primeiro), condição de exibição e título da barra recolhida */
+  weight?: number | ((s: GameState) => number);
+  when?: (s: GameState) => boolean;
+  title?: L;
 }
 
 export interface ExtraArea {
@@ -98,6 +102,10 @@ export function sectionsOf(host: SectionHost, ids: string[], s: GameState): HTML
   return ids.map((id) => (SECTIONS[host] ?? []).find((x) => x.id === id)?.render(s)).filter((x): x is HTMLElement => !!x);
 }
 
+/** r19: seções visíveis de um host (sem desenhar), na ordem — para quem decide o que abrir (blocks19). */
+export function sectionList(host: SectionHost, s: GameState): ExtraSection[] {
+  return (SECTIONS[host] ?? []).filter((x) => !SECTION_HIDE.some((f) => f(host, x.id, s))).sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
+}
 export function extraSections(host: string, s: GameState): HTMLElement | null {
   const list = (SECTIONS[host] ?? []).filter((x) => !SECTION_HIDE.some((f) => f(host, x.id, s))).sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
   const els = list.map((x) => x.render(s)).filter((x): x is HTMLElement => !!x);

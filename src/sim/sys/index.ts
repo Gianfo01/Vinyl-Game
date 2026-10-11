@@ -255,3 +255,6 @@ import './links18';
 import './cine18';
 import './post18';
 import './final18'; // r18 integração final: reputação artística com memória curta
+// Rodada 19 (Frente 8): calendário único de prazos, orçamento de notificações/boletim semanal, carta na fila e pulso explicado.
+import './calendar19';
+import './notify19';

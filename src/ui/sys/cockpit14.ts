@@ -11,8 +11,10 @@ import { rerender } from '../common';
 import { h } from '../dom';
 import { deskPanel } from '../panels/desk';
 import { campusThumb18 } from './campus18';
-import { home18 } from './home18';
-import { EXTRA_AREAS, extraSections, registerArea } from '../registry';
+import { home18, homeBlocks18 } from './home18';
+import { head19View } from './cockpit19';
+import { deskBlocks19, pick19, renderBlocks19 } from '../blocks19';
+import { EXTRA_AREAS, registerArea } from '../registry';
 import { store } from '../store';
 import { ic } from '../vis';
 import './cockpit14.css';
@@ -34,18 +36,20 @@ export function cockpit(s: GameState): HTMLElement {
   const n = s.decisions.length, m = unread(s);
   const ib = inbox();
   const desk = deskPanel(s);
-  const more = extraSections('desk', s);
-  if (more) desk.appendChild(more);
+  // r19 (blocks19): cartões do topo + seções da Mesa num só conjunto com peso; ~6 abertos, resto em "Mais"
+  const blocks = [...homeBlocks18(s), { id: 'home:hq', title: l('Nosso mundo', 'Our world'), weight: 18, el: hqMini(s), host: 'home' as const }, ...deskBlocks19(s)];
+  const pk = pick19(s, blocks);
+  const more = renderBlocks19(s, pk, 'desk');
+  if (more.length) desk.appendChild(h('div', { class: 'extra-sections' }, more));
   return h('div', { class: 'ck14' },
     h('div', { class: 'ck14-bar', role: 'toolbar', 'aria-label': t(l('Atalhos do cockpit', 'Cockpit shortcuts')) },
       h('b', null, t(l('Cockpit do mês', 'Monthly cockpit'))),
       h('button', { class: `btn small ${n ? 'primary' : 'ghost'}`, onclick: () => jump('ck14-desk') }, ic('calendar'), ' ', t(l('Decisões', 'Decisions')), ` (${n})`),
       h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: () => jump('ck14-inbox') }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`),
       h('small', { class: 'muted' }, n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.')))),
-    home18(s), // r18 decide18: letreiro, semanas, momentos, humor, pulso, holofote
-    h('div', { class: 'ck14-top' },
-      hqMini(s),
-      h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—'))),
+    head19View(s), // r19: Hoje / Ameaças / Andamento
+    home18(s, pk), // r18 decide18 + r19 blocks19: calendário, pulso, momentos, humor… (por peso)
+    h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—')),
     h('div', { id: 'ck14-desk', class: 'ck14-desk' }, desk));
 }
 
