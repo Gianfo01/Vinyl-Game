@@ -252,10 +252,10 @@ export function foundAt19(s: GameState, kind: VKind, lot: number): L | null {
 export const LOTGATE19: ((s: GameState, lot: number) => L | null)[] = [];
 const gate = (s: GameState, lot: number): L | null => { for (const f of LOTGATE19) { const e = f(s, lot); if (e) return e; } return null; };
 
-export interface PopRow19 { k: L; v: string; why?: [string, WhyCtx]; tone?: 'good' | 'bad' | '' }
+export interface PopRow19 { k: L; v: string | L; go?: Goto18; why?: [string, WhyCtx]; tone?: 'good' | 'bad' | '' }
 export interface PopAct19 { id: string; label: L; cost?: number; dis?: L; tone?: 'primary' | 'ghost' | 'danger'; go?: Goto18; confirm?: L; ask?: 'name' | 'q' | 'lot' }
 export interface Opt19 { id: string; name: L; desc: L; effect: L; cost: number; months: number; icon: string; dis?: L; syn: L[]; q?: boolean }
-export interface Pop19 { kind: 'bld' | 'lot'; id: string; title: string; icon: string; tags: (L | string)[]; rows: PopRow19[]; notes: { t: L | string; tone?: 'good' | 'bad' | 'warn' }[]; prog?: number; acts: PopAct19[]; opts: Opt19[] }
+export interface Pop19 { kind: 'bld' | 'lot'; id: string; title: string | L; icon: string; tags: (L | string)[]; rows: PopRow19[]; notes: { t: L | string; tone?: 'good' | 'bad' | 'warn' }[]; prog?: number; acts: PopAct19[]; opts: Opt19[] }
 
 const ABS = (s: GameState, id: string) => buildings18(s).find((b) => b.id === id);
 /** Popup de um prédio (ou null se não existe). */
@@ -266,17 +266,18 @@ export function bldPop19(s: GameState, id: string, q = 1): Pop19 | null {
   const st = campus18(s), lot = layout18(s, bs).get(b.id);
   const rows: PopRow19[] = [];
   rows.push({ k: l('Estágio', 'Stage'), v: `${b.lvl}` });
-  for (const [k, v] of b.kpi ?? []) if (k.pt !== 'Nível') rows.push({ k, v });
+  // contagens zeradas (equipe, elenco, departamentos…) não dizem nada: ficam de fora
+  for (const [k, v] of b.kpi ?? []) if (k.pt !== 'Nível' && v !== '0' && v !== '—') rows.push({ k, v });
   const up = upkeep19(s, b);
   if (up) rows.push({ k: l('Custo/mês', 'Cost/mo'), v: up.v ? `−${$k(up.v)}` : '$0', why: ['w19.upk', { id }], tone: up.v ? 'bad' : 'good' });
   const sy = syn19(s, bs).filter((x) => x.a === id || x.b === id);
   if (b.zone === 'campus' && lot !== undefined) rows.push({ k: l('Vizinhança', 'Neighbours'), v: sy.length ? sy.map((x) => (x.rule.neg ? '−' : '+')).join('') : '—', why: ['w19.syn', { id }], tone: sy.some((x) => x.rule.neg) ? 'bad' : sy.length ? 'good' : '' });
-  if (lot !== undefined) rows.push({ k: l('Lote', 'Lot'), v: LOTS18[lot].name.pt, why: ['w19.lot', { lot }] });
+  if (lot !== undefined) rows.push({ k: l('Lote', 'Lot'), v: LOTS18[lot].name, why: ['w19.lot', { lot }] });
   if (b.kind === 'hq') {
     const hw = explain18(s, 'h19.hood', {});
-    if (hw) rows.push({ k: l('Bairro', 'Area'), v: `${typeof hw.title === 'string' ? hw.title : hw.title?.pt ?? ''} · ${hw.value}`, why: ['h19.hood', {}] });
+    if (hw && hw.title && typeof hw.title !== 'string' && hw.note && typeof hw.note !== 'string') rows.push({ k: l('Bairro', 'Area'), v: hw.title, why: ['h19.hood', {}] });
     const far = bs.filter((x) => x.zone === 'world' && x.st !== 'sold' && x.st !== 'closed');
-    if (far.length) rows.push({ k: l('Filiais e escritórios', 'Branches and offices'), v: far.map((x) => x.city.startsWith('@') ? x.name : cityById[x.city]?.name.pt ?? x.city).slice(0, 5).join(', ') });
+    if (far.length) rows.push({ k: l('Filiais e escritórios', 'Branches and offices'), v: ((f: (x: Bld18) => string, g: (x: Bld18) => string) => l(far.slice(0, 5).map(f).join(', '), far.slice(0, 5).map(g).join(', ')))((x) => (x.city.startsWith('@') ? x.name : cityById[x.city]?.name.pt ?? x.city), (x) => (x.city.startsWith('@') ? x.name : cityById[x.city]?.name.en ?? x.city)), go: { area: 'hq' } });
   }
   const notes: Pop19['notes'] = [];
   if (b.now) notes.push({ t: b.now });
@@ -296,11 +297,11 @@ export function bldPop19(s: GameState, id: string, q = 1): Pop19 | null {
     if (b.kind === 'hq') {
       const nx = HQ_LEVELS[s.player.hq + 1], c = hqUpCost(s);
       if (nx && c !== null) {
-        const req: string[] = [];
-        if (nx.minYear && s.year < nx.minYear) req.push(fmtL(l('a partir de {y}', 'from {y}'), { y: nx.minYear }).pt);
-        if (nx.minReputation && s.player.reputation.institutional < nx.minReputation) req.push(fmtL(l('reputação institucional {r}+', 'institutional reputation {r}+'), { r: nx.minReputation }).pt);
+        const req: L[] = [];
+        if (nx.minYear && s.year < nx.minYear) req.push(fmtL(l('a partir de {y}', 'from {y}'), { y: nx.minYear }));
+        if (nx.minReputation && s.player.reputation.institutional < nx.minReputation) req.push(fmtL(l('reputação institucional {r}+', 'institutional reputation {r}+'), { r: nx.minReputation }));
         acts.push({ id: 'up', label: fmtL(l('Ampliar para {n}', 'Expand to {n}'), { n: nx.name }), cost: c, tone: 'primary',
-          dis: req.length ? l(`Requisito: ${req.join(', ')}.`, `Requires: ${req.join(', ')}.`) : s.player.cash < c ? l('Caixa insuficiente.', 'Not enough cash.') : undefined });
+          dis: req.length ? l(`Requisito: ${req.map((x) => x.pt).join(', ')}.`, `Requires: ${req.map((x) => x.en).join(', ')}.`) : s.player.cash < c ? l('Caixa insuficiente.', 'Not enough cash.') : undefined });
       }
     } else if (b.id.startsWith('v:')) {
       const v = ventures(s).list.find((x) => `v:${x.id}` === id);
@@ -372,7 +373,7 @@ export function lotPop19(s: GameState, lot: number, q = 1, moving?: string): Pop
         syn: synAt19(s, bk, lot, bs).map((x) => fmtL(l('{s} {n} (com {w})', '{s} {n} (with {w})'), { s: x.rule.neg ? '−' : '+', n: x.rule.name, w: x.with.name })) });
     }
   }
-  return { kind: 'lot', id: `lot:${lot}`, title: L0.name.pt, icon: 'building', tags: [l('Lote vazio', 'Empty lot'), fmtL(l('{w}×{d} quadras', '{w}×{d} tiles'), { w: L0.w, d: L0.d })], rows, notes, acts, opts };
+  return { kind: 'lot', id: `lot:${lot}`, title: L0.name, icon: 'building', tags: [l('Lote vazio', 'Empty lot'), fmtL(l('{w}×{d} quadras', '{w}×{d} tiles'), { w: L0.w, d: L0.d })], rows, notes, acts, opts };
 }
 
 /** Executa uma ação de popup. Devolve erro (L) ou null. */
@@ -459,7 +460,7 @@ registerExplain('w19.syn', (s, c) => {
   const act = syn19(s, bs).filter((x) => x.a === id || x.b === id);
   const parts: WhyPart[] = act.map((x) => ({ label: x.rule.name, value: (x.a === id ? bs.find((y) => y.id === x.b) : bs.find((y) => y.id === x.a))?.name ?? '?', fmt: 'text', tone: x.rule.neg ? 'bad' : 'good', note: x.rule.eff }));
   const could = ADJ19.filter((r) => (r.a.includes(b.kind) || r.b.includes(b.kind)) && !act.some((x) => x.rule === r));
-  for (const r of could) parts.push({ label: r.name, value: '—', fmt: 'text', note: fmtL(l('Possível: {e} Precisa de {k} a até uma rua de distância.', 'Possible: {e} Needs {k} within one street.'), { e: r.eff, k: (r.a.includes(b.kind) ? r.b : r.a).map((k) => KIND18[k].name.pt).join(' / ') }) });
+  for (const r of could) parts.push({ label: r.name, value: '—', fmt: 'text', note: fmtL(l('Possível: {e} Precisa de {k} a até uma rua de distância.', 'Possible: {e} Needs {k} within one street.'), { e: r.eff, k: ((ks) => l(ks.map((k) => KIND18[k].name.pt).join(' / '), ks.map((k) => KIND18[k].name.en).join(' / ')))(r.a.includes(b.kind) ? r.b : r.a) }) });
   return { title: l('Vizinhança', 'Neighbours'), value: act.length, fmt: 'num', parts,
     note: l('Lotes encostados ou do outro lado de uma rua contam como vizinhos. Mude prédios de lote para formar pares.', 'Lots that touch or face each other across one street count as neighbours. Move buildings to form pairs.') };
 });
@@ -478,6 +479,6 @@ registerExplain('w19.lot', (s, c) => {
   return { title: L0.name, value: `×${L0.pm}`, fmt: 'text', parts: [
     { label: l('Preço (multiplica obras e mudanças)', 'Price (multiplies works and moves)'), value: L0.pm, fmt: 'mult' },
     { label: l('Visibilidade (loja e letreiro rendem mais)', 'Visibility (store and sign earn more)'), value: L0.vis, fmt: 'mult' },
-    ...near.map((i) => ({ label: fmtL(l('Vizinho: {n}', 'Neighbour: {n}'), { n: LOTS18[i].name }), value: who.get(i) ? (buildings18(s).find((b) => b.id === who.get(i))?.name ?? '—') : l('vazio', 'empty').pt, fmt: 'text' as const })),
+    ...near.map((i) => ({ label: fmtL(l('Vizinho: {n}', 'Neighbour: {n}'), { n: LOTS18[i].name }), value: who.get(i) ? (buildings18(s).find((b) => b.id === who.get(i))?.name ?? '—') : '—', fmt: 'text' as const })),
   ], note: l('A esquina principal é da sede. Lotes de esquina custam mais e aparecem mais.', 'The main corner belongs to the HQ. Corner lots cost more and are seen more.') };
 });

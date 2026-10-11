@@ -54,7 +54,7 @@ export interface Bld18 {
   prog?: number;
   lot?: number;
   goto?: Goto18;
-  kpi?: [L, string][];
+  kpi?: [L, string | L][];
   staff?: number;
   now?: L;
   note?: L;
@@ -197,13 +197,13 @@ export function buildings18(s: GameState): Bld18[] {
   add({
     id: 'hq', kind: 'hq', name: `${s.config.companyName} — ${HQ_LEVELS[s.player.hq].name.pt}`, city: s.config.homeCity, lvl: s.player.hq + 1, since: st.born.hq ?? hqY, sy: hqY,
     staff: s.player.staff.length, goto: { area: 'hq' },
-    kpi: [[l('Nível', 'Level'), HQ_LEVELS[s.player.hq].name.pt], [l('Equipe', 'Staff'), String(s.player.staff.length)], [l('Departamentos', 'Departments'), String(depts)],
-      [l('Prédio', 'Building'), hq6(s).ownBuilding ? 'próprio / owned' : `aluguel / rent ${$k(s, money(s, HQ_LEVELS[s.player.hq].rent))}`], [l('Elenco', 'Roster'), String(sl.length)]],
+    kpi: [[l('Nível', 'Level'), HQ_LEVELS[s.player.hq].name], [l('Equipe', 'Staff'), String(s.player.staff.length)], [l('Departamentos', 'Departments'), String(depts)],
+      [l('Prédio', 'Building'), hq6(s).ownBuilding ? l('próprio', 'owned') : fmtL(l('aluguel {v}', 'rent {v}'), { v: $k(s, money(s, HQ_LEVELS[s.player.hq].rent)) })], [l('Elenco', 'Roster'), String(sl.length)]],
     now: rec.length ? fmtL(l('Gravando: {a}', 'Recording: {a}'), { a: rec.map((x) => s.acts[x.actId]?.name ?? '?').slice(0, 3).join(', ') }) : l('Escritórios abertos; estúdio livre.', 'Offices open; studio free.'),
   });
   // filiais
   for (const b of s.branches ?? []) add({ id: `br:${b.id}`, kind: 'branch', name: b.name, city: b.city, lvl: b.level + 1, since: st.born[`br:${b.id}`] ?? s.year, goto: { area: 'hq' },
-    kpi: [[l('Nível', 'Level'), BRANCH_LEVELS[b.level]?.name.pt ?? '?'], [l('Cidade', 'City'), cname(b.city)], [l('Aluguel', 'Rent'), $k(s, money(s, BRANCH_LEVELS[b.level]?.rent ?? 0))]], staff: BRANCH_LEVELS[b.level]?.staff });
+    kpi: [[l('Nível', 'Level'), BRANCH_LEVELS[b.level]?.name ?? '?'], [l('Cidade', 'City'), cname(b.city)], [l('Aluguel', 'Rent'), $k(s, money(s, BRANCH_LEVELS[b.level]?.rent ?? 0))]], staff: BRANCH_LEVELS[b.level]?.staff });
   // empreendimentos (ventures9)
   for (const v of ventures(s).list) {
     const k = VK[v.kind];
@@ -226,7 +226,7 @@ export function buildings18(s: GameState): Bld18[] {
     const vv = lv.venue;
     const h = vv.history[vv.history.length - 1];
     add({ id: 'lv:venue', kind: 'venue', name: vv.name, city: vv.cityId, lvl: vv.kind === 'club' ? 1 : vv.kind === 'theater' ? 3 : 5, since: vv.boughtYear, goto: { area: 'cp17-venue' },
-      kpi: [[l('Tipo', 'Type'), vv.kind], [l('Acústica', 'Acoustics'), String(Math.round(vv.acoustics))], [l('Ocupação', 'Occupancy'), h ? `${Math.round(h.occupancy * 100)}%` : '—']],
+      kpi: [[l('Tipo', 'Type'), vv.kind === 'club' ? l('clube', 'club') : vv.kind === 'theater' ? l('teatro', 'theatre') : l('arena', 'arena')], [l('Acústica', 'Acoustics'), String(Math.round(vv.acoustics))], [l('Ocupação', 'Occupancy'), h ? `${Math.round(h.occupancy * 100)}%` : '—']],
       now: h ? fmtL(l('Último mês: receita {r}', 'Last month: revenue {r}'), { r: $k(s, h.revenue) }) : undefined });
   }
   const vfx = new Set(ventures(s).list.map((v) => v.fx).filter(Boolean));
@@ -249,7 +249,7 @@ export function buildings18(s: GameState): Bld18[] {
     kpi: [[l('Capacidade/semana', 'Capacity/week'), String(p.capacity)], [l('Terceiros', 'Contract units'), String(p.contractUnits)]],
     now: (s.x4.industry?.orders ?? []).some((o) => o.ready > s.week) ? fmtL(l('Prensando: {n} pedidos na fila', 'Pressing: {n} orders queued'), { n: (s.x4.industry?.orders ?? []).filter((o) => o.ready > s.week).length }) : undefined });
   // escritórios próprios no exterior (regions18)
-  for (const [sub, lc] of Object.entries(reg18(s).loc)) if (lc.mode === 'own') add({ id: `of:${sub}`, kind: 'office', name: subName18(sub).pt, city: `@${sub}`, zone: 'world', lvl: 2, since: lc.since, goto: { area: 'regions18' }, kpi: [[l('Região', 'Region'), subName18(sub).pt], [l('Desde', 'Since'), String(lc.since)]] });
+  for (const [sub, lc] of Object.entries(reg18(s).loc)) if (lc.mode === 'own') add({ id: `of:${sub}`, kind: 'office', name: subName18(sub).pt, city: `@${sub}`, zone: 'world', lvl: 2, since: lc.since, goto: { area: 'regions18' }, kpi: [[l('Região', 'Region'), subName18(sub)], [l('Desde', 'Since'), String(lc.since)]] });
   // banda da casa (sala de ensaio)
   const hb = sess18(s).hb;
   if (hb) add({ id: 'hb', kind: 'rehearsal', name: hb.name, city: s.config.homeCity, lvl: 1, since: hb.since, goto: { area: 'talent18', tab: ['talent18', 'band'] }, staff: hb.players.length,
@@ -260,7 +260,7 @@ export function buildings18(s: GameState): Bld18[] {
     kpi: [[l('Imprints', 'Imprints'), String(Object.keys(dl.imp).length)], [l('JVs', 'JVs'), String(dl.jv.length)]] });
   // subselos
   for (const sb of s.subLabels ?? []) if (sb.status !== 'closed') add({ id: `sb:${sb.id}`, kind: 'sublabel', name: sb.name, city: s.config.homeCity, lvl: clamp(1 + Math.floor(sb.roster.length / 3), 1, 3), goto: { area: 'business', tab: ['business-business', 'subs'] },
-    kpi: [[l('Elenco', 'Roster'), String(sb.roster.length)], [l('Caixa', 'Cash'), $k(s, sb.cash)], [l('Situação', 'Status'), sb.status]], note: sb.status === 'distress' ? l('Em crise financeira.', 'In financial distress.') : undefined });
+    kpi: [[l('Elenco', 'Roster'), String(sb.roster.length)], [l('Caixa', 'Cash'), $k(s, sb.cash)], [l('Situação', 'Status'), sb.status === 'distress' ? l('em crise', 'in distress') : l('ativo', 'active')]], note: sb.status === 'distress' ? l('Em crise financeira.', 'In financial distress.') : undefined });
   // casa do dono
   const ow = P(s).owner; // sem criar o dono (não mexe na semente)
   if (ow && ow.house >= 0 && HOUSES[ow.house]) {

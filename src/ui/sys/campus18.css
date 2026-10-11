@@ -74,7 +74,11 @@
 @media (max-width: 640px) {
   .w19-frame { padding: 4px; margin: 6px 0; }
   .w19-bar .btn { font-size: 12px; padding: 3px 7px; min-height: 30px; }
-  .w19-pop { z-index: 60; position: fixed !important; left: 8px !important; right: 8px; width: auto !important; top: auto !important; bottom: 8px !important; max-height: 62vh; }
   .w19-legend { left: 8px; right: 8px; max-width: none; }
 }
 .c18-thumbbtn { max-width: 640px; margin: 0 auto; }
+/* r19: folha inferior no celular (presa ao rodapé da tela; o mapa continua visível acima) */
+.w19-pop.w19-sheet { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 60vh; overflow: auto; z-index: 1000; border-radius: 12px 12px 0 0; border-width: 2px 0 0; padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
+/* r19: enquanto um popup do mapa está aberto, cartões de tutorial e dicas saem da frente */
+body.w19-open .tutorial, body.w19-open .tip18 { display: none; }
+@media (max-width: 640px) { .tutorial { left: 0.5rem; right: 0.5rem; bottom: 0.5rem; max-width: none; max-height: 45vh; overflow: auto; } }

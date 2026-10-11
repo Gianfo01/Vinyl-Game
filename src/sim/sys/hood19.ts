@@ -67,12 +67,12 @@ registerExplain('h19.hood', (s) => {
   const x = hoodStats19(s);
   const parts: WhyPart[] = [
     ...x.parts.map(([label, value]) => ({ label, value, fmt: 'num' as const })),
-    { label: l('Fase', 'Stage'), value: STAGE19[x.stage].pt, fmt: 'text', note: l('Barato e artístico → na moda → caro: o ciclo de toda cena.', 'Cheap and artsy → hip → pricey: every scene\'s cycle.') },
+    { label: l('Gentrificação (0–100)', 'Gentrification (0–100)'), value: Math.round(x.age * 100), fmt: 'num', note: fmtL(l('{s} — barato e artístico → na moda → caro: o ciclo de toda cena.', '{s} — cheap and artsy → hip → pricey: every scene\'s cycle.'), { s: STAGE19[x.stage] }) },
     { label: l('Aluguel (× da média)', 'Rent (× average)'), value: x.rent, fmt: 'mult', tone: x.rent > 1 ? 'bad' : 'good', note: fmtL(l('Ajuste mensal no aluguel da sede: {v}.', 'Monthly HQ rent adjustment: {v}.'), { v: hq6(s).ownBuilding ? l('nenhum (prédio próprio)', 'none (owned building)').pt : $k(rentAdj19(s)) }) },
     { label: l('Clima da cena', 'Scene vibe'), value: x.vibe, fmt: 'num', tone: x.vibe >= 65 ? 'good' : '', note: l('65+: o elenco da cidade perde 1 de estresse por mês.', '65+: the local roster sheds 1 stress a month.') },
     { label: l('Segurança', 'Safety'), value: x.safety, fmt: 'num', tone: x.safety < 45 ? 'bad' : '', note: l('Abaixo de 45: mais chance de reclamações e de enchente sem manutenção.', 'Below 45: more complaints and floods without upkeep.') },
   ];
-  return { title: x.h.n, value: STAGE19[x.stage].pt, fmt: 'text', parts, note: x.h.d };
+  return { title: x.h.n, value: Math.round(x.age * 100), fmt: 'num', parts, note: x.h.d };
 });
 
 // ---------------------------------------------------------------- vizinhos
@@ -124,7 +124,7 @@ export function nbPop19(s: GameState, lot: number): Pop19 | null {
   const x = nb19(s).find((v) => v.lot === lot);
   if (!x) return null;
   const d = NB19[x.k];
-  const rows: PopRow19[] = [{ k: l('Lote', 'Lot'), v: LOTS18[lot].name.pt, why: ['w19.lot', { lot }] }, { k: l('Bairro', 'Area'), v: hoodStats19(s).h.n.pt, why: ['h19.hood', {}] }];
+  const rows: PopRow19[] = [{ k: l('Lote', 'Lot'), v: LOTS18[lot].name, why: ['w19.lot', { lot }] }, { k: l('Bairro', 'Area'), v: hoodStats19(s).h.n, why: ['h19.hood', {}] }];
   if (x.sale) rows.push({ k: l('Preço pedido', 'Asking price'), v: $k(x.price), why: ['h19.hood', {}] });
   const acts: PopAct19[] = [];
   acts.push({ id: 'go', label: d.go.label ?? l('Abrir', 'Open'), go: x.who ? { area: 'labels', label: d.go.label } : d.go, tone: 'ghost' });
@@ -147,7 +147,7 @@ export function lmPop19(s: GameState, id: string, year = s.year): Pop19 | null {
     acts.push({ id: 'go', label: l('Marcar show aqui', 'Book a show here'), go: { area: 'tour12', label: l('Shows e turnês', 'Shows and tours') }, tone: 'primary' });
   }
   if (x.music === 'studio') notes.push({ t: l('Estúdio lendário: o bairro atrai músicos de sessão (clima da cena +4).', 'Legendary studio: the area draws session players (scene vibe +4).'), tone: 'good' });
-  return { kind: 'lot', id: `lm:${x.id}`, title: x.n.pt, icon: 'star', tags: [l('Marco da cidade', 'City landmark')], rows, notes, acts, opts: [] };
+  return { kind: 'lot', id: `lm:${x.id}`, title: x.n, icon: 'star', tags: [l('Marco da cidade', 'City landmark')], rows, notes, acts, opts: [] };
 }
 
 // ---------------------------------------------------------------- eventos do bairro
@@ -203,7 +203,7 @@ export function evPop19(s: GameState, id: string): Pop19 | null {
   if (!e) return null;
   const d = EV19[e.k];
   const acts: PopAct19[] = d.ch.map(([c, label]) => { const cost = evCost19(s, e.k, c); return { id: `ev:${c}`, label, cost: e.k === 'shoot' && c === 'allow' ? -money(s, 3000) : cost || undefined, tone: c === d.ch[0][0] ? 'primary' : 'ghost', dis: cost && s.player.cash < cost ? l('Caixa insuficiente.', 'Not enough cash.') : undefined }; });
-  return { kind: 'lot', id: `ev:${e.id}`, title: d.n.pt, icon: 'warning', tags: [l('Evento do bairro', 'Neighbourhood event')], rows: [], notes: [{ t: d.d }, ...d.ch.map(([, n, eff]) => ({ t: fmtL(l('{n}: {e}', '{n}: {e}'), { n, e: eff }) }))], acts, opts: [] };
+  return { kind: 'lot', id: `ev:${e.id}`, title: d.n, icon: 'warning', tags: [l('Evento do bairro', 'Neighbourhood event')], rows: [], notes: [{ t: d.d }, ...d.ch.map(([, n, eff]) => ({ t: fmtL(l('{n}: {e}', '{n}: {e}'), { n, e: eff }) }))], acts, opts: [] };
 }
 export function actEv19(s: GameState, id: string, c: string): L | null {
   const e = live19ev(s).find((x) => x.id === id);

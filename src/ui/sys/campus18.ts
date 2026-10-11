@@ -20,6 +20,7 @@ import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, type Scene18 } 
 import { registerArea } from '../registry';
 import { store } from '../store';
 import { go18 } from './inbox18';
+import { endTour18 } from '../tutorial18';
 import { chips, ic, stat } from '../vis';
 import './campus18.css';
 
@@ -121,10 +122,10 @@ function popBody(v: View, p: Pop19, close: () => void, rerun: () => void): HTMLE
   const s = v.s;
   const anyQ = p.opts.some((o) => o.q) || p.acts.some((a) => a.ask === 'q');
   return h('div', { class: 'w19-pop-in' },
-    h('header', null, h('b', null, ic(p.icon), ' ', p.title), h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
+    h('header', null, h('b', null, ic(p.icon), ' ', tx(p.title)), h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
     h('div', { class: 'row wrap w19-tags' }, p.tags.map((x) => pill(tx(x)))),
     p.prog !== undefined ? h('div', { class: 'c18-bar', role: 'progressbar', 'aria-valuenow': Math.round(p.prog * 100), 'aria-valuemin': 0, 'aria-valuemax': 100 }, h('i', { style: `width:${Math.round(p.prog * 100)}%` })) : null,
-    p.rows.length ? h('table', { class: 'c18-kpi small' }, p.rows.map((r) => h('tr', { class: r.tone ?? '' }, h('td', null, t(r.k)), h('td', null, r.why ? why18(s, r.why[0], r.why[1], r.v) : r.v)))) : null,
+    p.rows.length ? h('table', { class: 'c18-kpi small' }, p.rows.map((r) => h('tr', { class: r.tone ?? '' }, h('td', null, t(r.k)), h('td', null, r.why ? why18(s, r.why[0], r.why[1], tx(r.v)) : r.go ? h('button', { type: 'button', class: 'linklike', onclick: () => { close(); go18(r.go!); } }, tx(r.v), ' ↗') : tx(r.v))))) : null,
     p.notes.length ? h('ul', { class: 'w19-notes small' }, p.notes.map((n) => h('li', { class: n.tone ?? '' }, tx(n.t)))) : null,
     anyQ ? contractorPick(rerun) : null,
     p.opts.length ? h('div', { class: 'w19-opts' }, h('b', { class: 'small' }, t(l('Construir aqui', 'Build here'))), p.opts.map((o) => h('div', { class: `w19-opt ${o.dis ? 'dis' : ''}` },
@@ -142,6 +143,7 @@ function popBody(v: View, p: Pop19, close: () => void, rerun: () => void): HTMLE
 
 function mapFrame(v: View): HTMLElement {
   const s = v.s;
+  for (const old of document.querySelectorAll('body > .w19-pop')) old.remove(); // folha antiga (celular) de um render anterior
   const frame = h('div', { class: 'w19-frame' });
   const vp = h('div', { class: 'w19-vp' });
   const zoom = h('div', { class: 'w19-zoom' });
@@ -149,26 +151,49 @@ function mapFrame(v: View): HTMLElement {
   const tip = h('div', { class: 'c18-tip', hidden: true, role: 'tooltip' });
   const pop = h('div', { class: 'w19-pop', role: 'dialog', 'aria-modal': 'false', hidden: true });
   const pct = (x: number, w: number) => `${((x / w) * 100).toFixed(2)}%`;
+  /** Posiciona dentro da parte VISÍVEL do quadro: abaixo, acima, ao lado ou (sem espaço) no topo com rolagem interna. */
+  const place = (hs: HTMLElement | null) => {
+    const fr = frame.getBoundingClientRect(), r = hs?.getBoundingClientRect() ?? fr;
+    const visTop = Math.max(8, -fr.top + 8), visBot = Math.min(fr.height - 8, window.innerHeight - fr.top - 8);
+    const room = Math.max(160, visBot - visTop);
+    const pw = Math.min(340, fr.width - 16);
+    pop.style.width = `${pw}px`; pop.style.maxHeight = `${room}px`; pop.style.bottom = '';
+    const ph = Math.min(pop.scrollHeight + 4, room);
+    const hx = r.left - fr.left, hy = r.top - fr.top, hw = r.width, hh = r.height;
+    let left = Math.max(8, Math.min(fr.width - pw - 8, hx + hw / 2 - pw / 2)), top: number;
+    if (hy + hh + 6 + ph <= visBot) top = hy + hh + 6;
+    else if (hy - 6 - ph >= visTop) top = hy - 6 - ph;
+    else {
+      top = Math.max(visTop, Math.min(visBot - ph, hy + hh / 2 - ph / 2));
+      if (hx + hw + 8 + pw <= fr.width - 8) left = hx + hw + 8; else if (hx - 8 - pw >= 8) left = hx - 8 - pw;
+    }
+    pop.style.left = `${left}px`; pop.style.top = `${top}px`;
+  };
   let lastHs: HTMLElement | null = null;
-  const close = () => { ui.pop = undefined; v.scene.sel = undefined; pop.hidden = true; pop.replaceChildren(); lastHs?.focus(); };
+  const close = () => { ui.pop = undefined; v.scene.sel = undefined; pop.hidden = true; pop.replaceChildren(); document.body.classList.remove('w19-open'); lastHs?.focus(); };
   const open = (id: string, hs: HTMLElement | null) => {
     const p = popFor(v, id);
     if (!p) { close(); return; }
     ui.pop = id; lastHs = hs; v.scene.sel = id; tip.hidden = true;
     const rerun = () => open(id, hs);
     pop.replaceChildren(popBody(v, p, close, rerun));
-    pop.setAttribute('aria-label', p.title);
+    pop.setAttribute('aria-label', tx(p.title));
     pop.hidden = false;
-    // posição: perto do ponto clicado, dentro do quadro (no celular vira folha inferior via CSS)
-    const fr = frame.getBoundingClientRect(), r = hs?.getBoundingClientRect() ?? fr;
-    const pw = Math.min(340, fr.width - 16);
-    let left = r.left - fr.left + r.width / 2 - pw / 2;
-    left = Math.max(8, Math.min(fr.width - pw - 8, left));
-    pop.style.width = `${pw}px`; pop.style.left = `${left}px`;
-    pop.style.maxHeight = `${Math.max(200, fr.height - 16)}px`;
-    const ph = pop.offsetHeight, below = r.bottom - fr.top + 6, above = r.top - fr.top - 6;
-    const top = below + ph <= fr.height - 8 ? below : above - ph >= 8 ? above - ph : Math.max(8, Math.min(fr.height - ph - 8, below));
-    pop.style.top = `${top}px`; pop.style.bottom = '';
+    // r19: o popup não cobre nem é coberto pelo tutorial (fecha o tour; o cartão antigo some enquanto o popup está aberto)
+    endTour18();
+    document.body.classList.add('w19-open');
+    // celular: folha presa no rodapé da TELA (fora de ancestrais com transform), mapa visível acima
+    if (window.matchMedia?.('(max-width: 640px)').matches) {
+      if (pop.parentElement !== document.body) document.body.appendChild(pop);
+      pop.classList.add('w19-sheet');
+      pop.removeAttribute('style');
+      // o ponto tocado sobe para a faixa visível acima da folha (funciona com qualquer contêiner de rolagem)
+      if (hs) { const r = hs.getBoundingClientRect(); if (r.top < 8 || r.bottom > window.innerHeight * 0.4) hs.scrollIntoView({ block: 'start', behavior: 'auto' }); }
+    } else {
+      if (pop.parentElement !== frame) frame.appendChild(pop);
+      pop.classList.remove('w19-sheet');
+      place(hs);
+    }
     (pop.querySelector('.w19-pop-in button:not(.w19-x):not([disabled]), .w19-x') as HTMLElement | null)?.focus({ preventScroll: true });
   };
   const hot = (id: string, cls: string, box: [number, number, number, number], label: string, txt = '') => {
@@ -237,8 +262,9 @@ function mapFrame(v: View): HTMLElement {
   frame.append(bar, mv ?? '', vp, tip, pop);
   if (ui.legend) frame.append(legend());
   // fechar: Esc ou clique fora
-  frame.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pop.hidden) { e.stopPropagation(); close(); } });
-  const outside = (e: Event) => { if (!frame.isConnected) { document.removeEventListener('pointerdown', outside, true); return; } if (!pop.hidden && !pop.contains(e.target as Node) && !(e.target as HTMLElement).closest?.('.w19-hs')) close(); };
+  const esc = (e: KeyboardEvent) => { if (!frame.isConnected) { document.removeEventListener('keydown', esc, true); return; } if (e.key === 'Escape' && !pop.hidden) { e.stopPropagation(); close(); } };
+  document.addEventListener('keydown', esc, true);
+  const outside = (e: Event) => { if (!frame.isConnected) { document.removeEventListener('pointerdown', outside, true); if (pop.parentElement === document.body) pop.remove(); document.body.classList.remove('w19-open'); return; } if (!pop.hidden && !pop.contains(e.target as Node) && !(e.target as HTMLElement).closest?.('.w19-hs')) close(); };
   document.addEventListener('pointerdown', outside, true);
   if (ui.pop) requestAnimationFrame?.(() => { const hs = layer.querySelector(`[data-id="${CSS.escape(ui.pop!)}"]`) as HTMLElement | null; if (ui.pop) open(ui.pop, hs); });
   return frame;
