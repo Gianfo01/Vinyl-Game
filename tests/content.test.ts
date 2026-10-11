@@ -44,7 +44,7 @@ describe('gêneros', () => {
     expect(new Set(GENRES.map((g) => g.id)).size).toBe(GENRES.length);
     for (const g of GENRES) {
       expect(familyIds.has(g.family), g.id).toBe(true);
-      expect(g.born).toBeGreaterThanOrEqual(1920);
+      expect(g.born).toBeGreaterThanOrEqual(1880); // r18 era1889: ragtime, cakewalk, barbershop… nascem antes de 1920
       expect(g.born).toBeLessThanOrEqual(2040);
       for (const p of g.parents) {
         expect(genreById[p], `${g.id} <- ${p}`).toBeDefined();
