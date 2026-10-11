@@ -10,6 +10,7 @@ import { FREE_POINTS, PRONOUNS, VISUALS, playerTraitById, type OwnerAttrId } fro
 import { BRANCHES, SKILL_TREE, START_SKILL_POINTS, canBuySkill, lifestyleById, lifestyleOf, skillById, validStartSkills } from '../sim/sys/persona/skills';
 import { careerOfSpec, deriveAttrs, pointsUsed } from '../sim/sys/persona';
 import { ORIGINS, originById } from '../sim/sys/identity/data';
+import { defaultCharacter20 } from '../sim/past20';
 import { POLS, POL_HINT, RELS, polById, relById } from '../sim/beliefs';
 import { ROLE_NAMES, type Role } from '../sim/sys/talent/attrs';
 import type { Appearance, CharacterSpec, RunConfig } from '../sim/types';
@@ -74,8 +75,10 @@ export function skillPicker(ch: CharacterSpec, onChange: () => void): HTMLElemen
   return box;
 }
 
-export function characterCard(cfg: RunConfig): HTMLElement {
-  const ch = (cfg.character ??= { name: '', age: 30, background: 'musician', career: 'musician', role: 'guitar', traits: [], style: 'mentor', visual: 'casual', pronoun: 'they', points: {}, sex: 'x', skills: [] });
+/** r20c (N1): `path: false` deixa a trajetória para o bloco "Passado profissional" (mesmos campos da ficha). */
+export function characterCard(cfg: RunConfig, opts: { path?: boolean } = {}): HTMLElement {
+  const withPath = opts.path !== false;
+  const ch = (cfg.character ??= defaultCharacter20());
   ch.traits ??= [];
   ch.points ??= {};
   ch.skills ??= [];
@@ -169,10 +172,10 @@ export function characterCard(cfg: RunConfig): HTMLElement {
       ),
       h('div', null, h('small', { class: 'muted' }, t(l('Aparência', 'Appearance')), ' ', helpTip('look')), lookBox),
     ),
-    h('h4', null, ...hl(l('Trajetória profissional', 'Professional path'), 'path')),
+    ...(!withPath ? [] : [h('h4', null, ...hl(l('Trajetória profissional', 'Professional path'), 'path')),
     h('p', { class: 'muted small' }, t(l('Como você chegou à indústria. Cada trajetória traz uma base (atributos, instrumento, patrimônio e bônus), contatos, vantagens e um preço. O estilo de liderança nasce depois, das suas decisões (área Identidade, tecla L).', 'How you got into the industry. Each path brings a base (attributes, instrument, wealth and bonuses), contacts, advantages and a price. Your leadership style emerges later from your decisions (Identity area, key L).'))),
     careerBox,
-    careerInfo,
+    careerInfo]),
     h('h4', null, ...hl(l('Traços de personalidade', 'Personality traits'), 'traits')),
     h('p', { class: 'muted small' }, t(l('Escolha até 3. Em verde, o efeito em jogo; em vermelho, por que um traço está bloqueado. ✦ = dom hereditário.', 'Pick up to 3. Green shows the in-game effect; red shows why a trait is blocked. ✦ = inheritable gift.'))),
     traitBox,
