@@ -10,7 +10,7 @@ export function drawLandmark19(p: Px, sh: LmShape, x: number, y: number, c: LmCo
   const B = c.body, H = c.hi, D = c.dark;
   const r = (x0: number, y0: number, w: number, h: number, col = B) => p.rect(Math.round(x0), Math.round(y0), Math.round(w), Math.round(h), col);
   switch (sh) {
-    case 'statue': { p.ellipse(x, y, 18, 14, shade(B, -0.1)); r(x - 1, y - 30, 3, 18, H); r(x - 7, y - 26, 15, 2, H); p.disc(x + 0.5, y - 31, 1.5, H); return [x - 18, y - 33, x + 18, y]; }
+    case 'statue': { p.ellipse(x, y, 16, 10, shade(B, -0.1)); r(x - 1, y - 30, 3, 18, H); r(x - 7, y - 26, 15, 2, H); p.disc(x + 0.5, y - 31, 1.5, H); return [x - 18, y - 33, x + 18, y]; }
     case 'cable': { p.ellipse(x + 8, y, 12, 26, shade(B, -0.08)); p.ellipse(x - 14, y, 9, 14, shade(B, -0.12)); p.line(x - 14, y - 14, x + 6, y - 25, D); r(x - 5, y - 21, 3, 2, c.lamp); return [x - 23, y - 26, x + 20, y]; }
     case 'bridge': { r(x - 24, y - 6, 49, 2, D); for (const tx of [x - 14, x + 14]) r(tx - 1, y - 22, 3, 22, B); for (let i = -24; i <= 24; i++) { const a = Math.abs(i); p.set(x + i, Math.round(a <= 14 ? y - 22 + (196 - i * i) / 14 : y - 22 + ((a - 14) * 15) / 10), H); } return [x - 24, y - 22, x + 25, y]; }
     case 'tbridge': { r(x - 22, y - 7, 45, 2, D); for (const tx of [x - 11, x + 11]) { r(tx - 3, y - 20, 7, 20, B); p.poly([[tx - 4, y - 20], [tx + 4, y - 20], [tx, y - 26]], D); } r(x - 8, y - 17, 17, 2, H); return [x - 22, y - 26, x + 23, y]; }

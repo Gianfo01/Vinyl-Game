@@ -154,7 +154,7 @@ function mapFrame(v: View): HTMLElement {
   const open = (id: string, hs: HTMLElement | null) => {
     const p = popFor(v, id);
     if (!p) { close(); return; }
-    ui.pop = id; lastHs = hs; v.scene.sel = id;
+    ui.pop = id; lastHs = hs; v.scene.sel = id; tip.hidden = true;
     const rerun = () => open(id, hs);
     pop.replaceChildren(popBody(v, p, close, rerun));
     pop.setAttribute('aria-label', p.title);
@@ -165,9 +165,10 @@ function mapFrame(v: View): HTMLElement {
     let left = r.left - fr.left + r.width / 2 - pw / 2;
     left = Math.max(8, Math.min(fr.width - pw - 8, left));
     pop.style.width = `${pw}px`; pop.style.left = `${left}px`;
-    const below = r.bottom - fr.top + 6, above = r.top - fr.top - 6;
-    pop.style.top = ''; pop.style.bottom = '';
-    if (below + 220 < fr.height || above < 220) pop.style.top = `${Math.min(below, Math.max(8, fr.height - 260))}px`; else pop.style.bottom = `${fr.height - above}px`;
+    pop.style.maxHeight = `${Math.max(200, fr.height - 16)}px`;
+    const ph = pop.offsetHeight, below = r.bottom - fr.top + 6, above = r.top - fr.top - 6;
+    const top = below + ph <= fr.height - 8 ? below : above - ph >= 8 ? above - ph : Math.max(8, Math.min(fr.height - ph - 8, below));
+    pop.style.top = `${top}px`; pop.style.bottom = '';
     (pop.querySelector('.w19-pop-in button:not(.w19-x):not([disabled]), .w19-x') as HTMLElement | null)?.focus({ preventScroll: true });
   };
   const hot = (id: string, cls: string, box: [number, number, number, number], label: string, txt = '') => {
