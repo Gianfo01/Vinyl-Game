@@ -172,4 +172,6 @@ import './tribute19';
 import './session19';
 // Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
 import './era19';
+// Rodada 19 (onda 3, T9): Imprensa e fanzines (zines19) e Fraudes e sósias (fakes19).
+import './media19';
 import './core18';

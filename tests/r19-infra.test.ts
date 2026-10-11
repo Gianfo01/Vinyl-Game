@@ -243,6 +243,9 @@ const INBOX_RARE19: Record<string, string> = {
   l19b_betray: 'traição de pacto: exige pacto ativo e calor 35+',
   l19b_delay: 'obra do campus atrasada: só com obra própria em andamento',
   l19b_ins: 'prédio danificado (incêndio/desastre): raro',
+  fk19_ghost: 'banda falsa com o nome de um ato SEU: exige ato do selo famoso (55+) separado/em hiato ou cena em febre',
+  fk19_whistle: 'cantor ameaça contar: só com voz-fantasma do jogador e risco 40+',
+  zn19_coi: 'conflito de interesse: exige revista/fanzine próprio e lançamentos seguidos',
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 
