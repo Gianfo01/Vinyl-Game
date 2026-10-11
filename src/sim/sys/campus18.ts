@@ -38,7 +38,9 @@ import { v17, vdef } from './venues17';
 export type BKind = 'hq' | 'branch' | 'studio' | 'venue' | 'fest' | 'school' | 'museum' | 'publisher' | 'plant' | 'office' | 'media' | 'platform'
   | 'booking' | 'rehearsal' | 'imprint' | 'sublabel' | 'home' | 'store' | 'sign' | 'dorm' | 'park';
 export type BState = 'planned' | 'building' | 'open' | 'renovating' | 'damaged' | 'closed' | 'sold';
-export type Style18 = 'victorian' | 'brick' | 'deco' | 'midcentury' | 'brutal' | 'postmod' | 'glass' | 'eco';
+export type Style18 = 'victorian' | 'brick' | 'deco' | 'midcentury' | 'brutal' | 'postmod' | 'glass' | 'eco' | 'gothic' | 'beaux' | 'tropical' | 'loft' | 'neon';
+/** r19 (world19): o primeiro lugar do selo, antes de qualquer ampliação */
+export type Place19 = 'parlour' | 'backroom' | 'garage' | 'bedroom' | 'basement' | 'homestudio';
 export type Vehicle18 = 'cart' | 'modelT' | 'round' | 'fin' | 'boxy' | 'suv' | 'pod';
 
 export interface Bld18 {
@@ -60,6 +62,10 @@ export interface Bld18 {
   note?: L;
   /** prédio em mau estado (conservação baixa) */
   worn?: boolean;
+  /** r19 (world19): estilo escolhido pelo jogador (senão, o da época de `sy`) */
+  style?: Style18;
+  /** r19: o lugarzinho do começo (garagem, quarto…) em vez da sede */
+  place?: Place19;
 }
 
 export type PKind = 'store' | 'sign' | 'dorm' | 'park' | 'reno';
@@ -117,7 +123,28 @@ export const STYLES18: { id: Style18; from: number; name: L; desc: L }[] = [
   { id: 'eco', from: 2024, name: l('Eco-futurista', 'Eco-futurist'), desc: l('Telhado verde, painéis solares, madeira e hologramas.', 'Green roof, solar panels, timber and holograms.') },
 ];
 export const styleOf18 = (y: number): Style18 => { let r: Style18 = 'victorian'; for (const x of STYLES18) if (y >= x.from) r = x.id; return r; };
-export const styleName18 = (id: Style18): L => STYLES18.find((x) => x.id === id)!.name;
+/** r19 (world19): catálogo de estilos que o jogador escolhe ao construir, ampliar ou reformar — só os que já existiam no ano.
+ *  cost = multiplicador da obra; upk = da manutenção; rep = reputação única ao inaugurar; gent = empurra a gentrificação do bairro. Nada domina: o barato não dá prestígio, o vistoso encarece e gentrifica. */
+export interface StyDef18 { id: Style18; from: number; name: L; desc: L; cost: number; upk: number; rep?: ['artistic' | 'commercial' | 'artists' | 'institutional', number]; gent: number; eff: L }
+export const STYLE_CAT18: StyDef18[] = [
+  { id: 'victorian', from: 0, name: l('Vitoriano', 'Victorian'), desc: STYLES18[0].desc, cost: 1, upk: 1.1, rep: ['institutional', 1], gent: 0, eff: l('Tradição: +1 reputação institucional; manutenção +10%.', 'Tradition: +1 institutional reputation; upkeep +10%.') },
+  { id: 'gothic', from: 0, name: l('Gótico', 'Gothic revival'), desc: l('Arcos ogivais, pináculos e vitrais.', 'Pointed arches, pinnacles and stained glass.'), cost: 1.25, upk: 1.2, rep: ['artistic', 2], gent: 0.02, eff: l('Imponente: +2 reputação artística; obra +25%, manutenção +20%.', 'Imposing: +2 artistic reputation; works +25%, upkeep +20%.') },
+  { id: 'beaux', from: 0, name: l('Neoclássico', 'Beaux-Arts'), desc: l('Pedra clara, colunas e cúpula de cobre.', 'Pale stone, columns and a copper dome.'), cost: 1.2, upk: 1.1, rep: ['institutional', 2], gent: 0.03, eff: l('Respeitável: +2 reputação institucional; obra +20%; valoriza o bairro.', 'Respectable: +2 institutional reputation; works +20%; lifts the area.') },
+  { id: 'brick', from: 0, name: l('Tijolo industrial', 'Industrial brick'), desc: STYLES18[1].desc, cost: 0.85, upk: 0.9, gent: -0.02, eff: l('Barato e honesto: obra −15%, manutenção −10%; sem prestígio extra.', 'Cheap and honest: works −15%, upkeep −10%; no extra prestige.') },
+  { id: 'tropical', from: 0, name: l('Colonial tropical', 'Tropical colonial'), desc: l('Paredes caiadas, janelas com venezianas e telhado de barro.', 'Whitewashed walls, shuttered windows and a clay-tile roof.'), cost: 0.95, upk: 0.95, rep: ['artists', 1], gent: 0, eff: l('Acolhedor: +1 reputação com artistas; obra −5%.', 'Welcoming: +1 reputation with artists; works −5%.') },
+  { id: 'deco', from: 1920, name: STYLES18[2].name, desc: STYLES18[2].desc, cost: 1.15, upk: 1, rep: ['commercial', 2], gent: 0.02, eff: l('Glamour: +2 reputação comercial; obra +15%.', 'Glamour: +2 commercial reputation; works +15%.') },
+  { id: 'midcentury', from: 1940, name: STYLES18[3].name, desc: STYLES18[3].desc, cost: 1, upk: 0.95, rep: ['commercial', 1], gent: 0.01, eff: l('Moderno e leve: +1 reputação comercial; manutenção −5%.', 'Modern and light: +1 commercial reputation; upkeep −5%.') },
+  { id: 'brutal', from: 1955, name: STYLES18[4].name, desc: STYLES18[4].desc, cost: 0.9, upk: 0.85, rep: ['artistic', 1], gent: -0.03, eff: l('Concreto: obra −10%, manutenção −15%; o bairro torce o nariz (gentrifica menos).', 'Concrete: works −10%, upkeep −15%; the area frowns (gentrifies less).') },
+  { id: 'loft', from: 1970, name: l('Loft industrial', 'Industrial loft'), desc: l('Galpão convertido: janelões de aço, caixa d\'água e terraço.', 'Converted warehouse: steel windows, a water tank and a roof deck.'), cost: 1, upk: 1, rep: ['artists', 2], gent: 0.04, eff: l('Cena: +2 reputação com artistas; gentrifica o bairro.', 'Scene cred: +2 reputation with artists; gentrifies the area.') },
+  { id: 'postmod', from: 1975, name: STYLES18[5].name, desc: STYLES18[5].desc, cost: 1.05, upk: 1, rep: ['commercial', 1], gent: 0.02, eff: l('Divertido: +1 reputação comercial.', 'Playful: +1 commercial reputation.') },
+  { id: 'neon', from: 1980, name: l('Neon anos 80', '80s neon'), desc: l('Fachada escura com faixas de neon rosa e azul.', 'A dark façade with pink and blue neon bands.'), cost: 1.05, upk: 1.15, rep: ['commercial', 2], gent: 0.01, eff: l('Chamativo: +2 reputação comercial; manutenção +15% (luz).', 'Flashy: +2 commercial reputation; upkeep +15% (power).') },
+  { id: 'glass', from: 1985, name: STYLES18[6].name, desc: STYLES18[6].desc, cost: 1.3, upk: 1.1, rep: ['institutional', 2], gent: 0.05, eff: l('Corporativo: +2 reputação institucional; obra +30%; gentrifica rápido.', 'Corporate: +2 institutional reputation; works +30%; gentrifies fast.') },
+  { id: 'eco', from: 2000, name: STYLES18[7].name, desc: STYLES18[7].desc, cost: 1.2, upk: 0.8, rep: ['artists', 1], gent: 0.03, eff: l('Verde: manutenção −20%, +1 reputação com artistas; obra +20%.', 'Green: upkeep −20%, +1 reputation with artists; works +20%.') },
+];
+export const styleDef18 = (id: Style18): StyDef18 => STYLE_CAT18.find((x) => x.id === id) ?? STYLE_CAT18[0];
+/** Estilos que já existiam no ano (nada do futuro). */
+export const stylesAt18 = (year: number): StyDef18[] => STYLE_CAT18.filter((x) => x.from <= year);
+export const styleName18 = (id: Style18): L => styleDef18(id).name;
 export const vehicleOf18 = (y: number): Vehicle18 => (y < 1910 ? 'cart' : y < 1935 ? 'modelT' : y < 1958 ? 'round' : y < 1975 ? 'fin' : y < 1996 ? 'boxy' : y < 2025 ? 'suv' : 'pod');
 
 export const KIND18: Record<BKind, { name: L; icon: string }> = {
@@ -512,13 +539,14 @@ const SC: BState[] = ['planned', 'building', 'open', 'renovating', 'damaged', 'c
 /** Codifica: kind.lvl.state.sy.lot.prog|zone|city|name ; separados por ';' */
 export function encode18(s: GameState, bs: Bld18[]): string {
   const lots = layout18(s, bs);
-  return bs.map((b) => [KC.indexOf(b.kind), b.lvl, SC.indexOf(b.st), b.sy, lots.get(b.id) ?? -1, Math.round((b.prog ?? 1) * 9), b.zone === 'world' ? 1 : 0, b.city, b.name.replace(/[;|]/g, ' ').slice(0, 40), b.id].join('|')).join(';');
+  return bs.map((b) => [KC.indexOf(b.kind), b.lvl, SC.indexOf(b.st), b.sy, lots.get(b.id) ?? -1, Math.round((b.prog ?? 1) * 9), b.zone === 'world' ? 1 : 0, b.city, b.name.replace(/[;|]/g, ' ').slice(0, 40), b.id, b.style ?? '', b.place ?? ''].join('|')).join(';');
 }
 export function decode18(str: string): Bld18[] {
   if (!str) return [];
   return str.split(';').map((x) => {
-    const [k, lvl, st, sy, lot, pr, z, city, name, id] = x.split('|');
-    return { id: id ?? name, kind: KC[+k] ?? 'hq', lvl: +lvl, st: SC[+st] ?? 'open', since: +sy, sy: +sy, lot: +lot >= 0 ? +lot : undefined, prog: +pr / 9, zone: z === '1' ? 'world' : 'campus', city, name };
+    const [k, lvl, st, sy, lot, pr, z, city, name, id, sty, place] = x.split('|');
+    return { id: id ?? name, kind: KC[+k] ?? 'hq', lvl: +lvl, st: SC[+st] ?? 'open', since: +sy, sy: +sy, lot: +lot >= 0 ? +lot : undefined, prog: +pr / 9, zone: z === '1' ? 'world' : 'campus', city, name,
+      ...(sty ? { style: sty as Style18 } : {}), ...(place ? { place: place as Place19 } : {}) };
   });
 }
 export function snapshot18(s: GameState): void {
