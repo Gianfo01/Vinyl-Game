@@ -143,6 +143,7 @@ export function applyStarter19(s: GameState, id: string): L | null {
     }
     t = fmtL(l('Pacote inicial: {n} ({c}).', 'Starter package: {n} ({c}).'), { n: p.name, c: `$${Math.round(cost / 100).toLocaleString()}` });
   } else if (id === 'venue') {
+    if (liveOf(s).venue || s.year < 1920) return null;
     const full = money(s, 60000);
     const down = Math.min(Math.round(full * 0.3), Math.max(0, s.player.cash));
     creditLoan(s, full - down, 48, 'Crédito de fundação: clube arrendado');
