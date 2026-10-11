@@ -146,12 +146,10 @@ import './society18';
 import './long18';
 // Rodada 18 (cine18): storyboards de cerimônias e grandes momentos, Cinemateca e Legado póstumo.
 import './cine18';
-// Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 // Rodada 19 (Frente 6, T5): Mundo › Regiões e política (selos regionais, comuna, vistos, greves, campanhas, leis, celeiros).
 import './regions19';
 // Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
 import './market19a';
-import './core18';
 import './finance18';
 import './eras18';
 // Rodada 18 (artist18): Contratos do artista (selos NPC, extrato, equipe) e Sociedades.
@@ -162,9 +160,6 @@ import './campus18';
 import './decide18';
 import './home18';
 import './links18';
-// Rodada 18 (cine18): storyboards de cerimônias e grandes momentos, Cinemateca e Legado póstumo.
-import './cine18';
-// Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 // Rodada 18 (era1889): Mundo › Era acústica e a seção de partituras em Paradas.
 import './era1889';
 // Rodada 19 (Frente 8): calendário único (faixa + página), topo Hoje/Ameaças/Andamento e blocos com peso.
@@ -202,4 +197,5 @@ import './advance19';
 import './scenes19'; // r19 cenas: resultado da cerimônia só depois de vista
 // Rodada 19 (onda 5, A): pacote inicial no Novo Jogo, terreno do festival e Finanças do grupo (consolidado).
 import './careers19';
+// Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
