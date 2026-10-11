@@ -56,7 +56,7 @@ export function hoodStats19(s: GameState, year = s.year): HoodStats19 {
   const age = clamp(base + own, 0, 1);
   const lm = landmarksAt19(s.config.homeCity, year).filter((x) => x.music === 'venue' || x.music === 'studio').length;
   const vibe = Math.round(clamp(88 - 48 * age + lm * 4, 10, 100)), safety = Math.round(clamp(35 + 50 * age, 0, 100));
-  const rent = Math.round((0.7 + 0.9 * age) * 100) / 100;
+  const rent = Math.round((0.85 + 0.45 * age) * 100) / 100; // ±30% no máximo: efeito sentido sem quebrar o equilíbrio
   const parts: [L, number][] = [[fmtL(l('Anos desde que o bairro virou "{n}"', 'Years since the area became "{n}"'), { n: h.n }), Math.round(base * 100)], [l('Seus prédios valorizam a área', 'Your buildings lift the area'), Math.round(own * 100)]];
   return { h, age, stage: age < 0.4 ? 'artsy' : age < 0.75 ? 'hip' : 'pricey', rent, vibe, safety, parts };
 }
