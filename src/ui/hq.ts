@@ -845,6 +845,7 @@ export class HqView {
       else if (e.key === 'Escape' && this.kb >= 0) { this.kb = -1; this.hover = null; this.hideTip(); this.dirty = true; }
       else return;
       e.preventDefault();
+      e.stopPropagation(); // r20b: atalhos globais (N, P, Enter…) não roubam as teclas da planta
     });
   }
 
