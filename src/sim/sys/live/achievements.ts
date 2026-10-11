@@ -17,7 +17,15 @@ export interface AchievementDef {
   check: (s: GameState) => boolean;
 }
 
-const mine = (s: GameState) => Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+// r19 (desempenho): a lista dos lançamentos do jogador é varrida uma vez por semana, não uma vez por conquista
+const MINE = new WeakMap<GameState, { w: number; n: number; v: GameState['releases'][string][] }>();
+const mine = (s: GameState) => {
+  const n = s.idSeq, c = MINE.get(s);
+  if (c && c.w === s.week && c.n === n) return c.v;
+  const v = Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+  MINE.set(s, { w: s.week, n, v });
+  return v;
+};
 const cnt = (s: GameState, k: string) => liveOf(s).counters[k] ?? 0;
 const hasFormatSale = (s: GameState, f: string) => mine(s).some((r) => r.formats.includes(f as never) && r.totalUnits > 0);
 
