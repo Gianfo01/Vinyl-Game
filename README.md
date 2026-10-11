@@ -306,6 +306,9 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 ## Rodada 17
 Resumo completo em [docs/rodada17.md](docs/rodada17.md): fatos/obrigações/estresse/escândalos integrados, diretor criativo com situações e mundo vivo, crime, vida pessoal (sexualidade, amor, filhos, envelhecimento), imprensa e boatos, dados reais (relíquias, peso cultural, estilos), negócios (venda do selo, canais, casas de show, licenças, direitos de imagem, merch), agenda e contratações, menu reformado, novo início com cenários e saves na nuvem, cenas interativas e popups no mapa.
 
+## Rodada 20
+Resumo em [docs/rodada20.md](docs/rodada20.md): saves confiáveis e turno transacional, finanças com títulos, reservas e Posição, simulação reproduzível e coerente, Artistas com menu Ações ▾ e catálogo único de ações, Shows/Sede/Mundo por intenção, Cockpit essencial, oferta em camadas, fãs por região e a nova run "Reais em mundo aleatório".
+
 ## Rodada 19
 Resumo completo em [docs/rodada19.md](docs/rodada19.md): 13 sistemas novos (covers e tributos, revivals, sessões, compositores, remix, sincronização, trilhas, regiões e escolas, zines, farsas, beneficentes, concursos, espólio e equipamento) com 6 cadeias de história, banco de dados expandido, auditoria de 8 pontos aplicada (carreiras sustentáveis, regras de contexto, chance mostrada = sorteada, cockpit por profissão, volume de eventos, vitórias pequenas, economia entre negócios, histórias da partida), Nosso mundo como bairro com estilos de fachada e pontos turísticos, cenas de premiação corrigidas, "Sem tutoriais" e equilíbrio.
 
