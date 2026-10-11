@@ -1,13 +1,26 @@
 // Rodada 16: o bot jogador usa as mesmas ações da interface e joga de verdade (assina, grava, lança, sai em turnê, oferece sync).
+// Rápido por padrão (1 ano + reprise de 3 meses para o determinismo); BALANCE_FULL=1 roda a versão longa (2 × 2 anos).
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
-import { simulatePlayer } from '../src/sim/playbot16';
+import { playLog, playMonth, simulatePlayer } from '../src/sim/playbot16';
+import { advanceMonth } from '../src/sim/tick';
+import { createGame } from '../src/sim/worldgen';
+
+const FULL = !!process.env.BALANCE_FULL;
 
 describe('playbot16', () => {
   it('uma run curta tem ações variadas de jogador e é determinística', () => {
     const cfg = defaultConfig('r16pb-3', { startYear: 1975, realNames: true }); // r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
-    const a = simulatePlayer(cfg, 2, 'balanced').summary;
-    const L = a.log;
+    const years = FULL ? 2 : 1;
+    // a mesma partida que simulatePlayer joga, guardando o retrato do 3º mês para a reprise curta
+    const s = createGame(cfg);
+    let snap = '';
+    for (let m = 0; m < years * 12 && !s.ended; m++) {
+      playMonth(s, 'balanced');
+      advanceMonth(s);
+      if (m === 2) snap = JSON.stringify({ cash: s.player.cash, log: playLog(s) });
+    }
+    const L = playLog(s);
     expect(L.signs).toBeGreaterThan(0);
     expect(L.projects).toBeGreaterThan(0);
     expect(L.recordings).toBeGreaterThan(0);
@@ -18,8 +31,13 @@ describe('playbot16', () => {
     expect(L.scouts).toBeGreaterThan(0);
     expect(L.decisions).toBeGreaterThan(0);
     expect(L.hires).toBeGreaterThan(0);
-    const b = simulatePlayer(cfg, 2, 'balanced').summary;
-    expect(b.cash).toBe(a.cash);
-    expect(b.log).toEqual(a.log);
+    if (FULL) {
+      const b = simulatePlayer(cfg, 2, 'balanced').summary;
+      expect(b.cash).toBe(s.player.cash);
+      expect(b.log).toEqual({ ...L, r17: { ...L.r17 } });
+    } else {
+      const b = simulatePlayer(cfg, 0.25, 'balanced');
+      expect(JSON.stringify({ cash: b.state.player.cash, log: playLog(b.state) })).toBe(snap);
+    }
   }, 240000);
 });
