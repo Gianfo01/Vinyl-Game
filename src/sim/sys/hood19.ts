@@ -19,11 +19,11 @@ import type { Goto18 } from '../inbox18';
 import { addStress } from '../stress17';
 import type { GameState } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
-import { LOTS18, buildings18, campus18, freeLots18, log18, lotMult18 } from './campus18';
+import { LOTS18, buildings18, campus18, freeLots18, log18, lotMult18, styleDef18 } from './campus18';
 import { hq6 } from './hq6';
 import { liveOf } from './live/state';
 import { v17, vdef } from './venues17';
-import { LOTGATE19, type Pop19, type PopAct19, type PopRow19 } from './world19';
+import { LOTGATE19, world19, type Pop19, type PopAct19, type PopRow19 } from './world19';
 
 // ---------------------------------------------------------------- estado
 
@@ -53,11 +53,13 @@ export function hoodStats19(s: GameState, year = s.year): HoodStats19 {
   const span = h.to >= 9999 ? 30 : Math.max(8, h.to - h.from);
   const base = clamp((year - Math.max(h.from, year - 60)) / span, 0, 1);
   const own = Math.min(0.25, buildings18(s).filter((b) => b.zone === 'campus' && b.st === 'open').length * 0.025);
-  const age = clamp(base + own, 0, 1);
+  // estilos escolhidos empurram (vidro, loft) ou seguram (brutalista, tijolo) a gentrificação
+  const sg = clamp(Object.values(world19(s).sty).reduce((t, x) => t + styleDef18(x).gent, 0), -0.15, 0.15);
+  const age = clamp(base + own + sg, 0, 1);
   const lm = landmarksAt19(s.config.homeCity, year).filter((x) => x.music === 'venue' || x.music === 'studio').length;
   const vibe = Math.round(clamp(88 - 48 * age + lm * 4, 10, 100)), safety = Math.round(clamp(35 + 50 * age, 0, 100));
   const rent = Math.round((0.85 + 0.45 * age) * 100) / 100; // ±30% no máximo: efeito sentido sem quebrar o equilíbrio
-  const parts: [L, number][] = [[fmtL(l('Anos desde que o bairro virou "{n}"', 'Years since the area became "{n}"'), { n: h.n }), Math.round(base * 100)], [l('Seus prédios valorizam a área', 'Your buildings lift the area'), Math.round(own * 100)]];
+  const parts: [L, number][] = [[fmtL(l('Anos desde que o bairro virou "{n}"', 'Years since the area became "{n}"'), { n: h.n }), Math.round(base * 100)], [l('Seus prédios valorizam a área', 'Your buildings lift the area'), Math.round(own * 100)], [l('Estilos das fachadas', 'Façade styles'), Math.round(sg * 100)]];
   return { h, age, stage: age < 0.4 ? 'artsy' : age < 0.75 ? 'hip' : 'pricey', rent, vibe, safety, parts };
 }
 /** Ajuste mensal do aluguel da sede pelo bairro (positivo = desconto). */

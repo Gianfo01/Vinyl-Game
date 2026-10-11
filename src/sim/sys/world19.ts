@@ -20,7 +20,7 @@ import { fmtL, money, post } from '../util';
 import { addStress } from '../stress17';
 import {
   CAMPUS_POST19, CONTRACTORS18, KIND18, LOTS18, PROJ18, STATE18, buildings18, campus18, dormPeople, freeLots18, layout18, log18, lotMult18, projCost18,
-  renoMonths18, storeIncome18, storeUpkeep18, styleName18, styleOf18, type BKind, type Bld18, type PKind,
+  renoMonths18, storeIncome18, storeUpkeep18, styleDef18, styleName18, styleOf18, stylesAt18, type BKind, type Bld18, type PKind, type Place19, type Style18,
 } from './campus18';
 import { hq6 } from './hq6';
 import { liveOf } from './live/state';
@@ -34,19 +34,24 @@ export interface Work19 { s: number; m: number; k: 'found' | 'up' | 'move' }
 export interface World19 {
   /** apelidos dados pelo jogador */
   alias: Record<string, string>;
+  /** r19: estilo escolhido por prédio, e o pendente (aplicado quando a obra termina) */
+  sty: Record<string, Style18>;
+  stp: Record<string, Style18>;
+  /** nível da sede no começo do jogo (o "lugarzinho" vale até a 1ª ampliação); ausente em saves antigos */
+  h0?: number;
   /** obras visuais (fundação, expansão, mudança de lote) */
   wk: Record<string, Work19>;
   /** sinergias já anunciadas (chave → ano) */
   syn: Record<string, number>;
 }
 declare module '../ext4' { interface Ext4 { world19: World19 } }
-const fresh = (): World19 => ({ alias: {}, wk: {}, syn: {} });
+const fresh = (): World19 => ({ alias: {}, wk: {}, syn: {}, sty: {}, stp: {} });
 registerExt4('world19', fresh);
 /** Estado (migra saves antigos: campos ausentes viram vazios). */
 export function world19(s: GameState): World19 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.world19 ??= fresh()) as World19;
-  st.alias ??= {}; st.wk ??= {}; st.syn ??= {};
+  st.alias ??= {}; st.wk ??= {}; st.syn ??= {}; st.sty ??= {}; st.stp ??= {};
   return st;
 }
 const mIdx = (s: GameState) => s.year * 12 + s.month;
@@ -60,6 +65,8 @@ CAMPUS_POST19.push((s, out) => {
   for (const b of out) {
     const a = w.alias[b.id];
     if (a) b.name = a;
+    if (w.sty[b.id]) b.style = w.sty[b.id];
+    if (b.kind === 'hq') { const pl = startPlace19(s); if (pl) { b.place = pl.k; if (!a) b.name = `${s.config.companyName} — ${pl.n.pt}`; } }
     const k = w.wk[b.id];
     if (k && m - k.s < k.m) {
       const prog = clamp((m - k.s + 0.5) / k.m, 0.05, 0.98);
@@ -70,6 +77,55 @@ CAMPUS_POST19.push((s, out) => {
     }
   }
 });
+
+// ---------------------------------------------------------------- começo pequeno (o lugarzinho)
+
+export const PLACE19: Record<Place19, { n: L; d: L }> = {
+  parlour: { n: l('Sala com piano', 'Parlour with a piano'), d: l('A sala da frente da casa, com o piano da família e um balcão de partituras.', 'The front room of the house, with the family piano and a sheet-music counter.') },
+  backroom: { n: l('Sala alugada em cima de uma loja', 'Rented room above a shop'), d: l('Uma escada estreita, uma mesa, um telefone e caixas de discos.', 'A narrow staircase, a desk, a telephone and boxes of records.') },
+  garage: { n: l('Garagem', 'Garage'), d: l('O carro foi para a rua: amplificadores, colchões nas paredes e um gravador.', 'The car went to the street: amps, mattresses on the walls and a tape recorder.') },
+  bedroom: { n: l('Quarto-estúdio', 'Bedroom studio'), d: l('Teclado, sampler e espuma na janela, em cima da cama.', 'A keyboard, a sampler and foam on the window, above the bed.') },
+  basement: { n: l('Porão alugado', 'Rented basement'), d: l('Um porão úmido com mesa de som usada e caixas de vinil.', 'A damp basement with a used mixing desk and crates of vinyl.') },
+  homestudio: { n: l('Home studio', 'Home studio'), d: l('Um cômodo da casa com notebook, monitores e painéis acústicos.', 'A room of the house with a laptop, monitors and acoustic panels.') },
+};
+/** O lugar do começo pela época e pela carreira principal (enquanto a sede não foi ampliada). */
+export function placeFor19(year: number, role: string): Place19 {
+  const art = role === 'artist';
+  return year < 1925 ? (art ? 'parlour' : 'parlour') : year < 1946 ? (art ? 'parlour' : 'backroom') : year < 1986 ? 'garage' : year < 2010 ? (art ? 'bedroom' : 'basement') : 'homestudio';
+}
+export function startPlace19(s: GameState): { k: Place19; n: L; d: L } | null {
+  const w = world19(s), h0 = w.h0 ?? 0;
+  if (s.player.hq > 1 || s.player.hq !== h0) return null;
+  const y0 = Math.min(s.year, s.config.startYear ?? s.year);
+  const k = placeFor19(y0, String(s.config.role ?? 'label'));
+  return { k, ...PLACE19[k] };
+}
+registerSimHook('newgame', 'world19n', (s) => { world19(s).h0 = s.player.hq; });
+
+// ---------------------------------------------------------------- estilo escolhido
+
+export interface StyOpt19 { id: Style18; name: L; desc: L; cost: number; eff: L }
+export const styOpts19 = (s: GameState): StyOpt19[] => stylesAt18(s.year).map((x) => ({ id: x.id, name: x.name, desc: x.desc, cost: x.cost, eff: x.eff }));
+const styMul = (sty?: Style18) => (sty ? styleDef18(sty).cost : 1);
+/** Guarda o estilo pedido (aplicado quando a obra termina). */
+function setSty(s: GameState, id: string, sty?: Style18): void { if (sty) world19(s).stp[id] = sty; }
+const working = (s: GameState, id: string) => campus18(s).proj.some((p) => p.target === id || `c:${p.kind}` === id) || (world19(s).wk[id] && mIdx(s) - world19(s).wk[id].s < world19(s).wk[id].m);
+/** Aplica estilos pendentes quando não há mais obra; dá a reputação do estilo uma vez. */
+export function commitSty19(s: GameState): void {
+  const w = world19(s);
+  for (const [id, sty] of Object.entries(w.stp)) {
+    if (working(s, id)) continue;
+    delete w.stp[id];
+    if (!buildings18(s).some((b) => b.id === id)) continue;
+    w.sty[id] = sty;
+    const d = styleDef18(sty);
+    if (d.rep) s.player.reputation[d.rep[0]] = clamp(s.player.reputation[d.rep[0]] + d.rep[1], 0, 100);
+    log18(s, fmtL(l('Fachada nova: {n} ({e})', 'New façade: {n} ({e})'), { n: d.name, e: d.eff }));
+  }
+}
+
+/** Estilo atual de um prédio (escolhido ou o da época em que foi feito). */
+export const w19s = (s: GameState, b: Bld18): Style18 => world19(s).sty[b.id] ?? b.style ?? styleOf18(b.sy);
 
 // ---------------------------------------------------------------- vizinhança (lotes)
 
@@ -152,11 +208,13 @@ export function upkeep19(s: GameState, b: Bld18): { v: number; parts: [L, number
     const k = b.id.slice(2) as 'sign';
     parts.push([l('Manutenção', 'Maintenance'), maint19(s, k)]);
   }
+  const sd = world19(s).sty[b.id] && !/^c:(sign|park|dorm)$/.test(b.id) ? styleDef18(world19(s).sty[b.id]) : null;
+  if (sd && sd.upk !== 1 && parts.length) parts.push([fmtL(l('Estilo {n} (manutenção ×{m})', '{n} style (upkeep ×{m})'), { n: sd.name, m: sd.upk }), Math.round(parts.reduce((t, [, x]) => t + x, 0) * (sd.upk - 1))]);
   if (campus18(s).dmg[b.id]) parts.push([l('Espaço provisório (prédio danificado)', 'Temporary space (damaged building)'), money(s, 900)]);
   if (!parts.length) return null;
   return { v: parts.reduce((t, [, x]) => t + x, 0), parts };
 }
-export const maint19 = (s: GameState, k: 'sign' | 'park' | 'dorm'): number => (campus18(s).built[k] ? Math.round(money(s, MAINT19[k]) * (1 + 0.25 * (campus18(s).upl[`c:${k}`] ?? 0))) : 0);
+export const maint19 = (s: GameState, k: 'sign' | 'park' | 'dorm'): number => (campus18(s).built[k] ? Math.round(money(s, MAINT19[k]) * (1 + 0.25 * (campus18(s).upl[`c:${k}`] ?? 0)) * (world19(s).sty[`c:${k}`] ? styleDef18(world19(s).sty[`c:${k}`]).upk : 1)) : 0);
 
 // ---------------------------------------------------------------- ações
 
@@ -255,11 +313,11 @@ const gate = (s: GameState, lot: number): L | null => { for (const f of LOTGATE1
 export interface PopRow19 { k: L; v: string | L; go?: Goto18; why?: [string, WhyCtx]; tone?: 'good' | 'bad' | '' }
 export interface PopAct19 { id: string; label: L; cost?: number; dis?: L; tone?: 'primary' | 'ghost' | 'danger'; go?: Goto18; confirm?: L; ask?: 'name' | 'q' | 'lot' }
 export interface Opt19 { id: string; name: L; desc: L; effect: L; cost: number; months: number; icon: string; dis?: L; syn: L[]; q?: boolean }
-export interface Pop19 { kind: 'bld' | 'lot'; id: string; title: string | L; icon: string; tags: (L | string)[]; rows: PopRow19[]; notes: { t: L | string; tone?: 'good' | 'bad' | 'warn' }[]; prog?: number; acts: PopAct19[]; opts: Opt19[] }
+export interface Pop19 { sty?: { cur: Style18; list: StyOpt19[] }; kind: 'bld' | 'lot'; id: string; title: string | L; icon: string; tags: (L | string)[]; rows: PopRow19[]; notes: { t: L | string; tone?: 'good' | 'bad' | 'warn' }[]; prog?: number; acts: PopAct19[]; opts: Opt19[] }
 
 const ABS = (s: GameState, id: string) => buildings18(s).find((b) => b.id === id);
 /** Popup de um prédio (ou null se não existe). */
-export function bldPop19(s: GameState, id: string, q = 1): Pop19 | null {
+export function bldPop19(s: GameState, id: string, q = 1, sty?: Style18): Pop19 | null {
   const bs = buildings18(s);
   const b = bs.find((x) => x.id === id);
   if (!b) return null;
@@ -316,7 +374,7 @@ export function bldPop19(s: GameState, id: string, q = 1): Pop19 | null {
     const c = projCost18(s, 'reno', -1, q, b);
     const dmg = !!st.dmg[id];
     acts.push({ id: 'reno', ask: 'q', label: dmg ? l('Reconstruir', 'Rebuild') : fmtL(l('Reformar ({s}, {m} meses)', 'Renovate ({s}, {m} months)'), { s: styleName18(styleOf18(s.year)), m: renoMonths18(b) }), cost: c, tone: dmg ? 'primary' : 'ghost',
-      dis: !dmg && styleOf18(b.sy) === styleOf18(s.year) ? l('Já tem a cara desta época.', 'Already looks like this era.') : s.player.cash < Math.round(c * 0.3) ? l('Caixa insuficiente para a entrada.', 'Not enough cash for the down payment.') : undefined });
+      dis: !dmg && w19s(s, b) === (sty ?? styleOf18(s.year)) ? l('Já tem esse estilo: escolha outro abaixo.', 'Already in that style: pick another below.') : s.player.cash < Math.round(c * 0.3) ? l('Caixa insuficiente para a entrada.', 'Not enough cash for the down payment.') : undefined });
   }
   if (b.zone === 'campus' && b.kind !== 'hq' && b.kind !== 'home' && !busy) {
     const no = canMove19(s, b), fl = freeLots18(s);
@@ -330,12 +388,16 @@ export function bldPop19(s: GameState, id: string, q = 1): Pop19 | null {
     else if (id.startsWith('ve:')) { const o = v17(s).own.find((x) => `ve:${x.id}` === id); if (o) acts.push({ id: 'sell', label: l('Vender a casa', 'Sell the venue'), cost: -sellValue(s, o), tone: 'danger', confirm: l('Vender a casa de shows?', 'Sell the venue?') }); }
   }
   if (b.goto && b.goto.area !== 'campus18') acts.push({ id: 'go', label: l('Abrir página de gestão', 'Open management page'), go: b.goto, tone: 'ghost' });
-  const tags: (L | string)[] = [KIND18[b.kind].name, STATE18[b.st], styleName18(styleOf18(b.sy)), b.since === b.sy ? fmtL(l('desde {y}', 'since {y}'), { y: b.since }) : fmtL(l('desde {y} · fachada de {z}', 'since {y} · façade from {z}'), { y: b.since, z: b.sy })];
-  return { kind: 'bld', id, title: b.name, icon: KIND18[b.kind].icon, tags, rows, notes, prog: b.prog !== undefined && b.st !== 'open' ? b.prog : undefined, acts, opts: [] };
+  const tags: (L | string)[] = [KIND18[b.kind].name, STATE18[b.st], styleName18(w19s(s, b)), b.since === b.sy ? fmtL(l('desde {y}', 'since {y}'), { y: b.since }) : fmtL(l('desde {y} · fachada de {z}', 'since {y} · façade from {z}'), { y: b.since, z: b.sy })];
+  const styd = acts.some((a) => (a.id === 'up' || a.id === 'reno') && !a.go);
+  const cur = w19s(s, b);
+  if (styd) for (const a of acts) if ((a.id === 'up' || a.id === 'reno') && a.cost) { a.cost = Math.round(a.cost * styMul(sty ?? cur)); if (a.id === 'reno' && sty && sty !== cur && a.dis && !st.dmg[id]) a.dis = undefined; }
+  if (b.place) notes.unshift({ t: fmtL(l('Começo modesto: {d}', 'Humble beginnings: {d}'), { d: startPlace19(s)?.d ?? '' }) });
+  return { kind: 'bld', id, title: b.name, icon: KIND18[b.kind].icon, tags, rows, notes, prog: b.prog !== undefined && b.st !== 'open' ? b.prog : undefined, acts, opts: [], sty: styd ? { cur, list: styOpts19(s) } : undefined };
 }
 
 /** Popup de um lote vazio: o que dá para construir aqui (custo, prazo, requisito e vizinhança). */
-export function lotPop19(s: GameState, lot: number, q = 1, moving?: string): Pop19 | null {
+export function lotPop19(s: GameState, lot: number, q = 1, moving?: string, sty?: Style18): Pop19 | null {
   const L0 = LOTS18[lot];
   if (!L0) return null;
   const st = campus18(s), bs = buildings18(s), free = freeLots18(s).includes(lot);
@@ -373,11 +435,37 @@ export function lotPop19(s: GameState, lot: number, q = 1, moving?: string): Pop
         syn: synAt19(s, bk, lot, bs).map((x) => fmtL(l('{s} {n} (com {w})', '{s} {n} (with {w})'), { s: x.rule.neg ? '−' : '+', n: x.rule.name, w: x.with.name })) });
     }
   }
-  return { kind: 'lot', id: `lot:${lot}`, title: L0.name, icon: 'building', tags: [l('Lote vazio', 'Empty lot'), fmtL(l('{w}×{d} quadras', '{w}×{d} tiles'), { w: L0.w, d: L0.d })], rows, notes, acts, opts };
+  for (const o of opts) o.cost = Math.round(o.cost * styMul(sty ?? styleOf18(s.year)));
+  return { sty: opts.length ? { cur: sty ?? styleOf18(s.year), list: styOpts19(s) } : undefined, kind: 'lot', id: `lot:${lot}`, title: L0.name, icon: 'building', tags: [l('Lote vazio', 'Empty lot'), fmtL(l('{w}×{d} quadras', '{w}×{d} tiles'), { w: L0.w, d: L0.d })], rows, notes, acts, opts };
 }
 
 /** Executa uma ação de popup. Devolve erro (L) ou null. */
-export function act19(s: GameState, target: string, act: string, arg: { q?: number; name?: string; lot?: number; moving?: string } = {}): L | null {
+/** Ajusta a obra recém-criada (ou o pagamento à vista) pelo multiplicador do estilo. */
+function styCost(s: GameState, before: number, sty: Style18 | undefined, cash0?: number, key = ''): void {
+  const m = styMul(sty);
+  if (m === 1) return;
+  const st = campus18(s);
+  if (st.proj.length > before) {
+    const p = st.proj[st.proj.length - 1], extra = Math.round(p.cost * (m - 1)), down = Math.round(extra * 0.3);
+    p.cost += extra; p.paid += down;
+    post(s, `world19:sty:${p.id}`, -down, 'capex', `Estilo: ${styleDef18(sty!).name.pt}`);
+  } else if (cash0 !== undefined) {
+    const paid = cash0 - s.player.cash;
+    if (paid > 0) post(s, `world19:sty:${key}:${mIdx(s)}`, -Math.round(paid * (m - 1)), 'capex', `Estilo: ${styleDef18(sty!).name.pt}`);
+  }
+}
+export function act19(s: GameState, target: string, act: string, arg: { q?: number; name?: string; lot?: number; moving?: string; sty?: Style18 } = {}): L | null {
+  const sty = arg.sty;
+  if (sty && !stylesAt18(s.year).some((x) => x.id === sty)) return l('Esse estilo ainda não existe nesta época.', 'That style does not exist yet in this era.');
+  if (sty && ['p:', 'v:', 'up', 'reno'].some((x) => act.startsWith(x))) {
+    const n0 = campus18(s).proj.length, cash0 = s.player.cash, v0 = new Set(ventures(s).list.map((v) => v.id));
+    const e = act19(s, target, act, { ...arg, sty: undefined });
+    if (e) return e;
+    styCost(s, n0, sty, cash0, target);
+    const id = act.startsWith('p:') ? `c:${act.slice(2)}` : act.startsWith('v:') ? `v:${ventures(s).list.find((v) => !v0.has(v.id))?.id}` : target;
+    setSty(s, id, sty);
+    return null;
+  }
   const q = arg.q ?? 1;
   if (target.startsWith('lot:')) {
     const lot = +target.slice(4);
@@ -420,7 +508,10 @@ const startReno = (s: GameState, id: string, q: number) => startProj18(s, 'reno'
 
 registerSimHook('month', 'world19', (s) => {
   const w = world19(s), m = mIdx(s);
+  commitSty19(s);
   for (const [id, k] of Object.entries(w.wk)) if (m - k.s >= k.m) delete w.wk[id];
+  // estilo: ajuste da manutenção (o letreiro, a praça e a casa já vêm com ele embutido)
+  for (const b of buildings18(s)) { if (!w.sty[b.id] || /^c:(sign|park|dorm)$/.test(b.id)) continue; const u = upkeep19(s, b); const ln = u?.parts.find(([k]) => k.pt.startsWith('Estilo')); if (ln && ln[1]) post(s, `world19:styupk:${b.id}:${m}`, -ln[1], 'hq', `Manutenção do estilo: ${b.name}`); }
   const sy = syn19(s);
   let store = false, dorm = 0;
   for (const x of sy) {

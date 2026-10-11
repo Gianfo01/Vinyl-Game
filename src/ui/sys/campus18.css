@@ -82,3 +82,11 @@
 /* r19: enquanto um popup do mapa está aberto, cartões de tutorial e dicas saem da frente */
 body.w19-open .tutorial, body.w19-open .tip18 { display: none; }
 @media (max-width: 640px) { .tutorial { left: 0.5rem; right: 0.5rem; bottom: 0.5rem; max-width: none; max-height: 45vh; overflow: auto; } }
+/* r19: seletor de estilo da fachada */
+.w19-sty { display: grid; gap: 4px; margin: 6px 0; }
+.w19-styl { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x proximity; }
+.w19-styl button { flex: 0 0 auto; display: grid; justify-items: center; gap: 1px; width: 70px; padding: 3px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; scroll-snap-align: start; }
+.w19-styl button.on { outline: 2px solid #1a1416; background: rgba(240, 192, 64, 0.18); }
+.w19-styl canvas { width: 44px; height: 46px; image-rendering: pixelated; }
+.w19-styl small { font-size: 10px; line-height: 1.1; text-align: center; }
+@media (max-width: 640px) { body.w19-open .w19 { padding-bottom: 62vh; } }

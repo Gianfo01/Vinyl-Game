@@ -5,8 +5,8 @@ import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import { LANDMARKS19, landmarksAt19 } from '../src/data/landmarks19';
-import { buildings18, campus18, freeLots18, layout18, startProj18 } from '../src/sim/sys/campus18';
-import { act19, bldPop19, lotPop19, near19, syn19, synAt19, world19 } from '../src/sim/sys/world19';
+import { STYLE_CAT18, buildings18, campus18, decode18, encode18, freeLots18, layout18, startProj18, stylesAt18 } from '../src/sim/sys/campus18';
+import { act19, bldPop19, lotPop19, near19, placeFor19, startPlace19, syn19, synAt19, world19 } from '../src/sim/sys/world19';
 import { actEv19, evPop19, hood19, rollEv19, hoodStats19, lmPop19, nb19, nbPop19 } from '../src/sim/sys/hood19';
 import { ventures } from '../src/sim/sys/ventures9';
 
@@ -113,5 +113,54 @@ describe('world19', () => {
     for (const x of [a, b]) for (let m = 0; m < 30; m++) { x.month = m % 12; x.year = 1981 + Math.floor(m / 12); rollEv19(x); }
     expect(hood19(a).evs.map((e) => e.k)).toEqual(hood19(b).evs.map((e) => e.k));
     expect(nb19(a).map((x) => x.lot)).toEqual(nb19(b).map((x) => x.lot));
+  }, 240000);
+
+  it('começo pequeno: o lugarzinho da época e da carreira; some depois da 1ª ampliação', () => {
+    expect(placeFor19(1900, 'label')).toBe('parlour');
+    expect(placeFor19(1935, 'label')).toBe('backroom');
+    expect(placeFor19(1955, 'artist')).toBe('garage');
+    expect(placeFor19(1995, 'artist')).toBe('bedroom');
+    expect(placeFor19(2022, 'label')).toBe('homestudio');
+    const s = rich(1955, 'w19p');
+    const hq = buildings18(s).find((b) => b.kind === 'hq')!;
+    expect(hq.place).toBe('garage');
+    expect(s.player.hq).toBeLessThanOrEqual(1);
+    expect(bldPop19(s, 'hq')!.notes.some((n) => typeof n.t !== 'string' && n.t.pt.startsWith('Começo modesto'))).toBe(true);
+    s.player.hq += 1;
+    expect(startPlace19(s)).toBeNull();
+    expect(buildings18(s).find((b) => b.kind === 'hq')!.place).toBeUndefined();
+    // save antigo (sem h0) com sede já grande: nada de garagem
+    const o = rich(1990, 'w19o'); o.player.hq = 3; delete world19(o).h0;
+    expect(buildings18(o).find((b) => b.kind === 'hq')!.place).toBeUndefined();
+  });
+
+  it('estilos: só os que já existiam, ≥5 em qualquer ano; escolhido persiste, custa e aparece no retrato', () => {
+    for (let y = 1889; y <= 2040; y += 5) expect(stylesAt18(y).length).toBeGreaterThanOrEqual(5);
+    expect(stylesAt18(1900).map((x) => x.id)).not.toContain('brutal');
+    expect(stylesAt18(1960).map((x) => x.id)).toContain('brutal');
+    expect(stylesAt18(1970).map((x) => x.id)).not.toContain('postmod');
+    expect(stylesAt18(1990).map((x) => x.id)).toContain('glass');
+    expect(stylesAt18(1995).map((x) => x.id)).not.toContain('eco');
+    expect(stylesAt18(1915).map((x) => x.id)).not.toContain('deco');
+    expect(new Set(STYLE_CAT18.map((x) => x.id)).size).toBe(STYLE_CAT18.length);
+    const s = rich(1972, 'w19s');
+    const lot = freeLot(s);
+    expect(act19(s, `lot:${lot}`, 'p:store', { q: 1, sty: 'neon' })).not.toBeNull(); // 1980+: do futuro
+    expect(lotPop19(s, lot)!.sty!.list.some((x) => x.id === 'neon')).toBe(false);
+    const c0 = lotPop19(s, lot, 1, undefined, 'brick')!.opts.find((o) => o.id === 'p:store')!.cost;
+    const c1 = lotPop19(s, lot, 1, undefined, 'gothic')!.opts.find((o) => o.id === 'p:store')!.cost;
+    expect(c1).toBeGreaterThan(c0);
+    expect(act19(s, `lot:${lot}`, 'p:store', { q: 1, sty: 'loft' })).toBeNull();
+    for (let i = 0; i < 8 && campus18(s).proj.length; i++) advanceMonth(s);
+    advanceMonth(s);
+    const b = buildings18(s).find((x) => x.id === 'c:store')!;
+    expect(b.style).toBe('loft');
+    expect(decode18(encode18(s, buildings18(s))).find((x) => x.id === 'c:store')!.style).toBe('loft');
+    // reforma troca o estilo
+    expect(act19(s, 'c:store', 'reno', { q: 1, sty: 'brutal' })).toBeNull();
+    expect(buildings18(s).find((x) => x.id === 'c:store')!.style).toBe('loft'); // até a obra acabar
+    for (let i = 0; i < 9 && campus18(s).proj.length; i++) advanceMonth(s);
+    advanceMonth(s);
+    expect(buildings18(s).find((x) => x.id === 'c:store')!.style).toBe('brutal');
   }, 240000);
 });
