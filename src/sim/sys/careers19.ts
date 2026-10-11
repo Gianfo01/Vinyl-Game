@@ -214,7 +214,8 @@ export function festQ19(s: GameState, f: OwnFestival, acts: Act[]): Dem19 {
   const coh = Math.max(...Object.values(fam)) / acts.length;
   const hot = acts.reduce((t, a) => t + clamp((s.genrePop?.[a.genre] ?? 1) / 2, 0, 1), 0) / acts.length;
   const mk = cityById[f.cityId]?.market;
-  const comp = ventures(s).npc.filter((n) => n.kind === 'festival' && cityById[n.city]?.market === mk).length + liveOf(s).fests.filter((y) => y !== f && y.month === f.month && cityById[y.cityId]?.market === mk).length;
+  // canibalização: outro festival SEU no mesmo mês e mercado (festivais rivais de NPC: regra própria em fest12/ventures16)
+  const comp = liveOf(s).fests.filter((y) => y !== f && y.month === f.month && cityById[y.cityId]?.market === mk).length;
   const k = clamp(0.3 + top * 0.006 + avg * 0.004 + coh * 0.15 + hot * 0.15 - comp * 0.07, 0.3, 1.25);
   return { k, top, avg, coh, hot, comp };
 }
@@ -222,7 +223,7 @@ festDem19.f = (s, f, acts, why) => {
   if (!acts.length) return 1;
   const q = festQ19(s, f, acts);
   why.push(fmtL(l('Qualidade do line-up ×{k}: headliner fama {t}, média {a}, {c}% do mesmo gênero, gêneros {h}% em alta{x}.', 'Line-up quality ×{k}: headliner fame {t}, average {a}, {c}% same genre, genres {h}% hot{x}.'),
-    { k: q.k.toFixed(2), t: Math.round(q.top), a: Math.round(q.avg), c: Math.round(q.coh * 100), h: Math.round(q.hot * 100), x: q.comp ? fmtL(l(', {n} festival(is) concorrente(s) no mercado', ', {n} competing festival(s) in the market'), { n: q.comp }) : '' }));
+    { k: q.k.toFixed(2), t: Math.round(q.top), a: Math.round(q.avg), c: Math.round(q.coh * 100), h: Math.round(q.hot * 100), x: q.comp ? fmtL(l(', {n} outro(s) festival(is) seu(s) no mesmo mês', ', {n} other festival(s) of yours the same month'), { n: q.comp }) : '' }));
   return q.k;
 };
 
@@ -484,7 +485,7 @@ registerExplain('fest19.demand', (s, c) => {
     { label: fmtL(l('Média do line-up (fama {a})', 'Bill average (fame {a})'), { a: Math.round(q.avg) }), value: +(q.avg * 0.004).toFixed(2), fmt: 'signed', tone: 'good' },
     { label: fmtL(l('Coerência de gênero ({c}%)', 'Genre coherence ({c}%)'), { c: Math.round(q.coh * 100) }), value: +(q.coh * 0.15).toFixed(2), fmt: 'signed' },
     { label: fmtL(l('Gêneros em alta ({h}%)', 'Hot genres ({h}%)'), { h: Math.round(q.hot * 100) }), value: +(q.hot * 0.15).toFixed(2), fmt: 'signed' },
-    { label: fmtL(l('Concorrência no mercado ({n})', 'Competition in the market ({n})'), { n: q.comp }), value: -(q.comp * 0.07), fmt: 'signed', tone: q.comp ? 'bad' : '' },
+    { label: fmtL(l('Seus festivais no mesmo mês e mercado ({n})', 'Your festivals in the same month and market ({n})'), { n: q.comp }), value: -(q.comp * 0.07), fmt: 'signed', tone: q.comp ? 'bad' : '' },
     { label: fmtL(l('Teto do terreno: {g}', 'Ground ceiling: {g}'), { g: GROUND19[groundOf19(s, f.id)]?.name ?? '—' }), value: Number.isFinite(festCap19.f(s, f)) ? festCap19.f(s, f) : '∞' },
   ], note: l('Multiplica a procura (0,3 a 1,25). Line-up fraco não lota mais o terreno: cada escolha aparece no público.', 'Multiplies demand (0.3 to 1.25). A weak bill no longer fills the grounds: every pick shows in the crowd.') };
 });

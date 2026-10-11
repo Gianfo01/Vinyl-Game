@@ -4,14 +4,16 @@
 import { GENRES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
+import { fmtL, rngOf } from '../../sim/util';
+import { endorseOdds19 } from '../../sim/sys/careers19';
+import { devChance12 } from '../../sim/sys/manager12';
 import {
   AMB_NAME, AREA_NAME, AUTO_NAME, TEAM_NAME, acceptCounter, agencyTier, agentMax, agentSalary, ambitionsOf, answerIssue, arrange, assignAgent, c12, canArrange, capacityHours,
   clashesOf, clientHours, demandHours, devCandidates, endorse, endorseReady, endorseValue, fireAgent, hireAgent, mandateChance, mgr12, negotiateMandate, proposePlan,
   raiseAgent, reinvent, resolveDilemma, setSuccessor, signDev, talk, talkReady, teamCost, toggleTeam, type Amb, type Area, type DilemmaMove, type Mandate, type TeamRole,
 } from '../../sim/sys/manager12';
 import { SVC, askChance, isForeign, providers, quote, remaining, services, type SvcKind } from '../../sim/sys/services12';
-import { ventures, type Client } from '../../sim/sys/ventures9';
+import { refusedWait9, ventures, type Client } from '../../sim/sys/ventures9';
 import { $, actLink, cityName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
@@ -89,7 +91,9 @@ export function clientPanel12(s: GameState, c: Client): HTMLElement {
     x.book.length ? h('details', { class: 'small' }, h('summary', null, t(l('Prestação de contas', 'Accountability log'))), h('ul', null, x.book.slice().reverse().map((y) => h('li', null, t(y))))) : null,
   );
 }
-const fmtTitle = (s: GameState, id: string): L => ({ pt: `≈ $${Math.round(endorseValue(s, s.acts[id]) / 100).toLocaleString()}`, en: `≈ $${Math.round(endorseValue(s, s.acts[id]) / 100).toLocaleString()}` });
+// r19 (careers19): patrocínio tem marca, mercado e chance — a dica mostra os mesmos números do sorteio
+const fmtTitle = (s: GameState, id: string): L => { const a = s.acts[id]; const o = endorseOdds19(s, a); const v = `$${Math.round(endorseValue(s, a) * o.mult / 100).toLocaleString()}`;
+  return { pt: `${o.brand}: ${Math.round(o.chance * 100)}% de chance · ≈ ${v} · ${o.why.map((w) => w.pt).join(' ')}`, en: `${o.brand}: ${Math.round(o.chance * 100)}% chance · ≈ ${v} · ${o.why.map((w) => w.en).join(' ')}` }; };
 
 function servicesForm(s: GameState, id: string): HTMLElement {
   const r = rngOf(s);
@@ -142,7 +146,7 @@ function agencyTab(s: GameState): HTMLElement {
     section(t(l('Desenvolver talentos', 'Develop new talent')),
       h('p', { class: 'small muted' }, t(l('Desconhecidos (fama < 8): pouco dinheiro agora, muita confiança. Se um chegar a fama 30, a descoberta é sua (+prestígio).', 'Unknowns (fame < 8): little money now, lots of trust. If one reaches fame 30, the discovery is yours (+prestige).'))),
       h('table', { class: 'tbl compact' }, h('tbody', null, devCandidates(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, `${t(l('fama', 'fame'))} ${fameText(s, a.id)} · ${t(l('momento', 'momentum'))} ${Math.round(a.momentum)}`),
-        h('td', null, btn(l('Apostar', 'Bet on them'), () => res(signDev(s, r, a.id)), 'btn tiny primary'))))))),
+        h('td', null, refusedWait9(s, a.id) ? pill(t(l('recusou: espera {n} sem.', 'declined: wait {n} wk'), { n: refusedWait9(s, a.id) }), 'warn') : btn(fmtL(l('Apostar ({p}%)', 'Bet on them ({p}%)'), { p: Math.round(devChance12(s) * 100) }), () => res(signDev(s, r, a.id)), 'btn tiny primary'))))))),
     mg.clients.length ? null : h('p', { class: 'muted' }, t(l('Sem clientes ainda.', 'No clients yet.'))),
   );
 }

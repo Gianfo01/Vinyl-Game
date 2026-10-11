@@ -194,4 +194,6 @@ import './live19';
 // Rodada 19 (onda 3, T3): Lendas › Espólio (herdeiros, masters, arena digital) e Estúdio › Equipamento (endossos, ícones).
 import './afterlife19';
 import './gear19';
+// Rodada 19 (onda 5, A): pacote inicial no Novo Jogo, terreno do festival e Finanças do grupo (consolidado).
+import './careers19';
 import './core18';
