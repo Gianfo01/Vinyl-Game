@@ -44,7 +44,7 @@ export interface Change19 { k: 'tech' | 'genre' | 'law' | 'market' | 'era'; t: L
 export interface Turn19 { y: number; k: 'decade' | 'era' | 'tech'; name: L; era?: EraId; changes: Change19[]; sum: DecSum19; rivals: L[]; goals: string[]; seen?: 1 }
 export interface Goal19 { id: string; spec: GoalSpec19; w0: number; due: number; base: number; src: 'open' | 'turn'; y: number; done?: number; fail?: number }
 export interface Rc19 { id: string; w: number; ev: string; t: L; o: L; th?: string; n: number; d?: Record<string, number>; seen?: 1 }
-export interface Ux19State { ly: number; era: string; turns: Turn19[]; goals: Goal19[]; rc: Rc19[]; ch: Record<string, number[]>; un: Record<string, number>; heir?: { id: string; w: number; from?: string }; seq: number }
+export interface Ux19State { ly: number; era: string; turns: Turn19[]; goals: Goal19[]; rc: Rc19[]; ch: Record<string, number[]>; un: Record<string, number>; heir?: { id: string; w: number; from?: string }; seq: number; /** cartão de abertura já mostrado */ os?: 1 }
 declare module '../ext4' { interface Ext4 { ux19: Ux19State } }
 const fresh = (): Ux19State => ({ ly: 0, era: '', turns: [], goals: [], rc: [], ch: {}, un: {}, seq: 0 });
 registerExt4('ux19', fresh);

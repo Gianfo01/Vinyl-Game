@@ -194,4 +194,6 @@ import './live19';
 // Rodada 19 (onda 3, T3): Lendas › Espólio (herdeiros, masters, arena digital) e Estúdio › Equipamento (endossos, ícones).
 import './afterlife19';
 import './gear19';
+// Rodada 19 (Frente 8, onda 4): viradas de década/era, metas, recibo de decisão, "por que perdi?", epitáfio, divulgação progressiva e acessibilidade.
+import './ux19';
 import './core18';

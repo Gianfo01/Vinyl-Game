@@ -35,6 +35,7 @@ import { saveManagerModal17 } from './saves17';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
 import { AFTER_ADVANCE, EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
+import { UX19UI } from './hooks19'; // r19 ux19: divulgação progressiva, rodapé do menu e fim de partida
 import { openLabelStory } from './sys/story12';
 import './sys';
 import { defaultHome, type NavGroup } from './careernav13';
@@ -258,7 +259,7 @@ const HINT17: Record<string, string> = Object.fromEntries(GROUPS.flatMap((g) => 
 /** r17: menu reformado (nav17): grupos por função, carreiras em Você › Carreiras, resto em Mais. */
 const groups = (): NavGroup14[] => (groupsMemo ??= (() => {
   const g = store.game, ids = navItems().map((x) => x.id), has = new Set(ids);
-  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a), all: ids, hint: HINT17 });
+  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a) && (!g || !UX19UI.has || UX19UI.has(g, a) || a === store.area), all: ids, hint: HINT17 });
 })());
 void navGroups16;
 
@@ -316,7 +317,7 @@ function nav(): HTMLElement {
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
       open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
     );
-  }));
+  }), UX19UI.navFoot?.(store.game!) ?? null);
 }
 
 /** Faixa de sub-áreas no topo do painel (útil no celular, onde o menu lateral vira barra). */
@@ -559,6 +560,7 @@ function endScreen(): void {
   const body = h('div', { class: 'ending' },
     h('div', { class: 'disc big', 'aria-hidden': 'true' }),
     h('h3', null, insolvent && !def ? t(S.insolvencyTitle) : t(def?.name)),
+    UX19UI.end?.(g) ?? null,
     h('p', { class: 'lead' }, insolvent && !def ? t(S.insolvencyText) : t(def?.text)),
     h('p', { class: 'muted' }, `${g.config.companyName} · ${g.config.startYear}–${end.year} · Run ${g.signature}`),
     h('h4', null, `${t(S.legacy)}: ${legacyTotal(g)}`),

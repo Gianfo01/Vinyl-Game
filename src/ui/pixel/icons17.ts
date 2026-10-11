@@ -15,6 +15,8 @@ export const ICON17_NAMES = [
   'chess', 'coin', 'ticket', 'medal', 'mask', 'diamond', 'tie', 'stage', 'mixer', 'hourglass', 'skyline',
   // r18 final: páginas novas da rodada 18
   'door', 'clapper', 'typewriter', 'copyright', 'factory', 'signpost', 'network', 'seedling', 'passport', 'columns', 'dice',
+  // r19 onda 4 (ux19): páginas da rodada 19 com lugar próprio no menu
+  'datebook', 'quill', 'turntable', 'spotlight', 'ballot', 'zine', 'certificate',
 ] as const;
 export type Icon17 = (typeof ICON17_NAMES)[number];
 
@@ -54,6 +56,13 @@ const DRAW: Record<Icon17, (p: Px) => void> = {
   seedling: (p) => { p.rect(4, 11, 8, 4, K.brown); p.rect(3, 10, 10, 2, K.dbrown); p.vline(8, 4, 10, K.dgreen); p.ellipse(5, 5, 3, 1.8, K.green); p.ellipse(11, 3.5, 3, 1.8, K.green); },
   passport: (p) => { p.rect(3, 1, 10, 14, K.dblue); p.disc(8, 7, 3, K.gold); p.ring(8, 7, 2, K.dgold); p.hline(5, 10, 12, K.gold); },
   columns: (p) => { p.poly([[1, 5], [8, 1], [15, 5]], K.cream); p.rect(2, 5, 12, 1, K.grey); for (const x of [3, 7, 11]) p.rect(x, 6, 2, 7, K.white); p.rect(1, 13, 14, 2, K.grey); },
+  datebook: (p) => { p.rect(2, 3, 12, 12, K.white); p.rect(2, 3, 12, 3, K.red); p.rect(4, 1, 2, 4, K.dgrey); p.rect(10, 1, 2, 4, K.dgrey); for (let y = 8; y < 14; y += 2) for (let x = 4; x < 13; x += 3) p.rect(x, y, 2, 1, K.grey); p.rect(10, 11, 2, 2, K.red); },
+  quill: (p) => { p.rect(2, 10, 9, 5, K.cream); p.hline(3, 9, 12, K.grey); p.poly([[14, 1], [9, 9], [8, 11], [10, 9], [15, 3]], K.white); p.line(13, 3, 8, 11, K.grey); p.put(8, 12, K.ink); },
+  turntable: (p) => { p.rect(1, 3, 14, 11, K.brown); p.disc(7, 8.5, 4.6, K.black); p.disc(7, 8.5, 1.4, K.red); p.ring(7, 8.5, 3, K.dgrey); p.line(13, 4, 11, 10, K.grey); p.rect(12, 3, 2, 2, K.white); },
+  spotlight: (p) => { p.poly([[6, 1], [10, 1], [14, 14], [2, 14]], C('#fff2b0')); p.rect(5, 0, 6, 2, K.dgrey); p.ellipse(8, 14, 6, 1.4, K.gold); p.disc(8, 10, 1.6, K.skin); p.rect(7, 11, 3, 3, K.blue); },
+  ballot: (p) => { p.rect(2, 7, 12, 8, K.dblue); p.rect(2, 7, 12, 2, K.blue); p.rect(6, 7, 4, 1, K.black); p.poly([[5, 1], [11, 1], [11, 7], [5, 7]], K.white); p.line(6, 4, 7, 5, K.green); p.line(7, 5, 10, 2, K.green); },
+  zine: (p) => { p.poly([[2, 2], [13, 1], [14, 14], [3, 15]], K.cream); p.rect(4, 3, 7, 4, K.black); p.put(5, 4, K.red); p.put(9, 5, K.red); p.hline(4, 11, 9, K.grey); p.hline(4, 10, 11, K.grey); p.hline(5, 12, 13, K.grey); },
+  certificate: (p) => { p.rect(1, 2, 14, 10, K.cream); p.rect(1, 2, 14, 1, K.dgold); p.rect(1, 11, 14, 1, K.dgold); p.disc(8, 7, 3, K.gold); p.disc(8, 7, 1.4, K.white); p.hline(3, 5, 5, K.grey); p.hline(11, 13, 9, K.grey); p.poly([[6, 10], [8, 10], [7, 15]], K.red); p.poly([[8, 10], [10, 10], [9, 15]], K.dred); },
   dice: (p) => { p.rect(2, 2, 12, 12, K.white); p.rect(2, 2, 12, 1, K.grey); p.disc(5, 5, 1.2, K.red); p.disc(8, 8, 1.2, K.red); p.disc(11, 11, 1.2, K.red); p.disc(11, 5, 1.2, K.ink); p.disc(5, 11, 1.2, K.ink); },
 };
 
