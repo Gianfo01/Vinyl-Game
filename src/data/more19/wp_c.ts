@@ -49,11 +49,6 @@ const MENA: Row[] = [
   ['Mohamed Mounir', 'arabic_pop', 'cairo', 1977, 2, 'EGY'],
   ['Ahmed Adaweyya', 'shaabi', 'cairo', 1971, 3, 'EGY'],
   ['Wegz', 'trap', 'alexandria', 2018, 2, 'EGY'],
-  ['Cheikha Rimitti', 'rai', 'oran', 1952, 2, 'DZA'],
-  ['Warda', 'arabic_pop', 'algiers', 1958, 2, 'DZA'],
-  ['Idir', 'folk', 'algiers', 1973, 3, 'DZA'],
-  ['Souad Massi', 'folk', 'algiers', 1999, 3, 'DZA'],
-  ['Nass El Ghiwane', 'chaabi', 'casablanca', 1971, 3, 'MAR'],
 ];
 
 // Sudeste Asiático, Taiwan/Hong Kong, Sul da Ásia, Camboja, Japão e Coreia
@@ -109,7 +104,6 @@ const ASIA: Row[] = [
   ['Happy End', 'pop_rock', 'tokyo', 1970, 2, 'JPN', 1973],
   ['Haruomi Hosono', 'synthpop', 'tokyo', 1973, 2, 'JPN'],
   ['Ryuichi Sakamoto', 'synthpop', 'tokyo', 1978, 1, 'JPN'],
-  ['Fujii Kaze', 'jpop', 'tokyo', 2020, 2, 'JPN'],
   ['Na Hoon-a', 'trot', 'seoul', 1963, 2, 'KOR'],
   ['Kim Wan-sun', 'dance_pop', 'seoul', 1986, 2, 'KOR'],
 ];

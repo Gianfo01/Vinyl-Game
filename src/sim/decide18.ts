@@ -123,7 +123,11 @@ export interface Conseq18 {
 }
 const REG: Record<string, Conseq18> = {};
 export function registerConseq18(key: string, c: Conseq18): void { REG[key] = c; }
-export const conseq18 = (key: string): Conseq18 | undefined => REG[key];
+/** r19 (echoes19, 11.2): eco PADRÃO pelo tom da opção quando a escolha não tem eco escrito à mão (injetado: sem ciclo). */
+export const DEF_CONSEQ19: { f?: (key: string) => Conseq18 | undefined } = {};
+export const conseq18 = (key: string): Conseq18 | undefined => REG[key] ?? DEF_CONSEQ19.f?.(key);
+/** só os ecos registrados (escritos à mão), sem o padrão */
+export const ownConseq18 = (key: string): Conseq18 | undefined => REG[key];
 export const conseqKeys18 = (): string[] => Object.keys(REG);
 export const evKey18 = (eventId: string, opt: string): string => `ev:${eventId}:${opt}`;
 

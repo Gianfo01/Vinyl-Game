@@ -141,6 +141,8 @@ function quick(): HTMLElement {
   return h('div', { class: 'hm18-quick', role: 'toolbar', 'aria-label': t(l('Atalhos', 'Quick actions')) }, q.map(([a, i, lb]) => h('button', { class: 'btn small ghost', onclick: () => go(a) }, ic(i), ' ', t(lb))));
 }
 
+/** r19 (era19/realhist19): outros sistemas acrescentam blocos ao topo do Cockpit ("A era", "A história real"). */
+export const HOME_EXTRA19: ((s: GameState) => Block19[])[] = [];
 /** r19 (11.12): os cartões do topo viram blocos com peso e condição (blocks19 escolhe ~6 com as seções da Mesa). */
 export function homeBlocks18(s: GameState): Block19[] {
   const hot = mine(s).some((a) => a.members.some((id) => { const p = s.persons[id]; return p?.alive && (p.stress > 70 || p.resentment > 50); }));
@@ -154,6 +156,7 @@ export function homeBlocks18(s: GameState): Block19[] {
     { id: 'home:mood', title: l('Humor do elenco', 'Roster mood'), weight: hot ? 68 : 38, el: roster(s), host: 'home' },
     { id: 'home:tick', title: l('Notícias e paradas', 'News and charts'), weight: 28, el: ticker(s), host: 'home' },
     { id: 'home:spot', title: l('Holofote', 'Spotlight'), weight: 22, el: spotlight(s), host: 'home' },
+    ...HOME_EXTRA19.flatMap((f) => { try { return f(s); } catch { return []; } }),
   ];
 }
 

@@ -170,4 +170,6 @@ import './cockpit19';
 import './tribute19';
 // Rodada 19 (Frente 9.2/9.3): Músicos de sessão (Estúdio) e Créditos e autores (Compor/Editora).
 import './session19';
+// Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
+import './era19';
 import './core18';

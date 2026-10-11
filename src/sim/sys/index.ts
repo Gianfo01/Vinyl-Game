@@ -267,4 +267,8 @@ import './revival19';
 import './session19';
 import './writers19';
 import './links19a'; // r19 Frente 1 grupo A: espólio, fábrica, censura, festival, ecos, regiões
+// Rodada 19 (onda 2: 11.2/11.5/11.6 + piloto da Frente 2): cobertura de ecos, era 1889 ligada, contratos por época, história real.
+import './echoes19';
+import './era19';
+import './realhist19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

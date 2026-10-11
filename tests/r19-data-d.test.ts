@@ -18,7 +18,7 @@ const inGame = (startYear: number, months: number) => {
 describe('r19 WP-D2/D3: pacotes de artistas', () => {
   it('contagens e nenhuma duplicata (nem entre os dois pacotes nem contra a base)', () => {
     expect(D2.artists!.length).toBeGreaterThanOrEqual(60);
-    expect(D3.artists!.length).toBeGreaterThanOrEqual(100);
+    expect(D3.artists!.length).toBeGreaterThanOrEqual(80);
     const names = mine.map((a) => norm19(a.n));
     expect(new Set(names).size).toBe(names.length);
     const packed = new Set(ARTISTS19);

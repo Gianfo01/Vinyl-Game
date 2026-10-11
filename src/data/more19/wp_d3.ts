@@ -101,12 +101,6 @@ const Y20: NonNullable<Pack19['artists']> = [
   { n: 'Xdinary Heroes', g: 'kpop', c: 'seoul', d: 2021, t: 3, cn: 'KOR', z: 1 },
   { n: 'Yorushika', g: 'jpop', c: 'tokyo', d: 2019, t: 2, cn: 'JPN', z: 1 },
   // ── África (pop global dos anos 2020) ──
-  { n: 'Black Sherif', g: 'afrobeats', c: 'accra', d: 2021, t: 2, cn: 'GHA', b: 2002, r: 'vocal', z: 2 },
-  { n: 'Omah Lay', g: 'afrobeats', c: 'lagos', d: 2020, t: 2, cn: 'NGA', b: 1997, r: 'vocal', z: 2 },
-  { n: 'Victony', g: 'afrobeats', c: 'lagos', d: 2020, t: 3, cn: 'NGA', r: 'vocal', z: 1 },
-  { n: 'Ruger', g: 'afrobeats', c: 'lagos', d: 2021, t: 3, cn: 'NGA', r: 'vocal', z: 1 },
-  { n: 'Uncle Waffles', g: 'amapiano', c: 'johannesburg', d: 2022, t: 2, cn: 'ZAF', r: 'dj', z: 2 },
-  { n: 'Musa Keys', g: 'amapiano', c: 'johannesburg', d: 2021, t: 3, cn: 'ZAF', r: 'dj', z: 1 },
   // ── EUA: country e rap dos anos 2020 ──
   { n: 'Shaboozey', g: 'country', c: 'nashville', d: 2018, t: 2, cn: 'USA', b: 1995, r: 'vocal', z: 2 },
   { n: 'Megan Moroney', g: 'country_pop', c: 'nashville', d: 2022, t: 3, cn: 'USA', b: 1998, r: 'vocal', z: 1 },

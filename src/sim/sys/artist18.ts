@@ -21,13 +21,14 @@ import { expectedAdvance } from '../contracts';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { registerExplain } from '../explain18';
 import { emitFact } from '../facts17';
-import { pushInbox18, registerAdvisorTip, registerInboxKind, type AdvTip18 } from '../inbox18';
+import { pushInbox18 as pushInbox18raw, registerAdvisorTip, registerInboxKind, type AdvTip18 } from '../inbox18';
 import { postHooks18 } from '../ledger18';
 import { defaultRights } from '../rights';
 import type { Act, Contract, GameState, Label } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ability18 } from './ability18';
 import { PKG18, packaging18, type Clauses18 } from './contracts18';
+import { eraK19, eraMasterL19, eraWord19, eraOffer19, eraOfferText19, expRoy19, hasMaster19 } from './eracon19';
 import { fameIn, homeA3 } from './fame16';
 import { m14, mgrActive, mgrName } from './managers14';
 import { labelClout, type ArApproval } from './offers12';
@@ -83,7 +84,9 @@ export const band18 = (s: GameState): Act | undefined => { const id = s.player.b
 export const on18 = (s: GameState): boolean => s.config.role === 'artist' && !!band18(s);
 const nameOf = (s: GameState, id: string) => s.labels[id]?.name ?? id;
 const exp18 = (s: GameState, a: Act) => Math.max(600, expectedAdvance(s, a));
-const say = (st: Art18, s: GameState, t: L) => { st.log.unshift([s.year, s.month, t]); if (st.log.length > 40) st.log.length = 40; };
+/** r19 (11.6): antes de ~1925 não existe "master" — mensagens e registro falam em matrizes */
+const pushInbox18: typeof pushInbox18raw = (s, kind, m) => pushInbox18raw(s, kind, hasMaster19(s.year) ? m : { ...m, subject: eraWord19(m.subject), body: eraWord19(m.body), actions: m.actions?.map((x) => ({ ...x, label: eraWord19(x.label) })) });
+const say = (st: Art18, s: GameState, t0: L) => { const t = hasMaster19(s.year) ? t0 : eraWord19(t0); st.log.unshift([s.year, s.month, t]); if (st.log.length > 40) st.log.length = 40; };
 function led(s: GameState, k: string, v: number, t: L): void {
   const st = a18(s);
   st.led.unshift({ w: s.week, y: s.year, m: s.month, k, v: Math.round(v), t });
@@ -193,9 +196,15 @@ function mkRecord(s: GameState, r: Rng, lb: Label, a: Act, v: number, why: L[], 
   };
   if (pred) o.pred = 1;
   if (low) o.low = 1;
+  eraOffer19(s.year, o, a.fame); // r19 (11.6): cachê por sessão antes de ~1903, sem "master" antes de ~1925, royalty por década
   return o;
 }
 function mkDist(s: GameState, r: Rng, lb: Label, a: Act, why: L[]): Offer18 {
+  const o = mkDist0(s, r, lb, a, why);
+  if (!hasMaster19(s.year)) { eraOffer19(s.year, o, a.fame); o.why = why; } // r19: distribuidora "o master continua seu" não existe antes de ~1925
+  return o;
+}
+function mkDist0(s: GameState, r: Rng, lb: Label, a: Act, why: L[]): Offer18 {
   const exp = exp18(s, a);
   const fee = Math.round((0.15 + r.next() * 0.15) * 100) / 100;
   return {
@@ -220,12 +229,14 @@ export function value18(s: GameState, o: Offer18): { v: number; seen: number; pa
   if (o.fund) add(clamp(toReal(o.fund, s.year) / exp, 0, 1.5) * 0.04, l('Fundo de gravação pago pelo selo (recuperável)', 'Recording fund paid by the label (recoupable)'));
   const k = o.k18;
   const bm = k ? (k.base === 'retail' ? 1.25 : k.base === 'wholesale' ? 1 : 0.88) * (1 - packaging18(s.year, k.base)) : 1;
-  const expR = o.model === 'distribution' ? 0.75 : 0.15 + a.fame / 600;
-  add((o.roy / expR - 1) * 0.15, fmtL(l('Royalty nominal {r}%', 'Headline royalty {r}%'), { r: Math.round(o.roy * 100) }));
-  if (k && bm !== 1) add((bm - 1) * 0.15, fmtL(l('Base do royalty e embalagem: vale {p}% do nominal', 'Royalty base and packaging: worth {p}% of headline'), { p: Math.round(bm * 100) }), 1);
+  const ek = eraK19(s.year); // r19 (11.6): o artista espera o royalty da sua década (antes de ~1903, cachê por sessão)
+  const expR = o.model === 'distribution' ? 0.75 : ek === 'modern' && s.year >= 2000 ? 0.15 + a.fame / 600 : expRoy19(s.year, a.fame);
+  if (ek === 'session') add(0.01, l('Cachê por sessão, sem royalty: o costume antes de ~1903', 'Flat session fee, no royalty: the custom before ~1903'));
+  else add((o.roy / expR - 1) * 0.15, fmtL(l('Royalty nominal {r}%', 'Headline royalty {r}%'), { r: Math.round(o.roy * 100) }));
+  if (k && bm !== 1 && ek !== 'session') add((bm - 1) * 0.15, fmtL(l('Base do royalty e embalagem: vale {p}% do nominal', 'Royalty base and packaging: worth {p}% of headline'), { p: Math.round(bm * 100) }), 1);
   if (k && o.model !== 'distribution') {
     const burden = k.rec * 0.04 + (k.video ? 0.02 : 0) + (k.tour ? 0.025 : 0) + k.mkt * 0.08;
-    add(-burden, l('Despesas recuperáveis (gravação, clipe, turnê, marketing)', 'Recoupable costs (recording, video, tour, marketing)'), 1);
+    add(-burden, ek === 'modern' ? l('Despesas recuperáveis (gravação, clipe, turnê, marketing)', 'Recoupable costs (recording, video, tour, marketing)') : l('Gravação recuperável (ceras e músicos)', 'Recoupable recording (waxes and musicians)'), 1);
     add(k.cross ? -0.03 : 0.015, k.cross ? l('Recuperação cruzada entre discos', 'Cross-collateralized across records') : l('Recuperação por projeto', 'Per-project recoupment'), 1);
     add(k.stmt === 'a' ? -0.03 : k.stmt === 'q' ? 0.015 : 0, k.stmt === 'a' ? l('Contas só uma vez por ano', 'Statements only yearly') : k.stmt === 'q' ? l('Contas trimestrais', 'Quarterly statements') : l('Contas semestrais', 'Semiannual statements'), 1);
     if (k.lag >= 4) add(-0.02, fmtL(l('{n} meses de atraso para pagar', '{n}-month payment lag'), { n: k.lag }), 1);
@@ -235,7 +246,9 @@ export function value18(s: GameState, o: Offer18): { v: number; seen: number; pa
   add(-Math.max(0, o.term / 12 - 3) * 0.03, fmtL(l('Prazo de {y} anos', '{y}-year term'), { y: Math.round(o.term / 12 * 10) / 10 }));
   if (o.opts) add(-o.opts * 0.02, fmtL(l('{n} opção(ões) a critério do selo', '{n} option(s) at the label\'s discretion'), { n: o.opts }), 1);
   if (o.albums > 3) add(-(o.albums - 3) * 0.02, fmtL(l('{n} discos devidos', '{n} records owed'), { n: o.albums }));
-  add(o.master === 'artist' ? 0.1 : o.master === 'shared' ? 0.05 : o.rev ? 0.02 : -0.02, o.master === 'artist' ? l('Master continua seu', 'You keep the master') : o.master === 'shared' ? l('Master dividido', 'Shared master') : o.rev ? fmtL(l('Master volta em {y} anos', 'Master reverts in {y} years'), { y: o.rev }) : l('Master do selo para sempre', 'Label owns the master forever'));
+  const em = eraMasterL19(s.year);
+  if (em) add(0.005, em);
+  else add(o.master === 'artist' ? 0.1 : o.master === 'shared' ? 0.05 : o.rev ? 0.02 : -0.02, o.master === 'artist' ? l('Master continua seu', 'You keep the master') : o.master === 'shared' ? l('Master dividido', 'Shared master') : o.rev ? fmtL(l('Master volta em {y} anos', 'Master reverts in {y} years'), { y: o.rev }) : l('Master do selo para sempre', 'Label owns the master forever'));
   if (o.s360) add(-o.s360 * 0.5, fmtL(l('360: {p}% de shows, merch e patrocínio', '360: {p}% of live, merch and sponsorship'), { p: Math.round(o.s360 * 100) }));
   add(o.ar === 'artist' ? 0.06 : o.ar === 'joint' ? 0.03 : -0.02, o.ar === 'artist' ? l('Vocês escolhem singles e produtor', 'You pick singles and producer') : o.ar === 'joint' ? l('Decisão conjunta no estúdio', 'Joint studio decisions') : l('O selo escolhe singles e produtor', 'The label picks singles and producer'));
   add(labelClout(s, o.lb) * 0.2 - 0.08, fmtL(l('Força do selo ({c}%)', 'Label clout ({c}%)'), { c: Math.round(labelClout(s, o.lb) * 100) }));
@@ -295,6 +308,8 @@ const pushOfferMsg = (s: GameState, o: Offer18, subj: L, body: L) => {
 };
 function offerText(s: GameState, o: Offer18): L {
   if (o.k === 'dist') return fmtL(l('Distribuição e fabricação por {f}% das vendas; adiantamento de {a}; o master continua seu. 2 anos.', 'Distribution and manufacturing for {f}% of sales; {a} advance; you keep the master. 2 years.'), { f: Math.round((1 - o.roy) * 100), a: fmtMoney(s, o.adv) });
+  const era = o.k === 'record' || o.k === 'buyout' ? eraOfferText19(s.year, o, o.who) : null; // r19 (11.6): linguagem da época
+  if (era) return o.k === 'buyout' ? fmtL(l('{b} paga {fee} ao seu selo atual para tirar vocês de lá. {t}', '{b} pays your current label {fee} to get you out. {t}'), { b: o.who, fee: fmtMoney(s, o.fee ?? 0), t: era }) : era;
   if (o.k === 'dev') return fmtL(l('Contrato de desenvolvimento: mesada de {m}/mês por 12 meses; o selo tem a opção de contratar vocês nos termos combinados. Enquanto isso, vocês não assinam com outros.', 'Development deal: {m}/month stipend for 12 months; the label holds an option to sign you on pre-agreed terms. Meanwhile you can\'t sign elsewhere.'), { m: fmtMoney(s, o.stip ?? 0) });
   const t = fmtL(l('Adiantamento {a} + fundo de gravação {f}; royalty {r}%; {y} anos ({n} discos, {o} opções); master: {m}{x}.', 'Advance {a} + recording fund {f}; royalty {r}%; {y} years ({n} records, {o} options); master: {m}{x}.'),
     { a: fmtMoney(s, o.adv), f: fmtMoney(s, o.fund), r: Math.round(o.roy * 100), y: Math.round(o.term / 12 * 10) / 10, n: o.albums, o: o.opts, m: o.master === 'artist' ? l('seu', 'yours') : o.master === 'shared' ? l('dividido', 'shared') : o.rev ? fmtL(l('do selo, volta em {r} anos', 'label\'s, reverts in {r} years'), { r: o.rev }) : l('do selo', 'label\'s'), x: o.s360 ? fmtL(l('; 360 de {p}%', '; 360 of {p}%'), { p: Math.round(o.s360 * 100) }) : '' });

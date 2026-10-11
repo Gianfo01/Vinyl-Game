@@ -9,6 +9,7 @@ import {
   a18, accept18, advice18, ASK18, audit18, auditBlock18, auditCost18, band18, breach18, counter18, counterOdds18, decline18, diy18, fireAgent18, fireMgr18, hireLawyer18, hon18,
   ctx18, interest18, lawyerCost18, leave18, leaveCost18, on18, openOffers18, PTYPE18, reneg18, renegBlock18, renegOdds18, sue18, testi18, value18, votes18, warn18, type Ask18, type Offer18,
 } from '../../sim/sys/artist18';
+import { eraAsks19, eraMasterL19 } from '../../sim/sys/eracon19';
 import {
   buyOut18, buyOutPrice18, capOf18, styleOf18, dissolve18, found18, foundOdds18, hybrid18, partners18, PROP18, SELF18, sellStake18, setSelf18, setSplit18, sh18, SPLIT18, STYLE18, value18v, vote18, VKIND18,
   type Prop18, type VKind18,
@@ -49,7 +50,7 @@ function terms(s: GameState, o: Offer18): HTMLElement {
       [l('Base do royalty', 'Royalty base'), q(k ? t(k.base === 'retail' ? l('varejo (− embalagem)', 'retail (− packaging)') : k.base === 'wholesale' ? l('atacado', 'wholesale') : l('receita líquida', 'net receipts')) : '—', 1)],
       [l('Recuperável', 'Recoupable'), q(k ? `${t(l('gravação', 'recording'))} ${pc(k.rec)}${k.video ? ', ' + t(l('clipe', 'video')) : ''}${k.tour ? ', ' + t(l('turnê', 'tour')) : ''}${k.mkt ? `, mkt ${pc(k.mkt)}` : ''} · ${t(k.cross ? l('cruzado', 'cross-coll.') : l('por projeto', 'per project'))}` : '—', 1)],
       [l('Prazo', 'Term'), `${Math.round(o.term / 12 * 10) / 10} ${t(l('anos', 'yrs'))} · ${o.albums} ${t(l('discos', 'records'))} · ${q(String(o.opts), 1)} ${t(l('opções', 'options'))}`],
-      [l('Master', 'Master'), t(o.master === 'artist' ? l('seu', 'yours') : o.master === 'shared' ? l('dividido', 'shared') : o.rev ? l('do selo (volta depois)', 'label\'s (reverts later)') : l('do selo para sempre', 'label\'s forever'))],
+      eraMasterL19(s.year) ? [l('Matrizes', 'Matrices'), t(eraMasterL19(s.year)!)] : [l('Master', 'Master'), t(o.master === 'artist' ? l('seu', 'yours') : o.master === 'shared' ? l('dividido', 'shared') : o.rev ? l('do selo (volta depois)', 'label\'s (reverts later)') : l('do selo para sempre', 'label\'s forever'))],
       [l('360', '360'), o.s360 ? pc(o.s360) : '—'], [l('Território', 'Territory'), t(o.scope === 'world' ? l('mundo', 'world') : o.scope === 'region' ? l('região', 'region') : l('seu país', 'home'))],
       [l('Estúdio', 'Studio'), t(o.ar === 'artist' ? l('vocês decidem', 'you decide') : o.ar === 'joint' ? l('conjunto', 'joint') : l('o selo decide', 'label decides'))],
       [l('Contas', 'Statements'), q(k ? `${t(k.stmt === 'q' ? l('trimestrais', 'quarterly') : k.stmt === 's' ? l('semestrais', 'semiannual') : l('anuais', 'yearly'))} +${k.lag}m${k.audit ? ' · ' + t(l('auditoria', 'audit')) : ''}` : '—', 1)],
@@ -76,7 +77,7 @@ function offerCard(s: GameState, o: Offer18): HTMLElement {
     vote.length ? h('div', { class: 'small' }, t(l('Banda: ', 'Band: ')), ...vote.map((x) => h('span', { class: x.yes ? 'good' : 'bad', title: t(x.why) }, `${x.name} ${x.yes ? '✓' : '✗'} `)), no * 2 > vote.length ? h('span', { class: 'warn' }, t(l('— maioria contra', '— majority against'))) : null) : null,
     h('div', { class: 'row wrap' },
       btn(l('Aceitar', 'Accept'), () => { const r = accept18(s, o.id); if (!r.ok && r.vote) confirm18(l('A banda votou contra', 'The band voted no'), r.text, l('Assinar mesmo assim', 'Sign anyway'), () => say(accept18(s, o.id, true))); else say(r); }, 'btn small primary'),
-      o.k !== 'reneg' ? select(ask, ASKS.map((x) => ({ value: x, label: t(ASK18[x]) })), (x) => { UI.ask[o.id] = x; rerender(); }) : null,
+      o.k !== 'reneg' ? select(ask, eraAsks19(s.year, ASKS).map((x) => ({ value: x, label: t(ASK18[x]) })), (x) => { UI.ask[o.id] = x; rerender(); }) : null,
       o.k !== 'reneg' ? btn(fmtL2(l('Contrapropor ({p}%)', 'Counter ({p}%)'), { p: Math.round(odds.p * 100) }), () => say(counter18(s, o.id, ask)), 'btn small', l(odds.why.map((x) => x.pt).join(' · ') || 'Chance base', odds.why.map((x) => x.en).join(' · ') || 'Base chance')) : null,
       !adv ? btn(fmtL2(l('Advogado ({c})', 'Lawyer ({c})'), { c: $(lawyerCost18(s)) }), () => say(hireLawyer18(s), l('Advogado contratado: as letras miúdas aparecem.', 'Lawyer hired: the fine print shows up.')), 'btn small ghost') : null,
       btn(l('Recusar', 'Decline'), () => { decline18(s, o.id); rerender(); }, 'btn small ghost')));
