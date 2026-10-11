@@ -1,0 +1,92 @@
+// Rodada 19 (onda 5, B) — auditoria 8 §3, §4, §5: chance mostrada = chance sorteada; cockpit por profissão;
+// orçamento global de conflitos, aviso antes de avançar e resumo do mês.
+import { describe, expect, it } from 'vitest';
+import { defaultConfig } from '../src/sim/bot';
+import { createGame } from '../src/sim/worldgen';
+import { Rng } from '../src/core/rng';
+import type { GameState } from '../src/sim/types';
+import '../src/sim/sys';
+import { ODDS19 } from '../src/sim/sys/odds19';
+import { foundVenture, mgCandidates, ventures, bookingCandidates } from '../src/sim/sys/ventures9';
+import { a18, band18, counterOdds18, openOffers18, type Ask18 } from '../src/sim/sys/artist18';
+import { r18 } from '../src/sim/sys/rights18';
+import { FESTIVALS } from '../src/data/catalog';
+import { editionOf, festFee, pitchOdds8 } from '../src/sim/sys/fests8';
+import { advanceMonth } from '../src/sim/tick';
+
+/** Rng que devolve sempre u: "aceitou" tem de ser exatamente u < chance mostrada. */
+class FixedRng extends Rng { constructor(private u: number) { super([1, 2, 3, 4]); } next(): number { return this.u; } }
+const clone = (s: GameState) => JSON.parse(JSON.stringify(s)) as GameState;
+const game = (y = 1975, seed = 'r19b', extra: object = {}) => createGame(defaultConfig(seed, { startYear: y, ...extra } as never));
+
+function check(id: string, s: GameState, cases: unknown[][]): number {
+  const d = ODDS19[id];
+  let n = 0;
+  for (const a of cases) {
+    const p = d.chance(s, a);
+    expect(p, `${id} ${JSON.stringify(a)}`).toBeGreaterThanOrEqual(0);
+    // logo abaixo e logo acima da chance mostrada: o sorteio tem de virar exatamente ali
+    for (const u of [p - 0.004, p + 0.004].filter((x) => x > 0 && x < 1)) {
+    const ok = d.roll(clone(s), new FixedRng(u), a);
+    expect(ok, `${id} ${JSON.stringify(a)} u=${u} p=${p}`).toBe(u < p);
+    n++;
+    }
+  }
+  return n;
+}
+
+describe('r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorteio', () => {
+  it('empresário, agência, festival, editora: para várias comissões/termos', () => {
+    const s = game();
+    s.player.cash = 1e9;
+    const covered = new Set<string>();
+    const cands = mgCandidates(s).slice(0, 3);
+    const rates = [0.1, 0.15, 0.2];
+    const mg = cands.flatMap((a) => rates.map((r) => [a.id, r]));
+    check('mg.pitch', s, mg); covered.add('mg.pitch');
+    check('mg.poach', s, mg); covered.add('mg.poach');
+    // a chance muda com a comissão (a tela tem de redesenhar)
+    const a0 = mgCandidates(s).reduce((m, a) => (a.fame < m.fame ? a : m));
+    expect(ODDS19['mg.pitch'].chance(s, [a0.id, 0.1])).toBeGreaterThan(ODDS19['mg.pitch'].chance(s, [a0.id, 0.2]));
+    // cliente existente: renegociar comissão e mandato
+    const c = cands[1];
+    ventures(s).mg.clients.push({ actId: c.id, rate: 0.12, since: s.week, sat: 60, earned: 0 });
+    check('mg.rate', s, [[c.id, 0.15], [c.id, 0.2], [c.id, 0.25]]); covered.add('mg.rate');
+    check('mg.mandate', s, [0.1, 0.15, 0.2].flatMap((rate) => [[c.id, { areas: ['recordings'], rate, excl: false, auto: 1 }], [c.id, { areas: ['recordings', 'shows'], rate, excl: true, auto: 2 }]])); covered.add('mg.mandate');
+    // agência de shows e festival próprio
+    expect(foundVenture(s, 'booking', 'label', { name: 'Ag' })).toBeNull();
+    expect(foundVenture(s, 'festival', 'label', { name: 'Fest' })).toBeNull();
+    const bk = ventures(s).list.find((v) => v.kind === 'booking')!;
+    const fv = ventures(s).list.find((v) => v.kind === 'festival')!;
+    const bc = bookingCandidates(s, bk.id).slice(0, 3);
+    check('booking.sign', s, bc.flatMap((a) => [0.08, 0.12, 0.2].map((r) => [bk.id, a.id, r]))); covered.add('booking.sign');
+    check('fest.invite', s, mgCandidates(s).slice(0, 4).map((a) => [fv.id, a.id])); covered.add('fest.invite');
+    // editora: taxa de administração
+    r18(s).admOff.push({ id: 'adm-t', name: 'Espólio X', size: 100000, fee: 0.15, until: s.year + 3, sat: 60, exp: s.week + 13 });
+    check('pub.admin', s, [0.1, 0.15, 0.2].map((f) => ['adm-t', f])); covered.add('pub.admin');
+    // festival de terceiros: seu artista pede faixa/cachê
+    const eds = FESTIVALS.map((_, k) => k).filter((k) => { const ed = editionOf(s, k); return ed && !ed.done && ed.month > s.month; });
+    const pool = Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.members.length);
+    const pairs = eds.flatMap((fi) => pool.filter((a) => pitchOdds8(s, fi, a.id, 'opening', festFee(s, FESTIVALS[fi], a, 'opening')) > 0).slice(0, 1).map((a) => [fi, a] as const)).slice(0, 2);
+    expect(pairs.length).toBeGreaterThan(0);
+    const fc = pairs.flatMap(([fi, a]) => [0.9, 1.2, 2.5].flatMap((m) => (['opening', 'headline'] as const).map((t) => [fi, a.id, t, Math.round(festFee(s, FESTIVALS[fi], a, t) * m)])));
+    check('fest.pitch', s, fc); covered.add('fest.pitch');
+    expect(new Set(fc.map((a) => ODDS19['fest.pitch'].chance(s, a))).size).toBeGreaterThan(1);
+    covered.add('artist.counter'); // coberto no teste abaixo
+    expect([...covered].sort()).toEqual(Object.keys(ODDS19).sort());
+  });
+
+  it('contraproposta do artista: a chance depende do tamanho do pedido e é a do sorteio', () => {
+    const s = createGame(defaultConfig('r19bart', { role: 'artist', startYear: 1965, bandGenre: 'rnr', bandName: 'Os Testes' } as never));
+    let o = openOffers18(s).find((x) => x.k === 'record' || x.k === 'dist' || x.k === 'dev');
+    for (let i = 0; i < 12 && !o; i++) { const a = band18(s)!; a.fame = 45; a.momentum = 70; advanceMonth(s); o = openOffers18(s).find((x) => x.k === 'record' || x.k === 'dist' || x.k === 'dev'); }
+    expect(o).toBeTruthy();
+    o!.master = 'label'; o!.rev = 0; o!.ar = 'label';
+    const asks: Ask18[] = ['adv', 'roy', 'master', 'audit', 'term', 'promo', 'control'];
+    const ps = asks.map((k) => counterOdds18(s, o!, k).p);
+    expect(new Set(ps).size).toBeGreaterThan(2);
+    expect(counterOdds18(s, o!, 'master').p).toBeLessThan(counterOdds18(s, o!, 'audit').p);
+    check('artist.counter', s, asks.map((k) => [o!.id, k]));
+    expect(a18(s).offers.length).toBeGreaterThan(0);
+  });
+});
