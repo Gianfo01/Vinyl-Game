@@ -316,4 +316,6 @@ import './scenes19'; // r19 cenas: calendário real dos prêmios, cerimônia com
 // Rodada 19 (onda 5, A): carreiras que sustentam a partida (pacotes iniciais, festival, empresário) e economia interna.
 import './careers19';
 import './intra19';
+// Rodada 20 (G7): livro regional de fãs (coortes por mercado, conservação com o global) e preço por mercado.
+import './terr20';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
