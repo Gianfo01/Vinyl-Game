@@ -13,9 +13,8 @@ import { addAsset } from './finance';
 import { branchRent, hqBlocker, hqCaps } from './branches';
 import { perk } from './perks';
 import { loanAdj19 } from './rates19';
+import { rentOn19 } from './slots19'; // r19 (careers19): sede de selo só com selo ativo
 
-/** r19 (careers19): a sede de selo só cobra aluguel quando a carreira de selo (ou músico) está ativa. Injetado: sem ciclo. */
-export const rentOn19: { f: (s: GameState) => boolean } = { f: () => true };
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
   // prédio próprio (rodada 6): sem aluguel da matriz
