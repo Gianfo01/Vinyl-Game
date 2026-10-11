@@ -28,6 +28,7 @@ import { leaderOf } from './leaders10';
 import { logMove, moveText as moveTxt, playbookOf, rivals8, type PlaybookId } from './rivals8';
 import { standingOf, standingScore } from './standing9';
 import { skipBlockedLog } from './gate14';
+import { allReleases17 } from '../relidx17';
 
 export type ContestKind = 'bid' | 'auction' | 'date' | 'producer' | 'market' | 'catalog' | 'fest' | 'deal' | 'deal_end' | 'info';
 export type Screen = 'market' | 'releases' | 'studio' | 'world' | 'catalog' | 'shows' | 'hq';
@@ -41,6 +42,8 @@ export interface Rivals12State {
   c: Contest[]; bids: Record<string, Bid12>; deals: Deal12[];
   push: Record<string, { lb: string; until: number; fought?: 1 }>;
   seenAu: Record<string, number>; seen: string[]; cl: Record<string, 1>; cd: Record<string, number>; seq: number;
+  /** r20 (B19): resfriamento por mercado (semana até a qual o mercado não pode ser alvo de nova ofensiva) */
+  cdm?: Record<string, number>;
 }
 
 declare module '../ext4' { interface Ext4 { rivals12: Rivals12State } }
@@ -294,15 +297,34 @@ function marketPush(s: GameState): void {
   if (s.week < (st.cd.mkt ?? 0) || !playerActs(s).length) return;
   const r = rngFor(s, 'mkt');
   if (!r.chance(0.08)) return;
-  const m = s.player.territories.find((x) => !st.push[x]);
-  if (!m) return;
-  const lb = Object.values(s.labels).filter((x) => x.active && ['regional', 'importer', 'conglomerate', 'vulture', 'live'].includes(playbookOf(x)) && x.cash > money(s, 120000)).sort((a, b) => heatOf(s, b.id) - heatOf(s, a.id))[0];
+  const lb = Object.values(s.labels).filter((x) => x.active && ['regional', 'importer', 'conglomerate', 'vulture', 'live'].includes(playbookOf(x)) && x.cash > money(s, 120000)).sort((a, b) => heatOf(s, b.id) - heatOf(s, a.id) || (a.id < b.id ? -1 : 1))[0];
   if (!lb) return;
+  // r20 (B19): o alvo é o mercado mais exposto/valioso para ESTE rival, não o primeiro da lista
+  const tgt = pushTargets20(s, lb)[0];
+  if (!tgt) return;
+  const m = tgt.m;
   if (!lb.territories.includes(m)) lb.territories.push(m);
   st.push[m] = { lb: lb.id, until: s.week + 52 };
+  (st.cdm ??= {})[m] = s.week + 52 + 26;
   st.cd.mkt = s.week + 30;
   add(s, { k: 'market', lb: lb.id, scr: 'world', ref: m, until: s.week + 6, opts: ['fight', 'cede'],
-    t: fmtL(l('{b} lançou uma ofensiva em {m}, seu mercado: rádio comprada, lojas lotadas com os discos deles.', '{b} launched a push into {m}, your market: bought radio, stores packed with their records.'), { b: rivalWho(s, lb.id), m: marketById[m].name }) });
+    t: fmtL(l('{b} lançou uma ofensiva em {m}, seu mercado: rádio comprada, lojas lotadas com os discos deles. Por quê: {w}.', '{b} launched a push into {m}, your market: bought radio, stores packed with their records. Why: {w}.'), { b: rivalWho(s, lb.id), m: marketById[m].name, w: tgt.why }) });
+}
+
+/** r20 (B19): mercados do jogador ranqueados para a ofensiva de um rival — tamanho, sua exposição (lançamentos
+ *  ativos ali) e presença prévia do rival; empate decidido pelo id (a ordem do array não muda nada). Mercados
+ *  em ofensiva ou em resfriamento ficam de fora. */
+export function pushTargets20(s: GameState, lb: Label): { m: MarketId; score: number; why: L }[] {
+  const st = rivals12(s);
+  const expo: Record<string, number> = {};
+  for (const rel of allReleases17(s)) if (rel.owner === 'player' && rel.live) for (const m of rel.territories) expo[m] = (expo[m] ?? 0) + 1;
+  return s.player.territories.filter((m) => marketById[m] && !st.push[m] && (st.cdm?.[m] ?? 0) <= s.week).map((m) => {
+    const size = marketById[m].size(s.year), e = expo[m] ?? 0, here = lb.territories.includes(m);
+    const score = size * (1 + Math.min(8, e) * 0.25) * (here ? 1.3 : 1);
+    const parts = [fmtL(l('mercado de porte {p}', 'market size {p}'), { p: size.toFixed(2) }), fmtL(l('{n} lançamento(s) seu(s) ativos ali', '{n} of your release(s) live there'), { n: e })];
+    if (here) parts.push(l('o rival já distribui lá', 'the rival already distributes there'));
+    return { m, score, why: { pt: parts.map((x) => x.pt).join(', '), en: parts.map((x) => x.en).join(', ') } };
+  }).sort((a, b) => b.score - a.score || (a.m < b.m ? -1 : 1));
 }
 
 registerMod('appeal', 'rivals12push', (s, v, c) => {
