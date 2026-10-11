@@ -151,7 +151,7 @@ registerConseq18('ev:d18_mentor:accept', { later: [{ in: [4, 9], p: 0.4, tone: '
 // ---------------------------------------------------------------- 6. trégua com um rival (portão de relação e traço)
 const truce = ev({
   id: 'd18_truce', cat: 'market', tone: 'neutral', cooldown: 24,
-  find: (s, r) => { const ls = Object.values(s.labels).filter((x) => x && !(x as { defunct?: boolean }).defunct); if (ls.length < 2 || !r.chance(0.2)) return null; return { label: r.pick(ls).id }; },
+  find: (s, r) => { const ls = Object.values(s.labels).filter((x) => x && x.active && !(x as { defunct?: boolean }).defunct); if (ls.length < 2 || !r.chance(0.2)) return null; return { label: r.pick(ls).id }; },
   title: N('{labelName} propõe uma trégua', '{labelName} proposes a truce'),
   text: N('O chefe da {labelName} sugere: nada de aliciar artistas um do outro por dois anos. Um aperto de mão — ou uma negociação dura.', 'The {labelName} boss suggests: no poaching each other\'s artists for two years. A handshake — or a hard bargain.'),
   options: [

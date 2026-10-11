@@ -274,6 +274,7 @@ export function moveText(m: Move): L {
   else if ((m.k === 'scene_sign' || m.k === 'scene_night') && m.x?.includes(':')) x = sceneNameL(m.x);
   else if (m.k === 'import_hit') x = marketById[m.x as MarketId]?.name ?? (m.x ?? '');
   else if (m.k === 'strategy_change') x = PLAYBOOKS[m.x as PlaybookId]?.name ?? (m.x ?? '');
+  if (m.k === 'media_push' && (m.x === 'press' || m.x === 'radio')) return fmtL(m.x === 'press' ? l('pôs {a} na revista, no jornal e nos teatros do grupo na mesma semana', 'put {a} in the group\'s magazine, papers and theatres in the same week') : l('pôs {a} no rádio e na revista do grupo na mesma semana', 'put {a} on the group\'s radio and magazine in the same week'), { a: m.a ?? '' });
   return fmtL(MOVE_TXT[m.k], { a: m.a ?? '', x });
 }
 
@@ -695,7 +696,7 @@ function mediaConglomerate(s: GameState, r: Rng, lb: Label): void {
       a.fame = clamp(a.fame + 1.2, 0, 100);
       a.momentum = clamp(a.momentum + 8, 0, 100);
       a.fans.casual += Math.round(a.fans.casual * 0.05) + 200;
-      logMove(s, lb, { k: 'media_push', a: a.name });
+      logMove(s, lb, { k: 'media_push', a: a.name, x: s.year < 1922 ? 'press' : s.year < 1940 ? 'radio' : undefined }); // r19 smoke: sem TV/rádio antes da época
     }
   }
   if (r.chance(0.015) && lb.cash > money(s, 800000)) {

@@ -177,7 +177,7 @@ function goneRows(s: GameState): HTMLElement {
           h('td', null, logo(a, 28)),
           h('td', null, actLink(s, a.id), a.legend ? pill(t(l('lenda', 'legend')), 'gold') : null),
           h('td', null, genreName(a.genre)),
-          h('td', null, `${a.debutYear}–${a.status === 'hiatus' ? '…' : a.careerEnd}`),
+          h('td', null, `${a.debutYear}–${a.status === 'hiatus' ? '…' : Math.min(a.careerEnd, s.year)}`), // r19 smoke: o fim planejado não vaza
           h('td', null, statusPill(a)),
           h('td', null, `${a.releases.length} · ${a.hits} top 10 · ${a.number1s} #1`),
           h('td', null, N0(catalog(a))),

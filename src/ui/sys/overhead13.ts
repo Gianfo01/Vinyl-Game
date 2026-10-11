@@ -31,7 +31,7 @@ registerSection('company', {
           h('tr', null, h('td', null, h('b', null, `${t(l('Total por mês', 'Total per month'))} (${pct} ${t(l('da receita', 'of revenue'))})`)), h('td', { class: 'bad' }, $(-total)))))
         : h('p', { class: 'muted small' }, t(l('Operação pequena: sem estrutura extra por enquanto. Burocracia, jurídico e equipes aparecem quando o selo cresce.', 'Small operation: no extra structure yet. Bureaucracy, legal and teams appear as the label grows.'))),
       last?.capped ? h('p', { class: 'muted small' }, t(l('O teto de despesas limitou o total neste mês: a conta foi reduzida proporcionalmente.', 'The overhead cap limited the total this month: every line was scaled down.'))) : null,
-      h('p', { class: 'small' }, `${t(l('Promoção mínima por lançamento', 'Baseline promo per release'))}: ${t(l('single', 'single'))} ${$(launchPromo(s, { type: 'single', territories: s.player.territories }, R).amount)} · LP ${$(launchPromo(s, { type: 'lp', territories: s.player.territories }, R).amount)}`,
+      h('p', { class: 'small' }, `${t(l('Promoção mínima por lançamento', 'Baseline promo per release'))}: ${t(l('single', 'single'))} ${$(launchPromo(s, { type: 'single', territories: s.player.territories }, R).amount)} · ${s.year < 1948 ? t(l('álbum', 'album')) : 'LP'} ${$(launchPromo(s, { type: 'lp', territories: s.player.territories }, R).amount)}`,
         h('span', { class: 'muted' }, ` — ${t(launchPromo(s, { type: 'lp', territories: s.player.territories }, R).why)}${o.promoN ? ` · ${t(l('pago até agora', 'paid so far'))}: ${$(-o.promo)} (${o.promoN})` : ''}`)));
   },
 });

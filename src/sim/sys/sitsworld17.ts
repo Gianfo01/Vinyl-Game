@@ -362,7 +362,7 @@ registerSituation({
     const p = a ? leadOf(s, a) : undefined;
     return a && p ? { hero: p.id, act: a.id, cast: { person: p.id }, data: {} } : null;
   },
-  title: (s, c) => fmtL(s.year < 1955 ? l('{a} estoura no rádio', '{a} blows up on the radio') : s.year < 1981 ? l('{a} arrasa na TV', '{a} kills it on TV') : s.year < 2005 ? l('O clipe de {a} não sai da MTV', '{a}\'s video is all over MTV') : l('{a} viralizou', '{a} went viral'), { a: nm(s, c.act) }),
+  title: (s, c) => fmtL(s.year < 1922 ? l('{a} vira febre nos teatros de variedades', '{a} is the rage of the variety halls') : s.year < 1955 ? l('{a} estoura no rádio', '{a} blows up on the radio') : s.year < 1981 ? l('{a} arrasa na TV', '{a} kills it on TV') : s.year < 2005 ? l('O clipe de {a} não sai da MTV', '{a}\'s video is all over MTV') : l('{a} viralizou', '{a} went viral'), { a: nm(s, c.act) }),
   text: (s, c) => fmtL(l('Todo mundo está falando de {a} esta semana. Como aproveitar?', 'Everyone is talking about {a} this week. How to make the most of it?'), { a: nm(s, c.act) }),
   options: [
     { id: 'ride', label: l('Surfar a onda: agenda cheia', 'Ride the wave: packed schedule'), hint: l('Embalo +12, fama +2; estresse +8.', 'Momentum +12, fame +2; stress +8.'), weightByTraits: (p) => F(p, 'ambicao') + F(p, 'sociabilidade') * 0.5,

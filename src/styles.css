@@ -270,6 +270,13 @@ img.pxi { vertical-align: -3px; display: inline-block; padding: 0; }
 .toast.good { border-left-color: var(--good); }
 .toast.bad { border-left-color: var(--bad); }
 .toast.out { opacity: 0; transform: translateY(8px); }
+/* r19 smoke: com um diálogo aberto, os avisos ficam sob o véu (não cobrem os botões); no celular, só os 2 últimos e curtos */
+body:has(.overlay) #toasts { z-index: 40; pointer-events: none; }
+@media (max-width: 600px) {
+  #toasts { left: 0.5rem; right: 0.5rem; bottom: calc(0.5rem + 64px); max-width: none; }
+  #toasts .toast:nth-last-child(n+3) { display: none; }
+  #toasts .toast { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.9em; }
+}
 
 /* telas iniciais */
 .title-screen { max-width: 720px; margin: 6vh auto; text-align: center; padding: 1rem; }

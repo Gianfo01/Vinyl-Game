@@ -23,11 +23,11 @@ function row(label: string, v: number, cls = '', strong = false): HTMLElement {
   return h('tr', { class: cls }, h('td', null, strong ? h('b', null, label) : label), h('td', { class: `num ${v < 0 ? 'bad' : v > 0 ? 'good' : 'muted'}` }, strong ? h('b', null, $(v)) : $(v)));
 }
 
-function dre(o: Record<string, number> | undefined): HTMLElement {
+function dre(o: Record<string, number> | undefined, year = 2030): HTMLElement {
   const rev = sumP18(o, 'rev:'), op = opProfit18(o), net = netProfit18(o);
   return h('table', { class: 'tbl compact dre18' }, h('tbody', null,
     h('tr', null, h('th', { colspan: 2 }, t(l('Receita operacional', 'Operating revenue')))),
-    ...REV.map(([k, n]) => row(t(n), o?.[`rev:${k}`] ?? 0)),
+    ...REV.map(([k, n]) => row(k === 'rec' && year < 2001 ? t(l('Gravações (vendas e distribuição)', 'Recordings (sales and distribution)')) : t(n), o?.[`rev:${k}`] ?? 0)), // r19 smoke: sem streaming antes da época
     row(t(l('= Receita operacional', '= Operating revenue')), rev, '', true),
     h('tr', null, h('th', { colspan: 2 }, t(l('Custos e despesas', 'Costs and expenses')))),
     ...COST.map(([k, n]) => row(t(n), o?.[`cost:${k}`] ?? 0)),
@@ -139,7 +139,7 @@ function render(s: GameState): HTMLElement {
     ...(st.per === 'year' ? years.slice(0, 8).map((y) => h('button', { class: `btn small ${y === st.y ? '' : 'ghost'}`, onclick: () => { st.y = y; rerender(); } }, String(y)))
       : Array.from({ length: 12 }, (_, i) => cur - 11 + i).filter((m) => f.m[m]).map((m) => h('button', { class: `btn small ${m === st.m ? '' : 'ghost'}`, onclick: () => { st.m = m; rerender(); } }, mName(m)))));
   return h('div', null,
-    section(t(l('Demonstrativo de resultado e fluxo de caixa', 'Income statement and cash flow')), pick, dre(o),
+    section(t(l('Demonstrativo de resultado e fluxo de caixa', 'Income statement and cash flow')), pick, dre(o, s.year),
       f.since ? h('p', { class: 'muted small' }, t(l('Jogo salvo antes desta versão: as seções valem a partir de {y}; anos anteriores somavam qualquer entrada como receita.', 'Saved before this version: sections apply from {y}; earlier years counted any inflow as revenue.'), { y: f.since })) : null,
       h('p', { class: 'muted small' }, t(l('Aporte de investidor, empréstimo, IPO e venda de ativos NÃO são receita nem lucro: entram em Financiamento/Investimento. O conselho, as metas e a avaliação da empresa usam o lucro operacional.', 'Investor money, loans, IPOs and asset sales are NOT revenue or profit: they go to Financing/Investing. The board, goals and company valuation use operating profit.')))),
     section(t(l('Lucro × caixa nos últimos 12 meses', 'Profit × cash over the last 12 months')), bars(s),

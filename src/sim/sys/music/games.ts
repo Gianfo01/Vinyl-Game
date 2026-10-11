@@ -76,7 +76,7 @@ export function gearOffersMonth(s: GameState, r: Rng): void {
   const m = ms(s);
   m.gearOffers = m.gearOffers.filter((o) => o.expires > s.week);
   for (const lb of Object.values(s.labels)) {
-    if (lb.active || m.seenLabels.includes(lb.id)) continue;
+    if (lb.active || lb.founded > s.year || m.seenLabels.includes(lb.id)) continue; // r19 smoke: selo que ainda não existe não tem massa falida
     m.seenLabels.push(lb.id);
     if (m.seenLabels.length > 60) m.seenLabels.shift();
     const opts = GEAR.filter((g) => s.year >= g.from && !m.gear.includes(g.id) && !m.gearOffers.some((o) => o.gearId === g.id));
