@@ -919,7 +919,8 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
   const pc = narratorPace(s.config.storyteller);
   const freq = pc.freq;
   let n = Math.floor(freq + r.next());
-  if (s.decisions.length >= 4 || CONFLICTS19.full(s)) n = 0; // a mesa do mês tem no máximo ~5 itens; r19: e o orçamento global de conflitos
+  if (s.decisions.length >= 4) n = 0; // a mesa do mês tem no máximo ~5 itens
+  const full19 = n > 0 && CONFLICTS19.full(s); // r19: orçamento global cheio → nada de evento ruim novo (oportunidades seguem)
   const monthlyCost = estimateMonthlyBurn(s);
   const struggling = s.player.cash < monthlyCost * 2 || s.player.insolvencyMonths > 0;
   const target = pc.wave ? 0.5 + 0.35 * Math.sin((monthIndex / pc.wave) * Math.PI * 2) : 0.35;
@@ -930,6 +931,7 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
       for (const def of EVENTS) {
         if (def.forcedOnly || !def.find) continue;
         if ((s.eventCooldowns[def.id] ?? -1) > s.week) continue;
+        if (full19 && def.tone === 'bad') continue;
         if (filtered(s, def)) continue;
         const ctx = def.find(s, r);
         // o personagem do jogador decide a própria vida (área Você): eventos pessoais não o escolhem

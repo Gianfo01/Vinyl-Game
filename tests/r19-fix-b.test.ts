@@ -23,7 +23,7 @@ import { liveOf } from '../src/sim/sys/live';
 import { foundCost } from '../src/sim/sys/ventures9';
 import { CONFLICTS19 } from '../src/sim/conflicts19';
 import { autoResolve19, conflicts19, delegateMonth, dlg19, folded19, NOTE_CAP19 } from '../src/sim/sys/budget19';
-import { storyteller } from '../src/sim/events';
+import { EVENTS, storyteller } from '../src/sim/events';
 import { notify } from '../src/sim/util';
 import { pol18 } from '../src/sim/sys/policy18';
 import { l } from '../src/data/world';
@@ -152,16 +152,23 @@ describe('r19-fix-b §4: cockpit por profissão', () => {
 });
 
 describe('r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do mês, delegação', () => {
-  it('crises de clientes contam no orçamento: cheio, o narrador não abre cartões novos', () => {
+  it('crises de clientes contam no orçamento: cheio, o narrador não abre crise nova (só oportunidades)', () => {
     const s = mgGame('r19bconf');
     expect(CONFLICTS19.full(s)).toBe(false);
     addClients(s, 8, true);
     const c = conflicts19(s);
     expect(c.n).toBeGreaterThanOrEqual(c.cap);
     expect(CONFLICTS19.full(s)).toBe(true);
-    const d0 = s.decisions.length;
-    for (let i = 0; i < 6; i++) storyteller(s, new Rng([9, 8, 7, i + 1]), i);
-    expect(s.decisions.length).toBe(d0);
+    const d0 = new Set(s.decisions.map((d) => d.id));
+    const seen: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      storyteller(s, new Rng([9, 8, 7, i + 1]), i);
+      for (const d of s.decisions) if (!d0.has(d.id)) seen.push(d.eventId);
+      s.decisions = s.decisions.filter((d) => d0.has(d.id));
+      expect(CONFLICTS19.full(s)).toBe(true);
+    }
+    const bad = new Set(EVENTS.filter((e) => e.tone === 'bad').map((e) => e.id));
+    expect(seen.filter((e) => bad.has(e))).toEqual([]);
   });
   it('autoResolve19 lista os cartões da mesa com a resposta padrão', () => {
     const s = game(1975, 'r19bauto');
