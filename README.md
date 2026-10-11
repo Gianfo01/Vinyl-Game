@@ -306,7 +306,10 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 ## Rodada 17
 Resumo completo em [docs/rodada17.md](docs/rodada17.md): fatos/obrigações/estresse/escândalos integrados, diretor criativo com situações e mundo vivo, crime, vida pessoal (sexualidade, amor, filhos, envelhecimento), imprensa e boatos, dados reais (relíquias, peso cultural, estilos), negócios (venda do selo, canais, casas de show, licenças, direitos de imagem, merch), agenda e contratações, menu reformado, novo início com cenários e saves na nuvem, cenas interativas e popups no mapa.
 
-## Rodada 18 — era acústica (1889–1919)
+## Rodada 18
+Resumo completo em [docs/rodada18.md](docs/rodada18.md): por quê em tudo, livro-caixa e contratos com cláusulas, habilidade atual/potencial, iniciativas de NPC por gatilho, Mestre do jogo, direitos e cadeia física, mídia/streaming/rádio, ao vivo e fãs, regiões e K-pop, caminhos de vitória, rivais que aprendem, Nosso mundo, carreira de artista contratada por gravadoras e sociedades, decisões com consequências agora/depois, Cockpit e caixa de entrada vivos, cenas que mudam com as decisões, cerimônia do envelope, carreira póstuma e hologramas, início em 1889, tutorial completo e equilíbrio.
+
+### Rodada 18 — era acústica (1889–1919)
 - Início em qualquer ano de 1889 a 2039 (eras nomeadas 1889, 1895, 1901, 1902, 1910, 1914, 1917; cenários "Columbia: Washington, 1889", "Casa Edison: Rio de Janeiro, 1902" e "Tin Pan Alley: Nova York, 1910").
 - Formatos da época: cilindro de cera (até ~1929), disco de goma-laca depois de Berliner (1895), rolo de pianola (1896–1931) e a partitura como a fatia não física antes do rádio; guerra dos formatos (o cilindro perde demanda a partir de 1905) e guerra de patentes (licenciar 6% ou arriscar liminar).
 - Gravação acústica (corneta, sem microfone): vozes potentes, metais e banjo gravam bem; cordas e vozes suaves somem. Song pluggers do Tin Pan Alley e salões de fonógrafo a moedas (1889–1905).
