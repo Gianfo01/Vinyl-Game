@@ -298,7 +298,7 @@ T('*', 'gear19', ['Equipamento', 'Gear'], ['O instrumento de cada integrante (mo
   [['Timbre do instrumento soma 1–2 pontos numa dimensão do disco quando serve ao gênero.', 'The instrument\'s tone adds 1–2 points to a record dimension when it suits the genre.'], ['Fabricante seu: endossos da casa sem custo e margem cheia nos modelos-assinatura.', 'Owning the maker: in-house endorsements at no cost and full margin on signature models.']]);
 
 // r19 onda 5 (A): grupo e consolidado
-T('business', 'grupo19', ['Grupo e consolidado', 'Group and consolidated'],
+T('*', 'grupo19', ['Grupo e consolidado', 'Group and consolidated'],
   ['A DRE de cada negócio seu (selo, festival, estúdio, editora, mídia, produtor, empresário) e a consolidada, que elimina o dinheiro que só trocou de bolso entre eles. Também: preço entre os seus negócios (mercado ou desconto da casa) e conflitos de interesse.', 'The P&L of each of your businesses (label, festival, studio, publisher, media, producer, manager) and the consolidated one, which removes money that only changed pockets between them. Also: pricing between your businesses (market or house discount) and conflicts of interest.'],
   ['Compare a coluna Resultado com o consolidado. Ex.: o festival pagou $10 mil de cachê ao seu próprio ato: aparece como custo do festival e receita do selo, mas o consolidado não muda.', 'Compare the Result column with the consolidated row. E.g. the festival paid your own act a $10k fee: it shows as festival cost and label revenue, but the consolidated total does not change.'],
   [],
