@@ -2,6 +2,7 @@
 // caixa comprometido, sessões de estúdio take a take, crises com prazo, histórias em curso,
 // votações da banda e relatório dos rivais.
 
+import { arTotal18 } from '../../sim/ledger18';
 import { agendaById } from '../../data/people';
 import { EXTRA_ACTIONS, actionMeta } from '../../data/actions';
 import { l, type L } from '../../data/world';
@@ -90,7 +91,7 @@ export function centralPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
   const now = monthIndex(s);
   const committed = s.plans.filter((p) => p.status === "planned").reduce((x, p) => x + p.costEst, 0);
-  const receivables = Math.round(s.flags.receivables ?? 0);
+  const receivables = arTotal18(s); // r20 (B8): subledger ao vivo, não o retrato mensal
   const day = s.day + s.clock.dayInMonth;
   const crises = s.crises.filter((c) => !c.resolved);
   const sessions = s.sessions.filter((x) => !x.done);

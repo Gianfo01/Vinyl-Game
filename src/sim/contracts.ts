@@ -10,6 +10,7 @@ import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
 import { offerMods } from './ext4';
+import { freeCash20 } from './oblig20';
 export { registerOfferMod } from './ext4';
 import { rivalSignOk, useMeeting } from './sys/gate14';
 
@@ -153,6 +154,8 @@ export function makeOffer(s: GameState, o: Omit<Offer, 'id' | 'week' | 'status'>
   const act = s.acts[o.actId];
   if (!act || act.owner === 'player') return null;
   if (s.offers.some((x) => x.actId === o.actId && x.status === 'pending')) return null;
+  // r20 (B4): o adiantamento fica reservado enquanto a oferta pende — não dá para prometer o mesmo caixa duas vezes
+  if (o.advance > 0 && freeCash20(s) < o.advance) return null;
   if (useMeeting(s)) return null; // rodada 14: cada oferta é uma reunião (cota da equipe, depois seu tempo)
   const offer: Offer = { ...o, id: nextId(s, 'o'), week: s.week, status: 'pending' };
   s.offers.push(offer);
@@ -202,6 +205,16 @@ export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer[
     return 'thinking';
   }
   if (r.chance(ev.p)) {
+    // r20 (B4): revalida o caixa na hora da assinatura (pensou, foi pressionado ou fechamento do mês)
+    if (o.advance > 0 && s.player.cash < o.advance) {
+      o.status = 'rejected';
+      o.thinkUntil = undefined;
+      o.note = l('Aceitariam, mas o caixa não cobre o adiantamento: a oferta caducou.', 'They would accept, but cash does not cover the advance: the offer lapsed.').pt;
+      const kn = s.knowledge[act.id];
+      if (kn) kn.stage = 'investigating';
+      notify(s, fmtL(l('{act} aceitaria, mas o caixa não cobre o adiantamento de {v}: oferta caducou sem custo.', '{act} would accept, but cash does not cover the {v} advance: the offer lapsed at no cost.'), { act: act.name, v: `$${Math.round(o.advance / 100).toLocaleString('en-US')}` }), 'bad');
+      return 'rejected';
+    }
     acceptOffer(s, act, o);
     return 'accepted';
   }
@@ -274,12 +287,12 @@ export function acceptCounter(s: GameState, offerId: string): boolean {
     o.status = 'sniped';
     return false;
   }
-  if (s.player.cash < o.advance) return false;
-  acceptOffer(s, act, o);
-  return true;
+  if (freeCash20(s) < o.advance) return false; // r20 (B4): respeita o caixa reservado por outras ofertas
+  return acceptOffer(s, act, o);
 }
 
-export function acceptOffer(s: GameState, act: Act, o: Offer): void {
+export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
+  if (o.status === 'accepted') return false; // r20 (B4): idempotente — repetir não debita duas vezes
   o.status = 'accepted';
   const id = nextId(s, 'k');
   const termWeeks = Math.round(o.termMonths * 4.35);
@@ -325,6 +338,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): void {
   s.player.stats.signed += 1;
   notify(s, fmtL(l('{act} assinou com você!', '{act} signed with you!'), { act: act.name }), 'good');
   remember(s, 'signed', fmtL(l('{act} assinou contrato ({model}) com {company}.', '{act} signed a {model} deal with {company}.'), { act: act.name, model: CONTRACT_MODELS.find((m) => m.id === o.model)?.name ?? o.model, company: s.config.companyName }), { actId: act.id, important: true });
+  return true;
 }
 
 export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng, force = false): void {

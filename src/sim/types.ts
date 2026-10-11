@@ -402,6 +402,8 @@ export interface Contract {
   /** masters deste contrato já voltaram ao artista */
   reverted?: boolean;
   revertWarned?: boolean;
+  /** r20 (B29): aviso de cauda (reversão travada pelo recoupment) já dado */
+  recoupWarn20?: boolean;
   /** r18: cláusulas negociadas (recuperável, base do royalty, prestação de contas, compromissos) */
   clauses18?: import('./sys/contracts18').Clauses18;
 }
@@ -431,6 +433,8 @@ export interface RightsTerms {
   reversionYears: number;
   /** a reversão só acontece com o adiantamento recuperado */
   reversionNeedsRecoup: boolean;
+  /** r20 (B29): teto negociável da trava — passados N anos da data de reversão, o master volta mesmo sem recuperar (0/ausente = sem teto) */
+  recoupCapYears?: number;
 }
 
 export interface Label {

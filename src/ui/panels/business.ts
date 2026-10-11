@@ -28,7 +28,8 @@ function overview(s: GameState): HTMLElement {
   const b = balanceSheet(s);
   return h('div', null,
     section(t(l('Balanço (visão contábil)', 'Balance sheet (accounting view)')),
-      chips(stat('money', $(b.cash), l('Caixa', 'Cash')), stat('house', $(b.assets), l('Ativos (valor contábil)', 'Assets (book value)')), stat('bank', $(b.receivables), l('A receber', 'Receivables')), stat('warning', $(b.debt), l('Dívidas', 'Debts'), b.debt > 0 ? 'bad' : ''), stat('trophy', $(b.equity), l('Patrimônio líquido', 'Equity'), b.equity < 0 ? 'bad' : 'good')),
+      chips(stat('money', $(b.cash), l('Caixa', 'Cash')), stat('house', $(b.assets), l('Ativos (valor contábil)', 'Assets (book value)')), stat('bank', $(b.receivables), l('A receber (ao vivo)', 'Receivables (live)')), stat('bank', $(b.payables), l('A pagar (ao vivo)', 'Payables (live)'), b.payables > 0 ? 'bad' : ''), stat('warning', $(b.debt), l('Dívidas (inclui títulos)', 'Debts (incl. bonds)'), b.debt > 0 ? 'bad' : ''), stat('trophy', $(b.equity), l('Patrimônio líquido', 'Equity'), b.equity < 0 ? 'bad' : 'good')),
+      b.bonds ? h('p', { class: 'muted small' }, t(l('Dívida inclui {b} em títulos lastreados em catálogo (fora do covenant bancário). Detalhe por instrumento em Posição.', 'Debt includes {b} in catalog-backed bonds (outside the bank covenant). Per-instrument detail in Position.'), { b: $(b.bonds) })) : null,
       h('p', { class: 'muted small' }, t(l('Depreciação do mês: {d}. Depreciação não sai do caixa; reduz o valor contábil dos bens.', 'Depreciation this month: {d}. Depreciation does not leave cash; it lowers book value.'), { d: $(b.depreciationMonth) })),
       h('div', { class: 'cards' }, Object.entries(b.byKind).map(([k, v]) => tile(k === 'equipment' ? 'mic' : k === 'catalog' ? 'disc' : k === 'plant' ? 'cd' : k === 'hologram' ? 'hologram' : k === 'voice' ? 'brain' : 'house', t(KIND_NAME[k] ?? l(k)), [h('span', null, $(v))]))),
     ),
@@ -179,7 +180,7 @@ function brandsTab(s: GameState): HTMLElement {
 }
 
 // Rodada 10: Negócios tinha 13 abas; Finanças (dinheiro, capital, dívidas, bolsa) virou área própria.
-const FINANCE_TABS = new Set(['overview', 'stock', 'capital', 'loans7', 'stakes8', 'dre18', 'debt19']);
+const FINANCE_TABS = new Set(['pos20', 'overview', 'stock', 'capital', 'loans7', 'stakes8', 'dre18', 'debt19']);
 export function businessPanel(s: GameState, group: 'business' | 'finance' = 'business'): HTMLElement {
   return h('div', { class: 'panel business' },
     tabs(`business-${group}`, mergeTabs([

@@ -201,5 +201,6 @@ import './careers19';
 import './terr20';
 // Rodada 20 (G5): Shows, Sede e Mundo por intenção (hubs com subáreas; painel antigo vira "Tudo").
 import './hubs20';
+import './fin20'; // r20 G2: Finanças → Posição (agora × fechamento, obrigações, reconciliação)
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';

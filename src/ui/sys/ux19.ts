@@ -29,6 +29,8 @@ import { AFTER_ADVANCE, EXTRA_AREAS, registerSection } from '../registry';
 import { help18 } from '../help18';
 import { store } from '../store';
 import { why18 } from '../explain18';
+import { LABEL_LEGACY20, PATH_LEGACY20 } from '../../sim/oblig20';
+import { legacyTotal } from '../../sim/legacy';
 import { pendingView18 } from './decide18';
 import { tutAllowed19 } from '../tutoff19';
 import './ux19.css';
@@ -296,7 +298,9 @@ function endBlock(g: GameState): HTMLElement {
     h('div', { class: 'ux19-epi' }, tombArt(E.name),
       h('div', null, h('p', { class: 'ux19-kicker' }, `${E.y0}–${E.y1}`), h('h3', null, E.name),
         E.ending ? h('p', { class: 'small' }, t(E.ending)) : null,
-        h('div', { class: 'ux19-kpis' }, h('div', null, h('small', null, t(l('Legado', 'Legacy'))), h('b', null, String(E.legacy))),
+        // r20 (B21): dois legados, dois nomes — cada um com a própria composição (ⓘ)
+        h('div', { class: 'ux19-kpis' }, h('div', null, h('small', null, t(PATH_LEGACY20)), h('b', null, why18(g, 'legacy.path20', {}, String(E.legacy)))),
+          h('div', null, h('small', null, t(LABEL_LEGACY20)), h('b', null, why18(g, 'legacy.label20', {}, String(legacyTotal(g))))),
           ...E.stats.map((x) => h('div', null, h('small', null, t(x.k)), h('b', null, N(x.v))))))),
     h('ul', { class: 'ux19-epi-list' },
       E.best ? h('li', null, h('b', null, t(l('Melhor disco: ', 'Best record: '))), `${E.best.title} — ${E.best.act}`, E.best.peak < 999 ? ` (#${E.best.peak})` : '') : null,
