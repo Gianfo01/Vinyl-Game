@@ -134,3 +134,67 @@ balanced/catalog repetem números idênticos.)
   são o GC, `repertoire.songUses` (varre todos os lançamentos a cada `songStatus`) e `charts7.weekCharts`.
   Indexar canção → lançamentos encurtaria o lote.
 - Faltam adversários para payola, chart_rig, 360 e IPO/bolsa (próxima rodada da 0.3).
+
+## Onda 4 — integração final (12 sementes × 5 anos, inícios 1889/1955/1975/2005 em rodízio)
+
+**Antes** = código da onda 3 integrada (sem estas mudanças). **Depois** = código combinado com a onda 5
+(`claude/bold-maxwell-j94owc` mesclado), `npm run balance -- --seeds 12 --years 5` (120 partidas, 28 min com carga alta).
+
+| perfil | quebra antes → depois | caixa mediana antes → depois (p25 / p75 depois) | patrimônio med. | prest. med. (máx.) antes → depois | fama |
+|---|---|---|---|---|---|
+| balanced | 17% → **17%** | 149 mil → **127 mil** (−15%; 27 mil / 310 mil) | 8.39 mi → 5.64 mi | 75 (99) → 70 (86) | 12 |
+| cautious | 0% → 33% | 900 mil → 497 mil (−1 mil / 2.26 mi) | 9.91 mi → 9.54 mi | 91 (100) → 70 (86) | 12 |
+| aggressive | 33% → 50% | 56 mil → 8 mil (−7 mil / 130 mil) | 3.17 mi → 1.47 mi | 42 (80) → 32 (60) | 14 |
+| artist | 8% → **0%** | 4.36 mi → **1.78 mi** (1.20 mi / 2.65 mi; 0.89–5.57 mi) | 4.40 mi → 1.88 mi | 58 → 52 | 56 |
+
+Adversários (depois): nenhum exploit. `catalog` 1.16× do equilibrado em patrimônio, `flip` 0.12× (líquido 21× porque o
+equilibrado reinveste), spam/loans/signall/crime quebram 75–100%. Sanidade de carreira única (6 × 5 anos, `--quick
+--years 5`): só empresário (`--role manager --careers manager`) 33% de quebra, caixa mediana 76 mil; só festival
+(`--careers festival`) 17%, 97 mil.
+
+Por início (equilibrado, depois): 1889 3/3 sobrevivem (127 mil; antes 2/3 quebravam em 1890 — a onda 5 corrigiu, o
+`b19-4` de 1889 também passa com todos os sistemas R19 desligados), 1955 3/3, 1975 1/3 (dois quebram em 1976: o primeiro
+ano de 1975 queima ~140 mil contra ~60 mil de receita antes do 1º sucesso), 2005 3/3.
+
+### O que mudou nesta passada
+- **Divisão da banda** (`sys/bandpay19.ts`, carreira de artista): o lucro operacional do mês (DRE do ledger18) é dividido
+  em partes iguais entre os integrantes (fora o dono) e o fundo; prejuízo acumulado é abatido antes; 3+ meses sem divisão
+  sobem o ressentimento (lineup16 lê). Porquê `bandpay19`, ajuda `bandpay19`. Artista: 4.36 → 1.78 mi de mediana,
+  amplitude 0.89–5.57 mi (solo fica com tudo, quarteto com ¼).
+- **Avaliação com lucro** (`sale17.valuation17` → `margin19`/`marginFactor19`): catálogo + elenco × (0,6 + 1,6 × margem
+  operacional de 12 meses + 0,5 × crescimento da receita), entre 0,35× e 1,3×. Selo no zero a zero vale ~0,6× do que
+  valia; histórico < 3 meses não ajusta. Linha "Lucro" no porquê da venda.
+- **Prestígio sem teto fácil** (`sys/sat19.ts`): a alta mensal de cada reputação acima de 50 rende ×(100 − antes)/50
+  (mín. ×0,1) e acima de 85 desbota 0,25/mês. Máximo do equilibrado 99 → 86; cauteloso 100 → 86.
+- **Cadeias 2 e 3** (abaixo): `revival19` — metade dos usos aleatórios de mídia volta a uma faixa que já tem calor
+  (decaimento 0,85 → 0,9); `botr19.ts` — o playbot responde às ofertas de canção/ghostwriter e divide a autoria.
+- A/B (`OFF19=sat,botr,rev` via `tmp`/`NODE_OPTIONS`; flags `__sat19Off`, `__botr19Off`, `__rev19Old`, além de
+  `__mkb19Off`, `__l19aOff`, `__mka19Off`): na mesma semente as três mudanças não alteram a quebra do agressivo de 1975
+  (−22 947 idêntico com e sem). A deriva de caixa entre lotes vem de divergência (qualquer sorteio a mais muda a partida:
+  2005/b19-3 deu 1.49 mi, 443 mil e 210 mil com mudanças que não tocam o selo), não de um dreno.
+
+### Ainda fora da meta
+- **Espalhamento de estratégias**: o agressivo ainda perde do cauteloso (50% de quebra; só 2005 sobrevive inteiro). O
+  bot agressivo se endivida cedo (empréstimo com 3 meses de fôlego, até 3 empréstimos, adiantamento até 40% do caixa).
+  Próximo passo: guarda-corpo no perfil agressivo ou retorno maior para investimento (o crescimento já pesa na avaliação).
+- **Cauteloso 33%**: quebras em 1889/1975 no 1º–2º ano (pouco lançamento = sem sucesso que pague a estrutura).
+
+### Cadeias de história (plano19 §9) — 10 partidas × 20 anos desde 1955, equilibrado
+Contagem por fatos (`tmp-w4/chains.ts`, `onFact('*')`): partidas em que cada passo aconteceu ao menos uma vez.
+
+| cadeia | passos (partidas com o passo, de 10) | cadeia inteira (núcleo) |
+|---|---|---|
+| 1 separação → tributo → sósia → fãs → documentário → processo do músico | 7 · 10 · 2 · 10 · 2 · 0 | 1/10 |
+| 2 remix → comercial → série/needle drop → revival → certificação → relançamento → título | 0 · 7 · 8 · **3** · 0 · 3 · 0 | 3/10 (mídia → revival; antes 0/4) |
+| 3 coral/prodígio → concurso → divisão de autoria → ghostwriter revelado → solo | 10 · 10 · 10 · 8 · 10 | 8/10 (antes 0/4: sem `cowrite_split`) |
+| 4 crise → show beneficente → briga/pacto → dinheiro some → investigação | 9 · 9 · 10 · 2 · 10 | 2/10 |
+| 5 assinatura/instrumento-ícone → morte → relíquia → leilão → herdeiros → holograma/tributo | 7 · 10 · 10 · 0 · 8 · 10 | 7/10 |
+| 6 fanzine → cena → corrida do ouro → bandas-fantasma → lei | 8 · 8 · 9 · 10 · 9 | 8/10 |
+
+Remix de clube só existe a partir de 1975 e certificação tardia exige o revival vender muito: em 1955–1975 a cadeia 2
+fecha no revival. O processo do músico de estúdio (cadeia 1) e o leilão de masters (cadeia 5) não apareceram em 20 anos.
+
+### Desempenho
+`tests/r14-db` enorme: 1 201 ms/mês (carga 3,7 de outros agentes; meta < 1 500). Perfil: ganchos R19 somam ~45 ms/mês;
+os mais caros continuam `charts7` (semana, ~83–130 ms/mês), `hype12`, `fame16`, `lineup16`. `live-achievements`
+(33 ms/mês) passou a varrer os lançamentos do jogador uma vez por semana.
