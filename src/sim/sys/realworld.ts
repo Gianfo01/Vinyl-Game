@@ -166,9 +166,16 @@ const ALIASES: Record<string, string> = {
 };
 
 /** Chave canônica de um nome real (sem acentos, pontuação e caixa; apelidos unificados). */
+/** r19 (T8, desempenho): memo puro texto → chave (não guarda estado de partida; kin15.graph recalcula milhares por mês). */
+const CANON19 = new Map<string, string>();
 export function canonKey(name: string): string {
-  const k = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-  return ALIASES[k] ?? k;
+  const m = CANON19.get(name);
+  if (m !== undefined) return m;
+  const k0 = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const k = ALIASES[k0] ?? k0;
+  if (CANON19.size > 60000) CANON19.clear();
+  CANON19.set(name, k);
+  return k;
 }
 
 /** Índice nome canônico → pessoa (saves antigos: reconstruído a partir dos atos reais, modo nomes reais). */

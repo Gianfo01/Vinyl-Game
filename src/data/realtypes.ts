@@ -39,4 +39,8 @@ export interface RealArtist {
   m?: RealMember[];
   /** discos e singles marcantes */
   al?: RealRelease[];
+  /** r19 (T8): `false` = dado ainda não conferido (†) — some no modo "Vida real exata" (só fatos documentados) */
+  exact?: false;
+  /** r19 (T8): propenso a tributo/cover (db19 §3.1 K) — tribute19 dá bônus de nascimento */
+  T?: true;
 }

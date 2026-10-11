@@ -171,21 +171,29 @@ function trackMembers(s: GameState, c: ChronState): void {
 
 /** Estreias marcantes e influências (quando o ato chega à fama ou ao primeiro hit). */
 function debuts(s: GameState, c: ChronState): void {
+  let pool: Record<string, Act[]> | undefined;
   for (const a of Object.values(s.acts)) {
     if (c.seen[a.id] || !alive(a)) continue;
     if (a.fame < 28 && a.hits === 0) continue;
     c.seen[a.id] = 1;
     chron(s, { k: 'rise', i: a.fame > 45 ? 3 : 2, a: [a.id], t: fmtL(l('{a} desponta em {c} ({g}), formado em {y}.', '{a} breaks through in {c} ({g}), formed in {y}.'), { a: a.name, c: cityL(a.city), g: genreL(a.genre), y: a.formed }) });
-    pickInfluence(s, c, a);
+    pickInfluence(s, c, a, false, (pool ??= infPool19(s)));
   }
 }
 
-function pickInfluence(s: GameState, c: ChronState, a: Act, silent = false): void {
+/** r19 (T8, desempenho): candidatos a influência agrupados por família, na ordem de s.acts (mesmo resultado do laço completo). */
+function infPool19(s: GameState): Record<string, Act[]> {
+  const out: Record<string, Act[]> = {};
+  for (const b of Object.values(s.acts)) if (b.legend || b.hits > 0 || b.fame > 35) (out[genreById[b.genre]?.family ?? ''] ??= []).push(b);
+  return out;
+}
+
+function pickInfluence(s: GameState, c: ChronState, a: Act, silent = false, pool?: Record<string, Act[]>): void {
   if (c.inf[a.id]) return;
   const fam = genreById[a.genre]?.family;
   let best: Act | undefined;
   let bestScore = 0;
-  for (const b of Object.values(s.acts)) {
+  for (const b of pool ? pool[fam ?? ''] ?? [] : Object.values(s.acts)) {
     if (b === a || b.formed > a.formed - 4 || (b.genre !== a.genre && genreById[b.genre]?.family !== fam)) continue;
     const sc = b.fame + b.hits * 4 + (b.legend ? 40 : 0) + (b.city === a.city ? 15 : 0) + ((a.id.charCodeAt(a.id.length - 1) * 7 + b.id.length * 13) % 20);
     if (sc > bestScore && (b.legend || b.hits > 0 || b.fame > 35)) { best = b; bestScore = sc; }
@@ -254,7 +262,7 @@ function records(s: GameState, c: ChronState): void {
 // o mundo inicial já existe: quem já é famoso não "desponta" no primeiro mês
 registerSimHook('newgame', 'chron9', (s) => {
   const c = chronState(s);
-  for (const a of Object.values(s.acts)) if (a.fame >= 28 || a.hits > 0) { c.seen[a.id] = 1; if (!c.inf[a.id]) pickInfluence(s, c, a, true); }
+  { const pool = infPool19(s); for (const a of Object.values(s.acts)) if (a.fame >= 28 || a.hits > 0) { c.seen[a.id] = 1; if (!c.inf[a.id]) pickInfluence(s, c, a, true, pool); } }
 });
 
 registerSimHook('month', 'chron9', (s) => {
