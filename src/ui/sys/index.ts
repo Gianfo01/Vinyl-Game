@@ -197,5 +197,7 @@ import './advance19';
 import './scenes19'; // r19 cenas: resultado da cerimônia só depois de vista
 // Rodada 19 (onda 5, A): pacote inicial no Novo Jogo, terreno do festival e Finanças do grupo (consolidado).
 import './careers19';
+// Rodada 20 (G7): aba Fãs por região e seção Fãs e preço por mercado.
+import './terr20';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
