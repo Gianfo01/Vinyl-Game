@@ -1,6 +1,6 @@
 // Notas do show, curva do setlist, ingressos/cambistas e o show ao vivo (mini-jogo) — GDD §9.
 
-import { clamp } from '../../../core/rng';
+import { Rng, clamp } from '../../../core/rng';
 import { hashString } from '../../../core/rng';
 import { cityById, familyOf, l, type L } from '../../../data/world';
 import { applyMods, queueCutscene, registerMod, registerSimHook } from '../../ext4';
@@ -8,7 +8,7 @@ import { actTalent } from '../../people';
 import { cityDemand } from '../../tours';
 import type { GameState, Song } from '../../types';
 import { fmtL, notify, remember, staffSkill } from '../../util';
-import { bump, isMine, liveOf, type CurveResult, type ShowNote } from './state';
+import { bump, isMine, liveOf, type CurveResult, type LiveLog20, type ShowNote } from './state';
 
 // ---------------------------------------------------------------- curva do setlist
 
@@ -221,7 +221,8 @@ registerSimHook('show', 'live-notes', (s, _r, arg) => {
 export interface IncidentCard {
   label: L;
   hint: L;
-  stat: 'stage' | 'crew' | 'calm' | 'safe';
+  /** r20 (B15): 'security' = segurança de público (lê o kit da turnê); 'crew' = equipe técnica (não lê o kit). */
+  stat: 'stage' | 'crew' | 'calm' | 'safe' | 'security';
   gain: number;
   risk: number;
 }
@@ -245,12 +246,12 @@ export const INCIDENTS: Incident[] = [
   ] },
   { id: 'fight', text: l('Uma briga começa perto da grade.', 'A fight breaks out near the barrier.'), cards: [
     { label: l('Parar a música e pedir calma', 'Stop the song and ask for calm'), hint: l('Líder sereno acalma; nervoso piora.', 'A calm leader soothes it; a tense one makes it worse.'), stat: 'calm', gain: 9, risk: 0.1 },
-    { label: l('Chamar a segurança e seguir', 'Call security and keep going'), hint: l('Depende da equipe.', 'Depends on the crew.'), stat: 'crew', gain: 5, risk: 0 },
+    { label: l('Chamar a segurança e seguir', 'Call security and keep going'), hint: l('Depende da segurança contratada para a turnê.', 'Depends on the security hired for the tour.'), stat: 'security', gain: 5, risk: 0 },
     { label: l('Aumentar o volume', 'Turn it up'), hint: l('Arriscado.', 'Risky.'), stat: 'stage', gain: 6, risk: 0.35 },
   ] },
   { id: 'invasion', text: l('Um fã invade o palco e abraça o vocalista!', 'A fan rushes the stage and hugs the singer!'), cards: [
     { label: l('Cantar um trecho com o fã', 'Sing a bit with the fan'), hint: l('Vira lenda — ou vira caos.', 'Becomes legend — or chaos.'), stat: 'stage', gain: 16, risk: 0.25 },
-    { label: l('Segurança retira com gentileza', 'Security removes them gently'), hint: l('Depende da equipe.', 'Depends on the crew.'), stat: 'crew', gain: 4, risk: 0 },
+    { label: l('Segurança retira com gentileza', 'Security removes them gently'), hint: l('Depende da segurança contratada para a turnê.', 'Depends on the security hired for the tour.'), stat: 'security', gain: 4, risk: 0 },
     { label: l('Ignorar e seguir tocando', 'Ignore it and keep playing'), hint: l('Depende do sangue-frio.', 'Depends on composure.'), stat: 'calm', gain: 3, risk: 0.05 },
   ] },
   { id: 'power', text: l('Cai a luz de metade do palco.', 'Half the stage loses power.'), cards: [
@@ -273,6 +274,12 @@ function statSkill(s: GameState, actId: string, stat: IncidentCard['stat']): num
     const t = s.tours.find((x) => x.actId === actId && (x.status === 'running' || x.status === 'done'));
     return clamp((t?.crew ?? 2) / 16 + staffSkill(s, 'tour_manager') / 150, 0, 1);
   }
+  if (stat === 'security') {
+    // r20 (B15): só a segurança de público do kit (casa / profissional / reforçada) e um pouco do tamanho da equipe
+    const t = s.tours.find((x) => x.actId === actId && (x.status === 'running' || x.status === 'done'));
+    const sec = (t?.kit18?.sec ?? 0) as 0 | 1 | 2;
+    return clamp([0.3, 0.6, 0.85][sec] + Math.min(4, t?.crew ?? 2) / 40, 0, 1);
+  }
   if (stat === 'calm') {
     const ms = act.members.map((id) => s.persons[id]).filter(Boolean);
     return ms.length ? ms.reduce((t, p) => t + (100 - p.stress), 0) / ms.length / 100 : 0.5;
@@ -285,6 +292,37 @@ export function resolveCard(s: GameState, actId: string, card: IncidentCard, rol
   const chance = card.stat === 'safe' ? 1 : clamp(0.35 + statSkill(s, actId, card.stat) * 0.6 - card.risk, 0.05, 0.95);
   const ok = roll < chance;
   return { delta: ok ? card.gain : -Math.round(Math.abs(card.gain) * 0.6), ok, chance };
+}
+
+// ---------------------------------------------------------------- r20 (B7): sorte com semente própria
+// O show ao vivo não usa Math.random: incidentes e sorteios vêm de um subfluxo versionado por show (chave
+// `${tourId}:${dia}`) e por decisão (passo 0..2). Mesmo save + mesmas escolhas = mesmo resultado; o fluxo é puro
+// (não consome o s.rng nem os fluxos rng19), então abrir/fechar a cena não desloca nenhum outro sistema.
+export const LIVE_RNG20 = 'live20v1';
+const liveRng20 = (s: GameState, key: string, part: string) => Rng.fromSeed(`${s.config.seed}|${LIVE_RNG20}|${key}|${part}`);
+/** Os três incidentes da noite (fixos para o show). */
+export function liveIncidents20(s: GameState, key: string): Incident[] {
+  const r = liveRng20(s, key, 'inc');
+  const pool = [...INCIDENTS];
+  const out: Incident[] = [];
+  for (let i = 0; i < 3 && pool.length; i++) out.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+  return out;
+}
+/** Sorteio (0..1) da decisão `step` do show — o mesmo qualquer que seja a carta (comparar chances é justo). */
+export function liveRoll20(s: GameState, key: string, step: number): number {
+  return liveRng20(s, key, `d${step}`).next();
+}
+/** Resolve a decisão `step` e registra incidente, carta, sorteio, acerto e delta no log do show. */
+export function playLiveCard20(s: GameState, key: string, actId: string, step: number, inc: Incident, cardIdx: number): { delta: number; ok: boolean; chance: number; roll: number } {
+  const card = inc.cards[cardIdx];
+  const roll = liveRoll20(s, key, step);
+  const res = resolveCard(s, actId, card, roll);
+  const lv = liveOf(s);
+  const log = ((lv.liveLog20 ??= {})[key] ??= []);
+  if (!log.some((x, i) => i === step && x.i === inc.id)) log[step] = { i: inc.id, c: cardIdx, roll: Math.round(roll * 1e4) / 1e4, ok: res.ok, d: res.delta } satisfies LiveLog20;
+  const keys = Object.keys(lv.liveLog20);
+  if (keys.length > 60) for (const k of keys.slice(0, keys.length - 60)) delete lv.liveLog20[k];
+  return { ...res, roll };
 }
 
 /** Energia esperada sem jogar (resolver automático). */

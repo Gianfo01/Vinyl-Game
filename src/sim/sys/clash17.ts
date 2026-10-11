@@ -14,6 +14,7 @@ import { CITIES, cityById, familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { scandal } from '../scandal17';
+import { TOUR18 } from '../tourhook18';
 import type { Act, GameState } from '../types';
 import { dateOfDay, fmtL, money, post } from '../util';
 
@@ -100,9 +101,13 @@ export function blitz(s: GameState, actId: string, city: string, w: number): L |
   return null;
 }
 
+// r20 (B16): A/B mostrou que o acerto lia s.week, que no 7º dia de cada semana ainda é a semana anterior, enquanto
+// a agenda (playerShows) e a previsão usam weekOfDay(dia do show). Agora os dois leem a semana do dia em curso.
+export const clashForDay20 = (s: GameState, act: Act, city: string, day: number): number => clash17(s, act, city, weekOfDay(day));
+TOUR18.clash = clashForDay20;
 registerMod('showRevenue', 'clash17', (s, v, c) => {
   if (!c.act || !c.cityId || !mine(s, c.act)) return null;
-  const k = clashOf(s, c.act, c.cityId, s.week);
+  const k = clashOf(s, c.act, c.cityId, weekOfDay(s.day + s.clock.dayInMonth));
   const t = TIX[cal17(s).tix[c.act.id] ?? 'fair'];
   const m = k.mult * (s.year >= t.from ? t.rev : 1);
   return m !== 1 ? { value: v * m, label: k.mult < 1 ? l('Concorrência na agenda', 'Calendar competition') : t.name } : null;

@@ -55,8 +55,10 @@ const FAM_PP: Partial<Record<FamilyId, number>> = { blues_jazz: 1.25, country_fo
 const norm = (v: number[]): number[] => { const t = v.reduce((a, b) => a + Math.max(0, b), 0) || 1; return v.map((x) => Math.max(0, x) / t); };
 
 /** Poder de compra da base (0,5–1,6): riqueza do mercado de origem × público do gênero × fãs que envelheceram com o artista. */
-export function pp18(s: GameState, act: Act): number {
-  const w = WEALTH[cityById[act.city]?.market ?? 'na'] ?? 1;
+/** Poder de compra do público. r20 (B20): com `cityId`, vale o mercado do DESTINO (onde o ingresso é vendido);
+ *  sem cidade, o mercado de origem do ato (leituras gerais da ficha). */
+export function pp18(s: GameState, act: Act, cityId?: string): number {
+  const w = WEALTH[cityById[cityId ?? act.city]?.market ?? cityById[act.city]?.market ?? 'na'] ?? 1;
   const age = s.year - (act.debutYear ?? s.year) >= 15 ? 1.15 : 1;
   return clamp(w * (FAM_PP[familyOf(act.genre)] ?? 0.9) * age, 0.5, 1.6);
 }
@@ -181,9 +183,9 @@ registerMod('cityDemand', 'fans18', (s, v, c) => {
 });
 
 /** Ingresso caro numa noite: quem tem menos dinheiro fica de fora (lealdade e comunidade sentem). */
-export function ticketShock18(s: GameState, act: Act, pm: number): number {
+export function ticketShock18(s: GameState, act: Act, pm: number, cityId?: string): number {
   const f = fans18(s).a[act.id];
-  const pp = pp18(s, act);
+  const pp = pp18(s, act, cityId);
   if (!f || pm <= 1.2) return 0;
   const hit = (pm - 1.2) * clamp(1.25 - pp, 0, 0.8);
   f.loy = clamp(f.loy - hit * 1.5, 0, 100);

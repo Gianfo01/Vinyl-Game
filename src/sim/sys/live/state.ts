@@ -131,11 +131,15 @@ export interface CustomEvent {
   fired?: boolean;
 }
 
+export interface LiveLog20 { i: string; c: number; roll: number; ok: boolean; d: number }
+
 export interface LiveState {
   notes: Record<string, ShowNote[]>;
   curves: Record<string, CurveResult>;
   liveQueued: Record<string, number>;
   liveDone: Record<string, number>;
+  /** R20 (B7): registro auditável do show ao vivo — incidente, carta, sorteio, acerto e delta (por chave do show). */
+  liveLog20?: Record<string, LiveLog20[]>;
   fests: OwnFestival[];
   venue: OwnVenue | null;
   tickets: { vip: boolean; dynamic: boolean };
