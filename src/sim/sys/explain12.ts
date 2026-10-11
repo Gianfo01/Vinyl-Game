@@ -16,7 +16,7 @@ import { renewalAdj } from '../rights';
 import { cityDemand, type TourEstimate, type TourPlan } from '../tours';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, notify, playerActs, staffCount, staffSkill } from '../util';
-import { festCapacity, festFee, festTierFor, editionOf, TIER_NAME, type FestTier } from './fests8';
+import { festCapacity, festFee, festTierFor, editionOf, pitchOdds8, TIER_NAME, type FestTier } from './fests8';
 import { comparePackages, hu, moodOf, packageFromOffer, rivalPackages } from './offers12';
 
 // ---------------------------------------------------------------- tipos
@@ -167,14 +167,13 @@ export function forecastFestival(s: GameState, fi: number, actId: string, tier: 
   const info = infoQuality(s, 'festival', act);
   const can = f && act ? festTierFor(s, f, fi, act) : null;
   const order: FestTier[] = ['headline', 'afternoon', 'opening'];
-  let p = 0;
+  const p = pitchOdds8(s, fi, actId, tier, fee);
   const risks: L[] = [];
-  if (!can) { p = 0.02; risks.push(l('Pelo que se sabe, não está no perfil (som ou tamanho).', 'As far as anyone knows, not a fit (sound or size).')); }
-  else if (order.indexOf(tier) < order.indexOf(can)) { p = 0.05; risks.push(fmtL(l('Faixa acima do possível: o provável é contraproposta como "{t}".', 'Slot above reach: likely a counter as "{t}".'), { t: TIER_NAME[can] })); }
+  if (!can) { risks.push(l('Pelo que se sabe, não está no perfil (som ou tamanho).', 'As far as anyone knows, not a fit (sound or size).')); }
+  else if (order.indexOf(tier) < order.indexOf(can)) { risks.push(fmtL(l('Faixa acima do possível: o provável é contraproposta como "{t}".', 'Slot above reach: likely a counter as "{t}".'), { t: TIER_NAME[can] })); }
   else {
     const ratio = fee / Math.max(1, festFee(s, f, act, tier));
     const b = staffSkill(s, 'booking') / 400;
-    p = ratio <= 1.05 + b ? 0.95 : ratio <= 1.3 + b ? 0.5 : ratio <= 2 ? 0.12 : 0.02;
     if (ratio > 1.3 + b) risks.push(l('Cachê acima do que a produção costuma pagar.', 'Fee above what the producers usually pay.'));
     if (ratio < 0.8) risks.push(l('Cachê abaixo do justo: aceito, mas você deixa dinheiro na mesa.', 'Fee below fair: accepted, but you leave money on the table.'));
   }

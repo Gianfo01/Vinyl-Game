@@ -489,9 +489,9 @@ export function logShot18(s: GameState, sh: Omit<Shot18, 'id' | 'y' | 'm' | 'w'>
   if (st.log.length > 80) st.log.splice(0, st.log.length - 80);
   return x;
 }
-const PLACE18: Partial<Record<Kind18, PlaceKind>> = { soldout: 'venue_stadium', festival: 'venue_festival', premiere: 'venue_theatre', verdict: 'court', musicshow: 'tv_chart' };
+const PLACE18: Partial<Record<Kind18, PlaceKind>> = { signing: 'boardroom', soldout: 'venue_stadium', festival: 'venue_festival', premiere: 'venue_theatre', verdict: 'court', musicshow: 'tv_chart' };
 /** Grava e (nos grandes, no máximo 2 por mês pelo orçamento das cenas menores) abre o storyboard. */
-function big18(s: GameState, f: Fact, k: Kind18, d?: Shot18['d'], show = true): void {
+function big18(s: GameState, f: Fact, k: Kind18, d?: Shot18['d'], show = true, prio = false): void {
   const m = mineOf17(s, f.actors);
   if (!m) return;
   const once = `${k}:${m.act ?? 'p'}:${k === 'number1' || k === 'musicshow' ? '' : s.year}`;
@@ -500,12 +500,12 @@ function big18(s: GameState, f: Fact, k: Kind18, d?: Shot18['d'], show = true): 
   st.seen[once] = s.week;
   const sh = logShot18(s, { k, act: m.act, pid: m.pid, city: f.place, text: f.text, fact: f.id, d });
   if (!show || !first || OFF_S17.auto || !PLACE18[k]) return;
-  queueScene(s, 'cine18', PLACE18[k]!, { title: board18(s, sh).title, shot: sh.id, actId: m.act ?? null }, { minor: true });
+  queueScene(s, 'cine18', PLACE18[k]!, { title: board18(s, sh).title, shot: sh.id, actId: m.act ?? null }, { minor: true, prio });
 }
 const tagged = (f: Fact, ...t: string[]) => t.some((x) => f.tags.includes(x));
 onFact('chart', (s, f) => { if (tagged(f, 'mem:number1')) big18(s, f, 'number1', undefined, false); }, 'cine18:n1');
-onFact('signing', (s, f) => big18(s, f, 'signing', undefined, false), 'cine18:sign');
-onFact('case_ruling', (s, f) => { if (!tagged(f, 'crime')) big18(s, f, 'verdict', { good: tagged(f, 'good') ? 1 : 0 }); }, 'cine18:verdict');
+onFact('signing', (s, f) => big18(s, f, 'signing'), 'cine18:sign'); // r19: a assinatura do SEU contrato vira cena (uma por ato e ano)
+onFact('case_ruling', (s, f) => { if (!tagged(f, 'crime')) big18(s, f, 'verdict', { good: tagged(f, 'good') ? 1 : 0 }, true, true); }, 'cine18:verdict');
 onFact('award', (s, f) => { if (tagged(f, 'music_show')) big18(s, f, 'musicshow'); }, 'cine18:music');
 onFact('release', (s, f) => { if (tagged(f, 'screen18') && f.severity >= 45) big18(s, f, 'premiere', { box: tagged(f, 'good') ? 0.7 : 0.4 }); }, 'cine18:prem');
 onFact('*', (s, f) => {
@@ -525,7 +525,10 @@ onFact('death', (s, f) => {
 registerSimHook('week', 'cine18', (s) => {
   const st = cine18(s);
   for (const cs of s.cutscenes ?? []) {
-    if (cs.kind !== 'awards' || cs.week !== s.week || st.log.some((x) => x.aw?.cs === cs.id)) continue;
+    // r19: marca processada (a cena nasce no fechamento do mês; comparar semanas nunca batia)
+    if (cs.kind !== 'awards' || cs.data.logged || s.week - cs.week > 8) continue;
+    cs.data.logged = 1;
+    if (st.log.some((x) => x.aw?.cs === cs.id)) continue;
     const aw = ceremonyOfCutscene19(s, cs as { id: string; data: Record<string, unknown> }); // r19: fachada awards19
     logShot18(s, { k: 'awards', act: aw.actId ?? aw.cats.flatMap((c) => c.nominees).find((n) => n.mine)?.actId, aw, text: (cs.data as Record<string, unknown>).title as L });
   }

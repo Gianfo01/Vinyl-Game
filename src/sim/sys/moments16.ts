@@ -63,9 +63,9 @@ export function momentOfMemory16(kind: string, year: number): Moment16 | null {
 /** Grandes momentos furam o limite mensal; os menores entram no máximo 2 por mês. */
 const MAJOR = new Set(['award', 'award2', 'nat_award', 'festival_tv', 'contest_win', 'hall_of_fame', 'ai_award', 'signed']);
 /** Já têm cena interativa própria (entrevista, rádio): só guardamos para rever. */
-const OWN_SCENE = new Set(['interview', 'radio_visit', 'renewal']);
+const OWN_SCENE = new Set(['interview', 'radio_visit', 'renewal', 'hall_of_fame']); // r19: a posse no Hall já tem cena própria
 /** Cena própria do mesmo assunto na semana (evita duas janelas seguidas). */
-const SAME: Record<string, string> = { award: 'awards', festival: 'festivalDay', festival8: 'festivalDay', festival9: 'festivalDay' };
+const SAME: Record<string, string> = { award: 'awards', hall_of_fame: 'hall', festival: 'festivalDay', festival8: 'festivalDay', festival9: 'festivalDay' };
 
 function mine(s: GameState, e: MemoryEntry): boolean {
   if (e.actId) return s.acts[e.actId]?.owner === 'player';
@@ -98,7 +98,8 @@ rememberListeners().push((s, e) => {
   if (!ev || !mine(s, e)) return;
   if (e.kind === 'award2' && !e.important) return;
   const same = SAME[e.kind];
-  const dup = !!same && (s.cutscenes ?? []).some((c) => c.kind === same && !c.seen && c.week === s.week);
+  // r19: a cerimônia já mostrou o resultado (o aviso só sai depois dela): sem cartão repetido nas semanas seguintes
+  const dup = !!same && (s.cutscenes ?? []).some((c) => c.kind === same && s.week - c.week <= 8);
   log16(s, ev, e.text, [], !OWN_SCENE.has(e.kind) && !dup, MAJOR.has(e.kind), e.kind, e.id, e.actId);
 });
 

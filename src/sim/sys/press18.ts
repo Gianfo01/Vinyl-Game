@@ -1,6 +1,6 @@
 // Rodada 18 (society18, frente H — M5) — JORNALISMO MUSICAL COMO CARREIRA. Você resenha os lançamentos do mês (de
 // qualquer selo): a nota mistura-se à média da crítica e mexe no apelo do disco conforme sua CREDIBILIDADE × ALCANCE;
-// acertar (nota perto da qualidade real; apostar num desconhecido que depois estoura) sobe a credibilidade, errar feio
+// acertar (nota perto do consenso que a história forma ~10 meses depois — r19, verdict19; apostar num desconhecido que depois estoura) sobe a credibilidade, errar feio
 // derruba. Escada: frila (cachê por texto) → crítico da casa (salário) → editor (salário maior, alcance) → seu próprio
 // veículo por época (revista, fanzine 1976+, blog 2000+, canal de vídeo 2008+, newsletter 2017+: assinantes, anúncios,
 // custos). Ética e poder: selo oferece dinheiro ou capa por resenha boa (aceitar, recusar, denunciar); cópia antecipada
@@ -11,6 +11,7 @@
 import { clamp, Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
+import { credDelta19, verdict19 } from '../ctx19';
 import { registerExplain } from '../explain18';
 import { emitFact, facts17, raiseVisibility, type Fact } from '../facts17';
 import { histMode } from '../history15';
@@ -34,7 +35,7 @@ export const OUTK18: Record<OutK18, { name: L; from: number; cost: number; price
   newsletter: { name: l('Newsletter paga', 'Paid newsletter'), from: 2017, cost: 500, price: 0.9, run: 250 },
 };
 export const STAGE18: L[] = [l('Frila', 'Freelancer'), l('Crítico da casa', 'Staff critic'), l('Editor', 'Editor'), l('Dono do veículo', 'Outlet owner')];
-export interface Rev18 { rel: string; sc: number; w: number; y: number; bet?: 1; paid?: 1 }
+export interface Rev18 { rel: string; sc: number; w: number; y: number; bet?: 1; paid?: 1; /** r19: consenso da crítica antes da sua nota (−1 = nenhum) e veredito da história quando julgado */ pre?: number; vd?: number; cd?: number }
 export interface Press18 {
   stage: number; cred: number; reach: number; n: number;
   out?: { name: string; k: OutK18; since: number; subs: number };
@@ -72,15 +73,15 @@ export function review18(s: GameState, relId: string, sc: number): L | null {
   sc = clamp(Math.round(sc), 0, 100);
   const inf = influence18(s);
   const a = s.acts[rel.actId];
-  const truth = clamp(rel.q, 0, 100);
-  const diff = Math.abs(sc - truth);
-  const rv: Rev18 = { rel: relId, sc, w: s.week, y: s.year };
+  // r19: a credibilidade não é medida contra a qualidade oculta, e sim contra o consenso posterior (verdict19, ~10 meses depois)
+  const pre = (rel.criticN ?? 0) > 0 && rel.critic !== undefined ? rel.critic : -1;
+  const rv: Rev18 = { rel: relId, sc, w: s.week, y: s.year, pre };
   // a média da crítica absorve sua nota com peso pela influência
   const n = rel.criticN ?? 0, w = 0.5 + inf * 20;
   rel.critic = Math.round(((rel.critic ?? sc) * n + sc * w) / (n + w));
   rel.criticN = n + 1;
   st.infl[relId] = Math.round(((sc - 60) / 40) * inf * 1000) / 1000;
-  st.cred = clamp(st.cred + (diff < 12 ? 1.2 : diff < 22 ? 0.3 : diff > 32 ? -2.5 : -0.8), 0, 100);
+  if (pre >= 0) st.cred = clamp(st.cred + (Math.abs(sc - pre) < 10 ? 0.2 : Math.abs(sc - pre) > 35 ? -0.3 : 0), 0, 100); // pressão do consenso do momento: pequena
   st.reach = clamp(st.reach + 0.3 + (a?.fame ?? 0) / 200, 0, 100);
   if (sc >= 80 && (a?.fame ?? 0) < 30) rv.bet = 1;
   const lb = rel.owner && s.labels[rel.owner] ? rel.owner : null;
@@ -186,6 +187,16 @@ registerSimHook('month', 'press18', (s) => {
   // apostas que se confirmam (o desconhecido que você bancou estourou)
   for (const rv of st.revs) if (rv.bet === 1 && s.week - rv.w >= 20) { rv.bet = undefined; const rel = s.releases[rv.rel]; if (rel && rel.peak > 0 && rel.peak <= 20) { st.cred = clamp(st.cred + 5, 0, 100); st.reach = clamp(st.reach + 3, 0, 100); logP(s, fmtL(l('Você apostou cedo em "{t}" — e acertou. Credibilidade +5.', 'You backed "{t}" early — and were right. Credibility +5.'), { t: rel.title })); } }
   for (const k of Object.keys(st.infl)) { const rel = s.releases[k]; if (!rel || s.week - rel.week > 26) delete st.infl[k]; }
+  // r19: a história julga as resenhas (~10 meses depois): crítica agregada, paradas, certificados e prêmios
+  for (const rv of st.revs) if (rv.vd === undefined && s.week - rv.w >= 40) {
+    const rel = s.releases[rv.rel];
+    if (!rel) { rv.vd = -1; continue; }
+    const vd = verdict19(s, rel).v, cd = credDelta19(rv.sc, vd, rv.pre);
+    rv.vd = vd; rv.cd = cd.d;
+    st.cred = clamp(st.cred + cd.d, 0, 100);
+    if (cd.ahead) { st.reach = clamp(st.reach + 2, 0, 100); logP(s, fmtL(l('À frente do seu tempo: você deu {n} a "{t}" quando a crítica dava {p}; a história fechou em {v}. Credibilidade +{d}.', 'Ahead of your time: you gave "{t}" {n} when critics gave {p}; history settled on {v}. Credibility +{d}.'), { n: rv.sc, t: rel.title, p: Math.round(rv.pre ?? 0), v: vd, d: Math.round(cd.d * 10) / 10 })); }
+    else if (cd.d <= -2) logP(s, fmtL(l('A história discordou de você: "{t}" ficou em {v} (você deu {n}). Credibilidade {d}.', 'History disagreed with you: "{t}" settled at {v} (you gave {n}). Credibility {d}.'), { t: rel.title, v: vd, n: rv.sc, d: cd.d }));
+  }
   if (!on(s)) return;
   // salário
   if (st.stage === 1 || st.stage === 2) { const v = money(s, st.stage === 1 ? 2200 : 4200); post(s, `pr18sal:${s.week}`, v, 'services', st.stage === 1 ? 'Salário de crítico' : 'Salário de editor'); st.earned += v; }

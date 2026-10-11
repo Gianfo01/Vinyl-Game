@@ -281,6 +281,9 @@ export function boardView18(s: GameState, b0: Board18, o: BoardOpts18 = {}): HTM
   }
   function go(i: number, force = false): void {
     i = Math.max(0, Math.min(b.frames.length - 1, i));
+    // r19: sem espiar o envelope — não passa de um quadro com decisão pendente (figurino, reação, discurso)
+    const gate = b.frames.findIndex((f) => f.slot && !!o.slot?.(f, refresh));
+    if (gate >= 0 && i > gate) i = gate;
     if (i === cur && !force && fstart) return;
     cur = i; fstart = performance.now();
     const f = b.frames[cur];

@@ -12,7 +12,7 @@ import { auctionsWeek, discoveryMonth } from './discovery';
 import { chartsWeek } from './charts2';
 import { financeMonth } from './finance';
 import { fandomMonth } from './fandom';
-import { dynastyMonth, dynastyYear } from './dynasty';
+import { dynastyMonth } from './dynasty';
 import { subLabelsMonth } from './sublabels';
 import { brandsMonth } from './brands';
 import { businessMonth } from './business';
@@ -21,7 +21,6 @@ import { cultureMonth, registerMovementGenres } from './culture';
 import { rivals2Month } from './rivals2';
 import { contracts2Month } from './contracts2';
 import { directorMonth as directorImpl } from './director';
-import { yearlyAwards2 } from './awards2';
 import './contentBridge';
 import './sys';
 import { runSimHooks } from './ext4';
@@ -67,8 +66,7 @@ export function monthlyExt(s: GameState, r: Rng): void {
 }
 
 export function yearlyExt(s: GameState, r: Rng): void {
-  dynastyYear(s);
-  yearlyAwards2(s, r);
+  // r19: Hall dos Ecos e prêmios de awards2 seguem o calendário real (mês de cada um; sys/scenes19.ts)
   runSimHooks('year', s, r);
 }
 

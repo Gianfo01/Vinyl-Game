@@ -303,4 +303,17 @@ import './sat19'; // r19 onda 4: reputação com retorno decrescente perto do to
 // Rodada 19 (world19): Nosso mundo — lotes, vizinhança, ampliações e popups sobre o mapa.
 import './world19';
 import './hood19';
+// Rodada 19 (Frente 8, onda 4): viradas de década/era, metas por época, recibo de decisão, "por que perdi?", epitáfio e divulgação progressiva.
+import './ux19';
+// r19 onda 5 (C): regras de contexto, ctxFx das decisões e vitórias pequenas
+import './ctxsys19';
+import './wins19';
+// Rodada 19 (onda 5, B): registro de chances das telas de negociação (mostrada = sorteada).
+import './odds19';
+import './prof19';
+import './budget19';
+import './scenes19'; // r19 cenas: calendário real dos prêmios, cerimônia com indicados oficiais e resultado só depois da cena, volume de cenas
+// Rodada 19 (onda 5, A): carreiras que sustentam a partida (pacotes iniciais, festival, empresário) e economia interna.
+import './careers19';
+import './intra19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

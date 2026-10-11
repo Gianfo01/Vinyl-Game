@@ -4,17 +4,20 @@
 import { GENRES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
+import { fmtL, rngOf } from '../../sim/util';
+import { endorseOdds19 } from '../../sim/sys/careers19';
+import { devChance12 } from '../../sim/sys/manager12';
 import {
   AMB_NAME, AREA_NAME, AUTO_NAME, TEAM_NAME, acceptCounter, agencyTier, agentMax, agentSalary, ambitionsOf, answerIssue, arrange, assignAgent, c12, canArrange, capacityHours,
   clashesOf, clientHours, demandHours, devCandidates, endorse, endorseReady, endorseValue, fireAgent, hireAgent, mandateChance, mgr12, negotiateMandate, proposePlan,
   raiseAgent, reinvent, resolveDilemma, setSuccessor, signDev, talk, talkReady, teamCost, toggleTeam, type Amb, type Area, type DilemmaMove, type Mandate, type TeamRole,
 } from '../../sim/sys/manager12';
 import { SVC, askChance, isForeign, providers, quote, remaining, services, type SvcKind } from '../../sim/sys/services12';
-import { ventures, type Client } from '../../sim/sys/ventures9';
+import { refusedWait9, ventures, type Client } from '../../sim/sys/ventures9';
 import { $, actLink, cityName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
+import { renewTag19 } from './ctx19';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -55,12 +58,12 @@ export function clientPanel12(s: GameState, c: Client): HTMLElement {
       ] as [DilemmaMove, L, L][]).map(([k, n, d]) => btn(n, () => res(resolveDilemma(s, a.id, k)), k === 'decline' ? 'btn small ghost' : 'btn small', false, d)))) : null,
     // prestação de contas
     x.issue ? h('div', { class: 'row wrap small' }, pill(t(l('problema', 'issue')), 'bad'), ' ', t(x.issue.t), ' ',
-      btn(l('Explicar ao artista', 'Explain to the act'), () => res(answerIssue(s, a.id, 'explain')), 'btn tiny primary', false, l('Custa pouca confiança agora (menos se o plano foi seguido).', 'Costs a little trust now (less if the plan was followed).')),
+      btn(l('Explicar ao artista', 'Explain to the act'), () => res(answerIssue(s, a.id, 'explain')), 'btn tiny primary', false, l('Sem plano: −2. Plano respeitado: perdoado (0). Plano quebrado: −5.', 'No plan: −2. Plan respected: forgiven (0). Plan broken: −5.')),
       btn(l('Esconder', 'Hide it'), () => res(answerIssue(s, a.id, 'hide')), 'btn tiny ghost', false, l('Nada agora; se descobrir, −15.', 'Nothing now; if found out, −15.'))) : null,
     // plano
     h('div', { class: 'small' }, h('b', null, t(l('Plano de carreira', 'Career plan'))), ' ',
       x.plan ? h('span', null, x.plan.goals.map((g) => `${g.done ? '✓' : '·'} ${t(AMB_NAME[g.k])}`).join('  '), h('span', { class: 'muted' }, ` · ${t(l('passos', 'steps'))} ${x.plan.steps} · ${t(l('revisão na semana', 'review at week'))} ${x.plan.w + 52}${x.plan.broken ? ` · ${t(l('plano quebrado', 'plan broken'))}` : ''}`))
-        : h('span', { class: 'muted' }, t(l('sem plano — sem plano, fracassos não são perdoados', 'no plan — without one, failures are not forgiven'))),
+        : h('span', { class: 'muted' }, t(l('sem plano — cada tropeço é julgado sozinho; com plano respeitado, os tropeços são perdoados', 'no plan — each stumble is judged on its own; with a respected plan, stumbles are forgiven'))),
       x.plan?.target && a.genre !== x.plan.target ? btn(l('Reinventar agora', 'Reinvent now'), () => res(reinvent(s, a.id)), 'btn tiny') : null),
     h('div', { class: 'row wrap small' }, ...AMBS.map((k) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: goals.has(k), onchange: (e: Event) => { if ((e.target as HTMLInputElement).checked) goals.add(k); else goals.delete(k); } }),
       t(AMB_NAME[k]), x.known && amb.includes(k) ? ' ★' : '')),
@@ -69,6 +72,7 @@ export function clientPanel12(s: GameState, c: Client): HTMLElement {
     // mandato
     h('div', { class: 'row wrap small' }, h('b', null, t(l('Mandato', 'Mandate'))), ' ',
       x.mandate.legacy ? pill(t(l('informal', 'informal')), 'warn') : null,
+      renewTag19(s, a.id), ' ',
       ...AREAS.map((k) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: m.areas.includes(k), onchange: (e: Event) => { m.areas = (e.target as HTMLInputElement).checked ? [...m.areas, k] : m.areas.filter((y) => y !== k); upd(); } }), t(AREA_NAME[k]))),
       select<number>(m.rate, [0.08, 0.1, 0.12, 0.15, 0.18, 0.2, 0.25].map((v) => ({ value: v, label: pct(v) })), (v) => { m.rate = v; upd(); }),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: m.excl, onchange: (e: Event) => { m.excl = (e.target as HTMLInputElement).checked; upd(); } }), t(l('exclusivo', 'exclusive'))),
@@ -89,7 +93,9 @@ export function clientPanel12(s: GameState, c: Client): HTMLElement {
     x.book.length ? h('details', { class: 'small' }, h('summary', null, t(l('Prestação de contas', 'Accountability log'))), h('ul', null, x.book.slice().reverse().map((y) => h('li', null, t(y))))) : null,
   );
 }
-const fmtTitle = (s: GameState, id: string): L => ({ pt: `≈ $${Math.round(endorseValue(s, s.acts[id]) / 100).toLocaleString()}`, en: `≈ $${Math.round(endorseValue(s, s.acts[id]) / 100).toLocaleString()}` });
+// r19 (careers19): patrocínio tem marca, mercado e chance — a dica mostra os mesmos números do sorteio
+const fmtTitle = (s: GameState, id: string): L => { const a = s.acts[id]; const o = endorseOdds19(s, a); const v = `$${Math.round(endorseValue(s, a) * o.mult / 100).toLocaleString()}`;
+  return { pt: `${o.brand}: ${Math.round(o.chance * 100)}% de chance · ≈ ${v} · ${o.why.map((w) => w.pt).join(' ')}`, en: `${o.brand}: ${Math.round(o.chance * 100)}% chance · ≈ ${v} · ${o.why.map((w) => w.en).join(' ')}` }; };
 
 function servicesForm(s: GameState, id: string): HTMLElement {
   const r = rngOf(s);
@@ -142,7 +148,7 @@ function agencyTab(s: GameState): HTMLElement {
     section(t(l('Desenvolver talentos', 'Develop new talent')),
       h('p', { class: 'small muted' }, t(l('Desconhecidos (fama < 8): pouco dinheiro agora, muita confiança. Se um chegar a fama 30, a descoberta é sua (+prestígio).', 'Unknowns (fame < 8): little money now, lots of trust. If one reaches fame 30, the discovery is yours (+prestige).'))),
       h('table', { class: 'tbl compact' }, h('tbody', null, devCandidates(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, `${t(l('fama', 'fame'))} ${fameText(s, a.id)} · ${t(l('momento', 'momentum'))} ${Math.round(a.momentum)}`),
-        h('td', null, btn(l('Apostar', 'Bet on them'), () => res(signDev(s, r, a.id)), 'btn tiny primary'))))))),
+        h('td', null, refusedWait9(s, a.id) ? pill(t(l('recusou: espera {n} sem.', 'declined: wait {n} wk'), { n: refusedWait9(s, a.id) }), 'warn') : btn(fmtL(l('Apostar ({p}%)', 'Bet on them ({p}%)'), { p: Math.round(devChance12(s) * 100) }), () => res(signDev(s, r, a.id)), 'btn tiny primary'))))))),
     mg.clients.length ? null : h('p', { class: 'muted' }, t(l('Sem clientes ainda.', 'No clients yet.'))),
   );
 }

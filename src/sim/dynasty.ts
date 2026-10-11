@@ -2,6 +2,7 @@
 // reunião negociada, genealogia e dinastias, carreira solo jogável, tributos, Hall da Fama,
 // envelhecimento e morte (GDD §8, §10, §36, §43, §44, §46.5).
 
+import { ECHOES_CAL19 } from './awardcal19';
 import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import { makePerson, personName, langForCity } from './people';
@@ -365,7 +366,9 @@ export function startSoloCareer(s: GameState, r: Rng, actId: string, personId: s
 }
 
 // ---------- Hall da Fama e tributos ----------
-function hallOfFameYear(s: GameState): void {
+/** r19: posse do Hall dos Ecos no mês do dado (abril) e só desde a fundação (1986) — chamado por sys/scenes19.ts. */
+export function hallOfFameYear(s: GameState): void {
+  if (s.year < ECHOES_CAL19.start) return;
   const cands = Object.values(s.acts)
     .filter((a) => !s.hallOfFame.some((h) => h.actId === a.id) && s.year - a.debutYear >= 25 && (a.number1s + a.hits / 3 + a.awards * 2 + (a.legend ? 5 : 0)) >= 4)
     .sort((a, b) => b.number1s + b.hits / 3 + b.awards * 2 - (a.number1s + a.hits / 3 + a.awards * 2))
@@ -406,6 +409,5 @@ export function dynastyMonth(s: GameState, r: Rng): void {
   }
 }
 
-export function dynastyYear(s: GameState): void {
-  hallOfFameYear(s);
-}
+/** r19: o Hall dos Ecos saiu do fechamento do ano (calendário real em sys/scenes19.ts). */
+export function dynastyYear(_s: GameState): void {}

@@ -52,6 +52,7 @@ export const STREAMS19: Record<string, string> = {
   score19: 'canções-tema, bilheteria, indicações e needle drops (score19)',
   cancel19: 'ondas de cancelamento: resposta de NPCs e contra-ataque (cancel19)',
   culture19: 'cultura caótica: erros de metadados e vazamentos (culture19)',
+  dlg19: 'delegação por carreira: renovações de mandato feitas pela equipe (budget19)',
 };
 
 export const perSystem19 = (s: GameState): boolean => (s.rngVersion ?? 0) >= RNG_VERSION19;

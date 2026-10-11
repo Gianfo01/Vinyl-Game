@@ -162,11 +162,13 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
 /** Tipos que não aparecem com segurança em bots curtos (1 ano), com o motivo (levantamento: 6 bots de 3 anos, 1889–2015,
  *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
 const INBOX_RARE19: Record<string, string> = {
+  dlg19: 'budget19: exceção da equipe delegada por carreira — só com delegação de empresário/festival/estúdio ligada (desligada por padrão)',
   m19_call: 'money19: banco chama a dívida só com empréstimo e covenant quebrado (3 trimestres no prejuízo ou dívida > receita de 12 meses)',
   m19_auc: 'money19: leilão só quando um selo NPC quebra (raro em bots curtos)',
   af19_suit: 'espólio processa pelos masters: exige morte de artista do seu elenco com masters retidos (raro em bots curtos)',
   af19_offer: 'proposta do espólio: só com artista morto do seu catálogo e legado alto (anos depois da morte)',
   gear19_offer: 'endosso de instrumento: artista do elenco com fama 40+ e sorteio de ~3%/mês (1930+)',
+  c19_fest_skip: 'careers19: aviso de edição pulada só com festival próprio sem line-up a 3 meses (bots de selo não fundam festival)',
   // vistos às vezes em 1 ano (1 mensagem): exigir seria frágil a qualquer mudança de sorteio
   a18_rep: 'artista: relatório da gravadora só depois de assinar (depende do sorteio de ofertas)',
   analyst: 'relatório do analista: sem ação, vai para o boletim semanal (notify19) e não aparece como item próprio',
@@ -187,6 +189,7 @@ const INBOX_RARE19: Record<string, string> = {
   relic18_fake: 'relíquia falsa: só com mercado de relíquias aberto (visto em 3 anos)',
   media18_viral: 'viral de mídia: 1990+ e lançamento forte (visto em 3 anos, 1990/2005)',
   aw18_snub: 'esnobada em prêmio: exige indicação (visto em 3 anos, 1960 artista)',
+  scn19_fit: 'figurino do tapete vermelho: exige indicado oficial seu aos Gramófonos (1959+, novembro)',
   a18_stmt: 'artista: declaração pública pedida após polêmica (visto em 3 anos)',
   supply_bump: 'cadeia física: choque de fornecimento aleatório (visto em 3 anos)',
   st18_rival: 'streaming 2015+: denúncia de fazenda rival, sorteio de 3,5%/mês (visto em 3 anos)',

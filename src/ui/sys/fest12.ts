@@ -9,7 +9,7 @@ import {
   proj12, setCal12, setIdent12, setSales12, stagesOf, structCost, sync12, takeSponsor12, ventureOf, type Ident,
 } from '../../sim/sys/fest12';
 import { guestAccepts, isMine, liveOf, type OwnFestival } from '../../sim/sys/live';
-import { funds, type Holder, type Venture } from '../../sim/sys/ventures9';
+import { foundCost, funds, type Holder, type Venture } from '../../sim/sys/ventures9';
 import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
 import { visibleAct } from '../../sim/future';
@@ -198,8 +198,11 @@ export function festCard12(s: GameState, f: OwnFestival): HTMLElement {
       { id: 'history', label: t(l('História', 'History')), icon: 'star', render: () => historyTab(s, f) },
     ], rerender),
     mu <= 1 && mu > 0 ? h('p', { class: 'small warn' }, t(l('Mês que vem é o festival: no dia, chuva, atrasos, panes e filas pedem decisões suas.', 'Next month is the festival: on the day, rain, delays, failures and queues will need your calls.'))) : null,
+    ...FEST_EXTRA12.map((fn) => fn(s, f)), // r19 (careers19): terreno, qualidade da edição e avisos
   );
 }
+/** r19: blocos extras no cartão do festival (registrados por outras frentes). */
+export const FEST_EXTRA12: ((s: GameState, f: OwnFestival) => HTMLElement | null)[] = [];
 
 const draft = { name: '', city: '', month: 6, ident: 'discovery' as Ident, owner: 'label' as Holder };
 function foundForm12(s: GameState): HTMLElement {
@@ -216,7 +219,7 @@ function foundForm12(s: GameState): HTMLElement {
       if ('pt' in r) return say(r, r);
       draft.name = '';
       say(null, l('Festival fundado: monte o terreno e o line-up. A primeira edição fica para daqui a 4+ meses.', 'Festival founded: lay out the grounds and the line-up. The first edition is 4+ months away.'));
-    } }, ic('flag'), ' ', t(l('Fundar festival', 'Found festival'))),
+    } }, ic('flag'), ' ', t(l('Fundar festival ({c})', 'Found festival ({c})'), { c: $(foundCost(s, 'festival')) })),
     h('small', { class: 'muted' }, t(IDENTS[draft.ident].desc)),
   );
 }

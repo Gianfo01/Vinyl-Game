@@ -26,7 +26,8 @@ import { auctionsSection, contestsSection, demosSection, scoutsSection } from '.
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
-import { afterRender18, helpButton18, paletteCmds18, settings18 } from './tutorial18'; // r18 tutorial18
+import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
+import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
@@ -35,6 +36,7 @@ import { saveManagerModal17 } from './saves17';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
 import { AFTER_ADVANCE, EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
+import { UX19UI } from './hooks19'; // r19 ux19: divulgação progressiva, rodapé do menu e fim de partida
 import { openLabelStory } from './sys/story12';
 import './sys';
 import { defaultHome, type NavGroup } from './careernav13';
@@ -52,6 +54,7 @@ import { personRoute16, searchRoute16 } from './route16';
 import { ALIAS17, CAREER_PAGE17, ICON17, KEY17, areaOfKey17, careerOfPage17, groupOf17, navGroups17, pushRecent17, resolve17, sectionOf17, togglePin17 } from './nav17';
 import { careerPages17 } from './sys/careerpages17';
 import { icon17 } from './pixel/icons17';
+import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
 import './nav17.css';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
@@ -170,10 +173,11 @@ try { const j = JSON.parse(localStorage.getItem('vtn17.nav') ?? '{}') as Partial
 const save17 = () => { try { localStorage.setItem('vtn17.nav', JSON.stringify(store17)); } catch { /* sem armazenamento */ } };
 function togglePin(id: string): void { store17.pins = togglePin17(store17.pins, id); save17(); toast(t(store17.pins.includes(id) ? l('Página fixada no topo do menu.', 'Page pinned to the top of the menu.') : l('Página desafixada.', 'Page unpinned.')), 'info'); render(); }
 
-function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void {
+function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 = false): void {
   const g = store.game;
   if (!g) return;
   if (g.ended && !g.flags.sandbox) return endScreen();
+  if (!ok19 && askAdvance19(g, mode, () => doAdvance(mode, true))) return; // r19 B.5: cartões que vão valer o padrão
   if (!g.config.ironman) store.undoSnapshot = JSON.stringify(g);
   const before = g.notifications.length;
   const noteWeek = g.week;
@@ -190,7 +194,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until'): void
     digest = { d: digestEnd(g, snap, r0.months), why: r0.stopReason };
   } else res = advance(g, mode);
   if (!digest) {
-    const fresh = g.notifications.filter((n) => n.week > noteWeek).slice(-3);
+    const fresh = g.notifications.filter((n) => n.week > noteWeek && !n.fold).slice(-3);
     for (const n of fresh) toast(t(n.text), n.kind);
   }
   if (res.stopReason && mode !== 'month' && !digest) toast(`⏸ ${t(res.stopReason)}`, 'event');
@@ -258,7 +262,7 @@ const HINT17: Record<string, string> = Object.fromEntries(GROUPS.flatMap((g) => 
 /** r17: menu reformado (nav17): grupos por função, carreiras em Você › Carreiras, resto em Mais. */
 const groups = (): NavGroup14[] => (groupsMemo ??= (() => {
   const g = store.game, ids = navItems().map((x) => x.id), has = new Set(ids);
-  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a), all: ids, hint: HINT17 });
+  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a) && (!g || !UX19UI.has || UX19UI.has(g, a) || a === store.area), all: ids, hint: HINT17 });
 })());
 void navGroups16;
 
@@ -316,7 +320,7 @@ function nav(): HTMLElement {
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
       open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
     );
-  }));
+  }), UX19UI.navFoot?.(store.game!) ?? null);
 }
 
 /** Faixa de sub-áreas no topo do painel (útil no celular, onde o menu lateral vira barra). */
@@ -466,9 +470,12 @@ function settings(): void {
     h('label', null, `${t(S.textSize)}: ${p.textScale}%`, h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { p.textScale = Number((e.target as HTMLInputElement).value); savePrefs(); } })),
     h('label', null, t(S.theme), select(p.theme, [{ value: 'auto', label: t(S.themeAuto) }, { value: 'light', label: t(S.themeLight) }, { value: 'dark', label: t(S.themeDark) }] as { value: typeof p.theme; label: string }[], (v) => { p.theme = v; savePrefs(); })),
     h('label', null, t(l('Modo para daltonismo', 'Colorblind mode')), select(p.colorblind ?? 'none', [{ value: 'none' as const, label: t(l('Desligado', 'Off')) }, { value: 'deutan' as const, label: t(l('Deuteranopia (verde)', 'Deuteranopia (green)')) }, { value: 'protan' as const, label: t(l('Protanopia (vermelho)', 'Protanopia (red)')) }, { value: 'tritan' as const, label: t(l('Tritanopia (azul)', 'Tritanopia (blue)')) }], (v) => { p.colorblind = v; savePrefs(); })),
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tutorialsOff19(p), onchange: (e: Event) => { setTutorials19(p, !(e.target as HTMLInputElement).checked); savePrefs(); close(); render(); settings(); } }), ' ', t(TUTOFF_LABEL19)), // r19 tutoff19
+    h('button', { class: 'btn small ghost', onclick: () => { resetTut18('all'); setTutorials19(p, true); savePrefs(); if (store.game) restartTutorial(store.game); close(); render(); } }, t(l('Reiniciar tutoriais', 'Restart tutorials'))),
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
     ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
     h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
+    settings19(), // r19 B.5
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
@@ -559,6 +566,7 @@ function endScreen(): void {
   const body = h('div', { class: 'ending' },
     h('div', { class: 'disc big', 'aria-hidden': 'true' }),
     h('h3', null, insolvent && !def ? t(S.insolvencyTitle) : t(def?.name)),
+    UX19UI.end?.(g) ?? null,
     h('p', { class: 'lead' }, insolvent && !def ? t(S.insolvencyText) : t(def?.text)),
     h('p', { class: 'muted' }, `${g.config.companyName} · ${g.config.startYear}–${end.year} · Run ${g.signature}`),
     h('h4', null, `${t(S.legacy)}: ${legacyTotal(g)}`),

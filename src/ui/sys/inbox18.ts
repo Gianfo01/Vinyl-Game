@@ -19,6 +19,7 @@ import { store } from '../store';
 import { ic, setTab } from '../vis';
 import './core18.css';
 import { decLocked18, decOptBody18, decTimer18, pendingView18, sender18, voice18, voiceTag18 } from './decide18';
+import { ctxLine19 } from './ctx19';
 import { pending18, thread18 } from '../../sim/sys/decide18';
 
 /** Abre o destino de um "ir para" (pessoa, ato ou área/aba). */
@@ -69,6 +70,7 @@ function itemEl(s: GameState, it: Item18): HTMLElement {
     h('div', { class: 'ib18-acts' },
       m?.actions?.length && !m.resolved ? m.actions.map((a, i) => h('button', { class: `btn small ${i === 0 ? 'primary' : ''}`, title: i === m.actions!.length - 1 ? t(l('Opção padrão se você não responder', 'Default option if you don\'t reply')) : '', onclick: () => { toast(t(answerMsg(s, m.id, a.id))); rerender(); } }, t(a.label))) : null,
       m?.resolved ? h('small', { class: 'muted' }, '✓ ', t(m.actions?.find((a) => a.id === m.resolved)?.label)) : null,
+      d ? ctxLine19(s, d) : null, // r19: contexto do ator
       d ? d.options.map((o) => h('button', { class: `btn small ib18-opt ${o.id === d.defaultOption ? '' : 'primary'} ${decLocked18(s, d, o) ? 'dc18-locked' : ''}`, 'aria-disabled': String(decLocked18(s, d, o)), title: t(o.hint), onclick: () => { if (decLocked18(s, d, o)) return; resolveDecision(s, d.id, o.id); toast(t(o.label)); rerender(); } }, ...decOptBody18(s, d, o))) : null,
       it.goto ? h('button', { class: 'btn small ghost', onclick: () => { if (m) markRead(s, m.id); go18(it.goto!); } }, t(gotoLabel(it.goto)), ' →') : null,
       !pending && ui.view !== 'archived' ? h('button', { class: 'btn small ghost', title: t(l('Some por 4 semanas (fica em Adiadas)', 'Hidden for 4 weeks (kept in Snoozed)')), onclick: () => { snoozeMsg(s, it.key, ui.view === 'snoozed' ? 0 : 4); if (m) markRead(s, m.id); rerender(); } }, ui.view === 'snoozed' ? t(l('Trazer de volta', 'Bring back')) : t(l('Adiar', 'Snooze'))) : null,

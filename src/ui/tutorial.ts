@@ -5,7 +5,9 @@ import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import type { GameState } from '../sim/types';
 import { h } from './dom';
-import { store, type Area } from './store';
+import { savePrefs, store, type Area } from './store';
+import { setTutorials19, tutAllowed19 } from './tutoff19';
+import { toast } from './common';
 import { ic } from './vis';
 import { tutorialIntro14 } from './tutorial14';
 import { careers } from '../sim/sys/careers12';
@@ -31,7 +33,7 @@ const STEPS: Step[] = [
 
 export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | null {
   const tu = s.tutorial;
-  if (tu.done || tu.step >= STEPS.length) return null;
+  if (tu.done || tu.step >= STEPS.length || !tutAllowed19(store.prefs, 'card')) return null; // r19: "Sem tutoriais"
   const st0 = STEPS[tu.step];
   const st: Step = tu.step === 0 ? { ...st0, ...tutorialIntro14(careers(s).active), area: tutorialIntro14(careers(s).active).area as Area } : st0;
   const next = () => {
@@ -49,6 +51,7 @@ export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | 
         st.area && store.area !== st.area ? h('button', { class: 'btn small primary', onclick: () => { store.area = st.area!; rerender(); } }, t(l('Mostrar', 'Show me'))) : null,
         h('button', { class: 'btn small', onclick: next }, tu.step === STEPS.length - 1 ? t(l('Começar!', "Let's go!")) : t(l('Próximo', 'Next'))),
         h('button', { class: 'btn small ghost', onclick: () => { tu.done = true; rerender(); } }, t(l('Pular tutorial', 'Skip tutorial'))),
+        h('button', { class: 'btn small ghost tut19-off', onclick: () => { setTutorials19(store.prefs, false); savePrefs(); tu.done = true; rerender(); toast(t(l('Tutoriais desativados. Religue em Configurações.', 'Tutorials off. Turn them back on in Settings.')), 'info'); } }, t(l('Desativar todos os tutoriais', 'Turn off all tutorials'))),
       ),
     ),
   );

@@ -9,13 +9,15 @@ import { FAMILIES, MARKETS, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CRIT_ACTIONS, criticAction, relWith } from '../../sim/criticrel';
 import { allCritics, criticByName, type CriticDef } from '../../sim/media';
+import { calOf19 } from '../../sim/awardcal19';
+import { GRAMO_START, cycleYear } from '../../sim/sys/ceremonies8';
 import { CAMPAIGN_COST, CEREMONY_MONTH, GRAMO_CATS, NOMS_MONTH, REGIONAL_AWARDS, answerGramoPerform19 as answerPerform, campaignBonus, cer8, eligible, nominees, runCampaign } from '../../sim/awards19'; // r19: fachada
 import type { GramoCat } from '../../sim/sys/ceremonies8';
 import { AWARD_CATS, awardName, ch7 } from '../../sim/sys/charts7';
 import { TIER_NAME, TIER_ORDER, acceptInvite, declineInvite, editionOf, fest8, festActive, festCapacity, festFee, festMonth, festTierFor, pitchAct, withdraw, type FestTier, type PitchResult } from '../../sim/sys/fests8';
-import { festForecast12 } from './explain12';
+import { festForecast12, refreshForecast12 } from './explain12';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { fmtL, money, playerActs, rngOf } from '../../sim/util';
 import { existsNow } from '../../sim/future';
 import { $, N, actLink, cityName, kv, modal, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
@@ -91,8 +93,8 @@ export function openFestivalPage(fi: number): void {
     const form = { actId: mine[0]?.id ?? '', tier: 'afternoon' as FestTier, fee: 0 };
     const reply = h('div', { class: 'eval' });
     const feeInput = h('input', { type: 'number', min: 0, step: 50 }) as HTMLInputElement;
-    const refreshFee = () => { const a = s.acts[form.actId]; if (a) { form.fee = festFee(s, f, a, form.tier); feeInput.value = String(Math.round(form.fee / 100)); } };
-    feeInput.oninput = () => { form.fee = Math.max(0, Math.round(Number(feeInput.value) * 100)); };
+    const refreshFee = () => { const a = s.acts[form.actId]; if (a) { form.fee = festFee(s, f, a, form.tier); feeInput.value = String(Math.round(form.fee / 100)); } refreshForecast12(form); };
+    feeInput.oninput = () => { form.fee = Math.max(0, Math.round(Number(feeInput.value) * 100)); refreshForecast12(form); };
     refreshFee();
     const showReply = (res: PitchResult) => {
       reply.replaceChildren(h('p', { class: res.result === 'accepted' ? 'good' : res.result === 'rejected' ? 'bad' : '' }, t(res.text)),
@@ -144,13 +146,15 @@ interface CeremonyRow { id: string; name: string; month: number; kind: L; cats: 
 
 function ceremonies(s: GameState): CeremonyRow[] {
   const out: CeremonyRow[] = [
-    { id: 'gramo', name: s.config.realNames ? 'Grammy Awards' : t(l('Gramófonos de Ouro', 'Golden Gramophones')), month: CEREMONY_MONTH, kind: l('Principal (mundo)', 'Main (world)'), cats: GRAMO_CATS.map((c) => c.id), desc: l('Indicados anunciados em outubro; a cerimônia é em dezembro. Campanhas podem ajudar.', 'Nominees announced in October; the ceremony is in December. Campaigns can help.') },
-    { id: 'critics', name: t(l('Prêmio da Crítica', 'Critics\' Prize')), month: 11, kind: l('Crítica', 'Critics'), cats: ['critics'], desc: l('Vai para o disco com a melhor média de resenhas do ano.', 'Goes to the record with the best review average of the year.') },
-    { id: 'industry', name: t(l('Prêmios da Indústria', 'Industry Awards')), month: 11, kind: l('Indústria', 'Industry'), cats: ['label_year', 'producer_year', 'live_act'], desc: l('Selo do ano (receita), produtor do ano (hits) e ato ao vivo do ano (público em turnê).', 'Label of the year (revenue), producer of the year (hits) and live act of the year (tour crowds).') },
-  ];
+    // r19 (cenas): mês e fundação reais de cada prêmio (awardcal19); antes da fundação o prêmio não aparece
+    { id: 'gramo', name: s.config.realNames ? 'Grammy Awards' : t(l('Gramófonos de Ouro', 'Golden Gramophones')), month: CEREMONY_MONTH, kind: l('Principal (mundo)', 'Main (world)'), cats: GRAMO_CATS.map((c) => c.id), desc: fmtL(l('Desde {y}. Indicados anunciados em novembro; voto final e cerimônia em fevereiro do ano seguinte. Campanhas e o figurino do tapete vermelho podem ajudar.', 'Since {y}. Nominees announced in November; final vote and ceremony in February of the following year. Campaigns and the red-carpet outfit can help.'), { y: GRAMO_START }) },
+    { id: 'critics', name: t(l('Prêmio da Crítica', 'Critics\' Prize')), month: calOf19('critics').month, kind: l('Crítica', 'Critics'), cats: ['critics'], desc: l('Vai para o disco com a melhor média de resenhas do ano anterior.', 'Goes to the record with the best review average of the previous year.') },
+    { id: 'industry', name: t(l('Prêmios da Indústria', 'Industry Awards')), month: calOf19('label_year').month, kind: l('Indústria', 'Industry'), cats: ['label_year', 'producer_year'], desc: l('Selo do ano (receita) e produtor do ano (hits) do ano anterior.', 'Label of the year (revenue) and producer of the year (hits) of the previous year.') },
+    { id: 'live_act', name: t(l('Ato ao Vivo do Ano', 'Live Act of the Year')), month: calOf19('live_act').month, kind: l('Indústria', 'Industry'), cats: ['live_act'], desc: l('Maior público em turnê no ano anterior.', 'Biggest tour crowds in the previous year.') },
+  ].filter((c) => s.year + (c.id === 'gramo' ? 1 : 0) >= calOf19(c.cats[0]).start);
   for (const m of MARKETS) {
     const def = REGIONAL_AWARDS[m.id];
-    if (def) out.push({ id: def.id, name: s.config.realNames && def.realRef ? def.realRef : t(def.name), month: 11, kind: l('Regional', 'Regional'), cats: [def.id], desc: l('Vai para quem lidera a parada da região no fim do ano.', 'Goes to the region\'s chart leader at year end.') });
+    if (def && s.year >= calOf19(def.id).start) out.push({ id: def.id, name: s.config.realNames && def.realRef ? def.realRef : t(def.name), month: calOf19(def.id).month, kind: l('Regional', 'Regional'), cats: [def.id], desc: l('Vai para quem lidera a parada da região na noite da cerimônia.', 'Goes to the region\'s chart leader on the ceremony night.') });
   }
   for (const c of COUNTRY_INFO) if (c.award && c.award[2] <= s.year) out.push({ id: `nat_${c.a3}`, name: awardName(s, c), month: 11, kind: fmtKind(c.a3), cats: [], desc: l('Artista, música, álbum e revelação do ano pelo consumo no país.', 'Artist, song, album and newcomer of the year by consumption in the country.'), country: c.a3 });
   return out;
@@ -165,7 +169,7 @@ export function ceremoniesTab(s: GameState): HTMLElement {
   const myWins = (c: CeremonyRow) => c.country ? ch7(s).awards.filter((a) => a.a3 === c.country && a.byPlayer).length : s.awards.filter((a) => c.cats.includes(a.category) && a.byPlayer).length;
   const list = all.filter((c) => cui.filter === 'main' ? !c.country : cui.filter === 'national' ? !!c.country : myWins(c) > 0);
   return section(t(l('Premiações', 'Award ceremonies')),
-    h('p', { class: 'muted small' }, t(l('Cada premiação tem data, regras e histórico. Nos Gramófonos de Ouro os indicados saem em outubro e você pode fazer campanha.', 'Each ceremony has a date, rules and history. For the Golden Gramophones, nominees come out in October and you can campaign.'))),
+    h('p', { class: 'muted small' }, t(l('Cada premiação tem data real, regras e histórico. Nos Gramófonos de Ouro os indicados saem em novembro, a cerimônia é em fevereiro e você pode fazer campanha.', 'Each ceremony has a real date, rules and history. For the Golden Gramophones, nominees come out in November, the ceremony is in February and you can campaign.'))),
     h('div', { class: 'row wrap' }, select(cui.filter, [{ value: 'main', label: t(l('Mundiais, crítica, indústria e regionais', 'World, critics, industry and regional')) }, { value: 'national', label: t(l('Nacionais (por país)', 'National (by country)')) }, { value: 'mine', label: t(l('Onde já ganhei', 'Where I have won')) }], (v) => { cui.filter = v as typeof cui.filter; rerender(); })),
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Premiação', 'Ceremony'))), h('th', null, t(l('Tipo', 'Type'))), h('th', null, t(l('Mês', 'Month'))), h('th', null, t(l('Seus prêmios', 'Your awards'))))),
@@ -179,11 +183,12 @@ export function openCeremonyPage(id: string): void {
   if (!c) return;
   let close = () => {};
   const draw = () => {
-    const blocks: (HTMLElement | null)[] = [kv(t(l('Tipo', 'Type')), t(c.kind)), kv(t(l('Cerimônia', 'Ceremony')), `${t(MONTHS[c.month])} ${s.year}`), h('p', { class: 'small' }, t(c.desc))];
+    const blocks: (HTMLElement | null)[] = [kv(t(l('Tipo', 'Type')), t(c.kind)), kv(t(l('Cerimônia', 'Ceremony')), `${t(MONTHS[c.month])} ${c.month >= s.month ? s.year : s.year + 1}`), h('p', { class: 'small' }, t(c.desc))];
     if (c.id === 'gramo') {
       const st = cer8(s);
-      const announced = st.noms?.year === s.year;
-      blocks.push(h('p', { class: 'small muted' }, announced ? t(l('Indicados de {y} anunciados.', '{y} nominees announced.'), { y: s.year }) : t(l('Os indicados saem em {m}. Até lá, uma campanha melhora as chances de indicação.', 'Nominees come out in {m}. Until then, a campaign improves nomination chances.'), { m: t(MONTHS[NOMS_MONTH]) })));
+      const cy = cycleYear(s);
+      const announced = st.noms?.year === cy;
+      blocks.push(h('p', { class: 'small muted' }, announced ? t(l('Indicados de {y} anunciados.', '{y} nominees announced.'), { y: cy }) : t(l('Os indicados saem em {m}. Até lá, uma campanha melhora as chances de indicação.', 'Nominees come out in {m}. Until then, a campaign improves nomination chances.'), { m: t(MONTHS[NOMS_MONTH]) })));
       for (const cat of GRAMO_CATS) {
         const ids = nominees(s, cat.id) ?? [];
         blocks.push(section(`${t(cat.name)} — ${t(cat.rule)}`,
@@ -191,7 +196,7 @@ export function openCeremonyPage(id: string): void {
           campaignBox(s, cat.id, () => { close(); draw(); }),
         ));
       }
-      const perf = st.perform.find((p) => p.year === s.year);
+      const perf = st.perform.find((p) => p.year === cycleYear(s));
       if (perf) blocks.push(section(t(l('Convite para tocar na cerimônia', 'Invitation to play at the ceremony')),
         h('p', { class: 'small' }, actLink(s, perf.actId), ' ', perf.accepted === undefined ? t(l('foi convidado. Tocar ao vivo dá fama e fãs, mas cansa.', 'was invited. Playing live brings fame and fans, but is tiring.')) : perf.accepted ? t(l('vai tocar.', 'will play.')) : t(l('recusou.', 'declined.'))),
         perf.accepted === undefined ? h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => { answerPerform(s, perf.actId, true); close(); draw(); rerender(); } }, t(l('Aceitar', 'Accept'))), h('button', { class: 'btn small ghost', onclick: () => { answerPerform(s, perf.actId, false); close(); draw(); } }, t(l('Recusar', 'Decline')))) : null));
@@ -215,7 +220,7 @@ export function openCeremonyPage(id: string): void {
 }
 
 function campaignBox(s: GameState, cat: GramoCat, redraw: () => void): HTMLElement | null {
-  if (s.month >= CEREMONY_MONTH) return null;
+  if (s.month === CEREMONY_MONTH || cycleYear(s) + 1 < GRAMO_START) return null; // r19: votação fecha no mês da cerimônia
   const mine = Object.values(s.releases).filter((r) => (r.owner === 'player' || s.acts[r.actId]?.playerBand) && eligible(s, cat, r));
   if (!mine.length) return h('p', { class: 'muted small' }, t(l('Nenhum lançamento seu concorre aqui este ano.', 'None of your releases is eligible here this year.')));
   const pick = { rel: mine[0].id, lv: 1 };

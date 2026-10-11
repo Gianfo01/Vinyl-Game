@@ -23,7 +23,7 @@ import type { GameState, Release } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { isGenRel18 } from './ai18';
 import { aw15 } from './awards15';
-import { GRAMO_ADJ, NOMS_MONTH, nominees } from './ceremonies8';
+import { CEREMONY_MONTH, GRAMO_ADJ, NOMS_MONTH, cycleYear, nominees } from './ceremonies8';
 import { AWARD_ADJ18, type Comm18 } from './screen18';
 
 // ---------------------------------------------------------------- estado
@@ -78,16 +78,20 @@ export function campPts18(s: GameState, k: Camp18): number {
   return k === 'screen' ? 5 * (v.age > 50 ? 1.3 : 1) : k === 'lobby' ? 9 : 3 + v.young * 10;
 }
 /** Ajuste total de um lançamento (pontos somados ao placar do prêmio), com porquê. */
+/** r19: ajustes extras com porquê (figurino do tapete vermelho, sys/scenes19.ts). */
+export const REL_ADJ19: ((s: GameState, rel: Release) => [L, number] | null)[] = [];
 export function relAdj18(s: GameState, rel: Release): { v: number; why: [L, number][] } {
   const st = aw18(s), why: [L, number][] = [];
+  const cy = cycleYear(s); // r19: ciclo do prêmio (até a cerimônia de fevereiro ainda é o ano anterior)
   const act = s.acts[rel.actId];
   if (s.year >= 2023 && isGenRel18(s, rel.id)) return { v: -999, why: [[l('Inelegível: faixa gerada por IA (regra de autoria humana, 2023)', 'Ineligible: AI-generated (human-authorship rule, 2023)'), -999]] };
-  if (st.dq[rel.id] === s.year) return { v: -999, why: [[l('Desclassificado por violar as regras de campanha', 'Disqualified for breaking campaign rules'), -999]] };
+  if (st.dq[rel.id] === cy) return { v: -999, why: [[l('Desclassificado por violar as regras de campanha', 'Disqualified for breaking campaign rules'), -999]] };
   const b = act ? voters18(s).bias[familyOf(act.genre)] ?? 0 : 0;
   if (b) why.push([l('Gosto do corpo de votantes', 'Voting body taste'), b]);
-  for (const c of st.camps) if (c.rel === rel.id && c.y === s.year) why.push([CAMP18[c.k].name, Math.round(campPts18(s, c.k))]);
-  if (act && (st.makeup[act.id] ?? 0) === s.year) why.push([l('Compensação pela esnobada do ano passado', 'Make-up for last year\'s snub'), 6]);
-  if (act) { const wins = s.awards.filter((a) => a.actId === act.id && a.year >= s.year - 3).length; if (wins >= 2) why.push([l('Fadiga de voto (ganhou demais)', 'Voter fatigue (won too much)'), -4 * (wins - 1)]); }
+  for (const c of st.camps) if (c.rel === rel.id && c.y === cy) why.push([CAMP18[c.k].name, Math.round(campPts18(s, c.k))]);
+  if (act && (st.makeup[act.id] ?? 0) === cy) why.push([l('Compensação pela esnobada do ano passado', 'Make-up for last year\'s snub'), 6]);
+  if (act) { const wins = s.awards.filter((a) => a.actId === act.id && a.year >= cy - 3).length; if (wins >= 2) why.push([l('Fadiga de voto (ganhou demais)', 'Voter fatigue (won too much)'), -4 * (wins - 1)]); }
+  for (const f of REL_ADJ19) { const x = f(s, rel); if (x) why.push(x); }
   return { v: why.reduce((t, x) => t + x[1], 0), why };
 }
 GRAMO_ADJ.push((s, relId) => { const rel = s.releases[relId]; return rel ? relAdj18(s, rel).v : 0; });
@@ -95,22 +99,23 @@ GRAMO_ADJ.push((s, relId) => { const rel = s.releases[relId]; return rel ? relAd
 export function campaign18(s: GameState, relId: string, k: Camp18): L | null {
   const rel = s.releases[relId];
   if (!rel || !mine(s, rel)) return l('Só lançamentos seus.', 'Only your releases.');
-  if (rel.year !== s.year) return l('Só concorre quem saiu este ano.', 'Only this year\'s releases compete.');
+  const cy = cycleYear(s); // r19: ciclo do prêmio
+  if (rel.year !== cy) return l('Só concorre quem saiu no ano homenageado.', 'Only releases from the honored year compete.');
   if (s.year < CAMP18[k].from) return l('Ainda não existe nesta época.', 'Not available in this era yet.');
-  if (s.month >= 11) return l('A votação já fechou.', 'Voting has closed.');
+  if (s.month === CEREMONY_MONTH) return l('A votação já fechou.', 'Voting has closed.');
   const st = aw18(s);
-  if (st.camps.some((c) => c.rel === relId && c.k === k && c.y === s.year)) return l('Essa campanha já está rodando.', 'That campaign is already running.');
+  if (st.camps.some((c) => c.rel === relId && c.k === k && c.y === cy)) return l('Essa campanha já está rodando.', 'That campaign is already running.');
   const cost = money(s, CAMP18[k].cost);
   if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
   post(s, `aw18:${relId}:${k}`, -cost, 'marketing', `Campanha de prêmio (${CAMP18[k].name.pt}): ${rel.title}`);
-  st.camps.push({ rel: relId, k, y: s.year });
+  st.camps.push({ rel: relId, k, y: cy });
   if (st.camps.length > 40) st.camps.shift();
   if (k === 'lobby') {
     const r = Rng.fromSeed(`${s.config.seed}|aw18lobby|${relId}|${s.year}`);
     if (r.chance(s.year >= 2000 ? 0.18 : 0.08)) {
       scandal(s, rel.actId, 'money', 35, fmtL(l('Jantares com votantes: campanha de "{t}" acusada de comprar voto', 'Dinners with voters: the "{t}" campaign accused of buying votes'), { t: rel.title }), { tags: ['awards', 'aw18', 'lobby'] });
       s.player.reputation.institutional = clamp(s.player.reputation.institutional - 4, 0, 100);
-      if (r.chance(0.3)) { st.dq[relId] = s.year; logW(s, fmtL(l('"{t}" é desclassificada da premiação por violar as regras de campanha.', '"{t}" is disqualified for breaking campaign rules.'), { t: rel.title })); }
+      if (r.chance(0.3)) { st.dq[relId] = cy; logW(s, fmtL(l('"{t}" é desclassificada da premiação por violar as regras de campanha.', '"{t}" is disqualified for breaking campaign rules.'), { t: rel.title })); }
     }
   }
   return null;
@@ -153,14 +158,14 @@ function snubCheck(s: GameState): void {
   }
 }
 export function snubReact18(s: GameState, actId: string, ch: 'boycott' | 'protest' | 'quiet'): L {
-  const st = aw18(s), a = s.acts[actId], x = st.snub.find((k) => k.act === actId && k.y === s.year && !k.ch);
+  const st = aw18(s), a = s.acts[actId], x = st.snub.find((k) => k.act === actId && k.y === cycleYear(s) && !k.ch);
   if (!a || !x) return l('Nada a decidir.', 'Nothing to decide.');
   x.ch = ch;
   if (ch === 'boycott') {
     aw15(s).boycott[actId] = s.year;
     a.fans.core = Math.round(a.fans.core * 1.04);
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - 3, 0, 100);
-    st.makeup[actId] = s.year + 1;
+    st.makeup[actId] = cycleYear(s) + 1;
     emitFact(s, { kind: 'boycott', actors: [actId], severity: 45, visibility: 'public', tags: ['awards', 'aw18'], src: 'aw18', place: a.city, text: fmtL(l('{a} boicota a cerimônia: "esse prêmio não fala com a minha geração".', '{a} boycotts the ceremony: "this award does not speak to my generation".'), { a: a.name }) });
     return l('Boicote anunciado.', 'Boycott announced.');
   }
@@ -281,7 +286,7 @@ registerSimHook('month', 'aw18', (s) => {
     logW(s, t);
   }
   if (s.month === NOMS_MONTH + 1) snubCheck(s);
-  if (s.month === 0) { for (const [k, y] of Object.entries(st.makeup)) if (y < s.year) delete st.makeup[k]; for (const [k, w] of Object.entries(st.bundles)) if (w < s.week) delete st.bundles[k]; }
+  if (s.month === 0) { for (const [k, y] of Object.entries(st.makeup)) if (y < cycleYear(s)) delete st.makeup[k]; for (const [k, w] of Object.entries(st.bundles)) if (w < s.week) delete st.bundles[k]; }
   if (!exact(s) && s.year === st.reformY && s.month === 2) {
     const t = l('A academia convida milhares de membros novos, mais jovens e diversos: muda quem vota.', 'The academy invites thousands of new, younger and more diverse members: who votes changes.');
     emitFact(s, { kind: 'law', actors: [], severity: 45, visibility: 'public', tags: ['awards', 'aw18', 'reform'], src: 'aw18', text: t }); logW(s, t);
@@ -302,9 +307,9 @@ registerExplain('aw18.rules', (s, c) => {
 });
 registerAdvisorTip('aw18', (s) => {
   const out = [] as ReturnType<Parameters<typeof registerAdvisorTip>[1]>;
-  if (s.month >= 7 && s.month <= 10) {
+  if (s.month >= 6 && s.month < NOMS_MONTH) {
     const best = Object.values(s.releases).filter((r) => r.year === s.year && mine(s, r) && r.peak > 0 && r.peak <= 10 && !aw18(s).camps.some((c) => c.rel === r.id && c.y === s.year)).sort((a, b) => a.peak - b.peak)[0];
-    if (best) out.push({ id: `aw18-camp-${best.id}`, level: 'info', cat: 'release', score: 38, text: fmtL(l('"{t}" pode concorrer: campanha com votantes antes de outubro.', '"{t}" could compete: voter campaign before October.'), { t: best.title }), why: [voters18(s).era], goto: { area: 'society18', tab: ['society18', 'awards'] } });
+    if (best) out.push({ id: `aw18-camp-${best.id}`, level: 'info', cat: 'release', score: 38, text: fmtL(l('"{t}" pode concorrer: campanha com votantes antes das indicações de novembro.', '"{t}" could compete: voter campaign before the November nominations.'), { t: best.title }), why: [voters18(s).era], goto: { area: 'society18', tab: ['society18', 'awards'] } });
   }
   if (bundlesOk18(s)) { const r = Object.values(s.releases).find((x) => mine(s, x) && s.week - x.week <= 4 && !aw18(s).bundles[x.id]); if (r) out.push({ id: `aw18-bundle-${r.id}`, level: 'info', cat: 'release', score: 30, text: fmtL(l('Regra atual conta bundles: "{t}" ganharia +15% na parada por 8 semanas.', 'Current rule counts bundles: "{t}" would get +15% on the chart for 8 weeks.'), { t: r.title }), goto: { area: 'society18', tab: ['society18', 'charts'] } }); }
   return out;

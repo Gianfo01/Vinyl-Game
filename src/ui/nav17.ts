@@ -19,20 +19,20 @@ export const NAV17: Group17[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'house', secs: [sec('today', l('Hoje', 'Today'), ['cockpit', 'plan', 'goals', 'diary'])] },
   { id: 'company', label: l('Empresa', 'Company'), icon: 'building', secs: [
     sec('base', l('Sede e equipe', 'HQ and staff'), ['campus18', 'hq', 'company', 'team']),
-    sec('money', l('Dinheiro', 'Money'), ['finance', 'business']),
-    sec('course', l('Rumo, direitos e cadeia', 'Course, rights and supply'), ['long18', 'rights18', 'supply18'])] },
+    sec('money', l('Dinheiro e riscos', 'Money and risks'), ['finance', 'business', 'firm19']),
+    sec('course', l('Rumo, prazos, direitos e cadeia', 'Course, deadlines, rights and supply'), ['long18', 'calendar19', 'rights18', 'supply18'])] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', secs: [
-    sec('roster', l('Seu elenco', 'Your roster'), ['artists', 'people', 'dyn18']),
+    sec('roster', l('Seu elenco', 'Your roster'), ['artists', 'people', 'dyn18', 'contracts19']),
     sec('find', l('Descobrir', 'Discover'), ['market', 'directory', 'talent18']),
     sec('pros', l('Bastidores', 'Behind the scenes'), ['managers14', 'producers15'])] },
   { id: 'music', label: l('Música', 'Music'), icon: 'disc', secs: [
     sec('make', l('Criar', 'Create'), ['project', 'creation', 'studio']),
-    sec('release', l('Lançar', 'Release'), ['releases', 'catalog']),
-    sec('live', l('Palco', 'Stage'), ['shows', 'cal17'])] },
-  { id: 'press', label: l('Mídia', 'Media'), icon: 'newspaper', secs: [sec('press', l('Imprensa', 'Press'), ['news17', 'media', 'critics'])] },
+    sec('release', l('Lançar e reviver', 'Release and revive'), ['releases', 'catalog', 'tribute19', 'media19']),
+    sec('live', l('Palco', 'Stage'), ['shows', 'cal17', 'live19'])] },
+  { id: 'press', label: l('Mídia', 'Media'), icon: 'newspaper', secs: [sec('press', l('Imprensa', 'Press'), ['news17', 'media', 'critics', 'zines19', 'fakes19'])] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', secs: [
-    sec('map', l('Mapa', 'Map'), ['world', 'world17', 'after18']),
-    sec('market', l('Mercado', 'Market'), ['charts', 'labels', 'industry', 'regions18']),
+    sec('map', l('Mapa e política', 'Map and politics'), ['world', 'world17', 'after18', 'regions19']),
+    sec('market', l('Mercado', 'Market'), ['charts', 'labels', 'industry', 'regions18', 'market19a']),
     sec('culture', l('Cultura e histórias', 'Culture and stories'), ['movements', 'lendas', 'society18', 'dm18'])] },
   { id: 'events', label: l('Eventos', 'Events'), icon: 'trophy', secs: [sec('events', l('Eventos', 'Events'), ['festivals', 'awards', 'rockhall'])] },
   { id: 'crime', label: l('Submundo', 'Underworld'), icon: 'skull', secs: [sec('crime', l('Submundo', 'Underworld'), ['crime'])] },
@@ -81,7 +81,8 @@ export const ICON17: Record<string, string> = {
   world: 'map', world17: 'chess', after18: 'door', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
   festivals: 'ticket', awards: 'medal', rockhall: 'vault', crime: 'mask',
   you: 'fame', agenda17: 'hourglass', personal: 'heart', night14: 'sleep', wealth: 'diamond', scenes17: 'shirt', careers: 'compass', ventures: 'rocket',
-  long18: 'signpost', rights18: 'copyright', supply18: 'factory', dyn18: 'network', talent18: 'seedling', regions18: 'passport', society18: 'columns', dm18: 'dice',
+  long18: 'signpost', rights18: 'copyright',
+  calendar19: 'datebook', contracts19: 'quill', firm19: 'stress', tribute19: 'broken-heart', media19: 'turntable', live19: 'spotlight', regions19: 'ballot', market19a: 'certificate', zines19: 'zine', fakes19: 'warning', supply18: 'factory', dyn18: 'network', talent18: 'seedling', regions18: 'passport', society18: 'columns', dm18: 'dice',
   identity: 'lock', biz17: 'gavel', management: 'brain', tour12: 'train', studio12: 'radio', publishing16: 'bulb', outlets16: 'film', platform16: 'ship',
   ...Object.fromEntries(ORDER17.map((id) => [CAREER_PAGE17[id].area, CAREER_PAGE17[id].icon])),
 };

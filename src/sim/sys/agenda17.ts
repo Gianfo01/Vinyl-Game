@@ -68,9 +68,9 @@ const report = (s: GameState, t: L, tone: 'good' | 'bad' | 'info' = 'info') => {
 export const OFFICE = 2;
 export const INV_NAME: Record<Inv, L> = { lead: l('À frente', 'Hands-on'), normal: l('Normal', 'Normal'), deleg: l('Delegada', 'Delegated') };
 export const INV_DESC: Record<Inv, L> = {
-  lead: l('2 bolinhas: você cuida de tudo pessoalmente. Resultado +12% (reputação, qualidade, satisfação).', '2 balls: you handle everything personally. Results +12% (reputation, quality, satisfaction).'),
+  lead: l('2 bolinhas: você cuida de tudo pessoalmente. Resultado de +2% a +18% (reputação, qualidade, satisfação): sobe com a sua energia, cai com cada outra frente que você toca e com o porte do negócio.', '2 balls: you handle everything personally. Results +2% to +18% (reputation, quality, satisfaction): higher with your energy, lower with each other front you run and with the size of the business.'),
   normal: l('1 bolinha: acompanha o essencial. Resultado normal.', '1 ball: you keep up with the essentials. Normal results.'),
-  deleg: l('0 bolinha: um diretor contratado toca. Custa salário; o resultado vai de −25% (fraco) a +3% (excelente) pela habilidade dele.', '0 balls: a hired director runs it. Costs a salary; results range from −25% (weak) to +3% (excellent) by their skill.'),
+  deleg: l('0 bolinha: um diretor contratado toca. Custa salário; o resultado vai de −25% (fraco) a +15% (excelente) pela habilidade dele, menos se o negócio for grande ou se você tiver diretores demais para supervisionar.', '0 balls: a hired director runs it. Costs a salary; results range from −25% (weak) to +15% (excellent) by their skill, less if the business is big or you have too many directors to supervise.'),
 };
 const BALLS: Record<Inv, number> = { lead: 2, normal: 1, deleg: 0 };
 /** Carreira → negócios que ela comanda. */
@@ -136,15 +136,39 @@ export function balls(s: GameState): { office: Ball[]; personal: Ball[]; over: B
 
 // ================================================================ qualidade por carreira
 
-export function careerQ(s: GameState, id: string): { f: number; why: L } {
+/** r19 (contexto): porte do negócio que a carreira comanda (1 = pequeno; cresce com unidades, nível, elenco, clientes). */
+export function careerSize19(s: GameState, id: string): number {
+  if (id === 'label') return Math.max(1, playerActs(s).length / 5);
+  if (id === 'manager') return Math.max(1, ventures(s).mg.clients.length / 3);
+  const k = CAREER_KIND[id];
+  if (!k) return 1;
+  const vs = ventures(s).list.filter((v) => v.kind === k);
+  return Math.max(1, vs.reduce((t, v) => t + 0.6 + 0.4 * (v.level || 1), 0));
+}
+export interface QPart19 { k: string; v: number }
+export function careerQ(s: GameState, id: string): { f: number; why: L; parts: QPart19[] } {
   const a = ag17(s), on = careers(s).active.includes(id), hd = a.heads[id];
+  const sz = careerSize19(s, id), parts: QPart19[] = [];
   let f: number, why: L;
-  if (on && invOf(s, id) === 'lead') { f = 1.12; why = l('você à frente', 'you hands-on'); }
+  if (on && invOf(s, id) === 'lead') {
+    // dedicação: energia do jogador, outras frentes tocadas por você e porte do negócio (uma pessoa não faz tudo)
+    const en = clamp(maxEnergy(s) / 5, 0.4, 1.2), others = careers(s).active.filter((c) => c !== id && invOf(s, c) !== 'deleg').length;
+    const b = 0.15 * en, o = -0.03 * others, z = -0.025 * Math.max(0, sz - 2);
+    f = 1 + clamp(b + o + z, 0.02, 0.18);
+    parts.push({ k: 'energy', v: b }, { k: 'others', v: o }, { k: 'size', v: z });
+    why = fmtL(l('você à frente ({p})', 'you hands-on ({p})'), { p: `${f >= 1 ? '+' : ''}${Math.round((f - 1) * 100)}%` });
+  }
   else if (on && invOf(s, id) === 'normal') { f = 1; why = l('você acompanha', 'you keep up'); }
-  else if (hd) { f = 0.75 + 0.28 * hd.skill / 100; why = fmtL(l('{n} dirige (hab. {k})', '{n} runs it (skill {k})'), { n: hd.name, k: hd.skill }); }
+  else if (hd) {
+    // diretor: teto pela habilidade, menos com o porte do negócio e com quantos diretores você supervisiona
+    const base = 0.75 + 0.4 * hd.skill / 100, z = -0.04 * Math.max(0, sz - 1) * (1.2 - hd.skill / 100), ld = -0.02 * Math.max(0, Object.keys(a.heads).length - 2);
+    f = clamp(base + z + ld, 0.6, 1.15);
+    parts.push({ k: 'skill', v: base - 1 }, { k: 'size', v: z }, { k: 'load', v: ld });
+    why = fmtL(l('{n} dirige (hab. {k})', '{n} runs it (skill {k})'), { n: hd.name, k: hd.skill });
+  }
   else { f = 0.72; why = l('ninguém no comando (sem a carreira e sem diretor)', 'nobody in charge (no career, no director)'); }
-  if (overbooked(s) > 0) { f *= 0.9; why = l(why.pt + ' · sobrecarga −10%', why.en + ' · overbooked −10%'); }
-  return { f, why };
+  if (overbooked(s) > 0) { f *= 0.9; parts.push({ k: 'over', v: -0.1 }); why = l(why.pt + ' · sobrecarga −10%', why.en + ' · overbooked −10%'); }
+  return { f, why, parts };
 }
 
 // carga de agenda dos careers12: à frente pesa mais, delegada quase nada

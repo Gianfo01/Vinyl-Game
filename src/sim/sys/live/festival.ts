@@ -146,6 +146,8 @@ export interface FestModel {
   costs: { tiles: number; fees: number; production: number };
 }
 
+/** r19 (careers19): teto de público do terreno (alugado na edição 0; cresce por passo explícito). Injetado: sem ciclo. */
+export const festCap19: { f: (s: GameState, f: OwnFestival) => number } = { f: () => Infinity };
 /** Modelo determinístico (sem clima e desastres) — usado na previsão e na edição real. */
 export function festModel(s: GameState, f: OwnFestival): FestModel {
   const c = countTiles(f);
@@ -164,7 +166,7 @@ export function festModel(s: GameState, f: OwnFestival): FestModel {
   const demand = Math.round((fans * 0.5 + f.rep * 150 + (lineup.length ? 400 : 0)) * (0.6 + f.rep / 100) / elastic);
   const groundCap = c.free * PEOPLE_PER_TILE;
   const gateCap = c.gate * 7000;
-  const capacity = Math.min(groundCap, gateCap);
+  const capacity = Math.min(groundCap, gateCap, festCap19.f(s, f)); // r19 (careers19): terreno alugado limita o público
   const attendance = Math.max(0, Math.min(demand, capacity));
   const overflow = Math.max(0, demand - capacity);
   const att = Math.max(1, attendance);

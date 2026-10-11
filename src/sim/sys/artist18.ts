@@ -339,9 +339,23 @@ export const ASK18: Record<Ask18, L> = {
   audit: l('Auditoria e contas trimestrais', 'Audit and quarterly statements'), term: l('Prazo mais curto', 'Shorter term'), promo: l('Verba e lançamento garantidos', 'Guaranteed budget and release'), control: l('Controle criativo', 'Creative control'),
 };
 /** chance de o selo ceder (com o porquê) */
-export function counterOdds18(s: GameState, o: Offer18): { p: number; why: L[] } {
+/** R19: quanto custa ao selo ceder cada ponto — pedir a master de volta pesa mais que pedir auditoria. */
+export function askSize18(o: Offer18, ask: Ask18): number {
+  const k = o.k18;
+  switch (ask) {
+    case 'adv': return o.low ? 0.02 : 0.06 + (o.bid ? 0.02 : 0);
+    case 'roy': return 0.07 + (o.roy >= (o.model === 'distribution' ? 0.8 : 0.2) ? 0.05 : 0);
+    case 'master': return o.master !== 'label' ? 0.03 : o.rev ? 0.08 : 0.18;
+    case 'audit': return k?.audit ? 0 : o.pred ? 0.01 : 0.03;
+    case 'term': return o.term > 48 ? 0.03 : 0.07;
+    case 'promo': return 0.05 + (o.mkt > 0 && o.adv > 0 && o.mkt > o.adv ? 0.03 : 0);
+    case 'control': return o.ar === 'label' ? 0.1 : 0.14;
+  }
+}
+export function counterOdds18(s: GameState, o: Offer18, ask?: Ask18): { p: number; why: L[] } {
   const why: L[] = [];
   let p = 0.3 + o.mood * 0.2 - o.rounds * 0.12;
+  if (ask) { const x = askSize18(o, ask); p -= x; if (x) why.push(fmtL(l('−{p}%: o tamanho do pedido ({a})', '−{p}%: the size of the ask ({a})'), { p: Math.round(x * 100), a: ASK18[ask] })); }
   const n = competing(s, o);
   if (n) { p += Math.min(0.3, n * 0.15); why.push(fmtL(l('+{p}%: {n} selo(s) disputando vocês (leilão)', '+{p}%: {n} label(s) bidding for you (auction)'), { p: Math.round(Math.min(0.3, n * 0.15) * 100), n })); }
   const adv = advice18(s);
@@ -358,7 +372,7 @@ export function counter18(s: GameState, id: string, ask: Ask18, r?: Rng): { ok: 
   const a = band18(s);
   if (!o || o.st !== 'open' || !a) return { ok: false, text: l('Proposta indisponível.', 'Offer unavailable.') };
   r ??= new Rng(seedState(`a18c|${s.config.seed}|${o.id}|${o.rounds}|${s.week}`));
-  const { p } = counterOdds18(s, o);
+  const { p } = counterOdds18(s, o, ask);
   o.rounds++;
   if (!r.chance(p)) {
     o.mood -= 0.25;

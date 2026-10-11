@@ -2,7 +2,7 @@
 // Cada evento: pré-condições, participantes compatíveis, cooldown, tags de conteúdo,
 // opções e efeitos. O diretor escolhe entre os válidos; nunca inventa evento sem causa.
 
-import { DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
+import { CTXFX19, DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
 import { clamp, type Rng } from '../core/rng';
 import { toReal } from '../core/money';
 import { FESTIVALS, MEDIA } from '../data/catalog';
@@ -11,6 +11,7 @@ import { formatMoney } from '../core/money';
 import { makeAct, makePerson, langForCity } from './people';
 import type { Act, Decision, GameState } from './types';
 import { rng19 } from './rng19';
+import { CONFLICTS19 } from './conflicts19';
 import { withPlayerActsCache, fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
@@ -48,7 +49,7 @@ export interface EventDef {
 const mineActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]);
 const pickMine = (s: GameState, r: Rng, f: (a: Act) => boolean = () => true): Act | undefined => {
   const list = mineActs(s).filter(f);
-  return list.length ? r.pick(list) : undefined;
+  return list.length ? (CTXFX19.pickW && list.length > 1 ? r.weighted(list, (a) => CTXFX19.pickW!(s, a)) : r.pick(list)) : undefined; // r19: quem tem mágoa aberta reage primeiro
 };
 const members = (s: GameState, a: Act) => a.members.map((id) => s.persons[id]).filter((p) => p && p.alive);
 const mood = (s: GameState, a: Act, k: 'morale' | 'fatigue' | 'stress' | 'inspiration', v: number) => {
@@ -908,7 +909,9 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
     return true;
   }
   const r = rng19(s, 'decide', () => rngOf(s));
+  const cx19 = CTXFX19.pre?.(s, def.id, opt.id, d.ctx); // r19: contexto do ator (ctxsys19)
   opt.apply(s, r, d.ctx);
+  if (cx19) CTXFX19.post?.(s, cx19);
   runDecisionListeners(s, def.id, opt.id, d.ctx);
   s.decisions = s.decisions.filter((x) => x !== d);
   remember(s, `decision:${def.id}`, fmtL(l('{t} → {o}', '{t} → {o}'), { t: d.title, o: opt.label }), { actId: d.ctx.act ? String(d.ctx.act) : undefined });
@@ -922,6 +925,7 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
   const freq = pc.freq;
   let n = Math.floor(freq + r.next());
   if (s.decisions.length >= 4) n = 0; // a mesa do mês tem no máximo ~5 itens
+  const full19 = n > 0 && CONFLICTS19.full(s); // r19: orçamento global cheio → nada de evento ruim novo (oportunidades seguem)
   const monthlyCost = estimateMonthlyBurn(s);
   const struggling = s.player.cash < monthlyCost * 2 || s.player.insolvencyMonths > 0;
   const target = pc.wave ? 0.5 + 0.35 * Math.sin((monthIndex / pc.wave) * Math.PI * 2) : 0.35;
@@ -932,6 +936,7 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
       for (const def of EVENTS) {
         if (def.forcedOnly || !def.find) continue;
         if ((s.eventCooldowns[def.id] ?? -1) > s.week) continue;
+        if (full19 && def.tone === 'bad') continue;
         if (filtered(s, def)) continue;
         const ctx = def.find(s, r);
         // o personagem do jogador decide a própria vida (área Você): eventos pessoais não o escolhem

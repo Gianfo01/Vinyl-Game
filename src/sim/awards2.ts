@@ -7,6 +7,7 @@ import type { GameState } from './types';
 import { fmtL, notify, recordAward, remember } from './util';
 import { avgReview } from './media';
 import { PRODUCERS } from './studio';
+import { calOf19, honoredYear19 } from './awardcal19';
 
 export interface AwardDef {
   id: string;
@@ -36,43 +37,56 @@ function give(s: GameState, year: number, category: string, name: L, winnerName:
   remember(s, 'award2', fmtL(l('{y} — {c}: {n}.', '{y} — {c}: {n}.'), { y: year, c: name, n: winnerName }), { actId: opts.actId, important: opts.byPlayer });
 }
 
+/** r19: o id é de um prêmio regional (ids reais do conteúdo: trofeu_vitrola, euro_stage… ou os antigos reg_*). */
+export const isRegional19 = (cat: string): boolean => cat.startsWith('reg_') || Object.values(REGIONAL_AWARDS).some((d) => d.id === cat);
+
+/** r19 (calendário real): roda no fechamento de cada mês e entrega só os prêmios cuja cerimônia é neste mês e que já
+ *  existem (ano de fundação do dado). Premia o ano homenageado (cerimônias do 1º semestre = ano anterior). */
 export function yearlyAwards2(s: GameState, r: Rng): void {
-  const year = s.year;
+  const at = (cat: string) => { const c = calOf19(cat); return s.month === c.month && s.year >= c.start; };
+  const year = honoredYear19(s.year, s.month);
   const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
-  if (!rels.length) return;
   // crítica: melhor média de resenhas
-  const critic = rels.map((x) => ({ x, v: avgReview(s, x.id) ?? 0 })).filter((y) => y.v > 0).sort((a, b) => b.v - a.v)[0];
+  const critic = at('critics') ? rels.map((x) => ({ x, v: avgReview(s, x.id) ?? 0 })).filter((y) => y.v > 0).sort((a, b) => b.v - a.v)[0] : undefined;
   if (critic) {
     const act = s.acts[critic.x.actId];
-    give(s, year, 'critics', l('Prêmio da Crítica', 'Critics\' Prize'), `${act?.name ?? '?'} — ${critic.x.title}`, { actId: act?.id, releaseId: critic.x.id, byPlayer: critic.x.owner === 'player' || !!act?.playerBand });
+    give(s, year, 'critics', l('Prêmio da Crítica', "Critics' Prize"), `${act?.name ?? '?'} — ${critic.x.title}`, { actId: act?.id, releaseId: critic.x.id, byPlayer: critic.x.owner === 'player' || !!act?.playerBand });
     if (critic.x.owner === 'player') s.player.reputation.artistic = clamp(s.player.reputation.artistic + 3, 0, 100);
   }
-  // regionais: líder da parada regional
+  // regionais: líder da parada regional na noite (cada um no seu mês e desde a sua fundação)
   for (const m of MARKETS) {
+    const def = REGIONAL_AWARDS[m.id];
+    if (!def || !at(def.id)) continue;
     const top = s.regionCharts[m.id]?.[0];
     const rel = top ? s.releases[top] : undefined;
     if (!rel || rel.year < year - 1) continue;
-    const def = REGIONAL_AWARDS[m.id];
     const act = s.acts[rel.actId];
     give(s, year, def.id, def.name, `${act?.name ?? '?'} — ${rel.title}`, { actId: act?.id, releaseId: rel.id, byPlayer: rel.owner === 'player' || !!act?.playerBand });
   }
-  // indústria: selo do ano (receita), produtor do ano (hits), ato ao vivo (público em turnê)
-  const labels = Object.values(s.labels).filter((x) => x.active).map((lb) => ({ id: lb.id, name: lb.name, v: lb.revenueYear }));
-  labels.push({ id: 'player', name: s.config.companyName, v: s.player.revenueByYear[year] ?? 0 });
-  const bestLabel = labels.sort((a, b) => b.v - a.v)[0];
-  if (bestLabel && s.year >= 1930) give(s, year, 'label_year', l('Selo do Ano (indústria)', 'Label of the Year (industry)'), bestLabel.name, { byPlayer: bestLabel.id === 'player' });
-  const prodHits: Record<string, number> = {};
-  for (const rel of rels) for (const id of rel.songs) {
-    const p = s.songs[id]?.producerId;
-    if (p && rel.peak <= 20) prodHits[p] = (prodHits[p] ?? 0) + 1;
+  // indústria: selo do ano (receita), produtor do ano (hits)
+  if (at('label_year')) {
+    const rev = (lb: { revenueYear: number; revenueLastYear: number }) => (year === s.year ? lb.revenueYear : lb.revenueLastYear);
+    const labels = Object.values(s.labels).filter((x) => x.active).map((lb) => ({ id: lb.id, name: lb.name, v: rev(lb) }));
+    labels.push({ id: 'player', name: s.config.companyName, v: s.player.revenueByYear[year] ?? 0 });
+    const bestLabel = labels.sort((a, b) => b.v - a.v)[0];
+    if (bestLabel) give(s, year, 'label_year', l('Selo do Ano (indústria)', 'Label of the Year (industry)'), bestLabel.name, { byPlayer: bestLabel.id === 'player' });
+    const prodHits: Record<string, number> = {};
+    for (const rel of rels) for (const id of rel.songs) {
+      const p = s.songs[id]?.producerId;
+      if (p && rel.peak <= 20) prodHits[p] = (prodHits[p] ?? 0) + 1;
+    }
+    const bestProd = Object.entries(prodHits).sort((a, b) => b[1] - a[1])[0];
+    if (bestProd) give(s, year, 'producer_year', l('Produtor do Ano', 'Producer of the Year'), PRODUCERS.find((p) => p.id === bestProd[0])?.name ?? bestProd[0], { byPlayer: false });
   }
-  const bestProd = Object.entries(prodHits).sort((a, b) => b[1] - a[1])[0];
-  if (bestProd) give(s, year, 'producer_year', l('Produtor do Ano', 'Producer of the Year'), PRODUCERS.find((p) => p.id === bestProd[0])?.name ?? bestProd[0], { byPlayer: false });
-  const live = s.tours.filter((t) => t.status === 'done' && t.stops.some((st) => st.status === 'played' && Math.floor(st.day / 365.25) + s.config.startYear === year));
-  const bestLive = live.map((t) => ({ t, v: t.stops.reduce((x, y) => x + y.sold, 0) })).sort((a, b) => b.v - a.v)[0];
-  if (bestLive && bestLive.v > 20000) {
-    const act = s.acts[bestLive.t.actId];
-    give(s, year, 'live_act', l('Ato ao Vivo do Ano', 'Live Act of the Year'), act?.name ?? '?', { actId: act?.id, byPlayer: true });
+  // ato ao vivo: maior público em turnê no ano homenageado
+  if (at('live_act')) {
+    const live = s.tours.filter((t) => t.status === 'done' && t.stops.some((st) => st.status === 'played' && Math.floor(st.day / 365.25) + s.config.startYear === year));
+    const bestLive = live.map((t) => ({ t, v: t.stops.reduce((x, y) => x + y.sold, 0) })).sort((a, b) => b.v - a.v)[0];
+    if (bestLive && bestLive.v > 20000) {
+      const act = s.acts[bestLive.t.actId];
+      // r19: só é "do jogador" se o ato ainda for seu (antes era sempre true)
+      give(s, year, 'live_act', l('Ato ao Vivo do Ano', 'Live Act of the Year'), act?.name ?? '?', { actId: act?.id, byPlayer: !!act && (act.owner === 'player' || !!act.playerBand) });
+    }
   }
   void r;
 }
