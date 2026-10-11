@@ -43,7 +43,8 @@ describe('saves na nuvem (r17)', () => {
   it('pedaço de outra gravação é detectado', async () => {
     const db = memDb17();
     await cloudSave17(db, 'u', 's-a', 'x'.repeat(10), { name: 'a', year: 1, label: 'b' });
-    await db.doc('data/users/u/saves/s-a/c0').set({ gen: 'outra', i: 0, d: 'zz' });
+    const k0 = [...db.store.keys()].find((k) => /\/saves\/s-a\/(g[^/]*-)?c0$/.test(k))!; // r20: pedaços por geração
+    await db.doc(k0).set({ gen: 'outra', i: 0, d: 'zz' });
     await expect(cloudLoad17(db, 'u', 's-a')).rejects.toThrow('incomplete');
     expect(chunks17('abcdef', 4)).toEqual(['abcd', 'ef']);
     expect(CHUNK17).toBeLessThan(256 * 1024);

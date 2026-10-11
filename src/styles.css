@@ -723,3 +723,8 @@ main select { max-width: 100%; }
 .p12-grid label { grid-template-columns: minmax(0, 1fr); min-width: 0; }
 /* r18 final: a dica de primeira vez não cobre o menu lateral (fica à direita no desktop) */
 @media (min-width: 641px) { body > .tip18 { left: auto; right: 1rem; } }
+/* r20 G1: indicador de saúde do save no topo */
+.topbar .sh20 { white-space: nowrap; font-variant-numeric: tabular-nums; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; }
+.topbar .sh20.bad { color: var(--bad); border-color: var(--bad); font-weight: 600; }
+.topbar .sh20.warn { color: var(--warn); }
+.sh20-detail .sh20-box { margin-bottom: 0.5rem; }

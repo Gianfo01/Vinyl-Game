@@ -6,6 +6,8 @@ import { registerMovementGenres } from '../sim/culture';
 import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
 import { SAVE_VERSION } from '../sim/worldgen';
+import { decodeSave20, encodeSave20, inflate20, MAX_IN20, MAX_OUT20, now20, SaveError20 } from '../core/save20';
+import { errName20, noteCost20, retry20, setHealth20 } from './savehealth20';
 
 export type BaseArea = 'hq' | 'desk' | 'plan' | 'charts' | 'artists' | 'market' | 'media' | 'catalog' | 'creation' | 'shows' | 'company' | 'business' | 'world' | 'diary';
 /** Áreas base + áreas registradas pelos sistemas da rodada 4 (registerArea). */
@@ -97,8 +99,7 @@ export async function gzip(text: string): Promise<Blob | string> {
 
 export async function gunzip(data: Blob | string): Promise<string> {
   if (typeof data === 'string') return data;
-  const stream = data.stream().pipeThrough(new DecompressionStream('gzip'));
-  return new Response(stream).text();
+  return inflate20(data);
 }
 
 export interface SaveMeta {
@@ -128,14 +129,23 @@ export const afterSave17: ((g: GameState, slot: string) => void)[] = [];
 export const runId17 = (g: GameState): string => ((g as { run17?: string }).run17 ??= `${g.signature}-${Date.now().toString(36)}`);
 export const autoSlot17 = (g: GameState): string => g.config.ironman ? `auto-${runId17(g)}` : `auto-${runId17(g)}-${g.year % 3}`;
 
+/** r20 (B1): grava e só marca o checkpoint como confirmado depois do oncomplete; falha (quota, IndexedDB
+ *  indisponível, transação abortada) fica visível no indicador do topo, com motivo e "tentar de novo". */
 export async function saveGame(slot = 'auto', name?: string): Promise<boolean> {
   const g = store.game;
   if (!g) return false;
   const kind = slot === 'auto' ? 'auto' : 'manual';
   if (slot === 'auto' || g.config.ironman) slot = autoSlot17(g);
+  const at = { year: g.year, month: g.month, week: g.week, slot, run: runId17(g) };
+  retry20.local = () => saveGame(kind === 'auto' ? 'auto' : slot, name);
+  setHealth20('local', { st: 'pending' });
   try {
+    const t0 = now20();
     const db = await openDb();
-    const payload = await gzip(JSON.stringify(g));
+    const json = encodeSave20(g);
+    const t1 = now20();
+    const payload = await gzip(json);
+    const t2 = now20();
     const pp = Object.values(g.persons).find((p) => p.isPlayer);
     const meta: SaveMeta = { slot, signature: g.signature, company: g.config.companyName, year: g.year, month: g.month, role: g.config.role, savedAt: Date.now(), version: SAVE_VERSION,
       name, profile: profileId17(), kind, size: typeof payload === 'string' ? payload.length : payload.size, player: pp?.name, cash: Math.round(g.player.cash), ironman: !!g.config.ironman, run: runId17(g) };
@@ -144,28 +154,32 @@ export async function saveGame(slot = 'auto', name?: string): Promise<boolean> {
       tx.objectStore(STORE).put({ meta, payload }, slot);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error ?? new DOMException('aborted', 'AbortError')); // quota estoura no commit: só abort
     });
+    noteCost20({ stringifyMs: t1 - t0, packMs: t2 - t1, writeMs: now20() - t2, bytes: json.length, packed: meta.size ?? 0 });
+    setHealth20('local', { st: 'ok', lastOk: { ts: Date.now(), ...at } });
     for (const f of afterSave17) try { f(g, slot); } catch { /* nuvem opcional */ }
     return true;
   } catch (e) {
     console.warn('save failed', e);
+    setHealth20('local', { st: typeof indexedDB === 'undefined' ? 'unavailable' : 'failed', err: errName20(e), errAt: Date.now() });
     return false;
   }
 }
 
+/** r20 (B1): erro de leitura SOBE (a interface mostra "indisponível" + tentar de novo); lista vazia = vazio de verdade. */
 export async function listSaves(): Promise<SaveMeta[]> {
-  try {
-    const db = await openDb();
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readonly');
-      const req = tx.objectStore(STORE).getAll();
-      req.onsuccess = () => resolve((req.result as { meta: SaveMeta }[]).map((x) => x.meta).sort((a, b) => b.savedAt - a.savedAt));
-      req.onerror = () => reject(req.error);
-    });
-  } catch {
-    return [];
-  }
+  const db = await openDb();
+  return await new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => resolve((req.result as { meta: SaveMeta }[]).map((x) => x.meta).filter((m) => m && m.slot).sort((a, b) => b.savedAt - a.savedAt));
+    req.onerror = () => reject(req.error);
+  });
 }
+
+/** Motivo da última falha de carga (para a interface explicar; o registro gravado nunca é alterado). */
+export let lastLoadErr20 = '';
 
 export async function loadGame(slot: string): Promise<GameState | null> {
   try {
@@ -176,10 +190,12 @@ export async function loadGame(slot: string): Promise<GameState | null> {
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
+    lastLoadErr20 = '';
     if (!rec) return null;
-    return migrate(JSON.parse(await gunzip(rec.payload)));
+    return decodeSave20(await gunzip(rec.payload), migrate);
   } catch (e) {
     console.warn('load failed', e);
+    lastLoadErr20 = e instanceof SaveError20 ? e.code : errName20(e);
     return null;
   }
 }
@@ -212,7 +228,7 @@ export function migrate(g: GameState): GameState {
 export function exportSave(): boolean {
   const g = store.game;
   if (!g) return false;
-  return tryDownload(`masters-${g.signature}-${g.year}.json`, JSON.stringify(g));
+  return tryDownload(`masters-${g.signature}-${g.year}.json`, encodeSave20(g));
 }
 
 const SAVE_PREFIX = 'VTN1:';
@@ -228,34 +244,34 @@ export async function gzipB64(text: string): Promise<string> {
 
 export async function unGzipB64(b64: string): Promise<string> {
   if (b64.startsWith('raw:')) return decodeURIComponent(escape(atob(b64.slice(4))));
-  const bin = atob(b64);
+  if (b64.length > MAX_IN20) throw new SaveError20('too_big');
+  let bin: string;
+  try { bin = atob(b64); } catch { throw new SaveError20('malformed', 'base64'); }
   const buf = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-  const stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
-  return await new Response(stream).text();
+  return inflate20(buf);
 }
 
 /** Save como texto compactado (para copiar e colar onde downloads são bloqueados). */
 export async function exportSaveText(): Promise<string> {
   const g = store.game;
   if (!g) return '';
-  return SAVE_PREFIX + (await gzipB64(JSON.stringify(g)));
+  return SAVE_PREFIX + (await gzipB64(encodeSave20(g)));
 }
 
-function validateSave(g: unknown): GameState {
-  const x = g as Partial<GameState> | null;
-  if (!x || typeof x !== 'object' || !x.player || !x.economy || !x.acts || typeof x.year !== 'number' || !x.signature) throw new Error('save inválido');
-  return migrate(x as GameState);
-}
+/** r20 (B5/B6): envelope/versão, limites, profundidade e forma — numa cópia; erro = SaveError20 com código. */
+const validateSave = (text: string): GameState => decodeSave20(text, migrate);
 
-/** Aceita JSON puro ou o formato compactado (VTN1:...), com espaços/quebras de linha de copiar e colar. */
+/** Aceita JSON puro (cru ou envelope r20) ou o formato compactado (VTN1:...), com espaços/quebras de linha de
+ *  copiar e colar. Nada é trocado nem gravado aqui: quem chama decide depois que tudo validou. */
 export async function importSaveText(text: string): Promise<GameState> {
+  if (text.length > MAX_OUT20) throw new SaveError20('too_big');
   let tx = text.replace(/^\uFEFF/, '').trim();
-  if (tx.startsWith('{')) return validateSave(JSON.parse(tx));
+  if (tx.startsWith('{')) return validateSave(tx);
   tx = tx.replace(/\s+/g, '');
   const i = tx.indexOf(SAVE_PREFIX);
-  if (i < 0) throw new Error('formato');
-  return validateSave(JSON.parse(await unGzipB64(tx.slice(i + SAVE_PREFIX.length))));
+  if (i < 0) throw new SaveError20('format');
+  return validateSave(await unGzipB64(tx.slice(i + SAVE_PREFIX.length)));
 }
 
 /** Tenta baixar como arquivo; devolve false se o navegador (ex.: visualizador isolado) bloquear. */
@@ -299,5 +315,6 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function importSave(file: File): Promise<GameState> {
+  if (file.size > MAX_OUT20) return Promise.reject(new SaveError20('too_big'));
   return file.text().then((txt) => importSaveText(txt));
 }
