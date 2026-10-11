@@ -285,8 +285,9 @@ function festBranchMonth(s: GameState, f: OwnFestival): void {
     notify(s, t, 'bad');
     pushInbox18(s, 'c19_fest_skip', { from: f.name, subject: l('Edição em risco', 'Edition at risk'), body: t, ref: { fx: f.id } });
   }
-  // meses mortos: uma decisão do ramo, no máximo a cada 2 meses (garantida após 3)
-  if (mu < 5) { st.fused[f.id] = mu <= 0 ? [] : st.fused[f.id] ?? []; return; }
+  // meses mortos (e o começo do planejamento): uma decisão do ramo, no máximo a cada 2 meses (garantida após 3)
+  if (mu >= 11) st.fused[f.id] = []; // ciclo novo logo depois da edição
+  if (mu < 3) return;
   const last = st.fcard[f.id] ?? -99;
   if (now - last < 2) return;
   if (s.decisions.some((d) => d.eventId.startsWith('f19_') && d.ctx.fx === f.id)) return;
@@ -430,7 +431,8 @@ function mgBranchMonth(s: GameState): void {
   const now = monthIndex(s);
   if (now - st.mcard < 2 || s.decisions.some((d) => d.eventId.startsWith('c19_mg_') && d.eventId !== 'c19_mg_renew')) return;
   const r = rngOf(s, 'mg');
-  if (!r.chance(Math.min(0.45, 0.15 + mg.clients.length * 0.05))) return;
+  // no máximo a cada 2 meses; depois de 3 meses sem nada do ofício, a decisão chega
+  if (now - st.mcard < 3 && !r.chance(Math.min(0.45, 0.15 + mg.clients.length * 0.05))) return;
   const c = r.pick(mg.clients);
   const a = s.acts[c.actId];
   if (!a) return;

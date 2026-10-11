@@ -646,7 +646,7 @@ export function mgChance(s: GameState, a: Act, rate: number): number {
 /** Rodada 14: ajustes externos à chance de conquistar um cliente (ex.: empresário rival que já o representa). */
 export const mgAdj9: ((s: GameState, a: Act) => number)[] = [];
 /** r19: ganho de reputação de empresário com retorno decrescente (fácil sair de 20, difícil passar de 80). */
-export const mgRepGain9 = (rep: number): number => clamp(1.1 - rep / 90, 0.08, 1);
+export const mgRepGain9 = (rep: number): number => clamp(1.1 - rep / 85, 0.05, 1);
 
 export function pitchClient(s: GameState, r: Rng, actId: string, rate: number): { ok: boolean; text: L } {
   const mg = ventures(s).mg;
