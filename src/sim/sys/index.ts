@@ -316,4 +316,5 @@ import './scenes19'; // r19 cenas: calendário real dos prêmios, cerimônia com
 // Rodada 19 (onda 5, A): carreiras que sustentam a partida (pacotes iniciais, festival, empresário) e economia interna.
 import './careers19';
 import './intra19';
+import './life20'; // r20 G3 (B28/B11): aviso de fim de carreira um ano antes e varredura de liderança
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

@@ -8,6 +8,7 @@ import { fmtL, notify, recordAward, remember } from './util';
 import { avgReview } from './media';
 import { PRODUCERS } from './studio';
 import { calOf19, honoredYear19 } from './awardcal19';
+import { livePublic20 } from './livesnap20';
 
 export interface AwardDef {
   id: string;
@@ -80,10 +81,10 @@ export function yearlyAwards2(s: GameState, r: Rng): void {
   }
   // ato ao vivo: maior público em turnê no ano homenageado
   if (at('live_act')) {
-    const live = s.tours.filter((t) => t.status === 'done' && t.stops.some((st) => st.status === 'played' && Math.floor(st.day / 365.25) + s.config.startYear === year));
-    const bestLive = live.map((t) => ({ t, v: t.stops.reduce((x, y) => x + y.sold, 0) })).sort((a, b) => b.v - a.v)[0];
+    // r20 (B14): snapshot por show jogado no ano homenageado (turnês em curso concorrem; datas de outro ano não contam)
+    const bestLive = Object.entries(livePublic20(s, year)).map(([actId, v]) => ({ actId, v })).sort((a, b) => b.v - a.v || (a.actId < b.actId ? -1 : 1))[0];
     if (bestLive && bestLive.v > 20000) {
-      const act = s.acts[bestLive.t.actId];
+      const act = s.acts[bestLive.actId];
       // r19: só é "do jogador" se o ato ainda for seu (antes era sempre true)
       give(s, year, 'live_act', l('Ato ao Vivo do Ano', 'Live Act of the Year'), act?.name ?? '?', { actId: act?.id, byPlayer: !!act && (act.owner === 'player' || !!act.playerBand) });
     }
