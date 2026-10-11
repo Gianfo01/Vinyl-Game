@@ -112,9 +112,11 @@ function tombArt(name: string): HTMLElement {
 }
 
 // ---------------------------------------------------------------- utilidades
+const BUSY19 = '.overlay, .scene-overlay, .tour18, aside.tutorial';
+const busy = (): boolean => typeof document === 'undefined' || !!document.querySelector(BUSY19);
 const whenFree = (fn: () => void, n = 0): void => {
   if (typeof document === 'undefined') return;
-  if (document.querySelector('.overlay, .scene-overlay, .tour18') && n < 60) { setTimeout(() => whenFree(fn, n + 1), 500); return; }
+  if (busy() && n < 60) { setTimeout(() => whenFree(fn, n + 1), 500); return; }
   fn();
 };
 const goArea = (a: string) => { document.querySelector('.overlay')?.remove(); store.area = a as typeof store.area; rerender(); };
@@ -125,11 +127,13 @@ const CH_T: Record<string, L> = { tech: l('Tecnologia', 'Technology'), genre: l(
 function yearBars(rows: { y: number; a: number; b: number }[], la: L, lb: L): HTMLElement {
   if (!rows.length) return h('p', { class: 'muted small' }, t(l('Sem anos fechados ainda.', 'No closed years yet.')));
   const max = Math.max(1, ...rows.map((r) => Math.max(Math.abs(r.a), Math.abs(r.b))));
-  const W = 30 * rows.length, H = 80, mid = 50;
+  const W = Math.max(150, 30 * rows.length), H = 80, mid = 50;
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H + 12}`);
   svg.setAttribute('class', 'ux19-bars');
+  svg.setAttribute('width', String(W * 2));
+  svg.setAttribute('height', String((H + 12) * 2));
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', rows.map((r) => `${r.y}: ${t(la)} ${$(r.a)}, ${t(lb)} ${$(r.b)}`).join('; '));
   rows.forEach((r, i) => {
@@ -306,7 +310,7 @@ function endBlock(g: GameState): HTMLElement {
 UX19UI.end = (g) => { try { return endBlock(g); } catch { return null; } };
 
 // ---------------------------------------------------------------- Cockpit: metas, quase-falência, menu
-registerSection('desk', { id: 'ux19-goals', title: l('Metas da era', 'Era goals'), weight: (s) => (activeGoals19(s).some((g) => g.due - s.week < 13) ? 44 : 24), when: (s) => activeGoals19(s).length > 0,
+registerSection('desk', { id: 'ux19-goals', title: l('Metas da era', 'Era goals'), weight: (s) => (monthsPlayed19(s) < 6 || activeGoals19(s).some((g) => g.due - s.week < 13) ? 52 : 24), when: (s) => activeGoals19(s).length > 0,
   render: (s) => h('section', { class: 'card ux19-sec' }, h('h3', null, '🎯 ', t(l('Metas da era', 'Era goals')), ' ', h('small', { class: 'muted' }, t(eraBand19(s.year).name))),
     h('ul', { class: 'ux19-goals' }, activeGoals19(s).slice(0, 5).map((g) => goalRow(s, g)))) });
 registerSection('desk', { id: 'ux19-loss', title: l('Por que o caixa afunda?', 'Why is cash sinking?'), weight: (s) => (nearLoss19(s) ? 88 : 0), when: (s) => nearLoss19(s) && monthsPlayed19(s) >= 3,
@@ -366,16 +370,18 @@ AFTER_ADVANCE.push((s) => {
   seenUn.set(s, s.week);
   if (fresh.length) toast(t(fmtL(l('Nova área no menu: {a}', 'New area in the menu: {a}'), { a: fresh.map((a) => t(EXTRA_AREAS.find((x) => x.id === a)?.label ?? help18(a)?.title ?? l(a, a))).join(', ') })), 'info');
   const T = U.turns.find((x) => !x.seen && x.y <= s.year);
-  if (T && store.prefs.cutscenes !== false) whenFree(() => openTurn19(s, T));
+  if (T && store.prefs.cutscenes !== false) setTimeout(() => whenFree(() => { if (!T.seen) openTurn19(s, T); }), 700); // depois do resumo e das cenas do mês
   else if (T) T.seen = 1;
 });
 // 1º mês: metas de abertura (e herança, se houver) — também ao carregar um jogo novo sem avançar
 const openTried = new WeakSet<GameState>();
 function tryOpening(): void {
   const s = store.game;
-  if (!s || openTried.has(s) || monthsPlayed19(s) > 1 || s.ended) return;
+  if (!s || openTried.has(s) || s.ended) return;
+  if (ux19(s).os || monthsPlayed19(s) > 3) { openTried.add(s); return; }
+  if (busy()) return; // tutorial ou outra janela aberta: tenta de novo depois
   openTried.add(s);
-  whenFree(() => openingCard(s));
+  openingCard(s);
 }
 AFTER_ADVANCE.push(() => tryOpening());
 if (typeof window !== 'undefined') setInterval(() => { if (store.game && !openTried.has(store.game)) tryOpening(); }, 1500);
@@ -390,9 +396,16 @@ if (typeof document !== 'undefined') {
     const i = list.indexOf(tb);
     const j = e.key === 'Home' ? 0 : e.key === 'End' ? list.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + list.length) % list.length;
     const key = tb.closest('[data-tabs]')?.getAttribute('data-tabs');
+    const scope = tb.parentElement?.classList[0] ?? 'tabs';
     e.preventDefault();
     list[j]?.click();
-    setTimeout(() => (document.querySelector(`[data-tabs="${key}"] [role=tab][aria-selected=true]`) as HTMLElement | null)?.focus(), 30);
+    const want = list[j]?.textContent;
+    const refocus = (n: number) => {
+      const el = [...document.querySelectorAll<HTMLElement>(key ? `[data-tabs="${key}"] [role=tab]` : `.${scope} > [role=tab]`)].find((x) => x.textContent === want);
+      if (el && document.activeElement !== el) el.focus();
+      if (n < 6) setTimeout(() => refocus(n + 1), 60);
+    };
+    setTimeout(() => refocus(0), 20);
   });
   // botões só com ícone ganham rótulo acessível (title → aria-label); abas ganham roving tabindex
   let queued = false;
@@ -402,7 +415,10 @@ if (typeof document !== 'undefined') {
       const txt = (b.textContent ?? '').trim();
       if (txt.length <= 2 || !/[\p{L}\p{N}]{2}/u.test(txt)) { const ti = b.getAttribute('title'); if (ti) b.setAttribute('aria-label', ti); }
     }
-    for (const tl of document.querySelectorAll<HTMLElement>('[role=tablist]')) for (const tb of tl.querySelectorAll<HTMLElement>(':scope > [role=tab]')) tb.tabIndex = tb.getAttribute('aria-selected') === 'true' ? 0 : -1;
+    for (const tl of document.querySelectorAll<HTMLElement>('[role=tablist]')) {
+      const tbs = [...tl.querySelectorAll<HTMLElement>(':scope > [role=tab]')];
+      if (tbs.some((x) => x.getAttribute('aria-selected') === 'true')) for (const tb of tbs) tb.tabIndex = tb.getAttribute('aria-selected') === 'true' ? 0 : -1;
+    }
   };
   new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(fix); } }).observe(document.documentElement, { childList: true, subtree: true });
 }

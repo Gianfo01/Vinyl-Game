@@ -79,7 +79,7 @@ export function goalNow19(s: GameState, g: Goal19): number {
     case 'comm': return Math.round(s.player.reputation.commercial);
     case 'terr': return s.player.territories.length;
     case 'fam': return playerActs(s).filter((id) => genreById[s.acts[id]?.genre ?? '']?.family === n.fam).length;
-    case 'noLoan': return s.player.loans.length === 0 && s.player.cash > 0 && s.week >= g.due - 4 ? 1 : 0;
+    case 'noLoan': return s.player.loans.length === 0 && s.player.cash > 0 ? 1 : 0;
   }
   return 0;
 }
@@ -112,7 +112,9 @@ export function openingGoals19(s: GameState): Goal19[] {
 function checkGoals(s: GameState): void {
   for (const g of activeGoals19(s)) {
     const v = goalNow19(s, g);
-    if (v >= g.spec.n) {
+    // metas de "segurar" (caixa, sem dívida) só contam depois de 1 ano (ou perto do prazo): não valem no 1º mês
+    const hold = (g.spec.tpl === 'reserve' || g.spec.tpl === 'noLoan') && s.week < Math.min(g.w0 + 52, g.due - 4);
+    if (v >= g.spec.n && !hold) {
       g.done = s.week;
       const rp = s.player.reputation, k = g.spec.tpl === 'art' || g.spec.tpl === 'lp' ? 'artistic' : g.spec.tpl === 'reserve' || g.spec.tpl === 'noLoan' ? 'institutional' : 'commercial';
       rp[k] = clamp(rp[k] + 1, 0, 100);
