@@ -196,7 +196,7 @@ void neuralDraft; void actLink; void PRODUCERS;
 export type StudioGroup = 'write' | 'studio' | 'release';
 const STUDIO_GROUP: Record<string, StudioGroup> = {
   projects: 'write', compose: 'write', repertoire: 'write', 'cr-themes': 'write', 'cr-recipe': 'write', 'cr-partners': 'write', 'cr-comm': 'write', 'cr-div': 'write',
-  session: 'studio', 'studio-gear': 'studio', 'cr-sound': 'studio', versions: 'studio', neural: 'studio',
+  session: 'studio', session19: 'studio', 'studio-gear': 'studio', 'cr-sound': 'studio', versions: 'studio', neural: 'studio',
   launch: 'release', rollout: 'release', 'cr-visuals': 'release', 'cr-cover': 'release', 'cr-catalog': 'release',
 };
 export function studioHub(s: GameState, launch: () => HTMLElement, group: StudioGroup = 'write'): HTMLElement {

@@ -54,7 +54,6 @@ export const WHITELIST19: Record<string, string> = {
   press: 'ação de imprensa do jogador (verbs18): efeito local',
   arc: 'batida de fio do dm18: o próprio fio é o consumidor (diário do mestre de drama)',
   audit: 'auditoria de royalties (rights18): dinheiro e relação aplicados no rights18; a dica do tutorial18 lê na interface',
-  credit_dispute: 'disputa de crédito (rights18): efeito local; ouvinte previsto em session19/writers19 (Frente 9)',
   feud_start: 'início de rixa (feud18): a rixa é o próprio estado; dm18 já ouve `feud`',
   feud_end: 'fim de rixa (feud18): a rixa é o próprio estado',
   release_review: 'crítica do lançamento (review18): a nota já entra no lançamento; tutorial18 lê na interface',
@@ -62,7 +61,8 @@ export const WHITELIST19: Record<string, string> = {
   tour_done: 'fim de turnê (live18): balanço aplicado no live18; tutorial18 lê na interface',
 };
 
-/** Tipos reservados dos 13 sistemas da Frente 9 (plano19) → consumidores previstos. Nenhum é emitido ainda. */
+/** Tipos reservados dos 13 sistemas da Frente 9 (plano19) → consumidores previstos. Quando o sistema nasce e emite, o tipo
+ *  precisa de consumidor (teste r19-infra). session19 e writers19 (onda 2) já emitem os seus. */
 export const RESERVED19: Record<string, { sys: string; to: string[] }> = {
   tribute_born: { sys: 'tribute19', to: ['rights18', 'press18', 'fans18'] },
   tribute_licensed: { sys: 'tribute19', to: ['ledger18', 'rights18'] },

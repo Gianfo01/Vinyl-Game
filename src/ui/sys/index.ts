@@ -168,4 +168,6 @@ import './calendar19';
 import './cockpit19';
 // Rodada 19 (Frente 9.1/9.5): Tributos e covers (tributos, sósias, sucesso tardio).
 import './tribute19';
+// Rodada 19 (Frente 9.2/9.3): Músicos de sessão (Estúdio) e Créditos e autores (Compor/Editora).
+import './session19';
 import './core18';
