@@ -272,4 +272,9 @@ import './echoes19';
 import './era19';
 import './realhist19';
 import './links19b'; // r19 Frente 1 grupo B: sessão×qualidade, câmbio por submercado, inteligência de rivais, campus, júri×caminho, 11.10, 11.11
+import './media19'; // r19 T9: dados de mídia (veículos, programas, covers, cenas, relíquias, crime) nos módulos consumidores
+import './zines19'; // r19 9.10 fanzines, revistas e críticos-editores
+import './fakes19'; // r19 9.11 dublagem, bandas-fantasma, vozes de IA, leis
+import './media19ev'; // r19 T9: eventos regionalizados a partir dos dados
+import './media19sit'; // r19 T9: situações do diretor citando dados
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
