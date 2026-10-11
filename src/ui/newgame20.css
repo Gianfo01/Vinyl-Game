@@ -69,3 +69,6 @@
 /* mobile: nenhuma coluna da ficha pode ficar mais larga que a tela */
 .ng20 .ng-panel > *, .ng20 .ng-char > * { min-width: 0; }
 @media (max-width: 760px) { .ng20 .ng-char { grid-template-columns: minmax(0, 1fr); } }
+/* r20b (Z3 a11y): com texto a 200% em 390px a lista de cidades (opções longas) empurrava a página para o lado */
+.ng20-where .row > span { min-width: 0; max-width: 100%; }
+.ng20-where select { max-width: 100%; min-width: 0; }

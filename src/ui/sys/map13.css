@@ -5,7 +5,7 @@
 .map13-scale i { flex: 1; height: 10px; min-width: 120px; border: 1px solid var(--line); border-radius: 2px; display: block; }
 .map13-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
 .map13-country h5 { margin: 0.6rem 0 0.2rem; }
-.map13-country .bar-row { display: grid; grid-template-columns: minmax(6rem, 10rem) 1fr 3rem; gap: 6px; align-items: center; }
+.map13-country .bar-row { display: grid; grid-template-columns: minmax(min(6rem, 100%), 10rem) 1fr 3rem; gap: 6px; align-items: center; }
 .map13-country .bar i.bad { background: var(--bad); }
 .map13-country .bar i.good { background: var(--good); }
 .map13-lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; }

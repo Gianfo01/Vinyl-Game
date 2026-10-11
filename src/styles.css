@@ -435,7 +435,7 @@ canvas.glyph { vertical-align: middle; image-rendering: pixelated; }
 .stat.bad { border-color: var(--bad); color: var(--bad); }
 .stat.good { border-color: var(--good); color: var(--good); }
 .stat.warn { border-color: var(--warn); color: var(--warn); }
-.meter { display: grid; grid-template-columns: auto minmax(5rem, 9rem) 1fr 2.2rem; align-items: center; gap: 0.35rem; font-size: 0.85rem; margin: 0.15rem 0; }
+.meter { display: grid; grid-template-columns: minmax(0, max-content) minmax(3rem, 9rem) minmax(0, 1fr) minmax(2.2rem, auto); /* r20b (Z3): rótulo encolhe com texto 200% */ align-items: center; gap: 0.35rem; font-size: 0.85rem; margin: 0.15rem 0; }
 .meter-lbl { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .meter-bar { position: relative; display: inline-block; height: 0.6rem; min-width: 3rem; background: var(--line); border-radius: 99px; overflow: hidden; }
 .meter-bar > span { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 99px; }
@@ -462,7 +462,7 @@ button.tile:hover:not(:disabled), .tile.on { border-color: var(--accent); }
 .loadbar em { position: absolute; right: 0.25rem; top: 0; font-size: 0.7rem; font-style: normal; line-height: 1.1rem; color: var(--ink); mix-blend-mode: normal; text-shadow: 0 0 2px var(--panel); }
 .loadbar.over { outline: 2px solid var(--bad); }
 .calendar { display: grid; gap: 0.2rem; overflow-x: auto; }
-.cal-head, .cal-row { display: grid; grid-template-columns: 8rem repeat(var(--cols), minmax(4.5rem, 1fr)); gap: 0.3rem; align-items: center; }
+.cal-head, .cal-row { display: grid; grid-template-columns: 8rem repeat(var(--cols), minmax(min(4.5rem, 100%), 1fr)); gap: 0.3rem; align-items: center; }
 .cal-head span { font-size: 0.75rem; color: var(--muted); text-align: center; }
 .cal-who { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; }
 .plan-act { margin-bottom: 0.8rem; }
@@ -496,7 +496,7 @@ img.portrait { border: 1px solid var(--line); }
 .tour-stops { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.4rem 0; }
 .stop { display: inline-flex; flex-direction: column; align-items: center; gap: 0.1rem; padding: 0.3rem 0.45rem; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.75rem; min-width: 4.5rem; }
 .stop.played { border-color: var(--good); } .stop.cancelled { border-color: var(--bad); opacity: 0.8; }
-.form.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.5rem; }
+.form.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr)); gap: 0.5rem; }
 .rollout-line { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .phase { display: inline-flex; flex-direction: column; align-items: center; padding: 0.3rem 0.5rem; border-radius: 8px; border: 1px dashed var(--line); font-size: 0.75rem; }
 .phase.done { border-style: solid; border-color: var(--good); }
@@ -519,7 +519,7 @@ img.portrait { border: 1px solid var(--line); }
 .member .main-traits { flex-wrap: wrap; gap: 0.25rem; margin: 0.2rem 0; }
 .member .main-traits .pill { font-size: 0.72rem; }
 .member.gone { opacity: 0.75; }
-.persona .meter { grid-template-columns: auto minmax(7rem, 10rem) 1fr 2rem; }
+.persona .meter { grid-template-columns: auto minmax(min(7rem, 100%), 10rem) 1fr 2rem; }
 .family { border-top: 1px dashed var(--line); margin-top: 0.4rem; padding-top: 0.4rem; }
 .sub-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.6rem; }
 .sub-card header { display: flex; align-items: center; gap: 0.5rem; }
@@ -546,7 +546,7 @@ img.portrait { border: 1px solid var(--line); }
   .tutorial { left: 0.5rem; right: 0.5rem; bottom: 0.5rem; max-width: none; }
   .meter { grid-template-columns: auto 1fr 2rem; }
   .meter-lbl { display: none; }
-  .cal-head, .cal-row { grid-template-columns: 5.5rem repeat(var(--cols), minmax(3.6rem, 1fr)); }
+  .cal-head, .cal-row { grid-template-columns: 5.5rem repeat(var(--cols), minmax(min(3.6rem, 100%), 1fr)); }
 }
 /* Daltonismo: troca o par verde/vermelho por azul/laranja (e mantém padrões nas barras) */
 :root[data-cb='deutan'], :root[data-cb='protan'] { --good: #2c7fb8; --bad: #e66101; --warn: #b2abd2; }
@@ -651,8 +651,8 @@ img.portrait { border: 1px solid var(--line); }
 
 /* rodada 7: atributos das composições */
 .song-attrs { display: grid; gap: 2px; margin: 0.35rem 0; font-size: 0.85rem; }
-.sa-row { display: grid; grid-template-columns: 9.5rem minmax(4rem, 10rem) 3.2rem 1fr; align-items: center; gap: 0.45rem; }
-.song-attrs.compact .sa-row { grid-template-columns: 7rem minmax(3rem, 7rem) 3rem; }
+.sa-row { display: grid; grid-template-columns: 9.5rem minmax(min(4rem, 100%), 10rem) 3.2rem 1fr; align-items: center; gap: 0.45rem; }
+.song-attrs.compact .sa-row { grid-template-columns: 7rem minmax(min(3rem, 100%), 7rem) 3rem; }
 .sa-name { color: var(--muted); }
 .sa-q .sa-name { color: var(--ink); font-weight: 600; }
 .sa-derived .sa-name { font-style: italic; }
@@ -698,7 +698,7 @@ img.portrait { border: 1px solid var(--line); }
 .mgr11 { border-top: 1px dashed var(--line); margin-top: 0.4rem; padding-top: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .mgr11 .warn-list { margin: 0; padding-left: 1rem; }
 /* rodada 12: carreiras e empresário */
-.car12-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.5rem; }
+.car12-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr)); gap: 0.5rem; }
 .car12-card { margin: 0; }
 .mgr12 { border-top: 1px dashed var(--line); margin-top: 0.4rem; padding-top: 0.4rem; }
 .mgr12 > summary { cursor: pointer; }

@@ -6,7 +6,7 @@
 
 import { countryName } from '../../data/geo';
 import { COUNTRY_INFO } from '../../data/countries';
-import { FAMILIES, l, type L } from '../../data/world';
+import { FAMILIES, cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { relWith } from '../../sim/criticrel';
 import { holdsOf } from '../../sim/holds17';
@@ -23,6 +23,10 @@ import { playerActs } from '../../sim/util';
 import { $, actLink, monthName, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { registerArea, registerPageTab } from '../registry';
+import { showOf20, storyShow20 } from '../../sim/sys/showops20';
+import { dateOfDay } from '../../sim/util';
+import { store } from '../store';
+import { ic, setTab } from '../vis';
 
 const ST_NAME: Record<Story['st'], [L, string]> = {
   open: [l('em aberto', 'open'), 'warn'], confirmed: [l('confirmado', 'confirmed'), ''], denied: [l('desmentido', 'denied'), 'good'],
@@ -49,6 +53,18 @@ function oddsLine(od: Odds): HTMLElement | null {
 }
 const act = (s: GameState, f: () => { ok: boolean; text: L }) => { const r = f(); toast(t(r.text), r.ok ? 'info' : 'bad'); rerender(); };
 
+// ---------------------------------------------------------------- r20b (Z1): notícia → show/incidente
+
+function showBack20(s: GameState, x: Story): HTMLElement | null {
+  const key = storyShow20(s, x);
+  const sh = key ? showOf20(s, key) : null;
+  if (!key || !sh) return null;
+  return h('div', { class: 'small row wrap' }, ic('mic'), ' ',
+    t(l('Sobre o show de {d} em {c} ({t}).', 'About the {d} show in {c} ({t}).'), { d: dateLabel(s, sh.stop.day), c: t(cityById[sh.stop.cityId]?.name ?? l(sh.stop.cityId, sh.stop.cityId)), t: sh.tour.name }), ' ',
+    h('button', { class: 'btn small ghost', onclick: () => { setTab('showsHub', 'agenda'); store.area = 'shows'; rerender(); } }, t(l('Abrir o show', 'Open the show'))));
+}
+const dateLabel = (s: GameState, day: number): string => { const d = dateOfDay(s.config.startYear, day); return `${String(d.dom).padStart(2, '0')}/${String(d.month + 1).padStart(2, '0')}/${d.year}`; };
+
 // ---------------------------------------------------------------- cartão de história
 
 const RESP: [Resp, L][] = [['deny', l('Desmentir', 'Deny')], ['confirm', l('Assumir', 'Own it')], ['kill', l('Abafar (comprar)', 'Kill (buy it)')], ['sue', l('Processar', 'Sue')], ['silent', l('Sem comentários', 'No comment')]];
@@ -69,6 +85,7 @@ function storyCard(s: GameState, x: Story): HTMLElement {
       `${t(l('Espalhado em', 'Spread to'))} ${x.reach.length} ${t(l('país(es)', 'country(ies)'))}: ${reach}`,
       x.tone ? ` · ${t(l('peso na fama local por país: {w}', 'local fame weight per country: {w}'), { w: `${x.tone < 0 ? '−' : '+'}${storyWeight(x)}` })}` : ''),
     x.why ? h('p', { class: 'small muted' }, t(x.why)) : null,
+    showBack20(s, x),
     x.resp && mine ? h('p', { class: 'small muted' }, t(l('Sua resposta: {r}', 'Your answer: {r}'), { r: t(RESP.find((z) => z[0] === x.resp)?.[1]) })) : null,
     btns.length ? h('div', { class: 'row wrap' }, ...btns) : null);
 }

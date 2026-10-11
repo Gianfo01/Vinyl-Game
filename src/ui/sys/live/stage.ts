@@ -199,7 +199,7 @@ registerCutscene('liveShow', (s, cs, close) => {
     body.replaceChildren(
       h('p', { class: 'lv-incident' }, ic('warning'), ' ', h('b', null, t(inc.text))),
       h('div', { class: 'lv-cards' }, inc.cards.map((card, ci) => {
-        const chance = resolveCard(s, d.actId, card, 0).chance;
+        const chance = resolveCard(s, d.actId, card, 0, d.key).chance;
         return h('button', { class: 'lv-card', onclick: () => {
           const r = playLiveCard20(s, d.key, d.actId, step, inc, ci);
           energy.v = Math.max(0, Math.min(100, energy.v + r.delta));

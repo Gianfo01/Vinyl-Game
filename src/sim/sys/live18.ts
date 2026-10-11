@@ -277,7 +277,7 @@ TOUR18.settle = (s, _r, t, st, c) => {
     b.fights++;
     const nx = s.persons[x]?.name ?? '?', ny = s.persons[y]?.name ?? '?';
     const tx = fmtL(l('{a}: {x} e {y} brigam no camarim em {c}. Cansaço e diárias apertadas.', '{a}: {x} and {y} fight backstage in {c}. Fatigue and tight per diems.'), { a: act.name, x: nx, y: ny, c: cityById[st.cityId]?.name ?? st.cityId });
-    emitFact(s, { kind: 'road_fight', actors: [act.id, `p:${x}`, `p:${y}`], place: st.cityId, severity: 25, visibility: 'rumor', text: tx, tags: ['tour'], src: 'live18' });
+    emitFact(s, { kind: 'road_fight', actors: [act.id, `p:${x}`, `p:${y}`], place: st.cityId, severity: 25, visibility: 'rumor', text: tx, tags: ['tour'], src: 'live18', data: { show: `${t.id}:${st.day}` } });
     notes.push(tx);
   }
   // segurança de público
@@ -331,7 +331,7 @@ function crowd(s: GameState, r: Rng, t: Tour, st: TourStop, act: Act, k: Kit18, 
     fmtL(l('{a} em {c}: multidão comprimida, vários hospitalizados. Autoridades investigam a segurança.', '{a} in {c}: crowd surge, several hospitalised. Authorities investigate security.'), { a: act.name, c: city }),
     fmtL(l('{a} em {c}: tragédia na frente do palco, mortos na multidão (história alternativa).', '{a} in {c}: tragedy in front of the stage, deaths in the crowd (alternate history).'), { a: act.name, c: city }),
   ][sev];
-  emitFact(s, { kind: 'crowd_incident', actors: [act.id, 'player'], place: st.cityId, severity: [0, 25, 55, 90][sev], text, tags: ['tour', 'safety'], src: 'live18', data: { sev } });
+  emitFact(s, { kind: 'crowd_incident', actors: [act.id, 'player'], place: st.cityId, severity: [0, 25, 55, 90][sev], text, tags: ['tour', 'safety'], src: 'live18', data: { sev, show: `${t.id}:${st.day}` } }); // r20b (Z1): id do show
   if (sev >= 2) {
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - (sev === 3 ? 8 : 3), 0, 100);
     act.momentum = clamp(act.momentum - (sev === 3 ? 10 : 3), 0, 100);

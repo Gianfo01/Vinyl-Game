@@ -25,7 +25,7 @@
 .cats17 button { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 0.25rem 0.7rem; font: inherit; font-size: 0.85rem; cursor: pointer; }
 .cats17 button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .cats17 .n17 { opacity: 0.7; font-size: 0.75em; }
-.sum17 { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.4rem; margin: 0.4rem 0 0.6rem; }
+.sum17 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr)); gap: 0.4rem; margin: 0.4rem 0 0.6rem; }
 .sum17 > div { border: 1px solid var(--line); border-radius: 8px; padding: 0.35rem 0.55rem; background: var(--panel); font-size: 0.85rem; }
 .sum17 > div b { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .sum17 .bad { color: var(--bad, #c03030); }

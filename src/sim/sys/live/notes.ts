@@ -7,7 +7,9 @@ import { applyMods, queueCutscene, registerMod, registerSimHook } from '../../ex
 import { actTalent } from '../../people';
 import { cityDemand } from '../../tours';
 import type { GameState, Song } from '../../types';
+import type { Tour } from '../../xtypes';
 import { fmtL, notify, remember, staffSkill } from '../../util';
+import { emitFact } from '../../facts17';
 import { bump, isMine, liveOf, type CurveResult, type LiveLog20, type ShowNote } from './state';
 
 // ---------------------------------------------------------------- curva do setlist
@@ -159,7 +161,8 @@ registerSimHook('show', 'live-notes', (s, _r, arg) => {
   const act = s.acts[sh.actId];
   if (!t || !act) return;
   const today = s.day + s.clock.dayInMonth;
-  const st = t.stops.find((x) => x.day === today && x.cityId === sh.cityId) ?? t.stops.find((x) => x.cityId === sh.cityId && x.status === 'played');
+  // r20b (Z1): a data exata de hoje nesta turnê; sem ela, a última jogada nesta cidade (nunca uma anterior)
+  const st = t.stops.find((x) => x.day === today && x.cityId === sh.cityId) ?? t.stops.filter((x) => x.cityId === sh.cityId && x.status === 'played').at(-1);
   if (!st) return;
   // ingressos: demanda × capacidade
   const demand = cityDemand(s, act, sh.cityId);
@@ -266,17 +269,31 @@ export const INCIDENTS: Incident[] = [
   ] },
 ];
 
-function statSkill(s: GameState, actId: string, stat: IncidentCard['stat']): number {
+/** r20b (Z1): a turnê EXATA do show (id `${tourId}:${dia}`), não a primeira do ato — uma turnê anterior encerrada
+ *  na mesma cidade não pode emprestar kit/equipe. Sem chave: a turnê em curso; senão a última jogada. */
+export function showTour20(s: GameState, actId: string, key?: string): Tour | undefined {
+  if (key) {
+    const i = key.lastIndexOf(':');
+    const t = s.tours.find((x) => x.id === key.slice(0, i) && x.actId === actId);
+    if (t) return t;
+  }
+  const cur = s.tours.find((x) => x.actId === actId && x.status === 'running');
+  if (cur) return cur;
+  const lastDay = (x: Tour) => Math.max(-1, ...x.stops.filter((y) => y.status === 'played').map((y) => y.day));
+  return s.tours.filter((x) => x.actId === actId && x.status === 'done').sort((a, b) => lastDay(b) - lastDay(a))[0];
+}
+
+function statSkill(s: GameState, actId: string, stat: IncidentCard['stat'], key?: string): number {
   const act = s.acts[actId];
   if (!act) return 0.3;
   if (stat === 'stage') return actTalent(s, act).stage / 100;
   if (stat === 'crew') {
-    const t = s.tours.find((x) => x.actId === actId && (x.status === 'running' || x.status === 'done'));
+    const t = showTour20(s, actId, key);
     return clamp((t?.crew ?? 2) / 16 + staffSkill(s, 'tour_manager') / 150, 0, 1);
   }
   if (stat === 'security') {
     // r20 (B15): só a segurança de público do kit (casa / profissional / reforçada) e um pouco do tamanho da equipe
-    const t = s.tours.find((x) => x.actId === actId && (x.status === 'running' || x.status === 'done'));
+    const t = showTour20(s, actId, key);
     const sec = (t?.kit18?.sec ?? 0) as 0 | 1 | 2;
     return clamp([0.3, 0.6, 0.85][sec] + Math.min(4, t?.crew ?? 2) / 40, 0, 1);
   }
@@ -288,8 +305,8 @@ function statSkill(s: GameState, actId: string, stat: IncidentCard['stat']): num
 }
 
 /** Resolve uma carta de resposta. `roll` (0..1) vem da interface; o resultado depende dos atributos. */
-export function resolveCard(s: GameState, actId: string, card: IncidentCard, roll: number): { delta: number; ok: boolean; chance: number } {
-  const chance = card.stat === 'safe' ? 1 : clamp(0.35 + statSkill(s, actId, card.stat) * 0.6 - card.risk, 0.05, 0.95);
+export function resolveCard(s: GameState, actId: string, card: IncidentCard, roll: number, key?: string): { delta: number; ok: boolean; chance: number } {
+  const chance = card.stat === 'safe' ? 1 : clamp(0.35 + statSkill(s, actId, card.stat, key) * 0.6 - card.risk, 0.05, 0.95);
   const ok = roll < chance;
   return { delta: ok ? card.gain : -Math.round(Math.abs(card.gain) * 0.6), ok, chance };
 }
@@ -316,7 +333,7 @@ export function liveRoll20(s: GameState, key: string, step: number): number {
 export function playLiveCard20(s: GameState, key: string, actId: string, step: number, inc: Incident, cardIdx: number): { delta: number; ok: boolean; chance: number; roll: number } {
   const card = inc.cards[cardIdx];
   const roll = liveRoll20(s, key, step);
-  const res = resolveCard(s, actId, card, roll);
+  const res = resolveCard(s, actId, card, roll, key);
   const lv = liveOf(s);
   const log = ((lv.liveLog20 ??= {})[key] ??= []);
   if (!log.some((x, i) => i === step && x.i === inc.id)) log[step] = { i: inc.id, c: cardIdx, roll: Math.round(roll * 1e4) / 1e4, ok: res.ok, d: res.delta } satisfies LiveLog20;
@@ -349,6 +366,18 @@ export function finishLiveShow(s: GameState, key: string, actId: string, sold: n
   act.fame = clamp(act.fame + bonus * 8, 0, 100);
   s.player.reputation.artists = clamp(s.player.reputation.artists + bonus * 10, 0, 100);
   bump(s, 'liveShows');
+  // r20b (Z1): o show ao vivo vira fato (com o id do show); noites lendárias ou desastrosas viram notícia (media17)
+  const log = (lv.liveLog20?.[key] ?? []).filter(Boolean);
+  const i = key.lastIndexOf(':');
+  const tr = s.tours.find((x) => x.id === key.slice(0, i));
+  const city = tr?.stops.find((x) => x.day === Number(key.slice(i + 1)))?.cityId;
+  const cityL = city ? cityById[city]?.name ?? l(city, city) : l('?', '?');
+  const bad = log.filter((x) => !x.ok).length;
+  const txt = energy >= 85 ? l('{a} em {c}: noite lendária ao vivo ({n} imprevisto(s) no palco, {k} contornado(s)).', '{a} in {c}: a legendary live night ({n} on-stage mishap(s), {k} handled).')
+    : energy < 35 ? l('{a} em {c}: show difícil, o público sentiu ({n} imprevisto(s) no palco, {b} mal resolvido(s)).', '{a} in {c}: a rough show, the crowd noticed ({n} on-stage mishap(s), {b} badly handled).')
+    : l('{a} em {c}: show ao vivo correto ({n} imprevisto(s) no palco, {k} contornado(s)).', '{a} in {c}: a solid live show ({n} on-stage mishap(s), {k} handled).');
+  emitFact(s, { kind: 'show', actors: [actId], place: city, severity: energy >= 85 ? 45 : energy < 35 ? 35 : 15, tags: ['tour', 'live', ...(energy >= 85 ? ['good'] : energy < 35 ? ['bad'] : [])],
+    text: fmtL(txt, { a: act.name, c: cityL, n: log.length, k: log.length - bad, b: bad }), src: 'live20', data: { show: key, energy, inc: log.length, bad } });
   if (energy >= 85) {
     bump(s, 'legendaryShows');
     remember(s, 'legendary_show', fmtL(l('Show lendário de {a}: o público não esquece.', 'A legendary {a} show: the crowd won\'t forget it.'), { a: act.name }), { actId, important: true });

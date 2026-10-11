@@ -38,6 +38,7 @@ import type { RoomKind } from '../pixel/sprites';
 import { equipmentSection20, festivalsAside20, gigsSection20, hqPanel, setTourStops20, showsPanel, stopHq, toggleTourStop20, tourMapSection20, tourStops20 } from '../panels/misc';
 import { TOUR_STEPS20, activeToursSection, copyTourPolicy20, merchSection, onTourBooked20, tourDraftEstimate20, tourLivePanel20, tourPlannerSection } from '../panels/tours';
 import { setKitDraft18 } from './live18';
+import { showKey20, showLinks20 } from '../../sim/sys/showops20';
 import { branchBlock, deptBlock, hqBlock, marketsBlock } from './hq6';
 import { actionsButton20, chooseAction20, openActionMenu20, openRoomMenu20 } from './actmenu20'; // r20 G4: registro único de ações
 import { ROOM_ACTIONS20, actionRow20 } from '../actions20';
@@ -101,6 +102,21 @@ function tourOf(s: GameState, x: PShow): Tour | undefined {
   return s.tours.find((tr) => tr.actId === x.actId && tr.name === x.label && (tr.status === 'planned' || tr.status === 'running'));
 }
 
+/** r20b (Z1): incidentes do show (ao vivo e de público) e as notícias ligadas pelo mesmo id de show. */
+export function showNewsBlock20(s: GameState, key: string): HTMLElement | null {
+  const x = showLinks20(s, key);
+  if (!x.live.length && !x.facts.length) return null;
+  const bad = x.live.filter((y) => !y.ok).length;
+  return h('div', { class: 'cr20-news', 'data-show': key },
+    x.live.length ? h('p', { class: 'small' }, ic('warning'), ' ', t(l('Ao vivo: {n} imprevisto(s), {b} mal resolvido(s).', 'Live: {n} mishap(s), {b} badly handled.'), { n: x.live.length, b: bad })) : null,
+    h('ul', { class: 'small', 'aria-label': T(l('Fatos e notícias deste show', 'Facts and news about this show')) },
+      x.facts.map((f) => {
+        const st = x.stories.find((y) => y.fact === f.id);
+        return h('li', null, pill(st ? T(l('notícia', 'news')) : T(l('fato', 'fact')), st ? '' : 'muted'), ' ', T(st ? st.t : f.text),
+          st ? h('button', { class: 'btn small ghost', onclick: () => { store.area = 'news17'; rerender(); } }, T(l('Ver nas notícias', 'See in the news'))) : null);
+      })));
+}
+
 /** Protótipo C — sala de controle da próxima apresentação. */
 export function controlRoom20(s: GameState): HTMLElement | null {
   const all = playerShows(s);
@@ -147,7 +163,8 @@ export function controlRoom20(s: GameState): HTMLElement | null {
       chips(stat('fans', `${N(lastStop.sold)}/${N(lastStop.capacity)}`, l('Vendidos / lotação', 'Sold / capacity'), lastStop.sold < lastStop.capacity * 0.5 ? 'warn' : 'good'),
         stat('money', $(lastTour.revenue), l('Receita da turnê até aqui', 'Tour revenue so far')), stat('bank', $(lastTour.costs || lastTour.costReserved), l('Custos da turnê', 'Tour costs')),
         lastTour.accidents ? stat('warning', lastTour.accidents, l('Incidentes', 'Incidents'), 'bad') : null),
-      h('small', null, cityName(lastStop.cityId), ' · ', actLink(s, lastTour.actId), lastStop.note ? ` · ${T(lastStop.note)}` : '')));
+      h('small', null, cityName(lastStop.cityId), ' · ', actLink(s, lastTour.actId), lastStop.note ? ` · ${T(lastStop.note)}` : ''),
+      showNewsBlock20(s, showKey20(lastTour.id, lastStop.day))));
   }
   return h('section', { class: 'card cr20' }, h('h3', null, ic('mic'), ' ', T(l('Sala de controle — próxima apresentação', 'Control room — next show'))), ...body);
 }

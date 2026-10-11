@@ -266,7 +266,7 @@ export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
         const a = s.acts[id];
         const mt = maxVenueTier(s, a);
         return section(`${a.name} — ${t(S.gigs)}`,
-          h('table', { class: 'tbl compact' },
+          h('div', { class: 'tbl-scroll20' }, h('table', { class: 'tbl compact' },
             h('thead', null, h('tr', null, h('th', null, t(S.venue)), h('th', null, t(S.perDate)), h('th', null, t(S.revenue)), h('th', null, t(S.net)), h('th', null, t(S.fatigue)), h('th', null, ''))),
             h('tbody', null, VENUE_TIERS.map((v) => {
               const est = gigEstimate(s, a, v.id, 4);
@@ -283,10 +283,10 @@ export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
                   s.delegated[a.id] = false;
                   toast(t(l('Shows adicionados à agenda.', 'Gigs added to the agenda.')), 'good');
                   rerender();
-                } }, t(l('Agendar 4 datas', 'Book 4 dates'))) : null),
+                }, 'aria-label': `${t(l('Agendar 4 datas', 'Book 4 dates'))} — ${t(v.name)}` }, t(l('Agendar 4 datas', 'Book 4 dates'))) : null),
               );
             })),
-          ),
+          )), // r20b (Z3 a11y): tabela rola dentro do cartão (não empurra a página); botão diz qual casa
           h('p', { class: 'muted small' }, a.playerBand ? t(l('Bilheteria vai para você.', 'Box office goes to you.')) : t(l('Bilheteria é do artista; o selo só participa em contrato 360.', 'Box office belongs to the artist; the label only shares in a 360 deal.'))),
         );
       }) : section(t(S.gigs), h('p', null, t(S.noActs)));

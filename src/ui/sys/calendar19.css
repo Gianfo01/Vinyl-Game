@@ -48,3 +48,5 @@
 .b19-more { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin: 0.3rem 0 0.5rem; }
 .b19-home { display: grid; gap: 0.5rem; }
 .b19-home > .b19 { min-width: 0; }
+/* r20b (Z3 a11y): o cabeçalho do bloco não passa por baixo dos botões recolher/esconder (sobreposição medida a 100% e 200%) */
+.b19 .ck14-head, .b19 > .card > h3:first-child, .b19 > .card > header:first-child { padding-right: 3.6rem; }
