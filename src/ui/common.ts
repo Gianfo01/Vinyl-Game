@@ -123,7 +123,7 @@ export function toast(msg: string, kind = 'info'): void {
   }
   const el = h('div', { class: `toast ${kind}`, role: 'status', 'data-msg': msg }, msg);
   host.appendChild(el);
-  while (host.children.length > 4) host.firstElementChild?.remove();
+  while (host.querySelectorAll('.toast').length > 4) host.querySelector('.toast')?.remove(); // r19: o recibo de decisão (ux19) também mora aqui
   setTimeout(() => el.classList.add('out'), 4200);
   setTimeout(() => el.remove(), 4800);
 }

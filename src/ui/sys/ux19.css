@@ -42,6 +42,7 @@
 .ux19-rcbox { position: fixed; right: 16px; bottom: 16px; z-index: 60; max-width: min(420px, calc(100vw - 32px)); background: var(--panel, #fffaf2); color: var(--ink, #241c17);
   border: 2px solid var(--accent, #f0c040); border-radius: 6px; padding: 10px 34px 10px 12px; box-shadow: 0 4px 18px rgba(0, 0, 0, .4); transition: opacity .5s; }
 .ux19-rcbox.out { opacity: 0; }
+#toasts .ux19-rcbox { position: relative; left: auto; right: auto; bottom: auto; max-width: none; pointer-events: auto; }
 .ux19-rcbox .ux19-x { position: absolute; top: 4px; right: 4px; }
 .ux19-rc { display: grid; gap: 3px; }
 .ux19-rc-now { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
