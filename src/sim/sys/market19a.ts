@@ -143,32 +143,36 @@ export function tierName19(n: number): L {
 }
 /** Unidades do lançamento que contam na entidade: fatia do mercado (gosto × territórios, como as paradas regionais) ×
  *  parte do país no mercado × (sem streams antes da fórmula). */
-export function certUnits19(s: GameState, rel: Release, b: Body19): { u: number; w: number; sf: number; counts: boolean } {
-  const fam = familyOf(s.acts[rel.actId]?.genre ?? 'pop');
-  let den = 0, mine = 0;
-  for (const m of MARKETS) {
-    const v = m.size(s.year) * (MARKET_PREF[m.id][fam] ?? 0.6) * (rel.territories.includes(m.id) ? 1 : 0.08);
-    den += v; if (m.id === b.mk) mine = v;
-  }
-  const w = den > 0 ? mine / den : 0;
+/** Pesos por mercado (gosto × territórios, como charts2), somando 1. */
+export function mkW19(s: GameState, rel: Release): Partial<Record<MarketId, number>> {
+  const fam = familyOf(s.acts[rel.actId]?.genre ?? 'pop'), o: Partial<Record<MarketId, number>> = {};
+  let den = 0;
+  for (const m of MARKETS) { const v = m.size(s.year) * (MARKET_PREF[m.id][fam] ?? 0.6) * (rel.territories.includes(m.id) ? 1 : 0.08); o[m.id] = v; den += v; }
+  for (const m of MARKETS) o[m.id] = den > 0 ? (o[m.id] ?? 0) / den : 0;
+  return o;
+}
+export function certUnits19(s: GameState, rel: Release, b: Body19, ws = mkW19(s, rel), sfm?: Partial<Record<MarketId, number>>): { u: number; w: number; sf: number; counts: boolean } {
+  const w = ws[b.mk] ?? 0;
   const counts = s.year >= streamYear19(b, rel.type);
   const st = s.techDates.streaming;
-  const sf = counts ? 0 : st !== undefined && rel.year >= st ? mix18(s, b.mk).stream : 0;
+  const sf = counts ? 0 : st !== undefined && rel.year >= st ? (sfm ? (sfm[b.mk] ??= mix18(s, b.mk).stream) : mix18(s, b.mk).stream) : 0;
   return { u: Math.round(rel.totalUnits * w * b.part * (1 - sf)), w, sf, counts };
 }
 export const auditFee19 = (s: GameState, n: number): number => money(s, n >= 99 ? 1500 : n >= 2 ? 900 : 600);
 
-function certMonth(s: GameState): void {
+export function certMonth19(s: GameState): void {
   const st = mka19(s), bs = bodies19(s);
   if (!bs.length) return;
   let npcF = 0, newP = 0;
+  const sfm: Partial<Record<MarketId, number>> = {};
   for (const rel of Object.values(s.releases)) {
     if (rel.totalUnits < 1e4) continue;
     const mine = mineRel(s, rel), a = s.acts[rel.actId];
     if (!mine && (rel.hist || !a || (a.fame < 50 && !(rel.peak && rel.peak <= 10)))) continue;
     if (!mine && s.week - rel.week > 156 && !(rel.weekly[rel.weekly.length - 1] > 0)) continue;
+    const ws = mkW19(s, rel);
     for (const b of bs) {
-      const n = tierOf19(certUnits19(s, rel, b).u, thOf19(b, s.year, rel.type));
+      const n = tierOf19(certUnits19(s, rel, b, ws, sfm).u, thOf19(b, s.year, rel.type));
       const have = st.c[rel.id]?.[b.mk] ?? 0;
       if (n <= have) continue;
       if (mine) { const k = `${rel.id}|${b.mk}`; if ((st.pend[k] ?? 0) < n) { if (!st.pend[k]) newP++; st.pend[k] = n; } continue; }
@@ -362,7 +366,7 @@ registerExplain('mka19.test', (s, c) => {
 export const MOOD19 = ['ambient', 'lofi_hiphop', 'classical', 'trip_hop', 'vaporwave', 'new_age', 'smooth_jazz', 'chillout', 'downtempo'];
 export const PLAT19 = l('Loopit (plataforma fictícia)', 'Loopit (fictional platform)');
 export const ghostFee19 = (s: GameState): number => money(s, 12000);
-function ghostYear(s: GameState): void {
+export function ghostYear19(s: GameState): void {
   const st = mka19(s);
   if (s.year < 2015) return;
   const r = rng(s);
@@ -392,7 +396,7 @@ export function ghost19(s: GameState, how: 'accept' | 'expose' | 'refuse'): L {
   }
   return l('Recusado.', 'Refused.');
 }
-function ghostMonth(s: GameState): void {
+export function ghostMonth19(s: GameState): void {
   const st = mka19(s);
   if (!st.gh || st.gh.out) return;
   if (s.month === 0 && st.gh.from < s.year) post(s, `mka19gh:${s.year}`, ghostFee19(s), 'licensing', 'Faixas sem rosto (compra fechada)');
@@ -428,7 +432,7 @@ registerMod('chartUnits', 'mka19:ghost', (s, v, ctx) => {
 
 export const PROMO19 = l('Arena Nação (promotora)', 'Arena Nation (promoter)');
 export const matchCost19 = (s: GameState, a: Act): number => money(s, Math.round(expectedAdvance(s, a) * 1.6));
-function star360Month(s: GameState): void {
+export function star360Month19(s: GameState): void {
   if (s.year < 2007) return;
   const st = mka19(s), r = rng(s);
   for (const id of playerActs(s)) {
@@ -540,7 +544,7 @@ export function bid19(s: GameState, id: string, k: keyof typeof BID19 | 'contest
   x.bid = v;
   return F(l('Lance de {v} registrado; resultado em {w} semanas.', 'Bid of {v} filed; result in {w} weeks.'), { v: usd(v), w: Math.max(0, x.w - s.week) });
 }
-function antiMonth(s: GameState): void {
+export function antiMonth19(s: GameState): void {
   const st = mka19(s), r = rng(s);
   for (const x of st.anti) {
     if (x.st !== 'open' || s.week < x.w) continue;
@@ -601,7 +605,7 @@ function setPh(s: GameState, x: Sc19, ph: ScPh19): void {
       text: F(l('A ressaca de "{n}": todo mundo assinou, o som cansou e a imprensa decreta o fim da cena. Sobra o turismo.', 'The "{n}" hangover: everyone signed, the sound got tired and the press declares the scene over. Tourism remains.'), { n: nm }) });
   } else if (ph === 5) headline19(s, F(l('"{n}" renasce: uma geração nova redescobre a cena.', '"{n}" is reborn: a new generation rediscovers the scene.'), { n: nm }), 1);
 }
-function scenesMonth19(s: GameState): void {
+export function scenesMonth19(s: GameState): void {
   const st = mka19(s), r = rng(s);
   const top = Object.entries(s.scenes).filter(([k, v]) => v >= 20 && genreById[k.split(':')[1]]).sort((a, b) => b[1] - a[1]).slice(0, 10);
   for (const [k, v] of top) if (!st.sc[k] && Object.keys(st.sc).length < 24) st.sc[k] = { k, ph: v >= 35 ? 1 : 0, w: s.week, h: v, pk: v, sg: 0, first: s.year };
@@ -720,10 +724,10 @@ registerDeadline('market19a', (s, from, to) => {
 });
 registerSimHook('month', 'market19a', (s) => {
   if (off()) return;
-  certMonth(s);
-  ghostMonth(s);
-  if (s.month === 0) ghostYear(s);
-  star360Month(s);
-  antiMonth(s);
+  certMonth19(s);
+  ghostMonth19(s);
+  if (s.month === 0) ghostYear19(s);
+  star360Month19(s);
+  antiMonth19(s);
   scenesMonth19(s);
 });

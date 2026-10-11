@@ -147,6 +147,8 @@ import './long18';
 // Rodada 18 (cine18): storyboards de cerimônias e grandes momentos, Cinemateca e Legado póstumo.
 import './cine18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
+// Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
+import './market19a';
 import './core18';
 import './finance18';
 import './eras18';
@@ -172,4 +174,6 @@ import './tribute19';
 import './session19';
 // Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
 import './era19';
+// Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
+import './market19a';
 import './core18';
