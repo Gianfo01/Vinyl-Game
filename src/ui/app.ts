@@ -26,7 +26,8 @@ import { auctionsSection, contestsSection, demosSection, scoutsSection } from '.
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
-import { afterRender18, helpButton18, paletteCmds18, settings18 } from './tutorial18'; // r18 tutorial18
+import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
+import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
 import { portraitDataUrl } from './pixel/avatar';
@@ -35,6 +36,7 @@ import { saveManagerModal17 } from './saves17';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
 import { AFTER_ADVANCE, EXTRA_AREAS, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
+import { UX19UI } from './hooks19'; // r19 ux19: divulgação progressiva, rodapé do menu e fim de partida
 import { openLabelStory } from './sys/story12';
 import './sys';
 import { defaultHome, type NavGroup } from './careernav13';
@@ -258,7 +260,7 @@ const HINT17: Record<string, string> = Object.fromEntries(GROUPS.flatMap((g) => 
 /** r17: menu reformado (nav17): grupos por função, carreiras em Você › Carreiras, resto em Mais. */
 const groups = (): NavGroup14[] => (groupsMemo ??= (() => {
   const g = store.game, ids = navItems().map((x) => x.id), has = new Set(ids);
-  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a), all: ids, hint: HINT17 });
+  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a) && (!g || !UX19UI.has || UX19UI.has(g, a) || a === store.area), all: ids, hint: HINT17 });
 })());
 void navGroups16;
 
@@ -316,7 +318,7 @@ function nav(): HTMLElement {
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
       open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
     );
-  }));
+  }), UX19UI.navFoot?.(store.game!) ?? null);
 }
 
 /** Faixa de sub-áreas no topo do painel (útil no celular, onde o menu lateral vira barra). */
@@ -466,6 +468,8 @@ function settings(): void {
     h('label', null, `${t(S.textSize)}: ${p.textScale}%`, h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { p.textScale = Number((e.target as HTMLInputElement).value); savePrefs(); } })),
     h('label', null, t(S.theme), select(p.theme, [{ value: 'auto', label: t(S.themeAuto) }, { value: 'light', label: t(S.themeLight) }, { value: 'dark', label: t(S.themeDark) }] as { value: typeof p.theme; label: string }[], (v) => { p.theme = v; savePrefs(); })),
     h('label', null, t(l('Modo para daltonismo', 'Colorblind mode')), select(p.colorblind ?? 'none', [{ value: 'none' as const, label: t(l('Desligado', 'Off')) }, { value: 'deutan' as const, label: t(l('Deuteranopia (verde)', 'Deuteranopia (green)')) }, { value: 'protan' as const, label: t(l('Protanopia (vermelho)', 'Protanopia (red)')) }, { value: 'tritan' as const, label: t(l('Tritanopia (azul)', 'Tritanopia (blue)')) }], (v) => { p.colorblind = v; savePrefs(); })),
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tutorialsOff19(p), onchange: (e: Event) => { setTutorials19(p, !(e.target as HTMLInputElement).checked); savePrefs(); close(); render(); settings(); } }), ' ', t(TUTOFF_LABEL19)), // r19 tutoff19
+    h('button', { class: 'btn small ghost', onclick: () => { resetTut18('all'); setTutorials19(p, true); savePrefs(); if (store.game) restartTutorial(store.game); close(); render(); } }, t(l('Reiniciar tutoriais', 'Restart tutorials'))),
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
     ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
     h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
@@ -559,6 +563,7 @@ function endScreen(): void {
   const body = h('div', { class: 'ending' },
     h('div', { class: 'disc big', 'aria-hidden': 'true' }),
     h('h3', null, insolvent && !def ? t(S.insolvencyTitle) : t(def?.name)),
+    UX19UI.end?.(g) ?? null,
     h('p', { class: 'lead' }, insolvent && !def ? t(S.insolvencyText) : t(def?.text)),
     h('p', { class: 'muted' }, `${g.config.companyName} · ${g.config.startYear}–${end.year} · Run ${g.signature}`),
     h('h4', null, `${t(S.legacy)}: ${legacyTotal(g)}`),
