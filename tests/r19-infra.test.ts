@@ -168,6 +168,7 @@ const INBOX_RARE19: Record<string, string> = {
   af19_suit: 'espólio processa pelos masters: exige morte de artista do seu elenco com masters retidos (raro em bots curtos)',
   af19_offer: 'proposta do espólio: só com artista morto do seu catálogo e legado alto (anos depois da morte)',
   gear19_offer: 'endosso de instrumento: artista do elenco com fama 40+ e sorteio de ~3%/mês (1930+)',
+  c19_fest_skip: 'careers19: aviso de edição pulada só com festival próprio sem line-up a 3 meses (bots de selo não fundam festival)',
   // vistos às vezes em 1 ano (1 mensagem): exigir seria frágil a qualquer mudança de sorteio
   a18_rep: 'artista: relatório da gravadora só depois de assinar (depende do sorteio de ofertas)',
   analyst: 'relatório do analista: sem ação, vai para o boletim semanal (notify19) e não aparece como item próprio',

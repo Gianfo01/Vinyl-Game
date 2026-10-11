@@ -14,7 +14,8 @@ import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { scandal } from '../scandal17';
 import { ownerOf } from './people/owner';
-import { funds, grossShows, mgCap, mgChance, mgGross, ventures, type Client } from './ventures9';
+import { funds, grossShows, mgCap, mgChance, mgGross, mgRepGain9, ventures, type Client } from './ventures9';
+import { isActive } from './careers12';
 
 export type Goal = 'deal' | 'tour' | 'fame' | 'image';
 export const GOAL_NAME: Record<Goal, L> = {
@@ -120,13 +121,14 @@ export function bookTour(s: GameState, r: Rng, actId: string): { ok: boolean; te
   a.momentum = clamp(a.momentum + 8, 0, 100);
   a.fans.casual += Math.round(gross / money(s, 20));
   c.sat = clamp(c.sat + 6, 0, 100);
-  mg.rep = clamp(mg.rep + 1, 0, 100);
+  mg.rep = clamp(mg.rep + mgRepGain9(mg.rep), 0, 100); // r19: turnê rende menos reputação para quem já é grande
   return { ok: true, text: fmtL(l('Turnê de {a} fechada: {g} de bilheteria.', '{a}\'s tour wrapped: {g} gross.'), { a: a.name, g: `$${Math.round(gross / 100).toLocaleString()}` }) };
 }
 
 // ---------------------------------------------------------------- contrato de gravadora
 
-const hasPlayerLabel = (s: GameState) => s.config.role !== 'artist';
+// r19: só quem tem a carreira de selo ativa recebe proposta do próprio selo (empresário sozinho não tem selo vazio)
+const hasPlayerLabel = (s: GameState) => isActive(s, 'label');
 export const canShop = (s: GameState, a?: Act) => !!a && !a.owner;
 
 /** Leva o agenciado sem gravadora ao mercado: até três propostas (rivais e, se você tem selo, o seu). */

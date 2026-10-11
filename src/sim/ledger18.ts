@@ -92,6 +92,8 @@ export function book18(s: GameState, sect: Sect18, cat: string, key: string, amo
   if (accrual) {
     const line = `${sect}:${group18(cat, sect, key)}`;
     add(Y, line, amount); add(M, line, amount);
+    // r19 (intra19): transferência entre negócios do próprio jogador (`rel:`) — a DRE do negócio mantém, a consolidada elimina
+    if ((sect === 'rev' || sect === 'cost') && key.includes('rel:')) { const k = sect === 'rev' ? 'int:rev' : 'int:cost'; add(Y, k, amount); add(M, k, amount); }
   }
   if (cash) {
     const cf = sect === 'inv' ? 'cf:inv' : sect === 'fin' ? 'cf:fin' : 'cf:op';
@@ -109,6 +111,8 @@ export function sumP18(o: Record<string, number> | undefined, prefix: string): n
 /** lucro operacional, resultado líquido (op + não operacional + impostos) */
 export const opProfit18 = (o: Record<string, number> | undefined): number => sumP18(o, 'rev:') + sumP18(o, 'cost:');
 export const netProfit18 = (o: Record<string, number> | undefined): number => opProfit18(o) + sumP18(o, 'nonop:') + sumP18(o, 'tax:');
+/** r19 (intra19): lucro operacional consolidado — sem as transferências internas (`int:rev`/`int:cost`). */
+export const consolOp18 = (o: Record<string, number> | undefined): number => opProfit18(o) - sumP18(o, 'int:');
 export const arTotal18 = (s: GameState): number => fin18(s).ar.reduce((t, b) => t + b.amt, 0);
 export const apTotal18 = (s: GameState): number => -fin18(s).ap.reduce((t, b) => t + b.amt, 0);
 

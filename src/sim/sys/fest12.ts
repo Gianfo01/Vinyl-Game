@@ -228,7 +228,7 @@ export function ask12(s: GameState, f: OwnFestival, a: Act, o: { time: number; l
   const tech = techOf(a);
   if (tech === 2) why.push(l('Produção pesada: custo extra de palco e mais risco de pane.', 'Heavy production: extra stage cost and higher failure risk.'));
   let refuse: L | undefined;
-  if (isMine(s, a.id)) return { fee: 0, time: want, tech, why: [l('Artista do seu selo: sem cachê.', 'Your own act: no fee.')] };
+  if (isMine(s, a.id)) return houseAsk19.f(s, f, a, { fee: Math.round(fee), time: want, tech, why }); // r19 (intra19): preço de mercado ou desconto da casa
   if (!guestAccepts(f, a)) refuse = l('O festival ainda não tem prestígio para esse nome (mais palcos e reputação ajudam).', 'The festival lacks the prestige for this name (more stages and reputation help).');
   else if (o.excl && a.fame >= 70 && f.rep < 50) refuse = l('Não dá exclusividade a um festival pequeno.', 'Won\'t grant exclusivity to a small festival.');
   if (x.ident === 'genre' && familyOf(a.genre) !== x.fam) why.push(l('Fora do gênero do festival: o público de nicho torce o nariz.', 'Off the festival\'s genre: the niche crowd frowns.'));
@@ -247,7 +247,7 @@ export function offer12(s: GameState, fid: string, actId: string, o: { stage: nu
   if (Object.values(x.deals).some((d) => d.stage === o.stage && d.time === o.time)) return { res: 'no', text: l('Esse horário já está ocupado nesse palco.', 'That slot is taken on that stage.') };
   const k = ask12(s, f, a, o);
   if (k.refuse) return { res: 'no', text: fmtL(l('{a} recusou: {w}', '{a} declined: {w}'), { a: a.name, w: k.refuse }) };
-  const fee = isMine(s, actId) ? 0 : Math.round(o.fee);
+  const fee = isMine(s, actId) ? k.fee : Math.round(o.fee);
   if (fee < k.fee * 0.8) return { res: 'no', text: fmtL(l('{a} achou a proposta ofensiva ({p}% do pedido).', '{a} found the offer insulting ({p}% of the ask).'), { a: a.name, p: Math.round((fee / Math.max(1, k.fee)) * 100) }) };
   if (fee < k.fee) return { res: 'counter', counter: k.fee, text: fmtL(l('{a} pede {f} (dólares de hoje) por essas condições.', '{a} asks {f} (today\'s dollars) for these terms.'), { a: a.name, f: Math.round(money(s, k.fee) / 100) }) };
   place(s, f, a, { stage: o.stage, time: o.time, len: o.len, excl: o.excl, fee }, true);
@@ -257,7 +257,7 @@ export function offer12(s: GameState, fid: string, actId: string, o: { stage: nu
 function place(s: GameState, f: OwnFestival, a: Act, o: { stage: number; time: number; len: number; excl: boolean; fee: number }, advance: boolean): void {
   const x = f12(s, f);
   f.lineup.push({ actId: a.id, fee: o.fee });
-  const adv = advance && o.fee ? Math.round(money(s, o.fee) * 0.3) : 0;
+  const adv = advance && o.fee && !isMine(s, a.id) ? Math.round(money(s, o.fee) * 0.3) : 0;
   x.deals[a.id] = { actId: a.id, stage: o.stage, time: o.time, len: o.len, excl: o.excl, tech: techOf(a), adv };
   if (adv) {
     pay(s, f, -adv, `adv:${a.id}`, `Adiantamento ${a.name} (${f.name})`);
@@ -335,6 +335,7 @@ export function proj12(s: GameState, f: OwnFestival): Proj {
   // r19: festivais rivais pesam por distância, mês, gênero/identidade e porte (rivalFest19)
   const rv = rivalFest19(s, ventures(s).npc, { city: f.cityId, month: f.month, fam: x.fam, ident: x.ident, rep: f.rep });
   if (rv.v < 0.995) { dem *= rv.v; why.push(fmtL(l('Festivais rivais na região e na temporada: −{p}% de procura ({n}).', 'Rival festivals in the region and season: −{p}% demand ({n}).'), { p: Math.round((1 - rv.v) * 100), n: rv.rows.map((q) => q.n.name).join(', ') })); }
+  dem *= festDem19.f(s, f, acts, why); // r19 (careers19): qualidade do line-up, gênero, época e concorrência mexem na procura
   dem = dem * x.cyc.hype * x.cyc.mods.dem * (x.cyc.late ? 0.85 : 1) + x.loyal * id.loyalF;
   if (x.loyal) why.push(fmtL(l('{n} fiéis compram pelo festival, não pela atração.', '{n} loyalists buy for the festival, not the act.'), { n: Math.round(x.loyal) }));
   const trust = clamp((f.rep + x.hist.length * 6) / 90, 0.08, 1);
@@ -717,7 +718,7 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   const d = f.days;
   const extras = (Math.min(att, c.food * 1500) * money(s, 9) + Math.min(att, c.bar * 1500) * money(s, 7) * 0.6) * d + Math.min(att, c.merch * 4000) * money(s, 4) * (0.3 + 0.7 * acts.filter((a) => isMine(s, a.id)).length / acts.length);
   const doorRev = door * money(s, p.avg) * 1.15;
-  const fees = f.lineup.reduce((t, y) => t + money(s, y.fee) - (x.deals[y.actId]?.adv ?? 0), 0);
+  const fees = f.lineup.filter((y) => !isMine(s, y.actId)).reduce((t, y) => t + money(s, y.fee) - (x.deals[y.actId]?.adv ?? 0), 0);
   const struct = x.cyc.supplied ? 0 : structCost(s, f);
   pay(s, f, doorRev + extras, `ed:${x.cyc.year}:rev`, `${f.name} ${x.cyc.year}: porta, bar e comida`);
   pay(s, f, -(fees + struct + fine), `ed:${x.cyc.year}:cost`, `${f.name} ${x.cyc.year}: cachês e produção`);
@@ -732,7 +733,8 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   // artistas
   for (const a of acts) {
     const e = f.lineup.find((y) => y.actId === a.id);
-    if (!isMine(s, a.id)) { a.cash += money(s, e?.fee ?? 0); a.fans.casual += Math.round(att * 0.02); continue; }
+    if (!isMine(s, a.id)) { a.cash += money(s, e?.fee ?? 0); guestPaid19.f(s, f, a, money(s, e?.fee ?? 0)); a.fans.casual += Math.round(att * 0.02); continue; }
+    ownPaid19.f(s, f, a, money(s, e?.fee ?? 0)); // r19 (intra19): cachê do próprio ato = transferência interna (festival → selo/artista)
     const boost = x.ident === 'discovery' && a.fame < 35 ? 2 : 1;
     a.fans.casual += Math.round(att * 0.08 * (ex / 70) * boost);
     a.fans.active += Math.round(att * 0.015 * (ex / 70) * boost);
@@ -830,4 +832,9 @@ deferEvents([...OP_EVENTS, CANCEL]);
 
 // r18 live18: prestígio da curadoria baixa o cachê pedido; pagamento do festival exposto para fest18.
 export const festFee18: { f: (s: GameState, f: OwnFestival, a: Act, why: L[]) => number } = { f: () => 1 };
+// r19 (careers19/intra19): ganchos injetados (sem ciclo de import)
+export const festDem19: { f: (s: GameState, f: OwnFestival, acts: Act[], why: L[]) => number } = { f: () => 1 };
+export const houseAsk19: { f: (s: GameState, f: OwnFestival, a: Act, k: Ask) => Ask } = { f: (_s, _f, _a, k) => ({ ...k, fee: 0, why: [l('Artista do seu selo: sem cachê.', 'Your own act: no fee.')] }) };
+export const ownPaid19: { f: (s: GameState, f: OwnFestival, a: Act, fee: number) => void } = { f: () => {} };
+export const guestPaid19: { f: (s: GameState, f: OwnFestival, a: Act, fee: number) => void } = { f: () => {} };
 export const festPay12 = pay;

@@ -244,3 +244,10 @@ export const UX19: Record<string, { sys: string; to: string[] }> = {
   era_turn: { sys: 'ux19', to: ['ux19:era (manchete press9 + Diário; a interface abre o cartão da virada)'] },
   era_goal: { sys: 'ux19', to: ['ux19:goal (moral do elenco +2, Diário)'] },
 };
+
+/** R19 onda 5, A (sys/careers19.ts, sys/intra19.ts): carreiras que sustentam a partida e economia interna. */
+export const CAREERS19: Record<string, { sys: string; to: string[] }> = {
+  mandate: { sys: 'careers19 (cartão de renovação do mandato)', to: ['careers19:mandate (boca a boca: confiança dos outros clientes)'] },
+  fest_ground: { sys: 'careers19 (passo de terreno do festival)', to: ['careers19:ground (expectativa da próxima edição, cena da cidade)'] },
+  house_deal: { sys: 'intra19 (serviço entre negócios seus a preço de mercado ou com desconto da casa)', to: ['intra19:house (reputação com artistas cai com desconto da casa no próprio elenco)'] },
+};

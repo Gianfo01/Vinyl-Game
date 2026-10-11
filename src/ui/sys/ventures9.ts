@@ -11,7 +11,7 @@ import {
   CRISIS_NAME, GEAR, MAX_LEVEL, MEDIA, VERDICT_NAME, VKINDS, actFee, autoLineup, bookingCandidates, crisisCost, dealLabel, dropClient, dropFromLineup, favorAct, festCandidates, festCapacity,
   foundCost, foundVenture, funds, handleCrisis, inviteAct, inviteChance, isConglomerate, kindsAvailable, lineupMax, maxGear, mediaAvailable, mgCandidates, mgCap, mgChance, mgGross, negotiateFor,
   pitchClient, pitchSync, placeSong, pushScene, routeTour, sellVenture, setFestival, setMgOwner, setPayout, setStaff, signBooking, signWriter, takePayola, transferVenture, upgradeCost,
-  upgradeGear, upgradeVenture, valuation, ventures, writerAdvance, writerCandidates, type CrisisMove, type Holder, type MediaKind, type VKind, type Venture,
+  upgradeGear, upgradeVenture, valuation, ventures, writerAdvance, writerCandidates, refusedWait9, type CrisisMove, type Holder, type MediaKind, type VKind, type Venture,
   bookingChance,
 } from '../../sim/sys/ventures9';
 import { RATE19 } from './neg19';
@@ -255,7 +255,8 @@ function prospectTab(s: GameState): HTMLElement {
       h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Selo', 'Label'), l('Fama', 'Fame'), l('Renda est./mês', 'Est. income/mo'), l(`Chance (${pct(rate)})`, `Chance (${pct(rate)})`), l('', '')].map((x) => h('th', null, t(x))))),
       h('tbody', null, cands.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, a.owner === 'player' ? s.config.companyName : a.owner ? s.labels[a.owner]?.name ?? '—' : t(l('independente', 'independent'))),
         h('td', null, String(fameText(s, a.id))), h('td', null, $(mgGross(s, a))), h('td', null, pct(mgChance(s, a, rate))),
-        h('td', null, btn(l('Propor', 'Pitch'), () => res(pitchClient(s, r, a.id, rate)), 'btn tiny primary')))))));
+        h('td', null, refusedWait9(s, a.id) ? pill(t(l('recusou: espera {n} sem.', 'declined: wait {n} wk'), { n: refusedWait9(s, a.id) }), 'warn') : btn(l('Propor', 'Pitch'), () => res(pitchClient(s, r, a.id, rate)), 'btn tiny primary')))))),
+    h('p', { class: 'small muted' }, t(l('A lista mostra a faixa de fama que a sua reputação alcança (até reputação + 30), ordenada pela chance real. Quem recusa só volta a ouvir em 6 meses.', 'The list shows the fame band your reputation reaches (up to reputation + 30), sorted by real odds. Whoever declines only listens again in 6 months.'))));
 }
 
 function managementArea(s: GameState): HTMLElement {
