@@ -256,17 +256,10 @@ function tourMapSection(s: GameState): HTMLElement {
   return section(t(l('Mapa', 'Map')), tourMap.element, tourSummary);
 }
 
-// ---------- Shows ----------
-export function showsPanel(s: GameState): HTMLElement {
+/** r20: tabela de datas avulsas por artista (Shows › Agenda). */
+export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
   const ids = playerActs(s);
-  const fests = FESTIVALS.filter((f) => f.start <= s.year && !f.scouting);
-  return h('div', { class: 'panel shows' },
-    h('div', { class: 'col-main' },
-      tourMapSection(s),
-      tourPlannerSection(s, tourStops, (ids) => { tourStops = [...ids]; refreshTour(s); rerender(); }),
-      activeToursSection(s),
-      merchSection(s),
-      ids.length ? ids.map((id) => {
+  return ids.length ? ids.map((id) => {
         const a = s.acts[id];
         const mt = maxVenueTier(s, a);
         return section(`${a.name} — ${t(S.gigs)}`,
@@ -293,14 +286,42 @@ export function showsPanel(s: GameState): HTMLElement {
           ),
           h('p', { class: 'muted small' }, a.playerBand ? t(l('Bilheteria vai para você.', 'Box office goes to you.')) : t(l('Bilheteria é do artista; o selo só participa em contrato 360.', 'Box office belongs to the artist; the label only shares in a 360 deal.'))),
         );
-      }) : section(t(S.gigs), h('p', null, t(S.noActs))),
-    ),
-    h('aside', { class: 'col-side' },
+      }) : section(t(S.gigs), h('p', null, t(S.noActs)));
+}
+
+/** r20: festivais e casas (lateral de Shows; Shows › Negócios ao vivo). */
+export function festivalsAside20(s: GameState): HTMLElement[] {
+  const ids = playerActs(s);
+  const fests = FESTIVALS.filter((f) => f.start <= s.year && !f.scouting);
+  return [
       section(t(S.festivals), h('p', { class: 'muted small' }, t(l('Convites chegam de abril a agosto, por adequação, prestígio e rede.', 'Invitations arrive April–August, by fit, prestige and network.'))),
         h('ul', { class: 'small' }, fests.map((f) => h('li', null, h('b', null, f.name), ` · ${cityName(f.city)} · ${t(f.kind)} `,
           ...ids.map((id) => { const slot = festivalSlot(s, s.acts[id], f.prestige); const fit = f.focus.length === 0 || f.focus.includes(familyOf(s.acts[id].genre)); return slot && fit ? pill(`${s.acts[id].name}: ${slot}`, 'good') : null; }))))),
       section(t(S.venues), h('ul', { class: 'small' }, VENUES.map((v) => h('li', null, `${v.name} — ${cityName(v.city)} (${N(v.capacity)})`)))),
+  ];
+}
+
+/** r20: rota do planejador (mesmos IDs no mapa e na lista de cidades). */
+export const tourStops20 = (): string[] => [...tourStops];
+export function toggleTourStop20(s: GameState, id: string): void {
+  if (id === s.config.homeCity || !cityById[id]) return;
+  tourStops = tourStops.includes(id) ? tourStops.filter((x) => x !== id) : [...tourStops, id];
+  refreshTour(s);
+}
+export function setTourStops20(s: GameState, ids: string[]): void { tourStops = ids.filter((id) => cityById[id] && id !== s.config.homeCity); refreshTour(s); }
+export { tourMapSection as tourMapSection20 };
+
+// ---------- Shows ----------
+export function showsPanel(s: GameState): HTMLElement {
+  return h('div', { class: 'panel shows' },
+    h('div', { class: 'col-main' },
+      tourMapSection(s),
+      tourPlannerSection(s, tourStops, (ids) => { tourStops = [...ids]; refreshTour(s); rerender(); }),
+      activeToursSection(s),
+      merchSection(s),
+      gigsSection20(s),
     ),
+    h('aside', { class: 'col-side' }, ...festivalsAside20(s)),
   );
 }
 
@@ -403,6 +424,20 @@ export function branchesSection(s: GameState): HTMLElement {
   );
 }
 
+/** r20: equipamentos da empresa (Empresa › Sede e Sede › Equipamentos e conforto). */
+export function equipmentSection20(s: GameState): HTMLElement {
+  return section(t(S.equipment), h('table', { class: 'tbl compact' }, h('tbody', null,
+        s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', null, t(e.name)), h('td', null, branchName(e.branch)), h('td', null, '✓'), h('td', null, '')); }),
+        availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, $(money(s, e.cost))), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
+      )));
+}
+
+/** r20: territórios (Empresa › Sede e Sede › Expansão). */
+export function territoriesSection20(s: GameState): HTMLElement {
+  return section(t(S.territories), h('ul', null, MARKETS.map((m) => h('li', null, t(m.name), ' ',
+    s.player.territories.includes(m.id) ? pill('✓', 'good') : h('button', { class: 'btn small', onclick: () => { const e = openTerritory(s, m.id); if (e) toast(t(e), 'bad'); rerender(); } }, `${t(S.openMarket)} ${$(territoryCost(s, m.id))}`)))));
+}
+
 function hqTab(s: GameState): HTMLElement {
   const up = upgradeCost(s);
   return h('div', { class: 'cols' },
@@ -412,14 +447,10 @@ function hqTab(s: GameState): HTMLElement {
         up !== null ? (() => { const blk = hqBlocker(s); return h('div', { class: 'row' }, h('button', { class: 'btn primary', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => { const e = upgradeHq(s); if (e) toast(t(e), 'bad'); rerender(); } }, ic('building'), ` ${t(S.upgrade)}: ${t(HQ_LEVELS[s.player.hq + 1].name)} (${$(up)})`), blk ? h('small', { class: 'muted' }, t(blk)) : null); })() : null,
       ),
       branchesSection(s),
-      section(t(S.equipment), h('table', { class: 'tbl compact' }, h('tbody', null,
-        s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', null, t(e.name)), h('td', null, branchName(e.branch)), h('td', null, '✓'), h('td', null, '')); }),
-        availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, $(money(s, e.cost))), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
-      ))),
+      equipmentSection20(s),
     ),
     h('aside', { class: 'col-side' },
-      section(t(S.territories), h('ul', null, MARKETS.map((m) => h('li', null, t(m.name), ' ',
-        s.player.territories.includes(m.id) ? pill('✓', 'good') : h('button', { class: 'btn small', onclick: () => { const e = openTerritory(s, m.id); if (e) toast(t(e), 'bad'); rerender(); } }, `${t(S.openMarket)} ${$(territoryCost(s, m.id))}`))))),
+      territoriesSection20(s),
     ),
   );
 }
