@@ -15,6 +15,7 @@ import {
   receiptEchoes19, unlocked19, ux19,
 } from '../src/sim/sys/ux19';
 import { NAV17, ICON17 } from '../src/ui/nav17';
+import { setTutorials19, tutAllowed19, tutorialsOff19, type TutKind19, type TutPrefs19 } from '../src/ui/tutoff19';
 import type { GameState } from '../src/sim/types';
 
 const game = (y: number, seed: string): GameState => createGame(defaultConfig(seed, { startYear: y }));
@@ -135,5 +136,28 @@ describe('r19 ux — recibo, perda, fim, divulgação', () => {
       expect(ICON17[a], a).toBeTruthy();
     }
     for (const g of NAV17) for (const x of g.secs) expect(x.areas.length, x.id).toBeLessThanOrEqual(5);
+  });
+});
+
+describe('r19 ux — "Sem tutoriais (já sei jogar)"', () => {
+  const ALL: TutKind19[] = ['card', 'tour', 'tip', 'track', 'opening', 'nav', 'turn'];
+  it('uma chave desliga tudo de uma vez e religa (com as escolhas finas coerentes)', () => {
+    const p: TutPrefs19 = {};
+    expect(ALL.every((k) => tutAllowed19(p, k))).toBe(true);
+    setTutorials19(p, false);
+    expect(tutorialsOff19(p)).toBe(true);
+    expect(ALL.some((k) => tutAllowed19(p, k))).toBe(false);
+    expect(p.tut18).toEqual({ noTours: true, noTips: true });
+    setTutorials19(p, true);
+    expect(ALL.every((k) => tutAllowed19(p, k))).toBe(true);
+    expect(tutAllowed19({ tut18: { noTours: true } }, 'tour')).toBe(false); // escolha fina antiga continua valendo
+    expect(tutAllowed19({ tut18: { noTours: true } }, 'card')).toBe(true);
+  });
+  it('com a chave desligada, partidas novas em 1889/1965/2005 seguem iguais (só a interface muda)', () => {
+    for (const y of [1889, 1965, 2005]) {
+      const s = game(y, `ux-tut-${y}`);
+      expect(s.tutorial.done).toBe(false); // o cartão some pela preferência, não pelo save
+      expect(activeGoals19(s).length).toBe(3);
+    }
   });
 });

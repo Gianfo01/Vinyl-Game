@@ -30,6 +30,7 @@ import { help18 } from '../help18';
 import { store } from '../store';
 import { why18 } from '../explain18';
 import { pendingView18 } from './decide18';
+import { tutAllowed19 } from '../tutoff19';
 import './ux19.css';
 
 // ---------------------------------------------------------------- perfil local (meta-progresso entre partidas)
@@ -319,7 +320,7 @@ registerSection('desk', { id: 'ux19-loss', title: l('Por que o caixa afunda?', '
   render: (s) => { const C0 = lossCauses19(s); return h('section', { class: 'card ux19-sec ux19-warn' }, h('h3', null, '⚠ ', t(l('Quase falência: as causas', 'Near bankruptcy: the causes'))),
     C0.length ? h('ol', null, C0.map((c) => h('li', null, t(c.t), h('br'), h('small', null, t(l('Ajuda: ', 'Helps: ')), t(c.help))))) : h('p', { class: 'small muted' }, t(l('Sem causa forte: corte custos fixos.', 'No strong cause: cut fixed costs.'))),
     h('button', { class: 'btn small', onclick: () => openLoss19(s) }, t(l('Por que perdi? (detalhes)', 'Why did I lose? (details)')))); } });
-registerSection('desk', { id: 'ux19-menu', title: l('Menu e áreas novas', 'Menu and new areas'), weight: 6, when: (s) => lockedAreas19(s).length > 0,
+registerSection('desk', { id: 'ux19-menu', title: l('Menu e áreas novas', 'Menu and new areas'), weight: 6, when: (s) => lockedAreas19(s).length > 0 && tutAllowed19(store.prefs, 'nav'),
   render: (s) => h('section', { class: 'card ux19-sec' }, h('h3', null, t(l('Menu simples', 'Simple menu'))),
     h('p', { class: 'small' }, t(fmtL(l('{n} áreas avançadas aparecem no menu quando passam a importar (ou com o tempo).', '{n} advanced areas show up in the menu when they start to matter (or with time).'), { n: lockedAreas19(s).length }))),
     navToggle()) });
@@ -354,14 +355,14 @@ registerSection('diary', { id: 'ux19-rc', order: 56, render: (s) => {
 } });
 
 // ---------------------------------------------------------------- divulgação progressiva (menu)
-const showAll = (): boolean => { const p = profile(); return p.all ?? finished(p) >= 1; };
+const showAll = (): boolean => { if (!tutAllowed19(store.prefs, 'nav')) return true; const p = profile(); return p.all ?? finished(p) >= 1; }; // "Sem tutoriais" = menu completo
 function navToggle(): HTMLElement {
   const on = showAll();
   return h('button', { class: 'btn small ghost ux19-navall', 'aria-pressed': on ? 'true' : 'false', onclick: () => { const p = profile(); p.all = !on; saveProfile(p); rerender(); } },
     on ? t(l('Menu simples', 'Simple menu')) : t(l('Mostrar tudo', 'Show everything')));
 }
 UX19UI.has = (g, a) => showAll() || unlocked19(g, a);
-UX19UI.navFoot = (g) => (lockedAreas19(g).length ? h('div', { class: 'ux19-navfoot' }, navToggle(), showAll() ? null : h('small', { class: 'muted' }, t(fmtL(l('{n} áreas abrem com o tempo', '{n} areas open over time'), { n: lockedAreas19(g).length })))) : null);
+UX19UI.navFoot = (g) => (lockedAreas19(g).length && tutAllowed19(store.prefs, 'nav') ? h('div', { class: 'ux19-navfoot' }, navToggle(), showAll() ? null : h('small', { class: 'muted' }, t(fmtL(l('{n} áreas abrem com o tempo', '{n} areas open over time'), { n: lockedAreas19(g).length })))) : null);
 
 // ---------------------------------------------------------------- após o avanço: viradas, abertura, áreas novas
 const seenUn = new WeakMap<GameState, number>();
@@ -372,7 +373,8 @@ AFTER_ADVANCE.push((s) => {
   seenUn.set(s, s.week);
   if (fresh.length) toast(t(fmtL(l('Nova área no menu: {a}', 'New area in the menu: {a}'), { a: fresh.map((a) => t(EXTRA_AREAS.find((x) => x.id === a)?.label ?? help18(a)?.title ?? l(a, a))).join(', ') })), 'info');
   const T = U.turns.find((x) => !x.seen && x.y <= s.year);
-  if (T && store.prefs.cutscenes !== false) setTimeout(() => whenFree(() => { if (!T.seen) openTurn19(s, T); }), 700); // depois do resumo e das cenas do mês
+  if (T && !tutAllowed19(store.prefs, 'turn')) { T.seen = 1; toast(`${T.y} — ${t(T.name)}`, 'info'); } // sem tutoriais: virada em uma linha
+  else if (T && store.prefs.cutscenes !== false) setTimeout(() => whenFree(() => { if (!T.seen) openTurn19(s, T); }), 700); // depois do resumo e das cenas do mês
   else if (T) T.seen = 1;
 });
 // 1º mês: metas de abertura (e herança, se houver) — também ao carregar um jogo novo sem avançar
@@ -380,7 +382,7 @@ const openTried = new WeakSet<GameState>();
 function tryOpening(): void {
   const s = store.game;
   if (!s || openTried.has(s) || s.ended) return;
-  if (ux19(s).os || monthsPlayed19(s) > 3) { openTried.add(s); return; }
+  if (ux19(s).os || monthsPlayed19(s) > 3 || (!tutAllowed19(store.prefs, 'opening') && !HEIRS19.some((x) => heirOpen(profile(), x.id)))) { openTried.add(s); return; } // sem tutoriais: só aparece se houver herança a oferecer
   if (busy()) return; // tutorial ou outra janela aberta: tenta de novo depois
   openTried.add(s);
   openingCard(s);

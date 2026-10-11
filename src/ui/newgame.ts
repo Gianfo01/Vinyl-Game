@@ -17,6 +17,7 @@ import { characterCard } from './charCreate';
 import { labelsCard } from './newgameLabels';
 import { careerCard, careerSummary } from './sys/careers12';
 import { START_YEARS13 } from './ngdata13';
+import { TUTOFF_HINT19, TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19';
 import { addHelp, hl } from './newgame13';
 import { charPreview17, diffCard17, presetBar17, runCard17, startCard17, summaryExtra17, worldCard17 } from './newgame17';
 import { lastSave17, profileBar17, saveManager17 } from './saves17';
@@ -62,6 +63,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
       h('h1', null, t(S.gameTitle)),
       h('p', { class: 'tagline' }, t(S.tagline)),
       profileBar17(() => titleScreen(root, onStart)),
+      h('div', { class: 'row center' }, tutToggle19()),
       h('div', { class: 'row center' },
         cont,
         h('button', { class: 'btn primary big', onclick: () => newGameScreen(root, onStart) }, t(S.newGame)),
@@ -358,7 +360,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     h('div', { class: 'ng-tabs', role: 'tablist', 'aria-label': t(S.newGame) }, ...tabBtns),
     h('div', { class: 'ng-layout' },
       h('div', { class: 'ng-main' }, ...panels, h('div', { class: 'ng-nav' }, back, step, next)),
-      h('aside', { class: 'ng-side card', 'aria-label': t(l('Resumo', 'Summary')) }, h('h3', null, t(l('Resumo', 'Summary'))), side, sideNotes, h('div', { class: 'row center' }, startBtn('ng-start')))),
+      h('aside', { class: 'ng-side card', 'aria-label': t(l('Resumo', 'Summary')) }, h('h3', null, t(l('Resumo', 'Summary'))), side, sideNotes, tutToggle19(), h('div', { class: 'row center' }, startBtn('ng-start')))),
     h('div', { class: 'ng-bar' }, mini, startBtn('ng-start-bar')),
   );
   // resumo sempre em dia: os handlers dos campos rodam antes deste (borbulha até o contêiner)
@@ -371,4 +373,10 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
 export function newgameCards(): ((cfg: RunConfig, onYear: (y: number) => void) => HTMLElement)[] {
   const f = newgameCards as unknown as { l?: ((cfg: RunConfig, onYear: (y: number) => void) => HTMLElement)[] };
   return (f.l ??= []);
+}
+
+/** r19 tutoff19: chave "Sem tutoriais (já sei jogar)" (preferência do navegador, vale para todas as partidas). */
+function tutToggle19(): HTMLElement {
+  return h('label', { class: 'check tut19-toggle', title: t(TUTOFF_HINT19) },
+    h('input', { type: 'checkbox', checked: tutorialsOff19(store.prefs), onchange: (e: Event) => { setTutorials19(store.prefs, !(e.target as HTMLInputElement).checked); savePrefs(); } }), ' ', t(TUTOFF_LABEL19));
 }
