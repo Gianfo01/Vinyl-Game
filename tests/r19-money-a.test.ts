@@ -69,6 +69,7 @@ describe('J3 covenants e o banco', () => {
     const a = myAct(s);
     a.trust = 60;
     expect(takeLoan(s)).toBe(true);
+    s.year += 3; s.player.loans[0].startWeek -= 60; // carência: selo 2 anos+, empréstimo 1 ano+
     const st = m19(s);
     st.q = [-1, -1];
     const F = fin18(s);
