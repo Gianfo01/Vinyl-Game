@@ -8,6 +8,7 @@
 //   registerSituation({ id, pressure, cost, cooldown, trigger: ['scandal'], when, actorsPick, title, text, options: [...] })
 
 import { rng19 } from '../rng19';
+import { CONFLICTS19 } from '../conflicts19';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { deferEvents, registerExt4, registerSimHook } from '../ext4';
@@ -178,7 +179,7 @@ export function runSituations(s: GameState): { mine: string[]; npc: string[] } {
       if (!ctx || (st.calm[ctx.hero] ?? 0) > s.week) continue;
       const mine = involvesPlayer(s, ctx);
       if (mine) {
-        if (def.npcOnly || out.mine.length >= 1 || s.decisions.length >= 4) continue;
+        if (def.npcOnly || out.mine.length >= 1 || s.decisions.length >= 4 || CONFLICTS19.full(s)) continue; // r19: orçamento global
         if (struggling && (def.pressure === 'money' || def.cost >= 3)) continue; // machuca, mas não mata
         const opts = def.options;
         const d: Decision = {

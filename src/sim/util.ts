@@ -116,7 +116,10 @@ export function rememberListeners(): ((s: GameState, e: MemoryEntry) => void)[] 
   return (f.l ??= []);
 }
 
+/** r19 (onda 5, B.5): avisos de pouco valor podem ir para o resumo do mês (budget19); true = agrupado. */
+export const NOTIFY19: { f: ((s: GameState, n: Notification) => boolean) | null } = { f: null };
 export function notify(s: GameState, text: L, kind: Notification['kind'] = 'info'): void {
+  if (NOTIFY19.f?.(s, { week: s.week, text, kind })) return;
   s.notifications.push({ week: s.week, text, kind });
   if (s.notifications.length > 120) s.notifications.splice(0, s.notifications.length - 120);
 }

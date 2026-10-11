@@ -11,6 +11,7 @@ import { formatMoney } from '../core/money';
 import { makeAct, makePerson, langForCity } from './people';
 import type { Act, Decision, GameState } from './types';
 import { rng19 } from './rng19';
+import { CONFLICTS19 } from './conflicts19';
 import { withPlayerActsCache, fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
@@ -918,7 +919,7 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
   const pc = narratorPace(s.config.storyteller);
   const freq = pc.freq;
   let n = Math.floor(freq + r.next());
-  if (s.decisions.length >= 4) n = 0; // a mesa do mês tem no máximo ~5 itens
+  if (s.decisions.length >= 4 || CONFLICTS19.full(s)) n = 0; // a mesa do mês tem no máximo ~5 itens; r19: e o orçamento global de conflitos
   const monthlyCost = estimateMonthlyBurn(s);
   const struggling = s.player.cash < monthlyCost * 2 || s.player.insolvencyMonths > 0;
   const target = pc.wave ? 0.5 + 0.35 * Math.sin((monthIndex / pc.wave) * Math.PI * 2) : 0.35;
