@@ -197,5 +197,6 @@ import './advance19';
 import './scenes19'; // r19 cenas: resultado da cerimônia só depois de vista
 // Rodada 19 (onda 5, A): pacote inicial no Novo Jogo, terreno do festival e Finanças do grupo (consolidado).
 import './careers19';
+import './fin20'; // r20 G2: Finanças → Posição (agora × fechamento, obrigações, reconciliação)
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';

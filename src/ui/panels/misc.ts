@@ -28,7 +28,7 @@ import { planRoute } from '../../sim/travel';
 import { WorldMap, glyphCanvas, transportName, type MapCity } from '../map';
 import { activeToursSection, merchSection, tourPlannerSection } from './tours';
 import { assignBranch, closeBranch, hqBlocker, hqCaps, upgradeBranch } from '../../sim/branches';
-import { ic, tile } from '../vis';
+import { ic, setTab, tile } from '../vis';
 import { crewProfileCell, crewRespecButton, crewSummary } from '../sys/crew8';
 import { replayBtn16 } from '../sys/moments16';
 import { hotGenres17 } from '../sys/trends17';
@@ -307,7 +307,8 @@ export function showsPanel(s: GameState): HTMLElement {
 
 // ---------- Empresa ----------
 export function companyPanel(s: GameState): HTMLElement {
-  const tabs: [typeof store.companyTab, string][] = [['finances', t(S.finances)], ['staff', t(S.staff)], ['hq', t(S.areaHq)], ['legacy', t(S.legacy)]];
+  // r20 (G2, uiux §4.6): Empresa = equipe, sede, legado e um RESUMO financeiro que declara a fonte (a posição completa fica em Finanças)
+  const tabs: [typeof store.companyTab, string][] = [['finances', t(l('Resumo financeiro', 'Financial summary'))], ['staff', t(S.staff)], ['hq', t(S.areaHq)], ['legacy', t(LABEL_LEGACY20)]];
   const tabBar = h('div', { class: 'tabs' }, tabs.map(([id, label]) => h('button', { class: store.companyTab === id ? 'on' : '', onclick: () => { store.companyTab = id; rerender(); } }, label)));
   let body: HTMLElement;
   if (store.companyTab === 'finances') body = finances(s);
@@ -335,6 +336,8 @@ function finances(s: GameState): HTMLElement {
   const years = Object.keys(s.player.revenueByYear).map(Number).sort((a, b) => b - a).slice(0, 12);
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
+      h('p', { class: 'small muted' }, t(l('Mesma fonte que Finanças (livro e subledger do selo). Posição, obrigações, reconciliação e DRE completos ficam lá.', 'Same source as Finances (the label\'s ledger and subledger). Position, obligations, reconciliation and full P&L live there.')), ' ',
+        h('button', { class: 'btn small ghost', onclick: () => { setTab('business-finance', 'pos20'); store.area = 'finance'; rerender(); } }, t(l('Abrir Finanças → Posição', 'Open Finances → Position')))),
       section(t(S.byCategory), h('table', { class: 'tbl compact' }, h('tbody', null, last.map(([k, v]) => h('tr', null, h('td', null, catName(k)), h('td', { class: v >= 0 ? 'good' : 'bad' }, $(v))))))),
       section(t(S.yearly), !years.length ? h('p', { class: 'muted small' }, t(l('O primeiro ano fecha em dezembro; receita e resultado anuais aparecem aqui.', 'The first year closes in December; yearly revenue and result show up here.'))) : h('table', { class: 'tbl compact' },
         h('thead', null, h('tr', null, h('th', null, t(l('Ano', 'Year'))), h('th', null, t(S.revenue)), h('th', null, t(l('Resultado', 'Result'))))),
