@@ -6,7 +6,7 @@ import { l, type L } from '../../../data/world';
 import { avgReview, activeCensorship } from '../../media';
 import { fandomOf } from '../../fandom';
 import type { GameState, Release } from '../../types';
-import { fmtL, notify, playerActs, remember } from '../../util';
+import { addHeat, fmtL, heatOf, notify, playerActs, remember } from '../../util';
 import { clampN, findScene, patchScene, queueScene, sc } from './state';
 
 export interface Nominee {
@@ -108,7 +108,7 @@ export function awardsYear(s: GameState, r: Rng): void {
   const show = cats.slice(0, 6);
   const won = given.filter((a) => a.byPlayer).length;
   const winAct = given.find((a) => a.byPlayer && a.actId && s.acts[a.actId])?.actId;
-  const rival = Object.values(s.labels).filter((lb) => lb.active).sort((a, b) => (s.rivalries[b.id] ?? 0) - (s.rivalries[a.id] ?? 0) || b.revenueYear - a.revenueYear)[0];
+  const rival = Object.values(s.labels).filter((lb) => lb.active).sort((a, b) => heatOf(s, b.id) - heatOf(s, a.id) || b.revenueYear - a.revenueYear)[0];
   queueScene(s, 'awards', 'awards', {
     title: fmtL(l('Gramófonos de Ouro {y}', 'Golden Gramophones {y}'), { y: year }),
     year,
@@ -138,7 +138,7 @@ export function awardSpeech(s: GameState, r: Rng, csId: string, choice: SpeechCh
     result = l('Você agradece nome por nome: músicos, técnicos, a recepção. A equipe sai da festa mais unida.', 'You thank everyone by name: musicians, engineers, the front desk. The team leaves the party closer.');
   } else if (choice === 'rival') {
     const rid = cs.data.rivalId ? String(cs.data.rivalId) : null;
-    if (rid) s.rivalries[rid] = clampN((s.rivalries[rid] ?? 0) + 15, 0, 100);
+    if (rid) addHeat(s, rid, 15, 100); // r19: rivals19
     rep.institutional = clampN(rep.institutional - 3, 0, 100);
     if (act) {
       act.momentum = clampN(act.momentum + 10, 0, 100);

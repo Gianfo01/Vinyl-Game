@@ -9,6 +9,7 @@ import {
 } from '../../sim/sys/intrigue';
 import type { GameState } from '../../sim/types';
 import { money, rngOf } from '../../sim/util';
+import { heat19 } from '../../sim/rivals19';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { lifeEventsSection } from './lifeevents10';
@@ -23,7 +24,7 @@ const form: { kind: SchemeKind; target: string; agents: number } = { kind: 'dig'
 function targets(s: GameState, kind: SchemeKind): { value: string; label: string }[] {
   const out: { value: string; label: string }[] = [];
   const on = SCHEMES[kind].on;
-  if (on.includes('label')) for (const lb of Object.values(s.labels).filter((x) => x.active).sort((a, b) => (s.rivalries[b.id] ?? 0) - (s.rivalries[a.id] ?? 0) || b.revenueLastYear - a.revenueLastYear)) out.push({ value: `label:${lb.id}`, label: `🏢 ${lb.name}` });
+  if (on.includes('label')) for (const lb of Object.values(s.labels).filter((x) => x.active).sort((a, b) => heat19(s, b.id) - heat19(s, a.id) || b.revenueLastYear - a.revenueLastYear)) out.push({ value: `label:${lb.id}`, label: `🏢 ${lb.name}` });
   if (on.includes('act')) for (const a of Object.values(s.acts).filter((x) => visibleAct(s, x) && x.status !== 'retired' && x.status !== 'split' && (kind !== 'poach' || (x.owner && x.owner !== 'player')) && (kind !== 'smear' || x.owner !== 'player') && (x.fame > 8 || x.owner === 'player' || s.knowledge[x.id])).sort((a, b) => b.fame - a.fame).slice(0, 80)) out.push({ value: `act:${a.id}`, label: `🎤 ${a.name}${a.owner && a.owner !== 'player' ? ` (${s.labels[a.owner]?.name ?? ''})` : a.owner === 'player' ? ` (${t(l('seu', 'yours'))})` : ''}` });
   return out;
 }

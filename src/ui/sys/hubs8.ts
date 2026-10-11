@@ -9,8 +9,8 @@ import { FAMILIES, MARKETS, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CRIT_ACTIONS, criticAction, relWith } from '../../sim/criticrel';
 import { allCritics, criticByName, type CriticDef } from '../../sim/media';
-import { REGIONAL_AWARDS } from '../../sim/awards2';
-import { CAMPAIGN_COST, CEREMONY_MONTH, GRAMO_CATS, NOMS_MONTH, answerPerform, campaignBonus, cer8, eligible, nominees, runCampaign, type GramoCat } from '../../sim/sys/ceremonies8';
+import { CAMPAIGN_COST, CEREMONY_MONTH, GRAMO_CATS, NOMS_MONTH, REGIONAL_AWARDS, answerGramoPerform19 as answerPerform, campaignBonus, cer8, eligible, nominees, runCampaign } from '../../sim/awards19'; // r19: fachada
+import type { GramoCat } from '../../sim/sys/ceremonies8';
 import { AWARD_CATS, awardName, ch7 } from '../../sim/sys/charts7';
 import { TIER_NAME, TIER_ORDER, acceptInvite, declineInvite, editionOf, fest8, festActive, festCapacity, festFee, festMonth, festTierFor, pitchAct, withdraw, type FestTier, type PitchResult } from '../../sim/sys/fests8';
 import { festForecast12 } from './explain12';

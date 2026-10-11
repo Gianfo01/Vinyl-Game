@@ -46,7 +46,7 @@ export interface Fact {
 }
 export type FactIn = Omit<Fact, 'id' | 'y' | 'm' | 'w' | 'visibility' | 'tags' | 'severity'> & Partial<Pick<Fact, 'visibility' | 'tags' | 'severity'>>;
 
-export interface Facts17State { f: Fact[]; seq: number; /** r19: fatos agregados (não guardados) por `kind:ano-mês` */ agg?: Record<string, number> }
+export interface Facts17State { f: Fact[]; seq: number; /** r19: fatos agregados (não guardados) por `kind:ano-mês` */ agg?: Record<string, number>; /** r19: fatos-índice (emitIndexFact) */ ix?: Fact[]; xs?: number }
 declare module './ext4' { interface Ext4 { facts17: Facts17State } }
 const fresh = (): Facts17State => ({ f: [], seq: 0 });
 registerExt4('facts17', fresh);
@@ -157,13 +157,15 @@ export interface FactFilter { kind?: FactKind; kinds?: FactKind[]; tag?: string;
 
 /** Fatos mais recentes primeiro. */
 export function recentFacts(s: GameState, q: FactFilter = {}): Fact[] {
+  return scan(s, facts17(s).f, q);
+}
+function scan(s: GameState, list: Fact[], q: FactFilter): Fact[] {
   const out: Fact[] = [];
-  const st = facts17(s);
   const since = q.sinceWeek ?? (q.months ? s.week - Math.round(q.months * 4.35) : -Infinity);
   const vis = q.vis ? (Array.isArray(q.vis) ? q.vis : [q.vis]) : null;
   const who = q.actor ? actorId(q.actor) : null;
-  for (let i = st.f.length - 1; i >= 0; i--) {
-    const f = st.f[i];
+  for (let i = list.length - 1; i >= 0; i--) {
+    const f = list[i];
     if (f.w < since) break;
     if (q.kind && f.kind !== q.kind) continue;
     if (q.kinds && !q.kinds.includes(f.kind)) continue;
@@ -178,6 +180,24 @@ export function recentFacts(s: GameState, q: FactFilter = {}): Fact[] {
   }
   return out;
 }
+
+/** R19 (fachadas fandom19/rivals19/awards19): FATO-ÍNDICE — vai aos ouvintes (onFact, inclusive '*') e a um anel
+ *  próprio pequeno (`ix`), sem ocupar o anel principal nem a numeração `f…`: publicar não muda sorteio nem leitura
+ *  existente (ids `x…`). Leia com `indexFacts` (mesmo filtro de recentFacts). */
+export const INDEX_CAP = 150;
+export function emitIndexFact(s: GameState, fi: FactIn): Fact {
+  const st = facts17(s);
+  const ix = (st.ix ??= []);
+  const f: Fact = {
+    ...fi, id: `x${(st.xs = (st.xs ?? 0) + 1)}`, y: s.year, m: s.month, w: s.week, actors: [...new Set(fi.actors.filter(Boolean))],
+    severity: Math.round(Math.max(0, Math.min(100, fi.severity ?? 10))), visibility: fi.visibility ?? 'public', tags: fi.tags ?? [],
+  };
+  ix.push(f);
+  if (ix.length > INDEX_CAP) ix.splice(0, ix.length - INDEX_CAP);
+  fire(s, f);
+  return f;
+}
+export const indexFacts = (s: GameState, q: FactFilter = {}): Fact[] => scan(s, facts17(s).ix ?? [], q);
 
 /** Fatos em que alguém aparece (pessoa, ato, selo, 'player' ou chave persona13). Pessoa inclui o ato atual
  *  quando `withAct` (ex.: escândalo da banda aparece na página do vocalista). */

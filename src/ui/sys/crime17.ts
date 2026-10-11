@@ -16,6 +16,7 @@ import { WARN_REPLY, cutTie, payOffCost, replyWarn, tieAct, tieOf, truce, truceC
 import { relics } from '../../sim/sys/relics9';
 import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
+import { heat19 } from '../../sim/rivals19';
 import { rivalsExtra } from '../panels/discovery';
 import { cityName, monthName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
@@ -92,7 +93,7 @@ function plansTab(s: GameState): HTMLElement {
   if (!executors.some((x) => x.value === form.actor)) form.actor = 'player';
   const ctx: Ctx17 = { actor: form.actor, target: form.target, method: d.methods ? form.method : undefined, org: form.org || undefined, partners: form.partners };
   const od = form.target ? crimeOdds(s, ctx, d.id) : null;
-  const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => (s.rivalries[a.id] ?? 0) - (s.rivalries[b.id] ?? 0)).slice(0, 12);
+  const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => heat19(s, a.id) - heat19(s, b.id)).slice(0, 12);
   return h('div', null,
     st.warn.length ? section(T(l('Planos descobertos e convites', 'Discovered plots and invitations')), ...st.warn.map((w) => {
       const inv = w.partners.includes('invite');

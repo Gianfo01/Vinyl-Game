@@ -188,3 +188,24 @@ export function decadeOf(year: number): number {
 
 /** r18 final (balanço): reputação artística não satura — subir perto do topo custa mais e cair dói mais. */
 export const artDelta18 = (rep: number, d: number): number => (d > 0 ? d * Math.max(0, 1 - rep / 100) ** 1.3 : d * (0.6 + rep / 125));
+
+// R19 (fachada rivals19): `s.rivalries[selo]` é a fonte única do calor da rivalidade; estas primitivas leves
+// são o jeito canônico de ler/escrever (rivals19 re-exporta como heat19/addHeat19/coolHeat19).
+export const heatOf = (s: GameState, lbId: string): number => s.rivalries[lbId] ?? 0;
+/** Soma `d` ao calor; com `max`, prende em 0..max (como as cenas faziam). Devolve o valor novo. */
+export function addHeat(s: GameState, lbId: string, d: number, max?: number): number {
+  const v = (s.rivalries[lbId] ?? 0) + d;
+  return (s.rivalries[lbId] = max === undefined ? v : Math.max(0, Math.min(max, v)));
+}
+/** Esfria `d` sem passar do piso (0). */
+export function coolHeat(s: GameState, lbId: string, d: number, floor = 0): number {
+  return (s.rivalries[lbId] = Math.max(floor, (s.rivalries[lbId] ?? 0) - d));
+}
+
+/** R19 (fachada awards19): livro único de prêmios — `s.awards` é a fonte; conta o prêmio no ato (opcional) e nas
+ *  estatísticas do jogador. Gramófonos (legacy.ts), regionais (awards2) e nacionais (charts7) passam por aqui. */
+export function recordAward(s: GameState, e: GameState['awards'][number], o: { countAct?: boolean; countPlayer?: boolean } = {}): void {
+  s.awards.push(e);
+  if (o.countAct !== false && e.actId && s.acts[e.actId]) s.acts[e.actId].awards += 1;
+  if (o.countPlayer !== false && e.byPlayer) s.player.stats.awards += 1;
+}

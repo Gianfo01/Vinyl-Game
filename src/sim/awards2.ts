@@ -4,7 +4,7 @@
 import { clamp, type Rng } from '../core/rng';
 import { MARKETS, l, type L } from '../data/world';
 import type { GameState } from './types';
-import { fmtL, notify, remember } from './util';
+import { fmtL, notify, recordAward, remember } from './util';
 import { avgReview } from './media';
 import { PRODUCERS } from './studio';
 
@@ -29,10 +29,8 @@ export function setRegionalAwards(x: Record<string, AwardDef>): void {
 }
 
 function give(s: GameState, year: number, category: string, name: L, winnerName: string, opts: { actId?: string; releaseId?: string; byPlayer: boolean }): void {
-  s.awards.push({ year, category, releaseId: opts.releaseId, actId: opts.actId, name: `${name.pt} / ${name.en}: ${winnerName}`, byPlayer: opts.byPlayer });
-  if (opts.actId && s.acts[opts.actId]) s.acts[opts.actId].awards += 1;
+  recordAward(s, { year, category, releaseId: opts.releaseId, actId: opts.actId, name: `${name.pt} / ${name.en}: ${winnerName}`, byPlayer: opts.byPlayer });
   if (opts.byPlayer) {
-    s.player.stats.awards += 1;
     notify(s, fmtL(l('{c}: {n}!', '{c}: {n}!'), { c: name, n: winnerName }), 'good');
   }
   remember(s, 'award2', fmtL(l('{y} — {c}: {n}.', '{y} — {c}: {n}.'), { y: year, c: name, n: winnerName }), { actId: opts.actId, important: opts.byPlayer });

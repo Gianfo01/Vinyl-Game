@@ -15,7 +15,8 @@ import { climateAt } from '../travel';
 import type { Act, GameState } from '../types';
 import { fmtL } from '../util';
 import { isEstate } from './image17';
-import { fans18 } from './fans18';
+import { fanState19 } from '../fandom19';
+import { ceremonyOfCutscene19 } from '../awards19';
 import { l16 } from './lineup16';
 import { live18 } from './live18';
 import { Fx17, OFF_S17, ctx17, mineOf17, pend17, result17 } from './scene17';
@@ -128,7 +129,7 @@ export function crowd18(s: GameState, a: Act | undefined, base = 0.7): { n: numb
   if (!a) return { n: base * 0.6, mood: 'cheer', signs: [], why };
   const fans = a.fans.core + a.fans.active + a.fans.casual * 0.15;
   const n = clamp(base * (0.3 + Math.log10(1 + fans) / 6.5), 0.12, 1);
-  const f = fans18(s).a[a.id];
+  const f = fanState19(s, a.id); // r19: fachada fandom19
   let mood: Crowd18 = 'cheer';
   const signs: string[] = [];
   if (f && f.fat >= 55) { mood = 'quiet'; why.push(l('Fãs cansados de tanto lançamento: plateia morna.', 'Fans tired of too many releases: a lukewarm crowd.')); }
@@ -516,17 +517,13 @@ registerSimHook('week', 'cine18', (s) => {
   const st = cine18(s);
   for (const cs of s.cutscenes ?? []) {
     if (cs.kind !== 'awards' || cs.week !== s.week || st.log.some((x) => x.aw?.cs === cs.id)) continue;
-    const d = cs.data as Record<string, unknown>;
-    const aw: Aw18 = { cs: cs.id, year: Number(d.year ?? s.year), cats: (d.cats as Aw18['cats']) ?? [], won: Number(d.won ?? 0), actId: (d.actId as string) ?? null, rivalId: (d.rivalId as string) ?? null, rivalName: (d.rivalName as string) ?? null };
-    logShot18(s, { k: 'awards', act: aw.actId ?? aw.cats.flatMap((c) => c.nominees).find((n) => n.mine)?.actId, aw, text: d.title as L });
+    const aw = ceremonyOfCutscene19(s, cs as { id: string; data: Record<string, unknown> }); // r19: fachada awards19
+    logShot18(s, { k: 'awards', act: aw.actId ?? aw.cats.flatMap((c) => c.nominees).find((n) => n.mine)?.actId, aw, text: (cs.data as Record<string, unknown>).title as L });
   }
 });
 
 /** Para os dados de prêmio vindos direto do cartão (a interface não precisa esperar o gancho). */
-export function awOfCs18(s: GameState, cs: { id: string; data: Record<string, unknown> }): Aw18 {
-  const d = cs.data;
-  return { cs: cs.id, year: Number(d.year ?? s.year), cats: (d.cats as Aw18['cats']) ?? [], won: Number(d.won ?? 0), actId: (d.actId as string) ?? null, rivalId: (d.rivalId as string) ?? null, rivalName: (d.rivalName as string) ?? null };
-}
+export const awOfCs18 = (s: GameState, cs: { id: string; data: Record<string, unknown> }): Aw18 => ceremonyOfCutscene19(s, cs); // r19: alias de awards19
 export const shot18 = (s: GameState, id: string): Shot18 | undefined => cine18(s).log.find((x) => x.id === id);
 
 /** Decisão de imagem no tapete vermelho: muda o figurino em todos os quadros e tem consequência. */

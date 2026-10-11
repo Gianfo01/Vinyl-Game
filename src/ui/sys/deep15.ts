@@ -4,10 +4,9 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { resolveDecision } from '../../sim/events';
-import { fandomOf, ritualFor } from '../../sim/fandom';
-import { aw15 } from '../../sim/sys/awards15';
+import { fandomOf, fn15, ritualFor, vaultSong } from '../../sim/fandom19'; // r19: fachadas
+import { aw15 } from '../../sim/awards19';
 import { cleanBooks, courtOdds, dp15, legal15 } from '../../sim/sys/dispute15';
-import { fn15, vaultSong } from '../../sim/sys/fan15';
 import { MEDIA15, MOOD15, candidates, feeOf, objects, openBriefs, pitch15, sy15, type Brief15 } from '../../sim/sys/sync15';
 import type { GameState } from '../../sim/types';
 import { $, actLink, N, pill, rerender, section, toast } from '../common';

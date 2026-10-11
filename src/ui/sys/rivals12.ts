@@ -3,7 +3,8 @@
 
 import { l, marketById, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { dealWith, endDeal, openContests, OPT_TXT, recentContests, respond, rivals12, rivalWho, type Contest, type ContestKind, type Screen } from '../../sim/sys/rivals12';
+import { dealWith, endDeal, heat19, openContests, OPT_TXT, recentContests, respond, rivals12, rivalWho } from '../../sim/rivals19'; // r19: fachada
+import type { Contest, ContestKind, Screen } from '../../sim/sys/rivals12';
 import { leaderOf } from '../../sim/sys/leaders10';
 import type { GameState } from '../../sim/types';
 import { $, actLink, labelLink, pill, rerender, section, toast } from '../common';
@@ -82,7 +83,7 @@ registerPageTab('label', {
     const ld = leaderOf(s, id);
     const list = rivals12(s).c.filter((c) => c.lb === id).slice(-10).reverse();
     return h('div', null,
-      h('p', { class: 'small' }, t(rivalWho(s, id)), ' · ', t(l('rixa com você', 'feud with you')), ` ${Math.round(s.rivalries[id] ?? 0)}`,
+      h('p', { class: 'small' }, t(rivalWho(s, id)), ' · ', t(l('rixa com você', 'feud with you')), ` ${Math.round(heat19(s, id))}`,
         ld ? ` · ${t(l('líder com você', 'leader toward you'))} ${Math.round(ld.rel.player ?? 0)}` : '',
         d ? h('span', null, ' · ', pill(`${t(l('distribui você em', 'distributes you in'))} ${t(marketById[d.m].name)} · ${t(l('tensão', 'tension'))} ${Math.round(d.ten)}`, d.ten > 70 ? 'bad' : 'good')) : null),
       list.length ? h('div', { class: 'riv12-list' }, list.map((c) => contestCard(s, c))) : null,

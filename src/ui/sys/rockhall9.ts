@@ -1,7 +1,7 @@
 // Página do Hall da Fama do Rock (rodada 9): só aparece depois da fundação (1983).
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { HALL_CATS, HALL_CEREMONY_MONTH, HALL_FIRST_CLASS, HALL_FOUNDED, HALL_WAIT, LOBBY_COST, answerPerform, eligibleActs, hall, hallExists, hallName, hallScore, lobby } from '../../sim/sys/rockhall9';
+import { HALL_CATS, HALL_CEREMONY_MONTH, HALL_FIRST_CLASS, HALL_FOUNDED, HALL_WAIT, LOBBY_COST, answerHallPerform19 as answerPerform, eligibleActs, hall, hallExists, hallName, hallScore, hallLobby19 as lobby } from '../../sim/awards19'; // r19: fachada
 import type { GameState } from '../../sim/types';
 import { money, rngOf } from '../../sim/util';
 import { $, actLink, rerender, section, toast } from '../common';
