@@ -11,15 +11,23 @@
 //   por mercado. Unidades: 'chartUnits' recebe a razão (preço local ÷ global) ponderada pelo livro do ato nos
 //   territórios do lançamento. Receita: depois do ajuste global da indústria, posta-se só a DIFERENÇA de margem
 //   (local − global) sobre a fatia estimada das vendas desse mercado — nada é contado duas vezes.
+// • r20c (N3.1) — MERCADOS LIGADOS: os fãs que os lançamentos convertem (vendas + streams + campanha) nascem nos
+//   mercados do lançamento, não espalhados pela fama: físico onde o ato já tem público; streaming/digital onde a
+//   plataforma já chegou (adoção por mercado de eras18); a campanha de marketing (marketingE) puxa para os
+//   territórios-alvo pelo porte do mercado. O preço regional (B18) muda a conversão ali (mais barato converte mais)
+//   e a ofensiva de um rival (B19, rivals12.push) reduz o crescimento do ato naquele mercado (na conversão e na
+//   deriva do alvo). Tudo é só REDISTRIBUIÇÃO: o fechamento continua por restos maiores sobre o total global.
 import { clamp } from '../../core/rng';
 import { COUNTRY_INFO, countryMarketSize } from '../../data/countries';
-import { MARKETS, cityById, l, type L, type MarketId } from '../../data/world';
+import { MARKETS, cityById, familyOf, l, type L, type MarketId } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { registerExplain } from '../explain18';
 import { emitFact } from '../facts17';
-import type { Act, GameState } from '../types';
+import type { Act, GameState, Release } from '../types';
 import { fmtL, playerActs, post } from '../util';
+import { physIn18 } from './eras18';
 import { f16, fameIn, mkOf } from './fame16';
+import { rivals12 } from './rivals12';
 import { PRICE_TIERS } from './industry/retail';
 import type { PriceTier } from './industry/state';
 
@@ -37,6 +45,10 @@ export interface Terr20 {
   /** maior praça fora de casa já anunciada (fato) */
   top: Record<string, MarketId>;
   log: [number, number, L][];
+  /** r20c: unidades de cada lançamento do jogador já convertidas em fãs regionais (delta mensal) */
+  ru?: Record<string, number>;
+  /** r20c: última repartição mensal da conversão por lançamentos (ato → mercado → fatia) — para o "por quê" */
+  lc?: Record<string, Partial<Record<MarketId, number>>>;
 }
 declare module '../ext4' { interface Ext4 { terr20: Terr20 } }
 const fresh = (): Terr20 => ({ a: {}, p: {}, sw: {}, ov: {}, top: {}, log: [] });
@@ -44,7 +56,7 @@ registerExt4('terr20', fresh);
 export function terr20(s: GameState): Terr20 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const t = (x.terr20 ??= fresh()) as Terr20;
-  t.a ??= {}; t.p ??= {}; t.sw ??= {}; t.ov ??= {}; t.top ??= {}; t.log ??= [];
+  t.a ??= {}; t.p ??= {}; t.sw ??= {}; t.ov ??= {}; t.top ??= {}; t.log ??= []; t.ru ??= {}; t.lc ??= {};
   return t;
 }
 const mine = (a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand) && a.status !== 'retired' && a.status !== 'split';
@@ -75,7 +87,7 @@ export function apportion20(v: number[], n: number): number[] {
 
 /** Recalcula o livro de um ato: anterior × retenção + conversão local + deriva para o alvo; fecha com o global. */
 export function settle20(s: GameState, a: Act): void {
-  const st = terr20(s), g = glob(a), tg = target20(s, a);
+  const st = terr20(s), g = glob(a), tg = pushedTarget20(s, a);
   const prev = st.a[a.id], pend = st.p[a.id] ?? {};
   const next: Partial<Record<MarketId, Coh20>> = {};
   for (let k = 0; k < 3; k++) {
@@ -93,6 +105,71 @@ export function settle20(s: GameState, a: Act): void {
   }
   st.a[a.id] = next;
   delete st.p[a.id];
+}
+
+// ---------------------------------------------------------------- r20c (N3.1): campanha, streaming, preço e ofensiva
+
+/** Fator da ofensiva rival (B19) no crescimento do ato num mercado: 1 sem ofensiva; 0,75 ativa; 0,95 se você reagiu. */
+export function pushMult20(s: GameState, mk: MarketId): number {
+  const p = rivals12(s).push?.[mk];
+  if (!p || p.until < s.week) return 1;
+  return p.fought ? 0.95 : 0.75;
+}
+/** Fator de conversão do preço regional (B18): unidades do nível local ÷ do nível global. */
+export const priceConv20 = (s: GameState, mk: MarketId): number => PRICE_TIERS[tierOf20(s, mk)].units / PRICE_TIERS[s.x4.industry.pricing].units;
+/** Alvo regional com a ofensiva rival aplicada (soma 1). */
+export function pushedTarget20(s: GameState, a: Act): Record<MarketId, number> {
+  const tg = target20(s, a);
+  let t = 0;
+  for (const m of MK20) { tg[m] *= pushMult20(s, m); t += tg[m]; }
+  if (t > 0) for (const m of MK20) tg[m] /= t;
+  return tg;
+}
+export interface RelConv20 { m: MarketId; phys: number; dig: number; mkt: number; price: number; push: number; w: number }
+/** Onde os fãs de um lançamento nascem: físico (público do ato) + digital/streaming (adoção local) + campanha
+ *  (marketingE × porte), vezes preço regional e ofensiva rival. `w` normalizado (soma 1) nos territórios do lançamento. */
+export function relConv20(s: GameState, rel: Release, a: Act): RelConv20[] {
+  const mks = rel.territories.filter((m) => MK20.includes(m));
+  if (!mks.length) return [];
+  const sh = share20(s, a), fam = familyOf(a.genre);
+  const sz = Object.fromEntries(mks.map((m) => [m, MARKETS.find((x) => x.id === m)!.size(s.year)])) as Record<MarketId, number>;
+  const szT = mks.reduce((t, m) => t + sz[m], 0) || 1;
+  const shT = mks.reduce((t, m) => t + sh[m], 0);
+  const rows = mks.map((m) => {
+    const ph = physIn18(s, m, fam);
+    const own = shT > 0 ? sh[m] / shT : sz[m] / szT;
+    const phys = ph * own, dig = (1 - ph) * (sz[m] / szT), mkt = Math.max(0, rel.marketingE ?? 0) * (sz[m] / szT);
+    const price = priceConv20(s, m), push = pushMult20(s, m);
+    return { m, phys, dig, mkt, price, push, w: (phys + dig + mkt) * price * push };
+  });
+  const t = rows.reduce((x, r) => x + r.w, 0);
+  for (const r of rows) r.w = t > 0 ? r.w / t : 1 / rows.length;
+  return rows;
+}
+/** Converte as unidades novas (desde o último mês) dos lançamentos do jogador em conversão local pendente. */
+export function relGains20(s: GameState): void {
+  const st = terr20(s), ru = st.ru!, lc: Terr20['lc'] = {};
+  const seen = new Set<string>();
+  for (const rel of Object.values(s.releases)) {
+    const a = s.acts[rel.actId];
+    if (!mine(a) || (rel.owner !== 'player' && !a.playerBand)) continue;
+    if (!rel.live && ru[rel.id] === undefined) continue;
+    seen.add(rel.id);
+    // save antigo / primeira vista: só conta daqui para a frente (lançamento recente conta desde o zero)
+    const last = ru[rel.id] ?? (s.week - rel.week <= 5 ? 0 : rel.totalUnits);
+    const du = Math.max(0, rel.totalUnits - last);
+    ru[rel.id] = rel.totalUnits;
+    if (du <= 0) continue;
+    const gain: Coh20 = [du * 0.1, du * 0.006, 0]; // mesmas taxas do acerto semanal (market.ts)
+    const p = (st.p[a.id] ??= {}), acc = (lc[a.id] ??= {});
+    for (const r of relConv20(s, rel, a)) {
+      const c = (p[r.m] ??= [0, 0, 0]);
+      for (let k = 0; k < 3; k++) c[k] += Math.round(gain[k] * r.w);
+      acc[r.m] = (acc[r.m] ?? 0) + du * r.w;
+    }
+  }
+  for (const k of Object.keys(ru)) if (!seen.has(k)) delete ru[k];
+  for (const [id, acc] of Object.entries(lc)) { const t = Object.values(acc).reduce((x, y) => x + (y ?? 0), 0) || 1; for (const m of Object.keys(acc) as MarketId[]) acc[m] = acc[m]! / t; st.lc![id] = acc; }
 }
 
 export const fansIn20 = (s: GameState, a: Act, mk: MarketId): Coh20 => terr20(s).a[a.id]?.[mk] ?? [0, 0, 0];
@@ -187,6 +264,7 @@ registerSimHook('month', 'terr20', (s) => {
   const st = terr20(s);
   const adj = priceAdj20(s, s.monthLedger.sales ?? 0);
   if (adj) post(s, `terr20:price:${s.year}:${s.month}`, adj, 'sales', adj > 0 ? 'Margem premium regional' : 'Desconto regional');
+  relGains20(s); // r20c: vendas/streams/campanha → conversão local pendente (antes do fechamento)
   for (const id of playerActs(s)) {
     const a = s.acts[id];
     if (!mine(a)) continue;
@@ -202,7 +280,7 @@ registerSimHook('month', 'terr20', (s) => {
       emitFact(s, { kind: 'fans_region', actors: [a.id, 'player'], severity: 20, visibility: 'public', tags: ['good', 'region', best], text, src: 'terr20', data: { mk: best, share: Math.round(sh[best] * 100) } });
     }
   }
-  for (const k of Object.keys(st.a)) if (!mine(s.acts[k])) { delete st.a[k]; delete st.p[k]; delete st.sw[k]; delete st.top[k]; }
+  for (const k of Object.keys(st.a)) if (!mine(s.acts[k])) { delete st.a[k]; delete st.p[k]; delete st.sw[k]; delete st.top[k]; delete st.lc![k]; }
 });
 
 registerExplain('terr20.demand', (s, c) => {
@@ -216,7 +294,10 @@ registerExplain('terr20.demand', (s, c) => {
       { label: l('Fatia dos fãs nesta região', 'Share of fans in this region'), value: sh, fmt: 'pct' },
       { label: l('Fatia que a fama regional explica', 'Share explained by regional fame'), value: tg, fmt: 'pct' },
       { label: fmtL(l('Confiança da estimativa: {c}', 'Estimate confidence: {c}'), { c: cf.name }), value: `±${Math.round(cf.pm * 100)}%`, fmt: 'text' },
+      ...(terr20(s).lc?.[a.id]?.[mk] !== undefined ? [{ label: l('Fatia da conversão por lançamentos (último mês)', 'Share of release conversion (last month)'), value: terr20(s).lc![a.id]![mk]!, fmt: 'pct' as const }] : []),
+      ...(priceConv20(s, mk) !== 1 ? [{ label: l('Preço regional na conversão', 'Regional price on conversion'), value: priceConv20(s, mk), fmt: 'mult' as const }] : []),
+      ...(pushMult20(s, mk) !== 1 ? [{ label: l('Ofensiva rival neste mercado', 'Rival push in this market'), value: pushMult20(s, mk), fmt: 'mult' as const, tone: 'bad' as const }] : []),
     ],
-    note: l('Shows convertem fãs na praça onde acontecem; sem atividade, a distribuição volta aos poucos para a fama regional. A soma das regiões é sempre o total global.', 'Shows convert fans where they happen; without activity, the split drifts back to regional fame. Regions always add up to the global total.'),
+    note: l('Shows convertem fãs na praça onde acontecem; vendas e streams, nos mercados do lançamento (físico onde já há público, streaming onde a plataforma chegou, campanha nos territórios-alvo); preço regional mais baixo converte mais e ofensiva rival freia o crescimento ali. Sem atividade, a distribuição volta aos poucos para a fama regional. A soma das regiões é sempre o total global.', 'Shows convert fans where they happen; sales and streams, in the release\'s markets (physical where the act already has fans, streaming where the platform has arrived, campaigns in the target territories); a lower regional price converts more and a rival push slows growth there. Without activity, the split drifts back to regional fame. Regions always add up to the global total.'),
   };
 });
