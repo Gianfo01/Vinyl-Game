@@ -248,7 +248,7 @@ onFact('cert_award', (s, f) => {
 }, 'market19a:cert:press');
 onFact('cert_award', (s, f) => {
   const rel = s.releases[String(f.data?.rel ?? '')]; if (!rel) return;
-  rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.05);
+  if (f.actors.includes('player')) rel.hypeBoost = Math.min(0.5, (rel.hypeBoost ?? 0) + 0.05); // vitrine: só quem pagou a auditoria
   if (f.actors.includes('player') && Number(f.data?.n) >= 2 && f.data?.mk !== 'na') s.player.stats.platinum += 1; // a AMIF mundial já conta a América do Norte
 }, 'market19a:cert:value');
 onFact('cert_award', (s, f) => { const rel = s.releases[String(f.data?.rel ?? '')]; if (rel && s.year - rel.year >= 10) stage19(s, rel.id, 'viral', -28); }, 'market19a:cert:revival');
@@ -475,10 +475,10 @@ export function answer360(s: GameState, actId: string, k: 'match' | 'partner' | 
     if (s.player.cash < v) return l('Caixa insuficiente para cobrir.', 'Not enough cash to match.');
     post(s, `mka19m:${actId}`, -v, 'advances', `360 de ${a.name}`);
     c.advance += v; c.recoupBalance += v; c.model = '360'; c.share360 = Math.max(c.share360, 0.25); c.endWeek += 52 * 4; c.termMonths += 48;
-    p.k = 'match'; a.trust = clamp(a.trust + 4, 0, 100);
+    p.k = 'match'; p.end = c.endWeek; a.trust = clamp(a.trust + 4, 0, 100);
     return F(l('Você cobre a oferta: {a} fica mais 4 anos, agora com 360.', 'You match: {a} stays 4 more years, now on a 360.'), { a: a.name });
   }
-  if (k === 'partner') { c.royalty = Math.min(0.5, c.royalty + 0.05); c.share360 = 0; c.endWeek += 52 * 3; c.termMonths += 36; p.k = 'partner'; return l('Acordo dividido: a promotora fica com a estrada, você com os discos (royalty +5 p.p.).', 'Split deal: the promoter takes the road, you keep the records (royalty +5 pts).'); }
+  if (k === 'partner') { c.royalty = Math.min(0.5, c.royalty + 0.05); c.share360 = 0; c.endWeek += 52 * 3; c.termMonths += 36; p.k = 'partner'; p.end = c.endWeek; return l('Acordo dividido: a promotora fica com a estrada, você com os discos (royalty +5 p.p.).', 'Split deal: the promoter takes the road, you keep the records (royalty +5 pts).'); }
   p.k = 'let'; return F(l('{a} sai quando o contrato acabar.', '{a} leaves when the contract ends.'), { a: a.name });
 }
 registerInboxKind('mka19_360', { label: l('Promotora 360', '360 promoter'), cat: 'deals', icon: 'star', prio: 2, goto: (_s, m) => ({ act: String(m.ref?.act) }),
@@ -614,11 +614,10 @@ export function scenesMonth19(s: GameState): void {
     x.h = v; x.pk = Math.max(x.pk, v);
     switch (x.ph) {
       case 0: if (v >= 35 || (up && v >= 28)) setPh(s, x, 1); else if (v < 8 && age > 12) delete st.sc[x.k]; break;
-      case 1: rush(s, x, r, 0.3); if (age >= 3 && x.sg >= 2) setPh(s, x, 2); else if (v < 12 && age > 12) delete st.sc[x.k]; break;
-      case 2: rush(s, x, r, 0.5); if (age >= 12 && (x.sg >= 6 || age >= 24)) setPh(s, x, 3); break;
+      case 1: rush(s, x, r, 0.15); if (age >= 3 && x.sg >= 2 && Object.values(st.sc).filter((y) => y.ph === 2 || y.ph === 3).length < 2) setPh(s, x, 2); else if (v < 12 && age > 12) delete st.sc[x.k]; break;
+      case 2: rush(s, x, r, 0.25); if (age >= 12 && (x.sg >= 6 || age >= 24)) setPh(s, x, 3); break;
       case 3: s.scenes[x.k] = v * 0.96; if (age >= 6 && (r.chance(0.12) || age >= 12)) setPh(s, x, 4); break;
-      case 4: if (age >= 24) { const g = x.k.split(':')[1]; s.genrePop[g] = clamp((s.genrePop[g] ?? 1) * 1.02, 0.15, 2.2); }
-        if (s.year - (x.bust ?? s.year) >= 6 && v >= 25 && r.chance(0.2)) setPh(s, x, 5); else if (s.year - (x.bust ?? s.year) >= 12) delete st.sc[x.k]; break;
+      case 4: if (s.year - (x.bust ?? s.year) >= 6 && v >= 25 && r.chance(0.2)) setPh(s, x, 5); else if (s.year - (x.bust ?? s.year) >= 12) delete st.sc[x.k]; break;
       case 5: if (age >= 12) { x.sg = 0; setPh(s, x, 1); } break;
     }
   }
@@ -677,7 +676,7 @@ registerConseq18('ib:mka19_rush:indie', { later: [{ in: [12, 30], p: 0.4, tone: 
 registerMod('chartUnits', 'mka19:scene', (s, v, ctx) => {
   const rel = ctx.release; if (!rel || off()) return null;
   const x = sceneOf19(s, s.acts[rel.actId]); if (!x) return null;
-  const k = x.ph === 2 ? 1.06 : x.ph === 1 ? 1.03 : x.ph === 4 && s.year - (x.bust ?? 0) <= 2 ? (s.flags[`mka19:indie:${x.k}`] && mineRel(s, rel) ? 0.95 : 0.9) : 1;
+  const k = x.ph === 2 ? 1.06 : x.ph === 1 ? 1.03 : x.ph === 4 && s.year - (x.bust ?? 0) <= 2 ? (s.flags[`mka19:indie:${x.k}`] && mineRel(s, rel) ? 0.97 : 0.94) : 1;
   return k !== 1 ? { value: v * k, label: F(l('Cena: {p}', 'Scene: {p}'), { p: PH19[x.ph] }) } : null;
 });
 registerOfferMod('mka19:rush', (s, act, o) => {
@@ -709,7 +708,7 @@ registerExplain('mka19.scene', (s, c) => {
     { label: l('Calor da cena (cai 3%/semana)', 'Scene heat (falls 3%/week)'), value: Math.round(x.h), fmt: 'num' },
     { label: l('Pico', 'Peak'), value: Math.round(x.pk), fmt: 'num' },
     { label: l('Assinaturas das majors (adiantamento +15% cada)', 'Majors\' signings (advance +15% each)'), value: x.sg, fmt: 'num', tone: x.sg >= 4 ? 'bad' : undefined },
-    { label: l('Paradas dos atos da cena', 'Charts for the scene\'s acts'), value: x.ph === 2 ? 1.06 : x.ph === 1 ? 1.03 : x.ph === 4 ? 0.9 : 1, fmt: 'mult' },
+    { label: l('Paradas dos atos da cena', 'Charts for the scene\'s acts'), value: x.ph === 2 ? 1.06 : x.ph === 1 ? 1.03 : x.ph === 4 ? 0.94 : 1, fmt: 'mult' },
   ], note: l('Nasce (calor 20+) → hype (35+) → corrida (2+ assinaturas) → saturação (6 assinaturas ou 2 anos) → ressaca (turismo +8% nos shows) → renascimento anos depois.', 'Born (heat 20+) → hype (35+) → rush (2+ signings) → saturation (6 signings or 2 years) → backlash (show tourism +8%) → revival years later.') };
 });
 for (const id of ['goldrush', 'cert', 'research', 'ghost', 'star360', 'antitrust']) LINK18_PARTS[id] ??= (s) => [{ label: l('Registros deste sistema', 'Entries of this system'), value: Object.values(mka19(s).n).reduce((t, v) => t + v, 0), fmt: 'num' }];
