@@ -86,10 +86,10 @@ export function checkInsolvency(s: GameState, r: Rng): void {
     s.player.insolvencyMonths = 0;
     return;
   }
-  // r18 final (balanço): dívida funda (abaixo de 3 meses de custo fixo, mínimo US$ 25 mil reais) faz os credores
+  // r18 final (balanço): dívida funda (abaixo de 2 meses de custo fixo, mínimo US$ 15 mil reais) faz os credores
   // apertarem — o mês conta dobrado. Ficar levemente no vermelho continua dando 4 meses de fôlego.
   const c = monthlyCosts(s), burn = c.rent + c.salaries + c.outsourcing + c.loans + c.equipment;
-  const deep = s.player.insolvencyMonths >= 1 && s.player.cash < -Math.max(3 * burn, money(s, 25000));
+  const deep = s.player.insolvencyMonths >= 1 && s.player.cash < -Math.max(2 * burn, money(s, 15000));
   const m0 = s.player.insolvencyMonths;
   s.player.insolvencyMonths += deep ? 2 : 1;
   const m = s.player.insolvencyMonths;

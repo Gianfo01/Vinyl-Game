@@ -180,6 +180,9 @@ export function pressingCost(s: GameState, formats: FormatId[], units: number): 
   for (const id of s.player.equipment) discount += EQUIPMENT.find((e) => e.id === id)?.effect.pressing ?? 0;
   discount += staffSkill(s, 'manufacturing') / 400;
   if (hasCard(s, 'manufacturer')) discount += 0.1;
+  // r18 final (balanço): tiragem grande sai mais barata por unidade (economia de escala real das fábricas):
+  // até −20% a partir de ~150 mil unidades
+  discount += Math.min(0.2, Math.max(0, Math.log10(Math.max(1, units) / 10000)) * 0.17);
   discount = Math.min(0.5, discount);
   return Math.round(applyMods(s, 'pressingCost', money(s, (unit * units * (1 - discount) * (s.flags.geoPressing ?? 1)) + 400), { formats }).value);
 }
