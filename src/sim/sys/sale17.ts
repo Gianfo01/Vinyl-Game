@@ -17,11 +17,14 @@ import { endContract } from '../contracts';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { grantHold } from '../holds17';
-import type { Act, GameState, Label } from '../types';
+import type { Act, GameState, Label, Release } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { careers, registerLoad } from './careers12';
 import { ownerOf } from './people/owner';
 import { labelValue } from './stakes8';
+import { rateTilt19 } from '../rates19';
+/** r19 (money19, N1/N5): ganchos da venda de master — direito de preferência e reação do artista. */
+export const SALE19: { rofr?: (s: GameState, rel: Release, price: number) => boolean; sold?: (s: GameState, rel: Release, price: number, rofr: boolean) => void; label?: (s: GameState, lbId: string) => void } = {};
 
 export type BuyerKind = 'rival' | 'conglomerate' | 'fund' | 'vulture';
 export interface Bid17 { id: string; kind: BuyerKind; buyer: string; name: string; price: number; cashPct: number; nonCompete: number; consult: number; cut: number; keepStaff: boolean; expires: number; why: L[] }
@@ -62,7 +65,7 @@ export function eraMultiple(s: GameState, y = s.year): { m: number; why: L } {
     : y < 2015 ? [8, l('streaming estabiliza a receita', 'streaming steadies revenue')]
     : y < 2022 ? [15, l('juro baixo + streaming: fundos pagam 15–20× pela receita', 'low rates + streaming: funds pay 15–20× revenue')]
     : [11, l('juros sobem: a festa dos catálogos esfria', 'rates rise: the catalog party cools')];
-  return { m: (m as number) * rec, why: why as L };
+  return { m: (m as number) * rec * rateTilt19(s, y), why: why as L }; // r19 M13: juro do ano vs. média da época
 }
 /** Receita anual estimada de um lançamento (decai com a idade). */
 // r19 (exploit "hype máximo e vende"): o comprador desconta o pico de lançamento — um disco com menos de 2 anos vale
@@ -185,6 +188,7 @@ export function sellLabel(s: GameState, bidId: string): L | null {
   }
   const subs = new Set((s.subLabels ?? []).flatMap((x) => x.roster));
   for (const rel of Object.values(s.releases)) if (rel.owner === 'player' && !s.acts[rel.actId]?.playerBand && !subs.has(rel.actId)) rel.owner = lb.id;
+  SALE19.label?.(s, lb.id); // r19 (money19): preferência do artista e regravações quando os masters mudam de dono
   // dinheiro: caixa e dívidas vão com a empresa; o preço vai para o seu bolso
   if (s.player.cash) post(s, 'sale17:cash', -s.player.cash, 'acquisitions', 'Caixa transferido ao comprador');
   s.player.loans = [];
@@ -291,10 +295,12 @@ export function sellMaster17(s: GameState, bidId: string): L | null {
   post(s, `sale17:cat:${rel.id}`, b.price, 'asset_sales', `Master vendido: ${rel.title}`);
   noteLost18(s, [rel.id], b.price, `"${rel.title}"`); // r18: renda futura que sai com o master
   const buyer = Object.values(s.labels).find((x) => x.active && x.strategy === 'buy_catalog');
-  rel.owner = buyer?.id ?? 'indie';
+  const rofr = !!SALE19.rofr?.(s, rel, b.price); // r19: o artista com direito de preferência cobre o lance
+  rel.owner = rofr ? 'indie' : buyer?.id ?? 'indie';
   const a = s.acts[rel.actId];
+  SALE19.sold?.(s, rel, b.price, rofr);
   // vender o master tira poder de veto do artista e mexe na confiança (audit17 §3.7 #42)
-  if (a && a.owner === 'player') { a.trust = clamp(a.trust - 8, 0, 100); grantHold(s, { holder: a.id, target: 'player', kind: 'grievance', strength: 25, months: 36, src: 'sale17', text: fmtL(l('{a} soube pelos jornais que "{t}" foi vendido a um fundo.', '{a} read in the papers that "{t}" was sold to a fund.'), { a: a.name, t: rel.title }) }); }
+  if (a && a.owner === 'player' && !rofr) { a.trust = clamp(a.trust - 8, 0, 100); grantHold(s, { holder: a.id, target: 'player', kind: 'grievance', strength: 25, months: 36, src: 'sale17', text: fmtL(l('{a} soube pelos jornais que "{t}" foi vendido a um fundo.', '{a} read in the papers that "{t}" was sold to a fund.'), { a: a.name, t: rel.title }) }); }
   st.cat = st.cat.filter((x) => x.id !== bidId);
   st.catSold += 1;
   const t = fmtL(l('Master de "{t}" vendido a {f} por {p}.', 'Master of "{t}" sold to {f} for {p}.'), { t: rel.title, f: b.fund, p: `$${Math.round(b.price / 100).toLocaleString('en-US')}` });

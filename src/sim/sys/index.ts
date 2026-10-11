@@ -273,4 +273,5 @@ import './era19';
 import './realhist19';
 import './links19b'; // r19 Frente 1 grupo B: sessão×qualidade, câmbio por submercado, inteligência de rivais, campus, júri×caminho, 11.10, 11.11
 import './moneyb19'; // r19 T2 money-b: mercado de contratos (janelas, cláusulas, empréstimos), empresário total, disco de cumprimento, briga de gestão
+import './money19'; // r19 onda 3 T1: dívida e catálogo (covenants, leilão de masters, preferência/regravação, títulos lastreados, juros)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

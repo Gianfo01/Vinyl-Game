@@ -12,6 +12,7 @@ import { emitEvent } from './events';
 import { addAsset } from './finance';
 import { branchRent, hqBlocker, hqCaps } from './branches';
 import { perk } from './perks';
+import { loanAdj19 } from './rates19';
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
@@ -62,10 +63,11 @@ export function loanOffer(s: GameState): { amount: number; rate: number; months:
   // r17 final: banco não empresta para quem já está no vermelho há 2+ meses, e cada empréstimo em aberto
   // encolhe o próximo e encarece os juros (crédito é para planejar antes, não para salvar no fim)
   if (s.player.insolvencyMonths >= 2) return null;
+  if ((s.flags.m19nolend ?? 0) > s.week) return null; // r19 (money19): banco que chamou a dívida não empresta
   const n = s.player.loans.length;
   const rep = s.player.reputation.commercial + s.player.reputation.institutional;
   const amount = money(s, (20000 + rep * 600 + s.player.hq * 30000) * Math.pow(0.75, n));
-  const rate = clamp(0.16 - rep / 1500 + (s.economy.recession ? 0.04 : 0) + n * 0.03 + (s.year < 1914 ? 0.02 : 0), 0.05, 0.3); // r18 era1889: sem banco central, crédito caro
+  const rate = clamp(0.16 - rep / 1500 + (s.economy.recession ? 0.04 : 0) + n * 0.03 + (s.year < 1914 ? 0.02 : 0) + loanAdj19(s), 0.04, 0.3); // r19 M13: juro básico da época // r18 era1889: sem banco central, crédito caro
   return { amount, rate, months: 36 };
 }
 

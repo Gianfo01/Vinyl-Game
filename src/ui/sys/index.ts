@@ -174,4 +174,6 @@ import './session19';
 import './era19';
 // Rodada 19 (T2 money-b): Mercado de contratos (janelas, cláusulas, empréstimos, empresários, briga de gestão).
 import './moneyb19';
+// Rodada 19 (onda 3, T1): Finanças › Dívida e catálogo.
+import './money19';
 import './core18';

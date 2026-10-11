@@ -11,6 +11,7 @@
 //  • Rescisão americana (35 anos, cessões de 1978+), conexos por país, prazo europeu 50→70 anos, regravações.
 //  • Precedentes jurídicos em datas reais (financiáveis; fora do modo exato o veredito pode virar história alternativa).
 //  • Editora como negócio: administração de catálogos de terceiros. Avaliação de catálogo para compra/venda.
+import { rateTilt19 } from '../rates19';
 import { Rng, clamp } from '../../core/rng';
 import { MARKETS, cityById, l, type L } from '../../data/world';
 import { NEIGH18, PRECS18, SOCS18, type Mod18, type Soc18 } from '../../data/rights18';
@@ -853,7 +854,7 @@ export function catVal18(s: GameState, rels: Release[], own = false): CatVal18 {
   const rows = rels.map((r) => ({ r, a: annualRevenue(r) })).filter((x) => x.a > 0);
   const annual = rows.reduce((t, x) => t + x.a, 0);
   const parts: WhyPart[] = [];
-  const em = eraMult18(s.year);
+  const em = eraMult18(s.year) * rateTilt19(s, s.year, 'r18'); // r19 M13: juro do ano inclina o múltiplo da época
   parts.push({ label: fmtL(l('Múltiplo de mercado em {y}', 'Market multiple in {y}'), { y: s.year }), value: em, fmt: 'mult' });
   if (!annual) return { annual: 0, mult: em, value: 0, parts };
   let m = em;

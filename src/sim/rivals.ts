@@ -92,13 +92,16 @@ export function rivalsMonth(s: GameState, r: Rng): void {
   }
 }
 
-function closeLabel(s: GameState, r: Rng, lb: Label): void {
+/** r19 (money19, N1): falência vira leilão de masters (devolve true quando assume o catálogo). */
+export const CLOSE19: { f?: (s: GameState, lb: Label) => boolean } = {};
+export function closeLabel(s: GameState, r: Rng, lb: Label): void {
   lb.active = false;
   lb.closedYear = s.year;
   for (const id of [...lb.roster]) {
     const a = s.acts[id];
     if (a) endContract(s, a, 'terminated');
   }
+  if (CLOSE19.f?.(s, lb)) { lb.reputation = clamp(lb.reputation - 30, 0, 100); return; }
   // catálogo vendido para quem tem caixa
   const buyer = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 500000)).sort((a, b) => b.cash - a.cash)[0];
   if (buyer) for (const rel of Object.values(s.releases)) if (rel.owner === lb.id) rel.owner = buyer.id;
