@@ -11,7 +11,7 @@ import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import {
-  CAT20, DEFAULT_PINS20, SUBTAB_KEY20, action20, actionRow20, actionRows20, actions20, applyRecordPlan20, batchPreview20, batchable20,
+  CAT20, DEFAULT_PINS20, SUBTAB_KEY20, action20, agName20, actionRow20, actionRows20, actions20, applyRecordPlan20, batchPreview20, batchable20,
   paletteEntries20, recordPlan20, runAction20, runBatch20, togglePin20, type Nav20, type RecOpt20, type Row20,
 } from '../actions20';
 import { $, inspect, modal, rerender, toast } from '../common';
@@ -310,7 +310,7 @@ export function openRecord20(s: GameState, actId: string, anchor?: HTMLElement |
           h('input', { type: 'radio', name: 'am20rec', checked: x.id === opt, onchange: () => { opt = x.id; draw(); } }),
           h('span', null, h('b', null, t(x.name)), h('small', { class: 'muted' }, ' — ', t(x.fx)),
             x.plan ? h('small', { class: x.plan.block ? 'bad' : 'muted' }, h('br'),
-              x.plan.block ? t(x.plan.block) : `${t(l('Custo', 'Cost'))} ${$(x.plan.cost)} · ${t(l('ocupação', 'load'))} ${x.plan.load}% / ${x.plan.cap}%${x.plan.dropped.length ? ` · ${t(l('sai', 'drops'))}: ${x.plan.dropped.map((d) => d.action).join(', ')}` : ''}`) : null)))),
+              x.plan.block ? t(x.plan.block) : `${t(l('Custo', 'Cost'))} ${$(x.plan.cost)} · ${t(l('ocupação', 'load'))} ${x.plan.load}% / ${x.plan.cap}%${x.plan.dropped.length ? ` · ${t(l('sai', 'drops'))}: ${x.plan.dropped.map((d) => t(agName20(d.action))).join(', ')}` : ''}`) : null)))),
       h('div', { class: 'row wrap' },
         h('button', { class: 'btn primary', disabled: !!rp.block || !!o.plan?.block, onclick: () => {
           const out = applyRecordPlan20(s, actId, opt, tier, approach);

@@ -306,7 +306,8 @@ export function commitAgenda20(s: GameState, a: Act, slots: AgendaSlot[]): void 
   s.delegated[a.id] = false;
 }
 
-const agName = (id: string): L => agendaById[id]?.name ?? l(id, id);
+export const agName20 = (id: string): L => agendaById[id]?.name ?? l(id, id);
+const agName = agName20;
 const slotText = (xs: AgendaSlot[]): string => xs.map((x) => agName(x.action).pt).join(', ');
 const slotL = (xs: AgendaSlot[]): L => l(xs.map((x) => agName(x.action).pt).join(', '), xs.map((x) => agName(x.action).en).join(', '));
 
