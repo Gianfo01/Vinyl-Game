@@ -21,7 +21,7 @@ import { START_YEARS13 } from './ngdata13';
 import { TUTOFF_HINT19, TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19';
 import { addHelp, hl } from './newgame13';
 import { charPreview17, diffCard17, presetBar17, runCard17, startCard17, summaryExtra17, worldCard17 } from './newgame17';
-import { lastSave17, profileBar17, saveManager17 } from './saves17';
+import { lastSave17, profileBar17, saveErrText20, saveManager17 } from './saves17';
 import { scenarioById } from '../sim/sys/live';
 import { WORLDS17, worldOf17 } from '../sim/start17';
 
@@ -46,7 +46,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
   // r17: gerenciador completo (perfis, autosave por partida, nuvem por pessoa) e "Continuar" com o save mais recente
   const play = (g: NonNullable<typeof store.game>) => { store.game = g; onStart(); };
   const cont = h('span');
-  void lastSave17().then((m) => { if (m) cont.replaceChildren(h('button', { class: 'btn primary big', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } }, `▶ ${t(S.continue)}: ${m.name || m.company} — ${m.year}`)); });
+  void lastSave17().then((m) => { if (m) cont.replaceChildren(h('button', { class: 'btn primary big', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } }, `▶ ${t(S.continue)}: ${m.name || m.company} — ${m.year}`)); }, (e) => { cont.replaceChildren(h('p', { class: 'bad small', role: 'alert' }, '⚠ ', t(l('Não foi possível ler os saves deste navegador ({e}). Nada foi apagado; abra "Saves" para tentar de novo.', 'Could not read this browser\'s saves ({e}). Nothing was deleted; open "Saves" to try again.'), { e: String((e as Error)?.name || e) }))); });
   const saves = h('details', { class: 'saves sv17-wrap' }, h('summary', null, t(l('Saves, perfis e nuvem', 'Saves, profiles and cloud'))), saveManager17(play, { profiles: false }));
   const fileInput = h('input', { type: 'file', style: 'display:none', onchange: async (e: Event) => {
     const f = (e.target as HTMLInputElement).files?.[0];
@@ -54,8 +54,8 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
     try {
       store.game = await importSave(f);
       onStart();
-    } catch {
-      toast(t(l('Arquivo inválido.', 'Invalid file.')), 'bad');
+    } catch (er) {
+      toast(saveErrText20(er), 'bad');
     }
   } });
   root.replaceChildren(
@@ -71,7 +71,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
         scenarioButton(root, onStart, () => titleScreen(root, onStart)),
         h('button', { class: 'btn ghost', onclick: () => fileInput.click() }, t(S.importSave)),
         fileInput,
-        h('button', { class: 'btn ghost', onclick: async () => { const tx = window.prompt(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'))); if (!tx) return; try { store.game = await importSaveText(tx); onStart(); } catch { toast(t(l('Texto de save inválido.', 'Invalid save text.')), 'bad'); } } }, t(l('Colar save', 'Paste save'))),
+        h('button', { class: 'btn ghost', onclick: async () => { const tx = window.prompt(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'))); if (!tx) return; try { store.game = await importSaveText(tx); onStart(); } catch (er) { toast(saveErrText20(er), 'bad'); } } }, t(l('Colar save', 'Paste save'))),
         select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { store.prefs.lang = v; savePrefs(); titleScreen(root, onStart); }, { 'aria-label': t(S.language) }),
       ),
       saves,
