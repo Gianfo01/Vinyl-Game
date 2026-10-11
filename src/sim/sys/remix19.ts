@@ -88,11 +88,12 @@ export function remix19(s: GameState, relId: string, djId: string): L | null {
 }
 registerConseq18('rmx19:club', { now: l('Custo agora; sai em 1 mês, chance pelo DJ e pela pista.', 'Cost now; out in 1 month, odds by DJ and floor.'), later: [{ in: [6, 14], p: 0.2, tone: 'mixed', hint: l('Puristas da faixa original podem reclamar.', 'Purists of the original may complain.'),
   fx: (f) => (f.r.chance(0.5) ? (f.fans(2), l('O remix apresenta a faixa a uma pista inteira de gente nova.', 'The remix introduces the track to a whole new dancefloor.')) : (f.trust(-2), l('O artista detesta o remix e diz em entrevista que não autorizou "aquilo".', 'The artist hates the remix and says in an interview they never approved "that".'))) }] });
-function resolveRx(s: GameState, x: Rmx19, r: Rng): void {
+/** Resolve o remix (sorteio pela chance; `force` decide — usado em testes de cadeia). */
+export function resolveRemix19(s: GameState, x: Rmx19, r: Rng, force?: boolean): void {
   const rel = s.releases[x.rel], dj = media18(s).djs.find((d) => d.id === x.dj);
   if (!rel) { x.ok = false; return; }
   const p = dj ? remixOdds19(s, rel, dj).p : 0.2;
-  x.ok = r.chance(p);
+  x.ok = force ?? r.chance(p);
   const st = rmx19(s), a = s.acts[rel.actId];
   if (!x.ok) {
     log19(s, st, fmtL(l('O remix de "{t}" por {d} passa despercebido nas pistas.', '{d}\'s remix of "{t}" goes unnoticed in the clubs.'), { t: rel.title, d: x.djn }));
@@ -200,7 +201,7 @@ registerConseq18('ib:rmx19_offer:no', { later: [{ in: [4, 12], p: 0.2, tone: 'ba
 export function remixMonth19(s: GameState): void {
   if (!remixOpen19(s)) return;
   const st = rmx19(s), r = rng(s);
-  for (const x of st.rx) if (x.ok === undefined && x.due <= s.week) resolveRx(s, x, r);
+  for (const x of st.rx) if (x.ok === undefined && x.due <= s.week) resolveRemix19(s, x, r);
   // remixes que pegaram: vendas por 4 meses
   for (const x of st.rx) {
     if (!x.ok || (x.until ?? 0) <= s.week) continue;
@@ -235,7 +236,7 @@ export function remixMonth19(s: GameState): void {
   if (r.chance(0.03)) {
     const pool = Object.values(s.releases).filter((x) => !mineR19(s, x) && remixable19(s, x) && s.year - x.year >= 10 && x.type === 'single');
     const rel = r.weighted(pool, (x) => (x.q / 50) ** 2 * (flop(x) ? 1.5 : 1)), dj = rel && r.pick(djs);
-    if (rel && dj) { st.rx.push({ id: `rx${++st.seq}`, rel: rel.id, dj: dj.id, djn: dj.name, w: s.week, due: s.week, k: 'club', split: 0 }); resolveRx(s, st.rx[st.rx.length - 1], r); }
+    if (rel && dj) { st.rx.push({ id: `rx${++st.seq}`, rel: rel.id, dj: dj.id, djn: dj.name, w: s.week, due: s.week, k: 'club', split: 0 }); resolveRemix19(s, st.rx[st.rx.length - 1], r); }
   }
   st.rx = st.rx.filter((x) => x.ok === undefined || (x.until ?? 0) > s.week - 52).slice(-40);
 }
