@@ -35,6 +35,7 @@ export const STREAMS19: Record<string, string> = {
   wr19: 'compositores: ghostwriters, ofertas de canções, plágio (writers19)',
   links19a: 'ligações R19 grupo A: tragédia em festival lotado (links19a)',
   l19b: 'malha de ligações B: crises cambiais sorteadas, bônus de descoberta do campus, corrida por talento, traição de pactos (links19b)',
+  mka19: 'mercado A: erro dos testes de faixa, vazamentos, faixas sem rosto, saídas 360, leilões antitruste, ciclo das cenas (market19a)',
 };
 
 export const perSystem19 = (s: GameState): boolean => (s.rngVersion ?? 0) >= RNG_VERSION19;

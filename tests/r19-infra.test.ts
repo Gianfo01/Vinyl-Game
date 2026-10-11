@@ -243,6 +243,13 @@ const INBOX_RARE19: Record<string, string> = {
   l19b_betray: 'traição de pacto: exige pacto ativo e calor 35+',
   l19b_delay: 'obra do campus atrasada: só com obra própria em andamento',
   l19b_ins: 'prédio danificado (incêndio/desastre): raro',
+  // r19 market19a (T6, mercado A): cartas que dependem de patamar nacional, ação do jogador, era ou fusão grande
+  mka19_cert: 'certificação nacional: disco seu precisa passar do patamar do país (ouro 35 mil+ unidades num mercado)',
+  mka19_test: 'pesquisa de mercado: só quando o jogador encomenda um teste de faixa (o bot não encomenda)',
+  mka19_ghost: 'faixas sem rosto: só 2015+, 35% por ano, uma vez a cada 3 anos',
+  mka19_360: 'promotora 360: só 2007+ com ato próprio de fama 70+ e contrato acabando em até 1 ano',
+  mka19_divest: 'leilão antitruste: só depois de fusão que passa do limiar do regulador',
+  mka19_rush: 'corrida do ouro: cena na sua cidade ou com ato seu entrando na fase de corrida',
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 
