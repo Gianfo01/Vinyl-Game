@@ -20,14 +20,16 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { chron, chronListeners, cityL, genreL, nameOf, type ChronEv } from './chron9';
 import { crime17 } from './crime17';
+import { simStart20 } from '../worldpolicy20';
 import { addRelic, relics, type Relic, type RelicKind } from './relics9';
 
 for (const d of RELICS18) if (!RELICS17.some((x) => x.id === d.id)) RELICS17.push(d);
 
 // ---------------------------------------------------------------- modos de história
 const strict = (s: GameState) => histMode(s) === 'strict';
-relics17Gate.f = (s, d) => strict(s) || d.year < s.config.startYear;
-relics17Gate.step = (s, x) => strict(s) || x[0] < s.config.startYear;
+// r20 (G8): no mundo aleatório v2 nem as relíquias reais anteriores ao início viram fato (obras/ídolos podem não existir)
+relics17Gate.f = (s, d) => strict(s) || (d.year < s.config.startYear && !simStart20(s));
+relics17Gate.step = (s, x) => strict(s) || (x[0] < s.config.startYear && !simStart20(s));
 
 // ---------------------------------------------------------------- estado
 export interface RelMeta18 { o: string; b: number; st?: L; lg?: number; auth?: 1; alt?: string; tour?: number }

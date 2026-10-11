@@ -54,6 +54,15 @@ export interface RunConfig {
   runYears17?: number;
   scenario17?: string;
   preset17?: string;
+  /** rodada 20 (G8, src/sim/worldpolicy20.ts): versões do esquema e da política de mundo; ausentes = configuração
+   * legada (geração antiga). `initialWorldPolicy: 'simulated'` (modo random v2) simula repertório, formações,
+   * vínculos e destinos anteriores ao início; nunca inferido de `world17` sozinho. */
+  configSchemaVersion?: number;
+  worldPolicyVersion?: number;
+  initialWorldPolicy?: 'historical' | 'simulated';
+  futureCareerPolicy?: 'documented' | 'simulated';
+  futureDebutPolicy?: 'real_documented' | 'real_era_eligible' | 'generated_only' | 'chaotic';
+  identityPolicy?: 'real_catalog' | 'fictional';
 }
 
 export interface LabelSetup {

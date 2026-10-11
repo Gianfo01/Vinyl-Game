@@ -1,6 +1,7 @@
 // Gerador de mundo em camadas (GDD §5): L0 seed → L1 mundo → L2 elenco → L3 mercado → L5 jogador.
 
 import { normalizeHistory } from './history15';
+import { simulatedStartCfg20 } from './worldpolicy20';
 import './sys';
 import { emptyExt, ensureExt } from './ext';
 import { initWorldExt } from './worldext';
@@ -339,7 +340,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     const u = { no: ca.no, name: ca.name, genre: ca.genre, city: ca.city, members: ca.members, debut: (realD ?? ca.debut) + jitter, potential, rs: ca.rs, synthetic: ca.synthetic };
     const activeYears = cfg.startYear - u.debut;
     if (activeYears >= 0) {
-      const realE = cfg.realNames ? REAL_CLASSIC[ca.no]?.e : undefined;
+      const realE = cfg.realNames && !simulatedStartCfg20(cfg) ? REAL_CLASSIC[ca.no]?.e : undefined; // r20: mundo aleatório v2 não usa o fim real
       const careerLen = realE !== undefined ? realE - u.debut + (cfg.mode === 'historic' ? 0 : r.int(-3, 3)) : r.int(14, 40);
       if (activeYears > careerLen) continue; // já faz parte da história
       const act = spawnCatalogAct(s, r, u, activeYears);
