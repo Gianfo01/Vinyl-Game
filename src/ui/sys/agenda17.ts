@@ -25,6 +25,7 @@ import { h, select } from '../dom';
 import { registerArea } from '../registry';
 import { store } from '../store';
 import { tabs } from '../vis';
+import { why18 } from '../explain18';
 
 const say = (r: { ok: boolean; text: L }) => { toast(t(r.text), r.ok ? 'good' : 'bad'); rerender(); };
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -113,7 +114,7 @@ function careerRows(s: GameState): HTMLElement {
       h('td', null, h('b', null, t(d.name)), on ? null : h('div', { class: 'small bad' }, t(l('sem a carreira: só anda com diretor', 'no career: runs only with a director')))),
       h('td', null, on ? select<Inv>(inv, (['lead', 'normal', 'deleg'] as Inv[]).map((v) => ({ value: v, label: `${t(INV_NAME[v])} (${v === 'lead' ? 2 : v === 'normal' ? 1 : 0} ${B})`, disabled: v === 'deleg' && !hd })), (v) => say(setInv(s, id, v)), { title: t(INV_DESC[inv]) }) : '—'),
       h('td', null, on ? `${B.repeat(n) || '0'}${c ? ` (${t(l('pico', 'peak'))}: ${t(c)})` : ''}` : '0'),
-      h('td', { class: q.f >= 1.05 ? 'good' : q.f < 0.95 ? 'bad' : '' }, pct(q.f), h('div', { class: 'small muted' }, t(q.why))),
+      h('td', { class: q.f >= 1.05 ? 'good' : q.f < 0.95 ? 'bad' : '' }, why18(s, 'agenda.careerQ', { id }, pct(q.f)), h('div', { class: 'small muted' }, t(q.why))),
       h('td', null, hd ? h('div', null, `${hd.name} · ${hd.skill} · ${$(hd.salary)}/${t(l('mês', 'mo'))} `, h('button', { class: 'btn tiny ghost', onclick: () => { if (confirm(t(l('Demitir {n}? Rescisão de um salário.', 'Fire {n}? One salary severance.'), { n: hd.name }))) say(fireHead(s, id)); } }, t(l('Demitir', 'Fire'))))
         : h('button', { class: 'btn tiny', onclick: () => { hireFor = hireFor === id ? '' : id; rerender(); } }, hireFor === id ? t(l('Fechar', 'Close')) : t(l('Contratar diretor', 'Hire director')))));
   };

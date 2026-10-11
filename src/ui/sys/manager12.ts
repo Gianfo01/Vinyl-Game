@@ -15,6 +15,7 @@ import { ventures, type Client } from '../../sim/sys/ventures9';
 import { $, actLink, cityName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
+import { renewTag19 } from './ctx19';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -69,6 +70,7 @@ export function clientPanel12(s: GameState, c: Client): HTMLElement {
     // mandato
     h('div', { class: 'row wrap small' }, h('b', null, t(l('Mandato', 'Mandate'))), ' ',
       x.mandate.legacy ? pill(t(l('informal', 'informal')), 'warn') : null,
+      renewTag19(s, a.id), ' ',
       ...AREAS.map((k) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: m.areas.includes(k), onchange: (e: Event) => { m.areas = (e.target as HTMLInputElement).checked ? [...m.areas, k] : m.areas.filter((y) => y !== k); upd(); } }), t(AREA_NAME[k]))),
       select<number>(m.rate, [0.08, 0.1, 0.12, 0.15, 0.18, 0.2, 0.25].map((v) => ({ value: v, label: pct(v) })), (v) => { m.rate = v; upd(); }),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: m.excl, onchange: (e: Event) => { m.excl = (e.target as HTMLInputElement).checked; upd(); } }), t(l('exclusivo', 'exclusive'))),

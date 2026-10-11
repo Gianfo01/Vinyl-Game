@@ -16,6 +16,7 @@ import { langForCity, makePerson } from './people';
 import type { Act, GameState, Person, Release } from './types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember, staffSkill, type Param } from './util';
 import { scandal } from './scandal17';
+import { CTXFX19 } from './ext4';
 import { actsTouched17 } from './actidx17';
 
 type Opt = EventDef['options'][number];
@@ -39,7 +40,7 @@ const noop: Apply = () => {};
 const mine = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter(Boolean);
 const pick = (s: GameState, r: Rng, f: (a: Act) => boolean = () => true): Act | undefined => {
   const list = mine(s).filter(f);
-  return list.length ? r.pick(list) : undefined;
+  return list.length ? (CTXFX19.pickW && list.length > 1 ? r.weighted(list, (a) => CTXFX19.pickW!(s, a)) : r.pick(list)) : undefined; // r19: quem tem mágoa aberta reage primeiro
 };
 const crew = (s: GameState, a: Act): Person[] => a.members.map((id) => s.persons[id]).filter((p) => p && p.alive);
 const fam = (a: Act): FamilyId => familyOf(a.genre);

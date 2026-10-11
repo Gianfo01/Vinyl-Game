@@ -18,6 +18,9 @@ import { chips, setTab, stat, tabs } from '../vis';
 import { festivalsTab } from './hubs8';
 import { foundForm, kindTab, ventureHead } from './ventures9';
 import { PAGE16 } from '../pages16';
+import { npcMonth19, rivalFest19 } from '../../sim/ctx19';
+import { f12 } from '../../sim/sys/fest12';
+import { liveOf } from '../../sim/sys/live/state';
 
 export const FEST_FROM = Math.min(1950, ...FESTIVALS.map((f) => f.start));
 
@@ -55,15 +58,18 @@ function kindPage(s: GameState, kind: VKind, intro: L): HTMLElement {
 
 function rivalsTab(s: GameState): HTMLElement {
   const npc = ventures(s).npc.filter((n) => n.kind === 'festival').sort((a, b) => b.rep - a.rep);
-  const mine = ventures(s).list.filter((v) => v.kind === 'festival');
+  // r19: o peso de cada rival é contextual (rivalFest19): distância, sobreposição de mês, gênero/identidade e porte
+  const mine = [...liveOf(s).fests.map((f) => ({ name: f.name, city: f.cityId, month: f.month, fam: f12(s, f).fam, ident: f12(s, f).ident, rep: f.rep })),
+    ...ventures(s).list.filter((v) => v.kind === 'festival' && !v.fx).map((v) => ({ name: v.name, city: v.city, month: v.month ?? 6, fam: null, ident: undefined, rep: v.rep }))];
+  const hitOf = (n: (typeof npc)[number]) => mine.map((m) => ({ m, loss: 1 - rivalFest19(s, [n], m).v })).filter((x) => x.loss > 0.004).sort((a, b) => b.loss - a.loss)[0];
   return h('div', null,
     section(t(l('Festivais de gravadoras rivais', 'Rival labels\' festivals')),
-      h('p', { class: 'small muted' }, t(l('Cada festival rival na mesma cidade do seu tira cerca de 12% do público de cada edição (dois tiram ~23%). Mudar de cidade ou de mês é a defesa.', 'Each rival festival in the same city as yours takes about 12% of each edition\'s crowd (two take ~23%). Moving city or month is the defence.'))),
+      h('p', { class: 'small muted' }, t(l('Um festival rival tira público conforme a distância (mesma cidade pesa tudo; até 800 km, parte), a sobreposição de mês (mesmo mês pesa tudo; 1–2 meses de distância, pouco), o gênero (mesmo gênero pesa mais; curadoria de descobertas e premium, menos) e o porte (reputação dele contra a sua). Mudar de mês, de cidade ou de identidade é a defesa.', 'A rival festival takes crowd by distance (same city counts fully; up to 800 km, partly), month overlap (same month fully; 1–2 months apart, a little), genre (same genre weighs more; discovery and premium curation, less) and size (its reputation against yours). Changing month, city or identity is the defence.'))),
       npc.length ? h('table', { class: 'tbl compact' },
-        h('thead', null, h('tr', null, ...[l('Festival', 'Festival'), l('Dono', 'Owner'), l('Cidade', 'City'), l('Reputação', 'Reputation'), l('Desde', 'Since'), l('Contra você', 'Against you')].map((x) => h('th', null, t(x))))),
-        h('tbody', null, npc.map((n) => { const hit = mine.filter((v) => v.city === n.city);
-          return h('tr', { class: hit.length ? 'mine' : '' }, h('td', null, n.name), h('td', null, s.labels[n.labelId]?.name ?? '—'), h('td', null, cityName(n.city)), h('td', null, String(n.rep)), h('td', null, String(n.y)),
-            h('td', null, hit.length ? pill(t(l('mesma cidade: −12% de público', 'same city: −12% crowd')), 'bad') : '—')); }))) : h('p', { class: 'muted' }, t(l('Nenhuma gravadora rival tem festival próprio ainda. Gravadoras ricas abrem negócios de vez em quando.', 'No rival label runs its own festival yet. Rich labels open businesses now and then.')))));
+        h('thead', null, h('tr', null, ...[l('Festival', 'Festival'), l('Dono', 'Owner'), l('Cidade', 'City'), l('Mês', 'Month'), l('Reputação', 'Reputation'), l('Desde', 'Since'), l('Contra você', 'Against you')].map((x) => h('th', null, t(x))))),
+        h('tbody', null, npc.map((n) => { const hit = hitOf(n);
+          return h('tr', { class: hit ? 'mine' : '' }, h('td', null, n.name), h('td', null, s.labels[n.labelId]?.name ?? '—'), h('td', null, cityName(n.city)), h('td', null, monthName(npcMonth19(n))), h('td', null, String(n.rep)), h('td', null, String(n.y)),
+            h('td', null, hit ? pill(t(l('{f}: −{p}% de público', '{f}: −{p}% crowd'), { f: hit.m.name, p: Math.round(hit.loss * 100) }), 'bad') : '—')); }))) : h('p', { class: 'muted' }, t(l('Nenhuma gravadora rival tem festival próprio ainda. Gravadoras ricas abrem negócios de vez em quando.', 'No rival label runs its own festival yet. Rich labels open businesses now and then.')))));
 }
 
 function mapTab(s: GameState): HTMLElement {

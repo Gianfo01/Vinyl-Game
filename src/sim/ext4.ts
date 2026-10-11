@@ -71,6 +71,9 @@ export function runDecisionListeners(s: GameState, eventId: string, optionId: st
 }
 /** r18 decide18: portão de opção (traço/habilidade/relação/desbloqueio) — bloqueada vira a opção padrão. */
 export const DEC_GATE18: { f: null | ((s: GameState, eventId: string, optionId: string, ctx: Record<string, string | number>) => boolean) } = { f: null };
+/** r19 (sys/ctxsys19): contexto do ator nas decisões — `pre` fotografa confiança/reputação, `post` escala a variação pelo
+ *  histórico (mágoas, favores, promessas quebradas, temperamento, relação); `pickW` faz quem tem mágoa aberta reagir primeiro. */
+export const CTXFX19: { pre: null | ((s: GameState, eventId: string, optionId: string, ctx: Record<string, string | number>) => unknown); post: null | ((s: GameState, tok: unknown) => void); pickW: null | ((s: GameState, a: Act) => number) } = { pre: null, post: null, pickW: null };
 
 // ---------------------------------------------------------------- modificadores
 

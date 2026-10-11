@@ -2,7 +2,7 @@
 // Cada evento: pré-condições, participantes compatíveis, cooldown, tags de conteúdo,
 // opções e efeitos. O diretor escolhe entre os válidos; nunca inventa evento sem causa.
 
-import { DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
+import { CTXFX19, DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
 import { clamp, type Rng } from '../core/rng';
 import { toReal } from '../core/money';
 import { FESTIVALS, MEDIA } from '../data/catalog';
@@ -48,7 +48,7 @@ export interface EventDef {
 const mineActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]);
 const pickMine = (s: GameState, r: Rng, f: (a: Act) => boolean = () => true): Act | undefined => {
   const list = mineActs(s).filter(f);
-  return list.length ? r.pick(list) : undefined;
+  return list.length ? (CTXFX19.pickW && list.length > 1 ? r.weighted(list, (a) => CTXFX19.pickW!(s, a)) : r.pick(list)) : undefined; // r19: quem tem mágoa aberta reage primeiro
 };
 const members = (s: GameState, a: Act) => a.members.map((id) => s.persons[id]).filter((p) => p && p.alive);
 const mood = (s: GameState, a: Act, k: 'morale' | 'fatigue' | 'stress' | 'inspiration', v: number) => {
@@ -905,7 +905,9 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
     return true;
   }
   const r = rng19(s, 'decide', () => rngOf(s));
+  const cx19 = CTXFX19.pre?.(s, def.id, opt.id, d.ctx); // r19: contexto do ator (ctxsys19)
   opt.apply(s, r, d.ctx);
+  if (cx19) CTXFX19.post?.(s, cx19);
   runDecisionListeners(s, def.id, opt.id, d.ctx);
   s.decisions = s.decisions.filter((x) => x !== d);
   remember(s, `decision:${def.id}`, fmtL(l('{t} → {o}', '{t} → {o}'), { t: d.title, o: opt.label }), { actId: d.ctx.act ? String(d.ctx.act) : undefined });
