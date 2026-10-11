@@ -159,6 +159,18 @@ export const REG19: Record<string, { sys: string; to: string[] }> = {
   campaign_song: { sys: 'regions19', to: ['regions19:campaign (estresse no protesto, manchete)'] },
 };
 
+/** R19 onda 3, T6 (Frente 7, mercado A; sys/market19a.ts): tipos novos → ouvintes. `scene_boom`/`scene_bust` também
+ *  alimentam a cadeia 6 (zines19/fakes19 da T9 ouvem pelo nome). */
+export const MARKETA19: Record<string, { sys: string; to: string[] }> = {
+  cert_award: { sys: 'market19a', to: ['market19a:cert:press (press9, fama)', 'market19a:cert:value (prestígio do sale17, vitrine)', 'market19a:cert:revival (revival19)', 'GRAMO_ADJ (júri)'] },
+  track_test: { sys: 'market19a', to: ['market19a:test (confiança do ato; vazamento → embalo)'] },
+  ghost_tracks: { sys: 'market19a', to: ['market19a:ghost:press (manchete)', 'market19a:ghost:artists (reputação, confiança do elenco)'] },
+  star_360: { sys: 'market19a', to: ['market19a:360 (manchete, reputação de quem perdeu a estrela)'] },
+  antitrust_remedy: { sys: 'market19a', to: ['market19a:anti (manchete, reputação da major)'] },
+  scene_boom: { sys: 'market19a', to: ['market19a:boom (manchete, gênero em alta)', 'zines19/fakes19 (cadeia 6, T9)'] },
+  scene_bust: { sys: 'market19a', to: ['market19a:bust (gênero cai, calor da cena ×0,5)', 'zines19/fakes19 (cadeia 6, T9)'] },
+};
+
 export interface FactRow19 { kind: string; listeners: string[]; wildcard: string[]; readers: string[]; chron: boolean; why?: string }
 
 /** Monta a matriz para os tipos emitidos (`readers`: tipo → arquivos que leem; `chron`: tipos que passam pela crônica). */

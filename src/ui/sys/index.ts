@@ -149,6 +149,8 @@ import './cine18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 // Rodada 19 (Frente 6, T5): Mundo › Regiões e política (selos regionais, comuna, vistos, greves, campanhas, leis, celeiros).
 import './regions19';
+// Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
+import './market19a';
 import './core18';
 import './finance18';
 import './eras18';
@@ -181,4 +183,6 @@ import './money19';
 // Rodada 19 (Frente 6, T5): Mundo › Regiões e política (selos regionais, comuna, vistos, greves, campanhas, leis, celeiros).
 import './regions19';
 import './history19'; // r19 T8: Mundo › Marcos da história + bloco do Cockpit
+// Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
+import './market19a';
 import './core18';
