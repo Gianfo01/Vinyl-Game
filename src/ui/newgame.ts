@@ -208,7 +208,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const yearSel = select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); refreshAll(); });
   // r20 (§7.5/§9.3): a semente é criada uma vez; editar não sorteia outra; vazia é validada ao começar
   const seedErr = h('small', { class: 'bad', role: 'alert' });
-  const seedInput = h('input', { type: 'text', value: cfg.seed, 'aria-describedby': 'ng20-seed-help', oninput: (e: Event) => { cfg.seed = (e.target as HTMLInputElement).value; if (cfg.seed.trim()) seedErr.textContent = ''; }, onchange: () => refreshAll() }) as HTMLInputElement;
+  const seedInput = h('input', { type: 'text', value: cfg.seed, 'aria-label': t(S.seed), 'aria-describedby': 'ng20-seed-help', // r20b (Z3): o <label> envolve o (?) antes, que virava o controle rotulado
+    oninput: (e: Event) => { cfg.seed = (e.target as HTMLInputElement).value; if (cfg.seed.trim()) seedErr.textContent = ''; }, onchange: () => refreshAll() }) as HTMLInputElement;
   const nameInput = h('input', { type: 'text', value: cfg.companyName, oninput: (e: Event) => (cfg.companyName = (e.target as HTMLInputElement).value || 'Selo') }) as HTMLInputElement;
   const cityBox = h('span');
   let cityQ = '';

@@ -54,3 +54,6 @@
   .ng20-intent .pick { padding: 0.45rem; font-size: 0.85rem; }
   .ng-bar .btn.big { white-space: nowrap; font-size: 0.9rem; padding: 0.45rem 0.7rem; }
 }
+/* r20b (Z3 a11y): com texto a 200% em 390px a lista de cidades (opções longas) empurrava a página para o lado */
+.ng20-where .row > span { min-width: 0; max-width: 100%; }
+.ng20-where select { max-width: 100%; min-width: 0; }

@@ -1,6 +1,6 @@
 .snd-axes { display: grid; gap: 4px; max-width: 640px; margin: 6px 0; }
-.snd-row { display: grid; grid-template-columns: 11rem 5.5rem minmax(6rem, 1fr) 5.5rem 2.2rem; align-items: center; gap: 6px; }
-.snd-axes.compact .snd-row { grid-template-columns: 9rem 4.8rem minmax(5rem, 1fr) 4.8rem; }
+.snd-row { display: grid; grid-template-columns: 11rem 5.5rem minmax(min(6rem, 100%), 1fr) 5.5rem 2.2rem; align-items: center; gap: 6px; }
+.snd-axes.compact .snd-row { grid-template-columns: 9rem 4.8rem minmax(min(5rem, 100%), 1fr) 4.8rem; }
 .snd-name { color: var(--muted); font-size: 0.85rem; }
 .snd-lo { text-align: right; }
 .snd-track { position: relative; height: 0.6rem; background: var(--line); border-radius: 99px; }
@@ -14,7 +14,7 @@
 .snd-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; background: var(--panel-2); }
 .snd-pulls { margin: 4px 0; padding-left: 1.2rem; }
 .snd-sliders { display: grid; gap: 4px; max-width: 640px; margin: 6px 0; }
-.snd-slider { display: grid; grid-template-columns: 12rem 5rem minmax(6rem, 1fr) 5rem 2rem; align-items: center; gap: 6px; }
+.snd-slider { display: grid; grid-template-columns: 12rem 5rem minmax(min(6rem, 100%), 1fr) 5rem 2rem; align-items: center; gap: 6px; }
 .snd-slider input[type='range'] { width: 100%; }
 .snd-arc { display: flex; align-items: flex-end; gap: 3px; height: 54px; margin: 4px 0 8px; max-width: 420px; }
 .snd-arc i { flex: 1; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.8; }
@@ -25,7 +25,7 @@
 .snd-effects .bad { color: var(--bad); }
 .snd-mini { display: inline-block; width: 2.2rem; height: 0.4rem; border-radius: 99px; background: linear-gradient(90deg, var(--accent) var(--v), var(--line) var(--v)); vertical-align: middle; }
 @media (max-width: 700px) {
-  .snd-row, .snd-axes.compact .snd-row { grid-template-columns: 7.5rem minmax(4rem, 1fr) 2rem; }
+  .snd-row, .snd-axes.compact .snd-row { grid-template-columns: 7.5rem minmax(min(4rem, 100%), 1fr) 2rem; }
   .snd-lo, .snd-hi { display: none; }
   .snd-slider { grid-template-columns: 1fr; }
 }

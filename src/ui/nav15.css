@@ -31,7 +31,7 @@ main > .hub > .tabs-wrap > .tabs, main > .panel > .tabs-wrap > .tabs, main > div
 
 /* atalhos */
 .keys15 dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 0.8rem; margin: 0 0 0.8rem; }
-.keys15 dl.cols15 { grid-template-columns: repeat(auto-fill, minmax(2.2rem, max-content) minmax(8rem, 1fr)); }
+.keys15 dl.cols15 { grid-template-columns: repeat(auto-fill, minmax(min(2.2rem, 100%), max-content) minmax(min(8rem, 100%), 1fr)); }
 .keys15 dd { margin: 0; }
 
 /* gaveta (celular) */
@@ -57,3 +57,6 @@ main > .hub > .tabs-wrap > .tabs, main > .panel > .tabs-wrap > .tabs, main > div
   main .tabs-wrap > .tabs button { flex: 0 0 auto; }
 }
 @media (max-width: 860px) and (min-width: 641px) { .bar15 { margin: -0.6rem -16px 0.6rem; padding-left: 16px; padding-right: 16px; top: -0.6rem; } }
+/* r20b (Z3 a11y): com texto grande os itens da trilha encolhiam e o texto de um passava por cima do vizinho */
+.crumbs15 li { overflow: hidden; }
+.crumbs15 li .link { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
