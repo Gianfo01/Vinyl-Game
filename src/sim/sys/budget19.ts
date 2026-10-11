@@ -97,7 +97,7 @@ NOTIFY19.f = (s, n) => {
   if (b.fold.length > 60) b.fold.shift();
   const ex = b.fold.slice(-3).map((x) => x.t);
   const text: L = { pt: `${SUM19} ${b.fold.length} aviso(s) menor(es) agrupado(s) — ${ex.map((x) => x.pt).join(' · ')}`, en: `Monthly summary: ${b.fold.length} minor notice(s) grouped — ${ex.map((x) => x.en).join(' · ')}` };
-  const sum = b.fold.length > 1 ? s.notifications.findLast((x) => x.text.pt.startsWith(SUM19) && x.week >= s.clock.monthStartWeek) : undefined;
+  const sum = b.fold.length > 1 ? [...s.notifications].reverse().find((x) => x.text.pt.startsWith(SUM19) && x.week >= s.clock.monthStartWeek) : undefined;
   if (sum) { sum.text = text; sum.week = n.week; }
   else s.notifications.push({ week: n.week, text, kind: 'info' });
   return true;
