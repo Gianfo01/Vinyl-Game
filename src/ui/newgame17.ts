@@ -158,7 +158,7 @@ export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () =
     const w = world17ById[rs.id];
     list.replaceChildren(...WORLDS17.map((x) => h('label', { class: `ng20-mode ${x.id === rs.id ? 'on' : ''}` },
       h('input', { type: 'radio', name: 'world20', value: x.id, checked: x.id === rs.id, onchange: () => { applyWorld17(cfg, x.id); draw(); onChange(); } }),
-      h('span', null, h('b', null, t(x.name)), x.id === 'random' ? h('span', { class: 'ng20-badge' }, t(l('PADRÃO', 'DEFAULT'))) : null, h('small', null, t(x.short ?? x.desc))))));
+      h('span', null, h('b', null, t(x.name), x.id === 'random' ? h('span', { class: 'ng20-badge' }, t(l('PADRÃO', 'DEFAULT'))) : null), h('small', null, t(x.short ?? x.desc))))));
     const legacy = rs.id === 'random' && codeStatus20(cfg) === 'legacy';
     info.replaceChildren(...nn20(
       rs.custom ? h('p', { class: 'small warn' }, h('span', { class: 'ng20-badge' }, t(l('Personalizado', 'Custom'))), ' ', t(l('Ajustes avançados mudaram: {d}. O motor vai rodar exatamente isto.', 'Advanced tweaks changed: {d}. The engine will run exactly this.'), { d: rs.diffL.map((x) => t(x)).join(', ') }), ' ',

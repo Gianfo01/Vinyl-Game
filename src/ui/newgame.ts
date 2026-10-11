@@ -372,7 +372,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const reviewBtn = (cls: string) => h('button', { type: 'button', class: cls, onclick: () => { fromReview = false; go(REVIEW); } }, t(l('Revisar e começar', 'Review and start')));
   const sideAct = h('div', { class: 'row center ng20-side-act' });
   const barAct = h('span');
-  function go(i: number, focus = false, focusPanel = false): void {
+  function go(i: number, focus = false, focusPanel = false, quiet = false): void {
     cur = Math.max(0, Math.min(REVIEW, i));
     tabBtns.forEach((b, j) => { b.setAttribute('aria-selected', String(j === cur)); b.tabIndex = j === cur ? 0 : -1; b.classList.toggle('on', j === cur); });
     panels.forEach((p, j) => (p.hidden = j !== cur));
@@ -385,7 +385,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     drawSummary();
     if (focus) tabBtns[cur].focus();
     else if (focusPanel) { panels[cur].scrollIntoView?.({ block: 'start' }); (panels[cur].querySelector('h3, h4') as HTMLElement | null)?.setAttribute('tabindex', '-1'); (panels[cur].querySelector('h3, h4') as HTMLElement | null)?.focus?.(); }
-    else tabBtns[cur].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    else if (!quiet) tabBtns[cur].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   }
   // r20 (§6.2, NR06): começar sem submissão dupla; gera sobre uma CÓPIA do rascunho; falha mantém rascunho e semente
   let busy = false;
@@ -418,7 +418,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     }, 30);
   };
   const startBtn = (extra = '') => { const b = h('button', { type: 'button', class: `btn primary big ${extra}`, disabled: busy, onclick: start }, busy ? t(l('Gerando seu mundo…', 'Generating your world…')) : t(l('Começar run', 'Start run'))) as HTMLButtonElement; startBtns.push(b); return b; };
-  const intent = h('div', { class: 'row wrap ng20-intent', role: 'group', 'aria-label': t(l('Como você quer começar', 'How you want to start')) },
+  const intent = h('div', { class: 'ng20-intent', role: 'group', 'aria-label': t(l('Como você quer começar', 'How you want to start')) },
     h('button', { type: 'button', class: 'pick on', 'aria-pressed': 'true' }, h('b', null, t(l('Nova run livre', 'New free run'))), h('small', null, t(l('Configure com o padrão novo; tudo é editável.', 'Configure with the new default; everything is editable.')))),
     h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', onclick: () => scenarioScreen(root, onStart, () => newGameScreen(root, onStart, cfg, cur)) }, h('b', null, '🏅 ', t(l('Cenários e desafios', 'Scenarios and challenges'))), h('small', null, t(l('Veja regras, ano, cidade e meta antes de iniciar.', 'See rules, year, city and goal before starting.')))),
     h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', onclick: () => pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, REVIEW)) }, h('b', null, '⇥ ', t(l('Usar código de run', 'Use a run code'))), h('small', null, t(l('Importa para o rascunho e mostra a revisão; mantém as regras do código.', 'Imports into the draft and shows the review; keeps the code\'s rules.')))));
@@ -437,7 +437,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   // resumo sempre em dia: os handlers dos campos rodam antes deste (borbulha até o contêiner)
   for (const ev of ['input', 'change', 'click']) wrap.addEventListener(ev, (e) => { if ((e.target as HTMLElement).closest?.('.ng-nav, .ng20-side-act, .ng-bar, .ng-tabs, .ng20-group-h')) return; drawSummary(); });
   root.replaceChildren(wrap);
-  go(cur);
+  go(cur, false, false, true);
 }
 
 /** Cartões extras do Novo Jogo (rodada 9: mundo/história prévia). Função içada: segura na ordem de carga. */

@@ -45,3 +45,12 @@
   .ng20-intent .pick small { display: none; }
   .ng-bar { flex-wrap: nowrap; }
 }
+@media (max-width: 640px) {
+  .ng20 header h1 { font-size: 1.35rem; }
+  .ng20 .ng17-preset-grid { grid-template-columns: 1fr 1fr; }
+  .ng20 .ng17-preset-grid .pick small { display: none; }
+  .ng20 .ng17-presets h3 { font-size: 1rem; margin: 0 0 0.3rem; }
+  .ng20-intent { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ng20-intent .pick { padding: 0.45rem; font-size: 0.85rem; }
+  .ng-bar .btn.big { white-space: nowrap; font-size: 0.9rem; padding: 0.45rem 0.7rem; }
+}
