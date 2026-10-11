@@ -162,6 +162,7 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
 /** Tipos que não aparecem com segurança em bots curtos (1 ano), com o motivo (levantamento: 6 bots de 3 anos, 1889–2015,
  *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
 const INBOX_RARE19: Record<string, string> = {
+  dlg19: 'budget19: exceção da equipe delegada por carreira — só com delegação de empresário/festival/estúdio ligada (desligada por padrão)',
   m19_call: 'money19: banco chama a dívida só com empréstimo e covenant quebrado (3 trimestres no prejuízo ou dívida > receita de 12 meses)',
   m19_auc: 'money19: leilão só quando um selo NPC quebra (raro em bots curtos)',
   af19_suit: 'espólio processa pelos masters: exige morte de artista do seu elenco com masters retidos (raro em bots curtos)',
@@ -286,19 +287,33 @@ const INBOX_RARE19: Record<string, string> = {
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 
+// A cobertura completa (4 bots de 1 ano: era × carreira) é longa: roda com BALANCE_FULL=1. Sempre: a lista de exceções
+// confere com os tipos registrados e um bot curto (3 meses, 2010, base pequena) entrega mensagens tipadas na Caixa.
+const FULL19 = !!process.env.BALANCE_FULL;
 describe('r19 11.9 — cobertura dos tipos da Caixa', () => {
-  it('todo registerInboxKind aparece em bots curtos por era × carreira ou tem motivo', () => {
+  const collect = (runs: [number, 'label' | 'artist'][], years: number, db?: 'small') => {
     const seen: Record<string, number> = {};
     const ids = new Set<string>();
     registerSimHook('month', 'test:inbox19', (s) => { for (const m of P(s).inbox) { const k = m.ref?.k18; if (k && !ids.has(m.id)) { ids.add(m.id); seen[String(k)] = (seen[String(k)] ?? 0) + 1; } } });
-    for (const [y, role] of RUNS19) simulatePlayer(defaultConfig(`ib19-${y}`, { startYear: y, role }), 1, 'balanced');
-    registerSimHook('month', 'test:inbox19', () => {});
+    try { for (const [y, role] of runs) simulatePlayer(defaultConfig(`ib19-${y}`, { startYear: y, role, ...(db ? { dbSize: db } : {}) }), years, 'balanced'); }
+    finally { registerSimHook('month', 'test:inbox19', () => {}); }
+    return seen;
+  };
+  it('lista de exceções sem entradas velhas e com motivo', () => {
     const kinds = inboxKinds18();
-    const never = kinds.filter((k) => !seen[k] && !INBOX_RARE19[k]);
     const stale = Object.keys(INBOX_RARE19).filter((k) => !kinds.includes(k));
-    console.log('IB19 seen', JSON.stringify(seen), 'never', JSON.stringify(never), 'stale', JSON.stringify(stale));
-    expect(never).toEqual([]);
     expect(stale).toEqual([]);
     for (const [k, why] of Object.entries(INBOX_RARE19)) expect(why.length, k).toBeGreaterThan(15);
+  });
+  it('bot curto entrega mensagens tipadas na Caixa', () => {
+    const seen = collect([[2010, 'label']], 0.25, 'small');
+    expect(Object.keys(seen).length).toBeGreaterThan(0);
+  }, 120000);
+  it.runIf(FULL19)('todo registerInboxKind aparece em bots curtos por era × carreira ou tem motivo', () => {
+    const seen = collect(RUNS19, 1);
+    const kinds = inboxKinds18();
+    const never = kinds.filter((k) => !seen[k] && !INBOX_RARE19[k]);
+    console.log('IB19 seen', JSON.stringify(seen), 'never', JSON.stringify(never));
+    expect(never).toEqual([]);
   }, 900000);
 });

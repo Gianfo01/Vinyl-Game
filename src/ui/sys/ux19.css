@@ -1,0 +1,65 @@
+/* Rodada 19 (Frente 8, onda 4 — ux19): cartão de virada, metas, recibo, "por que perdi?", epitáfio, menu e acessibilidade. */
+.ux19-turn, .ux19-open, .ux19-end, .ux19-loss { display: grid; gap: 10px; min-width: 0; text-align: left; }
+.ux19-hero { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.ux19-hero h3 { margin: 0; }
+.ux19-art { width: 288px; max-width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--line, #444); border-radius: 4px; }
+.ux19-kicker { margin: 0; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #aaa); }
+.ux19-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 10px; }
+.ux19-sec { min-width: 0; overflow-wrap: anywhere; }
+.ux19-sec h4 { margin: 0 0 6px; }
+.ux19-sec ul, .ux19-sec ol { margin: 4px 0; padding-left: 18px; }
+.ux19-ch { margin-bottom: 6px; }
+.ux19-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; margin: 6px 0; }
+.ux19-kpis > div { display: flex; flex-direction: column; min-width: 0; }
+.ux19-kpis small { color: var(--muted, #aaa); }
+.ux19-actions { justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.ux19-goals { list-style: none; padding: 0 !important; display: grid; gap: 6px; }
+.ux19-goal { display: flex; gap: 8px; align-items: flex-start; }
+.ux19-goal.good .ux19-gi { color: var(--good, #48b85c); }
+.ux19-goal.bad .ux19-gi { color: var(--bad, #e04848); }
+.ux19-gt { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.ux19-prog { display: block; height: 6px; background: color-mix(in srgb, var(--ink, #241c17) 15%, transparent); border-radius: 3px; overflow: hidden; }
+.ux19-prog > i { display: block; height: 100%; background: var(--accent, #f0c040); }
+.ux19-fig { margin: 6px 0; }
+.ux19-bars { max-width: 100%; height: auto; display: block; }
+.ux19-bars rect.a { fill: var(--accent, #f0c040); }
+.ux19-bars rect.b { fill: var(--good, #48b85c); }
+.ux19-bars rect.b.neg { fill: var(--bad, #e04848); }
+.ux19-bars line.base { stroke: var(--muted, #888); stroke-width: .5; }
+.ux19-bars text { font-size: 7px; fill: var(--muted, #aaa); }
+.ux19-key.a { color: var(--accent, #f0c040); }
+.ux19-key.b { color: var(--good, #48b85c); }
+.ux19-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ux19-top li { margin: 2px 0; }
+.ux19-warn { border-color: var(--bad, #e04848); }
+.ux19-causes li { margin-bottom: 8px; }
+.ux19-epi { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.ux19-epi .ux19-art { width: 192px; }
+.ux19-epi h3 { margin: 0; }
+.ux19-epi-list { padding-left: 18px; }
+.ux19-ach { list-style: none; padding: 0; }
+/* recibo de decisão (canto inferior; no celular ocupa a largura) */
+.ux19-rcbox { position: fixed; right: 16px; bottom: 16px; z-index: 60; max-width: min(420px, calc(100vw - 32px)); background: var(--panel, #fffaf2); color: var(--ink, #241c17);
+  border: 2px solid var(--accent, #f0c040); border-radius: 6px; padding: 10px 34px 10px 12px; box-shadow: 0 4px 18px rgba(0, 0, 0, .4); transition: opacity .5s; }
+.ux19-rcbox.out { opacity: 0; }
+.ux19-rcbox .ux19-x { position: absolute; top: 4px; right: 4px; }
+.ux19-rc { display: grid; gap: 3px; }
+.ux19-rc-now { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.ux19-rcl { list-style: none; padding: 0 !important; display: grid; gap: 8px; }
+.ux19-rcl > li { border-left: 3px solid var(--line, #555); padding-left: 8px; }
+.ux19-navfoot { display: grid; gap: 2px; padding: 8px; border-top: 1px solid var(--line, #444); margin-top: 6px; }
+@media (max-width: 480px) { .ux19-rcbox { left: 8px; right: 8px; bottom: 76px; max-width: none; } .ux19-art { width: 100%; } }
+
+/* acessibilidade (P10): foco visível em tudo que é interativo, sem animação para quem pede */
+:is(main, nav, .modal, .ux19-rcbox, .drawer15) :is(button, a, select, input, textarea, summary, [tabindex]):focus-visible,
+[role=tab]:focus-visible { outline: 3px solid var(--accent, #f0c040); outline-offset: 2px; }
+html.reduced-motion *, html.reduced-motion *::before, html.reduced-motion *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+/* contraste (WCAG AA 4,5:1 no tema claro): cinza de apoio, destaque e verde um pouco mais escuros
+   (#7a6d62 → #6b5f55, #c8641e → #a4501a, #2f7d4f → #286c44, aviso #8a5b13, ruim #9e3127: texto branco no botão 5,6:1, destaque no papel 5,4:1) */
+:root[data-theme='light']:not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; --warn: #8a5b13; --bad: #9e3127; }
+@media (prefers-color-scheme: light) { :root:not([data-theme]):not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; --warn: #8a5b13; --bad: #9e3127; } }
+/* contraste nas páginas R19 (calendário e topo do Cockpit): contador "pedem atenção" e datas sobre fundo tingido */
+.h19-n.bad { background: var(--bad); color: var(--panel); }
+.c19-date { color: color-mix(in srgb, var(--ink) 80%, var(--muted)); }

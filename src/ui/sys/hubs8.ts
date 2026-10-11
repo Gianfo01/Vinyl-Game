@@ -13,7 +13,7 @@ import { CAMPAIGN_COST, CEREMONY_MONTH, GRAMO_CATS, NOMS_MONTH, REGIONAL_AWARDS,
 import type { GramoCat } from '../../sim/sys/ceremonies8';
 import { AWARD_CATS, awardName, ch7 } from '../../sim/sys/charts7';
 import { TIER_NAME, TIER_ORDER, acceptInvite, declineInvite, editionOf, fest8, festActive, festCapacity, festFee, festMonth, festTierFor, pitchAct, withdraw, type FestTier, type PitchResult } from '../../sim/sys/fests8';
-import { festForecast12 } from './explain12';
+import { festForecast12, refreshForecast12 } from './explain12';
 import type { GameState } from '../../sim/types';
 import { money, playerActs, rngOf } from '../../sim/util';
 import { existsNow } from '../../sim/future';
@@ -91,8 +91,8 @@ export function openFestivalPage(fi: number): void {
     const form = { actId: mine[0]?.id ?? '', tier: 'afternoon' as FestTier, fee: 0 };
     const reply = h('div', { class: 'eval' });
     const feeInput = h('input', { type: 'number', min: 0, step: 50 }) as HTMLInputElement;
-    const refreshFee = () => { const a = s.acts[form.actId]; if (a) { form.fee = festFee(s, f, a, form.tier); feeInput.value = String(Math.round(form.fee / 100)); } };
-    feeInput.oninput = () => { form.fee = Math.max(0, Math.round(Number(feeInput.value) * 100)); };
+    const refreshFee = () => { const a = s.acts[form.actId]; if (a) { form.fee = festFee(s, f, a, form.tier); feeInput.value = String(Math.round(form.fee / 100)); } refreshForecast12(form); };
+    feeInput.oninput = () => { form.fee = Math.max(0, Math.round(Number(feeInput.value) * 100)); refreshForecast12(form); };
     refreshFee();
     const showReply = (res: PitchResult) => {
       reply.replaceChildren(h('p', { class: res.result === 'accepted' ? 'good' : res.result === 'rejected' ? 'bad' : '' }, t(res.text)),

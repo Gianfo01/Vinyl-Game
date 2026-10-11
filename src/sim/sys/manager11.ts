@@ -7,6 +7,7 @@
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { acceptOffer, defaultOffer, expectedAdvance, signWithRival } from '../contracts';
+import { tourCancelP19 } from '../ctx19';
 import { registerExt4, registerSimHook } from '../ext4';
 import { langForCity, personName } from '../people';
 import type { Act, GameState, Offer } from '../types';
@@ -102,7 +103,7 @@ export function bookTour(s: GameState, r: Rng, actId: string): { ok: boolean; te
   pay(s, -cost, `tourprod:${actId}`, `Produção de turnê ${a.name}`);
   const x = cxOf(s, actId);
   x.tourW = s.week;
-  if (r.chance(clamp(0.14 - mg.rep / 1000, 0.04, 0.14))) {
+  if (r.chance(tourCancelP19(s, mg.rep, a, !!ventures(s).list.some((v) => v.kind === 'booking' && v.clients?.some((k) => k.actId === actId))).v)) { // r19: porte do nome, estresse, época, agência própria
     c.sat = clamp(c.sat - 8, 0, 100);
     return bad(fmtL(l('A turnê de {a} foi cancelada: casas vazias e promotor sumido.', '{a}\'s tour fell apart: empty rooms and a vanished promoter.'), { a: a.name }));
   }

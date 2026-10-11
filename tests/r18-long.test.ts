@@ -11,7 +11,8 @@ import { paBlock18, personActionDefs18 } from '../src/sim/personact18';
 import { playerActs } from '../src/sim/util';
 
 describe('r18 long18', () => {
-  const { state: s } = simulatePlayer(defaultConfig('long18t', { startYear: 1990 }), 2, 'balanced');
+  // 1 ano basta para post-mortem, ano em revista e cockpit; BALANCE_FULL=1 joga os 2 anos de antes
+  const { state: s } = simulatePlayer(defaultConfig('long18t', { startYear: 1990 }), process.env.BALANCE_FULL ? 2 : 1, 'balanced');
   it('post-mortem, ano em revista, biografia, casa e três perguntas', () => {
     const pm = rv18(s).pm;
     expect(pm.length).toBeGreaterThan(0);

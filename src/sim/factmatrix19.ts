@@ -206,6 +206,10 @@ export function factMatrix19(emitted: string[], readers: Record<string, string[]
 export const consumed19 = (r: FactRow19): boolean => r.listeners.length + r.wildcard.length + r.readers.length > 0 || r.chron;
 
 /** R19 T2 money-b (sys/moneyb19.ts): mercado de contratos, empresário total, disco de cumprimento, briga de gestão. */
+/** Rodada 19 (onda 5, B.5): delegação por carreira (budget19). */
+export const BUDGET19: Record<string, { sys: string; to: string[] }> = {
+  deleg_exc: { sys: 'budget19', to: ['budget19:deleg (mensagem "A equipe precisa de você" na Caixa; exceção na aba Políticas)'] },
+};
 export const MONEYB19: Record<string, { sys: string; to: string[] }> = {
   contract_sold: { sys: 'moneyb19', to: ['moneyb19:sold (reputação com artistas, confiança do elenco, calor do comprador, diário, manchete)'] },
   sale_regret: { sys: 'moneyb19', to: ['moneyb19:regret (reputação comercial, diário "arrependimento", manchete)'] },
@@ -233,6 +237,12 @@ export const MARKETB19: Record<string, { sys: string; to: string[] }> = {
   culture_shift: { sys: 'culture19', to: ['culture19:staff (lealdade da equipe, confiança do elenco, manchete)'] },
   naming_deal: { sys: 'naming19', to: ['naming19:rep (reputação da casa/festival, manchete)'] },
   naming_pulled: { sys: 'naming19', to: ['naming19:back (nome antigo volta, manchete)'] },
+};
+
+/** R19 Frente 8 (onda 4, sys/ux19.ts): viradas de década/era e metas da era → ouvintes. */
+export const UX19: Record<string, { sys: string; to: string[] }> = {
+  era_turn: { sys: 'ux19', to: ['ux19:era (manchete press9 + Diário; a interface abre o cartão da virada)'] },
+  era_goal: { sys: 'ux19', to: ['ux19:goal (moral do elenco +2, Diário)'] },
 };
 
 /** R19 onda 5, A (sys/careers19.ts, sys/intra19.ts): carreiras que sustentam a partida e economia interna. */

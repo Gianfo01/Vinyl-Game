@@ -24,7 +24,11 @@ export interface Prefs {
   cutscenes?: boolean;
   /** pele da interface por era */
   eraSkin?: boolean;
+  /** r19 (B.5): perguntar antes de avançar quando há cartões que vão valer o padrão (false = não perguntar) */
+  ask19?: boolean;
   /** r18 tutorial18: tours vistos, dicas vistas, visitas, trilhas concluídas e o que está desligado */
+  /** r19 tutoff19: "Sem tutoriais (já sei jogar)" — desliga tudo que é tutorial de uma vez */
+  noTut19?: boolean;
   tut18?: { tours: Record<string, number>; tips: Record<string, number>; visits: Record<string, number>; done: Record<string, number>; noTours?: boolean; noTips?: boolean };
 }
 

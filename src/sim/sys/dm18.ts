@@ -14,6 +14,7 @@
 // O "Diário do Mestre" (ui/sys/dm18.ts) mostra só o que você sabe.
 
 import { rng19 } from '../rng19';
+import { CONFLICTS19 } from '../conflicts19';
 import { clamp, Rng } from '../../core/rng';
 import { familyOf, l, type L } from '../../data/world';
 import { dir17 } from '../director17';
@@ -540,7 +541,8 @@ function opener(s: GameState, r: Rng): void {
   const mine = openThreads(s).filter((t) => t.mine).length, npc = openThreads(s).filter((t) => !t.mine).length;
   const phaseOk = st.ph === 'calm' || st.ph === 'rising' || (st.ph === 'resolution' && r.chance(0.3));
   if (!phaseOk || !r.chance(0.55)) return;
-  const pool = THREADS18.filter((d) => (d.mine ? mine < 4 : npc < 4) && !openThreads(s).some((t) => t.k === d.k && d.mine));
+  const full = CONFLICTS19.full(s); // r19: com o orçamento global cheio, o Mestre só abre fios entre NPCs
+  const pool = THREADS18.filter((d) => (d.mine ? mine < 4 && !full : npc < 4) && !openThreads(s).some((t) => t.k === d.k && d.mine));
   const order = pool.map((d) => [d, r.float() * (d.k === 'journey' ? 0.6 : 1) * (THREADS_W[d.k] ?? 1)] as [ThreadDef18, number]).sort((a, b) => b[1] - a[1]);
   for (const [d] of order) {
     const o = d.open(s, r);

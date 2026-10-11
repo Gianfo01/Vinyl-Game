@@ -20,6 +20,7 @@ import { pick19, moreStrip19, renderBlocks19, type Block19, type Pick19 } from '
 import { why18 } from '../explain18';
 import { calStrip19 } from './calendar19';
 import { ic } from '../vis';
+import { moodBlock19, quick19 } from './prof19';
 import './home18.css';
 
 const go = (area: string) => { store.area = area as typeof store.area; rerender(); };
@@ -136,10 +137,6 @@ function urgency(s: GameState): HTMLElement {
     b(bad > 0, 'warn', `↩ ${bad} ${t(l('podem voltar', 'may return'))}`, () => go('inbox')),
     b(run < 3, 'bad', `💸 ${t(l('fôlego de {n} meses', '{n} months of runway'), { n: Math.max(0, Math.round(run * 10) / 10) })}`, () => go('finance')));
 }
-function quick(): HTMLElement {
-  const q: [string, string, L][] = [['market', 'fans', l('Contratar', 'Sign')], ['studio', 'note', l('Gravar', 'Record')], ['releases', 'disc', l('Lançar', 'Release')], ['shows', 'mic', l('Shows', 'Shows')], ['finance', 'money', l('Finanças', 'Finances')], ['charts', 'chart-up', l('Paradas', 'Charts')]];
-  return h('div', { class: 'hm18-quick', role: 'toolbar', 'aria-label': t(l('Atalhos', 'Quick actions')) }, q.map(([a, i, lb]) => h('button', { class: 'btn small ghost', onclick: () => go(a) }, ic(i), ' ', t(lb))));
-}
 
 /** r19 (era19/realhist19): outros sistemas acrescentam blocos ao topo do Cockpit ("A era", "A história real"). */
 export const HOME_EXTRA19: ((s: GameState) => Block19[])[] = [];
@@ -148,12 +145,13 @@ export function homeBlocks18(s: GameState): Block19[] {
   const hot = mine(s).some((a) => a.members.some((id) => { const p = s.persons[id]; return p?.alive && (p.stress > 70 || p.resentment > 50); }));
   const P = pending18(s), soon = P.filter((x) => x.tone === 'bad' && x.from - s.week <= 4).length;
   const hi = highlights(s);
+  const mood = moodBlock19(s); // r19 B.4: clientes (empresário) / último público (festival) conforme a carreira principal
   return [
     { id: 'home:cal', title: l('Calendário', 'Calendar'), weight: 80, el: calStrip19(s), host: 'home' },
     { id: 'home:pulse', title: l('Pulso do mês', 'Monthly pulse'), weight: 72, el: pulse(s), host: 'home' },
     { id: 'home:hi', title: l('Grandes momentos', 'Big moments'), weight: 60, when: !!hi, el: hi, host: 'home' },
     { id: 'home:pend', title: l('Consequências pendentes', 'Pending consequences'), weight: soon ? 66 : 42, when: P.length > 0, el: pendingView18(s, 4), host: 'home' },
-    { id: 'home:mood', title: l('Humor do elenco', 'Roster mood'), weight: hot ? 68 : 38, el: roster(s), host: 'home' },
+    mood ? { id: 'home:mood', title: mood.title, weight: mood.hot ? 68 : 38, el: mood.el, host: 'home' } : { id: 'home:mood', title: l('Humor do elenco', 'Roster mood'), weight: hot ? 68 : 38, el: roster(s), host: 'home' },
     { id: 'home:tick', title: l('Notícias e paradas', 'News and charts'), weight: 28, el: ticker(s), host: 'home' },
     { id: 'home:spot', title: l('Holofote', 'Spotlight'), weight: 22, el: spotlight(s), host: 'home' },
     ...HOME_EXTRA19.flatMap((f) => { try { return f(s); } catch { return []; } }),
@@ -167,7 +165,7 @@ export function home18(s: GameState, p?: Pick19): HTMLElement {
   paintW = s.week;
   const pk = p ?? pick19(s, homeBlocks18(s));
   return h('div', { class: `hm18 ${fresh ? 'anim' : ''}` },
-    h('div', { class: 'hm18-row' }, urgency(s), quick()),
+    h('div', { class: 'hm18-row' }, urgency(s), quick19(s)),
     h('div', { class: 'b19-home' }, renderBlocks19(s, pk, 'home')),
     moreStrip19(s, pk));
 }

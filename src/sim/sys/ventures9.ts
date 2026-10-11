@@ -11,6 +11,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { scandal } from '../scandal17';
+import { commW19, crisisP19, favorCost19, rivalFest19, studioComp19 } from '../ctx19';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 
@@ -268,9 +269,9 @@ function festivalEdition(s: GameState, r: Rng, v: Venture): void {
   const head = ups[0]?.a;
   const draw = clamp(0.1 + (head?.fame ?? 0) / 130 + ups.length * 0.03 + v.rep / 250 + standingOf(s, 'player').pop / 600, 0, 1.4);
   const ratio = (v.price ?? money(s, 25)) / money(s, 25);
-  const competition = ventures(s).npc.filter((n) => n.kind === 'festival' && n.city === v.city).length;
+  const competition = rivalFest19(s, ventures(s).npc, { city: v.city, month: v.month ?? 6, rep: v.rep }).v; // r19: rival ponderado por distância, mês e porte
   const rain = r.chance([0, 1, 2, 10, 11].includes(v.month!) ? 0.18 : 0.08);
-  let crowd = Math.round(Math.min(cap, cap * draw * Math.pow(ratio, -0.8) * Math.pow(0.88, competition) * (rain ? 0.6 : 1)));
+  let crowd = Math.round(Math.min(cap, cap * draw * Math.pow(ratio, -0.8) * competition * (rain ? 0.6 : 1)));
   const disaster = r.chance(clamp(0.035 - v.level * 0.003 - v.staff * 0.003 + (crowd > cap * 0.95 ? 0.02 : 0), 0.004, 0.08));
   if (disaster) crowd = Math.round(crowd * 0.7);
   const fees = ups.reduce((t, y) => t + y.x.fee, 0);
@@ -414,8 +415,8 @@ export function upgradeGear(s: GameState, id: string): L | null {
 
 function studioMonth(s: GameState, r: Rng, v: Venture): void {
   const gap = maxGear(s) - v.gear!;
-  const comp = ventures(s).npc.filter((n) => n.kind === 'studio' && n.city === v.city).length;
-  const demand = v.level * 3 * (0.4 + v.sound! / 100) * Math.pow(0.6, gap) * Math.pow(0.85, comp);
+  const comp = studioComp19(ventures(s).npc.filter((n) => n.kind === 'studio' && n.city === v.city), v.rep).v; // r19: rival pesa pela reputação relativa
+  const demand = v.level * 3 * (0.4 + v.sound! / 100) * Math.pow(0.6, gap) * comp;
   const n = Math.max(0, Math.round(demand + r.normal(0, 1)));
   const labs = Object.values(s.labels).filter((x) => x.active);
   v.booked = [];
@@ -445,13 +446,17 @@ export function bookingCandidates(s: GameState, id: string): Act[] {
 }
 export function grossShows(s: GameState, a: Act): number { return money(s, 250 * Math.pow(1 + a.fame / 10, 1.6)); }
 
+/** R19: a mesma conta que a tela mostra e o sorteio usa (comissão menor e agência de nome convencem; estrelas resistem). */
+export function bookingChance(_s: GameState, v: Venture, a: Act, rate: number): number {
+  rate = clamp(rate, 0.08, 0.2);
+  return clamp(0.5 + v.rep / 200 - (rate - 0.1) * 3 - a.fame / 300 + v.level * 0.04, 0.05, 0.95);
+}
 export function signBooking(s: GameState, r: Rng, id: string, actId: string, rate: number): { ok: boolean; text: L } {
   const v = byId(s, id);
   const a = s.acts[actId];
   if (!v || v.kind !== 'booking' || !activeAct(a)) return { ok: false, text: l('Inválido.', 'Invalid.') };
   if (v.clients!.length >= 3 + v.level * 2) return { ok: false, text: l('A agência está no limite de clientes.', 'The agency is at client capacity.') };
-  rate = clamp(rate, 0.08, 0.2);
-  if (!r.chance(clamp(0.5 + v.rep / 200 - (rate - 0.1) * 3 - a.fame / 300 + v.level * 0.04, 0.05, 0.95))) return { ok: false, text: fmtL(l('{a} ficou com a agência atual.', '{a} stayed with their current agency.'), { a: a.name }) };
+  if (!r.chance(bookingChance(s, v, a, rate))) return { ok: false, text: fmtL(l('{a} ficou com a agência atual.', '{a} stayed with their current agency.'), { a: a.name }) };
   v.clients!.push({ actId, rate, since: s.week });
   return { ok: true, text: fmtL(l('{a} agora é agenciado por {n}.', '{a} is now booked by {n}.'), { a: a.name, n: v.name }) };
 }
@@ -530,7 +535,7 @@ function mediaMonth(s: GameState, r: Rng, v: Venture): void {
   if (fav) {
     fav.momentum = clamp(fav.momentum + v.reach / 20, 0, 100);
     if (r.chance(v.reach / 200)) fav.fame = clamp(fav.fame + 1, 0, 100);
-    if (fav.owner === 'player') v.rep = clamp(v.rep - 0.4, 0, 100); // jabá caseiro: público percebe
+    if (fav.owner === 'player') v.rep = clamp(v.rep - favorCost19(v.media ?? 'magazine', v.reach ?? 0, fav.fame).v, 0, 100); // jabá caseiro: público percebe (r19: pelo tipo de veículo, alcance e fama)
   }
   if (v.scene) {
     const key = `${v.city}:${v.scene}`;
@@ -641,7 +646,7 @@ export function mgChance(s: GameState, a: Act, rate: number): number {
   const mg = ventures(s).mg;
   const o = ownerOf(s);
   const fired = mg.fired.some((f) => f.actId === a.id && s.year - f.y < 5);
-  return clamp(0.35 + mg.rep / 200 + (o.attrs.charisma - 50) / 250 + (standingOf(s, 'player').trust - 50) / 400 - (rate - 0.1) * 2.5 - Math.max(0, a.fame - mg.rep) / 150 - (fired ? 0.3 : 0) + (a.owner === 'player' ? 0.1 : 0) + mgAdj9.reduce((t, f) => t + f(s, a), 0), 0.03, 0.95);
+  return clamp(0.35 + mg.rep / 200 + (o.attrs.charisma - 50) / 250 + (standingOf(s, 'player').trust - 50) / 400 - (rate - 0.1) * 2.5 * commW19(s, a).v - Math.max(0, a.fame - mg.rep) / 150 - (fired ? 0.3 : 0) + (a.owner === 'player' ? 0.1 : 0) + mgAdj9.reduce((t, f) => t + f(s, a), 0), 0.03, 0.95);
 }
 /** Rodada 14: ajustes externos à chance de conquistar um cliente (ex.: empresário rival que já o representa). */
 export const mgAdj9: ((s: GameState, a: Act) => number)[] = [];
@@ -735,7 +740,7 @@ function managementMonth(s: GameState, r: Rng): void {
       c.sat = clamp(c.sat - 20, 0, 100);
       notify(s, fmtL(l('Você deixou a crise de {a} sem resposta. O estrago está feito.', 'You left {a}\'s crisis unanswered. The damage is done.'), { a: a.name }), 'bad');
       c.crisis = undefined;
-    } else if (!c.crisis && r.chance(0.03)) {
+    } else if (!c.crisis && r.chance(crisisP19(s, a).v)) { // r19: temperamento, fama e saúde do artista
       c.crisis = { k: r.pick(['scandal', 'burnout', 'feud', 'legal'] as CrisisK[]), w: s.week };
       notify(s, fmtL(l('Crise com {a}: {k}. Resolva na Gestão de artistas.', 'Crisis with {a}: {k}. Handle it in Artist management.'), { a: a.name, k: CRISIS_NAME[c.crisis.k] }), 'bad');
     }

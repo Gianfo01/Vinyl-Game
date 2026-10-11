@@ -298,6 +298,18 @@ import './contests19';
 // Rodada 19 (onda 3, T3): pós-vida (espólio como ator, 11.8, arena digital) e endosso de instrumentos/instrumento-ícone.
 import './afterlife19';
 import './gear19';
+// Rodada 19 (world19): Nosso mundo — lotes, vizinhança, ampliações e popups sobre o mapa.
+import './world19';
+import './hood19';
+// Rodada 19 (Frente 8, onda 4): viradas de década/era, metas por época, recibo de decisão, "por que perdi?", epitáfio e divulgação progressiva.
+import './ux19';
+// r19 onda 5 (C): regras de contexto, ctxFx das decisões e vitórias pequenas
+import './ctxsys19';
+import './wins19';
+// Rodada 19 (onda 5, B): registro de chances das telas de negociação (mostrada = sorteada).
+import './odds19';
+import './prof19';
+import './budget19';
 // Rodada 19 (onda 5, A): carreiras que sustentam a partida (pacotes iniciais, festival, empresário) e economia interna.
 import './careers19';
 import './intra19';

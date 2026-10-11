@@ -38,7 +38,9 @@ import { v17, vdef } from './venues17';
 export type BKind = 'hq' | 'branch' | 'studio' | 'venue' | 'fest' | 'school' | 'museum' | 'publisher' | 'plant' | 'office' | 'media' | 'platform'
   | 'booking' | 'rehearsal' | 'imprint' | 'sublabel' | 'home' | 'store' | 'sign' | 'dorm' | 'park';
 export type BState = 'planned' | 'building' | 'open' | 'renovating' | 'damaged' | 'closed' | 'sold';
-export type Style18 = 'victorian' | 'brick' | 'deco' | 'midcentury' | 'brutal' | 'postmod' | 'glass' | 'eco';
+export type Style18 = 'victorian' | 'brick' | 'deco' | 'midcentury' | 'brutal' | 'postmod' | 'glass' | 'eco' | 'gothic' | 'beaux' | 'tropical' | 'loft' | 'neon';
+/** r19 (world19): o primeiro lugar do selo, antes de qualquer ampliação */
+export type Place19 = 'parlour' | 'backroom' | 'garage' | 'bedroom' | 'basement' | 'homestudio';
 export type Vehicle18 = 'cart' | 'modelT' | 'round' | 'fin' | 'boxy' | 'suv' | 'pod';
 
 export interface Bld18 {
@@ -54,21 +56,27 @@ export interface Bld18 {
   prog?: number;
   lot?: number;
   goto?: Goto18;
-  kpi?: [L, string][];
+  kpi?: [L, string | L][];
   staff?: number;
   now?: L;
   note?: L;
   /** prédio em mau estado (conservação baixa) */
   worn?: boolean;
+  /** r19 (world19): estilo escolhido pelo jogador (senão, o da época de `sy`) */
+  style?: Style18;
+  /** r19: o lugarzinho do começo (garagem, quarto…) em vez da sede */
+  place?: Place19;
 }
 
 export type PKind = 'store' | 'sign' | 'dorm' | 'park' | 'reno';
-export interface Proj18 { id: string; kind: PKind; target?: string; lot: number; q: number; start: number; months: number; left: number; cost: number; paid: number; over: number; delays: number; asked?: number }
+export interface Proj18 { id: string; kind: PKind; target?: string; lot: number; q: number; start: number; months: number; left: number; cost: number; paid: number; over: number; delays: number; asked?: number; /** r19 (world19): obra de ampliação (sobe um estágio) */ up?: number }
 /** r19 (links19b, 11.10): ganchos para virar o atraso de obra e o dano em cartas de decisão (true = já tratado). */
 /** r19 (regions19/schools19): prédios de sistemas novos sem estado próprio aqui — cada provedor devolve os seus. */
 export const BLD19: { f: ((s: GameState) => (Omit<Bld18, 'zone' | 'since' | 'sy' | 'st'> & Partial<Pick<Bld18, 'since' | 'sy' | 'st' | 'zone'>>)[])[] } = { f: [] };
 /** R19 (afterlife19 e outros): prédios extras no mapa (ex.: arena digital). Recebe o `add` do buildings18. */
 export const CAMPUS_X19: ((s: GameState, add: (b: Omit<Bld18, 'zone' | 'since' | 'sy' | 'st'> & Partial<Pick<Bld18, 'since' | 'sy' | 'st' | 'zone'>>) => void) => void)[] = [];
+/** R19 (world19): ajustes finais nos prédios (apelidos, obras visuais de expansão/mudança). */
+export const CAMPUS_POST19: ((s: GameState, out: Bld18[]) => void)[] = [];
 export const CAMPUS19: { delay?: (s: GameState, p: Proj18, why: L) => boolean; dmg?: (s: GameState, f: Fact, target: string) => boolean } = {};
 export interface Built18 { lot: number; y: number; q: number }
 export interface Gone18 { id: string; kind: BKind; name: string; city: string; lvl: number; sy: number; lot?: number; y: number; how: 'sold' | 'closed' }
@@ -82,21 +90,24 @@ export interface Campus18 {
   built: Partial<Record<Exclude<PKind, 'reno'>, Built18>>;
   proj: Proj18[];
   snaps: { y: number; b: string }[];
+  /** r19 (world19): estágios de ampliação das obras próprias (c:store → 0..2) */
+  upl: Record<string, number>;
   /** último nome/cidade/tipo visto de cada prédio (para placas de "vendido") */
   nm: Record<string, [string, string, BKind]>;
   log: { y: number; m: number; t: L }[];
   seq: number;
 }
 declare module '../ext4' { interface Ext4 { campus18: Campus18 } }
-const fresh = (): Campus18 => ({ born: {}, lvl: {}, ren: {}, lot: {}, dmg: {}, gone: [], built: {}, proj: [], snaps: [], nm: {}, log: [], seq: 0 });
+const fresh = (): Campus18 => ({ born: {}, lvl: {}, ren: {}, lot: {}, dmg: {}, gone: [], built: {}, proj: [], snaps: [], upl: {}, nm: {}, log: [], seq: 0 });
 registerExt4('campus18', fresh);
 export function campus18(s: GameState): Campus18 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.campus18 ??= fresh()) as Campus18;
-  st.born ??= {}; st.lvl ??= {}; st.ren ??= {}; st.lot ??= {}; st.dmg ??= {}; st.gone ??= []; st.built ??= {}; st.proj ??= []; st.snaps ??= []; st.nm ??= {}; st.log ??= []; st.seq ??= 0;
+  st.born ??= {}; st.lvl ??= {}; st.ren ??= {}; st.lot ??= {}; st.dmg ??= {}; st.gone ??= []; st.built ??= {}; st.proj ??= []; st.snaps ??= []; st.nm ??= {}; st.log ??= []; st.seq ??= 0; st.upl ??= {};
   return st;
 }
 const mIdx = (s: GameState) => s.year * 12 + s.month;
+export const log18 = (s: GameState, t: L): void => log(s, t);
 const log = (s: GameState, t: L) => { const st = campus18(s); st.log.push({ y: s.year, m: s.month, t }); if (st.log.length > 40) st.log.splice(0, st.log.length - 40); };
 
 // ---------------------------------------------------------------- época: arquitetura e veículos
@@ -112,7 +123,28 @@ export const STYLES18: { id: Style18; from: number; name: L; desc: L }[] = [
   { id: 'eco', from: 2024, name: l('Eco-futurista', 'Eco-futurist'), desc: l('Telhado verde, painéis solares, madeira e hologramas.', 'Green roof, solar panels, timber and holograms.') },
 ];
 export const styleOf18 = (y: number): Style18 => { let r: Style18 = 'victorian'; for (const x of STYLES18) if (y >= x.from) r = x.id; return r; };
-export const styleName18 = (id: Style18): L => STYLES18.find((x) => x.id === id)!.name;
+/** r19 (world19): catálogo de estilos que o jogador escolhe ao construir, ampliar ou reformar — só os que já existiam no ano.
+ *  cost = multiplicador da obra; upk = da manutenção; rep = reputação única ao inaugurar; gent = empurra a gentrificação do bairro. Nada domina: o barato não dá prestígio, o vistoso encarece e gentrifica. */
+export interface StyDef18 { id: Style18; from: number; name: L; desc: L; cost: number; upk: number; rep?: ['artistic' | 'commercial' | 'artists' | 'institutional', number]; gent: number; eff: L }
+export const STYLE_CAT18: StyDef18[] = [
+  { id: 'victorian', from: 0, name: l('Vitoriano', 'Victorian'), desc: STYLES18[0].desc, cost: 1, upk: 1.1, rep: ['institutional', 1], gent: 0, eff: l('Tradição: +1 reputação institucional; manutenção +10%.', 'Tradition: +1 institutional reputation; upkeep +10%.') },
+  { id: 'gothic', from: 0, name: l('Gótico', 'Gothic revival'), desc: l('Arcos ogivais, pináculos e vitrais.', 'Pointed arches, pinnacles and stained glass.'), cost: 1.25, upk: 1.2, rep: ['artistic', 2], gent: 0.02, eff: l('Imponente: +2 reputação artística; obra +25%, manutenção +20%.', 'Imposing: +2 artistic reputation; works +25%, upkeep +20%.') },
+  { id: 'beaux', from: 0, name: l('Neoclássico', 'Beaux-Arts'), desc: l('Pedra clara, colunas e cúpula de cobre.', 'Pale stone, columns and a copper dome.'), cost: 1.2, upk: 1.1, rep: ['institutional', 2], gent: 0.03, eff: l('Respeitável: +2 reputação institucional; obra +20%; valoriza o bairro.', 'Respectable: +2 institutional reputation; works +20%; lifts the area.') },
+  { id: 'brick', from: 0, name: l('Tijolo industrial', 'Industrial brick'), desc: STYLES18[1].desc, cost: 0.85, upk: 0.9, gent: -0.02, eff: l('Barato e honesto: obra −15%, manutenção −10%; sem prestígio extra.', 'Cheap and honest: works −15%, upkeep −10%; no extra prestige.') },
+  { id: 'tropical', from: 0, name: l('Colonial tropical', 'Tropical colonial'), desc: l('Paredes caiadas, janelas com venezianas e telhado de barro.', 'Whitewashed walls, shuttered windows and a clay-tile roof.'), cost: 0.95, upk: 0.95, rep: ['artists', 1], gent: 0, eff: l('Acolhedor: +1 reputação com artistas; obra −5%.', 'Welcoming: +1 reputation with artists; works −5%.') },
+  { id: 'deco', from: 1920, name: STYLES18[2].name, desc: STYLES18[2].desc, cost: 1.15, upk: 1, rep: ['commercial', 2], gent: 0.02, eff: l('Glamour: +2 reputação comercial; obra +15%.', 'Glamour: +2 commercial reputation; works +15%.') },
+  { id: 'midcentury', from: 1940, name: STYLES18[3].name, desc: STYLES18[3].desc, cost: 1, upk: 0.95, rep: ['commercial', 1], gent: 0.01, eff: l('Moderno e leve: +1 reputação comercial; manutenção −5%.', 'Modern and light: +1 commercial reputation; upkeep −5%.') },
+  { id: 'brutal', from: 1955, name: STYLES18[4].name, desc: STYLES18[4].desc, cost: 0.9, upk: 0.85, rep: ['artistic', 1], gent: -0.03, eff: l('Concreto: obra −10%, manutenção −15%; o bairro torce o nariz (gentrifica menos).', 'Concrete: works −10%, upkeep −15%; the area frowns (gentrifies less).') },
+  { id: 'loft', from: 1970, name: l('Loft industrial', 'Industrial loft'), desc: l('Galpão convertido: janelões de aço, caixa d\'água e terraço.', 'Converted warehouse: steel windows, a water tank and a roof deck.'), cost: 1, upk: 1, rep: ['artists', 2], gent: 0.04, eff: l('Cena: +2 reputação com artistas; gentrifica o bairro.', 'Scene cred: +2 reputation with artists; gentrifies the area.') },
+  { id: 'postmod', from: 1975, name: STYLES18[5].name, desc: STYLES18[5].desc, cost: 1.05, upk: 1, rep: ['commercial', 1], gent: 0.02, eff: l('Divertido: +1 reputação comercial.', 'Playful: +1 commercial reputation.') },
+  { id: 'neon', from: 1980, name: l('Neon anos 80', '80s neon'), desc: l('Fachada escura com faixas de neon rosa e azul.', 'A dark façade with pink and blue neon bands.'), cost: 1.05, upk: 1.15, rep: ['commercial', 2], gent: 0.01, eff: l('Chamativo: +2 reputação comercial; manutenção +15% (luz).', 'Flashy: +2 commercial reputation; upkeep +15% (power).') },
+  { id: 'glass', from: 1985, name: STYLES18[6].name, desc: STYLES18[6].desc, cost: 1.3, upk: 1.1, rep: ['institutional', 2], gent: 0.05, eff: l('Corporativo: +2 reputação institucional; obra +30%; gentrifica rápido.', 'Corporate: +2 institutional reputation; works +30%; gentrifies fast.') },
+  { id: 'eco', from: 2000, name: STYLES18[7].name, desc: STYLES18[7].desc, cost: 1.2, upk: 0.8, rep: ['artists', 1], gent: 0.03, eff: l('Verde: manutenção −20%, +1 reputação com artistas; obra +20%.', 'Green: upkeep −20%, +1 reputation with artists; works +20%.') },
+];
+export const styleDef18 = (id: Style18): StyDef18 => STYLE_CAT18.find((x) => x.id === id) ?? STYLE_CAT18[0];
+/** Estilos que já existiam no ano (nada do futuro). */
+export const stylesAt18 = (year: number): StyDef18[] => STYLE_CAT18.filter((x) => x.from <= year);
+export const styleName18 = (id: Style18): L => styleDef18(id).name;
 export const vehicleOf18 = (y: number): Vehicle18 => (y < 1910 ? 'cart' : y < 1935 ? 'modelT' : y < 1958 ? 'round' : y < 1975 ? 'fin' : y < 1996 ? 'boxy' : y < 2025 ? 'suv' : 'pod');
 
 export const KIND18: Record<BKind, { name: L; icon: string }> = {
@@ -192,13 +224,13 @@ export function buildings18(s: GameState): Bld18[] {
   add({
     id: 'hq', kind: 'hq', name: `${s.config.companyName} — ${HQ_LEVELS[s.player.hq].name.pt}`, city: s.config.homeCity, lvl: s.player.hq + 1, since: st.born.hq ?? hqY, sy: hqY,
     staff: s.player.staff.length, goto: { area: 'hq' },
-    kpi: [[l('Nível', 'Level'), HQ_LEVELS[s.player.hq].name.pt], [l('Equipe', 'Staff'), String(s.player.staff.length)], [l('Departamentos', 'Departments'), String(depts)],
-      [l('Prédio', 'Building'), hq6(s).ownBuilding ? 'próprio / owned' : `aluguel / rent ${$k(s, money(s, HQ_LEVELS[s.player.hq].rent))}`], [l('Elenco', 'Roster'), String(sl.length)]],
+    kpi: [[l('Nível', 'Level'), HQ_LEVELS[s.player.hq].name], [l('Equipe', 'Staff'), String(s.player.staff.length)], [l('Departamentos', 'Departments'), String(depts)],
+      [l('Prédio', 'Building'), hq6(s).ownBuilding ? l('próprio', 'owned') : fmtL(l('aluguel {v}', 'rent {v}'), { v: $k(s, money(s, HQ_LEVELS[s.player.hq].rent)) })], [l('Elenco', 'Roster'), String(sl.length)]],
     now: rec.length ? fmtL(l('Gravando: {a}', 'Recording: {a}'), { a: rec.map((x) => s.acts[x.actId]?.name ?? '?').slice(0, 3).join(', ') }) : l('Escritórios abertos; estúdio livre.', 'Offices open; studio free.'),
   });
   // filiais
   for (const b of s.branches ?? []) add({ id: `br:${b.id}`, kind: 'branch', name: b.name, city: b.city, lvl: b.level + 1, since: st.born[`br:${b.id}`] ?? s.year, goto: { area: 'hq' },
-    kpi: [[l('Nível', 'Level'), BRANCH_LEVELS[b.level]?.name.pt ?? '?'], [l('Cidade', 'City'), cname(b.city)], [l('Aluguel', 'Rent'), $k(s, money(s, BRANCH_LEVELS[b.level]?.rent ?? 0))]], staff: BRANCH_LEVELS[b.level]?.staff });
+    kpi: [[l('Nível', 'Level'), BRANCH_LEVELS[b.level]?.name ?? '?'], [l('Cidade', 'City'), cname(b.city)], [l('Aluguel', 'Rent'), $k(s, money(s, BRANCH_LEVELS[b.level]?.rent ?? 0))]], staff: BRANCH_LEVELS[b.level]?.staff });
   // empreendimentos (ventures9)
   for (const v of ventures(s).list) {
     const k = VK[v.kind];
@@ -221,7 +253,7 @@ export function buildings18(s: GameState): Bld18[] {
     const vv = lv.venue;
     const h = vv.history[vv.history.length - 1];
     add({ id: 'lv:venue', kind: 'venue', name: vv.name, city: vv.cityId, lvl: vv.kind === 'club' ? 1 : vv.kind === 'theater' ? 3 : 5, since: vv.boughtYear, goto: { area: 'cp17-venue' },
-      kpi: [[l('Tipo', 'Type'), vv.kind], [l('Acústica', 'Acoustics'), String(Math.round(vv.acoustics))], [l('Ocupação', 'Occupancy'), h ? `${Math.round(h.occupancy * 100)}%` : '—']],
+      kpi: [[l('Tipo', 'Type'), vv.kind === 'club' ? l('clube', 'club') : vv.kind === 'theater' ? l('teatro', 'theatre') : l('arena', 'arena')], [l('Acústica', 'Acoustics'), String(Math.round(vv.acoustics))], [l('Ocupação', 'Occupancy'), h ? `${Math.round(h.occupancy * 100)}%` : '—']],
       now: h ? fmtL(l('Último mês: receita {r}', 'Last month: revenue {r}'), { r: $k(s, h.revenue) }) : undefined });
   }
   const vfx = new Set(ventures(s).list.map((v) => v.fx).filter(Boolean));
@@ -244,7 +276,7 @@ export function buildings18(s: GameState): Bld18[] {
     kpi: [[l('Capacidade/semana', 'Capacity/week'), String(p.capacity)], [l('Terceiros', 'Contract units'), String(p.contractUnits)]],
     now: (s.x4.industry?.orders ?? []).some((o) => o.ready > s.week) ? fmtL(l('Prensando: {n} pedidos na fila', 'Pressing: {n} orders queued'), { n: (s.x4.industry?.orders ?? []).filter((o) => o.ready > s.week).length }) : undefined });
   // escritórios próprios no exterior (regions18)
-  for (const [sub, lc] of Object.entries(reg18(s).loc)) if (lc.mode === 'own') add({ id: `of:${sub}`, kind: 'office', name: subName18(sub).pt, city: `@${sub}`, zone: 'world', lvl: 2, since: lc.since, goto: { area: 'regions18' }, kpi: [[l('Região', 'Region'), subName18(sub).pt], [l('Desde', 'Since'), String(lc.since)]] });
+  for (const [sub, lc] of Object.entries(reg18(s).loc)) if (lc.mode === 'own') add({ id: `of:${sub}`, kind: 'office', name: subName18(sub).pt, city: `@${sub}`, zone: 'world', lvl: 2, since: lc.since, goto: { area: 'regions18' }, kpi: [[l('Região', 'Region'), subName18(sub)], [l('Desde', 'Since'), String(lc.since)]] });
   // banda da casa (sala de ensaio)
   const hb = sess18(s).hb;
   if (hb) add({ id: 'hb', kind: 'rehearsal', name: hb.name, city: s.config.homeCity, lvl: 1, since: hb.since, goto: { area: 'talent18', tab: ['talent18', 'band'] }, staff: hb.players.length,
@@ -255,7 +287,7 @@ export function buildings18(s: GameState): Bld18[] {
     kpi: [[l('Imprints', 'Imprints'), String(Object.keys(dl.imp).length)], [l('JVs', 'JVs'), String(dl.jv.length)]] });
   // subselos
   for (const sb of s.subLabels ?? []) if (sb.status !== 'closed') add({ id: `sb:${sb.id}`, kind: 'sublabel', name: sb.name, city: s.config.homeCity, lvl: clamp(1 + Math.floor(sb.roster.length / 3), 1, 3), goto: { area: 'business', tab: ['business-business', 'subs'] },
-    kpi: [[l('Elenco', 'Roster'), String(sb.roster.length)], [l('Caixa', 'Cash'), $k(s, sb.cash)], [l('Situação', 'Status'), sb.status]], note: sb.status === 'distress' ? l('Em crise financeira.', 'In financial distress.') : undefined });
+    kpi: [[l('Elenco', 'Roster'), String(sb.roster.length)], [l('Caixa', 'Cash'), $k(s, sb.cash)], [l('Situação', 'Status'), sb.status === 'distress' ? l('em crise', 'in distress') : l('ativo', 'active')]], note: sb.status === 'distress' ? l('Em crise financeira.', 'In financial distress.') : undefined });
   // casa do dono
   const ow = P(s).owner; // sem criar o dono (não mexe na semente)
   if (ow && ow.house >= 0 && HOUSES[ow.house]) {
@@ -267,9 +299,10 @@ export function buildings18(s: GameState): Bld18[] {
   // obras próprias prontas
   for (const k of ['store', 'sign', 'dorm', 'park'] as const) {
     const b = st.built[k];
-    if (b) add({ id: `c:${k}`, kind: k, name: KIND18[k].name.pt, city: s.config.homeCity, lvl: 1 + b.q, since: b.y, lot: b.lot, goto: { area: 'campus18' }, kpi: effectKpi(s, k) });
+    if (b) add({ id: `c:${k}`, kind: k, name: KIND18[k].name.pt, city: s.config.homeCity, lvl: 1 + b.q + (st.upl[`c:${k}`] ?? 0), since: b.y, lot: b.lot, goto: { area: 'campus18' }, kpi: effectKpi(s, k) });
   }
   for (const f of CAMPUS_X19) f(s, add);
+  for (const f of CAMPUS_POST19) f(s, out);
   // dano, reforma, obras em andamento
   for (const b of out) {
     if (st.dmg[b.id]) { b.st = 'damaged'; b.note = st.dmg[b.id].why; }
@@ -397,7 +430,9 @@ function finish(s: GameState, p: Proj18): void {
   if (p.kind === 'reno') {
     st.ren[p.target!] = s.year;
     delete st.dmg[p.target!];
-    what = fmtL(l('Reforma concluída: o prédio agora tem cara de {y}.', 'Renovation done: the building now looks like {y}.'), { y: styleName18(styleOf18(s.year)) });
+    if (p.up) st.upl[p.target!] = (st.upl[p.target!] ?? 0) + 1;
+    what = p.up ? fmtL(l('Ampliação concluída: {n} sobe para o estágio {e}.', 'Expansion done: {n} moves up to stage {e}.'), { n: KIND18[(p.target!.slice(2) as BKind)]?.name ?? l('prédio', 'building'), e: 1 + (st.upl[p.target!] ?? 0) })
+      : fmtL(l('Reforma concluída: o prédio agora tem cara de {y}.', 'Renovation done: the building now looks like {y}.'), { y: styleName18(styleOf18(s.year)) });
     s.player.reputation.institutional = clamp(s.player.reputation.institutional + 1, 0, 100);
   } else {
     st.built[p.kind] = { lot: p.lot, y: s.year, q: p.q };
@@ -449,19 +484,21 @@ export function monthProj18(s: GameState): void {
 
 // ---------------------------------------------------------------- efeitos das obras prontas
 
+/** Multiplicador do estágio de ampliação (r19: +25% por estágio). */
+export const upMul18 = (s: GameState, k: string): number => 1 + 0.25 * (campus18(s).upl[`c:${k}`] ?? 0);
 export function storeIncome18(s: GameState): number {
   const b = campus18(s).built.store;
   if (!b) return 0;
   const fame = playerActs(s).reduce((t, id) => t + (s.acts[id]?.fame ?? 0), 0);
-  return Math.round(money(s, 250 + Math.min(fame, 400) * 9) * (LOTS18[b.lot]?.vis ?? 1) * CONTRACTORS18[b.q].eff);
+  return Math.round(money(s, 250 + Math.min(fame, 400) * 9) * (LOTS18[b.lot]?.vis ?? 1) * CONTRACTORS18[b.q].eff * upMul18(s, 'store'));
 }
 export const storeUpkeep18 = (s: GameState): number => (campus18(s).built.store ? money(s, 450) : 0);
-export const signRep18 = (s: GameState): number => { const b = campus18(s).built.sign; return b ? Math.round(15 * (LOTS18[b.lot]?.vis ?? 1) * CONTRACTORS18[b.q].eff) / 10 : 0; };
-export const parkRep18 = (s: GameState): number => { const b = campus18(s).built.park; return b ? Math.round(10 * CONTRACTORS18[b.q].eff) / 10 : 0; };
-function dormPeople(s: GameState): string[] {
+export const signRep18 = (s: GameState): number => { const b = campus18(s).built.sign; return b ? Math.round(15 * (LOTS18[b.lot]?.vis ?? 1) * CONTRACTORS18[b.q].eff * upMul18(s, 'sign')) / 10 : 0; };
+export const parkRep18 = (s: GameState): number => { const b = campus18(s).built.park; return b ? Math.round(10 * CONTRACTORS18[b.q].eff * upMul18(s, 'park')) / 10 : 0; };
+export function dormPeople(s: GameState): string[] {
   const b = campus18(s).built.dorm;
   if (!b) return [];
-  return playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.city === s.config.homeCity).flatMap((a) => a.members).slice(0, 12);
+  return playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.city === s.config.homeCity).flatMap((a) => a.members).slice(0, 12 + 4 * (campus18(s).upl['c:dorm'] ?? 0));
 }
 function effectKpi(s: GameState, k: Exclude<PKind, 'reno'>): [L, string][] {
   if (k === 'store') return [[l('Receita/mês', 'Income/mo'), $k(s, storeIncome18(s))], [l('Custo/mês', 'Cost/mo'), $k(s, storeUpkeep18(s))]];
@@ -472,7 +509,7 @@ function effectKpi(s: GameState, k: Exclude<PKind, 'reno'>): [L, string][] {
 
 // ---------------------------------------------------------------- vida em volta (derivada de fatos recentes)
 
-export type Amb18 = 'fans' | 'protest' | 'police' | 'press' | 'show' | 'smoke';
+export type Amb18 = 'fans' | 'protest' | 'police' | 'press' | 'show' | 'smoke' | 'crowd';
 /** O que está acontecendo em volta dos prédios agora (sem estado próprio). */
 export function ambient18(s: GameState): { k: Amb18; at: string; why: L }[] {
   const mine = new Set([...playerActs(s), 'player']);
@@ -489,6 +526,9 @@ export function ambient18(s: GameState): { k: Amb18; at: string; why: L }[] {
   for (const o of v17(s).own) if (o.last?.nights) out.push({ k: 'show', at: `ve:${o.id}`, why: l('Noite de show: fila na porta.', 'Show night: a queue at the door.') });
   if (liveOf(s).venue) out.push({ k: 'show', at: 'lv:venue', why: l('Noite de show: fila na porta.', 'Show night: a queue at the door.') });
   for (const id of Object.keys(campus18(s).dmg)) out.push({ k: 'smoke', at: id, why: campus18(s).dmg[id].why });
+  // r19 (world19): dia de festival = multidão no terreno
+  for (const v of ventures(s).list) if (v.kind === 'festival' && v.month === s.month) out.push({ k: 'crowd', at: `v:${v.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: v.name }) });
+  for (const f of liveOf(s).fests) if (f.month === s.month) out.push({ k: 'crowd', at: `fe:${f.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: f.name }) });
   return out;
 }
 
@@ -499,13 +539,14 @@ const SC: BState[] = ['planned', 'building', 'open', 'renovating', 'damaged', 'c
 /** Codifica: kind.lvl.state.sy.lot.prog|zone|city|name ; separados por ';' */
 export function encode18(s: GameState, bs: Bld18[]): string {
   const lots = layout18(s, bs);
-  return bs.map((b) => [KC.indexOf(b.kind), b.lvl, SC.indexOf(b.st), b.sy, lots.get(b.id) ?? -1, Math.round((b.prog ?? 1) * 9), b.zone === 'world' ? 1 : 0, b.city, b.name.replace(/[;|]/g, ' ').slice(0, 40), b.id].join('|')).join(';');
+  return bs.map((b) => [KC.indexOf(b.kind), b.lvl, SC.indexOf(b.st), b.sy, lots.get(b.id) ?? -1, Math.round((b.prog ?? 1) * 9), b.zone === 'world' ? 1 : 0, b.city, b.name.replace(/[;|]/g, ' ').slice(0, 40), b.id, b.style ?? '', b.place ?? ''].join('|')).join(';');
 }
 export function decode18(str: string): Bld18[] {
   if (!str) return [];
   return str.split(';').map((x) => {
-    const [k, lvl, st, sy, lot, pr, z, city, name, id] = x.split('|');
-    return { id: id ?? name, kind: KC[+k] ?? 'hq', lvl: +lvl, st: SC[+st] ?? 'open', since: +sy, sy: +sy, lot: +lot >= 0 ? +lot : undefined, prog: +pr / 9, zone: z === '1' ? 'world' : 'campus', city, name };
+    const [k, lvl, st, sy, lot, pr, z, city, name, id, sty, place] = x.split('|');
+    return { id: id ?? name, kind: KC[+k] ?? 'hq', lvl: +lvl, st: SC[+st] ?? 'open', since: +sy, sy: +sy, lot: +lot >= 0 ? +lot : undefined, prog: +pr / 9, zone: z === '1' ? 'world' : 'campus', city, name,
+      ...(sty ? { style: sty as Style18 } : {}), ...(place ? { place: place as Place19 } : {}) };
   });
 }
 export function snapshot18(s: GameState): void {

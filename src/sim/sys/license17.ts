@@ -56,15 +56,19 @@ export function acceptLic(s: GameState, id: string): L | null {
 export function declineLic(s: GameState, id: string): void { const d = lic17(s).list.find((x) => x.id === id); if (d && d.status === 'offer') d.status = 'ended'; }
 
 /** Você propõe licenciar seu catálogo a um selo que opera onde você não está. */
-export function pitchOut(s: GameState, lbId: string, m: MarketId): L | null {
+/** R19: chance mostrada no botão "Propor" (mesma conta do sorteio de pitchOut). */
+export function pitchOdds17(s: GameState, lbId: string): number {
+  const rep = (s.player.reputation.commercial + s.player.reputation.artistic) / 2;
+  return clamp(0.25 + rep / 150 - ((s.rivalries?.[lbId] ?? 0) > 30 ? 0.3 : 0), 0.05, 0.85);
+}
+export function pitchOut(s: GameState, lbId: string, m: MarketId, r0?: Rng): L | null {
   const lb = s.labels[lbId];
   if (!lb?.active || !lb.territories.includes(m)) return l('Esse selo não opera lá.', 'That label does not operate there.');
   if (s.player.territories.includes(m)) return l('Você já opera nesse mercado.', 'You already operate there.');
   const st = lic17(s);
   if (st.list.some((x) => x.dir === 'out' && x.market === m && x.status !== 'ended')) return l('Já há acordo ou proposta para esse mercado.', 'There is already a deal or offer for that market.');
-  const r = Rng.fromSeed(`${s.config.seed}:lic17p:${lbId}:${m}:${s.year}:${s.month}`);
-  const rep = (s.player.reputation.commercial + s.player.reputation.artistic) / 2;
-  const p = clamp(0.25 + rep / 150 - ((s.rivalries?.[lbId] ?? 0) > 30 ? 0.3 : 0), 0.05, 0.85);
+  const r = r0 ?? Rng.fromSeed(`${s.config.seed}:lic17p:${lbId}:${m}:${s.year}:${s.month}`);
+  const p = pitchOdds17(s, lbId);
   if (!r.chance(p)) { log(s, fmtL(l('{lb} recusou licenciar seu catálogo em {m} (chance era {p}%).', '{lb} declined to license your catalog in {m} (odds were {p}%).'), { lb: lb.name, m: mkName(m), p: Math.round(p * 100) })); return null; }
   st.list.push(mkOut(s, r, lb, m));
   return null;

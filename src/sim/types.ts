@@ -590,6 +590,8 @@ export interface Notification {
   week: number;
   text: L;
   kind: 'info' | 'good' | 'bad' | 'event';
+  /** r19 (B.5): aviso menor agrupado no "Resumo do mês" (fica no registro, some da lista e dos toasts) */
+  fold?: 1;
 }
 
 export interface GameState extends ExtState {

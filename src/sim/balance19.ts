@@ -17,7 +17,7 @@ import { resolveDecision } from './events';
 import { onFact } from './facts17';
 import { releaseDemo } from './repertoire';
 import { advanceMonth } from './tick';
-import type { GameState } from './types';
+import type { GameState, RunConfig } from './types';
 import { playerActs, rngOf } from './util';
 import { createGame } from './worldgen';
 import { hqCaps } from './branches';
@@ -135,13 +135,19 @@ export function worth19(s: GameState, w0: number, liquid = false): number {
   return Math.round(toReal(firm + (ownerOf(s).wealth - w0), s.year));
 }
 
-export const runBot19 = (o: { bot: Bot19; start: number; seed: string; years: number }): Row19 => playBot19(o).row;
+/** Opções da partida: perfil, início, semente, anos e — opcionais, para o lote rápido e os perfis de carreira — tamanho da
+ *  base (`db`, padrão médio), papel inicial (`role`; o bot 'artist' sempre começa como artista) e carreiras principais. */
+export interface Opts19 { bot: Bot19; start: number; seed: string; years: number; db?: RunConfig['dbSize']; role?: RunConfig['role']; careers?: string[] }
+export const runBot19 = (o: Opts19): Row19 => playBot19(o).row;
 /** A partida inteira (estado final + linha), para diagnóstico. */
-export function playBot19(o: { bot: Bot19; start: number; seed: string; years: number }): { s: GameState; row: Row19 } {
+export function playBot19(o: Opts19): { s: GameState; row: Row19 } {
   hookFacts();
   const t = Date.now();
-  const role = o.bot === 'artist' ? 'artist' : 'label';
-  const s = createGame(defaultConfig(o.seed, { startYear: o.start, role, bandGenre: 'rnr', bandName: 'Banda Teste' }));
+  const role = o.bot === 'artist' ? 'artist' : o.role ?? 'label';
+  const extra: Partial<RunConfig> = {};
+  if (o.db) extra.dbSize = o.db;
+  if (o.careers?.length) extra.careers = { main: o.careers };
+  const s = createGame(defaultConfig(o.seed, { startYear: o.start, role, bandGenre: 'rnr', bandName: 'Banda Teste', ...extra }));
   const c: Cnt = { scandals: 0, deaths: 0, echoes: 0, crimes: 0 };
   CNT.set(s, c);
   const w0 = ownerOf(s).wealth;

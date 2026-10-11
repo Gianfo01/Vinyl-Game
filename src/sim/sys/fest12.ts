@@ -15,6 +15,7 @@ import { climateInfo } from '../travelAdapter';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, remember } from '../util';
 import { monthIndex } from '../capacity';
+import { exclPrem19, identLoss19, rivalFest19 } from '../ctx19';
 import { countTiles, festModel, guestAccepts, guestFee } from './live/festival';
 import { bump, isMine, liveOf, type FestEdition, type FestThought, type FestTile, type OwnFestival } from './live/state';
 import { foundVenture, ventures, vpay9, type Holder, type Venture, type Verdict } from './ventures9';
@@ -190,8 +191,9 @@ export function setIdent12(s: GameState, fid: string, ident: Ident, fam?: Family
   const x = f12(s, f);
   if (x.cyc.phase === 'onsale') return l('Depois do anúncio, a identidade não muda nesta edição.', 'After the announcement the identity is locked for this edition.');
   if ((ident !== x.ident || (ident === 'genre' && fam && fam !== x.fam)) && x.hist.length) {
-    x.loyal = Math.round(x.loyal * 0.6);
-    x.cyc.notes.push(l('Mudança de identidade: 40% do público fiel não se reconhece mais no festival.', 'Identity change: 40% of the loyal crowd no longer recognises the festival.'));
+    const il = identLoss19(x.ident, ident, x.hist.length); // r19: perda pela distância entre identidades e pela tradição
+    x.loyal = Math.round(x.loyal * (1 - il.v));
+    x.cyc.notes.push(fmtL(l('Mudança de identidade: {p}% do público fiel não se reconhece mais no festival (quanto mais distante a nova identidade e mais longa a tradição, maior a perda).', 'Identity change: {p}% of the loyal crowd no longer recognises the festival (the further the new identity and the longer the tradition, the bigger the loss).'), { p: Math.round(il.v * 100) }));
   }
   x.ident = ident;
   if (fam) x.fam = fam;
@@ -222,7 +224,7 @@ export function ask12(s: GameState, f: OwnFestival, a: Act, o: { time: number; l
   if (o.len !== 60) why.push(fmtL(l('Set de {n} min: cachê ×{f}.', '{n}-min set: fee ×{f}.'), { n: o.len, f: LEN_F[o.len] }));
   const want = wantTime(a);
   if (o.time < want) { fee *= 1 + 0.25 * (want - o.time); why.push(fmtL(l('Quer tocar em "{w}"; posição abaixo custa +{p}%.', 'Wants the "{w}" slot; a lower billing costs +{p}%.'), { w: TIMES[want], p: 25 * (want - o.time) })); }
-  if (o.excl) { fee *= 1.35; why.push(l('Exclusividade regional: +35% (não toca em outro festival da região).', 'Regional exclusivity: +35% (no other festival in the region).')); }
+  if (o.excl) { const xp = exclPrem19(s, ventures(s).npc, f.cityId, f.month, a.fame).v; fee *= 1 + xp; why.push(fmtL(l('Exclusividade regional: +{p}% (não toca em outro festival da região; mais caro com mais festivais concorrentes por perto e mais fama).', 'Regional exclusivity: +{p}% (no other festival in the region; pricier with more competing festivals nearby and more fame).'), { p: Math.round(xp * 100) })); }
   const tech = techOf(a);
   if (tech === 2) why.push(l('Produção pesada: custo extra de palco e mais risco de pane.', 'Heavy production: extra stage cost and higher failure risk.'));
   let refuse: L | undefined;
@@ -330,6 +332,9 @@ export function proj12(s: GameState, f: OwnFestival): Proj {
   if (f.days > 1 && x.cyc.passes) { dem *= 1.15; why.push(l('Passes de um dia: mais gente casual entra (+15%), ticket médio menor.', 'Day passes: more casual buyers (+15%), lower average ticket.')); }
   const hh = festHypeHook.f(s, f);
   if (hh) { dem *= hh.k; if (hh.why) why.push(hh.why); }
+  // r19: festivais rivais pesam por distância, mês, gênero/identidade e porte (rivalFest19)
+  const rv = rivalFest19(s, ventures(s).npc, { city: f.cityId, month: f.month, fam: x.fam, ident: x.ident, rep: f.rep });
+  if (rv.v < 0.995) { dem *= rv.v; why.push(fmtL(l('Festivais rivais na região e na temporada: −{p}% de procura ({n}).', 'Rival festivals in the region and season: −{p}% demand ({n}).'), { p: Math.round((1 - rv.v) * 100), n: rv.rows.map((q) => q.n.name).join(', ') })); }
   dem *= festDem19.f(s, f, acts, why); // r19 (careers19): qualidade do line-up, gênero, época e concorrência mexem na procura
   dem = dem * x.cyc.hype * x.cyc.mods.dem * (x.cyc.late ? 0.85 : 1) + x.loyal * id.loyalF;
   if (x.loyal) why.push(fmtL(l('{n} fiéis compram pelo festival, não pela atração.', '{n} loyalists buy for the festival, not the act.'), { n: Math.round(x.loyal) }));

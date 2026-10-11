@@ -194,6 +194,11 @@ import './live19';
 // Rodada 19 (onda 3, T3): Lendas › Espólio (herdeiros, masters, arena digital) e Estúdio › Equipamento (endossos, ícones).
 import './afterlife19';
 import './gear19';
+// Rodada 19 (Frente 8, onda 4): viradas de década/era, metas, recibo de decisão, "por que perdi?", epitáfio, divulgação progressiva e acessibilidade.
+import './ux19';
+// Rodada 19 (onda 5, B): cockpit por profissão, aviso antes de avançar e delegação por carreira.
+import './prof19';
+import './advance19';
 // Rodada 19 (onda 5, A): pacote inicial no Novo Jogo, terreno do festival e Finanças do grupo (consolidado).
 import './careers19';
 import './core18';

@@ -64,8 +64,8 @@ function offerCard(s: GameState, o: Offer18): HTMLElement {
   const vote = o.k === 'reneg' ? [] : votes18(s, o);
   const no = vote.filter((x) => !x.yes).length;
   const w = warn18(s, o);
-  const odds = counterOdds18(s, o);
   const ask = UI.ask[o.id] ?? 'adv';
+  const odds = counterOdds18(s, o, ask);
   return h('div', { class: 'card' },
     h('div', { class: 'row wrap between' },
       h('div', { class: 'row wrap' }, s.labels[o.lb] ? h('b', null, labelLink(s, o.lb)) : h('b', null, o.who), ' ', pill(t(KIND[o.k])), o.bid ? pill(t(l('leilão', 'bidding war')), 'gold') : null, o.pred && adv ? pill(t(l('predatória', 'predatory')), 'bad') : null, o.low && adv ? pill(t(l('abaixo do mercado', 'lowball')), 'warn') : null),

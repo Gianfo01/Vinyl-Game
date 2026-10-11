@@ -115,6 +115,15 @@ export function editionOf(s: GameState, fi: number): FestEdition8 | undefined {
 export type PitchResult = { result: 'accepted' | 'counter' | 'rejected'; tier?: FestTier; fee?: number; text: L };
 
 /** Oferece um artista seu para a edição deste ano. Resposta imediata. */
+/** R19: chance de o festival aceitar de primeira (a mesma conta mostrada na previsão e usada em pitchAct). */
+export function pitchOdds8(s: GameState, fi: number, actId: string, tier: FestTier, fee: number): number {
+  const f = FESTIVALS[fi], act = s.acts[actId];
+  if (!f || !act || !fits(f, act)) return 0;
+  const can = festTierFor(s, f, fi, act);
+  if (!can || TIER_ORDER.indexOf(tier) < TIER_ORDER.indexOf(can)) return 0;
+  const ratio = fee / Math.max(1, festFee(s, f, act, tier)), b = staffSkill(s, 'booking') / 400;
+  return ratio <= 1.05 + b ? 1 : ratio <= 1.3 + b ? 0.5 : 0;
+}
 export function pitchAct(s: GameState, r: Rng, fi: number, actId: string, tier: FestTier, fee: number): PitchResult {
   const f = FESTIVALS[fi];
   const ed = editionOf(s, fi);
@@ -142,8 +151,8 @@ export function pitchAct(s: GameState, r: Rng, fi: number, actId: string, tier: 
     return { result: 'counter', tier: can, fee: fair(can), text: fmtL(l('{f} topa {a} como "{t}" por {v}.', '{f} would take {a} as "{t}" for {v}.'), { f: f.name, a: act.name, t: TIER_NAME[can], v: `$${Math.round(fair(can) / 100).toLocaleString('pt-BR')}` }) };
   }
   const ratio = fee / Math.max(1, fair(tier));
-  const booking = staffSkill(s, 'booking') / 400;
-  if (ratio <= 1.05 + booking || (ratio <= 1.3 + booking && r.chance(0.5))) {
+  const p = pitchOdds8(s, fi, actId, tier, fee);
+  if (p >= 1 || (p > 0 && r.chance(p))) {
     addToLineup(s, ed, actId, tier, fee);
     return { result: 'accepted', text: fmtL(l('Fechado: {a} toca no {f} ({t}).', 'Deal: {a} plays {f} ({t}).'), { a: act.name, f: f.name, t: TIER_NAME[tier] }) };
   }

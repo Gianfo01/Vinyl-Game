@@ -21,6 +21,7 @@ import { registerArea } from './registry';
 import { savePrefs, store } from './store';
 import { COMMON18, TIPS18, TRACKS18, dueTips18, trackState18, type Tip18 } from './tracks18';
 import { ic } from './vis';
+import { setTutorials19, tutAllowed19 } from './tutoff19';
 import './tutorial18.css';
 
 type Go = (area: string) => void;
@@ -143,6 +144,8 @@ function steps18(area: string): Step18[] {
 
 let tourEl: HTMLElement | null = null, tourArea = '', tourT0 = 0;
 /** Fecha o tour; só conta como visto se a pessoa respondeu (ou ele ficou na tela > 2 s) — um re-render não "gasta" o tour. */
+/** r19 (world19): fecha o tour aberto (ex.: quando um popup do mapa abre por cima). */
+export const endTour18 = (): void => endTour(true);
 function endTour(ack = false): void {
   if (tourEl && (ack || Date.now() - tourT0 > 2000)) { tp18().tours[tourArea] = 1; savePrefs(); }
   tourEl?.remove(); tourEl = null; document.removeEventListener('keydown', tourKey);
@@ -152,7 +155,7 @@ const tourKey = (e: KeyboardEvent): void => { if (e.key === 'Escape' && tourEl) 
 /** Mostra o tour da página (força = mesmo já visto ou desligado). */
 export function startTour18(area: string, force = false): boolean {
   const p = tp18();
-  if (!force && (p.noTours || p.tours[area])) return false;
+  if (!force && (!tutAllowed19(store.prefs, 'tour') || p.tours[area])) return false; // r19: "Sem tutoriais" também
   const xs = steps18(area);
   if (xs.length < 2) return false;
   endTour();
@@ -177,7 +180,8 @@ export function startTour18(area: string, force = false): boolean {
         i > 0 ? h('button', { class: 'btn small ghost', onclick: () => { i--; show(); } }, '←') : null,
         h('button', { class: 'btn small primary', onclick: () => { if (++i >= xs.length) endTour(true); else show(); } }, i === xs.length - 1 ? t(l('Entendi', 'Got it')) : t(l('Próximo', 'Next'))),
         h('button', { class: 'btn small ghost tour18-skip', onclick: () => endTour(true) }, t(l('Pular', 'Skip'))),
-        h('button', { class: 'btn small ghost tour18-off', onclick: () => { tp18().noTours = true; savePrefs(); endTour(true); toast(t(l('Tours desligados. Religue em Configurações ou em Ajuda e tutorial.', 'Tours off. Turn them back on in Settings or Help and tutorial.')), 'info'); } }, t(l('Não mostrar de novo', 'Don\'t show again')))));
+        h('button', { class: 'btn small ghost tour18-off', onclick: () => { tp18().noTours = true; savePrefs(); endTour(true); toast(t(l('Tours desligados. Religue em Configurações ou em Ajuda e tutorial.', 'Tours off. Turn them back on in Settings or Help and tutorial.')), 'info'); } }, t(l('Não mostrar de novo', 'Don\'t show again'))),
+        h('button', { class: 'btn small ghost tut19-off', onclick: () => { setTutorials19(store.prefs, false); savePrefs(); endTour(true); toast(t(l('Tutoriais desativados. Religue em Configurações.', 'Tutorials off. Turn them back on in Settings.')), 'info'); } }, t(l('Desativar todos os tutoriais', 'Turn off all tutorials')))));
     el?.scrollIntoView?.({ block: 'nearest' });
   };
   document.body.appendChild(tourEl);
@@ -208,13 +212,14 @@ function showTip(tp: Tip18): void {
         tp.area ? h('button', { class: 'btn small primary', onclick: () => { el.remove(); goFn(tp.area!); } }, t(l('Ver página', 'Open page'))) : null,
         tp.gloss ? h('button', { class: 'btn small ghost', onclick: () => openGloss18(tp.gloss) }, t(l('Termo', 'Term'))) : null,
         h('button', { class: 'btn small ghost', onclick: () => el.remove() }, t(l('Entendi', 'Got it'))),
-        h('button', { class: 'btn small ghost', onclick: () => { tp18().noTips = true; savePrefs(); el.remove(); } }, t(l('Sem dicas', 'No tips'))))));
+        h('button', { class: 'btn small ghost', onclick: () => { tp18().noTips = true; savePrefs(); el.remove(); } }, t(l('Sem dicas', 'No tips'))),
+        h('button', { class: 'btn small ghost tut19-off', onclick: () => { setTutorials19(store.prefs, false); savePrefs(); el.remove(); toast(t(l('Tutoriais desativados. Religue em Configurações.', 'Tutorials off. Turn them back on in Settings.')), 'info'); } }, t(l('Desativar todos os tutoriais', 'Turn off all tutorials'))))));
   document.body.appendChild(el);
 }
 
 function checkTips(g: GameState): void {
   const p = tp18();
-  if (p.noTips) return;
+  if (!tutAllowed19(store.prefs, 'tip')) return;
   if (g.signature === lastSig && g.week === lastWeek && !hot[g.signature]) return;
   lastSig = g.signature; lastWeek = g.week; delete hot[g.signature];
   const [tp] = dueTips18(g, p.tips, 1);
@@ -228,7 +233,7 @@ function checkTracks(g: GameState): void {
   let changed = false;
   for (const id of careers(g).active) for (const x of trackState18(g, id, p.visits, p.done)) {
     const k = `${id}:${x.obj.id}`;
-    if (x.ok && !p.done[k]) { p.done[k] = 1; changed = true; toast(`✓ ${t(l('Objetivo', 'Goal'))}: ${t(x.obj.label)}`, 'good'); }
+    if (x.ok && !p.done[k]) { p.done[k] = 1; changed = true; if (tutAllowed19(store.prefs, 'track')) toast(`✓ ${t(l('Objetivo', 'Goal'))}: ${t(x.obj.label)}`, 'good'); }
   }
   if (changed) savePrefs();
 }

@@ -40,7 +40,7 @@ function estCard(s: GameState, x: Est19): HTMLElement {
 }
 function arenaBlock(s: GameState): HTMLElement {
   const ar = af19(s).ar;
-  if (s.year < ARENA_FROM19) return muted(fmtS(l('Arenas de avatares digitais chegam em {y} (ABBA Voyage, 2022).', 'Digital avatar arenas arrive in {y} (ABBA Voyage, 2022).'), { y: ARENA_FROM19 }));
+  if (s.year < ARENA_FROM19) return muted(l('Arenas de avatares digitais ainda não existem nesta época.', 'Digital avatar arenas do not exist yet in this era.')); // r19 ux19: sem data do futuro
   if (!ar || ar.st === 'sold') {
     const b = arenaBlock19(s);
     return h('div', null, muted(fmtS(l('Obra de {m} meses, {c} (30% na entrada, o resto mês a mês, como investimento). Depois: {r}/mês de operação; cada residência custa {p} em captura de movimento e avatares.', '{m}-month build, {c} (30% up front, the rest monthly as capex). Then {r}/month to run; each residency costs {p} in motion capture and avatars.'), { m: 18, c: $(arenaCost19(s)), r: $(arenaRun19(s)), p: $(resCost19(s)) })),

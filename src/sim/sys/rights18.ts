@@ -835,13 +835,14 @@ function admMonth(s: GameState): void {
   }
 }
 /** aceitar um cliente de administração com a taxa pedida (10/15/20%); taxa alta = mais chance de recusa */
-export function takeAdm18(s: GameState, id: string, fee: number): L {
+/** R19: chance de o cliente aceitar a taxa (mostrada no botão e usada no sorteio). */
+export function admChance18(s: GameState, fee: number): number { return Math.min(1, (fee <= 0.1 ? 0.95 : fee <= 0.15 ? 0.75 : 0.45) + meta18(s).v * 0.1); }
+export function takeAdm18(s: GameState, id: string, fee: number, r0?: Rng): L {
   const st = r18(s), o = st.admOff.find((x) => x.id === id);
   if (!o) return l('Proposta expirou.', 'Offer expired.');
-  const r = Rng.fromSeed(`${s.config.seed}:r18:adm:${id}:${fee}`);
+  const r = r0 ?? Rng.fromSeed(`${s.config.seed}:r18:adm:${id}:${fee}`);
   st.admOff = st.admOff.filter((x) => x.id !== id);
-  const p = fee <= 0.1 ? 0.95 : fee <= 0.15 ? 0.75 : 0.45;
-  if (!r.chance(p + meta18(s).v * 0.1)) return fmtL(l('{n} achou {f}% caro e fechou com outra editora.', '{n} found {f}% too steep and went elsewhere.'), { n: o.name, f: Math.round(fee * 100) });
+  if (!r.chance(admChance18(s, fee))) return fmtL(l('{n} achou {f}% caro e fechou com outra editora.', '{n} found {f}% too steep and went elsewhere.'), { n: o.name, f: Math.round(fee * 100) });
   st.adm.push({ ...o, fee, exp: undefined });
   return fmtL(l('{n} entrega a administração do catálogo por 3 anos ({f}% do arrecadado).', '{n} hands over catalog administration for 3 years ({f}% of collections).'), { n: o.name, f: Math.round(fee * 100) });
 }
