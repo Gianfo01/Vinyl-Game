@@ -3,6 +3,7 @@
 // aprendizado e pós-morte previsto × realizado), Rádio (formatos, consultores, diretores, adição/rotação,
 // promotor independente) e Clipes, virais e pistas (clipe com diretor/coreografia, DJs, remix, parada de clubes).
 
+import { ERA19 } from '../../sim/era19';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CHANNELS } from '../../data/rules';
@@ -180,7 +181,7 @@ function clipsTab(s: GameState): HTMLElement {
   );
 }
 
-registerTab('mediaHub', { id: 'st18', icon: 'stream', order: 55, label: l('Público e streaming', 'Audience and streaming'), render: streamTab, badge: (s) => playerActs(s).filter((id) => { const a = st18(s).a[id]; return a && a.drop && a.drop > s.week; }).length || undefined });
+registerTab('mediaHub', { id: 'st18', icon: 'stream', order: 55, label: l('Público e streaming', 'Audience and streaming'), labelAt: ERA19.audience, render: streamTab, badge: (s) => playerActs(s).filter((id) => { const a = st18(s).a[id]; return a && a.drop && a.drop > s.week; }).length || undefined });
 registerTab('mediaHub', { id: 'mk18', icon: 'chart-up', order: 56, label: l('Campanhas', 'Campaigns'), render: campTab });
 registerTab('mediaHub', { id: 'radio18', icon: 'radio', order: 57, label: l('Rádio: formatos', 'Radio: formats'), render: radioTab, visible: (s) => hasTech(s, 'radio') });
-registerTab('mediaHub', { id: 'clips18', icon: 'tv', order: 58, label: l('Clipes, virais e pistas', 'Videos, virals and clubs'), render: clipsTab });
+registerTab('mediaHub', { id: 'clips18', icon: 'tv', order: 58, label: l('Clipes, virais e pistas', 'Videos, virals and clubs'), labelAt: ERA19.clips, render: clipsTab });

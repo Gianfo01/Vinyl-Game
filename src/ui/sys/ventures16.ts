@@ -2,6 +2,7 @@
 // Veículos de mídia e Plataforma. "Empreendimentos" vira só a carteira: todos os negócios, números do mês,
 // melhor/pior e fundar um novo (que leva à página do tipo). Rótulo no menu = título da página = migalha.
 
+import { ERA19, fmtL19 } from '../../sim/era19';
 import { FESTIVALS } from '../../data/catalog';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -110,7 +111,7 @@ registerArea({ id: 'festivals', label: l('Festivais', 'Festivals'), icon: 'star'
 // ================================================================== Editora, Veículos de mídia, Plataforma
 
 registerArea({ id: 'publishing16', label: l('Editora', 'Publishing'), icon: 'note', key: ';', render: (s) => kindPage(s, 'publisher', l('Editora musical: contrate compositores, coloque canções com artistas de qualquer selo, licencie para trilhas e viva de royalties por décadas.', 'Music publishing: sign songwriters, place songs with any label\'s acts, license to sync and live off royalties for decades.')) });
-registerArea({ id: 'outlets16', label: l('Veículos de mídia', 'Media outlets'), icon: 'radio', key: ',', render: (s) => h('div', null, kindPage(s, 'media', l('Seus veículos (revista, rádio, TV, blog, playlist): grade, anunciantes, equipe, poder de execução e o risco do jabá. A área Mídia é a sua relação com a imprensa; aqui você é a imprensa.', 'Your outlets (magazine, radio, TV, blog, playlist): schedule, advertisers, staff, airplay power and payola risk. The Media area is your relationship with the press; here you are the press.')),
+registerArea({ id: 'outlets16', label: l('Veículos de mídia', 'Media outlets'), icon: 'radio', key: ',', render: (s) => h('div', null, kindPage(s, 'media', fmtL19(l('Seus veículos ({k}): grade, anunciantes, equipe, poder de execução e o risco do jabá. A área Mídia é a sua relação com a imprensa; aqui você é a imprensa.', 'Your outlets ({k}): schedule, advertisers, staff, airplay power and payola risk. The Media area is your relationship with the press; here you are the press.'), { k: ERA19.outlets(s) })),
   isConglomerate(s) || !owns(s, 'media') ? null : h('p', { class: 'small muted' }, t(l('Três veículos diferentes formam um conglomerado: publicidade +25% e cobertura extra para o selo.', 'Three different outlets make a conglomerate: +25% ad revenue and extra coverage for the label.')))) });
 registerArea({ id: 'platform16', label: l('Plataforma', 'Platform'), icon: 'globe', key: '.', visible: (s) => s.year >= VKINDS.platform.from || owns(s, 'platform'), render: (s) => kindPage(s, 'platform', l('Plataforma de streaming: assinantes, curadoria, catálogos licenciados e a briga com as gravadoras pelo repasse.', 'Streaming platform: subscribers, curation, licensed catalogs and the fight with labels over payouts.')) });
 

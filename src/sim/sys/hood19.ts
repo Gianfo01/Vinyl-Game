@@ -149,7 +149,7 @@ export function nbPop19(s: GameState, lot: number): Pop19 | null {
   const acts: PopAct19[] = [];
   acts.push({ id: 'go', label: d.go.label ?? l('Abrir', 'Open'), go: x.who ? { area: 'labels', label: d.go.label } : d.go, tone: 'ghost' });
   acts.push({ id: 'buy', label: l('Comprar o imóvel', 'Buy the property'), cost: x.price, tone: 'primary', dis: !x.sale ? (x.k === 'rival' ? l('A rival não vende o escritório.', 'The rival won\'t sell its office.') : l('Não está à venda este ano.', 'Not for sale this year.')) : s.player.cash < x.price ? l('Caixa insuficiente.', 'Not enough cash.') : undefined, confirm: l('Comprar? O vizinho sai e o lote fica livre para você construir.', 'Buy? The neighbour moves out and the lot is free for you to build on.') });
-  return { kind: 'lot', id: `nb:${lot}`, title: x.name, icon: d.icon, tags: [l('Vizinho', 'Neighbour'), d.n, x.sale ? l('À venda', 'For sale') : l('Não está à venda', 'Not for sale')], rows, notes: [{ t: l('Vizinhos dão vida à rua. Comprar o imóvel libera o lote para você.', 'Neighbours bring the street to life. Buying frees the lot for you.') }], acts, opts: [] };
+  return { kind: 'lot', id: `nb:${lot}`, title: x.name, icon: d.icon, tags: [l('Vizinho', 'Neighbour'), x.k === 'records' && s.year < 1910 ? l('Loja de partituras e fonógrafos', 'Sheet-music and phonograph shop') : d.n, x.sale ? l('À venda', 'For sale') : l('Não está à venda', 'Not for sale')], rows, notes: [{ t: l('Vizinhos dão vida à rua. Comprar o imóvel libera o lote para você.', 'Neighbours bring the street to life. Buying frees the lot for you.') }], acts, opts: [] };
 }
 
 // ---------------------------------------------------------------- marcos da cidade

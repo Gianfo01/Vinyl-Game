@@ -1,6 +1,7 @@
 // Interface da estrutura da empresa x era (rodada 12): encaixe, o que a era exige x como a equipe está
 // dividida, o efeito de cada departamento agora, remanejamento e histórico das viradas.
 
+import { deptName19 } from '../../sim/era19';
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
@@ -38,13 +39,13 @@ function orgPanel(s: GameState): HTMLElement {
         h('tbody', null, DEPTS.map((d) => {
           const c = coverage(s, d);
           const k = deptK(s, d);
-          return h('tr', null, h('td', null, h('b', null, t(DEPT_NAME[d])), h('div', { class: 'small muted' }, t(DEPT_FX[d]))), h('td', null, pct(dem[d])), h('td', null, pct(o.alloc[d])),
+          return h('tr', null, h('td', null, h('b', null, t(deptName19(s, d, DEPT_NAME[d]))), h('div', { class: 'small muted' }, t(DEPT_FX[d]))), h('td', null, pct(dem[d])), h('td', null, pct(o.alloc[d])),
             h('td', null, c === null ? h('span', { class: 'muted' }, t(l('irrelevante nesta era', 'irrelevant this era'))) : pill(`${k >= 0 ? '+' : ''}${Math.round(k * 100)}%`, k >= 0 ? 'good' : 'bad')));
         }))),
       h('div', { class: 'row wrap small' },
         t(l('Remanejar {p} da equipe de', 'Move {p} of staff from'), { p: pct(MOVE_STEP) }), ' ',
-        select<Dept>(from, DEPTS.map((d) => ({ value: d, label: t(DEPT_NAME[d]) })), (v) => (from = v)), ' ', t(l('para', 'to')), ' ',
-        select<Dept>(to, DEPTS.map((d) => ({ value: d, label: t(DEPT_NAME[d]) })), (v) => (to = v)), ' ',
+        select<Dept>(from, DEPTS.map((d) => ({ value: d, label: t(deptName19(s, d, DEPT_NAME[d])) })), (v) => (from = v)), ' ', t(l('para', 'to')), ' ',
+        select<Dept>(to, DEPTS.map((d) => ({ value: d, label: t(deptName19(s, d, DEPT_NAME[d])) })), (v) => (to = v)), ' ',
         h('button', { class: 'btn small', onclick: () => { const er = moveStaff(s, from, to); toast(t(er ?? l('Equipe remanejada.', 'Staff moved.')), er ? 'bad' : 'good'); rerender(); } }, `${t(l('Remanejar', 'Move'))} (${$(moveCost(s))})`)),
     ),
     o.log.length ? section(t(l('Viradas e reorganizações', 'Shifts and reorganizations')),

@@ -1,5 +1,6 @@
 // Layout principal: barra superior, 10 áreas + Diário, avanço, paleta de comandos, fim de run.
 
+import { ERA19 } from '../sim/era19';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
 import { l, type L } from '../data/world';
 import { S, t, type Lang } from '../i18n/strings';
@@ -348,7 +349,7 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
     case 'plan': return centralPanel(g);
     case 'charts': return h('div', { class: 'hub' }, tabs('chartsHub', mergeTabs([
       { id: 'global', label: t(l('Parada mundial', 'World chart')), icon: 'chart-up', render: () => chartsPanel(g) },
-      { id: 'more', label: t(l('Rádio e outras paradas', 'Radio and other charts')), icon: 'radio', render: () => extraSections('charts', g) ?? h('div') },
+      { id: 'more', label: t(ERA19.otherCharts(g)), icon: 'radio', render: () => extraSections('charts', g) ?? h('div') },
     ], 'chartsHub', g), render));
     case 'artists': return artistsPanel(g);
     case 'market': return h('div', { class: 'hub' }, tabs('marketHub', mergeTabs([

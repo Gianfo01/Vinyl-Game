@@ -105,7 +105,7 @@ export function physMix18(y: number): Record<string, number> {
   const tape = y < 1966 ? 0 : y < 1983 ? (y - 1966) / 17 * 0.5 : y < 1991 ? 0.55 : y < 2003 ? Math.max(0.05, 0.55 - (y - 1991) * 0.045) : y < 2016 ? 0.02 : 0.03;
   const cd = y < 1983 ? 0 : y < 1992 ? (y - 1983) / 9 * 0.55 : y < 2003 ? Math.min(0.9, 0.55 + (y - 1992) * 0.035) : y < 2010 ? 0.92 : Math.max(0.4, 0.92 - (y - 2009) * 0.045);
   const eight = y >= 1966 && y <= 1982 ? 0.12 * Math.max(0, 1 - Math.abs(y - 1975) / 8) : 0;
-  const vin = Math.max(0.01, 1 - sh - tape - cd - eight);
+  const vin = y < 1948 ? 0 : Math.max(0.01, 1 - sh - tape - cd - eight); // r19: nada de vinil antes do LP
   return { shellac: sh, vinyl: vin, eight, tape, cd };
 }
 const FMT_MAT: Record<string, Material> = { shellac: 'shellac', single45: 'vinyl', lp: 'vinyl', cassette: 'tape', cd: 'polycarbonate', cylinder: 'shellac', piano_roll: 'paper' };

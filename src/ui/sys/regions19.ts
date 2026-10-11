@@ -1,6 +1,7 @@
 // Rodada 19 (Frente 6, T5) — página "Regiões e política" (Mundo): selos regionais (cassete, sound system, rua, salsa),
 // comuna e exílio, vistos e rádio (needle time), greves de gravação, campanhas e leis, celeiros (coros e escolas).
 
+import { ERA19 } from '../../sim/era19';
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { countryOfCity } from '../../data/geo';
@@ -109,7 +110,7 @@ function page(s: GameState): HTMLElement {
     tabs('regions19', [
       { id: 'ind', label: t(l('Selos regionais', 'Regional labels')), badge: Object.keys(st.ind).length || undefined, render: () => indTab(s) },
       { id: 'com', label: t(l('Comuna e exílio', 'Commune and exile')), badge: Object.keys(st.com).length || undefined, render: () => comTab(s) },
-      { id: 'visa', label: t(l('Vistos e rádio', 'Visas and radio')), render: () => visaTab(s) },
+      { id: 'visa', label: t(ERA19.visas(s)), render: () => visaTab(s) },
       { id: 'strike', label: t(l('Greves', 'Strikes')), badge: strikeActive(s) && !w4(s).union ? 1 : undefined, render: () => strikeTab(s) },
       { id: 'pol', label: t(l('Campanhas e leis', 'Campaigns and laws')), render: () => polTab(s) },
       { id: 'sch', label: t(l('Celeiros', 'Nurseries')), render: () => schTab(s) },

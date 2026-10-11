@@ -2,6 +2,7 @@
 // Licenças entre regiões, Imagem & voz, Merch, Circuito (festivais/reunião/financiamento coletivo) e a
 // Agenda de shows com concorrência. Cada escolha mostra chance, custo e o porquê.
 
+import { txt19, fmtL19 } from '../../sim/era19';
 import { FESTIVALS } from '../../data/catalog';
 import { CITIES, FAMILIES, cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -92,7 +93,7 @@ function outletsTab(s: GameState): HTMLElement {
   const rels = Object.values(s.releases).filter((r) => editable(s, r)).sort((a, b) => b.week - a.week).slice(0, 6);
   const now = outletsNow(s), st = out17(s);
   return h('div', null,
-    h('p', { class: 'small muted' }, t(l('O formato (vinil, K7, CD…) você escolhe na prensagem; aqui você escolhe ONDE vender. Cada canal tem alcance, margem e custo — e alguns têm efeito colateral. Vale nas 8 primeiras semanas do lançamento.', 'You choose the format (vinyl, cassette, CD…) when pressing; here you choose WHERE to sell. Each channel has reach, margin and cost — and some have side effects. Applies in a release\'s first 8 weeks.'))),
+    h('p', { class: 'small muted' }, t(fmtL19(l('O formato ({f}) você escolhe na prensagem; aqui você escolhe ONDE vender. Cada canal tem alcance, margem e custo — e alguns têm efeito colateral. Vale nas 8 primeiras semanas do lançamento.', 'You choose the format ({f}) when pressing; here you choose WHERE to sell. Each channel has reach, margin and cost — and some have side effects. Applies in a release\'s first 8 weeks.'), { f: txt19(s, 'biz17:formats', l('vinil, K7, CD…', 'vinyl, cassette, CD…')) }))),
     h('table', { class: 'tbl small' }, h('tr', null, ...[l('Canal', 'Channel'), l('Alcance', 'Reach'), l('Margem', 'Margin'), l('Custo', 'Cost'), l('Padrão', 'Default')].map((x) => h('th', null, t(x)))),
       now.map((o) => h('tr', { title: t(o.desc) }, h('td', null, t(o.name), o.upfront ? h('span', { class: 'small good' }, ` · ${t(l('adianta', 'pays upfront'))}`) : null), h('td', null, sg(o.reach)), h('td', null, sg(o.margin)), h('td', null, o.fee ? $(feeOf(s, o)) : '—'),
         h('td', null, h('input', { type: 'checkbox', checked: st.preset.includes(o.id), onchange: () => { setPreset(s, st.preset.includes(o.id) ? st.preset.filter((x) => x !== o.id) : [...st.preset, o.id]); rerender(); } }))))),
