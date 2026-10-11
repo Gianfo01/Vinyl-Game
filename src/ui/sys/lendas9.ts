@@ -343,6 +343,8 @@ function book(s: GameState): HTMLElement {
     bookCache ? h('pre', { class: 'ln-book' }, bookCache.txt) : null);
 }
 
+/** R19: abas extras de Lendas (ex.: Espólio do afterlife19). */
+export const LENDAS_X19: { id: string; label: L; icon: string; when?: (s: GameState) => boolean; render: (s: GameState) => HTMLElement }[] = [];
 function lendasArea(s: GameState): HTMLElement {
   const c = chronState(s);
   const rl = relics(s).list;
@@ -368,6 +370,7 @@ function lendasArea(s: GameState): HTMLElement {
       { id: 'eras17', label: t(l('Épocas', 'Eras')), icon: 'clock', render: () => erasTab17(s) },
       { id: 'press', label: t(l('Jornal', 'Newspaper')), icon: 'newspaper', render: () => paper(s) },
       { id: 'book', label: t(l('Livro e mundo', 'Book and world')), icon: 'note', render: () => book(s) },
+      ...LENDAS_X19.filter((x) => !x.when || x.when(s)).map((x) => ({ id: x.id, label: t(x.label), icon: x.icon, render: () => x.render(s) })),
     ], rerender));
 }
 

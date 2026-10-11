@@ -179,6 +179,16 @@ export const LIVE19: Record<string, { sys: string; to: string[] }> = {
   world_crisis: { sys: 'charity19', to: ['charity19:crisis (carta ao jogador; megashow de outro selo; manchete)'] },
 };
 
+/** R19 onda 3 (T3, sys/afterlife19.ts + gear19.ts): tipos novos do pós-vida → ouvintes. */
+export const AFTERLIFE19: Record<string, { sys: string; to: string[] }> = {
+  estate_contract: { sys: 'afterlife19', to: ['af19:contract (opinião dos herdeiros, Ligações, manchete)'] },
+  estate_suit: { sys: 'afterlife19', to: ['af19:suit (fama, estresse do ato, manchete)'] },
+  estate_offer: { sys: 'afterlife19', to: ['af19:offer (legado do espólio post18)'] },
+  estate_partner: { sys: 'afterlife19', to: ['af19:partner (sociedade shared18: herdeiro e oferta de venda)'] },
+  arena_open: { sys: 'afterlife19', to: ['af19:arena (reputação comercial, manchete)'] },
+  avatar_residency: { sys: 'afterlife19', to: ['af19:residency (fama, lealdade dos fãs fans18, manchete)'] },
+};
+
 export interface FactRow19 { kind: string; listeners: string[]; wildcard: string[]; readers: string[]; chron: boolean; why?: string }
 
 /** Monta a matriz para os tipos emitidos (`readers`: tipo → arquivos que leem; `chron`: tipos que passam pela crônica). */

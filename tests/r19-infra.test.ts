@@ -164,6 +164,9 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
 const INBOX_RARE19: Record<string, string> = {
   m19_call: 'money19: banco chama a dívida só com empréstimo e covenant quebrado (3 trimestres no prejuízo ou dívida > receita de 12 meses)',
   m19_auc: 'money19: leilão só quando um selo NPC quebra (raro em bots curtos)',
+  af19_suit: 'espólio processa pelos masters: exige morte de artista do seu elenco com masters retidos (raro em bots curtos)',
+  af19_offer: 'proposta do espólio: só com artista morto do seu catálogo e legado alto (anos depois da morte)',
+  gear19_offer: 'endosso de instrumento: artista do elenco com fama 40+ e sorteio de ~3%/mês (1930+)',
   // vistos às vezes em 1 ano (1 mensagem): exigir seria frágil a qualquer mudança de sorteio
   a18_rep: 'artista: relatório da gravadora só depois de assinar (depende do sorteio de ofertas)',
   analyst: 'relatório do analista: sem ação, vai para o boletim semanal (notify19) e não aparece como item próprio',

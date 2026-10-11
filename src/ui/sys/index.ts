@@ -191,4 +191,7 @@ import './media19';
 import './market19b';
 // Rodada 19 (Frente 5, onda 3 — T4): Palco e temporada (ingressos, festival grátis, vinil/RSD, temporada, beneficentes, concursos).
 import './live19';
+// Rodada 19 (onda 3, T3): Lendas › Espólio (herdeiros, masters, arena digital) e Estúdio › Equipamento (endossos, ícones).
+import './afterlife19';
+import './gear19';
 import './core18';

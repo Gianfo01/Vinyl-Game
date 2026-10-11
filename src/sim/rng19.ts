@@ -41,6 +41,8 @@ export const STREAMS19: Record<string, string> = {
   live19: 'ao vivo e temporada: audiência antitruste, boicote de NPC, festival gratuito (incidente), descoberta no palco aberto (live19)',
   charity19: 'beneficentes: crises sorteadas, recrutamento de NPC, rivais no palco, dinheiro que some (charity19)',
   contests19: 'concursos de rádio/TV: inscritos, notas do júri, rixas de jurado (contests19)',
+  af19: 'pós-vida: processos e propostas do espólio, residências de avatares, prêmios póstumos (afterlife19)',
+  gear19: 'equipamento: ofertas de endosso, modelo-assinatura, herança do instrumento-ícone (gear19)',
   l19b: 'malha de ligações B: crises cambiais sorteadas, bônus de descoberta do campus, corrida por talento, traição de pactos (links19b)',
   mka19: 'mercado A: erro dos testes de faixa, vazamentos, faixas sem rosto, saídas 360, leilões antitruste, ciclo das cenas (market19a)',
   zn19: 'fanzines e imprensa: nascimento de fanzines, críticos que viram editores, conflito de interesse (zines19)',
