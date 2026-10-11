@@ -11,6 +11,8 @@
     "test": "vitest run",
     "headless": "tsx tools/headless.ts",
     "balance": "tsx tools/balance19.ts",
+    "balance:quick": "tsx tools/balance19.ts --quick",
+    "balance:full": "tsx tools/balance19.ts --full",
     "geo": "tsx tools/build-geo.ts"
   },
   "devDependencies": {
