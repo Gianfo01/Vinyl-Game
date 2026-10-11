@@ -19,6 +19,9 @@ import { forecastBox } from '../sys/explain12';
 import { fameText } from '../../sim/sys/fame15';
 import { labelTourNet16, sizedDraft16, suggestRoute16 } from '../../sim/route16';
 import { kitDraft18, kitForm18 } from '../sys/live18';
+import { changeTour20, futureStops20, tourChangeQuote20, type TourChange20 } from '../../sim/sys/showops20';
+import { FLY_FROM18, KIT_TXT18 } from '../../sim/sys/live18';
+import { KIT0, type Kit18 } from '../../sim/tourhook18';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -133,8 +136,48 @@ export function activeToursSection(s: GameState): HTMLElement | null {
       chips(stat('money', $(tr.revenue), l('Receita', 'Revenue')), stat('fans', N(tr.stops.reduce((x, y) => x + y.sold, 0)), l('Público', 'Attendance')), tr.accidents ? stat('warning', tr.accidents, l('Acidentes', 'Accidents'), 'bad') : null),
       tr.status === 'planned' || tr.status === 'running' ? h('button', { class: 'btn small ghost', onclick: () => { const e = cancelTour(s, tr.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(l('Cancelar (devolve metade)', 'Cancel (half refunded)'))) : null),
     h('div', { class: 'tour-stops' }, tr.stops.map((st) => h('span', { class: `stop ${st.status}`, title: st.note ? t(st.note) : '' }, ic(stopIcon(st)), h('b', null, cityName(st.cityId)), st.status === 'played' ? h('small', null, `${N(st.sold)}/${N(st.capacity)}`) : st.note ? h('small', null, t(st.note)) : null))),
+    tr.status === 'planned' || tr.status === 'running' ? tourChangeForm20(s, tr) : null,
     dailyTimeline(s, tr.actId, 6),
   )));
+}
+
+// r20b (Z2): alterar kit, equipe e ingresso das datas futuras depois de marcar (prévia = lançamento)
+const chg20 = new Map<string, TourChange20>();
+const chgOpen20 = new Set<string>();
+function tourChangeForm20(s: GameState, tr: Tour): HTMLElement | null {
+  if (!playerActs(s).includes(tr.actId) || !futureStops20(s, tr).length) return null;
+  const ch = chg20.get(tr.id) ?? {};
+  const cur: Kit18 = { ...KIT0, ...(tr.kit18 ?? {}), ...(ch.kit ?? {}) };
+  const setK = <K extends keyof Kit18>(k: K, v: Kit18[K]) => { chg20.set(tr.id, { ...ch, kit: { ...(ch.kit ?? {}), [k]: v } }); rerender(); };
+  const opt = <V extends string | number>(o: Record<string, L> | L[], keys: V[]) => keys.map((k) => ({ value: k, label: t((o as Record<string, L>)[k as unknown as string]) }));
+  const q = tourChangeQuote20(s, tr.id, ch);
+  const dirty = !!ch.kit || ch.crew !== undefined || ch.priceMult !== undefined;
+  const sign = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${$(Math.abs(v))}`;
+  return h('details', { class: 'tourchg20', open: chgOpen20.has(tr.id) ? true : undefined, ontoggle: (e: Event) => { if ((e.currentTarget as HTMLDetailsElement).open) chgOpen20.add(tr.id); else chgOpen20.delete(tr.id); } },
+    h('summary', null, ic('pen'), ' ', t(l('Alterar datas futuras ({n})', 'Change future dates ({n})'), { n: futureStops20(s, tr).length })),
+    h('p', { class: 'small muted' }, t(l('Vale só para datas ainda não jogadas; shows jogados não mudam. O promotor é contrato. Reduzir serviços devolve metade da economia (multa de cancelamento).', 'Applies only to dates not yet played; played shows never change. The promoter is a contract. Cutting services refunds half the savings (cancellation fee).'))),
+    h('div', { class: 'form grid2' },
+      h('label', null, t(l('Transporte', 'Transport')), select(cur.move, opt(KIT_TXT18.move, (s.year >= FLY_FROM18 ? ['van', 'bus', 'fly'] : ['van', 'bus']) as Kit18['move'][]), (v) => setK('move', v))),
+      h('label', null, t(l('Hospedagem', 'Lodging')), select(cur.bed, opt(KIT_TXT18.bed, ['cheap', 'std', 'good'] as Kit18['bed'][]), (v) => setK('bed', v))),
+      h('label', null, t(l('Diárias', 'Per diems')), select(cur.diem, opt(KIT_TXT18.diem, [0, 1, 2] as Kit18['diem'][]), (v) => setK('diem', Number(v) as Kit18['diem']))),
+      h('label', null, t(l('Equipamento', 'Gear')), select(cur.gear, opt(KIT_TXT18.gear, ['own', 'rent'] as Kit18['gear'][]), (v) => setK('gear', v))),
+      tr.status === 'planned' ? h('label', null, t(l('Ensaio', 'Rehearsal')), select(cur.reh, opt(KIT_TXT18.reh, [0, 1, 2] as Kit18['reh'][]), (v) => setK('reh', Number(v) as Kit18['reh']))) : null,
+      h('label', null, t(l('Seguro', 'Insurance')), select(cur.ins, opt(KIT_TXT18.ins, [0, 1] as Kit18['ins'][]), (v) => setK('ins', Number(v) as Kit18['ins']))),
+      h('label', null, t(l('Segurança do público', 'Crowd security')), select(cur.sec, opt(KIT_TXT18.sec, [0, 1, 2] as Kit18['sec'][]), (v) => setK('sec', Number(v) as Kit18['sec']))),
+      h('label', null, t(l('Equipe técnica', 'Road crew')), select(ch.crew ?? tr.crew, [...new Set([1, 2, 4, 6, 10, 16, tr.crew])].sort((a, b) => a - b).map((n) => ({ value: n, label: `${n}` })), (v) => { chg20.set(tr.id, { ...ch, crew: Number(v) }); rerender(); })),
+      h('label', null, t(l('Ingresso (datas futuras)', 'Ticket (future dates)')), select(ch.priceMult ?? 0, [{ value: 0, label: t(l('manter', 'keep')) }, ...[0.6, 0.8, 1, 1.25, 1.5, 2].map((m) => ({ value: m, label: `×${m}` }))], (v) => { chg20.set(tr.id, { ...ch, priceMult: Number(v) ? Number(v) : undefined }); rerender(); })),
+    ),
+    dirty ? h('div', { class: 'small', role: 'status' },
+      chips(stat('bank', sign(q.delta), l('Logística das datas futuras (diferença)', 'Future-date logistics (difference)'), q.delta > 0 ? 'warn' : 'good'),
+        q.fee ? stat('warning', $(q.fee), l('Multa de cancelamento', 'Cancellation fee'), 'warn') : null,
+        stat('money', sign(q.cash), l('Efeito no caixa agora', 'Cash effect now'), q.cash < 0 ? 'warn' : 'good'),
+        stat('fans', sign(q.revAfter - q.revBefore), l('Bilheteria prevista (mesma conta do planejamento)', 'Expected box office (same math as planning)'))),
+      q.parts.length ? h('ul', null, q.parts.map(([n, v]) => h('li', null, `${t(n)}${v ? `: ${sign(v)}` : ''}`))) : null,
+      q.warn.length ? h('ul', { class: 'warn' }, q.warn.map((w) => h('li', null, t(w)))) : null,
+      !q.ok && q.why ? h('p', { class: 'bad' }, t(q.why)) : null) : null,
+    h('div', { class: 'row wrap' },
+      h('button', { class: 'btn small primary', disabled: !dirty || !q.ok ? true : undefined, title: q.why ? t(q.why) : undefined, onclick: () => { const r = changeTour20(s, tr.id, ch); if ('ok' in r) { chg20.delete(tr.id); toast(t(l('Turnê alterada.', 'Tour changed.')), 'good'); } else toast(t(r), 'bad'); rerender(); } }, t(l('Aplicar alteração', 'Apply change'))),
+      dirty ? h('button', { class: 'btn small ghost', onclick: () => { chg20.delete(tr.id); rerender(); } }, t(l('Descartar', 'Discard'))) : null));
 }
 
 export function merchSection(s: GameState): HTMLElement {
