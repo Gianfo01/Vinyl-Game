@@ -187,6 +187,7 @@ const INBOX_RARE19: Record<string, string> = {
   relic18_fake: 'relíquia falsa: só com mercado de relíquias aberto (visto em 3 anos)',
   media18_viral: 'viral de mídia: 1990+ e lançamento forte (visto em 3 anos, 1990/2005)',
   aw18_snub: 'esnobada em prêmio: exige indicação (visto em 3 anos, 1960 artista)',
+  scn19_fit: 'figurino do tapete vermelho: exige indicado oficial seu aos Gramófonos (1959+, novembro)',
   a18_stmt: 'artista: declaração pública pedida após polêmica (visto em 3 anos)',
   supply_bump: 'cadeia física: choque de fornecimento aleatório (visto em 3 anos)',
   st18_rival: 'streaming 2015+: denúncia de fazenda rival, sorteio de 3,5%/mês (visto em 3 anos)',
