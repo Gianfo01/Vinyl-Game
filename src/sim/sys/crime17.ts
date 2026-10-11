@@ -939,7 +939,10 @@ function extrasMonth(s: GameState, r: Rng): void {
     const rel = r.pick(hits);
     const a = s.acts[rel.actId];
     if (!a) continue;
-    const loss = money(s, 800 + a.fame * 90);
+    // r19 (equilíbrio): a perda é parte das vendas do disco pirateado (até 20% do que ele já rendeu), nunca mais que o
+    // teto pela fama — antes um compacto de estreia que rendeu US$ 2 mil "perdia" US$ 1,3 mil por batida (dreno fixo de selo pequeno)
+    const loss = Math.min(money(s, 800 + a.fame * 90), Math.round(Math.max(0, rel.revenue) * 0.2));
+    if (loss < money(s, 50)) continue;
     post(s, `c17pir:${o.id}`, -loss, 'legal', `Vendas perdidas para pirataria (${o.name.pt})`);
     emitFact(s, { kind: 'piracy', actors: [a.id, o.key], place: o.city, severity: 25, visibility: 'rumor', tags: ['crime', 'bad'], text: fmtL(l('{f} piratas de {a} inundam {c} ({o}): −{v}.', 'Bootleg {f} of {a} flood {c} ({o}): −{v}.'), { f: bootFmt(s.year), a: a.name, c: countryName(o.a3), o: o.name, v: usd(loss) }), src: 'crime17' });
   }
