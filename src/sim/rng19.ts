@@ -20,6 +20,7 @@ registerExt4('rng19', () => ({ st: {} }));
 
 /** Chaves em uso (documentação + teste): quem tem fluxo próprio. */
 export const STREAMS19: Record<string, string> = {
+  money19: 'dívida e catálogo: leilões de masters, juras de regravação, banco x selos NPC (money19)',
   events: 'storyteller: quais eventos/decisões aparecem no mês (events.ts)',
   decide: 'resolução das opções escolhidas nas decisões (events.ts resolveDecision)',
   director: 'diretor de arcos e lembranças (director.ts)',

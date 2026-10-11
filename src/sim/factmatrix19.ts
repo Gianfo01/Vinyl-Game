@@ -131,6 +131,19 @@ export const LINKS19B: Record<string, { sys: string; to: string[] }> = {
   pa_bet: { sys: 'links19b', to: ['links19b:pabet (inspiração da banda)'] },
 };
 
+/** r19 onda 3 (T1 money-a, `sys/money19.ts`): fatos novos e quem ouve. */
+export const MONEY19A: Record<string, { sys: string; to: string[] }> = {
+  debt_called: { sys: 'money19', to: ['money19:called (confiança do elenco, calor do rival abutre, manchete no pedido de falência)'] },
+  label_bankrupt: { sys: 'money19', to: ['money19:auction (abre o leilão de masters, carta na Caixa, manchete)'] },
+  master_auction: { sys: 'money19', to: ['money19:won (calor com quem venceu você, risco de regravação, reputação comercial)'] },
+  rerecord_vow: { sys: 'money19', to: ['money19:vow (fãs escolhem um lado: mobilização/embalo; mágoa e reputação se os masters são seus)'] },
+  rofr_used: { sys: 'money19', to: ['money19:rofr (confiança do ato, reputação com artistas)'] },
+  bond_issued: { sys: 'money19', to: ['money19:bond (notícia na bolsa, reputação comercial)'] },
+  bond_rating: { sys: 'money19', to: ['money19:rating (notícia na bolsa, reputação institucional)'] },
+  bond_default: { sys: 'money19', to: ['money19:default (credores executam os masters → leilão, crédito fechado)'] },
+  rate_shift: { sys: 'money19', to: ['money19:rates (dívida dos selos NPC, notícia na bolsa)'] },
+};
+
 export interface FactRow19 { kind: string; listeners: string[]; wildcard: string[]; readers: string[]; chron: boolean; why?: string }
 
 /** Monta a matriz para os tipos emitidos (`readers`: tipo → arquivos que leem; `chron`: tipos que passam pela crônica). */

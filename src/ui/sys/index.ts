@@ -172,4 +172,6 @@ import './tribute19';
 import './session19';
 // Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
 import './era19';
+// Rodada 19 (onda 3, T1): Finanças › Dívida e catálogo.
+import './money19';
 import './core18';
