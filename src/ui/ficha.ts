@@ -69,7 +69,7 @@ export function openRelease(id: string): void {
         mine ? kv(t(S.revenue), $(r.revenue)) : null,
         mine && r.pressed ? kv(t(S.stock), `${N(Math.max(0, r.stock))} / ${N(r.pressed)}`) : null,
         mine && r.shortage ? kv(t(S.shortage), N(r.shortage)) : null,
-        r.weekly.length ? h('div', null, sparkline(r.weekly.slice(-40), 220, 40)) : null,
+        r.weekly.length ? h('div', null, sparkline(r.weekly.slice(-40), 220, 40, t(l('Vendas por semana', 'Weekly sales')))) : null,
         relHype12(s, r),
       ),
     ),

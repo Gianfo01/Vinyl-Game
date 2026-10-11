@@ -22,20 +22,22 @@ import { calStrip19 } from './calendar19';
 import { ic } from '../vis';
 import { moodBlock19, quick19 } from './prof19';
 import './home18.css';
+import { nameSvg20 } from '../ux20';
 
 const go = (area: string) => { store.area = area as typeof store.area; rerender(); };
 const mine = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');
 const ui = { spot: 0 };
 
 /** Minigráfico com mínimo e máximo próprios (aceita negativos). */
-export function spark18(vals: number[], w = 90, hh = 24): HTMLElement {
+export function spark18(vals: number[], w = 90, hh = 24, name?: string): HTMLElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', String(w)); svg.setAttribute('height', String(hh)); svg.setAttribute('class', 'hm18-spark');
   if (vals.length < 2) return svg as unknown as HTMLElement;
   const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
   const pts = vals.map((v, i) => `${((i / (vals.length - 1)) * w).toFixed(1)},${(hh - 2 - ((v - lo) / span) * (hh - 4)).toFixed(1)}`).join(' ');
   const up = vals[vals.length - 1] >= vals[0];
-  svg.innerHTML = `<polyline fill="none" stroke="${up ? 'var(--good)' : 'var(--bad)'}" stroke-width="1.6" points="${pts}"/><circle r="2.2" fill="currentColor" cx="${w}" cy="${pts.split(' ').pop()!.split(',')[1]}"/>`;
+  nameSvg20(svg, name ?? t(l('Tendência', 'Trend')), vals); // r20 B24
+  svg.innerHTML += `<polyline fill="none" stroke="${up ? 'var(--good)' : 'var(--bad)'}" stroke-width="1.6" points="${pts}"/><circle r="2.2" fill="currentColor" cx="${w}" cy="${pts.split(' ').pop()!.split(',')[1]}"/>`;
   return svg as unknown as HTMLElement;
 }
 const delta = (v: number, fmt: (n: number) => string = (n) => Math.round(n).toLocaleString()): HTMLElement =>
@@ -95,7 +97,7 @@ function pulse(s: GameState): HTMLElement {
   const pl = dec18(s).pl, L0 = pl.last;
   // r19 (11.15): ▲▼ abre o porquê (pulse19 → resultado do mês e cadeia de causas dos fatos)
   const cell = (lb: L, vals: number[], now: string, d: number, fmt?: (n: number) => string, k = 'cash') =>
-    h('div', { class: 'hm18-kpi' }, h('small', null, t(lb)), h('b', null, now), spark18(vals), L0 ? why18(s, 'pulse19', { k }, delta(d, fmt)) : null);
+    h('div', { class: 'hm18-kpi' }, h('small', null, t(lb)), h('b', null, now), spark18(vals, 90, 24, t(lb)), L0 ? why18(s, 'pulse19', { k }, delta(d, fmt)) : null);
   const fans = pl.fans.at(-1) ?? 0;
   return h('div', { class: 'hm18-kpis' },
     cell(l('Caixa', 'Cash'), pl.cash, $(s.player.cash), L0?.cash ?? 0, (n) => $(n)),

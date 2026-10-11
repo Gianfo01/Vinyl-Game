@@ -5,7 +5,7 @@
 
 import { formatMoney } from '../core/money';
 import { l, type L } from '../data/world';
-import { t } from '../i18n/strings';
+import { getLang, t } from '../i18n/strings';
 import { MASTER_NAME, SCOPE_NAME, defaultRights, splitPreview } from '../sim/rights';
 import type { GameState, Notification, Offer, RightsTerms } from '../sim/types';
 import { fmtL } from '../sim/util';
@@ -83,6 +83,17 @@ export function chartSummary20(name: string, values: number[], fmt: (n: number) 
   return en
     ? `${name}: ${v.length} points, from ${fmt(v[0])} to ${fmt(v[v.length - 1])} (min ${fmt(lo)}, max ${fmt(hi)})${trend}`
     : `${name}: ${v.length} pontos, de ${fmt(v[0])} a ${fmt(v[v.length - 1])} (mín ${fmt(lo)}, máx ${fmt(hi)})${trend}`;
+}
+
+/** Nome acessível + <title> num SVG de gráfico (chamado na hora de desenhar; não toca no DOM ao importar). */
+export function nameSvg20<T extends Element>(svg: T, name: string, values: number[], fmt?: (n: number) => string): T {
+  const sum = chartSummary20(name, values, fmt, getLang() === 'en');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', sum);
+  const tt = svg.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'title');
+  tt.textContent = sum;
+  svg.insertBefore(tt, svg.firstChild);
+  return svg;
 }
 
 // ---------------------------------------------------------------- B22: ajuda mínima por área

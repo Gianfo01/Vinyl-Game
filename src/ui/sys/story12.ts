@@ -12,6 +12,8 @@ import { openRelease } from '../ficha';
 import { h } from '../dom';
 import { openScene, registerTab } from '../registry';
 import { chips, stat } from '../vis';
+import { nameSvg20 } from '../ux20';
+import { chartTable20 } from './ui20';
 
 const TONE: Record<Tone, [L, string, string]> = {
   peak: [l('Picos', 'Peaks'), '▲', 'good'], crisis: [l('Crises', 'Crises'), '▼', 'bad'], release: [l('Lançamentos', 'Releases'), '●', ''],
@@ -19,12 +21,13 @@ const TONE: Record<Tone, [L, string, string]> = {
 };
 let off: Partial<Record<Tone, 1>> = {};
 const NS = 'http://www.w3.org/2000/svg';
-const svgEl = (w: number, hg: number, inner: string): HTMLElement => {
+const svgEl = (w: number, hg: number, inner: string, name = '', vals: number[] = []): HTMLElement => {
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${w} ${hg}`);
   svg.setAttribute('class', 'chart');
   svg.setAttribute('role', 'img');
   svg.innerHTML = inner;
+  nameSvg20(svg, name || t(l('Gráfico', 'Chart')), vals); // r20 B24
   return svg as unknown as HTMLElement;
 };
 
@@ -44,7 +47,8 @@ function revenueChart(st: LabelStory): HTMLElement | null {
     if (i % Math.max(1, Math.ceil(rs.length / 10)) === 0) s += `<text x="${X}" y="${H - 6}">${x.y}</text>`;
   });
   s += `<polyline fill="none" stroke="var(--warn)" stroke-width="2" points="${rs.map((x, i) => `${30 + i * bw + bw / 2},${y(x.p)}`).join(' ')}"/>`;
-  return h('div', null, svgEl(W, H, s), h('div', { class: 'legend' }, h('span', null, h('i', { style: 'background:var(--accent)' }), t(l('Receita', 'Revenue'))), h('span', null, h('i', { style: 'background:var(--warn)' }), t(l('Lucro', 'Profit'))),
+  const nm = t(l('Receita por ano', 'Revenue by year'));
+  return h('div', null, svgEl(W, H, s, nm, rs.map((x) => Math.round(x.v / 100))), chartTable20(nm, [t(l('Ano', 'Year')), t(l('Receita', 'Revenue')), t(l('Lucro', 'Profit'))], rs.map((x) => [x.y, $(x.v), $(x.p)])), h('div', { class: 'legend' }, h('span', null, h('i', { style: 'background:var(--accent)' }), t(l('Receita', 'Revenue'))), h('span', null, h('i', { style: 'background:var(--warn)' }), t(l('Lucro', 'Profit'))),
     st.peak ? h('span', null, h('i', { style: 'background:var(--good)' }), t(l('Melhor ano: {y}', 'Best year: {y}'), { y: st.peak.y })) : null, st.crisis ? h('span', null, h('i', { style: 'background:var(--bad)' }), t(l('Pior ano: {y}', 'Worst year: {y}'), { y: st.crisis.y })) : null));
 }
 
@@ -59,7 +63,8 @@ function repChart(st: LabelStory): HTMLElement | null {
   let s = `<line x1="28" x2="${W}" y1="${y(50)}" y2="${y(50)}" stroke="var(--line)" stroke-dasharray="3 3"/>`;
   series.forEach(([, f], k) => { s += `<polyline fill="none" stroke="${cols[k]}" stroke-width="${k === 4 ? 2.5 : 1.5}" points="${sn.map((_, i) => `${x(i)},${y(f(i))}`).join(' ')}"/>`; });
   sn.forEach((p, i) => { if (i % Math.max(1, Math.ceil(sn.length / 10)) === 0) s += `<text x="${x(i) - 8}" y="${H - 4}">${p.y}</text>`; });
-  return h('div', null, svgEl(W, H, s), h('div', { class: 'legend' }, series.map(([n], k) => h('span', null, h('i', { style: `background:${cols[k]}` }), t(n)))));
+  const nm = t(l('Reputação e fama do elenco por ano (0–100)', 'Reputation and roster fame by year (0–100)'));
+  return h('div', null, svgEl(W, H, s, nm, sn.map((_, i) => series[4][1](i))), chartTable20(nm, [t(l('Ano', 'Year')), ...series.map(([n]) => t(n))], sn.map((x, i) => [x.y ?? i + 1, ...series.map(([, f]) => Math.round(f(i)))])), h('div', { class: 'legend' }, series.map(([n], k) => h('span', null, h('i', { style: `background:${cols[k]}` }), t(n)))));
 }
 
 export function storyView(s: GameState, refresh: () => void = rerender): HTMLElement {

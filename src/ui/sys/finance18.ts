@@ -9,6 +9,8 @@ import { $, actLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { chips, stat } from '../vis';
 import { registerTab } from '../registry';
+import { nameSvg20 } from '../ux20';
+import { chartTable20 } from './ui20';
 
 const MON: L[] = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'].map((m, i) => l(m, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]));
 const mName = (mi: number) => `${t(MON[mi % 12])}/${String(Math.floor(mi / 12)).slice(2)}`;
@@ -63,7 +65,9 @@ function bars(s: GameState): HTMLElement {
   el.setAttribute('class', 'bars18');
   el.setAttribute('style', 'width:100%;max-width:460px;height:auto');
   el.innerHTML = svg;
-  return h('div', null, el as unknown as HTMLElement, h('p', { class: 'muted small' }, '■ ', t(l('verde: lucro operacional (competência)', 'green: operating profit (accrual)')), ' · ■ ', t(l('laranja: caixa operacional (dinheiro de fato)', 'orange: operating cash (actual money)')), ' — ', mName(ms[0]), '…', mName(ms[11])));
+  const nm = t(l('Lucro operacional × caixa operacional, 12 meses', 'Operating profit vs operating cash, 12 months'));
+  nameSvg20(el, nm, op.map((v) => Math.round(v / 100))); // r20 B24: nome + resumo + tabela
+  return h('div', null, el as unknown as HTMLElement, chartTable20(nm, [t(l('Mês', 'Month')), t(l('Lucro operacional', 'Operating profit')), t(l('Caixa operacional', 'Operating cash'))], ms.map((m, i) => [mName(m), $(op[i]), $(cf[i])])), h('p', { class: 'muted small' }, '■ ', t(l('verde: lucro operacional (competência)', 'green: operating profit (accrual)')), ' · ■ ', t(l('laranja: caixa operacional (dinheiro de fato)', 'orange: operating cash (actual money)')), ' — ', mName(ms[0]), '…', mName(ms[11])));
 }
 
 function timeline(s: GameState): HTMLElement {

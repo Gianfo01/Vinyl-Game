@@ -3,6 +3,7 @@
 
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
+import { nameSvg20 } from '../ux20';
 import { buyValue, change12, controlShare, holders, holdingsOf, insight, KIND_NAME, listed, OWN, ownListing, playerFrac, raiders, repelRaider, sellShares, bolsa, unlistedNotes, walletOf, type Acct, type Kind } from '../../sim/sys/bolsa10';
 import { INVEST, canLet, goodById, goodUpkeep, goods, invest, netWorth, redeem, rentOf, saleValue, sellGood, setLet, type InvId } from '../../sim/sys/goods8';
 import { ownerOf } from '../../sim/sys/people/owner';
@@ -38,6 +39,7 @@ function spark(values: number[], w = 96, hg = 26): HTMLElement {
   svg.setAttribute('class', 'spark');
   svg.setAttribute('style', `color:${up ? 'var(--good, #3a9a5b)' : 'var(--bad, #c0504d)'}`);
   svg.innerHTML = `<polyline fill="none" stroke="currentColor" stroke-width="1.5" points="${pts}"/>`;
+  nameSvg20(svg, t(l('Cotação', 'Share price')), values.map((v) => v / 100), (n) => `$${n.toFixed(2)}`); // r20 B24
   return svg as unknown as HTMLElement;
 }
 
