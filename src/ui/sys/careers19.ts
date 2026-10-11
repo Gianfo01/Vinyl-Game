@@ -57,8 +57,8 @@ FEST_EXTRA12.push((s, f) => {
       pill(Number.isFinite(cap) ? t(l('até {n} pessoas', 'up to {n} people'), { n: cap.toLocaleString() }) : t(l('capacidade pelos portões', 'capacity by gates'))),
       nx ? h('button', { class: 'btn tiny', title: t(l('Precisa de: {n}', 'Needs: {n}'), { n: t(nx.need) }), onclick: () => { const e = growGround19(s, f.id); toast(t(e ?? l('Terreno ampliado.', 'Grounds expanded.')), e ? 'bad' : 'good'); rerender(); } },
         t(l('Passar para {g} ({c})', 'Move to {g} ({c})'), { g: t(nx.name), c: $(Math.round(nominal(nx.cost, s.year))) })) : null),
-    acts.length ? h('p', null, why18(s, 'fest19.demand', { fx: f.id }, t(l('Qualidade da edição para o público: ×{k}', 'Edition quality for the crowd: ×{k}'), { k: q.k.toFixed(2) })),
-      q.k < 0.7 ? h('span', { class: 'warn' }, ' — ', t(l('line-up fraco: não espere lotar.', 'weak bill: don\'t expect a sell-out.'))) : null) : null,
+    acts.length ? h('p', null, why18(s, 'fest19.demand', { fx: f.id }, t(l('Qualidade da edição para o público: ×{k}', 'Edition quality for the crowd: ×{k}'), { k: (q.k * q.sat).toFixed(2) })),
+      q.k < 0.6 ? h('span', { class: 'warn' }, ' — ', t(l('line-up fraco: não espere lotar.', 'weak bill: don\'t expect a sell-out.'))) : null) : null,
     mu > 0 && mu <= 4 && !f.lineup.length ? h('p', { class: 'bad' }, t(l('Faltam {m} meses e não há atração: sem line-up a edição é cancelada.', '{m} months left and no acts: with no bill the edition is cancelled.'), { m: mu })) : null,
     x.hist.length && mu > 4 ? h('p', { class: 'muted' }, t(l('Entre edições: decisões do ramo (olheiro, patrocinador, alvará, vizinhos, tiqueteira) chegam na Central de decisões.', 'Between editions: branch decisions (scouting, sponsors, permits, neighbours, ticketing) arrive in the decision hub.'))) : null);
 });
