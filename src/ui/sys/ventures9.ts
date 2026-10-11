@@ -15,6 +15,7 @@ import {
   bookingChance,
 } from '../../sim/sys/ventures9';
 import { RATE19 } from './neg19';
+import { why18 } from '../explain18';
 import { $, actLink, cityName, genreName, inspect, pill, rerender, section, sparkline, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea, registerPageTab, registerSection } from '../registry';
@@ -149,7 +150,7 @@ function bookingBody(s: GameState, v: Venture): HTMLElement {
     cands.length ? h('div', { class: 'row wrap' },
       select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)})` })), (x) => { RATE19.bkAct = x; rerender(); }),
       select<number>(rate, [0.08, 0.1, 0.12, 0.15, 0.2].map((x) => ({ value: x, label: pa ? `${pct(x)} · ${t(l('chance', 'odds'))} ${pct(bookingChance(s, v, pa, x))}` : pct(x) })), (x) => { RATE19.booking = x; rerender(); }),
-      pa ? pill(`${t(l('chance', 'odds'))} ${pct(bookingChance(s, v, pa, rate))}`) : null,
+      pa ? why18(s, 'bk19.odds', { v: v.id, act: pa.id, rate }, pill(`${t(l('chance', 'odds'))} ${pct(bookingChance(s, v, pa, rate))}`)) : null,
       btn(l('Oferecer agenciamento', 'Offer booking'), () => res(signBooking(s, r, v.id, pick, rate)), 'btn small primary')) : null);
 }
 

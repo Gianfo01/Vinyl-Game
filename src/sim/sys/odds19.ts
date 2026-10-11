@@ -3,7 +3,9 @@
 // o teste tests/r19-fix-b.test.ts sorteia com um Rng fixo e confere, para vários termos, que "aceitou" ⇔ u < chance.
 import { l, type L } from '../../data/world';
 import type { Rng } from '../../core/rng';
+import { registerExplain } from '../explain18';
 import type { GameState } from '../types';
+import { fmtL } from '../util';
 import { a18, counter18, counterOdds18, type Ask18 } from './artist18';
 import { pitchAct, pitchOdds8, type FestTier } from './fests8';
 import { poachChance, poachClient, rateChance, renegotiateRate } from './manager11';
@@ -54,3 +56,17 @@ registerOdds19('artist.counter', { screen: l('Artista › Propostas › Contrapr
 registerOdds19('pub.admin', { screen: l('Direitos › Editora › Propostas', 'Rights › Publishing › Offers'),
   chance: (s, [, fee]: Args) => admChance18(s, fee as number),
   roll: (s, r, [id, fee]: Args) => { takeAdm18(s, id as string, fee as number, r); return r18(s).adm.some((c) => c.id === id); } });
+
+// porquê da chance de agenciamento (a única chance nova na tela; as outras já tinham porquê ou fórmula no título)
+registerExplain('bk19.odds', (s, ctx) => {
+  const v = vById(s, ctx.v), a = act(s, ctx.act), rate = Number(ctx.rate ?? 0.12);
+  if (!v || !a) return null;
+  const r = Math.min(0.2, Math.max(0.08, rate));
+  return { title: l('Chance de assinar o agenciamento', 'Odds of signing the booking deal'), value: bookingChance(s, v, a, rate), fmt: 'pct', parts: [
+    { label: l('Base', 'Base'), value: 0.5, fmt: 'pct' },
+    { label: l('Reputação da agência (÷200)', 'Agency reputation (÷200)'), value: v.rep / 200, fmt: 'pct', tone: 'good' },
+    { label: fmtL(l('Comissão {p}% (−3 pontos por ponto acima de 10%)', 'Commission {p}% (−3 points per point above 10%)'), { p: Math.round(r * 100) }), value: -(r - 0.1) * 3, fmt: 'pct', tone: r > 0.1 ? 'bad' : 'good' },
+    { label: l('Fama do artista (estrelas resistem; ÷300)', 'Act\'s fame (stars resist; ÷300)'), value: -a.fame / 300, fmt: 'pct', tone: 'bad' },
+    { label: l('Nível da agência (+4% por nível)', 'Agency level (+4% per level)'), value: v.level * 0.04, fmt: 'pct', tone: 'good' },
+  ], note: l('Limitada entre 5% e 95%. É a mesma conta do sorteio.', 'Clamped to 5–95%. It is the same math as the roll.') };
+});

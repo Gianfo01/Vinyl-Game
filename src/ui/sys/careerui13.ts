@@ -18,6 +18,7 @@ import { PAGE16 } from '../pages16';
 import { CAREER_PAGE17 } from '../nav17';
 import { $, pill, rerender, section, toast } from '../common';
 import { RATE19 } from './neg19';
+import { why18 } from '../explain18';
 import { h, select } from '../dom';
 import { registerSection } from '../registry';
 import { store } from '../store';
@@ -69,7 +70,7 @@ export function signInline(s: GameState, v: NonNullable<ReturnType<typeof hasAge
     cands.length ? h('div', { class: 'found13' },
       select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)})` })), (x) => { RATE19.bkAct = x; rerender(); }),
       select<number>(rate, [0.08, 0.1, 0.12, 0.15, 0.2].map((x) => ({ value: x, label: `${t(l('comissão', 'commission'))} ${Math.round(x * 100)}%${pa ? ` · ${t(l('chance', 'odds'))} ${Math.round(bookingChance(s, v, pa, x) * 100)}%` : ''}` })), (x) => { RATE19.booking = x; rerender(); }),
-      pa ? pill(`${t(l('chance', 'odds'))} ${Math.round(bookingChance(s, v, pa, rate) * 100)}%`) : null,
+      pa ? why18(s, 'bk19.odds', { v: v.id, act: pa.id, rate }, pill(`${t(l('chance', 'odds'))} ${Math.round(bookingChance(s, v, pa, rate) * 100)}%`)) : null,
       h('button', { class: 'btn small primary', onclick: () => { const r = signBooking(s, rngOf(s), v.id, pick, rate); toast(t(r.text), r.ok ? 'good' : 'bad'); rerender(); } }, t(l('Oferecer agenciamento', 'Offer booking'))))
       : h('p', { class: 'muted small' }, t(l('Nenhum artista livre com fama 10+ agora. Volte no mês que vem.', 'No free act with fame 10+ right now. Check again next month.'))));
 }
