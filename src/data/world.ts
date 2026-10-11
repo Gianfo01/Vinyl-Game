@@ -1,5 +1,7 @@
 // Mercados, cidades, famílias e gêneros (Catálogo §1, GDD §8).
 
+import { C19, G19 } from './world19';
+
 export type L = { pt: string; en: string };
 export const l = (pt: string, en = pt): L => ({ pt, en });
 
@@ -16,7 +18,8 @@ export interface Market {
 export type NameGroup =
   | 'en' | 'pt' | 'es' | 'fr' | 'de' | 'it' | 'sv' | 'ja' | 'ko' | 'hi' | 'zh' | 'th' | 'ar' | 'tr' | 'yo' | 'zu' | 'wo'
   | 'ru' | 'pl' | 'nl' | 'el' | 'fa' | 'he' | 'sw' | 'am' | 'vi' | 'id' | 'tl' | 'ms' | 'ln' | 'hu' | 'cs' | 'da' | 'no'
-  | 'fi' | 'is' | 'ur' | 'bn' | 'ak' | 'sr' | 'uk';
+  | 'fi' | 'is' | 'ur' | 'bn' | 'ak' | 'sr' | 'uk'
+  | 'ro' | 'bg' | 'hr' | 'ka' | 'hy' | 'lt' | 'et' | 'my' | 'km' | 'si' | 'sq'; // r19 WP0
 
 const ramp = (pts: [number, number][]) => (y: number) => {
   if (y <= pts[0][0]) return pts[0][1];
@@ -82,6 +85,10 @@ export interface City {
   scenes: string[]; // gêneros
   lat: number;
   lon: number;
+  /** r19: país ISO-3 (cidades novas; as antigas vêm de geo/meta.json) */
+  a3?: string;
+  /** r19: peso no sorteio de atos procedurais (1 = padrão) */
+  w?: number;
 }
 
 const c = (id: string, pt: string, en: string, market: MarketId, lang: NameGroup, scenes: string[], lat = 0, lon = 0): City => ({ id, name: l(pt, en), market, lang, scenes, lat, lon });
@@ -250,6 +257,9 @@ export const CITIES: City[] = [
   c('adelaide', 'Adelaide', 'Adelaide', 'oceania', 'en', ['heavy_metal', 'indie'], -34.93, 138.6),
   c('suva', 'Suva', 'Suva', 'oceania', 'en', ['reggae', 'dancehall'], -18.14, 178.44),
 ];
+
+// r19 WP0 (db19 §3.15): cidades novas no fim (ids estáveis); peso menor no sorteio de atos procedurais
+for (const [id, pt, en, mk, lang, scenes, lat, lon, a3] of C19) if (!CITIES.some((x) => x.id === id)) CITIES.push({ ...c(id, pt, en, mk, lang, [...scenes], lat, lon), a3, w: 0.4 });
 
 export const cityById = Object.fromEntries(CITIES.map((x) => [x.id, x])) as Record<string, City>;
 
@@ -601,6 +611,12 @@ export const GENRES: Genre[] = [
   g('dream_feed', 'Dream-feed', 'electronic', 2037, ['ambient', 'synthetic']),
   g('lucid_trance', 'Lucid trance', 'electronic', 2038, ['trance', 'dream_feed']),
 ];
+
+// r19 WP0 (db19 §3.14): gêneros novos + cidades-cena (o gênero entra nas cenas da cidade; nascimento filtra o futuro)
+for (const [id, pt, en, fam, born, parents, cities] of G19) {
+  if (!GENRES.some((x) => x.id === id)) GENRES.push(g(id, pt, fam, born, parents, en));
+  for (const ci of cities) { const cy = CITIES.find((x) => x.id === ci); if (cy && !cy.scenes.includes(id)) cy.scenes.push(id); }
+}
 
 export const genreById = Object.fromEntries(GENRES.map((x) => [x.id, x])) as Record<string, Genre>;
 

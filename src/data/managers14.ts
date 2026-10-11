@@ -6,6 +6,7 @@
 import { l, type FamilyId, type L } from './world';
 import { MGRS18 } from './people18';
 import { MGRS_1889 } from './era1889';
+import { MGRS19 } from './more19';
 
 /** shark: arranca adiantamentos; muscle: intimida e exige royalties; svengali: fabrica imagem e quer verba
  *  prometida; guardian: protege o artista e exige controle criativo; impresario: promotor, quer contratos curtos. */
@@ -165,4 +166,5 @@ export const REAL_MGRS: RealMgr[] = [
 
 REAL_MGRS.push(...MGRS18.filter((x) => !REAL_MGRS.some((y) => y.id === x.id))); // r18 (world18): mais empresários reais por região
 REAL_MGRS.push(...MGRS_1889.filter((x) => !REAL_MGRS.some((y) => y.id === x.id))); // r18 era1889: impresarios da era acústica
+REAL_MGRS.push(...MGRS19.filter((x) => !REAL_MGRS.some((y) => y.id === x.id))); // r19 more19 (onda 2)
 export const mgrById: Record<string, RealMgr> = Object.fromEntries(REAL_MGRS.map((m) => [m.id, m]));

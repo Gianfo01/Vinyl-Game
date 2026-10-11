@@ -5,6 +5,7 @@
 // (campo opcional `realRef`, ex.: "WorldSound 100 (≈ Billboard Hot 100)").
 
 import { l, type L } from './world';
+import { FESTS19, STUDIOS19 } from './more19';
 
 export interface CatalogAct {
   no: number;
@@ -337,6 +338,7 @@ export const FESTIVAL_IDENTITY: Record<string, FestId> = {
   'Feedfest': fi(undefined, 'neural', 500000, 9, 70, ['dream_feed', 'lucid_trance', 'neuro_pop'], 'Uma noite inteira transmitida direto no córtex de quem assina.', 'A whole night streamed straight to subscribers\' cortex.'),
 };
 
+FESTIVALS.push(...FESTS19.filter((d) => !FESTIVALS.some((x) => x.name === d.name))); // r19 more19 (onda 2): identidade inline
 for (const fest of FESTIVALS) Object.assign(fest, FESTIVAL_IDENTITY[fest.name] ?? {});
 
 export interface MediaOutlet {
@@ -501,6 +503,9 @@ export interface StudioDef {
   name: string;
   city: string;
   specialty: string[];
+  /** r19: estúdios reais (more19) trazem época; ausente = arquétipo atemporal */
+  from?: number;
+  to?: number;
 }
 
 export const STUDIOS: StudioDef[] = [
@@ -515,3 +520,4 @@ export const STUDIOS: StudioDef[] = [
   { name: 'Hillfield Studios', city: 'london', specialty: ['rock'] },
   { name: 'Estúdio Maré Alta', city: 'rio', specialty: ['brazil'] },
 ];
+STUDIOS.push(...STUDIOS19.filter((d) => !STUDIOS.some((x) => x.name === d.name))); // r19 more19 (onda 2): estúdios reais com época

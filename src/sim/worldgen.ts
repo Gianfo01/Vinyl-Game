@@ -148,7 +148,7 @@ export function aliveGenres(s: GameState, year = s.year): string[] {
 
 export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; genre?: string; potential?: number; formedYear?: number; fame?: number } = {}): Act {
   const year = opts.formedYear ?? s.year;
-  const city = opts.city ?? r.weighted(CITIES, (c) => MARKETS.find((m) => m.id === c.market)!.size(year))!.id;
+  const city = opts.city ?? r.weighted(CITIES, (c) => MARKETS.find((m) => m.id === c.market)!.size(year) * (c.w ?? 1))!.id; // r19: cidades novas pesam 0,4
   const cityDef = cityById[city];
   let genre = opts.genre;
   if (!genre) {

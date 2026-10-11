@@ -209,6 +209,18 @@ export const FIRST_NAMES: Record<NameGroup, string[]> = {
   ak: ['Kwame', 'Ama', 'Kofi', 'Efua', 'Yaw', 'Akosua', 'Kojo', 'Abena'],
   sr: ['Dragan', 'Vesna', 'Miloš', 'Jelena', 'Nemanja', 'Ana'],
   uk: ['Taras', 'Oksana', 'Andriy', 'Nataliya', 'Bohdan', 'Iryna'],
+  // r19 WP0: idiomas das cidades novas
+  ro: ['Andrei', 'Ioana', 'Mihai', 'Elena', 'Florin', 'Ana', 'Radu', 'Corina'],
+  bg: ['Georgi', 'Maria', 'Ivan', 'Desislava', 'Dimitar', 'Lili', 'Petar', 'Vasilka'],
+  hr: ['Ivan', 'Ana', 'Josip', 'Marija', 'Tomislav', 'Lana', 'Darko', 'Neda'],
+  ka: ['Giorgi', 'Nino', 'Davit', 'Tamar', 'Levan', 'Ketevan', 'Irakli', 'Mariam'],
+  hy: ['Aram', 'Anahit', 'Tigran', 'Lilit', 'Gor', 'Siranush', 'Vardan', 'Arpi'],
+  lt: ['Jonas', 'Rūta', 'Mindaugas', 'Ieva', 'Raimonds', 'Laima', 'Andris', 'Inga'],
+  et: ['Tõnu', 'Kristiina', 'Jaan', 'Liis', 'Margus', 'Kadri', 'Rein', 'Anu'],
+  my: ['Aung', 'Thida', 'Min', 'Hnin', 'Kyaw', 'Su', 'Zaw', 'Nilar'],
+  km: ['Sinn', 'Ros', 'Pen', 'Sophea', 'Sovann', 'Chanthy', 'Dara', 'Bopha'],
+  si: ['Nimal', 'Kumari', 'Sunil', 'Chandrika', 'Ruwan', 'Dilani', 'Pradeep', 'Ishara'],
+  sq: ['Arben', 'Elira', 'Besnik', 'Dua', 'Genc', 'Rita', 'Ilir', 'Era'],
 };
 
 export const LAST_NAMES: Record<NameGroup, string[]> = {
@@ -253,6 +265,17 @@ export const LAST_NAMES: Record<NameGroup, string[]> = {
   ak: ['Mensah', 'Owusu', 'Boateng', 'Asante', 'Osei', 'Amoako'],
   sr: ['Petrović', 'Jovanović', 'Nikolić', 'Marković', 'Đorđević'],
   uk: ['Shevchenko', 'Kovalenko', 'Bondarenko', 'Tkachenko', 'Melnyk'],
+  ro: ['Popescu', 'Ionescu', 'Dumitrescu', 'Stan', 'Constantin', 'Georgescu'],
+  bg: ['Ivanov', 'Petrova', 'Dimitrov', 'Georgieva', 'Stoyanov', 'Todorova'],
+  hr: ['Horvat', 'Kovačević', 'Babić', 'Novak', 'Jurić', 'Knežević'],
+  ka: ['Beridze', 'Kapanadze', 'Gelashvili', 'Maisuradze', 'Tsiklauri', 'Lomidze'],
+  hy: ['Grigoryan', 'Sargsyan', 'Hakobyan', 'Petrosyan', 'Avetisyan', 'Harutyunyan'],
+  lt: ['Kazlauskas', 'Petrauskaitė', 'Bērziņš', 'Ozola', 'Jankauskas', 'Kalniņš'],
+  et: ['Tamm', 'Saar', 'Sepp', 'Mägi', 'Kask', 'Kukk'],
+  my: ['Win', 'Myint', 'Htun', 'Oo', 'Naing', 'Thein'],
+  km: ['Sok', 'Chea', 'Sam', 'Heng', 'Keo', 'Meas'],
+  si: ['Perera', 'Fernando', 'de Silva', 'Jayasuriya', 'Bandara', 'Wickramasinghe'],
+  sq: ['Hoxha', 'Shehu', 'Krasniqi', 'Gashi', 'Berisha', 'Leka'],
 };
 
 export const BAND_WORDS = {

@@ -13,6 +13,7 @@ import { fmtL, hasTech, money, notify, playerActs, post, remember } from '../../
 import { take360 } from '../deal360_17';
 import { fam, liveMine, mineAct, mineRel, rep, strikeActive } from './common';
 import { w4, type FormatBet } from './state';
+import { MILESTONES19 } from '../../../data/more19';
 
 export interface Milestone {
   id: string;
@@ -362,6 +363,7 @@ export const MILESTONES: Milestone[] = [
     mech: l('Inscreva um ato no treinamento (2 anos): durante, rende menos; depois, +25% em pop asiático.', 'Enroll an act in training (2 years): weaker during, then +25% in Asian pop.'),
   },
 ];
+MILESTONES.push(...MILESTONES19.filter((d) => !MILESTONES.some((x) => x.id === d.id))); // r19 more19 (onda 2): só dados
 
 export const milestoneById: Record<string, Milestone> = Object.fromEntries(MILESTONES.map((m) => [m.id, m]));
 
