@@ -9,14 +9,14 @@ import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import {
-  CONTRACTORS18, KIND18, LOTS18, STATE18, ambient18, buildings18, campus18, decode18, layout18, styleName18, styleOf18, type Bld18,
+  CONTRACTORS18, KIND18, LOTS18, STATE18, type Style18, ambient18, buildings18, campus18, decode18, layout18, styleName18, styleOf18, type Bld18,
 } from '../../sim/sys/campus18';
 import { act19, bldPop19, lotPop19, syn19, upkeep19, type Pop19, type PopAct19 } from '../../sim/sys/world19';
 import { EV19, STAGE19, actEv19, buyNb19, evPop19, hoodStats19, live19ev, lmNow19, lmPop19, nb19, nbPop19 } from '../../sim/sys/hood19';
 import { $, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { why18 } from '../explain18';
-import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, type Scene18 } from '../pixel/campus18px';
+import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, stylePreview19, type Scene18 } from '../pixel/campus18px';
 import { registerArea } from '../registry';
 import { store } from '../store';
 import { go18 } from './inbox18';
@@ -29,7 +29,7 @@ const latOf = (s: GameState) => cityById[s.config.homeCity]?.lat ?? 40;
 const tx = (x: L | string | undefined) => (x === undefined ? '' : typeof x === 'string' ? x : t(x));
 
 /** UI efêmera (por sessão; não vai para o save). */
-const ui: { pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number } =
+const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number } =
   { mode: 'cycle', q: 1, f: { mine: true, nb: true, lm: true }, z: 1, px: 0, py: 0 };
 
 interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean }
@@ -80,13 +80,33 @@ function popFor(v: View, id: string): Pop19 | null {
   if (!v.live) {
     if (id.startsWith('lm:')) return lmPop19(s, id.slice(3), v.year);
     const b = v.bs.find((x) => x.id === id);
-    return b ? { kind: 'bld', id, title: b.name, icon: KIND18[b.kind].icon, tags: [KIND18[b.kind].name, STATE18[b.st], styleName18(styleOf18(b.sy))], rows: [{ k: l('Estágio', 'Stage'), v: String(b.lvl) }], notes: [{ t: { pt: `Retrato de ${v.year}.`, en: `Snapshot from ${v.year}.` } }], acts: [], opts: [] } : null;
+    return b ? { kind: 'bld', id, title: b.name, icon: KIND18[b.kind].icon, tags: [KIND18[b.kind].name, STATE18[b.st], styleName18(b.style ?? styleOf18(b.sy))], rows: [{ k: l('Estágio', 'Stage'), v: String(b.lvl) }], notes: [{ t: { pt: `Retrato de ${v.year}.`, en: `Snapshot from ${v.year}.` } }], acts: [], opts: [] } : null;
   }
-  if (id.startsWith('lot:')) return lotPop19(s, +id.slice(4), ui.q, ui.moving);
+  if (ui.styFor !== id) { ui.sty = undefined; ui.styFor = id; }
+  if (id.startsWith('lot:')) return lotPop19(s, +id.slice(4), ui.q, ui.moving, ui.sty);
   if (id.startsWith('nb:')) return nbPop19(s, +id.slice(3));
   if (id.startsWith('lm:')) return lmPop19(s, id.slice(3));
   if (id.startsWith('ev:')) return evPop19(s, id.slice(3));
-  return bldPop19(s, id, ui.q);
+  return bldPop19(s, id, ui.q, ui.sty);
+}
+
+/** r19: seletor de estilo com miniatura, custo e efeito (só estilos que já existem no ano). */
+function stylePick(p: Pop19, year: number, rerun: () => void): HTMLElement | null {
+  if (!p.sty) return null;
+  const cur = ui.sty ?? p.sty.cur, sel = p.sty.list.find((x) => x.id === cur) ?? p.sty.list[0];
+  return h('div', { class: 'w19-sty' },
+    h('b', { class: 'small' }, t(l('Estilo da fachada', 'Façade style'))),
+    styRow(h('div', { class: 'w19-styl', role: 'radiogroup', 'aria-label': t(l('Estilo da fachada', 'Façade style')) }, p.sty.list.map((x) => {
+      const c = stylePreview19(x.id, year); c.classList.add('px');
+      return h('button', { type: 'button', role: 'radio', 'aria-checked': String(x.id === cur), class: x.id === cur ? 'on' : '', title: `${t(x.name)} — ${t(x.desc)}`, onclick: () => { ui.sty = x.id; rerun(); } },
+        c, h('small', null, t(x.name)), h('small', { class: x.cost > 1 ? 'bad' : x.cost < 1 ? 'good' : 'muted' }, `×${x.cost}`));
+    }))),
+    sel ? h('small', { class: 'muted' }, `${t(sel.name)}: ${t(sel.eff)}`) : null);
+}
+/** Rola a fileira até o estilo marcado (sem mexer na página). */
+function styRow(row: HTMLElement): HTMLElement {
+  requestAnimationFrame?.(() => { const on = row.querySelector('.on') as HTMLElement | null; if (on) row.scrollLeft = Math.max(0, on.offsetLeft - row.offsetLeft - 8); });
+  return row;
 }
 
 function contractorPick(rerun: () => void): HTMLElement {
@@ -94,7 +114,7 @@ function contractorPick(rerun: () => void): HTMLElement {
     CONTRACTORS18.map((c, i) => h('button', { type: 'button', role: 'radio', 'aria-checked': String(ui.q === i), class: ui.q === i ? 'on' : '', title: t(c.desc), onclick: () => { ui.q = i; rerun(); } }, t(c.name))));
 }
 
-function runAct(v: View, id: string, a: PopAct19, close: () => void): void {
+function runAct(v: View, id: string, a: PopAct19, close: () => void, sty?: Style18): void {
   const s = v.s;
   if (a.dis) { toast(t(a.dis), 'bad'); return; }
   if (a.go) { close(); go18(a.go); return; }
@@ -105,7 +125,7 @@ function runAct(v: View, id: string, a: PopAct19, close: () => void): void {
   else if (a.id.startsWith('ev:')) { e = actEv19(s, id.slice(3), a.id.slice(3)); ok = l('Decidido.', 'Decided.'); ui.pop = undefined; }
   else if (a.id === 'buy') { e = buyNb19(s, +id.slice(3)); ok = l('Imóvel comprado: o lote é seu.', 'Property bought: the lot is yours.'); if (!e) ui.pop = `lot:${id.slice(3)}`; }
   else {
-    e = act19(s, id, a.id, { q: ui.q, moving: ui.moving });
+    e = act19(s, id, a.id, { q: ui.q, moving: ui.moving, sty: a.id === 'up' || a.id === 'reno' || a.id.startsWith('p:') || a.id.startsWith('v:') ? sty : undefined });
     ok = a.id === 'moveHere' ? l('Mudança contratada.', 'Move contracted.') : a.id === 'sell' ? l('Vendido.', 'Sold.') : a.id === 'up' ? l('Ampliação contratada.', 'Expansion contracted.') : a.id === 'reno' ? l('Reforma contratada.', 'Renovation contracted.') : a.id.startsWith('p:') || a.id.startsWith('v:') ? l('Obra contratada: a cerca já subiu no lote.', 'Works contracted: the fence is up on the lot.') : ok;
     if (!e && a.id === 'moveHere') { ui.pop = ui.moving; ui.moving = undefined; }
     if (!e && (a.id.startsWith('p:') || a.id.startsWith('v:'))) ui.pop = undefined;
@@ -128,14 +148,15 @@ function popBody(v: View, p: Pop19, close: () => void, rerun: () => void): HTMLE
     p.rows.length ? h('table', { class: 'c18-kpi small' }, p.rows.map((r) => h('tr', { class: r.tone ?? '' }, h('td', null, t(r.k)), h('td', null, r.why ? why18(s, r.why[0], r.why[1], tx(r.v)) : r.go ? h('button', { type: 'button', class: 'linklike', onclick: () => { close(); go18(r.go!); } }, tx(r.v), ' ↗') : tx(r.v))))) : null,
     p.notes.length ? h('ul', { class: 'w19-notes small' }, p.notes.map((n) => h('li', { class: n.tone ?? '' }, tx(n.t)))) : null,
     anyQ ? contractorPick(rerun) : null,
+    stylePick(p, v.year, rerun),
     p.opts.length ? h('div', { class: 'w19-opts' }, h('b', { class: 'small' }, t(l('Construir aqui', 'Build here'))), p.opts.map((o) => h('div', { class: `w19-opt ${o.dis ? 'dis' : ''}` },
       h('div', { class: 'row' }, h('b', null, ic(o.icon), ' ', t(o.name)), h('span', { class: 'w19-cost' }, `${$(o.cost)} · ${o.months} ${t(l('m', 'mo'))}`)),
       h('small', { class: 'muted' }, t(o.effect)),
       o.syn.length ? h('small', { class: 'good' }, o.syn.map((x) => tx(x)).join(' · ')) : null,
       o.dis ? h('small', { class: 'bad' }, t(o.dis)) : null,
-      h('button', { type: 'button', class: 'btn small primary', disabled: !!o.dis, 'aria-disabled': o.dis ? 'true' : undefined, onclick: () => runAct(v, p.id, { id: o.id, label: o.name, cost: o.cost }, close) }, ic('building'), ' ', t(l('Construir', 'Build')))))) : null,
+      h('button', { type: 'button', class: 'btn small primary', disabled: !!o.dis, 'aria-disabled': o.dis ? 'true' : undefined, onclick: () => runAct(v, p.id, { id: o.id, label: o.name, cost: o.cost }, close, ui.sty ?? p.sty?.cur) }, ic('building'), ' ', t(l('Construir', 'Build')))))) : null,
     p.acts.length ? h('div', { class: 'w19-acts' }, p.acts.map((a) => h('button', { type: 'button', class: `btn small ${a.tone === 'primary' ? 'primary' : a.tone === 'danger' ? 'danger ghost' : 'ghost'}`, disabled: !!a.dis, title: a.dis ? t(a.dis) : undefined,
-      onclick: () => runAct(v, p.id, a, close) }, t(a.label), a.cost !== undefined ? h('small', null, ` ${costTxt(a.cost)}`) : null, a.go ? ' ↗' : null))) : null,
+      onclick: () => runAct(v, p.id, a, close, ui.sty ?? p.sty?.cur) }, t(a.label), a.cost !== undefined ? h('small', null, ` ${costTxt(a.cost)}`) : null, a.go ? ' ↗' : null))) : null,
     p.acts.some((a) => a.dis) ? h('ul', { class: 'w19-notes small muted' }, p.acts.filter((a) => a.dis).map((a) => h('li', null, `${t(a.label)}: ${t(a.dis!)}`))) : null);
 }
 
