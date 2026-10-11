@@ -111,6 +111,19 @@ export const RESERVED19: Record<string, { sys: string; to: string[] }> = {
   icon_instrument: { sys: 'gear19', to: ['relics18', 'post18'] },
 };
 
+/** Ligações da Frente 1, grupo B (sys/links19b.ts): tipos novos → ouvintes (todos com efeito real). */
+export const LINKS19B: Record<string, { sys: string; to: string[] }> = {
+  session_mark: { sys: 'links19b', to: ['links19b:session (moral do elenco / confiança do ato)'] },
+  fx_crisis: { sys: 'links19b', to: ['links19b:fx (caixa dos selos do submercado, embalo dos atos de lá, diário de regions18, manchete)'] },
+  rival_intel: { sys: 'links19b', to: ['links19b:intel (carta: pacto, vazar, observar)'] },
+  pact_betrayal: { sys: 'links19b', to: ['links19b:betray (calor da rivalidade, carta: processar, retaliar, perdoar)'] },
+  campus_invest: { sys: 'links19b', to: ['links19b:campus (desbloqueio decide18 → quality18/discover18, lealdade da equipe)'] },
+  insurance_claim: { sys: 'links19b', to: ['links19b:ins (prêmio do seguro)'] },
+  jury_nod: { sys: 'links19b', to: ['links19b:jury (reputação artística, manchete)'] },
+  talent_race: { sys: 'links19b', to: ['links19b:race (calor com o selo rival)'] },
+  pa_bet: { sys: 'links19b', to: ['links19b:pabet (inspiração da banda)'] },
+};
+
 export interface FactRow19 { kind: string; listeners: string[]; wildcard: string[]; readers: string[]; chron: boolean; why?: string }
 
 /** Monta a matriz para os tipos emitidos (`readers`: tipo → arquivos que leem; `chron`: tipos que passam pela crônica). */

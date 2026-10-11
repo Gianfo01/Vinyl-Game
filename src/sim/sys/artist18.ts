@@ -302,7 +302,10 @@ function offerText(s: GameState, o: Offer18): L {
 }
 const fmtMoney = (_s: GameState, cents: number): string => { const v = Math.round(cents / 100); return v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `$${Math.round(v / 1e3)}k` : `$${v}`; };
 
+/** r19 (links19b, 11.11): PA × olho do A&R do selo nas ofertas (chance de desenvolvimento e ajuste de valores). */
+export const A18_HOOK19: { dev?: (s: GameState, lb: Label, a: Act) => number; adj?: (s: GameState, o: Offer18) => void } = {};
 function addOffer(s: GameState, o: Offer18): void {
+  A18_HOOK19.adj?.(s, o);
   const st = a18(s);
   st.offers.unshift(o);
   if (st.offers.length > 30) st.offers.length = 30;
@@ -618,7 +621,8 @@ function scout(s: GameState, r: Rng, a: Act): void {
     if (p > 0 && r.chance(p)) {
       made++;
       st.cd[`rf:${lb.id}`] = Math.round(a.fame); st.cd[`rh:${lb.id}`] = a.hits;
-      const dev = lb.strategy === 'develop' && a.fame < 22 && r.chance(0.35);
+      const dp = A18_HOOK19.dev ? A18_HOOK19.dev(s, lb, a) : lb.strategy === 'develop' ? 0.35 : 0;
+      const dev = dp > 0 && a.fame < 22 && r.chance(dp);
       const dist = !dev && (lb.family === 'C' || lb.family === 'D') && r.chance(0.3);
       if (dev) { const o = mkRecord(s, r, lb, a, v, why, 'dev'); o.stip = r100(s, exp18(s, a) * 0.05); o.adv = 0; addOffer(s, o); }
       else addOffer(s, dist ? mkDist(s, r, lb, a, why) : mkRecord(s, r, lb, a, v, why));

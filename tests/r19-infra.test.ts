@@ -228,6 +228,11 @@ const INBOX_RARE19: Record<string, string> = {
   sh18_prop: 'sociedade com NPC: proposta exige artista com caixa e fama',
   sh18_fall: 'sociedade com NPC: rompimento exige sociedade ativa',
   campus18: 'Nosso mundo: obra/desastre só com obra própria iniciada',
+  // r19 links19b (Frente 1, grupo B): cartas que dependem de inteligência, pacto, obra atrasada e desastre
+  l19b_intel: 'intenção de rival revelada: exige espionagem ou analista 60+ com rival tenso',
+  l19b_betray: 'traição de pacto: exige pacto ativo e calor 35+',
+  l19b_delay: 'obra do campus atrasada: só com obra própria em andamento',
+  l19b_ins: 'prédio danificado (incêndio/desastre): raro',
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 

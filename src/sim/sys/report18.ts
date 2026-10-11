@@ -33,6 +33,9 @@ export function mix18(s: GameState, mk: MarketId): Mix18 {
   return { phys, shellac: phys * pm.shellac, vinyl: phys * pm.vinyl, tape: phys * (pm.tape + pm.eight), cd: phys * pm.cd, radio: dlOn ? 0 : dig, dl: dlOn ? dig * (1 - sf) : 0, stream: dlOn ? dig * sf : 0 };
 }
 
+/** r19 (links19b): notas extras do relatório (inteligência de rivais etc.). Puras: o relatório também é lido pela interface. */
+export const REP_NOTES19: ((s: GameState) => L[])[] = [];
+
 export function makeReport18(s: GameState): Rep18 {
   const mix: Partial<Record<MarketId, Mix18>> = {};
   for (const m of MARKETS) if (m.size(s.year) > 0.04) mix[m.id] = mix18(s, m.id);
@@ -68,6 +71,7 @@ export function makeReport18(s: GameState): Rep18 {
   if (n1 && n0 && a1 / n1 > (a0 / n0) * 1.2) notes.push(l('Adiantamentos subindo: a briga por talento está cara; contratos de desenvolvimento saem mais em conta.', 'Advances rising: the talent war is pricey; development deals are cheaper.'));
   for (const g of gap) notes.push(fmtL(l('{g} está subindo e você não tem ninguém no gênero.', '{g} is rising and you have no one in the genre.'), { g: genreById[g]?.name ?? l(g) }));
   const st = sup18(s);
+  for (const f of REP_NOTES19) notes.push(...f(s));
   if (st.dist === 'indie_net' && st.health < 40) notes.push(l('A sua distribuidora independente está fraca: risco de calote.', 'Your independent distributor is weak: default risk.'));
   return { y: s.year, m: s.month, mix, hot, cold, comp, retail, queue, adv: n1 ? Math.round(a1 / n1) : 0, advPrev: n0 ? Math.round(a0 / n0) : 0, gap, notes };
 }

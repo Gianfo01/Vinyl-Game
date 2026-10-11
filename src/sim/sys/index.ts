@@ -260,4 +260,5 @@ import './factlink19';
 // Rodada 19 (Frente 8): calendário único de prazos, orçamento de notificações/boletim semanal, carta na fila e pulso explicado.
 import './calendar19';
 import './notify19';
+import './links19b'; // r19 Frente 1 grupo B: sessão×qualidade, câmbio por submercado, inteligência de rivais, campus, júri×caminho, 11.10, 11.11
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
