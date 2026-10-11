@@ -74,6 +74,8 @@ export function post18(s: GameState): Post18 {
 const rng = (s: GameState, tag: string) => Rng.fromSeed(`${s.config.seed}:post18:${tag}`);
 const log = (s: GameState, t: L) => { const st = post18(s); st.log.push([s.year, s.month, t]); if (st.log.length > 60) st.log.shift(); };
 export const actOfP18 = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid));
+/** R19 (afterlife19, 11.8): ganchos do espólio como ator — quem guarda os masters bloqueia/ajusta projetos; opinião dos herdeiros pesa. */
+export const POST19: { block?: (s: GameState, pid: string, k: PK18) => L | null; adj?: (s: GameState, pid: string, k: PK18) => { d: number; why: L } | null; held?: (s: GameState, actId: string) => boolean } = {};
 const mine = (a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
 
 /** Espólio (criado na primeira consulta depois da morte). */
@@ -144,6 +146,8 @@ export function block18(s: GameState, pid: string, k: PK18): L | null {
   if ((post18(s).cd[pid] ?? 0) > s.week) return l('O espólio pediu um tempo antes de ouvir outra proposta.', 'The estate asked for time before hearing another pitch.');
   if (post18(s).proj.some((x) => x.pid === pid && x.k === k && x.st === 'run')) return l('Já em andamento.', 'Already running.');
   if (k === 'ai_album' && p.alive) return l('Voz por IA de artista vivo: use os acordos de imagem (image17).', 'AI voice of a living artist: use image deals (image17).');
+  const xb = POST19.block?.(s, pid, k);
+  if (xb) return xb;
   if (s.player.cash < money(s, def.cost)) return l('Caixa insuficiente.', 'Not enough cash.');
   return null;
 }
@@ -194,7 +198,7 @@ export function ask18(s: GameState, pid: string, k: PK18, share: Share18 = 'fair
   const e = estate18(s, pid)!;
   const scope = k === 'holo_show' || k === 'holo_tour' || k === 'ghost' || k === 'avatar' ? 'hologram' : k === 'ai_album' ? 'voice_ai' : k === 'biopic' ? 'biopic' : null;
   if (scope && hasRight(s, a.id, scope)) return { p: 1, why: [l('Acordo de imagem em vigor cobre isso (Direitos de imagem).', 'An image deal in force covers this (Image rights).')] };
-  if ((k === 'box' || k === 'remaster') && mine(a)) return { p: 1, why: [l('As masters são do selo: não precisa do espólio.', 'The masters belong to the label: no estate needed.')] };
+  if ((k === 'box' || k === 'remaster') && mine(a) && !POST19.held?.(s, a.id)) return { p: 1, why: [l('As masters são do selo: não precisa do espólio.', 'The masters belong to the label: no estate needed.')] };
   const m = majority(e);
   let v = m === 'cash' ? 0.75 : m === 'guard' ? 0.35 : 0.55;
   why.push(F(l('Postura dos herdeiros: {s}', 'Heirs\' stance: {s}'), { s: STANCE18[m] }));
@@ -207,6 +211,8 @@ export function ask18(s: GameState, pid: string, k: PK18, share: Share18 = 'fair
   if (e.unity < 40) { v -= 0.15; why.push(l('Herdeiros desunidos: um veta o que o outro aprova (−15%).', 'Divided heirs: one vetoes what the other approves (−15%).')); }
   if (e.wish === 'never' && e.known && scope) { v -= 0.3; why.push(l('Desejo do artista em vida: "nunca" (−30%).', 'The artist\'s wish in life: "never" (−30%).')); }
   if (e.wish === 'open' && e.known && scope) { v += 0.15; why.push(l('O artista dizia que gostaria de "tocar para sempre" (+15%).', 'The artist used to say they\'d love to "play forever" (+15%).')); }
+  const xa = POST19.adj?.(s, pid, k);
+  if (xa) { v += xa.d; why.push(xa.why); }
   return { p: clamp(v, 0.03, 0.97), why };
 }
 export const STANCE18: Record<Heir18['st'], L> = { guard: l('guardiões do legado', 'legacy guardians'), cash: l('querem faturar', 'want to cash in'), artist: l('pensam como artistas', 'think like artists') };
