@@ -13,6 +13,7 @@ import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
 import { $, actLink, cityName, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
+import { priceBasis20 } from '../../sim/sys/price20';
 import { registerSection } from '../registry';
 import { ic } from '../vis';
 import { careerSlotsUsed } from '../../sim/contracts';
@@ -30,9 +31,10 @@ export function hqBlock(s: GameState): HTMLElement {
     h('h4', null, ic('building'), ' ', t(HQ_LEVELS[s.player.hq].name), ' ', st.ownBuilding ? pill(t(l('prédio próprio', 'own building')), 'good') : pill(`${t(l('aluguel', 'rent'))} ${$(money(s, HQ_LEVELS[s.player.hq].rent))}/${t(l('mês', 'mo'))}`)),
     h('p', { class: 'small' }, t(l('Carreiras {u}/{c} · equipe {st} · sessões {se} · equipamentos {e} · departamentos {d}/{ds}', 'Careers {u}/{c} · staff {st} · sessions {se} · equipment {e} · departments {d}/{ds}'), { u: careerSlotsUsed(s), c: caps.careers, st: caps.staff, se: caps.sessions, e: caps.equipment, d: deptCount(s), ds: deptSlots(s) })),
     h('div', { class: 'row wrap' },
-      up !== null && next ? h('button', { class: 'btn small primary', disabled: !!blk, title: blk ? t(blk) : t(next.reach), onclick: () => say(upgradeHq(s), l('Sede ampliada!', 'HQ upgraded!')) }, ic('building'), ` ${t(S.upgrade)}: ${t(next.name)} (${$(up)})`) : null,
+      up !== null && next ? h('button', { class: 'btn small primary', disabled: !!blk, title: blk ? t(blk) : t(next.reach), onclick: () => say(upgradeHq(s), l('Sede ampliada!', 'HQ upgraded!')) }, ic('building'), ` ${t(l('Mudar de sede', 'Move HQ'))}: ${t(next.name)} (${$(up)} + ${$(money(s, next.rent))}/${t(l('mês', 'mo'))})`) : null, // r20c (N2): mudar ≠ reformar; mostra o aluguel novo
       blk && next ? h('small', { class: 'muted' }, t(blk)) : null,
       !st.ownBuilding ? h('button', { class: 'btn small', title: t(l('Acaba o aluguel da matriz até a próxima mudança de sede.', 'Ends the main HQ rent until the next move.')), onclick: () => { if (confirm(t(l('Comprar o prédio por {v}?', 'Buy the building for {v}?'), { v: $(buildingPrice(s)) }))) say(buyBuilding(s), l('O prédio é seu.', 'The building is yours.')); } }, `${t(l('Comprar o prédio', 'Buy the building'))} (${$(buildingPrice(s))})`) : null,
+      h('small', { class: 'muted' }, t(priceBasis20(s, up ?? buildingPrice(s)))),
     ),
   );
 }

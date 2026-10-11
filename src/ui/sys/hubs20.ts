@@ -17,14 +17,17 @@ import { cityDemand, cancelTour } from '../../sim/tours';
 import { playerShows, type PShow } from '../../sim/sys/clash17';
 import { hardConflictCount20, showConflict20 } from '../../sim/sys/shows20';
 import { DEPTS, buildingPrice, hq6 } from '../../sim/sys/hq6';
-import { upgradeCost, managementLoad } from '../../sim/economy';
+import { availableEquipment, upgradeCost, managementLoad } from '../../sim/economy';
+import { buildings18, renoCost18 } from '../../sim/sys/campus18';
+import { priceBasis20, type CostKind20 } from '../../sim/sys/price20';
+import { costKindPill20, price20 } from '../price20';
 import { hqCapacityText } from '../../sim/legacy';
 import { KIT0 } from '../../sim/tourhook18';
 import { KIT_TXT18 } from '../../sim/sys/live18';
 import { activeMembers } from '../../sim/capacity';
 import type { GameState } from '../../sim/types';
 import type { Tour } from '../../sim/xtypes';
-import { money, playerActs } from '../../sim/util';
+import { fmtL, money, playerActs } from '../../sim/util';
 import { $, N, actLink, cityName, inspect, kv, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { chips, ic, stat, tabs, setTab } from '../vis';
@@ -270,27 +273,43 @@ function capacityCard(s: GameState): HTMLElement {
     load > 1 ? h('p', { class: 'small bad' }, ic('warning'), ' ', T(l('Acima da capacidade: decisões atrasam e a equipe se desgasta.', 'Over capacity: decisions slip and staff wear down.'))) : null);
 }
 
-/** Investimento (uma vez) × custo recorrente (por mês), separados. */
+/** Investimento (uma vez) × custo recorrente (por mês), separados — r20c (N2): cada linha é UMA ação com tipo
+ *  explícito (alugar, mudar de sede, comprar, reformar, equipar, ampliar) e cada preço explica moeda e base de tempo. */
 export function costSplit20(s: GameState): HTMLElement {
   const st = hq6(s);
   const cur = HQ_LEVELS[s.player.hq];
   const next = HQ_LEVELS[s.player.hq + 1];
   const up = upgradeCost(s);
   const rentNow = st.ownBuilding ? 0 : money(s, cur.rent);
-  const rows: [L, number | null, number | null, L?][] = [];
-  rows.push([l('Sede atual', 'Current HQ'), null, rentNow, st.ownBuilding ? l('prédio próprio', 'own building') : undefined]);
-  if (next && up !== null) rows.push([l(`Ampliar para ${next.name.pt}`, `Upgrade to ${next.name.en}`), up, money(s, next.rent), l('aluguel do novo nível', 'new level rent')]);
-  if (!st.ownBuilding) rows.push([l('Comprar o prédio', 'Buy the building'), buildingPrice(s), 0, l('acaba o aluguel até a próxima mudança', 'ends rent until the next move')]);
+  type Row = { k: CostKind20; what: L; inv: number | null; rec: number | null; note?: L; go?: () => void };
+  const rows: Row[] = [];
+  rows.push({ k: 'rent', what: fmtL(l('Sede atual: {n}', 'Current HQ: {n}'), { n: cur.name }), inv: null, rec: rentNow, note: st.ownBuilding ? l('prédio próprio: sem aluguel', 'own building: no rent') : undefined });
+  if (next && up !== null) rows.push({ k: 'move', what: fmtL(l('Mudar para {n} (sede maior)', 'Move to {n} (bigger HQ)'), { n: next.name }), inv: up, rec: money(s, next.rent), note: l('o aluguel novo substitui o atual', 'the new rent replaces the current one') });
+  if (!st.ownBuilding) rows.push({ k: 'buy', what: l('Comprar o prédio da sede', 'Buy the HQ building'), inv: buildingPrice(s), rec: 0, note: l('acaba o aluguel até a próxima mudança', 'ends rent until the next move') });
+  const hqB = buildings18(s).find((b) => b.kind === 'hq');
+  if (hqB) rows.push({ k: 'refit', what: l('Reformar a sede (fachada e salas, estilo da época)', 'Renovate the HQ (façade and rooms, period style)'), inv: renoCost18(s, hqB), rec: null, note: l('em Nosso mundo; não muda aluguel nem capacidade', 'in Our world; changes neither rent nor capacity'),
+    go: () => { store.area = 'campus18'; rerender(); } });
+  const eq = availableEquipment(s).filter((e) => !s.player.equipment.includes(e.id));
+  if (eq.length) {
+    const cs = eq.map((e) => money(s, e.cost));
+    rows.push({ k: 'equip', what: fmtL(l('Equipar: {n} item(ns) disponível(is) na loja', 'Equip: {n} item(s) available in the shop'), { n: eq.length }), inv: Math.min(...cs), rec: null, note: fmtL(l('a partir de; o mais caro custa {v}', 'from; the priciest costs {v}'), { v: $(Math.max(...cs)) }),
+      go: () => { setTab('hqHub', 'gear'); rerender(); } });
+  }
   for (const d of DEPTS) {
     const lv = st.depts[d.id] ?? 0;
-    if (lv) rows.push([d.name, null, money(s, d.upkeep * lv), l(`nível ${lv}/3`, `level ${lv}/3`)]);
-    if (lv < 3) rows.push([l(`${lv ? 'Ampliar' : 'Criar'}: ${d.name.pt}`, `${lv ? 'Upgrade' : 'Create'}: ${d.name.en}`), money(s, d.cost[lv]), money(s, d.upkeep), l('+ manutenção por nível', '+ upkeep per level')]);
+    if (lv) rows.push({ k: 'rent', what: fmtL(l('Manter: {n}', 'Keep: {n}'), { n: d.name }), inv: null, rec: money(s, d.upkeep * lv), note: l(`nível ${lv}/3`, `level ${lv}/3`) });
+    if (lv < 3) rows.push({ k: 'expand', what: l(`${lv ? 'Ampliar' : 'Criar'}: ${d.name.pt}`, `${lv ? 'Upgrade' : 'Create'}: ${d.name.en}`), inv: money(s, d.cost[lv]), rec: money(s, d.upkeep), note: l('+ manutenção por nível', '+ upkeep per level') });
   }
-  return section(T(l('Investimento × custo recorrente', 'Investment × recurring cost')),
+  const cell = (v: number | null, k: CostKind20, rec: boolean) => h('td', { class: 'num' }, v === null ? '—' : v === 0 ? $(0) : price20(s, v, k, rec));
+  return section(T(l('Ações da sede e custos', 'HQ actions and costs')),
+    h('p', { class: 'muted small' }, T(l('Cada linha é uma ação diferente: alugar (todo mês), mudar de sede, comprar o prédio, reformar, equipar e ampliar departamentos. ', 'Each row is a different action: rent (every month), move HQ, buy the building, renovate, equip and expand departments. ')), T(priceBasis20(s, money(s, 1000))), ' ',
+      T(l('Toque num valor para ver o porquê.', 'Tap a value to see why.'))),
     h('div', { class: 'tbl-scroll20' }, h('table', { class: 'tbl compact' },
-      h('thead', null, h('tr', null, h('th', null, ''), h('th', null, T(l('Investimento (uma vez)', 'Investment (one-off)'))), h('th', null, T(l('Recorrente / mês', 'Recurring / month'))))),
-      h('tbody', null, rows.map(([k, inv, rec, note]) => h('tr', null, h('td', null, T(k), note ? h('small', { class: 'muted' }, ` · ${T(note)}`) : null), h('td', { class: 'num' }, inv === null ? '—' : $(inv)), h('td', { class: 'num' }, rec === null ? '—' : $(rec))))))),
-    h('p', { class: 'muted small' }, T(l('Investimento sai do caixa uma vez; o recorrente entra todo mês em Finanças (aluguel, manutenção).', 'Investment leaves cash once; recurring hits Finance every month (rent, upkeep).'))));
+      h('thead', null, h('tr', null, h('th', null, T(l('Ação', 'Action'))), h('th', null, T(l('Tipo', 'Type'))), h('th', null, T(l('Investimento (uma vez)', 'Investment (one-off)'))), h('th', null, T(l('Recorrente / mês', 'Recurring / month'))))),
+      h('tbody', null, rows.map((r) => h('tr', null,
+        h('td', null, r.go ? h('button', { type: 'button', class: 'btn tiny ghost', onclick: r.go }, T(r.what), ' ↗') : T(r.what), r.note ? h('small', { class: 'muted' }, ` · ${T(r.note)}`) : null),
+        h('td', null, costKindPill20(r.k)), cell(r.inv, r.k, false), cell(r.rec, 'rent', true)))))),
+    h('p', { class: 'muted small' }, T(l('Investimento sai do caixa uma vez (e respeita o caixa reservado para ofertas pendentes); o recorrente entra todo mês em Finanças (aluguel, manutenção).', 'Investment leaves cash once (and respects cash reserved for pending offers); recurring hits Finance every month (rent, upkeep).'))));
 }
 
 function hqHub20(s: GameState): HTMLElement {

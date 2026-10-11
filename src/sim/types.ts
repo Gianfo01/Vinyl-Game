@@ -413,6 +413,8 @@ export interface Contract {
   revertWarned?: boolean;
   /** r20 (B29): aviso de cauda (reversão travada pelo recoupment) já dado */
   recoupWarn20?: boolean;
+  /** r20c (N2): saldo de recoupment perdoado quando o teto da trava liberou o master (centavos) */
+  recoupWrittenOff20?: number;
   /** r18: cláusulas negociadas (recuperável, base do royalty, prestação de contas, compromissos) */
   clauses18?: import('./sys/contracts18').Clauses18;
 }

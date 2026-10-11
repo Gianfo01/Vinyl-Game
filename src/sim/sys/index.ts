@@ -320,4 +320,5 @@ import './intra19';
 import './terr20';
 import './fin20'; // r20 G2: obrigações consolidadas, reconciliação e os dois legados (explicações)
 import './life20'; // r20 G3 (B28/B11): aviso de fim de carreira um ano antes e varredura de liderança
+import './price20'; // r20c N2: moeda/base de tempo dos preços ('price20') e tipos de custo da sede
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

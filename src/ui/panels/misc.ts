@@ -34,6 +34,8 @@ import { replayBtn16 } from '../sys/moments16';
 import { hotGenres17 } from '../sys/trends17';
 import { stylePill17 } from '../sys/style17';
 import { styleOfRel17 } from '../../sim/sys/trends17';
+import { priceBasis20 } from '../../sim/sys/price20';
+import { price20 } from '../price20';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -430,9 +432,9 @@ export function branchesSection(s: GameState): HTMLElement {
 
 /** r20: equipamentos da empresa (Empresa › Sede e Sede › Equipamentos e conforto). */
 export function equipmentSection20(s: GameState): HTMLElement {
-  return section(t(S.equipment), h('table', { class: 'tbl compact' }, h('tbody', null,
+  return section(t(S.equipment), h('p', { class: 'muted small' }, t(l('Equipar = investimento (uma vez). ', 'Equip = investment (one-off). ')), t(priceBasis20(s, money(s, 1000)))), h('table', { class: 'tbl compact' }, h('tbody', null,
         s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', null, t(e.name)), h('td', null, branchName(e.branch)), h('td', null, '✓'), h('td', null, '')); }),
-        availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, $(money(s, e.cost))), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
+        availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, price20(s, money(s, e.cost), 'equip')), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
       )));
 }
 

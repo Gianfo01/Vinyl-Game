@@ -16,6 +16,8 @@ import { EV19, STAGE19, actEv19, buyNb19, evPop19, hoodStats19, live19ev, lmNow1
 import { $, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { why18 } from '../explain18';
+import { COSTK20, NATURE20, priceBasis20, type CostKind20 } from '../../sim/sys/price20';
+import { price20 } from '../price20';
 import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, stylePreview19, type Scene18 } from '../pixel/campus18px';
 import { registerArea } from '../registry';
 import { store } from '../store';
@@ -135,6 +137,16 @@ function runAct(v: View, id: string, a: PopAct19, close: () => void, sty?: Style
   rerender();
 }
 
+/** r20c (N2): tipo de custo de cada ação do popup (reformar × ampliar × mudar × construir × comprar). */
+function kind20(p: Pop19, a: PopAct19): CostKind20 | null {
+  if (a.id === 'up') return p.id === 'hq' ? 'move' : 'expand';
+  if (a.id === 'reno') return 'refit';
+  if (a.id === 'move' || a.id === 'moveHere') return 'move';
+  if (a.id === 'rush') return 'build';
+  if (a.id === 'buy') return 'buy';
+  return null;
+}
+const kindTag20 = (k: CostKind20 | null) => (k ? h('small', { class: 'muted', title: t(COSTK20[k].desc) }, ` [${t(COSTK20[k].name)} · ${t(NATURE20[COSTK20[k].nature])}]`) : null);
 function costTxt(c?: number): string { return c === undefined ? '' : c < 0 ? `+${$(-c)}` : $(c); }
 
 /** Corpo do popup (sem posição). */
@@ -150,13 +162,13 @@ function popBody(v: View, p: Pop19, close: () => void, rerun: () => void): HTMLE
     anyQ ? contractorPick(rerun) : null,
     stylePick(p, v.year, rerun),
     p.opts.length ? h('div', { class: 'w19-opts' }, h('b', { class: 'small' }, t(l('Construir aqui', 'Build here'))), p.opts.map((o) => h('div', { class: `w19-opt ${o.dis ? 'dis' : ''}` },
-      h('div', { class: 'row' }, h('b', null, ic(o.icon), ' ', t(o.name)), h('span', { class: 'w19-cost' }, `${$(o.cost)} · ${o.months} ${t(l('m', 'mo'))}`)),
+      h('div', { class: 'row' }, h('b', null, ic(o.icon), ' ', t(o.name)), h('span', { class: 'w19-cost' }, price20(s, o.cost, 'build'), ` · ${o.months} ${t(l('m', 'mo'))}`)), kindTag20('build'),
       h('small', { class: 'muted' }, t(o.effect)),
       o.syn.length ? h('small', { class: 'good' }, o.syn.map((x) => tx(x)).join(' · ')) : null,
       o.dis ? h('small', { class: 'bad' }, t(o.dis)) : null,
       h('button', { type: 'button', class: 'btn small primary', disabled: !!o.dis, 'aria-disabled': o.dis ? 'true' : undefined, onclick: () => runAct(v, p.id, { id: o.id, label: o.name, cost: o.cost }, close, ui.sty ?? p.sty?.cur) }, ic('building'), ' ', t(l('Construir', 'Build')))))) : null,
     p.acts.length ? h('div', { class: 'w19-acts' }, p.acts.map((a) => h('button', { type: 'button', class: `btn small ${a.tone === 'primary' ? 'primary' : a.tone === 'danger' ? 'danger ghost' : 'ghost'}`, disabled: !!a.dis, title: a.dis ? t(a.dis) : undefined,
-      onclick: () => runAct(v, p.id, a, close, ui.sty ?? p.sty?.cur) }, t(a.label), a.cost !== undefined ? h('small', null, ` ${costTxt(a.cost)}`) : null, a.go ? ' ↗' : null))) : null,
+      onclick: () => runAct(v, p.id, a, close, ui.sty ?? p.sty?.cur) }, t(a.label), a.cost !== undefined ? h('small', { title: t(priceBasis20(s, Math.abs(a.cost))) }, ` ${costTxt(a.cost)}`) : null, kindTag20(kind20(p, a)), a.go ? ' ↗' : null))) : null,
     p.acts.some((a) => a.dis) ? h('ul', { class: 'w19-notes small muted' }, p.acts.filter((a) => a.dis).map((a) => h('li', null, `${t(a.label)}: ${t(a.dis!)}`))) : null);
 }
 

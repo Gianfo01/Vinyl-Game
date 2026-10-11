@@ -214,6 +214,26 @@ export function recoupTail20(s: GameState, c: Contract): RecoupTail20 {
   return { needs, balance, perYear, years, revertWeek: rw, capWeek, revertAt };
 }
 
+/** r20c (N2): o teto da trava (B29) liberou o master sem recuperar → o saldo NÃO recuperado é perdoado de fato:
+ *  zera o saldo (inclusive os baldes por projeto das cláusulas r18) e registra no razão uma linha de memória (valor 0:
+ *  o adiantamento já foi lançado como despesa quando foi pago; o que some é o direito de abater royalties futuros). */
+export function writeOffRecoup20(s: GameState, c: Contract): number {
+  const v = Math.max(0, Math.round(c.recoupBalance));
+  if (v <= 0) return 0;
+  c.recoupBalance = 0;
+  const cc = c as Contract & { rb18?: Record<string, number> };
+  if (cc.rb18) for (const k of Object.keys(cc.rb18)) cc.rb18[k] = 0;
+  c.recoupWrittenOff20 = (c.recoupWrittenOff20 ?? 0) + v;
+  const key = `${s.week}:recoupoff20:${c.id}`;
+  if (!s.ledgerKeys[key]) {
+    s.ledgerKeys[key] = 1;
+    const who = s.acts[c.actId]?.name ?? '?';
+    s.ledger.push({ key, week: s.week, amount: 0, cat: 'writeoff', memo: `Saldo de recoupment perdoado (teto da trava): ${who} — $${Math.round(v / 100).toLocaleString('en-US')}` });
+    if (s.ledger.length > 400) s.ledger.splice(0, s.ledger.length - 400);
+  }
+  return v;
+}
+
 export function releasesOfDeal(s: GameState, c: Contract): Release[] {
   const act = s.acts[c.actId];
   if (!act) return [];

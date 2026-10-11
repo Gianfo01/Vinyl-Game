@@ -200,7 +200,7 @@ export const EQUIPMENT: EquipmentDef[] = [
   { id: 'plugin_suite', name: l('Plugins e loops', 'Plugins & loops'), branch: 'audio', tech: 'streaming', cost: 8000, effect: { production: 4 } },
   { id: 'ai_tools', name: l('Ferramentas de IA', 'AI tools'), branch: 'audio', tech: 'synthetic_voice', cost: 30000, effect: { production: 6 }, needsEngineer: true },
   { id: 'press_contract', name: l('Contrato com prensagem', 'Pressing plant contract'), branch: 'manufacturing', cost: 5000, effect: { pressing: 0.12 } },
-  { id: 'own_plant', name: l('Fábrica própria', 'Own pressing plant'), branch: 'manufacturing', cost: 90000, effect: { pressing: 0.3 } },
+  { id: 'own_plant', name: l('Fábrica própria', 'Own pressing plant'), branch: 'manufacturing', cost: 350000, effect: { pressing: 0.3 } }, // r20c (N2): era 90000 — fábrica a preço de mesa de som (docs/precos20.md)
   { id: 'mail_list', name: l('Mala direta e fã-clube', 'Mailing list & fan club'), branch: 'marketing', cost: 3000, effect: { marketing: 0.08 } },
   { id: 'video_suite', name: l('Ilha de edição de vídeo', 'Video edit suite'), branch: 'marketing', tech: 'clipnet', cost: 20000, effect: { marketing: 0.12 } },
   { id: 'analytics', name: l('Painel de dados', 'Analytics dashboard'), branch: 'marketing', tech: 'internet', cost: 12000, effect: { marketing: 0.1 } },
