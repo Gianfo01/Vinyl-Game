@@ -11,8 +11,9 @@
 // profundidade do JSON e forma mínima do estado — tudo verificado numa cópia, antes de trocar o jogo ou gravar.
 //
 // Custo (B26): measure20() cronometra serialização/compressão/gravação; o último resultado aparece no indicador de
-// save. Medido numa partida nova e em poucos anos (ver docs): stringify domina, mas fica abaixo de um quadro de
-// animação longo; nenhuma otimização (Worker/incremental) se justifica ainda.
+// save. Medido (Node, 1975, sem jogador): JSON 2,3→7,9 MB em 0→3 anos; stringify 31→98 ms (síncrono), gzip
+// 85→331 ms (assíncrono, fora do quadro no navegador), parse 18→119 ms. Bem abaixo do custo de um mês simulado;
+// nada domina a ponto de justificar Worker/save incremental agora — o indicador mostra o custo real para reavaliar.
 
 import { RNG_VERSION19 } from '../sim/rng19';
 import type { GameState } from '../sim/types';

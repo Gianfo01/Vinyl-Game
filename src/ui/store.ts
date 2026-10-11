@@ -270,7 +270,7 @@ export async function importSaveText(text: string): Promise<GameState> {
   if (tx.startsWith('{')) return validateSave(tx);
   tx = tx.replace(/\s+/g, '');
   const i = tx.indexOf(SAVE_PREFIX);
-  if (i < 0) throw new Error('formato');
+  if (i < 0) throw new SaveError20('format');
   return validateSave(await unGzipB64(tx.slice(i + SAVE_PREFIX.length)));
 }
 
