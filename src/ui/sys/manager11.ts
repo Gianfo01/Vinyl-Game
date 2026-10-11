@@ -11,6 +11,7 @@ import {
 } from '../../sim/sys/manager11';
 import { mgCandidates, mgGross, ventures, type Client } from '../../sim/sys/ventures9';
 import { $, actLink, pill, rerender, toast } from '../common';
+import { RATE19 } from './neg19';
 import { h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
 
@@ -68,14 +69,14 @@ export function reportsTab(s: GameState): HTMLElement {
 
 export function poachTab(s: GameState): HTMLElement {
   const r = rngOf(s);
-  let rate = 0.15;
+  const rate = RATE19.poach;
   const cands = mgCandidates(s).filter((a) => a.fame >= 20).slice(0, 15);
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('Artistas consagrados já têm empresário. Um bônus de assinatura (pago na hora, mesmo se recusarem) aumenta a chance — e os rivais fazem o mesmo com os seus.', 'Established acts already have managers. A signing bonus (paid upfront, even if they decline) raises the odds — and rivals do the same to yours.'))),
-    h('div', { class: 'row wrap' }, t(l('Comissão proposta', 'Proposed commission')), ' ', select<number>(rate, [0.1, 0.12, 0.15, 0.18, 0.2].map((v) => ({ value: v, label: pct(v) })), (v) => (rate = v))),
+    h('div', { class: 'row wrap' }, t(l('Comissão proposta', 'Proposed commission')), ' ', select<number>(rate, [0.1, 0.12, 0.15, 0.18, 0.2].map((v) => ({ value: v, label: pct(v) })), (v) => { RATE19.poach = v; rerender(); })),
     cands.length ? h('table', { class: 'tbl compact' },
-      h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Fama', 'Fame'), l('Renda est./mês', 'Est. income/mo'), l('Bônus', 'Bonus'), l('Chance (15%)', 'Chance (15%)'), l('', '')].map((y) => h('th', null, t(y))))),
-      h('tbody', null, cands.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, String(fameText(s, a.id))), h('td', null, $(mgGross(s, a))), h('td', null, $(poachBonus(s, a))), h('td', null, pct(poachChance(s, a, 0.15))),
+      h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Fama', 'Fame'), l('Renda est./mês', 'Est. income/mo'), l('Bônus', 'Bonus'), l(`Chance (${pct(rate)})`, `Chance (${pct(rate)})`), l('', '')].map((y) => h('th', null, t(y))))),
+      h('tbody', null, cands.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, String(fameText(s, a.id))), h('td', null, $(mgGross(s, a))), h('td', null, $(poachBonus(s, a))), h('td', null, pct(poachChance(s, a, rate))),
         h('td', null, btn(t(l('Roubar', 'Poach')), () => res(poachClient(s, r, a.id, rate)), 'btn tiny primary')))))) : h('p', { class: 'muted' }, t(l('Ninguém consagrado disponível agora.', 'No established act available now.'))),
     h('p', { class: 'small muted' }, `${t(l('Clientes', 'Clients'))}: ${ventures(s).mg.clients.length}`),
   );

@@ -306,4 +306,8 @@ import './ux19';
 // r19 onda 5 (C): regras de contexto, ctxFx das decisões e vitórias pequenas
 import './ctxsys19';
 import './wins19';
+// Rodada 19 (onda 5, B): registro de chances das telas de negociação (mostrada = sorteada).
+import './odds19';
+import './prof19';
+import './budget19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

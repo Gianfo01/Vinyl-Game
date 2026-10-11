@@ -206,6 +206,10 @@ export function factMatrix19(emitted: string[], readers: Record<string, string[]
 export const consumed19 = (r: FactRow19): boolean => r.listeners.length + r.wildcard.length + r.readers.length > 0 || r.chron;
 
 /** R19 T2 money-b (sys/moneyb19.ts): mercado de contratos, empresário total, disco de cumprimento, briga de gestão. */
+/** Rodada 19 (onda 5, B.5): delegação por carreira (budget19). */
+export const BUDGET19: Record<string, { sys: string; to: string[] }> = {
+  deleg_exc: { sys: 'budget19', to: ['budget19:deleg (mensagem "A equipe precisa de você" na Caixa; exceção na aba Políticas)'] },
+};
 export const MONEYB19: Record<string, { sys: string; to: string[] }> = {
   contract_sold: { sys: 'moneyb19', to: ['moneyb19:sold (reputação com artistas, confiança do elenco, calor do comprador, diário, manchete)'] },
   sale_regret: { sys: 'moneyb19', to: ['moneyb19:regret (reputação comercial, diário "arrependimento", manchete)'] },

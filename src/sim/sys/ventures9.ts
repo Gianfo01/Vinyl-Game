@@ -440,13 +440,17 @@ export function bookingCandidates(s: GameState, id: string): Act[] {
 }
 export function grossShows(s: GameState, a: Act): number { return money(s, 250 * Math.pow(1 + a.fame / 10, 1.6)); }
 
+/** R19: a mesma conta que a tela mostra e o sorteio usa (comissão menor e agência de nome convencem; estrelas resistem). */
+export function bookingChance(_s: GameState, v: Venture, a: Act, rate: number): number {
+  rate = clamp(rate, 0.08, 0.2);
+  return clamp(0.5 + v.rep / 200 - (rate - 0.1) * 3 - a.fame / 300 + v.level * 0.04, 0.05, 0.95);
+}
 export function signBooking(s: GameState, r: Rng, id: string, actId: string, rate: number): { ok: boolean; text: L } {
   const v = byId(s, id);
   const a = s.acts[actId];
   if (!v || v.kind !== 'booking' || !activeAct(a)) return { ok: false, text: l('Inválido.', 'Invalid.') };
   if (v.clients!.length >= 3 + v.level * 2) return { ok: false, text: l('A agência está no limite de clientes.', 'The agency is at client capacity.') };
-  rate = clamp(rate, 0.08, 0.2);
-  if (!r.chance(clamp(0.5 + v.rep / 200 - (rate - 0.1) * 3 - a.fame / 300 + v.level * 0.04, 0.05, 0.95))) return { ok: false, text: fmtL(l('{a} ficou com a agência atual.', '{a} stayed with their current agency.'), { a: a.name }) };
+  if (!r.chance(bookingChance(s, v, a, rate))) return { ok: false, text: fmtL(l('{a} ficou com a agência atual.', '{a} stayed with their current agency.'), { a: a.name }) };
   v.clients!.push({ actId, rate, since: s.week });
   return { ok: true, text: fmtL(l('{a} agora é agenciado por {n}.', '{a} is now booked by {n}.'), { a: a.name, n: v.name }) };
 }

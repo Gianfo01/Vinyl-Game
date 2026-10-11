@@ -403,3 +403,10 @@ H('ctx19', ['Regras de contexto e vitórias pequenas', 'Context rules and small 
     ['Festival rival no mesmo mês e gênero dói mais: mudar de mês é a defesa mais barata.', 'A rival festival in the same month and genre hurts most: moving month is the cheapest defence.'],
     ['Empresário: confiança média, anos por cliente e % de renovações valem tanto quanto estrelas.', 'Manager: average trust, years per client and renewal % count as much as stars.']],
   ['long18', 'agenda17', 'festivals', 'cp17-critic', 'managers14', 'inbox']);
+// Rodada 19 (onda 5, B): cockpit por profissão, conflitos abertos e aviso antes de avançar.
+H('prof19', ['Cockpit por profissão', 'Cockpit per profession'],
+  ['Os atalhos, o bloco de humor e "Hoje / Ameaças" seguem as carreiras ativas: o empresário vê clientes, crises e mandatos; o festival vê meses até a edição, pagamentos, vendas contra a meta do patrocinador e buracos no line-up.', 'Shortcuts, the mood block and "Today / Threats" follow your active careers: managers see clients, crises and mandates; festivals see months to the edition, payments, sales vs the sponsor target and line-up gaps.'],
+  ['Ex.: festival a 4 meses sem headliner → aparece em "Hoje" com atalho para o line-up. Conflitos abertos (decisões, fios do Mestre, rixas, crises de clientes) têm teto: perto dele o diretor para de abrir crises novas com você.', 'E.g. festival 4 months out with no headliner → shows in "Today" with a line-up shortcut. Open conflicts (decisions, DM threads, feuds, client crises) have a cap: near it the director stops opening new crises with you.'],
+  [['Antes de avançar, a lista mostra cada cartão que vai valer a resposta padrão; "Não perguntar de novo" desliga (religa em Configurações).', 'Before advancing, a list shows each card that will take the default answer; "Do not ask again" turns it off (re-enable in Settings).'],
+    ['Avisos de rotina e informativos além de 8 no mês viram um único "Resumo do mês".', 'Routine and informative notices beyond 8 a month become a single "Monthly summary".']],
+  ['cockpit', 'long18']);

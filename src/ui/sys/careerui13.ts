@@ -9,7 +9,7 @@ import { careerDef, careers, timeLoad } from '../../sim/sys/careers12';
 import { liveOf } from '../../sim/sys/live';
 import { prod, studios } from '../../sim/sys/studio12';
 import { c12, hasAgency } from '../../sim/sys/tour12';
-import { VKINDS, bookingCandidates, foundCost, foundVenture, funds, kindsAvailable, signBooking, ventures, type Holder, type VKind } from '../../sim/sys/ventures9';
+import { VKINDS, bookingCandidates, foundCost, foundVenture, funds, kindsAvailable, signBooking, bookingChance, ventures, type Holder, type VKind } from '../../sim/sys/ventures9';
 import type { GameState } from '../../sim/types';
 import { fmtL, money, rngOf } from '../../sim/util';
 import { ADVISOR_EXTRA, type Tip } from '../advisor';
@@ -17,6 +17,8 @@ import { CAREER_NAV } from '../careernav13';
 import { PAGE16 } from '../pages16';
 import { CAREER_PAGE17 } from '../nav17';
 import { $, pill, rerender, section, toast } from '../common';
+import { RATE19 } from './neg19';
+import { why18 } from '../explain18';
 import { h, select } from '../dom';
 import { registerSection } from '../registry';
 import { store } from '../store';
@@ -59,14 +61,16 @@ export function foundInline(s: GameState, kind: VKind, why: L): HTMLElement {
 /** Assinar clientes direto da página de turnês (a agência existe, mas está vazia). */
 export function signInline(s: GameState, v: NonNullable<ReturnType<typeof hasAgency>>): HTMLElement {
   const cands = bookingCandidates(s, v.id);
-  let pick = cands[0]?.id ?? '';
-  let rate = 0.12;
+  const pick = cands.some((a) => a.id === RATE19.bkAct) ? RATE19.bkAct : cands[0]?.id ?? '';
+  const rate = RATE19.booking;
+  const pa = s.acts[pick];
   const cap = 3 + v.level * 2;
   return h('div', { class: 'card' },
     h('p', null, t(l('{n} ainda não tem clientes ({c}/{m}). Ofereça agenciamento: comissão menor e agência com boa reputação convencem mais; estrelas resistem a trocar de agência.', '{n} has no clients yet ({c}/{m}). Offer booking: a lower commission and a well-reputed agency persuade more; stars resist switching agencies.'), { n: v.name, c: v.clients?.length ?? 0, m: cap })),
     cands.length ? h('div', { class: 'found13' },
-      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)})` })), (x) => (pick = x)),
-      select<number>(rate, [0.08, 0.1, 0.12, 0.15, 0.2].map((x) => ({ value: x, label: `${t(l('comissão', 'commission'))} ${Math.round(x * 100)}%` })), (x) => (rate = x)),
+      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${Math.round(a.fame)})` })), (x) => { RATE19.bkAct = x; rerender(); }),
+      select<number>(rate, [0.08, 0.1, 0.12, 0.15, 0.2].map((x) => ({ value: x, label: `${t(l('comissão', 'commission'))} ${Math.round(x * 100)}%${pa ? ` · ${t(l('chance', 'odds'))} ${Math.round(bookingChance(s, v, pa, x) * 100)}%` : ''}` })), (x) => { RATE19.booking = x; rerender(); }),
+      pa ? why18(s, 'bk19.odds', { v: v.id, act: pa.id, rate }, pill(`${t(l('chance', 'odds'))} ${Math.round(bookingChance(s, v, pa, rate) * 100)}%`)) : null,
       h('button', { class: 'btn small primary', onclick: () => { const r = signBooking(s, rngOf(s), v.id, pick, rate); toast(t(r.text), r.ok ? 'good' : 'bad'); rerender(); } }, t(l('Oferecer agenciamento', 'Offer booking'))))
       : h('p', { class: 'muted small' }, t(l('Nenhum artista livre com fama 10+ agora. Volte no mês que vem.', 'No free act with fame 10+ right now. Check again next month.'))));
 }

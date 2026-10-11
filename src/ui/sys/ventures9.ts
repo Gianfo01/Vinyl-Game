@@ -12,7 +12,10 @@ import {
   foundCost, foundVenture, funds, handleCrisis, inviteAct, inviteChance, isConglomerate, kindsAvailable, lineupMax, maxGear, mediaAvailable, mgCandidates, mgCap, mgChance, mgGross, negotiateFor,
   pitchClient, pitchSync, placeSong, pushScene, routeTour, sellVenture, setFestival, setMgOwner, setPayout, setStaff, signBooking, signWriter, takePayola, transferVenture, upgradeCost,
   upgradeGear, upgradeVenture, valuation, ventures, writerAdvance, writerCandidates, type CrisisMove, type Holder, type MediaKind, type VKind, type Venture,
+  bookingChance,
 } from '../../sim/sys/ventures9';
+import { RATE19 } from './neg19';
+import { why18 } from '../explain18';
 import { $, actLink, cityName, genreName, inspect, pill, rerender, section, sparkline, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea, registerPageTab, registerSection } from '../registry';
@@ -137,15 +140,17 @@ function studioBody(s: GameState, v: Venture): HTMLElement {
 function bookingBody(s: GameState, v: Venture): HTMLElement {
   const r = rngOf(s);
   const cands = bookingCandidates(s, v.id);
-  let pick = cands[0]?.id ?? '';
-  let rate = 0.12;
+  const pick = cands.some((a) => a.id === RATE19.bkAct) ? RATE19.bkAct : cands[0]?.id ?? '';
+  const rate = RATE19.booking;
+  const pa = s.acts[pick];
   return h('div', null,
     h('h5', null, t(l('Clientes', 'Clients')), ` (${v.clients!.length}/${3 + v.level * 2})`),
     v.clients!.length ? h('ul', { class: 'small' }, v.clients!.map((c) => h('li', null, actLink(s, c.actId), ` · ${pct(c.rate)} `,
       btn(l('Roteirizar turnê', 'Route a tour'), () => res(routeTour(s, r, v.id, c.actId)), 'btn tiny')))) : null,
     cands.length ? h('div', { class: 'row wrap' },
-      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)})` })), (x) => (pick = x)),
-      select<number>(rate, [0.08, 0.1, 0.12, 0.15, 0.2].map((x) => ({ value: x, label: pct(x) })), (x) => (rate = x)),
+      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)})` })), (x) => { RATE19.bkAct = x; rerender(); }),
+      select<number>(rate, [0.08, 0.1, 0.12, 0.15, 0.2].map((x) => ({ value: x, label: pa ? `${pct(x)} · ${t(l('chance', 'odds'))} ${pct(bookingChance(s, v, pa, x))}` : pct(x) })), (x) => { RATE19.booking = x; rerender(); }),
+      pa ? why18(s, 'bk19.odds', { v: v.id, act: pa.id, rate }, pill(`${t(l('chance', 'odds'))} ${pct(bookingChance(s, v, pa, rate))}`)) : null,
       btn(l('Oferecer agenciamento', 'Offer booking'), () => res(signBooking(s, r, v.id, pick, rate)), 'btn small primary')) : null);
 }
 
@@ -242,14 +247,14 @@ function rosterTab(s: GameState): HTMLElement {
 
 function prospectTab(s: GameState): HTMLElement {
   const r = rngOf(s);
-  let rate = 0.15;
+  const rate = RATE19.prospect;
   const cands = mgCandidates(s);
   return h('div', null,
-    h('div', { class: 'row wrap' }, t(l('Comissão proposta', 'Proposed commission')), ' ', select<number>(rate, [0.1, 0.12, 0.15, 0.18, 0.2].map((x) => ({ value: x, label: pct(x) })), (x) => { rate = x; })),
+    h('div', { class: 'row wrap' }, t(l('Comissão proposta', 'Proposed commission')), ' ', select<number>(rate, [0.1, 0.12, 0.15, 0.18, 0.2].map((x) => ({ value: x, label: pct(x) })), (x) => { RATE19.prospect = x; rerender(); })),
     h('table', { class: 'tbl compact' },
-      h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Selo', 'Label'), l('Fama', 'Fame'), l('Renda est./mês', 'Est. income/mo'), l('Chance (15%)', 'Chance (15%)'), l('', '')].map((x) => h('th', null, t(x))))),
+      h('thead', null, h('tr', null, ...[l('Artista', 'Act'), l('Selo', 'Label'), l('Fama', 'Fame'), l('Renda est./mês', 'Est. income/mo'), l(`Chance (${pct(rate)})`, `Chance (${pct(rate)})`), l('', '')].map((x) => h('th', null, t(x))))),
       h('tbody', null, cands.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, a.owner === 'player' ? s.config.companyName : a.owner ? s.labels[a.owner]?.name ?? '—' : t(l('independente', 'independent'))),
-        h('td', null, String(fameText(s, a.id))), h('td', null, $(mgGross(s, a))), h('td', null, pct(mgChance(s, a, 0.15))),
+        h('td', null, String(fameText(s, a.id))), h('td', null, $(mgGross(s, a))), h('td', null, pct(mgChance(s, a, rate))),
         h('td', null, btn(l('Propor', 'Pitch'), () => res(pitchClient(s, r, a.id, rate)), 'btn tiny primary')))))));
 }
 

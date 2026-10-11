@@ -178,7 +178,11 @@ export function bio18(s: GameState, who: string): L[] {
 // ---------------------------------------------------------------- Cockpit: três perguntas (feedback #14)
 
 export interface Q18 { t: L; tone: 'good' | 'bad' | 'info'; goto?: Goto18; why?: L }
-export function cockpit18(s: GameState): { now: Q18[]; works: Q18[]; threats: Q18[] } {
+export type Cockpit18 = { now: Q18[]; works: Q18[]; threats: Q18[] };
+/** R19 (onda 5, B.4): cada carreira registra o que entra em "Hoje / Andamento / Ameaças" (o provedor decide se a carreira está ativa). */
+export const COCKPIT18: Record<string, (s: GameState) => Partial<Cockpit18>> = {};
+export function registerCockpit18(careerId: string, fn: (s: GameState) => Partial<Cockpit18>): void { COCKPIT18[careerId] = fn; }
+export function cockpit18(s: GameState): Cockpit18 {
   const now: Q18[] = [], works: Q18[] = [], threats: Q18[] = [];
   if (s.decisions.length) now.push({ tone: 'bad', t: fmtL(l('{n} decisão(ões) na mesa — ignoradas, vale a opção padrão.', '{n} decision(s) on the desk — if ignored, the default applies.'), { n: s.decisions.length }) });
   const ask = items18(s).filter((x) => x.msg?.actions?.length && !x.msg.resolved);
@@ -191,6 +195,8 @@ export function cockpit18(s: GameState): { now: Q18[]; works: Q18[]; threats: Q1
     const a = s.acts[id], c = a?.contractId ? s.contracts[a.contractId] : undefined;
     if (c && c.party === 'player' && !a.playerBand && c.endWeek - s.week > 0 && c.endWeek - s.week <= 8 && !pol18(s).renew) now.push({ tone: 'bad', t: fmtL(l('Contrato de {a} vence em {w} semanas (renovação não delegada).', '{a}\'s contract ends in {w} weeks (renewal not delegated).'), { a: a.name, w: c.endWeek - s.week }), goto: { act: id } });
   }
+  const prov = Object.values(COCKPIT18).map((f) => { try { return f(s); } catch { return {}; } });
+  for (const p of prov) { now.push(...(p.now ?? [])); works.push(...(p.works ?? [])); }
   if (!now.length) now.push({ tone: 'good', t: l('Nada exige você agora: dá para avançar.', 'Nothing needs you right now: you can advance.') });
   // o que funciona / falha
   for (const p of rv18(s).pm.filter((x) => s.week - x.w < 30).slice(0, 3)) works.push({ tone: p.tone, t: fmtL(l('"{t}": {x}', '"{t}": {x}'), { t: p.title, x: p.text }), goto: { area: 'long18', tab: ['long18', 'pm'] } });
@@ -221,6 +227,7 @@ export function cockpit18(s: GameState): { now: Q18[]; works: Q18[]; threats: Q1
   if (D.ph === 'rising' || D.ph === 'climax') threats.push({ tone: D.ph === 'climax' ? 'bad' : 'info', t: fmtL(l('Mestre: {p} (tensão {v}) — {d}', 'DM: {p} (tension {v}) — {d}'), { p: PHASE18[D.ph].name, v: Math.round(D.t), d: PHASE18[D.ph].desc }), goto: { area: 'dm18' } });
   const A = sg18(s).adapt;
   if (A.on && Math.abs(A.lvl) >= 0.25) threats.push({ tone: 'info', t: fmtL(l('Dificuldade adaptativa {x}: {w}.', 'Adaptive difficulty {x}: {w}.'), { x: A.lvl < 0 ? l('aliviando', 'easing') : l('apertando', 'tightening'), w: A.why.map((x) => x.pt).join(', ') }), goto: { area: 'long18', tab: ['long18', 'diff'] } });
+  for (const p of prov) threats.push(...(p.threats ?? []));
   if (!threats.length) threats.push({ tone: 'good', t: l('Nenhuma ameaça clara nos próximos meses.', 'No clear threat in the coming months.') });
   return { now, works, threats };
 }

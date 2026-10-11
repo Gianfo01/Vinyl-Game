@@ -14,6 +14,7 @@ import { h } from '../dom';
 import { advisorSection } from '../advisor';
 import { decLocked18, decOptBody18, decTimer18 } from '../sys/decide18';
 import { ctxLine19 } from '../sys/ctx19';
+import { folded19View } from '../sys/advance19';
 
 const CAT_ICON: Record<string, string> = {
   career: '🎼', people: '👥', band: '🎸', contract: '📜', market: '🏢', tech: '📡', culture: '🎨', scandal: '📰',
@@ -36,7 +37,7 @@ export function deskPanel(s: GameState): HTMLElement {
   );
   const counters = s.offers.filter((o) => o.status === 'counter');
   const pending = s.offers.filter((o) => o.status === 'pending');
-  const recentNotes = s.notifications.slice(-12).reverse();
+  const recentNotes = s.notifications.filter((n) => !n.fold).slice(-12).reverse(); // r19: agrupados ficam no Resumo do mês
   const last = s.lastMonthLedger;
   const net = Object.values(last).reduce((t2, v) => t2 + v, 0);
   const myCharts = [...s.charts.singles, ...s.charts.albums].filter((e) => s.releases[e.releaseId]?.owner === 'player' || s.acts[s.releases[e.releaseId]?.actId]?.playerBand);
@@ -60,6 +61,7 @@ export function deskPanel(s: GameState): HTMLElement {
         kv(t(S.lastMonth), h('span', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, $(net))),
         myCharts.length ? h('ul', { class: 'small' }, myCharts.map((e) => h('li', null, h('span', { class: 'why18', 'data-why': 'chart.pos', 'data-why-ctx': JSON.stringify({ rel: e.releaseId, kind: s.charts.albums.includes(e) ? 'albums' : 'singles' }), tabindex: '0' }, `#${e.pos}`), ' ', releaseLink(s, e.releaseId), e.last ? h('span', { class: e.last > e.pos ? 'good' : e.last < e.pos ? 'bad' : 'muted' }, ` (${e.last > e.pos ? '▲' : e.last < e.pos ? '▼' : '='}${t(S.last)} ${e.last})`) : pill('NEW', 'good')))) : null,
         h('ul', { class: 'notes small' }, recentNotes.map((n) => h('li', { class: n.kind }, t(n.text)))),
+        folded19View(s), // r19 B.5: avisos menores agrupados no mês
       ),
     ),
     h('aside', { class: 'col-side' },
