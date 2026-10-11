@@ -14,10 +14,12 @@ import { branchRent, hqBlocker, hqCaps } from './branches';
 import { perk } from './perks';
 import { loanAdj19 } from './rates19';
 
+/** r19 (careers19): a sede de selo só cobra aluguel quando a carreira de selo (ou músico) está ativa. Injetado: sem ciclo. */
+export const rentOn19: { f: (s: GameState) => boolean } = { f: () => true };
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
   const hq = HQ_LEVELS[s.player.hq];
   // prédio próprio (rodada 6): sem aluguel da matriz
-  const rent = (s.flags.ownBuildingHq === s.player.hq ? 0 : money(s, hq.rent)) + branchRent(s);
+  const rent = (s.flags.ownBuildingHq === s.player.hq || !rentOn19.f(s) ? 0 : money(s, hq.rent)) + branchRent(s);
   const salaries = Math.round(s.player.staff.reduce((t, x) => t + x.salary, 0) * Math.max(0.5, 1 + perk(s, 'staffCost')));
   const over = Math.max(0, careerSlotsUsed(s) - hqCaps(s).careers);
   // terceirizar carreiras além da capacidade custa menos para quem ainda é pequeno

@@ -16,7 +16,7 @@ import { contactsFor, isActive, originTrust, registerLoad } from './careers12';
 import { cxOf } from './manager11';
 import { ownerOf } from './people/owner';
 import { SVC, isForeign, onServiceOutcome, providerById, registerContactBonus, requestService, signService, type Ask, type SvcKind } from './services12';
-import { dropClient, funds, grossShows, mgCap, ventures, type Client } from './ventures9';
+import { dropClient, funds, grossShows, markRefused9, mgCap, refusedWait9, ventures, type Client } from './ventures9';
 
 export type Area = 'recordings' | 'shows' | 'endorsements' | 'international';
 export type Amb = 'money' | 'recognition' | 'genre' | 'family' | 'international' | 'art';
@@ -342,6 +342,15 @@ export function resolveDilemma(s: GameState, id: string, m: DilemmaMove): Res {
 
 // ---------------------------------------------------------------- patrocínio
 
+/** Chance de renovar o mandato (confiança, pressões e promessas quebradas). */
+export function renewChance12(s: GameState, id: string): number {
+  const x = c12(s, id);
+  return clamp(x.trust / 100 + 0.2 - x.pressured * 0.08 - x.promises.filter((q) => q.kept === false).length * 0.1, 0.05, 0.98);
+}
+/** r19 (careers19): devolve true quando a renovação foi entregue ao jogador (cartão); false = sorteio automático. */
+export const mgRenew12: { f: (s: GameState, id: string, p: number) => boolean } = { f: () => false };
+/** r19 (careers19): patrocínio com marca, mercado e chance (null = regra antiga, dinheiro garantido). */
+export const endorse19: { f: ((s: GameState, a: Act, base: number) => { ok: boolean; value: number; brand: string; why: L[] }) | null } = { f: null };
 export const endorseReady = (s: GameState, id: string) => !c12(s, id).endW || s.week - c12(s, id).endW! >= 26;
 export const endorseValue = (s: GameState, a: Act) => Math.round(money(s, 1500) * Math.pow(1 + a.fame / 10, 1.4));
 export function endorse(s: GameState, id: string): Res {
@@ -352,7 +361,10 @@ export function endorse(s: GameState, id: string): Res {
   if (!x.mandate.areas.includes('endorsements')) return bad(l('Patrocínios estão fora do mandato.', 'Endorsements are outside the mandate.'));
   if (!endorseReady(s, id)) return bad(l('Um patrocínio por semestre.', 'One endorsement per half-year.'));
   x.endW = s.week;
-  const v = endorseValue(s, a);
+  let v = endorseValue(s, a);
+  const e19 = endorse19.f?.(s, a, v);
+  if (e19 && !e19.ok) { x.endW = s.week - 18; return bad(fmtL(l('{b} preferiu outro nome desta vez ({w}). Dá para tentar outra marca em 2 meses.', '{b} went with another name this time ({w}). You can try another brand in 2 months.'), { b: e19.brand, w: { pt: e19.why.map((y) => y.pt).join('; '), en: e19.why.map((y) => y.en).join('; ') } })); }
+  if (e19) v = e19.value;
   a.cash += Math.round(v * (1 - c.rate));
   pay(s, v * c.rate, `endorse:${id}:${s.week}`, `Comissão patrocínio ${a.name}`, c);
   const amb = ambitionsOf(s, id);
@@ -401,6 +413,8 @@ export function fireAgent(s: GameState, agentId: string): void {
 }
 export function setSuccessor(s: GameState, agentId?: string): void { mgr12(s).successor = agentId; }
 
+/** Chance de um talento desconhecido aceitar (r19: exposta para a tela mostrar o mesmo número do sorteio). */
+export const devChance12 = (s: GameState): number => clamp(0.55 + ventures(s).mg.rep / 300 + originTrust(s) / 100, 0.2, 0.9);
 export function devCandidates(s: GameState): Act[] {
   const taken = new Set(ventures(s).mg.clients.map((c) => c.actId));
   return Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && !a.playerBand && a.fame < 8 && !taken.has(a.id)).sort((a, b) => b.momentum - a.momentum).slice(0, 12);
@@ -410,7 +424,9 @@ export function signDev(s: GameState, r: Rng, id: string): Res {
   const mg = ventures(s).mg;
   if (!a || mg.clients.some((c) => c.actId === id)) return bad(INVALID);
   if (mg.clients.length >= mgCap(s) + mgr12(s).agents.length * 2) return bad(l('Você não dá conta de mais artistas.', 'You cannot handle more acts.'));
-  if (!r.chance(clamp(0.55 + mg.rep / 300 + originTrust(s) / 100, 0.2, 0.9))) return bad(fmtL(l('{a} prefere seguir sozinho por enquanto.', '{a} would rather go it alone for now.'), { a: a.name }));
+  const wait = refusedWait9(s, id);
+  if (wait) return bad(fmtL(l('{a} já recusou há pouco. Tente de novo em {n} semanas.', '{a} turned you down recently. Try again in {n} weeks.'), { a: a.name, n: wait }));
+  if (!r.chance(devChance12(s))) { markRefused9(s, id); return bad(fmtL(l('{a} prefere seguir sozinho por enquanto (volte em 6 meses).', '{a} would rather go it alone for now (come back in 6 months).'), { a: a.name })); }
   mg.clients.push({ actId: id, rate: 0.2, since: s.week, sat: 70, earned: 0 });
   const x = c12(s, id);
   x.dev = true;
@@ -501,7 +517,8 @@ function managerMonth(s: GameState, r: Rng): void {
     // confiança puxa a satisfação; renovação do mandato
     c.sat = clamp(c.sat + (x.trust - c.sat) * 0.1, 0, 100);
     if (x.mandate.until <= s.week) {
-      const p = clamp(x.trust / 100 + 0.2 - x.pressured * 0.08 - x.promises.filter((q) => q.kept === false).length * 0.1, 0.05, 0.98);
+      const p = renewChance12(s, a.id);
+      if (mgRenew12.f(s, a.id, p)) continue; // r19: a renovação vira cartão de decisão (careers19); o padrão sorteia aqui
       if (r.chance(p)) { x.mandate = { ...x.mandate, until: s.week + 104, legacy: false }; book(x, l('Mandato renovado por mais dois anos.', 'Mandate renewed for two more years.')); }
       else {
         dropClient(s, a.id);

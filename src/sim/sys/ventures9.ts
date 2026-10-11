@@ -41,7 +41,7 @@ export interface Client { actId: string; rate: number; since: number; sat: numbe
 export interface NpcVenture { kind: VKind; labelId: string; name: string; city: string; rep: number; y: number }
 export interface VenturesState {
   list: Venture[];
-  mg: { clients: Client[]; rep: number; owner: Holder; fired: { actId: string; y: number }[]; total: number };
+  mg: { clients: Client[]; rep: number; owner: Holder; fired: { actId: string; y: number }[]; total: number; /** r19: semana da última recusa por artista (espera antes de insistir) */ refused?: Record<string, number> };
   npc: NpcVenture[];
   log: { w: number; t: L }[];
 }
@@ -125,6 +125,8 @@ function log(s: GameState, t: L): void {
   if (st.log.length > 40) st.log.shift();
 }
 
+/** r19 (careers19): multiplicador dos custos fixos (terreno alugado, sala alugada, fanzine: estrutura de começo). */
+export const upkeepAdj9: { f: (s: GameState, v: Venture) => number } = { f: () => 1 };
 export function foundCost(s: GameState, kind: VKind, media?: MediaKind): number {
   return money(s, VKINDS[kind].cost * (kind === 'media' ? MEDIA[media ?? 'magazine'].mult : 1));
 }
@@ -136,7 +138,7 @@ export function valuation(s: GameState, v: Venture): number {
   return Math.max(Math.round(v.cost * 0.4), Math.round(v.cost * (0.5 + v.level * 0.25) * (0.5 + v.rep / 100) + Math.max(0, yearly) * 3));
 }
 export function upkeep(s: GameState, v: Venture): number {
-  return money(s, VKINDS[v.kind].upkeep * (v.kind === 'media' ? MEDIA[v.media ?? 'magazine'].mult : 1) * (0.6 + v.level * 0.4) + v.staff * STAFF_COST);
+  return Math.round(money(s, VKINDS[v.kind].upkeep * (v.kind === 'media' ? MEDIA[v.media ?? 'magazine'].mult : 1) * (0.6 + v.level * 0.4) + v.staff * STAFF_COST) * upkeepAdj9.f(s, v));
 }
 
 // ---------------------------------------------------------------- fundação e gestão
@@ -376,9 +378,11 @@ function publisherMonth(s: GameState, r: Rng, v: Venture): void {
     const pool = Object.values(s.acts).filter((a) => activeAct(a) && a.fame >= 10);
     if (pool.length) placeOne(s, r, v, w, r.pick(pool));
   }
-  let inc = 0;
-  for (const c of v.cat!) inc += c.v * Math.pow(0.97, s.year - c.y);
+  let inc = 0, own = 0;
+  // r19 (intra19): obra gravada pelo próprio selo — a mecânica é paga pelo selo (transferência interna), não vem de fora
+  for (const c of v.cat!) { const x = c.v * Math.pow(0.97, s.year - c.y); if (pubOwn19.is(s, c.actId)) own += x; else inc += x; }
   vpay(s, v.owner, inc * (1 + v.level * 0.08), `roy:${v.id}`, `Royalties ${v.name}`, v);
+  if (own) pubOwn19.pay(s, v, own * (1 + v.level * 0.08));
   if (v.cat!.length && r.chance(Math.min(0.05, v.cat!.length * 0.0015))) {
     const c = r.pick(v.cat!);
     if (r.chance(0.5 + v.rep / 300)) {
@@ -425,6 +429,8 @@ function studioMonth(s: GameState, r: Rng, v: Venture): void {
   v.rep = clamp(v.rep + (v.sound! - v.rep) * 0.05, 0, 100);
 }
 
+/** r19 (intra19): obras do catálogo gravadas por atos do próprio selo e quem paga a mecânica. Injetado: sem ciclo. */
+export const pubOwn19: { is: (s: GameState, actId: string) => boolean; pay: (s: GameState, v: Venture, amt: number) => void } = { is: () => false, pay: () => {} };
 /** Som da casa: o melhor estúdio do dono levanta a produção dos discos dos artistas do selo. */
 export function houseSound(s: GameState): number {
   return Math.max(0, ...ventures(s).list.filter((v) => v.kind === 'studio').map((v) => v.sound! * (0.6 + v.level * 0.08)));
@@ -615,11 +621,19 @@ function platformMonth(s: GameState, r: Rng, v: Venture): void {
 
 // ---------------------------------------------------------------- gestão de artistas
 
+/** r19: candidatos realistas — faixa de fama perto da reputação de empresário (não as 30 estrelas do mundo),
+ *  ordenados pela chance real (a 15%) ponderada pelo que o cliente renderia. */
 export function mgCandidates(s: GameState): Act[] {
   const mg = ventures(s).mg;
   const taken = new Set(mg.clients.map((c) => c.actId));
-  return Object.values(s.acts).filter((a) => activeAct(a) && !a.playerBand && a.fame >= 8 && !taken.has(a.id)).sort((a, b) => b.fame - a.fame).slice(0, 30);
+  const top = mg.rep + 30;
+  const pool = Object.values(s.acts).filter((a) => activeAct(a) && !a.playerBand && a.fame >= 8 && a.fame <= top && !taken.has(a.id));
+  const sc = new Map(pool.map((a) => [a.id, mgChance(s, a, 0.15) * (1 + a.fame / 25)]));
+  return pool.sort((a, b) => sc.get(b.id)! - sc.get(a.id)!).slice(0, 30);
 }
+/** r19: semanas até poder insistir com quem recusou (0 = livre). */
+export function refusedWait9(s: GameState, actId: string): number { const w = ventures(s).mg.refused?.[actId]; return w === undefined ? 0 : Math.max(0, w + 26 - s.week); }
+export function markRefused9(s: GameState, actId: string): void { const mg = ventures(s).mg; (mg.refused ??= {})[actId] = s.week; for (const k of Object.keys(mg.refused)) if (s.week - mg.refused[k] > 52) delete mg.refused[k]; }
 export function mgCap(s: GameState): number { return 2 + Math.floor(ventures(s).mg.rep / 20); }
 export function mgGross(s: GameState, a: Act): number { return money(s, 200 * Math.pow(1 + a.fame / 10, 1.6)) + Math.round(a.momentum * money(s, 15)); }
 
@@ -631,6 +645,8 @@ export function mgChance(s: GameState, a: Act, rate: number): number {
 }
 /** Rodada 14: ajustes externos à chance de conquistar um cliente (ex.: empresário rival que já o representa). */
 export const mgAdj9: ((s: GameState, a: Act) => number)[] = [];
+/** r19: ganho de reputação de empresário com retorno decrescente (fácil sair de 20, difícil passar de 80). */
+export const mgRepGain9 = (rep: number): number => clamp(1.1 - rep / 90, 0.08, 1);
 
 export function pitchClient(s: GameState, r: Rng, actId: string, rate: number): { ok: boolean; text: L } {
   const mg = ventures(s).mg;
@@ -638,7 +654,9 @@ export function pitchClient(s: GameState, r: Rng, actId: string, rate: number): 
   if (!activeAct(a) || mg.clients.some((c) => c.actId === actId)) return { ok: false, text: l('Inválido.', 'Invalid.') };
   if (mg.clients.length >= mgCap(s)) return { ok: false, text: l('Você não dá conta de mais artistas (a reputação de empresário aumenta o limite).', 'You cannot handle more acts (manager reputation raises the cap).') };
   rate = clamp(rate, 0.1, 0.2);
-  if (!r.chance(mgChance(s, a, rate))) return { ok: false, text: fmtL(l('{a} agradece, mas não quer você como empresário.', '{a} thanks you but does not want you as manager.'), { a: a.name }) };
+  const wait = refusedWait9(s, actId);
+  if (wait) return { ok: false, text: fmtL(l('{a} já disse não há pouco: insistir agora pega mal. Tente de novo em {n} semanas.', '{a} said no recently: pushing now looks bad. Try again in {n} weeks.'), { a: a.name, n: wait }) };
+  if (!r.chance(mgChance(s, a, rate))) { markRefused9(s, actId); return { ok: false, text: fmtL(l('{a} agradece, mas não quer você como empresário (volte a tentar em 6 meses).', '{a} thanks you but does not want you as manager (try again in 6 months).'), { a: a.name }) }; }
   mg.clients.push({ actId, rate, since: s.week, sat: 60, earned: 0 });
   remember(s, 'manager9', fmtL(l('Você passa a empresariar {a} ({p}% de comissão).', 'You start managing {a} ({p}% commission).'), { a: a.name, p: Math.round(rate * 100) }));
   return { ok: true, text: fmtL(l('{a} topou: você é o novo empresário.', '{a} agreed: you are the new manager.'), { a: a.name }) };
@@ -731,7 +749,7 @@ function managementMonth(s: GameState, r: Rng): void {
       notify(s, t, 'bad');
       continue;
     }
-    if (c.sat > 60) mg.rep = clamp(mg.rep + 0.3, 0, 100);
+    if (c.sat > 60) mg.rep = clamp(mg.rep + 0.3 * mgRepGain9(mg.rep), 0, 100); // r19: retorno decrescente perto do topo
   }
 }
 

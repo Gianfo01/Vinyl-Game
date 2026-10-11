@@ -37,7 +37,7 @@ export interface Proj {
   job: PJob; step: number; terms?: 'flat' | 'points'; intent?: 'faithful' | 'reinvent' | 'commercial'; style?: Style; mus?: 'band' | 'session' | 'synth'; app?: 'live' | 'overdub' | 'hybrid'; room?: string;
   cf?: 'single' | 'deadline' | 'budget'; cfPick?: string; take?: string; sc: { prec: number; emo: number; com: number; art: number; lab: number; time: number }; cost: number; ev: L[]; done?: { q: number; art: number; lab: number; pay: number; why: L[] };
 }
-export interface Producer { on: boolean; skill: { ear: number; arr: number; people: number }; sig: Style; fresh: number; learning: number; rep: number; credits: Credit[]; offers: PJob[]; proj: Proj | null; pending: { due: number; amt: number; memo: string }[]; boost: Record<string, number>; total: number }
+export interface Producer { on: boolean; skill: { ear: number; arr: number; people: number }; sig: Style; fresh: number; learning: number; rep: number; credits: Credit[]; offers: PJob[]; proj: Proj | null; pending: { due: number; amt: number; memo: string; own?: string }[]; boost: Record<string, number>; total: number }
 export interface Studio12 { by: Record<string, StudioX>; prod: Producer }
 declare module '../ext4' { interface Ext4 { studio12: Studio12 } }
 const freshP = (): Producer => ({ on: false, skill: { ear: 40, arr: 35, people: 40 }, sig: 'warm', fresh: 70, learning: 0, rep: 15, credits: [], offers: [], proj: null, pending: [], boost: {}, total: 0 });
@@ -289,8 +289,8 @@ export function deliver(s: GameState, r: Rng): void {
   if (P.fresh < 35) why.push(l('Sua assinatura soa datada: pesa na nota e no cachê.', 'Your signature sounds dated: it weighs on the grade and on your fee.'));
   const w0 = ownerOf(s);
   let pay = 0;
-  if (pr.terms === 'flat') { pay = Math.round(j.fee * (0.9 + q / 500)); w0.wealth += pay; why.push(l('Cachê fixo recebido agora.', 'Flat fee received now.')); }
-  else { const amt = pointsEV(s, a, j.pts, q); P.pending.push({ due: mIdx(s) + 12, amt, memo: a.name }); pay = amt; why.push(l('Pontos: o dinheiro só chega em 12 meses, conforme as vendas.', 'Points: money only arrives in 12 months, following sales.')); }
+  if (pr.terms === 'flat') { pay = Math.round(j.fee * (0.9 + q / 500)); if (j.own) pay = prodOwn19.f(s, a, pay, why); else w0.wealth += pay; why.push(l('Cachê fixo recebido agora.', 'Flat fee received now.')); }
+  else { const amt = pointsEV(s, a, j.pts, q); P.pending.push({ due: mIdx(s) + 12, amt, memo: a.name, own: j.own ? a.id : undefined }); pay = amt; why.push(l('Pontos: o dinheiro só chega em 12 meses, conforme as vendas.', 'Points: money only arrives in 12 months, following sales.')); }
   w0.wealth -= pr.cost; P.total += pay - pr.cost;
   P.credits.push({ y: s.year, act: a.name, q, style: pr.style ?? P.sig });
   if (P.credits.length > 40) P.credits.shift();
@@ -303,6 +303,9 @@ export function deliver(s: GameState, r: Rng): void {
   pr.done = { q, art, lab, pay, why };
 }
 export function closeProject(s: GameState): void { prod(s).proj = null; }
+/** r19 (intra19): produzir o disco do próprio selo é transferência interna (o selo paga o produtor, que é você);
+ *  devolve o que o produtor recebeu. Padrão antigo: dinheiro do nada no patrimônio. Injetado: sem ciclo. */
+export const prodOwn19: { f: (s: GameState, a: Act, amt: number, why: L[]) => number } = { f: (s, _a, amt) => { ownerOf(s).wealth += amt; return amt; } };
 
 registerSimHook('year', 'studio12', (s) => {
   const P = prod(s); if (!P.on) return;
@@ -312,7 +315,7 @@ registerSimHook('month', 'studio12', (s) => {
   const r = Rng.fromSeed(`${s.config.seed}:studio12:${s.year}:${s.month}`);
   for (const v of studios(s)) studioMonth(s, r, v);
   const P = prod(s), now = mIdx(s);
-  for (const p of P.pending.filter((z) => z.due <= now)) { ownerOf(s).wealth += p.amt; P.total += 0; notify(s, fmtL(l('Pontos do disco de {a} renderam {m}.', 'Points on {a}\'s record paid {m}.'), { a: p.memo, m: Math.round(p.amt / 100).toLocaleString() }), 'good'); }
+  for (const p of P.pending.filter((z) => z.due <= now)) { if (p.own && s.acts[p.own]) p.amt = prodOwn19.f(s, s.acts[p.own], p.amt, []); else ownerOf(s).wealth += p.amt; P.total += 0; notify(s, fmtL(l('Pontos do disco de {a} renderam {m}.', 'Points on {a}\'s record paid {m}.'), { a: p.memo, m: Math.round(p.amt / 100).toLocaleString() }), 'good'); }
   P.pending = P.pending.filter((z) => z.due > now);
   if (!P.on) return;
   P.offers = P.offers.filter(() => r.chance(0.8));
