@@ -2,6 +2,7 @@
 // criam, sua revista e a linha editorial, críticos que viram editores, arquivo de mídia da época) e "Fraudes e sósias"
 // (fakes19: voz-fantasma e dublagem, bandas-fantasma, vozes de IA, leis e crônica real).
 
+import { fmtL19 } from '../../sim/era19';
 import { OUTLETS17 } from '../../data/media17';
 import { SCENES17 } from '../../data/heritage17';
 import { cityById, genreById, l, type L } from '../../data/world';
@@ -11,7 +12,7 @@ import { media19Counts, showName19, showsNow19 } from '../../sim/sys/media19';
 import { FR18 } from '../../sim/sys/tv18';
 import { SCENE_HEAT19, buyOutlet19, buyable19, closeZine19, editorPay19, editorsFor19, foundZine19, hireEditor19, outletPrice19, ownOutlet19, sellOutlet19, setLine19, zScenesLive19, zineCost19, zinesLive19, zn19 } from '../../sim/sys/zines19';
 import type { GameState } from '../../sim/types';
-import { playerActs } from '../../sim/util';
+import { hasTech, playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { why18 } from '../explain18';
@@ -103,7 +104,7 @@ function lipTab(s: GameState): HTMLElement {
   const st = fk19(s);
   const acts = mine(s).filter((a) => !a.playerBand);
   return h('div', null,
-    muted(l('Voz-fantasma: um cantor de estúdio grava escondido e o ato só dubla. Discos +10% de apelo; o risco sobe todo mês com a fama e a cada playback na TV. Exposto: escândalo, reembolsos, fãs embora e prêmios dos últimos 5 anos cassados.', 'Ghost voice: a session singer records in secret and the act just mimes. Records get +10% appeal; the risk rises every month with fame and with each TV playback. Exposed: scandal, refunds, fans leaving and awards from the last 5 years revoked.')),
+    muted(fmtL19(l('Voz-fantasma: um cantor de estúdio grava escondido e o ato só dubla. Discos +10% de apelo; o risco sobe todo mês com a fama e a cada {p}. Exposto: escândalo, reembolsos, fãs embora e prêmios dos últimos 5 anos cassados.', 'Ghost voice: a session singer records in secret and the act just mimes. Records get +10% appeal; the risk rises every month with fame and with each {p}. Exposed: scandal, refunds, fans leaving and awards from the last 5 years revoked.'), { p: hasTech(s, 'tv_music') ? l('playback na TV', 'TV playback') : l('apresentação dublada', 'mimed appearance') })),
     acts.length ? h('div', null, ...acts.map((a) => {
       const x = st.lip.find((y) => y.act === a.id && !y.exp);
       return card(row(actLink(s, a.id), x ? pill(t(x.end ? l('parado (risco esfriando)', 'stopped (risk cooling)') : l('voz-fantasma ativa', 'ghost voice active')), 'warn') : null,

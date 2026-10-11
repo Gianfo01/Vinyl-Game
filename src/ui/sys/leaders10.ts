@@ -1,6 +1,7 @@
 // Interface da rodada 10: perfil dos líderes das gravadoras (ficha do selo, Mundo → Gravadoras) e a
 // tabela de estratégias e líderes de todos os selos ativos.
 
+import { pbText19 } from '../../sim/era19';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { BG_TXT, STYLE_TXT, ageOf, describeLeader, jobEndText, leaderOf, leaders, type Leader } from '../../sim/sys/leaders10';
@@ -63,7 +64,7 @@ export function leaderBody(s: GameState, L0: Leader, full = true): HTMLElement {
       L0.note ? h('p', { class: 'small muted' }, t(L0.note)) : null)),
     h('h4', null, t(l('Liderança', 'Leadership'))),
     h('p', null, pill(t(STYLE_TXT[L0.style][0]), 'gold'), ' ', h('span', { class: 'small muted' }, t(STYLE_TXT[L0.style][1]))),
-    h('p', { class: 'small' }, h('b', null, t(l('Estratégia preferida: ', 'Preferred strategy: '))), t(pb.name), h('span', { class: 'muted' }, ` — ${t(pb.desc)}`)),
+    h('p', { class: 'small' }, h('b', null, t(l('Estratégia preferida: ', 'Preferred strategy: '))), t(pb.name), h('span', { class: 'muted' }, ` — ${t(pbText19(s, L0.pref, pb).desc)}`)),
     lb && playbookOf(lb) !== L0.pref ? h('p', { class: 'small muted' }, t(l('O selo ainda segue outra estratégia; o líder pode mudá-la.', 'The label still follows another strategy; the leader may change it.'))) : null,
     h('div', { class: 'kv' }, h('span', { class: 'k' }, t(l('Ambição', 'Ambition'))), h('span', { class: 'v' }, bar(L0.amb), ` ${L0.amb}`)),
     h('div', { class: 'kv' }, h('span', { class: 'k' }, t(l('Apetite a risco', 'Risk tolerance'))), h('span', { class: 'v' }, bar(L0.risk), ` ${L0.risk}`)),
@@ -147,7 +148,7 @@ export function leadersTab(s: GameState): HTMLElement {
           const rel = L0?.rel.player ?? 0;
           return h('tr', null,
             h('td', null, labelLink(s, lb.id)),
-            h('td', { title: `${t(pb.desc)}\n${pb.tells.map((x) => '• ' + t(x)).join('\n')}` }, pill(t(pb.name), 'gold')),
+            h('td', { title: ((x) => `${t(x.desc)}\n${x.tells.map((y) => '• ' + t(y)).join('\n')}`)(pbText19(s, playbookOf(lb), pb)) }, pill(t(pb.name), 'gold')),
             h('td', null, leaderLink(s, L0)),
             h('td', null, L0 ? String(ageOf(s, L0)) : '—'),
             h('td', null, L0 ? t(STYLE_TXT[L0.style][0]) : '—'),
@@ -156,6 +157,6 @@ export function leadersTab(s: GameState): HTMLElement {
         })),
     ),
     h('h4', null, t(l('Os manuais', 'The playbooks'))),
-    h('ul', { class: 'small' }, [...new Set(list.map((lb) => playbookOf(lb)))].map((id) => h('li', null, h('b', null, t(PLAYBOOKS[id].name)), ' — ', t(PLAYBOOKS[id].desc), h('span', { class: 'muted' }, ` ${t(l('Sinais:', 'Tells:'))} ${PLAYBOOKS[id].tells.map((x) => t(x)).join(' ')}`)))),
+    h('ul', { class: 'small' }, [...new Set(list.map((lb) => playbookOf(lb)))].map((id) => h('li', null, h('b', null, t(PLAYBOOKS[id].name)), ' — ', t(pbText19(s, id, PLAYBOOKS[id]).desc), h('span', { class: 'muted' }, ` ${t(l('Sinais:', 'Tells:'))} ${pbText19(s, id, PLAYBOOKS[id]).tells.map((x) => t(x)).join(' ')}`)))),
   );
 }

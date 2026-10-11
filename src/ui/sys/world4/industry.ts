@@ -1,6 +1,7 @@
 // Abas e seções de indústria: jabá e rádio, paradas e metodologia (manipulação), mais paradas,
 // feiras e hype, fã-clubes oficiais, leis e sindicatos (com selo de aviso) e pirataria.
 
+import { ERA19 } from '../../../sim/era19';
 import { FAMILIES, GENRES, l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
 import { isUnlocked } from '../../../sim/era';
@@ -28,7 +29,7 @@ export function radioTab(s: GameState): HTMLElement {
   const p = w.payola;
   const radio = hasTech(s, 'radio');
   return h('div', null,
-    section(t(curator ? l('Curadores de playlist', 'Playlist curators') : l('Jabá e rádio', 'Payola and radio')),
+    section(t(curator ? l('Curadores de playlist', 'Playlist curators') : ERA19.payola(s)),
       h('div', { class: 'row' }, pill(t(info.name), era === 'legal' ? '' : era === 'indie' ? 'warn' : 'bad'), h('span', { class: 'small' }, t(info.desc))),
       meter(curator ? 'stream' : 'radio', curator ? l('Relação com curadores', 'Curator relationship') : l('Relação com DJs e programadores', 'DJ and programmer relationship'), curator ? p.curator : p.dj),
       meter('chart-up', l('Empurrão atual nas paradas', 'Current chart push'), p.level * 100, 45),

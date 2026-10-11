@@ -28,6 +28,8 @@ export interface ExtraTab {
   order?: number;
   /** some quando falso (ex.: o que ainda não existe no ano do jogo) */
   visible?: (s: GameState) => boolean;
+  /** r19: rótulo de época (ex.: "Público e streaming" só com streaming); ausente = `label` */
+  labelAt?: (s: GameState) => L;
 }
 
 export interface ExtraSection {
@@ -83,7 +85,7 @@ export function registerCutscene(kind: string, render: (s: GameState, cs: Cutsce
 
 /** Abas extras no formato de `tabs()` de vis.ts. */
 export function extraTabs(host: TabHost, s: GameState): { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement; order: number }[] {
-  return (TABS[host] ?? []).filter((x) => !x.visible || x.visible(s)).map((x) => ({ id: x.id, label: t(x.label), icon: x.icon, badge: x.badge?.(s), render: () => x.render(s), order: x.order ?? 60 }));
+  return (TABS[host] ?? []).filter((x) => !x.visible || x.visible(s)).map((x) => ({ id: x.id, label: t(x.labelAt?.(s) ?? x.label), icon: x.icon, badge: x.badge?.(s), render: () => x.render(s), order: x.order ?? 60 }));
 }
 
 /** Junta abas existentes (ordem 50) e extras, ordenadas. */

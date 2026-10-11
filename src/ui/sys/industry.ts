@@ -1,5 +1,6 @@
 // Interface do sistema de indústria: área "Indústria" (tecla I) e edição de salas na Sede.
 
+import { txt19 } from '../../sim/era19';
 import { CITIES, MARKETS, cityById, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { PLANT_LEVELS, buildPlant, pressCapacity, upgradePlant } from '../../sim/sys/industry/supply';
@@ -114,7 +115,7 @@ function researchTab(s: GameState): HTMLElement {
       const err = canResearch(s, n.id);
       return h('div', { class: `tile ${done ? 'good' : ''} ${st.current === n.id ? 'on' : ''}` },
         h('div', { class: 'tile-ic' }, ic(done ? 'sparkle' : 'bulb', 2)),
-        h('div', { class: 'tile-body' }, h('b', null, t(n.name)), h('small', null, t(n.desc)), h('small', { class: 'muted' }, `${n.cost} ${t(l('pontos', 'points'))}`),
+        h('div', { class: 'tile-body' }, h('b', null, t(txt19(s, `research:${n.id}:name`, n.name))), h('small', null, t(txt19(s, `research:${n.id}`, n.desc))), h('small', { class: 'muted' }, `${n.cost} ${t(l('pontos', 'points'))}`),
           done ? pill(t(l('concluída', 'done')), 'good') : st.current === n.id ? pill(t(l('em andamento', 'in progress')), 'warn') : h('button', { class: 'btn small', disabled: !!err, title: err ? t(err) : '', onclick: () => say(startResearch(s, n.id), l('Pesquisa iniciada.', 'Research started.')) }, t(l('Pesquisar', 'Research')))));
     })),
   );

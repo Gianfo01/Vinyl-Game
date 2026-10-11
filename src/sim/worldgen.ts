@@ -8,7 +8,7 @@ import { registerMovementGenres } from './culture';
 import { clamp, hashString, Rng, seedState } from '../core/rng';
 import { nominal } from '../core/money';
 import { CATALOG_ACTS, CATALOG_LABELS } from '../data/catalog';
-import { REAL_ACTS, REAL_LABELS, applyRealNames } from '../data/realnames';
+import { REAL_ACTS, REAL_LABELS, applyRealNames, realFounded } from '../data/realnames';
 import { dbSizeInfo } from './dbsize14';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { EXTRA_LABELS } from '../data/labels10';
@@ -74,9 +74,12 @@ export const DEFAULT_LABEL_IDS = (): string[] => CATALOG_LABELS.map((d) => d.id)
 const PROC_A = ['Golden', 'Silver', 'Velvet', 'Thunder', 'Harmony', 'Echo', 'Paramount', 'Liberty', 'Crown', 'Apex', 'Cobalt', 'Lantern', 'Riverbend', 'Skyline', 'Orchid', 'Granada'];
 const PROC_B = ['Records', 'Discos', 'Music', 'Sound', 'Recordings', 'Phonograph Co.', 'Audio'];
 
+/** r19: no modo nomes reais, o selo real não nasce antes do ano documentado. */
+const realDef = <T extends { id: string; founded: number }>(d: T, cfg: RunConfig): T => (cfg.realNames ? { ...d, founded: realFounded(d.id, d.founded) } : d);
+
 function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
   const set = cfg.labels!;
-  const pool = labelPool();
+  const pool = labelPool().map((d) => realDef(d, cfg));
   const byId = new Map(pool.map((d) => [d.id, d]));
   const startY = cfg.startYear;
   const future = set.future ?? 'default';
@@ -306,7 +309,8 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   const equal = cfg.labels?.start === 'equal';
   const chosenLabels = !!cfg.labels && (!!cfg.labels.ids || cfg.labels.count !== undefined || equal);
   if (chosenLabels) setupLabels(s, r, cfg);
-  else for (const def of CATALOG_LABELS) {
+  else for (const def0 of CATALOG_LABELS) {
+    const def = realDef(def0, cfg);
     const founded = cfg.mode === 'chaos' ? def.founded + r.int(-12, 12) : cfg.mode === 'free' ? def.founded + r.int(-4, 4) : def.founded;
     makeLabel(s, r, { ...def, name: cfg.realNames ? REAL_LABELS[def.id] ?? def.name : def.name, founded: def.id === 'cortex' ? Math.max(founded, s.techDates.synthetic_voice - 2) : founded });
   }
@@ -503,7 +507,7 @@ function takeoverLabel(s: GameState, id: string): Label | undefined {
   let lb: Label | undefined = s.labels[id];
   const r = new Rng(seedState(`${cfg.seed}:tk11:${id}`));
   if (!lb?.active) {
-    const def = labelPool().find((d) => d.id === id && d.founded <= cfg.startYear);
+    const def = labelPool().map((d) => realDef(d, cfg)).find((d) => d.id === id && d.founded <= cfg.startYear);
     if (!def) return lb;
     delete s.labels[id];
     for (const x of Object.values(s.labels)) if (x.parentLabel === id) delete x.parentLabel;

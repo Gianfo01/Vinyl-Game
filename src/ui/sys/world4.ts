@@ -3,6 +3,7 @@
 // mercados com regras próprias), em Paradas (mais paradas) e em Artistas (fã-clubes oficiais),
 // mais a cena da investigação de jabá.
 
+import { ERA19 } from '../../sim/era19';
 import './world4.css';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -20,6 +21,7 @@ import { fairsTab, fanClubsSection, lawsSection, methodTab, moreChartsSection, p
 registerTab('mediaHub', {
   id: 'w4radio', icon: 'radio', order: 60,
   label: l('Jabá e rádio', 'Payola and radio'),
+  labelAt: ERA19.payola,
   render: radioTab,
   badge: (s) => (w4(s).payola.heat > 60 && payolaEra(s) !== 'legal' ? 1 : undefined),
 });

@@ -1,6 +1,7 @@
 // Rodada 19 (Frente 5, onda 3 — T4) — página "Palco e temporada" (grupo Música): boicote ao monopólio de ingressos,
 // festival gratuito, vinil e Record Store Day, calendário sazonal (curva por era), beneficentes e concursos.
 
+import { ERA19 } from '../../sim/era19';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CAUSES18, soc18 } from '../../sim/sys/society18';
@@ -137,7 +138,7 @@ function page(s: GameState): HTMLElement {
     tabs('live19', [
       { id: 'tickets', label: t(l('Ingressos', 'Ticketing')), badge: activeBoy19(s).length || undefined, render: () => ticketsTab(s) },
       { id: 'free', label: t(l('Festival grátis', 'Free festival')), render: () => freeTab(s) },
-      { id: 'vinyl', label: t(l('Vinil e RSD', 'Vinyl and RSD')), render: () => vinylTab(s) },
+      { id: 'vinyl', label: t(ERA19.vinyl(s)), render: () => vinylTab(s) },
       { id: 'season', label: t(l('Temporada', 'Season')), render: () => seasonTab(s) },
       { id: 'charity', label: t(l('Beneficentes', 'Benefits')), render: () => charityTab(s) },
       { id: 'contests', label: t(l('Concursos', 'Contests')), render: () => contestsTab(s) },

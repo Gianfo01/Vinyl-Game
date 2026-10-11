@@ -1,6 +1,7 @@
 // Aba "Habilidades" da área Você (rodada 9): árvore por ramos com pré-requisitos, custo, efeitos e botão
 // de compra; pontos livres, marcos que dão pontos e o estilo de vida derivado (com os 10 estilos).
 
+import { ERA19, skillName19 } from '../../sim/era19';
 import './skills.css';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -23,16 +24,16 @@ export function skillsTab(s: GameState): HTMLElement {
       section(`${t(l('Habilidades', 'Abilities'))} — ${t(l('{n} pontos livres', '{n} free points'), { n: S0.points })}`,
         h('p', { class: 'muted small' }, t(l('Ganhe {y} pontos por ano, +1 em cada marco e pontos por prêmios, nº 1, hits, certificações e turnês esgotadas (veja Fontes de pontos). Cada habilidade pede as anteriores do ramo (setas). Custo: 1 nos níveis 1–2, 2 nos níveis 3–4, 3 no topo.', 'Earn {y} points a year, +1 per milestone and points for awards, #1s, hits, certifications and sold-out tours (see Point sources). Each ability needs the earlier ones in its branch (arrows). Cost: 1 at tiers 1–2, 2 at tiers 3–4, 3 at the top.'), { y: YEARLY_SKILL_POINTS })),
         h('div', { class: 'sk-tree sk-tree8' }, BRANCHES.map((b) => h('div', { class: 'sk-branch' },
-          h('b', null, ic(b.icon), ' ', t(b.name), h('small', { class: 'muted' }, ` · ${bp[b.id]} ${t(l('pts', 'pts'))}`)),
-          h('small', { class: 'muted' }, t(b.desc)),
+          h('b', null, ic(b.icon), ' ', t(b.id === 'digital' ? ERA19.digitalSkill(s) : b.name), h('small', { class: 'muted' }, ` · ${bp[b.id]} ${t(l('pts', 'pts'))}`)),
+          h('small', { class: 'muted' }, t(b.id === 'digital' ? ERA19.digitalSkillDesc(s) : b.desc)),
           ...SKILL_TREE.filter((x) => x.branch === b.id).map((d) => {
             const on = S0.owned.includes(d.id);
             const ok = canBuySkill(S0.owned, S0.points, d.id);
             const reqOk = d.req.every((x) => S0.owned.includes(x));
             return h('div', { class: `sk ${on ? 'on' : ''} ${!on && !reqOk ? 'locked' : ''}` },
-              h('span', null, h('b', null, `${d.tier}. ${t(d.name)}`), h('small', { class: 'muted' }, ` (${d.cost})`)),
+              h('span', null, h('b', null, `${d.tier}. ${t(skillName19(s, d.id, d.name))}`), h('small', { class: 'muted' }, ` (${d.cost})`)),
               h('small', null, fxText(d.values, d.attrs) || t(l('Saúde +0,5/mês', 'Health +0.5/month'))),
-              d.req.length ? h('small', { class: 'muted' }, '← ', d.req.map((x) => t(skillById[x]?.name)).join(' + ')) : null,
+              d.req.length ? h('small', { class: 'muted' }, '← ', d.req.map((x) => t(skillName19(s, x, skillById[x]?.name))).join(' + ')) : null,
               on ? h('small', { class: 'good' }, '✔ ', t(l('aprendida', 'learned')))
                 : h('button', { class: 'btn small', disabled: !ok, onclick: () => say(buySkill(s, d.id), l('Habilidade aprendida.', 'Ability learned.')) }, t(l('Aprender', 'Learn'))));
           }))),

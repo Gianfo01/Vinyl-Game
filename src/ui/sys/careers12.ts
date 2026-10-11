@@ -2,6 +2,7 @@
 // painel em Empreendimentos e um cartão por carreira na mesa (registerCareerCard deixa cada sistema
 // desenhar o próprio cartão).
 
+import { txt19 } from '../../sim/era19';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState, RunConfig } from '../../sim/types';
@@ -72,7 +73,7 @@ export function careersPanel(s: GameState): HTMLElement {
       h('table', { class: 'tbl compact' }, h('tbody', null, careerDefs(s).map((d) => {
         const on = st.active.includes(d.id);
         return h('tr', { class: on ? 'me' : '' },
-          h('td', null, h('b', null, t(d.name)), h('div', { class: 'small muted' }, t(d.desc))),
+          h('td', null, h('b', null, t(d.name)), h('div', { class: 'small muted' }, t(txt19(s, `career:${d.id}`, d.desc)))),
           h('td', { class: 'small' }, on ? `${t(l('desde', 'since'))} ${st.started[d.id] ?? s.year}` : `${Math.round(d.load * 100)}% ${t(l('da agenda', 'of schedule'))}`),
           h('td', null, on ? h('div', { class: 'row' }, h('button', { class: 'btn tiny', onclick: () => openCareer(d.id) }, t(l('Abrir', 'Open'))), d.id === 'label' ? h('button', { class: 'btn tiny ghost', title: t(l('Em vez de abandonar, venda o selo (r17)', 'Instead of abandoning it, sell the label (r17)')), onclick: () => { setTab('biz17', 'sale'); store.area = 'biz17'; rerender(); } }, t(l('Vender', 'Sell'))) : h('button', { class: 'btn tiny ghost', onclick: () => res(dropCareer(s, d.id)) }, t(l('Largar', 'Drop'))))
             : h('button', { class: 'btn tiny primary', onclick: () => res(startCareer(s, d.id)) }, t(l('Começar', 'Start')))));

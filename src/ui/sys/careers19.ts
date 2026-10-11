@@ -12,6 +12,7 @@ import { f12, muOf } from '../../sim/sys/fest12';
 import { festCap19 } from '../../sim/sys/live/festival';
 import { VKINDS, ventures, type VKind } from '../../sim/sys/ventures9';
 import { prod } from '../../sim/sys/studio12';
+import { careers } from '../../sim/sys/careers12';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerTab } from '../registry';
@@ -65,8 +66,10 @@ FEST_EXTRA12.push((s, f) => {
 
 // ---------------------------------------------------------------- Finanças: grupo e consolidado
 
-interface Row19 { name: string; rev: number; cost: number; inn: number; out: number }
-function rows19(s: GameState): Row19[] {
+interface Row19 { name: string; rev: number; cost: number; inn: number; out: number; sub?: boolean }
+/** r19 smoke: todo negócio ativo do jogador aparece (mesmo com receita zero); os que pertencem ao selo vêm como
+ *  linha "dentro do selo" (já somados na DRE do selo, fora do total para não contar duas vezes). */
+export function rows19(s: GameState): Row19[] {
   const Y = intraYear19(s);
   const f = fin18(s).y[s.year];
   const out: Row19[] = [];
@@ -74,14 +77,14 @@ function rows19(s: GameState): Row19[] {
   out.push({ name: t(l('Selo / empresa (DRE do ano)', 'Label / company (P&L this year)')), rev: sumP18(f, 'rev:'), cost: -sumP18(f, 'cost:'), inn: lab.inn, out: lab.out });
   for (const v of ventures(s).list) {
     const pl = v.pl.filter((e) => e.y === s.year);
-    if (v.owner === 'label') continue; // já está na DRE do selo
+    const sub = v.owner === 'label';
     const tl = Y[v.id] ?? { inn: 0, out: 0 };
-    out.push({ name: `${v.name} (${t(l('pessoal', 'personal'))})`, rev: pl.reduce((a, e) => a + e.rev, 0), cost: pl.reduce((a, e) => a + e.cost, 0), inn: tl.inn, out: tl.out });
+    out.push({ name: `${v.name} · ${t(VKINDS[v.kind]?.name ?? l('Negócio', 'Business'))} (${t(sub ? l('dentro do selo', 'inside the label') : l('pessoal', 'personal'))})`, rev: pl.reduce((a, e) => a + e.rev, 0), cost: pl.reduce((a, e) => a + e.cost, 0), inn: tl.inn, out: tl.out, sub });
   }
   const P = Y.producer;
   if (P || prod(s).on) out.push({ name: t(l('Produtor (você, patrimônio pessoal)', 'Producer (you, personal wealth)')), rev: P?.inn ?? 0, cost: 0, inn: P?.inn ?? 0, out: P?.out ?? 0 });
-  const M = Y.manager;
-  if (M) out.push({ name: t(l('Empresário', 'Manager')), rev: M.inn, cost: M.out, inn: M.inn, out: M.out });
+  const M = Y.manager, mg = ventures(s).mg;
+  if (M || mg.clients.length || careers(s).active.includes('manager')) out.push({ name: t(l('Empresário', 'Manager')), rev: M?.inn ?? 0, cost: M?.out ?? 0, inn: M?.inn ?? 0, out: M?.out ?? 0 });
   return out;
 }
 
@@ -89,7 +92,7 @@ function grupoTab(s: GameState): HTMLElement {
   const st = intra19(s);
   const f = fin18(s).y[s.year];
   const rows = rows19(s);
-  const tot = rows.reduce((a, r) => ({ rev: a.rev + r.rev, cost: a.cost + r.cost, inn: a.inn + r.inn, out: a.out + r.out }), { rev: 0, cost: 0, inn: 0, out: 0 });
+  const tot = rows.filter((r) => !r.sub).reduce((a, r) => ({ rev: a.rev + r.rev, cost: a.cost + r.cost, inn: a.inn + r.inn, out: a.out + r.out }), { rev: 0, cost: 0, inn: 0, out: 0 });
   const conf = conflicts19(s);
   const pol = (k: HouseK) => h('div', { class: 'row wrap small' }, h('b', null, t(HOUSE_NAME[k])), ' ',
     select<HouseP>(st.house[k], [{ value: 'market', label: t(l('Preço de mercado', 'Market price')) }, { value: 'discount', label: t(l('Desconto da casa', 'House discount')) }], (v) => { setHouse19(s, k, v); rerender(); }),
@@ -98,7 +101,7 @@ function grupoTab(s: GameState): HTMLElement {
     section(t(l('DRE por negócio × consolidada ({y})', 'P&L by business × consolidated ({y})'), { y: s.year }),
       h('table', { class: 'tbl compact' },
         h('thead', null, h('tr', null, ...[l('Negócio', 'Business'), l('Receita', 'Revenue'), l('Custos', 'Costs'), l('Recebido de negócios seus', 'Received from your businesses'), l('Pago a negócios seus', 'Paid to your businesses'), l('Resultado', 'Result')].map((x) => h('th', null, t(x))))),
-        h('tbody', null, ...rows.map((r) => h('tr', null, h('td', null, r.name), h('td', null, $(r.rev)), h('td', null, $(-r.cost)), h('td', { class: 'muted' }, $(r.inn)), h('td', { class: 'muted' }, $(-r.out)), h('td', { class: r.rev - r.cost < 0 ? 'bad' : 'good' }, $(r.rev - r.cost)))),
+        h('tbody', null, ...rows.map((r) => h('tr', r.sub ? { class: 'muted' } : null, h('td', null, r.name), h('td', null, $(r.rev)), h('td', null, $(-r.cost)), h('td', { class: 'muted' }, $(r.inn)), h('td', { class: 'muted' }, $(-r.out)), h('td', { class: r.rev - r.cost < 0 ? 'bad' : 'good' }, $(r.rev - r.cost)))),
           h('tr', null, h('td', null, h('b', null, t(l('= Consolidado (sem transferências internas)', '= Consolidated (internal transfers removed)')))), h('td', null, $(tot.rev - tot.inn)), h('td', null, $(-(tot.cost - tot.out))), h('td', null, '—'), h('td', null, '—'), h('td', null, h('b', null, $(tot.rev - tot.inn - (tot.cost - tot.out))))))),
       h('p', { class: 'small' }, why18(s, 'intra19.house', {}, t(l('Transferências internas no ano: {v}', 'Internal transfers this year: {v}'), { v: $(intraTotal19(s)) })), ' · ',
         t(l('Lucro operacional do selo: {a} · consolidado: {b}', 'Label operating profit: {a} · consolidated: {b}'), { a: $(opProfit18(f)), b: $(consolOp18(f)) })),

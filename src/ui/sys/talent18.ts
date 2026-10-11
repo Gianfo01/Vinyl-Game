@@ -3,6 +3,7 @@
 // estrelas; banda da casa; escolas de música e bolsas; TV de talentos. E a aba "Acervo vivo" em Lendas (relíquias
 // nascidas na partida, legado → valor, perícia, ala-museu, exposição itinerante).
 
+import { ERA19 } from '../../sim/era19';
 import { FAMILIES, l, type FamilyId, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { estTxt18 } from '../../sim/sys/discover18';
@@ -143,7 +144,7 @@ function tvTab(s: GameState): HTMLElement {
   const pp = playerPerson(s);
   const judges = [...(pp ? [pp.id] : []), ...playerActs(s).flatMap((id) => s.acts[id]?.members ?? [])].filter((id, i, a) => a.indexOf(id) === i && s.persons[id]?.alive);
   return h('div', null,
-    section(fr ? t(frName18(s, fr)) : t(l('TV de talentos', 'TV talent shows')),
+    section(fr ? t(frName18(s, fr)) : t(ERA19.talentShow(s)),
       fr ? muted(fr.desc) : muted(l('Nenhum programa de calouros no seu mercado nesta época.', 'No talent show in your market in this era.')),
       se ? h('div', null,
         row(pill(t(se.stage === 'casting' ? l('seleção', 'casting') : se.stage === 'live' ? l('ao vivo', 'live') : l('encerrada', 'finished')), se.stage === 'live' ? 'warn' : ''),
@@ -170,7 +171,7 @@ registerArea({ id: 'talent18', label: l('Talentos e formação', 'Talent & train
     { id: 'camps', label: t(l('Composição', 'Songwriting')), icon: 'pen', badge: camps18(s).pitches.filter((p) => !p.done && p.until >= s.week).length || undefined, render: () => campsTab(s) },
     { id: 'band', label: t(l('Banda da casa', 'House band')), icon: 'guitar', render: () => bandTab(s) },
     { id: 'school', label: t(l('Escolas', 'Schools')), icon: 'note', render: () => schoolTab(s) },
-    { id: 'tv', label: t(l('TV de talentos', 'TV talent shows')), icon: 'star', render: () => tvTab(s) },
+    { id: 'tv', label: t(ERA19.talentShow(s)), icon: 'star', render: () => tvTab(s) },
   ], rerender)) });
 
 // ---------------------------------------------------------------- Lendas → Acervo vivo

@@ -43,7 +43,7 @@ function makeView(s: GameState, year?: number): View {
   }
   const bs = buildings18(s);
   const amb = [...ambient18(s), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n }))];
-  return { s, bs, year: s.year, live: true, scene: buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s), lms) };
+  return { s, bs, year: s.year, live: true, scene: buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms) };
 }
 /** Iniciais do selo (placa da sede e letreiro). */
 export const brand18 = (s: GameState): string => (s.config.companyName.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).map((w) => w[0]).join('').toUpperCase().slice(0, 3) || 'REC');
@@ -240,7 +240,7 @@ function mapFrame(v: View): HTMLElement {
     if (sp.nb ? !ui.f.nb : !ui.f.mine) continue;
     const b = v.bs.find((x) => x.id === sp.id);
     const nb = sp.nb ? nb19(s).find((x) => `nb:${x.lot}` === sp.id) : undefined;
-    const label = b ? `${b.name} · ${t(KIND18[b.kind].name)} · ${t(STATE18[b.st])} · ${t(l('estágio', 'stage'))} ${b.lvl}` : nb ? `${nb.name} · ${t(l('vizinho', 'neighbour'))}${nb.sale ? ` · ${t(l('à venda', 'for sale'))}` : ''}` : sp.id;
+    const label = b ? `${b.name} · ${t(KIND18[b.kind].name)} · ${t(STATE18[b.st])} · ${t(l('estágio', 'stage'))} ${b.lvl}` : nb ? `${t(nb.name)} · ${t(l('vizinho', 'neighbour'))}${nb.sale ? ` · ${t(l('à venda', 'for sale'))}` : ''}` : sp.id;
     hot(sp.id, sp.nb ? 'nb' : 'mine', sp.box, label);
   }
   // marcos da cidade

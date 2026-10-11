@@ -2,6 +2,7 @@
 // níveis, abrir filiais em qualquer cidade, ampliar, definir foco e diretor regional, designar artistas
 // e abrir mercados — tudo sem sair da Sede.
 
+import { hqDeptDesc19 } from '../../sim/era19';
 import { BRANCH_LEVELS, HQ_LEVELS } from '../../data/rules';
 import { CITIES, MARKETS, l, type L } from '../../data/world';
 import { S, t } from '../../i18n/strings';
@@ -43,7 +44,7 @@ function deptBlock(s: GameState): HTMLElement {
     const blk = deptBlocker(s, d.id);
     return h('div', { class: `mg-dept ${lv ? 'on' : ''}` },
       h('b', null, ic(d.icon), ' ', t(d.name)), ' ', lv ? pill(`${lv}/3`, 'good') : null,
-      h('small', { class: 'muted' }, t(d.desc)),
+      h('small', { class: 'muted' }, t(hqDeptDesc19(s, d.id, d.desc))),
       lv ? h('small', null, t(l('Manutenção: {v}/mês', 'Upkeep: {v}/mo'), { v: $(money(s, d.upkeep * lv)) })) : null,
       h('div', { class: 'row wrap' },
         lv < 3 ? h('button', { class: 'btn small', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => say(buildDept(s, d.id), lv ? l('Departamento ampliado.', 'Department upgraded.') : l('Departamento criado.', 'Department created.')) }, `${lv ? t(l('Ampliar', 'Upgrade')) : t(l('Criar', 'Create'))} ${$(money(s, d.cost[lv]))}`) : null,
