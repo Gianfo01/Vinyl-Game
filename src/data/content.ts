@@ -8,6 +8,7 @@
 
 import { l, type FamilyId, type L, type MarketId } from './world';
 import { AWARDS19, CHARTS19 } from './more19';
+import { GEO19 } from './hist19';
 
 /** Utilitário: itens ativos num ano (start/end inclusivos). */
 export function activeIn<T extends { start: number; end?: number }>(xs: T[], year: number): T[] {
@@ -572,6 +573,7 @@ export const GEOPOLITICS: GeoEvent[] = [
   ge('geo_voice_treaty', 'Tratado das Vozes', 'Voice Rights Treaty', 'sanctions', ['eu', 'na', 'asia', 'br', 'latam', 'africa', 'oceania'], 2034, 2040, fx(0.1, [], 1), 'Clonar voz sem consentimento vira crime internacional.', 'Cloning a voice without consent becomes an international crime.'),
   ge('geo_heat_crisis', 'Verões extremos', 'Extreme summers', 'curfew', ['eu', 'na', 'oceania', 'asia'], 2030, 2040, fx(0, [], 0.97, { touringBlocked: false }), 'Festivais mudam de data; shows diurnos proibidos em ondas de calor.', 'Festivals move dates; daytime shows banned during heatwaves.'),
 ];
+GEOPOLITICS.push(...GEO19.filter((g) => !GEOPOLITICS.some((x) => x.id === g.id))); // r19 (T8): geopolítica 1959–2026 (db19 §3.11)
 
 // =====================================================================================
 // ERAS TECNOLÓGICAS (detalhe)

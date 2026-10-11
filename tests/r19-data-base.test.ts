@@ -166,7 +166,7 @@ describe('r19 base de dados: pessoas, selos, lugares e eventos (validador da ond
     for (const x of SOCS18) chk(!x.to || x.to >= x.from, `sociedade ${x.id}: datas`);
     chk(new Set(MILESTONES.map((x) => x.id)).size === MILESTONES.length, 'marco: id duplicado');
     for (const m of MILESTONES) chk((m.month === undefined || (m.month >= 0 && m.month <= 11)) && (!m.until || m.until >= m.year), `marco ${m.id}: datas`);
-    for (const m of MILESTONES19) chk(!m.appeal && !m.onFire, `marco ${m.id}: pacote só com dados`);
+    for (const m of MILESTONES19) chk(!m.appeal && (!m.onFire || m.id.startsWith('law_')), `marco ${m.id}: pacote só com dados (leis ganham mecânica em regions19)`);
     for (const x of GEAR19) chk(x.fam.every((f) => fams.has(f)) && (!x.to || x.to >= x.from), `gear ${x.id}`);
     chk(new Set(GEAR19.map((x) => x.id)).size === GEAR19.length, 'gear: id duplicado');
     expect(out).toEqual([]);

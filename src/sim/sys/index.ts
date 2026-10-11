@@ -271,6 +271,7 @@ import './links19a'; // r19 Frente 1 grupo A: espólio, fábrica, censura, festi
 import './echoes19';
 import './era19';
 import './realhist19';
+import './history19'; // r19 T8: marcos 1926–2026 com decisão e ecos, geopolítica, regimes, flag T
 import './links19b'; // r19 Frente 1 grupo B: sessão×qualidade, câmbio por submercado, inteligência de rivais, campus, júri×caminho, 11.10, 11.11
 import './moneyb19'; // r19 T2 money-b: mercado de contratos (janelas, cláusulas, empréstimos), empresário total, disco de cumprimento, briga de gestão
 import './money19'; // r19 onda 3 T1: dívida e catálogo (covenants, leilão de masters, preferência/regravação, títulos lastreados, juros)

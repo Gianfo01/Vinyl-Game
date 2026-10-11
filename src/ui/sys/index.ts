@@ -180,4 +180,5 @@ import './moneyb19';
 import './money19';
 // Rodada 19 (Frente 6, T5): Mundo › Regiões e política (selos regionais, comuna, vistos, greves, campanhas, leis, celeiros).
 import './regions19';
+import './history19'; // r19 T8: Mundo › Marcos da história + bloco do Cockpit
 import './core18';

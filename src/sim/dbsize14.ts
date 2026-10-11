@@ -13,7 +13,8 @@ export const DB_SIZES: DbInfo[] = [
 ];
 export const dbSizeInfo = (c: Pick<RunConfig, 'dbSize'>): DbInfo => DB_SIZES.find((d) => d.id === c.dbSize) ?? DB_SIZES[1];
 /** O artista real entra nesta partida? Lista original: sempre (menos nomes regionais no tamanho pequeno); lote novo: pelo nível `z`. */
-export const realAllowed = (c: Pick<RunConfig, 'dbSize'>, a: RealArtist): boolean => {
+export const realAllowed = (c: Pick<RunConfig, 'dbSize'> & Partial<Pick<RunConfig, 'history'>>, a: RealArtist): boolean => {
+  if (a.exact === false && c.history === 'strict') return false; // r19 (T8): não conferido some do modo exato
   const lvl = dbSizeInfo(c).lvl;
   return a.z ? a.z <= lvl : lvl > 0 || a.t < 3;
 };

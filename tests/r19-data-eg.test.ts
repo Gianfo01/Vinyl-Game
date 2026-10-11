@@ -94,7 +94,7 @@ describe('r19 WP-G: festivais, prêmios, paradas, sociedades e leis', () => {
     expect(MILESTONES.find((m) => m.id === 'law_cancon')).toMatchObject({ year: 1971, month: 0 });
   });
   it('leis: só dados (sem appeal/onFire) e disparam no calendário real', () => {
-    for (const m of G.milestones!) { expect(m.appeal).toBeUndefined(); expect(m.onFire).toBeUndefined(); expect(m.id.startsWith('law_')).toBe(true); }
+    for (const m of G.milestones!) { expect(m.appeal).toBeUndefined(); expect(m.id.startsWith('law_')).toBe(true); } // onFire: mecânica das leis em regions19
     const toubon = MILESTONES.find((m) => m.id === 'law_toubon')!;
     expect(milestoneDue(game(1993), toubon)).toBe(false);
     expect(milestoneDue(game(1995), toubon)).toBe(true);
