@@ -225,6 +225,7 @@ describe('dossiê de descoberta', () => {
     s.player.cash = money(s, 1e6);
     s.player.initialCash = s.player.cash - s.player.totalPosted;
     const a = freeAct(s, 3);
+    a.careerEnd = Math.max(a.careerEnd ?? 0, s.year + 5); // r19: banco maior muda o ato escolhido; não pode se aposentar no meio da residência
     s.knowledge[a.id] ??= { actId: a.id, degree: 1, stage: 'signal', bias: 0, updatedWeek: s.week, source: 'watch' };
     research(s, a.id, 'producer');
     const w1 = readsFor(s, a.id, 'live').find((x) => x.src === 'producer')!.w;

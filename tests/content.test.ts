@@ -1,5 +1,6 @@
 // Integridade do conteúdo expandido: cidades, gêneros, catálogo, dados de content.ts e eventos extras.
 
+import { AWARDS19 } from '../src/data/more19';
 import { describe, expect, it } from 'vitest';
 import { CATALOG_ACTS, CATALOG_LABELS, FESTIVALS, MEDIA, STUDIOS, VENUES } from '../src/data/catalog';
 import { FIRST_NAMES, LAST_NAMES } from '../src/data/people';
@@ -103,7 +104,9 @@ describe('content.ts', () => {
       for (const c of m.cities) expect(cityById[c], `${m.id}:${c}`).toBeDefined();
     }
     for (const g of GEOPOLITICS) for (const mk of g.markets) expect(marketIds.has(mk), g.id).toBe(true);
-    for (const a of AWARDS) expect(a.categories.length, a.id).toBeGreaterThan(1);
+    // r19: prêmios reais de categoria única (Pulitzer, Polaris…) vêm do more19
+    const one19 = new Set(AWARDS19.map((a) => a.id));
+    for (const a of AWARDS) expect(a.categories.length, a.id).toBeGreaterThan(one19.has(a.id) ? 0 : 1);
   });
 });
 

@@ -67,7 +67,9 @@ describe('r18 core', () => {
     expect(advisorTips18(s).some((x) => x.id === 'c18-runway')).toBe(true);
     for (let i = 0; i < 4; i++) advanceMonth(s);
     const P = (s.x4 as unknown as { people: { inbox: { ref?: Record<string, unknown> }[] } }).people;
-    expect(P.inbox.some((x) => x.ref?.k18 === 'analyst')).toBe(true);
+    // r19 (notify19): o relatório do analista entra no boletim semanal
+    const P2 = P as unknown as { inbox: { ref?: Record<string, unknown>; body: { pt: string } }[] };
+    expect(P2.inbox.some((x) => x.ref?.k18 === 'analyst' || (x.ref?.k18 === 'bulletin19' && x.body.pt.includes('Relatório do analista')))).toBe(true);
   });
 
   it('ações por pessoa: menu com chance e porquê, custo, cooldown, fatos e crime17 ligado', () => {

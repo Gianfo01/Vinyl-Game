@@ -154,7 +154,8 @@ describe('perfis do selo emergem das decisões', () => {
         reaction: offer('export', act, 'status') > 0 && (forceProfile(s, 'export'), (profileOfferEffect(s, local)?.score ?? 0) < 0) && (forceProfile(s, null), true),
       },
       dev: {
-        opp: oppOpen('dev') && (() => { const small = anyAct(s, (a) => a.fame < 10); forceProfile(s, 'dev'); const v = perk(s, 'songQ', small) > 1 && perk(s, 'trust', small) > 4; forceProfile(s, null); return v; })(),
+        // r19: traços do dono (sorteados) também mexem na confiança — mede só o que o perfil acrescenta
+        opp: oppOpen('dev') && (() => { const small = anyAct(s, (a) => a.fame < 10); const t0 = perk(s, 'trust', small); forceProfile(s, 'dev'); const v = perk(s, 'songQ', small) > 1 && perk(s, 'trust', small) - t0 > 4; forceProfile(s, null); return v; })(),
         cost: (() => { const f = act.fame; act.fame = 60; const v = offer('dev', act, 'money'); act.fame = f; return v < 0; })(),
         reaction: diff('dev', () => pressReaction(s, fakeRel(s, anyAct(s, (a) => a.releases.length === 0).id))) > 0 && diff('dev', () => retentionBonus(s, act)) > 0,
       },

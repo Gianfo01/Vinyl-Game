@@ -298,6 +298,8 @@ import './contests19';
 // Rodada 19 (onda 3, T3): pós-vida (espólio como ator, 11.8, arena digital) e endosso de instrumentos/instrumento-ícone.
 import './afterlife19';
 import './gear19';
+import './bandpay19'; // r19 onda 4: divisão do lucro da banda (carreira de artista)
+import './sat19'; // r19 onda 4: reputação com retorno decrescente perto do topo
 // Rodada 19 (world19): Nosso mundo — lotes, vizinhança, ampliações e popups sobre o mapa.
 import './world19';
 import './hood19';

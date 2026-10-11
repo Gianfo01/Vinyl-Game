@@ -172,13 +172,17 @@ export function lateCert19(s: GameState, rel: Release): boolean {
 /** Mês: decaimento do calor, usos novos em mídia e vendas dos revivals ativos. */
 export function revivalMonth19(s: GameState): void {
   const st = rv19(s), r = rng(s);
-  for (const [id, c] of Object.entries(st.c)) { c.h = Math.round(c.h * 0.85); if (c.h < 3) delete st.c[id]; }
+  for (const [id, c] of Object.entries(st.c)) { c.h = Math.round(c.h * 0.9); if (c.h < 3) delete st.c[id]; } // r19 onda 4: 0,85 → 0,9
   const ks = (Object.keys(RK19) as RK19[]).filter((k) => RK19[k].p > 0 && s.year >= RK19[k].from);
   let pool: Release[] | null = null;
   for (const k of ks) {
     if (!r.chance(RK19[k].p)) continue;
     pool ??= Object.values(s.releases).filter((x) => oldRel19(s, x) && (x.type !== 'lp' || r.chance(0.3)));
-    const rel = r.weighted(pool, (x) => (x.q / 50) ** 2 * (flop19(x) ? 1.6 : 1) * (mineRel(s, x) ? 2.5 : 1) * (st.c[x.id] ? 3 : 1));
+    // r19 onda 4: faixa já em evidência atrai novos usos (metade das vezes a mídia volta a uma faixa com calor) — sem isso
+    // o calor se espalhava por milhares de faixas e a cadeia 2 (remix → comercial → série → revival) não acontecia sozinha
+    const hot = Object.keys(st.c).filter((id) => oldRel19(s, s.releases[id]));
+    const hid = hot.length && !(globalThis as { __rev19Old?: boolean }).__rev19Old && r.chance(0.5) ? r.weighted(hot, (id) => st.c[id].h) : undefined;
+    const rel = hid ? s.releases[hid] : r.weighted(pool, (x) => (x.q / 50) ** 2 * (flop19(x) ? 1.6 : 1) * (mineRel(s, x) ? 2.5 : 1) * (st.c[x.id] ? 3 : 1));
     if (rel) stage19(s, rel.id, k);
   }
   for (const x of activeRev19(s)) {
