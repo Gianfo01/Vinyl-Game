@@ -198,3 +198,57 @@ fecha no revival. O processo do músico de estúdio (cadeia 1) e o leilão de ma
 `tests/r14-db` enorme: 1 201 ms/mês (carga 3,7 de outros agentes; meta < 1 500). Perfil: ganchos R19 somam ~45 ms/mês;
 os mais caros continuam `charts7` (semana, ~83–130 ms/mês), `hype12`, `fame16`, `lineup16`. `live-achievements`
 (33 ms/mês) passou a varrer os lançamentos do jogador uma vez por semana.
+
+## Passada de equilíbrio pós-integração (cauteloso/agressivo quebrando)
+
+12 sementes × 5 anos, inícios 1889/1955/1975/2005 em rodízio (`npx tsx tools/balance19.ts --tsx --seeds 12 --years 5
+--bots balanced,cautious,aggressive --adv none`; artista no lote com os 4 perfis; empresário `--role manager --careers
+manager`, festival `--careers festival`). **Antes** = código combinado da onda 4 (tabela acima; cauteloso/agressivo
+medidos de novo neste lote: 17% / 42%). **Depois** = os 5 commits desta passada.
+
+| perfil | quebra antes → depois | caixa mediana antes → depois (p25 / p75 depois) | patrimônio med. depois | quebras depois |
+|---|---|---|---|---|
+| balanced | 17% → **17%** | 127 mil → 154 mil (27 mil / 221 mil) | 8.68 mi | 1975 b19-6 (1976), 1889 b19-0 (1890) |
+| cautious | 33% (17% no lote novo) → **17%** | 497 mil → **768 mil** (335 mil / 2.39 mi) | 12.62 mi | só 1889 (b19-0, b19-4, em 1890) |
+| aggressive | 50% (42%) → **33%** | 8 mil (24 mil) → **104 mil** (−1 mil / 268 mil) | 3.25 mi (2005: 9–20 mi) | 1975 ×2 (1976), 1955 (1957), 1889 (1891) |
+| artist | 0% → **0%** | 1.78 mi → 1.68 mi (1.21 mi / 2.62 mi) | 1.70 mi | — |
+| empresário só | 33% (6 sementes) → **0%** | 76 mil → 206 mil (81 mil / 361 mil) | — | — |
+| festival só | 17% (6 sementes) → **17%** | 97 mil → 237 mil (171 mil / 588 mil) | — | 1975 ×2 (1976) |
+
+Ruído: com 12 partidas uma quebra vale 8 pontos; lotes intermediários desta passada deram equilibrado 25% e 8% com o
+mesmo código de regras exceto um ajuste — leia ±8–15 pontos.
+
+### Causa raiz (logs por partida: ledger por chave + `lossCauses19`)
+1. **Ordens delegadas cobravam 100× o orçamento** (`deleg16.pay`: `money(usdN * 100)` trata o orçamento como dólares
+   reais ×100). Uma ordem de rádio de "$300/mês" saía ~US$ 20–30 mil/mês; o agressivo de 2005 perdia 238 mil em 2007 e
+   437 mil em 2008 só nisso (`business|d16:od…`), o cauteloso de 1975 141 mil em 1977. Qualquer jogador que contratasse
+   um promotor e delegasse rádio sangrava igual. A bilheteria da noite do selo tinha o mesmo erro para cima (100×).
+   Agora o orçamento é em dólares reais como a tela mostra (mensagens também). Era o que matava o agressivo em 2005
+   (0/3 quebras agora, era 2/3) e o que levou o empresário-só a 33%.
+2. **Multa de dupla marcação fixa de US$ 15 mil** por erro do agente → metade do cachê da data desfeita (US$ 500–15 mil).
+3. **Sede alugada danificada pagava espaço provisório para sempre** (`campus18`: enchente do bairro `hood19` ignorada =
+   dano permanente, ~10 mil/ano em 1975). Agora o dono do imóvel reforma em 6 meses; prédio próprio continua sendo seu problema.
+4. **Pirataria cobrava valor fixo pela fama** (`crime17`: 800 + fama×90, 10–35 mil/ano para selo pequeno de 1975, mais que
+   o disco rendia). Agora é até 20% do que o disco pirateado já rendeu, com o mesmo teto.
+5. **Crédito empilhado** (`economy.loanOffer`): o 2º/3º empréstimo encolhe para 65% (era 75%) e soma 4 pontos de juro por
+   linha aberta (eram 3). O 1º empréstimo não muda (o cauteloso nem sente); recoloca o risco no agressivo depois das correções acima.
+
+Não eram causa: empréstimo de fundação (só carreiras com pacote inicial), `bandpay19` (só artista), `sat19`, `intra19`
+(só com negócios próprios), avaliação (não toca caixa).
+
+### 1975: choque do petróleo
+Era evento de época (`supply13.matTarget`): vinil ×1,7 em 1973, 1974 **e 1975**, e prensas de terceiros com fila
+(9000/preço). Historicamente o embargo foi de out/1973 a mar/1974 e o PVC já baixava em 1975. Agora: 1973 ×1,35, 1974
+×1,7, 1975 ×1,3 ("ressaca do choque") — e enquanto o preço da matéria-prima principal estiver ≥ 1,15× com motivo de
+época, o conselheiro mostra o alerta "Matéria-prima cara" (porquê + ir para Fornecimento). Cauteloso de 1975: 3/3 sobrevivem;
+equilibrado e agressivo ainda quebram em 1976 numa semente (b19-6) que torra o 1º ano antes do 1º sucesso.
+
+### Ainda fora da meta
+- **Cauteloso 17%** (meta 10–15%): as duas quebras são 1889 em 1890, estáveis em todas as variantes. Grade só de 1889
+  (12 sementes × 3 anos): equilibrado 0%, agressivo 17%, cauteloso 33%. O cauteloso de 1889 gasta o mesmo em lançamento
+  que o equilibrado (24 × 28 mil) mas vende 1/3 (27 × 80 mil) com marketing de 5% e orçamento enxuto, e sem a 2ª linha de
+  crédito nem o investidor de 1890 não aguenta a guerra de patentes. É estilo do bot numa era de mercado minúsculo; não mexi.
+- **Agressivo não supera o cauteloso** em patrimônio mediano (3.25 × 12.62 mi); o melhor agressivo (2005, 19.5 mi) fica
+  abaixo do cauteloso de 2005 (31–34 mi). Próximo botão: retorno de lavish/marketing, não mais risco.
+- **Empresário-só 0%** (meta descuidado 20–25%): sem aluguel nem folha, o empresário não tem custo fixo que quebre.
+  Se quiser risco, ponha custo fixo (escritório/assistente) ou adiantamento a cliente.
