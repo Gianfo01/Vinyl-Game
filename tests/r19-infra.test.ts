@@ -243,6 +243,12 @@ const INBOX_RARE19: Record<string, string> = {
   l19b_betray: 'traição de pacto: exige pacto ativo e calor 35+',
   l19b_delay: 'obra do campus atrasada: só com obra própria em andamento',
   l19b_ins: 'prédio danificado (incêndio/desastre): raro',
+  // r19 T2 money-b (moneyb19): cartas que dependem de janela, aperto de caixa, ato insatisfeito ou banda famosa
+  mb19_bid: 'lance por contrato: só na janela (jan, jul–ago) ou no aperto de caixa, com astro de fama 35+',
+  mb19_mgr: 'empresário total: 5%/mês a partir de 1945, ato de fama 25–75',
+  mb19_revolt: 'revolta contra o empresário total: só depois de meses com empresário total',
+  mb19_junk: 'disco de cumprimento: ato com confiança < 25 e discos devidos',
+  mb19_klein: 'briga de gestão: banda de 3+ com fama 35+ e masters no catálogo (4%/mês, 1955+)',
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 
