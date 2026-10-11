@@ -7,6 +7,7 @@
 //
 //   registerSituation({ id, pressure, cost, cooldown, trigger: ['scandal'], when, actorsPick, title, text, options: [...] })
 
+import { rng19 } from '../rng19';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { deferEvents, registerExt4, registerSimHook } from '../ext4';
@@ -157,7 +158,7 @@ export function npcChoice(s: GameState, def: SituationDef, ctx: SitCtx, r: Rng):
 /** Tetos: 1 situação sua por mês (mesa cheia → nenhuma), até 3 entre NPCs. */
 export function runSituations(s: GameState): { mine: string[]; npc: string[] } {
   const st = sit17(s);
-  const r = Rng.fromSeed(`${s.config.seed}:sit17:${s.week}`);
+  const r = rng19(s, 'sit17', () => Rng.fromSeed(`${s.config.seed}:sit17:${s.week}`));
   const pace = narratorPace(s.config.storyteller);
   const D = dir17(s);
   st.b = clamp(st.b * 0.5 + (1.2 + pace.freq * 0.9) * D.drama + (pace.random ? r.float(-0.6, 0.9) : 0), 0, 6 + D.npc);

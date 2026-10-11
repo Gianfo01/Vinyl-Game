@@ -7,6 +7,7 @@ import { cityById, l, type L } from '../data/world';
 import { emitEvent, registerEvents, type EventDef } from './events';
 import type { Act, GameState, MemoryEntry } from './types';
 import type { Arc } from './xtypes';
+import { rng19 } from './rng19';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from './util';
 import { paceMonth } from './sys/pace9';
 
@@ -236,6 +237,7 @@ function recall(s: GameState, r: Rng): void {
 }
 
 export function directorMonth(s: GameState, r: Rng): void {
+  r = rng19(s, 'director', r);
   paceMonth(s); // rodada 9: ritmo dos fatos autônomos do mundo
   // séries para gatilhos (pico de fama, fama de um ano atrás)
   for (const id of playerActs(s)) {

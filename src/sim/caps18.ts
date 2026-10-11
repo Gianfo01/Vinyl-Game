@@ -44,3 +44,40 @@ export function capStat18(key: string, raw: number, eff: number): void {
   const x = (g[key] ??= { n: 0, raw: 0, max: 0, cut: 0 });
   x.n++; x.raw += raw; x.max = Math.max(x.max, raw); x.cut += raw - eff;
 }
+
+// ---------------------------------------------------------------- r19 (0.4): teto por FAMÍLIA do apelo
+// Auditoria das 63 fontes de registerMod('appeal') (lista em APPEAL_CAT19; teste em tests/r19-infra.test.ts): cada
+// fonte pertence a uma família de causa. Bônus da MESMA família se multiplicam e passam pelo joelho da família
+// (até +20% inteiro, depois no máximo +30% a mais) antes do teto geral acima — cinco fontes de "imagem" não somam
+// como cinco causas independentes. Efeitos grandes isolados (r > CAT_BIG19) seguem fora da pilha, como no teto geral.
+export const APPEAL_CAT19: Record<string, string[]> = {
+  /** obra: produção, som, qualidade, receita do estúdio */
+  craft: ['studio12:recipe', 'proj12:intent', 'proj12:dir', 'proj13', 'sound', 'q18', 'creation', 'links16:prod', 'supply13:grade', 'crew8'],
+  /** imagem e pessoa: identidade, aparência, persona, vida e fama do dono, relevância */
+  image: ['identity', 'persona13img', 'persona13race', 'persona13sex', 'looks17div', 'looks17age', 'life-fame', 'traj18', 'relevance8', 'standing9', 'sex17',
+    'people-feed', 'people-romance', 'people-owner', 'people-mood'],
+  /** público e cena: fãs, cenas locais/históricas, regiões e circuitos, fandoms de idol */
+  fans: ['fans18', 'scene12', 'scenes17', 'scenes-radio', 'w4scene', 'w4trainee', 'audience8', 'kpop18mil', 'idols18enka', 'regions18', 'circuits18', 'w4relation'],
+  /** alcance: canais, veículos, imprensa, vitrines, hype de feira, selo/imprint, IA de recomendação */
+  media: ['industry:channels', 'industry:outlets', 'ventures9:media', 'press18', 'goods8-spotlight', 'w4hype', 'deals18:imprint', 'ai18', 'ai8'],
+  /** mundo: era, sociedade, leis, greves, marcos, crime, guerra de NPCs e rivais */
+  world: ['era8', 'org12', 'world18', 'soc18', 'w4society', 'w4laws', 'w4cheap', 'w4strike', 'w4ms:*', 'w4backlash', 'crime17', 'crime17tie', 'npc17:war',
+    'rivals12push', 'rivals8', 'rivals8profile', 'rivalmind18:pact'],
+};
+export const CAT_CAP19: Record<string, { knee: number; room: number }> = { appeal: { knee: 0.2, room: 0.3 } };
+/** só multiplicadores até aqui entram na pilha da família */
+export const CAT_BIG19 = 1.6;
+const CAT_IDX19: Record<string, string> = {};
+for (const [c, ids] of Object.entries(APPEAL_CAT19)) for (const id of ids) CAT_IDX19[id] = c;
+/** família de uma fonte de modificador ('appeal' apenas; prefixo `w4ms:*` cobre os marcos) */
+export function modCat19(name: string, id: string): string | undefined {
+  if (name !== 'appeal') return undefined;
+  return CAT_IDX19[id] ?? (id.startsWith('w4ms:') ? CAT_IDX19['w4ms:*'] : undefined);
+}
+/** fator da família com pilha B (produto dos bônus da família) */
+export function catAdj19(name: string, boost: number): number {
+  const c = CAT_CAP19[name];
+  if (!c || boost <= 1.0001) return 1;
+  return (1 + soft18(boost - 1, c.knee, c.room)) / boost;
+}
+export const DIMINISH19: L = { pt: 'Mesma causa repetida (teto por família)', en: 'Same cause stacked (per-family cap)' };

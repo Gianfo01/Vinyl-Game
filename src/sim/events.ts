@@ -10,6 +10,7 @@ import { cityById, familyOf, genreById, l, type L } from '../data/world';
 import { formatMoney } from '../core/money';
 import { makeAct, makePerson, langForCity } from './people';
 import type { Act, Decision, GameState } from './types';
+import { rng19 } from './rng19';
 import { withPlayerActsCache, fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
@@ -903,7 +904,7 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
     s.decisions = s.decisions.filter((x) => x !== d);
     return true;
   }
-  const r = rngOf(s);
+  const r = rng19(s, 'decide', () => rngOf(s));
   opt.apply(s, r, d.ctx);
   runDecisionListeners(s, def.id, opt.id, d.ctx);
   s.decisions = s.decisions.filter((x) => x !== d);
@@ -913,6 +914,7 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
 
 /** Diretor de histórias: Maestro (ondas), Brisa (calmo), Acaso (aleatório). Machuca, mas não mata. */
 export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
+  r = rng19(s, 'events', r); // r19: um evento a mais não desloca os sorteios dos outros sistemas
   const pc = narratorPace(s.config.storyteller);
   const freq = pc.freq;
   let n = Math.floor(freq + r.next());

@@ -230,6 +230,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     config: cfg,
     signature: runSignature(cfg.seed, cfg.startYear),
     rng: seedState(cfg.seed),
+    rngVersion: 19,
     week: 0,
     day: startDay,
     year: cfg.startYear,

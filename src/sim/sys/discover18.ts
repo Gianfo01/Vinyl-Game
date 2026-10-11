@@ -6,6 +6,7 @@
 // estrela volta como "o que escapou" (Decca × Beatles).
 // API: CH18, chNow18, dig18, watchShow18, addLead18, disc18, demoMedium18.
 
+import { rng19 } from '../rng19';
 import { clamp, Rng } from '../../core/rng';
 import { CITIES, GENRES, cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
 import { signWithRival } from '../contracts';
@@ -216,7 +217,7 @@ registerInboxKind('disc18_hot', { label: l('Disputa', 'Bidding'), cat: 'deals', 
 
 registerSimHook('month', 'discover18', (s) => {
   const st = disc18(s);
-  const r = Rng.fromSeed(`${s.config.seed}|disc18m|${s.week}`);
+  const r = rng19(s, 'disc18', () => Rng.fromSeed(`${s.config.seed}|disc18m|${s.week}`));
   // demos chegando pelo meio da época
   // r18 final (ritmo): uma demo por vez na caixa (era a mensagem mais frequente do jogo) e chance menor
   const waiting = P(s).inbox.some((m) => m.ref?.k18 === 'disc18_demo' && !m.resolved && (m.expires ?? 0) > s.week);

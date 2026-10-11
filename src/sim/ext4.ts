@@ -10,7 +10,7 @@
 // Ordem determinística: ganchos rodam na ordem de registro, que é a ordem dos imports em
 // src/sim/sys/index.ts.
 
-import { DIMINISH18, MOD_CAP18, SMALL18, capStat18, modAdj18 } from './caps18';
+import { CAT_BIG19, DIMINISH18, DIMINISH19, MOD_CAP18, SMALL18, capStat18, catAdj19, modAdj18, modCat19 } from './caps18';
 import type { Rng } from '../core/rng';
 import type { L } from '../data/world';
 import type { Act, GameState, Offer, Release, Song } from './types';
@@ -98,12 +98,25 @@ export function applyMods(s: GameState, name: ModName, value: number, ctx: ModCt
   const factors: { label: L; ratio: number }[] = [];
   const lower = MOD_CAP18[name]?.lower;
   let boost = 1; // r18: produto dos multiplicadores favoráveis (retornos decrescentes no fim)
+  let fam: Record<string, number> | null = null; // r19: pilha por família de causa (só appeal)
+  const M19 = (globalThis as { __mod19?: Record<string, { n: number; lg: number; max: number }> }).__mod19;
   for (const m of MODS[name]) {
     const res = m.fn(s, value, ctx);
     if (!res || !Number.isFinite(res.value)) continue;
-    if (value > 0 && res.value > 0) { const r = res.value / value; const f = lower ? 1 / r : r; if (f > 1 && f <= SMALL18) boost *= f; }
+    if (value > 0 && res.value > 0) {
+      const r = res.value / value; const f = lower ? 1 / r : r;
+      if (f > 1 && f <= SMALL18) boost *= f;
+      const c = f > 1 && f <= CAT_BIG19 ? modCat19(name, m.id) : undefined;
+      if (c) { fam ??= {}; fam[c] = (fam[c] ?? 1) * f; }
+      if (M19) { const x = (M19[`${name}:${m.id}`] ??= { n: 0, lg: 0, max: 0 }); x.n++; x.lg += Math.log(r); x.max = Math.max(x.max, r); }
+    }
     if (res.label && value > 0 && Math.abs(res.value / value - 1) > 0.005) factors.push({ label: res.label, ratio: res.value / value });
     value = res.value;
+  }
+  if (fam && value > 0) {
+    let ca = 1;
+    for (const B of Object.values(fam)) ca *= catAdj19(name, B);
+    if (ca < 0.9995) { value *= ca; boost *= ca; factors.push({ label: DIMINISH19, ratio: ca }); capStat18('cat:' + name, 1 / ca - 1, 0); }
   }
   const adj = modAdj18(name, boost);
   capStat18('mod:' + name, boost - 1, adj === 1 ? boost - 1 : (lower ? boost / adj : boost * adj) - 1);

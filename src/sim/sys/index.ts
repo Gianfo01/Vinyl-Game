@@ -255,3 +255,5 @@ import './links18';
 import './cine18';
 import './post18';
 import './final18'; // r18 integração final: reputação artística com memória curta
+// Rodada 19 (infra 0.2/11.1): ouvintes de relic/situation/rise/masterwork/hologram/echo.
+import './factlink19';

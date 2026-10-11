@@ -597,6 +597,8 @@ export interface GameState extends ExtState {
   config: RunConfig;
   signature: string;
   rng: RngState;
+  /** r19: 19+ = um fluxo de sorteio por sistema (rng19.ts); ausente = save antigo, fluxo único */
+  rngVersion?: number;
   week: number; // semanas desde o início
   day: number; // dias desde 1/jan do ano inicial
   year: number;

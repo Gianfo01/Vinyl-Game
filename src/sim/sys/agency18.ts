@@ -8,6 +8,7 @@
 // Do lado do jogador: três ações novas no menu de pessoa — encomendar uma diss (rixa), mediar a rixa de alguém,
 // instigar alguém contra um rival.
 
+import { rng19 } from '../rng19';
 import { clamp, Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { dir17 } from '../director17';
@@ -615,7 +616,7 @@ export function agencyMonth18(s: GameState, r: Rng): Ag18Log[] {
   return out;
 }
 
-registerSimHook('month', 'agency18', (s) => { agencyMonth18(s, Rng.fromSeed(`${s.config.seed}:ag18:${s.week}`)); });
+registerSimHook('month', 'agency18', (s) => { agencyMonth18(s, rng19(s, 'ag18', () => Rng.fromSeed(`${s.config.seed}:ag18:${s.week}`))); });
 
 // ---------------------------------------------------------------- respostas do jogador
 

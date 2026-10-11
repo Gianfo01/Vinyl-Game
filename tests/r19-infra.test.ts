@@ -1,0 +1,244 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { defaultConfig } from '../src/sim/bot';
+import { createGame } from '../src/sim/worldgen';
+import { advanceMonth } from '../src/sim/tick';
+import { rngOf } from '../src/sim/util';
+import { FACT_CAP, emitFact, facts17, recentFacts } from '../src/sim/facts17';
+import { RESERVED19, WHITELIST19, consumed19, factMatrix19 } from '../src/sim/factmatrix19';
+import { STREAMS19, perSystem19, rng19 } from '../src/sim/rng19';
+import { APPEAL_CAT19, catAdj19, modCat19 } from '../src/sim/caps18';
+import { applyMods, registerSimHook } from '../src/sim/ext4';
+import { simulatePlayer } from '../src/sim/playbot16';
+import { inboxKinds18 } from '../src/sim/inbox18';
+import { P } from '../src/sim/sys/people/state';
+import { STREAM_PAYOUT17 } from '../src/sim/market';
+import { MEDIA18 } from '../src/sim/media18hook';
+import { payout18 } from '../src/sim/sys/stream18';
+import { press } from '../src/sim/sys/press9';
+import { l } from '../src/data/world';
+import type { GameState } from '../src/sim/types';
+
+const SRC = path.join(__dirname, '..', 'src');
+function files(d = SRC, out: string[] = []): string[] {
+  for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) files(p, out); else if (p.endsWith('.ts')) out.push(p); }
+  return out;
+}
+/** varredura estática: tipos emitidos (emitFact), tipos da crônica (chron9 → ponte) e leitores (recentFacts/f.kind) */
+function scan(): { emitted: Record<string, string[]>; chron: Set<string>; readers: Record<string, string[]> } {
+  const emitted: Record<string, string[]> = {}, readers: Record<string, string[]> = {}, chron = new Set<string>();
+  const add = (o: Record<string, string[]>, k: string, f: string) => { (o[k] ??= []).includes(f) || o[k].push(f); };
+  for (const p of files()) {
+    const t = fs.readFileSync(p, 'utf8'), f = path.basename(p);
+    for (const m of t.matchAll(/emitFact\(\s*s\s*,\s*\{\s*kind:\s*'([a-z0-9_]+)'/g)) add(emitted, m[1], f);
+    for (const m of t.matchAll(/chron\(\s*s\s*,\s*\{\s*k:\s*'([a-z0-9_]+)'/g)) chron.add(m[1]);
+    for (const m of t.matchAll(/(?:recentFacts|factsAbout)\(\s*s\s*,[^)]{0,120}?\bkinds?:\s*(\[[^\]]*\]|'[a-z0-9_]+')/g)) for (const k of m[1].matchAll(/'([a-z0-9_]+)'/g)) add(readers, k[1], f);
+    for (const m of t.matchAll(/\bf\.kind\s*[!=]==\s*'([a-z0-9_]+)'/g)) add(readers, m[1], f);
+  }
+  // ponte da crônica: tipos que viram fato com o mesmo nome (os do mapa KMAP viram outro tipo)
+  const kmap = fs.readFileSync(path.join(SRC, 'sim/sys/bridge17.ts'), 'utf8').match(/const KMAP[^=]*=\s*\{([\s\S]*?)\n\};/)![1];
+  const mapped = new Set([...kmap.matchAll(/([a-z0-9_]+):\s*'([a-z0-9_]+)'/g)].map((m) => m[1]));
+  for (const k of [...chron]) if (mapped.has(k)) chron.delete(k); else add(emitted, k, 'chron9.ts');
+  return { emitted, chron, readers };
+}
+
+describe('r19 0.1 — rng por sistema', () => {
+  it('jogo novo tem rngVersion; save antigo segue no fluxo único', () => {
+    const s = createGame(defaultConfig('r19-rng'));
+    expect(perSystem19(s)).toBe(true);
+    const legacy = rngOf(s);
+    const old = { ...s, rngVersion: undefined } as GameState;
+    expect(rng19(old, 'events', legacy)).toBe(legacy);
+    expect(rng19(s, 'events', legacy)).not.toBe(legacy);
+    expect(Object.keys(STREAMS19)).toContain('market');
+  });
+  it('um sorteio a mais no fluxo comum não muda os fluxos dos sistemas', () => {
+    const a = createGame(defaultConfig('r19-ind'));
+    const b = createGame(defaultConfig('r19-ind'));
+    rngOf(b).next(); rngOf(b).next(); // "um evento a mais" num consumidor do fluxo comum
+    advanceMonth(a); advanceMonth(b);
+    const st = (s: GameState) => (s as unknown as { x4: { rng19: { st: Record<string, number[]> } } }).x4.rng19.st;
+    expect(st(b).market).toEqual(st(a).market);
+    expect(st(b).dm18).toEqual(st(a).dm18);
+    expect(st(b).ag18).toEqual(st(a).ag18);
+  });
+});
+
+describe('r19 11.1 — volume de fatos', () => {
+  it('chart só nos marcos: o 2º nº 1 de país no mês soma no primeiro', () => {
+    const s = createGame(defaultConfig('r19-ch'));
+    const n0 = facts17(s).f.length;
+    const fa = emitFact(s, { kind: 'chart', actors: ['a1'], tags: ['good', 'mem:no1_country'], text: l('nº 1 em A', 'No. 1 in A') });
+    const fb = emitFact(s, { kind: 'chart', actors: ['a1'], tags: ['good', 'mem:no1_country'], text: l('nº 1 em B', 'No. 1 in B') });
+    emitFact(s, { kind: 'chart', actors: ['a1'], tags: ['good', 'chron:number1'], text: l('nº 1 mundial', 'world No. 1') });
+    expect(fb).toBe(fa);
+    expect(fa.data?.more).toBe(1);
+    expect(facts17(s).f.length - n0).toBe(2);
+  });
+  it('anel por gravidade e tipo: enxurrada de um tipo não apaga o fato grave', () => {
+    const s = createGame(defaultConfig('r19-ring'));
+    const grave = emitFact(s, { kind: 'death', actors: ['x'], severity: 85, text: l('morte', 'death') });
+    const rare = emitFact(s, { kind: 'law', actors: [], severity: 40, text: l('lei', 'law') });
+    s.week += 200;
+    for (let i = 0; i < FACT_CAP * 2; i++) { s.week += 1; emitFact(s, { kind: 'release', actors: [`r${i}`], severity: 30, text: l(`l${i}`, `r${i}`) }); }
+    const f = facts17(s).f;
+    expect(f.length).toBeLessThanOrEqual(FACT_CAP);
+    expect(f.some((x) => x.id === grave.id)).toBe(true);
+    expect(f.some((x) => x.id === rare.id)).toBe(true);
+    expect(f.filter((x) => x.kind === 'release').length).toBeLessThan(FACT_CAP);
+  });
+});
+
+describe('r19 0.2 — matriz fato → consumidores', () => {
+  const { emitted, chron, readers } = scan();
+  const rows = factMatrix19(Object.keys(emitted), readers, chron);
+  it('todo tipo emitido tem consumidor ou está na lista justificada', () => {
+    const orphan = rows.filter((r) => !consumed19(r) && !WHITELIST19[r.kind]).map((r) => `${r.kind} (${emitted[r.kind].join(',')})`);
+    expect(orphan).toEqual([]);
+    for (const [k, why] of Object.entries(WHITELIST19)) expect(why.length, k).toBeGreaterThan(20);
+  });
+  it('lista de exceções sem entradas velhas (tipo sumiu ou ganhou consumidor)', () => {
+    const stale = Object.keys(WHITELIST19).filter((k) => !emitted[k] || consumed19(rows.find((r) => r.kind === k)!));
+    expect(stale).toEqual([]);
+  });
+  it('relic, situation, rise, masterwork, hologram e echo têm ouvinte direto', () => {
+    for (const k of ['relic', 'situation', 'rise', 'masterwork', 'hologram', 'echo']) {
+      const r = rows.find((x) => x.kind === k) ?? factMatrix19([k])[0];
+      expect(r.listeners.length, k).toBeGreaterThan(0);
+    }
+  });
+  it('tipos reservados da Frente 9: não colidem e já têm consumidores previstos', () => {
+    expect(Object.keys(RESERVED19).length).toBeGreaterThanOrEqual(39);
+    expect(new Set(Object.values(RESERVED19).map((x) => x.sys)).size).toBe(13);
+    for (const [k, v] of Object.entries(RESERVED19)) { expect(emitted[k], k).toBeUndefined(); expect(v.to.length, k).toBeGreaterThan(0); }
+  });
+  it('ouvintes novos agem: obra-prima vira manchete e fama', () => {
+    const s = createGame(defaultConfig('r19-mw'));
+    const a = Object.values(s.acts)[0];
+    const fame = a.fame;
+    emitFact(s, { kind: 'masterwork', actors: [a.id], severity: 60, text: l('Obra-prima de teste', 'Test masterwork') });
+    expect(a.fame).toBeGreaterThan(fame);
+    expect(press(s).hl.some((h) => h.t.pt === 'Obra-prima de teste')).toBe(true);
+    expect(recentFacts(s, { kind: 'masterwork' }).length).toBe(1);
+  });
+});
+
+describe('r19 0.4 — teto de appeal por família', () => {
+  it('todas as fontes registradas têm família', () => {
+    const ids = new Set<string>();
+    for (const p of files()) for (const m of fs.readFileSync(p, 'utf8').matchAll(/registerMod\('appeal',\s*(?:'([^']+)'|`([^`$]+)\$)/g)) ids.add(m[1] ?? `${m[2]}x`);
+    ids.delete('music'); // exemplo no comentário de ext4.ts
+    const missing = [...ids].filter((id) => !modCat19('appeal', id));
+    expect(missing).toEqual([]);
+    expect(ids.size).toBeGreaterThanOrEqual(60);
+    expect(Object.keys(APPEAL_CAT19).length).toBe(5);
+  });
+  it('retorno decrescente dentro da família; penalidade fica inteira', () => {
+    expect(catAdj19('appeal', 1.15)).toBe(1);
+    expect(catAdj19('appeal', 1.6)).toBeLessThan(1);
+    expect(1.6 * catAdj19('appeal', 1.6)).toBeGreaterThan(1.4);
+    expect(catAdj19('appeal', 0.7)).toBe(1);
+    const s = createGame(defaultConfig('r19-ap'));
+    expect(applyMods(s, 'appeal', 50).value).toBeGreaterThan(0);
+  });
+});
+
+describe('r19 0.5 — streaming sem dupla contagem', () => {
+  it('payout18 já inclui a base STREAM_PAYOUT17 e substitui (não multiplica) a tarifa antiga', () => {
+    const s = createGame(defaultConfig('r19-st', { startYear: 2016 }));
+    const base = Object.values(s.releases).find((r) => s.acts[r.actId])!;
+    const rel = { ...base, owner: 'player', territories: [] } as typeof base;
+    const k = payout18(s, rel).k;
+    expect(MEDIA18.payout?.(s, rel, ['streaming'])).toBe(k);
+    // a base aparece uma vez: k / base é só o produto dos ajustes (território^0,6 · diluição · DM · fazenda), perto de 1
+    expect(k / STREAM_PAYOUT17).toBeGreaterThan(0.5);
+    expect(k / STREAM_PAYOUT17).toBeLessThan(1.5);
+  });
+});
+
+// ---------------------------------------------------------------- 11.9 cobertura da Caixa por era × carreira
+/** Tipos que não aparecem com segurança em bots curtos (1 ano), com o motivo (levantamento: 6 bots de 3 anos, 1889–2015,
+ *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
+const INBOX_RARE19: Record<string, string> = {
+  // vistos às vezes em 1 ano (1 mensagem): exigir seria frágil a qualquer mudança de sorteio
+  era1889_patent: 'só 1889–1910 (guerra de patentes); 1 aparição por partida',
+  ability18: 'relatório de potencial: depende do olheiro achar um jovem com PA alto',
+  rivalmind18_pact: 'pacto entre rivais: sorteio raro da mente rival',
+  a18_show: 'artista: convite de show depende de fama mínima',
+  rights18: 'auditoria/direitos: só com catálogo com receita (2º ano em diante)',
+  traj18: 'virada de trajetória: só após 2–3 lançamentos (visto em bots de 3 anos)',
+  feud18: 'rixa: exige atrito acumulado entre atos (visto em 3 anos, 1889)',
+  relic18_fake: 'relíquia falsa: só com mercado de relíquias aberto (visto em 3 anos)',
+  media18_viral: 'viral de mídia: 1990+ e lançamento forte (visto em 3 anos, 1990/2005)',
+  aw18_snub: 'esnobada em prêmio: exige indicação (visto em 3 anos, 1960 artista)',
+  a18_stmt: 'artista: declaração pública pedida após polêmica (visto em 3 anos)',
+  supply_bump: 'cadeia física: choque de fornecimento aleatório (visto em 3 anos)',
+  st18_rival: 'streaming 2015+: denúncia de fazenda rival, sorteio de 3,5%/mês (visto em 3 anos)',
+  // situações que bots curtos não criam
+  world18_invest: 'convite de investimento mundial: exige caixa alto e era de crise',
+  disc18_more: 'descoberta: segunda etapa de uma pista aberta pelo jogador',
+  disc18_hot: 'descoberta: rival disputando um nome que o jogador está seguindo',
+  camps18_cut: 'camp de composição: corte só depois de um pitch aceito',
+  sess18_revolt: 'sessão: revolta de músicos exige sessões longas e moral baixa',
+  sess18_poach: 'sessão: rival tenta levar músico de estúdio contratado',
+  supply_late: 'cadeia física: fábrica atrasada (fila cheia, grandes tiragens)',
+  supply_bust: 'cadeia física: falência de fornecedor (raro)',
+  supply_takedown: 'cadeia física: retirada de estoque por processo (raro)',
+  deal_dev: 'deals18: proposta de desenvolvimento exige selo médio/grande',
+  deal_imp: 'deals18: imprint exige reputação alta',
+  deal_jv: 'deals18: joint venture exige caixa e reputação altas',
+  st18_drop: 'streaming: queda de dependência só com catálogo grande no streaming',
+  st18_down: 'streaming: derrubada só após fraude de streams do jogador',
+  radio18_leak: 'rádio: vazamento antes do lançamento (raro, 1950+)',
+  fans18: 'fãs: pedido do fã-clube exige fã-clube grande',
+  fest18: 'festival: convite exige ato com fama de cartaz',
+  regions18: 'regiões: seu gênero viajar para outro submercado (virada rara)',
+  kpop18_mil: 'K-pop: serviço militar só com ídolo coreano no elenco',
+  kpop18_suit: 'K-pop: processo de contrato-escravo só com ídolo coreano',
+  kpop18_seven: 'K-pop: maldição dos 7 anos só com grupo de 7 anos de contrato',
+  idols18_grad: 'idols japoneses: graduação só com grupo idol no elenco',
+  idols18_kohaku: 'idols japoneses: convite do Kohaku só com ato japonês famoso',
+  screen18_offer: 'cinema/TV: oferta de filme exige fama alta',
+  screen18_ost: 'cinema/TV: trilha exige filme em produção',
+  screen18_late: 'cinema/TV: atraso de estreia só com projeto em curso',
+  ai18_fake: 'IA (2020+): voz falsa do seu artista',
+  ai18_suit: 'IA (2020+): processo contra IA',
+  press18_scoop: 'imprensa: furo só para quem tem veículo próprio (press18)',
+  press18_bribe: 'imprensa: suborno só para quem é crítico/editor',
+  press18_embargo: 'imprensa: embargo de selo só para quem tem veículo',
+  press18_job: 'imprensa: convite de emprego na carreira de crítico',
+  soc18_censor: 'sociedade: censura só em regimes/épocas com censor ativo',
+  soc18_exile: 'sociedade: exílio só sob ditadura e artista engajado',
+  soc18_home: 'sociedade: volta do exílio depende de exílio anterior',
+  soc18_boycott: 'sociedade: boicote só após declaração polêmica',
+  soc18_rent: 'sociedade: aluguel/despejo de espaço cultural (raro)',
+  policy18: 'política: lei nova que afeta o selo (marco histórico)',
+  a18_info: 'artista: informação de bastidor do agente (contrato em negociação)',
+  a18_ar: 'artista: A&R do selo NPC pede mudança (artista contratado)',
+  a18_deliver: 'artista: cobrança de entrega de disco (contrato com selo NPC)',
+  a18_buried: 'artista: disco engavetado pelo selo NPC',
+  a18_drop: 'artista: dispensa pelo selo NPC após fracasso',
+  a18_merge: 'artista: fusão do seu selo NPC',
+  sh18_prop: 'sociedade com NPC: proposta exige artista com caixa e fama',
+  sh18_fall: 'sociedade com NPC: rompimento exige sociedade ativa',
+  campus18: 'Nosso mundo: obra/desastre só com obra própria iniciada',
+};
+const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
+
+describe('r19 11.9 — cobertura dos tipos da Caixa', () => {
+  it('todo registerInboxKind aparece em bots curtos por era × carreira ou tem motivo', () => {
+    const seen: Record<string, number> = {};
+    const ids = new Set<string>();
+    registerSimHook('month', 'test:inbox19', (s) => { for (const m of P(s).inbox) { const k = m.ref?.k18; if (k && !ids.has(m.id)) { ids.add(m.id); seen[String(k)] = (seen[String(k)] ?? 0) + 1; } } });
+    for (const [y, role] of RUNS19) simulatePlayer(defaultConfig(`ib19-${y}`, { startYear: y, role }), 1, 'balanced');
+    registerSimHook('month', 'test:inbox19', () => {});
+    const kinds = inboxKinds18();
+    const never = kinds.filter((k) => !seen[k] && !INBOX_RARE19[k]);
+    const stale = Object.keys(INBOX_RARE19).filter((k) => !kinds.includes(k));
+    console.log('IB19 seen', JSON.stringify(seen), 'never', JSON.stringify(never), 'stale', JSON.stringify(stale));
+    expect(never).toEqual([]);
+    expect(stale).toEqual([]);
+    for (const [k, why] of Object.entries(INBOX_RARE19)) expect(why.length, k).toBeGreaterThan(15);
+  }, 900000);
+});

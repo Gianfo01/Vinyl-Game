@@ -46,7 +46,7 @@ export interface Fact {
 }
 export type FactIn = Omit<Fact, 'id' | 'y' | 'm' | 'w' | 'visibility' | 'tags' | 'severity'> & Partial<Pick<Fact, 'visibility' | 'tags' | 'severity'>>;
 
-export interface Facts17State { f: Fact[]; seq: number }
+export interface Facts17State { f: Fact[]; seq: number; /** r19: fatos agregados (não guardados) por `kind:ano-mês` */ agg?: Record<string, number> }
 declare module './ext4' { interface Ext4 { facts17: Facts17State } }
 const fresh = (): Facts17State => ({ f: [], seq: 0 });
 registerExt4('facts17', fresh);
@@ -57,8 +57,11 @@ export function facts17(s: GameState): Facts17State {
   return st;
 }
 
-/** Teto do anel: fatos pequenos e velhos saem primeiro. */
+/** Teto do anel. r19: ao podar, sai primeiro o excesso dos tipos que passam da cota, depois o pequeno e velho,
+ *  depois o mais fraco (gravidade) — fatos raros e graves sobrevivem à enxurrada de um tipo só. */
 export const FACT_CAP = 600;
+/** r19: cota por tipo no anel (só fatos com gravidade < 70 contam para sair) */
+export const FACT_KIND_QUOTA = 90;
 type FactFn = (s: GameState, f: Fact) => void;
 const LISTENERS: { kind: string; id: string; fn: FactFn }[] = [];
 let depth = 0;
@@ -69,6 +72,9 @@ export function onFact(kind: FactKind | '*', fn: FactFn, id = `${kind}#${LISTENE
   if (i >= 0) LISTENERS[i] = { kind, id, fn };
   else LISTENERS.push({ kind, id, fn });
 }
+
+/** r19 (0.2): quem ouve o quê (matriz Fato → consumidores em factmatrix19.ts). */
+export const factListeners19 = (): { kind: string; id: string }[] => LISTENERS.map((x) => ({ kind: x.kind, id: x.id }));
 
 const same = (a: Fact, b: Omit<Fact, 'id'>): boolean => a.kind === b.kind && a.w === b.w && (a.actors[0] ?? '') === (b.actors[0] ?? '');
 
@@ -89,6 +95,7 @@ export function emitFact(s: GameState, fi: FactIn): Fact {
     if (bridged) { if (o.text.pt === f0.text.pt || !o.data?.bridged) return o; }
     else if (o.data?.bridged) { const f = { ...f0, id: o.id }; st.f[i] = f; fire(s, f); return f; }
   }
+  if (f0.kind === 'chart') { const m = chartMerge19(s, st, f0); if (m) return m; }
   const f: Fact = { ...f0, id: `f${++st.seq}` };
   st.f.push(f);
   if (st.f.length > FACT_CAP) prune(s, st);
@@ -104,10 +111,41 @@ function fire(s: GameState, f: Fact): void {
   } finally { depth--; }
 }
 
+/** r19 (11.1): classe de marco de um fato `chart` — nº 1 mundial, nº 1 num país, top 10 fora de casa, viral,
+ *  virada de estilo. Por protagonista e mês só o primeiro de cada classe vira fato; os seguintes somam em
+ *  `data.more` do primeiro e no agregado do mês (o anel não se afoga em "nº 1 em mais um país"). */
+export function chartClass19(f: Pick<Fact, 'tags'>): string {
+  const t = f.tags;
+  return t.includes('chron:number1') || t.includes('mem:number1') ? 'n1w' : t.includes('mem:no1_country') ? 'n1c' : t.includes('viral') ? 'viral'
+    : t.includes('trend') ? 'trend' : t.includes('crossover') ? 'top10x' : 'chart';
+}
+function chartMerge19(s: GameState, st: Facts17State, f0: Omit<Fact, 'id'>): Fact | null {
+  const cc = chartClass19(f0), who = f0.actors[0] ?? '';
+  for (let i = st.f.length - 1, n = 0; i >= 0 && n < 60; i--, n++) {
+    const o = st.f[i];
+    if (o.y !== f0.y || o.m !== f0.m) break;
+    if (o.kind !== 'chart' || (o.actors[0] ?? '') !== who || chartClass19(o) !== cc) continue;
+    o.data = { ...(o.data ?? {}), more: Number(o.data?.more ?? 0) + 1 };
+    const agg = (st.agg ??= {});
+    const k = `chart:${s.year}-${s.month}`;
+    agg[k] = (agg[k] ?? 0) + 1;
+    const ks = Object.keys(agg);
+    if (ks.length > 36) delete agg[ks[0]];
+    return o;
+  }
+  return null;
+}
+
 function prune(s: GameState, st: Facts17State): void {
-  const over = st.f.length - FACT_CAP + 60;
-  const old = st.f.filter((f) => s.week - f.w > 104 && f.severity < 50).slice(0, over).map((f) => f.id);
-  const drop = new Set(old);
+  let over = st.f.length - FACT_CAP + 60;
+  const drop = new Set<string>();
+  const cnt: Record<string, number> = {};
+  for (const f of st.f) cnt[f.kind] = (cnt[f.kind] ?? 0) + 1;
+  // mais fraco primeiro; empate → mais velho
+  const weak = [...st.f].sort((a, b) => a.severity - b.severity || a.w - b.w);
+  for (const f of weak) { if (over <= 0) break; if (f.severity < 70 && cnt[f.kind] > FACT_KIND_QUOTA) { drop.add(f.id); cnt[f.kind]--; over--; } }
+  for (const f of st.f) { if (over <= 0) break; if (!drop.has(f.id) && s.week - f.w > 104 && f.severity < 50) { drop.add(f.id); over--; } }
+  for (const f of weak) { if (over <= 0) break; if (!drop.has(f.id) && s.week - f.w > 8) { drop.add(f.id); over--; } }
   st.f = st.f.filter((f) => !drop.has(f.id));
   if (st.f.length > FACT_CAP) st.f = st.f.slice(st.f.length - FACT_CAP + 60);
 }
