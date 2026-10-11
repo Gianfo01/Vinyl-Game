@@ -73,6 +73,7 @@ function editorsTab(s: GameState): HTMLElement {
     eds.length ? list(eds.map(([oid, e]) => `${OUTLETS17.find((o) => o.id === oid)?.name ?? oid}: ${e.c} (${e.y}) — ${e.fav.join(', ')}`)) : muted(l('Nenhum ainda.', 'None yet.')),
     section(t(l('Diário da redação', 'Newsroom log')), st.log.length ? list(st.log.slice(0, 15).map(([y, m, x]) => `${y}/${m + 1} — ${t(x)}`)) : muted(l('Nada ainda.', 'Nothing yet.'))));
 }
+const CNT19: Record<string, L> = { events: l('eventos', 'events'), situations: l('situações', 'situations'), outlets: l('veículos', 'outlets'), formats: l('programas e concursos', 'shows and contests'), covers: l('covers/samples', 'covers/samples'), scenes: l('cenas locais', 'local scenes'), relics: l('relíquias', 'relics'), orgs: l('organizações', 'organisations'), chronicles: l('crônicas do crime', 'crime chronicles') };
 function archiveTab(s: GameState): HTMLElement {
   const c = media19Counts();
   const outs = OUTLETS17.filter((o) => s.year >= o.from && s.year <= o.to);
@@ -80,7 +81,7 @@ function archiveTab(s: GameState): HTMLElement {
   const fr = FR18.filter((f) => s.year >= f.from && s.year <= f.to);
   const scenes = SCENES17.filter((x) => s.year >= x[3] && s.year <= x[4]);
   return h('div', null,
-    row(...Object.entries(c).map(([k, v]) => pill(`${k}: ${v}`))),
+    row(...Object.entries(c).map(([k, v]) => pill(`${T(CNT19[k] ?? l(k, k))}: ${v}`))),
     section(t(l('Veículos da época', 'Outlets of the era')), list(outs.slice(0, 40).map((o) => `${o.real && s.config.realNames ? `${o.name} (≈ ${o.real})` : o.name} — ${o.kind}, ${o.market}: ${t(o.desc)}`))),
     section(t(l('Programas no ar', 'Shows on air')), shows.length ? list(shows.map((x) => `${showName19(s, x)} (${x.mk.join(', ')}) — ${t(x.desc)}`)) : muted(l('Nenhum programa-vitrine ainda.', 'No showcase programme yet.'))),
     section(t(l('Concursos e festivais da canção', 'Contests and song festivals')), fr.length ? list(fr.map((f) => `${s.config.realNames ? f.real : t(f.alt)} (${f.mk.join(', ')}) — ${t(f.desc)}`)) : muted(l('Nenhum ainda.', 'None yet.'))),
