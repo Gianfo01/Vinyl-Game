@@ -209,7 +209,14 @@ function mapFrame(v: View): HTMLElement {
       pop.classList.add('w19-sheet');
       pop.removeAttribute('style');
       // o ponto tocado sobe para a faixa visível acima da folha (funciona com qualquer contêiner de rolagem)
-      if (hs) { const r = hs.getBoundingClientRect(); if (r.top < 8 || r.bottom > window.innerHeight * 0.4) hs.scrollIntoView({ block: 'start', behavior: 'auto' }); }
+      if (hs) {
+        const r = hs.getBoundingClientRect(), want = window.innerHeight * 0.4 - r.height - 24;
+        if (r.top < 90 || r.bottom > window.innerHeight * 0.4) {
+          let sc: HTMLElement | null = hs.parentElement;
+          while (sc && !(sc.scrollHeight > sc.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement;
+          if (sc) sc.scrollTop += r.top - want; else window.scrollBy({ top: r.top - want });
+        }
+      }
     } else {
       if (pop.parentElement !== frame) frame.appendChild(pop);
       pop.classList.remove('w19-sheet');
