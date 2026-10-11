@@ -9,6 +9,7 @@
 // Sem estado de RNG próprio: as decisões extras usam um hash da semente (determinístico, não mexe na sequência).
 
 import type { Act, GameState, RunConfig } from './types';
+import { simStart20 } from './worldpolicy20';
 
 export type HistoryMode = NonNullable<RunConfig['history']>;
 export const histMode = (s: GameState): HistoryMode => s.config.history ?? 'loose';
@@ -45,4 +46,5 @@ export const exactHist = (s: GameState): boolean => histMode(s) === 'strict';
 /** Fora do modo exato: história alternativa. */
 export const altHistory = (s: GameState): boolean => histMode(s) !== 'strict';
 /** Um fato real do ano `y` ainda acontece como roteiro? Antes do início da partida, sempre; depois, só no modo exato. */
-export const scriptedReal = (s: GameState, y: number): boolean => exactHist(s) || y < s.config.startYear;
+// r20 (G8): no mundo aleatório v2 (estado inicial simulado) nem o passado anterior ao início é roteiro real.
+export const scriptedReal = (s: GameState, y: number): boolean => exactHist(s) || (y < s.config.startYear && !simStart20(s));

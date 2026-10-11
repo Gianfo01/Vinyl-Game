@@ -15,6 +15,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { chron } from './chron9';
 import { realAct17, realName17, norm17 } from './realidx17';
+import { simStart20 } from '../worldpolicy20';
 import { histRoll } from '../history15';
 
 interface H17 { scenes: Record<string, 1>; covers: Record<string, 1>; suits: Record<string, number> }
@@ -128,7 +129,7 @@ registerSimHook('month', 'heritage17', (s) => {
     const k = keyOf(c);
     if (st.covers[k] || s.year < c[0] || (s.year === c[0] && s.month < c[1])) continue;
     st.covers[k] = 1;
-    if (s.year - c[0] <= 1 && (s.config.history === 'strict' || c[0] < s.config.startYear)) coverEvent(s, c); // r18: história alternativa não reencena covers reais
+    if (s.year - c[0] <= 1 && (s.config.history === 'strict' || (c[0] < s.config.startYear && !simStart20(s)))) coverEvent(s, c); // r18: história alternativa não reencena covers reais
   }
   sampleSuits(s);
 });

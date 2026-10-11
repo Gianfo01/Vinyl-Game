@@ -7,6 +7,7 @@ import {
   type Medal, type UniversePack,
 } from '../../../sim/sys/live';
 import type { GameState, RunConfig } from '../../../sim/types';
+import { newRunConfig20 } from '../../../sim/start17';
 import { createGame } from '../../../sim/worldgen';
 import { scenario17 } from '../../../sim/sys/scenarios17';
 import { $, N, cityName, pill, rerender, section, toast } from '../../common';
@@ -83,10 +84,8 @@ const MEDAL_ICON: Record<Medal, string> = { gold: '🥇', silver: '🥈', bronze
 
 function baseConfig(company: string): RunConfig {
   const words = ['vinil', 'groove', 'fita', 'agulha', 'eco', 'neon', 'jukebox', 'fader'];
-  return {
-    seed: `${words[Math.floor(Math.random() * words.length)]}-${Math.floor(Math.random() * 1e6).toString(36)}`, role: 'label', scenario: 'from_zero', startYear: 1962, mode: 'historic', storyteller: 'maestro',
-    card: 'none', mutators: [], difficulty: 'normal', ironman: false, homeCity: 'london', companyName: company || t(l('Selo Agulha', 'Needle Records')), bandName: '', bandGenre: 'rnr', contentFilters: [],
-  };
+  // r20 (G8): mesma fábrica do Novo Jogo, com o contrato histórico próprio dos cenários (declarado e versionado)
+  return newRunConfig20({ seed: `${words[Math.floor(Math.random() * words.length)]}-${Math.floor(Math.random() * 1e6).toString(36)}`, companyName: company || t(l('Selo Agulha', 'Needle Records')), kind: 'scenario' });
 }
 
 function startGame(cfg: RunConfig, onStart: () => void): void {

@@ -26,6 +26,7 @@ import { feudOf15 } from './kin15';
 import { replaceMember } from './lifecycle7';
 import { canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
 import { actsTouched17 } from '../actidx17';
+import { simStart20 } from '../worldpolicy20';
 
 export type Why16 = 'creative' | 'solo' | 'feud' | 'addiction' | 'left';
 type Ev16 = [number, string, string, 'j' | 'l'];
@@ -104,7 +105,7 @@ const realBound = (s: GameState, p: Person) => !!s.config.realNames && histMode(
 // ---------------------------------------------------------------- renomes reais
 
 function renames(s: GameState): void {
-  if (!s.config.realNames) return;
+  if (!s.config.realNames || simStart20(s)) return; // r20: mundo aleatório v2 não restaura renomes anteriores ao início
   const st = l16(s);
   for (const a of Object.values(s.acts)) {
     if (!a.catalogNo || a.catalogNo < REAL_BASE || a.owner === 'player') continue;

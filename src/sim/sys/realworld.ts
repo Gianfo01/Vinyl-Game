@@ -34,6 +34,7 @@ import { addSignal, signToBestRival } from '../worldgen';
 import { histAltered, histDiverged, histMode, histRoll } from '../history15';
 import { noteRelease17 } from '../relidx17';
 import { actsTouched17 } from '../actidx17';
+import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 const BASE_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
@@ -232,15 +233,21 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   const sched = { push: (e: Sched) => st.sched.push(hm === 'strict' ? { ...e, mo: Math.floor(histRoll(s, `${e.kind}:${act.id}:${e.personId ?? e.rel?.[0] ?? e.m?.[0] ?? e.year}`) * 12) } : e) };
   const debut = act.debutYear;
   const shift = d.d !== undefined ? debut - d.d : 0; // deslocamento (modos livre/caos)
+  // r20 (G8): mundo aleatório v2 — identidade real (nome, papel, nascimento, formação de estreia), mas nada da cronologia
+  // documentada anterior ao início (entradas/saídas, mortes, fim, voltas, discos) vira fato da partida.
+  const sim = simStart20(s);
+  const simDead = (key: string, born: number | undefined) => (sim && s.week === 0 ? simDeath20(s, `${act.id}:${key}`, born, s.year, debut + 1) : undefined);
   if (real) act.name = d.n;
   // integrantes
   if (d.m?.length) {
     const now: string[] = [];
     const old = act.members.map((id) => s.persons[id]).filter(Boolean);
     d.m.forEach((m, i) => {
-      const [name, role, born, died, joined, left] = m;
+      const [name, role, born, died0, joined, left] = m;
       const join = joined !== undefined ? joined + shift : undefined;
-      const leave = left !== undefined ? left + shift : undefined;
+      if (sim && join !== undefined && join > debut) return; // r20: entradas posteriores à estreia são história, não identidade
+      const leave = sim ? undefined : left !== undefined ? left + shift : undefined;
+      const died = sim ? simDead(name, born) : died0;
       const reuse = old[i] && (join === undefined || join <= debut) ? old[i] : undefined;
       let p: Person;
       if (reuse) {
@@ -294,17 +301,19 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       if (real) p.name = d.n;
       if (d.b) p.born = d.b;
       if (d.r) p.role = d.r;
-      if (d.x !== undefined && d.x <= s.year) { p.alive = false; p.died = d.x; }
-      else if (d.x !== undefined && fates) sched.push({ year: d.x, kind: 'fate', actId: act.id, personId: p.id });
+      const x = sim ? simDead(d.n, d.b) : d.x;
+      if (x !== undefined && x <= s.year) { p.alive = false; p.died = x; }
+      else if (x !== undefined && fates) sched.push({ year: x, kind: 'fate', actId: act.id, personId: p.id });
     }
   }
   // fim de carreira e voltas
-  if (d.e !== undefined && hm !== 'strict' && d.e + shift >= s.year) act.careerEnd = Math.max(s.year, act.debutYear) + 2 + Math.floor(histRoll(s, `${act.id}:e18`) * 24); // r18: fim de carreira futuro sorteado
+  if (sim) act.careerEnd = Math.max(s.year, act.debutYear) + 2 + Math.floor(histRoll(s, `${act.id}:e18`) * 24); // r20: fim sorteado, não o real
+  else if (d.e !== undefined && hm !== 'strict' && d.e + shift >= s.year) act.careerEnd = Math.max(s.year, act.debutYear) + 2 + Math.floor(histRoll(s, `${act.id}:e18`) * 24); // r18: fim de carreira futuro sorteado
   else if (d.e !== undefined) act.careerEnd = d.e + shift + (s.config.mode === 'historic' ? 0 : jitter(s, r, 2));
   else act.careerEnd = Math.max(act.careerEnd, 2026 + r.int(0, 14));
-  for (const [a, b] of d.rj ?? []) if (a + shift < s.config.startYear || keep(`r${a}`, 0.4)) sched.push({ year: a + shift, kind: 'reunion', actId: act.id, until: b !== undefined ? b + shift : undefined });
+  for (const [a, b] of sim ? [] : d.rj ?? []) if (a + shift < s.config.startYear || keep(`r${a}`, 0.4)) sched.push({ year: a + shift, kind: 'reunion', actId: act.id, until: b !== undefined ? b + shift : undefined });
   // discografia: o que já saiu vira catálogo; o resto sai no ano certo (se o ato não for do jogador)
-  for (const rel of d.al ?? []) {
+  for (const rel of sim ? [] : d.al ?? []) { // r20: no mundo aleatório v2 o repertório anterior é simulado (newgame)
     const year = rel[1] + shift;
     const title = real ? rel[0] : songTitle(r, langForCity(act.city, r));
     if (year < s.year || (year === s.year && s.month > 0)) seedRelease(s, r, act, { title, year, type: rel[2] ?? 'lp', tier: d.t });
@@ -349,6 +358,7 @@ function newgame(s: GameState, r: Rng): void {
   const st = rw(s);
   const y0 = s.config.startYear;
   const mode = s.config.mode;
+  const sim = simStart20(s); // r20 (G8): estado inicial simulado (status, fim, fama e catálogo não vêm das datas reais)
   // catálogo clássico: decora os que existem; quem já terminou antes da run vira história (modo real)
   const byNo = new Map(Object.values(s.acts).filter((a) => a.catalogNo && a.catalogNo < REAL_BASE).map((a) => [a.catalogNo!, a]));
   const upcomingNos = new Set(s.upcoming.map((u) => u.no));
@@ -368,7 +378,9 @@ function newgame(s: GameState, r: Rng): void {
     fixClassicGenre(s, ca, no);
     decorate(s, r, ca, d);
     ca.status = ca.deceased ? 'retired' : (ex.m?.length ?? 0) > 1 ? 'split' : 'retired';
-    ca.fame = clamp(45 + r.float(0, 30) - (y0 - (ex.e ?? y0)) / 3, 15, 85);
+    const endY = sim ? Math.min(y0 - 1, ex.d + simCareer20(s, `cl:${no}`)) : ex.e ?? y0;
+    ca.fame = clamp(45 + r.float(0, 30) - (y0 - endY) / 3, 15, 85);
+    if (sim) { ca.careerEnd = endY; if (endY > ex.d) simulateDiscography(s, r, ca, ex.d, endY, 1); }
     setFans(ca);
     ca.legend = true;
   }
@@ -380,8 +392,11 @@ function newgame(s: GameState, r: Rng): void {
     if (mode === 'free' && r.chance(0.08)) continue;
     const debut = a.d + jitter(s, r, 2);
     if (debut > y0) { st.upcoming.push(i); continue; }
-    const end = a.e;
-    const reunionNow = (a.rj ?? []).some(([x, y]) => x <= y0 && (y === undefined || y >= y0));
+    const end = sim ? debut + simCareer20(s, `rw:${i}`) : a.e;
+    const reunionNow = !sim && (a.rj ?? []).some(([x, y]) => x <= y0 && (y === undefined || y >= y0));
+    // r20: fama histórica não garante liderança atual no mundo aleatório v2 (porte sorteado em torno do real)
+    const tr = roll20(s, `tier:${i}`);
+    const tier = sim ? (Math.max(1, Math.min(3, a.t + (tr < 0.3 ? 1 : tr > 0.85 ? -1 : 0))) as 1 | 2 | 3) : a.t;
     const act = spawnReal(s, r, i, true);
     if (!act) continue;
     act.debutYear = debut;
@@ -391,14 +406,15 @@ function newgame(s: GameState, r: Rng): void {
     if (end !== undefined && end < y0 && !reunionNow) {
       // já encerrou: catálogo e lenda (fica na aba de inativos)
       if (!act.deceased) act.status = (a.m?.length ?? 0) > 1 ? 'split' : 'retired';
-      act.fame = clamp(activeYearsFame(r, a.t, end - debut) - (y0 - end) / 2, 5, 80);
+      act.fame = clamp(activeYearsFame(r, tier, end - debut) - (y0 - end) / 2, 5, 80);
+      if (sim) { act.careerEnd = end; if (end > debut) simulateDiscography(s, r, act, debut, end, tier); }
       setFans(act);
       if (a.t === 1) act.legend = true;
       continue;
     }
     if (act.status === 'retired') continue;
     act.status = 'active';
-    act.fame = activeYearsFame(r, a.t, years);
+    act.fame = activeYearsFame(r, tier, years);
     act.momentum = r.float(35, 75);
     act.positioning = r.float(35, 85);
     setFans(act);
@@ -407,7 +423,7 @@ function newgame(s: GameState, r: Rng): void {
       if (!p) continue;
       for (const k of Object.keys(p.skills) as (keyof typeof p.skills)[]) p.skills[k] = Math.min(p.potential, p.skills[k] + Math.min(20, years * 2));
     }
-    if (!(a.al ?? []).length && years >= 1) simulateDiscography(s, r, act, debut, y0, a.t);
+    if ((sim || !(a.al ?? []).length) && years >= 1) simulateDiscography(s, r, act, debut, y0, tier);
     if (act.fame > 12 || r.chance(0.5)) signToBestRival(s, r, act);
   }
   // atos gerados ativos no início ganham discografia simulada

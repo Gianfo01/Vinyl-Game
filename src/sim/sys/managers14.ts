@@ -21,6 +21,7 @@ import { gone16 } from './gone16';
 import { labelNeg, opine, opinionOf, registerPer13 } from './persona13';
 import { ownerOf } from './people/owner';
 import { realDataOf } from './realworld';
+import { simStart20 } from '../worldpolicy20';
 import { activeAct } from './ventures12';
 import { mgAdj9, ventures } from './ventures9';
 
@@ -255,8 +256,8 @@ export function managersMonth(s: GameState, r: Rng): void {
       notify(s, fmtL(m.died !== undefined && m.died <= m.to ? l('{n} morreu ({y}); os clientes dele ficam sem empresário.', '{n} died ({y}); their clients are left without a manager.') : l('{n} deixou a gestão de artistas.', '{n} left artist management.'), { n, y: m.died ?? m.to }), 'event');
     }
   }
-  // clientes históricos (ato existe, ano bate, não é seu cliente)
-  for (const m of REAL_MGRS) {
+  // clientes históricos (ato existe, ano bate, não é seu cliente) — r20: não no mundo aleatório v2 (vínculos simulados)
+  for (const m of simStart20(s) ? [] : REAL_MGRS) {
     if (!act(m)) continue;
     for (const [name, a, b] of m.cl) {
       const x = idx.get(name);
@@ -300,7 +301,7 @@ export function managersMonth(s: GameState, r: Rng): void {
     const roster = rosterOf(s, m.id);
     const mk = cityById[m.city]?.market;
     if (roster.length < mgrCap(m) && r.chance(0.08)) {
-      const cands = Object.values(s.acts).filter((a) => activeAct(a) && !a.playerBand && !taken.has(a.id) && a.fame >= 12 && a.debutYear <= s.year && !isMyClient(s, a.id) && !realDataOf(a)
+      const cands = Object.values(s.acts).filter((a) => activeAct(a) && !a.playerBand && !taken.has(a.id) && a.fame >= 12 && a.debutYear <= s.year && !isMyClient(s, a.id) && (simStart20(s) || !realDataOf(a))
         && cityById[a.city]?.market === mk && m.fam.includes(familyOf(a.genre)) && (a.owner !== 'player' || a.trust < 55 || feud));
       cands.sort((a, b) => b.fame - a.fame);
       const pick = cands.length ? cands[Math.min(cands.length - 1, r.int(0, 3))] : undefined;

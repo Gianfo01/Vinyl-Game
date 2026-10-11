@@ -1,0 +1,56 @@
+/* Rodada 20 (G8) — Novo Jogo "Crie sua próxima história": entrada por intenção, 4 áreas, lista de modos, revisão editável. */
+.ng20 header { align-items: flex-start; }
+.ng20 header h1 { margin: 0; }
+.ng20-sub { margin: 0.2rem 0 0; }
+.ng20-intent { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; margin: 0 0 0.6rem; }
+.ng20-intent .pick small { color: var(--muted); }
+.ng20-badge { display: inline-block; margin-left: 0.4rem; padding: 0 0.4rem; border-radius: 999px; font-size: 0.72em; font-weight: 700; letter-spacing: 0.04em; background: var(--accent); color: var(--accent-ink); vertical-align: middle; }
+.ng20-fs { border: 0; padding: 0; margin: 0; min-width: 0; }
+.ng20-fs legend { padding: 0; }
+.ng20-fs legend h3 { margin: 0 0 0.4rem; }
+.ng20-modes { display: grid; gap: 0.35rem; }
+.ng20-mode { display: flex; gap: 0.55rem; align-items: flex-start; padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); cursor: pointer; }
+.ng20-mode.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.ng20-mode input { margin-top: 0.25rem; flex: 0 0 auto; }
+.ng20-mode > span { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.ng20-mode small { color: var(--muted); }
+.ng20-mode:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ng20-explain { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 0.6rem; margin: 0.6rem 0 0.2rem; font-size: 0.92em; }
+.ng20-explain dt { font-weight: 700; }
+.ng20-explain dd { margin: 0; }
+.ng20-cmp { overflow-x: auto; max-width: 100%; }
+.ng20-cmp table { border-collapse: collapse; min-width: 560px; }
+.ng20-cmp th, .ng20-cmp td { text-align: left; padding: 0.25rem 0.45rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ng20-where label { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.5rem; }
+.ng20-where .row { gap: 0.4rem; align-items: center; }
+.ng20-where input[type=text], .ng20-city-q { min-width: 0; flex: 1 1 160px; }
+.ng20-pop > summary { cursor: pointer; }
+.ng20-pop > .ng-grid { margin-top: 0.6rem; }
+.ng20-group { border-top: 1px solid var(--line); padding-top: 0.4rem; margin-top: 0.4rem; }
+.ng20-group-h { justify-content: space-between; align-items: center; gap: 0.5rem; }
+.ng20-group-h h4 { margin: 0.2rem 0; }
+.ng20-notes { margin: 0.5rem 0; padding: 0.4rem 0.6rem; border-radius: 6px; background: var(--panel-2); }
+.ng20-notes.warn { border-left: 3px solid var(--warn, var(--gold)); }
+.ng20-notes p { margin: 0.2rem 0; }
+.ng20-review-acts { gap: 0.4rem; align-items: center; margin: 0.4rem 0; }
+.ng20-next { gap: 0.4rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.ng20-side-act { margin-top: 0.5rem; }
+.ng-side-body p { margin: 0.2rem 0; }
+.ng20-barsum { min-width: 0; flex: 1 1 auto; }
+.ng20-barsum > summary { cursor: pointer; list-style: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ng20-barsum[open] > div { max-height: 40vh; overflow: auto; padding: 0.3rem 0; }
+@media (max-width: 860px) {
+  .ng20 .ng-nav { flex-wrap: wrap; }
+  .ng20-intent { grid-template-columns: 1fr; }
+  .ng20-intent .pick small { display: none; }
+  .ng-bar { flex-wrap: nowrap; }
+}
+@media (max-width: 640px) {
+  .ng20 header h1 { font-size: 1.35rem; }
+  .ng20 .ng17-preset-grid { grid-template-columns: 1fr 1fr; }
+  .ng20 .ng17-preset-grid .pick small { display: none; }
+  .ng20 .ng17-presets h3 { font-size: 1rem; margin: 0 0 0.3rem; }
+  .ng20-intent { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ng20-intent .pick { padding: 0.45rem; font-size: 0.85rem; }
+  .ng-bar .btn.big { white-space: nowrap; font-size: 0.9rem; padding: 0.45rem 0.7rem; }
+}
