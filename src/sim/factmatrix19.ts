@@ -26,6 +26,7 @@ export const GENERIC19 = ['bridge17:press', 'cine18:mem', 'post18:hall'];
 
 /** Tipos emitidos sem consumidor, com o motivo (revisar a cada rodada). */
 export const WHITELIST19: Record<string, string> = {
+  fans_region: 'notícia pública (terr20): mercado fora da região de origem passou de 25% dos fãs; registro na crônica/noticiário e factsAbout, sem reação sistêmica pretendida',
   memory: 'ponte genérica de remember(): o conteúdo já é consumido pelo tipo de origem (tags mem:*), não pelo rótulo',
   agenda: 'registro da agenda (agenda17) para a linha do tempo/porquê; só leitura na interface (factsAbout)',
   hire: 'contratação: aparece na ficha da pessoa (factsAbout); sem reação sistêmica pretendida',
