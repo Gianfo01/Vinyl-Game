@@ -25,6 +25,7 @@ import { bondBalance, bondNote, careerPhase, identity, prefsOf, repeatsFormula, 
 import { rw } from './realworld';
 import { playbookOf } from './rivals8';
 import { actsTouched17 } from '../actidx17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type StoryKind = 'cult' | 'pact' | 'formula';
 
@@ -447,7 +448,7 @@ export function fundExperimental(s: GameState, storyId: string): L | null {
   if (!st || !a || st.k !== 'pact' || st.done || st.st < 1) return l('Não há pacto a cumprir.', 'No pact to honor.');
   if (st.ch.includes('funded')) return l('Já financiado.', 'Already funded.');
   const cost = money(s, 2500 + a.fame * 80);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `r8fund:${st.id}`, -cost, 'artist_dev', `Projeto experimental ${a.name}`);
   for (const id of a.songs) { const so = s.songs[id]; if (so && !so.recorded) so.originality = clamp(so.originality + 10, 0, 100); }
   for (const id of a.members) { const p = s.persons[id]; if (p && !p.isPlayer) p.inspiration = clamp(p.inspiration + 15, 0, 100); }

@@ -37,6 +37,7 @@ import { exileChoice18, regimeAt18, soc18 } from './society18';
 import { strikeActive } from './world4/common';
 import { milestoneById } from './world4/milestones';
 import { w4 } from './world4/state';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const exact = (s: GameState) => histMode(s) === 'strict';
 /** chave de balanço (lote liga/desliga): desliga ganchos mensais e modificadores */
@@ -116,7 +117,7 @@ export function foundInd19(s: GameState, id: IndId): L | null {
   if (s.year < d.from || s.year > d.to) return l('Fora da época.', 'Out of its era.');
   if ((x?.lv ?? 0) >= 3) return l('Já está no nível máximo.', 'Already at the top level.');
   const c = indCost19(s, id);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `reg19ind:${id}:${(x?.lv ?? 0) + 1}`, -c, 'capex', `${d.name.pt} (nível ${(x?.lv ?? 0) + 1})`);
   if (x) { x.lv++; return null; }
   st.ind[id] = { lv: 1, since: s.year, inc: 0, hits: 0, dub: 0, ver: 0, fair: true, grudge: 0, last: -99 };
@@ -136,14 +137,14 @@ export function indAction19(s: GameState, id: IndId, opt = ''): L {
   const pick = (k: string) => schedule18(s, `ib:reg19_ind:${k}`, ctx, d.act, d.name);
   if (id === 'sound' && opt === 'dub') {
     const c = money(s, 400);
-    if (x.dub >= 8 || s.player.cash < c) return l('Caixote cheio ou sem caixa.', 'Box full or no cash.');
+    if (x.dub >= 8 || freeCash20(s) < c) return cashWhy20(s, c, l('Caixote cheio ou sem caixa.', 'Box full or no cash.'));
     post(s, `reg19dub:${x.dub}`, -c, 'recording', 'Dubplate exclusiva');
     x.dub++; pick('dub');
     return fmtL(l('Dubplate exclusiva gravada ({n} no caixote).', 'Exclusive dubplate cut ({n} in the box).'), { n: x.dub });
   }
   if (x.last > s.week - 4) return l('Uma vez por mês.', 'Once a month.');
   const c = actCost19(s, id);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   x.last = s.week;
   post(s, `reg19act:${id}`, -c, id === 'salsa' ? 'live_costs' : 'recording', d.act.pt);
   const a = r.pick(myIn(s, d.genres)) as Act | undefined;
@@ -206,7 +207,7 @@ export function communeBlock19(s: GameState, a?: Act): L | null {
   if (s.year < 1965) return l('Comunas de artistas começam nos anos 1960.', 'Artist communes start in the 1960s.');
   if (histLocked(s, a)) return l('Modo exato: artista real segue a própria história.', 'Exact mode: a real artist follows their own history.');
   if (reg19(s).com[a.id]) return l('Já tem uma comuna.', 'Already has a commune.');
-  if (s.player.cash < communeCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < communeCost19(s)) return cashWhy20(s, communeCost19(s), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function foundCommune19(s: GameState, actId: string): L | null {
@@ -303,7 +304,7 @@ export function applyVisa19(s: GameState, actId: string, vid: string, r = rng(s)
   if (!a || !v || !mineA(s, a)) return l('Indisponível.', 'Unavailable.');
   if (hasVisa19(s, actId, vid)) return l('Já tem.', 'Already granted.');
   const c = money(s, v.cost);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `reg19visa:${actId}:${vid}:${s.week}`, -c, 'touring', `Visto: ${v.name.pt} (${a.name})`);
   const ok = r.chance(visaOdds19(s, a, v).p);
   if (ok) { reg19(s).visa[visaKey19(actId, vid)] = s.week + 52; cnt(s, 'visa_ok'); return fmtL(l('{a}: visto concedido por um ano.', '{a}: visa granted for a year.'), { a: a.name }); }

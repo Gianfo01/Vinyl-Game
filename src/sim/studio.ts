@@ -13,6 +13,7 @@ import type { SampleRequest, StudioSession, Take } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember, staffSkill } from './util';
 import { activeMembers, checkCapacity, fitOverAgenda, monthIndex } from './capacity';
 import { applyMods } from './ext4';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 // ---------- Produtores ----------
 export interface ProducerDef {
@@ -101,7 +102,7 @@ export function startSession(s: GameState, actId: string, songIds: string[], tie
   const { conflict, keep } = fitOverAgenda(s, actId, () => checkCapacity(s, activeMembers(s, act), monthIndex(s), 1, load));
   if (conflict) return conflict.text;
   const cost = sessionCost(s, songs.length, tier, approach, producerId);
-  if (s.player.cash < cost) return l('Caixa insuficiente para a sessão.', 'Not enough cash for the session.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para a sessão.', 'Not enough cash for the session.'));
   // gravar exige estar na cidade da sede (estúdio externo usa a mesma cidade)
   const home = s.config.homeCity;
   let travel = 0;
@@ -308,7 +309,7 @@ export function makeCover(s: GameState, actId: string, sourceSongId: string): So
   const src = s.songs[sourceSongId];
   if (!act || !src) return l('Inválido.', 'Invalid.');
   const fee = money(s, 300);
-  if (s.player.cash < fee) return l('Caixa insuficiente para a licença mecânica.', 'Not enough cash for the mechanical license.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para a licença mecânica.', 'Not enough cash for the mechanical license.'));
   post(s, `cover:${act.id}:${src.id}`, -fee, 'rights', `Licença de cover "${src.title}"`);
   return cloneSong(s, act, src, { coverOf: src.id, originality: clamp(src.originality - 15, 0, 100), genre: act.genre, writers: src.writers, splits: src.splits });
 }
@@ -330,7 +331,7 @@ export function makeTranslation(s: GameState, r: Rng, sourceSongId: string, lang
   if (!src) return l('Inválido.', 'Invalid.');
   const act = s.acts[src.actId];
   const cost = money(s, 600);
-  if (s.player.cash < cost) return l('Caixa insuficiente para a versão.', 'Not enough cash for the adaptation.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para a versão.', 'Not enough cash for the adaptation.'));
   post(s, `transl:${src.id}:${lang}`, -cost, 'rights', `Versão em ${lang}`);
   return cloneSong(s, act, src, { translationOf: src.id, lang, lyrics: clamp(src.lyrics * 0.9 + r.normal(0, 4), 5, 100), title: `${songTitle(r, lang as ReturnType<typeof actLang>)} (${src.title})`, writers: src.writers });
 }

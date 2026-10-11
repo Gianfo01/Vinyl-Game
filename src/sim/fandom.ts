@@ -6,6 +6,7 @@ import { l, type L } from '../data/world';
 import type { Act, GameState } from './types';
 import type { Fandom } from './xtypes';
 import { fmtL, hasTech, money, notify, playerActs, post, remember } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export function fandomOf(s: GameState, actId: string): Fandom {
   return (s.fandoms[actId] ??= { superfans: 0, haters: 0, toxicity: 0 });
@@ -66,7 +67,7 @@ export function fanMeetup(s: GameState, actId: string): L | null {
   const act = s.acts[actId];
   if (!act || act.owner !== 'player') return l('Ato não é seu.', 'Not your act.');
   const cost = money(s, 1500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `meetup:${actId}`, -cost, 'marketing', `Encontro de fãs ${act.name}`);
   const f = fandomOf(s, actId);
   f.superfans += Math.round(act.fans.core * 0.03 + 10);
@@ -80,7 +81,7 @@ export function moderateCommunity(s: GameState, actId: string): L | null {
   const act = s.acts[actId];
   if (!act || act.owner !== 'player') return l('Ato não é seu.', 'Not your act.');
   const cost = money(s, 2500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `moderate:${actId}`, -cost, 'marketing', `Moderação de comunidade ${act.name}`);
   const f = fandomOf(s, actId);
   f.toxicity = Math.max(0, f.toxicity - 25);

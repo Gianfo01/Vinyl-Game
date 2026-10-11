@@ -19,6 +19,7 @@ import type { GameState, Release } from '../types';
 import { fmtL, hasTech, money, notify, playerActs, post, remember } from '../util';
 import { addRecoup18 } from './contracts18';
 import { addChannel18 } from './mkt18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ================================================================ estado
 
@@ -88,7 +89,7 @@ export function makeVideo18(s: GameState, relId: string, o: { tier: number; dir:
   const tier = clamp(Math.round(o.tier), 0, 2);
   if (!d) return l('Escolha um diretor.', 'Pick a director.');
   const cost = dirFee18(s, d, tier) + (o.choreo ? choreoFee18(s) : 0);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v18:${relId}`, -cost, 'marketing', `Clipe: ${rel.title}`);
   const act = s.acts[rel.actId];
   const c = act?.contractId ? s.contracts[act.contractId] : undefined;
@@ -159,7 +160,7 @@ registerInboxKind('media18_viral', {
     if (!rel || !o) return l('Passou.', 'It passed.');
     if (action === 'remix') { const b = exploitBlock(s, rel, 'remaster'); if (b && rel.owner === 'player' && !s.acts[rel.actId]?.playerBand) return b; }
     const cost = money(s, o.real);
-    if (cost && s.player.cash < cost) return l('Caixa insuficiente: você deixou acontecer.', 'Not enough cash: you let it ride.');
+    if (cost && freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente: você deixou acontecer.', 'Not enough cash: you let it ride.'));
     if (cost) post(s, `m18v:${rel.id}:${action}`, -cost, action === 'remix' ? 'recording' : 'promo', `${o.name.pt}: ${rel.title}`);
     startViral(s, rel, o.k, o.weeks, action);
     const act = s.acts[rel.actId];
@@ -236,7 +237,7 @@ export function commissionRemix18(s: GameState, relId: string, djId: string): L 
   const d = ensureDjs18(s).find((x) => x.id === djId);
   if (!d) return l('Escolha um DJ.', 'Pick a DJ.');
   const cost = djFee18(s, d);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `m18r:${relId}`, -cost, 'recording', `Remix ${d.name}: ${rel.title}`);
   const fit = djFit18(s, d, rel);
   st.rmx[relId] = { rel: relId, dj: d.id, w: s.week, until: s.week + 16, k: 1 + 0.06 + fit * 0.14 + d.fame / 500 };
@@ -260,7 +261,7 @@ export function remixContest18(s: GameState, relId: string): L {
   if (!hasTech(s, 'internet')) return l('Concurso de remix precisa de internet (para mandar as trilhas separadas).', 'A remix contest needs the internet (to share the stems).');
   if ((st.n[`cont:${relId}`] ?? 0) > 0) return l('Já houve concurso deste lançamento.', 'This release already had a contest.');
   const cost = money(s, 600);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `m18c:${relId}`, -cost, 'promo', `Concurso de remix: ${rel.title}`);
   st.n[`cont:${relId}`] = 1;
   cnt(s, 'contest');

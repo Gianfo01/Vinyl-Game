@@ -8,6 +8,7 @@ import { addAsset } from './finance';
 import type { GameState } from './types';
 import type { Branch } from './xtypes';
 import { fmtL, hasTech, money, nextId, post, remember } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export interface HqCaps {
   careers: number;
@@ -48,7 +49,7 @@ export function canOpenBranch(s: GameState, cityId: string): L | null {
   if (s.branches.some((b) => b.city === cityId)) return l('Já existe uma filial aqui.', 'There is already a branch here.');
   const max = Math.max(1, s.player.hq * 2 - 2);
   if (s.branches.length >= max) return fmtL(l('A sede atual comporta até {n} filiais.', 'The current HQ supports up to {n} branches.'), { n: max });
-  if (s.player.cash < money(s, BRANCH_LEVELS[0].cost)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, BRANCH_LEVELS[0].cost)) return cashWhy20(s, money(s, BRANCH_LEVELS[0].cost), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 
@@ -74,7 +75,7 @@ export function upgradeBranch(s: GameState, id: string): L | null {
   if (!next) return l('Filial no nível máximo.', 'Branch at max level.');
   if (s.player.hq < b.level + 2) return l('Amplie a matriz primeiro.', 'Upgrade the main HQ first.');
   const cost = money(s, next.cost);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `branchup:${b.id}:${b.level + 1}`, -cost, 'hq', `Ampliação da filial ${b.name}`);
   b.level += 1;
   addAsset(s, { kind: 'building', name: fmtL(l('{n}: {lv}', '{n}: {lv}'), { n: b.name, lv: next.name }), cost, lifeMonths: 180 });

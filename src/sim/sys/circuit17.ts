@@ -19,6 +19,7 @@ import { scandal } from '../scandal17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, nextId, post } from '../util';
 import { acceptInvite, declineInvite, festFee, fest8 } from './fests8';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface War17 { id: string; act: string; a: string; b: string; fa: number; fb: number; until: number; ia?: number; ib?: number }
 export interface Reunion17 { id: string; act: string; cost: number; p: number; est: number; until: number }
@@ -102,7 +103,7 @@ export function stageReunion(s: GameState, actId: string): { ok: boolean; text: 
   const a = s.acts[actId];
   if (!a || !reunionCands(s).includes(a)) return { ok: false, text: l('Indisponível.', 'Unavailable.') };
   const T = reunionTerms(s, a);
-  if (s.player.cash < T.cost) return { ok: false, text: l('Caixa insuficiente para a garantia.', 'Not enough cash for the guarantee.') };
+  if (freeCash20(s) < T.cost) return { ok: false, text: cashWhy20(s, T.cost, l('Caixa insuficiente para a garantia.', 'Not enough cash for the guarantee.')) };
   const st = c17(s);
   st.reunited[a.id] = s.year;
   const r = Rng.fromSeed(`${s.config.seed}:reu17:${a.id}:${s.year}`);

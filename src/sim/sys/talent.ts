@@ -11,6 +11,7 @@ import { songQ } from '../production';
 import type { GameState, Person } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { GROUP_NAMES, actAttr, attrById, grow, groupAvg, tal, techAvg, type AttrGroup, type Role } from './talent/attrs';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export * from './talent/attrs';
 
@@ -96,7 +97,7 @@ export function startLessons(s: GameState, personId: string, group: AttrGroup): 
   if (!p?.alive) return l('Pessoa indisponível.', 'Person unavailable.');
   if (lessonFor(s, personId)) return l('Já está fazendo aulas.', 'Already taking lessons.');
   const cost = money(s, LESSON_COST[group]);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   tal(s).lessons.push({ personId, group, until: s.week + 14, cost });
   return null;
 }

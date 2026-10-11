@@ -28,6 +28,7 @@ import { catVal18 } from './rights18';
 import { noteLost18 } from './econ18';
 import { catFundBid } from './sale17';
 import { ventures } from './ventures9';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -314,7 +315,7 @@ export function docBlock18(s: GameState, d: Doctrine18): L | null {
   if (hasDoc18(s, d.id)) return l('Já em vigor.', 'Already in force.');
   if (hasDoc18(s, d.excl)) return fmtL(l('Incompatível com "{d}" (revogue antes).', 'Incompatible with "{d}" (revoke first).'), { d: docById18(d.excl)!.name });
   if (s.week - P.docLast < DOC_GAP) return fmtL(l('Uma lei por semestre: próxima na semana {w}.', 'One law per semester: next in week {w}.'), { w: P.docLast + DOC_GAP });
-  if (s.player.cash < money(s, d.cost)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, d.cost)) return cashWhy20(s, money(s, d.cost), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function adoptDoc18(s: GameState, id: string): L | null {
@@ -433,7 +434,7 @@ export function labelDecBlock18(s: GameState, d: LabelDec18): L | null {
   const last = pa18(s).dec[d.id];
   if (last !== undefined && s.week - last < d.cooldown) return fmtL(l('De novo na semana {w}.', 'Again in week {w}.'), { w: last + d.cooldown });
   if (d.months && !d.months.includes(s.month)) return deadline(d.months);
-  if (s.player.cash < d.cost(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < d.cost(s)) return cashWhy20(s, d.cost(s), l('Caixa insuficiente.', 'Not enough cash.'));
   return d.when?.(s) ?? null;
 }
 export function takeLabelDec18(s: GameState, id: string): L {

@@ -13,6 +13,7 @@ import { emitFact, onFact, type Fact } from '../facts17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, post } from '../util';
 import { hasRight } from './image17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Sku = 'button' | 'poster' | 'tee' | 'patch' | 'hoodie' | 'cdbox' | 'color_vinyl' | 'tote' | 'nft' | 'fanbox';
 export const SKUS: Record<Sku, { name: L; from: number; to: number; cost: number; price: number; fan: 'core' | 'active' | 'casual'; winter?: 1 }> = {
@@ -75,7 +76,7 @@ export function makeBatch(s: GameState, actId: string, sku: Sku, units: number, 
   if (!skusNow(s).includes(sku)) return l('Esse produto não existe nesta época.', 'That product does not exist in this era.');
   units = clamp(Math.round(units), 50, 50000);
   const cost = unitCost(s, sku, design) * units + money(s, 200 + design * 10);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `m17:${actId}:${sku}:${s.week}`, -cost, 'merch', `Lote ${SKUS[sku].name.pt}: ${a.name}`);
   const st = m17(s);
   let ln = st.lines.find((x) => x.act === actId && x.sku === sku && !x.drop);

@@ -26,6 +26,7 @@ export const CAT18: Record<string, L> = {
   marketing: l('Marketing avulso', 'Ad-hoc marketing'), taxes: l('Impostos', 'Taxes'), outsourcing: l('Terceirização', 'Outsourcing'), neural: l('Era neural', 'Neural era'),
   acquisitions: l('Aquisições', 'Acquisitions'), asset_sales: l('Venda de ativos', 'Asset sales'), overhead: l('Despesas gerais', 'Overhead'),
   promo: l('Promoção mínima de lançamentos', 'Baseline release promo'), dividends: l('Dividendos', 'Dividends'), owner_draw: l('Retiradas e aportes do dono', 'Owner draws and injections'),
+  writeoff: l('Saldo perdoado (sem efeito no caixa)', 'Balance written off (no cash effect)'),
   other: l('Outros', 'Other'),
 };
 const catL = (c: string): L => CAT18[c] ?? l(c, c);

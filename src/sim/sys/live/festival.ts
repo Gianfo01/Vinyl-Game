@@ -10,6 +10,7 @@ import { climateInfo } from '../../travelAdapter';
 import type { Act, GameState } from '../../types';
 import { fmtL, money, nextId, notify, post, remember } from '../../util';
 import { bump, isMine, liveOf, type FestEdition, type FestThought, type FestTile, type OwnFestival } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export interface TileDef {
   id: Exclude<FestTile, ''>;
@@ -68,7 +69,7 @@ export function createFestival(s: GameState, name: string, cityId: string, month
   if (why) return why;
   if (!cityById[cityId]) return l('Cidade inválida.', 'Invalid city.');
   const cost = foundCost(s);
-  if (s.player.cash < cost) return l('Caixa insuficiente para a licença e o terreno.', 'Not enough cash for the permit and the land.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para a licença e o terreno.', 'Not enough cash for the permit and the land.'));
   const w = 12;
   const h = 8;
   const grid: FestTile[] = new Array(w * h).fill('');

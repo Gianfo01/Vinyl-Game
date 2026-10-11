@@ -9,6 +9,7 @@ import type { GameState } from '../../types';
 import { fmtL, money, notify, post, remember } from '../../util';
 import { liveMine, mineAct, mineRel } from './common';
 import { w4 } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export interface FairDef {
   id: string;
@@ -49,7 +50,7 @@ export function bookFair(s: GameState, fairId: string): L | null {
   if (s.month > f.month) return l('A feira deste ano já passou.', 'This year\'s fair is over.');
   if (w.fairs.booked[f.id] === s.year) return l('Estande já reservado.', 'Booth already booked.');
   const cost = fairCost(s, f);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4fairbook:${f.id}`, -cost, 'w4_fairs', `Estande em feira ${f.id}`);
   w.fairs.booked[f.id] = s.year;
   return null;
@@ -131,7 +132,7 @@ export function createFanClub(s: GameState, actId: string, tier: 0 | 1 | 2): L |
   if (w.clubs[actId]) return l('Já existe um fã-clube oficial.', 'An official fan club already exists.');
   if (a.fans.active < 300) return l('Poucos fãs ativos (mín. 300).', 'Too few active fans (min. 300).');
   const cost = money(s, 800);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4clubnew:${actId}`, -cost, 'w4_fanclub', `Fã-clube oficial ${a.name}`);
   w.clubs[actId] = { since: s.week, tier, members: 0, magazine: false, income: 0 };
   fandomOf(s, actId).clubOrganized = true;
@@ -165,7 +166,7 @@ export function clubMeetup(s: GameState, actId: string): L | null {
   const key = `w4meet:${actId}`;
   if (s.week - (s.flags[key] ?? -999) < 26) return l('O último encontro foi há pouco.', 'The last meetup was recent.');
   const cost = money(s, 1000 + c.members * 0.2);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, key, -cost, 'w4_fanclub', `Encontro do fã-clube ${a.name}`);
   s.flags[key] = s.week;
   const conv = Math.min(a.fans.active, Math.round(c.members * 0.05) + 20);

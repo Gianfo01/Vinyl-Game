@@ -16,6 +16,7 @@ import { songProfile } from '../../repertoire';
 import type { Act, GameState, Release, Song } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
 import { exploitBlock } from '../../rights';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 // ------------------------------------------------------------------ estado
 
@@ -347,7 +348,7 @@ export function inviteFeature(s: GameState, r: Rng, songId: string, guestId: str
   if (song.releaseId) return l('A música já foi lançada.', 'The song is already released.');
   if (songX(s, songId).featuring) return l('Esta música já tem participação.', 'This song already has a feature.');
   const fee = featureFee(s, guest);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   const host = s.acts[song.actId];
   const rivalOwner = guest.owner && guest.owner !== 'player' ? s.labels[guest.owner] : undefined;
   const rivalry = rivalOwner ? s.rivalries[rivalOwner.id] ?? 0 : 0;
@@ -383,7 +384,7 @@ export function hireWriter(s: GameState, poolId: string, ghost: boolean, months 
   if (!w) return l('Compositor indisponível.', 'Songwriter unavailable.');
   if (s.x4.creation.writers.some((x) => x.name === w.name && x.until > s.week)) return l('Já contratado.', 'Already hired.');
   const fee = money(s, 800 + w.skill * 25) * (ghost ? 1.4 : 1);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `writer:${w.id}:${s.week}`, -Math.round(fee), 'recording', `Compositor ${w.name}`);
   s.x4.creation.writers.push({ ...w, id: `wr:${s.week}:${w.id}`, fee: Math.round(fee), ghost, until: s.week + months * 4 });
   return null;
@@ -515,7 +516,7 @@ export function remaster(s: GameState, r: Rng, relId: string): L | null {
   if (!remasterOptions(s).length) return l('Ainda não há tecnologia nova para remasterizar.', 'There is no new technology to remaster with yet.');
   if (s.x4.creation.remasters.includes(relId)) return l('Já remasterizado nesta geração.', 'Already remastered for this generation.');
   const cost = money(s, 3000 + rel.songs.length * 600);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `remaster:${relId}`, -cost, 'recording', `Remaster de ${rel.title}`);
   s.x4.creation.remasters.push(relId);
   const act = s.acts[rel.actId];
@@ -549,7 +550,7 @@ export function shootClip(s: GameState, r: Rng, songId: string, shots: string[])
   const defs = shots.map((id) => SHOTS.find((x) => x.id === id)!).filter(Boolean);
   const budget = defs.reduce((t, x) => t + x.cost, 0);
   const cost = money(s, budget * 1500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `clip:${songId}`, -cost, 'marketing', 'Videoclipe');
   const variety = new Set(shots).size;
   const risk = defs.reduce((t, x) => t + x.risk, 0);
@@ -608,7 +609,7 @@ export function openDivision(s: GameState, id: string): L | null {
   if (s.year < d.from) return fmtL(l('Disponível a partir de {y}.', 'Available from {y}.'), { y: d.from });
   if (s.x4.creation.divisions[id]) return l('Divisão já aberta.', 'Division already open.');
   const cost = money(s, d.cost * 5);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `div:${id}`, -cost, 'business', `Divisão ${d.name.pt}`);
   s.x4.creation.divisions[id] = { since: s.week, prestige: 20, awards: 0 };
   return null;

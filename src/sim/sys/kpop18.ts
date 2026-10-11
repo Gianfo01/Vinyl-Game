@@ -18,6 +18,7 @@ import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post } from '../util';
 import { nudge16 } from './fame16';
 import { addStress } from '../stress17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface Tr18 { id: string; name: string; m: boolean; born: number; voice: number; dance: number; look: number; months: number; debt: number }
 export interface Kpop18State {
@@ -58,7 +59,7 @@ export const kftc18 = (y: number) => ({ max7: y >= 2009, trainee: y >= 2017 });
 export function progBlock18(s: GameState): L | null {
   if (kp18(s).prog !== undefined) return l('O programa já existe.', 'The programme already exists.');
   if (s.year < 1989) return l('O modelo de trainees surge com a SM Entertainment (1989).', 'The trainee model appears with SM Entertainment (1989).');
-  if (s.player.cash < progCost18(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < progCost18(s)) return cashWhy20(s, progCost18(s), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function foundProg18(s: GameState): L | null {
@@ -73,7 +74,7 @@ export function audition18(s: GameState): L | null {
   const st = kp18(s);
   if (st.prog === undefined) return l('Abra o programa de trainees primeiro.', 'Open the trainee programme first.');
   if (s.week - st.aud < 52) return l('Uma audição por ano.', 'One audition a year.');
-  if (s.player.cash < audCost18(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < audCost18(s)) return cashWhy20(s, audCost18(s), l('Caixa insuficiente.', 'Not enough cash.'));
   st.aud = s.week;
   post(s, 'kp18aud', -audCost18(s), 'scouting', 'Audição de trainees');
   const r = Rng.fromSeed(`${s.config.seed}|kp18aud|${s.week}`);
@@ -94,7 +95,7 @@ export function debutBlock18(s: GameState, o: Debut18): L | null {
   if (o.mode === 'survival' && s.year < 2016) return l('Programas de sobrevivência só a partir de 2016 (Produce 101).', 'Survival shows only from 2016 (Produce 101).');
   if (o.long && kftc18(s.year).max7) return l('Desde 2009 o contrato-padrão da KFTC limita a 7 anos.', 'Since 2009 the KFTC standard contract caps terms at 7 years.');
   const cost = debutCost18(s) + (o.mode === 'survival' ? survCost18(s) : 0);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function debut18(s: GameState, o: Debut18): L | Act {
@@ -132,7 +133,7 @@ export function debut18(s: GameState, o: Debut18): L | Act {
 export function mobilize18(s: GameState, actId: string): L | null {
   const a = s.acts[actId];
   if (!a || a.owner !== 'player') return l('Inválido.', 'Invalid.');
-  if (s.player.cash < voteCost18(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < voteCost18(s)) return cashWhy20(s, voteCost18(s), l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `kp18vote:${actId}`, -voteCost18(s), 'promo', `Mobilização de fandom (${a.name})`);
   kp18(s).vote[actId] = s.week + 8;
   return null;

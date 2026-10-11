@@ -19,6 +19,7 @@ import type { Owner } from './people/state';
 import { persona, skills } from './persona';
 import { EVENTS } from './lifeevents10/data';
 import { EVENTS11 } from './lifeevents10/data11';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // rodada 11: mais eventos no mesmo sorteio
 for (const d of EVENTS11) if (!EVENTS.some((x) => x.id === d.id)) EVENTS.push(d);
@@ -116,7 +117,7 @@ export function choiceBlocker(s: GameState, ch: Ch, c: LeCtx): L | null {
   if (g) return g;
   const k = costOf(ch);
   if (k.w && e.o.wealth < money(s, k.w)) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
-  if (k.cash && s.player.cash < money(s, k.cash)) return l('Caixa do selo insuficiente.', 'Not enough label cash.');
+  if (k.cash && freeCash20(s) < money(s, k.cash)) return cashWhy20(s, money(s, k.cash), l('Caixa do selo insuficiente.', 'Not enough label cash.'));
   if (k.energy && energyLeft(s) < k.energy) return l('Sem tempo livre suficiente.', 'Not enough free time.');
   return null;
 }

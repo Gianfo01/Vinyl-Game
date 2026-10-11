@@ -22,6 +22,7 @@ import { standingOf } from './standing9';
 import { BOARD_SEAT, CONTROL, holdings as stakeHoldings, labelValue, npcAbsorb, stakeOf } from './stakes8';
 import { ventures } from './ventures9';
 import { withCatalogSums } from '../business';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- catálogo
 
@@ -841,7 +842,7 @@ export function repelRaider(s: GameState, k: string): L | null {
   const f = own?.[k];
   if (!s.listing.listed || !f) return l('Este acionista não tem bloco no seu selo.', 'This holder has no block in your label.');
   const cost = Math.round(f * s.listing.shares * s.listing.price * 1.2);
-  if (s.player.cash < cost) return l('Caixa do selo insuficiente para a recompra.', 'Not enough label cash for the buyback.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa do selo insuficiente para a recompra.', 'Not enough label cash for the buyback.'));
   coPost(s, `repel:${k}`, -cost, `Recompra do bloco de ${holderName(s, k).pt}`);
   delete own[k];
   s.listing.floatShare = Math.max(0, s.listing.floatShare - f);

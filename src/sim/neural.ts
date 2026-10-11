@@ -9,6 +9,7 @@ import type { Act, GameState, Person } from './types';
 import type { HologramShow } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { addAsset } from './finance';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 /** r19 (links19a, I1–I3): o espólio (post18) entra nas decisões de holograma/póstumo/voz IA — preenchido por sys/links19a. */
 export const NEURAL19: {
@@ -53,7 +54,7 @@ export function negotiateImageRights(s: GameState, r: Rng, personId: string, off
   if (ir.holder === 'player') return l('Os direitos já são seus.', 'You already own the rights.');
   const g19 = NEURAL19.gate?.(s, personId, true);
   if (g19) return g19;
-  if (s.player.cash < offer) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < offer) return cashWhy20(s, offer, l('Caixa insuficiente.', 'Not enough cash.'));
   const ratio = offer / ir.feeAsk;
   const trustBonus = s.player.reputation.artists / 200;
   const chance = clamp(ratio * 0.6 + trustBonus - (s.player.neural.voiceScandal ? 0.25 : 0) + (NEURAL19.odds?.(s, personId) ?? 0), 0.02, 0.95);
@@ -101,7 +102,7 @@ export function startHologramShow(s: GameState, r: Rng, personId: string, months
   const rights = rightsHolder(s, personId);
   if (authorized && !rights.ownedByPlayer) return l('Negocie os direitos de imagem com o espólio primeiro.', 'Negotiate image rights with the estate first.');
   const cost = hologramCost(s) + money(s, 8000 * months);
-  if (s.player.cash < cost) return l('Caixa insuficiente para produção do holograma.', 'Not enough cash for hologram production.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para produção do holograma.', 'Not enough cash for hologram production.'));
   post(s, `holo:${personId}:${s.week}`, -cost, 'live_costs', `Holograma de ${p.name}`);
   addAsset(s, { kind: 'hologram', name: fmtL(l('Holograma de {p}', '{p} hologram'), { p: p.name }), cost: hologramCost(s), lifeMonths: 36, refId: personId });
   const show: HologramShow = { id: nextId(s, 'ho'), actId: act.id, personId, rights: rights.ownedByPlayer ? 'owned' : 'licensed', estateFee: rights.ownedByPlayer ? 0 : rights.ask, shows: 0, revenue: 0, untilWeek: s.week + Math.round(months * 4.35) };
@@ -148,7 +149,7 @@ export function posthumousRelease(s: GameState, r: Rng, personId: string, author
   if (authorized && !rights.ownedByPlayer) return l('Negocie os direitos com o espólio primeiro.', 'Negotiate rights with the estate first.');
   const act = Object.values(s.acts).find((a) => a.members.includes(personId))!;
   const cost = money(s, 6000 + vault.length * 1500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `posth:${personId}`, -cost, 'recording', `Finalização póstuma: ${p.name}`);
   for (const id of vault) {
     const song = s.songs[id];
@@ -183,7 +184,7 @@ export function aiVoiceSongs(s: GameState, r: Rng, personId: string, n: number, 
   const g19 = p.alive ? null : NEURAL19.gate?.(s, personId, false);
   if (g19) return g19;
   const cost = money(s, 12000 * n);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `aivoice:${personId}:${s.week}`, -cost, 'recording', `Voz sintética: ${p.name}`);
   const songs = composeSongs(s, r, act, n);
   for (const song of songs) {

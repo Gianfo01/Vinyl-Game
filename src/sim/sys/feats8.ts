@@ -20,6 +20,7 @@ import { addMsg, P } from './people/state';
 import { ownerBonus } from './people/owner';
 import { actBond, actOfPerson, bump } from './social8';
 import { stakeOf } from './stakes8';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface FeatTerms { fee: number; split: number }
 export interface FeatDeal {
@@ -167,7 +168,7 @@ export function acceptFeatCounter(s: GameState, dealId: string): L | null {
   const d = st.deals.find((x) => x.id === dealId && x.status === 'counter');
   if (!d?.counter) return l('Contraproposta expirada.', 'Counter-offer expired.');
   const cl = clearance(s, d.guestActId, d.counter.fee);
-  if (s.player.cash < d.counter.fee + cl.cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < d.counter.fee + cl.cost) return cashWhy20(s, d.counter.fee + cl.cost, l('Caixa insuficiente.', 'Not enough cash.'));
   st.deals = st.deals.filter((x) => x !== d);
   if (!closeFeat(s, d.songId, d.guestActId, d.counter, cl.cost)) return l('A música não está mais disponível.', 'The song is no longer available.');
   return null;

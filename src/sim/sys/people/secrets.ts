@@ -13,6 +13,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember } from '../../u
 import { P, actOf, addMsg, addPost, clamp01, healthOf, socialEra, trackedPersons, type Secret } from './state';
 import { addThought, thoughtAll } from './thoughts';
 import { ownerOf } from './owner';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export const SECRET_NAME: Record<Secret['kind'], L> = {
   affair: l('caso extraconjugal', 'an affair'),
@@ -73,7 +74,7 @@ export function detectiveCost(s: GameState): number {
 /** Contrata um detetive particular para investigar uma pessoa ou CEO rival. */
 export function hireDetective(s: GameState, r: Rng, target: string): L {
   const cost = detectiveCost(s);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `detective:${target}`, -cost, 'admin', 'Detetive particular');
   const st = P(s);
   const hidden = st.secrets.filter((x) => x.owner === target && !x.known);

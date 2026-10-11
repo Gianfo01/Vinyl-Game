@@ -32,6 +32,7 @@ import { eraK19, eraMasterL19, eraWord19, eraOffer19, eraOfferText19, expRoy19, 
 import { fameIn, homeA3 } from './fame16';
 import { m14, mgrActive, mgrName } from './managers14';
 import { labelClout, type ArApproval } from './offers12';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -406,7 +407,7 @@ export function bestAsk18(s: GameState, o: Offer18): Ask18 {
 export function hireLawyer18(s: GameState): L | null {
   if (a18(s).lawyer >= s.week) return l('O advogado já está acompanhando.', 'The lawyer is already on it.');
   const c = lawyerCost18(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `a18law:${s.week}`, -c, 'legal', 'Advogado (negociação de contrato)');
   a18(s).lawyer = s.week + 12;
   led(s, 'legal', -c, l('Advogado para negociar contrato', 'Lawyer to negotiate a deal'));
@@ -965,7 +966,7 @@ export function auditBlock18(s: GameState): L | null {
   if (!st.deal && !st.past.length) return l('Sem contrato para auditar.', 'No deal to audit.');
   if ((st.cd.audit ?? 0) > s.week) return l('Auditoria recente (uma por ano).', 'Recent audit (once a year).');
   if (!st.stmts.length) return l('Ainda não há prestação de contas para auditar.', 'No statements to audit yet.');
-  if (s.player.cash < auditCost18(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < auditCost18(s)) return cashWhy20(s, auditCost18(s), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 /** auditoria dos livros do selo: acha o que foi "arredondado" */
@@ -1032,7 +1033,7 @@ export function leave18(s: GameState): L {
   const d = a18(s).deal;
   if (!d) return l('Sem contrato.', 'No deal.');
   const v = leaveCost18(s);
-  if (s.player.cash < v) return l('Caixa insuficiente para comprar a saída.', 'Not enough cash to buy your way out.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente para comprar a saída.', 'Not enough cash to buy your way out.'));
   post(s, `a18leave:${d.cid}`, -v, 'legal', `Rescisão com ${nameOf(s, d.lb)}`);
   led(s, 'legal', -v, fmtL(l('Rescisão comprada de {b}', 'Bought out of {b}'), { b: nameOf(s, d.lb) }));
   const lb = s.labels[d.lb]; if (lb) lb.cash += v;
@@ -1057,7 +1058,7 @@ export function sue18(s: GameState): L {
   if (!d || !a || !why) return l('Não há quebra de contrato clara.', 'No clear breach of contract.');
   if (st.suits.some((x) => x.lb === d.lb)) return l('Já há processo em andamento.', 'A suit is already under way.');
   const cost = money(s, 5000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `a18sue:${s.week}`, -cost, 'legal', `Processo contra ${nameOf(s, d.lb)}`);
   led(s, 'legal', -cost, fmtL(l('Processo contra {b}: {w}', 'Suit against {b}: {w}'), { b: nameOf(s, d.lb), w: why }));
   st.suits.push({ lb: d.lb, by: 'player', claim: r100(s, 8000 + a.fame * 400), odds: clamp(0.4 + advice18(s) * 0.08, 0, 0.8), ruling: s.week + 26, t: why });
@@ -1153,7 +1154,7 @@ registerInboxKind('a18_buried', {
     const id = String(m.ref?.rel);
     if (action === 'pay') {
       const v = r100(s, exp18(s, a) * 0.4);
-      if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+      if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
       post(s, `a18selfpromo:${id}`, -v, 'marketing', 'Divulgação por conta própria'); led(s, 'mkt', -v, l('Divulgação bancada por vocês', 'Promotion funded by you'));
       d.buried = d.buried.filter((x) => x !== id); a.momentum = clamp(a.momentum + 5, 0, 100);
       return l('Vocês bancaram a divulgação: o disco volta a respirar.', 'You funded the promotion: the record breathes again.');

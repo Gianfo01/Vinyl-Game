@@ -14,6 +14,7 @@ import { songQ } from '../production';
 import type { Act, GameState, Song, StaffMember } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { careerOf } from './people/staff';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type SpecId = 'auteur' | 'facilitator' | 'signature' | 'technician' | 'safety' | 'lean' | 'hardball' | 'mediator' | 'independent' | 'company' | 'local' | 'global';
 export type Ambition = 'stable' | 'star' | 'mentor' | 'founder';
@@ -168,7 +169,7 @@ export function respec(s: GameState, staffId: string): L | null {
   if (!pair) return l('Essa função não tem especializações.', 'This role has no specializations.');
   const cur = profileOf(s, st).spec!;
   const cost = respecCost(s, st);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `respec:${st.id}`, -cost, 'staff_training', `Reorientação ${st.name}`);
   crew(s).over[st.id] = pair[0] === cur ? pair[1] : pair[0];
   const c = careerOf(s, st);

@@ -17,6 +17,7 @@ import { branchCityBonus } from './branches';
 import { applyMods, runSimHooks } from './ext4';
 import { take360 } from './sys/deal360_17';
 import { TOUR18, type Kit18 } from './tourhook18';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export const TICKET = [12, 25, 45, 70, 95];
 export const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
@@ -154,7 +155,7 @@ export function planTour(s: GameState, p: TourPlan): Tour | L {
     }
   }
   if (p.partnerActId && !s.acts[p.partnerActId]) return l('Parceiro inválido.', 'Invalid partner.');
-  if (s.player.cash < est.logistics) return l('Caixa insuficiente para reservar a logística.', 'Not enough cash to book logistics.');
+  if (freeCash20(s) < est.logistics) return cashWhy20(s, est.logistics, l('Caixa insuficiente para reservar a logística.', 'Not enough cash to book logistics.'));
   const tour: Tour = {
     id: nextId(s, 'tr'), actId: act.id, name: p.name?.trim() || fmtL(l('Turnê {y}', '{y} Tour'), { y: s.year }).pt, stops: est.stops, setlist: p.setlist, minutes: p.minutes,
     production: p.production, role: p.role, partnerActId: p.partnerActId, crew: p.crew, pay: p.pay, costReserved: est.logistics, revenue: 0, costs: est.logistics, status: 'planned', log: [], accidents: 0,

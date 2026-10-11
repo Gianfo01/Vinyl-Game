@@ -11,6 +11,7 @@ import type { Act, GameState } from '../../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../../util';
 import { monthIndex } from '../../capacity';
 import { bump, isMine, liveOf, liveShare, type OwnVenue, type Residency } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 void applyMods;
 
@@ -32,7 +33,7 @@ export function buyVenue(s: GameState, kind: OwnVenue['kind'], cityId: string, n
   if (s.year < k.minYear) return l('Ainda não existem arenas desse porte.', 'Arenas of that size don\'t exist yet.');
   if (!cityById[cityId]) return l('Cidade inválida.', 'Invalid city.');
   const price = money(s, k.price);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   const v: OwnVenue = { kind, cityId, name: name.trim() || `${k.name.pt} ${cityById[cityId].name.pt}`, bar: 0, acoustics: 0, rentalNights: 8, ownNights: 0, boughtYear: s.year, price, history: [] };
   post(s, `venuebuy:${kind}:${cityId}`, -price, 'investments', `Compra: ${v.name}`);
   lv.venue = v;
@@ -46,7 +47,7 @@ export function upgradeVenue(s: GameState, what: 'bar' | 'acoustics'): L | null 
   if (!v) return l('Sem casa de shows.', 'No venue.');
   if (v[what] >= 3) return l('Já está no máximo.', 'Already maxed out.');
   const cost = upgradeCost(s, v, what);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `venueup:${what}:${v[what]}`, -cost, 'investments', `Reforma (${what}) ${v.name}`);
   v[what] += 1;
   return null;

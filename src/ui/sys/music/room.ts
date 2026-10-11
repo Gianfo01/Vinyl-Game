@@ -10,6 +10,7 @@ import { h } from '../../dom';
 import { store } from '../../store';
 import { focusIdeal, stageName, studioContext } from '../../../sim/sys/recipe12';
 import { chips, ic, stat } from '../../vis';
+import { freeCash20 } from '../../../sim/oblig20';
 
 export function studioTab(s: GameState): HTMLElement {
   const a = s.acts[store.selectedAct ?? ''];
@@ -54,12 +55,12 @@ function studioSection(s: GameState): HTMLElement {
       const g = gearById[o.gearId];
       return h('article', { class: 'tile mu-offer' }, h('div', { class: 'tile-ic' }, ic('gavel', 2)), h('div', { class: 'tile-body' },
         h('b', null, t(g.name)), h('small', null, t(l('Massa falida de {lb}', '{lb} bankruptcy sale'), { lb: o.from })),
-        h('button', { class: 'btn small primary', disabled: s.player.cash < o.price, onclick: () => { const e = buyGear(s, o.gearId, o.id); toast(t(e ?? l('Comprado no leilão!', 'Bought at auction!')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Arrematar', 'Buy'))} ${$(o.price)}`)));
+        h('button', { class: 'btn small primary', disabled: freeCash20(s) < o.price, onclick: () => { const e = buyGear(s, o.gearId, o.id); toast(t(e ?? l('Comprado no leilão!', 'Bought at auction!')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Arrematar', 'Buy'))} ${$(o.price)}`)));
     })) : null,
     avail.length ? h('div', { class: 'mu-gear' }, avail.map((g) => h('article', { class: 'tile' }, h('div', { class: 'tile-ic' }, ic('mic', 2)), h('div', { class: 'tile-body' },
       h('b', null, t(g.name)), h('small', null, t(g.desc)),
       chips(stat('radio', `+${g.prod}`, l('Produção', 'Production')), g.perf ? stat('mic', `+${g.perf}`, l('Performance', 'Performance')) : null, g.orig ? stat('sparkle', `${g.orig > 0 ? '+' : ''}${g.orig}`, l('Originalidade', 'Originality')) : null),
-      h('button', { class: 'btn small', disabled: s.player.cash < money(s, g.price), onclick: () => { const e = buyGear(s, g.id); toast(t(e ?? l('Equipamento instalado no estúdio.', 'Gear installed in the studio.')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Comprar', 'Buy'))} ${$(money(s, g.price))}`))))) : h('p', { class: 'muted small' }, t(l('Nenhum equipamento lendário novo nesta época.', 'No new legendary gear in this era.'))),
+      h('button', { class: 'btn small', disabled: freeCash20(s) < money(s, g.price), onclick: () => { const e = buyGear(s, g.id); toast(t(e ?? l('Equipamento instalado no estúdio.', 'Gear installed in the studio.')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Comprar', 'Buy'))} ${$(money(s, g.price))}`))))) : h('p', { class: 'muted small' }, t(l('Nenhum equipamento lendário novo nesta época.', 'No new legendary gear in this era.'))),
     h('p', { class: 'muted small' }, t(l('Equipamentos valem inteiros no estúdio da sede e pela metade em estúdios externos; casam melhor com alguns gêneros e mudam o som do trecho.', 'Gear counts fully in your HQ studio and half in outside studios; it suits some genres better and changes the snippet\'s sound.'))),
   );
 }

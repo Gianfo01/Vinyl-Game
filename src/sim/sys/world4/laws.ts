@@ -12,6 +12,7 @@ import { liveMine, liveMineReleases, mineRel, rep } from './common';
 import { STANCE_NAME, setStance } from './milestones';
 import { w4, type LawState, type PiracyStance, type Society } from './state';
 import { emitFact } from '../../facts17';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 // ======================================================================= sindicato
 
@@ -46,7 +47,7 @@ export function setSociety(s: GameState, soc: Society | undefined): L | null {
   if (soc && !societyAvailable(s, soc)) return l('Essa sociedade ainda não existe.', 'That society does not exist yet.');
   if (w.society && soc) {
     const cost = money(s, 1500);
-    if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, 'w4socswitch', -cost, 'w4_rights', 'Transferência de sociedade (auditoria)');
   }
   w.society = soc;
@@ -90,7 +91,7 @@ export function joinAssoc(s: GameState, on: boolean): L | null {
   if (w.assoc === on) return null;
   if (on) {
     const cost = assocDues(s);
-    if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, 'w4assoc', -cost, 'w4_rights', 'Anuidade da associação de gravadoras');
     rep(s, 'institutional', 2);
   }
@@ -110,7 +111,7 @@ export function lobby(s: GameState, lawId: string): L | null {
   if (!st || st.status !== 'pending') return l('Nada em votação.', 'Nothing up for a vote.');
   if (!w4(s).assoc) return l('Só membros da associação fazem lobby.', 'Only association members can lobby.');
   const cost = money(s, 3000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4lobby:${lawId}:${st.lobby}`, -cost, 'w4_rights', `Lobby ${lawId}`);
   st.lobby += 1;
   return null;
@@ -214,7 +215,7 @@ export function cleanEdit(s: GameState, relId: string): L | null {
   const cur = w.advisory[relId];
   if (cur === 'clean' || cur === 'both') return l('Já tem versão limpa.', 'Already has a clean edit.');
   const cost = money(s, 1200);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4clean:${relId}`, -cost, 'w4_release', `Versão editada ${rel.title}`);
   rel.appeal *= 1.06;
   w.advisory[relId] = cur === 'sticker' ? 'both' : 'clean';

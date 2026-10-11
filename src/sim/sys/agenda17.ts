@@ -34,6 +34,7 @@ import { ventures, type VKind } from './ventures9';
 import { mgrActive, mgrCap, mgrName, rosterOf } from './managers14';
 import { prodActive, prodName } from './producers15';
 import { liveOf } from './live/state';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Inv = 'lead' | 'normal' | 'deleg';
 export interface Head { id: string; name: string; skill: number; salary: number; since: number; trait: string }
@@ -278,7 +279,7 @@ export function negotiate(s: GameState, candId: string, pct: number): Res17 {
   const isStaff = !c.role.startsWith('head:') && c.role !== 'chief';
   if (isStaff && s.player.staff.length >= hqCaps(s).staff) return { ok: false, text: l('Sede sem vagas para equipe. Amplie a sede (diretores e chefe de gabinete não ocupam vaga).', 'No staff room in the HQ. Upgrade it (directors and chief of staff take no seat).') };
   const salary = Math.round(c.ask * pct), signOn = Math.round(salary * 0.5);
-  if (s.player.cash < signOn) return { ok: false, text: l('Caixa insuficiente para as luvas (meio salário).', 'Not enough cash for the signing fee (half a salary).') };
+  if (freeCash20(s) < signOn) return { ok: false, text: cashWhy20(s, signOn, l('Caixa insuficiente para as luvas (meio salário).', 'Not enough cash for the signing fee (half a salary).')) };
   const r = Rng.fromSeed(`${s.config.seed}:ag17:neg:${candId}:${s.week}:${Math.round(pct * 100)}`);
   const p = acceptChance(s, c, pct);
   a.used[candId] = mk(s);
@@ -339,7 +340,7 @@ export function hireFreelancer(s: GameState, flId: string, actId: string): Res17
   const kind = flId.split(':')[2] as FlKind, f = freelancers(s, kind).find((x) => x.id === flId), act = s.acts[actId];
   if (!f || !act) return { ok: false, text: l('Indisponível.', 'Unavailable.') };
   if (f.busy) return { ok: false, text: f.busy };
-  if (s.player.cash < f.fee) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.') };
+  if (freeCash20(s) < f.fee) return { ok: false, text: cashWhy20(s, f.fee, l('Caixa insuficiente.', 'Not enough cash.')) };
   const a = ag17(s), r = Rng.fromSeed(`${s.config.seed}:ag17:flr:${flId}:${actId}`);
   a.used[flId] = mk(s);
   post(s, `ag17:fl:${flId}`, -f.fee, 'marketing', `${FL[kind].name.pt} ${f.name}`);
@@ -409,7 +410,7 @@ export function bookCrew(s: GameState, crewId: string, actId: string): Res17 {
   const c = crewById(crewId), act = s.acts[actId], a = ag17(s);
   if (!c || !act || s.year < c.from || s.year > c.to) return { ok: false, text: l('Indisponível nesta época.', 'Not available in this era.') };
   const fee = crewFee(s, c);
-  if (s.player.cash < fee) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.') };
+  if (freeCash20(s) < fee) return { ok: false, text: cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.')) };
   if (a.sess.some((x) => x.actId === actId && x.kind === c.kind && x.until >= mk(s))) return { ok: false, text: l('Esse ato já tem um contrato desse tipo em andamento.', 'That act already has a deal of this kind running.') };
   const fit = crewFit(s, c, act);
   post(s, `ag17:crew:${crewId}:${actId}:${mk(s)}`, -fee, 'recording', `${crewName(s, c).pt} · ${act.name}`);

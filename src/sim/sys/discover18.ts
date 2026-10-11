@@ -20,6 +20,7 @@ import { fmtL, money, notify, playerActs, post, staffSkill } from '../util';
 import { addSignal, spawnProceduralAct } from '../worldgen';
 import { spendEnergy } from './life';
 import { P } from './people/state';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface Lead18 { a: string; ch: string; w: number; note: L; ref?: string }
 export interface Disc18State { leads: Lead18[]; hot: Record<string, { lb: string; w: number }>; passed: Record<string, number>; gone: Record<string, 1>; asked: Record<string, number>; last: Record<string, number> }
@@ -115,7 +116,7 @@ export function dig18(s: GameState, chId: string): Dig18 {
   if (!c || s.year < c.from || s.year > c.to) return { ok: false, text: l('Canal indisponível nesta época.', 'Channel not available in this era.'), found: [] };
   if (!ready(s, c)) return { ok: false, text: l('Você já usou este canal neste mês.', 'You already used this channel this month.'), found: [] };
   const cost = chCost18(s, c);
-  if (s.player.cash < cost) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.'), found: [] };
+  if (freeCash20(s) < cost) return { ok: false, text: cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.')), found: [] };
   if (c.id === 'referral' && !playerActs(s).length) return { ok: false, text: l('Você ainda não tem elenco para indicar ninguém.', 'You have no roster yet to refer anyone.'), found: [] };
   if (c.balls) { const e = spendEnergy(s, c.balls); if (e) return { ok: false, text: e, found: [] }; }
   const st = disc18(s);
@@ -162,7 +163,7 @@ export function watchShow18(s: GameState, headId: string): Dig18 {
   const st = disc18(s);
   if ((st.last[`show:${headId}`] ?? -99) > s.week - 8) return { ok: false, text: l('Você já viu este show há pouco.', 'You saw this show recently.'), found: [] };
   const cost = money(s, 60 + h.fame * 4);
-  if (s.player.cash < cost) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.'), found: [] };
+  if (freeCash20(s) < cost) return { ok: false, text: cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.')), found: [] };
   const e = spendEnergy(s, 1); if (e) return { ok: false, text: e, found: [] };
   st.last[`show:${headId}`] = s.week;
   post(s, `d18show:${headId}`, -cost, 'scouting', `Show de ${h.name}`);

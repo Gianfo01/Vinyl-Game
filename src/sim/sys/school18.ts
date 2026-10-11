@@ -18,6 +18,7 @@ import { fmtL, money, notify, playerActs, post } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { actOfPerson17 } from './love17';
 import { addLead18, disc18 } from './discover18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface School18 { id: string; real: string; alt: L; from: number; to: number; city: string; fams: FamilyId[]; usd: number; q: number; desc: L }
 export const SCHOOLS18: School18[] = [
@@ -64,7 +65,7 @@ export function foundSchool18(s: GameState): L | null {
   const def = OWN18[lv];
   if (!def) return l('Já está no nível máximo.', 'Already at the top level.');
   const c = money(s, def.cost);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `venture:school18:${lv}`, -c, 'capex', `Escola: ${def.name.pt}`);
   st.own = st.own ? { ...st.own, lv } : { lv, since: s.year, prest: 20, students: 0, inc: 0 };
   emitFact(s, { kind: 'deal', actors: ['player'], place: s.config.homeCity, severity: 15 + lv * 10, visibility: 'public', tags: ['good', 'school', 'education'], src: 'school18', text: fmtL(l('{c} abre: {n}.', '{c} opens: {n}.'), { c: s.config.companyName, n: def.name }) });

@@ -21,6 +21,7 @@ import { a3Of, commitCrime, crime17, feedCase, isReal } from './crime17';
 import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import { per13 } from './persona13';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- regras de história
 
@@ -265,7 +266,7 @@ export function cool18(s: GameState, f: Feud18, how: 'mediate' | 'truce' | 'coll
 export function tryCool18(s: GameState, f: Feud18, how: 'mediate' | 'truce' | 'collab', payer: 'player' | 'npc', r: Rng): { ok: boolean; text: L } {
   const o = cool18(s, f, how);
   if (payer === 'player') {
-    if (s.player.cash < o.cost) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.') };
+    if (freeCash20(s) < o.cost) return { ok: false, text: cashWhy20(s, o.cost, l('Caixa insuficiente.', 'Not enough cash.')) };
     post(s, `feud18:${how}:${f.id}`, -o.cost, how === 'collab' ? 'recording' : 'legal', `Rixa: ${how}`);
   }
   const ok = r.chance(o.p);

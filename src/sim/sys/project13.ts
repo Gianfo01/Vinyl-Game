@@ -15,6 +15,7 @@ import { sup13 } from './industry/supply13';
 import { capDeltas, songRec, syncSong, type Deltas } from './music/state';
 import { CONCEPTS, conceptById, openProjects, proj8, projectQ, projectStage, type MusicProject } from './project8';
 import { INTENTS, planOf12 } from './project12';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Loc = 'label' | 'live' | 'legendary' | 'retreat' | 'abroad' | 'home';
 export type Single = 'none' | 'focus' | 'lead' | 'two' | 'surprise';
@@ -116,7 +117,7 @@ export function commit13(s: GameState, p: MusicProject, c: Choice13): L | null {
   const prev = planOf13(s, p);
   const cost = cost13(s, p, c);
   const delta = cost - (prev?.paid ?? 0);
-  if (delta > 0 && s.player.cash < delta) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (delta > 0 && freeCash20(s) < delta) return cashWhy20(s, delta, l('Caixa insuficiente.', 'Not enough cash.'));
   if (delta) { post(s, `p13:${p.id}:${s.week}:${cost}`, -delta, 'recording', `Projeto ${p.title || p.type}`); p.spent += delta; }
   const dw = LOCS[c.loc].weeks + Math.round((c.polish - 50) / 10);
   const pl12 = planOf12(s, p);

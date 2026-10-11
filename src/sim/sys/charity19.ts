@@ -30,6 +30,7 @@ import { feedCase } from './crime17';
 import { headline19 } from './factlink19';
 import { feudOf18, startFeud18, temper18, leadOf18 } from './feud18';
 import { CAUSES18, soc18, startCharity18, type Camp18 } from './society18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface Cr19 { id: string; y: number; m: number; w: number; cause: string; fmt: Camp18['fmt']; t: L; real?: boolean; mine?: boolean; aud?: boolean; join?: string; done?: boolean; org?: string; v?: number; gone?: boolean }
 export interface Stage19 { y: number; a: string; b: string; k: 'pact' | 'feud' | 'cold'; t: L }
@@ -112,7 +113,7 @@ export function answerCrisis19(s: GameState, crId: string, a: 'lead_audit' | 'le
     return fmtL(l('{a} vai tocar no megashow.', '{a} will play the mega-show.'), { a: top.name });
   }
   const aud = a === 'lead_audit';
-  if (aud && s.player.cash < auditCost19(s)) return l('Caixa insuficiente para a auditoria.', 'Not enough cash for the audit.');
+  if (aud && freeCash20(s) < auditCost19(s)) return cashWhy20(s, auditCost19(s), l('Caixa insuficiente para a auditoria.', 'Not enough cash for the audit.'));
   const err = startCharity18(s, c.cause, c.fmt, 0);
   if (err) return err;
   if (aud) post(s, `ch19aud:${c.id}`, -auditCost19(s), 'legal', 'Auditoria independente da campanha beneficente');

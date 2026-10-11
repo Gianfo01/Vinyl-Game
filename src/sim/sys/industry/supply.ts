@@ -11,6 +11,7 @@ import { fmtL, money, nextId, notify, post, remember } from '../../util';
 import type { Material, Plant } from './state';
 import { researchDone } from './research';
 import { costFactor, gradeDefect, matTarget, onGradeLaunch } from './supply13';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export const MATERIAL_NAMES: Record<Material, L> = {
   shellac: l('Goma-laca', 'Shellac'),
@@ -60,7 +61,7 @@ export function buildPlant(s: GameState, cityId: string): L | null {
   if (!cityById[cityId]) return l('Cidade inválida.', 'Invalid city.');
   if (st.plants.length >= 3) return l('No máximo 3 fábricas.', 'At most 3 plants.');
   const cost = money(s, PLANT_LEVELS[0].cost);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `plant:${cityId}:${s.week}`, -cost, 'plant', `Fábrica em ${cityById[cityId].name.pt}`);
   const p: Plant = { id: nextId(s, 'pl'), city: cityId, level: 1, opened: s.week, capacity: PLANT_LEVELS[0].capacity, contractUnits: 0 };
   st.plants.push(p);
@@ -75,7 +76,7 @@ export function upgradePlant(s: GameState, id: string): L | null {
   const next = PLANT_LEVELS[p.level];
   if (!next) return l('Fábrica no nível máximo.', 'Plant at max level.');
   const cost = money(s, next.cost);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `plantup:${p.id}:${p.level + 1}`, -cost, 'plant', 'Ampliação da fábrica');
   p.level += 1;
   p.capacity = next.capacity;

@@ -25,6 +25,7 @@ import { hq6 } from './hq6';
 import { liveOf } from './live/state';
 import { v17, vdef } from './venues17';
 import { LOTGATE19, world19, type Pop19, type PopAct19, type PopRow19 } from './world19';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -131,7 +132,7 @@ export function buyNb19(s: GameState, lot: number): L | null {
   const x = nb19(s).find((v) => v.lot === lot);
   if (!x) return l('Não há vizinho nesse lote.', 'No neighbour on that lot.');
   if (!x.sale) return l('O imóvel não está à venda.', 'The property is not for sale.');
-  if (s.player.cash < x.price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < x.price) return cashWhy20(s, x.price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `hood19:buy:${lot}:${mIdx(s)}`, -x.price, 'capex', `Compra de imóvel vizinho: ${x.name.pt}`);
   hood19(s).bought[lot] = s.year;
   log18(s, fmtL(l('Você comprou o imóvel de "{n}": o lote "{l}" agora é seu.', 'You bought "{n}"\'s property: lot "{l}" is now yours.'), { n: x.name, l: LOTS18[lot].name }));
@@ -148,7 +149,7 @@ export function nbPop19(s: GameState, lot: number): Pop19 | null {
   if (x.sale) rows.push({ k: l('Preço pedido', 'Asking price'), v: $k(x.price), why: ['h19.hood', {}] });
   const acts: PopAct19[] = [];
   acts.push({ id: 'go', label: d.go.label ?? l('Abrir', 'Open'), go: x.who ? { area: 'labels', label: d.go.label } : d.go, tone: 'ghost' });
-  acts.push({ id: 'buy', label: l('Comprar o imóvel', 'Buy the property'), cost: x.price, tone: 'primary', dis: !x.sale ? (x.k === 'rival' ? l('A rival não vende o escritório.', 'The rival won\'t sell its office.') : l('Não está à venda este ano.', 'Not for sale this year.')) : s.player.cash < x.price ? l('Caixa insuficiente.', 'Not enough cash.') : undefined, confirm: l('Comprar? O vizinho sai e o lote fica livre para você construir.', 'Buy? The neighbour moves out and the lot is free for you to build on.') });
+  acts.push({ id: 'buy', label: l('Comprar o imóvel', 'Buy the property'), cost: x.price, tone: 'primary', dis: !x.sale ? (x.k === 'rival' ? l('A rival não vende o escritório.', 'The rival won\'t sell its office.') : l('Não está à venda este ano.', 'Not for sale this year.')) : freeCash20(s) < x.price ? cashWhy20(s, x.price, l('Caixa insuficiente.', 'Not enough cash.')) : undefined, confirm: l('Comprar? O vizinho sai e o lote fica livre para você construir.', 'Buy? The neighbour moves out and the lot is free for you to build on.') });
   return { kind: 'lot', id: `nb:${lot}`, title: x.name, icon: d.icon, tags: [l('Vizinho', 'Neighbour'), x.k === 'records' && s.year < 1910 ? l('Loja de partituras e fonógrafos', 'Sheet-music and phonograph shop') : d.n, x.sale ? l('À venda', 'For sale') : l('Não está à venda', 'Not for sale')], rows, notes: [{ t: l('Vizinhos dão vida à rua. Comprar o imóvel libera o lote para você.', 'Neighbours bring the street to life. Buying frees the lot for you.') }], acts, opts: [] };
 }
 
@@ -222,14 +223,14 @@ export function evPop19(s: GameState, id: string): Pop19 | null {
   const e = live19ev(s).find((x) => x.id === id);
   if (!e) return null;
   const d = EV19[e.k];
-  const acts: PopAct19[] = d.ch.map(([c, label]) => { const cost = evCost19(s, e.k, c); return { id: `ev:${c}`, label, cost: e.k === 'shoot' && c === 'allow' ? -money(s, 3000) : cost || undefined, tone: c === d.ch[0][0] ? 'primary' : 'ghost', dis: cost && s.player.cash < cost ? l('Caixa insuficiente.', 'Not enough cash.') : undefined }; });
+  const acts: PopAct19[] = d.ch.map(([c, label]) => { const cost = evCost19(s, e.k, c); return { id: `ev:${c}`, label, cost: e.k === 'shoot' && c === 'allow' ? -money(s, 3000) : cost || undefined, tone: c === d.ch[0][0] ? 'primary' : 'ghost', dis: cost && freeCash20(s) < cost ? cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.')) : undefined }; });
   return { kind: 'lot', id: `ev:${e.id}`, title: d.n, icon: 'warning', tags: [l('Evento do bairro', 'Neighbourhood event')], rows: [], notes: [{ t: d.d }, ...d.ch.map(([, n, eff]) => ({ t: fmtL(l('{n}: {e}', '{n}: {e}'), { n, e: eff }) }))], acts, opts: [] };
 }
 export function actEv19(s: GameState, id: string, c: string): L | null {
   const e = live19ev(s).find((x) => x.id === id);
   if (!e) return l('Evento já passou.', 'The event is over.');
   const cost = evCost19(s, e.k, c);
-  if (cost && s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (cost && freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   if (cost) post(s, `hood19:${e.id}:${c}`, -cost, 'hq', `Bairro: ${EV19[e.k].n.pt}`);
   const rep = s.player.reputation;
   const local = () => playerActs(s).map((a) => s.acts[a]).filter((a) => a && a.city === s.config.homeCity).flatMap((a) => a.members);

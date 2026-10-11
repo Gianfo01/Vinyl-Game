@@ -22,6 +22,7 @@ import { fmtL, money, playerActs, post } from '../util';
 import { careers, registerCareer } from './careers12';
 import { playerPerson } from './life';
 import { noto, registerNoto14 } from './notoriety14';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Med18 = 'film' | 'tv' | 'musical' | 'game';
 export type Style18 = 'auteur' | 'meddler' | 'trusting';
@@ -107,7 +108,7 @@ export function acceptComm18(s: GameState, id: string, who: string, ap: Ap18): L
   if (!p?.alive || !composers18(s).includes(p)) return l('Escolha um compositor seu.', 'Pick one of your composers.');
   if (busy(s, who) >= 2) return l('Esse compositor já tem duas encomendas.', 'That composer already has two commissions.');
   const cost = Math.round(c.fee * AP18[ap].cost);
-  if (cost > 0 && s.player.cash < cost) return l('Caixa insuficiente para as sessões.', 'Not enough cash for the sessions.');
+  if (cost > 0 && freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para as sessões.', 'Not enough cash for the sessions.'));
   c.st = 'work'; c.who = who; c.ap = ap; c.due = s.week + c.mo * 4 + 2;
   post(s, `sc18adv:${c.id}`, Math.round(c.fee * 0.5), 'sync', `Trilha (adiantamento): ${c.title}`);
   if (cost > 0) post(s, `sc18orch:${c.id}`, -cost, 'recording', `Sessões de orquestra: ${c.title}`);
@@ -121,7 +122,7 @@ export function coproduce18(s: GameState, id: string): L | null {
   const c = sc18(s).list.find((x) => x.id === id);
   if (!c || c.med !== 'musical' || c.cop || (c.st !== 'work' && c.st !== 'late' && c.st !== 'offer')) return l('Só musicais antes da estreia.', 'Only musicals before opening.');
   const v = copCost18(s, c);
-  if (s.player.cash < v) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < v) return cashWhy20(s, v, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `sc18cop:${c.id}`, -v, 'investments', `Co-produção: ${c.title}`);
   c.cop = v;
   return null;

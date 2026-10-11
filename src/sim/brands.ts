@@ -8,6 +8,7 @@ import type { Act, GameState } from './types';
 import type { BrandDeal } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from './util';
 import { syncMasterShare } from './rights';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export interface BrandDef {
   name: string;
@@ -142,7 +143,7 @@ export function produceMerch(s: GameState, actId: string, units: number, quality
   if (!act.playerBand && c?.model !== '360') return l('Merch do artista só com contrato 360.', 'Artist merch requires a 360 deal.');
   const unit = money(s, 2 + quality / 25);
   const cost = unit * units + money(s, 300);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `merch:${actId}:${units}`, -cost, 'merch', `Merch ${act.name}`);
   const m = (s.merch[actId] ??= { actId, stock: 0, designs: 0, sold: 0, revenue: 0, quality: 40 });
   m.stock += units;

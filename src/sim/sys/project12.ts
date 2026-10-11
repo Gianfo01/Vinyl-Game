@@ -18,6 +18,7 @@ import {
   createProject, maxSongs, needSongs, openProjects, proj8, projectById, projectCosts, projectForecast, projectSession, projectStage, type MusicProject, type ProjGoal,
 } from './project8';
 import { AUDIENCES, type Aud12 } from './recipe12';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Intent = 'audience' | 'career' | 'experiment' | 'prestige';
 export type Dir = 'safe' | 'signature' | 'bold';
@@ -138,7 +139,7 @@ export function problemOptions(s: GameState, p: MusicProject): ProblemOption[] {
     return [
       { id: 'cut', name: l('Cortar faixas', 'Cut tracks'), fx: cut ? fmtL(l('{n} faixa(s) saem{t}; o disco fica pronto antes.{x}', '{n} track(s) dropped{t}; the record is ready sooner.{x}'), { n: cut.drop, t: cut.type !== p.type ? fmtL(l(' e vira {f}', ' and it becomes an {f}'), { f: cut.type.toUpperCase() }) : '', x: lovesArt(p, pl) ? l(' O artista sente o corte (confiança −4).', ' The act resents the cut (trust −4).') : '' }) : l('—', '—'), disabled: cut ? undefined : l('Nada a cortar: as faixas que faltam são as mínimas.', 'Nothing to cut: the missing tracks are the minimum.') },
       { id: 'outside', name: l('Contratar estúdio externo', 'Hire an outside studio'), fx: fmtL(l('Grava já as {n} faixa(s) pendentes num estúdio profissional por {c} (30% de urgência). Não resolve músicas que ainda nem foram escritas.', 'Records the {n} pending track(s) now in a professional studio for {c} (30% rush fee). Does not fix songs not yet written.'), { n: un.length, c: `$${Math.round(cost / 100).toLocaleString('en-US')}` }),
-        disabled: !un.length ? l('Nenhuma faixa escrita esperando gravação.', 'No written track waiting to be recorded.') : s.player.cash < cost ? l('Caixa insuficiente.', 'Not enough cash.') : undefined },
+        disabled: !un.length ? l('Nenhuma faixa escrita esperando gravação.', 'No written track waiting to be recorded.') : freeCash20(s) < cost ? cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.')) : undefined },
       { id: 'delay', name: l('Adiar o lançamento', 'Delay the release'), fx: fmtL(l('Prazo +{w} semanas. O mercado esfria: momento −4{x}.', 'Deadline +{w} weeks. The market cools: momentum −4{x}.'), { w: dw, x: pl.deadlineKind === 'tight' ? l(' e o prazo deixa de ser "apertado"', ' and the deadline is no longer "tight"') : '' }) },
     ];
   }
@@ -158,7 +159,7 @@ export function problemOptions(s: GameState, p: MusicProject): ProblemOption[] {
   return [
     { id: 'listen', name: l('Ouvir o artista', 'Listen to the act'), fx: fmtL(l('Direção vira "{d}". Confiança +8 e moral +6.', 'Direction becomes "{d}". Trust +8 and morale +6.'), { d: DIRS[want].name }), disabled: want === pl.dir ? l('Já é essa a direção.', 'That is already the direction.') : undefined },
     { id: 'insist', name: l('Manter o plano', 'Stick to the plan'), fx: l('Nada muda no disco. Confiança −10 e estresse +10 na formação.', 'Nothing changes on the record. Trust −10 and stress +10 on the lineup.') },
-    { id: 'mediate', name: l('Reunião com um produtor mediador', 'Meet with a mediating producer'), fx: fmtL(l('Custa {c} e 2 semanas de prazo; confiança +3 e o plano segue.', 'Costs {c} and 2 weeks of deadline; trust +3 and the plan stays.'), { c: `$${Math.round(money(s, 1500) / 100).toLocaleString('en-US')}` }), disabled: s.player.cash < money(s, 1500) ? l('Caixa insuficiente.', 'Not enough cash.') : undefined },
+    { id: 'mediate', name: l('Reunião com um produtor mediador', 'Meet with a mediating producer'), fx: fmtL(l('Custa {c} e 2 semanas de prazo; confiança +3 e o plano segue.', 'Costs {c} and 2 weeks of deadline; trust +3 and the plan stays.'), { c: `$${Math.round(money(s, 1500) / 100).toLocaleString('en-US')}` }), disabled: freeCash20(s) < money(s, 1500) ? cashWhy20(s, money(s, 1500), l('Caixa insuficiente.', 'Not enough cash.')) : undefined },
   ].map((o) => ({ ...o, fx: act ? o.fx : o.fx }));
 }
 

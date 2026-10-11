@@ -15,6 +15,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util
 import { monthlyCosts } from '../economy';
 import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- tipos de investidor
 
@@ -202,7 +203,7 @@ export function lendToCompany(s: GameState, realAmount: number): L | null {
 export function withdrawFromCompany(s: GameState, r: Rng, realAmount: number): L | null {
   const amt = money(s, realAmount);
   if (amt <= 0) return l('Valor inválido.', 'Invalid amount.');
-  if (s.player.cash < amt) return l('A empresa não tem esse caixa.', 'The company does not have that cash.');
+  if (freeCash20(s) < amt) return cashWhy20(s, amt, l('A empresa não tem esse caixa.', 'The company does not have that cash.'));
   const o = ownerOf(s);
   const c = capital(s);
   post(s, `withdraw:${s.week}:${c.log.length}`, -amt, 'owner_draw', 'Retirada extraordinária do dono');
@@ -318,7 +319,7 @@ function genOffers(s: GameState, r: Rng, n: number, bonus = 0): void {
 export function seekInvestors(s: GameState, r: Rng): L | null {
   if (energyLeft(s) < 1) return l('Sem tempo livre este mês.', 'No free time this month.');
   const fee = money(s, 1500);
-  if (s.player.cash < fee) return l('Caixa insuficiente para o banco.', 'Not enough cash for the bankers.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para o banco.', 'Not enough cash for the bankers.'));
   spendEnergy(s, 1);
   post(s, `seekinv:${s.week}`, -fee, 'financing', 'Banco de investimento (prospecção)');
   capital(s).offers = capital(s).offers.filter((o) => o.expires > s.week);
@@ -355,7 +356,7 @@ export function buyBack(s: GameState, invId: string, from: 'company' | 'personal
   if (!inv) return l('Sócio não encontrado.', 'Partner not found.');
   const price = buybackPrice(s, inv);
   if (from === 'company') {
-    if (s.player.cash < price) return l('A empresa não tem caixa para a recompra.', 'The company lacks cash for the buyback.');
+    if (freeCash20(s) < price) return cashWhy20(s, price, l('A empresa não tem caixa para a recompra.', 'The company lacks cash for the buyback.'));
     post(s, `buyback:${inv.id}`, -price, 'financing', `Recompra da participação de ${inv.name}`);
   } else {
     const o = ownerOf(s);

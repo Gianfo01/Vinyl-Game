@@ -11,6 +11,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import type { GameState, Label } from '../types';
 import { fmtL, money, notify, post } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type Dir = 'in' | 'out';
 export interface Lic17 { id: string; dir: Dir; lb: string; market: MarketId; adv: number; share: number; until: number; since: number; earned: number; status: 'offer' | 'active' | 'ended'; expires: number; why?: L }
@@ -41,7 +42,7 @@ export function acceptLic(s: GameState, id: string): L | null {
   const lb = s.labels[d.lb];
   if (!lb?.active) return l('O selo fechou.', 'The label closed.');
   if (d.dir === 'in') {
-    if (s.player.cash < d.adv) return l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.');
+    if (freeCash20(s) < d.adv) return cashWhy20(s, d.adv, l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.'));
     post(s, `lic17:${d.id}`, -d.adv, 'distribution', `Licença de ${lb.name} (${d.market})`);
   } else {
     if (s.player.territories.includes(d.market)) return l('Você já opera nesse mercado.', 'You already operate in that market.');

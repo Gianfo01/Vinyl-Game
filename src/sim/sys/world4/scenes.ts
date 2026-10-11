@@ -9,6 +9,7 @@ import { fmtL, money, notify, post, remember, rngOf } from '../../util';
 import { spawnProceduralAct } from '../../worldgen';
 import { liveMine, mineAct, mineRel, rep } from './common';
 import { w4, type SceneLook } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export interface HistScene {
   id: string;
@@ -106,7 +107,7 @@ export function signScene(s: GameState, sceneId: string): L | null {
   if (st !== 'rise' && st !== 'peak') return l('Só dá para assinar uma cena viva (nascendo ou no auge).', 'You can only sign a living scene (rising or at its peak).');
   if (w.scenes[sceneId]?.signed) return l('Você já assinou essa cena.', 'You already signed this scene.');
   const cost = signCost(s, sc);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4scene:${sceneId}`, -cost, 'w4_scenes', `Apoio à cena ${sceneId}`);
   (w.scenes[sceneId] ??= {}).signed = st === 'rise' ? -s.year : s.year; // negativo = chegou cedo
   rep(s, 'artistic', st === 'rise' ? 4 : 2);
@@ -227,7 +228,7 @@ export function enrollTrainee(s: GameState, actId: string): L | null {
   if (!mineAct(s, a)) return l('Ato não é seu.', 'Not your act.');
   if (w.trainees[actId]) return l('Já passou pelo treinamento.', 'Already went through training.');
   const cost = money(s, 2500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4trainee:${actId}`, -cost, 'w4_markets', `Matrícula de trainees ${a.name}`);
   w.trainees[actId] = { from: s.week, until: s.week + TRAINEE_WEEKS };
   return null;

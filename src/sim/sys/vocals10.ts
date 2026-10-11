@@ -8,6 +8,7 @@ import type { Act, GameState, Person, Song } from '../types';
 import { fmtL, money, post } from '../util';
 import { songQ } from '../production';
 import { grantInstrument, instrumentsOf } from './instruments';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 /** Nível mínimo do instrumento "voz" para alguém cantar além do papel principal. */
 export const VOICE_MIN = 40;
@@ -82,7 +83,7 @@ export function hireSessionSinger(s: GameState, songId: string): L {
   if (!song || song.releaseId) return l('A faixa já saiu.', 'The track is already out.');
   if (!song.instrumental) return l('Esta faixa já tem voz.', 'This track already has vocals.');
   const cost = sessionSingerCost(s);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `sessvox:${songId}`, -cost, 'recording', `Cantor de estúdio — ${song.title}`);
   const before = songQ(song);
   song.sessionVocal = true;

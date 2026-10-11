@@ -11,6 +11,7 @@ import type { Rollout, RolloutPhase } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { exploitBlock } from './rights';
 import { addChannel18, teaserK18 } from './sys/mkt18';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export interface RolloutOpts {
   actId: string;
@@ -57,7 +58,7 @@ export function planRollout(s: GameState, o: RolloutOpts): Rollout | L {
   if (o.limitedUnits > 0) phases.push({ kind: 'limited', week: w + 2, done: false, budget: 0 });
   if (o.deluxeSongs.length) phases.push({ kind: 'deluxe', week: w + 30, done: false, budget: o.budget });
   const totalBudget = phases.reduce((t, p) => t + p.budget, 0);
-  if (s.player.cash < totalBudget * 0.3) return l('Caixa insuficiente para sustentar o plano.', 'Not enough cash to support the plan.');
+  if (freeCash20(s) < totalBudget * 0.3) return cashWhy20(s, totalBudget * 0.3, l('Caixa insuficiente para sustentar o plano.', 'Not enough cash to support the plan.'));
   const ro: Rollout = { id: nextId(s, 'ro'), actId: o.actId, title: o.title || 'Álbum', songIds: o.albumSongs, singles: o.singles, phases, presaves: 0, hype: 0, status: 'active' };
   (ro as Rollout & { deluxe?: string[]; limited?: number }).deluxe = o.deluxeSongs;
   (ro as Rollout & { deluxe?: string[]; limited?: number }).limited = o.limitedUnits;

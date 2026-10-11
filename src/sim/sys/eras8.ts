@@ -11,6 +11,7 @@ import { emitEvent, type EventDef } from '../events';
 import { deferEvents, registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState, Label, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type EraId = 'radio' | 'jukebox' | 'albums' | 'rocknroll' | 'fm' | 'disco' | 'video' | 'cd' | 'piracy' | 'download' | 'streaming' | 'viral' | 'synthetic' | 'neural' | 'postai';
 type NpcTag = 'hits' | 'catalog' | 'indie' | 'empire';
@@ -406,7 +407,7 @@ export function pivotStance(s: GameState, stanceId: string): L | null {
   if ((st.chosen[e.id]?.s ?? defaultStance(e).id) === stanceId) return l('Essa já é a postura atual.', 'That is already the current stance.');
   if (s.week - st.pivot < PIVOT_WEEKS) return fmtL(l('Mudou de rumo há pouco: espere {n} semanas.', 'You changed course recently: wait {n} weeks.'), { n: PIVOT_WEEKS - (s.week - st.pivot) });
   const cost = money(s, PIVOT_COST);
-  if (s.player.cash < cost) return l('Caixa insuficiente para reorganizar a empresa.', 'Not enough cash to reorganise the company.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para reorganizar a empresa.', 'Not enough cash to reorganise the company.'));
   post(s, `era8:pivot:${e.id}`, -cost, 'admin', `Mudança de estratégia ${e.name.pt}`);
   rep(s, 'commercial', -2);
   st.pivot = s.week;

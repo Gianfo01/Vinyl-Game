@@ -22,6 +22,7 @@ import { headline19 } from './factlink19';
 import { fan18 } from './fans18';
 import { addHype } from './hype12';
 import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 , off19 } from './mkb19';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export const CANCEL_FROM19 = 2010;
 export type Resp19 = 'apology' | 'silent' | 'counter';
@@ -102,7 +103,7 @@ export const comebackCost19 = (s: GameState) => money(s, 3000);
 export function comeback19(s: GameState, id: string): L | null {
   const x = cx19(s).w.find((y) => y.id === id), a = x && s.acts[x.act];
   if (!x || !a || x.over === undefined || x.back) return l('Sem retorno pendente.', 'No pending comeback.');
-  if (mineA19(a)) { if (s.player.cash < comebackCost19(s)) return l('Caixa insuficiente.', 'Not enough cash.'); post(s, `cx19back:${x.id}`, -comebackCost19(s), 'pr_agency', `Retorno de ${a.name}`); }
+  if (mineA19(a)) { if (freeCash20(s) < comebackCost19(s)) return cashWhy20(s, comebackCost19(s), l('Caixa insuficiente.', 'Not enough cash.')); post(s, `cx19back:${x.id}`, -comebackCost19(s), 'pr_agency', `Retorno de ${a.name}`); }
   x.back = 1;
   cnt19(cx19(s), 'back');
   const tx = fmtL(l('{a} volta depois do cancelamento: entrevista longa, disco novo, fãs divididos.', '{a} returns after the cancellation: a long interview, a new record, split fans.'), { a: a.name });

@@ -233,7 +233,7 @@ export function move19(s: GameState, id: string, lot: number): L | null {
   if (no) return no;
   if (!freeLots18(s).includes(lot)) return l('Lote ocupado.', 'Lot taken.');
   const c = moveCost19(s, b, lot);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   const st = campus18(s);
   post(s, `world19:move:${id}:${mIdx(s)}`, -c, 'capex', `Mudança de lote: ${b.name}`);
   st.lot[id] = lot;
@@ -257,7 +257,7 @@ export function startUp19(s: GameState, k: CK, q = 1): L | null {
   if (st.proj.some((p) => p.target === `c:${k}`)) return l('Já tem obra nesse prédio.', 'That building already has works.');
   if (!CONTRACTORS18[q]) return l('Escolha um empreiteiro.', 'Pick a contractor.');
   const cost = upCost19(s, k, q), months = upMonths19(s, k, q), first = Math.round(cost * 0.3);
-  if (s.player.cash < first) return l('Caixa insuficiente para a entrada (30%).', 'Not enough cash for the 30% down payment.');
+  if (freeCash20(s) < first) return cashWhy20(s, first, l('Caixa insuficiente para a entrada (30%).', 'Not enough cash for the 30% down payment.'));
   const id = `cp${++st.seq}`;
   post(s, `campus18:${id}:0`, -first, 'capex', `Obra (entrada): ampliação ${PROJ18[k].name.pt}`);
   st.proj.push({ id, kind: 'reno', target: `c:${k}`, lot: -1, q, start: mIdx(s), months, left: months, cost, paid: first, over: 0, delays: 0, up: 1 });
@@ -346,7 +346,7 @@ export function bldPop19(s: GameState, id: string, q = 1, sty?: Style18): Pop19 
   if (busy) {
     const c12 = Math.round(busy.cost * 0.12);
     notes.push({ t: fmtL(l('Obra: {m} meses restantes · pago {p} de {c}.', 'Works: {m} months left · paid {p} of {c}.'), { m: busy.left, p: $k(busy.paid), c: $k(busy.cost + busy.over) }), tone: 'warn' });
-    if (busy.left > 1) acts.push({ id: 'rush', label: l('Hora extra (−1 mês)', 'Overtime (−1 month)'), cost: c12, tone: 'primary', dis: s.player.cash < c12 ? l('Caixa insuficiente.', 'Not enough cash.') : undefined });
+    if (busy.left > 1) acts.push({ id: 'rush', label: l('Hora extra (−1 mês)', 'Overtime (−1 month)'), cost: c12, tone: 'primary', dis: freeCash20(s) < c12 ? cashWhy20(s, c12, l('Caixa insuficiente.', 'Not enough cash.')) : undefined });
     acts.push({ id: 'cancel', label: l('Cancelar obra', 'Cancel works'), tone: 'danger', confirm: l('Cancelar a obra? O que foi pago não volta.', 'Cancel the works? What was paid is lost.') });
   }
   const open = b.st === 'open' || b.st === 'damaged';
@@ -359,14 +359,14 @@ export function bldPop19(s: GameState, id: string, q = 1, sty?: Style18): Pop19 
         if (nx.minYear && s.year < nx.minYear) req.push(fmtL(l('a partir de {y}', 'from {y}'), { y: nx.minYear }));
         if (nx.minReputation && s.player.reputation.institutional < nx.minReputation) req.push(fmtL(l('reputação institucional {r}+', 'institutional reputation {r}+'), { r: nx.minReputation }));
         acts.push({ id: 'up', label: fmtL(l('Ampliar para {n}', 'Expand to {n}'), { n: nx.name }), cost: c, tone: 'primary',
-          dis: req.length ? l(`Requisito: ${req.map((x) => x.pt).join(', ')}.`, `Requires: ${req.map((x) => x.en).join(', ')}.`) : s.player.cash < c ? l('Caixa insuficiente.', 'Not enough cash.') : undefined });
+          dis: req.length ? l(`Requisito: ${req.map((x) => x.pt).join(', ')}.`, `Requires: ${req.map((x) => x.en).join(', ')}.`) : freeCash20(s) < c ? cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.')) : undefined });
       }
     } else if (b.id.startsWith('v:')) {
       const v = ventures(s).list.find((x) => `v:${x.id}` === id);
-      if (v && v.level < MAX_LEVEL) { const c = vUpCost(s, v); acts.push({ id: 'up', label: fmtL(l('Expandir para o nível {n}', 'Expand to level {n}'), { n: v.level + 1 }), cost: c, tone: 'primary', dis: s.player.cash < c ? l('Caixa insuficiente.', 'Not enough cash.') : undefined }); }
+      if (v && v.level < MAX_LEVEL) { const c = vUpCost(s, v); acts.push({ id: 'up', label: fmtL(l('Expandir para o nível {n}', 'Expand to level {n}'), { n: v.level + 1 }), cost: c, tone: 'primary', dis: freeCash20(s) < c ? cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.')) : undefined }); }
     } else if (isC(id)) {
       const k = id.slice(2) as CK, u = st.upl[id] ?? 0;
-      if (u < UPMAX19) { const c = upCost19(s, k, q); acts.push({ id: 'up', ask: 'q', label: fmtL(l('Ampliar: estágio {n} (+25% de efeito, {m} meses)', 'Expand: stage {n} (+25% effect, {m} months)'), { n: u + 2, m: upMonths19(s, k, q) }), cost: c, tone: 'primary', dis: s.player.cash < Math.round(c * 0.3) ? l('Caixa insuficiente para a entrada.', 'Not enough cash for the down payment.') : undefined }); }
+      if (u < UPMAX19) { const c = upCost19(s, k, q); acts.push({ id: 'up', ask: 'q', label: fmtL(l('Ampliar: estágio {n} (+25% de efeito, {m} meses)', 'Expand: stage {n} (+25% effect, {m} months)'), { n: u + 2, m: upMonths19(s, k, q) }), cost: c, tone: 'primary', dis: freeCash20(s) < Math.round(c * 0.3) ? cashWhy20(s, Math.round(c * 0.3), l('Caixa insuficiente para a entrada.', 'Not enough cash for the down payment.')) : undefined }); }
     }
   }
   // reformar (estilo da época) — exceto obras em andamento
@@ -374,7 +374,7 @@ export function bldPop19(s: GameState, id: string, q = 1, sty?: Style18): Pop19 
     const c = projCost18(s, 'reno', -1, q, b);
     const dmg = !!st.dmg[id];
     acts.push({ id: 'reno', ask: 'q', label: dmg ? l('Reconstruir', 'Rebuild') : fmtL(l('Reformar ({s}, {m} meses)', 'Renovate ({s}, {m} months)'), { s: styleName18(styleOf18(s.year)), m: renoMonths18(b) }), cost: c, tone: dmg ? 'primary' : 'ghost',
-      dis: !dmg && w19s(s, b) === (sty ?? styleOf18(s.year)) ? l('Já tem esse estilo: escolha outro abaixo.', 'Already in that style: pick another below.') : s.player.cash < Math.round(c * 0.3) ? l('Caixa insuficiente para a entrada.', 'Not enough cash for the down payment.') : undefined });
+      dis: !dmg && w19s(s, b) === (sty ?? styleOf18(s.year)) ? l('Já tem esse estilo: escolha outro abaixo.', 'Already in that style: pick another below.') : freeCash20(s) < Math.round(c * 0.3) ? cashWhy20(s, Math.round(c * 0.3), l('Caixa insuficiente para a entrada.', 'Not enough cash for the down payment.')) : undefined });
   }
   if (b.zone === 'campus' && b.kind !== 'hq' && b.kind !== 'home' && !busy) {
     const no = canMove19(s, b), fl = freeLots18(s);
@@ -412,7 +412,7 @@ export function lotPop19(s: GameState, lot: number, q = 1, moving?: string, sty?
   const mv = moving ? bs.find((b) => b.id === moving) : undefined;
   if (mv && free) {
     const c = moveCost19(s, mv, lot);
-    acts.push({ id: 'moveHere', label: fmtL(l('Mudar {n} para cá', 'Move {n} here'), { n: mv.name }), cost: c, tone: 'primary', dis: canMove19(s, mv) ?? (s.player.cash < c ? l('Caixa insuficiente.', 'Not enough cash.') : undefined) });
+    acts.push({ id: 'moveHere', label: fmtL(l('Mudar {n} para cá', 'Move {n} here'), { n: mv.name }), cost: c, tone: 'primary', dis: canMove19(s, mv) ?? (freeCash20(s) < c ? cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.')) : undefined) });
     for (const x of synAt19(s, mv.kind, lot, bs.filter((b) => b.id !== mv.id))) notes.push({ t: fmtL(l('Aqui: {n} (com {w})', 'Here: {n} (with {w})'), { n: x.rule.name, w: x.with.name }), tone: x.rule.neg ? 'bad' : 'good' });
   }
   if (free && !mv) {
@@ -420,7 +420,7 @@ export function lotPop19(s: GameState, lot: number, q = 1, moving?: string, sty?
       const d = PROJ18[k], has = !!st.built[k] || st.proj.some((p) => p.kind === k);
       const cost = projCost18(s, k as PKind, lot, q), months = Math.max(1, d.months - (q === 0 ? 1 : 0));
       opts.push({ id: `p:${k}`, name: d.name, desc: d.desc, effect: d.effect, cost, months, icon: KIND18[k].icon, q: true,
-        dis: has ? l('Você já tem (ou está construindo) um.', 'You already have (or are building) one.') : s.player.cash < Math.round(cost * 0.3) ? l('Caixa insuficiente para a entrada (30%).', 'Not enough cash for the 30% down payment.') : undefined,
+        dis: has ? l('Você já tem (ou está construindo) um.', 'You already have (or are building) one.') : freeCash20(s) < Math.round(cost * 0.3) ? cashWhy20(s, Math.round(cost * 0.3), l('Caixa insuficiente para a entrada (30%).', 'Not enough cash for the 30% down payment.')) : undefined,
         syn: synAt19(s, k, lot, bs).map((x) => fmtL(l('{s} {n} (com {w})', '{s} {n} (with {w})'), { s: x.rule.neg ? '−' : '+', n: x.rule.name, w: x.with.name })) });
     }
     const av = kindsAvailable(s);
@@ -431,7 +431,7 @@ export function lotPop19(s: GameState, lot: number, q = 1, moving?: string, sty?
       const cost = foundCost(s, k);
       opts.push({ id: `v:${k}`, name: VKINDS[k].name, desc: VKINDS[k].desc, effect: fmtL(l('Novo negócio (nível 1) neste lote; obra de 3 meses. Manutenção a partir de {u}/mês.', 'New business (level 1) on this lot; 3-month build. Upkeep from {u}/mo.'), { u: $k(money(s, VKINDS[k].upkeep)) }),
         cost, months: 3, icon: KIND18[bk].icon,
-        dis: own.has(k) ? l('Você já tem um desses na cidade (amplie o atual).', 'You already have one in town (expand it instead).') : s.player.cash < cost ? l('Caixa insuficiente.', 'Not enough cash.') : undefined,
+        dis: own.has(k) ? l('Você já tem um desses na cidade (amplie o atual).', 'You already have one in town (expand it instead).') : freeCash20(s) < cost ? cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.')) : undefined,
         syn: synAt19(s, bk, lot, bs).map((x) => fmtL(l('{s} {n} (com {w})', '{s} {n} (with {w})'), { s: x.rule.neg ? '−' : '+', n: x.rule.name, w: x.with.name })) });
     }
   }
@@ -501,6 +501,7 @@ export function act19(s: GameState, target: string, act: string, arg: { q?: numb
 }
 // importações tardias para manter o topo legível
 import { cancelProj18 as cancel, rushProj18 as rush, startProj18 } from './campus18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 const startProjAt = (s: GameState, k: CK, lot: number, q: number) => startProj18(s, k, lot, q);
 const startReno = (s: GameState, id: string, q: number) => startProj18(s, 'reno', -1, q, id);
 

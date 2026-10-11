@@ -8,6 +8,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import type { GameState } from '../types';
 import { fmtL, money, nextId, notify, post } from '../util';
 import { chron, chronListeners, nameOf, type ChronEv } from './chron9';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type RelicKind = 'guitar' | 'tape' | 'lyrics' | 'trophy' | 'outfit' | 'mic' | 'drums' | 'record' | 'car' | 'glasses' | 'piano' | 'prop' | 'art' | 'bass';
 export type RelicStatus = 'kept' | 'auction' | 'stolen' | 'lost' | 'museum' | 'player';
@@ -120,7 +121,7 @@ export function negotiateRelic(s: GameState, id: string, mult: number): NegRes |
   if (rl.cd && s.week < rl.cd) return l('O dono não quer conversa agora. Tente mais tarde.', 'The owner will not talk right now. Try later.');
   const ask = relicPrice(s, rl);
   const price = Math.round(ask * clamp(mult, 0.5, 2.5));
-  if (s.player.cash < price) return l('Caixa insuficiente para essa oferta.', 'Not enough cash for that offer.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente para essa oferta.', 'Not enough cash for that offer.'));
   const at = relicAttach(s, rl);
   const pAcc = clamp((mult - 0.7) * 0.9 - at * 0.6 + 0.25 + (s.player.reputation.artistic - 50) / 300, 0, 0.95);
   const x = roll(s, rl, 'neg');
@@ -138,7 +139,7 @@ export function negotiateRelic(s: GameState, id: string, mult: number): NegRes |
 export function acceptCounter(s: GameState, id: string): L | null {
   const rl = find(s, id);
   if (!rl?.ctr || rl.st !== 'kept' || s.week > rl.ctr.w) return l('A contraproposta expirou.', 'The counter-offer expired.');
-  if (s.player.cash < rl.ctr.p) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < rl.ctr.p) return cashWhy20(s, rl.ctr.p, l('Caixa insuficiente.', 'Not enough cash.'));
   buyFrom(s, rl, rl.ctr.p, 'compra');
   return null;
 }
@@ -155,7 +156,7 @@ export function placeBid(s: GameState, id: string, amount: number): L | null {
   const rl = find(s, id);
   if (!rl || rl.st !== 'auction') return l('Não está em leilão.', 'Not at auction.');
   if (amount < openingBid(s, rl)) return l('Abaixo do lance inicial.', 'Below the opening bid.');
-  if (s.player.cash < amount) return l('Caixa insuficiente para cobrir o lance.', 'Not enough cash to cover the bid.');
+  if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente para cobrir o lance.', 'Not enough cash to cover the bid.'));
   rl.bid = Math.round(amount);
   return null;
 }
@@ -195,7 +196,7 @@ export function borrowRelic(s: GameState, id: string): L | null {
   if (!rl || rl.st !== 'museum' || rl.brw) return l('O museu não pode emprestar agora.', 'The museum cannot lend it now.');
   if (rl.cd && s.week < rl.cd) return l('O museu negou há pouco. Tente mais tarde.', 'The museum said no recently. Try later.');
   const fee = Math.round(money(s, rl.v) * 0.06);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   if (roll(s, rl, 'brw') > 0.35 + s.player.reputation.artistic / 140) { rl.cd = s.week + 26; return l('O museu recusa: sua reputação ainda não basta.', 'The museum declines: your reputation is not enough yet.'); }
   post(s, `relicbrw:${rl.id}`, -fee, 'hq', `Empréstimo de museu: ${rl.n.pt}`);
   rl.brw = s.week + 52;
@@ -209,7 +210,7 @@ export function seekRelic(s: GameState, id: string): L | null {
   if (!rl || rl.st !== 'stolen') return l('Não está desaparecida.', 'Not missing.');
   if (rl.cd && s.week < rl.cd) return l('O detetive ainda está no caso.', 'The investigator is still on the case.');
   const fee = seekFee(s, rl);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `relicseek:${rl.id}`, -fee, 'legal', `Detetive: ${rl.n.pt}`);
   rl.cd = s.week + 26;
   if (roll(s, rl, 'seek') < 0.3) {
@@ -227,7 +228,7 @@ export function buyRelic(s: GameState, id: string): L | null {
   const rl = relics(s).list.find((x) => x.id === id);
   if (!rl || rl.st !== 'auction') return l('Não está em leilão.', 'Not at auction.');
   const price = relicPrice(s, rl);
-  if (s.player.cash < price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `relic:${rl.id}`, -price, 'acquisitions', `Leilão: ${rl.n.pt}`);
   rl.st = 'player';
   rl.au = undefined;

@@ -49,6 +49,7 @@ import { reg18, subName18, subW18 } from './regions18';
 import { REP_NOTES19 } from './report18';
 import { hbMaxQ18, sess18 } from './session18';
 import { spawnProceduralAct } from '../worldgen';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -481,7 +482,7 @@ export function swapBuilder19(s: GameState, p: Proj18): L | null {
   if (p.q >= 2) return l('Já é a melhor construtora.', 'Already the best builder.');
   const rest = Math.max(0, p.cost + p.over - p.paid);
   const fee = Math.round(rest * 0.1);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `campus18:${p.id}:swap`, -fee, 'capex', 'Obra: troca de construtora');
   p.paid += fee;
   p.cost += Math.round(rest * (CONTRACTORS18[p.q + 1].cost / CONTRACTORS18[p.q].cost - 1));

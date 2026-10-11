@@ -26,6 +26,7 @@ function post(s: GameState, key: string, amount: number, cat: string, memo: stri
 import { PKG18, applyPkg18 } from './contracts18';
 import { SIGN_VETO } from './gate14';
 import { shield18 } from './feud18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const $ = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const rngFor = (s: GameState, k: string) => new Rng(seedState(`deal18|${s.config.seed}|${k}`));
@@ -79,7 +80,7 @@ export function startDev18(s: GameState, actId: string, months: 12 | 24): { ok: 
   if (shield18(s, actId)) return { ok: false, text: l('Modo história exata: artistas reais seguem a carreira documentada.', 'Exact history mode: real artists follow their documented career.') };
   if (Object.keys(st.dev).length >= 4) return { ok: false, text: l('No máximo 4 artistas em desenvolvimento.', 'At most 4 artists in development.') };
   const stip = devStipend18(s);
-  if (s.player.cash < stip * 3) return { ok: false, text: l('Caixa insuficiente para 3 meses de mesada.', 'Not enough cash for 3 months of stipend.') };
+  if (freeCash20(s) < stip * 3) return { ok: false, text: cashWhy20(s, stip * 3, l('Caixa insuficiente para 3 meses de mesada.', 'Not enough cash for 3 months of stipend.')) };
   const ch = devChance18(s, a);
   if (!rngFor(s, `dev|${actId}|${s.week}`).chance(ch.p)) { a.trust = clamp(a.trust - 2, 0, 100); return { ok: false, text: fmtL(l('{a} recusou a opção: prefere tentar a sorte.', '{a} turned down the option: prefers to take their chances.'), { a: a.name }) }; }
   st.dev[actId] = { act: actId, start: s.week, end: s.week + Math.round(months * 4.35), stip, fame0: a.fame };
@@ -101,7 +102,7 @@ export function exerciseDev18(s: GameState, actId: string): { ok: boolean; text:
   if (!d || !a) return { ok: false, text: l('Sem opção ativa.', 'No active option.') };
   if (a.owner) { delete st.dev[actId]; return { ok: false, text: l('O artista já tem selo.', 'The artist already has a label.') }; }
   const adv = devSignCost18(s, d);
-  if (s.player.cash < adv) return { ok: false, text: l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.') };
+  if (freeCash20(s) < adv) return { ok: false, text: cashWhy20(s, adv, l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')) };
   const o = { ...defaultOffer(s, a), advance: adv, releasesOwed: 3 };
   applyPkg18(o, 'indie');
   acceptOffer(s, a, { ...o, id: `dev18-${actId}`, week: s.week, status: 'pending' });
@@ -174,7 +175,7 @@ export function startImprint18(s: GameState, actId: string): { ok: boolean; text
   const a = s.acts[actId], e = impOk18(s, a);
   if (e) return { ok: false, text: e };
   const c = impSetup18(s);
-  if (s.player.cash < c) return { ok: false, text: l('Caixa insuficiente.', 'Not enough cash.') };
+  if (freeCash20(s) < c) return { ok: false, text: cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.')) };
   post(s, `imp18:${actId}`, -c, 'artist_dev', `Selo-vaidade de ${a!.name}`);
   const name = `${a!.name.split(' ')[0]} Records`;
   deals18(s).imp[actId] = { host: actId, name, since: s.week, acts: [], paid: 0, next: s.week + 13 };

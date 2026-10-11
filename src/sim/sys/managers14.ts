@@ -24,6 +24,7 @@ import { realDataOf } from './realworld';
 import { simStart20 } from '../worldpolicy20';
 import { activeAct } from './ventures12';
 import { mgAdj9, ventures } from './ventures9';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 
@@ -177,7 +178,7 @@ export function lunchBlock(s: GameState, id: string): L | null {
   const m = mgrById[id];
   if (!m || !mgrActive(s, m)) return l('Fora do ramo.', 'Out of the business.');
   if (!cdOk(s, `lunch|${id}`)) return l('Vocês almoçaram há pouco (a cada 6 meses).', 'You had lunch recently (every 6 months).');
-  if (s.player.cash < money(s, LUNCH_COST)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, LUNCH_COST)) return cashWhy20(s, money(s, LUNCH_COST), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 /** Almoço de negócios: aproxima mais quem é sociável; seu carisma conta. */
@@ -194,7 +195,7 @@ export function lunch(s: GameState, id: string): Res14 {
 
 export function peaceBlock(s: GameState, id: string): L | null {
   if (!inFeud(s, id)) return l('Não há rixa.', 'No feud.');
-  if (s.player.cash < peaceCost(s, mgrById[id])) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < peaceCost(s, mgrById[id])) return cashWhy20(s, peaceCost(s, mgrById[id]), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 /** Encerrar a rixa: pagar um acordo (sobe a opinião ao neutro). */

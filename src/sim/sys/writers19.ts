@@ -30,6 +30,7 @@ import { headline19 } from './factlink19';
 import { shield18, startFeud18 } from './feud18';
 import { goSolo16 } from './lineup16';
 import { registerDimAdj18 } from './quality18';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 /** Editoras por época (nomes reais só com nomes reais ligados). */
 const PUB19: [string, string, number, number][] = [
@@ -125,7 +126,7 @@ export function hireGhost19(s: GameState, actId: string, nda: boolean): L | null
   if (!a || a.owner !== 'player') return l('Escolha um ato do seu elenco.', 'Pick an act from your roster.');
   if (st.gh.some((g) => g.act === actId && g.st === 'on')) return l('Esse ato já tem um ghostwriter.', 'That act already has a ghostwriter.');
   const c = ghostCost19(s, nda);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `wr19g:${actId}`, -c, 'recording', `Ghostwriter: ${a.name}${nda ? ' (NDA)' : ''}`);
   const r = Rng.fromSeed(`${s.config.seed}|wr19g|${actId}|${s.week}`);
   const { p, from } = ghostCandidate(s, r, a.city);
@@ -218,7 +219,7 @@ export function takeOffer19(s: GameState, oid: string, cut: boolean): L {
   const st = wr19(s), o = st.offers.find((x) => x.id === oid), a = o && s.acts[o.act], w = o && s.persons[o.pid];
   if (!o || !a || !w) return l('Oferta encerrada.', 'Offer closed.');
   st.offers = st.offers.filter((x) => x !== o);
-  if (s.player.cash < o.fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < o.fee) return cashWhy20(s, o.fee, l('Caixa insuficiente.', 'Not enough cash.'));
   const r = Rng.fromSeed(`${s.config.seed}|wr19o|${o.id}`);
   if (cut && !r.chance(cutOdds19(s, o))) { w.rel['player'] = (w.rel['player'] ?? 0) - 10; return fmtL(l('{w} se ofende com o pedido de crédito e leva a canção para outro artista.', '{w} is offended by the credit grab and takes the song to another act.'), { w: w.name }); }
   post(s, `wr19o:${o.id}`, -o.fee, 'recording', `Canção de fora: ${w.name}`);
@@ -282,7 +283,7 @@ export function answerSuit19(s: GameState, id: string, how: 'fight' | 'credit' |
   if (how === 'settle') { su.st = 'done'; post(s, `wr19s:${su.id}`, -su.amt, 'legal', `Acordo de plágio: ${so.title}`); su.res = fmtL(l('Acordo fechado: {v}.', 'Settled: {v}.'), { v: usd(su.amt) }); return su.res; }
   if (how === 'credit') { su.st = 'done'; const p = lead(s, o); if (p) cutIn(so, p.id, 0.15); const mine = s.acts[so.actId]; if (mine) mine.trust = clamp(mine.trust - 3, 0, 100); su.res = fmtL(l('{o} entra nos créditos de "{t}" (15%).', '{o} joins the credits of "{t}" (15%).'), { o: o.name, t: so.title }); return su.res; }
   const fee = money(s, 5000);
-  if (s.player.cash < fee) return l('Caixa insuficiente para as custas.', 'Not enough cash for legal fees.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente para as custas.', 'Not enough cash for legal fees.'));
   post(s, `wr19c:${su.id}`, -fee, 'legal', `Processo de plágio: ${so.title}`);
   su.st = 'court'; su.due = s.week + 13;
   if (how === 'sue') emitFact(s, { kind: 'plagiarism_suit', actors: ['player', o.id, so.actId], severity: 30, visibility: 'public', tags: ['songwriting', 'court', 'out'], text: fmtL(l('{c} processa {o}: o sucesso deles copiaria "{t}".', '{c} sues {o}: their hit allegedly copies "{t}".'), { c: s.config.companyName, o: o.name, t: so.title }), src: 'writers19' });

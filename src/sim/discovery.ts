@@ -9,6 +9,7 @@ import type { GameState } from './types';
 import type { Auction, Scout } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { addSignal, spawnProceduralAct } from './worldgen';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 // ---------- Olheiros ----------
 
@@ -26,7 +27,7 @@ export function scoutPool(s: GameState, r: Rng): Scout[] {
 
 export function hireScout(s: GameState, sc: Scout): L | null {
   if (s.scouts.length >= 2 + s.player.hq * 2) return l('Limite de olheiros para o tamanho da sede.', 'Scout limit for your HQ size.');
-  if (s.player.cash < sc.salary) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < sc.salary) return cashWhy20(s, sc.salary, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `scouthire:${sc.id}`, -sc.salary, 'scouting', `Contratação ${sc.name}`);
   s.scouts.push({ ...sc });
   return null;
@@ -43,7 +44,7 @@ export function sendScout(s: GameState, scoutId: string, region: MarketId, famil
   if (sc.mission) return l('Já está em missão.', 'Already on a mission.');
   const weeks = sc.region === region ? 4 : 8;
   const travel = money(s, sc.region === region ? 300 : 1200);
-  if (s.player.cash < travel) return l('Caixa insuficiente para a viagem.', 'Not enough cash for travel.');
+  if (freeCash20(s) < travel) return cashWhy20(s, travel, l('Caixa insuficiente para a viagem.', 'Not enough cash for travel.'));
   post(s, `scouttrip:${sc.id}`, -travel, 'scouting', `Missão ${sc.name}`);
   sc.mission = { region, family, untilWeek: s.week + weeks };
   return null;
@@ -141,7 +142,7 @@ export function attendContest(s: GameState, id: string): L | null {
   if (c.attended) return null;
   const home = cityById[c.city]?.market === cityById[s.config.homeCity]?.market;
   const cost = money(s, home ? 300 : 1500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `contest:${c.id}`, -cost, 'scouting', 'Ida a concurso');
   c.attended = true;
   return null;
@@ -152,7 +153,7 @@ export function sponsorContest(s: GameState, id: string): L | null {
   const c = s.contests.find((x) => x.id === id);
   if (!c || c.winner) return l('Concurso encerrado.', 'Contest closed.');
   const cost = money(s, 5000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `contestsp:${c.id}`, -cost, 'marketing', 'Patrocínio de concurso');
   c.attended = true;
   c.prize += cost;
@@ -192,7 +193,7 @@ export function startAuction(s: GameState, r: Rng, actId: string, advance: numbe
   const act = s.acts[actId];
   if (!act || act.owner) return l('Ato indisponível.', 'Act unavailable.');
   if (s.auctions.some((a) => a.actId === actId && a.status === 'open')) return l('Leilão já em andamento.', 'Auction already running.');
-  if (s.player.cash < advance) return l('Caixa insuficiente para o lance.', 'Not enough cash to bid.');
+  if (freeCash20(s) < advance) return cashWhy20(s, advance, l('Caixa insuficiente para o lance.', 'Not enough cash to bid.'));
   const au: Auction = { id: nextId(s, 'au'), actId, bids: [{ party: 'player', advance, royalty }], round: 1, endsWeek: s.week + 3, status: 'open' };
   // rivais interessados entram com lances públicos
   const rivals = Object.values(s.labels).filter((lb) => lb.active && lb.cash > money(s, expectedAdvance(s, act)) && (lb.focus.length === 0 || lb.focus.includes(familyOf(act.genre))));
@@ -207,7 +208,7 @@ export function startAuction(s: GameState, r: Rng, actId: string, advance: numbe
 export function raiseBid(s: GameState, auctionId: string, advance: number, royalty: number): L | null {
   const au = s.auctions.find((x) => x.id === auctionId && x.status === 'open');
   if (!au) return l('Leilão encerrado.', 'Auction closed.');
-  if (s.player.cash < advance) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < advance) return cashWhy20(s, advance, l('Caixa insuficiente.', 'Not enough cash.'));
   au.bids.push({ party: 'player', advance, royalty });
   au.endsWeek = Math.max(au.endsWeek, s.week + 1);
   return null;

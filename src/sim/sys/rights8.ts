@@ -7,7 +7,7 @@ import { l } from '../../data/world';
 import { expectedAdvance } from '../contracts';
 import { mainAmbition } from '../people';
 import { registerExt4, registerSimHook } from '../ext4';
-import { artistPower, recoupTail20, releasesOfDeal, revertWeek, rightsOf, rst } from '../rights';
+import { artistPower, recoupTail20, releasesOfDeal, revertWeek, rightsOf, rst, writeOffRecoup20 } from '../rights';
 import { fmtL, money, nextId, notify, remember } from '../util';
 
 registerExt4('rights8', () => ({ demands: [], perms: [], reversions: [] }));
@@ -36,6 +36,9 @@ registerSimHook('month', 'rights8', (s, r) => {
           y: tl.capWeek !== Infinity ? fmtL(l('o teto de {n} anos libera antes', 'the {n}-year cap releases them first'), { n: t.recoupCapYears ?? 0 }) : tl.years === Infinity ? l('nunca se recupera (ficam com o selo)', 'it never recoups (the label keeps them)') : fmtL(l('~{n} anos', '~{n} years'), { n: Math.ceil(tl.years) }) }), 'event');
       }
       if (s.week >= rw && (!t.reversionNeedsRecoup || c.recoupBalance <= 0 || capped)) {
+        // r20c (N2): liberado pelo teto → o saldo não recuperado é perdoado (como a ficha promete)
+        const off = capped ? writeOffRecoup20(s, c) : 0;
+        if (off > 0) notify(s, fmtL(l('Teto da trava atingido: {a} recebe os masters e o saldo não recuperado ({v}) foi perdoado.', 'Lock cap reached: {a} gets the masters and the unrecouped balance ({v}) was written off.'), { a: act.name, v: `$${Math.round(off / 100).toLocaleString('en-US')}` }), 'info');
         const rels = releasesOfDeal(s, c);
         for (const rel of rels) rel.owner = 'indie';
         c.reverted = true;

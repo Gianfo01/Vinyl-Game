@@ -32,7 +32,7 @@ import { addHeat19 } from '../rivals19';
 import type { Act, GameState, Label, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { registerDeadline, type Deadline19 } from '../calendar19';
-import { bankDebt20, registerOblig20 } from '../oblig20';
+import { bankDebt20, cashWhy20, freeCash20, registerOblig20 } from '../oblig20';
 import { bolsa } from './bolsa10';
 import { schedule18 } from './decide18';
 import { headline19 } from './factlink19';
@@ -223,7 +223,7 @@ export function bidAuc19(s: GameState, id: string, amt: number): L | null {
   if (!a) return l('Leilão encerrado.', 'Auction closed.');
   if (!isLabel(s)) return l('Só gravadoras arrematam masters.', 'Only labels buy masters.');
   if (amt <= topBid19(a)) return l('O lance precisa superar o atual.', 'The bid must beat the current one.');
-  if (s.player.cash < amt) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < amt) return cashWhy20(s, amt, l('Caixa insuficiente.', 'Not enough cash.'));
   a.bids.push({ who: 'player', name: s.config.companyName, amt, w: s.week });
   schedule18(s, 'm19:bid', { auc: a.id, act: s.releases[a.rels[0]]?.actId ?? '' }, fmtL(l('Lance no leilão de {n}', 'Bid at the {n} auction'), { n: a.name }), l('Dar lance', 'Bid'));
   return null;
@@ -461,7 +461,7 @@ export function repayBond19(s: GameState): L | null {
   const b = liveBond19(s);
   if (!b) return l('Nenhum título vivo.', 'No live bond.');
   const cost = Math.round(b.left * 1.02);
-  if (s.player.cash < cost) return l('Caixa insuficiente para resgatar (saldo + 2%).', 'Not enough cash to redeem (balance + 2%).');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para resgatar (saldo + 2%).', 'Not enough cash to redeem (balance + 2%).'));
   post(s, `m19:redeem:${b.id}`, -cost, 'securitization', 'Resgate antecipado do título');
   b.left = 0; b.st = 'paid';
   return null;

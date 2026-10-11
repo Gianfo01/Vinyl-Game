@@ -14,6 +14,7 @@ import type { Plan } from '../../xtypes';
 import { fmtL, money, nextId, playerActs, post, remember } from '../../util';
 import { P, actOf, addMsg, clamp01, healthOf, trackedPersons, type Health, type MedStaff } from './state';
 import { addThought } from './thoughts';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 // ação de agenda nova: descanso total de uma pessoa (também usada pelos tratamentos)
 if (!EXTRA_ACTIONS.some((x) => x.id === 'med_leave')) {
@@ -52,7 +53,7 @@ export function hireMedic(s: GameState, id: string): L | null {
   if (!c) return l('Profissional indisponível.', 'Professional unavailable.');
   if (P(s).medics.length >= 4) return l('Equipe médica completa (máx. 4).', 'Medical team is full (max 4).');
   const sign = Math.round(c.salary * 0.5);
-  if (s.player.cash < sign) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < sign) return cashWhy20(s, sign, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `medhire:${c.id}`, -sign, 'salaries', `Contratação ${c.name}`);
   P(s).medics.push({ ...c, hiredWeek: s.week });
   return null;
@@ -79,7 +80,7 @@ export function buyEarProtection(s: GameState): L | null {
   const ps = trackedPersons(s).filter((p) => !healthOf(s, p.id).inEars);
   if (!ps.length) return l('Todo o elenco já tem proteção.', 'Everyone is already protected.');
   const cost = money(s, (inEarsAvailable(s) ? 900 : 120) * ps.length);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `ears:${s.week}`, -cost, 'equipment', inEarsAvailable(s) ? 'Monitores intraauriculares' : 'Protetores auriculares');
   for (const p of ps) healthOf(s, p.id).inEars = true;
   return null;
@@ -108,7 +109,7 @@ export function startTreatment(s: GameState, pid: string, kind: Treatment): L | 
   if (kind === 'rehab' && h.dependency < 35 && p.health !== 'addiction') return l('Não há dependência para tratar.', 'No dependency to treat.');
   if (kind === 'surgery' && s.year < 1935) return l('Cirurgia vocal ainda não é segura nesta época.', 'Vocal surgery is not safe yet in this era.');
   const cost = treatmentCost(s, kind);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `treat:${pid}:${kind}`, -cost, 'artist_dev', kind === 'surgery' ? `Cirurgia ${p.name}` : kind === 'rehab' ? `Tratamento ${p.name}` : `Terapia vocal ${p.name}`);
   const def = TREATMENT[kind];
   const months = Math.ceil(def.weeks / 4.35);

@@ -14,6 +14,7 @@ import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { monthIndex } from '../capacity';
 import { isMine, liveOf, type OwnVenue } from './live/state';
 import { VENUE_KINDS, venueKind } from './live/venue';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type NightK = 'original' | 'residency' | 'party' | 'private' | 'rental';
 export type DealK = 'rent' | 'door' | 'own';
@@ -173,7 +174,7 @@ export function upgrade12(s: GameState, u: UpK): L | null {
   if (!v || !x) return l('Sem casa de shows.', 'No venue.');
   if (x.ups[u]) return l('Já feito.', 'Already done.');
   const c = upCost(s, v, u);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v12up:${u}`, -c, 'investments', `Reforma: ${UPS[u].name.pt} (${v.name})`);
   x.ups[u] = s.year;
   if (u === 'access') s.player.reputation.institutional = clamp(s.player.reputation.institutional + 2, 0, 100);
@@ -191,7 +192,7 @@ export function neighFund12(s: GameState): L | null {
   const x = v12(s);
   if (!v || !x) return l('Sem casa de shows.', 'No venue.');
   const c = money(s, 1500 * Math.pow(scale(s, v), 0.6));
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v12nb:${monthIndex(s)}`, -c, 'live_costs', `Fundo do bairro (${v.name})`);
   x.neigh = clamp(x.neigh + 12, 0, 100);
   note(s, x, l('Você financiou a praça e a limpeza da rua: a vizinhança respira.', 'You funded the square and street cleaning: the neighbours relax.'));
@@ -213,7 +214,7 @@ export function branch12(s: GameState, city: string): L | null {
   if (!cityById[city] || city === v.cityId || x.branches.some((b) => b.city === city)) return l('Escolha outra cidade.', 'Pick another city.');
   if (x.regulars < 55 || bestIdn(x) < 50) return l('A marca ainda não se sustenta fora de casa (fiéis 55+ e uma noite com identidade 50+).', 'The brand cannot travel yet (regulars 55+ and one night with identity 50+).');
   const c = branchCost(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v12br:${city}`, -c, 'investments', `Filial ${v.name} em ${cityById[city].name.pt}`);
   x.branches.push({ id: nextId(s, 'br'), city, name: `${v.name} ${cityById[city].name.pt}`, y: s.year });
   x.regulars = clamp(x.regulars - 3, 0, 100);
@@ -235,7 +236,7 @@ export function bigger12(s: GameState): L | null {
   const nk = VENUE_KINDS[i + 1];
   if (!nk || s.year < nk.minYear) return l('Não há espaço maior disponível.', 'No bigger space available.');
   const c = biggerCost(s, v);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v12big:${nk.id}`, -c, 'investments', `Mudança para ${nk.name.pt}: ${v.name}`);
   v.kind = nk.id;
   v.price = money(s, nk.price);

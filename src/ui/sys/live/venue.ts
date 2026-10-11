@@ -12,6 +12,7 @@ import { $, N, actLink, cityName, pill, rerender, section, toast } from '../../c
 import { h, select } from '../../dom';
 import { registerSection } from '../../registry';
 import { chips, ic, meter, stat } from '../../vis';
+import { freeCash20 } from '../../../sim/oblig20';
 
 const buy = { kind: 'club' as 'club' | 'theater' | 'arena', city: '', name: '' };
 
@@ -27,7 +28,7 @@ function venueSection(s: GameState): HTMLElement {
         h('label', null, t(l('Tipo', 'Type')), select(buy.kind, VENUE_KINDS.filter((x) => s.year >= x.minYear).map((x) => ({ value: x.id, label: `${t(x.name)} · ${N(x.cap)} · ${$(money(s, x.price))}` })), (val) => { buy.kind = val; rerender(); })),
         h('label', null, t(l('Cidade', 'City')), select(buy.city, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (val) => (buy.city = val))),
         h('label', null, t(l('Nome', 'Name')), h('input', { type: 'text', maxlength: 40, value: buy.name, placeholder: t(l('(automático)', '(automatic)')), oninput: (e: Event) => (buy.name = (e.target as HTMLInputElement).value) })),
-        h('button', { class: 'btn primary', disabled: s.player.cash < money(s, k.price), onclick: () => { const r = buyVenue(s, buy.kind, buy.city, buy.name); if ('pt' in r) toast(t(r), 'bad'); else toast(t(l('Casa comprada!', 'Venue bought!')), 'good'); rerender(); } }, ic('house'), ' ', t(l('Comprar ({p})', 'Buy ({p})'), { p: $(money(s, k.price)) })),
+        h('button', { class: 'btn primary', disabled: freeCash20(s) < money(s, k.price), onclick: () => { const r = buyVenue(s, buy.kind, buy.city, buy.name); if ('pt' in r) toast(t(r), 'bad'); else toast(t(l('Casa comprada!', 'Venue bought!')), 'good'); rerender(); } }, ic('house'), ' ', t(l('Comprar ({p})', 'Buy ({p})'), { p: $(money(s, k.price)) })),
       ),
     );
   }

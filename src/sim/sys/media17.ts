@@ -29,6 +29,7 @@ import { medOf } from './media12';
 import { per13 } from './persona13';
 import { registerSituation } from './situations17';
 import { ventures } from './ventures9';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- críticos reais e novos (entram nas resenhas)
 // preguiçoso: o contentBridge troca a lista (setCritics) e a ordem dos módulos no bundle não é garantida (TDZ)
@@ -494,7 +495,7 @@ export function plantRumor(s: GameState, actId: string, tplId: string, outId: st
   const od = plantOdds(s, actId, tplId, outId);
   if (!od.ok) return { ok: false, text: od.why ?? l('Indisponível.', 'Unavailable.') };
   const st = m17(s), a = s.acts[actId], tp = tplById[tplId], o = outletById17(s, outId)!;
-  if (od.cost && s.player.cash < od.cost) return { ok: false, text: l('Sem dinheiro.', 'Not enough cash.') };
+  if (od.cost && freeCash20(s) < od.cost) return { ok: false, text: cashWhy20(s, od.cost, l('Sem dinheiro.', 'Not enough cash.')) };
   if (od.cost && !post(s, `m17plant:${actId}`, -od.cost, 'marketing', `Boato: ${a.name}`)) return { ok: false, text: l('Já feito nesta semana.', 'Already done this week.') };
   st.cd[`p:${actId}`] = s.week + 8;
   const r = Rng.fromSeed(`${s.config.seed}:m17p:${s.week}:${actId}:${tplId}:${outId}`);
@@ -579,7 +580,7 @@ export function respond(s: GameState, storyId: string, v: Resp): { ok: boolean; 
   const od = respondOdds(s, storyId, v);
   if (!od.ok) return { ok: false, text: od.why ?? l('Indisponível.', 'Unavailable.') };
   const st = m17(s), sto = st.st.find((x) => x.id === storyId)!, a = s.acts[sto.a!], o = outletById17(s, sto.out)!;
-  if (od.cost && s.player.cash < od.cost) return { ok: false, text: l('Sem dinheiro.', 'Not enough cash.') };
+  if (od.cost && freeCash20(s) < od.cost) return { ok: false, text: cashWhy20(s, od.cost, l('Sem dinheiro.', 'Not enough cash.')) };
   if (od.cost) post(s, `m17resp:${sto.id}:${v}`, -od.cost, v === 'sue' ? 'legal' : 'marketing', `Imprensa: ${v} ${a.name}`);
   sto.resp = v;
   const r = Rng.fromSeed(`${s.config.seed}:m17resp:${sto.id}:${v}:${s.week}`);
@@ -625,7 +626,7 @@ export function courtOdds(s: GameState, outId: string, v: Court): Odds {
 export function court(s: GameState, outId: string, v: Court): { ok: boolean; text: L } {
   const od = courtOdds(s, outId, v);
   if (!od.ok) return { ok: false, text: od.why! };
-  if (s.player.cash < od.cost) return { ok: false, text: l('Sem dinheiro.', 'Not enough cash.') };
+  if (freeCash20(s) < od.cost) return { ok: false, text: cashWhy20(s, od.cost, l('Sem dinheiro.', 'Not enough cash.')) };
   const st = m17(s), o = outletById17(s, outId)!;
   post(s, `m17court:${outId}:${v}`, -od.cost, 'marketing', `Imprensa: ${o.name}`);
   st.cd[`c:${v}:${outId}`] = s.week + (v === 'lunch' ? 8 : 12);
@@ -647,7 +648,7 @@ export function stakeoutOdds(s: GameState, actId: string): Odds {
 export function stakeout(s: GameState, actId: string): { ok: boolean; text: L } {
   const od = stakeoutOdds(s, actId);
   if (!od.ok) return { ok: false, text: od.why! };
-  if (s.player.cash < od.cost) return { ok: false, text: l('Sem dinheiro.', 'Not enough cash.') };
+  if (freeCash20(s) < od.cost) return { ok: false, text: cashWhy20(s, od.cost, l('Sem dinheiro.', 'Not enough cash.')) };
   const st = m17(s), a = s.acts[actId];
   post(s, `m17stk:${actId}`, -od.cost, 'marketing', `Investigação: ${a.name}`);
   st.cd[`s:${actId}`] = s.week + 12;

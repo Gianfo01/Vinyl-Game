@@ -8,6 +8,7 @@ import { registerSimHook } from '../../ext4';
 import type { GameState, Song } from '../../types';
 import { money, playerActs, post } from '../../util';
 import { researchDone } from './research';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export type RoomKindId = Room['kind'];
 
@@ -41,7 +42,7 @@ export function swapRooms(s: GameState, a: string, b: string): L | null {
   const rb = rooms.find((x) => x.id === b);
   if (!ra || !rb || a === b) return l('Escolha duas salas diferentes.', 'Pick two different rooms.');
   const cost = money(s, 2500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `roomswap:${a}:${b}:${s.week}`, -cost, 'hq', 'Reforma de salas');
   const map = (s.x4.industry.roomKinds[lv] ??= {});
   map[a] = rb.kind;
@@ -56,7 +57,7 @@ export function buyItem(s: GameState, id: string): L | null {
   const have = s.x4.industry.items[id] ?? 0;
   if (have >= it.max) return l('Já tem o máximo deste item.', 'You already have the maximum of this item.');
   const cost = money(s, it.cost);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `item:${id}:${have}:${s.week}`, -cost, 'hq', `Item: ${it.name.pt}`);
   s.x4.industry.items[id] = have + 1;
   return null;

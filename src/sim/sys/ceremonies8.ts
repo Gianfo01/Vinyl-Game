@@ -11,6 +11,7 @@ import type { GameState, Release } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
 import { GRAMO_CAL19 } from '../awardcal19';
 import { mineRel19 } from '../mine19';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export type GramoCat = 'record' | 'album' | 'newcomer' | 'performance';
 export const GRAMO_CATS: { id: GramoCat; name: L; rule: L }[] = [
@@ -135,7 +136,7 @@ export function runCampaign(s: GameState, r: Rng, relId: string, cat: GramoCat, 
   const lv = clamp(Math.round(level), 1, 3);
   if (cur && cur.level >= lv) return l('Já existe uma campanha desse tamanho.', 'A campaign of that size already exists.');
   const cost = money(s, CAMPAIGN_COST[lv - 1]) - (cur ? money(s, CAMPAIGN_COST[cur.level - 1]) : 0);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `fyc:${relId}:${cat}:${lv}`, -cost, 'marketing', `Campanha de premiação: ${rel.title}`);
   if (cur) cur.level = lv;
   else st.campaigns.push({ id: nextId(s, 'fyc'), relId, cat, level: lv, year: cy });

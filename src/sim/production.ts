@@ -13,6 +13,7 @@ import { hqCaps } from './branches';
 import { takeIdea } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
 import { settleVocals } from './sys/vocals10';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export function songQ(song: Pick<Song, 'melody' | 'lyrics' | 'performance' | 'production' | 'originality'> & { instrumental?: boolean }): number {
   // Qualidade Q (GDD §12): 0,25 melodia + 0,20 letra + 0,25 performance + 0,20 produção + 0,10 originalidade
@@ -215,7 +216,7 @@ export function validateRelease(s: GameState, p: ReleasePlan): L | null {
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && c.party !== 'player' && act.playerBand) return null;
   const cost = releaseCost(s, p);
-  if (s.player.cash < cost) return l('Caixa insuficiente para fabricação e marketing.', 'Not enough cash for manufacturing and marketing.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para fabricação e marketing.', 'Not enough cash for manufacturing and marketing.'));
   return null;
 }
 

@@ -13,6 +13,7 @@ import { addAsset } from './finance';
 import { branchRent, hqBlocker, hqCaps } from './branches';
 import { perk } from './perks';
 import { loanAdj19 } from './rates19';
+import { cashWhy20, freeCash20 } from './oblig20';
 import { rentOn19 } from './slots19'; // r19 (careers19): sede de selo só com selo ativo
 
 export function monthlyCosts(s: GameState): { rent: number; salaries: number; outsourcing: number; loans: number; equipment: number } {
@@ -136,7 +137,7 @@ export function hireStaff(s: GameState, proId: string): L | null {
   if (!pro) return l('Profissional indisponível.', 'Professional unavailable.');
   if (s.player.staff.length >= hqCaps(s).staff) return l('Sede sem vagas para equipe. Amplie a sede.', 'No staff room in the HQ. Upgrade it.');
   const signOn = Math.round(pro.salary * 0.5);
-  if (s.player.cash < signOn) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < signOn) return cashWhy20(s, signOn, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `hire:${pro.id}`, -signOn, 'salaries', `Contratação ${pro.name}`);
   s.professionals = s.professionals.filter((x) => x !== pro);
   s.player.staff.push({ ...pro, hiredWeek: s.week });
@@ -165,7 +166,7 @@ export function upgradeHq(s: GameState): L | null {
   if (cost === null) return l('Sede já no nível máximo.', 'HQ already at max level.');
   const block = hqBlocker(s);
   if (block) return block;
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `hq:${s.player.hq + 1}`, -cost, 'hq', 'Ampliação da sede');
   s.player.hq += 1;
   addAsset(s, { kind: 'building', name: HQ_LEVELS[s.player.hq].name, cost, lifeMonths: 240 });
@@ -182,7 +183,7 @@ export function buyEquipment(s: GameState, id: string): L | null {
   if (!def) return l('Item inválido.', 'Invalid item.');
   if (s.player.equipment.length >= hqCaps(s).equipment) return l('Sem espaço para equipamento na sede.', 'No equipment space in the HQ.');
   const cost = money(s, def.cost);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `eq:${id}`, -cost, 'equipment', def.name.pt);
   s.player.equipment.push(id);
   addAsset(s, { kind: 'equipment', name: def.name, cost, lifeMonths: 60, refId: id });
@@ -198,7 +199,7 @@ export function territoryCost(s: GameState, m: MarketId): number {
 export function openTerritory(s: GameState, m: MarketId): L | null {
   if (s.player.territories.includes(m)) return null;
   const cost = territoryCost(s, m);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `terr:${m}`, -cost, 'distribution', `Distribuição ${m}`);
   s.player.territories.push(m);
   s.player.stats.marketsPresent = s.player.territories.length;

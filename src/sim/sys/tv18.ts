@@ -21,6 +21,7 @@ import { fmtL, money, nextId, playerActs, post } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { addLead18 } from './discover18';
 import { actOfPerson17 } from './love17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface Fr18 { id: string; real: string; alt: L; from: number; to: number; mk: MarketId[]; power: number; desc: L }
 export const FR18: Fr18[] = [
@@ -108,7 +109,7 @@ export function pushVotes18(s: GameState, actId: string, hard: boolean): L | nul
   const c = se.cont.find((x) => x.a === actId && x.out === undefined);
   if (!c) return l('Participante fora da disputa.', 'Contestant out of the race.');
   const cost = pushCost18(s) * (hard ? 3 : 1);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `tv18push:${se.id}:${actId}`, -cost, 'marketing', 'Campanha de voto');
   se.push = actId;
   c.v += hard ? 25 : 8;
@@ -120,7 +121,7 @@ export function produceShow18(s: GameState, name: string): L | null {
   if (st.own) return l('Você já produz um programa.', 'You already produce a show.');
   if (s.year < 1950) return l('Ainda não há TV.', 'No TV yet.');
   const c = ownCost18(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'venture:tv18own', -c, 'capex', `Programa de TV: ${name}`);
   st.own = { name: name.trim() || 'Talento Total', since: s.year, inc: 0 };
   emitFact(s, { kind: 'deal', actors: ['player'], severity: 40, visibility: 'public', tags: ['good', 'tv', 'venture'], src: 'tv18', text: fmtL(l('{c} lança o programa de calouros "{n}".', '{c} launches the talent show "{n}".'), { c: s.config.companyName, n: st.own.name }) });

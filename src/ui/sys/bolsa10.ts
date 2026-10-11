@@ -12,6 +12,7 @@ import { money } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
+import { freeCash20 } from '../../sim/oblig20';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -127,7 +128,7 @@ function bolsaTab(s: GameState): HTMLElement {
       h('table', { class: 'tbl compact' }, h('tbody', null, rs.map((x) => h('tr', null,
         h('td', null, h('b', null, t(x.name)), ' ', x.hostile ? pill(t(l('ameaça', 'threat')), 'bad') : null),
         h('td', null, pc1(x.frac)),
-        h('td', null, h('button', { class: 'btn small', disabled: s.player.cash < x.cost, onclick: () => run(repelRaider(s, x.k), l('Bloco recomprado.', 'Block bought back.')) }, `${t(l('Recomprar (ágio 20%)', 'Buy back (20% premium)'))} ${$(x.cost)}`))))))) : null,
+        h('td', null, h('button', { class: 'btn small', disabled: freeCash20(s) < x.cost, onclick: () => run(repelRaider(s, x.k), l('Bloco recomprado.', 'Block bought back.')) }, `${t(l('Recomprar (ágio 20%)', 'Buy back (20% premium)'))} ${$(x.cost)}`))))))) : null,
     h('p', { class: 'muted small' }, t(l('Ações de empresas que existem em {y}. Os preços seguem o mundo do jogo: números dos selos rivais, hits, escândalos, trocas de comando, viradas de formato (CD, pirataria, streaming…) e as crises históricas. Corretagem de 0,5%. Fechou? A ação vai a quase zero; foi comprada? Você recebe ágio.', 'Shares of companies that exist in {y}. Prices follow the game world: rival label numbers, hits, scandals, leadership changes, format shifts (CD, piracy, streaming…) and historic crises. 0.5% brokerage. Closed down? The share goes to almost zero; bought out? You get a premium.'), { y: s.year }), ' ', t(l('Selos só aparecem depois de abrir capital (IPO). Você e o seu selo negociam no mesmo pregão; fundos, selos rivais, chefes de gravadora e artistas também.', 'Labels only appear after going public (IPO). You and your label trade on the same exchange; so do funds, rival labels, label heads and artists.'))),
     nw.length ? section(t(l('Notícias do pregão', 'Market news')), h('ul', { class: 'memory' }, nw.map((n) => h('li', { class: n.tone }, h('span', { class: 'muted' }, `${n.y} · `), t(n.t))))) : null,
     ...kinds.map((k) => section(t(KIND_NAME[k]), h('table', { class: 'tbl compact' }, h('tbody', null, rows.filter((r) => r.kind === k).map((r) => stockRow(s, r)))))),

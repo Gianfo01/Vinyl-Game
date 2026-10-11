@@ -29,6 +29,7 @@ import { persona, playerTraitById } from './persona';
 import type { BackgroundId } from './life/data';
 import { FACETS, FACET_TXT, soul, type Facet } from './soul9';
 import { actsOfPerson17 } from '../actidx17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- esquema
 
@@ -619,7 +620,7 @@ const cdOk = (s: GameState, k: string): boolean => (p13(s).cd[k] ?? -1e9) <= s.w
 
 export function giftBlock(s: GameState, key: string): L | null {
   if (!cdOk(s, `gift|${key}`)) return l('Já recebeu um presente seu este ano.', 'Already got a gift from you this year.');
-  if (s.player.cash < money(s, GIFT_COST)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, GIFT_COST)) return cashWhy20(s, money(s, GIFT_COST), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 export function sendGift(s: GameState, key: string): L {

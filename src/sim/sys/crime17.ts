@@ -27,6 +27,7 @@ import { leaderOf } from './leaders10';
 import { playerPerson } from './life';
 import { per13, registerPer13 } from './persona13';
 import { addRelic, relics, type Relic } from './relics9';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ================================================================ estado
 
@@ -686,7 +687,7 @@ export function resolveCase(s: GameState, csId: string, how: Plea, r: Rng = crng
     out = fmtL(l('{o} Delação: {n} entregue(s) — e agora querem vingança.', '{o} Plea: {n} given up — and now they want revenge.'), { o: out, n: [...named].map((x) => nameOf17(s, x)).join(', ') || l('ninguém', 'nobody') });
   } else if (how === 'bribe') {
     const cost = money(s, 20000 + cs.sev * 400);
-    if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `c17judge:${cs.id}`, -cost, 'legal', 'Honorários "especiais"');
     if (r.chance(corruption(s, cs.a3) * 0.9)) out = l('Absolvido(a) por "falta de provas". Ninguém acredita, mas vale.', 'Acquitted for "lack of evidence". Nobody believes it, but it counts.');
     else { cs.sev = Math.min(100, cs.sev + 15); out = fmtL(l('O juiz denunciou a propina! {x}', 'The judge reported the bribe! {x}'), { x: convict(s, cs, 1.4) }); }
@@ -800,7 +801,7 @@ export function forgeRelic(s: GameState, rlId: string): L {
   const src = relics(s).list.find((x) => x.id === rlId);
   if (!src) return l('Peça inválida.', 'Invalid piece.');
   const cost = forgeCost(s, src.v);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `c17forge:${rlId}`, -cost, 'production', `Réplica: ${src.n.pt}`);
   const copy = addRelic(s, src.k, fmtL(l('{n} (procedência "nova")', '{n} ("new" provenance)'), { n: src.n }), src.a, src.p, src.v, src.y);
   copy.st = 'stolen';
@@ -811,7 +812,7 @@ export function buyOffer(s: GameState, oid: string, r: Rng = crng(s, `buy:${oid}
   const st = crime17(s);
   const of = st.market.find((x) => x.id === oid);
   if (!of) return l('Oferta expirou.', 'Offer expired.');
-  if (s.player.cash < of.price) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < of.price) return cashWhy20(s, of.price, l('Caixa insuficiente.', 'Not enough cash.'));
   const rl = relics(s).list.find((x) => x.id === of.rl);
   if (!rl) return l('Peça sumiu.', 'Piece gone.');
   post(s, `c17buy:${of.id}`, -of.price, 'acquisitions', `Compra discreta: ${rl.n.pt}`);
@@ -884,7 +885,7 @@ export function approachOrg(s: GameState, oid: string): L {
   const o = orgById(s, oid);
   if (!o) return l('Inválido.', 'Invalid.');
   const cost = money(s, 2000 + o.power * 50);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `c17tribute:${o.id}`, -cost, 'legal', `Presente a ${o.name.pt}`);
   st.org[o.id] = clamp((st.org[o.id] ?? 0) + 15, -100, 100);
   addHeat(s, 'player', o.a3, 3);
@@ -909,7 +910,7 @@ export function raidBootleggers(s: GameState, oid: string, r: Rng = crng(s, `rai
   const o = orgById(s, oid);
   if (!o) return l('Inválido.', 'Invalid.');
   const cost = raidCost(s);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `c17raid:${o.id}`, -cost, 'legal', `Batida antipirataria (${o.name.pt})`);
   if (r.chance(0.55 + legal15(s) * 0.3)) {
     st.boot[o.id] = s.week + 52;

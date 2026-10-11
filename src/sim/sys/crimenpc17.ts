@@ -23,6 +23,7 @@ import { leaderOf } from './leaders10';
 import { per13 } from './persona13';
 import { relics } from './relics9';
 import { registerSituation } from './situations17';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = (s: GameState, key: string, f: string): number => ((per13(s, key)?.facets as Record<string, number> | undefined)?.[f] ?? 50);
 /** r18: pessoa real protegida só no modo "Vida real exata" (nos outros, história alternativa). */
@@ -178,7 +179,7 @@ export function replyWarn(s: GameState, wid: string, how: WarnReply, r: Rng = ne
   if (invite) {
     if (how !== 'join') { const res = commitCrime(s, w.c, ctx, r); return typeof res === 'object' && 'ok' in res ? fmtL(l('Você recusou. Eles fizeram sozinhos: {x}', 'You declined. They went alone: {x}'), { x: res.text }) : l('Você recusou.', 'You declined.'); }
     const share = Math.round(money(s, d.cost) / 2);
-    if (s.player.cash < share) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < share) return cashWhy20(s, share, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `c17join:${wid}`, -share, 'legal', `Sociedade "discreta" (${nameOf17(s, w.actor)})`);
     const res = commitCrime(s, w.c, { ...ctx, dp: 0.06, dpWhy: l('Você entrou como sócio +6%', 'You joined as partner +6%') }, r);
     if (typeof res !== 'object' || !('ok' in res)) return res as L;
@@ -202,7 +203,7 @@ export function replyWarn(s: GameState, wid: string, how: WarnReply, r: Rng = ne
   }
   if (how === 'pay') {
     const c = payOffCost(s);
-    if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `c17payoff:${wid}`, -c, 'legal', `Acordo com ${nameOf17(s, w.actor)}`);
     grantHold(s, { holder: w.actor, target: 'player', kind: 'favor', strength: 45, months: 48, src: 'crime17', text: l('Pagou para não ser alvo', 'Paid not to be a target'), quiet: true });
     if (s.labels[w.actor]) s.rivalries[w.actor] = Math.max(0, (s.rivalries[w.actor] ?? 0) - 10);
@@ -248,7 +249,7 @@ export function truce(s: GameState, key: string): L {
   const st = crime17(s);
   if (st.feud[key] === undefined) return l('Sem rixa.', 'No feud.');
   const c = truceCost(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `c17truce:${key}`, -c, 'legal', 'Trégua mediada');
   st.feud[key] = Math.max(0, st.feud[key] - 45);
   return l('Encontro num território neutro: a rixa esfria (−45).', 'A sit-down on neutral ground: the feud cools (−45).');

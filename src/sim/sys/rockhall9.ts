@@ -10,6 +10,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { ownerOf } from './people/owner';
 import { fmtL, money, notify, post, remember } from '../util';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export const HALL_FOUNDED = 1983;
 export const HALL_FIRST_CLASS = 1986;
@@ -180,7 +181,7 @@ export function lobby(s: GameState, r: Rng, actId: string, lv: 1 | 2 | 3): L | n
   if (!a || !(a.owner === 'player' || a.playerBand)) return l('Só artistas seus.', 'Only your acts.');
   if (!st.noms || !st.noms.ids.includes(actId)) return l('Só é possível fazer campanha por indicados.', 'You can only campaign for nominees.');
   const cost = money(s, LOBBY_COST[lv]);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `hall:${actId}:${lv}`, -cost, 'marketing', `Campanha no Hall da Fama: ${a.name}`);
   st.lobby.push({ actId, year: st.noms.year, lv });
   if (lv === 3 && r.next() < 0.3) {

@@ -11,6 +11,7 @@ import { deferEvents } from './ext4';
 import type { GameState, Label, Release } from './types';
 import type { RivalReportItem } from './xtypes';
 import { fmtL, money, playerActs, post, remember } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export const ARCHETYPES: Record<NonNullable<Label['archetype']>, { name: L; desc: L }> = {
   empire: { name: l('Império', 'Empire'), desc: l('Compra estrelas e concorrentes; evita risco artístico.', 'Buys stars and competitors; avoids artistic risk.') },
@@ -58,7 +59,7 @@ deferEvents(RIVAL_EVENTS);
 /** Contraespionagem: segurança reduz vazamentos por 12 meses. */
 export function buySecurity(s: GameState): L | null {
   const cost = money(s, 6000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'security', -cost, 'admin', 'Segurança da informação');
   s.flags.securityUntil = s.week + 52;
   return null;
@@ -69,7 +70,7 @@ export function spyOnRival(s: GameState, r: Rng, labelId: string): L {
   const lb = s.labels[labelId];
   if (!lb) return l('Inválido.', 'Invalid.');
   const cost = money(s, 4000);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `spy:${labelId}:${s.week}`, -cost, 'admin', 'Informação de mercado');
   if (r.chance(0.2)) {
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - 8, 0, 100);

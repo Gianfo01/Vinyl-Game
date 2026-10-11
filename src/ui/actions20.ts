@@ -17,6 +17,7 @@ import { STUDIO_TIERS } from '../data/rules';
 import { l, type L } from '../data/world';
 import { defaultAgenda, freeCapacity, slotCost, slotsFor, slotWeek, usedSlots } from '../sim/agenda';
 import { calendar19 } from '../sim/calendar19';
+import { cashWhy20, freeCash20 } from '../sim/oblig20';
 import { agendaLoad, slotLoad } from '../sim/capacity';
 import { raiseRoyalty } from '../sim/contracts';
 import type { Cutscene } from '../sim/ext4';
@@ -123,7 +124,7 @@ function baseBlock(s: GameState, c: Ctx20): L | null {
 function rowOf(s: GameState, def: Action20, c: Ctx20): Row20 {
   const block = baseBlock(s, c) ?? def.block?.(s, c) ?? null;
   const cost = def.cost?.(s, c) ?? 0;
-  const cashBlock = !block && def.mutates && cost > 0 && s.player.cash < cost ? N('Caixa insuficiente.', 'Not enough cash.') : null;
+  const cashBlock = !block && def.mutates && cost > 0 && freeCash20(s) < cost ? cashWhy20(s, cost, N('Caixa insuficiente.', 'Not enough cash.')) : null;
   return { def, block: block ?? cashBlock, cost, time: def.time?.(s, c) ?? null, effect: def.effect?.(s, c) ?? null };
 }
 
@@ -389,7 +390,7 @@ export function applyRecordPlan20(s: GameState, actId: string, opt: RecOpt20, ti
   if (!o.plan) return { ok: true, text: o.name, nav: o.nav };
   if (o.plan.block) return { ok: false, text: o.plan.block };
   if (tier !== undefined && !rp.studio.tiers.find((x) => x.id === tier)?.ok) return { ok: false, text: N('Sem estúdio próprio na sede: escolha um estúdio de fora.', 'No in-house studio at HQ: pick an outside studio.') };
-  if (s.player.cash < o.plan.cost) return { ok: false, text: N('Caixa insuficiente para a sessão.', 'Not enough cash for the session.') };
+  if (freeCash20(s) < o.plan.cost) return { ok: false, text: cashWhy20(s, o.plan.cost, N('Caixa insuficiente para a sessão.', 'Not enough cash for the session.')) };
   commitAgenda20(s, a, o.plan.slots);
   const combos = plannedCombos(o.plan.slots).map((x) => x.combo.name);
   return { ok: true, text: fmtL(N('Plano de gravação de {a} na agenda: {x}{c}.', '{a}\'s recording plan is on the agenda: {x}{c}.'), { a: a.name, x: slotText(o.plan.slots.filter((x) => x.action === 'record' || x.action === opt)), c: combos.length ? ` ✦ ${combos.map((x) => x.pt).join(', ')}` : '' }), nav: { sub: 'agenda', act: a.id } };

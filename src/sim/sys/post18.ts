@@ -27,6 +27,7 @@ import { soul } from './soul9';
 import { logShot18, type Kind18 } from './cine18';
 import { nudge16 } from './fame16';
 import { countryOfCity } from '../../data/geo';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
 
@@ -148,7 +149,7 @@ export function block18(s: GameState, pid: string, k: PK18): L | null {
   if (k === 'ai_album' && p.alive) return l('Voz por IA de artista vivo: use os acordos de imagem (image17).', 'AI voice of a living artist: use image deals (image17).');
   const xb = POST19.block?.(s, pid, k);
   if (xb) return xb;
-  if (s.player.cash < money(s, def.cost)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < money(s, def.cost)) return cashWhy20(s, money(s, def.cost), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 
@@ -349,7 +350,7 @@ export const mediateCost18 = (s: GameState) => money(s, 8000);
 export function mediate18(s: GameState, pid: string): L {
   const e = estate18(s, pid);
   if (!e) return l('Sem espólio.', 'No estate.');
-  if (s.player.cash < mediateCost18(s)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < mediateCost18(s)) return cashWhy20(s, mediateCost18(s), l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `post18med:${pid}`, -mediateCost18(s), 'legal', 'Mediação de espólio');
   const r = rng(s, `med:${pid}:${s.week}`);
   const neg = (s.player.reputation.institutional + s.player.reputation.artists) / 400;

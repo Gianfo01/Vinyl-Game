@@ -9,6 +9,7 @@ import type { GameState, Release } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, post, remember, rngOf } from '../../util';
 import { researchDone } from './research';
 import type { PriceTier, Store, StoreCell } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 // ------------------------------------------------------------------ lojas
 
@@ -45,7 +46,7 @@ export function openStore(s: GameState, cityId: string): L | null {
   if (st.stores.some((x) => x.city === cityId)) return l('Já existe uma loja sua aqui.', 'You already have a store here.');
   if (st.stores.length >= 12) return l('Limite de 12 lojas.', 'Limit of 12 stores.');
   const cost = storeOpenCost(s);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `store:${cityId}:${s.week}`, -cost, 'retail', `Loja em ${city.name.pt}`);
   const layout: StoreCell[] = new Array(STORE_W * STORE_H).fill('empty');
   layout[0] = 'window';
@@ -62,7 +63,7 @@ export function setCell(s: GameState, storeId: string, idx: number, cell: StoreC
   const store = s.x4.industry.stores.find((x) => x.id === storeId);
   if (!store || idx < 0 || idx >= store.layout.length) return l('Inválido.', 'Invalid.');
   const cost = money(s, CELL_INFO[cell].cost);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   if (cost) post(s, `storecell:${store.id}:${idx}:${cell}:${s.week}`, -cost, 'retail', 'Reforma da loja');
   store.layout[idx] = cell;
   return null;
@@ -124,7 +125,7 @@ export function hireDistributor(s: GameState, r: Rng, market: MarketId): L | nul
   const st = s.x4.industry;
   if (st.distributors.some((d) => d.market === market)) return l('Já há um distribuidor seu neste mercado.', 'You already have a distributor in this market.');
   const fee = money(s, 3000);
-  if (s.player.cash < fee) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `dist:${market}:${s.week}`, -fee, 'distribution', 'Contrato de distribuição');
   const comm = clamp(0.2 + r.float(-0.04, 0.05) - (researchDone(s, 'global_logistics') ? 0.05 : 0), 0.1, 0.3);
   st.distributors.push({ id: nextId(s, 'ds'), market, name: `${personName(r, 'en').split(' ')[1] ?? 'Indie'} Distribution`, commission: comm, stores: r.int(40, 160), since: s.week });
@@ -225,7 +226,7 @@ export function toggleMailClub(s: GameState): L | null {
   if (!mc.active && (s.year < 1955 || s.year > 1998)) return l('Clube do disco por correio: de 1955 a 1998.', 'Mail-order record club: 1955 to 1998.');
   if (!mc.active) {
     const cost = money(s, 12000);
-    if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+    if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
     post(s, `mailclubopen:${s.week}`, -cost, 'retail', 'Lançamento do clube do disco');
     mc.since = s.week;
     mc.members = 500;

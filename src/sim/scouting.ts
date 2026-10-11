@@ -8,6 +8,7 @@ import type { Act, GameState, Knowledge } from './types';
 import { addSignal, spawnProceduralAct, talentScore } from './worldgen';
 import { perk } from './perks';
 import { fmtL, hasCard, hasTech, money, notify, post, rngOf, staffCount, staffSkill } from './util';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export const DEGREES: L[] = [
   l('Rumor', 'Rumor'),
@@ -85,7 +86,7 @@ export function canScout(s: GameState, actId: string): { ok: boolean; reason?: L
   if (s.scoutActionsUsed >= scoutActionsPerMonth(s)) return { ok: false, reason: l('Sem ações de scouting neste mês.', 'No scouting actions left this month.') };
   if (k.degree >= 4 && s.acts[actId]?.owner !== 'player') return { ok: false, reason: l('Convivência só com contrato ou após meses de negociação.', 'Close contact only after signing or months of negotiation.') };
   if (k.degree >= 5) return { ok: false };
-  if (s.player.cash < scoutCost(s, k.degree)) return { ok: false, reason: l('Caixa insuficiente.', 'Not enough cash.') };
+  if (freeCash20(s) < scoutCost(s, k.degree)) return { ok: false, reason: cashWhy20(s, scoutCost(s, k.degree), l('Caixa insuficiente.', 'Not enough cash.')) };
   return { ok: true };
 }
 

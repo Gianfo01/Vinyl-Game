@@ -19,6 +19,7 @@ import { hasUnlock, residences } from './goods8';
 import { energyLeft, life, playerPerson, spendEnergy } from './life';
 import { gainXp, ownerOf } from './people/owner';
 import { gainTrait } from './vices';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 export interface MapX8State {
   /** onde o dono está (viagem pelo mapa) */
@@ -164,7 +165,7 @@ export function scoutCity(s: GameState, cityId: string): L | null {
   if (m.scoutJobs.some((j) => j.city === cityId)) return l('Já há um olheiro trabalhando aqui.', 'A scout is already working here.');
   if (m.scoutJobs.length >= 4) return l('No máximo quatro missões avulsas ao mesmo tempo.', 'At most four freelance missions at once.');
   const cost = scoutCityCost(s, cityId);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `mapscout:${cityId}`, -cost, 'scouting', `Olheiro avulso em ${cityById[cityId].name.pt}`);
   m.scoutJobs.push({ city: cityId, due: s.week + (isHere(s, cityId) ? 1 : 3), strong: isHere(s, cityId) || residences(s).includes(cityId) });
   return null;
@@ -199,7 +200,7 @@ export function promoBlocker(s: GameState, cityId: string, actId: string): L | n
   if (!act || (act.owner !== 'player' && !act.playerBand)) return l('Escolha um artista do selo.', 'Pick an act on the label.');
   if (act.status === 'retired' || act.status === 'split' || act.deceased) return l('Artista inativo.', 'Inactive act.');
   if (mapx(s).promos.some((p) => p.city === cityId && p.actId === actId && p.until > s.week)) return l('Já há divulgação desse artista aqui.', 'This act is already being promoted here.');
-  if (s.player.cash < promoCost(s, cityId)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < promoCost(s, cityId)) return cashWhy20(s, promoCost(s, cityId), l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
 }
 
@@ -247,7 +248,7 @@ export function localDistribution(s: GameState, cityId: string): L | null {
   if (!mk) return l('Cidade inválida.', 'Invalid city.');
   if (s.player.territories.includes(mk)) return l('Você já distribui neste mercado.', 'You already distribute in this market.');
   const cost = trialCost(s, mk);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `maptrial:${mk}`, -cost, 'distribution', `Teste de distribuição ${mk}`);
   s.player.territories.push(mk);
   s.player.stats.marketsPresent = s.player.territories.length;
@@ -261,7 +262,7 @@ export function convertTrial(s: GameState, mk: MarketId): L | null {
   const m = mapx(s);
   if (m.trials[mk] === undefined) return l('Sem teste em andamento.', 'No trial running.');
   const cost = convertCost(s, mk);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `mapconvert:${mk}`, -cost, 'distribution', `Distribuição ${mk}`);
   delete m.trials[mk];
   return null;

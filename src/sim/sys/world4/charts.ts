@@ -11,6 +11,7 @@ import { fmtL, hasTech, money, notify, post, remember } from '../../util';
 import { mineRel, rep } from './common';
 import { DISCO, milestoneById } from './milestones';
 import { w4 } from './state';
+import { cashWhy20, freeCash20 } from '../../oblig20';
 
 // ======================================================================= jabá
 
@@ -48,7 +49,7 @@ export function payDJs(s: GameState, tier: number): L | null {
   if (!hasTech(s, 'radio')) return l('Ainda não há rádio.', 'There is no radio yet.');
   if (w.payola.lastWeek === s.week) return l('Já houve pagamento nesta semana.', 'Already paid this week.');
   const cost = payolaCost(s, tier);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4payola:${tier}`, -cost, 'w4_payola', 'Divulgação (?)');
   const era = payolaEra(s);
   w.payola.level = clamp(w.payola.level + t.level, 0, 0.45);
@@ -65,7 +66,7 @@ export function pitchLegit(s: GameState): L | null {
   const w = w4(s);
   if (w.payola.pitchWeek === s.week) return l('Você já visitou as rádios nesta semana.', 'You already visited the stations this week.');
   const cost = money(s, 500);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'w4pitch', -cost, 'marketing', 'Visita a rádios e curadores');
   if (payolaEra(s) === 'curator') w.payola.curator = clamp(w.payola.curator + 5, 0, 100);
   else w.payola.dj = clamp(w.payola.dj + 5, 0, 100);
@@ -174,7 +175,7 @@ export function manipulate(s: GameState, relId: string, kind: string): L | null 
   if (!m.methods.includes(chartMethod(s))) return l('Não funciona com a metodologia atual.', 'Does not work with the current methodology.');
   if (w.manip.boosts[relId] && w.manip.boosts[relId].until >= s.week) return l('Já está sendo inflado.', 'Already being inflated.');
   const cost = money(s, m.real);
-  if (s.player.cash < cost) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `w4manip:${relId}:${kind}`, -cost, 'w4_payola', `Promoção de parada ${rel.title}`);
   w.manip.boosts[relId] = { until: s.week + m.weeks, mult: m.mult, kind };
   w.manip.lastRev[relId] = rel.revenue;

@@ -28,6 +28,7 @@ import { SCENARIOS17, type Scenario17 } from './scenarios17';
 import type { GameState, Release } from '../types';
 import { hasTech, money, notify, post, remember } from '../util';
 import { Rng } from '../../core/rng';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- dados nos sistemas existentes
 
@@ -210,7 +211,7 @@ export function openParlor1889(s: GameState): L | null {
   if (!parlorOpen1889(s)) return l('Os salões de fonógrafo já saíram de moda.', 'Phonograph parlors are out of fashion.');
   if (st.parlor !== undefined) return l('Você já tem um salão.', 'You already run a parlor.');
   const c = parlorCost1889(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, 'venture:parlor1889', -c, 'investments', 'Salão de fonógrafos a moedas');
   st.parlor = s.week;
   remember(s, 'parlor', l('Você abre um salão de fonógrafos: uma moeda, um cilindro, fones de borracha no ouvido.', 'You open a phonograph parlor: one coin, one cylinder, rubber ear tubes.'), { important: true });
@@ -231,7 +232,7 @@ export function plugSong1889(s: GameState, actId: string): L | null {
   if (s.year >= 1930) return l('Com o rádio, o song plugger perdeu a vez.', 'With radio, the song plugger lost his place.');
   if (!plugReady1889(s, actId)) return l('Os pluggers já estão rodando as lojas com essa canção este mês.', 'The pluggers are already working the stores with this song this month.');
   const c = plugCost1889(s);
-  if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `plug:${actId}:${s.week}`, -c, 'promo', 'Song pluggers (Tin Pan Alley)');
   era1889(s).plug[actId] = s.week;
   addHype(s, `a:${actId}`, 'plug1889', l('Song pluggers tocando a canção em lojas e teatros', 'Song pluggers playing the song in stores and theatres'), 7);

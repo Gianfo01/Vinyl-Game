@@ -16,6 +16,7 @@ import { h, select } from '../dom';
 import { registerSection } from '../registry';
 import { chips, meter, stat } from '../vis';
 import { fameText } from '../../sim/sys/fame15';
+import { freeCash20 } from '../../sim/oblig20';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const add = { day: 'fri' as DayK, k: 'original' as NightK, deal: 'door' as DealK, act: '', name: '' };
@@ -77,7 +78,7 @@ function venue12Section(s: GameState): HTMLElement | null {
     h('div', { class: 'cards' }, (Object.keys(UPS) as UpK[]).map((u) => h('div', { class: 'tile' }, h('div', { class: 'tile-body' },
       h('b', null, t(UPS[u].name)), ' ', x.ups[u] ? pill(t(l('feito', 'done')), 'good') : null,
       h('small', { class: 'muted' }, t(UPS[u].desc)),
-      x.ups[u] ? null : h('button', { class: 'btn small', disabled: s.player.cash < upCost(s, v, u), onclick: () => say(upgrade12(s, u), l('Reforma feita.', 'Renovation done.')) }, $(upCost(s, v, u))))))),
+      x.ups[u] ? null : h('button', { class: 'btn small', disabled: freeCash20(s) < upCost(s, v, u), onclick: () => say(upgrade12(s, u), l('Reforma feita.', 'Renovation done.')) }, $(upCost(s, v, u))))))),
     h('h5', null, t(l('Vizinhança', 'Neighbourhood'))),
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn small', onclick: () => say(neighFund12(s), l('Bairro agradecido.', 'Neighbours grateful.')) }, t(l('Financiar melhorias no bairro', 'Fund neighbourhood improvements'))),

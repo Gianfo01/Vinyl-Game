@@ -16,6 +16,7 @@ import { explain18, registerExplain } from './explain18';
 import type { GameState } from './types';
 import { fmtL, money, post } from './util';
 import { spendEnergy, energyLeft } from './sys/life';
+import { cashWhy20, freeCash20 } from './oblig20';
 
 export type PAGroup = 'social' | 'career' | 'press' | 'care' | 'love' | 'dark';
 export const PA_GROUP: Record<PAGroup, L> = {
@@ -75,7 +76,7 @@ export function paBlock18(s: GameState, def: PersonAction18, key: string): L | n
   const cd = pa18(s).cd[`${def.id}|${key}`];
   if (cd !== undefined && cd > s.week) return fmtL(l('Espere mais {n} semana(s) para repetir com esta pessoa.', 'Wait {n} more week(s) before repeating with this person.'), { n: cd - s.week });
   const c = def.cost?.(s, key) ?? {};
-  if (c.usd && s.player.cash < costMoney18(s, c)) return l('Caixa insuficiente.', 'Not enough cash.');
+  if (c.usd && freeCash20(s) < costMoney18(s, c)) return cashWhy20(s, costMoney18(s, c), l('Caixa insuficiente.', 'Not enough cash.'));
   if (c.balls && energyLeft(s) < c.balls) return l('Sem tempo livre este mês.', 'No free time left this month.');
   for (const g of PA_GATES18) { const why = g(s, def, key); if (why) return why; }
   return def.available?.(s, key) ?? null;

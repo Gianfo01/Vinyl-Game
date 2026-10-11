@@ -31,6 +31,7 @@ import { retailCycle } from './industry/retail';
 import type { Material } from './industry/state';
 import { MATERIAL_NAMES } from './industry/supply';
 import { matAvailable } from './industry/supply13';
+import { cashWhy20, freeCash20 } from '../oblig20';
 
 const $ = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 /** depuração do balanço: globalThis.__sup18off = ['day','launch','month','bot','report'] desliga partes */
@@ -284,7 +285,7 @@ export function resolveLate18(s: GameState, prId: string, how: 'postpone' | 'rus
   if (how === 'rush') {
     if (b.rush) return l('Prioridade já paga.', 'Priority already paid.');
     const c = rushCost18(s, pr);
-    if (s.player.cash < c) return l('Caixa insuficiente para a prioridade.', 'Not enough cash for priority.');
+    if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente para a prioridade.', 'Not enough cash for priority.'));
     post(s, `sup18rush:${prId}`, -c, 'manufacturing', `Prioridade na fábrica: ${pr.title}`);
     b.rush = true;
     book18(s, pr);
@@ -422,7 +423,7 @@ export function setVariants18(s: GameState, prId: string, n: number): L | null {
   if (!variantsOk18(s, pr.formats)) return l('Variantes só existem para vinil, a partir de 2014.', 'Variants only exist for vinyl, from 2014.');
   n = clamp(Math.round(n), 0, 4);
   const add = n - (b.var ?? 0);
-  if (add > 0) { const c = variantCost18(s) * add; if (s.player.cash < c) return l('Caixa insuficiente.', 'Not enough cash.'); post(s, `sup18var:${prId}:${n}`, -c, 'manufacturing', `Variantes de vinil: ${pr.title}`); }
+  if (add > 0) { const c = variantCost18(s) * add; if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.')); post(s, `sup18var:${prId}:${n}`, -c, 'manufacturing', `Variantes de vinil: ${pr.title}`); }
   b.var = n;
   return null;
 }
@@ -434,7 +435,7 @@ export function reserveCap18(s: GameState, plantId: string, units: number): L | 
   if (!p || !plantsNow(s).includes(p)) return l('Fábrica indisponível.', 'Plant unavailable.');
   if (st.top && st.top.until > s.week) return l('Já existe um contrato de capacidade em vigor.', 'A capacity contract is already running.');
   const c = topCost18(s, units);
-  if (s.player.cash < c) return l('Caixa insuficiente para o primeiro mês.', 'Not enough cash for the first month.');
+  if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente para o primeiro mês.', 'Not enough cash for the first month.'));
   st.top = { plant: plantId, units, until: s.week + 52 };
   post(s, `sup18top:${plantId}:${s.week}`, -c, 'manufacturing', `Capacidade reservada: ${p.name.pt}`);
   log(s, fmtL(l('Contrato de capacidade com {p}: {u} cópias/mês por 12 meses.', 'Capacity contract with {p}: {u} copies/month for 12 months.'), { p: p.name, u: units.toLocaleString('en-US') }));
