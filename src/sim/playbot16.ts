@@ -264,7 +264,8 @@ function records(s: GameState, k: Knobs, prof: Profile): void {
       if ('pt' in r) continue;
       p = r;
       L.projects++;
-      const budget = runway(s) < k.cut * 2 ? 'lean' : k.budget;
+      // r18 final: agressivo bem jogado — capricha só em quem já provou (fama 40+); estreante vai no padrão
+      const budget = runway(s) < k.cut * 2 ? 'lean' : k.budget === 'lavish' && act.fame < 40 ? 'standard' : k.budget;
       commitProject(s, p, { intent: act.fame < 15 ? 'audience' : 'career', dir: prof === 'aggressive' ? 'bold' : suggestDir18(s, act), aud: act.fame < 15 ? 'young' : 'core', budget, deadline: 'normal' });
       // escolhas de lançamento (rodada 13): o agressivo paga single de trabalho e edição limitada; os outros ficam no padrão
       if (prof === 'aggressive' && p.type !== 'single') commit13(s, p, { ...DEFAULT13, single: 'lead', ed: s.year >= 1975 ? 'limited' : 'standard' });

@@ -122,7 +122,7 @@ function makeLabel(s: GameState, r: Rng, def: { id: string; name: string; family
     family: def.family,
     city: def.city,
     founded: def.founded,
-    focus: def.focus,
+    focus: [...def.focus], // r18 final: cópia — o array da tabela de selos era compartilhado entre partidas (A&R de world18 e rivalmind18 o alteravam)
     cash: nominal(capital * r.float(0.7, 1.3), year),
     reputation: r.int(35, 70),
     roster: [],
