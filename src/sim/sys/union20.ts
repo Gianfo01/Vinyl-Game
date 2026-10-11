@@ -132,10 +132,16 @@ export function openDemand20(s: GameState, g: UGrp20, d: UDem20): void {
   });
 }
 
+/** Pode abrir pauta agora? (sem pauta aberta, prazo vencido, 1900+, elenco, nenhuma greve real em vigor) */
+export function eligible20(s: GameState): boolean {
+  const u = union20(s);
+  return !u.cur && s.week >= u.next && s.year >= GRP20.session.from && playerActs(s).length > 0 && !strikeActive(s);
+}
+
 registerSimHook('month', 'union20', (s) => {
   const u = union20(s);
   if (u.cur && s.week - u.cur.w > 8) answerUnion20(s, 'accept'); // segurança: pauta órfã (mensagem apagada) vale o padrão
-  if (u.cur || s.week < u.next || s.year < GRP20.session.from || !playerActs(s).length || strikeActive(s)) return;
+  if (!eligible20(s)) return;
   const r = rng(s);
   if (!r.chance(0.06 + (50 - u.trust) / 1000)) return;
   const grps = (Object.keys(GRP20) as UGrp20[]).filter((g) => s.year >= GRP20[g].from);
