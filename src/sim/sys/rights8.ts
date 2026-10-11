@@ -7,7 +7,7 @@ import { l } from '../../data/world';
 import { expectedAdvance } from '../contracts';
 import { mainAmbition } from '../people';
 import { registerExt4, registerSimHook } from '../ext4';
-import { artistPower, releasesOfDeal, revertWeek, rightsOf, rst } from '../rights';
+import { artistPower, recoupTail20, releasesOfDeal, revertWeek, rightsOf, rst } from '../rights';
 import { fmtL, money, nextId, notify, remember } from '../util';
 
 registerExt4('rights8', () => ({ demands: [], perms: [], reversions: [] }));
@@ -27,7 +27,15 @@ registerSimHook('month', 'rights8', (s, r) => {
         c.revertWarned = true;
         notify(s, fmtL(l('Os masters de {a} voltam ao artista em ~{m} meses. Dá para negociar a extensão na ficha de Direitos.', '{a}\'s masters revert to the artist in ~{m} months. You can negotiate an extension in the Rights sheet.'), { a: act.name, m: Math.max(1, Math.round((rw - s.week) / 4.35)) }), 'event');
       }
-      if (s.week >= rw && (!t.reversionNeedsRecoup || c.recoupBalance <= 0)) {
+      // r20 (B29): teto negociável da trava de recoupment; sem teto, avisa uma vez o cenário de cauda
+      const capped = t.reversionNeedsRecoup && c.recoupBalance > 0 && (t.recoupCapYears ?? 0) > 0 && s.week >= rw + Math.round((t.recoupCapYears ?? 0) * 52);
+      if (s.week >= rw && t.reversionNeedsRecoup && c.recoupBalance > 0 && !capped && !c.recoupWarn20) {
+        c.recoupWarn20 = true;
+        const tl = recoupTail20(s, c);
+        notify(s, fmtL(l('Masters de {a} travados pela cláusula de recoupment: faltam {b}; no ritmo atual, {y}.', '{a}\'s masters held by the recoupment clause: {b} left; at the current pace, {y}.'), { a: act.name, b: `$${Math.round(tl.balance / 100).toLocaleString('en-US')}`,
+          y: tl.capWeek !== Infinity ? fmtL(l('o teto de {n} anos libera antes', 'the {n}-year cap releases them first'), { n: t.recoupCapYears ?? 0 }) : tl.years === Infinity ? l('nunca se recupera (ficam com o selo)', 'it never recoups (the label keeps them)') : fmtL(l('~{n} anos', '~{n} years'), { n: Math.ceil(tl.years) }) }), 'event');
+      }
+      if (s.week >= rw && (!t.reversionNeedsRecoup || c.recoupBalance <= 0 || capped)) {
         const rels = releasesOfDeal(s, c);
         for (const rel of rels) rel.owner = 'indie';
         c.reverted = true;

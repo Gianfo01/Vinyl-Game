@@ -1,5 +1,6 @@
 // Paradas, Mídia, Catálogo, Shows, Empresa, Diário e Sede.
 
+import { LABEL_LEGACY20 } from '../../sim/sys/fin20';
 import { pager18 } from '../quick18';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
 import { BRANCH_LEVELS, CARDS, ENDINGS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
@@ -428,7 +429,7 @@ function legacyTab(s: GameState): HTMLElement {
   const card = cardById[s.config.card];
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
-      section(`${t(S.legacy)} — ${legacyTotal(s)}`, LEGACY_DIMS.map((d) => kv(t(d.name), h('span', null, Math.round(s.player.legacy[d.id]), ' ', bar(s.player.legacy[d.id]))))),
+      section(`${t(LABEL_LEGACY20)} — ${legacyTotal(s)}`, /* r20 (B21) */ LEGACY_DIMS.map((d) => kv(t(d.name), h('span', null, Math.round(s.player.legacy[d.id]), ' ', bar(s.player.legacy[d.id]))))),
       section(t(l('Marcos', 'Milestones')), h('ul', null, milestones(s).map((m) => h('li', { class: m.done ? 'good' : 'muted' }, m.done ? '☑ ' : '◻ ', t(m.text))))),
       section(t(l('Prêmios do selo', 'Label awards')), h('ul', { class: 'small' }, s.awards.filter((a) => a.byPlayer).slice(-20).reverse().map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`)))),
     ),

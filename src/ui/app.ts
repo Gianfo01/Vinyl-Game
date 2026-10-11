@@ -1,5 +1,6 @@
 // Layout principal: barra superior, 10 áreas + Diário, avanço, paleta de comandos, fim de run.
 
+import { LABEL_LEGACY20 } from '../sim/sys/fin20';
 import { ERA19 } from '../sim/era19';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
 import { l, type L } from '../data/world';
@@ -570,7 +571,8 @@ function endScreen(): void {
     UX19UI.end?.(g) ?? null,
     h('p', { class: 'lead' }, insolvent && !def ? t(S.insolvencyText) : t(def?.text)),
     h('p', { class: 'muted' }, `${g.config.companyName} · ${g.config.startYear}–${end.year} · Run ${g.signature}`),
-    h('h4', null, `${t(S.legacy)}: ${legacyTotal(g)}`),
+    h('h4', null, `${t(LABEL_LEGACY20)}: ${legacyTotal(g)}`), // r20 (B21): nome distinto do "Legado por caminhos" do epitáfio
+    h('p', { class: 'small muted' }, t(l('Soma das 7 dimensões abaixo (0–100 cada). O "Legado por caminhos" do epitáfio mede outra coisa: melhor caminho + 30% do segundo + pontos de caminho.', 'Sum of the 7 dimensions below (0–100 each). The epitaph\'s "Path legacy" measures something else: best path + 30% of the second + path points.'))),
     LEGACY_DIMS.map((d) => kv(t(d.name), h('span', null, Math.round(g.player.legacy[d.id]), ' ', bar(g.player.legacy[d.id])))),
     !insolvent ? h('p', { class: 'small muted' }, t(l('Finais mais próximos: ', 'Closest endings: ')), top.map((x) => t(ENDINGS.find((e) => e.id === x.id)?.name)).join(' · ')) : null,
     h('div', { class: 'row center' },

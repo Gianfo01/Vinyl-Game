@@ -5,6 +5,7 @@ import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import { distributionFee } from '../sim/market';
 import {
+  recoupTail20,
   EXPLOIT_NAME, MASTER_NAME, SCOPE_NAME, annualRevenue, artistPower, buyExploitPermission, defaultRights, extendMasters, extendPrice, hasExploit, marketsName,
   permissionPrice, releasesOfDeal, respondDemand, revertWeek, rightsOf, rst, splitPreview, type ExploitKind,
 } from '../sim/rights';
@@ -77,7 +78,10 @@ export function rightsFieldset(s: GameState, o: Omit<Offer, 'id' | 'week' | 'sta
         chk(l('Selo paga os pontos (desde o 1º disco)', 'Label pays the points (from record one)'), 'pointsFromLabel'),
         chk(l('Exclusividade', 'Exclusivity'), 'exclusive'),
         chk(l('Reversão só após recoupment', 'Reversion only once recouped'), 'reversionNeedsRecoup'),
+        // r20 (B29): teto negociável da trava e aviso de cauda
+        r.reversionNeedsRecoup && r.reversionYears > 0 && r.master !== 'shared' ? h('label', null, t(l('Teto da trava', 'Clause cap')), ' ', select(String(r.recoupCapYears ?? 0), ['0', '5', '10', '15'].map((v) => ({ value: v, label: v === '0' ? t(l('sem teto', 'no cap')) : `${v} ${t(l('anos após a data de reversão', 'years after the reversion date'))}` })), (v) => set(() => { r.recoupCapYears = Number(v) || undefined; }))) : null,
       ),
+      ...(r.reversionNeedsRecoup && r.reversionYears > 0 && r.master !== 'shared' ? [h('p', { class: 'small warn' }, t(r.recoupCapYears ? l(`Cauda: se o saldo não for recuperado, o master fica com o selo até ${r.recoupCapYears} anos depois da data de reversão; aí volta ao artista e o saldo é perdoado.`, `Tail: if the balance is not recouped, the label keeps the master up to ${r.recoupCapYears} years past the reversion date; then it returns and the balance is written off.`) : l('Cauda: disco que vende pouco pode NUNCA recuperar o adiantamento — aí o master fica com o selo para sempre. Um teto evita isso (o artista gosta).', 'Tail: a weak seller may NEVER recoup the advance — then the label keeps the master forever. A cap prevents that (artists like it).')))] : []),
       h('div', { class: 'row wrap' }, h('span', { class: 'small muted' }, t(l('O selo controla:', 'The label controls:'))), ...KINDS.map((k) => chk(EXPLOIT_NAME[k], k))),
       splitBar(splitParts(s, { model: o.model, royalty: o.royalty, distributionFee: o.distributionFee, publishing: o.publishing, rights: r })),
       h('p', { class: 'small' }, t(reversionText(r))),
@@ -106,6 +110,10 @@ export function rightsSheet(s: GameState, c: Contract, refresh: () => void = rer
         kv(t(l('Master', 'Master')), t(MASTER_NAME[r0.master])),
         kv(t(l('Edição (composição)', 'Publishing (composition)')), r0.pubShare ? `${pct(r0.pubShare)} ${t(l('do bolo de edição para o selo', 'of the publishing pot to the label'))}` : t(l('fica com o artista e autores', 'stays with artist and writers'))),
         kv(t(l('Reversão', 'Reversion')), c.reverted ? t(l('já voltou ao artista', 'already back with the artist')) : rw === Infinity ? t(reversionText(r0)) : `${t(reversionText(r0))} (${yearOfWeek(s, rw)}${r0.reversionNeedsRecoup && c.recoupBalance > 0 ? ' — ' + t(l('se recuperado', 'if recouped')) : ''})`),
+        !c.reverted && rw !== Infinity && r0.reversionNeedsRecoup && c.recoupBalance > 0 ? (() => { const tl = recoupTail20(s, c); return kv(t(l('Cenário de cauda', 'Tail scenario')), h('span', { class: 'warn small' },
+          tl.capWeek !== Infinity && tl.revertAt === tl.capWeek ? t(l('volta pelo teto em {y} (saldo perdoado)', 'returns via the cap in {y} (balance written off)'), { y: yearOfWeek(s, tl.capWeek) })
+            : tl.revertAt === Infinity ? t(l('no ritmo atual ({p}/ano para o recoupment) nunca recupera: o master fica com o selo', 'at the current pace ({p}/yr toward recoupment) it never recoups: the label keeps the master'), { p: $(tl.perYear) })
+              : t(l('recupera em ~{n} anos ({p}/ano): volta em ~{y}', 'recoups in ~{n} years ({p}/yr): returns around {y}'), { n: Math.ceil(tl.years), p: $(tl.perYear), y: yearOfWeek(s, tl.revertAt) }))); })() : null,
         kv(t(l('Prazo', 'Term')), `${yearOfWeek(s, c.startWeek)}–${yearOfWeek(s, c.endWeek)} (${c.termMonths} ${t(l('meses', 'months'))})`),
         kv(t(l('Territórios', 'Territories')), `${t(SCOPE_NAME[r0.scope])}${c.territories?.length ? ` · ${marketsName(c.territories)}` : ''}`),
         kv(t(l('Opções e exclusividade', 'Options and exclusivity')), `${c.options ?? r0.options} ${t(l('opção(ões)', 'option(s)'))} · ${r0.exclusive ? t(l('exclusivo', 'exclusive')) : t(l('não exclusivo', 'non-exclusive'))}`),

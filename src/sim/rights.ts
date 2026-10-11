@@ -112,6 +112,7 @@ export function rightsUtility(t: RightsTerms, amb: string): number {
     const rev = t.master === 'artist' ? clamp((10 - yrs) / 10, 0, 1) * 0.08 : yrs > 0 ? clamp((30 - yrs) / 25, 0, 1) * (free ? 0.18 : 0.11) : 0;
     u += rev;
     if (!t.reversionNeedsRecoup && (yrs > 0 || t.master === 'artist')) u += 0.02;
+    else if (t.reversionNeedsRecoup && (t.recoupCapYears ?? 0) > 0 && yrs > 0) u += 0.01; // r20 (B29): teto da trava
   }
   return u;
 }
@@ -196,6 +197,20 @@ export function revertWeek(c: Contract): number {
   if (t.master === 'shared') return Infinity;
   if (t.master === 'label' && t.reversionYears <= 0) return Infinity;
   return c.endWeek + Math.round(t.reversionYears * 52);
+}
+
+/** r20 (B29): cenário de cauda da cláusula "reversão só após recoupment" (estimativa pelo ritmo dos últimos 12 meses). */
+export interface RecoupTail20 { needs: boolean; balance: number; perYear: number; years: number; revertWeek: number; capWeek: number; revertAt: number }
+export function recoupTail20(s: GameState, c: Contract): RecoupTail20 {
+  const t = rightsOf(c), rw = revertWeek(c);
+  const balance = Math.max(0, c.recoupBalance);
+  const perYear = Math.round(releasesOfDeal(s, c).reduce((x, r) => x + annualRevenue(r), 0) * c.royalty);
+  const years = balance <= 0 ? 0 : perYear > 0 ? balance / perYear : Infinity;
+  const needs = !!t.reversionNeedsRecoup && balance > 0 && rw !== Infinity;
+  const capWeek = needs && (t.recoupCapYears ?? 0) > 0 ? rw + Math.round((t.recoupCapYears ?? 0) * 52) : Infinity;
+  const recoupWeek = years === Infinity ? Infinity : s.week + Math.round(years * 52);
+  const revertAt = rw === Infinity ? Infinity : !needs ? rw : Math.min(capWeek, Math.max(rw, recoupWeek));
+  return { needs, balance, perYear, years, revertWeek: rw, capWeek, revertAt };
 }
 
 export function releasesOfDeal(s: GameState, c: Contract): Release[] {
