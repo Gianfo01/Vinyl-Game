@@ -5,7 +5,7 @@ import { VENUE_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { cancelTour, estimateTour, planTour, type TourEstimate, type TourPlan } from '../../sim/tours';
-import { clashOf, playerShows, weekOfDay } from '../../sim/sys/clash17';
+import { draftConflicts20 } from '../../sim/sys/shows20';
 import { produceMerch } from '../../sim/brands';
 import type { GameState } from '../../sim/types';
 import type { Tour } from '../../sim/xtypes';
@@ -27,20 +27,10 @@ const PROD = [l('Básica', 'Basic'), l('Luzes e telão', 'Lights and screens'), 
 /** r20: etapas do planejamento (rota → datas/locais → logística → ingressos/merch → revisão). */
 export const TOUR_STEPS20: L[] = [l('Rota', 'Route'), l('Datas e locais', 'Dates and venues'), l('Logística', 'Logistics'), l('Ingressos e merch', 'Tickets and merch'), l('Revisão', 'Review')];
 
-/** r20: conflitos da turnê em rascunho. Duro = o artista já tem outra data na mesma semana (não dá para estar em dois lugares);
- *  brando = disputa de público (mesma conta de clash17 que o acerto aplica na receita do show). */
+/** r20: conflitos da turnê em rascunho (lógica em sim/sys/shows20), em texto. */
 export function tourConflicts20(s: GameState, actId: string, est: TourEstimate): { hard: L[]; soft: L[] } {
-  const act = s.acts[actId];
-  const hard: L[] = [];
-  const soft = new Map<string, L>();
-  const mine = playerShows(s).filter((x) => x.actId === actId);
-  for (const st of est.stops) {
-    const w = weekOfDay(st.day);
-    const dup = mine.find((x) => x.w === w);
-    if (dup) hard.push(l(`${cityName(st.cityId)}: já há data marcada nessa semana (${cityName(dup.city)})`, `${cityName(st.cityId)}: already booked that week (${cityName(dup.city)})`));
-    for (const why of clashOf(s, act, st.cityId, w).why) soft.set(why.pt, why);
-  }
-  return { hard, soft: [...soft.values()] };
+  const c = draftConflicts20(s, actId, est.stops);
+  return { hard: c.hard.map((x) => l(`${cityName(x.city)}: já há data marcada nessa semana (${cityName(x.other)})`, `${cityName(x.city)}: already booked that week (${cityName(x.other)})`)), soft: c.soft };
 }
 
 /** r20: painel vivo de custo, receita e risco (sempre à vista em todas as etapas). */

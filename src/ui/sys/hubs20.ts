@@ -14,7 +14,8 @@ import { CITIES, MARKETS, cityById, l, type L } from '../../data/world';
 import { HQ_LEVELS } from '../../data/rules';
 import { t } from '../../i18n/strings';
 import { cityDemand, cancelTour } from '../../sim/tours';
-import { clashOf, playerShows, type PShow } from '../../sim/sys/clash17';
+import { playerShows, type PShow } from '../../sim/sys/clash17';
+import { hardConflictCount20, showConflict20 } from '../../sim/sys/shows20';
 import { DEPTS, buildingPrice, hq6 } from '../../sim/sys/hq6';
 import { upgradeCost, managementLoad } from '../../sim/economy';
 import { hqCapacityText } from '../../sim/legacy';
@@ -65,15 +66,6 @@ export const SHOWS_TABS20: Record<'tours' | 'ops' | 'biz', string[]> = {
 const CLAIMED_SHOWS = Object.values(SHOWS_TABS20).flat();
 
 const KIND_SHOW: Record<PShow['kind'], L> = { tour: l('turnê', 'tour'), booking: l('data avulsa', 'one-off date'), festival: l('festival', 'festival') };
-
-export interface ShowConflict20 { hard: boolean; soft: number; why: L[] }
-/** Conflito de uma data já marcada: duro = mesmo artista em duas cidades na mesma semana; brando = disputa de público (clash17). */
-export function showConflict20(s: GameState, x: PShow, all: PShow[]): ShowConflict20 {
-  const hard = all.some((y) => y !== x && y.actId === x.actId && y.w === x.w && y.city !== x.city);
-  const a = s.acts[x.actId];
-  const c = a ? clashOf(s, a, x.city, x.w) : { mult: 1, why: [] as L[] };
-  return { hard, soft: Math.max(0, 1 - c.mult), why: c.why };
-}
 
 function upcomingSection(s: GameState): HTMLElement {
   const all = playerShows(s);
@@ -212,8 +204,7 @@ function toursTab(s: GameState): HTMLElement {
 }
 
 function showsHub20(s: GameState): HTMLElement {
-  const all = playerShows(s);
-  const hard = all.filter((x) => x.w >= s.week && showConflict20(s, x, all).hard).length;
+  const hard = hardConflictCount20(s);
   return h('div', { class: 'hub hub20 shows20' }, tabs('showsHub', [
     { id: 'agenda', label: T(l('Agenda', 'Agenda')), icon: 'calendar', badge: hard || undefined, render: () => h('div', { class: 'panel' },
       intro(l('Próximas datas, conflitos e operações em curso. Para reservar datas avulsas, use a tabela por artista.', 'Upcoming dates, conflicts and ongoing operations. To book one-off dates, use the per-act table.')),
