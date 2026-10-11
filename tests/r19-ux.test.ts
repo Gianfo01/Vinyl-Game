@@ -33,14 +33,14 @@ describe('r19 ux — viradas e metas', () => {
     expect(ERA_GOALS19.every((b) => b.goals.length === 5)).toBe(true);
   });
   it('virada de década grava mudanças, resumo, rivais e metas; fato era_turn tem ouvinte e vai ao Diário', () => {
-    const s = game(1958, 'ux-dec');
+    const s = game(1959, 'ux-dec');
     for (let i = 0; i < 26 && s.year < 1960; i++) advanceMonth(s);
     expect(s.year).toBe(1960);
     const T = ux19(s).turns.find((x) => x.y === 1960);
     expect(T).toBeTruthy();
     expect(T!.goals.length).toBeGreaterThanOrEqual(2);
     expect(T!.rivals.length).toBeGreaterThan(0);
-    expect(T!.sum.y0).toBe(1958);
+    expect(T!.sum.y0).toBe(1959);
     expect(recentFacts(s, { kind: 'era_turn', months: 24 }).length).toBeGreaterThan(0);
     expect(factListeners19().some((x) => x.id === 'ux19:era')).toBe(true);
     expect(s.memory.some((m) => m.kind === 'era19')).toBe(true);
@@ -50,7 +50,7 @@ describe('r19 ux — viradas e metas', () => {
     expect(fut.length).toBe(0);
   });
   it('era nova (LP/streaming) vira cartão com o que mudou', () => {
-    const s = game(2006, 'ux-era');
+    const s = game(2007, 'ux-era');
     s.techDates.streaming = 2008;
     for (let i = 0; i < 30 && s.year < 2008; i++) advanceMonth(s);
     const T = ux19(s).turns.find((x) => x.y === 2008)!;
