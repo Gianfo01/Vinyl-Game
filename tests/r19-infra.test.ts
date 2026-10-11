@@ -162,6 +162,10 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
  *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
 const INBOX_RARE19: Record<string, string> = {
   // vistos às vezes em 1 ano (1 mensagem): exigir seria frágil a qualquer mudança de sorteio
+  analyst: 'relatório do analista: sem ação, vai para o boletim semanal (notify19) e não aparece como item próprio',
+  market18: 'nota de mercado: informativa, agrupada no boletim semanal (notify19)',
+  review18: 'balanço do ano: informativo, agrupado no boletim semanal (notify19)',
+  follow19: 'carta enfileirada: só quando a Mesa já tem 6+ decisões (raro em bots de 1 ano)',
   era1889_patent: 'só 1889–1910 (guerra de patentes); 1 aparição por partida',
   ability18: 'relatório de potencial: depende do olheiro achar um jovem com PA alto',
   rivalmind18_pact: 'pacto entre rivais: sorteio raro da mente rival',
