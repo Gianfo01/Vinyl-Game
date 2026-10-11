@@ -298,4 +298,6 @@ import './contests19';
 // Rodada 19 (onda 3, T3): pós-vida (espólio como ator, 11.8, arena digital) e endosso de instrumentos/instrumento-ícone.
 import './afterlife19';
 import './gear19';
+// Rodada 19 (Frente 8, onda 4): viradas de década/era, metas por época, recibo de decisão, "por que perdi?", epitáfio e divulgação progressiva.
+import './ux19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

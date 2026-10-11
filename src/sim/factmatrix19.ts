@@ -234,3 +234,9 @@ export const MARKETB19: Record<string, { sys: string; to: string[] }> = {
   naming_deal: { sys: 'naming19', to: ['naming19:rep (reputação da casa/festival, manchete)'] },
   naming_pulled: { sys: 'naming19', to: ['naming19:back (nome antigo volta, manchete)'] },
 };
+
+/** R19 Frente 8 (onda 4, sys/ux19.ts): viradas de década/era e metas da era → ouvintes. */
+export const UX19: Record<string, { sys: string; to: string[] }> = {
+  era_turn: { sys: 'ux19', to: ['ux19:era (manchete press9 + Diário; a interface abre o cartão da virada)'] },
+  era_goal: { sys: 'ux19', to: ['ux19:goal (moral do elenco +2, Diário)'] },
+};
