@@ -274,3 +274,15 @@ H('cp17-critic', ['Jornalismo', 'Journalism'],
 
 // Rodada 18 (artist18): Contratos do artista e Sociedades.
 import './help18artist';
+
+// Rodada 19 (Frente 8): calendário único, boletim semanal/orçamento de notificações e topo Hoje/Ameaças/Andamento.
+H('calendar19', ['Calendário', 'Calendar'],
+  ['Todos os prazos do jogo num só lugar: cartões com ⏱, ecos que podem voltar (janela), mensagens que vencem, fim/opção de contrato, cláusulas e promessas, prestação de contas, lançamentos e fila da fábrica, turnês, festivais, obras, tribunal, parcelas de empréstimo e prêmios.', 'Every deadline in one place: ⏱ cards, echoes that may return (window), expiring messages, contract end/options, clauses and promises, royalty statements, releases and the plant queue, tours, festivals, works, court, loan payments and awards.'],
+  ['A faixa de 6 semanas no Cockpit é o mesmo calendário, recortado. Filtre por tipo ou marque "só o que pede ação". Ex.: 🔥 numa semana = 3+ prazos juntos; resolva um antes para não valer o padrão e para não estressar o dono.', 'The 6-week strip on the Cockpit is the same calendar, cropped. Filter by type or tick "only what needs action". E.g. 🔥 on a week = 3+ deadlines together; clear one early so defaults don\'t apply and the owner doesn\'t get stressed.'],
+  [['Itens em itálico são janelas (ecos): o futuro é nebuloso, a data exata nunca aparece.', 'Italic items are windows (echoes): the future is hazy, the exact date never shows.'], ['Cartas que não cabem na mesa (6+ decisões) entram como "Carta na fila" com prazo — não se perdem.', 'Cards that don\'t fit on the desk (6+ decisions) arrive as a "Queued card" with a deadline — they are not lost.']],
+  ['cockpit', 'artists', 'supply18', 'finance']);
+H('bulletin19', ['Boletim semanal', 'Weekly bulletin'],
+  ['Relatórios, leituras de mercado, pós-lançamento, trajetória e prestações de contas chegam juntos num só item por semana. Cada categoria tem orçamento por mês; o excedente vira linha do boletim.', 'Reports, market reads, post-release notes, trajectory and royalty statements arrive together as one item per week. Each category has a monthly budget; the overflow becomes a bulletin line.'],
+  ['O que pede resposta, o que é urgente e o que é ruim nunca vai para o boletim. Ex.: o segundo aviso de negócios do mês vira linha do boletim, mas a oferta continua na sua página.', 'What needs a reply, what is urgent and what is bad never goes to the bulletin. E.g. the month\'s second deals notice becomes a bulletin line, but the offer stays on its page.'],
+  [['No Cockpit, ▲▼ do pulso abrem o porquê: resultado do mês e a cadeia de causas de cada fato.', 'On the Cockpit, the pulse ▲▼ open the why: the month result and each fact\'s cause chain.'], ['Blocos do Cockpit: – recolhe, × manda para "Mais", e a escolha fica salva no jogo.', 'Cockpit blocks: – collapses, × moves to "More", and the choice is saved in the game.']],
+  ['cockpit', 'calendar19']);

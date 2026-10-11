@@ -10,12 +10,15 @@ import { recentFacts } from '../../sim/facts17';
 import { dec18, pending18 } from '../../sim/sys/decide18';
 import { P } from '../../sim/sys/people/state';
 import type { Act, GameState } from '../../sim/types';
-import { dateOfDay, fmtL, playerActs } from '../../sim/util';
+import { fmtL, playerActs } from '../../sim/util';
 import { $, inspect, monthName, rerender, toast } from '../common';
 import { h } from '../dom';
 import { AFTER_ADVANCE } from '../registry';
 import { store } from '../store';
 import { pendingView18 } from './decide18';
+import { pick19, moreStrip19, renderBlocks19, type Block19, type Pick19 } from '../blocks19';
+import { why18 } from '../explain18';
+import { calStrip19 } from './calendar19';
 import { ic } from '../vis';
 import './home18.css';
 
@@ -55,27 +58,7 @@ function ticker(s: GameState): HTMLElement | null {
     h('div', { class: 'hm18-track', style: `animation-duration:${dur}s;animation-delay:-${((Date.now() / 1000) % dur).toFixed(1)}s` }, ...row(), ...row()));
 }
 
-// ---------------------------------------------------------------- linha do tempo (próximas 6 semanas)
-function timeline(s: GameState): HTMLElement {
-  const ev: { w: number; tx: string; cls: string; run?: () => void }[] = [];
-  for (const p of s.pendingReleases) if (s.acts[p.actId]?.owner === 'player' && p.week >= s.week && p.week - s.week <= 6) ev.push({ w: p.week, tx: `💿 "${p.title}"`, cls: 'rel', run: () => go('releases') });
-  for (const d of s.decisions) if (d.ctx.dl18) ev.push({ w: Number(d.ctx.dl18), tx: `⏱ ${t(d.title)}`, cls: 'dl', run: () => document.getElementById('ck14-desk')?.scrollIntoView({ behavior: 'smooth' }) });
-  for (const m of P(s).inbox) if (m.expires && !m.resolved && m.actions?.length && m.expires - s.week <= 6) ev.push({ w: m.expires, tx: `✉ ${t(m.subject)}`, cls: 'msg', run: () => go('inbox') });
-  for (const x of pending18(s)) if (x.from - s.week <= 6) ev.push({ w: x.from, tx: `${x.tone === 'bad' ? '⚠' : x.tone === 'good' ? '✦' : '◆'} ${t(x.t)} — ${t(x.hint)}`, cls: `echo ${x.tone}` });
-  ev.sort((a, b) => a.w - b.w);
-  const cols = Array.from({ length: 6 }, (_, i) => s.week + i);
-  return h('section', { class: 'card hm18-tl' },
-    h('div', { class: 'ck14-head' }, h('h3', null, ic('calendar'), ' ', t(l('Próximas semanas', 'Coming weeks')))),
-    h('div', { class: 'hm18-weeks' }, cols.map((w, i) => {
-      const d = dateOfDay(s.config.startYear, w * 7);
-      const here = ev.filter((e) => (i === 5 ? e.w >= w : e.w === w) || (i === 0 && e.w < w));
-      return h('div', { class: `hm18-wk ${i === 0 ? 'now' : ''}`, style: `animation-delay:${i * 60}ms` },
-        h('small', null, i === 0 ? t(l('agora', 'now')) : `${d.dom} ${monthName(d.month).slice(0, 3)}`),
-        here.slice(0, 3).map((e) => h('button', { class: `hm18-ev ${e.cls}`, title: e.tx, onclick: e.run ?? null }, e.tx)),
-        here.length > 3 ? h('small', { class: 'muted' }, `+${here.length - 3}`) : null);
-    })),
-    ev.length ? null : h('p', { class: 'muted small' }, t(l('Agenda livre: um bom momento para gravar ou lançar algo.', 'Clear schedule: a good time to record or release something.'))));
-}
+// r19 (calendar19): a linha do tempo virou a faixa do calendário único (ui/sys/calendar19.ts)
 
 // ---------------------------------------------------------------- grandes momentos
 function highlights(s: GameState): HTMLElement | null {
@@ -109,14 +92,15 @@ function roster(s: GameState): HTMLElement | null {
 // ---------------------------------------------------------------- minigráficos
 function pulse(s: GameState): HTMLElement {
   const pl = dec18(s).pl, L0 = pl.last;
-  const cell = (lb: L, vals: number[], now: string, d: number, fmt?: (n: number) => string) =>
-    h('div', { class: 'hm18-kpi' }, h('small', null, t(lb)), h('b', null, now), spark18(vals), L0 ? delta(d, fmt) : null);
+  // r19 (11.15): ▲▼ abre o porquê (pulse19 → resultado do mês e cadeia de causas dos fatos)
+  const cell = (lb: L, vals: number[], now: string, d: number, fmt?: (n: number) => string, k = 'cash') =>
+    h('div', { class: 'hm18-kpi' }, h('small', null, t(lb)), h('b', null, now), spark18(vals), L0 ? why18(s, 'pulse19', { k }, delta(d, fmt)) : null);
   const fans = pl.fans.at(-1) ?? 0;
   return h('div', { class: 'hm18-kpis' },
     cell(l('Caixa', 'Cash'), pl.cash, $(s.player.cash), L0?.cash ?? 0, (n) => $(n)),
-    cell(l('Fãs', 'Fans'), pl.fans, fans >= 1e6 ? `${(fans / 1e6).toFixed(1)}M` : fans >= 1e3 ? `${Math.round(fans / 1e3)}k` : String(fans), L0?.fans ?? 0),
-    cell(l('Humor', 'Mood'), pl.mood, String(pl.mood.at(-1) ?? '—'), L0?.mood ?? 0),
-    cell(l('Nas paradas', 'Charting'), pl.hits, `${pl.hits.at(-1) ?? 0}${L0?.best ? ` · #${L0.best}` : ''}`, L0?.hits ?? 0));
+    cell(l('Fãs', 'Fans'), pl.fans, fans >= 1e6 ? `${(fans / 1e6).toFixed(1)}M` : fans >= 1e3 ? `${Math.round(fans / 1e3)}k` : String(fans), L0?.fans ?? 0, undefined, 'fans'),
+    cell(l('Humor', 'Mood'), pl.mood, String(pl.mood.at(-1) ?? '—'), L0?.mood ?? 0, undefined, 'mood'),
+    cell(l('Nas paradas', 'Charting'), pl.hits, `${pl.hits.at(-1) ?? 0}${L0?.best ? ` · #${L0.best}` : ''}`, L0?.hits ?? 0, undefined, 'hits'));
 }
 
 // ---------------------------------------------------------------- holofote (gira por semana; "próximo")
@@ -157,17 +141,32 @@ function quick(): HTMLElement {
   return h('div', { class: 'hm18-quick', role: 'toolbar', 'aria-label': t(l('Atalhos', 'Quick actions')) }, q.map(([a, i, lb]) => h('button', { class: 'btn small ghost', onclick: () => go(a) }, ic(i), ' ', t(lb))));
 }
 
-/** Faixa viva no topo do Cockpit. */
+/** r19 (11.12): os cartões do topo viram blocos com peso e condição (blocks19 escolhe ~6 com as seções da Mesa). */
+export function homeBlocks18(s: GameState): Block19[] {
+  const hot = mine(s).some((a) => a.members.some((id) => { const p = s.persons[id]; return p?.alive && (p.stress > 70 || p.resentment > 50); }));
+  const P = pending18(s), soon = P.filter((x) => x.tone === 'bad' && x.from - s.week <= 4).length;
+  const hi = highlights(s);
+  return [
+    { id: 'home:cal', title: l('Calendário', 'Calendar'), weight: 80, el: calStrip19(s), host: 'home' },
+    { id: 'home:pulse', title: l('Pulso do mês', 'Monthly pulse'), weight: 72, el: pulse(s), host: 'home' },
+    { id: 'home:hi', title: l('Grandes momentos', 'Big moments'), weight: 60, when: !!hi, el: hi, host: 'home' },
+    { id: 'home:pend', title: l('Consequências pendentes', 'Pending consequences'), weight: soon ? 66 : 42, when: P.length > 0, el: pendingView18(s, 4), host: 'home' },
+    { id: 'home:mood', title: l('Humor do elenco', 'Roster mood'), weight: hot ? 68 : 38, el: roster(s), host: 'home' },
+    { id: 'home:tick', title: l('Notícias e paradas', 'News and charts'), weight: 28, el: ticker(s), host: 'home' },
+    { id: 'home:spot', title: l('Holofote', 'Spotlight'), weight: 22, el: spotlight(s), host: 'home' },
+  ];
+}
+
+/** Faixa viva no topo do Cockpit (com a escolha de blocos já feita pelo Cockpit). */
 let paintW = -1;
-export function home18(s: GameState): HTMLElement {
+export function home18(s: GameState, p?: Pick19): HTMLElement {
   const fresh = paintW !== s.week; // anima só quando o tempo andou (não a cada clique)
   paintW = s.week;
+  const pk = p ?? pick19(s, homeBlocks18(s));
   return h('div', { class: `hm18 ${fresh ? 'anim' : ''}` },
-    ticker(s),
     h('div', { class: 'hm18-row' }, urgency(s), quick()),
-    pulse(s),
-    highlights(s),
-    h('div', { class: 'hm18-grid' }, timeline(s), h('div', { class: 'hm18-side' }, spotlight(s), roster(s), pendingView18(s, 4))));
+    h('div', { class: 'b19-home' }, renderBlocks19(s, pk, 'home')),
+    moreStrip19(s, pk));
 }
 
 /** Resumo ao avançar o mês (toast com deltas do pulso). */

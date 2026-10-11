@@ -17,9 +17,11 @@ const N = (pt: string, en: string): L => l(pt, en);
 const actN = (f: Fx18): string => f.act?.name ?? '—';
 const perN = (f: Fx18): string => f.person?.name ?? actN(f);
 const T = (f: Fx18, pt: string, en: string): L => fmtL(l(pt, en), { a: actN(f), p: perN(f) });
+/** r19 (notify19): carta que não cabe na mesa vira mensagem com prazo (injetado para evitar ciclo de import) */
+export const FOLLOW19: { f?: (s: GameState, id: string, c: Ctx18) => unknown } = {};
 /** follow-up: abre um novo cartão (decisão em várias etapas) se a mesa tiver espaço */
 export function follow18(f: Fx18, id: string, c: Ctx18 = f.c): boolean {
-  if (f.s.decisions.length >= 6) return false;
+  if (f.s.decisions.length >= 6) return !!FOLLOW19.f?.(f.s, id, c); // r19: mesa cheia → mensagem com prazo (não se perde)
   const n = f.s.decisions.length;
   emitEvent(f.s, Rng.fromSeed(`${f.s.config.seed}:fol18:${id}:${f.s.week}`), id, c);
   return f.s.decisions.length > n;

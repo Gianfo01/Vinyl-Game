@@ -41,8 +41,12 @@ export interface Push18 {
   /** semanas até expirar (padrão 6 quando há ações) */
   weeks?: number;
 }
+/** r19 (notify19): orçamento de notificações — devolve uma mensagem (fora da caixa) quando o item foi para o boletim. */
+export const INBOX_ROUTE19: { f?: (s: GameState, kind: string, m: Push18) => InboxMsg | null } = {};
 /** Manda uma mensagem tipada para a caixa de entrada. */
 export function pushInbox18(s: GameState, kind: string, m: Push18): InboxMsg {
+  const routed = INBOX_ROUTE19.f?.(s, kind, m);
+  if (routed) return routed;
   return addMsg(s, {
     from: m.from, subject: m.subject, body: m.body, kind: 'deal', tone: m.tone ?? 'info', actions: m.actions,
     expires: m.actions?.length ? s.week + (m.weeks ?? 6) : undefined,

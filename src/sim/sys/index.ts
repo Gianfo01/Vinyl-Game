@@ -257,3 +257,6 @@ import './post18';
 import './final18'; // r18 integração final: reputação artística com memória curta
 // Rodada 19 (infra 0.2/11.1): ouvintes de relic/situation/rise/masterwork/hologram/echo.
 import './factlink19';
+// Rodada 19 (Frente 8): calendário único de prazos, orçamento de notificações/boletim semanal, carta na fila e pulso explicado.
+import './calendar19';
+import './notify19';

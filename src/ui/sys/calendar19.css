@@ -1,0 +1,50 @@
+/* Rodada 19 (Frente 8) — calendário único, cabeçalho Hoje/Ameaças/Andamento e blocos do Cockpit */
+.ib18-bd { white-space: pre-line; }
+.c19-ev.k-decision, .c19-ev.k-court, .c19-ev.bad { background: color-mix(in srgb, var(--bad) 22%, var(--panel)); }
+.c19-ev.k-release, .c19-ev.good { background: color-mix(in srgb, var(--good) 22%, var(--panel)); }
+.c19-ev.k-msg { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }
+.c19-ev.win { font-style: italic; opacity: 0.85; border-left: 2px dashed var(--line); }
+.c19-ev.act { font-weight: 600; }
+.hm18-wk.c19-hot { border-top-color: var(--bad); }
+.c19-filters { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin: 0.5rem 0; }
+.c19-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+.c19-list li { display: grid; grid-template-columns: 7.5rem 1.4rem 1fr auto; gap: 0.4rem; align-items: center; padding: 0.2rem 0.3rem; border-radius: 4px; border-left: 3px solid var(--line); }
+.c19-list li.bad { border-left-color: var(--bad); }
+.c19-list li.good { border-left-color: var(--good); }
+.c19-list li.act { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.c19-date { font-size: 0.78rem; color: var(--muted); }
+.c19-need { color: var(--bad); }
+.c19-month h3 { margin: 0 0 0.3rem; }
+.c19-page .card + .card { margin-top: 0.5rem; }
+@media (max-width: 600px) {
+  .hm18-weeks.c19-weeks { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 0.5rem; }
+  .c19-list li { grid-template-columns: 1fr auto; }
+  .c19-list li .c19-date { grid-column: 1 / -1; }
+  .c19-list li .c19-ic { display: none; }
+}
+
+/* cabeçalho Hoje / Ameaças / Andamento */
+.h19 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; }
+.h19-col { border: 1px solid var(--line); border-radius: 8px; padding: 0.4rem 0.55rem; background: var(--panel); min-width: 0; }
+.h19-col h3 { margin: 0 0 0.25rem; font-size: 0.95rem; display: flex; gap: 0.35rem; align-items: center; }
+.h19-n { font-size: 0.75rem; border-radius: 10px; padding: 0 0.45rem; background: var(--panel-2); }
+.h19-n.bad { background: color-mix(in srgb, var(--bad) 35%, transparent); }
+.h19-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+.h19-col li { font-size: 0.82rem; display: flex; gap: 0.3rem; align-items: baseline; }
+.h19-col li::before { content: '•'; color: var(--muted); }
+.h19-col li.bad::before { color: var(--bad); }
+.h19-col li.good::before { color: var(--good); }
+.h19-col li button { margin-left: auto; flex: none; }
+.h19-col li span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .h19 { grid-template-columns: 1fr; } }
+
+/* blocos: recolher/esconder persistentes */
+.b19 { position: relative; }
+.b19-ctl { position: absolute; top: 0.25rem; right: 0.3rem; display: flex; gap: 0.15rem; opacity: 0.35; transition: opacity 0.15s; z-index: 1; }
+.b19:hover .b19-ctl, .b19:focus-within .b19-ctl { opacity: 1; }
+@media (hover: none) { .b19-ctl { opacity: 0.8; } }
+.b19-btn { border: 1px solid var(--line); background: var(--panel-2); color: inherit; border-radius: 4px; font-size: 0.7rem; line-height: 1; padding: 0.15rem 0.35rem; cursor: pointer; }
+.b19.col .b19-bar { width: 100%; text-align: left; border: 1px dashed var(--line); background: var(--panel); color: inherit; border-radius: 6px; padding: 0.3rem 3.5rem 0.3rem 0.5rem; cursor: pointer; font-size: 0.85rem; }
+.b19-more { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin: 0.3rem 0 0.5rem; }
+.b19-home { display: grid; gap: 0.5rem; }
+.b19-home > .b19 { min-width: 0; }

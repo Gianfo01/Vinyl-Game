@@ -212,3 +212,34 @@ U12: auditoria (script de rascunho) das 86 situações — 5 opções dominantes
 - **Teto de appeal por família (0.4)** `caps18.ts`: `APPEAL_CAT19` classifica as 63 fontes de `registerMod('appeal')` em 5 famílias (obra, imagem, público/cena, alcance, mundo); `applyMods` multiplica os bônus de cada família (até ×1,6 por fonte) e aplica `catAdj19` (joelho +20%, folga +30%) antes do teto geral; a autópsia mostra "Mesma causa repetida". **Fonte nova de appeal: acrescente o id numa família** (o teste falha sem isso). `globalThis.__mod19 = {}` coleta razão média/máxima por fonte.
 - **Streaming (0.5)**: verificado — sem dupla contagem. `market.ts` usa `MEDIA18.payout ?? streamPayout`: `payout18` (stream18) já parte de `STREAM_PAYOUT17` e **substitui** a tarifa fixa; a base entra uma vez (teste). Observação: com 'streaming' entre os formatos digitais, o fator também incide sobre downloads (subcontagem leve, não dupla).
 - **Cobertura da Caixa (11.9)**: `tests/r19-infra.test.ts` roda bots curtos por era × carreira e exige que todo `registerInboxKind` apareça ou esteja em `INBOX_RARE19` (motivo).
+## R19 calendar19 / notify19 / blocks19 (Frente 8: P1, P2, P9; 11.3, 11.12, 11.15)
+
+**Calendário único de prazos** — `src/sim/calendar19.ts` (puro) + provedores em `src/sim/sys/calendar19.ts`.
+- `registerDeadline(id, (s, from, to) => Deadline19[])` — todo sistema com data registra um provedor. `Deadline19 = { id, w, w0?, kind, t, d?, tone?, goto?, act? }`:
+  `w` = semana absoluta do prazo; `w0` = início de janela (ecos: nunca mostrar a semana exata); `kind` ∈ `decision|echo|msg|contract|clause|money|release|supply|tour|festival|build|court|award|other`;
+  `act: true` = pede ação do jogador (conta para "semana apertada", badge e coluna "Hoje"). Prefixe `id` com o nome do provedor.
+- `noteDeadline19(s, d)` / `dropDeadline19(s, id)` — prazo avulso guardado no save (para quem não tem estado de data próprio).
+- Leitura: `calendar19(s, { weeks?, from?, kinds? })` (ordenado por semana, depois risco), `crunch19(s, weeks, n)` (semanas com n+ prazos de ação),
+  `weekOfMonth19(s, y, m)`, `nextMonthWeek19(s, m)`.
+- Provedores já ligados: decide18 (`ctx.dl18`, janelas de `pending18`), Caixa (mensagens com ações que vencem), contratos do selo (fim/opção, promessas,
+  `clauses18.minRel`, prestação de contas pelo `stmt`/`lag`), artist18 (ofertas, fim do contrato, prestações, sentenças), lançamentos e fila da fábrica
+  (supply18 `book.ready` e contrato de capacidade), turnês (`s.tours`) e festivais próprios, obras (campus18), tribunal (crime17 `dl`), empréstimos, prêmios.
+- Fato `crunch` (secreto, ator `player`) no mês com semana apertada → ouvinte soma estresse ao dono. Dica do Conselheiro `cal19`. Explicação `cal19.week` ({w}).
+- UI: `calStrip19(s, weeks=6)` (ui/sys/calendar19.ts) é a faixa do Cockpit (substitui a antiga linha do tempo do home18); área `calendar19` (grupo Selo).
+
+**Orçamento de notificações e boletim semanal** — `src/sim/sys/notify19.ts`.
+- `pushInbox18` passa por `INBOX_ROUTE19.f` (src/sim/inbox18.ts). Mensagens SEM ações vão para o item único `bulletin19` da semana quando:
+  o tipo está em `BULLETIN19` (review18, market18, analyst, traj18, a18_stmt, tv18_third, regions18) ou a categoria
+  estourou `BUDGET19[cat]` no mês. Nunca vão: mensagens com ações, `prio ≥ 2` ou `tone: 'bad'`. Tipo novo barulhento? Adicione ao `BULLETIN19`.
+- O retorno de `pushInbox18` para um item roteado é o próprio boletim (não guarde `m.id` de mensagens sem ação).
+- Contadores: `ib19(s).ind/bul` e `ib19(s).y[ano] = [individuais, linhas de boletim]`.
+- Ofertas de selo ao artista (artist18 `scout`): no máximo 3 abertas, 1 por selo, 1 nova por mês; reoferta do mesmo selo só com fama +5 ou hit novo.
+
+**Carta perdida e pulso (11.15)** — `follow18` (echoes18) com mesa cheia (6+) chama `FOLLOW19.f` → `follow19(s, eventId, ctx, weeks=4)`: mensagem
+`follow19` ("Carta na fila") com prazo no calendário; "Pôr na mesa agora" emite o cartão; o padrão ("Deixar valer o padrão") emite e resolve com a opção padrão.
+Explicações: `pulse19` ({k: cash|fans|mood|hits}; parte de caixa liga em `cash.month`) e `fact19.chain` ({f: factId} → `causeChain`). Os ▲▼ do pulso usam `why18`.
+
+**Blocos do Cockpit (11.12)** — `src/ui/blocks19.ts`. `registerSection` aceita `weight` (número ou função), `when` e `title`; `sectionList(host, s)` em registry.ts.
+`homeBlocks18(s)` + `deskBlocks19(s)` → `pick19(s, blocks, 6)` abre os ~6 de maior peso; o resto vai para a faixa "Mais (n)". Preferências
+(`c` recolhido, `h` escondido, `o` fixado) ficam no save em `x4.ui19.c`. Topo fixo `head19View(s)` (ui/sys/cockpit19.ts): Hoje / Ameaças / Andamento
+(saga18 `cockpit18` + calendário); a seção antiga `long18-3q` foi escondida da Mesa.

@@ -605,16 +605,19 @@ function mine(s: GameState, k: string, v: number): void { const st = a18(s); st.
 function scout(s: GameState, r: Rng, a: Act): void {
   const st = a18(s);
   const open = openOffers18(s).filter((o) => o.k === 'record' || o.k === 'dist' || o.k === 'dev').length;
-  if (open >= 4 || st.dev) return;
+  if (open >= 3 || st.dev) return; // r19 (11.3): no máximo 3 ofertas abertas e 1 por selo
   const c = ctx18(s, a);
   let made = 0;
-  const labels = Object.values(s.labels).filter((lb) => lb.active && lb.founded <= s.year && lb.cash > money(s, 30000) && !st.offers.some((o) => o.lb === lb.id && o.st === 'open'));
+  // r19 (11.3): reoferta só se algo mudou desde a última proposta do selo (fama +5 ou um hit novo)
+  const again = (id: string) => st.cd[`rf:${id}`] === undefined || a.fame >= st.cd[`rf:${id}`] + 5 || a.hits > (st.cd[`rh:${id}`] ?? 0);
+  const labels = Object.values(s.labels).filter((lb) => lb.active && lb.founded <= s.year && lb.cash > money(s, 30000) && !st.offers.some((o) => o.lb === lb.id && o.st === 'open') && again(lb.id));
   for (const lb of r.shuffle(labels)) {
-    if (made >= 2) break;
+    if (made >= 1) break;
     const { v, why } = interest18(s, lb, a, c);
     const p = clamp((v - 0.28) * 0.35 * (0.6 + lb.aggression), 0, 0.18);
     if (p > 0 && r.chance(p)) {
       made++;
+      st.cd[`rf:${lb.id}`] = Math.round(a.fame); st.cd[`rh:${lb.id}`] = a.hits;
       const dev = lb.strategy === 'develop' && a.fame < 22 && r.chance(0.35);
       const dist = !dev && (lb.family === 'C' || lb.family === 'D') && r.chance(0.3);
       if (dev) { const o = mkRecord(s, r, lb, a, v, why, 'dev'); o.stip = r100(s, exp18(s, a) * 0.05); o.adv = 0; addOffer(s, o); }
