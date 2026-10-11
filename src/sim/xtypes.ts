@@ -386,6 +386,8 @@ export interface Faction {
   groups: string[][]; // ids de pessoas por facção
   leaderId?: string;
   tension: number;
+  /** r20 (B12): pares hostis observados (afinidade mútua < −20) */
+  hostile?: [string, string][];
 }
 
 export interface Documentary {

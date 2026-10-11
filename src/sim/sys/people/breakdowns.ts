@@ -1,4 +1,5 @@
 import { deferEvents } from '../../ext4';
+import { exitMember20 } from '../../members20';
 // Colapsos (RimWorld): abaixo de um limiar de moral, chance de a pessoa surtar. O tipo depende dos
 // traços — sumir antes do show, quebrar equipamento, bebedeira, sair da banda no palco, declaração
 // ofensiva, recaída. Efeitos reais (data cancelada, multa, reputação, crise) e memória no diário.
@@ -179,7 +180,7 @@ const QUIT: EventDef[] = [
         const p = s.persons[String(c.person)];
         const a = s.acts[String(c.act)];
         if (!p || !a || a.members.length < 2) return;
-        a.members = a.members.filter((x) => x !== p.id);
+        exitMember20(s, a, p.id);
         if (a.leaderId === p.id) a.leaderId = a.members[0];
         a.momentum = clamp01(a.momentum - 8);
         remember(s, 'member_quits', fmtL(l('{p} deixa {a} depois do show.', '{p} leaves {a} after the show.'), { p: p.name, a: a.name }), { actId: a.id, important: true });
@@ -194,7 +195,7 @@ const QUIT: EventDef[] = [
           p.morale = clamp01(p.morale + 10);
           remember(s, 'mediation', fmtL(l('{p} aceita ficar em {a} depois de uma conversa longa.', '{p} agrees to stay in {a} after a long talk.'), { p: p.name, a: a.name }), { actId: a.id });
         } else {
-          a.members = a.members.filter((x) => x !== p.id);
+          exitMember20(s, a, p.id);
           if (a.leaderId === p.id) a.leaderId = a.members[0];
           remember(s, 'member_quits', fmtL(l('A mediação falhou: {p} deixa {a}.', 'Mediation failed: {p} leaves {a}.'), { p: p.name, a: a.name }), { actId: a.id, important: true });
         }

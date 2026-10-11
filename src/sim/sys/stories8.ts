@@ -10,6 +10,7 @@
 //  - Fórmula: no auge, um artista inquieto se recusa a repetir o hit; insistir pode fazê-lo sair.
 
 import { clamp, type Rng } from '../../core/rng';
+import { exitMember20 } from '../members20';
 import { l, type L } from '../../data/world';
 import { endContract } from '../contracts';
 import { emitEvent, type Ctx, type EventDef } from '../events';
@@ -151,7 +152,7 @@ function voiceOf(s: GameState, a: Act): Person | undefined {
 
 /** A voz deixa a banda e começa carreira solo no selo rival. */
 function voiceLeaves(s: GameState, r: Rng, a: Act, p: Person, lb: Label | undefined, st: Story): void {
-  a.members = a.members.filter((x) => x !== p.id);
+  exitMember20(s, a, p.id);
   const f = (rw(s).former[a.id] ??= []);
   if (!f.some((x) => x.personId === p.id)) f.push({ personId: p.id, year: s.year, reason: 'left' });
   if (a.leaderId === p.id) a.leaderId = a.members[0];

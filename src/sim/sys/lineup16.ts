@@ -10,6 +10,7 @@
 // - Renomes reais (The Jackson 5 → The Jacksons, 1975) e a fama que acompanha a pessoa no solo novo.
 
 import { clamp, Rng, seedState } from '../../core/rng';
+import { exitMember20 } from '../members20';
 import { RENAMES16 } from '../../data/lineups16';
 import { REAL_CLASSIC } from '../../data/realacts_classic';
 import { REAL_ACTS } from '../../data/realnames';
@@ -147,7 +148,7 @@ const WHY_TXT: Record<Why16, L> = {
 export function leaveBand16(s: GameState, a: Act, p: Person, why: Why16): void {
   if (!a.members.includes(p.id)) return;
   BUMP++;
-  a.members = a.members.filter((x) => x !== p.id);
+  exitMember20(s, a, p.id);
   if (a.leaderId === p.id) a.leaderId = a.members[0];
   formerPush(s, a.id, p.id, why === 'addiction' ? 'fired' : 'left');
   for (const id of a.members) { const q = s.persons[id]; if (q) q.rel[p.id] = clamp((q.rel[p.id] ?? 0) - 8, -100, 100); }

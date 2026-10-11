@@ -3,6 +3,7 @@
 // envelhecimento e morte (GDD §8, §10, §36, §43, §44, §46.5).
 
 import { ECHOES_CAL19 } from './awardcal19';
+import { dropFromFactions20, exitMember20, fixLeader20 } from './members20';
 import { clamp, type Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import { makePerson, personName, langForCity } from './people';
@@ -54,7 +55,8 @@ export function personDies(s: GameState, p: Person, cause: L): void {
       act.deceased = true;
     } else {
       act.hiatusUntil = Math.max(act.hiatusUntil ?? 0, s.week + 4); // um mês de luto
-      if (act.leaderId === p.id) act.leaderId = alive[0];
+      dropFromFactions20(s, act.id, p.id); // r20 (B11): mesma regra da saída comum
+      fixLeader20(s, act);
     }
     // catálogo volta a tocar
     for (const rid of act.releases) {
@@ -96,7 +98,7 @@ function agingMonth(s: GameState, r: Rng): void {
       }
       // aposentadoria individual (limiar pessoal 62–75, decisão probabilística)
       if (age >= (p.retireAge ?? 70) && act.members.length > 1 && r.chance(0.02 + (p.health !== 'ok' ? 0.02 : 0)) && !histLocked(s, act)) {
-        act.members = act.members.filter((x) => x !== p.id);
+        exitMember20(s, act, p.id);
         remember(s, 'member_retires', fmtL(l('{p} se aposenta e deixa {a}.', '{p} retires and leaves {a}.'), { p: p.name, a: act.name }), { actId: act.id });
       }
     }
@@ -207,27 +209,49 @@ export function launchHeir(s: GameState, r: Rng, personId: string): L | null {
 }
 
 // ---------- Facções e líder ----------
+const ally20 = (s: GameState, a: string, b: string) => (s.persons[a]?.rel[b] ?? 0) > 20 && (s.persons[b]?.rel[a] ?? 0) > 20;
+/** Componentes conexos das alianças, em ordem canônica (ids ordenados): permutar o elenco não muda o resultado. */
+export function factionGroups20(s: GameState, ids: string[]): string[][] {
+  const ms = [...new Set(ids)].sort();
+  const seen = new Set<string>();
+  const groups: string[][] = [];
+  for (const a of ms) {
+    if (seen.has(a)) continue;
+    const g: string[] = [];
+    const stack = [a];
+    seen.add(a);
+    while (stack.length) {
+      const x = stack.pop()!;
+      g.push(x);
+      for (const y of ms) if (!seen.has(y) && ally20(s, x, y)) { seen.add(y); stack.push(y); }
+    }
+    groups.push(g.sort());
+  }
+  return groups;
+}
+/** Pares hostis (afinidade mútua < −20), cada um uma vez, em ordem canônica. */
+export function hostileEdges20(s: GameState, ids: string[]): [string, string][] {
+  const ms = [...new Set(ids)].sort();
+  const out: [string, string][] = [];
+  for (let i = 0; i < ms.length; i++) for (let j = i + 1; j < ms.length; j++) {
+    const a = ms[i], b = ms[j];
+    if ((s.persons[a]?.rel[b] ?? 0) < -20 && (s.persons[b]?.rel[a] ?? 0) < -20) out.push([a, b]);
+  }
+  return out;
+}
 function factionsMonth(s: GameState): void {
   for (const actId of playerActs(s)) {
     const act = s.acts[actId];
     const ms = act.members.filter((id) => s.persons[id]?.alive);
     if (ms.length < 3) continue;
-    // agrupa por afinidade (> 20 forma aliança)
-    const groups: string[][] = [];
-    const seen = new Set<string>();
-    for (const a of ms) {
-      if (seen.has(a)) continue;
-      const g = [a];
-      seen.add(a);
-      for (const b of ms) if (!seen.has(b) && (s.persons[a].rel[b] ?? 0) > 20 && (s.persons[b].rel[a] ?? 0) > 20) {
-        g.push(b);
-        seen.add(b);
-      }
-      groups.push(g);
-    }
+    // r20 (B12): facções = componentes do GRAFO de alianças (afinidade mútua > 20), independentes da ordem do
+    // elenco; hostilidade (afinidade mútua < −20) conta por aresta, mesmo dentro de um grupo.
+    const groups = factionGroups20(s, ms);
+    const hostile = hostileEdges20(s, ms);
     const prev = s.factions[actId];
-    const tension = clamp(groups.length > 1 ? (prev?.tension ?? 10) + (groups.length - 1) * 2 - 1 : (prev?.tension ?? 0) - 3, 0, 100);
-    s.factions[actId] = { actId, groups, leaderId: act.leaderId, tension };
+    const rise = (groups.length - 1) * 2 + hostile.length;
+    const tension = clamp(rise > 0 ? (prev?.tension ?? 10) + rise - 1 : (prev?.tension ?? 0) - 3, 0, 100);
+    s.factions[actId] = { actId, groups, leaderId: act.leaderId, tension, ...(hostile.length ? { hostile } : {}) };
     if (tension > 70 && groups.length > 1 && !s.flags[`factionWarn:${actId}`]) {
       s.flags[`factionWarn:${actId}`] = s.week;
       notify(s, fmtL(l('{a} está rachada em {n} facções. Mediação ou troca de líder podem ajudar.', '{a} is split into {n} factions. Mediation or a new leader may help.'), { a: act.name, n: groups.length }), 'bad');
