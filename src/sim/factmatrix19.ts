@@ -251,3 +251,10 @@ export const CAREERS19: Record<string, { sys: string; to: string[] }> = {
   fest_ground: { sys: 'careers19 (passo de terreno do festival)', to: ['careers19:ground (expectativa da próxima edição, cena da cidade)'] },
   house_deal: { sys: 'intra19 (serviço entre negócios seus a preço de mercado ou com desconto da casa)', to: ['intra19:house (reputação com artistas cai com desconto da casa no próprio elenco)'] },
 };
+
+/** R20c (N3, sys/exch20.ts e sys/union20.ts): residência entre cenas e negociação coletiva → ouvintes. */
+export const R20C: Record<string, { sys: string; to: string[] }> = {
+  scene_residency: { sys: 'exch20 (residência de ato/produtor em outra cena)', to: ['exch20:rel (relação com a cena anfitriã +1)'] },
+  union_deal: { sys: 'union20 (acordo/meio-termo com a entidade)', to: ['union20:deal (próxima pauta adiada)'] },
+  union_clash: { sys: 'union20 (fora do sindicato / locaute)', to: ['union20:clash (próxima pauta antecipada)', 'exch20:union (relação com todas as cenas −5)'] },
+};
