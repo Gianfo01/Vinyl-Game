@@ -29,6 +29,8 @@ export const STREAMS19: Record<string, string> = {
   sit17: 'situações do mês (situations17)',
   ag18: 'agência dos NPCs (agency18)',
   disc18: 'demos e descobertas do mês (discover18)',
+  tribute19: 'tributos e covers: nascimentos, sósia, despedida falsa, tribunal (tribute19)',
+  revival19: 'sucesso tardio: usos em mídia, decisão de NPC, vendas da onda (revival19)',
 };
 
 export const perSystem19 = (s: GameState): boolean => (s.rngVersion ?? 0) >= RNG_VERSION19;

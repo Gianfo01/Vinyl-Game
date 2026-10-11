@@ -166,4 +166,6 @@ import './era1889';
 // Rodada 19 (Frente 8): calendário único (faixa + página), topo Hoje/Ameaças/Andamento e blocos com peso.
 import './calendar19';
 import './cockpit19';
+// Rodada 19 (Frente 9.1/9.5): Tributos e covers (tributos, sósias, sucesso tardio).
+import './tribute19';
 import './core18';
