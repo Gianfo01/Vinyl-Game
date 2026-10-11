@@ -49,9 +49,10 @@ function hashId(id: string): number {
 export function songStatus(s: GameState, song: Song): SongStatus {
   if (isDiscarded(s, song.id)) return 'discarded';
   if (song.vault) return 'vault';
-  const uses = songUses(s, song.id);
-  if (uses.some((u) => !u.pending)) return 'released';
-  if (uses.length || song.releaseId) return 'scheduled';
+  // desempenho: mesmo resultado de songUses(), sem montar/ordenar a lista (para no primeiro lançamento que tem a música)
+  const sid = song.id;
+  for (const id in s.releases) if (s.releases[id].songs.includes(sid)) return 'released';
+  if (song.releaseId || s.pendingReleases.some((p) => p.songs.includes(sid))) return 'scheduled';
   return song.recorded ? 'recorded' : 'written';
 }
 
