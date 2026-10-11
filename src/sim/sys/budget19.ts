@@ -61,7 +61,7 @@ export function conflicts19(s: GameState): Conf19 {
   if (mg.length) { const q = managerQ19(s); add(l('Crises e mandatos de clientes', 'Client crises and mandates'), q.now.length + q.threats.length * 0.5); }
   if (liveOf(s).fests.length) { const q = festivalQ19(s); add(l('Apertos do festival', 'Festival squeezes'), q.now.length + q.threats.length * 0.5); }
   const extra = Math.max(0, careers(s).active.length - 1);
-  const v: Conf19 = { n: parts.reduce((t, p) => t + p[1], 0), cap: 7 + Math.min(2, extra), parts };
+  const v: Conf19 = { n: parts.reduce((t, p) => t + p[1], 0), cap: 8 + Math.min(2, extra), parts };
   memo.set(s, { k, v });
   return v;
 }
@@ -71,7 +71,7 @@ CONFLICTS19.cap = (s) => conflicts19(s).cap;
 registerExplain('bud19.conf', (s) => {
   const c = conflicts19(s);
   const parts: WhyPart[] = c.parts.map(([label, value]) => ({ label, value, fmt: 'num' }));
-  parts.push({ label: fmtL(l('Teto: 7 + 1 por carreira extra (até +2) = {c}', 'Cap: 7 + 1 per extra career (up to +2) = {c}'), { c: c.cap }), value: c.cap, fmt: 'num' });
+  parts.push({ label: fmtL(l('Teto: 8 + 1 por carreira extra (até +2) = {c}', 'Cap: 8 + 1 per extra career (up to +2) = {c}'), { c: c.cap }), value: c.cap, fmt: 'num' });
   return { title: l('Conflitos abertos', 'Open conflicts'), value: c.n, fmt: 'num', parts, note: l('Com o teto atingido, o narrador, as situações e o Mestre não abrem crises novas com você — só entre NPCs — até algo se resolver.', 'At the cap, the storyteller, situations and the DM open no new crises with you — only among NPCs — until something resolves.') };
 });
 registerCockpit18('budget19', (s) => {
