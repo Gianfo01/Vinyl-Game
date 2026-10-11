@@ -9,6 +9,7 @@ import { getLang, t } from '../i18n/strings';
 import { MASTER_NAME, SCOPE_NAME, defaultRights, splitPreview } from '../sim/rights';
 import type { GameState, Notification, Offer, RightsTerms } from '../sim/types';
 import { fmtL } from '../sim/util';
+import { reservedAdvances20 } from '../sim/oblig20';
 import type { Help18 } from './help18';
 import { NAV17, CAREER_PAGE17, ORDER17 } from './nav17';
 
@@ -209,7 +210,7 @@ export function compareOffers20(xs: Draft20[], distFee: number, gross = 10_000_0
 export interface Review20 { cash: number; reserved: number; free: number; after: number; ok: boolean; debts: L[]; promises: L[]; reqs: L[] }
 /** Revisão antes de enviar: caixa livre × reservado, termos que geram dívida/obrigação e requisitos. */
 export function review20(s: GameState, o: Draft20): Review20 {
-  const reserved = s.offers.filter((x) => x.status === 'pending' || x.status === 'counter').reduce((t, x) => t + Math.max(0, x.advance), 0);
+  const reserved = reservedAdvances20(s); // r20: mesma reserva do motor (B4)
   const cash = s.player.cash, free = cash - reserved, after = free - o.advance;
   const debts: L[] = [];
   if (o.advance > 0) debts.push(fmtL(l('Sai {v} do caixa ao assinar; volta só pelo recoupment das vendas.', '{v} leaves cash at signing; it only returns via sales recoupment.'), { v: $$(o.advance) }));
