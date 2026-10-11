@@ -8,6 +8,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { GENRES, l, type L } from '../../data/world';
+import { issueP19, renewP19 } from '../ctx19';
 import { registerExt4, registerSimHook } from '../ext4';
 import { langForCity, personName } from '../people';
 import type { Act, GameState } from '../types';
@@ -49,7 +50,7 @@ export interface C12 {
   agent?: string; bond: number; dev?: boolean; devDone?: boolean; fame0: number; since: number; flags: { intl?: boolean; art?: boolean }; counter?: { prov: string; price: number; w: number }; endW?: number; book: L[];
 }
 export interface Agent { id: string; name: string; skill: number; loyalty: number; hired: number; raiseW?: number }
-export interface Mgr12 { c: Record<string, C12>; agents: Agent[]; successor?: string; prestige: number; gen: number; seq: number; alumni: { name: string; y: number; took: string[] }[]; devHits: number }
+export interface Mgr12 { c: Record<string, C12>; agents: Agent[]; successor?: string; prestige: number; gen: number; seq: number; alumni: { name: string; y: number; took: string[] }[]; devHits: number; /** r19: mandatos renovados × não renovados (KPI relativo) */ ren?: [number, number] }
 
 declare module '../ext4' { interface Ext4 { manager12: Mgr12 } }
 const fresh = (): Mgr12 => ({ c: {}, agents: [], prestige: 0, gen: 1, seq: 0, alumni: [], devHits: 0 });
@@ -296,11 +297,11 @@ export function answerIssue(s: GameState, id: string, how: 'explain' | 'hide'): 
   const t = x.issue.t;
   x.issue = undefined;
   if (how === 'hide') { x.hidden.push({ t, w: s.week }); return { ok: true, text: l('Você guarda o problema para si. Por enquanto.', 'You keep the problem to yourself. For now.') }; }
-  const respected = !x.plan || x.plan.broken === 0;
-  const d = respected ? -1 : -4;
+  // r19: alinhado ao texto — sem plano, o tropeço é julgado sozinho (−2); plano respeitado, perdoado (0); plano quebrado, −5
+  const d = !x.plan ? -2 : x.plan.broken === 0 ? 0 : -5;
   trust(s, id, d);
   book(x, fmtL(l('Você explicou: {t}', 'You explained: {t}'), { t }));
-  return { ok: true, text: fmtL(respected ? l('{a} entende: o tropeço estava dentro do plano ({d}).', '{a} understands: the stumble was within the plan ({d}).') : l('{a} aceita a explicação, mas o plano já vinha sendo descumprido ({d}).', '{a} accepts it, but the plan had already been broken ({d}).'), { a: a.name, d }) };
+  return { ok: true, text: fmtL(!x.plan ? l('{a} ouve a explicação; sem um plano combinado, o tropeço conta por si só ({d}).', '{a} hears you out; with no agreed plan, the stumble counts on its own ({d}).') : x.plan.broken === 0 ? l('{a} perdoa: o tropeço estava dentro do plano ({d}).', '{a} forgives it: the stumble was within the plan ({d}).') : l('{a} aceita a explicação, mas o plano já vinha sendo descumprido ({d}).', '{a} accepts it, but the plan had already been broken ({d}).'), { a: a.name, d }) };
 }
 
 // ---------------------------------------------------------------- dilema: turnê internacional × família
@@ -466,7 +467,7 @@ function managerMonth(s: GameState, r: Rng): void {
       notify(s, t, 'bad');
     }
     if (x.issue && s.week - x.issue.w > 8) { x.hidden.push(x.issue); x.issue = undefined; }
-    if (!x.issue && r.chance(0.025)) x.issue = { w: s.week, t: r.pick([l('Um promotor não pagou o cachê inteiro.', 'A promoter shorted the fee.'), l('Erro no extrato de royalties.', 'An error in the royalty statement.'), l('Uma data foi vendida em dobro.', 'A date was double-booked.')]) };
+    if (!x.issue && r.chance(issueP19(mg.clients.length, st.agents.length).v)) x.issue = { w: s.week, t: r.pick([l('Um promotor não pagou o cachê inteiro.', 'A promoter shorted the fee.'), l('Erro no extrato de royalties.', 'An error in the royalty statement.'), l('Uma data foi vendida em dobro.', 'A date was double-booked.')]) };
     // contraproposta expira
     if (x.counter && s.week - x.counter.w > 2) x.counter = undefined;
     // dilema: turnê internacional × família
@@ -501,9 +502,11 @@ function managerMonth(s: GameState, r: Rng): void {
     // confiança puxa a satisfação; renovação do mandato
     c.sat = clamp(c.sat + (x.trust - c.sat) * 0.1, 0, 100);
     if (x.mandate.until <= s.week) {
-      const p = clamp(x.trust / 100 + 0.2 - x.pressured * 0.08 - x.promises.filter((q) => q.kept === false).length * 0.1, 0.05, 0.98);
-      if (r.chance(p)) { x.mandate = { ...x.mandate, until: s.week + 104, legacy: false }; book(x, l('Mandato renovado por mais dois anos.', 'Mandate renewed for two more years.')); }
+      const p = renewP19(s, a, { trust: x.trust, pressured: x.pressured, broken: x.promises.filter((q) => q.kept === false).length, fame0: x.fame0, since: x.since }).v; // r19: confiança, lealdade, entrega, anos juntos
+      st.ren ??= [0, 0];
+      if (r.chance(p)) { st.ren[0]++; x.mandate = { ...x.mandate, until: s.week + 104, legacy: false }; book(x, l('Mandato renovado por mais dois anos.', 'Mandate renewed for two more years.')); }
       else {
+        st.ren[1]++;
         dropClient(s, a.id);
         mg.fired.push({ actId: a.id, y: s.year });
         const t = fmtL(l('{a} não renova o mandato com você.', '{a} does not renew the mandate with you.'), { a: a.name });
