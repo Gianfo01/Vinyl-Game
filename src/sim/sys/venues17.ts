@@ -10,6 +10,7 @@ import { Rng, clamp } from '../../core/rng';
 import { FAMILIES, cityById, familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
+import { VENUES19 } from '../../data/more19';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
 
@@ -45,6 +46,7 @@ export const VENUES17: VDef[] = [
   { id: 'wembley', name: 'Wembley', city: 'london', cap: 80000, from: 1923, prestige: 95, price: 0, fam: 'pop', buyable: false, note: l('estádio nacional', 'national stadium') },
   { id: 'budokan', name: 'Nippon Budokan', city: 'tokyo', cap: 14000, from: 1964, prestige: 92, price: 0, fam: 'pop', buyable: false, note: l('arena de artes marciais, patrimônio', 'martial-arts hall, heritage site') },
 ];
+VENUES17.push(...VENUES19.filter((d) => !VENUES17.some((x) => x.id === d.id))); // r19 more19 (onda 2)
 export const vdef = (id: string) => VENUES17.find((x) => x.id === id);
 
 export type Policy = 'curated' | 'commercial' | 'rental' | 'residency';

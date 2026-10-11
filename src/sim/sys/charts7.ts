@@ -1,5 +1,5 @@
 // Paradas por país, por região e por formato (rodada 7). Cada semana, as unidades novas de cada
-// lançamento são divididas entre 34 países conforme o tamanho do mercado (população × poder de compra),
+// lançamento são divididas entre os países com ficha (34 até a r18; 128 desde a r19) conforme o tamanho do mercado (população × poder de compra),
 // o gosto local por família de gênero naquele ano, a distribuição do lançamento e o "efeito casa"
 // (artista local vende mais no próprio país). Daí saem, para cada país e região:
 //   - Top músicas e Top álbuns (consumo combinado da era)
@@ -101,6 +101,10 @@ function weekCache(year: number) {
   return cache;
 }
 
+// r19: preferência local por país é estática (tabela) — pré-calculada (128 países × 350 lançamentos por semana)
+const LP = COUNTRY_INFO.map((c) => localPref(c.a3));
+const LPS = LP.map((x) => Math.sqrt(x / 1.6));
+
 function countryWeights(s: GameState, rel: Release, out: number[]): number {
   const act = s.acts[rel.actId];
   const fam = act ? familyOf(act.genre) : 'pop';
@@ -117,9 +121,9 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
     let w = wc.size[i] * (taste + (1 - Math.min(1, taste)) * crossover * 0.4);
     if (!rel.territories.includes(c.market)) w *= 0.04;
     // rodada 8: artista local tem preferência em casa; fora, viaja conforme o peso mundial do país
-    if (home === c.a3) w *= 1.6 * localPref(c.a3);
+    if (home === c.a3) w *= 1.6 * LP[i];
     else {
-      w *= (homeMarket === c.market ? 1.25 : 1) * (0.25 + 0.75 * Math.max(wc.soft(home), own)) / Math.sqrt(localPref(c.a3) / 1.6);
+      w *= (homeMarket === c.market ? 1.25 : 1) * (0.25 + 0.75 * Math.max(wc.soft(home), own)) / LPS[i];
     }
     out[i] = w;
     sum += w;
@@ -171,6 +175,30 @@ function topN(rows: { relId: string; u: number }[], n: number): { relId: string;
   return top;
 }
 
+/** r19: o mesmo que rank(topN(linhas)) lendo direto dos vetores (val/has por índice de `fresh`), sem montar as linhas. */
+function rankIdx(prev: Row7[] | undefined, ids: string[], val: Float64Array, has: Uint8Array, js: Int32Array, n: number): Row7[] {
+  const top: number[] = [];
+  let min = 0.5;
+  for (let q = 0; q < n; q++) {
+    const j = js[q];
+    if (!has[j]) continue;
+    const u = val[j];
+    if (u <= min && top.length >= TOP) continue;
+    if (u <= 0.5) continue;
+    let i = top.length;
+    while (i > 0 && val[top[i - 1]] < u) i--;
+    top.splice(i, 0, j);
+    if (top.length > TOP) top.pop();
+    if (top.length >= TOP) min = val[top[top.length - 1]];
+  }
+  const pv = prev ?? [];
+  return top.map((j, i) => {
+    const relId = ids[j];
+    const p = pv.find((y) => y.relId === relId);
+    return { relId, u: Math.round(val[j]), pos: i + 1, last: p?.pos ?? 0, wk: (p?.wk ?? 0) + 1 };
+  });
+}
+
 function rank(prev: Row7[] | undefined, rows: { relId: string; u: number }[]): Row7[] {
   const pv = prev ?? [];
   return topN(rows, TOP).map((x, i) => {
@@ -203,49 +231,70 @@ export function weekCharts(s: GameState): void {
 
   const nC = COUNTRY_INFO.length;
   const shares = COUNTRY_INFO.map((c) => formatShares(s, c));
-  // acumuladores: [país][tipo] -> lista
-  const acc: Record<ChartKind, { relId: string; u: number; j: number }[]>[] = COUNTRY_INFO.map(() => ({ songs: [], albums: [], stream: [], sales: [], video: [] }));
-  const w: number[] = new Array(COUNTRY_INFO.length).fill(0);
+  // r19: unidades por (lançamento, país) numa matriz plana, sem uma linha-objeto por par (128 países: desempenho/GC).
+  // A ordem de leitura (país a país, lançamento crescente) é a mesma das listas antigas: mesmos ranks e empates.
   const nF = fresh.length;
+  const U = new Float64Array(nF * nC);
+  const ALB = new Uint8Array(nF), VF = new Float64Array(nF);
+  const w: number[] = new Array(nC).fill(0);
   for (let j = 0; j < nF; j++) {
     const { rel, units } = fresh[j];
     const sum = countryWeights(s, rel, w);
     if (sum <= 0) continue;
-    const vf = videoFactor(s, rel);
-    const album = rel.type === 'lp' || rel.type === 'ep';
+    VF[j] = videoFactor(s, rel);
+    ALB[j] = rel.type === 'lp' || rel.type === 'ep' ? 1 : 0;
     for (let i = 0; i < nC; i++) {
       const u = (units * w[i]) / sum;
       if (u < 0.5) continue;
-      const a = acc[i];
-      (album ? a.albums : a.songs).push({ relId: rel.id, u, j });
-      const sh = shares[i];
-      if (hasStream && sh.stream > 0) a.stream.push({ relId: rel.id, u: u * sh.stream * STREAMS_PER_UNIT * (album ? 0.6 : 1), j });
-      a.sales.push({ relId: rel.id, u: u * (sh.phys + sh.dl), j });
-      if (vf > 0) a.video.push({ relId: rel.id, u: u * vf * VIEWS_PER_UNIT * (album ? 0.4 : 1), j });
-      const yu = (st.yearUnits[COUNTRY_INFO[i].a3] ??= {});
-      yu[rel.id] = (yu[rel.id] ?? 0) + u;
+      U[j * nC + i] = u;
     }
   }
+  const ids = fresh.map((x) => x.rel.id);
   // países
   // acumuladores por índice do lançamento em `fresh` (mesma ordem de 1ª aparição e mesmas somas de antes, sem Map por string)
   const mkAcc = (): Acc7 => ({ v: new Float64Array(nF), seen: new Uint8Array(nF), ord: [] });
   const mkAccs = (): Record<ChartKind, Acc7> => ({ songs: mkAcc(), albums: mkAcc(), stream: mkAcc(), sales: mkAcc(), video: mkAcc() });
-  const addAcc = (x: Acc7, j: number, u: number) => { if (!x.seen[j]) { x.seen[j] = 1; x.ord.push(j); } x.v[j] += u; };
   const rowsOf = (x: Acc7) => x.ord.map((j) => ({ relId: fresh[j].rel.id, u: x.v[j] }));
   const regionAcc: Record<string, Record<ChartKind, Acc7>> = {};
   const worldAcc = mkAccs();
+  const val = new Float64Array(nF), has = new Uint8Array(nF), js = new Int32Array(nF);
   for (let i = 0; i < nC; i++) {
     const c = COUNTRY_INFO[i];
+    const sh = shares[i];
     const prev = boardsOf(s)[c.a3] ?? emptyBoard();
     const board = emptyBoard();
     const reg = (regionAcc[c.market] ??= mkAccs());
-    for (const k of CHART_KINDS) {
-      board[k] = rank(prev[k], acc[i][k]);
-      for (const x of acc[i][k]) {
-        addAcc(reg[k], x.j, x.u);
-        addAcc(worldAcc[k], x.j, x.u);
-      }
+    let n = 0;
+    for (let j = 0; j < nF; j++) if (U[j * nC + i] > 0) js[n++] = j;
+    if (n) { // acumulado do ano (prêmios nacionais, ficha do país): país a país, um objeto quente por vez
+      const yu = (st.yearUnits[c.a3] ??= {});
+      for (let q = 0; q < n; q++) { const j = js[q], id = ids[j]; yu[id] = (yu[id] ?? 0) + U[j * nC + i]; }
     }
+    // valor do lançamento j em cada parada (has = entrou na lista antiga, mesmo com valor ≤ 0,5); um laço por tipo
+    const pass = (k: ChartKind, mode: number, f: number) => {
+      const rk = reg[k], wk = worldAcc[k];
+      for (let q = 0; q < n; q++) {
+        const j = js[q], u = U[j * nC + i], album = ALB[j] === 1;
+        let ok = true, v = u;
+        if (mode === 0) ok = !album;
+        else if (mode === 1) ok = album;
+        else if (mode === 2) v = u * f * STREAMS_PER_UNIT * (album ? 0.6 : 1);
+        else if (mode === 3) v = u * f;
+        else { ok = VF[j] > 0; v = u * VF[j] * VIEWS_PER_UNIT * (album ? 0.4 : 1); }
+        has[j] = ok ? 1 : 0;
+        if (!ok) continue;
+        val[j] = v;
+        if (!rk.seen[j]) { rk.seen[j] = 1; rk.ord.push(j); } rk.v[j] += v;
+        if (!wk.seen[j]) { wk.seen[j] = 1; wk.ord.push(j); } wk.v[j] += v;
+      }
+      board[k] = rankIdx(prev[k], ids, val, has, js, n);
+    };
+    pass('songs', 0, 0);
+    pass('albums', 1, 0);
+    if (hasStream && sh.stream > 0) pass('stream', 2, sh.stream);
+    else board.stream = [];
+    pass('sales', 3, sh.phys + sh.dl);
+    pass('video', 4, 0);
     boardsOf(s)[c.a3] = board;
     trackPlayer(s, c.a3, board);
   }

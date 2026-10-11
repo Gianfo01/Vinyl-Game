@@ -7,6 +7,7 @@
 
 import type { FamilyId, MarketId } from './world';
 import { musicSpend17 } from './relevance17';
+import { COUNTRY_INFO19 } from './countries19';
 
 type Curve = [number, number][];
 type Taste = [number, Partial<Record<FamilyId, number>>][];
@@ -214,6 +215,9 @@ export const COUNTRY_INFO: CountryInfo[] = [
     chart: ['Parada da Nova Zelândia', 'Official NZ Music Chart'], award: ['Prêmio Kiwi', 'Aotearoa Music Awards', 1965],
   },
 ];
+
+// r19 WP0: fichas dos países que tinham artista ou cidade e nenhuma ficha (src/data/countries19.ts)
+COUNTRY_INFO.push(...COUNTRY_INFO19.filter((c) => !COUNTRY_INFO.some((x) => x.a3 === c.a3)));
 
 export const countryInfoByA3: Record<string, CountryInfo> = Object.fromEntries(COUNTRY_INFO.map((c) => [c.a3, c]));
 

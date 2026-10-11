@@ -7,6 +7,7 @@
 // interface mostrar "Nome (≈ Referência)". Pessoas (críticos, produtores) NUNCA têm referência real.
 
 import { l, type FamilyId, type L, type MarketId } from './world';
+import { AWARDS19, CHARTS19 } from './more19';
 
 /** Utilitário: itens ativos num ano (start/end inclusivos). */
 export function activeIn<T extends { start: number; end?: number }>(xs: T[], year: number): T[] {
@@ -444,6 +445,7 @@ export const AWARDS: AwardDef[] = [
     cat('album', 'Álbum humano do ano', 'Human album of the year'), cat('performance', 'Performance sem rede', 'Performance without a net'),
   ], 'Prêmio do movimento contra música gerada.', 'The award of the movement against generated music.'),
 ];
+AWARDS.push(...AWARDS19.filter((d) => !AWARDS.some((x) => x.id === d.id))); // r19 more19 (onda 2)
 
 // =====================================================================================
 // MOVIMENTOS culturais (geram subgêneros nomeados numa cidade)
@@ -669,6 +671,7 @@ export const CHARTS: ChartDef[] = [
   ch('oc_top', 'Parada Cruzeiro do Sul', 'ARIA Charts', 'regional', 'oceania', 1983, 50),
   ch('neural_top', 'Cortex 100', undefined, 'neural', 'global', 2036, 100),
 ];
+CHARTS.push(...CHARTS19.filter((d) => !CHARTS.some((x) => x.id === d.id))); // r19 more19 (onda 2)
 
 // Índices
 export const platformById = Object.fromEntries(PLATFORMS.map((x) => [x.id, x])) as Record<string, PlatformDef>;

@@ -3,6 +3,7 @@
 // "caixa preta" típica (fatia não identificada) e quais direitos cobram (execução, mecânico, conexos).
 // Valores aproximados e arredondados para jogo; datas de fundação reais.
 import { l, type L } from './world';
+import { SOCS19 } from './more19';
 
 export type Mod18 = 'perf' | 'mech' | 'print' | 'neigh' | 'sync' | 'adm';
 export interface Soc18 {
@@ -40,6 +41,7 @@ export const SOCS18: Soc18[] = [
   // Oceania
   { id: 'apra', mk: 'oceania', name: 'APRA AMCOS + PPCA', from: 1926, does: 'pmn', fee: 0.13, lag: 1, bb: 0.06, note: l('Austrália (1926): eficiente, e a PPCA (1969) cobra a gravação tocada no rádio.', 'Australia (1926): efficient, and PPCA (1969) collects for recordings played on radio.') },
 ];
+SOCS18.push(...SOCS19.filter((d) => !SOCS18.some((x) => x.id === d.id))); // r19 more19 (onda 2)
 
 /** Direito conexo (gravação tocada em público) por mercado: desde quando e quanto (fração da receita do master). */
 export const NEIGH18: Record<string, { from: number; rate: number; digitalOnly?: boolean }> = {

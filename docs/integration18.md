@@ -243,3 +243,8 @@ Explicações: `pulse19` ({k: cash|fans|mood|hits}; parte de caixa liga em `cash
 `homeBlocks18(s)` + `deskBlocks19(s)` → `pick19(s, blocks, 6)` abre os ~6 de maior peso; o resto vai para a faixa "Mais (n)". Preferências
 (`c` recolhido, `h` escondido, `o` fixado) ficam no save em `x4.ui19.c`. Topo fixo `head19View(s)` (ui/sys/cockpit19.ts): Hoje / Ameaças / Andamento
 (saga18 `cockpit18` + calendário); a seção antiga `long18-3q` foi escondida da Mesa.
+## R19 WP0 — base de dados (cidades, gêneros, países, more19)
+- `src/data/world19.ts`: `C19` (94 cidades novas com `a3`; `City.a3`/`City.w` opcionais), `G19` (61 gêneros com cidades-cena e afinidade por submercado), `NAMES19`/`MKT19`/`SUB19` (ilhas fora do atlas, mercado e submercado). Ligados em `world.ts` (CITIES/GENRES + cenas), `geo.ts` (`countryOfCity` lê `City.a3`; `countryName`; `marketOfCountry`) e `regions18/index.ts` (a3 dos submercados + gosto de base dos gêneros novos). Novos `NameGroup`: ro, bg, hr, ka, hy, lt, et, my, km, si, sq (people.ts).
+- `src/data/countries19.ts`: `COUNTRY_INFO19` (94 fichas) anexadas a `COUNTRY_INFO` (128 países). `charts7.weekCharts` foi reescrito sem objeto por (lançamento, país) para caber no orçamento (mesma ordem/empates).
+- `src/data/more19/`: vagas `wp_a…wp_j` (`PACK: Pack19`) e `index.ts` (`ARTISTS19`, `PRODS19`, `MGRS19`, `LABELS19`, `EXECS19`, `VENUES19`, `STUDIOS19`, `GEAR19`, `FESTS19`, `AWARDS19`, `CHARTS19`, `SOCS19`, `MILESTONES19`, `FORERUNNERS19`, `norm19`) com ganchos append-only nos módulos de dados. Formato: docs/db19.md "## Formato more19". Validador: `tests/r19-data-base.test.ts`.
+- `worldgen.spawnProceduralAct` pondera cidades por `City.w`; `culture.seedClubs` não abre clube com gênero do futuro.

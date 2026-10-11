@@ -6,6 +6,7 @@
 
 import meta from './geo/meta.json';
 import { cityById, l, type L, type MarketId } from './world';
+import { MKT19, NAMES19 } from './world19';
 
 // ---------------------------------------------------------------- formato do arquivo e decodificação
 
@@ -237,7 +238,7 @@ const META = meta as unknown as { names: Record<string, [string, string]>; citie
 
 export function countryName(a3: string | null | undefined): L {
   if (!a3) return l('?');
-  const n = META.names[a3];
+  const n = META.names[a3] ?? NAMES19[a3]; // r19: ilhas fora do atlas
   return n ? l(n[1], n[0]) : l(a3);
 }
 
@@ -250,7 +251,7 @@ export function allCountryCodes(): string[] {
  * ponto-em-polígono (com fallback pela borda mais próxima) quando as formas estão carregadas.
  */
 export function countryOfCity(cityId: string): string | null {
-  const known = META.cities[cityId];
+  const known = META.cities[cityId] ?? cityById[cityId]?.a3; // r19: cidades novas trazem o país
   if (known) return known;
   if (cityCache.has(cityId)) return cityCache.get(cityId)!;
   const c = cityById[cityId];
@@ -541,6 +542,7 @@ const MKT: Partial<Record<MarketId, string>> = {
 };
 const MARKET_OF: Record<string, MarketId> = {};
 for (const [m, list] of Object.entries(MKT)) for (const a3 of list!.split(' ')) MARKET_OF[a3] = m as MarketId;
+for (const [a3, m] of Object.entries(MKT19)) MARKET_OF[a3] ??= m; // r19 WP0
 
 /** Mercado do jogo (as 7 regiões de MARKETS) ao qual um país pertence; padrão: Ásia e Oriente Médio. */
 export function marketOfCountry(a3: string): MarketId {

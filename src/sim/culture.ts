@@ -158,7 +158,7 @@ export function clubBonus(s: GameState, cityId: string): number {
 export function seedClubs(s: GameState, r: Rng): void {
   for (const city of CITIES) {
     if (!r.chance(0.5)) continue;
-    const genre = r.pick(city.scenes.filter((g) => genreById[g] && genreById[g].born <= s.year)) ?? city.scenes[0];
+    const genre = r.pick(city.scenes.filter((g) => genreById[g] && genreById[g].born <= s.year)) ?? city.scenes.find((g) => (genreById[g]?.born ?? 9999) <= s.year); // r19: nada do futuro
     if (!genre) continue;
     s.clubs.push({ id: nextId(s, 'cl'), name: `${r.pick(CLUB_NAMES)} ${city.name.en.split(' ')[0]}`, city: city.id, genre, capacity: r.int(150, 900), prestige: r.int(15, 60), opened: s.year - r.int(0, 10) });
   }

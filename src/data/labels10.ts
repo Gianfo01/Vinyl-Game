@@ -7,6 +7,7 @@
 import type { CatalogLabel } from './catalog';
 import { l } from './world';
 import { EXECS_1889, LABELS_1889 } from './era1889';
+import { EXECS19, LABELS19 } from './more19';
 
 export interface ExtraLabel extends CatalogLabel {
   real: string;
@@ -100,3 +101,6 @@ export const REAL_EXECS: RealExec[] = [
 // r18 era1889: gravadoras e executivos reais da era acústica (1888–1918)
 EXTRA_LABELS.push(...LABELS_1889.filter((d) => !EXTRA_LABELS.some((x) => x.id === d.id)));
 REAL_EXECS.push(...EXECS_1889.filter((d) => !REAL_EXECS.some((x) => x.rid === d.rid)));
+// r19 more19 (onda 2)
+EXTRA_LABELS.push(...LABELS19.filter((d) => !EXTRA_LABELS.some((x) => x.id === d.id)));
+REAL_EXECS.push(...EXECS19.filter((d) => !REAL_EXECS.some((x) => x.rid === d.rid)));

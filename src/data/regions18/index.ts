@@ -4,12 +4,16 @@ import { AFEU18 } from './afeu';
 import { AMERICAS18 } from './americas';
 import { ASIA18 } from './asia';
 import type { Ramp18, Sub18 } from './types';
+import { G19, SUB19 } from '../world19';
 export * from './types';
 export { CIRCS18, DIAS18, SHIFTS18 } from './flows';
 
 export const SUBS18: Sub18[] = [...ASIA18, ...AMERICAS18, ...AFEU18];
 export const subById18: Record<string, Sub18> = Object.fromEntries(SUBS18.map((x) => [x.id, x]));
 export const subsOf18 = (mk: MarketId): Sub18[] => SUBS18.filter((x) => x.mk === mk);
+// r19 WP0: países das cidades novas ganham submercado; gêneros novos ganham gosto onde nasceram (afinidade de base)
+for (const [a3, id] of Object.entries(SUB19)) { const sb = subById18[id]; if (sb && !sb.a3.includes(a3)) sb.a3.push(a3); }
+for (const [g, , , , , , , aff] of G19) for (const [id, v] of Object.entries(aff)) for (const era of subById18[id]?.taste ?? []) era[1][g] ??= v;
 const A3: Record<string, string> = {};
 for (const x of SUBS18) for (const a of x.a3) if (!A3[a] || x.share[0][1] > (subById18[A3[a]]?.share[0][1] ?? 0)) A3[a] = x.id;
 /** Submercado de um país (o "geral" quando há sobreposição de circuito). */
