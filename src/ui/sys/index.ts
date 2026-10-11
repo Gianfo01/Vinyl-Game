@@ -166,4 +166,6 @@ import './era1889';
 // Rodada 19 (Frente 8): calendário único (faixa + página), topo Hoje/Ameaças/Andamento e blocos com peso.
 import './calendar19';
 import './cockpit19';
+// Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
+import './era19';
 import './core18';

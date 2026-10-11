@@ -1,14 +1,14 @@
 // Rodada 18 (econ18): cláusulas na ficha de proposta + o raciocínio do artista, linha por linha.
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { LEGACY18, PKG18, applyPkg18, advisor18, labelEdge18, reason18, type Clauses18 } from '../../sim/sys/contracts18';
+import { LEGACY18, PKG18, applyPkg18, advisor18, labelEdge18, pkgsFor19, reason18, type Clauses18 } from '../../sim/sys/contracts18';
 import type { Act, GameState, Offer } from '../../sim/types';
 import { h, select } from '../dom';
 
 type O = Omit<Offer, 'id' | 'week' | 'status'>;
 
 export function clauses18Fields(s: GameState, a: Act, o: O, update: () => void): HTMLElement {
-  if (!o.clauses18) applyPkg18(o, 'major');
+  if (!o.clauses18) applyPkg18(o, pkgsFor19(s.year)[0]?.id ?? 'major'); // r19 (11.6): pacote da época (cachê por sessão em 1889)
   const box = h('fieldset', { class: 'clauses18' });
   const why = h('div', { class: 'why18' });
   const k = (): Clauses18 => (o.clauses18 ??= { ...LEGACY18 });
@@ -28,7 +28,7 @@ export function clauses18Fields(s: GameState, a: Act, o: O, update: () => void):
     const c = k();
     box.replaceChildren(
       h('legend', null, t(l('Cláusulas (recuperável, royalties, contas, compromissos)', 'Clauses (recoupable, royalties, statements, commitments)'))),
-      h('label', null, t(l('Pacote', 'Package')), select(c.pkg, [{ value: 'custom', label: t(l('Personalizado', 'Custom')) }, ...PKG18.map((p) => ({ value: p.id, label: t(p.name) }))], (v: string) => { if (v !== 'custom') applyPkg18(o, v); else k().pkg = 'custom'; draw(); update(); })),
+      h('label', null, t(l('Pacote', 'Package')), select(c.pkg, [{ value: 'custom', label: t(l('Personalizado', 'Custom')) }, ...pkgsFor19(s.year).map((p) => ({ value: p.id, label: t(p.name) }))], (v: string) => { if (v !== 'custom') applyPkg18(o, v); else k().pkg = 'custom'; draw(); update(); })),
       h('p', { class: 'muted small' }, t(PKG18.find((p) => p.id === c.pkg)?.desc ?? l('Cláusulas negociadas uma a uma.', 'Clauses negotiated one by one.'))),
       h('label', null, t(l('Gravação recuperável', 'Recording recoupable')), select(String(c.rec), ['0', '0.5', '1'].map((v) => ({ value: v, label: `${Number(v) * 100}%` })), (v: string) => ch(() => { k().rec = Number(v) as Clauses18['rec']; k().pkg = 'custom'; })())),
       h('label', null, t(l('Marketing recuperável', 'Marketing recoupable')), select(String(c.mkt), ['0', '0.25', '0.5'].map((v) => ({ value: v, label: `${Number(v) * 100}%` })), (v: string) => ch(() => { k().mkt = Number(v) as Clauses18['mkt']; k().pkg = 'custom'; })())),

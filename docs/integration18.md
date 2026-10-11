@@ -283,3 +283,24 @@ continua o mesmo. Lista com produtor e ouvintes em `FACTS19` (para a matriz da F
 - `fan_wave` (base do jogador +15%/mês com ≥1.500 fãs, ou mobilização ≥60) / `fan_drop` (−15%) → ouvintes `fandom19:wave`/`fandom19:drop` (linha no diário de fãs, `f19.waves`).
 - `rivalry_flare` (calor cruza 50 ou 75, sem repetir até esfriar) / `rivalry_cool` (de ≥50 para <20) → `rivals19:flare`/`rivals19:cool` (relatório de rivais, `f19.flares`).
 - `award_win` (entrada nova no livro) → `awards19:jury` (memória de vitórias do júri: `juryLedger19`); `award_posthumous` → `awards19:posthumous` (`f19.post`).
+
+## R19 echoes19 / era19 / eracon19 / realhist19 (onda 2: 11.2, 11.5, 11.6 + piloto da Frente 2)
+- **Ecos por tom** (`sim/sys/echoes19.ts`): `decide18.DEF_CONSEQ19.f` dá um eco PADRÃO a qualquer opção sem eco escrito, pelo tom
+  (`optTone19(ev, opt)` → risky/generous/deceitful/cautious/aggressive; tamanho escala com a fama do ato e a reputação).
+  `conseq18(key)` agora devolve o eco escrito OU o padrão; `ownConseq18(key)` só o escrito. `coverage19(ids)` mede a cobertura.
+  `TOP19` = 120 eventos mais sorteados (playbot, 12 partidas × 4 anos); piso testado: ≥35% das opções com eco escrito (hoje 53%;
+  95% com o padrão). Ecos à mão no topo e nas famílias r11/w4/org12 (15×4)/era8. Fatos `risk_paid`/`risk_lost` (ouvintes: faro
+  do selo, moral do elenco) e dica `echoes19_risk`. Explicação `dec19.cover`.
+- **Era 1889** (`sim/sys/era19.ts`, `ui/sys/era19.ts`): `eraFactors19(s)` (crise/boato, formatos, patentes, vaudeville, costume do
+  contrato; nada do futuro) → bloco "A era" no Cockpit via `home18.HOME_EXTRA19` (registro novo de blocos do topo);
+  `registerAdvisorTip('era1889')`; explicação `era19.factors`; eventos `era19_cyl_bet` e `era19_vaud` (lista negra do circuito);
+  ecos `ib:era1889_patent:lic|risk`, `shellac_breakage`, `shellac_ration`, `sheet_music_boom`. Fato `format_bet`; ouve `case_ruling #patent`.
+- **Contrato por época** (`sim/sys/eracon19.ts`, puro): `eraK19(year)` session(<1903)/side(<1925)/modern; `royBand19`,
+  `expRoy19`, `clampRoy19`, `eraOffer19` (aplicado em `artist18.mkRecord/mkDist`), `eraOfferText19`, `eraMasterL19`, `eraWord19`
+  ("master" → "matriz" antes de 1925, também nas mensagens a18_*), `eraAsks19`. `contracts18`: `Pkg18.roy/from/to` e
+  `pkgsFor19(year)`; pacotes `session` e `side` (a UI de cláusulas mostra só os da época).
+- **História real** (`sim/sys/realhist19.ts`): `REAL19` (texto documentado + fonte), 5 marcos em `world4/milestones`
+  (`rh19_eurovision`, `rh19_pirate`, `rh19_moa`, `rh19_freefest`, `rh19_mtv`), eventos `rh19_euro` (todo março), `rh19_pirate`,
+  `rh19_fest` (1969–79), `rh19_mtv`, com ecos que gravam o desfecho em `rh19(s).run`. `realCards19(s)` → seção Mundo › "A história
+  real" e bloco no Cockpit (lado a lado: real × sua partida, só nos modos alternativos). Fatos `real_history` (vai ao Diário) e
+  `freefest_incident` (estresse do elenco + dica de segurança). Vítimas sempre anônimas e fictícias; sem detalhe gráfico.

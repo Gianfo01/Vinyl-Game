@@ -1,0 +1,14 @@
+/* r19 (era19/realhist19): card "A era" e "A história real" */
+.era19 ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.era19 li { border-left: 3px solid var(--line); padding: 2px 8px; }
+.era19 li.good { border-left-color: var(--good); }
+.era19 li.bad { border-left-color: var(--bad); }
+.era19 li b { display: block; }
+.rh19 { display: grid; gap: 10px; }
+.rh19-card { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--panel); }
+.rh19-card h4 { grid-column: 1 / -1; margin: 0; }
+.rh19-side { background: var(--panel-2); border-radius: 6px; padding: 6px 8px; }
+.rh19-side.run { border-left: 3px solid var(--accent); }
+.rh19-side.run.good { border-left-color: var(--good); }
+.rh19-side.run.bad { border-left-color: var(--bad); }
+.rh19-side small { color: var(--muted); }

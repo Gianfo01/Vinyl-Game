@@ -46,7 +46,8 @@ export interface Clauses18 {
 type OfferLike = Omit<Offer, 'id' | 'week' | 'status'>;
 type C18 = Contract & { clauses18?: Clauses18; rb18?: Record<string, number>; rp18?: Record<string, string>; spent18?: Record<string, number> };
 
-export interface Pkg18 { id: string; name: L; desc: L; c: Clauses18; rights?: Partial<RightsTerms>; /** r18 supply18: modelo e taxa sugeridos */ model?: Offer['model']; fee?: number }
+export interface Pkg18 { id: string; name: L; desc: L; c: Clauses18; rights?: Partial<RightsTerms>; /** r18 supply18: modelo e taxa sugeridos */ model?: Offer['model']; fee?: number;
+  /** r19 (11.6, era19): royalty fixado pelo pacote e janela de anos em que o pacote existe [from, to) */ roy?: number; from?: number; to?: number }
 const base = (o: Partial<Clauses18>): Clauses18 => ({ pkg: 'custom', rec: 0.5, video: false, tour: false, mkt: 0, cap: 0, cross: true, base: 'wholesale', stmt: 's', lag: 3, audit: false, minRel: 0, promo: 0, ...o });
 export const PKG18: Pkg18[] = [
   { id: 'major', name: l('Major clássico', 'Classic major'), desc: l('Master do selo para sempre; recupera gravação, clipe, apoio de turnê e metade do marketing, tudo cruzado. Royalty sobre varejo com dedução de embalagem; contas semestrais.', 'Label owns the master forever; recoups recording, video, tour support and half the marketing, all cross-collateralized. Royalty on retail with packaging deduction; semiannual statements.'),
@@ -71,7 +72,10 @@ export function applyPkg18(o: OfferLike, id: string): void {
   if (o.rights && p.rights) Object.assign(o.rights, p.rights);
   if (p.model) o.model = p.model;
   if (p.fee !== undefined) o.distributionFee = p.fee;
+  if (p.roy !== undefined) o.royalty = p.roy;
 }
+/** r19 (11.6): pacotes que existem no ano (sem janela = desde ~1925, quando o contrato moderno com master aparece) */
+export const pkgsFor19 = (year: number): Pkg18[] => PKG18.filter((p) => year >= (p.from ?? 1925) && year < (p.to ?? 9999));
 
 // ---------------------------------------------------------------- base dos royalties
 
