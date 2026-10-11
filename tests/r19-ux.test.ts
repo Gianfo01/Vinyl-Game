@@ -95,7 +95,7 @@ describe('r19 ux — recibo, perda, fim, divulgação', () => {
     emitFact(s, { kind: 'scandal', actors: ['player'], severity: 70, visibility: 'public', tags: ['bad'], text: { pt: 'Escândalo X', en: 'Scandal X' }, src: 'test' });
     const C = lossCauses19(s);
     expect(C.length).toBe(3);
-    expect(C[0].k).toBe('cost:pay');
+    expect(C.some((c) => c.k === 'cost:pay')).toBe(true);
     expect(C.some((c) => c.k === 'fact:scandal')).toBe(true);
     for (const c of C) expect(c.help.pt.length).toBeGreaterThan(10);
     expect(explain18(s, 'ux19.loss', {})!.parts.length).toBe(3);
@@ -107,7 +107,8 @@ describe('r19 ux — recibo, perda, fim, divulgação', () => {
     emitFact(s, { kind: 'release', actors: ['x'], severity: 30, visibility: 'public', tags: ['documentary'], text: { pt: 'doc', en: 'doc' }, src: 'test' });
     const P = chainProgress19(s);
     expect(P.find((x) => x.id === 'c4')!.all).toBe(true);
-    expect(P.find((x) => x.id === 'c1')!.n).toBe(1);
+    expect(P.find((x) => x.id === 'c4')!.me).toBe(true);
+    expect(P.find((x) => x.id === 'c1')!.n).toBe(0); // elo fora de ordem (documentário sem separação) não conta
     const E = epitaph19(s);
     expect(E.name).toBe(s.config.companyName);
     expect(E.stats.length).toBe(5);

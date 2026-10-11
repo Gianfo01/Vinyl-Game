@@ -1,5 +1,5 @@
 /* Rodada 19 (Frente 8, onda 4 — ux19): cartão de virada, metas, recibo, "por que perdi?", epitáfio, menu e acessibilidade. */
-.ux19-turn, .ux19-open, .ux19-end, .ux19-loss { display: grid; gap: 10px; min-width: 0; }
+.ux19-turn, .ux19-open, .ux19-end, .ux19-loss { display: grid; gap: 10px; min-width: 0; text-align: left; }
 .ux19-hero { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .ux19-hero h3 { margin: 0; }
 .ux19-art { width: 288px; max-width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--line, #444); border-radius: 4px; }
@@ -48,7 +48,7 @@
 .ux19-rcl { list-style: none; padding: 0 !important; display: grid; gap: 8px; }
 .ux19-rcl > li { border-left: 3px solid var(--line, #555); padding-left: 8px; }
 .ux19-navfoot { display: grid; gap: 2px; padding: 8px; border-top: 1px solid var(--line, #444); margin-top: 6px; }
-@media (max-width: 480px) { .ux19-rcbox { left: 8px; right: 8px; bottom: 8px; max-width: none; } .ux19-art { width: 100%; } }
+@media (max-width: 480px) { .ux19-rcbox { left: 8px; right: 8px; bottom: 76px; max-width: none; } .ux19-art { width: 100%; } }
 
 /* acessibilidade (P10): foco visível em tudo que é interativo, sem animação para quem pede */
 :is(main, nav, .modal, .ux19-rcbox, .drawer15) :is(button, a, select, input, textarea, summary, [tabindex]):focus-visible,
@@ -56,10 +56,7 @@
 html.reduced-motion *, html.reduced-motion *::before, html.reduced-motion *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
 
-/* contraste (WCAG AA 4,5:1 no tema claro): cinza de apoio e textos em cor de destaque um pouco mais escuros */
-:root[data-theme='light']:not(.contrast) { --muted: #6b5f55; }
-:root[data-theme='light'] :is(.help18-btn, button.link, .ux19-sec a) { color: #a4501a; }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]):not(.contrast) { --muted: #6b5f55; }
-  :root:not([data-theme]) :is(.help18-btn, button.link, .ux19-sec a) { color: #a4501a; }
-}
+/* contraste (WCAG AA 4,5:1 no tema claro): cinza de apoio, destaque e verde um pouco mais escuros
+   (#7a6d62 → #6b5f55, #c8641e → #a4501a, #2f7d4f → #286c44: texto branco no botão 5,6:1, destaque no papel 5,4:1) */
+:root[data-theme='light']:not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; }
+@media (prefers-color-scheme: light) { :root:not([data-theme]):not(.contrast):is([data-cb='none'], :not([data-cb])) { --muted: #6b5f55; --accent: #a4501a; --good: #286c44; } }

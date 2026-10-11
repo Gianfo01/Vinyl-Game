@@ -51,15 +51,16 @@ function recordRun(g: GameState): string[] {
   const p = profile();
   if (p.runs.some((r) => r.sig === g.signature)) return [];
   const E = epitaph19(g);
-  const medal = (E.legacy >= 70 ? 3 : E.legacy >= 45 ? 2 : E.legacy >= 20 ? 1 : 0) as RunRec19['medal'];
-  const chains = E.chains.filter((c) => c.n >= 3).map((c) => c.id);
+  // medalha só para partidas de 5+ anos (o legado já nasce com pontos de caminho)
+  const medal = (E.y1 - E.y0 < 5 ? 0 : E.legacy >= 70 ? 3 : E.legacy >= 50 ? 2 : E.legacy >= 30 ? 1 : 0) as RunRec19['medal'];
+  const chains = E.chains.filter((c) => c.n >= 3 && c.me).map((c) => c.id);
   p.runs.push({ sig: g.signature, co: g.config.companyName, y0: E.y0, y1: E.y1, legacy: E.legacy, path: E.path, medal, chains, lost: g.ended?.reason === 'insolvency' });
   if (p.runs.length > 40) p.runs.splice(0, p.runs.length - 40);
   const fresh: string[] = [];
   const got = (k: string) => { if (p.ach[k] === undefined) { p.ach[k] = E.y1; fresh.push(k); } };
   for (const c of chains) got(`chain:${c}`);
-  for (const c of E.chains.filter((x) => x.all)) got(`chainall:${c.id}`);
-  for (const m of E.medals) got(`path:${m.id}:${m.tier}`);
+  for (const c of E.chains.filter((x) => x.all && x.me)) got(`chainall:${c.id}`);
+  if (E.y1 - E.y0 >= 3) for (const m of E.medals) got(`path:${m.id}:${m.tier}`);
   if (medal) got(`medal:${medal}`);
   got(`start:${Math.floor(E.y0 / 10) * 10}`);
   saveProfile(p);
@@ -222,9 +223,9 @@ function openingCard(s: GameState): void {
 }
 
 // ---------------------------------------------------------------- recibo de decisão (P3)
-interface Snap19 { cash: number; fans: number; rep: number; rc?: string }
+interface Snap19 { cash: number; fans: number; rep: number; rc?: string; w: number; day: number }
 let snap: Snap19 | null = null;
-const snapNow = (s: GameState): Snap19 => ({ cash: s.player.cash, fans: playerActs(s).reduce((a, id) => a + (s.acts[id] ? fanTotal(s.acts[id]) : 0), 0), rep: Object.values(s.player.reputation).reduce((a, b) => a + b, 0) / 4, rc: ux19(s).rc[0]?.id });
+const snapNow = (s: GameState): Snap19 => ({ cash: s.player.cash, fans: playerActs(s).reduce((a, id) => a + (s.acts[id] ? fanTotal(s.acts[id]) : 0), 0), rep: Object.values(s.player.reputation).reduce((a, b) => a + b, 0) / 4, rc: ux19(s).rc[0]?.id, w: s.week, day: s.day });
 function receiptEl(s: GameState, r: Rc19): HTMLElement {
   const e = receiptEchoes19(s, r), d = r.d ?? {};
   const dl = (k: string, v: number, f: (x: number) => string) => v ? h('span', { class: `pill ${v > 0 ? 'good' : 'bad'}` }, `${t(({ cash: l('Caixa', 'Cash'), fans: l('Fãs', 'Fans'), rep: l('Reputação', 'Reputation') } as Record<string, L>)[k])} ${v > 0 ? '+' : '−'}${f(Math.abs(v))}`) : null;
@@ -255,7 +256,8 @@ if (typeof document !== 'undefined') {
     snap = snapNow(s);
     setTimeout(() => {
       const g = store.game, r = g ? ux19(g).rc[0] : undefined;
-      if (!g || !r || !snap || r.id === snap.rc || r.seen) { snap = null; return; }
+      // só a escolha feita no clique (avançar o tempo resolve cartões vencidos pelo padrão: sem recibo flutuante)
+      if (!g || !r || !snap || r.id === snap.rc || r.seen || g.week !== snap.w || g.day !== snap.day) { snap = null; return; }
       const now = snapNow(g);
       r.d = { cash: now.cash - snap.cash, fans: now.fans - snap.fans, rep: Math.round((now.rep - snap.rep) * 10) / 10 };
       r.seen = 1;
@@ -271,8 +273,8 @@ function lossView(s: GameState): HTMLElement {
   const F = fin18(s), m = mIdx18(s);
   const rows = Array.from({ length: 12 }, (_, i) => { const o = F.m[m - 12 + i] ?? {}; return { y: 0, a: sumP18(o, 'rev:'), b: sumP18(o, 'rev:') + sumP18(o, 'cost:') }; });
   return h('div', { class: 'ux19-loss' },
-    C0.length ? h('ol', { class: 'ux19-causes' }, C0.map((c, i) => h('li', null,
-      h('b', null, `${i + 1}. `, t(c.t)), ' ', h('span', { class: 'pill bad' }, String(c.v)),
+    C0.length ? h('ol', { class: 'ux19-causes' }, C0.map((c) => h('li', null,
+      h('b', null, t(c.t)), ' ', h('span', { class: 'pill bad' }, String(c.v)),
       c.chain && c.chain.length > 1 ? h('div', { class: 'small muted' }, t(l('Cadeia: ', 'Chain: ')), c.chain.map((x) => t(x)).join(' → ')) : null,
       h('div', { class: 'small' }, h('b', null, t(l('Teria ajudado: ', 'Would have helped: '))), t(c.help)))))
       : h('p', { class: 'muted' }, t(l('Nenhuma causa forte nos últimos 24 meses: o caixa caiu aos poucos.', 'No strong cause in the last 24 months: cash fell little by little.'))),
@@ -422,3 +424,6 @@ if (typeof document !== 'undefined') {
   };
   new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(fix); } }).observe(document.documentElement, { childList: true, subtree: true });
 }
+
+// verificação no navegador (só com ?debug19 na URL): acesso ao estado para forçar fim de partida/quase falência
+if (typeof location !== 'undefined' && location.search.includes('debug19')) (window as unknown as { __vtn19: unknown }).__vtn19 = { store, openLoss19, openTurn19 };

@@ -44,7 +44,7 @@ export interface Change19 { k: 'tech' | 'genre' | 'law' | 'market' | 'era'; t: L
 export interface Turn19 { y: number; k: 'decade' | 'era' | 'tech'; name: L; era?: EraId; changes: Change19[]; sum: DecSum19; rivals: L[]; goals: string[]; seen?: 1 }
 export interface Goal19 { id: string; spec: GoalSpec19; w0: number; due: number; base: number; src: 'open' | 'turn'; y: number; done?: number; fail?: number }
 export interface Rc19 { id: string; w: number; ev: string; t: L; o: L; th?: string; n: number; d?: Record<string, number>; seen?: 1 }
-export interface Ux19State { ly: number; era: string; turns: Turn19[]; goals: Goal19[]; rc: Rc19[]; ch: Record<string, number[]>; un: Record<string, number>; heir?: { id: string; w: number; from?: string }; seq: number; /** cartão de abertura já mostrado */ os?: 1 }
+export interface Ux19State { ly: number; era: string; turns: Turn19[]; goals: Goal19[]; rc: Rc19[]; ch: Record<string, number[]>; un: Record<string, number>; heir?: { id: string; w: number; from?: string }; seq: number; /** cartão de abertura já mostrado */ os?: 1; /** cadeia com elo envolvendo você */ me?: Record<string, 1> }
 declare module '../ext4' { interface Ext4 { ux19: Ux19State } }
 const fresh = (): Ux19State => ({ ly: 0, era: '', turns: [], goals: [], rc: [], ch: {}, un: {}, seq: 0 });
 registerExt4('ux19', fresh);
@@ -98,8 +98,10 @@ export const activeGoals19 = (s: GameState): Goal19[] => ux19(s).goals.filter((g
 /** Metas sugeridas para uma faixa de época: abertura = 3 primeiras; viradas giram pelo resto (sem repetir as ativas). */
 export function suggest19(s: GameState, y: number, n: number, offset: number): GoalSpec19[] {
   const band = eraBand19(y), act = new Set(activeGoals19(s).map((g) => g.spec.tpl));
-  const pool = band.goals.map((_, i) => band.goals[(i + offset) % band.goals.length]).filter((x) => !act.has(x.tpl));
-  return pool.slice(0, n);
+  const rot = band.goals.map((_, i) => band.goals[(i + offset) % band.goals.length]);
+  const used = new Set(activeGoals19(s).map((g) => g.spec));
+  // tipos novos primeiro; se faltar, repete o tipo com o alvo da época (nunca a mesma meta ativa)
+  return [...rot.filter((x) => !act.has(x.tpl)), ...rot.filter((x) => act.has(x.tpl) && !used.has(x))].slice(0, n);
 }
 
 /** Metas de abertura por época (1889 incluso). Chamado no newgame; seguro chamar de novo (não duplica). */
@@ -268,12 +270,13 @@ export function lossCauses19(s: GameState, n = 3): Cause19[] {
   const F = fin18(s), now = mIdx18(s), out: Cause19[] = [];
   const win = (a: number, b: number) => { const o: Record<string, number> = {}; for (let i = now - b; i < now - a; i++) for (const [k, v] of Object.entries(F.m[i] ?? {})) o[k] = (o[k] ?? 0) + v; return o; };
   const last = win(0, 12), prev = win(12, 24);
-  const rev = Math.max(1, sumP18(last, 'rev:'));
+  const rev = Math.max(1, sumP18(last, 'rev:'), -sumP18(last, 'cost:') - (last['nonop:int'] ?? 0));
   for (const [g, [t, help]] of Object.entries(GRP19)) {
     const c = -(g === 'int' ? last['nonop:int'] ?? 0 : last[`cost:${g}`] ?? 0);
-    if (c > rev * 0.15) out.push({ k: `cost:${g}`, t, v: Math.round((c / rev) * 100), help });
+    if (c > rev * 0.15) out.push({ k: `cost:${g}`, t, v: Math.min(100, Math.round((c / rev) * 100)), help });
   }
   const r0 = sumP18(prev, 'rev:'), r1 = sumP18(last, 'rev:');
+  // peso dos custos: % do maior entre receita e gasto total (receita perto de zero não explode a escala)
   if (r0 > 0 && r1 < r0 * 0.8) out.push({ k: 'rev', t: fmtL(l('Receita caiu {p}% em 12 meses', 'Revenue fell {p}% in 12 months'), { p: Math.round((1 - r1 / r0) * 100) }), v: Math.round((1 - r1 / r0) * 100), help: l('Lançar com regularidade e ter renda fora do disco (shows, edição, sync).', 'Release steadily and earn beyond records (live, publishing, sync).') });
   const op = opProfit18(last);
   if (op < 0 && !out.length) out.push({ k: 'op', t: l('Prejuízo operacional contínuo', 'Persistent operating loss'), v: 40, help: l('Cortar o que não paga (DRE em Finanças) antes de crescer.', 'Cut what does not pay (P&L in Finance) before growing.') });
@@ -296,10 +299,11 @@ registerExplain('ux19.loss', (s) => {
 export const nearLoss19 = (s: GameState): boolean => s.player.cash < 0 || s.player.insolvencyMonths > 0;
 
 // ---------------------------------------------------------------- fim de partida: epitáfio, cadeias, medalhas
-export interface Epitaph19 { name: string; y0: number; y1: number; legacy: number; path?: PathId; pathName?: L; ending?: L; best?: { title: string; act: string; peak: number; rev: number }; scandal?: L; stats: { k: L; v: number }[]; chains: { id: string; n: number; all: boolean }[]; medals: { id: PathId; tier: number }[] }
-export function chainProgress19(s: GameState): { id: string; n: number; all: boolean }[] {
+export interface Epitaph19 { name: string; y0: number; y1: number; legacy: number; path?: PathId; pathName?: L; ending?: L; best?: { title: string; act: string; peak: number; rev: number }; scandal?: L; stats: { k: L; v: number }[]; chains: { id: string; n: number; all: boolean; me: boolean }[]; medals: { id: PathId; tier: number }[] }
+export function chainProgress19(s: GameState): { id: string; n: number; all: boolean; me: boolean }[] {
   const ch = ux19(s).ch;
-  return CHAINS19.map((c) => ({ id: c.id, n: (ch[c.id] ?? []).length, all: (ch[c.id] ?? []).length >= c.steps.length }));
+  const me = ux19(s).me ?? {};
+  return CHAINS19.map((c) => ({ id: c.id, n: (ch[c.id] ?? []).length, all: (ch[c.id] ?? []).length >= c.steps.length, me: !!me[c.id] }));
 }
 export function epitaph19(s: GameState): Epitaph19 {
   const rels = Object.values(s.releases).filter((r) => r.owner === 'player');
@@ -317,13 +321,18 @@ export function epitaph19(s: GameState): Epitaph19 {
   };
 }
 
+/** O fato envolve você (selo, seus atos ou integrantes deles)? */
+const mineFact = (s: GameState, f: Fact): boolean => f.actors.some((a) => a === 'player' || s.acts[a]?.owner === 'player' || (a.startsWith('p:') && playerActs(s).some((id) => s.acts[id]?.members.includes(a.slice(2)))));
+// cadeia = elos EM ORDEM (o elo i só conta depois do i−1); `me` marca se algum elo envolveu você (exigido para a conquista)
 for (const c of CHAINS19) c.steps.forEach((st, i) => {
   for (const k0 of st.k) {
     const [kind, tag] = k0.split('#');
     onFact(kind, (s, f) => {
       if (tag && !f.tags.includes(tag)) return;
-      const arr = (ux19(s).ch[c.id] ??= []);
-      if (!arr.includes(i)) arr.push(i);
+      const U = ux19(s), arr = (U.ch[c.id] ??= []);
+      if (arr.includes(i) || (i > 0 && !arr.includes(i - 1))) return;
+      arr.push(i);
+      if (mineFact(s, f)) (U.me ??= {})[c.id] = 1;
     }, `ux19:chain:${c.id}:${k0}`);
   }
 });
