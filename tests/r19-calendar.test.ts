@@ -16,7 +16,9 @@ import { l } from '../src/data/world';
 import { playerActs } from '../src/sim/util';
 
 describe('r19 calendar19 + notify19', () => {
-  const { state: s } = simulatePlayer(defaultConfig('r19cal', { startYear: 1975 }), 1, 'balanced');
+  // meio ano já enche o calendário; BALANCE_FULL=1 joga o ano inteiro (como antes)
+  const YEARS = process.env.BALANCE_FULL ? 1 : 0.5;
+  const { state: s } = simulatePlayer(defaultConfig('r19cal', { startYear: 1975 }), YEARS, 'balanced');
 
   it('todos os sistemas com data registram provedores e o calendário ordena e recorta a janela', () => {
     for (const id of ['decide18', 'inbox', 'contracts', 'artist18', 'release', 'live', 'campus18', 'court', 'loans', 'awards', 'note19']) expect(deadlineProviders19()).toContain(id);
@@ -79,7 +81,7 @@ describe('r19 calendar19 + notify19', () => {
 
   it('artista: no máximo 3 ofertas de selo abertas', async () => {
     const { a18 } = await import('../src/sim/sys/artist18');
-    const { state: x } = simulatePlayer(defaultConfig('r19art', { startYear: 1965, role: 'artist' }), 1, 'balanced');
+    const { state: x } = simulatePlayer(defaultConfig('r19art', { startYear: 1965, role: 'artist' }), YEARS, 'balanced');
     const open = a18(x).offers.filter((o) => o.st === 'open' && o.until >= x.week && (o.k === 'record' || o.k === 'dist' || o.k === 'dev'));
     expect(open.length).toBeLessThanOrEqual(3);
   });

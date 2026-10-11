@@ -361,7 +361,7 @@ registerMod('appeal', 'world18', (s, value, ctx) => {
   const X = idx(s);
   if (!X.radio.length && !X.critic.length) return null;
   const fam = familyOf(act.genre);
-  const mine = rel.owner === 'player' || playerActs(s).includes(act.id);
+  const mine = rel.owner === 'player' || (act.owner === 'player' && act.status !== 'retired' && act.status !== 'split'); // = playerActs(s).includes(act.id), sem varrer s.acts
   let v = 1;
   let who = '';
   for (const [pid, c] of X.radio) {

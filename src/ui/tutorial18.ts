@@ -143,6 +143,8 @@ function steps18(area: string): Step18[] {
 
 let tourEl: HTMLElement | null = null, tourArea = '', tourT0 = 0;
 /** Fecha o tour; só conta como visto se a pessoa respondeu (ou ele ficou na tela > 2 s) — um re-render não "gasta" o tour. */
+/** r19 (world19): fecha o tour aberto (ex.: quando um popup do mapa abre por cima). */
+export const endTour18 = (): void => endTour(true);
 function endTour(ack = false): void {
   if (tourEl && (ack || Date.now() - tourT0 > 2000)) { tp18().tours[tourArea] = 1; savePrefs(); }
   tourEl?.remove(); tourEl = null; document.removeEventListener('keydown', tourKey);

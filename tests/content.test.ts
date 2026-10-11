@@ -127,10 +127,12 @@ describe('eventos extras', () => {
   });
 });
 
+// 30 anos por início é longo (≈ 100 s de CPU): por padrão 4 anos; BALANCE_FULL=1 joga os 30
+const LONG_YEARS = process.env.BALANCE_FULL ? 30 : 4;
 describe('simulação longa com o conteúdo novo', () => {
   for (const [seed, start] of [['content-a', 1920], ['content-b', 1960], ['content-c', 2005]] as const) {
-    it(`30 anos sem exceção e caixa fechando (${seed}, ${start})`, () => {
-      const { state } = simulate(defaultConfig(seed, { startYear: start, storyteller: 'acaso' }), 30);
+    it(`${LONG_YEARS} anos sem exceção e caixa fechando (${seed}, ${start})`, () => {
+      const { state } = simulate(defaultConfig(seed, { startYear: start, storyteller: 'acaso' }), LONG_YEARS);
       expect(state.player.cash).toBe(state.player.initialCash + state.player.totalPosted);
     }, 300000);
   }

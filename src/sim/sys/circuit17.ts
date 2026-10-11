@@ -66,7 +66,8 @@ function warMonth(s: GameState, r: Rng): void {
   }
   // festival preterido não convida mais seus atos por 2 anos
   const f0 = fest8(s);
-  f0.invites = f0.invites.filter((x) => !(snubbed(s, x.fi) && s.acts[x.actId]?.owner === 'player'));
+  // desempenho: sem festival preterido vigente o filtro não tira nada (a lista de convites é longa)
+  if (Object.values(st.snub).some((y) => y >= s.year)) f0.invites = f0.invites.filter((x) => !(snubbed(s, x.fi) && s.acts[x.actId]?.owner === 'player'));
   if (s.month !== 2 || st.wars.length) return;
   const star = Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand && a.fame >= 60 && (a.status === 'active' || a.status === 'emerging')).sort((a, b) => b.fame - a.fame)[0];
   if (!star) return;

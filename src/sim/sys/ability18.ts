@@ -403,8 +403,9 @@ function stepPerson(s: GameState, p: Person, a: Act, dt: number, my: boolean, be
     const colleague = (best[k] ?? 0) >= cur + 15 ? 0.3 : 0;
     const prodM = prodCA >= cur * 2 + 30 && (k === 'prod' || k === 'comp') ? 0.4 : 0;
     const mentM = mentor && mentor.skills[k] >= cur + 10 ? 0.6 : 0;
-    const parts: [string, number][] = [['nat', base], ['show', base * live * 1.2], ['rec', base * studio * 1.2], ['train', base * tr], ['mentor', base * (colleague + prodM + mentM)]];
-    let gain = parts.reduce((t, x) => t + x[1], 0);
+    // desempenho: as parcelas só viram lista (explicação) nos atos do jogador; a soma é a mesma, na mesma ordem
+    const p0 = base, p1 = base * live * 1.2, p2 = base * studio * 1.2, p3 = base * tr, p4 = base * (colleague + prodM + mentM);
+    let gain = 0 + p0 + p1 + p2 + p3 + p4;
     const room = Math.max(0, cap - cur);
     const scale = gain > room ? room / gain : 1;
     gain *= scale;
@@ -414,7 +415,7 @@ function stepPerson(s: GameState, p: Person, a: Act, dt: number, my: boolean, be
     if (sick && (k === 'stage' || k === 'voice' || k === 'instr')) { loss += 0.08 * dt; add('health', k, -0.08 * dt); }
     if (p.health === 'voice_strain' && k === 'voice') { loss += 0.15 * dt; add('health', k, -0.15 * dt); }
     if (long > 65 && (k === 'comp' || k === 'lyr' || k === 'stage')) { loss += 0.05 * dt; add('stress', k, -0.05 * dt); }
-    for (const [c, v] of parts) add(c, k, v * scale);
+    if (my) { add('nat', k, p0 * scale); add('show', k, p1 * scale); add('rec', k, p2 * scale); add('train', k, p3 * scale); add('mentor', k, p4 * scale); }
     p.skills[k] = clamp(cur + gain - loss, 3, 99);
   }
   // modo Vida real exata: o auge do artista real segue a época real da carreira (estreia + 4..10 anos)
