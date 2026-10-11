@@ -1,7 +1,8 @@
 // Descoberta, A&R e scouting em cinco graus (GDD §10).
 
+import { matchesReq20, signalEligible20, spawnPlanForReq20 } from './scout20';
 import { clamp, type Rng } from '../core/rng';
-import { CITIES, cityById, familyOf, l, type L } from '../data/world';
+import { cityById, l, type L } from '../data/world';
 import { actTalent } from './people';
 import type { Act, GameState, Knowledge } from './types';
 import { addSignal, spawnProceduralAct, talentScore } from './worldgen';
@@ -164,7 +165,7 @@ export function monthlySignals(s: GameState, r: Rng): void {
   const homeMarket = cityById[s.config.homeCity]?.market;
   const sources = SOURCES.filter((x) => (!x.from || hasTech(s, x.from)) && (!x.fromYear || s.year >= x.fromYear));
   const n = Math.max(0, 1 + Math.min(3, staffCount(s, 'anr')) + (r.chance(0.5) ? 1 : 0) + Math.round(perk(s, 'signals')));
-  const candidates = Object.values(s.acts).filter((a) => !a.owner && (a.status === 'emerging' || a.status === 'active') && !s.knowledge[a.id]);
+  const candidates = Object.values(s.acts).filter((a) => signalEligible20(s, a)); // r20 (B9): elegibilidade central
   for (let i = 0; i < n; i++) {
     const src = r.pick(sources);
     const act = r.weighted(candidates, (a) => {
@@ -180,25 +181,18 @@ export function monthlySignals(s: GameState, r: Rng): void {
   }
   // pedidos de scout: formulário estruturado, sem texto livre (GDD §10)
   for (const req of s.scoutRequests.splice(0)) {
-    const matches = Object.values(s.acts).filter((a) => {
-      if (a.owner || s.knowledge[a.id]) return false;
-      if (req.genreFamily !== 'any' && familyOf(a.genre) !== req.genreFamily) return false;
-      if (req.market !== 'any' && cityById[a.city]?.market !== req.market) return false;
-      if (req.level === 'beginner' && a.fame > 8) return false;
-      if (req.level === 'promising' && (a.fame < 3 || a.fame > 25)) return false;
-      if (req.level === 'established' && a.fame < 15) return false;
-      if (req.role === 'band' && a.members.length < 2) return false;
-      if (req.role === 'solo' && a.members.length !== 1) return false;
-      return true;
-    });
+    const matches = Object.values(s.acts).filter((a) => signalEligible20(s, a) && matchesReq20(a, req));
     r.shuffle(matches);
     let found = matches.slice(0, r.int(1, 3));
     if (!found.length) {
-      const city = req.market !== 'any' ? r.pick(CITIES.filter((c) => c.market === req.market)).id : undefined;
-      const genre = req.genreFamily !== 'any' ? r.pick(Object.keys(s.genrePop).filter((g) => familyOf(g) === req.genreFamily && (s.genrePop[g] ?? 0) > 0.3)) : undefined;
-      const act = spawnProceduralAct(s, r, { city, genre });
-      if (req.role === 'band' && act.members.length < 2) act.members = act.members.slice(0, 1);
-      found = [act];
+      // r20 (B10): sem relaxar filtros — um ato novo que obedece ao pedido, ou "sem resultado"
+      const plan = spawnPlanForReq20(s, r, req);
+      const act = plan ? spawnProceduralAct(s, r, plan) : undefined;
+      found = act && matchesReq20(act, req) ? [act] : [];
+    }
+    if (!found.length) {
+      notify(s, l('Scouts voltaram sem nomes: ninguém atende a todos os filtros do pedido agora.', 'Scouts came back empty-handed: nobody matches every filter of the request right now.'), 'info');
+      continue;
     }
     for (const a of found) addSignal(s, r, a.id, 'referral');
     notify(s, fmtL(l('Scouts trouxeram {n} nome(s) do pedido.', 'Scouts brought back {n} name(s) from your request.'), { n: found.length }), 'info');
@@ -207,7 +201,7 @@ export function monthlySignals(s: GameState, r: Rng): void {
   for (const k of Object.values(s.knowledge)) {
     if (s.acts[k.actId]?.owner === 'player') continue;
     if (s.week - k.updatedWeek > 52 && k.degree > 1 && r.chance(0.08)) k.degree -= 1;
-    if (!s.acts[k.actId] || s.acts[k.actId].status === 'retired') delete s.knowledge[k.actId];
+    if (!s.acts[k.actId] || s.acts[k.actId].status === 'retired' || s.acts[k.actId].status === 'split') delete s.knowledge[k.actId]; // r20 (B9): fora do radar quem não é contratável
   }
 }
 

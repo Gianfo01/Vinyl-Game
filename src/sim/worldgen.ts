@@ -1,5 +1,6 @@
 // Gerador de mundo em camadas (GDD §5): L0 seed → L1 mundo → L2 elenco → L3 mercado → L5 jogador.
 
+import { genreAvailable20 } from './genretime20';
 import { normalizeHistory } from './history15';
 import './sys';
 import { emptyExt, ensureExt } from './ext';
@@ -146,10 +147,10 @@ function makeLabel(s: GameState, r: Rng, def: { id: string; name: string; family
 
 export function aliveGenres(s: GameState, year = s.year): string[] {
   // GENRES é global: gêneros de movimento de outra partida aberta na mesma sessão não contam
-  return GENRES.filter((g) => g.born <= year && (!g.id.startsWith('mv_') || (s.movements ?? []).some((m) => m.genreId === g.id))).map((g) => g.id);
+  return GENRES.filter((g) => genreAvailable20(s, g.id, year)).map((g) => g.id); // r20 (B30): predicado temporal comum
 }
 
-export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; genre?: string; potential?: number; formedYear?: number; fame?: number } = {}): Act {
+export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; genre?: string; potential?: number; formedYear?: number; fame?: number; members?: number } = {}): Act {
   const year = opts.formedYear ?? s.year;
   const city = opts.city ?? r.weighted(CITIES, (c) => MARKETS.find((m) => m.id === c.market)!.size(year) * (c.w ?? 1))!.id; // r19: cidades novas pesam 0,4
   const cityDef = cityById[city];
@@ -162,7 +163,7 @@ export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; 
   }
   const fam = familyOf(genre);
   const soloChance = ['pop', 'hiphop', 'country_folk', 'latin', 'brazil', 'europe', 'sacred'].includes(fam) ? 0.6 : 0.35;
-  const members = r.chance(soloChance) ? 1 : r.chance(0.2) ? 2 : r.int(3, 5);
+  const members = opts.members ?? (r.chance(soloChance) ? 1 : r.chance(0.2) ? 2 : r.int(3, 5)); // r20 (B10): formato pedido
   // distribuição de potencial: maioria média, cauda rara de gênios
   let potential = opts.potential ?? clamp(r.normal(52, 14), 15, 92);
   if (hasMutator(s, 'rare_talent')) potential = Math.min(potential, r.chance(0.97) ? 78 : 92);

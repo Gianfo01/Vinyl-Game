@@ -4,6 +4,7 @@
 
 import { CTXFX19, DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
 import { exitMember20 } from './members20';
+import { genreAvailable20 } from './genretime20';
 import { clamp, type Rng } from '../core/rng';
 import { toReal } from '../core/money';
 import { FESTIVALS, MEDIA } from '../data/catalog';
@@ -240,7 +241,7 @@ export const EVENTS: EventDef[] = [
       const a = pickMine(s, r, (x) => !x.playerBand && (s.genrePop[x.genre] ?? 1) < 0.7);
       if (!a) return null;
       const fam = familyOf(a.genre);
-      const options = Object.entries(s.genrePop).filter(([g, v]) => v > 1.1 && familyOf(g) !== fam && s.year >= 1920).map(([g]) => g);
+      const options = Object.entries(s.genrePop).filter(([g, v]) => v > 1.1 && familyOf(g) !== fam && s.year >= 1920 && genreAvailable20(s, g)).map(([g]) => g); // r20 (B30): só gênero já nascido
       if (!options.length) return null;
       return { act: a.id, genre: r.pick(options) };
     },

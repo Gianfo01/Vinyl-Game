@@ -1,5 +1,6 @@
 // Contratos, negociação, recoupment e promessas (GDD §11).
 
+import { scoutEligible20 } from './scout20';
 import { clamp, type Rng } from '../core/rng';
 import { toReal } from '../core/money';
 import { l, type L } from '../data/world';
@@ -152,6 +153,7 @@ export function careerSlotsUsed(s: GameState): number {
 export function makeOffer(s: GameState, o: Omit<Offer, 'id' | 'week' | 'status'>): Offer | null {
   const act = s.acts[o.actId];
   if (!act || act.owner === 'player') return null;
+  if (!scoutEligible20(s, act).ok) return null; // r20 (B9): proposta só para quem é contratável
   if (s.offers.some((x) => x.actId === o.actId && x.status === 'pending')) return null;
   if (useMeeting(s)) return null; // rodada 14: cada oferta é uma reunião (cota da equipe, depois seu tempo)
   const offer: Offer = { ...o, id: nextId(s, 'o'), week: s.week, status: 'pending' };
@@ -178,6 +180,7 @@ export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer[
     o.note = act?.owner ? s.labels[act.owner]?.name : undefined;
     return 'sniped';
   }
+  if (!scoutEligible20(s, act).ok) { o.status = 'rejected'; o.thinkUntil = undefined; o.note = scoutEligible20(s, act).why?.pt; return 'rejected'; } // r20 (B9): aposentou/acabou no meio da negociação
   const ev = evaluateOffer(s, act, o);
   // rival disputa atos públicos (na mesa, ele só aparece se o artista pedir tempo)
   const rivalBid = !live && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
@@ -274,6 +277,7 @@ export function acceptCounter(s: GameState, offerId: string): boolean {
     o.status = 'sniped';
     return false;
   }
+  if (!scoutEligible20(s, act).ok) return false; // r20 (B9)
   if (s.player.cash < o.advance) return false;
   acceptOffer(s, act, o);
   return true;
@@ -318,6 +322,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): void {
   act.trust = clamp(act.trust + 10 + perk(s, 'trust', act), 0, 100);
   act.cash += o.advance;
   if (act.status === 'emerging' && act.fame > 5) act.status = 'active';
+  if (act.status === 'hiatus') { act.status = 'active'; act.hiatusUntil = undefined; notify(s, fmtL(l('{act} sai do hiato para assinar com você.', '{act} ends their hiatus to sign with you.'), { act: act.name }), 'good'); } // r20 (B9): volta explícita
   post(s, `advance:${act.id}`, -o.advance, 'advances', `Adiantamento ${act.name}`);
   const k = s.knowledge[act.id];
   if (k) k.stage = 'negotiation';
