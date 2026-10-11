@@ -10,6 +10,7 @@ import {
   BB_YEARS18, SUB_FEE18, answerTerm18, bbExpiring18, bbTotal18, canAdmin18, catVal18, claimBB18, claimRate18, courtOdds18, disputeOf18,
   euTerm18, fixConflict18, frozen18, hasSub18, homeMk18, meta18, modShares18, neighRate18, payClearance18, r18, rate18, rerecord18,
   rerecordable18, resolveDispute18, setSoc18, setSub18, socOf18, socOptions18, subCost18, takeAdm18, termWindow18, thirdWork18,
+  admChance18,
 } from '../../sim/sys/rights18';
 import type { GameState, Release, Song } from '../../sim/types';
 import { playerActs } from '../../sim/util';
@@ -232,7 +233,7 @@ function publishing(s: GameState): HTMLElement {
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('Administração: compositores e espólios entregam o catálogo para você registrar, cobrar e reclamar. Sua renda = arrecadado × taxa × identificação ({p} com seus metadados). Clientes mal atendidos não renovam.', 'Administration: songwriters and estates hand you their catalog to register, collect and claim. Your income = collections × fee × identification ({p} with your metadata). Poorly served clients do not renew.'), { p: pc(0.7 + 0.6 * m) })),
     section(t(l('Propostas', 'Offers')), st.admOff.length ? tbl([l('Cliente', 'Client'), l('Arrecadação/ano', 'Collections/yr'), l('Taxa', 'Fee')], st.admOff.map((o) => h('tr', null, h('td', null, o.name), h('td', null, $(o.size)),
-      h('td', null, [0.1, 0.15, 0.2].map((f) => btn(l(`${pc(f)} (${t(l('chance', 'chance'))} ${pc((f <= 0.1 ? 0.95 : f <= 0.15 ? 0.75 : 0.45) + m * 0.1)})`), () => say(takeAdm18(s, o.id, f)))))))) : empty(l('Nenhuma proposta agora (chegam a cada poucos meses).', 'No offers right now (they arrive every few months).'))),
+      h('td', null, [0.1, 0.15, 0.2].map((f) => btn(l(`${pc(f)} (${t(l('chance', 'chance'))} ${pc(admChance18(s, f))})`), () => say(takeAdm18(s, o.id, f)))))))) : empty(l('Nenhuma proposta agora (chegam a cada poucos meses).', 'No offers right now (they arrive every few months).'))),
     section(t(l('Clientes', 'Clients')), st.adm.length ? tbl([l('Cliente', 'Client'), l('Arrecadação/ano', 'Collections/yr'), l('Taxa', 'Fee'), l('Até', 'Until'), l('Satisfação', 'Satisfaction')], st.adm.map((c) => h('tr', null, h('td', null, c.name), h('td', null, $(c.size)), h('td', null, pc(c.fee)), h('td', null, String(c.until)), h('td', { class: c.sat < 50 ? 'bad' : 'good' }, String(Math.round(c.sat)))))) : empty(l('Nenhum cliente.', 'No clients.'))),
   );
 }

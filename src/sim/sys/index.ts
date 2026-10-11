@@ -298,4 +298,6 @@ import './contests19';
 // Rodada 19 (onda 3, T3): pós-vida (espólio como ator, 11.8, arena digital) e endosso de instrumentos/instrumento-ícone.
 import './afterlife19';
 import './gear19';
+// Rodada 19 (onda 5, B): registro de chances das telas de negociação (mostrada = sorteada).
+import './odds19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

@@ -30,9 +30,13 @@ export function forecastBox(fc: Forecast12): HTMLElement {
 /** Previsão para o formulário de festival (lê o formulário na hora do clique). */
 export function festForecast12(s: GameState, fi: number, form: { actId: string; tier: FestTier; fee: number }): HTMLElement {
   const box = h('div');
-  const btn = h('button', { class: 'btn small ghost', onclick: () => box.replaceChildren(form.actId ? forecastBox(forecastFestival(s, fi, form.actId, form.tier, form.fee)) : h('span')) }, ic('chart-up'), ' ', t(l('Ler as chances antes', 'Read the odds first')));
+  const draw = () => box.replaceChildren(form.actId ? forecastBox(forecastFestival(s, fi, form.actId, form.tier, form.fee)) : h('span'));
+  const btn = h('button', { class: 'btn small ghost', onclick: () => { FC12.set(form, draw); draw(); } }, ic('chart-up'), ' ', t(l('Ler as chances antes', 'Read the odds first')));
   return h('div', null, btn, box);
 }
+/** R19: depois de aberta, a previsão acompanha artista, faixa e cachê escolhidos (mesma conta do sorteio: pitchOdds8). */
+const FC12 = new WeakMap<object, () => void>();
+export const refreshForecast12 = (form: object): void => { FC12.get(form)?.(); };
 
 export function debriefCard(s: GameState, d: Debrief12): HTMLElement {
   const col = (title: L, items: L[], cls: string) => h('div', null, h('b', { class: cls }, t(title)), items.length ? h('ul', { class: 'small' }, items.map((x) => h('li', null, t(x)))) : h('p', { class: 'muted small' }, '—'));

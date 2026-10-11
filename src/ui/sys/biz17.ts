@@ -19,6 +19,7 @@ import { SKUS, canSell, demandOf, fightCost, m17, makeBatch, skusNow, toggleFigh
 import { c17, crowdEst, crowdOpen, launchCrowd, pickWar, reunionCands, reunionTerms, stageReunion } from '../../sim/sys/circuit17';
 import { TIX, blitz, blitzCost, cal17, clashOf, dateOfWeek, festWeeks, playerShows, setTix, type Tix } from '../../sim/sys/clash17';
 import { $, N, actLink, pill, rerender, section, toast } from '../common';
+import { RATE19 } from './neg19';
 import { h, select } from '../dom';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
@@ -72,7 +73,7 @@ function afterSale(s: GameState): HTMLElement {
       h('div', { class: 'row wrap' },
         h('input', { type: 'text', placeholder: t(l('Nome', 'Name')), value: fName, oninput: (e: Event) => { fName = (e.target as HTMLInputElement).value; } }),
         select(city, CITIES.filter((c) => c.id).map((c) => ({ value: c.id, label: `${t(c.name)}${refoundBlock(s, c.id).blocked ? ' ⛔' : ''}` })), (v) => { fCity = v; rerender(); }),
-        select(cap, [1, 2, 4, 8, 20].map((k) => ({ value: minRefound(s) * k, label: $(minRefound(s) * k) })), (v) => { fCap = v; }),
+        select(cap, [1, 2, 4, 8, 20].map((k) => ({ value: minRefound(s) * k, label: $(minRefound(s) * k) })), (v) => { fCap = v; rerender(); }),
         h('button', { class: 'btn small primary', onclick: () => res(refound(s, fName, city, cap, nb.blocked), l('Novo selo aberto.', 'New label founded.')) }, nb.blocked ? t(l('Fundar pagando a multa ({v})', 'Found paying the penalty ({v})'), { v: $(nb.buyout) }) : t(l('Fundar', 'Found'))))),
     section(t(l('2. Comprar um selo existente', '2. Buy an existing label')), h('div', null, buyableLabels(s).map((lb) => h('div', { class: 'row wrap' },
       `${lb.name} (${t(cityById[lb.city]?.name ?? l(lb.city))}) — ${lb.roster.length} ${t(l('artistas', 'acts'))} · ${$(buyPrice(s, lb))}`, ' ',
@@ -221,7 +222,6 @@ const activeDealMerch = (s: GameState, id: string) => !!activeDeal(s, id)?.scope
 
 // ================================================================== circuito
 
-let cGoal = 0;
 function circuitTab(s: GameState): HTMLElement {
   const st = c17(s);
   const reu = reunionCands(s).sort((a, b) => b.fame - a.fame).slice(0, 6);
@@ -239,9 +239,9 @@ function circuitTab(s: GameState): HTMLElement {
       h('div', { class: 'row wrap' }, actLink(s, a.id), ` · ${t(l('garantia', 'guarantee'))} ${$(T.cost)} · ${t(l('bilheteria esperada', 'expected gross'))} ~${$(T.est)} · ${t(l('chance de topar', 'odds they agree'))} ${pct(T.p)}`),
       ul(T.why.map(([w, v]) => `${t(w)}: ${sg(v)}`)),
       h('button', { class: 'btn small', onclick: () => say(stageReunion(s, a.id)) }, t(l('Bancar a reunião', 'Fund the reunion')))); })) : h('p', { class: 'muted small' }, t(l('Ninguém separado há 8+ anos com fama suficiente.', 'No one split for 8+ years with enough fame.')))),
-    section(t(l('Financiamento coletivo', 'Crowdfunding')), crowdActs.length ? h('div', null, crowdActs.map((a) => { const e = crowdEst(s, a); const g = cGoal || Math.round(e * 0.7); return h('div', { class: 'row wrap' },
+    section(t(l('Financiamento coletivo', 'Crowdfunding')), crowdActs.length ? h('div', null, crowdActs.map((a) => { const e = crowdEst(s, a); const g = RATE19.crowd[a.id] || Math.round(e * 0.7); return h('div', { class: 'row wrap' },
       `${a.name}: ${t(l('estimativa', 'estimate'))} ~${$(e)} · ${t(l('meta', 'goal'))}`, ' ',
-      select(g, [0.5, 0.7, 0.9, 1.1].map((k) => ({ value: Math.round(e * k), label: $(Math.round(e * k)) })), (v) => { cGoal = v; }),
+      select(g, [0.5, 0.7, 0.9, 1.1].map((k) => ({ value: Math.round(e * k), label: $(Math.round(e * k)) })), (v) => { RATE19.crowd[a.id] = v; rerender(); }),
       h('button', { class: 'btn tiny', onclick: () => say(launchCrowd(s, a.id, g)) }, t(l('Lançar campanha', 'Launch campaign')))); }),
       h('p', { class: 'small muted' }, t(l('Tudo ou nada. Atingiu a meta = promessa aos fãs: um disco (não single) em 12 meses. Não cumprir vira escândalo.', 'All or nothing. Hitting the goal = a promise to fans: a record (not a single) within 12 months. Breaking it becomes a scandal.'))),
       ul(st.crowd.slice(-5).map((c) => `${s.acts[c.act]?.name ?? ''}: ${$(c.raised)} · ${c.done === 'ok' ? t(l('entregue', 'delivered')) : c.done === 'broken' ? t(l('promessa quebrada', 'promise broken')) : t(l('prazo {y}', 'due {y}'), { y: dateOfWeek(s, c.due).year })}`))) : h('p', { class: 'muted small' }, t(l('Ainda não existe (2009+; 2003+ no jazz).', 'Not available yet (2009+; 2003+ for jazz).')))),
