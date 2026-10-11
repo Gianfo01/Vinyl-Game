@@ -146,3 +146,17 @@ export function factMatrix19(emitted: string[], readers: Record<string, string[]
   }));
 }
 export const consumed19 = (r: FactRow19): boolean => r.listeners.length + r.wildcard.length + r.readers.length > 0 || r.chron;
+
+/** R19 T2 money-b (sys/moneyb19.ts): mercado de contratos, empresário total, disco de cumprimento, briga de gestão. */
+export const MONEYB19: Record<string, { sys: string; to: string[] }> = {
+  contract_sold: { sys: 'moneyb19', to: ['moneyb19:sold (reputação com artistas, confiança do elenco, calor do comprador, diário, manchete)'] },
+  sale_regret: { sys: 'moneyb19', to: ['moneyb19:regret (reputação comercial, diário "arrependimento", manchete)'] },
+  release_clause: { sys: 'moneyb19', to: ['moneyb19:clause (calor da rivalidade, reputação, manchete)'] },
+  artist_loan: { sys: 'moneyb19', to: ['moneyb19:loan (estresse do ato emprestado, calor se o rival fica com ele)'] },
+  total_manager: { sys: 'moneyb19', to: ['moneyb19:mgr (embalo e confiança do ato, Ligações do mês)'] },
+  manager_exposed: { sys: 'moneyb19', to: ['moneyb19:exposed (scandal17 dinheiro, manchete)'] },
+  junk_record: { sys: 'moneyb19', to: ['moneyb19:junk (moral da banda, manchete)'] },
+  name_protest: { sys: 'moneyb19', to: ['moneyb19:name (fama −, núcleo de fãs +, manchete)'] },
+  mgmt_takeover: { sys: 'moneyb19', to: ['moneyb19:takeover (moral/estresse da minoria, manchete)'] },
+  mgmt_split: { sys: 'moneyb19', to: ['moneyb19:split (feud18 entre a banda e a dissidência, manchete)'] },
+};
