@@ -10,7 +10,7 @@ import { h } from '../dom';
 import { chips, stat } from '../vis';
 import { registerTab } from '../registry';
 import { nameSvg20 } from '../ux20';
-import { chartTable20 } from './ui20';
+import { chartTable20 } from '../st20';
 
 const MON: L[] = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'].map((m, i) => l(m, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]));
 const mName = (mi: number) => `${t(MON[mi % 12])}/${String(Math.floor(mi / 12)).slice(2)}`;

@@ -29,7 +29,7 @@ import { chips, ic, setTab } from '../vis';
 import { explainBox, goToProjects } from './project8';
 import { applyNewBlend, newBlendSelect, p13Panel } from './project13';
 import { phaseReview20 } from './review20';
-import { empty20 } from './ui20';
+import { empty20 } from '../st20';
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };

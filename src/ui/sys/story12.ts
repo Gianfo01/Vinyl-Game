@@ -13,7 +13,7 @@ import { h } from '../dom';
 import { openScene, registerTab } from '../registry';
 import { chips, stat } from '../vis';
 import { nameSvg20 } from '../ux20';
-import { chartTable20 } from './ui20';
+import { chartTable20 } from '../st20';
 
 const TONE: Record<Tone, [L, string, string]> = {
   peak: [l('Picos', 'Peaks'), '▲', 'good'], crisis: [l('Crises', 'Crises'), '▼', 'bad'], release: [l('Lançamentos', 'Releases'), '●', ''],

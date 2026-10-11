@@ -13,7 +13,7 @@ import type { Contract, GameState, Offer, RightsTerms } from '../sim/types';
 import { rngOf, yearOfWeek } from '../sim/util';
 import { $, actLink, kv, pill, releaseLink, rerender, toast } from './common';
 import { h, select } from './dom';
-import { status20 } from './sys/ui20';
+import { status20 } from './st20';
 
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); };

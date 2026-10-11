@@ -16,7 +16,7 @@ import { $, N, rerender, toast } from '../common';
 import { h } from '../dom';
 import { review20 } from '../ux20';
 import { goToProjects } from './project8';
-import { status20 } from './ui20';
+import { status20 } from '../st20';
 
 interface Opt20 { name: L; cost: number; weeks: number | null; aud?: L; risk: L; run: () => L | null; ok: L; primary?: boolean; blocked?: L | null }
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
