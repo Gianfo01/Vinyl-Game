@@ -32,7 +32,8 @@ describe('r17 agenda', () => {
     // à frente custa 2 e rende mais; delegar exige diretor
     expect(setInv(s, 'festival', 'deleg').ok).toBe(false);
     setInv(s, 'label', 'lead');
-    expect(careerQ(s, 'label').f).toBeGreaterThan(1.1);
+    // r19 (onda 5 C): à frente rende menos quando você toca outras frentes (aqui 3) — continua acima de só acompanhar
+    expect(careerQ(s, 'label').f).toBeGreaterThan(1.03);
     expect(perk(s, 'songQ')).toBeGreaterThan(0.3);
     expect(energyLeft(s)).toBe(1 + e0);
   });
