@@ -20,7 +20,7 @@ import { careerSlotsUsed } from '../../sim/contracts';
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 let newCity = '';
 
-function hqBlock(s: GameState): HTMLElement {
+export function hqBlock(s: GameState): HTMLElement {
   const st = hq6(s);
   const up = upgradeCost(s);
   const blk = hqBlocker(s);
@@ -37,7 +37,7 @@ function hqBlock(s: GameState): HTMLElement {
   );
 }
 
-function deptBlock(s: GameState): HTMLElement {
+export function deptBlock(s: GameState): HTMLElement {
   const st = hq6(s);
   return h('div', { class: 'mg-depts' }, DEPTS.map((d) => {
     const lv = st.depts[d.id] ?? 0;
@@ -54,7 +54,7 @@ function deptBlock(s: GameState): HTMLElement {
   }));
 }
 
-function branchBlock(s: GameState): HTMLElement {
+export function branchBlock(s: GameState): HTMLElement {
   const st = hq6(s);
   const acts = playerActs(s);
   const options = [...CITIES].filter((c) => c.id !== s.config.homeCity && !s.branches.some((b) => b.city === c.id)).sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
@@ -89,7 +89,7 @@ function branchBlock(s: GameState): HTMLElement {
   );
 }
 
-function marketsBlock(s: GameState): HTMLElement {
+export function marketsBlock(s: GameState): HTMLElement {
   return h('ul', { class: 'mg-markets' }, MARKETS.map((m) => h('li', null, t(m.name), ' ',
     s.player.territories.includes(m.id) ? pill('✓', 'good') : h('button', { class: 'btn small', onclick: () => say(openTerritory(s, m.id), l('Mercado aberto.', 'Market opened.')) }, `${t(S.openMarket)} ${$(territoryCost(s, m.id))}`))));
 }
