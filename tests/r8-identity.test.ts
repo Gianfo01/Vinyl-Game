@@ -132,6 +132,7 @@ describe('perfis do selo emergem das decisões', () => {
       return closed && open;
     };
     s.player.territories = [home, foreignM as Release['territories'][number]];
+    // dev: o ganho de confiança é medido contra o mesmo selo sem o perfil (traços sorteados do dono — ex.: Ardiloso, Asceta — somam por cima)
     const kinds: Record<CoreProfileId, { opp: boolean; cost: boolean; reaction: boolean }> = {
       hits: {
         opp: oppOpen('hits') && ratio('hits', appeal(newRel)) > 1.05,
@@ -154,7 +155,7 @@ describe('perfis do selo emergem das decisões', () => {
         reaction: offer('export', act, 'status') > 0 && (forceProfile(s, 'export'), (profileOfferEffect(s, local)?.score ?? 0) < 0) && (forceProfile(s, null), true),
       },
       dev: {
-        opp: oppOpen('dev') && (() => { const small = anyAct(s, (a) => a.fame < 10); forceProfile(s, 'dev'); const v = perk(s, 'songQ', small) > 1 && perk(s, 'trust', small) > 4; forceProfile(s, null); return v; })(),
+        opp: oppOpen('dev') && (() => { const small = anyAct(s, (a) => a.fame < 10); forceProfile(s, null); const t0 = perk(s, 'trust', small); forceProfile(s, 'dev'); const v = perk(s, 'songQ', small) > 1 && perk(s, 'trust', small) - t0 > 4; forceProfile(s, null); return v; })(),
         cost: (() => { const f = act.fame; act.fame = 60; const v = offer('dev', act, 'money'); act.fame = f; return v < 0; })(),
         reaction: diff('dev', () => pressReaction(s, fakeRel(s, anyAct(s, (a) => a.releases.length === 0).id))) > 0 && diff('dev', () => retentionBonus(s, act)) > 0,
       },
