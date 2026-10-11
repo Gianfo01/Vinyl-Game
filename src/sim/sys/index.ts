@@ -299,4 +299,5 @@ import './contests19';
 import './afterlife19';
 import './gear19';
 import './bandpay19'; // r19 onda 4: divisão do lucro da banda (carreira de artista)
+import './sat19'; // r19 onda 4: reputação com retorno decrescente perto do topo
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

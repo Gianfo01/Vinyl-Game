@@ -88,15 +88,19 @@ export function rosterTerm19(s: GameState, a: Act): number {
 
 export interface Val17 { total: number; cat: number; mult: number; roster: number; prestige: number; cash: number; debt: number; why: [L, number][]; profit?: number; margin?: number }
 /** r19 onda 4: margem operacional dos últimos 12 meses fechados (DRE do ledger18). null = histórico curto (< 3 meses). */
-export function margin19(s: GameState): { rev: number; op: number; n: number; margin: number } | null {
+export function margin19(s: GameState): { rev: number; op: number; n: number; margin: number; growth: number } | null {
   const f = fin18(s), mi = mIdx18(s);
-  let rev = 0, op = 0, n = 0;
+  let rev = 0, op = 0, n = 0, prev = 0, np = 0;
   for (let k = mi - 12; k < mi; k++) { const o = f.m[k]; if (!o) continue; n++; rev += sumP18(o, 'rev:'); op += opProfit18(o); }
+  for (let k = mi - 24; k < mi - 12; k++) { const o = f.m[k]; if (!o) continue; np++; prev += sumP18(o, 'rev:'); }
   if (n < 3 || rev <= 0) return null;
-  return { rev: rev * 12 / n, op: op * 12 / n, n, margin: op / rev };
+  // crescimento da receita contra os 12 meses anteriores (só com um ano inteiro de comparação)
+  const growth = np >= 12 && prev > 0 ? clamp((rev * 12 / n) / prev - 1, -0.5, 1) : 0;
+  return { rev: rev * 12 / n, op: op * 12 / n, n, margin: op / rev, growth };
 }
-/** Fator do comprador sobre catálogo + elenco pela margem: empate ≈ 0,6×; 25% de margem ≈ 1×; prejuízo pesado ≈ 0,35×. */
-export const marginFactor19 = (m: number): number => clamp(0.6 + 1.6 * m, 0.35, 1.15);
+/** Fator do comprador sobre catálogo + elenco: margem (empate ≈ 0,6×; 25% ≈ 1×; prejuízo pesado ≈ 0,35×) e crescimento
+ *  (comprador paga por crescer: +50% de receita ≈ +0,25×). */
+export const marginFactor19 = (m: number, g = 0): number => clamp(0.6 + 1.6 * m + 0.5 * clamp(g, -0.3, 0.6), 0.35, 1.3);
 export function valuation17(s: GameState): Val17 {
   const rels = Object.values(s.releases).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand);
   const catInc = rels.reduce((t, r) => t + relIncome(s, r.id) * netShare19(s, r.actId), 0);
@@ -110,7 +114,7 @@ export function valuation17(s: GameState): Val17 {
   // r19 onda 4: componente de lucro — quem compra paga pelo que sobra, não pelo faturamento. Um selo no zero a zero não vale
   // 2–3× a receita: catálogo + elenco são ajustados pela margem operacional dos últimos 12 meses.
   const mg = margin19(s);
-  const profit = mg ? Math.round((cat + roster) * (marginFactor19(mg.margin) - 1)) : 0;
+  const profit = mg ? Math.round((cat + roster) * (marginFactor19(mg.margin, mg.growth) - 1)) : 0;
   const cash = s.player.cash;
   const debt = s.player.loans.reduce((t, x) => t + x.balance, 0) + (s.creditors ?? []).reduce((t, c) => t + Math.max(0, c.owed), 0);
   const wc = arTotal18(s) - apTotal18(s); // r18: capital de giro (a receber − royalties a pagar)
@@ -118,7 +122,7 @@ export function valuation17(s: GameState): Val17 {
   return { total, cat, mult: em.m, roster, prestige, cash, debt, profit, margin: mg?.margin, why: [
     [fmtL(l('Catálogo: {n} lançamentos × {m}× ({w}; sobre a fatia líquida do selo, sem royalties e distribuição; disco com menos de 2 anos conta pela metade — o comprador desconta o pico de lançamento)', 'Catalog: {n} releases × {m}× ({w}; on the label\'s net share, after royalties and distribution; records under 2 years old count half — buyers discount the launch spike)'), { n: rels.length, m: Math.round(em.m * 10) / 10, w: em.why }), cat],
     [fmtL(l('Elenco: {n} artistas (fama, até ~3 anos do que cada um rende ao selo; contrato com menos de 1 ano vale menos)', 'Roster: {n} acts (fame, up to ~3 years of what each earns the label; under 1 year of contract left is worth less)'), { n: mineActs(s).length }), roster],
-    ...(mg ? [[fmtL(l('Lucro: margem operacional de {p}% nos últimos {n} meses (lucro anual ~{v}) — o comprador paga ×{f} sobre catálogo + elenco', 'Profit: {p}% operating margin over the last {n} months (~{v} a year) — the buyer pays ×{f} on catalog + roster'), { p: Math.round(mg.margin * 100), n: mg.n, v: `$${Math.round(mg.op / 100).toLocaleString('en-US')}`, f: Math.round(marginFactor19(mg.margin) * 100) / 100 }), profit] as [L, number]] : []),
+    ...(mg ? [[fmtL(l('Lucro: margem operacional de {p}% nos últimos {n} meses (lucro anual ~{v}), receita {g}% contra o ano anterior — o comprador paga ×{f} sobre catálogo + elenco', 'Profit: {p}% operating margin over the last {n} months (~{v} a year), revenue {g}% vs the year before — the buyer pays ×{f} on catalog + roster'), { p: Math.round(mg.margin * 100), n: mg.n, v: `$${Math.round(mg.op / 100).toLocaleString('en-US')}`, g: Math.round(mg.growth * 100), f: Math.round(marginFactor19(mg.margin, mg.growth) * 100) / 100 }), profit] as [L, number]] : []),
     [l('Prestígio: prêmios, nº 1, platinas (ágio de até 50% de catálogo + elenco)', 'Prestige: awards, No. 1s, platinum (premium up to 50% of catalog + roster)'), prestige],
     [l('Caixa (vai junto)', 'Cash (goes with it)'), cash],
     [l('A receber − royalties a pagar', 'Receivables − royalties payable'), wc],
