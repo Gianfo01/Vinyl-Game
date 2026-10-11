@@ -13,7 +13,7 @@ import { rngOf } from '../../sim/util';
 import { CAP_GAINS, bidNet, buyLabel17, buyPrice, buyableLabels, cutList, hasLabel, makeBids, minRefound, refound, refoundBlock, relIncome, sale17, sellLabel, sellMaster17, valuation17, MARKET_NAME } from '../../sim/sys/sale17';
 import { OUTLETS, editable, estimate, feeOf, out17, outletsNow, reachOf, setPreset, toggleOutlet, upfrontOf, type OutId } from '../../sim/sys/outlets17';
 import { POLICY, PRICE, VENUES17, buyVenue17, marketVenues, monthEst17, sellValue, sellVenue17, setVenue17, v17, vdef, venuePrice, type Policy, type PriceK } from '../../sim/sys/venues17';
-import { acceptLic, declineLic, estIn, lic17, mkName, pitchOut, pitchTargets } from '../../sim/sys/license17';
+import { acceptLic, declineLic, estIn, lic17, mkName, pitchOdds17, pitchOut, pitchTargets } from '../../sim/sys/license17';
 import { SCOPES, activeDeal, askImage, endDeal, fairShare, imgChance, img17, isEstate, renegotiate, scopesNow, type Scope } from '../../sim/sys/image17';
 import { SKUS, canSell, demandOf, fightCost, m17, makeBatch, skusNow, toggleFight, toggleLicense, unitCost, type Sku, type Line } from '../../sim/sys/merch17';
 import { c17, crowdEst, crowdOpen, launchCrowd, pickWar, reunionCands, reunionTerms, stageReunion } from '../../sim/sys/circuit17';
@@ -154,7 +154,7 @@ function licTab(s: GameState): HTMLElement {
       h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => res(acceptLic(s, d.id), l('Acordo fechado.', 'Deal signed.')) }, t(l('Aceitar', 'Accept'))), h('button', { class: 'btn small ghost', onclick: () => { declineLic(s, d.id); rerender(); } }, t(l('Recusar', 'Decline'))))))) : h('p', { class: 'muted small' }, '—')),
     section(t(l('Em vigor', 'Active')), act.length ? ul(act.map((d) => `${d.dir === 'in' ? '⇥' : '⇤'} ${s.labels[d.lb]?.name ?? '?'} · ${t(mkName(d.market))} · ${pct(d.share)} · ${t(l('rendeu', 'earned'))} ${$(d.earned)}`)) : h('p', { class: 'muted small' }, '—')),
     section(t(l('Oferecer seu catálogo', 'Pitch your catalog')), h('div', null, pitchTargets(s).map((x) => h('div', { class: 'row wrap' }, `${t(mkName(x.m))}: ${x.lb.name}`, ' ',
-      h('button', { class: 'btn tiny', onclick: () => res(pitchOut(s, x.lb.id, x.m), l('Proposta enviada: veja a resposta acima ou no histórico.', 'Pitch sent: see the answer above or in the history.')) }, t(l('Propor', 'Pitch'))))))),
+      h('button', { class: 'btn tiny', onclick: () => res(pitchOut(s, x.lb.id, x.m), l('Proposta enviada: veja a resposta acima ou no histórico.', 'Pitch sent: see the answer above or in the history.')) }, `${t(l('Propor', 'Pitch'))} (${pct(pitchOdds17(s, x.lb.id))})`))))),
     section(t(l('Histórico', 'History')), logList(st.log)));
 }
 

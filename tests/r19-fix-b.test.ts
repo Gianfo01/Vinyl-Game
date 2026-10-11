@@ -27,6 +27,7 @@ import { storyteller } from '../src/sim/events';
 import { notify } from '../src/sim/util';
 import { pol18 } from '../src/sim/sys/policy18';
 import { l } from '../src/data/world';
+import { pitchTargets } from '../src/sim/sys/license17';
 
 /** Rng que devolve sempre u: "aceitou" tem de ser exatamente u < chance mostrada. */
 class FixedRng extends Rng { constructor(private u: number) { super([1, 2, 3, 4]); } next(): number { return this.u; } }
@@ -86,6 +87,9 @@ describe('r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorte
     const fc = pairs.flatMap(([fi, a]) => [0.9, 1.2, 2.5].flatMap((m) => (['opening', 'headline'] as const).map((t) => [fi, a.id, t, Math.round(festFee(s, FESTIVALS[fi], a, t) * m)])));
     check('fest.pitch', s, fc); covered.add('fest.pitch');
     expect(new Set(fc.map((a) => ODDS19['fest.pitch'].chance(s, a))).size).toBeGreaterThan(1);
+    // licenciamento do catálogo para um selo de outro mercado
+    const tg = pitchTargets(s).slice(0, 3);
+    if (tg.length) { check('lic.pitch', s, tg.map((x) => [x.lb.id, x.m])); covered.add('lic.pitch'); }
     covered.add('artist.counter'); // coberto no teste abaixo
     expect([...covered].sort()).toEqual(Object.keys(ODDS19).sort());
   });

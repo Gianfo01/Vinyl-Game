@@ -11,6 +11,8 @@ import { pitchAct, pitchOdds8, type FestTier } from './fests8';
 import { poachChance, poachClient, rateChance, renegotiateRate } from './manager11';
 import { mandateChance, negotiateMandate } from './manager12';
 import { admChance18, takeAdm18, r18 } from './rights18';
+import { lic17, pitchOdds17, pitchOut } from './license17';
+import type { MarketId } from '../../data/world';
 import { bookingChance, inviteAct, inviteChance, mgChance, pitchClient, signBooking, ventures } from './ventures9';
 
 export interface Odds19 {
@@ -56,6 +58,10 @@ registerOdds19('artist.counter', { screen: l('Artista › Propostas › Contrapr
 registerOdds19('pub.admin', { screen: l('Direitos › Editora › Propostas', 'Rights › Publishing › Offers'),
   chance: (s, [, fee]: Args) => admChance18(s, fee as number),
   roll: (s, r, [id, fee]: Args) => { takeAdm18(s, id as string, fee as number, r); return r18(s).adm.some((c) => c.id === id); } });
+
+registerOdds19('lic.pitch', { screen: l('Selo › Canais, licenças e merch › Oferecer seu catálogo', 'Label › Channels, licensing and merch › Pitch your catalog'),
+  chance: (s, [lb]: Args) => pitchOdds17(s, lb as string),
+  roll: (s, r, [lb, m]: Args) => { pitchOut(s, lb as string, m as MarketId, r); return lic17(s).list.some((d) => d.dir === 'out' && d.market === m && d.lb === lb && d.status !== 'ended'); } });
 
 // porquê da chance de agenciamento (a única chance nova na tela; as outras já tinham porquê ou fórmula no título)
 registerExplain('bk19.odds', (s, ctx) => {
