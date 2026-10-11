@@ -82,11 +82,13 @@ describe('eventos de vida pessoal', () => {
     let fired = 0;
     const seen = new Set<string>();
     for (let i = 0; i < 60; i++) {
+      s.player.cash = Math.max(s.player.cash, 1e9); // r19: o selo parado vai à insolvência em ~2,5 anos e o relógio parava; o teste mede a vida pessoal
       advanceMonth(s);
       const st = leState(s);
       for (const o of st.open) seen.add(o.id);
     }
     fired = seen.size;
+    expect(s.ended).toBeFalsy();
     expect(fired).toBeGreaterThan(12); // r17: média ~19 em 6 sementes (14–25); r18: 14 nesta semente após decide18 — limiar no piso observado
     expect(fired).toBeLessThan(55);
     expect((s.cutscenes ?? []).some((c) => c.kind === 'lifeEvent')).toBe(true);
