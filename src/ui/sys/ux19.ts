@@ -246,7 +246,7 @@ function showReceipt(s: GameState, r: Rc19): void {
   document.querySelector('.ux19-rcbox')?.remove();
   const box = h('div', { class: 'ux19-rcbox', role: 'status', 'aria-live': 'polite' }, receiptEl(s, r),
     h('button', { class: 'icon ux19-x', 'aria-label': t(l('Fechar recibo', 'Close receipt')), title: t(l('Fechar recibo', 'Close receipt')), onclick: () => box.remove() }, '✕'));
-  document.body.appendChild(box);
+  (document.getElementById('toasts') ?? document.body).appendChild(box); // r19 smoke: empilha com os avisos (não se sobrepõem)
   setTimeout(() => box.classList.add('out'), 9000);
   setTimeout(() => box.remove(), 9600);
 }

@@ -84,6 +84,12 @@ export function reps18(s: GameState): RepState18 {
   return st;
 }
 
+/** r19 smoke: só os formatos que já existem e pesam (nada de "CD 0%" em 1889; vinil só depois de 1948). */
+function fmts18(mx: Mix18, y: number, lang: 'pt' | 'en'): string {
+  const xs: [number, string, string][] = [[mx.shellac, 'goma-laca', 'shellac'], [y >= 1948 ? mx.vinyl : 0, 'vinil', 'vinyl'], [mx.tape, 'fita', 'tape'], [mx.cd, 'CD', 'CD']];
+  return xs.filter(([v]) => v >= 0.005).map(([v, pt, en]) => `${lang === 'pt' ? pt : en} ${Math.round(v * 100)}%`).join(', ');
+}
+
 registerSimHook('month', 'report18', (s) => {
   if (s.config.role === 'artist' || off18('report')) return;
   const analyst = staffCount(s, 'analyst') > 0;
@@ -95,11 +101,11 @@ registerSimHook('month', 'report18', (s) => {
   const home = (MARKETS.find((m) => m.id === s.player.territories[0]) ?? MARKETS[0]).id;
   const mx = rp.mix[home];
   const lines: string[] = [];
-  if (mx) lines.push(`${MARKETS.find((m) => m.id === home)!.name.pt}: físico ${pc(mx.phys)} (vinil ${pc(mx.vinyl)}, fita ${pc(mx.tape)}, CD ${pc(mx.cd)})${mx.stream ? `, streaming ${pc(mx.stream)}` : mx.dl ? `, download ${pc(mx.dl)}` : ''}.`);
+  if (mx) lines.push(`${MARKETS.find((m) => m.id === home)!.name.pt}: físico ${pc(mx.phys)} (${fmts18(mx, s.year, 'pt')})${mx.stream ? `, streaming ${pc(mx.stream)}` : mx.dl ? `, download ${pc(mx.dl)}` : ''}.`);
   if (rp.hot.length) lines.push(`Subindo: ${rp.hot.map((h) => genreById[h.g]?.name.pt ?? h.g).join(', ')}.`);
   if (rp.comp.length) lines.push(`Concorrência: ${rp.comp.slice(0, 2).map((c) => `${s.labels[c.lb]?.name ?? c.lb} (${c.n} nas paradas)`).join('; ')}.`);
   const linesEn: string[] = [];
-  if (mx) linesEn.push(`${MARKETS.find((m) => m.id === home)!.name.en}: physical ${pc(mx.phys)} (vinyl ${pc(mx.vinyl)}, tape ${pc(mx.tape)}, CD ${pc(mx.cd)})${mx.stream ? `, streaming ${pc(mx.stream)}` : mx.dl ? `, download ${pc(mx.dl)}` : ''}.`);
+  if (mx) linesEn.push(`${MARKETS.find((m) => m.id === home)!.name.en}: physical ${pc(mx.phys)} (${fmts18(mx, s.year, 'en')})${mx.stream ? `, streaming ${pc(mx.stream)}` : mx.dl ? `, download ${pc(mx.dl)}` : ''}.`);
   if (rp.hot.length) linesEn.push(`Rising: ${rp.hot.map((h) => genreById[h.g]?.name.en ?? h.g).join(', ')}.`);
   if (rp.comp.length) linesEn.push(`Competition: ${rp.comp.slice(0, 2).map((c) => `${s.labels[c.lb]?.name ?? c.lb} (${c.n} on the charts)`).join('; ')}.`);
   pushInbox18(s, 'market18', {

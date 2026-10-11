@@ -64,7 +64,7 @@ function sceneTab(s: GameState): HTMLElement {
 function platTab(s: GameState): HTMLElement {
   const st = mka19(s), offers = Object.values(st.p360);
   return h('div', null,
-    section(T(PLAT19), s.year < 2015 ? muted(l('Playlists de humor com faixas sem rosto só a partir de 2015.', 'Mood playlists with faceless tracks only from 2015.')) : h('div', null,
+    section(s.year < 2015 ? T(l('Playlists de humor', 'Mood playlists')) : T(PLAT19), s.year < 2015 ? muted(l('Playlists de humor com faixas sem rosto só a partir de 2015.', 'Mood playlists with faceless tracks only from 2015.')) : h('div', null,
       muted(fmtS(l('Faixas sem rosto ocupam ~{p}% das playlists de humor: ambient, lo-fi, clássico e trip hop rendem menos. (Alegações de reportagens reais tratadas como ficção; plataforma fictícia.)', 'Faceless tracks take ~{p}% of mood playlists: ambient, lo-fi, classical and trip hop earn less. (Allegations from real reporting treated as fiction; fictional platform.)'), { p: Math.round(st.ghN * 100) })),
       st.gh ? muted(fmtS(l('Seu selo vende {n} faixas por ano ({v}).{o}', 'Your label sells {n} tracks a year ({v}).{o}'), { n: st.gh.tracks, v: $(ghostFee19(s)), o: st.gh.out ? t(l(' Vazou em ', ' Leaked in ')) + st.gh.out : '' }))
         : row(btn(fmtS(l('Oferecer faixas ({v}/ano)', 'Offer tracks ({v}/year)'), { v: $(ghostFee19(s)) }), () => say(ghost19(s, 'accept'))), btn(l('Denunciar à imprensa', 'Expose to the press'), () => say(ghost19(s, 'expose')), (st.ghCold ?? 0) > s.week)))),

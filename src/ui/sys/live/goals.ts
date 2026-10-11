@@ -157,6 +157,8 @@ function scenarioPanel(s: GameState): HTMLElement {
   );
 }
 
+/** Conquistas de formato que só fazem sentido a partir do ano em que o formato existe. */
+const ACH_ERA19: Record<string, number> = { fmt_lp: 1948, fmt_cassette: 1963, fmt_cd: 1982, digital_dl: 1997, digital_stream: 2005 };
 function achievementsPanel(s: GameState): HTMLElement {
   const lv = liveOf(s);
   const fresh = new Set(lv.achNew);
@@ -165,7 +167,7 @@ function achievementsPanel(s: GameState): HTMLElement {
   return section(t(l('Conquistas ({n}/{m})', 'Achievements ({n}/{m})'), { n: got, m: ACHIEVEMENTS.length }),
     h('div', { class: 'cards' }, ACHIEVEMENTS.map((a) => {
       const on = lv.ach[a.id] !== undefined;
-      const hidden = a.hidden && !on;
+      const hidden = (a.hidden || s.year < (ACH_ERA19[a.id] ?? 0)) && !on; // r19 smoke: formato do futuro fica escondido
       return h('div', { class: `tile lv-ach ${on ? 'on' : 'locked'} ${fresh.has(a.id) ? 'fresh' : ''}` },
         h('div', { class: 'tile-ic' }, hidden ? h('span', { 'aria-hidden': 'true' }, '❔') : ic(a.icon, 2)),
         h('div', { class: 'tile-body' }, h('b', null, hidden ? '???' : t(a.name)), h('small', null, hidden ? t(l('Conquista escondida.', 'Hidden achievement.')) : t(a.desc)),

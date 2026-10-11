@@ -179,7 +179,7 @@ function repView(s: GameState, rp: Rep18): HTMLElement {
       h('div', null, h('b', null, t(l('Caindo', 'Falling'))), ul(rp.cold.map((x) => `${gname(x.g)} (${(x.d * 100).toFixed(1)} p.p.)`)))),
     h('div', null, h('b', null, t(l('Concorrência nas paradas (13 semanas)', 'Competition on the charts (13 weeks)'))), rp.comp.length ? ul(rp.comp.map((c) => `${s.labels[c.lb]?.name ?? c.lb}: ${c.n} ${t(l('entradas', 'entries'))} · ${t(l('melhor', 'best'))} #${c.pos} ${c.top}`)) : muted(l('—', '—'))),
     h('p', { class: 'small' }, t(l('Varejo físico', 'Physical retail')), ' ', pill(`${Math.round(rp.retail * 100)}`, rp.retail < 0.6 ? 'bad' : rp.retail > 1.05 ? 'good' : ''), ' · ',
-      t(l('Fila das prensas: vinil {v} sem.', 'Pressing queues: vinyl {v} wk'), { v: rp.queue.vinyl }), rp.queue.cd ? ` · CD ${rp.queue.cd}` : '', rp.queue.tape ? ` · ${t(l('fita', 'tape'))} ${rp.queue.tape}` : '', ' · ',
+      t(s.year < 1948 ? l('Fila das prensas: goma-laca {v} sem.', 'Pressing queues: shellac {v} wk') : l('Fila das prensas: vinil {v} sem.', 'Pressing queues: vinyl {v} wk'), { v: rp.queue.vinyl }), rp.queue.cd ? ` · CD ${rp.queue.cd}` : '', rp.queue.tape ? ` · ${t(l('fita', 'tape'))} ${rp.queue.tape}` : '', ' · ',
       t(l('Adiantamento médio dos rivais', 'Rivals\' average advance')), ' ', rp.adv ? why18(s, 'market.adv', {}, $(rp.adv)) : '—'),
     rp.notes.length ? section(t(l('Leitura do analista', 'Analyst\'s reading')), ul(rp.notes.map((n) => t(n)))) : null);
 }
