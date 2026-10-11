@@ -143,13 +143,15 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
 export function availableFormats(s: GameState): FormatId[] {
   const out: FormatId[] = [];
   for (const f of FORMATS) {
-    if (f.id === 'airplay') continue;
+    if (f.id === 'airplay' || f.id === 'sheet') continue;
+    if (f.id === 'shellac' && s.year < (s.techDates.disc ?? 0)) continue; // r18 era1889: disco só depois de Berliner
+    if (f.id === 'piano_roll' && (s.year < 1896 || s.year > 1931)) continue;
     if (f.tech && !hasTech(s, f.tech)) continue;
-    if (f.until && hasTech(s, f.until, s.year - (f.id === 'shellac' ? 6 : 8))) continue;
+    if (f.until && hasTech(s, f.until, s.year - (f.id === 'shellac' ? 6 : f.id === 'cylinder' ? 4 : 8))) continue;
     if (f.id === 'cassette' && s.divergence.format80 === 'cassette' && hasTech(s, 'download', s.year - 10)) continue;
     out.push(f.id);
   }
-  if (!out.length) out.push('shellac');
+  if (!out.length) out.push(s.year < (s.techDates.disc ?? 0) ? 'cylinder' : 'shellac');
   return out;
 }
 
@@ -159,7 +161,7 @@ export function physicalShare(s: GameState, year = s.year): number {
   if (s.techDates.streaming !== undefined && year >= s.techDates.streaming + 2) p = 0.08;
   else if (s.techDates.download !== undefined && year >= s.techDates.download) p = 0.35;
   else if (s.techDates.p2p !== undefined && year >= s.techDates.p2p) p = 0.55;
-  else p = 0.8;
+  else p = year < 1905 ? 0.5 : year < 1915 ? 0.6 : year < 1920 ? 0.7 : 0.8; // r18 era1889: antes do rádio a partitura é metade do negócio
   // revival do vinil
   if (s.techDates.streaming !== undefined && year >= s.techDates.streaming + 4) p += 0.03;
   return p;

@@ -309,6 +309,13 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     const founded = cfg.mode === 'chaos' ? def.founded + r.int(-12, 12) : cfg.mode === 'free' ? def.founded + r.int(-4, 4) : def.founded;
     makeLabel(s, r, { ...def, name: cfg.realNames ? REAL_LABELS[def.id] ?? def.name : def.name, founded: def.id === 'cortex' ? Math.max(founded, s.techDates.synthetic_voice - 2) : founded });
   }
+  // r18 era1889: começando antes de 1920, as gravadoras reais da era acústica existem (ou surgem) nas datas reais
+  if (!chosenLabels && cfg.startYear < 1920) for (const def of EXTRA_LABELS) {
+    if (def.founded >= 1920 || s.labels[def.id]) continue;
+    const f0 = cfg.mode === 'chaos' ? def.founded + r.int(-6, 6) : cfg.mode === 'free' ? def.founded + r.int(-2, 2) : def.founded;
+    const founded = def.founded <= cfg.startYear ? Math.min(cfg.startYear, f0) : Math.max(cfg.startYear + 1, f0);
+    makeLabel(s, r, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
+  }
   const activeCount = Object.values(s.labels).filter((x) => x.active).length;
   for (let i = 0; i < Math.max(0, chosenLabels ? 0 : 5 - activeCount); i++) {
     const city = r.pick(['new_york', 'london', 'paris', 'berlin', 'rio', 'buenos_aires']);

@@ -59,7 +59,7 @@ export const ventures = (s: GameState): VenturesState => {
 
 export const VKINDS: Record<VKind, { name: L; desc: L; from: number; cost: number; upkeep: number; icon: string }> = {
   festival: { name: l('Festival próprio', 'Own festival'), desc: l('Data, cidade, line-up (inclusive artistas de rivais) e preço do ingresso. Pode virar lenda ou desastre.', 'Date, city, line-up (rivals\' acts too) and ticket price. Can become a legend or a disaster.'), from: 1950, cost: 120000, upkeep: 2500, icon: 'star' },
-  publisher: { name: l('Editora musical', 'Music publisher'), desc: l('Contrate compositores, coloque músicas com artistas de qualquer selo, licencie para trilhas. Royalties por décadas.', 'Sign songwriters, place songs with any label\'s artists, license to sync. Royalties for decades.'), from: 1900, cost: 40000, upkeep: 1200, icon: 'note' },
+  publisher: { name: l('Editora musical', 'Music publisher'), desc: l('Contrate compositores, coloque músicas com artistas de qualquer selo, licencie para trilhas. Royalties por décadas.', 'Sign songwriters, place songs with any label\'s artists, license to sync. Royalties for decades.'), from: 1889, cost: 40000, upkeep: 1200, icon: 'note' },
   studio: { name: l('Estúdio e produção', 'Studio & production'), desc: l('Equipamento da época, sessões de outros selos e um "som da casa" que melhora os discos gravados ali.', 'Era gear, sessions booked by other labels and a "house sound" that lifts records cut there.'), from: 1920, cost: 90000, upkeep: 2200, icon: 'cd' },
   booking: { name: l('Agência de shows', 'Booking agency'), desc: l('Agende turnês de outros artistas por comissão.', 'Route other acts\' tours for a commission.'), from: 1930, cost: 30000, upkeep: 1000, icon: 'tour-bus' },
   media: { name: l('Mídia', 'Media'), desc: l('Revista, rádio, TV, blog ou playlist: poder de execução, risco de jabá e força para lançar uma cena. Três veículos viram conglomerado.', 'Magazine, radio, TV, blog or playlist: airplay power, payola risk and the clout to launch a scene. Three outlets make a conglomerate.'), from: 1900, cost: 60000, upkeep: 1800, icon: 'bulb' },
@@ -745,6 +745,7 @@ function npcYear(s: GameState, r: Rng): void {
   for (const lb of rich) {
     if (!r.chance(0.08)) continue;
     const kinds = kindsAvailable(s).filter((k) => k !== 'platform' || lb.cash > money(s, 3000000));
+    if (!kinds.length) continue;
     const kind = r.pick(kinds);
     if (st.npc.some((n) => n.labelId === lb.id && n.kind === kind)) continue;
     const city = cityById[lb.city] ? lb.city : r.pick(CITIES).id;

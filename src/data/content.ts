@@ -118,10 +118,10 @@ const ou = (id: string, name: string, realRef: string | undefined, kind: OutletK
   ({ id, name, realRef, kind, market, start, end, bias, desc: l(pt, en), mediaName });
 
 export const OUTLETS: OutletDef[] = [
-  ou('palco_partitura', 'Palco & Partitura', 'Variety', 'newspaper', 'na', 1920, undefined, ob(['pop', 'blues_jazz', 'sacred'], ['hiphop'], 0.7, 0.4, 60), 'Bíblia do show business: bilheteria antes de arte.', 'Show-business bible: box office before art.', 'Palco & Partitura'),
+  ou('palco_partitura', 'Palco & Partitura', 'Variety', 'newspaper', 'na', 1905, undefined, ob(['pop', 'blues_jazz', 'sacred'], ['hiphop'], 0.7, 0.4, 60), 'Bíblia do show business: bilheteria antes de arte.', 'Show-business bible: box office before art.', 'Palco & Partitura'),
   ou('agulha_classica', 'Agulha Clássica', 'Gramophone', 'magazine', 'eu', 1923, undefined, ob(['sacred', 'blues_jazz'], ['pop', 'hiphop', 'electronic'], -0.2, 0.6, 82), 'Ouvidos de conservatório; pop é ruído.', 'Conservatory ears; pop is noise.', 'Agulha Clássica'),
   ou('tune_maker', 'Tune Maker', 'Melody Maker', 'magazine', 'eu', 1926, 2000, ob(['blues_jazz', 'rock'], ['pop'], -0.1, 0.5, 70), 'Do jazz ao rock, sempre de olho no músico.', 'From jazz to rock, always about the musician.', 'Tune Maker'),
-  ou('worldsound_weekly', 'WorldSound Weekly', 'Billboard', 'magazine', 'global', 1920, undefined, ob(['pop', 'rnb', 'country_folk'], [], 0.9, 0.2, 55), 'Revista do setor: números, paradas e negócios.', 'Trade magazine: numbers, charts and deals.', 'WorldSound Weekly'),
+  ou('worldsound_weekly', 'WorldSound Weekly', 'Billboard', 'magazine', 'global', 1894, undefined, ob(['pop', 'rnb', 'country_folk'], [], 0.9, 0.2, 55), 'Revista do setor: números, paradas e negócios.', 'Trade magazine: numbers, charts and deals.', 'WorldSound Weekly'),
   ou('ondas_astros', 'Ondas & Astros', 'Revista do Rádio', 'magazine', 'br', 1948, 1970, ob(['brazil', 'latin'], ['rock'], 0.8, 0.15, 35), 'Fofoca de auditório e cupons de votação.', 'Radio-show gossip and voting coupons.', 'Ondas & Astros'),
   ou('weekly_needle', 'Weekly Needle', 'NME', 'newspaper', 'eu', 1952, undefined, ob(['rock', 'electronic', 'hiphop'], ['country_folk', 'sacred'], -0.4, 0.75, 76), 'Semanal britânico que cria e destrói hypes em 3 edições.', 'UK weekly that builds and kills hypes in 3 issues.', 'Weekly Needle'),
   ou('rock_chronicle', 'Rock Chronicle', 'Rolling Stone', 'magazine', 'na', 1967, undefined, ob(['rock', 'country_folk', 'rnb'], ['electronic'], 0.2, 0.5, 82), 'Capa é coroação; resenha de 5 estrelas é raríssima.', 'A cover is a coronation; 5-star reviews are rare.', 'Rock Chronicle'),
@@ -169,7 +169,7 @@ const cr = (id: string, name: string, outlet: string, start: number, end: number
   ({ id, name, outlet, start, end, favored, disfavored, mainstream, harshness, quirk: l(pt, en) });
 
 export const CRITICS: CriticDef[] = [
-  cr('c_amberly', 'Hollis Amberly', 'palco_partitura', 1920, 1952, ['pop', 'blues_jazz'], ['country_folk'], 0.7, 0.4, 'Mede canções pelo número de partituras vendidas.', 'Measures songs by sheet music sold.'),
+  cr('c_amberly', 'Hollis Amberly', 'palco_partitura', 1905, 1952, ['pop', 'blues_jazz'], ['country_folk'], 0.7, 0.4, 'Mede canções pelo número de partituras vendidas.', 'Measures songs by sheet music sold.'),
   cr('c_vautrin', 'Odile Vautrin', 'agulha_classica', 1925, 1970, ['sacred'], ['pop', 'rock'], -0.3, 0.8, 'Considera qualquer microfone uma traição.', 'Considers any microphone a betrayal.'),
   cr('c_brennan', 'Clyde Brennan', 'tune_maker', 1930, 1968, ['blues_jazz'], ['pop'], -0.2, 0.55, 'Só respeita quem lê partitura.', 'Only respects those who read music.'),
   cr('c_lacerda', 'Dalva Lacerda', 'ondas_astros', 1948, 1970, ['brazil', 'latin'], ['rock'], 0.8, 0.15, 'Elege a "voz do ano" por cartas de fãs.', 'Picks the "voice of the year" from fan letters.'),
@@ -644,7 +644,7 @@ const ch = (id: string, name: string, realRef: string | undefined, scope: ChartS
 export const CHARTS: ChartDef[] = [
   ch('ws100', 'WorldSound 100', 'Billboard Hot 100', 'singles', 'global', 1958, 100),
   ch('ws_albums', 'WorldSound Albums', 'Billboard 200', 'albums', 'global', 1956, 200),
-  ch('ws_sheet', 'WorldSound Partituras', 'Billboard sheet-music charts', 'sheet_music', 'na', 1920, 30, undefined, 1958),
+  ch('ws_sheet', 'WorldSound Partituras', 'Billboard sheet-music charts', 'sheet_music', 'na', 1913, 30, undefined, 1958),
   ch('ws_juke', 'WorldSound Jukebox', 'Most Played in Jukeboxes', 'jukebox', 'na', 1944, 30, undefined, 1958),
   ch('ws_race', 'WorldSound R&B', 'Billboard Hot R&B/Hip-Hop Songs', 'genre', 'na', 1942, 50, ['rnb', 'hiphop']),
   ch('ws_country', 'WorldSound Country', 'Billboard Hot Country Songs', 'genre', 'na', 1944, 50, ['country_folk']),

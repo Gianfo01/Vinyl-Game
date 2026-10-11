@@ -5,6 +5,13 @@ import { l, type L } from '../data/world';
 
 /** Cada ano da lista tem um nome próprio (nada de "LP e TV" duas vezes). */
 export const ERA_NAMES: Record<number, L> = {
+  1889: l('Era dos cilindros: o fonógrafo vira negócio', 'Cylinder era: the phonograph becomes a business'),
+  1895: l('O disco de Berliner chega', 'Berliner\'s disc arrives'),
+  1901: l('Guerra dos formatos: cilindro × disco', 'Format war: cylinder vs disc'),
+  1902: l('Caruso grava e o disco ganha prestígio', 'Caruso records and the disc gains prestige'),
+  1910: l('Ragtime e a febre das partituras', 'Ragtime and the sheet-music craze'),
+  1914: l('Grande Guerra e as danças modernas', 'The Great War and modern dances'),
+  1917: l('O jazz nasce em disco e o samba no papel', 'Jazz is born on record and samba on paper'),
   1920: l('Goma-laca e rádio nascente', 'Shellac and early radio'),
   1925: l('Gravação elétrica e o microfone', 'Electrical recording and the microphone'),
   1927: l('Cinema falado e o jazz na tela', 'Talkies and jazz on screen'),
@@ -72,7 +79,7 @@ export const HELP: Record<string, L> = {
   main: l('Onde seu tempo vai no começo. Cada carreira ocupa parte da agenda; passar de 100% gera estresse todo mês. Dá para começar ou largar carreiras durante o jogo (Você → Carreiras).', 'Where your time goes at the start. Each career takes part of your schedule; above 100% you gain stress every month. You can start or drop careers later (You → Careers).'),
   origin: l('De onde você veio antes do selo. Aplicada uma vez no começo: atributos, habilidades musicais, dinheiro, reputação; e bônus permanentes e contatos no mercado de serviços. Diferente da Trajetória (aba Personagem), que define a base da ficha e o perfil do selo.', 'Where you came from before the label. Applied once at the start: attributes, music skills, money, reputation; plus permanent bonuses and contacts in the services market. Different from the Path (Character tab), which sets your sheet\'s base and label profile.'),
   ambition: l('O que te satisfaz. Todo janeiro o jogo confere a meta do ano: cumprida, −6 de estresse e um bônus no ano seguinte; frustrada, +6 de estresse. Trocar durante o jogo custa estresse.', 'What satisfies you. Every January the game checks the year\'s goal: met, −6 stress and a bonus next year; missed, +6 stress. Changing it later costs stress.'),
-  year: l('Ano de início (1920–2039). Define tecnologia, formatos, gêneros que já existem, preços (dólares da época), rivais e artistas reais disponíveis. Começar tarde é mais difícil: pirataria, streaming e mercado saturado.', 'Start year (1920–2039). Sets technology, formats, which genres exist, prices (period dollars), rivals and available real artists. Starting late is harder: piracy, streaming and a saturated market.'),
+  year: l('Ano de início (1889–2039). Define tecnologia, formatos, gêneros que já existem, preços (dólares da época), rivais e artistas reais disponíveis. Começar tarde é mais difícil: pirataria, streaming e mercado saturado.', 'Start year (1889–2039). Sets technology, formats, which genres exist, prices (period dollars), rivals and available real artists. Starting late is harder: piracy, streaming and a saturated market.'),
   city: l('Cidade da sede: mercado de casa, cena local, artistas que aparecem primeiro e custos. Grandes centros têm mais público e mais concorrência.', 'HQ city: home market, local scene, which acts show up first and costs. Big hubs have more audience and more competition.'),
   mode: l('Histórico: o mundo segue a história real (formatos, artistas, eventos). Livre: a história é ponto de partida, mas diverge. Caos: tudo pode acontecer em qualquer ordem.', 'Historic: the world follows real history (formats, acts, events). Free: history is a starting point but diverges. Chaos: anything can happen in any order.'),
   realNames: l('Liga os nomes reais de artistas, selos, festivais, mídia e prêmios. Desligado, o universo é ficcional (mesmas mecânicas).', 'Turns on real names for acts, labels, festivals, media and awards. Off, the universe is fictional (same mechanics).'),
