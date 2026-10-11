@@ -65,7 +65,7 @@ export function loanOffer(s: GameState): { amount: number; rate: number; months:
   const n = s.player.loans.length;
   const rep = s.player.reputation.commercial + s.player.reputation.institutional;
   const amount = money(s, (20000 + rep * 600 + s.player.hq * 30000) * Math.pow(0.75, n));
-  const rate = clamp(0.16 - rep / 1500 + (s.economy.recession ? 0.04 : 0) + n * 0.03, 0.05, 0.3);
+  const rate = clamp(0.16 - rep / 1500 + (s.economy.recession ? 0.04 : 0) + n * 0.03 + (s.year < 1914 ? 0.02 : 0), 0.05, 0.3); // r18 era1889: sem banco central, crédito caro
   return { amount, rate, months: 36 };
 }
 

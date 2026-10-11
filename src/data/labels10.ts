@@ -6,6 +6,7 @@
 
 import type { CatalogLabel } from './catalog';
 import { l } from './world';
+import { EXECS_1889, LABELS_1889 } from './era1889';
 
 export interface ExtraLabel extends CatalogLabel {
   real: string;
@@ -95,3 +96,7 @@ export const REAL_EXECS: RealExec[] = [
   e('lee_soo_man', 'Lee Soo-man', 1952, undefined, 'dragonfly', 1995, 'artist', 'autocrat', 'Cantor que criou o sistema de treinamento de ídolos.', 'Singer who created the idol training system.'),
   e('bang_si_hyuk', 'Bang Si-hyuk', 1972, undefined, 'x_bighit', 2005, 'producer', 'mentor', 'Compositor que apostou num grupo de garotos de fora do circuito.', 'Composer who bet on a boy band from outside the circuit.'),
 ];
+
+// r18 era1889: gravadoras e executivos reais da era acústica (1888–1918)
+EXTRA_LABELS.push(...LABELS_1889.filter((d) => !EXTRA_LABELS.some((x) => x.id === d.id)));
+REAL_EXECS.push(...EXECS_1889.filter((d) => !REAL_EXECS.some((x) => x.rid === d.rid)));

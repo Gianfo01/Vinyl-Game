@@ -108,7 +108,7 @@ export function physMix18(y: number): Record<string, number> {
   const vin = Math.max(0.01, 1 - sh - tape - cd - eight);
   return { shellac: sh, vinyl: vin, eight, tape, cd };
 }
-const FMT_MAT: Record<string, Material> = { shellac: 'shellac', single45: 'vinyl', lp: 'vinyl', cassette: 'tape', cd: 'polycarbonate' };
+const FMT_MAT: Record<string, Material> = { shellac: 'shellac', single45: 'vinyl', lp: 'vinyl', cassette: 'tape', cd: 'polycarbonate', cylinder: 'shellac', piano_roll: 'paper' };
 /** Peso de cada material no físico de um lançamento (pelos formatos escolhidos e pela época). */
 export function relMatShares(s: GameState, formats: string[]): Partial<Record<Material, number>> {
   const mix = physMix18(s.year);

@@ -151,7 +151,7 @@ export function readSetupCode17(code: string): RunConfig | null {
   try {
     const c = JSON.parse(decodeURIComponent(escape(atob(t.slice(i + CODE17.length))))) as RunConfig;
     if (!c || typeof c.seed !== 'string' || typeof c.startYear !== 'number' || !c.homeCity) return null;
-    c.startYear = Math.max(1920, Math.min(2039, Math.round(c.startYear)));
+    c.startYear = Math.max(1889, Math.min(2039, Math.round(c.startYear)));
     c.contentFilters ??= [];
     c.mutators ??= [];
     return c;

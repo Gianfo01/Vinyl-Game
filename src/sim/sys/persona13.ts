@@ -381,14 +381,16 @@ export interface Barrier13 { k: 'img' | 'race' | 'sex' | 'owner'; m: number; why
 
 const NICHE_RACE: FamilyId[] = ['blues_jazz', 'rnb', 'hiphop', 'caribbean', 'africa', 'brazil', 'latin', 'sacred'];
 function raceBase(a3: string | null, y: number): number {
-  if (a3 === 'USA') return y < 1955 ? 0.22 : y < 1965 ? 0.14 : y < 1981 ? 0.07 : y < 1986 ? 0.06 : y < 2000 ? 0.03 : 0.01;
+  if (a3 === 'USA') return y < 1920 ? 0.28 : y < 1955 ? 0.22 : y < 1965 ? 0.14 : y < 1981 ? 0.07 : y < 1986 ? 0.06 : y < 2000 ? 0.03 : 0.01;
   if (a3 === 'ZAF') return y < 1994 ? 0.25 : y < 2005 ? 0.06 : 0.02;
   if (a3 === 'GBR') return y < 1965 ? 0.1 : y < 1981 ? 0.06 : y < 2000 ? 0.025 : 0.01;
-  if (a3 === 'BRA') return y < 1970 ? 0.08 : y < 1990 ? 0.05 : y < 2010 ? 0.025 : 0.01;
+  if (a3 === 'BRA') return y < 1920 ? 0.12 : y < 1970 ? 0.08 : y < 1990 ? 0.05 : y < 2010 ? 0.025 : 0.01;
   return y < 1960 ? 0.08 : y < 1980 ? 0.05 : y < 2000 ? 0.02 : 0.005;
 }
 const raceWhy = (a3: string | null, y: number): L =>
-  a3 === 'USA' && y < 1965 ? l('Rádios e TVs segregadas: muitas emissoras não tocam artistas negros fora das "race records".', 'Segregated radio and TV: many stations will not play Black artists outside "race records".')
+  a3 === 'USA' && y < 1920 ? l('Jim Crow (Plessy v. Ferguson, 1896): vaudeville segregado, artistas negros forçados ao blackface e às "coon songs" caricatas, cachês menores e sem acesso aos teatros brancos.', 'Jim Crow (Plessy v. Ferguson, 1896): segregated vaudeville, Black artists forced into blackface and caricature "coon songs", lower fees and no access to white theatres.')
+    : a3 === 'BRA' && y < 1920 ? l('Pós-abolição (1888): samba, lundu e capoeira perseguidos pela polícia; o maxixe é chamado de dança indecente.', 'Post-abolition (1888): samba, lundu and capoeira harassed by police; the maxixe is called an indecent dance.')
+    : a3 === 'USA' && y < 1965 ? l('Rádios e TVs segregadas: muitas emissoras não tocam artistas negros fora das "race records".', 'Segregated radio and TV: many stations will not play Black artists outside "race records".')
     : a3 === 'USA' && y >= 1981 && y < 1986 ? l('A MTV dos primeiros anos quase não exibe clipes de artistas negros.', 'Early MTV barely airs videos by Black artists.')
       : a3 === 'ZAF' && y < 1994 ? l('Apartheid: rádio e TV separadas por raça, censura e circuito restrito.', 'Apartheid: radio and TV split by race, censorship and a restricted circuit.')
         : l('Preconceito racial nas programações e nas capas de revista desta época.', 'Racial prejudice in playlists and magazine covers of this era.');
@@ -399,6 +401,7 @@ function sexBase(fam: FamilyId, y: number): number {
 }
 /** Peso da imagem por época: rádio (pouco), TV (médio), MTV (muito), streaming (médio), redes (muito). */
 export function imageWeight(y: number): { w: number; era: L } {
+  if (y < 1920) return { w: 0.04, era: l('era do palco e da partitura (a capa da partitura vende o rosto)', 'stage and sheet-music era (the sheet cover sells the face)') };
   if (y < 1950) return { w: 0.02, era: l('era do rádio', 'radio era') };
   if (y < 1981) return { w: 0.06, era: l('era da TV', 'TV era') };
   if (y < 2006) return { w: 0.14, era: l('era da MTV e do videoclipe', 'MTV and music-video era') };

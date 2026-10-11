@@ -89,7 +89,7 @@ const facet = (s: GameState, a: Act, k: string): number => { const p = lead(s, a
 const mem = (s: GameState, a: Act) => a.members.map((id) => s.persons[id]).filter((p) => p?.alive);
 const secretAbout = (s: GameState, a: Act): Fact | undefined => recentFacts(s, { vis: 'secret', months: 60, minSev: 30 }).find((f) => f.actors.includes(a.id) || a.members.some((m) => f.actors.includes(m)));
 export const TPL17: Tpl[] = [
-  { id: 'romance', from: 1920, tone: 0, sev: 30, pair: 'famous', name: l('Romance', 'Romance'), t: l('{a} e {b} vistos juntos de madrugada: romance?', '{a} and {b} seen together at dawn: romance?'), real: (s, a, b) => !!b && mem(s, a).some((p) => b.members.some((m) => (p.rel[m] ?? 0) > 60)) },
+  { id: 'romance', from: 1889, tone: 0, sev: 30, pair: 'famous', name: l('Romance', 'Romance'), t: l('{a} e {b} vistos juntos de madrugada: romance?', '{a} and {b} seen together at dawn: romance?'), real: (s, a, b) => !!b && mem(s, a).some((p) => b.members.some((m) => (p.rel[m] ?? 0) > 60)) },
   { id: 'split', from: 1950, tone: -1, sev: 45, name: l('Fim da banda', 'Band split'), t: l('Clima pesado nos bastidores: {a} pode acabar', 'Tension backstage: {a} may be finished'), real: (s, a) => a.members.length >= 2 && mem(s, a).some((p) => p.resentment > 55 || p.morale < 30) },
   { id: 'feud', from: 1950, tone: -1, sev: 35, pair: 'genre', name: l('Rixa', 'Feud'), t: l('{a} e {b} não se falam mais', '{a} and {b} are no longer speaking'), real: (s, a, b) => !!b && mem(s, a).some((p) => b.members.some((m) => (p.rel[m] ?? 0) < -30)) },
   { id: 'rehab', from: 1955, tone: -1, sev: 55, sk: 'drugs', name: l('Vício', 'Addiction'), t: l('Integrante de {a} estaria internado numa clínica', 'A member of {a} is said to be in a clinic'), real: (s, a) => mem(s, a).some((p) => p.health === 'addiction' || p.health === 'recovering') },
@@ -211,6 +211,7 @@ function leaks(s: GameState, r: Rng, list: O17[]): void {
 function gossip(s: GameState, r: Rng, list: O17[]): void {
   const famous = Object.values(s.acts).filter((a) => live(a) && a.fame >= 30).sort((a, b) => b.fame - a.fame).slice(0, 40);
   const tpls = tplsIn(s.year);
+  if (!tpls.length) return;
   const st = m17(s);
   let n = 0;
   for (const a of famous) {

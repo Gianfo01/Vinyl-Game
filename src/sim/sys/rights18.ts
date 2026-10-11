@@ -210,6 +210,8 @@ export function rate18(s: GameState, mk: string, mod: Mod18): Rate18 {
 
 /** divisão da edição por modalidade na época */
 export function modShares18(y: number): Record<'perf' | 'mech' | 'print', number> {
+  if (y < 1909) return { perf: 0.15, mech: 0, print: 0.85 }; // r18 era1889: sem royalty mecânico até a Lei de 1909
+  if (y < 1914) return { perf: 0.15, mech: 0.25, print: 0.6 };
   const print = y < 1930 ? 0.35 : y < 1955 ? 0.15 : y < 1980 ? 0.05 : 0.02;
   const perf = y < 1950 ? 0.3 : y < 1980 ? 0.4 : y < 2005 ? 0.45 : 0.55;
   return { perf, mech: 1 - perf - print, print };

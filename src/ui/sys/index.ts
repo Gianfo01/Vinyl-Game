@@ -161,4 +161,6 @@ import './links18';
 // Rodada 18 (cine18): storyboards de cerimônias e grandes momentos, Cinemateca e Legado póstumo.
 import './cine18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
+// Rodada 18 (era1889): Mundo › Era acústica e a seção de partituras em Paradas.
+import './era1889';
 import './core18';

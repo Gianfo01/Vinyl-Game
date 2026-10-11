@@ -239,6 +239,8 @@ import './review18';
 import './policy18';
 import './paths18';
 import './saga18';
+// Rodada 18 (era1889): a era acústica 1889–1919 (formatos, patentes, partituras, linha do tempo, cenários).
+import './era1889';
 // Rodada 18 (artist18): carreira de artista com selos NPC, empresário/agente/editora, sociedades.
 import './artist18';
 import './shared18';

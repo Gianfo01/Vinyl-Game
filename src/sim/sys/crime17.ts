@@ -717,7 +717,7 @@ function caseMonth(s: GameState, r: Rng): void {
 // ================================================================ mercado negro (relíquias)
 
 export const FENCES17: { name: L; cut: number; risk: number; from: number; desc: L }[] = [
-  { name: l('Antiquário do porto', 'Harbor antique dealer'), cut: 0.55, risk: 0.06, from: 1900, desc: l('Paga pouco, pergunta menos.', 'Pays little, asks less.') },
+  { name: l('Antiquário do porto', 'Harbor antique dealer'), cut: 0.55, risk: 0.06, from: 1889, desc: l('Paga pouco, pergunta menos.', 'Pays little, asks less.') },
   { name: l('Colecionador sem perguntas', 'No-questions collector'), cut: 0.35, risk: 0.12, from: 1950, desc: l('Paga bem por peça autêntica; quer prova de procedência.', 'Pays well for authentic pieces; wants provenance.') },
   { name: l('Leiloeiro clandestino', 'Clandestine auctioneer'), cut: 0.3, risk: 0.2, from: 1970, desc: l('Leilão fechado para milionários; muita gente vê a peça.', 'A closed auction for millionaires; many eyes on the piece.') },
   { name: l('Fórum na dark web', 'Dark-web forum'), cut: 0.25, risk: 0.18, from: 2011, desc: l('Bitcoin e anonimato — e agentes infiltrados.', 'Bitcoin and anonymity — and undercover agents.') },

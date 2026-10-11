@@ -23,6 +23,8 @@ import { noteRelease17 } from './relidx17';
 import { allReleases17 } from './relidx17';
 
 const POOL: [number, number][] = [
+  // r18 era1889: antes de 1920 a demanda inclui a partitura (sucessos vendiam milhões de cópias impressas)
+  [1889, 280e3], [1895, 320e3], [1900, 370e3], [1905, 410e3], [1910, 450e3], [1915, 450e3], [1919, 360e3],
   [1920, 260e3], [1930, 300e3], [1945, 600e3], [1955, 1.5e6], [1965, 3e6], [1975, 5e6], [1985, 6e6],
   [1995, 8e6], [2001, 8e6], [2006, 5e6], [2010, 4.2e6], [2015, 5e6], [2020, 7e6], [2030, 9e6], [2040, 10e6],
 ];
@@ -370,14 +372,14 @@ export function marketWeek(s: GameState, r: Rng): void {
     rel.totalUnits += units;
     marketUnits += units;
     // receita bruta do master (centavos nominais)
-    const physFmt = rel.formats.find((f) => FORMATS.find((x) => x.id === f)?.physical) ?? (s.year < 1955 ? 'shellac' : hasTech(s, 'cd') ? 'cd' : 'lp');
+    const physFmt = rel.formats.find((f) => FORMATS.find((x) => x.id === f)?.physical) ?? (s.year < (s.techDates.disc ?? 0) ? 'cylinder' : s.year < 1955 ? 'shellac' : hasTech(s, 'cd') ? 'cd' : 'lp');
     const physDef = FORMATS.find((x) => x.id === physFmt)!;
     let gross = physSold * nominal(physDef.net[rel.type], s.year);
     if (digital.length) {
       const per = digital.reduce((t, f) => t + FORMATS.find((x) => x.id === f)!.net[rel.type], 0) / digital.length;
       gross += nonPhys * nominal(per, s.year) * (rel.owner === 'player' ? digitalReach(s) * (MEDIA18.payout?.(s, rel, digital) ?? streamPayout(digital)) : 1);
     } else {
-      gross += nonPhys * nominal(FORMATS.find((x) => x.id === 'airplay')!.net[rel.type], s.year);
+      gross += nonPhys * nominal(FORMATS.find((x) => x.id === (s.year < (s.techDates.radio ?? 1920) + 6 ? 'sheet' : 'airplay'))!.net[rel.type], s.year); // r18 era1889: antes do rádio, partitura
     }
     gross = Math.round(gross * (1 - piracy));
     if (rel.kind === 'limited') gross = Math.round(gross * 1.8);
