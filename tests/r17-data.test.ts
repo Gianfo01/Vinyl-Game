@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize, countryPop } from '../src/data/countries';
 import { COVERS17, ERAS17, SCENES17 } from '../src/data/heritage17';
 import { LOOKS17 } from '../src/data/looks17';
+import { COVERS19 } from '../src/data/media19';
 import { REAL_17 } from '../src/data/more17';
 import { REAL_1889 } from '../src/data/era1889';
+import { ARTISTS19 } from '../src/data/more19';
 import { REAL_ACTS } from '../src/data/realnames';
 import { GLOBAL17, globalOf17 } from '../src/data/relevance17';
 import { softPower } from '../src/data/relevance';
@@ -67,7 +69,10 @@ describe('r17 dados reais', () => {
     expect(i89).toBeGreaterThan(0);
     const tail = REAL_ALL.slice(0, i89).slice(-20).map((a) => a.n);
     expect(tail).toContain('Jeff Buckley');
-    expect(REAL_ALL.slice(i89).every((a) => REAL_1889.some((b) => b.n === a.n))).toBe(true);
+    // r19: o lote more19 (ARTISTS19) entra depois do de 1889
+    const i19 = REAL_ALL.findIndex((a, i) => i > i89 && !REAL_1889.some((b) => b.n === a.n));
+    expect(REAL_ALL.slice(i89, i19 < 0 ? undefined : i19).every((a) => REAL_1889.some((b) => b.n === a.n))).toBe(true);
+    if (i19 >= 0) expect(REAL_ALL.slice(i19).every((a) => ARTISTS19.some((b) => b.n === a.n))).toBe(true);
     expect(REAL_ALL.filter((a) => a.n === 'Luis Fonsi').length).toBe(1);
     const r = DB_SIZES.map((d) => realCount(d.id));
     expect(r[0]).toBeLessThan(r[1]); expect(r[2]).toBeLessThan(r[3]);
@@ -77,8 +82,13 @@ describe('r17 dados reais', () => {
   });
 
   it('épocas, relíquias e covers apontam para artistas reais do banco', () => {
-    const miss = [...ERAS17.flatMap((e) => e[1]), ...COVERS17.flatMap((c) => [c[4], c[5]]).filter(Boolean)].filter((n) => !ALL.has(norm17(n)));
+    // r19 (media19) anexa ao COVERS17 covers reais cujo outro lado pode não estar no banco (Pat Boone, The Tokens…);
+    // coverEvent só precisa de um dos dois — o lote r17 continua exigindo ambos
+    const own = COVERS17.filter((c) => !COVERS19.includes(c));
+    const miss = [...ERAS17.flatMap((e) => e[1]), ...own.flatMap((c) => [c[4], c[5]]).filter(Boolean)].filter((n) => !ALL.has(norm17(n)));
     expect(miss, miss.join(', ')).toEqual([]);
+    const none19 = COVERS19.filter((c) => ![c[4], c[5]].some((n) => n && ALL.has(norm17(n)))).map((c) => c[3]);
+    expect(none19, none19.join(', ')).toEqual([]);
     for (const x of SCENES17) expect(CITIES.some((c) => c.id === x[1]) && GENRES.some((gg) => gg.id === x[2]), x[0]).toBe(true);
     for (const r of RELICS17) for (const st of r.steps ?? []) expect(st[0] * 12 + st[1]).toBeGreaterThanOrEqual(r.year * 12 + r.month);
   });
