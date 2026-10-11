@@ -229,3 +229,14 @@ export function codeStatus20(c: RunConfig): 'legacy' | 'current' | 'future' {
   if ((c.configSchemaVersion ?? 1) > CONFIG_SCHEMA_V20) return 'future';
   return legacyConfig20(c) ? 'legacy' : 'current';
 }
+
+/** Por que um código não foi aceito: 'future' (versão mais nova) ou 'invalid'. */
+export function setupCodeError20(code: string): 'future' | 'invalid' {
+  try {
+    const t = code.replace(/\s+/g, '');
+    const i = t.indexOf(CODE17);
+    if (i < 0) return 'invalid';
+    const c = JSON.parse(decodeURIComponent(escape(atob(t.slice(i + CODE17.length))))) as RunConfig;
+    return (c?.configSchemaVersion ?? 1) > CONFIG_SCHEMA_V20 ? 'future' : 'invalid';
+  } catch { return 'invalid'; }
+}
