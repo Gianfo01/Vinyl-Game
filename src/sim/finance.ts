@@ -2,6 +2,7 @@
 // depreciação (visão contábil separada do caixa), credores com paciência e retomada de ativos.
 
 import { arTotal18 } from './ledger18';
+import { debt20, position20 } from './oblig20';
 import type { Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import type { GameState, Release } from './types';
@@ -78,15 +79,20 @@ export function depreciationMonth(s: GameState): number {
   return total;
 }
 
+/** r20 (B3): dívida financeira do registro canônico (empréstimos, credores e títulos lastreados em catálogo). */
 export function totalDebt(s: GameState): number {
-  return s.player.loans.reduce((t, x) => t + x.balance, 0) + s.creditors.reduce((t, c) => t + c.owed, 0);
+  return debt20(s);
 }
 
 export interface BalanceSheet {
   cash: number;
   assets: number;
   receivables: number;
+  /** r20: contas a pagar ao vivo (subledger) */
+  payables: number;
   debt: number;
+  /** r20: parte da dívida em títulos de catálogo (fora do covenant bancário) */
+  bonds: number;
   equity: number;
   depreciationMonth: number;
   byKind: Record<string, number>;
@@ -95,10 +101,9 @@ export interface BalanceSheet {
 export function balanceSheet(s: GameState): BalanceSheet {
   const byKind: Record<string, number> = {};
   for (const a of s.assets) byKind[a.kind] = (byKind[a.kind] ?? 0) + a.bookValue;
-  const assets = Object.values(byKind).reduce((t, x) => t + x, 0);
-  const receivables = Math.round(s.flags.receivables ?? 0);
-  const debt = totalDebt(s);
-  return { cash: s.player.cash, assets, receivables, debt, equity: s.player.cash + assets + receivables - debt - (s.flags.payables18 ?? 0), depreciationMonth: s.flags.depreciationLast ?? 0, byKind };
+  // r20 (B3/B8): AR/AP ao vivo do subledger e dívida do registro canônico (inclui títulos de catálogo)
+  const p = position20(s);
+  return { cash: p.cash, assets: p.assets, receivables: p.ar, payables: p.ap, debt: p.debt, bonds: p.bonds, equity: p.equity, depreciationMonth: s.flags.depreciationLast ?? 0, byKind };
 }
 
 // ---------- Credores ----------

@@ -1,6 +1,7 @@
 // Loop do mês: agenda → semanas (lançamentos, mercado, paradas) → fechamento
 // (finanças, contratos, pessoas, rivais, mundo, eventos, legado). GDD §6, §7.
 
+import { closeSnapshot20 } from './oblig20';
 import { fin18, sumP18 } from './ledger18';
 import { clamp, type Rng } from '../core/rng';
 import { dailyStep, directorMonth, monthlyExt, startPlans, weeklyExt, yearlyExt } from './hooks';
@@ -136,6 +137,7 @@ function closeMonth(s: GameState, r: Rng, daysInMonth: number): void {
   s.scoutActionsUsed = 0;
   if (s.year > END_YEAR && !s.ended) finishArc(s);
   buildBriefing(s, monthStartWeek);
+  closeSnapshot20(s); // r20 (B8): retrato datado do fechamento (Finanças: Agora × Último fechamento)
 }
 
 function contractsMonth(s: GameState): void {

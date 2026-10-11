@@ -32,6 +32,7 @@ import { addHeat19 } from '../rivals19';
 import type { Act, GameState, Label, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { registerDeadline, type Deadline19 } from '../calendar19';
+import { bankDebt20, registerOblig20 } from '../oblig20';
 import { bolsa } from './bolsa10';
 import { schedule18 } from './decide18';
 import { headline19 } from './factlink19';
@@ -74,7 +75,8 @@ export function rates19(s: GameState): Rates19 {
 
 // ---------------------------------------------------------------- J3: covenants e o banco
 
-export const debt19 = (s: GameState): number => s.player.loans.reduce((t, x) => t + x.balance, 0) + (s.creditors ?? []).filter((c) => c.kind === 'bank').reduce((t, c) => t + Math.max(0, c.owed), 0);
+/** r20 (B3): subconjunto do covenant bancário vindo do registro canônico (empréstimos + credor banco); títulos ficam fora. */
+export const debt19 = (s: GameState): number => bankDebt20(s);
 export function rev12_19(s: GameState): number {
   const F = fin18(s), m = mIdx18(s);
   let t = 0;
@@ -97,7 +99,8 @@ export function cov19(s: GameState): Cov19 {
   const seasoned = months >= 24 && s.player.loans.some((x) => s.week - x.startWeek >= 52);
   const breach = debt > 0 && seasoned && why.length > 0;
   return { debt, rev, ratio, losing, breach, why, parts: [
-    { label: l('Dívida bancária', 'Bank debt'), value: debt, fmt: 'money' },
+    { label: l('Dívida bancária (empréstimos + banco)', 'Bank debt (loans + bank)'), value: debt, fmt: 'money' },
+    { label: l('Fora do covenant: títulos de catálogo (dívida total no balanço)', 'Outside the covenant: catalog bonds (total debt on the balance sheet)'), value: liveBond19(s)?.left ?? 0, fmt: 'money' },
     { label: l('Receita dos últimos 12 meses', 'Revenue, last 12 months'), value: rev, fmt: 'money' },
     { label: l('Dívida ÷ receita (limite 1,0)', 'Debt ÷ revenue (limit 1.0)'), value: Math.round(ratio * 100) / 100, fmt: 'num', tone: ratio > 1 ? 'bad' : ratio > 0.75 ? 'bad' : undefined },
     { label: l('Trimestres seguidos no prejuízo (limite 2)', 'Losing quarters in a row (limit 2)'), value: losing, fmt: 'num', tone: losing >= 2 ? 'bad' : undefined },
@@ -408,6 +411,8 @@ function vowsMonth(s: GameState): void {
 
 export const bondYear19 = (s: GameState): number => (exactHist(s) ? 1997 : 1990);
 export const liveBond19 = (s: GameState): Bond19 | undefined => m19(s).bonds.find((b) => b.st === 'live');
+// r20 (B3): o principal vivo do título é passivo do balanço (não entra no covenant do banco)
+registerOblig20('bond19', (s) => m19(s).bonds.filter((b) => b.st === 'live' && b.left > 0).map((b) => ({ id: b.id, kind: 'bond' as const, src: 'money19', label: fmtL(l('Título {r} de {y} ({n} masters)', '{r} bond from {y} ({n} masters)'), { r: RATING19[b.rating] ?? '?', y: b.y, n: b.rels.length }), amt: b.left, liability: true, bank: false, rate: b.coupon, monthly: Math.min(b.left, Math.round(b.amt / Math.max(1, Math.round((b.ends - b.start) / 4.35)))) + Math.round((b.left * b.coupon) / 12) })));
 /** Rating do catálogo como lastro: diversificação, idade (receita provada), concentração e risco de formato. */
 export function rating19(s: GameState): { idx: number; parts: WhyPart[] } {
   const rels = pledgeable(s).filter((r) => s.year - r.year >= 3);

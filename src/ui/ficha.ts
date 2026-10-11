@@ -1,5 +1,6 @@
 // Ficha unificada com cadeia de inspeção por IDs estáveis (GDD §24) + modal de oferta.
 
+import { freeCash20, reservedAdvances20 } from '../sim/oblig20';
 import { cap14 } from '../sim/sys/gate14';
 import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
@@ -231,7 +232,7 @@ export function openOffer(actId: string): void {
   };
   const actions = h('div', { class: 'actions' },
     h('button', { class: 'btn primary', onclick: () => {
-      if (s.player.cash < o.advance) return toast(t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
+      if (freeCash20(s) < o.advance) return toast(reservedAdvances20(s) > 0 ? t(l('Caixa livre insuficiente: {r} já está reservado em ofertas pendentes.', 'Not enough free cash: {r} is already reserved for pending offers.'), { r: $(reservedAdvances20(s)) }) : t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
       const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined });
       showReply(offer, result);
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),

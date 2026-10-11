@@ -8,6 +8,7 @@
 // A final é uma cena (cine18: envelope e vaias); o vencedor vira pista e pessoa (fato `contest_winner`, que o writers19 usa
 // para achar ghostwriters — cadeia 3). As finais de Idol/The Voice do tv18 também viram contest_final/contest_winner.
 
+import { freeCash20 } from '../oblig20';
 import { mineAct19 } from '../mine19';
 import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L, type MarketId } from '../../data/world';
@@ -238,6 +239,7 @@ export function signWinner19(s: GameState, actId: string): L {
   if (!a || a.owner) return l('Já tem selo.', 'Already signed.');
   const o = { ...defaultOffer(s, a), royalty: 0.12, termMonths: 36, id: nextId(s, 'of'), week: s.week, status: 'pending' as const } as Offer;
   o.advance = Math.round(o.advance * 0.6);
+  if (freeCash20(s) < o.advance) return l('Caixa livre insuficiente para o adiantamento (há caixa reservado ou faltando).', 'Not enough free cash for the advance (cash is reserved or short).'); // r20 (B4)
   acceptOffer(s, a, o);
   return fmtL(l('{a} assina com você.', '{a} signs with you.'), { a: a.name });
 }
