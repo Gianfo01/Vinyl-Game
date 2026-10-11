@@ -298,4 +298,5 @@ import './contests19';
 // Rodada 19 (onda 3, T3): pós-vida (espólio como ator, 11.8, arena digital) e endosso de instrumentos/instrumento-ícone.
 import './afterlife19';
 import './gear19';
+import './scenes19'; // r19 cenas: calendário real dos prêmios, cerimônia com indicados oficiais e resultado só depois da cena, volume de cenas
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

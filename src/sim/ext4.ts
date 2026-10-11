@@ -135,10 +135,21 @@ export interface Cutscene {
   seen?: boolean;
 }
 
-export function queueCutscene(s: GameState, kind: string, data: Record<string, unknown>): void {
+/** r19 (cenas): `hold` segura uma cena menor para espalhar picos (devolve true = guardada para depois);
+ *  `trim` corta a fila sem perder cenas não vistas importantes. Preenchidos por sys/scenes19.ts. */
+export const CS_HOOK19: { hold?: (s: GameState, cs: Cutscene) => boolean; trim?: (s: GameState) => void } = {};
+
+export function queueCutscene(s: GameState, kind: string, data: Record<string, unknown>): Cutscene {
   s.cutscenes ??= [];
-  s.cutscenes.push({ id: `cs${s.week}-${s.cutscenes.length}-${kind}`, kind, week: s.week, data });
-  if (s.cutscenes.length > 40) s.cutscenes.splice(0, s.cutscenes.length - 40);
+  // r19: id por contador que só cresce (antes usava o tamanho da fila, que repetia depois do corte em 40)
+  const x = ((s as unknown as { x4?: Record<string, unknown> }).x4 ??= {}) as { csSeq?: number };
+  x.csSeq = (x.csSeq ?? 0) + 1;
+  const cs: Cutscene = { id: `cs${s.week}-n${x.csSeq}-${kind}`, kind, week: s.week, data };
+  if (CS_HOOK19.hold?.(s, cs)) return cs;
+  s.cutscenes.push(cs);
+  if (CS_HOOK19.trim) CS_HOOK19.trim(s);
+  else if (s.cutscenes.length > 40) s.cutscenes.splice(0, s.cutscenes.length - 40);
+  return cs;
 }
 
 // ---------------------------------------------------------------- eventos (sem ciclo de imports)

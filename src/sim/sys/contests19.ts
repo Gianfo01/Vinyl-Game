@@ -8,6 +8,7 @@
 // A final é uma cena (cine18: envelope e vaias); o vencedor vira pista e pessoa (fato `contest_winner`, que o writers19 usa
 // para achar ghostwriters — cadeia 3). As finais de Idol/The Voice do tv18 também viram contest_final/contest_winner.
 
+import { mineAct19 } from '../mine19';
 import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L, type MarketId } from '../../data/world';
 import { acceptOffer, defaultOffer } from '../contracts';
@@ -202,7 +203,8 @@ registerSimHook('month', 'contests19', (s) => contestMonth19(s));
 onFact('contest_final', (s, f) => {
   const w = s.acts[f.actors[0]];
   if (!w) return;
-  logShot18(s, { k: 'musicshow', act: w.id, text: f.text, fact: f.id, d: { envelope: 1, booed: f.tags.includes('booed') ? 1 : 0 } });
+  // r19: a Cinemateca guarda só finais de quem é seu (ou cliente); as de NPC ficam na manchete
+  if (mineAct19(s, w.id)) logShot18(s, { k: 'musicshow', act: w.id, text: f.text, fact: f.id, d: { envelope: 1, booed: f.tags.includes('booed') ? 1 : 0 } });
   tv18(s).tvFame[w.id] = { until: s.week + 52, hits: w.hits };
   headline19(s, f.text, f.tags.includes('booed') ? 3 : 2);
 }, 'contests19:final');

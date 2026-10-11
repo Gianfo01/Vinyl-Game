@@ -28,12 +28,15 @@ export function updateLegacy(s: GameState): void {
   L.reputation = clamp((p.reputation.artistic + p.reputation.commercial + p.reputation.artists + p.reputation.institutional) / 4, 0, 100);
 }
 
-/** Gramófonos de Ouro em dezembro: 4 categorias, reconhecimento sem bônus universal. */
-export function yearlyAwards(s: GameState, r: Rng): void {
-  const year = s.year;
+/** Um vencedor dos Gramófonos decidido na noite da cerimônia, ainda não anunciado (r19: o envelope vem antes do aviso). */
+export interface GramoWin19 { year: number; cat: string; name: L; e: GameState['awards'][number] }
+
+/** Gramófonos de Ouro: 4 categorias, decididas na noite da cerimônia (fevereiro) para o ano homenageado `year`.
+ *  r19: só DECIDE — quem anuncia (livro, avisos, memória) é `publishGramo19`, depois que a cena da cerimônia é vista. */
+export function yearlyAwards(s: GameState, r: Rng, year = s.year): GramoWin19[] {
   const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
-  if (!rels.length) return;
-  // rodada 8: só concorre quem foi indicado em outubro; campanhas do selo somam pontos
+  if (!rels.length) return [];
+  // rodada 8: só concorre quem foi indicado; campanhas do selo somam pontos
   const winner = (cat: string, list: Release[], score: (x: Release) => number) => {
     const pool = restrictToNominees(s, cat, list);
     const sc = new Map(pool.map((x) => [x.id, score(x) + campaignBonus(s, x.id, cat)]));
@@ -45,19 +48,30 @@ export function yearlyAwards(s: GameState, r: Rng): void {
     { id: 'newcomer', name: l('Artista Revelação', 'Best New Artist'), pick: () => winner('newcomer', rels.filter((x) => s.acts[x.actId]?.debutYear >= year - 1), (x) => (s.acts[x.actId]?.fame ?? 0) + x.q * 0.5 + r.float(0, 6)) },
     { id: 'performance', name: l('Melhor Performance', 'Best Performance'), pick: () => winner('performance', rels, (x) => Math.max(...x.songs.map((id) => s.songs[id]?.performance ?? 0)) + r.float(0, 6)) },
   ];
+  const out: GramoWin19[] = [];
   for (const c of cats) {
     const w = c.pick();
     if (!w) continue;
     const act = s.acts[w.actId];
     const byPlayer = w.owner === 'player' || !!act?.playerBand;
-    recordAward(s, { year, category: c.id, releaseId: w.id, actId: w.actId, name: `${act?.name ?? '?'} — ${w.title}`, byPlayer }); // r19: livro único (awards19)
-    if (act) act.fame = clamp(act.fame + 3, 0, 100);
-    if (byPlayer) {
-      s.player.reputation.artistic = clamp(s.player.reputation.artistic + 4, 0, 100);
-      notify(s, fmtL(l('Gramófono de Ouro: {c} para {n}!', 'Golden Gramophone: {c} goes to {n}!'), { c: c.name, n: `${act?.name} — ${w.title}` }), 'good');
-    }
-    remember(s, 'award', fmtL(l('Gramófonos de Ouro {y} — {c}: {n}.', 'Golden Gramophones {y} — {c}: {n}.'), { y: year, c: c.name, n: `${act?.name ?? '?'} — ${w.title}` }), { actId: w.actId, important: byPlayer || !!act?.catalogNo });
+    out.push({ year, cat: c.id, name: c.name, e: { year, category: c.id, releaseId: w.id, actId: w.actId, name: `${act?.name ?? '?'} — ${w.title}`, byPlayer } });
   }
+  return out;
+}
+
+/** Anuncia um vencedor dos Gramófonos: livro único (awards19), fama, reputação, aviso e memória. */
+export function publishGramo19(s: GameState, w: GramoWin19): void {
+  const e = w.e;
+  if (s.awards.some((a) => a.year === e.year && a.category === e.category)) return; // idempotente
+  const act = e.actId ? s.acts[e.actId] : undefined;
+  const rel = e.releaseId ? s.releases[e.releaseId] : undefined;
+  recordAward(s, e); // r19: livro único (awards19)
+  if (act) act.fame = clamp(act.fame + 3, 0, 100);
+  if (e.byPlayer) {
+    s.player.reputation.artistic = clamp(s.player.reputation.artistic + 4, 0, 100);
+    notify(s, fmtL(l('Gramófono de Ouro: {c} para {n}!', 'Golden Gramophone: {c} goes to {n}!'), { c: w.name, n: `${act?.name} — ${rel?.title ?? ''}` }), 'good');
+  }
+  remember(s, 'award', fmtL(l('Gramófonos de Ouro {y} — {c}: {n}.', 'Golden Gramophones {y} — {c}: {n}.'), { y: e.year, c: w.name, n: e.name }), { actId: e.actId, important: e.byPlayer || !!act?.catalogNo });
   if (s.awards.length > 400) s.awards.splice(0, s.awards.length - 400);
 }
 

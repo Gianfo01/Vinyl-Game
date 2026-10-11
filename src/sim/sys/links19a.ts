@@ -330,7 +330,7 @@ onFact('echo', (s, f) => {
   if (ks.length > 60) delete st.eth[ks[0]];
   const tone = f.tags.includes('good') ? 'good' : f.tags.includes('bad') ? 'bad' : 'mixed';
   const sh = logShot18(s, { k: 'echo', act: m.act, pid: m.pid, text: f.text, fact: f.id, d: { o: String(f.data?.o ?? ''), tone } });
-  queueScene(s, 'cine18', tone === 'bad' ? 'street' : 'backstage', { title: F(N('Eco: {o}', 'Echo: {o}'), { o: String(f.data?.o ?? '') }), shot: sh.id, actId: m.act ?? null }, { minor: true });
+  queueScene(s, 'cine18', tone === 'bad' ? 'street' : 'backstage', { title: F(N('Eco: {o}', 'Echo: {o}'), { o: String(f.data?.o ?? '') }), shot: sh.id, actId: m.act ?? null }, { minor: true, prio: true }); // r19: eco de decisão sua não é cortado
   log(s, 'echo', F(N('Você escolheu "{o}" — e voltou: {t}', 'You chose "{o}" — and it came back: {t}'), { o: String(f.data?.o ?? ''), t: f.text }));
 }, 'links19a:echo');
 const fitEcho = (fit: Fit18): void => {
