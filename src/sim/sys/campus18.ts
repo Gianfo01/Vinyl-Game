@@ -65,6 +65,8 @@ export interface Bld18 {
 export type PKind = 'store' | 'sign' | 'dorm' | 'park' | 'reno';
 export interface Proj18 { id: string; kind: PKind; target?: string; lot: number; q: number; start: number; months: number; left: number; cost: number; paid: number; over: number; delays: number; asked?: number }
 /** r19 (links19b, 11.10): ganchos para virar o atraso de obra e o dano em cartas de decisão (true = já tratado). */
+/** r19 (regions19/schools19): prédios de sistemas novos sem estado próprio aqui — cada provedor devolve os seus. */
+export const BLD19: { f: ((s: GameState) => (Omit<Bld18, 'zone' | 'since' | 'sy' | 'st'> & Partial<Pick<Bld18, 'since' | 'sy' | 'st' | 'zone'>>)[])[] } = { f: [] };
 export const CAMPUS19: { delay?: (s: GameState, p: Proj18, why: L) => boolean; dmg?: (s: GameState, f: Fact, target: string) => boolean } = {};
 export interface Built18 { lot: number; y: number; q: number }
 export interface Gone18 { id: string; kind: BKind; name: string; city: string; lvl: number; sy: number; lot?: number; y: number; how: 'sold' | 'closed' }
@@ -259,6 +261,7 @@ export function buildings18(s: GameState): Bld18[] {
     add({ id: 'home', kind: 'home', name: hs.name.pt, city: s.config.homeCity, lvl: clamp(Math.ceil(hs.prestige / 2), 1, 4), sy: st.born.home ?? Math.max(hs.from, s.year - 1), goto: { area: 'wealth' },
       kpi: [[l('Prestígio', 'Prestige'), String(hs.prestige)], [l('Alívio de estresse', 'Stress relief'), String(hs.relief)]] });
   }
+  for (const fn of BLD19.f) for (const b of fn(s)) add(b); // r19
   // obras próprias prontas
   for (const k of ['store', 'sign', 'dorm', 'park'] as const) {
     const b = st.built[k];
