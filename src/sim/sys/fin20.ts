@@ -7,12 +7,11 @@ import { l, type L } from '../../data/world';
 import { LEGACY_DIMS } from '../../data/rules';
 import { registerExplain, type WhyPart } from '../explain18';
 import { legacyTotal } from '../legacy';
-import { KIND_NAME20, obligations20, position20, recon20, type OblKind20 } from '../oblig20';
+import { KIND_NAME20, LABEL_LEGACY20, PATH_LEGACY20, obligations20, position20, recon20, type OblKind20 } from '../oblig20';
 import type { GameState } from '../types';
 import { legacy18, pa18, pathDef18 } from './paths18';
 
-export const LABEL_LEGACY20: L = l('Legado do selo', 'Label legacy');
-export const PATH_LEGACY20: L = l('Legado por caminhos', 'Path legacy');
+export { LABEL_LEGACY20, PATH_LEGACY20 };
 
 export interface LegacyCompo20 { label: { total: number; parts: { name: L; v: number }[] }; path: { total: number; best?: { name: L; v: number }; second?: { name: L; v: number; w: number }; pts: number } }
 export function legacyCompo20(s: GameState): LegacyCompo20 {

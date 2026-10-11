@@ -51,7 +51,7 @@ function obligations(s: GameState): HTMLElement {
     gs.map((g) => h('details', { class: 'fin20-grp' },
       h('summary', null, h('b', null, t(g.name)), ' — ', $(g.total), ' ', h('small', { class: 'muted' }, g.liability ? t(l('passivo', 'liability')) : t(l('compromete caixa, não é passivo', 'commits cash, not a liability')))),
       h('ul', { class: 'small' }, g.items.map((o) => h('li', null, typeof o.label === 'string' ? o.label : t(o.label), ': ', h('b', null, $(o.amt)),
-        o.monthly ? ` · ${$(o.monthly)}/${t(l('mês', 'mo'))}` : '', o.rate ? ` · ${(o.rate * 100).toFixed(1)}% a.a.` : '',
+        o.monthly ? ` · ${$(o.monthly)}/${t(l('mês', 'mo'))}` : '', o.rate ? ` · ${(o.rate * 100).toFixed(1)}% ${t(l('a.a.', '/yr'))}` : '',
         o.bank ? h('span', { class: 'pill small' }, t(l('covenant bancário', 'bank covenant'))) : null,
         o.note ? h('small', { class: 'muted' }, ' — ', t(o.note)) : null))))),
     h('p', { class: 'small muted' }, t(l('Covenant do banco: conta só empréstimos e o credor banco ({b}); títulos de catálogo e fornecedores ficam fora do contrato, mas entram no balanço.', 'Bank covenant: counts only loans and the bank creditor ({b}); catalog bonds and suppliers are outside the contract but count on the balance sheet.'), { b: $(cv.debt) })),

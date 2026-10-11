@@ -1,6 +1,6 @@
 // Layout principal: barra superior, 10 áreas + Diário, avanço, paleta de comandos, fim de run.
 
-import { LABEL_LEGACY20 } from '../sim/sys/fin20';
+import { LABEL_LEGACY20 } from '../sim/oblig20';
 import { ERA19 } from '../sim/era19';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
 import { l, type L } from '../data/world';

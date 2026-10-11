@@ -1,6 +1,6 @@
 // Paradas, Mídia, Catálogo, Shows, Empresa, Diário e Sede.
 
-import { LABEL_LEGACY20 } from '../../sim/sys/fin20';
+import { LABEL_LEGACY20 } from '../../sim/oblig20';
 import { pager18 } from '../quick18';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
 import { BRANCH_LEVELS, CARDS, ENDINGS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';

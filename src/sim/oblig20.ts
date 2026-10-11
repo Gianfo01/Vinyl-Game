@@ -10,6 +10,10 @@ import { l, type L } from '../data/world';
 import { apTotal18, arTotal18, fin18, mIdx18 } from './ledger18';
 import type { GameState } from './types';
 
+/** r20 (B21): nomes distintos dos dois legados (aqui, sem dependências, para a interface importar cedo). */
+export const LABEL_LEGACY20 = l('Legado do selo', 'Label legacy');
+export const PATH_LEGACY20 = l('Legado por caminhos', 'Path legacy');
+
 export type OblKind20 = 'loan' | 'creditor' | 'bond' | 'payable' | 'reserve' | 'commitment';
 export interface Obl20 {
   id: string;

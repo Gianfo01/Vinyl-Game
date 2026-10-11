@@ -29,7 +29,7 @@ import { AFTER_ADVANCE, EXTRA_AREAS, registerSection } from '../registry';
 import { help18 } from '../help18';
 import { store } from '../store';
 import { why18 } from '../explain18';
-import { LABEL_LEGACY20, PATH_LEGACY20 } from '../../sim/sys/fin20';
+import { LABEL_LEGACY20, PATH_LEGACY20 } from '../../sim/oblig20';
 import { legacyTotal } from '../../sim/legacy';
 import { pendingView18 } from './decide18';
 import { tutAllowed19 } from '../tutoff19';
