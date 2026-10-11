@@ -111,7 +111,8 @@ describe('r19 0.2 — matriz fato → consumidores', () => {
   it('tipos reservados da Frente 9: não colidem e já têm consumidores previstos', () => {
     expect(Object.keys(RESERVED19).length).toBeGreaterThanOrEqual(39);
     expect(new Set(Object.values(RESERVED19).map((x) => x.sys)).size).toBe(13);
-    for (const [k, v] of Object.entries(RESERVED19)) { expect(emitted[k], k).toBeUndefined(); expect(v.to.length, k).toBeGreaterThan(0); }
+    // emitido (sistema já implementado) → precisa ter consumidor; ainda não emitido → só reservado
+    for (const [k, v] of Object.entries(RESERVED19)) { if (emitted[k]) expect(consumed19(rows.find((r) => r.kind === k)!), k).toBe(true); expect(v.to.length, k).toBeGreaterThan(0); }
   });
   it('ouvintes novos agem: obra-prima vira manchete e fama', () => {
     const s = createGame(defaultConfig('r19-mw'));
@@ -228,6 +229,10 @@ const INBOX_RARE19: Record<string, string> = {
   sh18_prop: 'sociedade com NPC: proposta exige artista com caixa e fama',
   sh18_fall: 'sociedade com NPC: rompimento exige sociedade ativa',
   campus18: 'Nosso mundo: obra/desastre só com obra própria iniciada',
+  trib19_lab: 'tributos: só quando nasce tributo a um ato do seu catálogo (fama 40+ e original ausente)',
+  trib19_art: 'tributos: só quando nasce tributo à sua própria banda (carreira de músico famosa)',
+  trib19_renew: 'tributos: renovação um ano depois de licenciar um tributo',
+  rev19_dec: 'sucesso tardio: faixa sua com 10+ anos precisa juntar calor 60 em usos de mídia',
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 

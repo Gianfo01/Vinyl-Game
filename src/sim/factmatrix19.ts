@@ -38,8 +38,6 @@ export const WHITELIST19: Record<string, string> = {
   consent: 'consentimento de imagem (image17): o contrato de imagem já carrega o efeito',
   review: 'crítica de mídia (media17): a nota já entra em critic/apelo do lançamento',
   career: 'troca de carreira em mídia (media18): efeito aplicado no próprio media18',
-  remix_contest: 'concurso de remix (media18): efeito local; ganha ouvinte com remix19 (Frente 9.4)',
-  club_chart: 'parada de clube (media18): ganha ouvinte com remix19 (Frente 9.4)',
   video_banned: 'clipe banido (media18): efeito local; ouvinte previsto em radio/censura (Frente 1)',
   merch_drop: 'lançamento de merch (merch17): receita já no ledger; sem reação de terceiros',
   street_team: 'equipe de rua (fans18): efeito local nos fãs',
