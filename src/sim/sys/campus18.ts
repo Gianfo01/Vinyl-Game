@@ -15,7 +15,7 @@ import { clamp, Rng } from '../../core/rng';
 import { HQ_LEVELS, BRANCH_LEVELS } from '../../data/rules';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
-import { emitFact, onFact, recentFacts } from '../facts17';
+import { emitFact, onFact, recentFacts, type Fact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind, type Goto18 } from '../inbox18';
 import { addStress } from '../stress17';
 import type { GameState } from '../types';
@@ -64,6 +64,8 @@ export interface Bld18 {
 
 export type PKind = 'store' | 'sign' | 'dorm' | 'park' | 'reno';
 export interface Proj18 { id: string; kind: PKind; target?: string; lot: number; q: number; start: number; months: number; left: number; cost: number; paid: number; over: number; delays: number; asked?: number }
+/** r19 (links19b, 11.10): ganchos para virar o atraso de obra e o dano em cartas de decisão (true = já tratado). */
+export const CAMPUS19: { delay?: (s: GameState, p: Proj18, why: L) => boolean; dmg?: (s: GameState, f: Fact, target: string) => boolean } = {};
 export interface Built18 { lot: number; y: number; q: number }
 export interface Gone18 { id: string; kind: BKind; name: string; city: string; lvl: number; sy: number; lot?: number; y: number; how: 'sold' | 'closed' }
 export interface Campus18 {
@@ -420,7 +422,7 @@ export function monthProj18(s: GameState): void {
       log(s, fmtL(l('Atraso de {d} mês(es): {w}.', '{d}-month delay: {w}.'), { d, w: why }));
       if (p.asked !== mIdx(s)) {
         p.asked = mIdx(s);
-        pushInbox18(s, 'campus18', { from: c.name.pt, subject: l('Obra atrasada', 'Works delayed'), body: fmtL(l('{w}. Faltam {m} meses. Hora extra recupera 1 mês por {v}.', '{w}. {m} months left. Overtime recovers 1 month for {v}.'), { w: why, m: p.left, v: $k(s, Math.round(p.cost * 0.12)) }),
+        if (!CAMPUS19.delay?.(s, p, why)) pushInbox18(s, 'campus18', { from: c.name.pt, subject: l('Obra atrasada', 'Works delayed'), body: fmtL(l('{w}. Faltam {m} meses. Hora extra recupera 1 mês por {v}.', '{w}. {m} months left. Overtime recovers 1 month for {v}.'), { w: why, m: p.left, v: $k(s, Math.round(p.cost * 0.12)) }),
           tone: 'bad', actions: [{ id: 'rush', label: l('Pagar hora extra', 'Pay overtime') }, { id: 'wait', label: l('Esperar', 'Wait') }], weeks: 4, ref: { proj: p.id } });
       }
     }
@@ -569,7 +571,7 @@ onFact('disaster', (s, f) => {
   const target = mine ? (ventures(s).list.find((v) => v.kind === 'studio' && isHome(s, v.city)) ? `v:${ventures(s).list.find((v) => v.kind === 'studio' && isHome(s, v.city))!.id}` : 'hq') : 'hq';
   st.dmg[target] = { w: s.week, sev: f.severity, why: f.text };
   log(s, fmtL(l('Dano: {t}', 'Damage: {t}'), { t: f.text }));
-  pushInbox18(s, 'campus18', { from: 'Seguradora', subject: l('Prédio danificado', 'Building damaged'), body: fmtL(l('{t} Até a reforma, você paga um espaço provisório todo mês. Reforme em "Nosso mundo".', '{t} Until it is renovated you pay for temporary space every month. Renovate in "Our world".'), { t: f.text }), tone: 'bad', ref: { b: target } });
+  if (!CAMPUS19.dmg?.(s, f, target)) pushInbox18(s, 'campus18', { from: 'Seguradora', subject: l('Prédio danificado', 'Building damaged'), body: fmtL(l('{t} Até a reforma, você paga um espaço provisório todo mês. Reforme em "Nosso mundo".', '{t} Until it is renovated you pay for temporary space every month. Renovate in "Our world".'), { t: f.text }), tone: 'bad', ref: { b: target } });
 }, 'campus18-dmg');
 
 registerInboxKind('campus18', {

@@ -238,6 +238,11 @@ const INBOX_RARE19: Record<string, string> = {
   trib19_art: 'tributos: só quando nasce tributo à sua própria banda (carreira de músico famosa)',
   trib19_renew: 'tributos: renovação um ano depois de licenciar um tributo',
   rev19_dec: 'sucesso tardio: faixa sua com 10+ anos precisa juntar calor 60 em usos de mídia',
+  // r19 links19b (Frente 1, grupo B): cartas que dependem de inteligência, pacto, obra atrasada e desastre
+  l19b_intel: 'intenção de rival revelada: exige espionagem ou analista 60+ com rival tenso',
+  l19b_betray: 'traição de pacto: exige pacto ativo e calor 35+',
+  l19b_delay: 'obra do campus atrasada: só com obra própria em andamento',
+  l19b_ins: 'prédio danificado (incêndio/desastre): raro',
 };
 const RUNS19: [number, 'label' | 'artist'][] = [[1889, 'label'], [1960, 'artist'], [2010, 'label'], [2016, 'artist']];
 
