@@ -36,6 +36,8 @@ import { equipmentSection20, festivalsAside20, gigsSection20, hqPanel, setTourSt
 import { TOUR_STEPS20, activeToursSection, copyTourPolicy20, merchSection, onTourBooked20, tourDraftEstimate20, tourLivePanel20, tourPlannerSection } from '../panels/tours';
 import { setKitDraft18 } from './live18';
 import { branchBlock, deptBlock, hqBlock, marketsBlock } from './hq6';
+import { actionsButton20, chooseAction20 } from './actmenu20'; // r20 G4: registro único de ações
+import { ROOM_ACTIONS20, actionRow20 } from '../actions20';
 import './hubs20.css';
 
 const T = (x: L) => t(x);
@@ -132,6 +134,7 @@ export function controlRoom20(s: GameState): HTMLElement | null {
       h('p', { class: 'muted small' }, T(l('O que cada fator move: segurança de público pesa nos incidentes com a plateia (não conserta falha técnica — isso é equipamento e ensaio); transporte e hospedagem pesam no cansaço; concorrência e preço pesam na bilheteria.', 'What each factor moves: crowd security weighs on audience incidents (it does not fix technical failures — that is gear and rehearsal); transport and lodging weigh on fatigue; competition and price weigh on the box office.'))),
       h('div', { class: 'row wrap' },
         h('button', { class: 'btn small', onclick: () => (hqHooks.onAct ? hqHooks.onAct(x.actId) : inspect.act(x.actId)) }, ic('guitar'), ' ', T(l('Abrir artista', 'Open act'))),
+        playerActs(s).includes(x.actId) ? actionsButton20(s, x.actId, 'btn small') : null,
         tr ? h('button', { class: 'btn small', onclick: () => { copyTourPolicy20(tr); setKitDraft18(tr.kit18 ?? KIT0); setTab('showsHub', 'tours'); toast(T(l('Política copiada para o próximo planejamento (a rota não).', 'Policy copied to the next plan (not the route).')), 'good'); rerender(); } }, ic('pen'), ' ', T(l('Copiar política', 'Copy policy'))) : null,
         tr ? h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(T(l('Cancelar a turnê inteira? Pelas regras atuais, metade da logística volta.', 'Cancel the whole tour? Under current rules, half the logistics is refunded.')))) return; const e = cancelTour(s, tr.id); if (e) toast(T(e), 'bad'); rerender(); } }, T(l('Cancelar turnê (devolve metade)', 'Cancel tour (half refunded)'))) : null),
     );
@@ -248,10 +251,15 @@ export function hqList20(s: GameState): HTMLElement {
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
       hqHooks.side ? hqHooks.side(s) : section(T(l('Artistas', 'Acts')), h('ul', null, playerActs(s).map((id) => h('li', null, actLink(s, id))))),
+      playerActs(s).length ? section(T(l('Ações por artista', 'Actions per act')), h('ul', { class: 'hq20-acts' }, playerActs(s).map((id) => h('li', null, actLink(s, id), ' ', actionsButton20(s, id, 'btn small'))))) : null,
       section(T(l('Salas', 'Rooms')), h('ul', { class: 'hq20-rooms' }, rooms.map((k) => {
         const tg = tags.filter((x) => x.room === k);
         const tip = hqHooks.roomTip?.(s, k) ?? [];
-        return h('li', null, h('button', { type: 'button', class: 'btn small', onclick: () => hqHooks.onRoom?.(k) }, T(ROOM20[k])), ' ', ...tg.map((x) => pill(x.text, x.tone === 'info' ? '' : x.tone)), tip.length ? h('small', { class: 'muted' }, ` ${tip.join(' · ')}`) : null);
+        const sel = store.selectedAct && playerActs(s).includes(store.selectedAct) ? store.selectedAct : playerActs(s)[0];
+        const ra = sel && ROOM_ACTIONS20[k] ? actionRow20(s, ROOM_ACTIONS20[k], { act: sel }) : undefined;
+        return h('li', null, h('button', { type: 'button', class: 'btn small', onclick: () => hqHooks.onRoom?.(k) }, T(ROOM20[k])), ' ',
+          ra && sel ? h('button', { type: 'button', class: 'btn small ghost', 'aria-disabled': ra.block ? 'true' : null, title: ra.block ? T(ra.block) : '', onclick: (e: Event) => chooseAction20(s, ra.def.id, sel, e.currentTarget as HTMLElement) }, `${T(ra.def.label)} · ${s.acts[sel].name}`) : null, ' ',
+          ...tg.map((x) => pill(x.text, x.tone === 'info' ? '' : x.tone)), tip.length ? h('small', { class: 'muted' }, ` ${tip.join(' · ')}`) : null);
       })))),
     h('aside', { class: 'col-side' }, capacityCard(s)));
 }

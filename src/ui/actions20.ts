@@ -496,3 +496,6 @@ registerAction20({ id: 'pins.manage', label: N('Fixar ações no cabeçalho…',
 /** Ações de agenda conhecidas (teste: o registro não inventa ação de agenda que a simulação não conhece). */
 export const _agendaIds20 = (): string[] => AGENDA_ACTIONS.map((x) => x.id);
 export const _slotWeek20 = slotWeek;
+
+/** Sede espacial (G5 hubs20): sala → ação do registro sobre o artista selecionado (mesmas regras do menu/Ctrl+K). */
+export const ROOM_ACTIONS20: Record<string, string> = { booth: 'record.prepare', control: 'record.prepare', rehearsal: 'rehearse.add', writing: 'repertoire.open', lounge: 'rest.add', meeting: 'contract.view' };

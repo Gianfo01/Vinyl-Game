@@ -8,7 +8,7 @@ import type { GameState } from '../src/sim/types';
 import '../src/sim/sys';
 import {
   CAT20, DEFAULT_PINS20, FILTER0_20, SUB20, actionRow20, actionRows20, actions20, alerts20, applyRecordPlan20, batchPreview20,
-  filterRoster20, paletteEntries20, planAgenda20, recordPlan20, runAction20, runBatch20, togglePin20, _agendaIds20,
+  filterRoster20, paletteEntries20, planAgenda20, recordPlan20, runAction20, runBatch20, togglePin20, _agendaIds20, ROOM_ACTIONS20,
 } from '../src/ui/actions20';
 
 function game(): { s: GameState; id: string } {
@@ -28,6 +28,7 @@ describe('r20 G4 — registro de ações', () => {
     expect(SUB20.map((x) => x.id)).toEqual(['overview', 'agenda', 'career', 'audience', 'members', 'full']);
     for (const p of DEFAULT_PINS20) expect(ids).toContain(p);
     expect(_agendaIds20()).toContain('rehearse');
+    for (const id of Object.values(ROOM_ACTIONS20)) expect(ids).toContain(id);
   });
 
   it('menu: linhas sem mudar estado; bloqueio tem motivo; fora do elenco é bloqueado', () => {
