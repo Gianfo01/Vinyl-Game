@@ -9,9 +9,9 @@
 
 import { clamp } from '../../core/rng';
 import { BRANCH_LEVELS, HQ_LEVELS } from '../../data/rules';
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { upgradeCost as hqUpCost, upgradeHq } from '../economy';
-import { registerExplain, type WhyCtx, type WhyPart } from '../explain18';
+import { explain18, registerExplain, type WhyCtx, type WhyPart } from '../explain18';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import type { Goto18 } from '../inbox18';
@@ -248,6 +248,10 @@ export function foundAt19(s: GameState, kind: VKind, lot: number): L | null {
 
 // ---------------------------------------------------------------- modelos dos popups (puros)
 
+/** r19 (hood19): bloqueios de lote (vizinhos) — devolve o motivo ou null. */
+export const LOTGATE19: ((s: GameState, lot: number) => L | null)[] = [];
+const gate = (s: GameState, lot: number): L | null => { for (const f of LOTGATE19) { const e = f(s, lot); if (e) return e; } return null; };
+
 export interface PopRow19 { k: L; v: string; why?: [string, WhyCtx]; tone?: 'good' | 'bad' | '' }
 export interface PopAct19 { id: string; label: L; cost?: number; dis?: L; tone?: 'primary' | 'ghost' | 'danger'; go?: Goto18; confirm?: L; ask?: 'name' | 'q' | 'lot' }
 export interface Opt19 { id: string; name: L; desc: L; effect: L; cost: number; months: number; icon: string; dis?: L; syn: L[]; q?: boolean }
@@ -268,6 +272,12 @@ export function bldPop19(s: GameState, id: string, q = 1): Pop19 | null {
   const sy = syn19(s, bs).filter((x) => x.a === id || x.b === id);
   if (b.zone === 'campus' && lot !== undefined) rows.push({ k: l('Vizinhança', 'Neighbours'), v: sy.length ? sy.map((x) => (x.rule.neg ? '−' : '+')).join('') : '—', why: ['w19.syn', { id }], tone: sy.some((x) => x.rule.neg) ? 'bad' : sy.length ? 'good' : '' });
   if (lot !== undefined) rows.push({ k: l('Lote', 'Lot'), v: LOTS18[lot].name.pt, why: ['w19.lot', { lot }] });
+  if (b.kind === 'hq') {
+    const hw = explain18(s, 'h19.hood', {});
+    if (hw) rows.push({ k: l('Bairro', 'Area'), v: `${typeof hw.title === 'string' ? hw.title : hw.title?.pt ?? ''} · ${hw.value}`, why: ['h19.hood', {}] });
+    const far = bs.filter((x) => x.zone === 'world' && x.st !== 'sold' && x.st !== 'closed');
+    if (far.length) rows.push({ k: l('Filiais e escritórios', 'Branches and offices'), v: far.map((x) => x.city.startsWith('@') ? x.name : cityById[x.city]?.name.pt ?? x.city).slice(0, 5).join(', ') });
+  }
   const notes: Pop19['notes'] = [];
   if (b.now) notes.push({ t: b.now });
   if (b.note) notes.push({ t: b.note, tone: 'bad' });
@@ -370,6 +380,8 @@ export function act19(s: GameState, target: string, act: string, arg: { q?: numb
   const q = arg.q ?? 1;
   if (target.startsWith('lot:')) {
     const lot = +target.slice(4);
+    const g = gate(s, lot);
+    if (g) return g;
     if (act === 'moveHere') return arg.moving ? move19(s, arg.moving, lot) : l('Nada para mudar.', 'Nothing to move.');
     if (act.startsWith('p:')) { const k = act.slice(2) as CK; return PROJ18[k] ? startProjAt(s, k, lot, q) : l('Obra inválida.', 'Invalid project.'); }
     if (act.startsWith('v:')) return foundAt19(s, act.slice(2) as VKind, lot);

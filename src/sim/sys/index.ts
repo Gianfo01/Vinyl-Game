@@ -300,4 +300,5 @@ import './afterlife19';
 import './gear19';
 // Rodada 19 (world19): Nosso mundo — lotes, vizinhança, ampliações e popups sobre o mapa.
 import './world19';
+import './hood19';
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
