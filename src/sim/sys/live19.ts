@@ -23,7 +23,7 @@ import { fan18, fandomRec19, mobilization19 } from '../fandom19';
 import { exactHist } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind, type AdvTip18 } from '../inbox18';
 import { rng19 } from '../rng19';
-import { POOL19 } from '../market';
+import { POOL19 } from '../pool19';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { schedule18 } from './decide18';

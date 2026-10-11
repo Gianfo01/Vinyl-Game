@@ -1,3 +1,4 @@
+import { POOL19 } from './pool19';
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
 
@@ -57,7 +58,7 @@ export function weeklyPool(s: GameState, year = s.year): number {
   return v;
 }
 /** r19 (live19): fator sazonal do tamanho do mercado no mês (injetado pelo live19: sem ciclo). */
-export const POOL19: { f?: (s: GameState) => number } = {};
+export { POOL19 } from './pool19';
 
 export function coverage(territories: MarketId[], genre: string, year: number, positioning = 40): number {
   const fam = familyOf(genre);
