@@ -23,6 +23,7 @@ import { fan18, fandomRec19, mobilization19 } from '../fandom19';
 import { exactHist } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind, type AdvTip18 } from '../inbox18';
 import { rng19 } from '../rng19';
+import { POOL19 } from '../market';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { schedule18 } from './decide18';
@@ -260,11 +261,11 @@ export function season19(y: number, m: number): Season19 {
   const A = xmasAmp19(y), why: L[] = [];
   let u = 1, lv = 1;
   if (m === 10) { u = 1 + 0.2 * A; why.push(l('Compras de Natal começam', 'Christmas shopping starts')); }
-  if (m === 11) { u = 1 + 0.35 * A; lv = 0.95; why.push(l('Natal: o mês que mais vende disco', 'Christmas: the biggest record month')); }
-  if (m === 0) { u = 1 - 0.2 * A; lv = 0.9; why.push(l('Calmaria de janeiro: bolsos vazios', 'January lull: empty pockets')); }
+  if (m === 11) { u = 1 + 0.35 * A; why.push(l('Natal: o mês que mais vende disco', 'Christmas: the biggest record month')); }
+  if (m === 0) { u = 1 - 0.2 * A; lv = 0.95; why.push(l('Calmaria de janeiro: bolsos vazios', 'January lull: empty pockets')); }
   if (m === 1) { u = 1 - 0.12 * A; why.push(l('Fevereiro ainda fraco', 'February still slow')); }
   if (y >= 1960 && m >= 5 && m <= 7) { u *= 1.03; why.push(l('Música de verão: singles tocam na praia', 'Summer songs: singles play on the beach')); }
-  if (y >= 1969 && m >= 5 && m <= 7) { lv *= 1.08; why.push(l('Temporada de festivais', 'Festival season')); }
+  if (y >= 1969 && m >= 5 && m <= 7) { lv *= 1.05; why.push(l('Temporada de festivais', 'Festival season')); }
   return { units: Math.round(u * 1000) / 1000, live: Math.round(lv * 1000) / 1000, why };
 }
 export const xmasCost19 = (s: GameState) => money(s, 3000);
@@ -286,12 +287,12 @@ export function xmasPush19(s: GameState, relId: string): L | null {
   schedule18(s, 'lv19:xmas', { act: rel.actId, rel: rel.id }, l('Campanha de Natal', 'Christmas campaign'), l('Campanha', 'Campaign'));
   return null;
 }
-registerMod('chartUnits', 'live19:season', (s, v, c) => {
-  let k = season19(s.year, s.month).units;
+// curva sazonal no TAMANHO do mercado (market.weeklyPool): simétrica, fora dos tetos de mods (média do ano ≈ 1)
+POOL19.f = (s) => season19(s.year, s.month).units;
+// campanha de Natal: só o disco escolhido, em nov–dez
+registerMod('chartUnits', 'live19:xmas', (s, v, c) => {
   const rel = c.release;
-  if (rel && lv19(s).xmas[rel.id] === s.year && (s.month === 10 || s.month === 11)) k *= xmasMult19(s);
-  if (rel?.type === 'single' && s.year >= 1960 && s.month >= 5 && s.month <= 7) k *= 1.04;
-  return Math.abs(k - 1) > 0.004 ? { value: v * k, label: k >= 1 ? l('Temporada (Natal/verão)', 'Season (Christmas/summer)') : l('Calmaria de janeiro', 'January lull') } : null;
+  return rel && (s.month === 10 || s.month === 11) && lv19(s).xmas[rel.id] === s.year ? { value: v * xmasMult19(s), label: l('Campanha de Natal', 'Christmas campaign') } : null;
 });
 registerMod('cityDemand', 'live19:season', (s, v) => {
   const k = season19(s.year, s.month).live;
