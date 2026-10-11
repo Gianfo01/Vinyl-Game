@@ -144,6 +144,21 @@ export const MONEY19A: Record<string, { sys: string; to: string[] }> = {
   rate_shift: { sys: 'money19', to: ['money19:rates (dívida dos selos NPC, notícia na bolsa)'] },
 };
 
+/** R19 Frente 6 (T5, sys/regions19.ts + schools19.ts): tipos novos → ouvintes (todos com efeito real). schools19 emite os reservados. */
+export const REG19: Record<string, { sys: string; to: string[] }> = {
+  industry_born: { sys: 'regions19', to: ['regions19:born (gosto do submercado regions18, manchete)'] },
+  sound_clash: { sys: 'regions19', to: ['regions19:clash (fama dos atos de reggae, fama16 na Jamaica, regions18)'] },
+  street_hit: { sys: 'regions19', to: ['regions19:street (fama/embalo; royalties "de rua" → confiança −)'] },
+  allstars_show: { sys: 'regions19', to: ['regions19:allstars (fãs, fama16 em Porto Rico, regions18 Caribe, manchete)'] },
+  industry_suit: { sys: 'regions19', to: ['regions19:suit (reputação institucional, manchete)'] },
+  commune_founded: { sys: 'regions19', to: ['regions19:commune (calor do regime soc18, estresse, Ligações do mês)'] },
+  commune_raid: { sys: 'regions19', to: ['regions19:raid (manchete, fama16 em casa, lealdade fans18)'] },
+  visa_denied: { sys: 'regions19', to: ['regions19:visa (estresse, fama16 no país, Ligações do mês)'] },
+  radio_session: { sys: 'regions19', to: ['regions19:session (fama16 no Reino Unido)'] },
+  strike_settled: { sys: 'regions19', to: ['regions19:union (confiança do elenco, manchete)'] },
+  campaign_song: { sys: 'regions19', to: ['regions19:campaign (estresse no protesto, manchete)'] },
+};
+
 export interface FactRow19 { kind: string; listeners: string[]; wildcard: string[]; readers: string[]; chron: boolean; why?: string }
 
 /** Monta a matriz para os tipos emitidos (`readers`: tipo → arquivos que leem; `chron`: tipos que passam pela crônica). */

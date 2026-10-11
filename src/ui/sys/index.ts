@@ -147,6 +147,8 @@ import './long18';
 // Rodada 18 (cine18): storyboards de cerimônias e grandes momentos, Cinemateca e Legado póstumo.
 import './cine18';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
+// Rodada 19 (Frente 6, T5): Mundo › Regiões e política (selos regionais, comuna, vistos, greves, campanhas, leis, celeiros).
+import './regions19';
 import './core18';
 import './finance18';
 import './eras18';
@@ -176,4 +178,6 @@ import './era19';
 import './moneyb19';
 // Rodada 19 (onda 3, T1): Finanças › Dívida e catálogo.
 import './money19';
+// Rodada 19 (Frente 6, T5): Mundo › Regiões e política (selos regionais, comuna, vistos, greves, campanhas, leis, celeiros).
+import './regions19';
 import './core18';

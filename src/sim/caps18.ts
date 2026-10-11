@@ -62,7 +62,7 @@ export const APPEAL_CAT19: Record<string, string[]> = {
   media: ['industry:channels', 'industry:outlets', 'ventures9:media', 'press18', 'goods8-spotlight', 'w4hype', 'deals18:imprint', 'ai18', 'ai8'],
   /** mundo: era, sociedade, leis, greves, marcos, crime, guerra de NPCs e rivais */
   world: ['era8', 'org12', 'world18', 'soc18', 'w4society', 'w4laws', 'w4cheap', 'w4strike', 'w4ms:*', 'w4backlash', 'crime17', 'crime17tie', 'npc17:war',
-    'rivals12push', 'rivals8', 'rivals8profile', 'rivalmind18:pact'],
+    'rivals12push', 'rivals8', 'rivals8profile', 'rivalmind18:pact', 'regions19'],
 };
 export const CAT_CAP19: Record<string, { knee: number; room: number }> = { appeal: { knee: 0.2, room: 0.3 } };
 /** só multiplicadores até aqui entram na pilha da família */
