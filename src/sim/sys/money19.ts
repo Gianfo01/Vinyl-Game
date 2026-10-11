@@ -92,8 +92,10 @@ export function cov19(s: GameState): Cov19 {
   for (let i = st.q.length - 1; i >= 0 && st.q[i] < 0; i--) losing++;
   const why: L[] = [];
   if (ratio > 1) why.push(fmtL(l('dívida de {d} acima da receita de 12 meses ({r})', 'debt of {d} above 12-month revenue ({r})'), { d: usd(debt), r: usd(rev) }));
-  if (losing >= 3) why.push(fmtL(l('{n} trimestres seguidos no prejuízo', '{n} losing quarters in a row'), { n: losing }));
-  const breach = debt > 0 && why.length > 0;
+  if (losing >= 3 && ratio > 0.5) why.push(fmtL(l('{n} trimestres seguidos no prejuízo com dívida acima de metade da receita', '{n} losing quarters in a row with debt above half of revenue'), { n: losing }));
+  // carência: o banco só cobra covenant de empréstimo com 1 ano+ e de selo com 2 anos+ de vida
+  const seasoned = months >= 24 && s.player.loans.some((x) => s.week - x.startWeek >= 52);
+  const breach = debt > 0 && seasoned && why.length > 0;
   return { debt, rev, ratio, losing, breach, why, parts: [
     { label: l('Dívida bancária', 'Bank debt'), value: debt, fmt: 'money' },
     { label: l('Receita dos últimos 12 meses', 'Revenue, last 12 months'), value: rev, fmt: 'money' },
@@ -132,7 +134,7 @@ function callDebt(s: GameState, why: L[]): void {
       { id: 'pay', label: fmtL(l('Quitar tudo agora ({d})', 'Pay it all now ({d})'), { d: usd(debt) }) },
       { id: 'pledge', label: l('Empenhar masters (juro +3 pp; quebrar de novo = leilão)', 'Pledge masters (+3 pp rate; breach again = auction)') },
       { id: 'sell', label: l('Vender os 2 melhores masters a um fundo e amortizar', 'Sell the 2 best masters to a fund and pay down') },
-      { id: 'accept', label: l('Aceitar a aceleração (12 meses para quitar, juro +2 pp)', 'Accept acceleration (12 months to repay, +2 pp rate)') },
+      { id: 'accept', label: l('Aceitar a aceleração (24 meses para quitar, juro +1,5 pp)', 'Accept acceleration (24 months to repay, +1.5 pp rate)') },
     ] });
 }
 /** Resposta do jogador ao banco (também usada pela Caixa). */
@@ -172,12 +174,12 @@ export function answerCall19(s: GameState, how: 'pay' | 'pledge' | 'sell' | 'acc
     return fmtL(l('Masters vendidos por {p} (deságio de 30%) e a dívida amortizada.', 'Masters sold for {p} (30% haircut) and the debt paid down.'), { p: usd(got) });
   }
   for (const ln of s.player.loans) {
-    ln.rate += 0.02;
+    ln.rate += 0.015;
     const i = Math.round((ln.balance * ln.rate) / 12);
-    ln.monthly = Math.max(ln.monthly, Math.round(ln.balance / 12) + i);
+    ln.monthly = Math.max(ln.monthly, Math.round(ln.balance / 24) + i);
   }
   st.call.st = 'accel';
-  return l('Aceleração aceita: as prestações sobem para quitar em 12 meses.', 'Acceleration accepted: payments rise to clear the debt in 12 months.');
+  return l('Aceleração aceita: as prestações sobem para quitar em 24 meses.', 'Acceleration accepted: payments rise to clear the debt in 24 months.');
 }
 function payDown(s: GameState, amt: number): number {
   let left = amt;
@@ -310,7 +312,7 @@ export function setRofr19(s: GameState, actId: string, on: boolean): L | null {
   const a = s.acts[actId];
   if (!a || a.owner !== 'player' || a.playerBand) return l('Só artistas do seu elenco.', 'Only your roster.');
   const st = m19(s);
-  if (on) { st.rofr[actId] = s.week; a.trust = clamp(a.trust + 4, 0, 100); schedule18(s, 'm19:rofr', { act: actId }, fmtL(l('Preferência a {a}', 'First refusal for {a}'), { a: a.name }), l('Dar direito de preferência', 'Grant first refusal')); }
+  if (on) { st.rofr[actId] = s.week + 1; a.trust = clamp(a.trust + 4, 0, 100); schedule18(s, 'm19:rofr', { act: actId }, fmtL(l('Preferência a {a}', 'First refusal for {a}'), { a: a.name }), l('Dar direito de preferência', 'Grant first refusal')); }
   else { delete st.rofr[actId]; a.trust = clamp(a.trust - 6, 0, 100); }
   return null;
 }
@@ -335,7 +337,7 @@ function vow(s: GameState, a: Act, rels: Release[], why: L): void {
 SALE19.rofr = (s, rel) => {
   const a = s.acts[rel.actId];
   if (!a || !m19(s).rofr[a.id]) return false;
-  if (a.fame < 25 && !rng(s).chance(0.5)) return false;
+  if (a.fame < 25 && a.trust < 50) return false; // artista pequeno e desconfiado não levanta o dinheiro
   const t = fmtL(l('{a} usa o direito de preferência e compra o próprio master "{t}".', '{a} uses first refusal and buys their own master "{t}".'), { a: a.name, t: rel.title });
   emitFact(s, { kind: 'rofr_used', actors: [a.id, 'player'], severity: 45, visibility: 'public', tags: ['rights', 'good'], text: t, src: 'money19' });
   return true;
@@ -610,7 +612,7 @@ registerInboxKind('m19_auc', { label: l('Leilão', 'Auction'), cat: 'deals', ico
 registerConseq18('ib:m19_call:pay', { now: l('Dívida zerada; caixa fica curto.', 'Debt cleared; cash runs short.'), later: [{ in: [3, 9], p: 0.5, tone: 'good', hint: l('Banco lembra de quem paga em dia.', 'The bank remembers who pays on time.'), fx: (f) => { f.rep('institutional', 2); return l('O banco volta a oferecer crédito com juro melhor.', 'The bank offers credit again at a better rate.'); } }] });
 registerConseq18('ib:m19_call:pledge', { now: l('Masters empenhados, juro +3 pp.', 'Masters pledged, +3 pp rate.'), later: [{ in: [6, 15], p: (s) => (s.player.cash < 0 ? 0.6 : 0.25), tone: 'bad', hint: l('Empenho é promessa com data.', 'A pledge is a promise with a date.'), when: (s) => m19(s).lien.length > 0, fx: (f) => { f.rep('commercial', -1); return l('Concorrentes sabem que seus masters estão no banco.', 'Rivals know your masters are at the bank.'); } }] });
 registerConseq18('ib:m19_call:sell', { now: l('Dinheiro agora, renda futura perdida.', 'Cash now, future income lost.'), later: [{ in: [4, 12], p: 0.45, tone: 'bad', hint: l('O artista pode não gostar de saber pelos jornais.', 'The artist may not like reading it in the papers.'), fx: (f) => { f.rep('artists', -2); return l('Artistas comentam que você vende o catálogo na primeira crise.', 'Artists say you sell the catalog at the first crisis.'); } }] });
-registerConseq18('ib:m19_call:accept', { now: l('Prestações sobem por 12 meses.', 'Payments rise for 12 months.'), later: [{ in: [3, 12], p: (s) => (s.player.cash < 0 ? 0.55 : 0.2), tone: 'bad', hint: l('Se o covenant quebrar de novo no vermelho, o banco pede a falência.', 'If the covenant breaks again in the red, the bank files for bankruptcy.'), fx: (f) => { f.mood('stress', 6); return l('A diretoria perde o sono com as prestações.', 'The board loses sleep over the payments.'); } }] });
+registerConseq18('ib:m19_call:accept', { now: l('Prestações sobem por 24 meses.', 'Payments rise for 24 months.'), later: [{ in: [3, 12], p: (s) => (s.player.cash < 0 ? 0.55 : 0.2), tone: 'bad', hint: l('Se o covenant quebrar de novo no vermelho, o banco pede a falência.', 'If the covenant breaks again in the red, the bank files for bankruptcy.'), fx: (f) => { f.mood('stress', 6); return l('A diretoria perde o sono com as prestações.', 'The board loses sleep over the payments.'); } }] });
 registerConseq18('ib:m19_auc:bid', { later: [{ in: [2, 6], p: 0.4, tone: 'mixed', hint: l('Quem compra masters herda o humor do artista.', 'Whoever buys masters inherits the artist\'s mood.'), fx: (f) => { f.rep('commercial', 1); return l('O mercado comenta sua compra.', 'The market talks about your purchase.'); } }] });
 registerConseq18('ib:m19_auc:pass', { later: [{ in: [3, 9], p: 0.3, tone: 'mixed', hint: l('Outro selo pode crescer com esse catálogo.', 'Another label may grow on that catalog.'), fx: () => l('O rival que arrematou ganhou fôlego.', 'The rival who won it gained breathing room.') }] });
 registerConseq18('m19:bid', { later: [{ in: [2, 8], p: 0.35, tone: 'mixed', hint: l('Lance público vira informação para os rivais.', 'A public bid is information for rivals.'), fx: (f) => { f.rep('commercial', 1); return l('Seu lance sinaliza que você tem caixa.', 'Your bid signals you have cash.'); } }] });
@@ -671,5 +673,5 @@ REP_NOTES19.push((s) => {
 });
 
 // usado pelo teste e pela UI
-export const _test19 = { callDebt, seize19, closeAuction, covenantQuarter };
+export const _test19 = { callDebt, seize19, closeAuction, covenantQuarter, vowsMonth, bondsMonth, auctionMonth };
 export type { Label };

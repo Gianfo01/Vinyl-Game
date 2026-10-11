@@ -162,6 +162,8 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
 /** Tipos que não aparecem com segurança em bots curtos (1 ano), com o motivo (levantamento: 6 bots de 3 anos, 1889–2015,
  *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
 const INBOX_RARE19: Record<string, string> = {
+  m19_call: 'money19: banco chama a dívida só com empréstimo e covenant quebrado (3 trimestres no prejuízo ou dívida > receita de 12 meses)',
+  m19_auc: 'money19: leilão só quando um selo NPC quebra (raro em bots curtos)',
   // vistos às vezes em 1 ano (1 mensagem): exigir seria frágil a qualquer mudança de sorteio
   a18_rep: 'artista: relatório da gravadora só depois de assinar (depende do sorteio de ofertas)',
   analyst: 'relatório do analista: sem ação, vai para o boletim semanal (notify19) e não aparece como item próprio',
