@@ -26,3 +26,12 @@
 ## Nova run
 - Padrão **Reais em mundo aleatório**: nomes reais, mas catálogo, contratos, vínculos e trajetórias simulados desde o início (política versionada). Os seis modos continuam ("Fidelidade histórica" é o antigo Vida real exata).
 - Tela "Crie sua próxima história": 4 áreas (Mundo, Você e seu começo, Regras e ritmo, Revisão), presets Recomendado/Historiador/Sandbox/Desafio, comparação de modos, resumo editável, prévia rápida honesta, configuração única resolvida; saves e códigos antigos mantêm a semântica ("Configuração legada").
+
+## Pendências fechadas (20b) e nova revisão (20c)
+- Planta da Sede abre o mesmo menu Ações ▾ (artista e sala, teclado N/P/Enter/Esc); contrato de parceiro de TV confere o caixa livre.
+- Artista: aba **Real × partida** ("Referência real" até o ano atual × "Nesta partida"); lançamentos com selo **Documentado/Simulado**.
+- Shows: id de show `turnê:dia` liga incidente ↔ notícia ↔ sala de controle, sempre na turnê exata; **alterar datas futuras** (transporte, hospedagem, diárias, equipamento, seguro, segurança, equipe e preço) com prévia igual ao acerto.
+- Acessibilidade verificada por script (nomes, rótulos, IDs, foco, texto a 200% em 1400/390 px) e corrigida; leitor de tela real não testado.
+- Nova run, passo 2: atividade → ponto de partida → empresa/banda → **Passado profissional** (origem + trajetória num bloco, bônus sem duplicidade) → ambição → resumo; "Personalizar personagem" sob demanda; sem rolagem lateral no celular.
+- Preços com moeda e base temporal ("US$ de {ano} ≈ US$ de 2020"), ações da sede separadas (alugar, mudar, comprar, reformar, equipar, ampliar), 3 preços recalibrados ([precos20.md](precos20.md)); gastos respeitam o caixa reservado a ofertas; teto de recuperação perdoa o saldo de fato.
+- Vendas, streaming e campanhas alimentam os fãs por região; rivais freiam o mercado disputado. Novas dinâmicas: **residência de intercâmbio entre cenas** e **negociação coletiva** de músicos de sessão e equipe de estrada.
