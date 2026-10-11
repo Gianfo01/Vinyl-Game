@@ -186,8 +186,9 @@ describe('r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do m
     const n0 = s.notifications.length;
     for (let i = 0; i < 30; i++) notify(s, l(`Aviso ${i}`, `Notice ${i}`), 'info');
     for (let i = 0; i < 3; i++) notify(s, l(`Ruim ${i}`, `Bad ${i}`), 'bad');
-    const fresh = s.notifications.slice(n0);
+    const fresh = s.notifications.slice(n0).filter((n) => !n.fold);
     expect(fresh.length).toBeLessThanOrEqual(NOTE_CAP19 + 1 + 3);
+    expect(s.notifications.slice(n0).filter((n) => n.fold).length).toBe(30 - NOTE_CAP19); // ficam no registro
     expect(fresh.filter((n) => n.kind === 'bad').length).toBe(3);
     expect(fresh.some((n) => n.text.pt.startsWith('Resumo do mês'))).toBe(true);
     expect(folded19(s).length).toBeGreaterThanOrEqual(30 - NOTE_CAP19);

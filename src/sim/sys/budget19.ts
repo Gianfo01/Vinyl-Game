@@ -30,13 +30,13 @@ import { ventures } from './ventures9';
 // ---------------------------------------------------------------- estado
 
 export interface Dlg19 { mg: boolean; mgTrust: number; fsp: boolean; fhead: boolean; fcap: number; st: boolean; n: { done: number; exc: number } }
-export interface Bud19 { m: number; vis: number; fold: { w: number; t: L }[]; last: number; dlg: Dlg19 }
+export interface Bud19 { m: number; vis: number; nf?: number; last: number; dlg: Dlg19 }
 declare module '../ext4' { interface Ext4 { bud19: Bud19 } }
 const freshDlg = (): Dlg19 => ({ mg: false, mgTrust: 45, fsp: false, fhead: false, fcap: 0.25, st: false, n: { done: 0, exc: 0 } });
-registerExt4('bud19', () => ({ m: -1, vis: 0, fold: [], last: 0, dlg: freshDlg() }));
+registerExt4('bud19', () => ({ m: -1, vis: 0, nf: 0, last: 0, dlg: freshDlg() }));
 export const bud19 = (s: GameState): Bud19 => {
   const x = s.x4 as unknown as { bud19?: Bud19 };
-  const b = (x.bud19 ??= { m: -1, vis: 0, fold: [], last: 0, dlg: freshDlg() });
+  const b = (x.bud19 ??= { m: -1, vis: 0, nf: 0, last: 0, dlg: freshDlg() });
   b.dlg ??= freshDlg();
   return b;
 };
@@ -90,20 +90,19 @@ const mkey = (s: GameState) => s.year * 12 + s.month;
 const SUM19 = 'Resumo do mês:';
 NOTIFY19.f = (s, n) => {
   const b = bud19(s);
-  if (b.m !== mkey(s)) { b.last = b.fold.length; b.m = mkey(s); b.vis = 0; b.fold = []; }
+  if (b.m !== mkey(s)) { b.last = b.nf ?? 0; b.m = mkey(s); b.vis = 0; b.nf = 0; }
   const low = n.kind === 'info' || n.kind === 'good';
   if (!low || (!ROUTINE19.test(n.text.pt) && b.vis < NOTE_CAP19)) { b.vis++; return false; }
-  b.fold.push({ w: n.week, t: n.text });
-  if (b.fold.length > 60) b.fold.shift();
-  const ex = b.fold.slice(-3).map((x) => x.t);
-  const text: L = { pt: `${SUM19} ${b.fold.length} aviso(s) menor(es) agrupado(s) — ${ex.map((x) => x.pt).join(' · ')}`, en: `Monthly summary: ${b.fold.length} minor notice(s) grouped — ${ex.map((x) => x.en).join(' · ')}` };
-  const sum = b.fold.length > 1 ? [...s.notifications].reverse().find((x) => x.text.pt.startsWith(SUM19) && x.week >= s.clock.monthStartWeek) : undefined;
+  b.nf = (b.nf ?? 0) + 1;
+  const ex = [...folded19(s).slice(-2).map((x) => x.t), n.text];
+  const text: L = { pt: `${SUM19} ${b.nf} aviso(s) menor(es) agrupado(s) — ${ex.map((x) => x.pt).join(' · ')}`, en: `Monthly summary: ${b.nf} minor notice(s) grouped — ${ex.map((x) => x.en).join(' · ')}` };
+  const sum = b.nf > 1 ? [...s.notifications].reverse().find((x) => !x.fold && x.text.pt.startsWith(SUM19) && x.week >= s.clock.monthStartWeek) : undefined;
   if (sum) { sum.text = text; sum.week = n.week; }
   else s.notifications.push({ week: n.week, text, kind: 'info' });
   return true;
 };
-/** avisos agrupados do mês corrente (para a tela do resumo) */
-export const folded19 = (s: GameState): { w: number; t: L }[] => (bud19(s).m === mkey(s) ? bud19(s).fold : []);
+/** avisos agrupados do mês corrente (ficam no registro marcados `fold`; a tela do resumo lista) */
+export const folded19 = (s: GameState): { w: number; t: L }[] => s.notifications.filter((x) => x.fold && x.week >= s.clock.monthStartWeek).map((x) => ({ w: x.week, t: x.text }));
 
 // ---------------------------------------------------------------- avançar: o que vai valer o padrão
 

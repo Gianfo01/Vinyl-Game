@@ -192,7 +192,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
     digest = { d: digestEnd(g, snap, r0.months), why: r0.stopReason };
   } else res = advance(g, mode);
   if (!digest) {
-    const fresh = g.notifications.filter((n) => n.week > noteWeek).slice(-3);
+    const fresh = g.notifications.filter((n) => n.week > noteWeek && !n.fold).slice(-3);
     for (const n of fresh) toast(t(n.text), n.kind);
   }
   if (res.stopReason && mode !== 'month' && !digest) toast(`⏸ ${t(res.stopReason)}`, 'event');
