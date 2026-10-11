@@ -21,7 +21,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact, onFact, type Fact } from '../facts17';
 import { histLocked } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
-import { releasesOfDeal, rightsOf } from '../rights';
+import { dealOfRelease, rightsOf } from '../rights';
 import { rng19 } from '../rng19';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, staffSkill } from '../util';
@@ -104,7 +104,8 @@ export function endContract19(s: GameState, a: Act, pid: string): Est19 | null {
   const t = rightsOf(c);
   let how: Est19['how'] = 'kept';
   if (t.master === 'artist' || c.reverted) {
-    const rels = releasesOfDeal(s, c).concat(c.reverted ? a.releases.map((id) => s.releases[id]).filter((r): r is Release => !!r && r.owner === 'indie') : []);
+    // o personDies reabre o catálogo (semana do disco recua 53): disco do selo sem outro acordo que o cubra conta como deste
+    const rels = a.releases.map((id) => s.releases[id]).filter((r): r is Release => !!r && (r.owner === 'player' ? (dealOfRelease(s, r)?.id ?? c.id) === c.id : r.owner === 'indie' && !!c.reverted));
     for (const r of rels) r.owner = 'indie';
     x.held = [...new Set(rels.map((r) => r.id))];
     how = 'reverted';
