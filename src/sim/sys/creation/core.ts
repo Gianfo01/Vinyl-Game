@@ -5,7 +5,7 @@ import { deferEvents } from '../../ext4';
 // domínio público e standards, remasterização, capa, videoclipe, trecho viral e divisões.
 
 import { clamp, hashString, type Rng } from '../../../core/rng';
-import { FAMILIES, MARKETS, familyOf, l, type FamilyId, type L, type MarketId } from '../../../data/world';
+import { FAMILIES, MARKETS, cityById, familyOf, l, type FamilyId, type L, type MarketId } from '../../../data/world';
 import { emitEvent, type EventDef } from '../../events';
 import { queueCutscene, registerExt4, registerMod, registerSimHook } from '../../ext4';
 import { reviewRelease } from '../../media';
@@ -130,9 +130,34 @@ export function hotThemes(s: GameState, n = 4): { id: string; trend: number }[] 
   return THEMES.map((x) => ({ id: x.id, trend: themeTrend(s, x.id) })).sort((a, b) => b.trend - a.trend).slice(0, n);
 }
 
+// r20 (B32): o tema automático também ouve a CIDADE do ato — a tendência do mercado local pesa metade (a outra
+// metade é a global). Nenhum idioma/cultura é penalizado: o local só muda a ONDA de cada tema, não o "valor" dele.
+const marketOfAct = (act: Act): MarketId | undefined => cityById[act.city]?.market;
+export function themeWeight20(s: GameState, act: Act, theme: string): { w: number; aff: number; local: number; global: number } {
+  const aff = themeAffinity(s, familyOf(act.genre), theme);
+  const global = themeTrend(s, theme), mk = marketOfAct(act);
+  const local = mk ? themeTrend(s, theme, mk) : global;
+  return { w: Math.max(0.05, 1 + aff) * Math.sqrt(global * local), aff, local, global };
+}
 function pickTheme(s: GameState, r: Rng, act: Act): string {
-  const fam = familyOf(act.genre);
-  return (r.weighted(THEMES, (x) => Math.max(0.05, 1 + themeAffinity(s, fam, x.id)) * themeTrend(s, x.id)) ?? THEMES[0]).id;
+  return (r.weighted(THEMES, (x) => themeWeight20(s, act, x.id).w) ?? THEMES[0]).id;
+}
+/** Sugestões de tema para o ato, com o motivo (estilo, cena da cidade, onda global). */
+export function themeSuggest20(s: GameState, act: Act, n = 3): { id: string; why: L }[] {
+  const city = cityById[act.city]?.name ?? l(act.city);
+  return THEMES.map((x) => ({ x, k: themeWeight20(s, act, x.id) })).sort((a, b) => b.k.w - a.k.w || (a.x.id < b.x.id ? -1 : 1)).slice(0, n).map(({ x, k }) => ({
+    id: x.id,
+    why: fmtL(l('estilo {a}, cena de {c} ×{lo}, onda global ×{gl}', 'style {a}, {c} scene ×{lo}, global wave ×{gl}'), { a: `${k.aff >= 0 ? '+' : ''}${k.aff.toFixed(1)}`, c: city, lo: k.local.toFixed(2), gl: k.global.toFixed(2) }),
+  }));
+}
+/** Troca o tema de uma música do jogador ainda não lançada (a sugestão é só sugestão). */
+export function setSongTheme20(s: GameState, songId: string, theme: string): L | null {
+  const so = s.songs[songId], act = so ? s.acts[so.actId] : undefined;
+  if (!so || !act || (act.owner !== 'player' && !act.playerBand)) return l('Música inválida.', 'Invalid song.');
+  if (so.releaseId) return l('Música já lançada: o tema ficou na gravação.', 'Song already released: the theme is on the record.');
+  if (!themeById[theme]) return l('Tema inválido.', 'Invalid theme.');
+  (songX(s, so.id) as { theme?: string }).theme = theme;
+  return null;
 }
 
 function themeOf(song: Song): string | undefined {

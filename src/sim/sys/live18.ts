@@ -105,13 +105,23 @@ export function premium18(s: GameState, gross: number, shows: number): number {
   return Math.round((gross * 0.035 + money(s, 40) * shows) * (1 + 0.15 * incidents3y(s)) * safetyNorm18(s));
 }
 const KC18 = new WeakMap<Kit18, [L, number][]>();
+/** r20 (B13): o kit EFETIVO — o que a turnê realmente usa. Van com mais de 9 pessoas vira ônibus; avião antes da
+ *  época vira ônibus. O mesmo kit é custeado, persistido em t.kit18 e lido no acerto (fadiga, risco, custo). */
+export function effectiveKit18(s: GameState, kit: Partial<Kit18> | undefined, people: number): Kit18 {
+  const k: Kit18 = { ...KIT0, ...(kit ?? {}) };
+  if (k.move === 'van' && people > 9) k.move = 'bus';
+  if (k.move === 'fly' && s.year < FLY_FROM18) k.move = 'bus';
+  return k;
+}
 TOUR18.kit = (s, kit0, i) => {
-  const k = { ...KIT0, ...(kit0 ?? {}) };
+  const k = effectiveKit18(s, kit0, i.people);
   const parts: [L, number][] = [], warn: L[] = [];
   const add = (t: L, v: number) => { v = Math.round(v); if (v) parts.push([t, v]); };
   const maxT = Math.max(0, ...i.tiers);
-  if (k.move === 'van') { if (i.people > 9) warn.push(l('Gente demais para uma van: vai de ônibus.', 'Too many people for a van: going by bus.')); else add(KIT_TXT18.move.van, -0.3 * i.travel); }
-  if (k.move === 'fly') { if (s.year < FLY_FROM18) warn.push(l('Turnê de avião ainda não é viável nesta época.', 'Flying tours are not viable yet in this era.')); else add(KIT_TXT18.move.fly, 0.8 * i.travel + money(s, 60) * i.people * i.shows * 0.3); }
+  if (kit0?.move === 'van' && k.move !== 'van') warn.push(l('Gente demais para uma van: vai de ônibus.', 'Too many people for a van: going by bus.'));
+  if (kit0?.move === 'fly' && k.move !== 'fly') warn.push(l('Turnê de avião ainda não é viável nesta época.', 'Flying tours are not viable yet in this era.'));
+  if (k.move === 'van') add(KIT_TXT18.move.van, -0.3 * i.travel);
+  if (k.move === 'fly') add(KIT_TXT18.move.fly, 0.8 * i.travel + money(s, 60) * i.people * i.shows * 0.3);
   if (k.bed === 'cheap') add(KIT_TXT18.bed.cheap, -money(s, 16) * i.people * i.shows);
   if (k.bed === 'good') add(KIT_TXT18.bed.good, money(s, 22) * i.people * i.shows);
   if (k.diem === 0) add(KIT_TXT18.diem[0], -money(s, 12) * i.people * i.shows);
@@ -143,7 +153,7 @@ function expPay(t: Tour, st: TourStop, sold: number, dem: number): number {
 TOUR18.planned = (s, t, kit, i) => {
   const act = s.acts[t.actId];
   if (!act) return;
-  const k = { ...KIT0, ...(kit ?? {}) };
+  const k = effectiveKit18(s, kit, i.people); // r20 (B13): persiste o veículo que o aviso anunciou
   if (live18(s).excl && s.year >= GIANT_FROM18 && act.fame >= 30) k.prom = 'giant';
   t.kit18 = k;
   const parts = (kit && KC18.get(kit)) ?? kitCost18(s, k, i).parts;
@@ -166,7 +176,7 @@ TOUR18.q = (s, t, st) => {
   q *= 1 + clamp(b.chem, -50, 50) / 600;
   if (k.gear === 'rent') q *= 0.98;
   const pm = st.price / Math.max(1, money(s, TICKET[st.tier]));
-  if (Math.abs(pm - 1) > 0.05) q *= Math.pow(pm, 0.8 * (pp18(s, act) - 1));
+  if (Math.abs(pm - 1) > 0.05) q *= Math.pow(pm, 0.8 * (pp18(s, act, st.cityId) - 1)); // r20 (B20): elasticidade do mercado de destino
   const g = giant18(s);
   if (g && giantOk(s, act, k)) q *= (1 - g.fee) * (st.tier >= 3 ? 1.08 : 1.03);
   return clamp(q, 0.75, 1.3);
@@ -219,10 +229,10 @@ TOUR18.settle = (s, _r, t, st, c) => {
     notes.push(fmtL(l('Acerto: o promotor descontou {c} em "despesas da casa"{b}.', 'Settlement: the promoter deducted {c} in "house expenses"{b}.'), { c: usd(cut), b: back ? fmtL(l(' (o gerente de turnê recuperou {x})', ' (your tour manager clawed back {x})'), { x: usd(back) }) : '' }));
   }
   // poder de compra: merch e preço
-  const pp = pp18(s, act);
+  const pp = pp18(s, act, st.cityId); // r20 (B20): merch e ingresso no bolso de quem está na cidade
   merch = Math.round(merch * Math.pow(pp, 0.6));
   const pm = c.priceMult;
-  const shock = ticketShock18(s, act, pm);
+  const shock = ticketShock18(s, act, pm, st.cityId);
   if (shock > 0.05) notes.push(l('Ingresso caro: parte dos fãs ficou de fora e reclamou.', 'Pricey tickets: some fans were shut out and complained.'));
   // casa cheia × vazia
   v.fill[`${act.id}:${st.cityId}`] = Math.round(fill * 100) / 100;

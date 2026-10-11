@@ -110,7 +110,10 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
       if (leg.visa.denyChance > 0.3) warnings.push(fmtL(l('{c}: visto difícil ({p}% de recusa).', '{c}: hard visa ({p}% refusal).'), { c: cityById[cityId]?.name ?? cityId, p: Math.round(leg.visa.denyChance * 100) }));
     }
     logistics += leg.cost + money(s, (v.cost + 90 * people + PRODUCTION_COST[p.production]) * (1 - staffSkill(s, 'tour_manager') / 400));
-    revenue += sold * price;
+    // r20 (B16): a previsão aplica a mesma concorrência de agenda que o acerto (TOUR18.clash, semana do dia do show)
+    const clash = TOUR18.clash?.(s, act, cityId, day) ?? 1;
+    if (clash < 0.92) warnings.push(fmtL(l('{c}: concorrência na agenda nessa semana (−{p}% na bilheteria).', '{c}: calendar competition that week (−{p}% box office).'), { c: cityById[cityId]?.name ?? cityId, p: Math.round((1 - clash) * 100) }));
+    revenue += Math.round(sold * price * clash);
     merch += Math.round(sold * money(s, 3 + tier) * 0.6);
     tiers.push(tier);
     stops.push({ cityId, day, tier, price, capacity, sold: 0, merch: 0, status: 'scheduled', travelDays: leg.days, visa: !!leg.visa?.needed });

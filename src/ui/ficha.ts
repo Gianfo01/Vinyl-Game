@@ -1,6 +1,7 @@
 // Ficha unificada com cadeia de inspeção por IDs estáveis (GDD §24) + modal de oferta.
 
 import { freeCash20, reservedAdvances20 } from '../sim/oblig20';
+import { scoutEligible20 } from '../sim/scout20';
 import { cap14 } from '../sim/sys/gate14';
 import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
@@ -159,7 +160,9 @@ export function openOffer(actId: string): void {
   const evalBox = h('div', { class: 'eval' });
   const update = () => {
     const ev = evaluateOffer(s, a, o);
+    const el = scoutEligible20(s, a); // r20 (B9): mesma regra do radar, da proposta e do aceite
     evalBox.replaceChildren(
+      el.why ? h('p', { class: el.ok ? 'small' : 'small bad', role: el.ok ? undefined : 'alert' }, pill(t(el.ok ? l('Volta do hiato', 'Comeback') : l('Não contratável', 'Not signable')), el.ok ? 'warn' : 'bad'), ' ', t(el.why)) : '',
       h('div', null, t(S.chance), ': ', why18(s, 'offer.chance', { act: a.id, offer: o }, pill(t(S[ev.band]), ev.band)), ' ', h('small', { class: 'muted' }, t(l('(passe o mouse para ver cada termo)', '(hover to see each term)')))),
       h('ul', { class: 'small' }, ev.reasons.map((x) => h('li', null, t(x)))),
       h('p', { class: 'muted small' }, (s.knowledge[actId]?.degree ?? 0) < 3 ? t(l('Você ainda não conhece as ambições do ato: a leitura é grosseira.', 'You do not yet know the act\'s ambitions: this read is rough.')) : ''),

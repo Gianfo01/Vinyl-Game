@@ -33,4 +33,6 @@ export const TOUR18: {
   settle?: (s: GameState, r: Rng, t: Tour, st: TourStop, c: SettleCtx) => { pay: number; merch: number };
   /** lança o dinheiro do show (no ato ou a prazo, conforme o promotor); false = usa post() */
   book?: (s: GameState, t: Tour, key: string, amount: number, memo: string) => boolean;
+  /** r20 (B16): fator de concorrência na agenda (cidade × semana do DIA do show) — o mesmo na previsão e no acerto. */
+  clash?: (s: GameState, act: import('./types').Act, cityId: string, day: number) => number;
 } = {};

@@ -4,8 +4,7 @@
 import { l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
 import {
-  INCIDENTS, applySetlistOrder, autoLiveEnergy, autoOrder, avgNotes, curveFor, dynamicPricingAvailable, finishLiveShow, idealEnergy, liveOf, resolveCard, songEnergy,
-  type Incident,
+  applySetlistOrder, autoLiveEnergy, autoOrder, avgNotes, curveFor, dynamicPricingAvailable, finishLiveShow, idealEnergy, liveIncidents20, liveOf, playLiveCard20, resolveCard, songEnergy,
 } from '../../../sim/sys/live';
 import type { GameState } from '../../../sim/types';
 import { $, N, actLink, cityName, pill, rerender, section, toast } from '../../common';
@@ -173,18 +172,11 @@ function crowdCanvas(energyRef: { v: number }, tier: number, year: number): HTML
   return c;
 }
 
-function pickIncidents(): Incident[] {
-  const pool = [...INCIDENTS];
-  const out: Incident[] = [];
-  for (let i = 0; i < 3 && pool.length; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-  return out;
-}
-
 registerCutscene('liveShow', (s, cs, close) => {
   const d = cs.data as { key: string; actId: string; cityId: string; tier: number; sold: number; cap: number; ex: number };
   const act = s.acts[d.actId];
   const energy = { v: Math.round(20 + d.ex * 0.5) };
-  const incidents = pickIncidents();
+  const incidents = liveIncidents20(s, d.key); // r20 (B7): semente do show, sem Math.random
   let step = 0;
   const log: string[] = [];
   const body = h('div', { class: 'lv-live-body', 'aria-live': 'polite' });
@@ -206,10 +198,10 @@ registerCutscene('liveShow', (s, cs, close) => {
     const inc = incidents[step];
     body.replaceChildren(
       h('p', { class: 'lv-incident' }, ic('warning'), ' ', h('b', null, t(inc.text))),
-      h('div', { class: 'lv-cards' }, inc.cards.map((card) => {
+      h('div', { class: 'lv-cards' }, inc.cards.map((card, ci) => {
         const chance = resolveCard(s, d.actId, card, 0).chance;
         return h('button', { class: 'lv-card', onclick: () => {
-          const r = resolveCard(s, d.actId, card, Math.random());
+          const r = playLiveCard20(s, d.key, d.actId, step, inc, ci);
           energy.v = Math.max(0, Math.min(100, energy.v + r.delta));
           log.push(`${t(card.label)} → ${r.ok ? '✓' : '✗'} (${r.delta >= 0 ? '+' : ''}${r.delta})`);
           step += 1;

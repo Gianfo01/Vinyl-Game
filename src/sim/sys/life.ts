@@ -5,6 +5,7 @@
 // Dinheiro pessoal = patrimônio do dono (separado do caixa da empresa).
 
 import { clamp, type Rng } from '../../core/rng';
+import { exitMember20 } from '../members20';
 import { genreById, l, type L } from '../../data/world';
 import { queueCutscene, registerExt4, registerMod, registerSimHook } from '../ext4';
 import { composeSongs, songQ } from '../production';
@@ -611,7 +612,7 @@ export function leaveBand(s: GameState): L | null {
   const p = playerPerson(s);
   const act = playerAct(s);
   if (!p || !act) return l('Você não está em nenhuma banda.', 'You are not in any band.');
-  act.members = act.members.filter((x) => x !== p.id);
+  exitMember20(s, act, p.id);
   if (act.leaderId === p.id) act.leaderId = act.members[0];
   if (!act.members.length) {
     act.status = act.releases.length ? 'retired' : 'split';

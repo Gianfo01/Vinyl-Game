@@ -14,6 +14,7 @@ import { cityDemand } from '../tours';
 import type { GameState } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { addSignal, spawnProceduralAct } from '../worldgen';
+import { signalEligible20 } from '../scout20';
 import { hasUnlock, residences } from './goods8';
 import { energyLeft, life, playerPerson, spendEnergy } from './life';
 import { gainXp, ownerOf } from './people/owner';
@@ -120,7 +121,7 @@ export function travelTo(s: GameState, r: Rng, cityId: string): { text: L } | L 
     if (p) p.inspiration = clamp(p.inspiration + 6, 0, 100);
     if (m.visited.length >= 8) gainTrait(s, 'worldly');
   } else o.stress = clamp(o.stress - 2, 0, 100);
-  const locals = Object.values(s.acts).filter((a) => a.city === cityId && !a.owner && (a.status === 'active' || a.status === 'emerging') && !s.knowledge[a.id]);
+  const locals = Object.values(s.acts).filter((a) => a.city === cityId && signalEligible20(s, a));
   if (locals.length) addSignal(s, r, r.pick(locals).id, 'trip');
   const text = fmtL(l('Você chegou em {c}. Três semanas para conhecer a cena.', 'You arrived in {c}. Three weeks to get to know the scene.'), { c: cityById[cityId].name });
   mlog(s, text);
@@ -135,7 +136,7 @@ export function meetScene(s: GameState, r: Rng, cityId: string): { text: L } | L
   if (energyLeft(s) < 1) return l('Sem tempo livre este mês. Volte no mês que vem.', 'No free time left this month. Come back next month.');
   spendEnergy(s, 1);
   s.flags[key] = s.week;
-  const locals = Object.values(s.acts).filter((a) => a.city === cityId && !a.owner && (a.status === 'active' || a.status === 'emerging') && !s.knowledge[a.id]);
+  const locals = Object.values(s.acts).filter((a) => a.city === cityId && signalEligible20(s, a));
   const found = r.shuffle(locals).slice(0, 2);
   if (!found.length) found.push(spawnProceduralAct(s, r, { city: cityId }));
   for (const a of found) {
@@ -172,7 +173,7 @@ export function scoutCity(s: GameState, cityId: string): L | null {
 function resolveScouts(s: GameState, r: Rng): void {
   const m = mapx(s);
   for (const j of m.scoutJobs.filter((x) => x.due <= s.week)) {
-    const locals = Object.values(s.acts).filter((a) => a.city === j.city && !a.owner && (a.status === 'active' || a.status === 'emerging') && !s.knowledge[a.id]);
+    const locals = Object.values(s.acts).filter((a) => a.city === j.city && signalEligible20(s, a));
     const found = r.shuffle(locals).slice(0, j.strong ? 3 : 2);
     if (!found.length) found.push(spawnProceduralAct(s, r, { city: j.city }));
     for (const a of found) {

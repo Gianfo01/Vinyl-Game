@@ -4,6 +4,7 @@
 // por nepotismo) e herança de fama/fãs para filhos de artistas.
 
 import { clamp, Rng, seedState } from '../../core/rng';
+import { exitMember20 } from '../members20';
 import { KIN15 } from '../../data/kin15';
 import { l, type L } from '../../data/world';
 import { realSafe } from '../dynasty';
@@ -142,7 +143,7 @@ function feuds(s: GameState, r: Rng): void {
         delete st.feud[key];
         if (a.members.length > 2) {
           const out = A.stress + A.resentment > B.stress + B.resentment ? A : B;
-          a.members = a.members.filter((x) => x !== out.id);
+          exitMember20(s, a, out.id);
           if (a.leaderId === out.id) a.leaderId = a.members[0];
           const t = fmtL(l('{o} deixa {x} depois de meses de briga com {q}.', '{o} leaves {x} after months of fighting with {q}.'), { o: out.name, x: a.name, q: (out === A ? B : A).name });
           remember(s, 'member_retires', t, { actId: a.id, important: a.fame > 35 }); say(s, t);

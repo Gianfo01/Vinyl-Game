@@ -5,6 +5,7 @@
 // rivais pegam empréstimos para não quebrar.
 
 import { clamp, type Rng } from '../../core/rng';
+import { exitMember20 } from '../members20';
 import { nominal } from '../../core/money';
 import { familyOf, l } from '../../data/world';
 import { personDies, realSafe } from '../dynasty';
@@ -83,7 +84,7 @@ function bandLoss(s: GameState, r: Rng): void {
       } else if (roll < pSplit + pReplace) {
         replaceMember(s, r, act, pid);
       } else {
-        act.members = act.members.filter((x) => x !== pid);
+        exitMember20(s, act, pid);
         remember(s, 'lineup', fmtL(l('{a} segue sem substituir {p}.', '{a} carries on without replacing {p}.'), { a: act.name, p: s.persons[pid].name }), { actId: act.id, important: act.fame > 30 });
       }
     }
@@ -133,8 +134,8 @@ deferEvents([{
   text: l('A banda precisa decidir como seguir.', 'The band must decide how to go on.'),
   options: [
     { id: 'replace', label: l('Seguir com um substituto', 'Carry on with a replacement'), apply: (s: GameState, r: Rng, c: Ctx) => { const a = actOf(s, c); if (!a) return; post(s, `lc7sub:${a.id}`, -money(s, 4000), 'artist_dev', 'Substituto'); replaceMember(s, r, a, String(c.person)); a.fans.core = Math.round(a.fans.core * 0.93); } },
-    { id: 'smaller', label: l('Seguir sem substituir', 'Carry on without replacing'), apply: (s: GameState, _r: Rng, c: Ctx) => { const a = actOf(s, c); if (!a) return; a.members = a.members.filter((x) => x !== String(c.person)); if (!a.members.length) a.status = 'split'; } },
-    { id: 'hiatus', label: l('Pausa de luto', 'Mourning hiatus'), apply: (s: GameState, _r: Rng, c: Ctx) => { const a = actOf(s, c); if (!a) return; a.members = a.members.filter((x) => x !== String(c.person)); a.status = 'hiatus'; a.hiatusUntil = s.week + 52; } },
+    { id: 'smaller', label: l('Seguir sem substituir', 'Carry on without replacing'), apply: (s: GameState, _r: Rng, c: Ctx) => { const a = actOf(s, c); if (!a) return; exitMember20(s, a, String(c.person)); if (!a.members.length) a.status = 'split'; } },
+    { id: 'hiatus', label: l('Pausa de luto', 'Mourning hiatus'), apply: (s: GameState, _r: Rng, c: Ctx) => { const a = actOf(s, c); if (!a) return; exitMember20(s, a, String(c.person)); a.status = 'hiatus'; a.hiatusUntil = s.week + 52; } },
     { id: 'split', label: l('Encerrar', 'End it'), apply: (s: GameState, _r: Rng, c: Ctx) => { const a = actOf(s, c); if (!a) return; a.status = 'split'; a.careerEnd = s.year; a.legend = a.legend || a.fame > 40; remember(s, 'split', fmtL(l('{a} encerra a carreira.', '{a} calls it a day.'), { a: a.name }), { actId: a.id, important: true }); } },
   ],
 }] as never[]);
@@ -203,7 +204,7 @@ function careerMoves(s: GameState, r: Rng): void {
     solo.status = 'active';
     solo.fans = { casual: Math.round(act.fans.casual * 0.18), active: Math.round(act.fans.active * 0.15), core: Math.round(act.fans.core * 0.1) };
     const leaves = r.chance(0.35);
-    if (leaves) { act.members = act.members.filter((x) => x !== p.id); formerPush(s, act.id, p.id, 'left'); }
+    if (leaves) { exitMember20(s, act, p.id); formerPush(s, act.id, p.id, 'left'); }
     remember(s, 'solo', fmtL(leaves ? l('{p} deixa {a} para seguir carreira solo.', '{p} leaves {a} to go solo.') : l('{p} ({a}) lança carreira solo paralela.', '{p} ({a}) launches a parallel solo career.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 45 });
   }
   // supergrupo: dois nomes de bandas diferentes do mesmo universo musical

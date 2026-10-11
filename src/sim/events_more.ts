@@ -8,6 +8,7 @@
 // para a regra RS funcionar.
 
 import type { Ctx, EventDef } from './events';
+import { exitMember20 } from './members20';
 import { clamp, type Rng } from '../core/rng';
 import { FESTIVALS } from '../data/catalog';
 import { AWARDS, BRANDS, CRITICS, MOVEMENTS, PRODUCERS, censorshipIn, displayName, geoActive, outletById } from '../data/content';
@@ -1600,7 +1601,7 @@ const BAND: EventDef[] = [
     ['{leader} quer demitir {person}', '{leader} wants to fire {person}'],
     ['{leader} diz que {person} "atrasa a banda" e exige a saída. {act} está dividido.', '{leader} says {person} "holds the band back" and demands their exit. {act} is split.'],
     [
-      o('back', 'Apoiar o líder', 'Back the leader', (s, _r, c) => { const a = A(s, c); const p = P(s, c); if (!p || a.members.length < 2) return; a.members = a.members.filter((x) => x !== p.id); mood(s, a, 'resentment', 6); log(s, 'lineup', '{p} é demitido de {a}.', '{p} is fired from {a}.', { p: p.name, a: a.name }, a.id, true); }),
+      o('back', 'Apoiar o líder', 'Back the leader', (s, _r, c) => { const a = A(s, c); const p = P(s, c); if (!p || a.members.length < 2) return; exitMember20(s, a, p.id); mood(s, a, 'resentment', 6); log(s, 'lineup', '{p} é demitido de {a}.', '{p} is fired from {a}.', { p: p.name, a: a.name }, a.id, true); }),
       o('mediate', 'Mediação com psicólogo de banda', 'Mediation with a band therapist', (s, r, c) => { const a = A(s, c); pay(s, `bandtherapy:${a.id}`, 2000, 'artist_dev', 'Mediação'); if (r.chance(0.6)) mood(s, a, 'resentment', -10); }),
       o('refuse', 'Ninguém sai', 'Nobody leaves', (s, _r, c) => { const a = A(s, c); const l0 = lead(s, a); pmood(l0, 'resentment', 12); }),
     ]),

@@ -3,6 +3,8 @@
 // opções e efeitos. O diretor escolhe entre os válidos; nunca inventa evento sem causa.
 
 import { CTXFX19, DEC_GATE18, runDecisionListeners, setEventRegistrar } from './ext4';
+import { exitMember20 } from './members20';
+import { genreAvailable20 } from './genretime20';
 import { clamp, type Rng } from '../core/rng';
 import { toReal } from '../core/money';
 import { FESTIVALS, MEDIA } from '../data/catalog';
@@ -201,8 +203,8 @@ export const EVENTS: EventDef[] = [
         a.members = a.members.map((x) => (x === old.id ? np.id : x)); actsTouched17(s); // r17: índice pessoa→atos
         remember(s, 'lineup', fmtL(l('{o} sai de {a}; entra {n}.', '{o} leaves {a}; {n} joins.'), { o: old.name, a: a.name, n: np.name }), { actId: a.id, important: true });
       } },
-      { id: 'smaller', label: l('Seguir sem substituto', 'Carry on without replacing'), apply: (s, _r, c) => { const a = act(s, c); const old = s.persons[String(c.person)]; if (!a || !old) return; a.members = a.members.filter((x) => x !== old.id); remember(s, 'lineup', fmtL(l('{o} sai de {a}.', '{o} leaves {a}.'), { o: old.name, a: a.name }), { actId: a.id, important: true }); if (a.members.length === 0) a.status = 'split'; } },
-      { id: 'convince', label: l('Tentar convencer (bônus)', 'Try to convince (bonus)'), hint: l('Pode não funcionar.', 'May not work.'), apply: (s, r, c) => { const a = act(s, c); const p = s.persons[String(c.person)]; if (!a || !p) return; if (a.owner === 'player') pay(s, `bonus:${p.id}`, 3000, 'artist_dev', 'Bônus'); if (r.chance(0.55)) { p.morale = 60; p.resentment = Math.max(0, p.resentment - 20); } else { a.members = a.members.filter((x) => x !== p.id); remember(s, 'lineup', fmtL(l('{o} sai de {a} mesmo assim.', '{o} leaves {a} anyway.'), { o: p.name, a: a.name }), { actId: a.id, important: true }); } } },
+      { id: 'smaller', label: l('Seguir sem substituto', 'Carry on without replacing'), apply: (s, _r, c) => { const a = act(s, c); const old = s.persons[String(c.person)]; if (!a || !old) return; exitMember20(s, a, old.id); remember(s, 'lineup', fmtL(l('{o} sai de {a}.', '{o} leaves {a}.'), { o: old.name, a: a.name }), { actId: a.id, important: true }); if (a.members.length === 0) a.status = 'split'; } },
+      { id: 'convince', label: l('Tentar convencer (bônus)', 'Try to convince (bonus)'), hint: l('Pode não funcionar.', 'May not work.'), apply: (s, r, c) => { const a = act(s, c); const p = s.persons[String(c.person)]; if (!a || !p) return; if (a.owner === 'player') pay(s, `bonus:${p.id}`, 3000, 'artist_dev', 'Bônus'); if (r.chance(0.55)) { p.morale = 60; p.resentment = Math.max(0, p.resentment - 20); } else { exitMember20(s, a, p.id); remember(s, 'lineup', fmtL(l('{o} sai de {a} mesmo assim.', '{o} leaves {a} anyway.'), { o: p.name, a: a.name }), { actId: a.id, important: true }); } } },
     ],
   },
   {
@@ -239,7 +241,7 @@ export const EVENTS: EventDef[] = [
       const a = pickMine(s, r, (x) => !x.playerBand && (s.genrePop[x.genre] ?? 1) < 0.7);
       if (!a) return null;
       const fam = familyOf(a.genre);
-      const options = Object.entries(s.genrePop).filter(([g, v]) => v > 1.1 && familyOf(g) !== fam && s.year >= 1920).map(([g]) => g);
+      const options = Object.entries(s.genrePop).filter(([g, v]) => v > 1.1 && familyOf(g) !== fam && s.year >= 1920 && genreAvailable20(s, g)).map(([g]) => g); // r20 (B30): só gênero já nascido
       if (!options.length) return null;
       return { act: a.id, genre: r.pick(options) };
     },

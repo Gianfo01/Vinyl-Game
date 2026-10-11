@@ -9,6 +9,7 @@
 // Também gera a discografia simulada dos atos procedurais que já existiam no início (item 12).
 
 import { clamp, type Rng } from '../../core/rng';
+import { exitMember20 } from '../members20';
 import { CATALOG_ACTS } from '../../data/catalog';
 import { REAL_CLASSIC, type ClassicExtra } from '../../data/realacts_classic';
 import { REAL_EU } from '../../data/realacts_eu';
@@ -491,7 +492,7 @@ function monthly(s: GameState, r: Rng): void {
       if (ev.m[5] !== undefined && ev.m[5] > s.year) st.sched.push({ year: ev.m[5], kind: 'leave', actId: act.id, personId: p.id }); // rodada 16: segunda passagem também sai
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {
-      act.members = act.members.filter((x) => x !== ev.personId);
+      exitMember20(s, act, ev.personId);
       (st.former[act.id] ??= []).push({ personId: ev.personId, year: s.year, reason: 'left' });
       const p = s.persons[ev.personId];
       remember(s, 'lineup', fmtL(l('{p} deixa {a}.', '{p} leaves {a}.'), { p: p?.name ?? '?', a: act.name }), { actId: act.id, important: act.fame > 30 });

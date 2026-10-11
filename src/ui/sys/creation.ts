@@ -7,7 +7,7 @@ import { t } from '../../i18n/strings';
 import {
   CHALLENGES, DIVISIONS, EFFECTS, SHOTS, THEMES, acceptCommission, availableIngredients, closeDivision, commissionName, declineCommission, effectsOf,
   featureCandidates, featureFee, hireWriter, hotThemes, inviteFeature, marketCraving, openDivision, remaster, remasterOptions, setCover, setRecipe,
-  shootClip, songTheme, songX, standards, themeById, viralPush, writerPool,
+  setSongTheme20, shootClip, songTheme, songX, standards, themeById, themeSuggest20, viralPush, writerPool,
 } from '../../sim/sys/creation/core';
 import { songStatus } from '../../sim/repertoire';
 import type { GameState, Song } from '../../sim/types';
@@ -54,10 +54,16 @@ function themesTab(s: GameState): HTMLElement {
           return h('td', { class: v === undefined ? 'muted' : v > 0.2 ? 'good' : v < -0.2 ? 'bad' : '', title: v === undefined ? '?' : v.toFixed(1) }, v === undefined ? '?' : v > 0.2 ? '▲' : v < -0.2 ? '▼' : '•');
         })))))),
     ),
-    act ? section(t(l('Temas das músicas de {a}', "{a}'s song themes"), { a: act.name }), h('ul', { class: 'small' }, act.songs.slice(-12).reverse().map((id) => s.songs[id]).filter(Boolean).map((so) => {
-      const th = songTheme(s, so);
-      return h('li', null, `"${so.title}" — `, th ? pill(t(themeById[th]?.name ?? so.theme ?? l('?', '?'))) : h('span', { class: 'muted' }, '—'));
-    }))) : null,
+    act ? section(t(l('Temas das músicas de {a}', "{a}'s song themes"), { a: act.name }),
+      // r20 (B32): sugestão contextual (estilo + cena da cidade + onda global), com motivo e editável
+      h('p', { class: 'small' }, h('b', null, t(l('Sugestões:', 'Suggestions:'))), ' ', ...themeSuggest20(s, act).map((x) => h('span', { class: 'pill', title: t(x.why) }, t(themeById[x.id].name), ' ', h('small', { class: 'muted' }, `(${t(x.why)})`), ' '))),
+      h('ul', { class: 'small' }, act.songs.slice(-12).reverse().map((id) => s.songs[id]).filter(Boolean).map((so) => {
+        const th = songTheme(s, so);
+        const editable = !so.releaseId && (act.owner === 'player' || act.playerBand);
+        return h('li', null, `"${so.title}" — `, editable
+          ? select(th ?? '', [...(th ? [] : [{ value: '', label: '—' }]), ...THEMES.map((x) => ({ value: x.id, label: t(x.name) }))], (v: string) => { const e = v ? setSongTheme20(s, so.id, v) : null; if (e) toast(t(e)); rerender(); }, { 'aria-label': t(l('Tema de "{s}"', 'Theme of "{s}"'), { s: so.title }) })
+          : th ? pill(t(themeById[th]?.name ?? so.theme ?? l('?', '?'))) : h('span', { class: 'muted' }, '—'));
+      }))) : null,
   );
 }
 

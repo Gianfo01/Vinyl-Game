@@ -5,6 +5,7 @@
 // e canções sobre o próprio mundo (tributos, diss tracks, crises).
 
 import { clamp, hashString, type Rng } from '../../core/rng';
+import { exitMember20 } from '../members20';
 import { CITIES, cityById, familyOf, l, type L } from '../../data/world';
 import { deferEvents, registerExt4, registerOfferMod, registerSimHook } from '../ext4';
 import { bandName, langForCity, makeAct } from '../people';
@@ -388,7 +389,7 @@ function pursueDream(s: GameState, r: Rng, a: Act, p: Person): boolean {
   const d = dreamOf(s, p);
   const age = s.year - p.born;
   const band = a.members.length >= 2;
-  const leave = () => { a.members = a.members.filter((x) => x !== p.id); if (a.leaderId === p.id) a.leaderId = a.members[0]; };
+  const leave = () => { exitMember20(s, a, p.id); };
   switch (d) {
     case 'grammy': if (a.awards > 0) { dreamDone(s, p, a, fmtL(l('{p} realiza o sonho de ganhar um Gramófono de Ouro.', '{p} fulfils the dream of winning a Golden Gramophone.'), { p: p.name })); return true; } return false;
     case 'legend': if (a.legend) { dreamDone(s, p, a, fmtL(l('{p} vê {a} virar lenda — o sonho de uma vida.', '{p} sees {a} become a legend — a lifelong dream.'), { p: p.name, a: a.name })); return true; } return false;

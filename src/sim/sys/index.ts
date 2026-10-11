@@ -319,4 +319,5 @@ import './intra19';
 // Rodada 20 (G7): livro regional de fãs (coortes por mercado, conservação com o global) e preço por mercado.
 import './terr20';
 import './fin20'; // r20 G2: obrigações consolidadas, reconciliação e os dois legados (explicações)
+import './life20'; // r20 G3 (B28/B11): aviso de fim de carreira um ano antes e varredura de liderança
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
