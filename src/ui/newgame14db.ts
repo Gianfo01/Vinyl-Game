@@ -8,6 +8,7 @@ import { REAL_US } from '../data/realacts_us';
 import { REAL_WORLD } from '../data/realacts_world';
 import { l } from '../data/world';
 import { t } from '../i18n/strings';
+import { REAL_ALL } from '../sim/sys/realworld';
 import { DB_SIZES, dbSizeInfo, realAllowed } from '../sim/dbsize14';
 import type { RunConfig } from '../sim/types';
 import { h } from './dom';
@@ -19,18 +20,27 @@ const BASE = [...REAL_US, ...REAL_EU, ...REAL_WORLD];
 /** Quantos artistas reais existem neste tamanho (sem contar os 100 do catálogo clássico). */
 export const realCount = (size: RunConfig['dbSize']): number => [...BASE, ...REAL_MORE, ...REAL_17].filter((a) => realAllowed({ dbSize: size }, a)).length;
 const GEN0 = 95;
+/** r25: personagens no começo da partida, pelo ano de início: artistas reais já estreados (+ integrantes) e gerados (≈2 pessoas por ato). */
+export function cast25(size: RunConfig['dbSize'], year: number): { acts: number; real: number; people: number } {
+  const ra = REAL_ALL.filter((a) => a.d <= year && realAllowed({ dbSize: size }, a));
+  const realP = ra.reduce((n, a) => n + Math.max(1, a.m?.length ?? 0), 0);
+  const gen = Math.round(GEN0 * dbSizeInfo({ dbSize: size }).gen);
+  return { acts: ra.length + gen, real: ra.length, people: realP + gen * 2 };
+}
+const fmt25 = (n: number): string => n.toLocaleString('pt-BR');
 
 export function dbCard(cfg: RunConfig): HTMLElement {
   const note = h('small', { class: 'muted' });
   const refresh = () => {
     const d = dbSizeInfo(cfg);
-    note.textContent = t(l('≈ {r} artistas reais + ≈ {g} gerados no início (surgem novos todo ano). {p}', '≈ {r} real artists + ≈ {g} generated at the start (more appear every year). {p}'), {
-      r: realCount(d.id), g: Math.round(GEN0 * d.gen),
+    const c = cast25(d.id, cfg.startYear);
+    note.textContent = t(l('Em {y}: ≈ {pp} personagens em ≈ {a} artistas ({r} reais + ≈ {g} gerados); surgem novos todo ano. {p}', 'In {y}: ≈ {pp} characters in ≈ {a} artists ({r} real + ≈ {g} generated); more appear every year. {p}'), {
+      y: cfg.startYear, pp: fmt25(c.people), a: fmt25(c.acts), r: fmt25(c.real), g: Math.round(GEN0 * d.gen),
       p: d.lvl >= 3 ? t(l('Pesado: criar o jogo e avançar os meses demoram mais; recomendado para computadores bons.', 'Heavy: creating the game and advancing months take longer; best on a good computer.')) : d.lvl === 2 ? t(l('Um pouco mais lento em celulares antigos.', 'Slightly slower on old phones.')) : d.lvl === 0 ? t(l('Mais leve e rápido; menos nomes regionais.', 'Lighter and faster; fewer regional names.')) : t(l('Equilíbrio entre variedade e velocidade.', 'Balance between variety and speed.')),
     });
   };
   // r22: tamanhos em cartões
-  const sel = cards22(t(l('Tamanho da base de dados', 'Database size')), DB_SIZES.map((d) => ({ value: d.id, name: t(l(d.pt, d.en)).split(' (')[0].split(' —')[0], desc: `≈ ${realCount(d.id)} ${t(l('reais', 'real'))}` })), () => dbSizeInfo(cfg).id, (v) => { cfg.dbSize = v; refresh(); }, 'ng22-4');
+  const sel = cards22(t(l('Tamanho da base de dados', 'Database size')), DB_SIZES.map((d) => ({ value: d.id, name: t(l(d.pt, d.en)).split(' (')[0].split(' —')[0], desc: ((c) => `≈ ${fmt25(c.people)} ${t(l('personagens', 'characters'))} · ${fmt25(c.acts)} ${t(l('artistas', 'artists'))}`)(cast25(d.id, cfg.startYear)) })), () => dbSizeInfo(cfg).id, (v) => { cfg.dbSize = v; refresh(); }, 'ng22-4');
   refresh();
   return h('section', { class: 'card' },
     h('h3', null, t(l('Base de dados', 'Database')), ' ', helpTip(l('Define quantos artistas reais (estrelas, grandes nomes e cenas regionais de todos os países) e quantos artistas gerados existem no mundo. Pequena: só os principais, mais rápido. Média: padrão. Grande/Enorme: muito mais nomes e concorrência, mas o jogo fica mais pesado. Só fatos já verdadeiros no ano de cada estreia.', 'Sets how many real artists (stars, big names and regional scenes worldwide) and how many generated artists exist. Small: main names only, faster. Medium: default. Large/Huge: many more names and competition, but heavier. Only facts already true in each debut year.'))),
