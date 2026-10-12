@@ -10,7 +10,7 @@ import type { GameState } from '../sim/types';
 import { rerender } from './common';
 import { h } from './dom';
 import { sectionList } from './registry';
-import { foldWrap21 } from './ux21';
+import { foldWrap21, moreMenu21 } from './ux21';
 
 export interface Block19 {
   id: string;
@@ -52,11 +52,12 @@ export function pick19(s: GameState, blocks: Block19[], max = MAX19): Pick19 {
 
 function ctl(s: GameState, b: Block19, collapsed: boolean): HTMLElement {
   const pref = ui19(s).c[b.id];
-  return h('div', { class: 'b19-ctl' },
-    h('button', { class: 'b19-btn', title: t(collapsed ? l('Expandir', 'Expand') : l('Recolher (fica salvo)', 'Collapse (saved)')), 'aria-label': t(collapsed ? l('Expandir', 'Expand') : l('Recolher', 'Collapse')), 'aria-expanded': String(!collapsed),
-      onclick: () => { setPref19(s, b.id, collapsed ? (pref === 'c' ? null : 'o') : 'c'); rerender(); } }, collapsed ? '▸' : '–'),
-    h('button', { class: 'b19-btn', title: t(pref === 'o' ? l('Desafixar', 'Unpin') : l('Mover para "Mais"', 'Move to "More"')), 'aria-label': t(pref === 'o' ? l('Desafixar', 'Unpin') : l('Esconder', 'Hide')),
-      onclick: () => { setPref19(s, b.id, pref === 'o' ? null : 'h'); rerender(); } }, pref === 'o' ? '📌' : '×'));
+  // r21e (§2.3.2): um só botão "…" por bloco (recolher/expandir, fixar, esconder) em vez de dois
+  return h('div', { class: 'b19-ctl' }, moreMenu21([
+    { label: t(collapsed ? l('Expandir', 'Expand') : l('Recolher (fica salvo)', 'Collapse (saved)')), run: () => { setPref19(s, b.id, collapsed ? (pref === 'c' ? null : 'o') : 'c'); rerender(); } },
+    { label: t(pref === 'o' ? l('Desafixar', 'Unpin') : l('Fixar aberto', 'Pin open')), on: pref === 'o', run: () => { setPref19(s, b.id, pref === 'o' ? null : 'o'); rerender(); } },
+    { label: t(l('Mover para "Mais"', 'Move to "More"')), run: () => { setPref19(s, b.id, 'h'); rerender(); } },
+  ], t(l('Opções do bloco {b}', 'Block options: {b}'), { b: t(b.title) })));
 }
 /** r21 (§2.3.2): Metas da era, Estrutura × era e Quem tem tempo abrem recolhidos (details, estado nas prefs). */
 const FOLD21 = new Set(['desk:ux19-goals', 'desk:org12', 'desk:cap14']);
@@ -72,9 +73,11 @@ export function renderBlocks19(s: GameState, p: Pick19, host: Block19['host']): 
 /** Faixa "Mais (n)": abre um bloco escondido (fixa aberto). */
 export function moreStrip19(s: GameState, p: Pick19): HTMLElement | null {
   if (!p.more.length) return null;
+  // r21e (§2.3.2): "3 destaques + N outros" — os blocos fechados ficam num menu único em vez de uma fileira de botões
+  const more = p.more.sort((a, b) => b.weight - a.weight);
   return h('div', { class: 'b19-more', role: 'toolbar', 'aria-label': t(l('Mais blocos', 'More blocks')) },
-    h('small', { class: 'muted' }, t(l('Mais ({n}):', 'More ({n}):'), { n: p.more.length })),
-    p.more.sort((a, b) => b.weight - a.weight).map((b) => h('button', { class: 'btn small ghost', onclick: () => { setPref19(s, b.id, 'o'); rerender(); } }, '+ ', t(b.title))),
+    moreMenu21(more.map((b) => ({ label: `+ ${t(b.title)}`, run: () => { setPref19(s, b.id, 'o'); rerender(); } })), t(l('Mais blocos', 'More blocks')), t(l('Mais ({n}) ▾', 'More ({n}) ▾'), { n: more.length })),
+    h('small', { class: 'muted' }, more.slice(0, 4).map((b) => t(b.title)).join(' · '), more.length > 4 ? ' …' : ''),
     Object.keys(ui19(s).c).length ? h('button', { class: 'btn small ghost', title: t(l('Volta à escolha automática por peso', 'Back to automatic weight-based choice')), onclick: () => { ui19(s).c = {}; rerender(); } }, t(l('Restaurar', 'Reset'))) : null);
 }
 

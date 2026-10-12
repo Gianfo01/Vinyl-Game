@@ -126,11 +126,15 @@ function leadershipTab(s: GameState): HTMLElement {
   );
 }
 
-function identityArea(s: GameState): HTMLElement {
-  return h('div', { class: 'hub identity' }, tabs('identity', [
-    { id: 'label', label: t(l('Identidade do selo', 'Label identity')), icon: 'flag', render: () => identityTab(s) },
+/** r21e (UX 2.3.7): as duas abas da Identidade, para a página Gravadora as fundir na sua única fileira (id 'identity' = rota antiga). */
+export function identityTabs21(s: GameState): { id: string; label: string; icon: string; render: () => HTMLElement }[] {
+  return [
+    { id: 'identity', label: t(l('Identidade do selo', 'Label identity')), icon: 'flag', render: () => identityTab(s) },
     { id: 'lead', label: t(l('Liderança', 'Leadership')), icon: 'star', render: () => leadershipTab(s) },
-  ], rerender));
+  ];
+}
+function identityArea(s: GameState): HTMLElement {
+  return h('div', { class: 'hub identity' }, tabs('identity', identityTabs21(s), rerender));
 }
 
 registerArea({ id: 'identity', label: l('Identidade', 'Identity'), icon: 'flag', key: 'l', render: identityArea });

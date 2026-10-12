@@ -8,11 +8,12 @@ import { fameText } from '../../sim/sys/fame15';
 import { DEGREES, STAGES, canScout, dropSignal, estimate, requestScout, scoutActionsPerMonth, scoutAct, scoutCost, scoutRequestCost, setStage, sourceName, syncPipeline } from '../../sim/scouting';
 import { acceptCounter, defaultOffer, withdrawOffer } from '../../sim/contracts';
 import type { GameState, Knowledge } from '../../sim/types';
-import { $, actLink, cityName, genreName, labelLink, logo, pill, rerender, section, toast } from '../common';
+import { $, actLink, cityName, genreName, labelLink, logo, modal, pill, rerender, section, toast } from '../common';
 import { bar, h, rangeBar, select } from '../dom';
 import { openOffer } from '../ficha';
 import { openDossier } from '../dossierView';
-import { MARKET_TABS21, tabs } from '../vis';
+import { MARKET_TABS21, segTabs21 } from '../vis';
+import { foldInline21, moreMenu21 } from '../ux21';
 import { hqCaps } from '../../sim/branches';
 import { crewProfileCell } from '../sys/crew8';
 import { isWatched, missionProgress, scout11, toggleCompare, toggleWatch } from '../../sim/sys/scout11';
@@ -21,7 +22,8 @@ import { abilityCell18, staffStars18 } from '../ab18stars';
 export function marketPanel(s: GameState): HTMLElement {
   // r21 (I-6): tabs() com data-tabs (rota, { }, Ctrl+K e ajuda por aba); artista não vê scouting/pipeline
   const artist = s.config.role === 'artist';
-  return h('div', { class: 'panel market' }, tabs(MARKET_TABS21, [
+  // r21e (§2.3.5): o segundo nível vira segmentos dentro do conteúdo (uma fileira de abas só: a do hub)
+  return h('div', { class: 'panel market' }, segTabs21(MARKET_TABS21, [
     ...(artist ? [] : [
       { id: 'scouting', label: t(S.scouting), icon: 'fans', render: () => scouting(s) },
       { id: 'pipeline', label: t(S.pipeline), icon: 'contract', render: () => pipeline(s) },
@@ -53,7 +55,7 @@ function signalCard(s: GameState, k: Knowledge): HTMLElement {
   const lead = leadOf(s, a.id);
   return h('article', { class: `signal${watched ? ' watched' : ''}`, 'data-q': qKey(s, a.id) },
     h('header', null, logo(a, 36), h('div', { class: 'grow' }, actLink(s, a.id), h('div', { class: 'muted small' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${a.members.length > 1 ? t(S.band) : t(S.solo)}`)),
-      h('button', { class: `btn small ghost star${watched ? ' on' : ''}`, title: t(watched ? l('Tirar da observação', 'Unwatch') : l('Observar (alertas mensais)', 'Watch (monthly alerts)')), 'aria-pressed': watched ? 'true' : 'false', onclick: () => { toggleWatch(s, a.id); rerender(); } }, watched ? '★' : '☆')),
+      watched ? h('span', { class: 'star on', title: t(l('Em observação (alertas mensais)', 'Watched (monthly alerts)')) }, '★') : null),
     h('div', { class: 'row wrap small' }, pill(`${k.degree}/5 ${t(DEGREES[k.degree - 1])}`), ' ', fog(pot), ' ', a.owner ? pill(t(l('contratado', 'signed')), 'bad') : null,
       lead ? pill(t(l('{n} investigando', '{n} on it'), { n: lead.name }), 'good') : null),
     h('div', { class: 'est' },
@@ -63,12 +65,17 @@ function signalCard(s: GameState, k: Knowledge): HTMLElement {
     ),
     h('div', { class: 'small' }, t(l('Habilidade', 'Ability')), ' ', abilityCell18(s, a)),
     h('div', { class: 'muted small' }, `${t(S.source)}: ${t(sourceName(k.source))} · ${t(l('relatório de {n} mês(es)', '{n} month(s) old report'), { n: age })}`),
+    // r21e (§2.3.5): 2 ações primárias (Aprofundar, Fazer oferta) e o resto no menu "…"
     h('div', { class: 'actions' },
       h('button', { class: 'btn small', disabled: !chk.ok, title: chk.reason ? t(chk.reason) : '', onclick: () => { scoutAct(s, a.id); rerender(); } }, `${t(S.deepen)} (${$(scoutCost(s, k.degree))})`),
-      h('label', { class: 'check small' }, h('input', { type: 'checkbox', checked: cmp, onchange: () => { toggleCompare(s, a.id); rerender(); } }), t(l('Comparar', 'Compare'))),
-      h('button', { class: 'btn small', onclick: () => openDossier(a.id) }, t(l('Dossiê', 'Dossier'))),
       !a.owner ? h('button', { class: 'btn small primary', onclick: () => openOffer(a.id) }, t(S.makeOffer)) : null,
-      h('button', { class: 'btn small ghost', onclick: () => { dropSignal(s, a.id); rerender(); } }, t(S.drop)),
+      cmp ? h('small', { class: 'muted' }, '✓ ', t(l('comparando', 'comparing'))) : null,
+      moreMenu21([
+        { label: t(watched ? l('Tirar da observação', 'Unwatch') : l('Observar (alertas mensais)', 'Watch (monthly alerts)')), icon: 'fame', on: watched, run: () => { toggleWatch(s, a.id); rerender(); } },
+        { label: t(l('Comparar', 'Compare')), icon: 'chart-up', on: cmp, run: () => { toggleCompare(s, a.id); rerender(); } },
+        { label: t(l('Dossiê', 'Dossier')), icon: 'contract', run: () => openDossier(a.id) },
+        { label: t(S.drop), icon: 'warning', run: () => { dropSignal(s, a.id); rerender(); } },
+      ], t(l('Mais ações para {a}', 'More actions for {a}'), { a: a.name })),
     ),
   );
 }
@@ -156,13 +163,17 @@ function filterBar(): HTMLElement {
       { value: 'fame', label: t(l('Ordenar: alcance', 'Sort: reach')) },
       { value: 'recent', label: t(l('Ordenar: mais recentes', 'Sort: most recent')) },
     ] as { value: typeof f.sort; label: string }[], (v) => { f.sort = v; rerender(); }),
+    h('span', { class: 'muted small scout-count' }),
+  );
+  // r21e (§2.3.5): filtros avançados recolhidos (o resumo do que está ativo fica no título)
+  const adv = [f.fam !== 'any', f.market !== 'any', f.minDeg > 1, f.onlyWatch, !f.hideSigned].filter(Boolean).length;
+  root.appendChild(foldInline21('scout-adv', adv ? t(l('Mais filtros ({n} ativos)', 'More filters ({n} active)'), { n: adv }) : t(l('Mais filtros', 'More filters')), h('div', { class: 'row wrap scout-filter' },
     select<string>(f.fam, [{ value: 'any', label: t(l('Todos os gêneros', 'All genres')) }, ...FAMILIES.map((x) => ({ value: x.id as string, label: t(x.name) }))], (v) => { f.fam = v; rerender(); }),
     select<string>(f.market, [{ value: 'any', label: t(l('Todas as regiões', 'All regions')) }, ...MARKETS.map((x) => ({ value: x.id as MarketId as string, label: t(x.name) }))], (v) => { f.market = v; rerender(); }),
     select<number>(f.minDeg, [1, 2, 3, 4].map((d) => ({ value: d, label: t(l('Grau ≥ {d}', 'Degree ≥ {d}'), { d }) })), (v) => { f.minDeg = v; rerender(); }),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: f.onlyWatch, onchange: (e: Event) => { f.onlyWatch = (e.target as HTMLInputElement).checked; rerender(); } }), '★ ', t(l('Só observados', 'Watchlist only'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: f.hideSigned, onchange: (e: Event) => { f.hideSigned = (e.target as HTMLInputElement).checked; rerender(); } }), t(l('Esconder quem já assinou com rivais', 'Hide acts signed to rivals'))),
-    h('span', { class: 'muted small scout-count' }),
-  );
+  )));
   // aplica o texto atual assim que o painel entra no DOM
   queueMicrotask(() => applyQuery(root.closest('.panel') ?? root.parentElement ?? root));
   return root;
@@ -171,7 +182,6 @@ function filterBar(): HTMLElement {
 function scouting(s: GameState): HTMLElement {
   syncPipeline(s);
   const ks = sortedKnowledge(s);
-  const req = { genreFamily: 'any', market: 'any', level: 'promising', role: 'any' };
   const used = s.scoutActionsUsed;
   const max = scoutActionsPerMonth(s);
   return h('div', { class: 'cols' },
@@ -180,22 +190,38 @@ function scouting(s: GameState): HTMLElement {
         h('p', { class: 'muted small' }, t(l('Rumor → observação → acompanhamento → audição → convivência. Cada grau estreita o intervalo e revela campos. Relatórios envelhecem e podem discordar. Ações por mês: 3 + A&R + olheiros + bônus da sede/carta.', 'Rumor → observation → follow-up → audition → close contact. Each degree narrows the range and reveals fields. Reports age and may disagree. Actions per month: 3 + A&R + scouts + HQ/card bonus.'))),
         filterBar(),
         compareSection(s),
-        ks.length ? h('div', { class: 'signals' }, ks.map((k) => signalCard(s, k))) : h('p', { class: 'muted' }, t(l('Nenhum sinal ainda. Novos sinais chegam todo mês; contrate A&R, envie um pedido de scout ou siga artistas na aba Todos os artistas.', 'No signals yet. New signals arrive monthly; hire A&R, send a scout request or follow acts in the All artists tab.'))),
+        // r21e (§2.3.5): "destaques + N outros" — os primeiros cartões abertos, o resto atrás de um botão
+        ks.length ? h('div', { class: 'signals' }, ks.slice(0, showSignals).map((k) => signalCard(s, k))) : h('p', { class: 'muted' }, t(l('Nenhum sinal ainda. Novos sinais chegam todo mês; contrate A&R, envie um pedido de scout ou siga artistas na aba Todos os artistas.', 'No signals yet. New signals arrive monthly; hire A&R, send a scout request or follow acts in the All artists tab.'))),
+        ks.length > showSignals ? h('div', { class: 'signals-more21' }, h('button', { class: 'btn small ghost', onclick: () => { showSignals += SIGNALS_STEP; rerender(); } }, t(l('Mostrar mais {n} sinal(is)', 'Show {n} more signal(s)'), { n: Math.min(SIGNALS_STEP, ks.length - showSignals) }))) : null,
       ),
     ),
     h('aside', { class: 'col-side' },
       missionsSide(s),
+      // r21e (§2.3.5): o formulário "Pedido de scout" vira um botão que abre um diálogo
       section(t(S.scoutRequest),
         h('p', { class: 'muted small' }, t(l('Formulário estruturado. Resultado no fim do mês. Usa 1 ação.', 'Structured form. Results at month end. Uses 1 action.'))),
-        h('label', null, t(S.family), select('any', [{ value: 'any', label: t(S.any) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })).sort((a, b) => a.label.localeCompare(b.label))], (v) => (req.genreFamily = v))),
-        h('label', null, t(S.region), select('any', [{ value: 'any', label: t(S.any) }, ...MARKETS.map((m) => ({ value: m.id, label: t(m.name) }))], (v) => (req.market = v))),
-        h('label', null, t(S.level), select('promising', [{ value: 'beginner', label: t(S.beginner) }, { value: 'promising', label: t(S.promising) }, { value: 'established', label: t(S.established) }], (v) => (req.level = v))),
-        h('label', null, t(S.format), select('any', [{ value: 'any', label: t(S.any) }, { value: 'band', label: t(S.band) }, { value: 'solo', label: t(S.solo) }], (v) => (req.role = v))),
-        h('button', { class: 'btn', disabled: used >= max, onclick: () => { if (!requestScout(s, req)) toast(t(l('Sem ações ou caixa.', 'No actions or cash.')), 'bad'); else toast(t(l('Pedido enviado: os nomes chegam no fechamento do mês.', 'Request sent: names arrive at month end.')), 'good'); rerender(); } }, `${t(S.send)} (${$(scoutRequestCost(s))})`),
+        h('button', { class: 'btn', disabled: used >= max, 'aria-haspopup': 'dialog', onclick: () => scoutRequestDialog(s) }, `${t(S.scoutRequest)}… (${$(scoutRequestCost(s))})`),
         s.scoutRequests.length ? h('p', { class: 'small' }, t(l('Pedidos em andamento: {n}', 'Requests in progress: {n}'), { n: s.scoutRequests.length })) : null,
       ),
     ),
   );
+}
+
+const SIGNALS_STEP = 8;
+let showSignals = SIGNALS_STEP;
+
+function scoutRequestDialog(s: GameState): void {
+  const req = { genreFamily: 'any', market: 'any', level: 'promising', role: 'any' };
+  let close = () => {};
+  const body = h('div', { class: 'form' },
+    h('label', null, t(S.family), select('any', [{ value: 'any', label: t(S.any) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })).sort((a, b) => a.label.localeCompare(b.label))], (v) => (req.genreFamily = v))),
+    h('label', null, t(S.region), select('any', [{ value: 'any', label: t(S.any) }, ...MARKETS.map((m) => ({ value: m.id, label: t(m.name) }))], (v) => (req.market = v))),
+    h('label', null, t(S.level), select('promising', [{ value: 'beginner', label: t(S.beginner) }, { value: 'promising', label: t(S.promising) }, { value: 'established', label: t(S.established) }], (v) => (req.level = v))),
+    h('label', null, t(S.format), select('any', [{ value: 'any', label: t(S.any) }, { value: 'band', label: t(S.band) }, { value: 'solo', label: t(S.solo) }], (v) => (req.role = v))),
+    h('div', { class: 'row wrap' },
+      h('button', { class: 'btn ghost', onclick: () => close() }, t(l('Cancelar', 'Cancel'))),
+      h('button', { class: 'btn primary', onclick: () => { if (!requestScout(s, req)) toast(t(l('Sem ações ou caixa.', 'No actions or cash.')), 'bad'); else toast(t(l('Pedido enviado: os nomes chegam no fechamento do mês.', 'Request sent: names arrive at month end.')), 'good'); close(); rerender(); } }, `${t(S.send)} (${$(scoutRequestCost(s))})`)));
+  close = modal(t(S.scoutRequest), body);
 }
 
 const STAGE_ORDER: Knowledge['stage'][] = ['signal', 'monitoring', 'investigating', 'offer', 'negotiation'];

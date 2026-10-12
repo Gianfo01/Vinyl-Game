@@ -21,6 +21,7 @@ import { pill, rerender, section, toast } from '../common';
 import { bar, h } from '../dom';
 import { CAREER_PAGE17, ICON17, KEY17, ORDER17 } from '../nav17';
 import { EXTRA_AREAS, hideSection, registerArea, sectionsOf } from '../registry';
+import { identityTabs21 } from './identity';
 import { store } from '../store';
 import { ic, setTab, tabs } from '../vis';
 import { bizTabs17 } from './biz17';
@@ -71,7 +72,8 @@ function careerTabs(s: GameState, id: string): Tab[] {
   const out: (Tab | null)[] = (() => {
     switch (id) {
       case 'label': return [
-        areaTab(s, 'identity', l('Identidade', 'Identity')),
+        // r21e (UX 2.3.7): Identidade entra como segmentos da única fileira (antes: aba com segunda fileira de 2 abas)
+        ...(areaOf('identity') ? identityTabs21(s) : [areaTab(s, 'identity', l('Identidade', 'Identity'))]),
         { id: 'biz17', label: t(l('Venda & catálogo', 'Sale & catalog')), icon: 'bank', render: () => B.saleTab(s) },
         { id: 'trade', label: t(l('Canais, licenças e merch', 'Channels, licensing and merch')), icon: 'disc', render: () => h('div', null, B.outletsTab(s), B.licTab(s), B.merchTab(s)) },
         { id: 'image', label: t(l('Imagem & voz', 'Image & voice')), icon: 'star', render: () => B.imageTab(s) },

@@ -39,7 +39,8 @@ export function cockpit(s: GameState): HTMLElement {
   const desk = deskPanel(s);
   // r19 (blocks19): cartões do topo + seções da Mesa num só conjunto com peso; ~6 abertos, resto em "Mais"
   const blocks = [...homeBlocks18(s), { id: 'home:hq', title: l('Nosso mundo', 'Our world'), weight: 18, el: hqMini(s), host: 'home' as const }, ...deskBlocks19(s)];
-  const pk = pick19(s, blocks);
+  // r21e (§2.3.2): "3 destaques + N outros" no painel inteiro — 3 blocos abertos por peso, o resto na faixa "Mais (n)"
+  const pk = pick19(s, blocks, 3);
   const more = renderBlocks19(s, pk, 'desk');
   if (more.length) desk.appendChild(h('div', { class: 'extra-sections' }, more));
   // r20 (G6 §4.4): primeiro plano (agora, decisões com prazo, compromissos, projetos, 3 mudanças) e a caixa de entrada

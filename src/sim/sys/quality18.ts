@@ -196,7 +196,9 @@ export function computeDims18(s: GameState, rel: Release): Dims18 | null {
   const add = (d: Dim18, why: L, v: number) => { if (Math.abs(v) >= 0.5) P[d].push([why, Math.round(v * 10) / 10]); };
   const pf = so.map((x) => songProfile(x));
   const snd = so.map((x) => soundOf(s, x));
-  const lead = so[0], lp = pf[0];
+  // r21e: single de trabalho escolhido pelo jogador (dir21.lead); sem escolha, a primeira faixa
+  const li = Math.max(0, rel.dir21?.lead ? so.findIndex((x) => x.id === rel.dir21!.lead) : 0);
+  const lead = so[li], lp = pf[li];
   add('tech', l('Produção e execução das faixas', 'Tracks\' production and performance'), avg(so.map((x) => x.production * 0.5 + x.performance * 0.5)));
   add('emo', l('Interpretação, letra e melodia', 'Delivery, lyrics and melody'), avg(so.map((x) => x.performance * 0.45 + (x.instrumental ? x.melody : x.lyrics) * 0.4 + x.melody * 0.15)));
   const polish = avg(snd.map((v) => v[4] ?? 50));
@@ -232,6 +234,14 @@ export function computeDims18(s: GameState, rel: Release): Dims18 | null {
   const sq = sequence18(s, rel.songs);
   for (const [w, v] of sq.why) P.seq.push([w, v]);
   V.seq = sq.v;
+  // r21e: era do vinil — quem abre o lado B precisa segurar a agulha
+  const sb = rel.dir21?.sideB;
+  if (sb !== undefined && sb > 0 && sb < so.length && so.length >= 6) {
+    const hk = pf.map((x) => x.hook).sort((a, b) => b - a);
+    const strong = pf[sb].hook >= hk[Math.min(2, hk.length - 1)];
+    const w: [L, number] = strong ? [l('Lado B abre com um gancho', 'Side B opens with a hook'), 6] : pf[sb].hook < hk[Math.floor(hk.length / 2)] ? [l('Lado B abre morno', 'Side B opens lukewarm'), -5] : [l('Lado B abre no meio-termo', 'Side B opens middling'), 0];
+    if (w[1]) { P.seq.push(w); V.seq = Math.round(clamp(V.seq + w[1], 0, 100)); }
+  }
   if (so.length < 3) {
     add('coh', l('Single/EP curto: coesão = nível da faixa', 'Short release: cohesion = track level'), avg(so.map((x) => x.q)));
   } else {

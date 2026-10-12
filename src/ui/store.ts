@@ -1,6 +1,8 @@
 import { ensureExt } from '../sim/ext';
 import { migrate18 } from '../sim/ledger18';
 import { registerMovementGenres } from '../sim/culture';
+import { defaultMaster21 } from '../sim/sys/master21';
+import { media21 } from '../sim/sys/media21';
 // Estado da interface, preferências e persistência (IndexedDB + gzip; GDD §26).
 
 import { getLang, setLang, type Lang } from '../i18n/strings';
@@ -36,6 +38,8 @@ export interface Prefs {
   pins20?: string[];
   /** r21: seções recolhíveis (Cockpit) — aberto/fechado por id */
   fold21?: Record<string, boolean>;
+  /** r21e: linhas por página em Todos os artistas */
+  dirPage21?: number;
   tut18?: { tours: Record<string, number>; tips: Record<string, number>; visits: Record<string, number>; done: Record<string, number>; noTours?: boolean; noTips?: boolean };
 }
 
@@ -225,8 +229,11 @@ export function migrate(g: GameState): GameState {
   g.economy.investorUntil ??= 0;
   g.economy.lossCarry ??= 0; // r21 (B-7)
   g.upcoming ??= [];
+  // r21e: discos de saves antigos ganham o master padrão da época (a direção fica no próprio disco; o erro de previsão em x4.dir21 via ensureExt)
+  for (const rel of Object.values(g.releases ?? {})) if (rel.dir21 && !rel.dir21.master) rel.dir21.master = defaultMaster21(rel.year);
   for (const a of Object.values(g.acts ?? {})) if ((a.status === 'retired' || a.status === 'split') && a.hiatusUntil !== undefined) { a.hiatusUntil = undefined; a.hiatusWhy = undefined; } // r21 (C-5)
   ensureExt(g);
+  media21(g); // r21e (mídia): autocura dos campos da parada de airplay/playlists/virais em saves antigos
   migrate18(g);
   registerMovementGenres(g);
   g.version = SAVE_VERSION;

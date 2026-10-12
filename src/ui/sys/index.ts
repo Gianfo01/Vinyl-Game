@@ -206,4 +206,5 @@ import './fin20'; // r20 G2: Finanças → Posição (agora × fechamento, obrig
 import './ui20';
 import './realref20'; // r20b (Y): página do artista — Referência real × Nesta partida
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
+import './dir21ui'; // r21e: bloco "Direção" e "Mixagem e master" no projeto, previsão × realizado no Cockpit e em Finanças
 import './core18';

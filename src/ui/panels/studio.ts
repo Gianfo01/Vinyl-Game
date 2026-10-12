@@ -19,6 +19,7 @@ import { chips, ic, portrait, stat, tabs, tile } from '../vis';
 import { repertoireTab } from './repertoire';
 import { mergeTabs } from '../registry';
 import { stylePill17 } from '../sys/style17';
+import { emptyRoster21 } from '../ux21';
 
 const say = (res: L | null | object, ok: L) => {
   const err = res && typeof res === 'object' && 'pt' in res ? (res as L) : null;
@@ -55,19 +56,7 @@ function sessionTab(s: GameState): HTMLElement {
       h('span', { class: 'mini-bars' }, h('i', { style: `height:${so.melody}%`, title: t(l('Melodia', 'Melody')) }), h('i', { style: `height:${so.lyrics}%`, title: t(l('Letra', 'Lyrics')) }), h('i', { style: `height:${so.originality}%`, title: t(l('Originalidade', 'Originality')) })),
       so.sampleOf ? pill('sample') : null,
     ))) : h('p', { class: 'muted small' }, t(l('Nada escrito. Use "Compor" na agenda ou um camp de composição.', 'Nothing written. Use "Write songs" in the agenda or a songwriting camp.')))),
-    section(t(l('Produtor', 'Producer')), h('div', { class: 'cards producers' },
-      h('button', { class: `tile ${!sess.producer ? 'on' : ''}`, onclick: () => { sess.producer = ''; rerender(); } }, h('div', { class: 'tile-ic' }, ic('mic', 2)), h('div', { class: 'tile-body' }, h('b', null, t(l('Equipe da casa', 'In-house team'))), h('small', null, t(l('Sem assinatura; usa seu produtor contratado.', 'No signature; uses your hired producer.'))))),
-      prods.map((p) => {
-        const busy = (s.producerBusy[p.id] ?? 0) > s.week;
-        const fit = producerFit(p, a.genre);
-        return h('button', { class: `tile ${sess.producer === p.id ? 'on' : ''} ${busy ? 'muted' : ''}`, disabled: busy, onclick: () => { sess.producer = p.id; rerender(); } },
-          h('div', { class: 'tile-ic' }, ic('mic', 2)),
-          h('div', { class: 'tile-body' }, h('b', null, p.name), h('small', null, t(soundOf(p).name)),
-            chips(stat('sparkle', p.skill, l('Habilidade', 'Skill')), stat('money', $(money(s, p.fee)), l('Por faixa', 'Per track')), stat(fit === 1 ? 'heart' : 'warning', fit === 1 ? '✓' : '~', l('Afinidade com o gênero', 'Genre fit'))),
-            busy ? pill(t(l('ocupado', 'busy')), 'warn') : null,
-          ));
-      }),
-    )),
+    producersSection21(s, a, prods),
     section(t(l('Sessão', 'Session')),
       h('div', { class: 'row wrap' },
         select(sess.tier, STUDIO_TIERS.map((x) => ({ value: x.id, label: t(x.name) })), (v) => { sess.tier = v; rerender(); }),
@@ -79,6 +68,50 @@ function sessionTab(s: GameState): HTMLElement {
     ),
     splitsSection(s),
   );
+}
+
+let prodCards21 = false, allProds21 = false; // r21e (§2.3.9): produtores como lista compacta; "ver cartões" mostra os cartões antigos
+/** Afinidade com o gênero como ícone com tooltip (no lugar de "Afinidade com o gênero: ~"). */
+const fitIcon21 = (fit: number): HTMLElement => h('span', { class: `fit21 ${fit === 1 ? 'good' : 'warn'}`, role: 'img', title: fit === 1 ? t(l('Afinidade com o gênero: alta', 'Genre fit: high')) : t(l('Afinidade com o gênero: parcial', 'Genre fit: partial')), 'aria-label': fit === 1 ? t(l('Afinidade com o gênero: alta', 'Genre fit: high')) : t(l('Afinidade com o gênero: parcial', 'Genre fit: partial')) }, ic(fit === 1 ? 'heart' : 'warning'));
+function producersSection21(s: GameState, a: GameState['acts'][string], prods: ReturnType<typeof availableProducers>): HTMLElement {
+  const toggle = h('button', { class: 'btn small ghost', 'aria-pressed': prodCards21 ? 'true' : 'false', onclick: () => { prodCards21 = !prodCards21; rerender(); } }, prodCards21 ? t(l('Ver lista', 'See list')) : t(l('Ver cartões', 'See cards')));
+  const pick = (id: string) => { sess.producer = id; rerender(); };
+  if (prodCards21) {
+    return section(t(l('Produtor', 'Producer')), h('div', { class: 'row wrap' }, toggle), h('div', { class: 'cards producers' },
+      h('button', { class: `tile ${!sess.producer ? 'on' : ''}`, onclick: () => pick('') }, h('div', { class: 'tile-ic' }, ic('mic', 2)), h('div', { class: 'tile-body' }, h('b', null, t(l('Equipe da casa', 'In-house team'))), h('small', null, t(l('Sem assinatura; usa seu produtor contratado.', 'No signature; uses your hired producer.'))))),
+      prods.map((p) => {
+        const busy = (s.producerBusy[p.id] ?? 0) > s.week;
+        const fit = producerFit(p, a.genre);
+        return h('button', { class: `tile ${sess.producer === p.id ? 'on' : ''} ${busy ? 'muted' : ''}`, disabled: busy, onclick: () => pick(p.id) },
+          h('div', { class: 'tile-ic' }, ic('mic', 2)),
+          h('div', { class: 'tile-body' }, h('b', null, p.name), h('small', null, t(soundOf(p).name)),
+            chips(stat('sparkle', p.skill, l('Habilidade', 'Skill')), stat('money', $(money(s, p.fee)), l('Por faixa', 'Per track')), fitIcon21(fit)),
+            busy ? pill(t(l('ocupado', 'busy')), 'warn') : null,
+          ));
+      }),
+    ));
+  }
+  // afins com o gênero e o escolhido primeiro; 8 à vista, o resto com "Ver todos"
+  const sorted = [...prods].sort((x, y) => (y.id === sess.producer ? 1 : 0) - (x.id === sess.producer ? 1 : 0) || producerFit(y, a.genre) - producerFit(x, a.genre) || y.skill - x.skill);
+  const SHOW = 8;
+  const shown = allProds21 ? sorted : sorted.slice(0, SHOW);
+  const hiddenN = sorted.length - shown.length;
+  const row = (id: string, name: string, sig: string, skill: string, fee: string, fit: HTMLElement | null, busy: boolean) => {
+    const on = sess.producer === id;
+    return h('tr', { class: on ? 'on' : busy ? 'muted' : '' },
+      h('td', null, h('b', null, name), busy ? ' ' : null, busy ? pill(t(l('ocupado', 'busy')), 'warn') : null),
+      h('td', { class: 'muted' }, sig), h('td', { class: 'num' }, skill), h('td', { class: 'num' }, fee), h('td', null, fit),
+      h('td', null, h('button', { class: `btn small ${on ? 'primary' : ''}`, disabled: busy, 'aria-pressed': on ? 'true' : 'false', 'aria-label': `${on ? t(l('Escolhido', 'Chosen')) : t(l('Escolher', 'Choose'))}: ${name}`, onclick: () => pick(id) }, on ? '✓ ' + t(l('Escolhido', 'Chosen')) : t(l('Escolher', 'Choose')))));
+  };
+  return section(t(l('Produtor', 'Producer')),
+    h('div', { class: 'tbl-scroll20' }, h('table', { class: 'tbl compact producers21' },
+      h('thead', null, h('tr', null, h('th', null, t(l('Nome', 'Name'))), h('th', null, t(l('Assinatura', 'Signature'))), h('th', null, t(l('Habilidade', 'Skill'))), h('th', null, t(l('Por faixa', 'Per track'))), h('th', null, t(l('Afinidade', 'Fit'))), h('th', null, ''))),
+      h('tbody', null,
+        row('', t(l('Equipe da casa', 'In-house team')), t(l('Sem assinatura; usa seu produtor contratado.', 'No signature; uses your hired producer.')), '—', '—', null, false),
+        shown.map((p) => row(p.id, p.name, t(soundOf(p).name), String(p.skill), $(money(s, p.fee)), fitIcon21(producerFit(p, a.genre)), (s.producerBusy[p.id] ?? 0) > s.week))))),
+    h('div', { class: 'row wrap' },
+      hiddenN ? h('button', { class: 'btn small ghost', 'aria-pressed': allProds21 ? 'true' : 'false', onclick: () => { allProds21 = !allProds21; rerender(); } }, allProds21 ? t(l('Só os primeiros', 'Only the first ones')) : t(l('Ver todos (+{n})', 'See all (+{n})'), { n: hiddenN })) : null,
+      toggle));
 }
 
 function splitsSection(s: GameState): HTMLElement {
@@ -201,7 +234,7 @@ const STUDIO_GROUP: Record<string, StudioGroup> = {
 };
 export function studioHub(s: GameState, launch: () => HTMLElement, group: StudioGroup = 'write'): HTMLElement {
   const picker = actPicker(s);
-  if (!picker) return launch();
+  if (!picker) return group === 'write' ? launch() : h('div', { class: 'panel' }, emptyRoster21(s, group === 'studio' ? t(l('Estúdio', 'Studio')) : t(l('Lançamentos', 'Releases')), group === 'studio' ? t(l('Contrate um artista para marcar a primeira sessão.', 'Sign an act to book the first session.')) : t(l('Contrate um artista para lançar o primeiro disco.', 'Sign an act to release the first record.')))); // r21e (§2.3.12)
   return h('div', { class: 'hub studio-hub' },
     picker,
     tabs(`creation-${group}`, mergeTabs([

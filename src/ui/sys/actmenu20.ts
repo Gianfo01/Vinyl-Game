@@ -374,3 +374,14 @@ ACT_CARD_EXTRA20.f = (s, actId) => (playerActs(s).includes(actId) ? actionsButto
 
 export const _am20 = { pins20, togglePin20 } as { pins20: () => string[]; togglePin20: typeof togglePin20 };
 export type { L };
+
+/** r21e (§2.3.11): menu `…` genérico para cartões com uma ação primária — mesmo menu W3C do Ações ▾. */
+export function moreMenu21(anchor: HTMLElement, title: string, items: MenuItem20[], sub = t(l('mais ações', 'more actions'))): void {
+  menu20(anchor, undefined, title, sub, `${sub}: ${title}`, [{ label: sub, items }]);
+}
+/** Botão `…` que abre `moreMenu21` (nome acessível inclui o título); `items` é montado só ao abrir. */
+export function moreButton21(title: string, items: () => MenuItem20[], cls = 'btn small ghost'): HTMLElement {
+  const b = h('button', { class: `${cls} more21`, 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': `${t(l('Mais ações', 'More actions'))}: ${title}`, title: t(l('Mais ações', 'More actions')) }, '…');
+  b.onclick = (e: Event) => { e.stopPropagation(); moreMenu21(b, title, items()); };
+  return b;
+}

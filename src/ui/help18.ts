@@ -23,7 +23,13 @@ export interface Help18 {
 
 const HELP: Record<string, Help18> = {};
 export function registerHelp18(id: string, d: Help18): void { HELP[id] = d; }
-export const help18 = (id: string): Help18 | undefined => HELP[id];
+/** r21e (I-5/2.3.17): `topic:` são textos que não são páginas; `help18('x')` também acha `topic:x` (ligações antigas). */
+export const TOPIC18 = 'topic:';
+export const help18 = (id: string): Help18 | undefined => HELP[id] ?? HELP[TOPIC18 + id];
+export const isTopic18 = (id: string): boolean => id.startsWith(TOPIC18);
+/** Ids de ajuda que são páginas (sem abas nem tópicos). */
+export const helpAreaIds18 = (): string[] => Object.keys(HELP).filter((id) => !id.startsWith('tab:') && !isTopic18(id));
+export const helpTopicIds18 = (): string[] => Object.keys(HELP).filter(isTopic18);
 export const helpIds18 = (): string[] => Object.keys(HELP);
 
 /** Ajuda de uma aba: host exato primeiro, depois a genérica. */
@@ -33,7 +39,7 @@ export function helpFor18(area: string, tabs: [string, string][] = []): { area?:
   const seen = new Set<Help18>();
   const out: Help18[] = [];
   for (const [k, id] of tabs) { const x = tabHelp18(k, id); if (x && !seen.has(x) && x !== HELP[area]) { seen.add(x); out.push(x); } }
-  return { area: HELP[area], tabs: out };
+  return { area: help18(area), tabs: out };
 }
 
 // ---------------------------------------------------------------- atalhos de escrita (pt, en)
@@ -43,6 +49,10 @@ const L2 = (x: P): L => l(x[0], x[1]);
 /** Área: id, título, o quê, como, dicas, ligações, glossário. */
 export function H(id: string, title: P, what: P, how: P, tips: P[] = [], links: string[] = [], gloss: string[] = []): void {
   registerHelp18(id, { title: L2(title), what: L2(what), how: L2(how), tips: tips.map(L2), links, gloss });
+}
+/** Tópico (não é uma página): mesmo formato de H, registrado como `topic:id`; Ctrl+K e índice o abrem sem navegar. */
+export function HT(id: string, title: P, what: P, how: P, tips: P[] = [], links: string[] = [], gloss: string[] = []): void {
+  registerHelp18(TOPIC18 + id, { title: L2(title), what: L2(what), how: L2(how), tips: tips.map(L2), links, gloss });
 }
 /** Aba: host ('*' = qualquer), id, título, o quê, como, glossário. */
 export function T(host: string, id: string, title: P, what: P, how: P, gloss: string[] = [], tips: P[] = []): void {

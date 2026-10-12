@@ -174,7 +174,7 @@ export function planTour(s: GameState, p: TourPlan): Tour | L {
   if (freeCash20(s) < est.logistics) return cashWhy20(s, est.logistics, l('Caixa insuficiente para reservar a logística.', 'Not enough cash to book logistics.'));
   const tour: Tour = {
     id: nextId(s, 'tr'), actId: act.id, name: p.name?.trim() || fmtL(l('Turnê {y}', '{y} Tour'), { y: s.year }).pt, stops: est.stops, setlist: p.setlist, minutes: p.minutes,
-    production: p.production, role: p.role, partnerActId: p.partnerActId, crew: p.crew, pay: p.pay, costReserved: est.logistics, revenue: 0, costs: est.logistics, status: 'planned', log: [], accidents: 0,
+    production: p.production, role: p.role, partnerActId: p.partnerActId, crew: p.crew, pay: p.pay, costReserved: est.logistics, revenue: 0, costs: est.logistics, status: 'planned', log: [], accidents: 0, fc21: Math.round(est.expectedPay + est.expectedMerch),
   };
   post(s, `tour:${tour.id}`, -est.logistics, 'live_costs', `Logística ${tour.name}`);
   s.tours.push(tour);

@@ -43,7 +43,8 @@ import { noteTurnErr20 } from './savehealth20';
 import { tx20 } from '../core/save20';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
-import { AFTER_ADVANCE, EXTRA_AREAS, areaView20, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
+import { AFTER_ADVANCE, EXTRA_AREAS, areaView20, extraSections, extraTabIds, extraTabs, mergeTabs, showPendingCutscene, type TabHost } from './registry';
+import { tabIndex21 } from './tabgroups21'; // r21e (2.3.17): subabas indexadas no Ctrl+K sem abrir a página
 import { UX19UI } from './hooks19'; // r19 ux19: divulgação progressiva, rodapé do menu e fim de partida
 import { openLabelStory } from './sys/story12';
 import './sys';
@@ -453,13 +454,25 @@ function renderApp(): void {
   ));
   root.replaceChildren(app);
   const main = app.querySelector('main');
-  if (main) { stickyFix15(main); main.scrollTop = scroll; if (!same && document.activeElement === document.body) main.focus({ preventScroll: true }); }
+  if (main) { stickyFix15(main); slimHeader21(app, main); main.scrollTop = scroll; if (!same && document.activeElement === document.body) main.focus({ preventScroll: true }); }
   const tw = body.querySelector<HTMLElement>('[data-tabs]');
   const tk = tw?.dataset.tabs;
   const tid = tw?.dataset.cur;
   syncRoute15({ area: store.area, tab: tk && tid ? [tk, tid] : undefined }, pageTitle15(areaLabel(store.area), g.config.companyName));
   saveTabs15(tabSnapshot());
   afterRender18(g, store.area, go); // r18 tutorial18: tour da 1ª visita, dicas de 1ª vez, trilhas
+}
+
+/** r21e (§2.3.15): no celular o cabeçalho encolhe ao rolar para baixo (fica só o essencial: caixa e Avançar) e volta ao subir. */
+function slimHeader21(app: HTMLElement, main: HTMLElement): void {
+  let last = main.scrollTop;
+  const apply = () => {
+    const y = main.scrollTop;
+    const slim = window.innerWidth <= 640 && y > 64 && y >= last;
+    if (slim !== app.classList.contains('hdr-slim21')) app.classList.toggle('hdr-slim21', slim);
+    last = y;
+  };
+  main.addEventListener('scroll', apply, { passive: true });
 }
 
 /** Rótulo da área igual ao do menu (casa da carreira usa o nome do grupo). */
@@ -474,10 +487,11 @@ function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const gr = groupOf(store.area);
   const items = groupItems(gr);
   const tabLbl = body.querySelector('[data-tabs] > .tabs > [aria-selected=true]')?.textContent?.trim();
+  const segLbl = body.querySelector<HTMLElement>('[data-tabs]')?.dataset.seg || undefined; // r21e: segmento aberto dentro do grupo
   const head = () => { const last = lastInGroup[gr.id]; go(last && items.some((x) => x.id === last) ? last : gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit'); };
   // r17: Grupo › Seção › Página › Aba, avançar, fixar e recentes
   const secL = sectionOf17(gr, store.area);
-  const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL ? [{ label: t(secL), go: head }] : []), { label: areaLabel(store.area), go: () => go(store.area) }, ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
+  const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL ? [{ label: t(secL), go: head }] : []), { label: areaLabel(store.area), go: () => go(store.area) }, ...(tabLbl ? [{ label: tabLbl }] : []), ...(segLbl ? [{ label: segLbl }] : [])], sub);
   const row = bar0.querySelector('.crumbs15');
   const pinned = store17.pins.includes(store.area);
   const all = navItems();
@@ -551,18 +565,39 @@ async function saveTextDialog(): Promise<void> {
   close = modal(t(l('Save em texto', 'Save as text')), body);
 }
 
+/** r21e (2.3.17): subabas dos hubs e das barras agrupadas no Ctrl+K, sem a página aberta ("Finanças › Capital › Empréstimos"). */
+const HOST_OF21: Record<string, TabHost> = { 'business-finance': 'business', 'business-business': 'business', mediaHub: 'mediaHub', marketHub: 'marketHub', chartsHub: 'chartsHub', worldHub: 'worldHub', catalogHub: 'catalogHub', 'creation-write': 'creation', 'creation-studio': 'creation', 'creation-release': 'creation' };
+function paletteTabs21(g: NonNullable<typeof store.game>): PCmd[] {
+  const out: PCmd[] = [];
+  const reg: Record<string, Set<string>> = {}, vis: Record<string, Set<string>> = {};
+  for (const x of tabIndex21()) {
+    if (!areaExists(x.area)) continue;
+    const host = HOST_OF21[x.key];
+    if (host) { // aba registrada por outro módulo e invisível agora (era, carreira): fora do índice
+      reg[host] ??= new Set(extraTabIds(host)); vis[host] ??= new Set(extraTabs(host, g).map((tb) => tb.id));
+      if (reg[host].has(x.id) && !vis[host].has(x.id)) continue;
+    }
+    const area = areaLabel(x.area);
+    out.push({ label: `${area} › ${x.group ? `${t(x.group)} › ` : ''}${t(x.label)}`, kind: 'area', icon: ICON17[x.area] ?? 'compass', hint: t(groupOf(x.area).label), weight: 4, run: () => { setTab(x.key, x.id); go(x.area); } });
+  }
+  return out;
+}
+
 /** Paleta de comandos (GDD §24; rodada 15: busca tolerante a acentos, setas, pessoas e todos os artistas visíveis). */
 function palette(): void {
   const g = store.game!;
   navMemo = null;
   const mine = new Set(playerActs(g));
   const all17 = navItems();
+  const seenArea = new Set<string>(); // r21e: a Gravadora aparece em dois grupos (casa + atalho); o Ctrl+K lista uma vez
+  const indexed = new Set(tabIndex21().map((x) => `${x.key}:${x.id}`)), indexedKeys = new Set(tabIndex21().map((x) => x.key));
   const base: PCmd[] = [
     // r17: recentes primeiro, abas da página atual e telas absorvidas pelas páginas de carreira
     ...store17.recent.slice(1, 6).map((id) => all17.find((x) => x.id === id)).filter((x): x is NavItem => !!x).map((a): PCmd => ({ label: a.label, kind: 'recent', icon: a.icon, weight: 7, run: () => go(a.id) })),
-    ...[...document.querySelectorAll<HTMLButtonElement>('main [data-tabs] > .tabs > button')].map((b): PCmd => ({ label: `${areaLabel(store.area)} › ${b.textContent?.trim() ?? ''}`, kind: 'area', icon: 'compass', weight: 4, run: () => b.click() })),
+    ...(indexedKeys.has(document.querySelector('main [data-tabs]')?.getAttribute('data-tabs') ?? '') ? [] : [...document.querySelectorAll<HTMLButtonElement>('main [data-tabs] > .tabs > button')].map((b): PCmd => ({ label: `${areaLabel(store.area)} › ${b.textContent?.trim() ?? ''}`, kind: 'area', icon: 'compass', weight: 4, run: () => b.click() }))),
+    ...paletteTabs21(g),
     ...Object.keys(ALIAS17).filter((a) => groups().some((g) => g.areas.includes(ALIAS17[a][0]))).map((a): PCmd => ({ label: all17.find((x) => x.id === a)?.label ?? a, kind: 'area', icon: ICON17[a] ?? 'compass', hint: areaLabel(ALIAS17[a][0]), weight: 5, run: () => go(a) })),
-    ...groups().flatMap((gr) => groupItems(gr).map((a): PCmd => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, kind: 'area', icon: a.icon, hint: t(gr.label) + (a.key ? ` · ${a.key.toUpperCase()}` : ''), weight: 6,
+    ...groups().flatMap((gr) => groupItems(gr).filter((a) => !seenArea.has(a.id) && seenArea.add(a.id)).map((a): PCmd => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, kind: 'area', icon: a.icon, hint: t(gr.label) + (a.key ? ` · ${a.key.toUpperCase()}` : ''), weight: 6,
       run: () => { if (gr.home?.tab && gr.home.area === a.id) setTab(gr.home.tab[0], gr.home.tab[1]); go(a.id); } }))),
     { label: t(S.advanceMonth), kind: 'action', icon: 'calendar', hint: 'Ctrl+Enter', run: () => doAdvance('month') },
     { label: t(S.advanceQuarter), kind: 'action', icon: 'calendar', run: () => doAdvance('quarter') },
@@ -577,7 +612,7 @@ function palette(): void {
     ...[...mine].map((id): PCmd => ({ label: g.acts[id].name, kind: 'mine', icon: 'guitar', weight: 12, run: () => inspect.act(id) })),
     // rodada 16: abas extras (Sync, Disputas...) também aparecem no Ir para… — antes só se achavam abrindo a área certa
     ...([['charts', 'chartsHub'], ['market', 'marketHub'], ['media', 'mediaHub'], ['catalog', 'catalogHub'], ['world', 'worldHub']] as const).flatMap(([area, host]) =>
-      extraTabs(host, g).map((tb): PCmd => ({ label: tb.label, kind: 'area', icon: tb.icon, hint: navItems().find((x) => x.id === area)?.label, weight: 5, run: () => { setTab(host, tb.id); go(area); } }))),
+      extraTabs(host, g).filter((tb) => !indexed.has(`${host}:${tb.id}`)).map((tb): PCmd => ({ label: tb.label, kind: 'area', icon: tb.icon, hint: navItems().find((x) => x.id === area)?.label, weight: 5, run: () => { setTab(host, tb.id); go(area); } }))),
   ];
   // busca sob demanda (base grande: milhares de nomes) — só o que já existe no ano atual
   const search = (q: string): PCmd[] => {

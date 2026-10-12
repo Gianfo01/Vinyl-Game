@@ -377,6 +377,19 @@ export interface Release {
   expl?: boolean;
   /** r21 (E-10): catálogo "revivido" (sync, luto, documentário): a idade comercial conta a partir daqui; `week` fica imutável */
   revivedWeek?: number;
+  /** r21e: direção do disco (master, faixa-título, single de trabalho, lado B) — copiada do projeto no lançamento */
+  dir21?: Dir21;
+}
+
+/** r21e (criação): direção do disco — master da época, faixa-título, single de trabalho e início do lado B (era do vinil). */
+export interface Dir21 {
+  master?: 'std' | 'mono' | 'stereo' | 'loud' | 'dyn' | 'atmos';
+  /** faixa-título (id da música) */
+  title?: string;
+  /** single de trabalho (id da música); ausente = primeira faixa */
+  lead?: string;
+  /** índice da faixa que abre o lado B (vinil); ausente = sem lado B */
+  sideB?: number;
 }
 
 export interface AutopsyFactor {
@@ -580,6 +593,8 @@ export interface PendingRelease {
   hype?: number;
   rolloutId?: string;
   cover?: { style: string; seed: number };
+  /** r21e: direção do disco */
+  dir21?: Dir21;
 }
 
 export interface DecisionOption {

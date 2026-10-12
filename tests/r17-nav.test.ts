@@ -29,7 +29,8 @@ describe('menu r17', () => {
     for (const act of combos()) {
       const gs = menu(act);
       const flat = gs.flatMap((g) => g.areas);
-      expect(flat.length).toBe(new Set(flat).size); // sem duplicatas
+      const flat1 = flat.filter((a, i) => !(a === 'cp17-label' && i !== flat.indexOf(a))); // r21e: Gravadora mora em Empresa e tem atalho em Você
+      expect(flat1.length).toBe(new Set(flat1).size); // sem duplicatas
       const absorbedNow = act.flatMap((id) => CAREER_PAGE17[id].absorbs);
       for (const a of ALL) {
         if (absorbedNow.includes(a)) { expect(flat).not.toContain(a); expect(resolve17(a, gs).area).toBe(CAREER_PAGE17[act.find((id) => CAREER_PAGE17[id].absorbs.includes(a))!].area); }
@@ -37,7 +38,8 @@ describe('menu r17', () => {
         else expect(flat).toContain(a); // alcançável (no grupo dele ou em Mais)
       }
       const you = gs.find((g) => g.id === 'you')!;
-      for (const id of act) expect(groupOf17(gs, CAREER_PAGE17[id].area).id).toBe('you');
+      for (const id of act) expect(groupOf17(gs, CAREER_PAGE17[id].area).id).toBe(id === 'label' ? 'company' : 'you'); // r21e: Gravadora sobe para Empresa
+      if (act.includes('label')) expect(you.areas).toContain('cp17-label');
       expect(you.areas).toContain('careers');
       expect(gs.flatMap((g) => g.areas)).not.toContain('desk');
       // no máximo 2 níveis; seções curtas

@@ -207,6 +207,8 @@ export interface Rollout {
   presaves: number;
   hype: number; // 0..1, acumulado pelas fases
   status: 'active' | 'done' | 'cancelled';
+  /** r21e: direção do álbum (passa para o lançamento da fase 'album') */
+  dir21?: import('./types').Dir21;
 }
 
 // ---------- Mídia ----------
@@ -271,6 +273,8 @@ export interface Tour {
   status: 'planned' | 'running' | 'done' | 'cancelled';
   log: L[];
   accidents: number;
+  /** r21e: cachê + merch previstos no planejamento (previsão × realizado) */
+  fc21?: number;
 }
 
 // ---------- Marcas ----------

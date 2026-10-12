@@ -6,7 +6,7 @@ import type { Rng } from '../core/rng';
 import { l, type L } from '../data/world';
 import { availableChannels, bumpAppeal } from './market';
 import { availableFormats, scheduleRelease, suggestedPress } from './production';
-import type { GameState, Release } from './types';
+import type { Dir21, GameState, Release } from './types';
 import type { Rollout, RolloutPhase } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { exploitBlock } from './rights';
@@ -25,6 +25,8 @@ export interface RolloutOpts {
   limitedUnits: number;
   budget: number; // centavos por fase paga
   startInWeeks?: number;
+  /** r21e: direção do álbum (master, faixa-título, single de trabalho, lado B) */
+  dir21?: Dir21;
 }
 
 export function canVideo(s: GameState): boolean {
@@ -59,7 +61,7 @@ export function planRollout(s: GameState, o: RolloutOpts): Rollout | L {
   if (o.deluxeSongs.length) phases.push({ kind: 'deluxe', week: w + 30, done: false, budget: o.budget });
   const totalBudget = phases.reduce((t, p) => t + p.budget, 0);
   if (freeCash20(s) < totalBudget * 0.3) return cashWhy20(s, totalBudget * 0.3, l('Caixa insuficiente para sustentar o plano.', 'Not enough cash to support the plan.'));
-  const ro: Rollout = { id: nextId(s, 'ro'), actId: o.actId, title: o.title || 'Álbum', songIds: o.albumSongs, singles: o.singles, phases, presaves: 0, hype: 0, status: 'active' };
+  const ro: Rollout = { id: nextId(s, 'ro'), actId: o.actId, title: o.title || 'Álbum', songIds: o.albumSongs, singles: o.singles, phases, presaves: 0, hype: 0, status: 'active', dir21: o.dir21 ? { ...o.dir21 } : undefined };
   (ro as Rollout & { deluxe?: string[]; limited?: number }).deluxe = o.deluxeSongs;
   (ro as Rollout & { deluxe?: string[]; limited?: number }).limited = o.limitedUnits;
   // reserva as faixas para não serem lançadas por fora
@@ -128,7 +130,7 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
     case 'album': {
       const songs = ro.songIds.filter((id) => s.songs[id]?.recorded);
       for (const id of songs) delete s.flags[`ro:${id}`];
-      const res = scheduleRelease(s, r, { actId: act.id, type: 'lp', songs, title: ro.title, formats, press: suggestedPress(s, act, 'lp', 60), marketing: ph.budget ? [{ channel: mainChannel(s, 'album'), budget: ph.budget }] : [], territories: s.player.territories, weeksAhead: 1, hype: ro.hype, rolloutId: ro.id, kind: 'standard' });
+      const res = scheduleRelease(s, r, { actId: act.id, type: 'lp', songs, title: ro.title, formats, press: suggestedPress(s, act, 'lp', 60), marketing: ph.budget ? [{ channel: mainChannel(s, 'album'), budget: ph.budget }] : [], territories: s.player.territories, weeksAhead: 1, hype: ro.hype, rolloutId: ro.id, kind: 'standard', dir21: ro.dir21 });
       if ('pt' in res) notify(s, fmtL(l('O álbum do rollout não saiu: {e}', 'Rollout album failed: {e}'), { e: res }), 'bad');
       break;
     }

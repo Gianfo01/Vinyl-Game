@@ -12,7 +12,8 @@ import { festivalSlot, gigEstimate, maxVenueTier } from '../../sim/live';
 import { availableChannels } from '../../sim/market';
 import { pendingFeatures, unlockCost, unlockFeature } from '../../sim/era';
 import { availableFormats, scheduleRelease, suggestedPress } from '../../sim/production';
-import type { GameState } from '../../sim/types';
+import type { Act, GameState } from '../../sim/types';
+import { labelRate, labelTake } from '../../sim/sys/deal360_17';
 import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { careerSlotsUsed } from '../../sim/contracts';
 import { $, N, memoText, actLink, branchName, cityName, cover, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
@@ -39,11 +40,15 @@ import { price20 } from '../price20';
 import { confirm21 } from '../ask21';
 
 // ---------- Paradas ----------
+const CHART_FULL21: Record<string, boolean> = {};
 export function chartsPanel(s: GameState): HTMLElement {
-  const table = (which: 'singles' | 'albums') =>
-    h('div', { class: 'tbl-scroll' }, h('table', { class: 'tbl chart' }, // r21 (§2.3.15)
-      h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(S.last)), h('th', null, t(S.title)), h('th', null, t(l('Ato', 'Act'))), h('th', null, t(l('Selo', 'Label'))), h('th', null, t(S.weeks)), h('th', null, t(S.units)))),
-      h('tbody', null, s.charts[which].slice(0, 40).map((e) => {
+  // r21e (§2.3.4): 10 linhas e "ver 100"; só título e ato como link (selo vira texto; o cabeçalho abre Gravadoras)
+  const table = (which: 'singles' | 'albums') => {
+    const full = !!CHART_FULL21[which];
+    const n = s.charts[which].length;
+    return h('div', null, h('div', { class: 'tbl-scroll' }, h('table', { class: 'tbl chart' }, // r21 (§2.3.15)
+      h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(S.last)), h('th', null, t(S.title)), h('th', null, t(l('Ato', 'Act'))), h('th', { class: 'clickable', title: t(l('Abrir Gravadoras', 'Open Labels')), onclick: () => { store.area = 'labels' as typeof store.area; rerender(); } }, t(l('Selo', 'Label'))), h('th', null, t(S.weeks)), h('th', null, t(S.units)))),
+      h('tbody', null, s.charts[which].slice(0, full ? 100 : 10).map((e) => {
         const r = s.releases[e.releaseId];
         if (!r) return null;
         const mine = r.owner === 'player' || !!s.acts[r.actId]?.playerBand;
@@ -53,19 +58,21 @@ export function chartsPanel(s: GameState): HTMLElement {
           h('td', { class: move === '▲' || move === 'NEW' ? 'good' : move === '▼' ? 'bad' : 'muted' }, `${move} ${e.last || ''}`),
           h('td', null, releaseLink(s, r.id), r.certified ? pill(r.certified[0].toUpperCase(), 'gold') : null, ' ', stylePill17(styleOfRel17(s, r.id))),
           h('td', null, actLink(s, r.actId)),
-          h('td', null, labelLink(s, r.owner === 'indie' ? null : r.owner)),
+          h('td', { class: r.owner === 'player' ? 'mine' : 'muted' }, labelLink(s, r.owner === 'indie' ? null : r.owner).textContent),
           h('td', null, e.weeks),
           h('td', null, N(e.units)),
         );
       })),
-    ));
+    )),
+    n > 10 ? h('button', { class: 'btn small ghost', onclick: () => { CHART_FULL21[which] = !full; rerender(); } }, full ? t(l('Ver 10', 'Show 10')) :  t(l('Ver 100', 'Show 100')) + ` (${Math.min(100, n)})`) : null);
+  };
   const hot = Object.entries(s.genrePop).filter(([g]) => genreById[g]?.born <= s.year).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', { class: 'panel charts' },
     h('div', { class: 'col-main' }, section(t(S.singles), table('singles')), section(t(S.albums), table('albums'))),
-    h('aside', { class: 'col-side' },
-      hot.length ? hotGenres17(s) : null, // r17: gêneros em alta = estilos das músicas em alta
-      section(t(S.number1s), h('ul', { class: 'small' }, s.charts.number1History.slice(-15).reverse().map((n) => h('li', null, `${n.title} — ${n.act}`)))),
-    ),
+    h('aside', { class: 'col-side' }, tabs('chartsSide21', [ // r21e: dois cartões empilhados viram abas da coluna lateral
+      { id: 'hot', label: t(l('Gêneros em alta', 'Hot genres')), icon: 'fire', render: () => hot.length ? hotGenres17(s) : h('p', { class: 'muted small' }, '—') },
+      { id: 'no1', label: t(S.number1s), icon: 'trophy', render: () => section(t(S.number1s), h('ul', { class: 'small' }, s.charts.number1History.slice(-15).reverse().map((n) => h('li', null, `${n.title} — ${n.act}`)))) },
+    ], rerender)),
   );
 }
 
@@ -260,6 +267,8 @@ function tourMapSection(s: GameState): HTMLElement {
   return section(t(l('Mapa', 'Map')), tourMap.element, tourSummary);
 }
 
+/** r21e (§2.3.10): o que fica com o SELO numa data avulsa — banda própria 100 %; 360 pela fatia do contrato; clássico 0 (a mesma regra de playGigs). */
+const labelNet21 = (s: GameState, a: Act, net: number): number => a.playerBand ? net : net > 0 ? labelTake(s, a, 'live', net) : Math.round(net * labelRate(s, a, 'live'));
 let allTiers21 = false; // r21 (§2.3.10): só os portes alcançáveis; "ver todos os portes" mostra o resto
 /** r20: tabela de datas avulsas por artista (Shows › Agenda). */
 export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
@@ -270,7 +279,7 @@ export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
         const hidden = VENUE_TIERS.filter((v) => v.id > mt).length;
         return section(`${a.name} — ${t(S.gigs)}`,
           h('div', { class: 'tbl-scroll20' }, h('table', { class: 'tbl compact' },
-            h('thead', null, h('tr', null, h('th', null, t(S.venue)), h('th', null, t(S.perDate)), h('th', null, t(S.revenue)), h('th', null, t(S.net)), h('th', null, t(S.fatigue)), h('th', null, ''))),
+            h('thead', null, h('tr', null, h('th', null, t(S.venue)), h('th', null, t(S.perDate)), h('th', null, t(S.revenue)), h('th', null, t(S.net), ' ', h('small', { class: 'muted' }, t(l('(selo)', '(label)')))), h('th', null, t(S.fatigue)), h('th', null, ''))),
             h('tbody', null, VENUE_TIERS.filter((v) => allTiers21 || v.id <= mt).map((v) => {
               const est = gigEstimate(s, a, v.id, 4);
               const ok = v.id <= mt;
@@ -278,7 +287,7 @@ export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
                 h('td', null, t(v.name), h('small', { class: 'muted' }, ` ${v.cap[0]}–${v.cap[1]}`)),
                 h('td', null, ok ? `~${N(est.perDate)}` : '—'),
                 h('td', null, ok ? $(est.revenue) : '—'),
-                h('td', { class: est.net >= 0 ? 'good' : 'bad' }, ok ? $(est.net) : '—'),
+                h('td', { class: (ok ? labelNet21(s, a, est.net) : 0) >= 0 ? 'good' : 'bad', title: ok && !a.playerBand ? `${t(l('Líquido do artista', 'Act net'))}: ${$(est.net)}` : '' }, ok ? $(labelNet21(s, a, est.net)) : '—', ok && !a.playerBand && labelNet21(s, a, est.net) !== est.net ? h('small', { class: 'muted' }, ` (${t(l('artista', 'act'))}: ${$(est.net)})`) : null), // r21e (§2.3.10): já com a fatia do selo
                 h('td', null, ok ? `+${Math.round(est.fatigue)}` : '—'),
                 h('td', null, ok ? h('button', { class: 'btn small', onclick: () => {
                   const slots = s.delegated[a.id] !== false ? [] : [...(s.agenda[a.id] ?? [])];

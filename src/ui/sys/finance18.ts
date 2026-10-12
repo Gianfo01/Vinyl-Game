@@ -11,6 +11,7 @@ import { chips, stat } from '../vis';
 import { registerTab } from '../registry';
 import { nameSvg20 } from '../ux20';
 import { chartTable20 } from '../st20';
+import { forecastView21 } from './dir21ui';
 
 const MON: L[] = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'].map((m, i) => l(m, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]));
 const mName = (mi: number) => `${t(MON[mi % 12])}/${String(Math.floor(mi / 12)).slice(2)}`;
@@ -151,7 +152,7 @@ function render(s: GameState): HTMLElement {
     section(t(l('Contas a receber e a pagar', 'Receivables and payables')), timeline(s),
       h('p', { class: 'small' }, t(l('Caixa projetado', 'Projected cash')), ': ', ...cashForecast18(s, 6).map((x) => h('span', { class: `pill ${x.cash < 0 ? 'bad' : ''}` }, `${mName(x.mi)} ${$(x.cash)}`))),
       ...econWhy18(s).map((w) => h('p', { class: 'small warn' }, t(w)))),
-    fx(s), lost(s), tours(s),
+    fx(s), lost(s), tours(s), forecastView21(s), // r21e: previsão × realizado
   );
 }
 

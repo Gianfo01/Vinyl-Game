@@ -325,4 +325,6 @@ import './exch20'; // r20c N3: residência de intercâmbio entre cenas
 import './union20'; // r20c N3: negociação coletiva (músicos de sessão e equipe de estrada)
 import './price20'; // r20c N2: moeda/base de tempo dos preços ('price20') e tipos de custo da sede
 import './showops20'; // r20b (Z): show ↔ notícia e alterar turnê depois de marcar
+import './dir21'; // r21e: master por era, direção do álbum e previsão × realizado
+import './media21'; // r21e: airplay disputado por NPCs, vagas de playlist com bolo conservado, viral 2016+
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

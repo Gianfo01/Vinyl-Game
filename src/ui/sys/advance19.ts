@@ -3,7 +3,7 @@
 // "Por carreira" da aba Políticas (delegação do empresário, festival e estúdio) e o resumo dos avisos agrupados.
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { autoResolve19, dlg19, folded19 } from '../../sim/sys/budget19';
+import { autoResolve19, dlg19, folded19, type Auto19 } from '../../sim/sys/budget19';
 import { isActive } from '../../sim/sys/careers12';
 import { liveOf } from '../../sim/sys/live';
 import { studios } from '../../sim/sys/studio12';
@@ -20,6 +20,11 @@ export function askAdvance19(g: GameState, mode: Mode, go: () => void): boolean 
   if (store.prefs.ask19 === false) return false;
   const xs = autoResolve19(g, mode);
   if (!xs.length) return false;
+  // r21e (§2.3.13): quando todas as decisões pendentes têm opção padrão (já mostrada em cada cartão do Cockpit),
+  // a confirmação é uma linha presa ao próprio botão Avançar, não um diálogo
+  const allDefault = g.decisions.every((d) => d.options.some((o) => o.id === d.defaultOption));
+  const anchor = document.activeElement instanceof HTMLButtonElement && document.activeElement.closest('.topbar') ? document.activeElement : document.querySelector<HTMLButtonElement>('.topbar .advance button.primary, .topbar button.primary');
+  if (allDefault && anchor && !document.querySelector('.overlay')) { confirmPop21(xs, anchor, go); return true; }
   let close = () => {};
   const body = h('div', { class: 'adv19' },
     h('p', null, t(l('{n} cartão(ões) vão valer a resposta padrão se você avançar agora:', '{n} card(s) will take the default answer if you advance now:'), { n: xs.length })),
@@ -27,10 +32,44 @@ export function askAdvance19(g: GameState, mode: Mode, go: () => void): boolean 
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn', onclick: () => { close(); store.area = 'cockpit' as typeof store.area; rerender(); setTimeout(() => document.getElementById('ck14-desk')?.scrollIntoView({ behavior: 'smooth' }), 50); } }, t(l('Decidir agora', 'Decide now'))),
       h('button', { class: 'btn primary', onclick: () => { close(); go(); } }, t(l('Avançar e aceitar {n} padrão(ões)', 'Advance and accept {n} default(s)'), { n: xs.length }))),
-    // r21 (§2.3.13): o "não perguntar" em destaque (é a saída de dois cliques por mês para quem aceita o padrão)
-    h('label', { class: 'check adv19-ask21' }, h('input', { type: 'checkbox', onchange: (e: Event) => { store.prefs.ask19 = !(e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', h('b', null, t(l('Não perguntar de novo', 'Do not ask again'))), ' ', h('small', { class: 'muted' }, t(l('(o padrão já aparece em cada cartão do Cockpit; dá para religar em Configurações)', '(the default is already shown on each Cockpit card; re-enable in Settings)')))));
+    askLine21()); // r21 (§2.3.13): o "não perguntar" em destaque
   close = modal(t(l('Antes de avançar', 'Before advancing')), body);
   return true;
+}
+
+const askLine21 = (): HTMLElement => h('label', { class: 'check adv19-ask21' }, h('input', { type: 'checkbox', onchange: (e: Event) => { store.prefs.ask19 = !(e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', h('b', null, t(l('Não perguntar de novo', 'Do not ask again'))), ' ', h('small', { class: 'muted' }, t(l('(o padrão já aparece em cada cartão do Cockpit; dá para religar em Configurações)', '(the default is already shown on each Cockpit card; re-enable in Settings)'))));
+
+/** r21e (§2.3.13): confirmação presa ao botão Avançar — "Avançar e aceitar N padrões", "Decidir agora" e o "não perguntar"
+ *  em destaque. Escape, clique fora ou Tab para fora fecham sem avançar. */
+function confirmPop21(xs: Auto19[], anchor: HTMLButtonElement, go: () => void): void {
+  document.querySelector('.adv21-pop')?.remove();
+  const pop = h('div', { class: 'adv21-pop', role: 'dialog', 'aria-modal': 'false', 'aria-label': t(l('Antes de avançar', 'Before advancing')) },
+    h('p', { class: 'small' }, h('b', null, t(l('{n} decisão(ões) vão valer o padrão:', '{n} decision(s) will take the default:'), { n: xs.length }))),
+    h('ul', { class: 'small' }, xs.slice(0, 4).map((x) => h('li', null, t(x.title), ' → ', h('i', null, t(x.def)))), xs.length > 4 ? h('li', { class: 'muted' }, t(l('+{n} outras', '+{n} more'), { n: xs.length - 4 })) : null),
+    h('div', { class: 'row wrap' },
+      h('button', { class: 'btn primary', onclick: () => { close(); go(); } }, t(l('Avançar e aceitar {n} padrão(ões)', 'Advance and accept {n} default(s)'), { n: xs.length })),
+      h('button', { class: 'btn ghost', onclick: () => { close(); store.area = 'cockpit' as typeof store.area; rerender(); setTimeout(() => document.getElementById('ck14-desk')?.scrollIntoView({ behavior: 'smooth' }), 50); } }, t(l('Decidir agora', 'Decide now')))),
+    askLine21());
+  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); close(); anchor.focus(); } };
+  const onDown = (e: Event) => { if (!pop.contains(e.target as Node) && e.target !== anchor) close(); };
+  const onFocus = (e: FocusEvent) => { if (!pop.contains(e.target as Node) && e.target !== anchor) close(); };
+  function close(): void {
+    if (!pop.isConnected) return;
+    pop.remove();
+    document.removeEventListener('keydown', onKey, true);
+    document.removeEventListener('pointerdown', onDown, true);
+    document.removeEventListener('focusin', onFocus, true);
+    anchor.setAttribute('aria-expanded', 'false');
+  }
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect(), w = pop.offsetWidth || 420;
+  pop.style.left = `${Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w))}px`;
+  pop.style.top = `${r.bottom + 6}px`;
+  anchor.setAttribute('aria-expanded', 'true');
+  document.addEventListener('keydown', onKey, true);
+  document.addEventListener('pointerdown', onDown, true);
+  document.addEventListener('focusin', onFocus, true);
+  (pop.querySelector('button.primary') as HTMLElement | null)?.focus();
 }
 
 /** Linha para o diálogo de Configurações. */

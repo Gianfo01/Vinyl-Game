@@ -248,12 +248,12 @@ export class WorldMap {
       zoomBtn('⌂', l('Mapa inteiro', 'Whole map'), () => this.reset()),
     );
     this.stage = h('div', { class: 'wmap-stage' }, this.canvas, controls, this.tooltip);
-    this.tintBar = h('div', { class: 'wmap-seg', role: 'group', 'aria-label': t(l('Camada', 'Layer')) });
-    const cont = h('div', { class: 'wmap-seg wmap-cont', role: 'group', 'aria-label': t(l('Continentes', 'Continents')) },
-      CONTINENTS.map((c) => h('button', { type: 'button', class: 'wmap-btn text', onclick: () => this.focusContinent(c.id) }, t(c.name))));
+    // r21e (§2.3.1): região e política num seletor único sobre o mapa (antes: 3 + 6 botões)
+    this.tintBar = h('div', { class: 'wmap-seg', role: 'group', 'aria-label': t(l('Fundo e região', 'Background and region')) });
     this.legend = h('div', { class: 'wmap-legend' });
-    this.a11y = h('div', { class: 'sr-only' });
-    this.element = h('div', { class: 'wmap' }, h('div', { class: 'wmap-toolbar' }, this.tintBar, cont), this.stage, this.legend, this.a11y);
+    // r21e: a lista acessível de cidades vive num `details` (só monta quando aberta pelo teclado/leitor de tela)
+    this.a11y = h('details', { class: 'sr-only wmap-a11y', ontoggle: () => { if ((this.a11y as HTMLDetailsElement).open) this.buildA11y(); } });
+    this.element = h('div', { class: 'wmap' }, h('div', { class: 'wmap-toolbar' }, this.tintBar), this.stage, this.legend, this.a11y);
     this.bind();
     this.renderChrome();
     this.geo = geoData();
@@ -372,11 +372,17 @@ export class WorldMap {
 
   private renderChrome(): void {
     clear(this.tintBar);
-    for (const tn of TINTS) {
-      this.tintBar.appendChild(h('button', {
-        type: 'button', class: `wmap-btn text ${this.tint === tn.id ? 'on' : ''}`, 'aria-pressed': this.tint === tn.id ? 'true' : 'false',
-        onclick: () => { this.tint = tn.id; this.renderChrome(); this.schedule(); },
-      }, t(tn.name)));
+    {
+      const sel = h('select', { class: 'wmap-sel', 'aria-label': t(l('Fundo do mapa ou região', 'Map background or region')) }) as HTMLSelectElement;
+      const g1 = h('optgroup', { label: t(l('Pintar países por', 'Shade countries by')) }, TINTS.map((tn) => h('option', { value: `tint:${tn.id}`, selected: this.tint === tn.id }, t(tn.name))));
+      const g2 = h('optgroup', { label: t(l('Ir para a região', 'Go to region')) }, CONTINENTS.map((c) => h('option', { value: `go:${c.id}` }, t(c.name))));
+      sel.append(g1, g2);
+      sel.onchange = () => {
+        const v = sel.value;
+        if (v.startsWith('tint:')) { this.tint = v.slice(5) as MapTint; this.renderChrome(); this.schedule(); }
+        else { this.focusContinent(v.slice(3) as ContinentId); sel.value = `tint:${this.tint}`; }
+      };
+      this.tintBar.append(h('label', { class: 'wmap-sel-wrap small' }, t(l('Fundo e região', 'Background and region')), ' ', sel));
     }
     // legenda
     clear(this.legend);
@@ -395,10 +401,15 @@ export class WorldMap {
       sw(th.audience, t(l('Com público', 'Has audience')), 'dot'), sw(th.selected, t(l('Selecionada', 'Selected')), 'dot'), sw(th.locked, t(l('Sem acesso', 'No access')), 'dot'),
     );
     for (const e of this.opts.legendExtra?.() ?? []) this.legend.append(e);
-    // lista acessível de cidades
+    // lista acessível de cidades (r21e: montada só quando o `details` é aberto)
     clear(this.a11y);
+    this.a11y.appendChild(h('summary', null, t(l('Cidades do mapa ({n}) — lista acessível (Enter ou Espaço alterna a seleção)', 'Map cities ({n}) — accessible list (Enter or Space toggles selection)'), { n: this.opts.cities().length })));
+    if ((this.a11y as HTMLDetailsElement).open) this.buildA11y();
+  }
+
+  private buildA11y(): void {
+    const old = this.a11y.querySelector('ul'); if (old) old.remove();
     const list = this.opts.cities();
-    this.a11y.appendChild(h('p', null, t(l('Cidades do mapa (Enter ou Espaço alterna a seleção):', 'Map cities (Enter or Space toggles selection):'))));
     const ul = h('ul', null);
     for (const mc of list) {
       const c = cityById[mc.id];

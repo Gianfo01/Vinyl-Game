@@ -90,6 +90,8 @@ export function extraTabs(host: TabHost, s: GameState): { id: string; label: str
 }
 
 /** Junta abas existentes (ordem 50) e extras, ordenadas. */
+/** r21e: ids de todas as abas registradas num host (visíveis ou não), para o índice do Ctrl+K pular as que não existem agora. */
+export function extraTabIds(host: TabHost): string[] { return (TABS[host] ?? []).map((x) => x.id); }
 export function mergeTabs<T extends { id: string }>(base: T[], host: TabHost, s: GameState): (T | ReturnType<typeof extraTabs>[number])[] {
   const extra = extraTabs(host, s);
   const before = extra.filter((x) => x.order < 50).sort((a, b) => a.order - b.order);

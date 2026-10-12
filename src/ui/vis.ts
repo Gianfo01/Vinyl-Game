@@ -6,6 +6,7 @@ import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import type { GameState, Person } from '../sim/types';
 import { h } from './dom';
+import { arrange21, GROUPS21 } from './tabgroups21';
 import { nameSvg20 } from './ux20';
 
 const EMOJI: Record<string, string> = {
@@ -130,12 +131,53 @@ export const MARKET_TABS21 = 'marketTabs';
 /** Abas simples guardadas por chave. */
 const tabState: Record<string, string> = {};
 export function tabs(key: string, items: { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement }[], rerender: () => void): HTMLElement {
+  if (GROUPS21[key]) return groupedTabs21(key, items, rerender); // r21e: barras longas viram grupos + segmentos (ids antigos continuam valendo)
   const cur = tabState[key] && items.some((i) => i.id === tabState[key]) ? tabState[key] : items[0]?.id;
   const active = items.find((i) => i.id === cur);
   // r21 (UX 2.3.8): barras com mais de 7 abas rolam na horizontal em vez de quebrar em duas linhas
   return h('div', { class: `tabs-wrap ${items.length > 7 ? 'tabs-many21' : ''}`, 'data-tabs': key, 'data-cur': cur },
     h('div', { class: 'tabs', role: 'tablist' }, items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null))),
     h('div', { role: 'tabpanel' }, active ? active.render() : null),
+  );
+}
+
+/** r21e (§2.3.5): segundo nível como segmentos dentro do conteúdo — mesma chave/estado de tabs() (rotas, Ctrl+K e
+ *  setTab continuam valendo), mas sem uma segunda fileira de abas. */
+export function segTabs21(key: string, items: { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement }[], rerender: () => void): HTMLElement {
+  const cur = tabState[key] && items.some((i) => i.id === tabState[key]) ? tabState[key] : items[0]?.id;
+  const active = items.find((i) => i.id === cur);
+  return h('div', { class: 'tabs-wrap seg21', 'data-tabs': key, 'data-cur': cur },
+    h('div', { class: 'seg21-bar', role: 'group', 'aria-label': t(l('Seção', 'Section')) }, items.map((i) => h('button', { 'aria-pressed': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null))),
+    h('div', { class: 'seg21-body' }, active ? active.render() : null),
+  );
+}
+
+/**
+ * r21e (UX 2.3.7/2.3.8): uma fileira de grupos (≤ 6) e, dentro do grupo, segmentos com as abas de sempre.
+ * O estado guardado é o id da aba interna: rota, Ctrl+K, ajuda (`tab:chave:id`) e `setTab` não mudam.
+ * `setTab(chave, idDoGrupo)` abre o último segmento usado nesse grupo.
+ */
+function groupedTabs21(key: string, items: { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement }[], rerender: () => void): HTMLElement {
+  const groups = arrange21(key, items);
+  if (!groups.length) return h('div', { class: 'tabs-wrap', 'data-tabs': key });
+  const want = tabState[key];
+  const gr = groups.find((g) => g.id === want) ?? groups.find((g) => g.items.some((i) => i.id === want)) ?? groups[0];
+  const memo = tabState[`${key}>${gr.id}`];
+  const cur = gr.items.find((i) => i.id === want) ?? gr.items.find((i) => i.id === memo) ?? gr.items[0];
+  tabState[key] = cur.id;
+  tabState[`${key}>${gr.id}`] = cur.id;
+  const pick = (id: string) => { tabState[key] = id; rerender(); };
+  const segs = gr.items.length > 1;
+  return h('div', { class: 'tabs-wrap tabs-grouped21', 'data-tabs': key, 'data-cur': cur.id, 'data-seg': segs ? cur.label : '' },
+    h('div', { class: 'tabs', role: 'tablist' }, groups.map((g) => {
+      const on = g.id === gr.id;
+      const badge = g.items.reduce((n, i) => n + (i.badge ?? 0), 0);
+      const first = g.items.find((i) => i.id === tabState[`${key}>${g.id}`]) ?? g.items[0];
+      const icon = g.icon ?? g.items[0].icon;
+      return h('button', { role: 'tab', 'aria-selected': on ? 'true' : 'false', class: on ? 'on' : '', onclick: () => pick(first.id) }, icon ? ic(icon) : null, g.items.length === 1 ? g.items[0].label : t(g.label), badge ? h('span', { class: 'badge' }, badge) : null);
+    })),
+    segs ? h('div', { class: 'segs21', role: 'group', 'aria-label': t(gr.label) }, gr.items.map((i) => h('button', { type: 'button', class: i.id === cur.id ? 'on' : '', 'aria-pressed': i.id === cur.id ? 'true' : 'false', 'data-seg-id': i.id, onclick: () => pick(i.id) }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null))) : null,
+    h('div', { role: 'tabpanel' }, cur.render()),
   );
 }
 

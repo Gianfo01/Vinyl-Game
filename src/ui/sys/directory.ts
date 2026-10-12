@@ -10,10 +10,12 @@ import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
 import { simFate20 } from '../../sim/prov20';
 import { preDebut, visibleAct } from '../../sim/future';
-import { actLink, cityName, genreName, labelLink, logo, pill, rerender, toast } from '../common';
+import { actLink, cityName, genreName, logo, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
 import { openAct, openOffer, openPerson } from '../ficha';
 import { registerArea } from '../registry';
+import { foldLazy21 } from '../ux21';
+import { store, savePrefs } from '../store';
 import { ic } from '../vis';
 
 const F = {
@@ -29,7 +31,8 @@ const F = {
   role: 'any',
   page: 0,
 };
-const PAGE = 60; // r21 (§2.3.3)
+const PAGE_DEF = 30; // r21e (§2.3.3): 30/página por padrão, tamanho lembrado por jogador
+const pageSize = (): number => store.prefs.dirPage21 ?? PAGE_DEF;
 
 function actMatches(s: GameState, a: Act, q: string): boolean {
   if (!visibleAct(s, a)) return false;
@@ -57,9 +60,9 @@ function actRows(s: GameState): HTMLElement {
     : F.sort === 'known' ? known(b) - known(a) || b.fame - a.fame
     : F.sort === 'momentum' ? (b.momentum ?? 0) - (a.momentum ?? 0)
     : b.fame - a.fame);
-  const pages = Math.max(1, Math.ceil(list.length / PAGE));
+  const pages = Math.max(1, Math.ceil(list.length / pageSize()));
   F.page = Math.min(F.page, pages - 1);
-  const slice = list.slice(F.page * PAGE, F.page * PAGE + PAGE);
+  const slice = list.slice(F.page * pageSize(), F.page * pageSize() + pageSize());
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('{n} atos encontrados.', '{n} acts found.'), { n: list.length })),
     h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
@@ -70,10 +73,10 @@ function actRows(s: GameState): HTMLElement {
         // r21 (§2.3.3): a linha inteira abre a página; "Seguir" vira estrela
         return h('tr', { class: 'dir-row21', tabindex: '0', role: 'link', title: t(l('Abrir página', 'Open page')), onclick: (e: Event) => { if (!(e.target as HTMLElement).closest('button, a, select, input')) openAct(a.id); }, onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter' && e.target === e.currentTarget) openAct(a.id); } },
           h('td', null, logo(a, 28)),
-          h('td', null, actLink(s, a.id), simFate20(s, a) ? h('span', null, ' ', pill(t(l('destino simulado', 'simulated fate')), 'neural')) : null, h('div', { class: 'muted small' }, `${a.members.length > 1 ? t(l('Banda', 'Band')) + ` (${a.members.length})` : t(l('Solo', 'Solo'))} · ${preDebut(s, a) ? t(l('promessa', 'up-and-coming')) : `${t(l('desde', 'since'))} ${a.debutYear}`}`), a.status === 'retired' || a.status === 'split' ? pill(t(l('encerrado', 'ended')), 'bad') : a.status === 'hiatus' ? pill(t(l('hiato', 'hiatus')), 'warn') : null),
+          h('td', null, h('b', { class: a.owner === 'player' ? 'mine' : '' }, a.name), simFate20(s, a) ? h('span', null, ' ', pill(t(l('destino simulado', 'simulated fate')), 'neural')) : null, h('div', { class: 'muted small' }, `${a.members.length > 1 ? t(l('Banda', 'Band')) + ` (${a.members.length})` : t(l('Solo', 'Solo'))} · ${preDebut(s, a) ? t(l('promessa', 'up-and-coming')) : `${t(l('desde', 'since'))} ${a.debutYear}`}`), a.status === 'retired' || a.status === 'split' ? pill(t(l('encerrado', 'ended')), 'bad') : a.status === 'hiatus' ? pill(t(l('hiato', 'hiatus')), 'warn') : null),
           h('td', null, genreName(a.genre)),
           h('td', null, cityName(a.city)),
-          h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? labelLink(s, a.owner) : h('span', { class: 'muted' }, t(l('independente', 'independent')))),
+          h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? (s.labels[a.owner]?.name ?? '—') : h('span', { class: 'muted' }, t(l('independente', 'independent')))),
           h('td', null, `★${fameText(s, a.id)}`),
           h('td', null, tal ? `${tal.lo}–${tal.hi}` : '?'),
           h('td', null, a.owner === 'player' ? '—' : k ? `${k.degree}/5` : '—'),
@@ -109,9 +112,9 @@ function personRows(s: GameState): HTMLElement {
   const ver = `${s.config.seed}|${s.week}`; if (ver !== ocVer) { ocVer = ver; OC.clear(); } const oc = OC; // r15: memo por semana (o sort chamava overall() em cada comparação)
   const ovr = (p: Person) => { let v = oc.get(p.id); if (v === undefined) oc.set(p.id, v = overall(s, p)); return v; };
   list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.born - a.born : (actOf[b.id]?.fame ?? 0) - (actOf[a.id]?.fame ?? 0) || ovr(b) - ovr(a));
-  const pages = Math.max(1, Math.ceil(list.length / PAGE));
+  const pages = Math.max(1, Math.ceil(list.length / pageSize()));
   F.page = Math.min(F.page, pages - 1);
-  const slice = list.slice(F.page * PAGE, F.page * PAGE + PAGE);
+  const slice = list.slice(F.page * pageSize(), F.page * pageSize() + pageSize());
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('{n} pessoas encontradas.', '{n} people found.'), { n: list.length })),
     h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
@@ -146,13 +149,13 @@ function goneRows(s: GameState): HTMLElement {
     for (const [actId, list] of Object.entries(rw(s).former)) for (const f of list) if (s.acts[actId] && !(actsOf[f.personId] ?? []).includes(s.acts[actId])) (actsOf[f.personId] ??= []).push(s.acts[actId]);
     const list = Object.values(s.persons).filter((p) => !p.alive && (!q || p.name.toLowerCase().includes(q) || (actsOf[p.id] ?? []).some((a) => a.name.toLowerCase().includes(q))))
       .sort((a, b) => (b.died ?? 0) - (a.died ?? 0) || Math.max(0, ...(actsOf[b.id] ?? []).map((x) => x.fame)) - Math.max(0, ...(actsOf[a.id] ?? []).map((x) => x.fame)));
-    const pages = Math.max(1, Math.ceil(list.length / PAGE));
+    const pages = Math.max(1, Math.ceil(list.length / pageSize()));
     F.page = Math.min(F.page, pages - 1);
     return h('div', null,
       h('p', { class: 'muted small' }, t(l('{n} pessoas falecidas. Bandas podem seguir com substitutos e o catálogo continua vendendo.', '{n} people have died. Bands may carry on with replacements and the catalog keeps selling.'), { n: list.length })),
       h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
         h('thead', null, h('tr', null, ...[l('Nome', 'Name'), l('Função', 'Role'), l('Vida', 'Life'), l('Atos', 'Acts'), ''].map((x) => h('th', null, typeof x === 'string' ? x : t(x))))),
-        h('tbody', null, list.slice(F.page * PAGE, F.page * PAGE + PAGE).map((p) => h('tr', null,
+        h('tbody', null, list.slice(F.page * pageSize(), F.page * pageSize() + pageSize()).map((p) => h('tr', null,
           h('td', null, h('b', null, p.name), ' ', pill('†', 'bad')),
           h('td', null, t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))),
           h('td', null, `${p.born}–${p.died ?? '?'}${p.died ? ` (${p.died - p.born})` : ''}`),
@@ -165,14 +168,14 @@ function goneRows(s: GameState): HTMLElement {
   const list = Object.values(s.acts).filter((a) => want(a) && (F.family === 'any' || familyOf(a.genre) === F.family) && (F.market === 'any' || cityById[a.city]?.market === F.market) && (!q || a.name.toLowerCase().includes(q) || a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q))));
   const catalog = (a: Act) => a.releases.reduce((t0, id) => t0 + (s.releases[id]?.totalUnits ?? 0), 0);
   list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.careerEnd - a.careerEnd : b.fame - a.fame);
-  const pages = Math.max(1, Math.ceil(list.length / PAGE));
+  const pages = Math.max(1, Math.ceil(list.length / pageSize()));
   F.page = Math.min(F.page, pages - 1);
   const statusPill = (a: Act) => a.deceased ? pill(t(l('todos falecidos', 'all deceased')), 'bad') : a.status === 'split' ? pill(t(l('separada', 'split')), 'bad') : a.status === 'retired' ? pill(t(l('aposentado', 'retired')), 'warn') : pill(t(l('em pausa', 'on hiatus')), 'warn');
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('{n} atos fora de atividade. Quem ainda tem integrantes vivos pode voltar (reunião, saída da aposentadoria), e todos seguem vendendo catálogo.', '{n} inactive acts. Those with living members may return (reunion, coming out of retirement), and all keep selling their catalog.'), { n: list.length })),
     h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
       h('thead', null, h('tr', null, ...['', l('Ato', 'Act'), l('Gênero', 'Genre'), l('Carreira', 'Career'), l('Situação', 'Status'), l('Discos', 'Records'), l('Vendas totais', 'Total sales'), l('Pode voltar?', 'Could return?'), ''].map((x) => h('th', null, typeof x === 'string' ? x : t(x))))),
-      h('tbody', null, list.slice(F.page * PAGE, F.page * PAGE + PAGE).map((a) => {
+      h('tbody', null, list.slice(F.page * pageSize(), F.page * pageSize() + pageSize()).map((a) => {
         const live = a.members.filter((m) => s.persons[m]?.alive).length;
         return h('tr', null,
           h('td', null, logo(a, 28)),
@@ -190,8 +193,9 @@ function goneRows(s: GameState): HTMLElement {
 }
 
 function pager(pages: number): HTMLElement | null {
-  if (pages <= 1) return null;
-  return h('div', { class: 'row center' },
+  const size = h('label', { class: 'small muted' }, t(l('por página', 'per page')), ' ', select(pageSize(), [30, 60, 120].map((n) => ({ value: n, label: String(n) })), (v) => { store.prefs.dirPage21 = v; savePrefs(); F.page = 0; rerender(); }, { 'aria-label': t(l('Linhas por página', 'Rows per page')) }));
+  if (pages <= 1) return h('div', { class: 'row center' }, size);
+  return h('div', { class: 'row center' }, size,
     h('button', { class: 'btn small ghost', disabled: F.page === 0, onclick: () => { F.page -= 1; rerender(); } }, '←'),
     h('span', { class: 'small' }, ` ${F.page + 1} / ${pages} `),
     h('button', { class: 'btn small ghost', disabled: F.page >= pages - 1, onclick: () => { F.page += 1; rerender(); } }, '→'));
@@ -210,12 +214,20 @@ function directoryArea(s: GameState): HTMLElement {
       h('button', { role: 'tab', class: F.mode === 'gone' ? 'on' : '', 'aria-selected': String(F.mode === 'gone'), onclick: () => set('mode')('gone') }, ic('skull'), ' ', t(l('Mortos, separados e aposentados', 'Dead, split and retired')))),
     h('div', { class: 'row wrap dir-filters' },
       search,
-      select(F.family, [{ value: 'any', label: t(l('Todas as famílias', 'All families')) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })).sort((a, b) => a.label.localeCompare(b.label))], set('family')),
-      select(F.market, [{ value: 'any', label: t(l('Todas as regiões', 'All regions')) }, ...MARKETS.map((m) => ({ value: m.id, label: t(m.name) }))], set('market')),
+      select(F.sort, [
+        { value: 'fame', label: t(l('Ordenar: alcance', 'Sort: reach')) }, { value: 'name', label: t(l('Ordenar: nome', 'Sort: name')) },
+        { value: 'debut', label: t(l('Ordenar: mais novos', 'Sort: newest')) }, { value: 'known', label: t(l('Ordenar: mais conhecidos por você', 'Sort: best known to you')) },
+        { value: 'momentum', label: t(l('Ordenar: em alta', 'Sort: trending')) },
+      ] as { value: typeof F.sort; label: string }[], set('sort')),
       F.mode === 'gone' ? select(F.gone, [
         { value: 'all', label: t(l('Todos os inativos', 'All inactive')) }, { value: 'dead', label: t(l('Falecidos', 'Deceased')) },
         { value: 'split', label: t(l('Bandas separadas', 'Split bands')) }, { value: 'retired', label: t(l('Aposentados', 'Retired')) }, { value: 'hiatus', label: t(l('Em pausa', 'On hiatus')) },
       ] as { value: typeof F.gone; label: string }[], set('gone')) : null,
+    ),
+    // r21e (§2.3.3): "mais filtros" recolhido (estado lembrado)
+    foldLazy21('directory.more', t(l('Mais filtros', 'More filters')), () => h('div', { class: 'row wrap dir-filters' },
+      select(F.family, [{ value: 'any', label: t(l('Todas as famílias', 'All families')) }, ...FAMILIES.map((f) => ({ value: f.id, label: t(f.name) })).sort((a, b) => a.label.localeCompare(b.label))], set('family')),
+      select(F.market, [{ value: 'any', label: t(l('Todas as regiões', 'All regions')) }, ...MARKETS.map((m) => ({ value: m.id, label: t(m.name) }))], set('market')),
       F.mode === 'gone' ? null : select(F.owner, [
         { value: 'any', label: t(l('Qualquer selo', 'Any label')) }, { value: 'mine', label: t(l('Meus', 'Mine')) },
         { value: 'free', label: t(l('Sem contrato', 'Unsigned')) }, { value: 'rival', label: t(l('Em rivais', 'With rivals')) },
@@ -226,12 +238,7 @@ function directoryArea(s: GameState): HTMLElement {
       F.mode === 'gone' ? null : F.mode === 'acts'
         ? select(F.format, [{ value: 'any', label: t(l('Solo e banda', 'Solo and band')) }, { value: 'solo', label: t(l('Solo', 'Solo')) }, { value: 'band', label: t(l('Banda', 'Band')) }] as { value: typeof F.format; label: string }[], set('format'))
         : select(F.role, [{ value: 'any', label: t(l('Qualquer função', 'Any role')) }, ...roles.map((r) => ({ value: r, label: t(ROLE_NAMES[r]) }))], set('role')),
-      select(F.sort, [
-        { value: 'fame', label: t(l('Ordenar: alcance', 'Sort: reach')) }, { value: 'name', label: t(l('Ordenar: nome', 'Sort: name')) },
-        { value: 'debut', label: t(l('Ordenar: mais novos', 'Sort: newest')) }, { value: 'known', label: t(l('Ordenar: mais conhecidos por você', 'Sort: best known to you')) },
-        { value: 'momentum', label: t(l('Ordenar: em alta', 'Sort: trending')) },
-      ] as { value: typeof F.sort; label: string }[], set('sort')),
-    ),
+    ), false, 'dir-more21'),
     F.mode === 'acts' ? actRows(s) : F.mode === 'gone' ? goneRows(s) : personRows(s),
   );
 }

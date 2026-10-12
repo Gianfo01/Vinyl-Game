@@ -4,12 +4,13 @@
 // promotor independente) e Clipes, virais e pistas (clipe com diretor/coreografia, DJs, remix, parada de clubes).
 
 import { ERA19 } from '../../sim/era19';
-import { l, type L } from '../../data/world';
+import { MARKETS, cityById, l, marketById, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CHANNELS } from '../../data/rules';
 import { availableChannels } from '../../sim/market';
 import { CH18, mk18, satOf18, SRC18, type Src18 } from '../../sim/sys/mkt18';
 import { CONS18, FMT18, HOW18, addOdds18, consNow18, ensureStations18, fmtsNow18, lunchPd18, pitchRadio18, radio18, radioWeight18, spins18, type Fmt18, type How18 } from '../../sim/sys/radio18';
+import { PL_SLOTS21, media21, myAirRows21, plAsk21, plAskLeft21, plBudget21, plOdds21, viralOpen21 } from '../../sim/sys/media21';
 import { FARM18, STRAT18, buyStreams18, dmOpen18, farmRisk18, funnel18, pitchOdds18, pitchPlaylist18, setDm18, setStrat18, st18, type Strat18 } from '../../sim/sys/stream18';
 import { DSTYLE18, VTIER18, choreoFee18, commissionRemix18, djFee18, djFit18, djStyle18, dirFee18, ensureDirs18, ensureDjs18, makeVideo18, media18, remixContest18, remixOpen18, togglePool18, videoOpen18 } from '../../sim/sys/media18';
 import type { GameState, Release } from '../../sim/types';
@@ -20,7 +21,7 @@ import { why18 } from '../explain18';
 import { registerTab } from '../registry';
 import { btn, note } from './world4/util';
 
-const F = { rel: '', fmt: '' as Fmt18 | '', how: 'plug' as How18, edit: false, tier: 1, dir: '', choreo: false, censor: true };
+const F = { mk: '' as MarketId | '', rel: '', fmt: '' as Fmt18 | '', how: 'plug' as How18, edit: false, tier: 1, dir: '', choreo: false, censor: true };
 const say = (x: L | null | undefined, ok: L = l('Feito.', 'Done.')) => { toast(t(x ?? ok), 'info'); rerender(); };
 const pc = (x: number) => `${Math.round(x * 100)}%`;
 const recentMine = (s: GameState, weeks: number): Release[] => playerActs(s).flatMap((id) => (s.acts[id]?.releases ?? []).map((r) => s.releases[r])).filter((r): r is Release => !!r && r.owner === 'player' && s.week - r.week <= weeks).sort((a, b) => b.week - a.week);
@@ -62,6 +63,7 @@ function streamTab(s: GameState): HTMLElement {
           p ? pill(t(p.ok ? l('Na playlist editorial', 'On editorial playlist') : l('Curadores passaram', 'Curators passed')), p.ok ? 'good' : '') : btn(t(fmtL(l('Pitch para curadores ({p}%)', 'Pitch curators ({p}%)'), { p: Math.round(o.p * 100) })), () => say(pitchPlaylist18(s, r.id)), { title: o.why.map((w) => t(w)).join(' · ') }));
       }),
       recentMine(s, 4).length ? null : note(l('Nenhum lançamento nas últimas 4 semanas.', 'No releases in the last 4 weeks.')),
+      playlistSlots(s),
     ) : null,
     streaming ? section(t(l('Fazendas de streams (crime)', 'Stream farms (crime)')),
       note(l('Comprar plays falsos sobe a parada, mas não gera fã nem royalty; as plataformas procuram todo mês. Se pegarem: faixa derrubada por 10 semanas, multa, escândalo, curadores evitam o artista por 1 ano.', 'Buying fake plays lifts the chart, but yields neither fans nor royalties; platforms look every month. If caught: track down for 10 weeks, fine, scandal, curators avoid the act for a year.')),
@@ -122,6 +124,7 @@ function radioTab(s: GameState): HTMLElement {
       note(HOW18[F.how].desc),
       F.fmt ? note(FMT18[F.fmt as Fmt18].desc) : null,
     ),
+    airplaySection(s),
     section(t(l('Estações e diretores de programação', 'Stations and program directors')),
       table([t(l('Estação', 'Station')), t(l('Formato', 'Format')), t(l('Diretor', 'PD')), t(l('Relação', 'Relationship')), t(l('Consultor', 'Consultant')), t(l('Chance agora', 'Chance now')), ''], sts.map((x) => {
         const c = x.cons ? CONS18.find((k) => k.id === x.cons) : undefined;
@@ -136,6 +139,55 @@ function radioTab(s: GameState): HTMLElement {
       st.paid.length ? h('div', null, h('h4', null, t(l('Quem pagou, quem recebeu', 'Who paid, who got paid'))), note(l('Cada pagamento a promotor independente fica registrado; pode vazar enquanto o calor do jabá estiver alto.', 'Every payment to an independent promoter is on record; it can leak while payola heat is high.')),
         h('ul', { class: 'small' }, st.paid.slice(-6).reverse().map((p) => h('li', { class: p.out ? 'bad' : '' }, `${p.who} · ${$(p.amt)} · ${s.releases[p.rel]?.title ?? '?'}${p.out ? ` · ${t(l('VAZOU', 'LEAKED'))}` : ''}`)))) : null,
     ),
+  );
+}
+
+/** r21e: virais sem campanha (2016+) de qualquer ato — gancho da faixa, sem campanha. */
+function viralOpen18plus(s: GameState): HTMLElement | null {
+  if (!viralOpen21(s)) return null;
+  const log = media21(s).log;
+  return h('div', null, h('h4', null, t(l('Virais sem campanha (vídeos curtos, 2016+)', 'Virals with no campaign (short video, 2016+)'))),
+    note(l('Qualquer faixa nova pode viralizar pelo gancho do refrão: o gênero sobe, o país de origem lembra do artista, unidades ×1,8 por 8 semanas. Vale para rivais também.', 'Any new track can go viral on the strength of its hook: the genre rises, the home country remembers the act, units ×1.8 for 8 weeks. Rivals too.')),
+    log.length ? h('ul', { class: 'small' }, log.slice(0, 8).map((v) => h('li', { class: v.mine ? 'good' : '' }, s.releases[v.rel] ? releaseLink(s, v.rel) : v.title, ` · ${s.acts[v.act]?.name ?? ''} · ${t(l('gancho', 'hook'))} ${v.hook} · ${v.until > s.week ? t(l('em alta', 'trending')) : t(l('passou', 'over'))}`))) : note(l('Nenhum viral ainda.', 'None yet.')));
+}
+
+/** r21e: parada de airplay da semana — rotação disputada por todos os atos (NPCs incluídos). */
+function airplaySection(s: GameState): HTMLElement {
+  const m21 = media21(s);
+  const mks = MARKETS.map((m) => m.id);
+  if (!F.mk || !mks.includes(F.mk)) F.mk = cityById[s.config.homeCity]?.market ?? 'na';
+  const mk = F.mk as MarketId;
+  const rows = m21.air[mk] ?? [];
+  const slots = m21.slots[mk] ?? 10;
+  const mineRows = myAirRows21(s, mk);
+  const why = (rid: string, txt: string) => why18(s, 'media21.air', { rel: rid, mk }, txt);
+  return section(t(l('Parada de airplay da semana', 'This week\'s airplay chart')),
+    note(fmtL(l('{n} vagas de rotação por mercado, disputadas por todos os atos: apelo × fama regional × relação com as estações. Rivais pagam divulgadores; quem fica fora não ganha rotação nem peso na parada do país.', '{n} rotation slots per market, contested by every act: appeal × regional fame × station relationship. Rivals pay pluggers; whoever is left out gets no rotation and no weight in the country chart.'), { n: slots })),
+    h('div', { class: 'row' }, select<MarketId>(mk, mks.map((k) => ({ value: k, label: t(marketById[k].name) })), (v) => { F.mk = v; rerender(); }, { 'aria-label': t(l('Mercado', 'Market')) })),
+    rows.length ? table(['#', t(l('Faixa', 'Track')), t(l('Artista', 'Act')), t(l('Selo', 'Label')), t(l('Semana passada', 'Last week')), t(l('Por quê', 'Why'))], rows.slice(0, slots).map((x) => {
+      const rel = s.releases[x.rel];
+      const act = rel ? s.acts[rel.actId] : undefined;
+      const own = rel && (rel.owner === 'player' || act?.playerBand);
+      return [h('b', { class: own ? 'good' : '' }, String(x.pos)), rel ? releaseLink(s, rel.id) : '?', act ? actLink(s, act.id) : '—', own ? t(l('você', 'you')) : (rel && s.labels[rel.owner]?.name) || t(l('indep.', 'indie')), x.last ? String(x.last) : t(l('nova', 'new')), why(x.rel, '?')];
+    })) : note(l('A parada sai na virada da semana.', 'The chart comes out at the week turn.')),
+    mineRows.length ? h('div', { class: 'small' }, h('b', null, t(l('Seus discos: ', 'Your records: '))), ...mineRows.slice(0, 6).flatMap((x) => [why(x.rel, `${s.releases[x.rel]?.title ?? '?'}: ${x.in ? `#${x.pos}` : t(fmtL(l('fora (#{p}, {n} vagas)', 'out (#{p}, {n} slots)'), { p: x.pos, n: slots }))}`), ' · '])) : note(l('Nenhum disco seu concorre neste mercado (lançamentos de até 30 semanas distribuídos nele).', 'None of your records competes in this market (releases up to 30 weeks old distributed there).')),
+    m21.n.lost ? h('p', { class: 'small muted' }, t(fmtL(l('Vagas perdidas no seu mercado até hoje: {n}.', 'Slots lost in your home market so far: {n}.'), { n: m21.n.lost }))) : null,
+  );
+}
+
+/** r21e: vagas editoriais da semana (disputadas por todos) e pitch da equipe (tempo, não caixa). */
+function playlistSlots(s: GameState): HTMLElement {
+  const m21 = media21(s);
+  const mk = (cityById[s.config.homeCity]?.market ?? 'na') as MarketId;
+  const rows = m21.pl[mk] ?? [];
+  const dil = m21.dil[mk] ?? 1;
+  const rels = recentMine(s, 10);
+  return h('div', null,
+    h('h4', null, t(fmtL(l('Vagas editoriais em {m} ({n} por semana)', 'Editorial slots in {m} ({n} per week)'), { m: marketById[mk].name, n: PL_SLOTS21 }))),
+    note(fmtL(l('Score = apelo × retorno × relação com o curador, para todos os atos. O bolo do território é conservado: quem está na vaga ganha unidades e os demais são diluídos (hoje ×{d}).', 'Score = appeal × return × curator relationship, for every act. The territory pool is conserved: slot holders gain units and everyone else is diluted (now ×{d}).'), { d: Math.round(dil * 1000) / 1000 })),
+    rows.length ? h('ol', { class: 'small' }, rows.map((x) => { const rel = s.releases[x.rel]; const own = rel && (rel.owner === 'player' || s.acts[rel.actId]?.playerBand); return h('li', { class: own ? 'good' : '' }, rel ? releaseLink(s, rel.id) : '?', ` · ${rel ? s.acts[rel.actId]?.name ?? '' : ''} · ×${Math.round(x.k * 100) / 100}`); })) : note(l('As vagas saem na virada da semana.', 'Slots are decided at the week turn.')),
+    h('p', { class: 'small' }, t(fmtL(l('Tempo da equipe este mês: {a}/{b} pitches (mais publicitários, mais pitches).', 'Team time this month: {a}/{b} pitches (more publicists, more pitches).'), { a: plAskLeft21(s), b: plBudget21(s) }))),
+    ...rels.map((r) => { const o = plOdds21(s, r, mk); const asked = m21.plAsk[r.id] && m21.plAsk[r.id].w > s.week - 6; return h('div', { class: 'row' }, releaseLink(s, r.id), ' ', why18(s, 'media21.pl', { rel: r.id, mk }, `${Math.round(o.p * 100)}%`), ' ', asked ? pill(t(l('equipe já apresentou', 'team already pitched')), 'good') : btn(t(l('Pedir pitch à equipe', 'Ask the team to pitch')), () => say(plAsk21(s, r.id)), { disabled: plAskLeft21(s) <= 0 })); }),
   );
 }
 
@@ -168,6 +220,7 @@ function clipsTab(s: GameState): HTMLElement {
     section(t(l('Virais e catálogo que volta', 'Virals and returning catalog')),
       note(l('Faixas antigas podem voltar (vídeo curto, série, filme). A decisão chega na caixa de entrada: impulsionar, remix oficial, derrubar usos ou deixar passar. Viral traz muitos ouvintes de uma vez: poucos viram fãs.', 'Old tracks can come back (short video, series, film). The decision lands in your inbox: boost, official remix, take down uses or let it ride. Virals bring many one-time listeners: few become fans.')),
       virals.length ? h('ul', { class: 'small' }, virals.map((v) => h('li', null, releaseLink(s, v.rel), ` · ×${v.k} · ${v.until > s.week ? t(l('em alta', 'trending')) : t(l('passou', 'over'))}`))) : note(l('Nenhum viral agora.', 'No virals right now.')),
+      viralOpen18plus(s),
     ),
     remixOpen18(s) ? section(t(l('DJs, remix e pistas', 'DJs, remixes and clubs')),
       note(l('Remix encomendado leva a faixa às pistas por 16 semanas (melhor se o estilo do DJ combina com o gênero). Record pool: DJs recebem seus discos de graça. Concurso de remix: fãs participam e o vencedor pode virar DJ.', 'A commissioned remix takes the track to clubs for 16 weeks (better if the DJ style fits the genre). Record pool: DJs get your records free. Remix contest: fans join and the winner may become a DJ.')),

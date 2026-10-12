@@ -75,7 +75,6 @@ function personCard(s: GameState, p: Person): HTMLElement {
       ? h('div', { class: 'row wrap' }, (Object.keys(TREATMENT) as Treatment[]).map((k) => h('button', { class: 'btn small ghost', onclick: () => say(startTreatment(s, p.id, k), l('Tratamento iniciado.', 'Treatment started.')) }, `${t(TREATMENT[k].name)} ${$(treatmentCost(s, k))}`)))
       : h('button', { class: 'btn small ghost', 'aria-expanded': 'false', onclick: () => { ui.health = p.id; rerender(); } }, ic('warning'), ' ', t(l('Tratar…', 'Treat…')))) : null,
     rom ? h('p', { class: 'small' }, ic('heart'), ' ', t(l('Romance na banda', 'Romance in the band')), `: ${s.persons[rom.a]?.name} & ${s.persons[rom.b]?.name}`) : null,
-    h('p', { class: 'small' }, `${t(l('Patrimônio pessoal', 'Personal wealth'))}: ${$(wealthOf(s, p.id))} `, h('button', { class: 'btn small ghost', onclick: () => say(personalAdvance(s, p.id, money(s, 3000)), l('Adiantamento pago.', 'Advance paid.')) }, t(l('Adiantar dinheiro', 'Advance money')))),
     promises.length ? h('ul', { class: 'small' }, promises.map((pr) => h('li', null, ic('contract'), ` ${t(l('Promessa', 'Promise'))}: ${t(PROMISE_INFO[pr.kind].name)} · ${t(l('prazo semana', 'due week'))} ${pr.dueWeek}`))) : null,
     // r21 (§2.3.6): "Conversa" é um botão; as 5 opções abrem só no cartão escolhido
     h('div', { class: 'pp-talk' },
@@ -88,6 +87,10 @@ function personCard(s: GameState, p: Person): HTMLElement {
           h('button', { class: 'btn small ghost', onclick: () => { ui.talk = ''; rerender(); } }, t(l('Fechar', 'Close')))))
         : h('button', { class: 'btn small', 'aria-expanded': 'false', disabled: !!talkErr, title: talkErr ? t(talkErr) : '', onclick: () => { ui.talk = p.id; rerender(); } }, ic('people'), ' ', t(l('Conversa…', 'Talk…'))),
     ),
+    // r21e (§2.3.6): patrimônio e "Adiantar dinheiro" num rodapé do cartão
+    h('div', { class: 'pp-foot small' },
+      h('span', { class: 'muted' }, `${t(l('Patrimônio pessoal', 'Personal wealth'))}: ${$(wealthOf(s, p.id))}`),
+      h('button', { class: 'btn small ghost', onclick: () => say(personalAdvance(s, p.id, money(s, 3000)), l('Adiantamento pago.', 'Advance paid.')) }, t(l('Adiantar dinheiro', 'Advance money')))),
   );
 }
 

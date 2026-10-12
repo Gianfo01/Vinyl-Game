@@ -25,6 +25,7 @@ import { artistRate, dealOfRelease, hasGuest, isForeignWork, originalWork, right
 import { availableFormats, catalogPreservation } from './production';
 import { subCredit, subOwner } from './sublabels';
 import { noteRelease17 } from './relidx17';
+import { defaultMaster21 } from './sys/master21';
 import { allReleases17 } from './relidx17';
 
 const POOL: [number, number][] = [
@@ -217,6 +218,8 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   };
   rel.kind = pr.kind;
   rel.rolloutId = pr.rolloutId;
+  // r21e: direção do disco; quem não decidiu (delegação, rivais) recebe o master padrão da época
+  rel.dir21 = { ...(pr.dir21 ?? {}), master: pr.dir21?.master ?? defaultMaster21(s.year) };
   const { appeal, factors } = computeAppeal(s, r, rel, act);
   // campanha de rollout (teaser, pré-save, singles, clipe) e superfãs aquecem a estreia
   const hype = 1 + (pr.hype ?? 0);

@@ -17,7 +17,8 @@ import { $, N, actLink, cityName, dateLabel, genreName, pill, releaseLink, reren
 import { h } from '../dom';
 import { WorldMap, glyphCanvas, type MapCity, type MapOverlay } from '../map';
 import { store } from '../store';
-import { ic, stat, chips, tabs, tile } from '../vis';
+import { foldLazy21, foldOpen21, setFold21 } from '../ux21';
+import { ic, stat, chips, tile } from '../vis';
 import { select } from '../dom';
 import { board } from '../../sim/sys/charts7';
 import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
@@ -202,7 +203,7 @@ function countryTipExtra(s: GameState, a3: string): HTMLElement | null {
 }
 
 function layerBar(): HTMLElement {
-  return h('div', { class: 'layer-bar', role: 'group', 'aria-label': t(l('Camadas do mapa', 'Map layers')) },
+  return h('div', { class: 'layer-bar', role: 'group', 'aria-label': t(l('Todas as camadas', 'All layers')) },
     LAYERS.map((ly) => h('button', {
       type: 'button', class: `chip-btn ${layers.has(ly.id) ? 'on' : ''}`, 'aria-pressed': layers.has(ly.id) ? 'true' : 'false',
       onclick: () => { if (layers.has(ly.id)) layers.delete(ly.id); else layers.add(ly.id); rerender(); },
@@ -321,18 +322,23 @@ function mapSection(s: GameState): HTMLElement {
   };
   if (!worldMap) worldMap = new WorldMap(opts);
   else worldMap.update(opts);
-  return section(t(l('Mapa do mundo', 'World map')), presetBar20(s), legend20(s),
-    // r21 (§2.3.1): camadas recolhidas por padrão; 4 presets simples no topo do painel (as perguntas acima ligam presets maiores)
-    h('details', { class: 'layers20', open: layersOpen21 ? true : undefined, ontoggle: (e: Event) => { layersOpen21 = (e.currentTarget as HTMLDetailsElement).open; } },
-      h('summary', { class: 'small' }, ic('globe'), ' ', t(l('Camadas', 'Layers')), ' ', h('small', { class: 'muted' }, `(${[...layers].length})`)),
-      h('div', { class: 'row wrap small layers21-quick', role: 'group', 'aria-label': t(l('Presets de camadas', 'Layer presets')) },
-        QUICK21.map((q) => h('button', { type: 'button', class: `chip-btn ${quickOn(q) ? 'on' : ''}`, 'aria-pressed': quickOn(q) ? 'true' : 'false', onclick: () => { applyPreset20(s, null); for (const x of q.layers) layers.add(x); rerender(); } }, ic(q.icon), ' ', t(q.name)))),
-      layerBar()),
+  // r21e (§2.3.1): perguntas no primeiro nível, mapa na primeira dobra, legenda abaixo do mapa, camadas no painel lateral
+  return section(t(l('Mapa do mundo', 'World map')), presetBar20(s),
     worldMap.element,
+    legend20(s),
     h('p', { class: 'muted small' }, t(l('Clique numa cidade ou num país para abrir o popup com tudo sobre o lugar (mercado, cenas, artistas, casas, imprensa, crime, leis, tendências, relíquias, notícias).', 'Click a city or a country to open a popup with everything about the place (market, scenes, acts, venues, press, crime, laws, trends, relics, news).'))),
   );
 }
 
+/** r21e: painel lateral "Camadas" (fechado por padrão, estado lembrado): 4 presets simples no topo e "Todas (especialista)" recolhido. */
+function layersPanel21(s: GameState): HTMLElement {
+  const n = layers.size + layers17Now().length + (paintNow() !== 'none' ? 1 : 0);
+  return foldLazy21('world.layers', h('h3', null, ic('globe'), ' ', t(l('Camadas', 'Layers')), ' ', h('small', { class: 'muted' }, `(${n})`)), () => [
+    h('div', { class: 'row wrap small layers21-quick', role: 'group', 'aria-label': t(l('Presets de camadas', 'Layer presets')) },
+      QUICK21.map((q) => h('button', { type: 'button', class: `chip-btn ${quickOn(q) ? 'on' : ''}`, 'aria-pressed': quickOn(q) ? 'true' : 'false', onclick: () => { applyPreset20(s, null); for (const x of q.layers) layers.add(x); rerender(); } }, ic(q.icon), ' ', t(q.name)))),
+    foldLazy21('world.layers.all', t(l('Todas (especialista)', 'All (expert)')), () => layerBar(), false, 'fold21-inner'),
+  ], false, 'layers20');
+}
 const GLYPH_NAMES: Record<'hq' | 'branch' | 'rival' | 'festival' | 'tour' | 'movement' | 'home' | 'you' | 'promo' | 'scout', L> = {
   home: l('Sua casa', 'Your home'), you: l('Você está aqui', 'You are here'), promo: l('Divulgação', 'Promo'), scout: l('Olheiro avulso', 'Freelance scout'),
   hq: l('Matriz', 'Main HQ'), branch: l('Filial', 'Branch'), rival: l('Selo rival', 'Rival label'), festival: l('Festival', 'Festival'), tour: l('Turnê', 'Tour'), movement: l('Movimento', 'Movement'),
@@ -342,7 +348,7 @@ function geoSection(s: GameState): HTMLElement {
   const geo = activeGeo(s);
   const cens = activeCensorship(s);
   const mk = (ids: string[]) => ids.map((m) => t(MARKETS.find((x) => x.id === m)!.name)).join(', ');
-  return section(t(l('Geopolítica e censura', 'Geopolitics and censorship')),
+  return foldLazy21('world.geo', `${t(l('Geopolítica e censura', 'Geopolitics and censorship'))} (${geo.length + cens.length})`, () => h('div', null,
     geo.length || cens.length ? h('div', { class: 'cards' },
       geo.map((g) => tile(g.liveBlocked ? 'lock' : 'globe', t(g.name), [
         h('small', null, t(g.note)),
@@ -354,30 +360,41 @@ function geoSection(s: GameState): HTMLElement {
         h('small', { class: 'muted' }, `${t(l('Desde', 'Since'))} ${c.from} · ${mk(c.markets)}`)], { cls: 'bad' })),
     ) : h('p', { class: 'muted small' }, t(l('Mundo relativamente calmo.', 'A relatively calm world.'))),
     s.bans.length ? h('ul', { class: 'small' }, s.bans.slice(-6).reverse().map((b) => h('li', null, ic('lock'), ' ', releaseLink(s, b.releaseId), ` — ${t(MARKETS.find((m) => m.id === b.market)!.name)}: `, t(b.reason)))) : null,
-  );
+  ));
 }
 
 function movementsSection(s: GameState): HTMLElement {
+  return foldLazy21('world.movements', t(l('Movimentos e moda', 'Movements and fashion')), () => movementsBody(s));
+}
+function movementsBody(s: GameState): HTMLElement {
   const list = [...s.movements].sort((a, b) => b.born - a.born).slice(0, 12);
-  return section(t(l('Movimentos e moda', 'Movements and fashion')), list.length ? h('div', { class: 'cards' }, list.map((m) => tile('fire', t(m.name), [
+  return h('div', null, list.length ? h('div', { class: 'cards' }, list.map((m) => tile('fire', t(m.name), [
     h('small', null, `${cityName(m.city)} · ${m.born} · ${t(l('de', 'from'))} ${genreName(m.parent)}`),
     h('small', { class: 'muted' }, ic('shirt'), ' ', t(m.fashion)),
     h('div', { class: 'row wrap' }, m.acts.slice(0, 4).map((id) => actLink(s, id))),
   ]))) : h('p', { class: 'muted small' }, t(l('Movimentos nascem quando várias bandas de uma cidade fortalecem a mesma cena.', 'Movements are born when several bands in a city grow the same scene.'))));
 }
 
+let chartMarket21 = '';
+let chartFamily21 = '';
 function chartsSection(s: GameState): HTMLElement {
-  return section(t(l('Paradas por gênero e região', 'Charts by genre and region')),
-    tabs('worldcharts', [
-      ...MARKETS.map((m) => ({ id: m.id, label: t(m.name), render: () => h('ol', { class: 'mini-chart' }, (s.regionCharts[m.id] ?? []).map((id) => h('li', null, releaseLink(s, id), ' — ', actLink(s, s.releases[id]?.actId)))) })),
-      ...FAMILIES.filter((f) => s.genreCharts[f.id]?.length).map((f) => ({ id: f.id, label: t(f.name), render: () => h('ol', { class: 'mini-chart' }, (s.genreCharts[f.id] ?? []).map((id) => h('li', null, releaseLink(s, id), ' — ', actLink(s, s.releases[id]?.actId)))) })),
-    ], rerender),
-  );
+  // r21e: as 19 abas de mercado + abas de família viram dois seletores; a seção fica recolhida por padrão (estado lembrado)
+  const fams = FAMILIES.filter((f) => s.genreCharts[f.id]?.length);
+  const cur = MARKETS.some((m) => m.id === chartMarket21) ? chartMarket21 : MARKETS[0].id;
+  const fam = fams.some((f) => f.id === chartFamily21) ? chartFamily21 : fams[0]?.id ?? '';
+  const ol = (ids: string[]) => h('ol', { class: 'mini-chart' }, ids.slice(0, 10).map((id) => h('li', null, releaseLink(s, id), ' — ', actLink(s, s.releases[id]?.actId))));
+  return foldLazy21('world.charts', t(l('Paradas por gênero e região', 'Charts by genre and region')), () => h('div', { class: 'row wrap charts21-cols' },
+    h('div', null, h('label', { class: 'small' }, t(l('Região', 'Region')), ' ', select(cur, MARKETS.map((m) => ({ value: m.id, label: t(m.name) })), (v) => { chartMarket21 = v; rerender(); }, { 'aria-label': t(l('Mercado da parada', 'Chart market')) })), ol(s.regionCharts[cur] ?? [])),
+    fam ? h('div', null, h('label', { class: 'small' }, t(l('Gênero', 'Genre')), ' ', select(fam, fams.map((f) => ({ value: f.id, label: t(f.name) })), (v) => { chartFamily21 = v; rerender(); }, { 'aria-label': t(l('Família da parada', 'Chart family')) })), ol(s.genreCharts[fam] ?? [])) : null,
+  ));
 }
 
 function recordsSection(s: GameState): HTMLElement {
+  return foldLazy21('world.records', t(l('Recordes', 'Records')), () => recordsBody(s));
+}
+function recordsBody(s: GameState): HTMLElement {
   const r = s.records;
-  return section(t(l('Recordes', 'Records')), h('div', { class: 'cards' },
+  return h('div', null, h('div', { class: 'cards' },
     r.longestNo1 ? tile('trophy', t(l('Mais semanas em #1', 'Most weeks at #1')), [h('small', null, `"${r.longestNo1.title}" — ${r.longestNo1.act}`), h('b', null, `${r.longestNo1.weeks}`)]) : null,
     r.biggestWeek ? tile('fire', t(l('Maior semana de vendas', 'Biggest sales week')), [h('small', null, `"${r.biggestWeek.title}" — ${r.biggestWeek.act}`), h('b', null, N(r.biggestWeek.units))]) : null,
     r.longestRun ? tile('chart-up', t(l('Mais tempo nas paradas', 'Longest chart run')), [h('small', null, `"${r.longestRun.title}" — ${r.longestRun.act}`), h('b', null, `${r.longestRun.weeks}`)]) : null,
@@ -386,14 +403,14 @@ function recordsSection(s: GameState): HTMLElement {
 }
 
 function hallSection(s: GameState): HTMLElement {
-  return section(t(l('Hall dos Ecos', 'Hall of Echoes')), s.hallOfFame.length ? h('div', { class: 'hall' }, [...s.hallOfFame].reverse().slice(0, 20).map((x) => h('div', { class: 'plaque' }, ic('trophy'), h('b', null, x.name), h('small', null, String(x.year)), actLink(s, x.actId)))) : h('p', { class: 'muted small' }, t(l('Carreiras de 25+ anos com hits e prêmios entram aqui.', '25+ year careers with hits and awards are inducted here.'))),
-    s.documentaries.length ? h('ul', { class: 'small' }, s.documentaries.slice(-5).reverse().map((d) => h('li', null, ic('film'), ` ${d.title} (${N(d.views)})`))) : null);
+  return foldLazy21('world.hall', `${t(l('Hall dos Ecos', 'Hall of Echoes'))} (${s.hallOfFame.length})`, () => [s.hallOfFame.length ? h('div', { class: 'hall' }, [...s.hallOfFame].reverse().slice(0, 20).map((x) => h('div', { class: 'plaque' }, ic('trophy'), h('b', null, x.name), h('small', null, String(x.year)), actLink(s, x.actId)))) : h('p', { class: 'muted small' }, t(l('Carreiras de 25+ anos com hits e prêmios entram aqui.', '25+ year careers with hits and awards are inducted here.'))),
+    s.documentaries.length ? h('ul', { class: 'small' }, s.documentaries.slice(-5).reverse().map((d) => h('li', null, ic('film'), ` ${d.title} (${N(d.views)})`))) : null]);
 }
 
 export function worldPanel(s: GameState): HTMLElement {
   return h('div', { class: 'panel world' },
     h('div', { class: 'col-main' }, mapSection(s), chartsSection(s), movementsSection(s)),
-    h('aside', { class: 'col-side' }, placePanel20(s), geoSection(s), recordsSection(s), hallSection(s)),
+    h('aside', { class: 'col-side' }, layersPanel21(s), placePanel20(s), geoSection(s), recordsSection(s), hallSection(s)),
   );
 }
 
@@ -408,7 +425,6 @@ export const PRESETS20: { id: Preset20; icon: string; name: L; layers: Layer[]; 
   { id: 'risk', icon: 'warning', name: l('Que risco afeta minha operação?', 'What risk affects my operation?'), layers: ['geo', 'rivalpower', 'tours'], l17: ['clash17', 'heat17'], paint: 'rivaldom' },
 ];
 let preset20: Preset20 | null = null;
-let layersOpen21 = false;
 /** r21: presets simples (um clique = só estas camadas). */
 const QUICK21: { id: string; icon: string; name: L; layers: Layer[] }[] = [
   { id: 'fans', icon: 'fans', name: l('Meus fãs', 'My fans'), layers: ['fans', 'hq'] },
@@ -443,12 +459,12 @@ function presetBar20(s: GameState): HTMLElement {
     h('div', { class: 'presets20', role: 'group', 'aria-label': t(l('Perguntas do mapa', 'Map questions')) },
       PRESETS20.map((p) => h('button', { type: 'button', class: `chip-btn ${preset20 === p.id ? 'on' : ''}`, 'aria-pressed': preset20 === p.id ? 'true' : 'false', onclick: () => { applyPreset20(s, preset20 === p.id ? null : p.id); rerender(); } }, ic(p.icon), ' ', t(p.name)))),
     h('div', { class: 'row wrap small' },
-      h('label', null, t(l('Artista de referência', 'Reference act')), ' ',
-        select(refAct20, [{ value: '', label: t(l('Todo o elenco', 'Whole roster')) }, ...ids.map((id) => ({ value: id, label: s.acts[id].name }))], (v) => { refAct20 = v; if (v) store.selectedAct = v; rerender(); }, { 'aria-label': t(l('Artista de referência', 'Reference act')) })),
-      h('span', { class: 'muted' }, ` · ${t(l('Período', 'Period'))}: ${dateLabel(s)}`)),
-    h('div', { class: 'row wrap small' },
       h('span', null, h('b', null, t(l('Ativas', 'Active')), ': '), on.length ? on.join(' · ') : t(l('nenhuma camada', 'no layers'))),
-      on.length ? h('button', { class: 'btn small ghost', onclick: () => { applyPreset20(s, null); rerender(); } }, t(l('Limpar', 'Clear'))) : null));
+      on.length ? h('button', { class: 'btn small ghost', onclick: () => { applyPreset20(s, null); rerender(); } }, t(l('Limpar', 'Clear'))) : null,
+      h('button', { class: 'btn small ghost', 'aria-expanded': foldOpen21('world.layers', false) ? 'true' : 'false', onclick: () => { setFold21('world.layers', !foldOpen21('world.layers', false)); rerender(); const d = document.querySelector<HTMLElement>('details[data-fold="world.layers"]'); d?.scrollIntoView({ block: 'nearest' }); } }, ic('globe'), ' ', t(l('Camadas…', 'Layers…'))),
+      h('label', { class: 'muted' }, t(l('Referência', 'Reference')), ' ',
+        select(refAct20, [{ value: '', label: t(l('Todo o elenco', 'Whole roster')) }, ...ids.map((id) => ({ value: id, label: s.acts[id].name }))], (v) => { refAct20 = v; if (v) store.selectedAct = v; rerender(); }, { 'aria-label': t(l('Artista de referência', 'Reference act')) })),
+      h('span', { class: 'muted' }, `· ${dateLabel(s)}`)));
 }
 
 /** Legenda com unidade, escala, data e confiança (observado × estimado). */
@@ -487,5 +503,5 @@ function placePanel20(s: GameState): HTMLElement {
       focusCity ? h('div', { class: 'row wrap' },
         h('button', { class: 'btn small', onclick: () => openMapInfo17(s, 'city', focusCity!, () => cityById[focusCity!] ? cityCard(s, focusCity!) : null) }, ic('globe'), ' ', t(l('Tudo sobre o lugar', 'Everything about the place'))),
         h('button', { class: 'btn small ghost', onclick: () => { focusCity = null; rerender(); } }, t(l('Limpar seleção', 'Clear selection')))) : null,
-      h('details', { class: 'drawer20' }, h('summary', null, ic('globe'), ' ', t(l('Lista de lugares', 'Place list'))), search, list)));
+      foldLazy21('world.places', h('span', null, ic('globe'), ' ', t(l('Lista de lugares', 'Place list'))), () => [search, list], false, 'drawer20')));
 }

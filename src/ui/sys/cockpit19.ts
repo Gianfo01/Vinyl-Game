@@ -6,6 +6,7 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { calendar19, crunch19 } from '../../sim/calendar19';
 import { cockpit18, type Q18 } from '../../sim/sys/saga18';
+import { biasLine21, forecastBias21 } from '../../sim/sys/dir21';
 import type { GameState } from '../../sim/types';
 import { fmtL } from '../../sim/util';
 import { rerender } from '../common';
@@ -30,7 +31,10 @@ export function head19(s: GameState): Head19 {
   for (const x of crunch19(s, 6, 3).slice(0, 1)) threats.unshift({ tone: 'bad', t: fmtL(l('Semana apertada daqui a {w} semana(s): {n} prazos juntos.', 'Crunch week in {w} week(s): {n} deadlines together.'), { w: Math.max(0, x.w - s.week), n: x.items.length }), goto: { area: 'calendar19' } });
   for (const d of calendar19(s, { weeks: 6 }).filter((x) => x.tone === 'bad' && x.w0 === undefined && x.w - s.week >= 2 && (x.kind === 'contract' || x.kind === 'clause' || x.kind === 'court' || x.kind === 'supply')).slice(0, 2)) threats.push({ tone: 'info', t: fmtL(l('Em {w} semanas: {t}', 'In {w} weeks: {t}'), { w: d.w - s.week, t: d.t }), goto: d.goto });
   const sort = (xs: Q18[]) => xs.sort((a, b) => (RANK[a.tone] ?? 2) - (RANK[b.tone] ?? 2));
-  return { today: sort(today), threats: sort(threats), going: sort([...c.works]) };
+  const going = [...c.works];
+  // r21e: previsão × realizado — "você superestima vendas em X %" (12 meses)
+  for (const k of ['sales', 'tour'] as const) { const b = biasLine21(s, k); if (b) going.push({ tone: Math.abs(forecastBias21(s, k).bias) > 0.12 ? 'info' : 'good', t: b, goto: { area: 'business' } }); }
+  return { today: sort(today), threats: sort(threats), going: sort(going) };
 }
 
 function col(id: string, title: L, icon: string, qs: Q18[], empty: L): HTMLElement {

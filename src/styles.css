@@ -760,6 +760,12 @@ tr.dir-row21:hover, tr.dir-row21:focus-visible { background: var(--panel-2, rgba
 /* barras de abas longas: rolagem horizontal em vez de duas linhas */
 .tabs-wrap.tabs-many21 > .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; }
 .tabs-wrap.tabs-many21 > .tabs > button { flex: 0 0 auto; white-space: nowrap; }
+/* r21e (UX 2.3.8): segmentos dentro do grupo de abas — controle segmentado, não uma segunda fileira de abas */
+.segs21 { display: inline-flex; flex-wrap: wrap; margin: 0 0 0.7rem; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-width: 100%; }
+.segs21 > button { font: inherit; font-size: 0.85rem; background: var(--panel); color: var(--ink); border: 0; border-right: 1px solid var(--line); padding: 0.3rem 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+.segs21 > button:last-child { border-right: 0; }
+.segs21 > button.on { background: var(--ink); color: var(--bg); }
+.segs21 > button:focus-visible { outline: 2px solid var(--accent, var(--ink)); outline-offset: -2px; }
 /* mapa: presets rápidos de camadas */
 .layers21-quick { margin: 0.4rem 0 0.6rem; }
 /* tabelas largas rolam dentro do contêiner (Paradas, Mercados, Shows, Finanças) */
@@ -767,7 +773,72 @@ tr.dir-row21:hover, tr.dir-row21:focus-visible { background: var(--panel-2, rgba
 @media (max-width: 640px) {
   .tbl-scroll > .tbl, .tbl-scroll20 > .tbl, .fin20-scroll > .tbl { min-width: 36rem; }
   /* alvos de toque ≥ 36 px (chips, links em texto e controles de bloco mantêm o tamanho) */
-  button:not(.chip-btn):not(.link):not(.b19-btn):not(.c18-dot):not(.tile):not(.am20-item):not(.tabs > button):not(.pick) { min-height: 36px; }
-  .tabs > button, .tabs-wrap > .tabs > button { min-height: 34px; }
+  /* r21e (§2.3.15): alvos de toque ≥ 40 px (botões, abas, chips, seletores e campos) */
+  button:not(.link):not(.b19-btn):not(.c18-dot):not(.am20-item):not(.pick), .chip-btn, .tile, .pick { min-height: 40px; }
+  .tabs > button, .tabs-wrap > .tabs > button, [role='tab'], .subnav button, .nav button { min-height: 40px; }
+  main select, main input:not([type='checkbox']):not([type='radio']):not([type='range']), .topbar select, .topbar input { min-height: 40px; }
+  main input[type='checkbox'], main input[type='radio'] { width: 22px; height: 22px; margin: 9px; }
+  main a[href]:not(.btn):not(.link) { display: inline-block; padding: 0.45rem 0; }
+  .tbl a[href], .tbl .link, .tbl button.link { padding: 0.55rem 0.15rem; display: inline-block; }
   .topbar { min-height: 0; }
+}
+
+/* r21e: Mundo (camadas no painel lateral), Paradas e diretório */
+details.fold21.fold21-inner, details.fold21.drawer20, details.fold21.dir-more21 { padding: 0.3rem 0.6rem; margin: 0.4rem 0 0; }
+details.fold21 > summary > span, details.fold21 > summary > h3 { display: inline-flex; align-items: center; gap: 0.3rem; }
+.charts21-cols > div { flex: 1 1 16rem; min-width: 0; }
+.wmap-sel-wrap select { max-width: 14rem; }
+th.clickable { cursor: pointer; text-decoration: underline dotted; }
+.presets20-box label, .wmap-sel-wrap { display: inline-flex; align-items: center; gap: 0.3rem; }
+/* r21e: recolhível leve dentro de cartões */
+details.fold21-inline { margin: 0.3rem 0; }
+details.fold21-inline > summary .fold21-t { font-size: 0.9rem; color: var(--muted, inherit); }
+details.fold21-inline[open] > summary { margin-bottom: 0.3rem; }
+details.fold21:not([open]) > :not(summary) { display: none; } /* recolhido some de verdade (altura e foco) */
+/* r21e: decisões secundárias numa linha até o clique */
+.decision.dec21-compact header { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.decision.dec21-compact header .btn { margin-left: auto; }
+.decision.dec21-compact > p { margin: 0.2rem 0 0; }
+/* r21e: menu "…" de ações secundárias */
+.b19-ctl .mm21-btn { min-height: 0; padding: 0.1rem 0.4rem; font-size: 0.8rem; line-height: 1.2; }
+.mm21 { position: fixed; z-index: 60; min-width: 200px; max-width: calc(100vw - 16px); background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35); padding: 0.25rem 0; }
+.mm21-item { padding: 0.45rem 0.8rem; cursor: pointer; min-height: 2.2rem; display: flex; align-items: center; gap: 0.3rem; }
+.mm21-item:hover, .mm21-item:focus { background: var(--panel-2); outline: none; }
+.mm21-item.off { opacity: 0.55; cursor: default; }
+.mm21-btn { min-width: 2.2rem; font-weight: 700; letter-spacing: 0.1em; }
+/* r21e: segmentos (segundo nível dentro do conteúdo, sem segunda fileira de abas) */
+.seg21-bar { display: inline-flex; gap: 0; margin: 0 0 0.7rem; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+.seg21-bar > button { font: inherit; background: var(--panel); color: var(--ink); border: 0; border-right: 1px solid var(--line); padding: 0.3rem 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+.seg21-bar > button:last-child { border-right: 0; }
+.seg21-bar > button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+/* r21e: confirmação no próprio botão Avançar */
+.adv21-pop { position: fixed; z-index: 70; width: min(440px, calc(100vw - 16px)); background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35); padding: 0.7rem 0.9rem; }
+.adv21-pop ul { margin: 0.3rem 0 0.6rem 1rem; padding: 0; }
+.adv21-pop .adv19-ask21 { margin-top: 0.6rem; display: block; }
+.adv21-pop .adv19-ask21 small { display: block; margin-left: 1.6em; }
+/* r21e: cartões de pessoa e de sinal: rodapé e ações */
+.pp-foot { border-top: 1px dashed var(--line); padding-top: 6px; margin-top: 2px; display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
+.signal .actions { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; }
+.signal .actions .mm21-btn { margin-left: auto; }
+.signals-more21 { margin-top: 0.6rem; }
+
+/* r21e: Submundo (texto ≥ 12 px, uma ação primária + menu …), Estúdio (lista de produtores) */
+.crime21 .pill, .crime21 small, .crime21 .small .pill { font-size: 12px; }
+.crime21 .card > p.small, .crime21 .card > ul.small { font-size: 0.9rem; }
+.more21 { min-width: 2.2rem; font-weight: 700; letter-spacing: 0.1em; }
+.fit21 { display: inline-flex; align-items: center; cursor: help; }
+.fit21.good { color: var(--good); } .fit21.warn { color: var(--warn); }
+.producers21 tr.on td { background: var(--panel-2); }
+.producers21 td.num { text-align: right; white-space: nowrap; }
+/* r21e (§2.3.15): no celular o cabeçalho encolhe ao rolar para baixo; tabelas longas rolam dentro do cartão */
+@media (max-width: 640px) {
+  .topbar { transition: padding 0.15s ease; }
+  .app.hdr-slim21 .topbar .date, .app.hdr-slim21 .topbar .rep, .app.hdr-slim21 .topbar .sh20, .app.hdr-slim21 .topbar .money small,
+  .app.hdr-slim21 .topbar .advance > :not(.primary):not(.undo21) { display: none; }
+  .app.hdr-slim21 .topbar { padding: 0.2rem 0.6rem; gap: 0.3rem; }
+  .app.hdr-slim21 .topbar .advance { width: auto; margin-left: auto; }
+  .app.hdr-slim21 .topbar .brand b { max-width: 7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tbl, .tbl-wrap, .tbl-scroll, .tbl-scroll20, .fin20-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tbl th, .tbl td { white-space: nowrap; }
+  .tbl td:first-child, .tbl th:first-child { white-space: normal; min-width: 8rem; }
 }

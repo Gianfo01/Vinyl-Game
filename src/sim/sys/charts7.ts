@@ -22,7 +22,7 @@ import { allReleases17 } from '../relidx17';
 import { OUTSIDE_TERRITORY_W } from '../charts2';
 
 /** r21 (§4): fama regional (fame16) e show recente na praça (terr20) entram no peso por país — injetados sem ciclo. */
-export const countryHook21: { fame: null | ((s: GameState, act: Act, a3: string) => number); show: null | ((s: GameState, act: Act, mk: MarketId) => number) } = { fame: null, show: null };
+export const countryHook21: { fame: null | ((s: GameState, act: Act, a3: string) => number); show: null | ((s: GameState, act: Act, mk: MarketId) => number); /** r21e (mídia): airplay no mercado e viral no país de origem (media21) */ media: null | ((s: GameState, rel: Release, a3: string, mk: MarketId) => number) } = { fame: null, show: null, media: null };
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -141,6 +141,7 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
     // r21 (§4): fama regional e show recente na praça (pesos modestos) — a turnê passa a mexer na parada do país
     if (fr) w *= fr[i];
     if (act && countryHook21.show) w *= (showK[c.market] ??= countryHook21.show(s, act, c.market));
+    if (countryHook21.media) w *= countryHook21.media(s, rel, c.a3, c.market); // r21e: parada de airplay e viral
     // rodada 8: artista local tem preferência em casa; fora, viaja conforme o peso mundial do país
     if (home === c.a3) w *= 1.6 * LP[i];
     else {

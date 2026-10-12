@@ -6,7 +6,7 @@ import { clamp, type Rng } from '../core/rng';
 import { APPROACHES, EQUIPMENT, FORMATS, STUDIO_TIERS, type FormatId } from '../data/rules';
 import { l, type L, type MarketId } from '../data/world';
 import { actLang, actState, actTalent, songTitle, traitMod } from './people';
-import type { Act, GameState, PendingRelease, Release, Song } from './types';
+import type { Act, Dir21, GameState, PendingRelease, Release, Song } from './types';
 import { fmtL, hasCard, hasTech, money, nextId, notify, post, staffSkill } from './util';
 import { forecastUnits } from './market';
 import { hqCaps } from './branches';
@@ -263,6 +263,8 @@ export interface ReleasePlan {
   rolloutId?: string;
   /** rodada 8: proposta de capa escolhida */
   cover?: { style: string; seed: number };
+  /** r21e: direção do disco (master, faixa-título, single de trabalho, lado B) */
+  dir21?: Dir21;
 }
 
 export function validateRelease(s: GameState, p: ReleasePlan): L | null {
@@ -315,6 +317,7 @@ export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRe
     hype: p.hype,
     rolloutId: p.rolloutId,
     cover: p.cover,
+    dir21: p.dir21 ? { ...p.dir21 } : undefined,
   };
   // custo pago na programação (cancelar antes do lançamento devolve; GDD §27 "cancelar não cobra")
   const cost = releaseCost(s, p);

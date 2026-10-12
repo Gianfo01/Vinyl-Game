@@ -23,6 +23,8 @@ import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
 import { chips, stat, tabs } from '../vis';
 import { intriguePanel } from './intrigue';
+import { moreButton21 } from './actmenu20';
+import { foldLazy21 } from '../ux21';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const say = (x: L | string, tone: 'good' | 'bad' | 'info' = 'info') => { toast(T(x), tone); rerender(); };
@@ -42,7 +44,7 @@ function orgsTab(s: GameState): HTMLElement {
     h('p', { class: 'muted small' }, T(l(
       'Organizações ativas nesta época. As reais trazem apenas laços documentados; ' + (strict ? 'no modo Vida real exata nada é inventado para pessoas reais.' : 'nos modos livres, laços novos de pessoas reais aparecem só como boato.') + ' Assassinato nunca envolve pessoas reais.',
       'Organizations active in this era. Real ones only show documented ties; ' + (strict ? 'in Exact real life mode nothing is invented for real people.' : 'in free modes, new ties of real people only appear as rumors.') + ' Murder never involves real people.'))),
-    h('div', { class: 'cards' }, list.map((o) => {
+    ...orgCards21(list.map((o) => {
       const rel = Math.round(st.org[o.id] ?? 0);
       const tied = Object.entries(st.ties).filter(([, oid]) => oid === o.id).map(([aid]) => s.acts[aid]).filter(Boolean);
       const down = (st.down[o.id] ?? 0) > s.week;
@@ -53,18 +55,22 @@ function orgsTab(s: GameState): HTMLElement {
         h('p', { class: 'small muted' }, `${T(l('Negócios', 'Rackets'))}: ${o.rackets.map((r) => T(RACKET_NAME[r])).join(' · ')} · ${T(l('Chefe', 'Boss'))}: ${T(bossName(o))}`),
         o.ties?.length ? h('ul', { class: 'small' }, o.ties.filter((x) => x.y <= s.year).map((x) => h('li', null, pill(T(l('documentado', 'documented')), 'good'), ` ${x.who} (${x.y}): ${T(x.text)}`))) : null,
         tied.length ? h('p', { class: 'small' }, `${T(l('Andam com eles', 'Run with them'))}: ${tied.map((a) => `${a!.name}${a!.catalogNo ? ` (${T(l('boato', 'rumor'))})` : ''}`).join(', ')}`) : null,
+        // r21e (§2.3.11): uma ação primária por cartão (lavar/parar quando há lavagem ativa; senão aproximar-se) e o resto no menu `…`
         h('div', { class: 'row wrap' },
-          btn(l('Aproximar-se (presente)', 'Approach (gift)'), () => say(approachOrg(s, o.id), 'info'), { title: l('Relação +15; calor +3. Relação boa barateia e melhora serviços.', 'Relationship +15; heat +3. Good relations make services better.') }),
-          hasRacket(o, 'laundering') ? btn(st.laund[o.id] ? l('Parar de lavar', 'Stop laundering') : fmtTxt(l('Lavar dinheiro ({v}/mês)', 'Launder money ({v}/mo)'), usd(launderFee(s, o))), () => say(toggleLaunder(s, o.id), 'info'), { title: l('Renda mensal; calor +3/mês; eles guardam um segredo provado seu; casos viram crime organizado.', 'Monthly income; heat +3/month; they hold a proven secret on you; cases become organized crime.') }) : null,
-          btn(l('Denunciar', 'Report'), () => say(reportOrg(s, o.id), 'info'), { cls: 'ghost', title: l('Reputação +3, calor −15, caso contra eles; vingança por 18 meses.', 'Reputation +3, heat −15, case on them; revenge for 18 months.') }),
+          st.laund[o.id]
+            ? btn(l('Parar de lavar', 'Stop laundering'), () => say(toggleLaunder(s, o.id), 'info'), { cls: 'primary', title: l('Renda mensal; calor +3/mês; eles guardam um segredo provado seu; casos viram crime organizado.', 'Monthly income; heat +3/month; they hold a proven secret on you; cases become organized crime.') })
+            : btn(l('Aproximar-se (presente)', 'Approach (gift)'), () => say(approachOrg(s, o.id), 'info'), { cls: 'primary', title: l('Relação +15; calor +3. Relação boa barateia e melhora serviços.', 'Relationship +15; heat +3. Good relations make services better.') }),
+          moreButton21(T(o.name), () => [
+            ...(st.laund[o.id] ? [{ id: 'approach', label: T(l('Aproximar-se (presente)', 'Approach (gift)')), icon: 'handshake', note: T(l('Relação +15; calor +3', 'Relationship +15; heat +3')), run: () => say(approachOrg(s, o.id), 'info') }] : []),
+            ...(hasRacket(o, 'laundering') && !st.laund[o.id] ? [{ id: 'launder', label: fmtTxt(l('Lavar dinheiro ({v}/mês)', 'Launder money ({v}/mo)'), usd(launderFee(s, o))), icon: 'money', note: T(l('Calor +3/mês; eles guardam um segredo seu', 'Heat +3/month; they hold a secret on you')), run: () => say(toggleLaunder(s, o.id), 'info') }] : []),
+            { id: 'report', label: T(l('Denunciar', 'Report')), icon: 'gavel', note: T(l('Reputação +3, calor −15; vingança por 18 meses', 'Reputation +3, heat −15; revenge for 18 months')), run: () => say(reportOrg(s, o.id), 'info') },
+            ...((o.kind === 'gang' || o.kind === 'cartel' || o.kind === 'firm') ? mine.map((a) => tieOf(s, a!.id)?.id === o.id
+              ? { id: `cut:${a!.id}`, label: fmtTxt(l('Cortar laços: {a}', 'Cut ties: {a}'), a!.name), icon: 'guitar', run: () => say(cutTie(s, a!.id)) }
+              : { id: `tie:${a!.id}`, label: fmtTxt(l('Andar com eles: {a}', 'Run with them: {a}'), a!.name), icon: 'guitar', note: T(l('+5% de apelo em rap/funk/corridos; calor e rixas', '+5% appeal in rap/funk/corridos; heat and feuds')), run: () => say(tieAct(s, a!.id, o.id)) }) : []),
+          ]),
           st.pizzo[o.id] !== undefined ? pill(st.pizzo[o.id] > 0 ? `${T(l('pagando proteção', 'paying protection'))} ${T(usd(pizzoFee(s, o)))}` : T(l('recusou o pizzo', 'refused protection')), st.pizzo[o.id] > 0 ? 'warn' : 'bad') : null,
           (st.vend[o.id] ?? 0) > s.week ? pill(T(l('querem vingança', 'want revenge')), 'bad') : null,
         ),
-        (o.kind === 'gang' || o.kind === 'cartel' || o.kind === 'firm') && mine.length ? h('div', { class: 'row wrap' },
-          h('small', { class: 'muted' }, T(l('Seu artista de rua com eles:', 'Your street artist with them:'))),
-          ...mine.map((a) => tieOf(s, a!.id)?.id === o.id
-            ? btn(fmtTxt(l('Cortar laços: {a}', 'Cut ties: {a}'), a!.name), () => say(cutTie(s, a!.id)), { cls: 'ghost' })
-            : btn(a!.name, () => say(tieAct(s, a!.id, o.id)), { title: l('Proteção e credibilidade de rua (+5% de apelo em rap/funk/corridos), mas calor e rixas com gangues rivais.', 'Protection and street cred (+5% appeal for rap/funk/corridos), but heat and feuds with rival gangs.') }))) : null,
       );
     })),
     section(T(l('Rixas de rua', 'Street feuds')),
@@ -77,6 +83,14 @@ function orgsTab(s: GameState): HTMLElement {
   );
 }
 const fmtTxt = (x: L, v: L | string): string => T(x).replace('{v}', T(v)).replace('{a}', T(v));
+/** r21e (§2.3.11): as 6 organizações mais fortes à vista; o resto num cartão recolhido montado só ao abrir (meta ≤ 30 controles). */
+function orgCards21(cards: HTMLElement[]): HTMLElement[] {
+  const SHOW = 6;
+  const head = h('div', { class: 'cards' }, ...cards.slice(0, SHOW));
+  if (cards.length <= SHOW) return [head];
+  const rest = cards.slice(SHOW);
+  return [head, foldLazy21('crime-orgs-more', `${T(l('Outras organizações', 'Other organizations'))} (+${rest.length})`, () => h('div', { class: 'cards' }, ...rest))];
+}
 
 // ================================================================ Planos / Ações
 
@@ -208,7 +222,7 @@ function historyTab(s: GameState): HTMLElement {
 function crimeArea(s: GameState): HTMLElement {
   const st = crime17(s);
   const charged = myCases(s).filter((c) => c.stage === 'charged').length;
-  return h('div', { class: 'hub' }, tabs('crime17', [
+  return h('div', { class: 'hub crime21' }, tabs('crime17', [
     { id: 'orgs', label: t(l('Organizações', 'Organizations')), icon: 'handshake', render: () => orgsTab(s) },
     { id: 'plans', label: t(l('Planos/Ações', 'Plans/Actions')), icon: 'skull', badge: st.warn.length || undefined, render: () => plansTab(s) },
     { id: 'spy', label: t(l('Espionagem', 'Espionage')), icon: 'camera', render: () => h('div', null, rivalsExtra(s), intriguePanel(s)) },

@@ -15,7 +15,7 @@ import { availableFormats, cancelRelease, labelFunded, pendingRefund, releaseCos
 import { canPresave, canVideo, planRollout } from '../rollout';
 import { isDiscarded, songProfile } from '../repertoire';
 import { PRODUCERS, sessionCost, startSession } from '../studio';
-import type { Act, AgendaSlot, GameState, Release, ReleaseType, Song } from '../types';
+import type { Act, AgendaSlot, Dir21, GameState, Release, ReleaseType, Song } from '../types';
 import { fmtL, money, nextId, playerActs, remember } from '../util';
 import { featureFee, inviteFeature } from './creation/core';
 
@@ -84,6 +84,8 @@ export interface MusicProject {
   rolloutId?: string;
   releaseId?: string;
   closed?: boolean;
+  /** r21e: direção do disco (master, faixa-título, single de trabalho, lado B) */
+  dir21?: Dir21;
 }
 
 export interface Proj8State { list: MusicProject[] }
@@ -254,7 +256,7 @@ function planOf(s: GameState, p: MusicProject): ReleasePlan {
   return {
     actId: p.actId, type: p.type, songs: [...p.songIds], title: p.title || undefined, formats: availableFormats(s),
     press: suggestedPress(s, act, p.type, projectQ(s, p)), marketing: p.marketing.filter((m) => m.budget > 0), territories: [...s.player.territories],
-    weeksAhead: Math.max(1, Math.min(26, p.weeksAhead)), cover: p.cover,
+    weeksAhead: Math.max(1, Math.min(26, p.weeksAhead)), cover: p.cover, dir21: p.dir21,
   };
 }
 
@@ -277,9 +279,12 @@ export function rolloutProject(s: GameState, p: MusicProject): L | null {
   if (projectStage(s, p) !== 'finishing') return l('Grave todas as faixas antes de planejar o rollout.', 'Record every track before planning the rollout.');
   if (p.type !== 'lp') return l('Rollout é para álbuns.', 'Rollouts are for albums.');
   const songs = p.songIds.filter((id) => s.songs[id]?.recorded);
-  const singles = [...songs].sort((a, b) => songProfile(s.songs[b]).hook + s.songs[b].q - songProfile(s.songs[a]).hook - s.songs[a].q).slice(0, songs.length >= 9 ? 2 : 1);
+  // r21e: o single de trabalho escolhido pelo jogador abre o ciclo; o resto segue gancho + Q
+  const lead = p.dir21?.lead && songs.includes(p.dir21.lead) ? p.dir21.lead : undefined;
+  const ranked = [...songs].sort((a, b) => songProfile(s.songs[b]).hook + s.songs[b].q - songProfile(s.songs[a]).hook - s.songs[a].q);
+  const singles = (lead ? [lead, ...ranked.filter((id) => id !== lead)] : ranked).slice(0, songs.length >= 9 ? 2 : 1);
   const per = Math.max(money(s, 500), Math.round(p.marketing.reduce((t, m) => t + m.budget, 0) / 4));
-  const res = planRollout(s, { actId: p.actId, title: p.title || s.acts[p.actId].name, albumSongs: songs, singles, teaser: true, presave: canPresave(s), video: canVideo(s), deluxeSongs: [], limitedUnits: 0, budget: per, startInWeeks: Math.max(1, p.weeksAhead) });
+  const res = planRollout(s, { actId: p.actId, title: p.title || s.acts[p.actId].name, albumSongs: songs, singles, teaser: true, presave: canPresave(s), video: canVideo(s), deluxeSongs: [], limitedUnits: 0, budget: per, startInWeeks: Math.max(1, p.weeksAhead), dir21: p.dir21 });
   if ('pt' in res) return res;
   p.rolloutId = res.id;
   p.title = res.title;

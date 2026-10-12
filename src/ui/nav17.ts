@@ -135,12 +135,17 @@ export function navGroups17(ctx: NavCtx17): NavGroup14[] {
   const out: NavGroup14[] = [];
   const more: NavSection14[] = [];
   const parked: string[] = [];
+  // r21e (UX 2.3.7): a página da atividade principal (Gravadora) sobe para o grupo Empresa — que passa a se chamar
+  // "Gravadora" quando o selo é sua carreira — e fica também como atalho em Você › Suas carreiras.
+  const labelPage = pages.includes('label') && ctx.has(CAREER_PAGE17.label.area);
   for (const g of NAV17) {
     const secs: NavSection14[] = [];
+    if (g.id === 'company' && labelPage) { const xs = take([CAREER_PAGE17.label.area]); if (xs.length) secs.push({ label: l('Selo', 'Label'), areas: xs }); }
     for (const s of g.secs) {
       let xs = s.areas.filter((a) => { if (offCareer(a)) { parked.push(a); return false; } return true; });
       if (g.id === 'you' && s.id === 'cpages') xs = pages.map((id) => CAREER_PAGE17[id].area);
       const areas = take(xs);
+      if (g.id === 'you' && s.id === 'cpages' && labelPage) areas.unshift(CAREER_PAGE17.label.area); // atalho (a casa é o grupo Empresa/Gravadora)
       // muitas carreiras (12 na r18): a seção divide em duas para não virar uma lista longa
       if (g.id === 'you' && s.id === 'cpages' && areas.length > 10) { secs.push({ label: s.label, areas: areas.slice(0, 7) }); secs.push({ label: l('Mais carreiras', 'More careers'), areas: areas.slice(7) }); }
       else if (areas.length) secs.push({ label: s.label, areas });
@@ -149,7 +154,8 @@ export function navGroups17(ctx: NavCtx17): NavGroup14[] {
     if (ex.length) { if (secs.length) secs[secs.length - 1] = { ...secs[secs.length - 1], areas: [...secs[secs.length - 1].areas, ...ex] }; else secs.push({ label: g.label, areas: ex }); }
     if (!secs.length) continue;
     const areas = secs.flatMap((x) => x.areas);
-    out.push({ id: g.id, label: g.label, icon: g.icon, areas, sections: secs.length > 1 ? secs : undefined });
+    const label = g.id === 'company' && labelPage && on('label') ? l('Gravadora', 'Record label') : g.label;
+    out.push({ id: g.id, label, icon: g.icon, areas, sections: secs.length > 1 ? secs : undefined });
   }
   const pk = take(parked);
   if (pk.length) more.push({ label: l('Selo e banda (fora das suas carreiras)', 'Label and band (outside your careers)'), areas: pk });

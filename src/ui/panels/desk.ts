@@ -22,9 +22,15 @@ const CAT_ICON: Record<string, string> = {
   health: '🩺', stage: '🎤', manufacturing: '🏭', world: '🌍', neural: '🧠', scouting: '🔎', business: '💼',
 };
 
+let openDec21 = ''; // r21e (§2.3.2): a primeira decisão abre inteira; as outras ficam numa linha até o clique
+
 export function deskPanel(s: GameState): HTMLElement {
-  const decisions = s.decisions.map((d) =>
-    h('article', { class: 'decision' },
+  const decisions = s.decisions.map((d, i) => (i > 0 && d.id !== openDec21)
+    ? h('article', { class: 'decision dec21-compact' },
+      h('header', null, h('span', { class: 'cat' }, CAT_ICON[d.cat] ?? '•'), h('h4', null, t(d.title)), decTimer18(s, d),
+        h('button', { class: 'btn small', 'aria-expanded': 'false', onclick: () => { openDec21 = d.id; rerender(); } }, t(l('Decidir', 'Decide')))),
+      h('p', { class: 'muted small' }, t(S.defaultIfIgnored), t(d.options.find((o) => o.id === d.defaultOption)?.label)))
+    : h('article', { class: 'decision' },
       h('header', null, h('span', { class: 'cat' }, CAT_ICON[d.cat] ?? '•'), h('h4', null, t(d.title)), decTimer18(s, d)),
       h('p', null, t(d.text)),
       ctxLine19(s, d), // r19: contexto do ator (mágoas, favores, promessas, temperamento)
@@ -58,7 +64,7 @@ export function deskPanel(s: GameState): HTMLElement {
           pending.map((o) => h('li', null, actLink(s, o.actId), ' ', pill(t(l('aguardando resposta', 'awaiting answer'))), ` ${$(o.advance)} `, h('button', { class: 'btn small ghost', onclick: () => { withdrawOffer(s, o.id); rerender(); } }, t(S.withdraw)))),
         ),
       ) : null,
-      section(t(S.whatChanged),
+      fold21('changed', t(S.whatChanged), // r21e: o cartão do topo já traz os 3 destaques; a lista inteira fica recolhida
         kv(t(S.lastMonth), h('span', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, $(net))),
         myCharts.length ? h('ul', { class: 'small' }, myCharts.map((e) => h('li', null, h('span', { class: 'why18', 'data-why': 'chart.pos', 'data-why-ctx': JSON.stringify({ rel: e.releaseId, kind: s.charts.albums.includes(e) ? 'albums' : 'singles' }), tabindex: '0' }, `#${e.pos}`), ' ', releaseLink(s, e.releaseId), e.last ? h('span', { class: e.last > e.pos ? 'good' : e.last < e.pos ? 'bad' : 'muted' }, ` (${e.last > e.pos ? '▲' : e.last < e.pos ? '▼' : '='}${t(S.last)} ${e.last})`) : pill('NEW', 'good')))) : null,
         h('ul', { class: 'notes small' }, recentNotes.map((n) => h('li', { class: n.kind }, t(n.text)))),
@@ -68,8 +74,8 @@ export function deskPanel(s: GameState): HTMLElement {
     h('aside', { class: 'col-side' },
       section(t(S.goals), h('ul', { class: 'goals' }, nextGoals(s).map((g) => h('li', null, '◻ ', t(g.text))))),
       card && card.id !== 'none' ? section(`${t(S.card)}: ${t(card.name)}`, h('p', { class: 'small' }, t(card.passive)), h('p', null, t(S.cardGoal), ': ', t(card.goal), ' ', pill(cardGoalDone(s) || s.player.goalsDone.includes(card.id) ? t(S.done) : t(S.pending), cardGoalDone(s) ? 'good' : ''))) : null,
-      s.rumors.length ? section(t(S.rumors), h('ul', { class: 'small' }, s.rumors.map((r) => h('li', null, t(r.text))))) : null,
-      section(t(S.willProcess), h('ul', { class: 'small' },
+      s.rumors.length ? fold21('rumors', `${t(S.rumors)} (${s.rumors.length})`, h('ul', { class: 'small' }, s.rumors.map((r) => h('li', null, t(r.text))))) : null, // r21e: recolhido
+      fold21('willProcess', t(S.willProcess), h('ul', { class: 'small' },
         h('li', null, t(l('{n} agenda(s) de artistas', '{n} artist agenda(s)'), { n: playerActs(s).length })),
         h('li', null, t(l('{n} lançamento(s) programado(s)', '{n} scheduled release(s)'), { n: s.pendingReleases.length })),
         h('li', null, t(l('{n} oferta(s) a responder', '{n} offer(s) to answer'), { n: pending.length })),
