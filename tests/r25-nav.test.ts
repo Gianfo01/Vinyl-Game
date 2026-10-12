@@ -21,14 +21,14 @@ function combos(): string[][] {
 }
 
 describe('menu r25 (Pixel Studio)', () => {
-  it('as 6 seções, na ordem, com rótulos pt/en', () => {
-    expect(SECTIONS25.map((s) => s.label.pt)).toEqual(['Sede', 'Pessoas', 'Projetos', 'Ao vivo', 'Mundo', 'Gestão']);
-    expect(menu(['label']).map((g) => g.id)).toEqual(['sede', 'people', 'projects', 'live', 'world', 'admin']);
+  it('as seções, na ordem, com rótulos pt/en (r27 COCK: Cockpit primeiro e Você no fim, ambas de topo)', () => {
+    expect(SECTIONS25.map((s) => s.label.pt)).toEqual(['Cockpit', 'Sede', 'Pessoas', 'Projetos', 'Ao vivo', 'Mundo', 'Gestão', 'Você']);
+    expect(menu(['label']).map((g) => g.id)).toEqual(['cockpit', 'sede', 'people', 'projects', 'live', 'world', 'admin', 'you']);
   });
   it('toda combinação de carreiras: nada some, nada duplica, ≤5 principais, o resto por tema (r27: tudo na árvore)', () => {
     for (const act of combos()) {
       const gs = menu(act);
-      expect(gs.length).toBe(6);
+      expect(gs.length).toBe(SECTIONS25.length);
       const flat = gs.flatMap((g) => g.areas);
       expect(flat.length).toBe(new Set(flat).size);
       const absorbedNow = act.flatMap((id) => CAREER_PAGE17[id].absorbs);
@@ -53,9 +53,14 @@ describe('menu r25 (Pixel Studio)', () => {
       expect(flat).not.toContain('desk');
     }
   });
-  it('casas e lugares: Cockpit na Sede, Finanças em Gestão, Shows em Ao vivo, Paradas em Mundo', () => {
+  it('casas e lugares: Cockpit é a 1ª seção (só ele), Você é seção própria, Finanças em Gestão, Shows em Ao vivo, Paradas em Mundo', () => {
     const gs = menu(['label']);
     expect(home25(gs[0])).toBe('cockpit');
+    expect(gs[0].areas).toEqual(['cockpit']);
+    expect(groupOf17(gs, 'cockpit').id).toBe('cockpit');
+    expect(gs.find((g) => g.id === 'sede')!.areas).not.toContain('cockpit');
+    for (const a of ['you', 'personal', 'wealth', 'night14']) expect(groupOf17(gs, a).id).toBe('you');
+    expect(gs.find((g) => g.id === 'admin')!.areas).not.toContain('you');
     expect(groupOf17(gs, 'finance').id).toBe('admin');
     expect(groupOf17(gs, 'shows').id).toBe('live');
     expect(groupOf17(gs, 'charts').id).toBe('world');
@@ -64,9 +69,11 @@ describe('menu r25 (Pixel Studio)', () => {
     expect(sectionIdOf25('crime')).toBe('world');
     for (const a of TREE17) expect(KNOWN25.has(a)).toBe(true);
   });
-  it('Sede com tela própria (slot25) abre nela; sem ela, Cockpit', () => {
-    expect(menu(['label'], ['label'], { sede: true })[0].top[0]).toBe(SEDE25);
-    expect(menu(['label'])[0].areas).not.toContain(SEDE25);
+  it('Sede com tela própria (slot25) abre nela; sem ela, a casa da Sede é a página seguinte', () => {
+    const sede = (o: { sede?: boolean }) => menu(['label'], ['label'], o).find((g) => g.id === 'sede')!;
+    expect(sede({ sede: true }).top[0]).toBe(SEDE25);
+    expect(sede({}).areas).not.toContain(SEDE25);
+    expect(home25(sede({}))).toBe('hq');
   });
   it('páginas novas de outras frentes entram na seção sugerida ou em Gestão', () => {
     const gs = menu(['label'], ['label'], { all: ['zz1', 'zz2'], hint: { zz1: 'music' } });

@@ -142,8 +142,8 @@ export function boot(el: HTMLElement): void {
 const areaExists = (id: string): boolean => navItems().some((x) => x.id === alias14(id));
 
 function startGame(): void {
-  // r27: toda partida (nova ou carregada, de qualquer carreira) abre na Sede › Sua sede; a página da carreira
-  // fica a um clique no menu em árvore. (Antes: casa da carreira, Cockpit ou a rota do endereço.)
+  // r27 (COCK): toda partida (nova ou carregada, de qualquer carreira) abre no Cockpit, a 1ª seção do menu;
+  // a sede e a página da carreira ficam a um clique no menu em árvore.
   store.area = landing27(!!sedeHome25);
   navMemo = null;
   render();
@@ -402,6 +402,7 @@ function subnav(): HTMLElement | null {
   const all = navItems();
   const ids = [...new Set([...(gr.top ?? []), ...gr.areas])];
   const pages = ids.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
+  if (pages.length < 2) return null; // r27 (COCK): seção de uma página só (Cockpit) não precisa de faixa
   const tab = (a: NavItem) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: `btn25 ${store.area === a.id ? 'on' : ''}`, onclick: () => go(a.id) },
     h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null);
   return h('div', { class: 'tabs25 pages27', role: 'tablist', 'aria-label': t(gr.label) }, pages.map(tab));
@@ -536,7 +537,8 @@ function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const head = () => { const last = lastInGroup[gr.id]; go(last && items.some((x) => x.id === last) ? last : gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit'); };
   // r17: Grupo › Seção › Página › Aba, avançar, fixar e recentes
   const secL = sectionOf17(gr, store.area);
-  const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL ? [{ label: t(secL), go: head }] : []), { label: areaLabel(store.area), go: () => go(store.area) }, ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
+  const one = gr.areas.length === 1; // r27 (COCK): seção de uma página só (Cockpit) — sem "Cockpit › Agora › Cockpit"
+  const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL && !one ? [{ label: t(secL), go: head }] : []), ...(one ? [] : [{ label: areaLabel(store.area), go: () => go(store.area) }]), ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
   const row = bar0.querySelector('.crumbs15');
   const pinned = store17.pins.includes(store.area);
   const all = navItems();

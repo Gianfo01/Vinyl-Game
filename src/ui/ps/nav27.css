@@ -80,3 +80,17 @@ main .tabs[role=tablist] { flex-wrap: wrap; }
 body:has(.overlay, .scene-overlay, .navsheet27-wrap) :is(aside.tutorial, .tip18, .tour18) { display: none !important; }
 body:has(aside.tutorial) .tip18 { display: none !important; }
 body:has(.overlay, .scene-overlay, .navsheet27-wrap) #toasts { z-index: 49; }
+
+/* ================= r27 (COCK): Cockpit e Você como seções de topo ================= */
+/* seção de uma página só (Cockpit): as abas da página aparecem direto sob a seção */
+.tree27-single { padding-left: 4px; }
+.tree27-single > .tree27-tabs { display: block; margin-left: 0; }
+/* celular: a barra inferior acomoda quantas seções houver (8: Cockpit … Você), cada uma com ≥ 44px de toque a 390px */
+@media (max-width: 860px) {
+  .app > .nav.nav25 { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .app > .nav.nav25 .nav-head .lbl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 440px) {
+  .app > .nav.nav25 .nav-head { font-size: 0.6rem; letter-spacing: -0.01em; padding-inline: 0; }
+  .app > .nav.nav25 .nav-head .ic canvas, .app > .nav.nav25 .nav-head .ic img, .app > .nav.nav25 .nav-head .ic .ic-px { width: 22px; height: 22px; }
+}

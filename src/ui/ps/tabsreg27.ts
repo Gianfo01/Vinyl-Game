@@ -50,6 +50,7 @@ export const TABS_REG27: TabRow27[] = [
   ["charts", "chartsHub", "hype12", "Hype", "Hype"],
   ["cockpit", "ck20", "panel", "Painel", "Panel"],
   ["cockpit", "ck20", "inbox", "Caixa de entrada", "Inbox"],
+  ["cockpit", "ck20", "desk", "Mesa do mês", "Monthly desk"],
   ["contracts19", "contracts19", "win", "Mercado", "Market"],
   ["contracts19", "contracts19", "clause", "Cláusulas", "Clauses"],
   ["contracts19", "contracts19", "mgr", "Empresários", "Managers"],

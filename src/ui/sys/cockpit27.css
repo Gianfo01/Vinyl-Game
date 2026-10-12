@@ -1,0 +1,27 @@
+/* Rodada 27 (COCK) — Cockpit enxuto: "Agora" (≤3 ações), cartões (≤4), uma linha para o que está vazio e "Ver mais". */
+.ck27 { display: grid; gap: 0.9rem; }
+.ck27-h { margin: 0 0 0.4rem; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.ck27-acts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.ck27-act { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem;
+  background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius, 3px); }
+.ck27-act.t-bad { border-left-color: var(--bad); }
+.ck27-act.t-warn { border-left-color: var(--warn); }
+.ck27-act.t-good { border-left-color: var(--good); }
+.ck27-act-ic canvas, .ck27-act-ic .ic-px, .ck27-act-ic img { width: 32px; height: 32px; }
+.ck27-act-b { display: grid; gap: 2px; min-width: 0; }
+.ck27-act-b small { color: var(--muted); }
+.ck27-act .btn { white-space: nowrap; }
+.ck27-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.8rem; align-items: start; }
+.ck27-grid > .card { margin: 0; }
+.ck27-foot { margin: 0.4rem 0 0; }
+.ck27-empty { margin: 0; }
+.ck27-more { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.9rem; padding-top: 0.6rem; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.ck27-more-l { color: var(--muted); }
+.ck27-more .link { min-height: 32px; }
+@media (max-width: 560px) {
+  .ck27-act { grid-template-columns: auto minmax(0, 1fr); }
+  .ck27-act .btn { grid-column: 1 / -1; justify-self: stretch; min-height: 40px; }
+  .ck27-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.ck27-card .c27-act .btn { white-space: nowrap; }
+.ck27-card .r27-t { font-weight: 600; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

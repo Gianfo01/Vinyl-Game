@@ -1,13 +1,13 @@
 // Rodada 27 — menu em árvore: Seção › Página › Aba (› aba interna). Tudo visível, nada escondido em "Mais".
 // Cada seção e cada página abre e fecha; o que está aberto é lembrado neste navegador (conveniência por pessoa,
 // nunca estado do jogo). A página e a aba abertas ficam destacadas. No celular, a barra inferior mostra as
-// 6 seções e um toque abre uma folha com as páginas e abas da seção.
+// seções e um toque abre uma folha com as páginas e abas da seção (r27 COCK: o Cockpit, de uma página só, abre direto).
 
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { h } from '../dom';
 import { ic } from '../vis';
-import type { NavGroup25 } from './nav25';
+import { single27, type NavGroup25 } from './nav25';
 import { tabTree27, type TabDef27, type TabNode27 } from './subtabs27';
 import './nav27.css';
 
@@ -90,23 +90,28 @@ export function navSection27(ctx: TreeCtx27, gr: NavGroup25): HTMLElement {
   const open = secOpen27(gr.id, ctx.section);
   const ths = themes(ctx, gr);
   const badge = ths.reduce((a, x) => a + x.items.reduce((b, y) => b + (y.badge ?? 0), 0), 0);
-  const box: HTMLElement = h('div', { class: `nav-group tree27-sec ${here ? 'open' : ''} ${open ? 'exp27' : ''}`, 'data-sec25': gr.id });
+  // r27 (COCK): seção de uma página só (Cockpit) — o cabeçalho abre a página direto (também no celular, sem folha)
+  // e, aberta, a seção mostra as abas da página logo abaixo (sem repetir o nome da página)
+  const one = single27(gr) ? ths[0]?.items[0] : undefined;
+  const oneTabs = one ? tabTree27(one.id, ctx.tabs) : [];
+  const box: HTMLElement = h('div', { class: `nav-group tree27-sec ${one ? 'tree27-one' : ''} ${here ? 'open' : ''} ${open ? 'exp27' : ''}`, 'data-sec25': gr.id });
   const head = h('button', { type: 'button', class: `nav-head ${here ? 'on' : ''}`, 'aria-current': here ? 'true' : undefined, title: t(gr.label),
-    'aria-haspopup': 'dialog',
+    'aria-haspopup': one ? undefined : 'dialog',
     onclick: () => {
+      if (one) { closeSheet27(); fold.s[gr.id] = 1; saveFold(); ctx.go(one.id); return; }
       if (mobile()) { openSheet27(ctx, gr); return; }
       // abre a seção (e lembra) e vai para a casa dela
       fold.s[gr.id] = 1; saveFold();
       ctx.go(ctx.home(gr));
     } },
     h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null);
-  const body = h('ul', { class: 'tree27-pages', role: 'group', 'aria-label': t(gr.label) },
+  const body = one ? h('div', { class: 'tree27-pages tree27-single' }, oneTabs.length ? tabList(ctx, oneTabs, 1) : null) : h('ul', { class: 'tree27-pages', role: 'group', 'aria-label': t(gr.label) },
     ths.flatMap((th) => [
       ths.length > 1 ? h('li', { class: 'tree27-theme', 'aria-hidden': 'true' }, t(th.label)) : null,
       ...th.items.map((it) => pageNode(ctx, it)),
     ]));
   box.append(h('div', { class: 'tree27-head' }, head,
-    caret(open, t(l(`Páginas de ${t(gr.label)}`, `${t(gr.label)} pages`)), (b) => {
+    one && !oneTabs.length ? null : caret(open, t(l(`Páginas de ${t(gr.label)}`, `${t(gr.label)} pages`)), (b) => {
       const now = !box.classList.contains('exp27');
       box.classList.toggle('exp27', now); b.setAttribute('aria-expanded', now ? 'true' : 'false');
       fold.s[gr.id] = now ? 1 : 0; saveFold();

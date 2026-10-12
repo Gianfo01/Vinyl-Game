@@ -1,5 +1,5 @@
 // Rodada 27 — menu em árvore (Seção › Página › Aba): toda página e toda aba interna alcançáveis pela árvore,
-// a busca acha abas nunca abertas (registro gerado, não histórico), a partida abre na Sede › Sua sede e
+// a busca acha abas nunca abertas (registro gerado, não histórico), a partida abre no Cockpit (r27 COCK) e
 // só uma janela por vez (metas de abertura → tutorial → dicas; tour só a pedido).
 import { describe, expect, it } from 'vitest';
 import { CAREER_PAGE17, NAV17, ORDER17 } from '../src/ui/nav17';
@@ -85,14 +85,16 @@ describe('r27: busca acha abas nunca abertas', () => {
   });
 });
 
-describe('r27: a partida abre na Sede', () => {
-  it('nova ou carregada: Sede › Sua sede (sem a tela da sede, Cockpit)', () => {
-    expect(landing27(true)).toBe(SEDE25);
+describe('r27 (COCK): a partida abre no Cockpit', () => {
+  it('nova ou carregada, com ou sem a tela da sede: Cockpit, a 1ª seção do menu', () => {
+    expect(landing27(true)).toBe('cockpit');
     expect(landing27(false)).toBe('cockpit');
+    expect(menu(ORDER17)[0].id).toBe('cockpit');
+    expect(menu(['label'])[0].areas).toEqual([landing27(true)]);
   });
-  it('o 1º passo do tutorial aponta para a Sede em toda carreira', () => {
-    for (const id of [...ORDER17, '']) expect(tutorialIntro14(id ? [id] : []).area).toBe(SEDE25);
-    expect(tutorialIntro14(['label']).title.pt).toContain('sede');
+  it('o 1º passo do tutorial aponta para o Cockpit em toda carreira', () => {
+    for (const id of [...ORDER17, '']) expect(tutorialIntro14(id ? [id] : []).area).toBe('cockpit');
+    expect(tutorialIntro14(['label']).title.pt).toContain('Cockpit');
     expect(tutorialIntro14(['manager']).title.pt).toContain('gestão'); // o texto continua sendo do ofício
   });
 });

@@ -49,7 +49,8 @@ export function deskPanel(s: GameState): HTMLElement {
       section(t(S.briefing),
         s.briefing.length ? h('ul', { class: 'briefing' }, s.briefing.map((n) => h('li', { class: n.kind }, t(n.text)))) : h('p', { class: 'muted' }, t(l('Mês tranquilo.', 'A quiet month.'))),
       ),
-      section(`${t(S.decisions)} (${s.decisions.length})`, decisions.length ? h('div', { class: 'decisions' }, decisions) : h('p', { class: 'muted' }, t(S.noDecisions))),
+      // r27 (COCK): sem "Decisões (0)" — a seção só aparece quando há decisão
+      decisions.length ? section(`${t(S.decisions)} (${s.decisions.length})`, h('div', { class: 'decisions' }, decisions)) : null,
       counters.length || pending.length ? section(t(S.pendingOffers),
         h('ul', null,
           counters.map((o) => h('li', null, actLink(s, o.actId), ' ', pill(t(l('contraproposta', 'counter-offer')), 'warn'), ` ${t(S.advanceAmt)}: ${$(o.advance)} `,
