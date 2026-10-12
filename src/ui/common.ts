@@ -4,6 +4,7 @@ import { S, getLang, locale, t } from '../i18n/strings';
 import type { Act, GameState, Release } from '../sim/types';
 import { coverUrl, logoUrl } from './art';
 import { h } from './dom';
+import { eraGenre23 } from '../sim/genre23';
 import { store } from './store';
 import { nameSvg20 } from './ux20';
 
@@ -26,6 +27,16 @@ export function dateLabel(s: GameState): string {
 
 export function genreName(id: string): string {
   return t(genreById[id]?.name) || id;
+}
+
+/** r23 (D): gênero como existe no ano (com "pioneiro de X" se o gênero do ato ainda não nasceu) e a nota de origem. */
+export function actGenre23(s: Pick<GameState, 'year'>, a: Pick<Act, 'genre'> & { origin23?: L } | undefined | null): string {
+  if (!a) return '';
+  const e = eraGenre23(a.genre, s.year);
+  const bits = [genreName(e.id)];
+  if (e.pioneer) bits.push(`${t({ pt: 'pioneiro de', en: 'pioneer of' })} ${genreName(e.real)}`);
+  if (a.origin23) bits.push(t(a.origin23));
+  return bits.join(' · ');
 }
 
 export function cityName(id: string): string {

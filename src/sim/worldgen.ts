@@ -16,6 +16,7 @@ import { REAL_CLASSIC } from '../data/realacts_classic';
 import { EXTRA_LABELS } from '../data/labels10';
 import type { CatalogLabel } from '../data/catalog';
 import { STAFF_ROLES, TECHS } from '../data/rules';
+import { MISFIT_W23, cityGenreFit23, originNote23 } from './genre23';
 import { CITIES, GENRES, MARKETS, cityById, familyOf, genreById, type MarketId } from '../data/world';
 import { actTalent, makeAct, personName } from './people';
 import type { Act, GameState, Label, RunConfig, StaffMember } from './types';
@@ -224,7 +225,8 @@ export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; 
     const sceneGenres = cityDef.scenes.filter((gid) => genreById[gid] && genreById[gid].born <= year);
     // atos formados antes de 1920 (início em 1920): nenhum gênero "nasceu" ainda — usa os do ano corrente
     const alive = aliveGenres(s, year).length ? aliveGenres(s, year) : aliveGenres(s, Math.max(year, s.year));
-    genre = sceneGenres.length && r.chance(0.65) ? r.pick(sceneGenres) : r.weighted(alive, (gid) => (s.genrePop[gid] ?? 0.6))!;
+    // r23 (D): gênero regional fora da sua terra (ranchera em Odessa) fica bem mais raro
+    genre = sceneGenres.length && r.chance(0.65) ? r.pick(sceneGenres) : r.weighted(alive, (gid) => (s.genrePop[gid] ?? 0.6) * (cityGenreFit23(city, gid) ? 1 : MISFIT_W23))!;
   }
   const fam = familyOf(genre);
   const soloChance = ['pop', 'hiphop', 'country_folk', 'latin', 'brazil', 'europe', 'sacred'].includes(fam) ? 0.6 : 0.35;
@@ -248,6 +250,7 @@ export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; 
     fame: opts.fame ?? (archetype === 'genius' ? 0.5 : r.float(0, 5)),
     startFrac: r.float(0.4, 0.62),
   });
+  if (!cityGenreFit23(city, genre)) act.origin23 = originNote23(genre); // r23 (D): o que sobrou leva a nota de origem
   return act;
 }
 

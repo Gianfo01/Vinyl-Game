@@ -4,6 +4,7 @@
 import { coverById, coverCost, coverOptions, type CoverStyle } from '../../sim/covers';
 import { coverUrl } from '../art';
 import { FORMATS, type FormatId } from '../../data/rules';
+import { formatArrival23 } from '../../sim/genre23';
 import { MARKETS, l, type MarketId } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import { availableChannels, coverage, forecastUnits, marketingE } from '../../sim/market';
@@ -119,7 +120,9 @@ export function creationPanel(s: GameState): HTMLElement {
           h('fieldset', null, h('legend', null, t(l('Capa (escolha uma das três propostas)', 'Cover (pick one of three proposals)'))), coverBox),
           h('fieldset', null, h('legend', null, t(S.formats)), formats.map((f) => h('label', { class: 'check' },
             h('input', { type: 'checkbox', checked: plan.formats.includes(f), onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; plan.formats = on ? [...plan.formats, f] : plan.formats.filter((x) => x !== f); updateCost(); } }),
-            t(FORMATS.find((x) => x.id === f)?.name)))),
+            t(FORMATS.find((x) => x.id === f)?.name),
+            // r23 (D): formato que chegou em outra data nesta história (modo livre/caos)
+            ((fa) => fa ? h('small', { class: 'muted' }, ` — ${t(l('nesta história chegou em {h} (real: {r})', 'in this story it arrived in {h} (real: {r})'), { h: fa.here, r: fa.real })}`) : null)(formatArrival23(s.techDates, f))))),
           h('label', null, `${t(S.press)} (${t(S.suggested)} ${N(plan.press)})`, pressInput),
           h('fieldset', null, h('legend', null, t(S.marketing)), mkRows),
           h('fieldset', null, h('legend', null, t(S.territories)), MARKETS.map((m) => h('label', { class: 'check' },
