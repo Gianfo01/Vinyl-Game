@@ -1148,3 +1148,12 @@ export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25
   }
   return { plan, spots, more };
 }
+
+// ---------------------------------------------------------------- r27 (CITY2): primitivas para os interiores da cidade
+/** Contexto de pintura (Px + paleta + planta) — os interiores dos lugares do bairro (ui/pixel/interior27.ts) montam
+ *  uma planta de um andar só e reaproveitam a mesma mobília, luz e rua da sede. */
+export type Ctx27 = Ctx;
+export const prim27 = {
+  blk, sky, street, neighbours, wallFill, lamp, sign, amp, micStand, guitar, drums, piano, lathe, reelDeck, monitorSpk, consoleDesk, couch, shelf, desk, deskGear,
+  chair, filing, plant, tv, recordPlayer, poster, goldDisc, backWindow, foam, corkBoard, rng27, INK,
+};

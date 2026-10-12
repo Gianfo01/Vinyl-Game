@@ -12,6 +12,7 @@ import { HQ_LEVELS } from '../../data/rules';
 import { hoodAt19, histAge19, histNote19, CLIMATE19, type Hood19 } from '../../data/hood19';
 import { histMode } from '../history15';
 import { landmarksAt19, type Landmark19 } from '../../data/landmarks19';
+import { countryOfCity } from '../../data/geo';
 import { l, type L } from '../../data/world';
 import { registerExplain, type WhyPart } from '../explain18';
 import { registerExt4, registerSimHook } from '../ext4';
@@ -104,17 +105,29 @@ const NBNAMES: Record<Exclude<NbK, 'rival'>, NbName[]> = {
 /** Nomes possíveis de um vizinho no ano (só o que já existe; partituras e fonógrafos saem quando o disco domina). */
 export function nbNames19(s: GameState, k: Exclude<NbK, 'rival'>): L[] {
   const ok = NBNAMES[k].filter(([, y, tech]) => s.year >= (y ?? 0) && (!tech || hasTech(s, tech))).map(([n]) => n);
-  return k === 'records' && s.year >= 1910 ? ok.filter((n) => n.en !== 'Sheet Music & Pianos' && n.en !== 'Phonograph Parlour') : ok;
+  // r27 (CITY2): gramofones e vitrolas também saem quando o LP chega (sem "Casa de Gramofones" em 1985)
+  const old = s.year >= 1960 ? ['Gramophone House', 'Records & Victrolas'] : [];
+  return k === 'records' && s.year >= 1910 ? ok.filter((n) => n.en !== 'Sheet Music & Pianos' && n.en !== 'Phonograph Parlour' && !old.includes(n.en)) : ok;
 }
 /** Gravadoras rivais que já existem neste ano (fundadas, ativas, não fechadas). */
 export const nbRivals19 = (s: GameState) => Object.values(s.labels ?? {}).filter((x) => x && x.id !== 'player' && x.active !== false && !x.closedYear && (x.founded ?? 0) <= s.year).sort((a, b) => (a.id < b.id ? -1 : 1));
+/** r27 (CITY2): rivais que podem ter escritório NO BAIRRO — da cidade da sede ou, sem nenhum, do mesmo país.
+ *  Antes o vizinho "rival" era sorteado entre TODAS as gravadoras do mundo: um escritório brasileiro aparecia no
+ *  mapa de Londres. Gravadora estrangeira fica na cidade dela (mapa do mundo), nunca no bairro. */
+export const localRivals19 = (s: GameState) => {
+  const all = nbRivals19(s), home = s.config.homeCity;
+  const here = all.filter((x) => x.city === home);
+  if (here.length) return here;
+  const c = countryOfCity(home);
+  return c ? all.filter((x) => x.city && countryOfCity(x.city) === c) : [];
+};
 const RIVAL0 = (y: number): L => (y < 1920 ? l('Companhia Fonográfica Central', 'Central Phonograph Company') : y < 1960 ? l('Discos Metrópole', 'Metropole Records') : l('Selo do Bairro', 'Neighbourhood Label'));
 export interface Nb19 { lot: number; k: NbK; name: L; sale: boolean; price: number; who?: string }
 /** Vizinhos agora: ocupam lotes livres (deixando pelo menos 3 livres para você); somem quando você usa o lote. */
 export function nb19(s: GameState): Nb19[] {
   const st = hood19(s), free = freeLots18(s).filter((n) => st.bought[n] === undefined);
   const order = [...free].sort((a, b) => hash(`${s.config.seed}|nb|${a}`) - hash(`${s.config.seed}|nb|${b}`));
-  const rivals = nbRivals19(s);
+  const rivals = localRivals19(s); // r27 (CITY2): só rivais locais (nada de escritório estrangeiro no bairro)
   const kinds = (Object.keys(NB19) as NbK[]).filter((k) => s.year >= NB19[k].from && (k !== 'radio' || hasTech(s, 'radio')));
   const n = Math.max(0, Math.min(kinds.length, free.length - 3, 4));
   const hs = hoodStats19(s);

@@ -31,6 +31,9 @@ import { go18 } from './inbox18';
 import { endTour18 } from '../tutorial18';
 import { chips, ic, stat } from '../vis';
 import './campus18.css';
+import { places27, type Place27 } from '../../sim/sys/place27';
+import { PINNED27, PLACE_IC27, insideView27, ownPlace27, placePanel27, type InsideT27 } from './place27ui';
+import { placeTabs27, zoom27 } from '../ps/zoom27';
 
 const reduced = () => document.documentElement.classList.contains('reduced-motion') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const latOf = (s: GameState) => cityById[s.config.homeCity]?.lat ?? 40;
@@ -38,10 +41,10 @@ const tx = (x: L | string | undefined) => (x === undefined ? '' : typeof x === '
 const mobile = () => !!window.matchMedia?.('(max-width: 860px)').matches;
 
 /** UI efêmera (por sessão; não vai para o save). */
-const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number } =
+const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number; /** r27 (CITY2): lugar aberto por dentro */ inside?: string } =
   { mode: 'cycle', q: 1, f: { mine: true, nb: true, lm: true }, z: 1, px: 0, py: 0 };
 
-interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[] }
+interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[] }
 /** r27: o que a vida na rua (fãs, imprensa) e o estado dos prédios (fila de show) já mostram sai do ambiente antigo. */
 const AMB_DONE27 = new Set(['fans', 'press', 'show']);
 function makeView(s: GameState, year?: number): View {
@@ -50,7 +53,7 @@ function makeView(s: GameState, year?: number): View {
   if (snap) {
     const bs = decode18(snap.b);
     const lots = new Map(bs.filter((b) => b.lot !== undefined).map((b) => [b.id, b.lot!] as [string, number]));
-    return { s, bs, year: snap.y, live: false, vis: new Map(), sale: [], nbs: [], scene: buildScene18(bs, lots, env18(snap.y, 6, latOf(s), s.config.homeCity), [], hashSeed(s), brand18(s), [], lms) };
+    return { s, bs, year: snap.y, live: false, vis: new Map(), sale: [], nbs: [], places: [], scene: buildScene18(bs, lots, env18(snap.y, 6, latOf(s), s.config.homeCity), [], hashSeed(s), brand18(s), [], lms) };
   }
   const bs = buildings18(s);
   const vis = bldVis27(s, bs);
@@ -58,10 +61,12 @@ function makeView(s: GameState, year?: number): View {
   const filler = ui.moving ? [] : fillerLots27(s, sale);
   const life = life27(s, bs);
   const nbs = nbInfo27(s);
+  // r27 (CITY2): todo prédio que não é seu vira um lugar (vizinhos + cidade comum, com os básicos da música da época)
+  const places = places27(s, filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1);
   const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n }))];
   const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms,
-    { vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s) });
-  return { s, bs, year: s.year, live: true, vis, sale, nbs, scene };
+    { vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill').map((p) => [p.lot, p.draw])) });
+  return { s, bs, year: s.year, live: true, vis, sale, nbs, places, scene };
 }
 /** Iniciais do selo (placa da sede e letreiro). */
 export const brand18 = (s: GameState): string => (s.config.companyName.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).map((w) => w[0]).join('').toUpperCase().slice(0, 3) || 'REC');
@@ -217,7 +222,7 @@ function enterHq27(): void { sedeNav25.go(SEDE25); }
 const kv = (k: L, v: string | HTMLElement, cls = '') => [h('dt', null, t(k)), h('dd', { class: cls }, v)];
 
 /** Painel de um prédio seu: o que é, custo, receita, quem está lá, 2–3 ações + "Mais opções". */
-function bldPanel(v: View, id: string, close: () => void, rerun: () => void): HTMLElement | null {
+function bldPanel(v: View, id: string, close: () => void, rerun: () => void, inside?: () => void): HTMLElement | null {
   const s = v.s;
   const pn = panel27(s, id, v.bs);
   const p = popFor(v, id);
@@ -238,6 +243,7 @@ function bldPanel(v: View, id: string, close: () => void, rerun: () => void): HT
     notes.length ? h('ul', { class: 'w19-notes small' }, notes.map((n) => h('li', null, tx(n)))) : null,
     h('div', { class: 'c27-main-acts' },
       pn.enter ? h('button', { type: 'button', class: 'btn small primary', onclick: () => { close(); enterHq27(); } }, ic('house'), ' ', t(l('Entrar na sede', 'Enter the HQ'))) : null,
+      inside && v.live && ownPlace27(s, b) ? h('button', { type: 'button', class: 'btn small c2-enter', onclick: inside }, ic('door'), ' ', t(l('Ver por dentro', 'Look inside'))) : null, // r27 (CITY2)
       pn.main.map(mainBtn)),
     h('details', { class: 'c27-more' }, h('summary', null, t(l('Mais opções e números', 'More options and numbers'))), popBody(v, p, close, rerun, true)));
 }
@@ -283,6 +289,9 @@ function overview27(v: View, open: (id: string) => void): HTMLElement {
         x?.alerts ? h('i', { class: 'c27-n', title: x.why.map((w) => t(w)).join(' · ') }, String(x.alerts)) : null));
     })),
     v.nbs.length ? [h('h4', null, t(l('Vizinhos e rivais', 'Neighbours and rivals'))), h('ul', { class: 'c27-list' }, v.nbs.map((n) => h('li', null, h('button', { type: 'button', onclick: () => open(`nb:${n.lot}`) }, chip27(n.icon, n.k === 'rival' ? '#8a3a3a' : '#6a6a72', 'nb'), h('span', { class: 'c27-tx' }, h('b', null, t(n.name)), h('small', { class: 'muted' }, t(n.doing)))))))] : null,
+    // r27 (CITY2): os lugares da cidade (loja, casa de shows, rádio, estúdio, jornal, prédios) — todos clicáveis
+    v.places.some((p) => p.src === 'fill') ? [h('h4', null, t(l('Lugares da cidade', 'Places in town'))), h('ul', { class: 'c27-list' }, v.places.filter((p) => p.src === 'fill').map((p) => h('li', null, h('button', { type: 'button', onclick: () => open(p.id) },
+      chip27(PLACE_IC27[p.k].ic, PLACE_IC27[p.k].col), h('span', { class: 'c27-tx' }, h('b', null, t(p.name)), h('small', { class: 'muted' }, `${t(p.what)}${p.also.length ? ' +' : ''} · ${t(p.now)}`))))))] : null,
     v.sale.length ? [h('h4', null, t(l('À venda (cabe no caixa)', 'For sale (affordable)'))), h('ul', { class: 'c27-list' }, v.sale.map((x) => h('li', null, h('button', { type: 'button', onclick: () => open(`lot:${x.lot}`) }, chip27(ICON27[x.kind]?.ic ?? 'building', '#c8302c', 'sale'), h('span', { class: 'c27-tx' }, h('b', null, t(LOTS18[x.lot].name)), h('small', { class: 'muted' }, `${t(x.name)} · ${$(x.price)}`))))))]
       : v.live ? h('p', { class: 'small muted' }, t(l('Nenhum lote vazio cabe no caixa agora: os terrenos livres aparecem como cidade comum.', 'No empty lot fits your cash right now: free plots show as ordinary city.'))) : null,
     h('p', { class: 'small muted' }, t(l('Clique na sede para entrar nela. Toque num prédio, vizinho, placa "À venda" ou marco para ver detalhes e agir.', 'Click the HQ to step inside. Tap a building, neighbour, "For sale" sign or landmark to see details and act.'))));
@@ -312,11 +321,14 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   };
   const open = (id: string, hs: HTMLElement | null) => {
     const rerun = () => open(id, hs);
-    const body = !v.live || id.startsWith('lm:') || id.startsWith('ev:') ? null : id.startsWith('nb:') ? nbPanel(v, id, close, rerun) : id.startsWith('lot:') ? lotPanel(v, id, close, rerun) : v.bs.some((b) => b.id === id) ? bldPanel(v, id, close, rerun) : null;
+    const plc = v.places.find((x) => x.id === id); // r27 (CITY2): vizinho ou cidade comum = lugar com dono, gente e ações
+    const body = !v.live || id.startsWith('lm:') || id.startsWith('ev:') ? null : plc ? placePanel27(s, plc, { close, openLot: (lot) => open(`lot:${lot}`, null), inside: () => goInside(id, hs),
+        now: plc.k === 'label' ? v.nbs.find((x) => `nb:${x.lot}` === id)?.doing : undefined, more: id.startsWith('nb:') ? (() => { const p0 = popFor(v, id); return p0 && (p0.acts.length || p0.opts.length) ? popBody(v, p0, close, rerun, true) : null; })() : null })
+      : id.startsWith('nb:') ? nbPanel(v, id, close, rerun) : id.startsWith('lot:') ? lotPanel(v, id, close, rerun) : v.bs.some((b) => b.id === id) ? bldPanel(v, id, close, rerun, () => goInside(id, hs)) : null;
     const p = body ? null : popFor(v, id);
     if (!body && !p) { close(); return; }
     ui.pop = id; lastHs = hs; tip.hidden = true;
-    v.scene.sel = id; v.scene.selLot = id.startsWith('lot:') ? +id.slice(4) : undefined; cv.redraw27?.();
+    v.scene.sel = id.startsWith('pl:') ? `fl:${id.slice(3)}` : id; v.scene.selLot = id.startsWith('lot:') ? +id.slice(4) : undefined; cv.redraw27?.();
     for (const x of layer.querySelectorAll('.w19-hs.on')) x.classList.remove('on');
     hs?.classList.add('on');
     const content = body ?? h('div', { class: 'c27-pn' }, popBody(v, p!, close, rerun));
@@ -342,6 +354,36 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
     zoom.style.transform = `translate(${ui.px}px, ${ui.py}px) scale(${ui.z * 2.6})`;
     setTimeout(() => { ui.z = 1; ui.px = 0; ui.py = 0; enterHq27(); }, 300);
   };
+  // r27 (CITY2): entrar num lugar — aproxima no prédio e abre o corte por dentro; "Voltar à cidade" afasta
+  const insideOf = (id: string): InsideT27 | null => {
+    const plc = v.places.find((x) => x.id === id);
+    if (plc) return { id, k: plc.k, name: t(plc.name), what: t(plc.what), people: plc.people, year: v.year, city: s.config.homeCity, seed: s.config.seed };
+    const b = v.bs.find((x) => x.id === id), o = b ? ownPlace27(s, b) : null;
+    return b && o ? { id, k: o.k, name: o.name, what: t(KIND18[b.kind].name), people: o.people, year: v.year, city: s.config.homeCity, seed: s.config.seed } : null;
+  };
+  let inBox: HTMLElement | null = null;
+  const leaveInside = () => { ui.inside = undefined; inBox?.remove(); inBox = null; (layer.querySelector(`[data-id="${CSS.escape(ui.pop ?? '')}"]`) as HTMLElement | null)?.focus({ preventScroll: true }); };
+  const showInside = (id: string, anim: boolean) => {
+    const x = insideOf(id);
+    if (!x) { ui.inside = undefined; return; }
+    ui.inside = id; inBox?.remove();
+    // celular: a folha de ações desce para o interior aparecer; "Ações" a traz de volta
+    const mob = mobile();
+    if (mob) { sheet.hidden = true; document.body.classList.remove('w19-open'); }
+    inBox = insideView27(s, x, leaveInside, mob ? () => { if (ui.pop) open(ui.pop, lastHs); } : undefined);
+    if (anim) inBox.classList.add('enter');
+    vp.append(inBox);
+    if (mob && anim) frame.scrollIntoView({ block: 'start' });
+    if (anim) (inBox.querySelector('.c2-back') as HTMLElement | null)?.focus({ preventScroll: true });
+  };
+  const goInside = (id: string, hs: HTMLElement | null) => {
+    if (!hs || reduced()) { showInside(id, false); return; }
+    const r = hs.getBoundingClientRect(), vr = vp.getBoundingClientRect();
+    zoom.style.transition = 'transform 240ms ease-in';
+    zoom.style.transformOrigin = `${r.left + r.width / 2 - vr.left - ui.px}px ${r.top + r.height / 2 - vr.top - ui.py}px`;
+    zoom.style.transform = `translate(${ui.px}px, ${ui.py}px) scale(${ui.z * 2.4})`;
+    setTimeout(() => { zoom.style.transition = 'none'; zoom.style.transformOrigin = ''; apply(); showInside(id, true); }, 250);
+  };
   const hot = (id: string, cls: string, box: [number, number, number, number], label: string, kids: (HTMLElement | string | null)[] = [], onClick?: (hs: HTMLElement) => void) => {
     const [x0, y0, x1, y1] = box;
     const b = h('button', { type: 'button', class: `w19-hs ${cls}`, 'data-id': id, 'aria-label': label, 'aria-haspopup': onClick ? undefined : 'dialog',
@@ -355,7 +397,12 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const sc = v.scene;
   // prédios (seus e vizinhos), em ordem de profundidade; ícone próprio por tipo com alertas e prazo de obra
   for (const sp of sc.sprites) {
-    if (sp.filler) continue;
+    if (sp.filler) { // r27 (CITY2): a cidade comum também é lugar (loja, rádio, jornal, prédio, hotel…) — clicável
+      const plc = ui.f.nb ? v.places.find((x) => x.id === `pl:${sp.id.slice(3)}`) : undefined;
+      if (plc) hot(plc.id, 'fill', sp.box, `${t(plc.name)} · ${t(plc.what)} — ${t(plc.now)}`,
+        [PINNED27.has(plc.k) ? h('span', { class: 'c27-pin pl', style: `--k:${PLACE_IC27[plc.k].col}`, 'aria-hidden': 'true' }, ic(PLACE_IC27[plc.k].ic)) : null]);
+      continue;
+    }
     if (sp.nb ? !ui.f.nb : !ui.f.mine) continue;
     const b = v.bs.find((x) => x.id === sp.id);
     const nb = sp.nb ? v.nbs.find((x) => `nb:${x.lot}` === sp.id) : undefined;
@@ -420,14 +467,33 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   frame.append(bar, mv ?? '', vp, tip);
   if (ui.legend) frame.append(legend());
   // fechar: Esc ou clique fora (folha do celular)
-  const esc = (e: KeyboardEvent) => { if (!frame.isConnected) { document.removeEventListener('keydown', esc, true); return; } if (e.key === 'Escape' && ui.pop) { e.stopPropagation(); close(); } };
+  const esc = (e: KeyboardEvent) => { if (!frame.isConnected) { document.removeEventListener('keydown', esc, true); return; } if (e.key === 'Escape' && ui.inside) { e.stopPropagation(); leaveInside(); return; } if (e.key === 'Escape' && ui.pop) { e.stopPropagation(); close(); } };
   document.addEventListener('keydown', esc, true);
   const outside = (e: Event) => {
     if (!frame.isConnected) { document.removeEventListener('pointerdown', outside, true); sheet.remove(); document.body.classList.remove('w19-open'); return; }
-    if (!sheet.hidden && !sheet.contains(e.target as Node) && !(e.target as HTMLElement).closest?.('.w19-hs')) close();
+    if (!sheet.hidden && !sheet.contains(e.target as Node) && !(e.target as HTMLElement).closest?.('.w19-hs, .c2-in')) close();
   };
   document.addEventListener('pointerdown', outside, true);
   showOverview();
+  if (ui.inside && v.live) showInside(ui.inside, false); // r27 (CITY2): continua por dentro depois de uma ação
+  // r27 (CITY2): chegando da sede ("Ver a cidade"): o mapa abre aproximado na sede e se afasta até o bairro
+  if (zoom27.arrive) {
+    zoom27.arrive = false;
+    ui.z = 1; ui.px = 0; ui.py = 0; ui.inside = undefined;
+    const hq = layer.querySelector('[data-id="hq"]') as HTMLElement | null;
+    if (hq && v.live && !reduced() && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => {
+      const r = hq.getBoundingClientRect(), vr = vp.getBoundingClientRect();
+      zoom.style.transition = 'none';
+      zoom.style.transformOrigin = `${r.left + r.width / 2 - vr.left}px ${r.top + r.height / 2 - vr.top}px`;
+      zoom.style.transform = 'scale(2.6)';
+      void zoom.offsetWidth;
+      requestAnimationFrame(() => {
+        zoom.style.transition = 'transform 560ms cubic-bezier(.2,.7,.2,1)';
+        zoom.style.transform = 'translate(0px, 0px) scale(1)';
+        setTimeout(() => { zoom.style.transition = ''; zoom.style.transformOrigin = ''; apply(); }, 600);
+      });
+    });
+  }
   if (ui.pop) requestAnimationFrame?.(() => { const hs = layer.querySelector(`[data-id="${CSS.escape(ui.pop!)}"]`) as HTMLElement | null; if (ui.pop) open(ui.pop, hs); });
   return frame;
 }
@@ -471,6 +537,7 @@ function campusArea(s: GameState): HTMLElement {
   const side = h('aside', { class: 'c27-side', 'aria-label': t(l('Painel do bairro', 'Neighbourhood panel')), 'aria-live': 'polite' });
   return h('div', { class: 'c18 w19 c27' },
     section(`${t(l('Nosso mundo', 'Our world'))} — ${s.config.companyName}`,
+      placeTabs27('city'), // r27 (CITY2): Sua sede | Nosso mundo — o mesmo lugar, por dentro e por fora
       h('p', { class: 'w19-hood' }, ic('house'), ' ', why18(s, 'h19.hood', {}, h('b', null, t(hs.h.n)), ` · ${t(STAGE19[hs.stage])}`), h('span', { class: 'muted small' }, ` — ${t(hs.h.d)}${hs.note ? ` ${t(hs.note)}` : ''}`)),
       sum,
       h('div', { class: 'c27-main' }, h('div', { class: 'c27-mapcol' }, mapFrame(v, side), tl), side)),

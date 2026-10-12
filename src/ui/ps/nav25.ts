@@ -24,9 +24,9 @@ const th = (id: string, label: L, areas: string[]): Theme25 => ({ id, label, are
 /** Árvore canônica. A ordem das páginas dentro da seção = prioridade (as 5 primeiras ficam visíveis). */
 export const SECTIONS25: Section25[] = [
   { id: 'sede', label: l('Sede', 'HQ'), icon: 'house', blurb: l('Seu dia, sua casa e o que precisa de você.', 'Your day, your home and what needs you.'),
-    main: [SEDE25, 'cockpit', 'hq', 'plan', 'goals', 'diary'], themes: [
-    th('today', l('Hoje', 'Today'), [SEDE25, 'cockpit', 'hq', 'plan', 'goals', 'diary']),
-    th('base', l('Sua sede', 'Your HQ'), ['campus18'])] },
+    // r27 (CITY2): "Nosso mundo" (a cidade em volta da sede) logo abaixo de "Sua sede" — antes ficava escondido no fim
+    main: [SEDE25, 'cockpit', 'campus18', 'hq', 'plan', 'goals', 'diary'], themes: [
+    th('today', l('Hoje', 'Today'), [SEDE25, 'campus18', 'cockpit', 'hq', 'plan', 'goals', 'diary'])] },
   { id: 'people', label: l('Pessoas', 'People'), icon: 'people', blurb: l('Elenco, talentos e profissionais.', 'Roster, talent and professionals.'),
     main: ['artists', 'market', 'management', 'managers14', 'producers15', 'directory'], themes: [
     th('roster', l('Seu elenco', 'Your roster'), ['artists', 'people', 'dyn18', 'contracts19', 'artist18']),
