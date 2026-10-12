@@ -1,3 +1,4 @@
+import { INT_PREF23 } from '../sim/interrupt23';
 import { ensureExt } from '../sim/ext';
 import { migrate18 } from '../sim/ledger18';
 import { registerMovementGenres } from '../sim/culture';
@@ -24,6 +25,8 @@ export interface Prefs {
   minigames?: 'play' | 'auto';
   /** mostrar cenas (premiação, crítica, entrevista) ao avançar o tempo */
   cutscenes?: boolean;
+  /** r23 (A): o que interrompe — só decisões, marcos também (padrão) ou tudo */
+  interrupt23?: 'decisions' | 'milestones' | 'all';
   /** pele da interface por era */
   eraSkin?: boolean;
   /** r19 (B.5): perguntar antes de avançar quando há cartões que vão valer o padrão (false = não perguntar) */
@@ -47,6 +50,8 @@ export const store = {
   rerender: () => {},
   toast: (_msg: string, _kind?: string) => {},
 };
+
+INT_PREF23.v = store.prefs.interrupt23 ?? 'milestones'; // r23 (A)
 
 function loadPrefs(): Prefs {
   const def: Prefs = { lang: navigator.language?.startsWith('pt') ? 'pt' : 'en', textScale: 100, contrast: false, reducedMotion: false, theme: 'auto' };

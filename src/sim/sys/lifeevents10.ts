@@ -70,6 +70,8 @@ export interface Def {
   /** resposta padrão se o jogador ignorar */
   def: string;
   chain?: boolean;
+  /** r23 (A): o evento é CONTEXTO (a vida acontece; não nasce de uma escolha sua) — a cena diz isso e o porquê */
+  ctx23?: L;
 }
 export interface Env {
   s: GameState; year: number; age: number; o: Owner; v: Views; traits: string[]; ls: string | null;
@@ -220,7 +222,7 @@ function fire(s: GameState, ev: string, ctx: LeCtx): void {
   const op: Open = { id: `le${++st.seq}`, ev, ctx, m: mk(s) };
   st.open.push(op);
   if (st.open.length > 12) st.open.splice(0, st.open.length - 12);
-  queueCutscene(s, 'lifeEvent', { title: d.name, openId: op.id });
+  queueCutscene(s, 'lifeEvent', { title: d.name, openId: op.id, ...(d.ctx23 ? { ctx23: d.ctx23 } : {}) });
 }
 
 function eligible(s: GameState, e: Env, d: Def, now: number): number {

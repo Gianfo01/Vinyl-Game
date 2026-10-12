@@ -12,27 +12,36 @@ import { ic } from './vis';
 import { tutorialIntro14 } from './tutorial14';
 import { careers } from '../sim/sys/careers12';
 
-interface Step {
+export interface Step {
   icon: string;
   title: L;
   text: L;
   area?: Area;
   done?: (s: GameState) => boolean;
+  /** r23: só para esta carreira */
+  only?: 'label';
 }
 
+// r23 (C): o jogo abre no Cockpit — o passo 1 ensina o Cockpit (caixa, próximo passo, contratar); a sede vem depois.
 const STEPS: Step[] = [
-  { icon: 'house', title: l('Bem-vindo à sua sede', 'Welcome to your HQ'), text: l('Esta é a sua empresa vista de cima. Cada pessoa no piso faz algo real: gravar, compor, descansar. Clique numa banda para abrir a ficha.', 'This is your company from above. Everyone on the floor is doing something real: recording, writing, resting. Click a band to open its sheet.'), area: 'hq' },
-  { icon: 'calendar', title: l('A Mesa do mês', 'The monthly desk'), text: l('Aqui chegam o briefing, as decisões e as ofertas. Ignorar uma decisão aplica a opção padrão.', 'The briefing, decisions and offers land here. Ignoring a decision applies the default option.'), area: 'desk' },
+  { icon: 'calendar', title: l('Bem-vindo ao seu Cockpit', 'Welcome to your Cockpit'), text: l('Comece por aqui: no topo está o caixa (quanto dura o dinheiro); "Hoje" diz o próximo passo. O primeiro de todos é contratar um artista.', 'Start here: the cash is at the top (how long the money lasts); "Today" tells you the next step. The very first one is signing an artist.'), area: 'cockpit' },
+  { icon: 'fans', title: l('Contrate um artista', 'Sign an artist'), text: l('Olheiros, concursos e demos trazem nomes. Informação é um intervalo, nunca a verdade inteira. Faça uma oferta a quem cabe no seu caixa.', 'Scouts, contests and demos bring names. Information is a range, never the full truth. Make an offer to someone your cash can carry.'), area: 'market' },
   { icon: 'guitar', title: l('Seus artistas', 'Your artists'), text: l('Cada pessoa tem 100% de capacidade por mês. Monte a agenda ou deixe delegado. Veja personalidade, família e fãs.', 'Each person has 100% capacity per month. Build the agenda or leave it delegated. See personality, family and fans.'), area: 'artists' },
-  { icon: 'clock', title: l('Central de decisões', 'Decision hub'), text: l('Reserve atividades até 12 meses à frente (sem custo até começar), acompanhe takes de estúdio, crises e histórias.', 'Book activities up to 12 months ahead (no cost until they start), follow studio takes, crises and stories.'), area: 'plan' },
   { icon: 'mic', title: l('Estúdio e lançamentos', 'Studio and releases'), text: l('Escolha um produtor com assinatura sonora, grave take a take e lance com um rollout: teaser, singles, clipe, álbum.', 'Pick a producer with a sonic signature, record take by take and release with a rollout: teaser, singles, video, album.'), area: 'creation' },
-  { icon: 'fans', title: l('Descobrir talentos', 'Discover talent'), text: l('Olheiros, concursos e demos trazem nomes. Informação é um intervalo, nunca a verdade inteira.', 'Scouts, contests and demos bring names. Information is a range, never the full truth.'), area: 'market' },
+  { icon: 'clock', title: l('Central de decisões', 'Decision hub'), text: l('Reserve atividades até 12 meses à frente (sem custo até começar), acompanhe takes de estúdio, crises e histórias. Ignorar uma decisão aplica a opção padrão.', 'Book activities up to 12 months ahead (no cost until they start), follow studio takes, crises and stories. Ignoring a decision applies the default option.'), area: 'plan' },
+  { icon: 'house', title: l('Visite sua sede', 'Visit your HQ'), text: l('Esta é a sua empresa vista de cima. Cada pessoa no piso faz algo real: gravar, compor, descansar. Clique numa banda para abrir a ficha.', 'This is your company from above. Everyone on the floor is doing something real: recording, writing, resting. Click a band to open its sheet.'), area: 'hq', only: 'label' },
   { icon: 'globe', title: l('O mundo muda', 'The world changes'), text: l('Guerras, censura, novas tecnologias e movimentos de cena mudam o que funciona. Veja o mapa no Mundo.', 'Wars, censorship, new technology and scene movements change what works. Check the map in World.'), area: 'world' },
   { icon: 'chart-up', title: l('Avance o tempo', 'Advance time'), text: l('Use ▶ Semana para ver dias de turnê e estúdio, ou ▶ Mês para seguir mais rápido (Ctrl+Enter).', 'Use ▶ Week to see tour and studio days, or ▶ Month to move faster (Ctrl+Enter).') },
 ];
+/** r23 (C): passos que valem para as carreiras ativas (a sede só para quem tem selo). */
+export function tutSteps23(active: string[]): Step[] {
+  const label = active.includes('label') || !active.length;
+  return STEPS.filter((x) => !x.only || (x.only === 'label' && label));
+}
 
 export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | null {
   const tu = s.tutorial;
+  const STEPS = tutSteps23(careers(s).active);
   if (tu.done || tu.step >= STEPS.length || !tutAllowed19(store.prefs, 'card')) return null; // r19: "Sem tutoriais"
   const st0 = STEPS[tu.step];
   const st: Step = tu.step === 0 ? { ...st0, ...tutorialIntro14(careers(s).active), area: tutorialIntro14(careers(s).active).area as Area } : st0;

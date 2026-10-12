@@ -213,6 +213,8 @@ export interface Act {
   formed: number;
   debutYear: number;
   status: ActStatus;
+  /** r23 (D): nota de origem quando o gênero é de fora da cidade (ex.: 'diáspora mexicana' em Odessa) */
+  origin23?: L;
   /** Alcance 0..100 */
   fame: number;
   /** Momento 0..100 */

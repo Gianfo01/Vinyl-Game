@@ -122,6 +122,8 @@ import './char17';
 import './pop17';
 // Rodada 17 (onda 2, J): cenas interativas (cartao, momentos, premios), Album de cenas e popups do mapa.
 import './scene17';
+// Rodada 23 (A): cenas que não interromperam (caixa de entrada + Rever cena no Álbum).
+import './quiet23';
 // Rodada 18 (art18): trajetória artística (aba no artista) e qualidade em dimensões (disco e projeto).
 import './art18';
 // Rodada 18 (dm18, onda 1): Diário do Mestre (curva de tensão, fios, rixas, quem agiu contra quem) e aba Rixas no ato.

@@ -9,7 +9,7 @@ import type { Act, GameState, Person } from '../../sim/types';
 import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
 import { preDebut, visibleAct } from '../../sim/future';
-import { actLink, cityName, genreName, labelLink, logo, pill, rerender, toast } from '../common';
+import { actLink, cityName, actGenre23, genreName, labelLink, logo, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
 import { openAct, openOffer, openPerson } from '../ficha';
 import { registerArea } from '../registry';
@@ -69,7 +69,7 @@ function actRows(s: GameState): HTMLElement {
         return h('tr', null,
           h('td', null, logo(a, 28)),
           h('td', null, actLink(s, a.id), h('div', { class: 'muted small' }, `${a.members.length > 1 ? t(l('Banda', 'Band')) + ` (${a.members.length})` : t(l('Solo', 'Solo'))} · ${preDebut(s, a) ? t(l('promessa', 'up-and-coming')) : `${t(l('desde', 'since'))} ${a.debutYear}`}`), a.status === 'retired' || a.status === 'split' ? pill(t(l('encerrado', 'ended')), 'bad') : a.status === 'hiatus' ? pill(t(l('hiato', 'hiatus')), 'warn') : null),
-          h('td', null, genreName(a.genre)),
+          h('td', null, actGenre23(s, a)),
           h('td', null, cityName(a.city)),
           h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? labelLink(s, a.owner) : h('span', { class: 'muted' }, t(l('independente', 'independent')))),
           h('td', null, `★${fameText(s, a.id)}`),
@@ -176,7 +176,7 @@ function goneRows(s: GameState): HTMLElement {
         return h('tr', null,
           h('td', null, logo(a, 28)),
           h('td', null, actLink(s, a.id), a.legend ? pill(t(l('lenda', 'legend')), 'gold') : null),
-          h('td', null, genreName(a.genre)),
+          h('td', null, actGenre23(s, a)),
           h('td', null, `${a.debutYear}–${a.status === 'hiatus' ? '…' : Math.min(a.careerEnd, s.year)}`), // r19 smoke: o fim planejado não vaza
           h('td', null, statusPill(a)),
           h('td', null, `${a.releases.length} · ${a.hits} top 10 · ${a.number1s} #1`),

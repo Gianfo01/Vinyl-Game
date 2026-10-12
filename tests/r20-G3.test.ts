@@ -100,7 +100,7 @@ describe('r20 G3', () => {
 
   it('B9: elegibilidade central (status × dono) em card e proposta', () => {
     const s = game();
-    const a = someAct(s, (x) => !x.owner);
+    const a = someAct(s, (x) => !x.owner && x.members.some((id) => s.persons[id]?.alive)); // r23: mundo mudou (pesos de gênero × cidade); precisa de integrante vivo
     for (const st of ['emerging', 'active', 'hiatus', 'retired', 'split'] as const) {
       a.status = st;
       const e = scoutEligible20(s, a);

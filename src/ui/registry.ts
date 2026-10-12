@@ -11,6 +11,7 @@ import type { L } from '../data/world';
 import { t } from '../i18n/strings';
 import type { Cutscene } from '../sim/ext4';
 import type { GameState } from '../sim/types';
+import { INTERRUPT23, INT_PREF23, interruptOf23, shouldInterrupt23, type Interrupt23 } from '../sim/interrupt23';
 import { h } from './dom';
 
 /** Painéis que aceitam abas extras (já usam abas). */
@@ -79,9 +80,13 @@ export function registerArea(a: ExtraArea): void {
   else EXTRA_AREAS.push(a);
 }
 
-export function registerCutscene(kind: string, render: (s: GameState, cs: Cutscene, close: () => void) => HTMLElement): void {
+export function registerCutscene(kind: string, render: (s: GameState, cs: Cutscene, close: () => void) => HTMLElement, opts: { interrupt?: Interrupt23 } = {}): void {
   CUTSCENES[kind] = render;
+  if (opts.interrupt) INTERRUPT23[kind] = opts.interrupt; // r23: classe de interrupção declarada no registro
 }
+
+/** r23 (A): chamados com as cenas que NÃO interromperam (foram para a caixa de entrada / Álbum). */
+export const ON_QUIET23: ((s: GameState, list: Cutscene[]) => void)[] = [];
 
 /** Abas extras no formato de `tabs()` de vis.ts. */
 export function extraTabs(host: TabHost, s: GameState): { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement; order: number }[] {
@@ -176,10 +181,20 @@ export function openScene(title: L | string, render: (close: () => void) => HTML
 
 /** Mostra a próxima cena pendente da simulação (chamado pela interface depois de avançar o tempo). */
 export function showPendingCutscene(s: GameState, rerender: () => void, skip: boolean): boolean {
-  const pending = (s.cutscenes ?? []).filter((c) => !c.seen && CUTSCENES[c.kind]);
+  let pending = (s.cutscenes ?? []).filter((c) => !c.seen && CUTSCENES[c.kind]);
   if (!pending.length) return false;
+  // r23 (A): rotina não interrompe — marca como vista "em silêncio" (fica para rever) e avisa pela caixa de entrada
+  if (!skip) {
+    const quiet = pending.filter((c) => !shouldInterrupt23(interruptOf23(c), INT_PREF23.v));
+    if (quiet.length) {
+      for (const c of quiet) { c.seen = true; c.data.quiet23 = true; sceneDone(s, c); }
+      for (const f of ON_QUIET23) f(s, quiet);
+      pending = pending.filter((c) => !quiet.includes(c));
+      if (!pending.length) { rerender(); return false; }
+    }
+  }
   if (skip) {
-    for (const c of pending) { c.seen = true; sceneDone(s, c); }
+    for (const c of pending) { c.seen = true; c.data.quiet23 = true; sceneDone(s, c); } // r23: fica para rever
     return false;
   }
   const cs = pending[0];

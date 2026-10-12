@@ -6,7 +6,8 @@ import { CAREER_NAV } from './careernav13';
 import './polish14.css';
 
 const INTRO14: Record<string, [L, L]> = {
-  label: [l('Bem-vindo à sua sede', 'Welcome to your HQ'), l('Esta é a sua empresa vista de cima. Cada pessoa no piso faz algo real: gravar, compor, descansar. Clique numa banda para abrir a ficha.', 'This is your company from above. Everyone on the floor is doing something real: recording, writing, resting. Click a band to open its sheet.')],
+  // r23 (C): o jogo abre no Cockpit — o selo começa por ele (caixa, próximo passo, contratar); a sede vem mais tarde
+  label: [l('Bem-vindo ao seu Cockpit', 'Welcome to your Cockpit'), l('Comece por aqui: no topo está o caixa (quanto dura o dinheiro); "Hoje" diz o próximo passo. O primeiro de todos é contratar um artista.', 'Start here: the cash is at the top (how long the money lasts); "Today" tells you the next step. The very first one is signing an artist.')],
   manager: [l('Bem-vindo ao seu escritório de gestão', 'Welcome to your management office'), l('Aqui ficam seus clientes, as comissões e os contratos que você negocia por eles. Prospecte artistas e cuide da carreira de cada um.', 'Your clients, commissions and the deals you negotiate for them live here. Prospect acts and look after each career.')],
   booking: [l('Bem-vindo à sua agência de shows', 'Welcome to your booking agency'), l('Monte turnês, feche datas com casas e festivais e ganhe sua parte de cada noite.', 'Build tours, book dates with venues and festivals and take your cut of every night.')],
   festival: [l('Bem-vindo ao seu festival', 'Welcome to your festival'), l('Escolha o line-up, o local e o preço; o público, o clima e a cena decidem se a edição dá lucro.', 'Pick the line-up, site and price; crowds, weather and the scene decide whether the edition pays.')],
@@ -22,5 +23,5 @@ const INTRO14: Record<string, [L, L]> = {
 export function tutorialIntro14(active: string[]): { title: L; text: L; area: string } {
   const id = active.includes('label') || !active.length ? 'label' : active.find((x) => INTRO14[x]) ?? 'label';
   const [title, text] = INTRO14[id];
-  return { title, text, area: id === 'label' ? 'hq' : CAREER_NAV[id]?.home.area ?? 'cockpit' };
+  return { title, text, area: id === 'label' ? 'cockpit' : CAREER_NAV[id]?.home.area ?? 'cockpit' };
 }

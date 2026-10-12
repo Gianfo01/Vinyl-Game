@@ -8,7 +8,7 @@ import { fameText } from '../../sim/sys/fame15';
 import { DEGREES, STAGES, canScout, dropSignal, estimate, requestScout, scoutActionsPerMonth, scoutAct, scoutCost, scoutRequestCost, setStage, sourceName, syncPipeline } from '../../sim/scouting';
 import { acceptCounter, defaultOffer, withdrawOffer } from '../../sim/contracts';
 import type { GameState, Knowledge } from '../../sim/types';
-import { $, actLink, cityName, genreName, labelLink, logo, pill, rerender, section, toast } from '../common';
+import { $, actLink, cityName, actGenre23, genreName, labelLink, logo, pill, rerender, section, toast } from '../common';
 import { bar, h, rangeBar, select } from '../dom';
 import { openOffer } from '../ficha';
 import { openDossier } from '../dossierView';
@@ -55,7 +55,7 @@ function signalCard(s: GameState, k: Knowledge): HTMLElement {
   const cmp = scout11(s).compare.includes(a.id);
   const lead = leadOf(s, a.id);
   return h('article', { class: `signal${watched ? ' watched' : ''}`, 'data-q': qKey(s, a.id) },
-    h('header', null, logo(a, 36), h('div', { class: 'grow' }, actLink(s, a.id), h('div', { class: 'muted small' }, `${genreName(a.genre)} · ${cityName(a.city)} · ${a.members.length > 1 ? t(S.band) : t(S.solo)}`)),
+    h('header', null, logo(a, 36), h('div', { class: 'grow' }, actLink(s, a.id), h('div', { class: 'muted small' }, `${actGenre23(s, a)} · ${cityName(a.city)} · ${a.members.length > 1 ? t(S.band) : t(S.solo)}`)),
       h('button', { class: `btn small ghost star${watched ? ' on' : ''}`, title: t(watched ? l('Tirar da observação', 'Unwatch') : l('Observar (alertas mensais)', 'Watch (monthly alerts)')), 'aria-pressed': watched ? 'true' : 'false', onclick: () => { toggleWatch(s, a.id); rerender(); } }, watched ? '★' : '☆')),
     h('div', { class: 'row wrap small' }, pill(`${k.degree}/5 ${t(DEGREES[k.degree - 1])}`), ' ', fog(pot), ' ', a.owner ? pill(t(l('contratado', 'signed')), 'bad') : null,
       lead ? pill(t(l('{n} investigando', '{n} on it'), { n: lead.name }), 'good') : null),
@@ -81,7 +81,7 @@ function compareSection(s: GameState): HTMLElement | null {
   if (!ids.length) return null;
   const rng = (id: string, f: 'fame' | 'talent' | 'potential') => { const e = estimate(s, id, f); return e ? `${e.lo}–${e.hi}` : '?'; };
   const rows: [L, (id: string) => Node | string][] = [
-    [l('Gênero · cidade', 'Genre · city'), (id) => `${genreName(s.acts[id].genre)} · ${cityName(s.acts[id].city)}`],
+    [l('Gênero · cidade', 'Genre · city'), (id) => `${actGenre23(s, s.acts[id])} · ${cityName(s.acts[id].city)}`],
     [l('Formato', 'Format'), (id) => (s.acts[id].members.length > 1 ? t(S.band) : t(S.solo))],
     [l('Grau', 'Degree'), (id) => `${s.knowledge[id].degree}/5`],
     [S.fame, (id) => rng(id, 'fame')],
@@ -213,7 +213,7 @@ function pipeCard(s: GameState, k: Knowledge): HTMLElement {
   const offer = s.offers.find((o) => o.actId === a.id && (o.status === 'pending' || o.status === 'counter'));
   return h('div', { class: `kcard ${a.owner ? 'signed' : ''}`, 'data-q': qKey(s, a.id) },
     h('div', { class: 'row' }, logo(a, 24), actLink(s, a.id), h('small', { class: 'muted' }, ` ${k.degree}/5`), isWatched(s, a.id) ? h('span', { class: 'star on' }, ' ★') : null),
-    h('small', { class: 'muted' }, `${genreName(a.genre)} · ${cityName(a.city)} · ★${fameText(s, a.id)}`),
+    h('small', { class: 'muted' }, `${actGenre23(s, a)} · ${cityName(a.city)} · ★${fameText(s, a.id)}`),
     h('small', null, `${t(S.talent)} ${tal ? `${tal.lo}–${tal.hi}` : '?'} · ${t(S.potential)} ${pot ? `${pot.lo}–${pot.hi}` : '?'}`),
     abilityCell18(s, a),
     a.owner ? pill(t(l('assinou com rival', 'signed to a rival')), 'bad') : null,

@@ -153,7 +153,8 @@ export const EVENTS11: Def[] = [
       C('decline', 'Declinar', 'Decline', { ins: -1 }, 'A organizadora não esquece.', 'The organiser does not forget.'),
     ] },
   { id: 'r11_vacation_crash', name: l('Férias interrompidas', 'Vacation interrupted'), cool: 24, w: (e) => 0.5 + (e.ls === 'jetsetter' ? 0.8 : 0) + (e.wealth > 20000 ? 0.2 : 0),
-    text: T('Primeiro dia numa ilha paradisíaca. O telefone toca: um artista do selo está em crise e o contrato da distribuidora vence amanhã.', 'First day on a paradise island. The phone rings: a label artist is in crisis and the distribution contract expires tomorrow.'),
+    text: T('A família marcou uns dias de folga numa ilha (não foi uma ordem sua; é a vida acontecendo). Primeiro dia: o telefone toca — um artista do selo está em crise e o contrato da distribuidora vence amanhã.', 'The family booked a few days off on an island (not something you ordered; life happens). First day: the phone rings — a label artist is in crisis and the distribution contract expires tomorrow.'),
+    ctx23: l('Contexto, não consequência: a viagem não veio de uma decisão sua no jogo (pesa mais para jet-setters e quem tem patrimônio alto). Só a resposta ao telefone é sua.', 'Context, not consequence: the trip did not come from a decision of yours in the game (more likely for jet-setters and the wealthy). Only the answer to the phone is yours.'),
     def: 'phone', ch: [
       C('fly', 'Voltar no primeiro voo', 'Fly back on the first plane', { w: -1500, st: 6, love: -8, com: 2, arts: 2 }, 'Crise resolvida; a família termina as férias sem você.', 'Crisis solved; the family finishes the holiday without you.'),
       C('phone', 'Resolver por telefone da praia', 'Handle it by phone from the beach', { st: 3, love: -3, com: 1 }, 'Metade das férias no telefone, metade no mar.', 'Half the holiday on the phone, half in the sea.'),

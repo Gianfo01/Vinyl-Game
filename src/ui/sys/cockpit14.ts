@@ -3,6 +3,7 @@
 // atalhos (1, E), links do conselheiro e da sede continuam funcionando. A sede completa (ampliações,
 // capacidade) segue na área própria (tecla 2).
 
+import { cockpitBadge23 } from '../../sim/counters23';
 import { HQ_LEVELS } from '../../data/rules';
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -65,4 +66,4 @@ export function cockpit(s: GameState): HTMLElement {
     ], rerender));
 }
 
-registerArea({ id: 'cockpit', label: l('Cockpit', 'Cockpit'), icon: 'calendar', key: '1', render: cockpit, badge: (s) => (s.decisions.length + unread(s)) || undefined });
+registerArea({ id: 'cockpit', label: l('Cockpit', 'Cockpit'), icon: 'calendar', key: '1', render: cockpit, badge: (s) => cockpitBadge23(s) || undefined }); // r23 (B): só o que pede ação

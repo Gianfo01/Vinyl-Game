@@ -10,7 +10,7 @@ import { defaultOffer } from '../../sim/contracts';
 import type { GameState } from '../../sim/types';
 import type { Scout } from '../../sim/xtypes';
 import { rngOf } from '../../sim/util';
-import { $, actLink, cityName, genreName, labelLink, pill, rerender, section, toast } from '../common';
+import { $, actLink, cityName, actGenre23, labelLink, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { chips, ic, stat, tile } from '../vis';
 
@@ -78,7 +78,7 @@ export function demosSection(s: GameState): HTMLElement {
   return section(t(l('Demos recebidas', 'Incoming demos')), s.demos.length ? h('div', { class: 'cards' }, s.demos.map((d) => {
     const a = s.acts[d.actId];
     return tile('cassette', a?.name ?? '?', [
-      h('small', null, `${genreName(a?.genre ?? '')} · ${cityName(a?.city ?? '')}`),
+      h('small', null, `${actGenre23(s, a)} · ${cityName(a?.city ?? '')}`),
       d.heard ? h('span', null, t(l('Impressão: ', 'Impression: ')), h('b', null, `${d.hint}`), h('small', { class: 'muted' }, t(l(' (uma demo engana)', ' (a demo can mislead)')))) : h('button', { class: 'btn small', onclick: () => { say(listenDemo(s, r, d.id), l('Ouvida. O ato entrou no radar.', 'Listened. The act is on your radar.')); rerender(); } }, ic('cassette'), ' ', t(l('Ouvir', 'Listen'))),
       h('small', { class: 'muted' }, t(l('expira na semana {w}', 'expires week {w}'), { w: d.expires })),
     ]);
@@ -107,7 +107,7 @@ export function auctionsSection(s: GameState): HTMLElement {
       );
     }),
     hot.length ? h('div', { class: 'cards' }, hot.map((a) => tile('fire', a.name, [
-      h('small', null, `★${Math.round(a.fame)} · ${genreName(a.genre)}`),
+      h('small', null, `★${Math.round(a.fame)} · ${actGenre23(s, a)}`),
       h('button', { class: 'btn small', onclick: () => { const o = defaultOffer(s, a); const res = startAuction(s, r, a.id, o.advance, o.royalty); if ('pt' in res) toast(t(res), 'bad'); else toast(t(l('Leilão aberto: rivais podem entrar.', 'Bidding opened: rivals may join.')), 'good'); rerender(); } }, `${t(l('Abrir disputa', 'Open bidding'))} ${$(defaultOffer(s, a).advance)}`),
     ]))) : h('p', { class: 'muted small' }, t(l('Atos promissores no radar (grau 2+) podem ir a leilão.', 'Promising acts on your radar (degree 2+) can go to auction.'))),
   );

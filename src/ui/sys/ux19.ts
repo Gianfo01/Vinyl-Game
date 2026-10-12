@@ -378,6 +378,7 @@ AFTER_ADVANCE.push((s) => {
   if (fresh.length) toast(t(fmtL(l('Nova área no menu: {a}', 'New area in the menu: {a}'), { a: fresh.map((a) => t(EXTRA_AREAS.find((x) => x.id === a)?.label ?? help18(a)?.title ?? l(a, a))).join(', ') })), 'info');
   const T = U.turns.find((x) => !x.seen && x.y <= s.year);
   if (T && !tutAllowed19(store.prefs, 'turn')) { T.seen = 1; toast(`${T.y} — ${t(T.name)}`, 'info'); } // sem tutoriais: virada em uma linha
+  else if (T && store.prefs.interrupt23 === 'decisions') { T.seen = 1; toast(`${T.y} — ${t(T.name)}`, 'info'); } // r23: marco sem interromper
   else if (T && store.prefs.cutscenes !== false) setTimeout(() => whenFree(() => { if (!T.seen) openTurn19(s, T); }), 700); // depois do resumo e das cenas do mês
   else if (T) T.seen = 1;
 });
