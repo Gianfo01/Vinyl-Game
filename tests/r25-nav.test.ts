@@ -1,5 +1,6 @@
-// Rodada 25 — Pixel Studio: 6 seções (Sede, Pessoas, Projetos, Ao vivo, Mundo, Gestão), no máximo 5 páginas
-// visíveis por seção e o resto em "Mais" agrupado por tema; nada some em nenhuma combinação de carreiras.
+// Rodada 25 — Pixel Studio: 6 seções (Sede, Pessoas, Projetos, Ao vivo, Mundo, Gestão), até 5 páginas
+// "principais" por seção e o resto agrupado por tema; nada some em nenhuma combinação de carreiras.
+// r27: o menu virou árvore (tudo visível); `top`/`more25` seguem como ordem de prioridade — ver r27-nav.test.ts.
 import { describe, expect, it } from 'vitest';
 import { ALIAS17, CAREER_PAGE17, NAV17, ORDER17, groupOf17, resolve17 } from '../src/ui/nav17';
 import { CAREER_SECTION25, KNOWN25, SECTIONS25, SEDE25, TOP25, home25, more25, navGroups25, sectionIdOf25 } from '../src/ui/ps/nav25';
@@ -24,7 +25,7 @@ describe('menu r25 (Pixel Studio)', () => {
     expect(SECTIONS25.map((s) => s.label.pt)).toEqual(['Sede', 'Pessoas', 'Projetos', 'Ao vivo', 'Mundo', 'Gestão']);
     expect(menu(['label']).map((g) => g.id)).toEqual(['sede', 'people', 'projects', 'live', 'world', 'admin']);
   });
-  it('toda combinação de carreiras: nada some, nada duplica, ≤5 visíveis, Mais = o resto, por tema', () => {
+  it('toda combinação de carreiras: nada some, nada duplica, ≤5 principais, o resto por tema (r27: tudo na árvore)', () => {
     for (const act of combos()) {
       const gs = menu(act);
       expect(gs.length).toBe(6);
@@ -72,7 +73,7 @@ describe('menu r25 (Pixel Studio)', () => {
     expect(groupOf17(gs, 'zz1').id).toBe('projects');
     expect(groupOf17(gs, 'zz2').id).toBe('admin');
   });
-  it('carreira sem selo: telas de selo continuam alcançáveis (em Mais da própria seção)', () => {
+  it('carreira sem selo: telas de selo continuam alcançáveis (no fim da própria seção)', () => {
     const gs = menu(['manager']);
     expect(groupOf17(gs, 'market').id).toBe('people');
     expect(gs.find((g) => g.id === 'people')!.top[0]).toBe('cp17-manager');

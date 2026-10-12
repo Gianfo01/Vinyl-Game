@@ -11,6 +11,7 @@ import { toast } from './common';
 import { ic } from './vis';
 import { tutorialIntro14 } from './tutorial14';
 import { careers } from '../sim/sys/careers12';
+import { registerOverlay27 } from './ps/queue27';
 
 export interface Step {
   icon: string;
@@ -65,6 +66,9 @@ export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | 
     ),
   );
 }
+
+// r27: fila de janelas — o passo do tutorial está pendente enquanto o tutorial não acabou (as metas de abertura vêm antes)
+registerOverlay27('tutorial', (s) => !s.tutorial?.done && (s.tutorial?.step ?? 0) < tutSteps23(careers(s).active).length && tutAllowed19(store.prefs, 'card'));
 
 export function restartTutorial(s: GameState): void {
   s.tutorial = { step: 0, done: false, seen: [] };
