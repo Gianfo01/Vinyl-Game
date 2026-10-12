@@ -24,7 +24,7 @@ function orgPanel(s: GameState): HTMLElement {
   let from: Dept = DEPTS.slice().sort((a, b) => o.alloc[b] - dem[b] - (o.alloc[a] - dem[a]))[0];
   let to: Dept = DEPTS.slice().sort((a, b) => dem[b] - o.alloc[b] - (dem[a] - o.alloc[a]))[0];
   const pending = s.decisions.some((d) => d.eventId === `org12_${e.id}`);
-  return h('div', { class: 'panel org12' },
+  return h('div', { class: 'cols org12' }, // r27 INT: grade de colunas (.cols), não outro .panel dentro da página
     section(`${t(l('Estrutura da empresa', 'Company structure'))} — ${t(e.name)}`,
       h('p', { class: 'lead' }, t(SHIFT_WHY[e.id])),
       meter('building', l('Encaixe com a era', 'Fit with the era'), fit * 100),

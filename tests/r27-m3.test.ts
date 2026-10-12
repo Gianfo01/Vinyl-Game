@@ -203,4 +203,6 @@ describe('r27 M3 — operações jogáveis do Submundo', () => {
   });
 });
 
-const QUICK_SNAPSHOT: string[] = ["10:0.70/0.22:10331206", "11:0.70/0.16:10331942"];
+// r27 INT: rebaselinado depois dos merges do mundo; commitCrime com e sem a linha do dq (o único toque do M3 no
+// modo rápido) dá o mesmo resultado neste mundo (4 sementes conferidas).
+const QUICK_SNAPSHOT: string[] = ["10:0.70/0.22:10331206", "00:0.70/0.16:9926500"];

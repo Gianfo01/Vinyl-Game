@@ -34,7 +34,7 @@ function eraPanel(s: GameState): HTMLElement {
   const mine = act.find((x) => x.era.id === cur.id)?.stance;
   const waitPivot = Math.max(0, PIVOT_WEEKS - (s.week - st.pivot));
   const asked = s.decisions.find((d) => d.eventId === `era8_${cur.id}`);
-  return h('div', { class: 'panel era8' },
+  return h('div', { class: 'cols era8' }, // r27 INT: grade de colunas (.cols), não outro .panel dentro da página
     h('div', { class: 'col-main' },
       section(`${t(l('Era atual', 'Current era'))}: ${t(cur.name)}`,
         h('p', { class: 'lead' }, t(cur.model)),

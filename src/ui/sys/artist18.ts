@@ -19,7 +19,8 @@ import { rngOf } from '../../sim/util';
 import { $, actLink, labelLink, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
-import { tabs } from '../vis';
+import { setTab, tabs } from '../vis';
+import { emptyState27 } from '../ps/ui27';
 import { why18 } from '../explain18';
 import { confirm18, emptyState18 } from '../quick18';
 
@@ -229,7 +230,9 @@ function venCard(s: GameState, id: string): HTMLElement {
 function venTab(s: GameState): HTMLElement {
   const st = sh18(s);
   return h('div', null,
-    st.v.length ? h('div', null, st.v.map((v) => venCard(s, v.id))) : emptyState18(l('Nenhuma sociedade', 'No partnerships'), l('Funde um selo, festival ou estúdio com um NPC (artista famoso, empresário) ou um imprint com um selo. Aba "Nova sociedade".', 'Found a label, festival or studio with an NPC (famous artist, manager) or an imprint with a label. "New partnership" tab.')),
+    st.v.length ? h('div', null, st.v.map((v) => venCard(s, v.id))) : emptyState27({ icon: 'handshake', title: l('Nenhuma sociedade ainda', 'No partnerships yet'),
+      why: l('Uma sociedade é uma empresa com sócio: um selo, festival ou estúdio com um NPC (artista famoso, empresário) ou um imprint com outro selo. Cada sócio tem humor, estilo e voto nas decisões.', 'A partnership is a company with a partner: a label, festival or studio with an NPC (famous artist, manager) or an imprint with another label. Each partner has a mood, a style and a vote.'),
+      action: { label: l('Propor uma sociedade', 'Propose a partnership'), run: () => { setTab('shared18', 'new'); rerender(); } } }),
     st.log.length ? section(t(l('Histórico', 'History')), h('ul', { class: 'small' }, st.log.slice(0, 8).map(([y, m, x]) => h('li', null, `${m + 1}/${y} — `, t(x))))) : null);
 }
 function newTab(s: GameState): HTMLElement {

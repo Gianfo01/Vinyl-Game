@@ -69,15 +69,16 @@ export function festivalsTab(s: GameState): HTMLElement {
   );
 }
 
-function invitesBox(s: GameState): HTMLElement {
+function invitesBox(s: GameState, bare = false): HTMLElement {
   const st = fest8(s);
-  return section(t(l('Convites de festivais', 'Festival invitations')),
-    st.invites.length ? h('ul', { class: 'small' }, st.invites.map((inv) => h('li', null,
+  // r27 INT: na mesa o convite já está dentro do cartão "Convites" — sem segundo cartão (bare)
+  const title = t(l('Convites de festivais', 'Festival invitations'));
+  const body = st.invites.length ? h('ul', { class: 'small' }, st.invites.map((inv) => h('li', null,
       h('button', { class: 'link', onclick: () => openFestivalPage(inv.fi) }, FESTIVALS[inv.fi]?.name), ': ', actLink(s, inv.actId), ` — ${t(TIER_NAME[inv.tier])} · ${$(inv.fee)} `,
       h('button', { class: 'btn small primary', onclick: () => { const e = acceptInvite(s, inv.id); toast(e ? t(e) : t(l('Confirmado no line-up.', 'Confirmed on the line-up.')), e ? 'bad' : 'good'); rerender(); } }, t(l('Aceitar', 'Accept'))),
       h('button', { class: 'btn small ghost', onclick: () => { declineInvite(s, inv.id); rerender(); } }, t(l('Recusar', 'Decline'))),
-    ))) : h('p', { class: 'muted small' }, t(l('Nenhum convite agora. Festivais convidam de 1 a 4 meses antes da data, conforme fama, rede e o seu booking.', 'No invitations now. Festivals invite 1–4 months ahead, based on fame, network and your booking staff.'))),
-  );
+    ))) : h('p', { class: 'muted small' }, t(l('Nenhum convite agora. Festivais convidam de 1 a 4 meses antes da data, conforme fama, rede e o seu booking.', 'No invitations now. Festivals invite 1–4 months ahead, based on fame, network and your booking staff.')));
+  return bare ? h('div', { class: 'inv8' }, h('h4', null, title), body) : section(title, body);
 }
 
 export function openFestivalPage(fi: number): void {
@@ -322,7 +323,7 @@ registerSection('desk', { id: 'invites8', order: 20, render: (s) => {
   const perf = cer8(s).perform.find((p) => p.year === s.year && p.accepted === undefined);
   if (!st.invites.length && !perf) return null;
   return section(t(l('Convites', 'Invitations')),
-    st.invites.length ? invitesBox(s) : null,
+    st.invites.length ? invitesBox(s, true) : null,
     perf ? h('p', { class: 'small' }, actLink(s, perf.actId), ' ', t(l('foi convidado para tocar nos Gramófonos de Ouro.', 'was invited to play at the Golden Gramophones.')), ' ', h('button', { class: 'btn small', onclick: () => openCeremonyPage('gramo') }, t(l('Responder', 'Respond')))) : null,
   );
 } });

@@ -9,9 +9,11 @@ import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { careers } from '../../sim/sys/careers12';
 import { festActive, festMonth } from '../../sim/sys/fests8';
-import { VKINDS, isConglomerate, kindsAvailable, valuation, ventures, type VKind, type Venture } from '../../sim/sys/ventures9';
+import { VKINDS, foundCost, isConglomerate, kindsAvailable, valuation, ventures, type VKind, type Venture } from '../../sim/sys/ventures9';
 import { ownerOf } from '../../sim/sys/people/owner';
 import { $, cityName, monthName, pill, rerender, section } from '../common';
+import { emptyState27 } from '../ps/ui27';
+import { money } from '../../sim/util';
 import { h, select } from '../dom';
 import { registerArea } from '../registry';
 import { store } from '../store';
@@ -48,9 +50,20 @@ function kpis(s: GameState, kind: VKind | null): HTMLElement {
     stat('building', npc, l('Concorrentes de rivais', 'Rival competitors')));
 }
 
+/** r27 INT: página de carreira sem negócio próprio — o que é, por que está vazia e o próximo passo (fundar). */
+function intro27(s: GameState, kind: VKind, root: () => HTMLElement | null): HTMLElement | null {
+  if (owns(s, kind) || s.year < VKINDS[kind].from) return null;
+  const k = VKINDS[kind];
+  return emptyState27({ icon: k.icon, title: fmtL19(l('Você ainda não tem: {k}', 'You don\'t own one yet: {k}'), { k: t(k.name) }),
+    why: fmtL19(l('Nenhum negócio deste tipo é seu ainda. Fundar custa {c} e {u} por mês; ele ganha página própria com equipe, metas e resultados.', 'None of these businesses is yours yet. Founding costs {c} plus {u} a month; it gets its own page with staff, goals and results.'), { c: $(foundCost(s, kind)), u: $(money(s, k.upkeep)) }),
+    action: { label: l('Fundar agora', 'Found one now'), run: () => { const f = root()?.querySelector('input[type=text]') as HTMLElement | null; (f?.closest('section') ?? f)?.scrollIntoView({ block: 'center', behavior: 'smooth' }); f?.focus({ preventScroll: true }); } },
+    secondary: { label: l('Ver todos os negócios', 'See all businesses'), run: () => { store.area = 'ventures'; rerender(); } } });
+}
 function kindPage(s: GameState, kind: VKind, intro: L): HTMLElement {
   const from = VKINDS[kind].from;
-  return h('div', { class: `hub page16 page16-${kind}` },
+  let root: HTMLElement | null = null;
+  return root = h('div', { class: `hub page16 page16-${kind}` },
+    intro27(s, kind, () => root),
     h('p', { class: 'muted small' }, t(intro)), kpis(s, kind),
     s.year < from && !owns(s, kind) ? h('p', { class: 'muted' }, t(l('Esse negócio só surge a partir de {y}.', 'This business only appears from {y}.'), { y: from })) : kindTab(s, kind));
 }
@@ -127,6 +140,9 @@ function venturesArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub ventures16' },
     h('p', { class: 'muted small' }, t(l('A carteira de todos os seus negócios (do selo ou pessoais). Cada um é administrado na própria página: clique no nome. Para assumir ou largar uma profissão, use Carreiras.', 'The portfolio of all your businesses (label-owned or personal). Each one is run on its own page: click its name. To take up or drop a profession, use Careers.'))),
     kpis(s, null),
+    !list.length ? emptyState27({ icon: 'bank', title: l('Nenhum negócio ainda', 'No businesses yet'),
+      why: l('Empreendimentos são empresas além do selo: editora, estúdio, agência de shows, mídia, festival, plataforma. Cada uma rende (ou custa) todo mês e ganha página própria.', 'Ventures are companies beyond the label: publisher, studio, booking agency, media, festival, platform. Each one earns (or costs) every month and gets its own page.'),
+      action: { label: l('Escolher o primeiro', 'Pick the first one'), run: () => { const f = document.querySelector('.ventures16 .found27') as HTMLElement | null; f?.scrollIntoView({ block: 'center', behavior: 'smooth' }); (f?.querySelector('select') as HTMLElement | null)?.focus({ preventScroll: true }); } } }) : null,
     section(t(l('Carteira', 'Portfolio')),
       h('p', { class: 'small' }, t(l('Caixa do selo', 'Label cash')), `: ${$(s.player.cash)} · `, t(l('Patrimônio pessoal', 'Personal wealth')), `: ${$(ownerOf(s).wealth)}`),
       list.length ? h('table', { class: 'tbl compact' },
@@ -135,7 +151,7 @@ function venturesArea(s: GameState): HTMLElement {
           h('td', null, String(v.level)), h('td', null, String(Math.round(v.rep))), h('td', { class: m1(v) < 0 ? 'bad' : '' }, $(m1(v))), h('td', { class: y12(v) < 0 ? 'bad' : 'good' }, $(y12(v))), h('td', null, $(valuation(s, v))))))) : h('p', { class: 'muted' }, t(l('Nenhum negócio ainda. Funde o primeiro abaixo; ele ganha página própria no menu.', 'No businesses yet. Found the first one below; it gets its own page in the menu.'))),
       list.length > 1 && best && worst && y12(worst) < 0 ? h('p', { class: 'small' }, t(l('Melhor: {a} ({x} em 12 meses). Pior: {b} ({y}) — expanda a equipe, mude a estratégia na página dele ou venda.', 'Best: {a} ({x} over 12 months). Worst: {b} ({y}) — add staff, change strategy on its page or sell.'), { a: best.name, x: $(y12(best)), b: worst.name, y: $(y12(worst)) })) : null),
     list.length ? h('details', { class: 'card' }, h('summary', null, t(l('Expandir, equipe, transferir ou vender', 'Expand, staff, transfer or sell'))), ...list.map((v) => h('div', { class: 'card' }, ventureHead(s, v)))) : null,
-    kind ? h('div', null,
+    kind ? h('div', { class: 'found27' },
       h('div', { class: 'row wrap' }, h('b', null, t(l('Fundar negócio', 'Found a business'))), ' ', select<VKind>(kind, avail.map((k) => ({ value: k, label: t(VKINDS[k].name) })), (k) => { found16 = k; rerender(); }), ' ', link(kind, `→ ${t(l('abrir a página', 'open its page'))}`)),
       foundForm(s, kind)) : null,
     st.npc.length ? section(t(l('Concorrência', 'Competition')), h('p', { class: 'small' }, avail.map((k) => { const n = st.npc.filter((x) => x.kind === k).length; return n ? `${t(VKINDS[k].name)}: ${n}` : ''; }).filter(Boolean).join(' · '))) : null,

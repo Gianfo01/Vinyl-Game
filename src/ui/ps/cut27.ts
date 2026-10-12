@@ -6,7 +6,7 @@
 // (AFTER_ADVANCE), então bots e testes nunca enfileiram nada. Preferência em Opções: "Cenas: todas / só
 // importantes / desligadas" (store.prefs.cut27).
 
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { queueCutscene, type Cutscene } from '../../sim/ext4';
 import type { GameState } from '../../sim/types';
@@ -14,10 +14,11 @@ import { money } from '../../sim/util';
 import { h } from '../dom';
 import { portraitPx } from '../pixel/avatar';
 import { Px } from '../pixel/px';
-import { AFTER_ADVANCE, registerCutscene } from '../registry';
+import { AFTER_ADVANCE, registerCutscene, showPendingCutscene } from '../registry';
+import { rerender } from '../common';
 import { savePrefs, store } from '../store';
 import { drawFigs27, fitInt27, paintArt27 } from './art27';
-import { CUT27, CUT_H27, CUT_W27, beat27, choose27, cutModel27, paintFx27, scan27, type CutData27, type CutPref27 } from './cut27model';
+import { CUT27, CUT_H27, CUT_W27, beat27, choose27, cut27, cutModel27, onceKey27, paintFx27, scan27, type CutData27, type CutKey27, type CutPref27 } from './cut27model';
 import './art27.css';
 
 const reduced = (): boolean => typeof document !== 'undefined' && (document.documentElement.classList.contains('reduced-motion') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
@@ -56,6 +57,61 @@ const SAME27: Partial<Record<CutData27['key'], (c: Cutscene) => boolean>> = {
   fest: (c) => c.kind === 'cine18',
 };
 AFTER_ADVANCE.push((s) => { try { enqueue27(s); } catch (e) { console.warn('cut27', e); } });
+
+// ---------------------------------------------------------------- ponte das atividades jogáveis (r27 INT)
+// As mecânicas (record27, show27, heist27) chamam `globalThis.playCutscene27?.(id, ctx)` no momento do clímax.
+// Aqui o id vira uma cena CUT27 e entra na MESMA fila (s.cutscenes): respeita "Cenas" (todas/só importantes/
+// desligadas) e "Mostrar cenas", vale a regra "uma vez" do scan27 (o avanço seguinte não repete o momento) e
+// só abre quando nada mais está na tela (a janela da atividade fecha primeiro). Uma janela por vez.
+export const BRIDGE27: Record<string, CutKey27> = { magic_take: 'magic', sold_out: 'sold', disaster_show: 'flop', raid: 'raid', betrayal: 'betray' };
+const str = (x: unknown): string | undefined => (typeof x === 'string' && x ? x : undefined);
+function bridgeText27(s: GameState, id: string, ctx: Record<string, unknown>): string | undefined {
+  const cn = str(ctx.cityId) ? cityById[ctx.cityId as string]?.name : undefined;
+  const city = cn === undefined ? undefined : typeof cn === 'string' ? cn : t(cn);
+  switch (id) {
+    case 'magic_take': return str(ctx.songId) ? s.songs[ctx.songId as string]?.title : undefined;
+    case 'sold_out': return city;
+    case 'disaster_show': return city ? t(l('A noite em {c} desanda.', 'The night in {c} falls apart.'), { c: city }) : undefined;
+    case 'raid': return ctx.ok === false || ctx.ex ? t(l('A operação vazou e a polícia chegou primeiro.', 'The job leaked and the police got there first.')) : t(l('A polícia aparece no meio da operação.', 'The police show up in the middle of the job.'));
+    case 'betrayal': {
+      const who = Array.isArray(ctx.who) ? (ctx.who as unknown[]).filter((x) => typeof x === 'string').join(', ') : str(ctx.who);
+      return who ? t(l('{w} entregou o plano.', '{w} gave the plan away.'), { w: who }) : undefined;
+    }
+  }
+  return undefined;
+}
+/** Põe a cena da atividade na fila (ou nada, se a preferência desliga ou o momento já teve cena). */
+export function bridge27(s: GameState, id: string, ctx: Record<string, unknown> = {}, pref: CutPref27 = cutPref27()): CutData27 | null {
+  const key = BRIDGE27[id];
+  if (!key) return null;
+  if ((store.prefs as { cutscenes?: boolean }).cutscenes === false || pref === 'off' || (pref === 'major' && CUT27[key].tier !== 'major')) return null;
+  const actId = str(ctx.actId) && s.acts[ctx.actId as string] ? (ctx.actId as string) : undefined;
+  const st = cut27(s);
+  const d: CutData27 = { key, ref: `act27:${id}:${s.week}:${actId ?? ''}`, actId, year: s.year, week: s.week, a: actId ? s.acts[actId].name : undefined, t: bridgeText27(s, id, ctx) };
+  const k = onceKey27(key, d);
+  if (st.once[k] !== undefined) return null;
+  st.once[k] = s.week; st.n++;
+  const same = SAME27[key];
+  if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !actId || c.data.actId === actId) && same(c)) { c.seen = true; c.data.quiet23 = true; }
+  queueCutscene(s, 'cut27', { title: CUT27[key].title, d, actId: actId ?? null, int23: CUT27[key].choices.length ? 'always' : 'milestone' });
+  return d;
+}
+let waiting27 = 0;
+/** Abre a fila quando nada mais estiver na tela (a janela da atividade, outra cena). */
+function showWhenFree27(s: GameState, tries = 0): void {
+  if (store.game !== s || tries > 1200) { waiting27 = 0; return; }
+  if (typeof document !== 'undefined' && document.querySelector('.overlay, .scene-overlay')) { waiting27 = window.setTimeout(() => showWhenFree27(s, tries + 1), 400); return; }
+  waiting27 = 0;
+  showPendingCutscene(s, rerender, false);
+}
+export function playCutscene27(id: string, ctx: Record<string, unknown> = {}): boolean {
+  const s = store.game;
+  if (!s) return false;
+  const d = bridge27(s, id, ctx);
+  if (d && !waiting27 && typeof window !== 'undefined') waiting27 = window.setTimeout(() => showWhenFree27(s), 300);
+  return !!d;
+}
+(globalThis as { playCutscene27?: typeof playCutscene27 }).playCutscene27 = playCutscene27;
 
 /** Dicas falam em dólares reais ("US$ 1.500"); na tela vira o valor nominal da época ("$ 92" em 1930). */
 export function hint27(s: GameState, txt: string): string {

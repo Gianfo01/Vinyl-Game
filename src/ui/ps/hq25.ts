@@ -15,6 +15,7 @@ import { hqModel25, type Agenda25, type Goto25, type HqModel25, type RoomM25, ty
 import { drawHqCutaway27, isNarrow27, plan27, type Cell27, type Drawn27 } from './hqpx27';
 import { setSedeHome25 } from './slot25';
 import { bindZoomOut27, placeTabs27, toCity27 } from './zoom27';
+import { hqClick27, hqPropEggs27 } from '../sys/eggs27';
 import './hq25.css';
 
 /** Navega para o destino (usa as funções existentes: store.area + rerender, abas e ficha do artista). */
@@ -180,7 +181,8 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
     const key = `${k}|${minW}`;
     if (key === last) return;
     last = key;
-    const d = drawHqCutaway27(cv, m, { minW, look, role });
+    const props = hqPropEggs27.map((f) => f(s)).filter((x) => !!x);
+    const d = drawHqCutaway27(cv, m, { minW, look, role, props });
     st.style.width = `${d.plan.W * k}px`;
     st.style.height = `${d.plan.H * k}px`;
     const rooms = m.rooms.filter((r) => d.plan.rooms.includes(r.id));
@@ -190,6 +192,8 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
       ...rooms.map((r) => roomBtn(d, r, d.plan.cells.find((c) => c.room === r.id)!, k)),
       ...lockEls27(s, d, m.units),
       ...d.spots.map((sp) => hitEl(d, sp)),
+      // r27 INT: ovo — o gramofone/toca-discos do lounge responde a cliques (área invisível, sem destaque)
+      ...(d.plan.gramo ? [h('span', { class: 'hq27-gramo', style: box(d, ...d.plan.gramo), 'aria-hidden': 'true', onclick: (e: Event) => { e.stopPropagation(); hqClick27(s, 'gramophone'); } })] : []),
       ...d.more.map((x) => h('span', { class: 'hq25-more', style: `left:${pct(x.x, d.plan.W)};top:${pct(x.y, d.plan.H)}`, title: t(l('Mais {n} nesta sala', '{n} more in this room'), { n: x.n }) }, `+${x.n}`)));
   };
   paint(Math.min(960, Math.max(360, (window.innerWidth || 960) - 560)));
