@@ -17,7 +17,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import {
   SEC17, a3Of, addHeat, bossName, commitCrime, crime17, crimeById, famOf, feedCase, hasRacket, isReal, jailedIn, mIdx, nameOf17, orgById, orgs17,
-  ownerOfTarget, pizzoFee, reportOrg, toggleLaunder, launderFee, usd, type Ctx17, type Org17, type Warn17,
+  ownerOfTarget, pizzoFee, shield17, reportOrg, toggleLaunder, launderFee, usd, type Ctx17, type Org17, type Warn17,
 } from './crime17';
 import { leaderOf } from './leaders10';
 import { per13 } from './persona13';
@@ -29,7 +29,7 @@ const F = (s: GameState, key: string, f: string): number => ((per13(s, key)?.fac
 /** r18: pessoa real protegida só no modo "Vida real exata" (nos outros, história alternativa). */
 const sr = (s: GameState, id: string): boolean => histMode(s) === 'strict' && isReal(s, id);
 const live = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.status !== 'split';
-const STREET = (g: string): boolean => familyOf(g) === 'hiphop' || ['funk_carioca', 'corridos_tumbados', 'norteno', 'dancehall', 'reggaeton', 'gfunk', 'drill', 'trap'].includes(g);
+export const STREET = (g: string): boolean => familyOf(g) === 'hiphop' || ['funk_carioca', 'corridos_tumbados', 'norteno', 'dancehall', 'reggaeton', 'gfunk', 'drill', 'trap'].includes(g);
 const bestAct = (s: GameState, owner: string): Act | undefined =>
   (owner === 'player' ? playerActs(s).map((id) => s.acts[id]) : (s.labels[owner]?.roster ?? []).map((id) => s.acts[id])).filter(live).sort((a, b) => b.fame - a.fame)[0];
 const leadOf = (s: GameState, a?: Act): string | undefined => a ? (a.leaderId && s.persons[a.leaderId]?.alive ? a.leaderId : a.members.find((m) => s.persons[m]?.alive && !s.persons[m].isPlayer)) : undefined;
@@ -317,8 +317,8 @@ registerMod('appeal', 'crime17tie', (s, v, { release }) => {
 const homeOrgs = (s: GameState, r: string): Org17[] => { const a3 = a3Of(s, s.config.homeCity); return orgs17(s).filter((o) => o.a3 === a3 && o.rackets.includes(r as never)); };
 registerSituation({
   id: 'crime17_pizzo', pressure: 'law', cost: 2, cooldown: 30, playerOnly: true,
-  when: (s) => playerActs(s).length > 0 && homeOrgs(s, 'protection').some((o) => crime17(s).pizzo[o.id] === undefined && (crime17(s).vend[o.id] ?? 0) < s.week),
-  actorsPick: (s, _c, r) => { const os = homeOrgs(s, 'protection').filter((o) => crime17(s).pizzo[o.id] === undefined); return os.length ? { hero: 'player', cast: { org: r.pick(os).key }, data: {} } : null; },
+  when: (s) => playerActs(s).length > 0 && homeOrgs(s, 'protection').some((o) => crime17(s).pizzo[o.id] === undefined && (crime17(s).vend[o.id] ?? 0) < s.week && shield17(s, o.id) < 1),
+  actorsPick: (s, _c, r) => { const os = homeOrgs(s, 'protection').filter((o) => crime17(s).pizzo[o.id] === undefined && shield17(s, o.id) < 1); /* r23: quem tem gente lá dentro não paga */ return os.length ? { hero: 'player', cast: { org: r.pick(os).key }, data: {} } : null; },
   title: (s, c) => fmtL(l('{o} quer "taxa de proteção"', '{o} wants "protection money"'), { o: orgById(s, c.cast.org)?.name ?? '?' }),
   text: (s, c) => { const o = orgById(s, c.cast.org)!; return fmtL(l('Um homem de {b} aparece no escritório: seus shows na cidade "precisam de segurança". {v} por mês.', 'A man from {b} shows up at the office: your shows in town "need security". {v} a month.'), { b: bossName(o), v: usd(pizzoFee(s, o)) }); },
   options: [

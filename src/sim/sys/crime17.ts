@@ -49,7 +49,32 @@ export interface Crime17State {
   down: Record<string, number>;
   /** r19: produto de crime do jogador ainda não confiscado (centavos) */
   loot19?: number;
+  /** r23: membros de organizações por chave persona13 ('p:'/'s:'/'l:') — opcional (saves antigos) */
+  mem23?: Record<string, Mem23>;
+  /** r23: ex-membros (delatores, mortos, convertidos…), mais recentes no fim */
+  gone23?: Gone23[];
+  /** r23: poder perdido por organização (delações); volta devagar */
+  pw23?: Record<string, number>;
 }
+/** r23: hierarquia e funções de quem é membro. */
+export type Rank23 = 0 | 1 | 2 | 3;
+export type Role23 = 'musico' | 'contador' | 'seguranca' | 'motorista' | 'olheiro' | 'advogado' | 'promotor';
+export interface Mem23 {
+  o: string; rk: Rank23; ro: Role23; w: number;
+  /** por que entrou (até 4 motivos) */
+  why: L[];
+  /** o que o jogador sabe: 0 segredo · 1 boato · 2 confirmado */
+  k: 0 | 1 | 2;
+  /** crimes bem-sucedidos (promoção) */
+  n: number;
+  /** já passou pelo teste da prisão/indiciamento */
+  tr?: 1;
+  /** jogador decidiu manter (funcionário descoberto) */
+  kept?: 1;
+  /** escândalo público já aconteceu */
+  sc?: 1;
+}
+export interface Gone23 { k: string; o: string; how: 'informant' | 'death' | 'retired' | 'arrest' | 'conversion' | 'fired' | 'left' | 'org_end'; w: number; rk: Rank23 }
 declare module '../ext4' { interface Ext4 { crime17: Crime17State } }
 const fresh = (): Crime17State => ({ heat: {}, nh: {}, cases: [], log: [], org: {}, laund: {}, stash: [], hot: {}, rcity: {}, seeded: {}, sec: 0, jail: {}, rig: {}, rigBad: {}, boot: {}, pizzo: {}, exile: {}, doc: {}, parole: 0, seq: 0, market: [], warn: [], ties: {}, feud: {}, vend: {}, npcN: 0, fake: {}, down: {} });
 registerExt4('crime17', fresh);
@@ -428,6 +453,12 @@ export function targetsFor(s: GameState, c: CrimeDef17, max = 40): { id: string;
 
 // ================================================================ chances (visíveis, com o porquê)
 
+/** r23: ganchos extras de chance/exposição (cada um empurra o seu porquê). */
+export const ODDS17: ((s: GameState, c: Ctx17, cid: string, x: { p: number; q: number; why: L[] }) => void)[] = [];
+/** r23: isenção de pizzo (0..1) — ex.: um dos seus é membro da organização. */
+export const SHIELD17: ((s: GameState, oid: string) => number)[] = [];
+export const shield17 = (s: GameState, oid: string): number => SHIELD17.reduce((m, f) => Math.max(m, f(s, oid)), 0);
+
 export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
   const d = crimeById(cid)!;
   const st = crime17(s);
@@ -487,6 +518,7 @@ export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
   if (d.id === 'murder' && c.method === 'drugs' && s.persons[c.target]?.health === 'addiction') { p += 0.15; why.push(l('O alvo já usa drogas: +15%', 'The target already uses drugs: +15%')); }
   if (d.id === 'bribe') { const k = corruption(s, a3); p += k * 0.4 - 0.1; why.push(fmtL(l('Corrupção em {c} na época: {x}', 'Corruption in {c} at the time: {x}'), { c: countryName(a3), x: pct(k * 0.4 - 0.1) })); }
   if (c.actor === 'player' && glutN19(s, cid)) why.push(fmtL(l('Já fez isso {n}× em 12 meses: rende {x}% do normal (mercado saturado, vítimas espertas)', 'Done {n}× in 12 months: pays {x}% of normal (saturated market, wary victims)'), { n: glutN19(s, cid), x: Math.round(glut19(s, cid, 'player') * 100) }));
+  { const x = { p, q, why }; for (const f of ODDS17) f(s, c, cid, x); p = x.p; q = x.q; } // r23: membros (proteção, vazamentos, delatores)
   if (c.dp) { p += c.dp; why.push(c.dpWhy ?? fmtL(l('Ajuste {x}', 'Adjustment {x}'), { x: pct(c.dp) })); }
   // polícia e época
   const heat = c.actor === 'player' ? heatIn(s, a3) : st.nh[c.actor] ?? 0;
@@ -951,9 +983,10 @@ function extrasMonth(s: GameState, r: Rng): void {
   for (const [oid, since] of Object.entries(st.pizzo)) {
     const o = orgById(s, oid);
     if (!o) { delete st.pizzo[oid]; continue; }
-    if (since > 0) { post(s, `c17pizzo:${oid}`, -pizzoFee(s, o), 'legal', `"Segurança" (${o.name.pt})`); st.org[oid] = clamp((st.org[oid] ?? 0) + 1, -100, 100); continue; }
+    const sh = shield17(s, oid); // r23: gente sua dentro da organização = proteção de graça
+    if (since > 0) { post(s, `c17pizzo:${oid}`, -Math.round(pizzoFee(s, o) * (1 - sh)), 'legal', `"Segurança" (${o.name.pt})`); st.org[oid] = clamp((st.org[oid] ?? 0) + 1, -100, 100); continue; }
     if (-since + 26 < s.week) { delete st.pizzo[oid]; continue; }
-    if (r.chance(0.3 - SEC17[st.sec].def * 0.6)) {
+    if (r.chance((0.3 - SEC17[st.sec].def * 0.6) * (1 - sh))) {
       const a = s.acts[r.pick([...mine].length ? [...mine] : [''])];
       const loss = money(s, 6000 + (a?.fame ?? 0) * 150);
       post(s, `c17pzhit:${oid}`, -loss, 'legal', `Show depredado (${o.name.pt})`);
