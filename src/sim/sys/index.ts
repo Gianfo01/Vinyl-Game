@@ -205,6 +205,8 @@ import './ability18';
 // Rodada 18 (talent18, onda 1): relíquias criadas no jogo + mais reais, descoberta por canais/demos, camps e pitching, banda da casa, escolas e TV de talentos.
 import './relics18';
 import './discover18';
+// Rodada 23: Talentos (procurar / funil / decidir)
+import './scout23';
 import './camps18';
 import './session18';
 import './school18';

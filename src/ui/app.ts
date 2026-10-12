@@ -17,14 +17,13 @@ import { titleScreen } from './newgame';
 import { artistsPanel } from './panels/artists';
 import { creationPanel } from './panels/creation';
 import { deskPanel } from './panels/desk';
-import { marketPanel } from './panels/market';
 import { catalogPanel, chartsPanel, companyPanel, diaryPanel, hqPanel, mediaPanel, showsPanel, stopHq } from './panels/misc';
 import { applyPrefs, exportSave, migrate, saveGame, savePrefs, store, type Area } from './store';
 import { centralPanel } from './panels/central';
 import { worldPanel } from './panels/world';
 import { businessPanel } from './panels/business';
 import { studioHub } from './panels/studio';
-import { auctionsSection, contestsSection, demosSection, scoutsSection } from './panels/discovery';
+import { talentosHub23 } from './sys/talentos23';
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
@@ -384,11 +383,7 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
       { id: 'more', label: t(ERA19.otherCharts(g)), icon: 'radio', render: () => extraSections('charts', g) ?? h('div') },
     ], 'chartsHub', g), render));
     case 'artists': return artistsPanel(g);
-    case 'market': return h('div', { class: 'hub' }, tabs('marketHub', mergeTabs([
-      { id: 'classic', label: t(l('Radar e pipeline', 'Radar and pipeline')), icon: 'fans', render: () => marketPanel(g) },
-      { id: 'discovery', label: t(l('Olheiros, concursos e demos', 'Scouts, contests and demos')), icon: 'trophy', badge: g.demos.filter((d) => !d.heard).length || undefined, render: () => h('div', null, scoutsSection(g), contestsSection(g), demosSection(g)) },
-      { id: 'auctions', label: t(l('Leilões', 'Auctions')), icon: 'gavel', badge: g.auctions.filter((a) => a.status === 'open').length || undefined, render: () => auctionsSection(g) },
-    ], 'marketHub', g), render));
+    case 'market': return talentosHub23(g, render); // r23: tela Talentos (procurar / funil / decidir)
     case 'media': return h('div', { class: 'hub' }, tabs('mediaHub', mergeTabs([
       { id: 'press', label: t(l('Imprensa e crítica', 'Press and critics')), icon: 'newspaper', render: () => pressSection(g) },
       { id: 'channels', label: t(l('Canais e reputação', 'Channels and reputation')), icon: 'radio', render: () => mediaPanel(g) },

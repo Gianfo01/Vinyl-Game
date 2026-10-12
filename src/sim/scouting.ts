@@ -154,18 +154,30 @@ const SOURCES: { id: string; name: L; from?: string; fromYear?: number }[] = [
   { id: 'scout', name: l('olheiro', 'scout') },
   // rodada 16: indicação de amigo (lazer) — só por ligação, nunca sorteada como fonte mensal
   { id: 'friend', name: l('indicação de amigo', 'friend\'s tip'), fromYear: 99999 },
+  // r23: viagem de olheiro a uma cena (só por ação ativa)
+  { id: 'scene23', name: l('viagem de olheiro', 'scouting trip'), fromYear: 99999 },
 ];
 
 export function sourceName(id: string): L {
   return SOURCES.find((x) => x.id === id)?.name ?? l(id);
 }
 
+/** r23: fontes do "boca a boca" (sinais passivos) disponíveis nesta época. */
+export function passiveSources23(s: GameState): { id: string; name: L }[] {
+  return SOURCES.filter((x) => (!x.from || hasTech(s, x.from)) && (!x.fromYear || s.year >= x.fromYear));
+}
+/** r23: quantos nomes o boca a boca traz por mês (faixa; A&R e bônus aumentam). */
+export function passiveCount23(s: GameState): { lo: number; hi: number } {
+  const lo = Math.max(0, 1 + Math.min(3, staffCount(s, 'anr')) + Math.round(perk(s, 'signals')));
+  return { lo, hi: lo + 1 };
+}
+
 /** Sinais que chegam a cada mês (fontes por era e mercado). */
 export function monthlySignals(s: GameState, r: Rng): void {
   if (s.config.role === 'artist') return;
   const homeMarket = cityById[s.config.homeCity]?.market;
-  const sources = SOURCES.filter((x) => (!x.from || hasTech(s, x.from)) && (!x.fromYear || s.year >= x.fromYear));
-  const n = Math.max(0, 1 + Math.min(3, staffCount(s, 'anr')) + (r.chance(0.5) ? 1 : 0) + Math.round(perk(s, 'signals')));
+  const sources = passiveSources23(s);
+  const n = Math.max(0, passiveCount23(s).lo + (r.chance(0.5) ? 1 : 0));
   const candidates = Object.values(s.acts).filter((a) => signalEligible20(s, a)); // r20 (B9): elegibilidade central
   for (let i = 0; i < n; i++) {
     const src = r.pick(sources);

@@ -86,7 +86,7 @@ export const S = {
   areaDesk: s('Mesa do mês', 'Monthly desk'),
   areaCharts: s('Paradas', 'Charts'),
   areaArtists: s('Artistas', 'Artists'),
-  areaMarket: s('Mercado', 'Market'),
+  areaMarket: s('Talentos', 'Talent'), // r23: a área de A&R virou a tela Talentos
   areaMedia: s('Mídia', 'Media'),
   areaCatalog: s('Catálogo', 'Catalog'),
   areaCreation: s('Compor', 'Write'),

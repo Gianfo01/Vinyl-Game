@@ -86,7 +86,8 @@ const free = (a: Act) => !a.owner && a.status === 'emerging' && !a.deceased;
 
 /** Registra um achado (qualquer canal, inclusive TV e escolas) com o grau/ruído do canal. */
 export function addLead18(s: GameState, r: Rng, a: Act, chId: string, deg: number, noise: number, note: L, ref?: string): void {
-  addSignal(s, r, a.id, `d18:${chId}`);
+  // r23: origem = canal (ou a nota do show) e quem indicou
+  addSignal(s, r, a.id, `d18:${chId}`, { at: ch(chId)?.name ?? note, by: ref ? s.persons[ref]?.name : undefined });
   const k = s.knowledge[a.id];
   if (k && k.degree < deg) { k.degree = deg; k.bias = r.normal(0, noise); }
   if (k) k.updatedWeek = s.week;

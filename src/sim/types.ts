@@ -488,6 +488,10 @@ export interface Knowledge {
   bias: number; // erro sistemático do relatório
   updatedWeek: number;
   source: string;
+  /** r23: de onde veio o nome — fonte, semana, cidade, quem achou e onde (opcionais: saves antigos não têm) */
+  origin?: { src: string; w: number; city?: string; by?: string; at?: L };
+  /** r23: próximo passo de scouting em andamento (grau alvo e semana em que o relatório chega) */
+  pend23?: { to: number; until: number };
 }
 
 export interface StaffMember {
