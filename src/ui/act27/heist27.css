@@ -1,0 +1,85 @@
+/* Rodada 27 (M3) — operação jogável do Submundo: quadro em pixel art, cartões da equipe, medidor e linha do tempo. */
+.hz27 { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.hz27-board { margin: 0; background: var(--hq-bg, #0b1723); border: 2px solid var(--line); border-radius: var(--radius, 3px); overflow: hidden; }
+.hz27-board canvas { display: block; width: 100%; max-width: 720px; margin: 0 auto; height: auto; aspect-ratio: 192 / 72; image-rendering: pixelated; image-rendering: crisp-edges; }
+.hz27-meter { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 6px 8px; background: var(--panel-2); border-top: 2px solid var(--line); font-size: 12px; }
+.hz27-meter > span { display: inline-flex; align-items: center; gap: 6px; }
+.hz27-meter em { font-style: normal; font-family: var(--mono); min-width: 3.2em; }
+.hz27-cells { display: inline-flex; gap: 2px; }
+.hz27-cells i { width: 8px; height: 10px; background: var(--line); display: inline-block; }
+.hz27-cells.good i.on { background: var(--good); }
+.hz27-cells.bad i.on { background: var(--bad); }
+
+.hz27-time { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.hz27-time > li { position: relative; padding: 6px 8px; border: 2px solid var(--line); background: var(--panel); border-radius: var(--radius, 3px); min-width: 0; }
+.hz27-time > li.cur { border-color: var(--accent); }
+.hz27-time > li.done { opacity: 0.92; }
+.hz27-node { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 6px; background: var(--line); color: var(--ink); font-family: var(--pixel, monospace); font-size: 11px; box-shadow: var(--press); }
+.hz27-time li.cur .hz27-node { background: var(--accent); color: var(--accent-ink); }
+.hz27-time li.done .hz27-node { background: var(--good); color: var(--bg); }
+.hz27-sig { list-style: none; margin: 4px 0 0; padding: 0; font-size: 11.5px; line-height: 1.35; }
+.hz27-sig li.good { color: var(--good); }
+.hz27-sig li.bad { color: var(--bad); }
+.hz27-sig li.info { color: var(--muted); }
+
+.hz27-stage { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.hz27-stage h4 { margin: 4px 0 0; }
+.hz27-row { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.hz27-row label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; min-width: 0; max-width: 100%; }
+.hz27-row select { max-width: 100%; }
+.hz27-seg { border: 2px solid var(--line); border-radius: var(--radius, 3px); padding: 6px 8px; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.hz27-seg legend { font-size: 12px; font-weight: 700; padding: 0 4px; }
+.hz27-seg > small { flex-basis: 100%; }
+
+.hz27-crewgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.hz27-crew { display: grid; grid-template-columns: auto 1fr; grid-template-areas: 'pic name' 'pic st1' 'pic st2' 'pic st3' 'fee fee'; gap: 2px 8px; align-items: center; text-align: left; padding: 6px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); border-radius: var(--radius, 3px); cursor: pointer; font: inherit; min-width: 0; }
+.hz27-crew:hover:not(:disabled) { border-color: var(--accent-2); }
+.hz27-crew:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.hz27-crew.on { border-color: var(--accent); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--accent); }
+.hz27-crew:disabled { opacity: 0.5; cursor: not-allowed; }
+.hz27-crew .hz27-pic { grid-area: pic; width: 48px; height: 48px; image-rendering: pixelated; background: var(--panel-2); }
+.hz27-cn { grid-area: name; display: flex; flex-direction: column; min-width: 0; }
+.hz27-cn b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.hz27-cn small { color: var(--muted); font-size: 11px; }
+.hz27-fee { grid-area: fee; color: var(--muted); font-size: 11px; }
+.hz27-st { display: grid; grid-template-columns: 5.6em 1fr 2em; gap: 4px; align-items: center; font-size: 11px; }
+.hz27-st em { font-style: normal; font-family: var(--mono); text-align: right; }
+.hz27-bar { height: 6px; background: var(--line); display: block; }
+.hz27-bar i { display: block; height: 100%; background: var(--muted); }
+.hz27-st.good .hz27-bar i { background: var(--good); }
+.hz27-st.bad .hz27-bar i { background: var(--bad); }
+.hz27-st.warn .hz27-bar i { background: var(--warn); }
+.hz27-st.info .hz27-bar i { background: var(--accent); }
+
+.hz27-odds { border: 2px dashed var(--line); padding: 6px 8px; border-radius: var(--radius, 3px); }
+.hz27-kpis { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.hz27-kpi { display: flex; flex-direction: column; font-size: 11px; color: var(--muted); }
+.hz27-kpi b { font-size: 15px; color: var(--ink); font-family: var(--mono); }
+.hz27-kpi.good b { color: var(--good); }
+.hz27-kpi.bad b { color: var(--bad); }
+.hz27-kpi.warn b { color: var(--warn); }
+
+.hz27-ev { border: 2px solid var(--accent); background: var(--panel-2); padding: 8px 10px; border-radius: var(--radius, 3px); animation: hz27-in 0.25s ease-out; }
+.hz27-ev.ev-tip, .hz27-ev.ev-betray { border-color: var(--bad); }
+.hz27-ev p { margin: 4px 0 8px; }
+.hz27-who { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+.hz27-who canvas { width: 40px; height: 40px; image-rendering: pixelated; }
+.hz27-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px; }
+.hz27-ch { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; white-space: normal; height: auto; min-height: var(--btn-h, 40px); padding: 6px 10px; }
+.hz27-ch small { font-weight: 400; color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+.hz27-done { margin: 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
+.hz27-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.hz27-res { border: 2px solid var(--line); padding: 8px 10px; border-radius: var(--radius, 3px); }
+.hz27-res.good { border-color: var(--good); }
+.hz27-res.warn { border-color: var(--warn); }
+.hz27-res.bad { border-color: var(--bad); }
+.hz27-res h4 { margin: 0 0 4px; }
+.hz27-res p { margin: 3px 0; }
+
+@keyframes hz27-in { from { transform: translateY(4px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hz27-ev { animation: none; } }
+@media (max-width: 520px) {
+  .hz27-time { grid-template-columns: 1fr; }
+  .hz27-crewgrid { grid-template-columns: 1fr; }
+  .hz27-choices { grid-template-columns: 1fr; }
+}

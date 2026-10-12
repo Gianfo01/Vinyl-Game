@@ -24,6 +24,7 @@ import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
 import { chips, stat, tabs } from '../vis';
 import { intriguePanel } from './intrigue';
+import { heistOn27, openHeist27 } from '../act27/heist27'; // r27 (M3): operação jogável
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const say = (x: L | string, tone: 'good' | 'bad' | 'info' = 'info') => { toast(T(x), tone); rerender(); };
@@ -150,7 +151,8 @@ function plansTab(s: GameState): HTMLElement {
             const inv = form.partners.filter((p) => !r.joined.includes(p));
             say(`${T(r.ok ? l('Feito. ', 'Done. ') : l('Falhou. ', 'Failed. '))}${T(r.text)}${r.ex ? ` ${T(l('E vazou!', 'And it leaked!'))}` : ''}${inv.length ? ` ${T(l('Recusaram:', 'Declined:'))} ${inv.map((p) => nameOf17(s, p)).join(', ')}.` : ''}${r.betrayed.length ? ` ${T(l('Traidor(es):', 'Traitor(s):'))} ${r.betrayed.map((p) => nameOf17(s, p)).join(', ')}.` : ''}`, r.ok && !r.ex ? 'good' : 'bad');
           } else say(r, 'bad');
-        }, { cls: 'primary' })) : null,
+        }, { cls: 'primary' }),
+        !od.block && heistOn27(d.id) ? btn(l('Jogar', 'Play'), () => openHeist27(s, d.id, ctx), { title: l('Operação jogável: equipe, complicações e encobrimento (Executar = modo rápido).', 'Playable operation: crew, complications and cover-up (Execute = quick mode).') }) : null) : null,
     ),
   );
 }
