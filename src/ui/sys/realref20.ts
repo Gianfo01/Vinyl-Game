@@ -10,7 +10,6 @@ import type { Act, GameState } from '../../sim/types';
 import { N, cityName, kv, pill, section, statusName } from '../common';
 import { h } from '../dom';
 import { openRelease } from '../ficha';
-import { ACT_TABS } from '../pages';
 import { provBadge20 } from '../provbadge20';
 
 const TYPE20: Record<string, string> = { lp: 'LP', ep: 'EP', single: 'Single' };
@@ -55,4 +54,4 @@ export function realRefPanel20(s: GameState, a: Act): HTMLElement {
 }
 
 
-ACT_TABS.push((s, a) => ({ id: 'ref20', label: l('Real × partida', 'Real × run'), icon: 'book', render: () => realRefPanel20(s, a) }));
+// r21: a aba "Real × partida" saiu da ficha (pedido do jogador); o painel fica disponível para quem quiser reusá-lo.

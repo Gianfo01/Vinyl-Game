@@ -319,6 +319,11 @@ function go(id: string): void {
   render();
 }
 
+/** r21: clicar de novo no grupo aberto recolhe/expande (lembrado entre sessões). */
+const FOLD21 = 'vtn.navFold21';
+const navFold21: Set<string> = (() => { try { return new Set(JSON.parse(localStorage.getItem(FOLD21) ?? '[]') as string[]); } catch { return new Set<string>(); } })();
+const saveFold21 = () => { try { localStorage.setItem(FOLD21, JSON.stringify([...navFold21])); } catch { /* sem armazenamento */ } };
+
 function nav(): HTMLElement {
   const cur = groupOf(store.area);
   // r17: fixados no topo (☆ na barra de migalhas fixa/desfixa)
@@ -329,7 +334,8 @@ function nav(): HTMLElement {
   return h('nav', { class: 'nav grouped', 'aria-label': 'menu' }, pinBox, groups().map((gr) => {
     const items = groupItems(gr);
     const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
-    const open = gr.id === cur.id;
+    const here = gr.id === cur.id;
+    const open = here && !navFold21.has(gr.id);
     // rodada 14: casa da carreira (com aba, ex.: Empreendimentos › Festival) e títulos por carreira em "Outras atividades"
     const tabbed = (id: string) => gr.home?.tab && gr.home.area === id;
     const enter = (id: string) => { if (tabbed(id)) setTab(gr.home!.tab![0], gr.home!.tab![1]); go(id); };
@@ -339,7 +345,7 @@ function nav(): HTMLElement {
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, lbl), a.badge ? h('span', { class: 'badge' }, a.badge) : null); };
     const secs = gr.sections?.map((sc) => [sc, items.filter((x) => sc.areas.includes(x.id))] as const).filter(([, xs]) => xs.length).map(([sc, xs]) => [h('small', { class: 'nav-sec' }, t(sc.label)), ...xs.map(btn)]);
     return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''} ${gr.other ? 'nav-other' : ''}`, 'data-career': gr.career },
-      h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => enter(last ?? (gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit')) },
+      h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => { if (here) { if (open) navFold21.add(gr.id); else navFold21.delete(gr.id); saveFold21(); render(); return; } navFold21.delete(gr.id); saveFold21(); enter(last ?? (gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit')); } },
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
       open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
     );

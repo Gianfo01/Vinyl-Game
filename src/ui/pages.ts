@@ -21,7 +21,6 @@ import { activeThoughts, thoughtText } from '../sim/sys/people/thoughts';
 import type { Act, GameState, Person } from '../sim/types';
 import { money } from '../sim/util';
 import { $, N, actLink, cityName, cover, genreName, kv, labelLink, logo, modal, monthName, pill, rerender, statusName, toast } from './common';
-import { provBadge20 } from './provbadge20';
 import { bar, h, rangeBar, select } from './dom';
 import { openOffer, openRelease } from './ficha';
 import { rightsSheet } from './rightsView';
@@ -416,7 +415,7 @@ function discoTab(s: GameState, a: Act, mine: boolean): HTMLElement {
     h('tbody', null, rels.map((r) => {
       const rv = avgReview(s, r.id);
       return h('tr', { class: 'click', onclick: () => openRelease(r.id) },
-        h('td', null, cover(s, r, 32)), h('td', null, h('b', null, r.title), r.certified ? pill(r.certified, 'gold') : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null, provBadge20(s, r)),
+        h('td', null, cover(s, r, 32)), h('td', null, h('b', null, r.title), r.certified ? pill(r.certified, 'gold') : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null),
         h('td', null, r.type.toUpperCase()), h('td', null, r.year), h('td', null, r.peak < 999 ? `#${r.peak}` : '—'), h('td', null, N(r.totalUnits)),
         h('td', null, rv !== undefined ? rv.toFixed(1) : '—'), mine ? h('td', null, $(r.revenue)) : null);
     })));

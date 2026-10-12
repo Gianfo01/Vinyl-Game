@@ -65,13 +65,15 @@ export const EQUAL_REP = 40;
 
 export interface PoolLabel extends CatalogLabel { real?: string; playbook?: string; extra?: boolean }
 
-/** Todas as gravadoras que o Novo Jogo deixa escolher (as 22 clássicas + as extras da rodada 10). */
+/** Todas as gravadoras que o Novo Jogo deixa escolher (as 22 clássicas + as extras da rodada 10; o padrão r21 inclui um núcleo histórico delas). */
 export function labelPool(): PoolLabel[] {
   return [...CATALOG_LABELS.map((d) => ({ ...d, real: REAL_LABELS[d.id] })), ...EXTRA_LABELS.map((d) => ({ ...d, extra: true }))];
 }
 
-/** Conjunto padrão (o de sempre): as 22 clássicas. */
-export const DEFAULT_LABEL_IDS = (): string[] => CATALOG_LABELS.map((d) => d.id);
+/** r21: núcleo histórico que faltava no padrão — majors e selos-chave de cada era (só existem a partir da fundação real). */
+export const DEFAULT_EXTRA21 = ['x_odeon_br', 'x_rca', 'x_decca', 'x_capitol', 'x_atlantic', 'x_philips', 'x_warner', 'x_island', 'x_somlivre', 'x_virgin', 'x_subpop', 'x_xl', 'x_bighit'];
+/** Conjunto padrão: as 22 clássicas + o núcleo histórico (r21). */
+export const DEFAULT_LABEL_IDS = (): string[] => [...CATALOG_LABELS.map((d) => d.id), ...DEFAULT_EXTRA21];
 
 const PROC_A = ['Golden', 'Silver', 'Velvet', 'Thunder', 'Harmony', 'Echo', 'Paramount', 'Liberty', 'Crown', 'Apex', 'Cobalt', 'Lantern', 'Riverbend', 'Skyline', 'Orchid', 'Granada'];
 const PROC_B = ['Records', 'Discos', 'Music', 'Sound', 'Recordings', 'Phonograph Co.', 'Audio'];
@@ -320,6 +322,14 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   if (!chosenLabels && cfg.startYear < 1920) for (const def of EXTRA_LABELS) {
     if (def.founded >= 1920 || s.labels[def.id]) continue;
     const f0 = cfg.mode === 'chaos' ? def.founded + r.int(-6, 6) : cfg.mode === 'free' ? def.founded + r.int(-2, 2) : def.founded;
+    const founded = def.founded <= cfg.startYear ? Math.min(cfg.startYear, f0) : Math.max(cfg.startYear + 1, f0);
+    makeLabel(s, r, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
+  }
+  // r21: o padrão ganha as majors e selos-chave de cada era, nas datas reais (sem duplicar a era acústica)
+  if (!chosenLabels) for (const id of DEFAULT_EXTRA21) {
+    const def = EXTRA_LABELS.find((d) => d.id === id);
+    if (!def || s.labels[def.id]) continue;
+    const f0 = cfg.mode === 'chaos' ? def.founded + r.int(-8, 8) : cfg.mode === 'free' ? def.founded + r.int(-2, 2) : def.founded;
     const founded = def.founded <= cfg.startYear ? Math.min(cfg.startYear, f0) : Math.max(cfg.startYear + 1, f0);
     makeLabel(s, r, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
   }

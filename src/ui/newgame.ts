@@ -175,8 +175,10 @@ type Tab = { id: string; name: ReturnType<typeof l>; body: HTMLElement[] };
 /** r20 (G8): quatro áreas com navegação livre; uma frase por área dizendo o que se decide ali. */
 const STEP20: Record<string, ReturnType<typeof l>> = {
   world: l('Mundo — qual realidade, quando, onde e com que semente. População, rivais e história prévia ficam em "Personalizar".', 'World — which reality, when, where and with which seed. Population, rivals and prior history are under "Customize".'),
-  you: l('Você e seu começo — o que você faz, de onde parte (do zero, em ascensão, estabelecido, assumindo uma gravadora ou num cenário), sua empresa, seu passado e sua ambição. Aparência, vida pessoal e habilidades ficam em "Personalizar personagem". Nada aqui é obrigatório.', 'You and your start — what you do, where you start (from zero, rising, established, taking over a label or a scenario), your company, your past and your ambition. Look, personal life and abilities are under "Customize character". Nothing here is mandatory.'),
-  rules: l('Regras e ritmo — dificuldade, prazo, narrador, liberdade dos NPCs, tutoriais, filtros, Ironman e regras especiais.', 'Rules and pace — difficulty, deadline, storyteller, NPC freedom, tutorials, filters, Ironman and special rules.'),
+  mode: l('Modo — como você começa (do zero, em ascensão, estabelecido, assumindo uma gravadora ou num cenário), quais funções acumula, sua empresa, ambição e Carta. Tudo pode mudar durante a partida.', 'Mode — how you start (from zero, rising, established, taking over a label or a scenario), which roles you hold, your company, ambition and Card. Everything can change during the run.'),
+  you: l('Personagem — quem é você: passado, aparência, vida pessoal e habilidades. Nada aqui é obrigatório.', 'Character — who you are: background, look, personal life and abilities. Nothing here is mandatory.'),
+  you_old: l('Você e seu começo — o que você faz, de onde parte (do zero, em ascensão, estabelecido, assumindo uma gravadora ou num cenário), sua empresa, seu passado e sua ambição. Aparência, vida pessoal e habilidades ficam em "Personalizar personagem". Nada aqui é obrigatório.', 'You and your start — what you do, where you start (from zero, rising, established, taking over a label or a scenario), your company, your past and your ambition. Look, personal life and abilities are under "Customize character". Nothing here is mandatory.'),
+  rules: l('Regras e ritmos — dificuldade, prazo, narrador, liberdade dos NPCs, tutoriais, filtros, Ironman e regras especiais.', 'Rules and rhythms — difficulty, deadline, storyteller, NPC freedom, tutorials, filters, Ironman and special rules.'),
   review: l('Revisão — confira o que o motor vai executar. "Editar" leva ao grupo e volta direto para cá.', 'Review — check what the engine will run. "Edit" takes you to the group and straight back here.'),
 };
 
@@ -244,7 +246,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         h('div', { class: 'ng-grid' }, ...extras, addHelp(lc.el, 'rivals'))),
     ] },
     // r20c (N1): o que você faz → de onde parte → empresa/banda → passado (um bloco) → ambição → resumo; a ficha detalhada fica recolhida
-    { id: 'you', name: l('Você e seu começo', 'You and your start'), body: [
+    { id: 'mode', name: l('Modo', 'Mode'), body: [
       careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }, 'main'),
       startCard17(cfg, rebuild, customCard(cfg)),
       tk.el,
@@ -253,10 +255,14 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         h('label', null, ...hl(S.companyName, 'company'), nameInput),
         bandBox,
       ),
-      pastCard20(cfg, () => perso.redraw()),
       careerCard(cfg, undefined, 'ambition'),
+      h('section', { class: 'card wide' }, h('h3', null, ...hl(S.card, 'card')), cards),
     ] },
-    { id: 'rules', name: l('Regras e ritmo', 'Rules and pace'), body: [
+    // r21: personagem ganha etapa própria (passado, ficha ao vivo, aparência, vida pessoal, habilidades)
+    { id: 'you', name: l('Personagem', 'Character'), body: [
+      pastCard20(cfg, () => perso.redraw()),
+    ] },
+    { id: 'rules', name: l('Regras e ritmos', 'Rules and rhythms'), body: [
       h('section', { class: 'card' },
         h('label', null, ...hl(S.difficulty, 'difficulty'), select(cfg.difficulty, [
           { value: 'easy', label: t(S.easy) }, { value: 'normal', label: t(S.normal) }, { value: 'hard', label: t(S.hard) },
@@ -278,7 +284,6 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       ),
       tutCard,
       diffCard17(cfg),
-      h('section', { class: 'card wide' }, h('h3', null, ...hl(S.card, 'card')), cards),
       h('section', { class: 'card wide' }, h('h3', null, ...hl(S.mutators, 'mutators')), muts),
     ] },
     { id: 'review', name: l('Revisão', 'Review'), body: [] },
@@ -311,24 +316,26 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         [l('Gravadoras rivais', 'Rival labels'), `${rivals}${cfg.labels?.start === 'equal' ? ` · ${t(l('todos iguais', 'all equal'))}` : ''}${cfg.labels ? ` · ${t(l('personalizado', 'customized'))}` : ''}`],
         ...(prehist ? [[l('História prévia', 'Prior history'), t(l('{n} anos', '{n} years'), { n: prehist })] as Row] : []),
       ] },
-      { tab: 1, name: l('Você e seu começo', 'You and your start'), rows: [
-        [l('Personagem', 'Character'), cfg.character?.name || t(l('(gerado)', '(generated)'))],
+      { tab: 1, name: l('Modo', 'Mode'), rows: [
         [S.companyName, cfg.companyName],
         [l('Começo', 'Start'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
         [S.scenario, cfg.scenario17 && scenarioById[cfg.scenario17] ? `🏅 ${t(scenarioById[cfg.scenario17].name)}` : opt(cfg.scenario, SCN())],
         [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
         [l('Carreira', 'Career'), careerSummary(cfg)],
-        [l('Trajetória', 'Path'), cfg.character ? t(originById[careerOfSpec(cfg.character)]?.name ?? l('—', '—')) : '—'],
         ...(cfg.custom && Object.keys(cfg.custom).length ? [[l('Ajuste fino do começo', 'Start fine-tuning'), Object.keys(cfg.custom).join(', ')] as Row] : []),
+        [S.card, t(CARDS.find((c) => c.id === cfg.card)!.name)],
       ] },
-      { tab: 2, name: l('Regras e ritmo', 'Rules and pace'), rows: [
+      { tab: 2, name: l('Personagem', 'Character'), rows: [
+        [l('Personagem', 'Character'), cfg.character?.name || t(l('(gerado)', '(generated)'))],
+        [l('Trajetória', 'Path'), cfg.character ? t(originById[careerOfSpec(cfg.character)]?.name ?? l('—', '—')) : '—'],
+      ] },
+      { tab: 3, name: l('Regras e ritmos', 'Rules and rhythms'), rows: [
         [S.difficulty, `${opt(cfg.difficulty, DIFF())}${dsum ? ` · ${dsum}` : ''}`],
         [l('Prazo', 'Deadline'), cfg.runYears17 ? t(l('{n} anos', '{n} years'), { n: cfg.runYears17 }) : t(l('sem fim', 'endless'))],
         [S.ironman, cfg.ironman ? t(l('sim — um save, sem desfazer', 'yes — one save, no undo')) : t(l('não', 'no'))],
         [S.contentFilters, cfg.contentFilters.length ? cfg.contentFilters.map((id) => t(SENSITIVE.find((x) => x.id === id)?.label ?? l(id, id))).join(', ') : t(l('nenhum', 'none'))],
         [l('Tutoriais', 'Tutorials'), tutorialsOff19(store.prefs) ? t(l('desligados', 'off')) : t(l('ligados', 'on'))],
         [S.storyteller, `${t(STORYTELLERS.find((x) => x.id === cfg.storyteller)!.name)} · ${t(FREEDOM17[cfg.freedom17 ?? 'normal'].name)}`],
-        [S.card, t(CARDS.find((c) => c.id === cfg.card)!.name)],
         [S.mutators, cfg.mutators.map((id) => t(MUTATORS.find((m) => m.id === id)!.name)).join(', ') || '—'],
       ] },
     ];
@@ -348,11 +355,13 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       h('div', { class: 'row wrap ng20-review-acts' }, copyCode20(cfg), restoreDefault20(cfg, rebuild)),
       startErr,
       h('div', { class: 'row center' }, startBtn('ng-start-review')));
-    const w = gs[0].rows, r = gs[2].rows;
+    const w = gs[0].rows, r = gs[3].rows;
     const sideNodes = () => [
       h('p', { class: 'small' }, h('b', null, w[0][1])),
       h('p', { class: 'small' }, `${cfg.startYear} · ${cityName(cfg.homeCity)}`),
       h('p', { class: 'small' }, `${cfg.takeover ? t(l('Assume gravadora', 'Takeover')) : opt(cfg.scenario, SCN())} · ${r[0][1]} · ${r[1][1]}`),
+      h('p', { class: 'small' }, careerSummary(cfg)),
+      h('p', { class: 'small' }, cfg.character?.name || t(l('Personagem gerado', 'Generated character'))),
       h('p', { class: 'small muted' }, w[1][1]),
       ...notes17(cfg).filter((n) => n.level === 'warn').map((n) => h('p', { class: 'small warn' }, '⚠ ', t(n.text)))];
     side.replaceChildren(...sideNodes());
@@ -362,13 +371,19 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     popSum.textContent = p.length ? `— ${t(l('personalizado', 'customized'))}: ${p.join(', ')}` : `— ${t(l('padrão', 'default'))}`;
     sideAct.replaceChildren(cur === REVIEW ? startBtn('ng-start') : reviewBtn('btn primary'));
     barAct.replaceChildren(cur === REVIEW ? startBtn('ng-start-bar') : reviewBtn('btn primary big'));
+    const warns = notes17(cfg).filter((n) => n.level === 'warn').length;
+    const subs = [`${w[0][1]} · ${cfg.startYear} · ${cityName(cfg.homeCity)}`, `${careerSummary(cfg)} · ${gs[1].rows[2][1]}`, `${gs[2].rows[0][1]} · ${gs[2].rows[1][1]}`, `${r[0][1]} · ${r[1][1]}`,
+      warns ? t(l('{n} avisos', '{n} warnings'), { n: warns }) : t(l('pronto para começar', 'ready to start'))];
+    tabSubs.forEach((el, i) => (el.textContent = subs[i] ?? ''));
   }
+  const TAB_IC21: Record<string, string> = { world: '🌍', mode: '🎯', you: '👤', rules: '⚖️', review: '✅' };
+  const tabSubs = tabs.map(() => h('small', { class: 'ng21-sub' }));
   const tabBtns = tabs.map((tb, i) => h('button', { type: 'button', role: 'tab', id: `ng-tab-${tb.id}`, 'aria-controls': `ng-panel-${tb.id}`, class: 'ng-tab', onclick: () => { fromReview = false; go(i); }, onkeydown: (e: KeyboardEvent) => {
     const k = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
     if (k === null) return;
     e.preventDefault();
     go((k + tabs.length) % tabs.length, true);
-  } }, h('span', { class: 'ng-num' }, String(i + 1)), ' ', t(tb.name)));
+  } }, h('span', { class: 'ng-num ng21-ic', 'aria-hidden': 'true' }, TAB_IC21[tb.id] ?? String(i + 1)), h('span', { class: 'ng21-tl' }, h('b', null, `${i + 1}. ${t(tb.name).toUpperCase()}`), tabSubs[i])));
   const panels = tabs.map((tb) => h('div', { role: 'tabpanel', id: `ng-panel-${tb.id}`, 'aria-labelledby': `ng-tab-${tb.id}`, class: 'ng-grid ng-panel' }, h('p', { class: 'muted small ng17-step' }, t(STEP20[tb.id] ?? l('', ''))), ...tb.body));
   // r17: ficha ao vivo em "Você e seu começo" (agora rotulada como prévia rápida)
   const charPanel = panels[tabs.findIndex((x) => x.id === 'you')];
@@ -381,7 +396,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const barAct = h('span');
   function go(i: number, focus = false, focusPanel = false, quiet = false): void {
     cur = Math.max(0, Math.min(REVIEW, i));
-    tabBtns.forEach((b, j) => { b.setAttribute('aria-selected', String(j === cur)); b.tabIndex = j === cur ? 0 : -1; b.classList.toggle('on', j === cur); });
+    tabBtns.forEach((b, j) => { b.setAttribute('aria-selected', String(j === cur)); b.tabIndex = j === cur ? 0 : -1; b.classList.toggle('on', j === cur); b.classList.toggle('done', j < cur); });
     panels.forEach((p, j) => (p.hidden = j !== cur));
     back.disabled = cur === 0;
     // uma ação principal por momento: Continuar (ou voltar à revisão) nas áreas; Começar run na revisão
@@ -429,9 +444,9 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     h('button', { type: 'button', class: 'pick on', 'aria-pressed': 'true' }, h('b', null, t(l('Nova run livre', 'New free run'))), h('small', null, t(l('Configure com o padrão novo; tudo é editável.', 'Configure with the new default; everything is editable.')))),
     h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', onclick: () => scenarioScreen(root, onStart, () => newGameScreen(root, onStart, cfg, cur)) }, h('b', null, '🏅 ', t(l('Cenários e desafios', 'Scenarios and challenges'))), h('small', null, t(l('Veja regras, ano, cidade e meta antes de iniciar.', 'See rules, year, city and goal before starting.')))),
     h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', onclick: () => pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, REVIEW)) }, h('b', null, '⇥ ', t(l('Usar código de run', 'Use a run code'))), h('small', null, t(l('Importa para o rascunho e mostra a revisão; mantém as regras do código.', 'Imports into the draft and shows the review; keeps the code\'s rules.')))));
-  const wrap = h('div', { class: 'newgame tabbed ng20' },
+  const wrap = h('div', { class: 'newgame tabbed ng20 ng21' },
     h('header', null, h('button', { type: 'button', class: 'btn ghost', onclick: () => titleScreen(root, onStart) }, '← ' + t(S.back)),
-      h('div', null, h('h1', null, t(l('Crie sua próxima história', 'Create your next story'))), h('p', { class: 'muted small ng20-sub' }, t(l('Escolha o mundo e seu ponto de partida. Todas as opções avançadas continuam disponíveis.', 'Choose the world and your starting point. All advanced options are still available.'))))),
+      h('div', null, h('h1', null, t(l('Nova run', 'New run'))), h('p', { class: 'muted small ng20-sub' }, t(l('5 etapas · clique numa etapa para ir direto · clique no título de uma seção para recolher ou abrir.', '5 steps · click a step to jump to it · click a section title to collapse or expand it.'))))),
     intent,
     presetBar17(cfg, rebuild),
     h('div', { class: 'ng-tabs', role: 'tablist', 'aria-label': t(S.newGame) }, ...tabBtns),
@@ -443,6 +458,12 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   );
   // resumo sempre em dia: os handlers dos campos rodam antes deste (borbulha até o contêiner)
   for (const ev of ['input', 'change', 'click']) wrap.addEventListener(ev, (e) => { if ((e.target as HTMLElement).closest?.('.ng-nav, .ng20-side-act, .ng-bar, .ng-tabs, .ng20-group-h')) return; drawSummary(); });
+  // r21: clicar no título de uma seção recolhe/abre (o estado vale até sair da tela)
+  wrap.addEventListener('click', (e) => {
+    const hd = (e.target as HTMLElement).closest?.('.ng-panel > section.card > h3, .ng-panel > section.card > fieldset > legend > h3');
+    if (!hd || (e.target as HTMLElement).closest('button, a, input, select, .help')) return;
+    hd.closest('section.card')!.classList.toggle('ng21-folded');
+  });
   root.replaceChildren(wrap);
   go(cur, false, false, true);
 }

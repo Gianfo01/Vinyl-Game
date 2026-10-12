@@ -2,7 +2,7 @@
 
 
 *(antes chamado "Vinyl to Neural")*
-Simulador de gestão musical em turnos mensais, de 1889 a 2040: do cilindro de cera às vozes neurais.
+Simulador de gestão musical em turnos mensais, de 1889 a 2040 (e além, no sandbox): mais de 150 anos, do cilindro de cera às vozes neurais.
 Esta é a primeira versão jogável construída a partir do **GDD v8**, do **Catálogo do Universo** e da
 **Pesquisa de design**. Roda no navegador, sem servidor, em PT-BR e EN.
 
@@ -305,6 +305,9 @@ Por padrão o universo é ficcional. O modo opcional "Nomes reais" (rodada 6, pa
 
 ## Rodada 17
 Resumo completo em [docs/rodada17.md](docs/rodada17.md): fatos/obrigações/estresse/escândalos integrados, diretor criativo com situações e mundo vivo, crime, vida pessoal (sexualidade, amor, filhos, envelhecimento), imprensa e boatos, dados reais (relíquias, peso cultural, estilos), negócios (venda do selo, canais, casas de show, licenças, direitos de imagem, merch), agenda e contratações, menu reformado, novo início com cenários e saves na nuvem, cenas interativas e popups no mapa.
+
+## Rodada 21
+Resumo em [docs/rodada21.md](docs/rodada21.md): funções múltiplas por pessoa (artista que abre selo, empresaria, cria festival, financia discos) com decisões concretas para o jogador; Nova Run em 5 etapas (Mundo, Modo, Personagem, Regras e ritmos, Revisão) com seções recolhíveis; menu lateral recolhe ao clicar de novo; gravadoras padrão com as majors e selos-chave de cada era; acervo musical e perfis pesquisados no mundo; textos corrigidos (1889–2040, mais de 150 anos); aba "Real × partida" removida das fichas.
 
 ## Rodada 20
 Resumo em [docs/rodada20.md](docs/rodada20.md): saves confiáveis e turno transacional, finanças com títulos, reservas e Posição, simulação reproduzível e coerente, Artistas com menu Ações ▾ e catálogo único de ações, Shows/Sede/Mundo por intenção, Cockpit essencial, oferta em camadas, fãs por região e a nova run "Reais em mundo aleatório".

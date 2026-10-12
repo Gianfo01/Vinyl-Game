@@ -68,7 +68,7 @@ export function presetBar17(cfg: RunConfig, rebuild: () => void): HTMLElement {
     origin ? h('p', { class: 'small' }, changed.length
       ? h('span', null, h('span', { class: 'ng20-badge' }, t(l('Personalizado', 'Custom'))), ' ', t(l('a partir de "{p}" — mudou: {g}.', 'from "{p}" — changed: {g}.'), { p: t(origin.name), g: groups20(changed) || '—' }))
       : h('span', { class: 'muted' }, t(l('Usando a predefinição "{p}".', 'Using the "{p}" preset.'), { p: t(origin.name) }))) : null,
-    h('div', { class: 'ng17-preset-grid' }, ...PRESETS17.map((p) => h('button', { type: 'button', class: `pick ${cfg.preset17 === p.id ? 'on' : ''}`, 'aria-pressed': String(cfg.preset17 === p.id),
+    h('div', { class: 'ng17-preset-grid' }, ...PRESETS17.map((p) => h('button', { type: 'button', class: `pick ${cfg.preset17 === p.id ? 'on' : ''}`, 'aria-pressed': String(cfg.preset17 === p.id), title: t(p.desc),
       onclick: () => {
         const diff = presetDiff20(cfg, p.id);
         undo20 = JSON.stringify(cfg);

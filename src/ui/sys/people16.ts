@@ -84,7 +84,7 @@ function familyBlock16(s: GameState, key: string): HTMLElement {
     h('ul', { class: 'dos13-list small' },
       F0?.partner ? h('li', null, `${F0.partner.name} · ${t(F0.partner.job)} · `, t(together ? l('parceiro(a) atual', 'current partner') : l('ex', 'ex'))) : null,
       ...(F0?.kids ?? []).map((k) => h('li', null, `${k.name} · ${t(l('filho(a)', 'child'))} · ${s.year - k.born} ${t(l('anos', 'yrs'))}`)),
-      ...rk.map((r) => h('li', null, r.key ? personLink16(s, r.key, r.name) : r.name, ` · ${t(KIN16_REL[r.rel] ?? l(r.rel))}`, ' ', pill(t(l('real', 'real')), 'gold'))),
+      ...rk.map((r) => h('li', null, r.key ? personLink16(s, r.key, r.name) : r.name, ` · ${t(KIN16_REL[r.rel] ?? l(r.rel))}`)),
       parent ? h('li', null, personLink16(s, `l:${parent.id}`, parent.name), ` · ${t(l('pai/mãe — antecessor(a) no selo', 'parent — predecessor at the label'))}`) : null,
       ...heirs.map((x2) => h('li', null, personLink16(s, `l:${x2.id}`, x2.name), ` · ${t(l('filho(a) — herdou o comando', 'child — inherited the helm'))}`)),
     ),

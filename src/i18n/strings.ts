@@ -29,7 +29,7 @@ const s = (pt: string, en: string): L => ({ pt, en });
 
 export const S = {
   gameTitle: s('Masters', 'Masters'),
-  tagline: s('Da goma-laca às vozes neurais: 120 anos de negócio da música. Nenhuma run conta a mesma história.', 'From shellac to neural voices: run a music business through 120 years. No two runs tell the same story.'),
+  tagline: s('Do cilindro de cera às vozes neurais: mais de 150 anos de negócio da música (1889–2040, e depois o que você quiser). Nenhuma run conta a mesma história.', 'From wax cylinders to neural voices: run a music business through 150+ years (1889–2040, and beyond). No two runs tell the same story.'),
   newGame: s('Nova run', 'New run'),
   continue: s('Continuar', 'Continue'),
   load: s('Carregar', 'Load'),

@@ -19,3 +19,8 @@
 .legend20 { font-size: .85em; border-left: 3px solid var(--accent, #c63); padding: .2rem .5rem; margin: .3rem 0; }
 .place20 { display: grid; gap: .3rem; }
 .place20 .drawer20-list { max-height: 14rem; }
+/* r21: linha do tempo de funções */
+.r21-tl { list-style: none; padding: 0; margin: 0.3rem 0; border-left: 3px solid var(--line); }
+.r21-tl li { padding: 0.25rem 0 0.25rem 0.7rem; position: relative; }
+.r21-tl li::before { content: ''; position: absolute; left: -7px; top: 0.6rem; width: 11px; height: 11px; border-radius: 50%; background: var(--line); }
+.r21-tl li.on::before { background: var(--accent); }

@@ -72,3 +72,39 @@
 /* r20b (Z3 a11y): com texto a 200% em 390px a lista de cidades (opções longas) empurrava a página para o lado */
 .ng20-where .row > span { min-width: 0; max-width: 100%; }
 .ng20-where select { max-width: 100%; min-width: 0; }
+/* r21 — Nova Run em 5 etapas (MUNDO, MODO, PERSONAGEM, REGRAS E RITMOS, REVISÃO): barra de etapas fixa com resumo
+   ao vivo, modos de mundo em grade, atalhos compactos e seções recolhíveis pelo título. */
+.ng21 .ng-tabs { position: sticky; top: 0; z-index: 6; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; background: var(--bg); padding: 0.6rem 0 0.7rem; margin-bottom: 0.9rem; overflow: visible; }
+.ng21 .ng-tab { display: flex; align-items: center; gap: 0.6rem; text-align: left; padding: 0.55rem 0.7rem; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink); white-space: normal; min-width: 0; }
+.ng21 .ng-tab.on { border: 2px solid var(--accent); font-weight: 400; }
+.ng21 .ng21-ic { flex: 0 0 auto; width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; font-size: 1rem; background: var(--panel-2); }
+.ng21 .ng-tab.on .ng21-ic { background: var(--accent); }
+.ng21 .ng-tab.done .ng21-ic { background: var(--good); }
+.ng21 .ng21-tl { display: flex; flex-direction: column; min-width: 0; }
+.ng21 .ng21-tl b { font-size: 0.8rem; letter-spacing: 0.05em; }
+.ng21 .ng21-sub { color: var(--muted); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ng21 .ng20-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.ng21 .ng20-mode { min-height: 4.6rem; }
+.ng21 .ng20-intent { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ng21 .ng20-intent .pick, .ng21 .ng17-preset-grid .pick { padding: 0.45rem 0.6rem; }
+.ng21 .ng17-presets { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.ng21 .ng17-presets h3 { font-size: 0.95rem; margin: 0 0 0.3rem; }
+.ng21 .ng-panel > section.card > h3, .ng21 .ng-panel > section.card > fieldset > legend > h3 { cursor: pointer; }
+.ng21 .ng-panel > section.card > h3::after, .ng21 .ng-panel > section.card > fieldset > legend > h3::after { content: ' ▾'; color: var(--muted); font-size: 0.8em; }
+.ng21 .ng-panel > section.card.ng21-folded > h3::after, .ng21 .ng-panel > section.card.ng21-folded > fieldset > legend > h3::after { content: ' ▸'; }
+.ng21 .ng-panel > section.card.ng21-folded > :not(h3):not(fieldset) { display: none; }
+.ng21 .ng-panel > section.card.ng21-folded > fieldset > :not(legend) { display: none; }
+@media (max-width: 980px) { .ng21 .ng21-sub { display: none; } }
+@media (max-width: 760px) {
+  .ng21 .ng-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.25rem; }
+  .ng21 .ng-tab { flex-direction: column; gap: 0.2rem; padding: 0.35rem 0.2rem; text-align: center; }
+  .ng21 .ng21-tl b { font-size: 0.62rem; letter-spacing: 0; }
+  .ng21 .ng20-modes { grid-template-columns: 1fr; }
+}
+/* r21: entrada e atalhos viram uma faixa de botões compactos (descrição no title/tooltip) */
+.ng21 .ng20-intent, .ng21 .ng17-preset-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ng21 .ng20-intent .pick, .ng21 .ng17-preset-grid .pick { flex: 0 0 auto; border-radius: 999px; padding: 0.3rem 0.85rem; }
+.ng21 .ng20-intent .pick small, .ng21 .ng17-preset-grid .pick small { display: none; }
+.ng21 .ng17-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.8rem; background: transparent; border: 0; box-shadow: none; padding: 0; margin: 0 0 0.3rem; }
+.ng21 .ng17-presets h3 { margin: 0; }
+.ng21 .ng17-presets > p { margin: 0; order: 3; flex-basis: 100%; }

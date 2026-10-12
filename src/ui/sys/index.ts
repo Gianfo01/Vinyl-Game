@@ -132,6 +132,7 @@ import './rights18';
 // Rodada 18 (talent18, onda 1): Talentos e formação (descoberta, camps, banda da casa, escolas, TV) e Acervo vivo em Lendas.
 import './talent18';
 import './world18';
+import './roles21'; // r21: aba Funções (linha do tempo de funções da pessoa)
 // Rodada 18 (supply18, onda 1): cadeia física (fábricas, distribuição, estoque), acordos (desenvolvimento, imprint, JV) e relatório de mercado.
 import './supply18';
 // Rodada 18 (media18, onda 1): abas de mídia (público e streaming, campanhas, rádio por formatos, clipes/virais/pistas).
@@ -204,6 +205,5 @@ import './hubs20';
 import './fin20'; // r20 G2: Finanças → Posição (agora × fechamento, obrigações, reconciliação)
 // Rodada 20 (G6): cockpit em primeiro plano, pós-turno, densidade, gráficos acessíveis, oferta em camadas e revisão de fase.
 import './ui20';
-import './realref20'; // r20b (Y): página do artista — Referência real × Nesta partida
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';

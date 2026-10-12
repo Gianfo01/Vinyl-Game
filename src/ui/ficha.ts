@@ -25,7 +25,6 @@ import { why360 } from '../sim/sys/deal360_17';
 import { why18 } from './explain18';
 import { clauses18Fields } from './sys/contracts18';
 import { offerLayers20, type Layers20 } from './sys/offer20';
-import { provBadge20 } from './provbadge20';
 
 function g(): GameState {
   return store.game!;
@@ -62,7 +61,7 @@ export function openRelease(id: string): void {
   const body = h('div', { class: 'ficha' },
     h('div', { class: 'ficha-head' }, cover(s, r, 140),
       h('div', null,
-        h('h3', null, r.title, ' ', pill(t(TYPE_NAME[r.type] ?? l(r.type))), r.certified ? pill(r.certified, 'gold') : null, r.reissueOf ? pill(t(l('reedição', 'reissue'))) : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null, provBadge20(s, r)),
+        h('h3', null, r.title, ' ', pill(t(TYPE_NAME[r.type] ?? l(r.type))), r.certified ? pill(r.certified, 'gold') : null, r.reissueOf ? pill(t(l('reedição', 'reissue'))) : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null),
         h('div', null, actLink(s, r.actId), ' · ', labelLink(s, r.owner), ` · ${r.year}`),
         h('div', { class: 'row wrap' },
           h('div', { class: `crit-badge ${scoreClass(crit.score)}`, title: crit.estimated ? t(l('Estimativa da imprensa da época (sem resenhas guardadas).', 'Period press estimate (no stored reviews).')) : t(l('Média de {n} resenhas.', 'Average of {n} reviews.'), { n: crit.n }) }, h('b', null, crit.score), h('small', null, crit.estimated ? t(l('crítica (est.)', 'critics (est.)')) : t(l('crítica', 'critics')))),
