@@ -341,4 +341,7 @@ import './rivals27';
 import './cities27';
 import './hist27';
 import './conseq27';
+import './road27'; // r27 P2B: turnê no mapa — eventos de estrada (só em turnês marcadas pelo planejador jogável)
+import './crisis27'; // r27 P2B: crises com relógio (só depois que o jogador abre a sala de crise)
+import './board27'; // r27 P2B: reunião de diretoria mensal (só depois que o jogador liga a reunião)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
