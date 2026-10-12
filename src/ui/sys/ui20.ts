@@ -102,7 +102,7 @@ function decCard(s: GameState): HTMLElement {
   return card('dec', l('Decisões com prazo', 'Deadline decisions'), 'contract', xs.length, xs.length ? h('div', null,
     h('ul', { class: 'fp20-list dec21' }, xs.slice(0, 3).map((d) => h('li', { class: d.left !== null && d.left <= 1 ? 'bad' : '' },
       h('div', { class: 'dec21-top' }, h('span', { class: 'dec21-ic', 'aria-hidden': 'true' }, ic('contract', 3)),
-        h('span', null, h('b', null, t(d.title)), h('span', { class: 'dec21-due' }, ic('clock'), ' ', d.left !== null ? (d.left <= 0 ? t(l('vence agora', 'due now')) : t(l('{n} semanas', '{n} weeks'), { n: d.left })) : t(l('pendente', 'pending'))))),
+        h('span', null, h('b', null, t(d.title)), h('span', { class: 'dec21-due' }, ic('clock'), ' ', d.left !== null ? (d.left <= 0 ? t(l('vence agora', 'due now')) : (d.left === 1 ? t(l('1 semana', '1 week')) : t(l('{n} semanas', '{n} weeks'), { n: d.left }))) : t(l('pendente', 'pending'))))),
       h('small', { class: 'muted fp20-ev' }, t(d.why).slice(0, 120)),
       d.def ? h('small', null, t(l('Se ignorar: ', 'If ignored: ')), h('i', null, t(d.def))) : null,
       h('button', { class: 'btn small primary dec21-go', onclick: jumpDesk }, t(l('Decidir', 'Decide')), ' ▸')))),
