@@ -24,7 +24,8 @@ const C = (s: GameState) => liveOf(s).counters;
 const vl = (s: GameState, k: Venture['kind']) => ventures(s).list.filter((v) => v.kind === k);
 const certs = (s: GameState, b: Record<string, number>) => s.player.stats.gold + s.player.stats.platinum - (b.certs ?? 0);
 const top10 = (s: GameState, b: Record<string, number>) => s.player.stats.top10s - (b.top10s ?? 0);
-const kUnits = (gs: string[]) => (s: GameState) => Math.round(genreUnits(s, gs) / 1000);
+// pico de vendas (mil): vender masters/catálogo depois não apaga a meta já alcançada
+const kUnits = (gs: string[]) => (s: GameState) => { const c = C(s), k = `u23:${gs[0]}`; c[k] = Math.max(c[k] ?? 0, Math.round(genreUnits(s, gs) / 1000)); return c[k]; };
 const band = (s: GameState) => bestFame(s, (a) => !!a.playerBand);
 const fam = (gs: string[]) => (_s: GameState, a: { genre: string }) => gs.includes(a.genre);
 
@@ -84,9 +85,9 @@ export const SCENARIOS23: Scenario23[] = [
     metric: (s) => C(s).full23 ?? 0, fail: insolvent,
   },
   {
-    id: 'memphis_studio_1961', capital23: 150000, name: l('Soulsville: o cinema da McLemore, 1961', 'Soulsville: the McLemore movie theater, 1961'), startYear: 1961, endYear: 1968, homeCity: 'memphis', scenario: 'from_zero', careers: ['studio'],
+    id: 'memphis_studio_1961', capital23: 180000, name: l('Soulsville: o cinema da McLemore, 1961', 'Soulsville: the McLemore movie theater, 1961'), startYear: 1961, endYear: 1968, homeCity: 'memphis', scenario: 'from_zero', careers: ['studio'],
     desc: l('Um cinema velho vira estúdio com piso inclinado e eco de sala. Uma banda da casa, birracial, grava o soul mais cru do Sul — até 1968, quando o assassinato de Martin Luther King muda Memphis e um contrato de distribuição leva o catálogo.', 'An old cinema becomes a studio with a sloping floor and a room echo. A mixed-race house band cuts the rawest soul in the South — until 1968, when Martin Luther King\'s murder changes Memphis and a distribution deal takes the catalog.'),
-    goal: l('Encha a agenda do estúdio: some sessões contratadas até 1968.', 'Fill the studio\'s book: add up booked sessions by 1968.'), unit: l('sessões', 'sessions'), tiers: [80, 160, 260],
+    goal: l('Encha a agenda do estúdio: some sessões contratadas até 1968.', 'Fill the studio\'s book: add up booked sessions by 1968.'), unit: l('sessões', 'sessions'), tiers: [70, 140, 240],
     rules17: [l('Você é dono de estúdio: começa com uma sala alugada e um "som da casa" cru.', 'You own a studio: you start with a rented room and a raw "house sound".'),
       l('1962: um instrumental da banda da casa estoura — o soul de Memphis em alta.', '1962: a house-band instrumental breaks — Memphis soul booms.'),
       l('Abril de 1968: o assassinato de King em Memphis — o clima da cidade muda.', 'April 1968: King is murdered in Memphis — the city\'s mood changes.')],
@@ -119,7 +120,7 @@ export const SCENARIOS23: Scenario23[] = [
     metric: (s) => Math.round(Math.max(0, ...vl(s, 'media').map((v) => v.reach ?? 0))), fail: insolvent,
   },
   {
-    id: 'chitlin_1955', capital23: 40000, name: l('O circuito chitlin\': Memphis, 1955', 'The chitlin\' circuit: Memphis, 1955'), startYear: 1955, endYear: 1962, homeCity: 'memphis', scenario: 'from_zero', careers: ['booking'],
+    id: 'chitlin_1955', capital23: 60000, name: l('O circuito chitlin\': Memphis, 1955', 'The chitlin\' circuit: Memphis, 1955'), startYear: 1955, endYear: 1962, homeCity: 'memphis', scenario: 'from_zero', careers: ['booking'],
     desc: l('No Sul segregado, artistas negros só tocam numa rede de clubes, salões e teatros — o "chitlin\' circuit". Quem tem a agenda e o telefone decide quem viaja, quem come e quem estoura.', 'In the segregated South, Black artists can only play a network of clubs, halls and theaters — the "chitlin\' circuit". Whoever holds the date book and the phone decides who travels, who eats and who breaks.'),
     goal: l('Monte o maior elenco de agenciados até 1962.', 'Build the biggest roster of booked acts by 1962.'), unit: l('clientes', 'clients'), tiers: [2, 4, 6],
     rules17: [l('Você é agente de shows: começa com uma agência de uma pessoa só e um cliente de R&B.', 'You are a booking agent: you start with a one-person agency and one R&B client.'),
@@ -149,7 +150,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'funk_1989', name: l('Baile funk: Rio de Janeiro, 1989', 'Baile funk: Rio de Janeiro, 1989'), startYear: 1989, endYear: 1997, homeCity: 'rio', scenario: 'from_zero', careers: ['musician'], role: 'artist', bandGenre: 'funk_carioca',
     desc: l('1989: um DJ lança o primeiro disco de funk cantado em português, sobre a batida do Miami bass. Os bailes das comunidades reúnem milhares — e a imprensa os culpa pelos arrastões de 1992. Você é um MC tentando sair do baile para o rádio.', '1989: a DJ releases the first funk record sung in Portuguese, over a Miami bass beat. Community bailes draw thousands — and the press blames them for the 1992 beach mass robberies. You are an MC trying to get from the baile to the radio.'),
-    goal: l('Leve sua banda à fama nacional até 1997.', 'Take your act to national fame by 1997.'), unit: l('de fama', 'fame'), tiers: [50, 70, 88],
+    goal: l('Leve sua banda à fama nacional até 1997.', 'Take your act to national fame by 1997.'), unit: l('de fama', 'fame'), tiers: [75, 86, 95],
     rules17: [l('Você é músico (MC): sem selo, só a sua carreira.', 'You are a musician (MC): no label, just your career.'),
       l('1989: o primeiro LP de funk em português — o gênero ganha nome.', '1989: the first funk LP in Portuguese — the genre gets a name.'),
       l('Outubro de 1992: os arrastões nas praias — pânico moral contra os bailes.', 'October 1992: the beach mass robberies — a moral panic against the bailes.'),
@@ -162,7 +163,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'mangue_1993', name: l('Caranguejos com cérebro: Recife, 1993', 'Crabs with brains: Recife, 1993'), startYear: 1993, endYear: 1998, homeCity: 'recife', scenario: 'from_zero', careers: ['musician'], role: 'artist', bandGenre: 'mangue',
     desc: l('Um manifesto fincado na lama: maracatu, rock pesado e hip-hop numa antena parabólica cravada no mangue. Em 1994 sai o disco que põe Recife no mapa; em fevereiro de 1997, um acidente de carro cala a voz do movimento.', 'A manifesto stuck in the mud: maracatu, heavy rock and hip-hop on a satellite dish planted in the mangrove. In 1994 the record that puts Recife on the map comes out; in February 1997 a car crash silences the movement\'s voice.'),
-    goal: l('Leve sua banda à fama nacional até 1998.', 'Take your band to national fame by 1998.'), unit: l('de fama', 'fame'), tiers: [25, 40, 55],
+    goal: l('Leve sua banda à fama nacional até 1998.', 'Take your band to national fame by 1998.'), unit: l('de fama', 'fame'), tiers: [62, 76, 90],
     rules17: [l('Você é músico: sem selo, só a sua banda de mangue.', 'You are a musician: no label, just your mangue band.'),
       l('Abril de 1994: o disco da lama e do caos — mangue em alta.', 'April 1994: the record of mud and chaos — mangue booms.'),
       l('Fevereiro de 1997: a morte do líder do movimento.', 'February 1997: the movement\'s leader dies.')],
@@ -176,7 +177,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'studioone_1963', name: l('Studio One: Kingston, 1963', 'Studio One: Kingston, 1963'), startYear: 1963, endYear: 1970, homeCity: 'kingston', scenario: 'from_zero',
     desc: l('Um ano depois da independência, um dono de sound system abre um estúdio em Brentford Road. O ska vira o som da nova nação; em 1966 o calor desacelera a batida para o rocksteady, e em 1968 nasce o reggae.', 'A year after independence, a sound-system owner opens a studio on Brentford Road. Ska becomes the new nation\'s sound; in 1966 the heat slows the beat into rocksteady, and in 1968 reggae is born.'),
-    goal: l('Venda discos de ska, rocksteady e reggae até 1970.', 'Sell ska, rocksteady and reggae records by 1970.'), unit: l('mil cópias', 'thousand copies'), tiers: [25, 60, 120],
+    goal: l('Venda discos de ska, rocksteady e reggae até 1970.', 'Sell ska, rocksteady and reggae records by 1970.'), unit: l('mil cópias', 'thousand copies'), tiers: [30, 70, 140],
     rules17: [l('Sound systems: seus atos jamaicanos rendem +10% nos shows.', 'Sound systems: your Jamaican acts earn +10% at shows.'),
       l('Abril de 1964: o ska na Feira Mundial de Nova York.', 'April 1964: ska at the New York World\'s Fair.'),
       l('1966: o rocksteady substitui o ska; 1968: o reggae.', '1966: rocksteady replaces ska; 1968: reggae.')],
@@ -190,7 +191,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'jovemguarda_1965', name: l('Quero que vá tudo pro inferno: São Paulo, 1965', 'Jovem Guarda: São Paulo, 1965'), startYear: 1965, endYear: 1969, homeCity: 'sao_paulo', scenario: 'emerging',
     desc: l('Agosto de 1965: um programa de domingo à tarde na TV Record transforma o iê-iê-iê brasileiro em febre — calças, anéis e gírias. Em 1968 o programa acaba, e a Tropicália e a MPB dos festivais disputam a juventude.', 'August 1965: a Sunday-afternoon show on TV Record turns Brazilian "yeah-yeah-yeah" into a craze — trousers, rings and slang. In 1968 the show ends, and Tropicália and festival MPB fight for the youth.'),
-    goal: l('Venda discos de Jovem Guarda até 1969.', 'Sell Jovem Guarda records by 1969.'), unit: l('mil cópias', 'thousand copies'), tiers: [150, 400, 900],
+    goal: l('Venda discos de Jovem Guarda até 1969.', 'Sell Jovem Guarda records by 1969.'), unit: l('mil cópias', 'thousand copies'), tiers: [300, 700, 1400],
     rules17: [l('Agosto de 1965: o programa de domingo estreia — Jovem Guarda em alta e fama para seus atos.', 'August 1965: the Sunday show premieres — Jovem Guarda booms and your acts gain fame.'),
       l('Janeiro de 1968: o programa sai do ar.', 'January 1968: the show goes off the air.')],
     events17: [{ year: 1965, month: 7, title: l('Domingo à tarde na TV', 'Sunday afternoon on TV'), text: l('O programa jovem vira o mais visto do país; a juventude ganha um rei.', 'The youth show becomes the country\'s most watched; the youth get a king.'), genre: 'jovem_guarda', genreMult: 1.5, fame: 4 },
@@ -201,7 +202,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'afrobeat_1970', name: l('Afrobeat: Lagos, 1970', 'Afrobeat: Lagos, 1970'), startYear: 1970, endYear: 1979, homeCity: 'lagos', scenario: 'from_zero',
     desc: l('Saindo da guerra civil, Lagos tem petróleo, dinheiro e noites longas. Um saxofonista volta dos EUA com funk e política e funda um clube-santuário. Os militares não gostam — em fevereiro de 1977, mil soldados invadem a república dele.', 'Out of the civil war, Lagos has oil, money and long nights. A saxophonist returns from the US with funk and politics and founds a club-shrine. The military doesn\'t like it — in February 1977 a thousand soldiers raid his compound.'),
-    goal: l('Leve um artista de afrobeat ao pico de fama até 1979.', 'Take an afrobeat act to peak fame by 1979.'), unit: l('de fama', 'fame'), tiers: [35, 50, 65],
+    goal: l('Leve um artista de afrobeat ao pico de fama até 1979.', 'Take an afrobeat act to peak fame by 1979.'), unit: l('de fama', 'fame'), tiers: [40, 55, 70],
     rules17: [l('Boom do petróleo: seus atos nigerianos rendem +10% nos shows.', 'Oil boom: your Nigerian acts earn +10% at shows.'),
       l('1971: o santuário abre — afrobeat em alta.', '1971: the shrine opens — afrobeat booms.'),
       l('Fevereiro de 1977: a invasão militar — afrobeat cai e seu caixa sofre.', 'February 1977: the military raid — afrobeat drops and your cash suffers.')],
@@ -214,7 +215,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'factory_1978', name: l('Fábrica de discos: Manchester, 1978', 'Record factory: Manchester, 1978'), startYear: 1978, endYear: 1992, homeCity: 'manchester', scenario: 'from_zero',
     desc: l('Um apresentador de TV e um ator desempregado fundam um selo sem contratos escritos, com capas lindas e caras demais. Pós-punk sombrio, depois um clube enorme e vazio — até o acid house de 1988 lotar tudo. Em 1992, a falência.', 'A TV presenter and an out-of-work actor start a label with no written contracts, beautiful and overpriced sleeves. Dark post-punk, then a huge empty club — until 1988 acid house packs it out. In 1992, bankruptcy.'),
-    goal: l('Conquiste discos de ouro e platina até 1992.', 'Earn gold and platinum records by 1992.'), unit: l('certificações', 'certifications'), tiers: [2, 5, 10],
+    goal: l('Conquiste discos de ouro e platina até 1992.', 'Earn gold and platinum records by 1992.'), unit: l('certificações', 'certifications'), tiers: [8, 14, 22],
     rules17: [l('Capas caras: seus artistas esperam adiantamentos 15% menores (contratos de aperto de mão).', 'Pricey sleeves: your artists expect 15% smaller advances (handshake deals).'),
       l('Maio de 1980: a morte do vocalista da banda-símbolo; 1983: o single de 12" mais vendido da história.', 'May 1980: the flagship band\'s singer dies; 1983: the best-selling 12" single ever.'),
       l('1988: acid house e Madchester.', '1988: acid house and Madchester.')],
@@ -241,7 +242,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'axe_1985', name: l('Axé music: Salvador, 1985', 'Axé music: Salvador, 1985'), startYear: 1985, endYear: 1995, homeCity: 'salvador', scenario: 'from_zero',
     desc: l('1985: um cantor de trio elétrico mistura frevo, reggae e ijexá e o Brasil inteiro dança. Os blocos afro lançam o samba-reggae; em 1992 uma cantora para a avenida e o axé vira o som do verão nacional.', '1985: a trio-elétrico singer mixes frevo, reggae and ijexá and all of Brazil dances. The afro blocs launch samba-reggae; in 1992 a singer stops the avenue and axé becomes the national summer sound.'),
-    goal: l('Venda discos de axé até 1995.', 'Sell axé records by 1995.'), unit: l('mil cópias', 'thousand copies'), tiers: [60, 250, 600],
+    goal: l('Venda discos de axé até 1995.', 'Sell axé records by 1995.'), unit: l('mil cópias', 'thousand copies'), tiers: [300, 600, 1100],
     rules17: [l('Carnaval: seus atos de axé rendem +15% nos shows.', 'Carnival: your axé acts earn +15% at shows.'),
       l('1987: o samba-reggae dos blocos afro; 1992: o axé conquista o país.', '1987: the afro blocs\' samba-reggae; 1992: axé conquers the country.')],
     events17: [{ year: 1987, month: 1, title: l('O faraó do Pelourinho', 'The pharaoh of Pelourinho'), text: l('Um bloco afro transforma o Carnaval com o samba-reggae.', 'An afro bloc transforms Carnival with samba-reggae.'), genre: 'axe', genreMult: 1.25 },
@@ -253,7 +254,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'sertanejo_2005', name: l('Sertanejo universitário: Goiânia, 2005', 'College sertanejo: Goiânia, 2005'), startYear: 2005, endYear: 2015, homeCity: 'goiania', scenario: 'emerging',
     desc: l('Festas de universidade em Goiânia e Campo Grande trocam a viola caipira por baladas pop: duplas jovens gravam DVDs ao vivo e liberam as músicas de graça. Em 2011, um refrão vira hit mundial; em 2015 as cantoras tomam o gênero.', 'University parties in Goiânia and Campo Grande swap the country guitar for pop ballads: young duos shoot live DVDs and give songs away free. In 2011 a chorus becomes a global hit; in 2015 women take over the genre.'),
-    goal: l('Venda (e transmita) sertanejo universitário até 2015.', 'Sell (and stream) college sertanejo by 2015.'), unit: l('mil unidades', 'thousand units'), tiers: [80, 300, 800],
+    goal: l('Venda (e transmita) sertanejo universitário até 2015.', 'Sell (and stream) college sertanejo by 2015.'), unit: l('mil unidades', 'thousand units'), tiers: [300, 900, 1800],
     rules17: [l('DVD ao vivo: seus atos sertanejos rendem +15% nos shows.', 'Live DVD: your sertanejo acts earn +15% at shows.'),
       l('2011: um refrão sertanejo toca no mundo inteiro.', '2011: a sertanejo chorus plays all over the world.'),
       l('2015: o "feminejo" — novas estrelas femininas.', '2015: "feminejo" — new female stars.')],
