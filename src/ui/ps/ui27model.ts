@@ -53,6 +53,7 @@ export const PURPOSE27: Record<string, L> = {
   dyn18: l('Clima dentro das bandas: brigas, alianças e quem pode sair.', 'Band chemistry: fights, alliances and who might leave.'),
   contracts19: l('Contratos em jogo: cláusulas, empresários e masters.', 'Contracts in play: clauses, managers and masters.'),
   // market (Talentos): a própria tela já abre com o fluxo "Procurar → Funil → Decidir"; sem subtítulo repetido
+  knownacts27: l('Quem a sua empresa conhece e por quê: elenco, estrelas, cena local, radar, contatos, paradas, rivais e imprensa.', 'Who your company knows and why: roster, stars, local scene, radar, contacts, charts, rivals and press.'),
   directory: l('Todos os artistas do mundo, com filtros e ficha completa.', 'Every act in the world, with filters and full sheet.'),
   talent18: l('Formação de talentos: escolas, oficinas e quem está surgindo.', 'Talent development: schools, workshops and who is rising.'),
   management: l('Gestão das carreiras: agenda, imagem e conflitos do elenco.', 'Career management: roster schedule, image and conflicts.'),

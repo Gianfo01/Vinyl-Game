@@ -17,6 +17,8 @@ export const ICON17_NAMES = [
   'door', 'clapper', 'typewriter', 'copyright', 'factory', 'signpost', 'network', 'seedling', 'passport', 'columns', 'dice',
   // r19 onda 4 (ux19): páginas da rodada 19 com lugar próprio no menu
   'datebook', 'quill', 'turntable', 'spotlight', 'ballot', 'zine', 'certificate',
+  // r27 (KNOWN): Artistas conhecidos — fichário de contatos
+  'rolodex',
 ] as const;
 export type Icon17 = (typeof ICON17_NAMES)[number];
 
@@ -29,6 +31,7 @@ const DRAW: Record<Icon17, (p: Px) => void> = {
   book: (p) => { p.rect(2, 3, 12, 11, K.dred); p.rect(4, 3, 9, 10, K.cream); p.rect(3, 3, 1, 11, K.red); p.hline(6, 11, 6, K.grey); p.hline(6, 11, 8, K.grey); p.hline(6, 10, 10, K.grey); },
   pin: (p) => { p.disc(8, 6, 4.6, K.red); p.disc(8, 6, 1.8, K.white); p.poly([[4.5, 8], [11.5, 8], [8, 15]], K.red); p.set(6, 4, C('#ffb0b0')); },
   people: (p) => { person(p, 4.5, K.blue); person(p, 11.5, K.green); p.disc(8, 6, 2.4, K.skin); p.ellipse(8, 13, 3.4, 3, K.orange); },
+  rolodex: (p) => { p.rect(2, 12, 12, 3, K.dgrey); p.rect(4, 10, 2, 3, K.grey); p.rect(10, 10, 2, 3, K.grey); p.rect(2, 3, 12, 8, K.cream); p.rect(4, 1, 3, 2, K.cream); p.hline(2, 13, 3, K.dgold); p.disc(6, 6, 1.6, K.skin); p.ellipse(6, 9.5, 2.4, 1.4, K.blue); p.hline(9, 12, 6, K.grey); p.hline(9, 12, 8, K.grey); },
   eye: (p) => { p.ellipse(8, 8, 7, 4.2, K.white); p.disc(8, 8, 3, K.teal); p.disc(8, 8, 1.4, K.ink); p.put(7, 7, K.white); },
   briefcase: (p) => { p.rect(6, 2, 4, 2, K.dbrown); p.rect(2, 4, 12, 10, K.brown); p.hline(2, 13, 8, K.dbrown); p.rect(7, 7, 2, 3, K.gold); },
   headphones: (p) => { p.vline(3, 5, 9, K.dgrey); p.vline(12, 5, 9, K.dgrey); p.line(3, 5, 5, 3, K.dgrey); p.line(12, 5, 10, 3, K.dgrey); p.hline(5, 10, 2, K.dgrey); p.rect(2, 9, 3, 5, K.red); p.rect(11, 9, 3, 5, K.red); },

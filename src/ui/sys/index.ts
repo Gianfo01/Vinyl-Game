@@ -7,6 +7,7 @@ import './world4';
 import './scenes';
 import './live';
 import './life';
+import './knownacts27'; // r27 (KNOWN): Artistas conhecidos — quem a sua empresa conhece e por quê (antes de Todos os artistas)
 import './directory';
 import './capital';
 import './hq6';

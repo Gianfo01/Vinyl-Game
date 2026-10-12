@@ -52,7 +52,8 @@ function apply(tb: HTMLTableElement, hr: HTMLTableRowElement, st: Sort22 | undef
 
 function sortable(tb: HTMLTableElement): HTMLTableRowElement | null {
   const hr = headRow(tb);
-  if (!hr || tb.closest('[data-nosort]')) return null;
+  // r27: tabelas paginadas ordenam a lista inteira (sort27) — o sort22 só veria a página visível
+  if (!hr || tb.closest('[data-nosort]') || tb.hasAttribute('data-sort27')) return null;
   const n = hr.cells.length;
   const rows = bodyRows(tb, hr);
   if (rows.length < 2 || rows.some((r) => r.cells.length !== n)) return null;

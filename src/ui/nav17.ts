@@ -23,7 +23,7 @@ export const NAV17: Group17[] = [
     sec('course', l('Rumo, prazos, direitos e cadeia', 'Course, deadlines, rights and supply'), ['long18', 'calendar19', 'rights18', 'supply18'])] },
   { id: 'artists', label: l('Artistas', 'Artists'), icon: 'guitar', secs: [
     sec('roster', l('Seu elenco', 'Your roster'), ['artists', 'people', 'dyn18', 'contracts19']),
-    sec('find', l('Descobrir', 'Discover'), ['market', 'directory', 'talent18']),
+    sec('find', l('Descobrir', 'Discover'), ['market', 'knownacts27', 'directory', 'talent18']),
     sec('pros', l('Bastidores', 'Behind the scenes'), ['managers14', 'producers15'])] },
   { id: 'music', label: l('Música', 'Music'), icon: 'disc', secs: [
     sec('make', l('Criar', 'Create'), ['project', 'creation', 'studio']),
@@ -75,7 +75,7 @@ export const BAND_OR_LABEL17 = ['artists', 'project', 'creation', 'studio', 'rel
 export const ICON17: Record<string, string> = {
   cockpit: 'gamepad', plan: 'clock', goals: 'target', diary: 'book',
   campus18: 'skyline', hq: 'pin', company: 'contract', team: 'people', finance: 'money', business: 'bank',
-  artists: 'drums', people: 'handshake', market: 'eye', directory: 'fans', managers14: 'briefcase', producers15: 'headphones',
+  artists: 'drums', people: 'handshake', market: 'eye', knownacts27: 'rolodex', directory: 'fans', managers14: 'briefcase', producers15: 'headphones',
   project: 'cassette', creation: 'pen', studio: 'mic', releases: 'cd', catalog: 'gold-disc', shows: 'tour-bus', cal17: 'calendar',
   news17: 'megaphone', media: 'camera', critics: 'scroll',
   world: 'map', world17: 'chess', after18: 'door', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
