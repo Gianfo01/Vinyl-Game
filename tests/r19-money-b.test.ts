@@ -8,7 +8,7 @@ import { applyMods } from '../src/sim/ext4';
 import { recentFacts } from '../src/sim/facts17';
 import '../src/sim/sys';
 import { feudOf18 } from '../src/sim/sys/feud18';
-import { _mb19, borrow19, deliverJunk19, lend19, loansOn19, mb19, recall19, sellContract19, setClause19, value19, vote19, window19, windows19 } from '../src/sim/sys/moneyb19';
+import { _mb19, borrow19, deliverJunk19, lend19, loansOn19, mb19, sellContract19, setClause19, value19, vote19, window19, windows19 } from '../src/sim/sys/moneyb19';
 import { answerMsg } from '../src/sim/sys/people/inbox';
 import { P } from '../src/sim/sys/people/state';
 import { press } from '../src/sim/sys/press9';
@@ -35,13 +35,10 @@ const richLabel = (s: GameState): Label => { const lb = Object.values(s.labels).
 const msg = (s: GameState, k: string) => P(s).inbox.filter((m) => m.ref?.k18 === k && !m.resolved).pop()!;
 
 describe('r19 money-b — janelas e valor de mercado (M1/M2)', () => {
-  it('janelas em janeiro e julho–agosto; valor sobe com a fama', () => {
+  it('r22: sem janelas — mercado aberto o ano todo; valor sobe com a fama', () => {
     const s = game();
-    s.month = 0; expect(window19(s)).toBe(true);
-    s.month = 3; expect(window19(s)).toBe(false);
-    s.month = 7; expect(window19(s)).toBe(true);
-    s.month = 3;
-    expect(windows19(s, 2).every((w) => w.close >= w.open)).toBe(true);
+    for (const m of [0, 3, 7, 10]) { s.month = m; expect(window19(s)).toBe(true); }
+    expect(windows19(s, 2)).toEqual([]);
     const a = myAct(s, 30), v30 = value19(s, a).v;
     a.fame = 70;
     expect(value19(s, a).v).toBeGreaterThan(v30 * 3);
@@ -102,32 +99,19 @@ describe('r19 money-b — M2 cláusula de saída', () => {
   });
 });
 
-describe('r19 money-b — M1 empréstimos', () => {
-  it('emprestar um ato: vai ao rival e volta no fim (com bônus se cresceu); pegar emprestado e chamar de volta', () => {
+describe('r19 money-b — M1 empréstimos (removidos na r22)', () => {
+  it('emprestar e pegar emprestado são recusados em qualquer mês', () => {
     const s = game();
-    const a = myAct(s, 40), lb = richLabel(s);
-    s.month = 3;
-    expect(lend19(s, a.id, 'record')).not.toBeNull(); // fora da janela
-    s.month = 0;
-    expect(lend19(s, a.id, 'record')).toBeNull();
-    expect(a.owner).toBe(lb.id);
-    a.fame += 10; a.trust = 60;
-    s.week += 30;
-    _mb19.loansMonth(s, yes);
-    expect(a.owner).toBe('player');
-    expect(recentFacts(s, { kind: 'artist_loan' }).some((f) => f.tags.includes('back'))).toBe(true);
-    // pegar emprestado um ato de rival e chamar o próprio de volta antes
+    const a = myAct(s, 40);
+    richLabel(s);
     const other = Object.values(s.acts).find((x) => x.owner && x.owner !== 'player' && s.labels[x.owner]?.active && x.contractId && s.contracts[x.contractId] && x.status !== 'retired' && x.status !== 'split')!;
-    const owner = other.owner;
-    expect(borrow19(s, other.id)).toBeNull();
-    expect(other.owner).toBe('player');
-    expect(lend19(s, a.id, 'tour')).toBeNull();
-    const ln = loansOn19(s).find((x) => x.act === a.id)!;
-    expect(recall19(s, ln.id)).toBeNull();
+    for (const m of [0, 3, 7]) {
+      s.month = m;
+      expect(lend19(s, a.id, 'record')).not.toBeNull();
+      expect(borrow19(s, other.id)).not.toBeNull();
+    }
     expect(a.owner).toBe('player');
-    s.week += 30;
-    _mb19.loansMonth(s, yes);
-    expect(other.owner).toBe(owner);
+    expect(loansOn19(s)).toHaveLength(0);
   });
 });
 

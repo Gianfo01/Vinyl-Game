@@ -1,10 +1,10 @@
-// Rodada 19 (T2 money-b) — página "Mercado de contratos" (Artistas): janela de transferências (vender, emprestar, pegar
-// emprestado, pagar cláusula de rival), cláusulas de saída com valor de mercado, empresários totais, brigas de gestão e masters
+// Rodada 19 (T2 money-b) — página "Mercado de contratos" (Artistas): mercado aberto o ano todo (r22: sem janelas nem
+// empréstimos; vender, pagar cláusula de rival), cláusulas de saída com valor de mercado, empresários totais, brigas de gestão e masters
 // presos, casos reais documentados e o histórico.
 
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { CLAUSE19, auditCost19, auditMgr19, borrow19, borrowFee19, chron19, deliverJunk19, fireCost19, fireMgr19, lend19, loanFee19, loansOn19, mb19, myClauseActs19, npcClause19, onLoan19, payClause19, recall19, rivalStars19, setClause19, value19, window19, windows19, type Clause19 } from '../../sim/sys/moneyb19';
+import { CLAUSE19, auditCost19, auditMgr19, chron19, deliverJunk19, fireCost19, fireMgr19, loansOn19, mb19, myClauseActs19, npcClause19, payClause19, recall19, rivalStars19, setClause19, value19, type Clause19 } from '../../sim/sys/moneyb19';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
@@ -22,32 +22,30 @@ const muted = (x: L | string) => h('p', { class: 'muted small' }, T(x));
 const fm = (x: L, p: Record<string, string | number>) => t(x).replace(/\{(\w+)\}/g, (_, k) => String(p[k] ?? ''));
 const val = (s: GameState, id: string) => why18(s, 'mb19.value', { act: id }, $(value19(s, s.acts[id]).v));
 
+/** r22: mercado aberto o ano todo (sem janelas) e sem empréstimos de artista. */
 function windowTab(s: GameState): HTMLElement {
-  const open = window19(s), mine = myClauseActs19(s), w = windows19(s, 2);
+  const mine = myClauseActs19(s);
+  const back = loansOn19(s);
   return h('div', null,
-    muted(l('Duas janelas por ano, como no futebol: janeiro e julho–agosto. Nelas os rivais fazem lances pelos seus astros, pagam cláusulas baratas e pegam artistas emprestados; fora delas, só a venda de aperto (caixa no vermelho) acontece.', 'Two windows a year, like football: January and July–August. In them rivals bid for your stars, pay cheap clauses and borrow acts; outside them only the distress sale (cash in the red) happens.')),
-    row(pill(open ? t(l('Janela ABERTA', 'Window OPEN')) : t(l('Janela fechada', 'Window closed')), open ? 'good' : ''), ...w.map((x) => pill(fm(l('{m}/{y}', '{m}/{y}'), { m: x.m + 1, y: x.y })))),
+    muted(l('O mercado de contratos funciona o ano todo: a qualquer momento um rival pode fazer um lance pelos seus astros ou pagar uma cláusula de saída barata, e você pode pagar a cláusula de um astro rival. No aperto de caixa os lances ficam mais prováveis e mais baixos.', 'The contract market runs all year: at any time a rival may bid for your stars or pay a cheap exit clause, and you may pay a rival star\'s clause. When cash is tight, bids get more likely and lower.')),
     section(t(l('Seu elenco', 'Your roster')), mine.length ? h('table', { class: 'table small' },
-      h('tr', null, ...[l('Ato', 'Act'), l('Valor', 'Value'), l('Situação', 'Status'), ''].map((x) => h('th', null, T(x)))),
-      ...mine.map((a) => { const ln = onLoan19(s, a.id); return h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, val(s, a.id)), h('td', null, ln ? pill(t(l('emprestado (chegou)', 'borrowed (in)')), 'warn') : ''),
-        h('td', null, ln ? '' : row(btn(fm(l('Emprestar 1 disco (+{f})', 'Lend 1 record (+{f})'), { f: $(loanFee19(s, a, 'record')) }), () => say(lend19(s, a.id, 'record')), !open),
-          btn(fm(l('Emprestar turnê (+{f})', 'Lend a tour (+{f})'), { f: $(loanFee19(s, a, 'tour')) }), () => say(lend19(s, a.id, 'tour')), !open)))); }))
+      h('tr', null, ...[l('Ato', 'Act'), l('Valor de mercado', 'Market value')].map((x) => h('th', null, T(x)))),
+      ...mine.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, val(s, a.id)))))
       : muted(l('Nenhum ato com contrato do seu selo.', 'No acts under your label\'s contract.'))),
-    section(t(l('Emprestados', 'On loan')), loansOn19(s).length ? h('ul', { class: 'small' }, ...loansOn19(s).map((x) => h('li', null, actLink(s, x.act), ' — ',
+    // saves antigos: empréstimos que já estavam valendo terminam normalmente
+    back.length ? section(t(l('Empréstimos antigos (terminando)', 'Old loans (ending)')), h('ul', { class: 'small' }, ...back.map((x) => h('li', null, actLink(s, x.act), ' — ',
       x.from === 'player' ? fm(l('com {b} até a semana {w}', 'with {b} until week {w}'), { b: s.labels[x.to]?.name ?? '?', w: x.end }) : fm(l('de {b}, volta na semana {w}', 'from {b}, returns on week {w}'), { b: s.labels[x.from]?.name ?? '?', w: x.end }),
-      ' ', x.from === 'player' ? btn(fm(l('Chamar de volta (multa {p})', 'Recall (penalty {p})'), { p: $(Math.round(x.fee / 2)) }), () => say(recall19(s, x.id))) : null)))
-      : muted(l('Ninguém emprestado.', 'Nobody on loan.'))),
+      ' ', x.from === 'player' ? btn(fm(l('Chamar de volta (multa {p})', 'Recall (penalty {p})'), { p: $(Math.round(x.fee / 2)) }), () => say(recall19(s, x.id))) : null)))) : null,
     section(t(l('Astros dos rivais', 'Rival stars')), h('table', { class: 'table small' },
       h('tr', null, ...[l('Ato', 'Act'), l('Selo', 'Label'), l('Valor', 'Value'), l('Cláusula', 'Clause'), ''].map((x) => h('th', null, T(x)))),
       ...rivalStars19(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, s.labels[a.owner!]?.name ?? '?'), h('td', null, val(s, a.id)), h('td', null, $(npcClause19(s, a))),
-        h('td', null, row(btn(l('Pagar a cláusula', 'Pay the clause'), () => say(payClause19(s, a.id)), !open || freeCash20(s) < npcClause19(s, a)),
-          btn(fm(l('Pegar emprestado ({p})', 'Borrow ({p})'), { p: $(borrowFee19(s, a)) }), () => say(borrow19(s, a.id)), !open || freeCash20(s) < borrowFee19(s, a)))))))));
+        h('td', null, btn(l('Pagar a cláusula', 'Pay the clause'), () => say(payClause19(s, a.id)), freeCash20(s) < npcClause19(s, a))))))));
 }
 
 function clauseTab(s: GameState): HTMLElement {
   const mine = myClauseActs19(s);
   return h('div', null,
-    muted(l('Cláusula de saída: preço que um rival paga para levar o artista sem negociar. Barata fideliza (confiança +8) e ajuda a fechar a assinatura, mas convida o rival rico na janela; justa protege; sem cláusula, o artista desconfia. O valor de mercado mostra o porquê.', 'Exit clause: the price a rival pays to take the act without negotiating. Cheap builds loyalty (trust +8) and helps close the signing, but invites the rich rival in the window; fair protects; no clause, the act is wary. Market value shows the why.')),
+    muted(l('Cláusula de saída: preço que um rival paga para levar o artista sem negociar. Barata fideliza (confiança +8) e ajuda a fechar a assinatura, mas convida o rival rico a pagar e levar; justa protege; sem cláusula, o artista desconfia. O valor de mercado mostra o porquê.', 'Exit clause: the price a rival pays to take the act without negotiating. Cheap builds loyalty (trust +8) and helps close the signing, but invites a rich rival to pay and take them; fair protects; no clause, the act is wary. Market value shows the why.')),
     mine.length ? h('table', { class: 'table small' },
       h('tr', null, ...[l('Ato', 'Act'), l('Valor de mercado', 'Market value'), l('Cláusula', 'Clause'), ''].map((x) => h('th', null, T(x)))),
       ...mine.map((a) => { const k = s.contracts[a.contractId!]; const cheap = !!k?.exitFee && k.exitFee < value19(s, a).v * 0.95;
@@ -97,11 +95,11 @@ function page(s: GameState): HTMLElement {
   return h('div', null,
     h('h2', null, t(l('Mercado de contratos', 'Contract market'))),
     tabs('contracts19', [
-      { id: 'win', label: t(l('Janela', 'Window')), badge: window19(s) ? 1 : undefined, render: () => windowTab(s) },
+      { id: 'win', label: t(l('Mercado', 'Market')), render: () => windowTab(s) },
       { id: 'clause', label: t(l('Cláusulas', 'Clauses')), render: () => clauseTab(s) },
       { id: 'mgr', label: t(l('Empresários', 'Managers')), badge: Object.values(mb19(s).mgr).filter((m) => m.revolt >= 60).length || undefined, render: () => mgrTab(s) },
       { id: 'masters', label: t(l('Gestão e masters', 'Management and masters')), render: () => mastersTab(s) },
       { id: 'hist', label: t(l('Histórico', 'History')), render: () => histTab(s) },
     ], rerender));
 }
-registerArea({ id: 'contracts19', label: l('Mercado de contratos', 'Contract market'), icon: 'handshake', key: '', render: page, badge: (s) => (window19(s) && s.config.role !== 'artist' ? 1 : undefined) });
+registerArea({ id: 'contracts19', label: l('Mercado de contratos', 'Contract market'), icon: 'handshake', key: '', render: page });

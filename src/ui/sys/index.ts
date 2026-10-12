@@ -172,7 +172,7 @@ import './tribute19';
 import './session19';
 // Rodada 19 (onda 2: 11.5 + Frente 2): card "A era" no Cockpit e cartões "A história real".
 import './era19';
-// Rodada 19 (T2 money-b): Mercado de contratos (janelas, cláusulas, empréstimos, empresários, briga de gestão).
+// Rodada 19 (T2 money-b): Mercado de contratos (cláusulas, lances, empresários, briga de gestão; r22: sem janelas nem empréstimos).
 import './moneyb19';
 // Rodada 19 (onda 3, T1): Finanças › Dívida e catálogo.
 import './money19';

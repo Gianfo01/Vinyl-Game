@@ -1,10 +1,9 @@
 // Rodada 19 (Frente 3, T2 "money-b") — MERCADO DE CONTRATOS, EMPRESÁRIOS E BRIGAS DE GESTÃO.
-//  • N2  vender o contrato de uma estrela (Sun → RCA, 1955): lance de selo rival na janela ou no aperto de caixa; vender, vender
+//  • N2  vender o contrato de uma estrela (Sun → RCA, 1955): lance de selo rival a qualquer momento (mais provável no aperto de caixa); vender, vender
 //        com override (% das vendas futuras por 5 anos), pedir mais ou segurar. Se a estrela explode longe de você → arrependimento.
-//  • M1  janelas de transferência (janeiro e julho–agosto, estilo FM): lances, cláusulas pagas, empréstimos de artista (um disco
-//        ou uma turnê, taxa + bônus pelo que crescer, chamada de volta com multa) e pegar emprestado um astro de rival.
+//  • M1  (r22: sem janelas — tudo pode acontecer a qualquer momento; empréstimos de artista removidos, os antigos terminam.)
 //  • M2  cláusula de saída/recompra por ato, com preço de mercado visível (fama × prazo × embalo): barata fideliza e fecha a
-//        assinatura, mas o rival "paga a cláusula" na janela e leva o astro; você também pode pagar a cláusula de um rival.
+//        assinatura, mas o rival "paga a cláusula" e leva o astro; você também pode pagar a cláusula de um rival.
 //  • N3  o empresário total (Coronel Parker): fica com 25–50% do que o artista ganha, traz cinema/TV/merch (renda certa), não
 //        deixa o artista tocar fora do país (procura de shows no exterior cai) e guarda um segredo — exposto, vira escândalo;
 //        a corda estica até a revolta (demitir, auditar ou aguentar).
@@ -31,7 +30,7 @@ import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
 import { endContract } from '../contracts';
 import { fileLawsuit } from '../business';
-import { registerDeadline, weekOfMonth19 } from '../calendar19';
+import { registerDeadline } from '../calendar19';
 import { registerConseq18 } from '../decide18';
 import type { Act, Contract, GameState, Label } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
@@ -70,25 +69,22 @@ const labelAct = (s: GameState, a?: Act): a is Act => live(a) && a.owner === 'pl
 const N = l;
 
 export const LINKS19MB = [
-  { id: 'transfer', a: N('Janela de transferências', 'Transfer window'), b: N('Selos rivais', 'Rival labels'), how: N('Em janeiro e em julho–agosto os rivais fazem lances pelos seus astros, pagam cláusulas de saída baratas e pegam artistas emprestados; vender esquenta a rivalidade e o elenco lembra quem foi vendido.', 'In January and July–August rivals bid for your stars, pay cheap exit clauses and borrow acts; selling heats the rivalry and the roster remembers who was sold.') },
+  { id: 'transfer', a: N('Mercado de contratos', 'Contract market'), b: N('Selos rivais', 'Rival labels'), how: N('A qualquer momento os rivais podem fazer lances pelos seus astros ou pagar cláusulas de saída baratas; vender esquenta a rivalidade e o elenco lembra quem foi vendido.', 'At any time rivals may bid for your stars or pay cheap exit clauses; selling heats the rivalry and the roster remembers who was sold.') },
   { id: 'colonel', a: N('Empresário total', 'Total manager'), b: N('Turnês no exterior', 'Tours abroad'), how: N('O empresário total traz cinema, TV e merch, mas não deixa o artista sair do país: a procura de shows fora de casa despenca enquanto ele manda.', 'The total manager brings film, TV and merch but keeps the artist at home: demand for shows abroad collapses while he is in charge.') },
   { id: 'takeover', a: N('Briga de gestão', 'Management fight'), b: N('Banda e masters', 'Band and masters'), how: N('Quem administra decide o destino dos masters: a banda vota puxada pelo mais influente; brigar contra a maioria racha a banda e a rixa vai a público; o acordo prende os masters por 35 anos.', 'Whoever manages decides the masters\' fate: the band votes led by its most influential member; fighting the majority splits the band and the feud goes public; the deal locks the masters for 35 years.') },
 ];
 for (const d of LINKS19MB) if (!LINKS18.some((x) => x.id === d.id)) LINKS18.push(d);
 
 // ---------------------------------------------------------------- valor de mercado e janelas (M1/M2)
-/** Meses das janelas: inverno (janeiro) e verão (julho–agosto). */
-export const WIN19 = [0, 6, 7];
-export const window19 = (s: GameState): boolean => WIN19.includes(s.month);
-/** Próximas aberturas/fechamentos de janela (semanas absolutas). */
-export function windows19(s: GameState, n = 2): { open: number; close: number; y: number; m: number }[] {
-  const out: { open: number; close: number; y: number; m: number }[] = [];
-  for (let y = s.year; out.length < n && y < s.year + 3; y++) for (const [m0, m1] of [[0, 0], [6, 7]]) {
-    if (out.length >= n || y * 12 + m1 < s.year * 12 + s.month) continue;
-    out.push({ open: weekOfMonth19(s, y, m0), close: weekOfMonth19(s, y + (m1 === 11 ? 1 : 0), (m1 + 1) % 12) - 1, y, m: m0 });
-  }
-  return out;
+/** r22: não existe janela de transferências — o mercado de contratos funciona o ano todo (música não é futebol).
+ * Mantido como função para saves e chamadores antigos. */
+export const window19 = (_s: GameState): boolean => true;
+/** r22: sem janelas, nada a abrir ou fechar. */
+export function windows19(_s: GameState, _n = 2): { open: number; close: number; y: number; m: number }[] {
+  return [];
 }
+/** r22: empréstimo de artistas saiu do jogo (os que já estavam emprestados em saves antigos terminam normalmente). */
+export const LOANS_OFF22 = true;
 /** Preço de mercado do contrato de um ato: fama ao quadrado × embalo × prazo restante × saldo a recuperar. */
 export function value19(s: GameState, a: Act): { v: number; parts: WhyPart[] } {
   const k = kOf(s, a);
@@ -148,12 +144,12 @@ export function sellContract19(s: GameState, actId: string, lbId: string, price:
   return null;
 }
 
-/** Lance de um selo rival (janela; ou fora dela, no aperto de caixa, com desconto). */
+/** Lance de um selo rival (a qualquer momento; no aperto de caixa, mais provável e com desconto). */
 function bids(s: GameState, r: Rng): void {
   if (cool(s, 'bid')) return;
   const crunch = s.player.cash < 0 && s.player.insolvencyMonths >= 1;
-  if (!window19(s) && !crunch) return;
-  if (!r.chance(crunch ? 0.6 : 0.3)) return;
+  // r22: sem janela — a chance mensal equivale às 3 janelas de antes espalhadas pelo ano
+  if (!r.chance(crunch ? 0.6 : 0.075)) return;
   const stars = playerActs(s).map((id) => s.acts[id]).filter((a) => labelAct(s, a) && a.fame >= 35 && !cool(s, `bid:${a.id}`)).sort((x, y) => y.fame - x.fame);
   const a = stars[0];
   if (!a) return;
@@ -215,7 +211,7 @@ function overrides(s: GameState): void {
 // ---------------------------------------------------------------- M2: cláusula de saída
 export type Clause19 = 'cheap' | 'fair' | 'none';
 export const CLAUSE19: Record<Clause19, { k: number; trust: number; name: L; desc: L }> = {
-  cheap: { k: 0.6, trust: 8, name: l('Barata (60% do valor)', 'Cheap (60% of value)'), desc: l('O artista confia mais e assina mais fácil — mas um rival rico paga na janela e leva.', 'The artist trusts you more and signs easier — but a rich rival pays it in the window and takes them.') },
+  cheap: { k: 0.6, trust: 8, name: l('Barata (60% do valor)', 'Cheap (60% of value)'), desc: l('O artista confia mais e assina mais fácil — mas um rival rico pode pagar e levar.', 'The artist trusts you more and signs easier — but a rich rival may pay it and take them.') },
   fair: { k: 1.3, trust: 3, name: l('Justa (130% do valor)', 'Fair (130% of value)'), desc: l('Protege o selo; quem pagar, pagou caro.', 'Protects the label; whoever pays, pays dearly.') },
   none: { k: 0, trust: -5, name: l('Sem cláusula', 'No clause'), desc: l('Contrato blindado: o artista desconfia.', 'Locked-down contract: the artist is wary.') },
 };
@@ -229,31 +225,29 @@ export function setClause19(s: GameState, actId: string, c: Clause19): L | null 
   setCd(s, `cl:${a.id}`, 26);
   return null;
 }
-/** Na janela: rival rico paga a cláusula barata e leva o ato. */
+/** A qualquer momento: rival rico paga a cláusula barata e leva o ato (chance mensal = 1/4 da antiga, de janela). */
 function clausePaid(s: GameState, r: Rng): void {
-  if (!window19(s)) return;
   for (const id of playerActs(s)) {
     const a = s.acts[id], k = a && kOf(s, a);
     if (!labelAct(s, a) || !k?.exitFee || a.fame < 20) continue;
     const v = value19(s, a).v;
     if (k.exitFee >= v * 0.95) continue;
     const lb = Object.values(s.labels).filter((x) => x.active && x.cash >= k.exitFee! * 1.3).sort((x, y) => y.aggression - x.aggression)[0];
-    if (!lb || !r.chance(clamp(0.12 + (1 - k.exitFee / v) * 0.5 + lb.aggression / 400, 0, 0.6))) continue;
+    if (!lb || !r.chance(clamp(0.12 + (1 - k.exitFee / v) * 0.5 + lb.aggression / 400, 0, 0.6) / 4)) continue;
     const fee = k.exitFee;
     lb.cash -= fee;
     post(s, `mb19clause:${a.id}`, fee, 'transfers', `Cláusula de saída de ${a.name} paga por ${lb.name}`);
     moveAct19(s, a, lb.id);
-    const t = fmtL(l('{b} paga a cláusula de saída de {a} ({p}, valor de mercado {v}) e leva o artista na janela.', '{b} pays {a}\'s exit clause ({p}, market value {v}) and takes the act in the window.'), { b: lb.name, a: a.name, p: usd(fee), v: usd(v) });
+    const t = fmtL(l('{b} paga a cláusula de saída de {a} ({p}, valor de mercado {v}) e leva o artista.', '{b} pays {a}\'s exit clause ({p}, market value {v}) and takes the act.'), { b: lb.name, a: a.name, p: usd(fee), v: usd(v) });
     emitFact(s, { kind: 'release_clause', actors: [a.id, lb.id, 'player'], severity: 30 + a.fame / 3, visibility: 'public', tags: ['transfer', 'clause', 'poach'], text: t, src: 'moneyb19', data: { fee } });
     log(s, t); link(s, 'transfer', t);
     return;
   }
 }
-/** Pagar a cláusula de um ato de selo rival (só na janela; garantido, mas esquenta a rivalidade). */
+/** Pagar a cláusula de um ato de selo rival (a qualquer momento; garantido, mas esquenta a rivalidade). */
 export function payClause19(s: GameState, actId: string): L | null {
   const a = s.acts[actId], lb = a?.owner ? s.labels[a.owner] : undefined;
   if (!live(a) || !lb || !kOf(s, a)) return l('Sem contrato rival.', 'No rival contract.');
-  if (!window19(s)) return l('Só na janela de transferências (janeiro, julho e agosto).', 'Only in the transfer window (January, July and August).');
   if (exactHist(s) && histLocked(s, a)) return l('Modo "Vida real exata": este artista segue a história real.', '"Exact real life" mode: this act follows real history.');
   const p = npcClause19(s, a);
   if (freeCash20(s) < p) return cashWhy20(s, p, l('Caixa insuficiente.', 'Not enough cash.'));
@@ -273,7 +267,7 @@ export const loanFee19 = (s: GameState, a: Act, kind: Loan19['kind']): number =>
 export function lend19(s: GameState, actId: string, kind: Loan19['kind']): L | null {
   const a = s.acts[actId];
   if (!labelAct(s, a)) return l('Só atos do seu selo.', 'Only your label\'s acts.');
-  if (!window19(s)) return l('Empréstimos só na janela de transferências.', 'Loans only in the transfer window.');
+  if (LOANS_OFF22) return l('Empréstimo de artistas não existe mais no jogo.', 'Artist loans are no longer part of the game.');
   const fee = loanFee19(s, a, kind);
   const lb = Object.values(s.labels).filter((x) => x.active && x.cash >= fee * 2).sort((x, y) => y.cash - x.cash)[0];
   if (!lb) return l('Nenhum selo com caixa para o empréstimo.', 'No label has cash for the loan.');
@@ -293,7 +287,7 @@ export const borrowFee19 = (s: GameState, a: Act): number => Math.round(value19(
 export function borrow19(s: GameState, actId: string): L | null {
   const a = s.acts[actId], lb = a?.owner ? s.labels[a.owner] : undefined;
   if (!live(a) || !lb?.active || !kOf(s, a)) return l('Só atos com contrato em selo rival.', 'Only acts under contract at a rival label.');
-  if (!window19(s)) return l('Empréstimos só na janela de transferências.', 'Loans only in the transfer window.');
+  if (LOANS_OFF22) return l('Empréstimo de artistas não existe mais no jogo.', 'Artist loans are no longer part of the game.');
   if (exactHist(s) && histLocked(s, a)) return l('Modo "Vida real exata": este artista segue a história real.', '"Exact real life" mode: this act follows real history.');
   if ((s.rivalries[lb.id] ?? 0) >= 75) return fmtL(l('{b} está em guerra com você: não empresta nada.', '{b} is at war with you: they lend nothing.'), { b: lb.name });
   const fee = borrowFee19(s, a);
@@ -817,10 +811,6 @@ registerConseq18('ib:mb19_klein:unanimous', { later: [{ in: [3, 12], p: 0.45, to
 // ---------------------------------------------------------------- calendário, porquê, conselheiro
 registerDeadline('mb19', (s, from, to) => {
   const out: import('../calendar19').Deadline19[] = [];
-  for (const w of windows19(s, 3)) {
-    if (w.open >= from && w.open <= to) out.push({ id: `mb19:open:${w.y}:${w.m}`, w: w.open, kind: 'contract', t: l('Abre a janela de transferências', 'Transfer window opens'), d: l('Lances, cláusulas pagas e empréstimos de artistas.', 'Bids, paid clauses and artist loans.'), tone: 'info', goto: { area: 'contracts19' } });
-    if (w.close >= from && w.close <= to) out.push({ id: `mb19:close:${w.y}:${w.m}`, w: w.close, kind: 'contract', t: l('Fecha a janela de transferências', 'Transfer window closes'), d: l('Depois disso, só venda de aperto.', 'After this, only distress sales.'), tone: 'info', goto: { area: 'contracts19' }, act: window19(s) });
-  }
   for (const x of loansOn19(s)) if (x.end >= from && x.end <= to) out.push({ id: `mb19:loan:${x.id}`, w: x.end, kind: 'contract', t: fmtL(l('Fim do empréstimo de {a}', '{a}\'s loan ends'), { a: s.acts[x.act]?.name ?? '?' }), d: l('O artista volta — ou não quer voltar.', 'The act returns — or refuses to.'), tone: x.from === 'player' ? 'info' : 'bad', goto: { area: 'contracts19' } });
   return out;
 });
@@ -830,7 +820,7 @@ registerExplain('mb19.value', (s, c) => {
   const v = value19(s, a), k = kOf(s, a);
   return { title: fmtL(l('{a}: valor de mercado do contrato', '{a}: contract market value'), { a: a.name }), value: v.v, fmt: 'money', parts: [...v.parts,
     ...(k?.exitFee ? [{ label: l('Cláusula de saída atual', 'Current exit clause'), value: k.exitFee, fmt: 'money' as const, tone: (k.exitFee < v.v * 0.95 ? 'bad' : 'good') as 'bad' | 'good' }] : [])],
-    note: l('Valor = (US$ 4 mil + fama² × 45) × embalo × prazo + 40% do adiantamento a recuperar. Cláusula abaixo de 95% do valor atrai rival rico na janela.', 'Value = ($4k + fame² × 45) × momentum × term + 40% of the unrecouped advance. A clause under 95% of value lures a rich rival in the window.') };
+    note: l('Valor = (US$ 4 mil + fama² × 45) × embalo × prazo + 40% do adiantamento a recuperar. Cláusula abaixo de 95% do valor atrai rival rico.', 'Value = ($4k + fame² × 45) × momentum × term + 40% of the unrecouped advance. A clause under 95% of value lures a rich rival.') };
 });
 registerExplain('mb19.vote', (s, c) => {
   const a = s.acts[String(c.act)];
@@ -847,9 +837,9 @@ registerAdvisorTip('moneyb19', (s) => {
   const st = mb19(s);
   const rev = Object.entries(st.mgr).filter(([, m]) => m.revolt >= 45).sort((x, y) => y[1].revolt - x[1].revolt)[0];
   if (rev) { const a = s.acts[rev[0]]; if (a) out.push({ id: 'mb19-revolt', level: 'warn', cat: 'people', score: 55, text: fmtL(l('{a} está cansado do empresário total (revolta {r}).', '{a} is tired of the total manager (revolt {r}).'), { a: a.name, r: Math.round(rev[1].revolt) }), why: [fmtL(l('Ele já levou {t}.', 'He has taken {t}.'), { t: usd(rev[1].took) })], effect: fmtL(l('Auditoria: {c}, parte do dinheiro volta.', 'Audit: {c}, part of the money returns.'), { c: usd(auditCost19(s)) }), goto: { area: 'contracts19' }, run: { label: l('Auditar', 'Audit'), fn: (s2) => auditMgr19(s2, a.id) ?? l('Feito.', 'Done.') } }); }
-  if (window19(s) && s.config.role !== 'artist') {
+  if (s.config.role !== 'artist') {
     const cheap = playerActs(s).map((id) => s.acts[id]).find((a) => labelAct(s, a) && !!kOf(s, a)?.exitFee && kOf(s, a)!.exitFee! < value19(s, a).v * 0.95 && a.fame >= 30);
-    if (cheap) out.push({ id: 'mb19-clause', level: 'warn', cat: 'opportunity', score: 50, text: fmtL(l('Janela aberta: a cláusula de {a} está abaixo do valor de mercado.', 'Window open: {a}\'s clause is below market value.'), { a: cheap.name }), why: [l('Rival rico pode pagar e levar o artista neste mês.', 'A rich rival may pay it and take the act this month.')], effect: l('Subir para cláusula justa (130%).', 'Raise to a fair clause (130%).'), goto: { area: 'contracts19' }, run: { label: l('Subir cláusula', 'Raise clause'), fn: (s2) => setClause19(s2, cheap.id, 'fair') ?? l('Feito.', 'Done.') } });
+    if (cheap) out.push({ id: 'mb19-clause', level: 'warn', cat: 'opportunity', score: 50, text: fmtL(l('A cláusula de {a} está abaixo do valor de mercado.', '{a}\'s clause is below market value.'), { a: cheap.name }), why: [l('Um rival rico pode pagar e levar o artista a qualquer momento.', 'A rich rival may pay it and take the act at any time.')], effect: l('Subir para cláusula justa (130%).', 'Raise to a fair clause (130%).'), goto: { area: 'contracts19' }, run: { label: l('Subir cláusula', 'Raise clause'), fn: (s2) => setClause19(s2, cheap.id, 'fair') ?? l('Feito.', 'Done.') } });
   }
   return out;
 });
