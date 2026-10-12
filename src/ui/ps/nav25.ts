@@ -28,9 +28,9 @@ export const SECTIONS25: Section25[] = [
     th('today', l('Hoje', 'Today'), [SEDE25, 'cockpit', 'hq', 'plan', 'goals', 'diary']),
     th('base', l('Sua sede', 'Your HQ'), ['campus18'])] },
   { id: 'people', label: l('Pessoas', 'People'), icon: 'people', blurb: l('Elenco, talentos e profissionais.', 'Roster, talent and professionals.'),
-    main: ['artists', 'market', 'management', 'managers14', 'producers15', 'directory'], themes: [
+    main: ['artists', 'market', 'management', 'managers14', 'producers15', 'knownacts27', 'directory'], themes: [
     th('roster', l('Seu elenco', 'Your roster'), ['artists', 'people', 'dyn18', 'contracts19', 'artist18']),
-    th('find', l('Descobrir', 'Discover'), ['market', 'directory', 'talent18']),
+    th('find', l('Descobrir', 'Discover'), ['market', 'knownacts27', 'directory', 'talent18']),
     th('pros', l('Bastidores', 'Behind the scenes'), ['management', 'managers14', 'producers15'])] },
   { id: 'projects', label: l('Projetos', 'Projects'), icon: 'disc', blurb: l('Compor, gravar, lançar e reviver.', 'Write, record, release and revive.'),
     main: ['project', 'creation', 'studio', 'releases', 'catalog'], themes: [

@@ -37,7 +37,7 @@ export const ART_KINDS27: ArtKind27[] = ['crime', 'anr', 'studio', 'releases', '
 /** Página → cena (ids de nav25 e das páginas antigas). */
 export const AREA_ART27: Record<string, ArtKind27> = {
   crime: 'crime',
-  market: 'anr', talent18: 'anr', directory: 'anr',
+  market: 'anr', talent18: 'anr', knownacts27: 'anr', directory: 'anr',
   studio: 'studio', studio12: 'studio', project: 'studio', creation: 'studio',
   releases: 'releases', catalog: 'releases', media19: 'releases', tribute19: 'releases', supply18: 'releases',
   shows: 'shows', cal17: 'shows', live19: 'shows',

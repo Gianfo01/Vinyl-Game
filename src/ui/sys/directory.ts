@@ -13,6 +13,7 @@ import { actLink, cityName, actGenre23, genreName, labelLink, logo, pill, rerend
 import { h, select } from '../dom';
 import { openAct, openOffer, openPerson } from '../ficha';
 import { registerArea } from '../registry';
+import { setSort27, sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { ic } from '../vis';
 
 const F = {
@@ -56,13 +57,18 @@ function actRows(s: GameState): HTMLElement {
     : F.sort === 'known' ? known(b) - known(a) || b.fame - a.fame
     : F.sort === 'momentum' ? (b.momentum ?? 0) - (a.momentum ?? 0)
     : b.fame - a.fame);
-  const pages = Math.max(1, Math.ceil(list.length / PAGE));
+  // r27: o cabeçalho ordena a lista inteira (todas as páginas) antes de fatiar
+  const tal0 = (a: Act) => { const e = estimate(s, a.id, 'talent'); return e ? (e.lo + e.hi) / 2 : null; };
+  const SA = sortSpec27<Act>('dir-acts', { name: (a) => a.name, genre: (a) => genreName(a.genre), city: (a) => cityName(a.city), label: (a) => (a.owner === 'player' ? ' ' : a.owner ? s.labels[a.owner]?.name ?? a.owner : null),
+    fame: (a) => a.fame, talent: tal0, radar: (a) => (a.owner === 'player' ? null : s.knowledge[a.id]?.degree ?? null) });
+  const sorted = SA.apply(list);
+  const pages = Math.max(1, Math.ceil(sorted.length / PAGE));
   F.page = Math.min(F.page, pages - 1);
-  const slice = list.slice(F.page * PAGE, F.page * PAGE + PAGE);
+  const slice = sorted.slice(F.page * PAGE, F.page * PAGE + PAGE);
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('{n} atos encontrados.', '{n} acts found.'), { n: list.length })),
-    h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
-      h('thead', null, h('tr', null, ...['', l('Ato', 'Act'), l('Gênero', 'Genre'), l('Cidade', 'City'), l('Selo', 'Label'), l('Alcance', 'Reach'), l('Talento', 'Talent'), l('Radar', 'Radar'), ''].map((x) => h('th', null, typeof x === 'string' ? x : t(x))))),
+    h('div', { class: 'tbl-wrap' }, h('table', sortTable27('dir-acts', 'tbl dir-tbl'),
+      sortHead27(SA, [['', null], [l('Ato', 'Act'), 'name'], [l('Gênero', 'Genre'), 'genre'], [l('Cidade', 'City'), 'city'], [l('Selo', 'Label'), 'label'], [l('Alcance', 'Reach'), 'fame'], [l('Talento', 'Talent'), 'talent'], [l('Radar', 'Radar'), 'radar'], ['', null]], toPage0, list),
       h('tbody', null, slice.map((a) => {
         const k = s.knowledge[a.id];
         const tal = estimate(s, a.id, 'talent');
@@ -108,13 +114,17 @@ function personRows(s: GameState): HTMLElement {
   const ver = `${s.config.seed}|${s.week}`; if (ver !== ocVer) { ocVer = ver; OC.clear(); } const oc = OC; // r15: memo por semana (o sort chamava overall() em cada comparação)
   const ovr = (p: Person) => { let v = oc.get(p.id); if (v === undefined) oc.set(p.id, v = overall(s, p)); return v; };
   list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.born - a.born : (actOf[b.id]?.fame ?? 0) - (actOf[a.id]?.fame ?? 0) || ovr(b) - ovr(a));
-  const pages = Math.max(1, Math.ceil(list.length / PAGE));
+  // r27: ordenação de todas as páginas; "Geral" só ordena pelo que você consegue ver (o resto fica no fim)
+  const SP = sortSpec27<Person>('dir-people', { name: (p) => p.name, role: (p) => t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role)), age: (p) => s.year - p.born, act: (p) => actOf[p.id]?.name ?? null,
+    ovr: (p) => { const a = actOf[p.id]; const deg = a?.owner === 'player' || p.isPlayer ? 5 : knownLevel(s, p.id).priv; return deg >= 2 ? ovr(p) : null; } });
+  const sorted = SP.apply(list);
+  const pages = Math.max(1, Math.ceil(sorted.length / PAGE));
   F.page = Math.min(F.page, pages - 1);
-  const slice = list.slice(F.page * PAGE, F.page * PAGE + PAGE);
+  const slice = sorted.slice(F.page * PAGE, F.page * PAGE + PAGE);
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('{n} pessoas encontradas.', '{n} people found.'), { n: list.length })),
-    h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
-      h('thead', null, h('tr', null, ...[l('Nome', 'Name'), l('Função', 'Role'), l('Idade', 'Age'), l('Ato', 'Act'), l('Geral', 'Overall'), ''].map((x) => h('th', null, typeof x === 'string' ? x : t(x))))),
+    h('div', { class: 'tbl-wrap' }, h('table', sortTable27('dir-people', 'tbl dir-tbl'),
+      sortHead27(SP, [[l('Nome', 'Name'), 'name'], [l('Função', 'Role'), 'role'], [l('Idade', 'Age'), 'age'], [l('Ato', 'Act'), 'act'], [l('Geral', 'Overall'), 'ovr'], ['', null]], toPage0, list),
       h('tbody', null, slice.map((p) => {
         const a = actOf[p.id];
         const mine = a?.owner === 'player' || p.isPlayer;
@@ -145,13 +155,15 @@ function goneRows(s: GameState): HTMLElement {
     for (const [actId, list] of Object.entries(rw(s).former)) for (const f of list) if (s.acts[actId] && !(actsOf[f.personId] ?? []).includes(s.acts[actId])) (actsOf[f.personId] ??= []).push(s.acts[actId]);
     const list = Object.values(s.persons).filter((p) => !p.alive && (!q || p.name.toLowerCase().includes(q) || (actsOf[p.id] ?? []).some((a) => a.name.toLowerCase().includes(q))))
       .sort((a, b) => (b.died ?? 0) - (a.died ?? 0) || Math.max(0, ...(actsOf[b.id] ?? []).map((x) => x.fame)) - Math.max(0, ...(actsOf[a.id] ?? []).map((x) => x.fame)));
+    const SD = sortSpec27<Person>('dir-dead', { name: (p) => p.name, role: (p) => t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role)), life: (p) => p.died ?? null, acts: (p) => (actsOf[p.id] ?? [])[0]?.name ?? null });
+    const sorted = SD.apply(list);
     const pages = Math.max(1, Math.ceil(list.length / PAGE));
     F.page = Math.min(F.page, pages - 1);
     return h('div', null,
       h('p', { class: 'muted small' }, t(l('{n} pessoas falecidas. Bandas podem seguir com substitutos e o catálogo continua vendendo.', '{n} people have died. Bands may carry on with replacements and the catalog keeps selling.'), { n: list.length })),
-      h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
-        h('thead', null, h('tr', null, ...[l('Nome', 'Name'), l('Função', 'Role'), l('Vida', 'Life'), l('Atos', 'Acts'), ''].map((x) => h('th', null, typeof x === 'string' ? x : t(x))))),
-        h('tbody', null, list.slice(F.page * PAGE, F.page * PAGE + PAGE).map((p) => h('tr', null,
+      h('div', { class: 'tbl-wrap' }, h('table', sortTable27('dir-dead', 'tbl dir-tbl'),
+        sortHead27(SD, [[l('Nome', 'Name'), 'name'], [l('Função', 'Role'), 'role'], [l('Vida', 'Life'), 'life'], [l('Atos', 'Acts'), 'acts'], ['', null]], toPage0, list),
+        h('tbody', null, sorted.slice(F.page * PAGE, F.page * PAGE + PAGE).map((p) => h('tr', null,
           h('td', null, h('b', null, p.name), ' ', pill('†', 'bad')),
           h('td', null, t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))),
           h('td', null, `${p.born}–${p.died ?? '?'}${p.died ? ` (${p.died - p.born})` : ''}`),
@@ -164,14 +176,17 @@ function goneRows(s: GameState): HTMLElement {
   const list = Object.values(s.acts).filter((a) => want(a) && (F.family === 'any' || familyOf(a.genre) === F.family) && (F.market === 'any' || cityById[a.city]?.market === F.market) && (!q || a.name.toLowerCase().includes(q) || a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q))));
   const catalog = (a: Act) => a.releases.reduce((t0, id) => t0 + (s.releases[id]?.totalUnits ?? 0), 0);
   list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.careerEnd - a.careerEnd : b.fame - a.fame);
+  const SG = sortSpec27<Act>('dir-gone', { name: (a) => a.name, genre: (a) => genreName(a.genre), career: (a) => a.debutYear, status: (a) => (a.deceased ? 0 : a.status === 'split' ? 1 : a.status === 'retired' ? 2 : 3),
+    recs: (a) => a.releases.length, sales: catalog, back: (a) => (a.deceased ? null : a.members.filter((m) => s.persons[m]?.alive).length || null) });
+  const sorted = SG.apply(list);
   const pages = Math.max(1, Math.ceil(list.length / PAGE));
   F.page = Math.min(F.page, pages - 1);
   const statusPill = (a: Act) => a.deceased ? pill(t(l('todos falecidos', 'all deceased')), 'bad') : a.status === 'split' ? pill(t(l('separada', 'split')), 'bad') : a.status === 'retired' ? pill(t(l('aposentado', 'retired')), 'warn') : pill(t(l('em pausa', 'on hiatus')), 'warn');
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('{n} atos fora de atividade. Quem ainda tem integrantes vivos pode voltar (reunião, saída da aposentadoria), e todos seguem vendendo catálogo.', '{n} inactive acts. Those with living members may return (reunion, coming out of retirement), and all keep selling their catalog.'), { n: list.length })),
-    h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl dir-tbl' },
-      h('thead', null, h('tr', null, ...['', l('Ato', 'Act'), l('Gênero', 'Genre'), l('Carreira', 'Career'), l('Situação', 'Status'), l('Discos', 'Records'), l('Vendas totais', 'Total sales'), l('Pode voltar?', 'Could return?'), ''].map((x) => h('th', null, typeof x === 'string' ? x : t(x))))),
-      h('tbody', null, list.slice(F.page * PAGE, F.page * PAGE + PAGE).map((a) => {
+    h('div', { class: 'tbl-wrap' }, h('table', sortTable27('dir-gone', 'tbl dir-tbl'),
+      sortHead27(SG, [['', null], [l('Ato', 'Act'), 'name'], [l('Gênero', 'Genre'), 'genre'], [l('Carreira', 'Career'), 'career'], [l('Situação', 'Status'), 'status'], [l('Discos', 'Records'), 'recs'], [l('Vendas totais', 'Total sales'), 'sales'], [l('Pode voltar?', 'Could return?'), 'back'], ['', null]], toPage0, list),
+      h('tbody', null, sorted.slice(F.page * PAGE, F.page * PAGE + PAGE).map((a) => {
         const live = a.members.filter((m) => s.persons[m]?.alive).length;
         return h('tr', null,
           h('td', null, logo(a, 28)),
@@ -188,6 +203,9 @@ function goneRows(s: GameState): HTMLElement {
     pager(pages));
 }
 
+/** r27: clique no cabeçalho ordena todas as páginas e volta para a primeira. */
+function toPage0(): void { F.page = 0; rerender(); }
+
 function pager(pages: number): HTMLElement | null {
   if (pages <= 1) return null;
   return h('div', { class: 'row center' },
@@ -197,7 +215,11 @@ function pager(pages: number): HTMLElement | null {
 }
 
 function directoryArea(s: GameState): HTMLElement {
-  const set = <K extends keyof typeof F>(k: K) => (v: (typeof F)[K]) => { F[k] = v; F.page = 0; rerender(); };
+  const set = <K extends keyof typeof F>(k: K) => (v: (typeof F)[K]) => {
+    F[k] = v; F.page = 0;
+    if (k === 'sort') for (const id of ['dir-acts', 'dir-people', 'dir-dead', 'dir-gone']) setSort27(id, undefined); // a lista "Ordenar" volta a mandar
+    rerender();
+  };
   const roles: Role[] = ['vocal', 'guitar', 'bass', 'drums', 'keys', 'horns', 'strings', 'dj', 'producer', 'mc'];
   const search = h('input', { type: 'search', class: 'dir-search', placeholder: t(F.mode === 'acts' ? l('Buscar ato, integrante, gênero ou cidade…', 'Search act, member, genre or city…') : l('Buscar pessoa ou ato…', 'Search person or act…')), value: F.q,
     oninput: (e: Event) => { F.q = (e.target as HTMLInputElement).value; F.page = 0; clearTimeout(timer); timer = window.setTimeout(() => { rerender(); const el = document.querySelector<HTMLInputElement>('.dir-search'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 250); } });

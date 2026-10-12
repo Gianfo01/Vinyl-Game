@@ -1,0 +1,10 @@
+/* Rodada 27 (KNOWN) — Artistas conhecidos */
+.ka27 .ka27-chips { display: inline-flex; flex-wrap: wrap; gap: var(--sp-1, 4px); max-width: 26rem; }
+.ka27 .ka27-know { font-family: var(--mono, monospace); letter-spacing: 0.08em; color: var(--accent); white-space: nowrap; }
+.ka27 .ka27-search { min-width: 14rem; }
+.ka27 .ka27-pager { margin-top: var(--sp-3, 12px); gap: var(--sp-2, 8px); }
+.ka27 > .kpis27 { margin-bottom: var(--sp-4, 16px); }
+@media (max-width: 860px) {
+  .ka27 .ka27-search { min-width: 0; width: 100%; }
+  .ka27 .ka27-chips { max-width: none; }
+}

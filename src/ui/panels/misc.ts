@@ -2,6 +2,7 @@
 
 import { LABEL_LEGACY20, freeCash20 } from '../../sim/oblig20';
 import { pager18 } from '../quick18';
+import { sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
 import { BRANCH_LEVELS, ENDINGS, MUTATORS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
 import { MARKETS, familyOf, l } from '../../data/world';
@@ -122,12 +123,15 @@ export function catalogPanel(s: GameState): HTMLElement {
     else toast(t(l('Reedição programada.', 'Reissue scheduled.')), 'good');
     rerender();
   };
-  const pg18 = pager18('catalog', mine, 30);
+  // r27: o cabeçalho ordena o catálogo inteiro (não só o que já está à mostra no "mostrar mais")
+  const SC = sortSpec27<(typeof mine)[number]>('catalog', { title: (r) => r.title, act: (r) => s.acts[r.actId]?.name ?? null, type: (r) => r.type, year: (r) => r.year,
+    peak: (r) => (r.peak < 999 ? r.peak : null), units: (r) => r.totalUnits, rev: (r) => r.revenue }, { peak: 1 });
+  const pg18 = pager18('catalog', SC.apply(mine), 30);
   return h('div', { class: 'panel catalog' },
     section(`${t(S.areaCatalog)} (${mine.length})`,
       h('p', { class: 'muted small' }, t(l('Masters próprios geram cauda de catálogo. Obras com 8+ anos podem ser reeditadas (remaster), sobretudo com nostalgia em alta.', 'Owned masters earn a catalog tail. Works 8+ years old can be reissued (remaster), especially when nostalgia runs high.'))),
-      h('table', { class: 'tbl' },
-        h('thead', null, h('tr', null, h('th', null, ''), h('th', null, t(S.title)), h('th', null, t(l('Ato', 'Act'))), h('th', null, t(S.type)), h('th', null, t(l('Ano', 'Year'))), h('th', null, t(S.peak)), h('th', null, t(S.totalUnits)), h('th', null, t(S.revenue)), h('th', null, ''))),
+      h('table', sortTable27('catalog'),
+        sortHead27(SC, [['', null], [S.title, 'title'], [l('Ato', 'Act'), 'act'], [S.type, 'type'], [l('Ano', 'Year'), 'year'], [S.peak, 'peak'], [S.totalUnits, 'units'], [S.revenue, 'rev'], ['', null]], rerender, mine),
         h('tbody', null, pg18.items.map((r) => h('tr', { onclick: () => openRelease(r.id), class: 'clickable' },
           h('td', null, cover(s, r, 32)),
           h('td', null, r.title, r.certified ? pill(r.certified, 'gold') : null),
