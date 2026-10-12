@@ -12,6 +12,7 @@ import {
   forensic, forgeCost, forgeRelic, hasRacket, heatIn, isReal, launderFee, myCases, nameOf17, orgs17, partnerOdds, pizzoFee, raidBootleggers, raidCost, reportOrg, resolveCase,
   returnHot, ricoName, sellHot, setSecurity, targetsFor, toggleLaunder, trialOdds, usd, type Ctx17, type Plea,
 } from '../../sim/sys/crime17';
+import { GONE23, RANK23, ROLE23, density23, knownMembers23, name23, orgPower23 } from '../../sim/sys/crimemem23';
 import { WARN_REPLY, cutTie, payOffCost, replyWarn, tieAct, tieOf, truce, truceCost, type WarnReply } from '../../sim/sys/crimenpc17';
 import { relics } from '../../sim/sys/relics9';
 import type { GameState } from '../../sim/types';
@@ -52,6 +53,7 @@ function orgsTab(s: GameState): HTMLElement {
         h('p', { class: 'small' }, T(o.desc)),
         h('p', { class: 'small muted' }, `${T(l('Negócios', 'Rackets'))}: ${o.rackets.map((r) => T(RACKET_NAME[r])).join(' · ')} · ${T(l('Chefe', 'Boss'))}: ${T(bossName(o))}`),
         o.ties?.length ? h('ul', { class: 'small' }, o.ties.filter((x) => x.y <= s.year).map((x) => h('li', null, pill(T(l('documentado', 'documented')), 'good'), ` ${x.who} (${x.y}): ${T(x.text)}`))) : null,
+        membersBox(s, o.id),
         tied.length ? h('p', { class: 'small' }, `${T(l('Andam com eles', 'Run with them'))}: ${tied.map((a) => `${a!.name}${a!.catalogNo ? ` (${T(l('boato', 'rumor'))})` : ''}`).join(', ')}`) : null,
         h('div', { class: 'row wrap' },
           btn(l('Aproximar-se (presente)', 'Approach (gift)'), () => say(approachOrg(s, o.id), 'info'), { title: l('Relação +15; calor +3. Relação boa barateia e melhora serviços.', 'Relationship +15; heat +3. Good relations make services better.') }),
@@ -74,6 +76,25 @@ function orgsTab(s: GameState): HTMLElement {
         return h('li', null, `${a?.name ?? '?'} × ${b?.name ?? '?'} `, bar(v), ' ', pill(v >= 85 ? T(l('tiros', 'shots')) : v >= 55 ? T(l('briga', 'brawl')) : v >= 25 ? T(l('diss', 'diss')) : T(l('tensão', 'tension')), v >= 55 ? 'bad' : 'warn'),
           mineF ? btn(fmtTxt(l('Trégua ({v})', 'Truce ({v})'), usd(truceCost(s))), () => say(truce(s, k))) : null);
       })) : h('p', { class: 'muted small' }, T(l('Nenhuma rixa. Artistas ligados a gangues rivais trocam diss (vende!), depois brigas e, no limite, tiros — só entre personagens fictícios.', 'No feuds. Artists tied to rival gangs trade disses (it sells!), then brawls and, at the limit, shots — fictional characters only.')))),
+  );
+}
+/** r23: membros conhecidos (só o que você sabe: boato/confirmado), delatores e poder perdido. */
+function membersBox(s: GameState, oid: string): HTMLElement {
+  const st = crime17(s);
+  const o = orgs17(s).find((x) => x.id === oid)!;
+  const known = knownMembers23(s, oid);
+  const gone = (st.gone23 ?? []).filter((g) => g.o === oid && g.how === 'informant');
+  const pw = orgPower23(s, o);
+  return h('details', { class: 'small' },
+    h('summary', null, `${T(l('Membros conhecidos', 'Known members'))} (${known.length})${gone.length ? ` · ${T(l('delatores', 'informants'))} ${gone.length}` : ''}${pw < o.power ? ` · ${T(l('poder', 'power'))} ${o.power}→${pw}` : ''}`),
+    known.length ? h('ul', null, known.map(([k, m]) => h('li', null,
+      `${name23(s, k)} — ${T(RANK23[m.rk])}, ${T(ROLE23[m.ro])} `,
+      pill(m.k === 2 ? T(l('confirmado', 'confirmed')) : T(l('boato', 'rumor')), m.k === 2 ? 'bad' : 'warn'),
+      k.startsWith('s:') ? pill(T(l('sua equipe', 'your staff')), 'trait') : null,
+      (st.jail[k.slice(2)]?.u ?? 0) > s.week ? pill(T(l('preso', 'jailed')), 'warn') : null,
+      h('div', { class: 'muted' }, `${T(l('Por quê', 'Why'))}: ${m.why.map((w) => T(w)).join(' · ')}`)))) : h('p', { class: 'muted' }, T(l('Ninguém conhecido. Membros são segredo até virar boato (fama, prisão, crime exposto) ou a sua segurança descobrir.', 'Nobody known. Members are secret until rumors start (fame, prison, exposed crime) or your security finds out.'))),
+    gone.length ? h('p', { class: 'muted' }, `${T(l('Delatores', 'Informants'))}: ${gone.slice(-5).map((g) => `${name23(s, g.k)} (${T(RANK23[g.rk])})`).join(', ')} — ${T(GONE23.informant)}`) : null,
+    h('p', { class: 'muted' }, fmtTxt(l('Membros (todos, inclusive secretos) no país: {v} — a polícia presta atenção.', 'Members (all, secret included) in the country: {v} — police take notice.'), String(density23(s, o.a3)))),
   );
 }
 const fmtTxt = (x: L, v: L | string): string => T(x).replace('{v}', T(v)).replace('{a}', T(v));
