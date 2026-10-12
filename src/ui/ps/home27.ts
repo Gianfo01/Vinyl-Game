@@ -5,6 +5,7 @@
 // Nova run rápida: uma tela só (empresa, ano, cidade, atividade, ponto de partida, dificuldade) que gera a MESMA
 // RunConfig da configuração completa (home27model.ts) e abre a configuração completa pré-preenchida.
 
+import { drawHqCutaway27 } from './hqpx27';
 import { CITIES, l, type L } from '../../data/world';
 import { S, locale, t, type Lang } from '../../i18n/strings';
 import { formatMoney } from '../../core/money';
@@ -23,7 +24,17 @@ import { ic } from '../vis';
 import { CAREER_SHORT27, DIFFS27, STARTS27, careerOpen27, clampYear27, quickDefaults27, quickRunConfig27, type QuickRun27 } from './home27model';
 import './home27.css';
 
-const ART27 = () => new URL('../../assets/ps/hq_modern.webp', import.meta.url).href;
+/** r27: arte da tela inicial e da Nova run = a sede em pixel art do próprio jogo (hqpx27), não ilustração externa. */
+const SHOW27: [number, number, string][] = [[2, 1966, 'london'], [3, 1984, 'new_york'], [1, 1956, 'memphis'], [4, 2008, 'sao_paulo'], [0, 1977, 'liverpool'], [3, 1995, 'rio'], [5, 2030, 'tokyo'], [2, 1929, 'chicago']];
+function hqArt27(hq: number, year: number, city: string, cls: string, brand = 'MASTERS'): HTMLCanvasElement {
+  const cv = h('canvas', { class: cls, 'aria-hidden': 'true' }) as HTMLCanvasElement;
+  const c = CITIES.some((x) => x.id === city) ? city : (CITIES[0]?.id ?? '');
+  try { drawHqCutaway27(cv, { hq, year, rooms: [], city: c, brand, seedKey: `home27|${hq}|${year}|${c}` }, { minW: 520 }); } catch { /* sem canvas (testes) */ }
+  return cv;
+}
+const showcase27 = (): HTMLCanvasElement => { const [hq, y, c] = SHOW27[Math.floor(Math.random() * SHOW27.length)]; return hqArt27(hq, y, c, 'h27-bg'); };
+/** Nível da sede sugerido pelo ponto de partida (só para a prévia). */
+const hqOfStart27 = (sc: string): number => (/zero|garage|garag/.test(sc) ? 0 : /estab|major|big/.test(sc) ? 3 : 1);
 const PRIMARY27 = ['label', 'musician', 'manager', 'studio', 'festival', 'booking'];
 const MORE27 = ['venue', 'publisher', 'media', 'platform'];
 /** Troca de tela começa do topo (a rolagem da tela anterior não passa adiante). */
@@ -93,7 +104,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
 
   const link = (label: string, fn: () => void, extra: Record<string, string> = {}) => h('button', { type: 'button', class: 'h27-link', onclick: fn, ...extra }, label);
   const hero = h('section', { class: 'h27-hero' },
-    h('img', { class: 'h27-bg', src: ART27(), alt: '', 'aria-hidden': 'true', decoding: 'async' }),
+    showcase27(),
     h('div', { class: 'h27-shade', 'aria-hidden': 'true' }),
     h('div', { class: 'h27-top' },
       h('span', { class: 'h27-prof' }, '👤 ', curProfile17().name),
@@ -233,17 +244,20 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
   };
   drawCareers();
   const nameIn = h('input', { type: 'text', id: 'h27-name', value: q.companyName, maxlength: 60, oninput: (e: Event) => (q.companyName = (e.target as HTMLInputElement).value) }) as HTMLInputElement;
+  const prevArt = h('div', { class: 'h27-prev-art' });
+  const drawPrev = () => prevArt.replaceChildren(hqArt27(hqOfStart27(q.scenario), q.startYear, q.homeCity, 'h27-prev-cv', (q.companyName || 'MASTERS').toUpperCase().slice(0, 14)));
   const yearIn = h('input', { type: 'number', id: 'h27-year', min: YEAR_MIN20, max: YEAR_MAX20, step: 1, value: q.startYear, inputmode: 'numeric',
     onchange: (e: Event) => {
       const raw = Number((e.target as HTMLInputElement).value);
       if (!(raw >= YEAR_MIN20 && raw <= YEAR_MAX20)) { yearErr.textContent = t(l('Escolha um ano entre {a} e {b}.', 'Pick a year between {a} and {b}.'), { a: YEAR_MIN20, b: YEAR_MAX20 }); return; }
       yearErr.textContent = '';
       q.startYear = clampYear27(raw);
-      drawCareers();
+      drawCareers(); drawPrev();
     } }) as HTMLInputElement;
   const cities = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
-  const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => (q.homeCity = v), { id: 'h27-city' });
-  const startSel = select(q.scenario, STARTS27.map((s) => ({ value: s.id, label: t(s.name) })), (v) => (q.scenario = v), { id: 'h27-start' });
+  const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => { q.homeCity = v; drawPrev(); }, { id: 'h27-city' });
+  const startSel = select(q.scenario, STARTS27.map((s) => ({ value: s.id, label: t(s.name) })), (v) => { q.scenario = v; drawPrev(); }, { id: 'h27-start' });
+  drawPrev();
   const diffSel = select(q.difficulty, DIFFS27.map((d) => ({ value: d.id, label: t(d.name) })), (v) => (q.difficulty = v), { id: 'h27-diff' });
   let busy = false;
   const go = h('button', { type: 'button', class: 'h27-btn h27-primary h27-go', onclick: () => {
@@ -270,7 +284,7 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
       h('span', { class: 'h27-mini-logo', 'aria-hidden': 'true' }, t(S.gameTitle).toUpperCase())),
     h('div', { class: 'h27-start-grid' },
       h('figure', { class: 'h27-preview' },
-        h('img', { src: ART27(), alt: '', 'aria-hidden': 'true', decoding: 'async' }),
+        prevArt,
         h('figcaption', null, h('h2', null, t(l('Seu lugar na música', 'Your place in music'))), h('p', null, t(l('Escolha um começo. A história seguinte é sua.', 'Pick a beginning. The story that follows is yours.'))))),
       h('form', { class: 'h27-form', onsubmit: (e: Event) => { e.preventDefault(); go.click(); } },
         h('p', { class: 'h27-kicker gold' }, t(l('01 / ESCOLHA SEU COMEÇO', '01 / CHOOSE YOUR BEGINNING'))),

@@ -51,32 +51,32 @@
 main .tabs[role=tablist] { flex-wrap: wrap; }
 
 /* ================= celular: folha da seção ================= */
-.sheet27-wrap { position: fixed; inset: 0 0 calc(58px + env(safe-area-inset-bottom, 0px)) 0; z-index: 55; } /* a barra das 6 seções continua tocável */
-.sheet27-back { position: absolute; inset: 0; background: var(--scrim, rgba(0, 0, 0, 0.45)); }
-.sheet27 { position: absolute; left: 0; right: 0; bottom: 0; max-height: 78vh; display: flex; flex-direction: column;
+.navsheet27-wrap { position: fixed; inset: 0 0 calc(58px + env(safe-area-inset-bottom, 0px)) 0; z-index: 55; } /* a barra das 6 seções continua tocável */
+.navsheet27-back { position: absolute; inset: 0; background: var(--scrim, rgba(0, 0, 0, 0.45)); }
+.navsheet27 { position: absolute; left: 0; right: 0; bottom: 0; max-height: 78vh; display: flex; flex-direction: column;
   background: var(--panel); color: var(--ink); border-top: 3px solid var(--accent); border-radius: 12px 12px 0 0; box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
 }
-.sheet27-head { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; border-bottom: 1px solid var(--line); }
-.sheet27-head b { font-size: 1.1rem; flex: 1 1 auto; }
-.sheet27-head .ic canvas, .sheet27-head .ic .ic-px { width: 28px; height: 28px; }
-.sheet27-x { font-size: 1.4rem; min-width: 44px; min-height: 44px; }
-.sheet27-body { overflow-y: auto; padding: 0.4rem 1rem 1rem; }
-.sheet27-theme h4 { margin: 0.8rem 0 0.3rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.sheet27-page { padding: 2px 0 6px; border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
-.sheet27-pg { display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 44px; padding: 0.3rem 0.5rem; background: none; border: 1px solid transparent;
+.navsheet27-head { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; border-bottom: 1px solid var(--line); }
+.navsheet27-head b { font-size: 1.1rem; flex: 1 1 auto; }
+.navsheet27-head .ic canvas, .navsheet27-head .ic .ic-px { width: 28px; height: 28px; }
+.navsheet27-x { font-size: 1.4rem; min-width: 44px; min-height: 44px; }
+.navsheet27-body { overflow-y: auto; padding: 0.4rem 1rem 1rem; }
+.navsheet27-theme h4 { margin: 0.8rem 0 0.3rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.navsheet27-page { padding: 2px 0 6px; border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+.navsheet27-pg { display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 44px; padding: 0.3rem 0.5rem; background: none; border: 1px solid transparent;
   border-radius: var(--radius, 3px); color: var(--ink); font-size: 1rem; text-align: left; }
-.sheet27-pg .ic canvas, .sheet27-pg .ic .ic-px { width: 22px; height: 22px; }
-.sheet27-pg .badge { margin-left: auto; }
-.sheet27-pg.on { background: var(--accent); color: var(--accent-ink, #111); font-weight: 700; }
-.sheet27-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 4px 2.2rem; }
-.sheet27-tab { min-height: 36px; padding: 0.2rem 0.65rem; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); color: var(--ink); font-size: 0.85rem; }
-.sheet27-tab.d2, .sheet27-tab.d3 { background: transparent; border-style: dashed; font-size: 0.8rem; }
-.sheet27-tab.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--panel)); font-weight: 700; }
-.sheet27-sub { color: var(--muted); margin-right: 0.25rem; }
-@media (min-width: 861px) { .sheet27-wrap { display: none; } }
+.navsheet27-pg .ic canvas, .navsheet27-pg .ic .ic-px { width: 22px; height: 22px; }
+.navsheet27-pg .badge { margin-left: auto; }
+.navsheet27-pg.on { background: var(--accent); color: var(--accent-ink, #111); font-weight: 700; }
+.navsheet27-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 4px 2.2rem; }
+.navsheet27-tab { min-height: 36px; padding: 0.2rem 0.65rem; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); color: var(--ink); font-size: 0.85rem; }
+.navsheet27-tab.d2, .navsheet27-tab.d3 { background: transparent; border-style: dashed; font-size: 0.8rem; }
+.navsheet27-tab.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--panel)); font-weight: 700; }
+.navsheet27-sub { color: var(--muted); margin-right: 0.25rem; }
+@media (min-width: 861px) { .navsheet27-wrap { display: none; } }
 
 /* ================= uma janela por vez (ps/queue27.ts) ================= */
 /* modal/cena por cima: tutorial, dica e tour esperam escondidos; avisos (toasts) ficam atrás do modal */
-body:has(.overlay, .scene-overlay, .sheet27-wrap) :is(aside.tutorial, .tip18, .tour18) { display: none !important; }
+body:has(.overlay, .scene-overlay, .navsheet27-wrap) :is(aside.tutorial, .tip18, .tour18) { display: none !important; }
 body:has(aside.tutorial) .tip18 { display: none !important; }
-body:has(.overlay, .scene-overlay, .sheet27-wrap) #toasts { z-index: 49; }
+body:has(.overlay, .scene-overlay, .navsheet27-wrap) #toasts { z-index: 49; }

@@ -125,8 +125,8 @@ const sheetKey = (e: KeyboardEvent): void => { if (e.key === 'Escape' && sheet) 
 function sheetTabs(ctx: TreeCtx27, nodes: TabNode27[], depth: number): HTMLElement[] {
   return nodes.flatMap((n) => {
     const on = isOn(ctx, n);
-    return [h('button', { type: 'button', class: `sheet27-tab d${depth} ${on ? 'on' : ''}`, 'aria-current': on ? 'true' : undefined,
-      onclick: () => { closeSheet27(); ctx.goTab(n.area, [...n.trail, [n.key, n.id]]); } }, depth > 1 ? h('span', { class: 'sheet27-sub', 'aria-hidden': 'true' }, '›') : null, t(n.label)),
+    return [h('button', { type: 'button', class: `navsheet27-tab d${depth} ${on ? 'on' : ''}`, 'aria-current': on ? 'true' : undefined,
+      onclick: () => { closeSheet27(); ctx.goTab(n.area, [...n.trail, [n.key, n.id]]); } }, depth > 1 ? h('span', { class: 'navsheet27-sub', 'aria-hidden': 'true' }, '›') : null, t(n.label)),
     ...sheetTabs(ctx, n.kids, depth + 1)];
   });
 }
@@ -137,25 +137,25 @@ export function openSheet27(ctx: TreeCtx27, gr: NavGroup25): void {
   closeSheet27();
   if (again) return; // tocar de novo na mesma seção fecha a folha
   const ths = themes(ctx, gr);
-  const panel = h('div', { class: 'sheet27', role: 'dialog', 'aria-modal': 'true', 'aria-label': t(gr.label) },
-    h('div', { class: 'sheet27-head' },
+  const panel = h('div', { class: 'navsheet27', role: 'dialog', 'aria-modal': 'true', 'aria-label': t(gr.label) },
+    h('div', { class: 'navsheet27-head' },
       h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('b', null, t(gr.label)),
       h('button', { type: 'button', class: 'btn small ghost', onclick: () => { closeSheet27(); ctx.search(); } }, '⌕ ', t(l('Buscar', 'Search'))),
-      h('button', { type: 'button', class: 'icon sheet27-x', 'aria-label': t(l('Fechar', 'Close')), title: t(l('Fechar', 'Close')), onclick: closeSheet27 }, '×')),
-    h('div', { class: 'sheet27-body' }, ths.map((th) => h('section', { class: 'sheet27-theme' },
+      h('button', { type: 'button', class: 'icon navsheet27-x', 'aria-label': t(l('Fechar', 'Close')), title: t(l('Fechar', 'Close')), onclick: closeSheet27 }, '×')),
+    h('div', { class: 'navsheet27-body' }, ths.map((th) => h('section', { class: 'navsheet27-theme' },
       ths.length > 1 ? h('h4', null, t(th.label)) : null,
       th.items.map((it) => {
         const here = it.id === ctx.area;
         const kids = tabTree27(it.id, ctx.tabs);
-        return h('div', { class: `sheet27-page ${here ? 'here' : ''}` },
-          h('button', { type: 'button', class: `sheet27-pg ${here ? 'on' : ''}`, 'aria-current': here ? 'page' : undefined, onclick: () => { closeSheet27(); ctx.go(it.id); } },
+        return h('div', { class: `navsheet27-page ${here ? 'here' : ''}` },
+          h('button', { type: 'button', class: `navsheet27-pg ${here ? 'on' : ''}`, 'aria-current': here ? 'page' : undefined, onclick: () => { closeSheet27(); ctx.go(it.id); } },
             h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(it.icon)), h('span', { class: 'lbl' }, it.label), it.badge ? h('span', { class: 'badge' }, it.badge) : null),
-          kids.length ? h('div', { class: 'sheet27-tabs' }, sheetTabs(ctx, kids, 1)) : null);
+          kids.length ? h('div', { class: 'navsheet27-tabs' }, sheetTabs(ctx, kids, 1)) : null);
       })))));
   sheetSec = gr.id;
-  sheet = h('div', { class: 'sheet27-wrap' }, h('div', { class: 'sheet27-back', onclick: closeSheet27 }), panel);
+  sheet = h('div', { class: 'navsheet27-wrap' }, h('div', { class: 'navsheet27-back', onclick: closeSheet27 }), panel);
   document.body.append(sheet);
   document.addEventListener('keydown', sheetKey, true);
   // a página atual à vista; o foco vai para o primeiro botão
-  setTimeout(() => { (panel.querySelector('.sheet27-pg.on') ?? panel.querySelector('.sheet27-pg'))?.scrollIntoView?.({ block: 'nearest' }); panel.querySelector<HTMLElement>('.sheet27-x')?.focus(); }, 0);
+  setTimeout(() => { (panel.querySelector('.navsheet27-pg.on') ?? panel.querySelector('.navsheet27-pg'))?.scrollIntoView?.({ block: 'nearest' }); panel.querySelector<HTMLElement>('.navsheet27-x')?.focus(); }, 0);
 }
