@@ -4,7 +4,7 @@
 import { FAMILIES, MARKETS, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { attendContest, fireScout, hireScout, listenDemo, raiseBid, scoutPool, sponsorContest, startAuction, withdrawAuction } from '../../sim/discovery';
-import { MISSION_WEEKS, missionDepth, missionLength, missionProgress, missionTarget, startMission } from '../../sim/sys/scout11';
+import { MISSION_WEEKS, missionDepth, missionLength, missionProgress, missionTarget, startMission, tripOf23 } from '../../sim/sys/scout23';
 import { ARCHETYPES, archetypeOf, buySecurity, heat19, spyOnRival } from '../../sim/rivals19'; // r19: fachada
 import { defaultOffer } from '../../sim/contracts';
 import type { GameState } from '../../sim/types';
@@ -31,8 +31,8 @@ export function scoutsSection(s: GameState): HTMLElement {
     s.scouts.length ? h('div', { class: 'cards' }, s.scouts.map((sc) => tile('fans', sc.name, [
       chips(stat('globe', mkName(sc.region), l('Região', 'Region')), stat('guitar', famName(sc.family), l('Especialidade', 'Specialty')), stat('sparkle', sc.skill, l('Habilidade', 'Skill')), stat('money', $(sc.salary), l('Salário', 'Salary'))),
       h('small', { class: 'muted' }, t(l('Viés: {b}', 'Bias: {b}'), { b: sc.bias > 3 ? t(l('otimista', 'optimistic')) : sc.bias < -3 ? t(l('pessimista', 'pessimistic')) : t(l('equilibrado', 'balanced')) }), ` · ${sc.found} ${t(l('achados', 'finds'))}`),
-      sc.mission ? h('div', null, pill(`${t(l('em missão até sem.', 'on mission until wk'))} ${sc.mission.untilWeek}`, 'warn'), ' ', bar(missionProgress(s, sc) * 100),
-        h('small', { class: 'muted' }, ` ${sc.mission.leads?.length ?? 0} ${t(l('pista(s)', 'lead(s)'))} · ${t(l('grau máx.', 'max degree'))} ${sc.mission.depth ?? 2}`)) : missionForm(s, sc, famName),
+      ((tr) => tr ? h('div', null, pill(`${t(l('em missão até sem.', 'on mission until wk'))} ${tr.until}`, 'warn'), ' ', bar(missionProgress(s, sc) * 100),
+        h('small', { class: 'muted' }, ` ${tr.found.length} ${t(l('pista(s)', 'lead(s)'))} · ${t(l('grau máx.', 'max degree'))} ${tr.depth ?? 2}`)) : missionForm(s, sc, famName))(tripOf23(s, sc.id)),
     ]))) : h('p', { class: 'muted small' }, t(l('Sem olheiros. Cada um tem região, especialidade, viés e salário.', 'No scouts. Each has a region, specialty, bias and salary.'))),
     h('h4', null, t(l('Disponíveis este mês', 'Available this month'))),
     h('div', { class: 'cards' }, pool.map((sc) => tile('fans', sc.name, [

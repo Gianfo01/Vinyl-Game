@@ -8,7 +8,7 @@ import { familyOf } from '../src/data/world';
 import { traitAffinity, traitById } from '../src/data/people';
 import { createGame } from '../src/sim/worldgen';
 import { perk } from '../src/sim/perks';
-import { scoutActionsPerMonth, setStage, syncPipeline, watchAct } from '../src/sim/scouting';
+import { scoutActionsPerMonth, syncPipeline, watchAct } from '../src/sim/scouting';
 import { makeOffer, defaultOffer } from '../src/sim/contracts';
 import { deriveAttrs, persona } from '../src/sim/sys/persona';
 import { ownerOf } from '../src/sim/sys/people/owner';
@@ -27,8 +27,6 @@ describe('scouting e pipeline', () => {
     const a = Object.values(s.acts).find((x) => !x.owner && x.status !== 'retired' && !s.knowledge[x.id])!;
     expect(watchAct(s, a.id)).toBe(true);
     expect(s.knowledge[a.id].stage).toBe('monitoring');
-    expect(setStage(s, a.id, 'investigating')).toBe(true);
-    expect(setStage(s, a.id, 'offer')).toBe(false);
     makeOffer(s, defaultOffer(s, a));
     syncPipeline(s);
     expect(s.knowledge[a.id].stage).toBe('offer');

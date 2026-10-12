@@ -120,7 +120,6 @@ export interface Scout {
   bias: number; // erro sistemático −15..15
   salary: number;
   /** rodada 11: missões com início, profundidade (grau máximo) e pistas reveladas aos poucos */
-  mission?: { region: MarketId; family: string; untilWeek: number; start?: number; depth?: number; leads?: string[] };
   found: number;
 }
 

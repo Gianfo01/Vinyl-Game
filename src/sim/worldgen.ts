@@ -326,7 +326,6 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     pendingReleases: [],
     agenda: {},
     delegated: {},
-    scoutRequests: [],
     scoutActionsUsed: 0,
     player: {
       cash: 0,

@@ -1,24 +1,18 @@
-// Rodada 11 — scouting com névoa: missões de olheiros com duração escolhida (4, 8 ou 12 semanas), foco de
-// gênero e pistas reveladas semana a semana (o intervalo de potencial estreita à medida que o grau sobe);
-// lista de observação com alertas e comparação lado a lado. Gerador próprio (semente + semana + olheiro).
+// Rodada 11 — lista de observação com alertas mensais e comparação lado a lado (até três).
+// r27 (AUD1): as missões de olheiro que moravam aqui foram absorvidas pelo motor único de scouting (scout23.ts).
 
-import { Rng, clamp } from '../../core/rng';
-import { cityById, familyOf, l, type L, type MarketId } from '../../data/world';
-import { sendScout } from '../discovery';
+import { l } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { GameState } from '../types';
-import type { Scout } from '../xtypes';
 import { fmtL, notify } from '../util';
-import { addSignal } from '../worldgen';
 
 export interface Scout11State {
   watch: string[];
   compare: string[];
   seen: Record<string, { fame: number; owner: string }>;
-  feed: { w: number; t: L }[];
 }
 declare module '../ext4' { interface Ext4 { scout11: Scout11State } }
-const fresh = (): Scout11State => ({ watch: [], compare: [], seen: {}, feed: [] });
+const fresh = (): Scout11State => ({ watch: [], compare: [], seen: {} });
 registerExt4('scout11', fresh);
 export const scout11 = (s: GameState): Scout11State => {
   const x = s.x4 as unknown as { scout11?: Scout11State };
@@ -26,74 +20,8 @@ export const scout11 = (s: GameState): Scout11State => {
   return x.scout11;
 };
 
-export const MISSION_WEEKS = [4, 8, 12] as const;
-/** Grau máximo que a missão alcança: curtas só observam, longas acompanham; olheiro excelente em missão longa chega à audição. */
-export function missionDepth(sc: Scout, weeks: number): number {
-  return weeks >= 12 && sc.skill >= 80 ? 4 : weeks >= 8 ? 3 : 2;
-}
-export function missionTarget(sc: Scout, weeks: number): number {
-  return 1 + Math.floor(sc.skill / 35) + (weeks >= 12 ? 1 : 0);
-}
-export function missionLength(sc: Scout, region: MarketId, weeks: number): number {
-  return weeks + (sc.region === region ? 0 : 4);
-}
-
-/** Envia o olheiro com duração e foco escolhidos. Fora da região dele a missão leva +4 semanas e custa mais. */
-export function startMission(s: GameState, scoutId: string, region: MarketId, family: string, weeks: number): L | null {
-  const sc = s.scouts.find((x) => x.id === scoutId);
-  if (!sc) return l('Olheiro inválido.', 'Invalid scout.');
-  const e = sendScout(s, scoutId, region, family);
-  if (e) return e;
-  sc.mission = { region, family, untilWeek: s.week + missionLength(sc, region, weeks), start: s.week, depth: missionDepth(sc, weeks), leads: [] };
-  return null;
-}
-
-export function missionProgress(s: GameState, sc: Scout): number {
-  const m = sc.mission;
-  if (!m?.start) return 0;
-  return clamp((s.week - m.start) / Math.max(1, m.untilWeek - m.start), 0, 1);
-}
-
-const live = (s: GameState, id: string) => { const a = s.acts[id]; return !!a && a.status !== 'retired' && a.status !== 'split'; };
-
-function feed(s: GameState, t: L): void {
-  const st = scout11(s);
-  st.feed.push({ w: s.week, t });
-  if (st.feed.length > 30) st.feed.shift();
-}
-
-function missionWeek(s: GameState, sc: Scout): void {
-  const m = sc.mission;
-  if (!m?.leads || m.untilWeek <= s.week) return;
-  const r = Rng.fromSeed(`${s.config.seed}:scout11:${s.week}:${sc.id}`);
-  m.leads = m.leads.filter((id) => live(s, id) && s.knowledge[id]);
-  const weeks = m.untilWeek - (m.start ?? s.week) - (sc.region === m.region ? 0 : 4);
-  const onSpec = m.family === 'any' || m.family === sc.family;
-  if (m.leads.length < missionTarget(sc, weeks) && r.chance((0.3 + sc.skill / 250) * (onSpec ? 1 : 0.6))) {
-    const cands = Object.values(s.acts).filter((a) => !a.owner && live(s, a.id) && !s.knowledge[a.id] && cityById[a.city]?.market === m.region && (m.family === 'any' || familyOf(a.genre) === m.family));
-    // olheiro bom enxerga potencial; o mediano vai atrás de quem já faz barulho
-    const a = r.weighted(cands, (x) => 1 + (x.potential / 40) * (sc.skill / 60) + x.fame / 30);
-    if (a) {
-      addSignal(s, r, a.id, 'scout', { by: sc.name }); // r23: origem com o nome do olheiro
-      const k = s.knowledge[a.id];
-      k.bias = sc.bias + r.normal(0, Math.max(2, 12 - sc.skill / 10));
-      m.leads.push(a.id);
-      feed(s, fmtL(l('{n}: pista nova — {a}.', '{n}: new lead — {a}.'), { n: sc.name, a: a.name }));
-    }
-  }
-  for (const id of m.leads) {
-    const k = s.knowledge[id];
-    if (k.degree >= (m.depth ?? 2) || s.acts[id].owner || !r.chance(0.16 + sc.skill / 300)) continue;
-    k.degree += 1;
-    k.bias *= 0.7;
-    k.updatedWeek = s.week;
-    if (k.stage === 'signal' && k.degree >= 2) k.stage = 'monitoring';
-    if (k.degree >= 3 && k.stage === 'monitoring') k.stage = 'investigating';
-    feed(s, fmtL(l('{n}: relatório de {a} chega ao grau {d}.', '{n}: report on {a} reaches degree {d}.'), { n: sc.name, a: s.acts[id].name, d: k.degree }));
-  }
-}
-
 // ---------------------------------------------------------------- observação e comparação
+const live = (s: GameState, id: string) => { const a = s.acts[id]; return !!a && a.status !== 'retired' && a.status !== 'split'; };
 
 export function toggleWatch(s: GameState, actId: string): boolean {
   const st = scout11(s);
@@ -130,5 +58,4 @@ function watchMonth(s: GameState): void {
   }
 }
 
-registerSimHook('week', 'scout11', (s) => { for (const sc of s.scouts) missionWeek(s, sc); });
 registerSimHook('month', 'scout11', (s) => watchMonth(s));

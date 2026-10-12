@@ -8,7 +8,8 @@ import { createGame } from '../src/sim/worldgen';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { hireScout, scoutPool } from '../src/sim/discovery';
 import { estimate } from '../src/sim/scouting';
-import { scout11, startMission, toggleCompare, toggleWatch } from '../src/sim/sys/scout11';
+import { scout11, toggleCompare, toggleWatch } from '../src/sim/sys/scout11';
+import { scout23, startMission, tripOf23 } from '../src/sim/sys/scout23';
 import { acceptDeal, conflictsOf, mgr11, renegotiateRate, shopDeal } from '../src/sim/sys/manager11';
 import { ventures } from '../src/sim/sys/ventures9';
 import { money, post, rngOf } from '../src/sim/util';
@@ -16,16 +17,18 @@ import { money, post, rngOf } from '../src/sim/util';
 const mk = (seed: string) => createGame(defaultConfig(seed, { startYear: 1990 }));
 
 describe('scouting r11', () => {
-  it('missão revela pistas aos poucos e consolida no fim', () => {
+  it('missão (r27: viagem do motor único) revela pistas aos poucos e os relatórios amadurecem', () => {
     const s = mk('r11-sc');
     post(s, 'r11', money(s, 500000), 'business', 'teste');
     const sc = { ...scoutPool(s, rngOf(s))[0], skill: 90 };
     expect(hireScout(s, sc)).toBeNull();
     const me = s.scouts[0];
     expect(startMission(s, me.id, me.region, 'any', 12)).toBeNull();
-    expect(me.mission!.depth).toBe(4);
-    for (let i = 0; i < 4 && me.mission; i++) advanceMonth(s);
-    expect(me.mission).toBeUndefined();
+    expect(tripOf23(s, me.id)!.depth).toBe(4);
+    expect(startMission(s, me.id, me.region, 'any', 4)).not.toBeNull(); // já está em campo
+    for (let i = 0; i < 4 && tripOf23(s, me.id); i++) advanceMonth(s);
+    expect(tripOf23(s, me.id)).toBeUndefined();
+    expect(scout23(s).trips.some((x) => x.scoutId === me.id)).toBe(false);
     expect(me.found).toBeGreaterThan(0);
     const scouted = Object.values(s.knowledge).filter((k) => k.source === 'scout');
     expect(scouted.some((k) => k.degree >= 2)).toBe(true);

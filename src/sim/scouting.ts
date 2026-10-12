@@ -1,14 +1,15 @@
-// Descoberta, A&R e scouting em cinco graus (GDD §10).
+// Descoberta, A&R e scouting em cinco graus (GDD §10): o CONHECIMENTO (graus, estimativas com névoa, origem) e o
+// boca a boca mensal. r27 (AUD1): os verbos ativos (viagens, missões, pedido com filtros e o próximo passo do funil)
+// vivem num motor só, src/sim/sys/scout23.ts — o aprofundar na hora e o pedido de scout daqui foram absorvidos lá.
 
-import { matchesReq20, signalEligible20, spawnPlanForReq20 } from './scout20';
+import { signalEligible20 } from './scout20';
 import { clamp, type Rng } from '../core/rng';
 import { cityById, l, type L } from '../data/world';
 import { actTalent } from './people';
 import type { Act, GameState, Knowledge } from './types';
-import { addSignal, spawnProceduralAct, talentScore } from './worldgen';
+import { addSignal, talentScore } from './worldgen';
 import { perk } from './perks';
-import { fmtL, hasTech, money, notify, post, rngOf, staffCount, staffSkill } from './util';
-import { cashWhy20, freeCash20 } from './oblig20';
+import { hasTech, money, rngOf, staffCount, staffSkill } from './util';
 
 export const DEGREES: L[] = [
   l('Rumor', 'Rumor'),
@@ -79,42 +80,6 @@ export function scoutCost(s: GameState, degree: number): number {
   return money(s, [80, 200, 450, 900, 1500][clamp(degree, 1, 5) - 1]);
 }
 
-export function canScout(s: GameState, actId: string): { ok: boolean; reason?: L } {
-  const k = s.knowledge[actId];
-  if (!k) return { ok: false };
-  if (s.scoutActionsUsed >= scoutActionsPerMonth(s)) return { ok: false, reason: l('Sem ações de scouting neste mês.', 'No scouting actions left this month.') };
-  if (k.degree >= 4 && s.acts[actId]?.owner !== 'player') return { ok: false, reason: l('Convivência só com contrato ou após meses de negociação.', 'Close contact only after signing or months of negotiation.') };
-  if (k.degree >= 5) return { ok: false };
-  if (freeCash20(s) < scoutCost(s, k.degree)) return { ok: false, reason: cashWhy20(s, scoutCost(s, k.degree), l('Caixa insuficiente.', 'Not enough cash.')) };
-  return { ok: true };
-}
-
-export function scoutAct(s: GameState, actId: string): boolean {
-  const chk = canScout(s, actId);
-  if (!chk.ok) return false;
-  const k = s.knowledge[actId];
-  const cost = scoutCost(s, k.degree);
-  post(s, `scout:${actId}:${k.degree}`, -cost, 'scouting', `Scouting ${s.acts[actId].name}`);
-  s.scoutActionsUsed += 1;
-  k.degree += 1;
-  k.updatedWeek = s.week;
-  // relatório novo pode discordar do anterior
-  const r = rngOf(s);
-  k.bias = k.bias * 0.6 + r.normal(0, 3);
-  if (k.stage === 'signal' && k.degree >= 2) k.stage = 'monitoring';
-  if (k.degree >= 3 && (k.stage === 'monitoring' || k.stage === 'signal')) k.stage = 'investigating';
-  return true;
-}
-
-/** Move manualmente um nome entre as colunas do pipeline (oferta e negociação seguem as ofertas reais). */
-export function setStage(s: GameState, actId: string, stage: Knowledge['stage']): boolean {
-  const k = s.knowledge[actId];
-  if (!k || stage === 'offer' || stage === 'negotiation') return false;
-  if (s.offers.some((o) => o.actId === actId && (o.status === 'pending' || o.status === 'counter'))) return false;
-  k.stage = stage;
-  return true;
-}
-
 /** Põe no radar (grau 1) um ato visto na busca, nas paradas ou num show. */
 export function watchAct(s: GameState, actId: string): boolean {
   const a = s.acts[actId];
@@ -155,6 +120,8 @@ const SOURCES: { id: string; name: L; from?: string; fromYear?: number }[] = [
   { id: 'friend', name: l('indicação de amigo', 'friend\'s tip'), fromYear: 99999 },
   // r23: viagem de olheiro a uma cena (só por ação ativa)
   { id: 'scene23', name: l('viagem de olheiro', 'scouting trip'), fromYear: 99999 },
+  // r27: noite de olheiro jogável (night27) — só por ação ativa
+  { id: 'night27', name: l('noite de olheiro', 'scouting night'), fromYear: 99999 },
 ];
 
 export function sourceName(id: string): L {
@@ -191,42 +158,10 @@ export function monthlySignals(s: GameState, r: Rng): void {
       candidates.splice(candidates.indexOf(act), 1);
     }
   }
-  // pedidos de scout: formulário estruturado, sem texto livre (GDD §10)
-  for (const req of s.scoutRequests.splice(0)) {
-    const matches = Object.values(s.acts).filter((a) => signalEligible20(s, a) && matchesReq20(a, req));
-    r.shuffle(matches);
-    let found = matches.slice(0, r.int(1, 3));
-    if (!found.length) {
-      // r20 (B10): sem relaxar filtros — um ato novo que obedece ao pedido, ou "sem resultado"
-      const plan = spawnPlanForReq20(s, r, req);
-      const act = plan ? spawnProceduralAct(s, r, plan) : undefined;
-      found = act && matchesReq20(act, req) ? [act] : [];
-    }
-    if (!found.length) {
-      notify(s, l('Scouts voltaram sem nomes: ninguém atende a todos os filtros do pedido agora.', 'Scouts came back empty-handed: nobody matches every filter of the request right now.'), 'info');
-      continue;
-    }
-    for (const a of found) addSignal(s, r, a.id, 'referral');
-    notify(s, fmtL(l('Scouts trouxeram {n} nome(s) do pedido.', 'Scouts brought back {n} name(s) from your request.'), { n: found.length }), 'info');
-  }
   // relatórios envelhecem
   for (const k of Object.values(s.knowledge)) {
     if (s.acts[k.actId]?.owner === 'player') continue;
     if (s.week - k.updatedWeek > 52 && k.degree > 1 && r.chance(0.08)) k.degree -= 1;
     if (!s.acts[k.actId] || s.acts[k.actId].status === 'retired' || s.acts[k.actId].status === 'split') delete s.knowledge[k.actId]; // r20 (B9): fora do radar quem não é contratável
   }
-}
-
-export function scoutRequestCost(s: GameState): number {
-  return money(s, 500);
-}
-
-export function requestScout(s: GameState, req: { genreFamily: string; market: string; level: string; role: string }): boolean {
-  const cost = scoutRequestCost(s);
-  if (s.player.cash < cost) return false;
-  if (s.scoutActionsUsed >= scoutActionsPerMonth(s)) return false;
-  s.scoutActionsUsed += 1;
-  post(s, `scoutreq:${s.scoutRequests.length}`, -cost, 'scouting', 'Pedido de scout');
-  s.scoutRequests.push({ ...req, week: s.week });
-  return true;
 }

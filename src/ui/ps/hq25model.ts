@@ -119,7 +119,7 @@ export function hqModel25(s: GameState): HqModel25 {
     sprites.push({ id: `st:${m.id}`, kind: 'staff', name: m.name, role: m.role, room, note: l('Equipe', 'Staff') });
   }
   for (const sc of s.scouts ?? []) {
-    const away = !!sc.mission || tripScouts.has(sc.id);
+    const away = tripScouts.has(sc.id);
     sprites.push({ id: `sc:${sc.id}`, kind: 'scout', name: sc.name, room: away ? 'away' : 'anr', note: away ? l('Olheiro em viagem', 'Scout travelling') : l('Olheiro', 'Scout') });
   }
 

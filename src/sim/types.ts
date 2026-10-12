@@ -645,7 +645,6 @@ export interface GameState extends ExtState {
   pendingReleases: PendingRelease[];
   agenda: Record<string, AgendaSlot[]>; // actId -> slots do mês
   delegated: Record<string, boolean>;
-  scoutRequests: { genreFamily: string; market: string; level: string; role: string; week: number }[];
   scoutActionsUsed: number;
   player: {
     cash: number;

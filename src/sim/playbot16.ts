@@ -20,7 +20,8 @@ import { fireStaff, hireStaff, loanOffer, monthlyCosts, openTerritory, takeLoan,
 import { estimateMonthlyBurn, resolveDecision } from './events';
 import { availableChannels } from './market';
 import { respondDemand, rst } from './rights';
-import { canScout, estimate, requestScout, scoutAct } from './scouting';
+import { estimate, scoutActionsPerMonth } from './scouting';
+import { freeScouts23, nextStep23, sceneQuote23, scout23, startMission, startSceneTrip23, startStep23 } from './sys/scout23';
 import { availableProducers, producerFit, sessionCost } from './studio';
 import { acceptCommission } from './sys/creation/core';
 import { addOrder, d16, ordersOf } from './sys/deleg16';
@@ -94,7 +95,7 @@ export interface PlayLog {
 }
 const freshLog = (): PlayLog => ({ signs: 0, offers: 0, scouts: 0, projects: 0, recordings: 0, releases: 0, rollouts: 0, tours: 0, festivals: 0, syncPitches: 0, syncWins: 0, hires: 0, fires: 0, orders: 0, loans: 0, renewals: 0, drops: 0, decisions: 0, personal: 0, commissions: 0, demands: 0, r17: freshLog17() });
 
-interface Mem { log: PlayLog; cash: number[]; tourW: Record<string, number>; party: number; refused: Record<string, number>; req?: number }
+interface Mem { log: PlayLog; cash: number[]; tourW: Record<string, number>; party: number; refused: Record<string, number> }
 const MEM = new WeakMap<GameState, Mem>();
 const mem = (s: GameState): Mem => {
   let m = MEM.get(s);
@@ -169,19 +170,27 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
   const cheap = (id: string) => defaultOffer(s, s.acts[id]).advance * k.adv <= s.player.cash * k.advCash;
   const ks = Object.values(s.knowledge).filter((x) => s.acts[x.actId] && !s.acts[x.actId].owner && x.degree < 4)
     .map((x) => ({ ...x, v: score(x.actId) + x.degree * 4 + (cheap(x.actId) ? 25 : 0) })).sort((a, b) => b.v - a.v);
-  // pedido de scout (formulário da interface) quando não há ninguém acessível no radar e há vaga no elenco
+  // r27: procurar pelo motor único (tela Talentos): quando não há ninguém acessível no radar e há vaga no elenco,
+  // manda um olheiro à cena da cidade (o da casa, se houver livre; senão um freelancer) com o filtro de nível do
+  // antigo pedido de scout. Um olheiro da equipe livre também parte em missão pelo mercado de casa.
   const want = Math.min(k.roster, hqCaps(s).careers) > careerSlotsUsed(s);
-  if (want && !ks.some((x) => cheap(x.actId)) && s.month !== mem(s).req) {
-    const home = (cityById[s.config.homeCity]?.market ?? 'any') as string;
-    if (requestScout(s, { genreFamily: 'any', market: home, level: p === 'aggressive' ? 'promising' : 'beginner', role: 'any' })) { L.scouts++; mem(s).req = s.month; }
+  const home = (cityById[s.config.homeCity]?.market ?? 'na') as MarketId;
+  if (want && !ks.some((x) => cheap(x.actId)) && !scout23(s).trips.some((x) => x.kind === 'scene' && x.city === s.config.homeCity)) {
+    const sc = freeScouts23(s)[0];
+    const req = { level: p === 'aggressive' ? 'promising' : 'beginner', role: 'any' };
+    if (sceneQuote23(s, s.config.homeCity, 'any', sc?.id).cost < s.player.cash * 0.05 && !startSceneTrip23(s, s.config.homeCity, 'any', sc?.id, req)) L.scouts++;
   }
-  for (const x of ks.slice(0, 4)) {
-    if (!canScout(s, x.actId).ok) {
-      // o agressivo vai pessoalmente quando a equipe esgota as ações (custa tempo livre)
-      if (p === 'aggressive' && energyLeft(s) >= 3 && !scoutInPerson(s) && canScout(s, x.actId).ok) { scoutAct(s, x.actId); L.scouts++; L.personal++; }
-      break;
-    }
-    scoutAct(s, x.actId); L.scouts++;
+  for (const sc of freeScouts23(s)) if (want && !startMission(s, sc.id, sc.region ?? home, sc.family ?? 'any', 8)) L.scouts++;
+  // aprofunda os melhores do funil: o mesmo próximo passo dos cards (custo, semanas; audição pede tempo livre)
+  let n = 4;
+  for (const x of ks) {
+    if (n <= 0) break;
+    let st = nextStep23(s, x.actId);
+    // o agressivo vai pessoalmente quando a equipe esgota as ações (custa tempo livre)
+    if (st && !st.ok && !st.until && p === 'aggressive' && energyLeft(s) >= 3 && s.scoutActionsUsed >= scoutActionsPerMonth(s) && !scoutInPerson(s)) { st = nextStep23(s, x.actId); L.personal++; }
+    if (!st?.ok) continue;
+    if (startStep23(s, x.actId)) break;
+    L.scouts++; n--;
   }
   const cap = Math.min(k.roster, hqCaps(s).careers);
   if (careerSlotsUsed(s) >= cap || runway(s) < k.cut) return;
