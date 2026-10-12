@@ -21,7 +21,9 @@ import { persona, PLAYER_TRAITS } from './persona';
 import { vices } from './vices';
 
 export interface Relative { name: string; born: number; aptitude: number; rel: 'sibling' | 'parent' | 'cousin'; personId?: string }
-export interface HeirCand { key: string; name: string; born: number; aptitude: number; rel: 'kid' | 'spouse' | 'partner' | 'sibling' | 'parent' | 'cousin' | 'staff' | 'artist'; personId?: string; staffId?: string; actId?: string }
+export interface HeirCand { key: string; name: string; born: number; aptitude: number; rel: 'kid' | 'spouse' | 'partner' | 'sibling' | 'parent' | 'cousin' | 'staff' | 'artist'; personId?: string; staffId?: string; actId?: string; /** r27 AUD2: peso extra na ordem (vínculo/caminho do filho, kin27) */ bonus?: number; note?: L }
+/** r27 AUD2 (sys/aud27/kin27): o filho(a) `idx` entra na sucessão? `skip` = recusa/afastado; `d` = peso na ordem. */
+export const HEIR_KID8: ((s: GameState, idx: number) => { skip?: boolean; d?: number; note?: L } | null)[] = [];
 export interface HeirState {
   relatives: Relative[];
   /** linha do tempo das gerações (para a interface) */
@@ -53,7 +55,9 @@ export function heirCandidates(s: GameState): HeirCand[] {
     if (s.year - k.born < ADULT) return;
     const pid = kidPerson(s, i);
     if (!alive(pid)) return;
-    out.push({ key: `kid:${i}`, name: pid && s.persons[pid] ? s.persons[pid].name : k.name, born: k.born, aptitude: k.aptitude, rel: 'kid', personId: pid });
+    let d = 0, note: L | undefined;
+    for (const f of HEIR_KID8) { const x = f(s, i); if (x?.skip) return; d += x?.d ?? 0; note = x?.note ?? note; }
+    out.push({ key: `kid:${i}`, name: pid && s.persons[pid] ? s.persons[pid].name : k.name, born: k.born, aptitude: k.aptitude, rel: 'kid', personId: pid, ...(d ? { bonus: d } : {}), ...(note ? { note } : {}) });
   });
   const pt = L0.partner;
   // r17: união simbólica (sem casamento igualitário na lei) não garante herança — conta como parceiro(a)
@@ -81,7 +85,7 @@ export function heirCandidates(s: GameState): HeirCand[] {
     out.push({ key: `artist:${pid}`, name: p.name, born: p.born, aptitude: clamp(biz * 0.6 + a.trust * 0.3, 15, 85), rel: 'artist', personId: pid, actId: a.id });
   }
   // melhor candidato primeiro: o designado, depois aptidão com um peso para quem está no auge
-  const score = (c: HeirCand) => (c.key === o.heir ? 1000 : 0) + c.aptitude - Math.abs(s.year - c.born - 38) * 0.4 + (c.rel === 'kid' ? 5 : 0) - (c.rel === 'staff' || c.rel === 'artist' ? 8 : 0);
+  const score = (c: HeirCand) => (c.key === o.heir ? 1000 : 0) + c.aptitude - Math.abs(s.year - c.born - 38) * 0.4 + (c.rel === 'kid' ? 5 : 0) - (c.rel === 'staff' || c.rel === 'artist' ? 8 : 0) + (c.bonus ?? 0);
   return out.sort((a, b) => score(b) - score(a));
 }
 
@@ -170,7 +174,7 @@ export function beginSuccession(s: GameState, r: Rng, reason: 'death' | 'retire'
     return {
       id: `h${i}`,
       label: fmtL(l('{n} — {r}, {a} anos', '{n} — {r}, age {a}'), { n: c.name, r: REL_NAME[c.rel], a: s.year - c.born }),
-      hint: fmtL(isFamily(c.rel) ? l('Aptidão {ap} · herda {w}{t}', 'Aptitude {ap} · inherits {w}{t}') : l('Aptidão {ap} · patrimônio próprio {w}', 'Aptitude {ap} · own wealth {w}'), { ap: Math.round(c.aptitude), w: `$${Math.round(pv.wealth / 100).toLocaleString('en-US')}`, t: pv.tax ? fmtL(l(' (imposto {p}%)', ' ({p}% tax)'), { p: Math.round(pv.tax * 100) }) : '' }),
+      hint: fmtL(isFamily(c.rel) ? l('Aptidão {ap} · herda {w}{t}{n}', 'Aptitude {ap} · inherits {w}{t}{n}') : l('Aptidão {ap} · patrimônio próprio {w}', 'Aptitude {ap} · own wealth {w}'), { ap: Math.round(c.aptitude), w: `$${Math.round(pv.wealth / 100).toLocaleString('en-US')}`, t: pv.tax ? fmtL(l(' (imposto {p}%)', ' ({p}% tax)'), { p: Math.round(pv.tax * 100) }) : '', n: c.note ? fmtL(l(' · {x}', ' · {x}'), { x: c.note }) : '' }),
     };
   });
   const why = reason === 'death' ? l('morreu', 'has died') : reason === 'health' ? l('não tem mais saúde para comandar', 'can no longer lead for health reasons') : l('decidiu se aposentar', 'decided to retire');

@@ -14,6 +14,7 @@ import { ownerOf } from './people/owner';
 import { persona } from './persona';
 import { playerTraitById } from './persona/data';
 import { addSignal } from '../worldgen';
+import { relief27 } from '../relief27';
 
 // ---------------------------------------------------------------- estado
 
@@ -120,6 +121,7 @@ export function indulge(s: GameState, r: Rng, vice: 'drink' | 'drugs'): L | null
   if (r.chance((vice === 'drugs' ? 0.04 : 0.015) + v.heat / 1500 + famous / 3000)) scandal(s, r, vice);
   log(s, vice === 'drugs' ? fmtL(l('Noite de {d}: o estresse some por um tempo.', 'A night of {d}: stress fades for a while.'), { d: drugName(s.year) }) : l('Noitada: você esquece os problemas até amanhã.', 'A big night out: you forget your problems until tomorrow.'), 'info');
   if (v.dep[vice] >= 60) gainTrait(s, 'addicted');
+  relief27(s, vice, info.stress); // r27 AUD2: com quem / quem viu (sys/aud27/burnout27)
   return null;
 }
 
@@ -370,6 +372,7 @@ export function takeTrip(s: GameState, r: Rng, id: string): L | null {
   if (new Set(v.trips.map((x) => x.dest)).size >= 4) gainTrait(s, 'worldly');
   if (id === 'ibiza' && r.chance(0.3)) { v.dep.drugs = clamp(v.dep.drugs + 8, 0, 100); v.dep.drink = clamp(v.dep.drink + 8, 0, 100); }
   log(s, fmtL(l('Viagem para {c}: {d}', 'Trip to {c}: {d}'), { c: cityById[tp.city]?.name ?? tp.name, d: tp.desc }), 'good', true);
+  relief27(s, 'trip', tp.stress, id); // r27 AUD2: o escritório sem você, quem você conheceu
   return null;
 }
 

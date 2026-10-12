@@ -341,4 +341,5 @@ import './rivals27';
 import './cities27';
 import './hist27';
 import './conseq27';
+import './aud27'; // r27 AUD2: agiota, filhos×herança, cultura emergente, estresse, críticos, macro, reações (sys/aud27/)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

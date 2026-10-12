@@ -9,6 +9,7 @@ import { t } from '../../i18n/strings';
 import { ADK19, CRED_MAX19, ad19, adOpen19, medium19 } from '../../sim/sys/adsync19';
 import { CANCEL_FROM19, RESP19, comeback19, comebackCost19, cx19, respond19, type Resp19 } from '../../sim/sys/cancel19';
 import { CUL19, CUL_CD19, avgLoy19, cul19, setCulture19, setTrain19, trainCost19, type Cul19 } from '../../sim/sys/culture19';
+import { actualCulture27, cul27 } from '../../sim/sys/aud27/culture27';
 import { KEYMAN_FROM19, cover19, ins19, insureKey19, keyPerson19, planCost19, premium19, setPlan19 } from '../../sim/sys/insure19';
 import { buyIns19, insPrem19, l19b } from '../../sim/sys/links19b';
 import { djFit18, ensureDjs18 } from '../../sim/sys/media18';
@@ -110,8 +111,12 @@ function insTab(s: GameState): HTMLElement {
 function cultureTab(s: GameState): HTMLElement {
   const st = cul19(s), wait = st.c ? Math.max(0, CUL_CD19 - (s.week - st.since)) : 0;
   return h('div', null,
-    muted(l('A cultura puxa todo mês a lealdade da equipe (abaixo de 25 a pessoa sai), a confiança e o humor do elenco e a aceitação das suas propostas. Trocar abala a equipe (−6) e só pode a cada 6 meses.', 'The culture pulls staff loyalty every month (below 25 people quit), roster trust and mood, and how readily your offers are accepted. Changing it shakes staff (−6) and is allowed every 6 months.')),
+    muted(l('A cultura puxa todo mês a lealdade da equipe (abaixo de 25 a pessoa sai), a confiança e o humor do elenco e a aceitação das suas propostas. Trocar abala a equipe (−6) e só pode a cada 12 meses.', 'The culture pulls staff loyalty every month (below 25 people quit), roster trust and mood, and how readily your offers are accepted. Changing it shakes staff (−6) and is allowed every 12 months.')),
     row(why18(s, 'cul19', {}, fmtS(l('Cultura: {c} · lealdade média da equipe {v}', 'Culture: {c} · average staff loyalty {v}'), { c: st.c ? t(CUL19[st.c].name) : '—', v: avgLoy19(s) })), wait ? pill(fmtS(l('troca em {w} sem.', 'change in {w} wk'), { w: wait }), 'warn') : null),
+    // r27 AUD2: a cultura de fato nasce das decisões; o menu declara (e empurra devagar)
+    row(why18(s, 'cul27', {}, fmtS(l('De fato: {a} · declarada: {d}', 'Actual: {a} · declared: {d}'), { a: actualCulture27(s) ? t(CUL19[actualCulture27(s)!].name) : t(l('ainda indefinida', 'not settled yet')), d: cul27(s).decl ? t(CUL19[cul27(s).decl!].name) : '—' })),
+      cul27(s).gap ? pill(t(l('a equipe nota a distância', 'staff notice the gap')), 'warn') : null),
+    muted(l('A cultura de fato soma o tom das suas decisões (generosas, arriscadas, duras, cautelosas), o perfil e o estilo de liderança do selo e a balança da reputação. Se outra domina por 3 meses, a casa muda sozinha. Adotar abaixo é declarar: empurra devagar, e falar uma coisa e fazer outra cansa a equipe.', 'The actual culture adds up the tone of your decisions (generous, risky, tough, cautious), the label\'s profile and leadership style and the reputation balance. If another one dominates for 3 months, the house changes on its own. Adopting below is declaring: it pushes slowly, and saying one thing while doing another wears the staff down.')),
     h('div', null, ...(Object.keys(CUL19) as Cul19[]).map((c) => card(row(h('b', null, T(CUL19[c].name)), st.c === c ? pill(t(l('atual', 'current')), 'good') : btn(l('Adotar', 'Adopt'), () => say(setCulture19(s, c)), !!wait)), muted(CUL19[c].desc), muted(CUL19[c].real)))),
     section(t(l('Treinamento da equipe', 'Staff training')), row(fmtS(l('{v}/mês para {n} pessoas: habilidade +0,15 e lealdade +0,4 por mês; evita os erros do caos.', '{v}/mo for {n} people: skill +0.15 and loyalty +0.4 a month; prevents chaos errors.'), { v: $(trainCost19(s)), n: s.player.staff.length }), btn(st.train ? l('Desligar', 'Turn off') : l('Ligar', 'Turn on'), () => { setTrain19(s, !st.train); rerender(); }))),
     section(t(l('Diário', 'Log')), logList(st.log)));

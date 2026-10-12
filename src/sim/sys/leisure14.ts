@@ -25,6 +25,7 @@ import { ownerOf } from './people/owner';
 import { opine, opinionOf, per13, type P13 } from './persona13';
 import { scene12 } from './scenes12';
 import { actsOfPerson17 } from '../actidx17';
+import { relief27 } from '../relief27';
 
 // ---------------------------------------------------------------- dados
 
@@ -556,6 +557,7 @@ export function goOut14(s: GameState, k: Spot14): { ok: boolean; text: L; met: {
     : fmtL(l('{p}: noite tranquila, ninguém conhecido por lá — pelo menos a cabeça descansou.', '{p}: quiet night, nobody notable around — at least your mind rested.'), { p: SPOT14[k].name(s.year) });
   st.pl.log.unshift([s.year, s.month, text]);
   if (st.pl.log.length > 12) st.pl.log.length = 12;
+  relief27(s, 'out', k === 'church' || k === 'park' ? 4 : 2, k); // r27 AUD2
   return { ok: true, text, met };
 }
 

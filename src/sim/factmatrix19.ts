@@ -264,3 +264,27 @@ export const R20C: Record<string, { sys: string; to: string[] }> = {
   union_deal: { sys: 'union20 (acordo/meio-termo com a entidade)', to: ['union20:deal (próxima pauta adiada)'] },
   union_clash: { sys: 'union20 (fora do sindicato / locaute)', to: ['union20:clash (próxima pauta antecipada)', 'exch20:union (relação com todas as cenas −5)'] },
 };
+
+/** R27 AUD2 (sys/aud27/): tipos que só o emissor ouvia → consumidores de fora (e choques macro que chegam no dinheiro). */
+export const AUD2_27: Record<string, string[]> = {
+  tribute_born: ['reach27:tribute (fãs do original, embalo, manchete, reputação comercial do dono)'],
+  tribute_licensed: ['reach27:licensed (confiança do ato seu, reputação com artistas)'],
+  tribute_sued: ['reach27:sued (reputação com artistas, fãs do original)'],
+  cert_award: ['reach27:cert (bolsa10 do dono, confiança do ato, mágoa do rival — rivals27)'],
+  cowrite_split: ['reach27:split (moral/ressentimento da banda, relação com o líder)'],
+  zine_founded: ['reach27:zine (calor da cena — scenes27, embalo dos seus atos da cidade)'],
+  ghost_band: ['reach27:ghost (embalo e fãs do ato real)'],
+  contest_winner: ['reach27:contest (mercado corteja o vencedor — world18, cena)'],
+  judge_feud: ['reach27:judge (simpatia, fama do jurado, relação dos líderes)'],
+  choir_alumni: ['reach27:choir (embalo, cena local)'],
+  legend: ['reach27:legend (fãs, bolsa do dono, reputação)'],
+  revival_hit: ['reach27:revival (bolsa do dono, confiança, cena)'],
+  catalog_rerelease: ['reach27:rerelease (núcleo de fãs)'],
+  critic_editor: ['critic27:editor (relação com o crítico)'],
+  conflict_interest: ['critic27:conflict (relação com todos os críticos)'],
+  payola: ['critic27:payola (críticos se afastam)'],
+  rate_shift: ['macro27:rates (juros dos empréstimos flutuantes, bolsa, fundos do goods8)'],
+  bond_default: ['macro27:default (sua ação, juros)'],
+  label_bankrupt: ['macro27:bankrupt (ação do selo e do setor)'],
+  fx_crisis: ['macro27:fx (bolsa do submercado, estrada mais cara 12 meses, fundo de ações)'],
+};

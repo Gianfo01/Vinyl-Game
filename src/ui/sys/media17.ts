@@ -27,6 +27,7 @@ import { showOf20, storyShow20 } from '../../sim/sys/showops20';
 import { dateOfDay } from '../../sim/util';
 import { store } from '../store';
 import { ic, setTab } from '../vis';
+import { critWhy27 } from '../../sim/sys/aud27/critic27';
 
 const ST_NAME: Record<Story['st'], [L, string]> = {
   open: [l('em aberto', 'open'), 'warn'], confirmed: [l('confirmado', 'confirmed'), ''], denied: [l('desmentido', 'denied'), 'good'],
@@ -174,7 +175,7 @@ function criticsTab(s: GameState): HTMLElement {
       h('thead', null, h('tr', null, ...[l('Crítico', 'Critic'), l('Veículo', 'Outlet'), l('Região', 'Region'), l('Gosta', 'Likes'), l('Detesta', 'Dislikes'), l('Rigor', 'Harshness'), l('Prestígio', 'Prestige'), l('Relação', 'Relation')].map((x) => h('th', null, t(x))))),
       h('tbody', null, cs.map((c) => { const n = CRITICS17.find((x) => x.name === c.name)?.note; return h('tr', null,
         h('td', { title: n ? t(n) : '' }, c.name, REAL_CRITICS.has(c.name) ? ' ' : null, REAL_CRITICS.has(c.name) ? pill('real', 'gold') : null), h('td', null, c.realRef && !REAL_CRITICS.has(c.name) ? `${c.outlet} (≈ ${c.realRef})` : c.outlet), h('td', null, c.region ?? 'global'),
-        h('td', null, fam(c.favors)), h('td', null, fam(c.dislikes)), h('td', null, `${Math.round(c.harsh * 10)}/10`), h('td', null, String(c.prestige)), h('td', null, relTxt(relWith(s, c.name)))); }))));
+        h('td', null, fam(c.favors)), h('td', null, fam(c.dislikes)), h('td', null, `${Math.round(c.harsh * 10)}/10`), h('td', null, String(c.prestige)), h('td', { title: critWhy27(s, c.name).map((w) => t(w)).join('\n') || undefined }, relTxt(relWith(s, c.name)))); })))); // r27 AUD2: porquês da relação
 }
 
 function suitsTab(s: GameState): HTMLElement {
