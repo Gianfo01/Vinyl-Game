@@ -6,6 +6,7 @@ import { l, type FamilyId, type L } from './world';
 import { PRODS18 } from './people18';
 import { PRODS_1889 } from './era1889';
 import { PRODS19 } from './more19';
+import { PRODS27 } from './audit27_people';
 
 export type PrAttrs = [ear: number, neg: number, cha: number, mgmt: number, img: number];
 export interface RealProd {
@@ -97,4 +98,5 @@ export const REAL_PRODS: RealProd[] = [
 REAL_PRODS.push(...PRODS18.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r18 (world18): mais produtores reais por era/região
 REAL_PRODS.push(...PRODS_1889.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r18 era1889: A&R da era acústica
 REAL_PRODS.push(...PRODS19.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r19 more19 (onda 2)
+REAL_PRODS.push(...PRODS27.filter((x) => !REAL_PRODS.some((y) => y.id === x.id || y.name === x.name))); // r27 auditoria Masters_25
 export const prodById = Object.fromEntries(REAL_PRODS.map((p) => [p.id, p])) as Record<string, RealProd>;
