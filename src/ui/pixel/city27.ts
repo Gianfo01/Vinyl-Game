@@ -13,6 +13,9 @@
 //   • modelo do painel lateral (o que é, custo/mês, receita, quem está lá, 2–3 ações).
 
 import { CLIMATE19 } from '../../data/hood19';
+import { LANDMARKS19, landmarksAt19, type Landmark19, type LmShape } from '../../data/landmarks19';
+import type { Pop19 } from '../../sim/sys/world19';
+import type { Style18 } from '../../sim/sys/campus18';
 import { cityById, l, type L } from '../../data/world';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
@@ -90,17 +93,25 @@ export function era27(year: number): Era27 {
   return { lamp, sign, outfit, cars, hats: year < 1960 };
 }
 
-export type CityK27 = 'bay' | 'towers' | 'brick' | 'plain';
+export type CityK27 = 'bay' | 'towers' | 'brick' | 'stone' | 'plain';
 const BAY27 = new Set(['rio', 'salvador', 'florianopolis', 'cape_town', 'honolulu', 'sydney', 'havana', 'san_juan', 'naples', 'lisbon', 'recife', 'fortaleza', 'kingston', 'cartagena', 'zanzibar', 'wellington', 'vancouver', 'hong_kong', 'santo_domingo', 'port_of_spain', 'barcelona', 'marseille', 'istanbul', 'athens', 'beirut', 'dakar', 'durban', 'miami', 'sao_luis', 'belem', 'auckland', 'suva']);
 const TOWERS27 = new Set(['new_york', 'chicago', 'hong_kong', 'shanghai', 'tokyo', 'sao_paulo', 'toronto', 'dubai', 'singapore', 'seoul', 'osaka', 'kuala_lumpur', 'houston', 'atlanta', 'philadelphia', 'san_francisco', 'bangkok', 'jakarta', 'mumbai']);
+/** r27 (I2): cidades de pedra clara e mansarda (Paris e afins). */
+const STONE27 = new Set(['paris', 'madrid', 'vienna', 'budapest', 'prague', 'rome', 'milan', 'buenos_aires', 'brussels', 'bordeaux', 'lyon', 'turin', 'montevideo', 'santiago']);
+/** r27 (I2): morro com favela só onde existe (Rio, Salvador); o resto da baía tem encosta verde. */
+const FAVELA27 = new Set(['rio', 'salvador']);
+/** r27 (I2): altura dos morros da baía (Rio = 1; porto baixo como Sydney ~0,35). */
+const HILLS27: Record<string, number> = { rio: 1, salvador: 0.55, cape_town: 1, hong_kong: 0.9, wellington: 0.7, naples: 0.8, sydney: 0.32, miami: 0, recife: 0.15, fortaleza: 0.15, havana: 0.25, barcelona: 0.55, lisbon: 0.5, istanbul: 0.45, vancouver: 0.9, honolulu: 0.7, kingston: 0.75 };
 const BRICK27 = new Set(['london', 'manchester', 'liverpool', 'dublin', 'glasgow', 'bristol', 'birmingham', 'sheffield', 'boston', 'amsterdam', 'rotterdam', 'hamburg', 'copenhagen', 'brussels', 'cleveland', 'detroit']);
-export interface CityLook27 { k: CityK27; hill: boolean; sea: boolean; tall: boolean; brick: boolean; palms: boolean; wall: string[] }
+export interface CityLook27 { k: CityK27; hill: boolean; sea: boolean; tall: boolean; brick: boolean; palms: boolean; wall: string[];
+  /** r27 (I2): favela nas encostas (só Rio/Salvador, a partir de 1940) e altura relativa dos morros */ favela: boolean; hillAmp: number }
 /** Cara da cidade: morro + mar (Rio), torres (Nova York), tijolo e chaminés (Londres) ou genérica. */
 export function cityLook27(city: string, lat: number, year: number): CityLook27 {
-  const k: CityK27 = BAY27.has(city) ? 'bay' : TOWERS27.has(city) ? 'towers' : BRICK27.has(city) ? 'brick' : 'plain';
+  const k: CityK27 = BAY27.has(city) ? 'bay' : TOWERS27.has(city) ? 'towers' : BRICK27.has(city) ? 'brick' : STONE27.has(city) ? 'stone' : 'plain';
   const trop = Math.abs(lat) < 30;
-  const wall = k === 'brick' ? ['#8a4430', '#7a3a2a', '#9a5a40', '#6a4a40'] : k === 'bay' ? ['#f0d8a8', '#e8a888', '#a8d0c8', '#f4ecdc', '#e8c868'] : k === 'towers' ? (year < 1950 ? ['#a87a5a', '#8a6a5a', '#c8b8a0'] : ['#8a9aa8', '#5a6a80', '#c8ccd0', '#a87a5a']) : ['#d0c0a0', '#b8a888', '#a0a8b0', '#c89878'];
-  return { k, hill: k === 'bay', sea: k === 'bay', tall: k === 'towers' && year >= 1915, brick: k === 'brick', palms: k === 'bay' && trop || (trop && Math.abs(lat) < 26), wall };
+  const wall = k === 'brick' ? ['#8a4430', '#7a3a2a', '#9a5a40', '#6a4a40'] : k === 'bay' ? ['#f0d8a8', '#e8a888', '#a8d0c8', '#f4ecdc', '#e8c868'] : k === 'towers' ? (year < 1950 ? ['#a87a5a', '#8a6a5a', '#c8b8a0'] : ['#8a9aa8', '#5a6a80', '#c8ccd0', '#a87a5a']) : k === 'stone' ? ['#e4d6b8', '#d8c8a6', '#ece2cc', '#cdbb98'] : ['#d0c0a0', '#b8a888', '#a0a8b0', '#c89878'];
+  const hillAmp = k === 'bay' ? HILLS27[city] ?? 0.6 : 0;
+  return { k, hill: hillAmp > 0.2, sea: k === 'bay', tall: k === 'towers' && year >= 1915, brick: k === 'brick', palms: k === 'bay' && trop || (trop && Math.abs(lat) < 26), wall, favela: FAVELA27.has(city) && year >= 1940, hillAmp };
 }
 
 // ---------------------------------------------------------------- ícone por tipo
@@ -372,3 +383,107 @@ export function panel27(s: GameState, id: string, bs: Bld18[] = buildings18(s)):
 
 /** Nome curto de cidade (para legendas). */
 export const cityName27 = (id: string): L => cityById[id]?.name ?? l(id, id);
+
+// ---------------------------------------------------------------- r27 (I2): a sede por fora = a sede por dentro
+
+/** Casca da sede — a MESMA de `shellOf27` (ui/ps/hqpx27.ts, corte do interior); os testes conferem. */
+export type HqShell27 = 'garage' | 'shop' | 'loft' | 'building' | 'tower' | 'campus';
+const SHELLS27: HqShell27[] = ['garage', 'shop', 'loft', 'building', 'tower', 'campus'];
+/** Andares do corte do interior por casca (SPEC de hqpx27: garagem 1, sala alugada 2, loft 2, prédio 3, torre 5, campus 5). */
+export const HQ_FLOORS27: Record<HqShell27, number> = { garage: 1, shop: 2, loft: 2, building: 3, tower: 5, campus: 5 };
+/** Sem pele de vidro antes deste ano (bíblia de arte, docs/art27-city.md). */
+export const GLASS_FROM27 = 1968;
+/** Fachada (mesmos materiais do mapa: Style18 de sim/sys/campus18). */
+export type Facade27 = Style18;
+export interface HqIn27 {
+  /** nível da sede (s.player.hq: 0 garagem … 5 campus) */
+  level: number; year: number;
+  /** andares abertos (I1: salas/andares compráveis — `hqRooms27(s)`); sem isso, os andares do corte */
+  floorsOpen?: number;
+  /** um andar (ou a ampliação) em obra: andaime no topo */
+  building?: boolean;
+  /** estilo escolhido pelo jogador (world19); ignorado se for vidro antes de 1968 */
+  style?: Facade27;
+}
+export interface HqExt27 {
+  shell: HqShell27; floors: number; building: boolean; facade: Facade27; glass: boolean;
+  /** pegada (células) e altura de um andar (px); H = altura total (com o andar em obra) */
+  w: number; d: number; fh: number; H: number;
+  roof: 'gable' | 'flat' | 'tank' | 'crown' | 'antenna' | 'garden';
+  sign: Sign27; crane: boolean; rooftopSign: boolean;
+}
+const FH27: Record<HqShell27, number> = { garage: 9, shop: 7, loft: 9, building: 7, tower: 9, campus: 7 };
+const FP27: Record<HqShell27, [number, number]> = { garage: [2.2, 2], shop: [2.4, 2.1], loft: [3.2, 2.6], building: [3.2, 2.8], tower: [2.6, 2.6], campus: [4.6, 4] };
+/** Fachada da época para cada casca (sem vidro antes de 1968). */
+export function hqFacade27(shell: HqShell27, year: number): Facade27 {
+  switch (shell) {
+    case 'garage': return year < 1925 ? 'victorian' : year < 1960 ? 'brick' : 'midcentury';
+    case 'shop': return year < 1920 ? 'victorian' : year < 1955 ? 'brick' : year < 1985 ? 'midcentury' : 'postmod';
+    case 'loft': return 'loft';
+    case 'building': return year < 1905 ? 'victorian' : year < 1925 ? 'beaux' : year < 1946 ? 'deco' : year < GLASS_FROM27 ? 'midcentury' : year < 1985 ? 'brutal' : year < 2000 ? 'postmod' : 'glass';
+    case 'tower': return year < 1946 ? 'deco' : year < GLASS_FROM27 ? 'midcentury' : 'glass';
+    case 'campus': return year < GLASS_FROM27 ? 'midcentury' : year < 2010 ? 'glass' : 'eco';
+  }
+}
+/** A sede vista de fora: mesma casca, andares e época do interior; obra = andaime no andar de cima.
+ *  Gancho para I1: `hqExt27({ level: s.player.hq, year: s.year, floorsOpen: hqRooms27(s).floors, building: hqRooms27(s).building })`. */
+export function hqExt27(o: HqIn27): HqExt27 {
+  const shell = SHELLS27[Math.max(0, Math.min(5, Math.floor(o.level)))];
+  const floors = Math.max(1, Math.round(o.floorsOpen ?? HQ_FLOORS27[shell]));
+  const glassOk = (f: Facade27) => !(f === 'glass' || f === 'neon' || f === 'eco') || o.year >= GLASS_FROM27;
+  const facade = o.style && glassOk(o.style) && shell !== 'garage' && shell !== 'loft' ? o.style : hqFacade27(shell, o.year);
+  const [w, d] = FP27[shell], fh = FH27[shell];
+  const building = !!o.building;
+  const H = (floors + (building ? 1 : 0)) * fh + (shell === 'garage' ? 0 : 2);
+  const roof = shell === 'garage' || (shell === 'shop' && o.year < 1960) ? 'gable' : shell === 'loft' ? 'tank' : shell === 'tower' ? (facade === 'deco' ? 'crown' : 'antenna') : shell === 'campus' ? 'garden' : o.year < 1960 ? 'tank' : 'flat';
+  return { shell, floors, building, facade, glass: facade === 'glass', w, d, fh, H, roof, sign: era27(o.year).sign, crane: building && (shell === 'building' || shell === 'tower' || shell === 'campus'), rooftopSign: shell === 'building' || shell === 'tower' || shell === 'campus' };
+}
+
+// ---------------------------------------------------------------- r27 (I2): marcos no mapa (até 4, os mais icônicos do ano)
+
+/** Peso de ícone: quanto mais alto, mais cedo entra no mapa (Big Ben antes de Abbey Road). */
+export const LMW27: Record<string, number> = {
+  lon_bigben: 10, lon_tbridge: 9, lon_eye: 6, lon_bt: 5, lon_rah: 4, lon_abbey: 3,
+  par_eiffel: 10, par_arc: 8, par_olympia: 3,
+  ny_empire: 10, ny_liberty: 9, ny_wtc: 8, ny_brooklyn: 7, ny_carnegie: 3, ny_apollo: 3,
+  rio_christ: 10, rio_corcovado: 9, rio_cable: 9, rio_sugar: 9, rio_maracana: 6,
+  sp_masp: 9, sp_italia: 8, sp_municipal: 7,
+  liv_liver: 10, liv_cavern: 6, man_trafford: 6, man_fth: 5,
+  mem_sun: 9, mem_bridge: 7, mem_pyramid: 6, nash_ryman: 9, nash_opry: 8, nash_batman: 7,
+  tok_tower: 10, tok_sky: 9, tok_budokan: 6, ber_tv: 10, ber_gate: 9, ber_wall: 7,
+  syd_opera: 10, syd_bridge: 9, la_sign: 9, la_griffith: 7, la_bowl: 6, chi_sears: 9, chi_chess: 4,
+  sf_gate: 10, sea_needle: 10, tor_cn: 10, was_capitol: 9, was_monument: 8, det_ambassador: 7, det_hitsville: 8,
+};
+/** Marcos que só existem no mapa (relevo natural e prédios fora do horizonte do jogo — não mexem na simulação). */
+export const LMX27: Landmark19[] = [
+  { id: 'sp_masp', city: 'sao_paulo', n: l('MASP', 'MASP'), from: 1968, sh: 'hall', fact: l('O museu da Avenida Paulista, suspenso sobre um vão livre de 74 m, foi inaugurado em 1968.', 'The Avenida Paulista museum, hung over a 74 m open span, opened in 1968.') },
+  { id: 'rio_sugar', city: 'rio', n: l('Pão de Açúcar', 'Sugarloaf Mountain'), from: -9999, to: 1912, sh: 'cable', fact: l('O morro de granito na entrada da baía; o bondinho só chega em 1912.', 'The granite peak at the mouth of the bay; the cable car only arrives in 1912.') },
+  { id: 'rio_corcovado', city: 'rio', n: l('Corcovado', 'Corcovado'), from: -9999, to: 1931, sh: 'statue', fact: l('O pico ainda sem o Cristo (inaugurado em 1931).', 'The peak still without the Christ (inaugurated in 1931).') },
+  { id: 'mem_pyramid', city: 'memphis', n: l('Pirâmide de Memphis', 'Memphis Pyramid'), from: 1991, sh: 'pyramid', fact: l('Arena em forma de pirâmide aberta em 1991 à beira do Mississippi.', 'Pyramid-shaped arena opened in 1991 on the Mississippi.') },
+  { id: 'nash_batman', city: 'nashville', n: l('Torre de duas pontas', 'Twin-spired tower'), from: 1994, sh: 'spire', fact: l('O arranha-céu de duas pontas do centro foi concluído em 1994.', 'Downtown\'s twin-spired skyscraper was completed in 1994.') },
+];
+/** Marco no mapa: bastidor 0–1 = altos (fundo), 2–3 = largos (laterais). */
+export interface MapLm27 extends Landmark19 { slot: number; w: number }
+const WIDE27 = new Set<LmShape>(['bridge', 'tbridge', 'arch', 'shell', 'cable', 'stadium', 'wall', 'gate', 'colosseum', 'temple', 'hall', 'sign', 'studio', 'pyramid', 'wheel']);
+/** Até 4 marcos de pé no ano (construídos e não demolidos), os mais icônicos primeiro. Cidade sem marco
+ *  cadastrado: os genéricos de landmarksAt19 (catedral, ponte, estádio, torre de TV, pela época). */
+export function mapLms27(city: string, year: number): MapLm27[] {
+  const all = [...LANDMARKS19, ...LMX27].filter((x) => x.city === city);
+  const up = (x: Landmark19) => x.from <= year && (x.to === undefined || year < x.to);
+  const src = all.length ? all.filter(up) : landmarksAt19(city, year);
+  const w = (x: Landmark19) => LMW27[x.id] ?? (x.music ? 4 : 5);
+  const pick = [...src].sort((a, b) => w(b) - w(a) || a.from - b.from || (a.id < b.id ? -1 : 1)).slice(0, 4);
+  const tall = pick.filter((x) => !WIDE27.has(x.sh)), wide = pick.filter((x) => WIDE27.has(x.sh));
+  const slots: (Landmark19 | undefined)[] = [tall[0], tall[1], wide[0], wide[1]];
+  const rest = [...tall.slice(2), ...wide.slice(2)];
+  for (let i = 0; i < 4 && rest.length; i++) if (!slots[i]) slots[i] = rest.shift();
+  return slots.flatMap((x, i) => (x ? [{ ...x, slot: i, w: w(x) }] : []));
+}
+/** Popup de um marco do mapa (inclusive os que não estão entre os 4 do horizonte do jogo). */
+export function lmPop27(city: string, id: string, year: number): Pop19 | null {
+  const x = mapLms27(city, year).find((m) => m.id === id);
+  if (!x) return null;
+  const rows: Pop19['rows'] = x.from > -9999 ? [{ k: l('Desde', 'Since'), v: x.from < 0 ? `${-x.from} a.C.` : String(x.from) }] : [];
+  if (x.to && x.from > -9999) rows.push({ k: l('Até', 'Until'), v: String(x.to) });
+  return { kind: 'lot', id: `lm:${x.id}`, title: x.n, icon: 'star', tags: [l('Marco da cidade', 'City landmark')], rows, notes: [{ t: x.fact }], acts: [], opts: [] };
+}

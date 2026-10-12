@@ -9,8 +9,11 @@ import { LOTS18, buildings18, campus18, layout18, startProj18, freeLots18 } from
 import { nb19 } from '../src/sim/sys/hood19';
 import { VENUES17, v17 } from '../src/sim/sys/venues17';
 import {
-  ICON27, SALE_MAX27, bldVis27, cityLook27, climate27, env27, era27, fillerLots27, forSale27, life27, nbInfo27, panel27, season27,
+  GLASS_FROM27, HQ_FLOORS27, ICON27, SALE_MAX27, bldVis27, cityLook27, climate27, env27, era27, fillerLots27, forSale27, hqExt27, life27, lmPop27, mapLms27, nbInfo27, panel27, season27,
 } from '../src/ui/pixel/city27';
+import { plan27, shellOf27 } from '../src/ui/ps/hqpx27';
+import { hasBespoke27 } from '../src/ui/pixel/lmiso27';
+import { liftSign27, type SaleSign27 } from '../src/ui/pixel/campus18px';
 
 const game = (city: string, year: number, seed = 'r27') => {
   const cfg = defaultConfig(`${seed}-${city}-${year}`, { scenario: 'established', startYear: year, homeCity: city });
@@ -177,5 +180,97 @@ describe('r27 vizinhos e painel', () => {
     bldVis27(g); forSale27(g); life27(g); nbInfo27(g); panel27(g, 'hq');
     expect(JSON.stringify(g.rng)).toBe(rng);
     expect(g.player.cash).toBe(cash);
+  });
+});
+
+// ---------------------------------------------------------------- r27 (I2): direção de arte (docs/art27-city.md)
+
+describe('r27 (I2) sede por fora = sede por dentro', () => {
+  it('mesma casca e mesmo número de andares do corte do interior', () => {
+    for (let hq = 0; hq <= 5; hq++) for (const year of [1925, 1962, 1990, 2020]) {
+      const x = hqExt27({ level: hq, year });
+      expect(x.shell).toBe(shellOf27(hq));
+      expect(x.floors).toBe(HQ_FLOORS27[x.shell]);
+      expect(x.floors).toBe(plan27({ hq, year }).floors);
+    }
+  });
+  it('sem pele de vidro antes de 1968 (nem se o jogador escolher vidro)', () => {
+    for (let hq = 0; hq <= 5; hq++) for (let year = 1890; year < GLASS_FROM27; year += 3) {
+      expect(hqExt27({ level: hq, year }).glass).toBe(false);
+      expect(hqExt27({ level: hq, year, style: 'glass' }).facade).not.toBe('glass');
+    }
+    expect(hqExt27({ level: 4, year: 2005 }).glass).toBe(true);
+    expect(hqExt27({ level: 4, year: 1962 }).facade).toBe('midcentury');
+    expect(hqExt27({ level: 4, year: 1935 }).roof).toBe('crown');
+  });
+  it('andares comprados (I1) e obra: mais andares, andaime no topo, guindaste só a partir do prédio', () => {
+    const a = hqExt27({ level: 3, year: 1990 }), b = hqExt27({ level: 3, year: 1990, floorsOpen: 4, building: true });
+    expect(b.floors).toBe(4);
+    expect(b.H).toBeGreaterThan(a.H + a.fh);
+    expect(b.crane).toBe(true);
+    expect(hqExt27({ level: 0, year: 1990, building: true }).crane).toBe(false);
+    expect(hqExt27({ level: 2, year: 1990 }).facade).toBe('loft');
+  });
+});
+
+describe('r27 (I2) marcos no mapa', () => {
+  const ids = (c: string, y: number) => mapLms27(c, y).map((x) => x.id);
+  it('respeitam o ano de construção e demolição', () => {
+    expect(ids('sydney', 1965)).not.toContain('syd_opera');
+    expect(ids('sydney', 1980)).toContain('syd_opera');
+    expect(ids('berlin', 1965)).not.toContain('ber_tv');
+    expect(ids('berlin', 1975)).toContain('ber_tv');
+    expect(ids('berlin', 1995)).not.toContain('ber_wall');
+    expect(ids('sao_paulo', 1960)).not.toContain('sp_masp');
+    expect(ids('sao_paulo', 1995)).toContain('sp_masp');
+    expect(ids('new_york', 1990)).toContain('ny_wtc');
+    expect(ids('new_york', 2005)).not.toContain('ny_wtc');
+    expect(ids('rio', 1925)).toContain('rio_corcovado');
+    expect(ids('rio', 1985)).toEqual(expect.arrayContaining(['rio_christ', 'rio_cable']));
+  });
+  it('os mais icônicos primeiro (Big Ben e Tower Bridge em Londres, mesmo depois de 1965)', () => {
+    for (const y of [1962, 1975, 2010]) expect(ids('london', y)).toEqual(expect.arrayContaining(['lon_bigben', 'lon_tbridge']));
+    expect(ids('paris', 1975)).toContain('par_eiffel');
+    expect(ids('tokyo', 2015)).toEqual(expect.arrayContaining(['tok_tower', 'tok_sky']));
+  });
+  it('no máximo 4, bastidores distintos; cidade sem cadastro usa genéricos', () => {
+    for (const c of ['london', 'new_york', 'rio', 'tokyo', 'lagos', 'goiania']) {
+      const m = mapLms27(c, 2000);
+      expect(m.length).toBeLessThanOrEqual(4);
+      expect(new Set(m.map((x) => x.slot)).size).toBe(m.length);
+    }
+    expect(mapLms27('goiania', 1990).length).toBeGreaterThan(0);
+    expect(mapLms27('goiania', 1990)[0].id.startsWith('gen_')).toBe(true);
+  });
+  it('as 15+ cidades mais comuns têm desenho próprio para pelo menos um marco', () => {
+    const cities = ['new_york', 'london', 'rio', 'sao_paulo', 'memphis', 'nashville', 'liverpool', 'manchester', 'detroit', 'paris', 'tokyo', 'berlin', 'sydney', 'los_angeles', 'chicago', 'seattle', 'toronto', 'washington'];
+    for (const c of cities) expect(mapLms27(c, 2000).some((x) => hasBespoke27(x.id)), c).toBe(true);
+  });
+  it('popup de marco só do mapa (MASP) com ano e fato', () => {
+    const p = lmPop27('sao_paulo', 'sp_masp', 1990)!;
+    expect(p.rows[0].v).toBe('1968');
+    expect(lmPop27('sao_paulo', 'sp_masp', 1960)).toBeNull();
+  });
+  it('favela só no Rio; Sydney tem porto baixo', () => {
+    expect(cityLook27('rio', -22.9, 1985).favela).toBe(true);
+    expect(cityLook27('sydney', -33.9, 1985).favela).toBe(false);
+    expect(cityLook27('sydney', -33.9, 1985).hillAmp).toBeLessThan(0.5);
+    expect(cityLook27('paris', 48.9, 1975).k).toBe('stone');
+  });
+});
+
+describe('r27 (I2) placa À venda não some atrás do prédio da frente', () => {
+  const sign = (): SaleSign27 => ({ lot: 4, c: { width: 30, height: 19 } as HTMLCanvasElement, x: 100, y: 100, d: 12, base: [115, 118] });
+  it('prédio da frente cobrindo: a placa sobe acima do telhado dele', () => {
+    const sg = sign();
+    liftSign27(sg, [{ depth: 14, box: [95, 60, 140, 130] }]);
+    expect(sg.lift).toBe(true);
+    expect(sg.y + sg.c.height).toBeLessThanOrEqual(60);
+  });
+  it('prédio de trás (ou longe) não mexe na placa', () => {
+    const sg = sign();
+    liftSign27(sg, [{ depth: 10, box: [95, 60, 140, 130] }, { depth: 14, box: [200, 60, 240, 130] }]);
+    expect(sg.lift).toBeUndefined();
+    expect(sg.y).toBe(100);
   });
 });
