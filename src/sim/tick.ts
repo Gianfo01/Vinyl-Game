@@ -14,7 +14,7 @@ import { registerMovementGenres } from './culture';
 import { checkPromises, endContract, resolveOffers } from './contracts';
 import { checkInsolvency, payMonth, refreshProfessionals } from './economy';
 import { resolveDecision, storyteller } from './events';
-import { checkCardGoal, finishArc, updateLegacy } from './legacy';
+import { finishArc, updateLegacy } from './legacy';
 import { monthlyPeople, newRivalLabel, npcProduction, prune, worldSpawns } from './lifecycle';
 import { launchPending, marketWeek } from './market';
 import { rivalYearEnd, rivalsMonth } from './rivals';
@@ -111,7 +111,6 @@ function closeMonth(s: GameState, r: Rng, daysInMonth: number): void {
   const share = s.stats.marketUnitsYear > 0 ? s.stats.playerUnitsYear / s.stats.marketUnitsYear : 0;
   s.stats.marketShare = share;
   updateLegacy(s);
-  checkCardGoal(s);
 
   const closingYear = s.year;
   if (s.month === 11) {

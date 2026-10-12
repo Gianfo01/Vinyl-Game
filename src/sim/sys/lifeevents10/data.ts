@@ -33,7 +33,7 @@ const placeOf = (rel: string): L => rel === 'catholic' ? l('a paróquia', 'the p
 
 export const EVENTS: Def[] = [
   // ------------------------------------------------------------------ família
-  { id: 'baby_news', name: l('Notícia na família', 'News in the family'), cool: 30, w: (e) => e.partner && e.age < 46 && e.kids < 3 && (e.partner.stage !== 'dating' || e.partner.since < 9999) && e.partner.affinity > 55 ? 1.6 + (has(e, 'romantic') ? 0.8 : 0) + (e.ls === 'familia' ? 1 : 0) : 0,
+  { id: 'baby_news', name: l('Notícia na família', 'News in the family'), cool: 30, w: (e) => e.partner && e.age < 46 && e.kids < 3 && (e.partner.stage !== 'dating' || e.partner.since < 9999) && e.partner.affinity > 55 ? 1.6 + (has(e, 'romantic') ? 0.8 : 0) : 0,
     text: T('{x} chega em casa com um teste na mão e um sorriso nervoso: vem um bebê aí, no meio da agenda mais cheia do ano.', '{x} comes home with a test in hand and a nervous smile: a baby is on the way, in the middle of your busiest year.'),
     def: 'work', ch: [
       C('leave', 'Reorganizar a agenda e ficar perto', 'Rework the schedule and stay close', { love: 12, st: -6, h: 2 }, 'Vocês passam a gravidez juntos. O selo sobrevive sem você por algumas semanas.', 'You spend the pregnancy together. The label survives without you for a few weeks.', { energy: 2, next: { ev: 'baby_born', m: 8 }, nt: ['Custa tempo; o vínculo cresce muito.', 'Costs time; the bond grows a lot.'] }),
@@ -74,7 +74,7 @@ export const EVENTS: Def[] = [
       C('share', 'Dividir com os primos', 'Split with the cousins', { w: 3500, arts: 1, st: -3 }, 'Poucos fazem isso. A história corre e rende simpatia.', 'Few do this. The story spreads and earns sympathy.'),
       C('label', 'Injetar no selo', 'Put it into the label', { cash: 7000, st: 1 }, 'O caixa do selo respira um pouco mais.', 'The label cash breathes a little easier.'),
     ] },
-  { id: 'wedding_invite', name: l('Convite de casamento', 'Wedding invitation'), cool: 14, w: (e) => 1.1 + (e.ls === 'jetsetter' ? 0.6 : 0),
+  { id: 'wedding_invite', name: l('Convite de casamento', 'Wedding invitation'), cool: 14, w: () => 1.1,
     pick: (e, r) => (e.acts.length ? actCtx(e, r) : {}),
     text: (s, c) => (c.act ? fmtL(l('O vocalista de {a} vai se casar e quer você na festa — com direito a discurso.', 'The frontperson of {a} is getting married and wants you at the party, speech included.'), names(s, c)) : l('Um velho amigo da cena vai se casar e quer você como padrinho.', 'An old friend from the scene is getting married and wants you as best man.')),
     def: 'skip', ch: [
@@ -89,7 +89,7 @@ export const EVENTS: Def[] = [
       C('wait', 'Pedir mais tempo', 'Ask for more time', { love: -6, st: 3 }, 'Nada é dito, tudo é sentido.', 'Nothing is said, everything is felt.'),
       C('break', 'Ser honesto: não é isso que você quer', 'Be honest: this is not what you want', { breakup: 1, st: 10, h: -2 }, 'Foi sincero e doloroso. {x} vai embora de cabeça erguida.', 'It was honest and painful. {x} leaves with head held high.'),
     ] },
-  { id: 'partner_fight', name: l('Briga em casa', 'A fight at home'), cool: 10, w: (e) => (e.partner ? 0.9 + (e.stress > 55 ? 0.9 : 0) + (has(e, 'workaholic') ? 0.8 : 0) - (e.ls === 'familia' ? 0.5 : 0) : 0),
+  { id: 'partner_fight', name: l('Briga em casa', 'A fight at home'), cool: 10, w: (e) => (e.partner ? 0.9 + (e.stress > 55 ? 0.9 : 0) + (has(e, 'workaholic') ? 0.8 : 0) : 0),
     text: T('{x} diz que só conhece você pelos recados de voz. A discussão começa na cozinha e vai longe.', '{x} says they only know you through voice messages. The argument starts in the kitchen and goes far.'),
     def: 'double', ch: [
       C('stay', 'Cancelar compromissos e ficar', 'Cancel commitments and stay', { love: 12, st: -4, com: -1 }, 'Vocês conversam até tarde. O telefone toca e ninguém atende.', 'You talk late. The phone rings and nobody answers.', { energy: 2 }),
@@ -139,7 +139,7 @@ export const EVENTS: Def[] = [
       C('rest', 'Obedecer: repouso absoluto', 'Obey: complete rest', { h: -4, st: -14, art: -1, ins: -1 }, 'Duas semanas parado. O selo anda sozinho, mal.', 'Two weeks down. The label runs on its own, poorly.', { energy: 2 }),
       C('hide', 'Esconder da imprensa e voltar', 'Hide it from the press and return', { h: -14, st: 6, w: -800 }, 'Ninguém soube. Seu corpo, sim.', 'Nobody knew. Your body did.'),
     ] },
-  { id: 'accident', name: l('Acidente', 'Accident'), cool: 30, w: (e) => 0.6 + (e.ls === 'festeiro' ? 0.5 : 0) + (e.dep > 30 ? 0.6 : 0),
+  { id: 'accident', name: l('Acidente', 'Accident'), cool: 30, w: (e) => 0.6 + (e.dep > 30 ? 0.6 : 0),
     text: T('Uma freada, um vidro, um susto: você se envolve num acidente de trânsito a caminho do estúdio.', 'A skid, shattered glass, a scare: you are in a traffic accident on the way to the studio.'),
     def: 'public', ch: [
       C('private', 'Hospital particular e fisioterapia', 'Private hospital and physiotherapy', { w: -4000, h: -3, st: 2 }, 'Você se recupera rápido e sem sequelas.', 'You recover fast, no aftereffects.', { energy: 1 }),
@@ -205,7 +205,7 @@ export const EVENTS: Def[] = [
       C('haggle', 'Renegociar a licença', 'Renegotiate the licence', { w: 9500, st: 2 }, 'Você arrancou um percentual melhor.', 'You wrung out a better percentage.', { gate: attrNeed('negotiation', 55), energy: 1 }),
       C('give', 'Doar para os músicos da cena', 'Donate to the scene\'s musicians', { w: 1000, arts: 3, art: 2 }, 'A cena nunca esquece esse tipo de gesto.', 'The scene never forgets such gestures.'),
     ] },
-  { id: 'luxury', name: l('Tentação de luxo', 'Luxury temptation'), cool: 20, w: (e) => (e.wealth > 50000 ? 1 + (e.ls === 'jetsetter' ? 0.8 : 0) - (has(e, 'frugal') ? 0.7 : 0) : 0),
+  { id: 'luxury', name: l('Tentação de luxo', 'Luxury temptation'), cool: 20, w: (e) => (e.wealth > 50000 ? 1 - (has(e, 'frugal') ? 0.7 : 0) : 0),
     text: T('Um vendedor sorridente mostra o carro, a lancha, o relógio dos sonhos. "Para quem chegou onde você chegou."', 'A smiling salesman shows the car, the yacht, the dream watch. "For someone who got where you got."'),
     def: 'no', ch: [
       C('buy', 'Comprar', 'Buy it', { w: -20000, fame: 3, st: -6, com: 1 }, 'A foto vira capa de revista e inveja de colega.', 'The photo becomes a magazine cover and colleagues\' envy.'),
@@ -214,14 +214,14 @@ export const EVENTS: Def[] = [
     ] },
 
   // ------------------------------------------------------------------ social
-  { id: 'star_party', name: l('Festa com uma estrela', 'Party with a star'), cool: 8, w: (e) => 0.9 + (e.ls === 'festeiro' || e.ls === 'jetsetter' ? 1 : 0) + (has(e, 'bohemian') ? 0.6 : 0) + e.fame / 90 - (has(e, 'shy') ? 0.5 : 0),
+  { id: 'star_party', name: l('Festa com uma estrela', 'Party with a star'), cool: 8, w: (e) => 0.9 + (has(e, 'bohemian') ? 0.6 : 0) + e.fame / 90 - (has(e, 'shy') ? 0.5 : 0),
     text: (s) => l(`Convite dourado: uma das maiores estrelas da ${s.year >= 2000 ? 'cena internacional' : 'época'} dá uma festa na cobertura, e a lista é curta.`, `Golden invitation: one of the biggest stars of the ${s.year >= 2000 ? 'international scene' : 'day'} throws a party in the penthouse, and the list is short.`),
     def: 'brief', ch: [
       C('go', 'Ir e ficar até o fim', 'Go and stay to the end', { w: -400, fame: 3, art: 1, h: -4, st: -6, arts: 1 }, 'Você sai ao amanhecer com três contatos novos e um telefone de produtor.', 'You leave at dawn with three new contacts and a producer\'s number.', { energy: 1 }),
       C('brief', 'Passar só uma hora', 'Drop by for an hour', { fame: 1, st: -2 }, 'Um aperto de mão, uma foto, a porta.', 'A handshake, a photo, the door.'),
       C('home', 'Ficar em casa', 'Stay in', { h: 3, st: -3, fame: -1 }, 'Você descansa; a lista de convidados nem lembra o seu nome.', 'You rest; the guest list barely remembers your name.'),
     ] },
-  { id: 'scandal_photo', name: l('Foto comprometedora', 'Compromising photo'), cool: 24, w: (e) => 0.6 + (e.fame > 45 ? 1 : 0) + (e.ls === 'festeiro' ? 0.8 : 0) + (e.dep > 25 ? 0.5 : 0),
+  { id: 'scandal_photo', name: l('Foto comprometedora', 'Compromising photo'), cool: 24, w: (e) => 0.6 + (e.fame > 45 ? 1 : 0) + (e.dep > 25 ? 0.5 : 0),
     text: (s) => s.year >= 2008 ? l('Uma foto sua, embriagado e na companhia errada, circula nas redes. Sua assessoria liga em pânico.', 'A photo of you, drunk and in the wrong company, circulates on social media. Your press office calls in a panic.') : l('Um fotógrafo de tabloide conseguiu um flagrante seu saindo de um bar de madrugada, com a pessoa errada.', 'A tabloid photographer caught you leaving a bar at dawn with the wrong person.'),
     def: 'deny', ch: [
       C('deny', 'Mandar o advogado negar tudo', 'Have the lawyer deny everything', { w: -4000, st: -2 }, 'A história morre antes do almoço.', 'The story dies before lunch.', { odds: { p: 0.3, fx: { ins: -3, art: -2, love: -8 }, res: l('A negativa foi desmentida por uma segunda foto. O estrago dobrou.', 'The denial was contradicted by a second photo. The damage doubled.') } }),
@@ -245,7 +245,7 @@ export const EVENTS: Def[] = [
   { id: 'mentor_call', name: l('O velho mestre liga', 'The old master calls'), cool: 24, w: (e) => 0.7 + (has(e, 'intellectual') ? 0.5 : 0),
     text: T('Seu antigo mestre, agora frágil, pede que você dê uma aula magna no conservatório da cidade.', 'Your old master, now frail, asks you to give a keynote at the city conservatory.'),
     def: 'record', ch: [
-      C('go', 'Dar a aula pessoalmente', 'Give the lecture in person', { sp: 1, art: 2, st: -3, arts: 1 }, 'Você sobe ao palco com nervosismo e sai com uma ovação.', 'You take the stage nervous and leave to an ovation.', { energy: 2 }),
+      C('go', 'Dar a aula pessoalmente', 'Give the lecture in person', { art: 2, st: -3, arts: 1 }, 'Você sobe ao palco com nervosismo e sai com uma ovação.', 'You take the stage nervous and leave to an ovation.', { energy: 2 }),
       C('record', 'Gravar uma mensagem', 'Record a message', { art: 1, st: -1 }, 'A mensagem é exibida; o mestre sorri na primeira fila.', 'The message plays; the master smiles in the front row.', { energy: 1 }),
       C('no', 'Pedir desculpas, agenda cheia', 'Excuse yourself, busy schedule', { st: 2, art: -1 }, 'Ele entende. Você não se entende.', 'He understands. You don\'t.'),
     ] },
@@ -258,7 +258,7 @@ export const EVENTS: Def[] = [
     ] },
 
   // ------------------------------------------------------------------ carreira × pessoal
-  { id: 'artist_3am', name: l('Telefone às 3 da manhã', 'Phone at 3 a.m.'), cool: 8, w: (e) => (e.acts.length ? 1.3 + (e.ls === 'mecenas' ? 0.5 : 0) : 0), pick: actCtx,
+  { id: 'artist_3am', name: l('Telefone às 3 da manhã', 'Phone at 3 a.m.'), cool: 8, w: (e) => (e.acts.length ? 1.3 : 0), pick: actCtx,
     text: T('O telefone toca às 3 da manhã. É {p}, de {a}, desesperado(a): "preciso falar com alguém que entenda".', 'The phone rings at 3 a.m. It is {p}, from {a}, desperate: "I need someone who understands".'),
     def: 'aide', ch: [
       C('go', 'Ir até lá agora', 'Go there right now', { mor: 18, res: -12, h: -2, st: 3, arts: 2 }, 'Vocês conversam até o sol nascer. {p} nunca vai esquecer.', 'You talk until sunrise. {p} will never forget it.', { energy: 1 }),
@@ -290,14 +290,14 @@ export const EVENTS: Def[] = [
     ] },
 
   // ------------------------------------------------------------------ tentações
-  { id: 'drugs_offer', name: l('Oferta na festa', 'Offer at the party'), cool: 14, w: (e) => (e.s.config.contentFilters.includes('drugs') ? 0 : 0.7 + (e.ls === 'festeiro' || e.ls === 'boemio' ? 1 : 0) + (has(e, 'bohemian') ? 0.7 : 0) + (e.dep > 40 ? 1 : 0) - (has(e, 'sober') ? 0.9 : 0)),
+  { id: 'drugs_offer', name: l('Oferta na festa', 'Offer at the party'), cool: 14, w: (e) => (e.s.config.contentFilters.includes('drugs') ? 0 : 0.7 + (has(e, 'bohemian') ? 0.7 : 0) + (e.dep > 40 ? 1 : 0) - (has(e, 'sober') ? 0.9 : 0)),
     text: (s) => fmtL(l('Alguém coloca na sua mão um pacote: {d}. "Para relaxar. Faz parte da noite."', 'Someone puts a packet in your hand: {d}. "To relax. Part of the night."'), { d: s.year < 1960 ? 'anfetaminas' : s.year < 1975 ? 'LSD' : s.year < 1995 ? 'cocaína' : s.year < 2015 ? 'pílulas' : 'sintéticos' }),
     def: 'no', ch: [
       C('try', 'Experimentar', 'Try it', { st: -12, h: -5, heat: 6, dep: ['drugs', 8], art: 1 }, 'A noite foi brilhante. A manhã, nem tanto.', 'The night was brilliant. The morning, less so.', { odds: { p: 0.2, fx: { h: -10, heat: 15, ins: -3, st: 8, dep: ['drugs', 12] }, res: l('Passou mal; alguém ligou para a polícia; a história vazou.', 'You got sick; someone called the police; the story leaked.') } }),
       C('laugh', 'Dispensar com uma piada', 'Wave it off with a joke', { st: -1, fame: 1 }, 'A piada funciona. Ninguém insiste.', 'The joke works. Nobody insists.', { gate: attrNeed('charisma', 45) }),
       C('no', 'Sair da festa', 'Leave the party', { st: -1, arts: 1 }, 'Você chega em casa às duas e dorme como uma pedra.', 'You get home at two and sleep like a stone.'),
     ] },
-  { id: 'gambling', name: l('Noite de jogo', 'Gambling night'), cool: 20, w: (e) => (e.wealth > 10000 ? 0.6 + (has(e, 'greedy') ? 0.8 : 0) + (e.ls === 'jetsetter' ? 0.8 : 0) : 0),
+  { id: 'gambling', name: l('Noite de jogo', 'Gambling night'), cool: 20, w: (e) => (e.wealth > 10000 ? 0.6 + (has(e, 'greedy') ? 0.8 : 0) : 0),
     text: T('Num cassino de luxo, um amigo empurra fichas na sua direção: "só uma rodada".', 'At a luxury casino, a friend pushes chips your way: "just one round".'),
     def: 'no', ch: [
       C('big', 'Apostar alto', 'Bet high', { w: -10000, st: -4 }, 'A roleta sorriu: você sai com o dobro e uma história.', 'The wheel smiled: you leave with double and a story.', { odds: { p: 0.55, fx: { st: 8, h: -1 }, res: l('A casa sempre ganha. Você volta de táxi e de cabeça baixa.', 'The house always wins. You head back by taxi, head down.') }, dyn: () => ({ w: 20000 }) }),
@@ -340,7 +340,7 @@ export const EVENTS: Def[] = [
       C('comply', 'Cortar a faixa', 'Cut the track', { art: -2, ins: 1, mor: -8, res: 6 }, 'A faixa some do disco. {p} fica calado(a) e machucado(a).', 'The track disappears from the record. {p} goes quiet and hurt.'),
       C('resist', 'Resistir publicamente', 'Resist publicly', { art: 3, afame: 2, mor: 10, heat: 8, fans: 5, eng: 4 }, 'A resistência vira bandeira. O público compra mais, o governo anota seu nome.', 'Resistance becomes a banner. The public buys more; the government notes your name.', { odds: { p: 0.3, fx: { cash: -5000, ins: -3, st: 10, heat: 12, mor: 6 }, res: l('A reação veio rápida: multa, batida e um mês de dor de cabeça.', 'The backlash came fast: a fine, a raid and a month of headaches.') } }),
       C('lawyer', 'Contratar advogados e recorrer', 'Hire lawyers and appeal', { cash: -3500, ins: 1, st: 3 }, 'O processo se arrasta, mas o disco continua à venda.', 'The case drags on, but the record stays on sale.'),
-      C('bribe', 'Ungir a mão certa', 'Grease the right palm', { w: -6000, ins: -2, st: 3 }, 'O ofício some. O dinheiro também.', 'The notice vanishes. So does the money.', { gate: (e) => (e.ls === 'magnata' || e.o.attrs.negotiation >= 50 ? null : l('Exige negociação 50+ ou o estilo Magnata.', 'Requires negotiation 50+ or Tycoon lifestyle.')) }),
+      C('bribe', 'Ungir a mão certa', 'Grease the right palm', { w: -6000, ins: -2, st: 3 }, 'O ofício some. O dinheiro também.', 'The notice vanishes. So does the money.', { gate: (e) => (e.o.attrs.negotiation >= 50 ? null : l('Exige negociação 50+.', 'Requires negotiation 50+.')) }),
     ] },
   { id: 'boycott', name: l('Pedido de boicote', 'Boycott call'), cool: 16, w: (e) => (e.acts.some((a) => a.members.some((m) => isStrict(viewsOf(e.s, m)))) || e.year >= 2012 ? 0.9 : 0.3), pick: actCtx,
     text: (s, c) => fmtL(s.year >= 2012 ? l('Uma campanha nas redes pede o boicote a {a} por uma letra e uma capa consideradas ofensivas. O assunto toma conta do noticiário.', 'A social-media campaign calls for a boycott of {a} over a lyric and cover judged offensive. The topic fills the news.') : l('Um grupo de pais e igrejas pede o boicote a {a} por uma letra e uma capa consideradas ofensivas. O assunto toma conta do noticiário.', 'A group of parents and churches calls for a boycott of {a} over a lyric and cover judged offensive. The topic fills the news.'), names(s, c)),
@@ -354,7 +354,7 @@ export const EVENTS: Def[] = [
     def: 'quiet', ch: [
       C('faith', 'Procurar um conselheiro espiritual', 'Seek a spiritual counsellor', { st: -10, dev: 8, h: 2 }, 'A conversa traz paz, uma rotina e um caderno cheio.', 'The talk brings peace, a routine and a full notebook.', { energy: 1, dyn: (s) => (viewsOf(s, 'player').rel === 'none' || viewsOf(s, 'player').rel === 'atheist' ? { rel: 'spiritist' as const, dev: 20 } : {}) }),
       C('doubt', 'Aceitar a dúvida e seguir', 'Accept the doubt and move on', { st: -2, dev: -8 }, 'Você aceita não ter resposta.', 'You accept having no answer.'),
-      C('quiet', 'Escrever uma música sobre isso', 'Write a song about it', { st: -6, art: 2, sp: 0 }, 'A letra sai dolorida e verdadeira.', 'The lyrics come out sore and true.', { energy: 1 }),
+      C('quiet', 'Escrever uma música sobre isso', 'Write a song about it', { st: -6, art: 2 }, 'A letra sai dolorida e verdadeira.', 'The lyrics come out sore and true.', { energy: 1 }),
     ] },
   { id: 'gospel_idea', name: l('Disco de fé', 'A faith record'), cool: 30, w: (e) => (isDevout(e.v, 55) ? 1.3 : e.v.rel !== 'none' && e.v.rel !== 'atheist' ? 0.4 : 0),
     text: (s) => fmtL(l('Lideranças de {c} propõem um disco sacro ligado ao selo, para o fim do ano. Há demanda, e há risco de rótulo.', 'Leaders from {c} propose a sacred record tied to the label for year end. There is demand, and a risk of typecasting.'), { c: placeOf(viewsOf(s, 'player').rel) }),
@@ -396,7 +396,7 @@ export const EVENTS: Def[] = [
   { id: 'lockdown', name: l('Isolamento', 'Lockdown'), era: [2020, 2021], cool: 18, w: () => 1.2,
     text: T('Com o mundo em casa, a sua vida vira reuniões em vídeo e silêncio. O que você faz com tanto tempo?', 'With the world at home, your life turns into video calls and silence. What do you do with all that time?'),
     def: 'rest', ch: [
-      C('compose', 'Compor sem parar', 'Compose nonstop', { art: 2, st: -3, sp: 1 }, 'Um caderno cheio de canções que ninguém ouviu ainda.', 'A notebook full of songs nobody has heard yet.', { energy: 2 }),
+      C('compose', 'Compor sem parar', 'Compose nonstop', { art: 2, st: -3 }, 'Um caderno cheio de canções que ninguém ouviu ainda.', 'A notebook full of songs nobody has heard yet.', { energy: 2 }),
       C('live', 'Fazer lives para os fãs', 'Livestream for fans', { fame: 3, st: 2, cash: 1500 }, 'A tela cheia de corações compensa a sala vazia.', 'A screen full of hearts makes up for an empty room.', { energy: 1 }),
       C('rest', 'Cuidar da saúde e da casa', 'Look after health and home', { h: 5, st: -6 }, 'Você cozinha, caminha e dorme melhor que em anos.', 'You cook, walk and sleep better than in years.'),
     ] },

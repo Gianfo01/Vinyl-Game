@@ -288,41 +288,6 @@ export const MUTATORS: MutatorDef[] = [
   mu('beginners_luck', 'Sorte de Principiante', "Beginner's Luck", '+12% de apelo nos três primeiros anos.', '+12% appeal in the first three years.'),
 ];
 
-// ---------- Cartas do Selo (GDD §5.6) ----------
-export interface CardDef { id: string; name: L; passive: L; goal: L }
-const cd = (id: string, pt: string, en: string, ppt: string, pen: string, gpt: string, gen: string): CardDef => ({ id, name: l(pt, en), passive: l(ppt, pen), goal: l(gpt, gen) });
-
-export const CARDS: CardDef[] = [
-  cd('none', 'Sem carta', 'No card', 'Nenhum modificador.', 'No modifiers.', 'Nenhuma meta pessoal.', 'No personal goal.'),
-  cd('prospector', 'O Garimpeiro', 'The Prospector', '+ precisão de scouting / − caixa inicial', '+ scouting accuracy / − starting cash', '5 artistas que viram influência', '5 artists who become influential'),
-  cd('emperor', 'O Imperador', 'The Emperor', '+ distribuição / − confiança dos artistas', '+ distribution / − artist trust', 'Maior receita da era', 'Highest revenue of the era'),
-  cd('artists_house', 'A Casa do Artista', "The Artist's House", '+ confiança / − margem', '+ trust / − margin', 'Ninguém sai por insatisfação em 10 anos', 'Nobody leaves unhappy in 10 years'),
-  cd('archivist', 'O Arquivista', 'The Archivist', '+ valor de catálogo / − ritmo de lançamento', '+ catalog value / − release pace', 'Reativar 10 obras', 'Reactivate 10 works'),
-  cd('manufacturer', 'O Fabricante', 'The Manufacturer', '+ fabricação própria / − flexibilidade digital', '+ own manufacturing / − digital flexibility', 'Controlar a fabricação em 3 mercados', 'Control manufacturing in 3 markets'),
-  cd('showman', 'O Showman', 'The Showman', '+ palco e festivais / − estúdio', '+ stage and festivals / − studio', 'Ser headline em 3 festivais', 'Headline 3 festivals'),
-  cd('digital_native', 'O Digital Nativo', 'The Digital Native', '+ plataformas / − físico', '+ platforms / − physical', 'Liderar a transição digital', 'Lead the digital transition'),
-  cd('publisher', 'O Editor', 'The Publisher', '+ publishing / − master', '+ publishing / − master', 'Maior catálogo de composições', 'Largest song catalog'),
-  cd('patron', 'O Mecenas', 'The Patron', '+ cenas locais / − lucro', '+ local scenes / − profit', 'Fundar um movimento cultural', 'Found a cultural movement'),
-  cd('corsair', 'O Corsário', 'The Corsair', '+ eficiência em práticas questionáveis / − reputação institucional', '+ efficiency in questionable practices / − institutional reputation', 'Sobreviver a um escândalo', 'Survive a scandal'),
-  cd('globalist', 'O Globalista', 'The Globalist', '+ mercados externos / − cena local', '+ foreign markets / − local scene', 'Presença nos 7 mercados', 'Presence in all 7 markets'),
-  // rodada 6
-  cd('indie_spirit', 'O Independente', 'The Indie', '+ confiança e crítica / − vendas', '+ trust and critics / − sales', '3 lançamentos com média 8+ na crítica', '3 releases averaging 8+ with critics'),
-  cd('hit_factory', 'A Fábrica de Hits', 'The Hit Factory', '+ apelo e vendas / − crítica e moral', '+ appeal and sales / − critics and morale', '10 entradas no Top 10', '10 Top 10 entries'),
-  cd('family_business', 'O Negócio de Família', 'The Family Business', '+ tempo livre, renda pessoal e moral / − valor de mercado', '+ free time, personal income and morale / − market value', 'Um filho(a) assumir a empresa', 'A child takes over the company'),
-  cd('gambler', 'O Apostador', 'The Gambler', '+ ofertas irresistíveis e golpes de sorte / − adiantamentos caros e azares', '+ irresistible offers and windfalls / − costly advances and bad luck', 'Chegar a $1 milhão (corrigido) em caixa', 'Reach $1 million (adjusted) in cash'),
-  cd('tastemaker', 'O Formador de Opinião', 'The Tastemaker', '+ crítica e sinais / − bilheteria', '+ critics and signals / − box office', '5 lançamentos com nota 9+', '5 releases scoring 9+'),
-  cd('road_warrior', 'O Guerreiro da Estrada', 'The Road Warrior', '+ bilheteria e tempo livre / − fabricação cara', '+ box office and free time / − costly manufacturing', '200 shows do elenco', '200 roster shows'),
-  cd('conglomerate', 'O Conglomerado', 'The Conglomerate', '+ valor de mercado e salários baixos / − confiança', '+ market value and low salaries / − trust', 'Abrir o capital', 'Go public'),
-  cd('underdog', 'O Azarão', 'The Underdog', '+ aprendizado e apelo de atos pequenos / − caixa inicial', '+ learning and appeal for small acts / − starting cash', 'Um número 1 com um ato que começou com ★5 ou menos', 'A number one with an act that started at ★5 or less'),
-  cd('provocateur', 'O Provocador', 'The Provocateur', '+ apelo / − reputação institucional todo ano', '+ appeal / − institutional reputation every year', 'Sobreviver a 3 escândalos', 'Survive 3 scandals'),
-  cd('activist', 'O Engajado', 'The Activist', '+ reputação, crítica e confiança / − salários maiores', '+ reputation, critics and trust / − higher salaries', 'Reputação institucional 80+', 'Institutional reputation 80+'),
-  cd('inventor', 'O Inventor', 'The Inventor', '+ fabricação barata e vendas / − qualidade crua', '+ cheap manufacturing and sales / − rough quality', 'Ter a fábrica própria e 3 equipamentos', 'Own the plant and 3 pieces of equipment'),
-  cd('dynast', 'O Dinasta', 'The Dynast', '+ legado familiar: herdeiros mais talentosos, + moral / − estresse', '+ family legacy: more gifted heirs, + morale / − stress', 'Três gerações no comando', 'Three generations in charge'),
-  cd('synthetic_pioneer', 'O Pioneiro Sintético', 'The Synthetic Pioneer', '+ vozes sintéticas / − credibilidade humana', '+ synthetic voices / − human credibility', 'Um final sintético', 'A synthetic ending'),
-];
-
-export const cardById = Object.fromEntries(CARDS.map((x) => [x.id, x])) as Record<string, CardDef>;
-
 // ---------- Narradores (GDD §20) ----------
 export const STORYTELLERS: { id: 'maestro' | 'brisa' | 'acaso' | 'cronista' | 'tabloide' | 'poeta' | 'cinico' | 'locutor'; name: L; desc: L }[] = [
   { id: 'maestro', name: l('Maestro', 'Maestro'), desc: l('Tensão em ondas: oportunidade, crise, recuperação.', 'Tension in waves: opportunity, crisis, recovery.') },

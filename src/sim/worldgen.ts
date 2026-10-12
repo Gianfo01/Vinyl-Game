@@ -297,7 +297,6 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
 }
 
 export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): GameState {
-  cfg.card = 'none'; // r22: a Carta do selo saiu do jogo
   normalizeHistory(cfg);
   applyRealNames(!!cfg.realNames);
   const startDay = 0;
@@ -527,7 +526,6 @@ function setupPlayer(s: GameState, r: Rng): void {
     real = cfg.scenario === 'from_zero' ? 34000 : cfg.scenario === 'emerging' ? 100000 : 650000;
     p.hq = cfg.scenario === 'established' ? 2 : 1;
   }
-  if (cfg.card === 'prospector') real *= 0.8;
   real *= diffMult;
   if (cfg.custom?.hq !== undefined) p.hq = clamp(Math.round(cfg.custom.hq), 0, 3);
   if (cfg.custom?.reputation !== undefined) { const v = clamp(cfg.custom.reputation, 0, 100); p.reputation = { artistic: v, commercial: v, artists: v, institutional: v }; }

@@ -220,7 +220,6 @@ export const MONEYB19: Record<string, { sys: string; to: string[] }> = {
   contract_sold: { sys: 'moneyb19', to: ['moneyb19:sold (reputação com artistas, confiança do elenco, calor do comprador, diário, manchete)'] },
   sale_regret: { sys: 'moneyb19', to: ['moneyb19:regret (reputação comercial, diário "arrependimento", manchete)'] },
   release_clause: { sys: 'moneyb19', to: ['moneyb19:clause (calor da rivalidade, reputação, manchete)'] },
-  artist_loan: { sys: 'moneyb19', to: ['moneyb19:loan (estresse do ato emprestado, calor se o rival fica com ele)'] },
   total_manager: { sys: 'moneyb19', to: ['moneyb19:mgr (embalo e confiança do ato, Ligações do mês)'] },
   manager_exposed: { sys: 'moneyb19', to: ['moneyb19:exposed (scandal17 dinheiro, manchete)'] },
   junk_record: { sys: 'moneyb19', to: ['moneyb19:junk (moral da banda, manchete)'] },

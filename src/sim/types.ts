@@ -15,7 +15,8 @@ export interface RunConfig {
   startYear: number;
   mode: Mode;
   storyteller: StorytellerId;
-  card: string;
+  /** r22: a Carta do selo saiu do jogo (r27: código apagado). Campo morto, aceito só para configs/saves antigos. */
+  card?: string;
   mutators: string[];
   difficulty: 'easy' | 'normal' | 'hard';
   ironman: boolean;
@@ -119,8 +120,6 @@ export interface CharacterSpec {
   career?: string;
   /** rodada 9: sexo do personagem (filtra opções de aparência) */
   sex?: 'm' | 'f' | 'x';
-  /** rodada 9: habilidades iniciais (árvore; até START_SKILL_POINTS) */
-  skills?: string[];
   /** rodada 10: visão política e religião (ids de src/sim/beliefs.ts; vazio = derivado do mundo) */
   politics?: string;
   religion?: string;

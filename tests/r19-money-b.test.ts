@@ -8,7 +8,7 @@ import { applyMods } from '../src/sim/ext4';
 import { recentFacts } from '../src/sim/facts17';
 import '../src/sim/sys';
 import { feudOf18 } from '../src/sim/sys/feud18';
-import { _mb19, borrow19, deliverJunk19, lend19, loansOn19, mb19, sellContract19, setClause19, value19, vote19, window19, windows19 } from '../src/sim/sys/moneyb19';
+import { _mb19, deliverJunk19, mb19, sellContract19, setClause19, value19, vote19 } from '../src/sim/sys/moneyb19';
 import { answerMsg } from '../src/sim/sys/people/inbox';
 import { P } from '../src/sim/sys/people/state';
 import { press } from '../src/sim/sys/press9';
@@ -34,11 +34,9 @@ function myAct(s: GameState, fame = 50, members = 4): Act {
 const richLabel = (s: GameState): Label => { const lb = Object.values(s.labels).find((x) => x.active)!; lb.cash = 1e12; lb.aggression = 90; return lb; };
 const msg = (s: GameState, k: string) => P(s).inbox.filter((m) => m.ref?.k18 === k && !m.resolved).pop()!;
 
-describe('r19 money-b — janelas e valor de mercado (M1/M2)', () => {
-  it('r22: sem janelas — mercado aberto o ano todo; valor sobe com a fama', () => {
+describe('r19 money-b — valor de mercado (M1/M2)', () => {
+  it('valor de mercado sobe com a fama', () => {
     const s = game();
-    for (const m of [0, 3, 7, 10]) { s.month = m; expect(window19(s)).toBe(true); }
-    expect(windows19(s, 2)).toEqual([]);
     const a = myAct(s, 30), v30 = value19(s, a).v;
     a.fame = 70;
     expect(value19(s, a).v).toBeGreaterThan(v30 * 3);
@@ -96,22 +94,6 @@ describe('r19 money-b — M2 cláusula de saída', () => {
     expect(s.player.cash - c0).toBe(fee);
     expect(heatOf(s, lb.id)).toBeGreaterThan(h0);
     expect(recentFacts(s, { kind: 'release_clause' }).length).toBe(1);
-  });
-});
-
-describe('r19 money-b — M1 empréstimos (removidos na r22)', () => {
-  it('emprestar e pegar emprestado são recusados em qualquer mês', () => {
-    const s = game();
-    const a = myAct(s, 40);
-    richLabel(s);
-    const other = Object.values(s.acts).find((x) => x.owner && x.owner !== 'player' && s.labels[x.owner]?.active && x.contractId && s.contracts[x.contractId] && x.status !== 'retired' && x.status !== 'split')!;
-    for (const m of [0, 3, 7]) {
-      s.month = m;
-      expect(lend19(s, a.id, 'record')).not.toBeNull();
-      expect(borrow19(s, other.id)).not.toBeNull();
-    }
-    expect(a.owner).toBe('player');
-    expect(loansOn19(s)).toHaveLength(0);
   });
 });
 

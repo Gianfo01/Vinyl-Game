@@ -117,7 +117,6 @@ T('crime17', 'log', ['Histórico', 'History'], ['Crimes da indústria (reais e d
 // ---------------------------------------------------------------- Você
 T('life-you', 'me', ['Perfil', 'Profile'], ['Seus dados, idade, origem e ambição.', 'Your data, age, origin and ambition.'], ['Ambição define a meta pessoal.', 'Ambition sets the personal goal.']);
 T('life-you', 'persona', ['Personalidade', 'Personality'], ['Traços que mudam chances e reações.', 'Traits that change chances and reactions.'], ['Carisma ajuda negociações; impulsividade, riscos.', 'Charisma helps deals; impulsiveness, risks.']);
-T('life-you', 'skills', ['Habilidades', 'Skills'], ['Suas habilidades e pontos para gastar.', 'Your skills and points to spend.'], ['Invista no que você mais usa.', 'Invest in what you use most.']);
 T('life-you', 'decisions', ['Decisões', 'Decisions'], ['Escolhas grandes da vida e da carreira.', 'Big life and career choices.'], ['Algumas são irreversíveis.', 'Some are irreversible.']);
 T('life-you', 'looks17', ['Aparência', 'Looks'], ['Aparência com efeito no jogo, por época.', 'Looks with in-game effect, by era.'], ['O efeito é explicado no porquê.', 'The effect is explained in the why.']);
 T('life-you', 'music', ['Carreira musical', 'Music career'], ['Sua carreira como músico.', 'Your career as a musician.'], ['Some com a carreira Músico.', 'Pairs with the Musician career.']);

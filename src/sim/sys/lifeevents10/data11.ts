@@ -46,7 +46,7 @@ export const EVENTS11: Def[] = [
       C('distance', 'Namoro a distância', 'Long distance', { love: -4, st: 3 }, 'Ligações à noite, encontros a cada quinzena.', 'Late-night calls, a visit every other week.', { odds: { p: 0.25, fx: { breakup: 1, st: 10 }, res: l('A distância ganhou. {x} terminou por telefone.', 'Distance won. {x} broke up over the phone.') } }),
       C('ask', 'Pedir para recusar', 'Ask them to decline', { love: -12, st: 1 }, '{x} recusa, e guarda a mágoa numa gaveta.', '{x} declines, and files the resentment in a drawer.'),
     ] },
-  { id: 'r11_anniversary', name: l('O aniversário esquecido', 'The forgotten anniversary'), cool: 24, w: (e) => (e.married ? 0.7 + (has(e, 'workaholic') ? 0.8 : 0) + (e.ls === 'workaholic' ? 0.6 : 0) : 0),
+  { id: 'r11_anniversary', name: l('O aniversário esquecido', 'The forgotten anniversary'), cool: 24, w: (e) => (e.married ? 0.7 + (has(e, 'workaholic') ? 0.8 : 0) : 0),
     text: T('Você chega em casa às 23h e encontra a mesa posta, velas derretidas e {x} em silêncio. Era o aniversário de casamento.', 'You get home at 11pm to a set table, melted candles and {x} in silence. It was your wedding anniversary.'),
     def: 'sorry', ch: [
       C('trip', 'Viagem-surpresa no fim de semana', 'Surprise weekend getaway', { w: -2500, love: 12, st: -6 }, 'Uma pousada na serra salva o ano.', 'A mountain inn saves the year.', { energy: 2 }),
@@ -68,7 +68,7 @@ export const EVENTS11: Def[] = [
       C('go', 'Ir ao encontro', 'Go on the date', { st: -4, w: -150 }, 'Boa conversa, risadas e um "vamos repetir".', 'Good conversation, laughs and a "let\'s do it again".', { energy: 1, odds: { p: 0.45, fx: { st: 2 }, res: l('Ele(a) passou a noite falando do próprio podcast.', 'They spent the whole night talking about their podcast.') } }),
       C('skip', 'Desmarcar: trabalho demais', 'Cancel: too much work', { st: 1 }, 'O trabalho agradece. Você, nem tanto.', 'Work thanks you. You, less so.'),
     ] },
-  { id: 'r11_pet', name: l('Um cachorro na porta', 'A dog at the door'), cool: 60, once: true, w: (e) => 0.5 + (e.ls === 'familia' ? 0.5 : 0) + (e.stress > 60 ? 0.3 : 0),
+  { id: 'r11_pet', name: l('Um cachorro na porta', 'A dog at the door'), cool: 60, once: true, w: (e) => 0.5 + (e.stress > 60 ? 0.3 : 0),
     text: T('Um vira-lata magro segue você do estúdio até em casa e senta na porta. Não parece que vai embora.', 'A skinny stray follows you from the studio home and sits at the door. It does not look like it is leaving.'),
     def: 'shelter', ch: [
       C('adopt', 'Adotar', 'Adopt it', { st: -8, h: 3, w: -400, kidBond: 4, love: 3 }, 'Agora o estúdio tem mascote e você caminha todo dia.', 'Now the studio has a mascot and you walk every day.'),
@@ -102,7 +102,7 @@ export const EVENTS11: Def[] = [
       C('chair', 'Cadeira ergonômica e alongamento', 'Ergonomic chair and stretching', { w: -500, h: 2 }, 'Melhora um pouco. A cadeira é feia.', 'It helps a bit. The chair is ugly.'),
       C('pain', 'Analgésico e seguir', 'Painkillers and carry on', { h: -3, st: 3 }, 'A dor vira companhia fixa.', 'The pain becomes a constant companion.'),
     ] },
-  { id: 'r11_marathon', name: l('Desafio da maratona', 'Marathon challenge'), cool: 48, w: (e) => (e.age < 60 ? 0.4 + (has(e, 'disciplined') ? 0.5 : 0) + (e.ls === 'asceta' ? 0.6 : 0) : 0),
+  { id: 'r11_marathon', name: l('Desafio da maratona', 'Marathon challenge'), cool: 48, w: (e) => (e.age < 60 ? 0.4 + (has(e, 'disciplined') ? 0.5 : 0) : 0),
     text: T('Os artistas do selo apostaram que você não termina a maratona da cidade. Faltam quatro meses.', 'The label\'s artists bet you cannot finish the city marathon. Four months to go.'),
     def: 'laugh', ch: [
       C('train', 'Treinar de verdade', 'Train for real', { h: 8, st: -6, arts: 2, fame: 1 }, 'Você cruza a linha em 4h41 e ganha uma foto histórica.', 'You cross the line in 4h41 and earn a historic photo.', { energy: 2, odds: { p: 0.2, fx: { h: -4, st: 4 }, res: l('Uma lesão no joelho no km 30 encerra a aventura.', 'A knee injury at km 30 ends the adventure.') } }),
@@ -116,14 +116,14 @@ export const EVENTS11: Def[] = [
       C('patch', 'Adesivo e chiclete de nicotina', 'Nicotine patch and gum', { w: -300, st: 3, dep: ['smoke', -15] }, 'Meio caminho andado.', 'Halfway there.'),
       C('keep', 'Continuar fumando lá fora', 'Keep smoking outside', { st: 1, h: -1 }, 'A calçada vira seu segundo escritório.', 'The sidewalk becomes your second office.'),
     ] },
-  { id: 'r11_retreat', name: l('Retiro de silêncio', 'Silent retreat'), cool: 36, w: (e) => 0.3 + (e.ls === 'asceta' ? 1 : 0) + (has(e, 'spiritual') ? 0.6 : 0) + (e.stress > 70 ? 0.4 : 0),
+  { id: 'r11_retreat', name: l('Retiro de silêncio', 'Silent retreat'), cool: 36, w: (e) => 0.3 + (has(e, 'spiritual') ? 0.6 : 0) + (e.stress > 70 ? 0.4 : 0),
     text: T('Um mosteiro nas montanhas oferece dez dias de silêncio absoluto. Sem telefone, sem selo, sem música.', 'A mountain monastery offers ten days of absolute silence. No phone, no label, no music.'),
     def: 'no', ch: [
-      C('go', 'Ir', 'Go', { st: -20, h: 4, w: -600, com: -1, sp: 1 }, 'Você volta ouvindo coisas que antes não ouvia.', 'You come back hearing things you never heard before.', { energy: 3 }),
+      C('go', 'Ir', 'Go', { st: -20, h: 4, w: -600, com: -1 }, 'Você volta ouvindo coisas que antes não ouvia.', 'You come back hearing things you never heard before.', { energy: 3 }),
       C('weekend', 'Só um fim de semana', 'Just a weekend', { st: -8, w: -200 }, 'Dois dias bastam para lembrar como é respirar.', 'Two days are enough to remember how to breathe.', { energy: 1 }),
       C('no', 'Não dá agora', 'Not now', { st: 2 }, 'O folheto fica na gaveta.', 'The brochure stays in the drawer.'),
     ] },
-  { id: 'r11_hangover_meeting', name: l('A reunião da ressaca', 'The hangover meeting'), cool: 18, w: (e) => (vices(e.s).dep.drink > 20 || e.ls === 'festeiro' || e.ls === 'boemio' ? 0.7 + vices(e.s).dep.drink / 80 : 0),
+  { id: 'r11_hangover_meeting', name: l('A reunião da ressaca', 'The hangover meeting'), cool: 18, w: (e) => (vices(e.s).dep.drink > 20 ? 0.7 + vices(e.s).dep.drink / 80 : 0),
     text: T('Você acorda às 11h, de roupa, com uma ligação perdida do banco: a reunião do empréstimo era às 9h.', 'You wake at 11am, fully dressed, with a missed call from the bank: the loan meeting was at 9am.'),
     def: 'excuse', ch: [
       C('honest', 'Ligar e assumir o erro', 'Call and own the mistake', { ins: -1, st: 2 }, 'O gerente aprecia a honestidade e remarca.', 'The manager appreciates the honesty and reschedules.'),
@@ -131,28 +131,28 @@ export const EVENTS11: Def[] = [
       C('excuse', 'Inventar uma emergência', 'Invent an emergency', { ins: -2, st: 3 }, 'O gerente finge acreditar.', 'The manager pretends to believe you.'),
     ] },
   // ------------------------------------------------------------------ dinheiro e estilo de vida
-  { id: 'r11_sports_car', name: l('O carro esporte', 'The sports car'), cool: 60, w: (e) => (e.age >= 38 && e.age <= 58 && e.wealth > 30000 ? 0.6 + (e.ls === 'magnata' || e.ls === 'jetsetter' ? 0.6 : 0) - (has(e, 'frugal') ? 0.4 : 0) : 0),
+  { id: 'r11_sports_car', name: l('O carro esporte', 'The sports car'), cool: 60, w: (e) => (e.age >= 38 && e.age <= 58 && e.wealth > 30000 ? 0.6 - (has(e, 'frugal') ? 0.4 : 0) : 0),
     text: T('Na vitrine da concessionária, um conversível vermelho olha para você. O vendedor já sabe seu nome.', 'In the dealership window, a red convertible stares at you. The salesman already knows your name.'),
     def: 'walk', ch: [
       C('buy', 'Comprar à vista', 'Buy it outright', { w: -25000, st: -8, fame: 1, love: -3 }, 'Vento no cabelo, olhares na rua e um IPVA assustador.', 'Wind in your hair, heads turning and a scary insurance bill.'),
       C('rent', 'Alugar por um fim de semana', 'Rent it for a weekend', { w: -700, st: -4 }, 'Dois dias de crise de meia-idade controlada.', 'Two days of a controlled midlife crisis.'),
       C('walk', 'Seguir andando', 'Keep walking', { st: 1 }, 'O carro continua lá. Você também.', 'The car is still there. So are you.'),
     ] },
-  { id: 'r11_art_auction', name: l('Leilão de arte', 'Art auction'), cool: 36, w: (e) => (e.wealth > 60000 ? 0.4 + (e.ls === 'magnata' || e.ls === 'mecenas' ? 0.8 : 0) + (has(e, 'intellectual') ? 0.3 : 0) : 0),
+  { id: 'r11_art_auction', name: l('Leilão de arte', 'Art auction'), cool: 36, w: (e) => (e.wealth > 60000 ? 0.4 + (has(e, 'intellectual') ? 0.3 : 0) : 0),
     text: T('Um leilão vende o manuscrito original de uma canção histórica e uma tela de um pintor jovem que ninguém conhece ainda.', 'An auction is selling the original manuscript of a historic song and a canvas by a young painter nobody knows yet.'),
     def: 'watch', ch: [
       C('manuscript', 'Arrematar o manuscrito', 'Win the manuscript', { w: -15000, art: 2, ins: 2 }, 'O manuscrito vai para a sede, numa vitrine climatizada.', 'The manuscript goes to HQ, in a climate-controlled case.'),
       C('painter', 'Apostar no pintor jovem', 'Bet on the young painter', { w: -3000 }, 'A tela fica bonita na sala.', 'The canvas looks nice in the living room.', { odds: { p: 0.25, fx: { w: 30000, fame: 1 }, res: l('Dez anos depois, o pintor é estrela e a tela vale dez vezes mais.', 'Ten years later the painter is a star and the canvas is worth ten times more.') } }),
       C('watch', 'Só assistir', 'Just watch', {}, 'Você sai com um catálogo e uma taça de espumante.', 'You leave with a catalogue and a glass of bubbly.'),
     ] },
-  { id: 'r11_charity_gala', name: l('Gala beneficente', 'Charity gala'), cool: 24, w: (e) => 0.3 + (e.ls === 'mecenas' ? 1 : 0) + (has(e, 'generous') ? 0.5 : 0) + e.fame / 150,
+  { id: 'r11_charity_gala', name: l('Gala beneficente', 'Charity gala'), cool: 24, w: (e) => 0.3 + (has(e, 'generous') ? 0.5 : 0) + e.fame / 150,
     text: T('Um hospital infantil convida você para apresentar a gala anual e escalar artistas do selo para tocar de graça.', 'A children\'s hospital invites you to host its annual gala and line up label artists to play for free.'),
     def: 'donate', ch: [
       C('host', 'Apresentar e levar o elenco', 'Host and bring the roster', { ins: 4, arts: 1, fame: 2, st: 3 }, 'A noite arrecada uma fortuna e seu discurso emociona.', 'The night raises a fortune and your speech moves people.', { energy: 2, gate: attrNeed('charisma', 35) }),
       C('donate', 'Só doar', 'Just donate', { w: -2000, ins: 2 }, 'Seu nome aparece na placa de doadores.', 'Your name goes on the donor plaque.'),
       C('decline', 'Declinar', 'Decline', { ins: -1 }, 'A organizadora não esquece.', 'The organiser does not forget.'),
     ] },
-  { id: 'r11_vacation_crash', name: l('Férias interrompidas', 'Vacation interrupted'), cool: 24, w: (e) => 0.5 + (e.ls === 'jetsetter' ? 0.8 : 0) + (e.wealth > 20000 ? 0.2 : 0),
+  { id: 'r11_vacation_crash', name: l('Férias interrompidas', 'Vacation interrupted'), cool: 24, w: (e) => 0.5 + (e.wealth > 20000 ? 0.2 : 0),
     text: T('A família marcou uns dias de folga numa ilha (não foi uma ordem sua; é a vida acontecendo). Primeiro dia: o telefone toca — um artista do selo está em crise e o contrato da distribuidora vence amanhã.', 'The family booked a few days off on an island (not something you ordered; life happens). First day: the phone rings — a label artist is in crisis and the distribution contract expires tomorrow.'),
     ctx23: l('Contexto, não consequência: a viagem não veio de uma decisão sua no jogo (pesa mais para jet-setters e quem tem patrimônio alto). Só a resposta ao telefone é sua.', 'Context, not consequence: the trip did not come from a decision of yours in the game (more likely for jet-setters and the wealthy). Only the answer to the phone is yours.'),
     def: 'phone', ch: [
@@ -160,12 +160,12 @@ export const EVENTS11: Def[] = [
       C('phone', 'Resolver por telefone da praia', 'Handle it by phone from the beach', { st: 3, love: -3, com: 1 }, 'Metade das férias no telefone, metade no mar.', 'Half the holiday on the phone, half in the sea.'),
       C('off', 'Desligar o telefone', 'Switch the phone off', { st: -10, love: 6, com: -2, arts: -2 }, 'O mundo sobreviveu. Por pouco.', 'The world survived. Barely.'),
     ] },
-  { id: 'r11_home_studio', name: l('Estúdio em casa', 'Home studio'), cool: 60, once: true, w: (e) => (e.wealth > 15000 ? 0.4 + (has(e, 'perfectionist') ? 0.4 : 0) + (artist(e) ? 0.6 : 0) + (e.ls === 'underground' ? 0.3 : 0) : 0),
+  { id: 'r11_home_studio', name: l('Estúdio em casa', 'Home studio'), cool: 60, once: true, w: (e) => (e.wealth > 15000 ? 0.4 + (has(e, 'perfectionist') ? 0.4 : 0) + (artist(e) ? 0.6 : 0) : 0),
     text: (s) => (s.year >= 1995
       ? T('Com um computador e duas caixas de som boas dá para gravar quase tudo em casa. O quarto dos fundos está vazio.', 'With a computer and two good monitors you can record almost anything at home. The back room is empty.')(s, {})
       : T('Um gravador de quatro canais e espuma nas paredes: o quarto dos fundos pode virar estúdio.', 'A four-track recorder and foam on the walls: the back room could become a studio.')(s, {})),
     def: 'no', ch: [
-      C('build', 'Montar o estúdio', 'Build the studio', { w: -6000, art: 2, sp: 1, st: -3 }, 'Madrugadas criativas sem pagar hora de estúdio.', 'Creative late nights without paying studio hours.', { energy: 1 }),
+      C('build', 'Montar o estúdio', 'Build the studio', { w: -6000, art: 2, st: -3 }, 'Madrugadas criativas sem pagar hora de estúdio.', 'Creative late nights without paying studio hours.', { energy: 1 }),
       C('cheap', 'Versão simples', 'Basic version', { w: -1500, art: 1 }, 'Soa como demo, mas é sua demo.', 'It sounds like a demo, but it is your demo.'),
       C('no', 'Deixar o quarto vazio', 'Leave the room empty', {}, 'O quarto vira depósito de caixas de disco.', 'The room becomes a store for record boxes.'),
     ] },
@@ -177,10 +177,10 @@ export const EVENTS11: Def[] = [
       C('gentle', 'Livro elegante, sem fofoca', 'Elegant book, no gossip', { w: 4000, fame: 2, art: 2 }, 'A crítica elogia a prosa; as vendas são modestas.', 'Critics praise the prose; sales are modest.', { energy: 2 }),
       C('later', 'Ainda não', 'Not yet', {}, 'A editora deixa o cartão.', 'The publisher leaves a card.'),
     ] },
-  { id: 'r11_teach', name: l('Convite para dar aulas', 'Teaching invitation'), cool: 48, w: (e) => 0.3 + (has(e, 'intellectual') ? 0.6 : 0) + (e.ls === 'intelectual' ? 0.8 : 0) + (e.age > 45 ? 0.2 : 0),
+  { id: 'r11_teach', name: l('Convite para dar aulas', 'Teaching invitation'), cool: 48, w: (e) => 0.3 + (has(e, 'intellectual') ? 0.6 : 0) + (e.age > 45 ? 0.2 : 0),
     text: T('A universidade quer que você dê um curso de um semestre sobre a indústria fonográfica.', 'The university wants you to teach a one-semester course on the record industry.'),
     def: 'no', ch: [
-      C('teach', 'Aceitar o semestre', 'Take the semester', { ins: 3, art: 1, st: 3, sp: 1 }, 'Alunos curiosos fazem perguntas que você nunca se fez. Dois deles viram estagiários.', 'Curious students ask questions you never asked yourself. Two become interns.', { energy: 2 }),
+      C('teach', 'Aceitar o semestre', 'Take the semester', { ins: 3, art: 1, st: 3 }, 'Alunos curiosos fazem perguntas que você nunca se fez. Dois deles viram estagiários.', 'Curious students ask questions you never asked yourself. Two become interns.', { energy: 2 }),
       C('lecture', 'Só uma palestra', 'Just one lecture', { ins: 1 }, 'O auditório lota.', 'The auditorium is packed.'),
       C('no', 'Recusar', 'Decline', {}, 'Talvez um dia.', 'Maybe someday.'),
     ] },
@@ -207,10 +207,10 @@ export const EVENTS11: Def[] = [
       C('donate', 'Doar do próprio bolso', 'Donate from your pocket', { w: -1200, dev: 2 }, 'O padre/pastor agradece no sermão.', 'The clergy thank you in the sermon.'),
       C('skip', 'Não desta vez', 'Not this time', { dev: -2 }, 'Olham para você de um jeito diferente no próximo encontro.', 'They look at you differently at the next gathering.'),
     ] },
-  { id: 'r11_underground_show', name: l('Show secreto no porão', 'Secret basement show'), cool: 24, w: (e) => 0.3 + (e.ls === 'underground' ? 1.2 : 0) + (has(e, 'rebel') ? 0.4 : 0),
+  { id: 'r11_underground_show', name: l('Show secreto no porão', 'Secret basement show'), cool: 24, w: (e) => 0.3 + (has(e, 'rebel') ? 0.4 : 0),
     text: T('Um flyer xerocado: show secreto num porão às 2h, sem nome das bandas. Dizem que a próxima grande cena está lá.', 'A photocopied flyer: secret basement show at 2am, no band names. They say the next big scene is there.'),
     def: 'sleep', ch: [
-      C('go', 'Ir sozinho, sem crachá', 'Go alone, no badge', { st: -4, art: 2, h: -1, sp: 1 }, 'Barulho, suor e uma banda que você não tira da cabeça.', 'Noise, sweat and a band you cannot get out of your head.', { energy: 1, odds: { p: 0.2, fx: { st: 3, h: -3, heat: 3 }, res: l('A polícia fechou o porão e você passou a noite numa delegacia.', 'The police shut the basement and you spent the night at a station.') } }),
+      C('go', 'Ir sozinho, sem crachá', 'Go alone, no badge', { st: -4, art: 2, h: -1 }, 'Barulho, suor e uma banda que você não tira da cabeça.', 'Noise, sweat and a band you cannot get out of your head.', { energy: 1, odds: { p: 0.2, fx: { st: 3, h: -3, heat: 3 }, res: l('A polícia fechou o porão e você passou a noite numa delegacia.', 'The police shut the basement and you spent the night at a station.') } }),
       C('sleep', 'Dormir', 'Sleep', { h: 1 }, 'No dia seguinte, todos falam do show.', 'The next day, everyone is talking about the show.'),
     ] },
   { id: 'r11_old_diary', name: l('O caderno antigo', 'The old notebook'), cool: 60, once: true, w: (e) => (e.age >= 35 ? 0.4 : 0),

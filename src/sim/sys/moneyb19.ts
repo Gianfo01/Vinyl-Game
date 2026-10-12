@@ -1,7 +1,7 @@
 // Rodada 19 (Frente 3, T2 "money-b") — MERCADO DE CONTRATOS, EMPRESÁRIOS E BRIGAS DE GESTÃO.
 //  • N2  vender o contrato de uma estrela (Sun → RCA, 1955): lance de selo rival a qualquer momento (mais provável no aperto de caixa); vender, vender
 //        com override (% das vendas futuras por 5 anos), pedir mais ou segurar. Se a estrela explode longe de você → arrependimento.
-//  • M1  (r22: sem janelas — tudo pode acontecer a qualquer momento; empréstimos de artista removidos, os antigos terminam.)
+//  • M1  mercado de contratos aberto o ano todo (sem janelas de transferência; empréstimos de artista removidos na r27).
 //  • M2  cláusula de saída/recompra por ato, com preço de mercado visível (fama × prazo × embalo): barata fideliza e fecha a
 //        assinatura, mas o rival "paga a cláusula" e leva o astro; você também pode pagar a cláusula de um rival.
 //  • N3  o empresário total (Coronel Parker): fica com 25–50% do que o artista ganha, traz cinema/TV/merch (renda certa), não
@@ -30,10 +30,9 @@ import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
 import { endContract } from '../contracts';
 import { fileLawsuit } from '../business';
-import { registerDeadline } from '../calendar19';
 import { registerConseq18 } from '../decide18';
 import type { Act, Contract, GameState, Label } from '../types';
-import { fmtL, money, notify, playerActs, post, remember } from '../util';
+import { fmtL, money, playerActs, post, remember } from '../util';
 import { dynBand } from './dyn18';
 import { headline19 } from './factlink19';
 import { startFeud18 } from './feud18';
@@ -44,12 +43,11 @@ import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- estado
 export interface Sold19 { act: string; lb: string; w: number; y: number; price: number; pct: number; until: number; fame0: number; n10: number; u: Record<string, number>; paid: number; regret?: 1 }
-export interface Loan19 { id: string; act: string; from: string; to: string; kind: 'record' | 'tour'; fee: number; w: number; end: number; fame0: number; st: 'on' | 'back' | 'kept' | 'lost'; recall?: 1 }
 export interface Mgr19 { name: string; mid?: string; cut: number; since: number; secret: number; exposed?: 1; revolt: number; took: number; last: number; audited?: number }
 export interface Tk19 { name: string; y: number; rels: string[]; until: number; done?: 1 }
-export interface Mb19State { sold: Sold19[]; loans: Loan19[]; mgr: Record<string, Mgr19>; tk: Record<string, Tk19>; junk: Record<string, number>; cd: Record<string, number>; chron: Record<string, 1>; seq: number; log: { w: number; t: L }[] }
+export interface Mb19State { sold: Sold19[]; mgr: Record<string, Mgr19>; tk: Record<string, Tk19>; junk: Record<string, number>; cd: Record<string, number>; chron: Record<string, 1>; seq: number; log: { w: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { mb19: Mb19State } }
-const fresh = (): Mb19State => ({ sold: [], loans: [], mgr: {}, tk: {}, junk: {}, cd: {}, chron: {}, seq: 0, log: [] });
+const fresh = (): Mb19State => ({ sold: [], mgr: {}, tk: {}, junk: {}, cd: {}, chron: {}, seq: 0, log: [] });
 registerExt4('mb19', fresh);
 export function mb19(s: GameState): Mb19State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
@@ -75,16 +73,7 @@ export const LINKS19MB = [
 ];
 for (const d of LINKS19MB) if (!LINKS18.some((x) => x.id === d.id)) LINKS18.push(d);
 
-// ---------------------------------------------------------------- valor de mercado e janelas (M1/M2)
-/** r22: não existe janela de transferências — o mercado de contratos funciona o ano todo (música não é futebol).
- * Mantido como função para saves e chamadores antigos. */
-export const window19 = (_s: GameState): boolean => true;
-/** r22: sem janelas, nada a abrir ou fechar. */
-export function windows19(_s: GameState, _n = 2): { open: number; close: number; y: number; m: number }[] {
-  return [];
-}
-/** r22: empréstimo de artistas saiu do jogo (os que já estavam emprestados em saves antigos terminam normalmente). */
-export const LOANS_OFF22 = true;
+// ---------------------------------------------------------------- valor de mercado (M1/M2)
 /** Preço de mercado do contrato de um ato: fama ao quadrado × embalo × prazo restante × saldo a recuperar. */
 export function value19(s: GameState, a: Act): { v: number; parts: WhyPart[] } {
   const k = kOf(s, a);
@@ -260,112 +249,6 @@ export function payClause19(s: GameState, actId: string): L | null {
   log(s, t);
   return null;
 }
-
-// ---------------------------------------------------------------- M1: empréstimos
-export const loanFee19 = (s: GameState, a: Act, kind: Loan19['kind']): number => Math.round(value19(s, a).v * (kind === 'record' ? 0.14 : 0.1));
-/** Empresta um ato ocioso a um rival por um disco (6 meses) ou uma turnê (4 meses). */
-export function lend19(s: GameState, actId: string, kind: Loan19['kind']): L | null {
-  const a = s.acts[actId];
-  if (!labelAct(s, a)) return l('Só atos do seu selo.', 'Only your label\'s acts.');
-  if (LOANS_OFF22) return l('Empréstimo de artistas não existe mais no jogo.', 'Artist loans are no longer part of the game.');
-  const fee = loanFee19(s, a, kind);
-  const lb = Object.values(s.labels).filter((x) => x.active && x.cash >= fee * 2).sort((x, y) => y.cash - x.cash)[0];
-  if (!lb) return l('Nenhum selo com caixa para o empréstimo.', 'No label has cash for the loan.');
-  const st = mb19(s);
-  lb.cash -= fee;
-  post(s, `mb19lend:${a.id}`, fee, 'licensing', `Empréstimo de ${a.name} a ${lb.name}`);
-  moveAct19(s, a, lb.id);
-  const L19: Loan19 = { id: `ln${++st.seq}`, act: a.id, from: 'player', to: lb.id, kind, fee, w: s.week, end: s.week + (kind === 'record' ? 26 : 17), fame0: a.fame, st: 'on' };
-  st.loans.push(L19);
-  const t = fmtL(l('{a} vai emprestado a {b} por {k} ({p} de taxa; bônus se voltar maior).', '{a} goes on loan to {b} for {k} ({p} fee; bonus if they come back bigger).'), { a: a.name, b: lb.name, k: kind === 'record' ? l('um disco', 'one record') : l('uma turnê', 'one tour'), p: usd(fee) });
-  emitFact(s, { kind: 'artist_loan', actors: [a.id, lb.id, 'player'], severity: 20 + a.fame / 4, visibility: 'public', tags: ['transfer', 'loan', 'out'], text: t, src: 'moneyb19', data: { fee } });
-  log(s, t);
-  return null;
-}
-export const borrowFee19 = (s: GameState, a: Act): number => Math.round(value19(s, a).v * 0.18);
-/** Pega emprestado um ato de rival para um disco (6 meses). */
-export function borrow19(s: GameState, actId: string): L | null {
-  const a = s.acts[actId], lb = a?.owner ? s.labels[a.owner] : undefined;
-  if (!live(a) || !lb?.active || !kOf(s, a)) return l('Só atos com contrato em selo rival.', 'Only acts under contract at a rival label.');
-  if (LOANS_OFF22) return l('Empréstimo de artistas não existe mais no jogo.', 'Artist loans are no longer part of the game.');
-  if (exactHist(s) && histLocked(s, a)) return l('Modo "Vida real exata": este artista segue a história real.', '"Exact real life" mode: this act follows real history.');
-  if ((s.rivalries[lb.id] ?? 0) >= 75) return fmtL(l('{b} está em guerra com você: não empresta nada.', '{b} is at war with you: they lend nothing.'), { b: lb.name });
-  const fee = borrowFee19(s, a);
-  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
-  const st = mb19(s);
-  post(s, `mb19borrow:${a.id}`, -fee, 'licensing', `Empréstimo de ${a.name} (de ${lb.name})`);
-  lb.cash += fee;
-  moveAct19(s, a, 'player');
-  st.loans.push({ id: `ln${++st.seq}`, act: a.id, from: lb.id, to: 'player', kind: 'record', fee, w: s.week, end: s.week + 26, fame0: a.fame, st: 'on' });
-  const t = fmtL(l('{c} pega {a} emprestado de {b} para um disco ({p}).', '{c} borrows {a} from {b} for one record ({p}).'), { c: s.config.companyName, a: a.name, b: lb.name, p: usd(fee) });
-  emitFact(s, { kind: 'artist_loan', actors: [a.id, 'player', lb.id], severity: 20 + a.fame / 4, visibility: 'public', tags: ['transfer', 'loan', 'in'], text: t, src: 'moneyb19', data: { fee } });
-  log(s, t);
-  return null;
-}
-/** Chamar de volta antes do fim (multa = metade da taxa; o rival não gosta). */
-export function recall19(s: GameState, loanId: string): L | null {
-  const x = mb19(s).loans.find((y) => y.id === loanId && y.st === 'on');
-  if (!x || x.from !== 'player') return l('Empréstimo inválido.', 'Invalid loan.');
-  const pen = Math.round(x.fee * 0.5);
-  if (freeCash20(s) < pen) return cashWhy20(s, pen, l('Caixa insuficiente para a multa.', 'Not enough cash for the penalty.'));
-  post(s, `mb19recall:${x.act}`, -pen, 'licensing', 'Multa por chamar artista emprestado de volta');
-  const lb = s.labels[x.to];
-  if (lb) { lb.cash += pen; addHeat19(s, lb.id, 6, 100); }
-  x.recall = 1; x.end = s.week;
-  returnLoan(s, x, new Rng([1, 2, 3, 4]), true);
-  return null;
-}
-function returnLoan(s: GameState, x: Loan19, r: Rng, forced = false): void {
-  const a = s.acts[x.act];
-  const holder = x.to === 'player' ? 'player' : x.to;
-  if (!live(a) || a.owner !== holder || !kOf(s, a)) {
-    x.st = 'lost';
-    const t = fmtL(l('O empréstimo de {a} terminou sem volta: o contrato mudou de mãos no caminho.', '{a}\'s loan ended with no return: the contract changed hands along the way.'), { a: a?.name ?? '?' });
-    notify(s, t, 'bad'); log(s, t);
-    return;
-  }
-  if (x.from === 'player') {
-    const lb = s.labels[x.to];
-    // gostou da casa nova? artista sem confiança em você fica, e o rival paga para manter
-    if (!forced && lb?.active && a.trust < 30 && lb.cash >= value19(s, a).v * 0.7 && r.chance(0.55)) {
-      x.st = 'kept';
-      const p = Math.round(value19(s, a).v * 0.7);
-      lb.cash -= p;
-      post(s, `mb19kept:${a.id}`, p, 'transfers', `${a.name} fica em ${lb.name} (compensação)`);
-      const st = mb19(s);
-      st.sold.push({ act: a.id, lb: lb.id, w: s.week, y: s.year, price: p, pct: 0, until: s.year, fame0: a.fame, n10: a.hits, u: {}, paid: 0 });
-      const t = fmtL(l('{a} não quer voltar do empréstimo: fica em {b}, que paga {p} de compensação.', '{a} won\'t come back from the loan: they stay at {b}, which pays {p} in compensation.'), { a: a.name, b: lb.name, p: usd(p) });
-      emitFact(s, { kind: 'artist_loan', actors: [a.id, lb.id, 'player'], severity: 35, visibility: 'public', tags: ['transfer', 'loan', 'kept'], text: t, src: 'moneyb19', data: { fee: p } });
-      log(s, t);
-      return;
-    }
-    moveAct19(s, a, 'player');
-    const gain = Math.max(0, a.fame - x.fame0);
-    const bonus = lb?.active ? Math.min(lb.cash, money(s, gain * 700)) : 0;
-    if (bonus > 0 && lb) { lb.cash -= bonus; post(s, `mb19lbonus:${a.id}`, bonus, 'licensing', `Bônus do empréstimo de ${a.name}`); }
-    a.trust = clamp(a.trust + (gain >= 3 ? 4 : -3), 0, 100);
-    x.st = 'back';
-    const t = fmtL(l('{a} volta do empréstimo{g}.', '{a} returns from the loan{g}.'), { a: a.name, g: gain >= 3 ? fmtL(l(' com +{f} de fama e {p} de bônus', ' with +{f} fame and a {p} bonus'), { f: Math.round(gain), p: usd(bonus) }) : '' });
-    emitFact(s, { kind: 'artist_loan', actors: [a.id, 'player', x.to], severity: 15, visibility: 'public', tags: ['transfer', 'loan', 'back'], text: t, src: 'moneyb19' });
-    log(s, t);
-    return;
-  }
-  // devolver o astro emprestado ao dono
-  const lb = s.labels[x.from];
-  if (!lb?.active) { x.st = 'kept'; log(s, fmtL(l('{a} fica com você: o selo dono fechou.', '{a} stays with you: the owning label closed.'), { a: a.name })); return; }
-  moveAct19(s, a, lb.id);
-  x.st = 'back';
-  const t = fmtL(l('{a} volta para {b} depois do disco com você.', '{a} goes back to {b} after the record with you.'), { a: a.name, b: lb.name });
-  emitFact(s, { kind: 'artist_loan', actors: [a.id, lb.id, 'player'], severity: 15, visibility: 'public', tags: ['transfer', 'loan', 'back', 'in'], text: t, src: 'moneyb19' });
-  log(s, t);
-}
-function loansMonth(s: GameState, r: Rng): void {
-  for (const x of mb19(s).loans) if (x.st === 'on' && x.end <= s.week) returnLoan(s, x, r);
-  const st = mb19(s);
-  if (st.loans.length > 30) st.loans.splice(0, st.loans.length - 30);
-}
-export const loansOn19 = (s: GameState): Loan19[] => mb19(s).loans.filter((x) => x.st === 'on');
-export const onLoan19 = (s: GameState, actId: string): Loan19 | undefined => loansOn19(s).find((x) => x.act === actId);
 
 // ---------------------------------------------------------------- N3: o empresário total
 const mineOrBand = (s: GameState, a?: Act): a is Act => live(a) && (a.owner === 'player' || !!a.playerBand);
@@ -703,7 +586,6 @@ function chronMonth(s: GameState): void {
 registerSimHook('month', 'moneyb19', (s) => {
   const r = rng19(s, 'mb19', () => Rng.fromSeed(`${s.config.seed}|mb19m|${s.week}`));
   chronMonth(s);
-  loansMonth(s, r);
   overrides(s);
   mgrMonth(s, r);
   locksMonth(s);
@@ -737,12 +619,6 @@ onFact('release_clause', (s, f) => {
   if (b !== 'player') { s.player.reputation.commercial = clamp(s.player.reputation.commercial - 1, 0, 100); remember(s, 'release_clause', f.text, { actId: aId, important: true }); }
   headline19(s, f.text, 2);
 }, 'moneyb19:clause');
-onFact('artist_loan', (s, f) => {
-  const a = s.acts[f.actors[0]];
-  if (!a) return;
-  for (const pid of a.members) addStress(s, pid, f.tags.includes('kept') ? 2 : 3, l('Emprestado a outro selo', 'Loaned to another label'));
-  if (f.tags.includes('kept')) { const lb = f.actors[1]; if (s.labels[lb]) addHeat19(s, lb, 8, 100); }
-}, 'moneyb19:loan');
 onFact('total_manager', (s, f) => {
   const a = s.acts[f.actors[0]];
   if (!a) return;
@@ -809,11 +685,6 @@ registerConseq18('ib:mb19_klein:unanimous', { later: [{ in: [3, 12], p: 0.45, to
   when: (s, c) => (s.acts[String(c.act)]?.members.length ?? 0) >= 3, fx: (f) => { const a = actOf(f); const v = a ? vote19(f.s, a) : { yes: [], no: [] }; if (a && v.yes.length && v.no.length && f.r.chance(0.5)) { splitBand(f.s, a, v.yes.length < v.no.length ? v.yes : v.no, l('a gestão', 'management').pt, f.r); return l('A ferida da reunião abre: a banda racha.', 'The meeting\'s wound opens: the band splits.'); } return f.mood('morale', -4).lines[0] ?? l('Clima pesado nos ensaios.', 'Heavy mood at rehearsals.'); } }] });
 
 // ---------------------------------------------------------------- calendário, porquê, conselheiro
-registerDeadline('mb19', (s, from, to) => {
-  const out: import('../calendar19').Deadline19[] = [];
-  for (const x of loansOn19(s)) if (x.end >= from && x.end <= to) out.push({ id: `mb19:loan:${x.id}`, w: x.end, kind: 'contract', t: fmtL(l('Fim do empréstimo de {a}', '{a}\'s loan ends'), { a: s.acts[x.act]?.name ?? '?' }), d: l('O artista volta — ou não quer voltar.', 'The act returns — or refuses to.'), tone: x.from === 'player' ? 'info' : 'bad', goto: { area: 'contracts19' } });
-  return out;
-});
 registerExplain('mb19.value', (s, c) => {
   const a = s.acts[String(c.act)];
   if (!a) return null;
@@ -847,4 +718,4 @@ registerAdvisorTip('moneyb19', (s) => {
 /** Para a interface e os testes. */
 export const myClauseActs19 = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter((a) => labelAct(s, a));
 export const rivalStars19 = (s: GameState, n = 12): Act[] => Object.values(s.acts).filter((a) => live(a) && a.owner && a.owner !== 'player' && s.labels[a.owner]?.active && kOf(s, a) && !(exactHist(s) && histLocked(s, a))).sort((x, y) => y.fame - x.fame).slice(0, n);
-export const _mb19 = { bids, clausePaid, loansMonth, overrides, mgrOffer, mgrMonth, junkOffer, kleinOffer, takeover, splitBand, chronMonth, locksMonth, moveAct19, signMgr, expose };
+export const _mb19 = { bids, clausePaid, overrides, mgrOffer, mgrMonth, junkOffer, kleinOffer, takeover, splitBand, chronMonth, locksMonth, moveAct19, signMgr, expose };

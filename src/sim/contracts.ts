@@ -6,7 +6,7 @@ import { toReal } from '../core/money';
 import { l, type L } from '../data/world';
 import { mainAmbition } from './people';
 import type { Act, Contract, GameState, Offer } from './types';
-import { fmtL, hasCard, hasMutator, money, nextId, notify, playerActs, post, remember, rngOf, staffCount } from './util';
+import { fmtL, hasMutator, money, nextId, notify, playerActs, post, remember, rngOf, staffCount } from './util';
 import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
@@ -108,8 +108,6 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   const rivalHeat = act.fame > 12 ? (act.fame - 12) / 120 : 0;
   add(l('Interesse de rivais (fama do ato)', 'Rival interest (act fame)'), -rivalHeat);
   let cv = 0;
-  if (hasCard(s, 'artists_house')) cv += 0.06;
-  if (hasCard(s, 'emperor')) cv -= 0.04;
   if (act.catalogNo && act.fame < 5) cv += 0.05;
   cv += perk(s, 'offer', act);
   add(l('Cartas, vantagens e catálogo', 'Cards, perks and catalog'), cv);
