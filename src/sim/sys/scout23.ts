@@ -118,10 +118,12 @@ function genreFor(s: GameState, r: Rng, fam: string): string | undefined {
   return gs.length ? r.pick(gs).id : undefined;
 }
 
+/** r23 (links23): pesos extras na hora de o olheiro achar alguém (gênero em alta, coro/escola…). */
+export const FIND23: ((s: GameState, a: Act, tr: Trip23) => number)[] = [];
 function tripFind(s: GameState, r: Rng, tr: Trip23): Act | undefined {
   const cands = Object.values(s.acts).filter((a) => signalEligible20(s, a) && (tr.city ? a.city === tr.city : cityById[a.city]?.market === tr.market) && (tr.fam === 'any' || familyOf(a.genre) === tr.fam));
   // olheiro bom enxerga potencial; o mediano vai atrás de quem já faz barulho
-  const a = cands.length && r.chance(0.75) ? r.weighted(cands, (x) => 1 + (x.potential / 40) * (tr.skill / 60) + x.fame / 30) : undefined;
+  const a = cands.length && r.chance(0.75) ? r.weighted(cands, (x) => (1 + (x.potential / 40) * (tr.skill / 60) + x.fame / 30) * FIND23.reduce((m, f) => m * f(s, x, tr), 1)) : undefined;
   if (a) return a;
   const city = tr.city ?? r.pick(CITIES.filter((c) => c.market === tr.market)).id;
   return spawnProceduralAct(s, r, { city, genre: genreFor(s, r, tr.fam) });

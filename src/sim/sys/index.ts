@@ -208,6 +208,8 @@ import './relics18';
 import './discover18';
 // Rodada 23: Talentos (procurar / funil / decidir)
 import './scout23';
+import './secrets23'; // r23: segredos e vínculos (camada única de conhecimento: jogador, imprensa, rivais)
+import './links23'; // r23: ligações entre sistemas isolados (docs/conexoes23.md)
 import './camps18';
 import './session18';
 import './school18';
