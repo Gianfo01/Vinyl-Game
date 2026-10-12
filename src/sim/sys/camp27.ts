@@ -24,7 +24,7 @@ import { availableChannels } from '../market';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { scandal } from '../scandal17';
 import type { Act, GameState, PendingRelease, Release } from '../types';
-import { fmtL, hasTech, money, post } from '../util';
+import { fmtL, hasTech, money, notify, post } from '../util';
 import { addHype, hy, hypeOf, levers, needQ, useLever, type Lever } from './hype12';
 import { addChannel18 } from './mkt18';
 import { opine } from './persona13';
@@ -218,7 +218,8 @@ function rollEvent27(s: GameState, c: Camp27, w: number): void {
   if (!r.chance(c.exp >= 25 ? 0.65 : 0.5)) return;
   const ks = eligible27(s, c);
   const k = ks[r.int(0, ks.length - 1)];
-  makeEv27(s, c, k, w);
+  const e = makeEv27(s, c, k, w);
+  if (e && w > c.w0) notify(s, fmtL(l('Campanha de "{t}": {e} Responda no quadro até a semana que vem.', '"{t}" campaign: {e} Answer on the board by next week.'), { t: c.title, e: e.t }), e.tone === 'good' ? 'good' : 'event');
 }
 /** Monta um evento (exportado para testes e para o quadro forçar uma situação de tutorial). */
 export function makeEv27(s: GameState, c: Camp27, k: EvK27, w = s.week): Ev27 | null {
