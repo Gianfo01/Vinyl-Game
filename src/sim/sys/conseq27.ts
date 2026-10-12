@@ -2,7 +2,7 @@
 //  • ESCÂNDALO QUE VIAJA: o scandal17 já esfria a fama no país do escândalo. Aqui, um escândalo de um ato SEU repercute
 //    nas VENDAS mercado a mercado, cada um pela sua régua (scandalReaction: religiosidade do público na época, censura,
 //    imprensa local, fãs núcleo, quão conhecido o ato é ali, gênero rebelde que vira notoriedade). Resultado: vendas
-//    semanais (mod 'chartUnits') caem mais onde dói mais e quase nada onde ninguém liga — e esfriam ~12% ao mês.
+//    semanais (mod 'chartUnits') caem mais onde dói mais e quase nada onde ninguém liga — e esfriam ~15% ao mês.
 //    Fato `scandal_ripple` com a lista ("EUA −24%, Brasil −6%, Europa +3%").
 //  • MORTE VIRA LENDA: quando morre o rosto de um ato conhecido (líder, solo ou estrela), o catálogo do ato vende mais
 //    (pico ×1,15–1,45, caindo para um piso permanente ×1,05–1,12), o valor de catálogo do selo sobe (rights.catalogValue
@@ -55,13 +55,17 @@ function presence(s: GameState, a: Act): MarketId[] {
 
 /** Repercussão prevista por mercado (pura): multiplicador de vendas e o porquê. */
 export function ripplePreview27(s: GameState, a: Act, kind: ScandalKind, sev: number): { mk: MarketId; k: number; why: L }[] {
-  return presence(s, a).map((mk) => {
+  const raw = presence(s, a).map((mk) => {
     const R = scandalReaction(s, a, kind, sev, HUB27[mk]);
-    const k = R.rebel && R.eff < 55 ? 1.03 : 1 - Math.min(0.35, (R.eff / 100) * 0.45);
+    const pen = R.rebel && R.eff < 55 ? -0.03 : Math.min(0.22, (R.eff / 100) * 0.3);
     const top = R.why.slice(0, 2).map((w) => w.pt).join('; ');
     const topEn = R.why.slice(0, 2).map((w) => w.en).join('; ');
-    return { mk, k: Math.round(k * 100) / 100, why: l(`${countryName(R.a3).pt}: ${top}`, `${countryName(R.a3).en}: ${topEn}`) };
+    return { mk, pen, w: marketById[mk]?.size(s.year) ?? 0, why: l(`${countryName(R.a3).pt}: ${top}`, `${countryName(R.a3).en}: ${topEn}`) };
   });
+  // a fama no país do escândalo já caiu (scandal17): aqui pesa sobretudo a DIFERENÇA entre mercados — 70% da média sai
+  const W = raw.reduce((t, x) => t + x.w, 0);
+  const mean = W > 0 ? raw.reduce((t, x) => t + x.w * x.pen, 0) / W : 0;
+  return raw.map((x) => ({ mk: x.mk, k: Math.round(clamp(1 - (x.pen - mean * 0.7), 0.75, 1.1) * 100) / 100, why: x.why }));
 }
 
 onFact('scandal', (s, f) => {
@@ -154,7 +158,7 @@ export function conseq27Month(s: GameState): void {
   for (const [id, rip] of Object.entries(st.rip)) {
     let any = false;
     for (const mk of Object.keys(rip.m) as MarketId[]) {
-      const k = 1 + ((rip.m[mk] ?? 1) - 1) * 0.88;
+      const k = 1 + ((rip.m[mk] ?? 1) - 1) * 0.85;
       if (Math.abs(k - 1) < 0.01) delete rip.m[mk]; else { rip.m[mk] = Math.round(k * 1000) / 1000; any = true; }
     }
     if (!any || !s.acts[id]) delete st.rip[id];
@@ -171,7 +175,7 @@ registerExplain('ripple27', (s, c) => {
   const rip = a && cq27(s).rip[a.id];
   if (!a || !rip) return null;
   const parts: WhyPart[] = (Object.keys(rip.m) as MarketId[]).map((mk) => ({ label: marketById[mk]?.name ?? mk, value: rip.m[mk] ?? 1, fmt: 'mult' as const, tone: (rip.m[mk] ?? 1) >= 1 ? 'good' as const : 'bad' as const, note: rip.why[mk] }));
-  return { title: fmtL(l('Repercussão do escândalo de {a}', 'Fallout of {a}\'s scandal'), { a: a.name }), value: parts.length, parts, note: l('Cada mercado reage pela sua régua (religião, censura, imprensa, fãs, fama local). Esfria ~12% ao mês.', 'Each market reacts by its own yardstick (religion, censorship, press, fans, local fame). Cools ~12% a month.') };
+  return { title: fmtL(l('Repercussão do escândalo de {a}', 'Fallout of {a}\'s scandal'), { a: a.name }), value: parts.length, parts, note: l('Cada mercado reage pela sua régua (religião, censura, imprensa, fãs, fama local). Esfria ~15% ao mês.', 'Each market reacts by its own yardstick (religion, censorship, press, fans, local fame). Cools ~15% a month.') };
 });
 registerExplain('legend27', (s, c) => {
   const a = s.acts[String(c.act ?? c.id ?? '')];

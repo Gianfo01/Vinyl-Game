@@ -63,10 +63,10 @@ export function cityEcon27(s: GameState, city: string): CityEcon27 {
   const mk = (c?.market ?? 'na') as MarketId;
   const { a3, buy } = buyOf(s, city);
   const hb = buyOf(s, home(s)).buy;
-  const price = clamp(Math.pow(Math.max(0.02, buy) / Math.max(0.02, hb), 0.2), 0.82, 1.22);
+  const price = clamp(Math.pow(Math.max(0.02, buy) / Math.max(0.02, hb), 0.2), 0.85, 1.2);
   const md = mediaOf(s, mk);
   const hm = mediaOf(s, (cityById[home(s)]?.market ?? 'na') as MarketId).v;
-  const mediaK = clamp(1 + (md.v - hm) / 1200, 0.95, 1.06);
+  const mediaK = clamp(1 + (md.v - hm) / 1500, 0.97, 1.04);
   const ci = a3 ? countryInfoByA3[a3] : undefined;
   const cz = censorshipIn(s.year, mk);
   const reg = regimeAt18(s, a3);

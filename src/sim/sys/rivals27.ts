@@ -128,7 +128,7 @@ function react(s: GameState, r: Rng): void {
         emitEvent(s, r, 'poach_attempt', { act: target.id, label: lb.id });
         say(s, lb, x, 'poach', fmtL(l('{b} vai atrás de {a} para se vingar ({w})', '{b} goes after {a} for revenge ({w})'), { b: lb.name, a: target.name, w: why }), 45, target.id);
       } else {
-        bumpAgg(s, lb, x, 0.15);
+        bumpAgg(s, lb, x, 0.1);
         say(s, lb, x, 'threat', fmtL(l('O chefe de {b} jura vingança contra {c} na imprensa: "{w}" Vai cobrir todo lance seu por um ano.', '{b}\'s boss vows revenge on {c} in the press: "{w}" Will outbid you for a year.'), { b: lb.name, c: s.config.companyName, w: why }), 40);
       }
       x.g -= 15;
@@ -136,7 +136,7 @@ function react(s: GameState, r: Rng): void {
       say(s, lb, x, 'statement', fmtL(l('{b} solta nota: "Não precisamos de ninguém que {c} queira." ({w})', '{b} issues a statement: "We need nobody {c} wants." ({w})'), { b: lb.name, c: s.config.companyName, w: why }), 30);
       x.g -= 12;
     } else {
-      bumpAgg(s, lb, x, 0.12);
+      bumpAgg(s, lb, x, 0.08);
       say(s, lb, x, 'quiet', fmtL(l('{b} reforça o caixa de contratações: negócios são negócios ({w})', '{b} tops up its signing budget: business is business ({w})'), { b: lb.name, w: why }), 20, undefined, 'rumor');
       x.g -= 10;
     }

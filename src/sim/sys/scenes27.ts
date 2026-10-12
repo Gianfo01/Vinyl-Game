@@ -346,7 +346,7 @@ export function rideMult27(s: GameState, ride: Ride27, sc: Scene27, local: boole
   if (early) return sc.ph === 'fading' ? 1.02 : sc.ph === 'saturated' ? 1.05 : 1.12;
   if (ride.ph === 'peak') return sc.ph === 'peak' ? 1.05 : sc.ph === 'fading' ? 0.98 : 1;
   if (!local) return 1;
-  const k = sc.ph === 'fading' ? 0.9 : sc.ph === 'saturated' ? 0.93 : 1;
+  const k = sc.ph === 'fading' ? 0.94 : sc.ph === 'saturated' ? 0.96 : 1;
   return s.config.difficulty === 'easy' ? 1 - (1 - k) / 2 : k;
 }
 export function rideOf27(s: GameState, actId: string): { sc: Scene27; ride: Ride27; k: number }[] {
@@ -446,5 +446,5 @@ registerExplain('scene27', (s, c) => {
     { label: l('Entrar agora', 'Joining now'), value: entryPreview27(s, sc), fmt: 'mult', tone: entryPreview27(s, sc) >= 1 ? 'good' : 'bad' },
   ];
   for (const w of [...(sc.why ?? [])].sort((a, b) => b.v - a.v).slice(0, 3)) parts.push({ label: w.t, value: Math.round(w.v), tone: 'bad' });
-  return { title: sc.name, value: PH27[sc.ph].pt, parts, note: l('Nasce → cresce → auge → satura → declina → morre. Cedo: até ×1,12 enquanto viver; tarde numa cena saturada da sua cidade: até ×0,90.', 'Born → grows → peaks → saturates → fades → dies. Early: up to ×1.12 while it lives; late in a saturated scene in your city: down to ×0.90.') };
+  return { title: sc.name, value: PH27[sc.ph].pt, parts, note: l('Nasce → cresce → auge → satura → declina → morre. Cedo: até ×1,12 enquanto viver; tarde numa cena saturada da sua cidade: até ×0,94.', 'Born → grows → peaks → saturates → fades → dies. Early: up to ×1.12 while it lives; late in a saturated scene in your city: down to ×0.94.') };
 });
