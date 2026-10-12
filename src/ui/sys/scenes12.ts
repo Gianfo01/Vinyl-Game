@@ -9,7 +9,7 @@ import {
 } from '../../sim/sys/scenes12';
 import { HIST_SCENES, STAGE_NAME, sceneStage } from '../../sim/sys/world4/scenes';
 import type { GameState } from '../../sim/types';
-import { $, labelLink, pill, rerender, section, toast } from '../common';
+import { $, labelLink, pill, rerender, toast } from '../common';
 import { h } from '../dom';
 import { registerTab } from '../registry';
 import { meter } from '../vis';
@@ -61,10 +61,12 @@ function netCard(s: GameState, n: Net): HTMLElement {
 function scenesTab(s: GameState): HTMLElement {
   for (const c of netCities(s)) netOf(s, c);
   const nets = Object.values(scene12(s).nets).filter((n) => cityById[n.city]).sort((a, b) => Number(hasBranch(s, b.city)) - Number(hasBranch(s, a.city)) || b.health - a.health);
-  return h('div', { class: 'panel scene12-panel' },
-    section(t(l('Cenas locais', 'Local scenes')),
+  // r27 INT: um nível de caixa só — o título e a explicação ficam soltos e cada cena é o cartão
+  return h('div', { class: 'scene12-panel' },
+    h('div', null,
+      h('h3', null, t(l('Cenas locais', 'Local scenes'))),
       h('p', { class: 'muted small' }, t(l('Cada cena é uma rede: uma casa onde artistas surgem, um produtor influente, um veículo de mídia e um público com gosto próprio. Investir cedo faz a cena crescer; explorar demais faz ela rejeitar o selo e fortalece um selo local concorrente. Uma filial escolhe UM parceiro: ele cresce sozinho e vale 50% a mais — os outros esfriam mais rápido.', 'Each scene is a network: a venue where artists emerge, an influential producer, a media outlet and an audience with its own taste. Investing early grows the scene; over-exploiting makes it reject the label and strengthens a local rival label. A branch picks ONE partner: it grows on its own and counts 50% more — the others cool faster.'))),
-      nets.map((n) => netCard(s, n))),
+      h('div', { class: 'scene12-list', style: 'display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr));align-items:start' }, nets.map((n) => netCard(s, n)))),
   );
 }
 

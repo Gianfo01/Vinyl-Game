@@ -29,6 +29,12 @@
 
 ## Ganchos de uma linha para depois do merge
 
+> **Ligados na integração (r27 INT):** gramofone/toca-discos do lounge com área clicável invisível (`Plan27.gramo`,
+> `hq25.ts`); objetos da garagem desenhados por `drawHqCutaway27(..., { props })` na vaga `slotXY27` (dentro da porta
+> na garagem; na rua, junto ao meio-fio, nas outras cascas); tremor e sprites do mapa no laço de `mapCanvas`
+> (`src/ui/sys/campus18.ts`), com clique em fase de captura (o músico fica perto da porta da sede); título do quinto
+> integrante no cabeçalho da ficha (`PAGE16_HEAD`, chaves `e:` e `pd:`).
+
 Os arquivos abaixo são de outras frentes e **não** foram editados. Expõem registros puros:
 
 1. **Sede em pixel (`src/ui/ps/hqpx27.ts`, D1)**:

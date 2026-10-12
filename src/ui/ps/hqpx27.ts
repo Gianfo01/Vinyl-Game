@@ -45,6 +45,8 @@ export interface Plan27 {
   vip: boolean | Lock27 | null;
   /** coroa da torre acima do corte (x0, x1) — o horizonte põe os marcos fora dela */
   crown: [number, number] | null;
+  /** r27 INT: caixa do toca-discos/gramofone do lounge [x, y, w, h] (preenchida ao pintar; clique do ovo) */
+  gramo?: [number, number, number, number];
 }
 export interface Spot27 { id: string; room: Room25; x: number; y: number; pose: Pose; dir: 'SE' | 'SW'; sprite: Sprite25 }
 export interface More27 { room: Room25; x: number; y: number; n: number }
@@ -556,6 +558,7 @@ function tv(g: Ctx, x: number, fy: number): void {
 }
 function recordPlayer(g: Ctx, x: number, fy: number): void {
   const { p, pl, pal } = g;
+  pl.gramo = pl.gear === 'shellac' ? [x, fy - 27, 16, 27] : pl.gear === 'reel' ? [x, fy - 26, 14, 26] : [x, fy - 16, 18, 16];
   if (pl.gear === 'shellac') { // gramofone sobre mesinha
     p.rect(x + 1, fy - 9, 10, 2, pal.wood); p.rect(x + 2, fy - 7, 1, 7, pal.woodDark); p.rect(x + 9, fy - 7, 1, 7, pal.woodDark);
     blk(p, x + 1, fy - 13, 10, 4, pal.woodDark);
@@ -1121,7 +1124,17 @@ function vip27(g: Ctx, c: Cell27, st: boolean | Lock27): void {
 }
 
 export interface Drawn27 { plan: Plan27; spots: Spot27[]; more: More27[] }
-export interface DrawOpts27 { /** largura mínima em pixels lógicos (preenche o contêiner) */ minW?: number; /** aparência real (padrão: pelo id) */ look?: (x: Sprite25) => ReturnType<typeof lookOf>; role?: (x: Sprite25) => string | null | undefined }
+/** Objeto extra desenhado por cima (ovos da sede, `hqPropEggs27`): `slot` 'garage' = vaga da garagem. */
+export interface PropIn27 { slot: string; w: number; h: number; draw: (c: CanvasRenderingContext2D, x: number, y: number, t: number) => void }
+/** Canto de cada vaga: 'garage' = dentro da porta de enrolar (casca garagem) ou estacionado na rua, junto ao meio-fio, à esquerda da fachada. */
+export function slotXY27(pl: Plan27, slot: string, w: number, hh: number): [number, number] | null {
+  if (slot !== 'garage') return null;
+  const lob = pl.shell === 'garage' ? pl.cells.find((c) => c.kind === 'lobby') : undefined;
+  if (lob) return [lob.x + Math.max(6, (lob.w - w) >> 1), lob.y + lob.h - 3 - hh];
+  // outras cascas: estacionado na rua, junto ao meio-fio, no lado esquerdo da fachada
+  return [Math.max(2, pl.bx + 14), pl.gy + STREET - 1 - hh];
+}
+export interface DrawOpts27 { /** objetos extras (ovos) */ props?: PropIn27[]; /** largura mínima em pixels lógicos (preenche o contêiner) */ minW?: number; /** aparência real (padrão: pelo id) */ look?: (x: Sprite25) => ReturnType<typeof lookOf>; role?: (x: Sprite25) => string | null | undefined }
 
 /** Desenha a sede em corte no canvas (tamanho lógico; quem chama escala por inteiro com CSS). Exportado para o
  *  "Nosso mundo" (D2) abrir o interior no zoom. */
@@ -1145,6 +1158,7 @@ export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25
       ctx.fillRect(s.x - 6, s.y, 12, 1);
       ctx.drawImage(sp.c, s.x - sp.ax, s.y - sp.ay + 1);
     }
+    for (const pr of o.props ?? []) { const at = slotXY27(plan, pr.slot, pr.w, pr.h); if (at) pr.draw(ctx, at[0], at[1], 0); }
   }
   return { plan, spots, more };
 }

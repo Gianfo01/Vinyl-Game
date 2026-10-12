@@ -5,7 +5,7 @@
 .dc18-odds.bad { color: var(--bad); }
 .dc18-lock { color: var(--bad) !important; }
 .dc18-now, .dc18-later, .dc18-unl { display: block; line-height: 1.3; }
-.dc18-later i { opacity: 0.75; font-style: normal; }
+.dc18-later i { font-style: normal; } /* r27 INT: sem opacidade extra (já é cinza; caía abaixo de AA) */
 .dc18-e.bad { color: color-mix(in srgb, var(--bad) 80%, var(--muted)); }
 .dc18-e.good { color: color-mix(in srgb, var(--good) 80%, var(--muted)); }
 .btn.dc18-locked { opacity: 0.55; cursor: not-allowed; }
@@ -40,3 +40,6 @@
 .btn.ib18-opt { flex-direction: column; align-items: flex-start; text-align: left; max-width: 26rem; }
 .btn.ib18-opt small { color: var(--muted); font-size: 0.72rem; }
 .ib18-it { transition: background 0.2s; }
+/* r27 INT: dentro de botão primário (dourado) as prévias usam a tinta do botão — verde/vermelho/cinza sobre ouro sumiam */
+.btn.primary :is(.dc18-now, .dc18-later, .dc18-unl, .dc18-e, .dc18-lb, small, b) { color: inherit; }
+

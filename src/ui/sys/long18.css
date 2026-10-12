@@ -12,7 +12,12 @@
 .lg18-tier.on { opacity: 1; font-weight: 600; }
 .lg18-doc { border-top: 1px solid var(--line, #ddd); padding: 6px 0; }
 .lg18-doc.on { background: color-mix(in srgb, var(--accent, #c9a227) 12%, transparent); }
-.lg18-dec.off { opacity: 0.7; }
+/* r27 INT: ramos e decisões sem moldura própria (um nível de caixa só); bloqueado não fica translúcido (contraste AA) */
+.lg18-br { border-top: 2px solid var(--line, #ddd); padding-top: 6px; min-width: 0; }
+.lg18-br > h4 { margin: 0 0 4px; font-size: var(--fs-sm, 0.9rem); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); }
+.lg18-dec { border-top: 2px solid var(--line, #ddd); padding: 8px 0; min-width: 0; }
+.lg18-dec.off { border-top-style: dashed; }
+.lg18-dec.off > b { color: var(--muted); }
 .lg18-pol { display: flex; flex-direction: column; margin: 6px 0; }
 .lg18-num { width: 90px; }
 .lg18-pm { margin: 8px 0; }

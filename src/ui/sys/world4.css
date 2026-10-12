@@ -9,11 +9,11 @@
 .w4-ms p { margin: 0.2rem 0; }
 .w4-year { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); font-size: 0.9rem; }
 .w4-ms-body { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
-.w4-scene.future, .w4-scene.over { opacity: 0.7; }
+.w4-scene.future, .w4-scene.over { border-style: dashed; filter: saturate(0.55); } /* r27 INT: sem opacidade (texto cinza caía abaixo de AA) */
 .w4-scene.rise { border-left: 4px solid var(--good); }
 .w4-scene.peak { border-left: 4px solid var(--gold); }
 .w4-scene p { margin: 0.2rem 0; }
-.w4-arc { position: relative; height: 0.5rem; background: linear-gradient(90deg, var(--good), var(--gold) 50%, var(--bad)); border-radius: 99px; margin: 0.4rem 0 1rem; opacity: 0.85; }
+.w4-arc { position: relative; height: 0.5rem; background: linear-gradient(90deg, var(--good), var(--gold) 50%, var(--bad)); border-radius: 99px; margin: 0.4rem 0 1rem; }
 .w4-arc-peak { position: absolute; top: -0.2rem; width: 2px; height: 0.9rem; background: var(--ink); }
 .w4-arc-now { position: absolute; top: -0.3rem; width: 0.7rem; height: 1.1rem; margin-left: -0.35rem; border-radius: 3px; background: var(--panel); border: 2px solid var(--ink); }
 .w4-arc-a, .w4-arc-b { position: absolute; top: 0.55rem; font-size: 0.7rem; color: var(--muted); }

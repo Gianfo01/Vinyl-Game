@@ -17,12 +17,12 @@ import { acceptOffer, defaultOffer, evaluateOffer, makeOffer } from '../src/sim/
 import { scoutEligible20 } from '../src/sim/scout20';
 import { defaultRights } from '../src/sim/rights';
 
-let FIX: GameState; // 7º mês da semente r16pb-5 com duas turnês marcadas
+let FIX: GameState; // 7º mês da semente r16pb-4 com turnês marcadas (r27 INT: r16pb-5 parou de excursionar depois dos merges do mundo)
 let AFTER: GameState; // 8º mês (modo rápido)
 const clone = (s: GameState): GameState => structuredClone(s);
 
 beforeAll(() => {
-  const s = createGame(defaultConfig('r16pb-5', { startYear: 1975, realNames: true }));
+  const s = createGame(defaultConfig('r16pb-4', { startYear: 1975, realNames: true }));
   for (let m = 0; m < 8 && !s.ended; m++) {
     playMonth(s, 'balanced');
     if (m === 7) FIX = clone(s);
@@ -35,13 +35,16 @@ const nan = (o: unknown): boolean => JSON.stringify(o, (_k, v) => (typeof v === 
 
 describe('r27 M2 — modo rápido intacto', () => {
   it('tourDay refatorado (playStop) dá exatamente o mesmo mundo de antes', () => {
-    // valores medidos ANTES da extração de playStop (mesma semente, 8 meses de playbot)
+    // valores do mundo de 8 meses de playbot. r27 INT: rebaselinado depois dos merges do mundo (E2, F, M1, M3):
+    // o tourDay de ANTES da extração (tours.ts do commit pai de 57230cb, trocado por vi.mock) e o de agora dão
+    // turnês, atos, caixa e rng idênticos em r16pb-4/-2/-7 (24 shows tocados, 14 meses) — os números abaixo valem
+    // para os dois.
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
-    expect(played).toBe(7);
-    expect(AFTER.player.cash).toBe(812016);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3959194536);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2687729053);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3125636362);
+    expect(played).toBe(11);
+    expect(AFTER.player.cash).toBe(1149170);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(903003259);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2032855);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2608215173);
   });
 });
 

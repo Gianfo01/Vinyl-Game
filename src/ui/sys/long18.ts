@@ -69,7 +69,7 @@ function lawsTab(s: GameState): HTMLElement {
   return h('div', null,
     section(t(l('Doutrinas (uma lei por semestre)', 'Doctrines (one law per semester)')),
       h('p', { class: 'muted small' }, t(l('Cada ramo tem duas leis opostas: dão e tiram, travam ações e destravam decisões. Revogar só depois de um ano, com custo de credibilidade.', 'Each branch has two opposed laws: they give and take, lock actions and unlock decisions. Revoking only after a year, at a credibility cost.'))),
-      h('div', { class: 'lg18-grid' }, Object.keys(br).map((b) => h('div', { class: 'card' }, h('h4', null, t(br[b])),
+      h('div', { class: 'lg18-grid' }, Object.keys(br).map((b) => h('div', { class: 'lg18-br' }, h('h4', null, t(br[b])),
         DOCTRINES18.filter((d) => d.branch === b).map((d) => {
           const on = hasDoc18(s, d.id), blk = on ? null : docBlock18(s, d);
           return h('div', { class: `lg18-doc ${on ? 'on' : ''}` }, h('b', null, t(d.name)), h('p', { class: 'small' }, t(d.desc)),
@@ -78,8 +78,8 @@ function lawsTab(s: GameState): HTMLElement {
               : h('button', { class: 'btn small', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => msg(adoptDoc18(s, d.id), l('Doutrina em vigor.', 'Doctrine in force.')) }, t(l('Adotar', 'Adopt')), ` (${usd(s, Math.round(d.cost * 100))})`), blk && !on ? h('small', { class: 'muted' }, ' ', t(blk)) : null);
         }))))),
     section(t(l('Decisões do selo', 'Label decisions')),
-      h('div', { class: 'lg18-grid' }, LABEL_DECS18.map((d) => { const b = labelDecBlock18(s, d); return h('div', { class: `card lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), h('p', { class: 'small' }, t(d.desc)), h('p', { class: 'small muted' }, t(l('Custo: ', 'Cost: ')), usd(s, d.cost(s))), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small primary', onclick: () => { toast(t(takeLabelDec18(s, d.id)), 'good'); rerender(); } }, t(l('Decidir', 'Decide')))); }),
-        bigDecisions18().map((d) => { const b = decisionBlocker(s, d); return h('div', { class: `card lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), bigTaken18(s, d.id) ? h('small', { class: 'good' }, ' ✓') : null, h('p', { class: 'small' }, t(d.desc)), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small', onclick: () => msg(takeDecision(s, rngOf(s), d.id), l('Feito.', 'Done.')) }, t(l('Decidir', 'Decide'))) ); }))));
+      h('div', { class: 'lg18-grid' }, LABEL_DECS18.map((d) => { const b = labelDecBlock18(s, d); return h('div', { class: `lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), h('p', { class: 'small' }, t(d.desc)), h('p', { class: 'small muted' }, t(l('Custo: ', 'Cost: ')), usd(s, d.cost(s))), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small primary', onclick: () => { toast(t(takeLabelDec18(s, d.id)), 'good'); rerender(); } }, t(l('Decidir', 'Decide')))); }),
+        bigDecisions18().map((d) => { const b = decisionBlocker(s, d); return h('div', { class: `lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), bigTaken18(s, d.id) ? h('small', { class: 'good' }, ' ✓') : null, h('p', { class: 'small' }, t(d.desc)), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small', onclick: () => msg(takeDecision(s, rngOf(s), d.id), l('Feito.', 'Done.')) }, t(l('Decidir', 'Decide'))) ); }))));
 }
 
 function num(v: number, set: (x: number) => void, step = 1, min = 0, max = 1e9): HTMLElement {

@@ -31,8 +31,8 @@
 .t23-u.est { background: #d9a52a2a; }
 .t23-u.ok { background: #3aa65a2a; }
 td.t23-u { display: table-cell; }
-.t23-rival { color: #b86a00; }
-.t23-rival.hard { color: #c0392b; font-weight: 600; }
+.t23-rival { color: var(--warn, #b86a00); } /* r27 INT: cor do tema (AA no escuro e no claro) */
+.t23-rival.hard { color: var(--bad, #c0392b); font-weight: 600; }
 .warn-t { color: #b86a00; }
 .bad-t { color: #c0392b; }
 .t23-cact { gap: 4px; align-items: center; }

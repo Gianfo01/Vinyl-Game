@@ -24,7 +24,7 @@ import { bandOf27, halo, kit27, text } from './art27kit';
 import { artModel27, type ArtModel27, type Fig27, type SceneKind27 } from './art27';
 
 export type CutKey27 = 'press1' | 'chart1' | 'no1' | 'star' | 'show1' | 'sold' | 'flop' | 'tour' | 'award' | 'scandal' | 'raid'
-  | 'leave' | 'death' | 'broke' | 'era' | 'fest' | 'magic';
+  | 'leave' | 'death' | 'broke' | 'era' | 'fest' | 'magic' | 'betray';
 export type CutPref27 = 'all' | 'major' | 'off';
 export type CutFx27 = 'confetti' | 'flash' | 'fireworks' | 'rain' | 'police' | 'spot' | 'gold' | 'candles' | 'stamp';
 
@@ -201,6 +201,11 @@ export const CUT27: Record<CutKey27, CutDef27> = {
       Ch('keep', l('É esse!', 'That\'s the one!'), l('+3 momento, +3 moral', '+3 momentum, +3 morale'), (s, d) => { const a = actOf(s, d); if (a) a.momentum = cl(a.momentum + 3); members(s, d, (p) => { p.morale = cl(p.morale + 3); }); return l('O produtor sorri. Ninguém toca em nada.', 'The producer smiles. Nobody touches a thing.'); }),
       Ch('again', l('Mais um take', 'One more take'), l('arriscado: +6 momento ou +6 cansaço', 'risky: +6 momentum or +6 fatigue'), (s, d) => { const a = actOf(s, d); if (coin27(d.ref, 0.55)) { if (a) a.momentum = cl(a.momentum + 6); return l('O segundo é ainda melhor. Arrepio na sala.', 'The second is even better. Goosebumps in the room.'); } members(s, d, (p) => { p.fatigue = cl(p.fatigue + 6); }); return l('A mágica não volta. Vocês ficam com o primeiro.', 'The magic doesn\'t come back. You keep the first one.'); }),
     ] },
+  // r27 INT: traição no Submundo (chamada pela operação jogável via playCutscene27('betrayal'))
+  betray: { key: 'betray', tier: 'major', scene: 'crime', prio: 86, ms: 8000, fx: ['flash'],
+    title: l('Traição', 'Betrayal'),
+    beats: [l('Alguém da equipe falou demais.', 'Someone on the crew talked.'), l('{t}', '{t}'), l('No Submundo, a memória é longa.', 'In the underworld, memories are long.')],
+    choices: [] },
 };
 export const CUT_KEYS27 = Object.keys(CUT27) as CutKey27[];
 
@@ -242,6 +247,7 @@ export function cutOfFact27(s: GameState, f: Pick<Fact, 'kind' | 'actors' | 'tag
 }
 
 /** Chave "uma vez": por partida, por ato, por ato-ano ou por evento. */
+export function onceKey27(key: CutKey27, d: CutData27): string { return onceKey(key, d); }
 function onceKey(key: CutKey27, d: CutData27): string {
   switch (key) {
     case 'press1': case 'chart1': case 'show1': return key;
@@ -249,7 +255,7 @@ function onceKey(key: CutKey27, d: CutData27): string {
     case 'sold': case 'fest': case 'magic': case 'award': return `${key}:${d.actId ?? ''}:${d.year}`;
     case 'flop': return `${key}:${Math.floor(d.week / 26)}`;
     case 'scandal': return `${key}:${Math.floor(d.week / 8)}`;
-    case 'raid': return `${key}:${Math.floor(d.week / 12)}`;
+    case 'raid': case 'betray': return `${key}:${Math.floor(d.week / 12)}`;
     case 'tour': case 'death': case 'era': case 'broke': return `${key}:${d.ref}`;
   }
 }
@@ -338,6 +344,7 @@ export function cutModel27(s: GameState, d: CutData27, size: { w: number; h: num
     case 'tour': figs.push({ fx: 0.62, walkTo: 0.32, pose: 'walk', dir: 'SW', pid: mem[0], seed: 'c-t1' }, { fx: 0.7, walkTo: 0.4, pose: 'walk', dir: 'SW', pid: mem[1], seed: 'c-t2' }); break;
     case 'award': figs.push({ fx: 0.5, dy: -10, pose: 'stand', dir: 'SE', pid: d.pid ?? mem[0], seed: 'c-aw' }); m.n.trophies = Math.max(1, m.n.trophies ?? 0); break;
     case 'scandal': figs.push({ fx: 0.5, pose: 'stand', dir: 'SE', pid: d.pid ?? mem[0], seed: 'c-sc' }); break;
+    case 'betray': figs.push({ fx: 0.4, pose: 'stand', dir: 'SE', seed: 'c-b1' }, { fx: 0.62, walkTo: 0.92, pose: 'walk', dir: 'SE', seed: 'c-b2' }); break;
     case 'raid': figs.push({ fx: 0.66, dy: -1, pose: 'stand', dir: 'SW', seed: 'c-r1' }, { fx: 0.78, dy: -1, pose: 'stand', dir: 'SW', seed: 'c-r2' }, { fx: 0.2, walkTo: 0.4, pose: 'walk', dir: 'SE', seed: 'c-cop', role: null }); break;
     case 'leave': figs.push({ fx: 0.5, walkTo: 0.9, pose: 'walk', dir: 'SE', pid: d.pid, seed: 'c-lv' }); mem.slice(0, 2).forEach((pid, i) => figs.push({ fx: 0.25 + i * 0.1, pose: 'stand', dir: 'SE', pid, seed: `c-lv${i}` })); m.n.acts = 1; break;
     case 'death': break; // o retrato vai na moldura (camada do DOM)

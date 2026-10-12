@@ -30,7 +30,11 @@ import { store } from '../store';
 import { go18 } from './inbox18';
 import { endTour18 } from '../tutorial18';
 import { chips, ic, stat } from '../vis';
+import { cityEggs27, cityShake27, type CityEgg27 } from './eggs27';
 import './campus18.css';
+
+/** r27 INT: sprite de ovo desenhado no quadro e sua caixa (coordenadas do mapa). */
+interface Egg27Box { box: [number, number, number, number]; e: CityEgg27 }
 
 const reduced = () => document.documentElement.classList.contains('reduced-motion') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const latOf = (s: GameState) => cityById[s.config.homeCity]?.lat ?? 40;
@@ -74,7 +78,27 @@ function mapCanvas(v: View): HTMLCanvasElement {
   if (!ctx) return cv;
   const nightFor = (tm: number) => (ui.mode === 'day' ? 0 : ui.mode === 'night' ? 1 : reduced() ? 0 : nightOf(tm));
   let tm0 = 0;
-  const draw = (tm: number) => { tm0 = tm; drawFrame18(ctx, v.scene, tm, nightFor(tm)); };
+  // r27 INT: ovos do mapa — chão tremendo (cityShake27) e sprites (músico das 3h) com caixa clicável
+  const eggs = ((cv as HTMLCanvasElement & { eggs27?: Egg27Box[] }).eggs27 = [] as Egg27Box[]);
+  const city = v.s.config.homeCity;
+  const hqSp = v.live ? v.scene.sprites.find((x) => v.bs.some((b) => b.id === x.id && b.kind === 'hq')) : undefined;
+  const draw = (tm: number) => {
+    tm0 = tm;
+    const night = nightFor(tm);
+    const [dx, dy] = v.live ? cityShake27(v.s, city, tm) : [0, 0];
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (dx || dy) { ctx.clearRect(0, 0, MW, MH); ctx.translate(dx, dy); }
+    drawFrame18(ctx, v.scene, tm, night);
+    eggs.length = 0;
+    if (v.live && hqSp) for (const f of cityEggs27) {
+      const e = f(v.s, { t: tm, night, city });
+      if (!e) continue;
+      const x = Math.round(hqSp.door[0] + 12), y = Math.round(hqSp.door[1] - e.h + 3);
+      e.draw(ctx, x, y, tm);
+      eggs.push({ box: [x + dx, y + dy, e.w, e.h], e });
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  };
   draw(reduced() ? 3 : 0);
   (cv as HTMLCanvasElement & { redraw27?: () => void }).redraw27 = () => draw(tm0); // seleção mudou: redesenha uma vez
   if (reduced() || typeof requestAnimationFrame !== 'function') return cv;
@@ -402,6 +426,15 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (!pts.size) setTimeout(() => { moved = false; }, 0); };
   vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
   vp.addEventListener('wheel', (e) => { if (!e.ctrlKey && ui.z === 1 && e.deltaY > 0) return; e.preventDefault(); const r = vp.getBoundingClientRect(); setZ(ui.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+  // r27 INT: clique num ovo do mapa (o músico das 3h) — caixas guardadas pelo desenho do quadro
+  const eggAt = (e: MouseEvent): Egg27Box | undefined => {
+    const r = layer.getBoundingClientRect(); if (!r.width) return undefined;
+    const mx = ((e.clientX - r.left) / r.width) * MW, my = ((e.clientY - r.top) / r.height) * MH;
+    return ((cv as HTMLCanvasElement & { eggs27?: Egg27Box[] }).eggs27 ?? []).find((q) => mx >= q.box[0] - 2 && mx <= q.box[0] + q.box[2] + 2 && my >= q.box[1] - 2 && my <= q.box[1] + q.box[3] + 2);
+  };
+  // fase de captura: o sprite fica perto da porta da sede, e o clique nele não deve entrar na sede
+  layer.addEventListener('click', (e) => { if (moved) return; const q = eggAt(e); if (!q?.e.onClick) return; e.stopPropagation(); e.preventDefault(); const r = q.e.onClick(s); if (r) { toast(t(r), 'good'); rerender(); } }, true);
+  layer.addEventListener('mousemove', (e) => { const q = eggAt(e); layer.style.cursor = q ? 'pointer' : ''; if (q) layer.title = t(q.e.title); else if (layer.title) layer.title = ''; });
   zoom.append(cv, layer);
   vp.append(zoom);
   requestAnimationFrame?.(() => { clampPan(); apply(); });

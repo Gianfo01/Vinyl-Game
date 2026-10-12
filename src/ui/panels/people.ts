@@ -122,7 +122,8 @@ export function reunionSection(s: GameState): HTMLElement | null {
   const r = rngOf(s);
   const cands = Object.values(s.acts).filter((a) => (a.status === 'split' || a.status === 'retired' || a.status === 'hiatus') && (a.number1s > 0 || a.hits > 1 || a.legend) && a.members.some((id) => s.persons[id]?.alive)).slice(0, 8);
   if (!cands.length) return null;
-  return section(t(l('Reuniões possíveis', 'Possible reunions')), h('div', { class: 'cards' }, cands.map((a) => {
+  // r27 INT: só os cartões (quem chama põe o título — o resumo do <details> no Elenco); sem caixa dentro de caixa
+  return h('div', { class: 'cards', role: 'group', 'aria-label': t(l('Reuniões possíveis', 'Possible reunions')) }, cands.map((a) => {
     const tm = reunionTerms(s, a.id);
     return tile('handshake', a.name, [
       h('div', { class: 'row' }, a.members.map((id) => portrait(s.persons[id], 24))),
@@ -131,5 +132,5 @@ export function reunionSection(s: GameState): HTMLElement | null {
       tm.ok ? h('button', { class: 'btn small', onclick: () => { toast(t(negotiateReunion(s, r, a.id)), 'info'); rerender(); } }, t(l('Negociar reunião', 'Negotiate reunion'))) : null,
       h('button', { class: 'link small', onclick: () => inspect.act(a.id) }, t(l('Ver ficha', 'View sheet'))),
     ]);
-  })));
+  }));
 }

@@ -149,7 +149,7 @@ button.hq27-hit { cursor: pointer; }
 .hqr27-work { border-color: rgba(240, 192, 32, .7); }
 .hqr27-buy-in { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; max-width: calc(100% - 8px); padding: 4px 9px; border-radius: 4px; background: rgba(14, 18, 34, .9); border: 1px solid rgba(227, 193, 88, .6); box-shadow: 0 2px 0 rgba(0, 0, 0, .45); font-size: clamp(.6rem, 1cqi, .78rem); line-height: 1.25; text-align: center; }
 .hqr27-buy-in b { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.hqr27-buy-in > span { color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hqr27-buy-in > span { color: #e3c158; /* r27 INT: chip sempre escuro — ouro claro fixo (o --gold do tema claro é escuro demais aqui) */ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .hqr27-buy.floor .hqr27-buy-in { font-size: clamp(.66rem, 1.15cqi, .86rem); padding: 6px 14px; }
 .hqr27-work .hqr27-buy-in { border-color: rgba(240, 192, 32, .8); }
 .hqr27-work .hqr27-buy-in > span { color: #f0c020; }
@@ -181,3 +181,5 @@ button.hq27-hit { cursor: pointer; }
   .hqr27-list { grid-template-columns: minmax(0, 1fr); }
   .hqr27-buy-in { padding: 2px 5px; font-size: .58rem; }
 }
+/* r27 INT: área invisível do gramofone (ovo de Páscoa) — sem contorno nem cursor de botão */
+.hq27-gramo { position: absolute; display: block; z-index: 2; background: none; }

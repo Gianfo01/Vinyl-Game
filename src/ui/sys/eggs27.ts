@@ -11,9 +11,11 @@ import { EGGS27, FEATS27, eggMeta27 } from '../../data/eggs27';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { recentFacts } from '../../sim/facts17';
-import { eg27, eggFeat27, found27, garage27, markEgg27, setSkin27, shake27, skin27, streetBusker27 } from '../../sim/sys/eggs27';
+import { eg27, eggFeat27, fifthTitle27, found27, garage27, markEgg27, setSkin27, shake27, skin27, streetBusker27 } from '../../sim/sys/eggs27';
 import type { GameState } from '../../sim/types';
-import { modal, rerender, toast } from '../common';
+import { modal, pill, rerender, toast } from '../common';
+import { PAGE16_HEAD } from './people16';
+import { PRODUCERS } from '../../sim/studio';
 import { h } from '../dom';
 import { store } from '../store';
 import './eggs27.css';
@@ -276,3 +278,13 @@ if (typeof document !== 'undefined') document.addEventListener('keydown', (e) =>
 
 /** Título do ovo (para quem quiser mostrar na galeria de outra tela). */
 export const eggTitle27 = (id: string): string => (eggMeta27[id] ? T(eggMeta27[id].title) : id);
+
+// ================================================================ ficha (r27 INT)
+
+/** "O quinto integrante de X (ano)" na ficha do empresário ('e:<id>') ou do produtor ('pd:<real>' → produtores do estúdio com esse real). */
+export function fifthFor27(s: GameState, key: string): L | null {
+  if (key.startsWith('e:')) return fifthTitle27(s, key);
+  if (key.startsWith('pd:')) { const real = key.slice(3); for (const p of PRODUCERS) if (p.id === real || p.real === real) { const x = fifthTitle27(s, p.id); if (x) return x; } }
+  return null;
+}
+PAGE16_HEAD.push((s, key) => { const x = fifthFor27(s, key); return x ? h('div', { class: 'row wrap' }, pill(t(x), 'gold')) : null; });
