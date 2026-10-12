@@ -638,8 +638,9 @@ registerSecretSource23({
     const p = s.persons[pid];
     if (p && (subjAct23(s, subj)?.fame ?? 0) >= 10) {
       const v = viewsOf(s, pid);
-      if (isDevout(v, 75)) out.push({ id: `fa:${pid}|${subj}`, kind: 'faith', subject: subj, since: 0, sev: 10, ev: 100, src: 'assumed', doc: true, data: { v: relById[v.rel]?.name.pt ?? v.rel } });
-      if (isPolitical(v, 75)) out.push({ id: `po:${pid}|${subj}`, kind: 'politics', subject: subj, since: 0, sev: 10, ev: 100, src: 'assumed', doc: true, data: { v: polById[v.pol]?.name.pt ?? v.pol } });
+      const real = isReal(s, pid); // crença derivada (não documentada): gente real fica fora no modo exato
+      if (isDevout(v, 75)) out.push({ id: `fa:${pid}|${subj}`, kind: 'faith', subject: subj, since: 0, sev: 10, ev: 100, src: 'assumed', real, data: { v: relById[v.rel]?.name.pt ?? v.rel } });
+      if (isPolitical(v, 75)) out.push({ id: `po:${pid}|${subj}`, kind: 'politics', subject: subj, since: 0, sev: 10, ev: 100, src: 'assumed', real, data: { v: polById[v.pol]?.name.pt ?? v.pol } });
     }
     return out;
   },
