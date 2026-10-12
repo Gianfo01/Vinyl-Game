@@ -41,7 +41,8 @@ describe('r19 WP-A / WP-B: dados de artistas', () => {
     const g35 = createGame(defaultConfig('r19ab', { startYear: 1935, realNames: true, dbSize: 'huge' }));
     const names35 = new Set(Object.values(g35.acts).map((x) => x.name));
     for (const n of ['Mamie Smith', 'King Oliver', 'Art Tatum']) expect(names35.has(n), n).toBe(true);
-    const g80 = createGame(defaultConfig('r19ab', { startYear: 1980, realNames: true, dbSize: 'huge' }));
+    // r21: modo histórico — o modo livre pula 8% dos reais por sorteio, e o teste é sobre a data de entrada, não sobre sorte
+    const g80 = createGame(defaultConfig('r19ab', { startYear: 1980, realNames: true, dbSize: 'huge', mode: 'historic' }));
     const names80 = new Set(Object.values(g80.acts).map((x) => x.name));
     for (const n of ['The Skatalites', 'Burning Spear', 'Prince Buster', 'Manu Dibango', 'Nass El Ghiwane']) expect(names80.has(n), n).toBe(true);
     for (const n of ['Chronixx', 'Koffee', 'Uncle Waffles', 'Black Sherif']) expect(names80.has(n), `${n} é do futuro`).toBe(false);

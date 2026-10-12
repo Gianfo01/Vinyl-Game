@@ -114,5 +114,5 @@ describe('arco completo', () => {
     expect(s.ended).toBeTruthy();
     expect(endingScores(s).length).toBe(20);
     expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
-  }, 180000);
+  }, 300000); // r21: já levava ~170 s de 180 s; o acervo (+210 atos modernos na base média) soma ~10%
 });

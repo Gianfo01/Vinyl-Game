@@ -1,5 +1,6 @@
 // Rodada 10: escolha de gravadoras no Novo Jogo, começo "todos iguais", estratégias novas e líderes.
 
+import { DEFAULT_EXTRA21 } from '../src/sim/worldgen';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth, advanceWeek } from '../src/sim/tick';
@@ -32,7 +33,7 @@ describe('gravadoras escolhidas', () => {
   it('sem configuração, o conjunto de sempre; todo selo ativo tem líder', () => {
     const s = createGame(cfg('r10-def'));
     const ids = Object.keys(s.labels);
-    for (const id of ids) expect(CATALOG_LABELS.some((d) => d.id === id) || id.startsWith('old')).toBe(true);
+    for (const id of ids) expect(CATALOG_LABELS.some((d) => d.id === id) || DEFAULT_EXTRA21.includes(id) || id.startsWith('old')).toBe(true); // r21: + núcleo histórico
     for (const lb of Object.values(s.labels).filter((x) => x.active)) {
       const L0 = leaderOf(s, lb.id);
       expect(L0, lb.name).toBeDefined();

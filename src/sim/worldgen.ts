@@ -326,13 +326,14 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     makeLabel(s, r, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
   }
   // r21: o padrão ganha as majors e selos-chave de cada era, nas datas reais (sem duplicar a era acústica)
-  if (!chosenLabels) for (const id of DEFAULT_EXTRA21) {
+  //     (gerador próprio: não desloca o sorteio do resto do mundo nem do personagem)
+  if (!chosenLabels) { const r21 = Rng.fromSeed(`${cfg.seed}|labels21`); for (const id of DEFAULT_EXTRA21) {
     const def = EXTRA_LABELS.find((d) => d.id === id);
     if (!def || s.labels[def.id]) continue;
-    const f0 = cfg.mode === 'chaos' ? def.founded + r.int(-8, 8) : cfg.mode === 'free' ? def.founded + r.int(-2, 2) : def.founded;
+    const f0 = cfg.mode === 'chaos' ? def.founded + r21.int(-8, 8) : cfg.mode === 'free' ? def.founded + r21.int(-2, 2) : def.founded;
     const founded = def.founded <= cfg.startYear ? Math.min(cfg.startYear, f0) : Math.max(cfg.startYear + 1, f0);
-    makeLabel(s, r, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
-  }
+    makeLabel(s, r21, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
+  } }
   const activeCount = Object.values(s.labels).filter((x) => x.active).length;
   for (let i = 0; i < Math.max(0, chosenLabels ? 0 : 5 - activeCount); i++) {
     const city = r.pick(['new_york', 'london', 'paris', 'berlin', 'rio', 'buenos_aires']);

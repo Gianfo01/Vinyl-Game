@@ -144,6 +144,8 @@ function sellerScore(s: GameState, lb: Label, share: number, price: number, mode
 export function stakeChance(s: GameState, labelId: string, share: number, price: number, mode: 'friendly' | 'hostile'): number {
   const lb = s.labels[labelId];
   if (!lb) return 0;
+  // r21: oferta irrisória (menos de 1/4 do preço justo) nunca fecha — o piso de 2% deixava $1 virar sócio por sorte
+  if (price < fairStakePrice(s, labelId, share, mode) * 0.25) return 0;
   return clamp(1 / (1 + Math.exp(-sellerScore(s, lb, share, price, mode) * 3)), 0.02, 0.95);
 }
 

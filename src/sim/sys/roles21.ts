@@ -76,8 +76,9 @@ export function spans21(s: GameState, pid: string): Span21[] {
 }
 export const activeRoles21 = (s: GameState, pid: string): Span21[] => spans21(s, pid).filter((x) => !x.ended && x.from <= s.year && (x.to === undefined || x.to >= s.year));
 
-function addSpan(s: GameState, p: Person, sp: Span21, act?: Act): void {
+function addSpan(s: GameState, p: Person, sp: Span21, act?: Act, quiet = false): void {
   (r21(s).sp[p.id] ??= []).push(sp);
+  if (quiet) return;
   emitFact(s, { kind: 'career', actors: [p.id, ...(act ? [act.id] : [])], place: act?.city, severity: clamp(15 + (act?.fame ?? 20) / 3, 1, 100), visibility: (act?.fame ?? 0) >= 35 || sp.real ? 'public' : 'rumor', tags: ['r21', sp.k], src: 'roles21',
     text: fmtL(l('{p} soma uma nova função: {k}{o}.', '{p} takes on a new role: {k}{o}.'), { p: p.name, k: ROLE21_NAME[sp.k], o: sp.org ? ` (${sp.org})` : '' }) });
 }
@@ -86,7 +87,7 @@ function addSpan(s: GameState, p: Person, sp: Span21, act?: Act): void {
 
 const ROLE_REAL: Record<string, Role21K> = { producer: 'producer', manager: 'manager', label_owner: 'label_owner', label_exec: 'label_exec', festival_founder: 'festival_founder', publisher: 'publisher',
   studio_owner: 'studio_owner', songwriter: 'songwriter', dj_radio: 'dj_radio', media: 'media', venue_owner: 'venue_owner', booking: 'booking' };
-function realRoles(s: GameState): void {
+function realRoles(s: GameState, quiet = false): void {
   if (!s.config.realNames) return;
   const st = r21(s);
   const byName = new Map<string, Person>();
@@ -101,7 +102,7 @@ function realRoles(s: GameState): void {
       if (st.seen[key]) continue;
       st.seen[key] = 1;
       const act = Object.values(s.acts).find((a) => a.members.includes(p.id));
-      addSpan(s, p, { k, ...(org ? { org } : {}), from: y, ...(to !== undefined ? { to } : {}), real: 1 }, act);
+      addSpan(s, p, { k, ...(org ? { org } : {}), from: y, ...(to !== undefined ? { to } : {}), real: 1 }, act, quiet || y < s.year);
       if (k === 'festival_founder' && org && !st.fest.some((f) => f.name === org)) st.fest.push({ id: `f21_${++st.n}`, name: org, city: act?.city ?? s.config.homeCity, owner: p.id, since: y, size: 2 });
     }
   }
@@ -132,7 +133,8 @@ function newRoles(s: GameState, r: Rng): void {
     const p = s.persons[a.leaderId && a.members.includes(a.leaderId) ? a.leaderId : a.members[0]];
     if (!p?.alive || p.isPlayer || s.year - p.born < 24 || (r21(s).sp[p.id]?.length ?? 0) >= 3) continue;
     if (!r.chance(clamp(0.01 + a.fame / 1500, 0, 0.08))) continue;
-    const ws = wishes(p, a).filter((w) => !activeRoles21(s, p.id).some((x) => x.k === w.k));
+    // "nenhuma gravadora nova" no Novo Jogo vale também para selos abertos por artistas
+    const ws = wishes(p, a).filter((w) => !activeRoles21(s, p.id).some((x) => x.k === w.k) && !(w.k === 'label_owner' && s.config.labels?.future === 'none'));
     const tot = ws.reduce((t, w) => t + w.w, 0);
     let roll = r.float(0, tot);
     const pick = ws.find((w) => (roll -= w.w) <= 0) ?? ws[0];
@@ -311,4 +313,4 @@ registerSimHook('month', 'roles21', (s) => {
   if (s.month === 0) { realRoles(s); newRoles(s, r); }
   if (s.config.role !== 'artist' || careers(s).active.length > 1) offerDecisions(s, r);
 });
-registerSimHook('newgame', 'roles21', (s) => { r21(s); realRoles(s); });
+registerSimHook('newgame', 'roles21', (s) => { r21(s); realRoles(s, true); }); // o que já aconteceu antes do início é histórico, não notícia

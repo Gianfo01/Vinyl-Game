@@ -8,7 +8,7 @@
 //
 // Também gera a discografia simulada dos atos procedurais que já existiam no início (item 12).
 
-import { clamp, type Rng } from '../../core/rng';
+import { clamp, Rng } from '../../core/rng';
 import { exitMember20 } from '../members20';
 import { CATALOG_ACTS } from '../../data/catalog';
 import { REAL_CLASSIC, type ClassicExtra } from '../../data/realacts_classic';
@@ -45,6 +45,9 @@ const L16F = REAL_L16.filter((a) => !taken16.has(norm16(a.n)));
 const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
 /** rodada 17: lote E (one-hit wonders, covers/samples, cenas locais, nomes que faltavam) também no fim. */
 export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO21.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
+/** r21: o acervo é o último lote de REAL_ALL; usa gerador próprio para não deslocar os sorteios do resto do mundo. */
+export const ACERVO21_FROM = REAL_ALL.length - ACERVO21.filter((a) => REAL_ALL.includes(a)).length;
+const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo21|${k}`);
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
 
@@ -386,7 +389,9 @@ function newgame(s: GameState, r: Rng): void {
     ca.legend = true;
   }
   // artistas reais novos
+  const rMain = r, rAc = acRng(s, 'start');
   for (let i = 0; i < REAL_ALL.length; i++) {
+    const r = i >= ACERVO21_FROM ? rAc : rMain;
     const a = REAL_ALL[i];
     if (!realAllowed(s.config, a)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
@@ -467,7 +472,9 @@ function monthly(s: GameState, r: Rng): void {
   // surgem os artistas reais do ano (um ano antes da estreia, como promessa de cena)
   if (st.upcoming.length) {
     const keep: number[] = [];
+    const rMain = r, rAc = acRng(s, `m${s.year * 12 + s.month}`);
     for (const i of st.upcoming) {
+      const r = i >= ACERVO21_FROM ? rAc : rMain;
       const a = REAL_ALL[i];
       if (!a || s.year < a.d - 1 || (s.year === a.d - 1 && s.month < 6)) { keep.push(i); continue; }
       const act = spawnReal(s, r, i, false);

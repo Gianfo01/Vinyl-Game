@@ -1,5 +1,6 @@
 // Rodada 17 (E) — dados reais: população por década, relevância cultural (exceções globais e hit viral),
 // gêneros em alta = estilos das paradas, mais artistas/visuais reais, relíquias reais com datas, épocas e cenas.
+import { ACERVO21 } from '../src/data/acervo21';
 import { describe, expect, it } from 'vitest';
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize, countryPop } from '../src/data/countries';
 import { COVERS17, ERAS17, SCENES17 } from '../src/data/heritage17';
@@ -70,7 +71,8 @@ describe('r17 dados reais', () => {
     const tail = REAL_ALL.slice(0, i89).slice(-20).map((a) => a.n);
     expect(tail).toContain('Jeff Buckley');
     // r19: o lote more19 (ARTISTS19) entra depois do de 1889
-    expect(REAL_ALL.slice(i89).every((a) => REAL_1889.some((b) => b.n === a.n) || ARTISTS19.some((b) => b.n === a.n))).toBe(true);
+    // r21: o acervo pesquisado (ACERVO21) entra depois do more19
+    expect(REAL_ALL.slice(i89).every((a) => REAL_1889.some((b) => b.n === a.n) || ARTISTS19.some((b) => b.n === a.n) || ACERVO21.some((b) => b.n === a.n))).toBe(true);
     expect(REAL_ALL.filter((a) => a.n === 'Luis Fonsi').length).toBe(1);
     const r = DB_SIZES.map((d) => realCount(d.id));
     expect(r[0]).toBeLessThan(r[1]); expect(r[2]).toBeLessThan(r[3]);

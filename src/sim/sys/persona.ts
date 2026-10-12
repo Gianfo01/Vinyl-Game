@@ -160,7 +160,8 @@ function applyPersona(s: GameState, r: Rng): void {
   }
   // origem mexe no caixa inicial da empresa
   const bg = backgroundById[life(s).background];
-  if (bg?.startCash) post(s, 'bg:start', money(s, bg.startCash), bg.startCash > 0 ? 'investment' : 'misc', bg.startCash > 0 ? 'Aporte da família' : 'Começo modesto');
+  // r21: caixa personalizado na tela é o valor exato — a origem não soma por cima
+  if (bg?.startCash && s.config.custom?.cash === undefined) post(s, 'bg:start', money(s, bg.startCash), bg.startCash > 0 ? 'investment' : 'misc', bg.startCash > 0 ? 'Aporte da família' : 'Começo modesto');
   bumpPerks();
 }
 
