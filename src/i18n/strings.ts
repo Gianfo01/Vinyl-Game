@@ -89,7 +89,7 @@ export const S = {
   areaMarket: s('Talentos', 'Talent'), // r23: a área de A&R virou a tela Talentos
   areaMedia: s('Mídia', 'Media'),
   areaCatalog: s('Catálogo', 'Catalog'),
-  areaCreation: s('Compor', 'Write'),
+  areaCreation: s('Composição', 'Songwriting'), // r23: a tela responde "de onde vem o repertório"
   areaStudio: s('Estúdio', 'Studio'),
   areaFinance: s('Finanças', 'Finance'),
   areaReleases: s('Lançamentos', 'Releases'),

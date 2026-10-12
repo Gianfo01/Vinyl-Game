@@ -13,7 +13,7 @@ import { featureCandidates, featureFee } from '../../sim/sys/creation/core';
 import { explainRelease } from '../../sim/sys/explain8';
 import {
   CONCEPTS, GOALS, STAGES, STAGE_NAMES, candidateSongs, closeProject, conceptById, createProject, featOf, inviteGuest, maxSongs, needSongs, openProjects,
-  planRecording, planWriting, projectById, projectCosts, projectForecast, projectResult, projectSession, projectStage, recordNow, rolloutProject,
+  projectById, projectCosts, projectForecast, projectResult, projectSession, projectStage, recordNow, rolloutProject,
   scheduleProject, setProjectSongs, stageIndex, unscheduleProject, type MusicProject, type ProjGoal, type ProjStage,
 } from '../../sim/sys/project8';
 import type { Act, GameState, Release, ReleaseType } from '../../sim/types';
@@ -26,6 +26,8 @@ import { ACT_HEAD_EXTRAS } from '../pages';
 import { registerTab } from '../registry';
 import { store } from '../store';
 import { ic, setTab } from '../vis';
+import { compose23 } from './journey23';
+import { openRecord20 } from './actmenu20';
 
 const ui = { sel: '' as string, type: 'single' as ReleaseType, concept: CONCEPTS[0].id };
 
@@ -132,8 +134,9 @@ function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
           h('td', null, Math.round(songProfile(so).hook)));
       }))) : h('p', { class: 'muted' }, t(l('O artista não tem músicas inéditas livres.', 'The act has no free unreleased songs.'))),
     !locked ? h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small', onclick: () => say(planWriting(s, p), l('"Compor" entrou na agenda do mês (agenda manual).', '"Write" added to this month\'s agenda (manual agenda).')) }, ic('note'), ' ', t(l('Compor (agenda)', 'Write (agenda)'))),
-      unrec ? h('button', { class: 'btn small', onclick: () => say(planRecording(s, p), l('"Gravar" entrou na agenda do mês.', '"Record" added to this month\'s agenda.')) }, ic('mic'), ' ', t(l('Gravar pela agenda', 'Record via agenda'))) : null,
+      // r23: composição já marcada não pede clique de novo (diz a semana); "mais" mostra o que sairia da agenda
+      h('button', { class: 'btn small', onclick: () => compose23(s, p.actId) }, ic('note'), ' ', t(l('Compor (agenda)', 'Write (agenda)'))),
+      unrec ? h('button', { class: 'btn small', onclick: () => openRecord20(s, p.actId) }, ic('mic'), ' ', t(l('Preparar gravação', 'Prepare a recording'))) : null,
     ) : null,
     unrec && !locked ? h('fieldset', null, h('legend', null, t(l('Estúdio, produtor e equipe', 'Studio, producer and team'))),
       h('div', { class: 'row wrap' },
@@ -148,7 +151,8 @@ function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
       feat ? h('p', null, t(l('Faixa principal com participação de ', 'Lead track featuring ')), actLink(s, feat)) :
         locked ? h('p', { class: 'muted small' }, '—') : h('div', { class: 'row wrap' },
           select(p.guestId ?? '', [{ value: '', label: t(l('Sem convidado', 'No guest')) }, ...guests.map((g) => ({ value: g.id, label: `${g.name} (${$(featureFee(s, g))})` }))], (v) => { p.guestId = v || undefined; rerender(); }),
-          h('button', { class: 'btn small', disabled: !p.guestId, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))))) : null,
+          h('button', { class: 'btn small', disabled: !p.guestId, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))),
+          !p.guestId ? h('small', { class: 'muted' }, t(guests.length ? l('Escolha um convidado na lista para convidar.', 'Pick a guest from the list to invite.') : l('Nenhum convidado possível agora: veja Parcerias em Composição.', 'No possible guest right now: see Partners in Songwriting.'))) : null)) : null,
 
     ...PROJ_TRACK_EXTRAS18.map((f) => f(s, p, locked)),
   );
@@ -254,6 +258,9 @@ function projectDetail(s: GameState, p: MusicProject): HTMLElement {
   const st = projectStage(s, p);
   const locked = st === 'scheduled' || st === 'released' || st === 'followup';
   return h('div', { class: 'pj-detail' },
+    // r23: esta aba é o detalhe do mesmo disco; o fio da jornada (próximo passo) fica no Projeto musical
+    h('p', { class: 'pj-hint' }, ic('disc'), ' ', t(l('Detalhes do disco: faixas, capa, verba e calendário. O próximo passo recomendado fica no Projeto musical.', 'Record details: tracks, cover, budget and calendar. The recommended next step lives in the Music project.')), ' ',
+      h('button', { class: 'btn small', onclick: () => { store.selectedAct = p.actId; store.area = 'project'; rerender(); } }, ic('disc'), ' ', t(l('Voltar ao Projeto musical', 'Back to the Music project')))),
     stepper(st),
     h('p', { class: 'pj-hint' }, ic('sparkle'), ' ', t(HINT[st])),
     resultSection(s, p),
@@ -323,7 +330,8 @@ ACT_HEAD_EXTRAS.push((s, a, close) => {
 });
 
 registerTab('creation', {
-  id: 'projects', label: l('Projetos', 'Projects'), icon: 'note', order: 10, render: projectsTab,
+  // r23: "Compor" abre no Repertório (de onde vêm as músicas); o detalhe do projeto vem depois
+  id: 'projects', label: l('Detalhes do projeto', 'Project details'), icon: 'note', order: 52, render: projectsTab,
   // aviso: projetos com tudo gravado, prontos para programar
   badge: (s) => openProjects(s).filter((p) => projectStage(s, p) === 'finishing').length || undefined,
 });

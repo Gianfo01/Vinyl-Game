@@ -60,6 +60,7 @@ import { ALIAS17, CAREER_PAGE17, ICON17, KEY17, areaOfKey17, careerOfPage17, gro
 import { careerPages17 } from './sys/careerpages17';
 import { icon17 } from './pixel/icons17';
 import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
+import { PURPOSE23 } from './sys/journey23'; // r23: propósito de cada tela da jornada do disco
 import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
 import './nav17.css';
 
@@ -468,6 +469,9 @@ function pageTitle21(body: HTMLElement): HTMLElement | null {
   // a tela repete o próprio nome logo no topo? o título grande assume e o repetido fica só para leitores de tela
   const dup = [...body.querySelectorAll<HTMLElement>('h2, h3')].slice(0, 2).find((x) => x.textContent?.trim() === it.label);
   dup?.classList.add('sr-only');
+  // r23: uma pergunta por tela — linha curta de propósito sob o título (Projeto, Composição, Estúdio, Lançamentos)
+  const why = PURPOSE23[store.area];
+  if (why) return h('header', { class: 'pg23' }, h('h1', { class: 'page21 page21-auto' }, it.label), h('p', { class: 'pg23-purpose' }, t(why)));
   return h('h1', { class: 'page21 page21-auto' }, it.label);
 }
 

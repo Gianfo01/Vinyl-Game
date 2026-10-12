@@ -8,7 +8,7 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { Stage } from '../../sim/sys/music/data';
 import {
-  CONCEPTS, GOALS, STAGE_NAMES, conceptById, createProject, needSongs, openProjects, planRecording, planWriting, projectById, projectCosts, projectResult,
+  CONCEPTS, GOALS, STAGE_NAMES, conceptById, createProject, needSongs, openProjects, projectById, projectCosts, projectResult,
   projectSession, projectStage, recordNow, rolloutProject, scheduleProject, unscheduleProject, type MusicProject, type ProjStage,
 } from '../../sim/sys/project8';
 import {
@@ -30,6 +30,7 @@ import { explainBox, goToProjects } from './project8';
 import { applyNewBlend, newBlendSelect, p13Panel } from './project13';
 import { phaseReview20 } from './review20';
 import { empty20 } from '../st20';
+import { journey23 } from './journey23';
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -104,17 +105,14 @@ function problemCard(s: GameState, p: MusicProject): HTMLElement | null {
     h('p', { class: 'muted small' }, t(l('Se você não decidir, o problema continua: atraso custa momento no lançamento; estouro pode travar a gravação.', 'If you do not decide, the problem stays: lateness costs momentum at release; overspending can stall the recording.'))));
 }
 
-function nextAction(s: GameState, p: MusicProject, st: ProjStage): HTMLElement {
+function nextAction(s: GameState, p: MusicProject, st: ProjStage): HTMLElement | null {
   const unrec = p.songIds.filter((id) => s.songs[id] && !s.songs[id].recorded).length;
   const sess = projectSession(s, p);
   const pr = s.pendingReleases.find((x) => x.id === p.pendingId);
   const body: (HTMLElement | string | null)[] = [];
-  if (st === 'concept' || st === 'writing') body.push(
-    h('p', null, t(l('Faltam {n} música(s) para o mínimo do formato.', '{n} song(s) missing for the format minimum.'), { n: Math.max(0, needSongs(p.type) - p.songIds.length) })),
-    h('button', { class: 'btn primary small', onclick: () => say(planWriting(s, p), l('"Compor" entrou na agenda do mês.', '"Write" added to this month\'s agenda.')) }, ic('note'), ' ', t(l('Compor (agenda)', 'Write (agenda)'))));
-  if (unrec && (st === 'writing' || st === 'recording')) body.push(sess ? h('p', null, t(l('Em estúdio: dia {d} de {n}.', 'In the studio: day {d} of {n}.'), { d: sess.dayDone, n: sess.days })) : h('span', { class: 'row wrap' },
-    h('button', { class: 'btn primary small', onclick: () => say(recordNow(s, p), l('Sessão de estúdio marcada.', 'Studio session booked.')) }, ic('mic'), ' ', t(l('Gravar agora ({n} faixas)', 'Record now ({n} tracks)'), { n: unrec })),
-    h('button', { class: 'btn small', onclick: () => say(planRecording(s, p), l('"Gravar" entrou na agenda do mês.', '"Record" added to this month\'s agenda.')) }, t(l('Gravar pela agenda', 'Record via agenda')))));
+  // r23: compor/gravar viraram o passo recomendado (journey23); aqui só o atalho da sessão do projeto, opcional
+  if (unrec && st === 'recording' && !sess) body.push(h('span', { class: 'row wrap' },
+    h('button', { class: 'btn small ghost', onclick: () => say(recordNow(s, p), l('Sessão de estúdio marcada.', 'Studio session booked.')) }, ic('mic'), ' ', t(l('Ou gravar já as {n} faixas do projeto (sessão com o produtor escolhido)', 'Or record the project\'s {n} tracks right now (session with the chosen producer)'), { n: unrec }))));
   if (st === 'finishing') body.push(h('span', { class: 'row wrap' },
     h('label', { class: 'pj-inline' }, t(l('Sai em (semanas)', 'Out in (weeks)')), h('input', { type: 'number', min: 1, max: 26, value: p.weeksAhead, onchange: (e: Event) => { p.weeksAhead = Math.max(1, Math.min(26, Number((e.target as HTMLInputElement).value) || 1)); rerender(); } })),
     h('button', { class: 'btn primary small', onclick: () => say(scheduleProject(s, rngOf(s), p), l('Lançamento programado.', 'Release scheduled.')) }, ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))),
@@ -122,14 +120,14 @@ function nextAction(s: GameState, p: MusicProject, st: ProjStage): HTMLElement {
   if (st === 'scheduled') body.push(h('p', null, pr ? t(l('Chega às lojas na semana {w}. Shows e entrevistas nessa semana somam.', 'Hits stores in week {w}. Shows and interviews that week add up.'), { w: pr.week }) : t(l('Rollout em andamento.', 'Rollout in progress.'))),
     pr ? h('button', { class: 'btn ghost small', onclick: () => { unscheduleProject(s, p); rerender(); } }, t(l('Cancelar lançamento', 'Cancel release'))) : null);
   if (st === 'released') body.push(h('p', { class: 'muted' }, t(l('Nas lojas. A leitura completa sai em algumas semanas; o próximo passo já pode ser escolhido.', 'In stores. The full reading comes in a few weeks; the next step can be chosen now.'))));
-  return body.length ? section(t(l('Próxima ação', 'Next action')), ...body) : h('div');
+  return body.length ? h('div', { class: 'j23-extra' }, ...body) : null;
 }
 
 function contextLinks(s: GameState, p: MusicProject): HTMLElement {
   const sel = () => { store.selectedAct = p.actId; };
   const act = s.acts[p.actId];
   return h('div', { class: 'p12-links', 'aria-label': t(l('Atalhos no contexto do projeto', 'Shortcuts in the project context')) },
-    h('button', { class: 'btn small ghost', onclick: () => goToProjects(p.actId, p.id) }, ic('note'), ' ', t(l('Faixas, capa e verba', 'Tracks, cover and budget'))),
+    h('button', { class: 'btn small ghost', onclick: () => goToProjects(p.actId, p.id) }, ic('note'), ' ', t(l('Detalhes: faixas, capa e verba', 'Details: tracks, cover and budget'))),
     h('button', { class: 'btn small ghost', onclick: () => { sel(); setTab('creation-studio', 'session'); area('studio'); } }, ic('mic'), ' ', t(l('Estúdio', 'Studio'))),
     h('button', { class: 'btn small ghost', onclick: () => { sel(); setTab('creation-studio', 'studio-gear'); area('studio'); } }, ic('sparkle'), ' ', t(l('Foco do estúdio', 'Studio focus'))),
     h('button', { class: 'btn small ghost', onclick: () => { sel(); setTab('creation-write', 'cr-recipe'); area('creation'); } }, ic('note'), ' ', t(l('Receita sonora', 'Sound recipe'))),
@@ -177,7 +175,9 @@ function results(s: GameState, p: MusicProject): HTMLElement | null {
   const rel = p.releaseId ? s.releases[p.releaseId] : undefined;
   if (!res || !rel) return null;
   const pl = planOf12(s, p);
-  return section(t(l('Resultado: por que deu nisso', 'Results: why it turned out this way')),
+  const sec = section(t(l('Balanço: o que aconteceu e a próxima decisão', 'Debrief: what happened and the next decision')),
+    // r23: cada número diz a janela em que foi medido (evita causalidade falsa)
+    h('p', { class: 'muted small' }, t(l('Janela: unidades e receita desde o lançamento (semana {r}); gasto desde o início do projeto (semana {f}); hoje é a semana {n}.', 'Window: units and revenue since release (week {r}); spend since the project started (week {f}); today is week {n}.'), { r: res.relWeek, f: res.from, n: res.now })),
     h('div', { class: 'row wrap' },
       kv(t(l('Unidades', 'Units')), N(res.units)), kv(t(l('Melhor posição', 'Peak')), res.peak < 999 ? `#${res.peak}` : '—'),
       kv(t(l('Receita', 'Revenue')), $(res.revenue)), kv(t(l('Gasto', 'Spend')), $(res.spent)),
@@ -193,6 +193,8 @@ function results(s: GameState, p: MusicProject): HTMLElement | null {
           h('button', { class: 'btn small', disabled: !!blk, onclick: () => { const r = chooseNext(s, p, k); if (r.err) toast(t(r.err), 'bad'); else { toast(t(NEXT[k].name), 'good'); if (r.project) ui.sel = r.project.id; if (k === 'tour') store.area = 'shows'; } rerender(); } }, t(NEXT[k].name)),
           h('small', { class: blk ? 'muted' : '' }, t(blk ?? NEXT[k].fx)));
       })));
+  sec.id = 'p23-res';
+  return sec;
 }
 
 function diary(s: GameState, p: MusicProject): HTMLElement | null {
@@ -214,13 +216,14 @@ function projectView(s: GameState, p: MusicProject): HTMLElement {
     pill(t(STAGE_NAMES[st]), st === 'followup' || st === 'released' ? 'good' : st === 'finishing' ? 'gold' : ''));
   const locked13 = !!(p.pendingId || p.rolloutId || p.releaseId);
   if (!pl || ui.edit) return h('div', { class: 'p12-view' }, head, commitPanel(s, p), p13Panel(s, p, locked13), contextLinks(s, p));
-  return h('div', { class: 'p12-view' }, head, timeline(s, p, st), problemCard(s, p), phaseReview20(s, p, st) /* r20 Protótipo B: revisão da fase */, results(s, p), st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, nextAction(s, p, st), commitSummary(s, p), p13Panel(s, p, locked13), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
+  // r23: o próximo passo recomendado vem logo depois do cabeçalho — um botão principal por etapa
+  return h('div', { class: 'p12-view' }, head, journey23(s, p.actId, p, nextAction(s, p, st)), timeline(s, p, st), problemCard(s, p), phaseReview20(s, p, st) /* r20 Protótipo B: revisão da fase */, results(s, p), st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, commitSummary(s, p), p13Panel(s, p, locked13), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
 }
 
 function hub(s: GameState): HTMLElement {
   const ids = playerActs(s);
   const act = s.acts[store.selectedAct ?? ''] && ids.includes(store.selectedAct ?? '') ? s.acts[store.selectedAct!] : s.acts[ids[0]];
-  if (!act) return section(t(l('Projeto musical', 'Music project')), h('p', { class: 'muted' }, t(l('Contrate um artista para começar um disco.', 'Sign an act to start a record.'))));
+  if (!act) return h('div', { class: 'p12' }, journey23(s, undefined)); // r23: passo 1 — encontrar um artista
   const all = openProjects(s).sort((a, b) => Number(a.actId !== act.id) - Number(b.actId !== act.id) || b.created - a.created);
   let cur = projectById(s, ui.sel);
   if (!cur || cur.closed) cur = all.find((p) => p.actId === act.id) ?? all[0];
@@ -228,7 +231,6 @@ function hub(s: GameState): HTMLElement {
   return h('div', { class: 'p12' },
     h('div', { class: 'p12-top' },
       h('h2', null, ic('disc'), ' ', t(l('Projeto musical', 'Music project'))),
-      h('p', { class: 'muted small' }, t(l('Tudo de um disco num lugar só: para que ele serve, quanto custa, quando sai, o que deu errado no caminho e o que fazer depois.', 'Everything about a record in one place: what it is for, what it costs, when it comes out, what went wrong on the way and what to do next.'))),
       h('div', { class: 'row wrap' },
         all.map((p) => { const pb = planOf12(s, p)?.problem; return h('button', { class: `chip-btn ${cur?.id === p.id ? 'on' : ''}`, onclick: () => { ui.sel = p.id; ui.edit = false; store.selectedAct = p.actId; rerender(); } }, `${s.acts[p.actId]?.name ?? '—'}: ${p.title || p.type.toUpperCase()}`, pb ? ' ⚠' : ''); }),
       ),
