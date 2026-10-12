@@ -1,0 +1,56 @@
+/* r27 (P2B) — turnê no mapa, sala de crise e reunião de diretoria. Variáveis do tema (theme25):
+   --bg --panel --panel-2 --ink --muted --line --accent --good --bad --warn --gold. */
+
+.p2b-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 860px) { .p2b-cols { grid-template-columns: minmax(0, 1fr); } }
+.p2b-map { min-width: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--panel-2); }
+.p2b-map > * { max-width: 100%; }
+.p2b-side { display: grid; gap: 8px; min-width: 0; }
+.p2b-tools { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: .9em; }
+.p2b-tools label { display: inline-flex; gap: 4px; align-items: center; }
+.p2b-stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 46vh; overflow: auto; }
+.p2b-stop { padding: 6px 8px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 3px; background: var(--panel-2); display: grid; gap: 4px; }
+.p2b-stop-h { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.p2b-ord { margin-left: auto; display: inline-flex; gap: 2px; }
+.p2b-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 2px 10px; font-size: .85em; }
+.p2b-grid .good { color: var(--good); } .p2b-grid .bad { color: var(--bad); }
+.p2b-chips, .p2b-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.p2b-warn { margin: 0; color: var(--warn); }
+
+.p2b-evs, .p2b-props { display: grid; gap: 10px; }
+.p2b-ev { padding: 8px 10px; border: 2px solid var(--line); border-left: 6px solid var(--warn); border-radius: 3px; background: var(--panel); display: grid; gap: 6px; }
+.p2b-ev p { margin: 0; }
+.p2b-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.p2b-opt { display: grid; gap: 4px; align-content: start; text-align: left; padding: 8px 10px; min-height: 96px; color: var(--ink); font: inherit;
+  background: linear-gradient(var(--accent), var(--accent)) top / 100% 5px no-repeat, var(--panel-2); border: 2px solid var(--line); border-radius: 3px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.3); cursor: pointer; transition: transform .12s; }
+.p2b-opt.safe { background: linear-gradient(var(--good), var(--good)) top / 100% 5px no-repeat, var(--panel-2); }
+.p2b-opt.bold { background: linear-gradient(var(--warn), var(--warn)) top / 100% 5px no-repeat, var(--panel-2); }
+.p2b-opt:hover:not([disabled]) { transform: translateY(-2px); }
+.p2b-opt:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+.p2b-opt[disabled] { opacity: .55; cursor: not-allowed; }
+.p2b-opt small { color: var(--muted); line-height: 1.25; }
+@media (prefers-reduced-motion: reduce) { .p2b-opt { transition: none; } }
+.reduced-motion .p2b-opt { transition: none; }
+
+.p2b-threat { position: relative; height: 22px; border: 2px solid var(--line); border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.p2b-threat i { position: absolute; inset: 0 auto 0 0; background: var(--warn); }
+.p2b-threat i.t-won { background: var(--good); } .p2b-threat i.t-lost { background: var(--bad); }
+.p2b-threat u { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .45; }
+.p2b-threat span { position: relative; display: block; text-align: center; font-size: .82em; line-height: 18px; color: var(--ink); text-shadow: 0 1px 0 var(--panel); }
+
+.p2b-prop.done { opacity: .8; }
+.p2b-prop p { margin: 4px 0; }
+.p2b-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.p2b-list li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.p2b-pol { display: grid; gap: 10px; margin: 10px 0; }
+.warn { color: var(--warn); }
+
+/* largura: nada de rolagem horizontal (chips longos quebram linha, colunas encolhem) */
+.p2b-route, .p2b-road, .p2b-crisis, .p2b-board { grid-template-columns: minmax(0, 1fr); }
+.p2b-route .a27-scene, .p2b-road .a27-scene, .p2b-crisis .a27-scene, .p2b-board .a27-scene { max-width: 460px; }
+.p2b-stops { grid-template-columns: minmax(0, 1fr); }
+.p2b-stop, .p2b-ev, .p2b-prop, .p2b-opt { min-width: 0; }
+.p2b-tags .chip27, .p2b-chips .chip27 { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+.p2b-ev > header { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.p2b-ev > header small { margin-left: auto; }

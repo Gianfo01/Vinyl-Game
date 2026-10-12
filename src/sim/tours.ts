@@ -230,9 +230,20 @@ export interface StopMods27 {
   morale?: number;
 }
 
+/** r27 (P2B): gancho da turnê no mapa (sys/road27): antes da data, resolve o evento de estrada pendente e devolve
+ *  os ajustes da noite (ou 'skip' se a data caiu). Só age em turnês marcadas pelo planejador jogável. */
+export const STOP27: { pre?: (s: GameState, t: Tour, st: TourStop, day: number, act: Act) => StopMods27 | 'skip' | undefined } = {};
+const mergeMods27 = (a: StopMods27 | undefined, b: StopMods27): StopMods27 => (!a ? b : {
+  ...a, noRisk: a.noRisk || b.noRisk, qMult: (a.qMult ?? 1) * (b.qMult ?? 1), fans: (a.fans ?? 1) * (b.fans ?? 1), merch: (a.merch ?? 1) * (b.merch ?? 1),
+  fame: (a.fame ?? 0) + (b.fame ?? 0), fatigue: (a.fatigue ?? 0) + (b.fatigue ?? 0), morale: (a.morale ?? 0) + (b.morale ?? 0),
+});
+
 /** r27 (M2): uma data da turnê — o mesmo corpo que `tourDay` sempre rodou, agora chamável para um show jogado
  *  (com `m` e um fluxo de sorte próprio). Sem `m`, idêntico ao de antes. */
 export function playStop(s: GameState, r: Rng, t: Tour, st: TourStop, day: number, act: Act, m?: StopMods27): void {
+  const pre27 = STOP27.pre?.(s, t, st, day, act);
+  if (pre27 === 'skip') return;
+  if (pre27) m = mergeMods27(m, pre27);
   {
     t.status = 'running';
     s.location[act.id] = st.cityId;
