@@ -3,7 +3,7 @@
 import { l, type L } from '../../../data/world';
 import { t } from '../../../i18n/strings';
 import {
-  ACHIEVEMENTS, MEDAL_NAME, SCENARIOS, liveOf, scenarioById, scenarioConfig, scenarioProgress, setNextGameSetup, shareCode, validatePack,
+  MEDAL_NAME, SCENARIOS, liveOf, scenarioById, scenarioConfig, scenarioProgress, setNextGameSetup, shareCode, validatePack,
   type Medal, type UniversePack,
 } from '../../../sim/sys/live';
 import type { GameState, RunConfig } from '../../../sim/types';
@@ -14,9 +14,10 @@ import { $, N, rerender, section, toast } from '../../common';
 import { h, select } from '../../dom';
 import { registerArea, registerCutscene } from '../../registry';
 import { store } from '../../store';
-import { chips, ic, meter, stat, tabs } from '../../vis';
+import { chips, meter, stat, tabs } from '../../vis';
 import { museumView } from './museum';
 import { scenarioBrowser22 } from '../../scen22';
+import { gameAch27 } from '../../ach27';
 
 void $;
 
@@ -153,23 +154,12 @@ function scenarioPanel(s: GameState): HTMLElement {
   );
 }
 
-/** Conquistas de formato que só fazem sentido a partir do ano em que o formato existe. */
-const ACH_ERA19: Record<string, number> = { fmt_lp: 1948, fmt_cassette: 1963, fmt_cd: 1982, digital_dl: 1997, digital_stream: 2005 };
+/** r27 (ACH): só as desbloqueadas (desta partida e do perfil); bloqueadas viram contagem, secretas só no total. */
 function achievementsPanel(s: GameState): HTMLElement {
   const lv = liveOf(s);
   const fresh = new Set(lv.achNew);
   lv.achNew = [];
-  const got = ACHIEVEMENTS.filter((a) => lv.ach[a.id] !== undefined).length;
-  return section(t(l('Conquistas ({n}/{m})', 'Achievements ({n}/{m})'), { n: got, m: ACHIEVEMENTS.length }),
-    h('div', { class: 'cards' }, ACHIEVEMENTS.map((a) => {
-      const on = lv.ach[a.id] !== undefined;
-      const hidden = (a.hidden || s.year < (ACH_ERA19[a.id] ?? 0)) && !on; // r19 smoke: formato do futuro fica escondido
-      return h('div', { class: `tile lv-ach ${on ? 'on' : 'locked'} ${fresh.has(a.id) ? 'fresh' : ''}` },
-        h('div', { class: 'tile-ic' }, hidden ? h('span', { 'aria-hidden': 'true' }, '❔') : ic(a.icon, 2)),
-        h('div', { class: 'tile-body' }, h('b', null, hidden ? '???' : t(a.name)), h('small', null, hidden ? t(l('Conquista escondida.', 'Hidden achievement.')) : t(a.desc)),
-          on ? h('small', { class: 'good' }, '✓ ', fresh.has(a.id) ? t(l('nova!', 'new!')) : '') : null));
-    })),
-  );
+  return gameAch27(s, fresh);
 }
 
 registerArea({

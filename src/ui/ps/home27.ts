@@ -22,6 +22,8 @@ import { scenarioScreen } from '../sys/live/goals';
 import { setTutorials19, tutorialsOff19, TUTOFF_LABEL19 } from '../tutoff19';
 import { ic } from '../vis';
 import { CAREER_SHORT27, DIFFS27, STARTS27, careerOpen27, clampYear27, quickDefaults27, quickRunConfig27, type QuickRun27 } from './home27model';
+import { achBadge27, homeAch27 } from '../ach27';
+import { profAchCount27 } from '../ach27store';
 import './home27.css';
 
 /** r27: arte da tela inicial e da Nova run = a sede em pixel art do próprio jogo (hqpx27), não ilustração externa. */
@@ -72,7 +74,7 @@ function options27(redraw: () => void): void {
 
 // ---------------------------------------------------------------- tela inicial
 
-export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves'): void {
+export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves' | 'ach'): void {
   const redraw = () => homeScreen27(root, onStart);
   const redrawSaves = () => homeScreen27(root, onStart, 'saves'); // ações de perfis/saves voltam para a lista
   const play = (g: NonNullable<typeof store.game>) => { store.game = g; onStart(); };
@@ -89,6 +91,9 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
   const pasteSave = async () => { const tx = window.prompt(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'))); if (!tx) return; try { play(await importSaveText(tx)); } catch (er) { toast(saveErrText20(er), 'bad'); } };
   const runCode = () => { const cfg = quickRunConfig27(quickDefaults27(randomSeed(), t(l('Selo Agulha', 'Needle Records')))); pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, 5)); };
   const savesSec = h('section', { class: 'h27-saves', id: 'h27-saves', 'aria-label': t(l('Saves e perfis', 'Saves and profiles')) });
+  const redrawAch = () => homeScreen27(root, onStart, 'ach'); // troca de perfil no painel de conquistas
+  let achSec: HTMLElement = h('div');
+  const toAch = () => { achSec.scrollIntoView?.({ behavior: 'smooth', block: 'start' }); (achSec.querySelector('h2') as HTMLElement | null)?.focus?.(); };
   const toSaves = () => { savesSec.scrollIntoView?.({ behavior: 'smooth', block: 'start' }); (savesSec.querySelector('h2') as HTMLElement | null)?.focus?.(); };
 
   // "Continuar": cartão com o save mais recente do perfil
@@ -107,7 +112,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
     showcase27(),
     h('div', { class: 'h27-shade', 'aria-hidden': 'true' }),
     h('div', { class: 'h27-top' },
-      h('span', { class: 'h27-prof' }, '👤 ', curProfile17().name),
+      h('span', { class: 'h27-prof' }, '👤 ', curProfile17().name, h('button', { type: 'button', class: 'h27-link h27-achk', title: t(l('Conquistas do perfil', 'Profile achievements')), onclick: () => toAch() }, achBadge27())),
       select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'PT' }, { value: 'en' as Lang, label: 'EN' }], (v) => { store.prefs.lang = v; savePrefs(); redraw(); }, { 'aria-label': t(S.language), class: 'h27-lang' }),
       h('button', { type: 'button', class: 'h27-link', onclick: () => options27(redraw) }, '⚙ ', t(l('Opções', 'Options')))),
     h('div', { class: 'h27-content' },
@@ -122,6 +127,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
       h('div', { class: 'h27-links' },
         link(t(l('Cenários históricos', 'Historical scenarios')), () => scenarioScreen(root, onStart, redraw)),
         link(t(l('Saves & perfis', 'Saves & profiles')), toSaves),
+        link(t(l('Conquistas', 'Achievements')), () => toAch(), { 'data-link': 'ach' }),
         link(t(l('Configuração completa', 'Full setup')), () => { newGameScreen(root, onStart); top27(); }),
         link(t(l('Usar código de run', 'Use a run code')), runCode),
         link(t(l('Importar arquivo', 'Import file')), () => fileInput.click()),
@@ -141,9 +147,11 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
         h('button', { type: 'button', class: 'btn small ghost', title: t(l('Renomear', 'Rename')), 'aria-label': `${t(l('Renomear', 'Rename'))}: ${p.name}`, onclick: () => { const n = window.prompt(t(l('Nome do perfil:', 'Profile name:')), p.name); if (n) { renameProfile17(p.id, n); redrawSaves(); } } }, '✎'),
         p.id === 'default' ? null : h('button', { type: 'button', class: 'btn small ghost h27-del', title: t(l('Apagar perfil', 'Delete profile')), 'aria-label': `${t(l('Apagar perfil', 'Delete profile'))}: ${p.name}`, onclick: async () => {
           const n = (await mySavesOf27(p.id)).length;
+          const na = profAchCount27(p.id);
+          const achTx = na ? ' ' + t(l('As {a} conquista(s) do perfil também serão apagadas.', 'The profile\'s {a} achievement(s) will be deleted too.'), { a: na }) : '';
           const pick = await choose27(t(l('Apagar perfil', 'Delete profile')),
-            n ? t(l('Apagar o perfil "{p}"? Ele tem {n} save(s). Você pode passá-los para "{d}" ou apagá-los junto (sem desfazer).', 'Delete profile "{p}"? It has {n} save(s). You can move them to "{d}" or delete them too (no undo).'), { p: p.name, n, d: profiles17()[0].name })
-              : t(l('Apagar o perfil "{p}"? Ele não tem saves.', 'Delete profile "{p}"? It has no saves.'), { p: p.name }),
+            (n ? t(l('Apagar o perfil "{p}"? Ele tem {n} save(s). Você pode passá-los para "{d}" ou apagá-los junto (sem desfazer).', 'Delete profile "{p}"? It has {n} save(s). You can move them to "{d}" or delete them too (no undo).'), { p: p.name, n, d: profiles17()[0].name })
+              : t(l('Apagar o perfil "{p}"? Ele não tem saves.', 'Delete profile "{p}"? It has no saves.'), { p: p.name })) + achTx,
             n ? [{ id: 'move', label: t(l('Apagar perfil e mover saves', 'Delete profile, move saves')) }, { id: 'all', label: t(l('Apagar perfil e saves', 'Delete profile and saves')), danger: true }]
               : [{ id: 'move', label: t(l('Apagar perfil', 'Delete profile')), danger: true }]);
           if (!pick) return;
@@ -196,10 +204,12 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
           h('button', { type: 'button', class: 'btn small ghost', onclick: () => saveManagerModal17(play) }, t(l('Exportar, duplicar e nuvem…', 'Export, duplicate and cloud…'))),
           h('button', { type: 'button', class: 'btn small ghost', onclick: () => fileInput.click() }, t(l('Importar arquivo', 'Import file'))),
           h('button', { type: 'button', class: 'btn small ghost', onclick: () => void pasteSave() }, t(l('Colar save', 'Paste save')))),
-        saveBox)),
+        saveBox),
+      achSec = homeAch27(redrawAch)),
     h('p', { class: 'muted small h27-note' }, t(l('Padrão: nomes reais em um mundo simulado (Elvis, Beatles, Roberto Carlos…) com músicas, contratos e carreiras simulados. Fidelidade histórica, universo ficcional e os outros modos ficam na Configuração completa → Mundo.', 'Default: real names in a simulated world (Elvis, Beatles…) with simulated songs, contracts and careers. Historical fidelity, a fictional universe and the other modes are in Full setup → World.'))));
   root.replaceChildren(h('div', { class: 'h27', id: 'main', role: 'main', tabindex: '-1' }, hero, savesSec));
   if (at === 'saves') savesSec.scrollIntoView?.({ block: 'start' });
+  else if (at === 'ach') achSec.scrollIntoView?.({ block: 'start' });
   else top27();
 }
 

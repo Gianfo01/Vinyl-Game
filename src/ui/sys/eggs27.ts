@@ -129,10 +129,11 @@ function gallery27(g: GameState): void {
     h('h4', null, T(l('Hall dos Ecos', 'Hall of Echoes'))),
     (g.hallOfFame ?? []).length ? h('ul', null, ...(g.hallOfFame ?? []).map((x) => h('li', null, `${x.year} · ${x.name}`))) : h('p', { class: 'muted' }, T(l('Ainda vazio.', 'Still empty.'))),
     h('h4', null, T(l('Ovos achados', 'Eggs found')), ` (${fd.size}/${EGGS27.length})`),
-    h('div', { class: 'egg27-grid' }, ...EGGS27.map((e) => h('div', { class: `egg27-card ${fd.has(e.id) ? 'on' : ''}`, title: fd.has(e.id) ? T(e.fx) : '?' },
-      h('b', null, fd.has(e.id) ? T(e.title) : '???'), h('small', { class: 'muted' }, fd.has(e.id) ? `${e.era} · ${T(e.place)}` : e.era)))),
-    h('h4', null, T(l('Conquistas secretas', 'Secret feats'))),
-    h('ul', null, ...FEATS27.map((f) => h('li', { class: st.feats[f.id] !== undefined ? '' : 'muted' }, st.feats[f.id] !== undefined ? `★ ${T(f.name)}` : '★ ???')))), { wide: true });
+    // r27 (ACH): só o que já foi achado; o resto é só contagem (sem nome, época ou pista)
+    fd.size ? h('div', { class: 'egg27-grid' }, ...EGGS27.filter((e) => fd.has(e.id)).map((e) => h('div', { class: 'egg27-card on', title: T(e.fx) },
+      h('b', null, T(e.title)), h('small', { class: 'muted' }, `${e.era} · ${T(e.place)}`)))) : h('p', { class: 'muted' }, T(l('Nenhum ainda. Eles se escondem bem.', 'None yet. They hide well.'))),
+    h('h4', null, T(l('Conquistas secretas', 'Secret feats')), ` (${FEATS27.filter((f) => st.feats[f.id] !== undefined).length}/${FEATS27.length})`),
+    FEATS27.some((f) => st.feats[f.id] !== undefined) ? h('ul', null, ...FEATS27.filter((f) => st.feats[f.id] !== undefined).map((f) => h('li', null, `★ ${T(f.name)}`))) : h('p', { class: 'muted' }, T(l('Nenhuma ainda.', 'None yet.')))), { wide: true });
 }
 function mixtape27(g: GameState): void {
   const songs = Object.values(g.releases).filter((r) => r.owner === 'player').flatMap((r) => r.songs.map((id) => ({ s: g.songs[id], a: g.acts[r.actId] }))).filter((x) => x.s && x.a);

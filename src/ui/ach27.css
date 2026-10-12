@@ -1,0 +1,33 @@
+/* Rodada 27 (ACH): conquistas desbloqueadas — grade com ícones em pixel art, contador e "??? × k" por categoria. */
+.ach27 { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ach27-count { margin: 0; font-size: 14px; }
+.ach27-count b { color: var(--gold, var(--accent)); font-variant-numeric: tabular-nums; }
+.ach27-cat h4 { margin: 4px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+.ach27-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.ach27-it { display: flex; gap: 10px; align-items: flex-start; background: var(--panel-2, var(--panel)); border: 1px solid var(--line); border-left: 3px solid var(--gold, var(--accent)); border-radius: 3px; padding: 8px 10px; min-width: 0; }
+.ach27-it.secret { border-left-color: var(--accent); }
+.ach27-it.fresh { box-shadow: 0 0 0 2px var(--gold, var(--accent)) inset; }
+.ach27-ic { flex: none; width: 36px; height: 36px; display: grid; place-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; image-rendering: pixelated; }
+.ach27-ic canvas, .ach27-ic img { image-rendering: pixelated; max-width: 32px; max-height: 32px; }
+.ach27-medal { font-size: 22px; }
+.ach27-b { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ach27-b b { font-size: 14px; overflow-wrap: anywhere; }
+.ach27-b small { color: var(--ink); opacity: .85; font-size: 12px; overflow-wrap: anywhere; }
+.ach27-b small.ach27-meta { color: var(--muted); opacity: 1; font-size: 11px; }
+.ach27-star { color: var(--gold, var(--accent)); }
+.ach27-new { color: var(--good); font-size: 11px; font-weight: 600; }
+.ach27-locked { margin-left: 8px; text-transform: none; letter-spacing: 0; }
+.ach27-shut-row { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; font-size: 13px; }
+.ach27-shut-it { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.ach27-medals h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ach27-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.ach27-head label.ach27-switch { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; margin: 0; }
+.ach27-head .ach27-switch select { width: auto; margin: 0; }
+.ach27-switch select { max-width: 200px; }
+.ach27-home { grid-column: 1 / -1; }
+.ach27-game { display: flex; flex-direction: column; gap: 12px; }
+.h27-achk { color: var(--gold, var(--accent)); margin-left: 8px; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) {
+  .ach27-grid { grid-template-columns: 1fr; }
+  .ach27-switch select { max-width: 60vw; }
+}
