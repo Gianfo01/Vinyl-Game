@@ -5,7 +5,8 @@ import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { playerActs } from '../src/sim/util';
 import type { GameState } from '../src/sim/types';
-import { ROOM_CAP25, ROOMS25, era25, hqModel25, rects25 } from '../src/ui/ps/hq25model';
+import { ROOM_CAP25, ROOMS25, era25, hqModel25 } from '../src/ui/ps/hq25model';
+import { plan27 } from '../src/ui/ps/hqpx27';
 
 const game = (seed: string, year = 1975): GameState => createGame(defaultConfig(seed, { scenario: 'established', startYear: year, dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
 const room = (m: ReturnType<typeof hqModel25>, id: string) => m.rooms.find((r) => r.id === id)!;
@@ -19,11 +20,11 @@ describe('r25 era e planta', () => {
     expect(era25(2005, 3)).toBe('modern');
     expect(era25(2005, 0)).toBe('garage'); // selo na garagem não ganha prédio de vidro
   });
-  it('6 salas com retângulos dentro da imagem e sem sobreposição', () => {
-    for (const era of ['heritage', 'garage', 'modern'] as const) {
-      const R = rects25(era);
-      const xs = ROOMS25.map((id) => R[id]);
-      for (const [x, y, w, h] of xs) { expect(x).toBeGreaterThanOrEqual(0); expect(y).toBeGreaterThanOrEqual(0); expect(x + w).toBeLessThanOrEqual(100); expect(y + h).toBeLessThanOrEqual(100); }
+  it('r27: salas desenhadas (pixel art) dentro do desenho e sem sobreposição, em todo nível', () => {
+    for (let hq = 0; hq <= 5; hq++) for (const year of [1950, 1975, 2005]) {
+      const p = plan27({ hq, year });
+      const xs = p.cells.map((c) => [c.x, c.y, c.w, c.h]);
+      for (const [x, y, w, h] of xs) { expect(x).toBeGreaterThanOrEqual(0); expect(y).toBeGreaterThanOrEqual(0); expect(x + w).toBeLessThanOrEqual(p.W); expect(y + h).toBeLessThanOrEqual(p.H); }
       for (let i = 0; i < xs.length; i++) for (let j = i + 1; j < xs.length; j++) {
         const [a, b] = [xs[i], xs[j]];
         const overlap = a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
@@ -92,6 +93,8 @@ describe('r25 hqModel25', () => {
     for (let i = 0; i < 8; i++) s.player.staff.push({ id: `x${i}`, name: `Pessoa ${i}`, role: 'admin', skill: 50, salary: 0, hiredWeek: 0 });
     const m = hqModel25(s);
     expect(m.era).toBe('garage');
+    expect(m.city).toBe(s.config.homeCity);
+    expect(plan27({ hq: m.hq, year: m.year }).rooms).not.toContain('anr'); // sala fechada não é desenhada
     expect(room(m, 'anr').open).toBe(false);
     expect(room(m, 'anr').lockNote).toBeTruthy();
     expect(room(m, 'stage').open).toBe(false);

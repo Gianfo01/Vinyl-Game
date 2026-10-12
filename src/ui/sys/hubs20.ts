@@ -364,10 +364,10 @@ function hqHub20(s: GameState): HTMLElement {
   const nonCanvas = (fn: () => HTMLElement) => () => { stopHq(); return fn(); };
   const modeBar = h('div', { class: 'row wrap', role: 'group', 'aria-label': T(l('Modo de visualização', 'View mode')) },
     (['canvas', 'list'] as const).map((m) => h('button', { type: 'button', class: `chip-btn ${hqMode20 === m ? 'on' : ''}`, 'aria-pressed': hqMode20 === m ? 'true' : 'false', onclick: () => { hqMode20 = m; lsSet('vtn20-hq-mode', m); rerender(); } },
-      ic(m === 'canvas' ? 'house' : 'note'), ' ', T(m === 'canvas' ? l('Planta', 'Floor plan') : l('Lista', 'List')))));
+      ic(m === 'canvas' ? 'house' : 'note'), ' ', T(m === 'canvas' ? l('Sede em corte', 'Cutaway') : l('Lista', 'List')))));
   return h('div', { class: 'hub hub20 hq20' }, tabs('hqHub', [
     { id: 'ops', label: T(l('Operação', 'Operation')), icon: 'house', render: () => h('div', null,
-      intro(l('Quem faz o quê agora, fila do estúdio e alertas de capacidade. Planta e lista mostram as mesmas pessoas e salas.', 'Who is doing what now, the studio queue and capacity alerts. Floor plan and list show the same people and rooms.')),
+      intro(l('Quem faz o quê agora, fila do estúdio e alertas de capacidade. A sede em corte e a lista mostram as mesmas pessoas e salas.', 'Who is doing what now, the studio queue and capacity alerts. The cutaway and the list show the same people and rooms.')),
       modeBar, canvasOn() ? hqPanel(s) : (stopHq(), hqList20(s)), ...secs('hq', s, HQ_TABS20.ops)) },
     { id: 'structure', label: T(l('Estrutura', 'Structure')), icon: 'building', render: nonCanvas(() => h('div', null,
       intro(l('Salas, funções, capacidade e reforma. Veja a capacidade antes e depois e o custo separado em investimento e recorrente.', 'Rooms, roles, capacity and refits. See capacity before and after, with cost split into investment and recurring.')),
