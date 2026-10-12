@@ -517,7 +517,10 @@ function pageTitle21(body: HTMLElement): HTMLElement | null {
   dup?.classList.add('sr-only');
   // r23: uma pergunta por tela — linha curta de propósito sob o título (Projeto, Composição, Estúdio, Lançamentos)
   // r27 (J): cabeçalho único (ps/ui27.ts) — título, propósito, números-chave da página e arte opcional
-  const why = PURPOSE23[store.area] ?? PURPOSE27[store.area];
+  // a tela já abre com um parágrafo de apresentação (fora de cartão)? então o subtítulo genérico não repete a ideia
+  const first = body.querySelector('p, h2, h3, table, .card, section, .tabs, [data-tabs]');
+  const ownIntro = first?.tagName === 'P' && !first.closest('.card') && (first.textContent ?? '').trim().length > 40;
+  const why = PURPOSE23[store.area] ?? (ownIntro ? undefined : PURPOSE27[store.area]);
   const g = store.game!;
   return pageHeader27({ title: it.label, sub: why, kpis: kpis27(store.area, g, locale()), art: artHook27.f?.(store.area, g) ?? null, area: store.area, go });
 }

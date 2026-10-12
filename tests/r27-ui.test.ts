@@ -91,7 +91,7 @@ describe('r27 ui: números alinhados à direita', () => {
 
 describe('r27 ui: cabeçalho das páginas', () => {
   it('as páginas principais de cada seção têm propósito (subtítulo) em pt e en', () => {
-    const must = ['cockpit', 'artists', 'market', 'catalog', 'shows', 'festivals', 'business', 'finance', 'company', 'team', 'you'];
+    const must = ['cockpit', 'artists', 'catalog', 'shows', 'festivals', 'business', 'finance', 'company', 'team', 'you'];
     for (const a of must) { expect(PURPOSE27[a]?.pt.length, a).toBeGreaterThan(10); expect(PURPOSE27[a]?.en.length, a).toBeGreaterThan(10); }
     // toda página com propósito existe na árvore de seções (nada de chave órfã)
     const known = new Set(SECTIONS25.flatMap((s) => s.themes.flatMap((x) => x.areas)));

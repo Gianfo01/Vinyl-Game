@@ -120,6 +120,14 @@ main :is(.card, section.card) > h3:first-child, main .card > header h3, main .c2
 main :is(.card, section.card) h3:not(:first-child) { font-size: var(--fs-md); }
 /* nome do artista no cabeçalho da página do elenco (era 40px e quebrava em 2 linhas) */
 main .ar21-id h2, main h2.big { font-size: clamp(1.45rem, 1.1rem + 0.9vw, 1.9rem); line-height: 1.1; }
+/* cabeçalho do artista: identidade numa linha; medidores à esquerda e ações à direita na linha de baixo
+   (antes as 4 medidas + 4 botões espremiam o nome em 2–3 linhas) */
+main .ar21-head { grid-template-columns: auto minmax(0, 1fr); }
+main .ar21-right { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-4); border-top: 1px solid var(--line); padding-top: var(--sp-3); }
+main .ar21-logo canvas, main .ar21-logo img, main .ar21-logo > * { width: 72px; height: 72px; }
+main .chip-btn:disabled { opacity: 0.6; }
+/* Lançar: o seletor de artista (chips do topo) já escolhe o ato — a lista "Elenco" repetida na lateral some */
+main .studio-hub .panel.creation > .col-side > section.card:first-child:has(> ul.roster) { display: none; }
 /* cabeçalho de cartão com ícone (padrão .h21 da r21): mesmo estilo dos outros títulos de cartão */
 main .card > .h21:first-child { border-bottom: 1px solid var(--line); padding-bottom: var(--sp-2); margin-bottom: var(--sp-3); }
 main .card > .h21:first-child h3 { margin: 0; display: flex; align-items: center; gap: var(--sp-2); font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -139,6 +147,10 @@ main section.card section.card > h3:first-child { border-bottom: 0; padding-bott
 /* abas internas: um pouco mais compactas (a página tem até 12 abas) */
 main .tabs button { font-size: 0.95rem; min-height: 36px; padding: 0.35rem 0.8rem; }
 
+/* tabelas sem estilo próprio (ex.: Produtores) tinham 1px de respiro e as colunas grudavam: respiro mínimo padrão */
+main table { border-collapse: collapse; }
+main table td, main table th { padding: 0.35rem 0.55rem; vertical-align: middle; }
+main table th { text-align: left; }
 /* tabelas: números à direita e tabulares (colunas marcadas por installNum27), cabeçalho alinhado com a coluna */
 main table :is(td, th).num27c, main table td.num, main table th.num { text-align: right; font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
 main table td.num27c { font-family: var(--mono); font-size: 0.92em; letter-spacing: -0.01em; }
@@ -154,6 +166,7 @@ main .pill.warn { color: var(--t-warn-fg); background: var(--t-warn-bg); }
 .pill.style17 { --fam-h: 30; color: hsl(var(--fam-h) var(--fam-s) var(--fam-l)) !important; border-color: hsl(var(--fam-h) var(--fam-s) var(--fam-l) / 0.55) !important; background: color-mix(in srgb, hsl(var(--fam-h) var(--fam-s) var(--fam-l)) 10%, var(--panel)); }
 /* notas/selos preenchidos com cor de estado: no escuro os tons são pastéis → texto escuro (antes branco, 1,6–2,4:1) */
 .score, .ovr, .take.good, .take.bad { color: var(--on-tone); }
+.ovr.low, .ovr:not(.good):not(.mid):not(.bad):not(.big) { color: var(--ink); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--line); }
 .warn-t { color: var(--warn) !important; }
 /* botão desabilitado: continua legível */
 .btn:disabled { opacity: 0.6; }
