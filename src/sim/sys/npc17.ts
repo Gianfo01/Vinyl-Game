@@ -20,7 +20,7 @@ import { cityById, familyOf, l, type L } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { dir17 } from '../director17';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
-import { emitFact, onFact, type Fact } from '../facts17';
+import { emitFact, factSeedKey17, onFact, type Fact } from '../facts17';
 import { histLocked, histMode } from '../history15';
 import { allHolds, grantHold, type Hold } from '../holds17';
 import { unreleasedRecorded } from '../production';
@@ -678,7 +678,7 @@ function onTrouble(s: GameState, f: Fact): void {
   const a = f.actors.map((id) => s.acts[id] ?? Object.values(s.acts).find((x) => live(x) && x.members.includes(id))).find((x) => okAct17(s, x) && !!x.owner && !!s.labels[x.owner]);
   if (!a || !cool(s, `trouble:${a.id}`, 26)) return;
   const lb = s.labels[a.owner!];
-  const r = Rng.fromSeed(`${s.config.seed}:npc17f:${f.id}`);
+  const r = Rng.fromSeed(`${s.config.seed}:npc17f:${factSeedKey17(f)}`); // r27: conteúdo do fato, não o id global
   const PL = Pl(s, lb);
   const drop = F(PL, 'disciplina') + F(PL, 'ansiedade') * 0.5 + (f.kind === 'arrest' ? 0.4 : 0) - F(PL, 'lealdade') - F(PL, 'coragem') * 0.3 + (a.fame < 30 ? 0.4 : -0.3);
   if (!r.chance(clamp(0.25 + drop * 0.4, 0.05, 0.85))) {

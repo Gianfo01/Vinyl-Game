@@ -44,6 +44,14 @@ export interface Fact {
   src?: string;
   data?: Record<string, number | string>;
 }
+/** r27: chave estável de um fato para semear sorteios de quem REAGE a ele. Não usa o id (`f${seq}`, contador
+ *  global): um fato a mais de qualquer sistema deslocaria todos os ids seguintes e mudaria reações sem relação. */
+export function factSeedKey17(f: Pick<Fact, 'kind' | 'actors' | 'w' | 'text'>): string {
+  let h = 2166136261;
+  const t = f.text?.pt ?? '';
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return `${f.kind}:${f.actors[0] ?? ''}:${f.w}:${(h >>> 0).toString(36)}`;
+}
 export type FactIn = Omit<Fact, 'id' | 'y' | 'm' | 'w' | 'visibility' | 'tags' | 'severity'> & Partial<Pick<Fact, 'visibility' | 'tags' | 'severity'>>;
 
 export interface Facts17State { f: Fact[]; seq: number; /** r19: fatos agregados (não guardados) por `kind:ano-mês` */ agg?: Record<string, number>; /** r19: fatos-índice (emitIndexFact) */ ix?: Fact[]; xs?: number }
