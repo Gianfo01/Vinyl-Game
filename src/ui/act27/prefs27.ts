@@ -9,7 +9,7 @@ import { savePrefs, store } from '../store';
 
 export type ActMode27 = 'play' | 'key' | 'quick';
 export const ACT_MODES27: { value: ActMode27; label: L }[] = [
-  { value: 'play', label: l('Jogáveis (botão "Jogar" em tudo)', 'Playable ("Play" button everywhere)') },
+  { value: 'play', label: l('Jogáveis (oferecidas ao avançar e nas telas)', 'Playable (offered on advance and on screens)') },
   { value: 'key', label: l('Só as importantes (gravar, shows grandes, contratos)', 'Key ones only (recording, big shows, contracts)') },
   { value: 'quick', label: l('Sempre rápido (resolve sozinho)', 'Always quick (resolves on its own)') },
 ];

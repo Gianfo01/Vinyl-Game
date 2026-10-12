@@ -15,8 +15,7 @@ import { rngOf, yearOfWeek } from '../sim/util';
 import { $, actLink, kv, pill, releaseLink, rerender, toast } from './common';
 import { h, select } from './dom';
 import { status20 } from './st20';
-import { playBtn27 } from './act27/mode27';
-import { openReneg27 } from './act27/negotiate27';
+import { screen27, screenOn27 } from './act27/flow27';
 
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); };
@@ -136,11 +135,13 @@ export function rightsSheet(s: GameState, c: Contract, refresh: () => void = rer
     c.party === 'player' ? kv(t(l('Masters cobertos', 'Masters covered')), `${rels.length} · ${$(annual)}/${t(l('ano', 'yr'))}`) : null,
     demand ? h('div', { class: 'r8-demand' },
       h('p', null, pill(t(l('renegociação', 'renegotiation')), 'warn'), ' ', t(l('Pedem royalty de {r}% e bônus de {b}{rev}.', 'They ask for a {r}% royalty and a {b} bonus{rev}.'), { r: Math.round(demand.royalty * 100), b: $(demand.bonus), rev: demand.reversionYears ? t(l(', com reversão dos masters em {y} anos', ', with masters reverting in {y} years'), { y: demand.reversionYears }) : '' })),
+      // r27 FLOW: um caminho só — quando a renegociação é jogável, a mesa É a resposta ao pedido ("aceitar como está" dentro dela)
+      screenOn27('reneg', s, { actId: demand.actId, data: { demandId: demand.id } }) ? h('div', { class: 'row' },
+        h('button', { class: 'btn small primary', onclick: () => screen27('reneg', s, { actId: demand.actId, data: { demandId: demand.id } }, () => { say(respondDemand(s, rngOf(s), demand.id, 'accept'), l('Renegociado. A relação sai fortalecida.', 'Renegotiated. The relationship is stronger.')); refresh(); }) }, '🎮 ', t(l('Responder na mesa', 'Answer at the table')))) :
       h('div', { class: 'row' },
         h('button', { class: 'btn small primary', onclick: () => { say(respondDemand(s, rngOf(s), demand.id, 'accept'), l('Renegociado. A relação sai fortalecida.', 'Renegotiated. The relationship is stronger.')); refresh(); } }, t(l('Aceitar', 'Accept'))),
         h('button', { class: 'btn small', onclick: () => { say(respondDemand(s, rngOf(s), demand.id, 'counter')); refresh(); } }, t(l('Propor meio-termo', 'Offer middle ground'))),
         h('button', { class: 'btn small ghost', onclick: () => { say(respondDemand(s, rngOf(s), demand.id, 'refuse'), l('Recusado. A confiança caiu.', 'Refused. Trust dropped.')); refresh(); } }, t(l('Recusar', 'Refuse')))),
-        playBtn27(l('Negociar na mesa', 'Negotiate at the table'), () => openReneg27(demand.id), (s.acts[demand.actId]?.fame ?? 0) >= 30), // r27 (M2)
     ) : null,
     c.party === 'player' && !c.reverted && rw !== Infinity && rels.length ? h('div', { class: 'row wrap' },
       h('button', { class: 'btn small', onclick: () => { say(extendMasters(s, c.id), l('Masters estendidos por mais 10 anos.', 'Masters extended 10 more years.')); refresh(); } }, `${t(l('Estender masters +10 anos', 'Extend masters +10 years'))} (${$(extendPrice(s, c))})`),

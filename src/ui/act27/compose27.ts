@@ -13,15 +13,8 @@ import { modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { ic } from '../vis';
 import { drawScene27, kindColor27, paintTable27, type Who27 } from './scene27';
-import { showPlay27 } from './prefs27';
 
 const sign = (n: number) => `${n > 0 ? '+' : ''}${n}`;
-
-/** Botão "Jogar" para pôr ao lado de "Compor" (some em "sempre rápido"). */
-export function playComposeBtn27(s: GameState, actId: string | undefined, small = true): HTMLElement | null {
-  if (!actId || !showPlay27()) return null;
-  return h('button', { class: `btn ${small ? 'small' : ''} a27-play`, title: t(l('Sessão de composição jogável: cartas, parceiros e eventos', 'Playable writing session: cards, co-writers and events')), onclick: () => openCompose27(s, actId) }, ic('sparkle'), ' ', t(l('Jogar', 'Play')));
-}
 
 interface Book27 { slots: AgendaSlot[]; existing: boolean; dropped: string[] }
 
@@ -43,13 +36,15 @@ function commitBooking(s: GameState, actId: string, b: Book27): void {
   commitAgenda20(s, s.acts[actId], slots);
 }
 
-export function openCompose27(s: GameState, actId: string): void {
+/** Abre a sessão de composição. Entrada única: a "Compor" da agenda, oferecida na virada do mês (flow27.ts);
+ *  `onEnd(jogou)` avisa quem abriu quando a janela fecha (também quando nem chega a abrir). */
+export function openCompose27(s: GameState, actId: string, onEnd?: (played: boolean) => void): void {
   const why = composeBlock27(s, actId);
-  if (why) { toast(t(why), 'bad'); return; }
+  if (why) { toast(t(why), 'bad'); onEnd?.(false); return; }
   const book = booking(s, actId);
-  if ('pt' in book) { toast(`${t(book)} ${t(l('Abra a agenda do artista e tire alguma ação.', 'Open the act\'s agenda and remove an action.'))}`, 'bad'); return; }
+  if ('pt' in book) { toast(`${t(book)} ${t(l('Abra a agenda do artista e tire alguma ação.', 'Open the act\'s agenda and remove an action.'))}`, 'bad'); onEnd?.(false); return; }
   const c0 = startCompose27(s, actId);
-  if ('pt' in c0) { toast(t(c0), 'bad'); return; }
+  if ('pt' in c0) { toast(t(c0), 'bad'); onEnd?.(false); return; }
   const c: Comp27 = c0;
   const a = s.acts[actId];
   let sel: string[] = [];
@@ -58,7 +53,7 @@ export function openCompose27(s: GameState, actId: string): void {
   let err: L | null = null;
   const root = h('div', { class: 'a27 a27-compose' });
   const put = (...xs: (Node | null)[]) => root.replaceChildren(...xs.filter((x): x is Node => !!x));
-  const close = modal(t(l('Sessão de composição', 'Writing session')) + ` — ${a.name}`, root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); if (result) rerender(); } });
+  const close = modal(t(l('Sessão de composição', 'Writing session')) + ` — ${a.name}`, root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); onEnd?.(!!result); if (result) rerender(); } });
 
   const scene = (): HTMLElement => {
     const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Mesa de composição', 'Writing table')) }) as HTMLCanvasElement;
@@ -119,7 +114,7 @@ export function openCompose27(s: GameState, actId: string): void {
       ),
       h('div', { class: 'a27-actions' },
         h('button', { class: 'btn primary', onclick: () => { phase = 'round'; draw(); } }, ic('sparkle'), ' ', t(l('Sentar à mesa', 'Sit at the table'))),
-        h('button', { class: 'btn ghost', onclick: () => close() }, t(l('Agora não', 'Not now')))));
+        h('button', { class: 'btn ghost', onclick: () => close() }, t(onEnd ? l('Resolver rápido', 'Resolve quickly') : l('Agora não', 'Not now')))));
   };
 
   const round = () => {

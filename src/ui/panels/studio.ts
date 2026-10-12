@@ -17,8 +17,6 @@ import { h, select } from '../dom';
 import { store } from '../store';
 import { chips, ic, portrait, setTab, stat, tabs, tile } from '../vis';
 import { compose23 } from '../sys/journey23';
-import { playComposeBtn27 } from '../act27/compose27';
-import { playStudioBtn27 } from '../act27/record27';
 import { repertoireTab } from './repertoire';
 import { mergeTabs } from '../registry';
 import { stylePill17 } from '../sys/style17';
@@ -78,10 +76,8 @@ function sessionTab(s: GameState): HTMLElement {
         // r23: sem faixa não há sessão — nada de "0 dias" com preço; o motivo e o conserto ficam ao lado do botão
         sess.songs.size ? chips(stat('calendar', `${sessionDays(sess.songs.size, sess.approach)}d`, l('Dias de estúdio', 'Studio days')), stat('money', $(cost), l('Custo', 'Cost'))) : null,
         h('button', { class: 'btn primary', disabled: !sess.songs.size, onclick: () => { const res = startSession(s, a.id, [...sess.songs], sess.tier, sess.approach, sess.producer || undefined); say(res, l('Sessão marcada! Acompanhe os takes na Central.', 'Session booked! Follow the takes in the Hub.')); rerender(); } }, ic('mic'), ' ', t(l('Entrar em estúdio', 'Enter the studio'))),
-        playStudioBtn27(s, a.id, [...sess.songs], sess.tier, sess.approach, sess.producer || undefined), // r27 M1
         !sess.songs.size ? h('span', { class: 'j23-why small', role: 'note' }, h('span', { class: 'bad' }, t(written.length ? l('Nenhuma faixa marcada: marque ao menos uma acima.', 'No track ticked: tick at least one above.') : l('Nenhuma faixa escrita: compor ou escolher um cover antes de gravar.', 'No written track: write or pick a cover before recording.'))),
           !written.length ? h('button', { class: 'btn small', onclick: () => compose23(s, a.id) }, ic('note'), ' ', t(l('Compor', 'Write'))) : null,
-          !written.length ? playComposeBtn27(s, a.id) : null, // r27 M1
           !written.length ? h('button', { class: 'btn small ghost', onclick: () => { setTab('creation-studio', 'versions'); rerender(); } }, t(l('Escolher cover', 'Pick a cover'))) : null) : null,
       ),
       h('p', { class: 'muted small' }, t(l('Cada dia grava um take. Você decide: manter, tentar de novo ou montar dos melhores. Carreiras delegadas decidem sozinhas.', 'Each day records a take. You decide: keep, try again or comp the best. Delegated careers decide on their own.'))),

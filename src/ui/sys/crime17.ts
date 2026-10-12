@@ -24,7 +24,8 @@ import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
 import { chips, stat, tabs } from '../vis';
 import { intriguePanel } from './intrigue';
-import { heistOn27, openHeist27 } from '../act27/heist27'; // r27 (M3): operação jogável
+import { heistOn27 } from '../act27/heist27'; // r27 (M3): operação jogável
+import { screen27, screenOn27 } from '../act27/flow27'; // r27 FLOW: uma entrada só
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const say = (x: L | string, tone: 'good' | 'bad' | 'info' = 'info') => { toast(T(x), tone); rerender(); };
@@ -145,16 +146,21 @@ function plansTab(s: GameState): HTMLElement {
         chips(stat('sparkle', P(od.p), l('Chance de sucesso', 'Success odds')), stat('warning', P(od.q), l('Risco de exposição', 'Exposure risk')), stat('money', T(usd(od.cost)), l('Custo', 'Cost')), stat('fire', `+${od.heat}`, l('Calor', 'Heat')), stat('skull', od.sev, l('Gravidade', 'Severity'))),
         h('p', { class: 'small' }, `${T(l('Por quê', 'Why'))}: ${od.why.map(T).join(' · ') || '—'}`),
         h('p', { class: 'small muted' }, fmtTxt(l('Calor em {a}: {h}. Sucesso sem exposição = segredo (só testemunhas sabem e guardam isso contra você). Exposto = boato/manchete, escândalo com reação regional, caso policial, mágoa da vítima e rivalidade.', 'Heat in {a}: {h}. Success without exposure = a secret (only witnesses know, and keep it against you). Exposed = rumor/headline, scandal with regional reaction, police case, the victim\'s grievance and rivalry.'), countryName(od.a3)).replace('{h}', String(heatIn(s, od.a3)))),
-        od.block ? h('p', { class: 'small bad' }, T(od.block)) : btn(l('Executar', 'Execute'), () => {
-          const r = commitCrime(s, d.id, ctx);
-          if (typeof r === 'object' && 'ok' in r) {
-            const inv = form.partners.filter((p) => !r.joined.includes(p));
-            say(`${T(r.ok ? l('Feito. ', 'Done. ') : l('Falhou. ', 'Failed. '))}${T(r.text)}${r.ex ? ` ${T(l('E vazou!', 'And it leaked!'))}` : ''}${inv.length ? ` ${T(l('Recusaram:', 'Declined:'))} ${inv.map((p) => nameOf17(s, p)).join(', ')}.` : ''}${r.betrayed.length ? ` ${T(l('Traidor(es):', 'Traitor(s):'))} ${r.betrayed.map((p) => nameOf17(s, p)).join(', ')}.` : ''}`, r.ok && !r.ex ? 'good' : 'bad');
-          } else say(r, 'bad');
+        od.block ? h('p', { class: 'small bad' }, T(od.block)) : btn(heistOn27(d.id) && screenOn27('heist', s, { data: { cid: d.id } }) ? l('🎮 Executar (planejar)', '🎮 Execute (plan)') : l('Executar', 'Execute'), () => {
+          // r27 FLOW: um caminho só — quando a operação é jogável, "Executar" abre o plano (com "executar direto" dentro)
+          if (screen27('heist', s, { data: { cid: d.id, ctx } }, () => exec27())) return;
+          exec27();
         }, { cls: 'primary' }),
-        !od.block && heistOn27(d.id) ? btn(l('Jogar', 'Play'), () => openHeist27(s, d.id, ctx), { title: l('Operação jogável: equipe, complicações e encobrimento (Executar = modo rápido).', 'Playable operation: crew, complications and cover-up (Execute = quick mode).') }) : null) : null,
+      ) : null,
     ),
   );
+  function exec27(): void {
+    const r = commitCrime(s, d.id, ctx);
+    if (typeof r === 'object' && 'ok' in r) {
+      const inv = form.partners.filter((p) => !r.joined.includes(p));
+      say(`${T(r.ok ? l('Feito. ', 'Done. ') : l('Falhou. ', 'Failed. '))}${T(r.text)}${r.ex ? ` ${T(l('E vazou!', 'And it leaked!'))}` : ''}${inv.length ? ` ${T(l('Recusaram:', 'Declined:'))} ${inv.map((p) => nameOf17(s, p)).join(', ')}.` : ''}${r.betrayed.length ? ` ${T(l('Traidor(es):', 'Traitor(s):'))} ${r.betrayed.map((p) => nameOf17(s, p)).join(', ')}.` : ''}`, r.ok && !r.ex ? 'good' : 'bad');
+    } else say(r, 'bad');
+  }
 }
 
 // ================================================================ Mercado negro

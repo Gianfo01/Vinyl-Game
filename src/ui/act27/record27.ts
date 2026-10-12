@@ -8,43 +8,26 @@
 import './act27.css';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { startSession } from '../../sim/studio';
-import { bars27, explainRecord27, MIX27, MOVES27, mixCost27, mixPreview27, mixRecord27, moveRecord27, recordBlock27, startRecord27, takeBase27, type Mix27, type Rec27, type RecMove27, type RecTake27 } from '../../sim/sys/record27';
+import { bars27, explainRecord27, MIX27, MOVES27, mixCost27, mixPreview27, mixRecord27, moveRecord27, startRecord27, takeBase27, type Mix27, type Rec27, type RecMove27, type RecTake27 } from '../../sim/sys/record27';
 import type { GameState } from '../../sim/types';
 import { $, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { ic } from '../vis';
 import { drawScene27, paintStudio27, type Who27 } from './scene27';
-import { cutscene27, showPlay27 } from './prefs27';
+import { cutscene27 } from './prefs27';
 
-/** "Jogar" ao lado de "Entrar em estúdio": marca a sessão (mesmo custo) e abre o jogo. */
-export function playStudioBtn27(s: GameState, actId: string, songIds: string[], tier: number, approach: string, producerId?: string): HTMLElement | null {
-  if (!showPlay27(true)) return null;
-  return h('button', { class: 'btn a27-play', disabled: !songIds.length, title: t(l('Gravação jogável: cada dia é um take com decisões', 'Playable recording: each day is a take with decisions')),
-    onclick: () => {
-      const res = startSession(s, actId, songIds, tier, approach, producerId);
-      if ('pt' in res) { toast(t(res), 'bad'); return; }
-      rerender();
-      openRecord27(s, res.id);
-    } }, ic('mic'), ' ', t(l('Jogar a sessão', 'Play the session')));
-}
-
-/** "Jogar os takes" numa sessão em andamento (Central / Estúdio). */
-export function playTakesBtn27(s: GameState, sessId: string): HTMLElement | null {
-  if (!showPlay27(true) || recordBlock27(s, sessId)) return null;
-  return h('button', { class: 'btn small a27-play', onclick: () => openRecord27(s, sessId) }, ic('mic'), ' ', t(l('Jogar os takes', 'Play the takes')));
-}
-
-export function openRecord27(s: GameState, sessId: string): void {
+/** Abre a gravação jogável de uma sessão em andamento. Entrada única: os dias de estúdio oferecidos no avanço
+ *  (flow27.ts); o que não for jogado segue no modo de sempre. `onEnd(jogou)` avisa quando a janela fecha. */
+export function openRecord27(s: GameState, sessId: string, onEnd?: (played: boolean) => void): void {
   const r0 = startRecord27(s, sessId);
-  if ('pt' in r0) { toast(t(r0), 'bad'); return; }
+  if ('pt' in r0) { toast(t(r0), 'bad'); onEnd?.(false); return; }
   const rc: Rec27 = r0;
   const a = s.acts[rc.actId];
   let err: L | null = null;
   let flash = false;
   const root = h('div', { class: 'a27 a27-record' });
   const put = (...xs: (Node | null)[]) => root.replaceChildren(...xs.filter((x): x is Node => !!x));
-  const close = modal(t(l('Estúdio', 'Studio')) + ` — ${a.name}`, root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); rerender(); } });
+  const close = modal(t(l('Estúdio', 'Studio')) + ` — ${a.name}`, root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); onEnd?.(rc.takes.length > 0 || rc.results.length > 0); rerender(); } });
 
   const scene = (): HTMLElement => {
     const cv = h('canvas', { class: `a27-scene ${flash ? 'a27-flash' : ''}`, role: 'img', 'aria-label': t(l('Sala de gravação', 'Live room')) }) as HTMLCanvasElement;

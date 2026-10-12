@@ -39,7 +39,9 @@ const num = (value: number, step: number, set: (v: number) => void, min = 0, max
 
 // ---------------------------------------------------------------- assinar um ato
 
-export function openNego27(actId: string, base?: Draft27): void {
+/** A mesa de negociação. Entrada única: a tela da oferta (ficha → Fazer proposta) abre a mesa quando a atividade
+ *  é jogável (flow27.ts); `quick` = caminho rápido (a proposta única de sempre). */
+export function openNego27(actId: string, base?: Draft27, quick?: () => void): void {
   const s = store.game;
   if (!s) return;
   const act = s.acts[actId];
@@ -86,7 +88,8 @@ export function openNego27(actId: string, base?: Draft27): void {
       h('button', { class: 'btn', title: t(l('"Temos outro artista na mira." Se colar, eles baixam a pedida; se não, confiança e paciência caem.', '"We have another act lined up." If it lands they lower the ask; if not, trust and patience drop.')), onclick: () => play('bluff') }, t(l('Blefar e propor', 'Bluff and propose'))),
       h('button', { class: 'btn', title: t(l('Resposta agora: fecha se estiver perto do mínimo; senão eles saem.', 'Answer now: closes if near their minimum; otherwise they leave.')), onclick: () => play('deadline') }, t(l('Propor com prazo', 'Propose with a deadline'))),
       h('button', { class: 'btn', disabled: !!n.rival, title: t(l('Abre a disputa: +1 rodada e paciência, mas o mínimo sobe acima do lance rival.', 'Opens the bidding: +1 round and patience, but their minimum rises above the rival bid.')), onclick: () => { bringRival27(s, n, true); draw(); } }, t(l('Chamar um rival', 'Bring in a rival'))),
-      h('button', { class: 'btn ghost', onclick: () => { walk27(s, n); draw(); } }, t(l('Sair da mesa', 'Walk away')))) : null;
+      h('button', { class: 'btn ghost', onclick: () => { walk27(s, n); draw(); } }, t(l('Sair da mesa', 'Walk away'))),
+      quick && !n.log.some((x) => x.who === 'you') ? h('button', { class: 'btn ghost', title: t(l('O formulário de sempre: uma proposta, uma resposta.', 'The usual form: one offer, one answer.')), onclick: () => { close(); quick(); } }, t(l('Resolver rápido: proposta única', 'Resolve quickly: single offer'))) : null) : null;
     const end = !open ? h('div', { class: `n27-end ${n.status === 'deal' ? 'good' : 'bad'}` },
       h('b', null, t(n.status === 'deal' ? l('Contrato assinado.', 'Contract signed.') : n.status === 'sniped' ? l('O rival levou o ato.', 'The rival signed the act.') : l('Sem acordo.', 'No deal.'))),
       h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close')))) : null;
@@ -103,7 +106,8 @@ export function openNego27(actId: string, base?: Draft27): void {
 
 // ---------------------------------------------------------------- renegociar
 
-export function openReneg27(demandId: string): void {
+/** A mesa da renegociação. Entrada única: o pedido do artista (Direitos); `quick` = aceitar o pedido como está. */
+export function openReneg27(demandId: string, quick?: () => void): void {
   const s = store.game;
   if (!s) return;
   const st = startReneg27(s, demandId);
@@ -139,7 +143,8 @@ export function openReneg27(demandId: string): void {
             h('button', { class: 'btn primary', onclick: () => play('plain') }, t(l('Propor', 'Propose'))),
             h('button', { class: 'btn', onclick: () => play('bluff') }, t(l('Blefar e propor', 'Bluff and propose'))),
             h('button', { class: 'btn', onclick: () => play('deadline') }, t(l('Propor com prazo', 'Propose with a deadline'))),
-            h('button', { class: 'btn ghost', onclick: () => { walkReneg27(s, n); draw(); } }, t(l('Recusar o pedido', 'Refuse the request')))) : h('div', { class: `n27-end ${n.status === 'deal' ? 'good' : 'bad'}` },
+            h('button', { class: 'btn ghost', onclick: () => { walkReneg27(s, n); draw(); } }, t(l('Recusar o pedido', 'Refuse the request'))),
+            quick && n.round === 0 ? h('button', { class: 'btn ghost', onclick: () => { close(); quick(); } }, t(l('Resolver rápido: aceitar como está', 'Resolve quickly: accept as is'))) : null) : h('div', { class: `n27-end ${n.status === 'deal' ? 'good' : 'bad'}` },
             h('b', null, t(n.status === 'deal' ? l('Contrato renegociado.', 'Contract renegotiated.') : l('Sem acordo.', 'No deal.'))),
             h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close'))))),
         h('div', null,

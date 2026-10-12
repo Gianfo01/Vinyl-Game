@@ -28,7 +28,6 @@ import { store } from '../store';
 import { ic, setTab } from '../vis';
 import { compose23 } from './journey23';
 import { openRecord20 } from './actmenu20';
-import { playComposeBtn27 } from '../act27/compose27';
 
 const ui = { sel: '' as string, type: 'single' as ReleaseType, concept: CONCEPTS[0].id };
 
@@ -137,7 +136,6 @@ function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
     !locked ? h('div', { class: 'row wrap' },
       // r23: composição já marcada não pede clique de novo (diz a semana); "mais" mostra o que sairia da agenda
       h('button', { class: 'btn small', onclick: () => compose23(s, p.actId) }, ic('note'), ' ', t(l('Compor (agenda)', 'Write (agenda)'))),
-      playComposeBtn27(s, p.actId), // r27 M1
       unrec ? h('button', { class: 'btn small', onclick: () => openRecord20(s, p.actId) }, ic('mic'), ' ', t(l('Preparar gravação', 'Prepare a recording'))) : null,
     ) : null,
     unrec && !locked ? h('fieldset', null, h('legend', null, t(l('Estúdio, produtor e equipe', 'Studio, producer and team'))),

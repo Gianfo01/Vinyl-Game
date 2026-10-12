@@ -34,6 +34,7 @@ import { hideSection, sectionsOf } from '../registry';
 import { FILTER0_20, SUB20, SUBTAB_KEY20, actionRow20, alerts20, filterRoster20, nextCommitment20, project20, type Filter20, type Sub20 } from '../actions20';
 import { actionsButton20, applyNav20, bindContext20, chooseAction20, quickPins20 } from '../sys/actmenu20';
 import { actStatus } from '../../sim/sys/hq8';
+import { flowNote27, slotHint27, slotMark27 } from '../act27/flow27';
 
 /** Seções registradas por outros sistemas que agora moram numa subaba (e não mais soltas no fim da página). */
 const PLACED20: Record<string, Sub20> = { feats8: 'agenda', 'people-negotiate': 'career', 'scenes-actions': 'audience', w4clubs: 'audience' };
@@ -272,10 +273,11 @@ function agendaSection(s: GameState, a: Act): HTMLElement {
     const def = agendaById[slot.action] ?? EXTRA_ACTIONS.find((x) => x.id === slot.action);
     const combo = combos.filter((c) => c.after === idx);
     return h('li', { class: `slot ${combo.length ? 'combo' : ''}` },
-      h('b', null, t(def?.name)), slotCost(slot.action) > 1 ? pill(`×${slotCost(slot.action)}`) : null,
+      h('b', null, t(def?.name)), slotMark27(s, a.id, slot, idx), slotCost(slot.action) > 1 ? pill(`×${slotCost(slot.action)}`) : null, // r27 FLOW: 🎮 jogável na virada do mês
       def?.cost ? h('span', { class: 'muted small' }, ` ${$(money(s, def.cost))}`) : null,
       ...params,
       h('small', { class: 'muted' }, t(def?.desc)),
+      slotHint27(s, a.id, slot, idx),
       ...combo.map((c) => pill(`✦ ${t(c.combo.name)}`, 'good')),
       h('button', { class: 'icon', 'aria-label': t(l('remover', 'remove')), onclick: () => commit(slots.filter((_, i) => i !== idx)) }, '✕'),
     );
@@ -293,9 +295,10 @@ function agendaSection(s: GameState, a: Act): HTMLElement {
   return section(`${t(S.agenda)} — ${t(l('capacidade', 'capacity'))} ${agendaLoad(slots)}%`,
     loadBar(slots.map((x) => ({ label: t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name), load: slotLoad(x) }))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: delegated, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; s.delegated[a.id] = on ? true : false; if (!on) s.agenda[a.id] = defaultAgenda(s, a); rerender(); } }), t(S.delegate)),
+    flowNote27(s), // r27 FLOW: o que o mês passado jogou × resolveu no rápido
     h('div', { class: 'agenda-cal' }, [1, 2, 3, 4].map((w) => h('div', { class: `agenda-week ${crowded.includes(w) ? 'crowded' : ''} ${relWeek === w ? 'release' : ''}` },
       h('header', null, `${t(l('Semana', 'Week'))} ${w}`, relWeek === w ? pill(t(l('lançamento', 'release')), 'gold') : null, crowded.includes(w) ? pill(t(l('cheia', 'busy')), 'warn') : null),
-      h('ul', { class: 'slots' }, slots.map((x, i) => ({ x, i })).filter(({ x, i }) => slotWeek(x, i) === w).map(({ x, i }) => delegated ? h('li', { class: 'slot muted' }, t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name)) : slotEditor(x, i))),
+      h('ul', { class: 'slots' }, slots.map((x, i) => ({ x, i })).filter(({ x, i }) => slotWeek(x, i) === w).map(({ x, i }) => delegated ? h('li', { class: 'slot muted' }, t(agendaById[x.action]?.name ?? EXTRA_ACTIONS.find((e) => e.id === x.action)?.name), slotMark27(s, a.id, x, i)) : slotEditor(x, i))),
     ))),
     delegated ? null : addSel,
     combos.length ? h('p', { class: 'small good' }, '✦ ', combos.map((c) => `${t(c.combo.name)}: ${t(c.combo.desc)}`).join(' · ')) : h('p', { class: 'muted small' }, t(l('Dica: combinações dão bônus — ensaiar antes dos shows, compor antes de gravar, treinar antes de gravar, descansar depois da estrada, dar entrevista na semana do lançamento.', 'Tip: combos give bonuses — rehearse before gigs, write before recording, train before recording, rest after the road, do interviews in release week.'))),
