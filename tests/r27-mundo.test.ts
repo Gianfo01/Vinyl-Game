@@ -117,25 +117,26 @@ describe('r27 mapa e ficha da cidade', () => {
 });
 
 describe('r27 linha das eras', () => {
-  it('1962: rádio e LP no passado, próxima tecnologia no futuro, cada passo diz o que muda', () => {
+  it('1962: rádio e LP no passado; nada do futuro aparece; cada passo diz o que muda', () => {
     const s = game('r27-h', 1962);
     const tl = eraTimeline27(s);
     const st = (id: string) => tl.steps.find((x) => x.id === id)!;
     expect(st('radio').status).toBe('past');
     expect(st('lp').status).toBe('past');
-    expect(tl.next).toBeDefined();
-    expect(tl.next!.year).toBeGreaterThan(s.year);
-    expect(tl.steps.filter((x) => x.status === 'next').length).toBe(1);
+    expect(tl.next).toBeUndefined();
+    expect(tl.steps.every((x) => x.year <= s.year && s.techDates[x.id] !== undefined)).toBe(true);
+    expect(tl.steps.find((x) => x.id === 'cassette')).toBeUndefined();
     for (const x of tl.steps) expect(x.fx.pt.length).toBeGreaterThan(5);
     // ordenada por ano; o marco do cassete descreve a cópia caseira
     for (let i = 1; i < tl.steps.length; i++) expect(tl.steps[i].year).toBeGreaterThanOrEqual(tl.steps[i - 1].year);
-    expect(st('cassette').changes.length + st('cassette').formats.length).toBeGreaterThan(0);
+    expect(st('lp').changes.length + st('lp').formats.length + st('radio').changes.length).toBeGreaterThan(0);
   });
-  it('2005: streaming é o próximo (ou já chegou), CD no passado', () => {
+  it('2005: CD no passado; streaming só aparece se já chegou neste save', () => {
     const s = game('r27-i', 2005);
     const tl = eraTimeline27(s);
     expect(tl.steps.find((x) => x.id === 'cd')!.status).toBe('past');
-    expect(['next', 'soon', 'now', 'past']).toContain(tl.steps.find((x) => x.id === 'streaming')!.status);
+    const st = tl.steps.find((x) => x.id === 'streaming');
+    expect(st === undefined || (s.techDates.streaming !== undefined && st.year <= s.year)).toBe(true);
   });
 });
 

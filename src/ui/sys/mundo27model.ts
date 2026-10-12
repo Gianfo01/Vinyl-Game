@@ -380,9 +380,9 @@ export function eraTimeline27(s: GameState): EraTimeline27 {
     const status: EraStatus27 = never ? 'never' : year < s.year - 1 ? 'past' : year <= s.year ? 'now' : year - s.year <= 12 ? 'soon' : 'later';
     return { id: x.id, name: x.name, year, real: x.base, status, fx: TECH_FX27[x.id] ?? x.name, changes, formats, unlocks, shifted: at !== undefined && year !== x.base };
   }).sort((a, b) => a.year - b.year || a.real - b.real);
-  const next = steps.find((x) => x.status === 'soon' || x.status === 'later');
-  if (next) next.status = 'next';
-  return { steps, next, year: s.year };
+  // r27: só o que já aconteceu NESTE save — nada do futuro (nem previsão), nem o que não veio
+  const done = steps.filter((x) => (x.status === 'past' || x.status === 'now') && s.techDates[x.id] !== undefined && x.year <= s.year);
+  return { steps: done, next: undefined, year: s.year };
 }
 
 // ================================================================ 4. O que sabemos

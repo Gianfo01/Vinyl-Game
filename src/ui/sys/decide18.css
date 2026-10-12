@@ -40,3 +40,8 @@
 .btn.ib18-opt { flex-direction: column; align-items: flex-start; text-align: left; max-width: 26rem; }
 .btn.ib18-opt small { color: var(--muted); font-size: 0.72rem; }
 .ib18-it { transition: background 0.2s; }
+/* r27: texto legível dentro de opções em destaque (fundo dourado): nada de cinza claro/verde/vermelho sobre ouro */
+.btn.primary .dc18-now, .btn.primary .dc18-later, .btn.primary .dc18-unl, .btn.primary .dc18-lock, .btn.primary .dc18-e,
+.btn.primary .dc18-e.good, .btn.primary .dc18-e.bad, .btn.primary small, .btn.primary i { color: var(--accent-ink, #1a1208) !important; opacity: 1; }
+.btn.primary .dc18-later i { opacity: 0.85; }
+.btn.primary .dc18-odds { background: rgba(0, 0, 0, 0.18); color: var(--accent-ink, #1a1208) !important; }
