@@ -8,7 +8,7 @@ import { mgrById, REAL_MGRS } from '../src/data/managers14';
 import { prodById, REAL_PRODS } from '../src/data/producers15';
 import { REAL_ACTS } from '../src/data/realnames';
 import { cityById, GENRES } from '../src/data/world';
-import { ARTISTS27_FROM, REAL_ALL, REAL_BASE, realDataOf, realSongs22 } from '../src/sim/sys/realworld';
+import { ARTISTS27_FROM, dedupKey27, REAL_ALL, REAL_BASE, realDataOf, realSongs22 } from '../src/sim/sys/realworld';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import type { Act } from '../src/sim/types';
@@ -22,8 +22,9 @@ describe('r27 artistas novos', () => {
   it('entram no fim de REAL_ALL, sem repetir nomes, e quem já existia fica de fora', () => {
     expect(ARTISTS27.length).toBe(84);
     expect(SKIPPED27.length).toBe(34);
-    expect(REAL_ALL.length - ARTISTS27_FROM).toBe(ARTISTS27.length);
-    for (const a of ARTISTS27) expect(REAL_ALL.indexOf(a), a.n).toBeGreaterThanOrEqual(ARTISTS27_FROM);
+    // r27: a fusão de duplicatas (C1) trata "The X" = "X" e "&" = "and" — quem já existia por essa regra fica com a entrada antiga
+    const early = new Set(REAL_ALL.slice(0, ARTISTS27_FROM).map((a) => dedupKey27(a.n)));
+    for (const a of ARTISTS27) { if (early.has(dedupKey27(a.n))) continue; expect(REAL_ALL.indexOf(a), a.n).toBeGreaterThanOrEqual(ARTISTS27_FROM); }
     for (const n of SKIPPED27) { const i = byName(n); expect(i, n).toBeGreaterThanOrEqual(0); expect(i, n).toBeLessThan(ARTISTS27_FROM); }
     const keys = REAL_ALL.map((a) => norm(a.n));
     expect(new Set(keys).size).toBe(keys.length);
@@ -92,7 +93,7 @@ describe('r27 músicas das lendas', () => {
     expect(Object.keys(SONGS27).length).toBe(341);
     let n = 0;
     for (const [a, xs] of Object.entries(SONGS27)) {
-      expect(byName(a) >= 0 || Object.values(REAL_ACTS).some((x) => norm(x.name) === norm(a)), a).toBe(true);
+      expect(REAL_ALL.some((x) => dedupKey27(x.n) === dedupKey27(a)) || Object.values(REAL_ACTS).some((x) => dedupKey27(x.name) === dedupKey27(a)), a).toBe(true);
       for (const [t, y] of xs) { n++; expect(t).not.toMatch(/\(com |\(composição\)|\(álbum\)/); expect(y).toBeGreaterThanOrEqual(1890); expect(y).toBeLessThanOrEqual(2026); }
     }
     expect(n).toBeGreaterThan(1600);

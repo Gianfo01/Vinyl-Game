@@ -84,7 +84,8 @@ export const REAL_EXECS: RealExec[] = [
   e('chris_blackwell', 'Chris Blackwell', 1937, undefined, 'x_island', 1959, 'heir', 'visionary', 'Herdeiro anglo-jamaicano que levou o reggae ao mundo.', 'Anglo-Jamaican heir who took reggae to the world.'),
   e('herb_alpert', 'Herb Alpert', 1935, undefined, 'x_am', 1962, 'artist', 'consensus', 'Trompetista que montou o selo na garagem.', 'Trumpeter who started the label in a garage.'),
   e('seymour_stein', 'Seymour Stein', 1942, 2023, 'x_sire', 1966, 'journalist', 'showman', 'Ouvido de A&R lendário para o novo.', 'Legendary A&R ear for the new.'),
-  e('clive_davis', 'Clive Davis', 1932, undefined, 'imperial', 1967, 'lawyer', 'dealmaker', 'Advogado que virou o maior caçador de hits da indústria.', 'Lawyer who became the industry\'s greatest hit hunter.'),
+  e('clive_davis', 'Clive Davis', 1932, 2026, // r27: morreu em 2026 (NPR)
+    'imperial', 1967, 'lawyer', 'dealmaker', 'Advogado que virou o maior caçador de hits da indústria.', 'Lawyer who became the industry\'s greatest hit hunter.'),
   e('joao_araujo', 'João Araújo', 1935, 2013, 'x_somlivre', 1969, 'promoter', 'dealmaker', 'Produtor que juntou música e novela.', 'Producer who married music and soap operas.'),
   e('david_geffen', 'David Geffen', 1943, undefined, 'sunset_parkway', 1970, 'promoter', 'dealmaker', 'Agente que virou magnata.', 'Agent turned mogul.'),
   e('richard_branson', 'Richard Branson', 1950, undefined, 'x_virgin', 1972, 'promoter', 'showman', 'Dono de loja de discos por correio que quis tudo.', 'Mail-order record shop owner who wanted everything.'),

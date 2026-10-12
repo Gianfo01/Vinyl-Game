@@ -38,7 +38,7 @@ describe('r19 WP-A / WP-B: dados de artistas', () => {
   });
 
   it('entradas aparecem no jogo no ano certo (nomes reais): 1935 (WP-A) e 1980 (WP-B)', () => {
-    const g35 = createGame(defaultConfig('r19ab', { startYear: 1935, realNames: true, dbSize: 'huge' }));
+    const g35 = createGame(defaultConfig('r19ab', { startYear: 1935, realNames: true, dbSize: 'huge', mode: 'historic' })); // r27: idem (sem sorte do modo livre)
     const names35 = new Set(Object.values(g35.acts).map((x) => x.name));
     for (const n of ['Mamie Smith', 'King Oliver', 'Art Tatum']) expect(names35.has(n), n).toBe(true);
     // r21: modo histórico — o modo livre pula 8% dos reais por sorteio, e o teste é sobre a data de entrada, não sobre sorte

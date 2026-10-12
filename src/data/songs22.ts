@@ -1626,9 +1626,6 @@ export const SONGS22: Record<string, [string, number][]> = {
 
 /** Artistas das curtidas que ainda não estavam no jogo (entram com o acervo, no sorteio próprio dele). */
 export const LIKES22_ARTISTS: RealArtist[] = [
-  { n: 'Toto', g: 'soft_rock', c: 'los_angeles', d: 1978, t: 1, cn: 'USA', z: 1,
-    m: [['Bobby Kimball', 'vocal', 1947, undefined, 1977, 1984], ['Steve Lukather', 'guitar', 1957, undefined, 1977], ['David Paich', 'keys', 1954, undefined, 1977], ['Steve Porcaro', 'keys', 1957, undefined, 1977, 1987], ['David Hungate', 'bass', 1948, undefined, 1977, 1982], ['Jeff Porcaro', 'drums', 1954, 1992, 1977, 1992]],
-    al: [['Toto', 1978], ['Hydra', 1979], ['Toto IV', 1982], ['Isolation', 1984]] },
   { n: 'Gemello', g: 'hiphop', c: 'rome', d: 2014, t: 3, cn: 'ITA', r: 'mc', z: 2, exact: false,
     al: [['UNtitled', 2019], ['La Quiete', 2022]] },
   // r23: artistas das playlists e curtidas (CSV do Spotify), classificados por gênero/cidade/estreia; conf baixa = z3 e não conferido

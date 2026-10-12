@@ -26,6 +26,8 @@ import { ACERVO21 } from '../../data/acervo21';
 import { LIKES22_ARTISTS, SONGS22 } from '../../data/songs22';
 import { ARTISTS27, FILL27 } from '../../data/audit27_artists';
 import { SONGS27 } from '../../data/audit27_songs';
+import { applyAudit27, applySongs27 } from '../../data/audit27';
+import { NEW27_C1 } from '../../data/new27c1';
 const ACERVO22 = [...ACERVO21, ...LIKES22_ARTISTS];
 import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
@@ -44,22 +46,28 @@ import { actsTouched17 } from '../actidx17';
 import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+/** r27: chave de deduplicação — "The X" = "X" e "&" = "and" (Carpenters, Four Tops, Smashing Pumpkins apareciam 2×) */
+export const dedupKey27 = (n: string) => norm16(n.replace(/^the\s+/i, '').replace(/&/g, ' and '));
 const BASE_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
-const taken16 = new Set([...BASE_ALL.map((a) => norm16(a.n)), ...Object.values(REAL_ACTS).map((a) => norm16(a.name))]);
+const taken16 = new Set([...BASE_ALL.map((a) => dedupKey27(a.n)), ...Object.values(REAL_ACTS).map((a) => dedupKey27(a.name))]);
 /** rodada 16: formações (solos e bandas novas de quem saiu) entram no fim — catalogNo estável. */
-const L16F = REAL_L16.filter((a) => !taken16.has(norm16(a.n)));
-const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
+const L16F = REAL_L16.filter((a) => !taken16.has(dedupKey27(a.n)));
+const taken17 = new Set([...taken16, ...L16F.map((a) => dedupKey27(a.n))]);
 /** rodada 17: lote E (one-hit wonders, covers/samples, cenas locais, nomes que faltavam) também no fim. */
-export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO22.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
+export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = dedupKey27(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = dedupKey27(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = dedupKey27(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO22.filter((a) => { const k = dedupKey27(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
 /** r21: o acervo é o último lote de REAL_ALL; usa gerador próprio para não deslocar os sorteios do resto do mundo. */
 export const ACERVO21_FROM = REAL_ALL.length - ACERVO22.filter((a) => REAL_ALL.includes(a)).length;
 /** r27: artistas que faltavam (auditoria Masters_25) entram depois do acervo — mesmo gerador próprio, sem deslocar o acervo. */
 export const ARTISTS27_FROM = REAL_ALL.length;
-REAL_ALL.push(...ARTISTS27.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }));
+REAL_ALL.push(...ARTISTS27.filter((a) => { const k = dedupKey27(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }));
 const FILL27N = new Map(Object.entries(FILL27).map(([k, v]) => [norm16(k), v]));
 for (const a of REAL_ALL) { const f = FILL27N.get(norm16(a.n)); if (f && !a.m?.length) { if (a.b === undefined && f.b !== undefined) a.b = f.b; if (a.x === undefined && f.x !== undefined) a.x = f.x; } } // r27: só preenche lacunas
 applyMembers25(REAL_ALL); // r25: formações pesquisadas para quem não tinha integrantes
 applyLineups25(REAL_ALL); // r25: formações reais que estavam incompletas (banda de 5 aparecia com 2–3)
+// r27: atos novos da auditoria (3T) no fim, no sorteio do acervo; depois as correções auditadas (mortes, saídas, voltas…)
+for (const a of NEW27_C1) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
+applySongs27(SONGS22);
 const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo21|${k}`);
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
@@ -81,15 +89,15 @@ registerExt4('rw', () => ({ upcoming: [], sched: [], done: {}, former: {} }));
 export const rw = (s: GameState): RwState => (s as unknown as { x4: { rw: RwState } }).x4.rw;
 
 /** Dados reais de um ato (lista nova ou catálogo clássico). */
-const SONG22_KEYS = new Map(Object.entries(SONGS22).map(([k, v]) => [norm16(k), v]));
+const SONG22_KEYS = new Map(Object.entries(SONGS22).map(([k, v]) => [dedupKey27(k), v]));
 for (const [k, v] of Object.entries(SONGS27)) { // r27: músicas da auditoria entram depois das curtidas, sem repetir título
-  const key = norm16(k), cur = SONG22_KEYS.get(key) ?? [], seen = new Set(cur.map(([t]) => norm16(t)));
+  const key = dedupKey27(k), cur = SONG22_KEYS.get(key) ?? [], seen = new Set(cur.map(([t]) => norm16(t)));
   SONG22_KEYS.set(key, [...cur, ...v.filter(([t]) => !seen.has(norm16(t)) && (seen.add(norm16(t)), true))]);
 }
 /** r22: músicas marcantes (título, ano) de um ato real — das curtidas do Spotify do jogador. */
 export function realSongs22(act: Act): [string, number][] {
   const d = realDataOf(act);
-  return d ? SONG22_KEYS.get(norm16(d.n)) ?? [] : [];
+  return d ? SONG22_KEYS.get(dedupKey27(d.n)) ?? [] : [];
 }
 /** r22: próximo título real ainda não usado pelo ato, de uma música já lançada na vida real até `year` (+1). Sem RNG. */
 export function realSongTitle22(s: GameState, act: Act, year = s.year): string | undefined {
@@ -394,7 +402,7 @@ function spawnReal(s: GameState, r: Rng, idx: number, startOfRun: boolean): Act 
   const pot = potentialFor(r, a.t);
   const act = makeAct(s, r, {
     name: s.config.realNames ? a.n : undefined, genre: a.g, city: a.c, members: membersAtDebut(a), potential: pot,
-    formed: debut - 1, debutYear: debut, catalogNo: REAL_BASE + idx, fame: r.float(0.5, 3), startFrac: r.float(0.58, 0.7),
+    formed: a.f !== undefined ? Math.min(a.f, debut) : debut - 1, debutYear: debut, catalogNo: REAL_BASE + idx, fame: r.float(0.5, 3), startFrac: r.float(0.58, 0.7),
   });
   return act;
 }
@@ -457,7 +465,7 @@ function newgame(s: GameState, r: Rng): void {
     const act = spawnReal(s, r, i, true);
     if (!act) continue;
     act.debutYear = debut;
-    act.formed = debut - 1;
+    act.formed = a.f !== undefined ? Math.min(a.f, debut) : debut - 1; // r27: formação real quando bem antes da estreia
     decorate(s, r, act, a);
     const years = y0 - debut;
     if (end !== undefined && end < y0 && !reunionNow) {

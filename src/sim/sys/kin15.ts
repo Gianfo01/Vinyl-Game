@@ -7,6 +7,7 @@ import { clamp, Rng, seedState } from '../../core/rng';
 import { exitMember20 } from '../members20';
 import { KIN15 } from '../../data/kin15';
 import { KIN25 } from '../../data/kin25';
+import { KIN27 } from '../../data/kin27';
 import { l, type L } from '../../data/world';
 import { realSafe } from '../dynasty';
 import { registerExt4, registerSimHook } from '../ext4';
@@ -72,7 +73,7 @@ function graph(s: GameState): Edges {
   const idx: Record<string, string> = {};
   for (const p of Object.values(s.persons)) { const k = canonKey(p.name); if (!(k in idx) || (!s.persons[idx[k]].alive && p.alive)) idx[k] = p.id; }
   const e: Edges = {};
-  for (const [t, ...ns] of KIN15) {
+  for (const [t, ...ns] of [...KIN15, ...KIN27]) { // r27: + laços da auditoria
     const ids = ns.map((x) => idx[canonKey(x)]);
     if (t === 'S' || t === 'C') { for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) if (ids[i] && ids[j]) add(e, ids[i], ids[j], t === 'S' ? 'sibling' : 'cousin'); }
     else if (ids[0]) for (const k of ids.slice(1)) if (k) add(e, ids[0], k, t === 'P' ? 'child' : t === 'M' ? 'spouse' : t === 'X' ? 'ex' : 'nephew');
