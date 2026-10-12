@@ -79,7 +79,7 @@ registerConseq18('nm19:sell', { now: l('Caixa fixo por ano; reputação do lugar
 /** Cláusula de conduta: a marca sai e o nome antigo volta. */
 export function pullName19(s: GameState, x: Nm19, why: L, cause?: Fact): void {
   if (x.pulled) return;
-  x.pulled = s.week; x.why = why;
+  x.pulled = Math.max(1, s.week); x.why = why; // r23: semana 0 contava como "nunca retirada"
   cnt19(nm19(s), 'pulled');
   const tx = fmtL(l('{b} aciona a cláusula de conduta e tira o nome de "{n}" ({w}).', '{b} triggers the conduct clause and drops its name from "{n}" ({w}).'), { b: x.bname, n: nameOf(s, x.k, x.tgt), w: why });
   log19(s, nm19(s), tx);
