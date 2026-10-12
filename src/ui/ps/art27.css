@@ -1,0 +1,25 @@
+/* r27 (K): ilustrações de página e cenas animadas em pixel art. Pixels nítidos (escala inteira feita no JS),
+   moldura com a cor das bordas da arte (fica bem no tema escuro e no claro). */
+canvas.art27, canvas.cut27-cv { image-rendering: pixelated; image-rendering: crisp-edges; display: block; max-width: 100%; }
+.art27-frame {
+  margin: 0 0 12px; padding: 0; display: flex; justify-content: center; overflow: hidden;
+  background: var(--art27-edge, #0c0a18); border: 1px solid var(--line, #2a2a40); border-radius: 10px;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--gold, #d4a63c) 18%, transparent);
+}
+:root[data-theme='light'] .art27-frame { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--gold, #b8862c) 30%, transparent), 0 1px 2px rgba(0, 0, 0, .12); }
+
+/* ---- cenas (cut27) ---- */
+.cut27 { display: grid; gap: 10px; max-width: 780px; margin: 0 auto; }
+.cut27-stage { position: relative; display: flex; justify-content: center; background: var(--art27-edge, #0c0a18); border-radius: 8px; overflow: hidden; border: 1px solid var(--line, #2a2a40); }
+.cut27-cap { min-height: 2.6em; margin: 0; font-size: 1rem; line-height: 1.35; color: var(--ink); }
+.cut27-cap b { color: var(--gold, #d4a63c); }
+.cut27-lines { margin: 0; padding-left: 1.1em; color: var(--muted); }
+.cut27-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.cut27-choices .btn { flex: 1 1 200px; text-align: left; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.cut27-choices .btn small { display: block; opacity: .75; font-weight: 400; }
+.cut27-out { padding: 8px 10px; border-left: 3px solid var(--gold, #d4a63c); background: var(--panel-2, rgba(255, 255, 255, .04)); border-radius: 6px; }
+.cut27-ctl { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+.cut27-bar { flex: 1; height: 3px; background: var(--line, #2a2a40); border-radius: 2px; overflow: hidden; }
+.cut27-bar > i { display: block; height: 100%; width: 0; background: var(--gold, #d4a63c); }
+.reduced-motion .cut27-bar, .reduced-motion .cut27-ctl { display: none; }
+@media (max-width: 560px) { .cut27-choices .btn { flex-basis: 100%; } }
