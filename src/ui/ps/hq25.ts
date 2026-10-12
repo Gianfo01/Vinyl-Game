@@ -2,16 +2,17 @@
 // por hqpx27.ts conforme nível da sede, ano e cidade — sem imagens), com as salas clicáveis, selos de estado, bonecos do elenco e da equipe reais, "Precisa de você", "Sua agenda" e o
 // "Elenco". Toda a lógica está em hq25model.ts (pura); aqui só se desenha. Encaixa pelo slot25.
 
-import { cityById, l } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
+import { buyBlocker27, buyRoom27, cityMul27, hqRooms27, type Unit27 } from '../../sim/sys/hqrooms27';
 import type { GameState } from '../../sim/types';
-import { inspect, rerender } from '../common';
+import { $, inspect, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { avatarSprite, lookOf, portraitCanvas } from '../pixel/avatar';
 import { store } from '../store';
 import { ic, setTab } from '../vis';
 import { hqModel25, type Agenda25, type Goto25, type HqModel25, type RoomM25, type Sprite25 } from './hq25model';
-import { drawHqCutaway27, plan27, type Cell27, type Drawn27 } from './hqpx27';
+import { drawHqCutaway27, isNarrow27, plan27, type Cell27, type Drawn27 } from './hqpx27';
 import { setSedeHome25 } from './slot25';
 import './hq25.css';
 
@@ -46,12 +47,107 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(3)}%`
 const box = (d: Drawn27, x: number, y: number, w: number, hh: number): string =>
   `left:${pct(x, d.plan.W)};top:${pct(y, d.plan.H)};width:${pct(w, d.plan.W)};height:${pct(hh, d.plan.H)}`;
 
-function roomBtn(d: Drawn27, r: RoomM25, c: Cell27): HTMLElement {
+/** Nomes curtos para salas estreitas (garagem): o selo cabe na sala e os detalhes vão para os cartões abaixo. */
+const SHORT27: Record<RoomM25['id'], L> = {
+  studio: l('Estúdio', 'Studio'), lounge: l('Lounge', 'Lounge'), office: l('Escritório', 'Office'),
+  anr: l('A&R', 'A&R'), stage: l('Palco', 'Stage'), lobby: l('Recepção', 'Lobby'),
+};
+
+function roomBtn(d: Drawn27, r: RoomM25, c: Cell27, k: number): HTMLElement {
   const say = [t(r.name), t(r.desc), ...r.badges.map((b) => t(b.text))].filter(Boolean).join('. ');
   const hot = r.badges.some((b) => b.tone === 'bad' || b.tone === 'warn');
-  return h('button', { type: 'button', class: `hq25-room ${hot ? 'hot' : ''}`, 'data-room': r.id, style: box(d, c.x, c.y, c.w, c.h), 'aria-label': say, onclick: () => go25(r.go) },
-    h('span', { class: 'hq25-chip' }, ic(r.icon), ' ', t(r.name)),
-    h('span', { class: 'hq25-bds' }, r.badges.slice(0, 2).map(badgeEl)));
+  const narrow = isNarrow27(c, k);
+  const tone = r.badges.find((b) => b.tone === 'bad')?.tone ?? r.badges.find((b) => b.tone === 'warn')?.tone;
+  return h('button', { type: 'button', class: `hq25-room ${hot ? 'hot' : ''} ${narrow ? 'narrow' : ''}`, 'data-room': r.id, style: box(d, c.x, c.y, c.w, c.h), 'aria-label': say, title: narrow ? say : undefined, onclick: () => go25(r.go) },
+    h('span', { class: 'hq25-chip' }, ic(r.icon), h('span', { class: 'hq25-chip-t' }, t(narrow ? SHORT27[r.id] : r.name)), narrow && tone ? h('i', { class: `hqr27-dot ${tone}`, 'aria-hidden': 'true' }) : null),
+    narrow ? null : h('span', { class: 'hq25-bds' }, r.badges.slice(0, 2).map(badgeEl)));
+}
+
+// ---------------------------------------------------------------- r27 I1: salas e andares compráveis
+
+const months27 = (n: number): string => t(n === 1 ? l('1 mês', '1 month') : l('{n} meses', '{n} months'), { n });
+const floorName27 = (f: number): string => (f === 0 ? t(l('Térreo', 'Ground floor')) : t(l('{n}º andar', 'Floor {n}'), { n: f }));
+
+/** Diálogo de compra: custo da obra, manutenção, tempo de obra e efeito; confirma e começa a obra. */
+export function buyDlg27(s: GameState, id: string): void {
+  const u = hqRooms27(s).find((x) => x.id === id);
+  if (!u) return;
+  const why = buyBlocker27(s, id);
+  const city = cityById[s.config.homeCity];
+  let close = (): void => {};
+  const buy = (): void => {
+    const e = buyRoom27(s, id);
+    close();
+    if (e) toast(t(e), 'bad');
+    else toast(t(l('Obra começou: {n}. Pronta em {m}.', 'Construction started: {n}. Ready in {m}.'), { n: t(u.name), m: months27(u.months) }), 'good');
+    rerender();
+  };
+  const row = (k: L, v: Node | string) => [h('dt', null, t(k)), h('dd', null, v)];
+  const body = h('div', { class: 'hqr27-dlg' },
+    h('p', null, t(u.desc)),
+    h('dl', { class: 'hqr27-dl' },
+      ...row(l('Custo da obra', 'Construction cost'), h('b', { class: 'num20' }, u.cost ? $(u.cost) : t(l('já é seu', 'already yours')))),
+      ...row(l('Manutenção', 'Upkeep'), h('span', { class: 'num20' }, `${$(u.upkeep)} ${t(l('por mês', 'per month'))}`)),
+      ...row(l('Tempo de obra', 'Construction time'), months27(u.months)),
+      ...row(l('Efeito', 'Effect'), h('b', null, t(u.effect))),
+      ...row(l('Onde', 'Where'), floorName27(u.floor))),
+    h('p', { class: 'muted small' }, t(l('Preço da época e da cidade-sede{c} (×{m}). A manutenção começa quando a obra termina.', 'Priced for the era and the home city{c} (×{m}). Upkeep starts when construction ends.'), { c: city ? ` (${t(city.name)})` : '', m: cityMul27(s).toFixed(2) })),
+    why ? h('p', { class: 'hqr27-why', role: 'alert' }, ic('lock'), ' ', t(why)) : null,
+    h('div', { class: 'row wrap hqr27-act' },
+      h('button', { type: 'button', class: 'btn primary', disabled: !!why, onclick: buy }, u.kind === 'floor' ? t(l('Montar o andar', 'Fit out the floor')) : u.kind === 'upgrade' ? t(l('Fazer a reforma', 'Do the makeover')) : t(l('Comprar e começar a obra', 'Buy and start building'))),
+      h('button', { type: 'button', class: 'btn ghost', onclick: () => close() }, t(l('Cancelar', 'Cancel')))));
+  close = modal(t(u.kind === 'floor' ? l('Montar andar: {n}', 'Fit out floor: {n}') : l('Comprar sala: {n}', 'Buy room: {n}'), { n: t(u.name) }), body);
+}
+
+/** Botões e etiquetas por cima do desenho: "Comprar sala — $X", "Comprar andar — $X", "Em obra · N meses". */
+function lockEls27(s: GameState, d: Drawn27, units: Unit27[]): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  const pl = d.plan;
+  const byId = new Map(units.map((u) => [u.id, u]));
+  const span = (f: number) => { const cs = pl.cells.filter((c) => c.floor === f); return { x: cs[0].x, y: cs[0].y, w: cs[cs.length - 1].x + cs[cs.length - 1].w - cs[0].x, h: cs[0].h }; };
+  const btn = (u: Unit27, b: { x: number; y: number; w: number; h: number }, cls: string, label: L) =>
+    h('button', { type: 'button', class: `hqr27-buy ${cls}`, style: box(d, b.x, b.y, b.w, b.h), 'data-unit': u.id, 'aria-label': `${t(label)}: ${t(u.name)} — ${$(u.cost)}. ${t(u.effect)}`, onclick: () => buyDlg27(s, u.id) },
+      h('span', { class: 'hqr27-buy-in' }, h('b', null, ic(u.kind === 'floor' ? 'building' : 'lock'), ' ', t(u.name)), h('span', null, `${t(label)} — ${$(u.cost)}`)));
+  const work = (u: Unit27, b: { x: number; y: number; w: number; h: number }, cls: string) =>
+    h('span', { class: `hqr27-work ${cls}`, style: box(d, b.x, b.y, b.w, b.h), role: 'note', 'data-unit': u.id, title: t(u.effect) },
+      h('span', { class: 'hqr27-buy-in' }, h('b', null, ic('clock'), ' ', t(u.name)), h('span', null, t(l('Em obra · falta {m}', 'Under construction · {m} left'), { m: months27(u.eta) }))));
+  for (const u of units) {
+    if (u.status === 'open') continue;
+    if (u.kind === 'floor') {
+      const b = span(u.floor);
+      out.push(u.status === 'building' ? work(u, b, 'floor') : btn(u, b, 'floor', l('Comprar andar', 'Buy floor')));
+    } else if (u.kind === 'upgrade') {
+      const c = pl.cells.find((x) => x.kind === 'lounge');
+      if (!c) continue;
+      // reforma do lounge: selinho compacto no canto de cima à direita (ícone + preço ou meses; o texto todo no title)
+      const b = { x: c.x + c.w - 52, y: c.y + 3, w: 48, h: 11 };
+      const full = u.status === 'building' ? `${t(u.name)}: ${t(l('em obra, falta {m}', 'under construction, {m} left'), { m: months27(u.eta) })}` : `${t(l('Reformar o lounge', 'Make over the lounge'))} — ${$(u.cost)}. ${t(u.effect)}`;
+      out.push(h(u.status === 'building' ? 'span' : 'button', { type: u.status === 'building' ? undefined : 'button', class: `${u.status === 'building' ? 'hqr27-work' : 'hqr27-buy'} mini`, style: box(d, b.x, b.y, b.w, b.h), 'data-unit': u.id, title: full, 'aria-label': full, onclick: u.status === 'building' ? undefined : () => buyDlg27(s, u.id) },
+        h('span', { class: 'hqr27-buy-in' }, ic(u.status === 'building' ? 'clock' : 'sparkle'), h('span', null, u.status === 'building' ? months27(u.eta) : $(u.cost)))));
+    }
+  }
+  for (const c of pl.cells) {
+    if (!c.unit || !c.lock || pl.flock[c.floor]) continue;
+    const u = byId.get(c.unit);
+    if (!u) continue;
+    out.push(c.lock === 'building' ? work(u, c, '') : btn(u, c, '', l('Comprar sala', 'Buy room')));
+  }
+  return out;
+}
+
+/** Lista das salas e andares do nível (abre o mesmo diálogo; no celular é o jeito mais fácil). */
+function unitList27(s: GameState, units: Unit27[]): HTMLElement | null {
+  if (!units.length) return null;
+  const open = units.filter((u) => u.status === 'open').length;
+  return h('details', { class: 'hqr27-box', open: units.some((u) => u.status !== 'open') ? true : undefined },
+    h('summary', null, h('b', null, t(l('Salas e andares para comprar', 'Rooms and floors to buy'))), ' ', h('small', { class: 'muted' }, t(l('{a} de {n} em uso', '{a} of {n} in use'), { a: open, n: units.length }))),
+    h('ul', { class: 'hqr27-list' }, units.map((u) => h('li', { class: `st-${u.status}` },
+      h('button', { type: 'button', class: 'hqr27-row', disabled: u.status !== 'locked' ? true : undefined, onclick: () => buyDlg27(s, u.id) },
+        h('span', { class: 'hqr27-row-ic', 'aria-hidden': 'true' }, ic(u.status === 'building' ? 'clock' : u.icon)),
+        h('span', { class: 'hqr27-row-t' }, h('b', null, t(u.name)), h('small', { class: 'muted' }, `${floorName27(u.floor)} · ${t(u.effect)}`)),
+        h('span', { class: 'hqr27-row-v' }, u.status === 'open' ? t(l('Em uso', 'In use'))
+          : u.status === 'building' ? t(l('Obra: falta {m}', 'Building: {m} left'), { m: months27(u.eta) })
+          : u.blocked ? t(u.blocked) : `${$(u.cost)} · ${months27(u.months)}`))))));
 }
 
 /** Botão invisível sobre cada boneco desenhado (nome no foco/hover; artista abre a ficha). */
@@ -87,9 +183,11 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
     st.style.width = `${d.plan.W * k}px`;
     st.style.height = `${d.plan.H * k}px`;
     const rooms = m.rooms.filter((r) => d.plan.rooms.includes(r.id));
+    const fx = new Map(m.units.map((u) => [u.id, u]));
     layer.replaceChildren(
-      ...d.plan.cells.filter((c) => !c.room && c.name).map((c) => h('span', { class: 'hq27-deco', style: box(d, c.x, c.y, c.w, c.h) }, h('span', null, t(c.name!)))),
-      ...rooms.map((r) => roomBtn(d, r, d.plan.cells.find((c) => c.room === r.id)!)),
+      ...d.plan.cells.filter((c) => !c.room && c.name && !c.lock).map((c) => h('span', { class: 'hq27-deco', style: box(d, c.x, c.y, c.w, c.h), title: c.unit && fx.get(c.unit) ? t(fx.get(c.unit)!.effect) : undefined }, h('span', null, t(c.name!)))),
+      ...rooms.map((r) => roomBtn(d, r, d.plan.cells.find((c) => c.room === r.id)!, k)),
+      ...lockEls27(s, d, m.units),
       ...d.spots.map((sp) => hitEl(d, sp)),
       ...d.more.map((x) => h('span', { class: 'hq25-more', style: `left:${pct(x.x, d.plan.W)};top:${pct(x.y, d.plan.H)}`, title: t(l('Mais {n} nesta sala', '{n} more in this room'), { n: x.n }) }, `+${x.n}`)));
   };
@@ -109,6 +207,7 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
         h('b', null, ic('plane'), ' ', t(l('Fora da sede', 'Away'))), h('span', { class: 'hq25-away-row' }, m.away.slice(0, 5).map((x, i) => awayEl(s, x, i))),
         m.away.length > 5 ? h('small', null, `+${m.away.length - 5}`) : null) : null),
     scroll,
+    unitList27(s, m.units),
     shut.length ? h('ul', { class: 'hq27-shut', 'aria-label': t(l('Salas que chegam com uma sede maior', 'Rooms that come with a bigger HQ')) },
       shut.map((r) => h('li', null, h('button', { type: 'button', class: 'btn small ghost', onclick: () => go25(r.go), title: t(r.desc) }, ic('lock'), ' ', h('b', null, t(r.name)), ' · ', h('small', { class: 'muted' }, r.lockNote ? t(r.lockNote) : ''))))) : null);
 }

@@ -332,4 +332,5 @@ import './showops20'; // r20b (Z): show ↔ notícia e alterar turnê depois de 
 import './roles21'; // r21: funções múltiplas por pessoa + decisões que cada inclusão gera
 import './scenarios23'; // r23: cenários de outras profissões e mais selos (depois do careers19)
 import './eggs27'; // r27 ovos de Páscoa (raros, determinísticos; docs/eggs27.md)
+import './hqrooms27'; // r27 I1: salas e andares compráveis da sede (obra, manutenção, efeitos)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

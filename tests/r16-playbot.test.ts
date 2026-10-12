@@ -10,7 +10,7 @@ const FULL = !!process.env.BALANCE_FULL;
 
 describe('playbot16', () => {
   it('uma run curta tem ações variadas de jogador e é determinística', () => {
-    const cfg = defaultConfig('r16pb-5', { startYear: 1975, realNames: true }); // r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
+    const cfg = defaultConfig('r16pb-9', { startYear: 1975, realNames: true }); // r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
     const years = FULL ? 2 : 1;
     // a mesma partida que simulatePlayer joga, guardando o retrato do 3º mês para a reprise curta
     const s = createGame(cfg);

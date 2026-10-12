@@ -103,4 +103,17 @@ describe('r25 hqModel25', () => {
     expect(off.sprites.length).toBe(ROOM_CAP25);
     expect(off.more).toBeGreaterThan(0);
   });
+  it('r27 I1: o modelo traz as salas e andares compráveis do nível (garagem: nenhum; torre: fechados com custo)', () => {
+    const s = game('r25-f', 1975);
+    s.player.hq = 0;
+    expect(hqModel25(s).units).toEqual([]);
+    s.player.hq = 4;
+    const m = hqModel25(s);
+    expect(m.units.length).toBeGreaterThan(4);
+    expect(m.units.every((u) => u.status === 'locked' && u.cost > 0)).toBe(true);
+    expect(m.units.filter((u) => u.kind === 'floor').length).toBe(2);
+    // a planta desenhada usa o mesmo estado (andares fechados → salas deles escuras)
+    const p = plan27({ hq: m.hq, year: m.year, units: Object.fromEntries(m.units.map((u) => [u.id, u.status])) });
+    expect(Object.keys(p.flock).map(Number).sort()).toEqual([3, 4]);
+  });
 });

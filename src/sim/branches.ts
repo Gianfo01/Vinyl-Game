@@ -17,6 +17,9 @@ export interface HqCaps {
   equipment: number;
 }
 
+/** r27 (sys/hqrooms27): salas e andares comprados na sede somam capacidade (registrado lá; evita import circular). */
+export const HQ_CAPS27: { f: null | ((s: GameState, c: HqCaps) => void) } = { f: null };
+
 /** Capacidade total: matriz + filiais. */
 export function hqCaps(s: GameState): HqCaps {
   const m = HQ_LEVELS[Math.min(s.player.hq, HQ_LEVELS.length - 1)];
@@ -27,6 +30,7 @@ export function hqCaps(s: GameState): HqCaps {
     c.staff += lv.staff;
     c.sessions += lv.sessions;
   }
+  HQ_CAPS27.f?.(s, c);
   return c;
 }
 
