@@ -111,9 +111,9 @@ Antes de começar, a fase 0 re-mede tudo na base da R27 (alguns números da aná
 1. Fase 0 (1 agente) → 2. Fases 1A + 1B + 2 em paralelo (3 agentes, quase tudo S) → 3. Fase 1C (1 agente, com balance) →
 4. Fases 3 + 4 + 5 (3 agentes) → 5. Fases 6 + 7 (2 agentes) → 6. Fase 8 (1–2 agentes) → suíte em série + build Masters_28.
 
-## Decisões do autor antes de começar
-1. Prazo padrão de 25 anos no Recomendado (com "continuar em sandbox")?
-2. Carreiras: manter as 12 em pé de igualdade ou destacar 3 principais (selo, artista, empresário) e o resto como empreendimento?
-3. Áudio: ligar sons por padrão ou só opt-in?
-4. Publicação: nomes reais seguem padrão, ou viram pacote ativável se for publicar?
-5. Barreira racial histórica: padrão "contexto" (texto) ou "efeito" (mecânica)?
+## Decisões do autor (respondidas)
+1. **Prazo:** o jogador escolhe o ano de início e o de fim na Nova run (com "continuar em sandbox" ao chegar no fim). Sem prazo fixo de 25 anos; o Recomendado sugere um fim, editável.
+2. **Carreiras:** manter as 12 em pé de igualdade.
+3. **Áudio:** opt-in (desligado por padrão, liga nas Opções).
+4. **Nomes reais:** ficam como estão por enquanto (sem pacote ativável).
+5. **Barreira racial histórica:** com efeito na mecânica; "enfrentar" precisa ter retorno que compense.
