@@ -61,7 +61,7 @@ export const APPEAL_CAT19: Record<string, string[]> = {
   /** alcance: canais, veículos, imprensa, vitrines, hype de feira, selo/imprint, IA de recomendação */
   media: ['zines19', 'industry:channels', 'industry:outlets', 'ventures9:media', 'press18', 'goods8-spotlight', 'w4hype', 'deals18:imprint', 'ai18', 'ai8'],
   /** mundo: era, sociedade, leis, greves, marcos, crime, guerra de NPCs e rivais */
-  world: ['era8', 'org12', 'world18', 'soc18', 'w4society', 'w4laws', 'w4cheap', 'w4strike', 'w4ms:*', 'w4backlash', 'crime17', 'crime17tie', 'npc17:war',
+  world: ['era8', 'org12', 'world18', 'soc18', 'w4society', 'w4laws', 'w4cheap', 'w4strike', 'w4ms:*', 'w4backlash', 'crime17', 'crime17tie', 'crimemem23', 'npc17:war',
     'rivals12push', 'rivals8', 'rivals8profile', 'rivalmind18:pact', 'regions19'],
 };
 export const CAT_CAP19: Record<string, { knee: number; room: number }> = { appeal: { knee: 0.2, room: 0.3 } };

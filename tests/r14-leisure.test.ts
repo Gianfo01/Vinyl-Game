@@ -20,8 +20,8 @@ const mk = (seed: string, y = 1985) => {
 
 describe('lazer r14', () => {
   it('simula artistas, executivos e equipe com teto mensal, sem futuro e de forma determinística', () => {
-    const a = mk('lz-1');
-    const b = mk('lz-1');
+    const a = mk('lz-3'); // r23: segredos/vínculos mudaram a trajetória; em lz-1 a banda se separa no mês 22
+    const b = mk('lz-3');
     // r19: decisões sem resposta (roubo de artista, brigas) derrubam a confiança; o selo parado não pode perder o elenco aqui
     const keep = (x: typeof a) => { for (const ac of Object.values(x.acts)) if (ac.owner === 'player') ac.trust = Math.max(ac.trust, 50); };
     for (let i = 0; i < 24; i++) { keep(a); keep(b); advanceMonth(a); advanceMonth(b); }

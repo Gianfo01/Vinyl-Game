@@ -1633,7 +1633,7 @@ export const LIKES22_ARTISTS: RealArtist[] = [
     al: [['UNtitled', 2019], ['La Quiete', 2022]] },
   // r23: artistas das playlists e curtidas (CSV do Spotify), classificados por gênero/cidade/estreia; conf baixa = z3 e não conferido
   { n: "Hotel Ugly", g: 'alt_rnb', c: 'houston', d: 2019, t: 2, cn: 'USA', z: 2, exact: false },
-  { n: "Iyaz", g: 'pop_rnb', c: 'san_juan', d: 2009, t: 2, cn: 'VGB', z: 2, r: 'vocal', b: 1987, exact: false },
+  { n: "Iyaz", g: 'pop_rnb', c: 'san_juan', d: 2009, t: 2, cn: 'GBR', z: 2, r: 'vocal', b: 1987, exact: false },
   { n: "Beach Weather", g: 'indie', c: 'boston', d: 2015, t: 2, cn: 'USA', z: 2, exact: false },
   { n: "Wiz Khalifa", g: 'trap', c: 'cleveland', d: 2006, t: 1, cn: 'USA', z: 1, r: 'mc', b: 1987 },
   { n: "Adam Port", g: 'afro_house', c: 'berlin', d: 2007, t: 2, cn: 'DEU', z: 2, r: 'dj', exact: false },

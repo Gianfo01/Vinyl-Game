@@ -82,6 +82,7 @@ export function realSongTitle22(s: GameState, act: Act, year = s.year): string |
   const xs = realSongs22(act);
   if (!xs.length) return undefined;
   const used = new Set(act.songs.map((id) => s.songs[id]?.title).concat(act.releases.map((id) => s.releases[id]?.title)));
+  for (const a of realDataOf(act)?.al ?? []) used.add(a[0]); // r23: título de lançamento real fica para o mundo real (G8: random não restaura lançamentos)
   return xs.find(([t, y]) => y <= year + 1 && !used.has(t))?.[0];
 }
 
