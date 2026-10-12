@@ -900,3 +900,7 @@ export function pageArtFrame27(area: string, s: GameState, opts: ArtOpts27 = {})
 export const artSlots27 = new Map<string, (s: GameState, opts?: ArtOpts27) => HTMLElement | null>();
 for (const area of Object.keys(AREA_ART27)) artSlots27.set(area, (s, o) => pageArtFrame27(area, s, o));
 
+
+// r27: liga a ilustração ao cabeçalho padrão das páginas (ui27.pageHeader27)
+import { artHook27 } from './ui27';
+artHook27.f = (area, s) => pageArtFrame27(area, s);

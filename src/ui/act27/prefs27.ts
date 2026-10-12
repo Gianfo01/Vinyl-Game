@@ -15,6 +15,7 @@ export const ACT_MODES27: { value: ActMode27; label: L }[] = [
 ];
 
 export const actMode27 = (): ActMode27 => store.prefs.activities27 ?? 'play';
+(globalThis as { actMode27?: () => ActMode27 }).actMode27 = actMode27; // r27: o Submundo jogável (M3) lê daqui
 /** O botão "Jogar" aparece? `key`: a atividade é das importantes (gravação, por exemplo). */
 export const showPlay27 = (key = false): boolean => { const m = actMode27(); return m === 'play' || (m === 'key' && key); };
 
