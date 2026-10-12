@@ -1,3 +1,4 @@
+import { buildings18 } from '../../sim/sys/campus18';
 // r25 (Pixel Studio, fase 3 "Sede viva") — o MODELO da tela inicial da Sede, função pura do estado (sem DOM):
 // era e nível da sede (o desenho em pixel art fica em hqpx27.ts), as 6 salas com selos de estado, quem está em cada sala (elenco e equipe
 // reais), "Precisa de você" (no máximo 3 tarefas, um botão cada), "Sua agenda" e o "Elenco". A interface
@@ -37,6 +38,8 @@ export interface HqModel25 {
   era: Era25; hq: number; hqName: L; year: number;
   /** r27: cidade-sede (horizonte), nome do selo (letreiro) e semente do desenho */
   city: string; brand: string; seedKey: string;
+  /** r27: ano da fachada = construção/última reforma da sede (o mesmo que o mapa da cidade usa) */
+  facadeYear?: number;
   rooms: RoomM25[]; away: Sprite25[]; needs: Need25[]; agenda: Agenda25[]; cast: Cast25[];
   /** r27 I1: salas e andares compráveis do nível atual (aberta, fechada ou em obra; custo, manutenção, efeito) */
   units: Unit27[];
@@ -173,7 +176,7 @@ export function hqModel25(s: GameState): HqModel25 {
   });
 
   return {
-    era, hq, hqName: HQ_LEVELS[hq].name, year: s.year, city: s.config.homeCity ?? '', brand: s.config.companyName || 'REC', seedKey: `${s.config.seed ?? ''}|${s.config.companyName ?? ''}`, rooms, away: sprites.filter((x) => x.room === 'away'), units: hqRooms27(s),
+    era, hq, hqName: HQ_LEVELS[hq].name, year: s.year, city: s.config.homeCity ?? '', facadeYear: buildings18(s).find((b) => b.kind === 'hq')?.sy, brand: s.config.companyName || 'REC', seedKey: `${s.config.seed ?? ''}|${s.config.companyName ?? ''}`, rooms, away: sprites.filter((x) => x.room === 'away'), units: hqRooms27(s),
     needs: needs25(s, { step, acts, rw, ready, soon: soonShows.length + tours.length }), agenda: agenda25(s, sessions), cast,
   };
 }

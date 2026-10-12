@@ -795,7 +795,7 @@ export function path19(sp: Sprite18, all: Sprite18[]): [number, number][] {
 export interface Nbr19 { lot: number; k: string; name: string }
 const NBK: Record<string, BKind> = { rival: 'branch', records: 'store', bar: 'venue', rehearsal: 'rehearsal', radio: 'media' };
 /** r27: extras da cena (estado dos prédios, lotes à venda, cidade comum, vida na rua). */
-export interface SceneX27 { vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string }
+export interface SceneX27 { /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string }
 /** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
 export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
 /** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido). */
@@ -856,7 +856,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
     if (b.zone !== 'campus') continue;
     const n = lots.get(b.id) ?? b.lot;
     if (n === undefined || n < 0 || !LOTS18[n]) continue;
-    sprites.push(buildingSprite18(b, LOTS18[n], env.year, seed + n * 31, brand, { vis: x.vis?.get(b.id), snow: env.snow }));
+    sprites.push(buildingSprite18(b.kind === 'hq' && x.hqFloors?.building ? { ...b, st: 'building' } : b, LOTS18[n], env.year, seed + n * 31, brand, { vis: x.vis?.get(b.id), snow: env.snow, floorsOpen: b.kind === 'hq' ? x.hqFloors?.open : undefined }));
   }
   // r19: vizinhos (não são seus) — prédios baixos, de época mais antiga, sem letreiro do selo (r27: letreiro da época)
   for (const nb of nbs) {

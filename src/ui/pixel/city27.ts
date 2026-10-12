@@ -390,7 +390,7 @@ export const cityName27 = (id: string): L => cityById[id]?.name ?? l(id, id);
 export type HqShell27 = 'garage' | 'shop' | 'loft' | 'building' | 'tower' | 'campus';
 const SHELLS27: HqShell27[] = ['garage', 'shop', 'loft', 'building', 'tower', 'campus'];
 /** Andares do corte do interior por casca (SPEC de hqpx27: garagem 1, sala alugada 2, loft 2, prédio 3, torre 5, campus 5). */
-export const HQ_FLOORS27: Record<HqShell27, number> = { garage: 1, shop: 2, loft: 2, building: 3, tower: 5, campus: 5 };
+export const HQ_FLOORS27: Record<HqShell27, number> = { garage: 1, shop: 2, loft: 3, building: 4, tower: 5, campus: 5 }; // r27: = LEVELS27 (hqrooms27) com todos os andares comprados
 /** Sem pele de vidro antes deste ano (bíblia de arte, docs/art27-city.md). */
 export const GLASS_FROM27 = 1968;
 /** Fachada (mesmos materiais do mapa: Style18 de sim/sys/campus18). */

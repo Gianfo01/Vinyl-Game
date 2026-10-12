@@ -132,6 +132,8 @@ export interface PlanIn27 {
   hq: number; year: number; city?: string; brand?: string; seedKey?: string; /** largura mínima (preenche o contêiner) */ minW?: number;
   /** estado das salas/andares compráveis (id de hqRooms27 → estado); sem isto, tudo aberto */
   units?: Record<string, 'open' | Lock27>;
+  /** r27: ano da fachada (construção/última reforma da sede, igual ao mapa da cidade); sem isto, o ano do jogo */
+  facadeYear?: number;
 }
 
 /** A planta inteira (pura). */
@@ -170,7 +172,7 @@ export function plan27(o: PlanIn27): Plan27 {
   for (const c of cells) if (flock[c.floor] && !c.room) c.lock = flock[c.floor];
   const vs = o.units?.loungeVip;
   const vip: Plan27['vip'] = vs === undefined ? (o.units ? null : false) : vs === 'open' ? true : vs;
-  const facade = facadeOf27(shell, o.year);
+  const facade = facadeOf27(shell, o.facadeYear ?? o.year);
   const tall = shell === 'tower' || shell === 'campus';
   const cw = facade === 'deco' || facade === 'stone' ? Math.round(bw * 0.46) : Math.round(bw * 0.42);
   return {
@@ -1123,9 +1125,9 @@ export interface DrawOpts27 { /** largura mínima em pixels lógicos (preenche o
 
 /** Desenha a sede em corte no canvas (tamanho lógico; quem chama escala por inteiro com CSS). Exportado para o
  *  "Nosso mundo" (D2) abrir o interior no zoom. */
-export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25, 'hq' | 'year' | 'rooms'> & { city?: string; brand?: string; seedKey?: string; units?: { id: string; status: 'open' | Lock27 }[] }, o: DrawOpts27 = {}): Drawn27 {
+export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25, 'hq' | 'year' | 'rooms'> & { city?: string; brand?: string; seedKey?: string; facadeYear?: number; units?: { id: string; status: 'open' | Lock27 }[] }, o: DrawOpts27 = {}): Drawn27 {
   const units = model.units ? Object.fromEntries(model.units.map((u) => [u.id, u.status])) : undefined;
-  const plan = plan27({ hq: model.hq, year: model.year, city: model.city, brand: model.brand, seedKey: model.seedKey, minW: o.minW, units });
+  const plan = plan27({ hq: model.hq, year: model.year, facadeYear: model.facadeYear, city: model.city, brand: model.brand, seedKey: model.seedKey, minW: o.minW, units });
   const px = paint27(plan);
   canvas.width = plan.W; canvas.height = plan.H;
   const ctx = canvas.getContext('2d');

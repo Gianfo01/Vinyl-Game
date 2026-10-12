@@ -1,3 +1,4 @@
+import { hqFloors27 } from '../../sim/sys/hqrooms27';
 // Rodada 18 (campus18) + Rodada 19 (world19) + Rodada 27 (D2): página "Nosso mundo" — o BAIRRO da sede em pixel
 // art isométrica. R27: painel lateral FIXO (no celular, folha no rodapé): clicar num prédio mostra o que é, custo
 // do mês, receita, quem está lá e 2–3 ações (ir para a tela, ampliar, vender) + "Mais opções" (reformar, estilo,
@@ -59,7 +60,7 @@ function makeView(s: GameState, year?: number): View {
   const nbs = nbInfo27(s);
   const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n }))];
   const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms,
-    { vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')) });
+    { vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s) });
   return { s, bs, year: s.year, live: true, vis, sale, nbs, scene };
 }
 /** Iniciais do selo (placa da sede e letreiro). */

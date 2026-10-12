@@ -269,3 +269,10 @@ HQ_CAPS27.f = (s, c) => {
   const a = capsAdd27(s);
   c.careers += a.careers; c.staff += a.staff; c.sessions += a.sessions; c.equipment += a.equipment;
 };
+
+/** r27: andares da sede vistos de fora (mapa da cidade): total do nível menos os andares ainda não comprados; obra = andaime. */
+export function hqFloors27(s: GameState): { open: number; building: boolean } {
+  const lv = level27(hqOf(s));
+  const us = hqRooms27(s).filter((u) => u.kind === 'floor');
+  return { open: Math.max(1, lv.floors - us.filter((u) => u.status !== 'open').length), building: us.some((u) => u.status === 'building') };
+}
