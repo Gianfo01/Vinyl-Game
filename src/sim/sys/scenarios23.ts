@@ -52,7 +52,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'woodstock_1969', capital23: 120000, name: l('Três dias de paz e música: Nova York, 1968', 'Three days of peace and music: New York, 1968'), startYear: 1968, endYear: 1972, homeCity: 'new_york', scenario: 'from_zero', careers: ['festival'],
     desc: l('Quatro jovens querem montar um festival no interior de Nova York. Em agosto de 1969, meio milhão de pessoas aparecem numa fazenda leiteira — os portões caem e o festival vira lenda (e prejuízo). Em dezembro, Altamont mostra o lado escuro.', 'Four young men want to stage a festival upstate. In August 1969 half a million people turn up on a dairy farm — the fences fall and the festival becomes a legend (and a loss). In December, Altamont shows the dark side.'),
-    goal: l('Faça edições boas do seu festival até 1972.', 'Hold good editions of your festival by 1972.'), unit: l('edições boas', 'good editions'), tiers: [1, 2, 4],
+    goal: l('Faça edições boas do seu festival até 1972.', 'Hold good editions of your festival by 1972.'), unit: l('edições boas', 'good editions'), tiers: [1, 3, 4], // r25: bot cauteloso faz 5/5 (direitos de mídia); estrelas caras quebram
     rules17: [l('Você é produtor de festival: começa com um terreno alugado e a edição 0.', 'You are a festival promoter: you start with rented ground and edition 0.'),
       l('Agosto de 1969: a contracultura no auge — rock psicodélico e folk em alta.', 'August 1969: the counterculture peaks — psychedelic rock and folk boom.'),
       l('Dezembro de 1969: Altamont — o clima de paz e amor esfria.', 'December 1969: Altamont — the peace-and-love mood cools.')],
@@ -63,7 +63,7 @@ export const SCENARIOS23: Scenario23[] = [
   {
     id: 'rockinrio_1985', capital23: 120000, name: l('Rock in Rio: Rio de Janeiro, 1984', 'Rock in Rio: Rio de Janeiro, 1984'), startYear: 1984, endYear: 1991, homeCity: 'rio', scenario: 'from_zero', careers: ['festival'],
     desc: l('Janeiro de 1985: na volta da democracia, uma cidade do rock é erguida em Jacarepaguá para dez noites com astros do metal e o novo rock brasileiro. Em 1991 o festival volta, no Maracanã.', 'January 1985: as democracy returns, a city of rock is built in Jacarepaguá for ten nights of metal stars and new Brazilian rock. In 1991 the festival returns, at the Maracanã.'),
-    goal: l('Faça edições boas do seu festival até 1991.', 'Hold good editions of your festival by 1991.'), unit: l('edições boas', 'good editions'), tiers: [1, 3, 5],
+    goal: l('Faça edições boas do seu festival até 1991.', 'Hold good editions of your festival by 1991.'), unit: l('edições boas', 'good editions'), tiers: [2, 4, 7], // r25: 8 edições possíveis (1984–91)
     rules17: [l('Você é produtor de festival: começa com um terreno alugado e a edição 0.', 'You are a festival promoter: you start with rented ground and edition 0.'),
       l('Janeiro de 1985: a cidade do rock — metal e rock brasileiro em alta.', 'January 1985: the city of rock — metal and Brazilian rock boom.'),
       l('1986: o Plano Cruzado congela preços e enche as lojas; 1990: o confisco esvazia os bolsos.', '1986: the Cruzado Plan freezes prices and fills the shops; 1990: the savings freeze empties pockets.')],

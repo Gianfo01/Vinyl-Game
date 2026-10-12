@@ -26,7 +26,7 @@ export type Ident = 'discovery' | 'genre' | 'family' | 'premium' | 'mega';
 export type OpK = 'storm' | 'rain' | 'delay' | 'gear' | 'crowd';
 export type SpK = 'beer' | 'bank' | 'kids' | 'luxury' | 'indie' | 'tech';
 export interface Deal { actId: string; stage: number; time: number; len: number; excl: boolean; tech: number; adv: number }
-export interface Commit { id: string; due: number; amt: number; what: L; kind: 'sponsor' | 'supplier' | 'advance' | 'loan' | 'refund'; done?: boolean; min?: number }
+export interface Commit { id: string; due: number; amt: number; what: L; kind: 'sponsor' | 'supplier' | 'advance' | 'loan' | 'refund' | 'rights'; done?: boolean; min?: number }
 export interface Sponsor { id: string; k: SpK; name: string; total: number; min: number }
 export interface Mods { ex: number; co: number; sa: number; dem: number; loyal: number; risk: number }
 export interface Cycle {
@@ -231,6 +231,8 @@ export function ask12(s: GameState, f: OwnFestival, a: Act, o: { time: number; l
   if (isMine(s, a.id)) return houseAsk19.f(s, f, a, { fee: Math.round(fee), time: want, tech, why }); // r19 (intra19): preço de mercado ou desconto da casa
   if (!guestAccepts(f, a)) refuse = l('O festival ainda não tem prestígio para esse nome (mais palcos e reputação ajudam).', 'The festival lacks the prestige for this name (more stages and reputation help).');
   else if (o.excl && a.fame >= 70 && f.rep < 50) refuse = l('Não dá exclusividade a um festival pequeno.', 'Won\'t grant exclusivity to a small festival.');
+  const gross = festModel(s, f).capacity * f.price * f.days; // r25: aviso — estrela cara num terreno pequeno não se paga
+  if (fee > gross * 0.5) why.push(fmtL(l('Cachê acima de metade da bilheteria máxima do terreno (~{g} em dólares de hoje): só se paga com terreno maior, patrocínio e direitos de mídia.', 'Fee above half the ground\'s maximum gate (~{g} in today\'s dollars): it only pays off with bigger grounds, sponsors and media rights.'), { g: Math.round(gross).toLocaleString() }));
   if (x.ident === 'genre' && familyOf(a.genre) !== x.fam) why.push(l('Fora do gênero do festival: o público de nicho torce o nariz.', 'Off the festival\'s genre: the niche crowd frowns.'));
   return { fee: Math.round(fee), time: want, tech, why, refuse };
 }
@@ -404,7 +406,10 @@ export function sponsorOffer(s: GameState, r: Rng, f: OwnFestival, x: F12): Spon
   const k = r.chance(0.6) ? ks[0] : r.pick(ks);
   const sp = SPONS[k];
   const p = proj12(s, f);
-  const total = money(s, sp.base * (0.4 + f.rep / 80) * (sp.fit[x.ident] ?? 1) * (0.6 + Math.min(2, p.cap / 15000)));
+  // r25: a marca paga pelo alcance (gente que quer ir e ouve falar do line-up), não só pela grade; patrocínio corporativo
+  // de rock explode nos anos 80 (Rock in Rio com cervejaria, turnês com marcas de refrigerante)
+  const reach = Math.max(p.cap, Math.min(p.demand, p.cap * 4));
+  const total = money(s, sp.base * (0.4 + f.rep / 80) * (sp.fit[x.ident] ?? 1) * (0.6 + Math.min(2, reach / 15000)) * (s.year >= 1980 ? 1.25 : 1));
   return { id: nextId(s, 'sp'), k, name: r.pick(sp.names), total: Math.round(total), min: Math.round(Math.min(p.cap, Math.max(p.demand, p.early)) * 0.7) };
 }
 
@@ -729,7 +734,16 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   }
   const spon = x.cyc.sponsors.reduce((t, sp) => t + sp.total, 0);
   const tiles = m.costs.tiles + m.costs.production;
-  const profit = Math.round(x.cyc.cash + doorRev + extras + spon - f.lineup.reduce((t, y) => t + money(s, y.fee), 0) - tiles - fine);
+  // r25: direitos de mídia (álbum ao vivo, filme, TV) — pagos meses depois; é o que salvou o caixa de 1969
+  const rt25 = rights12(s, { att, rating, top, disaster: !!disaster });
+  if (rt25.total) {
+    const e0 = monthIndex(s);
+    const first = Math.round(rt25.total * 0.4);
+    x.commits.push({ id: nextId(s, 'cm'), due: e0 + 2, amt: first, what: rt25.a, kind: 'rights' });
+    x.commits.push({ id: nextId(s, 'cm'), due: e0 + 7, amt: rt25.total - first, what: rt25.b, kind: 'rights' });
+    why.push(fmtL(l('Direitos de mídia: {v} nos próximos meses ({a}; {b}).', 'Media rights: {v} over the coming months ({a}; {b}).'), { v: `$${Math.round(rt25.total / 100).toLocaleString()}`, a: rt25.a, b: rt25.b }));
+  }
+  const profit = Math.round(x.cyc.cash + doorRev + extras + spon + rt25.total - f.lineup.reduce((t, y) => t + money(s, y.fee), 0) - tiles - fine);
   // artistas
   for (const a of acts) {
     const e = f.lineup.find((y) => y.actId === a.id);
@@ -775,7 +789,7 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   f.grid.forEach((t, i) => { if (!t) free.push({ x: i % f.w, y: Math.floor(i / f.w) }); });
   const thoughts: FestThought[] = th.slice(0, 10).map((t0, i) => ({ ...t0, ...(free[(i * 7) % Math.max(1, free.length)] ?? { x: 0, y: 0 }) }));
   const weather = x.cyc.ops.some((o) => o.k === 'storm') ? 'storm' : x.cyc.ops.some((o) => o.k === 'rain') ? 'rain' : 'sun';
-  const ed: FestEdition = { year: x.cyc.year, attendance: att, capacity: p.cap, demand: p.demand, excitement: ex, safety: sa, comfort: co, rating, queueMin: Math.round(5 + Math.max(0, A / Math.max(1, c.toilet * 800) - 1) * 20), revenue: Math.round(x.cyc.cash + doorRev + extras + spon), costs: Math.round(x.cyc.cash + doorRev + extras + spon - profit), weather, disaster, thoughts, lineup: acts.map((a) => a.name), grew: rating >= 60 && !disaster };
+  const ed: FestEdition = { year: x.cyc.year, attendance: att, capacity: p.cap, demand: p.demand, excitement: ex, safety: sa, comfort: co, rating, queueMin: Math.round(5 + Math.max(0, A / Math.max(1, c.toilet * 800) - 1) * 20), revenue: Math.round(x.cyc.cash + doorRev + extras + spon + rt25.total), costs: Math.round(x.cyc.cash + doorRev + extras + spon + rt25.total - profit), weather, disaster, thoughts, lineup: acts.map((a) => a.name), grew: rating >= 60 && !disaster };
   f.editions.push(ed);
   if (f.editions.length > 12) f.editions.splice(0, f.editions.length - 12);
   const h: Hist = { y: x.cyc.year, crowd: att, cap: p.cap, loyal: x.loyal, early: x.cyc.early, rating, profit, head: head?.name ?? '—', ident: x.ident, tag, why };
@@ -792,6 +806,25 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   queueCutscene(s, 'festivalDay', { title: fmtL(l('{f} {y}', '{f} {y}'), { f: f.name, y: x.cyc.year }), festId: f.id, year: x.cyc.year });
   reset(s, f, x);
   return h;
+}
+
+/** r25: peso da mídia por época — rádio/LP ao vivo (Newport), filme e álbum (Monterey, Woodstock), TV (Rock in Rio, Live Aid),
+ * DVD/streaming ao vivo. Determinístico (sem sorteio). */
+export function rightsEra12(year: number): { k: number; a: L; b: L } {
+  if (year < 1955) return { k: 0, a: l('—', '—'), b: l('—', '—') };
+  if (year < 1967) return { k: 0.35, a: l('transmissão de rádio', 'radio broadcast'), b: l('LP ao vivo', 'live LP') };
+  if (year < 1980) return { k: 1, a: l('álbum ao vivo', 'live album'), b: l('filme do festival', 'festival film') };
+  if (year < 1995) return { k: 1.15, a: l('transmissão na TV', 'TV broadcast'), b: l('especial e vídeo', 'TV special and video') };
+  if (year < 2010) return { k: 0.9, a: l('transmissão na TV', 'TV broadcast'), b: l('DVD ao vivo', 'live DVD') };
+  return { k: 0.8, a: l('transmissão ao vivo na internet', 'live stream'), b: l('álbum e vídeos ao vivo', 'live album and videos') };
+}
+/** r25: direitos de uma edição boa (nota 60+, sem desastre): headliner, público e nota. Centavos do ano. */
+export function rights12(s: GameState, o: { att: number; rating: number; top: number; disaster: boolean }): { total: number; a: L; b: L } {
+  const e = rightsEra12(s.year);
+  if (!e.k || o.disaster || o.rating < 60 || o.att < 500) return { total: 0, a: e.a, b: e.b };
+  const q = clamp((o.rating - 50) / 25, 0.4, 1.2);
+  const size = clamp(0.5 + o.att / 6000, 0.5, 2.5);
+  return { total: Math.round(money(s, (6000 + o.top * o.top * 20) * e.k * q * size)), a: e.a, b: e.b };
 }
 
 // ---------------------------------------------------------------- ganchos

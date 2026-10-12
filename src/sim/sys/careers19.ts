@@ -90,7 +90,9 @@ export const starterCost19 = (s: GameState, id: string): number => money(s, STAR
 /** Custo de fundação "do zero" (sem pacote), para o Novo Jogo e os botões. */
 export const fullCost19 = (s: GameState, id: string): number => (VKINDS[id as VKind] ? money(s, VKINDS[id as VKind].cost) : id === 'venue' ? money(s, 60000) : 0);
 
-upkeepAdj9.f = (s, v) => (car19(s).starter[v.id] && v.level <= 1 ? STARTER19[v.kind]?.upkeep ?? 1 : 1);
+// r25: festival fora de temporada (até 6 meses depois da edição) roda com equipe mínima — metade dos custos fixos
+const offSeason25 = (s: GameState, v: Venture): number => { if (v.kind !== 'festival' || !v.fx) return 1; const f = festOf(s, v.fx); return f && muOf(s, f) > 6 ? 0.5 : 1; };
+upkeepAdj9.f = (s, v) => (car19(s).starter[v.id] && v.level <= 1 ? STARTER19[v.kind]?.upkeep ?? 1 : 1) * offSeason25(s, v);
 
 /** Empréstimo de fundação (crédito honesto: entra no caixa e sai em parcelas). */
 function creditLoan(s: GameState, amount: number, months: number, why: string): void {
