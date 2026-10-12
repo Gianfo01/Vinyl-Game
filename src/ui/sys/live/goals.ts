@@ -116,7 +116,7 @@ export function scenarioScreen(root: HTMLElement, onStart: () => void, back: () 
   };
   // r22: abas e sub-abas (tipo, época, região, dificuldade) e cartões com mais informação
   const done = Object.values(medals).filter((m) => m !== 'none').length;
-  root.replaceChildren(h('div', { class: 'newgame lv-scenarios' },
+  root.replaceChildren(h('div', { class: 'newgame lv-scenarios', id: 'main', role: 'main', tabindex: '-1' }, // r23: alvo do skip link
     h('header', null, h('button', { class: 'btn ghost', onclick: back }, '← ', t(l('Voltar', 'Back'))),
       h('div', null, h('h1', null, t(l('Cenários históricos', 'Historical scenarios'))),
         h('p', { class: 'muted small' }, t(l('{n} cenários · {m} com medalha. Cada um tem ano, cidade, ponto de partida, meta com medalhas e regras da época.', '{n} scenarios · {m} with a medal. Each has a year, city, starting point, a medal goal and period rules.'), { n: SCENARIOS.length, m: done })))),

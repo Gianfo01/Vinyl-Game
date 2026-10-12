@@ -68,7 +68,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
     }
   } });
   root.replaceChildren(
-    h('div', { class: 'title-screen' },
+    h('div', { class: 'title-screen', id: 'main', role: 'main', tabindex: '-1' }, // r23: alvo do "Pular para o conteúdo"
       h('div', { class: 'disc', 'aria-hidden': 'true' }),
       h('h1', null, t(S.gameTitle)),
       h('p', { class: 'tagline' }, t(S.tagline)),
@@ -450,7 +450,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     }, 30);
   };
   const startBtn = (extra = '') => { const b = h('button', { type: 'button', class: `btn primary big ${extra}`, disabled: busy, onclick: start }, busy ? t(l('Gerando seu mundo…', 'Generating your world…')) : t(l('Começar run', 'Start run'))) as HTMLButtonElement; startBtns.push(b); return b; };
-  const wrap = h('div', { class: 'newgame tabbed ng20 ng21' },
+  const wrap = h('div', { class: 'newgame tabbed ng20 ng21', id: 'main', role: 'main', tabindex: '-1' }, // r23: alvo do skip link
     h('header', null, h('button', { type: 'button', class: 'btn ghost', onclick: () => titleScreen(root, onStart) }, '← ' + t(S.back)),
       h('div', null, h('h1', null, t(l('Nova run', 'New run'))), h('p', { class: 'muted small ng20-sub' }, t(l('6 etapas · clique numa etapa para ir direto · clique no título de uma seção para recolher ou abrir.', '6 steps · click a step to jump to it · click a section title to collapse or expand it.'))))),
     presetBar17(cfg, rebuild),

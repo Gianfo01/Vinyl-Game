@@ -6,6 +6,7 @@ import { countryName, countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
 import { defaultOffer, evaluateOffer } from '../contracts';
 import { registerExplain, sortParts, type WhyPart } from '../explain18';
+import { cashDeltaL23, lastClosed23, lastMonthView23, opResultL23 } from '../close23';
 import { stressOf, shortOf, STRESS_LEVEL } from '../stress17';
 import { cityDemand } from '../tours';
 import type { Act, GameState, Offer } from '../types';
@@ -37,12 +38,23 @@ const P18 = (xs: (WhyPart | null | undefined)[]): WhyPart[] => xs.filter((x): x 
 // ---------------------------------------------------------------- dinheiro
 
 registerExplain('cash.month', (s) => {
-  const e = Object.entries(s.lastMonthLedger).filter(([, v]) => v);
-  const net = e.reduce((t, [, v]) => t + v, 0);
-  const parts: WhyPart[] = sortParts(e.map(([k, v]) => ({ label: catL(k), value: v, fmt: 'money', tone: v >= 0 ? 'good' : 'bad', why: { key: 'cash.cat', ctx: { cat: k } } })));
+  // r23: retrato imutável do mês fechado (close23) — o mesmo número da barra do topo
+  const c = lastClosed23(s);
+  const e = Object.entries(c?.byCat ?? s.lastMonthLedger).filter(([, v]) => v);
+  const v23 = lastMonthView23(s);
+  const net = c ? v23.delta : e.reduce((t, [, v]) => t + v, 0);
+  const sec = c?.sect ?? {};
+  const head: WhyPart[] = c ? P18([
+    { label: opResultL23(s), value: v23.op, fmt: 'money', tone: v23.op >= 0 ? 'good' : 'bad' },
+    (sec.nonop ?? 0) + (sec.tax ?? 0) ? { label: l('Não operacional e impostos', 'Non-operating and taxes'), value: (sec.nonop ?? 0) + (sec.tax ?? 0), fmt: 'money' } : null,
+    sec.inv ? { label: l('Investimento (ativos)', 'Investing (assets)'), value: sec.inv, fmt: 'money' } : null,
+    sec.fin ? { label: l('Financiamento (empréstimos, aportes)', 'Financing (loans, capital)'), value: sec.fin, fmt: 'money' } : null,
+    v23.adj ? { label: l('Ajuste caixa × competência (a receber/a pagar)', 'Cash vs accrual adjustment (receivables/payables)'), value: v23.adj, fmt: 'money' } : null,
+  ]) : [];
+  const parts: WhyPart[] = [...head, ...sortParts(e.map(([k, v]) => ({ label: catL(k), value: v, fmt: 'money', tone: v >= 0 ? 'good' : 'bad', why: { key: 'cash.cat', ctx: { cat: k } } })))];
   const run = net < 0 ? Math.floor(s.player.cash / -net) : null;
   return {
-    title: l('Resultado do último mês', 'Last month result'), value: net, fmt: 'money', parts,
+    title: c ? cashDeltaL23(s) : l('Resultado do último mês', 'Last month result'), value: net, fmt: 'money', parts,
     note: run === null ? l('Mês no azul: o caixa cresce no ritmo atual.', 'Month in the black: cash grows at this pace.')
       : fmtL(l('No ritmo atual o caixa dura ~{n} meses. Receitas chegam com atraso (lojas pagam em ~2 meses; edição por trimestre).', 'At this pace cash lasts ~{n} months. Revenue arrives late (stores pay in ~2 months; publishing quarterly).'), { n: Math.max(0, run) }),
   };

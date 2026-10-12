@@ -5,6 +5,7 @@
 import { formatMoney } from '../../core/money';
 import { hashString } from '../../core/rng';
 import { genreById, l, type L } from '../../data/world';
+import { lastMonthView23 } from '../close23';
 import { monthlyCosts } from '../economy';
 import { registerSimHook } from '../ext4';
 import { recentFacts } from '../facts17';
@@ -91,7 +92,7 @@ const mine = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a) 
 registerAdvisorTip('core18', (s) => {
   const out: AdvTip18[] = [];
   // 1. fôlego do caixa
-  const net = Object.values(s.lastMonthLedger).reduce((a, b) => a + b, 0);
+  const net = lastMonthView23(s).delta; // r23: variação do caixa do mês fechado
   if (net < 0 && s.player.cash > 0) {
     const run = s.player.cash / -net;
     if (run < 8) {

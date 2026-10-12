@@ -20,10 +20,12 @@ import type { GameState } from '../sim/types';
 import { SAVE_VERSION } from '../sim/worldgen';
 
 export const FORMAT20 = 2;
-/** Texto de entrada (VTN1/base64 ou arquivo compactado). */
-export const MAX_IN20 = 96 * 1024 * 1024;
-/** JSON expandido (depois do gzip) — muito acima de uma partida longa, abaixo do que trava a aba. */
-export const MAX_OUT20 = 384 * 1024 * 1024;
+/** Texto de entrada compactado (VTN1/base64 ou arquivo compactado). r23: 96 → 32 MiB. */
+export const MAX_IN20 = 32 * 1024 * 1024;
+/** JSON expandido (depois do gzip) — acima de uma partida longa, abaixo do que trava a aba. r23: 384 → 128 MiB. */
+export const MAX_OUT20 = 128 * 1024 * 1024;
+/** r23: arquivo/colagem de save (JSON cru ou VTN1) — checado antes de ler o texto inteiro. */
+export const MAX_FILE23 = MAX_OUT20;
 export const MAX_DEPTH20 = 256;
 
 export type SaveErrCode = 'too_big' | 'malformed' | 'future' | 'schema' | 'format';

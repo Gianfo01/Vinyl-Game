@@ -4,6 +4,8 @@
 // indicador fica em savechip20.ts. Estado da sessão da página, não do jogo (não vai para o save).
 
 import type { Cost20 } from '../core/save20';
+import { l } from '../data/world';
+import { t } from '../i18n/strings';
 
 export type SaveSt = 'idle' | 'pending' | 'ok' | 'failed' | 'unavailable' | 'off' | 'stale';
 export interface Ack20 { ts: number; year: number; month: number; week: number; slot: string; run: string }
@@ -38,7 +40,17 @@ export const retry20: { local: (() => Promise<unknown>) | null; cloud: (() => Pr
 export function errName20(e: unknown): string {
   const x = e as { name?: string; code?: string | number; message?: string } | null;
   if (!x) return 'Error';
+  if (isQuota23(e)) return quotaText23(); // r23: cota estourada em linguagem de gente
   if (typeof x.code === 'string' && x.code) return x.code;
   if (x.name && x.name !== 'Error') return x.name;
   return String(x.message || x.name || e).slice(0, 80);
 }
+
+/** r23: QuotaExceededError (IndexedDB/localStorage; Firefox: NS_ERROR_DOM_QUOTA_REACHED; código legado 22/1014). */
+export function isQuota23(e: unknown): boolean {
+  const x = e as { name?: string; code?: string | number; message?: string } | null;
+  if (!x) return false;
+  return x.name === 'QuotaExceededError' || x.name === 'NS_ERROR_DOM_QUOTA_REACHED' || x.code === 22 || x.code === 1014 || /quota/i.test(String(x.message ?? ''));
+}
+export const quotaText23 = (): string => t(l('Sem espaço de armazenamento no navegador: apague saves antigos (ou autosaves de partidas encerradas) e exporte um backup. O limite depende do navegador.',
+  'Browser storage is full: delete old saves (or autosaves of finished runs) and export a backup. The limit depends on the browser.'));

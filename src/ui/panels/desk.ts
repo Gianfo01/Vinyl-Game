@@ -9,6 +9,7 @@ import { resolveDecision } from '../../sim/events';
 import { cardGoalDone, nextGoals } from '../../sim/legacy';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
+import { cashDeltaL23, lastMonthView23, opResultL23 } from '../../sim/close23';
 import { $, actLink, kv, pill, releaseLink, rerender, section } from '../common';
 import { h } from '../dom';
 import { advisorSection } from '../advisor';
@@ -38,8 +39,8 @@ export function deskPanel(s: GameState): HTMLElement {
   const counters = s.offers.filter((o) => o.status === 'counter');
   const pending = s.offers.filter((o) => o.status === 'pending');
   const recentNotes = s.notifications.filter((n) => !n.fold).slice(-12).reverse(); // r19: agrupados ficam no Resumo do mês
-  const last = s.lastMonthLedger;
-  const net = Object.values(last).reduce((t2, v) => t2 + v, 0);
+  const lm = lastMonthView23(s); // r23: mesmo retrato do fechamento usado na barra do topo
+  const net = lm.delta;
   const myCharts = [...s.charts.singles, ...s.charts.albums].filter((e) => s.releases[e.releaseId]?.owner === 'player' || s.acts[s.releases[e.releaseId]?.actId]?.playerBand);
   const card = cardById[s.config.card];
   return h('div', { class: 'panel desk' },
@@ -58,7 +59,8 @@ export function deskPanel(s: GameState): HTMLElement {
         ),
       ) : null,
       section(t(S.whatChanged),
-        kv(t(S.lastMonth), h('span', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, $(net))),
+        kv(t(cashDeltaL23(s)), h('span', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, $(net))),
+        kv(t(opResultL23(s)), h('span', { class: lm.op >= 0 ? 'good' : 'bad' }, $(lm.op))),
         myCharts.length ? h('ul', { class: 'small' }, myCharts.map((e) => h('li', null, h('span', { class: 'why18', 'data-why': 'chart.pos', 'data-why-ctx': JSON.stringify({ rel: e.releaseId, kind: s.charts.albums.includes(e) ? 'albums' : 'singles' }), tabindex: '0' }, `#${e.pos}`), ' ', releaseLink(s, e.releaseId), e.last ? h('span', { class: e.last > e.pos ? 'good' : e.last < e.pos ? 'bad' : 'muted' }, ` (${e.last > e.pos ? '▲' : e.last < e.pos ? '▼' : '='}${t(S.last)} ${e.last})`) : pill('NEW', 'good')))) : null,
         h('ul', { class: 'notes small' }, recentNotes.map((n) => h('li', { class: n.kind }, t(n.text)))),
         folded19View(s), // r19 B.5: avisos menores agrupados no mês
