@@ -1,7 +1,7 @@
 // Rodada 27 (M3) — OPERAÇÃO JOGÁVEL do Submundo: quadro de planejamento em pixel art (cortiça, fotos presas com
 // barbante vermelho, luminária), cartões da equipe (lealdade, habilidade, calor), alvo, medidor de risco e a linha do
 // tempo das 3 etapas — Preparar, Executar (2–3 complicações com escolhas) e Encobrir. A lógica é pura em
-// src/sim/sys/heist27.ts; aqui só a tela. "Executar" (modo rápido) segue igual ao lado do botão "Jogar".
+// src/sim/sys/heist27.ts; aqui só a tela. Entrada única (r27 FLOW): "Executar" abre este plano, com "executar direto" (rápido).
 // Cenas: batida policial e traição chamam playCutscene27?.('raid' | 'betrayal') se existir (agente K).
 
 import './heist27.css';
@@ -44,12 +44,13 @@ function cutscene(id: 'raid' | 'betrayal', ctx: unknown): void {
 // ---------------------------------------------------------------- estado da janela
 
 type Stage = 'prep' | 'exec' | 'cover' | 'done';
-interface UI27 { s: GameState; plan: Plan27; stage: Stage; picks: Partial<Record<Ev27, string>>; res?: Res27; up?: Up27; upSig: Sig27[]; root: HTMLElement; close?: () => void; closed?: boolean }
+interface UI27 { s: GameState; plan: Plan27; stage: Stage; picks: Partial<Record<Ev27, string>>; res?: Res27; up?: Up27; upSig: Sig27[]; root: HTMLElement; close?: () => void; closed?: boolean; quick?: () => void }
 
-/** Abre a operação jogável a partir do formulário do Submundo (crime, executor, alvo, método, organização, sócios). */
-export function openHeist27(s: GameState, cid: string, ctx: Ctx17): void {
-  if (!playable27(cid)) return;
-  const ui: UI27 = { s, plan: { cid, ctx: { ...ctx, partners: [...ctx.partners] }, crew: [], risk: 'mid', cover: 'none' }, stage: 'prep', picks: {}, upSig: [], root: h('div', { class: 'hz27' }) };
+/** Abre a operação jogável a partir do formulário do Submundo (crime, executor, alvo, método, organização, sócios).
+ *  Entrada única: o botão "Executar" abre este plano quando a atividade é jogável (flow27.ts); `quick` = executar direto. */
+export function openHeist27(s: GameState, cid: string, ctx: Ctx17, quick?: () => void): void {
+  if (!playable27(cid)) { quick?.(); return; }
+  const ui: UI27 = { s, plan: { cid, ctx: { ...ctx, partners: [...ctx.partners] }, crew: [], risk: 'mid', cover: 'none' }, stage: 'prep', picks: {}, upSig: [], root: h('div', { class: 'hz27' }), quick };
   draw(ui);
   ui.close = modal(`${T(l('Operação', 'Operation'))}: ${T(crimeById(cid)!.name)}`, ui.root, { wide: true, onClose: () => onClose(ui) });
 }
@@ -217,6 +218,7 @@ function prepEl(ui: UI27, pool: Crew27[], od: ReturnType<typeof planOdds27>): HT
     oddsEl(od),
     h('div', { class: 'hz27-actions' },
       od.block ? h('p', { class: 'small bad' }, T(od.block)) : h('button', { class: 'btn primary', 'data-focus': '', disabled: !plan.ctx.target, onclick: set(() => { ui.stage = 'exec'; ui.picks = {}; }) }, T(l('Começar a operação', 'Start the operation'))),
+      ui.quick ? h('button', { class: 'btn ghost', title: T(l('Do jeito de sempre: sem equipe nem complicações, uma rolagem.', 'The usual way: no crew or complications, one roll.')), onclick: () => { const q = ui.quick!; ui.close?.(); q(); } }, T(l('Resolver rápido: executar direto', 'Resolve quickly: execute directly'))) : null,
       h('button', { class: 'btn ghost', onclick: () => ui.close?.() }, T(l('Desistir', 'Back out')))),
   );
 }

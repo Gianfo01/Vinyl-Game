@@ -25,8 +25,7 @@ import { why360 } from '../sim/sys/deal360_17';
 import { why18 } from './explain18';
 import { clauses18Fields } from './sys/contracts18';
 import { offerLayers20, type Layers20 } from './sys/offer20';
-import { playBtn27 } from './act27/mode27';
-import { openNego27 } from './act27/negotiate27';
+import { screen27 } from './act27/flow27';
 
 function g(): GameState {
   return store.game!;
@@ -155,10 +154,11 @@ export function registerInspect(): void {
 }
 
 // ---------- Oferta ----------
-export function openOffer(actId: string): void {
+export function openOffer(actId: string, classic27 = false): void {
   const s = g();
   const a = s.acts[actId];
   if (!a) return;
+  if (!classic27 && screen27('nego', s, { actId }, () => openOffer(actId, true))) return; // r27 FLOW: a mesa de negociação É a tela da oferta (proposta única = caminho rápido)
   const o: Omit<Offer, 'id' | 'week' | 'status'> = defaultOffer(s, a);
   const evalBox = h('div', { class: 'eval' });
   let layers: Layers20 | null = null; // r20 (G6 §4.5): oferta em camadas
@@ -251,7 +251,6 @@ export function openOffer(actId: string): void {
       const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined });
       showReply(offer, result);
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
-    playBtn27(l('Negociar na mesa', 'Negotiate at the table'), () => { close(); openNego27(actId, o); }, a.fame >= 15), // r27 (M2): rodadas com contraproposta
     reply,
   );
   close = modal(`${t(S.offerTitle)}: ${a.name}`, h('div', null, form, actions), { wide: true });

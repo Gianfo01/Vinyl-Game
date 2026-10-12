@@ -21,6 +21,7 @@ import { deskPanel } from './panels/desk';
 import { catalogPanel, chartsPanel, companyPanel, diaryPanel, hqPanel, mediaPanel, showsPanel, stopHq } from './panels/misc';
 import { applyPrefs, exportSave, migrate, saveGame, savePrefs, store, type Area } from './store';
 import { settings27 } from './act27/prefs27';
+import { flowGate27 } from './act27/flow27';
 import { centralPanel } from './panels/central';
 import { worldPanel } from './panels/world';
 import { businessPanel } from './panels/business';
@@ -202,6 +203,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
   const g = store.game;
   if (!g) return;
   if (g.ended && !g.flags.sandbox) return endScreen();
+  if (!ok19 && flowGate27(g, mode, () => doAdvance(mode))) return; // r27 FLOW: atividades jogáveis da janela (Jogar / Resolver rápido)
   if (!ok19 && askAdvance19(g, mode, () => doAdvance(mode, true))) return; // r19 B.5: cartões que vão valer o padrão
   // r20 (B27): instantâneo SEMPRE (também no ironman — isto é proteção contra erro de software, não "desfazer");
   // se qualquer gancho lançar no meio do avanço, o jogo meio-mutado é descartado e nada é gravado.

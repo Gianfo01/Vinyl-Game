@@ -8,7 +8,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
-  KIND27, autoSet27, chance27, coverTitle27, moments27, planScore27, playShow27, showCtx27, showGate27, simulate27, venueName27,
+  KIND27, autoSet27, chance27, coverTitle27, moments27, planScore27, playShow27, showCtx27, showGate27, show27Log, simulate27, venueName27,
   type Moment27, type Result27, type Show27, type Song27,
 } from '../../sim/sys/show27';
 import { idealEnergy } from '../../sim/sys/live/notes';
@@ -24,11 +24,12 @@ import './show27.css';
 const songTitle = (x: Song27): string => (x.kind === 'cover' ? t(coverTitle27(x.id) ?? l(x.title, x.title)) : x.title);
 const MAX27 = 16;
 
-export function openShow27(key: string): void {
+/** Abre o show jogável. Entrada única: a data da turnê oferecida no avanço (flow27.ts). `onEnd(jogou)` ao fechar. */
+export function openShow27(key: string, onEnd?: (played: boolean) => void): void {
   const s = store.game;
-  if (!s) return;
+  if (!s) { onEnd?.(false); return; }
   const gate = showGate27(s, key);
-  if (gate) { toast(t(gate), 'bad'); return; }
+  if (gate) { toast(t(gate), 'bad'); onEnd?.(false); return; }
   const c = showCtx27(s, key)!;
   const act = s.acts[c.actId];
   const members: Member27[] = act.members.map((id) => s.persons[id]).filter((p) => p && p.alive).map((p) => ({ id: p.id, look: p.look, born: p.born, role: p.role }));
@@ -93,7 +94,8 @@ export function openShow27(key: string): void {
           h('ul', { class: 'small a27-why' }, p.why.map((w) => h('li', null, t(w)))))),
       h('div', { class: 'row a27-actions' },
         h('button', { class: 'btn', onclick: () => { ids = autoSet27(c); planView(); } }, t(l('Montar automático', 'Auto-build'))),
-        h('button', { class: 'btn primary', disabled: ids.length < 2, onclick: () => runView() }, t(l('Subir ao palco', 'Take the stage')))),
+        h('button', { class: 'btn primary', disabled: ids.length < 2, onclick: () => runView() }, t(l('Subir ao palco', 'Take the stage'))),
+        onEnd ? h('button', { class: 'btn ghost', onclick: () => close() }, t(l('Resolver rápido (o show acontece na data)', 'Resolve quickly (the show happens on its date)'))) : null),
     );
     setEnergy(30 + p.score * 0.3);
     paint();
@@ -206,7 +208,7 @@ export function openShow27(key: string): void {
   };
 
   planView();
-  close = modal(t(l('Show ao vivo — jogar', 'Live show — play')), root, { wide: true, onClose: () => { stop(); cancelAnimationFrame(raf); rerender(); } });
+  close = modal(t(l('Show ao vivo — jogar', 'Live show — play')), root, { wide: true, onClose: () => { stop(); cancelAnimationFrame(raf); onEnd?.(!!show27Log(s)[key]); rerender(); } });
 }
 
 const curve27 = (pts: string, label: string): HTMLElement => { const d = h('div', { class: 'a27-curve', role: 'img', 'aria-label': label }); d.innerHTML = `<svg viewBox="0 0 200 42" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2"/></svg>`; return d; };

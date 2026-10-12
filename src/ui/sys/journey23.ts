@@ -15,7 +15,6 @@ import { store } from '../store';
 import { commitAgenda20, planAgenda20 } from '../actions20';
 import { applyNav20, openRecord20 } from './actmenu20';
 import { ic, setTab } from '../vis';
-import { playComposeBtn27 } from '../act27/compose27';
 
 /** r23: uma pergunta por tela — linha de propósito logo abaixo do título da página. */
 export const PURPOSE23: Record<string, L> = {
@@ -96,7 +95,6 @@ export function journey23(s: GameState, actId: string | undefined, p?: MusicProj
       title = l('Arranjar repertório', 'Get songs');
       why = t(l('Faltam {n} música(s) para o formato. Escolha de onde vêm: compor, encomendar ou gravar um cover.', '{n} song(s) missing for the format. Choose where they come from: write, commission or record a cover.')).replace('{n}', String(miss));
       primary = main(l('Compor', 'Write'), 'note', () => compose23(s, id));
-      links.push(playComposeBtn27(s, id)); // r27 M1: composição jogável
       links.push(link(l('Encomendar a compositores', 'Commission songwriters'), nav(s, { area: 'creation', tab: ['creation-write', 'writers19'], act: id })),
         link(l('Escolher cover', 'Pick a cover'), nav(s, { area: 'studio', tab: ['creation-studio', 'versions'], act: id })));
       break;
