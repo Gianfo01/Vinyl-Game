@@ -14,14 +14,14 @@ import {
   CONTRACTORS18, KIND18, LOTS18, STATE18, type Style18, ambient18, buildings18, campus18, decode18, layout18, styleName18, styleOf18, type Bld18,
 } from '../../sim/sys/campus18';
 import { act19, bldPop19, lotPop19, syn19, upkeep19, type Pop19, type PopAct19 } from '../../sim/sys/world19';
-import { EV19, STAGE19, actEv19, buyNb19, evPop19, hoodStats19, live19ev, lmNow19, lmPop19, nb19, nbPop19 } from '../../sim/sys/hood19';
+import { EV19, STAGE19, actEv19, buyNb19, evPop19, hoodStats19, live19ev, lmPop19, nb19, nbPop19 } from '../../sim/sys/hood19';
 import { $, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { why18 } from '../explain18';
 import { COSTK20, NATURE20, priceBasis20, type CostKind20 } from '../../sim/sys/price20';
 import { price20 } from '../price20';
 import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, signAt27, stylePreview19, type Scene18 } from '../pixel/campus18px';
-import { ICON27, bldVis27, fillerLots27, forSale27, life27, nbInfo27, panel27, type BVis27, type NbInfo27, type Sale27 } from '../pixel/city27';
+import { ICON27, bldVis27, fillerLots27, forSale27, life27, lmPop27, mapLms27, nbInfo27, panel27, type BVis27, type NbInfo27, type Sale27 } from '../pixel/city27';
 import { SEDE25 } from '../ps/nav25';
 import { sedeNav25 } from '../ps/slot25';
 import { registerArea } from '../registry';
@@ -45,7 +45,7 @@ interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: 
 const AMB_DONE27 = new Set(['fans', 'press', 'show']);
 function makeView(s: GameState, year?: number): View {
   const snap = year !== undefined ? campus18(s).snaps.find((x) => x.y === year) : undefined;
-  const lms = lmNow19(s, snap ? snap.y : s.year);
+  const lms = mapLms27(s.config.homeCity, snap ? snap.y : s.year); // r27 (I2): marcos isométricos (os mais icônicos do ano)
   if (snap) {
     const bs = decode18(snap.b);
     const lots = new Map(bs.filter((b) => b.lot !== undefined).map((b) => [b.id, b.lot!] as [string, number]));
@@ -99,14 +99,14 @@ function mapCanvas(v: View): HTMLCanvasElement {
 function popFor(v: View, id: string): Pop19 | null {
   const s = v.s;
   if (!v.live) {
-    if (id.startsWith('lm:')) return lmPop19(s, id.slice(3), v.year);
+    if (id.startsWith('lm:')) return lmPop19(s, id.slice(3), v.year) ?? lmPop27(s.config.homeCity, id.slice(3), v.year);
     const b = v.bs.find((x) => x.id === id);
     return b ? { kind: 'bld', id, title: b.name, icon: KIND18[b.kind].icon, tags: [KIND18[b.kind].name, STATE18[b.st], styleName18(b.style ?? styleOf18(b.sy))], rows: [{ k: l('Estágio', 'Stage'), v: String(b.lvl) }], notes: [{ t: { pt: `Retrato de ${v.year}.`, en: `Snapshot from ${v.year}.` } }], acts: [], opts: [] } : null;
   }
   if (ui.styFor !== id) { ui.sty = undefined; ui.styFor = id; }
   if (id.startsWith('lot:')) return lotPop19(s, +id.slice(4), ui.q, ui.moving, ui.sty);
   if (id.startsWith('nb:')) return nbPop19(s, +id.slice(3));
-  if (id.startsWith('lm:')) return lmPop19(s, id.slice(3));
+  if (id.startsWith('lm:')) return lmPop19(s, id.slice(3)) ?? lmPop27(s.config.homeCity, id.slice(3), s.year);
   if (id.startsWith('ev:')) return evPop19(s, id.slice(3));
   return bldPop19(s, id, ui.q, ui.sty);
 }
@@ -186,8 +186,12 @@ function popBody(v: View, p: Pop19, close: () => void, rerun: () => void, bare =
       o.syn.length ? h('small', { class: 'good' }, o.syn.map((x) => tx(x)).join(' · ')) : null,
       o.dis ? h('small', { class: 'bad' }, t(o.dis)) : null,
       h('button', { type: 'button', class: 'btn small primary', disabled: !!o.dis, 'aria-disabled': o.dis ? 'true' : undefined, onclick: () => runAct(v, p.id, { id: o.id, label: o.name, cost: o.cost }, close, ui.sty ?? p.sty?.cur) }, ic('building'), ' ', t(l('Construir', 'Build')))))) : null,
-    p.acts.length ? h('div', { class: 'w19-acts' }, p.acts.map((a) => h('button', { type: 'button', class: `btn small ${a.tone === 'primary' ? 'primary' : a.tone === 'danger' ? 'danger ghost' : 'ghost'}`, disabled: !!a.dis, title: a.dis ? t(a.dis) : undefined,
-      onclick: () => runAct(v, p.id, a, close, ui.sty ?? p.sty?.cur) }, t(a.label), a.cost !== undefined ? h('small', { title: t(priceBasis20(s, Math.abs(a.cost))) }, ` ${costTxt(a.cost)}`) : null, kindTag20(kind20(p, a)), a.go ? ' ↗' : null))) : null,
+    // r27 (I2): rótulo e custo na 1ª linha, tipo de custo numa 2ª linha pequena; desabilitado = botão neutro legível
+    p.acts.length ? h('div', { class: 'w19-acts' }, p.acts.map((a) => h('button', { type: 'button', class: `btn small c27-act ${a.dis ? 'ghost c27-dis' : a.tone === 'primary' ? 'primary' : a.tone === 'danger' ? 'danger ghost' : 'ghost'}`, disabled: !!a.dis, 'aria-disabled': a.dis ? 'true' : undefined, title: a.dis ? t(a.dis) : undefined,
+      onclick: () => runAct(v, p.id, a, close, ui.sty ?? p.sty?.cur) },
+      h('span', { class: 'c27-al' }, t(a.label), a.go ? ' ↗' : null),
+      a.cost !== undefined ? h('span', { class: 'c27-ac', title: t(priceBasis20(s, Math.abs(a.cost))) }, costTxt(a.cost)) : null,
+      kind20(p, a) ? h('span', { class: 'c27-ak' }, kindTag20(kind20(p, a))) : null))) : null,
     p.acts.some((a) => a.dis) ? h('ul', { class: 'w19-notes small muted' }, p.acts.filter((a) => a.dis).map((a) => h('li', null, `${t(a.label)}: ${t(a.dis!)}`))) : null);
 }
 
@@ -363,7 +367,7 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
     hot(sp.id, sp.nb ? 'nb' : 'mine', sp.box, label, [pin], b?.kind === 'hq' && v.live ? enter : undefined);
   }
   // marcos da cidade
-  if (ui.f.lm) for (const m of sc.marks) { const lm = lmNow19(s, v.year).find((x) => x.id === m.id); if (lm) hot(`lm:${m.id}`, 'lm', m.box, `${t(lm.n)} · ${lm.from > 0 ? lm.from : ''}`); }
+  if (ui.f.lm) for (const m of sc.marks) { const lm = mapLms27(s.config.homeCity, v.year).find((x) => x.id === m.id); if (lm) hot(`lm:${m.id}`, 'lm', m.box, `${t(lm.n)} · ${lm.from > 0 ? lm.from : ''}`); }
   if (v.live && ui.f.mine) {
     if (ui.moving) { // mudança: todo lote livre é destino
       const used = new Set(layout18(s, v.bs).values()), nbl = new Set(nb19(s).map((x) => x.lot)), busy = new Set(campus18(s).proj.map((p) => p.lot));
@@ -374,8 +378,8 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
       });
     } else for (const x of v.sale) { // r27: placas "À venda" (só o que cabe no caixa)
       const L0 = LOTS18[x.lot];
-      const [bx, by] = signAt27(x.lot);
-      hot(`lot:${x.lot}`, 'sale', [bx - 14, by - 19, bx + 14, by + 1], `${t(L0.name)} · ${t(l('à venda', 'for sale'))} · ${t(l('sugestão', 'suggestion'))}: ${t(x.name)} ${$(x.price)}`,
+      const [bx, by] = signAt27(x.lot), sg = sc.signs?.find((g) => g.lot === x.lot); // r27 (I2): placa erguida leva o ponto clicável junto
+      hot(`lot:${x.lot}`, 'sale', sg ? [sg.x, sg.y, sg.x + sg.c.width, sg.y + 10] : [bx - 14, by - 19, bx + 14, by + 1], `${t(L0.name)} · ${t(l('à venda', 'for sale'))} · ${t(l('sugestão', 'suggestion'))}: ${t(x.name)} ${$(x.price)}`,
         [h('span', { class: 'c27-pin sale', 'aria-hidden': 'true' }, ic(ICON27[x.kind]?.ic ?? 'building'), h('i', { class: 'c27-nm' }, $(x.price)))]);
     }
     // eventos do bairro

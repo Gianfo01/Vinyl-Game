@@ -8,9 +8,9 @@
 import { C, Px, mix, noise, shade, withAlpha, dith, type Col } from './px';
 import { drawText, textWidth } from './font';
 import { LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, type Style18 } from '../../sim/sys/campus18';
-import { ICON27, cityLook27, env27, era27, type BVis27, type CityLook27, type Env27, type Era27, type Life27, type Sale27 } from './city27';
+import { ICON27, cityLook27, env27, era27, hqExt27, type BVis27, type CityLook27, type Env27, type Era27, type HqExt27, type Life27, type Sale27 } from './city27';
 import type { Landmark19 } from '../../data/landmarks19';
-import { drawLandmark19 } from './landmarks19px';
+import { LM_SLOTS27, drawLmIso27, outlineOuter } from './lmiso27';
 
 export const GW = 20, GH = 16;
 export const MW = 300, MH = 226;
@@ -97,7 +97,8 @@ function pattern(st: Style18, u: number, hz: number, H: number, len: number, z0:
   return 'wall';
 }
 
-interface BoxO { st: Style18; seed: number; lit: number; raw?: boolean; burnt?: boolean; boarded?: boolean; worn?: boolean; noWin?: boolean; roof?: Col; wall?: Col; snow?: boolean }
+interface BoxO { st: Style18; seed: number; lit: number; raw?: boolean; burnt?: boolean; boarded?: boolean; worn?: boolean; noWin?: boolean; roof?: Col; wall?: Col; snow?: boolean;
+  /** r27 (I2): padrão de fachada próprio (sede: andares contados) e cor do vidro da época */ pat?: (u: number, hz: number, len: number, right: boolean) => WinK; win?: Col }
 /** Caixa isométrica com fachadas por estilo; z0 = base (para recuos). */
 function box(t: T, L: T, gx: number, gy: number, w: number, d: number, H: number, z0: number, o: BoxO): void {
   const m = MAT[o.st];
@@ -107,7 +108,7 @@ function box(t: T, L: T, gx: number, gy: number, w: number, d: number, H: number
     let c: Col;
     if (o.raw) c = (Math.floor(hz) % 6 === 0 ? shade(RAW, -0.15) : RAW);
     else if (k === 'win') {
-      c = o.boarded ? C('#7a5a34') : o.burnt ? DARK : m.win;
+      c = o.boarded ? C('#7a5a34') : o.burnt ? DARK : o.win ?? m.win;
       if (o.st === 'glass' && (Math.floor(u) + Math.floor(hz)) % 17 < 2) c = shade(c, 0.35);
       if (!o.boarded && !o.burnt && noise(Math.floor(u / 4) + (right ? 50 : 0), Math.floor(hz / m.fh), o.seed) < o.lit) L.set(x, y, k === 'win' && (Math.floor(u) % 9 === 0) ? LIT2 : LIT);
     } else if (k === 'trim') c = m.trim;
@@ -123,11 +124,11 @@ function box(t: T, L: T, gx: number, gy: number, w: number, d: number, H: number
   // face esquerda (W→S) e direita (S→E)
   t.poly([[Wx, Wy - z0], [Sx, Sy - z0], [Sx, Sy - H], [Wx, Wy - H]], (x, y) => {
     const u = x - Wx, hz = Wy + u / 2 - y;
-    return col(o.noWin ? 'wall' : pattern(o.st, u, hz, H, lenL, z0), x, y, false, u, hz);
+    return col(o.noWin ? 'wall' : o.pat ? o.pat(u, hz, lenL, false) : pattern(o.st, u, hz, H, lenL, z0), x, y, false, u, hz);
   });
   t.poly([[Sx, Sy - z0], [Ex, Ey - z0], [Ex, Ey - H], [Sx, Sy - H]], (x, y) => {
     const u = x - Sx, hz = Sy - u / 2 - y;
-    return col(o.noWin ? 'wall' : pattern(o.st, u, hz, H, lenR, z0, false), x, y, true, u, hz);
+    return col(o.noWin ? 'wall' : o.pat ? o.pat(u, hz, lenR, true) : pattern(o.st, u, hz, H, lenR, z0, false), x, y, true, u, hz);
   });
   const roof = o.raw ? shade(RAW, 0.1) : o.roof ?? m.roof;
   t.poly([[Nx, Ny - H], [Ex, Ey - H], [Sx, Sy - H], [Wx, Wy - H]], (x, y) => {
@@ -141,13 +142,30 @@ function box(t: T, L: T, gx: number, gy: number, w: number, d: number, H: number
 
 // ---------------------------------------------------------------- acessórios
 
+/** r27 (I2): caixa-d'água de madeira sobre pernas (base em x, y no telhado). */
+function tank27(t: T, x: number, y: number): void {
+  t.line(x - 2, y, x - 2, y - 3, C('#3a3030')); t.line(x + 2, y, x + 2, y - 3, C('#3a3030'));
+  t.rect(x - 3, y - 9, 7, 6, C('#7a5a3a')); for (let i = -2; i <= 3; i += 2) t.line(x + i, y - 9, x + i, y - 4, C('#5a4028'));
+  t.poly([[x - 4, y - 9], [x + 4, y - 9], [x + 0.5, y - 12]], C('#4a3a30'));
+}
+/** r27 (I2): cúpula sombreada (luz da esquerda) — no lugar da elipse chapada. */
+function domeTop27(t: T, cx: number, cy: number, r: number, h: number, c: Col): void {
+  for (let z = 0; z < h; z++) { const ww = r * Math.sqrt(1 - (z / h) ** 2); for (let dx = -Math.ceil(ww); dx <= Math.ceil(ww); dx++) { if (Math.abs(dx + 0.5) > ww) continue; const f = (dx + 0.5) / Math.max(1, ww); t.set(cx + dx, cy - z, shade(c, f < -0.35 ? 0.18 : f < 0.25 ? 0 : -0.2)); } }
+}
+/** r27 (I2): chafariz isométrico (borda em losango, água com brilho, jato). */
+function fountain27(t: T, gx: number, gy: number): void {
+  t.poly([iso(gx - 0.7, gy - 0.7), iso(gx + 0.7, gy - 0.7), iso(gx + 0.7, gy + 0.7), iso(gx - 0.7, gy + 0.7)], C('#b8b4ac'));
+  t.poly([iso(gx - 0.5, gy - 0.5), iso(gx + 0.5, gy - 0.5), iso(gx + 0.5, gy + 0.5), iso(gx - 0.5, gy + 0.5)], (x, y) => ((x + y) % 5 === 0 ? C('#a8e0f8') : C('#4a98d8')));
+  const [x, y] = iso(gx, gy); t.rect(x, y - 5, 1, 5, C('#c8e8f8')); t.set(x - 1, y - 5, C('#e8f8ff')); t.set(x + 1, y - 5, C('#e8f8ff')); t.set(x - 2, y - 3, C('#c8e8f8')); t.set(x + 2, y - 3, C('#c8e8f8'));
+}
+
 function roofTop(gx: number, gy: number, w: number, d: number, H: number): [number, number] { const [x, y] = iso(gx + w / 2, gy + d / 2); return [x, y - H]; }
 function accessories(t: T, L: T, b: Bld18, st: Style18, gx: number, gy: number, w: number, d: number, H: number, seed: number): void {
   const [cx, cy] = roofTop(gx, gy, w, d, H);
   const m = MAT[st];
   if (st === 'victorian' || st === 'brick') {
     for (let i = 0; i < Math.min(3, w); i++) { const [x, y] = iso(gx + 0.6 + i * 1.3, gy + 0.5); t.rect(x, y - H - 5, 2, 5, C('#6a3a2a')); t.rect(x, y - H - 6, 2, 1, C('#3a3030')); }
-    if (st === 'brick' && H > 14) { t.rect(cx + 3, cy - 9, 5, 6, C('#7a5a3a')); t.ellipse(cx + 5.5, cy - 9, 3, 1.4, C('#5a4030')); t.line(cx + 3, cy - 3, cx + 3, cy, C('#3a2a20')); t.line(cx + 7, cy - 3, cx + 7, cy, C('#3a2a20')); }
+    if (st === 'brick' && H > 14) tank27(t, cx + 5, cy);
   } else if (st === 'deco' && H > 18) {
     t.line(cx, cy - 4, cx, cy - 4 - Math.min(16, H / 3), m.trim);
     L.set(cx, cy - 4 - Math.min(16, H / 3), C('#ff6060'));
@@ -161,26 +179,25 @@ function accessories(t: T, L: T, b: Bld18, st: Style18, gx: number, gy: number, 
     t.poly([[Wx, Wy - H], [Sx, Sy - H], [(Wx + Sx) / 2, (Wy + Sy) / 2 - H - 7]], m.roof);
   } else if (st === 'glass' && H > 24) {
     t.line(cx, cy, cx, cy - 12, C('#c0c8d0')); L.set(cx, cy - 12, C('#ff4040'));
-    if (w >= 3) { t.ellipse(cx - 6, cy + 1, 3, 1.5, C('#d0d4d8')); t.text('H', cx - 7, cy - 1, C('#40444c')); }
+    if (w >= 3) { t.poly([[cx - 10, cy + 1], [cx - 6, cy - 1], [cx - 2, cy + 1], [cx - 6, cy + 3]], C('#5a5e66')); t.set(cx - 7, cy + 1, C('#f0f0f0')); t.set(cx - 5, cy + 1, C('#f0f0f0')); t.set(cx - 6, cy + 1, C('#f0f0f0')); }
   } else if (st === 'eco') {
     for (let i = 0; i < Math.max(1, w - 1); i++) { const [x, y] = iso(gx + 0.5 + i, gy + 0.4); t.poly([[x, y - H - 1], [x + 6, y - H + 2], [x + 4, y - H + 3], [x - 2, y - H]], C('#2a3a6a')); }
-    if (b.kind === 'hq' && b.lvl >= 6) { t.ellipse(cx, cy - 6, 8, 6, withAlpha(C('#80f0ff'), 140)); L.ellipse(cx, cy - 6, 5, 4, withAlpha(C('#a0ffff'), 160)); }
   } else if (st === 'gothic') {
     for (const [a, c] of [[0, 0], [w, 0], [0, d], [w, d]] as [number, number][]) { const [x, y] = iso(gx + a, gy + c); t.rect(x - 1, y - H - 7, 2, 7, m.wall); t.poly([[x - 2, y - H - 7], [x + 2, y - H - 7], [x, y - H - 12]], m.roof); }
     if (H > 14) { t.rect(cx - 2, cy - 14, 4, 14, m.wall); t.poly([[cx - 3, cy - 14], [cx + 3, cy - 14], [cx, cy - 24]], m.roof); L.set(cx, cy - 9, C('#c080ff')); }
   } else if (st === 'beaux') {
-    t.ellipse(cx, cy - 2, Math.min(8, w * 2.5), Math.min(6, w * 2), m.roof); t.ellipse(cx - 1, cy - 4, 2, 2, shade(m.roof, 0.2)); t.line(cx, cy - 7, cx, cy - 11, m.trim);
+    domeTop27(t, cx, cy, Math.min(7, Math.round(w * 2.2)), Math.min(6, Math.round(w * 2)), m.roof); t.line(cx, cy - 7, cx, cy - 11, m.trim);
   } else if (st === 'tropical') {
     const [Nx, Ny] = iso(gx, gy), [Ex, Ey] = iso(gx + w, gy), [Sx, Sy] = iso(gx + w, gy + d), [Wx, Wy] = iso(gx, gy + d);
     t.poly([[Nx, Ny - H - 1], [Ex + 2, Ey - H], [Sx, Sy - H + 2], [Wx - 2, Wy - H], [cx, cy - 9]], (x, y) => (Math.floor(y) % 2 ? m.roof : shade(m.roof, -0.12)));
     const [px, py] = iso(gx + w + 0.4, gy + d + 0.2); t.line(px, py, px + 1, py - 14, C('#7a5a34')); for (const [dx, dy] of [[-5, 2], [5, 2], [-4, -2], [4, -2]]) t.line(px + 1, py - 14, px + 1 + dx, py - 14 + dy + 2, C('#3a8a3a'));
   } else if (st === 'loft') {
-    t.rect(cx + 3, cy - 9, 5, 6, C('#6a4a30')); t.ellipse(cx + 5.5, cy - 9, 3, 1.4, C('#4a3020')); t.line(cx + 3, cy - 3, cx + 3, cy, C('#2a2020')); t.line(cx + 7, cy - 3, cx + 7, cy, C('#2a2020'));
+    tank27(t, cx + 5, cy);
     for (let i = -6; i <= 0; i += 2) t.set(cx + i, cy - 2, C('#c8b080')); t.line(cx - 7, cy - 4, cx, cy - 4, C('#26262a'));
   } else if (st === 'neon') {
     const [Wx, Wy] = iso(gx, gy + d), [Sx, Sy] = iso(gx + w, gy + d);
     for (const [z, c] of [[H - 2, C('#ff48c8')], [H - 5, C('#3ae0ff')]] as [number, Col][]) { t.line(Wx + 1, Wy - z, Sx - 1, Sy - z, c); L.line(Wx + 1, Wy - z, Sx - 1, Sy - z, c); }
-    t.rect(cx - 4, cy - 8, 8, 5, C('#1a1428')); L.rect(cx - 3, cy - 7, 6, 3, C('#ff70d0'));
+    neonBoard27(t, L, Math.round(cx), Math.round(cy - 8), C('#ff70d0'), C('#3ae0ff'));
   }
   void seed;
 }
@@ -191,9 +208,10 @@ const KCOL = (k: BKind) => ACCENT[k] ?? C('#a04040');
 
 export interface Sprite18 { id: string; c: HTMLCanvasElement; lc: HTMLCanvasElement; x: number; y: number; depth: number; box: [number, number, number, number]; door: [number, number]; top: [number, number]; fp: [number, number, number, number]; kind: BKind; st: Bld18['st']; nb?: boolean;
   /** r27: prédio comum da cidade (lote que não está à venda para você) — não é clicável */
-  filler?: boolean; /** r27: janelas acesas também de dia (sessão, show) */ lit?: boolean; /** r27: topo da chaminé (fábrica) */ chim?: [number, number]; vis?: BVis27 }
-/** r27: extras do desenho (estado visual, neve, cores da cidade, letreiro da época). */
-export interface Spr27 { vis?: BVis27; snow?: boolean; wall?: Col; roof?: Col; sign?: Era27['sign']; filler?: boolean }
+  filler?: boolean; /** r27: janelas acesas também de dia (sessão, show) */ lit?: boolean; /** r27: topo da chaminé (fábrica) */ chim?: [number, number]; vis?: BVis27;
+  /** r27 (I2): altura (px) para a sombra projetada; sede vista de fora */ h?: number; hq?: HqExt27 }
+/** r27: extras do desenho (estado visual, neve, cores da cidade, letreiro da época). I2: andares abertos da sede (I1). */
+export interface Spr27 { vis?: BVis27; snow?: boolean; wall?: Col; roof?: Col; sign?: Era27['sign']; filler?: boolean; floorsOpen?: number }
 
 function fp(b: Bld18, lw: number, ld: number): { w: number; d: number; H: number } {
   const L = b.lvl;
@@ -209,21 +227,23 @@ function fp(b: Bld18, lw: number, ld: number): { w: number; d: number; H: number
 
 /** Desenha um prédio num sprite próprio (cor + luzes) dentro do lote dado. */
 export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: number; d: number }, year: number, seed: number, brand = 'REC', x27: Spr27 = {}): Sprite18 {
-  const { w, d, H } = fp(b, lot.w, lot.d);
+  // r27 (I2): a sede segue a casca do interior (garagem → campus), com andares contados e fachada da época
+  const hx = b.kind === 'hq' ? hqExt27({ level: b.lvl - 1, year: b.sy || year, building: b.st === 'renovating' || b.st === 'building', style: b.style, floorsOpen: x27.floorsOpen }) : undefined;
+  const { w, d, H } = hx ? { w: hx.w, d: hx.d, H: hx.H } : fp(b, lot.w, lot.d);
   const gx = lot.gx + (lot.w - w) / 2, gy = lot.gy + (lot.d - d) / 2;
   const [Nx] = iso(gx, gy + d), [Ex] = iso(gx + w, gy), [, Ny] = iso(gx, gy), [, Sy] = iso(gx + w, gy + d);
   const x0 = Math.floor(Math.min(Nx, iso(lot.gx, lot.gy + lot.d)[0])) - 10, x1 = Math.ceil(Math.max(Ex, iso(lot.gx + lot.w, lot.gy)[0])) + 10;
   const y0 = Math.floor(Ny - H - 44), y1 = Math.ceil(Math.max(Sy, iso(lot.gx + lot.w, lot.gy + lot.d)[1])) + 4;
   const p = new Px(x1 - x0, y1 - y0), lp = new Px(x1 - x0, y1 - y0);
   const t = new T(p, x0, y0), L = new T(lp, x0, y0);
-  const st = b.style ?? styleOf18(b.sy || year);
-  const building = b.st === 'building' || b.st === 'planned';
+  const st = hx ? hx.facade : b.style ?? styleOf18(b.sy || year);
+  const building = !hx && (b.st === 'building' || b.st === 'planned');
   const prog = b.prog ?? 1;
   const lit = x27.vis?.lit ? 0.9 : b.st === 'open' || b.st === 'renovating' ? 0.45 : b.st === 'damaged' ? 0.1 : 0;
   const o: BoxO = { st, seed, lit, raw: building, burnt: b.st === 'damaged', boarded: b.st === 'sold' || b.st === 'closed', worn: b.worn, snow: x27.snow };
   let chim: [number, number] | undefined;
   // r19: cor do tipo de negócio na fachada e no telhado (leitura rápida: estúdio vermelho, editora roxa…)
-  if (ACCENT[b.kind] && st !== 'glass' && st !== 'neon' && !b.place) { o.wall = mix(MAT[st].wall, ACCENT[b.kind]!, 0.22); o.roof = mix(MAT[st].roof, ACCENT[b.kind]!, 0.45); }
+  if (ACCENT[b.kind] && st !== 'glass' && st !== 'neon' && !hx) { o.wall = mix(MAT[st].wall, ACCENT[b.kind]!, 0.22); o.roof = mix(MAT[st].roof, ACCENT[b.kind]!, 0.45); }
   if (b.kind === 'venue') o.roof = mix(MAT[st].roof, C('#a03030'), 0.4);
   if (b.kind === 'plant') o.roof = mix(MAT[st].roof, C('#606870'), 0.5);
   if (b.kind === 'museum') { o.wall = mix(MAT[st].wall, C('#f0ead8'), 0.5); o.roof = C('#c8bfa8'); }
@@ -248,7 +268,7 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
     if (b.lvl >= 4) { const [x, y] = iso(gx + w - 1, gy + 0.8); for (let a = 0; a < 16; a++) t.set(x + Math.cos(a / 16 * 6.28) * 6, y - 9 + Math.sin(a / 16 * 6.28) * 6, C('#d0d0d8')); t.line(x, y, x, y - 9, C('#909098')); L.set(x, y - 15, C('#ffe080')); }
   } else if (b.kind === 'park') {
     t.poly([iso(gx, gy), iso(gx + w, gy), iso(gx + w, gy + d), iso(gx, gy + d)], (x, y) => (dith(x, y, 0.2) ? C('#5a8a40') : C('#6a9a48')));
-    const [fx, fy] = iso(gx + w / 2, gy + d / 2); t.ellipse(fx, fy, 6, 3, C('#c0c0c0')); t.ellipse(fx, fy, 4.5, 2, C('#4a90d0')); t.line(fx, fy, fx, fy - 4, C('#a0d0f0'));
+    fountain27(t, gx + w / 2, gy + d / 2);
     const [mx, my] = iso(gx + 0.3, gy + 0.3); for (let i = 0; i < 14; i++) t.rect(mx + i, my - 7 + i / 2, 1, 6, [C('#e04848'), C('#f0c040'), C('#48b85c'), C('#4a8ae0'), C('#8a5ad0')][Math.floor(i / 3) % 5]);
     for (let i = 0; i < 3; i++) { const [x, y] = iso(gx + 0.5 + i * (w - 1) / 2, gy + d - 0.5); tree(t, x, y, year, 'summer', seed + i); }
   } else if (b.kind === 'sign') {
@@ -265,35 +285,25 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
     if (building) HH = Math.max(3, Math.round(H * Math.max(0.12, prog)));
     if (building && prog < 0.25) { // r19: estágio 1 — escavação e fundação
       t.poly([iso(gx, gy), iso(gx + w, gy), iso(gx + w, gy + d), iso(gx, gy + d)], (x, y) => (noise(x, y, seed) < 0.3 ? C('#5a4430') : C('#6e5238')));
-      const [px, py] = iso(gx + w * 0.75, gy + d * 0.3); t.ellipse(px, py - 2, 5, 3, C('#8a6a48'));
+      const [px, py] = iso(gx + w * 0.75, gy + d * 0.3); t.poly([[px - 6, py], [px - 2, py - 4], [px + 2, py - 5], [px + 6, py]], C('#8a6a48')); t.line(px - 2, py - 4, px + 2, py - 5, C('#a88a60'));
       for (let i = 0; i < 4; i++) { const [rx, ry] = iso(gx + 0.4 + i * (w - 0.8) / 3, gy + d - 0.4); t.line(rx, ry, rx, ry - 6, C('#7a7a80')); }
       const [mx, my] = iso(gx + 0.6, gy + d * 0.5);
       if (year < 1920) { t.rect(mx - 3, my - 4, 6, 3, C('#8a6a40')); t.rect(mx + 3, my - 5, 2, 3, C('#5a3a20')); } else { t.rect(mx - 4, my - 5, 7, 4, C('#e0b020')); t.line(mx + 3, my - 5, mx + 8, my - 10, C('#e0b020')); t.line(mx + 8, my - 10, mx + 10, my - 6, C('#c09010')); }
       HH = 0;
     }
-    if (b.place && !building) {
-      place19(t, L, b.place, gx, gy, w, d, H, o, year);
-    } else if (b.kind === 'hq' && b.lvl === 6 && !building) {
-      box(t, L, gx, gy + 1, w, d - 1, 16, 0, o);
-      box(t, L, gx + 1, gy, 2.5, 2.5, H, 0, { ...o, roof: C('#5a9a48') });
-    } else if (b.kind === 'hq' && b.lvl === 5 && !building) {
-      box(t, L, gx - 1, gy - 1, w + 2, d + 2, 10, 0, o);
-      box(t, L, gx, gy, w, d, H, 10, o);
+    if (hx) {
+      hqBody27(t, L, hx, gx, gy, w, d, o, b.sy || year, brand);
     } else if (b.kind === 'home') {
       box(t, L, gx, gy, w, d, HH, 0, { ...o, lit: o.lit * 0.6 });
       if (!building) { const [ax, ay] = iso(gx, gy + d / 2), [bx, by] = iso(gx + w, gy + d / 2), [wx, wy] = iso(gx, gy + d), [sx, sy] = iso(gx + w, gy + d), [nx, ny] = iso(gx, gy), [ex, ey] = iso(gx + w, gy);
         const rc = st === 'midcentury' || st === 'glass' || st === 'eco' ? MAT[st].roof : C('#8a3a2a');
         t.poly([[wx, wy - HH], [sx, sy - HH], [bx, by - HH - 7], [ax, ay - HH - 7]], rc); t.poly([[sx, sy - HH], [ex, ey - HH], [bx, by - HH - 7]], shade(rc, -0.25)); void nx; void ny;
-        if (b.lvl >= 3 && year >= 1955) { const [px2, py2] = iso(lot.gx + lot.w - 0.9, lot.gy + lot.d - 0.6); t.ellipse(px2, py2, 6, 2.6, C('#58b8e8')); }
+        if (b.lvl >= 3 && year >= 1955) pool27(t, lot.gx + lot.w - 1.5, lot.gy + lot.d - 1.1); // r27 (I2): piscina em losango, com borda
       }
     } else if (HH > 0) {
       box(t, L, gx, gy, w, d, HH, 0, o);
     }
-    if (b.kind === 'hq' && !building && b.lvl >= 3) for (const fx of [Wx - 3, Sx + 1]) { const fy = fx < Sx ? Wy + 3 : Sy2 + 3; t.ellipse(fx, fy - 2, 2.5, 2, C('#3e7a3a')); t.rect(fx - 2, fy - 1, 4, 2, C('#8a6a4a')); } // jardineiras na entrada
-    if (!building && b.st !== 'sold' && b.st !== 'closed') {
-      if (b.kind === 'hq' && !b.place) { const bw = textWidth(brand) + 4; t.rect(door[0] - bw / 2, door[1] - 15, bw, 7, C('#1a1214')); t.text(brand, door[0] - bw / 2 + 2, door[1] - 14, year >= 1925 ? C('#ffd060') : C('#f0e8d0')); L.rect(door[0] - bw / 2 + 1, door[1] - 14, bw - 2, 5, withAlpha(C('#ffd060'), 140));
-        const [fx, fy] = roofTop(gx, gy, w, d, H); t.line(fx - 4, fy, fx - 4, fy - 12, C('#d0d0d0')); t.rect(fx - 3, fy - 12, 6, 4, C('#d04040')); }
-      if (b.kind === 'hq' && b.lvl <= 1) { for (let i = 0; i < 4; i++) t.line(Wx + 2, Wy - 2 - i * 1.5, Sx - 2, Sy2 - 2 - i * 1.5, C('#8a8a90')); }
+    if (!building && !hx && b.st !== 'sold' && b.st !== 'closed') {
       if (b.kind === 'venue') { // marquise com lâmpadas (r27: acesa só em noite de show)
         const mq = x27.vis ? x27.vis.marquee : true;
         for (let u = 2; u < Sx - Wx - 2; u += 2) { t.set(Wx + u, Wy + u / 2 - 7, mq ? C('#fff0b0') : C('#8a8070')); if (mq) L.set(Wx + u, Wy + u / 2 - 7, (u / 2) % 2 ? LIT : C('#ff8040')); }
@@ -307,16 +317,18 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
       }
       if (b.kind === 'museum') { for (let u = 2; u < Sx - Wx - 1; u += 3) t.line(Wx + u, Wy + u / 2 - 1, Wx + u, Wy + u / 2 - 9, C('#f0ece0')); t.poly([[Wx, Wy - 9], [Sx, Sy2 - 9], [(Wx + Sx) / 2, (Wy + Sy2) / 2 - 15]], C('#e8e0d0')); }
       if (b.kind === 'school') { const [x, y] = roofTop(gx, gy, w, d, H); t.rect(x - 2, y - 7, 5, 7, MAT[st].wall); t.poly([[x - 3, y - 7], [x + 3, y - 7], [x, y - 11]], C('#5a4a46')); t.disc(x + 0.5, y - 4.5, 1.2, C('#f8f4ec')); }
-      if (b.kind === 'media') { const [x, y] = roofTop(gx, gy, w, d, H); for (let i = 0; i < 24; i++) t.set(x, y - i, Math.floor(i / 4) % 2 ? C('#e04040') : C('#f0f0f0')); t.line(x - 4, y, x, y - 18, C('#8a8a90')); t.line(x + 4, y, x, y - 18, C('#8a8a90')); L.set(x, y - 24, C('#ff3030')); if (year >= 1965) { t.ellipse(x + 7, y - 3, 3, 3, C('#d8dce0')); t.set(x + 7, y - 3, C('#606468')); } }
+      if (b.kind === 'media') { const [x, y] = roofTop(gx, gy, w, d, H); for (let i = 0; i < 24; i++) t.set(x, y - i, Math.floor(i / 4) % 2 ? C('#e04040') : C('#f0f0f0')); t.line(x - 4, y, x, y - 18, C('#8a8a90')); t.line(x + 4, y, x, y - 18, C('#8a8a90')); L.set(x, y - 24, C('#ff3030')); if (year >= 1965) { t.rect(x + 6, y - 6, 2, 5, C('#d8dce0')); t.rect(x + 5, y - 5, 1, 3, C('#d8dce0')); t.set(x + 8, y - 4, C('#606468')); t.line(x + 6, y - 1, x + 6, y, C('#8a8a90')); } }
       if (b.kind === 'platform') { for (let u = 3; u < Sx - Wx - 2; u += 2) L.set(Wx + u, Wy + u / 2 - 4, (u % 3) ? C('#40f0ff') : C('#80ff80')); }
       if (b.kind === 'store') { for (let u = 1; u < Sx - Wx - 1; u++) { t.set(Wx + u, Wy + u / 2 - 7, Math.floor(u / 2) % 2 ? C('#e04848') : C('#f8f4ec')); t.set(Wx + u, Wy + u / 2 - 6, Math.floor(u / 2) % 2 ? C('#b03030') : C('#d8d4cc')); } }
       if (b.kind === 'dorm') { for (let z = 8; z < H - 2; z += 7) t.line(Wx + 1, Wy - z, Sx - 1, Sy2 - z, shade(MAT[st].trim, -0.2)); }
       if (b.kind === 'rehearsal') { t.rect(door[0] + 1, door[1] - 17, 1, 5, C('#f0c040')); t.disc(door[0], door[1] - 12, 1.3, C('#f0c040')); t.rect(door[0] + 2, door[1] - 17, 2, 1, C('#f0c040')); }
-      if (ACCENT[b.kind] && b.kind !== 'store' && !b.place && !x27.filler) { t.rect(door[0] - 3, door[1] - 9, 6, 2, KCOL(b.kind)); }
+      if (ACCENT[b.kind] && b.kind !== 'store' && !x27.filler) { t.rect(door[0] - 3, door[1] - 9, 6, 2, KCOL(b.kind)); }
       if (x27.sign && H > 6) eraSign27(t, L, x27.sign, gx, gy, w, d, H, seed);
-      if (b.kind !== 'home' && b.kind !== 'store' && !b.place) accessories(t, L, b, st, gx, gy, w, d, H, seed);
+      if (b.kind !== 'home' && b.kind !== 'store') accessories(t, L, b, st, gx, gy, w, d, H, seed);
     }
-    if (building || b.st === 'renovating') {
+    outlineOuter(p, OUTL27); // r27 (I2): contorno seletivo de 1 px (só por fora)
+    if (hx) hqPost27(t, L, hx, gx, gy, w, d);
+    else if (building || b.st === 'renovating') {
       // andaime: grade de canos sobre as fachadas
       const top = b.st === 'renovating' ? H + 2 : Math.min(H + 2, HH + 6);
       for (let z = 4; z <= top; z += 5) { t.line(Wx - 1, Wy - z, Sx, Sy2 - z, SCAF); const [Ex2, Ey2] = iso(gx + w, gy); t.line(Sx, Sy2 - z, Ex2 + 1, Ey2 - z, SCAF2); }
@@ -332,9 +344,17 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
     }
   }
   return { id: b.id, kind: b.kind, st: b.st, fp: [gx, gy, w, d], c: p.canvas(), lc: lp.canvas(), x: x0, y: y0, depth: gx + w / 2 + gy + d / 2, box: [Math.min(Wx, Nx), Ny - H - (b.kind === 'media' ? 24 : 6), Math.max(Ex, Sx), Math.max(Sy, Sy2)], door, top: roofTop(gx, gy, w, d, H),
-    filler: x27.filler, lit: !!x27.vis?.lit, chim, vis: x27.vis };
+    filler: x27.filler, lit: !!x27.vis?.lit, chim, vis: x27.vis, h: H, hq: hx };
 }
 
+/** r27 (I2): placa de neon legível também de dia — moldura de metal, fundo escuro e o tubo colorido em zigue-zague
+ *  (antes era um retângulo preto). (x, y) = canto de cima no meio. */
+function neonBoard27(t: T, L: T, x: number, y: number, c: Col, c2: Col): void {
+  t.line(x - 3, y + 6, x - 3, y + 8, C('#5a5a60')); t.line(x + 3, y + 6, x + 3, y + 8, C('#5a5a60'));
+  t.rect(x - 5, y, 11, 7, C('#8a8a94')); t.rect(x - 4, y + 1, 9, 5, C('#2c2438'));
+  for (let i = 0; i < 9; i++) { const yy = y + 2 + ((i % 4 === 1 || i % 4 === 2) ? 0 : 2); t.set(x - 4 + i, yy, c); L.set(x - 4 + i, yy, c); }
+  t.set(x - 3, y + 3, c2); t.set(x + 3, y + 3, c2); L.set(x - 3, y + 3, c2); L.set(x + 3, y + 3, c2);
+}
 /** r27: letreiro da época na fachada/telhado (pintado, neon, neon dos anos 80, telão, holograma). */
 function eraSign27(t: T, L: T, k: Era27['sign'], gx: number, gy: number, w: number, d: number, H: number, seed: number): void {
   const [Wx, Wy] = iso(gx, gy + d), [Sx, Sy] = iso(gx + w, gy + d), [Ex, Ey] = iso(gx + w, gy);
@@ -348,8 +368,8 @@ function eraSign27(t: T, L: T, k: Era27['sign'], gx: number, gy: number, w: numb
     const z = Math.max(5, H - 3);
     t.line(Wx + 2, Wy - z, Sx - 2, Sy - z, cs[0]); L.line(Wx + 2, Wy - z, Sx - 2, Sy - z, cs[0]);
     if (k === 'neon80') { t.line(Wx + 2, Wy - z + 2, Sx - 2, Sy - z + 2, cs[1]); L.line(Wx + 2, Wy - z + 2, Sx - 2, Sy - z + 2, cs[1]); }
-    const mx = (Wx + Sx) / 2, my = (Wy + Sy) / 2 - z - 7;
-    t.rect(mx - 4, my, 8, 5, C('#1a1428')); L.rect(mx - 3, my + 1, 6, 3, withAlpha(cs[1], 230));
+    const mx = Math.round((Wx + Sx) / 2), my = Math.round((Wy + Sy) / 2 - z - 7);
+    neonBoard27(t, L, mx, my, cs[1], cs[0]);
   } else if (k === 'screen') { // telão no telhado
     const [cx, cy] = roofTop(gx, gy, w, d, H), bw = Math.max(8, Math.min(14, w * 4));
     t.line(cx - 3, cy, cx - 3, cy - 5, C('#5a5a60')); t.line(cx + 3, cy, cx + 3, cy - 5, C('#5a5a60'));
@@ -362,40 +382,137 @@ function eraSign27(t: T, L: T, k: Era27['sign'], gx: number, gy: number, w: numb
     }
   } else { // holograma
     const [cx, cy] = roofTop(gx, gy, w, d, H);
-    t.ellipse(cx, cy - 10, 6, 6, withAlpha(C('#80f0ff'), 90)); L.ellipse(cx, cy - 10, 5, 5, withAlpha(C('#a0ffff'), 150));
+    t.poly([[cx - 5, cy - 10], [cx, cy - 18], [cx + 5, cy - 10], [cx, cy - 4]], withAlpha(C('#80f0ff'), 110)); L.poly([[cx - 4, cy - 10], [cx, cy - 16], [cx + 4, cy - 10], [cx, cy - 5]], withAlpha(C('#a0ffff'), 150));
   }
 }
 
-/** r19: o lugarzinho do começo (sala com piano, sala sobre loja, garagem, quarto, porão, home studio). */
+/** Telhado de duas águas (cumeeira ao longo de gx). */
 function gable(t: T, gx: number, gy: number, w: number, d: number, H: number, rc: Col): void {
   const [ax, ay] = iso(gx, gy + d / 2), [bx, by] = iso(gx + w, gy + d / 2), [wx, wy] = iso(gx, gy + d), [sx, sy] = iso(gx + w, gy + d), [ex, ey] = iso(gx + w, gy);
-  t.poly([[wx, wy - H], [sx, sy - H], [bx, by - H - 6], [ax, ay - H - 6]], rc); t.poly([[sx, sy - H], [ex, ey - H], [bx, by - H - 6]], shade(rc, -0.25));
+  t.poly([[wx, wy - H], [sx, sy - H], [bx, by - H - 6], [ax, ay - H - 6]], (_x, y) => ((Math.floor(y) % 2) ? rc : shade(rc, -0.08))); t.poly([[sx, sy - H], [ex, ey - H], [bx, by - H - 6]], shade(rc, -0.25));
 }
-function place19(t: T, L: T, k: NonNullable<Bld18['place']>, gx: number, gy: number, w: number, d: number, H: number, o: BoxO, year: number): void {
-  const [Wx, Wy] = iso(gx, gy + d), [Sx, Sy] = iso(gx + w, gy + d), mx = (Wx + Sx) / 2, my = (Wy + Sy) / 2;
-  if (k === 'parlour' || k === 'backroom') {
-    const HH = k === 'backroom' ? 13 : 9;
-    box(t, L, gx, gy, w, d, HH, 0, { ...o, st: k === 'backroom' ? 'brick' : 'victorian', lit: 0 });
-    gable(t, gx, gy, w, d, HH, C('#6a3a2a'));
-    for (let u = 1; u < Sx - Wx - 1; u++) t.set(Wx + u, Wy + u / 2 - 5, Math.floor(u / 2) % 2 ? C('#2f6a4a') : C('#f0e8d0')); // toldo
-    t.rect(mx - 3, my - 4, 2, 3, C('#3a4a5a')); L.rect(mx - 3, my - 4, 2, 2, LIT);
-    if (k === 'backroom') { t.rect(mx + 1, my - 11, 3, 3, C('#384858')); L.rect(mx + 1, my - 11, 3, 2, LIT2); } else { t.rect(mx + 2, my - 7, 3, 2, C('#2a1a14')); } // janela de cima / piano
-  } else if (k === 'garage') {
-    box(t, L, gx, gy, w, d, H, 0, { ...o, st: year < 1970 ? 'midcentury' : 'brutal', lit: 0, noWin: true });
-    gable(t, gx, gy, w, d, H, C('#7a6a5a'));
-    for (let z = 1; z <= 5; z++) t.line(Wx + 2, Wy - z, Sx - 2, Sy - z, z === 1 ? LIT : C('#9a9aa0')); // porta basculante meio aberta, luz por baixo
-    L.line(Wx + 2, Wy - 1, Sx - 2, Sy - 1, LIT);
-    const [cx, cy] = iso(gx - 0.6, gy + d + 0.2); t.rect(cx - 3, cy - 3, 6, 2, C('#a03030')); t.rect(cx - 2, cy - 5, 4, 2, C('#9ab8d0'));
-  } else if (k === 'bedroom' || k === 'basement') {
-    box(t, L, gx, gy, w, d, H + 2, 0, { ...o, st: 'postmod', lit: 0 });
-    gable(t, gx, gy, w, d, H + 2, C('#5a4a50'));
-    if (k === 'bedroom') { t.rect(mx - 1, my - 7, 3, 2, C('#40304a')); L.rect(mx - 1, my - 7, 3, 2, C('#c070ff')); }
-    else { t.rect(mx - 2, my - 1, 4, 1, C('#2a2a30')); L.rect(mx - 2, my - 1, 4, 1, LIT); }
-  } else {
-    box(t, L, gx, gy, w, d, H + 1, 0, { ...o, st: 'midcentury', lit: 0, noWin: true });
-    t.rect(mx - 3, my - 5, 5, 3, C('#2a4050')); L.rect(mx - 3, my - 5, 5, 3, C('#60e0ff'));
-    for (let u = 2; u < Sx - Wx - 2; u += 3) t.set(Wx + u, Wy + u / 2 - 6, C('#6a5a8a'));
+
+// ---------------------------------------------------------------- r27 (I2): a sede por fora (mesma casca do interior)
+
+const OUTL27 = C('#1c1824', 165);
+/** Padrão da fachada da sede: um andar = fh px, laje clara entre andares (dá para contar), janelas da época. */
+function hqPat27(x: HqExt27): (u: number, hz: number, len: number, right: boolean) => WinK {
+  const { fh, facade, floors, shell } = x;
+  return (u, hz, len, right) => {
+    const f = Math.floor(hz / fh), z = hz - f * fh;
+    if (hz >= floors * fh) return 'trim'; // platibanda
+    if (z < 1 && f > 0) return 'trim'; // laje entre andares
+    if (!right && f === 0 && z < 5 && Math.abs(u - len / 2) < 1.6 && shell !== 'garage') return 'door';
+    if (u < 1 || u > len - 1) return facade === 'glass' ? 'trim' : 'wall';
+    if (f === 0 && shell === 'shop' && !right) return z >= 1 && z <= fh - 3 && Math.floor(u) % 7 !== 0 ? 'win' : 'wall'; // vitrine da loja
+    if (z < 2 && facade !== 'glass') return 'wall';
+    const ui = Math.floor(u);
+    switch (facade) {
+      case 'glass': return ui % 6 === 0 ? 'trim' : 'win';
+      case 'midcentury': return z >= 2 && z <= fh - 3 ? (ui % 8 === 0 ? 'trim' : 'win') : 'wall'; // fita de janelas (não é pele de vidro)
+      case 'deco': case 'beaux': case 'gothic': return ui % 5 === 0 ? 'trim' : z <= fh - 2 && ui % 5 >= 2 && ui % 5 <= 3 ? 'win' : 'wall';
+      case 'loft': return z <= fh - 2 && ui % 6 >= 1 && ui % 6 <= 4 ? (ui % 6 === 2 || z === Math.floor(fh / 2) ? 'trim' : 'win') : 'wall';
+      case 'brutal': return z >= 3 && z <= fh - 3 && ui % 5 >= 2 && ui % 5 <= 3 ? 'win' : 'wall';
+      case 'postmod': return z <= fh - 3 && ui % 5 >= 1 && ui % 5 <= 3 ? 'win' : ui % 5 === 0 && z <= fh - 3 ? 'trim' : 'wall';
+      case 'eco': return ui % 7 === 0 ? 'trim' : z <= fh - 2 ? 'win' : 'wall';
+      default: return z <= fh - 2 && ui % 4 >= 1 && ui % 4 <= 2 ? 'win' : 'wall';
+    }
+  };
+}
+/** Placa na fachada esquerda, presa na altura z (px), no meio da face. */
+function facePlate27(t: T, L: T, gx: number, gy: number, w: number, d: number, z: number, txt: string, bg: Col, fg: Col, glow?: Col): void {
+  const [Wx, Wy] = iso(gx, gy + d), [Sx, Sy] = iso(gx + w, gy + d);
+  const mx = (Wx + Sx) / 2, my = (Wy + Sy) / 2 - z;
+  const bw = textWidth(txt) + 4;
+  t.rect(mx - bw / 2, my - 6, bw, 7, bg); t.text(txt, mx - bw / 2 + 2, my - 5, fg);
+  if (glow) L.rect(mx - bw / 2 + 1, my - 5, bw - 2, 5, glow);
+}
+/** Corpo da sede: casca, andares, fachada da época, porta, telhado e letreiro. */
+function hqBody27(t: T, L: T, x: HqExt27, gx: number, gy: number, w: number, d: number, o: BoxO, year: number, brand: string): void {
+  const done = x.floors * x.fh + (x.shell === 'garage' ? 0 : 2);
+  const [Wx, Wy] = iso(gx, gy + d), [Sx, Sy] = iso(gx + w, gy + d);
+  const win = x.facade === 'glass' ? (year < 1990 ? C('#5c5648') : year < 2020 ? C('#3e6a96') : C('#5aa8b4')) : undefined;
+  const wall = x.shell === 'garage' ? (year < 1925 ? C('#8a5a40') : C('#c8c0b0')) : x.shell === 'loft' ? C('#8a4632') : undefined;
+  const bo: BoxO = { ...o, st: x.facade, pat: hqPat27(x), win, wall: wall ?? o.wall, roof: x.roof === 'garden' ? C('#5a9a48') : o.roof };
+  if (x.shell === 'campus') t.poly([iso(gx - 0.5, gy - 0.5), iso(gx + w + 0.5, gy - 0.5), iso(gx + w + 0.5, gy + d + 0.5), iso(gx - 0.5, gy + d + 0.5)], (px, py) => ((Math.floor(px / 2) + py) % 2 ? C('#c8c2b6') : C('#d4cec2')));
+  box(t, L, gx, gy, w, d, done, 0, bo);
+  if (x.building) box(t, L, gx + 0.15, gy + 0.15, w - 0.3, d - 0.3, x.H, done, { ...o, st: 'brutal', raw: true, lit: 0, noWin: true });
+  const lerp = (u: number, z: number): [number, number] => [Wx + (Sx - Wx) * u, Wy + (Sy - Wy) * u - z];
+  // térreo de cada casca
+  if (x.shell === 'garage') {
+    const old = year < 1925, dc = old ? C('#6a4428') : C('#b4b4ba');
+    for (let z = 1; z <= 6; z++) { const [ax, ay] = lerp(0.18, z), [bx, by] = lerp(0.72, z); t.line(ax, ay, bx, by, z % 2 ? dc : shade(dc, -0.14)); }
+    if (old) { const [ax, ay] = lerp(0.18, 6), [bx, by] = lerp(0.72, 1); t.line(ax, ay, bx, by, shade(dc, -0.3)); const [cx, cy] = lerp(0.18, 1), [dx, dy] = lerp(0.72, 6); t.line(cx, cy, dx, dy, shade(dc, -0.3)); }
+    else { const [ax, ay] = lerp(0.2, 1), [bx, by] = lerp(0.7, 1); t.line(ax, ay, bx, by, LIT); L.line(ax, ay, bx, by, LIT); } // luz por baixo da porta
+    const [px, py] = lerp(0.84, 0); t.rect(px, py - 5, 2, 5, C('#5a3a28')); // porta lateral
   }
+  if (x.shell === 'shop') { // toldo listrado da loja do térreo
+    for (let u = 1; u < Sx - Wx - 1; u++) { const yy = Wy + u / 2 - x.fh + 1; t.set(Wx + u, yy, Math.floor(u / 2) % 2 ? C('#2f6a4a') : C('#f0e8d0')); t.set(Wx + u, yy + 1, Math.floor(u / 2) % 2 ? C('#245038') : C('#d8d0b8')); }
+  }
+  if (x.shell === 'loft') { // escada de incêndio em zigue-zague e guincho de carga
+    const ink = C('#2a2a30');
+    for (let f = 1; f < x.floors; f++) { const [ax, ay] = lerp(0.62, f * x.fh), [bx, by] = lerp(0.92, f * x.fh); t.line(ax, ay, bx, by, ink); const [cx, cy] = lerp(0.64, f * x.fh - x.fh + 1); t.line(cx, cy, ax + 4, ay + 2, ink); }
+    const [hx2, hy2] = iso(gx + w, gy + d * 0.5); t.line(hx2, hy2 - done + 1, hx2 + 3, hy2 - done - 1, ink); t.line(hx2 + 3, hy2 - done - 1, hx2 + 3, hy2 - done + 4, C('#6a6a70'));
+  }
+  // placa do selo sobre a porta (todas as cascas)
+  facePlate27(t, L, gx, gy, w, d, x.shell === 'garage' ? 8 : x.fh - 1, brand, C('#1a1214'), year >= 1925 ? C('#ffd060') : C('#f0e8d0'), withAlpha(C('#ffd060'), 140));
+  if (x.building) return; // telhado em obra: andaime e guindaste em hqPost27
+  const [cx, cy] = roofTop(gx, gy, w, d, done);
+  const rcol = year < 1960 ? C('#6a3a2e') : C('#7a6a5e');
+  if (x.roof === 'gable') gable(t, gx, gy, w, d, done, x.shell === 'garage' && year >= 1925 ? C('#7a6a5a') : rcol);
+  if (x.roof === 'tank') { // caixa-d'água de madeira sobre pernas
+    const [tx, ty] = iso(gx + w * 0.7, gy + d * 0.3); const yy = ty - done;
+    t.line(tx - 2, yy, tx - 2, yy - 4, C('#3a3030')); t.line(tx + 2, yy, tx + 2, yy - 4, C('#3a3030'));
+    t.rect(tx - 3, yy - 10, 7, 6, C('#7a5a3a')); for (let i = -2; i <= 3; i += 2) t.line(tx + i, yy - 10, tx + i, yy - 5, C('#5a4028'));
+    t.poly([[tx - 4, yy - 10], [tx + 4, yy - 10], [tx + 0.5, yy - 13]], C('#4a3a30'));
+  }
+  if (x.roof === 'flat') { for (const [u, v] of [[0.25, 0.3], [0.55, 0.25]] as [number, number][]) { const [ax, ay] = iso(gx + w * u, gy + d * v); t.rect(ax - 2, ay - done - 3, 4, 3, C('#9a9ca4')); t.rect(ax - 2, ay - done - 3, 4, 1, C('#c0c4cc')); } }
+  if (x.roof === 'crown') { // coroa art déco escalonada + agulha
+    box(t, L, gx + 0.35, gy + 0.35, w - 0.7, d - 0.7, done + 6, done, { ...bo, pat: undefined, noWin: true });
+    box(t, L, gx + 0.75, gy + 0.75, w - 1.5, d - 1.5, done + 11, done + 6, { ...bo, pat: undefined, noWin: true });
+    const [sx, sy] = roofTop(gx, gy, w, d, done + 11); t.line(sx, sy, sx, sy - 10, MAT.deco.trim); L.set(sx, sy - 10, C('#ff6060'));
+  }
+  if (x.roof === 'antenna') {
+    box(t, L, gx + 0.6, gy + 0.6, w - 1.2, d - 1.2, done + 5, done, { ...bo, pat: undefined, noWin: true, wall: shade(MAT[x.facade].wall, -0.1) });
+    const [sx, sy] = roofTop(gx, gy, w, d, done + 5); t.line(sx + 2, sy, sx + 2, sy - 12, C('#c0c8d0')); L.set(sx + 2, sy - 12, C('#ff4040'));
+    if (year >= 1970) { const q = [iso(gx + 0.2, gy + 0.2), iso(gx + 1.0, gy + 0.2), iso(gx + 1.0, gy + 1.0), iso(gx + 0.2, gy + 1.0)].map(([a, b]) => [a, b - done] as [number, number]); t.poly(q, C('#5a5e66')); const [hx3, hy3] = iso(gx + 0.6, gy + 0.6); t.text('H', hx3 - 1, hy3 - done - 3, C('#f0f0f0')); }
+  }
+  if (x.roof === 'garden') { // telhado verde: árvores e placas solares
+    canopy27(t, cx - 10, cy - 8, C('#3a9040'), 3); canopy27(t, cx + 3, cy - 6, C('#3a9040'), 5);
+    if (year >= 1990) for (let i = 0; i < 3; i++) { const [ax, ay] = iso(gx + w - 1.2, gy + 0.4 + i * 0.6); t.poly([[ax - 4, ay - done], [ax + 2, ay - done + 3], [ax + 4, ay - done + 2], [ax - 2, ay - done - 1]], C('#24345a')); }
+  }
+  // letreiro do selo no telhado (prédio, torre, campus), na linguagem da época
+  if (x.rooftopSign) {
+    const k = x.sign, bw = textWidth(brand) + 4;
+    const [mx, my] = iso(gx + w * 0.5, gy + d - 0.2); const yy = my - done - 1;
+    const bg = k === 'painted' ? C('#efe6cc') : k === 'holo' ? withAlpha(C('#60e0ff'), 150) : C('#16141c');
+    const fg = k === 'painted' ? C('#a82a20') : k === 'neon' ? C('#ff5a4a') : k === 'neon80' ? C('#ff48c8') : k === 'screen' ? C('#40e0ff') : C('#e0ffff');
+    t.line(mx - bw / 2 + 2, yy, mx - bw / 2 + 2, yy - 3, C('#4a4a50')); t.line(mx + bw / 2 - 2, yy, mx + bw / 2 - 2, yy - 3, C('#4a4a50'));
+    t.rect(mx - bw / 2, yy - 10, bw, 7, bg); t.text(brand, mx - bw / 2 + 2, yy - 9, fg);
+    if (k !== 'painted') L.rect(mx - bw / 2 + 1, yy - 9, bw - 2, 5, withAlpha(fg, 170));
+  }
+}
+/** Obra na sede: andaime no andar novo (e no de baixo) + guindaste a partir do prédio. Depois do contorno. */
+function hqPost27(t: T, L: T, x: HqExt27, gx: number, gy: number, w: number, d: number): void {
+  if (!x.building) return;
+  const [Wx, Wy] = iso(gx, gy + d), [Sx, Sy] = iso(gx + w, gy + d), [Ex, Ey] = iso(gx + w, gy);
+  const z0 = Math.max(2, x.floors * x.fh - x.fh), top = x.H + 2;
+  for (let z = z0; z <= top; z += 4) { t.line(Wx - 1, Wy - z, Sx, Sy - z, SCAF); t.line(Sx, Sy - z, Ex + 1, Ey - z, SCAF2); }
+  for (let u = 0; u <= Sx - Wx; u += 4) t.line(Wx + u, Wy + u / 2 - z0, Wx + u, Wy + u / 2 - top, SCAF);
+  for (let u = 0; u <= Ex - Sx; u += 4) t.line(Sx + u, Sy - u / 2 - z0, Sx + u, Sy - u / 2 - top, SCAF2);
+  if (x.crane) {
+    const [cx, cy] = iso(gx + w + 0.3, gy + 0.2), mast = x.H + 20;
+    for (let z = 0; z < mast; z++) t.set(cx, cy - z, z % 4 === 0 ? C('#a07a10') : C('#e0b020'));
+    for (let z = 0; z < mast; z += 3) t.set(cx + 1, cy - z, C('#c09010'));
+    t.line(cx - 24, cy - mast, cx + 8, cy - mast, C('#e0b020')); t.line(cx, cy - mast - 4, cx - 18, cy - mast, C('#a07a10')); t.line(cx, cy - mast - 4, cx + 8, cy - mast, C('#a07a10'));
+    t.line(cx - 15, cy - mast, cx - 15, cy - x.H - 6, C('#5a5a60')); t.rect(cx - 17, cy - x.H - 6, 5, 2, RAW); t.rect(cx + 5, cy - mast + 1, 3, 3, C('#7a7a80'));
+    L.set(cx, cy - mast - 5, C('#ff4040')); L.set(cx - 24, cy - mast, C('#ff4040'));
+  }
+}
+/** Piscina em losango com borda clara e reflexo. */
+function pool27(t: T, gx: number, gy: number): void {
+  t.poly([iso(gx - 0.1, gy - 0.1), iso(gx + 1.1, gy - 0.1), iso(gx + 1.1, gy + 0.8), iso(gx - 0.1, gy + 0.8)], C('#e8e4da'));
+  t.poly([iso(gx, gy), iso(gx + 1, gy), iso(gx + 1, gy + 0.7), iso(gx, gy + 0.7)], (x, y) => ((x + y * 3) % 7 === 0 ? C('#a8e4f8') : C('#4ab0e0')));
 }
 
 /** r19: miniatura de um estilo (para o seletor nos popups). */
@@ -411,16 +528,47 @@ export function stylePreview19(st: Style18, year: number): HTMLCanvasElement {
 
 function tree(t: T, x: number, y: number, year: number, season: Env18['season'], seed: number, env?: Env18): void {
   // r27: palmeira no litoral tropical; no trópico não há inverno (folhagem sempre verde e viva)
-  if (env && env.climate === 'tropical' && noise(seed, 3) < 0.6) {
-    t.line(x, y, x + 1, y - 9, C('#8a6a40')); for (const [dx, dy] of [[-5, 2], [5, 2], [-4, -1], [4, -1], [0, -3]]) t.line(x + 1, y - 9, x + 1 + dx, y - 9 + dy + 1, C('#2e9a3a'));
+  // r27 (I2): árvores desenhadas pixel a pixel (copa em 3 tons com contorno; nada de bolinha solta) + sombra curta
+  x = Math.round(x); y = Math.round(y);
+  t.poly([[x - 1, y + 1], [x + 3, y - 1], [x + 7, y + 1], [x + 3, y + 3]], withAlpha(C('#141828'), 60));
+  if (env && env.climate === 'tropical' && noise(seed, 3) < 0.6) { palm27(t, x, y, seed); return; }
+  const bare = season === 'winter' && (!env || env.climate === 'cold' || env.climate === 'mild');
+  if (bare) {
+    const br = C('#5a4030');
+    t.rect(x, y - 5, 1, 5, br); t.line(x, y - 4, x - 2, y - 7, br); t.line(x, y - 5, x + 2, y - 8, br); t.set(x - 3, y - 8, br); t.set(x + 1, y - 8, br); t.set(x + 3, y - 9, br);
+    if (env?.snow) { t.set(x - 2, y - 8, C('#ffffff')); t.set(x + 2, y - 9, C('#ffffff')); t.set(x - 1, y - 6, C('#eef4fa')); }
     return;
   }
-  t.line(x, y, x, y - 4, C('#5a3a20'));
-  const bare = season === 'winter' && (!env || env.climate === 'cold' || env.climate === 'mild');
-  if (bare) { t.line(x - 2, y - 6, x, y - 3, C('#5a3a20')); t.line(x + 2, y - 6, x, y - 3, C('#5a3a20')); if (env?.snow) { t.set(x - 2, y - 7, C('#ffffff')); t.set(x + 2, y - 7, C('#ffffff')); } return; }
-  const c = env?.climate === 'tropical' ? C('#2a9a3a') : env?.climate === 'arid' ? C('#7a9a48') : season === 'autumn' ? (noise(seed, 1) < 0.5 ? C('#e08a2a') : C('#d8b030')) : season === 'spring' && noise(seed, 2) < 0.35 ? C('#f4a0c8') : C('#3a8a3a');
-  t.disc(x + 0.5, y - 6.5, 3.2, c); t.disc(x - 0.5, y - 7.5, 1.6, shade(c, 0.25));
+  if (env?.climate === 'cold' || (env?.climate === 'mild' && noise(seed, 5) < 0.25)) { conifer27(t, x, y, env?.snow ?? false); return; }
+  const c = env?.climate === 'tropical' ? C('#2c9a3c') : env?.climate === 'arid' ? C('#7a9a48') : season === 'autumn' ? (noise(seed, 1) < 0.5 ? C('#d8862a') : C('#d0aa30')) : season === 'spring' && noise(seed, 2) < 0.35 ? C('#f0a0c4') : C('#3a903c');
+  t.rect(x, y - 3, 1, 3, C('#5a3a20'));
+  canopy27(t, x - 3, y - 10, c, seed);
   void year;
+}
+/** Copa de árvore (máscara 7×7) em 3 tons + contorno escuro: luz no alto à esquerda. */
+const CANOPY27 = ['..###..', '.#####.', '#######', '#######', '#######', '.#####.', '..#.#..'];
+function canopy27(t: T, x0: number, y0: number, c: Col, seed: number): void {
+  const out = shade(c, -0.55), dk = shade(c, -0.22), hi = shade(c, 0.22);
+  const on = (i: number, j: number) => j >= 0 && j < 7 && i >= 0 && i < 7 && CANOPY27[j][i] === '#';
+  for (let j = -1; j <= 7; j++) for (let i = -1; i <= 7; i++) {
+    if (on(i, j)) { const g = i + j; t.set(x0 + i, y0 + j, g <= 4 ? (noise(i, j, seed) < 0.7 ? hi : c) : g >= 9 ? dk : noise(i, j, seed + 1) < 0.25 ? dk : c); }
+    else if (on(i - 1, j) || on(i + 1, j) || on(i, j - 1) || on(i, j + 1)) t.set(x0 + i, y0 + j, withAlpha(out, 200));
+  }
+}
+function palm27(t: T, x: number, y: number, seed: number): void {
+  const lean = noise(seed, 9) < 0.5 ? 1 : -1, tr = C('#8a6a40');
+  for (let i = 0; i < 10; i++) t.set(x + Math.round((i * i * lean) / 40), y - i, i % 3 === 0 ? shade(tr, -0.2) : tr);
+  const tx = x + Math.round((81 * lean) / 40), ty = y - 10, g = C('#2e9a3a'), gd = C('#1e6a2a');
+  for (const [dx, dy] of [[-5, 3], [5, 3], [-4, 0], [4, 0], [-2, -2], [2, -2]] as [number, number][]) {
+    for (let k = 1; k <= 5; k++) { const px = tx + Math.round((dx * k) / 5), py = ty + Math.round((dy * k) / 5 + (k * k) / 10); t.set(px, py, k > 3 ? gd : g); t.set(px, py + 1, withAlpha(gd, 160)); }
+  }
+  t.set(tx, ty, C('#6a4a28')); t.set(tx + 1, ty + 1, C('#6a4a28'));
+}
+function conifer27(t: T, x: number, y: number, snow: boolean): void {
+  const g = C('#2a6a3a'), d = C('#1c4a2a'), o = C('#10241a');
+  t.rect(x, y - 2, 1, 2, C('#4a3020'));
+  for (let k = 0; k < 3; k++) { const w = 3 - k, yy = y - 3 - k * 3; for (let j = 0; j < 4; j++) for (let i = -w - 1 + Math.floor(j / 2); i <= w + 1 - Math.floor(j / 2); i++) { const edge = Math.abs(i) === w + 1 - Math.floor(j / 2); t.set(x + i, yy - j, edge ? o : i <= 0 ? (snow && j === 3 ? C('#f4f8fc') : g) : d); } }
+  t.set(x, y - 13, o);
 }
 
 // ---------------------------------------------------------------- chão
@@ -453,8 +601,13 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
       if (py < HZ) c = mix(pal.skyTop, pal.skyBot, Math.pow(py / HZ, 0.8));
       else if (look.sea) { // r27: cidade de baía: o mapa é cercado de mar e areia
         const edge = Math.min(Math.abs(gx < 0 ? gx : gx >= GW ? gx - GW : 0), 9) + Math.min(Math.abs(gy < 0 ? gy : gy >= GH ? gy - GH : 0), 9);
-        c = edge < 0.7 ? sand : noise(px, py, seed + 3) < 0.05 || (Math.floor(px / 3 + py) % 13 === 0 && dith(px, py, 0.5)) ? sea2 : sea;
-      } else c = env.snow ? (dith(px, py, 0.3) ? C('#dfe9f4') : C('#eaf1f8')) : dith(px, py, 0.5) ? shade(grass, -0.14) : shade(grass, -0.2);
+        // r27 (I2): areia → espuma (1 px) → raso → fundo, com brilhos em traços de 2 px (sem ruído de confete)
+        const glint = (Math.floor(px / 2) * 7 + py * 13) % 61 === 0 && py % 3 === 0;
+        c = edge < 0.55 ? (dith(px, py, 0.2) ? shade(sand, -0.06) : sand) : edge < 0.72 ? (dith(px, py, 0.5) ? C('#f4fbff') : C('#d6eef8')) : edge < 1.6 ? (glint ? sea2 : mix(sea, C('#5cc0e8'), 0.45 - edge * 0.2)) : glint ? sea2 : edge > 4 ? shade(sea, -0.06) : sea;
+      } else { // r27 (I2): campo fora do mapa um tom abaixo, com sebes a cada quadra (sem pontilhado cheio)
+        const hedge = (Math.abs(gx % 5) < 0.18 || Math.abs(gy % 5) < 0.18) && (gx < -0.6 || gy < -0.6 || gx > GW + 0.6 || gy > GH + 0.6);
+        c = env.snow ? (dith(px, py, 0.2) ? C('#dfe9f4') : C('#eaf1f8')) : hedge ? shade(grass, -0.24) : dith(px, py, 0.12) ? shade(grass, -0.2) : shade(grass, -0.14);
+      }
     } else if (ROAD(gx, gy)) {
       c = road;
       if (y < 1910 && noise(px, py, 1) < 0.15) c = shade(road, -0.15);
@@ -481,15 +634,21 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
     p.put(px, py, c);
   }
   horizon27(p, gl, env, look, seed, pal.skyBot);
-  // r19: marcos da cidade no horizonte (atrás do mapa), em tom de distância (r27: um pouco mais de cor)
-  const far = mix(pal.skyBot, C('#46506a'), 0.6);
-  const SLOT = [34, 96, 200, 264];
+  // r27 (I2): marcos em pixel isométrico, em 4 bastidores atrás do mapa (altos no fundo, largos nas laterais);
+  // a escolha (até 4, por peso de ícone e ano de construção) é a função pura mapLms27 (city27.ts)
   lms.forEach((lm, i) => {
-    const x = SLOT[i % 4] + Math.round((noise(i, 3, seed) - 0.5) * 8);
-    const body = lm.sh === 'cable' && look.hill ? mix(C('#3a7a4a'), pal.skyBot, 0.25) : far;
-    const bx = drawLandmark19(p, lm.sh, x, HZ, { body, hi: mix(body, C('#eef2f6'), 0.35), dark: shade(body, -0.25), lamp: y >= 1900 ? C('#ff6a50') : body });
-    marks.push({ id: lm.id, box: bx });
+    const slot = (lm as Landmark19 & { slot?: number }).slot ?? i;
+    const [sgx, sgy] = LM_SLOTS27[slot % LM_SLOTS27.length];
+    const [lx, ly] = iso(sgx, sgy);
+    marks.push({ id: lm.id, box: drawLmIso27(p, gl, lm.id, lm.sh, lx, ly, y, look.sea, seed) });
   });
+  // r27 (I2): sombra projetada de cada prédio para a direita (luz do alto à esquerda)
+  for (const sp of sprites) {
+    const [gx, gy, w, d] = sp.fp, h = sp.h ?? 0;
+    if (!w || !d || h < 4) continue;
+    const L = Math.min(3, h / 14);
+    p.poly([iso(gx, gy), iso(gx + w + L, gy), iso(gx + w + L, gy + d), iso(gx, gy + d)], withAlpha(C('#141828'), 66));
+  }
   const t = new T(p, 0, 0);
   // r19: árvores alinhadas na avenida (a partir de 1920); r27: palmeiras no trópico, galhos nus no inverno frio
   if (y >= 1920) for (const gx of [2, 6, 14, 18]) { const [x, yy] = iso(gx + 0.3, 6.75); tree(t, x, yy, y, env.season, gx, env); }
@@ -528,20 +687,49 @@ function horizon27(p: Px, gl: Px, env: Env18, look: CityLook27, seed: number, sk
   };
   const W = look.wall.map((hx) => C(hx));
   if (look.k === 'bay') {
-    // mar atrás da cidade + morros verdes (casinhas coloridas nas encostas a partir de 1940)
+    // r27 (I2): mar atrás da cidade + morros em cumeeira suave (sino, não semicírculo), encosta esquerda iluminada;
+    // favela só no Rio/Salvador (casinhas em fileiras), porto baixo em Sydney
     for (let px = 0; px < MW; px++) for (let j = 0; j < 7; j++) p.put(px, HZ - j, j === 6 ? air(C('#3a90d0'), 0.3) : (px * 7 + j * 13) % 23 === 0 ? air(C('#9ad0f0'), 0.3) : air(C('#2a80c8'), 0.25));
-    for (const [cx, rw, rh] of [[22, 34, 46], [70, 26, 30], [244, 30, 40], [290, 26, 52]] as [number, number, number][]) {
-      for (let i = -rw; i <= rw; i++) {
-        const hh = Math.round(rh * Math.sqrt(Math.max(0, 1 - (i / rw) ** 2)));
-        for (let j = 0; j < hh; j++) {
-          let c = air(j > hh - 3 ? C('#3e8a46') : i > rw * 0.3 ? C('#2e6e3a') : C('#3a8040'), 0.28);
-          if (y >= 1940 && j < hh * 0.55 && noise(cx + i, j, 5) < 0.35) { const k = Math.floor(noise(cx + i, j, 9) * 5); c = air([C('#e8c070'), C('#d87050'), C('#f0ece0'), C('#70a0d0'), C('#c8a0d0')][k], 0.3); if (noise(i, j, seed) < 0.3) gl.put(cx + i, HZ - 7 - j, winLit); }
-          p.put(cx + i, HZ - 7 - j, c);
+    const amp = look.hillAmp;
+    const HILLS: [number, number, number][] = [[20, 48, 30], [72, 30, 24], [244, 40, 26], [292, 54, 24]];
+    const hAt = (px: number) => Math.max(0, ...HILLS.map(([c, hh, w]) => hh * amp * Math.exp(-(((px - c) / w) ** 2) * 1.6))) + (amp > 0 ? (noise(px >> 2, 1, seed) - 0.5) * 1.6 : 0);
+    const roofs = [C('#c8603c'), C('#e8c070'), C('#f0ece0'), C('#70a0d0'), C('#d88a8a'), C('#9ac088')];
+    for (let px = 0; px < MW; px++) {
+      const hh = Math.round(hAt(px));
+      if (hh < 2) continue;
+      const slope = hAt(px + 2) - hAt(px - 2);
+      for (let j = 0; j < hh; j++) {
+        let c = slope > 0 ? C('#3e8c46') : C('#2c6c38');
+        if (j >= hh - 1) c = shade(c, 0.16);
+        else if (Math.abs(slope) > 3.2 && j > hh * 0.45 && noise(px, j, seed + 5) < 0.6) c = slope > 0 ? C('#8e8a7e') : C('#6e6a62'); // costão de pedra
+        else if (dith(px, j, 0.18)) c = shade(c, -0.08);
+        if (look.favela && j < hh * 0.55 && hh > 9) { // casinhas em fileiras escalonadas
+          const row = Math.floor(j / 3), col = Math.floor((px + row * 2) / 3);
+          if (noise(col, row, seed + 9) < 0.72 && (px + row * 2) % 3 !== 2) {
+            const rc = roofs[Math.floor(noise(col, row, seed + 1) * roofs.length)];
+            c = j % 3 === 2 ? shade(rc, -0.2) : rc;
+            if (j % 3 === 0 && noise(col, row, seed + 2) < 0.45) gl.put(px, HZ - 7 - j, winLit);
+          }
         }
+        p.put(px, HZ - 7 - j, air(c, 0.24));
       }
     }
     const maxH = y < 1930 ? 10 : y < 1960 ? 18 : y < 1990 ? 26 : 34;
     for (let x = 96; x < 226;) { const bw = 5 + Math.floor(noise(x, 9, seed) * 7), bh = 6 + Math.floor(noise(x, 11, seed) * maxH); bld(x, bw, bh + 7, W[Math.floor(noise(x, 2, seed) * W.length)], { k: 0.3 }); x += bw + 1; }
+    return;
+  }
+  if (look.k === 'stone') {
+    // r27 (I2): fileiras de prédios de pedra clara com mansarda cinza-azulada e chaminés; cúpulas e torres raras
+    for (let x = 0; x < MW;) {
+      const bw = 10 + Math.floor(noise(x, 9, seed) * 10), bh = 10 + Math.floor(noise(x, 11, seed) * (y < 1960 ? 8 : 14));
+      bld(x, bw, bh, W[Math.floor(noise(x, 2, seed) * W.length)], { k: 0.3 });
+      const roof = air(C('#5c6a80'), 0.3);
+      for (let i = 0; i < bw; i++) for (let j = 0; j < 4; j++) if (i >= j && i < bw - j) p.put(x + i, HZ - bh - j, j === 3 ? shade(roof, 0.15) : roof);
+      for (let i = 2; i < bw - 2; i += 4) { p.put(x + i, HZ - bh - 2, air(C('#e8e0cc'), 0.3)); gl.put(x + i, HZ - bh - 2, noise(x + i, 3, seed) < 0.4 ? winLit : 0); }
+      if (noise(x, 4, seed) < 0.3) p.rect(x + bw - 4, HZ - bh - 7, 2, 4, air(C('#8a7a6a'), 0.3));
+      if (noise(x, 6, seed) < 0.08) { const cx = x + Math.floor(bw / 2); for (let j = 0; j < 7; j++) for (let i = -4; i <= 4; i++) if (i * i + j * j * 1.6 <= 20) p.put(cx + i, HZ - bh - 3 - j, air(C('#a8b0a0'), 0.35)); }
+      x += bw;
+    }
     return;
   }
   if (look.k === 'brick') {
@@ -581,7 +769,7 @@ function horizon27(p: Px, gl: Px, env: Env18, look: CityLook27, seed: number, sk
 
 export interface Mark19 { id: string; box: [number, number, number, number] }
 export interface Scene18 { hl?: number; sel?: string; pins?: boolean; ground: HTMLCanvasElement; lights: HTMLCanvasElement; sprites: Sprite18[]; env: Env18; amb: { k: Amb18 | string; at: string }[]; seed: number; lamps: [number, number][]; marks: Mark19[];
-  /** r27 */ look?: CityLook27; era?: Era27; life?: Life27; walks?: { pts: [number, number][]; len: number; k: 'artist' | 'staff'; off: number }[]; sale?: Sale27[]; selLot?: number; signs?: { c: HTMLCanvasElement; x: number; y: number; d: number }[] }
+  /** r27 */ look?: CityLook27; era?: Era27; life?: Life27; walks?: { pts: [number, number][]; len: number; k: 'artist' | 'staff'; off: number }[]; sale?: Sale27[]; selLot?: number; signs?: SaleSign27[] }
 
 /** Caminho (células de meia quadra) da porta do prédio até a rua/calçada; desvia de outros prédios. */
 export function path19(sp: Sprite18, all: Sprite18[]): [number, number][] {
@@ -608,7 +796,8 @@ export interface Nbr19 { lot: number; k: string; name: string }
 const NBK: Record<string, BKind> = { rival: 'branch', records: 'store', bar: 'venue', rehearsal: 'rehearsal', radio: 'media' };
 /** r27: extras da cena (estado dos prédios, lotes à venda, cidade comum, vida na rua). */
 export interface SceneX27 { vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string }
-interface SaleSign27 { c: HTMLCanvasElement; x: number; y: number; d: number }
+/** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
+export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
 /** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido). */
 function saleSign27(sl: Sale27, txt: string): SaleSign27 {
   const l0 = LOTS18[sl.lot];
@@ -620,11 +809,24 @@ function saleSign27(sl: Sale27, txt: string): SaleSign27 {
   t.rect(x0, 1, tw, 8, C('#fbf6ea'));
   t.text(txt, x0 + 2, 2, C('#c8302c'));
   t.rect(x0, 8, tw, 1, C(ICON27[sl.kind]?.col ?? '#c8302c'));
-  return { c: p.canvas(), x: Math.round(bx - W / 2), y: Math.round(by - H + 1), d: l0.gx + l0.w / 2 + signGy27(sl.lot) };
+  return { lot: sl.lot, c: p.canvas(), x: Math.round(bx - W / 2), y: Math.round(by - H + 1), d: l0.gx + l0.w / 2 + signGy27(sl.lot), base: [Math.round(bx), Math.round(by)] };
 }
 /** Onde fica a placa do lote: na beirada voltada para a rua (avenida ao norte dos lotes de baixo; ao sul dos de cima). */
 const signGy27 = (lot: number): number => { const l0 = LOTS18[lot]; return l0.gy >= 8 ? l0.gy + 0.7 : l0.gy + l0.d - 0.6; };
 export const signAt27 = (lot: number): [number, number] => { const l0 = LOTS18[lot]; return iso(l0.gx + l0.w / 2, signGy27(lot)); };
+/** Sobe a placa acima do topo do prédio da frente que a cobriria (pura sobre as caixas dos sprites). */
+export function liftSign27(sg: SaleSign27, sprites: { depth: number; box: [number, number, number, number]; filler?: boolean }[]): void {
+  const w = sg.c.width, h = sg.c.height;
+  let top = Infinity;
+  for (const sp of sprites) {
+    if (sp.depth <= sg.d) continue;
+    const [x0, y0, x1, y1] = sp.box;
+    if (x0 < sg.x + w - 2 && x1 > sg.x + 2 && y0 < sg.y + h - 2 && y1 > sg.y + 4) top = Math.min(top, y0);
+  }
+  if (top === Infinity) return;
+  sg.y = Math.max(2, Math.round(top - h - 2));
+  sg.lift = true;
+}
 /** Caminho de um pedestre em coordenadas da grade (porta → calçada → porta). */
 type Walk27 = { pts: [number, number][]; len: number; k: 'artist' | 'staff'; off: number };
 function walkPath27(a: Sprite18, b: Sprite18): [number, number][] {
@@ -677,7 +879,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
     const wall = C(look.wall[Math.floor(noise(lot, 2, seed) * look.wall.length) % look.wall.length]);
     const kind: BKind = look.k === 'brick' && lvl <= 1 ? 'home' : 'office';
     const sp = buildingSprite18({ id: `fl:${lot}`, kind, name: '', city: '', zone: 'campus', lvl, st: 'open', since: env.year, sy: env.year, style }, { gx: L0.gx + 0.35, gy: L0.gy + 0.35, w: L0.w - 0.7, d: L0.d - 0.7 }, env.year, seed + lot * 29, '',
-      { filler: true, snow: env.snow, wall: style === 'glass' ? undefined : mix(wall, MAT[style].wall, 0.3), sign: noise(lot, 7, seed) < 0.6 ? era.sign : undefined });
+      { filler: true, snow: env.snow, wall: style === 'glass' ? undefined : mix(wall, MAT[style].wall, 0.3), sign: noise(lot, 7, seed) < 0.35 ? era.sign : undefined });
     sprites.push(sp);
     used.add(lot);
   }
@@ -686,6 +888,8 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
   const gr = groundCanvas(env, seed, used, sprites, lms, marks, look, x.sale ?? []);
   // r27: placas "À venda" como sprites com profundidade (não somem atrás do prédio da frente)
   const signs: SaleSign27[] = (x.sale ?? []).filter((sl) => LOTS18[sl.lot]).map((sl) => saleSign27(sl, x.saleTxt ?? 'VENDA'));
+  // r27 (I2): se um prédio da FRENTE cobre a placa, ela sobe acima do telhado dele (com haste até o lote)
+  for (const sg of signs) liftSign27(sg, sprites);
   const lights = document.createElement('canvas');
   lights.width = MW; lights.height = MH;
   const lc = lights.getContext('2d')!;
@@ -767,6 +971,16 @@ function lampPost(ctx: CanvasRenderingContext2D, x: number, y: number, k: Era27[
 const LAMPC: Record<Era27['lamp'], [string, string]> = { gas: ['#ffb060', 'rgba(255,160,80,'], iron: ['#ffe0a0', 'rgba(255,214,140,'], sodium: ['#ffb040', 'rgba(255,170,60,'], led: ['#eaf6ff', 'rgba(200,230,255,'] };
 const lampHead = (x: number, y: number, k: Era27['lamp']): [number, number] => (k === 'gas' ? [x + 0.5, y - 8] : k === 'iron' ? [x + 0.5, y - 9] : k === 'sodium' ? [x + 3, y - 10] : [x + 0.5, y - 11]);
 
+/** r27 (I2): fumaça em pixel (disco rasterizado com borda de baixo mais escura), sem círculo suavizado. */
+function puff27(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, rgb: [number, number, number], a: number): void {
+  x = Math.round(x); y = Math.round(y); const R = Math.max(1, Math.round(r));
+  for (let dy = -R; dy <= R; dy++) {
+    const half = Math.round(Math.sqrt(Math.max(0, R * R - dy * dy)));
+    const k = dy > R / 3 ? 0.78 : dy < -R / 3 ? 1.04 : 1;
+    ctx.fillStyle = `rgba(${Math.min(255, Math.round(rgb[0] * k))},${Math.min(255, Math.round(rgb[1] * k))},${Math.min(255, Math.round(rgb[2] * k))},${a.toFixed(2)})`;
+    ctx.fillRect(x - half, y + dy, half * 2 + 1, 1);
+  }
+}
 /** Ciclo do dia: 0 = meio-dia, 1 = meia-noite. */
 export const nightOf = (t: number): number => { const ph = (t / 48) % 1; return Math.max(0, Math.min(1, (Math.cos(ph * Math.PI * 2) * -1 + 0.2) * 0.9)); };
 
@@ -790,7 +1004,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   // itens móveis com profundidade (gx+gy)
   const items: { d: number; f: () => void }[] = sc.sprites.map((s) => ({ d: s.depth, f: () => { ctx.drawImage(s.c, s.x, s.y); if (s.lit && dayLit) { ctx.globalAlpha = 0.75; ctx.drawImage(s.lc, s.x, s.y); ctx.globalAlpha = 1; } } }));
   for (const [x, yy] of sc.lamps) { const [gx, gy] = unIso(x, yy); items.push({ d: gx + gy, f: () => lampPost(ctx, x, yy, era.lamp) }); }
-  for (const sg of sc.signs ?? []) items.push({ d: sg.d, f: () => ctx.drawImage(sg.c, sg.x, sg.y) });
+  for (const sg of sc.signs ?? []) if (!sg.lift) items.push({ d: sg.d, f: () => ctx.drawImage(sg.c, sg.x, sg.y) });
   const nP = y < 1920 ? 8 : y < 1970 ? 12 : 16;
   for (let i = 0; i < nP; i++) {
     const r = noise(i, 1, sc.seed), sp = 0.15 + noise(i, 2, sc.seed) * 0.25, path = i % 4;
@@ -826,7 +1040,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
       const mus = v.queueK === 'musicians';
       items.push({ d, f: () => person(ctx, dx + 4 + i * 3, dy + 3 + i * 1.5, i + (mus ? 2 : 5), y, mus ? 0 : Math.floor(t * 2 + i) % 2, undefined, pal, mus ? (i % 2 ? 'case' : undefined) : undefined) });
     }
-    if (v.smoke && s.chim) { const [cx, cy] = s.chim; items.push({ d: d + 5, f: () => { for (let i = 0; i < 7; i++) { const ph = (t * 0.5 + i / 7) % 1; ctx.fillStyle = `rgba(${night > 0.5 ? '120,118,130' : '235,235,240'},${(0.75 * (1 - ph)).toFixed(2)})`; ctx.beginPath(); ctx.arc(cx + Math.sin(ph * 5 + i) * 2 + ph * 8, cy - ph * 24, 1.5 + ph * 4, 0, 7); ctx.fill(); } } }); }
+    if (v.smoke && s.chim) { const [cx, cy] = s.chim; items.push({ d: d + 8, f: () => { for (let i = 0; i < 8; i++) { const ph = (t * 0.5 + i / 8) % 1; puff27(ctx, cx + Math.sin(ph * 5 + i) * 2 + ph * 10, cy - 1 - ph * 28, 1 + ph * 4, night > 0.5 ? [150, 148, 160] : [240, 240, 244], 0.9 * (1 - ph * 0.8)); } } }); }
   }
   // r27: ônibus da turnê saindo da sede; fãs (disco na parada) e imprensa (escândalo) na porta
   const hq = byId.get('hq');
@@ -859,7 +1073,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
     if (a.k === 'show') for (let i = 0; i < 9; i++) items.push({ d, f: () => person(ctx, dx - 4 - i * 3, dy + 3 + i * 1.5, i + 5, y, Math.floor(t * 2 + i) % 2, undefined, pal) });
     if (a.k === 'police') items.push({ d, f: () => vehicle(ctx, dx + 14, dy + 10, vk, 5, 1, true, t, cars, night) });
     if (a.k === 'press') items.push({ d, f: () => { vehicle(ctx, dx - 14, dy + 12, vk === 'cart' ? 'modelT' : vk, 4, -1, undefined, t, cars, night); if (y >= 1960) { ctx.fillStyle = '#d0d4d8'; ctx.fillRect(Math.round(dx - 18), Math.round(dy + 3), 3, 2); } person(ctx, dx - 6, dy + 11, 6, y, 0, undefined, pal); } });
-    if (a.k === 'smoke') items.push({ d: d + 5, f: () => { for (let i = 0; i < 6; i++) { const ph = (t * 0.6 + i / 6) % 1; ctx.fillStyle = `rgba(60,58,62,${0.55 * (1 - ph)})`; ctx.beginPath(); ctx.arc(s.top[0] + Math.sin(ph * 6 + i) * 3, s.top[1] - ph * 26, 2 + ph * 4, 0, 7); ctx.fill(); } if (Math.floor(t * 5) % 3) { ctx.fillStyle = '#ff7020'; ctx.fillRect(Math.round(s.top[0] - 1), Math.round(s.top[1] - 2), 3, 2); } } });
+    if (a.k === 'smoke') items.push({ d: d + 5, f: () => { for (let i = 0; i < 6; i++) { const ph = (t * 0.6 + i / 6) % 1; puff27(ctx, s.top[0] + Math.sin(ph * 6 + i) * 3, s.top[1] - ph * 26, 2 + ph * 4, [60, 58, 62], 0.7 * (1 - ph)); } if (Math.floor(t * 5) % 3) { ctx.fillStyle = '#ff7020'; ctx.fillRect(Math.round(s.top[0] - 1), Math.round(s.top[1] - 2), 3, 2); } } });
   }
   // r19: festival lotado, festa de rua, filmagem, mural, romaria de fãs, reclamação, enchente
   for (const a of sc.amb) {
@@ -876,6 +1090,12 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   }
   items.sort((a, b) => a.d - b.d);
   for (const it of items) it.f();
+  for (const sg of sc.signs ?? []) if (sg.lift) { // placa erguida: haste fina até o lote, por cima de tudo
+    const hx = sg.base[0], top = sg.y + sg.c.height - 1;
+    ctx.fillStyle = '#6a4a2a'; ctx.fillRect(hx, top, 1, Math.max(0, sg.base[1] - top));
+    ctx.fillStyle = '#3a2a1a'; ctx.fillRect(hx - 1, sg.base[1] - 1, 3, 1);
+    ctx.drawImage(sg.c, sg.x, sg.y);
+  }
   // clima (r27: flocos maiores e brancos; chuva em riscos finos)
   if (sc.env.snow || sc.env.rain) {
     for (let i = 0; i < (sc.env.snow ? 90 : 80); i++) {
