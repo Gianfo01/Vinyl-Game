@@ -27,6 +27,7 @@ import { showOf20, storyShow20 } from '../../sim/sys/showops20';
 import { dateOfDay } from '../../sim/util';
 import { store } from '../store';
 import { ic, setTab } from '../vis';
+import { ivBtn27 } from '../act27/interview27'; // r27 P2A: coletiva jogável sobre a matéria
 
 const ST_NAME: Record<Story['st'], [L, string]> = {
   open: [l('em aberto', 'open'), 'warn'], confirmed: [l('confirmado', 'confirmed'), ''], denied: [l('desmentido', 'denied'), 'good'],
@@ -87,7 +88,7 @@ function storyCard(s: GameState, x: Story): HTMLElement {
     x.why ? h('p', { class: 'small muted' }, t(x.why)) : null,
     showBack20(s, x),
     x.resp && mine ? h('p', { class: 'small muted' }, t(l('Sua resposta: {r}', 'Your answer: {r}'), { r: t(RESP.find((z) => z[0] === x.resp)?.[1]) })) : null,
-    btns.length ? h('div', { class: 'row wrap' }, ...btns) : null);
+    btns.length ? h('div', { class: 'row wrap' }, ...btns, ivBtn27(s, (o) => o.storyId === x.id)) : null);
 }
 
 // ---------------------------------------------------------------- abas

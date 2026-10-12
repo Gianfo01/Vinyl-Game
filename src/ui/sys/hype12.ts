@@ -11,6 +11,7 @@ import { $, actLink, cityName, genreName, pill, rerender, toast } from '../commo
 import { h } from '../dom';
 import { registerPageTab, registerTab } from '../registry';
 import { ic } from '../vis';
+import { campBtn27 } from '../act27/campaign27'; // r27 P2A: as alavancas viram jogadas da campanha
 
 const arrow = (tr: number) => tr >= 2 ? h('span', { class: 'good', title: t(l('subindo', 'rising')) }, `▲${tr}`) : tr <= -2 ? h('span', { class: 'bad', title: t(l('caindo', 'falling')) }, `▼${-tr}`) : h('span', { class: 'muted', title: t(l('estável', 'steady')) }, '▶');
 const band = (v: number): [L, string] => v >= 75 ? [l('febre', 'frenzy'), 'bad'] : v >= 50 ? [l('quente', 'hot'), 'gold'] : v >= 25 ? [l('morno', 'warm'), ''] : [l('frio', 'cold'), 'muted'];
@@ -44,7 +45,7 @@ function expectBox(s: GameState, actId: string): HTMLElement | null {
 function leverRow(s: GameState, actId: string): HTMLElement | null {
   const ls = levers(s, actId);
   if (!ls.length) return null;
-  return h('div', null, h('h4', null, t(l('Alavancas de hype', 'Hype levers'))),
+  return h('div', null, h('h4', null, t(l('Alavancas de hype', 'Hype levers')), ' ', campBtn27(s, { actId })),
     h('div', { class: 'grid2' }, ls.map((x) => h('div', { class: 'eval' },
       h('div', null, h('b', null, t(x.name)), x.cost ? ' ' : null, x.cost ? pill($(x.cost)) : pill(t(l('grátis', 'free')), 'good')),
       h('p', { class: 'small muted' }, t(x.fx)),
