@@ -6,16 +6,19 @@ import { cityById, marketById, l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import { SCENARIOS, type Medal, type ScenarioDef } from '../sim/sys/live';
 import { scenario17 } from '../sim/sys/scenarios17';
+import { careerDef } from '../sim/sys/careers12';
 import { cityName } from './common';
 import { h } from './dom';
 import './scen22.css';
 
-type Kind22 = 'scene' | 'rescue' | 'top' | 'tech';
+type Kind22 = 'scene' | 'rescue' | 'top' | 'tech' | 'career';
 const KIND22: Record<Kind22, { name: L; desc: L }> = {
   scene: { name: l('Nasce uma cena', 'A scene is born'), desc: l('Estar no lugar certo antes de um gênero explodir.', 'Be in the right place before a genre explodes.') },
   rescue: { name: l('Crise e resgate', 'Crisis and rescue'), desc: l('Salvar ou herdar uma empresa com problemas.', 'Save or inherit a company in trouble.') },
   top: { name: l('Rumo ao topo', 'Road to the top'), desc: l('Fábricas de hits, invasões e conquista do mundo.', 'Hit factories, invasions and conquering the world.') },
   tech: { name: l('Virada tecnológica', 'Tech shift'), desc: l('Uma tecnologia muda as regras no meio do jogo.', 'A technology changes the rules mid-game.') },
+  // r23: cenários em que você não é (só) gravadora
+  career: { name: l('Outras profissões', 'Other professions'), desc: l('Empresário, festival, casa de shows, estúdio, editora, rádio, agência, plataforma ou músico: a meta mede o seu negócio.', 'Manager, festival, venue, studio, publisher, radio, agency, platform or musician: the goal measures your business.') },
 };
 const DIFF22: L[] = [l('', ''), l('Tranquilo', 'Relaxed'), l('Equilibrado', 'Balanced'), l('Difícil', 'Hard'), l('Brutal', 'Brutal')];
 const DIFF22_DESC: L[] = [l('', ''), l('Caixa folgado ou meta generosa: bom para o primeiro cenário.', 'Comfortable cash or a generous goal: good first scenario.'), l('Meta justa com o tempo dado.', 'A fair goal for the time given.'), l('Pouco caixa, pouco tempo ou o mundo contra.', 'Little cash, little time or the world against you.'), l('Começa no buraco. Para veteranos.', 'You start in the hole. For veterans.')];
@@ -45,6 +48,26 @@ const META22: Record<string, { k: Kind22; d: 1 | 2 | 3 | 4; tip: L }> = {
   napster: { k: 'tech', d: 3, tip: l('As vendas físicas vão cair. Shows, licenciamento e o digital legal seguram o caixa.', 'Physical sales will fall. Shows, licensing and legal digital hold the cash.') },
   mtv_1981: { k: 'tech', d: 2, tip: l('Visual vende: invista em clipes cedo, antes que todos façam.', 'Looks sell: invest in videos early, before everyone does.') },
   stream_2015: { k: 'tech', d: 2, tip: l('Playlists valem mais que álbuns. Lance singles com frequência.', 'Playlists are worth more than albums. Release singles often.') },
+  // r23: outras profissões
+  manager_1961: { k: 'career', d: 3, tip: l('Cuide da satisfação do cliente e procure um selo grande para ele: os hits contam mesmo em selo alheio.', 'Keep your client happy and find him a big label: hits count even on someone else\'s label.') },
+  woodstock_1969: { k: 'career', d: 4, tip: l('Line-up coerente e preço justo: lotar demais vira desastre. Antes de agosto de 1969, psicodelia e folk.', 'Coherent line-up and fair pricing: overselling becomes a disaster. Before August 1969, psychedelia and folk.') },
+  rockinrio_1985: { k: 'career', d: 3, tip: l('Metal estrangeiro como chamariz, rock nacional para encher o line-up. Guarde caixa para o confisco de 1990.', 'Foreign metal as the draw, Brazilian rock to fill the bill. Save cash for the 1990 freeze.') },
+  cbgb_1973: { k: 'career', d: 2, tip: l('Agenda cheia de bandas novas e baratas; o punk de 1974 lota o clube se você já estiver programando a cena.', 'A full calendar of cheap new bands; 1974 punk packs the club if you already book the scene.') },
+  memphis_studio_1961: { k: 'career', d: 2, tip: l('O "som da casa" sobe com sessões: equipe cedo e troque o equipamento quando a geração mudar.', 'The house sound grows with sessions: staff up early and upgrade gear when the generation changes.') },
+  brill_1958: { k: 'career', d: 2, tip: l('Contrate duplas de compositores e coloque canções em grupos de garotas: cada obra entra no catálogo.', 'Sign writing teams and place songs with girl groups: every work joins the catalog.') },
+  djrock_1951: { k: 'career', d: 2, tip: l('Toque R&B de madrugada e empurre a cena: o alcance cresce com nível e equipe. Cuidado com o jabá.', 'Play R&B late at night and push the scene: reach grows with level and staff. Beware of payola.') },
+  chitlin_1955: { k: 'career', d: 2, tip: l('Assine artistas pequenos de R&B e soul com comissão baixa; suba de nível para caber mais clientes.', 'Sign small R&B and soul acts at a low commission; level up to fit more clients.') },
+  stream_startup_2008: { k: 'career', d: 3, tip: l('Catálogo e repasse decidem o crescimento: feche acordos com selos antes de 2011.', 'Catalog and payouts drive growth: close label deals before 2011.') },
+  funk_1989: { k: 'career', d: 3, tip: l('Faça muitos bailes (shows pequenos) e lance singles; segure a onda de 1992 e aproveite o funk melody.', 'Play many bailes (small shows) and release singles; ride out 1992 and seize funk melody.') },
+  mangue_1993: { k: 'career', d: 3, tip: l('Shows em Recife e um bom disco antes de 1994: quando a imprensa do Sul chegar, esteja pronto.', 'Recife shows and a strong record before 1994: when the southern press arrives, be ready.') },
+  // r23: mais selos
+  studioone_1963: { k: 'scene', d: 2, tip: l('Grave muito e barato e acompanhe o ritmo: ska, depois rocksteady (1966) e reggae (1968).', 'Record a lot and cheap and follow the beat: ska, then rocksteady (1966) and reggae (1968).') },
+  jovemguarda_1965: { k: 'top', d: 1, tip: l('A TV faz os ídolos: lance singles logo após agosto de 1965 e diversifique antes de 1968.', 'TV makes the idols: release singles right after August 1965 and diversify before 1968.') },
+  afrobeat_1970: { k: 'scene', d: 2, tip: l('Shows longos pagam as contas; guarde caixa para a invasão de 1977.', 'Long shows pay the bills; keep cash for the 1977 raid.') },
+  factory_1978: { k: 'scene', d: 3, tip: l('Quinze anos e pouco caixa: o pós-punk dá prestígio, o synth-pop de 1983 e o acid house de 1988 dão ouro.', 'Fifteen years and little cash: post-punk brings prestige, 1983 synth-pop and 1988 acid house bring gold.') },
+  defjam_1984: { k: 'scene', d: 3, tip: l('Caixa de estudante: singles baratos de rap até 1986, depois aposte tudo no crossover.', 'Student budget: cheap rap singles until 1986, then go all in on the crossover.') },
+  axe_1985: { k: 'scene', d: 2, tip: l('O Carnaval paga: faça shows em fevereiro e lance o disco do verão em dezembro.', 'Carnival pays: play in February and release the summer record in December.') },
+  sertanejo_2005: { k: 'top', d: 2, tip: l('Shows lotados e DVDs ao vivo; o streaming cresce depois de 2011.', 'Packed shows and live DVDs; streaming grows after 2011.') },
   human_2040: { k: 'tech', d: 3, tip: l('Vozes sintéticas são baratas e tentadoras; a meta pede o contrário. Proteja o catálogo humano.', 'Synthetic voices are cheap and tempting; the goal asks the opposite. Protect the human catalog.') },
 };
 const meta22 = (d: ScenarioDef) => META22[d.id] ?? { k: 'top' as Kind22, d: 2 as const, tip: l('', '') };
@@ -104,7 +127,9 @@ function scenCard22(d: ScenarioDef, o: ScenBrowser22): HTMLElement {
           h('span', { class: 'sc22-tag' }, `📍 ${cityName(d.homeCity)}${country ? ` · ${country}` : ''}`),
           h('span', { class: 'sc22-tag' }, `⏱ ${t(l('{n} anos', '{n} years'), { n: years })}`),
           h('span', { class: `sc22-tag sc22-d${m.d}` }, `${'●'.repeat(m.d)}${'○'.repeat(4 - m.d)} ${t(DIFF22[m.d])}`),
-          h('span', { class: 'sc22-tag' }, t(KIND22[m.k].name))))),
+          h('span', { class: 'sc22-tag' }, t(KIND22[m.k].name)),
+          // r23: profissão(ões) do cenário
+          ...(d.careers ?? []).map((c) => h('span', { class: 'sc22-tag sc22-career' }, `💼 ${t(careerDef(c)?.name ?? l(c, c))}`))))),
     h('p', { class: 'small' }, t(d.desc)),
     h('p', { class: 'small sc22-goal' }, h('b', null, t(l('Meta: ', 'Goal: '))), t(d.goal), h('span', { class: 'muted' }, ` · 🥉 ${d.tiers[0]} · 🥈 ${d.tiers[1]} · 🥇 ${d.tiers[2]} ${t(d.unit)}`)),
     open ? h('div', { class: 'sc22-more small' },

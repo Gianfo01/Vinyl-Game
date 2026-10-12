@@ -32,7 +32,7 @@ const certs = (s: GameState, b: Record<string, number>) => s.player.stats.gold +
 
 export const SCENARIOS17: Scenario17[] = [
   {
-    id: 'sun_1954', name: l('Sun Records: Memphis, 1954', 'Sun Records: Memphis, 1954'), startYear: 1954, endYear: 1958, homeCity: 'memphis', scenario: 'from_zero',
+    id: 'sun_1954', name: l('Sun Records: Memphis, 1954', 'Sun Records: Memphis, 1954'), startYear: 1954, endYear: 1958, homeCity: 'memphis', scenario: 'emerging', // r23: a Sun já gravava desde 1952
     desc: l('Um estúdio pequeno grava caminhoneiros, cantores gospel e bluesmen por poucos dólares. Um dia, alguém mistura country com rhythm and blues.', 'A small studio records truck drivers, gospel singers and bluesmen for a few dollars. One day someone mixes country with rhythm and blues.'),
     goal: l('Emplaque sucessos no top 10 nacional até 1958.', 'Land national top-10 hits by 1958.'), unit: l('top 10', 'top 10s'), tiers: [3, 7, 12],
     rules17: [l('Caixa curtíssimo (metade do normal): grave barato e venda contratos se precisar.', 'Very tight cash (half the usual): record cheap and sell contracts if you must.'),

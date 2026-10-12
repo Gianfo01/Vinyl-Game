@@ -374,7 +374,7 @@ const SC_1889: Scenario17[] = [
     metric: (s) => Math.round(genreUnits(s, ['choro', 'maxixe', 'modinha', 'samba', 'marchinha']) / 1000), fail: insolvent,
   },
   {
-    id: 'tinpan_1910', name: l('Tin Pan Alley: Nova York, 1910', 'Tin Pan Alley: New York, 1910'), startYear: 1910, endYear: 1919, homeCity: 'new_york', scenario: 'emerging',
+    id: 'tinpan_1910', name: l('Tin Pan Alley: Nova York, 1910', 'Tin Pan Alley: New York, 1910'), startYear: 1910, endYear: 1919, homeCity: 'new_york', scenario: 'emerging', careers: ['label', 'publisher'], // r23: selo + editora
     desc: l('Na Rua 28, pianos martelam o dia todo. Uma editora de canções vive de vender partituras: pluggers nas lojas, astros do vaudeville pagos para cantar a sua música, capas coloridas. Os discos são só mais uma vitrine.',
       'On 28th Street pianos pound all day. A song publisher lives on selling sheet music: pluggers in the stores, vaudeville stars paid to sing your song, colorful covers. Records are just another shop window.'),
     goal: l('Conquiste discos de ouro (meio milhão de cópias) até 1919.', 'Earn gold records (half a million copies) by 1919.'), unit: l('certificados', 'certifications'), tiers: [1, 3, 6],
