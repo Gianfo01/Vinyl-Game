@@ -5,7 +5,7 @@
 // com causas visíveis (fato `scene_life` + linha do tempo da cena): quantos atos tocam o som, quantas cidades já
 // copiaram, imitadores (rivals27), a casa fundadora que fechou, o fundador que morreu/saiu, censura no país de origem,
 // reação do público contra o gênero (world4 backlash). Ela SE ESPALHA para outras cidades (turnê de um ato da cena,
-// rádios do mesmo mercado, afinidade local, imprensa) e cada cidade nova ganha força de cena (s.scenes).
+// rádios do mesmo mercado, afinidade local, imprensa) e em cada cidade alcançada os atos do som atraem mais público.
 // Origens: movimento que nasce (culture.ts), cena histórica que começa (world4/scenes), cena local que ferve sem nome,
 // e um HIT DO JOGADOR (top 10) que planta uma cena na cidade do ato.
 // Jogador: entrar cedo (nascimento/crescimento) rende bônus de apelo enquanto a cena vive; chegar no auge rende pouco;
@@ -58,7 +58,7 @@ export function sc27(s: GameState): Sc27State {
 }
 
 /** Desligar (bisecção de balanceamento). */
-export const OFF27: { scenes?: boolean } = {};
+export const OFF27: { scenes?: boolean; facts?: boolean; notify?: boolean; hl?: boolean } = {};
 const LIVE: Ph27[] = ['born', 'growing', 'peak', 'saturated', 'fading'];
 export const alive27 = (sc: Scene27) => sc.ph !== 'dead';
 const cname = (id: string): L => cityById[id]?.name ?? l(id, id);
@@ -73,7 +73,17 @@ function logSc(s: GameState, sc: Scene27, t: L): void {
 }
 
 /** Fato da vida da cena (consumido aqui: manchete, força da cena na cidade nova). */
+/** a cena toca o jogador: passa pelo mercado da sede/territórios ou tem ato seu dentro */
+function near(s: GameState, sc: Scene27): boolean {
+  const hm = cityById[s.config.homeCity]?.market;
+  if (sc.cities.some((x) => { const m = cityById[x.c]?.market; return m === hm || (!!m && s.player.territories.includes(m)); })) return true;
+  return Object.keys(sc27(s).ride).some((k) => k.endsWith(`:${sc.id}`));
+}
+/** só nascimento, auge, morte, semente e entrada do jogador viram fato para qualquer cena; o resto, só perto do jogador
+ *  (tudo fica na linha do tempo da cena) — menos ruído no anel de fatos e no noticiário */
+const ALWAYS = new Set(['born', 'peak', 'dead', 'seed', 'ride']);
 function fact(s: GameState, sc: Scene27, tag: string, t: L, sev: number, extra: string[] = [], place = sc.city): void {
+  if (OFF27.facts || (!ALWAYS.has(tag) && !extra.includes('player') && !near(s, sc))) return;
   emitFact(s, { kind: 'scene_life', actors: [...extra, ...sc.founders.slice(0, 2)], place, severity: sev, visibility: 'public', tags: ['scene27', tag, sc.genre], src: 'scenes27', text: t, data: { sc: sc.id, ph: sc.ph } });
 }
 
@@ -134,7 +144,7 @@ function birth(s: GameState, r: Rng, o: { name: L; genre: string; gs?: string[];
   st.list.push(sc);
   fact(s, sc, 'born', t, 35);
   const mk = cityById[o.city]?.market;
-  if (o.src !== 'hit' && (o.city === s.config.homeCity || (mk && s.player.territories.includes(mk)))) notify(s, fmtL(l('Cena nascendo perto de você: {n} ({c}). Quem entra cedo ganha mais.', 'A scene is being born near you: {n} ({c}). Early arrivals gain the most.'), { n: o.name, c: cname(o.city) }), 'event');
+  if (!OFF27.notify && o.src !== 'hit' && (o.city === s.config.homeCity || (mk && s.player.territories.includes(mk)))) notify(s, fmtL(l('Cena nascendo perto de você: {n} ({c}). Quem entra cedo ganha mais.', 'A scene is being born near you: {n} ({c}). Early arrivals gain the most.'), { n: o.name, c: cname(o.city) }), 'event');
   return sc;
 }
 
@@ -412,9 +422,6 @@ export function scenes27Month(s: GameState): void {
     if (!alive27(sc)) continue;
     life(s, sc, by, nGlobal);
     if (alive27(sc)) spread(s, r, sc, by);
-    // cidades que a cena alcançou ganham força de cena enquanto ela vive (a de origem já tem a sua)
-    const d = sc.ph === 'growing' ? 0.25 : sc.ph === 'peak' ? 0.35 : sc.ph === 'saturated' ? 0.1 : 0;
-    if (d) for (const x of sc.cities.slice(1)) s.scenes[`${x.c}:${sc.genre}`] = (s.scenes[`${x.c}:${sc.genre}`] ?? 0) + d;
   }
   // poda: mortas há 25+ anos saem; no máximo 60 cenas guardadas
   st.list = st.list.filter((sc) => alive27(sc) || s.year - (sc.died ?? s.year) < 25);
@@ -423,12 +430,30 @@ export function scenes27Month(s: GameState): void {
 }
 registerSimHook('month', 'scenes27', (s) => scenes27Month(s));
 
-// ouvinte do fato: manchete (nascimento, auge, morte, semente) e força de cena na cidade nova (expansão)
+// ouvinte do fato: manchete (nascimento, auge, morte, semente, expansão)
 onFact('scene_life', (s, f) => {
   const tag = f.tags[1];
-  if (tag === 'spread' && f.place) { const g = f.tags[2]; s.scenes[`${f.place}:${g}`] = (s.scenes[`${f.place}:${g}`] ?? 0) + 2; }
-  if (tag === 'born' || tag === 'peak' || tag === 'dead' || tag === 'seed') headline19(s, f.text, tag === 'seed' ? 3 : 2);
+  if (OFF27.hl) return;
+  if (tag === 'born' || tag === 'peak' || tag === 'dead' || tag === 'seed' || tag === 'spread') headline19(s, f.text, tag === 'spread' ? 4 : tag === 'seed' ? 3 : 2);
 }, 'scenes27:life');
+
+// público: onde a cena está viva, atos do som atraem mais gente (força própria da cena; não mexe em s.scenes, para
+// não deslocar os sorteios dos outros sistemas que leem s.scenes)
+export const PH_DEMAND27: Record<Ph27, number> = { born: 1.02, growing: 1.05, peak: 1.08, saturated: 1.03, fading: 1, dead: 1 };
+export function sceneDemand27(s: GameState, a: Act, city: string): { k: number; sc?: Scene27 } {
+  let best: { k: number; sc?: Scene27 } = { k: 1 };
+  for (const sc of sc27(s).list) {
+    if (!alive27(sc) || !sc.gs.includes(a.genre) || !sc.cities.some((x) => x.c === city)) continue;
+    const k = PH_DEMAND27[sc.ph];
+    if (k > best.k) best = { k, sc };
+  }
+  return best;
+}
+registerMod('cityDemand', 'scenes27', (s, v, c) => {
+  if (OFF27.scenes || !c.act || !c.cityId) return null;
+  const d = sceneDemand27(s, c.act, c.cityId);
+  return d.sc ? { value: v * d.k, label: fmtL(l('Cena {n} {p} aqui', 'The {n} scene is {p} here'), { n: d.sc.name, p: PH27[d.sc.ph] }) } : null;
+});
 
 // ---------------------------------------------------------------- leitura (interface)
 

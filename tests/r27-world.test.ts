@@ -53,7 +53,7 @@ describe('r27 cenas — nascem, crescem, saturam e morrem, com causas', () => {
     for (let i = 0; i < 80 && sc.cities.length < 2; i++) { sc.heat = 80; sc.sat = 5; sc.phW = s.week; step(s); scenes27Month(s); }
     expect(sc.cities.length).toBeGreaterThan(1);
     expect(sc.cities[1].why.pt.length).toBeGreaterThan(10);
-    expect(s.scenes[`${sc.cities[1].c}:${sc.genre}`] ?? 0).toBeGreaterThan(0);
+    expect(labelsOf(applyMods(s, 'cityDemand', 1000, { act: a, cityId: sc.cities[1].c }))).toContain(sc.name.pt);
     sc.sat = 59.9; step(s); scenes27Month(s); expect(sc.ph).toBe('saturated');
     sc.heat = 30.5; step(s); scenes27Month(s); expect(sc.ph).toBe('fading');
     sc.heat = 6.5; step(s); scenes27Month(s); expect(sc.ph).toBe('dead');
