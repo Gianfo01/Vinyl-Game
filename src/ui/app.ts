@@ -73,6 +73,7 @@ import { openSearch25, searchTabs25, seenDefs27 } from './ps/search25';
 import { navSection27 } from './ps/tree27';
 import { allTabs27 } from './ps/subtabs27';
 import { kick27, mayShow27 } from './ps/queue27';
+import { settingsCut27 } from './ps/cut27'; // r27 (K): cenas animadas dos grandes momentos
 import { getLang } from '../i18n/strings';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
@@ -564,6 +565,7 @@ function settings(): void {
     settings19(), // r19 B.5
     settings20(), // r20 G6: densidade
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)
+    settingsCut27(), // r27 (K): Cenas: todas / só importantes / desligadas
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
