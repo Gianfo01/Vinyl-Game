@@ -19,6 +19,7 @@ import { h, select } from '../dom';
 import { why18 } from '../explain18';
 import { registerTab } from '../registry';
 import { btn, note } from './world4/util';
+import { campBtn27 } from '../act27/campaign27'; // r27 P2A
 
 const F = { rel: '', fmt: '' as Fmt18 | '', how: 'plug' as How18, edit: false, tier: 1, dir: '', choreo: false, censor: true };
 const say = (x: L | null | undefined, ok: L = l('Feito.', 'Done.')) => { toast(t(x ?? ok), 'info'); rerender(); };
@@ -58,7 +59,7 @@ function streamTab(s: GameState): HTMLElement {
       ...recentMine(s, 4).map((r) => {
         const p = st18(s).pitch[r.id];
         const o = pitchOdds18(s, r);
-        return h('div', { class: 'row' }, releaseLink(s, r.id), ' ',
+        return h('div', { class: 'row' }, releaseLink(s, r.id), ' ', campBtn27(s, { relId: r.id }), ' ',
           p ? pill(t(p.ok ? l('Na playlist editorial', 'On editorial playlist') : l('Curadores passaram', 'Curators passed')), p.ok ? 'good' : '') : btn(t(fmtL(l('Pitch para curadores ({p}%)', 'Pitch curators ({p}%)'), { p: Math.round(o.p * 100) })), () => say(pitchPlaylist18(s, r.id)), { title: o.why.map((w) => t(w)).join(' · ') }));
       }),
       recentMine(s, 4).length ? null : note(l('Nenhum lançamento nas últimas 4 semanas.', 'No releases in the last 4 weeks.')),

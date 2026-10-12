@@ -16,6 +16,8 @@ import { bar, h } from '../dom';
 import { store } from '../store';
 import { HINT15, canSee, knownLevel } from '../../sim/sys/fame15';
 import { personRoute16 } from '../route16';
+import { favorsBtn27 } from '../act27/favors27'; // r27 P2A: presente/favor viram jogadas na rede de favores
+import { ivBtn27 } from '../act27/interview27'; // r27 P2A: entrevista do dono
 
 const tone = (v: number) => (v >= 65 ? 'good' : v <= 35 ? 'bad' : '');
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -82,12 +84,13 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
       h('div', { class: 'row wrap' },
         h('button', { class: 'btn small', disabled: !!giftBlock(s, P.key), title: t(giftBlock(s, P.key) ?? l('Agrada mais quem é vaidoso ou mão-fechada.', 'Pleases the vain and the stingy most.')), onclick: () => say(sendGift(s, P.key)) }, `${t(l('Presente', 'Gift'))} · ${$(money(s, GIFT_COST))}`),
         h('button', { class: 'btn small', disabled: !!favorBlock(s, P.key), title: t(favorBlock(s, P.key) ?? l('Gasta boa vontade por um ganho imediato.', 'Spends goodwill for an immediate gain.')), onclick: () => say(askFavor(s, P.key)) }, t(l('Pedir favor', 'Ask a favor'))),
+        favorsBtn27(P.key),
         h('button', { class: 'btn small ghost', onclick: () => say(publicStatement(s, P.key, true)) }, t(l('Elogiar em público', 'Praise publicly'))),
         h('button', { class: 'btn small ghost', onclick: () => say(publicStatement(s, P.key, false)) }, t(l('Criticar em público', 'Criticize publicly'))),
       ),
       h('p', { class: 'small muted' }, t(l('Também mexem na opinião: dispensar ou contratar ex-artistas de rivais, aliciar, processar, atrasar salários, quebrar promessas, vender masters, ganhar prêmios em cima deles e suas posições políticas.', 'Opinion also moves with: dropping acts or signing rivals\' ex-acts, poaching, lawsuits, late salaries, broken promises, selling masters, beating them at awards and your political stances.'))),
     ),
-    self ? h('div', { class: 'row wrap' }, h('button', { class: 'btn small', title: t(l('Quem pensa como você se aproxima; quem discorda se afasta (pesa mais em quem é engajado).', 'Like-minded people come closer; those who disagree drift away (more so for the engaged).')), onclick: () => say(politicalStatement(s)) }, t(l('Fazer declaração política', 'Make a political statement')))) : null,
+    self ? h('div', { class: 'row wrap' }, ivBtn27(s, (o) => o.who === 'player'), favorsBtn27(), h('button', { class: 'btn small', title: t(l('Quem pensa como você se aproxima; quem discorda se afasta (pesa mais em quem é engajado).', 'Like-minded people come closer; those who disagree drift away (more so for the engaged).')), onclick: () => say(politicalStatement(s)) }, t(l('Fazer declaração política', 'Make a political statement')))) : null,
   );
 }
 

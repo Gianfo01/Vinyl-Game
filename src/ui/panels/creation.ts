@@ -16,6 +16,7 @@ import { h, select } from '../dom';
 import { emptyState27 } from '../ps/ui27';
 import { store } from '../store';
 import { hasSinger, hireSessionSinger, sessionSingerCost, voiceLabel } from '../../sim/sys/vocals10';
+import { campBtn27 } from '../act27/campaign27'; // r27 P2A: campanha de lançamento jogável
 
 export function creationPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
@@ -98,7 +99,7 @@ export function creationPanel(s: GameState): HTMLElement {
   return h('div', { class: 'panel creation' },
     h('aside', { class: 'col-side' },
       section(t(S.roster), h('ul', { class: 'roster' }, ids.map((id) => h('li', { class: id === a.id ? 'sel' : '', onclick: () => { store.selectedAct = id; rerender(); } }, s.acts[id].name)))),
-      section(t(S.scheduled), s.pendingReleases.length ? h('ul', null, s.pendingReleases.map((p) => h('li', null, `${p.title} (${p.type}) — ${t(S.week)} ${p.week} `, actLink(s, p.actId), ' ', h('button', { class: 'btn small ghost', onclick: () => { cancelRelease(s, p.id); rerender(); } }, t(S.cancel))))) : emptyState27({ title: l('Nada programado', 'Nothing scheduled'), why: l('Escolha as faixas gravadas em "Planejar lançamento" e marque a data.', 'Pick recorded tracks in "Plan release" and set a date.') })),
+      section(t(S.scheduled), s.pendingReleases.length ? h('ul', null, s.pendingReleases.map((p) => h('li', null, `${p.title} (${p.type}) — ${t(S.week)} ${p.week} `, actLink(s, p.actId), ' ', h('button', { class: 'btn small ghost', onclick: () => { cancelRelease(s, p.id); rerender(); } }, t(S.cancel)), ' ', campBtn27(s, { prId: p.id })))) : emptyState27({ title: l('Nada programado', 'Nothing scheduled'), why: l('Escolha as faixas gravadas em "Planejar lançamento" e marque a data.', 'Pick recorded tracks in "Plan release" and set a date.') })),
     ),
     h('div', { class: 'col-main' },
       section(`${a.name}: ${t(S.unrecorded)} (${written.length})`,
