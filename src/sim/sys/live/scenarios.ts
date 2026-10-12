@@ -53,6 +53,8 @@ export interface ScenarioDef {
   scenario: RunConfig['scenario'];
   role?: RunConfig['role'];
   bandGenre?: string;
+  /** r23: carreiras principais (abre o negócio inicial de cada uma no Novo Jogo; ex.: ['label','festival']) */
+  careers?: string[];
   tiers: [number, number, number];
   setup?: (s: GameState, r: Rng) => void;
   /** valor atual da meta (pode usar o retrato inicial `base`) */
@@ -141,14 +143,14 @@ export const SCENARIOS: ScenarioDef[] = [
     metric: (s, b) => s.player.stats.top10s - (b.top10s ?? 0), fail: insolvent,
   },
   {
-    id: 'grunge_1989', name: l('Seattle antes da explosão', 'Seattle before the explosion'), startYear: 1989, endYear: 1995, homeCity: 'seattle', scenario: 'from_zero',
+    id: 'grunge_1989', name: l('Seattle antes da explosão', 'Seattle before the explosion'), startYear: 1989, endYear: 1995, homeCity: 'seattle', scenario: 'emerging', // r23: o selo já existia havia 2–3 anos
     desc: l('Chuva, flanela e guitarras sujas. O mundo ainda não sabe o que vem aí.', 'Rain, flannel and dirty guitars. The world doesn\'t know what\'s coming.'),
     goal: l('Conquiste discos de ouro e platina.', 'Earn gold and platinum records.'), unit: l('certificações', 'certifications'), tiers: [1, 3, 6],
     setup: (s, r) => { signAct(s, r, 'grunge', 'seattle', 8, 4); },
     metric: (s, b) => s.player.stats.gold + s.player.stats.platinum - (b.certs ?? 0), fail: insolvent,
   },
   {
-    id: 'festival_king', name: l('Rei dos festivais', 'Festival king'), startYear: 1985, endYear: 1995, homeCity: 'london', scenario: 'emerging',
+    id: 'festival_king', name: l('Rei dos festivais', 'Festival king'), startYear: 1985, endYear: 1995, homeCity: 'london', scenario: 'emerging', careers: ['label', 'festival'], // r23: abre o festival já no início
     desc: l('1985: a era dos megafestivais começa. Monte o seu e faça seus artistas tocarem em todos.', '1985: the mega-festival era begins. Build your own and get your acts on every bill.'),
     goal: l('Some edições boas do seu festival e participações em festivais.', 'Add up good editions of your festival and festival appearances.'), unit: l('pontos de festival', 'festival points'), tiers: [4, 10, 18],
     metric: (s, b) => (liveOf(s).counters.festGood ?? 0) * 2 + s.player.stats.festivals - (b.festivals ?? 0), fail: insolvent,
@@ -156,8 +158,14 @@ export const SCENARIOS: ScenarioDef[] = [
 ];
 export const scenarioById = Object.fromEntries(SCENARIOS.map((x) => [x.id, x])) as Record<string, ScenarioDef>;
 
+// r23: mesma regra de careers12.roleFromMain (copiada para não criar import circular live ↔ careers12)
+const roleOf23 = (main: string[]): RunConfig['role'] => (!main.includes('musician') ? 'label' : main.includes('label') ? 'hybrid' : 'artist');
+
 export function scenarioConfig(def: ScenarioDef, base: RunConfig): RunConfig {
-  return { ...base, startYear: def.startYear, homeCity: def.homeCity, scenario: def.scenario, role: def.role ?? 'label', mode: 'historic', mutators: [], card: 'none', bandGenre: def.bandGenre ?? base.bandGenre };
+  const cfg: RunConfig = { ...base, startYear: def.startYear, homeCity: def.homeCity, scenario: def.scenario, role: def.role ?? 'label', mode: 'historic', mutators: [], card: 'none', bandGenre: def.bandGenre ?? base.bandGenre };
+  // r23: cenário de profissão — carreiras principais e o papel que delas decorre
+  if (def.careers?.length) { cfg.careers = { main: [...def.careers], origin: 'none', ambition: 'legacy' }; cfg.role = def.role ?? roleOf23(def.careers); }
+  return cfg;
 }
 
 export function medalOf(def: ScenarioDef, value: number): Medal {

@@ -325,4 +325,5 @@ import './union20'; // r20c N3: negociação coletiva (músicos de sessão e equ
 import './price20'; // r20c N2: moeda/base de tempo dos preços ('price20') e tipos de custo da sede
 import './showops20'; // r20b (Z): show ↔ notícia e alterar turnê depois de marcar
 import './roles21'; // r21: funções múltiplas por pessoa + decisões que cada inclusão gera
+import './scenarios23'; // r23: cenários de outras profissões e mais selos (depois do careers19)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
