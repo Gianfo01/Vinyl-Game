@@ -73,7 +73,7 @@ describe('menu r25 (Pixel Studio)', () => {
     const sede = (o: { sede?: boolean }) => menu(['label'], ['label'], o).find((g) => g.id === 'sede')!;
     expect(sede({ sede: true }).top[0]).toBe(SEDE25);
     expect(sede({}).areas).not.toContain(SEDE25);
-    expect(home25(sede({}))).toBe('hq');
+    expect(home25(sede({}))).toBe('campus18'); // r27: "Nosso mundo" logo abaixo de "Sua sede"
   });
   it('páginas novas de outras frentes entram na seção sugerida ou em Gestão', () => {
     const gs = menu(['label'], ['label'], { all: ['zz1', 'zz2'], hint: { zz1: 'music' } });

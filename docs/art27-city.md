@@ -80,3 +80,26 @@ Regra dura: **sem pele de vidro antes de 1968** (sede, prédios comuns e marcos)
 ## 10. Movimento e desempenho
 - ~8 quadros/s só com o mapa visível (IntersectionObserver + `document.hidden`); "reduzir movimento" = quadro
   parado. Tudo que não se mexe (chão, sombras, marcos, prédios, contornos) é pré-desenhado uma vez por cena.
+
+## 11. Lugares e interiores (CITY2)
+- **Tudo é lugar.** Todo prédio do mapa que não é seu vira um lugar com dono, gente e ações (`sim/sys/place27.ts`):
+  vizinhos do hood19 (`nb:<lote>`) e a cidade comum (`pl:<lote>`). Nada é só decoração; o ponto clicável é o prédio.
+- **Básicos da música sempre presentes, pela época:** casa de shows (teatro de variedades → salão de baile → clube de
+  jazz → casa de rock → casa de shows; casa REAL da cidade quando existe em venues17), loja (partituras e pianos antes
+  de 1920 → 78 rpm → LPs → CDs de 1985 a 2007 → vinil para colecionador), rádio (só a partir de 1922), estúdio
+  (cornetas → elétrico → fita → multipista → digital), bar (pub em Londres, botequim em cidade lusófona, speakeasy nos
+  EUA 1920–33) e redação (coluna de jornal → revista → redação de site). Se faltar lote, o básico divide um prédio
+  ("Também neste prédio"). O que já é seu conta como presente.
+- **No mapa:** os lugares da música ganham chip pequeno sem nome (cor do tipo); prédios comuns (apartamentos,
+  escritórios, hotel) só o contorno de foco. O prédio é desenhado com o tipo do lugar (marquise, toldo, antena).
+- **Interior** (`ui/pixel/interior27.ts`): o mesmo corte lateral da sede (primitivas `prim27` de `ps/hqpx27.ts`), um
+  andar de 92 px com fachada da época, letreiro com o nome, luz da época e a rua. Palco com cortina de veludo antes de
+  1968 e refletores coloridos depois; plateia de costas NA FRENTE dos bonecos (só com alguém no palco); caixotes com
+  partituras/78/LP/CD/vinil; cabine de rádio com luz "NO AR"; técnica + vidro + sala de gravação; balcão com garrafas
+  e palquinho; máquinas de escrever até 1989, monitores depois. As pessoas são as reais (dono, funcionários, artistas
+  da cidade no palco, os seus quando estão lá — destacados em dourado).
+- **Um lugar só:** "Sua sede | Nosso mundo" em abas nas duas telas; "Ver a cidade −", Ctrl + roda ou pinça fechando
+  saem da sede e o mapa abre aproximado na sede e se afasta (560 ms). Clicar na sede aproxima e entra. Nos lugares,
+  "Entrar" aproxima e abre o interior; "Voltar à cidade", Esc, Ctrl + roda ou pinça afastam. Reduzir movimento = sem
+  animação. O interior é pintado uma vez (sem laço de animação).
+- **Filial/escritório estrangeiro nunca no bairro:** o vizinho "rival" é só gravadora da cidade (ou do país) da sede.

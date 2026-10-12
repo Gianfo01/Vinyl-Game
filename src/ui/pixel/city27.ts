@@ -20,7 +20,7 @@ import { cityById, l, type L } from '../../data/world';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
 import { KIND18, LOTS18, buildings18, campus18, dormPeople, layout18, storeIncome18, type BKind, type Bld18 } from '../../sim/sys/campus18';
-import { NB19, live19ev, nb19, nbRivals19, type Nb19 } from '../../sim/sys/hood19';
+import { NB19, live19ev, nb19, type Nb19 } from '../../sim/sys/hood19';
 import { liveOf } from '../../sim/sys/live/state';
 import { rel18 } from '../../sim/sys/relics18';
 import { school18 } from '../../sim/sys/school18';
@@ -299,11 +299,10 @@ export interface NbInfo27 { lot: number; k: Nb19['k']; name: L; who: L; doing: L
 export function nbInfo27(s: GameState): NbInfo27[] {
   const top = s.charts.singles[0] ? s.releases[s.charts.singles[0].releaseId] : undefined;
   const topAlb = s.charts.albums[0] ? s.releases[s.charts.albums[0].releaseId] : undefined;
-  const rivals = nbRivals19(s);
   return nb19(s).map((x) => {
     let who: L = NB19[x.k].n, doing: L = l('Movimento normal na rua.', 'Business as usual.');
     if (x.k === 'rival') {
-      const rv = (x.who ? s.labels[x.who] : undefined) ?? rivals[0];
+      const rv = x.who ? s.labels[x.who] : undefined; // r27 (CITY2): sem rival local = escritório genérico (nunca um estrangeiro)
       if (rv) {
         who = fmtL(l('{n} — reputação {r}, {k} artistas', '{n} — reputation {r}, {k} acts'), { n: rv.name, r: Math.round(rv.reputation), k: rv.roster.length });
         doing = rv.lastDecision ?? (rv.strategy === 'buy_catalog' ? l('Comprando catálogos antigos.', 'Buying old catalogues.') : rv.strategy === 'stars' ? l('Caçando estrelas para contratar.', 'Hunting for stars to sign.') : rv.strategy === 'niche' ? l('Cuidando do seu nicho.', 'Tending its niche.') : l('Desenvolvendo artistas novos.', 'Developing new acts.'));

@@ -795,7 +795,7 @@ export function path19(sp: Sprite18, all: Sprite18[]): [number, number][] {
 export interface Nbr19 { lot: number; k: string; name: string }
 const NBK: Record<string, BKind> = { rival: 'branch', records: 'store', bar: 'venue', rehearsal: 'rehearsal', radio: 'media' };
 /** r27: extras da cena (estado dos prédios, lotes à venda, cidade comum, vida na rua). */
-export interface SceneX27 { /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string }
+export interface SceneX27 { /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string; /** r27 (CITY2): tipo de prédio de cada lote de cidade comum (lugares do bairro) */ fillKind?: Map<number, BKind> }
 /** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
 export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
 /** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido). */
@@ -877,9 +877,9 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
     const lvl = look.k === 'towers' ? 3 + Math.floor(r * 3) : look.k === 'brick' ? 1 + Math.floor(r * 2) : 1 + Math.floor(r * 3);
     const style: Style18 = look.k === 'brick' ? (env.year < 1990 || r < 0.5 ? 'brick' : 'loft') : look.k === 'bay' && env.year >= 1930 && r < 0.6 ? 'tropical' : look.k === 'towers' ? (env.year < 1950 ? 'deco' : env.year < 1975 ? 'midcentury' : env.year < 1990 ? 'brutal' : 'glass') : styleOf18(Math.max(1889, env.year - 10 - Math.floor(r * 25)));
     const wall = C(look.wall[Math.floor(noise(lot, 2, seed) * look.wall.length) % look.wall.length]);
-    const kind: BKind = look.k === 'brick' && lvl <= 1 ? 'home' : 'office';
+    const kind: BKind = x.fillKind?.get(lot) ?? (look.k === 'brick' && lvl <= 1 ? 'home' : 'office'); // r27 (CITY2): o lugar do lote (loja, rádio, casa de shows…)
     const sp = buildingSprite18({ id: `fl:${lot}`, kind, name: '', city: '', zone: 'campus', lvl, st: 'open', since: env.year, sy: env.year, style }, { gx: L0.gx + 0.35, gy: L0.gy + 0.35, w: L0.w - 0.7, d: L0.d - 0.7 }, env.year, seed + lot * 29, '',
-      { filler: true, snow: env.snow, wall: style === 'glass' ? undefined : mix(wall, MAT[style].wall, 0.3), sign: noise(lot, 7, seed) < 0.35 ? era.sign : undefined });
+      { filler: true, snow: env.snow, wall: style === 'glass' ? undefined : mix(wall, MAT[style].wall, 0.3), sign: x.fillKind?.has(lot) && kind !== 'home' && kind !== 'office' ? era.sign : noise(lot, 7, seed) < 0.35 ? era.sign : undefined });
     sprites.push(sp);
     used.add(lot);
   }

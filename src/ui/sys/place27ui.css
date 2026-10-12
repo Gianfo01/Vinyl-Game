@@ -1,0 +1,32 @@
+/* r27 (CITY2): lugares do bairro — painel, ponto clicável da cidade comum e interior sobre o mapa */
+.c2-who { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 1px; font-size: 13px; }
+.c2-who small.good { color: var(--good, #60c080); }
+.c2-also { margin: 0; color: var(--muted, #aaa); }
+.c2-actsel select { max-width: 100%; min-height: 30px; }
+.c2-acts .btn { min-height: 34px; }
+.c2-enter { font-weight: 700; }
+/* cidade comum: ponto clicável discreto (o prédio inteiro); lugar da música ganha chip pequeno sem nome */
+.w19-hs.fill:hover, .w19-hs.fill:focus-visible { background: rgba(255, 255, 255, 0.10); }
+.c27-pin.pl { padding: 1px; border-radius: 6px; opacity: 0.9; }
+.c27-pin.pl .ic-px, .c27-pin.pl img { width: 12px; height: 12px; }
+/* interior por cima do mapa */
+.c2-in { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; background: #12141c; color: #f4ecd8; overflow: auto; }
+.c2-in-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(0, 0, 0, 0.35); font-size: 14px; }
+.c2-in-bar .btn { min-height: 32px; }
+.c2-in-st { position: relative; width: 100%; }
+.c2-in-cv { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+.c2-in-hot { position: absolute; inset: 0; }
+.c2-hit { position: absolute; margin: 0; padding: 0; border: 0; background: transparent; border-radius: 3px; color: inherit; cursor: default; }
+button.c2-hit { cursor: pointer; }
+.c2-hit:hover, .c2-hit:focus-visible { outline: 2px solid #ffd040; outline-offset: 1px; }
+.c2-tag { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -2px); white-space: nowrap; font: 700 11px/1.2 system-ui, sans-serif; padding: 1px 4px; border-radius: 4px; background: rgba(20, 18, 24, 0.85); color: #f4ecd8; opacity: 0; pointer-events: none; }
+.c2-hit.mine .c2-tag { background: #d0a030; color: #1a1416; opacity: 1; }
+.c2-hit:hover .c2-tag, .c2-hit:focus-visible .c2-tag { opacity: 1; }
+.c2-in-foot { margin: 4px 10px 8px; color: #e8e0cc; }
+.c2-in-foot .c2-who { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; }
+.c2-in-foot p { margin: 4px 0 0; color: #a8a090; }
+.c2-in.enter { animation: c2in 260ms ease-out; }
+@keyframes c2in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .c2-in.enter { animation: none; } }
+:root.reduced-motion .c2-in.enter { animation: none; }
+.c2-acts-btn { margin-left: auto; }

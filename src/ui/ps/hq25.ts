@@ -14,6 +14,7 @@ import { ic, setTab } from '../vis';
 import { hqModel25, type Agenda25, type Goto25, type HqModel25, type RoomM25, type Sprite25 } from './hq25model';
 import { drawHqCutaway27, isNarrow27, plan27, type Cell27, type Drawn27 } from './hqpx27';
 import { setSedeHome25 } from './slot25';
+import { bindZoomOut27, placeTabs27, toCity27 } from './zoom27';
 import './hq25.css';
 
 /** Navega para o destino (usa as funções existentes: store.area + rerender, abas e ficha do artista). */
@@ -196,6 +197,7 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
     const ro = new ResizeObserver((es) => { if (!scroll.isConnected) { ro.disconnect(); return; } const w = es[0]?.contentRect.width; if (w) paint(w); });
     ro.observe(scroll);
   }
+  bindZoomOut27(scroll, () => toCity27(scroll)); // r27 (CITY2): Ctrl + roda / pinça fechando = ver a cidade
   const company = s.config.companyName || t(l('Seu selo', 'Your label'));
   const city = cityById[m.city];
   const shut = m.rooms.filter((r) => !r.open);
@@ -203,6 +205,7 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
     h('header', { class: 'hq27-head' },
       h('div', null, h('h1', { class: 'page21' }, t(l('Sua sede', 'Your HQ'))),
         h('small', { class: 'muted' }, [company, t(m.hqName), city ? t(city.name) : '', String(m.year)].filter(Boolean).join(' · '))),
+      placeTabs27('hq', () => scroll), // r27 (CITY2): a sede e a cidade são o mesmo lugar (afastar = Nosso mundo)
       m.away.length ? h('div', { class: 'hq25-away', role: 'note', 'aria-label': t(l('Fora da sede', 'Away from HQ')) },
         h('b', null, ic('plane'), ' ', t(l('Fora da sede', 'Away'))), h('span', { class: 'hq25-away-row' }, m.away.slice(0, 5).map((x, i) => awayEl(s, x, i))),
         m.away.length > 5 ? h('small', null, `+${m.away.length - 5}`) : null) : null),
