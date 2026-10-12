@@ -4,7 +4,7 @@ import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
 import { realFounded } from '../data/realnames';
-import { S, t, type Lang } from '../i18n/strings';
+import { S, t } from '../i18n/strings';
 import type { RunConfig, StartCustom } from '../sim/types';
 import { createGame, labelPool, takeoverCandidates } from '../sim/worldgen';
 import { formatMoney } from '../core/money';
@@ -12,27 +12,27 @@ import { genreById } from '../data/world';
 import { locale } from '../i18n/strings';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
-import { importSave, importSaveText, loadGame, savePrefs, store } from './store';
-import { prepareNewGame, scenarioButton } from './sys/live/goals';
+import { savePrefs, store } from './store';
+import { prepareNewGame } from './sys/live/goals';
 import { cards22, chips22, seg22, toggle22, type Opt22 } from './pick22';
 import { helpTip } from './newgame13';
 import { RUN_YEARS17 } from '../sim/start17';
 import { attrsCard22 } from './newgame20you';
-import { chosenLabels22, labelsCard, materializeLabels22 } from './newgameLabels';
+import { chosenLabels22, labelsCard } from './newgameLabels';
 import { identityCard22, traitsCard22 } from './charCreate';
 import { careerCard, careerSummary } from './sys/careers12';
 import { START_YEARS13 } from './ngdata13';
-import { TUTOFF_HINT19, TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19';
+import { setTutorials19, tutorialsOff19 } from './tutoff19';
 import { addHelp, hl } from './newgame13';
 import { copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, startCard17, summaryExtra17, worldCard17 } from './newgame17';
-import { lastSave17, profileBar17, saveErrText20, saveManager17 } from './saves17';
-import { scenarioById } from '../sim/sys/live';
 import { WORLDS17, newRunConfig20, notes17, resolveWorld20 } from '../sim/start17';
 import { YEAR_MAX20, YEAR_MIN20 } from '../sim/worldpolicy20';
 import { originById } from '../sim/sys/identity/data';
 import { AMBITIONS, type Ambition } from '../sim/sys/careers12';
 import { careerOfSpec } from '../sim/sys/persona';
 import './newgame20.css';
+import { buildRun27, draftDefaults27 } from './ps/home27model';
+import { homeScreen27 } from './ps/home27';
 
 /** Anos de início com nomes únicos (rodada 13: ver ngdata13.ts; o campo ao lado aceita qualquer ano de 1889 a 2039). */
 const START_YEARS = START_YEARS13;
@@ -46,47 +46,25 @@ const SENSITIVE = [
   { id: 'romance', label: l('Traição, armário e escândalos amorosos', 'Infidelity, closet and romance scandals') },
 ];
 
-function randomSeed(): string {
+export function randomSeed(): string {
   const words = ['vinil', 'shellac', 'groove', 'fita', 'agulha', 'eco', 'reverb', 'neon', 'jukebox', 'fader', 'loop', 'sample'];
   return `${words[Math.floor(Math.random() * words.length)]}-${Math.floor(Math.random() * 1e6).toString(36)}`;
 }
 
+/** r27: tela inicial no estilo "Pixel Studio" (ps/home27.ts); mantém o nome usado por app.ts. */
 export function titleScreen(root: HTMLElement, onStart: () => void): void {
-  // r17: gerenciador completo (perfis, autosave por partida, nuvem por pessoa) e "Continuar" com o save mais recente
-  const play = (g: NonNullable<typeof store.game>) => { store.game = g; onStart(); };
-  const cont = h('span');
-  void lastSave17().then((m) => { if (m) cont.replaceChildren(h('button', { class: 'btn primary big', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } }, `▶ ${t(S.continue)}: ${m.name || m.company} — ${m.year}`)); }, (e) => { cont.replaceChildren(h('p', { class: 'bad small', role: 'alert' }, '⚠ ', t(l('Não foi possível ler os saves deste navegador ({e}). Nada foi apagado; abra "Saves" para tentar de novo.', 'Could not read this browser\'s saves ({e}). Nothing was deleted; open "Saves" to try again.'), { e: String((e as Error)?.name || e) }))); });
-  const saves = h('details', { class: 'saves sv17-wrap' }, h('summary', null, t(l('Saves, perfis e nuvem', 'Saves, profiles and cloud'))), saveManager17(play, { profiles: false }));
-  const fileInput = h('input', { type: 'file', style: 'display:none', onchange: async (e: Event) => {
-    const f = (e.target as HTMLInputElement).files?.[0];
-    if (!f) return;
-    try {
-      store.game = await importSave(f);
-      onStart();
-    } catch (er) {
-      toast(saveErrText20(er), 'bad');
-    }
-  } });
-  root.replaceChildren(
-    h('div', { class: 'title-screen', id: 'main', role: 'main', tabindex: '-1' }, // r23: alvo do "Pular para o conteúdo"
-      h('div', { class: 'disc', 'aria-hidden': 'true' }),
-      h('h1', null, t(S.gameTitle)),
-      h('p', { class: 'tagline' }, t(S.tagline)),
-      profileBar17(() => titleScreen(root, onStart)),
-      h('div', { class: 'row center' }, tutToggle19()),
-      h('div', { class: 'row center' },
-        cont,
-        h('button', { class: 'btn primary big', onclick: () => newGameScreen(root, onStart) }, t(S.newGame)),
-        scenarioButton(root, onStart, () => titleScreen(root, onStart)),
-        h('button', { class: 'btn ghost', onclick: () => fileInput.click() }, t(S.importSave)),
-        fileInput,
-        h('button', { class: 'btn ghost', onclick: async () => { const tx = window.prompt(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'))); if (!tx) return; try { store.game = await importSaveText(tx); onStart(); } catch (er) { toast(saveErrText20(er), 'bad'); } } }, t(l('Colar save', 'Paste save'))),
-        select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { store.prefs.lang = v; savePrefs(); titleScreen(root, onStart); }, { 'aria-label': t(S.language) }),
-      ),
-      saves,
-      h('p', { class: 'muted small foot' }, t(l('Padrão: Reais em mundo aleatório — nomes reais (Elvis, Beatles, Roberto Carlos…) com músicas, contratos e carreiras simulados. Fidelidade histórica, universo ficcional e os outros modos ficam em Novo Jogo → Mundo.', 'Default: Real names, random world — real names (Elvis, Beatles…) with simulated songs, contracts and careers. Historical fidelity, a fictional universe and the other modes are in New Game → World.'))),
-    ),
-  );
+  homeScreen27(root, onStart);
+}
+
+/** r27: preparo comum (buildRun27) + createGame; usado pela configuração completa e pela Nova run rápida. */
+export function launchRun27(cfg: RunConfig, onStart: () => void): void {
+  const run = buildRun27(cfg);
+  prepareNewGame(run);
+  const g = createGame(run);
+  store.game = g;
+  store.area = 'desk';
+  store.undoSnapshot = null;
+  onStart();
 }
 
 /** Início personalizado (rodada 7): tudo opcional; vazio = padrão do cenário. */
@@ -189,7 +167,7 @@ const STEP20: Record<string, ReturnType<typeof l>> = {
 
 export function newGameScreen(root: HTMLElement, onStart: () => void, init?: RunConfig, tab0 = 0): void {
   // r20 (G8): fábrica única (padrão "Reais em mundo aleatório", política v2); códigos/cenários chegam por `init` e não são sobrescritos
-  const cfg: RunConfig = init ?? newRunConfig20({ seed: randomSeed(), companyName: t(l('Selo Agulha', 'Needle Records')) });
+  const cfg: RunConfig = draftDefaults27(init ?? newRunConfig20({ seed: randomSeed(), companyName: t(l('Selo Agulha', 'Needle Records')) }));
   delete cfg.scenario17; // r22: cenários são outra modalidade (tela inicial)
   // predefinição, código e cenário reconstroem a tela com a mesma configuração (mesma área)
   const rebuild = () => newGameScreen(root, onStart, cfg, cur);
@@ -209,7 +187,9 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const yearErr = h('small', { class: 'bad', role: 'alert' });
   const yearInput = h('input', { type: 'number', min: YEAR_MIN20, max: YEAR_MAX20, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: yearMsg,
     onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= YEAR_MIN20 && v <= YEAR_MAX20) { yearErr.textContent = ''; cfg.startYear = v; renderBand(); refreshAll(); } else yearErr.textContent = yearMsg; } }) as HTMLInputElement;
-  const yearSel = select(cfg.startYear, START_YEARS.map((y) => ({ value: y.year, label: t(y.label) })), (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); refreshAll(); });
+  // r27: ano fora da lista (vindo da Nova run rápida ou de um código) aparece como opção própria, sem cair em 1889
+  const yearOpts = [...(START_YEARS.some((y) => y.year === cfg.startYear) ? [] : [{ value: cfg.startYear, label: `${cfg.startYear} — ${t(l('ano escolhido', 'chosen year'))}` }]), ...START_YEARS.map((y) => ({ value: y.year, label: t(y.label) }))];
+  const yearSel = select(cfg.startYear, yearOpts, (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); refreshAll(); });
   // r20 (§7.5/§9.3): a semente é criada uma vez; editar não sorteia outra; vazia é validada ao começar
   const seedErr = h('small', { class: 'bad', role: 'alert' });
   const seedInput = h('input', { type: 'text', value: cfg.seed, 'aria-label': t(S.seed), 'aria-describedby': 'ng20-seed-help', // r20b (Z3): o <label> envolve o (?) antes, que virava o controle rotulado
@@ -428,18 +408,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     startErr.textContent = '';
     setBusy(true);
     setTimeout(() => {
-      const run = JSON.parse(JSON.stringify(cfg)) as RunConfig;
-      run.seed = run.seed.trim();
       try {
-        const sc = run.scenario17 ? scenarioById[run.scenario17] : undefined;
-        if (sc) Object.assign(run, { startYear: sc.startYear, homeCity: sc.homeCity, scenario: sc.scenario, ...(sc.role ? { role: sc.role } : {}) });
-        materializeLabels22(run); // r22: a sugestão de gravadoras vira a lista da partida
-        prepareNewGame(run);
-        const g = createGame(run);
-        store.game = g;
-        store.area = 'desk';
-        store.undoSnapshot = null;
-        onStart();
+        launchRun27(cfg, onStart); // r27: mesmo preparo da Nova run rápida (cópia, cenário, gravadoras materializadas)
       } catch (e) {
         console.error(e);
         setBusy(false);
@@ -477,10 +447,4 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
 export function newgameCards(): ((cfg: RunConfig, onYear: (y: number) => void) => HTMLElement)[] {
   const f = newgameCards as unknown as { l?: ((cfg: RunConfig, onYear: (y: number) => void) => HTMLElement)[] };
   return (f.l ??= []);
-}
-
-/** r19 tutoff19: chave "Sem tutoriais (já sei jogar)" (preferência do navegador, vale para todas as partidas). */
-function tutToggle19(): HTMLElement {
-  return h('label', { class: 'check tut19-toggle', title: t(TUTOFF_HINT19) },
-    h('input', { type: 'checkbox', checked: tutorialsOff19(store.prefs), onchange: (e: Event) => { setTutorials19(store.prefs, !(e.target as HTMLInputElement).checked); savePrefs(); } }), ' ', t(TUTOFF_LABEL19));
 }

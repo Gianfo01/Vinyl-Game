@@ -100,6 +100,24 @@ export function switchProfile17(id: string): boolean {
   return true;
 }
 export const curProfile17 = (): Profile17 => profiles17().find((p) => p.id === profileId17()) ?? profiles17()[0];
+/** r27: apaga um perfil. Os saves dele vão para "Jogador 1" (padrão) ou, com `withSaves`, são apagados também.
+ *  O perfil padrão não pode ser apagado. Os saves são resolvidos antes de o perfil sair da lista (falha = nada muda). */
+export async function deleteProfile17(id: string, withSaves = false): Promise<{ ok: boolean; saves: number }> {
+  if (id === 'default' || !profiles17().some((p) => p.id === id)) return { ok: false, saves: 0 };
+  const mine = (await listSaves()).filter((m) => (m.profile ?? 'default') === id);
+  for (const m of mine) {
+    if (withSaves) await deleteSave(m.slot);
+    else { const r = await getRec(m.slot); if (r) await putRec(m.slot, { ...r, meta: { ...r.meta, profile: 'default' } }); }
+  }
+  writeJ(PKEY, readJ<Profile17[]>(PKEY, []).filter((p) => p.id !== id));
+  if (profileId17() === id) writeJ('vtn:profile17', 'default');
+  return { ok: true, saves: mine.length };
+}
+/** r27: troca o nome de um perfil (o padrão também pode ser renomeado). */
+export function renameProfile17(id: string, name: string): void {
+  const ps = profiles17();
+  writeJ(PKEY, ps.map((p) => (p.id === id ? { ...p, name: name.slice(0, 30) || p.name } : p)));
+}
 export const mySaves17 = async (): Promise<SaveMeta[]> => (await listSaves()).filter((m) => (m.profile ?? 'default') === profileId17());
 
 // ---------------------------------------------------------------- nuvem (runtime do claude.ai)
