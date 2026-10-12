@@ -24,6 +24,8 @@ import { REAL_1889 } from '../../data/era1889';
 import { ARTISTS19 } from '../../data/more19';
 import { ACERVO21 } from '../../data/acervo21';
 import { LIKES22_ARTISTS, SONGS22 } from '../../data/songs22';
+import { ARTISTS27, FILL27 } from '../../data/audit27_artists';
+import { SONGS27 } from '../../data/audit27_songs';
 const ACERVO22 = [...ACERVO21, ...LIKES22_ARTISTS];
 import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
@@ -51,6 +53,11 @@ const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
 export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO22.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
 /** r21: o acervo é o último lote de REAL_ALL; usa gerador próprio para não deslocar os sorteios do resto do mundo. */
 export const ACERVO21_FROM = REAL_ALL.length - ACERVO22.filter((a) => REAL_ALL.includes(a)).length;
+/** r27: artistas que faltavam (auditoria Masters_25) entram depois do acervo — mesmo gerador próprio, sem deslocar o acervo. */
+export const ARTISTS27_FROM = REAL_ALL.length;
+REAL_ALL.push(...ARTISTS27.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }));
+const FILL27N = new Map(Object.entries(FILL27).map(([k, v]) => [norm16(k), v]));
+for (const a of REAL_ALL) { const f = FILL27N.get(norm16(a.n)); if (f && !a.m?.length) { if (a.b === undefined && f.b !== undefined) a.b = f.b; if (a.x === undefined && f.x !== undefined) a.x = f.x; } } // r27: só preenche lacunas
 applyMembers25(REAL_ALL); // r25: formações pesquisadas para quem não tinha integrantes
 applyLineups25(REAL_ALL); // r25: formações reais que estavam incompletas (banda de 5 aparecia com 2–3)
 const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo21|${k}`);
@@ -75,6 +82,10 @@ export const rw = (s: GameState): RwState => (s as unknown as { x4: { rw: RwStat
 
 /** Dados reais de um ato (lista nova ou catálogo clássico). */
 const SONG22_KEYS = new Map(Object.entries(SONGS22).map(([k, v]) => [norm16(k), v]));
+for (const [k, v] of Object.entries(SONGS27)) { // r27: músicas da auditoria entram depois das curtidas, sem repetir título
+  const key = norm16(k), cur = SONG22_KEYS.get(key) ?? [], seen = new Set(cur.map(([t]) => norm16(t)));
+  SONG22_KEYS.set(key, [...cur, ...v.filter(([t]) => !seen.has(norm16(t)) && (seen.add(norm16(t)), true))]);
+}
 /** r22: músicas marcantes (título, ano) de um ato real — das curtidas do Spotify do jogador. */
 export function realSongs22(act: Act): [string, number][] {
   const d = realDataOf(act);
