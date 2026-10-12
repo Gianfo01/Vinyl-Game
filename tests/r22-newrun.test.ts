@@ -43,3 +43,19 @@ describe('r22 carta e origem', () => {
     invariant(g);
   });
 });
+
+import { SONGS22 } from '../src/data/songs22';
+import { realSongTitle22 } from '../src/sim/sys/realworld';
+describe('r22 músicas das curtidas', () => {
+  it('dados válidos e títulos reais só com nomes reais e depois do ano', () => {
+    for (const [a, xs] of Object.entries(SONGS22)) for (const [t, y] of xs) { expect(t.length, a).toBeGreaterThan(0); expect(y).toBeGreaterThanOrEqual(1950); expect(y).toBeLessThanOrEqual(2026); }
+    const s = createGame(defaultConfig('sg22', { startYear: 1972, realNames: true }));
+    const doors = Object.values(s.acts).find((a) => a.name === 'The Doors');
+    if (doors) {
+      const t = realSongTitle22(s, doors);
+      expect(SONGS22['The Doors'].some(([x, y]) => x === t && y <= 1973)).toBe(true);
+      s.config.realNames = false;
+      expect(realSongTitle22(s, doors)).toBeUndefined();
+    }
+  });
+});

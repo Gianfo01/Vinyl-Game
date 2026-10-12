@@ -21,6 +21,8 @@ import { REAL_17 } from '../../data/more17';
 import { REAL_1889 } from '../../data/era1889';
 import { ARTISTS19 } from '../../data/more19';
 import { ACERVO21 } from '../../data/acervo21';
+import { LIKES22_ARTISTS, SONGS22 } from '../../data/songs22';
+const ACERVO22 = [...ACERVO21, ...LIKES22_ARTISTS];
 import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
 import type { RealArtist, RealMember, RealRelease } from '../../data/realtypes';
@@ -44,9 +46,9 @@ const taken16 = new Set([...BASE_ALL.map((a) => norm16(a.n)), ...Object.values(R
 const L16F = REAL_L16.filter((a) => !taken16.has(norm16(a.n)));
 const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
 /** rodada 17: lote E (one-hit wonders, covers/samples, cenas locais, nomes que faltavam) também no fim. */
-export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO21.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
+export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO22.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
 /** r21: o acervo é o último lote de REAL_ALL; usa gerador próprio para não deslocar os sorteios do resto do mundo. */
-export const ACERVO21_FROM = REAL_ALL.length - ACERVO21.filter((a) => REAL_ALL.includes(a)).length;
+export const ACERVO21_FROM = REAL_ALL.length - ACERVO22.filter((a) => REAL_ALL.includes(a)).length;
 const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo21|${k}`);
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
@@ -68,6 +70,21 @@ registerExt4('rw', () => ({ upcoming: [], sched: [], done: {}, former: {} }));
 export const rw = (s: GameState): RwState => (s as unknown as { x4: { rw: RwState } }).x4.rw;
 
 /** Dados reais de um ato (lista nova ou catálogo clássico). */
+const SONG22_KEYS = new Map(Object.entries(SONGS22).map(([k, v]) => [norm16(k), v]));
+/** r22: músicas marcantes (título, ano) de um ato real — das curtidas do Spotify do jogador. */
+export function realSongs22(act: Act): [string, number][] {
+  const d = realDataOf(act);
+  return d ? SONG22_KEYS.get(norm16(d.n)) ?? [] : [];
+}
+/** r22: próximo título real ainda não usado pelo ato, de uma música já lançada na vida real até `year` (+1). Sem RNG. */
+export function realSongTitle22(s: GameState, act: Act, year = s.year): string | undefined {
+  if (!s.config.realNames) return undefined;
+  const xs = realSongs22(act);
+  if (!xs.length) return undefined;
+  const used = new Set(act.songs.map((id) => s.songs[id]?.title).concat(act.releases.map((id) => s.releases[id]?.title)));
+  return xs.find(([t, y]) => y <= year + 1 && !used.has(t))?.[0];
+}
+
 export function realDataOf(act: Act): (RealArtist | (ClassicExtra & { n: string; t: 1 | 2 | 3 })) | undefined {
   const no = act.catalogNo;
   if (!no) return undefined;
@@ -137,7 +154,8 @@ export function simulateDiscography(s: GameState, r: Rng, act: Act, fromYear: nu
   let y = fromYear;
   while (y < toYear) {
     const type: Release['type'] = y < 1958 ? 'single' : r.chance(0.55) ? 'lp' : r.chance(0.5) ? 'ep' : 'single';
-    seedRelease(s, r, act, { title: songTitle(r, lang), year: y, type, tier });
+    const gen = songTitle(r, lang);
+    seedRelease(s, r, act, { title: (type === 'single' ? realSongTitle22(s, act, y) : undefined) ?? gen, year: y, type, tier });
     y += r.int(1, 3);
   }
 }

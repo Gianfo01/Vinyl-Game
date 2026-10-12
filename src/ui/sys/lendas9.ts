@@ -396,7 +396,7 @@ export function worldCard9(cfg: RunConfig, onYear?: (y: number) => void): HTMLEl
   const info = h('small', { class: 'muted' });
   const apply = (on: boolean) => {
     if (on && w) { cfg.world9 = w; cfg.startYear = Math.max(1889, Math.min(2039, w.year + gap)); onYear?.(cfg.startYear); info.textContent = t(l('{c}, {y} → começa em {s}.', '{c}, {y} → starts in {s}.'), { c: w.company, y: w.year, s: cfg.startYear }); }
-    else { delete cfg.world9; info.textContent = w ? t(l('Mundo salvo: {c} ({y}).', 'Saved world: {c} ({y}).'), { c: w.company, y: w.year }) : t(l('Nenhum mundo salvo. Salve um em Lendas → Livro e mundo, ou carregue um arquivo.', 'No saved world. Save one in Legends → Book and world, or load a file.')); }
+    else { delete cfg.world9; info.textContent = w ? t(l('Mundo salvo: {c} ({y}).', 'Saved world: {c} ({y}).'), { c: w.company, y: w.year }) : t(l('Para continuar um mundo antigo, salve-o em Lendas → Livro e mundo ou carregue o arquivo.', 'To continue an old world, save it in Legends → Book and world or load its file.')); }
   };
   const box = h('input', { type: 'checkbox', disabled: !w, onchange: (e: Event) => apply((e.target as HTMLInputElement).checked) }) as HTMLInputElement;
   apply(false);
@@ -405,15 +405,23 @@ export function worldCard9(cfg: RunConfig, onYear?: (y: number) => void): HTMLEl
     if (!f) return;
     try { w = JSON.parse(await f.text()) as WorldFile; box.disabled = false; box.checked = true; apply(true); } catch { toast(t(l('Arquivo de mundo inválido.', 'Invalid world file.')), 'bad'); }
   } });
+  // r22: campos de mundo salvo só aparecem quando há um mundo salvo (ou depois de carregar um arquivo)
+  const saved = h('div', { class: 'ng22-saved' });
+  const drawSaved = () => saved.replaceChildren(...(w ? [
+    h('label', { class: 'check' }, box, t(l('Continuar em mundo salvo', 'Continue in saved world'))),
+    h('label', null, t(l('Anos depois', 'Years later')), select(gap, [5, 10, 20, 30].map((n) => ({ value: n, label: String(n) })), (v) => { gap = v; if (box.checked) apply(true); })),
+  ] : []), info);
+  file.addEventListener('change', () => setTimeout(drawSaved, 50));
+  drawSaved();
+  const pick = h('button', { type: 'button', class: 'btn small ghost', onclick: () => (file as HTMLInputElement).click() }, '📂 ', t(l('Carregar arquivo de mundo', 'Load world file')));
+  (file as HTMLInputElement).style.display = 'none';
   return h('section', { class: 'card' },
     h('h3', null, t(l('Mundo', 'World'))),
     h('label', { title: t(l('Simula, numa passada leve só de artistas, os anos antes do início: bandas, hits, lendas, separações, mortes, selos e cenas.', 'Runs a light, artists-only pass over the years before the start: bands, hits, legends, splits, deaths, labels and scenes.')) },
       t(l('Gerar história prévia', 'Generate prior history')),
       select(cfg.prehist ?? 0, [0, 10, 20, 40].map((n) => ({ value: n, label: n ? t(l('{n} anos', '{n} years'), { n }) : t(l('Nenhuma', 'None')) })), (v) => (cfg.prehist = v))),
-    h('label', { class: 'check' }, box, t(l('Continuar em mundo salvo', 'Continue in saved world'))),
-    h('label', null, t(l('Anos depois', 'Years later')), select(gap, [5, 10, 20, 30].map((n) => ({ value: n, label: String(n) })), (v) => { gap = v; if (box.checked) apply(true); })),
-    h('label', null, t(l('Carregar arquivo de mundo', 'Load world file')), file),
-    info);
+    h('small', { class: 'muted' }, t(l('Com história prévia, o mundo já começa com carreiras, sucessos e separações acontecidos.', 'With prior history, the world starts with careers, hits and splits already behind it.'))),
+    saved, h('div', { class: 'row wrap' }, pick, file));
 }
 
 newgameCards().push(worldCard9);

@@ -13,7 +13,10 @@ import { locale } from '../i18n/strings';
 import { cityName, toast } from './common';
 import { h, select } from './dom';
 import { importSave, importSaveText, loadGame, savePrefs, store } from './store';
-import { prepareNewGame, scenarioButton, scenarioScreen } from './sys/live/goals';
+import { prepareNewGame, scenarioButton } from './sys/live/goals';
+import { cards22, chips22, seg22, toggle22, type Opt22 } from './pick22';
+import { helpTip } from './newgame13';
+import { RUN_YEARS17 } from '../sim/start17';
 import { attrsCard22 } from './newgame20you';
 import { chosenLabels22, labelsCard, materializeLabels22 } from './newgameLabels';
 import { identityCard22, traitsCard22 } from './charCreate';
@@ -21,7 +24,7 @@ import { careerCard, careerSummary } from './sys/careers12';
 import { START_YEARS13 } from './ngdata13';
 import { TUTOFF_HINT19, TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19';
 import { addHelp, hl } from './newgame13';
-import { copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, runCard17, startCard17, summaryExtra17, worldCard17 } from './newgame17';
+import { copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, startCard17, summaryExtra17, worldCard17 } from './newgame17';
 import { lastSave17, profileBar17, saveErrText20, saveManager17 } from './saves17';
 import { scenarioById } from '../sim/sys/live';
 import { WORLDS17, newRunConfig20, notes17, resolveWorld20 } from '../sim/start17';
@@ -187,6 +190,7 @@ const STEP20: Record<string, ReturnType<typeof l>> = {
 export function newGameScreen(root: HTMLElement, onStart: () => void, init?: RunConfig, tab0 = 0): void {
   // r20 (G8): fábrica única (padrão "Reais em mundo aleatório", política v2); códigos/cenários chegam por `init` e não são sobrescritos
   const cfg: RunConfig = init ?? newRunConfig20({ seed: randomSeed(), companyName: t(l('Selo Agulha', 'Needle Records')) });
+  delete cfg.scenario17; // r22: cenários são outra modalidade (tela inicial)
   // predefinição, código e cenário reconstroem a tela com a mesma configuração (mesma área)
   const rebuild = () => newGameScreen(root, onStart, cfg, cur);
   const bandBox = h('div', { class: 'band-box' });
@@ -201,9 +205,6 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   };
   renderBand();
   // r20 (§7.4): todo controle nasce do rascunho (sobrevive à reconstrução por predefinição/código)
-  const muts = h('div', { class: 'mut-grid' }, MUTATORS.map((m) => h('label', { class: 'check', title: t(m.desc) },
-    h('input', { type: 'checkbox', checked: cfg.mutators.includes(m.id), onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.mutators = on ? [...cfg.mutators.filter((x) => x !== m.id), m.id] : cfg.mutators.filter((x) => x !== m.id); } }),
-    h('span', null, t(m.name), h('small', { class: 'muted' }, ` — ${t(m.desc)}`)))));
   const yearMsg = t(l('Ano exato de início ({a}–{b})', 'Exact start year ({a}–{b})'), { a: YEAR_MIN20, b: YEAR_MAX20 });
   const yearErr = h('small', { class: 'bad', role: 'alert' });
   const yearInput = h('input', { type: 'number', min: YEAR_MIN20, max: YEAR_MAX20, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: yearMsg,
@@ -233,7 +234,6 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const worldExtra = extras.find((el) => el.querySelector('h3')?.textContent?.startsWith(t(l('Mundo', 'World'))));
   if (worldExtra) worldExtra.append(seedRow);
   let redrawAttrs = (): void => undefined;
-  const tutCard = h('section', { class: 'card' }, h('h3', null, t(l('Tutoriais e dicas', 'Tutorials and tips'))), tutToggle19(), h('small', { class: 'muted' }, t(l('Preferência deste navegador: vale para todas as partidas.', 'This browser\'s preference: applies to every run.'))));
 
   const tabs: Tab[] = [
     { id: 'world', name: l('Mundo', 'World'), body: [
@@ -264,29 +264,29 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       ),
     ] },
     { id: 'labels', name: l('Gravadoras', 'Labels'), body: [lc.el] },
+    // r22: regras em cartões, seletor segmentado, chaves e etiquetas (o ajuste fino fica recolhido)
     { id: 'rules', name: l('Regras e ritmo', 'Rules and rhythm'), body: [
-      h('section', { class: 'card' },
-        h('label', null, ...hl(S.difficulty, 'difficulty'), select(cfg.difficulty, [
-          { value: 'easy', label: t(S.easy) }, { value: 'normal', label: t(S.normal) }, { value: 'hard', label: t(S.hard) },
-        ] as { value: RunConfig['difficulty']; label: string }[], (v) => { cfg.difficulty = v; tk.refresh(); })),
-        h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!cfg.ironman, onchange: (e: Event) => (cfg.ironman = (e.target as HTMLInputElement).checked) }), ...hl(S.ironman, 'ironman')),
-        h('small', { class: 'muted' }, t(l('Ironman: um save só, sem desfazer e sem carregar pontos antigos. É uma regra de jogo — não substitui backup do navegador.', 'Ironman: one save, no undo and no loading old points. It is a game rule — not a substitute for browser backups.'))),
-        h('fieldset', null, h('legend', null, ...hl(S.contentFilters, 'filters')), SENSITIVE.map((x) => h('label', { class: 'check' },
-          h('input', { type: 'checkbox', checked: cfg.contentFilters.includes(x.id), onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.contentFilters = on ? [...cfg.contentFilters.filter((y) => y !== x.id), x.id] : cfg.contentFilters.filter((y) => y !== x.id); } }),
-          t(x.label)))),
-      ),
-      runCard17(cfg),
-      h('section', { class: 'card' },
-        h('fieldset', null, h('legend', null, ...hl(S.storyteller, 'storyteller')), STORYTELLERS.map((st) => h('label', { class: 'radio' },
-          h('input', { type: 'radio', name: 'st', checked: cfg.storyteller === st.id, onchange: () => (cfg.storyteller = st.id) }),
-          h('span', null, h('b', null, t(st.name)), h('small', { class: 'muted' }, ` — ${t(st.desc)} ${t(DIR17[st.id].how)}`))))),
-        // r17: o narrador é o diretor criativo; a liberdade escala o quanto os NPCs mudam o mundo (não muda o modo de mundo)
-        h('label', null, ...hl(l('Liberdade do diretor (mundo dos NPCs)', 'Director freedom (NPC world)'), 'freedom17'), select(cfg.freedom17 ?? 'normal', (Object.keys(FREEDOM17) as Freedom17[]).map((k) => ({ value: k, label: `${t(FREEDOM17[k].name)} — ${t(FREEDOM17[k].desc)}` })), (v) => (cfg.freedom17 = v))),
-        h('small', { class: 'muted' }, t(l('Liberdade é a intensidade das decisões dos NPCs; não muda o contrato do mundo (a Fidelidade histórica continua seguindo o roteiro).', 'Freedom is how bold NPC decisions are; it does not change the world contract (Historical fidelity still follows the script).'))),
-      ),
-      tutCard,
-      diffCard17(cfg),
-      h('section', { class: 'card wide' }, h('h3', null, ...hl(S.mutators, 'mutators')), muts),
+      h('section', { class: 'card wide' }, h('h3', null, ...hl(S.difficulty, 'difficulty')),
+        cards22(t(S.difficulty), [
+          { value: 'easy', name: t(S.easy), desc: t(l('Caixa inicial ×1,5, previsões de venda mais precisas e aquisições mais baratas.', 'Starting cash ×1.5, sharper sales forecasts and cheaper acquisitions.')) },
+          { value: 'normal', name: t(S.normal), badge: t(l('PADRÃO', 'DEFAULT')), desc: t(l('O jogo como foi pensado.', 'The game as designed.')) },
+          { value: 'hard', name: t(S.hard), desc: t(l('Caixa inicial ×0,7, previsões mais incertas e aquisições mais caras.', 'Starting cash ×0.7, hazier forecasts and pricier acquisitions.')) },
+        ] as Opt22<RunConfig['difficulty']>[], () => cfg.difficulty, (v) => { cfg.difficulty = v; tk.refresh(); drawSummary(); }, 'ng22-3'),
+        h('details', { class: 'ng22-more' }, h('summary', null, t(l('Ajuste fino por eixo (mercado, custos, rivais, talento)', 'Fine-tune per axis (market, costs, rivals, talent)'))), diffCard17(cfg))),
+      h('section', { class: 'card wide' }, h('h3', null, t(l('Duração da partida', 'Run length')), ' ', helpTip(l('Sem fim: jogue quanto quiser. Com prazo: em dezembro do último ano o jogo soma legado, sucessos, certificações e festivais numa pontuação com patente. Dá para continuar depois.', 'No end: play as long as you like. With a deadline: in December of the last year the game totals legacy, hits, certifications and festivals into a ranked score. You can keep playing after.'))),
+        cards22(t(l('Duração', 'Length')), RUN_YEARS17.map((n) => ({ value: n, name: n ? t(l('{n} anos', '{n} years'), { n }) : t(l('Sem fim', 'Endless')), desc: n ? t(l('Pontuação e patente em dezembro de {y}.', 'Score and rank in December {y}.'), { y: cfg.startYear + n - 1 }) : t(l('Sandbox: segue enquanto você e seus herdeiros quiserem.', 'Sandbox: goes on as long as you and your heirs want.')) })), () => cfg.runYears17 ?? 0, (v) => { cfg.runYears17 = v; drawSummary(); }, 'ng22-4')),
+      h('section', { class: 'card wide' }, h('h3', null, ...hl(S.storyteller, 'storyteller')),
+        cards22(t(S.storyteller), STORYTELLERS.map((st) => ({ value: st.id, name: t(st.name), desc: `${t(st.desc)} ${t(DIR17[st.id].how)}` })), () => cfg.storyteller, (v) => { cfg.storyteller = v; drawSummary(); }),
+        h('div', { class: 'ng22-field' }, h('b', null, ...hl(l('Liberdade do diretor (mundo dos NPCs)', 'Director freedom (NPC world)'), 'freedom17')),
+          seg22(t(l('Liberdade do diretor', 'Director freedom')), (Object.keys(FREEDOM17) as Freedom17[]).map((k) => ({ value: k, name: t(FREEDOM17[k].name), desc: t(FREEDOM17[k].desc) })), () => cfg.freedom17 ?? 'normal', (v) => { cfg.freedom17 = v; drawSummary(); }))),
+      h('section', { class: 'card wide' }, h('h3', null, t(l('Opções da partida', 'Run options'))),
+        h('div', { class: 'ng22-toggles' },
+          toggle22(t(S.ironman), t(l('Um save só, sem desfazer e sem carregar pontos antigos. Não substitui backup do navegador.', 'One save, no undo and no loading old points. Not a substitute for browser backups.')), () => !!cfg.ironman, (v) => { cfg.ironman = v; drawSummary(); }),
+          toggle22(t(l('Tutoriais e dicas', 'Tutorials and tips')), t(l('Preferência deste navegador: vale para todas as partidas.', 'This browser\'s preference: applies to every run.')), () => !tutorialsOff19(store.prefs), (v) => { setTutorials19(store.prefs, v); savePrefs(); drawSummary(); })),
+        h('div', { class: 'ng22-field' }, h('b', null, ...hl(S.contentFilters, 'filters')), h('small', { class: 'muted' }, t(l('Temas marcados ficam fora da partida.', 'Checked themes stay out of the run.'))),
+          chips22(t(S.contentFilters), SENSITIVE.map((x) => ({ value: x.id, name: t(x.label) })), () => cfg.contentFilters, (v) => { cfg.contentFilters = v; drawSummary(); }))),
+      h('section', { class: 'card wide' }, h('h3', null, ...hl(S.mutators, 'mutators')), h('p', { class: 'muted small' }, t(l('Regras especiais que mudam o mundo inteiro. Passe o mouse para ver o efeito.', 'Special rules that change the whole world. Hover to see the effect.'))),
+        chips22(t(S.mutators), MUTATORS.map((m) => ({ value: m.id, name: t(m.name), desc: t(m.desc) })), () => cfg.mutators, (v) => { cfg.mutators = v; drawSummary(); })),
     ] },
     { id: 'review', name: l('Revisão', 'Review'), body: [] },
   ];
@@ -327,7 +327,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       { tab: 2, name: l('Modo', 'Mode'), rows: [
         [l('Atividades', 'Activities'), (cfg.careers?.main ?? ['label']).length ? careerSummary(cfg).split(' · ')[0] : '—'],
         [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
-        [S.scenario, cfg.scenario17 && scenarioById[cfg.scenario17] ? `🏅 ${t(scenarioById[cfg.scenario17].name)}` : opt(cfg.scenario, SCN())],
+        [S.scenario, opt(cfg.scenario, SCN())],
         [l('Como começa', 'How it starts'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
         [S.companyName, cfg.companyName],
         [S.homeCity, cityName(cfg.homeCity)],
@@ -361,7 +361,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         h('div', { class: 'row ng20-group-h' }, h('h4', null, t(g.name)), h('button', { type: 'button', class: 'btn small ghost', 'aria-label': `${t(l('Editar', 'Edit'))}: ${t(g.name)}`, onclick: () => { fromReview = true; go(g.tab, false, true); } }, '✎ ', t(l('Editar', 'Edit')))),
         dl(g.rows))),
       summaryExtra17(cfg),
-      h('div', { class: 'row wrap ng20-review-acts' }, copyCode20(cfg), restoreDefault20(cfg, rebuild)),
+      h('div', { class: 'row wrap ng20-review-acts' }, copyCode20(cfg), h('button', { type: 'button', class: 'btn small ghost', onclick: () => pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, REVIEW)) }, '⇥ ', t(l('Usar código de run', 'Use a run code'))), restoreDefault20(cfg, rebuild)),
       startErr,
       h('div', { class: 'row center' }, startBtn('ng-start-review')));
     const w = gs[0].rows, y = gs[1].rows, m = gs[2].rows, lb = gs[3].rows, r = gs[4].rows;
@@ -450,14 +450,9 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     }, 30);
   };
   const startBtn = (extra = '') => { const b = h('button', { type: 'button', class: `btn primary big ${extra}`, disabled: busy, onclick: start }, busy ? t(l('Gerando seu mundo…', 'Generating your world…')) : t(l('Começar run', 'Start run'))) as HTMLButtonElement; startBtns.push(b); return b; };
-  const intent = h('div', { class: 'ng20-intent', role: 'group', 'aria-label': t(l('Como você quer começar', 'How you want to start')) },
-    h('button', { type: 'button', class: 'pick on', 'aria-pressed': 'true' }, h('b', null, t(l('Nova run livre', 'New free run'))), h('small', null, t(l('Configure com o padrão novo; tudo é editável.', 'Configure with the new default; everything is editable.')))),
-    h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', onclick: () => scenarioScreen(root, onStart, () => newGameScreen(root, onStart, cfg, cur)) }, h('b', null, '🏅 ', t(l('Cenários e desafios', 'Scenarios and challenges'))), h('small', null, t(l('Veja regras, ano, cidade e meta antes de iniciar.', 'See rules, year, city and goal before starting.')))),
-    h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', onclick: () => pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, REVIEW)) }, h('b', null, '⇥ ', t(l('Usar código de run', 'Use a run code'))), h('small', null, t(l('Importa para o rascunho e mostra a revisão; mantém as regras do código.', 'Imports into the draft and shows the review; keeps the code\'s rules.')))));
   const wrap = h('div', { class: 'newgame tabbed ng20 ng21' },
     h('header', null, h('button', { type: 'button', class: 'btn ghost', onclick: () => titleScreen(root, onStart) }, '← ' + t(S.back)),
       h('div', null, h('h1', null, t(l('Nova run', 'New run'))), h('p', { class: 'muted small ng20-sub' }, t(l('6 etapas · clique numa etapa para ir direto · clique no título de uma seção para recolher ou abrir.', '6 steps · click a step to jump to it · click a section title to collapse or expand it.'))))),
-    intent,
     presetBar17(cfg, rebuild),
     h('div', { class: 'ng-tabs', role: 'tablist', 'aria-label': t(S.newGame) }, ...tabBtns),
     h('div', { class: 'ng-layout' },

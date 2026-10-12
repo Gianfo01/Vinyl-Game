@@ -10,3 +10,6 @@ import '@fontsource/silkscreen/latin-700.css';
 import './ui/heritage21.css'; // r21: tema Heritage Studio Pixel por último (só apresentação)
 
 boot(document.getElementById('app')!);
+// r22: toda tabela ordena pelo cabeçalho
+import { installSort22 } from './ui/sort22';
+if (typeof document !== 'undefined') installSort22();

@@ -116,8 +116,11 @@
 .ng22-row select, .ng22-row input { max-width: 100%; min-width: 0; }
 .ng22-grp { border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem 0.8rem 0.7rem; margin: 0 0 0.7rem; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
 .ng22-grp > legend { padding: 0 0.35rem; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-.ng22-you-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 360px); gap: 1rem; align-items: start; }
-.ng22-you-look { position: sticky; top: 6.5rem; border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem; background: var(--panel-2, transparent); }
+.ng22-you-grid { display: block; }
+.ng22-you-look .look-editor { grid-template-columns: auto minmax(0, 1fr); }
+.ng22-you-look .look-controls { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); column-gap: 1.4rem; align-items: start; }
+.ng22-you-look .look-row { grid-template-columns: 8em minmax(0, 1fr); }
+.ng22-you-look .swatches { flex-wrap: wrap; }
 .ng22-path-info p { margin: 0.15rem 0; }
 .ng22-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 0.5rem; }
 .ng22-picks .pick { display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; text-align: left; height: 100%; }
@@ -152,7 +155,6 @@
 .ng17-start-grid .pick.disabled { opacity: 0.55; }
 @media (max-width: 860px) {
   .ng22-you-grid, .ng22-attrs-grid { grid-template-columns: minmax(0, 1fr); }
-  .ng22-you-look { position: static; }
 }
 @media (max-width: 520px) { .ng22-range { grid-template-columns: minmax(0, 1fr) 2.5rem; } .ng22-range > span { grid-column: 1 / -1; } }
 /* r22: revisão em duas colunas de grupos, rótulos alinhados */
@@ -161,3 +163,38 @@
 .ng21 .ng-summary-full .ng-dl { display: grid; grid-template-columns: minmax(8rem, 40%) minmax(0, 1fr); gap: 0.15rem 0.8rem; }
 .ng21 .ng-summary-full .ng-dl dd { margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 760px) { .ng21 .ng-summary-full { grid-template-columns: minmax(0, 1fr); } }
+/* r22b — padrão único de seleção, offsets da barra de etapas e etapas mais compactas */
+.ng21 .ng-tabs { padding: 0.45rem 0 0.55rem; margin-bottom: 0.7rem; }
+.ng21 .ng-tab { padding: 0.4rem 0.6rem; border-radius: 10px; }
+.ng21 .ng21-ic { width: 1.7rem; height: 1.7rem; font-size: 0.9rem; }
+.ng21 .ng-side { top: 5.6rem; max-height: calc(100vh - 6.6rem); }
+.ng21 .ng-panel > * { scroll-margin-top: 6rem; }
+.ng22-3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.ng22-4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.ng22-picks .pick[aria-checked=true], .ng22-picks .pick.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: rgba(199, 101, 54, 0.08); }
+.ng22-more { margin-top: 0.7rem; }
+.ng22-more > summary { cursor: pointer; font-size: 0.9rem; }
+.ng22-more .ng17-diff { border: 0; box-shadow: none; padding: 0.4rem 0 0; margin: 0; background: transparent; }
+.ng22-more .ng17-diff > h3 { display: none; }
+.ng22-field { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.9rem; }
+.ng22-segwrap { display: flex; flex-direction: column; gap: 0.3rem; }
+.ng22-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: fit-content; max-width: 100%; }
+.ng22-seg button { border: 0; border-right: 1px solid var(--line); background: var(--panel); padding: 0.4rem 1rem; font: inherit; cursor: pointer; color: var(--ink); }
+.ng22-seg button:last-child { border-right: 0; }
+.ng22-seg button.on { background: var(--accent); color: #fff; font-weight: 600; }
+.ng22-toggles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 0.6rem 1.2rem; }
+.ng22-toggle { display: flex !important; flex-direction: row !important; gap: 0.7rem; align-items: flex-start; cursor: pointer; }
+.ng22-toggle > span { display: flex; flex-direction: column; gap: 0.15rem; }
+.ng22-switch { flex: 0 0 auto; width: 2.6rem; height: 1.45rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2, #e7dfd0); position: relative; cursor: pointer; padding: 0; margin-top: 0.1rem; }
+.ng22-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.25); transition: left 0.15s; }
+.ng22-switch.on { background: var(--accent); border-color: var(--accent); }
+.ng22-switch.on::after { left: calc(100% - 1.1rem - 2px); }
+.ng22-saved { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.4rem; }
+/* atividades (várias) e "como começar" (uma) viram cartões, sem mudar os controles por baixo */
+.ng21 .car12-ng .mut-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 0.45rem; }
+.ng21 .car12-ng .mut-grid > label.check { display: flex; gap: 0.5rem; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.6rem; margin: 0; background: var(--panel); cursor: pointer; }
+.ng21 .car12-ng .mut-grid > label.check:has(input:checked) { border-color: var(--accent); background: rgba(199, 101, 54, 0.08); box-shadow: inset 0 0 0 1px var(--accent); }
+.ng21 .car12-ng .mut-grid > label.check.disabled { opacity: 0.5; }
+.ng21 #ng-takeover > label.radio { display: flex; gap: 0.5rem; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 0.55rem 0.7rem; margin: 0 0 0.45rem; cursor: pointer; }
+.ng21 #ng-takeover > label.radio:has(input:checked) { border-color: var(--accent); background: rgba(199, 101, 54, 0.08); box-shadow: inset 0 0 0 1px var(--accent); }
+.ng21 .ng-panel > .car12-ng > section.card > h3::after { content: none; }

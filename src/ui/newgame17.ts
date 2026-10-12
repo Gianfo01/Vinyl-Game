@@ -16,7 +16,6 @@ import { playerTraitById } from '../sim/sys/persona/data';
 import { ownerOf } from '../sim/sys/people/owner';
 import { playerPerson } from '../sim/sys/life';
 import { scenarioById } from '../sim/sys/live';
-import { scenario17 } from '../sim/sys/scenarios17';
 import { runDone17, runEnd17 } from '../sim/sys/start17';
 import { challengeScore } from '../sim/sys/live';
 import type { GameState, RunConfig } from '../sim/types';
@@ -28,7 +27,6 @@ import { registerCutscene } from './registry';
 import { fxText } from './sys/persona';
 import { copyText } from './store';
 import { historyCard } from './history15';
-import { scenarioBrowser22 } from './scen22';
 import './start17.css';
 
 // o cartão antigo "História dos artistas reais" virou parte do seletor Mundo
@@ -197,42 +195,13 @@ const STARTS: { id: RunConfig['scenario']; name: L; fx: L }[] = [
   { id: 'established', name: l('Empresa estabelecida', 'Established company'), fx: l('Três artistas, catálogo, equipe e custos fixos maiores: mais a perder.', 'Three acts, a catalog, staff and higher fixed costs: more to lose.') },
 ];
 
-let scenOpen22 = false;
+/** r22: cenários são uma modalidade à parte (tela inicial); aqui só o ponto de partida da run livre. */
 export function startCard17(cfg: RunConfig, rebuild: () => void, custom: HTMLElement): HTMLElement {
-  const sc = cfg.scenario17 ? scenarioById[cfg.scenario17] : undefined;
-  const x17 = scenario17(cfg.scenario17);
-  const pick = (v: string) => {
-    if (!v) delete cfg.scenario17;
-    else { const d = scenarioById[v]; cfg.scenario17 = v; cfg.startYear = d.startYear; cfg.homeCity = d.homeCity; cfg.scenario = d.scenario; if (d.role) cfg.role = d.role; delete cfg.takeover; scenOpen22 = false; }
-    rebuild();
-  };
-  // r22: cenário escolhido num navegador com abas (tipo, época, região, dificuldade), no lugar da lista suspensa
-  const browser = h('div', { class: 'ng22-scen-browser' });
-  const toggle = h('button', { type: 'button', class: 'btn small', onclick: () => { scenOpen22 = !scenOpen22; drawBrowser(); } }) as HTMLButtonElement;
-  const drawBrowser = () => {
-    toggle.className = `btn small ${scenOpen22 ? '' : 'primary'}`;
-    toggle.setAttribute('aria-expanded', String(scenOpen22));
-    toggle.textContent = t(scenOpen22 ? l('Fechar lista', 'Close list') : sc ? l('Trocar cenário', 'Change scenario') : l('Ver cenários', 'Browse scenarios'));
-    browser.replaceChildren(...(scenOpen22 ? [scenarioBrowser22({ pickLabel: l('Usar este cenário', 'Use this scenario'), onPick: pick, current: cfg.scenario17, redraw: drawBrowser })] : []));
-  };
-  drawBrowser();
   return h('section', { class: 'card wide ng17-start' },
     h('h3', null, t(l('Ponto de partida', 'Starting point')), ' ', helpTip(HELP17.start17)),
-    h('div', { class: 'ng17-start-grid' }, ...STARTS.map((s0) => h('label', { class: `radio pick ${cfg.scenario === s0.id ? 'on' : ''} ${sc ? 'disabled' : ''}` },
-      h('input', { type: 'radio', name: 'st17', checked: cfg.scenario === s0.id, disabled: !!sc, onchange: () => { cfg.scenario = s0.id; rebuild(); } }),
+    h('div', { class: 'ng17-start-grid' }, ...STARTS.map((s0) => h('label', { class: `radio pick ${cfg.scenario === s0.id ? 'on' : ''}` },
+      h('input', { type: 'radio', name: 'st17', checked: cfg.scenario === s0.id, onchange: () => { cfg.scenario = s0.id; rebuild(); } }),
       h('span', null, h('b', null, t(s0.name)), h('small', null, t(s0.fx)))))),
-    h('div', { class: 'ng22-scen' },
-      h('div', { class: 'ng22-scen-head' },
-        h('div', null, h('b', null, '🏅 ', t(l('Cenário histórico', 'Historical scenario'))), ' ', h('small', { class: 'muted' }, t(l('(opcional — define ano, cidade, ponto de partida e uma meta com medalhas)', '(optional — sets year, city, starting point and a medal goal)')))),
-        h('div', { class: 'row wrap' },
-          sc ? h('button', { type: 'button', class: 'btn small ghost', onclick: () => pick('') }, '✕ ', t(l('Jogar sem cenário', 'Play without a scenario'))) : null,
-          toggle)),
-      sc ? h('div', { class: 'ng17-scen' },
-        h('p', { class: 'small' }, h('b', null, `${t(sc.name)} · ${sc.startYear} → ${sc.endYear} · ${cityName(sc.homeCity)}. `), t(sc.desc)),
-        h('p', { class: 'small' }, h('b', null, t(l('Meta: ', 'Goal: '))), t(sc.goal), ` — 🥉 ${sc.tiers[0]} · 🥈 ${sc.tiers[1]} · 🥇 ${sc.tiers[2]} ${t(sc.unit)}`),
-        x17 ? h('ul', { class: 'small' }, ...x17.rules17.map((r) => h('li', null, t(r)))) : null,
-        h('p', { class: 'muted small' }, t(l('O cenário define ano, cidade e ponto de partida; o resto (você, mundo, regras) continua à sua escolha.', 'The scenario sets year, city and starting point; the rest (you, world, rules) is still up to you.')))) : null,
-      browser),
     h('details', { class: 'ng17-custom' }, h('summary', { class: 'small' }, t(l('Ajuste fino do começo (caixa, sede, elenco, equipe…)', 'Fine-tune the start (cash, HQ, roster, staff…)'))), custom),
   );
 }

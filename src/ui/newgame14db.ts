@@ -10,7 +10,8 @@ import { l } from '../data/world';
 import { t } from '../i18n/strings';
 import { DB_SIZES, dbSizeInfo, realAllowed } from '../sim/dbsize14';
 import type { RunConfig } from '../sim/types';
-import { h, select } from './dom';
+import { h } from './dom';
+import { cards22 } from './pick22';
 import { helpTip } from './newgame13';
 import { newgameCards } from './newgame';
 
@@ -28,11 +29,12 @@ export function dbCard(cfg: RunConfig): HTMLElement {
       p: d.lvl >= 3 ? t(l('Pesado: criar o jogo e avançar os meses demoram mais; recomendado para computadores bons.', 'Heavy: creating the game and advancing months take longer; best on a good computer.')) : d.lvl === 2 ? t(l('Um pouco mais lento em celulares antigos.', 'Slightly slower on old phones.')) : d.lvl === 0 ? t(l('Mais leve e rápido; menos nomes regionais.', 'Lighter and faster; fewer regional names.')) : t(l('Equilíbrio entre variedade e velocidade.', 'Balance between variety and speed.')),
     });
   };
-  const sel = select(dbSizeInfo(cfg).id, DB_SIZES.map((d) => ({ value: d.id, label: t(l(d.pt, d.en)) })), (v) => { cfg.dbSize = v; refresh(); });
+  // r22: tamanhos em cartões
+  const sel = cards22(t(l('Tamanho da base de dados', 'Database size')), DB_SIZES.map((d) => ({ value: d.id, name: t(l(d.pt, d.en)).split(' (')[0].split(' —')[0], desc: `≈ ${realCount(d.id)} ${t(l('reais', 'real'))}` })), () => dbSizeInfo(cfg).id, (v) => { cfg.dbSize = v; refresh(); }, 'ng22-4');
   refresh();
   return h('section', { class: 'card' },
     h('h3', null, t(l('Base de dados', 'Database')), ' ', helpTip(l('Define quantos artistas reais (estrelas, grandes nomes e cenas regionais de todos os países) e quantos artistas gerados existem no mundo. Pequena: só os principais, mais rápido. Média: padrão. Grande/Enorme: muito mais nomes e concorrência, mas o jogo fica mais pesado. Só fatos já verdadeiros no ano de cada estreia.', 'Sets how many real artists (stars, big names and regional scenes worldwide) and how many generated artists exist. Small: main names only, faster. Medium: default. Large/Huge: many more names and competition, but heavier. Only facts already true in each debut year.'))),
-    h('label', null, t(l('Tamanho da base de dados', 'Database size')), sel),
+    sel,
     note);
 }
 

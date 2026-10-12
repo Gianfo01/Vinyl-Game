@@ -7,7 +7,7 @@
 // Leitura pura: não altera estado nem consome RNG.
 
 import type { Act, GameState, Release } from './types';
-import { realDataOf } from './sys/realworld';
+import { realDataOf, realSongs22 } from './sys/realworld';
 import { simStart20 } from './worldpolicy20';
 
 export type Prov20 = 'doc' | 'sim';
@@ -20,8 +20,9 @@ export function provOf20(s: GameState, rel: Release): Prov20 {
   if (!s.config.realNames || rel.reissueOf || rel.kind && rel.kind !== 'standard') return 'sim';
   const act = s.acts[rel.actId];
   const d = act ? realDataOf(act) : undefined;
-  if (!d?.al?.length) return 'sim';
   const k = normT(rel.title);
+  if (realSongs22(act!).some(([title, year]) => normT(title) === k && Math.abs(year - rel.year) <= 6)) return 'doc';
+  if (!d?.al?.length) return 'sim';
   return d.al.some(([title, year]) => normT(title) === k && Math.abs(year - rel.year) <= 6) ? 'doc' : 'sim';
 }
 
@@ -56,7 +57,8 @@ export function realRef20(s: GameState, act: Act): RealRef20 | null {
     debut: upTo(d.d),
     ended: upTo(d.e),
     members: (d.m ?? []).filter((m) => m[4] === undefined || m[4] <= y).map(([name, , born, died, joined, left]) => ({ name, born, died: upTo(died), joined, left: upTo(left) })),
-    hits: (d.al ?? []).filter((x) => x[1] <= y).map(([title, year, type]) => ({ title, year, type: type ?? 'lp' })),
+    hits: [...(d.al ?? []).filter((x) => x[1] <= y).map(([title, year, type]) => ({ title, year, type: type ?? 'lp' })),
+      ...realSongs22(act).filter((x) => x[1] <= y).map(([title, year]) => ({ title, year, type: 'single' as const }))].sort((a, b) => a.year - b.year),
     infoOnly: simStart20(s),
   };
 }

@@ -244,3 +244,9 @@ section.card > h3 { display: flex; align-items: center; gap: 0.45rem; padding-bo
 .kpi21 canvas { width: 40px; height: 40px; }
 .kpi21 b { font-family: var(--serif); font-size: 1.6rem; }
 @media (max-width: 860px) { .app > .nav .nav-head::after { content: none; } }
+/* r22: cabeçalhos ordenáveis */
+table.sort22 th[role=columnheader] { cursor: pointer; user-select: none; white-space: nowrap; }
+table.sort22 th[role=columnheader]:hover { color: var(--accent); }
+table.sort22 th[role=columnheader]::after { content: ' ↕'; opacity: 0.3; font-size: 0.85em; }
+table.sort22 th[aria-sort=ascending]::after { content: ' ▲'; opacity: 1; color: var(--accent); }
+table.sort22 th[aria-sort=descending]::after { content: ' ▼'; opacity: 1; color: var(--accent); }

@@ -31,10 +31,11 @@ describe('r17 agenda', () => {
     expect(balls(s).personal.filter((x) => x.k === 'spent').length).toBe(1);
     // à frente custa 2 e rende mais; delegar exige diretor
     expect(setInv(s, 'festival', 'deleg').ok).toBe(false);
+    const q0 = perk(s, 'songQ');
     setInv(s, 'label', 'lead');
     // r19 (onda 5 C): à frente rende menos quando você toca outras frentes (aqui 3) — continua acima de só acompanhar
     expect(careerQ(s, 'label').f).toBeGreaterThan(1.03);
-    expect(perk(s, 'songQ')).toBeGreaterThan(0.3);
+    expect(perk(s, 'songQ')).toBeGreaterThan(q0); // r22: sem a árvore de habilidades, compara com antes de ir à frente
     expect(energyLeft(s)).toBe(1 + e0);
   });
 

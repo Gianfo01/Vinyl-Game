@@ -116,8 +116,9 @@ export function identityCard22(cfg: RunConfig, onChange: () => void): HTMLElemen
         grp(l('Vida pessoal e crenças', 'Personal life and beliefs'),
           lifeRow17(ch),
           h('div', { class: 'ng22-row' }, h('label', null, ...hl(l('Visão política', 'Political view'), 'beliefs'), polSel), h('label', null, t(l('Religião', 'Religion')), relSel)),
-          beliefHint)),
-      h('div', { class: 'ng22-you-look' }, h('b', { class: 'small' }, t(l('Aparência', 'Appearance')), ' ', helpTip('look')), lookBox)),
+          beliefHint),
+        // r22: aparência em faixa de largura total (o editor não cabia numa coluna estreita)
+        h('fieldset', { class: 'ng22-grp ng22-you-look' }, h('legend', null, t(l('Aparência', 'Appearance')), ' ', helpTip('look')), lookBox))),
   );
 }
 

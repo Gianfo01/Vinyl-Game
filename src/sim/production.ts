@@ -1,5 +1,6 @@
 // Composição, gravação e preparação de lançamentos (GDD §12, §13).
 
+import { realSongTitle22 } from './sys/realworld';
 import { addRecoup18 } from './sys/contracts18';
 import { coverCost } from './covers';
 import { clamp, type Rng } from '../core/rng';
@@ -44,7 +45,7 @@ export function composeSongs(s: GameState, r: Rng, act: Act, n: number): Song[] 
     const song: Song = {
       id: nextId(s, 's'),
       actId: act.id,
-      title: songTitle(r, actLang(act)),
+      title: ((g) => realSongTitle22(s, act) ?? g)(songTitle(r, actLang(act))), // r22: músicas reais curtidas no Spotify (o sorteio do título continua, para não mudar o resto)
       genre: act.genre,
       writers,
       melody: clamp(melody + ib * 0.4, 5, 100), lyrics: clamp(lyrics + ib * 0.8, 5, 100), performance: 0, production: 0, originality: clamp(originality + ib * 0.6, 5, 100),
