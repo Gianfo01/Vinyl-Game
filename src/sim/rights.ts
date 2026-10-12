@@ -313,6 +313,8 @@ export function annualRevenue(rel: Release): number {
   return Math.round(rel.revenue * Math.min(1, last / rel.totalUnits));
 }
 
+/** r27: ajustes externos do valor de catálogo por lançamento (ex.: artista morto vira lenda, sys/conseq27.ts) */
+export const CATALOG_ADJ: ((s: GameState, rel: Release) => number)[] = [];
 export interface CatalogRow { rel: Release; deal?: Contract; annual: number; years: number; value: number }
 
 /** Valor estimado do catálogo: receita anual × anos de direito restantes (com desconto). */
@@ -328,7 +330,8 @@ export function catalogValue(s: GameState): { value: number; perpetual: number; 
     const years = rw === Infinity ? Infinity : Math.max(0, (rw - s.week) / 52);
     const share = deal && rightsOf(deal).master === 'shared' ? 0.5 : 1;
     const mult = years === Infinity ? 8 : Math.min(8, years * 0.85);
-    const value = Math.round(annual * mult * share);
+    const adj = CATALOG_ADJ.reduce((k, f) => k * f(s, rel), 1); // r27: catálogo de lenda (conseq27)
+    const value = Math.round(annual * mult * share * adj);
     if (years === Infinity) perpetual += value;
     else reverting += value;
     rows.push({ rel, deal, annual, years, value });

@@ -107,6 +107,8 @@ export function soc18(s: GameState): Soc18 {
 const logS = (s: GameState, t: L) => { const st = soc18(s); st.log.unshift({ y: s.year, t }); if (st.log.length > 40) st.log.length = 40; };
 
 const PROTEST_FAM = new Set(['rock', 'hiphop', 'brazil', 'latin', 'africa', 'country_folk']);
+/** r27: ajustes externos da chance de censura (ex.: postura do selo depois do AI-5, sim/sys/hist27.ts) */
+export const CENSOR_ADJ18: ((s: GameState, a: Act, reg: Regime18) => [L, number] | null)[] = [];
 /** Chance de o censor barrar um lançamento (pura). */
 export function censorOdds18(s: GameState, a: Act): { p: number; why: [L, number][] } | null {
   const reg = regimeAt18(s, countryOfCity(a.city));
@@ -118,6 +120,7 @@ export function censorOdds18(s: GameState, a: Act): { p: number; why: [L, number
   const h = soc18(s).heat[a.id] ?? 0;
   if (h) why.push([l('Ficha no censor (calor)', 'Censor file (heat)'), h / 300]);
   if ((soc18(s).laylow[a.id] ?? 0) > s.week) why.push([l('Ficando quieto', 'Lying low'), -0.2]);
+  for (const f of CENSOR_ADJ18) { const x = f(s, a, reg); if (x) why.push(x); } // r27: postura do selo (hist27)
   return { p: clamp(why.reduce((t, x) => t + x[1], 0), 0, 0.9), why };
 }
 registerSimHook('launch', 'soc18', (s, _r, arg) => {
