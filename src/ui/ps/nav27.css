@@ -1,0 +1,82 @@
+/* Rodada 27 — menu em árvore (Seção › Página › Aba), folha do celular e uma janela por vez. */
+
+/* ================= barra lateral: árvore ================= */
+@media (min-width: 861px) {
+  .app:has(> .nav.nav25) { grid-template-columns: 236px 1fr; }
+  /* cartão do tutorial e dicas não cobrem o menu */
+  body:has(.nav25) :is(aside.tutorial, .tip18) { left: calc(236px + 1rem); }
+  .app > .nav.nav25 { overflow-y: auto; min-height: 0; }
+}
+.tree27-head { display: flex; align-items: stretch; gap: 2px; }
+.app > .nav.nav25 .tree27-head > .nav-head { flex: 1 1 auto; min-width: 0; width: auto; }
+.tree27-caret { flex: 0 0 auto; width: 30px; min-height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid transparent; border-radius: var(--radius, 3px); color: var(--nav-muted); cursor: pointer; font-size: 0.85rem; }
+.tree27-caret:hover { color: var(--nav-ink); background: var(--nav-hover); }
+.tree27-caret:focus-visible { outline: 2px solid var(--nav-on); outline-offset: 1px; }
+.tree27-caret > span { display: inline-block; transition: transform 0.12s ease; }
+.tree27-caret[aria-expanded='true'] > span { transform: rotate(90deg); }
+
+.tree27-pages, .tree27-tabs { list-style: none; margin: 0; padding: 0; }
+.tree27-pages { display: none; padding: 2px 0 8px 10px; margin-left: 14px; border-left: 1px solid var(--nav-line); }
+.tree27-sec.exp27 > .tree27-pages { display: block; }
+.tree27-theme { color: var(--nav-muted); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 6px 2px; }
+.tree27-row { display: flex; align-items: center; gap: 2px; }
+.app > .nav.nav25 .tree27-pg { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 0.5rem; min-height: 34px; padding: 0.25rem 0.5rem;
+  background: none; border: 1px solid transparent; border-radius: var(--radius, 3px); color: var(--nav-ink); font-size: 0.9rem; text-align: left; cursor: pointer; }
+.tree27-pg .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree27-pg .ic canvas, .tree27-pg .ic img, .tree27-pg .ic .ic-px { width: 18px; height: 18px; }
+.tree27-pg .badge { margin-left: auto; }
+.app > .nav.nav25 .tree27-pg:hover { background: var(--nav-hover); }
+.app > .nav.nav25 .tree27-pg.on { background: var(--nav-on); color: var(--nav-on-ink); font-weight: 700; }
+.tree27-pg:focus-visible, .tree27-tab:focus-visible { outline: 2px solid var(--nav-on); outline-offset: 1px; }
+.tree27-tabs { display: none; margin: 0 0 4px 16px; padding-left: 8px; border-left: 1px dashed var(--nav-line); }
+.tree27-page.exp27 > .tree27-tabs { display: block; }
+.tree27-tabs .tree27-tabs { display: block; margin-left: 10px; }
+.app > .nav.nav25 .tree27-tab { display: block; width: 100%; min-height: 28px; padding: 0.15rem 0.5rem; background: none; border: 0; border-left: 2px solid transparent;
+  color: var(--nav-muted); font-size: 0.82rem; text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app > .nav.nav25 .tree27-tab:hover { color: var(--nav-ink); background: var(--nav-hover); }
+.app > .nav.nav25 .tree27-tab.on { color: var(--nav-on); border-left-color: var(--nav-on); font-weight: 700; background: color-mix(in srgb, var(--nav-on) 10%, transparent); }
+
+/* a faixa de páginas do topo repete a árvore: no computador some; no celular rola na horizontal (sem "Mais") */
+@media (min-width: 861px) { .tabs25.pages27 { display: none; } }
+@media (max-width: 860px) {
+  .app > .nav.nav25 .tree27-pages, .app > .nav.nav25 .tree27-caret { display: none !important; }
+  .app > .nav.nav25 .tree27-head { display: contents; }
+  .app > .nav.nav25 .tree27-head > .nav-head { width: 100%; }
+  /* dica de 1ª vez acima da barra inferior (não cobre as 6 seções) */
+  .tip18 { left: 8px; right: 8px; bottom: 72px; max-width: none; }
+}
+
+/* abas internas: todas visíveis, quebrando linha (r27: sem "Mais ▾" nas faixas de abas) */
+main .tabs[role=tablist] { flex-wrap: wrap; }
+
+/* ================= celular: folha da seção ================= */
+.sheet27-wrap { position: fixed; inset: 0 0 calc(58px + env(safe-area-inset-bottom, 0px)) 0; z-index: 55; } /* a barra das 6 seções continua tocável */
+.sheet27-back { position: absolute; inset: 0; background: var(--scrim, rgba(0, 0, 0, 0.45)); }
+.sheet27 { position: absolute; left: 0; right: 0; bottom: 0; max-height: 78vh; display: flex; flex-direction: column;
+  background: var(--panel); color: var(--ink); border-top: 3px solid var(--accent); border-radius: 12px 12px 0 0; box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+}
+.sheet27-head { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; border-bottom: 1px solid var(--line); }
+.sheet27-head b { font-size: 1.1rem; flex: 1 1 auto; }
+.sheet27-head .ic canvas, .sheet27-head .ic .ic-px { width: 28px; height: 28px; }
+.sheet27-x { font-size: 1.4rem; min-width: 44px; min-height: 44px; }
+.sheet27-body { overflow-y: auto; padding: 0.4rem 1rem 1rem; }
+.sheet27-theme h4 { margin: 0.8rem 0 0.3rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.sheet27-page { padding: 2px 0 6px; border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+.sheet27-pg { display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 44px; padding: 0.3rem 0.5rem; background: none; border: 1px solid transparent;
+  border-radius: var(--radius, 3px); color: var(--ink); font-size: 1rem; text-align: left; }
+.sheet27-pg .ic canvas, .sheet27-pg .ic .ic-px { width: 22px; height: 22px; }
+.sheet27-pg .badge { margin-left: auto; }
+.sheet27-pg.on { background: var(--accent); color: var(--accent-ink, #111); font-weight: 700; }
+.sheet27-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 4px 2.2rem; }
+.sheet27-tab { min-height: 36px; padding: 0.2rem 0.65rem; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); color: var(--ink); font-size: 0.85rem; }
+.sheet27-tab.d2, .sheet27-tab.d3 { background: transparent; border-style: dashed; font-size: 0.8rem; }
+.sheet27-tab.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--panel)); font-weight: 700; }
+.sheet27-sub { color: var(--muted); margin-right: 0.25rem; }
+@media (min-width: 861px) { .sheet27-wrap { display: none; } }
+
+/* ================= uma janela por vez (ps/queue27.ts) ================= */
+/* modal/cena por cima: tutorial, dica e tour esperam escondidos; avisos (toasts) ficam atrás do modal */
+body:has(.overlay, .scene-overlay, .sheet27-wrap) :is(aside.tutorial, .tip18, .tour18) { display: none !important; }
+body:has(aside.tutorial) .tip18 { display: none !important; }
+body:has(.overlay, .scene-overlay, .sheet27-wrap) #toasts { z-index: 49; }

@@ -1,7 +1,8 @@
 // Rodada 25 — Pixel Studio: arquitetura de informação em 6 seções (sem DOM: testável).
 // Sede · Pessoas · Projetos · Ao vivo · Mundo · Gestão (+ Buscar, Arquivo e Opções como utilitários).
-// Regras: cada página mora em exatamente UMA seção; cada seção mostra no máximo 5 páginas visíveis
-// (as "principais", com a página da sua carreira primeiro) e o resto vai para "Mais", agrupado por tema.
+// Regras: cada página mora em exatamente UMA seção, agrupada por tema; as até 5 "principais" (a página da sua
+// carreira primeiro) abrem a lista. r27: o menu é uma árvore (ps/tree27.ts) — Seção › Página › Aba, tudo visível,
+// sem "Mais" escondido; `top`/`more25` ficam como ordem de prioridade (faixa do celular, testes antigos).
 // Nada some: páginas novas (de outras frentes) caem na seção sugerida por quem as registrou ou em Gestão.
 // Telas absorvidas por páginas de carreira (ALIAS17) continuam abrindo a página da carreira na aba certa.
 
@@ -131,6 +132,9 @@ export function more25(g: NavGroup25): NavSection14[] {
   const top = new Set(g.top);
   return (g.sections ?? [{ label: g.label, areas: g.areas }]).map((x) => ({ label: x.label, areas: x.areas.filter((a) => !top.has(a)) })).filter((x) => x.areas.length);
 }
+
+/** r27: a partida (nova ou carregada) abre na Sede › Sua sede; sem a tela da sede registrada, no Cockpit. */
+export const landing27 = (hasSede: boolean): string => (hasSede ? SEDE25 : 'cockpit');
 
 /** Casa da seção (primeira página principal). */
 export const home25 = (g: NavGroup14): string => (g as NavGroup25).top?.[0] ?? g.areas[0];

@@ -25,13 +25,14 @@ describe('polimento r14', () => {
     expect(tagName14('classic_blues').en).toBe('Classic blues');
     expect(tagName14('weird_tag').pt).toBe('weird tag');
   });
-  it('tutorial: sede só para o selo; outras carreiras começam na sua casa', () => {
-    expect(tutorialIntro14(['label']).title.pt).toContain('Cockpit'); // r23 (C)
-    expect(tutorialIntro14(['manager', 'label']).area).toBe('cockpit');
+  it('tutorial: o passo 1 fala da carreira principal; r27: toda carreira começa na Sede › Sua sede', () => {
+    expect(tutorialIntro14(['label']).title.pt).toContain('sede'); // r27 (antes r23: Cockpit)
+    expect(tutorialIntro14(['manager', 'label']).area).toBe('sede25');
     const m = tutorialIntro14(['manager']);
-    expect(m.title.pt).not.toContain('sede');
-    expect(m.area).toBe('management');
-    expect(tutorialIntro14(['musician']).area).toBe('artists');
-    expect(tutorialIntro14([]).area).toBe('cockpit');
+    expect(m.title.pt).not.toContain('sede'); // o título continua sendo do ofício
+    expect(m.area).toBe('sede25');
+    expect(m.page).toBe('management'); // a casa da carreira segue conhecida (a um clique no menu)
+    expect(tutorialIntro14(['musician']).page).toBe('artists');
+    expect(tutorialIntro14([]).area).toBe('sede25');
   });
 });

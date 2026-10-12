@@ -24,6 +24,7 @@ import { COMMON18, TIPS18, TRACKS18, dueTips18, trackState18, type Tip18 } from 
 import { ic } from './vis';
 import { minimalHelp20 } from './ux20';
 import { setTutorials19, tutAllowed19 } from './tutoff19';
+import { mayShow27 } from './ps/queue27';
 import './tutorial18.css';
 
 type Go = (area: string) => void;
@@ -89,7 +90,10 @@ export function openHelp18(area: string): void {
 
 /** Botão "?" do cabeçalho de cada página. */
 export function helpButton18(area: string): HTMLElement {
-  return h('button', { class: 'icon help18-btn', title: t(l('Ajuda desta página', 'Help for this page')), 'aria-label': t(l('Ajuda desta página', 'Help for this page')), onclick: () => openHelp18(area) }, '?');
+  // r27: o tour da página só roda a pedido — o 1º "?" de cada página (depois do tutorial) mostra o tour; os seguintes, a ajuda
+  const first = () => { const g = store.game; return !!g?.tutorial?.done && !tp18().tours[area] && tutAllowed19(store.prefs, 'tour'); };
+  return h('button', { class: 'icon help18-btn', title: t(l('Ajuda desta página', 'Help for this page')), 'aria-label': t(l('Ajuda desta página', 'Help for this page')),
+    onclick: () => { if (!(first() && startTour18(area, true))) openHelp18(area); } }, '?');
 }
 
 // ---------------------------------------------------------------- glossário
@@ -253,8 +257,9 @@ export function afterRender18(g: GameState, area: string, go: Go): void {
   try { checkTracks(g); } catch { /* trilha nunca derruba a tela */ }
   if (tourEl && (!tourEl.isConnected || tourArea !== area)) endTour(); // trocou de página: o tour antigo some
   const busy = !!document.querySelector('.overlay, .scene-overlay') || !g.tutorial?.done;
-  if (busy) { if (tourEl) endTour(); } // modal/cena por cima: o tour volta depois
-  else if (!tourEl && !startTour18(area)) { try { checkTips(g); } catch { /* idem */ } }
+  if (busy) { if (tourEl) endTour(); } // modal/cena por cima: o tour fecha
+  // r27: uma janela por vez — o tour da página não abre sozinho (só no "?"); dicas de 1ª vez só com a fila livre
+  else if (!tourEl && mayShow27('tip', g)) { try { checkTips(g); } catch { /* idem */ } }
 }
 
 /** Linhas para o modal de configurações. */

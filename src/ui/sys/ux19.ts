@@ -33,6 +33,7 @@ import { LABEL_LEGACY20, PATH_LEGACY20 } from '../../sim/oblig20';
 import { legacyTotal } from '../../sim/legacy';
 import { pendingView18 } from './decide18';
 import { tutAllowed19 } from '../tutoff19';
+import { registerOverlay27 } from '../ps/queue27';
 import './ux19.css';
 
 // ---------------------------------------------------------------- perfil local (meta-progresso entre partidas)
@@ -222,7 +223,8 @@ function openingCard(s: GameState): void {
       h('div', { class: 'row wrap' }, heirs.map((x) => h('button', { class: `btn small ${pr.next === x.id ? 'primary' : ''}`, title: t(x.desc), onclick: () => pick(x.id) }, t(x.name))),
         h('button', { class: 'btn small ghost', onclick: () => close() }, t(l('Sem herança', 'No legacy'))))) : null,
     h('div', { class: 'row wrap ux19-actions' }, h('button', { class: 'btn primary', onclick: () => close() }, t(l('Começar', 'Start')))));
-  close = modal(t(l('Metas de abertura', 'Opening goals')), body, { wide: true });
+  // r27: ao fechar, redesenha — o passo do tutorial (que esperava na fila) aparece em seguida
+  close = modal(t(l('Metas de abertura', 'Opening goals')), body, { wide: true, onClose: () => rerender() });
 }
 
 // ---------------------------------------------------------------- recibo de decisão (P3)
@@ -384,16 +386,21 @@ AFTER_ADVANCE.push((s) => {
 });
 // 1º mês: metas de abertura (e herança, se houver) — também ao carregar um jogo novo sem avançar
 const openTried = new WeakSet<GameState>();
+/** r27: as metas de abertura ainda vão aparecer nesta partida? (fila de janelas: vêm antes do tutorial) */
+export const openingDue19 = (s: GameState): boolean => !openTried.has(s) && !s.ended && !ux19(s).os && monthsPlayed19(s) <= 3 && (tutAllowed19(store.prefs, 'opening') || HEIRS19.some((x) => heirOpen(profile(), x.id)));
 function tryOpening(): void {
   const s = store.game;
   if (!s || openTried.has(s) || s.ended) return;
-  if (ux19(s).os || monthsPlayed19(s) > 3 || (!tutAllowed19(store.prefs, 'opening') && !HEIRS19.some((x) => heirOpen(profile(), x.id)))) { openTried.add(s); return; } // sem tutoriais: só aparece se houver herança a oferecer
-  if (busy()) return; // tutorial ou outra janela aberta: tenta de novo depois
+  if (!openingDue19(s)) { openTried.add(s); return; } // sem tutoriais: só aparece se houver herança a oferecer
+  // r27: o cartão do tutorial e as dicas esperam as metas (fila de janelas); só um modal/cena/tour aberto adia
+  if (typeof document === 'undefined' || document.querySelector('.overlay, .scene-overlay, .tour18')) return;
   openTried.add(s);
   openingCard(s);
 }
 AFTER_ADVANCE.push(() => tryOpening());
 if (typeof window !== 'undefined') setInterval(() => { if (store.game && !openTried.has(store.game)) tryOpening(); }, 1500);
+// r27: na fila de janelas, a abertura vem primeiro; depois de cada desenho da tela ela entra logo, sem esperar o relógio
+registerOverlay27('opening', openingDue19, () => setTimeout(tryOpening, 250));
 
 // ---------------------------------------------------------------- acessibilidade (P10)
 if (typeof document !== 'undefined') {

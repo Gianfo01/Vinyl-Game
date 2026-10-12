@@ -66,9 +66,13 @@ import { PURPOSE23 } from './sys/journey23'; // r23: propósito de cada tela da 
 import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
 import './nav17.css';
 // r25 Pixel Studio: 6 seções (Sede, Pessoas, Projetos, Ao vivo, Mundo, Gestão), busca global e encaixe da Sede
-import { SEDE25, home25, more25, navGroups25, type NavGroup25 } from './ps/nav25';
+import { SECTIONS25, SEDE25, home25, landing27, navGroups25, sectionIdOf25, type NavGroup25 } from './ps/nav25';
 import { sedeHome25, sedeNav25 } from './ps/slot25';
-import { openSearch25, seenTabs25 } from './ps/search25';
+import { openSearch25, searchTabs25, seenDefs27 } from './ps/search25';
+// r27: menu em árvore (Seção › Página › Aba), folha do celular, todas as abas conhecidas e uma janela por vez
+import { navSection27 } from './ps/tree27';
+import { allTabs27 } from './ps/subtabs27';
+import { kick27, mayShow27 } from './ps/queue27';
 import { getLang } from '../i18n/strings';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
@@ -132,16 +136,10 @@ export function boot(el: HTMLElement): void {
 const areaExists = (id: string): boolean => navItems().some((x) => x.id === alias14(id));
 
 function startGame(): void {
-  // rodada 13: sem área escolhida, abre a casa da carreira principal
-  if (!store.area || store.area === 'desk') { const act = careers(store.game!).active; const hm = defaultHome(act); if (hm.tab) setTab(hm.tab[0], hm.tab[1]); store.area = hm.area;
-    // r17: quem não tem selo abre na página exclusiva da carreira principal
-    if (act.length && !act.includes('label') && CAREER_PAGE17[act[0]]) store.area = CAREER_PAGE17[act[0]].area;
-    // r25: com a tela da Sede registrada, quem abre no Cockpit abre na Sede
-    else if (store.area === 'cockpit' && sedeHome25) store.area = SEDE25; }
-  // rodada 15: recarregar a página volta à mesma tela (rota no endereço)
-  const r0 = initialRoute15();
+  // r27: toda partida (nova ou carregada, de qualquer carreira) abre na Sede › Sua sede; a página da carreira
+  // fica a um clique no menu em árvore. (Antes: casa da carreira, Cockpit ou a rota do endereço.)
+  store.area = landing27(!!sedeHome25);
   navMemo = null;
-  if (r0 && areaExists(r0.area)) { store.area = r0.area; if (r0.tab) setTab(r0.tab[0], r0.tab[1]); }
   render();
   void saveGame('auto');
 }
@@ -320,7 +318,7 @@ const groups = (): NavGroup14[] => (groupsMemo ??= (() => {
   // r25: 6 seções (nav25); a árvore r17 continua valendo para testes/ajuda (seções do ux20)
   return navGroups25({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a) && (!g || !UX19UI.has || UX19UI.has(g, a) || a === store.area), all: ids, hint: HINT17, sede: !!sedeHome25 });
 })());
-void navGroups16; void navGroups17;
+void navGroups16; void navGroups17; void defaultHome; void initialRoute15; void CAREER_PAGE17;
 
 interface NavItem { id: string; label: string; icon: string; key: string; badge?: number; /** r25: nome no outro idioma (busca) */ alt?: string }
 const altL25 = (x: L): string => (getLang() === 'pt' ? x.en : x.pt);
@@ -370,17 +368,14 @@ function nav(): HTMLElement {
   // (5 visíveis + "Mais"); no celular o menu vira a barra inferior com as 6 seções (sem "Mais" duplicado).
   const util = (icon: string, label: L, run: () => void, hint?: string) => h('button', { type: 'button', class: 'nav-util25', title: hint ? `${t(label)} (${hint})` : t(label), onclick: run },
     h('span', { class: 'ic', 'aria-hidden': 'true' }, icon), h('span', { class: 'lbl' }, t(label)), hint ? h('kbd', null, hint) : null);
-  return h('nav', { class: 'nav grouped nav25', 'aria-label': 'menu' },
+  // r27: árvore — cada seção abre/fecha e mostra TODAS as páginas (por tema) e, sob cada página, as abas
+  // internas (registro + vistas); no celular, a barra inferior com as 6 seções abre uma folha (ps/tree27.ts)
+  const ctx = { groups: groups() as NavGroup25[], item: (id: string) => all.find((x) => x.id === id), area: store.area, section: cur.id, live: liveTabs27,
+    tabs: allTabs27(store.game!.year, seenDefs27()), go, home: (gr: NavGroup25) => home25(gr), search: openSearch25,
+    goTab: (area: string, path: [string, string][]) => { for (const [k, v] of path) setTab(k, v); go(area); } };
+  return h('nav', { class: 'nav grouped nav25 tree27', 'aria-label': 'menu' },
     h('div', { class: 'nav-brand21', 'aria-hidden': 'true' }, h('span', { class: 'disc-sm' }), h('span', null, h('b', null, store.game!.config.companyName), h('small', null, 'Masters · Pixel Studio'))),
-    groups().map((gr) => {
-      const items = groupItems(gr);
-      const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
-      const here = gr.id === cur.id;
-      const last = lastInGroup[gr.id] && items.some((x) => x.id === lastInGroup[gr.id]) ? lastInGroup[gr.id] : null;
-      return h('div', { class: `nav-group ${here ? 'open' : ''}`, 'data-sec25': gr.id },
-        h('button', { class: `nav-head ${here ? 'on' : ''}`, 'aria-current': here ? 'true' : undefined, title: t(gr.label), onclick: () => go(here || gr.id === 'sede' ? home25(gr) : last ?? home25(gr)) },
-          h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null));
-    }),
+    groups().map((gr) => navSection27(ctx, gr as NavGroup25)),
     pinBox,
     h('div', { class: 'nav-utils25' },
       util('⌕', l('Buscar', 'Search'), openSearch25, 'Ctrl K'),
@@ -390,43 +385,20 @@ function nav(): HTMLElement {
 }
 void navFold21; void saveFold21;
 
-/** r25: faixa de páginas da seção (no máximo 5 visíveis) + "Mais" agrupado por tema, com filtro. */
+/** r27: seção de uma página para a busca — a do menu ou, se a página ainda não entrou no menu, a canônica. */
+const secOf27 = (area: string): { label: L } => groups().find((x) => x.areas.includes(area)) ?? SECTIONS25.find((x) => x.id === sectionIdOf25(area)) ?? groupOf(area);
+/** r27: abas abertas agora na página desenhada (chave da faixa → aba), para o destaque na árvore. */
+let liveTabs27 = new Map<string, string>();
+/** r27: faixa com TODAS as páginas da seção (sem "Mais"); no computador some (a árvore já mostra), no celular rola. */
 function subnav(): HTMLElement | null {
   const gr = groupOf(store.area) as NavGroup25;
   const all = navItems();
-  const item = (id: string) => all.find((x) => x.id === id);
-  const top = (gr.top ?? gr.areas.slice(0, 5)).map(item).filter((x): x is NavItem => !!x);
+  const ids = [...new Set([...(gr.top ?? []), ...gr.areas])];
+  const pages = ids.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
   const tab = (a: NavItem) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: `btn25 ${store.area === a.id ? 'on' : ''}`, onclick: () => go(a.id) },
     h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null);
-  const more = more25(gr).map((sc) => ({ label: t(sc.label), items: sc.areas.map(item).filter((x): x is NavItem => !!x) })).filter((x) => x.items.length);
-  const n = more.reduce((t0, x) => t0 + x.items.length, 0);
-  const inMore = more.some((x) => x.items.some((a) => a.id === store.area));
-  let moreEl: HTMLElement | null = null;
-  if (n) {
-    const list = h('div', { class: 'more25-list' });
-    const paint = (q: string) => {
-      const f = fold25(q);
-      const secs = more.map((sc) => {
-        const xs = sc.items.filter((a) => !f || fold25(`${a.label} ${a.alt ?? ''} ${sc.label}`).includes(f));
-        return xs.length ? h('div', { class: 'more25-sec' }, h('small', { class: 'nav-sec' }, sc.label),
-          ...xs.map((a) => h('button', { type: 'button', role: 'menuitem', class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, onclick: () => go(a.id) },
-            h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null;
-      }).filter((x): x is HTMLDivElement => !!x);
-      list.replaceChildren(...(secs.length ? secs : [h('p', { class: 'muted small' }, t(l('Nada com esse nome nesta seção. Tente Buscar (Ctrl+K).', 'Nothing by that name in this section. Try Search (Ctrl+K).')))]));
-    };
-    paint('');
-    const filter = h('input', { type: 'search', class: 'more25-filter', placeholder: t(l('Filtrar…', 'Filter…')), 'aria-label': t(l('Filtrar páginas', 'Filter pages')), oninput: (e: Event) => paint((e.target as HTMLInputElement).value) }) as HTMLInputElement;
-    const cur = inMore ? item(store.area) : undefined;
-    moreEl = h('details', { class: `more25 ${inMore ? 'on' : ''}`, ontoggle: (e: Event) => { if ((e.target as HTMLDetailsElement).open) setTimeout(() => filter.focus(), 0); },
-      onkeydown: (e: KeyboardEvent) => { if (e.key === 'Escape') { const d = e.currentTarget as HTMLDetailsElement; d.open = false; d.querySelector('summary')?.focus(); e.stopPropagation(); } } },
-      h('summary', { class: `btn25 ${inMore ? 'on' : ''}`, title: t(l('Mais páginas desta seção', 'More pages in this section')) },
-        ...(cur ? [h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(cur.icon)), h('span', { class: 'lbl' }, cur.label), h('small', { class: 'more25-n' }, `+${n - 1}`)]
-          : [h('span', { class: 'lbl' }, t(l('Mais', 'More'))), h('small', { class: 'more25-n' }, String(n))]), h('span', { class: 'more25-caret', 'aria-hidden': 'true' }, '▾')),
-      h('div', { class: 'more25-pop', role: 'menu' }, filter, list));
-  }
-  return h('div', { class: 'tabs25', role: 'tablist', 'aria-label': t(gr.label) }, top.map(tab), moreEl);
+  return h('div', { class: 'tabs25 pages27', role: 'tablist', 'aria-label': t(gr.label) }, pages.map(tab));
 }
-const fold25 = (x: string): string => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const SEDE_L25 = l('Sua sede', 'Your HQ');
 
 function panel(): HTMLElement {
@@ -504,11 +476,12 @@ function renderApp(): void {
   shownArea = store.area;
   // render não muda o elenco: a lista de atos do jogador é calculada uma vez só
   const [sub, body] = withPlayerActsCache(g, () => [subnav(), panel()] as const);
+  liveTabs27 = new Map([...body.querySelectorAll<HTMLElement>('[data-tabs]')].map((e) => [e.dataset.tabs ?? '', e.dataset.cur ?? '']));
   const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
     topBar(),
     nav(),
     h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), body),
-    tutorialCard(g, render),
+    mayShow27('tutorial', g) ? tutorialCard(g, render) : null, // r27: as metas de abertura vêm antes (fila de janelas)
     h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
   ));
   root.replaceChildren(app);
@@ -519,7 +492,8 @@ function renderApp(): void {
   const tid = tw?.dataset.cur;
   syncRoute15({ area: store.area, tab: tk && tid ? [tk, tid] : undefined }, pageTitle15(areaLabel(store.area), g.config.companyName));
   saveTabs15(tabSnapshot());
-  afterRender18(g, store.area, go); // r18 tutorial18: tour da 1ª visita, dicas de 1ª vez, trilhas
+  afterRender18(g, store.area, go); // r18 tutorial18: dicas de 1ª vez e trilhas (r27: tour só no "?")
+  kick27(g); // r27: a próxima janela da fila (metas de abertura) entra logo
 }
 
 /** Rótulo da área igual ao do menu (casa da carreira usa o nome do grupo). */
@@ -641,7 +615,7 @@ function palette(): void {
       run: () => { if (gr.home?.tab && gr.home.area === a.id) setTab(gr.home.tab[0], gr.home.tab[1]); go(a.id); } }))),
     // r25: as 6 seções e toda aba interna já vista (pt e en), com o caminho Seção › Página
     ...groups().map((gr): PCmd => ({ label: t(gr.label), alt: altL25(gr.label), kind: 'area', icon: gr.icon, hint: t(l('Seção', 'Section')), weight: 8, run: () => go(home25(gr)) })),
-    ...seenTabs25().filter((x) => areaExists(x.area) && all17.some((a) => a.id === x.area)).map((x): PCmd => ({ label: x.label, alt: x.alt, kind: 'tab', icon: 'compass', hint: `${t(groupOf(x.area).label)} › ${areaLabel(x.area)}`, weight: 3,
+    ...searchTabs25(g.year).filter((x) => areaExists(x.area) && all17.some((a) => a.id === x.area)).map((x): PCmd => ({ label: x.label, alt: x.alt, kind: 'tab', icon: 'compass', hint: `${t(secOf27(x.area).label)} › ${areaLabel(x.area)}`, weight: 3,
       run: () => { for (const [k, v] of x.trail) setTab(k, v); setTab(x.key, x.id); go(x.area); } })),
     { label: t(S.advanceMonth), kind: 'action', icon: 'calendar', hint: 'Ctrl+Enter', run: () => doAdvance('month') },
     { label: t(S.advanceQuarter), kind: 'action', icon: 'calendar', run: () => doAdvance('quarter') },
