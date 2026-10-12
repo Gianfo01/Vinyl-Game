@@ -66,7 +66,6 @@ import { icon17 } from './pixel/icons17';
 import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
 import { PURPOSE23 } from './sys/journey23'; // r23: propósito de cada tela da jornada do disco
 import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
-import { settings27 } from './act27/mode27'; // r27 (M2): Atividades jogáveis/rápidas
 import './nav17.css';
 // r25 Pixel Studio: 6 seções (Sede, Pessoas, Projetos, Ao vivo, Mundo, Gestão), busca global e encaixe da Sede
 import { SECTIONS25, SEDE25, home25, landing27, navGroups25, sectionIdOf25, type NavGroup25 } from './ps/nav25';
