@@ -169,4 +169,5 @@ REAL_MGRS.push(...MGRS18.filter((x) => !REAL_MGRS.some((y) => y.id === x.id))); 
 REAL_MGRS.push(...MGRS_1889.filter((x) => !REAL_MGRS.some((y) => y.id === x.id))); // r18 era1889: impresarios da era acústica
 REAL_MGRS.push(...MGRS19.filter((x) => !REAL_MGRS.some((y) => y.id === x.id))); // r19 more19 (onda 2)
 REAL_MGRS.push(...MGRS27.filter((x) => !REAL_MGRS.some((y) => y.id === x.id || y.name === x.name))); // r27 auditoria Masters_25
+for (const m of REAL_MGRS) if (m.died && m.to > m.died) m.to = m.died; // r27 (F): sem trabalho novo depois da morte
 export const mgrById: Record<string, RealMgr> = Object.fromEntries(REAL_MGRS.map((m) => [m.id, m]));

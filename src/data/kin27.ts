@@ -2,17 +2,17 @@
 // S = irmãos · P = pai/mãe, filhos... · M = casal · X = ex · U = tio/tia, sobrinhos... · C = primos.
 // Como em kin15, só valem entre pessoas presentes no banco (casamento por nome canônico); parentes que não existem no jogo
 // (Katherine Jackson, Riley Keough…) ficam listados e ligam sozinhos quando a pessoa existir — como Joe Jackson.
-// O modelo ainda não tem período nem subtipo de laço (meio-irmão, adotivo): os anos de casamento ficam nos comentários.
+// r27 (F): período e subtipo agora vão no último item da linha (KinMeta27, model27).
 import type { KinRow } from './kin15';
 
 export const KIN27: KinRow[] = [
   // Jackson / Presley
-  ['X', 'Michael Jackson', 'Debbie Rowe'], // 1996–1999
+  ['X', 'Michael Jackson', 'Debbie Rowe', { from: 1996, to: 1999 }],
   ['P', 'Katherine Jackson', 'Michael Jackson', 'Janet Jackson', 'Jermaine Jackson', 'Jackie Jackson', 'Tito Jackson', 'Marlon Jackson', 'La Toya Jackson', 'Randy Jackson', 'Rebbie Jackson'],
   ['S', 'Taj Jackson', 'Taryll Jackson', 'TJ Jackson'], // 3T
   ['P', 'Lisa Marie Presley', 'Riley Keough'], ['X', 'Elvis Presley', 'Priscilla Presley'],
   // Elis / Bôscoli
-  ['X', 'Elis Regina', 'Ronaldo Bôscoli'], ['P', 'Ronaldo Bôscoli', 'João Marcello Bôscoli'],
+  ['X', 'Elis Regina', 'Ronaldo Bôscoli', { from: 1967, to: 1972, src: 'a' }], ['P', 'Ronaldo Bôscoli', 'João Marcello Bôscoli', { sub: 'biological' }],
   // Índia, mundo árabe, Japão
   ['S', 'Lata Mangeshkar', 'Asha Bhosle', 'Usha Mangeshkar', 'Hridaynath Mangeshkar'], ['M', 'Asha Bhosle', 'R. D. Burman'], ['P', 'S. D. Burman', 'R. D. Burman'], ['P', 'Kishore Kumar', 'Amit Kumar'],
   ['M', 'Fairuz', 'Assi Rahbani'], ['S', 'Assi Rahbani', 'Mansour Rahbani'], ['P', 'Fairuz', 'Ziad Rahbani'],
@@ -24,7 +24,7 @@ export const KIN27: KinRow[] = [
   ['P', 'Brian Wilson', 'Carnie Wilson', 'Wendy Wilson'], ['P', 'John Phillips', 'Chynna Phillips', 'Mackenzie Phillips'],
   ['M', 'Kurt Cobain', 'Courtney Love'], ['P', 'Kurt Cobain', 'Frances Bean Cobain'],
   ['X', 'Ike Turner', 'Tina Turner'], ['X', 'Sonny Bono', 'Cher'], ['X', 'Bobby Brown', 'Whitney Houston'], ['P', 'Cissy Houston', 'Whitney Houston'], ['C', 'Whitney Houston', 'Dionne Warwick'],
-  ['X', 'Marvin Gaye', 'Anna Gordy'], ['S', 'Berry Gordy', 'Anna Gordy'], ['X', 'Jermaine Jackson', 'Hazel Gordy'], ['P', 'Berry Gordy', 'Hazel Gordy'],
+  ['X', 'Marvin Gaye', 'Anna Gordy'], ['S', 'Berry Gordy', 'Anna Gordy'], ['X', 'Jermaine Jackson', 'Hazel Gordy', { from: 1973, to: 1988, src: 'a' }], ['P', 'Berry Gordy', 'Hazel Gordy'],
   ['P', 'Diana Ross', 'Tracee Ellis Ross', 'Evan Ross'], ['P', 'Steven Tyler', 'Liv Tyler'], ['M', 'Bruce Springsteen', 'Patti Scialfa'],
   ['X', 'George Harrison', 'Pattie Boyd'], ['X', 'Eric Clapton', 'Pattie Boyd'], ['P', 'George Harrison', 'Dhani Harrison'], ['M', 'Ringo Starr', 'Barbara Bach'],
   ['M', 'David Bowie', 'Iman'], ['P', 'David Bowie', 'Duncan Jones'], ['M', 'Sting', 'Trudie Styler'], ['M', 'Elton John', 'David Furnish'],

@@ -26,12 +26,14 @@ import { ACERVO21 } from '../../data/acervo21';
 import { LIKES22_ARTISTS, SONGS22 } from '../../data/songs22';
 import { ARTISTS27, FILL27 } from '../../data/audit27_artists';
 import { SONGS27 } from '../../data/audit27_songs';
-import { applyAudit27, applySongs27 } from '../../data/audit27';
+import { applyAudit27, applyFix27, applySongs27, type AnyArtist27 } from '../../data/audit27';
 import { NEW27_C1 } from '../../data/new27c1';
+import { FIXR27, FIXV27, NEW27_F } from '../../data/research27';
+import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD27, songList27, takeOf27, workOf27, WORKS27, WRITERS27 } from '../../data/model27';
 const ACERVO22 = [...ACERVO21, ...LIKES22_ARTISTS];
 import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
-import type { RealArtist, RealMember, RealRelease } from '../../data/realtypes';
+import { atDebut27, inLineupAt, periodsOf, type Prov27, type RealArtist, type RealMember, type RealPeriod, type RealRelease } from '../../data/realtypes';
 import { CITIES, cityById, familyOf, l } from '../../data/world';
 import { personDies } from '../dynasty';
 import { computeAppeal } from '../market';
@@ -47,7 +49,8 @@ import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 /** r27: chave de deduplicação — "The X" = "X" e "&" = "and" (Carpenters, Four Tops, Smashing Pumpkins apareciam 2×) */
-export const dedupKey27 = (n: string) => norm16(n.replace(/^the\s+/i, '').replace(/&/g, ' and '));
+const DEDUP27: Record<string, string> = { gruporevelacao: 'revelacao' }; // r27 (F): o mesmo grupo com e sem "Grupo"
+export const dedupKey27 = (n: string) => { const k = norm16(n.replace(/^the\s+/i, '').replace(/&/g, ' and ')); return DEDUP27[k] ?? k; };
 const BASE_ALL: RealArtist[] = [...REAL_US, ...REAL_EU, ...REAL_WORLD, ...REAL_MORE];
 const taken16 = new Set([...BASE_ALL.map((a) => dedupKey27(a.n)), ...Object.values(REAL_ACTS).map((a) => dedupKey27(a.name))]);
 /** rodada 16: formações (solos e bandas novas de quem saiu) entram no fim — catalogNo estável. */
@@ -65,9 +68,48 @@ for (const a of REAL_ALL) { const f = FILL27N.get(norm16(a.n)); if (f && !a.m?.l
 applyMembers25(REAL_ALL); // r25: formações pesquisadas para quem não tinha integrantes
 applyLineups25(REAL_ALL); // r25: formações reais que estavam incompletas (banda de 5 aparecia com 2–3)
 // r27: atos novos da auditoria (3T) no fim, no sorteio do acervo; depois as correções auditadas (mortes, saídas, voltas…)
-for (const a of NEW27_C1) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+for (const a of [...NEW27_C1, ...NEW27_F]) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } } // r27 (F): + artistas da pesquisa
 applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
+// r27 (F): pesquisa da fila (research27) e normalização das passagens (uma linha por pessoa, com o 7º campo)
+{
+  const byName = new Map<string, AnyArtist27>(REAL_ALL.map((a) => [a.n, a as unknown as AnyArtist27]));
+  for (const [no, ex] of Object.entries(REAL_CLASSIC)) { const n = REAL_ACTS[+no]?.name; if (n) byName.set(n, Object.assign(ex as unknown as AnyArtist27, { n })); }
+  for (const fixes of [FIXR27, FIXV27]) for (const [n, fx] of Object.entries(fixes)) { const a = byName.get(n); if (a) applyFix27(a, fx); }
+  for (const a of REAL_ALL) a.m = mergePeriods27(a.m, a.n);
+  for (const [no, ex] of Object.entries(REAL_CLASSIC)) {
+    const n = REAL_ACTS[+no]?.name ?? '';
+    delete (ex as { n?: string }).n;
+    ex.m = mergePeriods27(ex.m, n);
+    // a "cópia" de nomes do catálogo (realnames) acompanha a formação de estreia documentada (BTS 7, Girls' Generation 9…)
+    const ra = REAL_ACTS[+no];
+    if (ra && ex.m?.length && ex.d !== undefined) { const deb = ex.m.filter((m) => atDebut27(m, ex.d!)).map((m) => m[0]); if (deb.length) ra.members = deb; }
+  }
+}
+void MERGED27;
 applySongs27(SONGS22);
+/** r27 (F): a mesma pessoa real em várias cópias (banda, solo, supergrupo) recebe o nascimento/morte que faltava numa delas.
+ *  Só nomes de 2+ palavras (os de uma palavra são ambíguos) e fora dos homônimos conhecidos. */
+export const HARMONIZED27: string[] = [];
+function harmonize27(): void {
+  type Ref = { b?: number; x?: number; d?: number; setB: (v: number) => void; setX: (v: number) => void; where: string };
+  const refs = new Map<string, Ref[]>();
+  const put = (n: string, r: Ref) => { const k = canonKey(n); if (!k.includes(' ') || HOMONYMS27.has(k)) return; (refs.get(k) ?? refs.set(k, []).get(k)!).push(r); };
+  const scan = (a: { n: string; d?: number; m?: RealMember[]; b?: number; x?: number; e?: number }) => {
+    if (!a.m?.length) put(a.n, { b: a.b, x: a.x, d: a.d, setB: (v) => { a.b = v; }, setX: (v) => { a.x = v; if (a.e === undefined || a.e > v) a.e = v; }, where: a.n });
+    for (const m of a.m ?? []) put(m[0], { b: m[2], x: m[3], d: m[4] ?? a.d, setB: (v) => { m[2] = v; }, setX: (v) => { m[3] = v; }, where: a.n });
+  };
+  for (const a of REAL_ALL) scan(a);
+  for (const [no, ex] of Object.entries(REAL_CLASSIC)) { const n = REAL_ACTS[+no]?.name; if (n) scan({ get n() { return n; }, get d() { return ex.d; }, get m() { return ex.m; }, get b() { return ex.b; }, set b(v) { ex.b = v; }, get x() { return ex.x; }, set x(v) { ex.x = v; }, get e() { return ex.e; }, set e(v) { ex.e = v; } }); }
+  for (const [k, xs] of refs) {
+    if (xs.length < 2) continue;
+    const b = xs.find((r) => r.b !== undefined)?.b, x = xs.find((r) => r.x !== undefined)?.x;
+    for (const r of xs) {
+      if (r.b === undefined && b !== undefined && (r.d === undefined || r.d >= b + 8)) { r.setB(b); HARMONIZED27.push(`${k} @ ${r.where}: nasc. ${b}`); }
+      if (r.x === undefined && x !== undefined && (r.d === undefined || r.d <= x + 1)) { r.setX(x); HARMONIZED27.push(`${k} @ ${r.where}: morte ${x}`); }
+    }
+  }
+}
+
 const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo21|${k}`);
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
@@ -90,10 +132,15 @@ export const rw = (s: GameState): RwState => (s as unknown as { x4: { rw: RwStat
 
 /** Dados reais de um ato (lista nova ou catálogo clássico). */
 const SONG22_KEYS = new Map(Object.entries(SONGS22).map(([k, v]) => [dedupKey27(k), v]));
+const SONG22_NAME = new Map(Object.keys(SONGS22).map((k) => [dedupKey27(k), k]));
 for (const [k, v] of Object.entries(SONGS27)) { // r27: músicas da auditoria entram depois das curtidas, sem repetir título
   const key = dedupKey27(k), cur = SONG22_KEYS.get(key) ?? [], seen = new Set(cur.map(([t]) => norm16(t)));
   SONG22_KEYS.set(key, [...cur, ...v.filter(([t]) => !seen.has(norm16(t)) && (seen.add(norm16(t)), true))]);
+  if (!SONG22_NAME.has(key)) SONG22_NAME.set(key, k);
 }
+// r27 (F): composição × gravação — ano da gravação original (não o da coletânea/relançamento), sem repetir a mesma obra
+for (const [key, v] of [...SONG22_KEYS]) SONG22_KEYS.set(key, songList27(SONG22_NAME.get(key) ?? '', v));
+for (const k of Object.keys(SONGADD27)) if (!SONG22_KEYS.has(dedupKey27(k))) SONG22_KEYS.set(dedupKey27(k), songList27(k, []));
 /** r22: músicas marcantes (título, ano) de um ato real — das curtidas do Spotify do jogador. */
 export function realSongs22(act: Act): [string, number][] {
   const d = realDataOf(act);
@@ -106,7 +153,8 @@ export function realSongTitle22(s: GameState, act: Act, year = s.year): string |
   if (!xs.length) return undefined;
   const used = new Set(act.songs.map((id) => s.songs[id]?.title).concat(act.releases.map((id) => s.releases[id]?.title)));
   for (const a of realDataOf(act)?.al ?? []) used.add(a[0]); // r23: título de lançamento real fica para o mundo real (G8: random não restaura lançamentos)
-  return xs.find(([t, y]) => y <= year + 1 && !used.has(t))?.[0];
+  const strict = histMode(s) === 'strict', an = realDataOf(act)?.n ?? '';
+  return xs.find(([t, y]) => y <= year + 1 && !used.has(t) && !(strict && takeOf27(an, t)?.src === 'u'))?.[0]; // r27 (F): não conferido some do modo exato
 }
 
 export function realDataOf(act: Act): (RealArtist | (ClassicExtra & { n: string; t: 1 | 2 | 3 })) | undefined {
@@ -135,7 +183,7 @@ function histPeak(r: Rng, tier: number): number {
 }
 
 /** Cria um lançamento anterior à run (sem mercado ativo; entra no catálogo e na história). */
-export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; year: number; type: Release['type']; tier: number; owner?: string; live?: boolean; doc?: boolean }): Release {
+export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; year: number; type: Release['type']; tier: number; owner?: string; live?: boolean; doc?: boolean; kind?: RealRelease[3] }): Release {
   const units = o.live ? 0 : histUnits(r, o.tier, o.year, o.type);
   const peak = o.live ? 999 : histPeak(r, o.tier);
   const q = clamp(r.normal(o.tier === 1 ? 74 : o.tier === 2 ? 64 : 55, 7), 30, 97);
@@ -156,6 +204,7 @@ export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; 
     lastPos: 0, coverSeed: r.int(1, 2 ** 30), shortage: 0, live: !!o.live, hist: !o.live, prov: o.doc ? 'doc' : 'sim',
   };
   if (o.live) rel.week = s.week;
+  if (o.kind === 'compilation' || o.kind === 'live') rel.kind = o.kind; // r27 (F): coletânea / ao vivo documentados
   if (songId) s.songs[songId].releaseId = rel.id;
   if (units >= 10e6) rel.certified = 'diamond';
   else if (units >= 1e6) rel.certified = 'platinum';
@@ -190,6 +239,7 @@ function makeRealPerson(s: GameState, r: Rng, act: Act, m: { name: string; role:
   const lang = langForCity(act.city, r);
   const p = makePerson(s, r, { lang, role: m.role, potential, born: m.born ?? act.formed - r.int(18, 26), startFrac: 0.66, name: real ? m.name : undefined });
   s.persons[p.id] = p;
+  if (m.born === undefined) p.real27 = { ...p.real27, bornEst: 1 }; // r27 (F): nascimento gerado → "idade aproximada"
   if (m.died !== undefined && m.died <= s.year) { p.alive = false; p.died = m.died; }
   return p;
 }
@@ -211,6 +261,7 @@ const ALIASES: Record<string, string> = {
   'ney de souza pereira': 'ney matogrosso',
   'rita lee jones': 'rita lee',
   ...ALIASES16,
+  ...ALIASES27, // r27 (F): tabela de apelidos (model27) — Mel B = Melanie Brown, Phil = Philip Selway, Jay Dee = J Dilla…
 };
 
 /** Chave canônica de um nome real (sem acentos, pontuação e caixa; apelidos unificados). */
@@ -225,6 +276,7 @@ export function canonKey(name: string): string {
   CANON19.set(name, k);
   return k;
 }
+harmonize27(); // r27 (F): depois de canonKey existir (apelidos); antes de qualquer partida
 
 /** Índice nome canônico → pessoa (saves antigos: reconstruído a partir dos atos reais, modo nomes reais). */
 function pidIndex(s: GameState): Record<string, string> {
@@ -266,8 +318,53 @@ function otherActsOf(s: GameState, personId: string, except: string): Act[] {
 
 const potentialFor = (r: Rng, tier: number) => (tier === 1 ? r.int(90, 99) : tier === 2 ? r.int(80, 93) : r.int(68, 84));
 
+/** r27 (F): procedência da pessoa real (a mais certa entre as cópias) e "idade aproximada" quando o nascimento foi gerado. */
+const PROV_RANK: Record<Prov27, number> = { c: 0, a: 1, u: 2 };
+function prov27(p: Person, pv: Prov27, born: number | undefined): void {
+  const x = (p.real27 ??= {});
+  if (!x.prov || PROV_RANK[pv] < PROV_RANK[x.prov]) x.prov = pv;
+  if (born !== undefined) delete x.bornEst;
+}
+
+/** r27 (F): autores das obras de um ato (WORKS27, pelo nome do ato) */
+const WB27 = new Map<string, string[]>();
+function writersOf27(actName: string): string[] {
+  let x = WB27.get(actName);
+  if (!x) { x = [...new Set(WORKS27.filter((w) => w.by && canonKey(w.by) === canonKey(actName)).flatMap((w) => w.w))]; WB27.set(actName, x); }
+  return x;
+}
+/** r27 (F): compositores reais das obras do ato que não são integrantes viram UMA Pessoa (gerador próprio, sem mexer no sorteio). */
+function writers27(s: GameState, act: Act, actName: string, fates: boolean): void {
+  const idx = pidIndex(s);
+  const mine = new Set(act.members.map((id) => canonKey(s.persons[id]?.name ?? '')));
+  for (const n of writersOf27(actName)) {
+    const k = canonKey(n);
+    const wd = WRITERS27[n];
+    if (!wd || mine.has(k) || idx[k]) continue;
+    const [born, died] = wd;
+    if (born > s.year) continue;
+    const r = Rng.fromSeed(`${s.config.seed}|w27|${k}`);
+    const p = makePerson(s, r, { lang: langForCity(act.city, r), role: 'vocal', potential: 70, born, startFrac: 0.66, name: n });
+    s.persons[p.id] = p;
+    p.real27 = { prov: 'c', writer: 1 };
+    idx[k] = p.id;
+    if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
+    else if (died !== undefined && fates) rw(s).sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
+    const lead = s.persons[act.members[0]];
+    if (lead) { p.rel[lead.id] = 40; lead.rel[p.id] = 40; }
+  }
+}
+/** r27 (F): compositores reais de uma obra (Pessoas que existem no jogo), para os créditos da música. */
+export function realWriters27(s: GameState, act: Act, title: string): string[] {
+  if (!s.config.realNames) return [];
+  const w = workOf27(title, realDataOf(act)?.n);
+  if (!w) return [];
+  const idx = pidIndex(s);
+  return w.w.map((n) => idx[canonKey(n)]).filter((id): id is string => !!id && !!s.persons[id]);
+}
+
 /** Aplica os dados reais a um ato já criado (integrantes, nascimento, fim, voltas, discografia). */
-function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?: number; e?: number; rj?: [number, number?][]; b?: number; x?: number; r?: Person['role']; m?: RealMember[]; al?: RealRelease[] }): void {
+function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?: number; e?: number; rj?: [number, number?][]; b?: number; x?: number; r?: Person['role']; m?: RealMember[]; al?: RealRelease[]; exact?: false; ap?: RealArtist['ap'] }): void {
   const st = rw(s);
   if (st.done[act.id]) return;
   st.done[act.id] = 1;
@@ -291,21 +388,29 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     // r25: fora do modo exato, quem é da formação clássica entra já (não fica de fora por ter entrado depois da estreia)
     const classic = fates ? undefined : classicLineup25(d.m, d.d ?? debut - shift);
     d.m.forEach((m, i) => {
-      const [name, role, born, died0, joined, left] = m;
-      const join = joined !== undefined ? joined + shift : undefined;
+      const [name, role, born, died0] = m;
+      const mp = memberProv27(d.n, name);
+      if (hm === 'strict' && mp === 'u') return; // r27 (F): integrante não conferido some do modo exato
+      // r27 (F): passagens (saiu e voltou) — deslocadas nos modos livre/caos
+      const ps = periodsOf(m).map(([a, b]) => [a !== undefined ? a + shift : undefined, b !== undefined ? b + shift : undefined] as RealPeriod);
+      const join = ps[0][0];
       const early = !!classic?.has(i) && join !== undefined && join > Math.min(debut, s.year);
       if (sim && join !== undefined && join > debut && !early) return; // r20: entradas posteriores à estreia são história, não identidade
-      const leave = sim ? undefined : left !== undefined ? left + shift : undefined;
+      const started = ps.filter(([a]) => a === undefined || a <= s.year);
+      const cur = sim || early ? ps[0] : started.find(([, b]) => b === undefined || b > s.year);
+      const future = sim ? [] : ps.filter(([a]) => a !== undefined && a > s.year);
       const died = sim ? simDead(name, born) : died0;
       const reuse = old[i] && (join === undefined || join <= debut) ? old[i] : undefined;
+      // agenda as voltas (2ª, 3ª passagem…) no modo exato
+      const pushJoins = (pid?: string) => { if (s.config.mode !== 'chaos') for (const [a, b] of future) if (keep(`j${name}${a}`, 0.5)) sched.push({ year: a!, kind: 'join', actId: act.id, m, until: b, personId: pid }); };
       let p: Person;
       if (reuse) {
         p = reuse;
         if (real) p.name = name;
         p.role = role;
         if (born) p.born = born;
-      } else if (join !== undefined && join > s.year && !early) {
-        if (keep(`j${name}`, 0.5)) sched.push({ year: join, kind: 'join', actId: act.id, m });
+      } else if (!started.length && !early) {
+        pushJoins(); // ainda não entrou: entra no ano real (e sai/volta nas passagens seguintes)
         return;
       } else {
         p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, real);
@@ -316,14 +421,18 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
         if (p !== reuse) delete s.persons[p.id];
         p = c;
       }
+      prov27(p, mp ?? (d.exact === false ? 'u' : d.ap?.includes('m') ? 'a' : 'c'), born);
       if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
       else if (died !== undefined && fates) sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
-      if (leave !== undefined && leave <= s.year) {
-        (st.former[act.id] ??= []).push({ personId: p.id, year: leave, reason: 'left' });
+      if (!cur) {
+        const lastOut = Math.max(...started.map(([, b]) => b ?? s.year));
+        (st.former[act.id] ??= []).push({ personId: p.id, year: lastOut, reason: 'left' });
       } else {
         now.push(p.id);
-        if (leave !== undefined && s.config.mode !== 'chaos' && keep(`l${name}`, 0.5)) sched.push({ year: leave, kind: 'leave', actId: act.id, personId: p.id });
+        const leave = cur[1];
+        if (!sim && leave !== undefined && s.config.mode !== 'chaos' && keep(`l${name}`, 0.5)) sched.push({ year: leave, kind: 'leave', actId: act.id, personId: p.id });
       }
+      pushJoins(p.id);
     });
     // integrantes gerados que sobraram saem do ato
     for (const p of old) if (!now.includes(p.id) && !(st.former[act.id] ?? []).some((x) => x.personId === p.id)) delete s.persons[p.id];
@@ -350,6 +459,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       if (real) p.name = d.n;
       if (d.b) p.born = d.b;
       if (d.r) p.role = d.r;
+      prov27(p, d.exact === false ? 'u' : d.ap?.some((x) => x === 'b' || x === 'd' || x === 'x') ? 'a' : 'c', d.b);
       const x = sim ? simDead(d.n, d.b) : d.x;
       if (x !== undefined && x <= s.year) { p.alive = false; p.died = x; }
       else if (x !== undefined && fates) sched.push({ year: x, kind: 'fate', actId: act.id, personId: p.id });
@@ -365,9 +475,11 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   for (const rel of sim ? [] : d.al ?? []) { // r20: no mundo aleatório v2 o repertório anterior é simulado (newgame)
     const year = rel[1] + shift;
     const title = real ? rel[0] : songTitle(r, langForCity(act.city, r));
-    if (year < s.year || (year === s.year && s.month > 0)) seedRelease(s, r, act, { title, year, type: rel[2] ?? 'lp', tier: d.t, doc: real });
-    else if (keep(`a${rel[0]}`, 0.5)) sched.push({ year, kind: 'release', actId: act.id, rel: [title, year, rel[2]] });
+    if (year < s.year || (year === s.year && s.month > 0)) seedRelease(s, r, act, { title, year, type: rel[2] ?? 'lp', tier: d.t, doc: real, kind: rel[3] });
+    else if (keep(`a${rel[0]}`, 0.5)) sched.push({ year, kind: 'release', actId: act.id, rel: [title, year, rel[2], rel[3]] });
   }
+  // r27 (F): parceiros de composição reais (não integrantes) viram Pessoa — Zé Dantas e Humberto Teixeira com Gonzaga
+  if (real && !sim) writers27(s, act, d.n, fates);
   // todo mundo morto antes da run: o ato é parte da história
   if (act.members.length && act.members.every((id) => !s.persons[id]?.alive)) {
     act.status = 'retired';
@@ -379,11 +491,11 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
  *  ela é maior que a de estreia (ex.: Earth, Wind & Fire estreou com 2 e chegou a 5; Yes, Genesis e Deep Purple com 3 → 5).
  *  Fora do modo exato as entradas posteriores não são agendadas; sem isto a banda ficava para sempre com a formação de estreia. */
 export function classicLineup25(m: RealMember[], debut: number): Set<number> | undefined {
-  const deb = m.filter((x) => x[4] === undefined || x[4] <= debut).length;
+  const deb = m.filter((x) => inLineupAt(x, debut)).length; // r27 (F): quem já tinha saído antes da estreia não conta
   let best: number[] = [];
   for (let y = debut; y <= 2030; y++) {
     const xs: number[] = [];
-    m.forEach((x, i) => { if ((x[4] === undefined || x[4] <= y) && (x[5] === undefined || x[5] > y)) xs.push(i); });
+    m.forEach((x, i) => { if (inLineupAt(x, y)) xs.push(i); }); // r27 (F): por passagens
     if (xs.length > best.length) best = xs;
   }
   return best.length > deb ? new Set(best) : undefined;
@@ -391,7 +503,7 @@ export function classicLineup25(m: RealMember[], debut: number): Set<number> | u
 
 function membersAtDebut(a: RealArtist): number {
   if (!a.m?.length) return 1;
-  return Math.max(1, a.m.filter((m) => m[4] === undefined || m[4] <= a.d).length);
+  return Math.max(1, a.m.filter((m) => inLineupAt(m, a.d)).length);
 }
 
 function spawnReal(s: GameState, r: Rng, idx: number, startOfRun: boolean): Act | undefined {
@@ -436,7 +548,7 @@ function newgame(s: GameState, r: Rng): void {
     if (upcomingNos.has(no) || !s.config.realNames || ex.d === undefined || ex.d > y0) continue;
     // terminou antes do início: entra aposentado/separado, com catálogo
     const real = REAL_ACTS[no];
-    const memberCount = Math.max(1, (ex.m ?? []).filter((m) => m[4] === undefined || m[4] <= ex.d!).length);
+    const memberCount = Math.max(1, (ex.m ?? []).filter((m) => inLineupAt(m, ex.d!)).length);
     const ca = makeAct(s, r, { name: real?.name, genre: 'pop', city: s.config.homeCity, members: memberCount, potential: potentialFor(r, 1), formed: ex.d - 1, debutYear: ex.d, catalogNo: no, fame: 0 });
     fixClassicGenre(s, ca, no);
     decorate(s, r, ca, d);
@@ -567,12 +679,15 @@ function monthly(s: GameState, r: Rng): void {
       st.sched.push({ ...ev, mo: Math.min(12, s.month + 1) }); // rodada 16: volta na reunião do mesmo ano
     } else if (ev.kind === 'join' && ev.m && act.status !== 'retired' && act.status !== 'split' && !histDiverged(s, act)) {
       const [name, role, born, died] = ev.m;
-      let p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, !!s.config.realNames);
-      const c = canonical(s, p, name, born, act.members);
-      if (c !== p) { delete s.persons[p.id]; p = c; }
-      if (act.members.includes(p.id)) continue;
+      // r27 (F): quem volta (2ª passagem) é a mesma Pessoa; quem estreia na banda é criado agora
+      const back = ev.personId ? s.persons[ev.personId] : undefined;
+      let p = back ?? makeRealPerson(s, r, act, { name, role, born, died }, act.potential, !!s.config.realNames);
+      if (!back) { const c = canonical(s, p, name, born, act.members); if (c !== p) { delete s.persons[p.id]; p = c; } }
+      if (act.members.includes(p.id) || !p.alive) continue;
+      prov27(p, memberProv27(realDataOf(act)?.n ?? '', name) ?? 'c', born);
       act.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
-      if (ev.m[5] !== undefined && ev.m[5] > s.year) st.sched.push({ year: ev.m[5], kind: 'leave', actId: act.id, personId: p.id }); // rodada 16: segunda passagem também sai
+      const until = ev.until; // fim desta passagem
+      if (until !== undefined && until > s.year) st.sched.push({ year: until, kind: 'leave', actId: act.id, personId: p.id }); // rodada 16: segunda passagem também sai
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {
       exitMember20(s, act, ev.personId);
@@ -599,7 +714,7 @@ function monthly(s: GameState, r: Rng): void {
       else if (p?.alive) st.sched.push({ ...ev, year: s.year + 1 });
     } else if (ev.kind === 'release' && ev.rel && !histDiverged(s, act) && !act.playerBand && (act.status === 'active' || act.status === 'emerging')) {
       // disco real no ano real: entra no mercado como lançamento de terceiros
-      const rel = seedRelease(s, r, act, { title: ev.rel[0], year: s.year, type: ev.rel[2] ?? 'lp', tier: realDataOf(act)?.t ?? 2, live: true, doc: !!s.config.realNames });
+      const rel = seedRelease(s, r, act, { title: ev.rel[0], year: s.year, type: ev.rel[2] ?? 'lp', tier: realDataOf(act)?.t ?? 2, live: true, doc: !!s.config.realNames, kind: ev.rel[3] });
       rel.weeksOnChart = 0;
       rel.territories = act.owner && s.labels[act.owner] ? s.labels[act.owner].territories : rel.territories;
       rel.appeal = computeAppeal(s, r, rel, act).appeal;
@@ -610,6 +725,14 @@ function monthly(s: GameState, r: Rng): void {
 }
 
 registerSimHook('newgame', 'realworld', (s, r) => newgame(s, r));
+// r27 (F): música com título de obra real leva os compositores reais nos créditos (Gonzaga + Zé Dantas), sem sorteio
+registerSimHook('compose', 'realworld:writers27', (s, _r, a) => {
+  const song = a.song;
+  const act = song ? s.acts[song.actId] : undefined;
+  if (!song || !act?.catalogNo) return;
+  const ws = realWriters27(s, act, song.title);
+  if (ws.length) song.writers = ws;
+});
 registerSimHook('month', 'realworld', (s, r) => monthly(s, r));
 
 /** Família do gênero (exposta para a interface). */

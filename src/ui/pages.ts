@@ -31,7 +31,7 @@ import { personActivity } from './pixel/activity';
 import { instrumentsTab } from './sys/instruments';
 import { viewsLine } from './sys/beliefs10';
 import { rw } from '../sim/sys/realworld';
-import { kinOf15, REL15 } from '../sim/sys/kin15';
+import { kinLabel15, kinOf15 } from '../sim/sys/kin15';
 import { instById, instrumentsOf } from '../sim/sys/instruments';
 import { icon } from './pixel/icons';
 import { pageTabs as extraPageTabs } from './registry';
@@ -164,7 +164,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
         h('h3', null, p.name, p.isPlayer ? pill(t(l('você', 'you')), 'gold') : null, !p.alive ? pill(t(l('falecido(a)', 'deceased')), 'bad') : null),
         h('div', null, pill(t(ROLE_NAMES[p.role] ?? l(p.role, p.role))), ' ', act ? actLink(s, act.id) : h('span', { class: 'muted' }, t(l('sem banda', 'no band'))), mine ? h('span', null, ' ', formIcon(form(p))) : null))),
       chips(
-        stat('calendar', s.year - p.born, l('Idade', 'Age')),
+        stat('calendar', p.real27?.bornEst ? `~${s.year - p.born}` : s.year - p.born, p.real27?.bornEst ? l('Idade aproximada', 'Approximate age') : l('Idade', 'Age')), // r27 (F)
         stat('star', potShown, l('Potencial', 'Potential')),
         vis.skills || mine ? stat('coin', $(money(s, marketValue(s, p, act?.fame ?? 0))), l('Valor de mercado (cachê/passe)', 'Market value (fee/transfer)')) : null,
         stat('globe', t(ORIGINS.find((o) => o.id === p.origin)?.name) || '—', l('Formação', 'Background')),
@@ -280,7 +280,7 @@ function relTab(s: GameState, p: Person): HTMLElement {
   const kin = kinOf15(s, p.id);
   return h('div', { class: 'grid2' },
     kin.length ? h('div', null, h('h4', null, t(l('Família', 'Family'))), h('ul', { class: 'attr-list' }, kin.slice(0, 12).map((k) => h('li', null,
-      h('button', { class: 'link', onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(REL15[k.rel])}${k.p.alive ? '' : ` · † ${k.p.died ?? '?'}`}`)))) : null,
+      h('button', { class: 'link', onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))}${k.p.alive ? '' : ` · † ${k.p.died ?? '?'}`}`)))) : null,
     h('div', null, h('h4', null, t(l('Afinidades', 'Friends'))), rels.filter(([, v]) => v > 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v > 0).slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—')),
     h('div', null, h('h4', null, t(l('Atritos', 'Frictions'))), rels.filter(([, v]) => v < 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v < 0).reverse().slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—'),
       rom.length ? h('p', null, ic('heart'), ' ', t(l('Namorando: ', 'Dating: ')), rom.map((r) => s.persons[r.a === p.id ? r.b : r.a]?.name).join(', ')) : null),
@@ -401,7 +401,7 @@ function overviewGrid(s: GameState, a: Act, deg: number, mine: boolean): HTMLEle
 }
 
 function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
-  const former = (rw(s).former[a.id] ?? []).map((f) => ({ f, p: s.persons[f.personId] })).filter((x) => x.p);
+  const former = (rw(s).former[a.id] ?? []).map((f) => ({ f, p: s.persons[f.personId] })).filter((x) => x.p && !a.members.includes(x.f.personId)); // r27 (F): quem voltou não é ex
   const why = { left: l('saiu', 'left'), died: l('faleceu', 'died'), retired: l('aposentou-se', 'retired'), fired: l('foi demitido', 'was fired') };
   return h('div', null,
     h('div', { class: 'pcard-grid' }, ms.map((p) => personCard(s, p))),

@@ -14,6 +14,7 @@ import { exitMember20 } from '../members20';
 import { RENAMES16 } from '../../data/lineups16';
 import { REAL_CLASSIC } from '../../data/realacts_classic';
 import { REAL_ACTS } from '../../data/realnames';
+import { periodsOf } from '../../data/realtypes';
 import { familyOf, l, type L } from '../../data/world';
 import { startSoloCareer } from '../dynasty';
 import { deferEvents, registerExt4, registerSimHook } from '../ext4';
@@ -493,10 +494,12 @@ export function stints16(s: GameState, a: Act): Stint16[] {
     const segs: { from: number; to?: number }[] = [];
     for (const m of d?.m ?? []) {
       if (canonKey(m[0]) !== canonKey(p.name)) continue;
-      const from = (m[4] ?? d!.d ?? base) + (m[4] !== undefined ? shift : 0);
-      if (from > s.year) continue;
-      const to = m[5] !== undefined && m[5] + shift <= s.year ? m[5] + shift : undefined;
-      segs.push({ from: Math.max(base, from), to });
+      for (const [a, b] of periodsOf(m)) { // r27 (F): uma passagem por período (saiu e voltou)
+        const from = (a ?? d!.d ?? base) + (a !== undefined ? shift : 0);
+        if (from > s.year) continue;
+        const to = b !== undefined && b + shift <= s.year ? b + shift : undefined;
+        segs.push({ from: Math.max(base, from), to });
+      }
     }
     for (const e of evs.filter((x) => x[2] === pid)) {
       const y = Math.floor(e[0] / 12), open = segs.find((x) => x.to === undefined);

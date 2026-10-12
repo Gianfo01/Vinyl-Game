@@ -17,7 +17,7 @@
 
 import { RNG_VERSION19 } from '../sim/rng19';
 import type { GameState } from '../sim/types';
-import { SAVE_VERSION } from '../sim/worldgen';
+import { MIN_SAVE_VERSION, SAVE_VERSION } from '../sim/worldgen';
 
 export const FORMAT20 = 2;
 /** Texto de entrada compactado (VTN1/base64 ou arquivo compactado). r23: 96 → 32 MiB. */
@@ -28,7 +28,7 @@ export const MAX_OUT20 = 128 * 1024 * 1024;
 export const MAX_FILE23 = MAX_OUT20;
 export const MAX_DEPTH20 = 256;
 
-export type SaveErrCode = 'too_big' | 'malformed' | 'future' | 'schema' | 'format';
+export type SaveErrCode = 'too_big' | 'malformed' | 'future' | 'schema' | 'format' | 'old';
 export class SaveError20 extends Error {
   constructor(public code: SaveErrCode, public detail = '') { super(`save20:${code}${detail ? ' ' + detail : ''}`); }
 }
@@ -95,6 +95,7 @@ export function decodeSave20(text: string, backfill: (g: GameState) => GameState
   if (fmt > FORMAT20 || sv > SAVE_VERSION || rv > RNG_VERSION19) throw new SaveError20('future', `f${fmt} v${sv} r${rv}`);
   const bad = schemaProblems20(game);
   if (bad.length) throw new SaveError20('schema', bad.join(','));
+  if (sv < MIN_SAVE_VERSION) throw new SaveError20('old', `v${sv}`); // r27 (F): save de antes do modelo histórico novo
   const g = game as unknown as GameState;
   for (let v = Math.max(1, Math.floor(sv)); v < SAVE_VERSION; v++) MIG20[v]?.(g);
   const out = backfill(g);

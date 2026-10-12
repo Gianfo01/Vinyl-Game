@@ -101,4 +101,7 @@ REAL_PRODS.push(...PRODS18.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))
 REAL_PRODS.push(...PRODS_1889.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r18 era1889: A&R da era acústica
 REAL_PRODS.push(...PRODS19.filter((x) => !REAL_PRODS.some((y) => y.id === x.id))); // r19 more19 (onda 2)
 REAL_PRODS.push(...PRODS27.filter((x) => !REAL_PRODS.some((y) => y.id === x.id || y.name === x.name))); // r27 auditoria Masters_25
+// r27 (F): regra do Tom Capone para todos — sem trabalho novo depois da morte (a disponibilidade acaba no ano da morte;
+// obra póstuma lançada até o ano seguinte continua valendo)
+for (const p of REAL_PRODS) if (p.died && p.to > p.died) p.to = p.died;
 export const prodById = Object.fromEntries(REAL_PRODS.map((p) => [p.id, p])) as Record<string, RealProd>;

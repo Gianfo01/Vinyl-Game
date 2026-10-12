@@ -1,6 +1,11 @@
 // Rodada 15: laços familiares reais (só valem entre pessoas presentes no banco; casamento por nome).
 // S = irmãos(ãs) · P = pai/mãe, filhos... · M = casal · X = ex · U = tio/tia, sobrinhos... · C = primos.
-export type KinRow = ['S' | 'P' | 'M' | 'X' | 'U' | 'C', ...string[]];
+// r27 (F): o último item pode ser um KinMeta27 (model27): subtipo (biological, adoptive, step, in_law, half), período
+// (from/to — casamento: cônjuge no período, ex-cônjuge depois; fim pela morte continua cônjuge) e procedência (src).
+// "P" sem subtipo é pai/mãe genérico (não implica biológico); meio-irmão não implica pai/mãe em comum além do declarado.
+import type { KinMeta27 } from './model27';
+export type KinT = 'S' | 'P' | 'M' | 'X' | 'U' | 'C';
+export type KinRow = [KinT, ...string[]] | [KinT, ...string[], KinMeta27];
 const J = (...x: string[]) => x.map((n) => `${n} Jackson`);
 
 export const KIN15: KinRow[] = [
@@ -10,7 +15,7 @@ export const KIN15: KinRow[] = [
   ['P', 'Tito Jackson', 'Taj Jackson', 'Taryll Jackson', 'TJ Jackson'], // r27: pai (era "tio"); os três formam o 3T
   ['P', 'Michael Jackson', 'Prince Jackson', 'Paris Jackson'],
   ['P', 'Jermaine Jackson', 'Jaafar Jackson'],
-  ['X', 'Michael Jackson', 'Lisa Marie Presley'], // r27: casados 1994–1996 ['P', 'Elvis Presley', 'Lisa Marie Presley'],
+  ['X', 'Michael Jackson', 'Lisa Marie Presley', { from: 1994, to: 1996 }], ['P', 'Elvis Presley', 'Lisa Marie Presley'], // r27 (F): linha do Elvis estava presa no comentário do C1
   // irmãos de bandas
   ['S', 'Barry Gibb', 'Robin Gibb', 'Maurice Gibb', 'Andy Gibb'],
   ['S', 'Don Everly', 'Phil Everly'],
@@ -19,7 +24,7 @@ export const KIN15: KinRow[] = [
   ['S', 'Kevin Jonas', 'Joe Jonas', 'Nick Jonas'],
   ['S', 'Este Haim', 'Danielle Haim', 'Alana Haim'],
   ['S', 'Caleb Followill', 'Nathan Followill', 'Jared Followill'], ['C', 'Matthew Followill', 'Caleb Followill'],
-  ['S', 'Eddie Van Halen', 'Alex Van Halen'], ['P', 'Eddie Van Halen', 'Wolfgang Van Halen'], ['X', 'Eddie Van Halen', 'Valerie Bertinelli'], // r27: casados 1981–2007
+  ['S', 'Eddie Van Halen', 'Alex Van Halen'], ['P', 'Eddie Van Halen', 'Wolfgang Van Halen'], ['X', 'Eddie Van Halen', 'Valerie Bertinelli', { from: 1981, to: 2007 }],
   ['S', 'Angus Young', 'Malcolm Young', 'George Young'],
   ['S', "O'Kelly Isley", 'Rudolph Isley', 'Ronald Isley', 'Ernie Isley', 'Marvin Isley'],
   ['S', 'Ruth Pointer', 'Anita Pointer', 'June Pointer', 'Bonnie Pointer'],
@@ -30,7 +35,8 @@ export const KIN15: KinRow[] = [
   // pais e filhos
   ['P', 'Bob Marley', 'Ziggy Marley', 'Damian Marley', 'Stephen Marley', 'Julian Marley', 'Ky-Mani Marley', 'Cedella Marley'], ['M', 'Bob Marley', 'Rita Marley'], ['P', 'Rita Marley', 'Ziggy Marley', 'Stephen Marley', 'Cedella Marley'],
   ['S', 'Ziggy Marley', 'Stephen Marley', 'Cedella Marley'],
-  ['P', 'John Lennon', 'Julian Lennon', 'Sean Lennon'], ['M', 'John Lennon', 'Yoko Ono'], ['X', 'John Lennon', 'Cynthia Lennon'], ['P', 'Yoko Ono', 'Sean Lennon'], ['S', 'Julian Lennon', 'Sean Lennon'],
+  // r27 (F): Julian (mãe Cynthia) e Sean (mãe Yoko) são meio-irmãos pelo pai; John e Yoko casados até a morte dele
+  ['P', 'John Lennon', 'Julian Lennon', 'Sean Lennon', { sub: 'biological' }], ['M', 'John Lennon', 'Yoko Ono', { from: 1969, to: 1980 }], ['X', 'John Lennon', 'Cynthia Lennon', { from: 1962, to: 1968 }], ['P', 'Yoko Ono', 'Sean Lennon', { sub: 'biological' }], ['S', 'Julian Lennon', 'Sean Lennon', { sub: 'half' }],
   ['M', 'Johnny Cash', 'June Carter Cash'], ['P', 'Johnny Cash', 'Rosanne Cash', 'John Carter Cash'], ['P', 'June Carter Cash', 'Carlene Carter', 'John Carter Cash'], ['P', 'Maybelle Carter', 'June Carter Cash'],
   ['P', 'Nat King Cole', 'Natalie Cole'], ['S', 'Nat King Cole', 'Freddy Cole'], ['U', 'Freddy Cole', 'Natalie Cole'],
   ['P', 'Frank Sinatra', 'Nancy Sinatra', 'Frank Sinatra Jr.'], ['S', 'Nancy Sinatra', 'Frank Sinatra Jr.'],
@@ -39,17 +45,18 @@ export const KIN15: KinRow[] = [
   ['S', 'Beyoncé', 'Solange'], ['M', 'Beyoncé', 'Jay-Z'], ['P', 'Beyoncé', 'Blue Ivy Carter'],
   ['P', 'Hank Williams', 'Hank Williams Jr.'], ['P', 'Hank Williams Jr.', 'Hank Williams III'],
   ['P', 'Bob Dylan', 'Jakob Dylan'], ['P', 'Willie Nelson', 'Lukas Nelson', 'Micah Nelson'], ['S', 'Lukas Nelson', 'Micah Nelson'],
-  ['P', 'Ravi Shankar', 'Norah Jones', 'Anoushka Shankar'], ['S', 'Norah Jones', 'Anoushka Shankar'],
+  ['P', 'Ravi Shankar', 'Norah Jones', 'Anoushka Shankar', { sub: 'biological' }], ['S', 'Norah Jones', 'Anoushka Shankar', { sub: 'half' }], // r27 (F): meio-irmãs (mães diferentes)
   ['P', 'Julio Iglesias', 'Enrique Iglesias'], ['P', 'Phil Collins', 'Lily Collins'], ['P', 'Mick Jagger', 'Jade Jagger'],
   ['P', 'Ringo Starr', 'Zak Starkey'], ['P', 'Paul McCartney', 'Stella McCartney', 'James McCartney'], ['M', 'Paul McCartney', 'Linda McCartney'],
   // Brasil
   ['P', 'Dorival Caymmi', 'Dori Caymmi', 'Danilo Caymmi', 'Nana Caymmi'], ['S', 'Dori Caymmi', 'Danilo Caymmi', 'Nana Caymmi'], ['P', 'Nana Caymmi', 'Stella Caymmi'],
   ['S', 'Caetano Veloso', 'Maria Bethânia'], ['P', 'Caetano Veloso', 'Moreno Veloso', 'Zeca Veloso', 'Tom Veloso'], ['S', 'Moreno Veloso', 'Zeca Veloso', 'Tom Veloso'], ['M', 'Caetano Veloso', 'Paula Lavigne'],
   ['P', 'Gilberto Gil', 'Preta Gil', 'Bem Gil', 'Bela Gil', 'Nara Gil'], ['S', 'Preta Gil', 'Bem Gil', 'Bela Gil', 'Nara Gil'],
-  ['P', 'Elis Regina', 'Maria Rita', 'Pedro Mariano', 'João Marcello Bôscoli'], ['S', 'Maria Rita', 'Pedro Mariano', 'João Marcello Bôscoli'], ['X', 'Elis Regina', 'César Camargo Mariano'], // r27: casados 1973–1981 ("Cesar" sem acento é a mesma pessoa) ['P', 'César Camargo Mariano', 'Pedro Mariano', 'Maria Rita'],
+  // r27 (F): João Marcello é filho de Ronaldo Bôscoli (kin27) — meio-irmão de Pedro e Maria Rita (filhos de César); casados 1973–1981
+  ['P', 'Elis Regina', 'Maria Rita', 'Pedro Mariano', 'João Marcello Bôscoli', { sub: 'biological' }], ['S', 'Maria Rita', 'Pedro Mariano'], ['X', 'Elis Regina', 'César Camargo Mariano', { from: 1973, to: 1981 }], ['P', 'César Camargo Mariano', 'Pedro Mariano', 'Maria Rita', { sub: 'biological' }],
   ['P', 'Wilson Simonal', 'Wilson Simoninha', 'Max de Castro'], ['S', 'Wilson Simoninha', 'Max de Castro'],
-  ['P', 'Luiz Gonzaga', 'Gonzaguinha'],
-  ['S', 'Chico Buarque', 'Miúcha', 'Cristina Buarque', 'Ana de Hollanda'], ['P', 'Miúcha', 'Bebel Gilberto'], ['P', 'João Gilberto', 'Bebel Gilberto'], ['X', 'João Gilberto', 'Miúcha'], // casados 1965–1971 ['U', 'Chico Buarque', 'Bebel Gilberto'], ['X', 'João Gilberto', 'Astrud Gilberto'], // r27: casados 1959–1964
+  ['P', 'Luiz Gonzaga', 'Gonzaguinha', { sub: 'biological', src: 'a' }], // r27 (F): versão oficial (paternidade discutida em biografias)
+  ['S', 'Chico Buarque', 'Miúcha', 'Cristina Buarque', 'Ana de Hollanda'], ['P', 'Miúcha', 'Bebel Gilberto'], ['P', 'João Gilberto', 'Bebel Gilberto'], ['X', 'João Gilberto', 'Miúcha', { from: 1965, to: 1971 }], ['U', 'Chico Buarque', 'Bebel Gilberto'], ['X', 'João Gilberto', 'Astrud Gilberto', { from: 1959, to: 1964 }], // r27 (F): linhas presas no comentário do C1
   ['P', 'Xororó', 'Sandy', 'Junior Lima'], ['S', 'Sandy', 'Junior Lima'],
   ['P', 'Tom Jobim', 'Paulo Jobim'], ['P', 'Paulo Jobim', 'Daniel Jobim'], ['P', 'Vinicius de Moraes', 'Luciana de Moraes'],
 

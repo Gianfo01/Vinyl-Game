@@ -26,7 +26,10 @@ import { l } from '../data/world';
 import { takeoverTerms, type TakeoverTerms } from './takeover';
 import { runSimHooks } from './ext4';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
+/** r27 (F): modelo histórico novo (passagens, laços com período, apelidos, composição, procedência) — saves anteriores
+ *  não abrem; a tela de saves marca "incompatível" e oferece Excluir (o usuário aceitou apagar os antigos). */
+export const MIN_SAVE_VERSION = 6;
 
 export function runSignature(seed: string, startYear: number): string {
   const h = hashString(seed).toString(16).toUpperCase().padStart(8, '0');
