@@ -6,10 +6,14 @@ import { MEMBERS25_2 } from './members25_2';
 import { MEMBERS25_3 } from './members25_3';
 import { MEMBERS25_4 } from './members25_4';
 import { MEMBERS25_5 } from './members25_5';
+import { MEMBERS25W_1, SOLO25W_1 } from './members25w_1';
+import { MEMBERS25W_2, SOLO25W_2 } from './members25w_2';
+import { MEMBERS25W_3, SOLO25W_3 } from './members25w_3';
 
-const WEB25: Record<string, RealMember[]>[] = [];
+const WEB25: Record<string, RealMember[]>[] = [MEMBERS25W_1, MEMBERS25W_2, MEMBERS25W_3];
 export const MEMBERS25: Record<string, RealMember[]> = Object.assign({}, MEMBERS25_1, MEMBERS25_2, MEMBERS25_3, MEMBERS25_4, MEMBERS25_5);
-for (const w of WEB25) for (const [k, v] of Object.entries(w)) if (v.length || !MEMBERS25[k]?.length) MEMBERS25[k] = v;
+for (const w of WEB25) for (const [k, v] of Object.entries(w)) if (v.length > (MEMBERS25[k]?.length ?? 0) || (v.length >= 2)) MEMBERS25[k] = v;
+for (const k of [...SOLO25W_1, ...SOLO25W_2, ...SOLO25W_3]) delete MEMBERS25[k]; // conferidos: é uma pessoa só
 
 /** Preenche `m` só de quem não tinha integrantes; grupo sem formação conhecida continua como está. */
 export function applyMembers25<T extends { n: string; m?: RealMember[] }>(xs: T[]): number {
