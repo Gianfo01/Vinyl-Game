@@ -204,7 +204,7 @@ describe('r27 (I2) sede por fora = sede por dentro', () => {
     expect(hqExt27({ level: 4, year: 1935 }).roof).toBe('crown');
   });
   it('andares comprados (I1) e obra: mais andares, andaime no topo, guindaste só a partir do prédio', () => {
-    const a = hqExt27({ level: 3, year: 1990, floorsOpen: 3 }), // r27: prédio com o último andar ainda à venda b = hqExt27({ level: 3, year: 1990, floorsOpen: 4, building: true });
+    const a = hqExt27({ level: 3, year: 1990, floorsOpen: 3 }) /* r27: último andar ainda à venda */, b = hqExt27({ level: 3, year: 1990, floorsOpen: 4, building: true });
     expect(b.floors).toBe(4);
     expect(b.H).toBeGreaterThan(a.H + a.fh);
     expect(b.crane).toBe(true);

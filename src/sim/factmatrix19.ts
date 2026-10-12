@@ -35,6 +35,7 @@ export const WHITELIST19: Record<string, string> = {
   crime_leave: 'saída de organização (crimemem23): o estado de membros já dispara as consequências; o fato vira linha do tempo e boato',
   crime_member: 'vínculo revelado (crimemem23): segredo que passou a rumor/público; reações saem de secrets23/links23 pelo estado, não pelo tipo do fato',
   secret23: 'segredo (secrets23): descoberto/vazado pelo próprio sistema de segredos, que já aplica escândalo, holds e stress; o fato é o registro visível',
+  cover_up: 'encobrimento no Submundo jogável (heist27): o efeito já sai no próprio plano (calor, provas, rancores, segredos); o fato é o registro na linha do tempo',
   scenario: 'abertura de cenário (scenarios17): marco da linha do tempo, não um acontecimento a reagir',
   run_end: 'fim de partida (start17): consumido pelo epitáfio/resumo, não por sistemas do mundo',
   doctrine: 'mudança de doutrina (paths18): efeito aplicado no próprio paths18',
