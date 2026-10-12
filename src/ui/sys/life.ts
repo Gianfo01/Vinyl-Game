@@ -33,6 +33,7 @@ import { chips, ic, meter, stat, tabs } from '../vis';
 import { ownerTab } from './people/area';
 import { personalAgendaTab, possessionsTab } from './goods8';
 import { careTab, heartTab, kidsTab, looksTab } from './life17';
+import { kidChoices27 } from './kin27';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -143,6 +144,7 @@ function loveTab(s: GameState): HTMLElement {
       kx.actId && s.acts[kx.actId] ? h('p', null, t(l('Carreira: ', 'Career: ')), actLink(s, kx.actId))
         : age >= 16 ? h('div', { class: 'row wrap' }, select(g0, GENRES.filter((x) => x.born <= s.year).sort((a, b) => t(a.name).localeCompare(t(b.name))).map((x) => ({ value: x.id, label: t(x.name) })), (v) => (g0 = v)),
           btn(l('Lançar carreira pelo selo', 'Launch a career on the label'), 1, () => { const res = launchKidCareer(s, rngOf(s), i, g0); if (isL(res)) run(res); else { toast(t(l('Estreia marcada!', 'Debut set!')), 'good'); openActPage(res.id); rerender(); } })) : null,
+      kidChoices27(s, i, age, run), // r27 AUD2: apoiar, estudos, empresa, deserdar/pazes + sucessão
     ));
   });
   return h('div', null,

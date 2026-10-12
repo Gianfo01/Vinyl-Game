@@ -148,12 +148,12 @@ describe('r19 T7 — mercado B: cancel19, insure19, culture19, naming19', () => 
     expect(ins19(s).pol.length).toBe(0);
     expect(setPlan19(s, true)).toBeNull();
     expect(setCulture19(s, 'profit')).toBeNull();
-    expect(setCulture19(s, 'artist')).not.toBeNull(); // cooldown de 6 meses
+    expect(setCulture19(s, 'artist')).not.toBeNull(); // cooldown de 12 meses (r27 AUD2)
     expect(cul19(s).c).toBe('profit');
     expect(kinds(s, 'culture_shift').length).toBe(1);
     expect(offerMods().some((m) => m.id === 'culture19')).toBe(true);
     expect(offerMods().some((m) => m.id === 'insure19:plan')).toBe(true);
-    s.week += 30;
+    s.week += 56;
     expect(setCulture19(s, 'artist')).toBeNull();
     expect(cul19(s).c).toBe('artist');
     expect(kinds(s, 'culture_shift').length).toBe(2);

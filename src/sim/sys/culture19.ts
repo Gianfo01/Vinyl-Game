@@ -2,7 +2,7 @@
 // LUCRO PRIMEIRO, PRESTÍGIO ou CAOS CRIATIVO. A cultura puxa todo mês a lealdade da equipe (people/staff: abaixo de 25
 // a pessoa sai — e rivais caçam quem está insatisfeito), a confiança e o humor do elenco, a aceitação das propostas a
 // artistas (registerOfferMod), a reputação e o caixa (bônus cortados no lucro primeiro; mimos no artista primeiro;
-// erros de metadados e vazamentos no caos). Trocar de cultura abala a equipe (`culture_shift`) e só pode a cada 6 meses.
+// erros de metadados e vazamentos no caos). Trocar de cultura abala a equipe (`culture_shift`) e só pode a cada 12 meses.
 // Treinamento pago (A&R, jurídico, metadados) sobe a habilidade e a lealdade da equipe e evita os erros do caos.
 
 import { Rng, clamp } from '../../core/rng';
@@ -29,7 +29,8 @@ export const CUL19: Record<Cul19, { name: L; desc: L; loy: number; trust: number
   prestige: { name: l('Prestígio', 'Prestige'), desc: l('Só o que a crítica respeita: reputação artística sobe devagar, comercial cai; artistas autorais aceitam mais.', 'Only what critics respect: artistic reputation rises slowly, commercial falls; auteur artists accept more.'), loy: 0.2, trust: 0.1, morale: 0.2, offer: 0.03, real: l('ECM, Blue Note, 4AD: a capa e o som são a marca.', 'ECM, Blue Note, 4AD: the cover and the sound are the brand.') },
   chaos: { name: l('Caos criativo', 'Creative chaos'), desc: l('Portas abertas e festas: inspiração sobe, estresse também; erros de metadados e vazamentos acontecem.', 'Open doors and parties: inspiration rises, so does stress; metadata errors and leaks happen.'), loy: -0.2, trust: 0.1, morale: 0.3, offer: 0.01, real: l('Factory Records e Creation: discos lendários e contas no vermelho.', 'Factory Records and Creation: legendary records and red ink.') },
 };
-export const CUL_CD19 = 26;
+/** r27 AUD2: 12 meses (antes 6) — a cultura de fato nasce das decisões (sys/aud27/culture27); o menu declara e empurra devagar. */
+export const CUL_CD19 = 52;
 export interface Culture19 extends Log19 { c: Cul19 | null; since: number; prev: Cul19 | null; train: boolean; err: number; leaks: number; trainPaid: number }
 declare module '../ext4' { interface Ext4 { culture19: Culture19 } }
 const fresh = (): Culture19 => ({ c: null, since: -999, prev: null, train: false, err: 0, leaks: 0, trainPaid: 0, log: [], n: {} });
@@ -137,5 +138,5 @@ registerExplain('cul19', (s) => {
   ] : [];
   if (st.train) parts.push({ label: l('Treinamento: lealdade +0,4/mês, habilidade +0,15/mês', 'Training: loyalty +0.4/month, skill +0.15/month'), value: trainCost19(s), fmt: 'money', tone: 'good' });
   parts.push({ label: l('Lealdade média da equipe hoje', 'Average staff loyalty today'), value: avgLoy19(s), fmt: 'num' });
-  return { title: l('Cultura da empresa', 'Company culture'), value: c ? CUL19[c].name.pt : '—', fmt: 'text', parts, note: l('Lealdade abaixo de 25 → a pessoa pede demissão (rivais caçam). Trocar de cultura: −6 de lealdade na hora, no máximo a cada 6 meses.', 'Loyalty below 25 → the person quits (rivals poach). Changing culture: −6 loyalty at once, at most every 6 months.') };
+  return { title: l('Cultura da empresa', 'Company culture'), value: c ? CUL19[c].name.pt : '—', fmt: 'text', parts, note: l('Lealdade abaixo de 25 → a pessoa pede demissão (rivais caçam). Trocar de cultura: −6 de lealdade na hora, no máximo a cada 12 meses.', 'Loyalty below 25 → the person quits (rivals poach). Changing culture: −6 loyalty at once, at most every 12 months.') };
 });

@@ -10,6 +10,7 @@ import { money, rngOf } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerTab } from '../registry';
+import { sharkNote27 } from '../../sim/sys/aud27/shark27'; // r27 AUD2
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 const form = { lender: 'bank' as LenderId, amount: 5000 };
@@ -49,7 +50,7 @@ export function vicesTab(s: GameState): HTMLElement {
     h('aside', { class: 'col-side' },
       section(t(l('Empréstimos pessoais', 'Personal loans')),
         h('p', { class: 'muted small' }, t(l('Patrimônio pessoal: {v}. O dinheiro entra no seu bolso; as parcelas saem dele todo mês.', 'Personal wealth: {v}. Money goes into your pocket; payments come out of it every month.'), { v: $(o.wealth) })),
-        v.loans.length ? h('ul', { class: 'small' }, v.loans.map((x) => h('li', null, h('b', null, t(LENDERS[x.lender].name)), ` — ${$(x.balance)} · ${$(x.monthly)}/${t(l('mês', 'mo'))}`, x.missed >= 1 ? pill(t(l('atrasado', 'late')), 'bad') : null, ' ', h('button', { class: 'link', onclick: () => say(repayPersonalLoan(s, x.id)) }, t(l('quitar', 'pay off')))))) : h('p', { class: 'muted small' }, t(l('Sem dívidas pessoais.', 'No personal debts.'))),
+        v.loans.length ? h('ul', { class: 'small' }, v.loans.map((x) => h('li', null, h('b', null, t(LENDERS[x.lender].name)), ` — ${$(x.balance)} · ${$(x.monthly)}/${t(l('mês', 'mo'))}`, x.missed >= 1 ? pill(t(l('atrasado', 'late')), 'bad') : null, sharkNote27(s, x.id) ? h('small', { class: 'muted' }, ` (${t(sharkNote27(s, x.id)!)})`) : null, ' ', h('button', { class: 'link', onclick: () => say(repayPersonalLoan(s, x.id)) }, t(l('quitar', 'pay off')))))) : h('p', { class: 'muted small' }, t(l('Sem dívidas pessoais.', 'No personal debts.'))),
         h('label', null, t(l('Credor', 'Lender')), select<LenderId>(form.lender, (Object.keys(LENDERS) as LenderId[]).map((k) => ({ value: k, label: `${t(LENDERS[k].name)} (${Math.round(LENDERS[k].rate * 100)}% a.a.)` })), (v2) => { form.lender = v2; rerender(); })),
         h('small', { class: 'muted' }, t(LENDERS[form.lender].desc)),
         h('label', null, t(l('Valor (dólares de 1960)', 'Amount (1960 dollars)')), h('input', { type: 'number', min: 500, step: 500, value: form.amount, onchange: (e: Event) => { form.amount = Math.max(500, Number((e.target as HTMLInputElement).value)); rerender(); } })),
@@ -67,7 +68,7 @@ function companyLoansTab(s: GameState): HTMLElement {
     h('p', { class: 'muted small' }, t(l('Cada credor tem regras próprias. As parcelas saem do caixa todo mês; caixa negativo traz consequências (o agiota ameaça, o investidor vira sócio, o banco suja seu nome).', 'Each lender has its own rules. Payments come out of cash every month; negative cash has consequences (the shark threatens, the investor becomes a partner, the bank ruins your credit).'))),
     s.player.loans.length ? h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Credor', 'Lender'))), h('th', null, t(l('Saldo', 'Balance'))), h('th', null, t(l('Parcela', 'Payment'))), h('th', null, t(l('Juros', 'Rate'))))),
-      h('tbody', null, s.player.loans.map((x) => h('tr', null, h('td', null, t(CO_LENDERS[v.coLenders[x.id] ?? 'bank'].name)), h('td', null, $(x.balance)), h('td', null, $(x.monthly)), h('td', null, `${(x.rate * 100).toFixed(1)}%`))))) : h('p', { class: 'muted small' }, t(l('Nenhum empréstimo ativo.', 'No active loans.'))),
+      h('tbody', null, s.player.loans.map((x) => h('tr', null, h('td', null, t(CO_LENDERS[v.coLenders[x.id] ?? 'bank'].name), sharkNote27(s, x.id) ? h('small', { class: 'muted' }, ` (${t(sharkNote27(s, x.id)!)})`) : null), h('td', null, $(x.balance)), h('td', null, $(x.monthly)), h('td', null, `${(x.rate * 100).toFixed(1)}%`))))) : h('p', { class: 'muted small' }, t(l('Nenhum empréstimo ativo.', 'No active loans.'))),
     h('div', { class: 'mg-depts' }, (Object.keys(CO_LENDERS) as CoLenderId[]).map((k) => {
       const def = CO_LENDERS[k];
       const err = companyLoanBlocker(s, k);
