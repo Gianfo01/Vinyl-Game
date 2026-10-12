@@ -29,6 +29,8 @@ export interface Prefs {
   cutscenes?: boolean;
   /** r23 (A): o que interrompe — só decisões, marcos também (padrão) ou tudo */
   interrupt23?: 'decisions' | 'milestones' | 'all';
+  /** r27: atividades jogáveis — 'play' (padrão), 'key' (só as importantes) ou 'quick' (sempre rápido) */
+  activities27?: 'play' | 'key' | 'quick';
   /** pele da interface por era */
   eraSkin?: boolean;
   /** r19 (B.5): perguntar antes de avançar quando há cartões que vão valer o padrão (false = não perguntar) */

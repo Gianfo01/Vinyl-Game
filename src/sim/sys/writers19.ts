@@ -241,6 +241,23 @@ export function takeOffer19(s: GameState, oid: string, cut: boolean): L {
 const plagMult = (s: GameState) => (s.year >= 2015 ? 1.8 : s.year >= 1976 ? 1.2 : 1);
 export const plagOdds19 = (s: GameState, so: Song, dir: 'in' | 'out'): number => dir === 'in' ? clamp(0.3 + so.originality / 160 + staffSkill(s, 'legal') / 400 - (s.year >= 2015 ? 0.1 : 0), 0.1, 0.9) : clamp(0.2 + so.originality / 220 + staffSkill(s, 'legal') / 500 + (s.year >= 2015 ? 0.1 : 0), 0.08, 0.75);
 export const plagSettle19 = (s: GameState, so: Song) => money(s, 3000 + Math.min(20000, (relOf(s, so)?.totalUnits ?? 0) * 0.01));
+/** Abre um processo de plágio contra uma faixa sua (o mesmo sorteio do caminho original; r27 M1: também usado pela
+ *  "ideia emprestada" da composição jogável, src/sim/sys/compose27.ts). */
+export function openPlagSuit19(s: GameState, r: Rng, so: Song): boolean {
+  const st = wr19(s);
+  const pool = Object.values(s.acts).filter((x) => x.owner !== 'player' && x.status !== 'retired' && x.fame >= 20 && familyOf(x.genre) === familyOf(so.genre) && !shield18(s, x.id));
+  if (!pool.length) return false;
+  const other = r.pick(pool);
+  const su: Suit19 = { id: `pl${++st.seq}`, dir: 'in', song: so.id, other: other.id, st: 'open', odds: plagOdds19(s, so, 'in'), amt: plagSettle19(s, so) };
+  st.suits.push(su);
+  const t = fmtL(l('{o} acusa "{t}" ({a}) de plágio.', '{o} accuses "{t}" ({a}) of plagiarism.'), { o: other.name, t: so.title, a: s.acts[so.actId]?.name ?? '' });
+  emitFact(s, { kind: 'plagiarism_suit', actors: [other.id, so.actId, 'player'], severity: 35, visibility: 'public', tags: ['bad', 'songwriting', 'court', 'in'], text: t, src: 'writers19' });
+  pushInbox18(s, 'wr19_plag', { from: other.name, subject: t, tone: 'bad', weeks: 8, ref: { su: su.id },
+    body: fmtL(l('Brigar na Justiça: {o}% de chance (originalidade {g}{p}), custas {c}. Dar crédito: 15% da obra para eles. Acordo: {v}.', 'Fight in court: {o}% chance (originality {g}{p}), fees {c}. Give credit: 15% of the work to them. Settle: {v}.'),
+      { o: Math.round(su.odds * 100), g: Math.round(so.originality), p: s.year >= 2015 ? l('; depois de "Blurred Lines" a "sensação" conta', '; after "Blurred Lines" the "feel" counts') : '', c: usd(money(s, 5000)), v: usd(su.amt) }),
+    actions: [{ id: 'fight', label: l('Brigar', 'Fight') }, { id: 'settle', label: l('Acordo', 'Settle') }, { id: 'credit', label: l('Dar crédito', 'Give credit') }] });
+  return true;
+}
 function plagiarism(s: GameState, r: Rng): void {
   const st = wr19(s);
   if (s.year < 1925) return;
@@ -250,17 +267,7 @@ function plagiarism(s: GameState, r: Rng): void {
     if (!so || !rel || st.chk[`p:${sid}`] || !rel.peak || rel.peak > 5 || rel.week < s.week - 26) continue;
     st.chk[`p:${sid}`] = 1;
     if (!r.chance(0.035 * plagMult(s))) continue;
-    const pool = Object.values(s.acts).filter((x) => x.owner !== 'player' && x.status !== 'retired' && x.fame >= 20 && familyOf(x.genre) === familyOf(so.genre) && !shield18(s, x.id));
-    if (!pool.length) continue;
-    const other = r.pick(pool);
-    const su: Suit19 = { id: `pl${++st.seq}`, dir: 'in', song: sid, other: other.id, st: 'open', odds: plagOdds19(s, so, 'in'), amt: plagSettle19(s, so) };
-    st.suits.push(su);
-    const t = fmtL(l('{o} acusa "{t}" ({a}) de plágio.', '{o} accuses "{t}" ({a}) of plagiarism.'), { o: other.name, t: so.title, a: s.acts[so.actId]?.name ?? '' });
-    emitFact(s, { kind: 'plagiarism_suit', actors: [other.id, so.actId, 'player'], severity: 35, visibility: 'public', tags: ['bad', 'songwriting', 'court', 'in'], text: t, src: 'writers19' });
-    pushInbox18(s, 'wr19_plag', { from: other.name, subject: t, tone: 'bad', weeks: 8, ref: { su: su.id },
-      body: fmtL(l('Brigar na Justiça: {o}% de chance (originalidade {g}{p}), custas {c}. Dar crédito: 15% da obra para eles. Acordo: {v}.', 'Fight in court: {o}% chance (originality {g}{p}), fees {c}. Give credit: 15% of the work to them. Settle: {v}.'),
-        { o: Math.round(su.odds * 100), g: Math.round(so.originality), p: s.year >= 2015 ? l('; depois de "Blurred Lines" a "sensação" conta', '; after "Blurred Lines" the "feel" counts') : '', c: usd(money(s, 5000)), v: usd(su.amt) }),
-      actions: [{ id: 'fight', label: l('Brigar', 'Fight') }, { id: 'settle', label: l('Acordo', 'Settle') }, { id: 'credit', label: l('Dar crédito', 'Give credit') }] });
+    openPlagSuit19(s, r, so);
   }
   // você processa: sucesso alheio parecido com o seu catálogo
   if (s.config.role === 'artist' || !r.chance(0.03 * plagMult(s))) return;

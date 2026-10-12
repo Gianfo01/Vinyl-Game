@@ -333,4 +333,5 @@ import './roles21'; // r21: funções múltiplas por pessoa + decisões que cada
 import './scenarios23'; // r23: cenários de outras profissões e mais selos (depois do careers19)
 import './eggs27'; // r27 ovos de Páscoa (raros, determinísticos; docs/eggs27.md)
 import './hqrooms27'; // r27 I1: salas e andares compráveis da sede (obra, manutenção, efeitos)
+import './compose27'; // r27 M1: composição jogável (cartas) — risco de plágio da ideia emprestada (gancho mensal, fluxo próprio)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

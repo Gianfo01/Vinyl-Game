@@ -196,6 +196,9 @@ export function resolveTake(s: GameState, r: Rng, sessionId: string, choice: 'ke
   return null;
 }
 
+/** r27 M1: a gravação jogável (src/sim/sys/record27.ts) fecha cada faixa pelo mesmo caminho. */
+export const fixSong27 = (s: GameState, r: Rng, sess: StudioSession, songId: string, perf: number): void => fixSong(s, r, sess, songId, perf);
+
 function fixSong(s: GameState, r: Rng, sess: StudioSession, songId: string, perf: number): void {
   const song = s.songs[songId];
   const act = s.acts[sess.actId];

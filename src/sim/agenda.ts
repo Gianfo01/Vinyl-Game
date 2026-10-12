@@ -264,6 +264,7 @@ function runAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot, dim: number
       break;
     }
     case 'compose': {
+      if (slot.params?.played27) { for (const x of [slot, ...(s.agenda[act.id] ?? [])]) if (x.params) delete x.params.played27; break; } // r27 M1: a composição jogada (compose27) já escreveu as músicas deste mês
       const prolific = actHasTrait(s, act, 'prolific') ? 1 : 0;
       const n = Math.max(1, Math.round((1 + (r.chance(0.5) ? 1 : 0) + prolific) * (actHasTrait(s, act, 'blocked') ? 0.5 : 1)));
       composeSongs(s, r, act, n);
