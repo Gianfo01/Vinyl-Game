@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
-import { BRANCHES, SKILL_TREE, START_SKILL_POINTS, YEARLY_SKILL_POINTS, branchPoints, skills } from '../src/sim/sys/persona';
-import { ACH_KINDS, awardSkillPoints } from '../src/sim/sys/skillpts13';
+import { BRANCHES, SKILL_TREE, SKILLS_OFF22, START_SKILL_POINTS, YEARLY_SKILL_POINTS, branchPoints, skills } from '../src/sim/sys/persona';
+import { awardSkillPoints } from '../src/sim/sys/skillpts13';
+import { perkEntries } from '../src/sim/perks';
 
 describe('árvore de 8 ramos', () => {
   it('cada ramo tem 6 habilidades e o total fica numa faixa jogável', () => {
@@ -19,32 +20,26 @@ describe('árvore de 8 ramos', () => {
   });
 });
 
-describe('pontos por conquistas', () => {
-  it('paga cada conquista uma vez, com aviso e diário, respeitando o teto', () => {
+// r22: a árvore de Habilidades saiu do jogo — nada é pago, comprado ou aplicado; saves antigos seguem rodando
+describe('habilidades removidas (r22)', () => {
+  it('conquistas não pagam pontos e não há aviso', () => {
     const s = createGame(defaultConfig('r13-skills', { startYear: 1990 }));
     const S0 = skills(s);
-    awardSkillPoints(s); // semeia o histórico sem pagar
-    const p0 = S0.points;
+    expect(SKILLS_OFF22).toBe(true);
+    expect(S0.owned).toEqual([]);
     for (let i = 0; i < 3; i++) s.awards.push({ year: 1990 + i, category: 'x' + i, name: 'Prêmio ' + i, byPlayer: true });
     s.week = 30;
     awardSkillPoints(s);
-    expect(S0.points).toBe(p0 + 6);
-    expect(S0.achLog!.length).toBe(3);
-    expect(s.notifications.some((n) => /ponto\(s\) de habilidade/.test(n.text.pt))).toBe(true);
-    awardSkillPoints(s);
-    expect(S0.points).toBe(p0 + 6); // sem pagamento duplo
-    for (let i = 0; i < 10; i++) s.awards.push({ year: 2000 + i, category: 'y' + i, name: 'P' + i, byPlayer: true });
-    awardSkillPoints(s);
-    expect(S0.achPts!.award).toBe(ACH_KINDS.find((k) => k.id === 'award')!.cap);
-    expect(S0.earned).toBeGreaterThanOrEqual(S0.points);
+    expect(S0.points).toBe(0);
+    expect(s.notifications.some((n) => /ponto\(s\) de habilidade/.test(n.text.pt))).toBe(false);
   });
 
-  it('save antigo sem ach carrega e a simulação segue', () => {
+  it('save antigo com habilidades compradas carrega, a simulação segue e elas não dão bônus', () => {
     const s = createGame(defaultConfig('r13-skills2', { startYear: 1990 }));
     const S0 = skills(s);
-    delete S0.ach; delete S0.achPts; delete S0.achLog;
+    S0.owned = ['cr_ear', 'cr_hook'];
     for (let i = 0; i < 14; i++) advanceMonth(s);
-    expect(S0.points).toBeGreaterThanOrEqual(0);
-    expect(Array.isArray(S0.ach)).toBe(true);
+    expect(S0.points).toBe(0);
+    expect(perkEntries(s).some((e) => /Habilidade|Ability/.test(e.label.pt))).toBe(false);
   });
 });

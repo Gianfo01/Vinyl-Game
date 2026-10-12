@@ -57,7 +57,7 @@ export const S = {
   card: s('Carta do Selo', 'Label Card'),
   mutators: s('Mutators', 'Mutators'),
   difficulty: s('Dificuldade', 'Difficulty'),
-  seed: s('Seed', 'Seed'),
+  seed: s('Semente do mundo', 'World seed'),
   ironman: s('Modo compromisso (sem desfazer)', 'Commitment mode (no undo)'),
   bandName: s('Nome da banda', 'Band name'),
   bandGenre: s('Gênero da banda', 'Band genre'),

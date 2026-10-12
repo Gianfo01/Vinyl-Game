@@ -45,24 +45,17 @@ describe('assumir gravadora existente', () => {
 });
 
 describe('árvore de habilidades', () => {
-  it('pontos iniciais, compra com pré-requisito, estilo derivado e pontos anuais', () => {
-    const spec = { name: 'Ana', age: 30, background: 'producer', career: 'producer', role: 'producer' as const, traits: [], points: {}, skills: ['cr_ear', 'cr_hook', 'cr_arr', 'cr_polish'] }; // 3 pontos (rodada 16): Lapidador não cabe
+  it('r22: habilidades fora do jogo — ficha sem habilidades, compra recusada e nenhum ponto anual', () => {
+    const spec = { name: 'Ana', age: 30, background: 'producer', career: 'producer', role: 'producer' as const, traits: [], points: {}, skills: ['cr_ear', 'cr_hook', 'cr_arr'] };
     const s = createGame(defaultConfig('r9-skill', { character: spec }));
     const S0 = skills(s);
-    expect(S0.owned).toEqual(['cr_ear', 'cr_hook', 'cr_arr']);
-    expect(S0.points).toBe(0);
-    expect(S0.lifestyle).toBe('intelectual');
-    expect(ownerOf(s).attrs.ear).toBe(deriveAttrs(spec).ear - 0); // ouvido treinado já entra na ficha
-    expect(buySkill(s, 'cr_master')).not.toBeNull(); // sem pontos
+    expect(S0.owned).toEqual([]);
+    expect(S0.lifestyle).toBeNull();
+    expect(ownerOf(s).attrs.ear).toBe(deriveAttrs(spec).ear);
     S0.points = 10;
-    expect(buySkill(s, 'net_door')).not.toBeNull(); // falta Caderninho
-    expect(buySkill(s, 'cr_radio')).toBeNull();
-    expect(buySkill(s, 'cr_polish')).toBeNull();
-    expect(buySkill(s, 'cr_master')).toBeNull();
-    expect(perk(s, 'songQ')).toBeGreaterThan(3);
-    const pts = S0.points;
+    expect(buySkill(s, 'cr_ear')).not.toBeNull();
     for (let i = 0; i < 13; i++) advanceMonth(s);
-    expect(skills(s).points).toBeGreaterThanOrEqual(pts + 2);
+    expect(skills(s).owned).toEqual([]);
   });
 
   it('há exatamente 10 estilos de vida e cada um é alcançável', () => {

@@ -3,7 +3,7 @@
 import { LABEL_LEGACY20, freeCash20 } from '../../sim/oblig20';
 import { pager18 } from '../quick18';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
-import { BRANCH_LEVELS, CARDS, ENDINGS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
+import { BRANCH_LEVELS, ENDINGS, MUTATORS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
 import { MARKETS, familyOf, l } from '../../data/world';
 import { S, locale, t } from '../../i18n/strings';
 import { availableEquipment, buyEquipment, fireStaff, loanOffer, managementLoad, monthlyCosts, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from '../../sim/economy';
@@ -470,7 +470,7 @@ function legacyTab(s: GameState): HTMLElement {
       section(t(l('Prêmios do selo', 'Label awards')), h('ul', { class: 'small' }, s.awards.filter((a) => a.byPlayer).slice(-20).reverse().map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`)))),
     ),
     h('aside', { class: 'col-side' },
-      card ? section(t(card.name), h('p', null, t(card.passive)), h('p', null, t(card.goal), ' ', pill(cardGoalDone(s) || s.player.goalsDone.includes(card.id) ? t(S.done) : t(S.pending)))) : null,
+      card && card.id !== 'none' ? section(t(card.name), h('p', null, t(card.passive)), h('p', null, t(card.goal), ' ', pill(cardGoalDone(s) || s.player.goalsDone.includes(card.id) ? t(S.done) : t(S.pending)))) : null,
       section(t(l('Fim da história', 'End of the story')), h('p', { class: 'small muted' }, t(l('Em 2040 a run termina num dos 20 finais, escolhido pelo seu legado e pelas escolhas que você fizer até lá.', 'In 2040 the run ends in one of 20 endings, chosen by your legacy and the choices you make until then.'))), h('p', { class: 'small' }, `${ENDINGS.length} ${t(l('finais possíveis', 'possible endings'))}`)),
       section(t(l('Mutators', 'Mutators')), h('p', { class: 'small' }, s.config.mutators.length ? s.config.mutators.join(', ') : t(S.none))),
       section(t(l('Run', 'Run')), kv(t(S.seed), s.config.seed), kv(t(l('Assinatura', 'Signature')), s.signature), kv(t(S.mode), s.config.mode), kv(t(S.storyteller), s.config.storyteller)),
@@ -519,7 +519,7 @@ export function hqPanel(s: GameState): HTMLElement {
     h('aside', { class: 'col-side' },
       hqHooks.side ? hqHooks.side(s) : section(t(l('Unidades por banda', 'Band units')), acts.length ? h('ul', { class: 'small' }, acts.map((a) => h('li', null, actLink(s, a.id), ` · ${t(S.fame)} ${Math.round(a.fame)} · `, t(l('agenda', 'agenda')), ': ', (s.agenda[a.id] ?? []).map((x) => x.action).join(', ') || '—'))) : h('p', { class: 'muted' }, t(S.noActs))),
       section(t(l('Capacidade', 'Capacity')), h('p', { class: 'small' }, t(hqCapacityText(s))), kv(t(S.mgmtLoad), `${(managementLoad(s) * 100).toFixed(0)}%`)),
-      section(t(l('Cartas e mutators', 'Cards and mutators')), h('p', { class: 'small' }, t(CARDS.find((c) => c.id === s.config.card)?.name))),
+      s.config.mutators.length ? section(t(l('Modificadores', 'Mutators')), h('p', { class: 'small' }, s.config.mutators.map((id) => t(MUTATORS.find((m) => m.id === id)?.name)).join(', '))) : null,
     ),
   );
 }

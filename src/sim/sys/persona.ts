@@ -18,6 +18,10 @@ import { ORIGIN_OF_BACKGROUND, originById, type OriginId } from './identity/data
 export * from './persona/data';
 export * from './persona/skills';
 
+/** r22: a árvore de Habilidades saiu do jogo (pedido de design). Nada é comprado, ganho ou aplicado; saves antigos
+ * guardam o estado, mas as habilidades e o estilo de vida deixam de dar bônus. */
+export const SKILLS_OFF22 = true;
+
 export type CopingId = 'drink' | 'overwork' | 'recluse' | 'meditation' | 'shopping';
 export const COPING: Record<CopingId, { name: L; desc: L }> = {
   drink: { name: l('Bebida', 'Drinking'), desc: l('−12 de estresse por mês, −1 de saúde por mês. Pode virar escândalo.', '−12 stress a month, −1 health a month. May become a scandal.') },
@@ -85,7 +89,7 @@ export function deriveAttrs(spec: CharacterSpec): Record<OwnerAttrId, number> {
   add(backgroundById[spec.background as BackgroundId]?.owner);
   for (const t of spec.traits ?? []) add(playerTraitById[t]?.attrs);
   add(originById[careerOfSpec(spec)]?.attrs);
-  for (const id of validStartSkills(spec.skills ?? [])) add(skillById[id]?.attrs);
+  if (!SKILLS_OFF22) for (const id of validStartSkills(spec.skills ?? [])) add(skillById[id]?.attrs);
   add(visualById[spec.visual ?? '']?.attrs);
   add(spec.points);
   for (const k of Object.keys(a) as OwnerAttrId[]) a[k] = clamp(Math.round(a[k]), 10, 95);
@@ -127,10 +131,13 @@ function applyPersona(s: GameState, r: Rng): void {
     P0.motto = spec.motto?.trim().slice(0, 120) || undefined;
     const attrs = deriveAttrs({ ...spec, background: life(s).background });
     o.attrs = { ...attrs };
-    const picked = validStartSkills(spec.skills ?? []);
-    const owned = picked.length || spec.skills ? picked : autoSkills(BRANCH_OF_STYLE[P0.style] ?? 'net', START_SKILL_POINTS);
-    if (owned !== picked) for (const id of owned) addAttrs(s, skillById[id].attrs);
-    initSkills(s, owned, START_SKILL_POINTS - owned.reduce((t, id) => t + skillById[id].cost, 0));
+    if (SKILLS_OFF22) initSkills(s, [], 0);
+    else {
+      const picked = validStartSkills(spec.skills ?? []);
+      const owned = picked.length || spec.skills ? picked : autoSkills(BRANCH_OF_STYLE[P0.style] ?? 'net', START_SKILL_POINTS);
+      if (owned !== picked) for (const id of owned) addAttrs(s, skillById[id].attrs);
+      initSkills(s, owned, START_SKILL_POINTS - owned.reduce((t, id) => t + skillById[id].cost, 0));
+    }
     const car = originById[careerOfSpec({ ...spec, background: life(s).background })];
     if (car?.rep) s.player.reputation.institutional = clamp(s.player.reputation.institutional + car.rep, 0, 100);
   } else {
@@ -143,9 +150,12 @@ function applyPersona(s: GameState, r: Rng): void {
     const br = r.pick(BRANCHES).id;
     P0.style = (Object.keys(BRANCH_OF_STYLE).find((k) => BRANCH_OF_STYLE[k] === br) ?? 'mentor') as StyleId;
     P0.hometown = s.config.homeCity;
-    const owned = autoSkills(br, START_SKILL_POINTS);
-    for (const id of owned) addAttrs(s, skillById[id].attrs);
-    initSkills(s, owned, START_SKILL_POINTS - owned.reduce((t, id) => t + skillById[id].cost, 0));
+    if (SKILLS_OFF22) initSkills(s, [], 0);
+    else {
+      const owned = autoSkills(br, START_SKILL_POINTS);
+      for (const id of owned) addAttrs(s, skillById[id].attrs);
+      initSkills(s, owned, START_SKILL_POINTS - owned.reduce((t, id) => t + skillById[id].cost, 0));
+    }
   }
   // traços viram traços da pessoa (o temperamento puxa o gênero da própria banda)
   const p = playerPerson(s);
@@ -187,8 +197,8 @@ registerPerkSource('persona', (s) => {
     if (d.families) out.push({ label: fmtL(l('Traço: {t}', 'Trait: {t}'), { t: d.name }), values: d.families.perks, act: famFilter(d.families.ids) });
   }
   const S0 = skills(s);
-  for (const id of S0.owned) { const d = skillById[id]; if (d && Object.keys(d.values).length) out.push({ label: fmtL(l('Habilidade: {p}', 'Ability: {p}'), { p: d.name }), values: d.values }); }
-  const ls = S0.lifestyle ? lifestyleById[S0.lifestyle] : undefined;
+  if (!SKILLS_OFF22) for (const id of S0.owned) { const d = skillById[id]; if (d && Object.keys(d.values).length) out.push({ label: fmtL(l('Habilidade: {p}', 'Ability: {p}'), { p: d.name }), values: d.values }); }
+  const ls = S0.lifestyle && !SKILLS_OFF22 ? lifestyleById[S0.lifestyle] : undefined;
   if (ls) out.push({ label: fmtL(l('Estilo de vida: {s}', 'Lifestyle: {s}'), { s: ls.name }), values: ls.values, act: ls.act });
   // trajetórias novas (rodada 9): efeitos declarativos; as antigas seguem em identity.ts
   const org = originById[((s.x4 as unknown as { ident?: { origin?: OriginId } }).ident?.origin ?? '') as OriginId];
@@ -257,6 +267,7 @@ function addAttrs(s: GameState, a?: Partial<Record<OwnerAttrId, number>>): void 
 
 /** Compra uma habilidade. Devolve erro ou null. */
 export function buySkill(s: GameState, id: string): L | null {
+  if (SKILLS_OFF22) return l('Habilidades não fazem mais parte do jogo.', 'Abilities are no longer part of the game.');
   const S0 = skills(s);
   const d = skillById[id];
   if (!d) return l('Habilidade desconhecida.', 'Unknown ability.');
@@ -279,6 +290,7 @@ export function buySkill(s: GameState, id: string): L | null {
 }
 
 function skillsMonth(s: GameState): void {
+  if (SKILLS_OFF22) return;
   const S0 = skills(s);
   for (const m of SKILL_MILESTONES) {
     if (S0.milestones.includes(m.id) || !m.test(s)) continue;
@@ -293,6 +305,7 @@ function skillsMonth(s: GameState): void {
 }
 
 registerSimHook('year', 'persona:skills', (s) => {
+  if (SKILLS_OFF22) return;
   const S0 = skills(s);
   if (S0.lastYear >= s.year) return;
   S0.lastYear = s.year;

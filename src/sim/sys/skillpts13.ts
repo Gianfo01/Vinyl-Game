@@ -6,7 +6,7 @@ import { l, type L } from '../../data/world';
 import { registerSimHook } from '../ext4';
 import type { GameState, Release } from '../types';
 import { fmtL, notify } from '../util';
-import { skills } from './persona';
+import { SKILLS_OFF22, skills } from './persona';
 
 export interface AchKind { id: string; name: L; desc: L; cap: number }
 export const ACH_KINDS: AchKind[] = [
@@ -42,6 +42,7 @@ function pay(s: GameState, kind: string, key: string, n: number, why: L, silent:
 
 /** Varre o estado e paga o que ainda não foi pago. */
 export function awardSkillPoints(s: GameState): void {
+  if (SKILLS_OFF22) return;
   const S0 = skills(s);
   const silent = !S0.ach && s.week < 4;
   S0.ach ??= [];

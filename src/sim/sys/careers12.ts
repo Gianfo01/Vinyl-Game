@@ -20,7 +20,7 @@ import { liveOf } from './live';
 export type CareerId = 'label' | 'manager' | 'festival' | 'booking' | 'venue' | 'studio' | 'publisher' | 'media' | 'platform' | 'musician';
 export interface CareerDef { id: string; name: L; desc: L; from: number; icon: string; area: string; load: number; status?: (s: GameState) => L | null }
 export type Origin = 'musician' | 'roadie' | 'journalist' | 'lawyer' | 'heir' | 'dj' | 'accountant'
-  | 'musicKid' | 'session' | 'anr' | 'teacher' | 'engineer' | 'adman';
+  | 'musicKid' | 'session' | 'anr' | 'teacher' | 'engineer' | 'adman' | 'none';
 export type Ambition = 'money' | 'legacy' | 'power' | 'art' | 'family' | 'fame' | 'discover' | 'world' | 'glory' | 'freedom';
 
 const vcount = (s: GameState, k: string) => ventures(s).list.filter((v) => v.kind === k).length;
@@ -51,6 +51,8 @@ export const careerDefs = (s?: GameState) => DEFS.filter((d) => !s || d.from <= 
 export const careerDef = (id: string) => DEFS.find((d) => d.id === id);
 
 export const ORIGINS: Record<Origin, { name: L; desc: L }> = {
+  // r22: a escolha de origem saiu do Novo Jogo (a trajetória já conta o seu passado); 'none' não soma nada
+  none: { name: l('Só a trajetória', 'Path only'), desc: l('Sem origem extra: o seu passado é a trajetória.', 'No extra origin: your past is your path.') },
   musician: { name: l('Ex-músico(a) de banda', 'Former band musician'), desc: l('Carisma +6, ouvido +4, instrumento +6 e palco +4; artistas confiam +3. Contatos em estúdios e festivais.', 'Charisma +6, ear +4, instrument +6 and stage +4; acts trust +3. Studio and festival contacts.') },
   roadie: { name: l('Ex-roadie/produção de estrada', 'Former roadie/road crew'), desc: l('Gestão +6; bilheteria +4%. Muitos contatos em agências e festivais.', 'Management +6; box office +4%. Lots of booking and festival contacts.') },
   journalist: { name: l('Jornalista musical', 'Music journalist'), desc: l('Ouvido +6; crítica +0,2 e reputação institucional +2. Contatos na mídia.', 'Ear +6; critics +0.2 and institutional reputation +2. Media contacts.') },
@@ -68,6 +70,7 @@ export const ORIGINS: Record<Origin, { name: L; desc: L }> = {
 /** Efeitos mecânicos de cada origem (aplicados uma vez no começo; perks valem a partida toda). */
 interface OriginFx { attrs?: Partial<Record<'ear' | 'negotiation' | 'charisma' | 'management', number>>; wealth?: number; cash?: number; rep?: number; artists?: number; skills?: Partial<Record<SkillId, number>>; perks?: PerkValues }
 export const ORIGIN_FX: Record<Origin, OriginFx> = {
+  none: {},
   musician: { attrs: { charisma: 6, ear: 4 }, skills: { instr: 6, stage: 4 }, perks: { trust: 3 } },
   roadie: { attrs: { management: 6 }, perks: { showRevenue: 0.04 } },
   journalist: { attrs: { ear: 6 }, rep: 2, perks: { critics: 0.2 } },
@@ -100,6 +103,7 @@ export const AMBITION_PERK: Record<Ambition, PerkValues> = {
   fame: { appeal: 0.04 }, discover: { scoutAccuracy: 0.04 }, world: { showRevenue: 0.05 }, glory: { reputation: 1 }, freedom: { staffCost: -0.03 },
 };
 export const ORIGIN_CONTACTS: Record<Origin, Partial<Record<string, number>>> = {
+  none: {},
   musician: { studio: 6, producer: 6, festival: 4 }, roadie: { booking: 12, festival: 10 }, journalist: { media: 14, label: 4 }, lawyer: { label: 8 },
   heir: { label: 4, festival: 4 }, dj: { media: 10, festival: 8 }, accountant: { studio: 6, label: 8 },
   musicKid: { studio: 8, producer: 6, festival: 6 }, session: { studio: 14, producer: 12 }, anr: { label: 12, media: 4 }, teacher: { studio: 4, label: 4 },

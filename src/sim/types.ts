@@ -68,10 +68,10 @@ export interface RunConfig {
 export interface LabelSetup {
   /** ids de definição escolhidos (catálogo + extras); ausente = conjunto padrão */
   ids?: string[];
-  /** número de rivais (0–60); ausente = o tamanho da lista escolhida */
+  /** número de rivais (0–100); ausente = o tamanho da lista escolhida */
   count?: number;
   /** 'history' = tamanhos e elencos pela história (padrão); 'equal' = todos (inclusive o jogador) começam iguais */
-  start?: 'history' | 'equal';
+  start?: 'history' | 'equal' | 'random' | 'inverted' | 'giants' | 'startups';
   /** gravadoras fundadas depois do ano de início: 'default' = as da lista escolhida; 'all' = todas; 'none' = nenhuma */
   future?: 'default' | 'all' | 'none';
 }

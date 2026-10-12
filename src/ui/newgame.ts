@@ -1,12 +1,12 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
-import { CARDS, HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
+import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
 import { realFounded } from '../data/realnames';
 import { S, t, type Lang } from '../i18n/strings';
 import type { RunConfig, StartCustom } from '../sim/types';
-import { createGame, DEFAULT_LABEL_IDS, labelPool, takeoverCandidates } from '../sim/worldgen';
+import { createGame, labelPool, takeoverCandidates } from '../sim/worldgen';
 import { formatMoney } from '../core/money';
 import { genreById } from '../data/world';
 import { locale } from '../i18n/strings';
@@ -14,18 +14,20 @@ import { cityName, toast } from './common';
 import { h, select } from './dom';
 import { importSave, importSaveText, loadGame, savePrefs, store } from './store';
 import { prepareNewGame, scenarioButton, scenarioScreen } from './sys/live/goals';
-import { pastCard20, personalize20 } from './newgame20you';
-import { labelsCard } from './newgameLabels';
+import { attrsCard22 } from './newgame20you';
+import { chosenLabels22, labelsCard, materializeLabels22 } from './newgameLabels';
+import { identityCard22, traitsCard22 } from './charCreate';
 import { careerCard, careerSummary } from './sys/careers12';
 import { START_YEARS13 } from './ngdata13';
 import { TUTOFF_HINT19, TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19';
 import { addHelp, hl } from './newgame13';
-import { charPreview17, copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, runCard17, startCard17, summaryExtra17, worldCard17 } from './newgame17';
+import { copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, runCard17, startCard17, summaryExtra17, worldCard17 } from './newgame17';
 import { lastSave17, profileBar17, saveErrText20, saveManager17 } from './saves17';
 import { scenarioById } from '../sim/sys/live';
 import { WORLDS17, newRunConfig20, notes17, resolveWorld20 } from '../sim/start17';
 import { YEAR_MAX20, YEAR_MIN20 } from '../sim/worldpolicy20';
 import { originById } from '../sim/sys/identity/data';
+import { AMBITIONS, type Ambition } from '../sim/sys/careers12';
 import { careerOfSpec } from '../sim/sys/persona';
 import './newgame20.css';
 
@@ -174,12 +176,12 @@ function takeoverCard(cfg: RunConfig, nameInput: HTMLInputElement, citySel: () =
 type Tab = { id: string; name: ReturnType<typeof l>; body: HTMLElement[] };
 /** r20 (G8): quatro áreas com navegação livre; uma frase por área dizendo o que se decide ali. */
 const STEP20: Record<string, ReturnType<typeof l>> = {
-  world: l('Mundo — qual realidade, quando, onde e com que semente. População, rivais e história prévia ficam em "Personalizar".', 'World — which reality, when, where and with which seed. Population, rivals and prior history are under "Customize".'),
-  mode: l('Modo — como você começa (do zero, em ascensão, estabelecido, assumindo uma gravadora ou num cenário), quais funções acumula, sua empresa, ambição e Carta. Tudo pode mudar durante a partida.', 'Mode — how you start (from zero, rising, established, taking over a label or a scenario), which roles you hold, your company, ambition and Card. Everything can change during the run.'),
-  you: l('Personagem — quem é você: passado, aparência, vida pessoal e habilidades. Nada aqui é obrigatório.', 'Character — who you are: background, look, personal life and abilities. Nothing here is mandatory.'),
-  you_old: l('Você e seu começo — o que você faz, de onde parte (do zero, em ascensão, estabelecido, assumindo uma gravadora ou num cenário), sua empresa, seu passado e sua ambição. Aparência, vida pessoal e habilidades ficam em "Personalizar personagem". Nada aqui é obrigatório.', 'You and your start — what you do, where you start (from zero, rising, established, taking over a label or a scenario), your company, your past and your ambition. Look, personal life and abilities are under "Customize character". Nothing here is mandatory.'),
-  rules: l('Regras e ritmos — dificuldade, prazo, narrador, liberdade dos NPCs, tutoriais, filtros, Ironman e regras especiais.', 'Rules and rhythms — difficulty, deadline, storyteller, NPC freedom, tutorials, filters, Ironman and special rules.'),
-  review: l('Revisão — confira o que o motor vai executar. "Editar" leva ao grupo e volta direto para cá.', 'Review — check what the engine will run. "Edit" takes you to the group and straight back here.'),
+  world: l('Mundo — quão real é o mundo, em que ano começa, o que já aconteceu antes e quantos artistas existem.', 'World — how real the world is, the start year, what happened before and how many artists exist.'),
+  you: l('Personagem — quem é você: identidade, trajetória, traços, ambição e atributos. Nada aqui é obrigatório.', 'Character — who you are: identity, path, traits, ambition and attributes. Nothing here is mandatory.'),
+  mode: l('Modo — o que você faz, de onde parte (do zero, em ascensão, estabelecido ou num cenário), se funda ou assume uma gravadora, e a sua empresa.', 'Mode — what you do, where you start (from zero, rising, established or in a scenario), whether you found or take over a label, and your company.'),
+  labels: l('Gravadoras — quais existem, quantas e como começam. Sem mexer, vale a sugestão para o ano, a cidade e o mundo escolhidos.', 'Labels — which exist, how many and how they start. Untouched, the suggestion for the chosen year, city and world applies.'),
+  rules: l('Regras e ritmo — dificuldade, prazo, narrador, liberdade dos NPCs, tutoriais, filtros, Ironman e regras especiais.', 'Rules and rhythm — difficulty, deadline, storyteller, NPC freedom, tutorials, filters, Ironman and special rules.'),
+  review: l('Revisão — confira o que o motor vai executar. "Editar" leva à etapa e volta direto para cá.', 'Review — check what the engine will run. "Edit" takes you to the step and straight back here.'),
 };
 
 export function newGameScreen(root: HTMLElement, onStart: () => void, init?: RunConfig, tab0 = 0): void {
@@ -198,9 +200,6 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     ] : []));
   };
   renderBand();
-  const cards = h('div', { class: 'card-grid' });
-  const renderCards = () => cards.replaceChildren(...CARDS.map((c) => h('button', { type: 'button', class: `pick ${cfg.card === c.id ? 'on' : ''}`, 'aria-pressed': String(cfg.card === c.id), onclick: () => { cfg.card = c.id; renderCards(); } }, h('b', null, t(c.name)), h('small', null, t(c.passive)), h('small', { class: 'muted' }, t(c.goal)))));
-  renderCards();
   // r20 (§7.4): todo controle nasce do rascunho (sobrevive à reconstrução por predefinição/código)
   const muts = h('div', { class: 'mut-grid' }, MUTATORS.map((m) => h('label', { class: 'check', title: t(m.desc) },
     h('input', { type: 'checkbox', checked: cfg.mutators.includes(m.id), onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.mutators = on ? [...cfg.mutators.filter((x) => x !== m.id), m.id] : cfg.mutators.filter((x) => x !== m.id); } }),
@@ -215,54 +214,57 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const seedInput = h('input', { type: 'text', value: cfg.seed, 'aria-label': t(S.seed), 'aria-describedby': 'ng20-seed-help', // r20b (Z3): o <label> envolve o (?) antes, que virava o controle rotulado
     oninput: (e: Event) => { cfg.seed = (e.target as HTMLInputElement).value; if (cfg.seed.trim()) seedErr.textContent = ''; }, onchange: () => refreshAll() }) as HTMLInputElement;
   const nameInput = h('input', { type: 'text', value: cfg.companyName, oninput: (e: Event) => (cfg.companyName = (e.target as HTMLInputElement).value || 'Selo') }) as HTMLInputElement;
+  // r22: a cidade-sede é escolhida só pela lista (sem busca)
   const cityBox = h('span');
-  let cityQ = '';
   const drawCity = () => {
     const all = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
-    const q = cityQ.trim().toLowerCase();
-    const xs = all.filter((c) => !q || c.id === cfg.homeCity || cityName(c.id).toLowerCase().includes(q) || (c.a3 ?? '').toLowerCase().includes(q) || c.market.toLowerCase().includes(q));
-    cityBox.replaceChildren(select(cfg.homeCity, xs.map((c) => ({ value: c.id, label: `${cityName(c.id)}${c.a3 ? ` · ${c.a3}` : ''}` })), (v) => { cfg.homeCity = v; drawSummary(); }, { 'aria-label': t(S.homeCity), ...(cfg.takeover ? { disabled: true } : {}) }));
+    cityBox.replaceChildren(select(cfg.homeCity, all.map((c) => ({ value: c.id, label: `${cityName(c.id)}${c.a3 ? ` · ${c.a3}` : ''}` })), (v) => { cfg.homeCity = v; lc.refresh(); drawSummary(); }, { 'aria-label': t(S.homeCity), ...(cfg.takeover ? { disabled: true } : {}) }));
   };
-  const citySearch = h('input', { type: 'search', class: 'ng20-city-q', placeholder: t(l('Buscar cidade ou país (ex.: BRA)…', 'Search city or country (e.g. GBR)…')), 'aria-label': t(l('Buscar cidade', 'Search city')), oninput: (e: Event) => { cityQ = (e.target as HTMLInputElement).value; drawCity(); } });
   drawCity();
   const tk = takeoverCard(cfg, nameInput, drawCity, () => drawSummary());
   const lc = labelsCard(cfg, () => tk.refresh());
   function refreshAll(): void { tk.refresh(); lc.refresh(); drawSummary(); }
   const onYear = (y: number) => { yearInput.value = String(y); renderBand(); refreshAll(); };
   const extras = newgameCards().filter((f) => !(f as { hidden17?: boolean }).hidden17).map((f) => { const el = f(cfg, onYear); return el.querySelector('h3')?.textContent === t(l('Mundo', 'World')) ? addHelp(el, 'world') : el; });
-  const popSum = h('span', { class: 'muted small' });
-  const perso = personalize20(cfg);
+  // r22: a semente mora no cartão "Mundo" (história prévia e continuação)
+  const seedRow = h('div', { class: 'ng22-seed' },
+    h('label', null, ...hl(S.seed, 'seed'), h('div', { class: 'row wrap' }, seedInput, h('button', { type: 'button', class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; seedErr.textContent = ''; refreshAll(); toast(t(l('Outro mundo sorteado: nova semente. Suas escolhas continuam; personagem e população gerados podem mudar.', 'Another world rolled: new seed. Your choices stay; the generated character and population may change.')), 'good'); } }, '🎲 ', t(l('Sortear outro mundo', 'Roll another world')))), seedErr),
+    h('small', { class: 'muted', id: 'ng20-seed-help' }, t(l('Mesma semente + mesma configuração + mesma versão do jogo = mesmo começo.', 'Same seed + same configuration + same game version = same start.'))));
+  const worldExtra = extras.find((el) => el.querySelector('h3')?.textContent?.startsWith(t(l('Mundo', 'World'))));
+  if (worldExtra) worldExtra.append(seedRow);
+  let redrawAttrs = (): void => undefined;
   const tutCard = h('section', { class: 'card' }, h('h3', null, t(l('Tutoriais e dicas', 'Tutorials and tips'))), tutToggle19(), h('small', { class: 'muted' }, t(l('Preferência deste navegador: vale para todas as partidas.', 'This browser\'s preference: applies to every run.'))));
 
   const tabs: Tab[] = [
     { id: 'world', name: l('Mundo', 'World'), body: [
       worldCard17(cfg, () => refreshAll(), rebuild),
-      h('section', { class: 'card wide ng20-where' },
-        h('label', null, ...hl(S.startYear, 'year'), h('div', { class: 'row wrap' }, yearSel, yearInput), yearErr),
-        h('label', null, ...hl(S.homeCity, 'city'), h('div', { class: 'row wrap' }, citySearch, cityBox)),
-        h('label', null, ...hl(S.seed, 'seed'), h('div', { class: 'row wrap' }, seedInput, h('button', { type: 'button', class: 'btn small ghost', onclick: () => { cfg.seed = randomSeed(); seedInput.value = cfg.seed; seedErr.textContent = ''; refreshAll(); toast(t(l('Outro mundo sorteado: nova semente. Suas escolhas continuam; personagem e população gerados podem mudar.', 'Another world rolled: new seed. Your choices stay; the generated character and population may change.')), 'good'); } }, '🎲 ', t(l('Sortear outro mundo', 'Roll another world')))), seedErr),
-        h('small', { class: 'muted', id: 'ng20-seed-help' }, t(l('Mesma semente + mesma configuração + mesma versão do jogo = mesmo começo. Mudar ano, modo, rivais ou base gera outro mundo, mesmo com a mesma semente.', 'Same seed + same configuration + same game version = same start. Changing year, mode, rivals or database makes another world, even with the same seed.')))),
-      h('details', { class: 'card wide ng20-pop' }, h('summary', null, h('b', null, t(l('Personalizar população, rivais e história prévia', 'Customize population, rivals and prior history'))), ' ', popSum),
-        h('div', { class: 'ng-grid' }, ...extras, addHelp(lc.el, 'rivals'))),
+      h('section', { class: 'card wide ng22-year' },
+        h('h3', null, ...hl(S.startYear, 'year')),
+        h('div', { class: 'row wrap' }, yearSel, yearInput), yearErr,
+        h('small', { class: 'muted' }, t(l('O ano decide a tecnologia, os formatos, os gêneros vivos, as gravadoras que já existem e os artistas em atividade.', 'The year decides technology, formats, living genres, which labels already exist and which artists are active.')))),
+      ...extras,
+      ...(worldExtra ? [] : [h('section', { class: 'card' }, seedRow)]),
     ] },
-    // r20c (N1): o que você faz → de onde parte → empresa/banda → passado (um bloco) → ambição → resumo; a ficha detalhada fica recolhida
+    { id: 'you', name: l('Personagem', 'Character'), body: [
+      identityCard22(cfg, () => redrawAttrs()),
+      traitsCard22(cfg, () => redrawAttrs()),
+      careerCard(cfg, undefined, 'ambition'),
+    ] },
     { id: 'mode', name: l('Modo', 'Mode'), body: [
       careerCard(cfg, () => { renderBand(); tk.show(cfg.careers?.main.includes('label') ?? true); }, 'main'),
       startCard17(cfg, rebuild, customCard(cfg)),
       tk.el,
-      h('section', { class: 'card wide' },
-        h('h3', null, t(l('Empresa e banda', 'Company and band'))),
-        h('label', null, ...hl(S.companyName, 'company'), nameInput),
+      h('section', { class: 'card wide ng22-company' },
+        h('h3', null, t(l('Empresa', 'Company'))),
+        h('div', { class: 'ng22-row' },
+          h('label', { class: 'ng22-grow' }, ...hl(S.companyName, 'company'), nameInput),
+          h('label', null, ...hl(S.homeCity, 'city'), cityBox)),
+        h('small', { class: 'muted' }, t(l('A cidade-sede define o seu mercado, a cena local e a concorrência por perto. Assumindo uma gravadora, vale a cidade dela.', 'The home city sets your market, the local scene and nearby competition. Taking over a label, its city applies.'))),
         bandBox,
       ),
-      careerCard(cfg, undefined, 'ambition'),
-      h('section', { class: 'card wide' }, h('h3', null, ...hl(S.card, 'card')), cards),
     ] },
-    // r21: personagem ganha etapa própria (passado, ficha ao vivo, aparência, vida pessoal, habilidades)
-    { id: 'you', name: l('Personagem', 'Character'), body: [
-      pastCard20(cfg, () => perso.redraw()),
-    ] },
-    { id: 'rules', name: l('Regras e ritmos', 'Rules and rhythms'), body: [
+    { id: 'labels', name: l('Gravadoras', 'Labels'), body: [lc.el] },
+    { id: 'rules', name: l('Regras e ritmo', 'Rules and rhythm'), body: [
       h('section', { class: 'card' },
         h('label', null, ...hl(S.difficulty, 'difficulty'), select(cfg.difficulty, [
           { value: 'easy', label: t(S.easy) }, { value: 'normal', label: t(S.normal) }, { value: 'hard', label: t(S.hard) },
@@ -299,37 +301,44 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const DIFF = () => [{ value: 'easy', label: t(S.easy) }, { value: 'normal', label: t(S.normal) }, { value: 'hard', label: t(S.hard) }];
   const opt = (v: string, xs: { value: string; label: string }[]) => xs.find((x) => x.value === v)?.label ?? v;
   type Row = [ReturnType<typeof l>, string];
+  const LBSTART: Record<string, ReturnType<typeof l>> = { history: l('pela história', 'by history'), random: l('aleatório', 'random'), equal: l('todos iguais', 'all equal'), inverted: l('mundo virado', 'upside down'), giants: l('gigantes', 'giants'), startups: l('todas novatas', 'all newcomers') };
   const groups = (): { tab: number; name: ReturnType<typeof l>; rows: Row[] }[] => {
-    const ids = cfg.labels?.ids ?? DEFAULT_LABEL_IDS();
+    const ids = chosenLabels22(cfg);
     const rivals = cfg.labels?.count ?? labelPool().filter((d) => ids.includes(d.id) && (cfg.realNames ? realFounded(d.id, d.founded) : d.founded) <= cfg.startYear).length;
     const dsum = Object.entries(cfg.diff17 ?? {}).filter(([, v]) => v).map(([k, v]) => `${k} ${v! > 0 ? '+' : ''}${v}`).join(', ');
     const rs = resolveWorld20(cfg);
     const prehist = (cfg as { prehist?: number }).prehist ?? 0;
+    const ch = cfg.character;
     return [
       { tab: 0, name: l('Mundo', 'World'), rows: [
-        [l('Modo', 'Mode'), `${t(WORLDS17.find((w) => w.id === rs.id)!.name)}${rs.custom ? ` · ${t(l('Personalizado', 'Custom'))}` : ''}`],
+        [l('Mundo', 'World'), `${t(WORLDS17.find((w) => w.id === rs.id)!.name)}${rs.custom ? ` · ${t(l('Personalizado', 'Custom'))}` : ''}`],
         [l('Contrato', 'Contract'), policyLine20(cfg)],
         [S.startYear, String(cfg.startYear)],
-        [S.homeCity, cityName(cfg.homeCity)],
-        [S.seed, cfg.seed || '—'],
+        [l('História prévia', 'Prior history'), prehist ? t(l('{n} anos', '{n} years'), { n: prehist }) : t(l('nenhuma', 'none'))],
         [l('Base de dados', 'Database'), cfg.dbSize ?? 'medium'],
-        [l('Gravadoras rivais', 'Rival labels'), `${rivals}${cfg.labels?.start === 'equal' ? ` · ${t(l('todos iguais', 'all equal'))}` : ''}${cfg.labels ? ` · ${t(l('personalizado', 'customized'))}` : ''}`],
-        ...(prehist ? [[l('História prévia', 'Prior history'), t(l('{n} anos', '{n} years'), { n: prehist })] as Row] : []),
+        [S.seed, cfg.seed || '—'],
       ] },
-      { tab: 1, name: l('Modo', 'Mode'), rows: [
-        [S.companyName, cfg.companyName],
-        [l('Começo', 'Start'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
-        [S.scenario, cfg.scenario17 && scenarioById[cfg.scenario17] ? `🏅 ${t(scenarioById[cfg.scenario17].name)}` : opt(cfg.scenario, SCN())],
+      { tab: 1, name: l('Personagem', 'Character'), rows: [
+        [l('Nome', 'Name'), ch?.name || t(l('(gerado)', '(generated)'))],
+        [l('Trajetória', 'Path'), ch ? t(originById[careerOfSpec(ch)]?.name ?? l('—', '—')) : '—'],
+        [l('Traços', 'Traits'), ch?.traits?.length ? String(ch.traits.length) : '—'],
+        [l('Ambição', 'Ambition'), t(AMBITIONS[cfg.careers?.ambition as Ambition]?.name ?? l('—', '—'))],
+      ] },
+      { tab: 2, name: l('Modo', 'Mode'), rows: [
+        [l('Atividades', 'Activities'), (cfg.careers?.main ?? ['label']).length ? careerSummary(cfg).split(' · ')[0] : '—'],
         [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
-        [l('Carreira', 'Career'), careerSummary(cfg)],
+        [S.scenario, cfg.scenario17 && scenarioById[cfg.scenario17] ? `🏅 ${t(scenarioById[cfg.scenario17].name)}` : opt(cfg.scenario, SCN())],
+        [l('Como começa', 'How it starts'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
+        [S.companyName, cfg.companyName],
+        [S.homeCity, cityName(cfg.homeCity)],
         ...(cfg.custom && Object.keys(cfg.custom).length ? [[l('Ajuste fino do começo', 'Start fine-tuning'), Object.keys(cfg.custom).join(', ')] as Row] : []),
-        [S.card, t(CARDS.find((c) => c.id === cfg.card)!.name)],
       ] },
-      { tab: 2, name: l('Personagem', 'Character'), rows: [
-        [l('Personagem', 'Character'), cfg.character?.name || t(l('(gerado)', '(generated)'))],
-        [l('Trajetória', 'Path'), cfg.character ? t(originById[careerOfSpec(cfg.character)]?.name ?? l('—', '—')) : '—'],
+      { tab: 3, name: l('Gravadoras', 'Labels'), rows: [
+        [l('No começo', 'At the start'), `${rivals} · ${cfg.labels?.ids ? t(l('lista personalizada', 'custom list')) : t(l('sugestão', 'suggestion'))}`],
+        [l('Como começam', 'How they start'), t(LBSTART[cfg.labels?.start ?? 'history'])],
+        [l('Fundadas depois', 'Founded later'), t(cfg.labels?.future === 'all' ? l('todas do catálogo', 'all from the catalog') : cfg.labels?.future === 'none' ? l('nenhuma', 'none') : l('as da lista', 'the listed ones'))],
       ] },
-      { tab: 3, name: l('Regras e ritmos', 'Rules and rhythms'), rows: [
+      { tab: 4, name: l('Regras e ritmo', 'Rules and rhythm'), rows: [
         [S.difficulty, `${opt(cfg.difficulty, DIFF())}${dsum ? ` · ${dsum}` : ''}`],
         [l('Prazo', 'Deadline'), cfg.runYears17 ? t(l('{n} anos', '{n} years'), { n: cfg.runYears17 }) : t(l('sem fim', 'endless'))],
         [S.ironman, cfg.ironman ? t(l('sim — um save, sem desfazer', 'yes — one save, no undo')) : t(l('não', 'no'))],
@@ -355,28 +364,26 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       h('div', { class: 'row wrap ng20-review-acts' }, copyCode20(cfg), restoreDefault20(cfg, rebuild)),
       startErr,
       h('div', { class: 'row center' }, startBtn('ng-start-review')));
-    const w = gs[0].rows, r = gs[3].rows;
+    const w = gs[0].rows, y = gs[1].rows, m = gs[2].rows, lb = gs[3].rows, r = gs[4].rows;
     const sideNodes = () => [
-      h('p', { class: 'small' }, h('b', null, w[0][1])),
-      h('p', { class: 'small' }, `${cfg.startYear} · ${cityName(cfg.homeCity)}`),
-      h('p', { class: 'small' }, `${cfg.takeover ? t(l('Assume gravadora', 'Takeover')) : opt(cfg.scenario, SCN())} · ${r[0][1]} · ${r[1][1]}`),
-      h('p', { class: 'small' }, careerSummary(cfg)),
-      h('p', { class: 'small' }, cfg.character?.name || t(l('Personagem gerado', 'Generated character'))),
+      h('p', { class: 'small' }, h('b', null, w[0][1]), ` · ${cfg.startYear}`),
+      h('p', { class: 'small' }, `${y[0][1]} · ${y[1][1]}`),
+      h('p', { class: 'small' }, `${m[2][1]} · ${cfg.companyName} · ${cityName(cfg.homeCity)}`),
+      h('p', { class: 'small' }, `${t(l('Gravadoras', 'Labels'))}: ${lb[0][1]} · ${lb[1][1]}`),
+      h('p', { class: 'small' }, `${r[0][1]} · ${r[1][1]}`),
       h('p', { class: 'small muted' }, w[1][1]),
       ...notes17(cfg).filter((n) => n.level === 'warn').map((n) => h('p', { class: 'small warn' }, '⚠ ', t(n.text)))];
     side.replaceChildren(...sideNodes());
     sideM.replaceChildren(...sideNodes());
     mini.textContent = `${w[0][1]} · ${cfg.startYear} · ${cityName(cfg.homeCity)}`;
-    const p = [cfg.dbSize && cfg.dbSize !== 'medium' ? `${t(l('base', 'database'))} ${cfg.dbSize}` : '', cfg.labels ? t(l('rivais personalizados', 'custom rivals')) : '', ((cfg as { prehist?: number }).prehist ?? 0) ? t(l('história prévia', 'prior history')) : ''].filter(Boolean);
-    popSum.textContent = p.length ? `— ${t(l('personalizado', 'customized'))}: ${p.join(', ')}` : `— ${t(l('padrão', 'default'))}`;
     sideAct.replaceChildren(cur === REVIEW ? startBtn('ng-start') : reviewBtn('btn primary'));
     barAct.replaceChildren(cur === REVIEW ? startBtn('ng-start-bar') : reviewBtn('btn primary big'));
     const warns = notes17(cfg).filter((n) => n.level === 'warn').length;
-    const subs = [`${w[0][1]} · ${cfg.startYear} · ${cityName(cfg.homeCity)}`, `${careerSummary(cfg)} · ${gs[1].rows[2][1]}`, `${gs[2].rows[0][1]} · ${gs[2].rows[1][1]}`, `${r[0][1]} · ${r[1][1]}`,
+    const subs = [`${w[0][1]} · ${cfg.startYear}`, `${y[0][1]} · ${y[3][1]}`, `${m[0][1]} · ${m[2][1]}`, `${lb[0][1].split(' · ')[0]} · ${lb[1][1]}`, `${r[0][1]} · ${r[1][1]}`,
       warns ? t(l('{n} avisos', '{n} warnings'), { n: warns }) : t(l('pronto para começar', 'ready to start'))];
     tabSubs.forEach((el, i) => (el.textContent = subs[i] ?? ''));
   }
-  const TAB_IC21: Record<string, string> = { world: '🌍', mode: '🎯', you: '👤', rules: '⚖️', review: '✅' };
+  const TAB_IC21: Record<string, string> = { world: '🌍', you: '👤', mode: '🎯', labels: '💿', rules: '⚖️', review: '✅' };
   const tabSubs = tabs.map(() => h('small', { class: 'ng21-sub' }));
   const tabBtns = tabs.map((tb, i) => h('button', { type: 'button', role: 'tab', id: `ng-tab-${tb.id}`, 'aria-controls': `ng-panel-${tb.id}`, class: 'ng-tab', onclick: () => { fromReview = false; go(i); }, onkeydown: (e: KeyboardEvent) => {
     const k = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
@@ -385,9 +392,11 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     go((k + tabs.length) % tabs.length, true);
   } }, h('span', { class: 'ng-num ng21-ic', 'aria-hidden': 'true' }, TAB_IC21[tb.id] ?? String(i + 1)), h('span', { class: 'ng21-tl' }, h('b', null, `${i + 1}. ${t(tb.name).toUpperCase()}`), tabSubs[i])));
   const panels = tabs.map((tb) => h('div', { role: 'tabpanel', id: `ng-panel-${tb.id}`, 'aria-labelledby': `ng-tab-${tb.id}`, class: 'ng-grid ng-panel' }, h('p', { class: 'muted small ng17-step' }, t(STEP20[tb.id] ?? l('', ''))), ...tb.body));
-  // r17: ficha ao vivo em "Você e seu começo" (agora rotulada como prévia rápida)
+  // r22: cartão Atributos (pontos livres + o que o passado soma + prévia rápida), atento às mudanças da etapa
   const charPanel = panels[tabs.findIndex((x) => x.id === 'you')];
-  charPanel.append(charPreview17(cfg, charPanel), perso.el);
+  const attrs = attrsCard22(cfg, charPanel);
+  redrawAttrs = attrs.redraw;
+  charPanel.append(attrs.el);
   const back = h('button', { type: 'button', class: 'btn ghost', onclick: () => { fromReview = false; go(cur - 1); } }, '← ' + t(l('Anterior', 'Previous')));
   const navNext = h('span', { class: 'row ng20-next' });
   const step = h('span', { class: 'muted small' });
@@ -424,6 +433,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       try {
         const sc = run.scenario17 ? scenarioById[run.scenario17] : undefined;
         if (sc) Object.assign(run, { startYear: sc.startYear, homeCity: sc.homeCity, scenario: sc.scenario, ...(sc.role ? { role: sc.role } : {}) });
+        materializeLabels22(run); // r22: a sugestão de gravadoras vira a lista da partida
         prepareNewGame(run);
         const g = createGame(run);
         store.game = g;
@@ -446,7 +456,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', onclick: () => pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, REVIEW)) }, h('b', null, '⇥ ', t(l('Usar código de run', 'Use a run code'))), h('small', null, t(l('Importa para o rascunho e mostra a revisão; mantém as regras do código.', 'Imports into the draft and shows the review; keeps the code\'s rules.')))));
   const wrap = h('div', { class: 'newgame tabbed ng20 ng21' },
     h('header', null, h('button', { type: 'button', class: 'btn ghost', onclick: () => titleScreen(root, onStart) }, '← ' + t(S.back)),
-      h('div', null, h('h1', null, t(l('Nova run', 'New run'))), h('p', { class: 'muted small ng20-sub' }, t(l('5 etapas · clique numa etapa para ir direto · clique no título de uma seção para recolher ou abrir.', '5 steps · click a step to jump to it · click a section title to collapse or expand it.'))))),
+      h('div', null, h('h1', null, t(l('Nova run', 'New run'))), h('p', { class: 'muted small ng20-sub' }, t(l('6 etapas · clique numa etapa para ir direto · clique no título de uma seção para recolher ou abrir.', '6 steps · click a step to jump to it · click a section title to collapse or expand it.'))))),
     intent,
     presetBar17(cfg, rebuild),
     h('div', { class: 'ng-tabs', role: 'tablist', 'aria-label': t(S.newGame) }, ...tabBtns),

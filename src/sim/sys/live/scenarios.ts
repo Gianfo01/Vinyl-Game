@@ -4,7 +4,7 @@
 
 import { clamp, hashString, type Rng } from '../../../core/rng';
 import { toReal } from '../../../core/money';
-import { CARDS, MUTATORS } from '../../../data/rules';
+import { MUTATORS } from '../../../data/rules';
 import { CITIES, cityById, genreById, l, type L } from '../../../data/world';
 import { queueCutscene, registerSimHook } from '../../ext4';
 import { makeAct } from '../../people';
@@ -203,15 +203,13 @@ export function weeklyChallenge(week: string, base: RunConfig): { cfg: RunConfig
   const startYear = years[hashString(week + 'y') % years.length];
   const cityPool = CITIES.filter((c) => ['new_york', 'london', 'rio', 'sao_paulo', 'tokyo', 'paris', 'berlin', 'los_angeles', 'kingston', 'lagos', 'seoul', 'detroit', 'memphis', 'buenos_aires'].includes(c.id));
   const city = cityPool[hashString(week + 'c') % cityPool.length];
-  const card = CARDS[hashString(week + 'k') % CARDS.length];
   const mut1 = MUTATORS[hashString(week + 'm1') % MUTATORS.length];
   const mut2 = MUTATORS[hashString(week + 'm2') % MUTATORS.length];
   const mutators = [...new Set([mut1.id, mut2.id])];
   const difficulty = (['easy', 'normal', 'hard'] as const)[hashString(week + 'd') % 3];
-  const cfg: RunConfig = { ...base, seed: `semana-${week}`, startYear, homeCity: city.id, card: card.id, mutators, difficulty, mode: 'free', role: 'label', scenario: 'from_zero', ironman: true };
+  const cfg: RunConfig = { ...base, seed: `semana-${week}`, startYear, homeCity: city.id, card: 'none', mutators, difficulty, mode: 'free', role: 'label', scenario: 'from_zero', ironman: true };
   const rules: L[] = [
     fmtL(l('Início: {y} em {c}', 'Start: {y} in {c}'), { y: startYear, c: city.name }),
-    fmtL(l('Carta: {k}', 'Card: {k}'), { k: card.name }),
     fmtL(l('Mutadores: {m}', 'Mutators: {m}'), { m: { pt: mutators.map((id) => MUTATORS.find((x) => x.id === id)!.name.pt).join(', '), en: mutators.map((id) => MUTATORS.find((x) => x.id === id)!.name.en).join(', ') } }),
     fmtL(l('Dificuldade: {d} · ironman · {n} anos', 'Difficulty: {d} · ironman · {n} years'), { d: difficulty, n: CHALLENGE_YEARS }),
   ];

@@ -5,7 +5,7 @@
 import { CITIES, GENRES, genreById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { bumpPerks, perkEntries, type PerkKey } from '../../sim/perks';
-import { COPING, PRONOUNS, VISUALS, chooseCoping, dropCoping, lifestyleById, persona, playerTraitById, skills, type CopingId } from '../../sim/sys/persona';
+import { COPING, PRONOUNS, VISUALS, chooseCoping, dropCoping, persona, playerTraitById, type CopingId } from '../../sim/sys/persona';
 import type { PerkValues } from '../../sim/perks';
 import { backgroundById, life } from '../../sim/sys/life';
 import { ownerOf } from '../../sim/sys/people/owner';
@@ -71,8 +71,6 @@ export function bonusTable(s: GameState): HTMLElement {
 export function personaTab(s: GameState): HTMLElement {
   const P0 = persona(s);
   const o = ownerOf(s);
-  const S0 = skills(s);
-  const ls = S0.lifestyle ? lifestyleById[S0.lifestyle] : undefined;
   const bg = backgroundById[life(s).background];
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
@@ -80,17 +78,13 @@ export function personaTab(s: GameState): HTMLElement {
         h('div', { class: 'row wrap' }, P0.traits.length ? P0.traits.map((x) => h('span', { class: 'chip-btn on', title: t(playerTraitById[x]?.desc) }, t(playerTraitById[x]?.name))) : h('span', { class: 'muted' }, '—')),
         bg ? h('p', { class: 'small' }, h('b', null, t(bg.name)), ': ', t(bg.effects ?? bg.desc)) : null,
       ),
-      section(`${t(l('Estilo de vida', 'Lifestyle'))}: ${ls ? t(ls.name) : '—'}`,
-        ls ? h('p', { class: 'small' }, t(ls.desc)) : null,
-        h('p', { class: 'muted small' }, t(l('O estilo de vida nasce de onde você investe os pontos de habilidade. Pontos livres: {n} — gaste na aba Habilidades.', 'Your lifestyle comes from where you invest ability points. Free points: {n} — spend them in the Abilities tab.'), { n: S0.points })),
-      ),
       section(t(l('Válvulas de escape', 'Coping mechanisms')),
         P0.copingPrompt ? h('div', null,
           h('p', { class: 'bad' }, t(l('O estresse estourou ({s}). Como você lida com isso? A escolha vira hábito.', 'Stress boiled over ({s}). How do you cope? The choice becomes a habit.'), { s: Math.round(o.stress) })),
           h('div', { class: 'card-grid' }, (Object.keys(COPING) as CopingId[]).filter((c) => !P0.coping.includes(c)).map((c) => h('button', { class: 'pick', onclick: () => say(chooseCoping(s, c), l('Hábito adquirido.', 'Habit acquired.')) }, h('b', null, t(COPING[c].name)), h('small', null, t(COPING[c].desc)))))) : null,
         P0.coping.length ? h('ul', null, P0.coping.map((c) => h('li', null, h('b', null, t(COPING[c].name)), ' — ', t(COPING[c].desc), ' ', h('button', { class: 'btn small ghost', onclick: () => say(dropCoping(s, c), l('Hábito largado (custou tempo e estresse).', 'Habit dropped (cost time and stress).')) }, t(l('Largar', 'Quit')))))) : (!P0.copingPrompt ? h('p', { class: 'muted small' }, t(l('Nenhuma. Quando o estresse passar de 85, você terá de escolher uma.', 'None. When stress goes above 85 you will have to pick one.'))) : null),
       ),
-      section(t(l('Seus bônus', 'Your bonuses')), h('p', { class: 'muted small' }, t(l('Tudo o que mexe na simulação a seu favor (ou contra): origem, traços, estilo, gosto, cidade natal, carta do selo, mutators e sócios.', 'Everything that tilts the simulation for (or against) you: background, traits, style, taste, hometown, label card, mutators and partners.'))), bonusTable(s)),
+      section(t(l('Seus bônus', 'Your bonuses')), h('p', { class: 'muted small' }, t(l('Tudo o que mexe na simulação a seu favor (ou contra): origem, traços, estilo, gosto, cidade natal, modificadores e sócios.', 'Everything that tilts the simulation for (or against) you: background, traits, style, taste, hometown, mutators and partners.'))), bonusTable(s)),
     ),
     h('aside', { class: 'col-side' },
       section(t(l('Identidade', 'Identity')),

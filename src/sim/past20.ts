@@ -16,7 +16,7 @@ export type OwnerAttr20 = 'ear' | 'negotiation' | 'charisma' | 'management';
 
 /** Padrão da ficha (o mesmo que a ficha do personagem sempre usou ao nascer o rascunho). */
 export const defaultCharacter20 = (): CharacterSpec => ({ name: '', age: 30, background: 'musician', career: 'musician', role: 'guitar', traits: [], style: 'mentor', visual: 'casual', pronoun: 'they', points: {}, sex: 'x', skills: [] });
-export const defaultCareers20 = (): NonNullable<RunConfig['careers']> => ({ main: ['label'], origin: 'musician', ambition: 'legacy' });
+export const defaultCareers20 = (): NonNullable<RunConfig['careers']> => ({ main: ['label'], origin: 'none', ambition: 'legacy' });
 
 /** Trajetória escolhida: mesma mutação que a ficha fazia (trajetória → base → instrumento). */
 export function setTrajectory20(ch: CharacterSpec, id: OriginId): void {

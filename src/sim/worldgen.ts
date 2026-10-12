@@ -75,6 +75,31 @@ export const DEFAULT_EXTRA21 = ['x_odeon_br', 'x_rca', 'x_decca', 'x_capitol', '
 /** Conjunto padrão: as 22 clássicas + o núcleo histórico (r21). */
 export const DEFAULT_LABEL_IDS = (): string[] => [...CATALOG_LABELS.map((d) => d.id), ...DEFAULT_EXTRA21];
 
+/** r22: sugestão de gravadoras que muda com o ano, a cidade-sede e o mundo escolhidos. Devolve os ids e o motivo de cada grupo. */
+export function suggestLabels22(cfg: RunConfig): { ids: string[]; parts: { why: 'core' | 'major' | 'local' | 'era' | 'acoustic'; ids: string[] }[] } {
+  const pool = labelPool().map((d) => realDef(d, cfg));
+  const y = cfg.startYear;
+  const home = cityById[cfg.homeCity]?.market;
+  const base = DEFAULT_LABEL_IDS();
+  const taken = new Set(base);
+  const parts: { why: 'core' | 'major' | 'local' | 'era' | 'acoustic'; ids: string[] }[] = [{ why: 'core', ids: base }];
+  const take = (why: (typeof parts)[number]['why'], xs: PoolLabel[], n: number) => {
+    const ids = xs.filter((d) => !taken.has(d.id)).slice(0, n).map((d) => d.id);
+    for (const id of ids) taken.add(id);
+    if (ids.length) parts.push({ why, ids });
+  };
+  const open = pool.filter((d) => d.founded <= y);
+  // majors que já existem no ano de início
+  take('major', open.filter((d) => d.family === 'A'), 8);
+  // concorrência local: selos do mesmo mercado da sede (os mais próximos da época primeiro)
+  take('local', open.filter((d) => cityById[d.city]?.market === home).sort((a, b) => b.founded - a.founded), 6);
+  // a cena do momento: selos fundados nos 15 anos antes do início, de qualquer lugar
+  take('era', open.filter((d) => d.founded >= y - 15).sort((a, b) => b.founded - a.founded), 4);
+  // era acústica: os pioneiros do disco
+  if (y < 1920) take('acoustic', pool.filter((d) => d.founded < 1920).sort((a, b) => a.founded - b.founded), 12);
+  return { ids: [...taken], parts };
+}
+
 const PROC_A = ['Golden', 'Silver', 'Velvet', 'Thunder', 'Harmony', 'Echo', 'Paramount', 'Liberty', 'Crown', 'Apex', 'Cobalt', 'Lantern', 'Riverbend', 'Skyline', 'Orchid', 'Granada'];
 const PROC_B = ['Records', 'Discos', 'Music', 'Sound', 'Recordings', 'Phonograph Co.', 'Audio'];
 
@@ -91,7 +116,7 @@ function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
   // no começo só contam as que já existem; as futuras seguem a regra de `future`
   let now = chosen.filter((d) => d.founded <= startY);
   const later = future === 'none' ? [] : future === 'all' ? pool.filter((d) => d.founded > startY) : chosen.filter((d) => d.founded > startY);
-  const want = set.count === undefined ? now.length : Math.max(0, Math.min(60, Math.round(set.count)));
+  const want = set.count === undefined ? now.length : Math.max(0, Math.min(LABELS_MAX22, Math.round(set.count)));
   if (now.length > want) now = r.shuffle([...now]).slice(0, want).sort((a, b) => a.founded - b.founded);
   else if (now.length < want) {
     const extra = r.shuffle(pool.filter((d) => d.founded <= startY && !now.includes(d)));
@@ -117,6 +142,43 @@ function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
   if (equal) for (const lb of Object.values(s.labels)) {
     lb.cash = nominal(EQUAL_START_REAL, Math.max(startY, lb.founded));
     lb.reputation = EQUAL_REP;
+  }
+  shapeLabels22(s, cfg);
+}
+
+/** r22: limite de rivais escolhível no Novo Jogo. */
+export const LABELS_MAX22 = 100;
+
+/** r22: outros começos das gravadoras (sorteio próprio — não mexe no resto do mundo). */
+function shapeLabels22(s: GameState, cfg: RunConfig): void {
+  const mode = cfg.labels?.start;
+  if (!mode || mode === 'history' || mode === 'equal') return;
+  const r = Rng.fromSeed(`${cfg.seed}|labels22|${mode}`);
+  const capital = { A: 9_000_000, B: 1_200_000, C: 3_000_000, D: 4_000_000 } as const;
+  const flip = { A: 'B', B: 'A', C: 'D', D: 'C' } as const;
+  for (const lb of Object.values(s.labels)) {
+    const y = Math.max(cfg.startYear, lb.founded);
+    if (mode === 'random') {
+      // porte, caixa e prestígio sorteados: uma major pode começar quebrada e um selo de garagem, rico
+      lb.family = r.pick(['A', 'B', 'C', 'D'] as const);
+      lb.cash = nominal(capital[lb.family] * r.float(0.15, 2.2), y);
+      lb.reputation = r.int(10, 90);
+    } else if (mode === 'inverted') {
+      // mundo virado: as grandes começam pequenas e as pequenas, grandes
+      lb.family = flip[lb.family];
+      lb.cash = nominal(capital[lb.family] * r.float(0.7, 1.3), y);
+      lb.reputation = clamp(100 - lb.reputation, 15, 85);
+    } else if (mode === 'giants') {
+      // todas as rivais com fôlego de major
+      lb.cash = nominal(capital.A * r.float(0.8, 1.4), y);
+      lb.reputation = r.int(60, 85);
+    } else if (mode === 'startups') {
+      // todas recém-abertas: pouco caixa e prestígio; ninguém tem elenco no começo
+      lb.cash = nominal(capital.B * r.float(0.2, 0.5), y);
+      lb.reputation = r.int(15, 35);
+    }
+    const home = cityById[lb.city]?.market ?? 'na';
+    lb.territories = lb.family === 'A' ? MARKETS.map((m) => m.id) : lb.family === 'B' ? [home] : [home, 'na', 'eu'].filter((v, i, a) => a.indexOf(v) === i) as MarketId[];
   }
 }
 
@@ -228,6 +290,7 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
 }
 
 export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): GameState {
+  cfg.card = 'none'; // r22: a Carta do selo saiu do jogo
   normalizeHistory(cfg);
   applyRealNames(!!cfg.realNames);
   const startDay = 0;
@@ -311,7 +374,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
 
   // L3 — mercado: gravadoras (rodada 10: conjunto e começo escolhidos no Novo Jogo; ausente = como sempre)
   const equal = cfg.labels?.start === 'equal';
-  const chosenLabels = !!cfg.labels && (!!cfg.labels.ids || cfg.labels.count !== undefined || equal);
+  const chosenLabels = !!cfg.labels && (!!cfg.labels.ids || cfg.labels.count !== undefined || equal || (!!cfg.labels.start && cfg.labels.start !== 'history'));
   if (chosenLabels) setupLabels(s, r, cfg);
   else for (const def0 of CATALOG_LABELS) {
     const def = realDef(def0, cfg);
@@ -406,7 +469,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
 
 export function signToBestRival(s: GameState, r: Rng, act: Act): void {
   // rodada 10: no começo "todos iguais" ninguém tem elenco (só usado na criação do mundo)
-  if (s.config.labels?.start === 'equal') return;
+  if (s.config.labels?.start === 'equal' || s.config.labels?.start === 'startups') return;
   const fam = familyOf(act.genre);
   const candidates = Object.values(s.labels).filter((lb) => lb.active && lb.roster.length < 40);
   const lb = r.weighted(candidates, (x) => (x.focus.length === 0 ? 1 : x.focus.includes(fam) ? 3 : 0.2) * (cityById[x.city]?.market === cityById[act.city]?.market ? 2 : 1));

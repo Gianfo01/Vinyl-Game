@@ -10,12 +10,13 @@ import type { GameState, RunConfig } from '../../../sim/types';
 import { newRunConfig20 } from '../../../sim/start17';
 import { createGame } from '../../../sim/worldgen';
 import { scenario17 } from '../../../sim/sys/scenarios17';
-import { $, N, cityName, pill, rerender, section, toast } from '../../common';
+import { $, N, rerender, section, toast } from '../../common';
 import { h, select } from '../../dom';
 import { registerArea, registerCutscene } from '../../registry';
 import { store } from '../../store';
 import { chips, ic, meter, stat, tabs } from '../../vis';
 import { museumView } from './museum';
+import { scenarioBrowser22 } from '../../scen22';
 
 void $;
 
@@ -107,24 +108,20 @@ export function scenarioButton(root: HTMLElement, onStart: () => void, back: () 
 export function scenarioScreen(root: HTMLElement, onStart: () => void, back: () => void): void {
   const redraw = () => scenarioScreen(root, onStart, back);
   const medals = readLS<Record<string, Medal>>(MEDAL_KEY, {});
-  const scen = () => h('div', { class: 'lv-scen-grid' }, SCENARIOS.map((d) => h('article', { class: 'card lv-scen' },
-    h('h3', null, t(d.name), ' ', h('span', { title: t(l('Melhor medalha', 'Best medal')) }, MEDAL_ICON[medals[d.id] ?? 'none'])),
-    h('p', null, pill(`${d.startYear}→${d.endYear}`), pill(cityName(d.homeCity))),
-    h('p', { class: 'small' }, t(d.desc)),
-    h('p', { class: 'small' }, h('b', null, t(l('Meta: ', 'Goal: '))), t(d.goal)),
-    scenario17(d.id) ? h('ul', { class: 'small' }, ...scenario17(d.id)!.rules17.map((x) => h('li', null, t(x)))) : null,
-    h('p', { class: 'small muted' }, `🥉 ${d.tiers[0]} · 🥈 ${d.tiers[1]} · 🥇 ${d.tiers[2]} ${t(d.unit)}`),
-    h('button', { class: 'btn primary', onclick: () => {
-      setNextGameSetup({ scenarioId: d.id, pack: activePack() });
-      startGame(scenarioConfig(d, baseConfig(screen.company)), onStart);
-    } }, t(l('Jogar cenário', 'Play scenario'))),
-  )));
+  const play = (id: string) => {
+    const d = scenarioById[id];
+    if (!d) return;
+    setNextGameSetup({ scenarioId: d.id, pack: activePack() });
+    startGame(scenarioConfig(d, baseConfig(screen.company)), onStart);
+  };
+  // r22: abas e sub-abas (tipo, época, região, dificuldade) e cartões com mais informação
+  const done = Object.values(medals).filter((m) => m !== 'none').length;
   root.replaceChildren(h('div', { class: 'newgame lv-scenarios' },
-    h('header', null, h('button', { class: 'btn ghost', onclick: back }, '← ', t(l('Voltar', 'Back'))), h('h1', null, t(l('Cenários históricos', 'Historical scenarios')))),
-    h('label', null, t(l('Nome do selo', 'Label name')), ' ', h('input', { type: 'text', value: screen.company, placeholder: t(l('Selo Agulha', 'Needle Records')), oninput: (e: Event) => (screen.company = (e.target as HTMLInputElement).value) })),
-    tabs('lv-title', [
-      { id: 'scen', label: t(l('Cenários históricos', 'Historical scenarios')), icon: 'trophy', render: scen },
-    ], redraw),
+    h('header', null, h('button', { class: 'btn ghost', onclick: back }, '← ', t(l('Voltar', 'Back'))),
+      h('div', null, h('h1', null, t(l('Cenários históricos', 'Historical scenarios'))),
+        h('p', { class: 'muted small' }, t(l('{n} cenários · {m} com medalha. Cada um tem ano, cidade, ponto de partida, meta com medalhas e regras da época.', '{n} scenarios · {m} with a medal. Each has a year, city, starting point, a medal goal and period rules.'), { n: SCENARIOS.length, m: done })))),
+    h('label', { class: 'lv-name' }, t(l('Nome do selo', 'Label name')), ' ', h('input', { type: 'text', value: screen.company, placeholder: t(l('Selo Agulha', 'Needle Records')), oninput: (e: Event) => (screen.company = (e.target as HTMLInputElement).value) })),
+    scenarioBrowser22({ pickLabel: l('Jogar cenário', 'Play scenario'), onPick: play, medals, redraw }),
   ));
 }
 

@@ -220,6 +220,7 @@ export function migrate(g: GameState): GameState {
   g.economy.investorShare ??= 0;
   g.economy.investorUntil ??= 0;
   g.upcoming ??= [];
+  g.config.card = 'none'; // r22: a Carta do selo saiu do jogo
   ensureExt(g);
   migrate18(g);
   registerMovementGenres(g);

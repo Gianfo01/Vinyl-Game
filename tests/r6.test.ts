@@ -55,9 +55,8 @@ describe('persona', () => {
     const rock = Object.values(s.acts).find((x) => familyOf(x.genre) === 'rock')!;
     const sacred = Object.values(s.acts).find((x) => familyOf(x.genre) === 'sacred') ?? Object.values(s.acts).find((x) => familyOf(x.genre) !== 'rock' && familyOf(x.genre) !== 'hiphop')!;
     expect(perk(s, 'appeal', rock)).toBeGreaterThan(perk(s, 'appeal', sacred));
-    // rodada 9: o estilo antigo vira habilidades iniciais no ramo equivalente (Garimpeiro → Rede)
-    expect(skills(s).owned).toContain('net_book');
-    expect(skills(s).lifestyle).not.toBeNull();
+    // r22: a árvore de habilidades saiu do jogo
+    expect(skills(s).owned).toEqual([]);
   });
 });
 
@@ -74,10 +73,10 @@ describe('temperamento × gênero', () => {
 });
 
 describe('cartas e mutators novos', () => {
-  it('perks de carta e mutator aparecem', () => {
+  it('perks de mutator aparecem; a Carta do selo saiu do jogo (r22)', () => {
     const s = mk('r6-cards', { card: 'hit_factory', mutators: ['harsh_critics', 'talent_flood'] });
-    expect(perk(s, 'appeal')).toBeGreaterThan(0.07);
-    expect(perk(s, 'critics')).toBeLessThan(-1);
+    expect(s.config.card).toBe('none');
+    expect(perk(s, 'critics')).toBeLessThan(-0.5); // só o mutator (a carta somava −0,5)
     expect(perk(s, 'signals')).toBeGreaterThanOrEqual(2);
     for (let i = 0; i < 6; i++) advanceMonth(s);
     invariant(s);

@@ -11,12 +11,11 @@ import { playerViews, polById, relById } from '../sim/beliefs';
 import { perkEntries } from '../sim/perks';
 import { DIFF17, PRESETS17, RUN_YEARS17, WORLDS17, applyPreset17, applyWorld17, codeStatus20, newRunConfig20, notes17, presetDiff20, rank17, readSetupCode17, resolveWorld20, setupCode17, setupCodeError20, world17ById, worldOf17 } from '../sim/start17';
 import { ATTR13, ATTR13_IDS, facetName, per13 } from '../sim/sys/persona13';
-import { persona, skills as skillState } from '../sim/sys/persona';
-import { lifestyleById, skillById } from '../sim/sys/persona/skills';
+import { persona } from '../sim/sys/persona';
 import { playerTraitById } from '../sim/sys/persona/data';
 import { ownerOf } from '../sim/sys/people/owner';
 import { playerPerson } from '../sim/sys/life';
-import { scenarioById, SCENARIOS } from '../sim/sys/live';
+import { scenarioById } from '../sim/sys/live';
 import { scenario17 } from '../sim/sys/scenarios17';
 import { runDone17, runEnd17 } from '../sim/sys/start17';
 import { challengeScore } from '../sim/sys/live';
@@ -29,6 +28,7 @@ import { registerCutscene } from './registry';
 import { fxText } from './sys/persona';
 import { copyText } from './store';
 import { historyCard } from './history15';
+import { scenarioBrowser22 } from './scen22';
 import './start17.css';
 
 // o cartão antigo "História dos artistas reais" virou parte do seletor Mundo
@@ -197,26 +197,42 @@ const STARTS: { id: RunConfig['scenario']; name: L; fx: L }[] = [
   { id: 'established', name: l('Empresa estabelecida', 'Established company'), fx: l('Três artistas, catálogo, equipe e custos fixos maiores: mais a perder.', 'Three acts, a catalog, staff and higher fixed costs: more to lose.') },
 ];
 
+let scenOpen22 = false;
 export function startCard17(cfg: RunConfig, rebuild: () => void, custom: HTMLElement): HTMLElement {
   const sc = cfg.scenario17 ? scenarioById[cfg.scenario17] : undefined;
   const x17 = scenario17(cfg.scenario17);
-  const pick = select(cfg.scenario17 ?? '', [{ value: '', label: t(l('Nenhum — partida livre', 'None — free play')) },
-    ...[...SCENARIOS].sort((a, b) => a.startYear - b.startYear).map((d) => ({ value: d.id, label: `${d.startYear}–${d.endYear} · ${t(d.name)}${scenario17(d.id) ? ' ★' : ''}` }))], (v) => {
+  const pick = (v: string) => {
     if (!v) delete cfg.scenario17;
-    else { const d = scenarioById[v]; cfg.scenario17 = v; cfg.startYear = d.startYear; cfg.homeCity = d.homeCity; cfg.scenario = d.scenario; if (d.role) cfg.role = d.role; delete cfg.takeover; }
+    else { const d = scenarioById[v]; cfg.scenario17 = v; cfg.startYear = d.startYear; cfg.homeCity = d.homeCity; cfg.scenario = d.scenario; if (d.role) cfg.role = d.role; delete cfg.takeover; scenOpen22 = false; }
     rebuild();
-  });
+  };
+  // r22: cenário escolhido num navegador com abas (tipo, época, região, dificuldade), no lugar da lista suspensa
+  const browser = h('div', { class: 'ng22-scen-browser' });
+  const toggle = h('button', { type: 'button', class: 'btn small', onclick: () => { scenOpen22 = !scenOpen22; drawBrowser(); } }) as HTMLButtonElement;
+  const drawBrowser = () => {
+    toggle.className = `btn small ${scenOpen22 ? '' : 'primary'}`;
+    toggle.setAttribute('aria-expanded', String(scenOpen22));
+    toggle.textContent = t(scenOpen22 ? l('Fechar lista', 'Close list') : sc ? l('Trocar cenário', 'Change scenario') : l('Ver cenários', 'Browse scenarios'));
+    browser.replaceChildren(...(scenOpen22 ? [scenarioBrowser22({ pickLabel: l('Usar este cenário', 'Use this scenario'), onPick: pick, current: cfg.scenario17, redraw: drawBrowser })] : []));
+  };
+  drawBrowser();
   return h('section', { class: 'card wide ng17-start' },
     h('h3', null, t(l('Ponto de partida', 'Starting point')), ' ', helpTip(HELP17.start17)),
-    h('div', { class: 'ng17-start-grid' }, ...STARTS.map((s0) => h('label', { class: `radio pick ${cfg.scenario === s0.id ? 'on' : ''}` },
+    h('div', { class: 'ng17-start-grid' }, ...STARTS.map((s0) => h('label', { class: `radio pick ${cfg.scenario === s0.id ? 'on' : ''} ${sc ? 'disabled' : ''}` },
       h('input', { type: 'radio', name: 'st17', checked: cfg.scenario === s0.id, disabled: !!sc, onchange: () => { cfg.scenario = s0.id; rebuild(); } }),
       h('span', null, h('b', null, t(s0.name)), h('small', null, t(s0.fx)))))),
-    h('label', null, t(l('Cenário histórico (opcional)', 'Historical scenario (optional)')), pick),
-    sc ? h('div', { class: 'ng17-scen' },
-      h('p', { class: 'small' }, h('b', null, `${sc.startYear} → ${sc.endYear} · ${cityName(sc.homeCity)}. `), t(sc.desc)),
-      h('p', { class: 'small' }, h('b', null, t(l('Meta: ', 'Goal: '))), t(sc.goal), ` — 🥉 ${sc.tiers[0]} · 🥈 ${sc.tiers[1]} · 🥇 ${sc.tiers[2]} ${t(sc.unit)}`),
-      x17 ? h('ul', { class: 'small' }, ...x17.rules17.map((r) => h('li', null, t(r)))) : null,
-      h('p', { class: 'muted small' }, t(l('O cenário define ano, cidade e ponto de partida; o resto (você, mundo, regras) continua à sua escolha.', 'The scenario sets year, city and starting point; the rest (you, world, rules) is still up to you.')))) : null,
+    h('div', { class: 'ng22-scen' },
+      h('div', { class: 'ng22-scen-head' },
+        h('div', null, h('b', null, '🏅 ', t(l('Cenário histórico', 'Historical scenario'))), ' ', h('small', { class: 'muted' }, t(l('(opcional — define ano, cidade, ponto de partida e uma meta com medalhas)', '(optional — sets year, city, starting point and a medal goal)')))),
+        h('div', { class: 'row wrap' },
+          sc ? h('button', { type: 'button', class: 'btn small ghost', onclick: () => pick('') }, '✕ ', t(l('Jogar sem cenário', 'Play without a scenario'))) : null,
+          toggle)),
+      sc ? h('div', { class: 'ng17-scen' },
+        h('p', { class: 'small' }, h('b', null, `${t(sc.name)} · ${sc.startYear} → ${sc.endYear} · ${cityName(sc.homeCity)}. `), t(sc.desc)),
+        h('p', { class: 'small' }, h('b', null, t(l('Meta: ', 'Goal: '))), t(sc.goal), ` — 🥉 ${sc.tiers[0]} · 🥈 ${sc.tiers[1]} · 🥇 ${sc.tiers[2]} ${t(sc.unit)}`),
+        x17 ? h('ul', { class: 'small' }, ...x17.rules17.map((r) => h('li', null, t(r)))) : null,
+        h('p', { class: 'muted small' }, t(l('O cenário define ano, cidade e ponto de partida; o resto (você, mundo, regras) continua à sua escolha.', 'The scenario sets year, city and starting point; the rest (you, world, rules) is still up to you.')))) : null,
+      browser),
     h('details', { class: 'ng17-custom' }, h('summary', { class: 'small' }, t(l('Ajuste fino do começo (caixa, sede, elenco, equipe…)', 'Fine-tune the start (cash, HQ, roster, staff…)'))), custom),
   );
 }
@@ -314,7 +330,6 @@ function renderSheet(g: GameState): HTMLElement[] {
   const o = ownerOf(g);
   const pp = playerPerson(g);
   const pe = persona(g);
-  const sk = skillState(g);
   const p13 = per13(g, 'player');
   const v = playerViews(g);
   const sheet: Sheet = {};
@@ -344,11 +359,7 @@ function renderSheet(g: GameState): HTMLElement[] {
       h('div', null, h('h4', null, t(l('Personalidade', 'Personality'))),
         h('p', { class: 'small' }, ...(pe.traits.length ? pe.traits.map((x) => h('span', { class: 'tag' }, t(playerTraitById[x]?.name))) : [h('span', { class: 'muted' }, '—')])),
         p13?.traits.length ? h('p', { class: 'small' }, t(l('Temperamento: ', 'Temperament: ')), p13.traits.map((x) => t(facetName(x.k, x.hi))).join(', ')) : null,
-        h('p', { class: 'small' }, t(l('Crenças: ', 'Beliefs: ')), `${t(polById[v.pol]?.name)} · ${t(relById[v.rel]?.name)}`)),
-      h('div', null, h('h4', null, t(l('Habilidades e estilo de vida', 'Abilities and lifestyle'))),
-        h('p', { class: 'small' }, (sk.owned ?? []).map((id) => t(skillById[id]?.name)).join(', ') || '—'),
-        h('p', { class: 'small' }, t(l('Estilo de vida: ', 'Lifestyle: ')), h('b', null, sk.lifestyle ? t(lifestyleById[sk.lifestyle].name) : '—'), sk.lifestyle ? h('span', { class: 'muted' }, ` — ${t(lifestyleById[sk.lifestyle].desc)}`) : null),
-        h('p', { class: 'small muted' }, t(l('Pontos de habilidade guardados: {n}', 'Saved ability points: {n}'), { n: sk.points })), mark('pts', sk.points)),
+        h('p', { class: 'small' }, t(l('Crenças: ', 'Beliefs: ')), `${t(polById[v.pol]?.name)} · ${t(relById[v.rel]?.name)}`))
     ),
     h('div', null, h('h4', null, t(l('Bônus ativos no começo ({n})', 'Active bonuses at the start ({n})'), { n: perks.length })),
       perks.length ? h('ul', { class: 'small ng17-perks' }, ...perks.map((e) => h('li', null, h('b', null, t(e.label)), ': ', fxText(e.values) || '—', e.act ? h('span', { class: 'muted' }, ` (${t(l('só alguns atos', 'some acts only'))})`) : null)))

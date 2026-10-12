@@ -61,7 +61,7 @@ export function careersPanel(s: GameState): HTMLElement {
         h('button', { class: 'btn small', title: t(l('Soma as carreiras do herdeiro às atuais: mais frentes, agenda mais cheia.', 'Adds the heir\'s careers to the current ones: more fronts, fuller schedule.')), onclick: () => res(decideHeir(s, 'blend')) }, t(l('Somar os dois', 'Combine both'))),
         h('button', { class: 'btn small ghost', title: t(l('Mantém tudo como está; +15 de estresse (frustração).', 'Keeps everything; +15 stress (frustration).')), onclick: () => res(decideHeir(s, 'tradition')) }, t(l('Manter a tradição da família', 'Keep the family tradition'))))) : null,
     section(t(l('Quem você é', 'Who you are')),
-      h('div', { class: 'small' }, t(l('Origem', 'Origin')), ': ', h('b', null, t(ORIGINS[st.origin].name)), h('span', { class: 'muted' }, ` — ${t(ORIGINS[st.origin].desc)}`)),
+      st.origin !== 'none' && ORIGINS[st.origin] ? h('div', { class: 'small' }, t(l('Origem', 'Origin')), ': ', h('b', null, t(ORIGINS[st.origin].name)), h('span', { class: 'muted' }, ` — ${t(ORIGINS[st.origin].desc)}`)) : null,
       // r17: ambição é do personagem e fica travada durante a partida (só um herdeiro pode trazer outra)
       h('div', { class: 'small' }, t(l('Ambição', 'Ambition')), ': ', h('b', null, '🔒 ', t(AMBITIONS[st.ambition].name)), h('span', { class: 'muted' }, ` — ${t(AMBITIONS[st.ambition].desc)} `, t(l('(definida na criação do personagem; não muda no meio da partida)', '(set when creating the character; it does not change mid-run)')))),
       (() => { const g = ambitionGoal(s); return g ? h('div', { class: `small ${g.ok ? 'good' : 'muted'}` }, t(l('Meta deste ano até agora: ', 'This year\'s goal so far: ')), t(g.why), ` · ${t(l('cumprida dá', 'met gives'))}: ${fxText(AMBITION_PERK[st.ambition])}`) : null; })(),
@@ -89,7 +89,7 @@ registerArea({ id: 'careers', label: l('Carreiras', 'Careers'), icon: 'star', ke
 const NG_CAREERS = ['label', 'manager', 'festival', 'booking', 'venue', 'studio', 'publisher', 'media', 'platform', 'musician'];
 /** Aba "Carreira" do Novo Jogo: atividades principais (várias), origem profissional e ambição. */
 export function careerCard(cfg: RunConfig, onRole?: () => void, part: 'all' | 'main' | 'identity' | 'ambition' = 'all'): HTMLElement {
-  const c = (cfg.careers ??= { main: ['label'], origin: 'musician', ambition: 'legacy' });
+  const c = (cfg.careers ??= { main: ['label'], origin: 'none', ambition: 'legacy' });
   cfg.role = roleFromMain(c.main);
   const box = h('div', { class: 'car12-ng' });
   // r17: atividades ficam na aba do negócio; origem e ambição são do PERSONAGEM (aba Personagem)
@@ -105,12 +105,11 @@ export function careerCard(cfg: RunConfig, onRole?: () => void, part: 'all' | 'm
       h('p', { class: 'muted small' }, t(l('O que você fazia antes de ter um negócio na música. Vale dinheiro, habilidades, reputação e contatos de saída.', 'What you did before running a music business. Brings money, skills, reputation and contacts from day one.'))),
       select<Origin>(c.origin as Origin, (Object.keys(ORIGINS) as Origin[]).map((k) => ({ value: k, label: t(ORIGINS[k].name) })), (k) => { c.origin = k; draw(); }, { 'aria-label': t(l('Origem profissional', 'Professional origin')) }),
       h('p', { class: 'small good' }, t(ORIGINS[c.origin as Origin]?.desc ?? l('', '')))),
-    !amb ? null : h('section', { class: 'card' }, h('h3', null, ...hl(l('Ambição', 'Ambition'), 'ambition')),
-      h('p', { class: 'small muted' }, '🔒 ', t(l('Escolha com calma: a ambição fica travada durante toda a partida.', 'Choose carefully: the ambition stays locked for the whole run.'))),
-      select<Ambition>(c.ambition as Ambition, (Object.keys(AMBITIONS) as Ambition[]).map((k) => ({ value: k, label: t(AMBITIONS[k].name) })), (k) => { c.ambition = k; draw(); }, { 'aria-label': t(l('Ambição', 'Ambition')) }),
-      h('p', { class: 'small' }, h('b', null, t(l('Meta anual: ', 'Yearly goal: '))), t(AMBITIONS[c.ambition as Ambition]?.desc ?? l('', ''))),
-      h('p', { class: 'small good' }, h('b', null, t(l('Cumprida: ', 'Met: '))), `${t(l('−6 de estresse e no ano seguinte', '−6 stress and next year'))} ${fxText(AMBITION_PERK[c.ambition as Ambition])}`),
-      h('p', { class: 'small bad' }, h('b', null, t(l('Frustrada: ', 'Missed: '))), t(l('+6 de estresse.', '+6 stress.')))),
+    // r22: ambição em cartões (todas à vista, com meta e recompensa), no lugar da lista suspensa
+    !amb ? null : h('section', { class: 'card wide ng22-amb' }, h('h3', null, ...hl(l('Ambição', 'Ambition'), 'ambition')),
+      h('p', { class: 'small muted' }, '🔒 ', t(l('Fica travada a partida toda. Cumprida no ano: −6 de estresse e um bônus no ano seguinte. Frustrada: +6 de estresse.', 'Locked for the whole run. Met in a year: −6 stress and a bonus the next year. Missed: +6 stress.'))),
+      h('div', { class: 'ng22-picks' }, ...(Object.keys(AMBITIONS) as Ambition[]).map((k) => h('button', { type: 'button', class: `pick ${c.ambition === k ? 'on' : ''}`, 'aria-pressed': String(c.ambition === k), onclick: () => { c.ambition = k; draw(); } },
+        h('b', null, t(AMBITIONS[k].name)), h('small', null, t(AMBITIONS[k].desc)), h('small', { class: 'good' }, fxText(AMBITION_PERK[k]) || '—'))))),
   ].filter((x): x is HTMLElement => !!x));
   draw();
   return box;
@@ -118,5 +117,5 @@ export function careerCard(cfg: RunConfig, onRole?: () => void, part: 'all' | 'm
 export function careerSummary(cfg: RunConfig): string {
   const c = cfg.careers;
   if (!c) return '—';
-  return `${c.main.map((id) => t(careerDef(id)?.name ?? l(id, id))).join(' + ')} · ${t(ORIGINS[c.origin as Origin]?.name ?? l('—', '—'))} · ${t(AMBITIONS[c.ambition as Ambition]?.name ?? l('—', '—'))}`;
+  return `${c.main.map((id) => t(careerDef(id)?.name ?? l(id, id))).join(' + ')} · ${t(AMBITIONS[c.ambition as Ambition]?.name ?? l('—', '—'))}`;
 }
