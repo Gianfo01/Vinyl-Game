@@ -8,6 +8,9 @@ import type { Song } from '../sim/types';
 import { h } from './dom';
 
 export const grade = (v: number): string => (v >= 80 ? 'A' : v >= 65 ? 'B' : v >= 50 ? 'C' : v >= 35 ? 'D' : 'E');
+/** r27: conceito por extenso (as letras A–E sozinhas confundiam). */
+const GRADE_TXT: Record<string, L> = { A: l('excelente', 'excellent'), B: l('boa', 'good'), C: l('regular', 'fair'), D: l('fraca', 'weak'), E: l('muito fraca', 'very weak') };
+export const gradeWord = (v: number): string => t(GRADE_TXT[grade(v)]);
 
 const ATTRS: { key: keyof Song; name: L; what: L; recorded?: boolean }[] = [
   { key: 'melody', name: l('Melodia', 'Melody'), what: l('refrão, gancho e acessibilidade', 'chorus, hook and accessibility') },
@@ -23,10 +26,10 @@ export function songAttrs(so: Song, opts: { compact?: boolean; fuzzy?: boolean }
   const row = (name: L, v: number, what: L | null, cls = '') => h('div', { class: `sa-row ${cls}` },
     h('span', { class: 'sa-name' }, t(name)),
     h('span', { class: 'sa-bar' }, h('span', { style: `width:${Math.max(2, Math.min(100, v))}%` })),
-    h('b', { class: `sa-val g${grade(v)}` }, show(v), ' ', h('small', null, grade(v))),
+    h('b', { class: `sa-val g${grade(v)}`, title: what ? `${t(name)}: ${t(what)}` : t(name) }, show(v), ' ', h('small', null, gradeWord(v))),
     !opts.compact && what ? h('small', { class: 'muted sa-what' }, t(what)) : null);
   return h('div', { class: `song-attrs ${opts.compact ? 'compact' : ''}` },
-    row(l('Qualidade geral (Q)', 'Overall quality (Q)'), so.q, l('média ponderada; decide vendas e críticas', 'weighted average; drives sales and reviews'), 'sa-q'),
+    row(l('Qualidade geral', 'Overall quality'), so.q, l('média ponderada; decide vendas e críticas', 'weighted average; drives sales and reviews'), 'sa-q'),
     ...ATTRS.filter((a) => !a.recorded || so.recorded).map((a) => row(a.name, Number(so[a.key]) || 0, a.what)),
     !so.recorded ? h('small', { class: 'muted' }, t(l('Interpretação e produção aparecem depois da gravação.', 'Performance and production appear after recording.'))) : null,
     row(l('Gancho', 'Hook'), p.hook, l('força como single', 'strength as a single'), 'sa-derived'),
