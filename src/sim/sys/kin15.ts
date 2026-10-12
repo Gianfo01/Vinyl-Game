@@ -6,6 +6,7 @@
 import { clamp, Rng, seedState } from '../../core/rng';
 import { exitMember20 } from '../members20';
 import { KIN15 } from '../../data/kin15';
+import { KIN25 } from '../../data/kin25';
 import { l, type L } from '../../data/world';
 import { realSafe } from '../dynasty';
 import { registerExt4, registerSimHook } from '../ext4';
@@ -15,14 +16,16 @@ import { fmtL, notify, remember } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { canonKey } from './realworld';
 
-export type Rel15 = 'parent' | 'child' | 'sibling' | 'spouse' | 'ex' | 'cousin' | 'uncle' | 'nephew';
+export type Rel15 = 'parent' | 'child' | 'sibling' | 'spouse' | 'ex' | 'cousin' | 'uncle' | 'nephew' | 'grandparent' | 'grandchild';
 export const REL15: Record<Rel15, L> = {
   parent: l('Pai/mãe', 'Parent'), child: l('Filho(a)', 'Child'), sibling: l('Irmão(ã)', 'Sibling'), spouse: l('Cônjuge', 'Spouse'), ex: l('Ex', 'Ex'),
   cousin: l('Primo(a)', 'Cousin'), uncle: l('Tio(a)', 'Uncle/aunt'), nephew: l('Sobrinho(a)', 'Nephew/niece'),
+  grandparent: l('Avô/avó', 'Grandparent'), grandchild: l('Neto(a)', 'Grandchild'),
 };
-const INV: Record<Rel15, Rel15> = { parent: 'child', child: 'parent', sibling: 'sibling', spouse: 'spouse', ex: 'ex', cousin: 'cousin', uncle: 'nephew', nephew: 'uncle' };
+export const INV15: Record<Rel15, Rel15> = { parent: 'child', child: 'parent', sibling: 'sibling', spouse: 'spouse', ex: 'ex', cousin: 'cousin', uncle: 'nephew', nephew: 'uncle', grandparent: 'grandchild', grandchild: 'grandparent' };
+const INV = INV15;
 /** relação inicial (−100..100) entre parentes */
-const BASE: Record<Rel15, number> = { parent: 35, child: 35, sibling: 20, spouse: 40, ex: -25, cousin: 10, uncle: 20, nephew: 20 };
+const BASE: Record<Rel15, number> = { parent: 35, child: 35, sibling: 20, spouse: 40, ex: -25, cousin: 10, uncle: 20, nephew: 20, grandparent: 30, grandchild: 30 };
 const CLOSE = new Set<Rel15>(['parent', 'child', 'sibling', 'spouse']);
 
 export interface Kin15 {
@@ -74,11 +77,21 @@ function graph(s: GameState): Edges {
     if (t === 'S' || t === 'C') { for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) if (ids[i] && ids[j]) add(e, ids[i], ids[j], t === 'S' ? 'sibling' : 'cousin'); }
     else if (ids[0]) for (const k of ids.slice(1)) if (k) add(e, ids[0], k, t === 'P' ? 'child' : t === 'M' ? 'spouse' : t === 'X' ? 'ex' : 'nephew');
   }
+  // r25: [A, rel, B] = "A é <rel> de B" → aresta de B para A
+  for (const [a, r, b] of KIN25) { const ia = idx[canonKey(a)], ib = idx[canonKey(b)]; if (ia && ib) add(e, ib, ia, r); }
   for (const [a, b, r] of st.g) if (s.persons[a] && s.persons[b]) add(e, a, b, r);
   // filhos do mesmo pai/mãe são irmãos
   for (const [pid, ks] of Object.entries(e)) {
     const kids = ks.filter((x) => x[1] === 'child').map((x) => x[0]);
     for (let i = 0; i < kids.length; i++) for (let j = i + 1; j < kids.length; j++) if (s.persons[pid]) add(e, kids[i], kids[j], 'sibling');
+  }
+  // r25: derivados (sem sobrescrever o que já existe): pai do pai = avô; irmão do pai = tio; filhos de irmãos = primos
+  for (const pid of Object.keys(e)) {
+    const pars = e[pid].filter((x) => x[1] === 'parent').map((x) => x[0]);
+    for (const q of pars) for (const [o, r] of e[q] ?? []) {
+      if (r === 'parent') add(e, pid, o, 'grandparent');
+      else if (r === 'sibling') { add(e, pid, o, 'uncle'); for (const [c, rc] of e[o] ?? []) if (rc === 'child') add(e, pid, c, 'cousin'); }
+    }
   }
   cache.set(s, { n: n + st.g.length * 100000, e });
   return e;

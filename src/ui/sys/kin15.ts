@@ -11,9 +11,9 @@ import { LIFE_EXTRAS13 } from './dossier13';
 import { personLife } from '../../sim/sys/dossier13';
 
 const ROWS: { k: string; rels: Rel15[]; label: ReturnType<typeof l> }[] = [
-  { k: 'up', rels: ['parent', 'uncle'], label: l('Pais e tios', 'Parents and uncles/aunts') },
+  { k: 'up', rels: ['grandparent', 'parent', 'uncle'], label: l('Avós, pais e tios', 'Grandparents, parents and uncles/aunts') },
   { k: 'side', rels: ['spouse', 'ex', 'sibling', 'cousin'], label: l('Casal, irmãos e primos', 'Partner, siblings and cousins') },
-  { k: 'down', rels: ['child', 'nephew'], label: l('Filhos e sobrinhos', 'Children and nieces/nephews') },
+  { k: 'down', rels: ['child', 'grandchild', 'nephew'], label: l('Filhos, netos e sobrinhos', 'Children, grandchildren and nieces/nephews') },
 ];
 
 export function familyBlock15(s: GameState, p: Person): HTMLElement | null {

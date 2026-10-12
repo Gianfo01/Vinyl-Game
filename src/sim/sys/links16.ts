@@ -75,7 +75,7 @@ const say = (s: GameState, t: L, tone: 'good' | 'bad' | 'info' | 'event' = 'info
 };
 const mineAct = (a?: Act): a is Act => !!a && a.owner === 'player' && a.status !== 'retired' && a.status !== 'split';
 const me = (s: GameState): Person | undefined => Object.values(s.persons).find((p) => p.isPlayer && p.alive);
-const INV16: Record<Rel15, Rel15> = { parent: 'child', child: 'parent', sibling: 'sibling', spouse: 'spouse', ex: 'ex', cousin: 'cousin', uncle: 'nephew', nephew: 'uncle' };
+const INV16: Record<Rel15, Rel15> = { parent: 'child', child: 'parent', sibling: 'sibling', spouse: 'spouse', ex: 'ex', cousin: 'cousin', uncle: 'nephew', nephew: 'uncle', grandparent: 'grandchild', grandchild: 'grandparent' };
 const CLOSE16 = new Set<Rel15>(['parent', 'child', 'sibling', 'spouse']);
 
 // ---------------------------------------------------------------- 1. fama → notoriedade

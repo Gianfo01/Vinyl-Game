@@ -17,6 +17,7 @@ import { REAL_US } from '../../data/realacts_us';
 import { REAL_WORLD } from '../../data/realacts_world';
 import { REAL_MORE } from '../../data/realacts_more14';
 import { ALIASES16, REAL_L16 } from '../../data/lineups16';
+import { applyLineups25 } from '../../data/lineups25';
 import { REAL_17 } from '../../data/more17';
 import { REAL_1889 } from '../../data/era1889';
 import { ARTISTS19 } from '../../data/more19';
@@ -49,6 +50,7 @@ const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
 export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO22.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
 /** r21: o acervo é o último lote de REAL_ALL; usa gerador próprio para não deslocar os sorteios do resto do mundo. */
 export const ACERVO21_FROM = REAL_ALL.length - ACERVO22.filter((a) => REAL_ALL.includes(a)).length;
+applyLineups25(REAL_ALL); // r25: formações reais que estavam incompletas (banda de 5 aparecia com 2–3)
 const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo21|${k}`);
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
@@ -265,10 +267,13 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   if (d.m?.length) {
     const now: string[] = [];
     const old = act.members.map((id) => s.persons[id]).filter(Boolean);
+    // r25: fora do modo exato, quem é da formação clássica entra já (não fica de fora por ter entrado depois da estreia)
+    const classic = fates ? undefined : classicLineup25(d.m, d.d ?? debut - shift);
     d.m.forEach((m, i) => {
       const [name, role, born, died0, joined, left] = m;
       const join = joined !== undefined ? joined + shift : undefined;
-      if (sim && join !== undefined && join > debut) return; // r20: entradas posteriores à estreia são história, não identidade
+      const early = !!classic?.has(i) && join !== undefined && join > Math.min(debut, s.year);
+      if (sim && join !== undefined && join > debut && !early) return; // r20: entradas posteriores à estreia são história, não identidade
       const leave = sim ? undefined : left !== undefined ? left + shift : undefined;
       const died = sim ? simDead(name, born) : died0;
       const reuse = old[i] && (join === undefined || join <= debut) ? old[i] : undefined;
@@ -278,7 +283,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
         if (real) p.name = name;
         p.role = role;
         if (born) p.born = born;
-      } else if (join !== undefined && join > s.year) {
+      } else if (join !== undefined && join > s.year && !early) {
         if (keep(`j${name}`, 0.5)) sched.push({ year: join, kind: 'join', actId: act.id, m });
         return;
       } else {
@@ -347,6 +352,20 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     act.status = 'retired';
     act.deceased = true;
   }
+}
+
+/** r25: formação clássica = integrantes do primeiro ano com a maior formação simultânea documentada. Só existe quando
+ *  ela é maior que a de estreia (ex.: Earth, Wind & Fire estreou com 2 e chegou a 5; Yes, Genesis e Deep Purple com 3 → 5).
+ *  Fora do modo exato as entradas posteriores não são agendadas; sem isto a banda ficava para sempre com a formação de estreia. */
+export function classicLineup25(m: RealMember[], debut: number): Set<number> | undefined {
+  const deb = m.filter((x) => x[4] === undefined || x[4] <= debut).length;
+  let best: number[] = [];
+  for (let y = debut; y <= 2030; y++) {
+    const xs: number[] = [];
+    m.forEach((x, i) => { if ((x[4] === undefined || x[4] <= y) && (x[5] === undefined || x[5] > y)) xs.push(i); });
+    if (xs.length > best.length) best = xs;
+  }
+  return best.length > deb ? new Set(best) : undefined;
 }
 
 function membersAtDebut(a: RealArtist): number {
