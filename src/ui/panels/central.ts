@@ -18,6 +18,7 @@ import { money, playerActs, rngOf } from '../../sim/util';
 import { $, actLink, labelLink, logo, modal, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, countdown, dailyTimeline, ic, loadBar, portrait, stat } from '../vis';
+import { playTakesBtn27 } from '../act27/record27';
 
 setActionNameLookup((id) => agendaById[id]?.name ?? EXTRA_ACTIONS.find((x) => x.id === id)?.name ?? l(id));
 
@@ -119,7 +120,7 @@ export function centralPanel(s: GameState): HTMLElement {
         const act = s.acts[ss.actId];
         const pr = PRODUCERS.find((x) => x.id === ss.producerId);
         return h('div', { class: 'session' },
-          h('header', null, act ? logo(act, 28) : null, h('b', null, act?.name ?? ''), pr ? pill(pr.name) : null, h('span', { class: 'muted small' }, ` ${ss.dayDone}/${ss.days} ${t(l('dias', 'days'))}`)),
+          h('header', null, act ? logo(act, 28) : null, h('b', null, act?.name ?? ''), pr ? pill(pr.name) : null, h('span', { class: 'muted small' }, ` ${ss.dayDone}/${ss.days} ${t(l('dias', 'days'))}`), ' ', playTakesBtn27(s, ss.id)), // r27 M1: jogar os takes
           h('ul', { class: 'takes' }, ss.songIds.map((sid) => {
             const song = s.songs[sid];
             const takes = ss.takes[sid] ?? [];
