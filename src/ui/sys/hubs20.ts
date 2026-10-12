@@ -229,9 +229,11 @@ function toursTab(s: GameState): HTMLElement {
 function showsHub20(s: GameState): HTMLElement {
   const hard = hardConflictCount20(s);
   return h('div', { class: 'hub hub20 shows20' }, tabs('showsHub', [
-    { id: 'agenda', label: T(l('Agenda', 'Agenda')), icon: 'calendar', badge: hard || undefined, render: () => h('div', { class: 'panel' },
+    { id: 'agenda', label: T(l('Agenda', 'Agenda')), icon: 'calendar', badge: hard || undefined, render: () => h('div', { class: 'stack27' },
       intro(l('Próximas datas, conflitos e operações em curso. Para reservar datas avulsas, use a tabela por artista.', 'Upcoming dates, conflicts and ongoing operations. To book one-off dates, use the per-act table.')),
-      controlRoom20(s), upcomingSection(s), activeToursSection(s), gigsSection20(s)) },
+      // r27 (J): uma coluna — conflitos, depois próximas datas e turnês lado a lado, e as tabelas largas por artista embaixo
+      // (antes a grade de 2 colunas jogava a tabela de um artista na coluna estreita e cortava as colunas)
+      controlRoom20(s), h('div', { class: 'split27' }, upcomingSection(s), activeToursSection(s)), gigsSection20(s)) },
     { id: 'tours', label: T(l('Turnês', 'Tours')), icon: 'tour-bus', badge: s.tours.filter((x) => x.status === 'running').length || undefined, render: () => toursTab(s) },
     { id: 'ops', label: T(l('Políticas e operação', 'Policies and operation')), icon: 'handshake', render: () => h('div', null,
       intro(l('Regras que valem para todas as datas (cada data pode sobrescrever), notas de palco, ingressos e merch.', 'Rules for every date (each date can override), stage notes, tickets and merch.')),

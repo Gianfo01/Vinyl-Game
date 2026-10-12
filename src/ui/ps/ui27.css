@@ -1,0 +1,191 @@
+/* Rodada 27 (J) — sistema visual compartilhado (guia: docs/ui27.md). Só apresentação; carregado depois do theme25.
+   1) tokens: espaço, tipo, tons de estado com contraste AA nos dois temas (conferidos em tests/r27-ui.test.ts)
+   2) componentes novos: .ph27 (cabeçalho de página), .kpis27, .c27 (cartão), .empty27, .chip27, .row27, .toolbar27
+   3) normalização das telas antigas: títulos, cartões dentro de cartões, tabelas (números à direita), chips de
+      gênero, notas coloridas, botões primários em linhas de tabela, formulários, diálogos e avisos. */
+
+/* ================= 1. tokens ================= */
+:root {
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
+  --fs-xs: 0.75rem; --fs-sm: 0.875rem; --fs-md: 1rem; --fs-lg: 1.125rem; --fs-xl: 1.375rem; --fs-2xl: clamp(1.6rem, 1.2rem + 1vw, 2.05rem);
+  --fs-kpi: 1.35rem;
+  --lh-tight: 1.15; --lh: 1.45;
+}
+/* tons (texto sobre fundo de chip): escuro = pastel sobre azul-noite; claro = tinta escura sobre marfim */
+:root[data-theme='dark'] {
+  --t-good-fg: #9fe0b9; --t-good-bg: #173a33; --t-bad-fg: #ffb3a9; --t-bad-bg: #3d2430; --t-warn-fg: #f6d48a; --t-warn-bg: #3a3322;
+  --t-info-fg: #a9d4f5; --t-info-bg: #183652; --t-accent-fg: #f3cd85; --t-accent-bg: #33301f; --t-neutral-fg: #d3dde6; --t-neutral-bg: #233c52;
+  --on-tone: #10202e; /* texto sobre preenchimento good/bad/warn (pastéis no escuro) */
+  --fam-l: 74%; --fam-s: 70%;
+}
+:root[data-theme='light'] {
+  --t-good-fg: #1f5c39; --t-good-bg: #e2efe3; --t-bad-fg: #8f2a20; --t-bad-bg: #f7e1dc; --t-warn-fg: #6e4708; --t-warn-bg: #f6e9cc;
+  --t-info-fg: #1d4f7a; --t-info-bg: #e0ebf4; --t-accent-fg: #8a3d17; --t-accent-bg: #f8e4d6; --t-neutral-fg: #3c443f; --t-neutral-bg: #ebe4d6;
+  --on-tone: #ffffff;
+  --fam-l: 26%; --fam-s: 62%;
+}
+
+/* ================= 2. componentes ================= */
+/* --- cabeçalho de página: título + propósito | ações; KPIs embaixo; arte opcional à direita --- */
+.ph27 { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'text act' 'kpi kpi'; column-gap: var(--sp-5); row-gap: var(--sp-3); align-items: end; margin: var(--sp-2) 0 var(--sp-4); position: relative; }
+.ph27.has-art { grid-template-columns: minmax(0, 1fr) auto minmax(160px, 280px); grid-template-areas: 'text act art' 'kpi kpi art'; }
+.ph27-text { grid-area: text; min-width: 0; }
+.ph27-actions { grid-area: act; display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: flex-end; }
+.ph27 > .kpis27 { grid-area: kpi; }
+.ph27-art { grid-area: art; align-self: stretch; min-height: 96px; max-height: 180px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hq-bg, var(--panel-2)); display: grid; place-items: center; }
+.ph27-art > canvas, .ph27-art > img, .ph27-art > svg { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; display: block; }
+.ph27-fold { display: none; }
+.ph27-eyebrow { margin: 0 0 var(--sp-1); color: var(--muted); font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+main h1.page21, main .ph27-title { font-family: var(--sans); font-size: var(--fs-2xl); font-weight: 800; line-height: var(--lh-tight); letter-spacing: 0.005em; margin: 0; }
+.ph27-sub, main .pg23-purpose { margin: var(--sp-1) 0 0; color: var(--muted); font-size: var(--fs-md); max-width: 72ch; line-height: var(--lh); }
+/* título automático antigo (sem .ph27): só o tamanho e o respiro */
+main > h1.page21-auto { margin: var(--sp-2) 0 var(--sp-4); }
+main > header.pg23 { margin: var(--sp-2) 0 var(--sp-4); }
+
+/* --- KPIs: rótulo pequeno em caixa-alta, valor monoespaçado --- */
+.kpis27 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-2); margin: 0; padding: 0; }
+.kpi27 { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: var(--sp-2) var(--sp-3); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); text-align: left; color: var(--ink); font: inherit; }
+button.kpi27 { cursor: pointer; }
+button.kpi27:hover { border-color: var(--accent); }
+.kpi27-l { color: var(--muted); font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi27-v { font-family: var(--mono); font-size: var(--fs-kpi); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi27-h { color: var(--muted); font-size: var(--fs-xs); }
+.kpi27-v.t-good { color: var(--good); } .kpi27-v.t-bad { color: var(--bad); } .kpi27-v.t-warn { color: var(--warn); } .kpi27-v.t-accent { color: var(--accent); } .kpi27-v.t-info { color: var(--t-info-fg); }
+button.kpi27.is-link .kpi27-l::after { content: ' →'; }
+
+/* --- cartão --- */
+.c27 { padding: var(--sp-4); }
+.c27 > .c27-h { display: flex; align-items: center; gap: var(--sp-2); justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: var(--sp-2); margin-bottom: var(--sp-3); }
+.c27 > .c27-h h3 { margin: 0; display: flex; align-items: center; gap: var(--sp-2); }
+.c27-act { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.c27-ic .ic-px, .c27-ic canvas, .c27-ic img { width: 20px; height: 20px; }
+.c27.v-flat { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.c27.v-hero { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); border-left: 4px solid var(--accent); }
+.c27.t-bad { border-left: 4px solid var(--bad); } .c27.t-warn { border-left: 4px solid var(--warn); } .c27.t-good { border-left: 4px solid var(--good); }
+.c27-more { margin-top: var(--sp-3); border-top: 1px dashed var(--line); padding-top: var(--sp-2); }
+.c27-more > summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: var(--fs-sm); }
+
+/* --- estado vazio / carregando / erro (e o antigo .empty18 com a mesma cara) --- */
+.empty27, main .empty18 { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-4); border: 1px dashed color-mix(in srgb, var(--muted) 55%, var(--line)); border-radius: var(--radius); background: color-mix(in srgb, var(--panel-2) 45%, transparent); color: var(--ink); font-size: var(--fs-sm); line-height: var(--lh); }
+main .empty18:not(.empty27) { display: block; }
+.empty27 b, main .empty18 b { display: block; font-size: var(--fs-md); margin-bottom: var(--sp-1); color: var(--ink); }
+.empty27 p { margin: 0; color: var(--muted); max-width: 64ch; }
+.empty27-act, main .empty18:not(.empty27) > div { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-3); }
+.empty27-ic .ic-px, .empty27-ic canvas, .empty27-ic img { width: 40px; height: 40px; opacity: 0.85; }
+.empty27.k-error { border-style: solid; border-left: 4px solid var(--bad); }
+.empty27-spin { width: 20px; height: 20px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin27 0.9s linear infinite; }
+@keyframes spin27 { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .empty27-spin { animation: none; } }
+
+/* --- chips de estado --- */
+.chip27 { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 2px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.5; white-space: nowrap; border: 1px solid currentColor; vertical-align: middle; }
+.chip27.t-good { color: var(--t-good-fg); background: var(--t-good-bg); } .chip27.t-bad { color: var(--t-bad-fg); background: var(--t-bad-bg); }
+.chip27.t-warn { color: var(--t-warn-fg); background: var(--t-warn-bg); } .chip27.t-info { color: var(--t-info-fg); background: var(--t-info-bg); }
+.chip27.t-accent { color: var(--t-accent-fg); background: var(--t-accent-bg); } .chip27.t-neutral { color: var(--t-neutral-fg); background: var(--t-neutral-bg); border-color: var(--line); }
+
+/* --- linha de lista com avatar --- */
+.list27 { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.row27 { display: flex; align-items: center; gap: var(--sp-2); border-bottom: 1px solid var(--line); }
+.row27:last-child { border-bottom: 0; }
+.r27-hit { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) var(--sp-1); background: none; border: 0; color: inherit; font: inherit; text-align: left; }
+button.r27-hit { cursor: pointer; }
+button.r27-hit:hover { background: var(--panel-2); }
+.row27.sel { box-shadow: inset 3px 0 0 var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.r27-body { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.r27-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r27-m { color: var(--muted); font-size: var(--fs-sm); }
+.r27-aside { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.r27-act { display: flex; gap: var(--sp-1); flex: 0 0 auto; }
+
+/* --- barra de ferramentas e números --- */
+.toolbar27 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-2); margin: 0 0 var(--sp-3); }
+.tb27-l, .tb27-r { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.num27 { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num27.t-good { color: var(--good); } .num27.t-bad { color: var(--bad); } .num27.t-warn { color: var(--warn); }
+
+/* --- utilitários de layout: pilha com respiro e duas colunas que viram uma --- */
+.stack27 { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
+.stack27 > * { margin-top: 0; margin-bottom: 0; }
+.split27 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: var(--sp-4); align-items: start; }
+.split27:empty { display: none; }
+
+/* ================= 3. normalização das telas antigas ================= */
+/* tipografia: Pixel Studio é sem serifa em toda a área da página (as eras mantêm cor e faixa, não a fonte) */
+main { --serif: var(--sans); }
+main :is(h1, h2, h3, h4) { font-family: var(--sans); }
+main h2 { font-size: var(--fs-xl); line-height: var(--lh-tight); }
+main h4 { font-size: var(--fs-md); }
+/* títulos de cartão: um só estilo — caixa-alta pequena com régua (antes 19,2px, 16,8px e 20px misturados) */
+main :is(.card, section.card) > h3:first-child, main .card > header h3, main .c27 > .c27-h h3 { font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.25; }
+main :is(.card, section.card) h3:not(:first-child) { font-size: var(--fs-md); }
+/* nome do artista no cabeçalho da página do elenco (era 40px e quebrava em 2 linhas) */
+main .ar21-id h2, main h2.big { font-size: clamp(1.45rem, 1.1rem + 0.9vw, 1.9rem); line-height: 1.1; }
+/* cabeçalho de cartão com ícone (padrão .h21 da r21): mesmo estilo dos outros títulos de cartão */
+main .card > .h21:first-child { border-bottom: 1px solid var(--line); padding-bottom: var(--sp-2); margin-bottom: var(--sp-3); }
+main .card > .h21:first-child h3 { margin: 0; display: flex; align-items: center; gap: var(--sp-2); font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+main .h21 .ic21 :is(canvas, img, .ic-px) { width: 22px; height: 22px; }
+main .artists20 .col-side h3 { font-size: 0.95rem; }
+/* elenco: coluna um pouco mais larga (filtros cortavam "Papel: tod…") e nada vaza do cartão */
+@media (min-width: 1100px) { main .panel.artists { grid-template-columns: 300px minmax(0, 1fr); } }
+main .ar20-filters select { font-size: 0.85rem; padding-right: 1.4rem; text-overflow: ellipsis; }
+main .roster.ar20 .ab18-cell { flex-wrap: wrap; white-space: normal; row-gap: 4px; }
+main .roster.ar20 li { min-width: 0; overflow: hidden; }
+
+/* cartões dentro de cartões: no máximo um nível de caixa (a seção de dentro vira título + régua, sem moldura) */
+main section.card section.card, main .card .card:not(.tile):not(button):not(.sel):not(.on) { box-shadow: none; }
+main section.card section.card { background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: var(--sp-3) 0 0; margin-top: var(--sp-3); }
+main section.card section.card > h3:first-child { border-bottom: 0; padding-bottom: 0; margin-bottom: var(--sp-2); font-size: var(--fs-sm); color: var(--muted); }
+
+/* abas internas: um pouco mais compactas (a página tem até 12 abas) */
+main .tabs button { font-size: 0.95rem; min-height: 36px; padding: 0.35rem 0.8rem; }
+
+/* tabelas: números à direita e tabulares (colunas marcadas por installNum27), cabeçalho alinhado com a coluna */
+main table :is(td, th).num27c, main table td.num, main table th.num { text-align: right; font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+main table td.num27c { font-family: var(--mono); font-size: 0.92em; letter-spacing: -0.01em; }
+/* tabela larga dentro de coluna estreita: rola dentro do cartão, nunca corta nem empurra a página */
+main :is(.col-side, aside) .card:has(> table), main :is(.col-side, aside) section.card:has(table) { overflow-x: auto; }
+@media (max-width: 860px) { main table.m23-cards td.num27c { justify-content: space-between; font-family: var(--mono); } }
+
+/* chips antigos com tom: mesmos pares de cor dos chip27 (AA nos dois temas) */
+main .pill.good { color: var(--t-good-fg); background: var(--t-good-bg); }
+main .pill.bad { color: var(--t-bad-fg); background: var(--t-bad-bg); }
+main .pill.warn { color: var(--t-warn-fg); background: var(--t-warn-bg); }
+/* chip de gênero (style17): a família dá o matiz; clareza/saturação vêm do tema (antes 1,9:1 no escuro) */
+.pill.style17 { --fam-h: 30; color: hsl(var(--fam-h) var(--fam-s) var(--fam-l)) !important; border-color: hsl(var(--fam-h) var(--fam-s) var(--fam-l) / 0.55) !important; background: color-mix(in srgb, hsl(var(--fam-h) var(--fam-s) var(--fam-l)) 10%, var(--panel)); }
+/* notas/selos preenchidos com cor de estado: no escuro os tons são pastéis → texto escuro (antes branco, 1,6–2,4:1) */
+.score, .ovr, .take.good, .take.bad { color: var(--on-tone); }
+.warn-t { color: var(--warn) !important; }
+/* botão desabilitado: continua legível */
+.btn:disabled { opacity: 0.6; }
+/* hierarquia: em linhas de tabela e listas longas o "primário" vira secundário com acento (antes até 187 botões cheios na mesma tela) */
+main tbody .btn.primary, main .roster .btn.primary { background: transparent; color: var(--accent); border-color: color-mix(in srgb, var(--accent) 70%, var(--line)); box-shadow: none; }
+main tbody .btn.primary:hover:not(:disabled), main .roster .btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 16%, var(--panel)); color: var(--ink); }
+
+/* formulários: mesma altura e respiro */
+main :is(select, input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color])) { min-height: 36px; padding: 0.3rem 0.55rem; font: inherit; font-size: 0.95rem; max-width: 100%; }
+main label { line-height: 1.3; }
+/* diálogos: cabeçalho com régua; avisos: borda de tom */
+.modal > h2:first-child, .modal > h3:first-child, .modal > header { border-bottom: 1px solid var(--line); padding-bottom: var(--sp-2); margin-bottom: var(--sp-3); }
+#toasts .toast { border-left: 4px solid var(--accent); border-radius: var(--radius); box-shadow: var(--card-shadow); }
+#toasts .toast.good, #toasts .toast.success { border-left-color: var(--good); }
+#toasts .toast.bad, #toasts .toast.error { border-left-color: var(--bad); }
+#toasts .toast.warn { border-left-color: var(--warn); }
+
+/* ================= celular ================= */
+@media (max-width: 860px) {
+  .ph27, .ph27.has-art { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'art' 'text' 'act' 'kpi'; row-gap: var(--sp-2); margin-top: var(--sp-1); }
+  .ph27-actions { justify-content: flex-start; }
+  .ph27-art { min-height: 0; max-height: 96px; }
+  .ph27.art-folded .ph27-art { display: none; }
+  .ph27-fold { display: inline-flex; position: absolute; top: 4px; right: 4px; z-index: 1; min-width: 32px; min-height: 32px; align-items: center; justify-content: center; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: var(--radius); cursor: pointer; }
+  .ph27.art-folded .ph27-fold { position: static; justify-self: end; grid-area: art; }
+  .ph27.art-folded .ph27-fold span[aria-hidden] { display: inline-block; transform: rotate(180deg); }
+  .kpis27 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis27 > :nth-child(n+5) { display: none; } /* no celular, só os 4 primeiros (o resto está na página) */
+  .kpi27 { padding: 6px var(--sp-2); }
+  .kpi27-v { font-size: 1.15rem; }
+  main :is(.card, section.card) > h3:first-child { font-size: 0.88rem; }
+  main section.card, main .card { padding: var(--sp-3); }
+  main section.card section.card { padding: var(--sp-2) 0 0; }
+  .toolbar27 > * { width: 100%; }
+}
