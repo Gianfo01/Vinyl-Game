@@ -65,6 +65,11 @@ import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
 import { PURPOSE23 } from './sys/journey23'; // r23: propósito de cada tela da jornada do disco
 import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
 import './nav17.css';
+// r25 Pixel Studio: 6 seções (Sede, Pessoas, Projetos, Ao vivo, Mundo, Gestão), busca global e encaixe da Sede
+import { SEDE25, home25, more25, navGroups25, type NavGroup25 } from './ps/nav25';
+import { sedeHome25, sedeNav25 } from './ps/slot25';
+import { openSearch25, seenTabs25 } from './ps/search25';
+import { getLang } from '../i18n/strings';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
 registerPortrait((p, size) => {
@@ -112,6 +117,9 @@ export function boot(el: HTMLElement): void {
   registerInspect();
   store.rerender = render;
   store.toast = toast;
+  // r25: a cena da Sede navega pelo mesmo caminho do menu
+  sedeNav25.go = (id) => go(id);
+  sedeNav25.rerender = () => { navMemo = null; groupsMemo = null; if (store.game) render(); };
   window.addEventListener('keydown', onKey);
   // rodada 15: voltar/avançar do navegador, abas lembradas, paleta pelo botão da barra
   for (const [k, v] of Object.entries(loadTabs15())) setTab(k, v);
@@ -127,7 +135,9 @@ function startGame(): void {
   // rodada 13: sem área escolhida, abre a casa da carreira principal
   if (!store.area || store.area === 'desk') { const act = careers(store.game!).active; const hm = defaultHome(act); if (hm.tab) setTab(hm.tab[0], hm.tab[1]); store.area = hm.area;
     // r17: quem não tem selo abre na página exclusiva da carreira principal
-    if (act.length && !act.includes('label') && CAREER_PAGE17[act[0]]) store.area = CAREER_PAGE17[act[0]].area; }
+    if (act.length && !act.includes('label') && CAREER_PAGE17[act[0]]) store.area = CAREER_PAGE17[act[0]].area;
+    // r25: com a tela da Sede registrada, quem abre no Cockpit abre na Sede
+    else if (store.area === 'cockpit' && sedeHome25) store.area = SEDE25; }
   // rodada 15: recarregar a página volta à mesma tela (rota no endereço)
   const r0 = initialRoute15();
   navMemo = null;
@@ -139,9 +149,11 @@ function startGame(): void {
 function onKey(e: KeyboardEvent): void {
   if (!store.game) return;
   const tag = (e.target as HTMLElement)?.tagName;
-  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  // r25: Ctrl/Cmd+K (Buscar) vale também de dentro de um campo (ex.: filtro do "Mais")
+  const ck = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
+  if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA')) return;
   if (document.querySelector('.overlay')) return;
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+  if (ck) {
     e.preventDefault();
     palette();
     return;
@@ -305,11 +317,13 @@ const HINT17: Record<string, string> = Object.fromEntries(GROUPS.flatMap((g) => 
 /** r17: menu reformado (nav17): grupos por função, carreiras em Você › Carreiras, resto em Mais. */
 const groups = (): NavGroup14[] => (groupsMemo ??= (() => {
   const g = store.game, ids = navItems().map((x) => x.id), has = new Set(ids);
-  return navGroups17({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a) && (!g || !UX19UI.has || UX19UI.has(g, a) || a === store.area), all: ids, hint: HINT17 });
+  // r25: 6 seções (nav25); a árvore r17 continua valendo para testes/ajuda (seções do ux20)
+  return navGroups25({ active: g ? careers(g).active : ['label'], pages: g ? careerPages17(g) : [], has: (a) => has.has(a) && (!g || !UX19UI.has || UX19UI.has(g, a) || a === store.area), all: ids, hint: HINT17, sede: !!sedeHome25 });
 })());
-void navGroups16;
+void navGroups16; void navGroups17;
 
-interface NavItem { id: string; label: string; icon: string; key: string; badge?: number }
+interface NavItem { id: string; label: string; icon: string; key: string; badge?: number; /** r25: nome no outro idioma (busca) */ alt?: string }
+const altL25 = (x: L): string => (getLang() === 'pt' ? x.en : x.pt);
 // rodada 15: menu (com selos/badges, alguns caros) calculado uma vez por render, não uma vez por grupo
 let navMemo: NavItem[] | null = null;
 let groupsMemo: NavGroup14[] | null = null;
@@ -317,8 +331,9 @@ let groupsMemo: NavGroup14[] | null = null;
 function navItems(): NavItem[] {
   const g = store.game!;
   return navMemo ??= [
-    ...AREAS.map((a) => ({ id: a.id as string, label: t(S[a.label]), icon: ICON17[a.id] ?? a.icon, key: KEY17[a.id] ?? '', badge: a.id === 'desk' && g.decisions.length ? g.decisions.length : undefined })),
-    ...EXTRA_AREAS.filter((a) => !a.visible || a.visible(g)).map((a) => ({ id: a.id, label: t(a.label), icon: ICON17[a.id] ?? a.icon, key: KEY17[a.id] ?? '', badge: a.badge?.(g) })),
+    ...(sedeHome25 ? [{ id: SEDE25, label: t(SEDE_L25), alt: altL25(SEDE_L25), icon: 'house', key: '' }] : []),
+    ...AREAS.map((a) => ({ id: a.id as string, label: t(S[a.label]), alt: altL25(S[a.label]), icon: ICON17[a.id] ?? a.icon, key: KEY17[a.id] ?? '', badge: a.id === 'desk' && g.decisions.length ? g.decisions.length : undefined })),
+    ...EXTRA_AREAS.filter((a) => !a.visible || a.visible(g)).map((a) => ({ id: a.id, label: t(a.label), alt: altL25(a.label), icon: ICON17[a.id] ?? a.icon, key: KEY17[a.id] ?? '', badge: a.badge?.(g) })),
   ];
 }
 
@@ -351,50 +366,73 @@ function nav(): HTMLElement {
   const pins = store17.pins.map((id) => all.find((x) => x.id === id && listed.has(id))).filter((x): x is NavItem => !!x);
   const pinBox = pins.length ? h('div', { class: 'nav-pins17' }, h('small', { class: 'nav-sec' }, '★ ', t(l('Fixados', 'Pinned'))),
     pins.map((a) => h('button', { class: store.area === a.id ? 'on' : '', title: a.label, onclick: () => go(a.id) }, h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null;
-  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' },
-    h('div', { class: 'nav-brand21', 'aria-hidden': 'true' }, h('span', { class: 'disc-sm' }), h('span', null, h('b', null, store.game!.config.companyName), h('small', null, 'Masters · Heritage'))),
-    pinBox, groups().map((gr, gi) => {
-    const items = groupItems(gr);
-    const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
-    const here = gr.id === cur.id;
-    const open = here && !navFold21.has(gr.id);
-    // rodada 14: casa da carreira (com aba, ex.: Empreendimentos › Festival) e títulos por carreira em "Outras atividades"
-    const tabbed = (id: string) => gr.home?.tab && gr.home.area === id;
-    const enter = (id: string) => { if (tabbed(id)) setTab(gr.home!.tab![0], gr.home!.tab![1]); go(id); };
-    const last = lastInGroup[gr.id] && items.some((x) => x.id === lastInGroup[gr.id]) ? lastInGroup[gr.id] : null;
-    const btn = (a: NavItem) => { const on = store.area === a.id && (!tabbed(a.id) || open); const lbl = tabbed(a.id) ? t(gr.label) : a.label;
-      return h('button', { class: on ? 'on' : '', 'aria-current': on ? 'page' : undefined, title: `${lbl} (${a.key.toUpperCase()})`, onclick: () => enter(a.id) },
-        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, lbl), a.badge ? h('span', { class: 'badge' }, a.badge) : null); };
-    const secs = gr.sections?.map((sc) => [sc, items.filter((x) => sc.areas.includes(x.id))] as const).filter(([, xs]) => xs.length).map(([sc, xs]) => [h('small', { class: 'nav-sec' }, t(sc.label)), ...xs.map(btn)]);
-    return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''} ${gr.other ? 'nav-other' : ''} ${gi >= MOBILE_NAV23 ? 'm23-x' : ''}`, 'data-career': gr.career },
-      h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => { if (here) { if (open) navFold21.add(gr.id); else navFold21.delete(gr.id); saveFold21(); render(); return; } navFold21.delete(gr.id); saveFold21(); enter(last ?? (gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit')); } },
-        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
-      open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
-    );
-  }), moreNav23(cur.id), UX19UI.navFoot?.(store.game!) ?? null);
+  // r25 Pixel Studio: só as 6 seções no menu (ícone 2×, botões grandes); as páginas ficam na faixa de abas do topo
+  // (5 visíveis + "Mais"); no celular o menu vira a barra inferior com as 6 seções (sem "Mais" duplicado).
+  const util = (icon: string, label: L, run: () => void, hint?: string) => h('button', { type: 'button', class: 'nav-util25', title: hint ? `${t(label)} (${hint})` : t(label), onclick: run },
+    h('span', { class: 'ic', 'aria-hidden': 'true' }, icon), h('span', { class: 'lbl' }, t(label)), hint ? h('kbd', null, hint) : null);
+  return h('nav', { class: 'nav grouped nav25', 'aria-label': 'menu' },
+    h('div', { class: 'nav-brand21', 'aria-hidden': 'true' }, h('span', { class: 'disc-sm' }), h('span', null, h('b', null, store.game!.config.companyName), h('small', null, 'Masters · Pixel Studio'))),
+    groups().map((gr) => {
+      const items = groupItems(gr);
+      const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
+      const here = gr.id === cur.id;
+      const last = lastInGroup[gr.id] && items.some((x) => x.id === lastInGroup[gr.id]) ? lastInGroup[gr.id] : null;
+      return h('div', { class: `nav-group ${here ? 'open' : ''}`, 'data-sec25': gr.id },
+        h('button', { class: `nav-head ${here ? 'on' : ''}`, 'aria-current': here ? 'true' : undefined, title: t(gr.label), onclick: () => go(here || gr.id === 'sede' ? home25(gr) : last ?? home25(gr)) },
+          h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null));
+    }),
+    pinBox,
+    h('div', { class: 'nav-utils25' },
+      util('⌕', l('Buscar', 'Search'), openSearch25, 'Ctrl K'),
+      util('▤', l('Arquivo', 'Files'), () => saveManagerModal17((g) => { store.game = g; startGame(); })),
+      util('⚙', l('Opções', 'Options'), settings)),
+    UX19UI.navFoot?.(store.game!) ?? null);
 }
+void navFold21; void saveFold21;
 
-/** r23: celular — barra inferior com no máximo 4 destinos + "Mais" (abre a gaveta com todos os grupos). */
-const MOBILE_NAV23 = 4;
-function moreNav23(curId: string): HTMLElement {
-  const rest = groups().slice(MOBILE_NAV23);
-  const on = rest.some((g) => g.id === curId);
-  const badge = rest.reduce((t0, g) => t0 + groupItems(g).reduce((t1, x) => t1 + (x.badge ?? 0), 0), 0);
-  return h('div', { class: 'nav-group m23-more' },
-    h('button', { type: 'button', class: `nav-head ${on ? 'on' : ''}`, 'aria-haspopup': 'dialog', onclick: openDrawer },
-      h('span', { class: 'ic', 'aria-hidden': 'true' }, '☰'), h('span', { class: 'lbl' }, t(l('Mais', 'More'))), badge ? h('span', { class: 'badge' }, badge) : null));
-}
-
-/** Faixa de sub-áreas no topo do painel (útil no celular, onde o menu lateral vira barra). */
+/** r25: faixa de páginas da seção (no máximo 5 visíveis) + "Mais" agrupado por tema, com filtro. */
 function subnav(): HTMLElement | null {
-  const gr = groupOf(store.area);
-  const items = groupItems(gr);
-  if (items.length < 2) return null;
-  return h('div', { class: 'subnav', role: 'tablist' }, items.map((a) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: store.area === a.id ? 'on' : '', onclick: () => go(a.id) }, ic(a.icon), ' ', gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, a.badge ? h('span', { class: 'badge' }, a.badge) : null)));
+  const gr = groupOf(store.area) as NavGroup25;
+  const all = navItems();
+  const item = (id: string) => all.find((x) => x.id === id);
+  const top = (gr.top ?? gr.areas.slice(0, 5)).map(item).filter((x): x is NavItem => !!x);
+  const tab = (a: NavItem) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: `btn25 ${store.area === a.id ? 'on' : ''}`, onclick: () => go(a.id) },
+    h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null);
+  const more = more25(gr).map((sc) => ({ label: t(sc.label), items: sc.areas.map(item).filter((x): x is NavItem => !!x) })).filter((x) => x.items.length);
+  const n = more.reduce((t0, x) => t0 + x.items.length, 0);
+  const inMore = more.some((x) => x.items.some((a) => a.id === store.area));
+  let moreEl: HTMLElement | null = null;
+  if (n) {
+    const list = h('div', { class: 'more25-list' });
+    const paint = (q: string) => {
+      const f = fold25(q);
+      const secs = more.map((sc) => {
+        const xs = sc.items.filter((a) => !f || fold25(`${a.label} ${a.alt ?? ''} ${sc.label}`).includes(f));
+        return xs.length ? h('div', { class: 'more25-sec' }, h('small', { class: 'nav-sec' }, sc.label),
+          ...xs.map((a) => h('button', { type: 'button', role: 'menuitem', class: store.area === a.id ? 'on' : '', 'aria-current': store.area === a.id ? 'page' : undefined, onclick: () => go(a.id) },
+            h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null;
+      }).filter((x): x is HTMLDivElement => !!x);
+      list.replaceChildren(...(secs.length ? secs : [h('p', { class: 'muted small' }, t(l('Nada com esse nome nesta seção. Tente Buscar (Ctrl+K).', 'Nothing by that name in this section. Try Search (Ctrl+K).')))]));
+    };
+    paint('');
+    const filter = h('input', { type: 'search', class: 'more25-filter', placeholder: t(l('Filtrar…', 'Filter…')), 'aria-label': t(l('Filtrar páginas', 'Filter pages')), oninput: (e: Event) => paint((e.target as HTMLInputElement).value) }) as HTMLInputElement;
+    const cur = inMore ? item(store.area) : undefined;
+    moreEl = h('details', { class: `more25 ${inMore ? 'on' : ''}`, ontoggle: (e: Event) => { if ((e.target as HTMLDetailsElement).open) setTimeout(() => filter.focus(), 0); },
+      onkeydown: (e: KeyboardEvent) => { if (e.key === 'Escape') { const d = e.currentTarget as HTMLDetailsElement; d.open = false; d.querySelector('summary')?.focus(); e.stopPropagation(); } } },
+      h('summary', { class: `btn25 ${inMore ? 'on' : ''}`, title: t(l('Mais páginas desta seção', 'More pages in this section')) },
+        ...(cur ? [h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(cur.icon)), h('span', { class: 'lbl' }, cur.label), h('small', { class: 'more25-n' }, `+${n - 1}`)]
+          : [h('span', { class: 'lbl' }, t(l('Mais', 'More'))), h('small', { class: 'more25-n' }, String(n))]), h('span', { class: 'more25-caret', 'aria-hidden': 'true' }, '▾')),
+      h('div', { class: 'more25-pop', role: 'menu' }, filter, list));
+  }
+  return h('div', { class: 'tabs25', role: 'tablist', 'aria-label': t(gr.label) }, top.map(tab), moreEl);
 }
+const fold25 = (x: string): string => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const SEDE_L25 = l('Sua sede', 'Your HQ');
 
 function panel(): HTMLElement {
   const g = store.game!;
+  // r25: tela da Sede (encaixe em ps/slot25.ts); sem tela registrada a área nem aparece no menu
+  if (store.area === SEDE25) { stopHq(); const el = h('div', { class: 'sede25 page21-host' }); if (sedeHome25) sedeHome25(el); else el.append(deskPanel(g)); return el; }
   const extra = EXTRA_AREAS.find((a) => a.id === store.area);
   if (extra) { stopHq(); return extra.render(g); }
   const v20 = areaView20(store.area); // r20 hubs20: Shows, Sede e Mundo por intenção (o painel antigo vira "Tudo")
@@ -599,8 +637,12 @@ function palette(): void {
     ...store17.recent.slice(1, 6).map((id) => all17.find((x) => x.id === id)).filter((x): x is NavItem => !!x).map((a): PCmd => ({ label: a.label, kind: 'recent', icon: a.icon, weight: 7, run: () => go(a.id) })),
     ...[...document.querySelectorAll<HTMLButtonElement>('main [data-tabs] > .tabs > button')].map((b): PCmd => ({ label: `${areaLabel(store.area)} › ${b.textContent?.trim() ?? ''}`, kind: 'area', icon: 'compass', weight: 4, run: () => b.click() })),
     ...Object.keys(ALIAS17).filter((a) => groups().some((g) => g.areas.includes(ALIAS17[a][0]))).map((a): PCmd => ({ label: all17.find((x) => x.id === a)?.label ?? a, kind: 'area', icon: ICON17[a] ?? 'compass', hint: areaLabel(ALIAS17[a][0]), weight: 5, run: () => go(a) })),
-    ...groups().flatMap((gr) => groupItems(gr).map((a): PCmd => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, kind: 'area', icon: a.icon, hint: t(gr.label) + (a.key ? ` · ${a.key.toUpperCase()}` : ''), weight: 6,
+    ...groups().flatMap((gr) => groupItems(gr).map((a): PCmd => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, alt: a.alt, kind: 'area', icon: a.icon, hint: t(gr.label) + (a.key ? ` · ${a.key.toUpperCase()}` : ''), weight: 6,
       run: () => { if (gr.home?.tab && gr.home.area === a.id) setTab(gr.home.tab[0], gr.home.tab[1]); go(a.id); } }))),
+    // r25: as 6 seções e toda aba interna já vista (pt e en), com o caminho Seção › Página
+    ...groups().map((gr): PCmd => ({ label: t(gr.label), alt: altL25(gr.label), kind: 'area', icon: gr.icon, hint: t(l('Seção', 'Section')), weight: 8, run: () => go(home25(gr)) })),
+    ...seenTabs25().filter((x) => areaExists(x.area) && all17.some((a) => a.id === x.area)).map((x): PCmd => ({ label: x.label, alt: x.alt, kind: 'tab', icon: 'compass', hint: `${t(groupOf(x.area).label)} › ${areaLabel(x.area)}`, weight: 3,
+      run: () => { for (const [k, v] of x.trail) setTab(k, v); setTab(x.key, x.id); go(x.area); } })),
     { label: t(S.advanceMonth), kind: 'action', icon: 'calendar', hint: 'Ctrl+Enter', run: () => doAdvance('month') },
     { label: t(S.advanceQuarter), kind: 'action', icon: 'calendar', run: () => doAdvance('quarter') },
     { label: t(S.advanceEvent), kind: 'action', icon: 'calendar', run: () => doAdvance('event') },

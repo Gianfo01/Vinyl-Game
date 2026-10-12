@@ -128,11 +128,17 @@ const tabState: Record<string, string> = {};
 export function tabs(key: string, items: { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement }[], rerender: () => void): HTMLElement {
   const cur = tabState[key] && items.some((i) => i.id === tabState[key]) ? tabState[key] : items[0]?.id;
   const active = items.find((i) => i.id === cur);
-  return h('div', { class: 'tabs-wrap', 'data-tabs': key, 'data-cur': cur },
-    h('div', { class: 'tabs', role: 'tablist' }, items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null))),
-    h('div', { role: 'tabpanel' }, active ? active.render() : null),
-  );
+  tabHook25.f?.(key, items, tabTrail25);
+  const bar = h('div', { class: 'tabs', role: 'tablist' }, items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null)));
+  // r25: abas dentro de abas — a trilha diz quais abas-mãe estão abertas (a busca global abre o caminho todo)
+  tabTrail25.push([key, cur ?? '']);
+  let panel: HTMLElement | null = null;
+  try { panel = active ? active.render() : null; } finally { tabTrail25.pop(); }
+  return h('div', { class: 'tabs-wrap', 'data-tabs': key, 'data-cur': cur }, bar, h('div', { role: 'tabpanel' }, panel));
 }
+/** r25: trilha de abas abertas durante o desenho e gancho que registra as abas vistas (busca global). */
+export const tabTrail25: [string, string][] = [];
+export const tabHook25: { f?: (key: string, items: { id: string; label: string; icon?: string }[], trail: [string, string][]) => void } = {};
 
 export function setTab(key: string, id: string): void {
   tabState[key] = id;

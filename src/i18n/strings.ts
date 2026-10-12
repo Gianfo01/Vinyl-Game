@@ -271,9 +271,9 @@ export const S = {
   contrast: s('Alto contraste', 'High contrast'),
   reducedMotion: s('Movimento reduzido', 'Reduced motion'),
   theme: s('Tema', 'Theme'),
-  themeAuto: s('Automático', 'Automatic'),
-  themeLight: s('Claro', 'Light'),
-  themeDark: s('Escuro', 'Dark'),
+  themeAuto: s('Automático (sistema)', 'Automatic (system)'),
+  themeLight: s('Claro (Heritage)', 'Light (Heritage)'),
+  themeDark: s('Escuro (Pixel Studio, padrão)', 'Dark (Pixel Studio, default)'),
   // ficha
   inspect: s('Ficha', 'Record'),
   history: s('Memória', 'Memory'),

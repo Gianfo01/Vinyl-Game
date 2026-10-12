@@ -118,8 +118,8 @@ export function shortcutsHelp15(areas: { key: string; label: string }[]): void {
 }
 
 // ---------- paleta ----------
-export interface PCmd { label: string; kind: string; hint?: string; icon?: string; weight?: number; run: () => void }
-const KIND: Record<string, L> = { area: l('Área', 'Area'), act: l('Artista', 'Artist'), mine: l('Seu artista', 'Your artist'), label: l('Selo', 'Label'), person: l('Pessoa', 'Person'), action: l('Ação', 'Action'), recent: l('Recente', 'Recent') };
+export interface PCmd { label: string; kind: string; hint?: string; icon?: string; weight?: number; alt?: string; run: () => void }
+const KIND: Record<string, L> = { area: l('Área', 'Area'), tab: l('Aba', 'Tab'), act: l('Artista', 'Artist'), mine: l('Seu artista', 'Your artist'), label: l('Selo', 'Label'), person: l('Pessoa', 'Person'), action: l('Ação', 'Action'), recent: l('Recente', 'Recent') };
 export function palette15(base: PCmd[], search: (q: string) => PCmd[]): void {
   const list = h('ul', { class: 'palette-list p15', role: 'listbox' });
   let sel = 0;
