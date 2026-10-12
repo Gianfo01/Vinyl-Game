@@ -1,5 +1,5 @@
 // Rodada 25 — Pixel Studio: arquitetura de informação em 6 seções (sem DOM: testável).
-// Sede · Pessoas · Projetos · Ao vivo · Mundo · Gestão (+ Buscar, Arquivo e Opções como utilitários).
+// r27 (COCK): Cockpit · Sede · Pessoas · Projetos · Ao vivo · Mundo · Gestão · Você (+ Buscar, Arquivo e Opções como utilitários).
 // Regras: cada página mora em exatamente UMA seção, agrupada por tema; as até 5 "principais" (a página da sua
 // carreira primeiro) abrem a lista. r27: o menu é uma árvore (ps/tree27.ts) — Seção › Página › Aba, tudo visível,
 // sem "Mais" escondido; `top`/`more25` ficam como ordem de prioridade (faixa do celular, testes antigos).
@@ -23,9 +23,12 @@ const th = (id: string, label: L, areas: string[]): Theme25 => ({ id, label, are
 
 /** Árvore canônica. A ordem das páginas dentro da seção = prioridade (as 5 primeiras ficam visíveis). */
 export const SECTIONS25: Section25[] = [
+  // r27 (COCK): o Cockpit é uma seção de topo própria, a primeira (e a página inicial padrão); sem subpáginas
+  { id: 'cockpit', label: l('Cockpit', 'Cockpit'), icon: 'calendar', blurb: l('O mês num relance: o que fazer agora.', 'The month at a glance: what to do now.'),
+    main: ['cockpit'], themes: [th('now', l('Agora', 'Now'), ['cockpit'])] },
   { id: 'sede', label: l('Sede', 'HQ'), icon: 'house', blurb: l('Seu dia, sua casa e o que precisa de você.', 'Your day, your home and what needs you.'),
-    main: [SEDE25, 'cockpit', 'hq', 'plan', 'goals', 'diary'], themes: [
-    th('today', l('Hoje', 'Today'), [SEDE25, 'cockpit', 'hq', 'plan', 'goals', 'diary']),
+    main: [SEDE25, 'hq', 'plan', 'goals', 'diary'], themes: [
+    th('today', l('Hoje', 'Today'), [SEDE25, 'hq', 'plan', 'goals', 'diary']),
     th('base', l('Sua sede', 'Your HQ'), ['campus18'])] },
   { id: 'people', label: l('Pessoas', 'People'), icon: 'people', blurb: l('Elenco, talentos e profissionais.', 'Roster, talent and professionals.'),
     main: ['artists', 'market', 'management', 'managers14', 'producers15', 'directory'], themes: [
@@ -47,12 +50,16 @@ export const SECTIONS25: Section25[] = [
     th('map', l('Mapa e política', 'Map and politics'), ['world', 'world17', 'after18', 'regions19']),
     th('culture', l('Cultura e histórias', 'Culture and stories'), ['movements', 'lendas', 'society18', 'dm18']),
     th('crime', l('Submundo', 'Underworld'), ['crime'])] },
-  { id: 'admin', label: l('Gestão', 'Management'), icon: 'chart-up', blurb: l('Dinheiro, estrutura, carreiras e a sua vida.', 'Money, structure, careers and your life.'),
-    main: ['business', 'finance', 'company', 'team', 'agenda17', 'you', 'careers'], themes: [
+  { id: 'admin', label: l('Gestão', 'Management'), icon: 'chart-up', blurb: l('Dinheiro, estrutura, rumo e carreiras.', 'Money, structure, course and careers.'),
+    main: ['business', 'finance', 'company', 'team', 'agenda17', 'careers'], themes: [
     th('company', l('Empresa', 'Company'), ['business', 'finance', 'company', 'team', 'agenda17', 'firm19', 'identity', 'biz17']),
     th('course', l('Rumo, prazos, direitos e cadeia', 'Course, deadlines, rights and supply'), ['long18', 'calendar19', 'rights18', 'supply18']),
-    th('careers', l('Carreiras', 'Careers'), ['careers', 'ventures', 'shared18']),
-    th('you', l('Você', 'You'), ['you', 'personal', 'wealth', 'night14', 'scenes17', 'tut18'])] },
+    th('careers', l('Carreiras', 'Careers'), ['careers', 'ventures', 'shared18'])] },
+  // r27 (COCK): Você (a sua vida: perfil, família, casa, patrimônio, noite) virou seção de topo — a última, como o
+  // "perfil" no canto dos apps; as páginas da empresa ficam juntas antes dela
+  { id: 'you', label: l('Você', 'You'), icon: 'star', blurb: l('Sua vida: perfil, amor e família, patrimônio e noite.', 'Your life: profile, love and family, wealth and nights out.'),
+    main: ['you', 'personal', 'wealth', 'night14', 'scenes17'], themes: [
+    th('life', l('Sua vida', 'Your life'), ['you', 'personal', 'wealth', 'night14', 'scenes17', 'tut18'])] },
 ];
 
 /** Seção de cada página de carreira (a página aparece primeiro na seção quando a carreira está ativa). */
@@ -62,7 +69,7 @@ export const CAREER_SECTION25: Record<string, string> = {
 };
 /** Grupos antigos (app.ts GROUPS e NAV17) → seção nova, para páginas que não estão na árvore. */
 export const OLD_GROUP25: Record<string, string> = {
-  home: 'sede', label: 'admin', company: 'admin', artists: 'people', music: 'projects', ventures: 'admin', you: 'admin',
+  home: 'sede', label: 'admin', company: 'admin', artists: 'people', music: 'projects', ventures: 'admin', you: 'you',
   world: 'world', press: 'world', crime: 'world', fame: 'live', events: 'live',
 };
 /** Ids antigos que só redirecionam (mesa, caixa de entrada → Cockpit). */
@@ -133,8 +140,11 @@ export function more25(g: NavGroup25): NavSection14[] {
   return (g.sections ?? [{ label: g.label, areas: g.areas }]).map((x) => ({ label: x.label, areas: x.areas.filter((a) => !top.has(a)) })).filter((x) => x.areas.length);
 }
 
-/** r27: a partida (nova ou carregada) abre na Sede › Sua sede; sem a tela da sede registrada, no Cockpit. */
-export const landing27 = (hasSede: boolean): string => (hasSede ? SEDE25 : 'cockpit');
+/** r27 (COCK): a partida (nova ou carregada, de qualquer carreira) abre no Cockpit — a 1ª seção do menu.
+ *  (Antes: Sede › Sua sede.) O parâmetro fica por compatibilidade. */
+export const landing27 = (_hasSede?: boolean): string => 'cockpit';
+/** Seção de uma página só (Cockpit): o cabeçalho leva direto à página, sem lista/folha de páginas. */
+export const single27 = (g: { areas: string[] }): boolean => g.areas.length === 1;
 
 /** Casa da seção (primeira página principal). */
 export const home25 = (g: NavGroup14): string => (g as NavGroup25).top?.[0] ?? g.areas[0];
