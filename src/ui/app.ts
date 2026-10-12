@@ -442,7 +442,7 @@ function renderApp(): void {
   const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
     topBar(),
     nav(),
-    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), body),
+    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), body),
     tutorialCard(g, render),
     h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
   ));
@@ -465,6 +465,17 @@ function areaLabel(id: string): string {
 }
 
 /** Barra fixa: ← voltar, Grupo › Área › Aba, botão de busca e (no celular) as sub-áreas. */
+/** r21 (Heritage): título grande da página (nome do menu), salvo quando a própria tela já traz um. */
+function pageTitle21(body: HTMLElement): HTMLElement | null {
+  if (body.querySelector('.page21')) return null;
+  const it = navItems().find((x) => x.id === store.area);
+  if (!it) return null;
+  // a tela repete o próprio nome logo no topo? o título grande assume e o repetido fica só para leitores de tela
+  const dup = [...body.querySelectorAll<HTMLElement>('h2, h3')].slice(0, 2).find((x) => x.textContent?.trim() === it.label);
+  dup?.classList.add('sr-only');
+  return h('h1', { class: 'page21 page21-auto' }, it.label);
+}
+
 function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const gr = groupOf(store.area);
   const items = groupItems(gr);

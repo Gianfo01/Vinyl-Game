@@ -107,7 +107,7 @@ export function centralPanel(s: GameState): HTMLElement {
 
   return h('div', { class: 'panel central' },
     h('div', { class: 'col-main' },
-      section(t(l('Caixa e compromissos', 'Cash and commitments')), cashRow),
+      section(t(l('Caixa e compromissos', 'Cash and commitments')), h('div', { class: 'kpi21' }, cashRow)),
       crises.length ? section(t(l('Crises abertas', 'Open crises')), h('div', { class: 'cards' }, crises.map((c) => h('article', { class: 'crisis' },
         h('header', null, ic('newspaper', 2), h('b', null, s.acts[c.actId]?.name ?? ''), countdown(c.deadlineDay - day)),
         h('p', null, t(c.text)), h('div', { class: 'sev' }, t(l('Gravidade', 'Severity')), ' ', h('span', { class: 'meter-bar bad' }, h('span', { style: `width:${c.severity}%` }))),

@@ -106,19 +106,20 @@ function header20(s: GameState, a: Act): HTMLElement {
   const crit = alerts20(s, a).filter((x) => x.critical);
   const pj = project20(s, a);
   const nx = nextCommitment20(s, a);
-  return h('section', { class: 'card ar20-card' },
-    h('div', { class: 'ar20-head' }, logo(a, 64),
-      h('div', null,
+  // r21 (Heritage): emblema grande, nome serifado, selos de estado e medidores à direita; Inspecionar + Ações ▾
+  const tile = (icon: string, label: L, v: number, bad = false) => h('div', { class: `ar21-tile ${bad && v >= 60 ? 'bad' : ''}`, title: t(label) },
+    ic(icon, 2), h('span', null, h('small', null, t(label)), h('b', null, String(Math.round(v)))));
+  return h('section', { class: 'card ar20-card ar21-card' },
+    h('div', { class: 'ar21-head' }, h('div', { class: 'ar21-logo' }, logo(a, 96)),
+      h('div', { class: 'ar21-id' },
         h('h2', null, a.name),
-        h('div', { class: 'small' }, `${genreName(a.genre)} · ${cityName(a.city)} · `, pill(statusName(a.status)), ' ', s.delegated[a.id] !== false ? pill(t(l('agenda delegada', 'delegated agenda'))) : null),
-        h('div', { class: 'ar20-sum' },
-          h('span', null, `${t(S.morale)} ${Math.round(st.morale)}`), h('span', null, `${t(S.fatigue)} ${Math.round(st.fatigue)}`), h('span', null, `${t(S.stress)} ${Math.round(st.stress)}`),
-          h('span', null, `${t(S.fame)} ${Math.round(a.fame)}`),
-          pj ? h('span', null, ic('disc'), ` "${pj.title}" · ${t(pj.stage)}`) : h('span', { class: 'muted' }, t(l('sem disco em andamento', 'no record in progress'))),
-          nx ? h('span', null, '→ ', t(nx.text), ` (${t(l('sem.', 'wk'))} ${Math.max(0, nx.w - s.week)})`) : null),
-        h('div', { class: 'ar20-actions' }, actionsButton20(s, a.id, 'btn primary small'), quickPins20(s, a.id),
-          h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, t(S.inspect))),
-      )),
+        h('div', { class: 'ar21-sub' }, `${a.members.length > 1 ? t(l('Grupo', 'Group')) : t(l('Solo', 'Solo'))} · ${genreName(a.genre)} · ${cityName(a.city)}`),
+        h('div', { class: 'ar21-pills' }, pill(statusName(a.status), a.status === 'active' ? 'good' : ''), s.delegated[a.id] !== false ? pill(t(l('Agenda delegada', 'Delegated agenda'))) : null,
+          pj ? pill(`${pj.title} · ${t(pj.stage)}`) : null, nx ? h('small', { class: 'muted' }, '→ ', t(nx.text), ` (${t(l('sem.', 'wk'))} ${Math.max(0, nx.w - s.week)})`) : null)),
+      h('div', { class: 'ar21-right' },
+        h('div', { class: 'ar21-tiles' }, tile('star', S.fame, a.fame), tile('heart', S.morale, st.morale), tile('sleep', S.fatigue, st.fatigue, true), tile('stress', S.stress, st.stress, true)),
+        h('div', { class: 'ar20-actions ar21-actions' }, quickPins20(s, a.id),
+          h('button', { class: 'btn', onclick: () => openAct(a.id) }, '🔍 ', t(S.inspect)), actionsButton20(s, a.id, 'btn primary')))),
     crit.length ? h('ul', { class: 'ar20-crit', 'aria-label': t(l('Alertas críticos', 'Critical alerts')) }, crit.map((x) => h('li', { class: x.tone },
       x.nav ? h('button', { class: 'link', onclick: () => applyNav20(s, { act: a.id, ...x.nav }) }, '⚠ ', t(x.text), ' ›') : h('span', null, '⚠ ', t(x.text))))) : null,
   );
@@ -145,13 +146,36 @@ function overview20(s: GameState, a: Act): HTMLElement[] {
     contract: () => applyNav20(s, { act: a.id, sub: 'career' }), release: () => applyNav20(s, { area: 'project', act: a.id }),
     studio: (el) => chooseAction20(s, 'record.prepare', a.id, el), rest: (el) => chooseAction20(s, 'rest.add', a.id, el), agenda: () => applyNav20(s, { act: a.id, sub: 'agenda' }),
   };
+  const ast = actState(s, a);
+  const unrec = a.songs.filter((id) => s.songs[id] && !s.songs[id].recorded).length;
+  const ready = a.songs.filter((id) => s.songs[id]?.recorded && !s.songs[id].releaseId).length;
+  const pj = project20(s, a);
+  const tot = Math.max(1, a.fans.casual + a.fans.active + a.fans.core);
+  const fanRow = (label: L, v: number) => h('div', { class: 'ar21-fan' }, h('span', null, t(label)), h('i', { class: 'ar21-bar' }, h('i', { style: `width:${Math.max(2, Math.round((v / tot) * 100))}%` })), h('b', null, N(v)));
+  const hd = (icon: string, title: L) => h('div', { class: 'h21' }, h('h3', null, h('span', { class: 'ic21' }, ic(icon, 2)), ' ', t(title)));
   return [
-    section(t(l('Próxima decisão', 'Next decision')), h('p', null, t(st.next.label)),
-      h('button', { class: 'btn primary small', onclick: (e: Event) => (go[st.next.kind] ?? go.agenda)(e.currentTarget as HTMLElement) }, t(l('Resolver', 'Handle it')), ' →')),
-    section(t(l('Riscos e tarefas', 'Risks and tasks')),
-      al.length ? h('ul', { class: 'ar20-crit' }, al.map((x) => h('li', { class: x.critical ? '' : x.tone }, x.nav ? h('button', { class: 'link', onclick: () => applyNav20(s, { act: a.id, ...x.nav }) }, t(x.text), ' ›') : t(x.text))))
-        : h('p', { class: 'small good' }, t(l('Nada pedindo atenção.', 'Nothing needs attention.')))),
-    overviewMeters(s, a),
+    // próxima decisão em destaque
+    h('section', { class: 'card ar21-next' }, h('span', { class: 'ar21-next-ic', 'aria-hidden': 'true' }, ic('contract', 3)),
+      h('div', null, h('h3', null, t(l('Próxima decisão', 'Next decision')), ': ', t(st.next.label))),
+      h('button', { class: 'btn primary', onclick: (e: Event) => (go[st.next.kind] ?? go.agenda)(e.currentTarget as HTMLElement) }, t(l('Resolver', 'Handle it')))),
+    h('div', { class: 'ar21-grid3' },
+      h('section', { class: 'card' }, hd('heart', l('Estado', 'State')),
+        meter('fire', S.momentum, a.momentum), meter('globe', S.positioning, a.positioning), meter('sparkle', S.inspiration, ast.inspiration),
+        a.playerBand ? null : meter('handshake', S.trust, a.trust), h('div', { class: 'ar21-ab' }, abilityCell18(s, a))),
+      h('section', { class: 'card' }, hd('fans', l('Público', 'Audience')),
+        fanRow(l('Casuais', 'Casual'), a.fans.casual), fanRow(l('Ativos', 'Active'), a.fans.active), fanRow(l('Núcleo', 'Core'), a.fans.core)),
+      h('section', { class: 'card' }, hd('note', l('Repertório', 'Repertoire')),
+        h('dl', { class: 'ar21-dl' }, h('dt', null, t(l('Escritas', 'Written'))), h('dd', null, String(unrec)), h('dt', null, t(l('Gravadas inéditas', 'Recorded unreleased'))), h('dd', null, String(ready)),
+          h('dt', null, t(l('Lançamentos', 'Releases'))), h('dd', null, String(a.releases.length))),
+        h('div', { class: 'ar21-btns' },
+          h('button', { class: 'btn small', onclick: () => { store.selectedAct = a.id; setTab('creation-write', 'repertoire'); store.area = 'creation'; rerender(); } }, ic('note'), ' ', t(l('Abrir repertório', 'Open repertoire'))),
+          h('button', { class: 'btn small', onclick: (e: Event) => chooseAction20(s, 'record.prepare', a.id, e.currentTarget as HTMLElement) }, ic('mic'), ' ', t(l('Preparar gravação', 'Prepare a recording'))),
+          h('button', { class: 'btn small primary', onclick: () => applyNav20(s, { area: 'project', act: a.id }) }, ic('disc'), ' ', pj ? `${pj.title} · ${t(pj.stage)}` : t(l('Começar um disco', 'Start a record')))))),
+    h('div', { class: 'ar21-grid2' },
+      h('section', { class: 'card' }, hd('guitar', l('Integrantes', 'Members')), h('div', { class: 'pcard-grid' }, a.members.map((id) => s.persons[id] ? personCard(s, s.persons[id], { compact: true }) : null))),
+      h('section', { class: 'card' }, hd('warning', l('Riscos e tarefas', 'Risks and tasks')),
+        al.length ? h('ul', { class: 'ar20-crit ar21-risks' }, al.map((x) => h('li', { class: x.critical ? '' : x.tone }, x.nav ? h('button', { class: 'link', onclick: () => applyNav20(s, { act: a.id, ...x.nav }) }, t(x.text), ' ›') : t(x.text))))
+          : h('p', { class: 'small good' }, t(l('Nada pedindo atenção.', 'Nothing needs attention.'))))),
   ];
 }
 

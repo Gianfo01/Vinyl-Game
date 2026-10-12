@@ -182,3 +182,65 @@ body { font-size: 16.5px; }
 /* Hoje / Ameaças / Andamento e blocos herdados: mesmo cabeçalho */
 .ck21 section.card > h3, .ck21 .card > h3 { font-size: 1.15rem; }
 .ck21 section.card > h3 canvas, .ck21 .card > h3 canvas { width: 24px; height: 24px; }
+/* ---------- Artistas (painel de gestão) ---------- */
+.artists20 { gap: 1rem; }
+.artists20 .col-side > .card, .artists20 .col-side > section { margin-bottom: 0.9rem; }
+.artists20 .col-side h3 { font-size: 1.25rem; }
+.roster.ar20 li { border: 1px solid transparent; border-radius: 6px; padding: 0.55rem 0.6rem; gap: 0.6rem; }
+.roster.ar20 li.sel { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.roster.ar20 li b { font-family: var(--serif); font-size: 1.05rem; }
+.ar21-card { padding: 1.1rem 1.2rem; }
+.ar21-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 1.1rem; align-items: center; }
+.ar21-logo canvas, .ar21-logo img, .ar21-logo > * { width: 96px; height: 96px; }
+.ar21-id h2 { font-family: var(--serif); font-size: clamp(1.8rem, 2.8vw, 2.5rem); margin: 0; line-height: 1.05; }
+.ar21-sub { color: var(--muted); font-size: 1.05rem; margin: 0.2rem 0 0.4rem; }
+.ar21-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.ar21-pills .pill { padding: 0.2rem 0.6rem; border: 1px solid var(--line); background: var(--panel-2); }
+.ar21-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
+.ar21-tiles { display: flex; gap: 0.4rem; }
+.ar21-tile { display: flex; align-items: center; gap: 0.35rem; border: 1px solid var(--line); border-radius: 6px; padding: 0.35rem 0.55rem; background: var(--panel); }
+.ar21-tile canvas { width: 26px; height: 26px; }
+.ar21-tile small { display: block; font-size: 0.72rem; color: var(--muted); line-height: 1; }
+.ar21-tile b { font-size: 1.2rem; line-height: 1.1; }
+.ar21-tile.bad b { color: var(--bad); }
+.ar21-actions { justify-content: flex-end; margin: 0; }
+@media (max-width: 1100px) { .ar21-head { grid-template-columns: auto minmax(0, 1fr); } .ar21-right { grid-column: 1 / -1; align-items: flex-start; } }
+.artists20 .tabs { margin-top: 0.4rem; }
+.artists20 .tabs button { display: inline-flex; align-items: center; gap: 0.35rem; }
+.ar21-next { display: flex; align-items: center; gap: 0.9rem; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.ar21-next h3 { margin: 0; font-size: 1.25rem; border: 0; padding: 0; }
+.ar21-next > div { flex: 1 1 auto; }
+.ar21-next-ic canvas { width: 44px; height: 44px; }
+.ar21-next .btn { padding: 0.55rem 1.6rem; font-size: 1.02rem; }
+.ar21-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; }
+.ar21-grid2 { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 0.9rem; }
+@media (max-width: 1100px) { .ar21-grid3, .ar21-grid2 { grid-template-columns: 1fr; } }
+.ar21-fan { display: grid; grid-template-columns: 5.5rem 1fr auto; gap: 0.5rem; align-items: center; padding: 0.3rem 0; }
+.ar21-bar { display: block; height: 8px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+.ar21-bar > i { display: block; height: 100%; background: var(--sage); }
+.ar21-dl { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 0.8rem; margin: 0 0 0.7rem; }
+.ar21-dl dd { margin: 0; font-weight: 700; text-align: right; }
+.ar21-btns { display: flex; flex-direction: column; gap: 0.4rem; }
+.ar21-btns .btn { justify-content: center; }
+.ar21-ab { margin-top: 0.5rem; }
+.ar21-risks li { padding: 0.35rem 0.5rem; }
+/* medidores com faixa sálvia */
+.meter .bar, .meter-bar { background: var(--panel-2); }
+.ar20-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.ar20-filters select { width: 100%; font-size: 0.9rem; }
+.roster.ar20 li { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: start; column-gap: 0.6rem; row-gap: 0.25rem; }
+.roster.ar20 li > :first-child { grid-row: span 2; width: 44px; height: 44px; }
+.roster.ar20 li > :nth-child(n+3) { grid-column: 2; }
+.roster.ar20 li .q18, .roster.ar20 li [class*='quick'] { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+.artists20 .tabs button { padding: 0.45rem 0.6rem; font-size: 0.98rem; }
+:root[data-era] .section > h3, :root[data-era] section > h3, :root[data-era] .h21 h3, section.card > h3 { font-family: var(--serif); font-weight: 700; font-size: 1.2rem; }
+:root[data-era] .topbar .brand { font-family: var(--serif); }
+section.card > h3 { display: flex; align-items: center; gap: 0.45rem; padding-bottom: 0.5rem; margin-bottom: 0.7rem; border-bottom: 1px solid var(--line); }
+.crumbs15 li b { font-family: var(--sans); }
+/* blocos de números grandes (Central: caixa e compromissos) */
+.kpi21 > * { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; }
+.kpi21 .stat, .kpi21 > * > * { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.9rem; border: 0; border-radius: 0; background: none; font-size: 1rem; flex-wrap: wrap; }
+.kpi21 > * > * + * { border-left: 1px solid var(--line); }
+.kpi21 canvas { width: 40px; height: 40px; }
+.kpi21 b { font-family: var(--serif); font-size: 1.6rem; }
+@media (max-width: 860px) { .app > .nav .nav-head::after { content: none; } }
