@@ -2,7 +2,7 @@
 // masters que voltam ao artista (com aviso e chance de recomprar), artistas que cresceram e pedem
 // renegociação com mais poder, e projetos paralelos de quem assinou sem exclusividade.
 
-import { clamp } from '../../core/rng';
+import { Rng, clamp } from '../../core/rng';
 import { l } from '../../data/world';
 import { expectedAdvance } from '../contracts';
 import { mainAmbition } from '../people';
@@ -57,14 +57,27 @@ registerSimHook('month', 'rights8', (s, r) => {
       c.fameAtSign = Math.round(act.fame * 10) / 10;
       continue;
     }
+    // r27 (M2): antes só pedia com +18 de fama E contrato com mais de 2 anos E ainda 26 semanas pela frente — numa
+    // ficha padrão de 36 meses a janela era quase nula (0 pedidos em 24 meses de bot). Agora a alavanca é crescer
+    // (fama/nº 1), ter um disco que estourou desde a assinatura ou estar claramente mal pago para a fama atual;
+    // pede a partir de 9 meses de contrato (1 ano depois de uma renegociação). Sorte em fluxo próprio (não s.rng).
     const power = artistPower(s, c);
-    if (power >= 0.45 && (c.lastRenegWeek ?? c.startWeek) < s.week - 104 && !st.demands.some((d) => d.actId === act.id) && r.chance(0.35)) {
+    const since = c.lastRenegWeek ?? c.startWeek;
+    const minAge = c.lastRenegWeek !== undefined ? 52 : 39;
+    if (s.week - since < minAge || st.demands.some((d) => d.actId === act.id)) continue;
+    let hit = false;
+    for (const id in s.releases) { const x = s.releases[id]; if (x.actId === act.id && x.week >= since && ((x.peak > 0 && x.peak <= 10) || !!x.certified)) { hit = true; break; } }
+    const under = 0.14 + act.fame / 600 - c.royalty >= 0.04 && act.fame - (c.fameAtSign ?? act.fame) >= 6;
+    const lev = Math.max(power, hit ? 0.35 : 0, under ? 0.3 : 0);
+    const tries = ((st as unknown as { try27?: Record<string, number> }).try27 ??= {});
+    if (lev >= 0.3) tries[c.id] = (tries[c.id] ?? 0) + 1;
+    if (lev >= 0.3 && Rng.fromSeed(`${s.config.seed}|reneg27|${c.id}|${s.week}|${tries[c.id]}`).chance(0.35)) {
       const amb = mainAmbition(s, act);
       const t = rightsOf(c);
       st.demands.push({
         id: nextId(s, 'rn'), actId: act.id, contractId: c.id, week: s.week,
-        royalty: Math.round(Math.min(0.45, c.royalty + 0.03 + power * 0.04) * 100) / 100,
-        bonus: Math.round(money(s, expectedAdvance(s, act) * (0.15 + power * 0.15)) / 100) * 100,
+        royalty: Math.round(Math.min(0.45, c.royalty + 0.03 + lev * 0.04) * 100) / 100,
+        bonus: Math.round(money(s, expectedAdvance(s, act) * (0.15 + lev * 0.15)) / 100) * 100,
         reversionYears: t.master === 'label' && t.reversionYears === 0 && (amb === 'freedom' || amb === 'art' || amb === 'legacy') ? 20 : 0,
       });
       notify(s, fmtL(l('{a} cresceu desde que assinou e quer renegociar o contrato.', '{a} has grown since signing and wants to renegotiate.'), { a: act.name }), 'event');

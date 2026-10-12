@@ -25,6 +25,8 @@ import { why360 } from '../sim/sys/deal360_17';
 import { why18 } from './explain18';
 import { clauses18Fields } from './sys/contracts18';
 import { offerLayers20, type Layers20 } from './sys/offer20';
+import { playBtn27 } from './act27/mode27';
+import { openNego27 } from './act27/negotiate27';
 
 function g(): GameState {
   return store.game!;
@@ -249,6 +251,7 @@ export function openOffer(actId: string): void {
       const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined });
       showReply(offer, result);
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
+    playBtn27(l('Negociar na mesa', 'Negotiate at the table'), () => { close(); openNego27(actId, o); }, a.fame >= 15), // r27 (M2): rodadas com contraproposta
     reply,
   );
   close = modal(`${t(S.offerTitle)}: ${a.name}`, h('div', null, form, actions), { wide: true });

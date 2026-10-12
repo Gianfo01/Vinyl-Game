@@ -208,6 +208,32 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
       t.status = 'cancelled';
       continue;
     }
+    playStop(s, r, t, st, day, act);
+  }
+  tourEnd(s);
+}
+
+/** r27 (M2): ajustes de um show jogado (src/sim/sys/show27.ts). Ausente = o show se resolve como sempre. */
+export interface StopMods27 {
+  /** o risco de acidente vira momento de decisão no show jogado (não rola de novo) */
+  noRisk?: boolean;
+  /** qualidade média do setlist montado (substitui a do setlist da turnê) e penalidade de covers */
+  q?: number;
+  cover?: number;
+  /** multiplicadores: qualidade percebida (boca a boca na porta), fãs convertidos, merch */
+  qMult?: number;
+  fans?: number;
+  merch?: number;
+  /** somas: fama, fadiga e moral de cada integrante */
+  fame?: number;
+  fatigue?: number;
+  morale?: number;
+}
+
+/** r27 (M2): uma data da turnê — o mesmo corpo que `tourDay` sempre rodou, agora chamável para um show jogado
+ *  (com `m` e um fluxo de sorte próprio). Sem `m`, idêntico ao de antes. */
+export function playStop(s: GameState, r: Rng, t: Tour, st: TourStop, day: number, act: Act, m?: StopMods27): void {
+  {
     t.status = 'running';
     s.location[act.id] = st.cityId;
     const cityL = cityById[st.cityId]?.name ?? l(st.cityId);
@@ -216,7 +242,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
       st.status = 'cancelled';
       st.note = blocked.name;
       s.daily.push({ day, kind: 'tour', actId: act.id, tone: 'bad', text: fmtL(l('{a}: show em {c} suspenso ({w}).', '{a}: show in {c} suspended ({w}).'), { a: act.name, c: cityL, w: blocked.name }) });
-      continue;
+      return;
     }
     // visto negado (rota internacional controlada)
     if (st.visa) {
@@ -226,7 +252,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
         st.status = 'cancelled';
         st.note = l('visto negado', 'visa denied');
         s.daily.push({ day, kind: 'tour', actId: act.id, tone: 'bad', text: fmtL(l('{a}: visto negado para {c}. Show cancelado.', '{a}: visa denied for {c}. Show cancelled.'), { a: act.name, c: cityL }) });
-        continue;
+        return;
       }
     }
     const month = dateOfDay(s.config.startYear, day).month;
@@ -235,7 +261,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     const fatigue = activeMembers(s, act).reduce((x, id) => x + (s.persons[id]?.fatigue ?? 0), 0) / Math.max(1, act.members.length);
     // acidentes e cancelamentos: fadiga, produção complexa, clima, pouca equipe
     const risk = applyMods(s, 'tourRisk', 0.006 + fatigue / 2500 + t.production * 0.004 + clim.cancelRisk + Math.max(0, 3 - t.crew) * 0.004, { act, cityId: st.cityId }).value;
-    if (r.chance(risk)) {
+    if (!m?.noRisk && r.chance(risk)) {
       const kind = r.pick(['storm', 'injury', 'stage', 'power'] as const);
       const text = {
         storm: l('tempestade derrubou a estrutura', 'a storm brought down the rig'),
@@ -253,13 +279,13 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
       act.image && (act.image.professionalism = clamp(act.image.professionalism - 2, 0, 100));
       s.daily.push({ day, kind: 'tour', actId: act.id, tone: 'bad', text: fmtL(l('{a} em {c}: {x}. Show cancelado.', '{a} in {c}: {x}. Show cancelled.'), { a: act.name, c: cityL, x: text }) });
       remember(s, 'tour_accident', fmtL(l('Acidente na turnê de {a} em {c}: {x}.', 'Accident on {a}\'s tour in {c}: {x}.'), { a: act.name, c: cityL, x: text }), { actId: act.id });
-      continue;
+      return;
     }
-    const { q, coverPenalty } = setlistQuality(s, t);
+    const { q, coverPenalty } = m?.q !== undefined ? { q: m.q, coverPenalty: m.cover ?? 1 } : setlistQuality(s, t);
     const demand = cityDemand(s, act, st.cityId) * (t.role === 'opening' ? 0.3 : 1);
     const partner = t.partnerActId ? s.acts[t.partnerActId] : undefined;
     const partnerDraw = partner ? cityDemand(s, partner, st.cityId) * (t.role === 'co' ? 0.8 : 1) : 0;
-    const quality = clubBonus(s, st.cityId) * (0.75 + q / 200 + t2.stage / 250) * coverPenalty * (1 + PRODUCTION_BONUS[t.production]) * clim.outdoorFactor * (TOUR18.q?.(s, t, st) ?? 1);
+    const quality = clubBonus(s, st.cityId) * (0.75 + q / 200 + t2.stage / 250) * coverPenalty * (1 + PRODUCTION_BONUS[t.production]) * clim.outdoorFactor * (TOUR18.q?.(s, t, st) ?? 1) * (m?.qMult ?? 1);
     const priceMult = st.price / Math.max(1, money(s, TICKET[st.tier]));
     let sold = Math.min(st.capacity, Math.round((demand + partnerDraw * (t.role === 'opening' ? 1 : 0.5)) * quality / Math.pow(priceMult, 1.2) * r.float(0.85, 1.12)));
     sold = Math.max(0, sold);
@@ -273,7 +299,7 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
     if (t.role === 'opening') pay = Math.round(money(s, 150 + act.fame * 20));
     if (t.role === 'co') pay = Math.round(pay * 0.5);
     const mq = s.merch[act.id]?.quality ?? 40;
-    let merch = Math.round(sold * money(s, 2 + st.tier) * (0.3 + mq / 120));
+    let merch = Math.round(sold * money(s, 2 + st.tier) * (0.3 + mq / 120) * (m?.merch ?? 1));
     if (TOUR18.settle) ({ pay, merch } = TOUR18.settle(s, r, t, st, { gross, pay, merch, demand, quality, cover: coverPenalty, fatigue, priceMult, clim: clim.label, forecast }));
     st.merch = merch;
     if (s.merch[act.id]) {
@@ -291,19 +317,19 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
       act.cash += pay + merch;
     }
     // público, fama e cena
-    act.fans.casual += Math.round(sold * 0.16);
-    act.fans.active += Math.round(sold * 0.05);
-    act.fans.core += Math.round(sold * 0.007);
-    act.fame = clamp(act.fame + Math.log10(1 + sold) * 0.05 * (1 - act.fame / 95), 0, 100);
+    act.fans.casual += Math.round(sold * 0.16 * (m?.fans ?? 1));
+    act.fans.active += Math.round(sold * 0.05 * (m?.fans ?? 1));
+    act.fans.core += Math.round(sold * 0.007 * (m?.fans ?? 1));
+    act.fame = clamp(act.fame + Math.log10(1 + sold) * 0.05 * (1 - act.fame / 95) + (m?.fame ?? 0), 0, 100);
     s.scenes[`${st.cityId}:${act.genre}`] = (s.scenes[`${st.cityId}:${act.genre}`] ?? 0) + sold / 4000;
     s.flags[`played:${act.id}:${st.cityId}`] = s.week;
     if (partner && t.role === 'opening') partner.fans.casual += Math.round(sold * 0.02);
     for (const id of act.members) {
       const p = s.persons[id];
       if (!p?.alive) continue;
-      p.fatigue = clamp(p.fatigue + 2.5 + st.travelDays * 0.8 - t.crew * 0.15, 0, 100);
+      p.fatigue = clamp(p.fatigue + 2.5 + st.travelDays * 0.8 - t.crew * 0.15 + (m?.fatigue ?? 0), 0, 100);
       p.skills.stage = Math.min(p.potential + 4, p.skills.stage + 0.08);
-      p.morale = clamp(p.morale + (sold > st.capacity * 0.8 ? 1.5 : -0.5), 0, 100);
+      p.morale = clamp(p.morale + (sold > st.capacity * 0.8 ? 1.5 : -0.5) + (m?.morale ?? 0), 0, 100);
     }
     s.daily.push({
       day, kind: 'tour', actId: act.id, tone: sold > st.capacity * 0.8 ? 'good' : sold < st.capacity * 0.3 ? 'bad' : 'neutral',
@@ -315,7 +341,10 @@ export function tourDay(s: GameState, r: Rng, day: number): void {
       remember(s, 'breakthrough_show', fmtL(l('Show histórico de {a} em {c} vira assunto na cidade.', '{a}\'s legendary show in {c} becomes the talk of the town.'), { a: act.name, c: cityL }), { actId: act.id, important: true });
     }
   }
-  // fim de turnê
+}
+
+/** Fim de turnê: todas as datas resolvidas (tocadas ou canceladas). */
+export function tourEnd(s: GameState): void {
   for (const t of s.tours) {
     if (t.status !== 'running') continue;
     if (t.stops.every((x) => x.status !== 'scheduled')) {

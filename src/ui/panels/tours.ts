@@ -22,6 +22,9 @@ import { kitDraft18, kitForm18 } from '../sys/live18';
 import { changeTour20, futureStops20, tourChangeQuote20, type TourChange20 } from '../../sim/sys/showops20';
 import { FLY_FROM18, KIT_TXT18 } from '../../sim/sys/live18';
 import { KIT0, type Kit18 } from '../../sim/tourhook18';
+import { playableShows27 } from '../../sim/sys/show27';
+import { playBtn27 } from '../act27/mode27';
+import { openShow27 } from '../act27/show27';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -134,7 +137,8 @@ export function activeToursSection(s: GameState): HTMLElement | null {
   return section(t(l('Turnês', 'Tours')), tours.map((tr) => h('div', { class: 'tour' },
     h('header', null, ic('tour-bus', 2), h('b', null, tr.name), ' ', actLink(s, tr.actId), ' ', pill(t({ planned: l('marcada', 'booked'), running: l('na estrada', 'on the road'), done: l('encerrada', 'finished'), cancelled: l('cancelada', 'cancelled') }[tr.status]), tr.status === 'running' ? 'good' : ''),
       chips(stat('money', $(tr.revenue), l('Receita', 'Revenue')), stat('fans', N(tr.stops.reduce((x, y) => x + y.sold, 0)), l('Público', 'Attendance')), tr.accidents ? stat('warning', tr.accidents, l('Acidentes', 'Accidents'), 'bad') : null),
-      tr.status === 'planned' || tr.status === 'running' ? h('button', { class: 'btn small ghost', onclick: () => { const e = cancelTour(s, tr.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(l('Cancelar (devolve metade)', 'Cancel (half refunded)'))) : null),
+      tr.status === 'planned' || tr.status === 'running' ? h('button', { class: 'btn small ghost', onclick: () => { const e = cancelTour(s, tr.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(l('Cancelar (devolve metade)', 'Cancel (half refunded)'))) : null,
+      ((ps) => (ps ? playBtn27(l('Jogar o próximo show', 'Play the next show'), () => openShow27(`${tr.id}:${ps.st.day}`), ps.st.tier >= 2) : null))(playableShows27(s).find((x) => x.t.id === tr.id))), // r27 (M2)
     h('div', { class: 'tour-stops' }, tr.stops.map((st) => h('span', { class: `stop ${st.status}`, title: st.note ? t(st.note) : '' }, ic(stopIcon(st)), h('b', null, cityName(st.cityId)), st.status === 'played' ? h('small', null, `${N(st.sold)}/${N(st.capacity)}`) : st.note ? h('small', null, t(st.note)) : null))),
     tr.status === 'planned' || tr.status === 'running' ? tourChangeForm20(s, tr) : null,
     dailyTimeline(s, tr.actId, 6),
