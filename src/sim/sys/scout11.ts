@@ -74,7 +74,7 @@ function missionWeek(s: GameState, sc: Scout): void {
     // olheiro bom enxerga potencial; o mediano vai atrás de quem já faz barulho
     const a = r.weighted(cands, (x) => 1 + (x.potential / 40) * (sc.skill / 60) + x.fame / 30);
     if (a) {
-      addSignal(s, r, a.id, 'scout');
+      addSignal(s, r, a.id, 'scout', { by: sc.name }); // r23: origem com o nome do olheiro
       const k = s.knowledge[a.id];
       k.bias = sc.bias + r.normal(0, Math.max(2, 12 - sc.skill / 10));
       m.leads.push(a.id);

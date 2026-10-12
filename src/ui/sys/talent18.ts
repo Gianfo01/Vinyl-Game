@@ -23,7 +23,8 @@ import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { why18 } from '../explain18';
 import { registerArea } from '../registry';
-import { tabs } from '../vis';
+import { setTab, tabs } from '../vis';
+import { store } from '../store';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null | string, ok?: L) => { if (r) toast(T(r), 'info'); else if (ok) toast(T(ok), 'good'); rerender(); };
@@ -41,6 +42,9 @@ function discTab(s: GameState): HTMLElement {
   const leads = st.leads.slice().reverse().slice(0, 18);
   const gone = Object.keys(st.gone).map((id) => s.acts[id]).filter(Boolean);
   return h('div', null,
+    // r23: a procura de talentos mora na tela Talentos; aqui fica o histórico de canais
+    h('div', { class: 'card', style: 'margin:6px 0;padding:8px' }, h('b', null, t(l('Procurar talentos agora fica em Talentos', 'Talent search now lives in Talent'))), ' ',
+      h('button', { class: 'btn small primary', onclick: () => { setTab('marketHub', 'search'); store.area = 'market'; rerender(); } }, t(l('Abrir Talentos', 'Open Talent')))),
     section(t(l('Canais desta época', 'Channels of this era')),
       muted(fmtLs(l('Demos chegam sozinhas pela Caixa ({m}). Canais públicos acham mais gente, mas com informação pior e rivais de olho.', 'Demos arrive on their own in the Inbox ({m}). Public channels find more people, but with worse info and rivals watching.'), { m: t(demoMedium18(s)) })),
       ...chs.map((c) => card(

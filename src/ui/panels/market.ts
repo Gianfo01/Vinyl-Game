@@ -267,7 +267,7 @@ export function rivals(s: GameState): HTMLElement {
   );
 }
 
-function professionals(s: GameState): HTMLElement {
+export function professionals(s: GameState): HTMLElement {
   const cap = hqCaps(s).staff;
   return section(`${t(S.professionals)} — ${t(S.staff)} ${s.player.staff.length}/${cap}`,
     h('table', { class: 'tbl' },

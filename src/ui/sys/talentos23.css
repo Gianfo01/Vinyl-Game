@@ -1,0 +1,41 @@
+/* r23: tela Talentos (procurar / funil / decidir) */
+.t23-title { margin: 0 0 6px; }
+.t23-strip { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 8px 10px; margin: 6px 0 10px; border: 1px solid var(--line, #ccc3); border-radius: 8px; }
+.t23-balls { letter-spacing: 2px; }
+.t23-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.t23-act { border: 1px solid var(--line, #ccc3); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.t23-act header { display: flex; gap: 6px; align-items: center; }
+.t23-act p { margin: 0; }
+.t23-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.t23-meta span { display: flex; flex-direction: column; background: var(--bg2, #8881); border-radius: 6px; padding: 4px 6px; min-width: 0; }
+.t23-meta small { opacity: .7; font-size: 11px; }
+.t23-meta b { font-size: 12px; overflow-wrap: anywhere; }
+.t23-ctl { gap: 6px; }
+.t23-ctl select { max-width: 100%; }
+.t23-trip { margin: 6px 0; }
+.t23-filters { gap: 6px; margin: 6px 0 10px; }
+.t23-kanban { display: grid; grid-template-columns: repeat(5, minmax(210px, 1fr)); gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.t23-col { background: var(--bg2, #8881); border-radius: 8px; padding: 6px; min-width: 0; }
+.t23-col h4 { margin: 2px 0; display: flex; justify-content: space-between; align-items: center; }
+.t23-col .tiny { font-size: 11px; margin: 0 0 6px; }
+.t23-card { background: var(--bg, #fff1); border: 1px solid var(--line, #ccc3); border-radius: 8px; padding: 6px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 4px; }
+.t23-card.sel { outline: 2px solid var(--accent, #c8a24a); }
+.t23-card.signed { opacity: .6; }
+.t23-card header { display: flex; gap: 6px; align-items: center; }
+.t23-card .grow { flex: 1; min-width: 0; }
+.t23-origin { opacity: .85; font-style: italic; }
+.t23-attrs { display: flex; gap: 4px; flex-wrap: wrap; }
+.t23-u { display: inline-flex; flex-direction: column; padding: 2px 6px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+.t23-u small { font-size: 10px; opacity: .7; }
+.t23-u.unk { background: #8882; color: inherit; }
+.t23-u.est { background: #d9a52a2a; }
+.t23-u.ok { background: #3aa65a2a; }
+td.t23-u { display: table-cell; }
+.t23-rival { color: #b86a00; }
+.t23-rival.hard { color: #c0392b; font-weight: 600; }
+.warn-t { color: #b86a00; }
+.bad-t { color: #c0392b; }
+.t23-cact { gap: 4px; align-items: center; }
+.t23-scroll { overflow-x: auto; }
+.t23-cmp td, .t23-cmp th { vertical-align: top; }
+@media (max-width: 700px) { .t23-kanban { grid-template-columns: repeat(5, 78vw); } }

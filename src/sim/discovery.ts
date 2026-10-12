@@ -73,7 +73,7 @@ function scoutsMonth(s: GameState, r: Rng): void {
       found = [spawnProceduralAct(s, r, { city: city.id })];
     }
     for (const a of found) {
-      addSignal(s, r, a.id, 'scout');
+      addSignal(s, r, a.id, 'scout', { by: sc.name }); // r23
       const k = s.knowledge[a.id];
       // viés do profissional e grau maior que um sinal comum
       k.bias = sc.bias + r.normal(0, Math.max(2, 12 - sc.skill / 10));
@@ -120,7 +120,7 @@ function contestsMonth(s: GameState, r: Rng): void {
     win.momentum = clamp(win.momentum + 20, 0, 100);
     if (c.attended) {
       for (const a of acts) {
-        addSignal(s, r, a.id, 'contest');
+        addSignal(s, r, a.id, 'contest', { at: c.name, city: c.city }); // r23
         const k = s.knowledge[a.id];
         if (k) k.degree = Math.max(k.degree, a.id === win.id ? 3 : 2);
       }

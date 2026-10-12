@@ -18,7 +18,7 @@ import type { CatalogLabel } from '../data/catalog';
 import { STAFF_ROLES, TECHS } from '../data/rules';
 import { CITIES, GENRES, MARKETS, cityById, familyOf, genreById, type MarketId } from '../data/world';
 import { actTalent, makeAct, personName } from './people';
-import type { Act, GameState, Label, RunConfig, StaffMember } from './types';
+import type { Act, GameState, Knowledge, Label, RunConfig, StaffMember } from './types';
 import { dayOfDate, fmtL, hasMutator, nextId, remember } from './util';
 import { l } from '../data/world';
 import { takeoverTerms, type TakeoverTerms } from './takeover';
@@ -708,9 +708,10 @@ function seedInitialSignals(s: GameState, r: Rng): void {
   }
 }
 
-export function addSignal(s: GameState, r: Rng, actId: string, source: string): void {
+export function addSignal(s: GameState, r: Rng, actId: string, source: string, origin?: Partial<NonNullable<Knowledge['origin']>>): void {
   if (s.knowledge[actId]) return;
-  s.knowledge[actId] = { actId, degree: 1, stage: 'signal', bias: r.normal(0, 7), updatedWeek: s.week, source };
+  // r23: guarda a origem (fonte, semana, cidade, quem) para o card explicar "de onde veio"
+  s.knowledge[actId] = { actId, degree: 1, stage: 'signal', bias: r.normal(0, 7), updatedWeek: s.week, source, origin: { src: source, w: s.week, city: s.acts[actId]?.city, ...origin } };
 }
 
 export function talentScore(s: GameState, act: Act): number {
