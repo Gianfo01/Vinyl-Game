@@ -34,21 +34,22 @@ Limites:
 
 O Masters é o simulador de indústria musical mais profundo que se pode imaginar. Tem 150 anos de história, eras que mudam as regras, pessoas com memória e decisões que voltam. O que já foi pedido está quase todo feito: 169 de 216 itens conferidos no código.
 
-O que mais segura o jogo não é falta de sistema. São quatro promessas que os próprios pilares fazem e o código ainda não cumpre:
+O que mais segura o jogo não é falta de sistema. São três promessas que os próprios pilares fazem e o código ainda não cumpre:
 - **incerteza legível**: chances mostradas erradas ou escondidas;
 - **run reproduzível**: carregar o save muda o futuro;
-- **risco que vale a pena**: a cautela domina;
-- **pessoas reais tratadas com cuidado**: o modo padrão as põe em crimes inventados.
+- **risco que vale a pena**: a cautela domina.
+
+O modo padrão "Reais em mundo aleatório", em que tudo pode acontecer com pessoas reais, é **intenção declarada do autor** e foi tratado como tensão, não como defeito. Para a escolha ficar sólida, faltam filtros que funcionem, documentação coerente e um aviso de ficção (C1).
 
 Há também uma regressão medida agora: o perfil equilibrado quebra em 50 % das partidas do lote completo, contra 17 % na R19. Um teste (`r16-playbot`) está vermelho desde a recalibração do choque do petróleo.
 
-O que mais levantaria o jogo: cumprir essas quatro promessas com regras centrais (poucas, quase todas S), cortar o ruído que esconde a história do jogador e trazer o primeiro sucesso e o fim de partida para perto.
+O que mais levantaria o jogo: cumprir essas três promessas com regras centrais (poucas, quase todas S), cortar o ruído que esconde a história do jogador e trazer o primeiro sucesso e o fim de partida para perto.
 
 ## Painel das 16 camadas
 
 | # | Camada | Nota | Uma frase |
 |---|---|---|---|
-| 1 | Identidade e pilares | 2 | A fantasia é clara, mas os pilares não estão escritos; há 3 sistemas órfãos (crime, bolsa, vícios) e a 1ª hora é um tour |
+| 1 | Identidade e pilares | 2 | A fantasia é clara, mas os pilares não estão escritos (nem o do modo aleatório com reais); há 2 sistemas órfãos (bolsa, vícios do jogador) e a 1ª hora é um tour |
 | 2 | MDA | 3 | Fantasia histórica forte; o desafio é minado pela estratégia "gastar pouco" e a narrativa pelo eco-molde |
 | 3 | Diversão / maestria | 3 | Eras e rivais renovam, mas "gaste pouco" se aprende cedo e o ruído esconde o valor das escolhas |
 | 4 | Fluxo e ritmo | 2 | Curva em degrau: todo o risco nos anos 1–3 (equilibrado quebra em 50 % no lote completo, regressão da R19), depois platô de margem zero |
@@ -62,45 +63,48 @@ O que mais levantaria o jogo: cumprir essas quatro promessas com regras centrais
 | 12 | Estética e sensação | 2 | Pixel art de época bonita; o jogo é mudo (motor de áudio órfão) e o fim não tem peso |
 | 13 | Sessão e retenção | 3 | Metas nos 3 horizontes; padrão sem prazo (1962→2040 = 936 meses) e sessão picotada |
 | 14 | Saúde técnica | 3 | Typecheck limpo, 938/949 testes; suíte de 26 min frágil, ~1 s de CPU por mês, fachadas que não substituem |
-| 15 | Ética e representação | 2 | Cuidado real (consentimento, contexto histórico), mas pessoas reais em crimes inventados no modo padrão e filtros que vazam |
+| 15 | Ética e representação | 3 | Cuidado real (consentimento, contexto histórico); reais em qualquer história é escolha do autor; filtros que vazam, gangues por gênero e barreira racial sem opção |
 | 16 | Mercado e escopo | 2 | Posição única; o escopo cresce ~100 arquivos por rodada sem orçamento; nomes reais ligados por padrão |
 
-Média geral: **2,6**. Por grupo:
+Média geral: **2,7**. Por grupo:
 - Sistema (2, 7, 8, 9): 2,75
 - Mente (3, 4, 5, 6): 2,75
 - Superfície (10, 11, 12): 2,7
-- Tempo e contexto (1, 13, 14, 15, 16): 2,4
+- Tempo e contexto (1, 13, 14, 15, 16): 2,6
 
 ---
 
 ## Cadeias causais
 
-As 8 cadeias abaixo explicam a maior parte dos ~70 achados. Estão ordenadas por prioridade.
+As 8 cadeias abaixo explicam a maior parte dos ~70 achados. Estão ordenadas por prioridade, exceto a C1, que foi rebaixada de P0 para P1 depois que o autor confirmou que o modo aleatório com pessoas reais é intencional.
 
-### C1. Pessoas reais em histórias inventadas (P0)
+### C1. Mundo aleatório com pessoas reais: a escolha precisa ficar sólida (P1)
+**Intenção declarada pelo autor:** um modo aleatório em que tudo pode acontecer, com pessoas reais. Portanto, crimes, vícios, casos e mortes envolvendo reais fora do modo "Fidelidade histórica" **não são defeito**: são o modo.
+
+O que segue é o que falta para a escolha funcionar como produto.
+
 - **Origem:**
-  - O padrão de nova run é "Reais em mundo aleatório", com `realNames: true` e `history: 'free'` (`src/sim/start17.ts:18-23`) [O].
-  - As proteções só valem com `histMode === 'strict'` [O]:
-    - assassinato: `src/sim/sys/crime17.ts:444`;
-    - rixas de NPC: `src/sim/sys/crimenpc17.ts:30, 296-300`;
-    - casos amorosos: `src/sim/sys/love17.ts:104`.
-  - O cabeçalho de `crime17.ts:7` promete "assassinato nunca envolve pessoa real". O código contradiz [O, conferido].
-  - Os vícios de NPC não têm guarda nenhuma ("Bastidores: {p} luta contra a dependência", `src/sim/sys/lifecycle7.ts:247-270`) [O].
-  - Os filtros "Crimes" e "Drogas" não são lidos por `crime17`, `crimenpc17` nem `lifecycle7` [O].
-- **Dinâmica:**
-  - A lista de alvos marca pessoas reais com ★ (`crime17.ts:414`) e permite "Encomendar morte".
-  - Uma rixa de gangue pode matar o líder de um artista real.
-  - Gangues são atribuídas por gênero: hip-hop, funk carioca, corridos, drill, trap, reggaeton e dancehall (`crimenpc17.ts:32`) [O].
-  - A penalidade racial das eras iniciais (até −28 % de alcance, `src/sim/sys/persona13.ts:385, 443-451`) torna "não contratar artistas negros" a escolha ótima, sem opção de desligar [O/I].
-  - No Diário aparecem mortos reais em atividade ("Robert Johnson chega ao #1" em 1962) e contradições ("The Carter Family segue em frente" × "decide encerrar" na mesma semana) [O, browser].
-- **Experiência:** manchetes difamatórias por sorteio; a melhor narrativa emergente vira o maior risco.
-- **Jogador e contexto:**
-  - Risco de imagem e de direito de personalidade de vivos e espólios [H; não é parecer jurídico].
-  - Bloqueio provável para publicar em loja [H].
-  - Documentação contraditória: o README diz "nomes reais ligados por padrão" (`:97`) e também "por padrão o universo é ficcional" (`:217`).
-- **Camadas:** 15 → 10 → 1 → 16 → 6/7.
-- **Alavancagem: regra.** Um `realGuard(s, personId, tema)` e um `allowed(s, tag, ctx)` centrais, consultados por todos os geradores. Cada um substitui dezenas de checagens espalhadas.
-- **Esforço:** S (bloquear assassinato, agressão e armação contra reais em todos os modos) + M (guarda e filtro centrais com teste).
+  - O padrão é "Reais em mundo aleatório" (`realNames: true`, `history: 'free'`, `src/sim/start17.ts:18-23`). As proteções de pessoa real valem só no modo exato (`crime17.ts:444`, `crimenpc17.ts:30, 296-300`, `love17.ts:104`) [O]. Coerente com a intenção.
+  - **Os filtros escolhidos pelo jogador não chegam a todos os sistemas.** "Crimes" e "Drogas" não são lidos por `crime17`, `crimenpc17` nem `lifecycle7` (`lifecycle7.ts:247-270`). O teste de filtros só cobre `events.ts` (`sim.test.ts:80`) [O]. Esse é um defeito real: quem desliga "Crimes" ainda vê crimes.
+  - **A documentação diz o contrário da intenção:**
+    - `crime17.ts:7`: "assassinato nunca envolve pessoa real";
+    - `README.md:217`: "por padrão o universo é ficcional";
+    - `realnames.ts:1`: "opcional, para uso pessoal".
+    - [O]
+  - **Não há aviso de ficção** na nova run nem nas manchetes sensíveis. O selo **Documentado/Simulado** (`provbadge20.ts`) existe para lançamentos, mas não marca fatos de crime, vício ou caso [O/I].
+  - **Contradições de ordem de resolução:** "The Carter Family segue em frente" × "decide encerrar" na mesma semana [O, browser]. Mortos reais voltam à ativa ("Robert Johnson chega ao #1" em 1962), o que é coerente com "tudo pode acontecer", mas a tela de revisão não avisa [O].
+- **Dinâmica:** o modo gera as histórias mais fortes do jogo, como o assassinato de um ídolo por uma rixa de gangue ou a recaída de uma lenda. Só que filtros furados e textos contraditórios fazem essas histórias parecerem bug, não escolha.
+- **Experiência:** quem quer o caos tem; quem desligou um tema é surpreendido.
+- **Contexto:**
+  - Risco de imagem e de direito de personalidade de vivos e espólios ao **publicar** [H; não é parecer jurídico].
+  - Possível barreira de loja [H].
+  - Não muda a intenção, mas pede mitigação: aviso claro, selo "Simulado" e, se for publicar, os nomes reais como pacote que o jogador ativa.
+- **Camadas:** 15 → 10 → 1 → 16.
+- **Alavancagem: regra + informação.**
+  1. `allowed(s, tag, ctx)` único, consultado por todos os geradores, com teste por filtro.
+  2. Pilar escrito ("mundo aleatório com reais: tudo pode acontecer") e documentação alinhada.
+  3. Aviso de ficção na Revisão ("pessoas reais vivem uma história inventada; nada aqui aconteceu") e selo "Simulado" nas manchetes de crime, vício e caso com pessoa real.
+- **Esforço:** S (docs, aviso, selo) + M (filtro único com teste).
 
 ### C2. Encolher é o ótimo (P1)
 - **Origem:**
@@ -258,7 +262,7 @@ As 8 cadeias abaixo explicam a maior parte dos ~70 achados. Estão ordenadas por
   - A regra de entrada de sistemas é "3 ligações", não "serve a um pilar" (`plano19.md:9`) [O].
   - Arquivos com sufixo de rodada: r17 74, r18 101, r19 97, r20 33 [O].
   - 12 carreiras, 64 páginas (31 visíveis no mês 0) [O].
-  - Órfãos: crime (~1.800 linhas), bolsa, bens e títulos (~2.600), vícios do jogador [O].
+  - Órfãos: bolsa, bens e títulos (~2.600 linhas), vícios do jogador [O]. O crime serve ao modo aleatório.
 - **Dinâmica:**
   - Suíte de 1.568 s com 8 timeouts [O].
   - ~1 s de CPU por mês, crescendo ~85 % em 5 anos numa seed [O].
@@ -270,7 +274,7 @@ As 8 cadeias abaixo explicam a maior parte dos ~70 achados. Estão ordenadas por
 - **Alavancagem: paradigma e objetivo.**
   - Escrever 4–5 pilares com o que cada um exclui.
   - Orçamento de sistemas por pilar: cada sistema novo exige cortar ou fundir outro.
-  - Crime vira mutator opt-in.
+  - Crime continua no modo aleatório, respeitando o filtro "Crimes".
 - **Esforço:** S (decisão) + L (cortes e fusões).
 
 ---
@@ -279,8 +283,8 @@ As 8 cadeias abaixo explicam a maior parte dos ~70 achados. Estão ordenadas por
 
 | Tensão | Onde o jogo está | Onde os pilares pedem | Recomendação |
 |---|---|---|---|
-| Realismo histórico × ética | Barreira racial aplicada sem opção; gangues por gênero; nomes reais em crimes | Contexto histórico sem recompensar o preconceito | Barreira como contexto/efeito opcional; "enfrentar" com retorno que compense; crime nunca com pessoa real |
-| Nomes reais × ficção | Reais por padrão desde a R20 | P2 (história viva) + publicação | Manter reais com guarda central agora; ao publicar, padrão ficcional com nomes reais como importação |
+| Realismo histórico × ética | Barreira racial aplicada sem opção; gangues por gênero | Contexto histórico sem recompensar o preconceito | Barreira como contexto/efeito opcional; "enfrentar" com retorno que compense; crime nunca com pessoa real |
+| Pessoas reais × "tudo pode acontecer" | Reais por padrão e sem guarda fora do modo exato (intencional) | Modo aleatório com reais (pilar declarado pelo autor) | Manter; filtros que funcionem, aviso de ficção, selo "Simulado"; se for publicar, reais como pacote ativável |
 | Profundidade × legibilidade | 64 páginas, Cockpit de 1.169 palavras no fim do ano 1 | Cadeia inteira, **manual ou delegada** | Delegação ligada por padrão na agenda; um bloco "Agora" no topo; especialista recolhido |
 | Sorte × agência | σ 0,33 no acaso, ~70 % da variância vem da sorte | Incerteza legível, decisões que importam | σ decrescente com fama e histórico; mais peso para gancho e qualidade |
 | Assistência × decisão | `bestProducer18`, `bestOrder18`, `suggestDir18`, sugestão de tiragem | Manual ou delegado | Sugestões explicam o porquê e erram de propósito no fácil, nunca no padrão; a de tiragem precisa ler o marketing |
@@ -309,6 +313,7 @@ Pilares inferidos:
 - P3: pessoas e histórias emergentes.
 - P4: incerteza legível.
 - P5: run única e reproduzível.
+- P6 (declarado pelo autor nesta análise): modo aleatório com pessoas reais, em que tudo pode acontecer.
 
 **1.2 A 1ª hora é tour, não jogada.**
 - Evidência: `tutorial.ts:23-32`; o 1º top 10 do bot chega nos meses 45 e 51 [O].
@@ -316,11 +321,9 @@ Pilares inferidos:
 - Liga com: C6. Esforço: M.
 
 **1.3 Sistemas órfãos.**
-- Evidência: crime (`crime17`, `crimenpc17`), bolsa e patrimônio (`bolsa10`, `goods8`, `bonds9`), vícios do jogador (`vices.ts`). Nenhum serve a P1–P5 [O].
-- Fix:
-  1. Crime como mutator opt-in.
-  2. "Patrimônio do dono" numa aba só.
-- Liga com: C1, C8. Esforço: M.
+- Evidência: bolsa e patrimônio (`bolsa10`, `goods8`, `bonds9`) e vícios do jogador (`vices.ts`) não servem a P1–P6 [O]. O crime (`crime17`, `crimenpc17`) serve a P6.
+- Fix: "Patrimônio do dono" numa aba só; vícios do jogador ligados a histórias (P3), não só a alívio de estresse.
+- Liga com: C8. Esforço: M.
 
 **1.4 Documentação contraditória.**
 - Evidência:
@@ -688,11 +691,18 @@ Medido:
 
 ### 15. Ética e representação — 2/5
 
-**15.1 Assassinato de pessoas reais no modo padrão.** Ver C1.
-- Evidência: `crime17.ts:7` × `:444`; `crimenpc17.ts:296-300` [O, conferido].
-- Esforço: S.
+**15.1 Pessoas reais em crimes, vícios e casos no modo aleatório: intencional (tensão, não defeito).**
+- Evidência: `crime17.ts:444`, `crimenpc17.ts:296-300`, `lifecycle7.ts:247-270` [O].
+- O que falta:
+  1. Corrigir o cabeçalho `crime17.ts:7` e o README.
+  2. Aviso de ficção na Revisão.
+  3. Selo "Simulado" nas manchetes sensíveis com pessoa real.
+- Liga com: C1. Esforço: S.
 
-**15.2 Proteções presas ao modo "Fidelidade histórica".** Ver C1. Esforço: M.
+**15.2 Publicação.**
+- Risco de direito de personalidade e de loja com reais em histórias inventadas [H].
+- Fix: decidir antes de publicar; nomes reais como pacote ativável preservam o modo.
+- Esforço: M.
 
 **15.3 Filtros de conteúdo vazam.**
 - Evidência: `lifecycle7.ts` (drogas), `crime17` e `crimenpc17` (crime). O teste só cobre `events.ts` (`sim.test.ts:80`) [O].
@@ -725,7 +735,7 @@ Positivo:
 **16.1 Escopo sem orçamento.** Ver C8.
 
 **16.2 Candidatos a corte ou fusão.**
-- Opt-in: crime, bolsa e títulos, construtor de festival, 9 das 12 carreiras.
+- Opt-in: bolsa e títulos, construtor de festival, 9 das 12 carreiras.
 - Fundir:
   - fama15/16 + notoriedade14;
   - explain8/12 + why18;
@@ -818,11 +828,11 @@ Ordenado por impacto × alcance × confiança ÷ esforço. As primeiras linhas r
 
 | Pri. | Ação | Resolve | Alavancagem | Esforço |
 |---|---|---|---|---|
-| P0 | Bloquear assassinato, agressão e armação contra pessoas reais em **todos** os modos; teste que varre alvos com `realNames: true` | C1, 15.1 | Regra | S |
-| P0 | `realGuard(s, id, tema)` central (vício, caso, gangue, crime) + `allowed(s, tag)` único para os 6 filtros em todos os geradores, com teste por filtro | C1, 15.2, 15.3, 15.4, 10.3 | Regra | M |
 | P0 | Determinismo de save: campos de `ensureExt` no nascimento; acaso semeado por id do lançamento; teste "continuar = salvar + carregar" | C4, 9.1, 9.2 | Regra | S |
 | P0 | Chance mostrada = sorteada em tudo: `echoP18` no "Depois"; faixa nas opções de evento que sorteiam; placar com ruído na contratação | C3, 5.2, 9.4, 9.6 | Informação | S |
 | P0 | Investigar a quebra de 50 % do equilibrado (1889: 2 de 2 em 1890–91; 1975: 1 de 1) e o `r16-playbot` vermelho desde `68b42ba` | C2, 14.1 | Parâmetro | S–M |
+| P1 | Filtros de conteúdo que funcionam em todo o jogo: `allowed(s, tag)` único em `crime17`, `crimenpc17`, `lifecycle7` e nos demais geradores, com teste por filtro | C1, 15.3 | Regra | M |
+| P1 | Modo aleatório com reais assumido: pilar escrito, docs alinhados (`crime17.ts:7`, README), aviso de ficção na Revisão, selo "Simulado" nas manchetes sensíveis; corrigir a contradição de ordem (Carter Family) | C1, 1.4, 10.3, 15.1 | Informação | S |
 | P1 | Fazer o risco pagar: choques em % da receita; retorno convexo de verba; passividade custa artistas; torneiras de reputação; teste-meta "agressivo ≥ cauteloso em ≥ 1/3 das seeds" | C2, 4.1, 4.2, 7.1, 8.2, J2 | Laço + regra | M |
 | P1 | Previsão calibrada a 80 % ("8 em 10") com os termos omitidos; tiragem sugerida com marketing; aviso de reprensagem | C3, 9.3, 6.4, 8.5 | Informação | S |
 | P1 | Orçamento único de atenção: Diário do jogador em anel próprio; cooldown por (evento, ator); orçamento de cenas; eco forte com cena "você escolheu X" | C5, 10.1, 10.4, 10.5, 12.3, 13.2 | Informação | S–M |
@@ -830,7 +840,7 @@ Ordenado por impacto × alcance × confiança ÷ esforço. As primeiras linhas r
 | P1 | Recomendado com prazo de 25 anos + sandbox; "Rumo a: <final>" no Cockpit; capítulos por década | C6, 13.1, 13.3 | Objetivo | S + M |
 | P1 | Contratação com escolha: promessas com custo; rival na oferta ao vivo; reserva própria do rival; rival sem estado privado | C7, 7.2–7.5 | Regra | S–M |
 | P1 | Alto contraste de verdade + teste ≥ 7:1; alvos de 24 px no Mundo pelo celular | 11.4, 11.5 | Parâmetro | S |
-| P2 | Escrever os pilares; orçamento de sistemas; crime como mutator opt-in; "Patrimônio do dono" | C8, 1.1, 1.3, 16.1 | Paradigma | S + M |
+| P2 | Escrever os pilares (inclusive o P6); orçamento de sistemas; "Patrimônio do dono" | C8, 1.1, 1.3, 16.1 | Paradigma | S + M |
 | P2 | `test:fast` / `test:sim`; CPU nos testes de desempenho; investigar `tours = 0` no playbot | 14.1 | Regra | M |
 | P2 | Religar o motor de áudio (prévia e stingers opt-in) e fim de partida com storyboard | C6, 12.1, 12.2 | Objetivo | M |
 | P2 | Portões de época nos eventos; nomes e gêneros pela cena da cidade; nome da parada por ano | 10.2, 10.6 | Regra | S–M |
@@ -844,7 +854,7 @@ Ordenado por impacto × alcance × confiança ÷ esforço. As primeiras linhas r
 | `balance --full` depois do P1 "risco" | Agressivo ≥ cauteloso em patrimônio em ≥ 1/3 das (seed, início); quebra do equilibrado entre 10 e 30 % |
 | Teste de calibração da previsão (≥ 300 lançamentos) | Faixa contém a procura em 78–82 % |
 | Teste "continuar = salvar + carregar + continuar" (12 meses, 3 seeds) | Estado idêntico |
-| Teste por filtro de conteúdo (6 filtros × 24 meses) | Zero fatos com a tag filtrada; zero crimes inventados com pessoa real fora do modo exato |
+| Teste por filtro de conteúdo (6 filtros × 24 meses) | Zero fatos com a tag filtrada, em todos os geradores |
 | Partida 1962 → 2040 headless | Tempo por mês e tamanho do save por década; nenhuma década com mais de 2× o custo da primeira |
 | Sensibilidade das cartas: "sempre padrão" × equilibrado × pior, 12 seeds | Equilibrado > padrão > pior, com sinal estável |
 | 5 jogadores novos na 1ª hora (gravação de tela) | Primeira decisão significativa em < 3 min; ao menos um lançamento na 1ª sessão; contagem de "não sei o que fazer" |
@@ -880,7 +890,7 @@ Ordenado por impacto × alcance × confiança ÷ esforço. As primeiras linhas r
 | Sede e campus | `sys/hq6/8.ts`, `sys/campus18.ts`, `furnish.ts`, `ui/hq.ts` | verba, nível | capacidade, moral, visual | fraco |
 | Vida pessoal | `sys/life.ts`, `sys/love17.ts`, `sys/kids17.ts` | tempo do dono | estresse, herdeiros | P3 fraco |
 | Vícios | `sys/vices.ts` | estresse | dependência, polícia | órfão |
-| Crime | `sys/crime17.ts`, `sys/crimenpc17.ts`, `sys/intrigue.ts` | alvos, organizações | casos, prisão, mortes | órfão / contradiz |
+| Crime | `sys/crime17.ts`, `sys/crimenpc17.ts`, `sys/intrigue.ts` | alvos, organizações | casos, prisão, mortes | P6 (modo aleatório) |
 | Bolsa e patrimônio | `sys/bolsa10.ts`, `sys/bonds9.ts`, `sys/goods8.ts` | caixa pessoal | ações, dividendos | órfão |
 | Carreiras | `sys/careers12/19.ts`, `sys/manager11/12.ts`, `sys/agency18.ts` | escolha no novo jogo | páginas por carreira | P1 (dilui) |
 | Explicabilidade e UX | `explain18.ts`, `sys/why18.ts`, `ui/help18*.ts`, `ui/tracks18.ts`, `sys/ux19.ts`, `odds19.ts` | qualquer número | "por quê", tours, divulgação | P4 |
