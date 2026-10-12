@@ -18,6 +18,7 @@ import { REAL_WORLD } from '../../data/realacts_world';
 import { REAL_MORE } from '../../data/realacts_more14';
 import { ALIASES16, REAL_L16 } from '../../data/lineups16';
 import { applyLineups25 } from '../../data/lineups25';
+import { applyMembers25 } from '../../data/members25';
 import { REAL_17 } from '../../data/more17';
 import { REAL_1889 } from '../../data/era1889';
 import { ARTISTS19 } from '../../data/more19';
@@ -50,6 +51,7 @@ const taken17 = new Set([...taken16, ...L16F.map((a) => norm16(a.n))]);
 export const REAL_ALL: RealArtist[] = [...BASE_ALL, ...L16F, ...REAL_17.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...REAL_1889.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ARTISTS19.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; }), ...ACERVO22.filter((a) => { const k = norm16(a.n); if (taken17.has(k)) return false; taken17.add(k); return true; })]; // r18 era1889 no fim; r19 more19 (onda 2) depois; r21 acervo + perfis pesquisados
 /** r21: o acervo é o último lote de REAL_ALL; usa gerador próprio para não deslocar os sorteios do resto do mundo. */
 export const ACERVO21_FROM = REAL_ALL.length - ACERVO22.filter((a) => REAL_ALL.includes(a)).length;
+applyMembers25(REAL_ALL); // r25: formações pesquisadas para quem não tinha integrantes
 applyLineups25(REAL_ALL); // r25: formações reais que estavam incompletas (banda de 5 aparecia com 2–3)
 const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo21|${k}`);
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
