@@ -10,13 +10,17 @@ import { stressOf } from '../sim/stress17';
 import type { Act, GameState } from '../sim/types';
 import { inspect, modal, rerender, toast } from './common';
 import { h } from './dom';
+import { emptyState27 } from './ps/ui27';
 import { store } from './store';
 import { setTab } from './vis';
 import './sys/core18.css';
 
 /** Estado vazio: o que é, por que está vazio e um botão para resolver. */
 export function emptyState18(what: L, why: L, act?: { label: L; run: () => void }): HTMLElement {
-  return h('div', { class: 'empty18', role: 'note' }, h('b', null, t(what)), ' ', t(why), act ? h('div', null, h('button', { class: 'btn small', onclick: act.run }, t(act.label), ' →')) : null);
+  // r27 (J): mesma cara do estado vazio do sistema (ui27.emptyState27): título, motivo e o próximo passo
+  const el = emptyState27({ title: what, why, action: act });
+  el.classList.add('empty18');
+  return el;
 }
 
 const PAGES = new Map<string, number>();

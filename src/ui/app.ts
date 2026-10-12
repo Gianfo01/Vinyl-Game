@@ -75,6 +75,9 @@ import { navSection27 } from './ps/tree27';
 import { allTabs27 } from './ps/subtabs27';
 import { kick27, mayShow27 } from './ps/queue27';
 import { getLang } from '../i18n/strings';
+import { locale } from '../i18n/strings';
+import { artHook27, pageHeader27 } from './ps/ui27'; // r27 (J): sistema visual compartilhado
+import { PURPOSE27, kpis27 } from './ps/ui27model';
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
 registerPortrait((p, size) => {
@@ -515,9 +518,13 @@ function pageTitle21(body: HTMLElement): HTMLElement | null {
   const dup = [...body.querySelectorAll<HTMLElement>('h2, h3')].slice(0, 2).find((x) => x.textContent?.trim() === it.label);
   dup?.classList.add('sr-only');
   // r23: uma pergunta por tela — linha curta de propósito sob o título (Projeto, Composição, Estúdio, Lançamentos)
-  const why = PURPOSE23[store.area];
-  if (why) return h('header', { class: 'pg23' }, h('h1', { class: 'page21 page21-auto' }, it.label), h('p', { class: 'pg23-purpose' }, t(why)));
-  return h('h1', { class: 'page21 page21-auto' }, it.label);
+  // r27 (J): cabeçalho único (ps/ui27.ts) — título, propósito, números-chave da página e arte opcional
+  // a tela já abre com um parágrafo de apresentação (fora de cartão)? então o subtítulo genérico não repete a ideia
+  const first = body.querySelector('p, h2, h3, table, .card, section, .tabs, [data-tabs]');
+  const ownIntro = first?.tagName === 'P' && !first.closest('.card') && (first.textContent ?? '').trim().length > 40;
+  const why = PURPOSE23[store.area] ?? (ownIntro ? undefined : PURPOSE27[store.area]);
+  const g = store.game!;
+  return pageHeader27({ title: it.label, sub: why, kpis: kpis27(store.area, g, locale()), art: artHook27.f?.(store.area, g) ?? null, area: store.area, go });
 }
 
 function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {

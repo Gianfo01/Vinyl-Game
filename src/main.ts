@@ -10,6 +10,7 @@ import '@fontsource/silkscreen/latin-700.css';
 import './ui/heritage21.css'; // r21: tema Heritage Studio Pixel por último (só apresentação)
 import './ui/mobile23.css'; // r23: celular — topo em uma linha, 4 destinos + Mais, tabelas em cartões
 import './ui/ps/theme25.css'; // r25: Pixel Studio — azul-noite + dourado (escuro padrão), claro Heritage; 6 seções
+import './ui/ps/ui27.css'; // r27 (J): sistema visual compartilhado (docs/ui27.md) — depois do tema
 import './ui/ps/hq25'; // r25: Sede viva (Pixel Studio) — registra a tela da Sede no slot25
 
 boot(document.getElementById('app')!);
@@ -22,3 +23,6 @@ if (typeof document !== 'undefined') installCards23();
 // r25: no máximo 5 abas visíveis por faixa; o resto em "Mais" (com filtro)
 import { installTabs25 } from './ui/ps/tabs25';
 if (typeof document !== 'undefined') installTabs25();
+// r27 (J): colunas numéricas de toda tabela alinhadas à direita
+import { installNum27 } from './ui/ps/num27';
+if (typeof document !== 'undefined') installNum27();

@@ -6,7 +6,10 @@
 import { cockpitBadge23 } from '../../sim/counters23';
 import { HQ_LEVELS } from '../../data/rules';
 import { l } from '../../data/world';
-import { t } from '../../i18n/strings';
+import { locale, t } from '../../i18n/strings';
+import { artHook27, pageHeader27 } from '../ps/ui27';
+import { kpis27 } from '../ps/ui27model';
+import { store } from '../store';
 import type { GameState } from '../../sim/types';
 import { rerender } from '../common';
 import { h } from '../dom';
@@ -48,11 +51,13 @@ export function cockpit(s: GameState): HTMLElement {
   const toInbox = () => { setTab('ck20', 'inbox'); rerender(); };
   const P = parts21(s);
   return h('div', { class: 'ck14 ck21' },
-    h('div', { class: 'ck21-head' }, h('h1', { class: 'page21' }, t(l('Cockpit do mês', 'Monthly cockpit'))),
-    h('div', { class: 'ck14-bar', role: 'toolbar', 'aria-label': t(l('Atalhos do cockpit', 'Cockpit shortcuts')) },
+    // r27 (J): cabeçalho do sistema (ui27) — título, o que fazer agora, atalhos à direita e números do mês
+    pageHeader27({ title: l('Cockpit do mês', 'Monthly cockpit'), area: 'cockpit',
+      sub: n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.')),
+      actions: [
       h('button', { class: `btn small ${n ? 'primary' : 'ghost'}`, onclick: () => { setTab('ck20', 'panel'); rerender(); setTimeout(() => jump('ck14-desk'), 30); } }, ic('calendar'), ' ', t(l('Decisões', 'Decisions')), ` (${n})`),
-      h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: toInbox }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`),
-      h('small', { class: 'muted' }, n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.'))))),
+      h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: toInbox }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`)],
+      kpis: kpis27('cockpit', s, locale()), art: artHook27.f?.('cockpit', s) ?? null, go: (a) => { setTab('ck20', 'panel'); goArea27(a); } }),
     tabs('ck20', [
       { id: 'panel', label: t(l('Painel', 'Panel')), render: () => h('div', { class: 'ck21-grid' },
         h('div', { class: 'ck21-main' },
@@ -65,5 +70,8 @@ export function cockpit(s: GameState): HTMLElement {
       { id: 'inbox', label: t(l('Caixa de entrada', 'Inbox')), badge: m || undefined, render: () => h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—')) },
     ], rerender));
 }
+
+/** r27 (J): KPI do cabeçalho leva à página (mesmo efeito de clicar no menu). */
+function goArea27(a: string): void { store.area = a as typeof store.area; rerender(); }
 
 registerArea({ id: 'cockpit', label: l('Cockpit', 'Cockpit'), icon: 'calendar', key: '1', render: cockpit, badge: (s) => cockpitBadge23(s) || undefined }); // r23 (B): só o que pede ação

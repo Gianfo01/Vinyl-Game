@@ -16,6 +16,7 @@ import type { Act, AgendaSlot, GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, genreName, cityName, kv, logo, pill, promiseName, rerender, section, statusName } from '../common';
 import { h, select } from '../dom';
+import { statusChip27 } from '../ps/ui27';
 import { openAct } from '../ficha';
 import { personCard } from '../pages';
 import { store } from '../store';
@@ -114,8 +115,9 @@ function header20(s: GameState, a: Act): HTMLElement {
       h('div', { class: 'ar21-id' },
         h('h2', null, a.name),
         h('div', { class: 'ar21-sub' }, `${a.members.length > 1 ? t(l('Grupo', 'Group')) : t(l('Solo', 'Solo'))} · ${genreName(a.genre)} · ${cityName(a.city)}`),
-        h('div', { class: 'ar21-pills' }, pill(statusName(a.status), a.status === 'active' ? 'good' : ''), s.delegated[a.id] !== false ? pill(t(l('Agenda delegada', 'Delegated agenda'))) : null,
-          pj ? pill(`${pj.title} · ${t(pj.stage)}`) : null, nx ? h('small', { class: 'muted' }, '→ ', t(nx.text), ` (${t(l('sem.', 'wk'))} ${Math.max(0, nx.w - s.week)})`) : null)),
+        // r27 (J): chips de estado do sistema (ui27) — tom pelo estado, contraste AA nos dois temas
+        h('div', { class: 'ar21-pills' }, statusChip27(statusName(a.status), a.status === 'active' ? 'good' : a.status === 'hiatus' ? 'warn' : 'neutral'), s.delegated[a.id] !== false ? statusChip27(l('Agenda delegada', 'Delegated agenda'), 'info') : null,
+          pj ? statusChip27(`${pj.title} · ${t(pj.stage)}`, 'accent') : null, nx ? h('small', { class: 'muted' }, '→ ', t(nx.text), ` (${t(l('sem.', 'wk'))} ${Math.max(0, nx.w - s.week)})`) : null)),
       h('div', { class: 'ar21-right' },
         h('div', { class: 'ar21-tiles' }, tile('star', S.fame, a.fame), tile('heart', S.morale, st.morale), tile('sleep', S.fatigue, st.fatigue, true), tile('stress', S.stress, st.stress, true)),
         h('div', { class: 'ar20-actions ar21-actions' }, quickPins20(s, a.id),

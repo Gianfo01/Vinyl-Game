@@ -10,9 +10,10 @@ import { oblGroups20 } from '../../sim/sys/fin20';
 import type { GameState } from '../../sim/types';
 import { $, section } from '../common';
 import { h } from '../dom';
+import { kpiRow27 } from '../ps/ui27';
+import { deltaTone27 } from '../ps/ui27model';
 import { why18 } from '../explain18';
 import { registerTab } from '../registry';
-import { chips, stat } from '../vis';
 
 const MON: L[] = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'].map((m, i) => l(m, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]));
 /** o retrato é tirado no início do mês (y,m): representa o fechamento do mês anterior */
@@ -34,13 +35,15 @@ function nowVsClose(s: GameState): HTMLElement {
 function concepts(s: GameState): HTMLElement {
   const p = position20(s);
   const M = fin18(s).m[mIdx18(s)];
-  return chips(
-    stat('money', $(p.cash), l('Caixa (dinheiro na conta)', 'Cash (money in the bank)'), p.cash < 0 ? 'bad' : ''),
-    stat('chart-up', $(netProfit18(M)), l('Resultado do mês por competência', 'Accrual result this month'), netProfit18(M) < 0 ? 'bad' : ''),
-    stat('bank', `${$(p.ar)} / ${$(p.ap)}`, l('A receber / a pagar (ao vivo)', 'Receivable / payable (live)')),
-    stat('warning', $(p.debt), l('Obrigações financeiras', 'Financial obligations'), p.debt > 0 ? 'bad' : ''),
-    stat('calendar', $(freeCash20(s) - p.committed), l('Caixa livre (após reservas e planos)', 'Free cash (after reserves and plans)'), freeCash20(s) - p.committed < 0 ? 'bad' : ''),
-  );
+  const free = freeCash20(s) - p.committed;
+  // r27 (J): os quatro conceitos como números-chave (KPI) — rótulo em cima, valor monoespaçado, tom pelo sinal
+  return kpiRow27([
+    { label: l('Caixa (dinheiro na conta)', 'Cash (money in the bank)'), value: $(p.cash), tone: p.cash < 0 ? 'bad' : 'neutral' },
+    { label: l('Resultado do mês (competência)', 'Accrual result this month'), value: $(netProfit18(M)), tone: deltaTone27(netProfit18(M)) },
+    { label: l('A receber / a pagar', 'Receivable / payable'), value: `${$(p.ar)} / ${$(p.ap)}`, hint: l('ao vivo', 'live') },
+    { label: l('Obrigações financeiras', 'Financial obligations'), value: $(p.debt), tone: p.debt > 0 ? 'warn' : 'neutral' },
+    { label: l('Caixa livre (após reservas e planos)', 'Free cash (after reserves and plans)'), value: $(free), tone: free < 0 ? 'bad' : 'neutral' },
+  ]);
 }
 
 function obligations(s: GameState): HTMLElement {
