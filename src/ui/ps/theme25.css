@@ -1,0 +1,196 @@
+/* Rodada 25 — Pixel Studio (direção visual "Masters — Pixel Studio").
+   Só apresentação: nenhuma regra de jogo muda. Carregado por último (main.ts).
+   ESCURO (padrão): azul-noite + dourado/âmbar. CLARO: paleta Heritage (marfim, carvão, laranja queimado).
+   Mesmos nomes de tokens nos dois temas; o atributo data-theme é sempre o tema resolvido (store.applyPrefs).
+   Contraste AA conferido: texto/fundo ≥ 4,5:1, texto secundário ≥ 4,5:1, dourado sobre painel ≥ 7:1. */
+
+/* ================= tokens ================= */
+:root {
+  --mono: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --pixel: 'Silkscreen', monospace;
+  --radius: 3px;
+  --btn-h: 40px;
+  --press: inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+}
+:root[data-theme='light'] {
+  --bg: #f4f0e7; --panel: #fff9ef; --panel-2: #efe7d8; --ink: #202826; --muted: #5f655f; --line: #d9cebc;
+  --accent: #b5562a; --accent-ink: #ffffff; --accent-2: #8a5a12;
+  --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; --gold: #8a6a10; --neural: #5a4fcf; --hq-bg: #2a2230;
+  --sage: #7c927f; --nav-bg: #1e2a33; --nav-ink: #ece6da; --nav-muted: #a3aeb2; --nav-hover: #2a3944; --nav-line: #34444f; --nav-on: #e9a64a; --nav-on-ink: #1a1408;
+  --shadow: 0 1px 0 rgba(32, 40, 38, 0.05), 2px 2px 0 rgba(32, 40, 38, 0.07);
+  --card-shadow: 2px 2px 0 #e2d7c4;
+  --task-art: #efe2c9;
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --bg: #0f1d2a; --panel: #172b3c; --panel-2: #1d3448; --ink: #f3e8cc; --muted: #a8bbca; --line: #344e65;
+  --accent: #edbc65; --accent-ink: #15212e; --accent-2: #f5d38e;
+  --good: #8fd0aa; --bad: #ee8f84; --warn: #f2c464; --gold: #edbc65; --neural: #a99cff; --hq-bg: #0b1723;
+  --sage: #83b99c; --nav-bg: #0d1824; --nav-ink: #eadfca; --nav-muted: #93a9ba; --nav-hover: #1c3246; --nav-line: #22384c; --nav-on: #edbc65; --nav-on-ink: #15212e;
+  --shadow: 3px 3px 0 #091521;
+  --card-shadow: 3px 3px 0 #091521;
+  --task-art: #2f4a5a;
+  --map-halo: #0f1d2a; --map-ocean: #0e2233; --map-ocean-2: #133048; --map-land: #2c4256; --map-coast: #07121c; --map-border: #0b1723; --map-label: #f3e8cc;
+  color-scheme: dark;
+}
+
+/* ================= base e tipografia ================= */
+body { background: var(--bg); color: var(--ink); }
+h1, h2, h3, h4, .card h3, .card h2, section.card > h3, .modal h3 { font-family: var(--sans); font-weight: 800; letter-spacing: 0.005em; }
+:root[data-era] .section > h3, :root[data-era] section > h3, :root[data-era] .h21 h3, section.card > h3 { font-family: var(--sans); font-weight: 800; }
+:root[data-theme='dark'] h1 { color: #f6ecd2; }
+/* números: monoespaçados e tabulares (dinheiro, datas, KPIs) */
+td, th, .num, input[type=number], .money, .date, .rep, .stat b { font-variant-numeric: tabular-nums lining-nums; }
+.topbar .money b, .topbar .rep, .kpi b, .kpi .v, .ck14 .big, .num.big, .stat b { font-family: var(--mono); letter-spacing: -0.01em; }
+:root[data-theme='dark'] .topbar .money b:not(.bad) { color: var(--gold); }
+a { color: var(--accent); }
+:root[data-theme='light'] a { color: var(--accent); }
+/* pixel art nítida e ícones pixel a 2× nos lugares grandes */
+img, canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+.ic-px { image-rendering: pixelated; }
+
+/* ================= barra superior ================= */
+.topbar { background: var(--nav-bg); color: var(--nav-ink); border-bottom: 2px solid var(--line); min-height: 64px; }
+:root[data-theme='light'] .topbar { background: var(--panel); color: var(--ink); }
+:root[data-era] .topbar { border-bottom: 3px solid var(--era-accent, var(--line)); } /* faixa da época continua */
+.topbar .brand b { font-family: var(--pixel); font-weight: 700; letter-spacing: 0.04em; font-size: 0.95rem; }
+.topbar .muted, .topbar small { color: var(--nav-muted); }
+:root[data-theme='light'] .topbar .muted, :root[data-theme='light'] .topbar small { color: var(--muted); }
+.topbar > * + .date, .topbar > .money, .topbar > .rep { border-left-color: var(--nav-line); }
+:root[data-theme='light'] .topbar > * + .date, :root[data-theme='light'] .topbar > .money, :root[data-theme='light'] .topbar > .rep { border-left-color: var(--line); }
+.topbar .btn:not(.primary) { background: transparent; color: inherit; border-color: var(--nav-line); }
+:root[data-theme='light'] .topbar .btn:not(.primary) { border-color: var(--line); }
+.topbar .btn.primary { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.9rem; }
+.topbar .icon { color: inherit; }
+
+/* ================= botões ================= */
+.btn { min-height: var(--btn-h); padding: 0.5rem 1rem; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); font-weight: 600; line-height: 1.2; }
+.btn.small { min-height: 32px; padding: 0.3rem 0.7rem; }
+.btn:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--panel-2) 80%, var(--accent)); color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: color-mix(in srgb, var(--accent) 80%, #fff); color: var(--accent-ink); font-weight: 700; box-shadow: var(--press); }
+.btn.primary:hover:not(:disabled) { background: var(--accent-2); color: var(--accent-ink); }
+:root[data-theme='light'] .btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 86%, #000); color: #fff; }
+.btn.primary:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.22); }
+.btn.ghost { background: transparent; }
+.btn.ghost:hover:not(:disabled) { background: var(--panel-2); }
+.btn:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btn-split > .btn.primary + .btn { background: var(--accent); color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 80%, #fff); }
+input, select, textarea { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); }
+:root[data-theme='dark'] input, :root[data-theme='dark'] select, :root[data-theme='dark'] textarea { background: #12273a; }
+
+/* ================= painéis e cartões ================= */
+.card, section.card, .modal { border-radius: var(--radius); border-color: var(--line); box-shadow: var(--card-shadow); }
+.card > h3:first-child, .card > header h3, section > h3:first-child { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.95rem; border-bottom-color: var(--line); }
+:root[data-theme='dark'] .card > h3:first-child, :root[data-theme='dark'] section > h3:first-child { color: #f3e8cc; }
+main h1.page21 { font-family: var(--sans); font-weight: 800; }
+/* cartões de tarefa ("Precisa de você"): borda forte, sombra de pixel, arte quadrada, ação em largura total */
+.task25, .ck14 .decision, .decision-card, .dec18, .need25 { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--card-shadow); border-radius: var(--radius); }
+.task25.urgent, .decision-card.urgent { border-left: 4px solid var(--bad); }
+.task25 > .btn, .need25 > .btn { width: 100%; text-transform: uppercase; letter-spacing: 0.05em; }
+.task25-art { width: 70px; height: 70px; display: grid; place-items: center; background: var(--task-art); border: 1px solid var(--line); }
+
+/* ================= abas internas (hubs) — botões quadrados como no guia ================= */
+.tabs { gap: 6px; border-bottom: 1px solid var(--line); padding-bottom: 8px; flex-wrap: wrap; }
+.tabs button { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); padding: 0.45rem 0.9rem; margin: 0; min-height: 38px; font-weight: 600; box-shadow: none; }
+.tabs button:hover { background: var(--panel-2); border-color: var(--accent); color: var(--ink); }
+.tabs button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: var(--press); }
+.tabs button.on .badge { background: var(--accent-ink); color: var(--accent); }
+
+/* ================= selos / chips ================= */
+.pill, .chip, .tag { border-radius: 2px; border: 1px solid color-mix(in srgb, currentColor 45%, transparent); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; }
+.pill.good { color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--panel)); }
+.pill.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--panel)); }
+.pill.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); }
+.badge { background: var(--accent); color: var(--accent-ink); font-family: var(--mono); font-weight: 700; }
+
+/* tabelas: cabeçalho discreto, linhas com divisória e números monoespaçados (sort22 e cards23 intactos) */
+table th { color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.78rem; }
+table td, table th { border-bottom-color: var(--line); }
+:root[data-theme='dark'] tbody tr:hover td { background: color-mix(in srgb, var(--panel-2) 70%, transparent); }
+
+/* ================= menu lateral: 6 seções ================= */
+@media (min-width: 861px) { .app { grid-template-columns: 196px 1fr; } }
+.app > .nav.nav25 { background: var(--nav-bg); color: var(--nav-ink); display: flex; flex-direction: column; gap: 4px; padding: 0.4rem 0.55rem 0.8rem; border-right: 2px solid var(--nav-line); }
+.nav25 .nav-brand21 { padding: 0.7rem 0.4rem 0.9rem; border-bottom: 1px solid var(--nav-line); margin-bottom: 0.4rem; }
+.nav25 .nav-brand21 b { color: var(--nav-on); }
+.app > .nav.nav25 .nav-group { margin: 0; }
+.app > .nav.nav25 .nav-head { min-height: 58px; width: 100%; display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0.7rem; font-size: 1.05rem; font-weight: 600; border: 1px solid transparent; border-left: 3px solid transparent; border-radius: 2px; background: none; color: var(--nav-ink); box-shadow: none; }
+.app > .nav.nav25 .nav-head::after { content: none; }
+.app > .nav.nav25 .nav-head .ic canvas, .app > .nav.nav25 .nav-head .ic img, .app > .nav.nav25 .nav-head .ic .ic-px { width: 30px; height: 30px; }
+.app > .nav.nav25 .nav-head:hover { background: var(--nav-hover); }
+.app > .nav.nav25 .nav-group.open > .nav-head, .app > .nav.nav25 .nav-head.on { background: color-mix(in srgb, var(--nav-on) 16%, var(--nav-bg)); border-color: color-mix(in srgb, var(--nav-on) 45%, var(--nav-bg)); border-left-color: var(--nav-on); color: var(--nav-on); box-shadow: none; }
+.app > .nav.nav25 .nav-head .badge { margin-left: auto; }
+.nav25 .nav-pins17 { margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid var(--nav-line); border-bottom: 0; }
+.nav25 .nav-pins17 button { font-size: 0.9rem; }
+.nav25 .nav-utils25 { margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--nav-line); display: flex; flex-direction: column; gap: 2px; }
+.app > .nav.nav25 .nav-util25 { display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 38px; padding: 0.35rem 0.7rem; background: none; border: 0; color: var(--nav-muted); font-size: 0.95rem; text-align: left; cursor: pointer; }
+.app > .nav.nav25 .nav-util25:hover { color: var(--nav-ink); background: var(--nav-hover); }
+.nav-util25 .ic { width: 22px; text-align: center; font-size: 1.05rem; }
+.nav-util25 kbd { margin-left: auto; font-family: var(--mono); font-size: 0.68rem; color: var(--nav-muted); border: 1px solid var(--nav-line); padding: 0 0.3rem; border-radius: 2px; }
+
+/* ================= faixa de páginas da seção (5 visíveis + Mais) ================= */
+.tabs25 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 0 10px; margin: 0 0 4px; border-bottom: 1px solid var(--line); position: relative; }
+.tabs25 .btn25 { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 42px; padding: 0.4rem 0.9rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.tabs25 .btn25:hover { border-color: var(--accent); background: var(--panel-2); }
+.tabs25 .btn25.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: var(--press); }
+.tabs25 .btn25 .ic canvas, .tabs25 .btn25 .ic img, .tabs25 .btn25 .ic .ic-px { width: 22px; height: 22px; }
+.tabs25 .btn25 .badge { margin-left: 0.2rem; }
+.more25 { position: relative; }
+.more25 > summary { list-style: none; }
+.more25 > summary::-webkit-details-marker { display: none; }
+.more25 > summary:not(.on) { background: transparent; border-color: transparent; color: var(--muted); }
+.more25 > summary:not(.on):hover { color: var(--ink); border-color: var(--line); }
+.more25-n { font-family: var(--mono); font-size: 0.8rem; opacity: 0.85; }
+.more25-caret { font-size: 0.8rem; }
+.more25-pop { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: min(420px, 92vw); max-height: min(70vh, 560px); overflow: auto; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--card-shadow), 0 12px 32px rgba(0, 0, 0, 0.35); padding: 10px; border-radius: var(--radius); }
+.more25-filter { width: 100%; min-height: 38px; padding: 0.35rem 0.6rem; margin-bottom: 8px; }
+.more25-sec { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.more25-sec .nav-sec { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; font-weight: 700; padding: 4px 6px 2px; }
+.more25-sec button { display: flex; align-items: center; gap: 0.55rem; width: 100%; min-height: 38px; padding: 0.3rem 0.6rem; background: none; border: 1px solid transparent; border-radius: 2px; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.more25-sec button:hover { background: var(--panel-2); border-color: var(--line); }
+.more25-sec button.on { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.bar15 .tabs25 { margin-top: 0.3rem; }
+/* a faixa antiga de sub-áreas não existe mais; migalhas mais discretas */
+.bar15 .subnav { display: none !important; }
+
+/* ================= Sede (encaixe da cena) ================= */
+.sede25 { min-height: 40vh; }
+
+/* ================= celular: barra inferior com as 6 seções ================= */
+@media (max-width: 860px) {
+  .app > .nav.nav25 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; padding: 0; border-right: 0; border-top: 2px solid var(--nav-line); flex-direction: row; }
+  .app > .nav.nav25 .nav-head { min-height: 56px; flex-direction: column; justify-content: center; gap: 2px; padding: 4px 1px; font-size: 0.68rem; border: 0; border-top: 3px solid transparent; }
+  .app > .nav.nav25 .nav-group.open > .nav-head, .app > .nav.nav25 .nav-head.on { border-left: 0; border-top-color: var(--nav-on); }
+  .app > .nav.nav25 .nav-head .ic canvas, .app > .nav.nav25 .nav-head .ic img, .app > .nav.nav25 .nav-head .ic .ic-px { width: 24px; height: 24px; }
+  .app > .nav.nav25 .nav-group.m23-more, .app > .nav.nav25 .nav-utils25 { display: none; }
+  .tabs25 { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 6px 0 8px; }
+  .tabs25 .btn25 { min-height: 40px; padding: 0.3rem 0.7rem; font-size: 0.88rem; }
+  .more25 { position: static; }
+  .more25-pop { position: fixed; left: 8px; right: 8px; top: auto; bottom: 70px; width: auto; max-height: 60vh; }
+}
+
+/* ================= abas internas: 5 visíveis + "Mais" (ps/tabs25.ts) ================= */
+.tabs > .t25-hidden { display: none !important; }
+.tabmore25 { display: inline-flex; }
+.tabmore25 > summary.btn25 { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 38px; padding: 0.4rem 0.8rem; border: 1px solid transparent; border-radius: var(--radius); color: var(--muted); font-weight: 600; cursor: pointer; list-style: none; }
+.tabmore25 > summary.btn25:hover, .tabmore25[open] > summary.btn25 { color: var(--ink); border-color: var(--line); background: var(--panel-2); }
+.tabmore25 .more25-sec button { font-weight: 500; }
+.tabmore25 .more25-sec button .ic-px, .tabmore25 .more25-sec button canvas { width: 20px; height: 20px; }
+/* menu lateral: sem setas de abrir/fechar (as páginas ficam na faixa do topo) */
+.app > .nav.nav25 .nav-group.open > .nav-head::after, .app > .nav.nav25 .nav-group > .nav-head::after { content: none; }
+.app > .nav.nav25 { scrollbar-width: thin; scrollbar-color: var(--nav-line) transparent; }
+@media (min-width: 861px) and (max-height: 860px) { .app > .nav.nav25 .nav-head { min-height: 50px; padding-block: 0.45rem; } .nav25 .nav-brand21 { padding-block: 0.5rem; } }
+/* paleta de busca: título sem serifa */
+.modal h2, .modal h3, .modal header { font-family: var(--sans); }
+/* abas de hub: a aberta é sempre preenchida (alguns hubs tinham estilo próprio) */
+main .tabs-wrap > .tabs > button.on, main .hub .tabs > button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+/* texto sobre o dourado/laranja: sempre a tinta do acento (o branco antigo não passa AA sobre o dourado) */
+.app > .nav button.on, .app > .nav .nav-sub button.on { background: var(--nav-on); color: var(--nav-on-ink); }
+.app > .nav .badge { background: var(--nav-on); color: var(--nav-on-ink); }
+.ck21 .tabs button.on, .ng22-seg button.on { color: var(--accent-ink); }
+/* main recebe foco por programa a cada troca de página (leitores de tela): sem moldura de foco nela */
+main[tabindex='-1']:focus, main[tabindex='-1']:focus-visible { outline: none; }
+@media (max-width: 860px) {
+  /* "Mais" da seção sempre à vista no fim da faixa que rola */
+  .tabs25 > .more25 { position: sticky; right: 0; background: var(--bg); padding-left: 4px; box-shadow: -10px 0 10px -4px var(--bg); }
+}

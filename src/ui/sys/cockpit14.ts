@@ -20,8 +20,6 @@ import { store } from '../store';
 import { ic, setTab, tabs } from '../vis';
 import { parts21 } from './ui20';
 import './cockpit14.css';
-import { sedeHome25 } from '../ps/slot25'; // r25: tela da Sede (Pixel Studio) — encaixe provisório
-const sede25 = (): HTMLElement => { const r = h('div'); sedeHome25?.(r); return r; };
 
 const inbox = () => EXTRA_AREAS.find((a) => a.id === 'inbox');
 const unread = (s: GameState) => inbox()?.badge?.(s) ?? 0;
@@ -56,7 +54,7 @@ export function cockpit(s: GameState): HTMLElement {
       h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: toInbox }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`),
       h('small', { class: 'muted' }, n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.'))))),
     tabs('ck20', [
-      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => sedeHome25 ? sede25() : h('div', { class: 'ck21-grid' },
+      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => h('div', { class: 'ck21-grid' },
         h('div', { class: 'ck21-main' },
           P.now, P.dec,
           head19View(s), // r19: Hoje / Ameaças / Andamento

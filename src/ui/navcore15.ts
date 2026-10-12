@@ -38,10 +38,10 @@ export function score15(q: string, label: string): number {
   return i === a.length ? 10 + Math.max(0, 10 - (b.length - a.length) * 0.2) : 0;
 }
 
-export interface Cmd15 { label: string; kind: string; hint?: string; weight?: number }
+export interface Cmd15 { label: string; kind: string; hint?: string; weight?: number; /** r25: nome no outro idioma (a busca casa os dois) */ alt?: string }
 /** Ordena e limita os comandos da paleta pela busca (estável: empate mantém a ordem original). */
 export function rank15<T extends Cmd15>(cmds: T[], q: string, limit = 14): T[] {
-  return cmds.map((c, i) => ({ c, i, m: score15(q, c.label) })).filter((x) => x.m > 0)
+  return cmds.map((c, i) => ({ c, i, m: Math.max(score15(q, c.label), c.alt ? score15(q, c.alt) * 0.95 : 0) })).filter((x) => x.m > 0)
     .map((x) => ({ ...x, s: x.m + (q.trim() ? x.c.weight ?? 0 : 0) }))
     .sort((x, y) => y.s - x.s || x.i - y.i)
     .slice(0, limit).map((x) => x.c);

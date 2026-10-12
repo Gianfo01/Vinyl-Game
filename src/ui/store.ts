@@ -20,6 +20,8 @@ export interface Prefs {
   contrast: boolean;
   reducedMotion: boolean;
   theme: 'auto' | 'light' | 'dark';
+  /** r25: preferências já migradas para o Pixel Studio (escuro padrão) */
+  ps25?: boolean;
   colorblind?: 'none' | 'deutan' | 'protan' | 'tritan';
   /** mini-jogos: jogar ou resolver automaticamente */
   minigames?: 'play' | 'auto';
@@ -54,10 +56,12 @@ export const store = {
 INT_PREF23.v = store.prefs.interrupt23 ?? 'milestones'; // r23 (A)
 
 function loadPrefs(): Prefs {
-  const def: Prefs = { lang: navigator.language?.startsWith('pt') ? 'pt' : 'en', textScale: 100, contrast: false, reducedMotion: false, theme: 'auto' };
+  // r25 Pixel Studio: escuro (azul-noite + dourado) é o padrão. Quem tinha 'auto' só porque era o padrão antigo
+  // (sem a marca ps25) passa ao escuro uma vez; escolhas explícitas de claro/escuro ficam como estão.
+  const def: Prefs = { lang: navigator.language?.startsWith('pt') ? 'pt' : 'en', textScale: 100, contrast: false, reducedMotion: false, theme: 'dark', ps25: true };
   try {
     const raw = localStorage.getItem('vtn:prefs');
-    if (raw) return { ...def, ...JSON.parse(raw) };
+    if (raw) { const p = { ...def, ...JSON.parse(raw) } as Prefs; if (!(JSON.parse(raw) as Partial<Prefs>).ps25) { if (p.theme === 'auto') p.theme = 'dark'; p.ps25 = true; } return p; }
   } catch {
     /* armazenamento indisponível */
   }
@@ -81,8 +85,10 @@ export function applyPrefs(): void {
   root.classList.toggle('contrast', p.contrast);
   root.classList.toggle('reduced-motion', p.reducedMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   root.setAttribute('data-cb', p.colorblind ?? 'none');
-  if (p.theme === 'auto') root.removeAttribute('data-theme');
-  else root.setAttribute('data-theme', p.theme);
+  // r25: o atributo sempre diz o tema resolvido ('auto' segue o sistema), para o CSS ter uma única fonte
+  let th = p.theme;
+  if (th !== 'light' && th !== 'dark') { try { th = window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch { th = 'dark'; } }
+  root.setAttribute('data-theme', th);
 }
 
 // ---------- IndexedDB ----------
