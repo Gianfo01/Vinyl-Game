@@ -138,6 +138,12 @@ H('critics', ['Críticos', 'Critics'],
 H('world', ['Mundo', 'World'],
   ['Mapa, cenas, história, leis e lugares, países e cenas locais. O mundo muda: guerras, censura, tecnologia.', 'Map, scenes, history, laws and places, countries and local scenes. The world changes: wars, censorship, technology.'],
   ['Clique em cidades/países para ver cena, censura e público. Ex.: país com censura alta derruba disco "rebelde" e pode banir o show.', 'Click cities/countries to see scene, censorship and audience. E.g. a high-censorship country drops a "rebel" record and may ban the show.'], [], ['regions18', 'world17']);
+H('mundo27', ['Este mês no mundo', 'This month in the world'],
+  ['A casa do Mundo: só o que mudou nas últimas 4 semanas — estreias e saltos nas paradas, gêneros e cenas nascendo, leis, escândalos, mortes, contratações de rivais, marcos de era — e a linha das eras com o que vem por aí.', 'The World home: only what changed in the last 4 weeks — chart debuts and jumps, genres and scenes being born, laws, scandals, deaths, rival signings, era milestones — and the era timeline with what is coming.'],
+  ['Cada item tem "Ver →" para a tela certa. Ex.: "Votação em 2 semanas: imposto sobre fitas" leva às leis, onde você faz lobby antes de fechar.', 'Each item has "View →" to the right screen. E.g. "Vote in 2 weeks: blank tape levy" takes you to the laws, where you lobby before it closes.'], [], ['charts', 'world', 'known27']);
+H('known27', ['O que sabemos', 'What we know'],
+  ['Segredos, boatos e fatos do meio musical separados pela certeza: fatos públicos, confirmado só por nós, boatos e suspeitas.', 'Secrets, rumors and facts from the music business split by certainty: public facts, confirmed only by us, rumors and suspicions.'],
+  ['Use antes de assinar ou enfrentar alguém. Ex.: uma suspeita de jabá num rival → contrate detetive na ficha dele; confirmada, vira trunfo.', 'Use it before signing or confronting someone. E.g. a payola suspicion about a rival → hire a detective on their page; once confirmed, it is leverage.'], [], ['news17', 'mundo27']);
 H('world17', ['Mundo vivo', 'Living world'],
   ['O que os NPCs fazem sozinhos: rompimentos, novos selos, fusões, roubos de artistas, guerras de preço.', 'What NPCs do on their own: splits, new labels, mergers, poaching, price wars.'],
   ['Leia para antecipar. Ex.: rival em guerra de preço → segure seu lançamento de catálogo por um trimestre.', 'Read it to anticipate. E.g. a rival in a price war → hold your catalog release one quarter.'], [], ['labels', 'dm18']);
