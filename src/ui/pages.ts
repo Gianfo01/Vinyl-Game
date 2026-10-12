@@ -31,6 +31,7 @@ import { personActivity } from './pixel/activity';
 import { instrumentsTab } from './sys/instruments';
 import { viewsLine } from './sys/beliefs10';
 import { rw } from '../sim/sys/realworld';
+import { kinOf15, REL15 } from '../sim/sys/kin15';
 import { instById, instrumentsOf } from '../sim/sys/instruments';
 import { icon } from './pixel/icons';
 import { pageTabs as extraPageTabs } from './registry';
@@ -275,7 +276,11 @@ function relTab(s: GameState, p: Person): HTMLElement {
   const rels = Object.entries(p.rel ?? {}).filter(([id]) => s.persons[id]).sort((a, b) => b[1] - a[1]);
   const row = ([id, v]: [string, number]) => h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(id) }, s.persons[id].name), ' ', bar(Math.abs(v), 100, v >= 0 ? 'good' : 'bad'), h('b', { class: v >= 0 ? 'good' : 'bad' }, ` ${v > 0 ? '+' : ''}${Math.round(v)}`));
   const rom = (P(s).romances ?? []).filter((r) => r.status === 'together' && (r.a === p.id || r.b === p.id));
+  // r25: parentes (grafo kin15 + kin25) também aparecem em Relações
+  const kin = kinOf15(s, p.id);
   return h('div', { class: 'grid2' },
+    kin.length ? h('div', null, h('h4', null, t(l('Família', 'Family'))), h('ul', { class: 'attr-list' }, kin.slice(0, 12).map((k) => h('li', null,
+      h('button', { class: 'link', onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(REL15[k.rel])}${k.p.alive ? '' : ` · † ${k.p.died ?? '?'}`}`)))) : null,
     h('div', null, h('h4', null, t(l('Afinidades', 'Friends'))), rels.filter(([, v]) => v > 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v > 0).slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—')),
     h('div', null, h('h4', null, t(l('Atritos', 'Frictions'))), rels.filter(([, v]) => v < 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v < 0).reverse().slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—'),
       rom.length ? h('p', null, ic('heart'), ' ', t(l('Namorando: ', 'Dating: ')), rom.map((r) => s.persons[r.a === p.id ? r.b : r.a]?.name).join(', ')) : null),
