@@ -211,3 +211,4 @@ import './fin20'; // r20 G2: Finanças → Posição (agora × fechamento, obrig
 import './ui20';
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
+import './eggs27'; // r27 ovos de Páscoa: Konami, pele 1889/chiptune, registros para busca/sede/mapa (docs/eggs27.md)

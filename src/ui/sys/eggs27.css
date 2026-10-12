@@ -1,0 +1,55 @@
+/* Rodada 27 — ovos de Páscoa: peles temporárias, galeria, mixtape e a travessia de Abbey Road. */
+
+/* 1889: visual de fonógrafo (sépia, serifa, papel) por um mês de jogo */
+body.egg27-phono {
+  --bg: #efe3c8; --panel: #f7eedb; --panel-2: #eadcbc; --ink: #3b2a17; --muted: #7a6446; --line: #c9b38a;
+  --accent: #8a4b1f; --accent-ink: #fff9ef; --accent-2: #6b3a17; --gold: #a8742a; --good: #4f6b2a; --bad: #9a2f22; --warn: #8a5a12;
+  --card-shadow: 2px 2px 0 #c9b38a; --shadow: 2px 2px 0 #c9b38a;
+  color-scheme: light;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+body.egg27-phono main :is(h1, h2, h3, h4, h5) { color: var(--ink) !important; }
+body.egg27-phono main, body.egg27-phono .topbar { filter: sepia(0.55) contrast(0.96); }
+body.egg27-phono::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(59, 42, 23, 0.28) 100%);
+}
+
+/* Konami: selo chiptune (verde de tubo, fonte monoespaçada, cantos retos) */
+body.egg27-chip {
+  --bg: #0b1a0f; --panel: #102616; --panel-2: #15301c; --ink: #b6f5a8; --muted: #6fae66; --line: #2f6b39;
+  --accent: #6cff5a; --good: #6cff5a; --gold: #f4e04d;
+  --accent-ink: #0b1a0f; --accent-2: #b6f5a8; --card-shadow: 3px 3px 0 #061009; --shadow: 3px 3px 0 #061009;
+  color-scheme: dark;
+  font-family: 'Courier New', ui-monospace, monospace;
+}
+body.egg27-chip main :is(h1, h2, h3, h4, h5) { color: var(--ink) !important; }
+body.egg27-chip button, body.egg27-chip .card, body.egg27-chip .pill { border-radius: 0 !important; }
+
+/* galeria / listas */
+.egg27-list ul, .egg27-gallery ul { margin: 0.4rem 0 0.8rem; padding-left: 1.1rem; }
+.egg27-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin: 0.4rem 0 0.8rem; }
+.egg27-card { border: 1px dashed var(--line); border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; opacity: 0.6; min-width: 0; }
+.egg27-card.on { border-style: solid; border-color: var(--gold); opacity: 1; background: var(--panel-2); }
+.egg27-card b { font-size: 0.85rem; overflow-wrap: anywhere; }
+.egg27-tape { background: repeating-linear-gradient(0deg, var(--panel), var(--panel) 22px, var(--panel-2) 23px); padding: 8px 12px; border-radius: 6px; }
+.egg27-hand { font-style: italic; transform: rotate(-1deg); }
+
+/* Abbey Road: quatro bonequinhos atravessam a faixa no topo da tela */
+.egg27-abbey {
+  position: fixed; left: 0; right: 0; top: 0; height: 26px; pointer-events: none; z-index: 9998; overflow: hidden;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0 14px, rgba(30, 30, 30, 0.85) 14px 28px);
+  animation: egg27-fade 9s linear forwards;
+}
+.egg27-walker {
+  position: absolute; top: 3px; left: -30px; width: 8px; height: 20px; border-radius: 4px 4px 1px 1px;
+  animation: egg27-walk 8s linear forwards;
+}
+.egg27-walker::before { content: ''; position: absolute; top: -1px; left: 1px; width: 6px; height: 6px; border-radius: 50%; background: #e0ac69; }
+.egg27-walker.w0 { background: #f2f2f2; animation-delay: 0s; }
+.egg27-walker.w1 { background: #1b1b22; animation-delay: 0.45s; }
+.egg27-walker.w2 { background: #3a3a44; animation-delay: 0.9s; }
+.egg27-walker.w3 { background: #4b6fa5; animation-delay: 1.35s; }
+@keyframes egg27-walk { to { left: calc(100% + 30px); } }
+@keyframes egg27-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .egg27-walker { animation-duration: 0.01s; } .egg27-abbey { animation-duration: 3s; } }
