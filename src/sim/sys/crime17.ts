@@ -240,7 +240,7 @@ export interface CrimeDef17 {
   /** efeito; devolve o texto da consequência */
   fx: (s: GameState, c: Ctx17, ok: boolean, r: Rng) => L;
 }
-export interface Ctx17 { actor: string; target: string; method?: string; org?: string; partners: string[]; /** ajuste extra de chance (ex.: alvo avisado) */ dp?: number; dpWhy?: L }
+export interface Ctx17 { actor: string; target: string; method?: string; org?: string; partners: string[]; /** ajuste extra de chance (ex.: alvo avisado) */ dp?: number; dpWhy?: L; /** r27 (heist27): ajuste extra de exposição (plano jogável) */ dq?: number; dqWhy?: L }
 export interface Odds17 { p: number; q: number; cost: number; heat: number; sev: number; why: L[]; block: L | null; a3: string; place: string }
 
 const pct = (x: number): string => `${x > 0 ? '+' : ''}${Math.round(x * 100)}%`;
@@ -520,6 +520,7 @@ export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
   if (c.actor === 'player' && glutN19(s, cid)) why.push(fmtL(l('Já fez isso {n}× em 12 meses: rende {x}% do normal (mercado saturado, vítimas espertas)', 'Done {n}× in 12 months: pays {x}% of normal (saturated market, wary victims)'), { n: glutN19(s, cid), x: Math.round(glut19(s, cid, 'player') * 100) }));
   { const x = { p, q, why }; for (const f of ODDS17) f(s, c, cid, x); p = x.p; q = x.q; } // r23: membros (proteção, vazamentos, delatores)
   if (c.dp) { p += c.dp; why.push(c.dpWhy ?? fmtL(l('Ajuste {x}', 'Adjustment {x}'), { x: pct(c.dp) })); }
+  if (c.dq) { q += c.dq; why.push(c.dqWhy ?? fmtL(l('Exposição {x}', 'Exposure {x}'), { x: pct(c.dq) })); } // r27: plano jogável
   // polícia e época
   const heat = c.actor === 'player' ? heatIn(s, a3) : st.nh[c.actor] ?? 0;
   if (heat > 0) { q += heat / 250; why.push(fmtL(l('{g} já de olho (calor {h}): exposição {x}', '{g} already watching (heat {h}): exposure {x}'), { g: agency(s, a3), h: Math.round(heat), x: pct(heat / 250) })); }
