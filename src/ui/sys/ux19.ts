@@ -27,7 +27,8 @@ import { UX19UI } from '../hooks19';
 import { C, Px, upscale, type Col } from '../pixel/px';
 import { AFTER_ADVANCE, EXTRA_AREAS, registerSection } from '../registry';
 import { help18 } from '../help18';
-import { store } from '../store';
+import { profileId17, store } from '../store';
+import { MARKS27 } from '../ach27store';
 import { why18 } from '../explain18';
 import { LABEL_LEGACY20, PATH_LEGACY20 } from '../../sim/oblig20';
 import { legacyTotal } from '../../sim/legacy';
@@ -39,12 +40,13 @@ import './ux19.css';
 // ---------------------------------------------------------------- perfil local (meta-progresso entre partidas)
 interface RunRec19 { sig: string; co: string; y0: number; y1: number; legacy: number; path?: string; medal: 0 | 1 | 2 | 3; chains: string[]; lost: boolean }
 interface Profile19 { runs: RunRec19[]; ach: Record<string, number>; next?: string | null; all?: boolean }
-const PKEY = 'vtn19.profile';
-function profile(): Profile19 {
-  try { const p = JSON.parse(localStorage.getItem(PKEY) ?? '{}') as Partial<Profile19>; return { runs: p.runs ?? [], ach: p.ach ?? {}, next: p.next ?? null, all: p.all }; }
+// r27 (ACH): um meta-perfil por perfil local (saves17); o padrão mantém a chave antiga
+const PKEY = (pid = profileId17()) => (pid === 'default' ? 'vtn19.profile' : `vtn19.profile:${pid}`);
+function profile(pid?: string): Profile19 {
+  try { const p = JSON.parse(localStorage.getItem(PKEY(pid)) ?? '{}') as Partial<Profile19>; return { runs: p.runs ?? [], ach: p.ach ?? {}, next: p.next ?? null, all: p.all }; }
   catch { return { runs: [], ach: {}, next: null }; }
 }
-function saveProfile(p: Profile19): void { try { localStorage.setItem(PKEY, JSON.stringify(p)); } catch { /* sem armazenamento */ } }
+function saveProfile(p: Profile19): void { try { localStorage.setItem(PKEY(), JSON.stringify(p)); } catch { /* sem armazenamento */ } }
 const finished = (p: Profile19) => p.runs.length;
 const heirOpen = (p: Profile19, id: string): boolean => {
   const H = HEIRS19.find((x) => x.id === id);
@@ -78,6 +80,10 @@ const achName = (k: string): L => {
   if (a === 'start') return fmtL(l('Começou nos anos {d}', 'Started in the {d}s'), { d: b });
   return l(k, k);
 };
+/** r27 (ACH): marcos entre partidas (cadeias, caminhos, medalhas de partida) de um perfil, para a tela inicial. */
+export const profileMarks19 = (pid?: string): { k: string; name: L; y: number }[] =>
+  Object.entries(profile(pid).ach).map(([k, y]) => ({ k, name: achName(k), y })).sort((a, b) => a.y - b.y);
+MARKS27.f = profileMarks19;
 
 // ---------------------------------------------------------------- pixel art da época
 const P = { ink: C('#1a1214'), cream: C('#f4e4b8'), gold: C('#f0c040'), dgold: C('#b07c1c'), brown: C('#9a6034'), dbrown: C('#5e3a1e'), black: C('#2a2628'), grey: C('#a8a4a0'), dgrey: C('#5c5856'), red: C('#e04848'), blue: C('#4a8ae0'), teal: C('#2ec8c0'), purple: C('#8a5ad0'), white: C('#f8f4ec'), green: C('#48b85c') };

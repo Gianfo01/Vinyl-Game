@@ -17,6 +17,7 @@ import {
   afterSave17, copyText, deleteSave, saveCompatible27, gunzip, gzip, gzipB64, importSaveText, lastLoadErr20, listSaves, loadGame, openDb, profileId17, readSaveFile23, runId17, saveGame, store, tryDownload, type SaveMeta,
 } from './store';
 import './start17.css';
+import { clearProfAch27 } from './ach27store';
 import { encodeSave20, SaveError20 } from '../core/save20';
 import { errName20, health20, isQuota23, quotaText23, retry20, setHealth20 } from './savehealth20';
 
@@ -100,8 +101,11 @@ const writeJ = (k: string, v: unknown) => { try { localStorage.setItem(k, typeof
 export const profiles17 = (): Profile17[] => { const ps = readJ<Profile17[]>(PKEY, []); return ps.some((p) => p.id === 'default') ? ps : [{ id: 'default', name: t(l('Jogador 1', 'Player 1')) }, ...ps]; };
 const pinHash = (pin: string) => { let x = 5381; for (const c of `masters|${pin}`) x = ((x * 33) ^ c.charCodeAt(0)) >>> 0; return x.toString(36); };
 export function addProfile17(name: string, pin?: string): Profile17 {
-  const p: Profile17 = { id: `p${Date.now().toString(36)}`, name: name.slice(0, 30) || '?', pin: pin ? pinHash(pin) : undefined };
-  writeJ(PKEY, [...profiles17(), p]);
+  const ps = profiles17();
+  let id = `p${Date.now().toString(36)}`;
+  while (ps.some((x) => x.id === id)) id += 'x'; // r27 (ACH): dois perfis no mesmo milissegundo não dividem id (nem conquistas)
+  const p: Profile17 = { id, name: name.slice(0, 30) || '?', pin: pin ? pinHash(pin) : undefined };
+  writeJ(PKEY, [...ps, p]);
   return p;
 }
 export function switchProfile17(id: string): boolean {
@@ -112,7 +116,7 @@ export function switchProfile17(id: string): boolean {
   return true;
 }
 export const curProfile17 = (): Profile17 => profiles17().find((p) => p.id === profileId17()) ?? profiles17()[0];
-/** r27: apaga um perfil. Os saves dele vão para "Jogador 1" (padrão) ou, com `withSaves`, são apagados também.
+/** r27: apaga um perfil (e as conquistas dele). Os saves dele vão para "Jogador 1" (padrão) ou, com `withSaves`, são apagados também.
  *  O perfil padrão não pode ser apagado. Os saves são resolvidos antes de o perfil sair da lista (falha = nada muda). */
 export async function deleteProfile17(id: string, withSaves = false): Promise<{ ok: boolean; saves: number }> {
   if (id === 'default' || !profiles17().some((p) => p.id === id)) return { ok: false, saves: 0 };
@@ -122,6 +126,7 @@ export async function deleteProfile17(id: string, withSaves = false): Promise<{ 
     else { const r = await getRec(m.slot); if (r) await putRec(m.slot, { ...r, meta: { ...r.meta, profile: 'default' } }); }
   }
   writeJ(PKEY, readJ<Profile17[]>(PKEY, []).filter((p) => p.id !== id));
+  clearProfAch27(id); // r27 (ACH): as conquistas do perfil vão junto (apagar save não mexe nelas)
   if (profileId17() === id) writeJ('vtn:profile17', 'default');
   return { ok: true, saves: mine.length };
 }
