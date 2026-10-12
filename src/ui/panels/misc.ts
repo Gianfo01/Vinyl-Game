@@ -36,6 +36,7 @@ import { stylePill17 } from '../sys/style17';
 import { styleOfRel17 } from '../../sim/sys/trends17';
 import { priceBasis20 } from '../../sim/sys/price20';
 import { price20 } from '../price20';
+import { chartRow27 } from '../sys/mundo27model';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -45,15 +46,20 @@ export function chartsPanel(s: GameState): HTMLElement {
       h('tbody', null, s.charts[which].slice(0, 40).map((e) => {
         const r = s.releases[e.releaseId];
         if (!r) return null;
-        const mine = r.owner === 'player' || !!s.acts[r.actId]?.playerBand;
-        const move = !e.last ? 'NEW' : e.last > e.pos ? '▲' : e.last < e.pos ? '▼' : '=';
-        return h('tr', { class: mine ? 'mine' : '' },
+        // r27 (E1): seta com tamanho do salto, semanas, "pioneiro de" (genre23) e o seu disco na cor do selo
+        const cr = chartRow27(s, e);
+        const mine = cr.mine;
+        const mv = cr.move === 'new' ? h('span', { class: 'mv27 new' }, t(l('NOVO', 'NEW')))
+          : h('span', { class: `mv27 ${cr.move}`, title: e.last ? `${t(S.last)}: ${e.last}` : '' }, cr.move === 'up' ? `▲${cr.delta}` : cr.move === 'down' ? `▼${cr.delta}` : '=');
+        return h('tr', { class: mine ? 'mine mine27' : '' },
           h('td', null, h('b', { class: 'why18', 'data-why': 'chart.pos', 'data-why-ctx': JSON.stringify({ rel: e.releaseId, kind: which }), tabindex: '0' }, e.pos)),
-          h('td', { class: move === '▲' || move === 'NEW' ? 'good' : move === '▼' ? 'bad' : 'muted' }, `${move} ${e.last || ''}`),
-          h('td', null, releaseLink(s, r.id), r.certified ? pill(r.certified[0].toUpperCase(), 'gold') : null, ' ', stylePill17(styleOfRel17(s, r.id))),
+          h('td', null, mv, e.last && cr.move !== 'same' ? h('small', { class: 'muted' }, ` (${e.last})`) : null),
+          h('td', null, releaseLink(s, r.id), r.certified ? pill(r.certified[0].toUpperCase(), 'gold') : null, ' ', stylePill17(styleOfRel17(s, r.id)),
+            cr.pioneer ? [' ', pill(`${t(l('pioneiro de', 'pioneer of'))} ${t(genreById[cr.pioneer]?.name) || cr.pioneer}`, 'pioneer27')] : null,
+            mine ? [' ', pill(s.config.companyName || t(l('seu selo', 'your label')), 'mine27')] : null),
           h('td', null, actLink(s, r.actId)),
           h('td', null, labelLink(s, r.owner === 'indie' ? null : r.owner)),
-          h('td', null, e.weeks),
+          h('td', { class: e.weeks >= 20 ? 'wk27 long' : 'wk27' }, e.weeks),
           h('td', null, N(e.units)),
         );
       })),

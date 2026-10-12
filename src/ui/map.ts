@@ -36,7 +36,9 @@ export type MapOverlay =
   /** arco entre duas cidades (turnês em andamento, rivalidades, rotas de filial) */
   | { kind: 'arc'; from: string; to: string; color: string; dashed?: boolean; width?: number }
   /** ícone pixel art ao lado da cidade */
-  | { kind: 'icon'; city: string; icon: OverlayIcon; slot?: number };
+  | { kind: 'icon'; city: string; icon: OverlayIcon; slot?: number }
+  /** r27: brilho pixelado (anéis em degrau) — força da cena; 0..1 */
+  | { kind: 'glow'; city: string; value: number; color?: string };
 
 export interface WorldMapOptions {
   getYear: () => number;
@@ -1043,7 +1045,27 @@ export class WorldMap {
     const ctx = this.ctx;
     const dpr = this.dpr;
     const zoom = Math.max(1, this.k / this.kMin());
-    // bolhas primeiro (maiores atrás), depois arcos, depois ícones
+    // r27: brilhos primeiro (anéis em degrau, estética pixel art), depois bolhas, arcos e ícones
+    const glows = list.filter((o): o is Extract<MapOverlay, { kind: 'glow' }> => o.kind === 'glow').sort((a, b) => b.value - a.value);
+    const unit = Math.max(1, Math.round(dpr * Math.min(2, Math.sqrt(zoom))));
+    for (const g of glows) {
+      const c = cityById[g.city];
+      if (!c) continue;
+      const [x, y] = this.project(c.lon, c.lat);
+      const v = Math.max(0, Math.min(1, g.value));
+      const rings = 3 + Math.round(v * 4);
+      const step = 2 + Math.round(v * 3);
+      const px = Math.round(x * dpr), py = Math.round(y * dpr);
+      ctx.fillStyle = this.resolveColor(g.color ?? 'var(--gold)') ?? '#edbc65';
+      for (let i = rings; i >= 1; i--) {
+        ctx.globalAlpha = (0.06 + 0.4 * ((rings - i + 1) / rings) ** 1.6) * (0.55 + 0.45 * v);
+        diamond(ctx, px, py, i * step * unit);
+      }
+      // miolo claro (cintila nas cenas mais fortes)
+      if (v > 0.45) { ctx.globalAlpha = 0.9; ctx.fillStyle = '#fff6d8'; ctx.fillRect(px - unit, py - 3 * unit, 2 * unit, 6 * unit); ctx.fillRect(px - 3 * unit, py - unit, 6 * unit, 2 * unit); }
+      ctx.globalAlpha = 1;
+    }
+    // bolhas (maiores atrás), depois arcos, depois ícones
     const bubbles = list.filter((o): o is Extract<MapOverlay, { kind: 'bubble' }> => o.kind === 'bubble').sort((a, b) => b.value - a.value);
     for (const b of bubbles) {
       const c = cityById[b.city];

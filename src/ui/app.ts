@@ -465,7 +465,7 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
     case 'studio': return studioHub(g, () => creationPanel(g), 'studio');
     case 'releases': return studioHub(g, () => creationPanel(g), 'release');
     case 'world': return h('div', { class: 'hub' }, tabs('worldHub', mergeTabs([
-      { id: 'map', label: t(l('Mapa e cenas', 'Map and scenes')), icon: 'globe', render: () => worldPanel(g) },
+      { id: 'map', label: t(l('Mapa detalhado', 'Detailed map')), icon: 'globe', render: () => worldPanel(g) }, // r27: o mapa principal é a aba map27
       { id: 'history', label: t(l('História, leis e lugares', 'History, laws and places')), icon: 'newspaper', render: () => extraSections('world', g) ?? h('div') },
     ], 'worldHub', g), render));
     case 'business': return businessPanel(g, 'business');

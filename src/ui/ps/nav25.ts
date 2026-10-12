@@ -40,9 +40,9 @@ export const SECTIONS25: Section25[] = [
     th('stage', l('Palco', 'Stage'), ['shows', 'cal17', 'live19', 'tour12']),
     th('events', l('Festivais e prêmios', 'Festivals and awards'), ['festivals', 'awards', 'rockhall'])] },
   { id: 'world', label: l('Mundo', 'World'), icon: 'globe', blurb: l('Paradas, mercado, mapa, imprensa e cultura.', 'Charts, market, map, press and culture.'),
-    main: ['charts', 'world', 'news17', 'labels', 'media'], themes: [
-    th('market', l('Paradas e mercado', 'Charts and market'), ['charts', 'labels', 'industry', 'regions18', 'market19a', 'platform16']),
-    th('press', l('Imprensa', 'Press'), ['news17', 'media', 'critics', 'zines19', 'fakes19', 'outlets16']),
+    main: ['mundo27', 'charts', 'world', 'known27', 'news17', 'labels', 'media'], themes: [
+    th('market', l('Paradas e mercado', 'Charts and market'), ['mundo27', 'charts', 'labels', 'industry', 'regions18', 'market19a', 'platform16']),
+    th('press', l('Imprensa', 'Press'), ['known27', 'news17', 'media', 'critics', 'zines19', 'fakes19', 'outlets16']),
     th('map', l('Mapa e política', 'Map and politics'), ['world', 'world17', 'after18', 'regions19']),
     th('culture', l('Cultura e histórias', 'Culture and stories'), ['movements', 'lendas', 'society18', 'dm18']),
     th('crime', l('Submundo', 'Underworld'), ['crime'])] },
