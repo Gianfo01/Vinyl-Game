@@ -1,0 +1,22 @@
+/* r23: jornada do disco — um próximo passo por etapa; motivo + conserto ao lado de botões desligados */
+.j23 { display: grid; gap: 6px; margin: 0 0 10px; }
+.j23-steps { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; }
+.j23-steps li { display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 3px; border-radius: 999px; border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
+.j23-steps li span { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--panel-2); font-size: 0.7rem; }
+.j23-steps li.done { color: var(--good); border-color: var(--good); }
+.j23-steps li.done span { background: var(--good); color: var(--panel); }
+.j23-steps li.on { color: var(--ink); border-color: var(--accent); font-weight: 700; }
+.j23-steps li.on span { background: var(--accent); color: var(--accent-ink); }
+.j23-card { border: 2px solid var(--accent); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 6px; background: var(--panel); }
+.j23-card h3 { margin: 0; }
+.j23-card p { margin: 0; }
+.j23-kicker { text-transform: uppercase; letter-spacing: .06em; color: var(--accent); font-weight: 700; font-size: .72rem; }
+.j23-more { display: grid; gap: 4px; padding: 6px 8px; border: 1px dashed var(--line); border-radius: var(--radius); }
+.j23-more p { margin: 0; }
+.j23-details summary { cursor: pointer; font-size: .9rem; }
+.j23-modal { display: grid; gap: 8px; }
+.j23-modal p, .j23-modal h4 { margin: 0; }
+.j23-why { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pg23 { margin: 0 0 .7rem; }
+.pg23 .page21 { margin-bottom: .15rem; }
+.pg23-purpose { margin: 0; color: var(--muted); font-size: .95rem; }

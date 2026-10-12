@@ -7,7 +7,8 @@
 
 import type { Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { defaultAgenda, setAgenda, slotCost, slotsFor, usedSlots } from '../agenda';
+import { defaultAgenda, freeCapacity, setAgenda, slotCost, slotsFor, usedSlots } from '../agenda';
+import { agendaLoad } from '../capacity';
 import { coverCost, coverOptions } from '../covers';
 import { registerExt4, registerSimHook } from '../ext4';
 import { availableChannels, forecastUnits } from '../market';
@@ -215,7 +216,8 @@ export function addAgendaAction(s: GameState, p: MusicProject, slot: AgendaSlot)
   const base = s.delegated[act.id] !== false ? defaultAgenda(s, act) : [...(s.agenda[act.id] ?? [])];
   if (base.filter((x) => x.action === slot.action).length >= 4) return l('Essa ação já está na agenda várias vezes.', 'That action is already on the agenda several times.');
   if (usedSlots(base) + slotCost(slot.action) > slotsFor(act)) return l('A agenda do mês está cheia: tire alguma ação na aba de artistas.', 'This month\'s agenda is full: remove an action in the artists tab.');
-  if (!setAgenda(s, act.id, [...base, slot])) return l('A formação não tem fôlego para mais isso neste mês.', 'The lineup has no capacity for that this month.');
+  // r23: diz o quanto a agenda já ocupa, em vez de só "sem fôlego"
+  if (!setAgenda(s, act.id, [...base, slot])) return fmtL(l('A agenda do mês já ocupa {u}% de {c}% da capacidade da formação: tire algo antes de acrescentar.', 'This month\'s agenda already takes {u}% of the lineup\'s {c}% capacity: remove something before adding.'), { u: agendaLoad(base), c: freeCapacity(s, act) });
   return null;
 }
 
@@ -302,7 +304,11 @@ export function closeProject(s: GameState, p: MusicProject): void {
   p.closed = true;
 }
 
-export interface ProjectResult { units: number; peak: number; revenue: number; spent: number; goalMet: boolean | null; goalText: L }
+export interface ProjectResult {
+  units: number; peak: number; revenue: number; spent: number; goalMet: boolean | null; goalText: L;
+  /** r23: janela de medição — semana de início do projeto, do lançamento e de hoje (evita causalidade falsa) */
+  from: number; relWeek: number; now: number;
+}
 
 export function projectResult(s: GameState, p: MusicProject): ProjectResult | null {
   const rel = p.releaseId ? s.releases[p.releaseId] : undefined;
@@ -326,17 +332,19 @@ export function projectResult(s: GameState, p: MusicProject): ProjectResult | nu
       const now = act ? fansOf(act) : 0;
       const g = p.fans0 > 0 ? now / p.fans0 - 1 : now > 0 ? 1 : 0;
       goalMet = g >= 0.25 ? true : enough ? false : null;
-      goalText = fmtL(l('Fãs ativos e fiéis: {d}% (meta +25%).', 'Active and core fans: {d}% (goal +25%).'), { d: `${g >= 0 ? '+' : ''}${Math.round(g * 100)}` });
+      // r23: diz a janela — o número soma tudo o que aconteceu no período, não só o disco
+      goalText = fmtL(l('Fãs ativos e fiéis: {d}% entre a semana {w0} (início do projeto) e hoje (semana {w}) — meta +25%. Conta tudo o que aconteceu no período, não só o disco.', 'Active and core fans: {d}% between week {w0} (project start) and today (week {w}) — goal +25%. Counts everything that happened in the period, not just the record.'), { d: `${g >= 0 ? '+' : ''}${Math.round(g * 100)}`, w0: p.created, w: s.week });
       break;
     }
     case 'profit': goalMet = revenue >= p.spent ? true : enough ? false : null; break;
     case 'scene': {
       const now = act ? sceneOf(s, act) : 0;
       goalMet = now > p.scene0 + 0.5 ? true : enough ? false : null;
+      goalText = fmtL(l('Força da cena: {a} → {b} entre a semana {w0} (início do projeto) e hoje (semana {w}).', 'Scene strength: {a} → {b} between week {w0} (project start) and today (week {w}).'), { a: Math.round(p.scene0 * 10) / 10, b: Math.round(now * 10) / 10, w0: p.created, w: s.week });
       break;
     }
   }
-  return { units: rels.reduce((t, x) => t + x.totalUnits, 0), peak, revenue, spent: p.spent, goalMet, goalText };
+  return { units: rels.reduce((t, x) => t + x.totalUnits, 0), peak, revenue, spent: p.spent, goalMet, goalText, from: p.created, relWeek: rel.week, now: s.week };
 }
 
 // ---------------------------------------------------------------- tick

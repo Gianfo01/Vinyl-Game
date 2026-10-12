@@ -16,9 +16,10 @@ import { $, N, rerender, toast } from '../common';
 import { h } from '../dom';
 import { review20 } from '../ux20';
 import { goToProjects } from './project8';
+import { bookedAction23, bookedText23 } from '../../sim/sys/journey23';
 import { status20 } from '../st20';
 
-interface Opt20 { name: L; cost: number; weeks: number | null; aud?: L; risk: L; run: () => L | null; ok: L; primary?: boolean; blocked?: L | null }
+interface Opt20 { name: L; cost: number; weeks: number | null; aud?: L; risk: L; run: () => L | null; ok: L; primary?: boolean; blocked?: L | null; booked?: L | null }
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
 
 /** Opções da etapa atual (mesmos comandos da tela completa). */
@@ -29,7 +30,9 @@ export function phaseOptions20(s: GameState, p: MusicProject, st: ProjStage): Op
   const aud = planOf12(s, p)?.aud;
   const audL = aud ? AUDIENCES[aud].name : undefined;
   const out: Opt20[] = [];
-  if ((st === 'concept' || st === 'writing') && (missing || !unrec)) out.push({ name: l('Compor pela agenda', 'Write via the agenda'), cost: 0, weeks: missing * 2, aud: audL, risk: l('Qualidade das músicas só se conhece ao escrever.', 'Song quality is only known once written.'), run: () => planWriting(s, p), ok: l('"Compor" entrou na agenda do mês.', '"Write" added to this month\'s agenda.'), primary: missing > 0 });
+  if ((st === 'concept' || st === 'writing') && (missing || !unrec)) out.push({ name: l('Compor pela agenda', 'Write via the agenda'), cost: 0, weeks: missing * 2, aud: audL, risk: l('Qualidade das músicas só se conhece ao escrever.', 'Song quality is only known once written.'), run: () => planWriting(s, p), ok: l('"Compor" entrou na agenda do mês.', '"Write" added to this month\'s agenda.'), primary: missing > 0,
+    // r23: já marcada → diz a semana em vez de pedir outro clique
+    booked: s.acts[p.actId] && bookedAction23(s, s.acts[p.actId], 'compose') ? bookedText23(bookedAction23(s, s.acts[p.actId], 'compose')!) : null });
   if (unrec && (st === 'writing' || st === 'recording') && !projectSession(s, p)) {
     out.push({ name: l('Gravar agora', 'Record now'), cost: c.recording, weeks: Math.ceil(unrec * 0.6) + 1, aud: audL, risk: l('A qualidade final sai da sessão (voz, energia, estúdio e produtor).', 'Final quality comes from the session (voice, energy, studio and producer).'), run: () => recordNow(s, p), ok: l('Sessão de estúdio marcada.', 'Studio session booked.'), primary: !missing, blocked: c.recording > s.player.cash ? l('Caixa insuficiente para a sessão.', 'Not enough cash for the session.') : null });
     out.push({ name: l('Ensaiar e gravar pela agenda', 'Rehearse and record via the agenda'), cost: c.recording, weeks: Math.ceil(unrec * 0.6) + 4, aud: audL, risk: l('Mais lento; divide o mês com outras tarefas do artista.', 'Slower; shares the month with the act\'s other tasks.'), run: () => planRecording(s, p), ok: l('"Gravar" entrou na agenda do mês.', '"Record" added to this month\'s agenda.') });
@@ -66,7 +69,8 @@ export function phaseReview20(s: GameState, p: MusicProject, st: ProjStage): HTM
         h('p', { class: 'small num20' }, `${t(l('Custo', 'Cost'))}: ${$(o.cost)} · ${t(l('Prazo', 'Time'))}: ${o.weeks === null ? t(l('várias semanas', 'several weeks')) : `~${o.weeks} ${t(l('sem.', 'wk'))}`}`),
         o.aud ? h('p', { class: 'small' }, t(l('Público-alvo: ', 'Target audience: ')), t(o.aud)) : null,
         h('p', { class: 'small muted' }, t(l('Incerteza: ', 'Uncertainty: ')), t(o.risk)),
-        o.blocked ? status20('blocked', t(o.blocked)) : h('button', { class: `btn small ${o.primary ? 'primary' : ''}`, onclick: () => say(o.run(), o.ok) }, t(o.name))))))
+        // r23: o botão principal da etapa fica no cartão "Próximo passo"; aqui as opções são comparação
+        o.booked ? status20('pending', t(o.booked)) : o.blocked ? status20('blocked', t(o.blocked)) : h('button', { class: 'btn small', onclick: () => say(o.run(), o.ok) }, t(o.name))))))
       : !bal ? h('p', { class: 'small muted' }, st === 'scheduled' ? t(l('Programado: nada a decidir até o lançamento (veja o hype abaixo).', 'Scheduled: nothing to decide until release (see hype below).')) : t(l('Sem decisão nesta etapa agora.', 'No decision at this stage right now.'))) : null,
     h('table', { class: 'tbl compact rv20' }, h('tbody', null,
       h('tr', null, h('th', { scope: 'row' }, t(l('Gasto realizado', 'Spent so far'))), h('td', null, $(p.spent))),

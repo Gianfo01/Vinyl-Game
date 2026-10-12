@@ -15,7 +15,8 @@ import { money, playerActs, rngOf } from '../../sim/util';
 import { $, actLink, genreName, logo, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { store } from '../store';
-import { chips, ic, portrait, stat, tabs, tile } from '../vis';
+import { chips, ic, portrait, setTab, stat, tabs, tile } from '../vis';
+import { compose23 } from '../sys/journey23';
 import { repertoireTab } from './repertoire';
 import { mergeTabs } from '../registry';
 import { stylePill17 } from '../sys/style17';
@@ -54,7 +55,7 @@ function sessionTab(s: GameState): HTMLElement {
       ic('disc'), h('b', null, so.title), stylePill17(so.genre),
       h('span', { class: 'mini-bars' }, h('i', { style: `height:${so.melody}%`, title: t(l('Melodia', 'Melody')) }), h('i', { style: `height:${so.lyrics}%`, title: t(l('Letra', 'Lyrics')) }), h('i', { style: `height:${so.originality}%`, title: t(l('Originalidade', 'Originality')) })),
       so.sampleOf ? pill('sample') : null,
-    ))) : h('p', { class: 'muted small' }, t(l('Nada escrito. Use "Compor" na agenda ou um camp de composição.', 'Nothing written. Use "Write songs" in the agenda or a songwriting camp.')))),
+    ))) : h('p', { class: 'muted small' }, t(l('Nada escrito ainda: o repertório vem de Composição (compor, encomendar) ou de um cover.', 'Nothing written yet: songs come from Songwriting (write, commission) or a cover.')))),
     section(t(l('Produtor', 'Producer')), h('div', { class: 'cards producers' },
       h('button', { class: `tile ${!sess.producer ? 'on' : ''}`, onclick: () => { sess.producer = ''; rerender(); } }, h('div', { class: 'tile-ic' }, ic('mic', 2)), h('div', { class: 'tile-body' }, h('b', null, t(l('Equipe da casa', 'In-house team'))), h('small', null, t(l('Sem assinatura; usa seu produtor contratado.', 'No signature; uses your hired producer.'))))),
       prods.map((p) => {
@@ -72,8 +73,12 @@ function sessionTab(s: GameState): HTMLElement {
       h('div', { class: 'row wrap' },
         select(sess.tier, STUDIO_TIERS.map((x) => ({ value: x.id, label: t(x.name) })), (v) => { sess.tier = v; rerender(); }),
         select(sess.approach, APPROACHES.map((x) => ({ value: x.id, label: t(x.name) })), (v) => { sess.approach = v; rerender(); }),
-        chips(stat('calendar', `${sessionDays(sess.songs.size, sess.approach)}d`, l('Dias de estúdio', 'Studio days')), stat('money', $(cost), l('Custo', 'Cost'))),
+        // r23: sem faixa não há sessão — nada de "0 dias" com preço; o motivo e o conserto ficam ao lado do botão
+        sess.songs.size ? chips(stat('calendar', `${sessionDays(sess.songs.size, sess.approach)}d`, l('Dias de estúdio', 'Studio days')), stat('money', $(cost), l('Custo', 'Cost'))) : null,
         h('button', { class: 'btn primary', disabled: !sess.songs.size, onclick: () => { const res = startSession(s, a.id, [...sess.songs], sess.tier, sess.approach, sess.producer || undefined); say(res, l('Sessão marcada! Acompanhe os takes na Central.', 'Session booked! Follow the takes in the Hub.')); rerender(); } }, ic('mic'), ' ', t(l('Entrar em estúdio', 'Enter the studio'))),
+        !sess.songs.size ? h('span', { class: 'j23-why small', role: 'note' }, h('span', { class: 'bad' }, t(written.length ? l('Nenhuma faixa marcada: marque ao menos uma acima.', 'No track ticked: tick at least one above.') : l('Nenhuma faixa escrita: compor ou escolher um cover antes de gravar.', 'No written track: write or pick a cover before recording.'))),
+          !written.length ? h('button', { class: 'btn small', onclick: () => compose23(s, a.id) }, ic('note'), ' ', t(l('Compor', 'Write'))) : null,
+          !written.length ? h('button', { class: 'btn small ghost', onclick: () => { setTab('creation-studio', 'versions'); rerender(); } }, t(l('Escolher cover', 'Pick a cover'))) : null) : null,
       ),
       h('p', { class: 'muted small' }, t(l('Cada dia grava um take. Você decide: manter, tentar de novo ou montar dos melhores. Carreiras delegadas decidem sozinhas.', 'Each day records a take. You decide: keep, try again or comp the best. Delegated careers decide on their own.'))),
     ),
