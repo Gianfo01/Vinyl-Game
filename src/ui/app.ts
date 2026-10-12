@@ -64,6 +64,7 @@ import { icon17 } from './pixel/icons17';
 import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
 import { PURPOSE23 } from './sys/journey23'; // r23: propósito de cada tela da jornada do disco
 import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
+import { settings27 } from './act27/mode27'; // r27 (M2): Atividades jogáveis/rápidas
 import './nav17.css';
 // r25 Pixel Studio: 6 seções (Sede, Pessoas, Projetos, Ao vivo, Mundo, Gestão), busca global e encaixe da Sede
 import { SECTIONS25, SEDE25, home25, landing27, navGroups25, sectionIdOf25, type NavGroup25 } from './ps/nav25';
@@ -563,6 +564,7 @@ function settings(): void {
     h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
     settings19(), // r19 B.5
     settings20(), // r20 G6: densidade
+    settings27(), // r27: atividades jogáveis × rápidas
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),

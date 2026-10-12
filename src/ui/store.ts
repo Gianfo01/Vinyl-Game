@@ -25,6 +25,8 @@ export interface Prefs {
   colorblind?: 'none' | 'deutan' | 'protan' | 'tritan';
   /** mini-jogos: jogar ou resolver automaticamente */
   minigames?: 'play' | 'auto';
+  /** r27: atividades (show, negociação…): jogáveis, só as importantes ou sempre rápido */
+  act27?: 'play' | 'important' | 'quick';
   /** mostrar cenas (premiação, crítica, entrevista) ao avançar o tempo */
   cutscenes?: boolean;
   /** r23 (A): o que interrompe — só decisões, marcos também (padrão) ou tudo */

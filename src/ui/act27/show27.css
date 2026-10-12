@@ -1,0 +1,41 @@
+/* r27 (M2) — show jogável. Cores só pelas variáveis do tema (theme25). */
+.a27-show { display: grid; gap: 10px; color: var(--ink); }
+.a27-stage { width: 100%; max-width: 520px; aspect-ratio: 200 / 112; image-rendering: pixelated; justify-self: center; border: 1px solid var(--line); border-radius: 6px; background: #0b0a12; }
+.a27-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .92em; color: var(--muted); }
+.a27-head b { color: var(--ink); }
+.a27-cols { display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px; }
+.a27-cols h4 { margin: 4px 0; }
+.a27-pool, .a27-set { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 300px; overflow: auto; }
+.a27-set { counter-reset: s; }
+.a27-pool li, .a27-set li { display: flex; align-items: center; gap: 6px; padding: 4px 6px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
+.a27-pool li.in { opacity: .5; }
+.a27-pool li small { margin-left: auto; white-space: nowrap; }
+.a27-t { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.a27-ord { display: flex; gap: 2px; margin-left: auto; }
+.a27-ord .btn, .a27-pool .btn { padding: 1px 7px; min-height: 26px; min-width: 26px; font-size: .8em; line-height: 1; }
+.a27-bar { position: relative; flex: 0 0 46px; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.a27-bar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+.a27-bar u { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--gold); text-decoration: none; }
+.a27-why { margin: 4px 0; padding-left: 18px; color: var(--muted); }
+.a27-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.a27-now { margin: 0; font-size: 1.05em; min-height: 1.4em; }
+.a27-sit { margin: 0; padding: 8px 10px; border-left: 3px solid var(--warn); background: var(--panel-2); border-radius: 4px; }
+.a27-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 8px; }
+.a27-card { display: grid; gap: 4px; text-align: left; padding: 10px; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.a27-card:hover, .a27-card:focus-visible { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
+.a27-card small { color: var(--muted); }
+.a27-card small.good { color: var(--good); } .a27-card small.bad { color: var(--bad); }
+.a27-feed { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.a27-feed li.good { color: var(--good); } .a27-feed li.bad { color: var(--bad); }
+.a27-title { margin: 0; color: var(--gold); }
+.a27-curve { width: 100%; height: 60px; color: var(--accent); background: var(--panel-2); border-radius: 6px; }
+.a27-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 6px; }
+.a27-stat { display: grid; padding: 6px 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; }
+.a27-stat small { color: var(--muted); }
+.act27-play { border-color: var(--gold); color: var(--gold); }
+@media (max-width: 640px) {
+  .a27-cols { grid-template-columns: 1fr; }
+  .a27-pool, .a27-set { max-height: 220px; }
+  .a27-pool li small { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .a27-card { transition: none; } }

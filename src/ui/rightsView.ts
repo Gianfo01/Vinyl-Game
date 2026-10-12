@@ -15,6 +15,8 @@ import { rngOf, yearOfWeek } from '../sim/util';
 import { $, actLink, kv, pill, releaseLink, rerender, toast } from './common';
 import { h, select } from './dom';
 import { status20 } from './st20';
+import { playBtn27 } from './act27/mode27';
+import { openReneg27 } from './act27/negotiate27';
 
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); };
@@ -138,6 +140,7 @@ export function rightsSheet(s: GameState, c: Contract, refresh: () => void = rer
         h('button', { class: 'btn small primary', onclick: () => { say(respondDemand(s, rngOf(s), demand.id, 'accept'), l('Renegociado. A relação sai fortalecida.', 'Renegotiated. The relationship is stronger.')); refresh(); } }, t(l('Aceitar', 'Accept'))),
         h('button', { class: 'btn small', onclick: () => { say(respondDemand(s, rngOf(s), demand.id, 'counter')); refresh(); } }, t(l('Propor meio-termo', 'Offer middle ground'))),
         h('button', { class: 'btn small ghost', onclick: () => { say(respondDemand(s, rngOf(s), demand.id, 'refuse'), l('Recusado. A confiança caiu.', 'Refused. Trust dropped.')); refresh(); } }, t(l('Recusar', 'Refuse')))),
+        playBtn27(l('Negociar na mesa', 'Negotiate at the table'), () => openReneg27(demand.id), (s.acts[demand.actId]?.fame ?? 0) >= 30), // r27 (M2)
     ) : null,
     c.party === 'player' && !c.reverted && rw !== Infinity && rels.length ? h('div', { class: 'row wrap' },
       h('button', { class: 'btn small', onclick: () => { say(extendMasters(s, c.id), l('Masters estendidos por mais 10 anos.', 'Masters extended 10 more years.')); refresh(); } }, `${t(l('Estender masters +10 anos', 'Extend masters +10 years'))} (${$(extendPrice(s, c))})`),

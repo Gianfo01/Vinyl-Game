@@ -399,6 +399,30 @@ export function buyExploitPermission(s: GameState, relId: string, kind: ExploitK
   return buyPermission(s, relId, kind, (price) => post(s, `perm:${relId}:${kind}`, -price, 'royalties', `Autorização de ${EXPLOIT_NAME[kind].pt}`));
 }
 
+/** r27 (M2): fecha um pedido de renegociação com termos negociados na mesa (src/sim/sys/nego27.ts). Mesmos efeitos
+ *  do "aceitar" de respondDemand (bônus recuperável, royalty, reversão, fama de referência), com os termos dados. */
+export function settleDemand(s: GameState, demandId: string, royalty: number, bonus: number, rev: number, trust: number): L | null {
+  const st = rst(s);
+  const d = st.demands.find((x) => x.id === demandId);
+  if (!d) return l('Pedido expirado.', 'Request expired.');
+  const c = s.contracts[d.contractId];
+  const act = s.acts[d.actId];
+  if (!c || !act || c.party !== 'player') { st.demands = st.demands.filter((x) => x !== d); return l('Contrato inválido.', 'Invalid contract.'); }
+  bonus = Math.max(0, Math.round(bonus));
+  if (freeCash20(s) < bonus) return cashWhy20(s, bonus, l('Caixa insuficiente para o bônus.', 'Not enough cash for the bonus.'));
+  if (bonus > 0) post(s, `reneg:${act.id}`, -bonus, 'advances', `Renegociação ${act.name}`);
+  act.cash += bonus;
+  c.recoupBalance += bonus;
+  c.royalty = Math.max(c.royalty, Math.round(royalty * 100) / 100);
+  if (rev > 0) c.rights = { ...rightsOf(c), reversionYears: rightsOf(c).reversionYears > 0 ? Math.min(rightsOf(c).reversionYears, rev) : rev };
+  c.fameAtSign = Math.round(act.fame * 10) / 10;
+  c.lastRenegWeek = s.week;
+  act.trust = clamp(act.trust + trust, 0, 100);
+  remember(s, 'renegotiation', fmtL(l('{a} renegocia o contrato na mesa: royalty de {r}% e bônus de {b}.', '{a} renegotiates at the table: {r}% royalty and a {b} bonus.'), { a: act.name, r: Math.round(c.royalty * 100), b: `$${Math.round(bonus / 100).toLocaleString('en-US')}` }), { actId: act.id });
+  st.demands = st.demands.filter((x) => x !== d);
+  return null;
+}
+
 /** Resposta a um artista que cresceu e pede renegociação. */
 export function respondDemand(s: GameState, r: Rng, demandId: string, answer: 'accept' | 'counter' | 'refuse'): L | null {
   const st = rst(s);
