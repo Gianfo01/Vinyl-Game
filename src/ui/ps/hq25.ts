@@ -1,8 +1,8 @@
-// r25 (Pixel Studio, fase 3 "Sede viva") — a tela inicial da Sede: o prédio em corte (imagem da era), com as
-// 6 salas clicáveis, selos de estado, bonecos do elenco e da equipe reais, "Precisa de você", "Sua agenda" e o
+// r25 (Pixel Studio, fase 3 "Sede viva") — a tela inicial da Sede: o prédio em corte (r27: pixel art desenhada
+// por hqpx27.ts conforme nível da sede, ano e cidade — sem imagens), com as salas clicáveis, selos de estado, bonecos do elenco e da equipe reais, "Precisa de você", "Sua agenda" e o
 // "Elenco". Toda a lógica está em hq25model.ts (pura); aqui só se desenha. Encaixa pelo slot25.
 
-import { l, type L } from '../../data/world';
+import { cityById, l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { inspect, rerender } from '../common';
@@ -10,17 +10,10 @@ import { h } from '../dom';
 import { avatarSprite, lookOf, portraitCanvas } from '../pixel/avatar';
 import { store } from '../store';
 import { ic, setTab } from '../vis';
-import { hqModel25, type Agenda25, type Era25, type Goto25, type HqModel25, type RoomM25, type Sprite25 } from './hq25model';
+import { hqModel25, type Agenda25, type Goto25, type HqModel25, type RoomM25, type Sprite25 } from './hq25model';
+import { drawHqCutaway27, plan27, type Cell27, type Drawn27 } from './hqpx27';
 import { setSedeHome25 } from './slot25';
 import './hq25.css';
-
-// Imagens (resolvidas pelo Vite; o <img> só nasce quando a tela abre).
-const IMG25: Record<Era25, () => string> = {
-  heritage: () => new URL('../../assets/ps/hq_heritage.webp', import.meta.url).href,
-  garage: () => new URL('../../assets/ps/hq_garage.webp', import.meta.url).href,
-  modern: () => new URL('../../assets/ps/hq_modern.webp', import.meta.url).href,
-};
-const ERA_NAME: Record<Era25, L> = { heritage: l('Era de ouro', 'Golden age'), garage: l('Garagem', 'Garage'), modern: l('Moderna', 'Modern') };
 
 /** Navega para o destino (usa as funções existentes: store.area + rerender, abas e ficha do artista). */
 export function go25(g: Goto25): void {
@@ -30,23 +23,17 @@ export function go25(g: Goto25): void {
   if (g.area) { store.area = g.area as typeof store.area; rerender(); }
 }
 
-function spriteEl(s: GameState, x: Sprite25, i: number, n: number, room?: RoomM25): HTMLElement {
+/** Boneco pequeno (lista "Fora da sede"): canvas próprio. */
+function awayEl(s: GameState, x: Sprite25, i: number): HTMLElement {
   const p = x.personId ? s.persons[x.personId] : undefined;
-  const look = lookOf(p ?? { id: x.id });
-  const sp = avatarSprite(look, { year: s.year, role: p?.role ?? null, dir: i % 2 ? 'SW' : 'SE' });
+  const sp = avatarSprite(lookOf(p ?? { id: x.id }), { year: s.year, role: p?.role ?? null, dir: i % 2 ? 'SW' : 'SE' });
   const c = document.createElement('canvas');
   c.width = sp.c.width; c.height = sp.c.height;
   c.getContext('2d')?.drawImage(sp.c, 0, 0);
   c.className = 'px';
   const label = `${x.name} — ${t(x.note)}`;
-  const style = room ? (() => {
-    const [rx, , rw] = room.rect;
-    const yb = room.rect[1] + room.rect[3] - 3; // pés no chão da sala
-    const left = rx + rw * ((i + 1) / (n + 1));
-    return `left:${left.toFixed(2)}%;top:${yb.toFixed(2)}%`;
-  })() : undefined;
   const on = x.actId ? () => go25({ act: x.actId }) : undefined;
-  return h(on ? 'button' : 'span', { class: `hq25-sp hq25-sp-${x.kind}`, style, title: label, 'aria-label': label, tabindex: on ? '-1' : undefined, onclick: on, type: on ? 'button' : undefined },
+  return h(on ? 'button' : 'span', { class: `hq25-sp hq25-sp-${x.kind}`, title: label, 'aria-label': label, onclick: on, type: on ? 'button' : undefined },
     c, h('span', { class: 'hq25-tag', 'aria-hidden': 'true' }, x.name));
 }
 
@@ -54,30 +41,76 @@ function badgeEl(b: RoomM25['badges'][number]): HTMLElement {
   return h('span', { class: `hq25-bd ${b.tone}` }, h('span', { class: 'hq25-bd-ic', 'aria-hidden': 'true' }, ic(b.icon)), t(b.text));
 }
 
-function roomBtn(r: RoomM25): HTMLElement {
-  const [x, y, w, hh] = r.rect;
-  const say = [t(r.name), t(r.desc), ...r.badges.map((b) => t(b.text)), r.lockNote ? t(r.lockNote) : ''].filter(Boolean).join('. ');
+/** Posição em % do desenho (W×H lógicos). */
+const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(3)}%`;
+const box = (d: Drawn27, x: number, y: number, w: number, hh: number): string =>
+  `left:${pct(x, d.plan.W)};top:${pct(y, d.plan.H)};width:${pct(w, d.plan.W)};height:${pct(hh, d.plan.H)}`;
+
+function roomBtn(d: Drawn27, r: RoomM25, c: Cell27): HTMLElement {
+  const say = [t(r.name), t(r.desc), ...r.badges.map((b) => t(b.text))].filter(Boolean).join('. ');
   const hot = r.badges.some((b) => b.tone === 'bad' || b.tone === 'warn');
-  return h('button', { type: 'button', class: `hq25-room ${r.open ? '' : 'shut'} ${hot ? 'hot' : ''}`, 'data-room': r.id, style: `left:${x}%;top:${y}%;width:${w}%;height:${hh}%`, 'aria-label': say, onclick: () => go25(r.go) },
+  return h('button', { type: 'button', class: `hq25-room ${hot ? 'hot' : ''}`, 'data-room': r.id, style: box(d, c.x, c.y, c.w, c.h), 'aria-label': say, onclick: () => go25(r.go) },
     h('span', { class: 'hq25-chip' }, ic(r.icon), ' ', t(r.name)),
-    h('span', { class: 'hq25-bds' }, r.badges.slice(0, 2).map(badgeEl)),
-    r.lockNote ? h('span', { class: 'hq25-lock' }, ic('lock'), ' ', t(r.lockNote)) : null);
+    h('span', { class: 'hq25-bds' }, r.badges.slice(0, 2).map(badgeEl)));
+}
+
+/** Botão invisível sobre cada boneco desenhado (nome no foco/hover; artista abre a ficha). */
+function hitEl(d: Drawn27, sp: Drawn27['spots'][number]): HTMLElement {
+  const x = sp.sprite;
+  const label = `${x.name} — ${t(x.note)}`;
+  const on = x.actId ? () => go25({ act: x.actId }) : undefined;
+  return h(on ? 'button' : 'span', { class: `hq27-hit hq25-sp-${x.kind}`, style: box(d, sp.x - 7, sp.y - 31, 14, 32), title: label, 'aria-label': label, tabindex: on ? '-1' : undefined, onclick: on, type: on ? 'button' : undefined },
+    h('span', { class: 'hq25-tag', 'aria-hidden': 'true' }, x.name));
+}
+
+/** Escala inteira (pixels nítidos): 2× no mínimo (celular rola de lado), 3× em telas largas. */
+export function fit27(cw: number, need: number): { k: number; minW: number } {
+  const k = Math.max(2, Math.min(3, Math.floor(cw / need)));
+  return { k, minW: Math.max(need, Math.floor(cw / k)) };
 }
 
 function stage(s: GameState, m: HqModel25): HTMLElement {
-  const img = h('img', { class: 'hq25-img', src: IMG25[m.era](), alt: '', width: 1536, height: 1024, decoding: 'async', draggable: 'false' });
-  const sprites = m.rooms.flatMap((r) => [...r.sprites.map((x, i) => spriteEl(s, x, i, r.sprites.length + (r.more ? 1 : 0), r)),
-    r.more ? h('span', { class: 'hq25-more', style: `left:${(r.rect[0] + r.rect[2] * (r.sprites.length + 1) / (r.sprites.length + 2)).toFixed(2)}%;top:${(r.rect[1] + r.rect[3] - 4).toFixed(2)}%`, title: t(l('Mais {n} nesta sala', '{n} more in this room'), { n: r.more }) }, `+${r.more}`) : null]);
+  const cv = h('canvas', { class: 'hq27-cv px', 'aria-hidden': 'true' }) as HTMLCanvasElement;
+  const layer = h('div', { class: 'hq27-layer' });
+  const st = h('div', { class: `hq25-stage hq27-stage lv-${m.hq}`, role: 'group', 'aria-label': t(l('Sua sede: {e}. Cada sala abre uma área do jogo.', 'Your HQ: {e}. Each room opens a game area.'), { e: t(m.hqName) }) }, cv, layer);
+  const scroll = h('div', { class: 'hq25-scroll hq27-scroll' }, st);
+  const look = (x: Sprite25) => lookOf((x.personId ? s.persons[x.personId] : undefined) ?? { id: x.id });
+  const role = (x: Sprite25) => (x.personId ? s.persons[x.personId]?.role : null) ?? null;
+  const need = plan27({ hq: m.hq, year: m.year }).W;
+  let last = '';
+  const paint = (cw: number): void => {
+    const { k, minW } = fit27(cw, need);
+    const key = `${k}|${minW}`;
+    if (key === last) return;
+    last = key;
+    const d = drawHqCutaway27(cv, m, { minW, look, role });
+    st.style.width = `${d.plan.W * k}px`;
+    st.style.height = `${d.plan.H * k}px`;
+    const rooms = m.rooms.filter((r) => d.plan.rooms.includes(r.id));
+    layer.replaceChildren(
+      ...d.plan.cells.filter((c) => !c.room && c.name).map((c) => h('span', { class: 'hq27-deco', style: box(d, c.x, c.y, c.w, c.h) }, h('span', null, t(c.name!)))),
+      ...rooms.map((r) => roomBtn(d, r, d.plan.cells.find((c) => c.room === r.id)!)),
+      ...d.spots.map((sp) => hitEl(d, sp)),
+      ...d.more.map((x) => h('span', { class: 'hq25-more', style: `left:${pct(x.x, d.plan.W)};top:${pct(x.y, d.plan.H)}`, title: t(l('Mais {n} nesta sala', '{n} more in this room'), { n: x.n }) }, `+${x.n}`)));
+  };
+  paint(Math.min(960, Math.max(360, (window.innerWidth || 960) - 560)));
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver((es) => { if (!scroll.isConnected) { ro.disconnect(); return; } const w = es[0]?.contentRect.width; if (w) paint(w); });
+    ro.observe(scroll);
+  }
   const company = s.config.companyName || t(l('Seu selo', 'Your label'));
-  return h('div', { class: 'hq25-scroll' },
-    h('div', { class: `hq25-stage era-${m.era}`, role: 'group', 'aria-label': t(l('Sua sede: {e}. Cada sala abre uma área do jogo.', 'Your HQ: {e}. Each room opens a game area.'), { e: t(m.hqName) }) },
-      img,
-      h('div', { class: 'hq25-title' }, h('h1', null, t(l('Sua sede', 'Your HQ'))), h('small', null, `${company} · ${t(m.hqName)} · ${t(ERA_NAME[m.era])}`)),
-      m.rooms.map(roomBtn),
-      h('div', { class: 'hq25-sprites' }, sprites),
+  const city = cityById[m.city];
+  const shut = m.rooms.filter((r) => !r.open);
+  return h('section', { class: 'hq27' },
+    h('header', { class: 'hq27-head' },
+      h('div', null, h('h1', { class: 'page21' }, t(l('Sua sede', 'Your HQ'))),
+        h('small', { class: 'muted' }, [company, t(m.hqName), city ? t(city.name) : '', String(m.year)].filter(Boolean).join(' · '))),
       m.away.length ? h('div', { class: 'hq25-away', role: 'note', 'aria-label': t(l('Fora da sede', 'Away from HQ')) },
-        h('b', null, ic('plane'), ' ', t(l('Fora da sede', 'Away'))), h('span', { class: 'hq25-away-row' }, m.away.slice(0, 5).map((x, i) => spriteEl(s, x, i, 0))),
-        m.away.length > 5 ? h('small', null, `+${m.away.length - 5}`) : null) : null));
+        h('b', null, ic('plane'), ' ', t(l('Fora da sede', 'Away'))), h('span', { class: 'hq25-away-row' }, m.away.slice(0, 5).map((x, i) => awayEl(s, x, i))),
+        m.away.length > 5 ? h('small', null, `+${m.away.length - 5}`) : null) : null),
+    scroll,
+    shut.length ? h('ul', { class: 'hq27-shut', 'aria-label': t(l('Salas que chegam com uma sede maior', 'Rooms that come with a bigger HQ')) },
+      shut.map((r) => h('li', null, h('button', { type: 'button', class: 'btn small ghost', onclick: () => go25(r.go), title: t(r.desc) }, ic('lock'), ' ', h('b', null, t(r.name)), ' · ', h('small', { class: 'muted' }, r.lockNote ? t(r.lockNote) : ''))))) : null);
 }
 
 function roomCards(m: HqModel25): HTMLElement {

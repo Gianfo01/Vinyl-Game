@@ -18,9 +18,9 @@ import { careerSlotsUsed } from '../../sim/contracts';
 import { $, N, memoText, actLink, branchName, cityName, cover, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
-import { HqView, hqHooks } from '../hq';
+import { type HqView, hqHooks } from '../hq';
+import { hqPeek27 } from '../ps/hqpeek27';
 import { copyText, store, tryDownload } from '../store';
-import { inspect } from '../common';
 import { CITIES, cityById, genreById } from '../../data/world';
 import { nominal } from '../../core/money';
 import { countryName, unitOfCity } from '../../data/geo';
@@ -506,16 +506,12 @@ export function diaryPanel(s: GameState): HTMLElement {
 // ---------- Sede ----------
 let hqView: HqView | null = null;
 export function hqPanel(s: GameState): HTMLElement {
-  hqView ??= new HqView(() => store.game);
-  hqView.onSelect = (id, at) => (hqHooks.onAct ? hqHooks.onAct(id, at) : inspect.act(id));
-  hqView.onSelectPerson = (id) => inspect.person(id);
-  hqView.onSelectStaff = () => { store.area = 'company'; store.companyTab = 'staff'; rerender(); };
-  hqView.refreshToolbar();
-  const wrap = h('div', { class: 'hq-wrap' }, hqView.toolbar, hqView.stage);
-  setTimeout(() => hqView?.start(), 0);
+  // r27 (D1): a planta isométrica antiga (HqView) saiu — a única vista de dentro da sede é a pixel art em corte
+  // da tela da Sede (ps/hqpx27.ts); aqui fica a miniatura que abre a Sede.
+  const wrap = hqPeek27(s);
   const acts = playerActs(s).map((id) => s.acts[id]);
   return h('div', { class: 'panel hq' },
-    h('div', { class: 'col-main' }, section(`${s.config.companyName} — ${t(HQ_LEVELS[s.player.hq].name)}`, wrap, h('p', { class: 'muted small' }, t(l('Balões mostram quem grava, compõe, ensaia, descansa, está à toa ou precisa de atenção (!); etiquetas mostram estúdio livre, gravando ou com fila. Clique num artista ou numa sala para abrir o mesmo menu de ações da lista (próxima decisão, gravar, ensaiar, contrato…). Teclado: foque a planta, N/P (ou ]/[) escolhem artista ou sala, Enter abre o menu, setas movem, +/− zoom, Home centraliza.', 'Bubbles show who is recording, writing, rehearsing, resting, idle or needs attention (!); tags show whether the studio is free, recording or has a queue. Click an artist or a room to open the same actions menu as the list (next decision, record, rehearse, contract…). Keyboard: focus the plan, N/P (or ]/[) pick an artist or room, Enter opens the menu, arrows pan, +/− zoom, Home recenters.'))))),
+    h('div', { class: 'col-main' }, section(`${s.config.companyName} — ${t(HQ_LEVELS[s.player.hq].name)}`, wrap, h('p', { class: 'muted small' }, t(l('A sede em corte: cada sala abre uma área do jogo e os bonecos são o seu elenco e a sua equipe. Clique para abrir a Sede.', 'Your HQ cut away: each room opens a game area and the figures are your roster and staff. Click to open the HQ.'))))),
     h('aside', { class: 'col-side' },
       hqHooks.side ? hqHooks.side(s) : section(t(l('Unidades por banda', 'Band units')), acts.length ? h('ul', { class: 'small' }, acts.map((a) => h('li', null, actLink(s, a.id), ` · ${t(S.fame)} ${Math.round(a.fame)} · `, t(l('agenda', 'agenda')), ': ', (s.agenda[a.id] ?? []).map((x) => x.action).join(', ') || '—'))) : h('p', { class: 'muted' }, t(S.noActs))),
       section(t(l('Capacidade', 'Capacity')), h('p', { class: 'small' }, t(hqCapacityText(s))), kv(t(S.mgmtLoad), `${(managementLoad(s) * 100).toFixed(0)}%`)),

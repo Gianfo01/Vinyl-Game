@@ -1,5 +1,5 @@
 // r25 (Pixel Studio, fase 3 "Sede viva") — o MODELO da tela inicial da Sede, função pura do estado (sem DOM):
-// qual imagem (era × tamanho da sede), as 6 salas com selos de estado, quem está em cada sala (elenco e equipe
+// era e nível da sede (o desenho em pixel art fica em hqpx27.ts), as 6 salas com selos de estado, quem está em cada sala (elenco e equipe
 // reais), "Precisa de você" (no máximo 3 tarefas, um botão cada), "Sua agenda" e o "Elenco". A interface
 // (ui/ps/hq25.ts) só desenha; os testes (tests/r25-hq.test.ts) conferem a lógica aqui.
 
@@ -25,8 +25,6 @@ export interface Badge25 { tone: Tone25; icon: string; text: L }
 export interface Sprite25 { id: string; kind: 'artist' | 'staff' | 'scout'; name: string; room: Room25 | 'away'; personId?: string; actId?: string; role?: string; note: L }
 export interface RoomM25 {
   id: Room25; name: L; desc: L; icon: string; go: Goto25;
-  /** retângulo na imagem, em % (x, y, largura, altura) */
-  rect: [number, number, number, number];
   badges: Badge25[]; sprites: Sprite25[]; more: number;
   /** sala própria na sede atual (senão: aparece apagada, com a dica de ampliação) */
   open: boolean; lockNote?: L;
@@ -36,30 +34,21 @@ export interface Agenda25 { id: string; weeks: number; kind: string; t: L; d?: L
 export interface Cast25 { actId: string; name: string; personId?: string; where: Room25 | 'away'; status: L }
 export interface HqModel25 {
   era: Era25; hq: number; hqName: L; year: number;
+  /** r27: cidade-sede (horizonte), nome do selo (letreiro) e semente do desenho */
+  city: string; brand: string; seedKey: string;
   rooms: RoomM25[]; away: Sprite25[]; needs: Need25[]; agenda: Agenda25[]; cast: Cast25[];
 }
 
 /** Máximo de bonecos desenhados por sala (o resto vira "+N"). */
 export const ROOM_CAP25 = 4;
 
-/** Era da imagem: ≤1959 Heritage, 1960–1989 Garagem, 1990+ Moderna. Sede "Garagem" (nível 0) a partir de 1960
- *  usa sempre a garagem — selo pequeno não ganha prédio de vidro. */
+/** Era visual (r25): ≤1959 Heritage, 1960–1989 Garagem, 1990+ Moderna. Sede "Garagem" (nível 0) a partir de 1960
+ *  conta sempre como garagem. r27: o desenho fino por ano/nível está em hqpx27.ts (plan27). */
 export function era25(year: number, hq = 2): Era25 {
   if (year < 1960) return 'heritage';
   if (year < 1990 || hq <= 0) return 'garage';
   return 'modern';
 }
-
-// Retângulos medidos nas imagens (1536×1024). Heritage e Moderna têm a mesma planta; a Garagem é mais estreita.
-const R_WIDE: Record<Room25, [number, number, number, number]> = {
-  studio: [1.5, 23, 41.8, 33], lounge: [43.8, 23, 25.4, 33], office: [70.2, 23, 27.8, 33],
-  anr: [1.5, 58.5, 28.8, 30], stage: [31.8, 58.5, 29.6, 30], lobby: [62.4, 58.5, 35.8, 34],
-};
-const R_GARAGE: Record<Room25, [number, number, number, number]> = {
-  studio: [3, 22.5, 35, 30.2], lounge: [39.2, 22.5, 27.4, 30.2], office: [67.8, 22.5, 29.8, 30.2],
-  anr: [7.6, 55.8, 26.2, 31.6], stage: [36.2, 55.8, 30.8, 31.6], lobby: [68.5, 55.8, 29.1, 31.6],
-};
-export const rects25 = (era: Era25): Record<Room25, [number, number, number, number]> => (era === 'garage' ? R_GARAGE : R_WIDE);
 
 export const ROOMS25: Room25[] = ['studio', 'lounge', 'office', 'anr', 'stage', 'lobby'];
 const META: Record<Room25, { name: L; desc: L; icon: string; go: Goto25; minHq: number }> = {
@@ -95,7 +84,6 @@ export function runway25(s: GameState): number | null {
 export function hqModel25(s: GameState): HqModel25 {
   const hq = Math.min(s.player.hq ?? 0, HQ_LEVELS.length - 1);
   const era = era25(s.year, hq);
-  const rects = rects25(era);
   const acts = live(s);
   const mine = new Set(acts.map((a) => a.id));
   const sessions = (s.sessions ?? []).filter((x) => !x.done && mine.has(x.actId));
@@ -175,14 +163,14 @@ export function hqModel25(s: GameState): HqModel25 {
     const here = sprites.filter((x) => x.room === id);
     const open = hq >= m.minHq;
     return {
-      id, name: m.name, desc: m.desc, icon: m.icon, go: m.go, rect: rects[id], badges: badges[id],
+      id, name: m.name, desc: m.desc, icon: m.icon, go: m.go, badges: badges[id],
       sprites: here.slice(0, ROOM_CAP25), more: Math.max(0, here.length - ROOM_CAP25), open,
       lockNote: open ? undefined : fmtL(l('Sem sala própria: chega com {h}', 'No room of its own yet: comes with {h}'), { h: HQ_LEVELS[m.minHq].name }),
     };
   });
 
   return {
-    era, hq, hqName: HQ_LEVELS[hq].name, year: s.year, rooms, away: sprites.filter((x) => x.room === 'away'),
+    era, hq, hqName: HQ_LEVELS[hq].name, year: s.year, city: s.config.homeCity ?? '', brand: s.config.companyName || 'REC', seedKey: `${s.config.seed ?? ''}|${s.config.companyName ?? ''}`, rooms, away: sprites.filter((x) => x.room === 'away'),
     needs: needs25(s, { step, acts, rw, ready, soon: soonShows.length + tours.length }), agenda: agenda25(s, sessions), cast,
   };
 }

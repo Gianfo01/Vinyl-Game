@@ -16,9 +16,9 @@ import { home18, homeBlocks18 } from './home18';
 import { head19View } from './cockpit19';
 import { deskBlocks19, pick19, renderBlocks19 } from '../blocks19';
 import { EXTRA_AREAS, registerArea } from '../registry';
-import { store } from '../store';
 import { ic, setTab, tabs } from '../vis';
 import { parts21 } from './ui20';
+import { openSede27 } from '../ps/hqpeek27';
 import './cockpit14.css';
 
 const inbox = () => EXTRA_AREAS.find((a) => a.id === 'inbox');
@@ -29,7 +29,7 @@ const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behav
 function hqMini(s: GameState): HTMLElement {
   return h('section', { class: 'card ck14-hq', id: 'ck14-hq' },
     h('div', { class: 'ck14-head h21' }, h('h3', null, h('span', { class: 'ic21' }, ic('globe', 2)), ' ', t(l('Nosso mundo', 'Our world')), h('small', { class: 'muted' }, ` · ${t(HQ_LEVELS[s.player.hq].name)}`)),
-      h('button', { class: 'btn small', onclick: () => { store.area = 'hq'; rerender(); } }, t(l('Sede completa', 'Full HQ')), ' →')),
+      h('button', { class: 'btn small', onclick: openSede27 }, t(l('Sede completa', 'Full HQ')), ' →')), // r27: abre a sede em corte (única vista de dentro)
     campusThumb18(s));
 }
 
