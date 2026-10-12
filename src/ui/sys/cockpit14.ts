@@ -17,7 +17,7 @@ import { deskBlocks19, pick19, renderBlocks19 } from '../blocks19';
 import { EXTRA_AREAS, registerArea } from '../registry';
 import { store } from '../store';
 import { ic, setTab, tabs } from '../vis';
-import { plane20 } from './ui20';
+import { parts21 } from './ui20';
 import './cockpit14.css';
 
 const inbox = () => EXTRA_AREAS.find((a) => a.id === 'inbox');
@@ -27,9 +27,8 @@ const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behav
 // r18 (campus18): a vista da sede em pixel art virou miniatura do "Nosso mundo" (clique abre o mapa completo)
 function hqMini(s: GameState): HTMLElement {
   return h('section', { class: 'card ck14-hq', id: 'ck14-hq' },
-    h('div', { class: 'ck14-head' }, h('h3', null, ic('house'), ' ', s.config.companyName, h('small', { class: 'muted' }, ` · ${t(HQ_LEVELS[s.player.hq].name)}`)),
-      h('button', { class: 'btn small ghost', onclick: () => { store.area = 'campus18' as typeof store.area; rerender(); } }, t(l('Nosso mundo', 'Our world'))),
-      h('button', { class: 'btn small ghost', onclick: () => { store.area = 'hq'; rerender(); } }, t(l('Sede completa', 'Full HQ')), ' (2)')),
+    h('div', { class: 'ck14-head h21' }, h('h3', null, h('span', { class: 'ic21' }, ic('globe', 2)), ' ', t(l('Nosso mundo', 'Our world')), h('small', { class: 'muted' }, ` · ${t(HQ_LEVELS[s.player.hq].name)}`)),
+      h('button', { class: 'btn small', onclick: () => { store.area = 'hq'; rerender(); } }, t(l('Sede completa', 'Full HQ')), ' →')),
     campusThumb18(s));
 }
 
@@ -38,25 +37,30 @@ export function cockpit(s: GameState): HTMLElement {
   const ib = inbox();
   const desk = deskPanel(s);
   // r19 (blocks19): cartões do topo + seções da Mesa num só conjunto com peso; ~6 abertos, resto em "Mais"
-  const blocks = [...homeBlocks18(s), { id: 'home:hq', title: l('Nosso mundo', 'Our world'), weight: 18, el: hqMini(s), host: 'home' as const }, ...deskBlocks19(s)];
+  // r21: "Nosso mundo" fica fixo na coluna da direita (não entra mais na disputa por peso)
+  const blocks = [...homeBlocks18(s), ...deskBlocks19(s)];
   const pk = pick19(s, blocks);
   const more = renderBlocks19(s, pk, 'desk');
   if (more.length) desk.appendChild(h('div', { class: 'extra-sections' }, more));
   // r20 (G6 §4.4): primeiro plano (agora, decisões com prazo, compromissos, projetos, 3 mudanças) e a caixa de entrada
   // inteira como área própria (aba "Caixa de entrada", com filtros e busca) em vez de empilhada no painel
   const toInbox = () => { setTab('ck20', 'inbox'); rerender(); };
-  return h('div', { class: 'ck14' },
+  const P = parts21(s);
+  return h('div', { class: 'ck14 ck21' },
+    h('div', { class: 'ck21-head' }, h('h1', { class: 'page21' }, t(l('Cockpit do mês', 'Monthly cockpit'))),
     h('div', { class: 'ck14-bar', role: 'toolbar', 'aria-label': t(l('Atalhos do cockpit', 'Cockpit shortcuts')) },
-      h('b', null, t(l('Cockpit do mês', 'Monthly cockpit'))),
       h('button', { class: `btn small ${n ? 'primary' : 'ghost'}`, onclick: () => { setTab('ck20', 'panel'); rerender(); setTimeout(() => jump('ck14-desk'), 30); } }, ic('calendar'), ' ', t(l('Decisões', 'Decisions')), ` (${n})`),
       h('button', { class: `btn small ${m ? '' : 'ghost'}`, onclick: toInbox }, ic('newspaper'), ' ', t(l('Mensagens', 'Messages')), ` (${m})`),
-      h('small', { class: 'muted' }, n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.')))),
-    plane20(s),
+      h('small', { class: 'muted' }, n ? t(l('Decisões ignoradas aplicam a opção padrão ao avançar.', 'Ignored decisions apply the default option when you advance.')) : t(l('Nenhuma decisão pendente: dá para avançar o mês.', 'No pending decisions: you can advance the month.'))))),
     tabs('ck20', [
-      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => h('div', null,
-        head19View(s), // r19: Hoje / Ameaças / Andamento
-        home18(s, pk), // r18 decide18 + r19 blocks19: calendário, pulso, momentos, humor… (por peso)
-        h('div', { id: 'ck14-desk', class: 'ck14-desk' }, desk)) },
+      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => h('div', { class: 'ck21-grid' },
+        h('div', { class: 'ck21-main' },
+          P.now, P.dec,
+          head19View(s), // r19: Hoje / Ameaças / Andamento
+          home18(s, pk), // r18 decide18 + r19 blocks19: calendário, pulso, momentos, humor… (por peso)
+          P.change, P.inbox,
+          h('div', { id: 'ck14-desk', class: 'ck14-desk' }, desk)),
+        h('aside', { class: 'ck21-side' }, P.commit, P.proj, hqMini(s))) },
       { id: 'inbox', label: t(l('Caixa de entrada', 'Inbox')), badge: m || undefined, render: () => h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—')) },
     ], rerender));
 }

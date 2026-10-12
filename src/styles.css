@@ -1,11 +1,12 @@
 :root {
-  --bg: #f4efe6;
-  --panel: #fffaf2;
-  --panel-2: #f0e7d8;
-  --ink: #241c17;
-  --muted: #7a6d62;
-  --line: #e0d4c2;
-  --accent: #c8641e;
+  /* r21 Heritage Studio Pixel: marfim, carvão e laranja queimado */
+  --bg: #f4f0e7;
+  --panel: #fff9ef;
+  --panel-2: #efe7d8;
+  --ink: #202826;
+  --muted: #6f7570;
+  --line: #d9cebc;
+  --accent: #c76536;
   --accent-ink: #fff;
   --good: #2f7d4f;
   --bad: #b33a2e;

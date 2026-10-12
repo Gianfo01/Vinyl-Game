@@ -83,8 +83,10 @@ export function advanceToasts20(fresh: Notification[]): void {
 // ---------------------------------------------------------------- §4.4: cockpit em primeiro plano
 
 const jumpDesk = () => { setTab('ck20', 'panel'); rerender(); setTimeout(() => document.getElementById('ck14-desk')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30); };
-const card = (id: string, title: L, icon: string, n: number, body: HTMLElement): HTMLElement =>
-  h('section', { class: 'card fp20-card', 'aria-labelledby': `fp20-${id}` }, h('h3', { id: `fp20-${id}` }, ic(icon), ' ', t(title), ' ', n ? h('span', { class: 'badge' }, n) : null), body);
+const card = (id: string, title: L, icon: string, n: number, body: HTMLElement, act?: { label: L; on: () => void }): HTMLElement =>
+  h('section', { class: 'card fp20-card', 'aria-labelledby': `fp20-${id}` },
+    h('div', { class: 'h21' }, h('h3', { id: `fp20-${id}` }, h('span', { class: 'ic21' }, ic(icon, 2)), ' ', t(title), ' ', n ? h('span', { class: 'badge' }, n) : null),
+      act ? h('button', { class: 'btn small', onclick: act.on }, t(act.label)) : null), body);
 
 /** "Agora": data, caixa, reservado em ofertas e caixa livre. */
 function nowRow(s: GameState): HTMLElement {
@@ -98,11 +100,13 @@ function nowRow(s: GameState): HTMLElement {
 function decCard(s: GameState): HTMLElement {
   const xs = decisions20(s);
   return card('dec', l('Decisões com prazo', 'Deadline decisions'), 'contract', xs.length, xs.length ? h('div', null,
-    h('ul', { class: 'fp20-list' }, xs.slice(0, 3).map((d) => h('li', { class: d.left !== null && d.left <= 1 ? 'bad' : '' },
-      h('b', null, t(d.title)), ' ', d.left !== null ? status20(d.left <= 0 ? 'expired' : 'pending', t(l('vence em {n} sem.', 'due in {n} wk'), { n: d.left })) : status20('pending'),
-      h('small', { class: 'muted fp20-ev' }, t(d.why).slice(0, 140)),
-      d.def ? h('small', null, t(l('Se ignorar: ', 'If ignored: ')), h('i', null, t(d.def))) : null))),
-    h('button', { class: 'btn small primary', onclick: jumpDesk }, t(l('Decidir', 'Decide')), xs.length > 3 ? ` (+${xs.length - 3})` : ''))
+    h('ul', { class: 'fp20-list dec21' }, xs.slice(0, 3).map((d) => h('li', { class: d.left !== null && d.left <= 1 ? 'bad' : '' },
+      h('div', { class: 'dec21-top' }, h('span', { class: 'dec21-ic', 'aria-hidden': 'true' }, ic('contract', 3)),
+        h('span', null, h('b', null, t(d.title)), h('span', { class: 'dec21-due' }, ic('clock'), ' ', d.left !== null ? (d.left <= 0 ? t(l('vence agora', 'due now')) : t(l('{n} semanas', '{n} weeks'), { n: d.left })) : t(l('pendente', 'pending'))))),
+      h('small', { class: 'muted fp20-ev' }, t(d.why).slice(0, 120)),
+      d.def ? h('small', null, t(l('Se ignorar: ', 'If ignored: ')), h('i', null, t(d.def))) : null,
+      h('button', { class: 'btn small primary dec21-go', onclick: jumpDesk }, t(l('Decidir', 'Decide')), ' ▸')))),
+    xs.length > 3 ? h('button', { class: 'link small', onclick: jumpDesk }, `+${xs.length - 3} `, t(l('decisões', 'decisions'))) : null)
     : empty20(l('Nenhuma decisão pendente.', 'No pending decisions.'), l('Dá para avançar: nada vai valer a opção padrão.', 'You can advance: nothing will take the default option.')));
 }
 function commitCard(s: GameState): HTMLElement {
@@ -144,6 +148,10 @@ function inboxLine(s: GameState): HTMLElement {
     t(l('Caixa de entrada: {d} decisões obrigatórias · {n} negócios · {r} rotina/notícias', 'Inbox: {d} required decisions · {n} deals · {r} routine/news'), { d: c.dec, n: c.deals, r: c.routine }),
     c.archived || c.snoozed ? h('span', { class: 'muted' }, ` · ${t(l('ocultas: {a} arquivadas, {z} adiadas', 'hidden: {a} archived, {z} snoozed'), { a: c.archived, z: c.snoozed })}`) : null,
     ' ', h('button', { class: 'link', onclick: () => { setTab('ck20', 'inbox'); rerender(); } }, t(l('abrir a caixa inteira', 'open the full inbox')), ' →'));
+}
+/** r21 (Heritage): as mesmas peças do primeiro plano, para o Cockpit montar em duas colunas. */
+export function parts21(s: GameState): { now: HTMLElement; dec: HTMLElement; commit: HTMLElement; proj: HTMLElement; change: HTMLElement; inbox: HTMLElement } {
+  return { now: nowRow(s), dec: decCard(s), commit: commitCard(s), proj: projCard(s), change: changeCard(s), inbox: inboxLine(s) };
 }
 /** Primeiro plano do Cockpit: agora, decisões com prazo, compromissos, projetos e as 3 mudanças mais importantes. */
 export function plane20(s: GameState): HTMLElement {

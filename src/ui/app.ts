@@ -331,7 +331,9 @@ function nav(): HTMLElement {
   const pins = store17.pins.map((id) => all.find((x) => x.id === id && listed.has(id))).filter((x): x is NavItem => !!x);
   const pinBox = pins.length ? h('div', { class: 'nav-pins17' }, h('small', { class: 'nav-sec' }, '★ ', t(l('Fixados', 'Pinned'))),
     pins.map((a) => h('button', { class: store.area === a.id ? 'on' : '', title: a.label, onclick: () => go(a.id) }, h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null;
-  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' }, pinBox, groups().map((gr) => {
+  return h('nav', { class: 'nav grouped', 'aria-label': 'menu' },
+    h('div', { class: 'nav-brand21', 'aria-hidden': 'true' }, h('span', { class: 'disc-sm' }), h('span', null, h('b', null, store.game!.config.companyName), h('small', null, 'Masters · Heritage'))),
+    pinBox, groups().map((gr) => {
     const items = groupItems(gr);
     const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
     const here = gr.id === cur.id;
@@ -346,7 +348,7 @@ function nav(): HTMLElement {
     const secs = gr.sections?.map((sc) => [sc, items.filter((x) => sc.areas.includes(x.id))] as const).filter(([, xs]) => xs.length).map(([sc, xs]) => [h('small', { class: 'nav-sec' }, t(sc.label)), ...xs.map(btn)]);
     return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''} ${gr.other ? 'nav-other' : ''}`, 'data-career': gr.career },
       h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => { if (here) { if (open) navFold21.add(gr.id); else navFold21.delete(gr.id); saveFold21(); render(); return; } navFold21.delete(gr.id); saveFold21(); enter(last ?? (gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit')); } },
-        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
+        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
       open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
     );
   }), UX19UI.navFoot?.(store.game!) ?? null);
