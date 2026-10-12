@@ -134,3 +134,50 @@ button.hq27-hit { cursor: pointer; }
 .hq27-peek-btn { display: block; max-width: 100%; overflow-x: auto; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: #12143a; cursor: pointer; }
 .hq27-peek-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .hq27-peek-cv { display: block; image-rendering: pixelated; }
+
+/* r27 I1: selo da sala nunca vaza para a vizinha; sala estreita mostra só o nome curto (+ ponto de alerta) */
+.hq27-stage .hq25-chip { max-width: calc(100% - 8px); overflow: hidden; }
+.hq25-chip-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.hq27-stage .hq25-room.narrow .hq25-chip { padding: 2px 5px; gap: 3px; }
+.hqr27-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 1px rgba(0, 0, 0, .5); }
+.hqr27-dot.bad { background: var(--bad); }
+/* salas e andares compráveis por cima do desenho */
+.hqr27-buy, .hqr27-work { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; border: 2px dashed color-mix(in srgb, var(--gold) 55%, transparent); background: transparent; color: #f4ead8; font: inherit; z-index: 2; }
+.hqr27-buy { cursor: pointer; }
+.hqr27-buy:hover, .hqr27-buy:focus-visible { border-style: solid; border-color: var(--gold); background: rgba(255, 220, 140, .08); outline: none; }
+.hqr27-buy:focus-visible { box-shadow: 0 0 0 3px var(--gold); }
+.hqr27-work { border-color: rgba(240, 192, 32, .7); }
+.hqr27-buy-in { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; max-width: calc(100% - 8px); padding: 4px 9px; border-radius: 4px; background: rgba(14, 18, 34, .9); border: 1px solid rgba(227, 193, 88, .6); box-shadow: 0 2px 0 rgba(0, 0, 0, .45); font-size: clamp(.6rem, 1cqi, .78rem); line-height: 1.25; text-align: center; }
+.hqr27-buy-in b { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hqr27-buy-in > span { color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hqr27-buy.floor .hqr27-buy-in { font-size: clamp(.66rem, 1.15cqi, .86rem); padding: 6px 14px; }
+.hqr27-work .hqr27-buy-in { border-color: rgba(240, 192, 32, .8); }
+.hqr27-work .hqr27-buy-in > span { color: #f0c020; }
+.hqr27-buy.mini, .hqr27-work.mini { border: 0; justify-content: flex-end; }
+.hqr27-buy.mini .hqr27-buy-in, .hqr27-work.mini .hqr27-buy-in { flex-direction: row; padding: 2px 6px; font-size: .62rem; }
+.hqr27-buy.mini .hqr27-buy-in b, .hqr27-work.mini .hqr27-buy-in b { display: none; }
+/* lista das obras */
+.hqr27-box { border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); padding: 6px 10px; }
+.hqr27-box summary { cursor: pointer; padding: 2px 0; }
+.hqr27-list { list-style: none; margin: 6px 0 2px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px; }
+.hqr27-row { display: grid; grid-template-columns: auto 1fr; grid-template-areas: 'ic t' 'ic v'; align-items: center; column-gap: 8px; width: 100%; padding: 6px 8px; text-align: left; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 5px; cursor: pointer; }
+.hqr27-row:hover:not(:disabled), .hqr27-row:focus-visible { border-color: var(--gold); outline: none; }
+.hqr27-row:disabled { cursor: default; opacity: 1; }
+.hqr27-row-ic { grid-area: ic; display: inline-flex; }
+.hqr27-row-t { grid-area: t; display: grid; min-width: 0; }
+.hqr27-row-t small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hqr27-row-v { grid-area: v; font-size: .8rem; color: var(--gold); }
+.st-open .hqr27-row-v { color: var(--good); }
+.st-building .hqr27-row-v { color: var(--warn); }
+.st-locked .hqr27-row { border-style: dashed; }
+/* diálogo de compra */
+.hqr27-dlg { display: grid; gap: 10px; max-width: 520px; }
+.hqr27-dlg p { margin: 0; }
+.hqr27-dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; }
+.hqr27-dl dt { color: var(--muted); }
+.hqr27-dl dd { margin: 0; }
+.hqr27-why { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 5px; border-left: 3px solid var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--panel)); }
+@media (max-width: 600px) {
+  .hqr27-list { grid-template-columns: minmax(0, 1fr); }
+  .hqr27-buy-in { padding: 2px 5px; font-size: .58rem; }
+}

@@ -9,6 +9,7 @@ import { hqCaps } from '../../sim/branches';
 import { calendar19 } from '../../sim/calendar19';
 import { lastMonthView23 } from '../../sim/close23';
 import type { Goto18 } from '../../sim/inbox18';
+import { hqRooms27, type Unit27 } from '../../sim/sys/hqrooms27';
 import { nextStep23, type Step23 } from '../../sim/sys/journey23';
 import { unreadCount } from '../../sim/sys/people/inbox';
 import { column23, scout23 } from '../../sim/sys/scout23';
@@ -37,6 +38,8 @@ export interface HqModel25 {
   /** r27: cidade-sede (horizonte), nome do selo (letreiro) e semente do desenho */
   city: string; brand: string; seedKey: string;
   rooms: RoomM25[]; away: Sprite25[]; needs: Need25[]; agenda: Agenda25[]; cast: Cast25[];
+  /** r27 I1: salas e andares compráveis do nível atual (aberta, fechada ou em obra; custo, manutenção, efeito) */
+  units: Unit27[];
 }
 
 /** Máximo de bonecos desenhados por sala (o resto vira "+N"). */
@@ -170,7 +173,7 @@ export function hqModel25(s: GameState): HqModel25 {
   });
 
   return {
-    era, hq, hqName: HQ_LEVELS[hq].name, year: s.year, city: s.config.homeCity ?? '', brand: s.config.companyName || 'REC', seedKey: `${s.config.seed ?? ''}|${s.config.companyName ?? ''}`, rooms, away: sprites.filter((x) => x.room === 'away'),
+    era, hq, hqName: HQ_LEVELS[hq].name, year: s.year, city: s.config.homeCity ?? '', brand: s.config.companyName || 'REC', seedKey: `${s.config.seed ?? ''}|${s.config.companyName ?? ''}`, rooms, away: sprites.filter((x) => x.room === 'away'), units: hqRooms27(s),
     needs: needs25(s, { step, acts, rw, ready, soon: soonShows.length + tours.length }), agenda: agenda25(s, sessions), cast,
   };
 }
