@@ -3,11 +3,11 @@
 // número, dinheiro, porcentagem, posição ou variação; travessão/vazio não contam. A marcação é só uma classe
 // (num27c) — ordenação (sort22) e cartões do celular (cards23) continuam iguais.
 
-/** A célula é um número? ($1.491, −$7 mil, 54%, +20, #3, 1.234,5, 12k, 2,3 mi, 4.9, ~175, 50–300 não). */
+/** A célula é um número? ($1.491, −$7 mil, 54%, +20, #3, 1.234,5, 12k, 2,3 mi, 4.9, ~175, "$1.125 $$$$", "1956–"; 50–300 não). */
 export function isNumCell27(raw: string): boolean {
   const x = raw.replace(/\s+/g, ' ').trim();
   if (!x || x.length > 24) return false;
-  return /^[~≈+\-−±#№]?\s?[−-]?\s?(?:[$€£¥]|R\$|US\$)?\s?\d[\d.,  ]*(?:\s?(?:%|pp|k|K|M|B|mi|mil|bi|x|×|º|ª|°))?(?:\s?[▲▼↑↓])?$/.test(x);
+  return /^[~≈+\-−±#№]?\s?[−-]?\s?(?:[$€£¥]|R\$|US\$)?\s?\d[\d.,  ]*(?:\s?(?:%|pp|k|K|M|B|mi|mil|bi|x|×|º|ª|°))?(?:\s?[▲▼↑↓])?(?:\s?\$+|[–-])?$/.test(x);
 }
 /** Célula que não decide (vazia, travessão, "n/d"). */
 export const isBlankCell27 = (raw: string): boolean => /^(?:|[—–\-·…?]|n\/d|N\/A)$/.test(raw.trim());

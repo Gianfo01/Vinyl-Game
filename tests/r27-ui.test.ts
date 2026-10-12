@@ -74,7 +74,7 @@ describe('r27 ui: tons e contraste', () => {
 
 describe('r27 ui: números alinhados à direita', () => {
   it('reconhece dinheiro, contagens, porcentagens e variações; recusa texto e faixas', () => {
-    for (const x of ['$1.491', '−$7,2 mil', '$155,6 mil', '54%', '+20', '~175', '4.739', '#3', '12k', '2,3 mi', '1978', '-3', '$0'])
+    for (const x of ['$1.491', '−$7,2 mil', '$155,6 mil', '54%', '+20', '~175', '4.739', '#3', '12k', '2,3 mi', '1978', '-3', '$0', '$1.125 $$$$$', '1956–'])
       expect(isNumCell27(x), x).toBe(true);
     for (const x of ['Bar ou clube pequeno', '50–300', 'Jun 1978', '3 semanas', 'Os Trovadores', '', 'R$ muito'])
       expect(isNumCell27(x), x).toBe(false);

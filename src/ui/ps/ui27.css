@@ -47,7 +47,7 @@ main > header.pg23 { margin: var(--sp-2) 0 var(--sp-4); }
 .kpi27 { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: var(--sp-2) var(--sp-3); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); text-align: left; color: var(--ink); font: inherit; }
 button.kpi27 { cursor: pointer; }
 button.kpi27:hover { border-color: var(--accent); }
-.kpi27-l { color: var(--muted); font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi27-l { color: var(--muted); font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .kpi27-v { font-family: var(--mono); font-size: var(--fs-kpi); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kpi27-h { color: var(--muted); font-size: var(--fs-xs); }
 .kpi27-v.t-good { color: var(--good); } .kpi27-v.t-bad { color: var(--bad); } .kpi27-v.t-warn { color: var(--warn); } .kpi27-v.t-accent { color: var(--accent); } .kpi27-v.t-info { color: var(--t-info-fg); }
@@ -168,6 +168,8 @@ main .pill.warn { color: var(--t-warn-fg); background: var(--t-warn-bg); }
 .score, .ovr, .take.good, .take.bad { color: var(--on-tone); }
 .ovr.low, .ovr:not(.good):not(.mid):not(.bad):not(.big) { color: var(--ink); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--line); }
 .warn-t { color: var(--warn) !important; }
+/* botão "fantasma" marcado como ligado (filtros): preenchido, como as abas (antes texto da cor do fundo, 1,1:1) */
+main .btn.ghost.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 /* botão desabilitado: continua legível */
 .btn:disabled { opacity: 0.6; }
 /* hierarquia: em linhas de tabela e listas longas o "primário" vira secundário com acento (antes até 187 botões cheios na mesma tela) */
