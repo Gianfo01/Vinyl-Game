@@ -212,3 +212,4 @@ import './ui20';
 import './mundo27'; // r27 (E1): Mundo — Este mês no mundo, mapa pixel art com ficha da cidade, linha das eras, O que sabemos
 // Rodada 18 (core18, onda 0): tooltips encadeados, Caixa de entrada 2.0, menu de ações por pessoa e Dinâmica (sempre por último).
 import './core18';
+import './eggs27'; // r27 ovos de Páscoa: Konami, pele 1889/chiptune, registros para busca/sede/mapa (docs/eggs27.md)

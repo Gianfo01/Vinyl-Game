@@ -30,6 +30,7 @@ import { compareActs } from './compare';
 import { restartTutorial, tutorialCard } from './tutorial';
 import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
+import { eggCmds27, undoEgg27 } from './sys/eggs27'; // r27 ovos de Páscoa (busca secreta e 3/2/1959)
 import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
 import { ICON_NAMES, icon as pxIcon, type IconName } from './pixel/icons';
@@ -249,6 +250,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
 
 function undo(): void {
   if (!store.undoSnapshot || !store.game || store.game.config.ironman) return;
+  { const m27 = undoEgg27(store.game); if (m27) { toast(m27, 'info'); return; } } // r27 ovo: 3/2/1959
   store.game = migrate(JSON.parse(store.undoSnapshot));
   store.undoSnapshot = null;
   toast(t(l('Mês desfeito.', 'Month undone.')), 'info');
@@ -643,6 +645,7 @@ function palette(): void {
     for (const p of Object.values(g.persons)) if (actOf[p.id] && p.name.toLowerCase().includes(qq.slice(0, 2))) out.push({ label: p.name, kind: 'person', icon: 'star', hint: actOf[p.id] + (p.alive ? '' : ' · †'), run: () => openPerson(p.id) });
     for (const x of searchRoute16.f?.(g, qq) ?? []) out.push({ label: x.label, kind: 'person', icon: 'star', hint: x.hint, run: () => personRoute16.f?.(x.key) });
     out.push(...paletteCmds20(g, true)); // r20 G4: ações dos outros artistas do elenco
+    out.push(...eggCmds27(g, qq)); // r27 ovos: códigos secretos da busca (payola, hall da fama, 1889…)
     return out;
   };
   palette15(base, search);
