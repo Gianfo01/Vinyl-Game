@@ -6,11 +6,11 @@ const J = (...x: string[]) => x.map((n) => `${n} Jackson`);
 export const KIN15: KinRow[] = [
   // Jackson
   ['S', ...J('Michael', 'Janet', 'Jermaine', 'Jackie', 'Tito', 'Marlon', 'La Toya', 'Randy', 'Rebbie')],
-  ['P', 'Joe Jackson', ...J('Michael', 'Janet', 'Jermaine', 'Jackie', 'Tito', 'Marlon', 'La Toya', 'Randy')],
-  ['U', 'Tito Jackson', 'Taj Jackson', 'TJ Jackson'],
+  ['P', 'Joe Jackson', ...J('Michael', 'Janet', 'Jermaine', 'Jackie', 'Tito', 'Marlon', 'La Toya', 'Randy', 'Rebbie')],
+  ['P', 'Tito Jackson', 'Taj Jackson', 'Taryll Jackson', 'TJ Jackson'], // r27: pai (era "tio"); os três formam o 3T
   ['P', 'Michael Jackson', 'Prince Jackson', 'Paris Jackson'],
   ['P', 'Jermaine Jackson', 'Jaafar Jackson'],
-  ['M', 'Michael Jackson', 'Lisa Marie Presley'], ['P', 'Elvis Presley', 'Lisa Marie Presley'],
+  ['X', 'Michael Jackson', 'Lisa Marie Presley'], // r27: casados 1994–1996 ['P', 'Elvis Presley', 'Lisa Marie Presley'],
   // irmãos de bandas
   ['S', 'Barry Gibb', 'Robin Gibb', 'Maurice Gibb', 'Andy Gibb'],
   ['S', 'Don Everly', 'Phil Everly'],
@@ -19,7 +19,7 @@ export const KIN15: KinRow[] = [
   ['S', 'Kevin Jonas', 'Joe Jonas', 'Nick Jonas'],
   ['S', 'Este Haim', 'Danielle Haim', 'Alana Haim'],
   ['S', 'Caleb Followill', 'Nathan Followill', 'Jared Followill'], ['C', 'Matthew Followill', 'Caleb Followill'],
-  ['S', 'Eddie Van Halen', 'Alex Van Halen'], ['P', 'Eddie Van Halen', 'Wolfgang Van Halen'], ['M', 'Eddie Van Halen', 'Valerie Bertinelli'],
+  ['S', 'Eddie Van Halen', 'Alex Van Halen'], ['P', 'Eddie Van Halen', 'Wolfgang Van Halen'], ['X', 'Eddie Van Halen', 'Valerie Bertinelli'], // r27: casados 1981–2007
   ['S', 'Angus Young', 'Malcolm Young', 'George Young'],
   ['S', "O'Kelly Isley", 'Rudolph Isley', 'Ronald Isley', 'Ernie Isley', 'Marvin Isley'],
   ['S', 'Ruth Pointer', 'Anita Pointer', 'June Pointer', 'Bonnie Pointer'],
@@ -46,10 +46,10 @@ export const KIN15: KinRow[] = [
   ['P', 'Dorival Caymmi', 'Dori Caymmi', 'Danilo Caymmi', 'Nana Caymmi'], ['S', 'Dori Caymmi', 'Danilo Caymmi', 'Nana Caymmi'], ['P', 'Nana Caymmi', 'Stella Caymmi'],
   ['S', 'Caetano Veloso', 'Maria Bethânia'], ['P', 'Caetano Veloso', 'Moreno Veloso', 'Zeca Veloso', 'Tom Veloso'], ['S', 'Moreno Veloso', 'Zeca Veloso', 'Tom Veloso'], ['M', 'Caetano Veloso', 'Paula Lavigne'],
   ['P', 'Gilberto Gil', 'Preta Gil', 'Bem Gil', 'Bela Gil', 'Nara Gil'], ['S', 'Preta Gil', 'Bem Gil', 'Bela Gil', 'Nara Gil'],
-  ['P', 'Elis Regina', 'Maria Rita', 'Pedro Mariano', 'João Marcello Bôscoli'], ['S', 'Maria Rita', 'Pedro Mariano', 'João Marcello Bôscoli'], ['M', 'Elis Regina', 'César Camargo Mariano'], ['P', 'César Camargo Mariano', 'Pedro Mariano', 'Maria Rita'],
+  ['P', 'Elis Regina', 'Maria Rita', 'Pedro Mariano', 'João Marcello Bôscoli'], ['S', 'Maria Rita', 'Pedro Mariano', 'João Marcello Bôscoli'], ['X', 'Elis Regina', 'César Camargo Mariano'], // r27: casados 1973–1981 ("Cesar" sem acento é a mesma pessoa) ['P', 'César Camargo Mariano', 'Pedro Mariano', 'Maria Rita'],
   ['P', 'Wilson Simonal', 'Wilson Simoninha', 'Max de Castro'], ['S', 'Wilson Simoninha', 'Max de Castro'],
   ['P', 'Luiz Gonzaga', 'Gonzaguinha'],
-  ['S', 'Chico Buarque', 'Miúcha', 'Cristina Buarque', 'Ana de Hollanda'], ['P', 'Miúcha', 'Bebel Gilberto'], ['P', 'João Gilberto', 'Bebel Gilberto'], ['X', 'João Gilberto', 'Miúcha'], ['U', 'Chico Buarque', 'Bebel Gilberto'], ['M', 'João Gilberto', 'Astrud Gilberto'],
+  ['S', 'Chico Buarque', 'Miúcha', 'Cristina Buarque', 'Ana de Hollanda'], ['P', 'Miúcha', 'Bebel Gilberto'], ['P', 'João Gilberto', 'Bebel Gilberto'], ['X', 'João Gilberto', 'Miúcha'], // casados 1965–1971 ['U', 'Chico Buarque', 'Bebel Gilberto'], ['X', 'João Gilberto', 'Astrud Gilberto'], // r27: casados 1959–1964
   ['P', 'Xororó', 'Sandy', 'Junior Lima'], ['S', 'Sandy', 'Junior Lima'],
   ['P', 'Tom Jobim', 'Paulo Jobim'], ['P', 'Paulo Jobim', 'Daniel Jobim'], ['P', 'Vinicius de Moraes', 'Luciana de Moraes'],
 

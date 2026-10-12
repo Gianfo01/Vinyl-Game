@@ -21,6 +21,8 @@ export interface RealArtist {
   c: string;
   /** ano da estreia (primeiro lançamento) */
   d: number;
+  /** r27: ano de formação, quando bem antes da estreia (ausente = estreia − 1) */
+  f?: number;
   /** ano em que parou (separação/aposentadoria/morte); ausente = ainda ativo */
   e?: number;
   /** anos de volta: [início, fim?] */
