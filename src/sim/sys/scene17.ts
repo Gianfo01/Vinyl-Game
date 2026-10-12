@@ -284,6 +284,7 @@ export function queue17(s: GameState, defId: string, c: Ctx17, o: { force?: bool
   const cs = queueScene(s, 'scene17', placeK, { title, text, actId: c.act ?? null, key: '' });
   if (!cs) return null;
   cs.data.key = cs.id;
+  cs.data.int23 = d.major ? 'always' : 'never'; // r23 (A): cena menor espera no Álbum (decidir depois)
   st.pend[cs.id] = { def: defId, ctx: c, w: s.week, title, text, vary, cs: cs.id };
   return cs.id;
 }

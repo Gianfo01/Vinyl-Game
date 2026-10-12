@@ -28,6 +28,7 @@
 .h19-col { border: 1px solid var(--line); border-radius: 8px; padding: 0.4rem 0.55rem; background: var(--panel); min-width: 0; }
 .h19-col h3 { margin: 0 0 0.25rem; font-size: 0.95rem; display: flex; gap: 0.35rem; align-items: center; }
 .h19-n { font-size: 0.75rem; border-radius: 10px; padding: 0 0.45rem; background: var(--panel-2); }
+.h19-dot { color: var(--muted, #888); font-size: 0.9rem; } /* r23 (B): informativo, sem número */
 .h19-n.bad { background: color-mix(in srgb, var(--bad) 35%, transparent); }
 .h19-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
 .h19-col li { font-size: 0.82rem; display: flex; gap: 0.3rem; align-items: baseline; }

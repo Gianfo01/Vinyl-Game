@@ -26,12 +26,12 @@ describe('polimento r14', () => {
     expect(tagName14('weird_tag').pt).toBe('weird tag');
   });
   it('tutorial: sede só para o selo; outras carreiras começam na sua casa', () => {
-    expect(tutorialIntro14(['label']).title.pt).toContain('sede');
-    expect(tutorialIntro14(['manager', 'label']).area).toBe('hq');
+    expect(tutorialIntro14(['label']).title.pt).toContain('Cockpit'); // r23 (C)
+    expect(tutorialIntro14(['manager', 'label']).area).toBe('cockpit');
     const m = tutorialIntro14(['manager']);
     expect(m.title.pt).not.toContain('sede');
     expect(m.area).toBe('management');
     expect(tutorialIntro14(['musician']).area).toBe('artists');
-    expect(tutorialIntro14([]).area).toBe('hq');
+    expect(tutorialIntro14([]).area).toBe('cockpit');
   });
 });

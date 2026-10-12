@@ -28,6 +28,7 @@ registerCutscene('lifeEvent', (s, cs, close) => {
     }
     const nm = names(s, op.ctx);
     box.replaceChildren(
+      ...(d.ctx23 ? [h('p', { class: 'muted small le10-ctx' }, h('b', null, t(l('Contexto', 'Context'))), ' · ', t(d.ctx23))] : []), // r23 (A)
       h('p', { class: 'le10-text' }, t(d.text(s, op.ctx))),
       dots(s),
       h('div', { class: 'col' }, d.ch.map((ch) => {

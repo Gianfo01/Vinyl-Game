@@ -2,6 +2,7 @@
 // (que eram uma seção perdida no meio da Mesa) com o calendário único: contagem, ordem por risco (ruim primeiro) e
 // "ir para" em cada linha. A seção antiga 'long18-3q' sai da Mesa (mesmo conteúdo, agora no topo).
 
+import { allClear23, badge23 } from '../../sim/counters23';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { calendar19, crunch19 } from '../../sim/calendar19';
@@ -34,10 +35,12 @@ export function head19(s: GameState): Head19 {
 }
 
 function col(id: string, title: L, icon: string, qs: Q18[], empty: L): HTMLElement {
-  const bad = qs.filter((q) => q.tone === 'bad').length;
+  // r23 (B): número só conta problema real; informativo = ponto neutro; "tudo bem" some (sem selo, mostra o texto vazio)
+  if (allClear23(qs)) qs = [];
+  const b = badge23(qs);
   const all = ui.more === id;
   return h('section', { class: 'h19-col', 'aria-label': t(title) },
-    h('h3', null, ic(icon), ' ', t(title), ' ', h('span', { class: `h19-n ${bad ? 'bad' : ''}`, title: t(l('{n} pedem atenção', '{n} need attention'), { n: bad }) }, String(qs.length))),
+    h('h3', null, ic(icon), ' ', t(title), ' ', b.n ? h('span', { class: 'h19-n bad', title: t(l('{n} pedem atenção', '{n} need attention'), { n: b.n }) }, String(b.n)) : b.dot ? h('span', { class: 'h19-dot', title: t(l('Só informação', 'Information only')), 'aria-label': t(l('Só informação', 'Information only')) }, '•') : null),
     qs.length ? h('ul', null, qs.slice(0, all ? 12 : 3).map((q) => h('li', { class: q.tone }, h('span', null, t(q.t)), q.goto ? h('button', { class: 'btn small ghost', 'aria-label': t(l('Ir', 'Go')), onclick: () => go18(q.goto!) }, '›') : null)))
       : h('p', { class: 'muted small' }, t(empty)),
     qs.length > 3 ? h('button', { class: 'link small', onclick: () => { ui.more = all ? '' : id; rerender(); } }, all ? t(l('menos', 'less')) : t(l('+{n} mais', '+{n} more'), { n: qs.length - 3 })) : null);
