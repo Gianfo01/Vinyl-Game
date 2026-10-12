@@ -2,6 +2,7 @@
 // (finanças, contratos, pessoas, rivais, mundo, eventos, legado). GDD §6, §7.
 
 import { closeSnapshot20 } from './oblig20';
+import { legacyOpen23, rotate23 } from './close23';
 import { fin18, sumP18 } from './ledger18';
 import { clamp, type Rng } from '../core/rng';
 import { dailyStep, directorMonth, monthlyExt, startPlans, weeklyExt, yearlyExt } from './hooks';
@@ -33,8 +34,8 @@ function openMonth(s: GameState, r: Rng): void {
   // decisões não respondidas seguem o padrão (o jogador teve o mês inteiro)
   for (const d of [...s.decisions]) resolveDecision(s, d.id, d.defaultOption);
   s.ledgerKeys = {};
-  s.lastMonthLedger = s.monthLedger;
-  s.monthLedger = {};
+  // r23: o extrato agora gira no FECHAMENTO (closeMonth → rotate23); save antigo gira aqui uma última vez
+  if (legacyOpen23(s)) rotate23(s, s.month === 0 ? s.year - 1 : s.year, (s.month + 11) % 12);
   s.notifications = s.notifications.filter((n) => s.week - n.week < 26);
   s.clock.monthStartWeek = s.week;
   s.clock.dayInMonth = 0;
@@ -87,6 +88,7 @@ export function advanceMonth(s: GameState): void {
 
 function closeMonth(s: GameState, r: Rng, daysInMonth: number): void {
   const monthStartWeek = s.clock.monthStartWeek;
+  const closingY = s.year, closingM = s.month; // r23
   s.day += daysInMonth;
   s.clock.dayInMonth = 0;
   s.clock.opened = false;
@@ -138,6 +140,7 @@ function closeMonth(s: GameState, r: Rng, daysInMonth: number): void {
   if (s.year > END_YEAR && !s.ended) finishArc(s);
   buildBriefing(s, monthStartWeek);
   closeSnapshot20(s); // r20 (B8): retrato datado do fechamento (Finanças: Agora × Último fechamento)
+  rotate23(s, closingY, closingM); // r23: retrato imutável do mês fechado (topo, Mesa, Cockpit usam o mesmo)
 }
 
 function contractsMonth(s: GameState): void {

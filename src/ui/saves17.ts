@@ -1,5 +1,5 @@
 // Rodada 17 — vários saves, de qualquer tamanho, e cada pessoa com os seus:
-// - Local (IndexedDB, sem limite prático): autosave por partida em rodízio de 3 anos (ironman: um só), saves com
+// - Local (IndexedDB; limite depende do navegador — r23): autosave por partida em rodízio de 3 anos (ironman: um só), saves com
 //   nome, renomear, duplicar, apagar, exportar (arquivo/texto VTN1) e importar para um slot novo.
 // - Perfis locais: várias pessoas no mesmo navegador, cada uma vê só os próprios saves (trava leve por PIN).
 // - Nuvem por pessoa (artifact no claude.ai): capacidades `db` + `user`; caminho privado data/users/<id>/ — nem o
@@ -14,11 +14,11 @@ import type { GameState } from '../sim/types';
 import { modal, toast } from './common';
 import { h } from './dom';
 import {
-  afterSave17, copyText, deleteSave, gunzip, gzip, gzipB64, importSaveText, lastLoadErr20, listSaves, loadGame, openDb, profileId17, runId17, saveGame, store, tryDownload, type SaveMeta,
+  afterSave17, copyText, deleteSave, gunzip, gzip, gzipB64, importSaveText, lastLoadErr20, listSaves, loadGame, openDb, profileId17, readSaveFile23, runId17, saveGame, store, tryDownload, type SaveMeta,
 } from './store';
 import './start17.css';
 import { encodeSave20, SaveError20 } from '../core/save20';
-import { errName20, health20, retry20, setHealth20 } from './savehealth20';
+import { errName20, health20, isQuota23, quotaText23, retry20, setHealth20 } from './savehealth20';
 
 // ---------------------------------------------------------------- armazenamento local cru
 
@@ -37,6 +37,7 @@ const recJson = async (slot: string): Promise<string | null> => { const r = awai
 /** r20 (B5/B6): mensagem de recusa de save, pelo código. */
 export function saveErrText20(e: unknown): string {
   const c = e instanceof SaveError20 ? e.code : '';
+  if (isQuota23(e)) return quotaText23(); // r23
   if (c === 'too_big') return t(l('Arquivo grande demais para um save (recusado antes de abrir).', 'File too large for a save (refused before opening).'));
   if (c === 'future') return t(l('Save de uma versão mais nova do jogo: atualize o jogo. O arquivo não foi alterado.', 'Save from a newer game version: update the game. The file was not changed.'));
   if (c === 'schema') return t(l('Save com estrutura inválida ou incompleta ({d}). Nada foi substituído.', 'Save with invalid or incomplete structure ({d}). Nothing was replaced.'), { d: (e as SaveError20).detail.slice(0, 60) });
@@ -229,14 +230,14 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
   const file = h('input', { type: 'file', style: 'display:none', onchange: async (e: Event) => {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
-    try { await importToSlot17(await f.text(), f.name.replace(/\.(json|txt|vtn)+$/g, '')); toast(t(l('Save importado para um slot novo.', 'Save imported into a new slot.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); }
+    try { await importToSlot17(await readSaveFile23(f), f.name.replace(/\.(json|txt|vtn)+$/g, '')); toast(t(l('Save importado para um slot novo.', 'Save imported into a new slot.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); }
   } }) as HTMLInputElement;
   box.append(
     o.profiles === false ? '' : profileBar17(() => { void drawLocal(); }),
     h('h4', null, t(l('Neste navegador', 'In this browser'))),
-    h('p', { class: 'muted small' }, t(l('Sem limite de tamanho nem de quantidade. Cada partida guarda 3 autosaves (o último de cada um dos 3 anos mais recentes; ironman: só 1).', 'No size or count limit. Each run keeps 3 autosaves (the last of each of the 3 most recent years; ironman: just 1).'))),
+    h('p', { class: 'muted small' }, t(l('O limite depende do navegador; exporte um backup de vez em quando. Cada partida guarda 3 autosaves (o último de cada um dos 3 anos mais recentes; ironman: só 1).', 'The limit depends on the browser; export a backup now and then. Each run keeps 3 autosaves (the last of each of the 3 most recent years; ironman: just 1).'))),
     h('div', { class: 'row wrap' },
-      store.game && !store.game.config.ironman ? act(t(l('Salvar como novo…', 'Save as new…')), async () => { const n = ask(l('Nome do save:', 'Save name:'), `${store.game!.config.companyName} ${store.game!.year}`); if (n === null) return; const ok = await saveGame(`man-${Date.now().toString(36)}`, n); toast(ok ? t(l('Salvo.', 'Saved.')) : 'Erro', ok ? 'good' : 'bad'); void drawLocal(); }, 'btn small') : null,
+      store.game && !store.game.config.ironman ? act(t(l('Salvar como novo…', 'Save as new…')), async () => { const n = ask(l('Nome do save:', 'Save name:'), `${store.game!.config.companyName} ${store.game!.year}`); if (n === null) return; const ok = await saveGame(`man-${Date.now().toString(36)}`, n); toast(ok ? t(l('Salvo.', 'Saved.')) : (health20.local.err ?? 'Erro'), ok ? 'good' : 'bad'); void drawLocal(); }, 'btn small') : null,
       act(t(l('Importar arquivo', 'Import file')), () => file.click()),
       act(t(l('Colar texto de save', 'Paste save text')), async () => { const tx = ask(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)')); if (!tx) return; try { await importToSlot17(tx); toast(t(l('Save importado.', 'Save imported.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); } }),
       file),

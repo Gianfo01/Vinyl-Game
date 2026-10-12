@@ -4,6 +4,7 @@
 
 import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
+import { lastMonthView23 } from '../sim/close23';
 import { unreleasedRecorded } from '../sim/production';
 import { actState } from '../sim/people';
 import { energyLeft, life, maxEnergy } from '../sim/sys/life';
@@ -34,7 +35,7 @@ export const ADVISOR_EXTRA: ((s: GameState) => Tip[])[] = [];
 
 export function advisorTips(s: GameState): Tip[] {
   const out: Tip[] = [];
-  const net = Object.values(s.lastMonthLedger).reduce((a, b) => a + b, 0);
+  const net = lastMonthView23(s).delta; // r23: variação do caixa do mês fechado
   if (s.player.cash < 0) out.push({ icon: 'warning', text: l('Caixa negativo: corte custos, venda masters ou peça empréstimo (Negócios).', 'Negative cash: cut costs, sell masters or take a loan (Business).'), area: 'business', level: 'bad' });
   else if (net < 0 && s.player.cash / -net < 4) out.push({ icon: 'warning', text: fmtL(l('No ritmo do último mês, o caixa dura ~{n} meses ({c}).', 'At last month\'s pace, cash lasts ~{n} months ({c}).'), { n: Math.max(1, Math.floor(s.player.cash / -net)), c: $(s.player.cash) }), area: 'business', level: 'warn' });
   const ids = playerActs(s);

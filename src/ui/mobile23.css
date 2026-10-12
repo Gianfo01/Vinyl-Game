@@ -1,0 +1,62 @@
+/* Rodada 23 — celular (≤760px): barra do topo em UMA linha (menu, data, caixa, avançar; o resto no "⋯"),
+   barra inferior com no máximo 4 destinos + "Mais" (gaveta com todos os grupos) e tabelas densas em cartões
+   empilhados (td[data-label], preenchido por cards23.ts). Fora do celular, os extras ficam escondidos. */
+
+.m23-tmenu, .nav .m23-more { display: none; }
+
+@media (max-width: 760px) {
+  /* ---- topo: uma linha ---- */
+  .app > .topbar { flex-wrap: nowrap; gap: 0.4rem; padding: 0.35rem 0.5rem; min-height: 48px; font-size: 0.9rem; }
+  .topbar .brand, .topbar .rep, .topbar .date small, .topbar .money > .muted { display: none; }
+  .topbar .sh20:not(.bad) { display: none; } /* save falhou continua visível (r20 B1) */
+  .topbar > * + .date, .topbar > .money, .topbar > .rep { padding-left: 0.4rem; }
+  .topbar .date { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: clip; flex: 0 0 auto; }
+  .topbar .money { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+  .topbar .money small { font-size: 0.75em; }
+  .topbar .money b { font-size: 0.95em; }
+  .topbar .advance { width: auto; margin-left: auto; flex-wrap: nowrap; gap: 0.25rem; justify-content: flex-end; flex: 0 0 auto; }
+  .topbar .advance > :not(.m23-adv):not(.m23-tmenu) { display: none; }
+  .topbar .advance .m23-adv { padding: 0.45rem 0.45rem; min-height: 44px; white-space: nowrap; }
+  .topbar .advance .m23-adv .m23-advl { display: none; }
+  .topbar .advance .m23-adv { display: inline-flex; align-items: center; gap: 0.25rem; }
+  .topbar .advance .m23-adv::after { content: attr(data-short); order: 1; }
+  .topbar .advance .m23-adv .badge { order: 2; }
+  .topbar > * { min-width: 0; }
+  .topbar > button:first-child { flex: 0 0 auto; }
+  .m23-tmenu { display: block; position: relative; }
+  .m23-tmenu > summary { list-style: none; cursor: pointer; min-width: 40px; min-height: 44px; display: grid; place-items: center; font-size: 1.3rem; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+  .m23-tmenu > summary::-webkit-details-marker { display: none; }
+  .m23-tmenu[open] > summary { border-color: var(--accent); }
+  .m23-tlist { position: absolute; right: 0; top: calc(100% + 6px); z-index: 45; display: flex; flex-direction: column; gap: 0.3rem; min-width: 14rem; max-width: calc(100vw - 32px); padding: 0.6rem; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+  .topbar .advance .m23-tmenu .m23-tlist .btn.ghost.small { display: flex; }
+  .m23-tlist .btn { justify-content: flex-start; text-align: left; min-height: 44px; }
+  .m23-tlist small { padding: 0 0.2rem 0.2rem; }
+
+  /* ---- navegação inferior: 4 destinos + Mais ---- */
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; height: 100dvh; }
+  .app > .nav { order: 3; grid-row: 3; grid-area: auto; position: sticky; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); flex-direction: row; overflow: visible;
+    border-top: 1px solid var(--line); border-right: 0; border-bottom: 0; padding: 2px 2px calc(2px + env(safe-area-inset-bottom, 0px)); gap: 0; width: auto; height: auto; }
+  .app > main { grid-row: 2; grid-area: auto; padding: 0.6rem 16px; }
+  .app > .topbar { grid-row: 1; grid-area: auto; }
+  .app > .nav > :not(.nav-group), .app > .nav .nav-group.m23-x, .app > .nav .nav-sub, .app > .nav .nav-pins17 { display: none; }
+  .app > .nav .nav-group { display: block; min-width: 0; }
+  .app > .nav .nav-group.m23-more { display: block; }
+  .app > .nav .nav-head { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; min-height: 52px; font-size: 0.7rem; position: relative; }
+  .app > .nav .nav-head::after, .app > .nav .nav-group.open > .nav-head::after { content: none; }
+  .app > .nav .nav-head .lbl { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app > .nav .nav-head .badge { position: absolute; top: 2px; right: 8%; font-size: 0.6rem; }
+  .tutorial, #toasts { bottom: 72px; }
+
+  /* ---- tabelas densas → cartões ---- */
+  table.m23-cards { display: block; width: 100%; max-width: 100%; overflow: visible; border: 0; }
+  table.m23-cards > thead, table.m23-cards > tbody > tr:first-child:not(:has(td)) { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  table.m23-cards > caption { display: block; text-align: left; }
+  table.m23-cards > tbody, table.m23-cards > tfoot { display: block; }
+  table.m23-cards tr { display: block; margin: 0 0 0.5rem; padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  table.m23-cards td, table.m23-cards tfoot th { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; padding: 0.2rem 0; border: 0; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  table.m23-cards td + td { border-top: 1px dashed var(--line); }
+  table.m23-cards td::before { content: attr(data-label); flex: 0 0 auto; max-width: 45%; color: var(--muted); font-size: 0.85em; text-align: left; font-weight: 500; }
+  table.m23-cards td:not([data-label])::before, table.m23-cards td[data-label='']::before { content: none; }
+  table.m23-cards td:not([data-label]) { justify-content: flex-start; text-align: left; }
+  table.m23-cards td:first-child { font-weight: 600; }
+}

@@ -3,6 +3,7 @@
 // votações da banda e relatório dos rivais.
 
 import { arTotal18 } from '../../sim/ledger18';
+import { cashDeltaL23, lastMonthView23, opResultL23 } from '../../sim/close23';
 import { agendaById } from '../../data/people';
 import { EXTRA_ACTIONS, actionMeta } from '../../data/actions';
 import { l, type L } from '../../data/world';
@@ -100,7 +101,8 @@ export function centralPanel(s: GameState): HTMLElement {
 
   const cashRow = chips(
     stat('money', $(s.player.cash), l('Caixa atual', 'Current cash'), s.player.cash < 0 ? 'bad' : ''),
-    stat('chart-up', $(Math.round(Object.values(s.lastMonthLedger).reduce((a, b) => a + b, 0))), l('Resultado do último mês', 'Last month result')),
+    stat('chart-up', $(lastMonthView23(s).delta), cashDeltaL23(s)), // r23: retrato do fechamento
+    stat('chart-up', $(lastMonthView23(s).op), opResultL23(s)),
     stat('bank', $(receivables), l('A receber (não financia gastos)', 'Receivables (cannot fund spending)')),
     stat('calendar', $(s.player.cash - committed), l('Caixa após planos', 'Cash after plans')),
   );

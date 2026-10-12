@@ -8,6 +8,7 @@ import { t } from '../../i18n/strings';
 import { estimateMonthlyBurn } from '../../sim/events';
 import { recentFacts } from '../../sim/facts17';
 import { dec18, pending18 } from '../../sim/sys/decide18';
+import { lastClosed23, lastMonthView23 } from '../../sim/close23';
 import { P } from '../../sim/sys/people/state';
 import type { Act, GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
@@ -100,7 +101,7 @@ function pulse(s: GameState): HTMLElement {
     h('div', { class: 'hm18-kpi' }, h('small', null, t(lb)), h('b', null, now), spark18(vals, 90, 24, t(lb)), L0 ? why18(s, 'pulse19', { k }, delta(d, fmt)) : null);
   const fans = pl.fans.at(-1) ?? 0;
   return h('div', { class: 'hm18-kpis' },
-    cell(l('Caixa', 'Cash'), pl.cash, $(s.player.cash), L0?.cash ?? 0, (n) => $(n)),
+    cell(l('Caixa', 'Cash'), pl.cash, $(s.player.cash), lastClosed23(s) ? lastMonthView23(s).delta : L0?.cash ?? 0, (n) => $(n)), // r23: retrato do fechamento
     cell(l('Fãs', 'Fans'), pl.fans, fans >= 1e6 ? `${(fans / 1e6).toFixed(1)}M` : fans >= 1e3 ? `${Math.round(fans / 1e3)}k` : String(fans), L0?.fans ?? 0, undefined, 'fans'),
     cell(l('Humor', 'Mood'), pl.mood, String(pl.mood.at(-1) ?? '—'), L0?.mood ?? 0, undefined, 'mood'),
     cell(l('Nas paradas', 'Charting'), pl.hits, `${pl.hits.at(-1) ?? 0}${L0?.best ? ` · #${L0.best}` : ''}`, L0?.hits ?? 0, undefined, 'hits'));
@@ -180,10 +181,12 @@ export function monthToast18(s: GameState): void {
   lastW = pl.w;
   const L0 = pl.last;
   const sg = (n: number, f: (x: number) => string = (x) => Math.round(x).toLocaleString()) => (n > 0 ? `+${f(n)}` : n < 0 ? `−${f(-n)}` : '±0');
-  const parts = [`${t(l('caixa', 'cash'))} ${sg(L0.cash, (x) => $(x))}`, `${t(l('fãs', 'fans'))} ${sg(L0.fans)}`, `${t(l('humor', 'mood'))} ${sg(L0.mood)}`];
+  const cash = lastClosed23(s) ? lastMonthView23(s).delta : L0.cash; // r23: mesmo número da barra do topo
+  const c23 = lastClosed23(s);
+  const parts = [`${t(l('variação do caixa', 'cash change'))} ${sg(cash, (x) => $(x))}`, `${t(l('fãs', 'fans'))} ${sg(L0.fans)}`, `${t(l('humor', 'mood'))} ${sg(L0.mood)}`];
   if (L0.best) parts.push(`${t(l('melhor posição', 'best spot'))} #${L0.best}`);
   if (L0.fired) parts.push(t(l('{n} consequência(s) voltaram', '{n} consequence(s) came back'), { n: L0.fired }));
-  toast(`📅 ${monthName((s.month + 11) % 12)} ${t(l('fechado', 'closed'))}: ${parts.join(' · ')}`, L0.cash >= 0 ? 'good' : 'bad');
+  toast(`📅 ${monthName(c23?.m ?? (s.month + 11) % 12)}${c23 ? ` ${c23.y}` : ''} ${t(l('fechado', 'closed'))}: ${parts.join(' · ')}`, cash >= 0 ? 'good' : 'bad');
 }
 
 AFTER_ADVANCE.push((s) => monthToast18(s));

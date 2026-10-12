@@ -18,6 +18,7 @@ import { noteDeadline19, dropDeadline19 } from '../calendar19';
 import type { GameState } from '../types';
 import { fmtL, nextId, playerActs } from '../util';
 import { addMsg, P, type InboxMsg } from './people/state';
+import { cashDeltaL23, lastClosed23, lastMonthView23 } from '../close23';
 
 // ---------------------------------------------------------------- regras
 
@@ -148,7 +149,8 @@ registerExplain('pulse19', (s, c) => {
   if (!L0) return null;
   const mine = new Set(['player', ...playerActs(s)]);
   const parts: WhyPart[] = [];
-  if (k === 'cash') parts.push({ label: l('Resultado do último mês (por categoria)', 'Last month result (by category)'), value: L0.cash, fmt: 'money', tone: L0.cash >= 0 ? 'good' : 'bad', why: { key: 'cash.month' } });
+  if (k === 'cash') parts.push({ label: cashDeltaL23(s), value: lastClosed23(s) ? lastMonthView23(s).delta : L0.cash, // r23
+     fmt: 'money', tone: L0.cash >= 0 ? 'good' : 'bad', why: { key: 'cash.month' } });
   if (k === 'fans' || k === 'hits') for (const id of playerActs(s).slice(0, 4)) {
     const a = s.acts[id];
     if (a) parts.push({ label: a.name, value: k === 'fans' ? a.fans.casual + a.fans.active + a.fans.core : `${a.hits} hits`, fmt: k === 'fans' ? 'num' : 'text', why: k === 'fans' ? { key: 'act.fame', ctx: { act: id } } : undefined });

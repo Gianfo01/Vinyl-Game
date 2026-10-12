@@ -7,6 +7,7 @@ import { l, type L } from '../data/world';
 import { S, t, type Lang } from '../i18n/strings';
 import { endingScores, legacyTotal } from '../sim/legacy';
 import { advance } from '../sim/tick';
+import { cashDeltaL23, lastMonthView23 } from '../sim/close23';
 import { advanceUntil, digestEnd, digestStart, type Digest } from '../sim/sys/pacing8';
 import { openUntilConfig, showDigest, stopSummary } from './sys/pacing8';
 import { playerActs } from '../sim/util';
@@ -244,7 +245,7 @@ function undo(): void {
 
 function topBar(): HTMLElement {
   const g = store.game!;
-  const net = Object.values(g.lastMonthLedger).reduce((a, b) => a + b, 0);
+  const net = lastMonthView23(g).delta; // r23: variação do caixa do mês recém-fechado (mesmo retrato da Mesa/Cockpit)
   const rep = g.player.reputation;
   return h('header', { class: 'topbar' },
     menuButton15(openDrawer),
@@ -252,7 +253,7 @@ function topBar(): HTMLElement {
     h('div', { class: 'date' }, h('b', null, dateLabel(g)), h('small', { class: 'muted' }, ` · ${t(S.week)} ${g.week} · Run ${g.signature}`)),
     saveChip20(), // r20 (B1, §4.4.6): saúde do save sempre visível
     h('div', { class: 'money' }, h('span', { class: 'muted' }, `${t(S.cash)} `), h('b', { class: g.player.cash < 0 ? 'bad' : '' }, $(g.player.cash)),
-      h('small', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0' }, ` (${net >= 0 ? '+' : ''}${$(net)})`)),
+      h('small', { class: `${net >= 0 ? 'good' : 'bad'} why18`, 'data-why': 'cash.month', tabindex: '0', title: t(cashDeltaL23(g)), 'aria-label': `${t(cashDeltaL23(g))}: ${$(net)}` }, ` (${net >= 0 ? '+' : ''}${$(net)})`)),
     h('div', { class: 'rep', title: t(S.reputation) }, '★ ', Math.round((rep.artistic + rep.commercial + rep.artists + rep.institutional) / 4)),
     h('div', { class: 'advance' },
       store.undoSnapshot && !g.config.ironman ? h('button', { class: 'btn ghost small', onclick: undo }, '↶ ' + t(S.undo)) : null,
@@ -261,11 +262,28 @@ function topBar(): HTMLElement {
         h('button', { class: 'btn ghost small', title: t(l('Critérios de parada', 'Stop criteria')), 'aria-label': t(l('Critérios de parada', 'Stop criteria')), onclick: () => openUntilConfig(g, () => doAdvance('until')) }, '▾')),
       h('button', { class: 'btn ghost small', onclick: () => doAdvance('quarter') }, '⏩ ' + t(S.advanceQuarter)),
       h('button', { class: 'btn small', title: t(l('Avança até o próximo fechamento semanal (dias de turnê, estúdio e crise)', 'Advance to the next weekly close (tour, studio and crisis days)')), onclick: () => doAdvance('week') }, '▷ ' + t(l('Semana', 'Week')), g.clock.opened ? h('small', null, ` ${g.clock.dayInMonth}d`) : null),
-      h('button', { class: 'btn primary', title: 'Ctrl+Enter', onclick: () => doAdvance('month') }, '▶ ' + t(S.advanceMonth), g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null),
+      h('button', { class: 'btn primary m23-adv', title: 'Ctrl+Enter', 'data-short': t(l('Mês', 'Month')), onclick: () => doAdvance('month') }, '▶ ', h('span', { class: 'm23-advl' }, t(S.advanceMonth)), g.decisions.length ? h('span', { class: 'badge' }, g.decisions.length) : null),
       themeButton(() => render()),
       h('button', { class: 'icon', 'aria-label': t(S.settings), onclick: settings }, '⚙'),
+      timeMenu23(g),
     ),
   );
+}
+
+/** r23: no celular (≤760px) a barra do topo fica numa linha (data, caixa, avançar); o resto do tempo vai para este menu. */
+function timeMenu23(g: NonNullable<typeof store.game>): HTMLElement {
+  const item = (label: string, fn: () => void, title?: string) => h('button', { type: 'button', class: 'btn ghost small', role: 'menuitem', title, onclick: (e: Event) => { (e.currentTarget as HTMLElement).closest('details')?.removeAttribute('open'); fn(); } }, label);
+  const rep = g.player.reputation;
+  return h('details', { class: 'm23-tmenu' },
+    h('summary', { 'aria-label': t(l('Mais controles de tempo e opções', 'More time controls and options')), title: t(l('Mais controles', 'More controls')) }, '⋯'),
+    h('div', { class: 'm23-tlist', role: 'menu' },
+      h('small', { class: 'muted' }, `${t(S.week)} ${g.week} · ★ ${Math.round((rep.artistic + rep.commercial + rep.artists + rep.institutional) / 4)} · ${t(cashDeltaL23(g))}`),
+      item('▷ ' + t(l('Semana', 'Week')) + (g.clock.opened ? ` (${g.clock.dayInMonth}d)` : ''), () => doAdvance('week')),
+      item('⏩ ' + t(S.advanceQuarter), () => doAdvance('quarter')),
+      item('⏭ ' + t(l('Até…', 'Until…')), () => doAdvance('until'), stopSummary(g)),
+      item('▾ ' + t(l('Critérios de parada', 'Stop criteria')), () => openUntilConfig(g, () => doAdvance('until'))),
+      store.undoSnapshot && !g.config.ironman ? item('↶ ' + t(S.undo), undo) : null,
+      item('⚙ ' + t(S.settings), settings)));
 }
 
 /** Menus agrupados (rodada 7): 6 grupos no lugar de ~20 áreas soltas; o grupo atual abre suas áreas. */
@@ -333,7 +351,7 @@ function nav(): HTMLElement {
     pins.map((a) => h('button', { class: store.area === a.id ? 'on' : '', title: a.label, onclick: () => go(a.id) }, h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null))) : null;
   return h('nav', { class: 'nav grouped', 'aria-label': 'menu' },
     h('div', { class: 'nav-brand21', 'aria-hidden': 'true' }, h('span', { class: 'disc-sm' }), h('span', null, h('b', null, store.game!.config.companyName), h('small', null, 'Masters · Heritage'))),
-    pinBox, groups().map((gr) => {
+    pinBox, groups().map((gr, gi) => {
     const items = groupItems(gr);
     const badge = items.reduce((t0, x) => t0 + (x.badge ?? 0), 0);
     const here = gr.id === cur.id;
@@ -346,12 +364,23 @@ function nav(): HTMLElement {
       return h('button', { class: on ? 'on' : '', 'aria-current': on ? 'page' : undefined, title: `${lbl} (${a.key.toUpperCase()})`, onclick: () => enter(a.id) },
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(a.icon)), h('span', { class: 'lbl' }, lbl), a.badge ? h('span', { class: 'badge' }, a.badge) : null); };
     const secs = gr.sections?.map((sc) => [sc, items.filter((x) => sc.areas.includes(x.id))] as const).filter(([, xs]) => xs.length).map(([sc, xs]) => [h('small', { class: 'nav-sec' }, t(sc.label)), ...xs.map(btn)]);
-    return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''} ${gr.other ? 'nav-other' : ''}`, 'data-career': gr.career },
+    return h('div', { class: `nav-group ${open ? 'open' : ''} ${gr.career ? 'nav-career' : ''} ${gr.other ? 'nav-other' : ''} ${gi >= MOBILE_NAV23 ? 'm23-x' : ''}`, 'data-career': gr.career },
       h('button', { class: `nav-head ${open ? 'on' : ''}`, 'aria-expanded': open ? 'true' : 'false', onclick: () => { if (here) { if (open) navFold21.add(gr.id); else navFold21.delete(gr.id); saveFold21(); render(); return; } navFold21.delete(gr.id); saveFold21(); enter(last ?? (gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit')); } },
         h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null),
       open && items.length > 1 ? h('div', { class: 'nav-sub' }, secs ?? items.map(btn)) : null,
     );
-  }), UX19UI.navFoot?.(store.game!) ?? null);
+  }), moreNav23(cur.id), UX19UI.navFoot?.(store.game!) ?? null);
+}
+
+/** r23: celular — barra inferior com no máximo 4 destinos + "Mais" (abre a gaveta com todos os grupos). */
+const MOBILE_NAV23 = 4;
+function moreNav23(curId: string): HTMLElement {
+  const rest = groups().slice(MOBILE_NAV23);
+  const on = rest.some((g) => g.id === curId);
+  const badge = rest.reduce((t0, g) => t0 + groupItems(g).reduce((t1, x) => t1 + (x.badge ?? 0), 0), 0);
+  return h('div', { class: 'nav-group m23-more' },
+    h('button', { type: 'button', class: `nav-head ${on ? 'on' : ''}`, 'aria-haspopup': 'dialog', onclick: openDrawer },
+      h('span', { class: 'ic', 'aria-hidden': 'true' }, '☰'), h('span', { class: 'lbl' }, t(l('Mais', 'More'))), badge ? h('span', { class: 'badge' }, badge) : null));
 }
 
 /** Faixa de sub-áreas no topo do painel (útil no celular, onde o menu lateral vira barra). */

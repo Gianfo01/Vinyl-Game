@@ -6,7 +6,7 @@ import { registerMovementGenres } from '../sim/culture';
 import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
 import { SAVE_VERSION } from '../sim/worldgen';
-import { decodeSave20, encodeSave20, inflate20, MAX_IN20, MAX_OUT20, now20, SaveError20 } from '../core/save20';
+import { decodeSave20, encodeSave20, inflate20, MAX_FILE23, MAX_IN20, MAX_OUT20, now20, SaveError20 } from '../core/save20';
 import { errName20, noteCost20, retry20, setHealth20 } from './savehealth20';
 
 export type BaseArea = 'hq' | 'desk' | 'plan' | 'charts' | 'artists' | 'market' | 'media' | 'catalog' | 'creation' | 'shows' | 'company' | 'business' | 'world' | 'diary';
@@ -317,7 +317,12 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
+/** r23: toda rota de arquivo checa o tamanho ANTES de ler o texto inteiro. */
+export async function readSaveFile23(file: File): Promise<string> {
+  if (file.size > MAX_FILE23) throw new SaveError20('too_big');
+  return file.text();
+}
+
 export function importSave(file: File): Promise<GameState> {
-  if (file.size > MAX_OUT20) return Promise.reject(new SaveError20('too_big'));
-  return file.text().then((txt) => importSaveText(txt));
+  return readSaveFile23(file).then((txt) => importSaveText(txt));
 }

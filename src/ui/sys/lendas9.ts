@@ -5,6 +5,7 @@ import { tryDownload } from '../store';
 // (negociar com o dono, lance fechado no leilão, emprestar, expor, doar, pedir a um museu, detetive).
 // Só passado e presente: tudo vem da crônica já acontecida.
 
+import { MAX_FILE23 } from '../../core/save20';
 import { CITIES, l, type L } from '../../data/world';
 import { getLang, t } from '../../i18n/strings';
 import { biography, chronQuery, chronState, definingFigures, genealogy, influences, nameOf, cityL, genreL, type ChronEv } from '../../sim/sys/chron9';
@@ -403,6 +404,7 @@ export function worldCard9(cfg: RunConfig, onYear?: (y: number) => void): HTMLEl
   const file = h('input', { type: 'file', accept: '.json,application/json', onchange: async (e: Event) => {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
+    if (f.size > MAX_FILE23) { toast(t(l('Arquivo grande demais (recusado antes de abrir).', 'File too large (refused before opening).')), 'bad'); return; } // r23
     try { w = JSON.parse(await f.text()) as WorldFile; box.disabled = false; box.checked = true; apply(true); } catch { toast(t(l('Arquivo de mundo inválido.', 'Invalid world file.')), 'bad'); }
   } });
   // r22: campos de mundo salvo só aparecem quando há um mundo salvo (ou depois de carregar um arquivo)

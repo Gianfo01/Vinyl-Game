@@ -2,6 +2,7 @@
 
 import { genreAvailable20 } from './genretime20';
 import { normalizeHistory } from './history15';
+import { ledgerNet23 } from './close23';
 import { simulatedStartCfg20 } from './worldpolicy20';
 import './sys';
 import { emptyExt, ensureExt } from './ext';
@@ -464,6 +465,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     year: cfg.startYear,
     sig: s.signature,
   }), { important: true });
+  (s as { cashOpen23?: number }).cashOpen23 = s.player.cash - ledgerNet23(s.monthLedger); // r23: saldo de abertura do 1º mês
   return s;
 }
 
