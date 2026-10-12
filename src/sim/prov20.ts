@@ -9,6 +9,7 @@
 import type { Act, GameState, Release } from './types';
 import { realDataOf, realSongs22 } from './sys/realworld';
 import { simStart20 } from './worldpolicy20';
+import { firstJoin, periodsOf } from '../data/realtypes';
 
 export type Prov20 = 'doc' | 'sim';
 
@@ -34,7 +35,7 @@ export interface RealRef20 {
   died?: number;
   debut?: number;
   ended?: number;
-  members: { name: string; born?: number; died?: number; joined?: number; left?: number }[];
+  members: { name: string; born?: number; died?: number; joined?: number; left?: number; periods?: [number | undefined, number | undefined][] }[];
   hits: { title: string; year: number; type: 'lp' | 'ep' | 'single' }[];
   /** mundo aleatório v2: nada da cronologia real anterior ao início virou fato — painel só informativo */
   infoOnly: boolean;
@@ -56,7 +57,12 @@ export function realRef20(s: GameState, act: Act): RealRef20 | null {
     died: upTo(d.x),
     debut: upTo(d.d),
     ended: upTo(d.e),
-    members: (d.m ?? []).filter((m) => m[4] === undefined || m[4] <= y).map(([name, , born, died, joined, left]) => ({ name, born, died: upTo(died), joined, left: upTo(left) })),
+    // r27 (F): uma linha por pessoa; passagens até o ano corrente (saiu e voltou)
+    members: (d.m ?? []).filter((m) => firstJoin(m) === undefined || firstJoin(m)! <= y).map((m) => {
+      const ps = periodsOf(m).filter(([a]) => a === undefined || a <= y).map(([a, b]) => [a, upTo(b)] as [number | undefined, number | undefined]);
+      const last = ps[ps.length - 1];
+      return { name: m[0], born: m[2], died: upTo(m[3]), joined: ps[0]?.[0], left: last?.[1], periods: ps.length > 1 ? ps : undefined };
+    }),
     hits: [...(d.al ?? []).filter((x) => x[1] <= y).map(([title, year, type]) => ({ title, year, type: type ?? 'lp' })),
       ...realSongs22(act).filter((x) => x[1] <= y).map(([title, year]) => ({ title, year, type: 'single' as const }))].sort((a, b) => a.year - b.year),
     infoOnly: simStart20(s),

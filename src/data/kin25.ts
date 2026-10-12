@@ -1,8 +1,10 @@
 // Rodada 25: mais laços familiares reais (complementa src/data/kin15.ts). Formato [A, relação, B] = "A é <relação> de B".
 // Só valem entre pessoas presentes no banco (casamento por nome canônico, em kin15.graph); sem sorteio.
 // Só fatos bem documentados: na dúvida, fica de fora.
+import type { KinMeta27 } from './model27';
 export type KinRel25 = 'parent' | 'child' | 'sibling' | 'spouse' | 'ex' | 'cousin' | 'uncle' | 'nephew' | 'grandparent' | 'grandchild';
-export type KinRow25 = [string, KinRel25, string];
+/** r27 (F): 4º item opcional = KinMeta27 (subtipo, período, procedência) */
+export type KinRow25 = [string, KinRel25, string] | [string, KinRel25, string, KinMeta27];
 
 /** irmãos: todos os pares do grupo */
 const sib = (...ns: string[]): KinRow25[] => ns.flatMap((a, i) => ns.slice(i + 1).map((b) => [a, 'sibling', b] as KinRow25));

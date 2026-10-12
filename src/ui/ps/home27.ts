@@ -12,8 +12,8 @@ import { careerDef } from '../../sim/sys/careers12';
 import { YEAR_MAX20, YEAR_MIN20 } from '../../sim/worldpolicy20';
 import { cityName, modal, toast } from '../common';
 import { h, select } from '../dom';
-import { deleteSave, importSave, importSaveText, listSaves, loadGame, lastLoadErr20, savePrefs, store, type SaveMeta } from '../store';
-import { addProfile17, curProfile17, deleteProfile17, lastSave17, mySaves17, profiles17, renameLocal17, renameProfile17, saveErrText20, saveManagerModal17, switchProfile17 } from '../saves17';
+import { deleteSave, importSave, importSaveText, listSaves, loadGame, lastLoadErr20, saveCompatible27, savePrefs, store, type SaveMeta } from '../store';
+import { addProfile17, curProfile17, deleteProfile17, lastSave17, mySaves17, oldRow27, profiles17, renameLocal17, renameProfile17, saveErrText20, saveManagerModal17, switchProfile17 } from '../saves17';
 import { SaveError20 } from '../../core/save20';
 import { pasteCode20 } from '../newgame17';
 import { launchRun27, newGameScreen, randomSeed } from '../newgame';
@@ -67,7 +67,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
   const play = (g: NonNullable<typeof store.game>) => { store.game = g; onStart(); };
   const loadSlot = async (m: SaveMeta) => {
     const g = await loadGame(m.slot);
-    if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
+    if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format', 'old'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
     play(g);
   };
   const fileInput = h('input', { type: 'file', style: 'display:none', 'aria-hidden': 'true', onchange: async (e: Event) => {
@@ -83,7 +83,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
   // "Continuar": cartão com o save mais recente do perfil
   const cont = h('div', { class: 'h27-cont-slot' });
   void lastSave17().then((m) => {
-    if (!m) return;
+    if (!m || !saveCompatible27(m)) return; // r27 (F): save antigo não "continua" — fica na lista com Excluir
     cont.replaceChildren(h('button', { type: 'button', class: 'h27-cont', onclick: () => void loadSlot(m) },
       h('span', { class: 'h27-cont-k' }, '▶ ', t(S.continue).toUpperCase()),
       h('b', null, m.name || m.company),
@@ -161,7 +161,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
     for (const m of list) { const k = m.run ?? m.signature; groups.set(k, [...(groups.get(k) ?? []), m]); }
     saveBox.replaceChildren(...[...groups.values()].map((ms) => h('article', { class: 'h27-run' },
       h('header', null, h('b', null, ms[0].company), h('small', { class: 'muted' }, [ms[0].player, ms[0].ironman ? '☠ ironman' : '', `${ms.length} save(s)`].filter(Boolean).join(' · '))),
-      ...ms.map((m) => h('div', { class: 'h27-row', 'data-slot': m.slot },
+      ...ms.map((m) => !saveCompatible27(m) ? oldRow27(m, redrawSaves) : h('div', { class: 'h27-row', 'data-slot': m.slot },
         h('button', { type: 'button', class: 'btn small h27-load', onclick: () => void loadSlot(m) }, '▶ ', `${m.name || (m.kind === 'auto' || m.slot.startsWith('auto') ? t(l('Autosave', 'Autosave')) : t(l('Save', 'Save')))} — ${monthName(m.month)} ${m.year}`),
         h('small', { class: 'muted h27-row-main' }, [m.cash !== undefined ? formatMoney(m.cash, locale()) : '', ago27(m.savedAt)].filter(Boolean).join(' · ')),
         h('span', { class: 'h27-acts' },

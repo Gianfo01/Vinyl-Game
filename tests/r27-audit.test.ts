@@ -69,7 +69,8 @@ describe('r27 auditoria: dados', () => {
     expect(mem(ra('EXO').m, 'Chen')[0][5]).toBe(2024);
     expect(mem(ra('Grateful Dead').m, 'Donna Jean Godchaux')[0]).toEqual(['Donna Jean Godchaux', 'vocal', 1947, 2025, 1972, 1979]);
     expect(mem(cl('Fleetwood Mac').m, 'Bob Welch')).toHaveLength(1);
-    expect(mem(ra('Red Hot Chili Peppers').m, 'John Frusciante')).toHaveLength(3);
+    expect(mem(ra('Red Hot Chili Peppers').m, 'John Frusciante')).toHaveLength(1); // r27 (F): uma linha, três passagens
+    expect(mem(ra('Red Hot Chili Peppers').m, 'John Frusciante')[0][6]).toHaveLength(3);
     // colaboradores fora da formação
     expect(mem(cl('Dr. Dre').m, 'Snoop Dogg')).toHaveLength(0);
     expect(mem(cl('Luiz Gonzaga').m, 'Zé Dantas')).toHaveLength(0);
@@ -85,7 +86,7 @@ describe('r27 auditoria: dados', () => {
     for (const x of ['With the Beatles', 'Beatles for Sale', 'Help!', 'Let It Be']) expect(beatles).toContain(x);
     expect(ra('Nara Leão').al!.some((r) => r[0] === 'Os Meus Amigos São um Barato' && r[1] === 1977)).toBe(true);
     const t3 = ra('3T');
-    expect(t3.exact).toBe(false);
+    expect(t3.ap).toEqual(['f']); // r27 (F): formação aproximada (1994); estreia em disco 1995 confirmada — continua no modo exato
     expect(t3.m!.map((m) => m[0])).toEqual(['Taj Jackson', 'Taryll Jackson', 'TJ Jackson']);
   });
 });
@@ -95,7 +96,7 @@ describe('r27 auditoria: família no jogo', () => {
   const rel = (s: GameState, a: string, b: string) => { const A = who(s, a), B = who(s, b); return A && B ? kinOf15(s, A.id).find((k) => k.id === B.id)?.rel : undefined; };
 
   it('Michael Jackson: irmãos; Tito é PAI de Taj, Taryll e TJ (3T), que são irmãos', { timeout: 240000 }, () => {
-    const s = createGame(defaultConfig('r27-kin', { startYear: 1999, realNames: true, dbSize: 'large' }));
+    const s = createGame(defaultConfig('r27-kin', { startYear: 1999, realNames: true, dbSize: 'large', mode: 'historic' })); // r27 (F): no modo livre 8% dos atos somem por sorteio
     expect(rel(s, 'Janet Jackson', 'Michael Jackson')).toBe('sibling');
     for (const k of ['Taj Jackson', 'Taryll Jackson', 'TJ Jackson']) {
       expect(who(s, k), k).toBeTruthy();

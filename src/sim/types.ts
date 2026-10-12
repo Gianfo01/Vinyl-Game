@@ -199,6 +199,9 @@ export interface Person {
   retireAge?: number;
   /** personagem do jogador (rodada 5) */
   isPlayer?: boolean;
+  /** r27 (F): procedência da pessoa real — c confirmado · a aproximado · u não conferido; bornEst = nascimento gerado
+   *  ("idade aproximada"); writer = compositor(a) real sem ato (parceiro de composição) */
+  real27?: { prov?: 'c' | 'a' | 'u'; bornEst?: 1; writer?: 1 };
 }
 
 export type ActStatus = 'emerging' | 'active' | 'hiatus' | 'retired' | 'split';

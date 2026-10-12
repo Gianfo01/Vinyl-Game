@@ -14,7 +14,7 @@ import type { GameState } from '../sim/types';
 import { modal, toast } from './common';
 import { h } from './dom';
 import {
-  afterSave17, copyText, deleteSave, gunzip, gzip, gzipB64, importSaveText, lastLoadErr20, listSaves, loadGame, openDb, profileId17, readSaveFile23, runId17, saveGame, store, tryDownload, type SaveMeta,
+  afterSave17, copyText, deleteSave, saveCompatible27, gunzip, gzip, gzipB64, importSaveText, lastLoadErr20, listSaves, loadGame, openDb, profileId17, readSaveFile23, runId17, saveGame, store, tryDownload, type SaveMeta,
 } from './store';
 import './start17.css';
 import { encodeSave20, SaveError20 } from '../core/save20';
@@ -39,6 +39,7 @@ export function saveErrText20(e: unknown): string {
   const c = e instanceof SaveError20 ? e.code : '';
   if (isQuota23(e)) return quotaText23(); // r23
   if (c === 'too_big') return t(l('Arquivo grande demais para um save (recusado antes de abrir).', 'File too large for a save (refused before opening).'));
+  if (c === 'old') return t(l('Save de uma versão antiga do jogo, incompatível com o modelo histórico novo. Exclua-o e comece uma partida nova.', 'Save from an old game version, incompatible with the new historical model. Delete it and start a new run.'));
   if (c === 'future') return t(l('Save de uma versão mais nova do jogo: atualize o jogo. O arquivo não foi alterado.', 'Save from a newer game version: update the game. The file was not changed.'));
   if (c === 'schema') return t(l('Save com estrutura inválida ou incompleta ({d}). Nada foi substituído.', 'Save with invalid or incomplete structure ({d}). Nothing was replaced.'), { d: (e as SaveError20).detail.slice(0, 60) });
   if (c === 'malformed' || c === 'format') return t(l('Texto de save corrompido ou truncado. Nada foi substituído.', 'Corrupted or truncated save text. Nothing was replaced.'));
@@ -49,6 +50,17 @@ function metaOf(g: GameState, slot: string, extra: Partial<SaveMeta> = {}): Save
   const pp = Object.values(g.persons).find((p) => p.isPlayer);
   return { slot, signature: g.signature, company: g.config.companyName, year: g.year, month: g.month, role: g.config.role, savedAt: Date.now(), version: g.version,
     profile: profileId17(), kind: 'manual', player: pp?.name, cash: Math.round(g.player.cash), ironman: !!g.config.ironman, run: runId17(g), ...extra };
+}
+
+/** r27 (F): linha de save incompatível (versão antiga): não carrega — só "Excluir". */
+export function oldRow27(m: SaveMeta, after: () => void): HTMLElement {
+  return h('div', { class: 'sv17-row sv27-old' },
+    h('span', { class: 'muted' }, `⚠ ${m.name || m.company} — ${m.year} · `, h('b', null, t(l('incompatível (versão antiga)', 'incompatible (old version)')))),
+    h('small', { class: 'muted' }, t(l('O modelo histórico mudou: este save não abre mais.', 'The historical model changed: this save no longer opens.'))),
+    h('span', { class: 'sv17-acts' }, h('button', { type: 'button', class: 'btn small danger', onclick: async () => {
+      if (!window.confirm(t(l('Excluir este save antigo?', 'Delete this old save?')))) return;
+      await deleteSave(m.slot); after();
+    } }, t(l('Excluir', 'Delete')))));
 }
 
 /** Grava um jogo num slot novo (importado, baixado da nuvem, duplicado). */
@@ -214,8 +226,8 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
       const top = ms[0];
       return h('article', { class: 'sv17-run card' },
         h('header', null, h('b', null, top.company), ' ', h('span', { class: 'muted small' }, `${top.player ? `${top.player} · ` : ''}${top.ironman ? '☠ ironman · ' : ''}${ms.length} ${t(l('save(s)', 'save(s)'))}`)),
-        ...ms.map((m) => h('div', { class: 'sv17-row' },
-          h('button', { type: 'button', class: 'btn small', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } },
+        ...ms.map((m) => !saveCompatible27(m) ? oldRow27(m, () => void drawLocal()) : h('div', { class: 'sv17-row' },
+          h('button', { type: 'button', class: 'btn small', onclick: async () => { const g = await loadGame(m.slot); if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format', 'old'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad'); play(g); } },
             `▶ ${m.name || (m.kind === 'auto' || m.slot.startsWith('auto') ? t(l('Autosave', 'Autosave')) : t(l('Save', 'Save')))} — ${monthName(m.month)} ${m.year}`),
           h('small', { class: 'muted' }, `${m.cash !== undefined ? formatMoney(m.cash, locale()) + ' · ' : ''}${kb(m.size)} · ${ago(m.savedAt)}`),
           h('span', { class: 'sv17-acts' },

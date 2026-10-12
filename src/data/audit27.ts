@@ -27,6 +27,10 @@ export const DEATH_FIX27: Record<string, number | null> = {
   'Bill Kreutzmann': null, // Grateful Dead: uma cópia o dava morto em 2024
   'Aston Barrett': 2024, // "Family Man" (The Wailers): 2016 → 2024
   'Georgy Guryanov': 2013, 'Georgy Gurianov': 2013, // Kino: 1991 → 2013
+  // r27 (F): achados do validador de consistência (tests/r27-consistency)
+  'John Farnham': null, // Little River Band: uma cópia o dava morto em 1982 (está vivo; saiu em 1985)
+  'George Young': 2017, // The Easybeats dizia 2023; o produtor (mesma pessoa) morreu em 2017
+  'Gary DeCarlo': 2010, // Steam (2016) × solo (2020): morreu em dez/2010
 };
 
 /** Nascimentos que faltavam (vindos das cópias duplicadas removidas e da auditoria): ato → integrante → ano. */
@@ -46,16 +50,16 @@ export interface Fix27 {
   /** campos trocados (n, d, e, rj, cn, f, b, x, r, t, exact…) */
   set?: Partial<RealArtist>;
   /** campos apagados */
-  del?: ('e' | 'rj' | 'x' | 'exact')[];
+  del?: ('e' | 'rj' | 'x' | 'exact' | 'r' | 'b')[];
   /** integrantes: upsert por nome (com várias passagens, casa pelo ano de entrada); campos undefined não mexem */
   m?: RealMember[];
-  /** novas passagens de quem já está na lista (saiu e voltou) — sempre acrescentadas */
-  again?: RealMember[];
   /** integrantes que não são da banda (colaboradores, artista visual) */
   mdel?: string[];
   /** discos que faltavam / anos de disco corrigidos */
   al?: RealRelease[];
   alYear?: Record<string, number>;
+  /** r27 (F): tipo e edição de discos já listados (coletânea, single album…) */
+  alKind?: Record<string, [RealRelease[2]?, RealRelease[3]?]>;
 }
 
 export const FIX27: Record<string, Fix27> = {
@@ -87,14 +91,14 @@ export const FIX27: Record<string, Fix27> = {
   'Linkin Park': { m: [['Rob Bourdon', 'drums', 1979, U, U, 2017], ['Joe Hahn', 'dj', 1977, U, 1996], ['Dave "Phoenix" Farrell', 'bass', 1977, U, 1999], ['Colin Brittain', 'drums', 1986, U, 2024]] },
   'Eagles': { m: [['Don Felder', 'guitar', 1947, U, 1974, 2001], ['Timothy B. Schmit', 'bass', 1947, U, 1977], ['Vince Gill', 'guitar', 1957, U, 2017]] },
   'Van Halen': { m: [['Wolfgang Van Halen', 'bass', 1991, U, 2006, 2020]] },
-  'Red Hot Chili Peppers': { m: [['Jack Irons', 'drums', 1962, U, 1983, 1988], ['John Frusciante', 'guitar', 1970, U, 1988, 1992], ['Josh Klinghoffer', 'guitar', 1979, U, 2009, 2019]],
-    again: [['John Frusciante', 'guitar', 1970, U, 1998, 2009], ['John Frusciante', 'guitar', 1970, U, 2019]] },
+  // r27 (F): saiu e voltou = uma linha com as passagens (antes eram linhas repetidas em `again`)
+  'Red Hot Chili Peppers': { m: [['Jack Irons', 'drums', 1962, U, 1983, 1988], ['John Frusciante', 'guitar', 1970, U, 1988, U, [[1988, 1992], [1998, 2009], [2019]]], ['Josh Klinghoffer', 'guitar', 1979, U, 2009, 2019]] },
   'Iron Maiden': { m: [['Clive Burr', 'drums', 1957, 2013, 1979, 1982], ['Janick Gers', 'guitar', 1957, U, 1990]] },
   'Maroon 5': { m: [['James Valentine', 'guitar', 1978, U, 2006]] },
   "Destiny's Child": { m: [['LeToya Luckett', 'vocal', 1981, U, 1993, 2000], ['LaTavia Roberson', 'vocal', 1981, U, 1993, 2000], ['Farrah Franklin', 'vocal', 1981, U, 2000, 2000]] },
   'N.W.A': { m: [['Dr. Dre', 'producer', 1965], ['Arabian Prince', 'producer', 1965, U, 1987, 1988]] },
   'Fleetwood Mac': { m: [['Jeremy Spencer', 'guitar', 1948, U, 1967, 1971], ['Danny Kirwan', 'guitar', 1950, 2018, 1968, 1972], ['Bob Welch', 'guitar', 1945, 2012, 1971, 1974]] },
-  Ramones: { m: [['Marky Ramone', 'drums', 1956, U, 1978, 1983], ['Richie Ramone', 'drums', 1957, U, 1983, 1987]], again: [['Marky Ramone', 'drums', 1956, U, 1987]] },
+  Ramones: { m: [['Marky Ramone', 'drums', 1956, U, 1978, U, [[1978, 1983], [1987]]], ['Richie Ramone', 'drums', 1957, U, 1983, 1987]] },
   'The Jimi Hendrix Experience': { m: [['Billy Cox', 'bass', 1941, U, 1969, 1970]] },
   'Grateful Dead': { m: [['Mickey Hart', 'drums', 1943, U, 1967, 1995], ['Keith Godchaux', 'keys', 1948, 1980, 1971, 1979], ['Donna Jean Godchaux', 'vocal', 1947, 2025, 1972, 1979], ['Brent Mydland', 'keys', 1952, 1990, 1979, 1990]] },
   EXO: { m: [['Kai', 'vocal', 1994], ['Sehun', 'vocal', 1994], ['Lay', 'vocal', 1991], ['Chen', 'vocal', 1992, U, U, 2024], ['Kris', 'vocal', 1990, U, U, 2014], ['Luhan', 'vocal', 1990, U, U, 2014], ['Tao', 'vocal', 1993, U, U, 2015]] },
@@ -120,7 +124,7 @@ export const FIX27: Record<string, Fix27> = {
   'Carlos Gardel': { set: { b: 1890 } },
 };
 
-/** Composições (só autoria, sem datas) — ainda sem lugar no modelo (composição × gravação fica para a próxima rodada). */
+/** Composições (só autoria, sem datas) — r27 (F): consumidas pela camada de composição (model27.WORKS27). */
 export const AUTHORS27: Record<string, string[]> = {
   'Baião': ['Luiz Gonzaga', 'Humberto Teixeira'], 'No Meu Pé de Serra': ['Luiz Gonzaga', 'Humberto Teixeira'],
   'Que Nem Jiló': ['Luiz Gonzaga', 'Humberto Teixeira'], 'Assum Preto': ['Luiz Gonzaga', 'Humberto Teixeira'],
@@ -152,32 +156,36 @@ export const SONGFIX27: Record<string, { year?: Record<string, number>; drop?: s
   Sabotage: { year: { 'Rap É Compromisso': 2000, 'Um Bom Lugar': 2000, 'Respeito É pra Quem Tem': 2000, 'Mun Rá': 2000 } }, // "Rap É Compromisso!" (2000); "Canão Foi Tão Bom" é do póstumo (2016)
 };
 
-type AnyArtist = { n: string; m?: RealMember[]; al?: RealRelease[]; b?: number; x?: number; e?: number; rj?: [number, number?][]; exact?: false } & Record<string, unknown>;
+export type AnyArtist27 = { n: string; m?: RealMember[]; al?: RealRelease[]; b?: number; x?: number; e?: number; rj?: [number, number?][]; exact?: false } & Record<string, unknown>;
 
-function fixMembers(a: AnyArtist, add: RealMember[]): void {
+function fixMembers(a: AnyArtist27, add: RealMember[]): void {
   const ms = (a.m ??= []);
   for (const p of add) {
     const k = key27(p[0]);
     const same = ms.filter((m) => key27(m[0]) === k);
     const hit = same.length === 1 ? same[0] : same.find((m) => m[4] === p[4]);
     if (hit) {
-      for (let i = 2; i < 6; i++) if (p[i] !== undefined) hit[i] = p[i];
+      for (let i = 2; i < 7; i++) if (p[i] !== undefined) (hit as unknown[])[i] = p[i]; // r27 (F): 7º campo = passagens
       hit[1] = p[1];
     } else ms.push([...p] as RealMember);
   }
 }
 
-function applyOne(a: AnyArtist): void {
-  const fx = FIX27[a.n];
+/** r27 (F): aplica um conjunto de correções (FIX27 da auditoria C1 ou FIXR27 da pesquisa). */
+export function applyFix27(a: AnyArtist27, fx: Fix27 | undefined): void {
   if (fx) {
     if (fx.set) Object.assign(a, fx.set);
     for (const k of fx.del ?? []) delete a[k];
     if (fx.mdel && a.m) a.m = a.m.filter((m) => !fx.mdel!.some((x) => key27(x) === key27(m[0])));
     if (fx.m) fixMembers(a, fx.m);
-    if (fx.again) a.m = [...(a.m ?? []), ...fx.again.map((m) => [...m] as RealMember)];
     if (fx.al) { const have = new Set((a.al ?? []).map((r) => key27(r[0]))); a.al = [...(a.al ?? []), ...fx.al.filter((r) => !have.has(key27(r[0])))]; }
     if (fx.alYear) for (const r of a.al ?? []) { const y = fx.alYear[r[0]]; if (y !== undefined) r[1] = y; }
+    if (fx.alKind) for (const r of a.al ?? []) { const k = fx.alKind[r[0]]; if (k) { if (k[0]) r[2] = k[0]; if (k[1]) r[3] = k[1]; } }
   }
+}
+
+function applyOne(a: AnyArtist27): void {
+  applyFix27(a, FIX27[a.n]);
   const born = BORN27[a.n];
   if (born) for (const m of a.m ?? []) { const y = born[m[0]]; if (y !== undefined && m[2] === undefined) m[2] = y; }
   // mortes: integrantes e solos (o fim de carreira do solo acompanha a morte)
@@ -195,13 +203,13 @@ function applyOne(a: AnyArtist): void {
 }
 
 /** Aplica a auditoria às listas de artistas reais e ao catálogo clássico (por nome em REAL_ACTS). */
-export function applyAudit27(xs: AnyArtist[] | RealArtist[], classic?: { extra: Record<number, ClassicExtra>; names: Record<number, { name: string }> }): void {
-  for (const a of xs as AnyArtist[]) applyOne(a);
+export function applyAudit27(xs: AnyArtist27[] | RealArtist[], classic?: { extra: Record<number, ClassicExtra>; names: Record<number, { name: string }> }): void {
+  for (const a of xs as AnyArtist27[]) applyOne(a);
   if (classic) for (const [no, ex] of Object.entries(classic.extra)) {
     const n = classic.names[+no]?.name;
     if (!n) continue;
-    const tmp = ex as unknown as AnyArtist;
-    tmp.n = n; applyOne(tmp); delete (tmp as Partial<AnyArtist>).n;
+    const tmp = ex as unknown as AnyArtist27;
+    tmp.n = n; applyOne(tmp); delete (tmp as Partial<AnyArtist27>).n;
   }
 }
 

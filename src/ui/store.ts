@@ -6,7 +6,7 @@ import { registerMovementGenres } from '../sim/culture';
 
 import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
-import { SAVE_VERSION } from '../sim/worldgen';
+import { MIN_SAVE_VERSION, SAVE_VERSION } from '../sim/worldgen';
 import { decodeSave20, encodeSave20, inflate20, MAX_FILE23, MAX_IN20, MAX_OUT20, now20, SaveError20 } from '../core/save20';
 import { errName20, noteCost20, retry20, setHealth20 } from './savehealth20';
 
@@ -140,6 +140,9 @@ export interface SaveMeta {
   ironman?: boolean;
   run?: string;
 }
+
+/** r27 (F): save de antes do modelo histórico novo — não abre; a lista oferece Excluir. */
+export const saveCompatible27 = (m: Pick<SaveMeta, 'version'>): boolean => (m.version ?? 0) >= MIN_SAVE_VERSION;
 
 /** Rodada 17: perfil local ativo (várias pessoas no mesmo navegador) e ganchos depois de gravar (nuvem). */
 export const profileId17 = (): string => { try { return localStorage.getItem('vtn:profile17') || 'default'; } catch { return 'default'; } };

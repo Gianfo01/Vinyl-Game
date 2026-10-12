@@ -6,11 +6,31 @@
 
 export type RealRole = 'vocal' | 'guitar' | 'bass' | 'drums' | 'keys' | 'horns' | 'dj' | 'producer' | 'mc' | 'strings';
 
-/** [nome, papel, ano de nascimento?, ano de morte?, ano em que entrou?, ano em que saiu?] */
-export type RealMember = [string, RealRole, number?, number?, number?, number?];
+/** r27 (F): passagem pelo ato [entrou?, saiu?] — `undefined` na entrada = desde o início; na saída = até hoje. */
+export type RealPeriod = [number | undefined, (number | undefined)?];
 
-/** [título, ano, tipo?] — tipo: 'lp' (padrão) | 'ep' | 'single' */
-export type RealRelease = [string, number, ('lp' | 'ep' | 'single')?];
+/** [nome, papel, ano de nascimento?, ano de morte?, ano em que entrou?, ano em que saiu?, passagens?]
+ *  r27 (F): quem saiu e voltou tem UMA linha com todas as passagens no 7º campo (KISS/Eric Singer, Take That/Robbie
+ *  Williams 1990–95 e 2010–12…); entrou/saiu ficam como a 1ª entrada e a última saída (leitores antigos continuam certos). */
+export type RealMember = [string, RealRole, number?, number?, number?, number?, RealPeriod[]?];
+
+/** r27 (F): todas as passagens de um integrante (sem o 7º campo: a única [entrou, saiu]). */
+export const periodsOf = (m: RealMember): RealPeriod[] => (m[6]?.length ? m[6] : [[m[4], m[5]]]);
+/** r27 (F): integrante no ano `y` (com deslocamento opcional dos modos livre/caos). Saída no ano y = já fora em y. */
+export const inLineupAt = (m: RealMember, y: number, shift = 0): boolean =>
+  periodsOf(m).some(([a, b]) => (a === undefined || a + shift <= y) && (b === undefined || b + shift > y));
+/** r27 (F): estava na formação de estreia (inclui quem saiu no próprio ano da estreia, como Vince Clarke em 1981). */
+export const atDebut27 = (m: RealMember, d: number): boolean => periodsOf(m).some(([a, b]) => (a === undefined || a <= d) && (b === undefined || b >= d));
+/** r27 (F): primeira entrada documentada (undefined = desde o início). */
+export const firstJoin = (m: RealMember): number | undefined => periodsOf(m)[0][0];
+
+/** r27 (F): procedência de um dado real — c = confirmado, a = aproximado (datas incertas), u = não conferido. */
+export type Prov27 = 'c' | 'a' | 'u';
+
+/** r27 (F): edição que não é disco novo de estúdio (coletânea, ao vivo, relançamento, trilha). */
+export type RealRelKind = 'compilation' | 'live' | 'reissue' | 'soundtrack';
+/** [título, ano, tipo?, edição?] — tipo: 'lp' (padrão) | 'ep' | 'single'; edição (r27): coletânea/ao vivo/relançamento */
+export type RealRelease = [string, number, ('lp' | 'ep' | 'single')?, RealRelKind?];
 
 export interface RealArtist {
   /** nome artístico */
@@ -43,6 +63,9 @@ export interface RealArtist {
   al?: RealRelease[];
   /** r19 (T8): `false` = dado ainda não conferido (†) — some no modo "Vida real exata" (só fatos documentados) */
   exact?: false;
+  /** r27 (F): campos aproximados (o ato continua no modo exato, mas a ficha diz "aproximado"): 'f' formação, 'd' estreia,
+   *  'b' nascimento, 'x' morte, 'm' datas de integrantes */
+  ap?: ('f' | 'd' | 'b' | 'x' | 'm')[];
   /** r19 (T8): propenso a tributo/cover (db19 §3.1 K) — tribute19 dá bônus de nascimento */
   T?: true;
 }

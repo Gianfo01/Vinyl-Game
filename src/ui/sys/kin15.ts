@@ -1,7 +1,7 @@
 // Rodada 15: seção "Família" na aba de vida pessoal das pessoas (extensão de dossier13, sem duplicar a aba).
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { actOf15, feudOf15, kin15, kinOf15, REL15, type Rel15 } from '../../sim/sys/kin15';
+import { actOf15, feudOf15, kin15, kinLabel15, kinOf15, type Kin15Item, type Rel15 } from '../../sim/sys/kin15';
 import type { GameState, Person } from '../../sim/types';
 import { pill } from '../common';
 import { h } from '../dom';
@@ -32,9 +32,9 @@ export function familyBlock15(s: GameState, p: Person): HTMLElement | null {
   const kids = lf.kids.filter((k) => !named.has(k.name));
   const status = lf.together ? l('Em relacionamento', 'In a relationship') : lf.separated ? l('Separado(a)', 'Separated') : l('Solteiro(a)', 'Single');
   const total = ks.length + (partner ? 1 : 0) + exes.length + kids.length;
-  const node = (k: { id: string; rel: Rel15; p: Person }) => {
+  const node = (k: Kin15Item) => {
     const a = actOf15(s, k.id), feud = feudOf15(s, p.id, k.id) !== undefined;
-    return h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(REL15[k.rel])} · `,
+    return h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))} · `,
       k.p.alive ? `${s.year - k.p.born} ${t(l('anos', 'yrs'))}` : `† ${k.p.died ?? '?'}`,
       a ? h('small', { class: 'muted' }, ` · ${a.name}`) : null,
       feud ? [' ', pill(t(l('em rixa', 'feuding')), 'bad')] : null,

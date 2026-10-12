@@ -28,7 +28,7 @@ export function realRefPanel20(s: GameState, a: Act): HTMLElement {
       ref.died !== undefined ? kv(t(l('Morte', 'Died')), String(ref.died)) : null,
       ref.debut !== undefined ? kv(t(l('Estreia (era)', 'Debut (era)')), `${ref.debut} · ${t(l('anos {d}', 'the {d}s'), { d: Math.floor(ref.debut / 10) * 10 })}`) : null,
       ref.ended !== undefined ? kv(t(l('Encerrou', 'Ended')), String(ref.ended)) : null,
-      ref.members.length ? kv(t(l('Formação documentada', 'Documented line-up')), ref.members.map((m) => `${m.name}${m.left !== undefined ? ` (${t(l('até', 'until'))} ${m.left})` : ''}`).join(', ')) : null,
+      ref.members.length ? kv(t(l('Formação documentada', 'Documented line-up')), ref.members.map((m) => `${m.name}${m.periods ? ` (${m.periods.map(([a, b]) => `${a ?? ''}–${b ?? ''}`).join(', ')})` : m.left !== undefined ? ` (${t(l('até', 'until'))} ${m.left})` : ''}`).join(', ')) : null,
       h('h5', null, t(l('Discos e sucessos reais (referência)', 'Real records and hits (reference)'))),
       ref.hits.length
         ? h('ul', { class: 'small ref20-hits' }, ref.hits.map((x) => h('li', null, `${x.year} · ${x.title} · ${TYPE20[x.type]}`)))

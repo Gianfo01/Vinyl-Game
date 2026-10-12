@@ -5,9 +5,13 @@
 
 import { clamp, Rng, seedState } from '../../core/rng';
 import { exitMember20 } from '../members20';
-import { KIN15 } from '../../data/kin15';
+import { KIN15, type KinRow } from '../../data/kin15';
 import { KIN25 } from '../../data/kin25';
 import { KIN27 } from '../../data/kin27';
+import { KINR27 } from '../../data/research27';
+import { isKinMeta27, type KinMeta27, type KinSub27 } from '../../data/model27';
+import type { Prov27 } from '../../data/realtypes';
+import { histMode } from '../history15';
 import { l, type L } from '../../data/world';
 import { realSafe } from '../dynasty';
 import { registerExt4, registerSimHook } from '../ext4';
@@ -58,13 +62,47 @@ const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 const say = (s: GameState, t: L) => { const st = kin15(s); st.log.unshift([s.year, s.month, t]); st.log.length = Math.min(st.log.length, 30); };
 
 // ---- grafo -------------------------------------------------------------------------------------------------
-type Edges = Record<string, [string, Rel15][]>;
+/** r27 (F): extras de um laço — subtipo (biológico, adotivo, padrasto, afinidade, meio-irmão), período e procedência. */
+export interface KinX15 { sub?: KinSub27; from?: number; to?: number; src?: Prov27 }
+type Edge = [string, Rel15, KinX15?];
+type Edges = Record<string, Edge[]>;
 const cache = new WeakMap<GameState, { n: number; e: Edges }>();
-const add = (e: Edges, a: string, b: string, r: Rel15) => {
+const add = (e: Edges, a: string, b: string, r: Rel15, x?: KinX15) => {
   if (a === b) return;
-  const la = (e[a] ??= []); if (!la.some((x) => x[0] === b)) la.push([b, r]);
-  const lb = (e[b] ??= []); if (!lb.some((x) => x[0] === a)) lb.push([a, INV[r]]);
+  const la = (e[a] ??= []); if (!la.some((y) => y[0] === b)) la.push(x ? [b, r, x] : [b, r]);
+  const lb = (e[b] ??= []); if (!lb.some((y) => y[0] === a)) lb.push(x ? [a, INV[r], x] : [a, INV[r]]);
 };
+/** laço de sangue (ou pai/mãe genérico): só ele gera irmãos, avós, tios e primos derivados */
+const blood = (x?: KinX15) => !x?.sub || x.sub === 'biological';
+const split27 = (row: KinRow): { t: KinRow[0]; ns: string[]; meta?: KinMeta27 } => {
+  const last = row[row.length - 1];
+  const meta = isKinMeta27(last) ? last : undefined;
+  return { t: row[0], ns: row.slice(1, meta ? -1 : undefined) as string[], meta };
+};
+/** r27 (F): casamento com período — antes do início não há laço; depois do fim vira ex (salvo se acabou com a morte). */
+export function marriage15(meta: KinMeta27 | undefined, base: 'spouse' | 'ex', y: number, a?: Person, b?: Person): 'spouse' | 'ex' | undefined {
+  if (!meta || (meta.from === undefined && meta.to === undefined)) return base;
+  if (meta.from !== undefined && y < meta.from) return undefined;
+  if (meta.to !== undefined && y > meta.to) return [a, b].some((p) => p && !p.alive && p.died !== undefined && p.died <= meta.to!) ? 'spouse' : 'ex';
+  return 'spouse';
+}
+const ALL_ROWS = (): KinRow[] => [...KIN15, ...KIN27, ...KINR27];
+/** pais declarados (de sangue/genéricos) por nome canônico — mesmo de quem não existe no jogo (ex.: Ronaldo Bôscoli, Cynthia) */
+let PARENTS27: Map<string, Set<string>> | null = null;
+function declaredParents27(): Map<string, Set<string>> {
+  if (PARENTS27) return PARENTS27;
+  const m = new Map<string, Set<string>>();
+  const put = (kid: string, par: string) => { const k = canonKey(kid); (m.get(k) ?? m.set(k, new Set()).get(k)!).add(canonKey(par)); };
+  for (const row of ALL_ROWS()) { const { t, ns, meta } = split27(row); if (t === 'P' && blood(meta)) for (const k of ns.slice(1)) put(k, ns[0]); }
+  for (const row of KIN25) { const [a, r, b, meta] = row as [string, Rel15, string, KinMeta27?]; if (!blood(meta)) continue; if (r === 'parent') put(b, a); else if (r === 'child') put(a, b); }
+  return (PARENTS27 = m);
+}
+/** r27 (F): dois filhos do mesmo pai/mãe são meio-irmãos quando os OUTROS pais declarados são diferentes. */
+export function halfByParents27(a: string, b: string, shared: string): boolean {
+  const P = declaredParents27(), sh = canonKey(shared);
+  const pa = [...(P.get(canonKey(a)) ?? [])].filter((x) => x !== sh), pb = [...(P.get(canonKey(b)) ?? [])].filter((x) => x !== sh);
+  return pa.length > 0 && pb.length > 0 && !pa.some((x) => pb.includes(x));
+}
 
 /** Arestas reais (do dataset, casando por nome) + geradas. */
 function graph(s: GameState): Edges {
@@ -73,34 +111,73 @@ function graph(s: GameState): Edges {
   const idx: Record<string, string> = {};
   for (const p of Object.values(s.persons)) { const k = canonKey(p.name); if (!(k in idx) || (!s.persons[idx[k]].alive && p.alive)) idx[k] = p.id; }
   const e: Edges = {};
-  for (const [t, ...ns] of [...KIN15, ...KIN27]) { // r27: + laços da auditoria
+  const strict = histMode(s) === 'strict';
+  for (const row of ALL_ROWS()) { // r27: + laços da auditoria (C1) e da pesquisa (F)
+    const { t, ns, meta } = split27(row);
+    if (strict && meta?.src === 'u') continue; // não conferido some do modo exato
     const ids = ns.map((x) => idx[canonKey(x)]);
-    if (t === 'S' || t === 'C') { for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) if (ids[i] && ids[j]) add(e, ids[i], ids[j], t === 'S' ? 'sibling' : 'cousin'); }
-    else if (ids[0]) for (const k of ids.slice(1)) if (k) add(e, ids[0], k, t === 'P' ? 'child' : t === 'M' ? 'spouse' : t === 'X' ? 'ex' : 'nephew');
+    const x: KinX15 | undefined = meta ? { ...meta } : undefined;
+    if (t === 'S' || t === 'C') { for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) if (ids[i] && ids[j]) add(e, ids[i], ids[j], t === 'S' ? 'sibling' : 'cousin', x); }
+    else if ((t === 'M' || t === 'X') && ids[0]) {
+      for (const k of ids.slice(1)) {
+        if (!k) continue;
+        const r = marriage15(meta, t === 'M' ? 'spouse' : 'ex', s.year, s.persons[ids[0]], s.persons[k]);
+        if (r) add(e, ids[0], k, r, x);
+      }
+    } else if (ids[0]) for (const k of ids.slice(1)) if (k) add(e, ids[0], k, t === 'P' ? 'child' : 'nephew', x);
   }
   // r25: [A, rel, B] = "A é <rel> de B" → aresta de B para A
-  for (const [a, r, b] of KIN25) { const ia = idx[canonKey(a)], ib = idx[canonKey(b)]; if (ia && ib) add(e, ib, ia, r); }
+  for (const row of KIN25) {
+    const [a, r0, b, meta] = row as [string, Rel15, string, KinMeta27?];
+    if (strict && meta?.src === 'u') continue;
+    const ia = idx[canonKey(a)], ib = idx[canonKey(b)];
+    if (!ia || !ib) continue;
+    const r = r0 === 'spouse' || r0 === 'ex' ? marriage15(meta, r0, s.year, s.persons[ia], s.persons[ib]) : r0;
+    if (r) add(e, ib, ia, r, meta ? { ...meta } : undefined);
+  }
   for (const [a, b, r] of st.g) if (s.persons[a] && s.persons[b]) add(e, a, b, r);
-  // filhos do mesmo pai/mãe são irmãos
+  // filhos do mesmo pai/mãe (de sangue ou genérico) são irmãos — meio-irmãos se os outros pais declarados diferem
   for (const [pid, ks] of Object.entries(e)) {
-    const kids = ks.filter((x) => x[1] === 'child').map((x) => x[0]);
-    for (let i = 0; i < kids.length; i++) for (let j = i + 1; j < kids.length; j++) if (s.persons[pid]) add(e, kids[i], kids[j], 'sibling');
+    if (!s.persons[pid]) continue;
+    const kids = ks.filter((x) => x[1] === 'child' && blood(x[2])).map((x) => x[0]);
+    for (let i = 0; i < kids.length; i++) for (let j = i + 1; j < kids.length; j++) {
+      const A = s.persons[kids[i]], B = s.persons[kids[j]];
+      const half = !!A && !!B && halfByParents27(A.name, B.name, s.persons[pid].name);
+      add(e, kids[i], kids[j], 'sibling', half ? { sub: 'half' } : undefined);
+    }
   }
   // r25: derivados (sem sobrescrever o que já existe): pai do pai = avô; irmão do pai = tio; filhos de irmãos = primos
+  // r27 (F): só por laços de sangue/genéricos (padrasto, sogro e pais de criação não geram avós, tios nem primos)
   for (const pid of Object.keys(e)) {
-    const pars = e[pid].filter((x) => x[1] === 'parent').map((x) => x[0]);
-    for (const q of pars) for (const [o, r] of e[q] ?? []) {
-      if (r === 'parent') add(e, pid, o, 'grandparent');
-      else if (r === 'sibling') { add(e, pid, o, 'uncle'); for (const [c, rc] of e[o] ?? []) if (rc === 'child') add(e, pid, c, 'cousin'); }
+    const pars = e[pid].filter((x) => x[1] === 'parent' && blood(x[2])).map((x) => x[0]);
+    for (const q of pars) for (const [o, r, xo] of e[q] ?? []) {
+      if (r === 'parent' && blood(xo)) add(e, pid, o, 'grandparent');
+      else if (r === 'sibling' && (!xo?.sub || xo.sub === 'half')) { add(e, pid, o, 'uncle'); for (const [c, rc, xc] of e[o] ?? []) if (rc === 'child' && blood(xc)) add(e, pid, c, 'cousin'); }
     }
   }
   cache.set(s, { n: n + st.g.length * 100000, e });
   return e;
 }
 
+export interface Kin15Item { id: string; rel: Rel15; p: Person; sub?: KinSub27; from?: number; to?: number; src?: Prov27 }
 /** Parentes visíveis hoje (quem ainda não nasceu não aparece). */
-export function kinOf15(s: GameState, pid: string): { id: string; rel: Rel15; p: Person }[] {
-  return (graph(s)[pid] ?? []).map(([id, rel]) => ({ id, rel, p: s.persons[id] })).filter((x) => x.p && x.p.born <= s.year);
+export function kinOf15(s: GameState, pid: string): Kin15Item[] {
+  return (graph(s)[pid] ?? []).map(([id, rel, x]) => ({ id, rel, p: s.persons[id], ...x })).filter((x) => x.p && x.p.born <= s.year);
+}
+
+/** r27 (F): rótulo do laço com subtipo e período (ex-cônjuge 1959–1964, meio-irmão, padrasto, sogro…). */
+const SUB15: Partial<Record<Rel15, Partial<Record<KinSub27, L>>>> = {
+  parent: { biological: l('Pai/mãe biológico(a)', 'Biological parent'), adoptive: l('Pai/mãe de criação', 'Adoptive parent'), step: l('Padrasto/madrasta', 'Stepparent'), in_law: l('Sogro(a)', 'Parent-in-law') },
+  child: { adoptive: l('Filho(a) de criação', 'Adopted child'), step: l('Enteado(a)', 'Stepchild'), in_law: l('Genro/nora', 'Child-in-law') },
+  sibling: { half: l('Meio-irmão(ã)', 'Half-sibling'), step: l('Irmão(ã) postiço(a)', 'Stepsibling'), in_law: l('Cunhado(a)', 'Sibling-in-law') },
+};
+export function kinLabel15(k: { rel: Rel15; sub?: KinSub27; from?: number; to?: number }): L {
+  const base = (k.sub && SUB15[k.rel]?.[k.sub]) || (k.rel === 'ex' ? l('Ex-cônjuge', 'Ex-spouse') : REL15[k.rel]);
+  if ((k.rel === 'spouse' || k.rel === 'ex') && (k.from !== undefined || k.to !== undefined)) {
+    const per = `${k.from ?? '?'}–${k.to ?? ''}`;
+    return l(`${base.pt} (${per})`, `${base.en} (${per})`);
+  }
+  return base;
 }
 export const actOf15 = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid));
 export const feudOf15 = (s: GameState, a: string, b: string): number | undefined => kin15(s).feud[pairKey(a, b)];
@@ -111,7 +188,7 @@ function grief(s: GameState, p: Person): void {
   for (const k of kinOf15(s, p.id)) {
     const q = k.p;
     if (!q.alive || k.rel === 'ex') continue;
-    const close = CLOSE.has(k.rel);
+    const close = CLOSE.has(k.rel) && k.sub !== 'in_law' && k.sub !== 'step'; // r27 (F)
     q.morale = clamp(q.morale - (close ? 10 : 4), 0, 100);
     q.stress = clamp(q.stress + (close ? 10 : 3), 0, 100);
     q.rel[p.id] = clamp((q.rel[p.id] ?? 0) + 5, -100, 100);
@@ -120,7 +197,7 @@ function grief(s: GameState, p: Person): void {
     const a = actOf15(s, q.id);
     if (close && a) {
       a.momentum = clamp(a.momentum - 4, 0, 100);
-      if (a.owner === 'player') notify(s, fmtL(l('{q} está de luto por {p} ({r}): moral e foco caem por um tempo.', '{q} is mourning {p} ({r}): morale and focus drop for a while.'), { q: q.name, p: p.name, r: l(REL15[INV[k.rel]].pt, REL15[INV[k.rel]].en) }), 'event');
+      if (a.owner === 'player') notify(s, fmtL(l('{q} está de luto por {p} ({r}): moral e foco caem por um tempo.', '{q} is mourning {p} ({r}): morale and focus drop for a while.'), { q: q.name, p: p.name, r: kinLabel15({ rel: INV[k.rel], sub: k.sub }) }), 'event');
     }
     // herança de fama: o legado do pai/mãe empurra o ato do filho
     if (k.rel === 'parent' && a && !a.catalogNo) { a.momentum = clamp(a.momentum + 12, 0, 100); a.fame = clamp(a.fame + Math.min(5, fameOf(s, p.id) * 0.06), 0, 100); }
@@ -232,7 +309,7 @@ function inherit(s: GameState): void {
     if (!a.catalogNo || a.fame > 45) continue;
     for (const id of a.members) {
       if (st.inh.includes(id)) continue;
-      const par = kinOf15(s, id).filter((k) => k.rel === 'parent').map((k) => fameOf(s, k.id)).sort((x, y) => y - x)[0];
+      const par = kinOf15(s, id).filter((k) => k.rel === 'parent' && k.sub !== 'in_law' && k.sub !== 'step').map((k) => fameOf(s, k.id)).sort((x, y) => y - x)[0];
       if (par === undefined || par < 30) continue;
       st.inh.push(id);
       a.fame = clamp(a.fame + Math.min(8, par * 0.1), 0, 100);
@@ -256,7 +333,7 @@ function tips(s: GameState, r: Rng): void {
       const kn = s.knowledge[a.id];
       if (!kn) s.knowledge[a.id] = { actId: a.id, degree: 2, stage: 'signal', bias: 0, updatedWeek: s.week, source: 'family' };
       else kn.degree = Math.min(4, kn.degree + 1);
-      const t = fmtL(l('{w} recomenda {k} ({r}), do ato {a}: porta aberta para conversar, sem intermediários.', '{w} recommends {k} ({r}), of the act {a}: an open door to talk, no middlemen.'), { w: s.persons[id].name, k: k.p.name, r: l(REL15[k.rel].pt.toLowerCase(), REL15[k.rel].en.toLowerCase()), a: a.name });
+      const t = fmtL(l('{w} recomenda {k} ({r}), do ato {a}: porta aberta para conversar, sem intermediários.', '{w} recommends {k} ({r}), of the act {a}: an open door to talk, no middlemen.'), { w: s.persons[id].name, k: k.p.name, r: l(kinLabel15(k).pt.toLowerCase(), kinLabel15(k).en.toLowerCase()), a: a.name });
       notify(s, t, 'info'); say(s, t);
     }
   }

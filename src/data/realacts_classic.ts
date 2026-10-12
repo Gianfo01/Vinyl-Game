@@ -126,7 +126,7 @@ export const REAL_CLASSIC: Record<number, ClassicExtra> = {
   },
   45: {
     d: 1970, e: 2017, rj: [[2025, 2025]],
-    m: [['Ozzy Osbourne', 'vocal', 1948, 2025, U, 1979], ['Ozzy Osbourne', 'vocal', 1948, 2025, 1997], ['Tony Iommi', 'guitar', 1948], ['Geezer Butler', 'bass', 1949], ['Bill Ward', 'drums', 1948],
+    m: [['Ozzy Osbourne', 'vocal', 1948, 2025, U, U, [[U, 1979], [1997]]], ['Tony Iommi', 'guitar', 1948], ['Geezer Butler', 'bass', 1949], ['Bill Ward', 'drums', 1948],
       ['Ronnie James Dio', 'vocal', 1942, 2010, 1979, 1982]],
     al: [['Black Sabbath', 1970], ['Paranoid', 1970], ['Master of Reality', 1971], ['Vol. 4', 1972], ['Heaven and Hell', 1980], ['13', 2013]],
   },
@@ -232,7 +232,7 @@ export const REAL_CLASSIC: Record<number, ClassicExtra> = {
   },
   72: {
     d: 1986,
-    m: [['Axl Rose', 'vocal', 1962], ['Slash', 'guitar', 1965, U, U, 1996], ['Duff McKagan', 'bass', 1964, U, U, 1997], ['Slash', 'guitar', 1965, U, 2016], ['Duff McKagan', 'bass', 1964, U, 2016], ['Izzy Stradlin', 'guitar', 1962, U, U, 1991],
+    m: [['Axl Rose', 'vocal', 1962], ['Slash', 'guitar', 1965, U, U, U, [[U, 1996], [2016]]], ['Duff McKagan', 'bass', 1964, U, U, U, [[U, 1997], [2016]]], ['Izzy Stradlin', 'guitar', 1962, U, U, 1991],
       ['Steven Adler', 'drums', 1965, U, U, 1990], ['Matt Sorum', 'drums', 1960, U, 1990, 1997], ['Dizzy Reed', 'keys', 1963, U, 1990]],
     al: [['Appetite for Destruction', 1987], ["G N' R Lies", 1988], ['Use Your Illusion I', 1991], ['Use Your Illusion II', 1991], ['Chinese Democracy', 2008]],
   },

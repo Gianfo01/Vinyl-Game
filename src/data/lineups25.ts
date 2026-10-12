@@ -8,7 +8,7 @@ const U = undefined;
 export const LINEUPS25: Record<string, { add?: RealMember[]; set?: RealMember[] }> = {
   'Maroon 5': { add: [['Matt Flynn', 'drums', U, U, 2006], ['PJ Morton', 'keys', 1981, U, 2012], ['Sam Farrar', 'bass', U, U, 2016]] },
   'Bon Jovi': { add: [['Hugh McDonald', 'bass', U, U, 2016], ['Phil X', 'guitar', U, U, 2016]] },
-  KISS: { add: [['Bruce Kulick', 'guitar', U, U, 1984, 1996], ['Eric Singer', 'drums', U, U, 1991, 1996], ['Tommy Thayer', 'guitar', U, U, 2002], ['Eric Singer', 'drums', U, U, 2004]] },
+  KISS: { add: [['Bruce Kulick', 'guitar', U, U, 1984, 1996], ['Eric Singer', 'drums', 1958, U, 1991, U, [[1991, 1996], [2004]]], ['Tommy Thayer', 'guitar', 1960, U, 2002]] },
   'Deep Purple': { add: [['Steve Morse', 'guitar', 1954, U, 1994, 2022], ['Don Airey', 'keys', 1948, U, 2002], ['Simon McBride', 'guitar', U, U, 2022]] },
   'Titãs': { add: [['Paulo Miklos', 'vocal', 1959, U, U, 2016], ['Charles Gavin', 'drums', U, U, 1985, 2010]] },
   'Toto': { add: [['Bobby Kimball', 'vocal', 1947, U, U, 1984], ['Steve Porcaro', 'keys', 1957, U, U, 1987], ['David Hungate', 'bass', U, U, U, 1982], ['Mike Porcaro', 'bass', 1955, 2015, 1982, 2007]] },

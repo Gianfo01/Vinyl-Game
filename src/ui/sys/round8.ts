@@ -23,7 +23,7 @@ import { SRC_NAME, TIE_NAME, actTies, otherOf, social, tiesOf, type Tie } from '
 import { acceptFeatCounter, clearance, dropFeatDeal, fairFeat, featChance, featSongs, featTargets, feats, pressFeat, proposeFeat, type FeatResult } from '../../sim/sys/feats8';
 import { actOfPerson } from '../../sim/sys/social8';
 import { fameText } from '../../sim/sys/fame15';
-import { kinOf15, REL15 } from '../../sim/sys/kin15';
+import { kinLabel15, kinOf15 } from '../../sim/sys/kin15';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const band = (p: number) => (p >= 0.6 ? 'likely' : p >= 0.3 ? 'uncertain' : 'unlikely') as 'likely' | 'uncertain' | 'unlikely';
@@ -228,7 +228,7 @@ ACT_TABS.push((s, a, close) => {
     id: 'rel8', label: l('Relações', 'Relationships'), icon: 'handshake',
     render: () => h('div', null,
       kin.length ? h('div', null, h('h4', null, t(l('Família', 'Family'))), h('ul', { class: 'attr-list' }, kin.slice(0, 16).map(({ m, k }) => h('li', null,
-        h('small', { class: 'muted' }, `${s.persons[m]?.name ?? ''} ↔ `), h('button', { class: 'link', onclick: () => { close(); openPersonPage(k.id); } }, k.p.name), ` · ${t(REL15[k.rel])}`,
+        h('small', { class: 'muted' }, `${s.persons[m]?.name ?? ''} ↔ `), h('button', { class: 'link', onclick: () => { close(); openPersonPage(k.id); } }, k.p.name), ` · ${t(kinLabel15(k))}`,
         actOfPerson(s, k.id) && actOfPerson(s, k.id)?.id !== a.id ? h('small', { class: 'muted' }, ` · ${actOfPerson(s, k.id)!.name}`) : null)))) : null,
       canFeat ? h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => { close(); openFeatModal(s, mine ? { host: a.id } : { guest: a.id }); } }, mine ? t(l('Convidar alguém para um feat', 'Invite someone to feature')) : t(l('Convidar para um feat', 'Invite to a feature')))) : null,
       ts.length ? h('ul', { class: 'attr-list' }, ts.slice(0, 24).map(({ t: x, me }) => h('div', null, h('small', { class: 'muted' }, `${s.persons[me]?.name ?? ''} ↔ `), tieRow(s, x, me, close)))) : h('p', { class: 'muted small' }, t(l('Ainda sem laços fora da banda.', 'No ties outside the band yet.'))),
