@@ -148,6 +148,8 @@ function grudges(s: GameState): Set<string> {
   if (!c || c.w !== s.week) { const set = new Set<string>(); for (const h of holds17(s).h) if (h.kind === 'grievance' && h.status === 'open') set.add(h.holder); GRIEV.set(s, (c = { w: s.week, set })); }
   return c.set;
 }
+/** r23 (links23): outros sistemas pesam no recrutamento (multiplicador + porquê). */
+export const RECRUIT23: ((s: GameState, key: string) => { k: number; why: L } | null)[] = [];
 const ORGW = new WeakMap<GameState, { w: number; l: Org17[] }>(); // organizações ativas da semana
 /** `u` (opcional): sorteio do mês — se nem com os traços no máximo daria, sai antes de ler a persona (barato). */
 export function recruitOdds(s: GameState, key: string, u?: number): { p: number; why: L[]; o?: Org17; ro?: Role23 } {
@@ -183,6 +185,7 @@ export function recruitOdds(s: GameState, key: string, u?: number): { p: number;
   }
   if (grudges(s).has(key.startsWith('p:') ? id : key)) { mult *= 1.5; why.push(l('Guarda mágoas e quer revanche', 'Holds grudges and wants payback')); }
   if (jail) { mult *= 6; why.push(l('Recrutado(a) na prisão', 'Recruited in prison')); }
+  for (const f of RECRUIT23) { const x = f(s, key); if (x) { mult *= x.k; why.push(x.why); } } // r23 ligações (cultura, bairro, filhos, agiota)
   if (rl) { mult *= 0.2; why.push(l('Pessoa real: fica no boato', 'Real person: stays a rumor')); }
   if (u !== undefined && u >= 0.0025 * mult * 2.5) return { p: 0, why };
   // traços (persona13)
