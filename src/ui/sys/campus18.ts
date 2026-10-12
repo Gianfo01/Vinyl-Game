@@ -1,9 +1,11 @@
-// Rodada 18 (campus18) + Rodada 19 (world19): página "Nosso mundo" — o BAIRRO da sede em pixel art isométrica.
-// R19: tudo acontece SOBRE o mapa: clique/toque num prédio abre um popup ancorado nele (números com "por quê",
-// ampliar, reformar, mudar de lote, renomear, vender, ir para a gestão); num lote vazio, "Construir aqui" com
-// custo, prazo, requisitos e vizinhança; vizinhos, marcos da cidade e eventos do bairro também são clicáveis.
-// Esc ou clique fora fecha; tudo é botão (teclado). Filtro (meus/vizinhos/marcos), legenda, zoom e arraste
-// (pinça no celular), ciclo dia/noite e linha do tempo com retratos anuais. Anima só enquanto visível.
+// Rodada 18 (campus18) + Rodada 19 (world19) + Rodada 27 (D2): página "Nosso mundo" — o BAIRRO da sede em pixel
+// art isométrica. R27: painel lateral FIXO (no celular, folha no rodapé): clicar num prédio mostra o que é, custo
+// do mês, receita, quem está lá e 2–3 ações (ir para a tela, ampliar, vender) + "Mais opções" (reformar, estilo,
+// mudar de lote, renomear…). Sem nada escolhido, o painel é a visão geral do bairro (seus prédios com o que está
+// acontecendo, vizinhos e rivais com o que estão fazendo, lotes à venda que cabem no caixa). Ícone próprio por
+// tipo, com contador de alertas e prazo de obra. Clicar na SEDE entra nela (Sede → Sua sede). O mapa cabe na tela.
+// Lotes vazios só aparecem como "À venda" quando você pode pagar; os outros viram cidade comum.
+// Anima com requestAnimationFrame (~8 quadros/s) só enquanto visível; com "reduzir movimento", desenha parado.
 
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -18,7 +20,10 @@ import { h } from '../dom';
 import { why18 } from '../explain18';
 import { COSTK20, NATURE20, priceBasis20, type CostKind20 } from '../../sim/sys/price20';
 import { price20 } from '../price20';
-import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, stylePreview19, type Scene18 } from '../pixel/campus18px';
+import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, signAt27, stylePreview19, type Scene18 } from '../pixel/campus18px';
+import { ICON27, bldVis27, fillerLots27, forSale27, life27, nbInfo27, panel27, type BVis27, type NbInfo27, type Sale27 } from '../pixel/city27';
+import { SEDE25 } from '../ps/nav25';
+import { sedeNav25 } from '../ps/slot25';
 import { registerArea } from '../registry';
 import { store } from '../store';
 import { go18 } from './inbox18';
@@ -29,48 +34,62 @@ import './campus18.css';
 const reduced = () => document.documentElement.classList.contains('reduced-motion') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const latOf = (s: GameState) => cityById[s.config.homeCity]?.lat ?? 40;
 const tx = (x: L | string | undefined) => (x === undefined ? '' : typeof x === 'string' ? x : t(x));
+const mobile = () => !!window.matchMedia?.('(max-width: 860px)').matches;
 
 /** UI efêmera (por sessão; não vai para o save). */
 const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number } =
   { mode: 'cycle', q: 1, f: { mine: true, nb: true, lm: true }, z: 1, px: 0, py: 0 };
 
-interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean }
+interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[] }
+/** r27: o que a vida na rua (fãs, imprensa) e o estado dos prédios (fila de show) já mostram sai do ambiente antigo. */
+const AMB_DONE27 = new Set(['fans', 'press', 'show']);
 function makeView(s: GameState, year?: number): View {
   const snap = year !== undefined ? campus18(s).snaps.find((x) => x.y === year) : undefined;
   const lms = lmNow19(s, snap ? snap.y : s.year);
   if (snap) {
     const bs = decode18(snap.b);
     const lots = new Map(bs.filter((b) => b.lot !== undefined).map((b) => [b.id, b.lot!] as [string, number]));
-    return { s, bs, year: snap.y, live: false, scene: buildScene18(bs, lots, env18(snap.y, 6, latOf(s), s.config.homeCity), [], hashSeed(s), brand18(s), [], lms) };
+    return { s, bs, year: snap.y, live: false, vis: new Map(), sale: [], nbs: [], scene: buildScene18(bs, lots, env18(snap.y, 6, latOf(s), s.config.homeCity), [], hashSeed(s), brand18(s), [], lms) };
   }
   const bs = buildings18(s);
-  const amb = [...ambient18(s), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n }))];
-  return { s, bs, year: s.year, live: true, scene: buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms) };
+  const vis = bldVis27(s, bs);
+  const sale = ui.moving ? [] : forSale27(s);
+  const filler = ui.moving ? [] : fillerLots27(s, sale);
+  const life = life27(s, bs);
+  const nbs = nbInfo27(s);
+  const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n }))];
+  const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms,
+    { vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')) });
+  return { s, bs, year: s.year, live: true, vis, sale, nbs, scene };
 }
 /** Iniciais do selo (placa da sede e letreiro). */
 export const brand18 = (s: GameState): string => (s.config.companyName.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).map((w) => w[0]).join('').toUpperCase().slice(0, 3) || 'REC');
 const hashSeed = (s: GameState) => { let x = 7; for (const c of s.config.seed) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x % 9973; };
 
-/** Canvas animado (para enquanto invisível; para sozinho quando sai do DOM). */
+/** Canvas animado: ~8 quadros/s via requestAnimationFrame, só enquanto visível; parado com "reduzir movimento". */
 function mapCanvas(v: View): HTMLCanvasElement {
   const cv = h('canvas', { class: 'c18-cv px', width: MW, height: MH, role: 'img', 'aria-label': t(l('Mapa do bairro com os seus prédios', 'Map of the neighbourhood with your buildings')) }) as HTMLCanvasElement;
   const ctx = cv.getContext('2d');
   if (!ctx) return cv;
   const nightFor = (tm: number) => (ui.mode === 'day' ? 0 : ui.mode === 'night' ? 1 : reduced() ? 0 : nightOf(tm));
-  const draw = (tm: number) => drawFrame18(ctx, v.scene, tm, nightFor(tm));
-  draw(0);
+  let tm0 = 0;
+  const draw = (tm: number) => { tm0 = tm; drawFrame18(ctx, v.scene, tm, nightFor(tm)); };
+  draw(reduced() ? 3 : 0);
+  (cv as HTMLCanvasElement & { redraw27?: () => void }).redraw27 = () => draw(tm0); // seleção mudou: redesenha uma vez
   if (reduced() || typeof requestAnimationFrame !== 'function') return cv;
   let visible = false, running = false, start = 0, last = 0;
   const loop = (now: number) => {
     if (!cv.isConnected && start) { running = false; io?.disconnect(); return; }
     if (!visible || document.hidden) { running = false; return; }
     if (!start) start = now;
-    if (now - last >= 100) { last = now; draw((now - start) / 1000); }
+    if (now - last >= 125) { last = now; draw((now - start) / 1000); }
     requestAnimationFrame(loop);
   };
   const kick = () => { if (!running && visible) { running = true; requestAnimationFrame(loop); } };
   const io = typeof IntersectionObserver === 'function' ? new IntersectionObserver((es) => { visible = es.some((x) => x.isIntersecting); kick(); }) : null;
   if (io) io.observe(cv); else { visible = true; kick(); }
+  const onVis = () => { if (!cv.isConnected) { document.removeEventListener('visibilitychange', onVis); return; } kick(); };
+  document.addEventListener('visibilitychange', onVis);
   return cv;
 }
 
@@ -150,11 +169,11 @@ const kindTag20 = (k: CostKind20 | null) => (k ? h('small', { class: 'muted', ti
 function costTxt(c?: number): string { return c === undefined ? '' : c < 0 ? `+${$(-c)}` : $(c); }
 
 /** Corpo do popup (sem posição). */
-function popBody(v: View, p: Pop19, close: () => void, rerun: () => void): HTMLElement {
+function popBody(v: View, p: Pop19, close: () => void, rerun: () => void, bare = false): HTMLElement {
   const s = v.s;
   const anyQ = p.opts.some((o) => o.q) || p.acts.some((a) => a.ask === 'q');
   return h('div', { class: 'w19-pop-in' },
-    h('header', null, h('b', null, ic(p.icon), ' ', tx(p.title)), h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
+    bare ? null : h('header', null, h('b', null, ic(p.icon), ' ', tx(p.title)), h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
     h('div', { class: 'row wrap w19-tags' }, p.tags.map((x) => pill(tx(x)))),
     p.prog !== undefined ? h('div', { class: 'c18-bar', role: 'progressbar', 'aria-valuenow': Math.round(p.prog * 100), 'aria-valuemin': 0, 'aria-valuemax': 100 }, h('i', { style: `width:${Math.round(p.prog * 100)}%` })) : null,
     p.rows.length ? h('table', { class: 'c18-kpi small' }, p.rows.map((r) => h('tr', { class: r.tone ?? '' }, h('td', null, t(r.k)), h('td', null, r.why ? why18(s, r.why[0], r.why[1], tx(r.v)) : r.go ? h('button', { type: 'button', class: 'linklike', onclick: () => { close(); go18(r.go!); } }, tx(r.v), ' ↗') : tx(r.v))))) : null,
@@ -172,101 +191,195 @@ function popBody(v: View, p: Pop19, close: () => void, rerun: () => void): HTMLE
     p.acts.some((a) => a.dis) ? h('ul', { class: 'w19-notes small muted' }, p.acts.filter((a) => a.dis).map((a) => h('li', null, `${t(a.label)}: ${t(a.dis!)}`))) : null);
 }
 
-// ---------------------------------------------------------------- mapa com pontos clicáveis
 
-function mapFrame(v: View): HTMLElement {
+// ---------------------------------------------------------------- r27: painel lateral
+
+const chip27 = (icon: string, col: string, cls = '') => h('span', { class: `c27-chip ${cls}`, style: `--k:${col}`, 'aria-hidden': 'true' }, ic(icon));
+/** Uma linha de status curta para o prédio (lista da visão geral e dica do mapa). */
+function status27(v: View, b: Bld18): string {
+  const x = v.vis.get(b.id);
+  if (!x) return t(STATE18[b.st]);
+  if (x.scaffold) return `${t(l('Obra', 'Works'))}${x.eta !== undefined ? ` · ${x.eta} ${t(l('m', 'mo'))}` : ''}`;
+  if (x.marquee) return t(l('Noite de show', 'Show night'));
+  if (x.smoke) return t(l('Prensando discos', 'Pressing records'));
+  if (x.queueK === 'musicians') return t(l('Gravando agora', 'Recording now'));
+  if (b.st === 'damaged') return t(STATE18.damaged);
+  return t(STATE18[b.st]);
+}
+/** Entrar na sede: Sede → Sua sede (interior). */
+function enterHq27(): void { sedeNav25.go(SEDE25); }
+
+const kv = (k: L, v: string | HTMLElement, cls = '') => [h('dt', null, t(k)), h('dd', { class: cls }, v)];
+
+/** Painel de um prédio seu: o que é, custo, receita, quem está lá, 2–3 ações + "Mais opções". */
+function bldPanel(v: View, id: string, close: () => void, rerun: () => void): HTMLElement | null {
   const s = v.s;
-  for (const old of document.querySelectorAll('body > .w19-pop')) old.remove(); // folha antiga (celular) de um render anterior
-  const frame = h('div', { class: 'w19-frame' });
+  const pn = panel27(s, id, v.bs);
+  const p = popFor(v, id);
+  if (!pn || !p) return null;
+  const x = v.vis.get(id);
+  const b = v.bs.find((y) => y.id === id)!;
+  const notes = [...(x?.why ?? []), ...pn.now.filter((n) => !(x?.why ?? []).some((w) => w.pt === n.pt))];
+  const mainBtn = (a: PopAct19, i: number) => h('button', { type: 'button', class: `btn small ${i === 0 && !pn.enter ? 'primary' : a.tone === 'danger' ? 'danger ghost' : 'ghost'}`, disabled: !!a.dis, title: a.dis ? t(a.dis) : undefined,
+    onclick: () => runAct(v, id, a, close, ui.sty ?? p.sty?.cur) }, t(a.id === 'go' ? l('Ir para a tela', 'Go to screen') : a.label), a.cost !== undefined ? h('small', null, ` ${costTxt(a.cost)}`) : null, a.go ? ' ↗' : null);
+  return h('div', { class: 'c27-pn' },
+    h('header', { class: 'c27-ph' }, chip27(pn.icon, pn.col), h('div', null, h('b', null, pn.title), h('small', { class: 'muted' }, `${t(pn.what)} · ${status27(v, b)}`)),
+      h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
+    p.prog !== undefined ? h('div', { class: 'c18-bar', role: 'progressbar', 'aria-valuenow': Math.round(p.prog * 100), 'aria-valuemin': 0, 'aria-valuemax': 100 }, h('i', { style: `width:${Math.round(p.prog * 100)}%` })) : null,
+    h('dl', { class: 'c27-kv' },
+      ...kv(l('Custo/mês', 'Cost/mo'), pn.cost !== undefined ? (pn.cost ? `−${$(pn.cost)}` : '$0') : '—', pn.cost ? 'bad' : ''),
+      ...kv(l('Receita/mês', 'Income/mo'), pn.income !== undefined ? $(pn.income) : '—', pn.income ? 'good' : ''),
+      ...kv(l('Quem está lá', 'Who\'s there'), pn.who.length ? pn.who.join(', ') : t(l('ninguém agora', 'nobody right now')))),
+    notes.length ? h('ul', { class: 'w19-notes small' }, notes.map((n) => h('li', null, tx(n)))) : null,
+    h('div', { class: 'c27-main-acts' },
+      pn.enter ? h('button', { type: 'button', class: 'btn small primary', onclick: () => { close(); enterHq27(); } }, ic('house'), ' ', t(l('Entrar na sede', 'Enter the HQ'))) : null,
+      pn.main.map(mainBtn)),
+    h('details', { class: 'c27-more' }, h('summary', null, t(l('Mais opções e números', 'More options and numbers'))), popBody(v, p, close, rerun, true)));
+}
+
+function nbPanel(v: View, id: string, close: () => void, rerun: () => void): HTMLElement | null {
+  const lot = +id.slice(3), info = v.nbs.find((x) => x.lot === lot), p = popFor(v, id);
+  if (!info || !p) return null;
+  return h('div', { class: 'c27-pn' },
+    h('header', { class: 'c27-ph' }, chip27(info.icon, info.k === 'rival' ? '#8a3a3a' : '#6a6a72', 'nb'), h('div', null, h('b', null, t(info.name)), h('small', { class: 'muted' }, info.k === 'rival' ? t(l('Gravadora rival', 'Rival label')) : t(l('Vizinho', 'Neighbour')))),
+      h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
+    h('dl', { class: 'c27-kv' }, ...kv(l('Quem é', 'Who'), t(info.who)), ...kv(l('Agora', 'Now'), t(info.doing))),
+    popBody(v, p, close, rerun, true));
+}
+
+function lotPanel(v: View, id: string, close: () => void, rerun: () => void): HTMLElement | null {
+  const lot = +id.slice(4), sl = v.sale.find((x) => x.lot === lot), p = popFor(v, id);
+  if (!p) return null;
+  return h('div', { class: 'c27-pn' },
+    h('header', { class: 'c27-ph' }, chip27('building', '#c8302c', 'sale'), h('div', null, h('b', null, tx(p.title)), h('small', { class: 'muted' }, ui.moving ? t(l('Destino da mudança', 'Move destination')) : t(l('À venda', 'For sale')))),
+      h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
+    sl ? h('p', { class: 'small c27-sug' }, t(l('Sugestão: ', 'Suggestion: ')), ic(ICON27[sl.kind]?.ic ?? 'building'), ' ', h('b', null, t(sl.name)), ` · ${$(sl.price)}`) : null,
+    popBody(v, p, close, rerun, true));
+}
+
+/** Visão geral (nada escolhido): seus prédios com o que está acontecendo, vizinhos, lotes à venda. */
+function overview27(v: View, open: (id: string) => void): HTMLElement {
+  const s = v.s;
+  const env = v.scene.env;
+  const mine = v.bs.filter((b) => b.zone === 'campus' && b.st !== 'sold' && b.st !== 'closed');
+  const sea = t(env.snow ? l('neve', 'snow') : env.rain ? l('chuva', 'rain') : env.season === 'winter' ? (env.climate === 'tropical' ? l('tempo seco', 'dry season') : l('inverno', 'winter')) : env.season === 'spring' ? l('primavera', 'spring') : env.season === 'summer' ? l('verão', 'summer') : l('outono', 'autumn'));
+  const life = v.scene.life;
+  const happen: string[] = [];
+  if (life?.bus) happen.push(t(fmt27(l('Ônibus da turnê "{t}" saindo da sede', 'Tour bus "{t}" leaving the HQ'), { t: life.bus.tour })));
+  if (life?.fansWhy) happen.push(t(life.fansWhy));
+  if (life?.pressWhy) happen.push(t(life.pressWhy));
+  return h('div', { class: 'c27-pn c27-ov' },
+    h('header', { class: 'c27-ph' }, chip27('globe', '#3a7a9a'), h('div', null, h('b', null, t(cityById[s.config.homeCity]?.name ?? l('Sua cidade', 'Your city'))), h('small', { class: 'muted' }, `${v.year} · ${sea}`))),
+    happen.length ? h('ul', { class: 'w19-notes small c27-happen' }, happen.map((x) => h('li', null, x))) : null,
+    h('h4', null, t(l('Seus prédios', 'Your buildings'))),
+    h('ul', { class: 'c27-list' }, mine.map((b) => {
+      const x = v.vis.get(b.id), k = ICON27[b.kind];
+      return h('li', null, h('button', { type: 'button', onclick: () => open(b.id) }, chip27(k.ic, k.col), h('span', { class: 'c27-tx' }, h('b', null, b.name), h('small', { class: 'muted' }, status27(v, b))),
+        x?.alerts ? h('i', { class: 'c27-n', title: x.why.map((w) => t(w)).join(' · ') }, String(x.alerts)) : null));
+    })),
+    v.nbs.length ? [h('h4', null, t(l('Vizinhos e rivais', 'Neighbours and rivals'))), h('ul', { class: 'c27-list' }, v.nbs.map((n) => h('li', null, h('button', { type: 'button', onclick: () => open(`nb:${n.lot}`) }, chip27(n.icon, n.k === 'rival' ? '#8a3a3a' : '#6a6a72', 'nb'), h('span', { class: 'c27-tx' }, h('b', null, t(n.name)), h('small', { class: 'muted' }, t(n.doing)))))))] : null,
+    v.sale.length ? [h('h4', null, t(l('À venda (cabe no caixa)', 'For sale (affordable)'))), h('ul', { class: 'c27-list' }, v.sale.map((x) => h('li', null, h('button', { type: 'button', onclick: () => open(`lot:${x.lot}`) }, chip27(ICON27[x.kind]?.ic ?? 'building', '#c8302c', 'sale'), h('span', { class: 'c27-tx' }, h('b', null, t(LOTS18[x.lot].name)), h('small', { class: 'muted' }, `${t(x.name)} · ${$(x.price)}`))))))]
+      : v.live ? h('p', { class: 'small muted' }, t(l('Nenhum lote vazio cabe no caixa agora: os terrenos livres aparecem como cidade comum.', 'No empty lot fits your cash right now: free plots show as ordinary city.'))) : null,
+    h('p', { class: 'small muted' }, t(l('Clique na sede para entrar nela. Toque num prédio, vizinho, placa "À venda" ou marco para ver detalhes e agir.', 'Click the HQ to step inside. Tap a building, neighbour, "For sale" sign or landmark to see details and act.'))));
+}
+const fmt27 = (x: L, o: Record<string, string | number>): L => ({ pt: x.pt.replace(/\{(\w+)\}/g, (_, k) => String(o[k] ?? '')), en: x.en.replace(/\{(\w+)\}/g, (_, k) => String(o[k] ?? '')) });
+
+// ---------------------------------------------------------------- mapa com pontos clicáveis + painel
+
+function mapFrame(v: View, side: HTMLElement): HTMLElement {
+  const s = v.s;
+  for (const old of document.querySelectorAll('body > .c27-sheet')) old.remove(); // folha antiga (celular) de um render anterior
+  const frame = h('div', { class: 'w19-frame c27-frame' });
   const vp = h('div', { class: 'w19-vp' });
   const zoom = h('div', { class: 'w19-zoom' });
   const layer = h('div', { class: 'w19-hot' });
   const tip = h('div', { class: 'c18-tip', hidden: true, role: 'tooltip' });
-  const pop = h('div', { class: 'w19-pop', role: 'dialog', 'aria-modal': 'false', hidden: true });
+  const sheet = h('div', { class: 'c27-sheet', role: 'dialog', 'aria-modal': 'false', hidden: true });
   const pct = (x: number, w: number) => `${((x / w) * 100).toFixed(2)}%`;
-  /** Posiciona dentro da parte VISÍVEL do quadro: abaixo, acima, ao lado ou (sem espaço) no topo com rolagem interna. */
-  const place = (hs: HTMLElement | null) => {
-    const fr = frame.getBoundingClientRect(), r = hs?.getBoundingClientRect() ?? fr;
-    const visTop = Math.max(8, -fr.top + 8), visBot = Math.min(fr.height - 8, window.innerHeight - fr.top - 8);
-    const room = Math.max(160, visBot - visTop);
-    const pw = Math.min(340, fr.width - 16);
-    pop.style.width = `${pw}px`; pop.style.maxHeight = `${room}px`; pop.style.bottom = '';
-    const ph = Math.min(pop.scrollHeight + 4, room);
-    const hx = r.left - fr.left, hy = r.top - fr.top, hw = r.width, hh = r.height;
-    let left = Math.max(8, Math.min(fr.width - pw - 8, hx + hw / 2 - pw / 2)), top: number;
-    if (hy + hh + 6 + ph <= visBot) top = hy + hh + 6;
-    else if (hy - 6 - ph >= visTop) top = hy - 6 - ph;
-    else {
-      top = Math.max(visTop, Math.min(visBot - ph, hy + hh / 2 - ph / 2));
-      if (hx + hw + 8 + pw <= fr.width - 8) left = hx + hw + 8; else if (hx - 8 - pw >= 8) left = hx - 8 - pw;
-    }
-    pop.style.left = `${left}px`; pop.style.top = `${top}px`;
-  };
+  const cv = mapCanvas(v) as HTMLCanvasElement & { redraw27?: () => void };
   let lastHs: HTMLElement | null = null;
-  const close = () => { ui.pop = undefined; v.scene.sel = undefined; pop.hidden = true; pop.replaceChildren(); document.body.classList.remove('w19-open'); lastHs?.focus(); };
-  const open = (id: string, hs: HTMLElement | null) => {
-    const p = popFor(v, id);
-    if (!p) { close(); return; }
-    ui.pop = id; lastHs = hs; v.scene.sel = id; tip.hidden = true;
-    const rerun = () => open(id, hs);
-    pop.replaceChildren(popBody(v, p, close, rerun));
-    pop.setAttribute('aria-label', tx(p.title));
-    pop.hidden = false;
-    // r19: o popup não cobre nem é coberto pelo tutorial (fecha o tour; o cartão antigo some enquanto o popup está aberto)
-    endTour18();
-    document.body.classList.add('w19-open');
-    // celular: folha presa no rodapé da TELA (fora de ancestrais com transform), mapa visível acima
-    if (window.matchMedia?.('(max-width: 640px)').matches) {
-      if (pop.parentElement !== document.body) document.body.appendChild(pop);
-      pop.classList.add('w19-sheet');
-      pop.removeAttribute('style');
-      // o ponto tocado sobe para a faixa visível acima da folha (funciona com qualquer contêiner de rolagem)
-      if (hs) {
-        const r = hs.getBoundingClientRect(), want = window.innerHeight * 0.4 - r.height - 24;
-        if (r.top < 90 || r.bottom > window.innerHeight * 0.4) {
-          let sc: HTMLElement | null = hs.parentElement;
-          while (sc && !(sc.scrollHeight > sc.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement;
-          if (sc) sc.scrollTop += r.top - want; else window.scrollBy({ top: r.top - want });
-        }
-      }
-    } else {
-      if (pop.parentElement !== frame) frame.appendChild(pop);
-      pop.classList.remove('w19-sheet');
-      place(hs);
-    }
-    (pop.querySelector('.w19-pop-in button:not(.w19-x):not([disabled]), .w19-x') as HTMLElement | null)?.focus({ preventScroll: true });
+  const showOverview = () => { side.replaceChildren(overview27(v, (id) => open(id, layer.querySelector(`[data-id="${CSS.escape(id)}"]`) as HTMLElement | null))); };
+  const close = () => {
+    ui.pop = undefined; v.scene.sel = undefined; v.scene.selLot = undefined; cv.redraw27?.();
+    sheet.hidden = true; sheet.replaceChildren(); document.body.classList.remove('w19-open');
+    for (const x of layer.querySelectorAll('.w19-hs.on')) x.classList.remove('on');
+    showOverview(); lastHs?.focus({ preventScroll: true });
   };
-  const hot = (id: string, cls: string, box: [number, number, number, number], label: string, txt = '') => {
+  const open = (id: string, hs: HTMLElement | null) => {
+    const rerun = () => open(id, hs);
+    const body = !v.live || id.startsWith('lm:') || id.startsWith('ev:') ? null : id.startsWith('nb:') ? nbPanel(v, id, close, rerun) : id.startsWith('lot:') ? lotPanel(v, id, close, rerun) : v.bs.some((b) => b.id === id) ? bldPanel(v, id, close, rerun) : null;
+    const p = body ? null : popFor(v, id);
+    if (!body && !p) { close(); return; }
+    ui.pop = id; lastHs = hs; tip.hidden = true;
+    v.scene.sel = id; v.scene.selLot = id.startsWith('lot:') ? +id.slice(4) : undefined; cv.redraw27?.();
+    for (const x of layer.querySelectorAll('.w19-hs.on')) x.classList.remove('on');
+    hs?.classList.add('on');
+    const content = body ?? h('div', { class: 'c27-pn' }, popBody(v, p!, close, rerun));
+    endTour18();
+    if (mobile()) { // celular: folha presa ao rodapé da tela; o mapa continua visível acima
+      if (sheet.parentElement !== document.body) document.body.appendChild(sheet);
+      sheet.replaceChildren(content); sheet.hidden = false; sheet.setAttribute('aria-label', tx(p?.title ?? ''));
+      document.body.classList.add('w19-open');
+      if (hs) { const r = hs.getBoundingClientRect(); if (r.top < 70 || r.bottom > window.innerHeight * 0.42) hs.scrollIntoView({ block: 'center' }); }
+      (sheet.querySelector('button:not(.w19-x):not([disabled]), .w19-x') as HTMLElement | null)?.focus({ preventScroll: true });
+    } else {
+      side.replaceChildren(content);
+      (side.querySelector('.c27-pn button:not([disabled])') as HTMLElement | null)?.focus({ preventScroll: true });
+    }
+  };
+  /** Clique na sede: aproxima e entra (Sede → Sua sede). */
+  const enter = (hs: HTMLElement) => {
+    if (reduced()) { enterHq27(); return; }
+    const r = hs.getBoundingClientRect(), vr = vp.getBoundingClientRect();
+    zoom.style.transition = 'transform 280ms ease-in';
+    const cx = r.left + r.width / 2 - vr.left, cy = r.top + r.height / 2 - vr.top;
+    zoom.style.transformOrigin = `${cx - ui.px}px ${cy - ui.py}px`;
+    zoom.style.transform = `translate(${ui.px}px, ${ui.py}px) scale(${ui.z * 2.6})`;
+    setTimeout(() => { ui.z = 1; ui.px = 0; ui.py = 0; enterHq27(); }, 300);
+  };
+  const hot = (id: string, cls: string, box: [number, number, number, number], label: string, kids: (HTMLElement | string | null)[] = [], onClick?: (hs: HTMLElement) => void) => {
     const [x0, y0, x1, y1] = box;
-    const b = h('button', { type: 'button', class: `w19-hs ${cls}`, 'data-id': id, 'aria-label': label, 'aria-haspopup': 'dialog',
+    const b = h('button', { type: 'button', class: `w19-hs ${cls}`, 'data-id': id, 'aria-label': label, 'aria-haspopup': onClick ? undefined : 'dialog',
       style: `left:${pct(x0, MW)};top:${pct(y0, MH)};width:${pct(Math.max(6, x1 - x0), MW)};height:${pct(Math.max(6, y1 - y0), MH)}`,
-      onclick: (e: Event) => { e.stopPropagation(); if (moved) return; open(id, e.currentTarget as HTMLElement); },
+      onclick: (e: Event) => { e.stopPropagation(); if (moved) return; const hs = e.currentTarget as HTMLElement; if (onClick) onClick(hs); else open(id, hs); },
       onmouseenter: (e: MouseEvent) => { const fr = frame.getBoundingClientRect(); tip.textContent = label; tip.hidden = false; tip.style.left = `${e.clientX - fr.left + 12}px`; tip.style.top = `${e.clientY - fr.top + 10}px`; },
-      onmouseleave: () => { tip.hidden = true; } }, txt);
+      onmouseleave: () => { tip.hidden = true; } }, ...kids);
     layer.appendChild(b);
     return b;
   };
   const sc = v.scene;
-  // prédios (seus e vizinhos), em ordem de profundidade
+  // prédios (seus e vizinhos), em ordem de profundidade; ícone próprio por tipo com alertas e prazo de obra
   for (const sp of sc.sprites) {
+    if (sp.filler) continue;
     if (sp.nb ? !ui.f.nb : !ui.f.mine) continue;
     const b = v.bs.find((x) => x.id === sp.id);
-    const nb = sp.nb ? nb19(s).find((x) => `nb:${x.lot}` === sp.id) : undefined;
-    const label = b ? `${b.name} · ${t(KIND18[b.kind].name)} · ${t(STATE18[b.st])} · ${t(l('estágio', 'stage'))} ${b.lvl}` : nb ? `${t(nb.name)} · ${t(l('vizinho', 'neighbour'))}${nb.sale ? ` · ${t(l('à venda', 'for sale'))}` : ''}` : sp.id;
-    hot(sp.id, sp.nb ? 'nb' : 'mine', sp.box, label);
+    const nb = sp.nb ? v.nbs.find((x) => `nb:${x.lot}` === sp.id) : undefined;
+    const x = v.vis.get(sp.id);
+    const label = b ? `${b.name} · ${t(KIND18[b.kind].name)} · ${status27(v, b)}${b.kind === 'hq' && v.live ? ` — ${t(l('clique para entrar', 'click to enter'))}` : ''}` : nb ? `${t(nb.name)} — ${t(nb.doing)}` : sp.id;
+    const k = b ? ICON27[b.kind] : undefined;
+    const pin = b && k ? h('span', { class: `c27-pin ${b.kind === 'hq' ? 'hq' : ''} ${x?.scaffold ? 'works' : ''} ${b.st === 'damaged' ? 'dmg' : ''}`, style: `--k:${k.col}`, 'aria-hidden': 'true' },
+      ic(k.ic), x?.alerts ? h('b', { class: 'c27-n' }, String(x.alerts)) : null, x?.scaffold && x.eta !== undefined ? h('i', { class: 'c27-eta' }, `${x.eta}${t(l('m', 'mo'))}`) : null)
+      : nb ? h('span', { class: `c27-pin nb ${nb.k === 'rival' ? 'rival' : ''}`, 'aria-hidden': 'true' }, ic(nb.icon), h('i', { class: 'c27-nm' }, t(nb.name).replace(/ \((escritório|office)\)$/, '').slice(0, 16))) : null;
+    hot(sp.id, sp.nb ? 'nb' : 'mine', sp.box, label, [pin], b?.kind === 'hq' && v.live ? enter : undefined);
   }
   // marcos da cidade
   if (ui.f.lm) for (const m of sc.marks) { const lm = lmNow19(s, v.year).find((x) => x.id === m.id); if (lm) hot(`lm:${m.id}`, 'lm', m.box, `${t(lm.n)} · ${lm.from > 0 ? lm.from : ''}`); }
-  // lotes livres: "+" (ou destino da mudança)
   if (v.live && ui.f.mine) {
-    const used = new Set(layout18(s, v.bs).values()), nbl = new Set(nb19(s).map((x) => x.lot)), busy = new Set(campus18(s).proj.map((p) => p.lot));
-    LOTS18.forEach((L0, i) => {
-      if (used.has(i) || nbl.has(i) || busy.has(i)) return;
-      const [cx, cy] = iso(L0.gx + L0.w / 2, L0.gy + L0.d / 2);
-      hot(`lot:${i}`, `lot ${ui.moving ? 'mv' : ''}`, [cx - 6, cy - 6, cx + 6, cy + 6], `${t(L0.name)} · ${t(ui.moving ? l('mudar para cá', 'move here') : l('lote vazio: construir aqui', 'empty lot: build here'))}`, '+');
-    });
+    if (ui.moving) { // mudança: todo lote livre é destino
+      const used = new Set(layout18(s, v.bs).values()), nbl = new Set(nb19(s).map((x) => x.lot)), busy = new Set(campus18(s).proj.map((p) => p.lot));
+      LOTS18.forEach((L0, i) => {
+        if (used.has(i) || nbl.has(i) || busy.has(i)) return;
+        const [cx, cy] = iso(L0.gx + L0.w / 2, L0.gy + L0.d / 2);
+        hot(`lot:${i}`, 'lot mv', [cx - 7, cy - 7, cx + 7, cy + 7], `${t(L0.name)} · ${t(l('mudar para cá', 'move here'))}`, ['→']);
+      });
+    } else for (const x of v.sale) { // r27: placas "À venda" (só o que cabe no caixa)
+      const L0 = LOTS18[x.lot];
+      const [bx, by] = signAt27(x.lot);
+      hot(`lot:${x.lot}`, 'sale', [bx - 14, by - 19, bx + 14, by + 1], `${t(L0.name)} · ${t(l('à venda', 'for sale'))} · ${t(l('sugestão', 'suggestion'))}: ${t(x.name)} ${$(x.price)}`,
+        [h('span', { class: 'c27-pin sale', 'aria-hidden': 'true' }, ic(ICON27[x.kind]?.ic ?? 'building'), h('i', { class: 'c27-nm' }, $(x.price)))]);
+    }
     // eventos do bairro
-    for (const e of live19ev(s)) { const sp = sc.sprites.find((x) => x.id === e.at); if (sp) hot(`ev:${e.id}`, 'ev', [sp.door[0] - 6, sp.door[1] - 2, sp.door[0] + 6, sp.door[1] + 10], `${t(EV19[e.k].n)} — ${t(l('decidir', 'decide'))}`, '!'); }
+    for (const e of live19ev(s)) { const sp = sc.sprites.find((x) => x.id === e.at); if (sp) hot(`ev:${e.id}`, 'ev', [sp.door[0] - 6, sp.door[1] - 2, sp.door[0] + 6, sp.door[1] + 10], `${t(EV19[e.k].n)} — ${t(l('decidir', 'decide'))}`, ['!']); }
   }
   // zoom e arraste (pinça no celular)
   const apply = () => { zoom.style.transform = `translate(${ui.px}px, ${ui.py}px) scale(${ui.z})`; };
@@ -284,7 +397,7 @@ function mapFrame(v: View): HTMLElement {
   const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (!pts.size) setTimeout(() => { moved = false; }, 0); };
   vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
   vp.addEventListener('wheel', (e) => { if (!e.ctrlKey && ui.z === 1 && e.deltaY > 0) return; e.preventDefault(); const r = vp.getBoundingClientRect(); setZ(ui.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
-  zoom.append(mapCanvas(v), layer);
+  zoom.append(cv, layer);
   vp.append(zoom);
   requestAnimationFrame?.(() => { clampPan(); apply(); });
   // barra sobre o mapa
@@ -297,15 +410,19 @@ function mapFrame(v: View): HTMLElement {
       h('button', { type: 'button', class: 'btn small ghost', 'aria-label': t(l('Aproximar', 'Zoom in')), onclick: () => setZ(ui.z * 1.4) }, '+'),
       h('button', { type: 'button', class: 'btn small ghost', 'aria-label': t(l('Afastar', 'Zoom out')), onclick: () => setZ(ui.z / 1.4) }, '−'),
       h('button', { type: 'button', class: `btn small ${ui.legend ? '' : 'ghost'}`, 'aria-pressed': String(!!ui.legend), onclick: () => { ui.legend = !ui.legend; rerender(); } }, t(l('Legenda', 'Legend')))));
-  const mv = ui.moving ? h('div', { class: 'w19-moving' }, ic('building'), ' ', t(l('Escolha um lote livre (+) para a mudança.', 'Pick a free lot (+) for the move.')), ' ',
+  const mv = ui.moving ? h('div', { class: 'w19-moving' }, ic('building'), ' ', t(l('Escolha um lote livre (→) para a mudança.', 'Pick a free lot (→) for the move.')), ' ',
     h('button', { type: 'button', class: 'btn small ghost', onclick: () => { ui.moving = undefined; rerender(); } }, t(l('Cancelar', 'Cancel')))) : null;
-  frame.append(bar, mv ?? '', vp, tip, pop);
+  frame.append(bar, mv ?? '', vp, tip);
   if (ui.legend) frame.append(legend());
-  // fechar: Esc ou clique fora
-  const esc = (e: KeyboardEvent) => { if (!frame.isConnected) { document.removeEventListener('keydown', esc, true); return; } if (e.key === 'Escape' && !pop.hidden) { e.stopPropagation(); close(); } };
+  // fechar: Esc ou clique fora (folha do celular)
+  const esc = (e: KeyboardEvent) => { if (!frame.isConnected) { document.removeEventListener('keydown', esc, true); return; } if (e.key === 'Escape' && ui.pop) { e.stopPropagation(); close(); } };
   document.addEventListener('keydown', esc, true);
-  const outside = (e: Event) => { if (!frame.isConnected) { document.removeEventListener('pointerdown', outside, true); if (pop.parentElement === document.body) pop.remove(); document.body.classList.remove('w19-open'); return; } if (!pop.hidden && !pop.contains(e.target as Node) && !(e.target as HTMLElement).closest?.('.w19-hs')) close(); };
+  const outside = (e: Event) => {
+    if (!frame.isConnected) { document.removeEventListener('pointerdown', outside, true); sheet.remove(); document.body.classList.remove('w19-open'); return; }
+    if (!sheet.hidden && !sheet.contains(e.target as Node) && !(e.target as HTMLElement).closest?.('.w19-hs')) close();
+  };
   document.addEventListener('pointerdown', outside, true);
+  showOverview();
   if (ui.pop) requestAnimationFrame?.(() => { const hs = layer.querySelector(`[data-id="${CSS.escape(ui.pop!)}"]`) as HTMLElement | null; if (ui.pop) open(ui.pop, hs); });
   return frame;
 }
@@ -314,8 +431,9 @@ function legend(): HTMLElement {
   const ks = ['hq', 'studio', 'venue', 'fest', 'publisher', 'media', 'platform', 'booking', 'plant', 'school', 'museum', 'store', 'sign', 'dorm', 'park', 'home'] as const;
   return h('div', { class: 'w19-legend small' },
     h('b', null, t(l('Legenda', 'Legend'))),
-    h('ul', null, ks.map((k) => h('li', null, ic(KIND18[k].icon), ' ', t(KIND18[k].name)))),
-    h('p', { class: 'muted' }, t(l('Placa amarela = obra; vermelha = danificado; cinza = vizinho ou vendido. "+" = lote vazio; "!" = evento do bairro esperando decisão. Marcos da cidade ficam no horizonte.', 'Yellow plate = works; red = damaged; grey = neighbour or sold. "+" = empty lot; "!" = neighbourhood event awaiting a decision. City landmarks sit on the skyline.'))));
+    h('ul', null, ks.map((k) => h('li', null, chip27(ICON27[k].ic, ICON27[k].col), ' ', t(KIND18[k].name)))),
+    h('p', { class: 'muted' }, t(l('Número vermelho = alertas; "3m" = meses de obra; placa "À venda" = lote que cabe no caixa (o tipo sugerido no ícone); cinza = vizinho, vinho = gravadora rival. Janelas acesas = gente trabalhando; fila na porta = sessão ou show; fumaça = fábrica prensando. Marcos da cidade ficam no horizonte.',
+      'Red number = alerts; "3mo" = months of works; "For sale" sign = a lot you can afford (suggested type on the icon); grey = neighbour, wine = rival label. Lit windows = people at work; queue at the door = session or show; smoke = plant pressing. City landmarks sit on the skyline.'))));
 }
 
 // ---------------------------------------------------------------- página
@@ -335,7 +453,7 @@ function campusArea(s: GameState): HTMLElement {
     stat('sparkle', sy.filter((x) => !x.rule.neg).length, l('Vizinhanças boas', 'Good neighbours')),
     stat('hourglass', v.bs.filter((b) => b.st === 'building' || b.st === 'planned' || b.st === 'renovating').length, l('Em obras', 'Under works')),
     stat('coin', $(upk), l('Custo mensal', 'Monthly cost')),
-    stat('calendar', t(env.snow ? l('Neve', 'Snow') : env.rain ? l('Chuva', 'Rain') : env.season === 'winter' ? l('Inverno', 'Winter') : env.season === 'spring' ? l('Primavera', 'Spring') : env.season === 'summer' ? l('Verão', 'Summer') : l('Outono', 'Autumn')), l('Tempo', 'Weather')));
+    stat('calendar', t(env.snow ? l('Neve', 'Snow') : env.rain ? l('Chuva', 'Rain') : env.season === 'winter' ? (env.climate === 'tropical' ? l('Seco', 'Dry') : l('Inverno', 'Winter')) : env.season === 'spring' ? l('Primavera', 'Spring') : env.season === 'summer' ? l('Verão', 'Summer') : l('Outono', 'Autumn')), l('Tempo', 'Weather')));
   const snaps = st.snaps;
   const tl = snaps.length > 1 ? h('div', { class: 'c18-tl' },
     h('span', null, ic('hourglass'), ' ', t(l('Ver em', 'See in'))),
@@ -345,13 +463,12 @@ function campusArea(s: GameState): HTMLElement {
     ui.year !== undefined ? h('button', { type: 'button', class: 'btn small ghost', onclick: () => { ui.year = undefined; rerender(); } }, t(l('Ao vivo', 'Live'))) : null)
     : h('p', { class: 'small muted' }, t(l('A linha do tempo ganha um retrato do quarteirão a cada virada de ano.', 'The timeline gets a snapshot of the block at every new year.')));
   const evs = v.live ? live19ev(s) : [];
-  return h('div', { class: 'c18 w19' },
+  const side = h('aside', { class: 'c27-side', 'aria-label': t(l('Painel do bairro', 'Neighbourhood panel')), 'aria-live': 'polite' });
+  return h('div', { class: 'c18 w19 c27' },
     section(`${t(l('Nosso mundo', 'Our world'))} — ${s.config.companyName}`,
       h('p', { class: 'w19-hood' }, ic('house'), ' ', why18(s, 'h19.hood', {}, h('b', null, t(hs.h.n)), ` · ${t(STAGE19[hs.stage])}`), h('span', { class: 'muted small' }, ` — ${t(hs.h.d)}${hs.note ? ` ${t(hs.note)}` : ''}`)),
       sum,
-      mapFrame(v),
-      tl,
-      h('p', { class: 'muted small' }, t(l('Toque num prédio, lote, vizinho ou marco para agir ali mesmo. Prédios vizinhos (até uma rua de distância) formam sinergias.', 'Tap a building, lot, neighbour or landmark to act right there. Buildings within one street of each other form synergies.')))),
+      h('div', { class: 'c27-main' }, h('div', { class: 'c27-mapcol' }, mapFrame(v, side), tl), side)),
     v.live && (sy.length || evs.length) ? section(t(l('Vizinhança', 'Neighbourhood')),
       h('ul', { class: 'small w19-list' },
         sy.map((x) => h('li', { class: x.rule.neg ? 'bad' : 'good' }, h('b', null, t(x.rule.name)), ` — ${t(x.rule.eff)}`)),
