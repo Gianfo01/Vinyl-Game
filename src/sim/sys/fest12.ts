@@ -8,7 +8,7 @@
 // atração) -> próxima edição. Toda aleatoriedade usa um gerador próprio (semente + festival + mês).
 
 import { Rng, clamp, hashString } from '../../core/rng';
-import { cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
+import { familyOf, l, type FamilyId, type L } from '../../data/world';
 import { deferEvents, queueCutscene, registerExt4, registerSimHook } from '../ext4';
 import { emitEvent, resolveDecision, type EventDef } from '../events';
 import { climateInfo } from '../travelAdapter';
@@ -124,29 +124,20 @@ export function sync12(s: GameState): void {
       const x = f12(s, f);
       for (const e of v.editions ?? []) x.hist.push({ y: e.y, crowd: e.crowd, cap: 0, loyal: 0, early: 0, rating: 0, profit: e.profit, head: e.head, ident: x.ident, tag: VERD[e.verdict], why: [] });
     }
+    // r27: uma fonte só — o terreno/ciclo manda; o negócio só espelha (nome, cidade, mês, ingresso, reputação)
     const sn = (st.snap[v.id] ??= { m: f.month, c: f.cityId });
-    if (v.month !== undefined && v.month !== sn.m) setCal12(s, f.id, { month: v.month });
-    if (v.city !== sn.c && cityById[v.city]) f.cityId = v.city;
     v.month = sn.m = f.month;
     v.city = sn.c = f.cityId;
     v.name = f.name;
     v.rep = f.rep;
     v.price = money(s, f.price);
-    for (const x of v.lineup ?? []) {
-      const a = s.acts[x.actId];
-      if (a && !f.lineup.some((y) => y.actId === a.id)) {
-        const slot = freeSlot(s, f, wantTime(a));
-        if (slot) place(s, f, a, { ...slot, len: 60, excl: false, fee: isMine(s, a.id) ? 0 : guestFee(s, a) }, false);
-      }
-    }
-    if (v.lineup) v.lineup = [];
   }
   for (const f of lv.fests) {
     // atrações postas pelo editor de terreno ganham palco e horário
     const x = f12(s, f);
     for (const y of f.lineup) { const a = s.acts[y.actId]; const sl = a && !x.deals[a.id] ? freeSlot(s, f, wantTime(a)) : null; if (a && sl) x.deals[a.id] = { actId: a.id, ...sl, len: 60, excl: false, tech: techOf(a), adv: 0 }; }
     if (vs.list.some((v) => v.fx === f.id)) continue;
-    const v: Venture = { id: nextId(s, 'vn'), kind: 'festival', owner: 'label', city: f.cityId, level: 1, rep: f.rep, staff: 1, founded: f.founded, cost: money(s, 12000), pl: [], total: 0, name: f.name, month: f.month, price: money(s, f.price), lineup: [], editions: [], fx: f.id };
+    const v: Venture = { id: nextId(s, 'vn'), kind: 'festival', owner: 'label', city: f.cityId, level: 1, rep: f.rep, staff: 1, founded: f.founded, cost: money(s, 12000), pl: [], total: 0, name: f.name, month: f.month, price: money(s, f.price), editions: [], fx: f.id };
     vs.list.push(v);
     st.snap[v.id] = { m: f.month, c: f.cityId };
   }
@@ -795,7 +786,7 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   const h: Hist = { y: x.cyc.year, crowd: att, cap: p.cap, loyal: x.loyal, early: x.cyc.early, rating, profit, head: head?.name ?? '—', ident: x.ident, tag, why };
   x.hist.push(h);
   if (x.hist.length > 30) x.hist.shift();
-  if (v) { v.editions!.push({ y: x.cyc.year, crowd: att, profit, verdict, head: h.head }); if (v.editions!.length > 30) v.editions!.shift(); v.rep = f.rep; v.lineup = []; }
+  if (v) { (v.editions ??= []).push({ y: x.cyc.year, crowd: att, profit, verdict, head: h.head }); if (v.editions.length > 30) v.editions.shift(); v.rep = f.rep; }
   bump(s, 'festEditions');
   if (rating >= 60 && !disaster) bump(s, 'festGood');
   if (disaster) bump(s, 'festDisasters');

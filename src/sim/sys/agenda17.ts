@@ -85,7 +85,7 @@ export const officeCap = (s: GameState): number => OFFICE + (ag17(s).chief ? 1 :
 
 /** Pico de calendário da carreira neste mês (+1 bolinha se você não delegou). */
 export function crunch(s: GameState, id: string): L | null {
-  if (id === 'festival' && ventures(s).list.some((v) => v.kind === 'festival' && v.month === s.month && v.lineup?.length)) return l('semana do seu festival', 'your festival week');
+  if (id === 'festival' && ventures(s).list.some((v) => v.kind === 'festival' && v.month === s.month && liveOf(s).fests.some((f) => f.id === v.fx && f.lineup.length))) return l('semana do seu festival', 'your festival week');
   if (id === 'musician') { const b = playerAct(s); if (b && s.pendingReleases.some((p) => p.actId === b.id && p.week >= s.week - 1 && p.week < s.week + 5)) return l('lançamento da sua banda', 'your band\'s release'); }
   return null;
 }

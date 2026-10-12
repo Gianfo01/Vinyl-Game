@@ -63,11 +63,11 @@ export function openNight27(): void {
         const prevSame = picks[slot - 1]?.act === x.actId && picks[slot - 1]?.venue === v.id;
         return h('article', { class: 'n27m-act' },
           h('div', null, h('b', null, T(actName27(s, x))), h('small', { class: 'muted' }, ` · ${T(actGenre27(s, x))} · ${actSize27(s, x)}👤`)),
-          h('div', { class: 'small' }, pips(x.buzz), ' ', T(BUZZ[x.buzz - 1]), ' · ', h('span', { class: x.known ? 'good' : 'muted' }, T(DEG[Math.min(4, x.known)]))),
+          h('div', { class: 'small' }, pips(x.buzz), ' ', T(BUZZ[x.buzz - 1]), ' · ', x.signedTo ? h('span', { class: 'muted' }, t(l('contratado', 'signed'))) : h('span', { class: x.known ? 'good' : 'muted' }, T(DEG[Math.min(4, x.known)]))),
           h('p', { class: 'n27m-tip' }, T(x.tip)),
           x.signedTo ? h('p', { class: 'small muted' }, fmt(l('Contrato com {l}: dá para ver, não para assinar.', 'Signed to {l}: you can watch, not sign.'), { l: x.signedTo })) : null,
-          done ? null : h('button', { class: 'btn small primary', onclick: () => { picks.push({ venue: v.id, act: x.actId, talk }); talk = false; draw(); } },
-            prevSame ? fmt(l('Ficar o show inteiro ({s})', 'Stay for the whole set ({s})'), { s: T(SLOTS27[slot]) }) : fmt(l('Ver às {s}', 'Watch at {s}'), { s: T(SLOTS27[slot]) })));
+          done ? null : h('button', { class: `btn small${x.signedTo ? ' ghost' : ' primary'}`, onclick: () => { picks.push({ venue: v.id, act: x.actId, talk }); talk = false; draw(); } },
+            x.signedTo ? fmt(l('Só assistir às {s}', 'Just watch at {s}'), { s: T(SLOTS27[slot]) }) : prevSame ? fmt(l('Ficar o show inteiro ({s})', 'Stay for the whole set ({s})'), { s: T(SLOTS27[slot]) }) : fmt(l('Ver às {s}', 'Watch at {s}'), { s: T(SLOTS27[slot]) })));
       }));
     const ctl = h('div', { class: 'n27m-ctl' },
       done ? null : h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: talk, onchange: (e: Event) => { talk = (e.target as HTMLInputElement).checked; } }), ' ', t(l('Puxar conversa depois do show (carisma; +bebida)', 'Chat after the show (charisma; +a drink)'))),
@@ -86,7 +86,7 @@ export function openNight27(): void {
     root.replaceChildren(
       h('h4', null, fmt(l('A noite rendeu {n} nome(s) novo(s) e {d} relatório(s) mais fundo(s). Gasto: {c}.', 'The night brought {n} new name(s) and {d} deeper report(s). Spent: {c}.'), { n: res.newNames, d: res.deeper, c: $(res.cost) })),
       h('ol', { class: 'n27m-res', 'aria-live': 'polite' }, ...res.lines.map((x) => h('li', { class: x.tone },
-        h('small', null, T(SLOTS27[x.slot])), ' ', h('b', null, s.acts[x.actId]?.name ?? '?'), ' ', h('span', { class: 'muted small' }, `${T(DEG[Math.min(4, x.before)])} → ${T(DEG[Math.min(4, x.after)])}`),
+        h('small', null, T(SLOTS27[x.slot])), ' ', h('b', null, s.acts[x.actId]?.name ?? '?'), ' ', x.after > x.before ? h('span', { class: 'muted small' }, `${T(DEG[Math.min(4, x.before)])} → ${T(DEG[Math.min(4, x.after)])}`) : null,
         h('p', null, T(x.why))))),
       h('p', { class: 'small muted' }, t(l('Os nomes estão no Funil (Talentos) com a origem "noite de olheiro".', 'The names are in the Funnel (Talents) with origin "scouting night".'))),
       h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close'))));

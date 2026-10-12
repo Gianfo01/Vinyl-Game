@@ -7,7 +7,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L } from '../../data/world';
-import { deferEvents, registerExt4, registerSimHook } from '../ext4';
+import { deferEvents, registerExt4 } from '../ext4';
 import { emitEvent, type EventDef } from '../events';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
@@ -295,10 +295,12 @@ export function corp(s: GameState, how: 'take' | 'move' | 'no', nid: string, amo
 
 // ---------------------------------------------------------------- mês
 
-function venue12Month(s: GameState): void {
+/** Mês da PROGRAMAÇÃO da casa construída (noites, fiéis, cena, vizinhança, metas). r27: devolve receita e custo para o
+ * fechamento único das casas (venues27) lançar junto com a base; multas e consertos seguem como eventos à parte. */
+export function programmeMonth12(s: GameState): { rev: number; cost: number } | null {
   const v = liveOf(s).venue;
   const x = v12(s);
-  if (!v || !x) return;
+  if (!v || !x) return null;
   const r = Rng.fromSeed(`${s.config.seed}:venue12:${monthIndex(s)}`);
   const e = monthEst12(s)!;
   let att = 0;
@@ -322,8 +324,7 @@ function venue12Month(s: GameState): void {
     if (n.deal === 'door' || n.k === 'original') x.scene += 0.5;
     if (n.k === 'private' && DAYS[n.day].late > 1) x.regulars -= 0.6;
   }
-  post(s, 'v12:rev', e.house + Math.max(0, e.branches), 'live', `Programação ${v.name}`);
-  post(s, 'v12:cost', -(e.cost + e.staff + e.maint + Math.max(0, -e.branches)), 'live_costs', `Equipe, cachês e manutenção ${v.name}`);
+  const out = { rev: e.house + Math.max(0, e.branches), cost: e.cost + e.staff + e.maint + Math.max(0, -e.branches) };
   // desgaste e manutenção
   const wear = x.prog.reduce((t, n) => t + (n.k === 'party' ? 2 : 1), 0) * (x.ups.flow ? 0.7 : 1);
   x.cond = clamp(x.cond - wear + [0, 3, 6][x.maint], 0, 100);
@@ -368,6 +369,7 @@ function venue12Month(s: GameState): void {
     x.corpAt = monthIndex(s);
     emitEvent(s, r, CORP.id, { nid: fri.id, night: fri.name, amount: venueKind(v.kind).rent * 7 });
   }
+  return out;
 }
 
-registerSimHook('month', 'venue12', (s) => venue12Month(s));
+// r27: sem gancho próprio — o fechamento único das casas (venues27) chama programmeMonth12.

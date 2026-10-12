@@ -147,6 +147,8 @@ import './sits17';
 import './sale17';
 import './outlets17';
 import './venues17';
+// r27 (AUD1): casas de shows num modelo só (lista, teto e fechamento mensal únicos)
+import './venues27';
 import './license17';
 import './clash17';
 import './image17';

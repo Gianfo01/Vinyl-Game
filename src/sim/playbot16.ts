@@ -50,6 +50,7 @@ import { ability18, prospect18 } from './sys/ability18';
 import { doPersonAction18, personActions18 } from './personact18';
 import { botMedia18 } from './botmedia18';
 import { rankChannels18 } from './sys/mkt18';
+import { freshLogBiz27, playBiz27, type LogBiz27 } from './botbiz27';
 
 export type Profile = 'cautious' | 'balanced' | 'aggressive';
 
@@ -92,8 +93,10 @@ export interface PlayLog {
   loans: number; renewals: number; drops: number; decisions: number; personal: number; commissions: number; demands: number;
   /** rodada 17: canais, merch, casas, imprensa, cenas, envolvimento */
   r17: Log17;
+  /** r27: negócios (salas da sede, estúdio, editora, casa de shows, festival próprio) */
+  biz: LogBiz27;
 }
-const freshLog = (): PlayLog => ({ signs: 0, offers: 0, scouts: 0, projects: 0, recordings: 0, releases: 0, rollouts: 0, tours: 0, festivals: 0, syncPitches: 0, syncWins: 0, hires: 0, fires: 0, orders: 0, loans: 0, renewals: 0, drops: 0, decisions: 0, personal: 0, commissions: 0, demands: 0, r17: freshLog17() });
+const freshLog = (): PlayLog => ({ signs: 0, offers: 0, scouts: 0, projects: 0, recordings: 0, releases: 0, rollouts: 0, tours: 0, festivals: 0, syncPitches: 0, syncWins: 0, hires: 0, fires: 0, orders: 0, loans: 0, renewals: 0, drops: 0, decisions: 0, personal: 0, commissions: 0, demands: 0, r17: freshLog17(), biz: freshLogBiz27() });
 
 interface Mem { log: PlayLog; cash: number[]; tourW: Record<string, number>; party: number; refused: Record<string, number> }
 const MEM = new WeakMap<GameState, Mem>();
@@ -390,6 +393,13 @@ function team(s: GameState, k: Knobs): void {
     const afford = pro && liq > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || liq > (salaries + pro.salary) * 24 * k.hireMult);
     if (pro && afford && !hireStaff(s, pro.id)) L.hires++;
   }
+  // r27: no 1º ano (ainda sem receita do ano anterior) a primeira contratação — A&R ou agente de shows, o mais barato
+  // que aparecer — sai quando um ano de salário cabe com folga no caixa e o fôlego segue acima do de corte
+  else if (!s.player.staff.length && acts.length && s.year - s.config.startYear < 2 && !yearRev && s.player.staff.length < hqCaps(s).staff) {
+    const pro = s.professionals.filter((p) => p.role === 'anr' || p.role === 'booking_agent').sort((a, b) => a.salary - b.salary)[0];
+    const liq = liquid18(s, 3);
+    if (pro && liq > pro.salary * 12 * (1 + k.hireMult) && (s.player.cash - pro.salary * 6) / Math.max(1, burn(s) + pro.salary) > k.cut * 2 && !hireStaff(s, pro.id)) L.hires++;
+  }
   // ordens permanentes para os delegados (como no painel de equipe)
   for (const st of s.player.staff) {
     if (st.role !== 'booking_agent' && st.role !== 'promoter') continue;
@@ -495,6 +505,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   sync(s, prof);
   team(s, k);
   grow(s, k);
+  playBiz27(s, prof, { cash: s.player.cash, burn: burn(s), cut: k.cut }, L.biz); // r27: negócios que o bot nunca tocava
   play17(s, prof, { cash: s.player.cash, burn: burn(s), energy: energyLeft(s) }, L.r17);
   botMedia18(s, prof);
   personal(s);
@@ -520,7 +531,7 @@ export function simulatePlayer(cfg: RunConfig, years: number, profile: Profile =
     state: s,
     summary: {
       seed: cfg.seed, profile, startYear: cfg.startYear, endYear: s.year, cash: s.player.cash, realCash: Math.round(toReal(s.player.cash, s.year)), ended: s.ended?.ending, endedYear: s.ended ? s.year : undefined, low: Math.round(low), y1: Math.round(y1), y2: Math.round(y2),
-      acts: playerActs(s).length, releases: s.player.stats.releases, number1s: s.player.stats.number1s, log: { ...playLog(s), r17: { ...playLog(s).r17 } },
+      acts: playerActs(s).length, releases: s.player.stats.releases, number1s: s.player.stats.number1s, log: { ...playLog(s), r17: { ...playLog(s).r17 }, biz: { ...playLog(s).biz } },
     },
   };
 }

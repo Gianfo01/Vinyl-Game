@@ -2,14 +2,14 @@
 // palcos, acessos, banheiros, comida, bar, camping, segurança, posto médico e merch; escolhe line-up,
 // data e preço. Na data, a simulação calcula lotação, empolgação, conforto, segurança, filas,
 // pensamentos do público e desastres. O festival cresce a cada edição bem-sucedida.
+// r27 (AUD1): aqui fica o TERRENO (grade, peças, line-up, modelo de lotação/conforto); o ciclo e a edição são do fest12.
 
-import { clamp, type Rng } from '../../../core/rng';
+import { clamp } from '../../../core/rng';
 import { cityById, l, type L } from '../../../data/world';
-import { queueCutscene, registerSimHook } from '../../ext4';
-import { climateInfo } from '../../travelAdapter';
+import { registerSimHook } from '../../ext4';
 import type { Act, GameState } from '../../types';
-import { fmtL, money, nextId, notify, post, remember } from '../../util';
-import { bump, isMine, liveOf, type FestEdition, type FestThought, type FestTile, type OwnFestival } from './state';
+import { fmtL, money, nextId, post, remember } from '../../util';
+import { isMine, liveOf, type FestTile, type OwnFestival } from './state';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export interface TileDef {
@@ -201,130 +201,7 @@ export function festModel(s: GameState, f: OwnFestival): FestModel {
   };
 }
 
-function freeSpot(f: OwnFestival, r: Rng): { x: number; y: number } {
-  for (let i = 0; i < 20; i++) {
-    const x = r.int(0, f.w - 1);
-    const y = r.int(0, f.h - 1);
-    if (!f.grid[y * f.w + x]) return { x, y };
-  }
-  return { x: r.int(0, f.w - 1), y: r.int(0, f.h - 1) };
-}
-
-function grow(f: OwnFestival): void {
-  const nw = Math.min(24, f.w + 2);
-  const nh = Math.min(12, f.h + 1);
-  if (nw === f.w && nh === f.h) return;
-  const grid: FestTile[] = new Array(nw * nh).fill('');
-  for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) grid[y * nw + x] = f.grid[y * f.w + x];
-  f.grid = grid;
-  f.w = nw;
-  f.h = nh;
-}
-
-/** Uma edição do festival. Devolve a edição ou null se cancelada por falta de estrutura. */
-export function runEdition(s: GameState, r: Rng, f: OwnFestival): FestEdition | null {
-  const m = festModel(s, f);
-  f.nextYear = s.year + 1;
-  if (!m.stages || !countTiles(f).gate || !m.lineup.length) {
-    notify(s, fmtL(l('{f}: edição cancelada — falta palco, acesso ou line-up.', '{f}: edition cancelled — missing stage, gate or line-up.'), { f: f.name }), 'bad');
-    f.rep = clamp(f.rep - 5, 0, 100);
-    return null;
-  }
-  const clim = climateInfo(s, f.cityId, f.month);
-  const storm = r.chance(clamp(clim.cancelRisk * 4 + 0.02, 0, 0.4));
-  const rain = !storm && r.chance(clamp(0.15 + (1 - clim.outdoorFactor) * 0.6, 0, 0.7));
-  const c = countTiles(f);
-  let { excitement, comfort, safety } = m;
-  if (rain) {
-    excitement -= 5;
-    comfort -= c.medic ? 6 : 12;
-  }
-  if (storm) {
-    excitement -= 12;
-    safety -= c.medic ? 5 : 20;
-  }
-  let revenueMult = 1;
-  let disaster: L | undefined;
-  let fine = 0;
-  let repHit = 0;
-  if (m.overflow > m.capacity * 0.2 && safety < 55 && r.chance(0.55)) {
-    disaster = l('Superlotação: grades derrubadas e feridos na frente do palco.', 'Overcrowding: barriers down and people injured in front of the stage.');
-    fine = money(s, 15000) + Math.round(m.attendance * money(s, 0.5));
-    repHit = 15;
-    safety -= 20;
-    s.player.reputation.institutional = clamp(s.player.reputation.institutional - 5, 0, 100);
-  } else if (storm && !c.medic && r.chance(0.6)) {
-    disaster = l('Tempestade: o palco principal foi evacuado.', 'Storm: the main stage was evacuated.');
-    revenueMult = 0.75;
-    repHit = 8;
-  } else if (rain && comfort < 30) {
-    disaster = l('Lamaçal: o festival virou um pântano.', 'Mudbath: the festival turned into a swamp.');
-    repHit = 5;
-  }
-  excitement = Math.round(clamp(excitement, 0, 100));
-  comfort = Math.round(clamp(comfort, 0, 100));
-  safety = Math.round(clamp(safety, 0, 100));
-  const rating = Math.round(excitement * 0.45 + comfort * 0.25 + safety * 0.3);
-  const rv = m.revenue;
-  const revenue = Math.round((rv.tickets + rv.food + rv.bar + rv.merch) * revenueMult);
-  const costs = m.costs.tiles + m.costs.fees + m.costs.production + fine;
-  post(s, `fest:${f.id}:${s.year}:rev`, revenue, 'live', `Festival ${f.name} ${s.year}`);
-  post(s, `fest:${f.id}:${s.year}:cost`, -costs, 'live_costs', `Custos do festival ${f.name} ${s.year}`);
-  // atrações
-  for (const a of m.lineup) {
-    const e = f.lineup.find((x) => x.actId === a.id);
-    if (!isMine(s, a.id)) {
-      a.cash += money(s, e?.fee ?? 0);
-      a.fans.casual += Math.round(m.attendance * 0.02);
-      continue;
-    }
-    a.fans.casual += Math.round(m.attendance * 0.08 * (excitement / 70));
-    a.fans.active += Math.round(m.attendance * 0.015 * (excitement / 70));
-    a.fame = clamp(a.fame + 1 + excitement / 100, 0, 100);
-    a.momentum = clamp(a.momentum + 3, 0, 100);
-    s.player.stats.festivals += 1;
-  }
-  // pensamentos do público
-  const th: { text: L; tone: FestThought['tone'] }[] = [];
-  const head = m.lineup.slice().sort((a, b) => b.fame - a.fame)[0];
-  if (m.ratios.toilet < 0.7) th.push({ text: l('Fila do banheiro enorme!', 'The toilet queue is huge!'), tone: 'bad' });
-  if (m.ratios.food < 0.7) th.push({ text: l('Uma hora de fila pra comer…', 'An hour in line for food…'), tone: 'bad' });
-  if (m.ratios.camp < 0.7) th.push({ text: l('Não tem onde armar a barraca.', 'Nowhere to pitch my tent.'), tone: 'bad' });
-  if (m.ratios.gate > 0.9) th.push({ text: l('Duas horas para entrar!', 'Two hours to get in!'), tone: 'bad' });
-  if (safety < 50) th.push({ text: l('Tá apertado demais aqui, dá medo.', 'It\'s way too packed, scary.'), tone: 'bad' });
-  if (m.priceTooHigh) th.push({ text: l('Ingresso caro demais pra esse line-up.', 'Ticket way too pricey for this line-up.'), tone: 'bad' });
-  if (rain) th.push({ text: l('Encharcado, mas valeu!', 'Soaked, but worth it!'), tone: 'neutral' }, { text: l('Lama até o joelho.', 'Mud up to my knees.'), tone: 'bad' });
-  if (storm) th.push({ text: l('Pararam tudo por causa dos raios…', 'They stopped everything for the lightning…'), tone: 'bad' });
-  if (disaster && repHit >= 15) th.push({ text: l('Socorro, a grade caiu!', 'Help, the barrier fell!'), tone: 'bad' });
-  if (excitement >= 70) th.push({ text: l('Melhor show da vida!', 'Best show of my life!'), tone: 'good' }, { text: l('Ano que vem eu volto!', 'Coming back next year!'), tone: 'good' });
-  if (head) th.push({ text: fmtL(l('{a} no palco principal é surreal!', '{a} on the main stage is unreal!'), { a: head.name }), tone: excitement >= 50 ? 'good' : 'neutral' });
-  if (comfort >= 75) th.push({ text: l('Banheiro limpo em festival? Milagre!', 'Clean toilets at a festival? Miracle!'), tone: 'good' });
-  if (c.merch && m.attendance > 0) th.push({ text: l('Comprei a camiseta da turnê.', 'Got the tour shirt.'), tone: 'good' });
-  if (c.bar >= 2) th.push({ text: l('O bar tá ótimo.', 'The bar is great.'), tone: 'good' });
-  if (excitement < 40) th.push({ text: l('Meio parado esse line-up…', 'This line-up is kind of dull…'), tone: 'bad' });
-  const thoughts: FestThought[] = th.slice(0, 10).map((x) => ({ ...x, ...freeSpot(f, r) }));
-  const edition: FestEdition = {
-    year: s.year, attendance: m.attendance, capacity: m.capacity, demand: m.demand, excitement, safety, comfort, rating, queueMin: m.queueMin, revenue, costs,
-    weather: storm ? 'storm' : rain ? 'rain' : 'sun', disaster, thoughts, lineup: m.lineup.map((a) => a.name),
-  };
-  f.rep = Math.round(clamp(f.rep + (rating - 55) / 3 - repHit, 0, 100));
-  s.player.reputation.commercial = clamp(s.player.reputation.commercial + (rating - 50) / 25, 0, 100);
-  if (rating >= 60 && !disaster) {
-    grow(f);
-    edition.grew = true;
-    bump(s, 'festGood');
-  }
-  bump(s, 'festEditions');
-  if (disaster) bump(s, 'festDisasters');
-  bump(s, 'festPeople', m.attendance);
-  f.editions.push(edition);
-  if (f.editions.length > 12) f.editions.splice(0, f.editions.length - 12);
-  remember(s, 'own_festival', fmtL(l('{f} {y}: {n} pessoas, nota {r}.{d}', '{f} {y}: {n} people, rating {r}.{d}'), { f: f.name, y: s.year, n: m.attendance, r: rating, d: disaster ? fmtL(l(' {x}', ' {x}'), { x: disaster }) : '' }), { important: !!disaster || f.editions.length === 1 || rating >= 80 });
-  notify(s, fmtL(l('{f}: {n} pessoas, nota {r}.', '{f}: {n} people, rating {r}.'), { f: f.name, n: m.attendance, r: rating }), disaster ? 'bad' : rating >= 60 ? 'good' : 'info');
-  queueCutscene(s, 'festivalDay', { title: fmtL(l('{f} {y}', '{f} {y}'), { f: f.name, y: s.year }), festId: f.id, year: s.year });
-  return edition;
-}
-
-registerSimHook('month', 'live-festival', (s, r) => {
-  for (const f of liveOf(s).fests) if (s.month === f.month && s.year >= f.nextYear) runEdition(s, r, f);
-});
+// r27 (AUD1): a edição antiga daqui (runEdition, mesmo gancho 'live-festival') era sombra do ciclo do fest12 e saiu:
+// toda edição de festival próprio roda em fest12.runEdition12 (uma fonte só para line-up, caixa e histórico).
+// O lugar do gancho fica reservado aqui (fest12 registra o mesmo id e o substitui na mesma posição da ordem).
+registerSimHook('month', 'live-festival', () => {});

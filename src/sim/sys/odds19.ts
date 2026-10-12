@@ -13,7 +13,7 @@ import { mandateChance, negotiateMandate } from './manager12';
 import { admChance18, takeAdm18, r18 } from './rights18';
 import { lic17, pitchOdds17, pitchOut } from './license17';
 import type { MarketId } from '../../data/world';
-import { bookingChance, inviteAct, inviteChance, mgChance, pitchClient, signBooking, ventures } from './ventures9';
+import { bookingChance, mgChance, pitchClient, signBooking, ventures } from './ventures9';
 
 export interface Odds19 {
   /** tela onde a chance aparece (para a ajuda e o teste de cobertura) */
@@ -46,9 +46,6 @@ registerOdds19('mg.mandate', { screen: l('Empresário › Mandato', 'Manager ›
 registerOdds19('booking.sign', { screen: l('Agência de shows › Oferecer agenciamento', 'Booking agency › Offer booking'),
   chance: (s, [v, a, rate]: Args) => bookingChance(s, vById(s, v), act(s, a), rate as number),
   roll: (s, r, [v, a, rate]: Args) => signBooking(s, r, v as string, a as string, rate as number).ok });
-registerOdds19('fest.invite', { screen: l('Festival › Convidar artista', 'Festival › Invite act'),
-  chance: (s, [v, a]: Args) => inviteChance(s, vById(s, v), act(s, a)),
-  roll: (s, r, [v, a]: Args) => inviteAct(s, r, v as string, a as string).ok });
 registerOdds19('fest.pitch', { screen: l('Festivais › Oferecer um artista seu', 'Festivals › Pitch one of your acts'),
   chance: (s, [fi, a, tier, fee]: Args) => pitchOdds8(s, fi as number, a as string, tier as FestTier, fee as number),
   roll: (s, r, [fi, a, tier, fee]: Args) => pitchAct(s, r, fi as number, a as string, tier as FestTier, fee as number).result === 'accepted' });

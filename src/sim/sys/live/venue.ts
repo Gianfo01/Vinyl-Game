@@ -12,6 +12,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember } from '../../u
 import { monthIndex } from '../../capacity';
 import { bump, isMine, liveOf, liveShare, type OwnVenue, type Residency } from './state';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { MAX_VENUES27, venueCount27 } from '../venues17';
 
 void applyMods;
 
@@ -29,6 +30,7 @@ export function upgradeCost(s: GameState, v: OwnVenue, what: 'bar' | 'acoustics'
 export function buyVenue(s: GameState, kind: OwnVenue['kind'], cityId: string, name: string): OwnVenue | L {
   const lv = liveOf(s);
   if (lv.venue) return l('Você já tem uma casa de shows.', 'You already own a venue.');
+  if (venueCount27(s) >= MAX_VENUES27) return l('Quatro casas é o máximo que dá para administrar.', 'Four venues is as many as you can run.');
   const k = venueKind(kind);
   if (s.year < k.minYear) return l('Ainda não existem arenas desse porte.', 'Arenas of that size don\'t exist yet.');
   if (!cityById[cityId]) return l('Cidade inválida.', 'Invalid city.');
@@ -95,14 +97,14 @@ export function venueMonthEstimate(s: GameState, v: OwnVenue): { rent: number; b
   return { rent, bar, own, upkeep: money(s, k.upkeep), occupancy: occ, ownAttendance };
 }
 
-function venueMonth(s: GameState, r: Rng): void {
+/** Mês da BASE da casa construída (aluguel, bar, artista da casa) — r27: sem lançar no caixa; quem lança é o
+ * fechamento único das casas (venues27), junto com a programação (venue12). Devolve receita e custo. */
+export function venueBaseMonth27(s: GameState, r: Rng): { rev: number; cost: number } | null {
   const v = liveOf(s).venue;
-  if (!v) return;
+  if (!v) return null;
   const e = venueMonthEstimate(s, v);
   const noise = r.float(0.85, 1.1);
   const revenue = Math.round((e.rent + e.bar + e.own) * noise);
-  post(s, `venue:rev`, revenue, 'live', `Casa de shows ${v.name}`);
-  post(s, `venue:cost`, -e.upkeep, 'live_costs', `Manutenção ${v.name}`);
   const act = v.ownActId ? s.acts[v.ownActId] : undefined;
   if (act && e.ownAttendance) {
     act.fans.casual += Math.round(e.ownAttendance * 0.1);
@@ -113,6 +115,7 @@ function venueMonth(s: GameState, r: Rng): void {
   v.history.push({ year: s.year, month: s.month, revenue, costs: e.upkeep, occupancy: Math.round(e.occupancy * 100) });
   if (v.history.length > 12) v.history.splice(0, v.history.length - 12);
   bump(s, 'venueMonths');
+  return { rev: revenue, cost: e.upkeep };
 }
 
 // ---------------------------------------------------------------- residência em cassino
@@ -254,7 +257,7 @@ function megaMonth(s: GameState, r: Rng): void {
 }
 
 registerSimHook('month', 'live-venue', (s, r) => {
-  venueMonth(s, r);
+  // r27: o mês da casa construída saiu daqui — fecha em venues27 (uma linha de receita e uma de custo por casa)
   residencyMonth(s);
   megaMonth(s, r);
 });

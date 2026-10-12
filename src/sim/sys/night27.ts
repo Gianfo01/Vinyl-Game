@@ -104,7 +104,7 @@ export function nightPlan27(s: GameState, city = s.config.homeCity): NightPlan27
     venues.push({ id: `nv:${k}:${i}`, name: k === 'bar' ? l(`Bar ${w}`, `${w} Bar`) : k === 'square' ? l(`Praça do ${w}`, `${w} Square`) : fmtL(l('{k} {w}', '{w} {k}'), { k: VENUE_K27[k].name, w }), kind: k, x: 0, y: 0, fee: 0, acts: [] });
   }
   // posições no mapa (grade 3×2 com folga) e entradas
-  venues.forEach((v, i) => { v.x = 12 + (i % 3) * 36 + r.int(-6, 6); v.y = 22 + Math.floor(i / 3) * 46 + r.int(-8, 8); v.fee = money(s, VENUE_K27[v.kind].fee); });
+  venues.forEach((v, i) => { v.x = 17 + (i % 3) * 33 + r.int(-3, 3); v.y = 20 + Math.floor(i / 3) * 48 + r.int(-6, 6); v.fee = money(s, VENUE_K27[v.kind].fee); });
   // quem toca: atos livres da cidade nas casas pequenas; contratados de rivais como atração nas grandes; e, onde
   // falta gente, uma abertura de banda nova (nasce quando você assiste — como o freelancer que acha alguém novo)
   const cityActs = Object.values(s.acts).filter((a) => live(a) && a.city === city && a.owner !== 'player' && (s.knowledge[a.id]?.degree ?? 0) < 4);
@@ -129,6 +129,7 @@ export function nightPlan27(s: GameState, city = s.config.homeCity): NightPlan27
       const tipGood = r.chance(potential >= 60 ? 0.72 : 0.28);
       v.acts.push({ actId: `new:${v.id}:${i}:${v.acts.length}`, known: 0, buzz: 1, tip: r.pick(tipGood ? GOOD_TIPS : BAD_TIPS), tipGood, spawn: { genre: g, potential, members: r.chance(0.4) ? 1 : r.int(2, 5), fame: Math.round(r.float(0, 3) * 10) / 10 } });
     }
+    v.acts.sort((a, b) => Number(!!a.signedTo) - Number(!!b.signedTo)); // quem dá para assinar primeiro
     // o olheiro de um selo rival no bar (mais provável onde a casa está cheia)
     const lbs = Object.values(s.labels).filter((lb) => lb.active).sort((a, b) => b.revenueLastYear - a.revenueLastYear).slice(0, 12);
     const hot = v.acts.reduce((t, x) => t + x.buzz, 0);
@@ -180,8 +181,14 @@ export function playNight27(s: GameState, plan: NightPlan27, picks: NightPick27[
       return;
     }
     const why: L[] = [];
+    // ficou o show inteiro (o mesmo ato, na mesma casa, no horário anterior)
+    const stayed = i > 0 && orig[i - 1] === orig[i] && ps[i - 1].venue === p.venue;
     // ver o show (com a SUA leitura: o ouvido do dono afina o viés)
-    if (!s.knowledge[a.id]) {
+    if (stayed && s.knowledge[a.id]) {
+      const k = s.knowledge[a.id];
+      if (k.degree < 3) { k.degree = 3; k.bias *= 0.6; why.push(l('Você ficou o show inteiro: dá para ver até onde chegam (potencial à vista).', 'You stayed for the whole set: you can see how far they can go (potential visible).')); }
+      else why.push(l('Você ficou o show inteiro, mas já sabia o bastante sobre eles.', 'You stayed for the whole set, but you already knew enough about them.'));
+    } else if (!s.knowledge[a.id]) {
       addSignal(s, r, a.id, 'night27', { by: me, at: v.name, city: a.city });
       const k = s.knowledge[a.id];
       k.degree = 2; k.stage = 'monitoring';
@@ -194,12 +201,6 @@ export function playNight27(s: GameState, plan: NightPlan27, picks: NightPick27[
       else why.push(fmtL(l('{a} você já conhecia bem; a noite só confirmou.', 'You already knew {a} well; the night only confirmed it.'), { a: a.name }));
     }
     const k = s.knowledge[a.id];
-    // ficou o show inteiro (o mesmo ato no horário anterior)
-    const prev = ps[i - 1];
-    if (prev && orig[i - 1] === orig[i] && prev.venue === p.venue && k.degree < 3) {
-      k.degree = 3; k.bias *= 0.6;
-      why.push(l('Você ficou o show inteiro: dá para ver até onde chegam (potencial à vista).', 'You stayed for the whole set: you can see how far they can go (potential visible).'));
-    }
     // puxar conversa depois
     if (p.talk) {
       const pTalk = clamp(0.35 + o.attrs.charisma / 150, 0.3, 0.9);

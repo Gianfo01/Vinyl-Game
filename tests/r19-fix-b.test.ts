@@ -72,10 +72,8 @@ describe('r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorte
     expect(foundVenture(s, 'booking', 'label', { name: 'Ag' })).toBeNull();
     expect(foundVenture(s, 'festival', 'label', { name: 'Fest' })).toBeNull();
     const bk = ventures(s).list.find((v) => v.kind === 'booking')!;
-    const fv = ventures(s).list.find((v) => v.kind === 'festival')!;
     const bc = bookingCandidates(s, bk.id).slice(0, 3);
     check('booking.sign', s, bc.flatMap((a) => [0.08, 0.12, 0.2].map((r) => [bk.id, a.id, r]))); covered.add('booking.sign');
-    check('fest.invite', s, mgCandidates(s).slice(0, 4).map((a) => [fv.id, a.id])); covered.add('fest.invite');
     // editora: taxa de administração
     r18(s).admOff.push({ id: 'adm-t', name: 'Espólio X', size: 100000, fee: 0.15, until: s.year + 3, sat: 60, exp: s.week + 13 });
     check('pub.admin', s, [0.1, 0.15, 0.2].map((f) => ['adm-t', f])); covered.add('pub.admin');
