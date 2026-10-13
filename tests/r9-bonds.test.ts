@@ -44,7 +44,8 @@ describe('laços duradouros', () => {
     s.player.initialCash += 10_000_000_00;
     const r = rngOf(s);
     let ok = false;
-    for (const o of npcs(s).slice(5, 40)) { if (proposeBond(s, r, 'ally', mine, [o.id]).ok) { ok = true; break; } }
+    // R28: com o mundo inicial pela cena da cidade (F3) os primeiros 40 podem não topar; procura em todos
+    for (const o of npcs(s).slice(5)) { if (proposeBond(s, r, 'ally', mine, [o.id]).ok) { ok = true; break; } }
     expect(ok).toBe(true);
     invariant(s);
     expect(bondInvite(s, r, mine, 'duo')).toBe(true);
