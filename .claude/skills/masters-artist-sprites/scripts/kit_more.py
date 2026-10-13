@@ -308,6 +308,13 @@ def face_paint(c, kind, skin, cx=47, cy=29, colr=None):
             c.px(x, ey - 1, INK)
 
 
+def split_facial(c, colr, color2, cx=47, cy=29):
+    """Bigode/barba bicolor: divide no eixo da boca (vista 3/4 → x = cx-5), só na região do rosto."""
+    m1, m2 = c.m(colr), c.m(color2)
+    k = (c.mat == m1) & (c.yy > cy + 4) & (c.yy < cy + 16) & (c.xx >= cx - 4.5) & (c.xx < cx + 9)
+    c.mat[k] = m2
+
+
 def split_hair(c, colr, color2, side='right', cx=47):
     """Cabelo bicolor: recolore metade do cabelo já desenhado."""
     m1, m2 = c.m(colr), c.m(color2)

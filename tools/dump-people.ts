@@ -1,11 +1,31 @@
 // Exporta os artistas reais (pessoas) com papel, gênero, estreia, nascimento e fama — insumo da skill de sprites.
 import { REAL_ALL } from '../src/sim/sys/realworld';
 import { writeFileSync } from 'node:fs';
-import { GENRES } from '../src/data/world';
+import { CITIES, GENRES } from '../src/data/world';
+import { CATALOG_ACTS } from '../src/data/catalog';
+import { REAL_ACTS } from '../src/data/realnames';
+import { REAL_CLASSIC } from '../src/data/realacts_classic';
 const FAM = new Map(GENRES.map((g) => [g.id, g.family as string]));
 
 type P = { name: string; role?: string; genre: string; family?: string; debut: number; birth?: number; death?: number; tier: number; country: string; acts: string[] };
 const out = new Map<string, P>();
+// os 100 atos-arquétipo do catálogo (nomes reais em realnames.ts, dados extras em realacts_classic.ts) vêm primeiro
+for (const ca of CATALOG_ACTS) {
+  const real = REAL_ACTS[ca.no];
+  if (!real) continue;
+  const ex = REAL_CLASSIC[ca.no] ?? {};
+  const city = CITIES.find((x) => x.id === ca.city);
+  const base = { genre: ca.genre, family: FAM.get(ca.genre), debut: ex.d ?? ca.debut, tier: 1, country: city ? `mercado:${city.market}` : '', acts: [real.name] };
+  const people: [string, string | undefined, number | undefined, number | undefined][] = ex.m
+    ? ex.m.map((m) => [m[0], m[1], m[2], m[3]])
+    : real.members && real.members.length > 1 ? real.members.map((n) => [n, undefined, undefined, undefined])
+    : [[real.members?.[0] ?? real.name, ex.r, ex.b, ex.x]];
+  for (const [name, role, birth, death] of people) {
+    const p = out.get(name);
+    if (p) { p.acts.push(real.name); continue; }
+    out.set(name, { name, role, birth, death, ...base, acts: [real.name] });
+  }
+}
 for (const a of REAL_ALL) {
   const add = (name: string, role: string | undefined, birth?: number, death?: number) => {
     const p = out.get(name);

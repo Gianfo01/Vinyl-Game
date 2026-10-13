@@ -224,7 +224,7 @@ def build(spec):
     for k in (fh if isinstance(fh, list) else [fh]):
         kit.facial_hair(c, k, col(f.get('facial_color'), hair_col))
     if f.get('facial_color2') and fh:
-        kit_more.split_hair(c, col(f.get('facial_color'), hair_col), f['facial_color2'], 'right')
+        kit_more.split_facial(c, col(f.get('facial_color'), hair_col), f['facial_color2'])
     kit_more.face_paint(c, f.get('paint'), skin, colr=f.get('paint_color'))
     kit.glasses(c, f.get('glasses'), f.get('glasses_color', '#d0a040'), lens_tint=f.get('lens_color', '#c8486a'))
     if spec.get('earrings'):
