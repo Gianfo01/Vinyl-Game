@@ -36,7 +36,15 @@ Quando os ajustes acabarem, o jogo deixa de ser um HTML e vira um app instalado 
 - **Casca:** Electron (Chromium + V8 iguais em toda máquina) ou Tauri (instalador menor, mas usa o navegador do sistema). A decisão fica para o empacotamento; o código do jogo não muda.
 - **O que o app instalado ganha de verdade:** sem limite de cota do navegador para saves; save em arquivo no disco (gzip/zstd, salvamento em segundo plano); sem a aba ser "congelada" quando fica em segundo plano; dá para reservar mais memória e usar vários núcleos (simulação num Worker, separada da tela).
 - **O que não muda sozinho:** a simulação continua rodando numa linha de execução só, com o mesmo motor JavaScript; uma máquina boa ajuda (~1,5–3× mais rápida que a da medição), mas não segura uma curva que cresce 15–19× até 2008. Por isso a poda/agregação do histórico e o corte dos ganchos caros continuam obrigatórios.
-- **Na 7A:** (1) simulação num Web Worker (a tela não trava no avanço do mês); (2) camada de save com adaptador (IndexedDB hoje → arquivo no app), mantendo o gzip que já existe em `store.ts`; (3) metas: ≤ 2,5× de custo por década e save ≤ 15 MB em 2040.
+- **Na 7A:** (1) simulação num Web Worker (a tela não trava no avanço do mês); (2) camada de save com adaptador (IndexedDB hoje → arquivo no app), mantendo o gzip que já existe em `store.ts`.
+- **Metas revistas com o autor (2026-10-13):** ficar mais lento com o mundo maior é normal (saves de Football Manager passam de 100 MB). Em vez de "≤ 2,5× por década", a meta é de **tempo absoluto num PC de referência** e de **curva sem explosão**:
+  - avanço de 1 mês ≤ ~3 s em 2040 com a base média num PC médio (e o pior mês ≤ 2× a média da década);
+  - save ≤ ~100 MB comprimido em 2040 na base grande, com carregamento ≤ ~10 s;
+  - o custo cresce no máximo na proporção do mundo ativo (atos/pessoas em atividade), não do histórico inteiro.
+- **Nível de detalhe por região (como as ligas "jogáveis × só de visualização" do FM):** nas regiões escolhidas (a sua e as que você ativar) a simulação é completa; nas outras, artistas e lançamentos de NPCs são simulados de forma agregada (paradas, vendas e carreiras resumidas). Escolha na Nova run e nas Opções, com estimativa de tempo por mês ao lado.
+- **Medidor de desempenho do PC:** no primeiro uso (e quando quiser, nas Opções) o jogo roda um teste curto e fixo (~5 s de simulação), classifica a máquina e recomenda tamanho de base e nível de detalhe ("neste PC: ~1,2 s por mês em 1980, ~3 s em 2020"). Durante a partida, um indicador discreto mostra o tempo do último avanço e o tamanho do save, com aviso quando passa do recomendado.
+- **Trocar o motor?** Não agora. São ~134 mil linhas de simulação em TypeScript (216 mil no total): reescrever em C#/Rust/C++ seria meses de trabalho e congelaria o jogo, para ganhar ~2–5× — menos do que corrigir a curva (algoritmos e poda costumam dar 5–20× nos pontos quentes, como já aconteceu no `r14-db`). Caminho em degraus: (1) perfilar e corrigir os ganchos caros; (2) usar vários núcleos — sistemas independentes (selos NPC, paradas, cenas) em Workers paralelos; (3) só então, se um núcleo de cálculo ainda dominar, reescrever **só ele** em Rust/WebAssembly, que roda tanto no HTML quanto no app instalado.
+
 
 ## Fase 1 — As três promessas (P0)
 ### 1A. Run reproduzível (C4) — S
