@@ -91,7 +91,7 @@ registerSimHook('month', 'idols18', (s) => {
       if (top && last) {
         addStress(s, last.id, 10, l('Último lugar na eleição', 'Last place in the election'));
         last.morale = clamp(last.morale - 8, 0, 100);
-        emitFact(s, { kind: 'award', actors: [top.id, id], severity: 25, visibility: 'public', tags: ['idol', 'election'], src: 'idols18', text: fmtL(l('{p} vence a eleição geral de {a}; {q} fica em último e chora no palco.', '{p} wins {a}\'s general election; {q} comes last and cries on stage.'), { p: top.name, a: a.name, q: last.name }) });
+        emitFact(s, { kind: 'award', actors: [top.id, id, last.id], severity: 25, visibility: 'public', tags: ['idol', 'election'], src: 'idols18', text: fmtL(l('{p} vence a eleição geral de {a}; {q} fica em último e chora no palco.', '{p} wins {a}\'s general election; {q} comes last and cries on stage.'), { p: top.name, a: a.name, q: last.name }) });
       }
     }
     // graduação (março)

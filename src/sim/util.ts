@@ -97,7 +97,7 @@ export function remember(
   s: GameState,
   kind: string,
   text: L,
-  opts: { actId?: string; causeIds?: string[]; important?: boolean } = {},
+  opts: { actId?: string; pid?: string; causeIds?: string[]; important?: boolean } = {},
 ): MemoryEntry {
   const e: MemoryEntry = { id: nextId(s, 'm'), week: s.week, year: s.year, month: s.month, kind, text, ...opts };
   s.memory.push(e);

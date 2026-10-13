@@ -58,7 +58,7 @@ rememberListeners().push((s: GameState, e: MemoryEntry) => {
   if (SKIP_MEM.has(base)) return;
   const kind = KMAP[e.kind];
   if (!kind && !e.important) return;
-  emitFact(s, { kind: kind ?? 'memory', actors: e.actId ? [e.actId] : [], place: e.actId ? s.acts[e.actId]?.city : undefined, severity: e.important ? 50 : 25, visibility: 'public', tags: [...tagsOf(kind ?? ''), `mem:${e.kind}`], text: e.text, src: 'memory', cause: e.causeIds, data: { bridged: 1 } });
+  emitFact(s, { kind: kind ?? 'memory', actors: [...(e.actId ? [e.actId] : []), ...(e.pid ? [e.pid] : [])], place: e.actId ? s.acts[e.actId]?.city : undefined, severity: e.important ? 50 : 25, visibility: 'public', tags: [...tagsOf(kind ?? ''), `mem:${e.kind}`], text: e.text, src: 'memory', cause: e.causeIds, data: { bridged: 1 } });
 });
 
 // Facts públicos de sistemas novos (crime, sexualidade, NPCs…) também viram boato que viaja (press9).

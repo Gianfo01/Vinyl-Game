@@ -101,7 +101,7 @@ function agingMonth(s: GameState, r: Rng): void {
       // aposentadoria individual (limiar pessoal 62–75, decisão probabilística)
       if (age >= (p.retireAge ?? 70) && act.members.length > 1 && r.chance(0.02 + (p.health !== 'ok' ? 0.02 : 0)) && !histLocked(s, act)) {
         exitMember20(s, act, p.id);
-        remember(s, 'member_retires', fmtL(l('{p} se aposenta e deixa {a}.', '{p} retires and leaves {a}.'), { p: p.name, a: act.name }), { actId: act.id });
+        remember(s, 'member_retires', fmtL(l('{p} se aposenta e deixa {a}.', '{p} retires and leaves {a}.'), { p: p.name, a: act.name }), { actId: act.id, pid: p.id });
       }
     }
   }

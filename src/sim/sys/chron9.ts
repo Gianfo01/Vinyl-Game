@@ -126,6 +126,7 @@ rememberListeners().push((s: GameState, e: MemoryEntry) => {
   if (!base) return;
   const actors: string[] = [];
   if (e.actId) actors.push(e.actId);
+  if (e.pid && !actors.includes(e.pid)) actors.push(e.pid); // R29 (CONNECT): a pessoa da entrada também é ator
   if (e.kind === 'death' && e.actId) {
     const a = s.acts[e.actId];
     for (const pid of a?.members ?? []) {

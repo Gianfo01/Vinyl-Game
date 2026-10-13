@@ -1,0 +1,87 @@
+// R29 (CONNECT): o que já era registrado em outro sistema e não aparecia na ficha da entidade de quem fala. Só leitura,
+// sem mexer em telas existentes (aba nova "Conexões" na pessoa e no ato; fatos e memória de rival no dossiê do selo):
+//  - correio (inbox27) que cita a pessoa/o ato;
+//  - promessas feitas à pessoa (abertas, cumpridas, quebradas) — antes só as abertas, no card do elenco;
+//  - relíquias da pessoa e prêmios dos atos da carreira (a página do ato já tinha; a da pessoa não);
+//  - submundo: organização ligada ao ato, rixas e ocorrências do registro do crime;
+//  - selo: fatos do barramento (facts17) com o selo como ator e a memória da rivalidade (rivals27).
+import { l } from '../../data/world';
+import { t } from '../../i18n/strings';
+import { crime17, orgById } from '../../sim/sys/crime17';
+import { tieOf } from '../../sim/sys/crimenpc17';
+import { careerActs29 } from '../../sim/sys/connect29';
+import { items18 } from '../../sim/sys/inbox18';
+import { P } from '../../sim/sys/people/state';
+import { relics } from '../../sim/sys/relics9';
+import { rivalMemory27 } from '../../sim/sys/rivals27';
+import type { Act, GameState, Person } from '../../sim/types';
+import { actLink, pill, section } from '../common';
+import { h } from '../dom';
+import { PERSON_TABS } from '../pages';
+import { registerPageTab } from '../registry';
+import { factsList17 } from './found17';
+import { ents27 } from './mail27model';
+
+const STATUS = { open: l('em aberto', 'open'), kept: l('cumprida', 'kept'), broken: l('quebrada', 'broken') } as const;
+const KIND = { single: l('single', 'single'), tour: l('turnê', 'tour'), raise: l('aumento', 'raise'), solo: l('projeto solo', 'solo project'), album: l('álbum', 'album') } as const;
+
+/** Mensagens do correio que citam a entidade (mesmo reconhecimento de entidades da caixa de entrada). */
+function mailOf(s: GameState, ent: string): HTMLElement | null {
+  const xs = [...items18(s), ...items18(s, { archived: true })].filter((it) => ents27(s, it).some((e) => e.id === ent)).sort((a, b) => b.week - a.week).slice(0, 12);
+  if (!xs.length) return null;
+  return section(t(l('No seu correio', 'In your mail')), h('ul', { class: 'small' }, ...xs.map((it) => h('li', null, h('span', { class: 'muted' }, `${it.year} · `), h('b', null, t(it.subject)), ' — ', t(it.body).slice(0, 140)))));
+}
+
+function promisesOf(s: GameState, p: Person): HTMLElement | null {
+  const xs = (P(s).promises ?? []).filter((x) => x.personId === p.id).slice(-12).reverse();
+  if (!xs.length) return null;
+  return section(t(l('Promessas', 'Promises')), h('ul', { class: 'small' }, ...xs.map((x) => h('li', null,
+    pill(t(STATUS[x.status]), x.status === 'kept' ? 'good' : x.status === 'broken' ? 'bad' : ''), ' ', t(KIND[x.kind] ?? l(x.kind, x.kind)), ' · ',
+    s.acts[x.actId] ? actLink(s, x.actId) : '', h('small', { class: 'muted' }, ` ${t(l('prazo: semana', 'due: week'))} ${x.dueWeek}`)))));
+}
+
+function relicsAwards(s: GameState, ids: string[], pid?: string): HTMLElement | null {
+  const set = new Set(ids);
+  const rs = relics(s).list.filter((r) => (pid && r.p === pid) || (r.a && set.has(r.a))).slice(0, 12);
+  const aw = (s.awards ?? []).filter((a) => a.actId && set.has(a.actId)).slice(-12).reverse();
+  if (!rs.length && !aw.length) return null;
+  return section(t(l('Relíquias e prêmios', 'Relics and awards')),
+    rs.length ? h('ul', { class: 'small' }, ...rs.map((r) => h('li', null, h('b', null, t(r.n)), ` · ${r.y}`, r.a && s.acts[r.a] ? [' · ', actLink(s, r.a)] : null))) : null,
+    aw.length ? h('ul', { class: 'small' }, ...aw.map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`, a.actId && s.acts[a.actId] ? [' · ', actLink(s, a.actId)] : null))) : null);
+}
+
+function underworld(s: GameState, acts: Act[], keys: string[]): HTMLElement | null {
+  const st = crime17(s), ks = new Set(keys);
+  const ties = acts.map((a) => ({ a, o: tieOf(s, a.id) })).filter((x) => x.o);
+  const feuds = Object.entries(st.feud ?? {}).filter(([k]) => k.split('|').some((x) => ks.has(x)));
+  const log = (st.log ?? []).filter((x) => ks.has(x.actor) || ks.has(x.target)).slice(-8).reverse();
+  if (!ties.length && !feuds.length && !log.length) return null;
+  return section(t(l('Submundo', 'Underworld')),
+    ties.length ? h('p', { class: 'small' }, ...ties.flatMap((x) => [actLink(s, x.a.id), ` ${t(l('ligado(a) a', 'tied to'))} `, h('b', null, t(x.o!.name)), ' ']) ) : null,
+    feuds.length ? h('p', { class: 'small' }, t(l('Rixas: ', 'Feuds: ')), feuds.map(([k, v]) => `${k.split('|').map((x) => orgById(s, x) ? t(orgById(s, x)!.name) : s.acts[x]?.name ?? x).join(' × ')} (${Math.round(v)})`).join(', ')) : null,
+    log.length ? h('ul', { class: 'small' }, ...log.map((x) => h('li', { class: x.ok ? '' : 'muted' }, `${x.y} · `, t(x.text)))) : null);
+}
+
+PERSON_TABS.push((s, p: Person) => {
+  if (p.isPlayer) return null;
+  const acts = careerActs29(s, p.id).map((x) => x.act);
+  const parts = () => [mailOf(s, `p:${p.id}`), promisesOf(s, p), relicsAwards(s, acts.map((a) => a.id), p.id), underworld(s, acts.filter((a) => a.members.includes(p.id)), [p.id, `p:${p.id}`, ...acts.filter((a) => a.members.includes(p.id)).map((a) => a.id)])].filter((x): x is HTMLElement => !!x);
+  return { id: 'connect29', label: l('Conexões', 'Connections'), icon: 'handshake', render: () => { const xs = parts(); return xs.length ? h('div', null, ...xs) : h('p', { class: 'muted small' }, t(l('Nada registrado em outros sistemas ainda.', 'Nothing recorded in other systems yet.'))); } };
+});
+
+registerPageTab('act', { id: 'connect29', label: l('Conexões', 'Connections'), icon: 'handshake', order: 86, render: (s, id) => {
+  const a = s.acts[id];
+  if (!a) return h('div');
+  const xs = [mailOf(s, id), underworld(s, [a], [id, ...a.members, ...a.members.map((x) => `p:${x}`)])].filter((x): x is HTMLElement => !!x);
+  return xs.length ? h('div', null, ...xs) : h('p', { class: 'muted small' }, t(l('Nada registrado em outros sistemas ainda.', 'Nothing recorded in other systems yet.')));
+} });
+
+registerPageTab('label', { id: 'facts29', label: l('Fatos e rivalidade', 'Facts and rivalry'), icon: 'newspaper', order: 85, render: (s, id) => {
+  const m = rivalMemory27(s, id);
+  return h('div', null,
+    m && (m.mem.length || m.g || m.copies.length) ? section(t(l('Memória da rivalidade', 'Rivalry memory')),
+      h('p', { class: 'small' }, `${t(l('Mágoa', 'Grudge'))}: ${m.g}`),
+      m.mem.length ? h('ul', { class: 'small' }, ...m.mem.slice(0, 10).map((x) => h('li', null, `${x.y} · `, t(x.t)))) : null,
+      m.copies.length ? h('p', { class: 'small muted' }, t(l('Cópias em andamento: {n}', 'Copies in progress: {n}'), { n: m.copies.length })) : null) : null,
+    factsList17(s, id, false));
+} });

@@ -155,7 +155,7 @@ export function leaveBand16(s: GameState, a: Act, p: Person, why: Why16): void {
   if (a.leaderId === p.id) a.leaderId = a.members[0];
   formerPush(s, a.id, p.id, why === 'addiction' ? 'fired' : 'left');
   for (const id of a.members) { const q = s.persons[id]; if (q) q.rel[p.id] = clamp((q.rel[p.id] ?? 0) - 8, -100, 100); }
-  remember(s, 'member_quits', fmtL(WHY_TXT[why], { p: p.name, a: a.name }), { actId: a.id, important: a.fame > 30 || mineAct(a) });
+  remember(s, 'member_quits', fmtL(WHY_TXT[why], { p: p.name, a: a.name }), { actId: a.id, pid: p.id, important: a.fame > 30 || mineAct(a) });
   if (!a.members.length) { a.status = 'split'; a.careerEnd = s.year; }
 }
 
@@ -195,7 +195,7 @@ function joinBand(s: GameState, p: Person, a: Act, txt: L, q = ''): void {
   for (const id of a.members) { const o = s.persons[id]; if (o && o.id !== p.id) { o.rel[p.id] ??= 10; p.rel[o.id] ??= 10; } }
   const from = s.acts[l16(s).free[p.id]?.[1] ?? ''];
   delete l16(s).free[p.id];
-  remember(s, 'lineup', fmtL(txt, { p: p.name, o: from?.name ?? '—', q, a: a.name }), { actId: a.id, important: a.fame > 30 || (from?.fame ?? 0) > 40 || mineAct(a) });
+  remember(s, 'lineup', fmtL(txt, { p: p.name, o: from?.name ?? '—', q, a: a.name }), { actId: a.id, pid: p.id, important: a.fame > 30 || (from?.fame ?? 0) > 40 || mineAct(a) });
 }
 
 // ---------------------------------------------------------------- destinos de quem saiu
@@ -527,10 +527,11 @@ export function stints16(s: GameState, a: Act): Stint16[] {
     for (const e of evs.filter((x) => x[2] === pid)) {
       const y = Math.floor(e[0] / 12), open = segs.find((x) => x.to === undefined);
       if (e[3] === 'j') { if (!open && !segs.some((x) => Math.abs(x.from - y) <= 1)) segs.push({ from: y }); }
-      else if (open) open.to = y;
+      else if (open && open.from <= y) open.to = y;
+      else if (open) { const prev = [...segs].reverse().find((x) => x.from <= y && x !== open); if (prev && (prev.to === undefined || prev.to > y)) prev.to = y; else if (!prev) segs.push({ from: base, to: y }); } // R29: saída simulada não fecha passagem documentada que só começa depois (Richard Wright "1980–1972")
       else if (!segs.some((x) => x.to !== undefined && Math.abs(x.to - y) <= 1)) segs.push({ from: base, to: y });
     }
-    if (!segs.length) segs.push({ from: base });
+    if (!segs.length) segs.push({ from: Math.max(base, p.born + 12) }); // R29: substituto gerado não "entra" antes de nascer
     segs.sort((x, y) => x.from - y.from);
     const last = segs[segs.length - 1];
     const member = a.members.includes(pid);

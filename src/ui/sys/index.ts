@@ -114,6 +114,7 @@ import './npc17';
 // Rodada 17 (onda 1, A): menu Crime (organizações, planos, espionagem movida, mercado negro, polícia, histórico).
 import './crime17';
 import './crimemem23'; // r23: membros de organizações na ficha da pessoa
+import './connect29'; // R29 (CONNECT): correio, promessas, relíquias/prêmios e submundo na ficha; fatos e rivalidade no selo
 import './secrets23'; // r23: aba "O que sabemos" (segredos e vínculos)
 // Rodada 17 (E): estilo nos cartões, gêneros em alta pelas paradas, alcance mundial do ato.
 import './trends17';

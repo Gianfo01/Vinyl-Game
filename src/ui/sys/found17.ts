@@ -72,7 +72,7 @@ function factRow(s: GameState, f: Fact): HTMLElement {
 
 /** Fatos recentes sobre alguém (segredos só quando envolvem você). */
 export function factsList17(s: GameState, id: string, withAct = true): HTMLElement {
-  const fs = factsAbout(s, id, { limit: 40, withAct }).filter((f) => f.visibility !== 'secret' || f.actors.includes('player') || f.actors.some((a) => s.acts[a]?.owner === 'player')).slice(0, 14);
+  const fs = factsAbout(s, id, { limit: 40, withAct, withMembers: !!s.acts[id] }).filter((f) => f.visibility !== 'secret' || f.actors.includes('player') || f.actors.some((a) => s.acts[a]?.owner === 'player')).slice(0, 14);
   const sc = s.acts[id] ? lastScandal(s, id) : undefined;
   return section(t(l('Fatos recentes', 'Recent facts')),
     fs.length ? h('ul', { class: 'small' }, ...fs.map((f) => factRow(s, f))) : h('p', { class: 'muted small' }, t(l('Nada notável registrado ainda.', 'Nothing notable on record yet.'))),

@@ -258,6 +258,9 @@ function generate(s: GameState, r: Rng): void {
     if (a.catalogNo || a.members.length < 2 || st.chk.includes(a.id)) continue;
     st.chk.push(a.id);
     const roll = r.next();
+    // R29 (CONNECT): pessoa real (real27) não ganha irmãos nem sobrenome inventados — "Marc Bolan" virava "Marc Watts"
+    // numa banda gerada e o índice de identidade (realworld) passava a apontar para outro nome. Depois do sorteio: mesma sequência.
+    if (s.config.realNames && a.members.some((id) => s.persons[id]?.real27)) continue;
     const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p && !(graph(s)[p.id]?.length));
     const fam = ms.filter((p) => p.origin === 'family').length;
     if (ms.length < 2 || !(fam >= 2 || roll < (a.members.length === 2 ? 0.18 : 0.08))) continue;

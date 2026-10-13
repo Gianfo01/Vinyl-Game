@@ -224,8 +224,8 @@ function apply(s: GameState, d: RelicDef17, rl: Relic9, st: RelicStep17): void {
   else if (ev === 'museum') { rl.st = 'museum'; rl.own.push([who, y, 'museu']); }
   else if (ev === 'exhibit') { /* exposição temporária: só crônica */ }
   else if (ev === 'auction') { rl.st = 'auction'; rl.au = s.week + 13; rl.v = val; rl.rb = who; }
-  chron(s, { k: 'relic', i: ev === 'auction' && val > 1e6 ? 4 : 3, a: rl.a ? [rl.a] : [], t: fmtL(l('{n}: {t}', '{n}: {t}'), { n: d.name, t: txt }) });
-  emitFact(s, { kind: 'relic', actors: rl.a ? [rl.a] : [], severity: ev === 'auction' ? 45 : ev === 'gone' ? 50 : 30, visibility: 'public', tags: ['relic', ev, ...(ev === 'gone' ? ['crime'] : [])], src: 'relics17', text: fmtL(l('{n}: {t}', '{n}: {t}'), { n: d.name, t: txt }), data: { relic: d.id } });
+  chron(s, { k: 'relic', i: ev === 'auction' && val > 1e6 ? 4 : 3, a: [...(rl.a ? [rl.a] : []), ...(rl.p ? [rl.p] : [])], t: fmtL(l('{n}: {t}', '{n}: {t}'), { n: d.name, t: txt }) }); // R29 (CONNECT): + a pessoa dona da peça
+  emitFact(s, { kind: 'relic', actors: [...(rl.a ? [rl.a] : []), ...(rl.p ? [`p:${rl.p}`] : [])], severity: ev === 'auction' ? 45 : ev === 'gone' ? 50 : 30, visibility: 'public', tags: ['relic', ev, ...(ev === 'gone' ? ['crime'] : [])], src: 'relics17', text: fmtL(l('{n}: {t}', '{n}: {t}'), { n: d.name, t: txt }), data: { relic: d.id } });
   if (ev === 'auction') notify(s, fmtL(l('Leilão histórico: {n} (dá para dar lance em Lendas → Relíquias).', 'Historic auction: {n} (you can bid in Legends → Relics).'), { n: d.name }), 'info');
 }
 

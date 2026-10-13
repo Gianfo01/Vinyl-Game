@@ -619,6 +619,8 @@ export interface MemoryEntry {
   kind: string;
   text: L;
   actId?: string;
+  /** R29 (CONNECT): pessoa de quem a entrada fala (entrada/saída de formação…) — vai para os atores da crônica e do fato */
+  pid?: string;
   causeIds?: string[];
   important?: boolean;
 }

@@ -755,12 +755,12 @@ function monthly(s: GameState, r: Rng): void {
       const until = ev.until; // fim desta passagem
       roles27(p, name, false);
       if (until !== undefined && until >= s.year) st.sched.push({ year: until, mo: until === s.year ? Math.max(s.month + 1, lineupMo27(s, act, name, 'l', until)) : lineupMo27(s, act, name, 'l', until), kind: 'leave', actId: act.id, personId: p.id, lin: ev.lin }); // rodada 16: segunda passagem também sai (r27 LIN: no mês)
-      remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
+      remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, pid: p.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {
       exitMember20(s, act, ev.personId);
       (st.former[act.id] ??= []).push({ personId: ev.personId, year: s.year, reason: 'left' });
       const p = s.persons[ev.personId];
-      remember(s, 'lineup', fmtL(l('{p} deixa {a}.', '{p} leaves {a}.'), { p: p?.name ?? '?', a: act.name }), { actId: act.id, important: act.fame > 30 });
+      remember(s, 'lineup', fmtL(l('{p} deixa {a}.', '{p} leaves {a}.'), { p: p?.name ?? '?', a: act.name }), { actId: act.id, pid: ev.personId, important: act.fame > 30 });
     } else if (ev.kind === 'reunion' && (act.status === 'retired' || act.status === 'split') && !act.deceased && !histDiverged(s, act)) {
       const alive = act.members.filter((id) => s.persons[id]?.alive);
       if (!alive.length) continue;

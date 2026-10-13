@@ -183,7 +183,7 @@ const QUIT: EventDef[] = [
         exitMember20(s, a, p.id);
         if (a.leaderId === p.id) a.leaderId = a.members[0];
         a.momentum = clamp01(a.momentum - 8);
-        remember(s, 'member_quits', fmtL(l('{p} deixa {a} depois do show.', '{p} leaves {a} after the show.'), { p: p.name, a: a.name }), { actId: a.id, important: true });
+        remember(s, 'member_quits', fmtL(l('{p} deixa {a} depois do show.', '{p} leaves {a} after the show.'), { p: p.name, a: a.name }), { actId: a.id, pid: p.id, important: true });
       } },
       { id: 'mediate', label: l('Mediar uma conversa', 'Mediate a talk'), hint: l('Grátis; depende do clima da banda.', 'Free; depends on the band mood.'), apply: (s, r, c) => {
         const p = s.persons[String(c.person)];
@@ -197,7 +197,7 @@ const QUIT: EventDef[] = [
         } else {
           exitMember20(s, a, p.id);
           if (a.leaderId === p.id) a.leaderId = a.members[0];
-          remember(s, 'member_quits', fmtL(l('A mediação falhou: {p} deixa {a}.', 'Mediation failed: {p} leaves {a}.'), { p: p.name, a: a.name }), { actId: a.id, important: true });
+          remember(s, 'member_quits', fmtL(l('A mediação falhou: {p} deixa {a}.', 'Mediation failed: {p} leaves {a}.'), { p: p.name, a: a.name }), { actId: a.id, pid: p.id, important: true });
         }
       } },
     ],

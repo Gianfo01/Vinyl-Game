@@ -209,10 +209,11 @@ export const indexFacts = (s: GameState, q: FactFilter = {}): Fact[] => scan(s, 
 
 /** Fatos em que alguém aparece (pessoa, ato, selo, 'player' ou chave persona13). Pessoa inclui o ato atual
  *  quando `withAct` (ex.: escândalo da banda aparece na página do vocalista). */
-export function factsAbout(s: GameState, id: string, o: { limit?: number; withAct?: boolean; notSecret?: boolean } = {}): Fact[] {
+export function factsAbout(s: GameState, id: string, o: { limit?: number; withAct?: boolean; withMembers?: boolean; notSecret?: boolean } = {}): Fact[] {
   const k = actorId(id);
   const ids = new Set([k, id]);
   if (o.withAct && s.persons[k]) for (const a of Object.values(s.acts)) if (a.members.includes(k)) ids.add(a.id);
+  if (o.withMembers && s.acts[k]) for (const pid of s.acts[k].members) ids.add(pid); // R29 (CONNECT): fatos só com o integrante (prisão, crime, caridade…)
   const out: Fact[] = [];
   const st = facts17(s);
   for (let i = st.f.length - 1; i >= 0 && out.length < (o.limit ?? 30); i--) {

@@ -86,7 +86,7 @@ function bandLoss(s: GameState, r: Rng): void {
         replaceMember(s, r, act, pid);
       } else {
         exitMember20(s, act, pid);
-        remember(s, 'lineup', fmtL(l('{a} segue sem substituir {p}.', '{a} carries on without replacing {p}.'), { a: act.name, p: s.persons[pid].name }), { actId: act.id, important: act.fame > 30 });
+        remember(s, 'lineup', fmtL(l('{a} segue sem substituir {p}.', '{a} carries on without replacing {p}.'), { a: act.name, p: s.persons[pid].name }), { actId: act.id, pid, important: act.fame > 30 });
       }
     }
   }
