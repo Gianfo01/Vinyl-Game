@@ -34,7 +34,7 @@ import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD2
 const ACERVO22 = [...ACERVO21, ...LIKES22_ARTISTS];
 import { realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
-import { atDebut27, inLineupAt, periodsOf, type Prov27, type RealArtist, type RealMember, type RealPeriod, type RealRelease } from '../../data/realtypes';
+import { atDebut27, firstJoin, inLineupAt, periodsOf, type Prov27, type RealArtist, type RealMember, type RealPeriod, type RealRelease } from '../../data/realtypes';
 import { CITIES, cityById, familyOf, l } from '../../data/world';
 import { personDies } from '../dynasty';
 import { computeAppeal } from '../market';
@@ -49,6 +49,7 @@ import { actsTouched17 } from '../actidx17';
 import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 import { actsNow27 } from '../tickcache27';
 import { RW_AFTER_NEWGAME } from './after29';
+import { lineup29Of, type Lineup29 } from '../lineup29';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 /** r27: chave de deduplicação — "The X" = "X" e "&" = "and" (Carpenters, Four Tops, Smashing Pumpkins apareciam 2×) */
@@ -129,6 +130,11 @@ export interface RwState {
   former: Record<string, { personId: string; year: number; reason: 'left' | 'died' | 'retired' | 'fired' }[]>;
   /** rodada 10: identidade única — nome real canônico → id da pessoa (a mesma pessoa em banda, solo e supergrupo) */
   pid?: Record<string, string>;
+  /** R29 (formação): pessoas reais criadas LIVRES (fora da formação inicial escolhida) → ato da história real de onde vêm.
+   *  Só referência (testes e "história real"): nunca vira ex-integrante. */
+  free29?: Record<string, string>;
+  /** R29 (formação): pessoas reais livres ainda jovens demais no início — [ato, índice do integrante] (criadas aos 15 anos) */
+  pend29?: [string, number][];
 }
 
 declare module '../ext4' { interface Ext4 { rw: RwState } }
@@ -416,7 +422,10 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     const skip = (m: RealMember) => hm === 'strict' && memberProv27(d.n, m[0]) === 'u'; // r27 (F): integrante não conferido some do modo exato
     // ninguém dentro pelo mês (todos entram no próprio ano): vale o ano, para o ato não ficar com integrantes gerados
     const relax = !d.m.some((m) => !skip(m) && shifted(m).some(([a, b]) => begun(m[0], a, false) && !over(m[0], b)));
-    d.m.forEach((m, i) => {
+    // R29 (formação): formação inicial escolhida (mais famosa/original) sem trocas agendadas; os outros ficam livres
+    const l29 = lineup29Of(s.config);
+    if (l29) members29(s, act, d as RealDec29, old, now, l29, { sim, real, shift, simDead });
+    (l29 ? [] : d.m).forEach((m, i) => {
       const [name, role, born, died0] = m;
       const mp = memberProv27(d.n, name);
       if (skip(m)) return;
@@ -464,7 +473,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       pushJoins(p.id);
     });
     // r27 (LIN): ato que já acabou com todo mundo fora (Menudo em 2005): a última formação continua como a do ato
-    if (!now.length && st.former[act.id]?.length) {
+    if (!l29 && !now.length && st.former[act.id]?.length) {
       const xs = st.former[act.id], last = Math.max(...xs.map((x) => x.year));
       for (const x of xs.filter((f) => f.year === last)) now.push(x.personId);
       st.former[act.id] = xs.filter((f) => f.year !== last);
@@ -559,6 +568,146 @@ export function identityYear27(m: RealMember[], debut: number): number {
   let best = 0, at = debut;
   for (let y = debut; y <= 2030; y++) { const n = m.filter((x) => inLineupAt(x, y)).length; if (n > best) { best = n; at = y; } }
   return best > deb ? at : debut;
+}
+
+// ---------------------------------------------------------------- R29 (formação): formação inicial escolhida
+
+/** Dados reais que decorate recebe (subconjunto usado pela formação inicial). */
+type RealDec29 = { n: string; t: number; d?: number; m?: RealMember[]; exact?: false; ap?: RealArtist['ap'] };
+/** Idade mínima para alguém da história real existir no mundo (como integrante ou pessoa livre). */
+const AGE29 = 15;
+
+/** R29 (formação): índices (em `m`) da formação inicial escolhida.
+ *  - 'famous': a formação clássica (classicLineup25) ou, sem ela, a da estreia (inLineupAt no ano da estreia);
+ *  - 'original': quem estava na banda no COMEÇO do ano de estreia — entrada no próprio ano só conta sem mês documentado
+ *    (ou em janeiro) e saída no próprio ano só conta como "ainda dentro" com mês documentado (MONTHS27). Beatles 1962 =
+ *    John, Paul, George e Pete Best (Ringo entrou em agosto). Sem ninguém assim, vale a da estreia. */
+export function lineupPick29(m0: RealMember[], debut: number, kind: Lineup29, actName: string): Set<number> {
+  // a morte documentada fecha a passagem (Keith Moon não tem saída, só a morte em 1978: sem isto o "maior elenco" do
+  // The Who era Moon + Kenney Jones juntos, dois bateristas)
+  const m = m0.map((x): RealMember => {
+    const died = x[3];
+    if (died === undefined) return x;
+    const ps = periodsOf(x).map(([a, b]) => [a, b === undefined || b > died ? died : b] as RealPeriod);
+    return [x[0], x[1], x[2], x[3], ps[0][0], ps[0][1], ps.length > 1 ? ps : undefined];
+  });
+  const at = (f: (x: RealMember) => boolean) => new Set(m.flatMap((x, i) => (f(x) ? [i] : [])));
+  const deb = (): Set<number> => {
+    for (const xs of [at((x) => inLineupAt(x, debut)), at((x) => atDebut27(x, debut))]) if (xs.size) return xs;
+    const first = Math.min(...m.map((x) => firstJoin(x) ?? -Infinity)); // ninguém na estreia: os primeiros que entraram
+    return at((x) => (firstJoin(x) ?? -Infinity) === first);
+  };
+  if (kind === 'famous') return classicLineup25(m, debut) ?? deb();
+  const xs = at((x) => periodsOf(x).some(([a, b]) => {
+    const jm = lineupMonth27(actName, x[0], 'j'), lm = lineupMonth27(actName, x[0], 'l');
+    return (a === undefined || a < debut || (a === debut && !jm)) && (b === undefined || b > debut || (b === debut && !!lm));
+  }));
+  return xs.size ? xs : deb();
+}
+
+/** Nascimento de um integrante real (documentado ou estimado pela 1ª entrada, deslocada como a estreia). */
+const born29 = (x: RealMember, shift: number, debut: number): number => x[2] ?? (firstJoin(x) ?? debut) + shift - 21;
+
+/** R29 (formação): integrantes do ato pela formação escolhida — sem nenhuma troca agendada (o futuro é da simulação).
+ *  Pessoas reais reaproveitam os integrantes gerados pela posição e passam pelo índice canônico (rw.pid), como antes.
+ *  Gerador próprio (semente|lin29|ato): não consome o fluxo compartilhado, então 'famous' e 'original' geram o mesmo
+ *  resto de mundo. Quem está fora da formação vira pessoa livre (free29) — nunca ex-integrante. */
+function members29(s: GameState, act: Act, d: RealDec29, old: Person[], now: string[], kind: Lineup29, o: { sim: boolean; real: boolean; shift: number; simDead: (key: string, born: number | undefined) => number | undefined }): void {
+  const st = rw(s);
+  const m = d.m ?? [];
+  const debY = d.d ?? act.debutYear - o.shift;
+  const pick = lineupPick29(m, debY, kind, d.n);
+  const rr = Rng.fromSeed(`${s.config.seed}|lin29|${act.id}`);
+  const fate = (x: RealMember) => (o.sim ? o.simDead(x[0], x[2]) : x[3]);
+  const gone = (x: RealMember) => { const y = fate(x); return y !== undefined && y <= s.year; };
+  const young = (x: RealMember) => born29(x, o.shift, debY) > s.year - AGE29;
+  // quem da formação escolhida pode estar nela agora: vivo e com idade (se ninguém puder, vale a escolha inteira)
+  const ok = [...pick].filter((i) => !gone(m[i]) && !young(m[i]));
+  const keep = new Set(ok.length ? ok : pick);
+  // os integrantes gerados (nomeados pela lista do catálogo) saem do índice: quem for reaproveitado volta pelo canonical;
+  // os que sobram seriam apagados e não podem "ocupar" o nome de quem fica livre (Ringo na formação original)
+  const idx0 = pidIndex(s);
+  for (const p of old) { const k0 = canonKey(p.name); if (idx0[k0] === p.id) delete idx0[k0]; }
+  let k = 0;
+  // primeiro a formação escolhida (reaproveita as vagas), depois quem fica de fora
+  const order = [...m.keys()].sort((a, b) => Number(!keep.has(a)) - Number(!keep.has(b)) || a - b);
+  for (const i of order) {
+    const x = m[i];
+    const [name, role, born] = x;
+    const died = fate(x);
+    const pv = memberProv27(d.n, name) ?? (d.exact === false ? 'u' : d.ap?.includes('m') ? 'a' : 'c');
+    if (!keep.has(i)) {
+      // da formação escolhida, mas morto antes do início: tocou na banda até morrer (se a banda já existia) — ex-integrante
+      // por morte; morto antes da estreia, nunca passou por ela. Fora da formação: pessoa livre, nunca ex-integrante.
+      if (pick.has(i) && died !== undefined && died <= s.year && died >= act.debutYear) {
+        const p0 = makeRealPerson(s, rr, act, { name, role, born, died }, act.potential, o.real);
+        const p = canonical(s, p0, name, born, now);
+        if (p !== p0) { delete s.persons[p0.id]; if (p.alive) continue; } // a mesma pessoa vive em outro ato: não morreu aqui
+        prov27(p, pv, born);
+        roles27(p, name, false);
+        (st.former[act.id] ??= []).push({ personId: p.id, year: p.died ?? died, reason: 'died' });
+      } else free29(s, act, d, i, o.shift, died);
+      continue;
+    }
+    const reuse = old[k++];
+    let p: Person;
+    if (reuse) {
+      p = reuse;
+      if (o.real && p.name !== name) { const idx = pidIndex(s), k0 = canonKey(p.name); if (idx[k0] === p.id) delete idx[k0]; p.name = name; } // índice segue o nome
+      p.role = role;
+      if (born) p.born = born;
+    } else p = makeRealPerson(s, rr, act, { name, role, born, died }, act.potential, o.real);
+    const c = canonical(s, p, name, born, now);
+    if (c !== p) {
+      if (p !== reuse) delete s.persons[p.id];
+      p = c;
+    }
+    prov27(p, pv, born);
+    roles27(p, name, i === 0 && frontmanSings27(act.genre, m) === name);
+    if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; } // só quando a formação inteira já morreu
+    now.push(p.id);
+  }
+}
+
+/** R29 (formação): pessoa real fora da formação inicial — existe no mundo SEM banda (pode ser achada, contratada,
+ *  chamada para banda, feat ou sessão), pelo mesmo índice canônico. Não entra em former (não passou pela banda nesta
+ *  partida). Já existe (outra banda, solo, compositor) ou morreu antes: nada a fazer. Jovem demais: espera (pend29). */
+function free29(s: GameState, act: Act, d: RealDec29, i: number, shift: number, died?: number): void {
+  const x = d.m?.[i];
+  if (!x) return;
+  const [name, role, born] = x;
+  const key = canonKey(name);
+  if (!key) return;
+  const st = rw(s), idx = pidIndex(s);
+  const ex = idx[key] ? s.persons[idx[key]] : undefined;
+  if (ex && canonKey(ex.name) === key) return;
+  if (died !== undefined && died <= s.year) return; // morreu antes do início: fica só na história real
+  const b = born29(x, shift, d.d ?? act.debutYear - shift);
+  if (b > s.year - AGE29) { if (!(st.pend29 ??= []).some(([a, j]) => a === act.id && j === i)) st.pend29.push([act.id, i]); return; }
+  const r = Rng.fromSeed(`${s.config.seed}|free29|${key}`);
+  const p = makePerson(s, r, { lang: langForCity(act.city, r), role, potential: potentialFor(r, d.t), born: b, startFrac: 0.66, name });
+  s.persons[p.id] = p;
+  if (born === undefined) p.real27 = { ...p.real27, bornEst: 1 };
+  prov27(p, memberProv27(d.n, name) ?? (d.exact === false ? 'u' : 'c'), born);
+  roles27(p, name, false);
+  idx[key] = p.id;
+  (st.free29 ??= {})[p.id] = act.id;
+}
+
+/** R29 (formação): pessoas livres que eram jovens demais no início surgem aos 15 anos (sem banda). */
+function pending29(s: GameState): void {
+  const st = rw(s);
+  if (!st.pend29?.length || !lineup29Of(s.config)) return;
+  const due: [Act, RealDec29, number, number][] = [];
+  st.pend29 = st.pend29.filter(([aid, i]) => {
+    const a = s.acts[aid], d = a ? realDataOf(a) : undefined, x = d?.m?.[i];
+    if (!a || !d || !x) return false;
+    const shift = d.d !== undefined ? a.debutYear - d.d : 0;
+    if (born29(x, shift, d.d ?? a.debutYear) > s.year - AGE29) return true;
+    due.push([a, d, i, shift]);
+    return false;
+  });
+  for (const [a, d, i, shift] of due) free29(s, a, d, i, shift);
 }
 
 /** r27 (LIN): mês (0–11) de uma entrada/saída: o documentado (MONTHS27) ou um sorteio fixo pela semente. */
@@ -712,6 +861,7 @@ function CATALOG_LOOKUP(): Record<number, { genre: string; city: string }> {
 
 function monthly(s: GameState, r: Rng): void {
   const st = rw(s);
+  pending29(s); // R29 (formação): pessoas reais livres que só agora têm idade
   // surgem os artistas reais do ano (um ano antes da estreia, como promessa de cena)
   if (st.upcoming.length) {
     const keep: number[] = [];

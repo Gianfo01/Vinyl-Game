@@ -29,6 +29,7 @@ import { setTutorials19, tutorialsOff19 } from './tutoff19';
 import { addHelp, hl } from './newgame13';
 import { copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, rivalsCard29, startCard17, summaryExtra17, worldCard17 } from './newgame17';
 import { WORLDS17, newRunConfig20, notes17, resolveWorld20 } from '../sim/start17';
+import { LINEUP29_DEFAULT, LINEUPS29, lineupApplies29 } from '../sim/lineup29';
 import { YEAR_MAX20, YEAR_MIN20 } from '../sim/worldpolicy20';
 import { originById } from '../sim/sys/identity/data';
 import { AMBITIONS, type Ambition } from '../sim/sys/careers12';
@@ -298,6 +299,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       { tab: 0, name: l('Mundo', 'World'), rows: [
         [l('Mundo', 'World'), `${t(WORLDS17.find((w) => w.id === rs.id)!.name)}${rs.custom ? ` · ${t(l('Personalizado', 'Custom'))}` : ''}`],
         [l('Contrato', 'Contract'), policyLine20(cfg)],
+        ...(lineupApplies29(cfg) ? [[l('Formação inicial', 'Starting lineup'), t(LINEUPS29.find((x) => x.id === (cfg.lineup29 ?? LINEUP29_DEFAULT))!.name)] as Row] : []), // R29 (formação)
         [S.startYear, String(cfg.startYear)],
         [l('História prévia', 'Prior history'), prehist ? t(l('{n} anos', '{n} years'), { n: prehist }) : t(l('nenhuma', 'none'))],
         [l('Base de dados', 'Database'), cfg.dbSize ?? 'medium'],

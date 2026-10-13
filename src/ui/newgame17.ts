@@ -12,6 +12,7 @@ import { locale, t } from '../i18n/strings';
 import { playerViews, polById, relById } from '../sim/beliefs';
 import { perkEntries } from '../sim/perks';
 import { DIFF17, PRESETS17, RUN_YEARS17, WORLDS17, applyPreset17, applyWorld17, codeStatus20, newRunConfig20, notes17, presetDiff20, rank17, readSetupCode17, resolveWorld20, setupCode17, setupCodeError20, world17ById, worldOf17 } from '../sim/start17';
+import { LINEUP29_DEFAULT, LINEUPS29, lineupApplies29 } from '../sim/lineup29';
 import { ATTR13, ATTR13_IDS, facetName, per13 } from '../sim/sys/persona13';
 import { persona } from '../sim/sys/persona';
 import { playerTraitById } from '../sim/sys/persona/data';
@@ -135,8 +136,8 @@ const DIM20: { k: string; name: L; v: Record<string, L> }[] = [
 
 /** O que cada modo deixa real e o que simula (aparece ao escolher, sem abrir ajuda). */
 const EXPLAIN20: Record<string, [L, L][]> = {
-  random: [[l('Real', 'Real'), l('os nomes e as referências de identidade (origem, nascimento, época de estreia, talento).', 'names and identity references (origin, birth, debut era, talent).')],
-    [l('Simulado', 'Simulated'), l('catálogo, contratos, vínculos, sucesso e trajetória — já no começo.', 'catalog, contracts, ties, success and career — already at the start.')],
+  random: [[l('Real', 'Real'), l('os nomes, as referências de identidade (origem, nascimento, época de estreia, talento) e a formação inicial das bandas (a mais famosa, por padrão).', 'names, identity references (origin, birth, debut era, talent) and the bands\' starting lineup (the most famous, by default).')],
+    [l('Inventado', 'Invented'), l('catálogo, contratos, vínculos, trocas de formação, sucesso e trajetória — já no começo.', 'catalog, contracts, ties, lineup changes, success and career — already at the start.')],
     [l('Época coerente', 'Coherent era'), l('não é Caos; tecnologia e disponibilidade seguem as regras do período.', 'not Chaos; technology and availability follow the period\'s rules.')]],
   exact: [[l('Roteiro', 'Script'), l('eventos documentados seguem o roteiro. Intervenções suas podem alterar carreiras.', 'documented events follow the script. Your interventions can change careers.')],
     [l('Cobertura', 'Coverage'), l('conforme a base histórica: fatos documentados até 2025; o que é conhecido só pelo ano não é dia exato.', 'as far as the database covers: documented facts up to 2025; things known only by year are not exact days.')]],
@@ -166,7 +167,8 @@ export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () =
       legacy ? h('p', { class: 'small warn' }, t(l('Configuração legada (código/save antigo): começo pela base histórica.', 'Legacy configuration (old code/save): start from the historical base.')), ' ',
         h('button', { type: 'button', class: 'btn small ghost', onclick: () => { applyWorld17(cfg, 'random'); draw(); onChange(); } }, t(l('Adaptar ao novo padrão', 'Adapt to the new default')))) : null,
       h('dl', { class: 'ng20-explain' }, ...(EXPLAIN20[rs.id] ?? []).flatMap(([k, v]) => [h('dt', null, t(k)), h('dd', null, t(v))])),
-      h('p', { class: 'small muted' }, t(w.desc))));
+      h('p', { class: 'small muted' }, t(w.desc)),
+      lineupPick29(cfg, () => { draw(); onChange(); })));
     const exact = rs.id === 'exact';
     adv.replaceChildren(...nn20(
       h('label', null, t(l('Linha do tempo da tecnologia', 'Technology timeline')), ' ', helpTip('mode'), select(cfg.mode, [
@@ -187,6 +189,19 @@ export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () =
         h('thead', null, h('tr', null, h('th', { scope: 'col' }, t(l('Modo', 'Mode'))), ...DIM20.map((d) => h('th', { scope: 'col' }, t(d.name))))),
         h('tbody', null, ...WORLDS17.map((x) => h('tr', null, h('th', { scope: 'row' }, t(x.name)), ...DIM20.map((d) => h('td', null, t(d.v[x.id]))))))))),
     h('details', null, h('summary', { class: 'small' }, t(l('Avançado: tecnologia e mortes reais', 'Advanced: technology and real deaths'))), adv));
+}
+
+/** R29 (formação): "Formação inicial das bandas reais" — só na configuração completa, com nomes reais e mundo não exato
+ *  (a Nova run rápida usa sempre a mais famosa). Mesma RunConfig da rápida quando a escolha é a padrão. */
+function lineupPick29(cfg: RunConfig, changed: () => void): HTMLElement | null {
+  if (!lineupApplies29(cfg)) return null;
+  const cur = cfg.lineup29 ?? LINEUP29_DEFAULT;
+  return h('fieldset', { class: 'ng20-fs ng29-lineup', 'data-lineup29': cur },
+    h('legend', null, h('b', null, t(l('Formação inicial das bandas reais', 'Starting lineup of real bands'))), ' ',
+      helpTip(l('Com quem cada banda real começa nesta partida. Nos dois casos ninguém entra ou sai por roteiro: depois do começo, as trocas de formação são da simulação. Os integrantes reais que ficam de fora existem no mundo sem banda (dá para encontrá-los, contratá-los e chamá-los para bandas, feats e sessões) e não aparecem como ex-integrantes.', 'Who each real band starts with in this run. Either way nobody joins or leaves by script: after the start, lineup changes come from the simulation. Real members left out exist in the world without a band (you can find, sign and recruit them for bands, feats and sessions) and do not show up as former members.'))),
+    h('div', { class: 'ng17-start-grid' }, ...LINEUPS29.map((x) => h('label', { class: `radio pick ${cur === x.id ? 'on' : ''}`, 'data-lineup29': x.id },
+      h('input', { type: 'radio', name: 'lineup29', value: x.id, checked: cur === x.id, onchange: () => { cfg.lineup29 = x.id; changed(); } }),
+      h('span', null, h('b', null, t(x.name)), h('small', null, t(x.fx)))))));
 }
 
 // ---------------------------------------------------------------- ponto de partida + cenário histórico

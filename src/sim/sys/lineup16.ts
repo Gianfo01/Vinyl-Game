@@ -29,6 +29,7 @@ import { canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
 import { RW_AFTER_NEWGAME } from './after29';
 import { actsTouched17 } from '../actidx17';
 import { simStart20 } from '../worldpolicy20';
+import { lineup29Of } from '../lineup29';
 import { actsNow27 } from '../tickcache27';
 
 export type Why16 = 'creative' | 'solo' | 'feud' | 'addiction' | 'left';
@@ -510,7 +511,9 @@ export function stints16(s: GameState, a: Act): Stint16[] {
   const st = l16(s), f = rw(s).former[a.id] ?? [];
   const evs = st.ev.filter((e) => e[1] === a.id);
   const ids = [...new Set([...a.members, ...f.map((x) => x.personId), ...evs.map((e) => e[2])])].filter((id) => s.persons[id]);
-  const d = s.config.realNames ? realDataOf(a) : undefined;
+  // R29 (formação): com a formação inicial escolhida (lineup29) as passagens documentadas não são desta partida — a
+  // formação existiu desde o começo do ato e toda troca depois é da simulação (log de formação)
+  const d = s.config.realNames && !lineup29Of(s.config) ? realDataOf(a) : undefined;
   const shift = d?.d !== undefined ? a.debutYear - d.d : 0;
   const base = a.debutYear;
   // r27 (LIN): fundador ("desde o início") começa na formação — ou na 1ª entrada documentada, se for antes (Beatles 1960)
