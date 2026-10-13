@@ -16,6 +16,8 @@ Resumo:
 - Pacote: o jogo e a wiki compartilham um pedaço comum (dados e motor, 7,8 MB). A wiki soma **228 kB** de JS próprio
   (86 kB gzip) e 7,4 kB de CSS. O jogo continua com o mesmo código; dividir em dois pacotes custou +58 kB no total de JS do
   jogo (+29 kB gzip), porque nomes exportados entre pedaços não são encurtados.
+- Atualizado depois com as frentes novas do base: **nível dos rivais** (`rivals29`, artigo Escada de início) e **oferta a
+  um integrante** (`member29`, artigo Contratos), com verbetes no glossário.
 - `tests/r29-wiki.test.ts`: 19 testes verdes. `r29-reorg`, `r27-ux`, `r27-ctx` e `r29-fixes` continuam verdes.
 - Capturas: `docs/shots29wiki/` (16 telas × computador 1440×900 e celular 390×844).
 
@@ -27,6 +29,9 @@ Resumo:
 `npx vite` e abrir `http://localhost:5173/wiki.html`. No build (`npx vite build`), sai `dist/wiki.html` ao lado de
 `dist/index.html`. O jogo não tem link para a wiki. Se o autor quiser, dá para pôr um link na tela inicial que abra
 `wiki.html` em outra aba.
+
+**Arquivo único para mandar/abrir sem servidor**: `npx vite build -c vite.wiki.config.ts && node scripts/inline-wiki29.mjs`
+gera `dist-wiki/Masters-Wiki.html` (≈7,2 MB, JS, CSS e fontes embutidos). Abre com dois cliques, sem internet.
 
 Página: topo (marca "Masters Wiki" + PT/EN), barra fixa com ◀ ▶ e a busca, abas das seções e o artigo (migalhas, arte,
 blocos). Cada link é um endereço `#/<tipo>/<id>`, então dá para guardar ou mandar o link de um artigo.
