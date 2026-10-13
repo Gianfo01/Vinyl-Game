@@ -52,7 +52,7 @@ export function replay29(s: GameState, e: Log29): void {
   });
 }
 
-ALBUM17_X.push((s) => {
+const albumSection29 = (s: GameState): HTMLElement | null => {
   const xs = log29of(s);
   if (!xs.length) return null;
   const byYear = new Map<number, Log29[]>();
@@ -64,23 +64,26 @@ ALBUM17_X.push((s) => {
       h('ul', null, es.map((e) => h('li', { 'data-k': e.k },
         h('b', null, t(e.ti)), e.a ? ` · ${e.a}` : '', e.ch && label(e) ? h('small', { class: 'muted' }, ` — ${label(e)}`) : null, ' ',
         h('button', { class: 'link small', onclick: () => replay29(s, e) }, t(l('rever cena', 'replay scene'))))))))));
-});
+};
+// uma vez só (recarga a quente do módulo não duplica a seção)
+const X29 = ALBUM17_X as (typeof ALBUM17_X & { alb29?: boolean });
+if (!X29.alb29) { X29.alb29 = true; ALBUM17_X.push((s) => albumSection29(s)); }
 
 // ---------------------------------------------------------------- storyboard do fim (end28)
 
-/** Miniatura em pixel (96×42) da cena animada registrada com este id, ou null (cena de lugar / sem registro). */
+/** Miniatura em pixel (quadro inteiro 256×112 mostrado a 50%) da cena animada registrada com este id, ou null (cena de lugar / sem registro). */
 export function thumb29(s: GameState, id: string): HTMLCanvasElement | null {
   const e = log29of(s).find((x) => x.id === id);
   if (!e || typeof document === 'undefined') return null;
   try {
-    const m = cutModel27(s, e.d, { w: 96, h: 42 });
+    const m = cutModel27(s, e.d);
     const px = paintCut29(s, e.d, m, 0);
     const c = document.createElement('canvas'); c.width = m.W; c.height = m.H; c.className = 'px sb29-thumb';
     const ctx = c.getContext('2d');
     if (!ctx) return null;
     const img = ctx.createImageData(m.W, m.H); new Uint32Array(img.data.buffer).set(px.d); ctx.putImageData(img, 0, 0);
     drawFigs27(ctx, s, m, 0, true);
-    c.style.width = `${m.W * 2}px`; c.style.imageRendering = 'pixelated';
+    c.style.width = `${m.W / 2}px`; c.style.imageRendering = 'pixelated'; c.style.display = 'block';
     c.setAttribute('role', 'img'); c.setAttribute('aria-label', t(e.ti));
     return c;
   } catch { return null; }
