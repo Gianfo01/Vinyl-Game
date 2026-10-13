@@ -9,6 +9,7 @@ import { openPersonPage } from '../pages';
 import { ic } from '../vis';
 import { LIFE_EXTRAS13 } from './dossier13';
 import { personLife } from '../../sim/sys/dossier13';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const ROWS: { k: string; rels: Rel15[]; label: ReturnType<typeof l> }[] = [
   { k: 'up', rels: ['grandparent', 'parent', 'uncle'], label: l('Avós, pais e tios', 'Grandparents, parents and uncles/aunts') },
@@ -25,7 +26,7 @@ export function familyBlock15(s: GameState, p: Person): HTMLElement | null {
   const byName = (n: string) => Object.values(s.persons).find((x) => x.name === n);
   const loose = (n: string, rel: string, extra = '') => {
     const q = byName(n);
-    return h('li', null, q ? h('button', { class: 'link', onclick: () => openPersonPage(q.id) }, n) : h('span', null, n), ` · ${rel}${extra}`);
+    return h('li', null, q ? h('button', { class: 'link', ...ent27('person', `p:${q.id}`), onclick: () => openPersonPage(q.id) }, n) : h('span', null, n), ` · ${rel}${extra}`);
   };
   const partner = lf.partner && !named.has(lf.partner) ? lf.partner : undefined;
   const exes = lf.exes.filter((n) => !named.has(n) && n !== lf.partner).slice(0, 4);
@@ -34,7 +35,7 @@ export function familyBlock15(s: GameState, p: Person): HTMLElement | null {
   const total = ks.length + (partner ? 1 : 0) + exes.length + kids.length;
   const node = (k: Kin15Item) => {
     const a = actOf15(s, k.id), feud = feudOf15(s, p.id, k.id) !== undefined;
-    return h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))} · `,
+    return h('li', null, h('button', { class: 'link', ...ent27('person', `p:${k.id}`), onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))} · `,
       k.p.alive ? `${s.year - k.p.born} ${t(l('anos', 'yrs'))}` : `† ${k.p.died ?? '?'}`,
       a ? h('small', { class: 'muted' }, ` · ${a.name}`) : null,
       feud ? [' ', pill(t(l('em rixa', 'feuding')), 'bad')] : null,

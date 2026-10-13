@@ -40,6 +40,7 @@ import { chips, ic, meter, stat } from './vis';
 import './pages.css';
 import { HINT15, canSee, fameText, knownLevel } from '../sim/sys/fame15';
 import { replayBtn16 } from './sys/moments16';
+import { ent27 } from './ps/ent27'; // r27 (CTX)
 
 /** Botões extras no topo da página do ato (rodada 8: projeto musical). */
 export const ACT_HEAD_EXTRAS: ((s: GameState, a: Act, close: () => void) => HTMLElement | null)[] = [];
@@ -120,7 +121,7 @@ export function personCard(s: GameState, p: Person, opts: { onClick?: () => void
   const main = all.filter((x) => x.def.group === 'tech').sort((a, b) => b.value - a.value).slice(0, 2);
   const extra = all.filter((x) => x.def.group === 'create' || x.def.group === 'stage').sort((a, b) => b.value - a.value).slice(0, 1);
   const top = [...main, ...extra].slice(0, opts.compact ? 2 : 3);
-  return h('button', { class: `pcard ${tone(ovr)}`, type: 'button', onclick: opts.onClick ?? (() => openPersonPage(p.id)) },
+  return h('button', { class: `pcard ${tone(ovr)}`, type: 'button', ...ent27('person', `p:${p.id}`), onclick: opts.onClick ?? (() => openPersonPage(p.id)) },
     h('div', { class: 'pcard-top' }, w >= 99 ? ovrBadge('?') : ovrBadge(w ? shown(ovr, w) : ovr), h('small', null, t(ROLE_NAMES[p.role] ?? l(p.role, p.role))), mine ? formIcon(form(p)) : null),
     portraitCanvas(p, s, 2),
     h('b', { class: 'pcard-name' }, p.name, p.isPlayer ? ' ★' : ''),
@@ -274,13 +275,13 @@ function moodTab(s: GameState, p: Person): HTMLElement {
 
 function relTab(s: GameState, p: Person): HTMLElement {
   const rels = Object.entries(p.rel ?? {}).filter(([id]) => s.persons[id]).sort((a, b) => b[1] - a[1]);
-  const row = ([id, v]: [string, number]) => h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(id) }, s.persons[id].name), ' ', bar(Math.abs(v), 100, v >= 0 ? 'good' : 'bad'), h('b', { class: v >= 0 ? 'good' : 'bad' }, ` ${v > 0 ? '+' : ''}${Math.round(v)}`));
+  const row = ([id, v]: [string, number]) => h('li', null, h('button', { class: 'link', ...ent27('person', `p:${id}`), onclick: () => openPersonPage(id) }, s.persons[id].name), ' ', bar(Math.abs(v), 100, v >= 0 ? 'good' : 'bad'), h('b', { class: v >= 0 ? 'good' : 'bad' }, ` ${v > 0 ? '+' : ''}${Math.round(v)}`));
   const rom = (P(s).romances ?? []).filter((r) => r.status === 'together' && (r.a === p.id || r.b === p.id));
   // r25: parentes (grafo kin15 + kin25) também aparecem em Relações
   const kin = kinOf15(s, p.id);
   return h('div', { class: 'grid2' },
     kin.length ? h('div', null, h('h4', null, t(l('Família', 'Family'))), h('ul', { class: 'attr-list' }, kin.slice(0, 12).map((k) => h('li', null,
-      h('button', { class: 'link', onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))}${k.p.alive ? '' : ` · † ${k.p.died ?? '?'}`}`)))) : null,
+      h('button', { class: 'link', ...ent27('person', `p:${k.id}`), onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))}${k.p.alive ? '' : ` · † ${k.p.died ?? '?'}`}`)))) : null,
     h('div', null, h('h4', null, t(l('Afinidades', 'Friends'))), rels.filter(([, v]) => v > 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v > 0).slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—')),
     h('div', null, h('h4', null, t(l('Atritos', 'Frictions'))), rels.filter(([, v]) => v < 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v < 0).reverse().slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—'),
       rom.length ? h('p', null, ic('heart'), ' ', t(l('Namorando: ', 'Dating: ')), rom.map((r) => s.persons[r.a === p.id ? r.b : r.a]?.name).join(', ')) : null),
@@ -407,7 +408,7 @@ function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
     h('div', { class: 'pcard-grid' }, ms.map((p) => personCard(s, p))),
     h('ul', { class: 'small views10' }, ms.map((p) => h('li', null, h('b', null, p.name), ': ', viewsLine(s, p.id)))),
     former.length ? h('div', null, h('h4', null, t(l('Ex-integrantes', 'Former members'))),
-      h('ul', { class: 'small' }, former.map(({ f, p }) => h('li', null, h('button', { class: 'link', onclick: () => openPersonPage(p.id) }, p.name), ` — ${t(why[f.reason])} ${t(l('em', 'in'))} ${f.year}`, !p.alive ? ' †' : '')))) : null,
+      h('ul', { class: 'small' }, former.map(({ f, p }) => h('li', null, h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, p.name), ` — ${t(why[f.reason])} ${t(l('em', 'in'))} ${f.year}`, !p.alive ? ' †' : '')))) : null,
     h('p', { class: 'muted small' }, t(l('Clique num integrante para ver a carta completa com todos os atributos.', 'Click a member for the full card with every attribute.'))),
   );
 }

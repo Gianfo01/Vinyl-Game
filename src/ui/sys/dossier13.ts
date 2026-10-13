@@ -29,13 +29,14 @@ import { hypeMeter } from './hype12';
 import { openLabelStory } from './story12';
 import './map13.css';
 import { HINT15, canSee, fameText, knownLevel } from '../../sim/sys/fame15';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const why = (x: L) => h('p', { class: 'dos13-why' }, t(x));
 const empty = (x: L) => h('p', { class: 'muted small' }, t(x));
 const ARCH: Record<string, L> = { empire: l('Império', 'Empire'), scene_hunter: l('Caçador de cenas', 'Scene hunter'), hitmaker: l('Fábrica de hits', 'Hitmaker'), catalog: l('Catálogo', 'Catalog'), boutique: l('Butique', 'Boutique') };
 const FAM: Record<string, L> = { A: l('Estrelas e escala', 'Stars & scale'), B: l('Descoberta e cenas', 'Discovery & scenes'), C: l('Hits e comunicação', 'Hits & publicity'), D: l('Patrimônio e catálogo', 'Heritage & catalog') };
-const labelBtn = (s: GameState, id: string) => h('button', { class: 'link', onclick: (e: Event) => { e.stopPropagation(); openLabelDossier(id); } }, labelName13(s, id));
+const labelBtn = (s: GameState, id: string) => h('button', { class: 'link', ...ent27('label', id), onclick: (e: Event) => { e.stopPropagation(); openLabelDossier(id); } }, labelName13(s, id));
 
 /** Abas locais (mesmo visual das fichas de artista). */
 function tabbed(items: { id: string; label: L; icon: string; render: () => HTMLElement | null }[], initial?: string): HTMLElement {
@@ -298,7 +299,7 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
   for (const f of facts) { const g = groups.get(f.group) ?? []; g.push(f); groups.set(f.group, g); }
   const healthName: Record<string, L> = { ok: l('bem', 'fine'), voice_strain: l('voz desgastada', 'voice strain'), burnout: l('esgotamento', 'burnout'), addiction: l('dependência', 'addiction'), recovering: l('em recuperação', 'recovering'), ill: l('doente', 'ill') };
   return h('div', { class: 'dos13-person' },
-    h('div', { class: 'row wrap' }, open ? h('button', { class: 'link', onclick: () => openPersonPage(p.id) }, h('b', null, p.name)) : h('b', null, p.name),
+    h('div', { class: 'row wrap' }, open ? h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, h('b', null, p.name)) : h('b', null, p.name),
       ` · ${p.alive ? `${s.year - p.born} ${t(l('anos', 'yrs'))}` : `${t(l('morreu em', 'died'))} ${p.died ?? '?'}`}`),
     h('ul', { class: 'dos13-list small' },
       // relacionamento, ex e filhos ficam no bloco único "Família" (rodada 15)

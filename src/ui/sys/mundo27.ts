@@ -27,6 +27,7 @@ import {
   sceneStrength27, sceneTier27, type CitySheet27, type DigestItem27, type EraStep27, type Go27, type KnownRow27, type MapLayer27,
 } from './mundo27model';
 import './mundo27.css';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 
@@ -236,10 +237,10 @@ function hintSheet(s: GameState): HTMLElement {
     h('h3', null, T(l('Clique numa cidade', 'Click a city'))),
     h('p', { class: 'small muted' }, T(l('Cidades brilham pela força da cena musical. A ficha mostra cena, casas, rádios, público e quem domina.', 'Cities glow by the strength of their music scene. The sheet shows scene, venues, radios, audience and who rules.'))),
     top.length ? h('div', null, h('h4', null, ic('sparkle'), ' ', T(l('Cenas mais fortes', 'Strongest scenes'))),
-      h('ol', { class: 'small' }, top.map(([id, v]) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => { mapSel = id; rerender(); } }, cityName(id)), ` · ${T(TIER27[sceneTier27(v)])}`)))) : null,
+      h('ol', { class: 'small' }, top.map(([id, v]) => h('li', null, h('button', { type: 'button', class: 'link', ...ent27('city', id), onclick: () => { mapSel = id; rerender(); } }, cityName(id)), ` · ${T(TIER27[sceneTier27(v)])}`)))) : null,
     hot.length ? h('p', { class: 'small' }, ic('fire'), ` ${T(l('Em alta', 'Hot'))}: ${hot.map(genreName).join(', ')}`) : null,
     ((m) => m.size ? h('div', null, h('h4', null, ic('building'), ' ', T(l('Seus lugares fora da sede', 'Your places away from HQ'))),
-      h('ul', { class: 'small' }, [...m].map(([id, xs]) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => { mapSel = id; layers.add('mine'); rerender(); } }, cityName(id)), ` · ${xs.map((x) => T(x.kindName)).join(', ')}`)))) : null)(sitesByCity27(s)));
+      h('ul', { class: 'small' }, [...m].map(([id, xs]) => h('li', null, h('button', { type: 'button', class: 'link', ...ent27('city', id), onclick: () => { mapSel = id; layers.add('mine'); rerender(); } }, cityName(id)), ` · ${xs.map((x) => T(x.kindName)).join(', ')}`)))) : null)(sitesByCity27(s)));
 }
 
 function mapTab(s: GameState): HTMLElement {

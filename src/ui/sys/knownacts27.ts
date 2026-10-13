@@ -10,7 +10,7 @@ import { t } from '../../i18n/strings';
 import { FTIERS, fameTier } from '../../sim/sys/fame15';
 import { GROUPS27, KNOW27, WHY27, countWhy27, knownArtists27, type Group27, type KnownAct27, type Why27 } from '../../sim/sys/knownacts27';
 import type { Act, GameState } from '../../sim/types';
-import { actGenre23, actLink, cityName, genreName, labelLink, logo, rerender } from '../common';
+import { actGenre23, actLink, cityLink, cityName, genreName, labelLink, logo, rerender } from '../common';
 import { h, select } from '../dom';
 import { openAct } from '../ficha';
 import { emptyState27, kpiRow27, statusChip27, toolbar27 } from '../ps/ui27';
@@ -122,7 +122,7 @@ function table(s: GameState, all: KnownAct27[], group: 'all' | Group27): HTMLEle
           h('td', null, actLink(s, a.id), h('div', { class: 'muted small' }, a.members.length > 1 ? `${t(l('Banda', 'Band'))} (${a.members.length})` : t(l('Solo', 'Solo')))),
           h('td', null, chips(k)),
           h('td', null, actGenre23(s, a)),
-          h('td', null, cityName(a.city), k.a3 ? h('div', { class: 'muted small' }, t(countryName(k.a3))) : null),
+          h('td', null, cityLink(a.city), k.a3 ? h('div', { class: 'muted small' }, t(countryName(k.a3))) : null),
           h('td', null, statusOf(s, a)),
           h('td', { class: 'num' }, fameCell(k)),
           h('td', null, knowDots(k.know)),

@@ -42,6 +42,8 @@ function action(icon: string, title: L, desc: L, m: HTMLElement, ...controls: (N
 
 // ---------------------------------------------------------------- PROCURAR
 const P = { city: '', fam: 'any', who: '', demoFam: 'any', ch: '' };
+/** r27 (CTX): "Mandar olheiro a esta cena" no menu de uma cidade abre Procurar com a cidade já escolhida. */
+export function presetCity23(city: string): void { P.city = city; }
 
 function procurar(s: GameState): HTMLElement {
   if (!P.city || !cityById[P.city]) P.city = s.config.homeCity;

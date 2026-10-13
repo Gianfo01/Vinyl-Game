@@ -28,7 +28,7 @@ import { activeMembers } from '../../sim/capacity';
 import type { GameState } from '../../sim/types';
 import type { Tour } from '../../sim/xtypes';
 import { fmtL, money, playerActs } from '../../sim/util';
-import { $, N, actLink, cityName, inspect, kv, pill, rerender, section, toast } from '../common';
+import { $, N, actLink, cityLink, inspect, kv, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { chips, ic, stat, tabs, setTab } from '../vis';
 import { extraSections, registerAreaView20, sectionList, type SectionHost } from '../registry';
@@ -86,7 +86,7 @@ function upcomingSection(s: GameState): HTMLElement {
         return h('tr', { class: c.hard ? 'bad' : '' },
           h('td', { class: 'nowrap' }, dw <= 0 ? T(l('esta semana', 'this week')) : t(l('em {n} sem.', 'in {n} wk'), { n: dw })),
           h('td', null, actLink(s, x.actId)),
-          h('td', null, cityName(x.city)),
+          h('td', null, cityLink(x.city)),
           h('td', null, T(KIND_SHOW[x.kind]), x.label ? h('small', { class: 'muted' }, ` · ${x.label}`) : null),
           h('td', { title: c.why.map(T).join(' · ') },
             c.hard ? pill(T(l('duro: duas cidades', 'hard: two cities')), 'bad') : null,
@@ -137,7 +137,7 @@ export function controlRoom20(s: GameState): HTMLElement | null {
     const tired = mem.filter((p) => p.fatigue >= 70).length;
     const sick = mem.filter((p) => p.health !== 'ok').length;
     body.push(
-      h('div', { class: 'row wrap' }, h('b', null, ic('calendar'), ' ', cityName(x.city)), ' · ', actLink(s, x.actId), ' · ', T(KIND_SHOW[x.kind]), x.label ? ` · ${x.label}` : '',
+      h('div', { class: 'row wrap' }, h('b', null, ic('calendar'), ' ', cityLink(x.city)), ' · ', actLink(s, x.actId), ' · ', T(KIND_SHOW[x.kind]), x.label ? ` · ${x.label}` : '',
         ' ', pill(x.w - s.week <= 0 ? T(l('esta semana', 'this week')) : t(l('em {n} sem.', 'in {n} wk'), { n: x.w - s.week }))),
       chips(
         occ !== null ? stat('fans', `${Math.round(occ * 100)}%`, l('Ocupação prevista (estimativa: procura da cidade ÷ lotação)', 'Expected occupancy (estimate: city demand ÷ capacity)'), occ < 0.5 ? 'warn' : 'good') : stat('fans', N(dem), l('Procura estimada na cidade', 'Estimated city demand')),
@@ -163,7 +163,7 @@ export function controlRoom20(s: GameState): HTMLElement | null {
       chips(stat('fans', `${N(lastStop.sold)}/${N(lastStop.capacity)}`, l('Vendidos / lotação', 'Sold / capacity'), lastStop.sold < lastStop.capacity * 0.5 ? 'warn' : 'good'),
         stat('money', $(lastTour.revenue), l('Receita da turnê até aqui', 'Tour revenue so far')), stat('bank', $(lastTour.costs || lastTour.costReserved), l('Custos da turnê', 'Tour costs')),
         lastTour.accidents ? stat('warning', lastTour.accidents, l('Incidentes', 'Incidents'), 'bad') : null),
-      h('small', null, cityName(lastStop.cityId), ' · ', actLink(s, lastTour.actId), lastStop.note ? ` · ${T(lastStop.note)}` : ''),
+      h('small', null, cityLink(lastStop.cityId), ' · ', actLink(s, lastTour.actId), lastStop.note ? ` · ${T(lastStop.note)}` : ''),
       showNewsBlock20(s, showKey20(lastTour.id, lastStop.day))));
   }
   return h('section', { class: 'card cr20' }, h('h3', null, ic('mic'), ' ', T(l('Sala de controle — próxima apresentação', 'Control room — next show'))), ...body);

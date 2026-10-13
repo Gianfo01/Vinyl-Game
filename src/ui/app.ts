@@ -82,6 +82,7 @@ import { getLang } from '../i18n/strings';
 import { locale } from '../i18n/strings';
 import { artHook27, pageHeader27 } from './ps/ui27'; // r27 (J): sistema visual compartilhado
 import { PURPOSE27, kpis27 } from './ps/ui27model';
+import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em nomes abre o menu de ações
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
 registerPortrait((p, size) => {
@@ -595,6 +596,7 @@ function settings(): void {
       h('button', { class: 'btn ghost', onclick: () => { close(); if (store.game) modal(t(l('Cartão da partida', 'Run card')), runCard17body(store.game)); } }, t(l('Cartão da partida', 'Run card'))), // r17
     ),
     h('p', { class: 'muted small' }, t(l('Atalhos: 1–0 e D trocam de área · Ctrl+Enter avança · Ctrl+K abre a busca · ? lista todos os atalhos · Alt+← volta.', 'Shortcuts: 1–0 and D switch area · Ctrl+Enter advances · Ctrl+K opens search · ? lists every shortcut · Alt+← goes back.'))),
+    h('p', { class: 'muted small' }, t(l('Clique com o botão direito (ou toque longo) em nomes para ver ações — Shift+F10 pelo teclado; Ctrl+clique direito mostra o menu do navegador.', 'Right-click (or long-press) names to see actions — Shift+F10 from the keyboard; Ctrl+right-click shows the browser menu.'))), // r27 (CTX)
   );
   close = modal(t(S.settings), body);
 }

@@ -41,6 +41,7 @@ import { timeline } from './leisure14';
 import { profile as mgrProfile } from './managers14';
 import { ficha13 } from './persona13';
 import { profile as prodProfile } from './producers15';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 interface Tab16 { id: string; label: L; icon?: string; render: () => HTMLElement | null }
 /** Rodada 17: abas extras da página única (quem não é artista), ex.: Fatos & Obrigações. */
@@ -54,7 +55,7 @@ const empty = (x: L) => h('p', { class: 'muted small' }, t(x));
 
 /** Link para qualquer pessoa (chave), já pela página única. */
 export function personLink16(s: GameState, key: string, name?: string, tab?: string): HTMLElement {
-  return h('button', { class: 'link', onclick: (e: Event) => { e.stopPropagation(); openPerson16(key, tab); } }, name ?? per13(s, key)?.name ?? key);
+  return h('button', { class: 'link', ...ent27('person', key), onclick: (e: Event) => { e.stopPropagation(); openPerson16(key, tab); } }, name ?? per13(s, key)?.name ?? key);
 }
 
 // ---------------------------------------------------------------- blocos comuns

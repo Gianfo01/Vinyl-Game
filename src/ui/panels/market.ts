@@ -8,7 +8,7 @@ import { fameText } from '../../sim/sys/fame15';
 import { DEGREES, STAGES, canScout, dropSignal, estimate, requestScout, scoutActionsPerMonth, scoutAct, scoutCost, scoutRequestCost, setStage, sourceName, syncPipeline } from '../../sim/scouting';
 import { acceptCounter, defaultOffer, withdrawOffer } from '../../sim/contracts';
 import type { GameState, Knowledge } from '../../sim/types';
-import { $, actLink, cityName, actGenre23, genreName, labelLink, logo, pill, rerender, section, toast } from '../common';
+import { $, actLink, cityLink, cityName, actGenre23, genreName, labelLink, logo, pill, rerender, section, toast } from '../common';
 import { bar, h, rangeBar, select } from '../dom';
 import { openOffer } from '../ficha';
 import { openDossier } from '../dossierView';
@@ -17,6 +17,7 @@ import { hqCaps } from '../../sim/branches';
 import { crewProfileCell } from '../sys/crew8';
 import { isWatched, missionProgress, scout11, toggleCompare, toggleWatch } from '../../sim/sys/scout11';
 import { abilityCell18, staffStars18 } from '../ab18stars';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 export function marketPanel(s: GameState): HTMLElement {
   const tabs: [typeof store.marketTab, string][] = [
@@ -257,7 +258,7 @@ export function rivals(s: GameState): HTMLElement {
       h('tbody', null, labels.map((lb) => h('tr', null,
         h('td', null, labelLink(s, lb.id)),
         h('td', null, `${lb.family} · ${famName[lb.family]}`),
-        h('td', null, cityById[lb.city] ? cityName(lb.city) : lb.city),
+        h('td', null, cityLink(lb.city)),
         h('td', null, lb.roster.length),
         h('td', null, $(lb.revenueLastYear)),
         h('td', null, lb.territories.length),
@@ -275,7 +276,7 @@ export function professionals(s: GameState): HTMLElement {
       h('tbody', null, s.professionals.map((p) => {
         const role = STAFF_ROLES.find((r) => r.id === p.role);
         return h('tr', null,
-          h('td', null, p.name),
+          h('td', null, h('span', { class: 'ent27', tabindex: '0', ...ent27('person', `s:${p.id}`) }, p.name)),
           h('td', { title: t(role?.desc) }, t(role?.name), h('div', null, crewProfileCell(s, p))),
           h('td', null, p.skill, ' ', staffStars18(s, p)),
           h('td', null, $(p.salary)),

@@ -8,7 +8,7 @@ import { S, t } from '../i18n/strings';
 import { acceptCounter, defaultOffer, evaluateOffer, offerNow, pressForAnswer, withdrawCounter } from '../sim/contracts';
 import type { Act, GameState, Offer, Release, Song } from '../sim/types';
 import { criticScore, fmtSecs, scoreClass, trackList } from '../sim/relinfo';
-import { $, N, actLink, cityName, cover, genreName, inspect, kv, labelLink, logo, modal, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
+import { $, N, actLink, cityLink, cover, songName, genreName, inspect, kv, labelLink, logo, modal, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
 import { h, select } from './dom';
 import { store } from './store';
 import { money, rngOf } from '../sim/util';
@@ -96,7 +96,7 @@ export function openRelease(id: string): void {
       h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(S.title)), h('th', null, t(l('Duração', 'Length'))), h('th', null, 'Q'), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.performance)), h('th', null, t(S.production)), h('th', null, t(S.originality)))),
       h('tbody', null, tracks.map((tr) => {
         const so = tr.songId ? s.songs[tr.songId] : undefined;
-        return h('tr', null, h('td', null, tr.n), h('td', null, tr.title, tr.single && r.type !== 'single' ? ' ' : '', tr.single && r.type !== 'single' ? pill(t(l('faixa de trabalho', 'lead single'))) : null, ' ', ...(so ? RELEASE_SONG_EXTRAS.map((f) => f(s, so)) : [stylePill17(s.acts[r.actId]?.genre)])),
+        return h('tr', null, h('td', null, tr.n), h('td', null, songName(tr.songId, tr.title), tr.single && r.type !== 'single' ? ' ' : '', tr.single && r.type !== 'single' ? pill(t(l('faixa de trabalho', 'lead single'))) : null, ' ', ...(so ? RELEASE_SONG_EXTRAS.map((f) => f(s, so)) : [stylePill17(s.acts[r.actId]?.genre)])),
           h('td', null, fmtSecs(tr.secs)),
           so ? h('td', null, h('b', null, show(so.q))) : h('td', { class: 'muted' }, '—'),
           ...(so ? [so.melody, so.lyrics, so.performance, so.production, so.originality].map((v) => h('td', null, v > 0 ? show(v) : '—')) : [h('td', { class: 'muted', colspan: 5 }, t(l('sem ficha técnica guardada', 'no stored credits')))]));
@@ -133,7 +133,7 @@ export function openLabel(id: string): void {
   const body = h('div', { class: 'ficha' },
     kv(t(l('Família', 'Family')), lb.family),
     kv(t(l('Estratégia', 'Strategy')), strategyName(lb.strategy)),
-    kv(t(S.city), cityName(lb.city)),
+    kv(t(S.city), cityLink(lb.city)),
     kv(t(l('Fundação', 'Founded')), lb.founded),
     kv(t(l('Receita do último ano (pública)', 'Last year revenue (public)')), $(lb.revenueLastYear)),
     kv(t(l('Última decisão', 'Last decision')), t(lb.lastDecision) || '—'),
