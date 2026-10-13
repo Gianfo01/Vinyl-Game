@@ -104,6 +104,8 @@ export function fullDiary28(s: GameState): MemoryEntry[] {
 
 /** Tipos de "nº 1" (mundial e por país): de outro artista nunca entram em "Só marcantes". */
 const NO1_KINDS28 = new Set(['number1', 'no1_country']);
+/** R29 (CONNECT): entradas e saídas de integrante dos SEUS atos (antes só passavam se o ato tivesse fama > 25–30) */
+const LINEUP29 = new Set(['lineup', 'member_quits', 'member_retires']);
 /** "Só marcantes": tudo o que é marcante do selo (inclusive o começo) + no máximo `worldMonth` fatos do mundo por mês,
  *  nunca o nº 1 de outro artista. O mesmo tipo de fato do mesmo ato no mesmo mês vira UMA linha com "(+N)" (ex.: o
  *  disco que chega ao #1 em 25 países). */
@@ -114,7 +116,7 @@ export function landmarks28(s: GameState): MemoryEntry[] {
   for (const m of fullDiary28(s)) {
     const mine = playerMem28(s, m);
     if (mine) {
-      if (!(m.important || NO1_KINDS28.has(m.kind) || m.kind === 'echo28' || m.kind === 'start' || m.kind === 'start17')) continue;
+      if (!(m.important || NO1_KINDS28.has(m.kind) || LINEUP29.has(m.kind) || m.kind === 'echo28' || m.kind === 'start' || m.kind === 'start17')) continue; // R29: troca de formação do seu ato é marco
       const k = `${m.kind}|${m.actId ?? ''}|${m.year}|${m.month}`;
       const g = grp.get(k);
       if (g && m.kind !== 'echo28' && !m.kind.startsWith('decision:')) { g.n++; continue; }

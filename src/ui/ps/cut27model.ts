@@ -18,6 +18,7 @@ import { facts17, type Fact } from '../../sim/facts17';
 import { a3Of, addHeat, crime17 } from '../../sim/sys/crime17';
 import { mineOf17 } from '../../sim/sys/scene17';
 import type { Act, GameState } from '../../sim/types';
+import type { Cutscene } from '../../sim/ext4';
 import { fmtL, money, post } from '../../sim/util';
 import { C, Px, noise, withAlpha } from '../pixel/px';
 import { bandOf27, halo, kit27, text } from './art27kit';
@@ -45,7 +46,9 @@ export interface CutDef27 {
 
 // ---------------------------------------------------------------- estado
 
-export interface Cut27St { init: number; mem: number; fact: number; once: Record<string, number>; era: number; broke: number; n: number; done: Record<string, string> }
+export interface Cut27St { init: number; mem: number; fact: number; once: Record<string, number>; era: number; broke: number; n: number; done: Record<string, string>;
+  /** R29 (CONNECT): cenas animadas que tocaram (as 30 últimas) — o álbum de cenas lia só as silenciosas */
+  log?: Cutscene[] }
 declare module '../../sim/ext4' { interface Ext4 { cut27: Cut27St } }
 const fresh = (): Cut27St => ({ init: 0, mem: 0, fact: 0, once: {}, era: -1, broke: -999, n: 0, done: {} });
 registerExt4('cut27', fresh);

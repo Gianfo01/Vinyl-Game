@@ -41,7 +41,9 @@ export function enqueue27(s: GameState, pref: CutPref27 = cutPref27()): Cutscene
     // uma cena por acontecimento: a cena antiga do mesmo momento (mesmo ato, avanço recente) fica só no álbum
     const same = SAME27[d.key];
     if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !d.actId || c.data.actId === d.actId) && same(c)) { c.seen = true; c.data.quiet23 = true; }
-    return queueCutscene(s, 'cut27', { title: CUT27[d.key].title, d, actId: d.actId ?? null, int23: CUT27[d.key].choices.length ? 'always' : 'milestone' });
+    const cs = queueCutscene(s, 'cut27', { title: CUT27[d.key].title, d, actId: d.actId ?? null, int23: CUT27[d.key].choices.length ? 'always' : 'milestone' });
+    const lg = (cut27(s).log ??= []); lg.push(cs); if (lg.length > 30) lg.splice(0, lg.length - 30); // R29 (CONNECT): vai para o álbum
+    return cs;
   });
 }
 /** Cenas antigas que contam o mesmo momento (number1 da rua, ônibus, momentos do r16, storyboards do cine18). */
