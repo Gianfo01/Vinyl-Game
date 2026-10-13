@@ -13,6 +13,10 @@
 
 import { cityById } from '../../data/world';
 import { C, Px, dith, mix, noise, shade, withAlpha, type Col } from './px';
+import { ramp20 } from './cenas20';
+
+/** Tom n da rampa de 6 tons do estilo oficial (0–2 sombra arroxeada, 3 base, 4 luz quente, 5 brilho). */
+const tn = (c: Col, n: number): Col => ramp20(c)[n];
 
 /** O que o horizonte precisa do ambiente (é um recorte de Env27, de city27.ts). */
 export interface SkyEnv27 { year: number; month: number; city: string; lat: number; climate: 'tropical' | 'arid' | 'mild' | 'cold'; season: 'winter' | 'spring' | 'summer' | 'autumn'; snow: boolean; rain: boolean }
@@ -140,7 +144,7 @@ const TER27: Record<string, Ter27[]> = {
   nairobi: [T('roll', 0, 0, 9, false)], kampala: [T('roll', 0, 0, 10, false)], addis_ababa: [T('ridge', 0.5, 200, 24, true, 'never', '#5a6a5a')],
   johannesburg: [T('dumps', 0.25, 26, 9, false, 'never', '#d8c070'), T('dumps', 0.72, 20, 7, false, 'never', '#d8c070')],
   las_vegas: [T('ridge', 0.5, 220, 26, true, 'winter', '#9a8070')], salvador: [T('roll', 0, 0, 6, false)], florianopolis: [T('roll', 0, 0, 12, false)],
-  nashville: [T('roll', 0, 0, 8, false)], sheffield: [T('roll', 0, 0, 10, false)], bristol: [T('roll', 0, 0, 9, false)], glasgow: [T('roll', 0, 0, 8, false)],
+  nashville: [T('roll', 0, 0, 14, true, 'never', '#4a7a50')], sheffield: [T('roll', 0, 0, 10, false)], bristol: [T('roll', 0, 0, 9, false)], glasgow: [T('roll', 0, 0, 8, false)],
   vienna: [T('roll', 0, 0, 10, false)], budapest: [T('roll', 0, 0, 11, false)], prague: [T('roll', 0, 0, 9, false)], kyiv: [T('roll', 0, 0, 8, false)],
   munich: [T('ridge', 0.5, 240, 16, true, 'always', '#8a92aa')], milan: [T('ridge', 0.5, 240, 16, true, 'always', '#8a92aa')],
   bh: [T('ridge', 0.5, 200, 22, true, 'never', '#5a6a5a')], port_of_spain: [T('ridge', 0.5, 200, 24, true, 'never', '#3e6a5a')],
@@ -303,6 +307,7 @@ export function skyCols27(e: SkyEnv27): SkyCols27 {
   if (!e.rain && !e.snow && e.season === 'winter' && e.climate !== 'tropical') { top = mix(top, C('#8aa8c8'), 0.25); bot = mix(bot, C('#eef2f6'), 0.3); }
   if (INDUSTRY.has(e.city) && e.year < 1960) { const k = e.year < 1925 ? 0.32 : 0.2; bot = mix(bot, C('#c8b48c'), k); mid = mix(mid, C('#b0a890'), k * 0.6); } // fuligem
   else if (e.year < 1946) { bot = mix(bot, C('#f0e4c8'), 0.12); top = mix(top, C('#c8b890'), 0.06); }
+  if (!e.rain && !e.snow) bot = mix(bot, C('#fff0d8'), 0.18); // estilo oficial: luz quente no horizonte
   const overcast = e.rain || e.snow;
   const cloud = e.rain ? C('#9aa4b4') : e.snow ? C('#dce4ee') : C('#fbfcff');
   const cloudSh = e.rain ? C('#6e7a8e') : e.snow ? C('#b4c2d4') : mix(C('#c8d4e6'), mid, 0.3);
@@ -351,10 +356,10 @@ const tri = (P: Paint, x0: number, x1: number, z0: number, h: number, c: Col, cr
 };
 /** Meia-cúpula (rx, ry) apoiada em z0, luz à esquerda. */
 const domeAt = (P: Paint, cx: number, z0: number, rx: number, ry: number, c: Col) => {
-  for (let j = 0; j < ry + 0.5; j++) { const w = rx * Math.sqrt(Math.max(0, 1 - (j / (ry + 0.5)) ** 2)); for (let i = -Math.round(w); i <= Math.round(w) - 1; i++) put(P, cx + i, P.base - z0 - j, i < -w * 0.35 ? shade(c, 0.14) : i >= w * 0.3 ? shade(c, -0.2) : c); }
+  for (let j = 0; j < ry + 0.5; j++) { const w = rx * Math.sqrt(Math.max(0, 1 - (j / (ry + 0.5)) ** 2)); for (let i = -Math.round(w); i <= Math.round(w) - 1; i++) put(P, cx + i, P.base - z0 - j, i < -w * 0.35 ? tn(c, 4) : i >= w * 0.3 ? tn(c, 2) : c); }
 };
 const mastAt = (P: Paint, x: number, z0: number, h: number, c: Col, red = true) => { R(P, x, z0, 1, h, c); if (red && P.year >= 1950) light(P, x, P.base - z0 - h + 1, C('#ff3a30')); };
-const winDark = (c: Col) => mix(c, C('#28303e'), 0.55);
+const winDark = (c: Col) => tn(mix(c, C('#28303e'), 0.35), 1);
 const WIN = C('#ffd77a'), WIN2 = C('#fff0b8'), WINC = C('#e8f0ff');
 
 /** Bloco de prédio com face clara, quina direita sombreada, cornija e janelas do material. */
@@ -363,10 +368,10 @@ function block(P: Paint, x0: number, z0: number, w: number, h: number, mat: Mat2
   const litC = glass && P.year >= 1968 ? WINC : WIN;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     const right = i >= w - side, y = P.base - z0 - j;
-    let c = right ? shade(wall, -0.2) : wall;
+    let c = right ? tn(wall, 2) : wall;
     let win = false;
     const ii = i, jj = j;
-    if (jj === h - 1) c = shade(c, 0.12);
+    if (jj === h - 1) c = tn(c, 4);
     else if (jj >= 2 && ii >= 1 && ii < w - 1) {
       switch (mat) {
         case 'brick': case 'stone': case 'stucco': case 'adobe': case 'white': win = jj % 3 === 1 && ii % 2 === 1; break;
@@ -377,7 +382,7 @@ function block(P: Paint, x0: number, z0: number, w: number, h: number, mat: Mat2
         case 'dark': win = jj % 2 === 0 && ii % 2 === 1; break;
         case 'bronze': case 'blue': case 'teal':
           if (jj % 3 === 0) c = shade(c, 0.1);
-          if ((ii + jj + salt) % 13 < 2) c = shade(c, 0.22); // reflexo diagonal
+          if ((ii + jj + salt) % 13 < 2) c = tn(c, 5); // reflexo diagonal (vidro = material brilhante)
           win = jj % 3 === 1 && ii % 2 === 0;
           break;
       }
@@ -482,8 +487,8 @@ function terrain(P: Paint, t: Ter27, e: SkyEnv27, s: number, amp = 1): void {
     if (h < 1) continue;
     const sl = hAt(x + 1.5) - hAt(x - 1.5);
     for (let j = 0; j < h; j++) {
-      let c = sl > 0.35 ? shade(base, 0.08) : sl < -0.35 ? shade(base, -0.14) : base;
-      if (j >= h - 1) c = shade(c, 0.12);
+      let c = sl > 0.35 ? tn(base, 4) : sl < -0.35 ? tn(base, 2) : base;
+      if (j >= h - 1) c = tn(c, 4);
       if (j > h * snowLine && j >= h - Math.max(2, Math.round((h * (1 - snowLine)) * (0.7 + 0.3 * noise(x, 2, s))))) c = sl < -0.35 ? C('#c4d4ea') : C('#f6faff');
       else if (!t.far && dith(x, j, 0.16)) c = shade(c, -0.07);
       else if (!t.far && t.k !== 'dumps' && noise(x, j, s + 5) < 0.06) c = shade(c, -0.16); // copas e pedras
@@ -548,7 +553,7 @@ export function renderSky27(o: SkyOpts27): { p: Px; g: Px } {
   const cols = skyCols27(e), y = e.year;
   for (let yy = 0; yy < H; yy++) for (let x = 0; x < W; x++) p.d[yy * W + x] = skyAt(cols, H, x, yy) | 0xff000000;
   const s = (seed * 131 + hashS(e.city)) % 99991;
-  const P: Paint = { p, g, W, H, year: y, seed: s, k: 0, haze: cols.bot, occ, lit: y < 1920 ? 0.22 : y < 1950 ? 0.34 : 0.42, win: WIN, snow: e.snow, base: H - 1, layer: 0 };
+  const P: Paint = { p, g, W, H, year: y, seed: s, k: 0, haze: mix(cols.bot, C('#b4a4cc'), 0.24) /* violeta de distância */, occ, lit: y < 1920 ? 0.22 : y < 1950 ? 0.34 : 0.42, win: WIN, snow: e.snow, base: H - 1, layer: 0 };
   clouds(P, cols, e, s);
   const plan = skyPlan27(e.city, y, W, seed, look, e.lat);
   const wallPal = look.wall.map((h) => C(h));

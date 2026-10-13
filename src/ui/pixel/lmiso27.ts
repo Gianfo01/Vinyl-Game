@@ -9,6 +9,7 @@
 import type { LmShape } from '../../data/landmarks19';
 import { C, Px, dith, noise, shade, withAlpha, type Col } from './px';
 import { drawText } from './font';
+import { INK, ramp20 } from './cenas20';
 import { region27 } from './skyline27';
 
 type P = [number, number];
@@ -21,8 +22,11 @@ interface Foot { r1: number; r2: number; h: number }
 type Base = 'plaza' | 'water' | 'island' | 'none';
 
 const QW = 150, QH = 150, AX = 75, AY = 116;
-const OUTL = C('#1c1824', 190);
-const SHADOW = withAlpha(C('#141828'), 72);
+// r27 (I2b): estilo oficial (skill masters-artist-sprites): contorno #170e12, sombra arroxeada, rampas de 6 tons
+const OUTL = withAlpha(INK, 200);
+const SHADOW = withAlpha(C('#2a1838'), 74);
+/** Tom n (0–2 sombra arroxeada, 3 base, 4 luz quente, 5 brilho) da rampa da cor. */
+const tn = (c: Col, n: number): Col => ramp20(c)[n];
 
 // ---------------------------------------------------------------- kit isométrico (1 célula = 8 px × 4 px)
 
@@ -33,29 +37,29 @@ type Tex = (side: 0 | 1, s: number, z: number, len: number) => Col | 0;
 function ibox(k: K, u: number, v: number, r1: number, r2: number, z0: number, h: number, base: Col, o: { top?: Col; tex?: Tex; noTop?: boolean; right?: Col } = {}): void {
   const W = ip(k, u - r1, v + r2), S = ip(k, u + r1, v + r2), E = ip(k, u + r1, v - r2), N = ip(k, u - r1, v - r2);
   const lenL = S[0] - W[0], lenR = E[0] - S[0];
-  const rc = o.right ?? shade(base, -0.22);
+  const rc = o.right ?? tn(base, 2);
   k.p.poly([[W[0], W[1] - z0], [S[0], S[1] - z0], [S[0], S[1] - z0 - h], [W[0], W[1] - z0 - h]], (x, y) => {
     const s = x + 0.5 - W[0], z = W[1] + s / 2 - z0 - (y + 0.5);
     const t = o.tex?.(0, s, z, lenL);
     if (t) return t;
-    return z >= h - 1 ? shade(base, 0.12) : s >= lenL - 1 && lenL > 3 ? shade(base, 0.08) : z0 === 0 && z < 1.5 && h > 6 ? shade(base, -0.1) : base;
+    return z >= h - 1 ? tn(base, 4) : s >= lenL - 1 && lenL > 3 && h > 5 ? tn(base, 1) : z0 === 0 && z < 1.5 && h > 6 ? tn(base, 2) : base;
   });
   k.p.poly([[S[0], S[1] - z0], [E[0], E[1] - z0], [E[0], E[1] - z0 - h], [S[0], S[1] - z0 - h]], (x, y) => {
     const s = x + 0.5 - S[0], z = S[1] - s / 2 - z0 - (y + 0.5);
     const t = o.tex?.(1, s, z, lenR);
-    if (t) return shade(t, -0.18);
-    return z >= h - 1 ? shade(rc, 0.1) : z0 === 0 && z < 1.5 && h > 6 ? shade(rc, -0.1) : rc;
+    if (t) return tn(t, 2);
+    return z >= h - 1 ? tn(rc, 4) : z0 === 0 && z < 1.5 && h > 6 ? tn(rc, 2) : rc;
   });
-  if (!o.noTop) k.p.poly([[N[0], N[1] - z0 - h], [E[0], E[1] - z0 - h], [S[0], S[1] - z0 - h], [W[0], W[1] - z0 - h]], o.top ?? shade(base, 0.16));
+  if (!o.noTop) k.p.poly([[N[0], N[1] - z0 - h], [E[0], E[1] - z0 - h], [S[0], S[1] - z0 - h], [W[0], W[1] - z0 - h]], o.top ?? tn(base, 4));
 }
 /** Prisma afunilado (pirâmide quando rt = 0): base r0, topo rt. */
 function taper(k: K, u: number, v: number, r0: number, rt: number, z0: number, h: number, base: Col, o: { right?: Col; tex?: (side: 0 | 1, x: number, y: number) => Col | 0 } = {}): void {
   const at = (r: number, z: number) => ({ W: ip(k, u - r, v + r, z), S: ip(k, u + r, v + r, z), E: ip(k, u + r, v - r, z), N: ip(k, u - r, v - r, z) });
   const a = at(r0, z0), b = at(rt, z0 + h);
-  const rc = o.right ?? shade(base, -0.22);
+  const rc = o.right ?? tn(base, 2);
   k.p.poly([a.W, a.S, b.S, b.W], (x, y) => o.tex?.(0, x, y) || base);
-  k.p.poly([a.S, a.E, b.E, b.S], (x, y) => { const t = o.tex?.(1, x, y); return t ? shade(t, -0.18) : rc; });
-  if (rt > 0) k.p.poly([b.N, b.E, b.S, b.W], shade(base, 0.16));
+  k.p.poly([a.S, a.E, b.E, b.S], (x, y) => { const t = o.tex?.(1, x, y); return t ? tn(t, 2) : rc; });
+  if (rt > 0) k.p.poly([b.N, b.E, b.S, b.W], tn(base, 4));
 }
 /** Cilindro vertical em faixas de luz (esquerda clara → direita escura), tampa no topo. */
 function cyl(k: K, u: number, v: number, r: number, z0: number, h: number, base: Col, rTop = r): void {
@@ -65,13 +69,12 @@ function cyl(k: K, u: number, v: number, r: number, z0: number, h: number, base:
     for (let dx = -Math.ceil(rx); dx <= Math.ceil(rx); dx++) {
       if (Math.abs(dx + 0.5) > rx + 0.3) continue;
       const f = (dx + 0.5) / Math.max(1, rx);
-      const band = f < -0.35 ? 0.14 : f < 0.2 ? 0 : f < 0.65 ? -0.16 : -0.3;
-      k.p.set(cx + dx, cy - z0 - z, shade(base, band));
+      k.p.set(cx + dx, cy - z0 - z, tn(base, f < -0.35 ? 4 : f < 0.2 ? 3 : f < 0.65 ? 2 : 1));
     }
   }
   const rx = rTop * 11.3, ry = rx / 2;
   for (let dy = -Math.ceil(ry); dy <= Math.ceil(ry); dy++) for (let dx = -Math.ceil(rx); dx <= Math.ceil(rx); dx++) {
-    if (((dx + 0.5) / (rx + 0.3)) ** 2 + ((dy + 0.5) / (ry + 0.3)) ** 2 <= 1) k.p.set(cx + dx, cy - z0 - h + dy, shade(base, 0.2));
+    if (((dx + 0.5) / (rx + 0.3)) ** 2 + ((dy + 0.5) / (ry + 0.3)) ** 2 <= 1) k.p.set(cx + dx, cy - z0 - h + dy, tn(base, 4));
   }
 }
 /** Esfera sombreada em 4 tons com brilho no alto à esquerda. */
@@ -81,7 +84,7 @@ function ball(k: K, u: number, v: number, z: number, r: number, base: Col): void
     const x = (dx + 0.5) / r, y = (dy + 0.5) / r, d = x * x + y * y;
     if (d > 1) continue;
     const nz = Math.sqrt(1 - d), lum = -0.55 * x - 0.55 * y + 0.62 * nz;
-    const c = lum > 0.8 ? shade(base, 0.5) : lum > 0.45 ? shade(base, 0.18) : lum > 0.1 ? base : lum > -0.3 ? shade(base, -0.2) : shade(base, -0.38);
+    const c = tn(base, lum > 0.8 ? 5 : lum > 0.45 ? 4 : lum > 0.1 ? 3 : lum > -0.3 ? 2 : 1);
     k.p.set(cx + dx, cy + dy, c);
   }
 }
@@ -112,7 +115,7 @@ function mountain(k: K, dx0: number, dx1: number, hAt: (dx: number) => number, r
       let c = steep && z > h * 0.25 ? rock : green;
       if (!steep && z < h * 0.35 && noise(dx, z, k.seed + 3) < 0.25) c = shade(green, -0.15);
       if (steep && (dx + Math.floor(z / 3)) % 4 === 0) c = shade(c, -0.12); // estrias na rocha
-      c = shade(c, lit + (top ? 0.12 : 0));
+      c = top ? tn(c, 4) : lit > 0 ? c : tn(c, 2);
       if (dith(dx + 40, z, 0.12) && !top) c = shade(c, -0.06);
       k.p.set(k.X + dx, k.Y - z, c);
     }
@@ -555,7 +558,7 @@ function hemi(k: K, u: number, v: number, z: number, r: number, base: Col, ky = 
     const x = (dx + 0.5) / r, y = (dy + 0.5) / ry, d = x * x + y * y;
     if (d > 1) continue;
     const nz = Math.sqrt(1 - d), lum = -0.6 * x - 0.45 * y + 0.62 * nz;
-    k.p.set(cx + dx, cy + dy, lum > 0.85 ? shade(base, 0.42) : lum > 0.5 ? shade(base, 0.16) : lum > 0.15 ? base : lum > -0.2 ? shade(base, -0.2) : shade(base, -0.36));
+    k.p.set(cx + dx, cy + dy, tn(base, lum > 0.85 ? 5 : lum > 0.5 ? 4 : lum > 0.15 ? 3 : lum > -0.2 ? 2 : 1));
   }
 }
 /** Faixa horizontal de pixels (para frisos e marquises). */
@@ -603,7 +606,7 @@ function hollywoodSign(k: K): Foot {
   const word = k.year < 1949 ? 'HOLLYWOODLAND' : 'HOLLYWOOD', step = k.year < 1949 ? 4 : 5;
   const x0 = -Math.round((word.length * step) / 2) + 2;
   for (let i = 0; i < word.length; i++) {
-    const dx = x0 + i * step, y = k.Y - Math.round(hAt(Math.round(dx * 0.35) + 4) * 0.6) - 5 + (i % 3 === 1 ? 1 : 0);
+    const dx = x0 + i * step, y = Math.max(k.Y - Math.round(hAt(6) * 0.62) - 5, k.Y - Math.round(hAt(dx + 1)) - 2) + (i % 3 === 1 ? 1 : 0);
     drawText(k.p, word[i], k.X + dx + 1, y + 1, C('#8a8a80'));
     drawText(k.p, word[i], k.X + dx, y, C('#fbfaf6'));
     if (k.year < 1949 || k.year >= 2000) lamp(k, k.X + dx + 1, y + 2, k.year < 1949 ? C('#fff0b8') : WARM);

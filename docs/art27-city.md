@@ -103,3 +103,42 @@ Regra dura: **sem pele de vidro antes de 1968** (sede, prédios comuns e marcos)
   "Entrar" aproxima e abre o interior; "Voltar à cidade", Esc, Ctrl + roda ou pinça afastam. Reduzir movimento = sem
   animação. O interior é pintado uma vez (sem laço de animação).
 - **Filial/escritório estrangeiro nunca no bairro:** o vizinho "rival" é só gravadora da cidade (ou do país) da sede.
+
+## 12. Céu, horizonte e marcos por cidade (r27 I2b)
+Código: `src/ui/pixel/skyline27.ts` (plano puro `skyPlan27` + pintura `renderSky27`/`paintSky27`), `src/ui/pixel/lmdata27.ts`
+(marcos só do mapa, com ano real), `src/ui/pixel/lmiso27.ts` (desenhos), `src/ui/pixel/cenas20.ts` (rampas do estilo
+oficial, trazidas do ramo `claude/arte-cenas`). Testes: `tests/r27-skyline.test.ts`.
+- **Estilo oficial** (skill `masters-artist-sprites`): cada cor vira rampa de 6 tons (sombra arroxeada → luz quente;
+  tom 5 só em material brilhante — vidro, latão); face direita no tom 2, topo e cornija no tom 4, quina vertical como
+  linha interna escura (tom 1); contorno dos marcos `#170e12`; sombra projetada arroxeada `#2a1838`. (Isto atualiza
+  o §3 para os marcos e o horizonte.)
+- **Camadas** (de trás para a frente): céu em 9 faixas pontilhadas (sem degradê liso) → nuvens de pixel (cúmulos de
+  3–6 bolhas com base reta; chuva/neve = teto com festões e bancos baixos) → serras distantes → horizonte distante →
+  água → morros → horizonte médio + assinaturas → casario perto → linha de árvores/palmeiras.
+- **Perspectiva aérea**: longe = mistura com a névoa do horizonte puxada para o violeta (`#b4a4cc`); névoa ~0,5 longe,
+  ~0,3 no meio, ~0,14 perto; chuva/neve somam +0,1. Céu claro com luz quente no horizonte (`#fff0d8`).
+- **Época**: altura máxima do centro por cidade e ano (Nova York 1913 → 1931 → 1973; Los Angeles baixa até 1957; Tóquio
+  baixa até 1964; Paris sempre baixa, com La Défense ao lado). Material pela época: tijolo/pedra → art déco → modernista
+  e concreto → **vidro só a partir de 1968** (bronze) → vidro azul (1990) → teal/branco (2020). Fuligem amarelada no céu
+  das cidades industriais antes de 1960; guindastes nos anos de expansão; mastros de TV só de 1955 a 1990.
+- **Assinaturas** (cada uma com ano): Woolworth 1913, Chrysler 1930, Citicorp 1977, One WTC 2014; St Paul's 1711,
+  Battersea 1935 (4 chaminés a partir de 1955), NatWest 1980, Canary Wharf 1991, Gherkin 2004, Shard 2012; Notre-Dame
+  (flecha 1859–2019 e de 2024), Invalides, Montparnasse 1973, La Défense crescendo desde 1966; Reichstag (cúpula até
+  1945, de vidro desde 1999), Gedächtniskirche (quebrada depois de 1943, torre azul 1961); Wrigley, Tribune, Marina City,
+  Hancock, Aon, Trump; Prefeitura de LA 1928; Copan, Banespa, Martinelli e antenas da Paulista; A Noite (Rio, 1929); e
+  ícones de Moscou, Dubai, Xangai, Kuala Lumpur, Taipé, Seul, Hong Kong, Cidade do México e Buenos Aires. As
+  assinaturas desviam (até ±40 px) dos marcos altos desenhados na frente.
+- **Relevo e água** pela geografia: San Gabriel (LA), Blue Mountains (Kingston), Fuji (Tóquio), Rainier (Seattle), Table
+  Mountain (Cidade do Cabo), Vesúvio (Nápoles), vulcões (Cidade do México), Andes (Santiago), montes de rejeito dourados
+  (Joanesburgo)…; água entre a cidade e o horizonte em baías, rios e lagoas (Nova York, Memphis, Detroit, Lagos).
+  Cidade sem cadastro: genérico pela região (igreja colonial de duas torres na América Latina, minaretes no Oriente
+  Médio e no Sahel, pagodes no Leste Asiático, cúpulas de cebola no Leste Europeu, gasômetros no Reino Unido).
+- **Marcos novos** (só no mapa, `lmdata27.ts`, ano real): Capitol Records 1956, Stax 1960–1989, Renaissance Center 1977,
+  Water Tower 1869, Sacré-Cœur 1914, Arcos da Lapa 1750 (bonde desde 1896), Devon House 1881, 56 Hope Road/Tuff Gong 1975,
+  Ponte Carter 1901, Teatro Nacional de Lagos 1976, Ponte do Terceiro Continente 1990, Torre de Sydney 1981, Partenon de
+  Nashville 1897. Redesenhados: letreiro de Hollywood (HOLLYWOODLAND até 1949), Griffith, Hollywood Bowl, Hitsville,
+  Budokan, Skytree.
+- **Noite**: janelas, luzes de aviação (≥1950), estrelas e lua vão para a camada de luz; marcos e prédios tapam o que
+  fica atrás. Entardecer/amanhecer (`dusk27`) no ciclo dia/noite.
+- **Escala**: tudo é pintado na largura real da cena (`G.mw`, de 300 a 436 px), sem larguras fixas. Cache por (cidade,
+  ano, clima, estação, tempo, tamanho, semente); ~7 ms por faixa sem cache.
