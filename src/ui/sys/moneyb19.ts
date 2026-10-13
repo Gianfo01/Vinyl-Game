@@ -4,7 +4,7 @@
 
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { CLAUSE19, auditCost19, auditMgr19, chron19, deliverJunk19, fireCost19, fireMgr19, loansOn19, mb19, myClauseActs19, npcClause19, payClause19, recall19, rivalStars19, setClause19, value19, type Clause19 } from '../../sim/sys/moneyb19';
+import { CLAUSE19, auditCost19, auditMgr19, chron19, deliverJunk19, fireCost19, fireMgr19, mb19, myClauseActs19, npcClause19, payClause19, rivalStars19, setClause19, value19, type Clause19 } from '../../sim/sys/moneyb19';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
@@ -25,17 +25,12 @@ const val = (s: GameState, id: string) => why18(s, 'mb19.value', { act: id }, $(
 /** r22: mercado aberto o ano todo (sem janelas) e sem empréstimos de artista. */
 function windowTab(s: GameState): HTMLElement {
   const mine = myClauseActs19(s);
-  const back = loansOn19(s);
   return h('div', null,
     muted(l('O mercado de contratos funciona o ano todo: a qualquer momento um rival pode fazer um lance pelos seus astros ou pagar uma cláusula de saída barata, e você pode pagar a cláusula de um astro rival. No aperto de caixa os lances ficam mais prováveis e mais baixos.', 'The contract market runs all year: at any time a rival may bid for your stars or pay a cheap exit clause, and you may pay a rival star\'s clause. When cash is tight, bids get more likely and lower.')),
     section(t(l('Seu elenco', 'Your roster')), mine.length ? h('table', { class: 'table small' },
       h('tr', null, ...[l('Ato', 'Act'), l('Valor de mercado', 'Market value')].map((x) => h('th', null, T(x)))),
       ...mine.map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, val(s, a.id)))))
       : muted(l('Nenhum ato com contrato do seu selo.', 'No acts under your label\'s contract.'))),
-    // saves antigos: empréstimos que já estavam valendo terminam normalmente
-    back.length ? section(t(l('Empréstimos antigos (terminando)', 'Old loans (ending)')), h('ul', { class: 'small' }, ...back.map((x) => h('li', null, actLink(s, x.act), ' — ',
-      x.from === 'player' ? fm(l('com {b} até a semana {w}', 'with {b} until week {w}'), { b: s.labels[x.to]?.name ?? '?', w: x.end }) : fm(l('de {b}, volta na semana {w}', 'from {b}, returns on week {w}'), { b: s.labels[x.from]?.name ?? '?', w: x.end }),
-      ' ', x.from === 'player' ? btn(fm(l('Chamar de volta (multa {p})', 'Recall (penalty {p})'), { p: $(Math.round(x.fee / 2)) }), () => say(recall19(s, x.id))) : null)))) : null,
     section(t(l('Astros dos rivais', 'Rival stars')), h('table', { class: 'table small' },
       h('tr', null, ...[l('Ato', 'Act'), l('Selo', 'Label'), l('Valor', 'Value'), l('Cláusula', 'Clause'), ''].map((x) => h('th', null, T(x)))),
       ...rivalStars19(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, s.labels[a.owner!]?.name ?? '?'), h('td', null, val(s, a.id)), h('td', null, $(npcClause19(s, a))),

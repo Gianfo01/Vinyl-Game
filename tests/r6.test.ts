@@ -8,9 +8,9 @@ import { familyOf } from '../src/data/world';
 import { traitAffinity, traitById } from '../src/data/people';
 import { createGame } from '../src/sim/worldgen';
 import { perk } from '../src/sim/perks';
-import { scoutActionsPerMonth, setStage, syncPipeline, watchAct } from '../src/sim/scouting';
+import { scoutActionsPerMonth, syncPipeline, watchAct } from '../src/sim/scouting';
 import { makeOffer, defaultOffer } from '../src/sim/contracts';
-import { deriveAttrs, persona, skills } from '../src/sim/sys/persona';
+import { deriveAttrs, persona } from '../src/sim/sys/persona';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { acceptInvestor, capital, goPublic6, injectCapital, opinion, ownerShare, payDividend, seekInvestors, valuation, withdrawFromCompany } from '../src/sim/sys/capital';
 import { rngOf } from '../src/sim/util';
@@ -27,8 +27,6 @@ describe('scouting e pipeline', () => {
     const a = Object.values(s.acts).find((x) => !x.owner && x.status !== 'retired' && !s.knowledge[x.id])!;
     expect(watchAct(s, a.id)).toBe(true);
     expect(s.knowledge[a.id].stage).toBe('monitoring');
-    expect(setStage(s, a.id, 'investigating')).toBe(true);
-    expect(setStage(s, a.id, 'offer')).toBe(false);
     makeOffer(s, defaultOffer(s, a));
     syncPipeline(s);
     expect(s.knowledge[a.id].stage).toBe('offer');
@@ -55,8 +53,6 @@ describe('persona', () => {
     const rock = Object.values(s.acts).find((x) => familyOf(x.genre) === 'rock')!;
     const sacred = Object.values(s.acts).find((x) => familyOf(x.genre) === 'sacred') ?? Object.values(s.acts).find((x) => familyOf(x.genre) !== 'rock' && familyOf(x.genre) !== 'hiphop')!;
     expect(perk(s, 'appeal', rock)).toBeGreaterThan(perk(s, 'appeal', sacred));
-    // r22: a árvore de habilidades saiu do jogo
-    expect(skills(s).owned).toEqual([]);
   });
 });
 
@@ -73,9 +69,8 @@ describe('temperamento × gênero', () => {
 });
 
 describe('cartas e mutators novos', () => {
-  it('perks de mutator aparecem; a Carta do selo saiu do jogo (r22)', () => {
+  it('perks de mutator aparecem; a Carta do selo saiu do jogo (r22; código apagado na r27)', () => {
     const s = mk('r6-cards', { card: 'hit_factory', mutators: ['harsh_critics', 'talent_flood'] });
-    expect(s.config.card).toBe('none');
     expect(perk(s, 'critics')).toBeLessThan(-0.5); // só o mutator (a carta somava −0,5)
     expect(perk(s, 'signals')).toBeGreaterThanOrEqual(2);
     for (let i = 0; i < 6; i++) advanceMonth(s);

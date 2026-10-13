@@ -1,0 +1,53 @@
+/* r27 (AUD1) — noite de olheiro: mapa da cidade à noite em blocos de pixel (theme25: --bg --panel --panel-2 --ink
+   --muted --line --accent --good --bad --warn --gold). */
+.n27m { display: grid; gap: 10px; min-width: 0; color: var(--ink); }
+.n27m-slots { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.n27m-slots li { padding: 4px 8px; border: 2px solid var(--line); border-radius: 3px; background: var(--panel-2); display: grid; min-width: 0; }
+.n27m-slots li b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.n27m-slots li.now { border-color: var(--gold); }
+.n27m-slots li.done { border-color: var(--good); }
+.n27m-cols { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; min-width: 0; }
+.n27m-map { position: relative; min-height: 300px; border: 2px solid var(--line); border-radius: 4px; overflow: hidden; image-rendering: pixelated;
+  background:
+    linear-gradient(transparent 47%, color-mix(in srgb, var(--muted) 30%, transparent) 47% 53%, transparent 53%),
+    linear-gradient(90deg, transparent 31%, color-mix(in srgb, var(--muted) 30%, transparent) 31% 35%, transparent 35% 65%, color-mix(in srgb, var(--muted) 30%, transparent) 65% 69%, transparent 69%),
+    radial-gradient(circle at 80% 12%, color-mix(in srgb, var(--gold) 55%, transparent) 0 6px, transparent 7px),
+    linear-gradient(#0b1530, #18264a); }
+.n27m-venue { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -20%); width: 27%; min-width: 88px; display: grid; justify-items: start; gap: 1px;
+  padding: 0 4px 4px; text-align: left; font: inherit; font-size: .8em; color: var(--ink); background: none; border: 0; cursor: pointer; }
+.n27m-roof { width: 100%; height: 8px; background: var(--accent); box-shadow: 3px 3px 0 rgba(0,0,0,.35); }
+.n27m-front { width: 100%; height: 26px; background: var(--panel); border: 2px solid var(--line); border-top: 0; position: relative; display: block;
+  background-image: linear-gradient(90deg, transparent 12%, color-mix(in srgb, var(--gold) 70%, transparent) 12% 24%, transparent 24% 76%, color-mix(in srgb, var(--gold) 70%, transparent) 76% 88%, transparent 88%); background-size: 100% 40%; background-repeat: no-repeat; background-position: 0 25%; }
+.n27m-door { position: absolute; left: 42%; bottom: 0; width: 16%; height: 60%; background: #2a1a10; }
+.n27m-venue b { background: var(--panel); padding: 0 3px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.n27m-venue small { color: var(--muted); background: var(--panel); padding: 0 3px; }
+.n27m-venue.k-club .n27m-roof { background: var(--good); }
+.n27m-venue.k-theater .n27m-roof { background: var(--gold); }
+.n27m-venue.k-basement .n27m-roof { background: var(--muted); }
+.n27m-venue.k-square .n27m-roof { background: transparent; box-shadow: none; }
+.n27m-venue.k-square .n27m-front { background: color-mix(in srgb, var(--good) 35%, var(--panel)); }
+.n27m-venue.sel .n27m-front { outline: 3px solid var(--gold); }
+.n27m-venue.been .n27m-door { background: var(--gold); }
+.n27m-venue:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.n27m-rival { position: absolute; top: 6px; right: 4px; width: 16px; height: 16px; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--bad); border-radius: 2px; }
+.n27m-pips { display: inline-flex; gap: 2px; vertical-align: middle; }
+.n27m-pips i { width: 6px; height: 8px; background: var(--line); }
+.n27m-pips i.on { background: var(--gold); }
+.n27m-acts { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.n27m-acts h4 { margin: 0; }
+.n27m-warn { color: var(--bad); font-weight: 400; font-size: .9em; }
+.n27m-act { padding: 8px; border: 2px solid var(--line); border-radius: 3px; background: var(--panel-2); display: grid; gap: 4px; box-shadow: 3px 3px 0 rgba(0,0,0,.25); }
+.n27m-tip { margin: 0; font-style: italic; color: var(--muted); }
+.n27m-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.n27m-res { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.n27m-res li { padding: 6px 10px; border-left: 4px solid var(--accent); background: var(--panel-2); border-radius: 2px; }
+.n27m-res li.good { border-color: var(--good); }
+.n27m-res li.bad { border-color: var(--bad); }
+.n27m-res li p { margin: 4px 0 0; }
+@media (max-width: 640px) {
+  .n27m-cols { grid-template-columns: 1fr; }
+  .n27m-map { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+  .n27m-venue { position: static; transform: none; width: auto; min-width: 0; }
+  .n27m-slots li { padding: 3px 5px; }
+}
+@media (prefers-reduced-motion: reduce) { .n27m * { transition: none !important; animation: none !important; } }

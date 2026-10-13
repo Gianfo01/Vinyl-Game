@@ -35,9 +35,9 @@ describe('r22 gravadoras', () => {
 });
 
 describe('r22 carta e origem', () => {
-  it('a Carta é sempre "none" e a origem padrão é neutra', () => {
+  it('uma Carta antiga na config não tem efeito e a origem padrão é neutra', () => {
     const s = createGame(defaultConfig('c22', { card: 'gambler' }));
-    expect(s.config.card).toBe('none');
+    expect(s.player.cash).toBe(createGame(defaultConfig('c22')).player.cash);
     expect(defaultCareers20().origin).toBe('none');
     const g = createGame(defaultConfig('o22', { careers: defaultCareers20() }));
     invariant(g);

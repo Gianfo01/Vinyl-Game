@@ -1,12 +1,11 @@
 // Mesa do mês: briefing (até 5 itens), cartões de decisão com custo/prazo/risco,
 // o que mudou, metas visíveis e rumores (GDD §6, §22, §24).
 
-import { cardById } from '../../data/rules';
 import { l } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import { acceptCounter, withdrawOffer } from '../../sim/contracts';
 import { resolveDecision } from '../../sim/events';
-import { cardGoalDone, nextGoals } from '../../sim/legacy';
+import { nextGoals } from '../../sim/legacy';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { cashDeltaL23, lastMonthView23, opResultL23 } from '../../sim/close23';
@@ -42,7 +41,6 @@ export function deskPanel(s: GameState): HTMLElement {
   const lm = lastMonthView23(s); // r23: mesmo retrato do fechamento usado na barra do topo
   const net = lm.delta;
   const myCharts = [...s.charts.singles, ...s.charts.albums].filter((e) => s.releases[e.releaseId]?.owner === 'player' || s.acts[s.releases[e.releaseId]?.actId]?.playerBand);
-  const card = cardById[s.config.card];
   return h('div', { class: 'panel desk' },
     h('div', { class: 'col-main' },
       advisorSection(s),
@@ -69,7 +67,6 @@ export function deskPanel(s: GameState): HTMLElement {
     ),
     h('aside', { class: 'col-side' },
       section(t(S.goals), h('ul', { class: 'goals' }, nextGoals(s).map((g) => h('li', null, '◻ ', t(g.text))))),
-      card && card.id !== 'none' ? section(`${t(S.card)}: ${t(card.name)}`, h('p', { class: 'small' }, t(card.passive)), h('p', null, t(S.cardGoal), ': ', t(card.goal), ' ', pill(cardGoalDone(s) || s.player.goalsDone.includes(card.id) ? t(S.done) : t(S.pending), cardGoalDone(s) ? 'good' : ''))) : null,
       s.rumors.length ? section(t(S.rumors), h('ul', { class: 'small' }, s.rumors.map((r) => h('li', null, t(r.text))))) : null,
       section(t(S.willProcess), h('ul', { class: 'small' },
         h('li', null, t(l('{n} agenda(s) de artistas', '{n} artist agenda(s)'), { n: playerActs(s).length })),

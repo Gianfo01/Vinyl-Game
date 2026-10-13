@@ -2,7 +2,7 @@
 // e festivais de revelação; mercado de demos; leilão de contratos disputado com rivais.
 
 import { clamp, type Rng } from '../core/rng';
-import { CITIES, FAMILIES, MARKETS, cityById, familyOf, l, type L, type MarketId } from '../data/world';
+import { CITIES, FAMILIES, MARKETS, cityById, familyOf, l, type L } from '../data/world';
 import { acceptOffer, defaultOffer, evaluateOffer, expectedAdvance, signWithRival } from './contracts';
 import { personName, langForCity } from './people';
 import type { GameState } from './types';
@@ -38,50 +38,9 @@ export function fireScout(s: GameState, id: string): void {
 }
 
 /** Missão: um mês na especialidade regional, dois fora dela (GDD §42.4). */
-export function sendScout(s: GameState, scoutId: string, region: MarketId, family: string): L | null {
-  const sc = s.scouts.find((x) => x.id === scoutId);
-  if (!sc) return l('Olheiro inválido.', 'Invalid scout.');
-  if (sc.mission) return l('Já está em missão.', 'Already on a mission.');
-  const weeks = sc.region === region ? 4 : 8;
-  const travel = money(s, sc.region === region ? 300 : 1200);
-  if (freeCash20(s) < travel) return cashWhy20(s, travel, l('Caixa insuficiente para a viagem.', 'Not enough cash for travel.'));
-  post(s, `scouttrip:${sc.id}`, -travel, 'scouting', `Missão ${sc.name}`);
-  sc.mission = { region, family, untilWeek: s.week + weeks };
-  return null;
-}
-
 function scoutsMonth(s: GameState, r: Rng): void {
   for (const sc of s.scouts) {
     post(s, `scoutsal:${sc.id}`, -sc.salary, 'scouting', `Salário ${sc.name}`);
-    if (!sc.mission || sc.mission.untilWeek > s.week) continue;
-    const { region, family, leads } = sc.mission;
-    // rodada 11: missão acompanhada semana a semana — o relatório final consolida as pistas já reveladas
-    const known = (leads ?? []).map((id) => s.acts[id]).filter((a) => a && s.knowledge[a.id]);
-    if (known.length) {
-      for (const a of known) s.knowledge[a.id].degree = Math.max(s.knowledge[a.id].degree, 2);
-      sc.found += known.length;
-      notify(s, fmtL(l('{n} voltou de missão com {k} nome(s).', '{n} returned from a mission with {k} name(s).'), { n: sc.name, k: known.length }), 'info');
-      sc.mission = undefined;
-      continue;
-    }
-    const matches = Object.values(s.acts).filter((a) => !a.owner && a.status !== 'retired' && a.status !== 'split' && cityById[a.city]?.market === region && (family === 'any' || familyOf(a.genre) === family) && !s.knowledge[a.id]);
-    r.shuffle(matches);
-    const n = 1 + Math.floor(sc.skill / 35);
-    let found = matches.slice(0, n);
-    if (!found.length) {
-      const city = r.pick(CITIES.filter((c) => c.market === region));
-      found = [spawnProceduralAct(s, r, { city: city.id })];
-    }
-    for (const a of found) {
-      addSignal(s, r, a.id, 'scout', { by: sc.name }); // r23
-      const k = s.knowledge[a.id];
-      // viés do profissional e grau maior que um sinal comum
-      k.bias = sc.bias + r.normal(0, Math.max(2, 12 - sc.skill / 10));
-      k.degree = sc.skill > 70 ? 3 : 2;
-    }
-    sc.found += found.length;
-    notify(s, fmtL(l('{n} voltou de missão com {k} nome(s).', '{n} returned from a mission with {k} name(s).'), { n: sc.name, k: found.length }), 'info');
-    sc.mission = undefined;
   }
 }
 

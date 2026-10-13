@@ -18,7 +18,7 @@ import { payAuthors } from './finance';
 import { superfanDebut } from './fandom';
 import type { Act, AutopsyFactor, ChartEntry, GameState, PendingRelease, Release } from './types';
 import { rng19 } from './rng19';
-import { artDelta18, fmtL, hasCard, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
+import { artDelta18, fmtL, hasMutator, hasTech, nextId, notify, post, remember, staffCount, staffSkill } from './util';
 import { songProfile } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
 import { artistRate, dealOfRelease, hasGuest, rightsOf } from './rights';
@@ -87,7 +87,6 @@ export function marketingE(s: GameState, marketing: { channel: string; budget: n
     if (owner === 'player') {
       eff *= 1 + staffSkill(s, 'publicist') / 250;
       for (const id of s.player.equipment) eff *= 1 + (EQUIPMENT.find((e) => e.id === id)?.effect.marketing ?? 0);
-      if (hasCard(s, 'digital_native') && ['playlists', 'social', 'short_clips', 'web_forums', 'neural_feed'].includes(ch.id)) eff *= 1.25;
       if (actId && MEDIA18.eff) eff *= MEDIA18.eff(s, actId, ch.id); // r18 media18: saturação e aprendizado
     }
     x += (real * eff) / ch.reachCost;
@@ -501,7 +500,6 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   const pubToPlayer = act.playerBand ? (c?.publishing && c.party !== 'player' ? 0.5 : 1) : c?.party === 'player' ? (terms ? terms.pubShare : c.publishing ? 0.5 : 0) : 0;
   if (pubToPlayer > 0) {
     let amount = Math.round(publishing * pubToPlayer * rightsLeak);
-    if (hasCard(s, 'publisher')) amount = Math.round(amount * 1.3);
     pubRoute18(s, rel, amount); // r18 (rights18): sociedades por mercado, caixa preta, caução e prazos
   }
   if (pubToPlayer < 1 && !act.playerBand) act.cash += Math.round(publishing * (1 - pubToPlayer) * 0.5);

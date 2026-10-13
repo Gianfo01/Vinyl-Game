@@ -184,10 +184,6 @@ export function hasMutator(s: GameState, id: string): boolean {
   return s.config.mutators.includes(id);
 }
 
-export function hasCard(s: GameState, id: string): boolean {
-  return s.config.card === id;
-}
-
 export function decadeOf(year: number): number {
   return Math.floor(year / 10) * 10;
 }

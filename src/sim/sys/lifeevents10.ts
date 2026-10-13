@@ -1,5 +1,5 @@
 // Eventos de vida pessoal (rodada 10): substituem os antigos "dilemas pessoais". Todo mês há uma chance
-// (guiada por traços, estilo de vida da árvore de habilidades, patrimônio, saúde/estresse, família, vícios,
+// (guiada por traços, patrimônio, saúde/estresse, família, vícios,
 // idade, época, política/religião, fama e situação do selo) de acontecer 0–1 evento (raramente 2) que
 // aparece como pop-up com 2–4 respostas. Cada resposta tem custos à vista e efeitos reais no jogo; algumas
 // têm sequência meses depois. Se o jogador avança sem responder, vale a resposta padrão (branda).
@@ -16,7 +16,7 @@ import { ownerOf } from './people/owner';
 import { energyLeft, life, spendEnergy, addKid, type Partner } from './life';
 import { vices, gainTrait, loseTrait, type ViceId } from './vices';
 import type { Owner } from './people/state';
-import { persona, skills } from './persona';
+import { persona } from './persona';
 import { EVENTS } from './lifeevents10/data';
 import { EVENTS11 } from './lifeevents10/data11';
 import { cashWhy20, freeCash20 } from '../oblig20';
@@ -32,7 +32,7 @@ export interface Fx {
   w?: number; cash?: number;
   /** reputação: artística, institucional, comercial, entre artistas */
   art?: number; ins?: number; com?: number; arts?: number;
-  love?: number; fame?: number; sp?: number; kidBond?: number; heat?: number;
+  love?: number; fame?: number; kidBond?: number; heat?: number;
   attr?: [keyof Owner['attrs'], number];
   /** pessoa do contexto: moral e ressentimento; ato do contexto: fama e fãs centrais (%) */
   mor?: number; res?: number; afame?: number; fans?: number;
@@ -74,7 +74,7 @@ export interface Def {
   ctx23?: L;
 }
 export interface Env {
-  s: GameState; year: number; age: number; o: Owner; v: Views; traits: string[]; ls: string | null;
+  s: GameState; year: number; age: number; o: Owner; v: Views; traits: string[];
   stress: number; health: number; wealth: number; cash: number; fame: number;
   partner: Partner | null; married: boolean; kids: number; dep: number; acts: Act[]; censor: boolean; sex: string;
 }
@@ -101,7 +101,7 @@ export function envOf(s: GameState): Env {
   const v = vices(s);
   const f = money(s, 1) || 1;
   return {
-    s, year: s.year, age: s.year - o.born, o, v: playerViews(s), traits: persona(s).traits, ls: skills(s).lifestyle ?? null,
+    s, year: s.year, age: s.year - o.born, o, v: playerViews(s), traits: persona(s).traits,
     stress: o.stress, health: o.health, wealth: o.wealth / f, cash: s.player.cash / f, fame: L0.fame,
     partner: L0.partner, married: L0.partner?.stage === 'married', kids: o.kids.length,
     dep: Math.max(v.dep.smoke, v.dep.drink, v.dep.drugs), acts: playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && !a.deceased && a.status !== 'retired'),
@@ -140,7 +140,6 @@ function apply(s: GameState, fx: Fx, c: LeCtx, key: string, soft = false): void 
   const L0 = life(s);
   if (fx.love && L0.partner) L0.partner.affinity = clamp(L0.partner.affinity + fx.love, 0, 100);
   if (fx.fame) L0.fame = clamp(L0.fame + fx.fame, 0, 100);
-  if (fx.sp) { const sk = skills(s); sk.points += fx.sp; sk.earned += fx.sp; }
   if (fx.kidBond) for (const k of Object.values(L0.kidsX)) k.bond = clamp(k.bond + fx.kidBond, 0, 100);
   if (fx.heat) vices(s).heat = clamp(vices(s).heat + fx.heat, 0, 100);
   if (fx.attr) { const k = fx.attr[0] as keyof Owner['attrs']; o.attrs[k] = clamp(o.attrs[k] + fx.attr[1], 5, 99); }

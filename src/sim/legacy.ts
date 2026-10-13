@@ -5,7 +5,7 @@ import { toReal } from '../core/money';
 import { HQ_LEVELS } from '../data/rules';
 import { l, type L } from '../data/world';
 import type { GameState, Release } from './types';
-import { fmtL, hasCard, notify, recordAward, remember, sum } from './util';
+import { fmtL, notify, recordAward, remember, sum } from './util';
 import { hqCaps } from './branches';
 import { campaignBonus, restrictToNominees } from './sys/ceremonies8';
 
@@ -103,41 +103,6 @@ export function nextGoals(s: GameState): Milestone[] {
   return milestones(s).filter((m) => !m.done).slice(0, 3);
 }
 
-/** Metas de cartas registradas por sistemas (rodada 6). */
-export const EXTRA_CARD_GOALS: Record<string, (s: GameState) => boolean> = {};
-
-export function cardGoalDone(s: GameState): boolean {
-  const st = s.player.stats;
-  switch (s.config.card) {
-    case 'prospector': return st.influential >= 5;
-    case 'emperor': {
-      const mine = s.player.revenueByYear[s.year - 1] ?? 0;
-      return mine > 0 && Object.values(s.labels).every((lb) => lb.revenueLastYear < mine);
-    }
-    case 'artists_house': return s.year - s.config.startYear >= 10 && st.leftUnhappy === 0;
-    case 'archivist': return s.player.reissues >= 10;
-    case 'manufacturer': return s.player.equipment.includes('own_plant') && s.player.territories.length >= 3;
-    case 'showman': return st.headlines >= 3;
-    case 'digital_native': return s.techDates.streaming !== undefined && s.year >= s.techDates.streaming && s.stats.marketShare > 0.08;
-    case 'publisher': return Object.values(s.songs).filter((x) => s.acts[x.actId]?.owner === 'player').length >= 150;
-    case 'patron': return !!s.flags.movement;
-    case 'corsair': return st.scandalsSurvived >= 1;
-    case 'globalist': return s.player.territories.length >= 7;
-    case 'synthetic_pioneer': return s.player.neural.synthActs > 0 && !!s.flags.synthNumber1;
-    default: return EXTRA_CARD_GOALS[s.config.card]?.(s) ?? false;
-  }
-}
-
-export function checkCardGoal(s: GameState): void {
-  if (s.config.card === 'none' || s.player.goalsDone.includes(s.config.card)) return;
-  if (cardGoalDone(s)) {
-    s.player.goalsDone.push(s.config.card);
-    s.player.legacy.reputation = clamp(s.player.legacy.reputation + 5, 0, 100);
-    notify(s, l('Meta da Carta do Selo cumprida!', 'Label Card goal achieved!'), 'good');
-    remember(s, 'card_goal', l('A meta pessoal da Carta do Selo foi cumprida.', 'The Label Card personal goal was achieved.'), { important: true });
-  }
-}
-
 // ---------- Finais ----------
 export function endingScores(s: GameState): { id: string; score: number }[] {
   const L = s.player.legacy;
@@ -152,7 +117,7 @@ export function endingScores(s: GameState): { id: string; score: number }[] {
   const recent = Object.values(s.releases).some((r) => r.owner === 'player' && s.year - r.year <= 5);
   const consentOk = consent && n.voiceLicenses + n.synthActs > 0;
   const scores: Record<string, number> = {
-    last_vinyl: (s.player.equipment.includes('own_plant') || hasCard(s, 'manufacturer')) && n.humanFocus >= 2 ? 50 + n.humanFocus * 2 + L.catalog * 0.05 : 0,
+    last_vinyl: s.player.equipment.includes('own_plant') && n.humanFocus >= 2 ? 50 + n.humanFocus * 2 + L.catalog * 0.05 : 0,
     house_of_masters: legends >= 2 && L.artists > 55 ? 45 + legends * 3 + L.artists * 0.1 : 0,
     live_stage: liveShare > 0.3 ? 45 + liveShare * 30 + st.headlines * 2 : 0,
     analog_manifesto: n.neuralAdopted === false && n.humanFocus >= 4 && L.cultural > 35 ? 45 + L.cultural * 0.15 + n.humanFocus * 1.5 : 0,
@@ -170,7 +135,7 @@ export function endingScores(s: GameState): { id: string; score: number }[] {
     white_noise: synth >= 3 && L.cultural < 30 ? 52 + synth : 0,
     human_renaissance: s.divergence.neural === 'rejected' && n.humanFocus >= 3 ? 42 + L.cultural * 0.2 + n.humanFocus * 1.5 : 0,
     creative_singularity: s.flags.synthNumber1 ? 66 : 0,
-    eternal_archivist: hasCard(s, 'archivist') || s.player.reissues >= 10 ? 45 + L.catalog * 0.15 + s.player.reissues : 0,
+    eternal_archivist: s.player.reissues >= 10 ? 45 + L.catalog * 0.15 + s.player.reissues : 0,
     the_silence: !recent && s.config.role !== 'artist' ? 62 : 0,
   };
   return Object.entries(scores).map(([id, score]) => ({ id, score })).sort((a, b) => b.score - a.score);
@@ -180,7 +145,6 @@ export function finishArc(s: GameState): void {
   if (s.ended) return;
   const best = endingScores(s)[0];
   s.ended = { ending: best.id, year: s.year, reason: 'arc' };
-  if (s.config.card === 'synthetic_pioneer' && ['creative_singularity', 'neural_empire', 'perfect_duet', 'licensed_choir', 'two_worlds'].includes(best.id)) s.player.goalsDone.push('synthetic_pioneer');
   remember(s, 'ending', l('Fim do Arco Neural.', 'End of the Neural Arc.'), { important: true });
 }
 

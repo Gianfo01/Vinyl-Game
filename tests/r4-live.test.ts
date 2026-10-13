@@ -14,8 +14,9 @@ import type { GameState } from '../src/sim/types';
 import {
   ACHIEVEMENTS, INCIDENTS, SCENARIOS, addToLineup, applySetlistOrder, autoLiveEnergy, autoOrder, buyVenue, challengeScore, checkAchievements, createFestival,
   curveFor, festModel, finishLiveShow, liveOf, placeTile, previewShowRevenue, resolveCard, residencyEligible, scenarioConfig, scenarioProgress, scoreCurve,
-  setNextGameSetup, startResidency, validatePack, weekKeyOf, weeklyChallenge, SAMPLE_PACK, runEdition, setFestival,
+  setNextGameSetup, startResidency, validatePack, weekKeyOf, weeklyChallenge, SAMPLE_PACK, setFestival,
 } from '../src/sim/sys/live';
+import { runEdition12, sync12 } from '../src/sim/sys/fest12';
 
 function withAct(seed: string, over = {}, fame = 30) {
   const s = createGame(defaultConfig(seed, over));
@@ -125,7 +126,7 @@ describe('ingressos', () => {
 
 describe('festival próprio', () => {
   it('monta terreno, line-up e roda a edição com caixa, notas e pensamentos', () => {
-    const { s, r, act } = withAct('live-fest', { startYear: 1970 });
+    const { s, act } = withAct('live-fest', { startYear: 1970 });
     const f = createFestival(s, 'Festival Agulha', s.config.homeCity, (s.month + 2) % 12, 2);
     expect('id' in f).toBe(true);
     if (!('id' in f)) return;
@@ -137,8 +138,10 @@ describe('festival próprio', () => {
     expect(addToLineup(s, f.id, act.id)).toBeNull();
     const m = festModel(s, f);
     expect(m.capacity).toBeGreaterThan(0);
-    const ed = runEdition(s, r, f);
-    expect(ed).not.toBeNull();
+    // r27: a edição é sempre a do ciclo do fest12 (o terreno daqui + o negócio de Empreendimentos)
+    sync12(s);
+    expect(runEdition12(s, f)).not.toBeNull();
+    const ed = f.editions.at(-1);
     expect(ed!.thoughts.length).toBeGreaterThan(0);
     expect(ed!.rating).toBeGreaterThanOrEqual(0);
     expect(f.editions.length).toBe(1);
@@ -146,13 +149,14 @@ describe('festival próprio', () => {
   });
 
   it('sem segurança a nota de segurança despenca; sem palco a edição é cancelada', () => {
-    const { s, r, act } = withAct('live-fest2', { startYear: 1990 });
+    const { s, act } = withAct('live-fest2', { startYear: 1990 });
     const f = createFestival(s, 'Sem Estrutura', s.config.homeCity, 6);
     if (!('id' in f)) throw new Error('falhou');
     addToLineup(s, f.id, act.id);
     expect(festModel(s, f).safety).toBeLessThan(40);
     placeTile(s, f.id, 5, 0, '');
-    expect(runEdition(s, r, f)).toBeNull();
+    sync12(s);
+    expect(runEdition12(s, f)).toBeNull();
     invariant(s);
   });
 });

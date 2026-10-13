@@ -8,9 +8,9 @@ import { rngOf } from '../../sim/util';
 import { ownerOf } from '../../sim/sys/people/owner';
 import { STAND_KEYS, STAND_NAME, standingOf, standingRanking } from '../../sim/sys/standing9';
 import {
-  CRISIS_NAME, GEAR, MAX_LEVEL, MEDIA, VERDICT_NAME, VKINDS, actFee, autoLineup, bookingCandidates, crisisCost, dealLabel, dropClient, dropFromLineup, favorAct, festCandidates, festCapacity,
-  foundCost, foundVenture, funds, handleCrisis, inviteAct, inviteChance, isConglomerate, kindsAvailable, lineupMax, maxGear, mediaAvailable, mgCandidates, mgCap, mgChance, mgGross, negotiateFor,
-  pitchClient, pitchSync, placeSong, pushScene, routeTour, sellVenture, setFestival, setMgOwner, setPayout, setStaff, signBooking, signWriter, takePayola, transferVenture, upgradeCost,
+  CRISIS_NAME, GEAR, MAX_LEVEL, MEDIA, VERDICT_NAME, VKINDS, bookingCandidates, crisisCost, dealLabel, dropClient, favorAct,
+  foundCost, foundVenture, funds, handleCrisis, isConglomerate, kindsAvailable, maxGear, mediaAvailable, mgCandidates, mgCap, mgChance, mgGross, negotiateFor,
+  pitchClient, pitchSync, placeSong, pushScene, routeTour, sellVenture, setMgOwner, setPayout, setStaff, signBooking, signWriter, takePayola, transferVenture, upgradeCost,
   upgradeGear, upgradeVenture, valuation, ventures, writerAdvance, writerCandidates, refusedWait9, type CrisisMove, type Holder, type MediaKind, type VKind, type Venture,
   bookingChance,
 } from '../../sim/sys/ventures9';
@@ -27,6 +27,8 @@ import { extra12 } from './ventures12';
 import { clientPanel12, managementTabs12 } from './manager12';
 import { careersPanel } from './careers12';
 import { fameText } from '../../sim/sys/fame15';
+import { f12, festOf } from '../../sim/sys/fest12';
+import { store } from '../store';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -82,27 +84,20 @@ export function foundForm(s: GameState, kind: VKind): HTMLElement {
       btn(l('Fundar', 'Found'), () => say(foundVenture(s, kind, owner, { name, city, media }), l('Negócio fundado.', 'Business founded.')), 'btn small primary')));
 }
 
+/** r27 (AUD1): o festival é um só — calendário, terreno, line-up e edições ficam na tela do festival (fest12); aqui o
+ * negócio mostra o espelho e leva até lá. */
 function festivalBody(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s);
-  const cands = festCandidates(s, v.id);
-  let pick = cands[0]?.id ?? '';
-  const months = Array.from({ length: 12 }, (_, i) => ({ value: i, label: new Date(2000, i, 1).toLocaleString(undefined, { month: 'long' }) }));
+  const f = v.fx ? festOf(s, v.fx) : undefined;
+  const x = f ? f12(s, f) : undefined;
   return h('div', null,
-    h('div', { class: 'row wrap' },
-      t(l('Mês', 'Month')), ' ', select<number>(v.month ?? 6, months, (m) => { setFestival(s, v.id, { month: m }); rerender(); }),
-      ' ', t(l('Cidade', 'City')), ' ', select<string>(v.city, CITIES.map((c) => ({ value: c.id, label: t(c.name) })), (c) => { setFestival(s, v.id, { city: c }); rerender(); }),
-      ' ', t(l('Ingresso', 'Ticket')), ' ', h('input', { type: 'number', min: 1, value: Math.round((v.price ?? 0) / 100), style: 'width:6em', onchange: (e: Event) => { setFestival(s, v.id, { price: Number((e.target as HTMLInputElement).value) * 100 }); rerender(); } }),
-      h('span', { class: 'small muted' }, ` ${t(l('Capacidade', 'Capacity'))} ${festCapacity(v).toLocaleString()}`)),
-    h('h5', null, t(l('Line-up', 'Line-up')), ` (${v.lineup!.length}/${lineupMax(v)})`),
-    v.lineup!.length ? h('ul', { class: 'small' }, v.lineup!.map((x) => h('li', null, actLink(s, x.actId), ` · ${$(x.fee)} `, btn(l('tirar', 'drop'), () => { dropFromLineup(s, v.id, x.actId); rerender(); }, 'btn tiny ghost')))) : h('p', { class: 'muted small' }, t(l('Ninguém confirmado. Sem line-up, não há edição.', 'Nobody confirmed. No line-up, no edition.'))),
-    cands.length ? h('div', { class: 'row wrap' },
-      select<string>(pick, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)}) · ${a.owner === 'player' ? t(l('seu selo', 'your label')) : a.owner ? s.labels[a.owner]?.name ?? '' : t(l('indep.', 'indie'))} · ${$(actFee(s, a))} · ${pct(inviteChance(s, v, a))}` })), (x) => (pick = x)),
-      btn(l('Convidar', 'Invite'), () => res(inviteAct(s, r, v.id, pick)), 'btn small primary'),
-      btn(l('Completar automaticamente', 'Auto-fill'), () => { const n = autoLineup(s, r, v.id); toast(t(l('{n} confirmados.', '{n} confirmed.'), { n }), 'good'); rerender(); })) : null,
-    v.editions!.length ? h('table', { class: 'tbl compact' },
-      h('thead', null, h('tr', null, ...[l('Ano', 'Year'), l('Headliner', 'Headliner'), l('Público', 'Crowd'), l('Resultado', 'Result'), l('Lucro', 'Profit')].map((x) => h('th', null, t(x))))),
-      h('tbody', null, v.editions!.slice().reverse().slice(0, 10).map((e) => h('tr', null, h('td', null, String(e.y)), h('td', null, e.head), h('td', null, e.crowd.toLocaleString()),
-        h('td', null, pill(t(VERDICT_NAME[e.verdict]), e.verdict === 'legend' ? 'good' : e.verdict === 'ok' ? '' : 'bad')), h('td', { class: e.profit < 0 ? 'bad' : 'good' }, $(e.profit)))))) : null);
+    f ? h('p', { class: 'small' }, t(l('{c} · edição em {m}/{y} · ingresso {p} · line-up {n}', '{c} · edition in {m}/{y} · ticket {p} · line-up {n}'), { c: cityName(f.cityId), m: f.month + 1, y: f.nextYear, p: $(v.price ?? 0), n: f.lineup.length }))
+      : h('p', { class: 'muted small' }, t(l('O terreno do festival é criado no fechamento do mês.', 'The festival grounds are set up at month end.'))),
+    h('button', { class: 'btn small primary', onclick: () => { store.area = 'festivals'; rerender(); } }, t(l('Abrir o festival (terreno, line-up, ingressos)', 'Open the festival (grounds, line-up, tickets)'))),
+    v.editions?.length ? h('table', { class: 'tbl compact' },
+      h('thead', null, h('tr', null, ...[l('Ano', 'Year'), l('Headliner', 'Headliner'), l('Público', 'Crowd'), l('Resultado', 'Result'), l('Lucro', 'Profit')].map((y) => h('th', null, t(y))))),
+      h('tbody', null, v.editions.slice().reverse().slice(0, 10).map((e) => h('tr', null, h('td', null, String(e.y)), h('td', null, e.head), h('td', null, e.crowd.toLocaleString()),
+        h('td', null, pill(t(VERDICT_NAME[e.verdict]), e.verdict === 'legend' ? 'good' : e.verdict === 'ok' ? '' : 'bad')), h('td', { class: e.profit < 0 ? 'bad' : 'good' }, $(e.profit)))))) : null,
+    x?.loyal ? h('p', { class: 'small muted' }, t(l('Público fiel: {n}', 'Loyal crowd: {n}'), { n: Math.round(x.loyal) })) : null);
 }
 
 function publisherBody(s: GameState, v: Venture): HTMLElement {

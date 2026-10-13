@@ -6,7 +6,6 @@ import { createGame } from '../src/sim/worldgen';
 import { cityById } from '../src/data/world';
 import { fin18 } from '../src/sim/ledger18';
 import { exploitBlock } from '../src/sim/rights';
-import { skillById } from '../src/sim/sys/persona/skills';
 import { bbTotal18, catVal18, homeMk18, openDispute18, precMonth18, precMul18, pubRoute18, r18, rate18, resolveDispute18, termWindow18 } from '../src/sim/sys/rights18';
 import type { GameState, Release } from '../src/sim/types';
 
@@ -77,11 +76,5 @@ describe('r18 rights', () => {
     two.revenue = 1000000; two.weekly = Array(52).fill(1000); two.totalUnits = 52000;
     const bal = catVal18(s, [one, two]);
     expect(bal.mult).toBeGreaterThan(conc.mult);
-  });
-
-  it('metadados limpos não dão mais bônus de vendas', () => {
-    const v = skillById.dg_meta.values as Record<string, number>;
-    expect(v.chartUnits).toBeUndefined();
-    expect(v.metadata).toBeGreaterThan(0);
   });
 });

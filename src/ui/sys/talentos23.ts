@@ -23,6 +23,8 @@ import { professionals } from '../panels/market';
 import { mergeTabs } from '../registry';
 import { getTab, ic, setTab, tabs } from '../vis';
 import './talentos23.css';
+import { playBtn27 } from '../act27/mode27';
+import { openNight27 } from '../act27/night27';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
@@ -41,7 +43,7 @@ function action(icon: string, title: L, desc: L, m: HTMLElement, ...controls: (N
 }
 
 // ---------------------------------------------------------------- PROCURAR
-const P = { city: '', fam: 'any', who: '', demoFam: 'any', ch: '' };
+const P = { city: '', fam: 'any', who: '', demoFam: 'any', ch: '', level: 'any' };
 
 function procurar(s: GameState): HTMLElement {
   if (!P.city || !cityById[P.city]) P.city = s.config.homeCity;
@@ -72,7 +74,9 @@ function procurar(s: GameState): HTMLElement {
         select<string>(P.city, cities.map((c) => ({ value: c.id, label: `${t(c.name)} · ${t(marketName23(c.market))}` })), (v) => { P.city = v; rerender(); }, { 'aria-label': t(l('Cidade', 'City')) }),
         select<string>(P.fam, famOpts(), (v) => { P.fam = v; rerender(); }, { 'aria-label': t(l('Gênero', 'Genre')) }),
         select<string>(P.who, [{ value: '', label: t(l('Freelancer', 'Freelancer')) }, ...free.map((sc) => ({ value: sc.id, label: `${sc.name} (${sc.skill})` }))], (v) => { P.who = v; rerender(); }, { 'aria-label': t(l('Quem vai', 'Who goes')) }),
-        h('button', { class: 'btn small primary', onclick: () => { say(startSceneTrip23(s, P.city, P.fam, P.who || undefined), l('Olheiro a caminho: os nomes chegam semana a semana.', 'Scout on the way: names arrive week by week.')); rerender(); } }, t(l('Mandar', 'Send')))),
+        select<string>(P.level, [{ value: 'any', label: t(l('Qualquer nível', 'Any level')) }, { value: 'beginner', label: t(l('Iniciantes', 'Beginners')) }, { value: 'promising', label: t(l('Promissores', 'Promising')) }], (v) => { P.level = v; }, { 'aria-label': t(l('Nível', 'Level')) }),
+        h('button', { class: 'btn small primary', onclick: () => { say(startSceneTrip23(s, P.city, P.fam, P.who || undefined, { level: P.level, role: 'any' }), l('Olheiro a caminho: os nomes chegam semana a semana.', 'Scout on the way: names arrive week by week.')); rerender(); } }, t(l('Mandar', 'Send'))),
+        playBtn27(l('Noite de olheiro', 'Scouting night'), openNight27, false, l('Você mesmo sai uma noite pelas casas da sua cidade (1 bolinha).', 'Go out yourself for a night around your city\'s venues (1 energy).'))),
       action('mic', l('Ir a um show você mesmo', 'Go to a show yourself'), l('Vá ao show de um nome grande da sua região e preste atenção em quem abre. Você vê de perto.', 'Go to a big name\'s show in your region and watch the opener. You see them up close.'),
         meta(shows.length ? `${$(money(s, 60 + shows[0].fame * 4))}+ · 1●` : '—', l('na hora', 'right away'), l('1 nome, grau 3 (Acompanhado)', '1 name, degree 3 (Followed)')),
         ...(shows.length ? shows.slice(0, 4).map((a) => h('button', { class: 'btn small', disabled: en < 1, title: en < 1 ? t(l('Sem tempo livre neste mês.', 'No free time this month.')) : '', onclick: () => { const r = watchShow18(s, a.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); } }, `${a.name} · ${$(money(s, 60 + a.fame * 4))}`))

@@ -40,7 +40,7 @@ describe('política e religião', () => {
     expect(pols.size).toBeGreaterThanOrEqual(5);
   });
   it('o jogador usa a escolha da ficha', () => {
-    const s = mk('r10-spec', 1990, { character: { name: 'Ana', age: 40, background: 'musician', career: 'musician', role: 'guitar', traits: [], style: 'mentor', visual: 'casual', pronoun: 'she', points: {}, sex: 'f', skills: [], politics: 'left', religion: 'umbanda' } });
+    const s = mk('r10-spec', 1990, { character: { name: 'Ana', age: 40, background: 'musician', career: 'musician', role: 'guitar', traits: [], style: 'mentor', visual: 'casual', pronoun: 'she', points: {}, sex: 'f', politics: 'left', religion: 'umbanda' } });
     const v = playerViews(s);
     expect(v.pol).toBe('left');
     expect(v.rel).toBe('umbanda');

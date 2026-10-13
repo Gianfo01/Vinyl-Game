@@ -8,12 +8,13 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { FAMILIES, cityById, familyOf, l, type L } from '../../data/world';
-import { registerExt4, registerSimHook } from '../ext4';
+import { registerExt4 } from '../ext4';
 import { emitFact } from '../facts17';
 import { VENUES19 } from '../../data/more19';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { liveOf } from './live/state';
 
 export interface VDef { id: string; name: string; city: string; cap: number; from: number; to?: number; prestige: number; price: number; fam: string; buyable?: false; note?: L }
 export const VENUES17: VDef[] = [
@@ -83,7 +84,7 @@ export function buyVenue17(s: GameState, id: string): L | null {
   if (d.buyable === false) return fmtL(l('Não está à venda: {w}.', 'Not for sale: {w}.'), { w: d.note ?? '' });
   const st = v17(s);
   if (st.own.some((o) => o.id === id)) return l('Já é sua.', 'Already yours.');
-  if (st.own.length >= 4) return l('Quatro casas é o máximo que dá para administrar.', 'Four venues is as many as you can run.');
+  if (venueCount27(s) >= MAX_VENUES27) return l('Quatro casas é o máximo que dá para administrar.', 'Four venues is as many as you can run.');
   const p = venuePrice(s, d);
   if (freeCash20(s) < p) return cashWhy20(s, p, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v17buy:${id}`, -p, 'investments', `Compra: ${d.name}`);
@@ -140,7 +141,12 @@ export function monthEst17(s: GameState, o: Own17): { att: number; net: number; 
   return { att, net: door + bar - fees - upkeep, nights, door, bar, fees, upkeep, why };
 }
 
-registerSimHook('month', 'venues17', (s) => {
+/** r27: teto único de casas (as reais compradas + a construída na carreira de casa de shows). */
+export const MAX_VENUES27 = 4;
+export const venueCount27 = (s: GameState): number => v17(s).own.length + (liveOf(s).venue ? 1 : 0);
+
+/** Mês das casas reais compradas. r27: chamado pelo fechamento único das casas (venues27). */
+export function realVenuesMonth17(s: GameState): void {
   const st = v17(s);
   for (const o of st.own) {
     const d = vdef(o.id);
@@ -188,7 +194,7 @@ registerSimHook('month', 'venues17', (s) => {
       emitFact(s, { kind: 'venue_event', actors: ['player'], place: d.city, severity: 55, visibility: 'public', tags: ['good', 'venue', 'legacy'], text: t, src: 'venues17' });
     }
   }
-});
+}
 
 /** Shows de atos seus numa casa sua (para a agenda de shows). */
 export const venueNights = (s: GameState) => v17(s).own.map((o) => ({ o, d: vdef(o.id)! })).filter((x) => x.d);

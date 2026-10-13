@@ -19,7 +19,7 @@ describe('r20c N1 — passado profissional', () => {
       setTrajectory20(neu.character, id); neu.careers.origin = 'heir';
       // caminho antigo (charCreate.drawCareer + careerCard 'identity')
       const old = base('n1');
-      old.character = { name: '', age: 30, background: 'musician', career: 'musician', role: 'guitar', traits: [], style: 'mentor', visual: 'casual', pronoun: 'they', points: {}, sex: 'x', skills: [] };
+      old.character = { name: '', age: 30, background: 'musician', career: 'musician', role: 'guitar', traits: [], style: 'mentor', visual: 'casual', pronoun: 'they', points: {}, sex: 'x' };
       old.careers = { main: ['label'], origin: 'musician', ambition: 'legacy' };
       const o = originById[id];
       old.character.career = o.id; old.character.background = o.bg; old.character.role = backgroundById[o.bg].role; old.careers.origin = 'heir';

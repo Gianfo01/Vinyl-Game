@@ -5,7 +5,8 @@ import { MARKETS } from '../data/world';
 import { acceptCounter, careerSlotsUsed, defaultOffer, evaluateOffer, makeOffer } from './contracts';
 import { fireStaff, hireStaff, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from './economy';
 import { estimateMonthlyBurn } from './events';
-import { canScout, estimate, scoutAct } from './scouting';
+import { estimate } from './scouting';
+import { nextStep23, startStep23 } from './sys/scout23';
 import type { GameState } from './types';
 import { money, playerActs, rngOf } from './util';
 import { createGame } from './worldgen';
@@ -36,9 +37,14 @@ export function botMonth(s: GameState): void {
     const ks = Object.values(s.knowledge)
       .filter((k) => s.acts[k.actId] && !s.acts[k.actId].owner && k.degree < 4)
       .sort((a, b) => (estimate(s, b.actId, 'talent')?.mid ?? s.acts[b.actId].fame) + b.degree * 4 - ((estimate(s, a.actId, 'talent')?.mid ?? s.acts[a.actId].fame) + a.degree * 4));
-    for (const k of ks.slice(0, s.player.cash > money(s, 15000) ? 3 : 1)) {
-      if (!canScout(s, k.actId).ok) break;
-      scoutAct(s, k.actId);
+    // r27: o mesmo próximo passo do funil da tela Talentos (o relatório chega em 1–2 semanas)
+    let n = s.player.cash > money(s, 15000) ? 3 : 1;
+    for (const k of ks) {
+      if (n <= 0) break;
+      const st = nextStep23(s, k.actId);
+      if (!st?.ok) continue;
+      if (startStep23(s, k.actId)) break;
+      n--;
     }
     // oferta: talento/potencial estimado e vaga na sede
     const cap = hqCaps(s).careers;
@@ -125,7 +131,6 @@ export function defaultConfig(seed: string, over: Partial<RunConfig> = {}): RunC
     startYear: 1960,
     mode: 'free',
     storyteller: 'maestro',
-    card: 'none',
     mutators: [],
     difficulty: 'normal',
     ironman: false,

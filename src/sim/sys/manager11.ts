@@ -14,6 +14,7 @@ import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { scandal } from '../scandal17';
 import { ownerOf } from './people/owner';
+import { liveOf } from './live/state';
 import { funds, grossShows, mgCap, mgChance, mgGross, mgRepGain9, ventures, type Client } from './ventures9';
 import { isActive } from './careers12';
 
@@ -244,7 +245,7 @@ export function conflictsOf(s: GameState, actId: string): L[] {
   for (const v of ventures(s).list) {
     if (v.kind === 'booking' && v.clients?.some((k) => k.actId === actId)) out.push(fmtL(l('Agenciado também pela sua agência {n} (comissão dupla).', 'Also booked by your agency {n} (double commission).'), { n: v.name }));
     if (v.kind === 'media' && v.favored === actId) out.push(fmtL(l('Favorecido pelo seu veículo {n}.', 'Favored by your outlet {n}.'), { n: v.name }));
-    if (v.kind === 'festival' && v.lineup?.some((x) => x.actId === actId)) out.push(fmtL(l('No line-up do seu festival {n}: você paga o cachê e cobra comissão.', 'On your festival {n}: you pay the fee and take a commission.'), { n: v.name }));
+    if (v.kind === 'festival' && liveOf(s).fests.some((f) => f.id === v.fx && f.lineup.some((x) => x.actId === actId))) out.push(fmtL(l('No line-up do seu festival {n}: você paga o cachê e cobra comissão.', 'On your festival {n}: you pay the fee and take a commission.'), { n: v.name }));
   }
   return out;
 }

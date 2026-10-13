@@ -17,16 +17,24 @@ import { acceptOffer, defaultOffer, evaluateOffer, makeOffer } from '../src/sim/
 import { scoutEligible20 } from '../src/sim/scout20';
 import { defaultRights } from '../src/sim/rights';
 
-let FIX: GameState; // 7º mês da semente r16pb-4 com turnês marcadas (r27 INT: r16pb-5 parou de excursionar depois dos merges do mundo)
-let AFTER: GameState; // 8º mês (modo rápido)
+let FIX: GameState; // 1º mês (a partir do 8º) da semente r16pb-4 com show jogável marcado
+let AFTER: GameState; // o mês seguinte (modo rápido)
+let MONTHS = 0; // meses jogados até AFTER
 const clone = (s: GameState): GameState => structuredClone(s);
 
 beforeAll(() => {
+  // r27 (AUD1): o bot passou a usar o motor único de scouting (e a contratar no 1º ano), então o mundo de cada semente
+  // mudou. O fixture agora é o primeiro mês ≥ 8 com show jogável; a semente r16pb-5 deixou de ter show aí perto e as
+  // calibrações abaixo variam com o show sorteado (razão de fãs 0,83–1,30 nas sementes r16pb-2..6) — r16pb-4 é o
+  // caso típico. Os valores do modo rápido foram medidos de novo.
   const s = createGame(defaultConfig('r16pb-4', { startYear: 1975, realNames: true }));
-  for (let m = 0; m < 8 && !s.ended; m++) {
+  for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
-    if (m === 7) FIX = clone(s);
+    const hit = m >= 7 && playableShows27(s, 40).length > 0;
+    if (hit) FIX = clone(s);
     advanceMonth(s);
+    MONTHS++;
+    if (hit) break;
   }
   AFTER = s;
 }, 600000);
@@ -35,7 +43,7 @@ const nan = (o: unknown): boolean => JSON.stringify(o, (_k, v) => (typeof v === 
 
 describe('r27 M2 — modo rápido intacto', () => {
   it('tourDay refatorado (playStop): mesma seed, mesmo mundo; o bot toca shows', () => {
-    // valores do mundo de 8 meses de playbot. r27 INT: rebaselinado depois dos merges do mundo (E2, F, M1, M3):
+    // valores do mundo do fixture (AUD1: 1º mês ≥ 8 com show jogável). r27 INT: rebaselinado depois dos merges do mundo (E2, F, M1, M3):
     // o tourDay de ANTES da extração (tours.ts do commit pai de 57230cb, trocado por vi.mock) e o de agora dão
     // turnês, atos, caixa e rng idênticos em r16pb-4/-2/-7 (24 shows tocados, 14 meses) — os números abaixo valem
     // para os dois.
@@ -44,7 +52,7 @@ describe('r27 M2 — modo rápido intacto', () => {
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
     expect(played).toBeGreaterThan(0);
     const again = createGame(defaultConfig('r16pb-4', { startYear: 1975, realNames: true }));
-    for (let m = 0; m < 8 && !again.ended; m++) { playMonth(again, 'balanced'); advanceMonth(again); }
+    for (let m = 0; m < MONTHS && !again.ended; m++) { playMonth(again, 'balanced'); advanceMonth(again); }
     expect(again.player.cash).toBe(AFTER.player.cash);
     expect(hashString(JSON.stringify(again.tours))).toBe(hashString(JSON.stringify(AFTER.tours)));
     expect(hashString(JSON.stringify(again.acts))).toBe(hashString(JSON.stringify(AFTER.acts)));

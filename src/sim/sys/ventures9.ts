@@ -11,7 +11,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { scandal } from '../scandal17';
-import { commW19, crisisP19, favorCost19, rivalFest19, studioComp19 } from '../ctx19';
+import { commW19, crisisP19, favorCost19, studioComp19 } from '../ctx19';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 
@@ -26,7 +26,8 @@ export interface Venture {
   pl: { y: number; m: number; rev: number; cost: number }[];
   total: number;
   // festival
-  fx?: string; month?: number; price?: number; lineup?: { actId: string; fee: number }[]; editions?: { y: number; crowd: number; profit: number; verdict: Verdict; head: string }[];
+  /** r27: festival — id do terreno/ciclo (fest12); mês, ingresso e edições são espelho escrito só pelo fest12 */
+  fx?: string; month?: number; price?: number; editions?: { y: number; crowd: number; profit: number; verdict: Verdict; head: string }[];
   // editora
   writers?: { pid: string; name: string; skill: number; until: number }[]; cat?: { title: string; actId: string; y: number; v: number; wp?: string; x?: import('./ventures12').CatX }[]; cool?: number;
   // estúdio
@@ -155,7 +156,7 @@ export function foundVenture(s: GameState, kind: VKind, owner: Holder, opts: { n
     id: nextId(s, 'vn'), kind, owner, city, level: 1, rep: 30, staff: 1, founded: s.year, cost, pl: [], total: 0,
     name: opts.name?.trim() || `${s.config.companyName} ${(md ? MEDIA[md].name : VKINDS[kind].name).pt}`,
   };
-  if (kind === 'festival') Object.assign(v, { month: 6, price: money(s, 25), lineup: [], editions: [] });
+  if (kind === 'festival') Object.assign(v, { month: 6, price: money(s, 25), editions: [] });
   if (kind === 'publisher') Object.assign(v, { writers: [], cat: [], cool: 0 });
   if (kind === 'studio') Object.assign(v, { gear: Math.max(0, maxGear(s) - 1), sound: 25, booked: [] });
   if (kind === 'booking') v.clients = [];
@@ -214,95 +215,9 @@ const activeAct = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.stat
 const ownerLabel = (s: GameState, a: Act) => (a.owner === 'player' ? s.config.companyName : a.owner ? s.labels[a.owner]?.name ?? '—' : null);
 
 // ---------------------------------------------------------------- festival
-
-export function festCapacity(v: Venture): number { return Math.round(4000 * Math.pow(v.level, 1.6)); }
-export function lineupMax(v: Venture): number { return 3 + v.level * 2; }
-export function actFee(s: GameState, a: Act): number { return money(s, 400 + Math.pow(a.fame, 2) * 12); }
-
-export function setFestival(s: GameState, id: string, o: { month?: number; price?: number; city?: string }): void {
-  const v = byId(s, id);
-  if (!v || v.kind !== 'festival') return;
-  if (o.month !== undefined) v.month = clamp(Math.round(o.month), 0, 11);
-  if (o.price !== undefined) v.price = clamp(Math.round(o.price), money(s, 3), money(s, 400));
-  if (o.city && cityById[o.city]) v.city = o.city;
-}
-
-export function festCandidates(s: GameState, id: string): Act[] {
-  const v = byId(s, id);
-  const taken = new Set(v?.lineup?.map((x) => x.actId));
-  return Object.values(s.acts).filter((a) => activeAct(a) && !taken.has(a.id) && a.fame >= 5).sort((a, b) => b.fame - a.fame).slice(0, 40);
-}
-
-export function inviteChance(s: GameState, v: Venture, a: Act): number {
-  const rivalFests = ventures(s).npc.filter((n) => n.kind === 'festival' && n.labelId === a.owner).length;
-  return clamp(0.4 + v.rep / 200 + v.level * 0.05 - Math.max(0, a.fame - v.rep) / 120 - (a.owner && a.owner !== 'player' ? 0.08 : 0) - rivalFests * 0.15 + (a.owner === 'player' ? 0.3 : 0), 0.03, 0.97);
-}
-
-export function inviteAct(s: GameState, r: Rng, id: string, actId: string): { ok: boolean; text: L } {
-  const v = byId(s, id);
-  const a = s.acts[actId];
-  if (!v || v.kind !== 'festival' || !activeAct(a)) return { ok: false, text: l('Inválido.', 'Invalid.') };
-  if (v.lineup!.length >= lineupMax(v)) return { ok: false, text: l('Line-up cheio para o tamanho do festival.', 'Line-up full for this festival size.') };
-  if (v.lineup!.some((x) => x.actId === actId)) return { ok: false, text: l('Já está no line-up.', 'Already on the bill.') };
-  if (!r.chance(inviteChance(s, v, a))) return { ok: false, text: fmtL(l('{a} recusou o convite.', '{a} turned the invite down.'), { a: a.name }) };
-  v.lineup!.push({ actId, fee: actFee(s, a) });
-  return { ok: true, text: fmtL(l('{a} confirmado no {n}.', '{a} confirmed for {n}.'), { a: a.name, n: v.name }) };
-}
-
-export function dropFromLineup(s: GameState, id: string, actId: string): void {
-  const v = byId(s, id);
-  if (v?.lineup) v.lineup = v.lineup.filter((x) => x.actId !== actId);
-}
-
-export function autoLineup(s: GameState, r: Rng, id: string): number {
-  const v = byId(s, id);
-  if (!v || v.kind !== 'festival') return 0;
-  let n = 0;
-  const pool = festCandidates(s, id).filter((a) => a.fame <= v.rep + 35);
-  for (const a of pool) { if (v.lineup!.length >= lineupMax(v)) break; if (inviteAct(s, r, id, a.id).ok) n++; }
-  return n;
-}
-
-function festivalEdition(s: GameState, r: Rng, v: Venture): void {
-  const ups = v.lineup!.map((x) => ({ x, a: s.acts[x.actId] })).filter((y) => activeAct(y.a)).sort((a, b) => b.a!.fame - a.a!.fame);
-  const cap = festCapacity(v);
-  const head = ups[0]?.a;
-  const draw = clamp(0.1 + (head?.fame ?? 0) / 130 + ups.length * 0.03 + v.rep / 250 + standingOf(s, 'player').pop / 600, 0, 1.4);
-  const ratio = (v.price ?? money(s, 25)) / money(s, 25);
-  const competition = rivalFest19(s, ventures(s).npc, { city: v.city, month: v.month ?? 6, rep: v.rep }).v; // r19: rival ponderado por distância, mês e porte
-  const rain = r.chance([0, 1, 2, 10, 11].includes(v.month!) ? 0.18 : 0.08);
-  let crowd = Math.round(Math.min(cap, cap * draw * Math.pow(ratio, -0.8) * competition * (rain ? 0.6 : 1)));
-  const disaster = r.chance(clamp(0.035 - v.level * 0.003 - v.staff * 0.003 + (crowd > cap * 0.95 ? 0.02 : 0), 0.004, 0.08));
-  if (disaster) crowd = Math.round(crowd * 0.7);
-  const fees = ups.reduce((t, y) => t + y.x.fee, 0);
-  const rev = crowd * (v.price ?? 0) + money(s, 1500 * v.level * (0.5 + v.rep / 60));
-  const cost = fees + money(s, 6000 * v.level) + (rain ? money(s, 3000 * v.level) : 0) + (disaster ? money(s, 15000 * v.level) : 0);
-  const key = `fest:${v.id}:${s.year}`;
-  vpay(s, v.owner, rev, `${key}:rev`, `Bilheteria ${v.name}`, v);
-  vpay(s, v.owner, -cost, `${key}:cost`, `Produção e cachês ${v.name}`, v);
-  const fill = crowd / cap;
-  const verdict: Verdict = disaster ? 'disaster' : fill > 0.9 && (head?.fame ?? 0) > 60 && r.chance(0.3 + v.rep / 250) ? 'legend' : fill < 0.4 ? 'flop' : 'ok';
-  v.rep = clamp(v.rep + { legend: 14, ok: 3, flop: -6, disaster: -20 }[verdict], 0, 100);
-  for (const y of ups) {
-    const a = y.a!;
-    a.fame = clamp(a.fame + (verdict === 'legend' ? 3 : verdict === 'disaster' ? 0 : 1), 0, 100);
-    a.momentum = clamp(a.momentum + (verdict === 'legend' ? 10 : 4), 0, 100);
-    a.cash += Math.round(y.x.fee * 0.7);
-  }
-  v.editions!.push({ y: s.year, crowd, profit: rev - cost, verdict, head: head?.name ?? '—' });
-  if (v.editions!.length > 30) v.editions!.shift();
-  v.lineup = [];
-  const text = verdict === 'legend'
-    ? fmtL(l('{n} {y} entra para a história: {c} pessoas, {h} no palco principal.', '{n} {y} goes down in history: {c} people, {h} headlining.'), { n: v.name, y: s.year, c: crowd, h: head?.name ?? '—' })
-    : verdict === 'disaster'
-      ? fmtL(l('{n} {y} vira desastre: {w}, feridos e manchetes. Público de {c}.', '{n} {y} turns into a disaster: {w}, injuries and headlines. Crowd of {c}.'), { n: v.name, y: s.year, c: crowd, w: rain ? l('tempestade', 'storm') : l('falha de estrutura', 'structural failure') })
-      : fmtL(l('{n} {y}: {c} pessoas ({v}){w}.', '{n} {y}: {c} people ({v}){w}.'), { n: v.name, y: s.year, c: crowd, v: VERDICT_NAME[verdict], w: rain ? l(', debaixo de chuva', ', in the rain') : '' });
-  if (verdict === 'disaster') s.player.reputation.institutional = clamp(s.player.reputation.institutional - (v.owner === 'label' ? 5 : 2), 0, 100);
-  if (verdict === 'legend') s.player.legacy.cultural = (s.player.legacy.cultural ?? 0) + 2;
-  remember(s, 'festival9', text, { important: verdict === 'legend' || verdict === 'disaster' });
-  notify(s, text, verdict === 'disaster' || verdict === 'flop' ? 'bad' : 'good');
-  log(s, text);
-}
+// r27 (AUD1): o festival próprio é UM só — o terreno/ciclo do fest12 (live.fests + fest12) é a fonte do calendário,
+// do line-up e das edições; aqui fica só o negócio (dono, caixa, equipe, nível). A antiga edição simplificada, o
+// line-up e o mês/ingresso editáveis por esta tela saíram (o fest12 espelha nome, cidade, mês e ingresso aqui).
 
 // ---------------------------------------------------------------- editora
 
@@ -784,12 +699,8 @@ registerSimHook('month', 'ventures9', (s, r) => {
   const st = ventures(s);
   for (const v of st.list) {
     vpay(s, v.owner, -upkeep(s, v), `upk:${v.id}`, `Custos fixos ${v.name}`, v);
-    if (v.kind === 'festival' && !v.fx) {
-      if (s.month === v.month && !v.editions!.some((e) => e.y === s.year)) {
-        if (v.lineup!.length) festivalEdition(s, r, v);
-        else if (s.year > v.founded) { v.rep = clamp(v.rep - 4, 0, 100); log(s, fmtL(l('{n} não teve edição este ano (line-up vazio).', '{n} skipped this year (empty line-up).'), { n: v.name })); }
-      }
-    } else if (v.kind === 'publisher') publisherMonth(s, r, v);
+    if (v.kind === 'festival') continue; // r27: o ciclo e as edições são do fest12
+    else if (v.kind === 'publisher') publisherMonth(s, r, v);
     else if (v.kind === 'studio') studioMonth(s, r, v);
     else if (v.kind === 'booking') bookingMonth(s, r, v);
     else if (v.kind === 'media') mediaMonth(s, r, v);

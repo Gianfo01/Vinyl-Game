@@ -5,14 +5,22 @@
 //  - chamada de demos: algumas demos chegam nas semanas seguintes;
 //  - próximo passo do funil com custo e tempo (o relatório chega depois, não na hora);
 //  - texto de origem ("visto no clube X por Fulano, semana 12"), incerteza (? / ~ a–b / ✓ x) e aviso de rival.
-// Estado novo em x4.scout23; campos novos de Knowledge são opcionais (saves antigos continuam válidos).
+// r27 (AUD1): é o ÚNICO motor de scouting ativo. Absorveu o que havia de bom nos antigos:
+//  - a missão de olheiro da equipe (scout11): viagem a um MERCADO inteiro com duração escolhida (4/8/12 semanas),
+//    e os relatórios das pistas sobem de grau semana a semana durante a missão (até o grau máximo da missão);
+//  - o pedido de scout com filtros (scouting.requestScout): a viagem aceita nível (iniciante/promissor) e formato
+//    (banda/solo) sem "relaxar" filtros — sem ninguém no mundo, nasce um ato que obedece; senão, sem resultado;
+//  - o aprofundar na hora (scouting.scoutAct) virou o próximo passo do funil (startStep23), com o mesmo custo.
+// scouting.ts guarda o conhecimento (graus, estimativas, boca a boca mensal); scout11 só a observação/comparação.
+// O bot usa as mesmas funções da tela Talentos. A noite de olheiro jogável fica em night27.ts.
 
 import { Rng, clamp } from '../../core/rng';
 import { CITIES, GENRES, MARKETS, cityById, familyOf, l, type L, type MarketId } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { estimate, scoutActionsPerMonth, scoutCost, sourceName } from '../scouting';
-import { scoutEligible20, signalEligible20 } from '../scout20';
+import { matchesReq20, scoutEligible20, signalEligible20, spawnPlanForReq20 } from '../scout20';
 import type { Act, GameState, Knowledge } from '../types';
+import type { Scout } from '../xtypes';
 import { dateOfDay, dayOfDate, fmtL, money, nextId, notify, post } from '../util';
 import { addSignal, spawnProceduralAct } from '../worldgen';
 import { cashWhy20, freeCash20 } from '../oblig20';
@@ -32,7 +40,13 @@ export interface Trip23 {
   until: number;
   target: number;
   found: string[];
+  /** r27: grau máximo que os relatórios das pistas alcançam durante a viagem (missão de olheiro da equipe) */
+  depth?: number;
+  /** r27: filtros do antigo pedido de scout (nível e formato) */
+  req?: TripReq23;
 }
+/** Filtros extras de uma viagem: nível ('any' | 'beginner' | 'promising') e formato ('any' | 'band' | 'solo'). */
+export interface TripReq23 { level: string; role: string }
 export interface Scout23State { trips: Trip23[]; log: { w: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { scout23: Scout23State } }
 const fresh = (): Scout23State => ({ trips: [], log: [] });
@@ -58,7 +72,7 @@ const famName = (id: string): L => (id === 'any' ? l('qualquer gênero', 'any ge
 /** Olheiros da equipe livres (sem missão antiga nem viagem r23). */
 export function freeScouts23(s: GameState) {
   const busy = new Set(scout23(s).trips.map((x) => x.scoutId).filter(Boolean));
-  return s.scouts.filter((sc) => !sc.mission && !busy.has(sc.id));
+  return s.scouts.filter((sc) => !busy.has(sc.id));
 }
 
 export interface Quote23 { cost: number; weeks: number; n: number; deg: number; by: string; skill: number }
@@ -77,7 +91,7 @@ export function sceneQuote23(s: GameState, city: string, fam: string, scoutId?: 
 }
 
 /** Manda um olheiro (ou um freelancer) a uma cena: os nomes chegam semana a semana. */
-export function startSceneTrip23(s: GameState, city: string, fam: string, scoutId?: string): L | null {
+export function startSceneTrip23(s: GameState, city: string, fam: string, scoutId?: string, req?: TripReq23): L | null {
   const c = cityById[city];
   if (!c) return l('Cidade inválida.', 'Invalid city.');
   if (scoutId && !freeScouts23(s).some((x) => x.id === scoutId)) return l('Esse olheiro já está em campo.', 'That scout is already in the field.');
@@ -87,8 +101,45 @@ export function startSceneTrip23(s: GameState, city: string, fam: string, scoutI
   const id = nextId(s, 'tr23');
   post(s, `trip23:${id}`, -q.cost, 'scouting', `Cena ${c.name.pt}`);
   const by = q.by || fmtL(l('freelancer de {c}', '{c} freelancer'), { c: c.name }).pt;
-  st.trips.push({ id, kind: 'scene', city, market: c.market as MarketId, fam, by, scoutId, skill: q.skill, start: s.week, until: s.week + q.weeks, target: q.n, found: [] });
+  const filt = req && (req.level !== 'any' || req.role !== 'any') ? req : undefined;
+  st.trips.push({ id, kind: 'scene', city, market: c.market as MarketId, fam, by, scoutId, skill: q.skill, start: s.week, until: s.week + q.weeks, target: q.n, found: [], ...(filt ? { req: filt } : {}) });
   log(s, fmtL(l('{b} foi para a cena de {c} ({f}).', '{b} went to the {c} scene ({f}).'), { b: by, c: c.name, f: famName(fam) }));
+  return null;
+}
+
+// ---------------------------------------------------------------- PROCURAR: missão de olheiro da equipe (ex-scout11)
+
+export const MISSION_WEEKS = [4, 8, 12] as const;
+/** Grau máximo que a missão alcança: curtas só observam, longas acompanham; olheiro excelente em missão longa chega à audição. */
+export function missionDepth(sc: Scout, weeks: number): number {
+  return weeks >= 12 && sc.skill >= 80 ? 4 : weeks >= 8 ? 3 : 2;
+}
+export function missionTarget(sc: Scout, weeks: number): number {
+  return 1 + Math.floor(sc.skill / 35) + (weeks >= 12 ? 1 : 0);
+}
+/** Fora da região do olheiro a missão leva +4 semanas. */
+export function missionLength(sc: Scout, region: MarketId, weeks: number): number {
+  return weeks + (sc.region === region ? 0 : 4);
+}
+export const missionCost = (s: GameState, sc: Scout, region: MarketId): number => money(s, sc.region === region ? 300 : 1200);
+/** Viagem em andamento do olheiro (missão ou cena), se houver. */
+export const tripOf23 = (s: GameState, scoutId: string): Trip23 | undefined => scout23(s).trips.find((x) => x.scoutId === scoutId);
+export function missionProgress(s: GameState, sc: Scout): number {
+  const tr = tripOf23(s, sc.id);
+  return tr ? clamp((s.week - tr.start) / Math.max(1, tr.until - tr.start), 0, 1) : 0;
+}
+/** Envia o olheiro da equipe a um MERCADO com duração e foco escolhidos: as pistas chegam e amadurecem semana a semana. */
+export function startMission(s: GameState, scoutId: string, region: MarketId, family: string, weeks: number): L | null {
+  const sc = s.scouts.find((x) => x.id === scoutId);
+  if (!sc) return l('Olheiro inválido.', 'Invalid scout.');
+  if (!freeScouts23(s).some((x) => x.id === scoutId)) return l('Já está em missão.', 'Already on a mission.');
+  const cost = missionCost(s, sc, region);
+  if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente para a viagem.', 'Not enough cash for travel.'));
+  const id = nextId(s, 'tr23');
+  post(s, `scouttrip:${sc.id}:${id}`, -cost, 'scouting', `Missão ${sc.name}`);
+  const len = missionLength(sc, region, weeks);
+  scout23(s).trips.push({ id, kind: 'scene', market: region, fam: family, by: sc.name, scoutId, skill: sc.skill, start: s.week, until: s.week + len, target: missionTarget(sc, weeks), found: [], depth: missionDepth(sc, weeks) });
+  log(s, fmtL(l('{b} partiu em missão ({m}, {f}, {w} semanas).', '{b} left on a mission ({m}, {f}, {w} weeks).'), { b: sc.name, m: marketName23(region), f: famName(family), w: len }));
   return null;
 }
 
@@ -120,11 +171,20 @@ function genreFor(s: GameState, r: Rng, fam: string): string | undefined {
 
 /** r23 (links23): pesos extras na hora de o olheiro achar alguém (gênero em alta, coro/escola…). */
 export const FIND23: ((s: GameState, a: Act, tr: Trip23) => number)[] = [];
+function reqOf(tr: Trip23) { return tr.req ? { genreFamily: tr.fam, market: tr.market, level: tr.req.level, role: tr.req.role } : undefined; }
 function tripFind(s: GameState, r: Rng, tr: Trip23): Act | undefined {
-  const cands = Object.values(s.acts).filter((a) => signalEligible20(s, a) && (tr.city ? a.city === tr.city : cityById[a.city]?.market === tr.market) && (tr.fam === 'any' || familyOf(a.genre) === tr.fam));
+  const req = reqOf(tr);
+  const cands = Object.values(s.acts).filter((a) => signalEligible20(s, a) && (tr.city ? a.city === tr.city : cityById[a.city]?.market === tr.market) && (tr.fam === 'any' || familyOf(a.genre) === tr.fam) && (!req || matchesReq20(a, req)));
   // olheiro bom enxerga potencial; o mediano vai atrás de quem já faz barulho
   const a = cands.length && r.chance(0.75) ? r.weighted(cands, (x) => (1 + (x.potential / 40) * (tr.skill / 60) + x.fame / 30) * FIND23.reduce((m, f) => m * f(s, x, tr), 1)) : undefined;
   if (a) return a;
+  if (req) {
+    // filtros não relaxam: um ato novo que obedece a todos, ou nada
+    const plan = spawnPlanForReq20(s, r, req);
+    if (!plan) return undefined;
+    const b = spawnProceduralAct(s, r, { ...plan, city: tr.city ?? plan.city });
+    return matchesReq20(b, req) ? b : undefined;
+  }
   const city = tr.city ?? r.pick(CITIES.filter((c) => c.market === tr.market)).id;
   return spawnProceduralAct(s, r, { city, genre: genreFor(s, r, tr.fam) });
 }
@@ -136,14 +196,26 @@ function tripWeek(s: GameState, tr: Trip23): void {
   while (tr.found.length < due) {
     const a = tripFind(s, r, tr);
     if (!a || s.knowledge[a.id]) break;
-    const where = tr.kind === 'demo' ? l('chamada de demos', 'demo call') : fmtL(l('cena de {c}', '{c} scene'), { c: cityById[a.city]?.name ?? a.city });
-    addSignal(s, r, a.id, tr.kind === 'demo' ? 'demo' : 'scene23', { by: tr.by, at: where, city: a.city });
+    const mission = !tr.city && tr.kind === 'scene';
+    const where = tr.kind === 'demo' ? l('chamada de demos', 'demo call') : mission ? fmtL(l('missão em {m}', 'mission in {m}'), { m: marketName23(tr.market) }) : fmtL(l('cena de {c}', '{c} scene'), { c: cityById[a.city]?.name ?? a.city });
+    addSignal(s, r, a.id, tr.kind === 'demo' ? 'demo' : mission ? 'scout' : 'scene23', { by: tr.by, at: where, city: a.city });
     const k = s.knowledge[a.id];
-    k.degree = tr.kind === 'demo' ? 2 : tr.skill >= 75 ? 3 : 2;
+    k.degree = tr.kind === 'demo' ? 2 : tr.skill >= 75 && !tr.depth ? 3 : 2;
     k.stage = 'monitoring';
-    k.bias = r.normal(0, tr.kind === 'demo' ? 10 : Math.max(2, 12 - tr.skill / 10));
+    const sc = mission && tr.scoutId ? s.scouts.find((x) => x.id === tr.scoutId) : undefined;
+    k.bias = (sc?.bias ?? 0) + r.normal(0, tr.kind === 'demo' ? 10 : Math.max(2, 12 - tr.skill / 10));
     tr.found.push(a.id);
     log(s, fmtL(l('{b}: nome novo — {a}.', '{b}: new name — {a}.'), { b: tr.by, a: a.name }));
+  }
+  // r27 (ex-scout11): durante a missão os relatórios das pistas amadurecem até o grau máximo
+  if (tr.depth) for (const id of tr.found) {
+    const k = s.knowledge[id];
+    if (!k || k.degree >= tr.depth || s.acts[id]?.owner || !r.chance(0.16 + tr.skill / 300)) continue;
+    k.degree += 1;
+    k.bias *= 0.7;
+    k.updatedWeek = s.week;
+    if (k.degree >= 3 && (k.stage === 'monitoring' || k.stage === 'signal')) k.stage = 'investigating';
+    log(s, fmtL(l('{n}: relatório de {a} chega ao grau {d}.', '{n}: report on {a} reaches degree {d}.'), { n: tr.by, a: s.acts[id]?.name ?? '?', d: k.degree }));
   }
 }
 
@@ -156,7 +228,8 @@ export function scout23Week(s: GameState): void {
     const sc = tr.scoutId ? s.scouts.find((x) => x.id === tr.scoutId) : undefined;
     if (sc) sc.found += tr.found.length;
     notify(s, tr.kind === 'demo' ? fmtL(l('Chamada de demos encerrada: {k} demo(s) no funil.', 'Demo call closed: {k} demo(s) in the funnel.'), { k: tr.found.length })
-      : fmtL(l('{n} voltou da cena de {c} com {k} nome(s).', '{n} came back from the {c} scene with {k} name(s).'), { n: tr.by, c: cityById[tr.city ?? '']?.name ?? '?', k: tr.found.length }), 'info');
+      : !tr.found.length && tr.req ? l('O olheiro voltou sem nomes: ninguém atende a todos os filtros agora.', 'The scout came back empty-handed: nobody matches every filter right now.')
+      : fmtL(l('{n} voltou de {c} com {k} nome(s).', '{n} came back from {c} with {k} name(s).'), { n: tr.by, c: tr.city ? cityById[tr.city]?.name ?? '?' : marketName23(tr.market), k: tr.found.length }), 'info');
   }
   st.trips = st.trips.filter((x) => s.week < x.until);
   // relatórios pedidos no funil chegam

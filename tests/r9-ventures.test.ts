@@ -11,10 +11,11 @@ import { life } from '../src/sim/sys/life';
 import { applyHeir, beginSuccession, heirCandidates } from '../src/sim/sys/heirs8';
 import { standingOf, standingRanking } from '../src/sim/sys/standing9';
 import {
-  autoLineup, foundVenture, inviteAct, kindsAvailable, mgCandidates, pitchClient, placeSong, signWriter, transferVenture, ventures, writerCandidates,
+  foundVenture, kindsAvailable, mgCandidates, pitchClient, placeSong, signWriter, transferVenture, ventures, writerCandidates,
 } from '../src/sim/sys/ventures9';
 import { money, post, rngOf } from '../src/sim/util';
 import type { GameState, RunConfig } from '../src/sim/types';
+import { festOf, setCal12, sync12 } from '../src/sim/sys/fest12';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
@@ -44,19 +45,20 @@ describe('empreendimentos', () => {
     invariant(s);
   });
 
-  it('festival monta line-up com artistas de qualquer selo e realiza a edição no mês marcado', () => {
+  it('r27: festival de Empreendimentos é o negócio do festival único (fest12): terreno, calendário e ingresso vêm de lá', () => {
     const s = mk('r9-v2', { startYear: 1985 });
     rich(s);
     expect(foundVenture(s, 'festival', 'personal')).toBeNull();
     const v = ventures(s).list[0];
-    v.rep = 90;
-    v.month = (s.month + 1) % 12;
-    const r = rngOf(s);
-    expect(autoLineup(s, r, v.id) + v.lineup!.length).toBeGreaterThan(0);
-    expect(inviteAct(s, r, v.id, 'nope').ok).toBe(false);
+    sync12(s);
+    const f = festOf(s, v.fx!)!;
+    expect(f).toBeTruthy();
+    setCal12(s, f.id, { month: (f.month + 3) % 12 });
+    sync12(s);
+    expect(v.month).toBe(f.month);
+    expect(v.name).toBe(f.name);
     for (let i = 0; i < 2; i++) advanceMonth(s);
-    expect(v.editions!.length).toBe(1);
-    expect(v.lineup!.length).toBe(0);
+    expect(v.pl.length).toBeGreaterThan(0); // o negócio segue com caixa e custos fixos
     invariant(s);
   });
 

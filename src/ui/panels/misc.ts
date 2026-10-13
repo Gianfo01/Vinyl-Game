@@ -4,11 +4,11 @@ import { LABEL_LEGACY20, freeCash20 } from '../../sim/oblig20';
 import { pager18 } from '../quick18';
 import { sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
-import { BRANCH_LEVELS, ENDINGS, MUTATORS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS, cardById } from '../../data/rules';
+import { BRANCH_LEVELS, ENDINGS, MUTATORS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS } from '../../data/rules';
 import { MARKETS, familyOf, l } from '../../data/world';
 import { S, locale, t } from '../../i18n/strings';
 import { availableEquipment, buyEquipment, fireStaff, loanOffer, managementLoad, monthlyCosts, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from '../../sim/economy';
-import { cardGoalDone, hqCapacityText, legacyTotal, milestones } from '../../sim/legacy';
+import { hqCapacityText, legacyTotal, milestones } from '../../sim/legacy';
 import { festivalSlot, gigEstimate, maxVenueTier } from '../../sim/live';
 import { availableChannels } from '../../sim/market';
 import { pendingFeatures, unlockCost, unlockFeature } from '../../sim/era';
@@ -472,7 +472,6 @@ function hqTab(s: GameState): HTMLElement {
 }
 
 function legacyTab(s: GameState): HTMLElement {
-  const card = cardById[s.config.card];
   return h('div', { class: 'cols' },
     h('div', { class: 'col-main' },
       section(`${t(LABEL_LEGACY20)} — ${legacyTotal(s)}`, /* r20 (B21) */ LEGACY_DIMS.map((d) => kv(t(d.name), h('span', null, Math.round(s.player.legacy[d.id]), ' ', bar(s.player.legacy[d.id]))))),
@@ -480,7 +479,6 @@ function legacyTab(s: GameState): HTMLElement {
       section(t(l('Prêmios do selo', 'Label awards')), h('ul', { class: 'small' }, s.awards.filter((a) => a.byPlayer).slice(-20).reverse().map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`)))),
     ),
     h('aside', { class: 'col-side' },
-      card && card.id !== 'none' ? section(t(card.name), h('p', null, t(card.passive)), h('p', null, t(card.goal), ' ', pill(cardGoalDone(s) || s.player.goalsDone.includes(card.id) ? t(S.done) : t(S.pending)))) : null,
       section(t(l('Fim da história', 'End of the story')), h('p', { class: 'small muted' }, t(l('Em 2040 a run termina num dos 20 finais, escolhido pelo seu legado e pelas escolhas que você fizer até lá.', 'In 2040 the run ends in one of 20 endings, chosen by your legacy and the choices you make until then.'))), h('p', { class: 'small' }, `${ENDINGS.length} ${t(l('finais possíveis', 'possible endings'))}`)),
       section(t(l('Mutators', 'Mutators')), h('p', { class: 'small' }, s.config.mutators.length ? s.config.mutators.join(', ') : t(S.none))),
       section(t(l('Run', 'Run')), kv(t(S.seed), s.config.seed), kv(t(l('Assinatura', 'Signature')), s.signature), kv(t(S.mode), s.config.mode), kv(t(S.storyteller), s.config.storyteller)),

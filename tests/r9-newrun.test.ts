@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame, takeoverCandidates } from '../src/sim/worldgen';
-import { perk } from '../src/sim/perks';
-import { BRANCHES, LIFESTYLES, SKILL_TREE, START_SKILL_POINTS, buySkill, deriveAttrs, lifestyleOf, persona, skills, validStartSkills } from '../src/sim/sys/persona';
+import { perk, perkEntries } from '../src/sim/perks';
+import { deriveAttrs } from '../src/sim/sys/persona';
 import { ORIGINS } from '../src/sim/sys/identity/data';
 import { backgroundById } from '../src/sim/sys/life/data';
 import { ownerOf } from '../src/sim/sys/people/owner';
@@ -44,45 +44,13 @@ describe('assumir gravadora existente', () => {
   });
 });
 
-describe('árvore de habilidades', () => {
-  it('r22: habilidades fora do jogo — ficha sem habilidades, compra recusada e nenhum ponto anual', () => {
-    const spec = { name: 'Ana', age: 30, background: 'producer', career: 'producer', role: 'producer' as const, traits: [], points: {}, skills: ['cr_ear', 'cr_hook', 'cr_arr'] };
+describe('árvore de habilidades (apagada na r27)', () => {
+  it('a ficha deriva os atributos sem habilidades e nenhum perk de Habilidade aparece', () => {
+    const spec = { name: 'Ana', age: 30, background: 'producer', career: 'producer', role: 'producer' as const, traits: [], points: {} };
     const s = createGame(defaultConfig('r9-skill', { character: spec }));
-    const S0 = skills(s);
-    expect(S0.owned).toEqual([]);
-    expect(S0.lifestyle).toBeNull();
     expect(ownerOf(s).attrs.ear).toBe(deriveAttrs(spec).ear);
-    S0.points = 10;
-    expect(buySkill(s, 'cr_ear')).not.toBeNull();
     for (let i = 0; i < 13; i++) advanceMonth(s);
-    expect(skills(s).owned).toEqual([]);
-  });
-
-  it('há exatamente 10 estilos de vida e cada um é alcançável', () => {
-    expect(LIFESTYLES.length).toBe(10);
-    expect(BRANCHES.length).toBe(8);
-    const all = new Set<string>();
-    const ids = SKILL_TREE.map((x) => x.id);
-    // combinações de até 3 ramos com os dois primeiros níveis
-    const firsts = BRANCHES.map((b) => SKILL_TREE.filter((x) => x.branch === b.id && x.tier <= 2).map((x) => x.id));
-    for (let a = 0; a < 6; a++) for (let b = a; b < 6; b++) for (let c = b; c < 6; c++) {
-      const ls = lifestyleOf([...new Set([...firsts[a], ...firsts[b], ...firsts[c]])]);
-      if (ls) all.add(ls);
-    }
-    expect(all.size).toBe(10);
-    expect(validStartSkills(ids)).toHaveLength(validStartSkills(ids).length);
-    expect(validStartSkills(['cr_hook', 'cr_ear'])).toEqual(['cr_ear', 'cr_hook']);
-  });
-
-  it('save antigo com perks de estilo vira pontos devolvidos', () => {
-    const s = createGame(defaultConfig('r9-migr'));
-    const P0 = persona(s);
-    delete P0.sk;
-    P0.unlocked = { mentor: 3, mogul: 1 };
-    const S0 = skills(s);
-    expect(S0.owned).toEqual([]);
-    expect(S0.points).toBe(START_SKILL_POINTS + (1 + 1 + 2) + 1);
-    expect(P0.unlocked).toEqual({});
+    expect(perkEntries(s).some((e) => /Habilidade|Estilo de vida/.test(e.label.pt))).toBe(false);
   });
 });
 

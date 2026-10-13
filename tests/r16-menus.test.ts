@@ -1,7 +1,5 @@
 // Rodada 16 — menus revistos (cada negócio com a sua página, sem duplicatas, 2 níveis) e 3 habilidades iniciais.
 import { describe, expect, it } from 'vitest';
-import { defaultConfig } from '../src/sim/bot';
-import { createGame } from '../src/sim/worldgen';
 import { l } from '../src/data/world';
 import { CAREER_NAV, type NavGroup } from '../src/ui/careernav13';
 import { HOME_EXTRA16, ORDER16, groupOf16, navGroups16 } from '../src/ui/careernav16';
@@ -12,7 +10,6 @@ const ALL17 = [...NAV17.flatMap((g) => g.secs.flatMap((s) => s.areas)), ...ORDER
 /** Rodada 17: o menu do jogo é navGroups17 (os navGroups antigos ficam só para saves/compatibilidade). */
 const menu17 = (active: string[]) => navGroups17({ active, pages: active, has: (a) => ALL17.includes(a), all: ALL17 });
 
-import { skills } from '../src/sim/sys/persona';
 
 const BASE: NavGroup[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'calendar', areas: ['cockpit', 'plan', 'goals', 'diary'] },
@@ -71,10 +68,5 @@ describe('menus r16', () => {
     expect(groupOf17(both, 'cp17-festival').id).toBe('you');
     expect(groupOf17(both, 'festivals').id).toBe('events');
     void resolve17;
-  });
-  it('r22: nenhuma habilidade no começo do jogo (árvore removida)', () => {
-    const s = createGame(defaultConfig('r16-sk', { character: { name: 'A', age: 30, background: 'producer', career: 'producer', role: 'producer', traits: [], points: {}, skills: ['cr_ear', 'cr_hook', 'cr_arr'] } }));
-    expect(skills(s).owned).toHaveLength(0);
-    expect(skills(s).points).toBe(0);
   });
 });

@@ -32,6 +32,7 @@ import { sess18 } from './session18';
 import { deals18 } from './deals18';
 import { ventures, type VKind } from './ventures9';
 import { v17, vdef } from './venues17';
+import { myVenues27 } from './venues27';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 // ---------------------------------------------------------------- tipos
@@ -524,8 +525,7 @@ export function ambient18(s: GameState): { k: Amb18; at: string; why: L }[] {
   if (ar.length) out.push({ k: 'police', at: 'hq', why: ar[ar.length - 1].text });
   const aw = rf('award', 2);
   if (aw.length || sc.length) out.push({ k: 'press', at: 'hq', why: (aw[aw.length - 1] ?? sc[sc.length - 1]).text });
-  for (const o of v17(s).own) if (o.last?.nights) out.push({ k: 'show', at: `ve:${o.id}`, why: l('Noite de show: fila na porta.', 'Show night: a queue at the door.') });
-  if (liveOf(s).venue) out.push({ k: 'show', at: 'lv:venue', why: l('Noite de show: fila na porta.', 'Show night: a queue at the door.') });
+  for (const v of myVenues27(s)) if (v.src === 'built' || v.last?.att) out.push({ k: 'show', at: v.key, why: l('Noite de show: fila na porta.', 'Show night: a queue at the door.') }); // r27: lista única
   for (const id of Object.keys(campus18(s).dmg)) out.push({ k: 'smoke', at: id, why: campus18(s).dmg[id].why });
   // r19 (world19): dia de festival = multidão no terreno
   for (const v of ventures(s).list) if (v.kind === 'festival' && v.month === s.month) out.push({ k: 'crowd', at: `v:${v.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: v.name }) });

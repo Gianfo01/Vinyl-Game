@@ -14,7 +14,7 @@ import { makeAct, makePerson, langForCity } from './people';
 import type { Act, Decision, GameState } from './types';
 import { rng19 } from './rng19';
 import { CONFLICTS19 } from './conflicts19';
-import { withPlayerActsCache, fmtL, type Param, hasCard, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
+import { withPlayerActsCache, fmtL, type Param, hasMutator, hasTech, money, nextId, notify, playerActs, post, remember, rngOf, staffSkill } from './util';
 import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
 import { MORE_EVENTS } from './events_more';
@@ -440,7 +440,7 @@ export const EVENTS: EventDef[] = [
     title: l('Oferta "por fora" de um DJ', 'An under-the-table offer from a DJ'),
     text: l('Um DJ de rádio influente promete tocar "{releaseTitle}" a cada hora... mediante pagamento.', 'An influential radio DJ promises to spin "{releaseTitle}" every hour... for a fee.'),
     options: [
-      { id: 'pay', label: l('Pagar', 'Pay'), hint: l('Ajuda agora; risco de descoberta e consequência persistente.', 'Helps now; risk of discovery and lasting consequences.'), apply: (s, _r, c) => { pay(s, `payola:${c.release}`, hasCard(s, 'corsair') ? 1500 : 3000, 'marketing', 'Divulgação (?)'); const rel = s.releases[String(c.release)]; if (rel) rel.marketingE = Math.min(0.95, rel.marketingE + 0.25); const m = remember(s, 'payola', l('O selo pagou um DJ por execuções.', 'The label paid a DJ for spins.')); s.flags.payola = m.week; } },
+      { id: 'pay', label: l('Pagar', 'Pay'), hint: l('Ajuda agora; risco de descoberta e consequência persistente.', 'Helps now; risk of discovery and lasting consequences.'), apply: (s, _r, c) => { pay(s, `payola:${c.release}`, 3000, 'marketing', 'Divulgação (?)'); const rel = s.releases[String(c.release)]; if (rel) rel.marketingE = Math.min(0.95, rel.marketingE + 0.25); const m = remember(s, 'payola', l('O selo pagou um DJ por execuções.', 'The label paid a DJ for spins.')); s.flags.payola = m.week; } },
       { id: 'refuse', label: l('Recusar', 'Refuse'), apply: (s) => rep(s, 'institutional', 1) },
     ],
   },
@@ -448,7 +448,7 @@ export const EVENTS: EventDef[] = [
     id: 'payola_exposed', cat: 'scandal', tone: 'bad', tags: ['crime'], cooldown: 36,
     find: (s, r) => {
       if (!s.flags.payola || s.week - s.flags.payola < 20) return null;
-      return r.chance(hasCard(s, 'corsair') ? 0.15 : 0.3) ? {} : null;
+      return r.chance(0.3) ? {} : null;
     },
     title: l('Escândalo do jabá', 'Payola scandal'),
     text: l('Uma investigação revelou pagamentos do selo a DJs. Causa: o acordo feito meses atrás.', 'An investigation uncovered the label\'s payments to DJs. Cause: the deal made months ago.'),
@@ -604,7 +604,7 @@ export const EVENTS: EventDef[] = [
     title: l('Explode a cena: {genreName} em {cityName}', 'Scene explodes: {genreName} in {cityName}'),
     text: l('Vários atos, clubes e rádios sustentam um movimento. Quem estiver lá agora surfa a onda.', 'Several acts, clubs and radio sustain a movement. Whoever is there now rides the wave.'),
     options: [
-      { id: 'invest', label: l('Apoiar a cena (patrocínio)', 'Back the scene (sponsorship)'), hint: l('Custo; sinais de scouting na cidade.', 'Cost; scouting signals in the city.'), apply: (s, r, c) => { pay(s, `scene:${c.scene}`, hasCard(s, 'patron') ? 1500 : 4000, 'marketing', 'Apoio à cena'); s.flags[`scene:${c.scene}`] = 1; s.genrePop[String(c.genre)] = clamp((s.genrePop[String(c.genre)] ?? 1) + 0.35, 0, 2.2); rep(s, 'artistic', 3); for (const a of Object.values(s.acts).filter((x) => x.city === c.city && !x.owner && !s.knowledge[x.id]).slice(0, 3)) s.knowledge[a.id] = { actId: a.id, degree: 2, stage: 'monitoring', bias: r.normal(0, 5), updatedWeek: s.week, source: 'scene' }; if (hasCard(s, 'patron')) s.player.goalsDone.includes('patron') || s.flags.movement ? null : (s.flags.movement = 1); remember(s, 'movement', fmtL(l('Nasce um movimento: {g} em {ci}.', 'A movement is born: {g} in {ci}.'), { g: genreById[String(c.genre)]?.name ?? String(c.genre), ci: cityById[String(c.city)]?.name ?? String(c.city) }), { important: true }); } },
+      { id: 'invest', label: l('Apoiar a cena (patrocínio)', 'Back the scene (sponsorship)'), hint: l('Custo; sinais de scouting na cidade.', 'Cost; scouting signals in the city.'), apply: (s, r, c) => { pay(s, `scene:${c.scene}`, 4000, 'marketing', 'Apoio à cena'); s.flags[`scene:${c.scene}`] = 1; s.genrePop[String(c.genre)] = clamp((s.genrePop[String(c.genre)] ?? 1) + 0.35, 0, 2.2); rep(s, 'artistic', 3); for (const a of Object.values(s.acts).filter((x) => x.city === c.city && !x.owner && !s.knowledge[x.id]).slice(0, 3)) s.knowledge[a.id] = { actId: a.id, degree: 2, stage: 'monitoring', bias: r.normal(0, 5), updatedWeek: s.week, source: 'scene' }; remember(s, 'movement', fmtL(l('Nasce um movimento: {g} em {ci}.', 'A movement is born: {g} in {ci}.'), { g: genreById[String(c.genre)]?.name ?? String(c.genre), ci: cityById[String(c.city)]?.name ?? String(c.city) }), { important: true }); } },
       { id: 'watch', label: l('Só observar', 'Just watch'), apply: (s, _r, c) => { s.flags[`scene:${c.scene}`] = 1; s.genrePop[String(c.genre)] = clamp((s.genrePop[String(c.genre)] ?? 1) + 0.25, 0, 2.2); } },
     ],
   },

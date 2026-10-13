@@ -1,6 +1,6 @@
-// Persona do jogador (rodada 6; rodada 9: árvore de habilidades e estilo de vida derivado): traços escolhidos,
-// gênero favorito, cidade natal, visual, pronome e apelido. Os atributos do dono derivam de origem +
-// traços + estilo + visual + pontos livres. Tudo vira perks (src/sim/perks.ts) que mexem na simulação.
+// Persona do jogador (rodada 6): traços escolhidos, gênero favorito, cidade natal, visual, pronome e apelido.
+// Os atributos do dono derivam de origem + traços + visual + pontos livres (a árvore de habilidades e o estilo de
+// vida saíram na r22 e o código foi apagado na r27; saves antigos com `sk` só carregam o campo morto). Tudo vira perks (src/sim/perks.ts) que mexem na simulação.
 // Também: válvulas de escape quando o estresse estoura (CK3 Stress) e herança do ouvido absoluto.
 
 import { clamp, type Rng } from '../../core/rng';
@@ -11,16 +11,10 @@ import type { CharacterSpec, GameState } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { backgroundById, life, playerPerson, type BackgroundId } from './life';
 import { ownerOf } from './people/owner';
-import { PLAYER_TRAITS, STYLES, playerTraitById, styleById, visualById, type OwnerAttrId, type StyleId } from './persona/data';
-import { BRANCHES, BRANCH_OF_STYLE, START_SKILL_POINTS, YEARLY_SKILL_POINTS, autoSkills, canBuySkill, lifestyleById, lifestyleOf, skillById, validStartSkills, type LifestyleId } from './persona/skills';
+import { PLAYER_TRAITS, playerTraitById, styleById, visualById, type OwnerAttrId, type StyleId } from './persona/data';
 import { ORIGIN_OF_BACKGROUND, originById, type OriginId } from './identity/data';
 
 export * from './persona/data';
-export * from './persona/skills';
-
-/** r22: a árvore de Habilidades saiu do jogo (pedido de design). Nada é comprado, ganho ou aplicado; saves antigos
- * guardam o estado, mas as habilidades e o estilo de vida deixam de dar bônus. */
-export const SKILLS_OFF22 = true;
 
 export type CopingId = 'drink' | 'overwork' | 'recluse' | 'meditation' | 'shopping';
 export const COPING: Record<CopingId, { name: L; desc: L }> = {
@@ -48,21 +42,6 @@ export interface PersonaState {
   history: { week: number; text: L }[];
   /** rodada 9 */
   sex?: 'm' | 'f' | 'x';
-  sk?: SkillState;
-}
-
-export interface SkillState {
-  owned: string[];
-  points: number;
-  /** total já ganho (criação + anos + marcos + reembolso) */
-  earned: number;
-  milestones: string[];
-  lastYear: number;
-  lifestyle: LifestyleId | null;
-  /** rodada 13: conquistas já pagas (ids), pontos por fonte e diário de pontos */
-  ach?: string[];
-  achPts?: Record<string, number>;
-  achLog?: { week: number; text: L }[];
 }
 
 declare module '../ext4' {
@@ -70,6 +49,10 @@ declare module '../ext4' {
     persona: PersonaState;
   }
 }
+
+/** Estilos sorteados em jogos sem ficha — a ordem e o tamanho (8) repetem a antiga lista de ramos, para o sorteio
+ * consumir o Rng compartilhado igual e os mundos não mudarem. */
+const RANDOM_STYLE: StyleId[] = ['mogul', 'hitmaker', 'curator', 'showman', 'mentor', 'schemer', 'mentor', 'mentor'];
 
 const fresh = (): PersonaState => ({ traits: [], style: 'mentor', xp: 0, unlocked: {}, visual: 'casual', pronoun: 'they', coping: [], copingPrompt: false, history: [] });
 registerExt4('persona', fresh);
@@ -89,7 +72,6 @@ export function deriveAttrs(spec: CharacterSpec): Record<OwnerAttrId, number> {
   add(backgroundById[spec.background as BackgroundId]?.owner);
   for (const t of spec.traits ?? []) add(playerTraitById[t]?.attrs);
   add(originById[careerOfSpec(spec)]?.attrs);
-  if (!SKILLS_OFF22) for (const id of validStartSkills(spec.skills ?? [])) add(skillById[id]?.attrs);
   add(visualById[spec.visual ?? '']?.attrs);
   add(spec.points);
   for (const k of Object.keys(a) as OwnerAttrId[]) a[k] = clamp(Math.round(a[k]), 10, 95);
@@ -131,13 +113,6 @@ function applyPersona(s: GameState, r: Rng): void {
     P0.motto = spec.motto?.trim().slice(0, 120) || undefined;
     const attrs = deriveAttrs({ ...spec, background: life(s).background });
     o.attrs = { ...attrs };
-    if (SKILLS_OFF22) initSkills(s, [], 0);
-    else {
-      const picked = validStartSkills(spec.skills ?? []);
-      const owned = picked.length || spec.skills ? picked : autoSkills(BRANCH_OF_STYLE[P0.style] ?? 'net', START_SKILL_POINTS);
-      if (owned !== picked) for (const id of owned) addAttrs(s, skillById[id].attrs);
-      initSkills(s, owned, START_SKILL_POINTS - owned.reduce((t, id) => t + skillById[id].cost, 0));
-    }
     const car = originById[careerOfSpec({ ...spec, background: life(s).background })];
     if (car?.rep) s.player.reputation.institutional = clamp(s.player.reputation.institutional + car.rep, 0, 100);
   } else {
@@ -147,15 +122,9 @@ function applyPersona(s: GameState, r: Rng): void {
       const t = r.pick(pool);
       if (!P0.traits.includes(t.id) && !P0.traits.some((x) => playerTraitById[x]?.opposite === t.id)) P0.traits.push(t.id);
     }
-    const br = r.pick(BRANCHES).id;
-    P0.style = (Object.keys(BRANCH_OF_STYLE).find((k) => BRANCH_OF_STYLE[k] === br) ?? 'mentor') as StyleId;
+    // estilo sorteado (mesmo sorteio de 8 opções da antiga árvore: não muda o fluxo compartilhado do Rng)
+    P0.style = r.pick(RANDOM_STYLE);
     P0.hometown = s.config.homeCity;
-    if (SKILLS_OFF22) initSkills(s, [], 0);
-    else {
-      const owned = autoSkills(br, START_SKILL_POINTS);
-      for (const id of owned) addAttrs(s, skillById[id].attrs);
-      initSkills(s, owned, START_SKILL_POINTS - owned.reduce((t, id) => t + skillById[id].cost, 0));
-    }
   }
   // traços viram traços da pessoa (o temperamento puxa o gênero da própria banda)
   const p = playerPerson(s);
@@ -196,10 +165,6 @@ registerPerkSource('persona', (s) => {
     if (d.perks) out.push({ label: fmtL(l('Traço: {t}', 'Trait: {t}'), { t: d.name }), values: d.perks });
     if (d.families) out.push({ label: fmtL(l('Traço: {t}', 'Trait: {t}'), { t: d.name }), values: d.families.perks, act: famFilter(d.families.ids) });
   }
-  const S0 = skills(s);
-  if (!SKILLS_OFF22) for (const id of S0.owned) { const d = skillById[id]; if (d && Object.keys(d.values).length) out.push({ label: fmtL(l('Habilidade: {p}', 'Ability: {p}'), { p: d.name }), values: d.values }); }
-  const ls = S0.lifestyle && !SKILLS_OFF22 ? lifestyleById[S0.lifestyle] : undefined;
-  if (ls) out.push({ label: fmtL(l('Estilo de vida: {s}', 'Lifestyle: {s}'), { s: ls.name }), values: ls.values, act: ls.act });
   // trajetórias novas (rodada 9): efeitos declarativos; as antigas seguem em identity.ts
   const org = originById[((s.x4 as unknown as { ident?: { origin?: OriginId } }).ident?.origin ?? '') as OriginId];
   if (org?.perks) out.push({ label: fmtL(l('Trajetória: {o}', 'Background: {o}'), { o: org.name }), values: org.perks });
@@ -221,103 +186,9 @@ registerPerkSource('persona', (s) => {
   return out;
 });
 
-// ---------------------------------------------------------------- árvore de habilidades (rodada 9)
-
-/** Marcos que valem +1 ponto de habilidade (uma vez cada). */
-export const SKILL_MILESTONES: { id: string; name: L; test: (s: GameState) => boolean }[] = [
-  { id: 'top10', name: l('Primeiro top 10', 'First top 10'), test: (s) => s.player.stats.top10s >= 1 },
-  { id: 'no1', name: l('Primeiro nº 1', 'First number 1'), test: (s) => s.player.stats.number1s >= 1 },
-  { id: 'gold', name: l('Primeiro disco de ouro', 'First gold record'), test: (s) => s.player.stats.gold >= 1 },
-  { id: 'platinum', name: l('Primeiro disco de platina', 'First platinum record'), test: (s) => s.player.stats.platinum >= 1 },
-  { id: 'award', name: l('Primeiro prêmio', 'First award'), test: (s) => s.player.stats.awards >= 1 },
-  { id: 'festival', name: l('Primeiro festival', 'First festival'), test: (s) => s.player.stats.festivals >= 1 },
-  { id: 'releases10', name: l('10 lançamentos', '10 releases'), test: (s) => s.player.stats.releases >= 10 },
-  { id: 'signed5', name: l('5 contratações', '5 signings'), test: (s) => s.player.stats.signed >= 5 },
-  { id: 'markets3', name: l('Presença em 3 mercados', 'Present in 3 markets'), test: (s) => s.player.stats.marketsPresent >= 3 },
-  { id: 'headline', name: l('Primeira manchete', 'First headline'), test: (s) => s.player.stats.headlines >= 1 },
-];
-
-/** Pontos de reembolso por perk antigo (índice 0..5 da árvore de estilo). */
-const REFUND = [1, 1, 2, 2, 2, 3];
-
-function initSkills(s: GameState, owned: string[], points: number): SkillState {
-  const P0 = persona(s);
-  P0.sk = { owned, points, earned: START_SKILL_POINTS, milestones: SKILL_MILESTONES.filter((m) => m.test(s)).map((m) => m.id), lastYear: s.year - 1, lifestyle: lifestyleOf(owned) };
-  return P0.sk;
-}
-
-/** Estado da árvore; saves antigos convertem os perks de estilo em pontos devolvidos. */
-export function skills(s: GameState): SkillState {
-  const P0 = persona(s);
-  if (P0.sk) return P0.sk;
-  const refund = STYLES.reduce((t, st) => t + REFUND.slice(0, P0.unlocked[st.id] ?? 0).reduce((a, b) => a + b, 0), 0);
-  P0.unlocked = {};
-  P0.xp = 0;
-  const st = initSkills(s, [], refund + START_SKILL_POINTS);
-  st.earned = refund + START_SKILL_POINTS;
-  bumpPerks();
-  return st;
-}
-
-function addAttrs(s: GameState, a?: Partial<Record<OwnerAttrId, number>>): void {
-  if (!a) return;
-  const o = ownerOf(s);
-  for (const [k, v] of Object.entries(a)) o.attrs[k as OwnerAttrId] = clamp(o.attrs[k as OwnerAttrId] + (v ?? 0), 5, 99);
-}
-
-/** Compra uma habilidade. Devolve erro ou null. */
-export function buySkill(s: GameState, id: string): L | null {
-  if (SKILLS_OFF22) return l('Habilidades não fazem mais parte do jogo.', 'Abilities are no longer part of the game.');
-  const S0 = skills(s);
-  const d = skillById[id];
-  if (!d) return l('Habilidade desconhecida.', 'Unknown ability.');
-  if (S0.owned.includes(id)) return l('Você já tem essa habilidade.', 'You already have that ability.');
-  if (!d.req.every((x) => S0.owned.includes(x))) return l('Falta um pré-requisito.', 'A prerequisite is missing.');
-  if (!canBuySkill(S0.owned, S0.points, id)) return l('Pontos insuficientes.', 'Not enough points.');
-  S0.owned.push(id);
-  S0.points -= d.cost;
-  addAttrs(s, d.attrs);
-  const before = S0.lifestyle;
-  S0.lifestyle = lifestyleOf(S0.owned);
-  if (S0.lifestyle && S0.lifestyle !== before) {
-    const text = fmtL(l('Seu estilo de vida agora é {s}.', 'Your lifestyle is now {s}.'), { s: lifestyleById[S0.lifestyle].name });
-    persona(s).history.unshift({ week: s.week, text });
-    notify(s, text, 'good');
-    remember(s, 'life', fmtL(l('{o} virou {s}.', '{o} became {s}.'), { o: ownerOf(s).name, s: lifestyleById[S0.lifestyle].name }));
-  }
-  bumpPerks();
-  return null;
-}
-
-function skillsMonth(s: GameState): void {
-  if (SKILLS_OFF22) return;
-  const S0 = skills(s);
-  for (const m of SKILL_MILESTONES) {
-    if (S0.milestones.includes(m.id) || !m.test(s)) continue;
-    S0.milestones.push(m.id);
-    S0.points += 1;
-    S0.earned += 1;
-    notify(s, fmtL(l('Marco: {m}. +1 ponto de habilidade (Você → Habilidades).', 'Milestone: {m}. +1 ability point (You → Abilities).'), { m: m.name }), 'good');
-  }
-  let hp = S0.lifestyle ? lifestyleById[S0.lifestyle].health ?? 0 : 0;
-  for (const id of S0.owned) hp += skillById[id]?.health ?? 0;
-  if (hp) { const o = ownerOf(s); o.health = clamp(o.health + hp, 0, 100); }
-}
-
-registerSimHook('year', 'persona:skills', (s) => {
-  if (SKILLS_OFF22) return;
-  const S0 = skills(s);
-  if (S0.lastYear >= s.year) return;
-  S0.lastYear = s.year;
-  S0.points += YEARLY_SKILL_POINTS;
-  S0.earned += YEARLY_SKILL_POINTS;
-  notify(s, fmtL(l('+{n} pontos de habilidade com mais um ano de estrada (Você → Habilidades).', '+{n} ability points for another year on the road (You → Abilities).'), { n: YEARLY_SKILL_POINTS }), 'good');
-});
-
 registerSimHook('month', 'persona', (s, r) => {
   const P0 = persona(s);
   const o = ownerOf(s);
-  skillsMonth(s);
   // renda pessoal (fundo da família, dividendos, frugalidade)
   const w = perkSum(s, 'wealth');
   if (w) o.wealth += money(s, w);

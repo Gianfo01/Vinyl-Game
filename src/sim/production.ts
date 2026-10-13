@@ -8,7 +8,7 @@ import { APPROACHES, EQUIPMENT, FORMATS, STUDIO_TIERS, type FormatId } from '../
 import { l, type L, type MarketId } from '../data/world';
 import { actLang, actState, actTalent, songTitle, traitMod } from './people';
 import type { Act, GameState, PendingRelease, Release, Song } from './types';
-import { fmtL, hasCard, hasTech, money, nextId, notify, post, staffSkill } from './util';
+import { fmtL, hasTech, money, nextId, notify, post, staffSkill } from './util';
 import { forecastUnits } from './market';
 import { hqCaps } from './branches';
 import { takeIdea } from './repertoire';
@@ -107,7 +107,6 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
   const producer = payer === 'player' ? staffSkill(s, 'producer') * 0.22 : 8 + tier * 2;
   const own = payer === 'player' && tier === 0 ? ownStudioProduction(s) + hqCaps(s).sessions * 2 : 0;
   const engineerFix = payer === 'player' ? staffSkill(s, 'engineer') / 25 : 2;
-  const showman = hasCard(s, 'showman') && payer === 'player' ? -3 : 0;
   const cost = recordingCost(s, tier, approach, songIds.length);
   const done: Song[] = [];
   for (const id of songIds) {
@@ -119,7 +118,7 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
     const mood = (st.morale - 50) / 8 - st.fatigue / 12;
     song.performance = clamp(perfBase + mood + ap.perf + r.normal(0, 6), 5, 100);
     const techIssue = r.chance(Math.max(0.02, 0.12 - engineerFix * 0.03)) ? -r.int(4, 12) : 0;
-    song.production = clamp(eraProductionBase(s) + studio.production + own + producer + t.prod * 0.18 + ap.prod + techIssue + showman + r.normal(0, 5), 5, 100);
+    song.production = clamp(eraProductionBase(s) + studio.production + own + producer + t.prod * 0.18 + ap.prod + techIssue + r.normal(0, 5), 5, 100);
     song.originality = clamp(song.originality + ap.originality, 0, 100);
     song.q = songQ(song);
     // equipe da casa (especialistas, química): ajusta os atributos da faixa
@@ -181,7 +180,6 @@ export function pressingCost(s: GameState, formats: FormatId[], units: number): 
   let discount = 0;
   for (const id of s.player.equipment) discount += EQUIPMENT.find((e) => e.id === id)?.effect.pressing ?? 0;
   discount += staffSkill(s, 'manufacturing') / 400;
-  if (hasCard(s, 'manufacturer')) discount += 0.1;
   // r18 final (balanço): tiragem grande sai mais barata por unidade (economia de escala real das fábricas):
   // até −20% a partir de ~150 mil unidades
   discount += Math.min(0.2, Math.max(0, Math.log10(Math.max(1, units) / 10000)) * 0.17);

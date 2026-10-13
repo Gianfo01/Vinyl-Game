@@ -162,7 +162,7 @@ export const scenarioById = Object.fromEntries(SCENARIOS.map((x) => [x.id, x])) 
 const roleOf23 = (main: string[]): RunConfig['role'] => (!main.includes('musician') ? 'label' : main.includes('label') ? 'hybrid' : 'artist');
 
 export function scenarioConfig(def: ScenarioDef, base: RunConfig): RunConfig {
-  const cfg: RunConfig = { ...base, startYear: def.startYear, homeCity: def.homeCity, scenario: def.scenario, role: def.role ?? 'label', mode: 'historic', mutators: [], card: 'none', bandGenre: def.bandGenre ?? base.bandGenre };
+  const cfg: RunConfig = { ...base, startYear: def.startYear, homeCity: def.homeCity, scenario: def.scenario, role: def.role ?? 'label', mode: 'historic', mutators: [], bandGenre: def.bandGenre ?? base.bandGenre };
   // r23: cenário de profissão — carreiras principais e o papel que delas decorre
   if (def.careers?.length) { cfg.careers = { main: [...def.careers], origin: 'none', ambition: 'legacy' }; cfg.role = def.role ?? roleOf23(def.careers); }
   return cfg;
@@ -215,7 +215,7 @@ export function weeklyChallenge(week: string, base: RunConfig): { cfg: RunConfig
   const mut2 = MUTATORS[hashString(week + 'm2') % MUTATORS.length];
   const mutators = [...new Set([mut1.id, mut2.id])];
   const difficulty = (['easy', 'normal', 'hard'] as const)[hashString(week + 'd') % 3];
-  const cfg: RunConfig = { ...base, seed: `semana-${week}`, startYear, homeCity: city.id, card: 'none', mutators, difficulty, mode: 'free', role: 'label', scenario: 'from_zero', ironman: true };
+  const cfg: RunConfig = { ...base, seed: `semana-${week}`, startYear, homeCity: city.id, mutators, difficulty, mode: 'free', role: 'label', scenario: 'from_zero', ironman: true };
   const rules: L[] = [
     fmtL(l('Início: {y} em {c}', 'Start: {y} in {c}'), { y: startYear, c: city.name }),
     fmtL(l('Mutadores: {m}', 'Mutators: {m}'), { m: { pt: mutators.map((id) => MUTATORS.find((x) => x.id === id)!.name.pt).join(', '), en: mutators.map((id) => MUTATORS.find((x) => x.id === id)!.name.en).join(', ') } }),

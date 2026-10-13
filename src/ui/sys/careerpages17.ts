@@ -12,7 +12,7 @@ import { liveOf } from '../../sim/sys/live/state';
 import { TIERS, notoTier, notoriety } from '../../sim/sys/notoriety14';
 import { prod, studios } from '../../sim/sys/studio12';
 import { c12, hasAgency } from '../../sim/sys/tour12';
-import { v17 } from '../../sim/sys/venues17';
+import { hasVenue27 } from '../../sim/sys/venues27';
 import { ventures } from '../../sim/sys/ventures9';
 import type { GameState } from '../../sim/types';
 import { ADVISOR_EXTRA } from '../advisor';
@@ -43,7 +43,7 @@ export function pageVisible17(s: GameState, id: string): boolean {
     case 'manager': return ventures(s).mg.clients.length > 0;
     case 'booking': return !!hasAgency(s) || !!c12(s).promoter?.on;
     case 'festival': return owns(s, 'festival') || liveOf(s).fests.length > 0;
-    case 'venue': return !!liveOf(s).venue || v17(s).own.length > 0;
+    case 'venue': return hasVenue27(s); // r27: lista única de casas (construída + reais)
     case 'studio': return studios(s).length > 0 || !!prod(s).on;
     case 'publisher': case 'media': case 'platform': return owns(s, id);
     case 'musician': return Object.values(s.acts).some((a) => a.playerBand && a.status !== 'retired' && a.status !== 'split');
