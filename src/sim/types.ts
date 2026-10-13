@@ -63,6 +63,10 @@ export interface RunConfig {
   /** r29: nível dos rivais escolhido na Nova run (id de rivals29data.ts: zero, emerging, mid, hipster, established, giants,
    *  leader); ausente = "mistura realista" (o mundo de sempre: testes, bot, saves antigos) */
   rivals29?: string;
+  /** r29: gravadoras da Nova run — quantas no início (atalho ou número exato), reais × inventadas, porte, região,
+   *  frequência de selos novos durante a run, fechamentos/fusões e concorrentes da carreira (labels29gate.ts);
+   *  ausente = o mundo de sempre */
+  labels29?: import('./labels29gate').Labels29;
   scenario17?: string;
   preset17?: string;
   /** rodada 20 (G8, src/sim/worldpolicy20.ts): versões do esquema e da política de mundo; ausentes = configuração
