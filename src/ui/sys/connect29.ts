@@ -9,7 +9,8 @@ import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { crime17, orgById } from '../../sim/sys/crime17';
 import { tieOf } from '../../sim/sys/crimenpc17';
-import { LINK29, linksOfKey29 } from '../../sim/sys/orglinks29'; // r29 Submundo: fonte única pessoa ↔ organização
+import { actAff29 } from '../../sim/sys/aff29'; // r29: facções × cenas
+import { LINK29, LINKSIM29, linksOfKey29 } from '../../sim/sys/orglinks29'; // r29 Submundo: fonte única pessoa ↔ organização
 import { ent27 } from '../ps/ent27';
 import { careerActs29, personFeats29 } from '../../sim/sys/connect29';
 import { items18 } from '../../sim/sys/inbox18';
@@ -52,6 +53,16 @@ function relicsAwards(s: GameState, ids: string[], pid?: string): HTMLElement | 
     aw.length ? h('ul', { class: 'small' }, ...aw.map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`, a.actId && s.acts[a.actId] ? [' · ', actLink(s, a.actId)] : null))) : null);
 }
 
+/** r29: facções que rondam a CENA do ato (gênero + país) — afinidade cultural, nunca afirmação sobre as pessoas. */
+function sceneAff(s: GameState, a: Act): HTMLElement | null {
+  const xs = actAff29(s, a);
+  if (!xs.length) return null;
+  return section(t(l('A cena e o submundo', 'The scene and the underworld')), h('ul', { class: 'small' }, ...xs.map((x) => h('li', null,
+    h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, t(x.org.name)), ' — ', t(x.scene), ' ', pill(t(x.doc ? l('cena documentada', 'documented scene') : l('afinidade de jogo', 'game affinity')), x.doc ? 'trait' : ''),
+    h('div', { class: 'muted' }, t(x.note))))),
+    h('p', { class: 'small muted' }, t(l('É uma afinidade da cena: não diz que o artista ou as pessoas dele pertencem à facção.', 'This is a scene affinity: it does not say the act or its people belong to the faction.'))));
+}
+
 function underworld(s: GameState, acts: Act[], keys: string[], linkKey?: string): HTMLElement | null {
   const st = crime17(s), ks = new Set(keys);
   // r29 (Submundo): ligações com organizações pela fonte única (orglinks29) — a mesma do card da organização
@@ -62,7 +73,7 @@ function underworld(s: GameState, acts: Act[], keys: string[], linkKey?: string)
   if (!links.length && !ties.length && !feuds.length && !log.length) return null;
   return section(t(l('Submundo', 'Underworld')),
     links.length ? h('ul', { class: 'small' }, ...links.map((x) => { const o = orgById(s, x.o); return h('li', null,
-      h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, o ? t(o.name) : x.o), ' ', pill(t(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''),
+      h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, o ? t(o.name) : x.o), ' ', pill(t(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''), x.sim ? pill(t(LINKSIM29), 'warn') : null,
       x.y ? ` ${x.y}` : '', x.via && s.acts[x.via] ? [` · ${t(l('via', 'via'))} `, actLink(s, x.via)] : null,
       h('div', { class: 'muted' }, t(x.text))); })) : null,
     ties.length ? h('p', { class: 'small' }, ...ties.flatMap((x) => [actLink(s, x.a.id), ` ${t(l('ligado(a) a', 'tied to'))} `, h('b', null, t(x.o!.name)), ' ']) ) : null,
@@ -89,7 +100,7 @@ PERSON_TABS.push((s, p: Person) => {
 registerPageTab('act', { id: 'connect29', label: l('Conexões', 'Connections'), icon: 'handshake', order: 86, render: (s, id) => {
   const a = s.acts[id];
   if (!a) return h('div');
-  const xs = [mailOf(s, id), underworld(s, [a], [id, ...a.members, ...a.members.map((x) => `p:${x}`)], id)].filter((x): x is HTMLElement => !!x);
+  const xs = [mailOf(s, id), underworld(s, [a], [id, ...a.members, ...a.members.map((x) => `p:${x}`)], id), sceneAff(s, a)].filter((x): x is HTMLElement => !!x);
   return xs.length ? h('div', null, ...xs) : h('p', { class: 'muted small' }, t(l('Nada registrado em outros sistemas ainda.', 'Nothing recorded in other systems yet.')));
 } });
 

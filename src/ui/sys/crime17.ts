@@ -13,8 +13,10 @@ import {
   returnHot, ricoName, sellHot, setSecurity, targetBlock17, targetId17, targetsFor, trialOdds, usd, type Ctx17, type Plea,
 } from '../../sim/sys/crime17';
 import { targetPicker29 } from './crimepick29'; // r29: seletor de alvo com busca (todos os personagens)
-import { JOBS29, METER29, askDef29, asks29, doMob29, era29, fulfill29, hire29, hireOdds29, meter29, mobActs29, peek29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
-import { LINK29, orgLinks29 } from '../../sim/sys/orglinks29';
+import { delay29, jobTarget29, jobsFor29, METER29, askDef29, asks29, doMob29, era29, fulfill29, hire29, hireOdds29, meter29, mobActs29, peek29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
+import { LINK29, LINKSIM29, orgLinks29 } from '../../sim/sys/orglinks29';
+import { AWCAT29, awCatsOn29 } from '../../sim/sys/rig29'; // r29: votação de prêmio comprada
+import { orgAff29 } from '../../sim/sys/aff29'; // r29: facções × cenas
 import { fmtL } from '../../sim/util';
 import { GONE23, RANK23, ROLE23, density23, name23, orgPower23 } from '../../sim/sys/crimemem23';
 import { WARN_REPLY, cutTie, payOffCost, replyWarn, tieAct, tieOf, truce, truceCost, type WarnReply } from '../../sim/sys/crimenpc17';
@@ -49,7 +51,7 @@ function orgsTab(s: GameState): HTMLElement {
   const st = crime17(s);
   const strict = histMode(s) === 'strict';
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');
-  const list = orgs17(s).sort((a, b) => (b.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) - (a.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) || b.power - a.power);
+  const list = orgs17(s, false, true).sort((a, b) => (b.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) - (a.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) || b.power - a.power);
   const feuds = Object.entries(st.feud).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', null,
     h('p', { class: 'muted small' }, T(l(
@@ -69,6 +71,8 @@ function orgsTab(s: GameState): HTMLElement {
         // r29 (Submundo): relação visível, época, ligações (fonte única orglinks29), pedidos e interações (mob29)
         meterRow29(s, o.id),
         h('p', { class: 'small muted' }, T(era29(s, o).text)),
+        // r29: facções × gêneros e cenas (afinidade cultural; nunca afirmação sobre pessoas)
+        ...orgAff29(s, o.id).map((x) => h('p', { class: 'small' }, pill(T(x.doc ? l('cena documentada', 'documented scene') : l('afinidade de jogo', 'game affinity')), x.doc ? 'trait' : ''), ` ${T(x.scene)} — `, h('span', { class: 'muted' }, T(x.note)))),
         membersBox(s, o.id),
         asksBox29(s, o.id),
         h('details', { class: 'small' }, h('summary', null, `${T(l('Negócios com a família', 'Dealings with the family'))} (${mobActs29(s, o.id).filter((x) => !x.block).length}/${mobActs29(s, o.id).length})`), h('div', { class: 'row wrap' },
@@ -77,7 +81,9 @@ function orgsTab(s: GameState): HTMLElement {
           (st.vend[o.id] ?? 0) > s.week ? pill(T(l('querem vingança', 'want revenge')), 'bad') : null,
         )),
         h('details', { class: 'small' }, h('summary', null, T(l('Contratar a família para…', 'Hire the family to…'))), h('div', { class: 'row wrap' },
-          ...JOBS29.map((j) => btn(j.name, () => { presetHire29(o.id, j.c); setTab('crime17', 'plans'); rerender(); }, { cls: 'ghost', title: l('Abre Planos com a família como executora: escolha o alvo, veja chance, taxa e o favor devido.', 'Opens Plans with the family as executor: pick the target, see odds, fee and the favor owed.') })))),
+          ...jobsFor29(o).map((j) => j.c.startsWith('x:')
+            ? btn(j.name, () => { const t = jobTarget29(s, o.id, j.id); if (!t) { say(l('Sem alvo possível agora: use o menu de ações de um artista (clique direito).', 'No possible target now: use an act\'s action menu (right-click).'), 'bad'); return; } const r = hire29(s, o.id, j.id, t); say(r.text, r.ok ? 'good' : 'bad'); }, { cls: 'ghost', title: l('Executa direto no alvo possível (seu artista ou o escolhido no menu de ações).', 'Runs directly on the possible target (your act or the one picked in the action menu).') })
+            : btn(j.name, () => { presetHire29(o.id, j.c, j.m); setTab('crime17', 'plans'); rerender(); }, { cls: 'ghost', title: l('Abre Planos com a família como executora: escolha o alvo, veja chance, taxa e o favor devido.', 'Opens Plans with the family as executor: pick the target, see odds, fee and the favor owed.') })))),
         mobLog29(s, o.id),
         (o.kind === 'gang' || o.kind === 'cartel' || o.kind === 'firm') && mine.length ? h('div', { class: 'row wrap' },
           h('small', { class: 'muted' }, T(l('Seu artista de rua com eles:', 'Your street artist with them:'))),
@@ -99,7 +105,7 @@ function orgsTab(s: GameState): HTMLElement {
  *  busca: ligação documentada · membro (com posto/função e o que você sabe) · associado · deve favor · inimizade · sócio. */
 function membersBox(s: GameState, oid: string): HTMLElement {
   const st = crime17(s);
-  const o = orgs17(s).find((x) => x.id === oid)!;
+  const o = orgById(s, oid)!;
   const links = orgLinks29(s, oid);
   const mem = st.mem23 ?? {};
   const gone = (st.gone23 ?? []).filter((g) => g.o === oid && g.how === 'informant');
@@ -110,7 +116,7 @@ function membersBox(s: GameState, oid: string): HTMLElement {
     links.length ? h('ul', null, links.map((x) => {
       const m = x.kind === 'member' ? mem[x.key] : undefined;
       return h('li', null,
-        whoLink29(s, x.key), ' ', pill(T(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''),
+        whoLink29(s, x.key), ' ', pill(T(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''), x.sim ? pill(T(LINKSIM29), 'warn') : null,
         x.y ? ` ${x.y}` : '',
         m ? [` — ${T(RANK23[m.rk])}, ${T(ROLE23[m.ro])} `, pill(m.k === 2 ? T(l('confirmado', 'confirmed')) : T(l('boato', 'rumor')), m.k === 2 ? 'bad' : 'warn')] : null,
         x.key.startsWith('s:') ? pill(T(l('sua equipe', 'your staff')), 'trait') : null,
@@ -144,6 +150,7 @@ function asksBox29(s: GameState, oid: string): HTMLElement | null {
       h('p', { class: 'small muted' }, `${T(d.fx)} · ${T(l('prazo: semana', 'deadline: week'))} ${a.dl}`),
       h('div', { class: 'row wrap' },
         btn(a.k === 'job' ? l('Aceitar', 'Accept') : l('Cumprir', 'Do it'), () => { const r = fulfill29(s, a.id); say(r.text, r.ok ? 'good' : 'bad'); }, { cls: 'primary' }),
+        !a.delay && !['job', 'baile', 'homage'].includes(a.k) ? btn(l('Negociar prazo (+4 sem.)', 'Negotiate (+4 wk)'), () => { const r = delay29(s, a.id); say(r.text, r.ok ? 'info' : 'bad'); }) : null,
         btn(l('Recusar', 'Refuse'), () => { const r = refuse29(s, a.id); say(r.text, 'bad'); }, { title: a.k === 'job' ? l('Sem consequência (por ora).', 'No consequence (for now).') : l('A dívida continua e a família escala: ameaça → sabotagem → violência.', 'The debt stands and the family escalates: threat → sabotage → violence.') })));
   }));
 }
@@ -170,11 +177,13 @@ function plansTab(s: GameState): HTMLElement {
   const executors = [{ value: 'player', label: `${T(l('Você', 'You'))} (${s.config.companyName})` },
     ...playerActs(s).flatMap((id) => s.acts[id]?.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).map((m) => ({ value: m, label: `${s.persons[m].name} (${s.acts[id].name})` })) ?? [])];
   // r29 (Submundo): "Contratar a família" — a organização executa (mob29.hire29), com taxa e favor devido
-  executors.push(...orgs17(s).filter((o) => !((st.down[o.id] ?? 0) > s.week)).map((o) => ({ value: `hire:${o.id}`, label: `${T(l('Contratar', 'Hire'))} ${T(o.name)} (${T(l('a família executa', 'the family does it'))})` })));
+  executors.push(...orgs17(s, false, true).filter((o) => !((st.down[o.id] ?? 0) > s.week)).map((o) => ({ value: `hire:${o.id}`, label: `${T(l('Contratar', 'Hire'))} ${T(o.name)} (${T(l('a família executa', 'the family does it'))})` })));
   if (!executors.some((x) => x.value === form.actor)) form.actor = 'player';
   const hireO = form.actor.startsWith('hire:') ? form.actor.slice(5) : '';
-  const ctx: Ctx17 = { actor: hireO ? 'player' : form.actor, target: form.target, method: d.methods ? form.method : undefined, org: hireO ? undefined : form.org || undefined, partners: hireO ? [] : form.partners };
-  const ho = hireO && form.target ? hireOdds29(s, hireO, d.id, form.target, ctx.method) : null;
+  const cats = d.id === 'award_rig' ? awCatsOn29(s) : [];
+  if (cats.length && !cats.includes(form.cat as never)) form.cat = cats[0];
+  const ctx: Ctx17 = { actor: hireO ? 'player' : form.actor, target: form.target, method: d.methods ? form.method : undefined, org: hireO ? undefined : form.org || undefined, partners: hireO ? [] : form.partners, ...(cats.length ? { cat: form.cat } : {}) };
+  const ho = hireO && form.target ? hireOdds29(s, hireO, d.id, form.target, ctx.method, ctx.cat) : null;
   const od = !form.target ? null : ho ? { p: ho.p, q: ho.q, cost: ho.cost, heat: ho.heatYou, sev: d.sev, a3: ho.a3, block: ho.block,
     why: [...ho.why, fmtL(l('Taxa da família {f} · você fica devendo um favor ({v}/100) que eles vão cobrar', 'Family fee {f} · you will owe a favor ({v}/100) they will call in'), { f: usd(ho.fee), v: ho.favor })] } : crimeOdds(s, ctx, d.id);
   const tb = form.target ? targetBlock17(s, d, form.target, hireO ? 'player' : form.actor) : null; // r29: alvo fora, com o motivo
@@ -196,6 +205,7 @@ function plansTab(s: GameState): HTMLElement {
         select<string>(form.c, CRIMES17.map((c) => ({ value: c.id, label: `${T(c.name)}${c.extra ? ' ★' : ''}` })), (v) => { form.c = v; const nd = crimeById(v); if (!nd || !form.target || targetBlock17(s, nd, form.target, form.actor)) form.target = ''; rerender(); }),
         select<string>(form.actor, executors, (v) => { form.actor = v; rerender(); }, { title: T(l('Quem executa: você ou um artista seu (os traços e a fama dele contam; a exposição cai sobre ele).', 'Who carries it out: you or one of your artists (their traits and fame count; exposure falls on them).')) }),
         d.methods ? select<string>(form.method, d.methods.map((m) => ({ value: m.id, label: T(m.name) })), (v) => { form.method = v; rerender(); }) : null,
+        cats.length ? select<string>(form.cat ?? cats[0], AWCAT29.filter((c) => cats.includes(c.id)).map((c) => ({ value: c.id, label: T(c.name(s)) })), (v) => { form.cat = v; rerender(); }, { title: T(l('Qual prêmio (indicação e noite da cerimônia).', 'Which award (nomination and ceremony night).')) }) : null, // r29: votação comprada
         select<string>(form.org, [{ value: '', label: T(l('Sem organização', 'No organization')) }, ...orgs17(s).filter((o) => (st.down[o.id] ?? 0) < s.week).map((o) => ({ value: o.id, label: `${T(o.name)} (${T(countryName(o.a3))})` }))], (v) => { form.org = v; rerender(); }),
       ),
       h('div', { class: 'row wrap' }, targetPicker29(s, d, form, (id) => { form.target = id; rerender(); }, form.actor)), // r29: todos os personagens
@@ -210,7 +220,7 @@ function plansTab(s: GameState): HTMLElement {
         chips(stat('sparkle', P(od.p), l('Chance de sucesso', 'Success odds')), stat('warning', P(od.q), l('Risco de exposição', 'Exposure risk')), stat('money', T(usd(od.cost)), l('Custo', 'Cost')), stat('fire', `+${od.heat}`, l('Calor', 'Heat')), stat('skull', od.sev, l('Gravidade', 'Severity'))),
         h('p', { class: 'small' }, `${T(l('Por quê', 'Why'))}: ${od.why.map(T).join(' · ') || '—'}`),
         h('p', { class: 'small muted' }, fmtTxt(l('Calor em {a}: {h}. Sucesso sem exposição = segredo (só testemunhas sabem e guardam isso contra você). Exposto = boato/manchete, escândalo com reação regional, caso policial, mágoa da vítima e rivalidade.', 'Heat in {a}: {h}. Success without exposure = a secret (only witnesses know, and keep it against you). Exposed = rumor/headline, scandal with regional reaction, police case, the victim\'s grievance and rivalry.'), countryName(od.a3)).replace('{h}', String(heatIn(s, od.a3)))),
-        blk ? h('p', { class: 'small bad' }, T(blk)) : hireO ? btn(fmtL(l('Contratar {o}', 'Hire {o}'), { o: orgById(s, hireO)?.name ?? hireO }), () => { const r = hire29(s, hireO, d.id, form.target, ctx.method); say(r.text, r.ok ? 'good' : 'bad'); }, { cls: 'primary' }) : btn(heistOn27(d.id) && screenOn27('heist', s, { data: { cid: d.id } }) ? l('🎮 Executar (planejar)', '🎮 Execute (plan)') : l('Executar', 'Execute'), () => {
+        blk ? h('p', { class: 'small bad' }, T(blk)) : hireO ? btn(fmtL(l('Contratar {o}', 'Hire {o}'), { o: orgById(s, hireO)?.name ?? hireO }), () => { const r = hire29(s, hireO, d.id, form.target, ctx.method, ctx.cat); say(r.text, r.ok ? 'good' : 'bad'); }, { cls: 'primary' }) : btn(heistOn27(d.id) && screenOn27('heist', s, { data: { cid: d.id } }) ? l('🎮 Executar (planejar)', '🎮 Execute (plan)') : l('Executar', 'Execute'), () => {
           // r27 FLOW: um caminho só — quando a operação é jogável, "Executar" abre o plano (com "executar direto" dentro)
           if (screen27('heist', s, { data: { cid: d.id, ctx } }, () => exec27())) return;
           exec27();

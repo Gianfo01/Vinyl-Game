@@ -44,12 +44,14 @@ export const isRegional19 = (cat: string): boolean => cat.startsWith('reg_') || 
 
 /** r19 (calendário real): roda no fechamento de cada mês e entrega só os prêmios cuja cerimônia é neste mês e que já
  *  existem (ano de fundação do dado). Premia o ano homenageado (cerimônias do 1º semestre = ano anterior). */
+/** r29 (Submundo): ajuste externo da nota do Prêmio da Crítica por lançamento (júri comprado, rig29). Vazio = nada muda. */
+export const CRITIC_ADJ29: ((s: GameState, relId: string, actId: string) => number)[] = [];
 export function yearlyAwards2(s: GameState, r: Rng): void {
   const at = (cat: string) => { const c = calOf19(cat); return s.month === c.month && s.year >= c.start; };
   const year = honoredYear19(s.year, s.month);
   const rels = releasesNow27(s).filter((x) => x.year === year && x.totalUnits > 0);
   // crítica: melhor média de resenhas
-  const critic = at('critics') ? rels.map((x) => ({ x, v: avgReview(s, x.id) ?? 0 })).filter((y) => y.v > 0).sort((a, b) => b.v - a.v)[0] : undefined;
+  const critic = at('critics') ? rels.map((x) => ({ x, v: (avgReview(s, x.id) ?? 0) + (CRITIC_ADJ29.length && (avgReview(s, x.id) ?? 0) > 0 ? CRITIC_ADJ29.reduce((t, f) => t + f(s, x.id, x.actId), 0) : 0) })).filter((y) => y.v > 0).sort((a, b) => b.v - a.v)[0] : undefined;
   if (critic) {
     const act = s.acts[critic.x.actId];
     give(s, year, 'critics', l('Prêmio da Crítica', "Critics' Prize"), `${act?.name ?? '?'} — ${critic.x.title}`, { actId: act?.id, releaseId: critic.x.id, byPlayer: critic.x.owner === 'player' || !!act?.playerBand });
