@@ -1,0 +1,36 @@
+/* R29 — Nova run completa no estilo do Atlas (Parte IX, NR01–NR06). Só apresentação; tokens ui27, ícones pixel existentes. */
+.ng21 .nr29-hero { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-4); align-items: center;
+  padding: var(--sp-4) var(--sp-5); border: 1px solid var(--line); border-radius: calc(var(--radius) + 2px); background: linear-gradient(90deg, var(--panel) 55%, var(--panel-2, var(--panel))); margin-bottom: var(--sp-3); }
+.nr29-kick { margin: 0 0 var(--sp-1); color: var(--accent); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.nr29-title { margin: 0; font-size: clamp(1.6rem, 1.1rem + 1.5vw, 2.4rem); font-weight: 800; line-height: 1.1; }
+.nr29-sub { margin: var(--sp-2) 0 0; color: var(--muted); max-width: 70ch; }
+.nr29-tx::after { content: ''; display: block; width: 44px; height: 3px; margin-top: var(--sp-3); background: var(--accent); border-radius: 2px; }
+.nr29-art { display: flex; align-items: center; gap: var(--sp-4); }
+.nr29-q { max-width: 16ch; font-size: var(--fs-xs); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); border-left: 3px solid var(--accent); padding-left: var(--sp-2); }
+.nr29-ic { display: grid; place-items: center; width: 120px; height: 120px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg, var(--panel-2)); }
+.nr29-ic canvas, .nr29-ic img { image-rendering: pixelated; }
+/* etapas numeradas (círculo) com a atual sublinhada em dourado */
+.ng21 .ng-tabs .ng-tab .ng21-ic { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); font-weight: 800; font-family: var(--mono); }
+.ng21 .ng-tabs .ng-tab.on { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+.ng21 .ng-tabs .ng-tab.on .ng21-ic { border-color: var(--accent); background: var(--accent); color: var(--on-tone, #10202e); }
+.ng21 .ng-tabs .ng-tab.done .ng21-ic { border-color: var(--good); color: var(--good); }
+/* resumo lateral como cartão do Atlas */
+.ng21 .ng-side > h3 { padding-left: var(--sp-3); border-left: 4px solid var(--accent); }
+.nr29-confirm { display: grid; gap: var(--sp-2); margin-top: var(--sp-3); }
+.nr29-confirm h4 { margin: 0; padding-left: var(--sp-3); border-left: 4px solid var(--accent); font-size: var(--fs-lg); }
+.nr29-cf { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2, var(--panel)); }
+.nr29-cf > div { display: flex; flex-direction: column; min-width: 0; }
+.nr29-cf span { overflow-wrap: anywhere; }
+.nr29-note { padding: var(--sp-2) var(--sp-3); border: 1px solid var(--t-info-fg); border-radius: var(--radius); background: var(--t-info-bg); }
+/* revisão: grupos como cartões com borda dourada à esquerda */
+.ng21 .ng20-group { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: var(--sp-2) var(--sp-3); margin: var(--sp-2) 0; background: var(--panel); }
+@media (max-width: 720px) {
+  .ng21 .nr29-hero { grid-template-columns: 1fr; padding: var(--sp-3); }
+  .nr29-art { justify-content: space-between; }
+  .nr29-ic { width: 72px; height: 72px; }
+}
+.ng21 .ng-tabs .ng-tab.done .ng21-ic { background: transparent; color: var(--good); border-color: var(--good); }
+.ng21 .ng-tabs .ng-tab.done .ng21-ic { font-size: 0; }
+.ng21 .ng-tabs .ng-tab.done .ng21-ic::after { content: '✓'; font-size: 16px; }
+/* M48: no celular, o editor de aparência (rótulo + ◀ valor ▶) empilha em vez de vazar 57 px para fora da tela */
+@media (max-width: 600px) { .ng22-you-look .look-row { grid-template-columns: minmax(0, 1fr); } .ng22-you-look .look-step { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: 100%; } }

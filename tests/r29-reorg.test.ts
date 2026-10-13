@@ -369,3 +369,12 @@ describe('r29 M20: presets Guiado/Livre/Contemplativo só de apresentação', ()
     for (const k of PRESET_KEYS29) expect(cfg.includes(`"${k}"`), k).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------- R29b item 6 — NR01–NR06 no estilo do Atlas
+import { NR_STEP29 } from '../src/ui/ps/nr29';
+describe('r29 NR01–NR06: Nova run completa no estilo do Atlas (só apresentação)', () => {
+  it('as 6 etapas têm herói (título, ícone pixel, frase) em pt e en', () => {
+    expect(Object.keys(NR_STEP29)).toEqual(['world', 'you', 'mode', 'labels', 'rules', 'review']);
+    for (const [k, d] of Object.entries(NR_STEP29)) { expect(d.title.pt && d.title.en, k).toBeTruthy(); expect(d.icon, k).toBeTruthy(); }
+  });
+});
