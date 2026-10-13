@@ -12,6 +12,25 @@ Antes de começar, a fase 0 re-mede tudo na base da R27 (alguns números da aná
 | CPU por mês e tamanho do save por década (1962→2040 headless) | Base para a frente técnica |
 | Recontar: ecos "provável" errados, calibração da previsão, eventos sem dica | Linha de base para os testes-meta |
 
+### Resultado da fase 0 (`docs/medicao28.md`, base `b748d64`)
+| Medida | Análise | R27 | Meta |
+|---|---|---|---|
+| Quebra do equilibrado (`--full`) | 50 % | 33 % (1975 `b19-2`, 1889 `b19-4`) | 10–30 % |
+| Quebra do cauteloso | 0 % | 17 % (1889) | — |
+| Agressivo ≥ cauteloso em patrimônio | — | 3 de 6 (um por quebra do cauteloso) | ≥ 1/3 |
+| `flip` (vender o selo), líquido × equilibrado | 2× | 16× | guarda-corpo |
+| Híbrido (5 anos) × equilibrado | ~60× cachê | 24 mi × 5 mi | guarda-corpo |
+| Faixa da previsão contém a procura | 62,5 % | 49 % (vendido: 33 %); falta de estoque em 90 % dos lançamentos | 78–82 % |
+| "Depois" otimista | 262 | 390 (262 padrão + 58–136 escritos à mão) | 0 |
+| Opções sem dica nem "Agora" (120 mais sorteados) | 57 % | 46 % | piso global |
+| CPU/mês 1962→2008 (headless) | 1,2 s (1962) | 1,2 s → 19–23 s (pior mês 48 s); save 1,8 → 31 MB | ≤ 2× por década |
+
+**Mudanças no plano por causa da medição**
+- **Nova fase 7A (desempenho) já no passo 2**, em paralelo com 1A/1B/2: a curva de CPU torna runs longas injogáveis antes de 2000, e a escolha do ano de fim (decisão 1) depende disso. Escopo: perfilar os ganchos numa partida 1990+, poda/agregação de lançamentos e pessoas inativas (catálogo agregado), teste de custo por década (`measure28 long` encurtado). A sessão `claude/r27-perf` já atacou o `r14-db` na R27.
+- **1B:** "Depois" com `echoP18` e o `ctx` real da decisão, cobrindo também os ecos escritos à mão e testando vários estados; tiragem lê o marketing **antes** de calibrar; a calibração final da previsão (80 %) é refeita **depois** da 1C, sobre a "procura" (vendido + falta).
+- **1C:** medir com `--grid` (seeds × inícios) e investigar 1889/1975 antes de mexer em choques; `flip` e `--role hybrid` entram como guarda-corpos do teste-meta; o cauteloso não pode quebrar mais do que hoje.
+- `r16-playbot` (`hires` = 0) foi resolvido na R27 (AUD1: primeira contratação no 1º ano quando o selo já fatura).
+
 ## Fase 1 — As três promessas (P0)
 ### 1A. Run reproduzível (C4) — S
 - `ensureExt` passa a atribuir objetivo, idade de aposentadoria, persona e líder **no nascimento** da pessoa; no carregamento só completa saves antigos.
@@ -80,6 +99,7 @@ Antes de começar, a fase 0 re-mede tudo na base da R27 (alguns números da aná
 - Leitor de tela real e atalhos configuráveis (dívida crônica).
 
 ## Fase 7 — Saúde técnica e escopo (C8) — M–L
+(7A = só a parte de CPU por mês/save, adiantada; o resto da fase 7 fica no passo 5.)
 - `test:fast` × `test:sim` (série); testes de desempenho medem CPU; rodar a suíte em série antes de fechar a rodada.
 - Ordem do tick explícita (`phase/order`) e teste que a congela; fachadas obrigatórias (teste que proíbe import fora da fachada).
 - Migrações explícitas por versão de esquema + saves fixos em teste. R27: 🟡 (SAVE_VERSION 6; saves velhos excluíveis).
@@ -108,7 +128,7 @@ Antes de começar, a fase 0 re-mede tudo na base da R27 (alguns números da aná
 | Leitor de tela nos 5 fluxos principais | Oferta e lançamento só com teclado + leitor |
 
 ## Ordem sugerida e agentes
-1. Fase 0 (1 agente) → 2. Fases 1A + 1B + 2 em paralelo (3 agentes, quase tudo S) → 3. Fase 1C (1 agente, com balance) →
+1. Fase 0 (1 agente, feita) → 2. Fases 1A + 1B + 2 + 7A em paralelo (4 agentes) → 3. Fase 1C (1 agente, com balance `--grid`) e recalibração da previsão (1B) →
 4. Fases 3 + 4 + 5 (3 agentes) → 5. Fases 6 + 7 (2 agentes) → 6. Fase 8 (1–2 agentes) → suíte em série + build Masters_28.
 
 ## Decisões do autor (respondidas)
