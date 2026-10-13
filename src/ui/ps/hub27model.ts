@@ -41,7 +41,8 @@ export const HUBS27: Hub27[] = [
   hub('culture', 'world', l('Cultura e lendas', 'Culture and legends'), 'vault', l('Lendas, movimentos, sociedade e o diário do mestre.', 'Legends, movements, society and the DM journal.'), ['lendas', 'movements', 'society18', 'dm18']),
   // Gestão (15 → 4)
   hub('money', 'admin', l('Dinheiro', 'Money'), 'money', l('Caixa, negócios e a cadeia física.', 'Cash, business and the supply chain.'), ['finance', 'business', 'supply18']),
-  hub('org', 'admin', l('Empresa e equipe', 'Company and staff'), 'building', l('Estrutura, equipe, contratações e cultura.', 'Structure, staff, hiring and culture.'), ['company', 'team', 'agenda17', 'firm19', 'identity', 'biz17']),
+  // contratar é a tarefa mais comum daqui: a agenda/contratações abre primeiro
+  hub('org', 'admin', l('Equipe e empresa', 'Staff and company'), 'building', l('Contratações, equipe, estrutura e cultura.', 'Hiring, staff, structure and culture.'), ['agenda17', 'team', 'company', 'firm19', 'identity', 'biz17']),
   hub('course', 'admin', l('Rumo e direitos', 'Course and rights'), 'flag', l('Estratégia de longo prazo, calendário e direitos.', 'Long-term strategy, calendar and rights.'), ['long18', 'calendar19', 'rights18']),
   hub('ventures', 'admin', l('Carreiras e sócios', 'Careers and partners'), 'star', l('Outras carreiras, empreendimentos e sócios.', 'Other careers, ventures and partners.'), ['careers', 'ventures', 'shared18']),
   // Você (6 → 3)
