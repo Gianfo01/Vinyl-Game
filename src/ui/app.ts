@@ -81,6 +81,7 @@ import { enhanceSelects27 } from './ps/pick27';
 import { allTabs27 } from './ps/subtabs27';
 import { kick27, mayShow27 } from './ps/queue27';
 import { settingsCut27 } from './ps/cut27'; // r27 (K): cenas animadas dos grandes momentos
+import { setAssist28 } from '../sim/sys/assist28'; // r28 F8 (D2): modo história
 import { getLang } from '../i18n/strings';
 import { locale } from '../i18n/strings';
 import { artHook27, pageHeader27 } from './ps/ui27'; // r27 (J): sistema visual compartilhado
@@ -612,6 +613,7 @@ function settings(): void {
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)
     settings27(), // r27: atividades jogáveis (jogáveis / só importantes / sempre rápido)
     settingsCut27(), // r27 (K): Cenas: todas / só importantes / desligadas
+    ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),

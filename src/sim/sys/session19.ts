@@ -251,6 +251,8 @@ function npcHits(s: GameState, r: Rng): void {
 }
 
 /** Documentário: 15+ anos depois do fim do coletivo, a tela revela quem tocou. Modo exato: só os reais, no ano real. */
+/** r28 F8: multiplicador da chance do documentário (1 = normal; o chains28 sobe quando a cadeia 1 está parada nele). */
+export const DOC_K19: { f?: (s: GameState) => number } = {};
 function documentaries(s: GameState, r: Rng): void {
   const st = ses19(s);
   for (const c of collectives19(s)) {
@@ -260,7 +262,7 @@ function documentaries(s: GameState, r: Rng): void {
     const unc = aces.reduce((t, a) => t + a.unc, 0);
     let go = false;
     if (exact(s)) go = !!real?.doc && s.year === real.doc[0] && s.month === 5;
-    else go = s.year >= 1985 && s.year >= c.to + 15 && unc >= 3 && r.chance(0.006 + unc / 6000);
+    else go = s.year >= 1985 && s.year >= c.to + 15 && unc >= 3 && r.chance((0.006 + unc / 6000) * (DOC_K19.f?.(s) ?? 1)); // r28 F8: chains28 acelera quando a cadeia 1 espera o documentário
     if (!go) continue;
     st.docs[c.id] = s.year;
     const title = real?.doc && (exact(s) || s.config.realNames) ? real.doc[1] : fmtL(l('Nas Sombras de {c}', 'In the Shadows of {c}'), { c: collName19(s, c.id) }).pt;

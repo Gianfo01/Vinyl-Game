@@ -250,6 +250,8 @@ function hqSince(s: GameState): number {
 }
 
 /** Todos os prédios do jogador agora (sem mudar o estado). */
+/** r28 F8: prédios de outros sistemas (ex.: sociedades com sócio NPC, sys/shared28.ts). */
+export const CAMPUS_EXTRA28: ((s: GameState) => (Omit<Bld18, 'zone' | 'since' | 'sy' | 'st'> & Partial<Pick<Bld18, 'since' | 'sy' | 'st' | 'zone'>>)[])[] = [];
 export function buildings18(s: GameState): Bld18[] {
   const st = campus18(s);
   const out: Bld18[] = [];
@@ -355,6 +357,7 @@ export function buildings18(s: GameState): Bld18[] {
     out.push({ id: `c:${p.kind}`, kind: p.kind, name: KIND18[p.kind].name.pt, city: s.config.homeCity, zone: 'campus', lvl: 1 + p.q, st: mIdx(s) - p.start < 1 ? 'planned' : 'building', since: Math.floor(p.start / 12), sy: s.year, prog, lot: p.lot,
       goto: { area: 'campus18' }, kpi: [[l('Obra', 'Works'), `${Math.round(prog * 100)}%`], [l('Faltam', 'Left'), `${p.left} m`], [l('Atrasos', 'Delays'), String(p.delays)]] });
   }
+  for (const f of CAMPUS_EXTRA28) for (const b of f(s)) add(b); // r28 F8: sociedades com NPC (shared28)
   // vendidos/fechados há pouco (ficam visíveis por 2 anos com placa)
   for (const g of st.gone) if (s.year - g.y <= 1 && !out.some((b) => b.id === g.id))
     out.push({ id: g.id, kind: g.kind, name: g.name, city: g.city, zone: isHome(s, g.city) ? 'campus' : 'world', lvl: g.lvl, st: g.how, since: g.sy, sy: g.sy, lot: g.lot, note: fmtL(l('{h} em {y}.', '{h} in {y}.'), { h: g.how === 'sold' ? l('Vendido', 'Sold') : l('Fechado', 'Closed'), y: g.y }) });

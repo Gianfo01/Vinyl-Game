@@ -102,6 +102,9 @@ export function margin19(s: GameState): { rev: number; op: number; n: number; ma
 /** Fator do comprador sobre catálogo + elenco: margem (empate ≈ 0,6×; 25% ≈ 1×; prejuízo pesado ≈ 0,35×) e crescimento
  *  (comprador paga por crescer: +50% de receita ≈ +0,25×). */
 export const marginFactor19 = (m: number, g = 0): number => clamp(0.6 + 1.6 * m + 0.5 * clamp(g, -0.3, 0.6), 0.35, 1.3);
+/** r28 F8: linhas extras da avaliação (ex.: participações em sociedades com NPC) e ouvintes da venda concluída. */
+export const VAL_EXTRA28: ((s: GameState) => [L, number] | null)[] = [];
+export const SALE_DONE28: ((s: GameState, buyer: string) => void)[] = [];
 export function valuation17(s: GameState): Val17 {
   const rels = releasesNow27(s).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand);
   const catInc = rels.reduce((t, r) => t + relIncome(s, r.id) * netShare19(s, r.actId), 0);
@@ -119,7 +122,8 @@ export function valuation17(s: GameState): Val17 {
   const cash = s.player.cash;
   const debt = s.player.loans.reduce((t, x) => t + x.balance, 0) + (s.creditors ?? []).reduce((t, c) => t + Math.max(0, c.owed), 0);
   const wc = arTotal18(s) - apTotal18(s); // r18: capital de giro (a receber − royalties a pagar)
-  const total = Math.max(money(s, 20000), cat + roster + profit + prestige + cash + wc - debt);
+  const extra = VAL_EXTRA28.map((f) => f(s)).filter((x): x is [L, number] => !!x && x[1] !== 0); // r28 F8: participações em sociedades (shared28)
+  const total = Math.max(money(s, 20000), cat + roster + profit + prestige + cash + wc - debt + extra.reduce((t, x) => t + x[1], 0));
   return { total, cat, mult: em.m, roster, prestige, cash, debt, profit, margin: mg?.margin, why: [
     [fmtL(l('Catálogo: {n} lançamentos × {m}× ({w}; sobre a fatia líquida do selo, sem royalties e distribuição; disco com menos de 2 anos conta pela metade — o comprador desconta o pico de lançamento)', 'Catalog: {n} releases × {m}× ({w}; on the label\'s net share, after royalties and distribution; records under 2 years old count half — buyers discount the launch spike)'), { n: rels.length, m: Math.round(em.m * 10) / 10, w: em.why }), cat],
     [fmtL(l('Elenco: {n} artistas (fama, até ~3 anos do que cada um rende ao selo; contrato com menos de 1 ano vale menos)', 'Roster: {n} acts (fame, up to ~3 years of what each earns the label; under 1 year of contract left is worth less)'), { n: mineActs(s).length }), roster],
@@ -128,6 +132,7 @@ export function valuation17(s: GameState): Val17 {
     [l('Caixa (vai junto)', 'Cash (goes with it)'), cash],
     [l('A receber − royalties a pagar', 'Receivables − royalties payable'), wc],
     [l('Dívidas assumidas pelo comprador', 'Debts the buyer assumes'), -debt],
+    ...extra,
   ] };
 }
 
@@ -209,6 +214,7 @@ export function sellLabel(s: GameState, bidId: string): L | null {
   const subs = new Set((s.subLabels ?? []).flatMap((x) => x.roster));
   for (const rel of releasesNow27(s)) if (rel.owner === 'player' && !s.acts[rel.actId]?.playerBand && !subs.has(rel.actId)) rel.owner = lb.id;
   SALE19.label?.(s, lb.id); // r19 (money19): preferência do artista e regravações quando os masters mudam de dono
+  for (const f of SALE_DONE28) f(s, lb.id); // r28 F8: sociedades do selo mudam de dono junto (shared28)
   // dinheiro: caixa e dívidas vão com a empresa; o preço vai para o seu bolso
   if (s.player.cash) post(s, 'sale17:cash', -s.player.cash, 'acquisitions', 'Caixa transferido ao comprador');
   s.player.loans = [];
