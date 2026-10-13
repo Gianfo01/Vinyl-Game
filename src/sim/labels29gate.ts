@@ -8,7 +8,7 @@ import type { GameState, Label, RunConfig } from './types';
 /** Escolhas de gravadoras da Nova run (todas opcionais; ausente = o mundo de sempre). */
 export interface Labels29 {
   /** atalho da Nova run rápida: poucas (3–5), algumas (6–10), muitas (11–20), mercado lotado (21–40) */
-  n?: 'few' | 'some' | 'many' | 'crowded';
+  n?: 'few' | 'some' | 'many' | 'crowded' | 'huge'; // R29: 'huge' = indústria gigante (41–120), sem teto depois de 1950
   /** número exato de gravadoras rivais no início (configuração completa; vale por cima do atalho) */
   count?: number;
   /** % de gravadoras reais (do catálogo) entre as iniciais; o resto é inventado no estilo da época (padrão 100) */

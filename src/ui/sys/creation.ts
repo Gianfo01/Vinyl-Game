@@ -6,7 +6,7 @@ import { FAMILIES, MARKETS, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
   CHALLENGES, DIVISIONS, EFFECTS, SHOTS, THEMES, acceptCommission, availableIngredients, closeDivision, commissionName, declineCommission, effectsOf,
-  featureCandidates, featureFee, hireWriter, hotThemes, inviteFeature, marketCraving, openDivision, remaster, remasterOptions, setCover, setRecipe,
+  featureCandidates, featureFee, hireWriter, hotThemes, inviteFeature, inviteFeaturePersons, marketCraving, openDivision, remaster, remasterOptions, setCover, setRecipe,
   setSongTheme20, shootClip, songTheme, songX, standards, themeById, themeSuggest20, viralPush, writerPool,
 } from '../../sim/sys/creation/core';
 import { songStatus } from '../../sim/repertoire';
@@ -21,10 +21,12 @@ import { store } from '../store';
 import { chips, ic, scoreBadge, stat, tile } from '../vis';
 import './creation.css';
 import { reviewCard, reviewSummary } from '../reviewView';
+import { quickChance29, quickPrice29 } from '../../sim/sys/featp29';
+import { featChips29, featPicker29 } from './featp29';
 import { fameText } from '../../sim/sys/fame15';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
-const ui = { recipeSong: '', featSong: '', featGuest: '', clipSong: '', commAct: '' };
+const ui = { recipeSong: '', featSong: '', featGuest: '', clipSong: '', commAct: '', featPersons: [] as string[], featQ: { v: '' } };
 
 function curAct(s: GameState) {
   return s.acts[store.selectedAct ?? ''] ?? s.acts[playerActs(s)[0]];
@@ -116,6 +118,22 @@ function commissionsTab(s: GameState): HTMLElement {
 
 // ------------------------------------------------------------------ parcerias e compositores
 
+/** R29 (feat de pessoa): convite a pessoa(s) específica(s) — o rápido (preço de tabela) e a negociação, o mesmo feat. */
+function personQuick29(s: GameState, song: Song): HTMLElement {
+  ui.featPersons = ui.featPersons.filter((p) => s.persons[p]);
+  const g = { persons: ui.featPersons };
+  const pr = ui.featPersons.length ? quickPrice29(s, song.id, g) : null;
+  return h('div', { class: 'p29-quick', style: 'margin-top:8px' },
+    h('p', { class: 'small' }, h('b', null, t(l('Pessoa(s) específica(s)', 'Specific person(s)'))), ' — ', t(l('só o integrante, solo ou músico, sem a banda inteira.', 'just the member, soloist or musician, not the whole band.'))),
+    ui.featPersons.length ? featChips29(s, ui.featPersons, (pid) => { ui.featPersons = ui.featPersons.filter((x) => x !== pid); rerender(); }) : null,
+    featPicker29(s, song.actId, ui.featPersons, (pid) => { if (!ui.featPersons.includes(pid)) ui.featPersons.push(pid); rerender(); }, ui.featQ),
+    pr ? h('p', { class: pr.block ? 'bad small' : 'small' }, pr.block ? t(pr.block)
+      : t(l('Preço de tabela: {f} + liberação {c} = {t} · chance {p}', 'List price: {f} + clearance {c} = {t} · chance {p}'), { f: $(pr.fee), c: $(pr.clearance), t: $(pr.total), p: `${Math.round(quickChance29(s, song.id, g) * 100)}%` })) : null,
+    h('div', { class: 'row wrap' },
+      h('button', { class: 'btn', disabled: !ui.featPersons.length || !!pr?.block, onclick: () => { toast(t(inviteFeaturePersons(s, song.id, ui.featPersons)), 'info'); ui.featPersons = []; rerender(); } }, t(l('Convite rápido (pessoa)', 'Quick invite (person)'))),
+      h('button', { class: 'btn ghost', disabled: !ui.featPersons.length, onclick: () => openFeatModal(s, { host: song.actId, song: song.id, persons: [...ui.featPersons] }) }, t(l('Negociar com a(s) pessoa(s)', 'Negotiate with the person(s)')))));
+}
+
 function partnersTab(s: GameState): HTMLElement {
   const act = curAct(s);
   const songs = act ? unreleased(s, act.id) : [];
@@ -132,6 +150,7 @@ function partnersTab(s: GameState): HTMLElement {
         h('button', { class: 'btn primary', disabled: !ui.featGuest, onclick: () => openFeatModal(s, { host: song.actId, song: ui.featSong, guest: ui.featGuest }) }, t(l('Negociar', 'Negotiate'))),
         h('button', { class: 'btn ghost', title: t(l('Convidar só um integrante, artista solo ou músico — sem a banda inteira.', 'Invite just a member, soloist or musician — not the whole band.')), onclick: () => openFeatModal(s, { host: song.actId, song: ui.featSong, mode: 'person' }) }, t(l('Pessoa específica…', 'Specific person…'))),
         h('button', { class: 'btn ghost', disabled: !ui.featGuest, title: t(l('Convite rápido com o cachê de tabela, sem negociar.', 'Quick invite at the list fee, no negotiation.')), onclick: () => { toast(t(inviteFeature(s, rngOf(s), ui.featSong, ui.featGuest)), 'info'); rerender(); } }, t(l('Convite rápido', 'Quick invite')))) : h('p', { class: 'muted small' }, t(l('Precisa de uma música inédita.', 'You need an unreleased song.'))),
+      song ? personQuick29(s, song) : null,
       h('p', { class: 'muted small' }, t(l('Convidados famosos e de outros gêneros trazem público novo. Selos rivais podem barrar.', 'Famous guests and other genres bring new audiences. Rival labels may block it.'))),
       st.features.length ? h('ul', { class: 'small' }, st.features.slice(-8).reverse().map((f) => h('li', null, `${s.songs[f.songId]?.title ?? '?'} + ${[s.acts[f.guestActId]?.name, ...(f.guestPersons ?? []).map((x) => s.persons[x]?.name)].filter(Boolean).join(' & ') || '?'} — `, pill(f.status === 'done' ? t(l('gravada', 'recorded')) : t(l('recusada', 'refused')), f.status === 'done' ? 'good' : 'bad')))) : null,
     ),
