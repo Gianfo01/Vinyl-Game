@@ -13,8 +13,10 @@ Arquivos:
   herdeiros fora do mundo no espólio), `sys/world18.ts` (`addProd18` — produtor de carreira nova), `sys/people16.ts`
   (modo exato: nada de namoro/filho inventado para gente real da indústria), `sys/realworld.ts` (`AGE29` = 12),
   `caps18.ts` (`family29` na família **image** do APPEAL_CAT19);
+- também: `src/sim/events.ts` (solo que sai do próprio ato encerra o ato), `src/ui/pixel/age17.ts` (antes dos 17: sem
+  barba/tatuagem, corpo de criança), `src/ui/sys/kin15.ts` (estado civil conta o cônjuge do grafo e o family29);
 - testes: `tests/r29-family.test.ts`; golden re-medidos em `tests/r27-p2a`, `r27-p2b` (r27-m2 compara execuções entre
-  si); sonda de medição `scripts/r29/fam29probe.ts`; capturas `docs/shots29familia/` (`scripts/shots29familia.mjs`).
+  si); medição `scripts/measure29familia.ts`; capturas `docs/shots29familia/` (`scripts/shots29familia.mjs`).
 
 ## O modelo
 
@@ -101,9 +103,9 @@ Convenção dos Direitos da Criança (ONU, 1989). Antes delas: sem fundo e sem l
 
 | Proteção / risco | Como funciona |
 |---|---|
-| Responsável na proposta | −0,04 "o responsável exige escola, fundo e limite de turnê"; pai/mãe-empresário −0,03 a mais |
-| Fundo (Coogan) | seu menor: todo mês sai do caixa (US$ 40 + fama×8, pela parte da lei) para o fundo; aos 18 o fundo vai para o artista |
-| Escola e limite de horas | carga extra na agenda (`PERSON_LOAD29`): escola 25 (15 sem lei) + a fração `hours` do trabalho do mês |
+| Responsável na proposta | −0,04 "o responsável exige escola, fundo e limite de turnê" (−0,02 com 16–17 anos); pai/mãe-empresário −0,03 a mais |
+| Fundo (Coogan) | todo mês a parte da lei (US$ 40 + fama×8, escalado pela `trust`) dos ganhos do **próprio menor** vai para o fundo (não é custo do selo); aos 18 o fundo vai para o artista |
+| Escola e limite de horas | carga extra na agenda (`PERSON_LOAD29`): escola 25 (15 sem lei) + a fração `hours` do trabalho do mês; 16–17 anos: escola 10 (5) e 30% do teto |
 | Tutor na estrada | US$ 300 por mês de turnê |
 | Exploração | seu menor com carga > 70 (90 sem lei) ou > 10 dias de estrada (18) por 3 meses: denúncia (60% depois de 1975): reputação com artistas −4, institucional −3, multa (com lei), escândalo de conduta, fato `child_exploit`; selo rival: −3 de reputação |
 | Esgotamento | sobrecarga = +5 de estresse e +6 de cansaço por mês; estresse > 85 na denúncia = burnout |
@@ -143,11 +145,67 @@ família do APPEAL_CAT19.
 
 ## Números
 
-MEDICOES29
+Medido com `scripts/measure29familia.ts` (bot realista playbot16), `tests/r14-db.test.ts`, `tools/balance19.ts --quick`
+e as golden. Máquina carregada (4 núcleos, carga 6–13 por causa de outros agentes): o relógio de parede engana; o custo
+do sistema vem do perfil de ganchos (`__hookProf`) e do CPU.
+
+**Por década** (semente `fam29probe`, início 1960, base média, 20 anos):
+
+| Década | Casamentos | Filhos | Estreias de família | Divórcios | Estrelas mirins | Casais célebres | Carreiras da indústria | Exploração |
+|---|---|---|---|---|---|---|---|---|
+| 1960 | 161 | 75 | 0 | 13 | 20 | 21 | 4 | 0 |
+| 1970 | 297 | 174 | 4 | 78 | 19 | 35 | 0 | 0 |
+
+As estreias crescem depois de ~17 anos de partida (os filhos nascidos no jogo chegam à idade; a semeadura inicial dá
+poucos porque os artistas gerados são jovens). No fim: 1.875 famílias, 263 filhos leves, 24 menores, 37 ex-mirins,
+632 pessoas reais com família simulada (mundo "com variações", o padrão).
+
+**Custo por mês** (perfil de ganchos):
+
+| Medida | Antes | Depois |
+|---|---|---|
+| gancho `family29` (mês + ano), base média 1960–1979 | — | **10,4 + 0,7 ms** (CPU total do mês ~2.000–3.000 ms: ≈ 0,4%) |
+| gancho `family29`, base **enorme** 2010 (1 ano) | — | **11,4 + 1,0 ms** de 3.536 ms/mês (≈ 0,3%) |
+| `tests/r14-db` "enorme: simulate(1 ano)/mês" | 3.804 ms | 4.011 ms (ruído da máquina; os dois passam do limite de 1.500 ms do teste nesta máquina, também sem a família) |
+| gancho `kin15` (com o laço `parentId` no grafo) | 17,1 ms | 15,1 ms |
+
+**Save** (20 anos, base média): estado `family29` = **98 KB** (0,5% de 18,1 MB); `s.families` (indústria) 170 KB, igual
+a antes (173 KB); save total 17,98 MB antes × 18,09 MB depois (os mundos divergem; a diferença é do tamanho da
+variação). Filhos leves são tuplas (~60 bytes); viram pessoa só quando seguem carreira.
+
+**Equilíbrio** (`tools/balance19.ts --quick`, 12 sementes, 3 anos, perfil equilibrado):
+
+| | Quebra | Caixa p25 / mediana / p75 | Patrimônio |
+|---|---|---|---|
+| antes | 25% | 6k / 30k / 86k | 1,97 M |
+| depois | 25% | −14k / 8k / 63k | 1,03 M |
+| só 1975, antes | 42% | −8k / 19k / 99k | 719k |
+| só 1975, depois | 50% | −9k / 11k / 47k | 45k |
+
+As mesmas sementes quebram nos dois (b19-0, 1, 4, 9 de 1975; b19-0 de 1889; b19-3 de 2005); a diferença é uma semente
+de cada lado (o mundo diverge). Uma delas expôs um erro antigo: um solo que "saía do próprio ato" pelo evento
+`member_leaves` deixava o ato **ativo e vazio** (o bot o contratava e quebrava) — agora o ato encerra (`events.ts`).
+Ajustes feitos pela medição: o fundo do menor sai dos ganhos **dele** (não é custo do selo); 16–17 anos têm escola de
+meio período e só 30% do teto de horas; a proposta pesa −0,02 (não −0,04) para quem tem 16–17.
+
+**Golden** (`r16pb-5`, 1975, nomes reais, 8 meses de playbot): caixa e rng iguais; acts muda (e tours no r27-p2b, pela
+venda das paradas) — comentários nos testes. r27-m2 compara execuções entre si e segue passando.
+
+## Capturas (`docs/shots29familia/`)
+
+1. `01-ficha-familia-casal-celebre` — aba Família: bloco do kin15 e a seção R29 (casado desde, "casal célebre", filhos).
+2. `02-arvore-da-familia` — árvore em retratos (a pessoa, o cônjuge, os filhos; envelhecem pelo age17).
+3. `03-filho-que-estreou` — o filho que estreou com herança (laço com os dois pais).
+4. `04-estrela-mirim-responsavel-fundo` — grupo de irmãos mirim: responsável, lei da época, fundo, escola.
+5. `05-empresario-filhos-e-carreiras` — página única de um empresário: filhos e o que viraram (produtor, empresário).
+6. `06-diretorio-filtro-familia` — Todos os artistas › Pessoas com "Família: Casais célebres" (♥, menor, filho de famoso).
+7. `07-clique-direito-ver-familia` — menu de pessoa com "Ver família" (e presente de casamento / condolências quando cabe).
+8. `08-ctrl-k-acha-filho` — a busca acha um filho que ainda é bebê ("filho(a) de … · 0 anos").
+9. `09-arvore-celular-390` — a árvore no celular.
 
 ## Testes
 
-`tests/r29-family.test.ts` (10 casos): filho da indústria → empresário, artista e produtor (e o caminho segue o ramo);
+`tests/r29-family.test.ts` (9 casos): filho da indústria → empresário, artista e produtor (e o caminho segue o ramo);
 casal célebre com filho que estreia com herança (laço com os dois pais, carreira no connect29, ficha concorda com o
 grafo); divórcio na mesma banda (rixa/pressão do lineup16 ou banda rachada); rodízio; estrela mirim de 12+ com
 responsável, fundo Coogan, escola na agenda e motivo na proposta; denúncia de exploração (seu selo e rival); Michael
@@ -156,4 +214,20 @@ alternativo marcado como simulado; determinismo e Rng compartilhado intocado.
 
 ## Lacunas
 
-GAPS29
+- **Sequestro/extorsão de família famosa**: o Submundo não tem essa operação; a ligação é pelo segredo guardado (caso
+  extraconjugal) que a chantagem já usa. Nada de sequestro.
+- **Demografia (demo29)**: o módulo ainda não existe neste ramo; `youthSkew29(s, actId)` (parte do público jovem pelos
+  menores/ex-mirins do ato) fica pronto para ele ler.
+- **Mapa de 13 sistemas (connmap29)**: é gerado pela sonda `probe29all`; a família entra no sistema "vida" e não
+  re-gerei o mapa (a sonda é pesada). `r29-connect-all` segue passando.
+- **Cenas animadas do cut27**: usei as cenas interativas do scene17 (casamento, bebê, divórcio, estreia de família no
+  seu elenco); não criei chaves novas no `cut29model`.
+- **contests19 / discover18 / school18** não foram mexidos: as estrelas mirins nascem com a origem marcada (calouros,
+  TV, trainee, escola) e entram no radar da sua cidade pelo fato `child_star`; os concursos ainda não escolhem crianças.
+- **Vínculo filho × estrada** só existe para os seus atos (dynasty.ts); filhos leves de NPC não guardam vínculo.
+- **Seus próprios filhos** (kids17) não viraram estrelas mirins por este sistema (seguem o caminho deles aos 18).
+- **Casais do mesmo sexo / leis de casamento por época** não entram (o sex17 cuida da época para o jogador).
+- **Filhos da indústria** dependem dos filhos que o people16 dá (e da semeadura dos gerados): em partidas curtas
+  aparecem poucos; a fila de herdeiro de selo segue a regra do people16.
+- **Bot**: o playbot não entende o limite de horas de menor; contrata estrela mirim como qualquer ato.
+- Teste antigo que já falhava no ramo base (não é desta rodada): `r17-life` "exposição: em época hostil…".
