@@ -111,6 +111,10 @@ export function labelsCard(cfg: RunConfig, onChange: () => void): { el: HTMLElem
   const el = h('div', { class: 'ng22-lbwrap' },
     h('section', { class: 'card wide' }, h('h3', null, t(l('Sugestão para a sua run', 'Suggestion for your run'))), sugBox),
     h('section', { class: 'card wide' }, h('h3', null, t(l('Como as gravadoras começam', 'How labels start'))), startBox),
+    // R29: com "Gravadoras no início" (labels29) definido, a lista antiga é ignorada pelo mundo — some daqui para não confundir
+    cfg.labels29 && (cfg.labels29.n || cfg.labels29.count !== undefined) ? h('section', { class: 'card wide' },
+      h('h3', null, t(l('Quantas e quais', 'How many and which'))),
+      h('p', { class: 'muted small' }, t(l('Definido no cartão "Gravadoras no início" acima (quantas, quais, porte, região e as que surgem na run). Volte ao "Padrão" lá para escolher gravadora por gravadora aqui.', 'Set in the "Labels at the start" card above (how many, which, size, region and new ones during the run). Switch back to "Default" there to pick label by label here.')))) :
     h('section', { class: 'card wide' },
       h('h3', null, t(l('Quantas e quais', 'How many and which'))),
       h('div', { class: 'ng22-range' }, h('span', null, t(l('Gravadoras rivais no começo', 'Rival labels at the start'))), countIn, countOut),
