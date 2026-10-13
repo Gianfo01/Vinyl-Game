@@ -263,3 +263,125 @@ com friendly-brown: `r29-art`, `r29-fixes`, `r29-reorg`, `r29-scenes`, `r9-bonds
   ("Wilson Batista", 1986, no SNJ). Não parte a identidade (a auditoria ignora quem não é real), mas confunde na tela.
 - `R1s` (troca simulada põe pessoa real em banda real na história alternativa) é comportamento da simulação, não erro;
   segue informativo.
+
+
+---
+
+## 10. Conectar tudo (13 sistemas)
+
+Pedido do autor: "TUDO deve estar conectado" — cada sistema lê e influencia os outros que deveria, nos dois sentidos
+quando faz sentido. O "Mapa das conexões" da wiki agora sai da **medição**, não de uma lista escrita à mão.
+
+### Como mede (`src/sim/probe29all.ts`, `scripts/probe29all.ts`)
+- 12 sistemas do jogo (a camada de público por idade/região — `demo29`, de outra sessão — entra quando chegar):
+  Dinheiro, Reputação, Imprensa, Projetos, Ao vivo, Sede, Fama, Mundo, Vida, Contratos, Prêmios, Submundo.
+- **20 empurrões** (entradas de cada sistema: caixa rico/quase zero, +25 de reputação, escândalo, resenha boa, single
+  melhor, série de shows, sede nível 2 + equipe, +fama, crise/moda/dez anos depois, elenco estressado, confiança alta e
+  baixa, rival em guerra, 4 prêmios, jabá, calor policial) × **40 saídas** (apelo, vendas, receita e despesas do período,
+  caixa livre para gravar/turnê/departamento/adiantamento/crime/campanha, reação a escândalo, crítica, atenção da
+  imprensa, bilheteria, eficácia da equipe, fama/embalo/fãs, influência nas leis, gosto e cena, estresse, aceite de
+  proposta, renovação, confiança, Gramofone, Hall da Fama, chance e exposição de crime, calor policial…).
+- Cada medição: braço de controle e braço com UM empurrão, a partir do MESMO estado (mesma semente), rodados do mesmo
+  jeito (controle nulo × nulo = 0 exato). Leituras "puras" logo depois do empurrão; leituras "do período" depois de 6
+  semanas nos dois braços (pega o que só existe nos ganchos mensais). Mediana de 3 sementes (`r29all`, `-b`, `-c`).
+- Força: forte ≥ 10%, média ≥ 3%, fraca ≥ 0,5% (0,2% nas puras).
+- `npx tsx scripts/probe29all.ts --write` regrava **`src/sim/connmap29.ts`** (`SYSTEMS29` e `CONNMAP29`: a, b, força,
+  Δ e "via" = qual empurrão sobre qual saída). **É deste arquivo que a wiki deve ler o mapa.**
+
+### Matriz antes (arestas novas desligadas): 60 de 132 pares
+● forte · ◐ média · · fraca · vazio = nada medido
+
+| de \ para | dinh | repu | impr | proj | aovi | sede | fama | mund | vida | cont | prem | subm |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dinh | — |   | · | ● | ● | ● |   |   |   | ● | ● | ● |
+| repu | ● | — |   |   |   |   |   |   |   | ● |   |   |
+| impr | · |   | — | ● | ● |   | ◐ |   | ● |   |   |   |
+| proj | ● | · | ● | — |   |   |   |   |   |   | ● |   |
+| aovi | ● |   |   | · | — |   | ◐ |   | ● |   | · |   |
+| sede | ● |   | ◐ | ◐ | ● | — | · | · | ◐ | ● |   |   |
+| fama | ● | · | ● | ● | ● |   | — |   | ◐ | ● | ● |   |
+| mund | ◐ | · | ● | ● | ● | · | · | — | ◐ | ◐ |   | ● |
+| vida |   |   | ● | ◐ | ◐ |   | · |   | — |   |   |   |
+| cont | ◐ |   | ◐ |   |   |   |   |   |   | — |   |   |
+| prem |   |   |   |   |   |   |   |   |   | ◐ | — |   |
+| subm | ● |   | ◐ | ● | · |   |   |   |   |   |   | — |
+
+### Matriz depois: 104 de 132 pares (todas as 64 esperadas)
+
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dinh | — |   | · | ● | ● | ● |   |   | ● | ● | ● | ● |
+| repu | ● | — | ◐ | · | ◐ | ◐ | · |   | ◐ | ● | ◐ | · |
+| impr | ◐ | ◐ | — | ● | ◐ | · | · |   | ● | ◐ | ◐ | ● |
+| proj | ● | · | ● | — | ◐ |   | · |   | ● | ◐ | ● | ◐ |
+| aovi | ● |   | ● | · | — |   | · |   | ● | ◐ | ◐ | ◐ |
+| sede | ● |   | ◐ | ◐ | ◐ | — | · | · | ◐ | ● | · | ● |
+| fama | ● | · | ● | ● | ● |   | — |   | ◐ | ● | ● | ● |
+| mund | ◐ | · | ● | ● | ● | · | ◐ | — | ◐ | ◐ |   | ● |
+| vida | · |   | ● | ◐ | ◐ |   | · |   | — | ◐ | ◐ | ◐ |
+| cont | ◐ |   | ◐ | ◐ | ◐ |   |   |   | ● | — | · | ◐ |
+| prem | ◐ | · | · | ● | ● |   | ◐ |   |   | ◐ | — |   |
+| subm | ● | · | ● | ● | · |   |   |   | ● | ● | · | — |
+
+(Entre rodadas o total oscila ±2 nas células fracas por causa da mediana; as 64 esperadas aparecem sempre — teste.)
+
+### O que foi ligado (`src/sim/sys/conn29.ts`, cada aresta com interruptor `CONN29_OFF` e o botão `CONN29.k`)
+Ganchos novos mínimos: `REACT29` (multiplicadores na reação a escândalo, `scandal17`) e `PRESSURE29` (pressões de curto
+prazo no estresse, `stress17`). O resto usa registros que já existiam (modificadores, Gramofone, chance de crime,
+proposta, renovação, eficácia da equipe, ganchos mensais e de estreia, ouvintes de fato e do diário).
+
+| de → para | o que acontece |
+|---|---|
+| Dinheiro → Vida | selo sem caixa livre: elenco teme cachê atrasado (estresse) |
+| Dinheiro → Reputação | caixa negativo mancha a reputação comercial (mensal, com piso) |
+| Reputação → Imprensa / Prêmios / Fama / Sede / Ao vivo / Vida | institucional amortece escândalo; júri do Gramofone pesa a reputação; selo de prestígio puxa a fama, atrai equipe melhor, pesa com promotores e tranquiliza o elenco |
+| Imprensa → Reputação / Prêmios / Submundo / Contratos / Dinheiro | escândalo de ato seu mancha o selo, afasta o júri, atrai a polícia (drogas/crime/violência), faz artistas hesitarem e custa gestão de crise |
+| Projetos → Fama / Ao vivo / Contratos / Vida / Submundo | aclamação na estreia; disco elogiado puxa ingresso; renova mais; crítica ruim estressa e disco muito bom alivia; disco de sucesso é pirateado mais fácil |
+| Ao vivo → Imprensa / Contratos / Reputação / Submundo | série de shows vira notícia, sobe a confiança do ato e a reputação comercial; ato na estrada é presa fácil de pirataria |
+| Sede → Imprensa / Fama / Prêmios / Submundo / Reputação | assessor amortece escândalo, puxa fama, monta a campanha do Gramofone e a reputação; jurídico reduz a exposição de crime |
+| Fama → Submundo | alvo famoso: crime contra o ato chama mais atenção |
+| Mundo → Ao vivo | guerra/crise esvazia as casas |
+| Vida → Dinheiro / Contratos / Prêmios / Submundo / Fama / Reputação | terapia (só com caixa livre, até 3 pessoas); banda esgotada renova menos e perde embalo; rende menos no Gramofone; fala demais (exposição); "selo que esgota artistas" |
+| Contratos → Vida / Projetos / Ao vivo / Reputação | confiança alta alivia e rende no estúdio e no palco; desconfiança faz o contrário e espalha má fama entre artistas |
+| Prêmios → Fama / Reputação / Projetos / Dinheiro / Ao vivo / Prêmios | cada prêmio novo dá fama e reputação artística; apelo e vendas dos discos do ato; casa cheia; júri tem favoritos |
+| Submundo → Imprensa / Vida / Contratos / Reputação / Dinheiro | polícia de olho: manchete pega mais, medo no elenco, artistas evitam o selo, reputação institucional cai e o jurídico cobra |
+
+Anteriores desta rodada que contam aqui: perks da sede (Marketing/Agência/Digital) religados, songQ depois dos ganchos
+de gravação, escândalo → próximo disco, prêmios → propostas, resenha → vendas (§4).
+
+### Sem espiral (o autor pediu)
+A primeira versão criou um ciclo **sem caixa → estresse → terapia → menos caixa** e outro **sem caixa → reputação com
+artistas cai → não contrata → menos caixa** (medido: falência 25% → 33–42% nas variações). Corrigido:
+- terapia só é cobrada com caixa livre, até 3 pessoas;
+- quedas mensais de reputação vindas destas arestas param num **piso de 35**, e caixa negativo só toca a comercial;
+- custos de crise e de jurídico pela metade.
+Bônus de apelo novos entram na família de causa (caps18: `awards29a` em "image").
+
+### Equilíbrio (`tools/balance19.ts --quick --seeds 24`, bot equilibrado, 3 anos)
+| | quebra | caixa mediano | patrimônio mediano | fama | prestígio |
+|---|---|---|---|---|---|
+| arestas desligadas | 17% (4/24) | 43k | 2,71 mi | 11 | 57 |
+| ligadas (final) | 21–29% (5–7/24 entre variações) | 4–18k | 1,1–2,1 mi | 17–18 | 53–59 |
+
+Por partida (mesma semente, desligado × ligado): 12–13 de 24 terminam melhor com as arestas; mediana da diferença de
+patrimônio entre −40 mil e +528 mil conforme a variação — a trajetória de cada partida diverge (contrata outros atos),
+então a mediana geral oscila muito. Efeito estável: **mais fama** (11 → 17–18) e o jogo um pouco mais exigente com caixa
+e escândalos. Botão: `CONN29.k` (0–1) suaviza tudo de uma vez; `CONN29_OFF` desliga arestas para medir.
+
+### Testes
+- `tests/r29-connect-all.test.ts`: toda aresta esperada (`EDGES29`, 64) medida; as 51 com sinal conhecido andam na
+  direção certa; o mapa da wiki (`connmap29`) tem todas.
+- Golden re-medidos (`r27-p2a`/`p2b`: 333758 / 1642544891 / 3380302445 / 2264116950; antes desta parte 450735 /
+  1382068899 / 2386675548 / 2839816166). `r27-p2b` "turnê pelo caminho de sempre" escolhe um ato sem turnê marcada
+  (mesmo critério do `roadFix` do arquivo). `r19-infra` verde (famílias de apelo, consumidores de fato).
+- Depois do merge com friendly-brown (contratos+): 87 testes verdes no lote (golden iguais).
+
+### Lacunas
+- **Mundo como destino** (12 pares vazios): o jogador não muda era, tecnologia nem gosto do mundo; só leis (influência)
+  e cenas, que aparecem fracas. Fica assim de propósito.
+- Vazios restantes sem sentido de jogo ou só indiretos: → Sede (projetos, ao vivo, fama, contratos, prêmios, submundo),
+  Dinheiro → Fama (passa por Projetos/marketing), Mundo → Prêmios, Prêmios → Vida/Submundo, Submundo → Fama.
+- **Ao vivo → Reputação** existe (shows de ato seu sobem a reputação comercial), mas a sonda não a separa: no braço de
+  controle o ato faz shows sozinho semanas depois (substituição).
+- **Público por idade e região** (`demo29`, outra sessão): ainda não está na friendly-brown; quando chegar, entra como
+  13º sistema na sonda (empurrões e saídas próprias) e o mapa é regravado.
+- Shows simples (`playGigs`) seguem sem os modificadores de show (§9).

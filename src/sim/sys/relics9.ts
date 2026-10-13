@@ -51,6 +51,8 @@ export interface Relics9State { list: Relic[] }
 export const relicHook: { f: (s: GameState, rl: Relic) => number } = { f: () => 1 };
 /** R29 (relics29): peças que a poda do teto de 90 não tira (as procedurais, que já têm teto e poda próprios). */
 export const relicKeep9: { f: (s: GameState, rl: Relic) => boolean } = { f: () => false };
+/** R29 (relics29): avisa quando a poda do teto tira uma peça da lista (o relics29 limpa o registro compacto na hora). */
+export const relicGone9: { f: (s: GameState, rl: Relic) => void } = { f: () => {} };
 declare module '../ext4' { interface Ext4 { relics9: Relics9State } }
 registerExt4('relics9', () => ({ list: [] }));
 export function relics(s: GameState): Relics9State {
@@ -81,7 +83,7 @@ export function addRelic(s: GameState, k: RelicKind, n: L, actId: string | undef
   if (st.list.length > 90) { // r18: mais fontes de peças — descarta perdida, senão a de menor valor fora do seu acervo
     let i = st.list.findIndex((x) => x.st === 'lost' && !x.rr);
     if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'player' && x.st !== 'auction' && !x.rr && !relicKeep9.f(s, x) && (i < 0 || x.v < st.list[i].v)) i = j; }
-    if (i >= 0) st.list.splice(i, 1);
+    if (i >= 0) relicGone9.f(s, st.list.splice(i, 1)[0]);
   }
   return rl;
 }

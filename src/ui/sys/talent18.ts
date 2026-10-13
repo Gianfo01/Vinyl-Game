@@ -16,7 +16,7 @@ import { ORIGIN18, WING18, authFee18, authenticate18, buildWing18, legacy18, rel
 import { RELIC_KIND, RELIC_ST, relics, toggleExhibit } from '../../sim/sys/relics9';
 import { relicImg28 } from '../pixel/relic28'; // r28 (arte)
 import { story29 } from '../../sim/sys/relics29';
-import { relic29Pills } from './relics29';
+import { archiveLine29, relic29Pills, relicBrowser29 } from './relics29';
 import { OWN18, SCHOOLS18, bolsaCost18, foundSchool18, school18, schoolName18, schoolYield18, schoolsNow18, setBolsas18, setTeacher18 } from '../../sim/sys/school18';
 import { disbandHB18, foundHB18, hbMaxQ18, hbSalary18, hbSetup18, sess18, setCredit18, setRent18 } from '../../sim/sys/session18';
 import { FR18, becomePartner18, frName18, frNow18, ownCost18, partnerFee18, partnerQuote18, produceShow18, pushCost18, pushVotes18, setJudge18, tv18, voteScore18 } from '../../sim/sys/tv18';
@@ -185,7 +185,7 @@ registerArea({ id: 'talent18', label: l('Talentos e formação', 'Talent & train
 export function relics18Tab(s: GameState): HTMLElement {
   const st = rel18(s);
   const list = relics(s).list.filter((x) => x.st !== 'lost');
-  const born = list.filter((x) => st.m[x.id] && !['base', 'real'].includes(st.m[x.id].o)).sort((a, b) => b.y - a.y).slice(0, 24);
+  const born = list.filter((x) => st.m[x.id] && !['base', 'real'].includes(st.m[x.id].o)).sort((a, b) => b.y - a.y); // R29: todas, com filtros e páginas
   const mine = list.filter((x) => x.st === 'player');
   const auc = list.filter((x) => x.st === 'auction' && !x.rr);
   const w = WING18[st.wing], nx = WING18[st.wing + 1];
@@ -209,8 +209,8 @@ export function relics18Tab(s: GameState): HTMLElement {
       row(nx ? btn(fmtLs(l('Construir: {n} ({c})', 'Build: {n} ({c})'), { n: t(nx.name), c: $(money(s, nx.cost)) }), () => say(buildWing18(s), l('Inaugurado!', 'Opened!'))) : null,
         btn(l('Exposição itinerante (6 meses)', 'Touring exhibition (6 months)'), () => { toast(t(tourExhibit18(s)), 'info'); rerender(); }, mine.filter((x) => x.ex).length < 3))),
     auc.length ? section(t(l('Em leilão — confira a procedência', 'At auction — check provenance')), muted(l('Cerca de 1 em 12 lotes não catalogados é falso. Perícia antes do lance evita o vexame.', 'About 1 in 12 uncatalogued lots is fake. An appraisal before bidding avoids the embarrassment.')), ...auc.map(relRow)) : null,
-    mine.length ? section(t(l('Seu acervo', 'Your collection')), ...mine.map(relRow)) : null,
-    section(t(l('Nascidas nesta partida', 'Born in this run')), born.length ? h('div', null, ...born.map(relRow)) : muted(l('Shows lendários, nº 1, prêmios, mortes, escândalos e capas criam peças com história.', 'Legendary shows, #1s, awards, deaths, scandals and covers create pieces with a story.'))));
+    mine.length ? section(t(l('Seu acervo', 'Your collection')), ...(mine.length > 12 ? [relicBrowser29(s, 'acervo:mine', mine, relRow, { size: 12, owners: false })] : mine.map(relRow))) : null,
+    section(t(l('Nascidas nesta partida', 'Born in this run')), archiveLine29(s), born.length ? relicBrowser29(s, 'acervo:born', born, relRow, { size: 12 }) : muted(l('Shows lendários, nº 1, prêmios, mortes, escândalos e capas criam peças com história.', 'Legendary shows, #1s, awards, deaths, scandals and covers create pieces with a story.'))));
 }
 
 /** r20b (B4): parceria de TV com cota, caixa livre e motivo do bloqueio visíveis antes do clique (mesma cotação que o motor revalida). */

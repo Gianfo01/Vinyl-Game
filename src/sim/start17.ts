@@ -208,6 +208,7 @@ export function newRunConfig20(o: { seed: string; companyName: string; kind?: 'f
     return c;
   }
   applyPreset17(c, 'rec');
+  c.genre29 = 0; // r29: rascunho novo — gênero da banda sugerido pela cidade e pelo ano (genre29data; draftDefaults27)
   return c;
 }
 

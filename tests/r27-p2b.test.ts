@@ -65,12 +65,17 @@ describe('r27 P2B — modo rápido intacto', () => {
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-    expect(AFTER.player.cash).toBe(450735);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    // R29 família (sys/family29, de propósito — docs/familia29.md): vida familiar dos artistas NPC (Rng próprio): só acts
-    // muda (caixa, tours e rng iguais). Antes: acts 2386675548.
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3011534618);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
+    // R29 (CONECTAR TUDO, de propósito — docs/connect29.md): arestas novas entre sistemas (conn29: confiança no palco/estúdio,
+    // crise na demanda da cidade, prêmios → fama/reputação, reputação → fama/equipe, calor policial…) mudam caixa, tours, acts e
+    // rng (com os grupos 2 e 3 e os pisos anti-espiral). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+    // R29 relíquias, "bem mais relíquias por save" (densidade padrão "muitas" — docs/reliquias29.md): ~7× mais peças
+    // procedurais (22 em 8 meses de 1975 nesta semente, contra 3), mais lotes em leilão e ofertas no mercado negro; caixa, acts e rng mudam
+    // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
+  // R29 conectar tudo + relíquias juntos: re-medido.
+    expect(AFTER.player.cash).toBe(334007);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3927711826);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(827562554);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2264116950);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
@@ -82,7 +87,9 @@ describe('r27 P2B — modo rápido intacto', () => {
     const run = (hook: boolean) => {
       const s = clone(FIX);
       s.player.cash += money(s, 200000);
-      const actId = playerActs(s)[0];
+      // R29: com o mundo novo o bot já tem turnê marcada no 1º ato — mesmo critério do roadFix abaixo
+      let actId = playerActs(s).find((id) => !s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running')));
+      if (!actId) { actId = playerActs(s)[0]; for (const t of s.tours) if (t.actId === actId && (t.status === 'planned' || t.status === 'running')) cancelTour(s, t.id); }
       const r = planTour(s, basePlan27(s, actId, ['rio', 'buenos_aires', 'montevideo', 'santiago'].filter((c) => c !== s.acts[actId].city), { startInDays: 7 }));
       expect('id' in r).toBe(true);
       const pre = STOP27.pre;

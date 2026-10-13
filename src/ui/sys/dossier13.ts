@@ -10,7 +10,7 @@ import { bolsa, change12, holders } from '../../sim/sys/bolsa10';
 import { ch7 } from '../../sim/sys/charts7';
 import {
   actContracts, actLabelHistory, actMilestones, actRelics, isPlayerLabel, labelAlumni, labelAwards, labelName13, labelRoster13, labelScenes,
-  labelShareHistory, labelStats13, labelTopReleases, personExtraFacts, personLife, type Award13, type Fact13,
+  labelShareHistory, labelStats13, labelTopReleases, personLife, type Award13,
 } from '../../sim/sys/dossier13';
 import { actHype } from '../../sim/sys/hype12';
 import { leaderOf, leaders } from '../../sim/sys/leaders10';
@@ -297,9 +297,6 @@ export const LIFE_EXTRAS13: ((s: GameState, p: Person, open?: boolean) => HTMLEl
 
 function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
   const lf = personLife(s, p);
-  const facts = personExtraFacts(s, p);
-  const groups = new Map<string, Fact13[]>();
-  for (const f of facts) { const g = groups.get(f.group) ?? []; g.push(f); groups.set(f.group, g); }
   const healthName: Record<string, L> = { ok: l('bem', 'fine'), voice_strain: l('voz desgastada', 'voice strain'), burnout: l('esgotamento', 'burnout'), addiction: l('dependência', 'addiction'), recovering: l('em recuperação', 'recovering'), ill: l('doente', 'ill') };
   return h('div', { class: 'dos13-person' },
     h('div', { class: 'row wrap' }, open ? h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, h('b', null, p.name)) : h('b', null, p.name),
@@ -312,8 +309,9 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
       lf.dependency !== undefined && lf.dependency > 5 && canSee(s, p.id, 'health') ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
     ),
     ...(canSee(s, p.id, 'life') ? LIFE_EXTRAS13.map((f) => f(s, p, open)) : []),
-    ...[...groups].filter(() => canSee(s, p.id, 'life')).map(([g, xs]) => h('details', null, h('summary', { class: 'small muted' }, `${t(l('Mais dados', 'More data'))} · ${g}`),
-      h('ul', { class: 'dos13-list small' }, xs.slice(0, 25).map((f) => h('li', null, h('span', { class: 'muted' }, `${t(f.label)}: `), typeof f.v === 'string' ? f.v : t(f.v)))))));
+    // R29: os campos internos crus ("Mais dados · person / ability18.p", real27, roles27…) não aparecem mais para o jogador —
+    // o que importa já tem bloco próprio (funções no cabeçalho, fonte/certeza, família, saúde).
+  );
 }
 
 ACT_TABS.push((s, a) => ({

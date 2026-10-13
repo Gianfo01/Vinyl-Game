@@ -275,12 +275,13 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
       if (!(raw >= YEAR_MIN20 && raw <= YEAR_MAX20)) { yearErr.textContent = t(l('Escolha um ano entre {a} e {b}.', 'Pick a year between {a} and {b}.'), { a: YEAR_MIN20, b: YEAR_MAX20 }); return; }
       yearErr.textContent = '';
       q.startYear = clampYear27(raw);
+      if (q.art29 && q.art29.genre === undefined) q.art29.genreK = undefined; // r29: 🎲 do gênero recomeça no novo lugar
       drawCareers(); drawPrev(); endF.refresh();
     } }) as HTMLInputElement;
   // r28 (F4): ano de fim (o Recomendado sugere 25 anos; "Sem fim" = sandbox)
   const endF = endYearField28(() => q.startYear, () => q.runYears ?? REC_YEARS28, (v) => { q.runYears = v; }, 'h27-end');
   const cities = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
-  const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => { q.homeCity = v; drawPrev(); charB.refresh(); drawStatus(); }, { id: 'h27-city' });
+  const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => { q.homeCity = v; if (q.art29 && q.art29.genre === undefined) q.art29.genreK = undefined; drawPrev(); charB.refresh(); drawStatus(); }, { id: 'h27-city' });
   // r29: situação inicial (escada zero → líder do mercado); o rótulo segue a carreira ("Artista hipster", "Produtor top 5"…)
   const status = h('p', { class: 'small h27-status', role: 'status', 'aria-live': 'polite' });
   const drawStatus = () => {
