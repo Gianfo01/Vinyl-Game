@@ -208,3 +208,35 @@ export function matrix29(run: Run29): Cell29[] {
   }
   return [...best.values()];
 }
+
+/** Arestas que o jogo DEVE ter (pedido do autor, R29 "Conectar tudo"): A influencia B. Algumas com o sinal esperado
+ *  de um empurrão sobre uma saída (sign 1 = sobe, -1 = desce). tests/r29-connect-all.test.ts exige todas medidas. */
+export const EDGES29: { a: Sys29; b: Sys29; check?: [nudge: string, metric: string, sign: 1 | -1] }[] = [
+  { a: 'dinheiro', b: 'projetos', check: ['pobre', 'cabe_gravar', -1] }, { a: 'dinheiro', b: 'aovivo', check: ['pobre', 'cabe_shows', -1] },
+  { a: 'dinheiro', b: 'sede', check: ['pobre', 'cabe_depto', -1] }, { a: 'dinheiro', b: 'contratos', check: ['pobre', 'cabe_adiant', -1] },
+  { a: 'dinheiro', b: 'submundo', check: ['pobre', 'cabe_crime', -1] }, { a: 'dinheiro', b: 'vida', check: ['pobre', 'estresse', 1] },
+  { a: 'reputacao', b: 'contratos', check: ['rep', 'oferta', 1] }, { a: 'reputacao', b: 'imprensa', check: ['rep', 'reacao', -1] },
+  { a: 'reputacao', b: 'premios', check: ['rep', 'gramofone', 1] }, { a: 'reputacao', b: 'fama', check: ['rep', 'fama', 1] },
+  { a: 'reputacao', b: 'dinheiro' }, { a: 'reputacao', b: 'sede', check: ['rep', 'equipe', 1] },
+  { a: 'imprensa', b: 'fama' }, { a: 'imprensa', b: 'reputacao', check: ['escandalo', 'rep', -1] }, { a: 'imprensa', b: 'projetos', check: ['resenha', 'vendas', 1] },
+  { a: 'imprensa', b: 'premios', check: ['escandalo', 'gramofone', -1] }, { a: 'imprensa', b: 'vida', check: ['escandalo', 'estresse', 1] }, { a: 'imprensa', b: 'dinheiro' },
+  { a: 'projetos', b: 'dinheiro', check: ['qualidade', 'receita', 1] }, { a: 'projetos', b: 'fama', check: ['qualidade', 'fama', 1] },
+  { a: 'projetos', b: 'premios', check: ['qualidade', 'gramofone', 1] }, { a: 'projetos', b: 'imprensa', check: ['qualidade', 'critica2', 1] },
+  { a: 'aovivo', b: 'fama', check: ['shows', 'fama', 1] }, { a: 'aovivo', b: 'dinheiro' }, { a: 'aovivo', b: 'vida', check: ['shows', 'estresse', 1] },
+  { a: 'aovivo', b: 'imprensa', check: ['shows', 'atencao', 1] },
+  { a: 'sede', b: 'projetos', check: ['sede', 'vendas', 1] }, { a: 'sede', b: 'aovivo', check: ['sede', 'show', 1] }, { a: 'sede', b: 'imprensa', check: ['sede', 'reacao', -1] },
+  { a: 'sede', b: 'contratos', check: ['sede', 'oferta', 1] }, { a: 'sede', b: 'dinheiro', check: ['sede', 'custos', 1] },
+  { a: 'fama', b: 'projetos', check: ['fama', 'apelo', 1] }, { a: 'fama', b: 'aovivo', check: ['fama', 'show', 1] }, { a: 'fama', b: 'contratos' },
+  { a: 'fama', b: 'premios', check: ['fama', 'hall', 1] }, { a: 'fama', b: 'imprensa', check: ['fama', 'fatos', 1] }, { a: 'fama', b: 'submundo', check: ['fama', 'crime_q', 1] },
+  { a: 'fama', b: 'dinheiro', check: ['fama', 'receita', 1] },
+  { a: 'mundo', b: 'projetos', check: ['moda', 'apelo', 1] }, { a: 'mundo', b: 'aovivo', check: ['crise', 'show', -1] }, { a: 'mundo', b: 'dinheiro' },
+  { a: 'mundo', b: 'imprensa' }, { a: 'mundo', b: 'submundo' }, { a: 'mundo', b: 'sede' },
+  { a: 'vida', b: 'aovivo', check: ['estresse', 'show', -1] }, { a: 'vida', b: 'projetos', check: ['estresse', 'gravacao', -1] }, { a: 'vida', b: 'imprensa' },
+  { a: 'vida', b: 'dinheiro', check: ['estresse', 'despesas', 1] },
+  { a: 'contratos', b: 'dinheiro' }, { a: 'contratos', b: 'projetos', check: ['desconfianca', 'gravacao', -1] }, { a: 'contratos', b: 'aovivo', check: ['desconfianca', 'show', -1] },
+  { a: 'contratos', b: 'imprensa' }, { a: 'contratos', b: 'vida', check: ['desconfianca', 'estresse', 1] },
+  { a: 'premios', b: 'fama', check: ['premios', 'fama', 1] }, { a: 'premios', b: 'reputacao', check: ['premios', 'rep', 1] }, { a: 'premios', b: 'contratos', check: ['premios', 'oferta', 1] },
+  { a: 'premios', b: 'projetos', check: ['premios', 'apelo', 1] }, { a: 'premios', b: 'dinheiro' },
+  { a: 'submundo', b: 'dinheiro', check: ['jaba', 'despesas', 1] }, { a: 'submundo', b: 'imprensa', check: ['calor', 'reacao', 1] }, { a: 'submundo', b: 'projetos', check: ['jaba', 'vendas', 1] },
+  { a: 'submundo', b: 'vida', check: ['calor', 'estresse', 1] }, { a: 'submundo', b: 'reputacao', check: ['calor', 'rep', -1] }, { a: 'submundo', b: 'contratos', check: ['calor', 'oferta', -1] },
+];
