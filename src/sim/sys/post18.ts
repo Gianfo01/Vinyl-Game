@@ -79,6 +79,8 @@ export const actOfP18 = (s: GameState, pid: string): Act | undefined => actsNow2
 /** R19 (afterlife19, 11.8): ganchos do espólio como ator — quem guarda os masters bloqueia/ajusta projetos; opinião dos herdeiros pesa. */
 export const POST19: { block?: (s: GameState, pid: string, k: PK18) => L | null; adj?: (s: GameState, pid: string, k: PK18) => { d: number; why: L } | null; held?: (s: GameState, actId: string) => boolean } = {};
 const mine = (a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
+/** R29 (família): herdeiros que não são pessoas do mundo (filhos leves e cônjuge gerado do sys/family29). */
+export const EST_HEIRS29: { f?: (s: GameState, pid: string) => { name: string; rel: 'child' | 'spouse' }[] } = {};
 
 /** Espólio (criado na primeira consulta depois da morte). */
 export function estate18(s: GameState, pid: string): Est18 | null {
@@ -94,7 +96,10 @@ export function estate18(s: GameState, pid: string): Est18 | null {
     const f = soul(s, q).f;
     return (f.ambicao ?? 50) > 62 ? 'cash' : (f.lealdade ?? 50) > 60 || (f.empatia ?? 50) > 62 ? 'guard' : 'artist';
   };
-  const heirs: Heir18[] = kin.length ? kin.map((k) => ({ name: k.p.name, pid: k.p.id, rel: REL[k.rel] ?? l('parente', 'relative'), st: stance(k.p) }))
+  // R29 (família): filhos e cônjuge que não são pessoas do mundo (registro leve do family29) também herdam
+  const kinH: Heir18[] = [...kin.map((k) => ({ name: k.p.name, pid: k.p.id, rel: REL[k.rel] ?? l('parente', 'relative'), st: stance(k.p) })),
+    ...(EST_HEIRS29.f?.(s, pid) ?? []).filter((x) => !kin.some((k) => k.p.name === x.name)).map((x) => ({ name: x.name, rel: REL[x.rel] ?? l('parente', 'relative'), st: stance() }))].slice(0, 4);
+  const heirs: Heir18[] = kinH.length ? kinH
     : [{ name: F(l('Fundação {p}', '{p} Foundation'), { p: p.name.split(' ').slice(-1)[0] }).pt, rel: l('fundação/curadores', 'foundation/trustees'), st: r.pick(['guard', 'artist'] as const) }];
   const e: Est18 = { pid, act: a?.id ?? '', heirs, unity: clamp(Math.round(80 - (heirs.length - 1) * 14 + r.int(-10, 10)), 10, 95), legacy: clamp(Math.round((a?.fame ?? 20) * 0.8 + (a?.legend ? 15 : 0)), 5, 100), wish: r.chance(0.22) ? 'never' : r.chance(0.35) ? 'open' : 'unknown', dispute: 0, n: 0, last: 0 };
   st.est[pid] = e;

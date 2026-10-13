@@ -483,7 +483,8 @@ function lifeMonth(s: GameState, r0: Rng, key: string, P: P13, k: number): void 
   // vida amorosa (mesma lógica dos artistas, mais simples)
   const has = !!fam?.partner && !fam.separated;
   if (!has) {
-    if (age >= 21 && age <= 68 && !REAL_KIN16.some(([k2, rel]) => rel === 'spouse' && k2 === key && s.config.realNames) && r.chance(0.008 * (1 + f.romantismo / 100 + f.sociabilidade / 200))) {
+    // R29 (família): no modo exato, gente real da indústria só tem a família documentada (nada de namoro/filho inventado)
+    if (age >= 21 && age <= 68 && !safe && !REAL_KIN16.some(([k2, rel]) => rel === 'spouse' && k2 === key && s.config.realNames) && r.chance(0.008 * (1 + f.romantismo / 100 + f.sociabilidade / 200))) {
       const F0 = ensureFamily(s, key);
       F0.partner = { name: personName(r0, langForCity(P.city ?? s.config.homeCity, r0)), job: r.pick(JOBS), trust: 60, wellbeing: 60, agenda: l('quer mais tempo juntos', 'wants more time together') };
       F0.separated = false;
@@ -507,7 +508,7 @@ function lifeMonth(s: GameState, r0: Rng, key: string, P: P13, k: number): void 
     emitFact(s, { kind: 'breakup', actors: [actorId(key)], place: P.city, severity: 30, tags: ['bad', 'romance'], text: p16(s).news[0][2], src: 'people16' });
     return;
   }
-  if (age >= 23 && age <= 47 && F0.kids.length < 3 && r.chance(x.mar ? 0.007 : 0.002)) {
+  if (age >= 23 && age <= 47 && F0.kids.length < 3 && !safe && r.chance(x.mar ? 0.007 : 0.002)) {
     const kid = { id: nextId(s, 'k'), name: personName(r0, langForCity(P.city ?? s.config.homeCity, r0)), born: s.year, bond: 70, musical: r.int(10, 90) };
     F0.kids.push(kid);
     x.dep = clamp(x.dep - 6, 0, 100);
