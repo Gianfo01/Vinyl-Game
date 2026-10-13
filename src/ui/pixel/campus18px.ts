@@ -11,6 +11,7 @@ import { LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, typ
 import { CLIMATE19 } from '../../data/hood19';
 import type { Landmark19 } from '../../data/landmarks19';
 import { drawLandmark19 } from './landmarks19px';
+import { INK, INK20, ramp20 } from './cenas20';
 
 export const GW = 20, GH = 16;
 export const MW = 300, MH = 226;
@@ -123,7 +124,15 @@ function box(t: T, L: T, gx: number, gy: number, w: number, d: number, H: number
     if (o.st === 'eco' && k === 'wall' && noise(x, y, o.seed) < 0.12) c = C('#4a8a3a');
     if (o.burnt && noise(x, y, o.seed + 9) < 0.55) c = mix(c, DARK, 0.7);
     if (o.worn && noise(x, y, o.seed + 4) < 0.12) c = shade(c, -0.3);
-    return right ? shade(c, -0.22) : c;
+    // r20 (arte-cenas): rampa de 6 tons — face direita na sombra arroxeada, faixa alta da face esquerda na luz,
+    // vidro com reflexo no canto de cima à esquerda (material brilhante)
+    const r = ramp20(c);
+    if (k === 'win' && !o.boarded && !o.burnt && !o.raw) {
+      const edge = (right ? pattern(o.st, u - 1, hz, H, lenR, z0, false) : pattern(o.st, u - 1, hz, H, lenL, z0)) !== 'win' || pattern(o.st, u, hz + 1, H, right ? lenR : lenL, z0, !right) !== 'win';
+      if (edge) return right ? r[3] : r[5];
+    }
+    if (right) return hz >= H - 1 ? r[3] : r[2];
+    return hz >= H - 1 ? r[4] : c;
   };
   const lenL = Math.hypot(Sx - Wx, Sy - Wy) / 1.118, lenR = Math.hypot(Ex - Sx, Ey - Sy) / 1.118;
   // face esquerda (W→S) e direita (S→E)
@@ -142,6 +151,10 @@ function box(t: T, L: T, gx: number, gy: number, w: number, d: number, H: number
     if (o.burnt && noise(x, y, o.seed + 2) < 0.6) c = mix(c, DARK, 0.8);
     return c;
   });
+  // r20: aresta da frente do telhado na luz e quina vertical como linha interna escura
+  const rr = ramp20(roof);
+  t.line(Wx, Wy - H, Sx - 1, Sy - H, rr[4]); t.line(Sx, Sy - H, Ex, Ey - H, rr[3]);
+  if (H - z0 > 2) t.line(Sx, Sy - z0 - 1, Sx, Sy - H + 1, mix(ramp20(wall)[1], INK, 0.35));
 }
 
 // ---------------------------------------------------------------- acessórios
@@ -326,6 +339,7 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
       t.rect(door[0] - 9, door[1] - 12, 19, 7, C('#f8f4ec')); t.text(b.st === 'sold' ? 'SOLD' : 'SHUT', door[0] - 7, door[1] - 11, C('#c03030'));
     }
   }
+  p.outline(INK); // r20: contorno escuro quente do pacote
   return { id: b.id, kind: b.kind, st: b.st, fp: [gx, gy, w, d], c: p.canvas(), lc: lp.canvas(), x: x0, y: y0, depth: gx + w / 2 + gy + d / 2, box: [Math.min(Wx, Nx), Ny - H - (b.kind === 'media' ? 24 : 6), Math.max(Ex, Sx), Math.max(Sy, Sy2)], door, top: roofTop(gx, gy, w, d, H) };
 }
 
@@ -376,7 +390,8 @@ function tree(t: T, x: number, y: number, year: number, season: Env18['season'],
   t.line(x, y, x, y - 4, C('#5a3a20'));
   if (season === 'winter') { t.line(x - 2, y - 6, x, y - 3, C('#5a3a20')); t.line(x + 2, y - 6, x, y - 3, C('#5a3a20')); return; }
   const c = season === 'autumn' ? (noise(seed, 1) < 0.5 ? C('#d08030') : C('#c0a030')) : season === 'spring' && noise(seed, 2) < 0.3 ? C('#f0a8c8') : C('#3a7a38');
-  t.disc(x + 0.5, y - 6.5, 3.2, c); t.disc(x - 0.5, y - 7.5, 1.6, shade(c, 0.2));
+  const r = ramp20(c); // r20: copa com volume (sombra embaixo à direita, luz em cima à esquerda) e contorno
+  t.disc(x + 0.5, y - 6.5, 4.2, mix(r[0], INK, 0.5)); t.disc(x + 0.5, y - 6.5, 3.2, r[2]); t.disc(x, y - 7, 2.6, c); t.disc(x - 0.5, y - 7.8, 1.4, r[4]);
   void year;
 }
 
@@ -385,15 +400,16 @@ function tree(t: T, x: number, y: number, year: number, season: Env18['season'],
 function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Sprite18[], lms: Landmark19[], marks: Mark19[]): HTMLCanvasElement {
   const y = env.year;
   const p = new Px(MW, MH);
-  const road = y < 1910 ? C('#8a6e4c') : y < 1950 ? C('#76726c') : y < 2025 ? C('#4a4a52') : C('#5a6070');
-  const walk = y < 1910 ? C('#a88c64') : y < 2025 ? C('#b8b0a2') : C('#c8ccd2');
-  const grass = env.snow ? C('#e8eef4') : env.season === 'autumn' ? C('#9a9448') : env.season === 'winter' ? C('#8a9a70') : env.season === 'spring' ? C('#78aa50') : C('#68984a');
-  const sky = y < 1946 ? C('#c4c4ac') : env.season === 'winter' ? C('#a8bccc') : C('#9cc4e4');
+  // r20: tons mais quentes (terra, asfalto e calçada puxam para o marrom; céu com luz quente perto do horizonte)
+  const road = y < 1910 ? C('#8a6a48') : y < 1950 ? C('#76685e') : y < 2025 ? C('#4c444c') : C('#585a68');
+  const walk = y < 1910 ? C('#b08e62') : y < 2025 ? C('#c0b29a') : C('#ccc8c4');
+  const grass = env.snow ? C('#ece8ee') : env.season === 'autumn' ? C('#a08e44') : env.season === 'winter' ? C('#8a9268') : env.season === 'spring' ? C('#7aa24c') : C('#6c9246');
+  const sky = y < 1946 ? C('#cac0a4') : env.season === 'winter' ? C('#aeb8c8') : C('#a4c2dc');
   for (let py = 0; py < MH; py++) for (let px = 0; px < MW; px++) {
     const [gx, gy] = unIso(px + 0.5, py + 0.5);
     let c: Col;
     if (gx < 0 || gy < 0 || gx >= GW || gy >= GH) {
-      if (py < HZ) c = mix(sky, C('#f0f0f0'), py / HZ * 0.4);
+      if (py < HZ) c = mix(sky, C('#ffe8c0'), py / HZ * 0.45);
       else c = dith(px, py, 0.5) ? shade(grass, -0.18) : shade(grass, -0.24);
     } else if (ROAD(gx, gy)) {
       c = road;
@@ -426,13 +442,13 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
   const maxH = y < 1900 ? 12 : y < 1930 ? 20 : y < 1960 ? 30 : y < 1990 ? 40 : y < 2020 ? 52 : 58;
   for (let x = 0; x < MW;) {
     const bw = 5 + Math.floor(noise(x, 9, seed) * 10), bh = 4 + Math.floor(noise(x, 11, seed) * maxH);
-    const c = mix(sky, C('#5a6478'), 0.35 + noise(x, 3, seed) * 0.15);
+    const c = mix(sky, C('#5e5070'), 0.35 + noise(x, 3, seed) * 0.15);
     for (let i = 0; i < bw; i++) for (let j = 0; j < bh; j++) p.put(x + i, HZ - j, j > bh - 2 && y >= 2025 && i > 1 && i < bw - 2 ? shade(c, 0.1) : c);
     if (y < 1930 && noise(x, 5, seed) < 0.15) for (let j = 0; j < 10; j++) p.put(x + 2, HZ - bh - j, c);
     x += bw + (noise(x, 7, seed) < 0.3 ? 3 : 0);
   }
   // r19: marcos da cidade no horizonte (atrás do mapa), em tom de distância
-  const far = mix(sky, C('#3e4658'), 0.55);
+  const far = mix(sky, C('#46385a'), 0.55);
   const SLOT = [34, 96, 200, 264];
   lms.forEach((lm, i) => {
     const x = SLOT[i % 4] + Math.round((noise(i, 3, seed) - 0.5) * 8);
@@ -516,9 +532,12 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
 
 // ---------------------------------------------------------------- vida (quadro a quadro)
 
-const OUTFIT = ['#2c4a7e', '#a33434', '#2f7a4c', '#d0a43c', '#6a4590', '#e4dccb', '#2a2a30', '#d8692a', '#5e3c26', '#6ab0e0'];
+const OUTFIT = ['#2c4a7e', '#8a2430', '#2f7a4c', '#c09048', '#6a4590', '#e4dccb', '#2a2a30', '#d8692a', '#6e2e20', '#6ab0e0'];
 function person(ctx: CanvasRenderingContext2D, x: number, y: number, k: number, year: number, frame: number, sign?: string): void {
   x = Math.round(x); y = Math.round(y);
+  // r20: sombra de contato e silhueta contornada (mesma leitura dos bonecos maiores)
+  ctx.fillStyle = 'rgba(23,14,18,0.35)'; ctx.fillRect(x - 1, y, 4, 1);
+  ctx.fillStyle = INK20; ctx.fillRect(x - 1, y - 5, 4, 5); ctx.fillRect(x, y - 7, 2, 1);
   ctx.fillStyle = OUTFIT[k % OUTFIT.length]; ctx.fillRect(x, y - 4, 2, 3);
   ctx.fillStyle = '#2a2628'; ctx.fillRect(x + (frame % 2), y - 1, 1, 1); ctx.fillRect(x + 1 - (frame % 2), y - 1, 1, 1);
   ctx.fillStyle = ['#f6d3b3', '#e0aa7e', '#a8714a', '#6e4528'][k % 4]; ctx.fillRect(x, y - 6, 2, 2);
@@ -527,12 +546,15 @@ function person(ctx: CanvasRenderingContext2D, x: number, y: number, k: number, 
 }
 function vehicle(ctx: CanvasRenderingContext2D, x: number, y: number, kind: ReturnType<typeof vehicleOf18>, k: number, dir: number, flash?: boolean, t = 0): void {
   x = Math.round(x); y = Math.round(y);
-  const col = ['#a03030', '#2c4a7e', '#e0c040', '#3a7a4a', '#e8e4d8', '#303034'][k % 6];
+  const col = ['#8a2430', '#2c4a7e', '#c09048', '#3a7a4a', '#e8e4d8', '#6e2e20'][k % 6];
   const len = kind === 'cart' ? 8 : kind === 'fin' ? 9 : kind === 'suv' ? 8 : 7;
   const x0 = dir > 0 ? x - len : x;
   if (kind === 'cart') { ctx.fillStyle = '#5a3a20'; ctx.fillRect(x0 + (dir > 0 ? 5 : 0), y - 5, 3, 3); ctx.fillStyle = '#8a6a40'; ctx.fillRect(x0 + (dir > 0 ? 0 : 3), y - 5, 5, 3); ctx.fillStyle = '#2a2020'; ctx.fillRect(x0 + 1, y - 2, 2, 2); ctx.fillRect(x0 + 5, y - 2, 2, 2); return; }
+  ctx.fillStyle = INK20; ctx.fillRect(x0 - 1, y - 5, len + 2, 5); // r20: contorno
   ctx.fillStyle = flash !== undefined ? '#e8e8f0' : kind === 'modelT' ? '#202024' : kind === 'pod' ? '#f0f4f8' : col;
   ctx.fillRect(x0, y - 4, len, 3);
+  ctx.fillStyle = 'rgba(255,240,200,0.35)'; ctx.fillRect(x0, y - 4, len, 1);
+  ctx.fillStyle = 'rgba(42,24,56,0.35)'; ctx.fillRect(x0, y - 2, len, 1);
   ctx.fillStyle = kind === 'modelT' ? '#202024' : '#9ab8d0';
   ctx.fillRect(x0 + 2, y - (kind === 'modelT' || kind === 'suv' ? 7 : 6), len - 4, kind === 'modelT' || kind === 'suv' ? 3 : 2);
   ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x0 + 1, y - 1, 2, 1); ctx.fillRect(x0 + len - 3, y - 1, 2, 1);
@@ -617,7 +639,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, MW, MH); }
   // noite
   if (night > 0.02) {
-    ctx.fillStyle = `rgba(14,18,52,${(night * 0.62).toFixed(3)})`;
+    ctx.fillStyle = `rgba(26,16,48,${(night * 0.62).toFixed(3)})`; // r20: noite arroxeada (sombra da casa)
     ctx.fillRect(0, 0, MW, MH);
     ctx.globalAlpha = Math.min(1, night * 1.3);
     ctx.drawImage(sc.lights, 0, 0);
@@ -640,8 +662,10 @@ function pin19(ctx: CanvasRenderingContext2D, sp: Sprite18, t: number): void {
   const g = GLYPH[sp.kind] ?? GLYPH.office!;
   const x = Math.round(sp.top[0]) - 4, y = Math.round(Math.min(sp.top[1], sp.box[1] + 6)) - 14 - (sp.st === 'building' || sp.st === 'planned' ? Math.round(Math.sin(t * 3)) : 0);
   const col = sp.nb ? '#7a7870' : sp.st === 'damaged' ? '#d03020' : sp.st === 'building' || sp.st === 'planned' || sp.st === 'renovating' ? '#e0b020' : sp.st === 'sold' || sp.st === 'closed' ? '#606060' : PINC[sp.kind] ?? '#406090';
-  ctx.fillStyle = '#1a1416'; ctx.fillRect(x - 1, y - 1, 11, 11); ctx.fillRect(x + 3, y + 10, 3, 1); ctx.fillRect(x + 4, y + 11, 1, 1);
+  ctx.fillStyle = INK20; ctx.fillRect(x - 1, y - 1, 11, 11); ctx.fillRect(x + 3, y + 10, 3, 1); ctx.fillRect(x + 4, y + 11, 1, 1);
   ctx.fillStyle = col; ctx.fillRect(x, y, 9, 9);
+  ctx.fillStyle = 'rgba(255,240,200,0.35)'; ctx.fillRect(x, y, 9, 1); ctx.fillRect(x, y, 1, 8); // r20: placa com volume
+  ctx.fillStyle = 'rgba(42,24,56,0.35)'; ctx.fillRect(x, y + 8, 9, 1); ctx.fillRect(x + 8, y, 1, 8);
   ctx.fillStyle = sp.nb ? '#d8d4c8' : '#fffaf0';
   for (let i = 0; i < 25; i++) if (g[i] === '1') ctx.fillRect(x + 2 + (i % 5), y + 2 + Math.floor(i / 5), 1, 1);
 }

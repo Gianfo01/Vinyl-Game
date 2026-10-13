@@ -2,11 +2,26 @@
 // marcas). Cada forma desenha a partir da base (x = centro, y = linha do horizonte) e devolve a caixa ocupada.
 
 import type { LmShape } from '../../data/landmarks19';
-import { Px, shade, type Col } from './px';
+import { Px, mix, shade, type Col } from './px';
+import { INK, relief20 } from './cenas20';
 
 export interface LmCols { body: Col; hi: Col; dark: Col; lamp: Col }
-/** Desenha a silhueta; devolve [x0, y0, x1, y1]. */
+/**
+ * Desenha o marco; devolve [x0, y0, x1, y1]. r20 (arte-cenas): a forma vai para um buffer próprio, ganha volume
+ * (borda de cima/esquerda na luz, de baixo/direita na sombra, como no pacote de equipamentos) e contorno escuro
+ * quente — misturado ao corpo, porque o marco fica longe, no horizonte — e só então é colada na cena.
+ */
 export function drawLandmark19(p: Px, sh: LmShape, x: number, y: number, c: LmCols): [number, number, number, number] {
+  const ox = Math.round(x) - 40, oy = Math.round(y) - 66;
+  const q = new Px(80, 70);
+  const b = shapeOf(q, sh, x - ox, y - oy, c);
+  // a lâmpada (luz de aviso, janela acesa) é luz própria: não ganha volume
+  relief20(q, mix(c.dark, INK, 0.45), { keep: c.lamp !== c.body ? c.lamp : undefined });
+  p.blit(q, ox, oy);
+  return [b[0] + ox - 1, b[1] + oy - 1, b[2] + ox + 1, b[3] + oy];
+}
+
+function shapeOf(p: Px, sh: LmShape, x: number, y: number, c: LmCols): [number, number, number, number] {
   const B = c.body, H = c.hi, D = c.dark;
   const r = (x0: number, y0: number, w: number, h: number, col = B) => p.rect(Math.round(x0), Math.round(y0), Math.round(w), Math.round(h), col);
   switch (sh) {

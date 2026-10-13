@@ -90,7 +90,8 @@ export const transportName = (m: TransportMode) => t(MODE_NAMES[m]);
 
 type Glyph = { rows: string[]; colors: Record<string, string> };
 const G = (rows: string[], colors: Record<string, string>): Glyph => ({ rows, colors });
-const INK = '#2a1f1a';
+const INK = '#170e12'; // r20 (arte-cenas): contorno escuro quente do pacote de equipamentos
+const CHIP = '#f2e4c4', BRASS = '#c09048', BRASS_HI = '#e8c888';
 const TRANSPORT_GLYPHS = new Set<string>(['ship', 'prop_plane', 'jet', 'train', 'bus', 'hyperloop']);
 const GLYPHS: Record<TransportMode | ClimateIcon | OverlayIcon | 'visa' | 'visa_bad', Glyph> = {
   ship: G(['....r.....', '....rr....', '....rrr...', '....k.....', 'kkkkkkkkkk', '.kwwwwwwk.', '..kkkkkk..'], { r: '#d8473a', k: INK, w: '#f2efe6' }),
@@ -129,14 +130,19 @@ function drawGlyph(ctx: CanvasRenderingContext2D, g: Glyph, cx: number, cy: numb
   const y0 = Math.round(cy - (hh * px) / 2);
   if (chip) {
     // plaquinha clara com borda escura: legível em tema claro e escuro
+    // r20: placa de creme com moldura de latão (luz em cima/esquerda, sombra embaixo/direita)
     ctx.fillStyle = INK;
     ctx.fillRect(x0 - 2 * px, y0 - 2 * px, (w + 4) * px, (hh + 4) * px);
-    ctx.fillStyle = '#f4ead8';
+    ctx.fillStyle = BRASS;
+    ctx.fillRect(x0 - 2 * px + 1, y0 - 2 * px + 1, (w + 4) * px - 2, (hh + 4) * px - 2);
+    ctx.fillStyle = BRASS_HI;
+    ctx.fillRect(x0 - 2 * px + 1, y0 - 2 * px + 1, (w + 4) * px - 2, Math.max(1, px / 2));
+    ctx.fillStyle = CHIP;
     ctx.fillRect(x0 - px, y0 - px, (w + 2) * px, (hh + 2) * px);
     outline = false;
   }
   if (outline) {
-    ctx.fillStyle = 'rgba(20,14,10,0.7)';
+    ctx.fillStyle = 'rgba(23,14,18,0.72)';
     for (let r = 0; r < hh; r++) for (let c = 0; c < w; c++) {
       if (g.rows[r][c] === '.') continue;
       ctx.fillRect(x0 + c * px - px / 2, y0 + r * px - px / 2, px * 2, px * 2);
@@ -168,7 +174,7 @@ export function glyphCanvas(name: keyof typeof GLYPHS, px = 2): HTMLCanvasElemen
 // ---------------------------------------------------------------- cores do tema
 
 interface Theme {
-  ocean: string; ocean2: string; land: string; coast: string; label: string; border: string; inner: string; ink: string; halo: string;
+  ocean: string; ocean2: string; land: string; coast: string; shadow: string; label: string; border: string; inner: string; ink: string; halo: string;
   pal: string[]; west: string; east: string; nonaligned: string; markets: Record<MarketId, string>;
   audience: string; selected: string; locked: string; route: string;
 }
@@ -179,7 +185,7 @@ function readTheme(el: HTMLElement): Theme {
   return {
     ocean: v('--map-ocean', '#b9d2dc'), ocean2: v('--map-ocean-2', '#a7c4d0'), land: v('--map-land', '#e8dcc0'),
     coast: v('--map-coast', '#4b3b2e'), label: v('--map-label', '#4b3b2e'), border: v('--map-border', '#6d5a48'), inner: v('--map-inner', '#8a7a68'),
-    ink: v('--ink', '#241c17'), halo: v('--map-halo', '#fffaf2'),
+    ink: v('--ink', '#241c17'), halo: v('--map-halo', '#fffaf2'), shadow: v('--map-shadow', 'rgba(58,32,80,0.3)'),
     pal: [1, 2, 3, 4, 5, 6, 7].map((i) => v(`--map-p${i}`, ['#d9c38a', '#a9c47f', '#e0a77a', '#9fb8c9', '#c9a6c4', '#e3cf6f', '#b9b09c'][i - 1])),
     west: v('--map-west', '#7fa6d6'), east: v('--map-east', '#d77a6c'), nonaligned: v('--map-nonaligned', '#d9cf8e'),
     markets: {
@@ -781,6 +787,15 @@ export class WorldMap {
       }
       return { color: th.pal[yc.colorOf.get(u.id) ?? 6], hatch: false };
     };
+    // r20: a terra projeta uma sombra arroxeada para baixo/direita no oceano (luz de cima à esquerda)
+    ctx.setTransform(k, 0, 0, k, this.tx * dpr + 1.5 * dpr, this.ty * dpr + 2 * dpr);
+    ctx.fillStyle = th.shadow;
+    for (const c of geo.countries) {
+      if (c.a3 === 'ATA') continue;
+      ctx.fill(this.countryPaths[c.idx], 'evenodd');
+      if (c.wraps) { ctx.translate(-WORLD_W, 0); ctx.fill(this.countryPaths[c.idx], 'evenodd'); ctx.translate(WORLD_W, 0); }
+    }
+    world();
     for (const c of geo.countries) {
       const path = this.countryPaths[c.idx];
       const u = yc.unitOf[c.idx];
@@ -1122,12 +1137,19 @@ export class WorldMap {
       const py = Math.round(y * dpr);
       // marcador em "diamante" pixelado com contorno
       const o = Math.max(1, Math.round(dpr));
+      // r20: gema com volume — base, metade de baixo/direita na sombra arroxeada, faceta de luz quente, brilho
+      ctx.fillStyle = 'rgba(23,14,18,0.35)';
+      diamond(ctx, px + o, py + o * 2, s / 2 + o);
       ctx.fillStyle = INK;
       diamond(ctx, px, py, s / 2 + o * 1.5);
       ctx.fillStyle = color;
       diamond(ctx, px, py, s / 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.fillRect(px - o, py - Math.round(s / 3), o, o);
+      ctx.fillStyle = 'rgba(42,24,56,0.38)';
+      diamondHalf(ctx, px, py, s / 2);
+      ctx.fillStyle = 'rgba(255,240,200,0.35)';
+      diamond(ctx, px - Math.round(s / 6), py - Math.round(s / 6), Math.max(1, s / 6));
+      ctx.fillStyle = 'rgba(255,251,232,0.85)';
+      ctx.fillRect(px - o - Math.round(s / 6), py - Math.round(s / 3), o, o);
       if (route[0] === mc.id) {
         ctx.strokeStyle = th.ink;
         ctx.lineWidth = o;
@@ -1145,7 +1167,9 @@ export class WorldMap {
         const by = py + s / 2;
         ctx.fillStyle = INK;
         ctx.fillRect(bx, by - 6 * dpr, bw, 12 * dpr);
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = BRASS;
+        ctx.fillRect(bx, by - 6 * dpr, bw, Math.max(1, Math.round(dpr)));
+        ctx.fillStyle = CHIP;
         ctx.fillText(mc.badge, bx + 3 * dpr, by + 3 * dpr);
       }
       if (isSel || zoomedIn || route.includes(mc.id) || this.focusCity === mc.id || this.hoverCity === mc.id) {
@@ -1182,6 +1206,16 @@ function diamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numbe
   for (let i = -rr; i <= rr; i++) {
     const half = rr - Math.abs(i);
     ctx.fillRect(cx - half, cy + i, half * 2 + 1, 1);
+  }
+}
+
+/** Metade de baixo/direita do diamante (lado da sombra). */
+function diamondHalf(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+  const rr = Math.max(1, Math.round(r));
+  for (let i = -rr; i <= rr; i++) {
+    const half = rr - Math.abs(i);
+    if (i > 0) ctx.fillRect(cx - half, cy + i, half * 2 + 1, 1);
+    else if (half > 0) ctx.fillRect(cx + 1, cy + i, half, 1);
   }
 }
 

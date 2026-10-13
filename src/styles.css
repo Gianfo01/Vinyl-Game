@@ -351,22 +351,24 @@ body:has(.tip18) #toasts { top: 64px; bottom: auto; } /* a dica (tip18) ocupa o 
 
 /* ---------- Mapa-múndi (src/ui/map.ts) ---------- */
 :root {
-  --map-ocean: #b4cfd9;
-  --map-ocean-2: #a1c1ce;
-  --map-land: #e6dbc1;
-  --map-coast: #4b3b2e;
-  --map-border: #6d5a48;
-  --map-inner: #7d6c5a;
-  --map-halo: #fffaf2;
-  --map-label: #4b3b2e;
+  /* r20 (arte-cenas): oceano e terra mais quentes, contorno escuro quente do pacote de equipamentos */
+  --map-ocean: #a9c5c6;
+  --map-ocean-2: #97b4b6;
+  --map-land: #ead9b6;
+  --map-coast: #2a1a1c;
+  --map-border: #5e4438;
+  --map-inner: #7a6050;
+  --map-halo: #fff6e6;
+  --map-label: #3a2620;
   --map-city: #3f7fb8;
-  --map-p1: #dcc68c; --map-p2: #afc983; --map-p3: #e4ab7d; --map-p4: #a3bccd; --map-p5: #cdaac8; --map-p6: #e7d374; --map-p7: #bdb4a0;
+  --map-shadow: rgba(58, 32, 80, 0.3);
+  --map-p1: #dfc287; --map-p2: #b4c47f; --map-p3: #e2a47c; --map-p4: #a6bec4; --map-p5: #d0a6b8; --map-p6: #e8cd72; --map-p7: #c4b39a;
   --map-west: #86acd9; --map-east: #dc8070; --map-nonaligned: #dccf8a;
   --map-m-na: #86acd9; --map-m-eu: #ab9fe0; --map-m-br: #82c78f; --map-m-latam: #eaa56d; --map-m-asia: #e3858f; --map-m-africa: #dcc46c; --map-m-oceania: #70c6c1;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --map-ocean: #121a29; --map-ocean-2: #1b2639; --map-land: #3a3442; --map-coast: #0a080d; --map-border: #191520; --map-inner: #6b5f74;
+    --map-ocean: #141826; --map-ocean-2: #1e2233; --map-land: #3c3240; --map-coast: #0b0709; --map-border: #1a1218; --map-inner: #6e5e70; --map-shadow: rgba(0, 0, 0, 0.5);
     --map-halo: #15121a; --map-label: #efe6da; --map-city: #6fb0e8;
     --map-p1: #6c6046; --map-p2: #4f6440; --map-p3: #74503d; --map-p4: #435a6d; --map-p5: #634b65; --map-p6: #6f6838; --map-p7: #514b55;
     --map-west: #3e5f8c; --map-east: #8c4038; --map-nonaligned: #6e6638;
@@ -374,7 +376,7 @@ body:has(.tip18) #toasts { top: 64px; bottom: auto; } /* a dica (tip18) ocupa o 
   }
 }
 :root[data-theme='dark'] {
-  --map-ocean: #121a29; --map-ocean-2: #1b2639; --map-land: #3a3442; --map-coast: #0a080d; --map-border: #191520; --map-inner: #6b5f74;
+  --map-ocean: #141826; --map-ocean-2: #1e2233; --map-land: #3c3240; --map-coast: #0b0709; --map-border: #1a1218; --map-inner: #6e5e70; --map-shadow: rgba(0, 0, 0, 0.5);
   --map-halo: #15121a; --map-label: #efe6da; --map-city: #6fb0e8;
   --map-p1: #6c6046; --map-p2: #4f6440; --map-p3: #74503d; --map-p4: #435a6d; --map-p5: #634b65; --map-p6: #6f6838; --map-p7: #514b55;
   --map-west: #3e5f8c; --map-east: #8c4038; --map-nonaligned: #6e6638;
