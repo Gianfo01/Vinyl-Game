@@ -58,9 +58,11 @@ beforeAll(() => {
   // Re-medidos na r27 (docs/suite27-final.md), mesmos do r27-p2b: os antigos (1301031 / 2195685417 / 2442526734)
   // reproduzem em b748d64; AUD2 (c4c5bfd) mudou acts e AUD1 (166a36e: playbot compra negócios e contrata no 1º ano)
   // mudou caixa, acts e rng. "Sem campanha nada muda" segue provado no 1º teste da campanha (a × b).
-  expect(s.player.cash).toBe(1089445);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1761475379);
-  expect(hashString(JSON.stringify(s.rng))).toBe(3113611029);
+  // R28 F3 (story28, de propósito): mundo inicial pela cena da cidade, nomes na língua do país, peso 0,85ⁿ e cooldown por
+  // (evento, ator), portões de época e eco padrão escalado pela receita mudam a partida. Antes: 1089445 / 1761475379 / 3113611029.
+  expect(s.player.cash).toBe(201241);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1730865213);
+  expect(hashString(JSON.stringify(s.rng))).toBe(3888628370);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

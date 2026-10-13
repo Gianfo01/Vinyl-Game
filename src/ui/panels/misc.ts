@@ -2,7 +2,7 @@
 
 import { LABEL_LEGACY20, freeCash20 } from '../../sim/oblig20';
 import { diary28, fullDiary28, landmarks28, lost28 } from '../../sim/sys/story28';
-import { chartName28 } from '../../sim/chartname28';
+import { chartNameL28 } from '../../sim/chartname28';
 import { pager18 } from '../quick18';
 import { sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
@@ -71,7 +71,7 @@ export function chartsPanel(s: GameState): HTMLElement {
     );
   const hot = Object.entries(s.genrePop).filter(([g]) => genreById[g]?.born <= s.year).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', { class: 'panel charts' },
-    h('div', { class: 'col-main' }, section(chartName28('singles', s.year, !!s.config.realNames), table('singles')), section(chartName28('albums', s.year, !!s.config.realNames), table('albums'))), // r28: nome pelo ano
+    h('div', { class: 'col-main' }, section(t(chartNameL28('singles', s.year, !!s.config.realNames)), table('singles')), section(t(chartNameL28('albums', s.year, !!s.config.realNames)), table('albums'))), // r28: nome pelo ano
     h('aside', { class: 'col-side' },
       hot.length ? hotGenres17(s) : null, // r17: gêneros em alta = estilos das músicas em alta
       section(t(S.number1s), h('ul', { class: 'small' }, s.charts.number1History.slice(-15).reverse().map((n) => h('li', null, `${n.title} — ${n.act}`)))),

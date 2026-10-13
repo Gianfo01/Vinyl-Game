@@ -46,11 +46,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // (1301031 / 1382068899 / 2195685417 / 2442526734) reproduzem em b748d64; AUD2 (c4c5bfd: estresse, críticos,
     // choques macro) mudou só acts (→ 3789538846); AUD1 (166a36e: playbot compra negócios e contrata no 1º ano) mudou
     // caixa, tours, acts e rng.
+    // R28 F3 (story28, de propósito): mundo inicial pela cena, nomes na língua do país, 0,85ⁿ e cooldown por (evento, ator),
+    // portões de época e eco pela receita mudam caixa, acts e rng (tours igual). Antes: 1089445 / 529417993 / 1761475379 / 3113611029.
     // A garantia "o P2B não mexe no modo rápido" segue provada pelo teste do gancho logo abaixo (com × sem STOP27.pre).
-    expect(AFTER.player.cash).toBe(1089445);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(529417993);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1761475379);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3113611029);
+    expect(AFTER.player.cash).toBe(201241);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1730865213);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3888628370);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

@@ -3,7 +3,7 @@ import { POOL19 } from './pool19';
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
 
 import { unlimitedStock20 } from './stock20';
-import { chartName28 } from './chartname28';
+import { chartName28, chartNameL28 } from './chartname28';
 import { ART18 } from './artist18hook';
 import { MEDIA18 } from './media18hook';
 import { physShareRel18 } from './sys/eras18';
@@ -538,7 +538,7 @@ function rankChart(s: GameState, entries: ChartEntry[], which: 'singles' | 'albu
       if (act) act.hits += 1;
       if (mine) {
         s.player.stats.top10s += 1;
-        notify(s, fmtL(l('"{t}" entrou no top 10 ({c}) em #{p}!', '"{t}" entered the top 10 ({c}) at #{p}!'), { t: rel.title, c: chartName28(which, s.year, !!s.config.realNames), p: e.pos }), 'good'); // r28: nome pelo ano
+        notify(s, fmtL(l('"{t}" entrou no top 10 ({c}) em #{p}!', '"{t}" entered the top 10 ({c}) at #{p}!'), { t: rel.title, c: chartNameL28(which, s.year, !!s.config.realNames), p: e.pos }), 'good'); // r28: nome pelo ano
       }
     }
     if (e.pos === 1 && wasPos !== 1) {
@@ -550,7 +550,7 @@ function rankChart(s: GameState, entries: ChartEntry[], which: 'singles' | 'albu
         s.player.stats.number1s += 1;
         s.player.reputation.commercial = clamp(s.player.reputation.commercial + 3, 0, 100);
       }
-      remember(s, 'number1', fmtL(l('"{t}" de {a} chega ao #1 ({c}).', '"{t}" by {a} hits #1 ({c}).'), { t: rel.title, a: act?.name ?? '?', c: chartName28(which, s.year, !!s.config.realNames) }), { actId: rel.actId, important: !!mine || !!act?.catalogNo });
+      remember(s, 'number1', fmtL(l('"{t}" de {a} chega ao #1 ({c}).', '"{t}" by {a} hits #1 ({c}).'), { t: rel.title, a: act?.name ?? '?', c: chartNameL28(which, s.year, !!s.config.realNames) }), { actId: rel.actId, important: !!mine || !!act?.catalogNo });
     }
   });
   // quem saiu da parada

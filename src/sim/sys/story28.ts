@@ -102,20 +102,34 @@ export function fullDiary28(s: GameState): MemoryEntry[] {
   return [...s.memory, ...extra].sort((a, b) => a.week - b.week || (a.id < b.id ? -1 : 1));
 }
 
+/** Tipos de "nº 1" (mundial e por país): de outro artista nunca entram em "Só marcantes". */
+const NO1_KINDS28 = new Set(['number1', 'no1_country']);
 /** "Só marcantes": tudo o que é marcante do selo (inclusive o começo) + no máximo `worldMonth` fatos do mundo por mês,
- *  nunca o nº 1 de outro artista. */
+ *  nunca o nº 1 de outro artista. O mesmo tipo de fato do mesmo ato no mesmo mês vira UMA linha com "(+N)" (ex.: o
+ *  disco que chega ao #1 em 25 países). */
 export function landmarks28(s: GameState): MemoryEntry[] {
   const out: MemoryEntry[] = [];
   const world: Record<number, number> = {};
+  const grp = new Map<string, { e: MemoryEntry; n: number }>();
   for (const m of fullDiary28(s)) {
     const mine = playerMem28(s, m);
-    if (mine) { if (m.important || m.kind === 'number1' || m.kind === 'echo28' || m.kind === 'start' || m.kind === 'start17') out.push(m); continue; }
-    if (!m.important || m.kind === 'number1') continue; // nº 1 alheio fica fora
+    if (mine) {
+      if (!(m.important || NO1_KINDS28.has(m.kind) || m.kind === 'echo28' || m.kind === 'start' || m.kind === 'start17')) continue;
+      const k = `${m.kind}|${m.actId ?? ''}|${m.year}|${m.month}`;
+      const g = grp.get(k);
+      if (g && m.kind !== 'echo28' && !m.kind.startsWith('decision:')) { g.n++; continue; }
+      const e = { ...m };
+      grp.set(k, { e, n: 0 });
+      out.push(e);
+      continue;
+    }
+    if (!m.important || NO1_KINDS28.has(m.kind)) continue; // nº 1 alheio fica fora
     const mk = m.year * 12 + m.month;
     if ((world[mk] ?? 0) >= ATTN28.worldMonth) continue;
     world[mk] = (world[mk] ?? 0) + 1;
     out.push(m);
   }
+  for (const { e, n } of grp.values()) if (n) e.text = { pt: `${e.text.pt} (+${n} do mesmo tipo no mês)`, en: `${e.text.en} (+${n} more of the same this month)` };
   return out;
 }
 

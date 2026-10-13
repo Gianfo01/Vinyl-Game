@@ -19,7 +19,7 @@ import {
   fullDiary28, landmarks28, lost28, pickScenes28, recent28, spendTip28, st28, strongEcho28,
 } from '../src/sim/sys/story28';
 import { VARIANTS28, echoText28, stake28 } from '../src/sim/sys/echovar28';
-import { chartName28 } from '../src/sim/chartname28';
+import { chartName28, chartNameL28 } from '../src/sim/chartname28';
 import { bandName } from '../src/sim/people';
 import { cityGenreFit23 } from '../src/sim/genre23';
 import { money, playerActs, remember } from '../src/sim/util';
@@ -57,6 +57,16 @@ describe('r28 F3 — Diário do jogador', () => {
     expect(lm.some((m) => m.text.pt.includes('Fulano'))).toBe(false);
     expect(lm.some((m) => m.text.pt.includes('Meu hit'))).toBe(true);
     expect(lm.filter((m) => m.kind === 'law').length).toBe(ATTN28.worldMonth);
+  });
+
+  it('"Só marcantes": nº 1 por país alheio fica fora; o do selo em 25 países vira uma linha "(+24)"', () => {
+    const s = mk();
+    remember(s, 'no1_country', l('"Y" de Fulano chega ao #1 em Chile.', 'y'), { actId: other(s).id, important: true });
+    for (let i = 0; i < 25; i++) remember(s, 'no1_country', l(`"Meu hit" chega ao #1 em país ${i}.`, `country ${i}`), { actId: mine(s).id, important: true });
+    const lm = landmarks28(s).filter((m) => m.kind === 'no1_country');
+    expect(lm.length).toBe(1);
+    expect(lm[0].text.pt).toContain('+24');
+    expect(diary28(s).filter((m) => m.kind === 'no1_country').length).toBe(25); // o anel guarda todas
   });
 });
 
@@ -203,6 +213,7 @@ describe('r28 F3 — nomes e mundo inicial', () => {
     expect(chartName28('albums', 1962)).toBe('WorldSound LPs');
     expect(chartName28('albums', 1962, true)).not.toContain('Billboard 200');
     expect(chartName28('albums', 1995, true)).toBe('Billboard 200');
+    expect(chartNameL28('singles', 1889).en).toBe('Phonograph Supplement');
   });
   it('nome de banda na língua do país, com os mesmos sorteios do inglês', () => {
     const r1 = Rng.fromSeed('nm'), r2 = Rng.fromSeed('nm');
