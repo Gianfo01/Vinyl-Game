@@ -2,7 +2,8 @@
 // (tipo, era, variante, orientação, quadro). Pisos, paredes e decalques ficam em tiles.ts.
 
 import { PALETTES, eraIndex, type EraId, type Palette } from './palette';
-import { C, Px, dith, mix, noise, shade, withAlpha, type BoxShader, type Col, type Shader, type Sprite } from './px';
+import { C, Px, dith, mix, noise, pack, rgba, shade, withAlpha, type BoxShader, type Col, type Shader, type Sprite } from './px';
+import { drawGear, gearFor, gearLoaded, gearSize, gearYearKey, type GearPart } from './gear21';
 
 export * from './tiles';
 
@@ -121,10 +122,76 @@ function make(kind: FurnKind, era: EraId, facing: Facing, variant: number, frame
   const p = new Px(W + Dd + 12, H + (W + Dd) / 2 + 10);
   const pal = PALETTES[era];
   draw(new D(p, ox, oy, facing, pal, f.a * 16, f.b * 16));
-  p.outline(pal.outline);
+  gearFinish(p);
+  p.outline(HOUSE_OUTLINE);
   void variant;
   void frame;
   return { c: p.canvas(), ax: ox, ay: oy };
+}
+
+// ---------- acabamento do estilo do pacote (objetos procedurais sem asset) ----------
+
+/** Contorno da casa (regra do estilo do pacote de equipamentos). */
+const HOUSE_OUTLINE = C('#170e12');
+
+/**
+ * Aproxima as cores procedurais das rampas do pacote: tons escuros puxam para a sombra arroxeada e os claros
+ * para a luz quente, sem mexer nos tons médios (que carregam a cor do material).
+ */
+function gearFinish(p: Px): void {
+  const d = p.d;
+  for (let i = 0; i < d.length; i++) {
+    const c = d[i];
+    const a = c >>> 24;
+    if (a < 200) continue;
+    const [r, g, b] = rgba(c);
+    const L = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    if (L < 0.42) {
+      const t = (0.42 - L) * 0.55;
+      d[i] = pack(r + (58 - r) * t, g + (32 - g) * t, b + (80 - b) * t, a);
+    } else if (L > 0.68) {
+      const t = (L - 0.68) * 0.35;
+      d[i] = pack(r + (255 - r) * t, g + (240 - g) * t, b + (200 - b) * t, a);
+    }
+  }
+}
+
+/** Sprite montado com peças do atlas do pacote, com o pé no centro-frente da pegada e sombra no chão. */
+function packSprite(kind: FurnKind, facing: Facing, parts: GearPart[]): Sprite {
+  const { w, d } = footprint(kind, facing);
+  const W = w * 16;
+  const Dd = d * 16;
+  const flip = facing === 'SE';
+  // pé: centro do losango da pegada, um pouco à frente (relativo à origem local, como em make())
+  const footX = (W - Dd) / 2;
+  const footY = ((W + Dd) * 3) / 8;
+  let tall = 0;
+  let half = 0;
+  for (const pt of parts) {
+    const s = gearSize(pt.id);
+    tall = Math.max(tall, s.h - (pt.dy ?? 0));
+    half = Math.max(half, Math.abs(pt.dx ?? 0) + s.w / 2);
+  }
+  half = Math.ceil(Math.max(half, (W + Dd) / 2)) + 2;
+  const fx = half;
+  const ax = fx - footX;
+  const ay = Math.max(0, Math.ceil(tall - footY) + 2);
+  const fy = ay + footY;
+  const cw = half * 2;
+  const ch = Math.ceil(ay + (W + Dd) / 2) + 4;
+  const cv = document.createElement('canvas');
+  cv.width = cw;
+  cv.height = ch;
+  const ctx = cv.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+  // sombra de contato (as peças do pacote não trazem chão)
+  const sw = Math.max(...parts.map((pt) => gearSize(pt.id).w / 2 + Math.abs(pt.dx ?? 0)));
+  ctx.fillStyle = 'rgba(23,14,18,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(Math.round(fx), Math.round(fy) - 1, Math.max(4, sw * 0.7), Math.max(2, sw * 0.22), 0, 0, Math.PI * 2);
+  ctx.fill();
+  for (const pt of parts) drawGear(ctx, pt.id, fx + (flip ? -(pt.dx ?? 0) : pt.dx ?? 0), fy + (pt.dy ?? 0), flip);
+  return { c: cv, ax, ay };
 }
 
 // ---------- cores auxiliares ----------
@@ -875,6 +942,15 @@ function funP(d: D, era: EraId, frame: number): void {
 
 /** Sprite de móvel com cache por (tipo, era, orientação, variante, quadro). */
 export function furniture(kind: FurnKind, era: EraId, facing: Facing = 'SW', variant = 0, frame = 0): Sprite {
+  const parts = gearLoaded() ? gearFor(kind, era, variant) : null;
+  if (parts) {
+    const gk = `g|${kind}|${era}|${facing}|${variant}|${gearYearKey()}`;
+    const gh = cache.get(gk);
+    if (gh) return gh;
+    const sp = packSprite(kind, facing, parts);
+    cache.set(gk, sp);
+    return sp;
+  }
   const frames = FURN[kind].frames ?? 1;
   const fr = frames > 1 ? frame % frames : 0;
   const key = `${kind}|${era}|${facing}|${variant}|${fr}`;
@@ -925,3 +1001,30 @@ export function equipmentVisual(id: string, era: EraId): EquipVisual {
 }
 
 
+/**
+ * Miniatura do equipamento para listas (loja de equipamentos): o mesmo sprite da sede, recortado e ampliado
+ * por fator inteiro (pixels nítidos) até caber em maxW × maxH.
+ */
+export function equipmentThumb(id: string, era: EraId, maxW = 44, maxH = 34): HTMLCanvasElement {
+  const v = equipmentVisual(id, era);
+  const sp = furniture(v.kind, era, 'SW', v.variant ?? 0, 0);
+  const src = sp.c;
+  const g = src.getContext('2d')!;
+  const px = g.getImageData(0, 0, src.width, src.height).data;
+  let x0 = src.width, y0 = src.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < src.height; y++)
+    for (let x = 0; x < src.width; x++)
+      if (px[(y * src.width + x) * 4 + 3] > 120) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  const w = Math.max(1, x1 - x0 + 1);
+  const hh = Math.max(1, y1 - y0 + 1);
+  const k = Math.max(1, Math.floor(Math.min(maxW / w, maxH / hh)));
+  const out = document.createElement('canvas');
+  out.width = w * k;
+  out.height = hh * k;
+  out.className = 'equip-thumb px';
+  const ctx = out.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(src, x0, y0, w, hh, 0, 0, w * k, hh * k);
+  if (w * k > maxW * 1.5) out.style.width = `${maxW * 1.5}px`; // ônibus: maior que a célula
+  return out;
+}

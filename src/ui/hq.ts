@@ -14,6 +14,7 @@ import { avatarSprite, lookOf, lookKey, variantOf, type Dir, type Pose, type Rol
 import { drawText, fitText } from './pixel/font';
 import { icon } from './pixel/icons';
 import { PALETTES, eraOf } from './pixel/palette';
+import { onGearLoaded, setGearYear } from './pixel/gear21';
 import { C, Px, mix, shade, withAlpha, type Sprite } from './pixel/px';
 import { BRANCH_LAYOUT, ROOM_NAMES, buildScene, findPath, freeTiles, roomAt, type Scene, type Spot } from './pixel/scene';
 import { WALL_H, decalPx, floorAt, furniture, groundAt, rugAt, wallSprite, type DecalKind, type RoomKind } from './pixel/sprites';
@@ -163,6 +164,7 @@ export class HqView {
     this.stage = h('div', { class: 'hq-stage' }, this.canvas, this.tip, this.live);
     this.toolbar = h('div', { class: 'hq-toolbar' });
     this.bindInput();
+    onGearLoaded(() => { this.dirty = true; });
   }
 
   // ---------- ciclo ----------
@@ -229,6 +231,7 @@ export class HqView {
     const branch = s.branches.find((b) => b.id === this.site);
     const acts = siteActs(s, this.site);
     if (this.mode !== 'overview' && !acts.includes(this.mode)) this.mode = 'overview';
+    setGearYear(s.year);
     const st = s.player.stats;
     const sk = `${this.site}:${branch?.level ?? ''}|${s.player.hq}|${eraOf(s.year)}|${s.player.equipment.join(',')}|${st.gold}/${st.platinum}/${st.awards}|${acts.join(',')}|${s.player.staff.length}|${s.config.seed}`;
     if (sk !== this.sceneKey) {
