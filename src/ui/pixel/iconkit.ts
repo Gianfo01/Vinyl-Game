@@ -38,6 +38,7 @@ const SPEC = new Set<number>([K.gold, K.dgold, K.grey, K.black, K.glass, K.white
 
 /** Aplica relevo e contorno a um ícone recém-desenhado em cores-base. */
 export function finishIcon(p: Px): void {
-  relief(p, { mode: 'regions', r: 3, slope: 0.8, spec: (c) => SPEC.has(c) });
+  // r27 (port): o ícone inteiro é um volume (cores internas ficam legíveis em 16 px) e sem o tom 0, que sumia no menu escuro do ui27
+  relief(p, { mode: 'silhouette', r: 4, slope: 0.8, bias: 0.08, minTone: 1, spec: (c) => SPEC.has(c) });
   p.outline(INK);
 }

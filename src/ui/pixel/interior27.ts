@@ -8,7 +8,7 @@
 import type { PlaceK27, Person27 } from '../../sim/sys/place27';
 import { avatarSprite, lookOf, type Pose } from './avatar';
 import { paletteOf } from './palette';
-import { C, Px, mix, noise, shade, withAlpha, type Col } from './px';
+import { C, INK, Px, lv, mix, noise, tint, withAlpha, type Col } from './px';
 import { eraOf } from './palette';
 import { gearOf27, lightOf27, prim27, type Ctx27, type Plan27 } from '../ps/hqpx27';
 
@@ -107,6 +107,8 @@ export function interior27(k: PlaceK27, year: number, n = 4): Interior27 {
 // ---------------------------------------------------------------- pintura
 
 const RH = 92, STREET = 16, FOUND = 4, OW = 6;
+/** Oclusão nos cantos: o tom mais fundo da rampa, puxado para o roxo (igual à sede). */
+const OCC = C('#2a1634');
 export interface IDrawn27 { W: number; H: number; hits: { x: number; y: number; w: number; h: number; who: Person27 }[] }
 export interface IDrawOpts27 { minW?: number; city?: string; name?: string; seed?: string; look?: (p: Person27) => ReturnType<typeof lookOf>; role?: (p: Person27) => string | null | undefined }
 
@@ -128,7 +130,7 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
   const shell: Plan27['shell'] = m.k === 'rehearsal' ? 'garage' : 'shop';
   const pl = { hq: 1, year, shell, gear: gearOf27(year), light: m.dim ? (year < 1960 ? 'bulb' : lightOf27('shop', year)) : lightOf27('shop', year), era: eraOf(year), facade: 'block',
     W, H, gy, bx, bw, top, floors: 1, cells: [cell], rooms: [], city: o.city ?? '', lms: [], brand: '', seed, flock: {}, vip: null, crown: null } as unknown as Plan27;
-  const p = new Px(W, H);
+  let p = new Px(W, H);
   const pal = paletteOf(year);
   const g: Ctx27 = { p, pal, pl, r: prim27.rng27(seed), lamp: pl.light === 'tube' ? C('#e8f4ff') : pl.light === 'led' ? mix(C('#ffffff'), pal.accent, 0.25) : pl.light === 'globe' ? C('#ffc070') : C('#ffd889') };
   prim27.sky(g); prim27.neighbours(g); prim27.street(g);
@@ -140,6 +142,9 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
   const { blk } = prim27;
   const k0 = m.k;
   let crowd: Prop27 | undefined;
+  // adereços numa camada própria, contornada com INK no fim (mesmo acabamento da sede e do pacote de equipamentos)
+  const back = p, layer = new Px(W, H);
+  p = layer; g.p = layer;
   for (const pr of m.props) {
     const x = X(pr.x), w = Wd(pr.w);
     switch (pr.t) {
@@ -148,16 +153,16 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
         // fundo do palco: cortina de veludo (antes de 1968) ou parede preta com refletores
         const curtain = year < 1968 ? C('#8a1c24') : C('#18161e');
         p.rect(x, y0 + 4, w, fy - sh - y0 - 4, curtain);
-        if (year < 1968) for (let xx = x; xx < x + w; xx += 4) p.vline(xx, y0 + 4, fy - sh - 1, shade(curtain, -0.25));
+        if (year < 1968) for (let xx = x; xx < x + w; xx++) { const k = (xx - x) % 4; if (k !== 1) p.vline(xx, y0 + 4, fy - sh - 1, lv(curtain, k === 0 ? 1.2 : k === 2 ? 4 : 2.4)); } // pregas: sombra, luz, meia-sombra
         else for (let i = 0; i < 4; i++) { const cx = x + Math.round((w * (i + 0.5)) / 4); p.rect(cx - 1, y0 + 5, 3, 2, C('#3a3a40')); p.poly([[cx, y0 + 7], [cx - 6, fy - sh], [cx + 6, fy - sh]], withAlpha(i % 2 ? C('#ff60c0') : C('#60d0ff'), 26)); }
         blk(p, x, fy - sh, w, sh, pal.woodDark);
-        p.hline(x, x + w - 1, fy - sh, shade(pal.wood, 0.3));
+        p.hline(x, x + w - 1, fy - sh, tint(pal.wood, 0.3));
         break;
       }
       case 'crowd': crowd = pr; break; // a plateia vai NA FRENTE dos bonecos (pintada no fim)
       case 'counter': {
         blk(p, x, fy - 14, w, 14, pal.wood);
-        p.rect(x - 1, fy - 15, w + 2, 2, shade(pal.wood, 0.3));
+        p.rect(x - 1, fy - 15, w + 2, 2, tint(pal.wood, 0.3));
         if (k0 === 'records' || k0 === 'instruments') { blk(p, x + w - 12, fy - 21, 9, 6, year < 1980 ? C('#9a8a6a') : C('#2a2a30')); p.rect(x + w - 10, fy - 20, 5, 2, C('#7ad070')); }
         if (k0 === 'hotel') p.rect(x + 4, fy - 17, 3, 2, C('#e8c050'));
         break;
@@ -166,9 +171,9 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
         for (let r = 0; r < 2; r++) {
           const yy = y0 + 18 + r * 14;
           p.rect(x, yy + 8, w, 2, pal.woodDark);
-          for (let xx = x + 1; xx < x + w - 3; xx += 4) { const c = [C('#3a7a3a'), C('#8a5a20'), C('#c8c0a0'), C('#5a2a2a'), C('#2a4a6a')][(xx + r + seed) % 5]; p.rect(xx, yy + 3, 3, 5, c); p.rect(xx + 1, yy, 1, 3, shade(c, 0.15)); p.put(xx, yy + 4, withAlpha(C('#ffffff'), 90)); }
+          for (let xx = x + 1; xx < x + w - 3; xx += 4) { const c = [C('#3a7a3a'), C('#8a5a20'), C('#c8c0a0'), C('#5a2a2a'), C('#2a4a6a')][(xx + r + seed) % 5]; p.rect(xx, yy + 3, 3, 5, c); p.rect(xx + 1, yy, 1, 3, tint(c, 0.15)); p.put(xx, yy + 4, withAlpha(C('#ffffff'), 90)); }
         }
-        p.rect(x, y0 + 12, w, 1, withAlpha(C('#ffe0a0'), 90));
+        p.rect(x, y0 + 12, w, 1, withAlpha(C('#ffe0a0'), 38)); // luz da prateleira (fraca: não ganha contorno)
         break;
       }
       case 'racks': prim27.shelf(g, x, y0 + 12, w, fy - y0 - 14, pr.media === 'cds' ? 'cds' : pr.media === 'sheets' ? 'books' : 'records'); break;
@@ -177,7 +182,7 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
         for (let i = 0; i < n; i++) {
           const bx0 = x + i * (bwid + 3);
           blk(p, bx0, fy - 11, bwid, 11, pal.wood);
-          p.rect(bx0 + 2, fy - 4, bwid - 4, 1, shade(pal.wood, -0.3));
+          p.rect(bx0 + 2, fy - 4, bwid - 4, 1, tint(pal.wood, -0.3));
           // o que está dentro do caixote
           const tall = pr.media === 'cds' ? 4 : pr.media === 'sheets' ? 6 : 7;
           for (let xx = bx0 + 1; xx < bx0 + bwid - 1; xx += pr.media === 'cds' ? 2 : 1) {
@@ -227,18 +232,21 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
       case 'gold': { const n = pr.n ?? 3; for (let i = 0; i < n; i++) prim27.goldDisc(g, x + i * 14, y0 + 14, i === 0); break; }
     }
   }
+  layer.outline(INK);
+  p = back; g.p = back;
+  p.blit(layer, 0, 0);
   // moldura do corte: paredes da fachada, laje, cornija e letreiro com o nome
   const fc = facadeCol(year, m.k);
-  blk(p, bx, top, OW, gy - top, fc); blk(p, bx + bw - OW, top, OW, gy - top, shade(fc, -0.18));
-  blk(p, bx, top, bw, y0 - top, shade(fc, 0.06));
-  p.rect(bx - 2, top - 2, bw + 4, 3, shade(fc, -0.3));
-  blk(p, bx, gy - FOUND, bw, FOUND, shade(fc, -0.35));
+  blk(p, bx, top, OW, gy - top, fc); blk(p, bx + bw - OW, top, OW, gy - top, tint(fc, -0.18));
+  blk(p, bx, top, bw, y0 - top, tint(fc, 0.06));
+  p.rect(bx - 2, top - 2, bw + 4, 3, tint(fc, -0.3));
+  blk(p, bx, gy - FOUND, bw, FOUND, tint(fc, -0.35));
   if (o.name) prim27.sign(g, Math.round(W / 2), top + 2, o.name, Math.min(bw - 20, 200), m.dim || year >= 1925);
   // luz: uma ou duas lâmpadas; casa escura (show, bar) tem halo mais forte no palco
   const nL = w0 > 200 ? 3 : 2;
   for (let i = 0; i < nL; i++) prim27.lamp(g, x0 + Math.round((w0 * (i + 0.5)) / nL), y0, fy, 26);
   if (m.dim) p.rect(x0, y0, w0, RH, withAlpha(C('#0a0820'), 70));
-  for (let i = 0; i < 3; i++) { p.rect(x0 + i, y0, 1, RH, withAlpha(prim27.INK, 60 - i * 18)); p.rect(x0 + w0 - 1 - i, y0, 1, RH, withAlpha(prim27.INK, 50 - i * 15)); }
+  for (let i = 0; i < 3; i++) { p.rect(x0 + i, y0, 1, RH, withAlpha(OCC, 90 - i * 28)); p.rect(x0 + w0 - 1 - i, y0, 1, RH, withAlpha(OCC, 80 - i * 25)); }
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
   const hits: IDrawn27['hits'] = [];

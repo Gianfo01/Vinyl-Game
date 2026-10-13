@@ -14,7 +14,9 @@ import { lookOf, type Pose } from '../pixel/avatar';
 import { avatarSprite } from '../pixel/avatar';
 import { drawLandmark19 } from '../pixel/landmarks19px';
 import { eraOf, paletteOf, type EraId, type Palette } from '../pixel/palette';
-import { C, Px, dith, mix, noise, shade, withAlpha, type Col } from '../pixel/px';
+import { C, INK, Px, dith, lv, mix, noise, tint, withAlpha, type Col } from '../pixel/px';
+import { gearPx } from '../pixel/gear21';
+import type { GearId } from '../pixel/gear21-atlas';
 import { drawText, fitText, textWidth } from '../pixel/font';
 import type { HqModel25, Room25, Sprite25 } from './hq25model';
 
@@ -209,13 +211,24 @@ export function place27(p: Plan27, rooms: { id: Room25; sprites: Sprite25[]; mor
 type Pal = Palette;
 interface Ctx { p: Px; pal: Pal; pl: Plan27; r: () => number; lamp: Col }
 
-const INK = C('#16121c');
+/** Sombra de oclusão (cantos, teto): o tom mais fundo da rampa, puxado para o roxo. */
+const OCC = C('#2a1634');
 const blk = (p: Px, x: number, y: number, w: number, h: number, c: Col): void => {
   if (w <= 0 || h <= 0) return;
   p.rect(x, y, w, h, c);
-  p.hline(x, x + w - 1, y, shade(c, 0.2));
-  p.hline(x, x + w - 1, y + h - 1, shade(c, -0.35));
-  if (h > 2) p.vline(x + w - 1, y + 1, y + h - 2, shade(c, -0.22));
+  // luz de cima à esquerda (tom 4), pé em sombra arroxeada (tom 1), lado direito em meia-sombra (tom 2)
+  p.hline(x, x + w - 1, y, lv(c, 4));
+  if (h > 3 && w > 3) p.vline(x, y + 1, y + h - 2, lv(c, 3.5));
+  p.hline(x, x + w - 1, y + h - 1, lv(c, 1));
+  if (h > 2) p.vline(x + w - 1, y + 1, y + h - 2, lv(c, 2));
+};
+
+/** Sprite do pacote de equipamentos (atlas gear21) com o pé em (cx, fy); false = sem atlas (fica o procedural). */
+const gear = (g: Ctx, id: GearId, cx: number, fy: number, flip = false): boolean => {
+  const q = gearPx(id);
+  if (!q) return false;
+  g.p.blit(q, Math.round(cx - q.w / 2), fy - q.h + 1, flip);
+  return true;
 };
 
 function sky(g: Ctx): void {
@@ -256,7 +269,7 @@ function skyline(g: Ctx): void {
       p.rect(x, y, w, pl.gy - y, col);
       if (pl.year >= 1990 && tall) { p.rect(x + 1, y, w - 2, h, mix(col, C('#5a6aa8'), 0.18)); }
       if (g.r() < 0.3 && pl.year >= 1930) { p.vline(x + (w >> 1), y - 6, y, col); if (pl.year >= 1960) p.put(x + (w >> 1), y - 7, C('#ff5a4a')); }
-      if (pl.year < 1960 && g.r() < 0.25) { p.rect(x + 2, y - 7, 6, 5, shade(col, 0.1)); p.vline(x + 3, y - 2, y, col); p.vline(x + 6, y - 2, y, col); } // caixa-d'água
+      if (pl.year < 1960 && g.r() < 0.25) { p.rect(x + 2, y - 7, 6, 5, tint(col, 0.1)); p.vline(x + 3, y - 2, y, col); p.vline(x + 6, y - 2, y, col); } // caixa-d'água
       for (let yy = y + 3; yy < pl.gy - 2; yy += 4) for (let xx = x + 2; xx < x + w - 2; xx += 3) if (noise(xx, yy, pl.seed) < wl) p.rect(xx, yy, 1, 2, lit);
       x += w + (g.r() < 0.3 ? 2 : 0);
     }
@@ -339,11 +352,11 @@ function street(g: Ctx): void {
   const y = pl.gy;
   const side = pl.shell === 'garage' ? mix(pal.ground[0], C('#8a8478'), 0.5) : mix(pal.ground[0], C('#7a7672'), 0.6);
   p.rect(0, y, pl.W, 5, side);
-  for (let x = 0; x < pl.W; x += 12) p.vline(x, y, y + 4, shade(side, -0.15));
-  p.rect(0, y + 5, pl.W, 1, shade(side, 0.3));
+  for (let x = 0; x < pl.W; x += 12) p.vline(x, y, y + 4, tint(side, -0.15));
+  p.rect(0, y + 5, pl.W, 1, tint(side, 0.3));
   const road = pl.year < 1930 ? C('#4a4440') : C('#24222c');
   p.rect(0, y + 6, pl.W, STREET - 6, road);
-  if (pl.year < 1930) for (let yy = y + 7; yy < y + STREET; yy += 2) for (let x = (yy & 2); x < pl.W; x += 4) p.put(x, yy, shade(road, 0.12));
+  if (pl.year < 1930) for (let yy = y + 7; yy < y + STREET; yy += 2) for (let x = (yy & 2); x < pl.W; x += 4) p.put(x, yy, tint(road, 0.12));
   else for (let x = 4; x < pl.W; x += 18) p.rect(x, y + 11, 8, 1, C('#d8c060'));
   // postes
   for (let x = 14; x < pl.W; x += 120) {
@@ -369,10 +382,10 @@ function neighbours(g: Ctx): void {
       const h = Math.max(30, Math.floor(bh * (0.55 + g.r() * 0.6)));
       const y = pl.gy - h;
       p.rect(x, y, w, h, col);
-      p.rect(x, y, w, 2, shade(col, 0.12));
+      p.rect(x, y, w, 2, tint(col, 0.12));
       for (let yy = y + 6; yy < pl.gy - 8; yy += 11) for (let xx = x + 4; xx < x + w - 5; xx += 9) {
         const on = noise(xx, yy, pl.seed + 7) < 0.35;
-        p.rect(xx, yy, 4, 6, on ? lit : shade(col, -0.25));
+        p.rect(xx, yy, 4, 6, on ? lit : tint(col, -0.25));
       }
       x += w + 1;
     }
@@ -386,6 +399,7 @@ function neighbours(g: Ctx): void {
 
 function amp(g: Ctx, x: number, fy: number, big = false): void {
   const { p, pl } = g;
+  if (big && pl.year >= 1950 && gear(g, 'amplificador', x + 7, fy)) return; // pacote: amplificador valvulado com tela
   const w = big ? 14 : 11, h = big ? 16 : 11;
   const body = pl.year < 1965 ? C('#c8a46a') : C('#1e1c22');
   blk(p, x, fy - h, w, h, body);
@@ -412,6 +426,7 @@ function guitar(g: Ctx, x: number, fy: number, col: Col): void {
 }
 function drums(g: Ctx, x: number, fy: number): void {
   const { p, pal, pl } = g;
+  if (pl.year >= 1940 && gear(g, 'bateria', x + 13, fy)) return; // pacote: bateria com pratos de latão
   const shell = pl.year < 1960 ? C('#e8e0d0') : pl.year < 1990 ? pal.accent2 : C('#2a2a38');
   p.disc(x + 13, fy - 8, 7.5, shell); p.disc(x + 13, fy - 8, 6, C('#f0ece4'));
   if (pl.year >= 1960) drawText(p, 'B', x + 12, fy - 10, pal.accent);
@@ -426,7 +441,7 @@ function piano(g: Ctx, x: number, fy: number): void {
   blk(p, x, fy - 22, 26, 14, w);
   p.rect(x + 1, fy - 9, 24, 2, C('#f2ece0')); for (let i = x + 2; i < x + 25; i += 2) p.put(i, fy - 9, INK);
   p.rect(x + 2, fy - 7, 2, 7, w); p.rect(x + 22, fy - 7, 2, 7, w);
-  p.rect(x + 4, fy - 20, 18, 1, shade(w, 0.15));
+  p.rect(x + 4, fy - 20, 18, 1, tint(w, 0.15));
   p.rect(x + 9, fy - 26, 6, 4, g.pal.paper); // partitura
 }
 function lathe(g: Ctx, x: number, fy: number): void {
@@ -486,18 +501,18 @@ function consoleDesk(g: Ctx, x: number, fy: number, w: number): void {
 }
 function couch(g: Ctx, x: number, fy: number, w: number, col: Col): void {
   const { p } = g;
-  blk(p, x, fy - 14, w, 7, shade(col, -0.08)); // encosto
+  blk(p, x, fy - 14, w, 7, tint(col, -0.08)); // encosto
   blk(p, x + 2, fy - 8, w - 4, 4, col); // assento
-  blk(p, x, fy - 10, 3, 7, shade(col, -0.18)); blk(p, x + w - 3, fy - 10, 3, 7, shade(col, -0.18));
+  blk(p, x, fy - 10, 3, 7, tint(col, -0.18)); blk(p, x + w - 3, fy - 10, 3, 7, tint(col, -0.18));
   p.rect(x + 1, fy - 3, 2, 3, INK); p.rect(x + w - 3, fy - 3, 2, 3, INK);
-  p.rect(x + 5, fy - 12, 5, 3, shade(col, 0.25)); // almofada
+  p.rect(x + 5, fy - 12, 5, 3, tint(col, 0.25)); // almofada
 }
 function shelf(g: Ctx, x: number, y: number, w: number, h: number, media: 'records' | 'tapes' | 'cds' | 'books' | 'drives'): void {
   const { p, pal } = g;
   blk(p, x, y, w, h, pal.woodDark);
   const cols = [pal.accent, pal.accent2, pal.fabric, pal.fabric2, pal.paper, pal.gold, C('#3a3a44')];
   for (let yy = y + 2; yy < y + h - 3; yy += 7) {
-    p.hline(x + 1, x + w - 2, yy + 5, shade(pal.woodDark, 0.25));
+    p.hline(x + 1, x + w - 2, yy + 5, tint(pal.woodDark, 0.25));
     let xx = x + 2;
     while (xx < x + w - 2) {
       const th = media === 'records' ? 1 : media === 'cds' ? 1 : media === 'drives' ? 2 : 2;
@@ -511,8 +526,8 @@ function desk(g: Ctx, x: number, fy: number, w: number): void {
   const { p, pal, pl } = g;
   const top = pl.year < 1990 ? pal.wood : pl.year < 2010 ? C('#c8c4b8') : C('#e8e6e0');
   blk(p, x, fy - 12, w, 3, top);
-  if (pl.year < 1990) blk(p, x + w - 9, fy - 9, 8, 9, shade(top, -0.12)); else p.rect(x + w - 3, fy - 9, 2, 9, C('#7a7a82'));
-  p.rect(x + 1, fy - 9, 2, 9, shade(top, -0.3));
+  if (pl.year < 1990) blk(p, x + w - 9, fy - 9, 8, 9, tint(top, -0.12)); else p.rect(x + w - 3, fy - 9, 2, 9, C('#7a7a82'));
+  p.rect(x + 1, fy - 9, 2, 9, tint(top, -0.3));
 }
 function deskGear(g: Ctx, x: number, fy: number): void {
   const { p, pl } = g;
@@ -537,7 +552,7 @@ function chair(g: Ctx, x: number, fy: number): void {
 function filing(g: Ctx, x: number, fy: number): void {
   const { p, pal } = g;
   blk(p, x, fy - 20, 9, 20, pal.metalDark);
-  for (let i = 0; i < 3; i++) { p.hline(x + 1, x + 7, fy - 19 + i * 6 + 5, shade(pal.metalDark, -0.3)); p.rect(x + 3, fy - 17 + i * 6, 3, 1, pal.metal); }
+  for (let i = 0; i < 3; i++) { p.hline(x + 1, x + 7, fy - 19 + i * 6 + 5, tint(pal.metalDark, -0.3)); p.rect(x + 3, fy - 17 + i * 6, 3, 1, pal.metal); }
 }
 function plant(g: Ctx, x: number, fy: number, big = false): void {
   const { p, pal } = g;
@@ -546,7 +561,7 @@ function plant(g: Ctx, x: number, fy: number, big = false): void {
   for (let i = 0; i < (big ? 9 : 5); i++) {
     const a = -Math.PI / 2 + (i - (big ? 4 : 2)) * 0.32;
     const len = h * (0.6 + noise(x, i, 1) * 0.4);
-    p.line(x, fy - 5, x + Math.cos(a) * len * 0.5, fy - 5 + Math.sin(a) * len, i % 2 ? pal.plant : shade(pal.plant, 0.2));
+    p.line(x, fy - 5, x + Math.cos(a) * len * 0.5, fy - 5 + Math.sin(a) * len, i % 2 ? pal.plant : tint(pal.plant, 0.2));
   }
 }
 function tv(g: Ctx, x: number, fy: number): void {
@@ -606,7 +621,7 @@ function goldDisc(g: Ctx, x: number, y: number, plat = false): void {
 }
 function backWindow(g: Ctx, x: number, y: number, w: number, h: number, arched: boolean): void {
   const { p, pl } = g;
-  const frame = pl.shell === 'loft' ? C('#2a2a30') : shade(g.pal.trim, -0.1);
+  const frame = pl.shell === 'loft' ? C('#2a2a30') : tint(g.pal.trim, -0.1);
   p.rect(x, y, w, h, frame);
   for (let yy = y + 1; yy < y + h - 1; yy++) for (let xx = x + 1; xx < x + w - 1; xx++) p.put(xx, yy, mix(C('#3a2d62'), C('#e07a5a'), (yy - y) / h));
   for (let xx = x + 1; xx < x + w - 1; xx += 3) { const hh = 2 + Math.floor(noise(xx, y, pl.seed) * (h * 0.5)); p.rect(xx, y + h - 1 - hh, 3, hh, C('#211d3c')); if (noise(xx, y, 9) < 0.5) p.put(xx + 1, y + h - hh, C('#ffd27a')); }
@@ -616,7 +631,7 @@ function backWindow(g: Ctx, x: number, y: number, w: number, h: number, arched: 
 }
 function foam(g: Ctx, x: number, y: number, w: number, h: number): void {
   const { p, pl } = g;
-  const a = pl.year < 1990 ? C('#6a5a4a') : C('#3a3a46'), b = shade(a, -0.2);
+  const a = pl.year < 1990 ? C('#6a5a4a') : C('#3a3a46'), b = tint(a, -0.2);
   for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) p.put(xx, yy, ((xx >> 2) + (yy >> 2)) % 2 ? a : b);
 }
 function corkBoard(g: Ctx, x: number, y: number, w: number, h: number): void {
@@ -653,33 +668,56 @@ function lamp(g: Ctx, cx: number, y: number, fy: number, reach: number): void {
 function wallFill(g: Ctx, c: Cell27): void {
   const { p, pl, pal } = g;
   const { x, y, w, h } = c;
-  const brick = pl.shell === 'loft' || (pl.shell === 'garage' && false) || pal.wallKind === 'brick';
+  const brick = pl.shell === 'loft' || pal.wallKind === 'brick';
   const block = pl.shell === 'garage';
   const base = block ? mix(C('#8a8478'), pal.wall, 0.25) : pl.shell === 'loft' ? C('#9a5440') : pal.wall;
+  const joint = lv(base, 1.4), lit = lv(base, 3.6);
+  const wain = pal.wallKind === 'wainscot' || pal.wallKind === 'paper';
+  const wy = Math.round(y + h * 0.62); // altura do lambri / régua
   for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) {
     let col = base;
     if (brick || block) {
+      // tijolo/bloco: junta escura (tom 1), fio de luz em cima de cada fiada (tom 4) — sem ruído por pixel
       const bh = block ? 6 : 3, bwid = block ? 12 : 7;
-      const row = Math.floor((yy - y) / bh), off = row % 2 ? bwid >> 1 : 0;
-      if ((yy - y) % bh === bh - 1 || (xx - x + off) % bwid === 0) col = shade(base, -0.22);
-      else if (noise(xx, yy, 11) < 0.12) col = shade(base, noise(xx, yy, 3) < 0.5 ? 0.06 : -0.08);
+      const ry = (yy - y) % bh, row = Math.floor((yy - y) / bh), off = row % 2 ? bwid >> 1 : 0;
+      if (ry === bh - 1 || (xx - x + off) % bwid === 0) col = joint;
+      else if (ry === 0) col = lit;
+      else if (noise(Math.floor((xx - x + off) / bwid), row, 11) < 0.18) col = lv(base, 2.6); // tijolo mais queimado (por peça)
     } else if (pal.wallKind === 'panel' && pl.year < 1990) {
-      if ((xx - x) % 6 === 0) col = shade(base, -0.15);
-    } else if (pal.wallKind === 'wainscot' || pal.wallKind === 'paper') {
-      if (yy > y + h * 0.62) col = (xx - x) % 5 === 0 ? shade(pal.wall2, -0.2) : pal.wall2;
-      else if (pal.wallKind === 'paper' && (xx - x) % 6 === 0 && (yy - y) % 4 < 2) col = shade(base, -0.06);
-    } else if (noise(xx, yy, 2) < 0.04) col = shade(base, -0.04);
+      const k = (xx - x) % 6;
+      col = k === 0 ? lv(base, 1.6) : k === 1 ? lv(base, 3.5) : base; // ripas com chanfro
+    } else if (wain) {
+      if (yy > wy) {
+        const k = (xx - x) % 5;
+        col = k === 0 ? lv(pal.wall2, 1.4) : k === 1 ? lv(pal.wall2, 3.6) : pal.wall2; // lambri com veio
+      } else if (pal.wallKind === 'paper' && (xx - x) % 6 === 0 && (yy - y) % 4 < 2) col = lv(base, 2.6);
+    }
     p.put(xx, yy, col);
   }
-  // sombra do teto (luz cai de cima)
-  for (let yy = 0; yy < 5; yy++) p.rect(x, y + yy, w, 1, withAlpha(INK, 70 - yy * 14));
-  // rodapé e piso
+  if (wain) { // régua do lambri: latão em 1920, madeira nas outras
+    const rule = pl.year < 1940 ? C('#c09048') : pal.trim;
+    p.hline(x, x + w - 1, wy, lv(rule, 4)); p.hline(x, x + w - 1, wy + 1, lv(rule, 1.5));
+  }
+  // oclusão sob a sanca (degraus arroxeados, a luz cai de cima)
+  for (let yy = 0; yy < 4; yy++) p.rect(x, y + yy, w, 1, withAlpha(OCC, 120 - yy * 30));
+  // rodapé saliente e piso
   const fk = c.kind === 'studio' || c.kind === 'studioB' ? 'studio' : c.kind === 'lounge' ? 'lounge' : c.kind === 'lobby' ? 'hall' : pl.shell === 'garage' ? 'garage' : 'office';
   const fl = pal.floors[fk];
-  p.rect(x, y + h - 5, w, 1, pal.trim);
+  p.rect(x, y + h - 7, w, 1, withAlpha(OCC, 60)); // sombra do rodapé na parede
+  p.hline(x, x + w - 1, y + h - 6, lv(pal.trim, 4));
+  p.hline(x, x + w - 1, y + h - 5, lv(pal.trim, 2));
   for (let yy = y + h - 4; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) {
-    const k = fl.kind === 'checker' ? ((xx >> 2) + (yy >> 1)) % 2 : fl.kind === 'parquet' || fl.kind === 'wood' ? ((xx + (yy % 2) * 5) % 9 === 0 ? 1 : 0) : noise(xx, yy, 5) < 0.3 ? 1 : 0;
-    p.put(xx, yy, k ? fl.b : fl.a);
+    const r = yy - (y + h - 4);
+    let col = fl.a;
+    if (fl.kind === 'checker') col = ((xx >> 2) + (yy >> 1)) % 2 ? fl.b : fl.a;
+    else if (fl.kind === 'parquet' || fl.kind === 'wood') { // tábuas: junta (tom 1) e fio de luz na borda de cima
+      const k = (xx + (yy % 2) * 5) % 9;
+      col = k === 0 ? lv(fl.a, 1.2) : (yy % 2 ? fl.b : fl.a);
+      if (r === 0 && k !== 0) col = lv(fl.a, 4);
+    } else if (fl.kind === 'tiles') col = (xx - x) % 6 === 0 || r === 2 ? lv(fl.a, 1.5) : r === 0 ? lv(fl.a, 4) : fl.a;
+    else if (fl.kind === 'carpet' || fl.kind === 'shag') col = r === 0 ? lv(fl.a, 3.6) : (xx + yy) % 3 === 0 ? fl.b : fl.a; // trama miúda
+    else col = (xx - x) % 16 === 0 ? lv(fl.a, 1.6) : r === 0 ? lv(fl.a, 3.6) : fl.a; // concreto/placas
+    p.put(xx, yy, col);
   }
 }
 
@@ -761,7 +799,7 @@ function furnish(g: Ctx, c: Cell27): void {
     }
     case 'stage': {
       const riser = pl.hq >= 2;
-      if (riser) { blk(p, x + 6, fy - 4, w - 30, 4, pal.woodDark); for (let xx = x + 8; xx < x + w - 26; xx += 8) p.put(xx, fy - 2, shade(pal.woodDark, 0.3)); }
+      if (riser) { blk(p, x + 6, fy - 4, w - 30, 4, pal.woodDark); for (let xx = x + 8; xx < x + w - 26; xx += 8) p.put(xx, fy - 2, tint(pal.woodDark, 0.3)); }
       const sy = riser ? fy - 4 : fy;
       if (pl.year >= 1965) { p.rect(x + 4, y + 4, w - 8, 2, C('#2a2a30')); for (let i = 0; i < 3; i++) { const xx = x + 20 + i * Math.floor((w - 50) / 2); p.rect(xx, y + 6, 3, 4, C('#3a3a40')); p.poly([[xx, y + 10], [xx + 3, y + 10], [xx + 14, sy], [xx - 11, sy]], withAlpha([C('#ff6a8a'), C('#ffd27a'), C('#7ac8ff')][i], 24)); } }
       else poster(g, x + w - 26, wy, 16, 20, 4);
@@ -794,7 +832,7 @@ function furnish(g: Ctx, c: Cell27): void {
     }
     // ---- enfeites
     case 'rehearsal': { // sala de ensaio: isolamento, tapete, bateria, amplificadores, setlist na parede
-      if (pl.year >= 1965) foam(g, x + 3, y + 8, w - 6, 18); else for (let xx = x + 4; xx < x + w - 4; xx += 6) p.vline(xx, y + 8, y + 26, shade(pal.wall, -0.12));
+      if (pl.year >= 1965) foam(g, x + 3, y + 8, w - 6, 18); else for (let xx = x + 4; xx < x + w - 4; xx += 6) p.vline(xx, y + 8, y + 26, tint(pal.wall, -0.12));
       p.rect(x + 8, y + 30, 14, 18, pal.paper); for (let i = 0; i < 5; i++) p.hline(x + 10, x + 18 - (i % 3) * 2, y + 33 + i * 3, INK); // setlist
       for (let xx = x + 6; xx < x + w - 6; xx++) p.put(xx, fy + 1, (xx >> 1) % 3 ? C('#7a2a3a') : C('#b8862a'));
       if (pl.gear === 'shellac') { piano(g, x + 26, fy); micStand(g, x + 60, fy); for (let i = 0; i < 2; i++) { p.vline(x + 72 + i * 12, fy - 14, fy - 1, C('#2a2a30')); blk(p, x + 69 + i * 12, fy - 18, 7, 4, C('#2a2a30')); } }
@@ -838,7 +876,7 @@ function extras(g: Ctx, c: Cell27): void {
   const { x, y, w, h } = c;
   const fy = y + h - 3;
   if (pl.shell === 'loft' || pl.shell === 'garage') { p.hline(x, x + w - 1, y + 2, C('#5a5a62')); p.hline(x, x + w - 1, y + 3, C('#3a3a42')); for (let xx = x + 10; xx < x + w; xx += 40) p.rect(xx, y + 1, 2, 4, C('#6a6a72')); }
-  const rug = (x0: number, x1: number, a: Col, b: Col) => { for (let xx = x0; xx < x1; xx++) { p.put(xx, fy, (xx >> 1) % 3 ? a : b); p.put(xx, fy + 1, shade(a, -0.2)); } };
+  const rug = (x0: number, x1: number, a: Col, b: Col) => { for (let xx = x0; xx < x1; xx++) { p.put(xx, fy, (xx >> 1) % 3 ? a : b); p.put(xx, fy + 1, tint(a, -0.2)); } };
   switch (c.kind) {
     case 'lounge': {
       if (w > 96) shelf(g, x + Math.floor(w * 0.52), y + 9, 22, 16, pl.gear === 'digital' ? 'cds' : 'records');
@@ -877,7 +915,7 @@ function van(g: Ctx, x: number, fy: number): void {
     p.rect(x + 2, roofY + 2, 58, 18, body); p.rect(x + 2, roofY + 12, 58, 8, C('#f2ece0')); p.ellipse(x + 58, roofY + 11, 4, 9, body);
   } else { p.rect(x + 2, roofY + 3, 54, 17, body); p.poly([[x + 56, roofY + 3], [x + 62, roofY + 12], [x + 62, roofY + 20], [x + 56, roofY + 20]], body); }
   for (let i = 0; i < 3; i++) p.rect(x + 10 + i * 14, roofY + 5, 10, 5, C('#2a3048'));
-  p.rect(x + 2, fy - 4, 60, 2, shade(body, -0.3));
+  p.rect(x + 2, fy - 4, 60, 2, tint(body, -0.3));
   for (const wx of [x + 14, x + 48]) { p.disc(wx, fy - 2, 4, INK); p.disc(wx, fy - 2, 1.6, C('#9aa0aa')); }
   p.rect(x + 60, roofY + 14, 2, 2, C('#ffe0a0'));
 }
@@ -895,30 +933,30 @@ function shell(g: Ctx): void {
     : fc === 'deco' ? C('#b09a78') : fc === 'stone' ? C('#a89a84') : pl.year < 1960 ? C('#a88a6a') : C('#8a7a6e');
   // torre e campus: a fachada continua acima do corte (cortada pelo topo da imagem), estreita para deixar o céu e os marcos à vista
   if (pl.crown) crown27(g, topY - SLAB - 6);
-  const slab = glass ? (fc === 'future' ? C('#b8c2cc') : C('#4a5068')) : masonry ? shade(outer, -0.3) : C('#5a5458');
-  p.rect(pl.bx, pl.gy - FOUND, pl.bw, FOUND, shade(outer, -0.35));
+  const slab = glass ? (fc === 'future' ? C('#b8c2cc') : C('#4a5068')) : masonry ? tint(outer, -0.3) : C('#5a5458');
+  p.rect(pl.bx, pl.gy - FOUND, pl.bw, FOUND, tint(outer, -0.35));
   for (let f = 0; f < pl.floors; f++) {
     const y0 = pl.gy - FOUND - (f + 1) * FH27 - f * SLAB;
     p.rect(pl.bx, y0 - SLAB, pl.bw, SLAB, slab);
-    p.rect(pl.bx, y0 - SLAB, pl.bw, 1, shade(slab, 0.2));
-    if (fc === 'deco') for (let xx = pl.bx + 3; xx < pl.bx + pl.bw - 3; xx += 6) p.put(xx, y0 - 3, shade(slab, 0.35)); // friso art déco
+    p.rect(pl.bx, y0 - SLAB, pl.bw, 1, tint(slab, 0.2));
+    if (fc === 'deco') for (let xx = pl.bx + 3; xx < pl.bx + pl.bw - 3; xx += 6) p.put(xx, y0 - 3, tint(slab, 0.35)); // friso art déco
     if (pl.shell === 'loft' || pl.shell === 'building') for (let xx = pl.bx; xx < pl.bx + pl.bw; xx += 10) p.vline(xx, y0 - SLAB + 2, y0 - 2, C('#3a3438')); // vigas
-    if (pl.shell === 'campus' && f > 0) for (let xx = pl.bx + 4; xx < pl.bx + pl.bw - 4; xx += 7) { p.put(xx, y0 - SLAB - 1, pal.plant); p.put(xx + 2, y0 - SLAB - 2, shade(pal.plant, 0.2)); } // floreiras nas lajes
+    if (pl.shell === 'campus' && f > 0) for (let xx = pl.bx + 4; xx < pl.bx + pl.bw - 4; xx += 7) { p.put(xx, y0 - SLAB - 1, pal.plant); p.put(xx + 2, y0 - SLAB - 2, tint(pal.plant, 0.2)); } // floreiras nas lajes
   }
   // paredes externas
   for (const wx of [pl.bx, pl.bx + pl.bw - OW]) {
     for (let yy = topY - SLAB; yy < pl.gy - FOUND; yy++) for (let xx = wx; xx < wx + OW; xx++) {
       let c = outer;
       if (!glass && pl.shell !== 'garage') {
-        if (masonry) { if (yy % 8 === 7 || (fc === 'deco' && (xx - wx) === 2)) c = shade(outer, -0.18); }
-        else { const row = Math.floor(yy / 3), off = row % 2 ? 3 : 0; if (yy % 3 === 2 || (xx + off) % 6 === 0) c = shade(outer, -0.25); }
+        if (masonry) { if (yy % 8 === 7 || (fc === 'deco' && (xx - wx) === 2)) c = tint(outer, -0.18); }
+        else { const row = Math.floor(yy / 3), off = row % 2 ? 3 : 0; if (yy % 3 === 2 || (xx + off) % 6 === 0) c = tint(outer, -0.25); }
       }
       if (glass && (xx - wx) === OW - 2) c = fc === 'future' ? C('#2ee8d8') : C('#8aa0c8');
       p.put(xx, yy, c);
     }
   }
   // paredes internas (andar fechado ou em obra: vão livre, sem divisórias)
-  if (pl.shell !== 'garage') for (const c of pl.cells) if (c.x + c.w < pl.bx + pl.bw - OW - 1 && !pl.flock[c.floor]) p.rect(c.x + c.w, c.y, IWALL, c.h, shade(outer, -0.15)), p.rect(c.x + c.w + 1, c.y, 1, c.h, shade(outer, 0.08));
+  if (pl.shell !== 'garage') for (const c of pl.cells) if (c.x + c.w < pl.bx + pl.bw - OW - 1 && !pl.flock[c.floor]) p.rect(c.x + c.w, c.y, IWALL, c.h, tint(outer, -0.15)), p.rect(c.x + c.w + 1, c.y, 1, c.h, tint(outer, 0.08));
   // telhado
   if (pl.shell === 'garage') {
     const ry = topY - SLAB;
@@ -928,7 +966,7 @@ function shell(g: Ctx): void {
     house(g);
   } else {
     const ry = topY - SLAB;
-    p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 6, shade(outer, -0.1)); p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 1, shade(outer, 0.2));
+    p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 6, tint(outer, -0.1)); p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 1, tint(outer, 0.2));
     if (pl.shell === 'loft' || (pl.shell === 'building' && pl.year < 1990)) { // caixa-d'água
       const wx = pl.bx + pl.bw - 46;
       p.rect(wx, ry - 30, 16, 16, C('#6a4a32')); for (let yy = ry - 28; yy < ry - 14; yy += 4) p.hline(wx, wx + 15, yy, C('#4a3222'));
@@ -978,16 +1016,16 @@ function crown27(g: Ctx, base: number): void {
       for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x0 + w; xx++) {
         const lx = xx - x0, ly = yy - y0;
         let c = mix(stone, C('#5a4a5a'), 0.35 + 0.3 * (1 - yy / Math.max(1, base)));
-        if (lx === 0 || lx === w - 1) c = shade(c, -0.25);
-        else if (fc === 'deco' && lx % 8 === 0) c = shade(c, 0.12); // pilastras
+        if (lx === 0 || lx === w - 1) c = tint(c, -0.25);
+        else if (fc === 'deco' && lx % 8 === 0) c = tint(c, 0.12); // pilastras
         else if (lx % 8 >= 3 && lx % 8 <= 5 && ly % 7 >= 2 && ly % 7 <= 5) c = noise(xx >> 3, Math.floor(yy / 7), pl.seed) < 0.3 ? lit : C('#2a2438'); // janelas
         p.put(xx, yy, c);
       }
-      p.hline(x0 - 1, x0 + w, y1 - 1, shade(stone, -0.3)); p.hline(x0 - 1, x0 + w, y0, shade(stone, 0.2));
+      p.hline(x0 - 1, x0 + w, y1 - 1, tint(stone, -0.3)); p.hline(x0 - 1, x0 + w, y0, tint(stone, 0.2));
     }
     if (fc === 'deco') { // agulha e coroa em leque
-      p.poly([[mid - 6, 6], [mid + 6, 6], [mid, -12]], shade(stone, 0.15));
-      for (let i = -2; i <= 2; i++) p.line(mid, 10, mid + i * 6, 2, shade(stone, 0.3));
+      p.poly([[mid - 6, 6], [mid + 6, 6], [mid, -12]], tint(stone, 0.15));
+      for (let i = -2; i <= 2; i++) p.line(mid, 10, mid + i * 6, 2, tint(stone, 0.3));
       p.vline(mid, 0, 6, C('#d8c8a0'));
     }
     return;
@@ -1004,7 +1042,7 @@ function crown27(g: Ctx, base: number): void {
       c = band ? (fc === 'future' ? C('#e8eef4') : C('#2a3a4a')) : brace ? C('#1e2a38') : noise(xx >> 2, Math.floor(yy / 12), pl.seed) < 0.12 ? C('#e8f0ff')
         : mix(fc === 'future' ? C('#4aa8c8') : C('#3a6a8a'), C('#c0789a'), (yy / Math.max(1, base)) * 0.7);
     }
-    if (lx === 0 || lx === cw - 1) c = shade(c, -0.3);
+    if (lx === 0 || lx === cw - 1) c = tint(c, -0.3);
     p.put(xx, yy, c);
   }
   if (fc === 'contemporary' || fc === 'future') { // topo chanfrado (um canto cortado)
@@ -1021,7 +1059,7 @@ function house(g: Ctx): void {
   const x = pl.bx - 80, w = 74, top = pl.gy - 58;
   const wall = pl.year < 1960 ? C('#d8c8a8') : pl.year < 1990 ? C('#c89a6a') : C('#b8c0c8');
   p.rect(x, top, w, pl.gy - top, wall);
-  for (let yy = top; yy < pl.gy; yy += 3) p.hline(x, x + w - 1, yy, shade(wall, -0.08));
+  for (let yy = top; yy < pl.gy; yy += 3) p.hline(x, x + w - 1, yy, tint(wall, -0.08));
   p.poly([[x - 5, top + 1], [x + w + 5, top + 1], [x + w / 2, top - 22]], C('#6a3a32'));
   for (const wx of [x + 10, x + 46]) { p.rect(wx, top + 12, 16, 14, C('#2a2a34')); p.rect(wx + 1, top + 13, 14, 12, C('#ffd889')); p.vline(wx + 8, top + 13, top + 24, C('#2a2a34')); p.hline(wx + 1, wx + 14, top + 19, C('#2a2a34')); }
   p.rect(x + 30, pl.gy - 20, 12, 20, pal.woodDark); p.put(x + 39, pl.gy - 10, pal.gold);
@@ -1041,9 +1079,15 @@ export function paint27(pl: Plan27): Px {
   neighbours(g);
   street(g);
   for (const c of pl.cells) if (!c.lock) wallFill(g, c);
+  // mobília numa camada própria: contorno INK de 1 px na silhueta (o fundo é opaco, o contorno do Px só vê o vazio)
+  const q = new Px(pl.W, pl.H);
+  g.p = q;
   for (const c of pl.cells) if (!c.lock) { extras(g, c); furnish(g, c); }
   const lounge = pl.cells.find((c) => c.kind === 'lounge');
   if (lounge && pl.vip) vip27(g, lounge, pl.vip);
+  q.outline(INK);
+  g.p = p;
+  p.blit(q, 0, 0);
   // r27 I1: salas e andares ainda não comprados (escuros, no osso) ou em obra (andaime)
   const fspan = (f: number) => { const cs = pl.cells.filter((c) => c.floor === f); return { x: cs[0].x, y: cs[0].y, w: cs[cs.length - 1].x + cs[cs.length - 1].w - cs[0].x, h: FH27 }; };
   for (const [f, st] of Object.entries(pl.flock)) bare27(g, fspan(Number(f)), st, true);
@@ -1052,8 +1096,8 @@ export function paint27(pl: Plan27): Px {
   // luzes: uma por sala (a garagem tem uma só lâmpada no meio); sala fechada fica apagada, obra tem lâmpada de serviço
   if (pl.shell === 'garage') { const c0 = pl.cells[0]; lamp(g, pl.bx + (pl.bw >> 1) - 20, c0.y, c0.y + c0.h - 3, 60); }
   else for (const c of pl.cells) { if (c.lock) continue; const n = c.w > 160 ? 2 : 1; for (let i = 0; i < n; i++) lamp(g, c.x + Math.round((c.w * (i + 1)) / (n + 1)), c.y, c.y + c.h - 3, Math.min(30, c.w / (2 * n))); }
-  // sombra suave nos cantos das salas
-  for (const c of pl.cells) if (!pl.flock[c.floor]) for (let i = 0; i < 3; i++) { p.rect(c.x + i, c.y, 1, c.h, withAlpha(INK, 60 - i * 18)); p.rect(c.x + c.w - 1 - i, c.y, 1, c.h, withAlpha(INK, 50 - i * 15)); }
+  // oclusão nos cantos das salas (sombra arroxeada em degraus)
+  for (const c of pl.cells) if (!pl.flock[c.floor]) for (let i = 0; i < 3; i++) { p.rect(c.x + i, c.y, 1, c.h, withAlpha(OCC, 90 - i * 28)); p.rect(c.x + c.w - 1 - i, c.y, 1, c.h, withAlpha(OCC, 80 - i * 25)); }
   return p;
 }
 
@@ -1065,8 +1109,8 @@ function bare27(g: Ctx, c: { x: number; y: number; w: number; h: number }, st: L
   const con = C('#76727c');
   for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) {
     let col = con;
-    if ((yy - y) % 16 === 15 || (xx - x) % 24 === 0) col = shade(con, -0.12); // fôrmas do concreto
-    else if (noise(xx, yy, 21) < 0.06) col = shade(con, noise(xx, yy, 4) < 0.5 ? 0.07 : -0.08);
+    if ((yy - y) % 16 === 15 || (xx - x) % 24 === 0) col = tint(con, -0.12); // fôrmas do concreto
+    else if (noise(xx, yy, 21) < 0.06) col = tint(con, noise(xx, yy, 4) < 0.5 ? 0.07 : -0.08);
     p.put(xx, yy, col);
   }
   p.rect(x, y + h - 4, w, 4, C('#5a5660')); p.hline(x, x + w - 1, y + h - 4, C('#8a8690'));
@@ -1082,8 +1126,8 @@ function bare27(g: Ctx, c: { x: number; y: number; w: number; h: number }, st: L
   if (st === 'building') {
     const pole = C('#c8a040'), plank = C('#8a6a3a');
     for (let xx = x + 8; xx < x + w - 4; xx += 26) p.vline(xx, y + 3, fy, pole);
-    for (const yy of [y + Math.floor(h * 0.42), fy - 14]) { p.rect(x + 6, yy, w - 12, 2, plank); p.hline(x + 6, x + w - 7, yy + 2, shade(plank, -0.3)); }
-    for (let xx = x + 8; xx + 26 < x + w - 4; xx += 52) p.line(xx, fy - 14, xx + 26, y + Math.floor(h * 0.42), shade(pole, -0.2));
+    for (const yy of [y + Math.floor(h * 0.42), fy - 14]) { p.rect(x + 6, yy, w - 12, 2, plank); p.hline(x + 6, x + w - 7, yy + 2, tint(plank, -0.3)); }
+    for (let xx = x + 8; xx + 26 < x + w - 4; xx += 52) p.line(xx, fy - 14, xx + 26, y + Math.floor(h * 0.42), tint(pole, -0.2));
     for (let xx = x + 2; xx < x + w - 2; xx++) p.put(xx, fy - 1, ((xx - x) >> 2) % 2 ? C('#f0c020') : C('#1a1a1a')); // fita zebrada
     const lx = x + w - 30; // escada, balde, carrinho
     for (let i = 0; i < 6; i++) p.hline(lx, lx + 6, fy - 4 - i * 5, C('#a8a8b0')); p.vline(lx, fy - 30, fy, C('#a8a8b0')); p.vline(lx + 6, fy - 30, fy, C('#a8a8b0'));

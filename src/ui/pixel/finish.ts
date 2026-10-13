@@ -2,17 +2,17 @@
 // rampas de 6 tons (sombra arroxeada → luz quente), luz de cima à esquerda, contorno #170e12 e
 // brilho (tom 5) só em material brilhante. Usado por ícones, logos e capas; tudo determinístico.
 
-import { C, pack, rgba, type Col } from './px';
+import { HOUSE as PX_HOUSE, INK, pack, ramp6, rgba, type Col } from './px';
 
-/** Contorno quente da casa. */
-export const INK = C('#170e12');
+// r27 (port): a rampa e o contorno vêm de px.ts (uma fonte só para ambientes, objetos e ícones).
+export { INK, ramp6 };
 
-/** Paleta da casa (mesmos valores do SKILL.md). */
+/** Paleta da casa (mesmos valores do SKILL.md e de px.ts › HOUSE), com os nomes usados pelos ícones. */
 export const HOUSE = {
-  mogno: C('#6e2e20'),
-  latao: C('#c09048'),
-  vinho: C('#8a2430'),
-  cromado: C('#a8acb8'),
+  mogno: PX_HOUSE.mahogany,
+  latao: PX_HOUSE.brass,
+  vinho: PX_HOUSE.wine,
+  cromado: PX_HOUSE.chrome,
 };
 
 const SH: [number, number, number][] = [[58, 32, 80], [42, 24, 56], [28, 16, 36]];
@@ -21,25 +21,6 @@ const LX = -0.5, LY = -0.72, LZ = 0.62;
 const LN = Math.hypot(LX, LY, LZ);
 
 const mixRgb = (a: number[], b: number[], t: number) => [0, 1, 2].map((i) => Math.round(a[i] * (1 - t) + b[i] * t));
-const rampCache = new Map<Col, Col[]>();
-
-/** Rampa de 6 tons de uma cor (índice 3 = a própria cor), como ramp() em scripts/px.py. */
-export function ramp6(c: Col): Col[] {
-  const hit = rampCache.get(c);
-  if (hit) return hit;
-  const [r, g, b, a] = rgba(c);
-  const mul = (m: number) => [Math.min(255, r * m), Math.min(255, g * m), Math.min(255, b * m)];
-  const out = [
-    mixRgb(mul(0.4), SH[2], 0.32),
-    mixRgb(mul(0.6), SH[1], 0.22),
-    mixRgb(mul(0.8), SH[0], 0.12),
-    [r, g, b],
-    mixRgb([r, g, b], HI[0], 0.24),
-    mixRgb([r, g, b], HI[1], 0.55),
-  ].map(([x, y, z]) => pack(x, y, z, a));
-  rampCache.set(c, out);
-  return out;
-}
 
 /** Tom n (0–5) da rampa de uma cor. */
 export const tone = (c: Col, n: number): Col => ramp6(c)[Math.max(0, Math.min(5, n))];
@@ -73,6 +54,10 @@ export interface ReliefOpts {
   spec?: (c: Col) => boolean;
   /** Cores que agrupam numa mesma região se a distância RGB for menor que isto. */
   join?: number;
+  /** Desloca a luz (positivo = mais claro); útil em peças pequenas sobre fundo escuro. */
+  bias?: number;
+  /** Tom mínimo da rampa (ex.: 1 evita o tom 0, que some num fundo escuro). */
+  minTone?: number;
 }
 
 /**
@@ -146,9 +131,10 @@ export function relief(p: { w: number; h: number; d: Uint32Array }, o: ReliefOpt
     const gx = ((HH(x + 1, y, r) - HH(x - 1, y, r)) / 2) * slope;
     const gy = ((HH(x, y + 1, r) - HH(x, y - 1, r)) / 2) * slope;
     const nn = Math.hypot(gx, gy, 1);
-    const lam = (-gx * LX - gy * LY + LZ) / nn / LN;
+    const lam = (-gx * LX - gy * LY + LZ) / nn / LN + (o.bias ?? 0);
     let L = lam < -0.1 ? 0 : lam < 0.25 ? 1 : lam < 0.48 ? 2 : lam < 0.74 ? 3 : lam < 0.92 ? 4 : 5;
     if (L === 5 && !o.spec?.(d[i])) L = 4;
+    if (o.minTone && L < o.minTone) L = o.minTone;
     out[i] = ramp6(d[i])[L];
   }
   d.set(out);
