@@ -10,8 +10,9 @@ import { histMode } from '../../sim/history15';
 import {
   CRIMES17, FENCES17, PLEA17, SEC17, agency, approachOrg, bossName, buyOffer, commitCrime, crime17, crimeById, crimeOdds, fenceQuote, fences, fineOf,
   forensic, forgeCost, forgeRelic, hasRacket, heatIn, isReal, launderFee, myCases, nameOf17, orgs17, partnerOdds, pizzoFee, raidBootleggers, raidCost, reportOrg, resolveCase,
-  returnHot, ricoName, sellHot, setSecurity, targetsFor, toggleLaunder, trialOdds, usd, type Ctx17, type Plea,
+  returnHot, ricoName, sellHot, setSecurity, targetBlock17, targetId17, targetsFor, toggleLaunder, trialOdds, usd, type Ctx17, type Plea,
 } from '../../sim/sys/crime17';
+import { targetPicker29 } from './crimepick29'; // r29: seletor de alvo com busca (todos os personagens)
 import { GONE23, RANK23, ROLE23, density23, knownMembers23, name23, orgPower23 } from '../../sim/sys/crimemem23';
 import { WARN_REPLY, cutTie, payOffCost, replyWarn, tieAct, tieOf, truce, truceCost, type WarnReply } from '../../sim/sys/crimenpc17';
 import { relics } from '../../sim/sys/relics9';
@@ -114,14 +115,19 @@ const form = crimeForm17; // r29: rascunho compartilhado com o menu de ações (
 function plansTab(s: GameState): HTMLElement {
   const st = crime17(s);
   const d = crimeById(form.c) ?? CRIMES17[0];
+  // r29: qualquer pessoa/ato/selo vale como alvo (seletor com busca); a lista de sempre vira sugestão e padrão
   const tg = targetsFor(s, d);
-  if (!tg.some((x) => x.id === form.target)) form.target = tg[0]?.id ?? '';
+  form.target = targetId17(s, form.target);
+  const world = d.tk === 'person' || d.tk === 'act' || d.tk === 'label';
+  if (!form.target || (!world && !tg.some((x) => x.id === form.target))) form.target = tg[0]?.id ?? '';
   if (d.methods && !d.methods.some((m) => m.id === form.method)) form.method = d.methods[0].id;
   const executors = [{ value: 'player', label: `${T(l('Você', 'You'))} (${s.config.companyName})` },
     ...playerActs(s).flatMap((id) => s.acts[id]?.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).map((m) => ({ value: m, label: `${s.persons[m].name} (${s.acts[id].name})` })) ?? [])];
   if (!executors.some((x) => x.value === form.actor)) form.actor = 'player';
   const ctx: Ctx17 = { actor: form.actor, target: form.target, method: d.methods ? form.method : undefined, org: form.org || undefined, partners: form.partners };
   const od = form.target ? crimeOdds(s, ctx, d.id) : null;
+  const tb = form.target ? targetBlock17(s, d, form.target, form.actor) : null; // r29: alvo fora, com o motivo
+  const blk = tb ?? od?.block ?? null;
   const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => heat19(s, a.id) - heat19(s, b.id)).slice(0, 12);
   return h('div', null,
     st.warn.length ? section(T(l('Planos descobertos e convites', 'Discovered plots and invitations')), ...st.warn.map((w) => {
@@ -136,12 +142,12 @@ function plansTab(s: GameState): HTMLElement {
     })) : null,
     section(T(l('Montar um plano', 'Plan a job')),
       h('div', { class: 'row wrap' },
-        select<string>(form.c, CRIMES17.map((c) => ({ value: c.id, label: `${T(c.name)}${c.extra ? ' ★' : ''}` })), (v) => { form.c = v; form.target = ''; rerender(); }),
+        select<string>(form.c, CRIMES17.map((c) => ({ value: c.id, label: `${T(c.name)}${c.extra ? ' ★' : ''}` })), (v) => { form.c = v; const nd = crimeById(v); if (!nd || !form.target || targetBlock17(s, nd, form.target, form.actor)) form.target = ''; rerender(); }),
         select<string>(form.actor, executors, (v) => { form.actor = v; rerender(); }, { title: T(l('Quem executa: você ou um artista seu (os traços e a fama dele contam; a exposição cai sobre ele).', 'Who carries it out: you or one of your artists (their traits and fame count; exposure falls on them).')) }),
-        tg.length ? select<string>(form.target, tg.map((x) => ({ value: x.id, label: T(x.name) })), (v) => { form.target = v; rerender(); }) : h('span', { class: 'muted small' }, T(l('Sem alvos possíveis.', 'No possible targets.'))),
         d.methods ? select<string>(form.method, d.methods.map((m) => ({ value: m.id, label: T(m.name) })), (v) => { form.method = v; rerender(); }) : null,
         select<string>(form.org, [{ value: '', label: T(l('Sem organização', 'No organization')) }, ...orgs17(s).filter((o) => (st.down[o.id] ?? 0) < s.week).map((o) => ({ value: o.id, label: `${T(o.name)} (${T(countryName(o.a3))})` }))], (v) => { form.org = v; rerender(); }),
       ),
+      h('div', { class: 'row wrap' }, targetPicker29(s, d, form, (id) => { form.target = id; rerender(); }, form.actor)), // r29: todos os personagens
       h('p', { class: 'small' }, T(d.desc), d.methods ? ` ${T(d.methods.find((m) => m.id === form.method)?.desc ?? '')}` : ''),
       h('div', { class: 'row wrap' }, h('small', { class: 'muted' }, T(l('Sócios (gravadoras):', 'Partners (labels):'))), ...labels.map((lb) => {
         const po = partnerOdds(s, lb.id, ctx);
@@ -152,7 +158,7 @@ function plansTab(s: GameState): HTMLElement {
         chips(stat('sparkle', P(od.p), l('Chance de sucesso', 'Success odds')), stat('warning', P(od.q), l('Risco de exposição', 'Exposure risk')), stat('money', T(usd(od.cost)), l('Custo', 'Cost')), stat('fire', `+${od.heat}`, l('Calor', 'Heat')), stat('skull', od.sev, l('Gravidade', 'Severity'))),
         h('p', { class: 'small' }, `${T(l('Por quê', 'Why'))}: ${od.why.map(T).join(' · ') || '—'}`),
         h('p', { class: 'small muted' }, fmtTxt(l('Calor em {a}: {h}. Sucesso sem exposição = segredo (só testemunhas sabem e guardam isso contra você). Exposto = boato/manchete, escândalo com reação regional, caso policial, mágoa da vítima e rivalidade.', 'Heat in {a}: {h}. Success without exposure = a secret (only witnesses know, and keep it against you). Exposed = rumor/headline, scandal with regional reaction, police case, the victim\'s grievance and rivalry.'), countryName(od.a3)).replace('{h}', String(heatIn(s, od.a3)))),
-        od.block ? h('p', { class: 'small bad' }, T(od.block)) : btn(heistOn27(d.id) && screenOn27('heist', s, { data: { cid: d.id } }) ? l('🎮 Executar (planejar)', '🎮 Execute (plan)') : l('Executar', 'Execute'), () => {
+        blk ? h('p', { class: 'small bad' }, T(blk)) : btn(heistOn27(d.id) && screenOn27('heist', s, { data: { cid: d.id } }) ? l('🎮 Executar (planejar)', '🎮 Execute (plan)') : l('Executar', 'Execute'), () => {
           // r27 FLOW: um caminho só — quando a operação é jogável, "Executar" abre o plano (com "executar direto" dentro)
           if (screen27('heist', s, { data: { cid: d.id, ctx } }, () => exec27())) return;
           exec27();

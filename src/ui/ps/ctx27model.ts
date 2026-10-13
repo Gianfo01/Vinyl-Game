@@ -9,7 +9,7 @@ import { hqCaps } from '../../sim/branches';
 import { cashWhy20, freeCash20 } from '../../sim/oblig20';
 import { scoutEligible20 } from '../../sim/scout20';
 import { costMoney18, personActions18, type PAGroup } from '../../sim/personact18';
-import { CRIMES17, crime17, crimeOdds, hasRacket, orgs17, targetsFor } from '../../sim/sys/crime17';
+import { CRIMES17, crime17, crimeOdds, hasRacket, orgs17, targetBlock17, targetId17 } from '../../sim/sys/crime17';
 import { leaderOf } from '../../sim/sys/leaders10';
 import { giveBlock27 } from '../../sim/sys/favors27';
 import { LUNCH_COST } from '../../sim/sys/managers14';
@@ -125,8 +125,9 @@ function crimeItems29(s: GameState, tk: string, target: string, env: CtxEnv27): 
     let chance: number | undefined;
     if (!block) {
       try {
-        if (!targetsFor(s, c).some((x) => x.id === target)) block = N('Fora da lista de alvos do Submundo agora (só os mais famosos e ativos).', 'Not on the Underworld target list right now (only the most famous and active).');
-        const od = crimeOdds(s, { actor: 'player', target, method: c.methods?.[0]?.id, partners: [] }, c.id);
+        // r29: qualquer pessoa/ato/selo vale; fora só com motivo (morto, você, seu elenco, tipo errado, época)
+        block = targetBlock17(s, c, target);
+        const od = crimeOdds(s, { actor: 'player', target: targetId17(s, target), method: c.methods?.[0]?.id, partners: [] }, c.id);
         cost = od.cost; chance = od.p;
         block ??= od.block;
       } catch { block = N('Indisponível agora.', 'Unavailable now.'); }
@@ -240,11 +241,15 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
   // r29: todas as ações do menu de pessoa (relação, carreira, imprensa, cuidado, romance, Submundo) — o "presente" já está
   // acima pelo fluxo da conversa de favor, então não entra de novo
   if (!me && P) out.push(...paItems29(s, key, new Set(out.some((x) => x.id === 'person.gift') ? ['gift'] : [])));
-  if (!me && pid && person?.alive && !playerActs(s).some((a) => s.acts[a]?.members.includes(pid))) {
+  // r29: "deve ter opção para todos os personagens" — integrante, artista solo, produtor, empresário, líder de selo,
+  // crítico, equipe; quem não vale aparece desabilitado com o motivo (morto, seu elenco, sua equipe…)
+  if (!me && (person || (P && /^(e|pd|l|s|c):/.test(key)))) {
     const c0 = CRIMES17.find((c) => c.tk === 'person');
     if (c0) {
       let block: L | null = env.has?.('area:crime') === false ? NO_CRIME29 : null;
-      if (!block) { try { if (!targetsFor(s, c0).some((x) => x.id === pid)) block = N('Fora da lista de alvos do Submundo agora (só gente dos atos mais famosos).', 'Not on the Underworld target list right now (only people from the most famous acts).'); } catch { block = N('Indisponível agora.', 'Unavailable now.'); } }
+      if (!block) { try { block = targetBlock17(s, c0, key); } catch { block = N('Indisponível agora.', 'Unavailable now.'); } }
+      // quem não é do banco de artistas não tem as ações diretas de pessoa (pa:crime:…): planos um a um
+      if (!pid) out.push(...crimeItems29(s, 'person', key, env));
       out.push(it('crime.person', N('Mais opções no Submundo (método, sócios, organização)…', 'More Underworld options (method, partners, organization)…'), 'skull', 'do', block, { sec: 'dark' }));
     }
   }

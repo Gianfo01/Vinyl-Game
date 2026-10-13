@@ -41,7 +41,7 @@ import { CTXHOOK27, ctxMenu27, menuSections27, type CtxEnv27, type CtxItem27, ty
 import { CRIMES17, approachOrg, reportOrg, toggleLaunder } from '../../sim/sys/crime17';
 import { leaderOf } from '../../sim/sys/leaders10';
 import { runPA18 } from '../sys/personact18';
-import { presetCrime17 } from '../sys/crimeform29';
+import { crimeForm17, presetCrimeFor29 } from '../sys/crimeform29';
 import { isEnt27, type Ent27 } from './ent27';
 import './ctx27.css';
 
@@ -163,7 +163,8 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
     case 'org.launder': toast(T(toggleLaunder(s, id)), 'info'); rerender(); return;
     case 'org.report': toast(T(reportOrg(s, id)), 'info'); rerender(); return;
     case 'org.tie': case 'act.tie': goArea(s, 'crime', ['crime17', 'orgs']); return;
-    case 'crime.person': { const c0 = CRIMES17.find((c) => c.tk === 'person'); if (c0) presetCrime17(c0.id, key.slice(2)); goArea(s, 'crime', ['crime17', 'plans']); return; }
+    // r29: qualquer pessoa (artista, produtor, empresário, líder, crítico, equipe): fica o crime contra pessoa já escolhido no formulário
+    case 'crime.person': { const cur = CRIMES17.find((c) => c.id === crimeForm17.c && c.tk === 'person'); const c0 = cur ?? CRIMES17.find((c) => c.tk === 'person'); if (c0) presetCrimeFor29(s, c0.id, key); goArea(s, 'crime', ['crime17', 'plans']); return; }
     // r29: atalhos e submenus de pessoa
     case 'act.leader': { const a = s.acts[id]; const p = a?.leaderId && a.members.includes(a.leaderId) && !s.persons[a.leaderId]?.isPlayer ? a.leaderId : a?.members.find((m) => s.persons[m]?.alive && !s.persons[m].isPlayer); if (p) setTimeout(() => openCtx27(s, 'person', `p:${p}`, anchor), 0); return; }
     case 'label.leader': { const L0 = leaderOf(s, id); if (L0) setTimeout(() => openCtx27(s, 'person', `l:${L0.id}`, anchor), 0); return; }
@@ -172,7 +173,7 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
     default:
       if (item.id.startsWith('pa:')) { runPA18(s, key, item.id.slice(3), (txt, ok) => { toast(txt, ok ? 'good' : 'bad'); rerender(); }); return; }
       if (item.id.startsWith('a20:')) { chooseAction20(s, item.id.slice(4), id, anchor); return; }
-      if (item.id.startsWith('crime.plan:')) { presetCrime17(item.id.slice(11), id); goArea(s, 'crime', ['crime17', 'plans']); return; }
+      if (item.id.startsWith('crime.plan:')) { presetCrimeFor29(s, item.id.slice(11), id); goArea(s, 'crime', ['crime17', 'plans']); return; }
       return;
   }
 }
