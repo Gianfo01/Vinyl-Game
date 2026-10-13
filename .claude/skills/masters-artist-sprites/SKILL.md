@@ -57,7 +57,9 @@ Dependências: `pip install pillow numpy` (Python 3.10+).
    Use os parâmetros de rosto para o que for marcante (dentes do Freddie, olhos fundos do Cash, bochechas do Armstrong).
 4. **Revisar pela folha**: `python3 render.py ../specs/*.json --out /tmp/rev` e **abra `/tmp/rev/_sheet.png`** (Read).
    A folha reduz: em caso de dúvida, abra o PNG individual. Ajuste e renderize de novo.
-5. **Exportar**: `python3 render.py ../specs/*.json --scale 1 --portrait --out <destino>`.
+5. **Exportar**: `python3 export.py ../specs/lotes/lote_??.jsonl --out ../../../../art/personagens` (todos, ~1 min:
+   `corpo/`, `busto/`, `index.json`, `_mosaico.png`) ou `python3 render.py <fichas> --scale 1 --portrait --out <destino>`.
+   Homônimos (mesmo nome, pessoas diferentes) levam o ato no nome: `Roger Taylor (Queen)`.
 
 Peça nova vai para `kit_ext.py` (reutilizável), nunca para um artista só. Depois de criar, inclua em `catalog.py`.
 
@@ -97,11 +99,11 @@ Peça nova vai para `kit_ext.py` (reutilizável), nunca para um artista só. Dep
 ```
 
 **Peças da rodada de revisão (`kit_more.py`):**
-- chapéus: sombrero (charro, `trim` = bordado), panama, bowler (chapéu-coco), flat_cap, bucket, kangol, kufi, fila
+- chapéus: cangaceiro (couro nordestino, Luiz Gonzaga), sombrero (charro, `trim` = bordado), panama, bowler (chapéu-coco), flat_cap, bucket, kangol, kufi, fila
   (peci/songkok), turban (sikh/liso), headwrap (turbante alto), military_cap, captain_cap, sailor_cap, headdress
   (cocar, `feathers: [#hex]`), fur_hat, mitre, headscarf (lenço); `hat.emblem: "#hex"` põe estrela/emblema.
 - instrumentos (`prop.type` + pose): banjo / ukulele / cavaquinho / bouzouki / oud / tres (pose `guitar` ou
-  `guitar_lefty`), cello (pose `cello`), upright_bass (pose `upright_bass`), trombone, clarinet, flute, pan_flute,
+  `guitar_lefty`), sitar (pose `guitar`), cello (pose `cello`), upright_bass (pose `upright_bass`), trombone, clarinet, flute, pan_flute,
   pandeiro, maracas, bandoneon (pose com o mesmo nome). Elétrica: `shape: sg | gretsch | lp | strat`,
   `stripes: ["#hex", "#hex"]`. Violão e baixo aceitam `guitar_lefty`.
 - roupas: sari (`drape`, `trim`), qipao, hanbok (com bottom `skirt_full`), kaftan, robe, kimono (`sash`), poncho,

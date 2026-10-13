@@ -19,7 +19,7 @@ def _F(cx, cy, ang):
 
 
 # ================================================================ chapéus
-HATS = {'sombrero', 'flat_cap', 'bucket', 'kangol', 'kufi', 'fila', 'turban', 'headwrap', 'military_cap', 'sailor_cap',
+HATS = {'cangaceiro', 'sombrero', 'flat_cap', 'bucket', 'kangol', 'kufi', 'fila', 'turban', 'headwrap', 'military_cap', 'sailor_cap',
         'captain_cap', 'headdress', 'fur_hat', 'bowler', 'mitre', 'headscarf', 'panama'}
 
 
@@ -29,7 +29,18 @@ def hat(c, h, rng, cx=47):
         return False
     colr = _col(h.get('color'), '#2a2228')
     trim = _col(h.get('trim'), '#d8d0c0')
-    if st == 'sombrero':
+    if st == 'cangaceiro':
+        # chapéu de couro nordestino (meia-lua, aba dobrada para cima na frente, estrelas e ilhoses)
+        lc = _col(h.get('color'), '#8a5a2a')
+        c.shape(c.poly([(cx - 13, 20), (cx - 12, 10), (cx - 5, 3), (cx + 6, 3), (cx + 13, 10), (cx + 14, 20), (cx + 1, 16)]), lc, r=5, spec=True)
+        c.shape(c.poly([(cx - 12, 20), (cx + 1, 15.5), (cx + 14, 20), (cx + 1, 22.5)]), lc, r=2, bias=-0.15)
+        for (x, y) in ((cx - 5, 9), (cx + 1, 6), (cx + 7, 9)):
+            for dx, dy in ((0, -1), (-1, 0), (1, 0), (0, 1), (0, 0)):
+                c.px(x + dx, y + dy, ('#d8c070', 5 if (dx, dy) == (0, 0) else 3))
+        for x in range(int(cx - 10), int(cx + 12), 3):
+            c.px(x, 14 + abs(x - cx - 1) * 0.15, ('#d8c070', 4))
+        c.shade_mask(c.ell(cx - 2, 23.5, 12, 2.6), -1)
+    elif st == 'sombrero':
         brim = c.ell(cx + 1, 19, 25, 5.2, ang=-4)
         c.shape(brim, colr, r=3)
         ring = brim & ~c.ell(cx + 1, 19, 22.5, 4.2, ang=-4)
@@ -136,6 +147,20 @@ def _prop(c, p, lefty=False):
     s = -1 if lefty else 1
     ang = 212 if lefty else -35
     cx = 48 if lefty else 50
+    if t == 'sitar':
+        f = _F(48, 84, -62)
+        w = _col(p.get('color'), '#8a4a1c')
+        c.shape(c.poly(f.ell(-4, 0, 9.5, 10)), w, r=5, spec=True)
+        c.shape(c.poly(f.poly([(4, -2.2), (48, -1.8), (48, 1.8), (4, 2.2)])), w, r=1, spec=True)
+        c.shape(c.poly(f.ell(36, 3.6, 3.4, 3.4)), w, r=2, spec=True)
+        for u in range(8, 46, 4):
+            a, b = f.pt(u, -2), f.pt(u, 2)
+            c.line(a[0], a[1], b[0], b[1], ('#e8d8a8', 4))
+        for v in (-0.8, 0.8):
+            a, b = f.pt(-10, v), f.pt(48, v)
+            c.line(a[0], a[1], b[0], b[1], (CHROME, 4))
+        f.fret_u = 26
+        return f
     if t in ('banjo', 'ukulele', 'cavaquinho', 'bouzouki', 'oud', 'tres'):
         f = _F(cx, 80, ang)
         if t == 'banjo':
