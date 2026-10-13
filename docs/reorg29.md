@@ -272,3 +272,28 @@ O autor mandou as imagens do Atlas: S03–S17 e NR01–NR06, 2560×1440. São "c
 - 71 páginas sem rolagem horizontal em 390 e 1440 px;
 - `r27-ui` (contraste e componentes) segue verde;
 - capturas em `docs/shots29reorg/atlas-*`: calendar19, finance, market, directory, contracts19, you, crime, hq, shows, mundo27, agenda17, project, artists e campanha, em `-desk` e `-mob`.
+
+---
+
+## 10. Rodada R29b: lacunas fechadas a pedido do autor (repassado pela sessão-mãe)
+
+Base: `origin/claude/friendly-brown-vpsmfl`, que já inclui r29-scenes, r29-art e os fixes (ctx27 por seções, escada `start29`, rótulo de status). O merge entrou sem conflito. Cada item foi um commit com push.
+
+| # | ID | O que ficou | Arquivos | Testes | Capturas |
+|---|---|---|---|---|---|
+| 1 | **S03 / M09** | Grade **Semana/Mês** com capacidade por recurso. Seis colunas ancoradas no relógio do jogo (`s.day`), mesmas fontes do motor:<br>• pessoas: `personLoad`, em % da agenda<br>• estúdio: sessões abertas<br>• dinheiro: a pagar − a receber agendados no ledger<br>• tempo: bolinhas do mês corrente; meses futuros ficam "desconhecido", nunca zero<br>• prazos do calendário<br>Cada célula tem cor **e** texto. Selecionar uma coluna mostra os prazos do período com "Abrir origem". É só consulta; o avanço continua no botão de sempre. | `ps/grid29model.ts`, `ps/grid29.ts/.css`, `screens29.calendarLayout29` | colunas e recursos; desconhecido fora do mês corrente; estado JSON idêntico antes/depois. `balls()` faz a virada preguiçosa do mês, por isso é lido sobre uma cópia. | `s03-antes-*`, `s03-depois-calendar19-*` |
+| 2 | **S04 / S05 / M05** | **Inspetor lateral** do ato com as abas Formação, Projetos, Contratos (vigentes e promessas), Agenda (mês e prazos do ato) e Saúde (moral, cansaço, estresse, inspiração e integrantes). As **Ações** vêm de `menuSections27`, a mesma fonte do clique direito, e rodam pelo executor `CTXHOOK27`. "Abrir ficha completa".<br>• No Elenco: vista **Lista + inspetor** (padrão, `layout29`; no celular o inspetor desce) ou a **Ficha detalhada** de sempre.<br>• Na ficha do ato: o mesmo inspetor como aba **Resumo**. | `ps/insp29model.ts`, `ps/insp29.ts/.css`, `panels/artists.ts` (+ alternador) | abas, fontes, contratos vigentes, estado intacto | `s04-antes-artists-*`, `s04-depois-artists-*` |
+| 3 | **M41** | **Lote** a partir do Elenco: marcar artistas → "Prévia da ação em lote…". Abre o painel de lote **que já existia** (`openBatch20`), não um segundo fluxo, agora com:<br>• a seleção pré-carregada;<br>• colunas Efeito e tempo;<br>• linha de **reversibilidade** por ação;<br>• aplicação em **dois passos**: "Revisar e confirmar…" e depois "Confirmar e aplicar". Nada é processado antes. | `ps/batch29.ts`, `ps/batch29model.ts`, `sys/actmenu20.ts` (aditivo) | reversibilidade declarada; nunca promete desfazer | `s04-depois-lote-*` |
+| 4 | **M44** | **Alertas por categoria**: Finanças, Pessoas, Contratos/promessas, Projetos, Ao vivo, Mundo, Submundo e Jurídico.<br>• Opções: mostrar e prioridade (baixa → crítica), restaurar padrão.<br>• Caixa de entrada: faixa "Alertas:" com contagem não lidas/total; o filtro é só de vista.<br>• Cockpit: bloco na ordem escolhida; silenciadas aparecem contadas.<br>• Avanço: silenciadas não viram aviso flutuante e entram no "+N outros".<br>Tudo em `localStorage`, fora do save; regras, prazos e respostas padrão não mudam. | `ps/alerts29model.ts`, `ps/alerts29.ts`, `sys/mail27model.ts` / `sys/inbox27.ts` / `sys/ui20.ts` (aditivo), Opções | classificação pt/en (notas "Mundo:" ficam em Mundo); padrão; nada some da contagem; cada conversa em exatamente uma categoria | `m44-depois-cockpit_ck20_panel-*`, `…inbox-*`, `…opcoes-*` |
+| 5 | **M20** | Estilos **Guiado / Livre / Contemplativo** em Opções, com prévia antes → depois em nomes legíveis, aplicar e "Desfazer o último estilo". Lista **fechada** de chaves: densidade, tutoriais, interrupções, ritmo das atividades e cenas, aviso antes de avançar, vista do menu. Nunca dificuldade, `assist28`, som, regras ou save. | `ps/presets29model.ts`, `ps/presets29.ts` | chaves permitidas; prévia exata; cópia; detecção; a partida não contém as chaves | `m20-depois-opcoes-*` |
+| 6 | **NR01–NR06** | Nova run completa no estilo do Atlas:<br>• herói por etapa ("Nova run completa · n/6", título do Atlas, ícone pixel existente ampliado);<br>• etapas numeradas (atual em dourado, feitas com ✓);<br>• resumo e revisão como cartões;<br>• **Confirmação da campanha** (NR-03): semente, versão do save, valores herdados, início/fim e avisos.<br>**Mesmo rascunho e mesmo gerador** (`launchRun27`).<br>Correção M48: o editor de aparência vazava 57 px no celular (problema anterior), agora 0 px. | `ps/nr29.ts/.css`, `newgame.ts` (3 trocas pontuais) | `r27-home`, `r29-fixes`, `r28-f4` verdes; heróis das 6 etapas | `nr-antes-NR0x-*`, `nr-depois-NR0x-*` |
+
+**Validação geral:**
+- 11 arquivos de teste relacionados, 130 testes, todos verdes: r29-reorg, r27-ux/nav/cockpit/inbox/home/ui/ctx, r28-f4, r29-fixes, r20-g4.
+- `tsc` limpo.
+- 71 páginas sem rolagem horizontal em 390 e 1440 px, e as 6 etapas da Nova run sem estouro no celular.
+
+**O que ainda falta:**
+- **M41 para pessoas.** O lote cobre atos (o registro de ações em lote é por artista). Ações em lote sobre **pessoas** (integrantes, equipe) precisam marcar no `personact18` quais ações aceitam lote.
+- **Capturas "antes" de Opções** (M20/M44). Os blocos são acréscimos; a tela anterior é a mesma sem eles. O "antes" do Cockpit é `depois-cockpit-*` da rodada anterior.
+- **Grade S03 de pessoas.** Mostra até 6 integrantes (os mais carregados); a lista completa continua na Agenda e na capacidade de cada ato.
