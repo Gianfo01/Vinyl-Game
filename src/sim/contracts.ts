@@ -24,6 +24,8 @@ export interface ContractHook {
   renew?: (s: GameState, act: Act) => number;
 }
 // lista guardada numa função (hoisted): sistemas carregados antes deste módulo terminar já podem registrar
+/** R29 (CONNECT): soma dos ganchos de renovação (arcs12, identity, explain12…) — a previsão usa a mesma conta da rolagem. */
+export const renewHooks29 = (s: GameState, act: Act): number => contractHooks().reduce((t, x) => t + (x.h.renew?.(s, act) ?? 0), 0);
 function contractHooks(): { id: string; h: ContractHook }[] { const f = contractHooks as unknown as { l?: { id: string; h: ContractHook }[] }; return (f.l ??= []); }
 export function registerContractHook(id: string, h: ContractHook): void {
   const i = contractHooks().findIndex((x) => x.id === id);

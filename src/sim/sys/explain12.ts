@@ -10,7 +10,7 @@ import { clamp } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { FESTIVALS } from '../../data/catalog';
 import { cityById, l, type L } from '../../data/world';
-import { evaluateOffer, expectedAdvance, registerContractHook, renewContract } from '../contracts';
+import { evaluateOffer, expectedAdvance, registerContractHook, renewContract, renewHooks29 } from '../contracts';
 import { registerMod, registerSimHook } from '../ext4';
 import { renewalAdj } from '../rights';
 import { cityDemand, type TourEstimate, type TourPlan } from '../tours';
@@ -130,7 +130,7 @@ export function forecastSigning(s: GameState, act: Act, o: Omit<Offer, 'id' | 'w
 export function renewChance(s: GameState, act: Act, bonus: number): number {
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (!c) return 0;
-  return clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3 + renewalAdj(s, c) + renewMood(s, act), 0, 0.97);
+  return clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3 + renewalAdj(s, c) + renewHooks29(s, act), 0, 0.97); // R29 (CONNECT): antes só renewMood — a previsão ignorava arcs12 e identity
 }
 
 export function forecastRenewal(s: GameState, act: Act, bonus: number): Forecast12 {

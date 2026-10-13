@@ -121,8 +121,6 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
     song.production = clamp(eraProductionBase(s) + studio.production + own + producer + t.prod * 0.18 + ap.prod + techIssue + r.normal(0, 5), 5, 100);
     song.originality = clamp(song.originality + ap.originality, 0, 100);
     song.q = songQ(song);
-    // equipe da casa (especialistas, química): ajusta os atributos da faixa
-    if (payer === 'player') song.q = applyMods(s, 'songQ', song.q, { song, act }).value;
     song.recorded = true;
     song.studioTier = tier;
     song.approach = approach;
@@ -136,6 +134,10 @@ export function recordSongs(s: GameState, r: Rng, act: Act, songIds: string[], t
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c && payer !== 'act') addRecoup18(s, c, 'rec', cost); // r18: fração negociada nas cláusulas (antes 50% fixo)
   for (const song of done) runSimHooks('record', s, r, { song });
+  // equipe da casa (especialistas, química, estresse…): ajusta a nota da faixa. R29 (CONNECT): DEPOIS dos ganchos de
+  // gravação — instrumentos, mobília, saúde, temperamento e talento recalculam q a partir dos atributos e apagavam os
+  // modificadores 'songQ' (estresse, equipe, química, engenheiro, perks): a sonda probe29mech media 0% nessas arestas.
+  if (payer === 'player') for (const song of done) song.q = applyMods(s, 'songQ', song.q, { song, act }).value;
   return { cost, songs: done };
 }
 

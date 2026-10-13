@@ -112,6 +112,13 @@ registerMod('appeal', 'press18', (s, v, c) => {
   const k = pr18(s).infl[c.release.id];
   return k ? { value: v * (1 + k), label: l('Sua resenha', 'Your review') } : null;
 });
+// R29 (CONNECT): a resenha sai DEPOIS da estreia, quando o apelo já foi calculado (o mod acima nunca pegava) — vale nas
+// vendas semanais das primeiras 12 semanas, como as críticas comuns (creation:reviews)
+registerMod('chartUnits', 'press18', (s, v, c) => {
+  if (!c.release || s.week - c.release.week > 12) return null;
+  const k = pr18(s).infl[c.release.id];
+  return k ? { value: v * (1 + k), label: l('Sua resenha', 'Your review') } : null;
+});
 
 export function foundOutlet18(s: GameState, k: OutK18, name: string): L | null {
   const st = pr18(s), d = OUTK18[k];
