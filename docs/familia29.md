@@ -156,6 +156,19 @@ do sistema vem do perfil de ganchos (`__hookProf`) e do CPU.
 | 1960 | 161 | 75 | 0 | 13 | 20 | 21 | 4 | 0 |
 | 1970 | 297 | 174 | 4 | 78 | 19 | 35 | 0 | 0 |
 
+**40 anos** (semente `fam29long`, início 1955, base pequena):
+
+| Década | Casamentos | Filhos | Estreias de família | Divórcios | Estrelas mirins | Casais célebres | Carreiras da indústria | Exploração |
+|---|---|---|---|---|---|---|---|---|
+| 1955–59 | 45 | 18 | 1 | 4 | 3 | 7 | 1 | 0 |
+| 1960 | 200 | 145 | 0 | 38 | 46 | 25 | 0 | 0 |
+| 1970 | 340 | 224 | 22 | 83 | 44 | 32 | 2 | 1 |
+| 1980 | 381 | 202 | 66 | 138 | 58 | 40 | 4 | 3 |
+| 1990–94 | 165 | 94 | 53 | 74 | 56 | 16 | 11 | 2 |
+
+No fim (1994): 3.289 famílias, 683 filhos leves, 18 filhos da indústria com carreira, 112 ex-mirins; gancho 15,3 + 0,9
+ms/mês; estado `family29` 185 KB num save de 25,7 MB (0,7%).
+
 As estreias crescem depois de ~17 anos de partida (os filhos nascidos no jogo chegam à idade; a semeadura inicial dá
 poucos porque os artistas gerados são jovens). No fim: 1.875 famílias, 263 filhos leves, 24 menores, 37 ex-mirins,
 632 pessoas reais com família simulada (mundo "com variações", o padrão).
