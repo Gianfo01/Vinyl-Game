@@ -131,6 +131,7 @@ describe('R29 família — estrelas mirins', () => {
     const L = personLoad(s, kid, monthIndex(s));
     expect(L.parts.some((x) => /Escola/.test(x.label.pt))).toBe(true);
     const cash0 = s.player.cash;
+    fam29(s).seed = 1; // o mundo já passou do 1º mês (antes disso o offer mod não consulta o grafo do kin15)
     minorsMonth29(s);
     expect(fam29(s).min[kid].tr).toBeGreaterThan(0);
     expect(s.player.cash).toBeLessThan(cash0);

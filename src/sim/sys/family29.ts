@@ -443,8 +443,9 @@ function separate(s: GameState, r: Rng, p: Person, a: Act, F: F29, q?: Person): 
 
 function birth(s: GameState, r: Rng, p: Person, a: Act, F: F29, q?: Person): void {
   const st = fam29(s);
-  const mus = (x?: Person) => (x ? (x.skills.voice + x.skills.instr + x.skills.comp) / 3 : 35);
-  const musical = Math.round(clamp((mus(p) + (q ? mus(q) : r.int(15, 60))) / 2 + r.normal(0, 16), 3, 99));
+  // musicalidade herdada do potencial dos pais (o de fora da música puxa para baixo) + o acaso
+  const mus = (x?: Person) => (x ? x.potential : 35);
+  const musical = Math.round(clamp((mus(p) + (q ? mus(q) : r.int(20, 55))) / 2 + r.normal(4, 15), 3, 99));
   const sur = p.name.split(' ').slice(1).join(' ');
   const first = personName(r, langForCity(a.city, r)).split(' ')[0];
   const name = sur ? `${first} ${sur}` : `${first} ${p.name}`;
@@ -545,13 +546,14 @@ function inheritance(s: GameState): void {
     if (pot >= 20000) say(s, T(l('Herança de {p}: US$ {v} para {h}.', '{p}\'s inheritance: US$ {v} to {h}.'), { p: p.name, v: Math.round(pot).toLocaleString('en-US'), h: heirs.map((x) => x.name).join(', ') || l('o espólio', 'the estate') }));
   }
 }
-EST_HEIRS29.f = (s, pid) => {
+/** Herdeiros fora do mundo (cônjuge de fora e filhos leves adultos) para o espólio do post18. */
+function estHeirs29(s: GameState, pid: string): { name: string; rel: 'child' | 'spouse' }[] {
   const st = fam29(s), F = st.f[pid];
   const out: { name: string; rel: 'child' | 'spouse' }[] = [];
   if (F && F[3] === 2 && F[0] && !F[1]) out.push({ name: F[0], rel: 'spouse' });
   for (const k of st.k) if ((k[1] === pid || k[2] === pid) && !k[6] && s.year - k[4] >= ADULT29) out.push({ name: k[3], rel: 'child' });
   return out;
-};
+}
 
 // ---------------------------------------------------------------- 2. filhos que estreiam (caminho único do kin15)
 
@@ -574,11 +576,29 @@ function debuts(s: GameState, r: Rng): void {
     const kid = debutKid15(s, r, o);
     PENDING = null;
     if (!kid) { k[7] = 0; continue; }
+    k[6] = kid.id; // também pelo gancho; aqui garante que ninguém estreia duas vezes
   }
 }
 let PENDING: Kid29 | null = null;
-KIN15X.births = false;
-KIN15X.debut = (s, kid, act, o) => {
+/** Liga os ganchos nos outros sistemas (kin15, post18, leaders10, capacity, scene17, personact18). Preguiçoso e por
+ *  partes: a ordem dos imports (worldgen → sys/index → …) pode avaliar este módulo antes de algum deles terminar — o que
+ *  ainda não existe fica para a próxima chamada (fim do módulo, 'newgame' e cada mês). */
+const WIRED29 = new Set<string>();
+function hooks29(): void {
+  // ESM nativo: ler um import ainda não avaliado lança (TDZ); no vitest vem undefined — os dois casos ficam para depois
+  const once = (k: string, ok: () => boolean, f: () => void) => {
+    if (WIRED29.has(k)) return;
+    try { if (!ok()) return; f(); WIRED29.add(k); } catch { /* ainda carregando: tenta na próxima */ }
+  };
+  once('kin15', () => !!KIN15X, () => { KIN15X.births = false; KIN15X.debut = onDebut; });
+  once('post18', () => !!EST_HEIRS29, () => { EST_HEIRS29.f = estHeirs29; });
+  try { if (SUCC10) wireSucc29(); } catch { /* ainda carregando */ } // sempre confere: o people16 pode ter trocado o pick depois
+  once('load', () => Array.isArray(PERSON_LOAD29), () => { PERSON_LOAD29.push(load29); });
+  once('scenes', () => typeof def17 === 'function', () => wireScenes29());
+  once('actions', () => typeof registerPersonAction === 'function', () => wireActions29());
+}
+registerSimHook('newgame', 'family29', () => hooks29());
+function onDebut(s: GameState, kid: Person, act: Act, o: Debut15): void {
   const st = fam29(s);
   const k = PENDING;
   if (k) {
@@ -598,7 +618,7 @@ KIN15X.debut = (s, kid, act, o) => {
     : T(l('{k} estreia{n}.', '{k} debuts{n}.'), { k: kid.name, n: o.note ?? '' });
   emitFact(s, { kind: 'family_debut', actors: [kid.id, act.id, ...(par ? [par.id] : [])], place: act.city, severity: clamp(10 + pf / 2, 8, 60), visibility: pf >= 30 ? 'public' : 'rumor', tags: ['family29', 'debut', ...(age < ADULT29 ? ['child_star'] : [])], text: t, src: 'family29', data: { pf: Math.round(pf) } });
   void st;
-};
+}
 
 // ---------------------------------------------------------------- 3. filhos de gente da indústria escolhem carreira
 
@@ -641,6 +661,7 @@ function industryKids(s: GameState): void {
 
 /** O filho vira pessoa do mundo e entra no ramo (com o nepotismo de sempre: contatos, reputação e portas). */
 export function careerOf(s: GameState, key: string, k: { id: string; name: string; born: number; musical: number; personId?: string }, path: Path29): Person | undefined {
+  hooks29();
   const st = fam29(s);
   const r = rng(s, `car|${k.id}`);
   const P = per13(s, key);
@@ -728,9 +749,11 @@ function inheritContacts(s: GameState, key: string, kid: Person): void {
 }
 
 // nepotismo na sucessão de selo: quando ninguém da família do líder herda, um "executivo da casa" pode ser filho de gente da indústria
-{
+let SUCC_MINE29: typeof SUCC10.pick;
+function wireSucc29(): void {
+  if (SUCC10.pick && SUCC10.pick === SUCC_MINE29) return;
   const prev = SUCC10.pick;
-  SUCC10.pick = (s, lb, why) => {
+  SUCC10.pick = SUCC_MINE29 = (s, lb, why) => {
     const out = prev?.(s, lb, why);
     if (out) return out;
     const st = fam29(s);
@@ -938,7 +961,7 @@ function minorsMonth(s: GameState): void {
 }
 
 // carga extra do menor na agenda: escola e limite de horas (o dobro das horas de trabalho conta, pela lei da época)
-PERSON_LOAD29.push((s, pid, idx, parts) => {
+function load29(s: GameState, pid: string, idx: number, parts: { label: L; load: number }[]): { label: L; load: number } | null {
   const m = (s.x4 as unknown as { family29?: Fam29St }).family29?.min[pid];
   if (!m) return null;
   const p = s.persons[pid];
@@ -950,13 +973,14 @@ PERSON_LOAD29.push((s, pid, idx, parts) => {
   const extra = lw ? Math.round(work * lw.hours) : 0;
   void idx;
   return { label: lw ? T(l('Escola e limite de horas (menor de idade · {n})', 'School and hour limit (minor · {n})'), { n: lw.name }) : l('Escola (menor de idade)', 'School (minor)'), load: school + extra };
-});
+}
 
 // ---------------------------------------------------------------- 5. nepotismo e menores nas propostas; apelo
 
 registerOfferMod('family29', (s, act) => {
   const st = (s.x4 as unknown as { family29?: Fam29St }).family29;
-  if (!st) return null;
+  // antes do 1º mês (mundo ainda sendo montado) não consulta o grafo do kin15: o cache dele é por mês e ficaria velho
+  if (!st?.seed) return null;
   let d = 0;
   const why: L[] = [];
   const minors = act.members.filter((id) => st.min[id]);
@@ -1001,7 +1025,7 @@ export function nepoFactor29(s: GameState, a: Act): number {
 }
 registerMod('appeal', 'family29', (s, v, ctx) => {
   const a = ctx.act ?? (ctx.release ? s.acts[ctx.release.actId] : undefined);
-  if (!a || !(s.x4 as unknown as { family29?: Fam29St }).family29) return null;
+  if (!a || !(s.x4 as unknown as { family29?: Fam29St }).family29?.seed) return null; // mundo montado (ver offer mod)
   const f = nepoFactor29(s, a);
   if (f === 1) return null;
   return { value: v * f, label: f > 1 ? l('Sobrenome famoso abre portas', 'A famous surname opens doors') : l('Comparação com o pai/mãe famoso(a)', 'Compared with the famous parent') };
@@ -1058,6 +1082,8 @@ function sceneFor(s: GameState, f: Fact, def: string): void {
   queue17(s, def, ctx17(s, { act: m.act, pid, who: other ? nm(s, other) : fam29(s).f[pid ?? '']?.[0] || undefined, city: f.place, fact: f.id }));
 }
 
+/** Cenas interativas da família no seu elenco (o motor do scene17: casamento, bebê, divórcio, estreia de família). */
+function wireScenes29(): void {
 def17({ id: 'wedding29', name: l('Casamento no elenco', 'A wedding on the roster'), icon: 'heart', major: false, cool: 3,
   place: () => 'country_house',
   title: (s, c) => T(l('{p} se casa', '{p} gets married'), { p: c.pid ? nm(s, c.pid) : '?' }),
@@ -1109,10 +1135,12 @@ def17({ id: 'debut29', name: l('Estreia de família', 'A family debut'), icon: '
     { id: 'own', label: l('Apresentar só pelo próprio nome', 'Present them on their own name only'), hint: l('Respeito artístico; começo mais lento.', 'Artistic respect; slower start.'),
       fx: (s, c, _ok, e) => { e.rep('artistic', 1).insp(6).trust(4); return l('"Me julguem pelo som", diz na primeira entrevista. Os críticos anotam.', '"Judge me by the sound," they say in the first interview. The critics take note.'); } },
   ] }] });
+}
 
 // ---------------------------------------------------------------- 7. ações sobre a pessoa (menu de contexto e ficha)
 
 const pidOfKey = (key: string) => (key.startsWith('p:') ? key.slice(2) : '');
+function wireActions29(): void {
 registerPersonAction({
   id: 'family29.view', label: l('Ver família', 'View family'), group: 'social', icon: 'fans',
   desc: l('Abre a aba Família da ficha: par, filhos, pais, irmãos e a árvore.', 'Opens the Family tab: partner, kids, parents, siblings and the tree.'),
@@ -1123,7 +1151,11 @@ registerPersonAction({
   desc: l('Casou há pouco: um presente da casa aproxima (e fica no livro de favores).', 'Recently married: a gift from the house brings you closer (and goes in the favor book).'),
   cost: () => ({ usd: 600 }),
   visible: (s, key) => { const id = pidOfKey(key); const F = id ? fam29(s).f[id] : undefined; const F0 = s.families[key]; return (!!F && F[3] === 2 && s.year - F[2] <= 1) || (!!F0?.partner && !F0.separated && (((s.x4 as unknown as { people16?: { L: Record<string, { mar?: number }> } }).people16?.L[key]?.mar ?? -9) >= s.year - 1)); },
-  run: (s, key) => { opine(s, key, 8, l('mandou presente de casamento', 'sent a wedding gift')); return { ok: true, text: l('O presente chega com um cartão do selo. Agradecem com uma foto do casal.', 'The gift arrives with a card from the label. They reply with a photo of the couple.') }; },
+  run: (s, key) => {
+    opine(s, key, 8, l('mandou presente de casamento', 'sent a wedding gift'));
+    grantHold(s, { holder: 'player', target: key, kind: 'favor', strength: 25, months: 24, src: 'family29', ref: 'family29', quiet: true, text: l('Lembra do presente de casamento', 'Remembers the wedding gift') });
+    return { ok: true, text: l('O presente chega com um cartão do selo. Agradecem com uma foto do casal (e ficam te devendo uma gentileza).', 'The gift arrives with a card from the label. They reply with a photo of the couple (and owe you a kindness).') };
+  },
 });
 registerPersonAction({
   id: 'family29.condole', label: l('Mandar condolências', 'Send condolences'), group: 'care', icon: 'broken-heart', cooldown: 52,
@@ -1132,6 +1164,7 @@ registerPersonAction({
   visible: (s, key) => { const id = pidOfKey(key); return !!id && kinOf15(s, id).some((k) => !k.p.alive && (k.p.died ?? 0) >= s.year - 1 && ['parent', 'child', 'spouse', 'sibling'].includes(k.rel)); },
   run: (s, key) => { opine(s, key, 6, l('mandou condolências no luto', 'sent condolences in mourning')); const p = s.persons[pidOfKey(key)]; if (p) p.morale = clamp(p.morale + 3, 0, 100); return { ok: true, text: l('Flores e uma carta à mão. A resposta chega semanas depois, curta e sincera.', 'Flowers and a handwritten letter. The reply arrives weeks later, short and sincere.') }; },
 });
+}
 
 // ---------------------------------------------------------------- 8. Hall da Fama: dinastias
 
@@ -1190,6 +1223,7 @@ export function debutNow29(s: GameState, kidId: string, band = false): Person | 
   const k = fam29(s).k.find((x) => x[0] === kidId);
   const par = k ? s.persons[k[1]] : undefined;
   if (!k || !par || k[6]) return undefined;
+  hooks29();
   const pa = actOfP(s, par.id);
   PENDING = k;
   const kid = debutKid15(s, rng(s, `deb|${kidId}`), { par, pa, name: k[3], born: k[4], band: band && pa && pa.members.includes(par.id) ? pa : undefined });
@@ -1226,7 +1260,7 @@ function seed29(s: GameState): void {
     for (let i = 0; i < n; i++) {
       const born = Math.min(y0 - 1, p.born + r.int(22, 40));
       if (born <= p.born + 18) continue;
-      const musical = Math.round(clamp((p.skills.voice + p.skills.instr + p.skills.comp) / 3 + r.normal(0, 18), 3, 99));
+      const musical = Math.round(clamp((p.potential + r.int(20, 55)) / 2 + r.normal(4, 15), 3, 99));
       const kage = y0 - born;
       let debut = 0;
       if (musical >= 55 && kage <= 24 && r.chance(0.5 + (musical - 55) / 90)) debut = Math.max(y0 + r.int(0, 2), born + (musical >= 72 && r.chance(childEra29(born + 13) * 0.5) ? r.int(CHILD_MIN29, 16) : r.int(17, 24)));
@@ -1257,6 +1291,7 @@ function seed29(s: GameState): void {
 // ---------------------------------------------------------------- tick
 
 export function familyMonth29(s: GameState): void {
+  hooks29();
   const st = fam29(s);
   if (!st.seed) seed29(s);
   const r = rng(s, `m|${s.year}|${s.month}`);
@@ -1285,3 +1320,4 @@ export function familyYear29(s: GameState): void {
 }
 registerSimHook('month', 'family29', (s) => familyMonth29(s));
 registerSimHook('year', 'family29', (s) => familyYear29(s));
+hooks29(); // ordem normal (sys/index): tudo já carregado; num ciclo de imports o resto liga no 'newgame' / no mês

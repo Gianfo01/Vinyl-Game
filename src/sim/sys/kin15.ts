@@ -283,7 +283,8 @@ function generate(s: GameState, r: Rng): void {
     if (!p) continue;
     const age = s.year - p.born;
     if (age < 28 || age > 55 || st.kids.some((k) => k.parent === p.id) || roll > 0.012 + a.fame / 8000) continue;
-    if (KIN15X.births === false) continue; // R29 (família): quem faz nascer é o sys/family29 (sem filho em dobro)
+    // R29 (família): com o sys/family29 na partida, é ele quem faz nascer (sem filho em dobro) — pelo estado, não pela ordem dos imports
+    if (KIN15X.births === false || (s.x4 as unknown as { family29?: unknown }).family29) continue;
     const sur = p.name.split(' ').slice(1).join(' ') || p.name;
     const first = personName(r, langForCity(a.city, r)).split(' ')[0];
     st.kids.push({ parent: p.id, name: `${first} ${sur}`, born: s.year, debut: s.year + r.int(17, 24) });
