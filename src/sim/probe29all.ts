@@ -25,7 +25,7 @@ import { money, rngOf, staffSkill } from './util';
 import { monthlyCosts } from './economy';
 import { createGame, spawnProceduralAct } from './worldgen';
 import { criticScore } from './relinfo';
-import { gramoScore } from './sys/ceremonies8';
+import { CAMPAIGN_COST, gramoScore } from './sys/ceremonies8';
 import { crime17, crimeOdds, a3Of } from './sys/crime17';
 import { renewChance } from './sys/explain12';
 import { personFame } from './sys/fame15';
@@ -98,6 +98,7 @@ export const METRICS29: Metric29[] = [
   { id: 'equipe', sys: 'sede', kind: 'pura', name: 'eficácia da equipe', f: (c) => ['publicist', 'booking', 'tour_manager', 'engineer', 'producer', 'legal'].reduce((t, r) => t + staffSkill(c.s, r), 0) },
   { id: 'fama', sys: 'fama', kind: 'mes', name: 'fama do ato', f: (c) => c.a.fame },
   { id: 'fas', sys: 'fama', kind: 'mes', name: 'fãs núcleo', f: (c) => c.a.fans.core },
+  { id: 'embalo', sys: 'fama', kind: 'mes', name: 'embalo do ato', f: (c) => c.a.momentum },
   { id: 'famap', sys: 'fama', kind: 'pura', name: 'fama da pessoa', f: (c) => personFame(c.s, c.a.members[0]).v },
   { id: 'influencia', sys: 'mundo', kind: 'pura', name: 'influência nas leis', f: (c) => influence(c.s) },
   { id: 'gosto', sys: 'mundo', kind: 'mes', name: 'popularidade do gênero', f: (c) => c.s.genrePop[c.a.genre] ?? 0 },
@@ -106,11 +107,14 @@ export const METRICS29: Metric29[] = [
   { id: 'estresse_mes', sys: 'vida', kind: 'mes', name: 'estresse depois de um mês', f: (c) => members(c).reduce((t, id) => t + stressOf(c.s, id).short, 0) / Math.max(1, members(c).length) },
   { id: 'oferta', sys: 'contratos', kind: 'pura', name: 'aceite de oferta', f: (c) => evaluateOffer(c.s, c.s.acts[c.b.npc], defaultOffer(c.s, c.s.acts[c.b.npc])).score },
   { id: 'renova', sys: 'contratos', kind: 'pura', name: 'chance de renovar', f: (c) => renewChance(c.s, c.a, 0) },
+  { id: 'confianca', sys: 'contratos', kind: 'mes', name: 'confiança do ato no selo', f: (c) => c.a.trust },
   { id: 'rivais', sys: 'contratos', kind: 'mes', name: 'calor dos rivais', f: (c) => Object.values(c.s.rivalries ?? {}).reduce((t, v) => t + v, 0) },
   { id: 'gramofone', sys: 'premios', kind: 'pura', name: 'nota no Gramofone', f: (c) => gramoScore(c.s, 'record', c.rel) },
+  { id: 'cabe_campanha', sys: 'premios', kind: 'pura', name: 'caixa livre para campanha do Gramofone', f: (c) => cap1(freeCash20(c.s) / money(c.s, CAMPAIGN_COST[1])) },
   { id: 'hall', sys: 'premios', kind: 'pura', name: 'nota no Hall da Fama', f: (c) => hallScore(c.s, c.a) },
   { id: 'crime_p', sys: 'submundo', kind: 'pura', name: 'chance de fraudar a parada', f: (c) => crimeOdds(c.s, { actor: 'player', target: c.a.id, partners: [] }, 'chart_rig').p },
   { id: 'crime_q', sys: 'submundo', kind: 'pura', name: 'exposição de um crime', f: (c) => crimeOdds(c.s, { actor: 'player', target: c.a.id, partners: [] }, 'chart_rig').q },
+  { id: 'crime_pirata', sys: 'submundo', kind: 'pura', name: 'chance de piratear o ato', f: (c) => crimeOdds(c.s, { actor: 'player', target: c.a.id, partners: [] }, 'bootleg').p },
   { id: 'calor', sys: 'submundo', kind: 'mes', name: 'calor policial', f: (c) => crime17(c.s).heat[a3home(c.s)] ?? 0 },
 ];
 

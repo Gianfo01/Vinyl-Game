@@ -24,10 +24,11 @@
 //  mundo     → ao vivo    guerra/crise esvazia as casas (demanda na cidade)
 //  ao vivo   → imprensa   série de shows de ato seu vira notícia (fato 'show')
 //  reputação → sede       selo de prestígio atrai gente melhor: a equipe rende mais (habilidade efetiva ±4)
-//  vida      → dinheiro   elenco muito estressado custa terapia/médico (mensal)
+//  vida      → dinheiro   elenco muito estressado custa terapia/médico (mensal, só com caixa livre, até 3 pessoas)
 //  projetos  → fama       disco muito bom estreia com aclamação: um pouco de fama na estreia
 import { l } from '../../data/world';
 import { registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
+import { registerContractHook } from '../contracts';
 import { emitFact, onFact } from '../facts17';
 import { freeCash20 } from '../oblig20';
 import { lastScandal, REACT29 } from '../scandal17';
@@ -139,7 +140,7 @@ registerMod('appeal', 'awards29a', (s, v, { release, act }) => {
   return n ? { value: v * (1 + Math.min(0.08, n * 0.02) * K()), label: l('Prêmio recente: mais gente quer ouvir', 'Recent award: more people want to listen') } : null;
 });
 registerMod('chartUnits', 'awards29c', (s, v, { release }) => {
-  if (!release || !on('premios') || s.week - release.week < 26) return null; // catálogo (não o lançamento novo, que já ganhou no apelo)
+  if (!release || !on('premios') || s.week - release.week < 2) return null; // discos já na rua (o lançamento novo ganha no apelo)
   const n = recentAwards(s, release.actId, 2);
   return n ? { value: v * (1 + Math.min(0.15, n * 0.04) * K()), label: l('Catálogo puxado pelo prêmio', 'Catalog lifted by the award') } : null;
 });
@@ -184,6 +185,8 @@ onFact('scandal', (s, f) => {
   const r = s.player.reputation;
   r.institutional = Math.max(0, r.institutional - Math.min(4, f.severity / 30) * K());
   r.commercial = Math.max(0, r.commercial - Math.min(2, f.severity / 60) * K());
+  // imprensa → dinheiro: gestão de crise (assessoria extra, advogado, cancelamentos)
+  if (on('escandalo_custo') && f.severity >= 30) post(s, `conn29crise:${f.id}`, -Math.round(money(s, f.severity * 60) * K()), 'marketing', 'Gestão de crise (escândalo)');
 }, 'conn29:scandal-rep');
 
 // ---------------------------------------------------------------- mensal: prêmios, reputação, submundo, vida
@@ -191,10 +194,11 @@ registerSimHook('newgame', 'conn29', (s) => { st29(s).aw = (s.awards ?? []).leng
 registerSimHook('month', 'conn29', (s: GameState) => {
   const st = st29(s), aw = s.awards ?? [];
   if (st.aw < 0) st.aw = aw.length; // saves antigos / início: só os prêmios daqui para frente
+  let nRep = 0;
   if (on('premios')) for (let i = st.aw; i < aw.length; i++) {
     const x = aw[i], a = x.actId ? s.acts[x.actId] : undefined;
     if (a) a.fame = Math.min(100, a.fame + 0.8 * (1 - a.fame / 100) * K()); // prêmios → fama
-    if (x.byPlayer) s.player.reputation.artistic = Math.min(100, s.player.reputation.artistic + 0.5 * K()); // prêmios → reputação
+    if (x.byPlayer && nRep++ < 3) s.player.reputation.artistic = Math.min(100, s.player.reputation.artistic + 1 * K()); // prêmios → reputação (até 3 por mês)
   }
   st.aw = aw.length;
   const r = s.player.reputation;
@@ -207,7 +211,129 @@ registerSimHook('month', 'conn29', (s: GameState) => {
     r.institutional = Math.max(0, r.institutional - Math.min(1.5, h / 60) * K());
     post(s, `conn29law:${s.year}:${s.month}`, -Math.round(money(s, h * 40) * K()), 'legal', 'Advogados (investigação policial)');
   }
-  let n = 0; // vida → dinheiro
-  for (const id of playerActs(s)) for (const pid of s.acts[id]?.members ?? []) if (s.persons[pid]?.alive && stressOf(s, pid).short >= 22) n++;
-  if (n && on('terapia')) post(s, `conn29med:${s.year}:${s.month}`, -Math.round(money(s, 700 * n) * K()), 'artist_dev', `Terapia e médico (${n} do elenco)`);
+  // vida → dinheiro: terapia/médico para quem está muito estressado. Sem ciclo: só com caixa livre (selo quebrado não
+  // paga — senão "sem caixa → estresse → terapia → menos caixa" virava espiral), no máximo 3 pessoas, US$ 250 cada.
+  let n = 0;
+  if (on('terapia') && freeCash20(s) > 0) for (const id of playerActs(s)) for (const pid of s.acts[id]?.members ?? []) if (s.persons[pid]?.alive && stressOf(s, pid).short >= 26) n++;
+  n = Math.min(3, n);
+  if (n) post(s, `conn29med:${s.year}:${s.month}`, -Math.round(money(s, 250 * n) * K()), 'artist_dev', `Terapia e médico (${n} do elenco)`);
+});
+
+// ================================================================ grupo 2 (o resto que deve existir)
+//  dinheiro  → reputação   cachê atrasado (selo sem caixa livre) mancha a reputação comercial e com artistas (mensal)
+//  imprensa  → submundo    escândalo de drogas/crime/violência de ato seu atrai a polícia (calor)
+//  imprensa  → contratos   escândalo recente de ato seu afasta artistas que você quer contratar (proposta)
+//  projetos  → ao vivo     disco bom recente puxa ingresso (demanda na cidade)
+//  projetos  → contratos   disco bom lançado pelo selo: o ato confia mais (na estreia)
+//  projetos  → vida        crítica ruim estressa, disco muito bom alivia (na estreia)
+//  ao vivo   → contratos / reputação   série de shows de ato seu: confiança do ato e reputação comercial do selo
+//  ao vivo   → submundo    ato na estrada é presa fácil de pirataria e sabotagem (chance)
+//  sede      → fama        assessor de imprensa puxa a fama dos seus atos (mensal)
+//  sede      → prêmios     assessor monta a campanha do Gramofone (pontos do júri)
+//  sede      → submundo    jurídico reduz a exposição de um crime
+//  vida      → contratos   elenco muito estressado perde a confiança no selo (mensal)
+//  vida      → prêmios     banda em crise rende menos na noite do Gramofone
+//  vida      → submundo    gente nervosa fala demais: exposição maior nos crimes com o ato
+//  contratos → reputação   ato que desconfia do selo fala mal: reputação com artistas cai (mensal)
+//  prêmios   → ao vivo     prêmio recente enche casa (demanda na cidade)
+const avgStress = (s: GameState, a: Act) => { const ms = a.members.filter((id) => s.persons[id]?.alive); return ms.length ? ms.reduce((t, id) => t + stressOf(s, id).short, 0) / ms.length : 0; };
+const recentGood = (s: GameState, a: Act) => a.releases.map((id) => s.releases[id]).filter((r) => r && s.week - r.week <= 12 && !r.reissueOf).reduce((m, r) => Math.max(m, r!.q), 0);
+
+onFact('scandal', (s, f) => {
+  const a = f.actors.map((id) => s.acts[id]).find(Boolean);
+  if (!mine(a) || !on('escandalo_policia') || f.severity < 30) return;
+  if (!f.tags.some((t) => t === 'drugs' || t === 'crime' || t === 'violence')) return;
+  const k = a3Of(s, a.city);
+  crime17(s).heat[k] = Math.min(100, (crime17(s).heat[k] ?? 0) + Math.min(12, f.severity / 8) * K());
+}, 'conn29:scandal-heat');
+
+registerOfferMod('scandal29', (s) => {
+  if (!on('escandalo_contratos')) return null;
+  const worst = playerActs(s).map((id) => lastScandal(s, id)).filter((x) => x && s.week - x.w <= 26).reduce((m, x) => Math.max(m, x!.rebel ? x!.eff / 2 : x!.eff), 0);
+  return worst >= 30 ? { delta: -Math.min(0.06, worst / 1500) * K(), reason: l('Escândalo recente no seu elenco: o artista hesita', 'Recent scandal in your roster: the act hesitates') } : null;
+});
+
+registerMod('cityDemand', 'proj29', (s, v, { act }) => {
+  if (!act || !on('disco_shows')) return null;
+  const q = recentGood(s, act);
+  return q >= 60 ? { value: v * (1 + Math.min(0.15, (q - 60) / 200) * K()), label: l('Disco novo elogiado puxa ingresso', 'Acclaimed new record sells tickets') } : null;
+});
+registerMod('cityDemand', 'awards29', (s, v, { act }) => {
+  const n = act && on('premios') ? recentAwards(s, act.id, 2) : 0;
+  return n ? { value: v * (1 + Math.min(0.12, n * 0.03) * K()), label: l('Prêmio recente enche a casa', 'Recent award fills the venue') } : null;
+});
+
+registerSimHook('launch', 'conn29b', (s, _r, arg) => {
+  const rel = arg.release, a = rel ? s.acts[rel.actId] : undefined;
+  if (!rel || !mine(a) || rel.reissueOf) return;
+  if (on('disco_confianca') && rel.q >= 60) a.trust = Math.min(100, a.trust + Math.min(4, (rel.q - 55) / 5) * K());
+  if (on('disco_vida')) for (const pid of a.members) {
+    const p = s.persons[pid];
+    if (!p?.alive) continue;
+    if (rel.q < 45) p.stress = Math.min(100, p.stress + 4 * K());
+    else if (rel.q >= 65) p.stress = Math.max(0, p.stress - 4 * K());
+  }
+});
+
+rememberListeners().push((s, e) => {
+  if (e.kind !== 'gigs' || !e.actId || !mine(s.acts[e.actId]) || !on('shows_contratos')) return;
+  const a = s.acts[e.actId];
+  a.trust = Math.min(100, a.trust + 1 * K());
+  s.player.reputation.commercial = Math.min(100, s.player.reputation.commercial + 0.6 * K());
+});
+
+ODDS17.push((s, c, cid, x) => {
+  const a = s.acts[c.target];
+  if (!a) return;
+  if (on('shows_crime') && (cid === 'bootleg' || cid === 'sabotage') && (a.gigSat ?? 0) >= 4) { const d = Math.min(0.1, (a.gigSat ?? 0) / 60) * K(); x.p += d; x.why.push(fmtL(l('Ato na estrada: alvo fácil ({x})', 'Act on the road: easy target ({x})'), { x: `+${Math.round(d * 100)}%` })); }
+  if (on('disco_crime') && cid === 'bootleg' && recentGood(s, a) >= 60) { const d = Math.min(0.08, (recentGood(s, a) - 55) / 250) * K(); x.p += d; x.why.push(fmtL(l('Disco de sucesso: pirataria vende fácil ({x})', 'Hit record: bootlegs sell easily ({x})'), { x: `+${Math.round(d * 100)}%` })); }
+  if (on('sede_crime') && c.actor === 'player') { const lg = staffSkill(s, 'legal'); if (lg > 0) { const d = (lg / 1000) * K(); x.q -= d; x.why.push(fmtL(l('Jurídico do selo prepara a defesa ({x})', 'Label lawyers prepare the defence ({x})'), { x: `−${Math.round(d * 100)}%` })); } }
+  if (on('vida_crime') && mine(a)) { const st = avgStress(s, a); if (st >= 15) { const d = Math.min(0.08, st / 400) * K(); x.q += d; x.why.push(fmtL(l('Elenco nervoso fala demais ({x})', 'A nervous band talks too much ({x})'), { x: `+${Math.round(d * 100)}%` })); } }
+});
+
+GRAMO_ADJ.push((s, relId) => {
+  const rel = s.releases[relId], a = rel ? s.acts[rel.actId] : undefined;
+  if (!rel || !a) return 0;
+  let v = 0;
+  if (rel.owner === 'player' && on('sede_premios')) v += staffSkill(s, 'publicist') / 20;
+  if (mine(a) && on('vida_premios')) { const st = avgStress(s, a); if (st >= 22) v -= Math.min(5, (st - 20) / 3); }
+  return v * K();
+});
+
+registerSimHook('month', 'conn29b', (s: GameState) => {
+  const r = s.player.reputation;
+  if (on('caixa_rep') && freeCash20(s) < 0) { r.commercial = Math.max(0, r.commercial - 0.5 * K()); r.artists = Math.max(0, r.artists - 0.7 * K()); }
+  const pub = staffSkill(s, 'publicist');
+  if (on('sede_rep') && pub > 0) r.commercial = Math.min(100, r.commercial + (pub / 300) * K()); // sede → reputação
+  for (const id of playerActs(s)) {
+    const a = s.acts[id];
+    if (!a) continue;
+    if (on('sede_fama') && pub > 0) a.fame = Math.min(100, a.fame + (pub / 150) * (1 - a.fame / 100) * K());
+    if (on('vida_fama') && avgStress(s, a) >= 22) a.momentum = Math.max(0, a.momentum - 3 * K()); // vida → fama: banda esgotada perde embalo
+    if (on('vida_rep') && avgStress(s, a) >= 26) r.artists = Math.max(0, r.artists - 0.5 * K()); // vida → reputação: "selo que esgota artistas"
+    if (on('vida_contratos') && avgStress(s, a) >= 22) a.trust = Math.max(0, a.trust - 1.5 * K());
+    if (on('contratos_rep') && a.trust < 30) r.artists = Math.max(0, r.artists - 1 * K());
+  }
+});
+
+// ================================================================ grupo 3
+//  vida → contratos       banda esgotada quer pausa: renova menos (gancho de renovação — a previsão usa o mesmo)
+//  projetos → contratos   disco bom recente lançado pelo selo: renova mais
+//  reputação → ao vivo    promotores e casas preferem selo de nome (demanda na cidade)
+//  reputação → vida       artista em selo respeitado fica tranquilo; em selo mal falado, preocupado
+registerContractHook('conn29', { renew: (s, act) => {
+  let v = 0;
+  if (on('vida_contratos') && avgStress(s, act) >= 22) v -= 0.06 * K();
+  if (on('disco_confianca') && recentGood(s, act) >= 60) v += 0.04 * K();
+  return v;
+} });
+registerMod('cityDemand', 'rep29', (s, v, { act }) => {
+  if (!mine(act) || !on('rep_shows')) return null;
+  const k = Math.max(-0.06, Math.min(0.1, (s.player.reputation.commercial - 40) / 400)) * K();
+  return Math.abs(k) > 0.005 ? { value: v * (1 + k), label: l('Nome do selo pesa com promotores', 'The label\'s name carries weight with promoters') } : null;
+});
+PRESSURE29.push((s, p) => {
+  if (!actOfP(s, p.id) || !on('rep_vida')) return null;
+  const r = s.player.reputation.artists;
+  return r > 60 ? { v: -2 * K(), why: l('selo respeitado pelos artistas', 'label respected by artists') } : r < 25 ? { v: 2 * K(), why: l('selo mal falado entre artistas', 'label badly spoken of by artists') } : null;
 });
