@@ -445,7 +445,7 @@ function birth(s: GameState, r: Rng, p: Person, a: Act, F: F29, q?: Person): voi
   const st = fam29(s);
   // musicalidade herdada do potencial dos pais (o de fora da música puxa para baixo) + o acaso
   const mus = (x?: Person) => (x ? x.potential : 35);
-  const musical = Math.round(clamp((mus(p) + (q ? mus(q) : r.int(20, 55))) / 2 + r.normal(4, 15), 3, 99));
+  const musical = Math.round(clamp((mus(p) + (q ? mus(q) : r.int(25, 60))) / 2 + r.normal(8, 15), 3, 99)); // cresceu entre instrumentos: +8
   const sur = p.name.split(' ').slice(1).join(' ');
   const first = personName(r, langForCity(a.city, r)).split(' ')[0];
   const name = sur ? `${first} ${sur}` : `${first} ${p.name}`;
@@ -1267,7 +1267,7 @@ function seed29(s: GameState): void {
     for (let i = 0; i < n; i++) {
       const born = Math.min(y0 - 1, p.born + r.int(22, 40));
       if (born <= p.born + 18) continue;
-      const musical = Math.round(clamp((p.potential + r.int(20, 55)) / 2 + r.normal(4, 15), 3, 99));
+      const musical = Math.round(clamp((p.potential + r.int(25, 60)) / 2 + r.normal(8, 15), 3, 99));
       const kage = y0 - born;
       let debut = 0;
       if (musical >= 55 && kage <= 24 && r.chance(0.5 + (musical - 55) / 90)) debut = Math.max(y0 + r.int(0, 2), born + (musical >= 72 && r.chance(childEra29(born + 13) * 0.5) ? r.int(CHILD_MIN29, 16) : r.int(17, 24)));
