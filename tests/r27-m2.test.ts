@@ -29,7 +29,10 @@ beforeAll(() => {
   // caso típico. Os valores do modo rápido foram medidos de novo.
   // R28: com F3 (mundo inicial pela cena, eco pela receita) + F5 (rivais) + formações reais, r16pb-4/-5/-6 quebram antes
   // de ter show jogável; r16pb-7 tem show no 9º mês e vira o fixture (r16pb-2 também tem, mas o rival entra na mesa).
-  const s = createGame(defaultConfig('r16pb-7', { startYear: 1975, realNames: true }));
+  // R29 (CONNECT): com a ordem dos ganchos de início corrigida (atos reais marcados no lineup16 e renomes depois que eles
+  // existem — antes dependia da ordem dos imports) e os perks religados, r16pb-7 quebra antes do show; r16pb-4 volta a ter
+  // show no 9º mês, mas o ato mais famoso livre fecha com um rival na mesa; r16pb-8 tem show no 9º mês e vira o fixture.
+  const s = createGame(defaultConfig('r16pb-8', { startYear: 1975, realNames: true }));
   for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
     const hit = m >= 7 && playableShows27(s, 40).length > 0;
@@ -53,7 +56,7 @@ describe('r27 M2 — modo rápido intacto', () => {
     // Aqui fica o que não pode quebrar: a mesma seed dá exatamente o mesmo mundo, e o bot toca shows pelo playStop.
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
     expect(played).toBeGreaterThan(0);
-    const again = createGame(defaultConfig('r16pb-7', { startYear: 1975, realNames: true }));
+    const again = createGame(defaultConfig('r16pb-8', { startYear: 1975, realNames: true }));
     for (let m = 0; m < MONTHS && !again.ended; m++) { playMonth(again, 'balanced'); advanceMonth(again); }
     expect(again.player.cash).toBe(AFTER.player.cash);
     expect(hashString(JSON.stringify(again.tours))).toBe(hashString(JSON.stringify(AFTER.tours)));
@@ -209,13 +212,14 @@ describe('r27 M2 — negociação jogável', () => {
     const rd = read27(s, n);
     expect(['below', 'inside', 'above']).toContain(rd.band);
     const o = { ...n.ours, advance: n.ours.advance * 6, royalty: 0.3, creativeControl: true };
+    s.player.cash += o.advance; // R29: o caixa livre precisa cobrir o adiantamento de 6× (senão "topam, mas o acordo cai")
     // R28: o ato mais famoso livre do fixture novo é ambicioso (aspiração acima de qualquer nota na 1ª rodada) — a
     // proposta generosa fecha quando a rodada final chega com ela acima do mínimo, sem estourar a paciência
     for (let i = 0; i < n.maxRounds && n.status === 'open'; i++) propose27(s, n, o);
     expect(n.status).toBe('deal');
     const c = s.contracts[n.contractId!];
     // mesma estrutura do caminho normal (makeOffer → acceptOffer)
-    const q = clone(FIX); q.player.cash += 50_000_00;
+    const q = clone(FIX); q.player.cash += 50_000_00 + o.advance;
     const off = makeOffer(q, { ...o })!;
     acceptOffer(q, q.acts[act.id], off);
     const c2 = q.contracts[q.acts[act.id].contractId!];

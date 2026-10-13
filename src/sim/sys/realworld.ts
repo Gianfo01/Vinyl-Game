@@ -48,6 +48,7 @@ import { noteRelease17 } from '../relidx17';
 import { actsTouched17 } from '../actidx17';
 import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 import { actsNow27 } from '../tickcache27';
+import { RW_AFTER_NEWGAME } from './after29';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 /** r27: chave de deduplicação — "The X" = "X" e "&" = "and" (Carpenters, Four Tops, Smashing Pumpkins apareciam 2×) */
@@ -796,7 +797,10 @@ function monthly(s: GameState, r: Rng): void {
   }
 }
 
-registerSimHook('newgame', 'realworld', (s, r) => newgame(s, r));
+// R29 (CONNECT): RW_AFTER_NEWGAME (after29.ts) roda no fim do newgame real — renomes do lineup16 etc. A ordem dos ganchos
+// 'newgame' dependia da ordem dos imports (ciclo realworld ↔ lineup16): com os imports de um teste o gancho do lineup16
+// rodava antes e "The Jackson 5" nunca virava "The Jacksons".
+registerSimHook('newgame', 'realworld', (s, r) => { newgame(s, r); for (const f of RW_AFTER_NEWGAME) f(s); });
 // r27 (F): música com título de obra real leva os compositores reais nos créditos (Gonzaga + Zé Dantas), sem sorteio
 registerSimHook('compose', 'realworld:writers27', (s, _r, a) => {
   const song = a.song;

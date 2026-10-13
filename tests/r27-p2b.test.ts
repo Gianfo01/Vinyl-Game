@@ -58,11 +58,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // novas que nascem de eventos (R28 arte: certificados, pôsteres, ingressos…): 446096 / 1382068899 / 4292160800 / 2262769409.
     // R29 (CONNECT, de propósito — docs/connect29.md): perks appeal/chartUnits/showRevenue/pressingCost passam a valer,
     // modificadores songQ depois dos ganchos de gravação, escândalo → próximo disco, prêmios → prestígio: caixa e acts mudam;
-    // tours e rng iguais. Antes: 446096 / 1382068899 / 4292160800 / 2262769409.
-    expect(AFTER.player.cash).toBe(427926);
+    // tours e rng iguais (427926 / 1382068899 / 1063419696 / 2262769409). Depois, ganchos de início em ordem fixa (atos reais
+    // marcados no lineup16 e renomes depois que existem; antes dependia da ordem dos imports): caixa, acts e rng mudam.
+    // Antes da R29: 446096 / 1382068899 / 4292160800 / 2262769409.
+    expect(AFTER.player.cash).toBe(252);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1063419696);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2262769409);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2817744560);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1576372716);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

@@ -60,10 +60,13 @@ beforeAll(() => {
   // mudou caixa, acts e rng. "Sem campanha nada muda" segue provado no 1º teste da campanha (a × b).
   // R28: re-medidos (mesmos do r27-p2b): fase 5 (rivais) e formações reais na data inicial mudam o mundo de propósito; depois F3, F4 e F8 (r27-p2b explica cada um).
   // R29 (CONNECT, de propósito): perks de apelo/vendas/bilheteria/prensagem passam a valer, modificadores songQ sobrevivem
-  // aos ganchos de gravação, escândalo pesa no próximo disco e prêmios dão prestígio. Antes: 446096 / 4292160800 (rng igual).
-  expect(s.player.cash).toBe(427926);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1063419696);
-  expect(hashString(JSON.stringify(s.rng))).toBe(2262769409);
+  // aos ganchos de gravação, escândalo pesa no próximo disco e prêmios dão prestígio: 427926 / 1063419696 (rng igual).
+  // Depois, ganchos de início em ordem fixa (atos reais marcados no lineup16 e renomes depois que existem — antes dependia
+  // da ordem dos imports e os atos reais ganhavam fama herdada no 1º mês): caixa, acts e rng mudam.
+  // Antes da R29: 446096 / 4292160800 / 2262769409.
+  expect(s.player.cash).toBe(252);
+  expect(hashString(JSON.stringify(s.acts))).toBe(2817744560);
+  expect(hashString(JSON.stringify(s.rng))).toBe(1576372716);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

@@ -26,6 +26,7 @@ import { personFame } from './fame15';
 import { feudOf15 } from './kin15';
 import { replaceMember } from './lifecycle7';
 import { canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
+import { RW_AFTER_NEWGAME } from './after29';
 import { actsTouched17 } from '../actidx17';
 import { simStart20 } from '../worldpolicy20';
 import { actsNow27 } from '../tickcache27';
@@ -494,7 +495,9 @@ function month(s: GameState): void {
   diff(s);
 }
 
-registerSimHook('newgame', 'lineup16', (s) => { renames(s); for (const a of actsNow27(s)) l16(s).boost[a.id] = 1; });
+const start16 = (s: GameState) => { renames(s); for (const a of actsNow27(s)) l16(s).boost[a.id] = 1; };
+registerSimHook('newgame', 'lineup16', start16);
+RW_AFTER_NEWGAME.push(start16); // R29 (CONNECT): idempotente; garante rodar depois dos atos reais, qualquer que seja a ordem dos imports
 registerSimHook('month', 'lineup16', (s) => month(s));
 
 // ---------------------------------------------------------------- consultas (interface e testes)
