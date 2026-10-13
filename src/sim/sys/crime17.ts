@@ -437,8 +437,8 @@ export function targetsFor(s: GameState, c: CrimeDef17, max = 40): { id: string;
   const live = (a: Act) => a.status !== 'retired' && a.status !== 'split';
   const acts = actsNow27(s).filter(live);
   switch (c.tk) {
-    case 'person': return acts.filter((a) => !mine.has(a.id)).sort((a, b) => b.fame - a.fame).slice(0, max).flatMap((a) => a.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).slice(0, 2).map((m) => ({ id: m, name: l(`${s.persons[m].name} (${a.name})${isReal(s, m) ? ' ★' : ''}`) })));
-    case 'act': return acts.filter((a) => !mine.has(a.id) && a.fame > 5).sort((a, b) => b.fame - a.fame).slice(0, max).map((a) => ({ id: a.id, name: l(`${a.name}${a.catalogNo ? ' ★' : ''}`) }));
+    case 'person': return acts.filter((a) => !mine.has(a.id)).sort((a, b) => b.fame - a.fame).slice(0, max).flatMap((a) => a.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).slice(0, 2).map((m) => ({ id: m, name: l(`${s.persons[m].name} (${a.name})`) })));
+    case 'act': return acts.filter((a) => !mine.has(a.id) && a.fame > 5).sort((a, b) => b.fame - a.fame).slice(0, max).map((a) => ({ id: a.id, name: l(a.name) }));
     case 'own_act': return acts.filter((a) => mine.has(a.id)).map((a) => ({ id: a.id, name: l(a.name) }));
     case 'label': return Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.reputation - a.reputation).slice(0, max).map((x) => ({ id: x.id, name: l(x.name) }));
     case 'relic': return relics(s).list.filter(liveRelic).sort((a, b) => b.v - a.v).slice(0, max).map((x) => ({ id: x.id, name: fmtL(l('{n} · {o}', '{n} · {o}'), { n: x.n, o: x.own.at(-1)?.[0] ?? '?' }) }));

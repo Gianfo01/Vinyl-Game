@@ -59,7 +59,7 @@ export function leaderBody(s: GameState, L0: Leader, full = true): HTMLElement {
   const relP = L0.rel.player ?? 0;
   const body = h('div', { class: 'ficha leader10' },
     h('div', { class: 'row' }, full ? face(s, L0, 4) : null, h('div', null,
-      full ? null : L0.real ? pill(t(l('pessoa real', 'real person')), 'gold') : null, h('h3', full ? null : { hidden: true }, L0.name, L0.real ? h('small', { class: 'muted' }, ` · ${t(l('pessoa real', 'real person'))}`) : null),
+      h('h3', full ? null : { hidden: true }, L0.name),
       h('p', null, `${ageOf(s, L0)} ${t(l('anos', 'years old'))} · ${t(l('de', 'from'))} ${cityName(L0.city)} · ${t(BG_TXT[L0.bg])}`, status ? ` · ${status}` : ''),
       lb ? h('p', null, t(L0.founder ? l('Fundador e líder de ', 'Founder and head of ') : l('Líder de ', 'Head of ')), labelLink(s, lb.id), ` ${t(l('desde', 'since'))} ${L0.since}`) : null,
       L0.note ? h('p', { class: 'small muted' }, t(L0.note)) : null)),

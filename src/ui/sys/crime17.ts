@@ -54,11 +54,11 @@ function orgsTab(s: GameState): HTMLElement {
       const tied = Object.entries(st.ties).filter(([, oid]) => oid === o.id).map(([aid]) => s.acts[aid]).filter(Boolean);
       const down = (st.down[o.id] ?? 0) > s.week;
       return h('section', { class: 'card' },
-        h('h3', null, orgEmblem(o, 40), ' ', T(o.name), ' ', pill(T(KIND_NAME[o.kind])), o.real ? pill(T(l('real', 'real')), 'trait') : pill(T(l('fictícia', 'fictional'))), down ? pill(T(l('desmantelada', 'dismantled')), 'good') : null),
+        h('h3', null, orgEmblem(o, 40), ' ', T(o.name), ' ', pill(T(KIND_NAME[o.kind])), down ? pill(T(l('desmantelada', 'dismantled')), 'good') : null),
         chips(stat('globe', `${cityName(o.city)} · ${T(countryName(o.a3))}`, l('Sede', 'Base')), stat('fire', o.power, l('Poder', 'Power')), stat('handshake', rel, l('Relação com você', 'Relationship with you'))),
         h('p', { class: 'small' }, T(o.desc)),
         h('p', { class: 'small muted' }, `${T(l('Negócios', 'Rackets'))}: ${o.rackets.map((r) => T(RACKET_NAME[r])).join(' · ')} · ${T(l('Chefe', 'Boss'))}: ${T(bossName(o))}`),
-        o.ties?.length ? h('ul', { class: 'small' }, o.ties.filter((x) => x.y <= s.year).map((x) => h('li', null, pill(T(l('documentado', 'documented')), 'good'), ` ${x.who} (${x.y}): ${T(x.text)}`))) : null,
+        o.ties?.length ? h('ul', { class: 'small' }, o.ties.filter((x) => x.y <= s.year).map((x) => h('li', null, `${x.who} (${x.y}): ${T(x.text)}`))) : null,
         membersBox(s, o.id),
         tied.length ? h('p', { class: 'small' }, `${T(l('Andam com eles', 'Run with them'))}: ${tied.map((a) => `${a!.name}${a!.catalogNo ? ` (${T(l('boato', 'rumor'))})` : ''}`).join(', ')}`) : null,
         h('div', { class: 'row wrap' },

@@ -171,11 +171,11 @@ function criticsTab(s: GameState): HTMLElement {
   ensureCritics17();
   const cs = activeCritics(s).slice().sort((a, b) => b.prestige - a.prestige);
   return h('div', null,
-    h('p', { class: 'small muted' }, t(l('Críticos ativos neste ano. Os marcados "real" escreveram de verdade nessa época; os outros são do mundo do jogo. Resenha muito dura de artista famoso vira situação: responder, convidar ou ignorar.', 'Critics active this year. Those marked "real" actually wrote in this era; the others belong to the game world. A very harsh review of a famous act becomes a situation: hit back, invite or ignore.'))),
+    h('p', { class: 'small muted' }, t(l('Críticos ativos neste ano. Resenha muito dura de artista famoso vira situação: responder, convidar ou ignorar.', 'Critics active this year. A very harsh review of a famous act becomes a situation: hit back, invite or ignore.'))),
     h('table', { class: 'tbl small' },
       h('thead', null, h('tr', null, ...[l('Crítico', 'Critic'), l('Veículo', 'Outlet'), l('Região', 'Region'), l('Gosta', 'Likes'), l('Detesta', 'Dislikes'), l('Rigor', 'Harshness'), l('Prestígio', 'Prestige'), l('Relação', 'Relation')].map((x) => h('th', null, t(x))))),
       h('tbody', null, cs.map((c) => { const n = CRITICS17.find((x) => x.name === c.name)?.note; return h('tr', null,
-        h('td', { title: n ? t(n) : '' }, c.name, REAL_CRITICS.has(c.name) ? ' ' : null, REAL_CRITICS.has(c.name) ? pill('real', 'gold') : null), h('td', null, c.realRef && !REAL_CRITICS.has(c.name) ? `${c.outlet} (≈ ${c.realRef})` : c.outlet), h('td', null, c.region ?? 'global'),
+        h('td', { title: n ? t(n) : '' }, c.name), h('td', null, c.realRef && !REAL_CRITICS.has(c.name) ? `${c.outlet} (≈ ${c.realRef})` : c.outlet), h('td', null, c.region ?? 'global'),
         h('td', null, fam(c.favors)), h('td', null, fam(c.dislikes)), h('td', null, `${Math.round(c.harsh * 10)}/10`), h('td', null, String(c.prestige)), h('td', { title: critWhy27(s, c.name).map((w) => t(w)).join('\n') || undefined }, relTxt(relWith(s, c.name)))); })))); // r27 AUD2: porquês da relação
 }
 

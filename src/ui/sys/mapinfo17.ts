@@ -119,7 +119,7 @@ function crime(s: GameState, sc: Scope): HTMLElement | null {
   const heat = heatIn(s, sc.a3);
   return blk('skull', l('Crime e polícia', 'Crime and police'),
     h('div', { class: 'chips' }, pill(`${T(l('Calor policial', 'Police heat'))} ${heat}`, heat >= 50 ? 'bad' : heat >= 20 ? 'warn' : ''), pill(`${T(l('Polícia', 'Police'))}: ${T(agency(s, sc.a3))}`)),
-    os.length ? h('ul', { class: 'small' }, os.map((o) => li(h('b', null, T(o.name)), ` · ${T(KIND_NAME[o.kind])} · ${T(l('poder', 'power'))} ${o.power}`, o.real ? pill(T(l('real', 'real'))) : null))) : h('p', { class: 'small muted' }, T(l('Nenhuma organização conhecida atuando aqui.', 'No known organization operating here.'))));
+    os.length ? h('ul', { class: 'small' }, os.map((o) => li(h('b', null, T(o.name)), ` · ${T(KIND_NAME[o.kind])} · ${T(l('poder', 'power'))} ${o.power}`))) : h('p', { class: 'small muted' }, T(l('Nenhuma organização conhecida atuando aqui.', 'No known organization operating here.'))));
 }
 
 function laws(s: GameState, sc: Scope): HTMLElement | null {
