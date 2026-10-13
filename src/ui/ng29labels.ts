@@ -6,7 +6,7 @@
 import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import { realFounded } from '../data/realnames';
-import { FREQS29, NAME_DEFAULT29, NS29, SIZES29, SPREADS29, VNS29, count29, eraCap29, setLabels29, statusAll29, ven29, venKind29, type Labels29 } from '../sim/labels29data';
+import { COUNT_MAX29, FREQS29, NAME_DEFAULT29, NS29, SIZES29, SPREADS29, VNS29, count29, eraCap29, setLabels29, statusAll29, ven29, venKind29, type Labels29 } from '../sim/labels29data';
 import { careerOf29 } from '../sim/start29data';
 import type { RunConfig } from '../sim/types';
 import { labelPool } from '../sim/worldgen';
@@ -22,7 +22,7 @@ export function labelsCard29(cfg: RunConfig, onChange: () => void, rebuild: () =
   const top = h('p', { class: 'small' });
   const drawTop = () => {
     const n = count29(cfg);
-    top.replaceChildren(h('b', null, t(statusAll29(cfg))), n === undefined ? '' : h('span', { class: 'muted' }, ` — ${t(l('{n} rivais no começo (a época comporta até {c} pelos atalhos).', '{n} rivals at the start (the era allows up to {c} via the shortcuts).'), { n, c: eraCap29(cfg.startYear) })}`));
+    top.replaceChildren(h('b', null, t(statusAll29(cfg))), n === undefined ? '' : h('span', { class: 'muted' }, ` — ${Number.isFinite(eraCap29(cfg.startYear)) ? t(l('{n} rivais no começo (a época comporta até {c}).', '{n} rivals at the start (the era allows up to {c}).'), { n, c: eraCap29(cfg.startYear) }) : t(l('{n} rivais no começo (sem limite depois de 1950).', '{n} rivals at the start (no limit after 1950).'), { n })}`));
   };
   drawTop();
   const exact = x().count !== undefined;
@@ -37,9 +37,12 @@ export function labelsCard29(cfg: RunConfig, onChange: () => void, rebuild: () =
   });
   const out = h('b', { class: 'ng22-count' }, String(x().count ?? ''));
   const slider = exact ? h('div', { class: 'ng22-range' }, h('span', null, t(l('Gravadoras rivais no começo', 'Rival labels at the start'))),
-    h('input', { type: 'range', min: 1, max: 60, step: 1, value: x().count, 'aria-label': t(l('Número exato de gravadoras', 'Exact number of labels')), id: 'ng29-count',
+    // R29: depois de 1950 sem limite de época — controle deslizante até 120 e campo numérico até o teto prático
+    h('input', { type: 'range', min: 1, max: Math.min(eraCap29(cfg.startYear), 120), step: 1, value: Math.min(x().count ?? 12, 120), 'aria-label': t(l('Número exato de gravadoras', 'Exact number of labels')), id: 'ng29-count',
       oninput: (e: Event) => { out.textContent = (e.target as HTMLInputElement).value; },
-      onchange: (e: Event) => set({ count: Number((e.target as HTMLInputElement).value) }) }), out) : null;
+      onchange: (e: Event) => set({ count: Number((e.target as HTMLInputElement).value) }) }), out,
+    Number.isFinite(eraCap29(cfg.startYear)) ? null : h('input', { type: 'number', min: 1, max: COUNT_MAX29, step: 1, value: x().count, class: 'ng29-count-n', 'aria-label': t(l('Número exato (sem limite de época)', 'Exact number (no era limit)')),
+      onchange: (e: Event) => { const v = Math.max(1, Math.min(COUNT_MAX29, Math.round(Number((e.target as HTMLInputElement).value) || 1))); out.textContent = String(v); set({ count: v }); } })) : null;
   // reais × inventadas
   const realOut = h('b', { class: 'ng22-count' }, `${x().real ?? 100}%`);
   const real = h('div', { class: 'ng22-range' }, h('span', null, t(l('Gravadoras reais', 'Real labels')), ' ', helpTip(l('As reais que existiam na data entram primeiro, pelo porte; se faltar gente (ou a % for menor), o resto é inventado com nomes e praças da época.', 'Real labels that existed at the date come first, by size; if there are not enough (or the % is lower), the rest is invented with era-style names and places.'))),

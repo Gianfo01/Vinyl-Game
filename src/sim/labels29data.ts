@@ -29,11 +29,16 @@ export const NS29: { id: N29; name: L; range: [number, number] }[] = [
   { id: 'some', name: N('Algumas (6–10)', 'Some (6–10)'), range: [6, 10] },
   { id: 'many', name: N('Muitas (11–20)', 'Many (11–20)'), range: [11, 20] },
   { id: 'crowded', name: N('Mercado lotado (21–40)', 'Crowded market (21–40)'), range: [21, 40] },
+  // R29 (pedido do autor): depois de 1950 não há teto — a indústria gigante passa de 40
+  { id: 'huge', name: N('Indústria gigante (41–120)', 'Huge industry (41–120)'), range: [41, 120] },
 ];
 export const NAME_DEFAULT29: L = N('Padrão (como a história deixou)', 'Default (as history left it)');
 
-/** Quantas gravadoras a indústria da época comporta no começo (atalhos não passam disso). */
-export const eraCap29 = (year: number): number => (year < 1900 ? 8 : year < 1920 ? 12 : year < 1946 ? 24 : 40);
+/** Quantas gravadoras a indústria da época comporta no começo (atalhos e número exato não passam disso).
+ *  R29 (pedido do autor): a partir de 1950 não há limite. */
+export const eraCap29 = (year: number): number => (year < 1900 ? 8 : year < 1920 ? 12 : year < 1946 ? 24 : year < 1950 ? 40 : Infinity);
+/** Teto prático do número exato (desempenho): sem limite de época depois de 1950. */
+export const COUNT_MAX29 = 400;
 /** Faixa efetiva do atalho na era. */
 export function range29(n: N29, year: number): [number, number] {
   const [lo, hi] = NS29.find((x) => x.id === n)!.range;
@@ -43,7 +48,7 @@ export function range29(n: N29, year: number): [number, number] {
 /** Número de gravadoras rivais no começo (exato > atalho pela semente); undefined = o de sempre (a sugestão). */
 export function count29(cfg: Pick<RunConfig, 'labels29' | 'seed' | 'startYear'>): number | undefined {
   const x = cfg.labels29;
-  if (x?.count !== undefined) return Math.max(0, Math.min(100, Math.round(x.count)));
+  if (x?.count !== undefined) return Math.max(0, Math.min(eraCap29(cfg.startYear), COUNT_MAX29, Math.round(x.count)));
   if (!x?.n || !NS29.some((d) => d.id === x.n)) return undefined;
   const [lo, hi] = range29(x.n, cfg.startYear);
   return lo + Math.floor(Rng.fromSeed(`labels29:${cfg.seed}:n:${x.n}`).next() * (hi - lo + 1));

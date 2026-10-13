@@ -155,7 +155,7 @@ function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
 }
 
 /** r22: limite de rivais escolhível no Novo Jogo. */
-export const LABELS_MAX22 = 100;
+export const LABELS_MAX22 = 400; // R29: sem limite de gravadoras depois de 1950 (teto prático de desempenho = COUNT_MAX29)
 
 /** r22: outros começos das gravadoras (sorteio próprio — não mexe no resto do mundo). */
 function shapeLabels22(s: GameState, cfg: RunConfig): void {

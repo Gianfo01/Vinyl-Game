@@ -19,7 +19,7 @@ describe('r22 gravadoras', () => {
   });
 
   it('começos novos geram mundos válidos; todas novatas não têm elenco no começo', () => {
-    expect(LABELS_MAX22).toBe(100);
+    expect(LABELS_MAX22).toBe(400); // R29: sem limite de gravadoras depois de 1950 (teto prático 400)
     for (const start of ['random', 'inverted', 'giants', 'startups'] as const) {
       const s = createGame(defaultConfig(`lb22-${start}`, { startYear: 1975, labels: { start } }));
       expect(Object.values(s.labels).filter((x) => x.active).length).toBeGreaterThan(5);
