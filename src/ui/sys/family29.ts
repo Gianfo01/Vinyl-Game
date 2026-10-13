@@ -93,7 +93,7 @@ export function famSection29(s: GameState, p: Person): HTMLElement {
     parents.length || F.ipar ? h('li', null, `${t(l('Pais', 'Parents'))}: `, ...parents.flatMap((k, i) => [i ? ', ' : '', plink(s, k.id, k.p.name)]), F.ipar ? [parents.length ? ', ' : '', klink(s, F.ipar), h('span', { class: 'muted' }, ` (${t(l('indústria', 'industry'))})`)] : null) : null,
     sibs.length ? h('li', null, `${t(l('Irmãos', 'Siblings'))}: `, ...sibs.slice(0, 8).flatMap((k, i) => [i ? ', ' : '', plink(s, k.id, k.p.name)])) : null,
     F.kids.length ? h('li', null, `${t(l('Filhos', 'Children'))}: `, ...F.kids.flatMap((k, i) => [i ? ', ' : '', k.pid ? plink(s, k.pid, k.name) : h('span', null, k.name), h('span', { class: 'muted' }, ` (${s.year - k.born}${k.music && !k.pid && k.debut ? ` · ${t(l('quer ser músico(a)', 'wants to be a musician'))}` : ''})`)])) : null,
-    F.house > 0 ? h('li', { class: 'muted' }, ic('coin'), ` ${t(l('Casa (patrimônio da família)', 'Household (family wealth)'))}: $${Math.round(F.house).toLocaleString('en-US')}`) : null,
+    F.house > 0 ? h('li', { class: 'muted' }, ic('money'), ` ${t(l('Casa (patrimônio da família)', 'Household (family wealth)'))}: $${Math.round(F.house).toLocaleString('en-US')}`) : null,
     m ? h('li', { class: 'fam29-minor' }, ic('star'), ` ${t(l('Menor de idade', 'Minor'))} (${s.year - p.born}) · ${t(SRC29[m.src])} · ${t(l('responsável', 'guardian'))}: `, m.gk ? plink(s, m.gk, m.g) : h('b', null, m.g),
       m.pm ? [' ', pill(t(l('pai/mãe-empresário(a)', 'parent-manager')), 'warn')] : null,
       h('div', { class: 'small muted' }, m.law ? t(m.law.name) : t(l('Sem lei de proteção nesta época/país: nada de fundo nem limite de horas.', 'No protection law in this era/country: no trust, no hour limit.'))),

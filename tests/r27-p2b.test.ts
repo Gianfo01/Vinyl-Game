@@ -67,7 +67,9 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
     expect(AFTER.player.cash).toBe(450735);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
+    // R29 família (sys/family29, de propósito — docs/familia29.md): vida familiar dos artistas NPC (Rng próprio): só acts
+    // muda (caixa, tours e rng iguais). Antes: acts 2386675548.
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(207414135);
     expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
   });
   it('nada de estado P2B criado sem o jogador', () => {

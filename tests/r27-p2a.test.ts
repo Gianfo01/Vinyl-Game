@@ -69,7 +69,10 @@ beforeAll(() => {
   // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
   // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
   expect(s.player.cash).toBe(450735);
-  expect(hashString(JSON.stringify(s.acts))).toBe(2386675548);
+  // R29 família (sys/family29, de propósito — docs/familia29.md): artistas NPC namoram, casam, se separam e têm filhos
+  // (1 divórcio e 2 filhos nesta semente em 8 meses; casal célebre mexe em fama/público) — só acts muda (caixa, tours e
+  // rng iguais, Rng próprio). Antes: acts 2386675548.
+  expect(hashString(JSON.stringify(s.acts))).toBe(207414135);
   expect(hashString(JSON.stringify(s.rng))).toBe(2839816166);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
