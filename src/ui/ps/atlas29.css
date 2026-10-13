@@ -83,3 +83,13 @@ main .ph27.has-art .ph27-art .art27-frame { margin: 0; width: 100%; height: 100%
 main .ph27.has-art .ph27-art canvas { width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center 60%; image-rendering: pixelated; }
 .rv29 .r27-lead { min-width: 6.5em; }
 .cp29-sec + .cp29-sec, .cp29-cols .note29 { margin-top: var(--sp-4); }
+/* celular: atalhos e etapas do topo viram uma faixa rolável compacta (não empurram o conteúdo da página) */
+@media (max-width: 720px) {
+  .links29.top29, .top29 .links29:not(.col), .steps29 ol { display: flex; overflow-x: auto; gap: var(--sp-2); scroll-snap-type: x proximity; padding-bottom: 4px; }
+  .links29.top29 .links29-c, .top29 .links29:not(.col) .links29-c { flex: 0 0 auto; min-width: 0; max-width: 72vw; padding: var(--sp-2); scroll-snap-align: start; }
+  .links29.top29 .links29-tx small, .top29 .links29:not(.col) .links29-tx small { display: none; }
+  .links29.top29 .links29-ic, .top29 .links29:not(.col) .links29-ic { width: 32px; height: 32px; }
+  .steps29 li { flex: 0 0 auto; }
+  .steps29 button { padding-right: var(--sp-4); }
+  .steps29-tx small { display: none; }
+}

@@ -12,13 +12,15 @@ import { h } from '../dom';
 import { openTarget29 } from './route29';
 import { money29, resume29, trail29, type Money29 } from './screens29model';
 import { show29 } from './state29model';
-import { layout29, linkCards29, note29, pill29, secTitle29, steps29, triCards29 } from './shell29';
+import { layout29, linkCards29, type Link29, note29, pill29, secTitle29, steps29, triCards29 } from './shell29';
 import type { Target29 } from './route29model';
 
 type Top29 = (s: GameState, area: string) => HTMLElement | null;
 const TOPS: Record<string, Top29> = {};
 const reg = (areas: string[], f: Top29) => { for (const a of areas) TOPS[a] = f; };
 const go = (x: Target29) => () => openTarget29(x);
+/** Cartões de contexto sem a página atual (você já está nela). */
+const ctx29 = (area: string, xs: (Link29 & { area: string })[]) => linkCards29(xs.filter((x) => x.area !== area));
 const lang = (): 'pt' | 'en' => (locale().startsWith('en') ? 'en' : 'pt');
 
 /** Bloco do topo da página (ou null). Se a página já traz o próprio cabeçalho (.ph27), entra logo depois dele. */
@@ -95,3 +97,48 @@ reg(['you'], (s) => {
     ], 'col'),
   ]);
 });
+
+// ---------------------------------------------------------------- S08–S10: jornada do projeto (as etapas que já existem)
+
+const JOURNEY: { area: string; icon: string; title: L; sub: L }[] = [
+  { area: 'project', icon: 'cassette', title: l('Projeto', 'Project'), sub: l('Ideia, ato e repertório', 'Idea, act and repertoire') },
+  { area: 'creation', icon: 'pen', title: l('Composição', 'Writing'), sub: l('Criar e desenvolver faixas', 'Write and develop tracks') },
+  { area: 'studio', icon: 'mic', title: l('Estúdio', 'Studio'), sub: l('Gravar e produzir', 'Record and produce') },
+  { area: 'releases', icon: 'cd', title: l('Lançamento', 'Release'), sub: l('Apresentar ao mundo', 'Put it out') },
+  { area: 'catalog', icon: 'gold-disc', title: l('Catálogo', 'Catalog'), sub: l('Acompanhar e reviver', 'Follow and revive') },
+];
+reg(JOURNEY.map((x) => x.area), (_s, area) => h('div', null,
+  secTitle29(l('Jornada do projeto', 'Project journey'), l('Da ideia ao catálogo. Cada etapa abre a tela de sempre.', 'From idea to catalog. Each step opens the usual screen.')),
+  steps29(t(l('Jornada do projeto', 'Project journey')), JOURNEY.map((x, i) => ({ n: i + 1, icon: x.icon, title: x.title, sub: x.sub, on: x.area === area, go: go({ area: x.area }) })))));
+
+// ---------------------------------------------------------------- S11 Ao vivo: modos de trabalho (show avulso × turnê) e apoio
+
+reg(['shows', 'cal17', 'live19', 'tour12'], (_s, area) => ctx29(area, [
+  { icon: 'stage', title: l('Shows', 'Shows'), sub: l('Apresentações avulsas e preparação.', 'One-off gigs and preparation.'), go: go({ area: 'shows' }), area: 'shows' },
+  { icon: 'train', title: l('Turnês', 'Tours'), sub: l('Itinerário, paradas e custos.', 'Itinerary, stops and costs.'), go: go({ area: 'tour12' }), area: 'tour12' },
+  { icon: 'calendar', title: l('Agenda de shows', 'Show calendar'), sub: l('Datas marcadas e conflitos.', 'Booked dates and conflicts.'), go: go({ area: 'cal17' }), area: 'cal17' },
+  { icon: 'spotlight', title: l('Temporada', 'Season'), sub: l('Desempenho ao vivo.', 'Live performance.'), go: go({ area: 'live19' }), area: 'live19' },
+]));
+
+// ---------------------------------------------------------------- S15 Submundo: ocorrências, fraudes e onde cada uma é registrada
+
+reg(['crime', 'fakes19'], (_s, area) => linkCards29([
+  { icon: 'mask', title: l('Ocorrências do submundo', 'Underworld events'), sub: l('Crime, máfia, payola e golpes.', 'Crime, mob, payola and scams.'), go: go({ area: 'crime' }) },
+  { icon: 'warning', title: l('Fraudes e sósias', 'Frauds and fakes'), sub: l('Destino próprio, também citado pela Imprensa.', 'Its own page, also referenced by the Press.'), go: go({ area: 'fakes19' }) },
+  { icon: 'megaphone', title: l('Imprensa', 'Press'), sub: l('Onde a repercussão é registrada.', 'Where the fallout is recorded.'), go: go({ area: 'news17' }) },
+  { icon: 'book', title: l('Índice completo', 'Full index'), sub: l('Todas as páginas, com o motivo de quem está fora.', 'Every page, with reasons.'), go: go({ util: 'index' }) },
+].filter((x) => !(area === 'crime' && x.title.pt.startsWith('Ocorr')) && !(area === 'fakes19' && x.title.pt.startsWith('Fraud')))));
+
+// ---------------------------------------------------------------- S12 Sede e S14 Mundo: atalhos de contexto
+
+reg(['hq', 'campus18'], (_s, area) => ctx29(area, [
+  { icon: 'pin', title: l('Operação da sede', 'HQ operations'), sub: l('Ambientes, equipamentos e capacidade.', 'Rooms, gear and capacity.'), go: go({ area: 'hq' }), area: 'hq' },
+  { icon: 'skyline', title: l('Nosso mundo', 'Our world'), sub: l('A cidade em volta da sede.', 'The city around the HQ.'), go: go({ area: 'campus18' }), area: 'campus18' },
+  { icon: 'people', title: l('Equipe', 'Staff'), sub: l('Quem trabalha aqui (ficha em Pessoas).', 'Who works here.'), go: go({ area: 'team' }), area: 'team' },
+]));
+reg(['mundo27', 'world', 'known27'], (_s, area) => ctx29(area, [
+  { icon: 'globe', title: l('Relevante agora', 'Relevant now'), sub: l('O que mudou este mês para você.', 'What changed this month for you.'), go: go({ area: 'mundo27' }), area: 'mundo27' },
+  { icon: 'map', title: l('Mundo inteiro', 'Whole world'), sub: l('Mapa, países, cenas e política.', 'Map, countries, scenes and politics.'), go: go({ area: 'world' }), area: 'world' },
+  { icon: 'eye', title: l('O que sabemos', 'What we know'), sub: l('Fatos, boatos e de onde vieram.', 'Facts, rumors and their sources.'), go: go({ area: 'known27' }), area: 'known27' },
+  { icon: 'chart-up', title: l('Paradas', 'Charts'), sub: l('Paradas e mercado.', 'Charts and market.'), go: go({ area: 'charts' }), area: 'charts' },
+]));

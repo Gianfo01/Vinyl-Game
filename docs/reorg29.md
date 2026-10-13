@@ -234,3 +234,41 @@ Do mais visível para o mais profundo:
 - **M15:** resolvedor comum de pré-requisito.
 - **P2:** M22, M27, M28, M29 (virtualização).
 - **NR-04, NR-07, NR-08:** com o agente da Nova run.
+
+---
+
+## 9. Estilo do Atlas visual (Parte IX), com a pixel art de hoje
+
+O autor mandou as imagens do Atlas: S03–S17 e NR01–NR06, 2560×1440. São "conceito visual — não implementado". O pedido foi "fazer nesses estilos ou o mais próximo possível". Apliquei o **padrão comum** das imagens usando só a arte que já existe (art27, ícones pixel, sprites) e os tokens ui27. Nenhum sprite foi trocado e nenhuma ilustração do mockup foi copiada.
+
+**Peças do padrão** (`src/ui/ps/atlas29.css`, `shell29.ts`):
+
+| Peça | Como ficou |
+|---|---|
+| Cabeçalho-herói | Cartão com sobrescrito do grupo em dourado ("GESTÃO", "PESSOAS"), título grande e régua dourada curta. A ilustração art27 da página ocupa a metade direita, com degradê. No celular a arte sobe e esmaece embaixo. Vale para **todas** as páginas com `.ph27`. |
+| Cartões-resumo coloridos | `triCards29`: borda verde/âmbar/azul, ícone, explicação, valores e "Ver origem". |
+| Funil/jornada em chevrons | `steps29`, com a etapa atual em dourado. |
+| Inspetor lateral | `layout29`: no desktop é uma coluna fixa à direita; no celular desce para baixo do conteúdo. |
+| Cartões de link | `linkCards29`, com ícone, título, descrição e seta. No celular viram uma faixa rolável compacta. |
+| Pílula de estado | `pill29`, com ponto e **texto** (nunca só cor). |
+
+**Telas aproximadas** (topos em `screentop29.ts`, um encaixe só em `app.ts`):
+
+| Tela | Status | O que ficou |
+|---|---|---|
+| S03 Agenda e fechamento | 🆕 | Calendário à esquerda e coluna **"Revisar período"**, agrupada em decisões pendentes, promessas, prazos e caixa. Diz que "nenhuma ação aqui faz o tempo avançar". |
+| S06 Scouting / S07 Contratos | 🆕 | Funil **1 Descobrir → 2 Avaliar → 3 Acompanhar → 4 Negociar** sobre as páginas que já existem. |
+| S08–S10 Projetos | 🆕 | **Jornada do projeto**: Projeto → Composição → Estúdio → Lançamento → Catálogo. |
+| S11 Ao vivo | 🆕 | Modos de trabalho: Shows · Turnês · Agenda de shows · Temporada. |
+| S12 Sede / S14 Mundo / S15 Submundo | 🆕 | Cartões de contexto. Mundo: Relevante agora × Mundo inteiro (M23). Submundo: Ocorrências · Fraudes (destino próprio) · Imprensa · Índice. |
+| S13 Finanças | 🆕 | **Realizado · Comprometido · Estimado** com valores e "Ver origem". Avisa: "não se somam; desconhecido não é zero". |
+| S16 Você | 🆕 | **"Sua história em marcos"** (capítulos e escolhas reais) e coluna **"Seu contexto"**: Objetivo, Relações, Compromissos, Diário, Álbum de cenas. |
+| S17 Central da campanha | 🆕 | Atalhos (Retomar/salvar, Índice, Opções), **Ficha da campanha** em duas colunas e aviso "Consultar não altera a partida". |
+| S04 Elenco, S05 Ficha | 🟡 | Só o herói. O inspetor "Formação/Projetos/Contratos" à direita da lista precisa refazer o painel `artists`, que fica para uma próxima rodada. |
+| NR01–NR06 Nova run | ⬜ | Pertencem ao agente da Nova run (rótulo de status e opções de início). As imagens ficam como referência para ele. |
+
+**Validação:**
+
+- 71 páginas sem rolagem horizontal em 390 e 1440 px;
+- `r27-ui` (contraste e componentes) segue verde;
+- capturas em `docs/shots29reorg/atlas-*`: calendar19, finance, market, directory, contracts19, you, crime, hq, shows, mundo27, agenda17, project, artists e campanha, em `-desk` e `-mob`.
