@@ -63,14 +63,11 @@ export const KIND27: Record<Ent27, L> = {
   act: l('artista', 'artist'), person: l('pessoa', 'person'), label: l('gravadora', 'label'), city: l('cidade', 'city'),
   song: l('música', 'song'), release: l('lançamento', 'release'), venue: l('casa de shows', 'venue'), festival: l('festival', 'festival'),
   place: l('lugar', 'place'), org: l('organização', 'organization'),
-  genre: l('gênero', 'genre'), relic: l('relíquia', 'relic'), // r29 WIKI
 };
 
 const N = (pt: string, en: string): L => l(pt, en);
 const it = (id: string, label: L, icon: string, grp: Grp27, block: L | null = null, extra: Partial<CtxItem27> = {}): CtxItem27 => ({ id, label, icon, grp, block, ...extra });
 const COPY = (): CtxItem27 => it('copy', N('Copiar nome', 'Copy name'), 'note', 'info', null, { sec: 'more' });
-/** r29 WIKI: abre o artigo da entidade na wiki (seção Atalhos). */
-const WIKI = (): CtxItem27 => it('wiki', N('Ver na wiki', 'See in the wiki'), 'book', 'info', null, { sec: 'more' });
 
 /** r29: seção das ações de sempre (por id); as novas já nascem com `sec`. */
 const SEC_OF_ID29: Record<string, Sec29> = {
@@ -208,7 +205,7 @@ function actMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
   out.push(it('act.compare', N('Comparar com outros', 'Compare with others'), 'network', 'info', pool ? null : N('Você ainda não conhece este artista (observe ou mande olheiro).', 'You don\'t know this act yet (watch or scout them).')));
   out.push(it('act.charts', N('Ver nas paradas', 'See on the charts'), 'chart-up', 'info', chartBlock(s, inCharts(s, (r) => s.releases[r]?.actId === id))));
   out.push(it('act.known', N('Notícias e boatos (O que sabemos)', 'News and rumors (What we know)'), 'newspaper', 'info'));
-  out.push(WIKI(), COPY());
+  out.push(COPY());
   void env;
   return { ent: 'act', id, name: a.name, kind: KIND27.act, items: out };
 }
@@ -262,7 +259,7 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
     out.push(it('person.act', fmtL(N('Abrir o artista ({a})', 'Open the act ({a})'), { a: actOf.name }), 'guitar', 'open'));
     if (playerActs(s).includes(actOf.id)) out.push(it('person.actmore', fmtL(N('Todas as ações de {a}…', 'All {a} actions…'), { a: actOf.name }), 'people', 'do', null, { sec: 'more' }));
   }
-  out.push(WIKI(), COPY());
+  out.push(COPY());
   return { ent: 'person', id: key, name, kind: KIND27.person, items: out };
 }
 
@@ -281,7 +278,7 @@ function labelMenu(s: GameState, id: string, env: CtxEnv27 = {}): CtxMenu27 | nu
   const boss = (() => { try { return leaderOf(s, id); } catch { return undefined; } })();
   if (boss) out.push(it('label.leader', fmtL(N('Ações com {n} (chefe) ›', 'Actions with {n} (head) ›'), { n: boss.name }), 'handshake', 'do', null, { sec: 'more' }));
   if (lb.active) out.push(...crimeItems29(s, 'label', id, env));
-  out.push(WIKI(), COPY());
+  out.push(COPY());
   return { ent: 'label', id, name: lb.name, kind: KIND27.label, items: out };
 }
 
@@ -296,7 +293,7 @@ function cityMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
   if (home && (env.has?.('area:campus18') ?? true)) out.push(it('city.home', N('Abrir "Nosso mundo" (sua cidade)', 'Open "Our world" (your city)'), 'house', 'open'));
   out.push(it('city.show', N('Marcar show / turnê aqui', 'Book a gig / tour here'), 'tour-bus', 'do', playerActs(s).length ? null : NO_ACTS));
   out.push(it('city.scout', N('Mandar olheiro a esta cena', 'Send a scout to this scene'), 'eye', 'do', s.config.role === 'artist' ? ARTIST_ROLE : null));
-  out.push(WIKI(), COPY());
+  out.push(COPY());
   return { ent: 'city', id, name: c.name, kind: KIND27.city, items: out };
 }
 
@@ -353,9 +350,9 @@ function venueMenu(s: GameState, id: string): CtxMenu27 | null {
 
 /** r29: organização do Submundo — as mesmas ações dos botões do cartão em Submundo › Organizações. */
 function orgMenu(s: GameState, id: string, env: CtxEnv27, name: string): CtxMenu27 | null {
-  if (env.has?.('area:crime') === false) return { ...plainMenu('org', id, name || id, null), items: [WIKI(), COPY()] };
+  if (env.has?.('area:crime') === false) return plainMenu('org', id, name || id, null);
   const o = (() => { try { return orgs17(s).find((x) => x.id === id); } catch { return undefined; } })();
-  if (!o) return { ...plainMenu('org', id, name || id, it('org.open', N('Abrir Submundo', 'Open Underworld'), 'skull', 'open')), items: [it('org.open', N('Abrir Submundo', 'Open Underworld'), 'skull', 'open'), WIKI(), COPY()] };
+  if (!o) return plainMenu('org', id, name || id, it('org.open', N('Abrir Submundo', 'Open Underworld'), 'skull', 'open'));
   const st = crime17(s);
   const down = (st.down[o.id] ?? 0) > s.week;
   const DOWN = N('Organização desmantelada.', 'Organization dismantled.');
@@ -369,7 +366,7 @@ function orgMenu(s: GameState, id: string, env: CtxEnv27, name: string): CtxMenu
     { sec: 'dark', note: N('Renda mensal; calor +3/mês; eles guardam um segredo provado seu.', 'Monthly income; heat +3/month; they hold a proven secret on you.') }));
   out.push(it('org.report', N('Denunciar à polícia', 'Report to the police'), 'gavel', 'do', null, { sec: 'dark', note: N('Reputação +3, calor −15, caso contra eles; vingança por 18 meses.', 'Reputation +3, heat −15, case on them; revenge for 18 months.') }));
   if (GANG29.has(o.kind)) out.push(it('org.tie', N('Ligar um artista seu a eles…', 'Tie one of your acts to them…'), 'guitar', 'do', playerActs(s).length ? null : NO_ACTS, { sec: 'dark' }));
-  out.push(WIKI(), COPY());
+  out.push(COPY());
   return { ent: 'org', id, name: o.name, kind: KIND27.org, items: out };
 }
 
@@ -389,8 +386,6 @@ export function ctxMenu27(s: GameState, ent: Ent27, id: string, env: CtxEnv27 = 
     case 'festival': return plainMenu(ent, id, name || id, it('festival.open', N('Abrir festivais', 'Open festivals'), 'star', 'open', env.has?.('area:festivals') === false ? N('Ainda não há festivais nesta época.', 'No festivals in this era yet.') : null));
     case 'place': return plainMenu(ent, id, name || id, it('place.open', N('Abrir "Nosso mundo"', 'Open "Our world"'), 'house', 'open'));
     case 'org': return orgMenu(s, id, env, name);
-    // r29 WIKI: gênero e relíquia — o artigo da wiki é a ficha deles
-    case 'genre': case 'relic': return { ent, id, name: name || id, kind: KIND27[ent], items: [WIKI(), COPY()] };
     default: return null;
   }
 }

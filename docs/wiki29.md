@@ -4,68 +4,54 @@ Ramo `claude/r29-wiki`, a partir de `claude/friendly-brown-vpsmfl` (Masters_29b)
 do jogo, com personagens com fotos, mecânicas e como funcionam etc."
 
 Resumo:
-- **Utilidade global "Wiki"**, ao lado de Índice e Campanha (barra de utilidades). Não é macromenu novo. Abre também pelo
-  Ctrl+K ("Wiki do jogo" e "Buscar na wiki: …"), por `#/wiki` e `#/wiki/<tipo>/<id>` (inclusive na tela de título, sem
-  partida) e por **"Ver na wiki"** na seção *Atalhos* do menu de contexto (ctx27) de pessoa, artista, selo, cidade,
-  gênero, relíquia e organização.
-- **7 seções**: Início, Personagens, Mecânicas, Mundo, Objetos, Glossário, Perguntas frequentes.
-- **12.056 artigos** no catálogo estático (sem partida); com partida, Personagens passa a listar as pessoas, os artistas e os
-  selos **da partida** (gerados ou reais).
-- Pacote principal **+6,3 kB** (+2,9 kB gzip). A wiki é um pedaço separado carregado na primeira abertura:
-  **230 kB** de JS (87 kB gzip) + 6,5 kB de CSS.
-- Nada novo no save. O "Revelar história real" só vale enquanto a janela está aberta.
-- `tests/r29-wiki.test.ts`: 20 testes verdes. `r29-reorg`, `r27-ux`, `r27-ctx` e `r29-fixes` continuam verdes.
-- Capturas: `docs/shots29wiki/` (17 telas × computador 1440×900 e celular 390×844).
+- **Arquivo separado do jogo**: `wiki.html` (entrada própria do Vite, `src/wiki/main.ts`). Não fica dentro do jogo, nem
+  na partida, nem no save. Abre direto no navegador, ao lado de `index.html` (no `dist/`: `dist/wiki.html`). Ajuste
+  pedido pelo autor depois da 1ª versão ("a ideia não é estar no save… na verdade, faça um arquivo separado do jogo"):
+  o botão na barra do jogo, o Ctrl+K, o "Ver na wiki" do menu de contexto e as caixas "Na sua partida" saíram. Os
+  arquivos do jogo voltaram a ser exatamente os do ramo base.
+- **7 seções**: Início, Personagens, Mecânicas, Mundo, Objetos, Glossário, Perguntas frequentes. **12.053 artigos**, todos
+  do catálogo de dados do jogo e do código (nada de partida).
+- Endereços próprios: `wiki.html#/mech/money`, `#/city/rio`, `#/ract/the-beatles`, `#/idx/persons`… Voltar/avançar do
+  navegador funcionam. Botões PT/EN; idioma e tema claro/escuro iniciais vêm das preferências do jogo (só leitura).
+- Pacote: o jogo e a wiki compartilham um pedaço comum (dados e motor, 7,8 MB). A wiki soma **228 kB** de JS próprio
+  (86 kB gzip) e 7,4 kB de CSS. O jogo continua com o mesmo código; dividir em dois pacotes custou +58 kB no total de JS do
+  jogo (+29 kB gzip), porque nomes exportados entre pedaços não são encurtados.
+- `tests/r29-wiki.test.ts`: 19 testes verdes. `r29-reorg`, `r27-ux`, `r27-ctx` e `r29-fixes` continuam verdes.
+- Capturas: `docs/shots29wiki/` (16 telas × computador 1440×900 e celular 390×844).
 
 ---
 
 ## 1. Onde mora e como abre
 
-| Entrada | O que faz |
-|---|---|
-| Barra de utilidades: **❖ Wiki** (entre Campanha e Opções) | abre no Início |
-| **Ctrl+K** → "Wiki do jogo (personagens, mecânicas, mundo)" | abre no Início |
-| **Ctrl+K** → digitar qualquer coisa → "Buscar na wiki: <texto>" | abre já com a busca |
-| `#/wiki`, `#/wiki/mech`, `#/wiki/mech/money`, `#/wiki/person/p12`, `#/wiki/city/rio`… | abre no artigo (também sem partida) |
-| Clique direito / toque longo num nome → *Atalhos* → **Ver na wiki** | abre o artigo da entidade |
+`wiki.html` na raiz do projeto, com o próprio `<div id="wiki">` e o script `src/wiki/main.ts`. Em desenvolvimento:
+`npx vite` e abrir `http://localhost:5173/wiki.html`. No build (`npx vite build`), sai `dist/wiki.html` ao lado de
+`dist/index.html`. O jogo não tem link para a wiki. Se o autor quiser, dá para pôr um link na tela inicial que abra
+`wiki.html` em outra aba.
 
-A janela usa o mesmo padrão do Índice e da Central da campanha (por cima da tela atual, Esc fecha). Ela tem busca, botões
-◀ ▶ (voltar/avançar dentro da wiki), migalhas (Início › Seção › Lista), abas das seções e o botão "Revelar história real".
-Ao navegar, o endereço vira `#/wiki/<tipo>/<id>` (replaceState, sem mexer no histórico do roteador do jogo). Ao fechar, o
-endereço volta ao de antes.
-
-Mudanças em arquivos compartilhados (todas mínimas e aditivas):
-- `src/ui/app.ts`: 1 import, `bindWiki29`/`initWikiHash29`, o botão na barra, 2 comandos no Ctrl+K.
-- `src/ui/ps/ctx27model.ts`: item `wiki` (seção *Atalhos*) nos menus de ato, pessoa, selo, cidade e organização. Tipos novos
-  `genre` e `relic` com menu mínimo (Ver na wiki · Copiar nome).
-- `src/ui/ps/ent27.ts`: `Ent27` ganha `genre` e `relic`.
-- `src/ui/ps/ctx27.ts`: `case 'wiki'`.
-- `src/ui/sys/knownacts27.ts` (coluna de gênero) e `src/ui/sys/talent18.ts` (nome de relíquia real): marcam `data-ent`
-  para o menu chegar a gênero e relíquia.
+Página: topo (marca "Masters Wiki" + PT/EN), barra fixa com ◀ ▶ e a busca, abas das seções e o artigo (migalhas, arte,
+blocos). Cada link é um endereço `#/<tipo>/<id>`, então dá para guardar ou mandar o link de um artigo.
 
 ## 2. Estrutura do código
 
-`src/ui/wiki29/`:
-
 | arquivo | papel |
 |---|---|
-| `wiki29open.ts` | porta leve (pacote principal): `openWiki29`, `bindWiki29`, `#/wiki`, id da wiki para cada entidade do ctx27 |
-| `wiki29.ts` + `wiki29.css` | interface (sob demanda): janela, abas, busca, migalhas, ◀ ▶, lista virtualizada, arte, diagrama SVG |
-| `wiki29types.ts` | tipos: `MechArt29`, `Term29`, `Faq29` e o **documento puro** (`Page29` / `Block29` / `Art29W`) |
-| `wiki29core.ts` | endereços ↔ hash, contexto (partida × catálogo), regra de spoiler, texto com links `[[id\|rótulo]]`, catálogo real |
-| `wiki29people.ts` | Personagens: pessoa/ato/selo da partida, pessoa/artista real, produtor, empresário, executivo, crítico |
-| `wiki29world.ts` | Mundo e Objetos: cidade, país, gênero, movimento, era, tecnologia, casa, veículo de imprensa, organização, relíquia, equipamento, merch, veículo de turnê |
-| `wiki29model.ts` | registro: listas por seção, títulos, despachante id → página, busca, links fixos |
-| `wiki29sys.ts` | cobertura: cada um dos 289 sistemas de `src/sim/sys/index.ts` → artigo |
-| `mech29w_a..d.ts` | os 18 artigos de mecânica, verbetes do glossário e perguntas (texto pt/en tirado do código e dos docs) |
+| `wiki.html` + `src/wiki/main.ts` | página separada: estilos e fontes do jogo, ícones em pixel art, idioma/tema das preferências, `mountWiki29` |
+| `vite.config.ts` | build com duas entradas (`index.html` e `wiki.html`) |
+| `src/ui/wiki29/wiki29.ts` + `wiki29.css` | interface: abas, busca, migalhas, ◀ ▶ (histórico do navegador), lista virtualizada, arte, diagrama SVG |
+| `src/ui/wiki29/wiki29types.ts` | tipos: `MechArt29`, `Term29`, `Faq29` e o **documento puro** (`Page29` / `Block29` / `Art29W`) |
+| `src/ui/wiki29/wiki29core.ts` | endereços ↔ hash, texto com links `[[id\|rótulo]]`, catálogo real (montado uma vez) |
+| `src/ui/wiki29/wiki29people.ts` | Personagens: pessoa/artista real, gravadora, produtor, empresário, executivo, crítico |
+| `src/ui/wiki29/wiki29world.ts` | Mundo e Objetos |
+| `src/ui/wiki29/wiki29model.ts` | registro: listas por seção, títulos, despachante id → página, busca, links fixos |
+| `src/ui/wiki29/wiki29sys.ts` | cobertura: cada um dos 288 sistemas de `src/sim/sys/index.ts` → artigo |
+| `src/ui/wiki29/mech29w_a..d.ts` | os 18 artigos de mecânica, glossário e perguntas (pt/en, tirados do código e dos docs) |
 
-As páginas são **montadas como documento puro** (blocos: título, parágrafo com links, lista, chave/valor, artes, "Na sua
-partida", aviso, lista longa, botões de página do jogo, spoiler, diagrama). A interface só desenha os blocos, e os testes
-"renderizam" todas as seções em várias eras sem navegador.
+As páginas são **montadas como documento puro** (blocos). A interface só desenha os blocos, e os testes montam todas as
+seções sem navegador.
 
-Endereços: `<tipo>:<id>`. Os tipos são `mech`, `glossario`, `faq`, `person`, `act`, `label`, `rp` (pessoa real), `ract`
-(artista real), `prod`, `mgr`, `exec`, `critic`, `city`, `country`, `genre`, `move`, `era`, `tech`, `venue`, `outlet`,
-`org`, `relic`, `gear`, `merch` e `vehicle`, mais `idx:<lista|seção>` e `home`.
+Observação: o modelo ainda aceita um estado de partida (`W29.s`, com páginas de pessoa/ato da partida, valores vivos e
+regras de spoiler por ano), da 1ª versão. A página separada sempre passa `s: null`. Os testes continuam cobrindo esse
+caminho, que não aparece para o jogador. Se o autor não quiser mais essa possibilidade, ele pode ser removido.
 
 ## 3. Seções e contagens
 
@@ -94,31 +80,21 @@ Catálogo estático (sem partida), medido:
 | Equipamento | 159 | `GEAR19` |
 | Merch | 10 | `SKUS` (merch17) |
 | Veículos de turnê | 3 | van / ônibus / avião (live18) |
-| Glossário | 34 | 3 próprios + 8 de cada arquivo de mecânica (sem repetir) |
-| Perguntas frequentes | 18 | 2 próprias + 4 de cada arquivo |
-| **Total** | **12.056** | (Gravadoras aparece em Personagens e em Mundo; contada uma vez) |
+| Glossário | 32 | 1 próprio + 8 de cada arquivo de mecânica (sem repetir) |
+| Perguntas frequentes | 17 | 1 própria + 4 de cada arquivo |
+| **Total** | **12.053** | (Gravadoras aparece em Personagens e em Mundo; contada uma vez) |
 
-Com partida carregada (semente `wcount`, 1975, nomes reais): base pequena = 764 pessoas no save, 754 visíveis, 396 atos
-visíveis; base **enorme** = 2.393 pessoas, 2.384 visíveis, 1.268 atos. Montar a lista leva 7 ms, a 1ª busca 33 ms (é ela que
-monta o índice; as seguintes reaproveitam) e uma página de pessoa 16 ms. A lista de pessoas é **virtualizada** (linhas de
-44 px; só as visíveis ± 6 existem no DOM), com filtro próprio.
+Desempenho: a lista de pessoas (6.480) é **virtualizada** (linhas de 44 px; só as visíveis ± 6 existem no DOM), com
+filtro próprio. A 1ª busca monta o índice (≈30 ms) e as seguintes o reaproveitam; uma página leva ≈15 ms.
 
 ### Personagens
-- **Pessoa da partida** (`person:<pid>`): retrato procedural (visual famoso via `looks15` para reais, `looks27/29` para os
-  demais), nascimento/idade/morte, funções (principal + `ROLES27` com ano), **bandas e carreira com períodos** e
-  "atual/ex"/solo (de `careerActs29`, a mesma fonte da ficha), família e laços (`kinOf15`/`kinLabel15`), prêmios e
-  relíquias dos atos da carreira, crônica (`biography29`, só o que já aconteceu). **Na sua partida**: banda agora, relação
-  com você (−100..100 com rótulo), se está no seu elenco, se está viva. Em nomes reais, a caixa "Na história real" com as
-  bandas reais e os períodos (fatos futuros escondidos).
-- **Ato da partida** (`act:<id>`): logo procedural, gênero, cidade, formação, estreia, situação, contrato (selo com link),
-  integrantes com funções, **ex-integrantes** (`exMembers29`, com motivo e ano), lançamentos até o ano atual, prêmios,
-  relíquias. Na sua partida: se é seu, fama, fãs, sucessos e, se for seu, a confiança em você. Em nomes reais, a formação
-  real, a discografia e o fim/volta reais (com spoiler).
-- **Selo**: logo, cidade, fundação, foco, territórios, elenco visível. Na sua partida: rivalidade com você, tamanho do
-  elenco, se está ativo. A estratégia/intenção do rival **não** aparece.
-- **Sem partida**: pessoas e artistas reais (bio, papéis, bandas com períodos, discos marcantes, procedência "não
-  conferido"), produtores (som, faixa de cachê, obras), empresários (estilo, comissão, clientes), executivos e críticos
-  (rosto de bastidor `people29` com o adereço da função).
+- **Pessoas e artistas reais**: retrato procedural com o **visual famoso** da época (`looks15`); para bandas, o logo
+  procedural. Bio, funções (principal + `ROLES27`), bandas e carreira com períodos, formação real com todas as passagens,
+  discos marcantes, fim e voltas, procedência "não conferido". A pessoa ↔ banda vem dos mesmos dados que o jogo usa para
+  montar as formações reais.
+- **Produtores** (som, faixa de cachê, estúdio, obras), **empresários** (estilo, comissão, clientes), **executivos** e
+  **críticos**: rosto de bastidor `people29` com o adereço da função.
+- **Gravadoras** do catálogo, com o nome real (`REAL_LABELS`) e o nome do jogo.
 
 ### Mecânicas (18 artigos, um por sistema pedido)
 `money`, `contracts`, `scouting`, `music`, `live`, `fame`, `reputation`, `hq`, `life`, `press`, `underworld`, `world`,
@@ -141,36 +117,27 @@ Algumas constantes importadas: `INSOLVENT_AT`, `loanOffer`, `monthlyCosts` (econ
 **diagrama SVG** (nós = artigos, clicáveis; cor/traço = conectada / religada na R29 / fraca / de propósito) e uma tabela.
 
 ### Mundo
-Cidade (brasão `geo29`, horizonte da época `skylineThumb`, bandeira do país, cenas, casas, selos, movimentos. Na sua
-partida: se é a sua cidade-base e os artistas na ativa dali), país (bandeira, parada nacional e prêmio com nome real ou do
+Cidade (brasão `geo29`, horizonte da época `skylineThumb`, bandeira do país, cenas, casas, selos, movimentos e artistas
+reais dali), país (bandeira, parada nacional e prêmio com nome real ou do
 jogo, população no ano, fatos por época), gênero (selo `badge29`, família, ano, de onde vem, o que gerou, cenas,
-movimentos. Na sua partida: popularidade e maiores atos agora), movimento (selo, época, visual, descrição, os movimentos
-vivos da partida), era (o que dá dinheiro, a pergunta, as posturas), tecnologia (chegada, dependências, variação nos modos
+movimentos e artistas reais), movimento (selo, época, visual, descrição), era (o que dá dinheiro, a pergunta, as posturas), tecnologia (chegada, dependências, variação nos modos
 Livre/Caos), casa de shows (arte `places29`, capacidade, prestígio, preço), veículo de imprensa, organização do
 submundo (emblema `emblem28`, negócios, laços documentados).
 
 ### Objetos
-Relíquias (`relic28/29`: história, valor, onde está, caminho; na partida, onde está agora), equipamento (`things29`; nome
+Relíquias (`relic28/29`: história, valor, onde está, caminho), equipamento (`things29`; nome
 genérico sem nomes reais; som), merch (`merchImg29`: época, custo, preço, quem compra) e veículos de turnê (van, ônibus e
 avião em 4 épocas, efeito na fadiga, `FLY_FROM18`).
 
 ### Glossário e Perguntas frequentes
-34 verbetes e 18 perguntas, com links cruzados.
+32 verbetes e 17 perguntas, com links cruzados.
 
-## 4. Segredo e spoiler (regras da Bíblia)
+## 4. Segredo
 
-- **Nunca** mostra: atributos/talento/potencial ocultos (`skills`, `potential`), fim de carreira previsto (`careerEnd`),
-  romances, a estratégia ou intenção secreta de selo rival, o mínimo escondido de uma negociação (os artigos dizem que
-  existe e que é oculto).
-- **Futuro real**: com partida carregada, todo fato real depois do ano da partida fica escondido (discos, mortes, fins,
-  voltas, passagens de integrantes, obras de produtores, clientes de empresários, passos de relíquias, fatos de país, laços
-  de organizações, gêneros/movimentos/casas/veículos/críticos que ainda não começaram). Textos livres (bio, história,
-  descrição) que citam um ano futuro também ficam escondidos. Cada página mostra "🔒 N fatos da história real estão
-  escondidos" com o botão **Revelar história real**, que fica desligado por padrão e não vai para o save.
-- **Agenda secreta do mundo**: em história alternativa, a data de cada tecnologia/era é sorteada na criação do mundo. A
-  wiki mostra a data da partida só quando ela chega. Revelando, mostra a data **real**, nunca a sorteada.
-- Atos que ainda não estrearam (e que você não conhece) e pessoas que ainda não nasceram ficam fora das listas e da busca.
-  O link direto mostra "Ainda não chegou na sua partida".
+A wiki não lê partida nenhuma, então não pode revelar nada de uma partida: talento/potencial ocultos, intenções de rivais,
+mínimo de negociação e datas sorteadas do mundo não existem fora do save. Os artigos de mecânica dizem que esses valores
+existem e são escondidos, sem números. O que a wiki mostra é a história real e as regras do jogo. Ela não esconde datas
+reais, porque não há "ano da partida" para comparar.
 
 ## 5. Busca
 
@@ -180,55 +147,42 @@ pequeno peso para mecânicas e glossário. Os resultados vêm **agrupados por ti
 
 ## 6. Testes
 
-`tests/r29-wiki.test.ts` (20 testes, verdes):
+`tests/r29-wiki.test.ts` (19 testes, verdes):
 - os 18 temas têm artigo completo (o quê, entradas, saídas, regras, dicas, páginas, pt e en);
-- **todo sistema registrado** em `src/sim/sys/index.ts` (289 módulos) está em `SYS_OF_MECH29`. Um sistema novo sem artigo
+- **todo sistema registrado** em `src/sim/sys/index.ts` (288 módulos) está em `SYS_OF_MECH29`. Um sistema novo sem artigo
   derruba o teste;
-- `nums` não quebra com e sem partida;
+- `nums` não quebra;
 - todo link dos artigos fixos resolve; toda página do jogo citada está no catálogo único (`ALL_AREAS29`); links das páginas
-  geradas resolvem (amostra de cada lista, com e sem partida); `#/wiki/...` vai e volta;
-- **pessoa ↔ connect29**: os atos da carreira na página da pessoa = `careerActs29`, e os ex-integrantes na página do ato =
-  `exMembers29` (40 pessoas e 40 atos);
-- nada de potencial/talento oculto na página; "Ver na wiki" na seção Atalhos dos 7 tipos;
-- **spoilers**: partida de 1962 sem revelar → nenhum ano > 1962 em 300+ páginas (atos reais, pessoas, relíquias, gêneros,
-  produtores, empresários, Beatles, Pink Floyd, Lennon, grunge, streaming, Brasil); revelando, aparece 1970 nos Beatles;
-  lista e busca de 1958 não trazem "grunge";
-- **busca**: "joao gilberto" = "João Gilberto"; teto e agrupamento; mecânica "contrato"; pessoa da partida;
-- **todas as seções montam** (Início, índices e amostras de cada lista, revelado e não) em partidas de 1925, 1955, 1978
-  (nomes gerados), 1999 e 2018, e no catálogo sem partida.
+  geradas resolvem (amostra de cada lista); os endereços vão e voltam;
+- busca: "joao gilberto" = "João Gilberto"; teto e agrupamento; mecânica "contrato";
+- todas as seções montam, e o catálogo tem milhares de pessoas e artistas (Lennon com retrato e link para os Beatles);
+- o caminho com partida que o modelo ainda guarda (§2) também segue testado: pessoa ↔ connect29, spoilers por ano, várias
+  eras.
 
-Rodados em lotes pequenos (`npx vitest run <arquivos> --poolOptions.forks.maxForks=2`): `r29-wiki` (20/20), `r29-reorg` +
-`r27-ux` (41/41), `r27-ctx` + `r29-fixes` (26/26). `tsc --noEmit` limpo (`NODE_OPTIONS=--max-old-space-size=6144`).
+Rodados em lotes pequenos (`--poolOptions.forks.maxForks=2`): `r29-wiki` (19/19); `r29-reorg`, `r27-ux`, `r27-ctx`,
+`r29-fixes` (67/67). `tsc --noEmit` limpo. `npx vite build` gera `index.html` e `wiki.html`.
 
 ## 7. Capturas
 
-`docs/shots29wiki/` (`scripts/shots29wiki.mjs`, Chromium, pt-BR, partida rápida pela tela inicial "NOVA RUN" →
-"COMEÇAR MINHA HISTÓRIA", que caiu em 1962). Sufixo `-desktop` (1440×900) e `-mobile` (390×844):
+`docs/shots29wiki/` (`scripts/shots29wiki.mjs`, Chromium, pt-BR, `wiki.html`). Sufixo `-desktop` (1440×900) e
+`-mobile` (390×844):
 
-01 início sem partida · 02 banda real (Beatles) · 03 pessoa real (John Lennon, visual famoso) · 04 lista virtualizada de
-pessoas · 05 mecânica "Como os sistemas se conectam" com o diagrama · 06 início com partida · 07 pessoa da partida (Na sua
-partida) · 08 ato da partida · 09 mecânica Dinheiro (números do código) · 10 cidade (brasão, horizonte, bandeira) ·
-11 gênero · 12 relíquia · 13 spoiler escondido (Nirvana em 1962) · 14 spoiler revelado · 15 busca sem acento ("joao") ·
-16 Objetos · 17 menu de contexto com "Ver na wiki" (só computador).
+01 início · 02 Personagens · 03 lista virtualizada de pessoas · 04 banda real (Beatles) · 05 pessoa real (John Lennon,
+visual famoso) · 06 produtor (George Martin) · 07 Mecânicas · 08 Dinheiro · 09 "Como os sistemas se conectam" (diagrama) ·
+10 cidade (brasão, horizonte, bandeira) · 11 gênero · 12 era · 13 relíquia · 14 Objetos · 15 Glossário · 16 busca sem
+acento ("joao").
 
 ## 8. Lacunas
 
-- **Nível de rival na Nova run**: outro agente está criando o seletor em paralelo. O artigo "Escada de início e níveis de
-  rival" descreve o que existe hoje (situação inicial dos selos, quantidade de rivais, eixo de dificuldade "Rivais").
-  Precisa de atualização quando o seletor entrar. O mesmo vale para a contratação de integrantes avulsos (outro agente),
-  que o artigo de Contratos ainda não cita.
-- Algumas constantes não são exportadas ou só carregam dentro do tick (ciclo de imports em Node: `producers15`, `fame15`,
-  `hype12`, `eras8`, `careers12`…). Esses números aparecem no texto das regras, citando o arquivo, e não nos "números lidos
-  agora". Se mudarem no código, o texto precisa ser revisto.
-- Os artigos de mecânica foram escritos à mão a partir do código e dos docs. Eles não acompanham sozinhos uma mudança de
-  regra, só as constantes lidas em `nums`.
-- **Equipe e profissionais gerados** da partida (técnicos, publicitários, líderes de selo gerados) não têm página própria.
-  O menu "Ver na wiki" de chaves `s:`/`l:`/`c:` cai na página da pessoa, se houver, ou em "não encontrado" com a busca.
-  Produtores (`pd:`) e empresários (`e:`) caem nas páginas da base real.
-- Movimentos da partida têm nome próprio e não guardam o id do modelo (`MOVEMENTS`). A wiki os associa ao modelo por
-  gênero de origem e época.
-- O nome das funções (Voz, Guitarra…) usa uma tabela local. A principal vem dos dados, e por isso John Lennon aparece com
-  "Voz" à frente de "Guitarra base".
-- A busca não indexa músicas e lançamentos (milhares por partida). Eles aparecem na página do ato.
-- Só o gênero (Artistas conhecidos) e a relíquia real (Talentos › relíquias) ganharam a marca `data-ent` nesta rodada.
-  Outras telas que citam gênero ou relíquia ainda não abrem o menu.
+- **Sem link no jogo**: a wiki é um arquivo à parte. Se quiser, um link na tela inicial pode abrir `wiki.html` em outra aba.
+- **Peso**: a wiki usa os dados e o motor do jogo para os números lidos ao vivo, então quem abre só a wiki baixa também o
+  pedaço comum (7,8 MB, ~2,9 MB gzip). Ele é o mesmo arquivo do jogo e fica no cache do navegador.
+- **Nível de rival na Nova run**: outro agente está criando o seletor. O artigo "Escada de início e níveis de rival"
+  descreve o que existe hoje e precisa de atualização quando o seletor entrar. O mesmo vale para a contratação de
+  integrantes avulsos (outro agente), que o artigo de Contratos ainda não cita.
+- Algumas constantes não são exportadas ou só carregam dentro do tick (`producers15`, `fame15`, `hype12`, `eras8`,
+  `careers12`…). Esses números aparecem no texto das regras, citando o arquivo, e não nos "números lidos agora".
+- Os artigos de mecânica foram escritos à mão a partir do código e dos docs. Eles só acompanham sozinhos as constantes
+  lidas em `nums`.
+- Personagens são só os dos dados reais. Pessoas e bandas geradas existem apenas dentro de cada partida.
+- A busca não indexa músicas.

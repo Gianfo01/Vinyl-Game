@@ -12,13 +12,10 @@ import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { careerActs29, exMembers29 } from '../src/sim/sys/connect29';
 import type { GameState } from '../src/sim/types';
-import { ORGS17 } from '../src/data/orgs17';
 import { ALL_AREAS29 } from '../src/ui/ps/route29model';
-import { ctxMenu27, menuSections27 } from '../src/ui/ps/ctx27model';
 import { MECH29, MECH_ORDER29, SEC_LISTS29, exists29, listIds29, page29, search29, staticLinks29, title29 } from '../src/ui/wiki29/wiki29model';
 import { SYS_OF_MECH29 } from '../src/ui/wiki29/wiki29sys';
 import { hashOf29, idOfHash29, type W29 } from '../src/ui/wiki29/wiki29core';
-import { wikiIdOfEnt29 } from '../src/ui/wiki29/wiki29open';
 import type { Block29, Inline29, Page29 } from '../src/ui/wiki29/wiki29types';
 
 const SYS = readFileSync('src/sim/sys/index.ts', 'utf8').split('\n').map((x) => /^import '\.\/([^']+)';/.exec(x)?.[1]).filter((x): x is string => !!x);
@@ -120,19 +117,6 @@ describe('r29 wiki: personagens concordam com connect29', () => {
     const txt = walk(page29({ s, reveal: false }, `act:${a.id}`)!).text + walk(page29({ s, reveal: false }, `person:${a.members[0]}`)!).text;
     expect(txt).not.toMatch(/potencial|potential|talento oculto|hidden talent/i);
     expect(txt).not.toContain(String(a.careerEnd) + ' (');
-  });
-  it('"Ver na wiki" está na seção Atalhos do menu de pessoa, ato, selo, cidade, gênero, relíquia e organização', () => {
-    const s = G1965;
-    const a = Object.values(s.acts).find((x) => x.debutYear <= s.year)!;
-    const lb = Object.keys(s.labels)[0];
-    const cases: [Parameters<typeof ctxMenu27>[1], string][] = [['act', a.id], ['person', `p:${a.members[0]}`], ['label', lb], ['city', 'rio'], ['genre', 'rnr'], ['relic', 'carmen_baiana'], ['org', ORGS17.find((o) => o.from <= 1965 && o.to >= 1965)!.id]];
-    for (const [ent, id] of cases) {
-      const m = ctxMenu27(s, ent, id, {}, 'Nome');
-      expect(m, ent).toBeTruthy();
-      const more = menuSections27(m!).find((x) => x.sec === 'more');
-      expect(more?.items.some((x) => x.id === 'wiki'), ent).toBe(true);
-      expect(page29({ s, reveal: false }, wikiIdOfEnt29(ent, id)), ent).toBeTruthy();
-    }
   });
 });
 

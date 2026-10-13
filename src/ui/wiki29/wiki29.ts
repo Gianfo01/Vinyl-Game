@@ -1,13 +1,10 @@
-// Rodada 29 (WIKI) — interface da wiki (carregada sob demanda por wiki29open.ts). Utilidade GLOBAL, não macromenu:
-// abre por cima da tela atual (mesmo padrão do Índice e da Central da campanha), com busca, migalhas, voltar/avançar,
-// links cruzados, caixas "Na sua partida" e o botão "Revelar história real" (desligado por padrão, só nesta sessão).
+// Rodada 29 (WIKI) — interface da wiki: página SEPARADA do jogo (wiki.html), sem partida nem save. Busca, migalhas,
+// voltar/avançar (histórico do navegador), links cruzados e abas das seções.
 // Listas longas (a base "enorme" tem milhares de pessoas) são virtualizadas; as páginas são montadas só quando abertas.
 // Arte: só a pixel art procedural que já existe (retratos com visual famoso, logos, brasões, selos, relíquias…).
 
-import { l } from '../../data/world';
-import { t } from '../../i18n/strings';
+import { getLang, setLang, t } from '../../i18n/strings';
 import { logoUrl } from '../art';
-import { modal } from '../common';
 import { h } from '../dom';
 import { portraitDataUrl } from '../pixel/avatar';
 import { awardSealImg29, genreBadgeImg29, movementBadgeImg29 } from '../pixel/badge29';
@@ -18,57 +15,50 @@ import { relicImg28 } from '../pixel/relic28';
 import { gearImg29, merchImg29, vehicleImg29 } from '../pixel/things29';
 import { outletArt29, venueArt29 } from '../art29ui';
 import { ic } from '../vis';
-import { label29 } from '../ps/route29';
+import { SCREENS29 } from '../ps/route29model';
+import { SECTIONS25 } from '../ps/nav25';
 import { MECH29, EDGES29W, page29, search29, title29, sub29 } from './wiki29model';
 import { SECS29W, T, hashOf29, idOfHash29, kindOf29, restOf29, secOf29W, type W29 } from './wiki29core';
-import { WIKI29 } from './wiki29open';
 import type { Art29W, Block29, Inline29, Page29 } from './wiki29types';
 import './wiki29.css';
 
-// ---------------------------------------------------------------- estado da janela (só desta sessão; nada no save)
+// ---------------------------------------------------------------- estado da página (só nesta aba do navegador)
 
-interface St { id: string; back: string[]; fwd: string[]; reveal: boolean; q: string; prevHash: string; root: HTMLElement | null; body: HTMLElement | null; input: HTMLInputElement | null; close: () => void }
-const st: St = { id: 'home', back: [], fwd: [], reveal: false, q: '', prevHash: '', root: null, body: null, input: null, close: () => {} };
-const ctx = (): W29 => ({ s: WIKI29.api.game(), reveal: st.reveal });
+interface St { id: string; q: string; root: HTMLElement | null; body: HTMLElement | null; input: HTMLInputElement | null }
+const st: St = { id: 'home', q: '', root: null, body: null, input: null };
+/** A wiki é um arquivo separado do jogo: nunca lê partida nem save — sempre o catálogo de dados do jogo. */
+const ctx = (): W29 => ({ s: null, reveal: false });
 
-/** Abre (ou navega, se já aberta). Aceita id ("mech:money") ou hash ("#/wiki/mech/money"). */
-export function showWiki29(idOrHash = 'home', q = ''): void {
-  const id = idOrHash.startsWith('#') ? idOfHash29(idOrHash) ?? 'home' : idOrHash || 'home';
-  if (st.root?.isConnected) { if (q) setQuery(q); else go(id); return; }
-  st.back = []; st.fwd = []; st.id = id; st.q = q;
-  st.prevHash = typeof location !== 'undefined' && !/^#\/wiki/.test(location.hash) ? location.hash : '';
-  const input = h('input', { type: 'search', class: 'wk29-q', placeholder: T('Buscar na wiki (pessoas, sistemas, cidades…)', 'Search the wiki (people, systems, cities…)'), 'aria-label': T('Buscar na wiki', 'Search the wiki'), value: q }) as HTMLInputElement;
+/** Endereço da página: #/mech/money ↔ id "mech:money" (mesmo formato de hashOf29, sem o prefixo /wiki). */
+const pageHash = (id: string): string => hashOf29(id).replace(/^#\/wiki/, '#') || '#/';
+const idOfPage = (hash: string): string => idOfHash29(`#/wiki${hash.replace(/^#/, '')}`) ?? 'home';
+
+/** Monta a wiki ocupando `root` (wiki.html). Voltar/avançar do navegador funcionam (histórico por hash). */
+export function mountWiki29(root: HTMLElement): void {
+  const input = h('input', { type: 'search', class: 'wk29-q', placeholder: T('Buscar na wiki (pessoas, sistemas, cidades…)', 'Search the wiki (people, systems, cities…)'), 'aria-label': T('Buscar na wiki', 'Search the wiki') }) as HTMLInputElement;
   input.addEventListener('input', () => { st.q = input.value; draw(); });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const b = st.body?.querySelector<HTMLButtonElement>('.wk29-hit'); b?.click(); } });
-  const body = h('div', { class: 'wk29-body', tabindex: '-1' });
-  const root = h('div', { class: 'wk29' }, h('div', { class: 'wk29-bar' }, h('div', { class: 'wk29-nav' }), input, h('label', { class: 'wk29-rev', title: T('Mostra fatos reais posteriores ao ano da partida. Só nesta sessão; não muda a partida.', 'Shows real facts after the run\'s year. This session only; does not change the run.') },
-    h('input', { type: 'checkbox', checked: st.reveal, onchange: (e: Event) => { st.reveal = (e.target as HTMLInputElement).checked; draw(); } }), ' ', T('Revelar história real', 'Reveal real history'))),
-  h('nav', { class: 'wk29-tabs', 'aria-label': T('Seções da wiki', 'Wiki sections') }), body);
-  st.root = root; st.body = body; st.input = input;
-  st.close = modal(T('Wiki', 'Wiki'), root, { wide: true, onClose: () => { st.root = null; restoreHash(); } });
-  root.closest('.modal')?.classList.add('wk29-modal');
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') st.body?.querySelector<HTMLButtonElement>('.wk29-hit')?.click(); });
+  const body = h('div', { class: 'wk29-body', id: 'main', role: 'main', tabindex: '-1' });
+  const langBtn = (lg: 'pt' | 'en') => h('button', { type: 'button', class: `wk29-lang${getLang() === lg ? ' on' : ''}`, 'aria-pressed': getLang() === lg ? 'true' : 'false', onclick: () => { setLang(lg); document.documentElement.lang = lg === 'pt' ? 'pt-BR' : 'en'; root.replaceChildren(); mountWiki29(root); } }, lg.toUpperCase());
+  const page = h('div', { class: 'wk29 wk29-standalone' },
+    h('header', { class: 'wk29-top' }, h('a', { class: 'wk29-brand', href: '#/' }, h('span', { class: 'disc-sm', 'aria-hidden': 'true' }), h('b', null, 'Masters'), h('span', null, T('Wiki', 'Wiki'))),
+      h('div', { class: 'wk29-langs', role: 'group', 'aria-label': T('Idioma', 'Language') }, langBtn('pt'), langBtn('en'))),
+    h('div', { class: 'wk29-bar' }, h('div', { class: 'wk29-nav' }), input),
+    h('nav', { class: 'wk29-tabs', 'aria-label': T('Seções da wiki', 'Wiki sections') }), body);
+  root.append(page);
+  st.root = page; st.body = body; st.input = input;
+  st.id = idOfPage(location.hash);
+  window.onhashchange = () => { st.id = idOfPage(location.hash); st.q = ''; input.value = ''; draw(); };
   draw();
-  setTimeout(() => input.focus(), 30);
-}
-
-function restoreHash(): void {
-  try { history.replaceState(null, '', st.prevHash || location.pathname + location.search); } catch { /* file:// */ }
-}
-function syncHash(): void {
-  try { history.replaceState(null, '', hashOf29(st.id)); } catch { /* file:// */ }
 }
 
 function go(id: string): void {
-  if (id === st.id && !st.q) return;
-  st.back.push(st.id); if (st.back.length > 60) st.back.shift();
-  st.fwd = [];
-  st.id = id; st.q = '';
+  st.q = '';
   if (st.input) st.input.value = '';
-  draw();
+  const hsh = pageHash(id);
+  if (location.hash === hsh) { st.id = id; draw(); return; }
+  location.hash = hsh; // dispara hashchange → draw()
 }
-function setQuery(q: string): void { st.q = q; if (st.input) st.input.value = q; draw(); }
-const goBack = () => { const x = st.back.pop(); if (x === undefined) return; st.fwd.push(st.id); st.id = x; st.q = ''; if (st.input) st.input.value = ''; draw(); };
-const goFwd = () => { const x = st.fwd.pop(); if (x === undefined) return; st.back.push(st.id); st.id = x; st.q = ''; if (st.input) st.input.value = ''; draw(); };
 
 // ---------------------------------------------------------------- desenho
 
@@ -76,10 +66,9 @@ function draw(): void {
   const root = st.root, body = st.body;
   if (!root || !body) return;
   const c = ctx();
-  const nav = root.querySelector('.wk29-nav')!;
-  nav.replaceChildren(
-    h('button', { type: 'button', class: 'wk29-nb', disabled: !st.back.length, title: T('Voltar', 'Back'), 'aria-label': T('Voltar', 'Back'), onclick: goBack }, '◀'),
-    h('button', { type: 'button', class: 'wk29-nb', disabled: !st.fwd.length, title: T('Avançar', 'Forward'), 'aria-label': T('Avançar', 'Forward'), onclick: goFwd }, '▶'));
+  root.querySelector('.wk29-nav')!.replaceChildren(
+    h('button', { type: 'button', class: 'wk29-nb', title: T('Voltar', 'Back'), 'aria-label': T('Voltar', 'Back'), onclick: () => history.back() }, '◀'),
+    h('button', { type: 'button', class: 'wk29-nb', title: T('Avançar', 'Forward'), 'aria-label': T('Avançar', 'Forward'), onclick: () => history.forward() }, '▶'));
   const sec = secOf29W(st.id);
   root.querySelector('.wk29-tabs')!.replaceChildren(...SECS29W.map((x) => h('button', { type: 'button', class: `wk29-tab${x.id === sec && !st.q ? ' on' : ''}`, 'aria-current': x.id === sec && !st.q ? 'page' : undefined,
     onclick: () => go(x.id === 'home' ? 'home' : `idx:${x.id}`) }, h('span', { class: 'wk29-tic', 'aria-hidden': 'true' }, ic(x.icon)), h('span', null, t(x.label)))));
@@ -87,10 +76,10 @@ function draw(): void {
   if (st.q.trim().length >= 2) { body.append(results(c)); return; }
   let p: Page29 | null = null;
   try { p = page29(c, st.id); } catch (e) { console.error('wiki29', e); }
-  if (!p) p = { id: st.id, title: T('Página não encontrada', 'Page not found'), kind: '', crumbs: [{ id: 'home', label: T('Início', 'Home') }], blocks: [{ k: 'p', x: [T('Este artigo não existe nesta partida. Use a busca acima.', 'This article does not exist in this run. Use the search above.')] }] };
-  syncHash();
+  if (!p) p = { id: st.id, title: T('Página não encontrada', 'Page not found'), kind: '', crumbs: [{ id: 'home', label: T('Início', 'Home') }], blocks: [{ k: 'p', x: [T('Este artigo não existe. Use a busca acima.', 'This article does not exist. Use the search above.')] }] };
+  document.title = `${p.title} · Masters Wiki`;
   body.append(pageEl(p));
-  body.scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 function results(c: W29): HTMLElement {
@@ -110,7 +99,7 @@ function pageEl(p: Page29): HTMLElement {
 
 const inl = (xs: Inline29[]): (Node | string)[] => xs.map((x) => (typeof x === 'string' ? x : link(x.link, x.text)));
 function link(id: string, text: string): HTMLElement {
-  return h('a', { href: hashOf29(id), class: 'wk29-a', onclick: (e: Event) => { e.preventDefault(); go(id); } }, text);
+  return h('a', { href: pageHash(id), class: 'wk29-a' }, text);
 }
 
 function block(b: Block29): HTMLElement {
@@ -122,22 +111,24 @@ function block(b: Block29): HTMLElement {
     case 'live': return h('section', { class: 'wk29-live', 'aria-label': T('Na sua partida', 'In your run') }, h('h3', null, '● ', T('Na sua partida', 'In your run')),
       h('dl', { class: 'wk29-kv' }, b.rows.flatMap(([k, v]) => [h('dt', null, k), h('dd', null, ...inl(v))])));
     case 'note': return h('div', { class: `wk29-note hue-${b.hue}`, role: 'note' }, h('b', null, b.t), h('p', null, ...inl(b.x)));
-    case 'arts': return h('div', { class: 'wk29-arts' }, b.items.map((x) => h('figure', null, x.link ? h('a', { href: hashOf29(x.link), onclick: (e: Event) => { e.preventDefault(); go(x.link!); } }, art(x.art, 64)) : art(x.art, 64), h('figcaption', null, x.cap))));
+    case 'arts': return h('div', { class: 'wk29-arts' }, b.items.map((x) => h('figure', null, x.link ? h('a', { href: pageHash(x.link) }, art(x.art, 64)) : art(x.art, 64), h('figcaption', null, x.cap))));
     case 'list': return vlist(b.ids);
     case 'pages': return pagesEl(b.ids);
-    case 'spoiler': return h('div', { class: 'wk29-spoil', role: 'note' }, h('span', null, '🔒 ', b.n === 1 ? T('1 fato da história real está escondido (depois do ano da partida).', '1 real-history fact is hidden (after the run\'s year).') : t(l('{n} fatos da história real estão escondidos (depois do ano da partida).', '{n} real-history facts are hidden (after the run\'s year).'), { n: b.n })),
-      h('button', { type: 'button', class: 'btn small', onclick: () => { st.reveal = true; const cb = st.root?.querySelector<HTMLInputElement>('.wk29-rev input'); if (cb) cb.checked = true; draw(); } }, T('Revelar história real', 'Reveal real history')));
+    case 'spoiler': return h('span'); // sem partida nada é futuro (a wiki não lê saves)
     case 'diagram': return diagram();
     default: return h('span');
   }
 }
 
-/** Botões para as páginas do jogo que controlam o sistema (fecham a wiki e abrem a página pelo caminho do menu). */
+/** Páginas do jogo que controlam o sistema (a wiki é separada do jogo: só o nome e o caminho, sem abrir). */
 function pagesEl(ids: string[]): HTMLElement {
-  const open = WIKI29.api.open;
-  const has = !!WIKI29.api.game() && !!open;
-  return h('div', { class: 'wk29-pages' }, ids.map((a) => h('button', { type: 'button', class: 'chip27', disabled: !has, title: has ? T('Abrir no jogo', 'Open in game') : T('Comece uma partida para abrir as páginas do jogo.', 'Start a run to open game pages.'),
-    onclick: () => { st.close(); open?.({ area: a }); } }, '↗ ', has ? label29(a) : a)));
+  return h('ul', { class: 'wk29-pages' }, ids.map((a) => h('li', { class: 'chip27' }, gamePage29(a))));
+}
+/** Nome de uma página do jogo pelo catálogo único (a tela canônica que a usa) — sem precisar do jogo carregado. */
+function gamePage29(area: string): string {
+  const sc = SCREENS29.find((x) => x.home.area === area) ?? SCREENS29.find((x) => x.areas.includes(area));
+  const grp = sc ? SECTIONS25.find((x) => x.id === sc.group) : undefined;
+  return sc ? `${grp ? `${t(grp.label)} › ` : ''}${t(sc.label)}` : area;
 }
 
 // ---------------------------------------------------------------- lista virtualizada
@@ -172,11 +163,8 @@ function vlist(ids: string[]): HTMLElement {
 
 function thumb(id: string): HTMLElement {
   const k = kindOf29(id), r = restOf29(id);
-  const s = WIKI29.api.game();
   const box = (x: Node) => h('span', { class: 'wk29-th', 'aria-hidden': 'true' }, x);
   try {
-    if (k === 'person' && s?.persons[r]) { const p = s.persons[r]; return box(img(portraitDataUrl(p, 32, s.year), 28)); }
-    if (k === 'act' && s?.acts[r]) { const a = s.acts[r]; return box(img(logoUrl(a.logoSeed, a.name, a.genre, a.formed, 32), 28)); }
     if (k === 'city') return box(cityCrestImg29(r, 28));
     if (k === 'genre') return box(genreBadgeImg29(r, 28));
     if (k === 'country') return box(flagImg29(r, 28));

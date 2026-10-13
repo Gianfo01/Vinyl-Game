@@ -33,14 +33,11 @@ export const mech29 = (id: string): MechArt29 | undefined => MECH29.find((m) => 
 
 /** Verbetes próprios da wiki (os demais vêm dos artigos). */
 const TERMS_W: Term29[] = [
-  { id: 'revelar-historia', term: l('Revelar história real', 'Reveal real history'), def: l('Botão da wiki (desligado por padrão) que mostra fatos reais posteriores ao ano da partida: discos futuros, mortes, separações, datas de tecnologia. Só vale enquanto a wiki está aberta; não muda a partida nem vai para o save.', 'Wiki toggle (off by default) that shows real facts after the run\'s year: future records, deaths, split-ups, technology dates. It lasts while the wiki is open; it does not change the run nor go into the save.'), see: ['mech:modes'] },
-  { id: 'na-sua-partida', term: l('Na sua partida', 'In your run'), def: l('Caixa das páginas da wiki com valores vivos da partida carregada (banda atual, relação com você, popularidade do gênero…). Sem partida, ela não aparece.', 'Box on wiki pages with live values from the loaded run (current band, relationship with you, genre popularity…). Without a run it does not appear.'), see: ['mech:connections'] },
-  { id: 'fonte-canonica', term: l('Fonte canônica pessoa ↔ ato', 'Canonical person ↔ act source'), def: l('Índice único de quem passou por qual banda (integrantes, ex-integrantes, log de formação e crônica). A ficha da pessoa, a página do ato e esta wiki leem dele, por isso sempre concordam.', 'Single index of who was in which band (members, former members, lineup log and chronicle). The person sheet, the act page and this wiki read it, so they always agree.'), see: ['mech:connections'] },
+  { id: 'fonte-canonica', term: l('Fonte canônica pessoa ↔ ato', 'Canonical person ↔ act source'), def: l('Índice único de quem passou por qual banda (integrantes, ex-integrantes, log de formação e crônica). A ficha da pessoa e a página do ato leem dele, por isso sempre concordam.', 'Single index of who was in which band (members, former members, lineup log and chronicle). The person sheet and the act page read it, so they always agree.'), see: ['mech:connections'] },
 ];
 export const TERMS29: Term29[] = [...TERMS_W, ...TERMS_A, ...TERMS_B, ...TERMS_C, ...TERMS_D].filter((x, i, xs) => xs.findIndex((y) => y.id === x.id) === i).sort((a, b) => tx(a.term).localeCompare(tx(b.term)));
 const FAQ_W: Faq29[] = [
-  { id: 'wiki-spoiler', q: l('A wiki pode estragar a história da minha partida?', 'Can the wiki spoil my run?'), a: l('Não por padrão. Ela esconde talento e potencial ocultos, intenções secretas de rivais, o mínimo escondido de uma negociação e todo fato real depois do ano da partida. Para ver a história real futura, ligue [[glossario:revelar-historia]].', 'Not by default. It hides hidden talent and potential, rivals\' secret intentions, a negotiation\'s hidden minimum and every real fact after the run\'s year. To see future real history, turn on [[glossario:revelar-historia]].'), see: ['mech:modes'] },
-  { id: 'wiki-pessoas', q: l('Por que a wiki mostra pessoas diferentes em cada partida?', 'Why does the wiki show different people in each run?'), a: l('Com uma partida carregada, Personagens lista as pessoas, artistas e selos DESTA partida (gerados ou reais). Sem partida, mostra o catálogo de dados reais do jogo.', 'With a run loaded, Characters lists the people, acts and labels of THIS run (generated or real). Without a run it shows the game\'s real-data catalog.') },
+  { id: 'wiki-separada', q: l('A wiki mostra a minha partida?', 'Does the wiki show my run?'), a: l('Não. A wiki é um arquivo separado do jogo: ela não lê partidas nem saves. Mostra o catálogo de dados do jogo (artistas e pessoas reais, profissionais, mundo, objetos) e como cada sistema funciona. O que acontece na sua partida você vê nas telas do jogo.', 'No. The wiki is a file separate from the game: it does not read runs or saves. It shows the game\'s data catalog (real artists and people, professionals, world, objects) and how each system works. What happens in your run you see on the game\'s screens.'), see: ['mech:modes'] },
 ];
 export const FAQS29: Faq29[] = [...FAQ_W, ...FAQ_A, ...FAQ_B, ...FAQ_C, ...FAQ_D].filter((x, i, xs) => xs.findIndex((y) => y.id === x.id) === i);
 
@@ -153,7 +150,7 @@ const listPage = (c: W29, list: string): Page29 => {
   const ids = listIds29(c, list);
   const sec = (Object.entries(SEC_LISTS29).find(([, xs]) => xs.includes(list))?.[0] ?? 'home') as Sec29W;
   return { id: `idx:${list}`, title: listLabel29(list), kind: `${ids.length.toLocaleString()} ${T('artigos', 'articles')}`, crumbs: crumbs29(sec), blocks: [
-    ...(list === 'persons' || list === 'acts' ? [P(c.s ? T('Da sua partida: só quem já existe no ano atual (ou que você já conhece).', 'From your run: only who already exists in the current year (or whom you already know).') : T('Sem partida carregada: catálogo de dados reais do jogo.', 'No run loaded: the game\'s real-data catalog.'))] : []),
+    ...(list === 'persons' || list === 'acts' ? [P(c.s ? T('Da sua partida: só quem já existe no ano atual (ou que você já conhece).', 'From your run: only who already exists in the current year (or whom you already know).') : T('Catálogo de dados reais do jogo: numa partida com nomes reais, estes artistas surgem no ano da estreia.', 'The game\'s real-data catalog: in a run with real names, these acts appear in their debut year.'))] : []),
     { k: 'list', ids, group: list }] };
 };
 
@@ -169,13 +166,13 @@ function secPage(c: W29, sec: Sec29W): Page29 {
 function homePage(c: W29): Page29 {
   const blocks: Block29[] = [
     P(T('Tudo sobre o jogo num lugar só: personagens com retrato, como cada sistema funciona, o mundo, os objetos, um glossário e as perguntas mais comuns. Busque no campo acima (com ou sem acento) ou navegue pelas seções.', 'Everything about the game in one place: characters with portraits, how each system works, the world, the objects, a glossary and the most common questions. Search above (with or without accents) or browse the sections.')),
-    { k: 'note', hue: c.s ? 'good' : 'info', t: c.s ? T('Partida carregada', 'Run loaded') : T('Sem partida', 'No run'), x: [c.s
+    { k: 'note', hue: c.s ? 'good' : 'info', t: c.s ? T('Partida carregada', 'Run loaded') : T('Arquivo separado do jogo', 'Separate from the game'), x: [c.s
       ? `${T('Personagens e valores vivos vêm da sua partida', 'Characters and live values come from your run')} (${c.s.config.companyName}, ${c.s.year}). ${T('Fatos reais depois deste ano ficam escondidos.', 'Real facts after this year stay hidden.')}`
-      : T('Mostrando o catálogo de dados reais (artistas, produtores, empresários, críticos, veículos). Comece uma partida para ver os personagens dela.', 'Showing the real-data catalog (artists, producers, managers, critics, outlets). Start a run to see its characters.')] },
+      : T('Esta wiki é separada do jogo: não lê partidas nem saves. Mostra o catálogo de dados do jogo (artistas e pessoas reais, produtores, empresários, críticos, veículos, mundo e objetos) e como cada sistema funciona.', 'This wiki is separate from the game: it does not read runs or saves. It shows the game\'s data catalog (real artists and people, producers, managers, critics, outlets, world and objects) and how each system works.')] },
     H(T('Seções', 'Sections')),
     { k: 'ul', items: SECS29W.filter((x) => x.id !== 'home').map((x) => [ln29(`idx:${x.id}`, tx(x.label)), ` — ${SEC_LISTS29[x.id as Exclude<Sec29W, 'home'>].reduce((n, li) => n + listIds29(c, li).length, 0).toLocaleString()} ${T('artigos', 'articles')}`]) },
     H(T('Comece por aqui', 'Start here')),
-    { k: 'ul', items: [[ln29('mech:money', title29(c, 'mech:money'))], [ln29('mech:contracts', title29(c, 'mech:contracts'))], [ln29('mech:music', title29(c, 'mech:music'))], [ln29('mech:connections', title29(c, 'mech:connections'))], [ln29('faq:wiki-spoiler', title29(c, 'faq:wiki-spoiler'))]] },
+    { k: 'ul', items: [[ln29('mech:money', title29(c, 'mech:money'))], [ln29('mech:contracts', title29(c, 'mech:contracts'))], [ln29('mech:music', title29(c, 'mech:music'))], [ln29('mech:connections', title29(c, 'mech:connections'))], [ln29('faq:wiki-separada', title29(c, 'faq:wiki-separada'))]] },
   ];
   return { id: 'home', title: T('Wiki do Masters', 'Masters wiki'), kind: T('início', 'home'), art: { k: 'icon', name: 'book' }, crumbs: [], blocks };
 }
