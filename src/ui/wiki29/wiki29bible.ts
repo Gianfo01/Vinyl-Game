@@ -6,6 +6,7 @@
 import { l } from '../../data/world';
 import { CATS_A } from './cat29_a';
 import { CATS_B } from './cat29_b';
+import { CATS_C } from './cat29_c';
 import { TIME_KINDS29, timeline29 } from './time29';
 import { H, P, T, tx } from './wiki29core';
 import type { Block29, Cat29, CatItem29, Inline29, Page29 } from './wiki29types';
@@ -45,7 +46,7 @@ export function pageDecade29(d: string, title: (id: string) => string): Page29 |
 
 // ---------------------------------------------------------------- regras e dados
 
-export const CATS29: Cat29[] = [...CATS_A, ...CATS_B].filter((x, i, xs) => xs.findIndex((y) => y.id === x.id) === i);
+export const CATS29: Cat29[] = [...CATS_A, ...CATS_B, ...CATS_C].filter((x, i, xs) => xs.findIndex((y) => y.id === x.id) === i);
 const ITEMS = new Map<string, CatItem29[]>();
 export function catItems29(id: string): CatItem29[] {
   let xs = ITEMS.get(id);
