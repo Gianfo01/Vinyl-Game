@@ -13,7 +13,9 @@ const mk = (seed: string) => { const s = createGame(defaultConfig(seed, { startY
 describe('agente x promotor', () => {
   it('promotor marca, prevê e liquida um show; força local e cansaço se movem', () => {
     const s = mk('r12-tour');
-    const act = Object.values(s.acts).filter((a) => a.members.length && a.status !== 'retired').sort((a, b) => b.fame - a.fame)[0];
+    // r27: atos reais podem ter fim de carreira roteirizado (separação nos meses seguintes cancela o show): usa um ato sem dados reais
+    const act = Object.values(s.acts).filter((a) => a.members.length && a.status !== 'retired' && !a.catalogNo).sort((a, b) => b.fame - a.fame)[0]
+      ?? Object.values(s.acts).filter((a) => a.members.length && a.status !== 'retired').sort((a, b) => b.fame - a.fame)[0];
     expect(openPromoter(s)).toBeNull();
     const st = defaultStop(s, act, act.city, s.week + 3);
     const v = validate(s, 'promoter', act.id, [st]);

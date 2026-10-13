@@ -91,7 +91,8 @@ describe('gestão de artistas', () => {
     const cands = mgCandidates(s).filter((x) => x.owner && x.owner !== 'player');
     const a = [...cands].sort((x, y) => (y.formed ?? 0) - (x.formed ?? 0))[0] ?? mgCandidates(s)[0];
     let ok = false;
-    for (let i = 0; i < 30 && !ok; i++) ok = pitchClient(s, r, a.id, 0.1).ok;
+    // r27: a recusa liga uma espera de 26 semanas (refused); para testar 30 tentativas de verdade, limpa a espera a cada volta
+    for (let i = 0; i < 30 && !ok; i++) { delete mg.refused?.[a.id]; ok = pitchClient(s, r, a.id, 0.1).ok; }
     expect(ok).toBe(true);
     const w = ownerOf(s).wealth;
     advanceMonth(s);
