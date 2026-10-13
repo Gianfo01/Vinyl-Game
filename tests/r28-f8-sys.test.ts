@@ -80,3 +80,29 @@ describe('r28 F8 — fundador e reputação de selo nas ofertas', () => {
     expect(lrep28(s)).toBeTruthy();
   });
 });
+
+import { CRAFT28, craftAwards28, dimScore28 } from '../src/sim/sys/awards28';
+import { gramoScore } from '../src/sim/sys/ceremonies8';
+import { dims18 } from '../src/sim/sys/quality18';
+
+describe('r28 F8 — prêmios pelas dimensões de qualidade (I18)', () => {
+  it('Gramófonos: duas gravações iguais em q e vendas, a de dimensões melhores pontua mais', () => {
+    const s = game('r28aw', 1975);
+    for (let i = 0; i < 14; i++) advanceMonth(s);
+    const rels = Object.values(s.releases).filter((x) => x.type === 'single' && dims18(s, x));
+    expect(rels.length).toBeGreaterThan(2);
+    const sc = rels.map((x) => ({ x, d: dimScore28(s, x, 'record')!, g: gramoScore(s, 'record', x) - (x.q * 1.2 + Math.log10(1 + x.totalUnits) * 8) }));
+    const hi = sc.reduce((a, b) => (b.d > a.d ? b : a)), lo = sc.reduce((a, b) => (b.d < a.d ? b : a));
+    expect(hi.g).toBeGreaterThan(lo.g);
+  });
+  it('Prêmios do Ofício em dezembro: um por dimensão, com a nota na citação, uma vez por ano', () => {
+    const s = game('r28aw2', 1975);
+    for (let i = 0; i < 13 && !s.awards.some((a) => a.category.startsWith('craft_')); i++) advanceMonth(s);
+    const n0 = s.awards.filter((a) => a.category.startsWith('craft_')).length;
+    expect(n0).toBeGreaterThanOrEqual(3); // o gancho mensal já entregou
+    s.month = 11; expect(craftAwards28(s)).toEqual([]); // não repete no mesmo ano
+    const a = s.awards.find((x) => x.category === 'craft_tech')!;
+    expect(a.name).toMatch(/técnica \d+/);
+    expect(CRAFT28.length).toBe(4);
+  });
+});

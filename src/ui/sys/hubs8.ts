@@ -2,6 +2,7 @@
 // de premiações (indicados, campanhas, convite para tocar, vencedores) e de críticos (região, gosto,
 // notas que deu, relação com o selo).
 
+import { CRAFT28, CRAFT_MONTH28, CRAFT_START28 } from '../../sim/sys/awards28'; // r28 F8
 import { FESTIVALS } from '../../data/catalog';
 import { COUNTRY_INFO, countryInfoByA3 } from '../../data/countries';
 import { countryName } from '../../data/geo';
@@ -152,6 +153,8 @@ function ceremonies(s: GameState): CeremonyRow[] {
     { id: 'critics', name: t(l('Prêmio da Crítica', 'Critics\' Prize')), month: calOf19('critics').month, kind: l('Crítica', 'Critics'), cats: ['critics'], desc: l('Vai para o disco com a melhor média de resenhas do ano anterior.', 'Goes to the record with the best review average of the previous year.') },
     { id: 'industry', name: t(l('Prêmios da Indústria', 'Industry Awards')), month: calOf19('label_year').month, kind: l('Indústria', 'Industry'), cats: ['label_year', 'producer_year'], desc: l('Selo do ano (receita) e produtor do ano (hits) do ano anterior.', 'Label of the year (revenue) and producer of the year (hits) of the previous year.') },
     { id: 'live_act', name: t(l('Ato ao Vivo do Ano', 'Live Act of the Year')), month: calOf19('live_act').month, kind: l('Indústria', 'Industry'), cats: ['live_act'], desc: l('Maior público em turnê no ano anterior.', 'Biggest tour crowds in the previous year.') },
+    // r28 F8 (I18): Prêmios do Ofício — um troféu por dimensão de qualidade (sys/awards28.ts)
+    ...(s.year >= CRAFT_START28 ? [{ id: 'craft28', name: t(l('Prêmios do Ofício', 'Craft Awards')), month: CRAFT_MONTH28, kind: l('Ofício', 'Craft'), cats: CRAFT28.map((c) => c.id), desc: l('Um troféu por dimensão de qualidade do ano: produção (técnica), originalidade, emoção e álbum coeso. Vence a maior nota entre os mais vendidos.', 'One trophy per quality dimension of the year: production (technique), originality, emotion and cohesive album. Highest score among the best sellers wins.') }] : []),
   ].filter((c) => s.year + (c.id === 'gramo' ? 1 : 0) >= calOf19(c.cats[0]).start);
   for (const m of MARKETS) {
     const def = REGIONAL_AWARDS[m.id];
