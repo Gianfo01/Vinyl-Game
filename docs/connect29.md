@@ -273,14 +273,15 @@ Pedido do autor: "TUDO deve estar conectado" — cada sistema lê e influencia o
 quando faz sentido. O "Mapa das conexões" da wiki agora sai da **medição**, não de uma lista escrita à mão.
 
 ### Como mede (`src/sim/probe29all.ts`, `scripts/probe29all.ts`)
-- 12 sistemas do jogo (a camada de público por idade/região — `demo29`, de outra sessão — entra quando chegar):
-  Dinheiro, Reputação, Imprensa, Projetos, Ao vivo, Sede, Fama, Mundo, Vida, Contratos, Prêmios, Submundo.
-- **20 empurrões** (entradas de cada sistema: caixa rico/quase zero, +25 de reputação, escândalo, resenha boa, single
+- 13 sistemas do jogo: Dinheiro, Reputação, Imprensa, Projetos, Ao vivo, Sede, Fama, Mundo, Vida, Contratos, Prêmios,
+  Submundo e **Público por idade e região** (`demo29`, chegou da sessão de demografia e entrou como 13º sistema).
+- **22 empurrões** (entradas de cada sistema: caixa rico/quase zero, +25 de reputação, escândalo, resenha boa, single
   melhor, série de shows, sede nível 2 + equipe, +fama, crise/moda/dez anos depois, elenco estressado, confiança alta e
-  baixa, rival em guerra, 4 prêmios, jabá, calor policial) × **40 saídas** (apelo, vendas, receita e despesas do período,
+  baixa, rival em guerra, 4 prêmios, jabá, calor policial, público jovem / público maduro) × **43 saídas** (apelo, vendas, receita e despesas do período,
   caixa livre para gravar/turnê/departamento/adiantamento/crime/campanha, reação a escândalo, crítica, atenção da
   imprensa, bilheteria, eficácia da equipe, fama/embalo/fãs, influência nas leis, gosto e cena, estresse, aceite de
-  proposta, renovação, confiança, Gramofone, Hall da Fama, chance e exposição de crime, calor policial…).
+  proposta, renovação, confiança, Gramofone, Hall da Fama, chance e exposição de crime, calor policial, fatia jovem do
+  público, fatia fora do país natal, gosto de quem tem 20 anos pelo gênero do ato…).
 - Cada medição: braço de controle e braço com UM empurrão, a partir do MESMO estado (mesma semente), rodados do mesmo
   jeito (controle nulo × nulo = 0 exato). Leituras "puras" logo depois do empurrão; leituras "do período" depois de 6
   semanas nos dois braços (pega o que só existe nos ganchos mensais). Mediana de 3 sementes (`r29all`, `-b`, `-c`).
@@ -308,6 +309,7 @@ quando faz sentido. O "Mapa das conexões" da wiki agora sai da **medição**, n
 
 ### Matriz depois: 104 de 132 pares (todas as 64 esperadas)
 
+| de \ para | dinh | repu | impr | proj | aovi | sede | fama | mund | vida | cont | prem | subm |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | dinh | — |   | · | ● | ● | ● |   |   | ● | ● | ● | ● |
 | repu | ● | — | ◐ | · | ◐ | ◐ | · |   | ◐ | ● | ◐ | · |
@@ -323,6 +325,41 @@ quando faz sentido. O "Mapa das conexões" da wiki agora sai da **medição**, n
 | subm | ● | · | ● | ● | · |   |   |   | ● | ● | · | — |
 
 (Entre rodadas o total oscila ±2 nas células fracas por causa da mediana; as 64 esperadas aparecem sempre — teste.)
+
+### Matriz com o 13º sistema (público por idade e região, depois do merge de `r29-demo`): 114 de 156 pares
+Todas as **72 arestas esperadas** medidas (58 com sinal conferido).
+
+| de \ para | dinh | repu | impr | proj | aovi | sede | fama | mund | vida | cont | prem | subm | publ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dinh | — |   | ◐ | ● | ● | ● |   |   | ● | ● | ● | ● |   |
+| repu | ◐ | — | ◐ | · | ◐ | ◐ | · |   | ◐ | ● | ◐ | · |   |
+| impr | ◐ | ◐ | — | ● | ● | · | · |   | ● | ◐ | ● | ● | · |
+| proj | ● | · | ● | — | ◐ |   | · |   | ● | ◐ | ● | ◐ |   |
+| aovi | · | · | ● | · | — |   | ◐ |   | ● | ◐ | ◐ | ◐ |   |
+| sede | ● |   | ● | ◐ | ● | — | · | · | ◐ | ● | · | ● |   |
+| fama | ● | · | ● | ● | ● |   | — |   | ● | ● | ● | ● | ◐ |
+| mund | ◐ | · | ● | ● | ● | · | · | — | ● | ◐ | · | ● | ● |
+| vida | ◐ |   | ● | ◐ | ● |   |   |   | — | ◐ | ◐ | ◐ |   |
+| cont | ◐ |   | ◐ | ◐ | ◐ |   |   |   | ● | — | · | ◐ |   |
+| prem | ◐ | · | ● | ● | ● |   | ◐ |   |   | ◐ | — |   | · |
+| subm | ● | · | ● | ● | · |   |   |   | ● | ● | · | — |   |
+| publ | · |   |   | ● | ● |   |   |   |   | ◐ | ◐ |   | — |
+
+O que o público faz e recebe (medido; o mecanismo é do `demo29`, aqui só ligado à sonda e ao mapa):
+- **Público → Projetos / Ao vivo** (fortes): público maduro tira apelo de single (−20%) e esvazia a bilheteria (−25%);
+  jovem faz o contrário.
+- **Público → Prêmios** (média): o júri do Gramofone é mais velho — público maduro sobe a nota (+5%).
+- **Público → Contratos** (média) e **→ Dinheiro** (fraca): afinidade de público entre selo e ato nas propostas; vendas.
+- **Mundo → Público** (forte): dez anos depois o público envelheceu (fatia até 24 anos −60%).
+- **Fama → Público** (média): mais fama espalha o público para fora do país natal; Imprensa e Prêmios → Público fracos.
+
+Duas arestas novas nesta etapa (o merge tirou duas ligações que eram só efeito colateral):
+- **Contratos → Imprensa** (`contratos_imprensa`): ato com confiança < 30 reclama do selo em entrevista (fato público,
+  no máximo uma nota a cada 3 meses por ato). Antes só aparecia por acaso (rival → crítica).
+- **Prêmios → Imprensa** (`premios_imprensa`): o prêmio do seu ato vira nota (uma por mês; o barramento junta com a
+  nota da cerimônia da mesma semana).
+- Vida → Fama (banda esgotada perde embalo, −3/mês) continua ligada, mas na sonda fica abaixo do caos entre sementes
+  (+3%, 0, −4%): sai do mapa medido.
 
 ### O que foi ligado (`src/sim/sys/conn29.ts`, cada aresta com interruptor `CONN29_OFF` e o botão `CONN29.k`)
 Ganchos novos mínimos: `REACT29` (multiplicadores na reação a escândalo, `scandal17`) e `PRESSURE29` (pressões de curto
@@ -368,8 +405,8 @@ então a mediana geral oscila muito. Efeito estável: **mais fama** (11 → 17�
 e escândalos. Botão: `CONN29.k` (0–1) suaviza tudo de uma vez; `CONN29_OFF` desliga arestas para medir.
 
 ### Testes
-- `tests/r29-connect-all.test.ts`: toda aresta esperada (`EDGES29`, 64) medida; as 51 com sinal conhecido andam na
-  direção certa; o mapa da wiki (`connmap29`) tem todas.
+- `tests/r29-connect-all.test.ts`: toda aresta esperada (`EDGES29`, 72 com o público) medida; as 58 com sinal conhecido
+  andam na direção certa; o mapa da wiki (`connmap29`) tem todas.
 - Golden re-medidos (`r27-p2a`/`p2b`: 333758 / 1642544891 / 3380302445 / 2264116950; antes desta parte 450735 /
   1382068899 / 2386675548 / 2839816166). `r27-p2b` "turnê pelo caminho de sempre" escolhe um ato sem turnê marcada
   (mesmo critério do `roadFix` do arquivo). `r19-infra` verde (famílias de apelo, consumidores de fato).
@@ -382,6 +419,9 @@ e escândalos. Botão: `CONN29.k` (0–1) suaviza tudo de uma vez; `CONN29_OFF` 
   Dinheiro → Fama (passa por Projetos/marketing), Mundo → Prêmios, Prêmios → Vida/Submundo, Submundo → Fama.
 - **Ao vivo → Reputação** existe (shows de ato seu sobem a reputação comercial), mas a sonda não a separa: no braço de
   controle o ato faz shows sozinho semanas depois (substituição).
-- **Público por idade e região** (`demo29`, outra sessão): ainda não está na friendly-brown; quando chegar, entra como
-  13º sistema na sonda (empurrões e saídas próprias) e o mapa é regravado.
+- **Público como destino**: Dinheiro, Reputação, Projetos, Ao vivo, Sede, Vida, Contratos e Submundo não mexem na
+  mistura de idade/região em 6 semanas (ela anda devagar: virada de mês e de ano). Ao vivo → Público existe (os fãs
+  convertidos nascem no país do show), mas os shows da sonda são na cidade natal.
+- **Público → Imprensa / Fama / Vida / Sede / Mundo / Reputação / Submundo**: sem ligação direta; passa por Projetos e
+  Ao vivo.
 - Shows simples (`playGigs`) seguem sem os modificadores de show (§9).
