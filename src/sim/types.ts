@@ -60,6 +60,9 @@ export interface RunConfig {
   /** r29: situação inicial escolhida na Nova run (id de start29data.ts: zero, emerging, mid, hipster, established, top5,
    *  leader, fallen); ausente = só o `scenario` de sempre (testes, bot, saves antigos) */
   start29?: string;
+  /** r29: nível dos rivais escolhido na Nova run (id de rivals29data.ts: zero, emerging, mid, hipster, established, giants,
+   *  leader); ausente = "mistura realista" (o mundo de sempre: testes, bot, saves antigos) */
+  rivals29?: string;
   scenario17?: string;
   preset17?: string;
   /** rodada 20 (G8, src/sim/worldpolicy20.ts): versões do esquema e da política de mundo; ausentes = configuração

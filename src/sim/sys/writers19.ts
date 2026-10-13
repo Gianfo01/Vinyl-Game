@@ -122,15 +122,18 @@ function ghostCandidate(s: GameState, r: Rng, city: string): { p: Person; from?:
 }
 export const ghostCost19 = (s: GameState, nda: boolean) => money(s, 2500 + (nda ? 4000 : 0));
 export const ghostMonthly19 = (s: GameState) => money(s, 700);
-export function hireGhost19(s: GameState, actId: string, nda: boolean): L | null {
+/** `pid` (R29, oferta a integrante): a pessoa escolhida escreve em segredo (sem ela, o candidato de sempre). */
+export function hireGhost19(s: GameState, actId: string, nda: boolean, pid?: string): L | null {
   const a = s.acts[actId], st = wr19(s);
   if (!a || a.owner !== 'player') return l('Escolha um ato do seu elenco.', 'Pick an act from your roster.');
   if (st.gh.some((g) => g.act === actId && g.st === 'on')) return l('Esse ato já tem um ghostwriter.', 'That act already has a ghostwriter.');
+  const pick = pid && s.persons[pid]?.alive ? s.persons[pid] : undefined;
+  if (pid && !pick) return l('Pessoa indisponível.', 'Person unavailable.');
   const c = ghostCost19(s, nda);
   if (freeCash20(s) < c) return cashWhy20(s, c, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `wr19g:${actId}`, -c, 'recording', `Ghostwriter: ${a.name}${nda ? ' (NDA)' : ''}`);
   const r = Rng.fromSeed(`${s.config.seed}|wr19g|${actId}|${s.week}`);
-  const { p, from } = ghostCandidate(s, r, a.city);
+  const { p, from } = pick ? { p: pick, from: undefined } : ghostCandidate(s, r, a.city);
   st.gh.push({ id: `gw${++st.seq}`, pid: p.id, act: actId, mine: true, since: s.week, songs: [], hits: 0, nda, grudge: 0, st: 'on', from });
   log(s, fmtL(l('{p} passa a escrever, em segredo, para {a}.', '{p} starts secretly writing for {a}.'), { p: p.name, a: a.name }));
   return null;

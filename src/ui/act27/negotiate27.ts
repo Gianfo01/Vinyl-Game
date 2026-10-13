@@ -17,6 +17,7 @@ import { $, modal, pill, rerender, toast } from '../common';
 import { h } from '../dom';
 import { clearDraft29, loadDraft29, saveDraft29 } from '../ps/draft29';
 import { store } from '../store';
+import { settleMember29 } from '../../sim/sys/member29';
 import { meter } from '../vis';
 import { promiseChecks28 } from '../sys/promises28';
 import './negotiate27.css';
@@ -110,6 +111,7 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
   close = modal(t(l('Negociar com {a}', 'Negotiate with {a}'), { a: act.name }), root, { wide: true, onClose: () => {
     // r29 (M42): mesa fechada aberta → guarda o rascunho; acordo ou ruptura → apaga
     if (n.status === 'open') saveDraft29(s.signature, 'nego', actId, copyDraft27(o), s.week); else clearDraft29(s.signature, 'nego', actId);
+    for (const x of settleMember29(s)) toast(t(x.t), x.ok ? 'good' : 'bad'); // R29 (integrante): solo-proposta assinado vira a saída da banda; sem acordo, some
     rerender();
   } });
   if (dr) toast(t(l('Rascunho da sua última proposta recuperado. A leitura da mesa usa a situação de agora.', 'Your last offer draft was restored. The table reading uses the current situation.')), 'info');

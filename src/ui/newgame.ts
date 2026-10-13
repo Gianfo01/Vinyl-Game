@@ -1,7 +1,7 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
 import { nrConfirm29, nrHero29 } from './ps/nr29'; // r29 (NR01–NR06, Atlas)
-import { statusOf29 } from '../sim/start29data'; // r29
+import { riv29ById, rivOf29, statusLineOf29 } from '../sim/rivals29data'; // r29: nível dos rivais
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
@@ -27,7 +27,7 @@ import { careerCard, careerSummary } from './sys/careers12';
 import { START_YEARS13 } from './ngdata13';
 import { setTutorials19, tutorialsOff19 } from './tutoff19';
 import { addHelp, hl } from './newgame13';
-import { copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, startCard17, summaryExtra17, worldCard17 } from './newgame17';
+import { copyCode20, diffCard17, pasteCode20, policyLine20, presetBar17, restoreDefault20, rivalsCard29, startCard17, summaryExtra17, worldCard17 } from './newgame17';
 import { WORLDS17, newRunConfig20, notes17, resolveWorld20 } from '../sim/start17';
 import { YEAR_MAX20, YEAR_MIN20 } from '../sim/worldpolicy20';
 import { originById } from '../sim/sys/identity/data';
@@ -246,7 +246,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         bandBox,
       ),
     ] },
-    { id: 'labels', name: l('Gravadoras', 'Labels'), body: [lc.el] },
+    { id: 'labels', name: l('Gravadoras', 'Labels'), body: [rivalsCard29(cfg, rebuild), lc.el] }, // r29: nível dos rivais antes da lista
     // r22: regras em cartões, seletor segmentado, chaves e etiquetas (o ajuste fino fica recolhido)
     { id: 'rules', name: l('Regras e ritmo', 'Rules and rhythm'), body: [
       h('section', { class: 'card wide' }, h('h3', null, ...hl(S.difficulty, 'difficulty')),
@@ -312,7 +312,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       { tab: 2, name: l('Modo', 'Mode'), rows: [
         [l('Atividades', 'Activities'), (cfg.careers?.main ?? ['label']).length ? careerSummary(cfg).split(' · ')[0] : '—'],
         [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
-        [l('Situação inicial', 'Starting situation'), t(statusOf29(cfg))], // r29: carreira × situação ("Artista iniciante", "Produtor top 5"…)
+        [l('Situação inicial', 'Starting situation'), t(statusLineOf29(cfg))], // r29: carreira × situação × rivais ("Selo emergente · rivais gigantes")
         [l('Como começa', 'How it starts'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
         [S.companyName, cfg.companyName],
         [S.homeCity, cityName(cfg.homeCity)],
@@ -320,6 +320,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       ] },
       { tab: 3, name: l('Gravadoras', 'Labels'), rows: [
         [l('No começo', 'At the start'), `${rivals} · ${cfg.labels?.ids ? t(l('lista personalizada', 'custom list')) : t(l('sugestão', 'suggestion'))}`],
+        [l('Nível dos rivais', 'Rival level'), t(riv29ById(rivOf29(cfg))!.name)], // r29
         [l('Como começam', 'How they start'), t(LBSTART[cfg.labels?.start ?? 'history'])],
         [l('Fundadas depois', 'Founded later'), t(cfg.labels?.future === 'all' ? l('todas do catálogo', 'all from the catalog') : cfg.labels?.future === 'none' ? l('nenhuma', 'none') : l('as da lista', 'the listed ones'))],
       ] },
