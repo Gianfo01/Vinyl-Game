@@ -50,6 +50,15 @@ Fora do escopo (outras sessões): móveis/equipamentos isométricos (`sprites.ts
 ícones, cinemáticas e mapa. Eles já herdam o contorno `INK`, a paleta nova e o `sbox` com rampa; os sprites HD de
 artistas não foram integrados.
 
+## Validação
+
+- `npm run typecheck`: sem erros.
+- `npm test`: 945 passaram, 3 falharam, nenhuma por causa desta mudança. `r16-playbot` ("run curta com ações
+  variadas") falha igual no commit de base, antes desta branch. `r14-db` ("enorme < 1500 ms") é limite de tempo:
+  passa quando roda sozinho e só estoura com a suíte inteira em paralelo. A terceira falha é um timeout do worker
+  do vitest (`onTaskUpdate`) com a máquina carregada. Os testes de cenas e da sede (`r12-scenes-eras`,
+  `r12-rivals-hq`, `r14-scenes`, `r16-scenes`) passam.
+
 ## Antes e depois
 
 Capturas com Playwright (Chromium) a partir de um harness local que monta a sede (`HqView`, nível Loft, ano fixo)
