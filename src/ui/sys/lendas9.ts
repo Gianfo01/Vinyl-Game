@@ -27,7 +27,7 @@ import { registerArea, registerPageTab } from '../registry';
 import { relicHype12 } from './hype12';
 import { relicImg28 } from '../pixel/relic28';
 import { erasTab17, relicStory17 } from './heritage17';
-import { relic29Section } from './relics29';
+import { archiveLine29, relic29Section, relicBrowser29 } from './relics29';
 import { setTab, tabs } from '../vis';
 import './lendas9.css';
 import { relics18Tab } from './talent18';
@@ -300,7 +300,9 @@ function relicsTab(s: GameState): HTMLElement {
   return h('div', null,
     h('div', { class: 'ln-chips' }, ...RF.map(([k, lb, fn]) => h('button', { class: `chip ${k === F.rf ? 'on' : ''}`, onclick: () => { F.rf = k; rerender(); } }, `${t(lb)} (${all.filter(fn).length})`))),
     mine.length ? h('p', { class: 'muted small' }, t(l('Seu acervo vale {v}. Peças expostas na sede rendem prestígio todo ano.', 'Your collection is worth {v}. Pieces on display at HQ earn prestige every year.'), { v: $(mine.reduce((x, r) => x + relicPrice(s, r), 0)) })) : null,
-    list.length ? grid(...list.map((r) => relicCard(s, r))) : empty(l('Nada nesta categoria.', 'Nothing in this category.')));
+    archiveLine29(s), // R29: acervo histórico (peças antigas resumidas por ato)
+    // R29: centenas de peças por partida — filtros (ato, arquétipo, época, valor) e páginas
+    list.length ? relicBrowser29(s, `lendas:${F.rf}`, list, (r) => relicCard(s, r), { wrap: (kids) => grid(...kids), owners: false }) : empty(l('Nada nesta categoria.', 'Nothing in this category.')));
 }
 
 // ---------------------------------------------------------------- cidades, jornal, livro

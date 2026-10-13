@@ -34,6 +34,7 @@ import { heistOn27 } from '../act27/heist27'; // r27 (M3): operação jogável
 import { screen27, screenOn27 } from '../act27/flow27'; // r27 FLOW: uma entrada só
 import { crimeForm17, presetHire29 } from './crimeform29';
 import { ent27 } from '../ps/ent27';
+import { relicBrowser29 } from './relics29'; // R29: filtros e páginas para listas grandes de relíquias
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 /** r28 (arte): brasão semeado da organização (forma pelo tipo, cores pela região, carga pelo negócio). */
@@ -242,7 +243,13 @@ function marketTab(s: GameState): HTMLElement {
         st.fake[rl!.id] ? null : btn(l('Devolver e cobrar recompensa (10%)', 'Return for the reward (10%)'), () => say(returnHot(s, rl!.id), 'good'), { cls: 'ghost' }))))) : h('p', { class: 'muted small' }, T(l('Vazio. Relíquias roubadas (Planos → Roubar relíquia) ou compradas aqui ficam escondidas; a polícia pode achá-las (mais calor, mais buscas).', 'Empty. Relics stolen (Plans → Steal a relic) or bought here stay hidden; police may find them (more heat, more searches).'))),
       h('p', { class: 'muted small' }, T(l('Receptadores cobram corte e alguns são armadilhas da polícia. Peça "quente" vale menos; procedência duvidosa derruba o preço.', 'Fences take a cut and some are police stings. A "hot" piece is worth less; doubtful provenance cuts the price.')))),
     section(T(l('Ofertas no mercado negro', 'Black-market offers')),
-      st.market.length ? h('ul', null, st.market.map((of) => { const rl = relics(s).list.find((x) => x.id === of.rl); return rl ? h('li', null, relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, 24), ` ${T(rl.n)} — ${T(FENCES17[of.fence].name)} · ${T(usd(of.price))} · ${T(l('autenticidade estimada', 'estimated authenticity'))} ${P(of.auth)} · ${T(l('até semana', 'until week'))} ${of.until} `, btn(l('Comprar', 'Buy'), () => say(buyOffer(s, of.id)), { title: l('Pode ser falsa; receptação aumenta o calor.', 'May be fake; handling stolen goods raises heat.') })) : null; })) : h('p', { class: 'muted small' }, T(l('Nada à venda agora. Peças roubadas pelo mundo aparecem aqui com preço baixo — e risco.', 'Nothing for sale now. Pieces stolen around the world show up here cheap — and risky.')))),
+      st.market.length ? (() => {
+        const offerLi = (of: (typeof st.market)[number], rl: (typeof stash)[number] & object) => h('li', null, relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, 24), ` ${T(rl.n)} — ${T(FENCES17[of.fence].name)} · ${T(usd(of.price))} · ${T(l('autenticidade estimada', 'estimated authenticity'))} ${P(of.auth)} · ${T(l('até semana', 'until week'))} ${of.until} `, btn(l('Comprar', 'Buy'), () => say(buyOffer(s, of.id)), { title: l('Pode ser falsa; receptação aumenta o calor.', 'May be fake; handling stolen goods raises heat.') }));
+        const pairs = st.market.map((of) => [of, relics(s).list.find((x) => x.id === of.rl)] as const).filter((x) => !!x[1]);
+        // R29: com muitas relíquias o mercado fica cheio — filtros e páginas acima de 6 ofertas
+        if (pairs.length <= 6) return h('ul', null, ...pairs.map(([of, rl]) => offerLi(of, rl!)));
+        return relicBrowser29(s, 'crime:market', pairs.map((x) => x[1]!), (rl) => offerLi(pairs.find((x) => x[1] === rl)![0], rl), { size: 8, owners: false, wrap: (kids) => h('ul', null, ...kids) });
+      })() : h('p', { class: 'muted small' }, T(l('Nada à venda agora. Peças roubadas pelo mundo aparecem aqui com preço baixo — e risco.', 'Nothing for sale now. Pieces stolen around the world show up here cheap — and risky.')))),
     section(T(l('Falsificação', 'Forgery')),
       h('p', { class: 'small muted' }, T(l('Encomende uma réplica de peça famosa e venda como verdadeira: o comprador desconfia (autenticidade baixa).', 'Commission a replica of a famous piece and sell it as genuine: buyers get suspicious (low authenticity).'))),
       h('div', { class: 'row wrap' }, ...famous.map((rl) => btn(`${T(rl.n)} (${T(usd(forgeCost(s, rl.v)))})`, () => say(forgeRelic(s, rl.id)), { title: fmtTxt(l('Autenticidade percebida {v}', 'Perceived authenticity {v}'), P(0.25)) })))),

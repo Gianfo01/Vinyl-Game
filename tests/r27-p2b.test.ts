@@ -65,10 +65,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-    expect(AFTER.player.cash).toBe(450735);
+    // R29 relíquias, "bem mais relíquias por save" (densidade padrão "muitas" — docs/reliquias29.md): ~7× mais peças
+    // procedurais (22 em 8 meses de 1975 nesta semente, contra 3), mais lotes em leilão e ofertas no mercado negro; caixa, acts e rng mudam
+    // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
+    expect(AFTER.player.cash).toBe(458975);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1776542358);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3652250691);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

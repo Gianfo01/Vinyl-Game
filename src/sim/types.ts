@@ -42,6 +42,8 @@ export interface RunConfig {
   labels?: LabelSetup;
   /** rodada 14: tamanho da base de dados (artistas reais + gerados); ausente = médio */
   dbSize?: 'small' | 'medium' | 'large' | 'huge';
+  /** R29 (relíquias): densidade das relíquias procedurais (relics29); ausente = 'many' */
+  relicDensity?: 'few' | 'normal' | 'many' | 'all';
   /** rodada 12: carreiras escolhidas no começo (atividades principais, origem profissional, ambição) */
   careers?: { main: string[]; origin?: string; ambition?: string };
   /** rodada 15: história dos artistas reais — exata, com variações (padrão) ou aleatória */
