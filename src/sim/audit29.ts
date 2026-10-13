@@ -153,7 +153,8 @@ export function audit29(s: GameState): Finding29[] {
     if (!a) continue;
     for (const sid of rel.songs) for (const w of s.songs[sid]?.writers ?? []) {
       const f = (st.former[a.id] ?? []).filter((x) => x.personId === w);
-      if (f.length && !a.members.includes(w) && !s.persons[w]?.real27?.writer && Math.max(...f.map((x) => x.year)) < rel.year - 1) add('R7m', `${s.songs[sid].title} (${rel.year}, ${a.name}) creditada a ${nm(w)}, que saiu em ${Math.max(...f.map((x) => x.year))}`);
+      const made = s.config.startYear + Math.floor((s.songs[sid].createdWeek ?? 0) / 52.18); // composta antes de sair = legítimo
+      if (f.length && !a.members.includes(w) && !s.persons[w]?.real27?.writer && Math.max(...f.map((x) => x.year)) < Math.min(rel.year, made) - 1) add('R7m', `${s.songs[sid].title} (${rel.year}, ${a.name}) creditada a ${nm(w)}, que saiu em ${Math.max(...f.map((x) => x.year))}`);
     }
   }
 

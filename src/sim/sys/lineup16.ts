@@ -533,10 +533,14 @@ export function stints16(s: GameState, a: Act): Stint16[] {
     }
     if (!segs.length) segs.push({ from: Math.max(base, p.born + 12) }); // R29: substituto gerado não "entra" antes de nascer
     segs.sort((x, y) => x.from - y.from);
-    const last = segs[segs.length - 1];
     const member = a.members.includes(pid);
+    const outY = member ? undefined : [...f].reverse().find((x) => x.personId === pid)?.year;
+    // R29: na história alternativa a volta documentada (Phil Collins 2007, Geri 2007…) pode não ter acontecido — passagem
+    // que só começaria depois da saída de verdade some, em vez de virar "2007–1997"
+    if (outY !== undefined && segs.length > 1) for (let i = segs.length - 1; i > 0 && segs[i].from > outY; i--) segs.pop();
+    const last = segs[segs.length - 1];
     if (member && last.to !== undefined) last.to = undefined;
-    if (!member && last.to === undefined) last.to = [...f].reverse().find((x) => x.personId === pid)?.year ?? (live(a) ? s.year : a.careerEnd);
+    if (!member && last.to === undefined) last.to = outY ?? (live(a) ? s.year : a.careerEnd);
     return { pid, segs };
   });
 }
