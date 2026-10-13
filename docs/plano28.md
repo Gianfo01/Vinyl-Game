@@ -28,7 +28,7 @@ Antes de começar, a fase 0 re-mede tudo na base da R27 (alguns números da aná
 **Mudanças no plano por causa da medição**
 - **Nova fase 7A (desempenho) já no passo 2**, em paralelo com 1A/1B/2: a curva de CPU torna runs longas injogáveis antes de 2000, e a escolha do ano de fim (decisão 1) depende disso. Escopo: perfilar os ganchos numa partida 1990+, poda/agregação de lançamentos e pessoas inativas (catálogo agregado), teste de custo por década (`measure28 long` encurtado). A sessão `claude/r27-perf` já atacou o `r14-db` na R27.
 - **1B:** "Depois" com `echoP18` e o `ctx` real da decisão, cobrindo também os ecos escritos à mão e testando vários estados; tiragem lê o marketing **antes** de calibrar; a calibração final da previsão (80 %) é refeita **depois** da 1C, sobre a "procura" (vendido + falta).
-- **1C:** medir com `--grid` (seeds × inícios) e investigar 1889/1975 antes de mexer em choques; `flip` e `--role hybrid` entram como guarda-corpos do teste-meta; o cauteloso não pode quebrar mais do que hoje.
+- **1C:** medir com `--grid` (amostra fixa: as 6 seeds `b19-0..5` × os 4 inícios 1889/1955/1975/2005 = 24 partidas por perfil, ~1 h de CPU para os 4 perfis; `flip` e híbrido com amostra menor) e investigar 1889/1975 antes de mexer em choques; `flip` e `--role hybrid` entram como guarda-corpos do teste-meta; o cauteloso não pode quebrar mais do que hoje.
 - `r16-playbot` (`hires` = 0) foi resolvido na R27 (AUD1: primeira contratação no 1º ano quando o selo já fatura).
 
 ### Plataforma alvo: jogo instalável (decisão do autor, 2026-10-13)
