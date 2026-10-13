@@ -75,7 +75,10 @@ mesma separação de matiz; fronteiras do ano, hachura de colônia, divisas inte
 
 ## Validação
 
-- `npm ci`, `npm run typecheck`, `npm test`.
+- `npm ci` e `npm run typecheck`: ok.
+- `npm test`: 946 passam; 2 falham e nenhuma das falhas vem deste passe (nenhum dos dois testes importa os arquivos alterados):
+  `r16-playbot` ("ações variadas… determinística") falha igual no commit base; `r14-db` ("enorme: criar o jogo < 3s…")
+  é um limite de tempo que estoura só com a suíte inteira em paralelo e passa isolado, antes e depois.
 - Capturas (Playwright + Chromium em `/opt/pw-browsers`) pela bancada `tools/arte-cenas/index.html?year=…&theme=…`,
   antes/depois em 1935, 1975 e 2030, nos temas claro e escuro: `docs/arte-cenas/{ano}-{tema}-{antes|depois}.png`.
   Cada captura tem seis quadros de cena (tapete, palco com envelope, estádio/teatro, funeral na chuva, tribunal com
