@@ -37,22 +37,24 @@ registerSimHook('newgame', 'start28', (s) => {
 
 // ---------------------------------------------------------------- (2) cenário de entrada "Primeiro hit"
 
+/** Lançamentos seus que chegaram ao top 40 (pico 1–40). */
+export const top40Hits28 = (s: GameState): number => Object.values(s.releases).filter((r) => (r.owner === 'player' || s.acts[r.actId]?.playerBand) && r.peak > 0 && r.peak <= 40).length;
+
 export const FIRST_HIT28: Scenario17 = {
   id: 'first_hit_28', name: l('Primeiro hit: Nova York, 1964', 'First hit: New York, 1964'), startYear: 1964, endYear: 1966, homeCity: 'new_york', scenario: 'emerging',
   desc: l('Para começar: um selo pequeno com um grupo de soul que já toca nas rádios do bairro. O primeiro sucesso está a um lançamento de distância — o resto é com você.',
     'To start with: a small label with a soul group already playing on neighborhood radio. The first hit is one release away — the rest is up to you.'),
-  goal: l('Coloque discos no top 10 até o fim de 1966.', 'Get records into the top 10 by the end of 1966.'), unit: l('top 10', 'top 10s'), tiers: [1, 2, 4],
-  rules17: [l('Entrada: o grupo principal já tem fãs e fama; grave e lance logo.', 'Entry: the main group already has fans and fame; record and release soon.'),
-    l('Primeiros 18 meses: +15% de apelo para os seus artistas (a cidade está curiosa).', 'First 18 months: +15% appeal for your acts (the city is curious).'),
-    l('Um segundo artista, cru, para você descobrir com calma.', 'A second, raw act for you to develop at your own pace.')],
-  perks17: (s) => (s.year * 12 + s.month < 1964 * 12 + 18 ? [{ label: l('Cenário: a cidade está curiosa', 'Scenario: the city is curious'), values: { appeal: 0.15 } }] : []),
+  goal: l('Emplaque singles no top 40 (WorldSound 100) até o fim de 1966.', 'Land singles in the top 40 (WorldSound 100) by the end of 1966.'), unit: l('hits no top 40', 'top-40 hits'), tiers: [1, 3, 6],
+  rules17: [l('Entrada: o grupo principal já tem fãs e fama no bairro; grave e lance logo — o top 40 está a um single de distância.', 'Entry: the main group already has local fans and fame; record and release soon — the top 40 is one single away.'),
+    l('Um segundo artista, cru, para você descobrir com calma.', 'A second, raw act for you to develop at your own pace.'),
+    l('O top 10 mundial de 1964 é das lendas: chegar lá é a medalha de ouro.', 'The 1964 world top 10 belongs to legends: getting there is the gold medal.')],
   setup: (s, r) => {
     adjustCash(s, 1.1);
     const a = signAct(s, r, 'soul', 'new_york', 24, 4);
     a.potential = Math.max(a.potential, 80);
     signAct(s, r, 'girl_group', 'new_york', 6, 3);
   },
-  metric: (s, b) => s.player.stats.top10s - (b.top10s ?? 0), fail: insolvent,
+  metric: (s) => top40Hits28(s), fail: insolvent,
 };
 if (!scenarioById[FIRST_HIT28.id]) { SCENARIOS17.push(FIRST_HIT28); SCENARIOS.push(FIRST_HIT28); scenarioById[FIRST_HIT28.id] = FIRST_HIT28; }
 

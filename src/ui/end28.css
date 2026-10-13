@@ -31,3 +31,4 @@
 .h27-form .ny28-free { display: flex; flex-direction: row; justify-content: flex-start; gap: 8px; font-size: 0.85rem; }
 .h27-form .ny28-free input[type='checkbox'], .ng22 .ny28-free input[type='checkbox'], .ny28-free input[type='checkbox'] { width: 18px; height: 18px; min-height: 0; flex: none; margin: 0; padding: 0; }
 .ny28 .small { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.h27-form .ny28 { margin: -6px 0 18px; }

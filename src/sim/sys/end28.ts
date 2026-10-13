@@ -138,16 +138,18 @@ export function album28(s: GameState, max = 9): SceneLog[] {
 export interface Story28 { company: string; y0: number; y1: number; rumo: Rumo28 | null; chapters: Chapter28[]; album: SceneLog[]; chains: Chain28[]; epitaph: L }
 
 /** Epitáfio final em uma frase. */
-export function epitaph28(s: GameState): L {
+export function epitaph28(s: GameState, yEnd?: number): L {
   const st = s.player.stats;
   const r = rumo28(s);
-  const y1 = s.ended?.year ?? s.year;
+  const y1 = yEnd ?? s.ended?.year ?? s.year;
   const base = fmtL(l('{c} ({a}–{b}): {r} lançamentos, {n} nº 1, {g} discos de ouro.', '{c} ({a}–{b}): {r} releases, {n} #1s, {g} gold records.'),
     { c: s.config.companyName, a: s.config.startYear, b: y1, r: st.releases, n: st.number1s, g: st.gold });
   const end = r ? fmtL(l(' Será lembrado como "{f}".', ' It will be remembered as "{f}".'), { f: r.name }) : l('', '');
   return l(base.pt + end.pt, base.en + end.en);
 }
 
-export function storyboard28(s: GameState): Story28 {
-  return { company: s.config.companyName, y0: s.config.startYear, y1: s.ended?.year ?? s.year, rumo: rumo28(s), chapters: chapters28(s), album: album28(s), chains: echoChains28(s), epitaph: epitaph28(s) };
+/** `yEnd`: ano em que a partida fechou (fim do prazo), quando a cena abre já no mês seguinte. */
+export function storyboard28(s: GameState, yEnd?: number): Story28 {
+  const y1 = yEnd ?? s.ended?.year ?? s.year;
+  return { company: s.config.companyName, y0: s.config.startYear, y1, rumo: rumo28(s), chapters: chapters28(s), album: album28(s), chains: echoChains28(s), epitaph: epitaph28(s, y1) };
 }

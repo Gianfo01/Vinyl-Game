@@ -111,7 +111,7 @@ function storyView(st: Story28, s: GameState): HTMLElement {
     h('h4', null, T(l('As 3 maiores cadeias de eco', 'The 3 biggest echo chains'))),
     st.chains.length ? h('ol', { class: 'sb28-chains' }, st.chains.map((c) => h('li', null,
       h('b', null, T(c.title)), c.choice.pt ? h('span', null, ' — ', T(c.choice)) : null,
-      h('small', { class: 'muted' }, ' · ', t(l('{n} ecos ({g} bons, {b} ruins)', '{n} echoes ({g} good, {b} bad)'), { n: c.n, g: c.good, b: c.bad })),
+      h('small', { class: 'muted' }, ' · ', c.n === 1 ? t(l('1 eco ({g} bom, {b} ruim)', '1 echo ({g} good, {b} bad)'), { g: c.good, b: c.bad }) : t(l('{n} ecos ({g} bons, {b} ruins)', '{n} echoes ({g} good, {b} bad)'), { n: c.n, g: c.good, b: c.bad })),
       c.last ? h('div', { class: 'small' }, '↳ ', T(c.last)) : null)))
       : h('p', { class: 'small muted' }, T(l('Nenhuma decisão ecoou ainda.', 'No decision has echoed yet.'))),
     h('h4', null, T(l('Capítulos', 'Chapters'))),
@@ -128,7 +128,7 @@ registerCutscene('run17Result', (s, cs, close) => {
   const d = cs.data as { score: number; years: number; year: number };
   return h('div', { class: 'sb28-end' },
     h('p', { class: 'h27-kicker gold' }, t(l('FIM DO PRAZO · {m} DE {y}', 'END OF THE RUN · {m} {y}'), { m: monthName(11).toUpperCase(), y: d.year ?? s.year })),
-    storyView(storyboard28(s), s),
+    storyView(storyboard28(s, d.year), s),
     h('div', { class: 'row' },
       h('button', { class: 'btn primary', onclick: () => { s.flags.sandbox = 1; close(); } }, T(l('Continuar em sandbox', 'Keep playing in sandbox'))),
       h('button', { class: 'btn ghost', onclick: () => { close(); window.dispatchEvent(new Event('vtn-menu28')); } }, T(l('Encerrar e voltar ao menu', 'Finish and return to menu')))));

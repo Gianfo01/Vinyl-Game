@@ -65,6 +65,8 @@ describe('r28 F4 — cenário "Primeiro hit"', () => {
     expect(soul.length).toBe(1);
     expect(soul[0].fame).toBeGreaterThanOrEqual(20);
     expect(soul[0].potential).toBeGreaterThanOrEqual(80);
+    expect(FIRST_HIT28.metric(g, {})).toBe(0); // meta: singles no top 40 (nenhum ainda)
+    expect(FIRST_HIT28.tiers).toEqual([1, 3, 6]);
   });
 });
 
