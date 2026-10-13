@@ -1,0 +1,38 @@
+{
+  "name": "Rita Lee",
+  "year": 1975,
+  "ref": "Tutti Frutti / 'Fruto Proibido': cabelo ruivo com franja, óculos redondos de lente colorida, figurino brilhante, bota prateada.",
+  "body": {
+    "sex": "f",
+    "build": "female",
+    "skin": "claro"
+  },
+  "hair": {
+    "style": "long_fringe",
+    "color": "#c8302a",
+    "size": 1.0
+  },
+  "face": {
+    "mouth": "smile",
+    "glasses": "round_tint",
+    "glasses_color": "#d0a040",
+    "lens_color": "#c8486a",
+    "lips": "#b04a50"
+  },
+  "top": {
+    "style": "blouse",
+    "color": "#3a3a5a",
+    "pattern": "polka",
+    "pattern_color": "#e8e4f0",
+    "shiny": true
+  },
+  "bottom": {
+    "style": "flare",
+    "color": "#2a2a40"
+  },
+  "shoes": {
+    "color": "#c8ccd8",
+    "style": "boot"
+  },
+  "pose": "hip"
+}

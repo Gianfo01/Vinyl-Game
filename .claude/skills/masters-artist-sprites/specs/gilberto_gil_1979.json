@@ -1,0 +1,47 @@
+{
+  "name": "Gilberto Gil",
+  "year": 1979,
+  "ref": "Época de 'Realce' (1979), quando usava dreads; bigode e barba curta, bata estampada, violão. (Em 1985 já usava black power quadrado com topete; usar hair.style 'flattop' para essa fase.)",
+  "body": {
+    "sex": "m",
+    "build": "slim",
+    "skin": "escuro"
+  },
+  "hair": {
+    "style": "dreads",
+    "color": "#1e1814",
+    "size": 0.9
+  },
+  "face": {
+    "iris": "#1e1412",
+    "mouth": "smile",
+    "facial": "beard",
+    "facial_color": "#1a1412",
+    "nose": "wide",
+    "smile_lines": true
+  },
+  "top": {
+    "style": "tunic",
+    "color": "#e8b030",
+    "pattern": "african",
+    "pattern_color": [
+      "#2f7a4c",
+      "#c8282c",
+      "#1e1a20"
+    ],
+    "trim": "#f4e8c8"
+  },
+  "bottom": {
+    "style": "pants",
+    "color": "#f0e8d8"
+  },
+  "shoes": {
+    "color": "#5e3c26"
+  },
+  "pose": "guitar",
+  "prop": {
+    "type": "acoustic",
+    "top": "#d8a058",
+    "binding": "#f0e6d0"
+  }
+}

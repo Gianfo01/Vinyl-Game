@@ -1,0 +1,45 @@
+{
+  "name": "Louis Armstrong",
+  "year": 1950,
+  "ref": "Smoking, gravata-borboleta, lenço branco na mão, trompete; sorriso enorme e bochechas cheias ('Satchmo').",
+  "body": {
+    "sex": "m",
+    "build": "stocky",
+    "skin": "escuro",
+    "head_rx": 10.8
+  },
+  "hair": {
+    "style": "cropped",
+    "color": "#2e2a2c",
+    "grey_sides": "#9a948e"
+  },
+  "face": {
+    "iris": "#1e1412",
+    "mouth": "grin",
+    "wide_eyes": true,
+    "cheeks": true,
+    "nose": "wide",
+    "smile_lines": true,
+    "jaw": "round",
+    "facial": "mustache"
+  },
+  "top": {
+    "style": "tux",
+    "color": "#25232b",
+    "lapel": "#3a3640",
+    "tie": "bow",
+    "pocket_square": true,
+    "shirt": "#f4f0e8"
+  },
+  "bottom": {
+    "style": "pants",
+    "color": "#25232b"
+  },
+  "shoes": {
+    "color": "#141216"
+  },
+  "pose": "trumpet",
+  "prop": {
+    "type": "trumpet"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Caetano Veloso",
+  "year": 1972,
+  "ref": "Volta do exílio ('Transa', 1972): cabelo longo cacheado, barba rala, camisa aberta; num show de 1972 usou batom vermelho.",
+  "body": {
+    "sex": "m",
+    "build": "slim",
+    "skin": "medio"
+  },
+  "hair": {
+    "style": "curls_long",
+    "color": "#1e1612",
+    "size": 1.1
+  },
+  "face": {
+    "mouth": "lips",
+    "lips": "#b8343a",
+    "facial": "stubble",
+    "jaw": "narrow",
+    "nose": "long"
+  },
+  "top": {
+    "style": "open_shirt",
+    "color": "#e8dcc4",
+    "pattern": "floral",
+    "pattern_color": [
+      "#c8343a",
+      "#2f7a4c"
+    ]
+  },
+  "bottom": {
+    "style": "jeans",
+    "flare": true
+  },
+  "shoes": {
+    "color": "#5e3c26"
+  },
+  "pose": "guitar",
+  "prop": {
+    "type": "acoustic",
+    "top": "#d8a058"
+  }
+}

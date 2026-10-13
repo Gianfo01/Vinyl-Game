@@ -1,0 +1,48 @@
+{
+  "name": "Johnny Cash",
+  "year": 1968,
+  "ref": "'Man in Black' (Folsom, 1968): tudo preto, cabelo preto penteado para trás, rosto marcado, olhos fundos, queixo forte.",
+  "body": {
+    "sex": "m",
+    "build": "regular",
+    "skin": "claro"
+  },
+  "hair": {
+    "style": "pompadour",
+    "color": "#1a171e",
+    "size": 0.7,
+    "sideburns": 8
+  },
+  "face": {
+    "iris": "#2a2420",
+    "mouth": "neutral",
+    "eyes": "deep",
+    "brow_style": "heavy",
+    "jaw": "square",
+    "chin_cleft": true,
+    "scar": true
+  },
+  "top": {
+    "style": "coat_long",
+    "color": "#2c2a32",
+    "shirt": "#1c1a20"
+  },
+  "bottom": {
+    "style": "pants",
+    "color": "#232128"
+  },
+  "shoes": {
+    "color": "#141216",
+    "style": "boot"
+  },
+  "pose": "guitar",
+  "prop": {
+    "type": "acoustic",
+    "top": "#1e1c24",
+    "side": "#141218",
+    "guard": "#100e14",
+    "binding": "#e8e2d4",
+    "neck": "#2a1a14",
+    "strap": "#141216"
+  }
+}

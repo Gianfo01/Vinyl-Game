@@ -1,0 +1,44 @@
+{
+  "name": "Elvis Presley",
+  "year": 1956,
+  "seed": 7,
+  "ref": "Paletó de lamê dourado (Nudie Cohn, 1957), que ele usava com calça preta no lugar da dourada; topete preto, costeletas, olhos caídos e lábio torto.",
+  "body": {
+    "sex": "m",
+    "build": "regular",
+    "skin": "claro"
+  },
+  "hair": {
+    "style": "pompadour",
+    "color": "#1c1822",
+    "size": 1.1,
+    "sideburns": 10
+  },
+  "face": {
+    "iris": "#5a7090",
+    "mouth": "snarl",
+    "eyes": "hooded",
+    "jaw": "round"
+  },
+  "top": {
+    "style": "jacket_open",
+    "color": "#d8a838",
+    "shirt": "#1e1a22",
+    "shiny": true,
+    "pattern": "sparkle",
+    "pattern_n": 30
+  },
+  "bottom": {
+    "style": "pants",
+    "color": "#26222a"
+  },
+  "shoes": {
+    "color": "#d8a838"
+  },
+  "pose": "guitar",
+  "prop": {
+    "type": "acoustic",
+    "top": "#e0aa5c",
+    "binding": "#f0e6d0"
+  }
+}
