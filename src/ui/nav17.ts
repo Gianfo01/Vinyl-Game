@@ -76,7 +76,7 @@ export const ICON17: Record<string, string> = {
   cockpit: 'gamepad', plan: 'clock', goals: 'target', diary: 'book',
   campus18: 'skyline', hq: 'pin', company: 'contract', team: 'people', finance: 'money', business: 'bank',
   artists: 'drums', people: 'handshake', market: 'eye', knownacts27: 'rolodex', directory: 'fans', managers14: 'briefcase', producers15: 'headphones',
-  project: 'cassette', creation: 'pen', songmkt27: 'quill', studio: 'mic', releases: 'cd', catalog: 'gold-disc', shows: 'tour-bus', cal17: 'calendar',
+  project: 'cassette', creation: 'pen', songmkt27: 'songsheet', studio: 'mic', releases: 'cd', catalog: 'gold-disc', shows: 'tour-bus', cal17: 'calendar',
   news17: 'megaphone', media: 'camera', critics: 'scroll',
   world: 'map', world17: 'chess', after18: 'door', charts: 'chart-up', labels: 'flag', industry: 'coin', movements: 'fire', lendas: 'hologram',
   festivals: 'ticket', awards: 'medal', rockhall: 'vault', crime: 'mask',

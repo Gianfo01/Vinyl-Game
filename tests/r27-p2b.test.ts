@@ -41,11 +41,16 @@ beforeAll(() => {
 
 describe('r27 P2B — modo rápido intacto', () => {
   it('com os módulos P2B carregados, o mundo do playbot é o mesmo de antes deles', () => {
-    // valores medidos com src/sim/tours.ts e src/sim/sys/index.ts SEM as mudanças do P2B (mesma semente, 8 meses de playbot)
-    expect(AFTER.player.cash).toBe(1301031);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2195685417);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2442526734);
+    // valores medidos com src/sim/tours.ts e src/sim/sys/index.ts SEM as mudanças do P2B (mesma semente, 8 meses de playbot).
+    // Re-medidos na r27 (docs/suite27-final.md) depois de dois merges que mudam o mundo de propósito. Valores antigos
+    // (1301031 / 1382068899 / 2195685417 / 2442526734) reproduzem em b748d64; AUD2 (c4c5bfd: estresse, críticos,
+    // choques macro) mudou só acts (→ 3789538846); AUD1 (166a36e: playbot compra negócios e contrata no 1º ano) mudou
+    // caixa, tours, acts e rng.
+    // A garantia "o P2B não mexe no modo rápido" segue provada pelo teste do gancho logo abaixo (com × sem STOP27.pre).
+    expect(AFTER.player.cash).toBe(1089445);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(529417993);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1761475379);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3113611029);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
