@@ -73,8 +73,11 @@ describe('r27 P2B — modo rápido intacto', () => {
     // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
   // R29 conectar tudo + relíquias juntos: re-medido.
     expect(AFTER.player.cash).toBe(334007);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3927711826);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(827562554);
+    // R29 família (sys/family29, de propósito — docs/familia29.md): vida familiar dos artistas NPC (Rng próprio; casal célebre
+    // mexe em fama/público dos atos, o que muda a venda nas paradas da turnê): acts e tours mudam (caixa e rng iguais).
+    // Antes: tours 3927711826 / acts 827562554.
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1252193190);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1285188736);
     expect(hashString(JSON.stringify(AFTER.rng))).toBe(2264116950);
   });
   it('nada de estado P2B criado sem o jogador', () => {

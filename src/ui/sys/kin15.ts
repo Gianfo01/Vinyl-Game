@@ -10,6 +10,7 @@ import { ic } from '../vis';
 import { LIFE_EXTRAS13 } from './dossier13';
 import { personLife } from '../../sim/sys/dossier13';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
+import { famOf29 } from '../../sim/sys/family29';
 
 const ROWS: { k: string; rels: Rel15[]; label: ReturnType<typeof l> }[] = [
   { k: 'up', rels: ['grandparent', 'parent', 'uncle'], label: l('Avós, pais e tios', 'Grandparents, parents and uncles/aunts') },
@@ -31,7 +32,9 @@ export function familyBlock15(s: GameState, p: Person): HTMLElement | null {
   const partner = lf.partner && !named.has(lf.partner) ? lf.partner : undefined;
   const exes = lf.exes.filter((n) => !named.has(n) && n !== lf.partner).slice(0, 4);
   const kids = lf.kids.filter((k) => !named.has(k.name));
-  const status = lf.together ? l('Em relacionamento', 'In a relationship') : lf.separated ? l('Separado(a)', 'Separated') : l('Solteiro(a)', 'Single');
+  // R29 (família): cônjuge no grafo e a vida dos artistas NPC (family29) também contam
+  const f29 = famOf29(s, p.id).status;
+  const status = ks.some((k) => k.rel === 'spouse') || f29 === 2 ? l('Casado(a)', 'Married') : lf.together || f29 === 1 ? l('Em relacionamento', 'In a relationship') : lf.separated || f29 === 3 ? l('Separado(a)', 'Separated') : l('Solteiro(a)', 'Single');
   const total = ks.length + (partner ? 1 : 0) + exes.length + kids.length;
   const node = (k: Kin15Item) => {
     const a = actOf15(s, k.id), feud = feudOf15(s, p.id, k.id) !== undefined;
