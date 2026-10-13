@@ -13,7 +13,9 @@ TOPS = [('suit', {'tie': 'tie'}), ('tux', {'tie': 'bow', 'lapel': '#3a3640'}), (
         ('leather_jacket', {'color': '#2a2428', 'shiny': True}), ('tracksuit', {'sleeve_stripe': '#f4f2ee'}),
         ('tunic', {'pattern': 'african'}), ('vest', {'shirt': '#ece4d4'}), ('military', {}), ('open_military', {'color': '#f0c02c'}),
         ('fringe_jacket', {'color': '#ece2cc', 'sleeve_fringe': True}), ('jumpsuit', {'color': '#efebe2', 'pattern': 'eagle'}),
-        ('blouse', {'pattern': 'polka', 'pattern_color': '#f4f0e6'}), ('dress', {}), ('gown', {}), ('crop', {'sleeves': 'bare'})]
+        ('blouse', {'pattern': 'polka', 'pattern_color': '#f4f0e6'}), ('dress', {}), ('gown', {}), ('crop', {'sleeves': 'bare'}),
+        ('sari', {}), ('qipao', {'pattern': 'floral'}), ('hanbok', {}), ('kaftan', {}), ('robe', {}), ('kimono', {}),
+        ('poncho', {}), ('shawl', {}), ('bare_chest', {})]
 
 
 def main():
@@ -29,10 +31,10 @@ def main():
     sheet(items, os.path.join(a.out, 'cabelos.png'), a.scale)
     items = []
     for i, (st, extra) in enumerate(TOPS):
-        f = st in ('blouse', 'dress', 'gown', 'crop')
+        f = st in ('blouse', 'dress', 'gown', 'crop', 'sari', 'qipao', 'hanbok', 'shawl')
         t = {'style': st, 'color': ['#2c4a7e', '#a33434', '#2f7a4c', '#6a4590', '#d8692a'][i % 5]}
         t.update(extra)
-        b = {'style': 'skirt_long', 'color': t['color']} if st in ('dress', 'gown') else ({'style': 'skirt', 'color': '#2a2a34'} if f else {'style': ['pants', 'jeans', 'flare'][i % 3]})
+        b = {'style': 'skirt_full', 'color': '#3a6ab0'} if st == 'hanbok' else {'style': 'skirt_long', 'color': t['color']} if st in ('dress', 'gown', 'sari', 'qipao') else ({'style': 'skirt', 'color': '#2a2a34'} if f else {'style': ['pants', 'jeans', 'flare'][i % 3]})
         s = {'name': st, 'body': {'sex': 'f' if f else 'm', 'skin': ['claro', 'medio', 'moreno'][i % 3]},
              'hair': {'style': 'bob' if f else 'short', 'color': '#3d2616'}, 'face': {'mouth': 'lips' if f else 'neutral', 'lashes': f},
              'top': t, 'bottom': b, 'pose': 'stand'}

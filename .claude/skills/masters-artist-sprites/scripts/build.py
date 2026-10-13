@@ -3,6 +3,7 @@ import numpy as np
 from px import Canvas
 import kit
 import kit_ext
+import kit_more
 from kit import col, hand
 
 # braços: caminho ombro→cotovelo→ponta, mão, camada
@@ -21,6 +22,10 @@ FRONT = {
     'squeeze':     dict(path=[(34, 52), (31, 64), (37, 70)], hand=(37.5, 71)),
     'stick':       dict(path=[(34, 52), (31, 68), (38, 73)], hand=(39, 73)),
     'keys':        dict(path=[(34, 52), (32, 68), (40, 75)], hand=(41, 75)),
+    'flute':       dict(path=[(34, 52), (30, 46), (37, 40)], hand=(37.5, 39.5)),
+    'pan':         dict(path=[(34, 52), (32, 62), (37, 46)], hand=(37.5, 45.5)),
+    'slide':       dict(path=[(34, 52), (26, 60), (20, 53)], hand=(19.5, 53.5)),
+    'cello_neck':  dict(path=[(34, 52), (28, 64), (31, 60)], hand=(31, 60)),
 }
 BACK = {
     'hang':         dict(path=[(62, 51), (64, 67), (62, 80)], hand=(62, 83), behind=True),
@@ -35,6 +40,10 @@ BACK = {
     'squeeze':      dict(path=[(62, 51), (64, 64), (60, 70)], hand=(59.5, 71), behind=False),
     'stick':        dict(path=[(62, 51), (66, 66), (60, 74)], hand=(59, 75), behind=True),
     'keys':         dict(path=[(62, 51), (64, 66), (57, 72)], hand=(56, 72), behind=False),
+    'flute':        dict(path=[(62, 51), (66, 52), (62, 44)], hand=(61.5, 43.5), behind=True),
+    'slide_back':   dict(path=[(62, 51), (58, 60), (47, 42)], hand=(46, 42), behind=False),
+    'bow_cello':    dict(path=[(62, 51), (62, 68), (48, 86)], hand=(48, 86), behind=False),
+    'pluck':        dict(path=[(62, 51), (60, 70), (38, 92)], hand=(37, 92), behind=False),
 }
 POSES = {  # pose → (braço da frente, braço de trás)
     'stand': ('hang', 'hang'),
@@ -54,6 +63,15 @@ POSES = {  # pose → (braço da frente, braço de trás)
     'accordion': ('squeeze', 'squeeze'),
     'drums': ('stick', 'stick'),
     'keytar': ('keys', 'keys'),
+    'clarinet': ('sax', 'sax'),
+    'flute': ('flute', 'flute'),
+    'pan_flute': ('pan', 'hip'),
+    'trombone': ('slide', 'slide_back'),
+    'cello': ('cello_neck', 'bow_cello'),
+    'upright_bass': ('cello_neck', 'pluck'),
+    'pandeiro': ('raise_hand', 'hip'),
+    'maracas': ('raise_hand', 'out'),
+    'bandoneon': ('squeeze', 'squeeze'),
 }
 
 
@@ -142,15 +160,19 @@ def build(spec):
 
     frame = None
     ptype = prop.get('type')
+    lefty_pose = fa == 'fret_left'
+    held_late = ptype in ('pandeiro', 'maracas')
     if ptype == 'acoustic':
-        frame = kit.acoustic(c, prop)
+        frame = kit.acoustic(c, prop, *((48, 80, 212) if lefty_pose else (50, 80, -35)), lefty=lefty_pose)
+    elif ptype and not held_late and kit_more.prop(c, prop, lefty=lefty_pose) is not False:
+        frame = kit_more.LAST if hasattr(kit_more, 'LAST') else None
     elif ptype == 'electric':
         lefty = fa == 'fret_left'
         frame = kit.electric(c, prop, *((48, 80, 212) if lefty else (50, 80, -35)), lefty=lefty)
     elif ptype == 'trumpet':
         kit.trumpet(c)
     elif ptype == 'bass':
-        frame = kit_ext.bass(c, prop, kit.Frame, col)
+        frame = kit_ext.bass(c, prop, kit.Frame, col, lefty=lefty_pose)
     elif ptype == 'sax':
         kit_ext.sax(c, prop, col)
     elif ptype == 'violin':
@@ -160,7 +182,7 @@ def build(spec):
     elif ptype == 'keytar':
         kit_ext.keytar(c, prop, col)
     if B['hand'] == 'fret' and frame:
-        hand(c, skin, *frame.pt(31, -3.2), 3.0)
+        hand(c, skin, *frame.pt(getattr(frame, 'fret_u', 31), -3.2), 3.0)
     if not B['behind']:
         back_arm()
         hand(c, skin, *B['hand'], 3.2)
@@ -177,7 +199,9 @@ def build(spec):
             kit.hand_mic(c, 35, 47)
         if fa == 'raise_stand':
             kit.bottomless_stand(c)
-        hpos = frame.pt(31, 2.5) if F['hand'] == 'fret_left' and frame else F['hand']
+        hpos = frame.pt(getattr(frame, 'fret_u', 31), 2.5) if F['hand'] == 'fret_left' and frame else F['hand']
+        if F['hand'] == 'fret_left' and not frame:
+            hpos = (21, 61)
         if F.get('after_hat') and spec.get('glove'):
             g = c.ell(hpos[0], hpos[1], 3.6, 3.8)
             c.shape(g, spec['glove'], r=2, spec=True)
@@ -191,14 +215,23 @@ def build(spec):
 
     if not F.get('after_hat'):
         front_arm()
+    if held_late:
+        kit_more.prop(c, prop)
     kit.head(c, skin, female=female, rx=b.get('head_rx', 10), jaw=spec.get('face', {}).get('jaw'), ears=spec.get('face', {}).get('ears'))
     f = dict(spec.get('face', {}))
     kit.face(c, skin, f, hair_col=hair_col)
-    kit.facial_hair(c, f.get('facial'), col(f.get('facial_color'), hair_col))
+    fh = f.get('facial')
+    for k in (fh if isinstance(fh, list) else [fh]):
+        kit.facial_hair(c, k, col(f.get('facial_color'), hair_col))
+    if f.get('facial_color2') and fh:
+        kit_more.split_hair(c, col(f.get('facial_color'), hair_col), f['facial_color2'], 'right')
+    kit_more.face_paint(c, f.get('paint'), skin, colr=f.get('paint_color'))
     kit.glasses(c, f.get('glasses'), f.get('glasses_color', '#d0a040'), lens_tint=f.get('lens_color', '#c8486a'))
     if spec.get('earrings'):
         kit.earrings(c, spec['earrings'], skin)
     kit.hair_front(c, hair, hat.get('style'))
+    if hair.get('color2'):
+        kit_more.split_hair(c, hair_col, hair['color2'], hair.get('split', 'right'))
     kit.hat(c, hat, rng)
     if spec.get('headphones'):
         kit_ext.headphones(c, spec['headphones'])

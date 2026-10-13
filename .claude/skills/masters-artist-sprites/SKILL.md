@@ -96,6 +96,20 @@ Peça nova vai para `kit_ext.py` (reutilizável), nunca para um artista só. Dep
 }
 ```
 
+**Peças da rodada de revisão (`kit_more.py`):**
+- chapéus: sombrero (charro, `trim` = bordado), panama, bowler (chapéu-coco), flat_cap, bucket, kangol, kufi, fila
+  (peci/songkok), turban (sikh/liso), headwrap (turbante alto), military_cap, captain_cap, sailor_cap, headdress
+  (cocar, `feathers: [#hex]`), fur_hat, mitre, headscarf (lenço); `hat.emblem: "#hex"` põe estrela/emblema.
+- instrumentos (`prop.type` + pose): banjo / ukulele / cavaquinho / bouzouki / oud / tres (pose `guitar` ou
+  `guitar_lefty`), cello (pose `cello`), upright_bass (pose `upright_bass`), trombone, clarinet, flute, pan_flute,
+  pandeiro, maracas, bandoneon (pose com o mesmo nome). Elétrica: `shape: sg | gretsch | lp | strat`,
+  `stripes: ["#hex", "#hex"]`. Violão e baixo aceitam `guitar_lefty`.
+- roupas: sari (`drape`, `trim`), qipao, hanbok (com bottom `skirt_full`), kaftan, robe, kimono (`sash`), poncho,
+  shawl, bare_chest; bottom `kilt` (`plaid`, `socks`). `jumpsuit` aceita `belt: "none"`; `dress` aceita `pattern`.
+- rosto: `face.paint`: skull | kiss_star | kiss_cat | white | mask | eyeliner (`paint_color` para a máscara);
+  `face.facial` aceita lista (`["mustache", "goatee"]`) e `facial_color2` (bigode bicolor);
+  `glasses: thick` (aro grosso); `hair.color2` + `hair.split: right|left` (cabelo bicolor).
+
 **Cabelos (23 do jogo + extras):** bald, short, fringe, buzz, pompadour, bowl, afro, long, wavy_long, ponytail, bun,
 mohawk, curly, bob, spiky, dreads, mullet, bouffant, slick, long_fringe, curls_long, braids, pixie, flattop, cropped.
 

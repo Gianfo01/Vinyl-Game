@@ -6,6 +6,7 @@ combinação encaixa. Ao criar uma peça nova, mantenha a mesma grade e a mesma 
 import math
 import numpy as np
 import kit_ext
+import kit_more
 
 BRASS = '#c09048'
 WOOD = '#6e2e20'
@@ -223,6 +224,8 @@ def glasses(c, kind, frame='#d0a040', cx=47, cy=29, lens_tint='#c8486a'):
                     c.px(x, y, (lens, 1 if y == ey else 2))
             c.px(x0 + 1, ey, '#f0d0a0' if kind == 'aviator' else '#5a6070')
         c.px(cx + 2, ey, (fr, 3) if kind == 'aviator' else fr)
+    elif kind == 'thick':
+        kit_more.thick_glasses(c, frame if frame and frame != '#d0a040' else INK, cx, cy)
     elif kind == 'round_tint':
         for ccx in (cx - 8.5, cx - 1.5):
             c.shape(c.ell(ccx, ey + 0.5, 2.8, 2.6), lens_tint, r=1, lvl=2)
@@ -263,7 +266,9 @@ def hair_front(c, h, hat, cx=47):
     st, colr, k = h.get('style'), col(h.get('color'), INK), h.get('size', 1.0)
     if not st or st == 'bald':
         return
-    if hat in ('fedora', 'cowboy', 'turban_fruit', 'top_hat', 'beret', 'beanie', 'cap'):
+    if hat in ('turban', 'headwrap', 'headscarf', 'fur_hat', 'mitre', 'turban_fruit') and st not in ('long', 'curls_long', 'wavy_long', 'dreads', 'braids', 'long_fringe'):
+        return
+    if hat in ('fedora', 'cowboy', 'turban_fruit', 'top_hat', 'beret', 'beanie', 'cap') or hat in kit_more.HATS:
         if st not in kit_ext.LONGISH:
             c.shape(c.poly([(cx + 7, 21), (cx + 11, 22), (cx + 11, 31), (cx + 9, 31), (cx + 8, 25)]), colr, r=2)
             c.shape(c.poly([(cx - 10, 22), (cx - 6, 21), (cx - 8, 26), (cx - 10, 27)]), colr, r=1)
@@ -310,6 +315,10 @@ def hat(c, h, rng, cx=47):
     st = h.get('style')
     if not st:
         return
+    if kit_more.hat(c, h, rng, cx):
+        return
+    if h.get('emblem') and st == 'cap':
+        c.shape(c.ell(cx - 3, 14.5, 2, 2), h['emblem'], r=1, spec=True)
     colr = col(h.get('color'), '#6e6458')
     if st in ('fedora', 'top_hat'):
         brim = c.ell(cx + 1, 19.5, 17, 3.6, ang=h.get('tilt', -7))
@@ -368,6 +377,9 @@ def hat(c, h, rng, cx=47):
 # =============================================================== roupa
 def legs(c, b, shoes, build='regular'):
     st = b.get('style', 'pants')
+    if st in kit_more.BOTTOMS:
+        kit_more.legs(c, b, shoes, build, shoe)
+        return
     pc = col(b.get('color'), '#2a2830')
     sc = col(shoes.get('color'), '#2a2224')
     sst = shoes.get('style', 'shoe')
@@ -436,6 +448,9 @@ def top(c, t, build, skin, rng):
     if st in kit_ext.TOPS:
         kit_ext.top(c, t, build, skin, rng, torso_shape, _pattern)
         return
+    if st in kit_more.TOPS:
+        kit_more.top(c, t, build, skin, rng, torso_shape, _pattern)
+        return
     tc = col(t.get('color'), '#33405e')
     shirt = col(t.get('shirt'), SHIRT)
     spec = t.get('shiny', False)
@@ -453,7 +468,9 @@ def top(c, t, build, skin, rng):
         c.shape(c.poly([(39, 51), (57, 51), (57, 54), (48, 57), (39, 54)]), skin, r=2)
         return
     if st == 'dress':
-        c.shape(c.poly([(48 - sh, 53), (48 - sh + 5, 48), (48 + sh - 5, 48), (48 + sh, 53), (48 + sh - 2, 70), (48 + wa + 2, 88), (48 - wa - 2, 88), (48 - sh + 2, 70)]), tc, r=6, group=G_TORSO, spec=spec)
+        dm = c.poly([(48 - sh, 53), (48 - sh + 5, 48), (48 + sh - 5, 48), (48 + sh, 53), (48 + sh - 2, 70), (48 + wa + 2, 88), (48 - wa - 2, 88), (48 - sh + 2, 70)])
+        c.shape(dm, tc, r=6, group=G_TORSO, spec=spec)
+        _pattern(c, t, dm, rng)
         c.shape(c.poly([(42, 48), (54, 48), (48, 55)]), skin, r=2)
         return
     if st == 'fringe_jacket':
@@ -504,6 +521,8 @@ def top(c, t, build, skin, rng):
     if st == 'jumpsuit':
         c.shape(c.poly([(43.5, 46), (53, 46), (48.5, 64)]), skin, r=2, bias=-0.1)
         _pattern(c, t, torso, rng)
+        if t.get('belt') == 'none':
+            return
         belt = col(t.get('belt'), '#d0a040')
         c.shape(c.poly([(33, 80), (63, 79), (63, 87), (34, 88)]), belt, r=2, spec=True)
         c.shape(c.ell(47, 83.5, 6, 5), belt, r=3, spec=True)
@@ -611,7 +630,7 @@ def vintage_mic(c, x=24, top=37, base_y=135):
     c.shape(c.rect(x - 4.4, top + 3, x + 4.4, top + 5), BRASS, r=1, spec=True)
 
 
-def acoustic(c, p, cx=50, cy=80, ang=-35):
+def acoustic(c, p, cx=50, cy=80, ang=-35, lefty=False):
     f = Frame(cx, cy, ang)
     topc = col(p.get('top'), '#e0aa5c')
     side = col(p.get('side'), '#7a3a22')
@@ -636,8 +655,8 @@ def acoustic(c, p, cx=50, cy=80, ang=-35):
     for v in (-1, 0, 1):
         a = f.pt(-7, v * 1.2); b = f.pt(43, v * 0.9)
         c.line(a[0], a[1], b[0], b[1], (CHROME, 4))
-    a = f.pt(14, -2)
-    c.shape(c.cap([a, (60, 50)], 0.9), col(p.get('strap'), '#5a2a1c'), r=1)
+    a = f.pt(14, 2 if lefty else -2)
+    c.shape(c.cap([a, (38 if lefty else 60, 50)], 0.9), col(p.get('strap'), '#5a2a1c'), r=1)
     return f
 
 
@@ -645,7 +664,9 @@ def electric(c, p, cx=48, cy=80, ang=-32, lefty=False):
     f = Frame(cx, cy, ang)
     s = -1 if lefty else 1
     bc = col(p.get('body'), '#c83030')
-    if p.get('shape') == 'lp':
+    if kit_more.electric_extra(c, f, p, s):
+        pass
+    elif p.get('shape') == 'lp':
         body = c.poly(f.ell(-1.5, 0, 10.5, 9.8)) | c.poly(f.ell(6, -4.5 * s, 4.6, 4.4))
         c.shape(body, bc, r=4, spec=True)
         c.shape(c.poly(f.poly([(1, 3 * s), (8, 2 * s), (7, 6 * s), (2, 7 * s)])), col(p.get('guard'), '#1a1418'), r=1)
@@ -662,7 +683,8 @@ def electric(c, p, cx=48, cy=80, ang=-32, lefty=False):
         for u in (-2.5, 1, 4.5):
             c.shape(c.poly(f.poly([(u - 0.8, -3.2), (u + 0.8, -3.2), (u + 0.8, 3.2), (u - 0.8, 3.2)])), col(p.get('pickups'), '#f4f0e6'), r=1)
     c.shape(c.poly(f.poly([(-7, -3.5), (-5.5, -3.5), (-5.5, 3.5), (-7, 3.5)])), CHROME, r=1, spec=True)
-    if p.get('shape') != 'lp':
+    kit_more.guitar_stripes(c, f, p)
+    if p.get('shape') in (None, 'strat'):
         for u, v in ((-4, 5 * s), (-1.5, 6 * s)):
             x, y = f.pt(u, v)
             c.px(x, y, '#ffffff')

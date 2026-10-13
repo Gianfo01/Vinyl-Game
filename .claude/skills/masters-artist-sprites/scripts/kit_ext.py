@@ -117,9 +117,12 @@ def front(c, st, colr, k, rng, cx=47):
         return True
     if st == 'spiky':
         m = _cap(c, cx)
-        for i, x in enumerate(range(int(cx - 10), int(cx + 11), 4)):
-            m |= c.poly([(x - 2.5, 17), (x + 0.5 - (i % 2), 7 + (i % 2) * 2), (x + 2.5, 16)])
+        tips = (12.5, 10.5, 11.5, 10, 12, 11, 13)
+        for i, x in enumerate(range(int(cx - 9), int(cx + 11), 3)):
+            m |= c.poly([(x - 2, 16), (x + 1 + (i % 2), tips[i % len(tips)]), (x + 2.5, 16)])
         c.shape(m, colr, r=2, spec=True)
+        for i, x in enumerate(range(int(cx - 8), int(cx + 10), 3)):
+            c.px(x + 1, 15, (colr, 1))
         return True
     if st in ('ponytail', 'bun'):
         c.shape(_cap(c, cx) | c.poly([(cx - 10.5, 20), (cx - 3, 15), (cx - 8, 22)]), colr, r=3, spec=True)
@@ -334,9 +337,9 @@ BRASS = '#c09048'
 CHROME = '#a8acb8'
 
 
-def bass(c, p, frame_cls, col):
+def bass(c, p, frame_cls, col, lefty=False):
     """Baixo elétrico (estilo Precision): corpo como a Strat, braço mais longo, 4 cordas."""
-    f = frame_cls(50, 82, -38)
+    f = frame_cls(48, 82, 214) if lefty else frame_cls(50, 82, -38)
     bc = col(p.get('body'), '#2a2a34')
     body = (c.poly(f.ell(-1, 0, 11, 10)) | c.poly(f.ell(8, -6, 4.5, 3.4)) | c.poly(f.ell(6, 6, 3.8, 3.2))
             | c.poly(f.poly([(-2, -8.5), (8, -8.5), (10, -6), (6, 0)])))
@@ -350,8 +353,9 @@ def bass(c, p, frame_cls, col):
     for v in (-1.2, -0.4, 0.4, 1.2):
         a = f.pt(-6, v * 1.3); b = f.pt(45, v)
         c.line(a[0], a[1], b[0], b[1], (CHROME, 4))
-    a = f.pt(10, -2)
-    c.shape(c.cap([a, (60, 50)], 0.9), col(p.get('strap'), '#3a2418'), r=1)
+    a = f.pt(10, 2 if lefty else -2)
+    c.shape(c.cap([a, (38 if lefty else 60, 50)], 0.9), col(p.get('strap'), '#3a2418'), r=1)
+    f.fret_u = 34
     return f
 
 
