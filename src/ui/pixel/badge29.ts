@@ -67,7 +67,8 @@ export function genreBadgePx29(genre: string): Px {
   const band = relicBand28(born);
   const sh = FAM_SHAPE[fam] ?? 'disc';
   const rim = band <= 1 ? K.dgold : band === 2 ? K.dsilver : band === 3 ? hsl(hue + 180, 80, 55) : band === 4 ? K.white : C('#2ee8d8');
-  const a = hsl(hue, 60, band >= 3 ? 42 : 36), b = hsl(hue, 55, band >= 3 ? 52 : 46);
+  const vl = (h28('gbl29', genre) % 7) - 3; // variação de tom por gênero (irmãos de família/época não ficam iguais)
+  const a = hsl(hue, 60, (band >= 3 ? 42 : 36) + vl), b = hsl(hue, 55, (band >= 3 ? 52 : 46) + vl);
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     if (!shapeIn(sh, x, y, N)) continue;
     const edge = !shapeIn(sh, x - 1, y, N) || !shapeIn(sh, x + 1, y, N) || !shapeIn(sh, x, y - 1, N) || !shapeIn(sh, x, y + 1, N);
