@@ -17,6 +17,7 @@ import { outletArt29, venueArt29 } from '../art29ui';
 import { ic } from '../vis';
 import { SCREENS29 } from '../ps/route29model';
 import { SECTIONS25 } from '../ps/nav25';
+import { refActBlocks29, refBlocks29 } from './wiki29ref';
 import { MECH29, EDGES29W, page29, search29, title29, sub29 } from './wiki29model';
 import { SECS29W, T, hashOf29, idOfHash29, kindOf29, restOf29, secOf29W, type W29 } from './wiki29core';
 import type { Art29W, Block29, Inline29, Page29 } from './wiki29types';
@@ -116,6 +117,19 @@ function block(b: Block29): HTMLElement {
     case 'pages': return pagesEl(b.ids);
     case 'spoiler': return h('span'); // sem partida nada é futuro (a wiki não lê saves)
     case 'diagram': return diagram();
+    case 'ref': {
+      // ficha de referência: gera a partida de referência do ano só agora (≈0,5 s), sem travar o resto da página
+      const box = h('div', { class: 'wk29-ref', 'aria-busy': 'true' }, h('p', { class: 'muted' }, '⏳ ', T(`Gerando a partida de referência de ${b.year}…`, `Generating the ${b.year} reference run…`)));
+      setTimeout(() => {
+        let bs: Block29[] = [];
+        try { bs = b.who === 'person' ? refBlocks29(b.name, b.year) : refActBlocks29(b.name, b.year); } catch (e) { console.error('wiki29 ref', e); }
+        box.replaceChildren(...bs.map(block));
+        box.removeAttribute('aria-busy');
+      }, 40);
+      return box;
+    }
+    case 'events': return h('ol', { class: 'wk29-ev' }, b.items.map((e) => h('li', { class: `wk29-ev-${e.kind}` }, h('b', null, e.m ? `${e.y}/${String(e.m).padStart(2, '0')}` : String(e.y)), ' ', h('span', { class: 'wk29-evk' }, e.kind), ' ', e.text,
+      ...e.links.map((x) => [' ', link(x, '→')]).flat())));
     default: return h('span');
   }
 }

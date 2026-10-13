@@ -20,6 +20,8 @@ import { EDGES29W, FAQ_D, MECH_D, TERMS_D } from './mech29w_d';
 import { H, P, SECS29W, T, hidden29, inl29, kindOf29, ln29, realCat29, restOf29, slug29, staticLabels29, tx, year29, type Sec29W, type W29 } from './wiki29core';
 import { MGRS29, PRODS29, critics29, crumbs29, listLabel29, pageAct29, pageCritic29, pageExec29, pageLabel29, pageMgr29, pagePerson29, pageProd29, pageRealAct29, pageRealPerson29, visible29 } from './wiki29people';
 import { SYS_OF_MECH29 } from './wiki29sys';
+import { CATS29, catItemTitle29, catItems29, ciId29, decadeOf29, decadeTitle29, decades29, pageCat29, pageCatItem29, pageCats29, pageDecade29, splitCi29 } from './wiki29bible';
+import { timeline29 } from './time29';
 import type { Block29, Faq29, MechArt29, Page29, Term29 } from './wiki29types';
 import { countries29, movName29, pageCity29, pageCountry29, pageEra29, pageGear29, pageGenre29, pageMerch29, pageMove29, pageOrg29, pageOutlet29, pageRelic29, pageTech29, pageVehicle29, pageVenue29, relics29 } from './wiki29world';
 
@@ -48,6 +50,8 @@ export const SEC_LISTS29: Record<Exclude<Sec29W, 'home'>, string[]> = {
   mech: ['mech'],
   mundo: ['cities', 'countries', 'genres', 'movements', 'eras', 'techs', 'venues', 'outlets', 'labels', 'orgs'],
   objetos: ['relics', 'gear', 'merch', 'vehicles'],
+  tempo: ['decades'],
+  dados: ['cats'],
   glossario: ['glossario'],
   faq: ['faq'],
 };
@@ -86,6 +90,8 @@ export function listIds29(c: W29, list: string): string[] {
     case 'mech': return MECH29.map((m) => `mech:${m.id}`);
     case 'glossario': return TERMS29.map((x) => `glossario:${x.id}`);
     case 'faq': return FAQS29.map((x) => `faq:${x.id}`);
+    case 'decades': return decades29().map((d) => `time:${d}`);
+    case 'cats': return CATS29.map((x) => `cat:${x.id}`);
     default: return [];
   }
 }
@@ -122,6 +128,9 @@ export function title29(c: W29, id: string): string {
     case 'relic': { const d = relics29().find((x) => x.id === r); return d ? tx(d.name) : r; }
     case 'gear': return GEAR19.find((x) => x.id === r)?.name ?? r;
     case 'merch': { const m = (SKUS as Record<string, { name: ReturnType<typeof l> }>)[r]; return m ? tx(m.name) : r; }
+    case 'time': return decadeTitle29(r);
+    case 'cat': { const x = CATS29.find((y) => y.id === r); return x ? tx(x.title) : r; }
+    case 'ci': { const [a, b] = splitCi29(r); return catItemTitle29(a, b); }
     case 'vehicle': return r === 'van' ? T('Van', 'Van') : r === 'bus' ? T('Ônibus de turnê', 'Tour bus') : r === 'fly' ? T('Avião', 'Plane') : r;
     default: return id;
   }
@@ -157,6 +166,7 @@ const listPage = (c: W29, list: string): Page29 => {
 function secPage(c: W29, sec: Sec29W): Page29 {
   if (sec === 'home') return homePage(c);
   const lists = SEC_LISTS29[sec];
+  if (sec === 'dados') return pageCats29();
   if (lists.length === 1) return listPage(c, lists[0]);
   return { id: `idx:${sec}`, title: tx(SECS29W.find((x) => x.id === sec)!.label), kind: T('seção', 'section'), crumbs: crumbs29('home'), blocks: [
     { k: 'ul', items: lists.map((x) => [ln29(`idx:${x}`, listLabel29(x)), ` — ${listIds29(c, x).length.toLocaleString()}`]) },
@@ -229,10 +239,13 @@ export function page29(c: W29, id: string): Page29 | null {
     case 'gear': return pageGear29(c, r);
     case 'merch': return pageMerch29(c, r);
     case 'vehicle': return pageVehicle29(c, r);
+    case 'time': return pageDecade29(r, tl(c));
+    case 'cat': return pageCat29(r);
+    case 'ci': return pageCatItem29(r, tl(c));
     default: return null;
   }
 }
-const LIST_OK: Record<string, 1> = { persons: 1, acts: 1, labels: 1, prods: 1, mgrs: 1, execs: 1, critics: 1, cities: 1, countries: 1, genres: 1, movements: 1, eras: 1, techs: 1, venues: 1, outlets: 1, orgs: 1, relics: 1, gear: 1, merch: 1, vehicles: 1, mech: 1, glossario: 1, faq: 1 };
+const LIST_OK: Record<string, 1> = { persons: 1, acts: 1, labels: 1, prods: 1, mgrs: 1, execs: 1, critics: 1, cities: 1, countries: 1, genres: 1, movements: 1, eras: 1, techs: 1, venues: 1, outlets: 1, orgs: 1, relics: 1, gear: 1, merch: 1, vehicles: 1, mech: 1, glossario: 1, faq: 1, decades: 1, cats: 1 };
 
 /** O id existe (para links)? Pessoas/atos da partida e dados reais contam; não verifica spoiler (a página cuida). */
 export function exists29(c: W29, id: string): boolean {
@@ -261,12 +274,15 @@ export function searchIndex29(c: W29): Ix29['rows'] {
   const hit = IX.get(o);
   if (hit && hit.k === key) return hit.rows;
   const rows: Ix29['rows'] = [];
-  const lists = ['mech', 'glossario', 'faq', 'persons', 'acts', 'labels', 'prods', 'mgrs', 'execs', 'critics', 'cities', 'countries', 'genres', 'movements', 'eras', 'techs', 'venues', 'outlets', 'orgs', 'relics', 'gear', 'merch', 'vehicles'];
+  const lists = ['mech', 'glossario', 'faq', 'cats', 'decades', 'persons', 'acts', 'labels', 'prods', 'mgrs', 'execs', 'critics', 'cities', 'countries', 'genres', 'movements', 'eras', 'techs', 'venues', 'outlets', 'orgs', 'relics', 'gear', 'merch', 'vehicles'];
   for (const li of lists) for (const id of listIds29(c, li)) {
     const label = title29(c, id);
     const extra = li === 'mech' ? ` ${tx(mech29(restOf29(id))!.summary)}` : li === 'glossario' ? ` ${tx(TERMS29.find((x) => x.id === restOf29(id))!.term)}` : '';
     rows.push({ id, label, f: norm29(`${label} ${extra}`), group: li });
   }
+  // itens dos catálogos de Regras e dados e os marcos da linha do tempo (o resultado abre a década)
+  for (const cat of CATS29) for (const it of catItems29(cat.id)) { const label = title29(c, ciId29(cat.id, it.id)); rows.push({ id: ciId29(cat.id, it.id), label, f: norm29(`${label} ${tx(cat.title)}`), group: 'catitems' }); }
+  for (const e of timeline29()) { const label = `${e.y} · ${tx(e.text)}`; rows.push({ id: `time:${decadeOf29(e.y)}`, label: label.length > 110 ? `${label.slice(0, 107)}…` : label, f: norm29(label), group: 'events' }); }
   IX.set(o, { k: key, rows });
   return rows;
 }

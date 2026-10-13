@@ -90,3 +90,10 @@ path.wk29-e-intended, .wk29-e.wk29-e-intended { stroke: var(--neural, var(--acce
   .wk29-head h2 { font-size: 1.25rem; }
   .wk29-vl { height: 56vh; }
 }
+
+/* r29 bíblia: ficha de referência e linha do tempo */
+.wk29-ref { border: 1px dashed var(--line); border-radius: var(--radius); padding: 4px 12px 8px; margin: 6px 0; }
+.wk29-ev { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 4px; }
+.wk29-ev li { padding: 4px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
+.wk29-ev b { font-family: var(--mono); color: var(--accent); }
+.wk29-evk { font-size: .72em; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }

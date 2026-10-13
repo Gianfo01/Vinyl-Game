@@ -199,3 +199,56 @@ describe('r29 wiki: toda seção monta em várias eras', () => {
     expect(walk(p).links).toContain('ract:the-beatles');
   });
 });
+
+// ---------------------------------------------------------------- bíblia: fichas, história real, linha do tempo, regras e dados
+import { refActBlocks29, refBlocks29 } from '../src/ui/wiki29/wiki29ref';
+import { CATS29, catItems29, decades29 } from '../src/ui/wiki29/wiki29bible';
+import { timeline29 } from '../src/ui/wiki29/time29';
+
+describe('r29 wiki (bíblia): fichas de jogo, história real, linha do tempo, regras e dados', () => {
+  const C: W29 = { s: null, reveal: false };
+  it('ficha de referência mostra habilidades, potencial na faixa do porte e alma', () => {
+    const bs = refBlocks29('John Lennon', 1962);
+    const txt = bs.map((b) => JSON.stringify(b)).join(' ');
+    expect(txt).toMatch(/Potencial|Potential/);
+    const pot = /Potencial \(pico\)","?\[?"?(\d+)/.exec(txt) ?? /"(\d+) ▮/.exec(txt);
+    expect(pot).toBeTruthy();
+    expect(txt).toMatch(/Composição|Songwriting/);
+    expect(txt).toMatch(/Ego/);
+    const a = refActBlocks29('The Beatles', 1962).map((b) => JSON.stringify(b)).join(' ');
+    expect(a).toMatch(/Potencial do ato|Act potential/);
+    // a página da pessoa pede a ficha no ano da estreia
+    const p = page29(C, 'rp:john-lennon')!;
+    expect(p.blocks.some((b) => b.k === 'ref' && b.year === 1962)).toBe(true);
+  });
+  it('história real ampliada: visual por fase, família, obras, covers', () => {
+    const p = walk(page29(C, 'rp:michael-jackson')!);
+    expect(p.text).toMatch(/Família|Family/);
+    const b = walk(page29(C, 'ract:the-beatles')!);
+    expect(b.text).toMatch(/Covers|Twist and Shout/);
+    expect(page29(C, 'rp:john-lennon')!.blocks.some((x) => x.k === 'arts')).toBe(true);
+  });
+  it('linha do tempo: milhares de marcos, todas as décadas montam e os links resolvem', () => {
+    expect(timeline29().length).toBeGreaterThan(1500);
+    for (const d of decades29()) {
+      const p = page29(C, `time:${d}`);
+      expect(p, d).toBeTruthy();
+      for (const to of walk(p!).links) expect(exists29(C, to), `${d} → ${to}`).toBe(true);
+      for (const b of p!.blocks) if (b.k === 'events') for (const e of b.items) for (const to of e.links) expect(exists29(C, to), `${d} → ${to}`).toBe(true);
+    }
+  });
+  it('regras e dados: todo catálogo tem itens e toda página de item monta', () => {
+    expect(CATS29.length).toBeGreaterThan(20);
+    for (const c of CATS29) {
+      const xs = catItems29(c.id);
+      expect(xs.length, c.id).toBeGreaterThan(0);
+      expect(page29(C, `cat:${c.id}`), c.id).toBeTruthy();
+      for (const x of xs.slice(0, 8)) {
+        const p = page29(C, `ci:${c.id}~${x.id}`);
+        expect(p, `${c.id}~${x.id}`).toBeTruthy();
+        for (const to of walk(p!).links) expect(exists29(C, to), `${c.id}~${x.id} → ${to}`).toBe(true);
+      }
+    }
+    expect(search29(C, 'woodstock').length + search29(C, 'cd').length).toBeGreaterThan(0);
+  });
+});

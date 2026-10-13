@@ -81,7 +81,11 @@ export type Block29 =
   /** fatos da história real escondidos (spoiler) — a interface mostra o botão "Revelar história real" */
   | { k: 'spoiler'; n: number }
   /** diagrama de conexões entre sistemas */
-  | { k: 'diagram' };
+  | { k: 'diagram' }
+  /** ficha de jogo de referência (gerada sob demanda: uma partida de referência por ano) */
+  | { k: 'ref'; who: 'person' | 'act'; name: string; year: number }
+  /** linha do tempo (lista de marcos) */
+  | { k: 'events'; items: { y: number; m?: number; text: string; kind: string; links: string[] }[] };
 
 export interface Page29 {
   id: string;
@@ -92,3 +96,11 @@ export interface Page29 {
   crumbs: { id: string; label: string }[];
   blocks: Block29[];
 }
+
+// ---------------------------------------------------------------- catálogos de dados (seção "Regras e dados")
+/** Item de um catálogo: título, linhas chave/valor lidas da tabela de dados do jogo, texto e links. */
+export interface CatItem29 { id: string; title: L | string; sub?: L | string; rows: [L, string | L][]; text?: L[]; see?: string[]; icon?: string }
+/** Catálogo: uma tabela de dados do jogo (traços, formatos, níveis da sede…), lida em tempo de execução. */
+export interface Cat29 { id: string; title: L; icon: string; group: 'pessoas' | 'regras' | 'mundo' | 'objetos' | 'historia'; desc: L; items: () => CatItem29[] }
+/** Marco da linha do tempo (história real e do jogo). */
+export interface Event29 { y: number; m?: number; text: L; kind: string; see?: string[] }

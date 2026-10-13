@@ -45,15 +45,18 @@ export const KINDS29 = {
   person: 'pessoas', act: 'pessoas', label: 'pessoas', rp: 'pessoas', ract: 'pessoas', prod: 'pessoas', mgr: 'pessoas', exec: 'pessoas', critic: 'pessoas',
   city: 'mundo', country: 'mundo', genre: 'mundo', move: 'mundo', era: 'mundo', tech: 'mundo', venue: 'mundo', outlet: 'mundo', org: 'mundo',
   relic: 'objetos', gear: 'objetos', merch: 'objetos', vehicle: 'objetos',
+  time: 'tempo', cat: 'dados', ci: 'dados',
 } as const;
 export type Kind29 = keyof typeof KINDS29;
-export type Sec29W = 'home' | 'pessoas' | 'mech' | 'mundo' | 'objetos' | 'glossario' | 'faq';
+export type Sec29W = 'home' | 'pessoas' | 'mech' | 'mundo' | 'objetos' | 'tempo' | 'dados' | 'glossario' | 'faq';
 export const SECS29W: { id: Sec29W; label: L; icon: string }[] = [
   { id: 'home', label: l('Início', 'Home'), icon: 'book' },
   { id: 'pessoas', label: l('Personagens', 'Characters'), icon: 'people' },
   { id: 'mech', label: l('Mecânicas', 'Mechanics'), icon: 'chess' },
   { id: 'mundo', label: l('Mundo', 'World'), icon: 'globe' },
   { id: 'objetos', label: l('Objetos', 'Objects'), icon: 'diamond' },
+  { id: 'tempo', label: l('Linha do tempo', 'Timeline'), icon: 'datebook' },
+  { id: 'dados', label: l('Regras e dados', 'Rules and data'), icon: 'scroll' },
   { id: 'glossario', label: l('Glossário', 'Glossary'), icon: 'quill' },
   { id: 'faq', label: l('Perguntas frequentes', 'FAQ'), icon: 'bulb' },
 ];

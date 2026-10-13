@@ -23,6 +23,8 @@ import type { Act, GameState, Person } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { H, P, T, hidden29, safeP29, join29, ln29, realCat29, roleName29, slug29, span29, staticLabels29, tx, year29, type RArt29, type RPer29, type W29 } from './wiki29core';
 import type { Block29, Inline29, Page29 } from './wiki29types';
+import { actLore29, personLore29 } from './wiki29lore';
+import { ATTR13, ATTR13_IDS } from '../../sim/sys/persona13';
 
 const hash = (x: string): number => { let h = 2166136261; for (let i = 0; i < x.length; i++) { h ^= x.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 export const hashName29 = hash;
@@ -288,6 +290,7 @@ export function pageRealAct29(c: W29, slug: string): Page29 | null {
   ] }];
   if (!a.m?.length && a.b) blocks.push(P(ln29(`rp:${slug29(a.n)}`, T('Ver a pessoa', 'See the person')), ` — ${roleName29(a.r ?? 'vocal')}`));
   blocks.push(...realActFacts29(c, a, T('Biografia', 'Biography')));
+  if (!c.s) blocks.push(...actLore29(a), H(T('Ficha de jogo', 'Game sheet')), { k: 'ref', who: 'act', name: a.n, year: a.d });
   blocks.push(P(T('Numa partida com nomes reais, este artista surge no ano da estreia e segue a história real (modo exato) ou diverge dela (história alternativa) — veja ', 'In a run with real names, this act appears in its debut year and follows real history (exact mode) or diverges from it (alternate history) — see '), ln29('mech:modes', T('Modos', 'Modes')), '.'));
   const look = !a.m?.length ? realLook15(a.n, a.d + 2) ?? undefined : undefined;
   return { id: `ract:${slug}`, title: a.n, kind: a.m?.length ? T('banda real', 'real band') : T('artista real', 'real artist'),
@@ -305,6 +308,13 @@ export function pageRealPerson29(c: W29, slug: string): Page29 | null {
   const extra = roles29({ name: rp.n, role: rp.role }, year29(c));
   const blocks: Block29[] = [{ k: 'kv', rows: [[T('Funções', 'Roles'), [extra.join(' · ')]]] }, ...realPersonFacts29(c, rp, T('Biografia', 'Biography'))];
   blocks.push(P(T('O visual é o "visual famoso" da época, desenhado na arte procedural do jogo (sem foto).', 'The look is the era\'s "famous look", drawn in the game\'s procedural art (no photo).')));
+  if (!c.s) {
+    const cat = realCat29();
+    blocks.push(...personLore29(rp, (sl) => cat.perBy.has(sl)));
+    // ficha de jogo: partida de referência no ano da primeira estreia (é quando a pessoa entra no mundo)
+    const deb = Math.min(...rp.acts.map((x) => cat.artBy.get(x.slug)?.d ?? 9999));
+    blocks.push(H(T('Ficha de jogo: atributos, talento inicial e potencial', 'Game sheet: attributes, starting talent and potential')), { k: 'ref', who: 'person', name: rp.n, year: deb < 9999 ? deb : first ?? 1960 });
+  }
   return { id: `rp:${slug}`, title: rp.n, kind: T('pessoa real', 'real person'), art: { k: 'portrait', id: `r:${slug}`, look, born: rp.b, role: rp.role, year: yr }, crumbs: crumbs29('pessoas', 'persons'), blocks };
 }
 
@@ -312,14 +322,14 @@ export function pageRealPerson29(c: W29, slug: string): Page29 | null {
 
 export const PRODS29 = (): RealProd[] => [...REAL_PRODS, ...PRODS18.filter((p) => !REAL_PRODS.some((q) => q.id === p.id))];
 export const MGRS29 = (): RealMgr[] => [...REAL_MGRS, ...MGRS18.filter((p) => !REAL_MGRS.some((q) => q.id === p.id))];
-export interface Crit29 { slug: string; name: string; outlet: string; from: number; to: number; favors: string[]; note?: string; region: string; real: boolean }
+export interface Crit29 { slug: string; name: string; outlet: string; from: number; to: number; favors: string[]; dislikes: string[]; mainstream: number; harsh: number; prestige: number; note?: string; region: string; real: boolean }
 let CRITS: Crit29[] | null = null;
 export function critics29(): Crit29[] {
   if (CRITS) return CRITS;
   const out: Crit29[] = [];
   const seen = new Set<string>();
-  for (const k of CRITICS17) { const sl = slug29(k.name); if (seen.has(sl)) continue; seen.add(sl); out.push({ slug: sl, name: k.name, outlet: k.outlet, from: k.from, to: k.to, favors: k.favors, note: tx(k.note), region: k.region, real: !!k.real }); }
-  for (const k of REGIONAL_CRITICS) { const sl = slug29(k.name); if (seen.has(sl)) continue; seen.add(sl); out.push({ slug: sl, name: k.name, outlet: k.outlet, from: k.from, to: k.to, favors: k.favors, region: k.region, real: !!k.realRef }); }
+  for (const k of CRITICS17) { const sl = slug29(k.name); if (seen.has(sl)) continue; seen.add(sl); out.push({ slug: sl, name: k.name, outlet: k.outlet, from: k.from, to: k.to, favors: k.favors, dislikes: k.dislikes, mainstream: k.mainstream, harsh: k.harsh, prestige: k.prestige, note: tx(k.note), region: k.region, real: !!k.real }); }
+  for (const k of REGIONAL_CRITICS) { const sl = slug29(k.name); if (seen.has(sl)) continue; seen.add(sl); out.push({ slug: sl, name: k.name, outlet: k.outlet, from: k.from, to: k.to, favors: k.favors, dislikes: k.dislikes, mainstream: k.mainstream, harsh: k.harsh, prestige: k.prestige, region: k.region, real: !!k.realRef }); }
   return (CRITS = out.sort((x, y) => x.name.localeCompare(y.name)));
 }
 
@@ -339,6 +349,10 @@ export function pageProd29(c: W29, id: string): Page29 | null {
     [T('Atividade', 'Active'), [span29(p.from, hidden29(c, p.to) ? undefined : p.to)]], [T('Base', 'Base'), [p.studio, ' · ', cityById[p.city] ? ln29(`city:${p.city}`, tx(cityById[p.city].name)) : p.city]],
     ...(p.born ? [[T('Nascimento', 'Born'), [String(p.born)]] as [string, Inline29[]]] : []), ...(p.died && !hidden29(c, p.died) ? [[T('Morte', 'Died'), [String(p.died)]] as [string, Inline29[]]] : []),
     [T('Som', 'Sound'), [tx(p.snd)]], [T('Faixa de cachê', 'Fee tier'), [`${p.tier}/5`]],
+    [T('Habilidade de produção', 'Production skill'), [`${p.skill}/100`]], [T('Ego', 'Ego'), [`${p.ego}/100`]],
+    [T('Efeito do som (produção · performance · originalidade)', 'Sound effect (production · performance · originality)'), [p.fx.map((x) => (x > 0 ? `+${x}` : String(x))).join(' · ')]],
+    [T('Famílias de gênero', 'Genre families'), [p.fam.join(', ')]], [T('Assinatura (catálogo antigo)', 'Signature (old catalog)'), [p.sig]],
+    ...ATTR13_IDS.map((k, i) => [tx(ATTR13[k][0]), [`${p.a[i]}/100`]] as [string, Inline29[]]),
   ] }, ...safeP29(c, tx(p.bio))];
   if (w.items.length) blocks.push(H(T('Obras', 'Works')), { k: 'ul', items: w.items });
   if (w.hid) blocks.push({ k: 'spoiler', n: w.hid });
@@ -357,6 +371,9 @@ export function pageMgr29(c: W29, id: string): Page29 | null {
   const blocks: Block29[] = [{ k: 'kv', rows: [
     [T('Atividade', 'Active'), [span29(m.from, hidden29(c, m.to) ? undefined : m.to)]], [T('Cidade', 'City'), cityById[m.city] ? [ln29(`city:${m.city}`, tx(cityById[m.city].name))] : [m.city]],
     [T('Estilo', 'Style'), [`${tx(MGR_STYLE[m.style][0])} — ${tx(MGR_STYLE[m.style][1])}`]], [T('Comissão típica', 'Typical commission'), [`${Math.round(m.rate * 100)}%`]],
+    [T('Famílias de gênero', 'Genre families'), [m.fam.join(', ')]],
+    ...ATTR13_IDS.map((k, i) => [tx(ATTR13[k][0]), [`${m.a[i]}/100`]] as [string, Inline29[]]),
+    ...Object.entries(m.f ?? {}).map(([k, v]) => [k, [`${v}/100`]] as [string, Inline29[]]),
   ] }, ...safeP29(c, tx(m.bio))];
   if (cl.items.length) blocks.push(H(T('Clientes', 'Clients')), { k: 'ul', items: cl.items });
   if (cl.hid) blocks.push({ k: 'spoiler', n: cl.hid });
@@ -370,7 +387,7 @@ export function pageExec29(c: W29, rid: string): Page29 | null {
   if (hidden29(c, e.y)) return futurePage29(`exec:${rid}`, e.name, T('executivo(a)', 'executive'));
   const lb = staticLabels29().find((x) => x.id === e.label);
   return { id: `exec:${rid}`, title: e.name, kind: T('executivo(a) de gravadora', 'label executive'), art: { k: 'staff', id: `l:${e.rid}`, role: 'exec', year: Math.min(year29(c), e.y + 3), born: e.born }, crumbs: crumbs29('pessoas', 'execs'),
-    blocks: [{ k: 'kv', rows: [[T('Selo', 'Label'), lb ? [ln29(`label:${lb.id}`, lb.real ?? lb.name)] : [e.label]], [T('No comando desde', 'In charge since'), [String(e.y)]], [T('Nascimento', 'Born'), [String(e.born)]],
+    blocks: [{ k: 'kv', rows: [[T('Selo', 'Label'), lb ? [ln29(`label:${lb.id}`, lb.real ?? lb.name)] : [e.label]], [T('No comando desde', 'In charge since'), [String(e.y)]], [T('Nascimento', 'Born'), [String(e.born)]], [T('Formação', 'Background'), [e.bg]], [T('Estilo de gestão', 'Management style'), [e.style]],
       ...(e.died && !hidden29(c, e.died) ? [[T('Morte', 'Died'), [String(e.died)]] as [string, Inline29[]]] : [])] }, ...safeP29(c, tx(l(e.pt, e.en)))] };
 }
 
@@ -381,7 +398,9 @@ export function pageCritic29(c: W29, slug: string): Page29 | null {
   const out = OUTLETS17.find((o) => o.real === k.outlet || o.name === k.outlet);
   return { id: `critic:${slug}`, title: k.name, kind: T('crítico(a)', 'critic'), art: { k: 'staff', id: `c:${slug}`, role: 'critic', year: Math.min(year29(c), k.from + 5) }, crumbs: crumbs29('pessoas', 'critics'),
     blocks: [{ k: 'kv', rows: [[T('Veículo', 'Outlet'), out ? [ln29(`outlet:${out.id}`, k.outlet)] : [k.outlet]], [T('Atividade', 'Active'), [span29(k.from, hidden29(c, k.to) ? undefined : k.to)]],
-      [T('Prefere', 'Favors'), [k.favors.join(', ') || '—']], [T('Origem', 'Source'), [k.real ? T('pessoa real', 'real person') : T('personagem do jogo', 'game character')]]] },
+      [T('Prefere', 'Favors'), [k.favors.join(', ') || '—']], [T('Não gosta de', 'Dislikes'), [k.dislikes.join(', ') || '—']],
+      [T('Gosto (−1 alternativo … +1 popular)', 'Taste (−1 alternative … +1 mainstream)'), [String(k.mainstream)]], [T('Rigor (0 generoso … 1 duro)', 'Harshness (0 kind … 1 harsh)'), [String(k.harsh)]], [T('Prestígio', 'Prestige'), [`${k.prestige}/100`]],
+      [T('Região', 'Region'), [k.region]], [T('Origem', 'Source'), [k.real ? T('pessoa real', 'real person') : T('personagem do jogo', 'game character')]]] },
     ...(k.note ? safeP29(c, k.note) : []), P(T('Críticos dão notas que mexem nas vendas das primeiras semanas — veja ', 'Critics give scores that move first-weeks sales — see '), ln29('mech:press', T('Imprensa e críticos', 'Press and critics')), '.')] };
 }
 
@@ -399,10 +418,11 @@ const LIST_L: Record<string, [string, string]> = {
   persons: ['Pessoas', 'People'], acts: ['Artistas e bandas', 'Artists and bands'], labels: ['Gravadoras', 'Labels'], prods: ['Produtores', 'Producers'], mgrs: ['Empresários', 'Managers'],
   execs: ['Executivos', 'Executives'], critics: ['Críticos', 'Critics'], outlets: ['Veículos de imprensa', 'Media outlets'], cities: ['Cidades', 'Cities'], countries: ['Países', 'Countries'],
   genres: ['Gêneros', 'Genres'], movements: ['Movimentos', 'Movements'], eras: ['Eras', 'Eras'], techs: ['Tecnologias', 'Technologies'], venues: ['Casas de shows', 'Venues'], orgs: ['Organizações do submundo', 'Underworld organizations'],
+  decades: ['Linha do tempo', 'Timeline'], cats: ['Regras e dados', 'Rules and data'], catitems: ['Itens de regras e dados', 'Rules and data items'], events: ['Marcos da linha do tempo', 'Timeline milestones'],
   relics: ['Relíquias', 'Relics'], gear: ['Equipamento', 'Gear'], merch: ['Merch', 'Merch'], vehicles: ['Veículos de turnê', 'Tour vehicles'], mech: ['Mecânicas', 'Mechanics'], glossario: ['Glossário', 'Glossary'], faq: ['Perguntas frequentes', 'FAQ'],
 };
 export const listLabel29 = (k: string): string => (LIST_L[k] ? T(LIST_L[k][0], LIST_L[k][1]) : k);
-const SEC_L: Record<string, [string, string]> = { pessoas: ['Personagens', 'Characters'], mech: ['Mecânicas', 'Mechanics'], mundo: ['Mundo', 'World'], objetos: ['Objetos', 'Objects'], glossario: ['Glossário', 'Glossary'], faq: ['Perguntas frequentes', 'FAQ'] };
+const SEC_L: Record<string, [string, string]> = { tempo: ['Linha do tempo', 'Timeline'], dados: ['Regras e dados', 'Rules and data'], pessoas: ['Personagens', 'Characters'], mech: ['Mecânicas', 'Mechanics'], mundo: ['Mundo', 'World'], objetos: ['Objetos', 'Objects'], glossario: ['Glossário', 'Glossary'], faq: ['Perguntas frequentes', 'FAQ'] };
 /** Migalhas: Início › Seção › Lista */
 export function crumbs29(sec: string, list?: string): { id: string; label: string }[] {
   const out = [{ id: 'home', label: T('Início', 'Home') }];
