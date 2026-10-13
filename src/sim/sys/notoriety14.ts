@@ -12,6 +12,7 @@ import { fmtL, money, notify } from '../util';
 import { careers } from './careers12';
 import { liveOf } from './live';
 import { mgCap, ventures } from './ventures9';
+import { actsNow27 } from '../tickcache27';
 
 export const TIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Ninguém ainda sabe quem você é neste ofício.', 'Nobody knows who you are in this trade yet.') },
@@ -56,7 +57,7 @@ const METRIC: Record<string, { fn: (s: GameState) => number; why: L }> = {
   publisher: { fn: (s) => owned(s, 'publisher').reduce((t, v) => t + (v.cat?.length ?? 0) * 1.2, 0), why: l('músicas colocadas no catálogo', 'songs placed in the catalog') },
   media: { fn: (s) => owned(s, 'media').reduce((t, v) => t + v.rep * 0.1, 0), why: l('reputação dos seus veículos', 'your outlets\' reputation') },
   platform: { fn: (s) => owned(s, 'platform').reduce((t, v) => t + Math.log10(1 + (v.subs ?? 0)) * 3, 0), why: l('assinantes da plataforma', 'platform subscribers') },
-  musician: { fn: (s) => { const b = Object.values(s.acts).find((a) => a.playerBand); return b ? b.fame * 0.25 + (b.fans?.core ?? 0) / 4000 : 0; }, why: l('fama e fãs da sua banda', 'your band\'s fame and fans') },
+  musician: { fn: (s) => { const b = actsNow27(s).find((a) => a.playerBand); return b ? b.fame * 0.25 + (b.fans?.core ?? 0) / 4000 : 0; }, why: l('fama e fãs da sua banda', 'your band\'s fame and fans') },
 };
 
 const NAMES: Record<string, L> = { label: l('Gravadora', 'Label'), manager: l('Empresário', 'Manager'), festival: l('Festival', 'Festival'), booking: l('Agência', 'Agency'), venue: l('Casa de shows', 'Venue'), studio: l('Estúdio', 'Studio'), publisher: l('Editora', 'Publisher'), media: l('Mídia', 'Media'), platform: l('Plataforma', 'Platform'), musician: l('Músico', 'Musician') };
@@ -92,7 +93,7 @@ export function notoMonth(s: GameState): void {
   const mg = ventures(s).mg;
   if (mgT >= 1 && mg.clients.length < mgCap(s) && r.chance(0.05 * mgT)) {
     const taken = new Set(mg.clients.map((c) => c.actId));
-    const pool = Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && !a.playerBand && !taken.has(a.id) && a.fame >= 4 && a.fame <= 25 + mgT * 12).sort((a, b) => b.momentum - a.momentum).slice(0, 6);
+    const pool = actsNow27(s).filter((a) => a.status !== 'retired' && a.status !== 'split' && !a.playerBand && !taken.has(a.id) && a.fame >= 4 && a.fame <= 25 + mgT * 12).sort((a, b) => b.momentum - a.momentum).slice(0, 6);
     if (pool.length) {
       const a = r.pick(pool);
       mg.clients.push({ actId: a.id, rate: 0.12, since: s.week, sat: 62, earned: 0 });

@@ -6,10 +6,11 @@ import { registerSimHook } from '../ext4';
 import { histMode } from '../history15';
 import type { GameState } from '../types';
 import { fmtL, notify, remember } from '../util';
+import { actsNow27 } from '../tickcache27';
 
 function markAltered(s: GameState): void {
   const f = s.flags as Record<string, number>;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!a.catalogNo || !(a.owner === 'player' || a.playerBand) || f[`h15alt:${a.id}`]) continue;
     f[`h15alt:${a.id}`] = s.year;
     if (histMode(s) !== 'strict' || s.week <= 0) continue;

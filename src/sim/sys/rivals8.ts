@@ -22,6 +22,7 @@ import { bondNote, prefsOf } from './identity8';
 import type { ProfileId } from './identity/data';
 import { XBY_ID, envOf, adj } from './identity/extra';
 import { skipBlockedLog } from './gate14';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export type PlaybookId = 'vulture' | 'scene' | 'catalog' | 'tech' | 'live' | 'idol' | 'gospel' | 'prestige' | 'sync' | 'regional' | 'fund' | 'visionary' | 'purist'
   | 'viral' | 'school' | 'royalty' | 'conglomerate' | 'importer' | 'agitator' | 'copycat' | 'budget';
@@ -319,7 +320,7 @@ function homeScene(s: GameState, lb: Label): string | undefined {
 function sceneTargets(s: GameState, key: string): Act[] {
   const [city, genre] = key.split(':');
   const fam = familyOf(genre);
-  return Object.values(s.acts).filter((a) => free(a) && a.city === city && familyOf(a.genre) === fam);
+  return actsNow27(s).filter((a) => free(a) && a.city === city && familyOf(a.genre) === fam);
 }
 
 function vulture(s: GameState, r: Rng, lb: Label, all: Act[]): void {
@@ -381,7 +382,7 @@ function catalogKeeper(s: GameState, r: Rng, lb: Label): void {
     const sellers = Object.values(s.labels).filter((x) => x.active && x.id !== lb.id && x.cash < money(s, 150000));
     const seller = sellers.length ? r.pick(sellers) : undefined;
     if (seller) {
-      const rels = Object.values(s.releases).filter((x) => x.owner === seller.id && s.year - x.year >= 5).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 6);
+      const rels = releasesNow27(s).filter((x) => x.owner === seller.id && s.year - x.year >= 5).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 6);
       if (rels.length) {
         const price = money(s, 2500 * rels.length);
         for (const x of rels) x.owner = lb.id;
@@ -392,7 +393,7 @@ function catalogKeeper(s: GameState, r: Rng, lb: Label): void {
     }
   }
   if (r.chance(0.05)) {
-    const own = Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 15 && x.q >= 58 && !x.reissueOf);
+    const own = releasesNow27(s).filter((x) => x.owner === lb.id && s.year - x.year >= 15 && x.q >= 58 && !x.reissueOf);
     const rel = own.length ? r.pick(own) : undefined;
     if (rel) {
       const v = money(s, 2000 + rel.q * 40);
@@ -537,7 +538,7 @@ function idolFactory(s: GameState, r: Rng, lb: Label): void {
   }
   // trainees: assina jovens do pop com contrato longo
   if (r.chance(0.04) && lb.roster.length < 16) {
-    const t0 = Object.values(s.acts).filter((a) => free(a) && a.fame < 12 && famOf(a) === 'pop' && a.members.every((id) => s.year - (s.persons[id]?.born ?? 0) < 25)).sort((x, y) => y.potential - x.potential)[0];
+    const t0 = actsNow27(s).filter((a) => free(a) && a.fame < 12 && famOf(a) === 'pop' && a.members.every((id) => s.year - (s.persons[id]?.born ?? 0) < 25)).sort((x, y) => y.potential - x.potential)[0];
     if (t0 && lb.cash > money(s, expectedAdvance(s, t0) * 1.2)) { signWithRival(s, t0, lb.id, r); logMove(s, lb, { k: 'scene_sign', a: t0.name, x: `${t0.city}:${t0.genre}` }); }
   }
 }
@@ -594,7 +595,7 @@ function assetStripper(s: GameState, r: Rng, lb: Label): void {
   const sellers = Object.values(s.labels).filter((x) => x.active && x.id !== lb.id && x.cash < money(s, 90000) && x.family !== 'A');
   const seller = sellers.length ? r.pick(sellers) : undefined;
   if (!seller) return;
-  const rels = Object.values(s.releases).filter((x) => x.owner === seller.id).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 5);
+  const rels = releasesNow27(s).filter((x) => x.owner === seller.id).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 5);
   const price = money(s, 1200 * Math.max(1, rels.length));
   for (const x of rels) x.owner = lb.id;
   lb.cash += Math.round(price * 0.6); // compra por `price` e revende em pedaços: o fundo só lucra desmontando
@@ -606,7 +607,7 @@ function assetStripper(s: GameState, r: Rng, lb: Label): void {
 
 function visionaryExec(s: GameState, r: Rng, lb: Label): void {
   if (!r.chance(0.03) || lb.cash < money(s, 120000) || lb.roster.length >= 14) return;
-  const a = Object.values(s.acts).filter((x) => free(x) && x.positioning < 40 && x.fame < 35).sort((x, y) => y.potential - x.potential)[0];
+  const a = actsNow27(s).filter((x) => free(x) && x.positioning < 40 && x.fame < 35).sort((x, y) => y.potential - x.potential)[0];
   if (!a || lb.cash < money(s, expectedAdvance(s, a) * 1.2)) return;
   signWithRival(s, a, lb.id, r);
   logMove(s, lb, { k: 'visionary_bet', a: a.name });
@@ -629,7 +630,7 @@ const fits = (lb: Label, a: Act) => !lb.focus.length || lb.focus.includes(famOf(
 
 function viralHunter(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.06) && lb.roster.length < 24) {
-    const a = Object.values(s.acts).filter((x) => free(x) && x.momentum >= 55 && x.fame < 25).sort((x, y) => y.momentum - x.momentum)[0];
+    const a = actsNow27(s).filter((x) => free(x) && x.momentum >= 55 && x.fame < 25).sort((x, y) => y.momentum - x.momentum)[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.1)) {
       signWithRival(s, a, lb.id, r);
       const k = a.contractId ? s.contracts[a.contractId] : undefined;
@@ -648,7 +649,7 @@ function viralHunter(s: GameState, r: Rng, lb: Label): void {
 
 function artistSchool(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.04) && lb.roster.length < 16) {
-    const a = Object.values(s.acts).filter((x) => free(x) && x.fame < 8 && fits(lb, x)).sort((x, y) => y.potential - x.potential)[0];
+    const a = actsNow27(s).filter((x) => free(x) && x.fame < 8 && fits(lb, x)).sort((x, y) => y.potential - x.potential)[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.1)) { signWithRival(s, a, lb.id, r); logMove(s, lb, { k: 'school_class', a: a.name }); }
   }
   if (r.chance(0.035)) {
@@ -668,7 +669,7 @@ function royaltyFund(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.03) && lb.cash > money(s, 200000)) {
     const sellers = Object.values(s.labels).filter((x) => x.active && x.id !== lb.id && playbookOf(x) !== 'royalty');
     const seller = sellers.length ? r.pick(sellers) : undefined;
-    const rels = seller ? Object.values(s.releases).filter((x) => x.owner === seller.id && s.year - x.year >= 3).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 4) : [];
+    const rels = seller ? releasesNow27(s).filter((x) => x.owner === seller.id && s.year - x.year >= 3).sort((x, y) => y.totalUnits - x.totalUnits).slice(0, 4) : [];
     if (seller && rels.length) {
       const price = money(s, 4000 * rels.length);
       for (const x of rels) x.owner = lb.id;
@@ -678,7 +679,7 @@ function royaltyFund(s: GameState, r: Rng, lb: Label): void {
     }
   }
   if (r.chance(0.06)) {
-    const n = Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 3).length;
+    const n = releasesNow27(s).filter((x) => x.owner === lb.id && s.year - x.year >= 3).length;
     if (n >= 2) {
       const v = money(s, 300 * Math.min(n, 40));
       lb.cash += v;
@@ -716,7 +717,7 @@ function mediaConglomerate(s: GameState, r: Rng, lb: Label): void {
 function hitImporter(s: GameState, r: Rng, lb: Label): void {
   const home = marketOf(lb.city);
   if (r.chance(0.05) && lb.roster.length < 20) {
-    const a = Object.values(s.acts).filter((x) => free(x) && x.fame >= 12 && marketOf(x.city) !== home).sort((x, y) => y.fame - x.fame)[0];
+    const a = actsNow27(s).filter((x) => free(x) && x.fame >= 12 && marketOf(x.city) !== home).sort((x, y) => y.fame - x.fame)[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.2)) {
       signWithRival(s, a, lb.id, r);
       logMove(s, lb, { k: 'import_hit', a: a.name, x: marketOf(a.city) ?? '' });
@@ -744,7 +745,7 @@ function sceneAgitator(s: GameState, r: Rng, lb: Label): void {
     }
   }
   if (r.chance(0.03) && lb.roster.length < 14) {
-    const a = Object.values(s.acts).filter((x) => free(x) && x.fame < 20 && fits(lb, x) && x.positioning < 45).sort((x, y) => y.potential - x.potential)[0];
+    const a = actsNow27(s).filter((x) => free(x) && x.fame < 20 && fits(lb, x) && x.positioning < 45).sort((x, y) => y.potential - x.potential)[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.1)) { signWithRival(s, a, lb.id, r); logMove(s, lb, { k: 'agitator_sign', a: a.name }); }
   }
   if (r.chance(0.015)) {
@@ -772,14 +773,14 @@ function trendCopycat(s: GameState, r: Rng, lb: Label): void {
     return;
   }
   if (lb.roster.length < 20) {
-    const a = Object.values(s.acts).filter((x) => free(x) && famOf(x) === fam && x.fame < 15).sort((x, y) => y.potential - x.potential)[0];
+    const a = actsNow27(s).filter((x) => free(x) && famOf(x) === fam && x.fame < 15).sort((x, y) => y.potential - x.potential)[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.1)) { signWithRival(s, a, lb.id, r); logMove(s, lb, { k: 'copy_sign', a: a.name }); }
   }
 }
 
 function budgetLabel(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.06)) {
-    const n = Math.min(14, Object.values(s.releases).filter((x) => x.owner === lb.id && s.year - x.year >= 2).length);
+    const n = Math.min(14, releasesNow27(s).filter((x) => x.owner === lb.id && s.year - x.year >= 2).length);
     if (n >= 3) {
       const v = money(s, 800 * n);
       lb.cash += v;
@@ -788,7 +789,7 @@ function budgetLabel(s: GameState, r: Rng, lb: Label): void {
     }
   }
   if (r.chance(0.05) && lb.roster.length < 24) {
-    const a = Object.values(s.acts).filter((x) => free(x) && x.fame < 6 && x.fame > 1).sort((x, y) => y.fame - x.fame)[0];
+    const a = actsNow27(s).filter((x) => free(x) && x.fame < 6 && x.fame > 1).sort((x, y) => y.fame - x.fame)[0];
     if (a && lb.cash > money(s, 20000)) {
       signWithRival(s, a, lb.id, r);
       const k = a.contractId ? s.contracts[a.contractId] : undefined;

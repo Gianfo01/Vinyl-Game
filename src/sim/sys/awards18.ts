@@ -26,6 +26,7 @@ import { aw15 } from './awards15';
 import { CEREMONY_MONTH, GRAMO_ADJ, NOMS_MONTH, cycleYear, nominees } from './ceremonies8';
 import { AWARD_ADJ18, type Comm18 } from './screen18';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 
@@ -309,9 +310,9 @@ registerExplain('aw18.rules', (s, c) => {
 registerAdvisorTip('aw18', (s) => {
   const out = [] as ReturnType<Parameters<typeof registerAdvisorTip>[1]>;
   if (s.month >= 6 && s.month < NOMS_MONTH) {
-    const best = Object.values(s.releases).filter((r) => r.year === s.year && mine(s, r) && r.peak > 0 && r.peak <= 10 && !aw18(s).camps.some((c) => c.rel === r.id && c.y === s.year)).sort((a, b) => a.peak - b.peak)[0];
+    const best = releasesNow27(s).filter((r) => r.year === s.year && mine(s, r) && r.peak > 0 && r.peak <= 10 && !aw18(s).camps.some((c) => c.rel === r.id && c.y === s.year)).sort((a, b) => a.peak - b.peak)[0];
     if (best) out.push({ id: `aw18-camp-${best.id}`, level: 'info', cat: 'release', score: 38, text: fmtL(l('"{t}" pode concorrer: campanha com votantes antes das indicações de novembro.', '"{t}" could compete: voter campaign before the November nominations.'), { t: best.title }), why: [voters18(s).era], goto: { area: 'society18', tab: ['society18', 'awards'] } });
   }
-  if (bundlesOk18(s)) { const r = Object.values(s.releases).find((x) => mine(s, x) && s.week - x.week <= 4 && !aw18(s).bundles[x.id]); if (r) out.push({ id: `aw18-bundle-${r.id}`, level: 'info', cat: 'release', score: 30, text: fmtL(l('Regra atual conta bundles: "{t}" ganharia +15% na parada por 8 semanas.', 'Current rule counts bundles: "{t}" would get +15% on the chart for 8 weeks.'), { t: r.title }), goto: { area: 'society18', tab: ['society18', 'charts'] } }); }
+  if (bundlesOk18(s)) { const r = releasesNow27(s).find((x) => mine(s, x) && s.week - x.week <= 4 && !aw18(s).bundles[x.id]); if (r) out.push({ id: `aw18-bundle-${r.id}`, level: 'info', cat: 'release', score: 30, text: fmtL(l('Regra atual conta bundles: "{t}" ganharia +15% na parada por 8 semanas.', 'Current rule counts bundles: "{t}" would get +15% on the chart for 8 weeks.'), { t: r.title }), goto: { area: 'society18', tab: ['society18', 'charts'] } }); }
   return out;
 });

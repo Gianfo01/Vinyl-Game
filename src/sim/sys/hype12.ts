@@ -15,7 +15,7 @@ import { relicHook, relics, type Relic } from './relics9';
 import { f12, festHypeHook } from './fest12';
 import { liveOf, type OwnFestival } from './live/state';
 import { w4 } from './world4/state';
-import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts17, quickParts17, rolloutText17 } from '../hype17';
+import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts17, quickParts17, rolloutText17, withFactIx17 } from '../hype17';
 import { actsNow27 } from '../tickcache27';
 
 export interface HSrc { k: string; t: L; v: number }
@@ -291,10 +291,10 @@ registerSimHook('week', 'hype12', (s) => {
   sceneIx = new Map();
   for (const a of actsNow27(s)) if (!a.deceased) { const k = `${a.city}:${a.genre}`; const xs = sceneIx.get(k); if (xs) xs.push(a); else sceneIx.set(k, [a]); }
   baseMemo = new Map();
-  try { for (const key of tracked(s)) {
+  try { withFactIx17(s, () => { for (const key of tracked(s)) {
     const e = (st.e[key] ??= { s: [] });
     const v = key.startsWith('s:') && key.split(':').length === 3 ? sceneV(s, key) : quickParts17(() => hypeOf(s, key).v);
-    if (key.startsWith('a:')) baseMemo.delete(key.slice(2)); // a entrada vai decair logo abaixo
+    if (key.startsWith('a:')) baseMemo?.delete(key.slice(2)); // a entrada vai decair logo abaixo
     const mine = key === 'l:player' || key.startsWith('f:') || (key.startsWith('a:') && s.acts[key.slice(2)]?.owner === 'player') || (key.startsWith('o:') && relics(s).list.find((x) => x.id === key.slice(2))?.st === 'player');
     const big = key.startsWith('a:') && (s.acts[key.slice(2)]?.fame ?? 0) >= 55;
     if (e.v !== undefined && e.v < 70 && v >= 70 && (mine || big) && news < 2) { news++; logNews(s, `up:${key}`, fmtL(l('{n} {w}: hype {v}.', '{n} {w}: hype {v}.'), { n: nameOfKey(s, key), w: viralWord(s), v }), true); }
@@ -307,7 +307,7 @@ registerSimHook('week', 'hype12', (s) => {
     for (const x of e.s) x.v *= d;
     e.s = e.s.filter((x) => Math.abs(x.v) >= 0.5);
     if (!e.s.length && v < 3) delete st.e[key];
-  } } finally { sceneIx = null; baseMemo = null; }
+  } }); } finally { sceneIx = null; baseMemo = null; }
   // reação e sucesso tardio: notícias, crítica mais dura, fama/confiança
   for (const [id, rh] of Object.entries(st.rel)) {
     const rel = s.releases[id], a = s.acts[rh.a];

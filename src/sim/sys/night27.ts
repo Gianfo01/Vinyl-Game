@@ -25,6 +25,7 @@ import { disc18 } from './discover18';
 import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
 import { VENUES17 } from './venues17';
+import { actsNow27 } from '../tickcache27';
 
 export type VenueK27 = 'bar' | 'club' | 'basement' | 'theater' | 'square';
 export const VENUE_K27: Record<VenueK27, { name: L; fee: number; big: number }> = {
@@ -107,7 +108,7 @@ export function nightPlan27(s: GameState, city = s.config.homeCity): NightPlan27
   venues.forEach((v, i) => { v.x = 17 + (i % 3) * 33 + r.int(-3, 3); v.y = 20 + Math.floor(i / 3) * 48 + r.int(-6, 6); v.fee = money(s, VENUE_K27[v.kind].fee); });
   // quem toca: atos livres da cidade nas casas pequenas; contratados de rivais como atração nas grandes; e, onde
   // falta gente, uma abertura de banda nova (nasce quando você assiste — como o freelancer que acha alguém novo)
-  const cityActs = Object.values(s.acts).filter((a) => live(a) && a.city === city && a.owner !== 'player' && (s.knowledge[a.id]?.degree ?? 0) < 4);
+  const cityActs = actsNow27(s).filter((a) => live(a) && a.city === city && a.owner !== 'player' && (s.knowledge[a.id]?.degree ?? 0) < 4);
   const free = r.shuffle(cityActs.filter((a) => !a.owner)).slice(0, 8);
   const signed = cityActs.filter((a) => a.owner).sort((a, b) => b.fame - a.fame).slice(0, 3);
   const genres = (cityById[city]?.scenes ?? []).filter((g) => genreById[g] && genreById[g].born <= s.year);

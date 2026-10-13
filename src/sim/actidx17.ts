@@ -3,6 +3,7 @@
 // então quem saiu de um ato no meio da semana já some.
 // Guardado por partida (WeakMap), nunca entre jogos.
 import type { Act, GameState } from './types';
+import { actsNow27 } from './tickcache27';
 
 interface ActIx { w: number; av: number; m: Map<string, Act[]>; v: number }
 const IX = new WeakMap<GameState, ActIx>();
@@ -19,7 +20,8 @@ function ix(s: GameState): ActIx {
   const av = AV.get(s) ?? 0;
   if (x && x.w === s.week && x.av === av) return x;
   const m = new Map<string, Act[]>();
-  for (const a of Object.values(s.acts)) for (const id of a.members) { const xs = m.get(id); if (xs) xs.push(a); else m.set(id, [a]); }
+  // r27: lista do passo (tickcache27)
+  for (const a of actsNow27(s)) for (const id of a.members) { const xs = m.get(id); if (xs) xs.push(a); else m.set(id, [a]); }
   x = { w: s.week, av, m, v: ++VER };
   IX.set(s, x);
   return x;

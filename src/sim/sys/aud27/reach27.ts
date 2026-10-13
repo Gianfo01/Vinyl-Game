@@ -34,6 +34,7 @@ import { sc27, alive27 } from '../scenes27';
 import { courtNewcomer18 } from '../world18';
 import { shockStocks27 } from './macro27';
 import { OFF_AUD27, OFF_KIND27 } from './off';
+import { actsNow27 } from '../../tickcache27';
 
 const N = (pt: string, en: string): L => l(pt, en);
 /** recarga por chave (ato:tipo) — a mesma reação não empilha a cada canção/fato do mesmo ato */
@@ -136,7 +137,7 @@ onFact('zine_founded', (s, f) => {
   const g = String(f.data?.g ?? f.tags[2] ?? '');
   const t = N('Um fanzine novo escreve sobre a cena.', 'A new fanzine writes about the scene.');
   warmScene27(s, f.place, g, 2, t);
-  for (const a of Object.values(s.acts)) if (a.owner === 'player' && a.city === f.place && (a.genre === g || familyOf(a.genre) === g) && live(a)) a.momentum = clamp(a.momentum + 1, -100, 100);
+  for (const a of actsNow27(s)) if (a.owner === 'player' && a.city === f.place && (a.genre === g || familyOf(a.genre) === g) && live(a)) a.momentum = clamp(a.momentum + 1, -100, 100);
   if (f.actors.includes('player')) rep(s, 'artistic', 0.5);
 }, 'reach27:zine');
 

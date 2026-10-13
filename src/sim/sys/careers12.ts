@@ -16,6 +16,7 @@ import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 import { ventures } from './ventures9';
 import { liveOf } from './live';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export type CareerId = 'label' | 'manager' | 'festival' | 'booking' | 'venue' | 'studio' | 'publisher' | 'media' | 'platform' | 'musician';
 export interface CareerDef { id: string; name: L; desc: L; from: number; icon: string; area: string; load: number; status?: (s: GameState) => L | null }
@@ -28,7 +29,7 @@ const owns = (k: string, pt: string, en: string) => (s: GameState) => { const n 
 
 const DEFS: CareerDef[] = [
   { id: 'label', name: l('Gravadora', 'Record label'), desc: l('Contratar, gravar, lançar. O selo é o coração da partida.', 'Sign, record, release. The label is the heart of the run.'), from: 1900, icon: 'building', area: 'hq', load: 0.45,
-    status: (s) => fmtL(l('{n} artistas no elenco', '{n} acts on the roster'), { n: Object.values(s.acts).filter((a) => a.owner === 'player').length }) },
+    status: (s) => fmtL(l('{n} artistas no elenco', '{n} acts on the roster'), { n: actsNow27(s).filter((a) => a.owner === 'player').length }) },
   { id: 'manager', name: l('Empresário', 'Manager'), desc: l('Representa artistas de qualquer selo: confiança, plano de carreira, mandato e equipe.', 'Represents acts from any label: trust, career plan, mandate and team.'), from: 1900, icon: 'handshake', area: 'management', load: 0.35,
     status: (s) => fmtL(l('{n} clientes · reputação {r}', '{n} clients · reputation {r}'), { n: ventures(s).mg.clients.length, r: Math.round(ventures(s).mg.rep) }) },
   { id: 'festival', name: l('Dono de festival', 'Festival owner'), desc: l('Data, line-up, ingresso: lenda ou desastre.', 'Date, line-up, tickets: legend or disaster.'), from: 1950, icon: 'star', area: 'festivals', load: 0.25, status: owns('festival', 'festival(is)', 'festival(s)') },
@@ -40,7 +41,7 @@ const DEFS: CareerDef[] = [
   { id: 'media', name: l('Dono de mídia', 'Media owner'), desc: l('Revista, rádio, TV: poder de execução e cenas.', 'Magazine, radio, TV: airplay power and scenes.'), from: 1900, icon: 'bulb', area: 'outlets16', load: 0.25, status: owns('media', 'veículo(s)', 'outlet(s)') },
   { id: 'platform', name: l('Dono de plataforma', 'Platform owner'), desc: l('Streaming: assinantes e briga pelo repasse.', 'Streaming: subscribers and payout fights.'), from: 2005, icon: 'globe', area: 'platform16', load: 0.35, status: owns('platform', 'plataforma(s)', 'platform(s)') },
   { id: 'musician', name: l('Músico', 'Musician'), desc: l('Você mesmo no palco e no estúdio (sua banda).', 'Yourself on stage and in the studio (your band).'), from: 1900, icon: 'guitar', area: 'artists', load: 0.35,
-    status: (s) => { const b = Object.values(s.acts).find((a) => a.playerBand); return b ? fmtL(l('{b}: fama {f}', '{b}: fame {f}'), { b: b.name, f: Math.round(b.fame) }) : l('Sem banda própria (papel Híbrido).', 'No band of your own (Hybrid role).'); } },
+    status: (s) => { const b = actsNow27(s).find((a) => a.playerBand); return b ? fmtL(l('{b}: fama {f}', '{b}: fame {f}'), { b: b.name, f: Math.round(b.fame) }) : l('Sem banda própria (papel Híbrido).', 'No band of your own (Hybrid role).'); } },
 ];
 /** Outros sistemas registram/refinam carreiras (ex.: casa de shows com área própria). */
 export function registerCareer(d: CareerDef): void {
@@ -273,7 +274,7 @@ function ambitionMet(s: GameState, st: CareersState): { ok: boolean; why: L } {
     case 'money': { const ok = worth(s) > sn.worth * 1.05; return { ok, why: ok ? l('o patrimônio cresceu', 'your fortune grew') : l('o dinheiro não cresceu', 'the money did not grow') }; }
     case 'legacy': { const ok = standingOf(s, 'player').rec + ventures(s).mg.rep > sn.std + 1; return { ok, why: ok ? l('o prestígio subiu', 'prestige rose') : l('o prestígio parou', 'prestige stalled') }; }
     case 'power': { const ok = st.active.length >= 3 || ventures(s).mg.clients.length + ventures(s).list.length >= 4; return { ok, why: ok ? l('você comanda várias frentes', 'you run several fronts') : l('poucas frentes sob seu comando', 'too few fronts under your command') }; }
-    case 'art': { const n = Object.values(s.releases).filter((x) => x.owner === 'player').length; const ok = n > sn.rel; return { ok, why: ok ? l('saiu música nova sua', 'new music of yours came out') : l('nenhum lançamento novo', 'no new release') }; }
+    case 'art': { const n = releasesNow27(s).filter((x) => x.owner === 'player').length; const ok = n > sn.rel; return { ok, why: ok ? l('saiu música nova sua', 'new music of yours came out') : l('nenhum lançamento novo', 'no new release') }; }
     case 'fame': { const n = s.player.stats.top10s + s.player.stats.number1s; const ok = n > (sn.hits ?? n); return { ok, why: ok ? l('um ato seu chegou ao top 10', 'one of your acts hit the top 10') : l('nenhum top 10 no ano', 'no top 10 this year') }; }
     case 'discover': { const n = s.player.stats.signed; const ok = n > (sn.signed ?? n); return { ok, why: ok ? l('você descobriu talento novo', 'you discovered new talent') : l('ninguém novo no elenco', 'nobody new on the roster') }; }
     case 'world': { const n = s.player.territories.length; const ok = n > (sn.mk ?? n); return { ok, why: ok ? l('um território novo se abriu', 'a new territory opened') : l('o mapa não cresceu', 'the map did not grow') }; }
@@ -291,7 +292,7 @@ function careersMonth(s: GameState): void {
   if (load > 1) o.stress = clamp(o.stress + (load - 1) * 8, 0, 100);
   if (s.month !== 0) return;
   const P = s.player;
-  const snap = { y: s.year, worth: worth(s), std: standingOf(s, 'player').rec + ventures(s).mg.rep, rel: Object.values(s.releases).filter((x) => x.owner === 'player').length,
+  const snap = { y: s.year, worth: worth(s), std: standingOf(s, 'player').rec + ventures(s).mg.rep, rel: releasesNow27(s).filter((x) => x.owner === 'player').length,
     hits: P.stats.top10s + P.stats.number1s, signed: P.stats.signed, mk: P.territories.length, aw: P.stats.awards };
   if (st.snap && st.snap.y < s.year) {
     const m = ambitionMet(s, st);

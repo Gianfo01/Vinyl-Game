@@ -6,7 +6,7 @@
 
 import { hashString } from '../core/rng';
 import { cityById, genreById, l, type L } from '../data/world';
-import { recentFacts } from './facts17';
+import { actorId, facts17, recentFacts, type Fact } from './facts17';
 import type { Act, GameState, Release } from './types';
 import { fmtL } from './util';
 
@@ -43,6 +43,26 @@ function chartOf(s: GameState, a: Act): ChartHit | null {
   return best;
 }
 
+// r27 (desempenho): índice ator → fato mais recente (mesmo filtro da consulta acima: 2 meses, não secreto, gravidade ≥ 25),
+// montado sob demanda e válido só durante o laço semanal do hype (que não emite nem altera fatos). Mesmo resultado de
+// recentFacts(..., limit: 1): o primeiro fato, do mais novo ao mais velho, que tem o ator.
+let FIX: { s: GameState; m: Map<string, Fact> | null } | null = null;
+function factFor(x: { s: GameState; m: Map<string, Fact> | null }, who: string): Fact | undefined {
+  if (!x.m) {
+    const m = new Map<string, Fact>(), list = facts17(x.s).f, since = x.s.week - Math.round(2 * 4.35);
+    for (let i = list.length - 1; i >= 0; i--) {
+      const f = list[i];
+      if (f.w < since) break;
+      if (f.severity < 25 || f.visibility === 'secret') continue;
+      for (const k of f.actors) if (!m.has(k)) m.set(k, f);
+    }
+    x.m = m;
+  }
+  return x.m.get(who);
+}
+/** Roda `fn` com o índice de fatos por ator (só para o laço semanal do hype). */
+export function withFactIx17<T>(s: GameState, fn: () => T): T { const prev = FIX; FIX = { s, m: null }; try { return fn(); } finally { FIX = prev; } }
+
 /** Decomposição do "momento" do ato em motivos concretos. `m` = contribuição antiga ((momento−45)·0,4). */
 // r17 (desempenho): no laço semanal do hype só o valor importa — os textos ficam para quem abre o painel
 let QUICK = false;
@@ -78,7 +98,7 @@ export function momentumParts17(s: GameState, a: Act, m: number): Part[] {
   const gp = s.genrePop[a.genre] ?? 0.6;
   if (gp >= 1.15) ds.push({ t: Q(() => fmtL(pick([l('{g} é a febre de {y}', '{g} is the craze of {y}'), l('Onda de {g}: todo mundo quer ouvir', '{g} wave: everyone wants to listen')], a.id + y), { g: gname(a.genre), y })), w: (gp - 1) * 1.2 });
   // 5. notícia recente (fato público ou boato) sobre o ato
-  const f = recentFacts(s, { actor: a.id, months: 2, notSecret: true, minSev: 25, limit: 1 })[0];
+  const f = FIX && FIX.s === s ? factFor(FIX, actorId(a.id)) : recentFacts(s, { actor: a.id, months: 2, notSecret: true, minSev: 25, limit: 1 })[0];
   if (f) { const tx = f.text; const cut = (x: string) => (x.length > 70 ? `${x.slice(0, 68)}…` : x); ds.push({ t: Q(() => ({ pt: `${f.visibility === 'rumor' ? 'Boato' : 'Na imprensa'}: ${cut(tx.pt)}`, en: `${f.visibility === 'rumor' ? 'Rumor' : 'In the press'}: ${cut(tx.en)}` })), w: 0.3 + f.severity / 100 }); }
   if (!ds.length) {
     // sem nada concreto: o embalo vem do boca a boca local (texto pela era e cidade)

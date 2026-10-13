@@ -10,6 +10,7 @@ import type { Auction, Scout } from './xtypes';
 import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { addSignal, spawnProceduralAct } from './worldgen';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { actsNow27 } from './tickcache27';
 
 // ---------- Olheiros ----------
 
@@ -60,7 +61,7 @@ function contestsMonth(s: GameState, r: Rng): void {
   if (r.chance(0.35)) {
     const city = r.weighted(CITIES, (c) => (c.id === s.config.homeCity ? 3 : s.branches.some((b) => b.city === c.id) ? 2.2 : 1) * (s.player.territories.includes(c.market) ? 1.5 : 0.6));
     if (city) {
-      const entrants = Object.values(s.acts).filter((a) => a.city === city.id && !a.owner && a.status === 'emerging').slice(0, 6).map((a) => a.id);
+      const entrants = actsNow27(s).filter((a) => a.city === city.id && !a.owner && a.status === 'emerging').slice(0, 6).map((a) => a.id);
       if (entrants.length < 3) entrants.push(spawnProceduralAct(s, r, { city: city.id }).id);
       if (entrants.length < 2) return;
       s.contests.push({ id: nextId(s, 'ct'), name: contestName(s, city.id), city: city.id, week: s.week + r.int(3, 8), entrants, prize: money(s, 1500), kind: r.chance(0.25) ? 'showcase' : 'contest' });
@@ -126,7 +127,7 @@ export function sponsorContest(s: GameState, id: string): L | null {
 function demosMonth(s: GameState, r: Rng): void {
   if (s.config.role === 'artist') return;
   const n = 1 + (s.player.reputation.artists > 50 ? 2 : s.player.reputation.artists > 30 ? 1 : 0) + (r.chance(0.4) ? 1 : 0);
-  const pool = Object.values(s.acts).filter((a) => !a.owner && a.status === 'emerging' && !s.demos.some((d) => d.actId === a.id));
+  const pool = actsNow27(s).filter((a) => !a.owner && a.status === 'emerging' && !s.demos.some((d) => d.actId === a.id));
   for (let i = 0; i < n && pool.length; i++) {
     const a = r.pick(pool);
     pool.splice(pool.indexOf(a), 1);

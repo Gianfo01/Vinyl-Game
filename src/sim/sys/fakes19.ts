@@ -29,6 +29,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, playerActs, post, remember } from '../util';
 import { headline19 } from './factlink19';
 import { LINKS18, lk18 } from './links18';
+import { actsNow27 } from '../tickcache27';
 
 export interface Lip19 { act: string; since: number; risk: number; by: 'player' | 'npc'; exp?: number; hush?: number; mimes: number; end?: number }
 export interface Ghost19 { id: string; name: string; of?: string; city: string; since: number; k: 'name' | 'scene'; g?: string; end?: number; why?: L; lic?: 1; court?: number; asked?: 1 }
@@ -248,7 +249,7 @@ function realChron(s: GameState): void {
     if (st.real[x.id] || s.year < x.y || (s.year === x.y && s.month < x.m) || s.year - x.y > 1) continue;
     if (!exact(s) && x.y >= s.config.startYear) continue; // história alternativa: depois do início, nada é reencenado
     st.real[x.id] = 1;
-    const a = x.act ? Object.values(s.acts).find((y) => y.name === x.act) : undefined;
+    const a = x.act ? actsNow27(s).find((y) => y.name === x.act) : undefined;
     if (x.k === 'lip' && a) { const l9: Lip19 = { act: a.id, since: s.week - 100, risk: 100, by: 'npc', mimes: 0 }; st.lip.push(l9); expose19(s, l9, 'real', x.text); continue; }
     if (x.k === 'ghost') { emitFact(s, { kind: 'ghost_band', actors: a ? [a.id] : [], place: a?.city ?? 'london', severity: 35, visibility: 'public', tags: ['fakes19', 'name', 'real'], src: 'fakes19', text: x.text }); continue; }
     if (x.k === 'ai') { emitFact(s, { kind: 'ai_voice_fake', actors: [], place: 'new_york', severity: 40, visibility: 'public', tags: ['fakes19', 'ai', 'real'], src: 'fakes19', text: x.text }); continue; }
@@ -321,7 +322,7 @@ registerSimHook('month', 'fakes19', (s) => {
   }
   // NPC: selos rivais também escondem vozes (só atos fictícios no modo exato)
   if (s.year >= 1960 && st.lip.filter((x) => !x.exp && x.by === 'npc').length < 3 && r.chance(0.02)) {
-    const cands = Object.values(s.acts).filter((a) => !mineAct(s, a) && a.owner && s.labels[a.owner] && a.fame >= 30 && a.fame <= 75 && ['pop', 'rnb', 'electronic'].includes(familyOf(a.genre)) && !shielded(s, a) && !lipOf19(s, a.id) && a.status !== 'split' && a.status !== 'retired');
+    const cands = actsNow27(s).filter((a) => !mineAct(s, a) && a.owner && s.labels[a.owner] && a.fame >= 30 && a.fame <= 75 && ['pop', 'rnb', 'electronic'].includes(familyOf(a.genre)) && !shielded(s, a) && !lipOf19(s, a.id) && a.status !== 'split' && a.status !== 'retired');
     if (cands.length) st.lip.push({ act: r.pick(cands).id, since: s.week, risk: 10, by: 'npc', mimes: 0 });
   }
   // 2) bandas-fantasma: nome de ato ausente, febre de cena
@@ -344,7 +345,7 @@ registerSimHook('month', 'fakes19', (s) => {
     }
     if (live.length < 10) {
       // nome famoso de quem sumiu
-      const cands = Object.values(s.acts).filter((a) => a.fame >= 55 && absent(s, a) && !shielded(s, a) && !st.gb.some((g) => g.of === a.id && !g.end));
+      const cands = actsNow27(s).filter((a) => a.fame >= 55 && absent(s, a) && !shielded(s, a) && !st.gb.some((g) => g.of === a.id && !g.end));
       for (const a of cands.slice(0, 40)) {
         const mk = mkOf(a.city);
         if (r.chance(0.008 * (a.fame / 60) * (lawIn19(s, mk) ? 0.3 : 1))) { spawnGhost19(s, r, { of: a, k: 'name' }); break; }
@@ -354,7 +355,7 @@ registerSimHook('month', 'fakes19', (s) => {
         if (until < s.week) { delete st.hot[k]; continue; }
         const [city, g] = k.split('|');
         if (r.chance(0.12 * (lawIn19(s, mkOf(city)) ? 0.3 : 1))) {
-          const lead = Object.values(s.acts).filter((a) => a.city === city && a.genre === g && a.fame >= 40 && !shielded(s, a)).sort((x, y) => y.fame - x.fame)[0];
+          const lead = actsNow27(s).filter((a) => a.city === city && a.genre === g && a.fame >= 40 && !shielded(s, a)).sort((x, y) => y.fame - x.fame)[0];
           spawnGhost19(s, r, lead && !st.gb.some((x) => x.of === lead.id && !x.end) ? { of: lead, city, g, k: 'scene' } : { city, g, k: 'scene' });
           break;
         }
@@ -363,7 +364,7 @@ registerSimHook('month', 'fakes19', (s) => {
   }
   // 3) vozes de IA não autorizadas no mundo (2020+)
   if (s.year >= 2020 && r.chance(s.year >= 2023 ? 0.06 : 0.02)) {
-    const cands = Object.values(s.acts).filter((a) => a.fame >= 60 && !mineAct(s, a) && !shielded(s, a));
+    const cands = actsNow27(s).filter((a) => a.fame >= 60 && !mineAct(s, a) && !shielded(s, a));
     if (cands.length) {
       const a = r.pick(cands);
       if (!lawIn19(s, mkOf(a.city), 'v') || r.chance(0.3)) emitFact(s, { kind: 'ai_voice_fake', actors: [a.id], place: a.city, severity: 40, visibility: 'public', tags: ['fakes19', 'ai'], src: 'fakes19', text: fmtL(N('Uma faixa "inédita" de {a} viraliza — a voz foi gerada por IA, sem autorização.', 'An "unreleased" {a} track goes viral — the voice was AI-generated, without permission.'), { a: a.name }) });

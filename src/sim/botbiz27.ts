@@ -18,6 +18,7 @@ import { addNight12, v12 } from './sys/venue12';
 import { buyVenue17, marketVenues, monthEst17, venuePrice } from './sys/venues17';
 import { hasVenue27, venueCount27, MAX_VENUES27 } from './sys/venues27';
 import { f12, found12, offer12, wantTime } from './sys/fest12';
+import { actsNow27 } from './tickcache27';
 
 export interface LogBiz27 { rooms: number; studio: number; studioJobs: number; publisher: number; writers: number; placements: number; venue: number; venueNights: number; festival: number; festBookings: number }
 export const freshLogBiz27 = (): LogBiz27 => ({ rooms: 0, studio: 0, studioJobs: 0, publisher: 0, writers: 0, placements: 0, venue: 0, venueNights: 0, festival: 0, festBookings: 0 });
@@ -77,7 +78,7 @@ function publisher(s: GameState, c: Ctx, L: LogBiz27, open: boolean): boolean {
   }
   const w = v.writers?.[0];
   if (w && (v.cool ?? 0) <= s.week) {
-    const a = Object.values(s.acts).filter((x) => (x.status === 'active' || x.status === 'emerging') && x.members.length && x.fame >= 10 && x.fame < 50).sort((p, q) => q.fame - p.fame)[0];
+    const a = actsNow27(s).filter((x) => (x.status === 'active' || x.status === 'emerging') && x.members.length && x.fame >= 10 && x.fame < 50).sort((p, q) => q.fame - p.fame)[0];
     if (a && placeSong(s, r, v.id, w.pid, a.id).ok) L.placements++;
   }
   return false;
