@@ -5,6 +5,8 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { availableProducers, producerFit, soundOf } from '../../sim/studio';
 import { featureCandidates, featureFee } from '../../sim/sys/creation/core';
+import { featPersons29 } from '../../sim/sys/featp29';
+import { featCredit29, featPersonButton29 } from './featp29';
 import { CONCEPTS, conceptById, featOf, inviteGuest, type MusicProject } from '../../sim/sys/project8';
 import {
   ARTS, DEFAULT13, EDITIONS, LOCS, SINGLES, blendHints, blendOf, block13, commit13, isOpen, normSplit, planOf13, preview13,
@@ -69,15 +71,17 @@ function crewBits(s: GameState, p: MusicProject, locked: boolean): HTMLElement {
   const pr = prods.find((x) => x.id === p.producerId);
   const lead = s.songs[p.songIds[0]];
   const feat = lead ? featOf(s, lead.id) : undefined;
-  const guests = lead && !locked && !feat ? featureCandidates(s, lead) : [];
+  const fp = lead ? featPersons29(s, lead.id) : []; // R29: convidado pessoa a pessoa
+  const guests = lead && !locked && !feat && !fp.length ? featureCandidates(s, lead) : [];
   return h('div', { class: 'p12-grid' },
     h('label', null, t(l('Produtor', 'Producer')),
       select(p.producerId ?? '', [{ value: '', label: t(l('Equipe da casa', 'House team')) }, ...prods.map((x) => ({ value: x.id, label: `${x.name} · ${t(soundOf(x).name)} (${$(money(s, x.fee))}/${t(l('faixa', 'track'))})`, disabled: (s.producerBusy[x.id] ?? 0) > s.week }))], (v) => { p.producerId = v || undefined; rerender(); }, { disabled: locked }),
       h('small', { class: 'muted' }, pr ? t(l('Assinatura: produção {a}, performance {b}, originalidade {c}. {f}', 'Signature: production {a}, performance {b}, originality {c}. {f}'), { a: soundOf(pr).prod, b: soundOf(pr).perf, c: soundOf(pr).orig, f: act && producerFit(pr, act.genre) >= 1 ? t(l('Combina com o gênero.', 'Fits the genre.')) : t(l('Fora do gênero: rende 60%.', 'Outside the genre: 60% effect.')) }) : t(l('Sem produtor de fora: a equipe da casa assina as faixas.', 'No outside producer: the house team signs the tracks.')))),
     h('label', null, t(l('Convidado (dueto na faixa principal)', 'Guest (duet on the lead track)')),
-      feat ? h('b', null, s.acts[feat]?.name ?? '—') : lead ? h('span', { class: 'row wrap' },
+      feat || fp.length ? h('b', null, lead ? featCredit29(s, lead.id, feat) : '—') : lead ? h('span', { class: 'row wrap' },
         select(p.guestId ?? '', [{ value: '', label: t(l('Sem convidado', 'No guest')) }, ...guests.map((g) => ({ value: g.id, label: `${g.name} (${$(featureFee(s, g))})` }))], (v) => { p.guestId = v || undefined; rerender(); }, { disabled: locked }),
-        h('button', { class: 'btn small', disabled: !p.guestId || locked, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite')))) : h('small', { class: 'muted' }, t(l('Escolha as faixas primeiro.', 'Pick the tracks first.'))),
+        h('button', { class: 'btn small', disabled: !p.guestId || locked, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))),
+        featPersonButton29(s, p.actId, lead.id, locked)) : h('small', { class: 'muted' }, t(l('Escolha as faixas primeiro.', 'Pick the tracks first.'))),
       h('small', { class: 'muted' }, t(l('Um nome conhecido empresta público e alcance; pode recusar se o seu artista for pequeno.', 'A known name lends audience and reach; may refuse if your act is small.')))));
 }
 

@@ -59,12 +59,19 @@ function featuringOf(s: GameState, songId: string): string | undefined {
   return cr?.songs[songId]?.featuring;
 }
 
+function featPersonsOf(s: GameState, songId: string): string[] {
+  const cr = (s.x4 as unknown as { creation?: { songs: Record<string, { featPersons?: string[] }> } }).creation;
+  return cr?.songs[songId]?.featPersons ?? [];
+}
+
 /** A faixa tem voz (do ato, do convidado ou de estúdio)? */
 export function songHasVoice(s: GameState, song: Song): boolean {
   if (song.sessionVocal || song.aiVoice) return true;
   if (hasSinger(s, s.acts[song.actId])) return true;
   const g = featuringOf(s, song.id);
-  return !!g && hasSinger(s, s.acts[g]);
+  if (g && hasSinger(s, s.acts[g])) return true;
+  // R29 (feat de pessoa): o convidado é uma pessoa — basta que ELA cante
+  return featPersonsOf(s, song.id).some((pid) => sings(s, s.persons[pid]));
 }
 
 /** Atualiza a marca de instrumental de uma faixa ainda não lançada (ao compor, gravar, feat, cantor de estúdio). */

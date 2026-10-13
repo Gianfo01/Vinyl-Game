@@ -53,10 +53,12 @@ export interface Feature {
   share: number;
   status: 'pending' | 'done' | 'refused';
   week: number;
+  /** R29 (feat de pessoa): convidados pessoa a pessoa (guestActId fica '' quando só pessoas) */
+  guestPersons?: string[];
 }
 
 export interface CreationState {
-  songs: Record<string, { recipe?: string[]; effects?: string[]; featuring?: string; ghost?: string; writer?: string; cover?: number; clip?: { shots: string[]; budget: number; result: number }; viral?: { start: number; challenge: string; result: number } }>;
+  songs: Record<string, { recipe?: string[]; effects?: string[]; featuring?: string; featPersons?: string[]; ghost?: string; writer?: string; cover?: number; clip?: { shots: string[]; budget: number; result: number }; viral?: { start: number; challenge: string; result: number } }>;
   seen: Record<string, number>; // "família:tema" -> nota descoberta
   writers: Writer[];
   features: Feature[];
@@ -266,6 +268,8 @@ function releaseAppealMult(s: GameState, rel: Release, act: Act): { m: number; l
     const g = s.acts[lead.featuring];
     if (g) m *= 1 + Math.min(0.25, g.fame / 300) + (familyOf(g.genre) !== fam ? 0.05 : 0);
   }
+  // R29 (feat de pessoa): quem empresta o nome é a PESSOA — a fama dela (fame15), não a da banda
+  if (lead?.featPersons?.length && FEATP29_CORE.appeal) m *= FEATP29_CORE.appeal(s, lead.featPersons, fam);
   // standards: regravar clássico em domínio público dá familiaridade
   if (songs[0]?.coverOf && isPublicDomain(s, songs[0].coverOf)) m *= 1.04;
   if (s.x4.creation.remasters.includes(rel.reissueOf ?? '')) m *= 1.25;
@@ -345,6 +349,10 @@ export function featureCandidates(s: GameState, song: Song): Act[] {
   return actsNow27(s).filter((a) => !mine.has(a.id) && a.status !== 'retired' && !a.deceased && a.fame > 15 && a.id !== song.actId).sort((a, b) => b.fame - a.fame).slice(0, 10);
 }
 
+/** R29 (feat de pessoa): apelo de convidados pessoa a pessoa (fama própria — fame15). Preenchido por sys/featp29 sem
+ *  import estático daqui (um import novo mudaria a ordem de avaliação dos módulos e, com ela, a dos ganchos do tick). */
+export const FEATP29_CORE: { appeal?: (s: GameState, pids: string[], fam: FamilyId) => number } = {};
+
 export function featureFee(s: GameState, guest: Act): number {
   return money(s, 1500 + guest.fame * guest.fame * 6);
 }
@@ -354,7 +362,7 @@ export function inviteFeature(s: GameState, r: Rng, songId: string, guestId: str
   const guest = s.acts[guestId];
   if (!song || !guest) return l('Inválido.', 'Invalid.');
   if (song.releaseId) return l('A música já foi lançada.', 'The song is already released.');
-  if (songX(s, songId).featuring) return l('Esta música já tem participação.', 'This song already has a feature.');
+  if (songX(s, songId).featuring || songX(s, songId).featPersons?.length) return l('Esta música já tem participação.', 'This song already has a feature.');
   const fee = featureFee(s, guest);
   if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
   const host = s.acts[song.actId];

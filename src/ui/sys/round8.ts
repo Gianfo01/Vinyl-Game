@@ -21,6 +21,9 @@ import {
 } from '../../sim/sys/stakes8';
 import { SRC_NAME, TIE_NAME, actTies, otherOf, social, tiesOf, type Tie } from '../../sim/sys/social8';
 import { acceptFeatCounter, clearance, dropFeatDeal, fairFeat, featChance, featSongs, featTargets, feats, pressFeat, proposeFeat, type FeatResult } from '../../sim/sys/feats8';
+import { clearance29, fairFeat29, featChance29, proposeFeat29, type FeatGuest29 } from '../../sim/sys/featp29';
+import { featChips29, featPicker29 } from './featp29';
+import { ent27 } from '../ps/ent27';
 import { actOfPerson } from '../../sim/sys/social8';
 import { fameText } from '../../sim/sys/fame15';
 import { kinLabel15, kinOf15 } from '../../sim/sys/kin15';
@@ -238,34 +241,64 @@ ACT_TABS.push((s, a, close) => {
 
 // ================================================================== feats negociados
 
-export function openFeatModal(s: GameState, pre: { host?: string; guest?: string; song?: string } = {}): void {
+export function openFeatModal(s: GameState, pre: { host?: string; guest?: string; song?: string; persons?: string[]; mode?: 'person' } = {}): void {
   const hosts = playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.members.length > 0);
   if (!hosts.length) { toast(t(l('Você precisa de um artista no elenco.', 'You need an act on your roster.')), 'bad'); return; }
-  const o = { host: pre.host && hosts.some((x) => x.id === pre.host) ? pre.host : hosts[0].id, song: pre.song ?? '', guest: pre.guest ?? '', fee: 0, split: 0.1 };
+  // R29 (feat de pessoa): o convidado é o ATO inteiro (como sempre) ou PESSOAS específicas (+ um ato, opcional: feat misto)
+  const o = {
+    host: pre.host && hosts.some((x) => x.id === pre.host) ? pre.host : hosts[0].id, song: pre.song ?? '', guest: pre.guest ?? '', fee: 0, split: 0.1,
+    mode: (pre.persons?.length || pre.mode === 'person' ? 'person' : 'act') as 'act' | 'person', persons: [...(pre.persons ?? [])], withAct: '',
+  };
+  const q29 = { v: '' };
   const box = h('div');
   const reply = h('div', { class: 'offer-reply' });
   let close = () => {};
-  const resetTerms = () => { if (o.guest) { const f = fairFeat(s, o.host, o.guest); o.fee = f.fee; o.split = f.split; } };
-  const draw = () => {
+  const g29 = (): FeatGuest29 => (o.withAct ? { act: o.withAct, persons: o.persons } : { persons: o.persons });
+  const byPerson = () => o.mode === 'person' && o.persons.length > 0;
+  const resetTerms = () => {
+    if (o.mode === 'person') { if (o.persons.length) { const f = fairFeat29(s, o.host, g29()); o.fee = f.fee; o.split = f.split; } return; }
+    if (o.guest) { const f = fairFeat(s, o.host, o.guest); o.fee = f.fee; o.split = f.split; }
+  };
+  if (o.mode === 'person') resetTerms();
+  // redesenho sem reentrada: trocar o conteúdo tira o foco do campo e o "change" do blur pediria outro redesenho no meio
+  let drawing = false;
+  const draw = (): void => {
+    if (drawing) { queueMicrotask(draw); return; }
+    drawing = true;
+    try { draw0(); } finally { drawing = false; }
+  };
+  const draw0 = () => {
     const songs = featSongs(s, o.host);
     if (!songs.some((x) => x.id === o.song)) o.song = songs[0]?.id ?? '';
     let targets = featTargets(s, o.host, 40);
     if (o.guest && !targets.some((x) => x.id === o.guest) && s.acts[o.guest]) targets = [s.acts[o.guest], ...targets];
-    if (!o.guest) { o.guest = targets[0]?.id ?? ''; resetTerms(); }
-    const fair = o.guest ? fairFeat(s, o.host, o.guest) : { fee: 0, split: 0 };
-    const cl = o.guest ? clearance(s, o.guest, o.fee) : undefined;
-    const p = o.song && o.guest ? featChance(s, o.song, o.guest, { fee: o.fee, split: o.split }) : 0;
+    if (o.mode === 'act' && !o.guest) { o.guest = targets[0]?.id ?? ''; resetTerms(); }
+    const fair = byPerson() ? fairFeat29(s, o.host, g29()) : o.mode === 'act' && o.guest ? fairFeat(s, o.host, o.guest) : { fee: 0, split: 0 };
+    const cl = byPerson() ? clearance29(s, o.host, g29(), o.fee) : o.mode === 'act' && o.guest ? clearance(s, o.guest, o.fee) : undefined;
+    const p = !o.song ? 0 : byPerson() ? featChance29(s, o.song, g29(), { fee: o.fee, split: o.split }) : o.mode === 'act' && o.guest ? featChance(s, o.song, o.guest, { fee: o.fee, split: o.split }) : 0;
+    const modeBtn = (m: 'act' | 'person', lab: L) => h('button', { type: 'button', class: `btn small ${o.mode === m ? 'primary' : 'ghost'}`, 'aria-pressed': o.mode === m ? 'true' : 'false', onclick: () => { if (o.mode !== m) { o.mode = m; resetTerms(); draw(); } } }, t(lab));
+    const pickPerson = (pid: string) => { if (!o.persons.includes(pid)) o.persons.push(pid); resetTerms(); draw(); box.querySelector<HTMLInputElement>('input[data-featq29]')?.focus(); };
     box.replaceChildren(h('div', { class: 'form' },
       h('label', null, t(l('Seu artista', 'Your act')), select(o.host, hosts.map((a) => ({ value: a.id, label: a.name })), (v) => { o.host = v; o.song = ''; resetTerms(); draw(); })),
       songs.length ? h('label', null, t(l('Música', 'Song')), select(o.song, songs.map((x) => ({ value: x.id, label: `${x.title} (Q ${Math.round(x.q)})` })), (v) => { o.song = v; draw(); }))
         : h('p', { class: 'warn small' }, t(l('Este artista não tem música inédita livre. Componha antes.', 'This act has no free unreleased song. Write one first.'))),
-      h('label', null, t(l('Convidado', 'Guest')), select(o.guest, targets.map((a) => ({ value: a.id, label: `${a.name} · ${t(l('fama', 'fame'))} ${fameText(s, a.id)}${a.owner && s.labels[a.owner] ? ` · ${s.labels[a.owner].name}` : ''}` })), (v) => { o.guest = v; resetTerms(); draw(); })),
+      h('div', { class: 'row wrap', role: 'group', 'aria-label': t(l('Quem é o convidado', 'Who is the guest')) }, h('small', { class: 'muted' }, `${t(l('Convidado', 'Guest'))}: `),
+        modeBtn('act', l('Ato inteiro', 'Whole act')), modeBtn('person', l('Pessoa(s) específica(s)', 'Specific person(s)'))),
+      o.mode === 'act'
+        ? h('label', null, t(l('Convidado', 'Guest')), select(o.guest, targets.map((a) => ({ value: a.id, label: `${a.name} · ${t(l('fama', 'fame'))} ${fameText(s, a.id)}${a.owner && s.labels[a.owner] ? ` · ${s.labels[a.owner].name}` : ''}` })), (v) => { o.guest = v; resetTerms(); draw(); }))
+        : h('div', null,
+          o.persons.length ? featChips29(s, o.persons, (pid) => { o.persons = o.persons.filter((x) => x !== pid); resetTerms(); draw(); })
+            : h('p', { class: 'muted small' }, t(l('Escolha uma ou mais pessoas: integrante de banda, artista solo, músico avulso, produtor(a) que canta ou toca. O crédito sai com o nome delas.', 'Pick one or more people: a band member, a solo artist, a freelance musician, a producer who sings or plays. The credit carries their names.'))),
+          featPicker29(s, o.host, o.persons, pickPerson, q29),
+          h('label', null, t(l('Junto com um ato (opcional)', 'Together with an act (optional)')), select(o.withAct, [{ value: '', label: t(l('Só as pessoas', 'Just the people')) }, ...targets.map((a) => ({ value: a.id, label: `${a.name} · ${t(l('fama', 'fame'))} ${fameText(s, a.id)}` }))], (v) => { o.withAct = v; resetTerms(); draw(); }))),
       h('label', null, `${t(l('Cachê', 'Fee'))} ($)`, h('input', { type: 'number', min: 0, step: 100, value: Math.round(o.fee / 100), onchange: (e: Event) => { o.fee = Math.max(0, Math.round(Number((e.target as HTMLInputElement).value) * 100)); draw(); } })),
       h('label', null, `${t(l('Royalties da faixa para o convidado', 'Track royalties to the guest'))} (%)`, h('input', { type: 'number', min: 0, max: 50, step: 1, value: Math.round(o.split * 100), onchange: (e: Event) => { o.split = Math.max(0, Math.min(0.5, Number((e.target as HTMLInputElement).value) / 100)); draw(); } })),
       h('div', { class: 'eval' },
         h('div', null, t(l('Referência', 'Reference')), `: ${$(fair.fee)} · ${pct(fair.split)} — `, t(S.chance), ': ', pill(t(S[band(p)]), band(p))),
         cl ? h('p', { class: cl.blocked ? 'bad small' : 'small' }, t(cl.text), cl.cost ? ` ${$(cl.cost)}` : '') : null,
-        h('p', { class: 'muted small' }, t(l('Pesa: amizade ou rixa entre os artistas, diferença de fama, qualidade da música, gênero, sua reputação com artistas e os termos. Feats cruzam públicos e ajudam nas paradas.', 'What matters: friendship or feud between the artists, fame gap, song quality, genre, your reputation with artists and the terms. Features cross audiences and help on the charts.'))),
+        h('p', { class: 'muted small' }, o.mode === 'person'
+          ? t(l('Pesa: a fama e a habilidade de cada pessoa (voz de quem canta, instrumento de quem toca), laços com o seu artista, qualidade da música e os termos. O público cruzado vem dos fãs da banda dela, em escala menor; os colegas de banda podem ficar com ciúme.', 'What matters: each person\'s fame and skill (voice for singers, instrument for players), ties with your act, song quality and the terms. The crossover comes from their band\'s fans, on a smaller scale; bandmates may get jealous.'))
+          : t(l('Pesa: amizade ou rixa entre os artistas, diferença de fama, qualidade da música, gênero, sua reputação com artistas e os termos. Feats cruzam públicos e ajudam nas paradas.', 'What matters: friendship or feud between the artists, fame gap, song quality, genre, your reputation with artists and the terms. Features cross audiences and help on the charts.'))),
       ),
     ));
   };
@@ -289,7 +322,25 @@ export function openFeatModal(s: GameState, pre: { host?: string; guest?: string
   };
   draw();
   close = modal(t(l('Negociar feat', 'Negotiate a feature')), h('div', null, box, h('div', { class: 'actions' },
-    h('button', { class: 'btn primary', onclick: () => { if (!o.song || !o.guest) return toast(t(l('Escolha música e convidado.', 'Pick a song and a guest.')), 'bad'); show(proposeFeat(s, rngOf(s), o.song, o.guest, { fee: o.fee, split: o.split })); } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))), reply)), { wide: true });
+    h('button', { class: 'btn primary', onclick: () => {
+      if (o.mode === 'person') {
+        if (!o.song || !o.persons.length) return toast(t(l('Escolha música e ao menos uma pessoa.', 'Pick a song and at least one person.')), 'bad');
+        return show(proposeFeat29(s, o.song, g29(), { fee: o.fee, split: o.split }));
+      }
+      if (!o.song || !o.guest) return toast(t(l('Escolha música e convidado.', 'Pick a song and a guest.')), 'bad');
+      show(proposeFeat(s, rngOf(s), o.song, o.guest, { fee: o.fee, split: o.split }));
+    } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))), reply)), { wide: true });
+}
+
+/** R29 (feat de pessoa): quem participa de um acordo — o ato e/ou as pessoas (nome clicável). */
+function dealGuests29(s: GameState, d: { guestActId: string; guestPersons?: string[] }): (HTMLElement | string)[] {
+  const xs: (HTMLElement | string)[] = [];
+  if (d.guestActId && s.acts[d.guestActId]) xs.push(actLink(s, d.guestActId));
+  for (const pid of d.guestPersons ?? []) {
+    if (xs.length) xs.push(' & ');
+    xs.push(h('button', { class: 'link', ...ent27('person', `p:${pid}`), onclick: (e: Event) => { e.stopPropagation(); openPersonPage(pid); } }, s.persons[pid]?.name ?? '?'));
+  }
+  return xs.length ? xs : [actLink(s, d.guestActId)];
 }
 
 function featsSection(s: GameState): HTMLElement | null {
@@ -302,12 +353,12 @@ function featsSection(s: GameState): HTMLElement | null {
   const soc = social(s);
   return section(t(l('Feats e relações', 'Features and relationships')),
     h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => openFeatModal(s) }, t(l('Negociar um feat', 'Negotiate a feature')))),
-    open.length ? h('ul', { class: 'small' }, open.map((d) => h('li', null, `"${d.title}" + `, actLink(s, d.guestActId), ' ',
+    open.length ? h('ul', { class: 'small' }, open.map((d) => h('li', null, `"${d.title}" + `, ...dealGuests29(s, d), ' ',
       d.status === 'thinking' ? h('span', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', h('button', { class: 'btn small', onclick: () => { const res = pressFeat(s, rngOf(s), d.id); toast(t(res.text), res.result === 'accepted' ? 'good' : 'bad'); rerender(); } }, t(l('Pressionar', 'Push'))))
         : h('span', null, pill(`${t(l('contraproposta', 'counter'))}: ${$(d.counter?.fee ?? 0)} · ${pct(d.counter?.split ?? 0)}`, 'warn'), ' ',
           h('button', { class: 'btn small primary', onclick: () => say(acceptFeatCounter(s, d.id), l('Participação gravada.', 'Feature recorded.')) }, t(l('Aceitar', 'Accept'))),
           h('button', { class: 'btn small ghost', onclick: () => { dropFeatDeal(s, d.id); rerender(); } }, t(l('Recusar', 'Decline'))))))) : null,
-    done.length ? h('ul', { class: 'small' }, done.map((d) => h('li', null, d.side === 'host' ? h('span', null, actLink(s, d.hostActId), ` "${d.title}" feat. `, actLink(s, d.guestActId)) : h('span', null, actLink(s, d.guestActId), ` ${t(l('em', 'on'))} "${d.title}" ${t(l('de', 'by'))} `, actLink(s, d.hostActId)),
+    done.length ? h('ul', { class: 'small' }, done.map((d) => h('li', null, d.side === 'host' ? h('span', null, actLink(s, d.hostActId), ` "${d.title}" feat. `, ...dealGuests29(s, d)) : h('span', null, actLink(s, d.guestActId), ` ${t(l('em', 'on'))} "${d.title}" ${t(l('de', 'by'))} `, actLink(s, d.hostActId)),
       ` · ${$(d.fee)} · ${pct(d.split)}`, d.paid ? ` · ${t(l('royalties', 'royalties'))} ${$(d.paid)}` : ''))) : null,
     ties.length ? h('div', null, h('h4', null, t(l('Laços do seu elenco fora do selo', 'Your roster\'s ties outside the label'))),
       h('ul', { class: 'attr-list' }, ties.map(({ t: x, me }) => h('div', null, h('small', { class: 'muted' }, `${s.persons[me]?.name ?? ''} ↔ `), tieRow(s, x, me, () => {}))))) : null,

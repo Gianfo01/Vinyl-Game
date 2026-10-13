@@ -9,7 +9,7 @@ import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { crime17, orgById } from '../../sim/sys/crime17';
 import { tieOf } from '../../sim/sys/crimenpc17';
-import { careerActs29 } from '../../sim/sys/connect29';
+import { careerActs29, personFeats29 } from '../../sim/sys/connect29';
 import { items18 } from '../../sim/sys/inbox18';
 import { P } from '../../sim/sys/people/state';
 import { relics } from '../../sim/sys/relics9';
@@ -62,10 +62,19 @@ function underworld(s: GameState, acts: Act[], keys: string[]): HTMLElement | nu
     log.length ? h('ul', { class: 'small' }, ...log.map((x) => h('li', { class: x.ok ? '' : 'muted' }, `${x.y} · `, t(x.text)))) : null);
 }
 
+/** R29 (feat de pessoa): as participações da pessoa — as dela (pessoa a pessoa) e as do ato inteiro de uma banda dela. */
+function featsOf29(s: GameState, p: Person): HTMLElement | null {
+  const xs = personFeats29(s, p.id, 16);
+  if (!xs.length) return null;
+  return section(t(l('Participações (feat.)', 'Features (feat.)')), h('ul', { class: 'small' }, ...xs.map((x) => h('li', null,
+    h('span', { class: 'muted' }, `${x.year} · `), h('b', null, `"${x.title}"`), ` ${t(l('de', 'by'))} `, actLink(s, x.hostActId),
+    x.via === 'act' && x.actId ? h('small', { class: 'muted' }, ` · ${t(l('com', 'with'))} ${s.acts[x.actId]?.name ?? '?'} ${t(l('(a banda inteira)', '(the whole band)'))}`) : h('small', { class: 'muted' }, ` · ${t(l('só a pessoa', 'just the person'))}`)))));
+}
+
 PERSON_TABS.push((s, p: Person) => {
   if (p.isPlayer) return null;
   const acts = careerActs29(s, p.id).map((x) => x.act);
-  const parts = () => [mailOf(s, `p:${p.id}`), promisesOf(s, p), relicsAwards(s, acts.map((a) => a.id), p.id), underworld(s, acts.filter((a) => a.members.includes(p.id)), [p.id, `p:${p.id}`, ...acts.filter((a) => a.members.includes(p.id)).map((a) => a.id)])].filter((x): x is HTMLElement => !!x);
+  const parts = () => [featsOf29(s, p), mailOf(s, `p:${p.id}`), promisesOf(s, p), relicsAwards(s, acts.map((a) => a.id), p.id), underworld(s, acts.filter((a) => a.members.includes(p.id)), [p.id, `p:${p.id}`, ...acts.filter((a) => a.members.includes(p.id)).map((a) => a.id)])].filter((x): x is HTMLElement => !!x);
   return { id: 'connect29', label: l('Conexões', 'Connections'), icon: 'handshake', render: () => { const xs = parts(); return xs.length ? h('div', null, ...xs) : h('p', { class: 'muted small' }, t(l('Nada registrado em outros sistemas ainda.', 'Nothing recorded in other systems yet.'))); } };
 });
 
