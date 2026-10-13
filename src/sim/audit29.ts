@@ -12,6 +12,7 @@
 //  R5  parentesco assimétrico (A é parente de B, B não é de A) ou romance com pessoa inexistente
 //  R6  falecido(a) mostrado(a) como integrante atual de ato ativo; morte antes do nascimento; vivo com ano de morte
 //  R7  autoria: compositor(a) inexistente, ou música do lançamento de outro ato
+//  R7m crédito para ex-integrante que já tinha saído antes da música (formação provisória da criação do mundo)
 //  R8  identidade partida: a mesma pessoa real (nome canônico) em duas Pessoas diferentes
 //  R9  índice nome → pessoa (rw.pid) apontando para alguém com outro nome (a causa raiz do caso Roger Waters)
 import { HOMONYMS27 } from '../data/model27';
@@ -143,6 +144,16 @@ export function audit29(s: GameState): Finding29[] {
       if (!so) continue;
       if (so.actId !== rel.actId && !(rel as { comp?: unknown }).comp && rel.type !== 'compilation' as string) add('R7', `${rel.title}: música de outro ato (${so.actId}≠${rel.actId})`);
       for (const w of so.writers) if (!s.persons[w]) add('R7', `${so.title}: compositor(a) inexistente ${w}`);
+    }
+  }
+
+  // R7m — crédito de composição para quem já tinha saído do ato antes da música (formação provisória)
+  for (const rel of Object.values(s.releases)) {
+    const a = s.acts[rel.actId];
+    if (!a) continue;
+    for (const sid of rel.songs) for (const w of s.songs[sid]?.writers ?? []) {
+      const f = (st.former[a.id] ?? []).filter((x) => x.personId === w);
+      if (f.length && !a.members.includes(w) && !s.persons[w]?.real27?.writer && Math.max(...f.map((x) => x.year)) < rel.year - 1) add('R7m', `${s.songs[sid].title} (${rel.year}, ${a.name}) creditada a ${nm(w)}, que saiu em ${Math.max(...f.map((x) => x.year))}`);
     }
   }
 

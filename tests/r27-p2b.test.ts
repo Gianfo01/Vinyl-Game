@@ -56,9 +56,12 @@ describe('r27 P2B — modo rápido intacto', () => {
     // selo NPC nas ofertas, facções, prêmios, cadeias) e F4: 284310 / 1382068899 / 2698844748 / 292729101. Bot equilibrado
     // trocando promessa de prioridade por adiantamento menor (F5): 446768 / 1382068899 / 855772293 / 288537379. Relíquias
     // novas que nascem de eventos (R28 arte: certificados, pôsteres, ingressos…): 446096 / 1382068899 / 4292160800 / 2262769409.
-    expect(AFTER.player.cash).toBe(446096);
+    // R29 (CONNECT, de propósito — docs/connect29.md): perks appeal/chartUnits/showRevenue/pressingCost passam a valer,
+    // modificadores songQ depois dos ganchos de gravação, escândalo → próximo disco, prêmios → prestígio: caixa e acts mudam;
+    // tours e rng iguais. Antes: 446096 / 1382068899 / 4292160800 / 2262769409.
+    expect(AFTER.player.cash).toBe(427926);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4292160800);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1063419696);
     expect(hashString(JSON.stringify(AFTER.rng))).toBe(2262769409);
   });
   it('nada de estado P2B criado sem o jogador', () => {

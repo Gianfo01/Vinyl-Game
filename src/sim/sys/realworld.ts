@@ -472,10 +472,15 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     for (const p of old) if (!now.includes(p.id) && !(st.former[act.id] ?? []).some((x) => x.personId === p.id)) delete s.persons[p.id];
     // R29 (CONNECT): músicas já criadas com os integrantes gerados nos créditos passam para quem ocupou a vaga (mesma
     // posição) ou para o(a) líder — antes ficavam com ids de pessoas apagadas ("compositor inexistente" na ficha da música)
-    const heir = (id: string, i: number) => (s.persons[id] ? id : (now[i] ?? now[0]));
+    // As músicas que já existem aqui foram compostas pela formação provisória (antes de decorar): crédito de quem não
+    // está na formação atual (ex-integrante que só entrou pela posição, como Syd Barrett em "Breathe" de 1975) também
+    // passa para a formação atual. Compositores reais de fora (real27.writer, WORKS27) ficam.
+    const heir = (id: string, i: number) => (s.persons[id] && (now.includes(id) || s.persons[id].real27?.writer) ? id : (now[i] ?? now[0]));
     for (const sid of act.songs) {
       const so = s.songs[sid];
-      if (so?.writers.some((w) => !s.persons[w])) so.writers = [...new Set(so.writers.map((w) => heir(w, old.findIndex((o) => o.id === w))).filter((w): w is string => !!w && !!s.persons[w]))];
+      if (so?.writers.some((w) => !s.persons[w] || !(now.includes(w) || s.persons[w].real27?.writer))) so.writers = [...new Set(so.writers.map((w) => heir(w, old.findIndex((o) => o.id === w))).filter((w): w is string => !!w && !!s.persons[w]))];
+      const ws = so && real ? realWriters27(s, act, so.title) : [];
+      if (so && ws.length) so.writers = ws; // obra real conhecida: os compositores de verdade
     }
     if (now.length) act.members = now; actsTouched17(s); // r17: índice pessoa→atos
     act.leaderId = act.members[0];

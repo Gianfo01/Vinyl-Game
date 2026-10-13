@@ -300,7 +300,7 @@ function careerTab(s: GameState, p: Person): HTMLElement {
   const acts = careerActs29(s, p.id).map((x) => x.act); // R29 (CONNECT): bandas antigas também (antes só a formação atual)
   return h('div', null,
     chips(stat('pen', written.length, l('Músicas escritas', 'Songs written')), stat('disc', released.length, l('Lançadas', 'Released')), stat('trophy', hits.length, l('No top 10', 'Top 10'))),
-    acts.length ? h('p', null, t(l('Atos: ', 'Acts: ')), acts.map((a) => actLink(s, a.id))) : null,
+    acts.length ? h('p', null, t(l('Atos: ', 'Acts: ')), acts.flatMap((a, i) => [i ? ', ' : '', actLink(s, a.id)])) : null,
     best.length ? h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, 'Q'), h('th', null, t(S.peak)), h('th', null, t(l('Ano', 'Year'))))),
       h('tbody', null, best.map((so) => { const r = s.releases[so.releaseId!]; return h('tr', null, h('td', null, h('button', { class: 'link', onclick: () => openRelease(r.id) }, so.title)), h('td', null, Math.round(so.q)), h('td', null, r.peak < 999 ? `#${r.peak}` : '—'), h('td', null, r.year)); }))) : null,
   );

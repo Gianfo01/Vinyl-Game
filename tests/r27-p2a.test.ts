@@ -59,8 +59,10 @@ beforeAll(() => {
   // reproduzem em b748d64; AUD2 (c4c5bfd) mudou acts e AUD1 (166a36e: playbot compra negócios e contrata no 1º ano)
   // mudou caixa, acts e rng. "Sem campanha nada muda" segue provado no 1º teste da campanha (a × b).
   // R28: re-medidos (mesmos do r27-p2b): fase 5 (rivais) e formações reais na data inicial mudam o mundo de propósito; depois F3, F4 e F8 (r27-p2b explica cada um).
-  expect(s.player.cash).toBe(446096);
-  expect(hashString(JSON.stringify(s.acts))).toBe(4292160800);
+  // R29 (CONNECT, de propósito): perks de apelo/vendas/bilheteria/prensagem passam a valer, modificadores songQ sobrevivem
+  // aos ganchos de gravação, escândalo pesa no próximo disco e prêmios dão prestígio. Antes: 446096 / 4292160800 (rng igual).
+  expect(s.player.cash).toBe(427926);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1063419696);
   expect(hashString(JSON.stringify(s.rng))).toBe(2262769409);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
