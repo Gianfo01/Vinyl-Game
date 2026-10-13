@@ -661,7 +661,7 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
     const slot = (lm as Landmark19 & { slot?: number }).slot ?? i;
     const [sgx, sgy] = LM_SLOTS27[slot % LM_SLOTS27.length];
     const [lx, ly] = iso(sgx, sgy);
-    marks.push({ id: lm.id, box: drawLmIso27(p, gl, lm.id, lm.sh, lx, ly, y, look.sea, seed) });
+    marks.push({ id: lm.id, box: drawLmIso27(p, gl, lm.id, lm.sh, lx, ly, y, look.sea, seed, env.city) });
   });
   // r27 (I2): sombra projetada de cada prédio para a direita (luz do alto à esquerda)
   for (const sp of sprites) {

@@ -9,10 +9,11 @@
 import type { LmShape } from '../../data/landmarks19';
 import { C, Px, dith, noise, shade, withAlpha, type Col } from './px';
 import { drawText } from './font';
+import { region27 } from './skyline27';
 
 type P = [number, number];
 /** Contexto de desenho: buffer de cor, buffer de luzes, âncora (centro da base no chão), ano. */
-interface K { p: Px; l: Px; X: number; Y: number; year: number; seed: number; /** chão (água, praça): sem contorno */ g: Px }
+interface K { p: Px; l: Px; X: number; Y: number; year: number; seed: number; /** chão (água, praça): sem contorno */ g: Px; /** r27 (I2b): região da cidade (skyline27.region27) para os genéricos */ reg?: string }
 /** Desenha no chão do marco (fica fora do contorno). */
 const G = (k: K): K => ({ ...k, p: k.g });
 /** Pegada para a sombra (células) e altura (px). */
@@ -868,12 +869,15 @@ const GENERIC: Record<LmShape, Spec> = {
   tbridge: { base: 'none', draw: towerBridge }, arch: { base: 'none', draw: (k) => archBridge(k, { col: C('#7a8088'), pylons: true }) }, spire: { base: 'plaza', draw: (k) => empire(k, { col: C('#c8c0b0') }) },
   twin: { base: 'plaza', draw: (k) => twin(k, C('#d8d4cc')) }, clock: { base: 'plaza', draw: (k) => bigBen(k, { stone: C('#c8bca4'), tall: 30 }) }, lattice: { base: 'plaza', draw: eiffel },
   needle: { base: 'plaza', draw: (k) => tvTower(k, { ball: false, shaft: C('#d8d4cc'), podR: 9, pod: 44, H: 42 }) }, shell: { base: 'none', draw: opera }, stadium: { base: 'plaza', draw: stadium },
-  dome: { base: 'none', draw: (k) => dome(k) }, hall: { base: 'none', draw: (k) => hall(k, { wall: C('#d8c8a8'), roof: C('#5a6068'), cols: true }) }, cathedral: { base: 'none', draw: (k) => cathedral(k) },
+  dome: { base: 'none', draw: (k) => dome(k) }, hall: { base: 'none', draw: (k) => hall(k, { wall: C('#d8c8a8'), roof: C('#5a6068'), cols: true }) }, cathedral: { base: 'none', draw: (k) => cathedral(k, GEN_STONE27[k.reg ?? ''] ?? C('#c8bca4')) },
   wall: { base: 'none', draw: wall }, pyramid: { base: 'none', draw: (k) => pyramid(k, C('#d8b878')) }, minaret: { base: 'plaza', draw: (k) => minaret(k) }, pagoda: { base: 'plaza', draw: (k) => pagoda(k) },
   sign: { base: 'none', draw: hillSign }, gate: { base: 'none', draw: (k) => brandenburg(k, { col: C('#d8ccb0'), quadriga: false }) }, colosseum: { base: 'none', draw: (k) => colosseum(k) },
   castle: { base: 'plaza', draw: (k) => castle(k) }, wheel: { base: 'plaza', draw: wheel }, obelisk: { base: 'plaza', draw: (k) => obelisk(k) }, temple: { base: 'none', draw: (k) => temple(k) },
   studio: { base: 'none', draw: studio },
 };
+
+/** r27 (I2b): pedra da catedral genérica pela região (caiada no trópico e na América Latina, ocre no Oriente Médio). */
+const GEN_STONE27: Record<string, Col> = { br: C('#f0e8d4'), latam: C('#f0e4cc'), carib: C('#f2ecdc'), africa: C('#ece0c4'), mena: C('#dcc49a'), med: C('#e4d6b8'), south: C('#e8d8b8'), asia: C('#d8d0c0') };
 
 /** Tem desenho próprio (não só a forma genérica)? */
 export const hasBespoke27 = (id: string): boolean => id in BESPOKE;
@@ -885,10 +889,10 @@ export const LM_SLOTS27: [number, number][] = [[-2.6, 3.4], [4.6, -2.6], [-2.8, 
  * Desenha um marco com base no chão em (x, y) de `p` (cor) e `gl` (luzes). `sea` = em volta é mar (ilha/praça viram
  * terra firme). Devolve a caixa ocupada [x0, y0, x1, y1] para o ponto clicável.
  */
-export function drawLmIso27(p: Px, gl: Px, id: string, sh: LmShape, x: number, y: number, year: number, sea: boolean, seed = 0): [number, number, number, number] {
+export function drawLmIso27(p: Px, gl: Px, id: string, sh: LmShape, x: number, y: number, year: number, sea: boolean, seed = 0, city = ''): [number, number, number, number] {
   const spec = BESPOKE[id] ?? GENERIC[sh] ?? GENERIC.cathedral;
   const q = new Px(QW, QH), ql = new Px(QW, QH), g = new Px(QW, QH), gb = new Px(QW, QH);
-  const k: K = { p: q, l: ql, X: AX, Y: AY, year, seed, g };
+  const k: K = { p: q, l: ql, X: AX, Y: AY, year, seed, g, reg: city ? region27(city) : undefined };
   const kg: K = { ...k, p: gb };
   const foot = spec.draw(k);
   const r1 = foot.r1 + 0.45, r2 = foot.r2 + 0.45;
@@ -905,6 +909,8 @@ export function drawLmIso27(p: Px, gl: Px, id: string, sh: LmShape, x: number, y
   outlineOuter(q, OUTL);
   p.blit(gb, Math.round(x - AX), Math.round(y - AY));
   p.blit(q, Math.round(x - AX), Math.round(y - AY));
+  // r27 (I2b): o marco tapa as luzes do horizonte e as estrelas que ficam atrás dele
+  for (let j = 0; j < QH; j++) for (let i = 0; i < QW; i++) if (q.d[j * QW + i] >>> 24 > 40) { const gx = i + Math.round(x - AX), gy = j + Math.round(y - AY); if (gx >= 0 && gy >= 0 && gx < gl.w && gy < gl.h) gl.d[gy * gl.w + gx] = 0; }
   gl.blit(ql, Math.round(x - AX), Math.round(y - AY));
   // caixa ocupada
   let x0 = QW, y0 = QH, x1 = 0, y1 = 0;
