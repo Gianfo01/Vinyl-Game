@@ -34,6 +34,7 @@ import type { MapOverlay } from '../map';
 import { openScene } from '../registry';
 import { ic } from '../vis';
 import './mapinfo17.css';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const T = (x: L) => t(x);
 const blk = (icon: string, title: L, ...body: (HTMLElement | null | false | string)[]): HTMLElement | null => {
@@ -99,7 +100,7 @@ function venues(s: GameState, sc: Scope): HTMLElement | null {
   const vs = VENUES17.filter((v) => sc.cities.includes(v.city) && venueOpen(s, v));
   const clubs = s.clubs.filter((c) => sc.cities.includes(c.city) && !c.closed).slice(0, 4);
   return blk('house', l('Casas de show', 'Venues'),
-    vs.length ? h('ul', { class: 'small' }, vs.map((v) => li(h('button', { class: 'link', onclick: () => openVenue17(s, v.id) }, v.name), ` · ${N(v.cap)} ${T(l('lugares', 'seats'))} · ${T(l('prestígio', 'prestige'))} ${v.prestige}`))) : null,
+    vs.length ? h('ul', { class: 'small' }, vs.map((v) => li(h('button', { class: 'link', ...ent27('venue', v.id), onclick: () => openVenue17(s, v.id) }, v.name), ` · ${N(v.cap)} ${T(l('lugares', 'seats'))} · ${T(l('prestígio', 'prestige'))} ${v.prestige}`))) : null,
     clubs.length ? h('ul', { class: 'small' }, clubs.map((c) => li(c.name, ` · ${genreName(c.genre)} · ${N(c.capacity)}`, c.owner === 'player' ? pill(T(l('seu', 'yours')), 'good') : null))) : null,
     !vs.length && !clubs.length ? h('p', { class: 'small muted' }, T(l('Sem casas famosas registradas agora.', 'No famous venues on record right now.'))) : null);
 }
@@ -167,7 +168,7 @@ function news(s: GameState, sc: Scope): HTMLElement | null {
 export function mapInfo17(s: GameState, kind: 'city' | 'country', id: string): HTMLElement {
   const sc = scopeOf(kind, id);
   return h('div', { class: 'mi17' },
-    kind === 'country' && sc.cities.length ? h('p', { class: 'small' }, T(l('Cidades: ', 'Cities: ')), ...sc.cities.map((c) => h('button', { class: 'link mi17-city', onclick: () => openMapInfo17(s, 'city', c) }, `${cityName(c)} `))) : null,
+    kind === 'country' && sc.cities.length ? h('p', { class: 'small' }, T(l('Cidades: ', 'Cities: ')), ...sc.cities.map((c) => h('button', { class: 'link mi17-city', ...ent27('city', c), onclick: () => openMapInfo17(s, 'city', c) }, `${cityName(c)} `))) : null,
     basics(s, sc), myFame(s, sc), relevance(s, sc), topActs(s, sc), venues(s, sc), press(s, sc), laws(s, sc), crime(s, sc), trends(s, sc), relicsHere(s, sc), news(s, sc));
 }
 

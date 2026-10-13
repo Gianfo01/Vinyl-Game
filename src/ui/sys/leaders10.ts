@@ -17,6 +17,7 @@ import { registerPageTab } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
 import { personRoute16 } from '../route16';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const relWord = (v: number): L => v >= 40 ? l('aliado', 'ally') : v >= 12 ? l('cordial', 'friendly') : v > -12 ? l('neutro', 'neutral') : v > -40 ? l('frio', 'cold') : l('inimigo', 'enemy');
 const relCls = (v: number) => (v >= 12 ? 'good' : v <= -12 ? 'bad' : '');
@@ -35,7 +36,7 @@ function face(s: GameState, L0: Leader, px = 3): HTMLElement {
 /** Link para o perfil do líder. */
 export function leaderLink(s: GameState, L0: Leader | undefined): HTMLElement {
   if (!L0) return h('span', { class: 'muted' }, '—');
-  return h('button', { class: 'link', onclick: (e: Event) => { e.stopPropagation(); openLeader(L0.id); } }, L0.name);
+  return h('button', { class: 'link', ...ent27('person', `l:${L0.id}`), onclick: (e: Event) => { e.stopPropagation(); openLeader(L0.id); } }, L0.name);
 }
 
 export function openLeader(id: string): void {

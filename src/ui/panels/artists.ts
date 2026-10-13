@@ -33,6 +33,7 @@ import { pledgeLine } from '../sys/offers12';
 import { hideSection, sectionsOf } from '../registry';
 import { FILTER0_20, SUB20, SUBTAB_KEY20, actionRow20, alerts20, filterRoster20, nextCommitment20, project20, type Filter20, type Sub20 } from '../actions20';
 import { actionsButton20, applyNav20, bindContext20, chooseAction20, quickPins20 } from '../sys/actmenu20';
+import { ent27 } from '../ps/ent27'; // r27 (CTX): clique direito no NOME abre o menu da entidade; no resto do card, o menu de ações
 import { actStatus } from '../../sim/sys/hq8';
 import { flowNote27, slotHint27, slotMark27 } from '../act27/flow27';
 
@@ -84,7 +85,7 @@ function rosterList20(s: GameState, ids: string[], sel: string): HTMLElement {
     const li = h('li', { class: id === sel ? 'sel' : '', tabindex: '0', 'aria-current': id === sel ? 'true' : null,
       onclick: () => { store.selectedAct = id; rerender(); },
       onkeydown: (e: KeyboardEvent) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); store.selectedAct = id; rerender(); } } },
-      logo(x, 32), h('div', null, h('b', null, x.name, off ? h('small', { class: 'muted' }, ` (${t(l('fora do filtro', 'outside the filter'))})`) : null),
+      logo(x, 32), h('div', null, h('b', { class: 'ent27', ...ent27('act', id) }, x.name, off ? h('small', { class: 'muted' }, ` (${t(l('fora do filtro', 'outside the filter'))})`) : null),
         h('span', { class: 'ar20-meta' }, `${genreName(x.genre)} · ${cityName(x.city)} · ${statusName(x.status)}`),
         nx ? h('span', { class: 'ar20-meta' }, '→ ', t(nx.text), ` · ${t(l('sem.', 'wk'))} ${Math.max(0, nx.w - s.week)}`) : null),
       x.status === 'hiatus' ? pill('⏸') : null,

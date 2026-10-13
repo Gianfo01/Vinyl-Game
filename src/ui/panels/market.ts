@@ -2,15 +2,16 @@
 // de scout, aprofundar na hora) saiu — a tela Talentos (talentos23) é a única, sobre o motor único scout23.
 
 import { STAFF_ROLES } from '../../data/rules';
-import { cityById, l } from '../../data/world';
+import { l } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import { hireStaff } from '../../sim/economy';
 import type { GameState } from '../../sim/types';
-import { $, cityName, labelLink, rerender, section, toast } from '../common';
+import { $, cityLink, labelLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { hqCaps } from '../../sim/branches';
 import { crewProfileCell } from '../sys/crew8';
 import { staffStars18 } from '../ab18stars';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 export function rivals(s: GameState): HTMLElement {
   const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.revenueLastYear - a.revenueLastYear);
@@ -22,7 +23,7 @@ export function rivals(s: GameState): HTMLElement {
       h('tbody', null, labels.map((lb) => h('tr', null,
         h('td', null, labelLink(s, lb.id)),
         h('td', null, `${lb.family} · ${famName[lb.family]}`),
-        h('td', null, cityById[lb.city] ? cityName(lb.city) : lb.city),
+        h('td', null, cityLink(lb.city)),
         h('td', null, lb.roster.length),
         h('td', null, $(lb.revenueLastYear)),
         h('td', null, lb.territories.length),
@@ -40,7 +41,7 @@ export function professionals(s: GameState): HTMLElement {
       h('tbody', null, s.professionals.map((p) => {
         const role = STAFF_ROLES.find((r) => r.id === p.role);
         return h('tr', null,
-          h('td', null, p.name),
+          h('td', null, h('span', { class: 'ent27', tabindex: '0', ...ent27('person', `s:${p.id}`) }, p.name)),
           h('td', { title: t(role?.desc) }, t(role?.name), h('div', null, crewProfileCell(s, p))),
           h('td', null, p.skill, ' ', staffStars18(s, p)),
           h('td', null, $(p.salary)),

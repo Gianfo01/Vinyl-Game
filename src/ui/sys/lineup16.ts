@@ -7,6 +7,7 @@ import type { Act, GameState, Person } from '../../sim/types';
 import { actLink, pill } from '../common';
 import { h } from '../dom';
 import { ACT_TABS, PERSON_TABS, openPersonPage } from '../pages';
+import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const MO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const live = (a: Act) => a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus';
@@ -35,7 +36,7 @@ function lineupTab(s: GameState, a: Act): HTMLElement {
         const p = s.persons[x.pid];
         const now = a.members.includes(x.pid);
         return [
-          h('div', { class: 'small' }, h('button', { class: 'link', onclick: () => openPersonPage(p.id) }, p.name), !p.alive ? ' †' : '', h('div', { class: 'muted', style: 'font-size:11px' }, `${roleName(p)} · ${segTxt(x.segs)}`)),
+          h('div', { class: 'small' }, h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, p.name), !p.alive ? ' †' : '', h('div', { class: 'muted', style: 'font-size:11px' }, `${roleName(p)} · ${segTxt(x.segs)}`)),
           h('div', null,
             h('div', { title: segTxt(x.segs), style: 'position:relative;height:10px;border-radius:5px;background:var(--panel-2)' },
               ...x.segs.map((g) => h('div', { style: `position:absolute;top:0;bottom:0;left:${pct(g.from)};width:calc(${pct(g.to ?? y1)} - ${pct(g.from)} + 4px);min-width:4px;border-radius:5px;background:${now && g.to === undefined ? 'var(--accent)' : 'var(--muted)'}` }))),

@@ -107,6 +107,7 @@ export function shortcutsHelp15(areas: { key: string; label: string }[]): void {
     ['{ / }', l('Aba anterior / próxima da página atual', 'Previous / next tab on the current page')],
     ['☆', l('Fixa a página atual no topo do menu (barra de migalhas)', 'Pins the current page to the top of the menu (breadcrumb bar)')],
     ['🕘', l('Páginas recentes (também no topo do Ctrl K)', 'Recent pages (also at the top of Ctrl K)')],
+    ['Shift F10', l('Ações do nome em foco (também clique direito ou toque longo num nome)', 'Actions for the focused name (also right-click or long-press a name)')], // r27 (CTX)
     ['?', l('Este painel', 'This panel')],
     ['Esc', l('Fecha janelas', 'Closes dialogs')],
   ];

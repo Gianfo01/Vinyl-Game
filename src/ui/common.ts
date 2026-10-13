@@ -7,6 +7,7 @@ import { h } from './dom';
 import { eraGenre23 } from '../sim/genre23';
 import { store } from './store';
 import { nameSvg20 } from './ux20';
+import { ent27 } from './ps/ent27'; // r27 (CTX): nomes com data-ent/data-id ganham o menu de ações (clique direito / toque longo)
 
 export const $ = (cents: number) => formatMoney(cents, locale());
 export const N = (n: number) => formatNumber(n, locale());
@@ -56,24 +57,37 @@ export const inspect = {
   release: (_id: string) => {},
   label: (_id: string) => {},
   person: (_id: string) => {},
+  /** r27 (CTX): ficha da cidade (registrada em ps/ctx27.ts → Mundo › Mapa) */
+  city: (_id: string) => {},
 };
 
 export function actLink(s: GameState, actId: string | undefined, extra = ''): HTMLElement {
   const a = actId ? s.acts[actId] : undefined;
   if (!a) return h('span', { class: 'muted' }, '—');
   const mine = a.owner === 'player';
-  return h('button', { class: `link ${mine ? 'mine' : ''} ${extra}`, onclick: (e: Event) => { e.stopPropagation(); inspect.act(a.id); } }, a.name);
+  return h('button', { class: `link ${mine ? 'mine' : ''} ${extra}`, ...ent27('act', a.id), onclick: (e: Event) => { e.stopPropagation(); inspect.act(a.id); } }, a.name);
 }
 
 export function releaseLink(s: GameState, relId: string): HTMLElement {
   const r = s.releases[relId];
   if (!r) return h('span', { class: 'muted' }, '—');
-  return h('button', { class: 'link', onclick: (e: Event) => { e.stopPropagation(); inspect.release(r.id); } }, r.title);
+  return h('button', { class: 'link', ...ent27('release', r.id), onclick: (e: Event) => { e.stopPropagation(); inspect.release(r.id); } }, r.title);
 }
 
 export function labelLink(s: GameState, owner: string | null | undefined): HTMLElement {
-  if (owner && s.labels[owner]) return h('button', { class: 'link', onclick: (e: Event) => { e.stopPropagation(); inspect.label(owner); } }, s.labels[owner].name);
+  if (owner && s.labels[owner]) return h('button', { class: 'link', ...ent27('label', owner), onclick: (e: Event) => { e.stopPropagation(); inspect.label(owner); } }, s.labels[owner].name);
   return h('span', { class: owner === 'player' ? 'mine' : 'muted' }, ownerName(s, owner));
+}
+
+/** r27 (CTX): nome de cidade clicável (abre a ficha no mapa) e com o menu de ações da cidade. */
+export function cityLink(id: string | undefined, text?: string): HTMLElement {
+  if (!id || !cityById[id]) return h('span', null, text ?? id ?? '—');
+  return h('button', { type: 'button', class: 'link', ...ent27('city', id), onclick: (e: Event) => { e.stopPropagation(); inspect.city(id); } }, text ?? cityName(id));
+}
+
+/** r27 (CTX): título de música com o menu de ações (ouvir, créditos…); o clique esquerdo fica com o dono da linha. */
+export function songName(songId: string | undefined, title: string): HTMLElement {
+  return h('span', { class: songId ? 'ent27' : '', tabindex: songId ? '0' : null, ...ent27('song', songId) }, title);
 }
 
 export function logo(act: Act, size = 40): HTMLElement {
