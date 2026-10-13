@@ -399,6 +399,13 @@ Bônus de apelo novos entram na família de causa (caps18: `awards29a` em "image
 | arestas desligadas | 17% (4/24) | 43k | 2,71 mi | 11 | 57 |
 | ligadas (final) | 21–29% (5–7/24 entre variações) | 4–18k | 1,1–2,1 mi | 17–18 | 53–59 |
 
+| com o público (demo29) — arestas desligadas | 17% (4/24) | 29k | 1,71 mi | 11 | 60 |
+| com o público (demo29) — ligadas | 25% (6/24) | 30k | 1,85 mi | 17 | 54 |
+
+Depois do merge do público (mesma bateria, `CONN29_OFF` com todas as 38 arestas): **15 de 24** partidas terminam
+melhor com as arestas, mediana da diferença pareada de patrimônio **+171 mil**; quebras 4 → 6 (duas a mais em 1889,
+o início mais duro, e uma trocada em 1975). Dentro da faixa já medida acima.
+
 Por partida (mesma semente, desligado × ligado): 12–13 de 24 terminam melhor com as arestas; mediana da diferença de
 patrimônio entre −40 mil e +528 mil conforme a variação — a trajetória de cada partida diverge (contrata outros atos),
 então a mediana geral oscila muito. Efeito estável: **mais fama** (11 → 17–18) e o jogo um pouco mais exigente com caixa
