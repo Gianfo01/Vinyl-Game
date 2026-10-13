@@ -145,11 +145,16 @@ export function artistWeights(s: GameState, act: Act): WeightInfo {
 
 const reachOf = (s: GameState) => clamp(s.player.territories.length / 6 + s.player.reputation.commercial / 200 + s.player.reputation.artists / 300, 0.1, 1);
 
+/** r28 F8: ajustes da reputação de um selo NPC na visão do artista (processos, falências do CEO, escândalo do fundador —
+ *  sys/labelrep28.ts) e o porquê que aparece nos contras do pacote. */
+export const CLOUT_ADJ12: ((s: GameState, lbId: string) => number)[] = [];
+export const CLOUT_WHY12: ((s: GameState, lbId: string) => L | null)[] = [];
 export function labelClout(s: GameState, from: string): number {
   if (from === 'player') return reachOf(s);
   const lb = s.labels[from];
   if (!lb) return 0.4;
-  return clamp(lb.reputation / 100 * 0.6 + (lb.family === 'A' ? 0.35 : lb.family === 'D' ? 0.2 : lb.family === 'B' ? 0.1 : 0.15) + lb.roster.length / 200, 0.1, 1);
+  const adj = CLOUT_ADJ12.reduce((x, f) => x + f(s, from), 0); // r28 F8
+  return clamp(lb.reputation / 100 * 0.6 + (lb.family === 'A' ? 0.35 : lb.family === 'D' ? 0.2 : lb.family === 'B' ? 0.1 : 0.15) + lb.roster.length / 200 + adj, 0.1, 1);
 }
 
 /** Notas 0..1 por bloco do ponto de vista do artista + total ponderado. */
@@ -179,6 +184,7 @@ export function scorePackage(s: GameState, act: Act, p: DealPackage, wi = artist
   if (pledge > 0.4) pros.push(l('verba de turnê/marketing garantida', 'guaranteed tour/marketing budget'));
   if (yrs > 4) cons.push(l('prazo longo', 'long term'));
   if (p.clout > 0.7) pros.push(l('selo forte e com alcance', 'strong label with reach'));
+  for (const f of CLOUT_WHY12) { const w = f(s, p.from); if (w) cons.push(w); } // r28 F8: processos, falências, fundador
   return { total, dims, pros, cons };
 }
 
