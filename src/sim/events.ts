@@ -930,6 +930,8 @@ export function resolveDecision(s: GameState, decisionId: string, optionId: stri
   return true;
 }
 
+/** r28 F8 (D2): ajuste do modo história/assistido nos pesos (sys/assist28.ts): fator para eventos ruins e bons. */
+export const ASSIST_EV28: { f?: (s: GameState, struggling: boolean) => { bad: number; good: number } } = {};
 /** Diretor de histórias: Maestro (ondas), Brisa (calmo), Acaso (aleatório). Machuca, mas não mata. */
 export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
   r = rng19(s, 'events', r); // r19: um evento a mais não desloca os sorteios dos outros sistemas
@@ -941,6 +943,7 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
   const monthlyCost = estimateMonthlyBurn(s);
   const struggling = s.player.cash < monthlyCost * 2 || s.player.insolvencyMonths > 0;
   const target = pc.wave ? 0.5 + 0.35 * Math.sin((monthIndex / pc.wave) * Math.PI * 2) : 0.35;
+  const as28 = ASSIST_EV28.f?.(s, struggling); // r28 F8 (D2): modo história
   for (let i = 0; i < n; i++) {
     const valid: [EventDef, Ctx][] = [];
     // as funções find só leem o estado: a lista de atos do jogador fica congelada durante a varredura
@@ -963,10 +966,12 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
       if (def.tone === 'bad') {
         w *= (pc.flatBad ?? (s.tension < target ? 1.8 : 0.6)) * pc.bad;
         if (struggling && pc.mercy) w *= 0.2;
+        if (as28) w *= as28.bad;
       }
       if (def.tone === 'good') {
         w *= (s.tension > target ? 1.6 : 0.8) * pc.good;
         if (struggling && pc.mercy) w *= 2;
+        if (as28) w *= as28.good;
       }
       return w;
     });

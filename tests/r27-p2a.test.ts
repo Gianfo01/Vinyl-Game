@@ -58,10 +58,10 @@ beforeAll(() => {
   // Re-medidos na r27 (docs/suite27-final.md), mesmos do r27-p2b: os antigos (1301031 / 2195685417 / 2442526734)
   // reproduzem em b748d64; AUD2 (c4c5bfd) mudou acts e AUD1 (166a36e: playbot compra negócios e contrata no 1º ano)
   // mudou caixa, acts e rng. "Sem campanha nada muda" segue provado no 1º teste da campanha (a × b).
-  // R28: re-medidos (mesmos do r27-p2b): fase 5 (rivais) e formações reais na data inicial mudam o mundo de propósito.
-  expect(s.player.cash).toBe(612278);
-  expect(hashString(JSON.stringify(s.acts))).toBe(4174246961);
-  expect(hashString(JSON.stringify(s.rng))).toBe(1111696030);
+  // R28: re-medidos (mesmos do r27-p2b): fase 5 (rivais) e formações reais na data inicial mudam o mundo de propósito; depois F3, F4 e F8 (r27-p2b explica cada um).
+  expect(s.player.cash).toBe(284310);
+  expect(hashString(JSON.stringify(s.acts))).toBe(2698844748);
+  expect(hashString(JSON.stringify(s.rng))).toBe(292729101);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

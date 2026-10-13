@@ -55,7 +55,7 @@ export const WHITELIST19: Record<string, string> = {
   piracy: 'pirataria (crime17): efeito no mercado aplicado no crime17',
   road_fight: 'briga na estrada (live18): estresse e relações aplicados no live18',
   succession: 'sucessão (saga18): consumida pela própria saga e pela crônica',
-  dispute: 'disputa de espólio (post18): efeito no próprio espólio',
+  // r28 F8: 'dispute' saiu da lista — agora a cena dos herdeiros (ui/ps/cut28model.ts) lê o fato
   termination: 'rescisão (rights18): direitos voltam no próprio rights18',
   press: 'ação de imprensa do jogador (verbs18): efeito local',
   arc: 'batida de fio do dm18: o próprio fio é o consumidor (diário do mestre de drama)',

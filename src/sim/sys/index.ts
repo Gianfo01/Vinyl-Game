@@ -349,4 +349,11 @@ import './board27'; // r27 P2B: reunião de diretoria mensal (só depois que o j
 import './aud27'; // r27 AUD2: agiota, filhos×herança, cultura emergente, estresse, críticos, macro, reações (sys/aud27/)
 import './songmkt27'; // r27 SONG: mercado de canções (comprar, ganhar, vender/dar, licenças; gancho mensal só com ato do jogador)
 import './story28'; // r28 F3: história do jogador — Diário próprio, orçamento de atenção, época e repetição dos eventos, ecos
+import './labelrep28'; // r28 F8: reputação de selo NPC nas ofertas + escândalo do fundador (N25)
+import './awards28'; // r28 F8 (I18): prêmios pelas dimensões de qualidade (Gramófonos + Prêmios do Ofício)
+import './fanscandal28';
+import './assist28'; // r28 F8 (D2): modo história/assistido (narrador alivia, socorro no aperto, dicas)
+import './chains28';
+import './quarter28';
+import './shared28'; // r28 F8: sociedade com NPC no festival, no campus e na venda da empresa // r28 F8 (C3/I25): uma decisão que importa por trimestre + delegação lida pelo Mestre (dm18) // r28 F8: Mestre das cadeias — cadeias 1, 2 e 5 andam em partidas reais (empurra o elo parado pelo sistema dono) // r28 F8 (I13): facções de fãs reagem diferente a cada escândalo (racha / defesa)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

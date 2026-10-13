@@ -19,6 +19,8 @@ export interface RunConfig {
   card?: string;
   mutators: string[];
   difficulty: 'easy' | 'normal' | 'hard';
+  /** r28 F8 (D2): modo história/assistido — narrador alivia (menos golpes, socorro no aperto) e dá dicas (sys/assist28.ts) */
+  assist28?: boolean;
   ironman: boolean;
   homeCity: string;
   companyName: string;

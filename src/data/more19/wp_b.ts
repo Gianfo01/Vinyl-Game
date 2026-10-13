@@ -42,7 +42,7 @@ Machel Montano|soca|port_of_spain|TTO|1986|2|1974||v
 Tabou Combo|kompa|port_au_prince|HTI|1968|2
 Nemours Jean-Baptiste|kompa|port_au_prince|HTI|1955|3|1918|1985|g
 Boukman Eksperyans|world_fusion|port_au_prince|HTI|1978|3
-Johnny Ventura|merengue|santo_domingo|DOM|1962|3|1940||v
+Johnny Ventura|merengue|santo_domingo|DOM|1962|3|1940|2021|v
 Wilfrido Vargas|merengue|santo_domingo|DOM|1970|3|1949||v
 Prince Royce|bachata|new_york|USA|2010|2|1989||v
 Cheo Feliciano|salsa|new_york|PRI|1962|3|1935|2014|v
@@ -78,7 +78,7 @@ Haruna Ishola|juju|lagos|NGA|1950|3|1919|1983|v
 Ebo Taylor|highlife|accra|GHA|1960|3|1936||g
 Pat Thomas|highlife|accra|GHA|1967|3|1951||v
 Sir Victor Uwaifo|highlife|lagos|NGA|1966|3|1941|2021|g
-Orlando Julius|highlife|lagos|NGA|1965|3|1943||h
+Orlando Julius|highlife|lagos|NGA|1965|3|1943|2022|h
 Prince Nico Mbarga|highlife|lagos|CMR|1976|3|1950|1997|g|||Sweet Mother:1976:s
 Daddy Lumba|highlife|accra|GHA|1987|2|1964|2025|v
 Femi Kuti|afrobeat|lagos|NGA|1986|2|1962||h

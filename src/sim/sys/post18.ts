@@ -390,12 +390,14 @@ function chronicle18(s: GameState): void {
     emitFact(s, { kind: 'statement', actors: [], severity: 45, visibility: 'public', tags: ['posthumous', 'chron', 'real'], text: c.t, src: 'post18' });
   }
 }
+/** r28 F8: multiplicador da chance mensal da história alternativa (1 = normal; o chains28 sobe quando a cadeia 5 espera o holograma). */
+export const ALT_K18: { f?: (s: GameState) => number } = {};
 /** História alternativa: selos rivais/espólios fazem hologramas e filmes de lendas mortas (Rng própria). */
 function altWorld18(s: GameState): void {
   if (exactHist(s) || s.year < 1950) return;
   const st = post18(s);
   const r = rng(s, `alt:${s.year}:${s.month}`);
-  if (!r.chance(0.03)) return;
+  if (!r.chance(0.03 * (ALT_K18.f?.(s) ?? 1))) return; // r28 F8: chains28 acelera quando a cadeia 5 espera o holograma
   const pool = actsNow27(s).filter((a) => !mine(a) && a.fame >= 55 && a.members.some((id) => s.persons[id] && !s.persons[id].alive));
   if (!pool.length) return;
   const a = r.pick(pool);

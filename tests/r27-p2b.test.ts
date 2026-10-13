@@ -52,11 +52,12 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R28: re-medidos depois de dois merges que mudam o mundo de propósito — fase 5 (rival disputa a oferta ao vivo e
     // tem reserva própria: 77884 / 1382068899 / 4242977539 / 1276410388) e formações reais na data inicial (95b6b81,
     // realNames: integrantes pela passagem, ex-integrantes, trocas agendadas). O bot prometendo não muda esta semente.
-    // Com F3 + F5 + formações juntos (merge R28): 612278 / 1382068899 / 4174246961 / 1111696030.
-    expect(AFTER.player.cash).toBe(612278);
+    // Com F3 + F5 + formações juntos (merge R28): 612278 / 1382068899 / 4174246961 / 1111696030. Mais F8 (reputação de
+    // selo NPC nas ofertas, facções, prêmios, cadeias) e F4: 284310 / 1382068899 / 2698844748 / 292729101.
+    expect(AFTER.player.cash).toBe(284310);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4174246961);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1111696030);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2698844748);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(292729101);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

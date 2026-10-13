@@ -537,13 +537,15 @@ function phaseStep(s: GameState, r: Rng): void {
   if (st.curve.length > 120) st.curve.splice(0, st.curve.length - 120);
 }
 
+/** r28 F8 (C3/I25): teto de fios do jogador abertos ao mesmo tempo (4; o quarter28 baixa quando você delegou frentes). */
+export const DM_MINE18: { f?: (s: GameState) => number } = {};
 function opener(s: GameState, r: Rng): void {
   const st = dm18(s);
   const mine = openThreads(s).filter((t) => t.mine).length, npc = openThreads(s).filter((t) => !t.mine).length;
   const phaseOk = st.ph === 'calm' || st.ph === 'rising' || (st.ph === 'resolution' && r.chance(0.3));
   if (!phaseOk || !r.chance(0.55)) return;
   const full = CONFLICTS19.full(s); // r19: com o orçamento global cheio, o Mestre só abre fios entre NPCs
-  const pool = THREADS18.filter((d) => (d.mine ? mine < 4 && !full : npc < 4) && !openThreads(s).some((t) => t.k === d.k && d.mine));
+  const pool = THREADS18.filter((d) => (d.mine ? mine < (DM_MINE18.f?.(s) ?? 4) && !full : npc < 4) && !openThreads(s).some((t) => t.k === d.k && d.mine));
   const order = pool.map((d) => [d, r.float() * (d.k === 'journey' ? 0.6 : 1) * (THREADS_W[d.k] ?? 1)] as [ThreadDef18, number]).sort((a, b) => b[1] - a[1]);
   for (const [d] of order) {
     const o = d.open(s, r);
