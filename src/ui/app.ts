@@ -73,8 +73,10 @@ import { SECTIONS25, SEDE25, home25, landing27, navGroups25, sectionIdOf25, type
 import { sedeHome25, sedeNav25 } from './ps/slot25';
 import { openSearch25, searchTabs25, seenDefs27 } from './ps/search25';
 // r27: menu em árvore (Seção › Página › Aba), folha do celular, todas as abas conhecidas e uma janela por vez
-import { navSection27 } from './ps/tree27';
-import { enhanceSelects27 } from './ps/pick27'; // r27 UX: escolhas curtas viram controle segmentado (docs/ux27.md)
+import { closeSheet27, hubHome27, navSection27 } from './ps/tree27';
+// r27 UX: páginas unificadas (hubs) como camada de mapeamento + vista Essencial/Completa (docs/ux27.md)
+import { VIEW_LABEL27, entries27, hubById27, hubOf27, resolveHub27, setView27, view27, views27 } from './ps/hub27model';
+import { enhanceSelects27 } from './ps/pick27';
 import { allTabs27 } from './ps/subtabs27';
 import { kick27, mayShow27 } from './ps/queue27';
 import { settingsCut27 } from './ps/cut27'; // r27 (K): cenas animadas dos grandes momentos
@@ -135,7 +137,7 @@ export function boot(el: HTMLElement): void {
   window.addEventListener('keydown', onKey);
   // rodada 15: voltar/avançar do navegador, abas lembradas, paleta pelo botão da barra
   for (const [k, v] of Object.entries(loadTabs15())) setTab(k, v);
-  initRouter15((r) => { if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
+  initRouter15((r) => { if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
   document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
   titleScreen(root, startGame);
 }
@@ -188,7 +190,7 @@ function onKey(e: KeyboardEvent): void {
 
 function cycleTab17(d: number): void {
   const wrap = document.querySelector('main [data-tabs]');
-  const bs = wrap ? [...wrap.querySelectorAll<HTMLButtonElement>(':scope > .tabs > button')] : [];
+  const bs = wrap ? [...wrap.querySelectorAll<HTMLButtonElement>(':scope > .tabs > button[role=tab]')] : [];
   if (bs.length < 2) return;
   const i = bs.findIndex((b) => b.classList.contains('on'));
   bs[(i + d + bs.length) % bs.length].click();
@@ -355,6 +357,8 @@ function groupItems(gr: NavGroup): NavItem[] {
 }
 
 function go(id: string): void {
+  // r27 UX: id de hub ("hub:money") abre a página certa do hub (a última visitada nele ou a 1ª visível)
+  if (hubById27(id) && id.startsWith('hub:')) { const x = hubById27(id)!; id = resolveHub27(id, areaExists, hubHome27(x, x.areas.filter(areaExists))) ?? 'cockpit'; }
   const r = resolve17(alias14(id), groups());
   if (r.tab) setTab(r.tab[0], r.tab[1]);
   store.area = r.area;
@@ -381,7 +385,7 @@ function nav(): HTMLElement {
   // r27: árvore — cada seção abre/fecha e mostra TODAS as páginas (por tema) e, sob cada página, as abas
   // internas (registro + vistas); no celular, a barra inferior com as 6 seções abre uma folha (ps/tree27.ts)
   const ctx = { groups: groups() as NavGroup25[], item: (id: string) => all.find((x) => x.id === id), area: store.area, section: cur.id, live: liveTabs27,
-    tabs: allTabs27(store.game!.year, seenDefs27()), go, home: (gr: NavGroup25) => home25(gr), search: openSearch25,
+    tabs: allTabs27(store.game!.year, seenDefs27()), go, home: (gr: NavGroup25) => home25(gr), search: openSearch25, viewToggle: viewToggle27,
     goTab: (area: string, path: [string, string][]) => { for (const [k, v] of path) setTab(k, v); go(area); } };
   return h('nav', { class: 'nav grouped nav25 tree27', 'aria-label': 'menu' },
     h('div', { class: 'nav-brand21', 'aria-hidden': 'true' }, h('span', { class: 'disc-sm' }), h('span', null, h('b', null, store.game!.config.companyName), h('small', null, 'Masters · Pixel Studio'))),
@@ -390,10 +394,22 @@ function nav(): HTMLElement {
     h('div', { class: 'nav-utils25' },
       util('⌕', l('Buscar', 'Search'), openSearch25, 'Ctrl K'),
       util('▤', l('Arquivo', 'Files'), () => saveManagerModal17((g) => { store.game = g; startGame(); })),
-      util('⚙', l('Opções', 'Options'), settings)),
+      util('⚙', l('Opções', 'Options'), settings),
+      // r27 UX: Essencial (poucas entradas, abas compactas) × Completa (a árvore inteira, todas as abas à mostra)
+      viewToggle27()),
     UX19UI.navFoot?.(store.game!) ?? null);
 }
 void navFold21; void saveFold21;
+
+/** r27 UX: alternar a vista do menu — Essencial (hubs) ou Completa (todas as páginas e abas). Nada some em nenhuma. */
+function viewToggle27(): HTMLElement {
+  const v = view27();
+  const opt = (id: 'simple' | 'full', label: L, hint: L) => h('button', { type: 'button', role: 'radio', 'aria-checked': v === id ? 'true' : 'false', class: v === id ? 'on' : '', title: t(hint),
+    onclick: () => { if (view27() === id) return; setView27(id); closeSheet27(); navMemo = null; groupsMemo = null; render(); toast(t(hint), 'info'); } }, t(label));
+  return h('div', { class: 'seg27 view27', role: 'radiogroup', 'aria-label': t(l('Vista do menu', 'Menu view')) },
+    opt('simple', l('Essencial', 'Essential'), l('Menu essencial: páginas parecidas juntas, abas compactas.', 'Essential menu: related pages together, compact tabs.')),
+    opt('full', l('Completa', 'Complete'), l('Menu completo: todas as páginas e abas à mostra.', 'Complete menu: every page and tab shown.')));
+}
 
 /** r27: seção de uma página para a busca — a do menu ou, se a página ainda não entrou no menu, a canônica. */
 const secOf27 = (area: string): { label: L } => groups().find((x) => x.areas.includes(area)) ?? SECTIONS25.find((x) => x.id === sectionIdOf25(area)) ?? groupOf(area);
@@ -403,6 +419,16 @@ let liveTabs27 = new Map<string, string>();
 function subnav(): HTMLElement | null {
   const gr = groupOf(store.area) as NavGroup25;
   const all = navItems();
+  // r27 UX (Essencial): a faixa mostra só as páginas do mesmo hub (vistas), também no computador
+  if (view27() === 'simple') {
+    const vs = views27(gr, store.area).map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
+    if (vs.length < 2) return null;
+    const hb = hubOf27(store.area);
+    return h('div', { class: 'tabs25 views27', role: 'tablist', 'aria-label': hb ? t(hb.label) : t(gr.label) },
+      hb ? h('span', { class: 'views27-hub', 'aria-hidden': 'true' }, ic(hb.icon), h('b', null, t(hb.label))) : null,
+      vs.map((a) => h('button', { role: 'tab', 'aria-selected': store.area === a.id ? 'true' : 'false', class: `btn25 ${store.area === a.id ? 'on' : ''}`, onclick: () => go(a.id) },
+        h('span', { class: 'lbl' }, VIEW_LABEL27[a.id] ? t(VIEW_LABEL27[a.id]) : a.label), a.badge ? h('span', { class: 'badge' }, a.badge) : null)));
+  }
   const ids = [...new Set([...(gr.top ?? []), ...gr.areas])];
   const pages = ids.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
   if (pages.length < 2) return null; // r27 (COCK): seção de uma página só (Cockpit) não precisa de faixa
@@ -540,7 +566,9 @@ function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const tabLbl = body.querySelector('[data-tabs] > .tabs > [aria-selected=true]')?.textContent?.trim();
   const head = () => { const last = lastInGroup[gr.id]; go(last && items.some((x) => x.id === last) ? last : gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit'); };
   // r17: Grupo › Seção › Página › Aba, avançar, fixar e recentes
-  const secL = sectionOf17(gr, store.area);
+  // r27 UX (Essencial): o nível do meio é o hub (página unificada), não o tema antigo
+  const hb = view27() === 'simple' && views27(gr as NavGroup25, store.area).length > 1 ? hubOf27(store.area) : undefined;
+  const secL = hb ? hb.label : sectionOf17(gr, store.area);
   const one = gr.areas.length === 1; // r27 (COCK): seção de uma página só (Cockpit) — sem "Cockpit › Agora › Cockpit"
   const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL && !one ? [{ label: t(secL), go: head }] : []), ...(one ? [] : [{ label: areaLabel(store.area), go: () => go(store.area) }]), ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
   const row = bar0.querySelector('.crumbs15');
@@ -629,12 +657,15 @@ function palette(): void {
   const base: PCmd[] = [
     // r17: recentes primeiro, abas da página atual e telas absorvidas pelas páginas de carreira
     ...store17.recent.slice(1, 6).map((id) => all17.find((x) => x.id === id)).filter((x): x is NavItem => !!x).map((a): PCmd => ({ label: a.label, kind: 'recent', icon: a.icon, weight: 7, run: () => go(a.id) })),
-    ...[...document.querySelectorAll<HTMLButtonElement>('main [data-tabs] > .tabs > button')].map((b): PCmd => ({ label: `${areaLabel(store.area)} › ${b.textContent?.trim() ?? ''}`, kind: 'area', icon: 'compass', weight: 4, run: () => b.click() })),
+    ...[...document.querySelectorAll<HTMLButtonElement>('main [data-tabs] > .tabs > button[role=tab]')].map((b): PCmd => ({ label: `${areaLabel(store.area)} › ${b.textContent?.trim() ?? ''}`, kind: 'area', icon: 'compass', weight: 4, run: () => b.click() })),
     ...Object.keys(ALIAS17).filter((a) => groups().some((g) => g.areas.includes(ALIAS17[a][0]))).map((a): PCmd => ({ label: all17.find((x) => x.id === a)?.label ?? a, kind: 'area', icon: ICON17[a] ?? 'compass', hint: areaLabel(ALIAS17[a][0]), weight: 5, run: () => go(a) })),
     ...groups().flatMap((gr) => groupItems(gr).map((a): PCmd => ({ label: gr.home?.tab && gr.home.area === a.id ? t(gr.label) : a.label, alt: a.alt, kind: 'area', icon: a.icon, hint: t(gr.label) + (a.key ? ` · ${a.key.toUpperCase()}` : ''), weight: 6,
       run: () => { if (gr.home?.tab && gr.home.area === a.id) setTab(gr.home.tab[0], gr.home.tab[1]); go(a.id); } }))),
     // r25: as 6 seções e toda aba interna já vista (pt e en), com o caminho Seção › Página
     ...groups().map((gr): PCmd => ({ label: t(gr.label), alt: altL25(gr.label), kind: 'area', icon: gr.icon, hint: t(l('Seção', 'Section')), weight: 8, run: () => go(home25(gr)) })),
+    // r27 UX: os hubs (páginas unificadas) também se acham pelo nome
+    ...groups().flatMap((gr) => entries27(gr as NavGroup25).flatMap((e) => (e.kind === 'hub' ? [e] : []))).map((e): PCmd => ({ label: t(e.hub.label), alt: altL25(e.hub.label), kind: 'area', icon: e.hub.icon,
+      hint: `${t(secOf27(e.areas[0]).label)} · ${e.areas.map((a) => areaLabel(a)).join(', ')}`, weight: 7, run: () => go(`hub:${e.hub.id}`) })),
     ...searchTabs25(g.year).filter((x) => areaExists(x.area) && all17.some((a) => a.id === x.area)).map((x): PCmd => ({ label: x.label, alt: x.alt, kind: 'tab', icon: 'compass', hint: `${t(secOf27(x.area).label)} › ${areaLabel(x.area)}`, weight: 3,
       run: () => { for (const [k, v] of x.trail) setTab(k, v); setTab(x.key, x.id); go(x.area); } })),
     { label: t(S.advanceMonth), kind: 'action', icon: 'calendar', hint: 'Ctrl+Enter', run: () => doAdvance('month') },
