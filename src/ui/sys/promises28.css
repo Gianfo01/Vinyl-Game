@@ -5,3 +5,5 @@
 .prom28 label.check small { flex-basis: 100%; padding-left: 1.7em; }
 .prom28-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .prom28-list li { line-height: 1.35; }
+.ppl-cards .prom28-terms { display: block; margin-top: 2px; opacity: .85; font-style: italic; }
+.prom28-note { margin: 6px 0; padding: 4px 8px; border-left: 3px solid var(--warn, #d9a441); }

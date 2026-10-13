@@ -1,0 +1,141 @@
+{
+ "years": 3,
+ "seeds": 6,
+ "rows": [
+  {
+   "seed": "m28f5-0",
+   "year0": 1975,
+   "offers": 4,
+   "signs": 2,
+   "contracts": 3,
+   "advReal": 4224,
+   "sniped": 0,
+   "rivalLive": 1,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 75357
+  },
+  {
+   "seed": "m28f5-1",
+   "year0": 1990,
+   "offers": 6,
+   "signs": 4,
+   "contracts": 3,
+   "advReal": 4852,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 51747
+  },
+  {
+   "seed": "m28f5-2",
+   "year0": 1962,
+   "offers": 4,
+   "signs": 2,
+   "contracts": 2,
+   "advReal": 7250,
+   "sniped": 2,
+   "rivalLive": 2,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 43509
+  },
+  {
+   "seed": "m28f5-3",
+   "year0": 2005,
+   "offers": 3,
+   "signs": 3,
+   "contracts": 2,
+   "advReal": 3522,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 67941
+  },
+  {
+   "seed": "m28f5-4",
+   "year0": 1985,
+   "offers": 4,
+   "signs": 4,
+   "contracts": 4,
+   "advReal": 1440,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 1,
+   "kept": 0,
+   "broken": 1,
+   "penaltyReal": 320,
+   "ms": 57027
+  },
+  {
+   "seed": "m28f5-5",
+   "year0": 1998,
+   "offers": 4,
+   "signs": 4,
+   "contracts": 4,
+   "advReal": 4631,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 65748
+  }
+ ],
+ "probe": {
+  "live": {
+   "rejected": 19,
+   "accepted": 5,
+   "thinking": 2,
+   "sniped": 17,
+   "counter": 5
+  },
+  "live15": {
+   "rejected": 13,
+   "accepted": 15,
+   "thinking": 14,
+   "sniped": 3,
+   "counter": 3
+  },
+  "month": {
+   "rejected": 21,
+   "accepted": 7,
+   "sniped": 17,
+   "counter": 3
+  },
+  "advLive": [
+   38300,
+   25300,
+   23600,
+   23100,
+   20300
+  ],
+  "prom": {
+   "n": 12,
+   "kept": 6,
+   "broken": 6,
+   "open": 0,
+   "penaltyReal": 1068,
+   "budgetReal": 18964
+  }
+ },
+ "broke": {
+  "n": 12,
+  "broken": 5,
+  "penaltyReal": 0,
+  "trust": -175,
+  "rep": 4.699999999999999,
+  "acts": 6
+ }
+}

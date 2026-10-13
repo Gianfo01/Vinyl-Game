@@ -6,7 +6,7 @@ import { acceptOffer, checkPromises, defaultOffer, resolveOne } from '../src/sim
 import { freeCash20 } from '../src/sim/oblig20';
 import { scoutEligible20 } from '../src/sim/scout20';
 import { bringRival27, propose27, startNego27, type Nego27 } from '../src/sim/sys/nego27';
-import { committed28, prom28, promiseRows28, promiseTerms28, tickPromises28 } from '../src/sim/sys/promises28';
+import { committed28, prom28, promiseMet28, promiseRows28, promiseTerms28, tickPromises28, TOUR_GIG_WEEKS28 } from '../src/sim/sys/promises28';
 import { contender28, perceivedDependence28, perceivedTrust28, rivalContest28, rivalReserve28, rs28 } from '../src/sim/sys/rivalsense28';
 import type { Act, GameState, Offer } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
@@ -81,7 +81,8 @@ describe('r28 C7 — promessas com verba, prazo e multa', () => {
     const p = c.promises[0];
     s.week += 3;
     a.history.push({ week: s.week } as never);
-    s.memory.push({ week: s.week, year: s.year, kind: 'gigs', text: { pt: 'shows', en: 'gigs' }, actId: a.id } as never);
+    // r28: turnê cumprida = turnê do selo encerrada (ou 6+ semanas de shows); uma semana de bar não basta mais
+    s.memory.push({ week: s.week, year: s.year, kind: 'tour_done', text: { pt: 'turnê', en: 'tour' }, actId: a.id } as never);
     const cash0 = s.player.cash, fans0 = a.fans.casual;
     tickPromises28(s);
     expect(p.kept).toBe(true);
@@ -218,7 +219,8 @@ describe('r28 C7 — cumprimento antecipado sem caixa', () => {
     acceptOffer(s, a, offerFor(s, a, { promises: ['tour'] }));
     const p = s.contracts[a.contractId!].promises[0];
     a.history.push({ week: s.week } as never);
-    s.memory.push({ week: s.week, year: s.year, kind: 'gigs', text: { pt: 'shows', en: 'gigs' }, actId: a.id } as never);
+    // r28: turnê cumprida = turnê do selo encerrada (ou 6+ semanas de shows); uma semana de bar não basta mais
+    s.memory.push({ week: s.week, year: s.year, kind: 'tour_done', text: { pt: 'turnê', en: 'tour' }, actId: a.id } as never);
     s.player.cash = 0;
     tickPromises28(s);
     expect(p.kept).toBeUndefined();
@@ -228,5 +230,25 @@ describe('r28 C7 — cumprimento antecipado sem caixa', () => {
     checkPromises(s);
     expect(p.kept).toBe(false);
     expect(prom28(s).broken).toBe(1);
+  });
+});
+
+describe('r28 C7 — turnê prometida exige estrada de verdade', () => {
+  it('uma semana de show da agenda não cumpre; 6 semanas ou uma turnê encerrada cumprem', () => {
+    const s = clone(BASE);
+    const a = free(s, 0)[0];
+    acceptOffer(s, a, offerFor(s, a, { promises: ['tour'] }));
+    const c = s.contracts[a.contractId!];
+    const p = c.promises[0];
+    a.history.push({ week: s.week } as never);
+    const gig = (w: number) => s.memory.push({ week: w, year: s.year, kind: 'gigs', text: { pt: 'shows', en: 'gigs' }, actId: a.id } as never);
+    gig(s.week);
+    expect(promiseMet28(s, c, a, p)).toBe(false);
+    for (let i = 1; i < TOUR_GIG_WEEKS28; i++) gig(s.week + i);
+    expect(promiseMet28(s, c, a, p)).toBe(true);
+    s.memory = s.memory.filter((m) => !(m.actId === a.id && m.kind === 'gigs'));
+    expect(promiseMet28(s, c, a, p)).toBe(false);
+    s.memory.push({ week: s.week, year: s.year, kind: 'tour_done', text: { pt: 'turnê', en: 'tour' }, actId: a.id } as never);
+    expect(promiseMet28(s, c, a, p)).toBe(true);
   });
 });

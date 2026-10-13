@@ -13,6 +13,8 @@ import { $, rerender, toast } from '../../common';
 import { h } from '../../dom';
 import { openScene } from '../../registry';
 import { meter } from '../../vis';
+import { promTermsText28 } from '../promises28';
+import { PROM28_GOAL } from '../../../sim/sys/promises28';
 
 export function negotiateButton(s: GameState, actId: string, mode: 'sign' | 'renew', label?: string): HTMLElement {
   const blocked = negBlocked(s, actId, mode);
@@ -38,6 +40,9 @@ export function openNegotiation(s: GameState, actId: string, mode: 'sign' | 'ren
     const root = h('div', { class: 'ppl-neg' });
     let adv = n.offer.advance;
     let roy = n.offer.royalty;
+    // r28 (fase 5): promessa feita na mesa = obrigação com verba, prazo e multa (mesmos termos da mesa r27 e da ficha)
+    const promNote = (months: number) => h('p', { class: 'small prom28-note' }, '📌 ', h('b', null, t(l('Promessa de turnê', 'Tour promise'))), ': ',
+      promTermsText28(s, act, 'tour', months), ' — ', t(l('cumprir: {g}. A verba sai do caixa livre até cumprir; descumprir paga a multa ao artista.', 'to keep: {g}. The budget leaves free cash until kept; breaking it pays the artist the penalty.'), { g: PROM28_GOAL.tour }));
     const finish = () => {
       const res = closeNegotiation(s);
       toast(t(res), s.acts[actId]?.owner === 'player' ? 'good' : 'info');
@@ -67,6 +72,7 @@ export function openNegotiation(s: GameState, actId: string, mode: 'sign' | 'ren
               h('p', { class: cur.done === 'deal' ? 'good' : 'bad' }, cur.done === 'deal'
                 ? t(l('Acordo: {a} e {r}%.', 'Deal: {a} and {r}%.'), { a: money(cur.offer.advance), r: (cur.offer.royalty * 100).toFixed(1) })
                 : t(l('Sem acordo.', 'No deal.'))),
+              cur.done === 'deal' && cur.usedCards.includes('promise') && act ? promNote(cur.ask.months) : null,
               h('button', { class: 'btn primary', onclick: finish }, t(l('Concluir', 'Finish'))),
             ) : h('div', null,
               h('label', null, t(cur.mode === 'sign' ? l('Adiantamento', 'Advance') : l('Bônus de renovação', 'Renewal bonus')), advIn, advOut),
@@ -77,7 +83,10 @@ export function openNegotiation(s: GameState, actId: string, mode: 'sign' | 'ren
                 h('button', { class: 'btn ghost', onclick: () => { P(s).neg = null; const res = autoNegotiate(s, actId, mode); toast(t(res)); close(); rerender(); } }, t(l('Resolver automático', 'Auto-resolve'))),
               ),
               h('h4', null, t(l('Cartas de argumento', 'Argument cards'))),
-              h('div', { class: 'ppl-cards' }, (Object.keys(CARD_INFO) as CardId[]).map((c) => h('button', { disabled: !cardAvailable(s, cur, c), onclick: () => { playCard(s, rngOf(s), c); draw(); } }, h('b', null, t(CARD_INFO[c].name)), h('small', null, t(CARD_INFO[c].desc))))),
+              h('div', { class: 'ppl-cards' }, (Object.keys(CARD_INFO) as CardId[]).map((c) => h('button', { disabled: !cardAvailable(s, cur, c), onclick: () => { playCard(s, rngOf(s), c); draw(); } }, h('b', null, t(CARD_INFO[c].name)), h('small', null, t(CARD_INFO[c].desc)),
+                // r28 (fase 5): a carta de promessa mostra os termos que ela cria (verba · prazo · multa), como na mesa r27
+                c === 'promise' && act ? h('small', { class: 'prom28-terms' }, promTermsText28(s, act, 'tour', cur.ask.months)) : null))),
+              cur.usedCards.includes('promise') && act ? promNote(cur.ask.months) : null,
             ),
           ),
         ),

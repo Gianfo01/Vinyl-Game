@@ -59,9 +59,34 @@ function promProbe(s: GameState): void {
   }
 }
 
+// Sonda "promete e não cumpre": mesma assinatura (cópia), mas o jogador some — 14 meses só com o mundo andando,
+// sem shows nem disco do ato. Mede quebras, multas pagas ao artista e o efeito na confiança e na reputação.
+const broke = { n: 0, broken: 0, penaltyReal: 0, trust: 0, rep: 0, acts: 0 };
+function breakProbe(s: GameState): void {
+  const a0 = Object.values(s.acts).filter((a) => !a.owner && a.fame <= 10 && a.fame > 2 && scoutEligible20(s, a).ok).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1))[0];
+  if (!a0) return;
+  const c: GameState = structuredClone(s);
+  const a = c.acts[a0.id];
+  const o = { ...defaultOffer(c, a), promises: ['tour', 'priority'] as ('tour' | 'priority')[], id: 'o-brk', week: c.week, status: 'pending' as const };
+  c.player.cash = Math.max(c.player.cash, o.advance * 3);
+  acceptOffer(c, a, o);
+  const t0 = a.trust, r0 = c.player.reputation.artists;
+  for (let m = 0; m < 14 && !c.ended; m++) advanceMonth(c);
+  const k = c.contracts[a.contractId ?? ''];
+  broke.acts++;
+  for (const p of k?.promises ?? []) {
+    broke.n++;
+    if (p.kept === false) broke.broken++;
+    broke.penaltyReal += Math.round(toReal(p.paidPenalty ?? 0, c.year));
+  }
+  broke.trust += Math.round(c.acts[a.id].trust - t0);
+  broke.rep += Math.round((c.player.reputation.artists - r0) * 10) / 10;
+}
+
 const YEARS = Number(process.argv[2] ?? 3);
 const SEEDS = Number(process.argv[3] ?? 4);
 const OUT = process.argv[4];
+const PROF = (process.argv[5] ?? 'balanced') as 'cautious' | 'balanced' | 'aggressive';
 type Row = { seed: string; year0: number; offers: number; signs: number; contracts: number; advReal: number; sniped: number; rivalLive: number; promises: number; kept: number; broken: number; penaltyReal: number; ms: number };
 const rows: Row[] = [];
 for (let i = 0; i < SEEDS; i++) {
@@ -70,8 +95,8 @@ for (let i = 0; i < SEEDS; i++) {
   const s: GameState = createGame(defaultConfig(`m28f5-${i}`, { difficulty: 'normal', scenario: 'emerging', startYear: year }));
   const sniped = new Set<string>();
   for (let m = 0; m < YEARS * 12 && !s.ended; m++) {
-    if (m === 9) { runProbe(s); promProbe(s); }
-    playMonth(s, 'balanced');
+    if (m === 9) { runProbe(s); promProbe(s); breakProbe(s); }
+    playMonth(s, PROF);
     for (const o of s.offers) if (o.status === 'sniped') sniped.add(o.id);
     advanceMonth(s);
     for (const o of s.offers) if (o.status === 'sniped') sniped.add(o.id);
@@ -89,5 +114,6 @@ for (let i = 0; i < SEEDS; i++) {
 }
 const sum = (k: keyof Row) => rows.reduce((a, r) => a + (r[k] as number), 0);
 console.log(`TOTAL ofertas ${sum('offers')} | assinaturas ${sum('signs')} (${Math.round(sum('signs') / Math.max(1, sum('offers')) * 100)}%) | contratos ${sum('contracts')} | adiantamento médio (real) $${Math.round(rows.reduce((a, r) => a + r.advReal * r.contracts, 0) / Math.max(1, sum('contracts')))} | rival levou ${sum('sniped')} | promessas ${sum('promises')} (cumpridas ${sum('kept')}, quebradas ${sum('broken')}, multas $${sum('penaltyReal')})`);
+console.log('SONDA não cumpre', JSON.stringify(broke));
 console.log('SONDA ao vivo', JSON.stringify(probe.live), '| ao vivo ×1,5', JSON.stringify(probe.live15), '| mês', JSON.stringify(probe.month), '| promessas', JSON.stringify(probe.prom));
-if (OUT) writeFileSync(OUT, JSON.stringify({ years: YEARS, seeds: SEEDS, rows, probe }, null, 1));
+if (OUT) writeFileSync(OUT, JSON.stringify({ years: YEARS, seeds: SEEDS, rows, probe, broke }, null, 1));

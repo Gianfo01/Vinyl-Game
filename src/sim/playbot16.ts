@@ -10,6 +10,7 @@ import { botR19 } from './botr19';
 import { botClauses18, botPolicy18 } from './sys/contracts18';
 import { botRights18 } from './sys/rights18';
 import { botSupply18 } from './sys/supply18';
+import { promiseTerms28 } from './sys/promises28';
 import { liquid18 } from './sys/econ18';
 import { toReal } from '../core/money';
 import { FESTIVALS } from '../data/catalog';
@@ -221,6 +222,14 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
     // negocia como na ficha: se a leitura é ruim, sobe royalty / dá controle criativo antes de desistir
     if (ev.band === 'unlikely') { o.royalty = Math.min(0.3, o.royalty + 0.03); ev = evaluateOffer(s, act, o); }
     if (ev.band === 'unlikely' && p !== 'cautious') { o.creativeControl = true; ev = evaluateOffer(s, act, o); }
+    // r28 (fase 5): promete como um jogador — o equilibrado promete turnê quando a leitura ainda é ruim; o agressivo
+    // promete turnê + prioridade sempre que a leitura não é boa (promete demais: às vezes não cumpre e paga a multa).
+    // Promessa separa verba do caixa livre e, descumprida, paga multa ao artista — só promete se a verba cabe no caixa.
+    if ((ev.band === 'unlikely' && p !== 'cautious') || (ev.band !== 'likely' && p === 'aggressive')) {
+      const kinds: ('tour' | 'priority')[] = p === 'aggressive' ? ['tour', 'priority'] : ['tour'];
+      const need = kinds.reduce((a, kd) => a + promiseTerms28(s, act, kd, o.termMonths * 4).budget, 0);
+      if (s.player.cash - o.advance - need > burn(s) * k.cut * 1.5) { o.promises = [...new Set([...o.promises, ...kinds])]; ev = evaluateOffer(s, act, o); }
+    }
     if (ev.band === 'unlikely') continue;
     if (o.advance > s.player.cash * k.advCash || s.player.cash - o.advance < burn(s) * k.cut * 1.5) continue;
     const { offer, result } = offerNow(s, rngOf(s), o);
@@ -511,7 +520,16 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
 
 export interface PlayerSummary { seed: string; profile: Profile; startYear: number; endYear: number; cash: number; realCash: number; ended?: string; endedYear?: number;
   /** menor caixa real (US$ de hoje) e caixa real ao fim do 1º e 2º anos: mede o aperto do começo */
-  low: number; y1: number; y2: number; acts: number; releases: number; number1s: number; log: PlayLog }
+  low: number; y1: number; y2: number; acts: number; releases: number; number1s: number; log: PlayLog;
+  /** r28 (fase 5): promessas que o bot fez nos contratos e o desfecho (multas em US$ de hoje) */
+  prom28: { made: number; kept: number; broken: number; open: number; penaltyReal: number } }
+
+/** r28 (fase 5): promessas feitas pelo jogador (bot) e o desfecho — para o balanço medir "prometer e não cumprir". */
+export function promSummary28(s: GameState): PlayerSummary['prom28'] {
+  const ps = Object.values(s.contracts).filter((c) => c.party === 'player').flatMap((c) => c.promises);
+  const pen = ps.reduce((a, p) => a + (p.paidPenalty ?? 0), 0);
+  return { made: ps.length, kept: ps.filter((p) => p.kept === true).length, broken: ps.filter((p) => p.kept === false).length, open: ps.filter((p) => p.kept === undefined).length, penaltyReal: Math.round(toReal(pen, s.year)) };
+}
 
 /** Joga `years` anos com o perfil escolhido. */
 export function simulatePlayer(cfg: RunConfig, years: number, profile: Profile = 'balanced'): { state: GameState; summary: PlayerSummary } {
@@ -530,6 +548,7 @@ export function simulatePlayer(cfg: RunConfig, years: number, profile: Profile =
     summary: {
       seed: cfg.seed, profile, startYear: cfg.startYear, endYear: s.year, cash: s.player.cash, realCash: Math.round(toReal(s.player.cash, s.year)), ended: s.ended?.ending, endedYear: s.ended ? s.year : undefined, low: Math.round(low), y1: Math.round(y1), y2: Math.round(y2),
       acts: playerActs(s).length, releases: s.player.stats.releases, number1s: s.player.stats.number1s, log: { ...playLog(s), r17: { ...playLog(s).r17 }, biz: { ...playLog(s).biz } },
+      prom28: promSummary28(s),
     },
   };
 }

@@ -22,7 +22,7 @@ export const PROM28_NAME: Record<PromKind28, L> = {
   tour: l('Turnê', 'Tour'), priority: l('Prioridade de lançamento', 'Release priority'), freedom: l('Liberdade criativa', 'Creative freedom'),
 };
 export const PROM28_GOAL: Record<PromKind28, L> = {
-  tour: l('fazer shows com o ato', 'play shows with the act'),
+  tour: l('levar o ato em turnê (turnê do selo ou 6 semanas de shows)', 'take the act on tour (a label tour or 6 weeks of gigs)'),
   priority: l('lançar um disco do ato', 'release a record by the act'),
   freedom: l('manter o controle criativo com o artista', 'keep creative control with the artist'),
 };
@@ -71,10 +71,20 @@ export function committed28(s: GameState): number {
   return t;
 }
 
+/** Semanas com shows pela agenda que valem como turnê cumprida (sem turnê planejada). */
+export const TOUR_GIG_WEEKS28 = 6;
+
 /** A condição da promessa já foi atendida? (mesma regra de sempre do checkPromises) */
 export function promiseMet28(s: GameState, c: Contract, act: Act, p: ContractPromise): boolean {
   if (p.kind === 'priority') return act.releases.some((rid) => s.releases[rid] && s.releases[rid].week >= c.startWeek);
-  if (p.kind === 'tour') return act.history.length > 0 && s.memory.some((m) => m.actId === act.id && m.kind === 'gigs' && m.week >= c.startWeek);
+  // r28: turnê de verdade — uma turnê do selo (planejada depois da assinatura e já na estrada ou encerrada) ou estrada
+  // contínua pela agenda (6+ semanas com shows). Antes, uma única semana de show de bar da agenda automática já
+  // "cumpria" a turnê na semana seguinte à assinatura (a sonda "promete e não cumpre" nunca quebrava nada).
+  if (p.kind === 'tour') {
+    if (s.memory.some((m) => m.actId === act.id && m.kind === 'tour_done' && m.week >= c.startWeek)) return true;
+    if (s.memory.some((m) => m.actId === act.id && m.kind === 'tour_planned' && m.week >= c.startWeek) && s.tours.some((t) => t.actId === act.id && t.status === 'running' && t.stops.some((x) => x.status === 'played'))) return true;
+    return act.history.length > 0 && s.memory.filter((m) => m.actId === act.id && m.kind === 'gigs' && m.week >= c.startWeek).length >= TOUR_GIG_WEEKS28;
+  }
   return c.creativeControl;
 }
 
