@@ -14,7 +14,9 @@ import { rerender, section } from '../common';
 import { h } from '../dom';
 import { openCutscene, openScene } from '../registry';
 import { ALBUM17_X } from '../sys/scene17';
-import { CUT27, cut27, type CutData27 } from './cut27model';
+import { drawFigs27 } from './art27';
+import { CUT27, cut27, cutModel27, type CutData27 } from './cut27model';
+import { paintCut29 } from './cutpaint29';
 
 /** Uma linha do álbum: id da cena na fila, chave, semana/ano, título, ato, dados da cena, escolha e resultado. */
 export interface Log29 { id: string; k: string; w: number; y: number; ti: L; a?: string; d: CutData27; ch?: string; out?: L }
@@ -63,3 +65,33 @@ ALBUM17_X.push((s) => {
         h('b', null, t(e.ti)), e.a ? ` · ${e.a}` : '', e.ch && label(e) ? h('small', { class: 'muted' }, ` — ${label(e)}`) : null, ' ',
         h('button', { class: 'link small', onclick: () => replay29(s, e) }, t(l('rever cena', 'replay scene'))))))))));
 });
+
+// ---------------------------------------------------------------- storyboard do fim (end28)
+
+/** Miniatura em pixel (96×42) da cena animada registrada com este id, ou null (cena de lugar / sem registro). */
+export function thumb29(s: GameState, id: string): HTMLCanvasElement | null {
+  const e = log29of(s).find((x) => x.id === id);
+  if (!e || typeof document === 'undefined') return null;
+  try {
+    const m = cutModel27(s, e.d, { w: 96, h: 42 });
+    const px = paintCut29(s, e.d, m, 0);
+    const c = document.createElement('canvas'); c.width = m.W; c.height = m.H; c.className = 'px sb29-thumb';
+    const ctx = c.getContext('2d');
+    if (!ctx) return null;
+    const img = ctx.createImageData(m.W, m.H); new Uint32Array(img.data.buffer).set(px.d); ctx.putImageData(img, 0, 0);
+    drawFigs27(ctx, s, m, 0, true);
+    c.style.width = `${m.W * 2}px`; c.style.imageRendering = 'pixelated';
+    c.setAttribute('role', 'img'); c.setAttribute('aria-label', t(e.ti));
+    return c;
+  } catch { return null; }
+}
+/** Todas as cenas animadas da partida (lista compacta por ano, com a escolha) — no storyboard, abaixo do álbum. */
+export function allScenes29(s: GameState): HTMLElement | null {
+  const xs = log29of(s);
+  if (!xs.length) return null;
+  const byYear = new Map<number, Log29[]>();
+  for (const e of xs) { const a = byYear.get(e.y) ?? []; a.push(e); byYear.set(e.y, a); }
+  const label = (e: Log29): string => { const c = CUT27[e.k as CutData27['key']]?.choices.find((x) => x.id === e.ch); return c ? ` — ${t(c.label)}` : ''; };
+  return h('details', { class: 'sb29-all' }, h('summary', null, t(l('Todas as cenas animadas ({n})', 'All animated scenes ({n})'), { n: xs.length })),
+    h('ul', { class: 'small' }, [...byYear.entries()].map(([y, es]) => h('li', null, h('b', null, `${y}: `), es.map((e) => `${t(e.ti)}${e.a ? ` (${e.a})` : ''}${label(e)}`).join(' · ')))));
+}

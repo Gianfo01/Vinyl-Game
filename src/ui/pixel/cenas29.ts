@@ -71,8 +71,10 @@ export function holoFx29(k: K27, cx: number, fy: number, t: number): void {
 // ---------------------------------------------------------------- peças reutilizáveis
 
 /** Pessoa em silhueta simples (plateia ao fundo, jurados, equipe). */
-function sil(k: K27, x: number, y: number, col: Col, tall = 0): void {
-  R(k, x, y - 12 - tall, 6, 12 + tall, col); R(k, x + 1, y - 16 - tall, 4, 4, shade(col, 0.15));
+function sil(k: K27, x: number, y: number, col: Col, tall = 0, skin?: Col): void {
+  R(k, x, y - 12 - tall, 6, 12 + tall, col); R(k, x + 1, y - 13 - tall, 4, 1, shade(col, 0.2)); // ombros
+  R(k, x + 1, y - 17 - tall, 4, 4, skin ?? shade(col, 0.15));
+  if (skin) R(k, x + 1, y - 18 - tall, 4, 2, k.c(['#1e1814', '#3d2616', '#8e3a1e', '#cfc9bf'][(x + tall) % 4]));
 }
 /** Moldura dourada (retrato do falecido / disco de ouro na parede). */
 function frame29(k: K27, x: number, y: number, w: number, h: number, inner: Col): void {
@@ -158,6 +160,7 @@ function boardroom(k: K27, o: Stage29, portrait = false): void {
   const sk = new Px(ww, wh); const kk = { ...k, p: sk, W: ww, H: wh } as K27;
   skyline(kk, wh, k.c(o.hour === 'day' ? '#5a6a80' : '#141024'), k.c('#ffd889', o.hour === 'day' ? 40 : 200), { seed: k.seed, tall: 0.9 });
   k.p.blit(sk, wx, wy);
+  if (o.v === -1) rainOn(k, wx, wy, ww, wh); // chuva lá fora (herdeiros, venda)
   for (let i = 1; i < 4; i++) k.p.vline(wx + Math.round((ww * i) / 4), wy, wy + wh - 1, k.pal.trim);
   if (portrait) frame29(k, Math.round(W * 0.5) - 18, 4, 36, 42, k.c('#2a1c18'));
   else if (k.band >= 2) { R(k, 10, 10, 60, 10, k.c('#101418')); for (let i = 0; i < 8; i++) { const v = noise(i, Math.floor(k.t * 2), k.seed); text(k, v > 0.5 ? '+' : '-', 12 + i * 7, 12, k.c(v > 0.5 ? '#5aff9a' : '#ff5a5a')); } } // cotação
@@ -198,6 +201,7 @@ const FULL29: Record<string, Painter29> = {
   coup(k, o) {
     const { W, fy } = k;
     wall(k, 0, fy, shade(k.pal.wall, -0.45));
+    dim(k, 120, '#0a0a1c');
     const wx = Math.round(W * 0.5), ww = Math.round(W * 0.42), wy = 6, wh = Math.round(fy * 0.62);
     windowPane(k, wx, wy, ww, wh, k.c('#141838'), true);
     const sk = new Px(ww, wh); skyline({ ...k, p: sk, W: ww, H: wh } as K27, wh, k.c('#0c0a1a'), k.c('#ffd889', 210), { seed: k.seed + 7, tall: 0.8 }); k.p.blit(sk, wx, wy);
@@ -218,15 +222,18 @@ const FULL29: Record<string, Painter29> = {
   },
   /** Herdeiros: sala fria, retrato na parede (o boneco é posto na moldura pela interface), dois lados da mesa. */
   heirs(k, o) {
-    boardroom(k, { ...o, hour: o.hour === 'day' ? 'dusk' : o.hour }, true);
+    boardroom(k, { ...o, hour: o.hour === 'day' ? 'dusk' : o.hour, v: -1 }, true);
     papers(k, Math.round(k.W * 0.3), k.fy - 16, 2); papers(k, Math.round(k.W * 0.62), k.fy - 16, 2);
+    // busto em sombra na moldura (a interface põe o retrato de quem se foi por cima, quando há)
+    const fx0 = Math.round(k.W * 0.5);
+    k.p.disc(fx0, 22, 7, k.c('#3a2a24')); R(k, fx0 - 12, 30, 24, 14, k.c('#3a2a24')); R(k, fx0 - 13, 42, 26, 2, k.c('#2a1c18'));
     // testamento selado no meio
     const cx = Math.round(k.W / 2);
     R(k, cx - 6, k.fy - 19, 12, 4, k.pal.paper); k.p.disc(cx, k.fy - 17, 2, k.c('#a02020'));
   },
   /** Venda da empresa / compra de um selo: a sala de reunião, o contrato e a caneta. */
   sale(k, o) {
-    boardroom(k, o);
+    boardroom(k, o.v ? o : { ...o, v: -1 });
     const cx = Math.round(k.W / 2);
     R(k, cx - 10, k.fy - 19, 20, 5, k.pal.paper); k.p.hline(cx - 8, cx + 6, k.fy - 17, shade(k.pal.paper, -0.35));
     k.p.line(cx + 6, k.fy - 22, cx + 12, k.fy - 26, k.c('#1a1a1e'));
@@ -291,7 +298,7 @@ const FULL29: Record<string, Painter29> = {
     // tapete e sofá
     k.p.ellipse(Math.round(W * 0.42), fy - 1, 40, 4, withAlpha(k.pal.fabric2, 200));
     ink(k, (q) => { rectV(q, Math.round(W * 0.2), fy - 16, 52, 10, k.pal.fabric, { r: 1 }); rectV(q, Math.round(W * 0.2), fy - 22, 52, 7, shade(k.pal.fabric, -0.15), { r: 1 }); });
-    for (let i = 0; i < 3; i++) sil(k, Math.round(W * 0.23) + i * 15, fy - 12, shade(k.pal.fabric2, -0.5 + i * 0.1), i === 1 ? 3 : 0);
+    for (let i = 0; i < 3; i++) sil(k, Math.round(W * 0.23) + i * 15, fy - 12, shade(k.pal.fabric2, -0.3 + i * 0.1), i === 1 ? 3 : 0, k.c(['#f2c9a0', '#a46a42', '#d79b6b'][i]));
     // aparelho por tecnologia (à direita, a luz dele nas pessoas)
     const dx = Math.round(W * 0.66), tech = o.tech ?? '';
     const glow = tech === 'clipnet' ? k.c('#ff4ad0') : tech === 'tv_music' ? k.c('#c8d8ff') : tech === 'streaming' || tech === 'short_video' || tech === 'internet' ? k.c('#3aa0ff') : k.pal.lamp;
@@ -423,7 +430,7 @@ const FULL29: Record<string, Painter29> = {
     car29(k, Math.round(W * 0.58), fy + 6, k.c('#121216'), true);
     R(k, Math.round(W * 0.58) + 20, fy - 14, 2, 8, k.c('#ffd889', 220)); // porta aberta (luz de dentro)
     halo(k, Math.round(W * 0.58) + 21, fy - 10, 10, k.c('#ffd889'), 70);
-    rainOn(k, 0, 0, W, fy);
+    rainOn(k, 0, Math.round(fy * 0.3), W, Math.round(fy * 0.7));
   },
 };
 
@@ -456,13 +463,13 @@ const OVER29: Record<string, Painter29> = {
     if (o.brand) text(k, o.brand.slice(0, 10), 6, 6, k.pal.gold);
   },
   vow_kept(k) { // o calendário com a data riscada e o aperto de mão (luz quente)
-    R(k, Math.round(k.W * 0.08), 8, 22, 24, k.pal.paper); R(k, Math.round(k.W * 0.08), 8, 22, 5, k.c('#2a8a4a'));
-    k.p.ring(Math.round(k.W * 0.08) + 11, 22, 4, k.c('#2a8a4a')); halo(k, Math.round(k.W * 0.5), k.fy - 30, 40, k.c('#ffc070'), 30);
+    const cx = Math.round(k.W * 0.3); R(k, cx, 8, 22, 24, k.pal.paper); R(k, cx, 8, 22, 5, k.c('#2a8a4a'));
+    k.p.ring(cx + 11, 22, 4, k.c('#2a8a4a')); halo(k, Math.round(k.W * 0.5), k.fy - 30, 40, k.c('#ffc070'), 30);
   },
   vow_broken(k) { // a data passou: X vermelho, chuva lá fora
-    R(k, Math.round(k.W * 0.08), 8, 22, 24, k.pal.paper); R(k, Math.round(k.W * 0.08), 8, 22, 5, k.c('#c02020'));
-    k.p.line(Math.round(k.W * 0.08) + 5, 16, Math.round(k.W * 0.08) + 17, 28, k.c('#c02020')); k.p.line(Math.round(k.W * 0.08) + 17, 16, Math.round(k.W * 0.08) + 5, 28, k.c('#c02020'));
-    for (let i = 0; i < 50; i++) k.p.vline(Math.round((i * 29 + k.t * 30) % k.W), Math.round((i * 47 + k.t * 120) % k.fy), Math.round((i * 47 + k.t * 120) % k.fy) + 3, k.c('#aabedc', 110));
+    const cx = Math.round(k.W * 0.3); R(k, cx, 8, 22, 24, k.pal.paper); R(k, cx, 8, 22, 5, k.c('#c02020'));
+    k.p.line(cx + 5, 16, cx + 17, 28, k.c('#c02020')); k.p.line(cx + 17, 16, cx + 5, 28, k.c('#c02020'));
+    const wx = Math.round(k.W * 0.62), ww = Math.round(k.W * 0.3); windowPane(k, wx, 6, ww, 30, k.c('#2a3450'), false); rainOn(k, wx, 6, ww, 30);
   },
   headline(k, o) { // telão com o nome, colunas de fogo, multidão cheia
     const cx = Math.round(k.W / 2);

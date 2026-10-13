@@ -65,7 +65,7 @@ export const CUT29: Record<CutKey29, CutDef27> = {
       Ch('rest', l('Pizza e cama', 'Pizza and bed'), l('-6 cansaço', '-6 fatigue'), (s, d) => { members(s, d, (p) => { p.fatigue = cl(p.fatigue - 6); }); return l('Amanhã tem mais. A banda dorme no sofá da técnica.', 'More tomorrow. The band sleeps on the control-room couch.'); }),
     ],
     [[l('Cabos por todo lado. O microfone ainda cheira a novo.', 'Cables everywhere. The microphone still smells new.'), l('Primeira contagem: "um, dois, três, quatro". {a} entra.', 'First count-in: "one, two, three, four". {a} comes in.'), l('Fica esse take?', 'Keep that take?')]]),
-  split: D('split', 'major', 'shows', 87, ['rain'], l('O fim da banda', 'The band breaks up'),
+  split: D('split', 'major', 'shows', 87, ['candles'], l('O fim da banda', 'The band breaks up'),
     [l('A sala de ensaio fica em silêncio.', 'The rehearsal room goes quiet.'), l('{t}', '{t}'), l('O que {b} faz com o que sobrou?', 'What does {b} do with what is left?')],
     [
       Ch('box', l('Caixa de despedida (coletânea)', 'Farewell box set'), l('custa US$ 1.500 · +8% fãs fiéis, +1 reputação comercial', 'costs US$ 1,500 · +8% core fans, +1 commercial reputation'), (s, d) => { const v = pay(s, d, 'box', 1500, 'marketing', 'Caixa de despedida'); const a = actOf(s, d); if (a) a.fans.core = Math.round(a.fans.core * 1.08); rep(s, 'commercial', 1); return fmtL(l('Encarte com fotos inéditas ({v}). Os fãs fazem fila.', 'Liner notes with unseen photos ({v}). The fans queue up.'), { v: $(v) }); }),
@@ -87,7 +87,7 @@ export const CUT29: Record<CutKey29, CutDef27> = {
       Ch('photo', l('Foto nova para a imprensa', 'New press photo'), l('custa US$ 300 · +1 fama', 'costs US$ 300 · +1 fame'), (s, d) => { const v = pay(s, d, 'photo', 300, 'marketing', 'Foto da formação'); const a = actOf(s, d); if (a) a.fame = cl(a.fame + 1); return fmtL(l('A formação nova na capa do caderno de cultura ({v}).', 'The new lineup on the arts section cover ({v}).'), { v: $(v) }); }),
     ],
     [[l('O novo integrante afina o instrumento em silêncio.', 'The new member tunes up in silence.'), l('{t}', '{t}'), l('A primeira música junto. E aí?', 'The first song together. So?')]]),
-  poach: D('poach', 'major', 'night', 81, ['rain'], l('Levaram o seu artista', 'They took your artist'),
+  poach: D('poach', 'major', 'night', 81, [], l('Levaram o seu artista', 'They took your artist'),
     [l('Uma limusine para na sua calçada.', 'A limousine pulls up at your curb.'), l('{t}', '{t}'), l('Deixa ir ou briga?', 'Let it go or fight?')],
     [
       Ch('counter', l('Contraproposta pública', 'Public counteroffer'), l('arriscado: +2 reputação comercial ou custa US$ 3.000', 'risky: +2 commercial reputation or costs US$ 3,000'), (s, d) => { if (coin29(`${d.ref}:ct`, 0.45)) { rep(s, 'commercial', 2); return l('O mercado vê que você não se vende barato.', 'The industry sees you do not come cheap.'); } const v = pay(s, d, 'counter', 3000, 'legal', 'Contraproposta perdida'); return fmtL(l('Você paga advogados e anúncios ({v}). Ele vai mesmo assim.', 'You pay lawyers and ads ({v}). The artist leaves anyway.'), { v: $(v) }); }),
@@ -108,7 +108,7 @@ export const CUT29: Record<CutKey29, CutDef27> = {
       Ch('quiet', l('Deixar falar por si', 'Let it speak for itself'), l('+5 confiança', '+5 trust'), (s, d) => { trust(s, d, 5); return l('Ninguém comenta. Mas a confiança cresce.', 'Nobody mentions it. But the trust grows.'); }),
     ],
     [[l('O cheque chega no dia certo.', 'The check arrives on the right day.'), l('{t}', '{t}')]]),
-  vow_broken: D('vow_broken', 'major', 'team', 76, ['rain'], l('Promessa quebrada', 'Promise broken'),
+  vow_broken: D('vow_broken', 'major', 'team', 76, [], l('Promessa quebrada', 'Promise broken'),
     [l('A data passou. Ninguém ligou.', 'The date passed. Nobody called.'), l('{t}', '{t}'), l('Como encarar?', 'How do you face it?')],
     [
       Ch('apology', l('Pedir desculpas e compensar', 'Apologize and make it up'), l('custa US$ 1.200 · +6 confiança', 'costs US$ 1,200 · +6 trust'), (s, d) => { const v = pay(s, d, 'apology', 1200, 'artists', 'Compensação de promessa'); trust(s, d, 6); return fmtL(l('Uma carta à mão e um cheque ({v}). Não apaga, mas ajuda.', 'A handwritten letter and a check ({v}). It does not erase it, but it helps.'), { v: $(v) }); }),
@@ -193,7 +193,7 @@ export const CUT29: Record<CutKey29, CutDef27> = {
       Ch('quiet', l('Sair em silêncio', 'Leave quietly'), l('+4 confiança', '+4 trust'), (s, d) => { trust(s, d, 4); return l('Sem anúncio. Uma carta à mão aos fãs.', 'No announcement. A handwritten letter to the fans.'); }),
     ],
     [[l('Isqueiros acesos na escuridão.', 'Lighters glowing in the dark.'), l('{t}', '{t}'), l('A última música.', 'The last song.')]]),
-  sale: D('sale', 'major', 'finance', 96, ['rain'], l('A venda da empresa', 'Selling the company'),
+  sale: D('sale', 'major', 'finance', 96, ['candles'], l('A venda da empresa', 'Selling the company'),
     [l('A caneta pesa mais do que no primeiro contrato.', 'The pen weighs more than on the first contract.'), l('{t}', '{t}'), l('O que você leva da sala?', 'What do you take from the room?')],
     [
       Ch('speech', l('Discurso para a equipe', 'A speech for the staff'), l('+3 reputação com artistas', '+3 reputation with artists'), (s) => { rep(s, 'artists', 3); return l('"Foi uma honra." Até o contador chora.', '"It was an honour." Even the accountant cries.'); }),

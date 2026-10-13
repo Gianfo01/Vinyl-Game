@@ -58,7 +58,7 @@ export const CUT28: Record<CutKey28, CutDef27> = {
       }),
       Ch('one', l('Só esta noite', 'Just tonight'), l('+1 reputação artística', '+1 artistic reputation'), (s) => { rep(s, 'artistic', 1); return l('Uma noite só, sem bis. Vira lenda.', 'One night, no encore. It becomes legend.'); }),
     ] },
-  heirs: { key: 'heirs' as CutDef27['key'], tier: 'major', scene: 'rights', prio: 82, ms: 10000, fx: ['rain'],
+  heirs: { key: 'heirs' as CutDef27['key'], tier: 'major', scene: 'rights', prio: 82, ms: 10000, fx: ['candles'], // r29: a chuva agora cai só na janela (cenas29)
     title: l('Os herdeiros brigam', 'The heirs fight'),
     beats: [l('Uma sala de reunião fria. Advogados dos dois lados.', 'A cold meeting room. Lawyers on both sides.'), l('{t}', '{t}'), l('O catálogo de {a} fica no meio da briga.', 'The {a} catalog is caught in the middle.')],
     choices: [
