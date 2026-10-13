@@ -20,7 +20,7 @@ import { drawText } from '../pixel/font';
 import { eraOf, type EraId } from '../pixel/palette';
 import { C, Px, mix, noise, shade, withAlpha } from '../pixel/px';
 import {
-  R, amp, bandOf27, blink, bricks, candle, chair, computer, cone, console27, crowd, desk, dim, disc, drums, floor, grad, guitar,
+  R, amp, bandOf27, ink27, blink, bricks, candle, chair, computer, cone, console27, crowd, desk, dim, disc, drums, floor, grad, guitar,
   halo, jukebox, kit27, lampDesk, micStand, neon, phone, piano, planks, policeCar, poster, press, pressCam, radio, recLight, shelf,
   skyline, speaker, stackDiscs, stars, text, tourVehicle, trophy, tvSet, typewriter, wall, wave, windowPane, tw, type Band27, type K27,
 } from './art27kit';
@@ -301,7 +301,7 @@ const P: Record<SceneKind27, Painter> = {
     floor(k, fy, k.c('#2a2220'), k.c('#221a18'));
     // palco à direita
     const sx = Math.round(W * 0.6);
-    R(k, sx, fy - 10, W - sx, 10, k.pal.woodDark); R(k, sx, fy - 10, W - sx, 1, shade(k.pal.wood, 0.2));
+    ink27(k, () => { R(k, sx, fy - 10, W - sx, 10, k.pal.woodDark); R(k, sx, fy - 10, W - sx, 1, shade(k.pal.wood, 0.2)); });
     cone(k, Math.round(W * 0.78), 0, 6, fy - 10, 60, k.pal.lamp, 40);
     amp(k, W - 16, fy - 10); speaker(k, sx + 2, fy - 10, 9, 14);
     if (b === 0) { // art déco: arco dourado
@@ -315,10 +315,11 @@ const P: Record<SceneKind27, Painter> = {
     // mesa dos olheiros com caderno
     for (let i = 0; i < m.n.scouts; i++) {
       const tx = Math.round(W * (0.16 + i * 0.09)) + 5;
-      R(k, tx - 2, fy - 12, 16, 3, k.pal.wood); k.p.vline(tx + 5, fy - 9, fy - 1, k.pal.woodDark);
+      ink27(k, () => { R(k, tx - 2, fy - 12, 16, 3, k.pal.wood); k.p.vline(tx + 5, fy - 9, fy - 1, k.pal.woodDark);
       R(k, tx + 6, fy - 14, 5, 2, b === 3 ? k.c('#16161a') : k.pal.paper); // caderno / celular
       if (b === 3) k.p.set(tx + 8, fy - 14, k.c('#3aa0ff'));
       R(k, tx, fy - 14, 2, 2, k.c('#c8a050', 200)); // copo
+    });
     }
     crowd(k, Math.round(W * 0.38), sx - 2, fy - 2, 0.85, 0.4, 2, b === 3 ? k.c('#9ad0ff') : undefined);
   },
@@ -352,7 +353,7 @@ const P: Record<SceneKind27, Painter> = {
       const beat = k.t * 5;
       press(k, Math.round(W * 0.1), fy, k.pal.accent2, beat); press(k, Math.round(W * 0.3), fy, k.pal.accent, beat + 1.5);
       // esteira com discos andando
-      R(k, Math.round(W * 0.42), fy - 10, Math.round(W * 0.4), 3, k.c('#3a3a40'));
+      ink27(k, () => { R(k, Math.round(W * 0.42), fy - 10, Math.round(W * 0.4), 3, k.c('#3a3a40')); });
       for (let i = 0; i < 6; i++) { const x = Math.round(W * 0.42) + ((i * 18 + Math.floor(k.t * 14)) % Math.round(W * 0.4)); disc(k, x, fy - 13, 3, [k.pal.accent, k.pal.accent2, k.pal.paper][i % 3]); }
       stackDiscs(k, Math.round(W * 0.86), fy, 9, k.pal.accent); stackDiscs(k, Math.round(W * 0.86) + 14, fy, 6, k.pal.accent2);
       if (m.n.fresh) poster(k, Math.round(W * 0.6), 18, 34, 22, k.pal.accent2, m.sign.act || 'NOVO');
@@ -362,7 +363,7 @@ const P: Record<SceneKind27, Painter> = {
       shelf(k, 4, fy, 60, 44, 0.9); shelf(k, W - 64, fy, 60, 44, 0.9);
       floor(k, fy, k.pal.floors.lounge.a, k.pal.floors.lounge.b);
       neon(k, k.year >= 1990 ? 'CDS & TAPES' : 'RECORDS', W / 2, 6, k.c('#ff4a8a'));
-      for (let i = 0; i < 4; i++) { const bx = Math.round(W * 0.3) + i * 30; R(k, bx, fy - 14, 24, 14, k.pal.woodDark); for (let j = 0; j < 5; j++) R(k, bx + 2 + j * 4, fy - 18 - (j % 2), 3, 5, [k.pal.accent, k.pal.paper, k.pal.accent2, k.pal.fabric2, k.c('#2a2a30')][(i + j) % 5]); }
+      ink27(k, () => { for (let i = 0; i < 4; i++) { const bx = Math.round(W * 0.3) + i * 30; R(k, bx, fy - 14, 24, 14, k.pal.woodDark); for (let j = 0; j < 5; j++) R(k, bx + 2 + j * 4, fy - 18 - (j % 2), 3, 5, [k.pal.accent, k.pal.paper, k.pal.accent2, k.pal.fabric2, k.c('#2a2a30')][(i + j) % 5]); } });
       if (m.n.fresh) poster(k, Math.round(W * 0.42), 16, 40, 24, k.pal.accent2, m.sign.act || 'NEW');
       tvSet(k, W - 90, fy - 20);
     } else {
@@ -370,7 +371,7 @@ const P: Record<SceneKind27, Painter> = {
       grad(k, 0, 0, W, k.H, k.c('#0c1024'), k.c('#1c1440'));
       for (let i = 0; i < 40; i++) k.p.set(Math.floor(noise(i, 1, m.seed) * W), Math.floor(noise(i, 2, m.seed) * fy), k.c('#3a4a8a'));
       const px = Math.round(W * 0.5) - 18, py = Math.max(2, fy - 66);
-      R(k, px, py, 36, Math.min(66, fy - py + 6), k.c('#0a0a0e')); R(k, px + 2, py + 3, 32, Math.min(58, fy - py - 2), k.c('#1c2440'));
+      ink27(k, () => { R(k, px, py, 36, Math.min(66, fy - py + 6), k.c('#0a0a0e')); R(k, px + 2, py + 3, 32, Math.min(58, fy - py - 2), k.c('#1c2440')); });
       R(k, px + 6, py + 7, 24, 18, k.pal.accent2); disc(k, px + 18, py + 16, 6, k.pal.gold, k.t * 3);
       text(k, (m.sign.act || 'PLAY').slice(0, 7), px + 4, py + 28, k.c('#ffffff'));
       R(k, px + 4, py + 36, 28, 1, k.c('#3a4a6a')); R(k, px + 4, py + 36, 6 + Math.floor((k.t * 4) % 22), 1, k.c('#4ade80'));
@@ -390,8 +391,8 @@ const P: Record<SceneKind27, Painter> = {
     // luzes
     const cols = b === 0 ? [k.pal.lamp] : [k.c('#ff4a8a'), k.c('#4ab0ff'), k.c('#ffd040')];
     for (let i = 0; i < 4; i++) { const x = sx0 + 10 + i * Math.round((sx1 - sx0 - 20) / 3); const sw = Math.round(wave(k, 0.3, i * 0.25) * 18); cone(k, x, 6, 3, sy, 40, cols[i % cols.length], b === 0 ? 30 : 38); void sw; }
-    R(k, sx0, sy, sx1 - sx0, 4, k.pal.woodDark); R(k, sx0, sy, sx1 - sx0, 1, shade(k.pal.wood, 0.3));
-    R(k, sx0, sy + 4, sx1 - sx0, fy - sy - 4, k.c('#141018'));
+    ink27(k, () => { R(k, sx0, sy, sx1 - sx0, 4, k.pal.woodDark); R(k, sx0, sy, sx1 - sx0, 1, shade(k.pal.wood, 0.3));
+    R(k, sx0, sy + 4, sx1 - sx0, fy - sy - 4, k.c('#141018')); });
     speaker(k, sx0 - 12, sy + 4, 12, b >= 2 ? 26 : 16); speaker(k, sx1, sy + 4, 12, b >= 2 ? 26 : 16);
     if (b >= 2) { speaker(k, sx0 - 12, sy - 22, 12, 22); speaker(k, sx1, sy - 22, 12, 22); }
     drums(k, Math.round(W * 0.5) - 10, sy); amp(k, sx1 - 18, sy);
@@ -410,7 +411,7 @@ const P: Record<SceneKind27, Painter> = {
     for (let x = (-Math.floor(k.t * 30)) % 16; x < W; x += 16) R(k, x, fy - 1, 8, 1, k.c('#e8d870'));
     // marquise do teatro
     const tx = Math.round(W * 0.62);
-    R(k, tx, fy - 40, 70, 32, k.pal.wall); R(k, tx - 4, fy - 46, 78, 8, k.c('#1a1418'));
+    ink27(k, () => { R(k, tx, fy - 40, 70, 32, k.pal.wall); R(k, tx - 4, fy - 46, 78, 8, k.c('#1a1418')); R(k, tx + 28, fy - 26, 14, 18, k.c('#2a1814')); });
     for (let i = 0; i < 18; i++) k.p.set(tx - 2 + i * 4, fy - 47, blink(k, 2, i * 0.3) ? k.c('#ffd040') : k.c('#5a4020'));
     text(k, (m.sign.tour || 'TOUR').slice(0, 14), tx, fy - 44, k.c('#ffd040'));
     R(k, tx + 28, fy - 26, 14, 18, k.c('#2a1814'));
@@ -423,21 +424,21 @@ const P: Record<SceneKind27, Painter> = {
     for (let i = 0; i < 3; i++) k.p.ellipse(40 + i * 90, 10 + (i % 2) * 6, 22, 4, k.c('#ffd0b0', 120));
     // gramado e tendas
     grad(k, 0, fy - 14, W, k.H, k.c('#4a7a3a'), k.c('#2a4a24'));
-    for (let i = 0; i < 4; i++) { const x = 8 + i * 22; k.p.poly([[x, fy - 12], [x + 9, fy - 22], [x + 18, fy - 12]], [k.pal.accent, k.pal.paper, k.pal.accent2, k.c('#e8e0d0')][i]); }
+    ink27(k, () => { for (let i = 0; i < 4; i++) { const x = 8 + i * 22; k.p.poly([[x, fy - 12], [x + 9, fy - 22], [x + 18, fy - 12]], [k.pal.accent, k.pal.paper, k.pal.accent2, k.c('#e8e0d0')][i]); } });
     // palco grande
     const sx = Math.round(W * 0.42), sw = Math.round(W * 0.4), top = Math.max(2, fy - 54);
-    if (b <= 1) { R(k, sx, fy - 30, sw, 6, k.pal.wood); k.p.poly([[sx - 4, fy - 30], [sx + sw / 2, fy - 50], [sx + sw + 4, fy - 30]], k.c('#e8e0d0')); }
+    if (b <= 1) { ink27(k, () => { R(k, sx, fy - 30, sw, 6, k.pal.wood); k.p.poly([[sx - 4, fy - 30], [sx + sw / 2, fy - 50], [sx + sw + 4, fy - 30]], k.c('#e8e0d0')); }); }
     else {
-      R(k, sx, top, sw, 4, k.c('#3a3a42')); k.p.vline(sx, top, fy - 14, k.c('#3a3a42')); k.p.vline(sx + sw, top, fy - 14, k.c('#3a3a42'));
-      for (let y = top + 4; y < fy - 18; y += 6) { k.p.line(sx, y, sx + 4, y + 6, k.c('#3a3a42')); k.p.line(sx + sw, y, sx + sw - 4, y + 6, k.c('#3a3a42')); }
-      if (b === 3) { R(k, sx + 8, top + 8, sw - 16, 16, k.c('#101018')); R(k, sx + 9, top + 9, sw - 18, 14, withAlpha(k.pal.accent2, 210)); text(k, m.sign.brand.slice(0, 10), sx + 12, top + 13, k.c('#ffffff')); }
+      ink27(k, () => { R(k, sx, top, sw, 4, k.c('#3a3a42')); k.p.vline(sx, top, fy - 14, k.c('#3a3a42')); k.p.vline(sx + sw, top, fy - 14, k.c('#3a3a42'));
+      for (let y = top + 4; y < fy - 18; y += 6) { k.p.line(sx, y, sx + 4, y + 6, k.c('#3a3a42')); k.p.line(sx + sw, y, sx + sw - 4, y + 6, k.c('#3a3a42')); } });
+      if (b === 3) { ink27(k, () => { R(k, sx + 8, top + 8, sw - 16, 16, k.c('#101018')); R(k, sx + 9, top + 9, sw - 18, 14, withAlpha(k.pal.accent2, 210)); }); text(k, m.sign.brand.slice(0, 10), sx + 12, top + 13, k.c('#ffffff')); }
       for (let i = 0; i < 3; i++) cone(k, sx + 12 + i * (sw - 24) / 2, top + 4, 3, fy - 22, 30, [k.c('#ff4a8a'), k.c('#4ab0ff'), k.c('#ffd040')][i], 34);
     }
-    R(k, sx, fy - 22, sw, 8, k.c('#1a1418')); speaker(k, sx - 12, fy - 14, 10, 22); speaker(k, sx + sw + 2, fy - 14, 10, 22);
+    ink27(k, () => { R(k, sx, fy - 22, sw, 8, k.c('#1a1418')); }); speaker(k, sx - 12, fy - 14, 10, 22); speaker(k, sx + sw + 2, fy - 14, 10, 22);
     // bandeirolas
     for (let x = 0; x < W; x += 6) k.p.set(x, 6 + Math.round(Math.sin(x / 9) * 2), [k.pal.accent, k.pal.accent2, k.c('#4ab0ff')][(x / 6) % 3]);
     if (b === 3) for (let i = 0; i < 3; i++) { const dx = Math.round(W * 0.3 + i * 40 + wave(k, 0.2, i) * 10); R(k, dx, 20 + i * 4, 4, 1, k.c('#2a2a30')); k.p.set(dx + 1, 21 + i * 4, blink(k, 2, i) ? k.c('#ff3030') : k.c('#3a3a3a')); }
-    if (m.n.own) { R(k, 4, fy - 34, 50, 10, k.pal.accent2); text(k, (m.sign.brand || 'FEST').slice(0, 11), 6, fy - 32, k.c('#fffaf0')); k.p.vline(4, fy - 34, fy - 12, k.pal.woodDark); }
+    ink27(k, () => { if (m.n.own) { R(k, 4, fy - 34, 50, 10, k.pal.accent2); text(k, (m.sign.brand || 'FEST').slice(0, 11), 6, fy - 32, k.c('#fffaf0')); k.p.vline(4, fy - 34, fy - 12, k.pal.woodDark); } });
     crowd(k, 0, W, fy + 2, m.n.fill ?? 0.6, m.n.hop ?? 0.5, k.H - fy > 20 ? 4 : 2, b >= 3 ? k.c('#9ad0ff') : undefined);
   },
   charts(k, m) {
@@ -446,8 +447,8 @@ const P: Record<SceneKind27, Painter> = {
     floor(k, fy, k.pal.floors.lounge.a, k.pal.floors.lounge.b);
     // quadro das paradas
     const bx = Math.round(W * 0.55), bw = Math.round(W * 0.4), by = 4, bh = fy - 10;
-    R(k, bx - 2, by - 2, bw + 4, bh + 4, b === 0 ? k.pal.woodDark : k.c('#101014'));
-    R(k, bx, by, bw, bh, b === 0 ? k.c('#22302a') : b === 1 ? k.c('#1a1a40') : b === 2 ? k.c('#101820') : k.c('#0c1020'));
+    ink27(k, () => { R(k, bx - 2, by - 2, bw + 4, bh + 4, b === 0 ? k.pal.woodDark : k.c('#101014'));
+    R(k, bx, by, bw, bh, b === 0 ? k.c('#22302a') : b === 1 ? k.c('#1a1a40') : b === 2 ? k.c('#101820') : k.c('#0c1020')); });
     const rows = Math.min(6, Math.floor((bh - 4) / 9));
     for (let i = 0; i < rows; i++) {
       const mineRow = m.n.pos === i;
@@ -473,16 +474,16 @@ const P: Record<SceneKind27, Painter> = {
     if (b <= 1) {
       // rotativa e jornal saindo
       const px = Math.round(W * 0.68);
-      R(k, px, fy - 30, 60, 30, k.pal.metalDark); for (let i = 0; i < 3; i++) k.p.disc(px + 12 + i * 18, fy - 16, 6, k.pal.metal);
+      ink27(k, () => { R(k, px, fy - 30, 60, 30, k.pal.metalDark); for (let i = 0; i < 3; i++) k.p.disc(px + 12 + i * 18, fy - 16, 6, k.pal.metal); });
       for (let i = 0; i < 3; i++) { const a = k.t * 6 + i; k.p.set(Math.round(px + 12 + i * 18 + Math.cos(a) * 5), Math.round(fy - 16 + Math.sin(a) * 5), k.c('#2a2a2e')); }
-      R(k, px - 30, fy - 18, 32, 2, k.pal.paper);
+      ink27(k, () => { R(k, px - 30, fy - 18, 32, 2, k.pal.paper); });
       for (let i = 0; i < 3; i++) R(k, px - 26 + i * 8 - ((k.t * 10) % 8), fy - 22, 6, 4, k.pal.paper);
-    } else if (b === 2) { R(k, W - 40, fy - 14, 24, 14, k.c('#d8d0c0')); R(k, W - 36, fy - 18, 16, 4, k.c('#f4f0e8')); } // fax
-    else { R(k, W - 70, 4, 60, 34, k.c('#101014')); R(k, W - 69, 5, 58, 32, k.c('#1d2a3a')); for (let i = 0; i < 5; i++) { R(k, W - 66, 8 + i * 6, 4, 4, k.c(['#ff7ad0', '#7ac0ff', '#ffd040', '#4ade80', '#ffffff'][i])); R(k, W - 60, 9 + i * 6, 30 + ((i * 7) % 16), 2, k.c('#a8c0e0')); } }
+    } else if (b === 2) ink27(k, () => { R(k, W - 40, fy - 14, 24, 14, k.c('#d8d0c0')); R(k, W - 36, fy - 18, 16, 4, k.c('#f4f0e8')); }); // fax
+    else { ink27(k, () => { R(k, W - 70, 4, 60, 34, k.c('#101014')); R(k, W - 69, 5, 58, 32, k.c('#1d2a3a')); }); for (let i = 0; i < 5; i++) { R(k, W - 66, 8 + i * 6, 4, 4, k.c(['#ff7ad0', '#7ac0ff', '#ffd040', '#4ade80', '#ffffff'][i])); R(k, W - 60, 9 + i * 6, 30 + ((i * 7) % 16), 2, k.c('#a8c0e0')); } }
     // manchete na parede
     const red = m.n.scandal === 1;
     const hx = 8, hy = 4, hw = Math.round(W * 0.34);
-    R(k, hx, hy, hw, 26, k.pal.paper); R(k, hx, hy, hw, 2, shade(k.pal.paper, -0.2));
+    ink27(k, () => { R(k, hx, hy, hw, 26, k.pal.paper); R(k, hx, hy, hw, 2, shade(k.pal.paper, -0.2)); });
     text(k, red ? (b <= 1 ? 'EXTRA! ESCANDALO' : 'URGENTE: ESCANDALO') : (b <= 1 ? 'GAZETA MUSICAL' : 'MUSIC NEWS'), hx + 3, hy + 4, red ? k.c('#c02020') : k.c('#202030'));
     for (let i = 0; i < 3; i++) R(k, hx + 3, hy + 12 + i * 4, hw - 6 - i * 10, 2, k.c('#8a8478'));
     // mesas da redação
@@ -505,12 +506,12 @@ const P: Record<SceneKind27, Painter> = {
     else computer(k, dx + 8, fy - 12, true);
     if (b >= 2) { R(k, dx + 34, fy - 26, 26, 14, k.c('#121216')); R(k, dx + 35, fy - 25, 24, 12, red ? k.c('#3a1018') : k.c('#102a1a')); for (let i = 0; i < 8; i++) k.p.vline(dx + 37 + i * 3, fy - 15 - (red ? 8 - i : i), fy - 14, red ? k.c('#ff5050') : k.c('#4ade80')); }
     // cofre e moedas
-    R(k, 12, fy - 22, 22, 22, k.c('#3a3a40')); k.p.disc(23, fy - 11, 5, k.c('#5a5a62')); k.p.set(23, fy - 11, k.pal.gold);
+    ink27(k, () => { R(k, 12, fy - 22, 22, 22, k.c('#3a3a40')); k.p.disc(23, fy - 11, 5, k.c('#5a5a62')); k.p.set(23, fy - 11, k.pal.gold); });
     if (m.n.rich) for (let i = 0; i < 5; i++) stackDiscs(k, 40 + i * 6, fy, 3 + (i % 3), k.pal.gold);
-    R(k, Math.round(W * 0.5) - 3, 5, 36, 11, k.c('#101418')); text(k, red ? 'SALDO -' : 'SALDO +', Math.round(W * 0.5), 8, red ? k.c('#ff5050') : k.c('#4ade80'));
+    ink27(k, () => { R(k, Math.round(W * 0.5) - 3, 5, 36, 11, k.c('#101418')); }); text(k, red ? 'SALDO -' : 'SALDO +', Math.round(W * 0.5), 8, red ? k.c('#ff5050') : k.c('#4ade80'));
     // arquivo e calendário
-    R(k, W - 30, fy - 26, 18, 26, k.band >= 2 ? k.c('#8a8a92') : k.pal.woodDark); for (let i = 0; i < 3; i++) { R(k, W - 29, fy - 25 + i * 8, 16, 7, shade(k.band >= 2 ? k.c('#8a8a92') : k.pal.woodDark, 0.1)); R(k, W - 23, fy - 22 + i * 8, 4, 1, k.pal.metal); }
-    R(k, Math.round(W * 0.14), 8, 16, 14, k.pal.paper); R(k, Math.round(W * 0.14), 8, 16, 3, k.c('#c03030')); for (let i = 0; i < 6; i++) k.p.set(Math.round(W * 0.14) + 2 + (i % 3) * 5, 13 + Math.floor(i / 3) * 4, k.c('#3a3a3a'));
+    ink27(k, () => { R(k, W - 30, fy - 26, 18, 26, k.band >= 2 ? k.c('#8a8a92') : k.pal.woodDark); for (let i = 0; i < 3; i++) { R(k, W - 29, fy - 25 + i * 8, 16, 7, shade(k.band >= 2 ? k.c('#8a8a92') : k.pal.woodDark, 0.1)); R(k, W - 23, fy - 22 + i * 8, 4, 1, k.pal.metal); } });
+    ink27(k, () => { R(k, Math.round(W * 0.14), 8, 16, 14, k.pal.paper); R(k, Math.round(W * 0.14), 8, 16, 3, k.c('#c03030')); for (let i = 0; i < 6; i++) k.p.set(Math.round(W * 0.14) + 2 + (i % 3) * 5, 13 + Math.floor(i / 3) * 4, k.c('#3a3a3a')); });
   },
   team(k, m) {
     const W = k.W, fy = k.fy, b = k.band;
@@ -524,8 +525,8 @@ const P: Record<SceneKind27, Painter> = {
       lampDesk(k, x + 22, fy - 12, i < (m.n.staff ?? 0));
     }
     // quadro de avisos / organograma
-    R(k, Math.round(W * 0.4), 4, 60, 18, b >= 3 ? k.c('#f0f0f4') : k.c('#8a6a3a'));
-    for (let i = 0; i < 6; i++) R(k, Math.round(W * 0.4) + 4 + i * 9, 7 + (i % 2) * 6, 6, 5, [k.pal.paper, k.c('#ffe070'), k.c('#9ad0ff')][i % 3]);
+    ink27(k, () => { R(k, Math.round(W * 0.4), 4, 60, 18, b >= 3 ? k.c('#f0f0f4') : k.c('#8a6a3a'));
+    for (let i = 0; i < 6; i++) R(k, Math.round(W * 0.4) + 4 + i * 9, 7 + (i % 2) * 6, 6, 5, [k.pal.paper, k.c('#ffe070'), k.c('#9ad0ff')][i % 3]); });
     text(k, m.sign.brand.slice(0, 14), 6, 6, k.pal.paper, k.pal.trim);
   },
   rights(k, m) {
@@ -536,10 +537,10 @@ const P: Record<SceneKind27, Painter> = {
       for (let y = fy; y < k.H; y++) k.p.hline(0, W - 1, y, y === fy ? k.c('#8a8478') : (y % 3 ? k.c('#a8a090') : k.c('#9a9282'))); // calçada
       for (let i = 0; i < 5; i++) {
         const x = i * 60 - 4, h = fy - 6 - (i % 2) * 8;
-        bricks(k, x, fy - h, 56, h, i % 2 ? k.c('#8a4a34') : k.c('#7a5a44'));
+        ink27(k, () => { bricks(k, x, fy - h, 56, h, i % 2 ? k.c('#8a4a34') : k.c('#7a5a44'));
         for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) { const wx = x + 6 + c * 16, wy = fy - h + 6 + r * 16; if (wy + 10 > fy - 4) continue; R(k, wx, wy, 10, 10, k.c('#ffe0a0', 220)); if ((r + c + i) % 3 === 0) piano(k, wx + 1, wy + 10, false); }
         R(k, x + 18, fy - 14, 12, 14, k.pal.woodDark);
-        R(k, x + 4, fy - h - 4, 30, 5, k.pal.paper); text(k, ['WITMARK', 'FEIST', 'REMICK', 'HARMS', 'SHAPIRO'][i], x + 5, fy - h - 4, k.c('#3a2a1a'));
+        R(k, x + 4, fy - h - 4, 30, 5, k.pal.paper); }); text(k, ['WITMARK', 'FEIST', 'REMICK', 'HARMS', 'SHAPIRO'][i], x + 5, fy - h - 4, k.c('#3a2a1a'));
       }
     } else {
       wall(k, 0, fy, k.pal.wall);
@@ -548,14 +549,14 @@ const P: Record<SceneKind27, Painter> = {
       desk(k, Math.round(W * 0.42), fy, 60);
       for (let i = 0; i < 4; i++) R(k, Math.round(W * 0.42) + 6 + i * 6, fy - 14 - i, 10, 2, k.pal.paper);
       computer(k, Math.round(W * 0.42) + 38, fy - 12, true);
-      R(k, W - 60, 6, 50, 30, k.pal.trim); R(k, W - 58, 8, 46, 26, k.pal.paper);
+      ink27(k, () => { R(k, W - 60, 6, 50, 30, k.pal.trim); R(k, W - 58, 8, 46, 26, k.pal.paper); });
       text(k, b === 2 ? 'ROYALTIES' : 'SPLITS %', W - 55, 11, k.c('#202030'));
       for (let i = 0; i < 3; i++) R(k, W - 55, 19 + i * 4, 30 - i * 6, 2, [k.pal.accent, k.pal.accent2, k.pal.fabric2][i]);
     }
     // partituras voando
     for (let i = 0; i < 5; i++) {
       const x = Math.round(((i * 61 + k.t * 12) % (W + 20)) - 10), y = 14 + ((i * 17) % Math.max(10, fy - 30)) + Math.round(wave(k, 0.5, i * 0.2) * 3);
-      R(k, x, y, 8, 10, k.c('#f8f4e8')); for (let j = 0; j < 4; j++) k.p.hline(x + 1, x + 6, y + 2 + j * 2, k.c('#8a8478'));
+      ink27(k, () => { R(k, x, y, 8, 10, k.c('#f8f4e8')); for (let j = 0; j < 4; j++) k.p.hline(x + 1, x + 6, y + 2 + j * 2, k.c('#8a8478')); });
       k.p.set(x + 3, y + 3 + (i % 3) * 2, k.c('#202020'));
     }
   },
@@ -566,12 +567,12 @@ const P: Record<SceneKind27, Painter> = {
     floor(k, fy, k.c('#3a1a24'), k.c('#321620'));
     R(k, 0, 0, W, 5, k.pal.gold);
     // palco e púlpito
-    R(k, Math.round(W * 0.3), fy - 10, Math.round(W * 0.4), 10, k.pal.woodDark); R(k, Math.round(W * 0.3), fy - 10, Math.round(W * 0.4), 1, k.pal.gold);
+    ink27(k, () => { R(k, Math.round(W * 0.3), fy - 10, Math.round(W * 0.4), 10, k.pal.woodDark); R(k, Math.round(W * 0.3), fy - 10, Math.round(W * 0.4), 1, k.pal.gold); });
     cone(k, Math.round(W * 0.5), 0, 6, fy - 10, 40, k.pal.lamp, 50);
     // estantes de troféus nas laterais (enchem com os prêmios)
     for (const side of [0, 1]) {
       const x0 = side ? W - 62 : 6;
-      for (let r = 0; r < 2; r++) { R(k, x0, fy - 14 - r * 18, 56, 2, k.pal.wood); }
+      ink27(k, () => { for (let r = 0; r < 2; r++) { R(k, x0, fy - 14 - r * 18, 56, 2, k.pal.wood); } });
       for (let i = 0; i < 6; i++) { const idx = side * 6 + i; if (idx >= (m.n.trophies ?? 0)) continue; trophy(k, x0 + 4 + (i % 3) * 18, fy - 14 - Math.floor(i / 3) * 18, (idx % 3) as 0 | 1 | 2); }
     }
     if (!m.n.trophies) for (const x of [10, W - 58]) text(k, '?', x + 24, fy - 26, k.c('#6a4a5a'));
@@ -585,7 +586,8 @@ const P: Record<SceneKind27, Painter> = {
       for (let i = 0; i < 6; i++) k.p.ellipse(20 + i * 50, 10 + (i % 3) * 8, 6, 3, shade(k.pal.wall, -0.5)); // mofo
       windowPane(k, Math.round(W * 0.7), 8, 28, Math.min(26, fy - 24), k.c('#2a3040'));
       floor(k, fy, shade(k.pal.floors.garage.a, -0.2), shade(k.pal.floors.garage.b, -0.2));
-      R(k, Math.round(W * 0.2), fy - 6, 50, 6, k.c('#8a8478')); R(k, Math.round(W * 0.2), fy - 8, 14, 3, k.c('#e8e0d0')); // colchão no chão
+      ink27(k, () => { R(k, Math.round(W * 0.2), fy - 6, 50, 6, k.c('#8a8478')); R(k, Math.round(W * 0.2), fy - 8, 14, 3, k.c('#e8e0d0')); // colchão no chão
+    });
       guitar(k, Math.round(W * 0.6), fy);
       R(k, Math.round(W * 0.42), fy - 26, 1, 14, k.c('#2a2a2a')); halo(k, Math.round(W * 0.42), fy - 12, 10, k.pal.lamp, 70); R(k, Math.round(W * 0.42) - 1, fy - 12, 3, 3, k.pal.lamp);
       radio(k, Math.round(W * 0.82), fy);
@@ -593,7 +595,7 @@ const P: Record<SceneKind27, Painter> = {
       wall(k, 0, fy, k.pal.wall);
       windowPane(k, Math.round(W * 0.66), 6, 40, Math.min(30, fy - 20), k.c('#1a2040'));
       floor(k, fy, k.pal.floors.lounge.a, k.pal.floors.lounge.b);
-      R(k, Math.round(W * 0.18), fy - 12, 50, 8, k.pal.fabric); R(k, Math.round(W * 0.18), fy - 18, 50, 6, shade(k.pal.fabric, -0.15)); R(k, Math.round(W * 0.18) - 3, fy - 14, 4, 14, shade(k.pal.fabric, -0.2)); R(k, Math.round(W * 0.18) + 49, fy - 14, 4, 14, shade(k.pal.fabric, -0.2));
+      ink27(k, () => { R(k, Math.round(W * 0.18), fy - 12, 50, 8, k.pal.fabric); R(k, Math.round(W * 0.18), fy - 18, 50, 6, shade(k.pal.fabric, -0.15)); R(k, Math.round(W * 0.18) - 3, fy - 14, 4, 14, shade(k.pal.fabric, -0.2)); R(k, Math.round(W * 0.18) + 49, fy - 14, 4, 14, shade(k.pal.fabric, -0.2)); });
       tvSet(k, Math.round(W * 0.5), fy);
       shelf(k, W - 34, fy, 26, 30, 0.8); radio(k, 10, fy);
     } else {
@@ -604,7 +606,7 @@ const P: Record<SceneKind27, Painter> = {
       for (let x = 0; x < W; x += 36) R(k, x, 0, 3, fy, k.c('#c8c8d0', 200));
       R(k, 0, 0, W, 3, k.c('#c8c8d0'));
       floor(k, fy, tier === 3 ? k.c('#e8e0d0') : k.pal.floors.hall.a, tier === 3 ? k.c('#d0c4b0') : k.pal.floors.hall.b);
-      R(k, Math.round(W * 0.6), fy - 12, 60, 8, k.c('#f0ece4')); R(k, Math.round(W * 0.6), fy - 16, 60, 4, k.c('#d8d0c4'));
+      ink27(k, () => { R(k, Math.round(W * 0.6), fy - 12, 60, 8, k.c('#f0ece4')); R(k, Math.round(W * 0.6), fy - 16, 60, 4, k.c('#d8d0c4')); });
       piano(k, Math.round(W * 0.1), fy, true);
       if (tier === 3) {
         const cx = Math.round(W * 0.5); k.p.vline(cx, 0, 8, k.pal.gold); for (let i = -2; i <= 2; i++) { k.p.vline(cx + i * 4, 8, 12 + Math.abs(i), k.pal.gold); k.p.set(cx + i * 4, 13 + Math.abs(i), k.c('#fff4c0')); }
@@ -619,16 +621,17 @@ const P: Record<SceneKind27, Painter> = {
     wall(k, 0, fy, k.pal.wall);
     floor(k, fy, k.pal.floors.lounge.a, k.pal.floors.lounge.b);
     // porta-retratos
-    for (let i = 0; i < 5; i++) { const x = 20 + i * 26, y = 6 + (i % 2) * 4; R(k, x, y, 14, 12, k.pal.gold); R(k, x + 1, y + 1, 12, 10, i < (m.n.fam ?? 0) + 1 ? k.c('#c8b8a0') : shade(k.pal.wall, -0.2)); if (i < (m.n.fam ?? 0) + 1) { k.p.disc(x + 7, y + 5, 2, k.c('#8a6a4a')); R(k, x + 4, y + 8, 6, 3, k.pal.accent2); } }
+    ink27(k, () => { for (let i = 0; i < 5; i++) { const x = 20 + i * 26, y = 6 + (i % 2) * 4; R(k, x, y, 14, 12, k.pal.gold); R(k, x + 1, y + 1, 12, 10, i < (m.n.fam ?? 0) + 1 ? k.c('#c8b8a0') : shade(k.pal.wall, -0.2)); if (i < (m.n.fam ?? 0) + 1) { k.p.disc(x + 7, y + 5, 2, k.c('#8a6a4a')); R(k, x + 4, y + 8, 6, 3, k.pal.accent2); } } });
     // mesa de jantar
     const tx = Math.round(W * 0.28);
-    R(k, tx, fy - 12, Math.round(W * 0.5), 3, k.pal.wood); k.p.vline(tx + 3, fy - 9, fy - 1, k.pal.woodDark); k.p.vline(tx + Math.round(W * 0.5) - 4, fy - 9, fy - 1, k.pal.woodDark);
+    ink27(k, () => { R(k, tx, fy - 12, Math.round(W * 0.5), 3, k.pal.wood); k.p.vline(tx + 3, fy - 9, fy - 1, k.pal.woodDark); k.p.vline(tx + Math.round(W * 0.5) - 4, fy - 9, fy - 1, k.pal.woodDark); });
     for (let i = 0; i < 4; i++) { candle(k, tx + 20 + i * 30, fy - 12); }
     for (let i = 0; i < 5; i++) chair(k, Math.round(W * (0.3 + i * 0.1)) - 3, fy);
-    R(k, 8, fy - 14, 40, 10, k.pal.fabric); R(k, 8, fy - 20, 40, 6, shade(k.pal.fabric, -0.15)); // sofá
+    ink27(k, () => { R(k, 8, fy - 14, 40, 10, k.pal.fabric); R(k, 8, fy - 20, 40, 6, shade(k.pal.fabric, -0.15)); // sofá
+    });
     halo(k, Math.round(W * 0.53), 4, 30, k.pal.lamp, 50); k.p.vline(Math.round(W * 0.53), 0, 4, k.pal.metalDark);
     if ((m.n.fam ?? 0) === 0) { radio(k, W - 30, fy); }
-    else R(k, W - 40, fy - 6, 10, 6, k.c('#e05a4e')); // brinquedo
+    else ink27(k, () => { R(k, W - 40, fy - 6, 10, 6, k.c('#e05a4e')); }); // brinquedo
   },
   night(k, m) {
     const W = k.W, fy = k.fy, b = k.band;
@@ -638,19 +641,20 @@ const P: Record<SceneKind27, Painter> = {
     if (b === 2) { for (let x = 0; x < W; x += 8) for (let y = fy; y < k.H; y += 3) if (blink(k, 2, (x + y) * 0.07)) R(k, x, y, 8, 3, [k.c('#ff4a8a', 180), k.c('#4ab0ff', 180), k.c('#ffd040', 180)][((x + y) / 8 | 0) % 3]); }
     // balcão do bar à esquerda
     const bw = Math.round(W * 0.34);
-    R(k, 0, fy - 14, bw, 14, k.pal.woodDark); R(k, 0, fy - 15, bw, 2, k.pal.wood);
-    for (let i = 0; i < 9; i++) { const x = 6 + i * 9; R(k, x, fy - 36, 3, 8, [k.c('#3a7a3a'), k.c('#7a3a2a'), k.c('#c8a050'), k.c('#5a5aa0')][i % 4]); R(k, x + 1, fy - 39, 1, 3, k.c('#3a3a3a')); }
-    R(k, 2, fy - 28, bw - 4, 1, k.pal.wood);
+    ink27(k, () => { R(k, 0, fy - 14, bw, 14, k.pal.woodDark); R(k, 0, fy - 15, bw, 2, k.pal.wood); });
+    ink27(k, () => { for (let i = 0; i < 9; i++) { const x = 6 + i * 9; R(k, x, fy - 36, 3, 8, [k.c('#3a7a3a'), k.c('#7a3a2a'), k.c('#c8a050'), k.c('#5a5aa0')][i % 4]); R(k, x + 1, fy - 39, 1, 3, k.c('#3a3a3a')); }
+    R(k, 2, fy - 28, bw - 4, 1, k.pal.wood); });
     // pista / palco por época
     if (b === 0) { neon(k, 'SPEAKEASY', W * 0.66, 6, k.pal.gold); piano(k, Math.round(W * 0.7), fy, true); halo(k, Math.round(W * 0.74), fy - 20, 20, k.pal.lamp, 40); }
     else if (b === 1) { neon(k, 'GO-GO', W * 0.66, 6, k.c('#ff8a3a')); jukebox(k, Math.round(W * 0.88), fy); }
     else if (b === 2) {
-      const cx = Math.round(W * 0.66); k.p.vline(cx, 0, 8, k.c('#8a8a92')); k.p.disc(cx, 12, 5, k.c('#c8c8d8'));
+      const cx = Math.round(W * 0.66); ink27(k, () => { k.p.vline(cx, 0, 8, k.c('#8a8a92')); k.p.disc(cx, 12, 5, k.c('#c8c8d8')); });
       for (let i = 0; i < 10; i++) { const a = k.t * 2 + i * 0.63; const x = Math.round(cx + Math.cos(a) * (20 + i * 8)), y = Math.round(20 + Math.abs(Math.sin(a)) * (fy - 24)); k.p.set(x, y, k.c('#ffffff')); }
       neon(k, 'DISCO', W * 0.88, 6, k.c('#ff4a8a'));
     } else {
       for (let i = 0; i < 6; i++) { const a = -0.5 + wave(k, 0.25, i * 0.17) * 0.6 + i * 0.12; k.p.line(Math.round(W * 0.8), 4, Math.round(W * 0.8 + Math.cos(a + 1.6) * W), Math.round(4 + Math.sin(a + 1.6) * W), k.c(i % 2 ? '#4aff8a' : '#ff4ad0', 160)); }
-      R(k, Math.round(W * 0.72), fy - 14, 30, 8, k.c('#1a1a22')); R(k, Math.round(W * 0.72) + 3, fy - 13, 8, 2, k.c('#3aa0ff')); // mesa do DJ
+      ink27(k, () => { R(k, Math.round(W * 0.72), fy - 14, 30, 8, k.c('#1a1a22')); R(k, Math.round(W * 0.72) + 3, fy - 13, 8, 2, k.c('#3aa0ff')); // mesa do DJ
+    });
       neon(k, 'CLUB', W * 0.55, 6, k.c('#4ad0ff'));
     }
     crowd(k, bw + 10, W, fy + 2, m.n.fill ?? 0.6, b >= 2 ? 0.9 : 0.4, k.H - fy > 20 ? 3 : 2, b === 3 ? k.c('#9ad0ff') : undefined);
@@ -700,7 +704,7 @@ const P: Record<SceneKind27, Painter> = {
     trophy(k, W - 30, fy - 44, 1); trophy(k, W - 16, fy - 44, 0);
     const dx = Math.round(W * 0.34), dw = Math.round(W * 0.32);
     desk(k, dx, fy, dw);
-    R(k, dx + dw / 2 - 8, fy - 15, 16, 3, k.c('#fffaf0')); for (let i = 0; i < 3; i++) k.p.hline(dx + dw / 2 - 6, dx + dw / 2 + 4 - i * 2, fy - 15 + i, k.c('#8a8478'));
+    ink27(k, () => { R(k, dx + dw / 2 - 8, fy - 15, 16, 3, k.c('#fffaf0')); for (let i = 0; i < 3; i++) k.p.hline(dx + dw / 2 - 6, dx + dw / 2 + 4 - i * 2, fy - 15 + i, k.c('#8a8478')); });
     const pen = k.t > 2 ? Math.min(6, Math.floor((k.t - 2) * 4)) : 0;
     R(k, dx + dw / 2 - 4 + pen, fy - 18, 1, 4, k.c('#18181c')); if (pen) k.p.hline(dx + dw / 2 - 6, dx + dw / 2 - 6 + pen, fy - 14, k.c('#1a2a8a'));
     lampDesk(k, dx + 4, fy - 12);
@@ -712,19 +716,19 @@ const P: Record<SceneKind27, Painter> = {
     nightStreet(k, m);
     // fachada com a porta acesa
     const fx = Math.round(W * 0.36), fw = Math.round(W * 0.28);
-    bricks(k, fx, Math.max(4, fy - 70), fw, fy - Math.max(4, fy - 70), k.c('#6a3a2a'));
-    R(k, fx + fw / 2 - 9, fy - 30, 18, 30, k.c('#ffe0a0')); R(k, fx + fw / 2 - 11, fy - 32, 22, 2, k.pal.trim);
+    ink27(k, () => { bricks(k, fx, Math.max(4, fy - 70), fw, fy - Math.max(4, fy - 70), k.c('#6a3a2a'));
+    R(k, fx + fw / 2 - 9, fy - 30, 18, 30, k.c('#ffe0a0')); R(k, fx + fw / 2 - 11, fy - 32, 22, 2, k.pal.trim); });
     cone(k, fx + fw / 2, fy - 1, 18, k.H, 50, k.c('#ffd889'), 40);
     R(k, fx + fw / 2 - 12, fy - 2, 24, 2, k.c('#5a5a62'));
     // imprensa amontoada
     R(k, 0, fy, W, k.H - fy, k.c('#1a1a22'));
     for (let i = 0; i < 9; i++) {
       const x = Math.round((i < 5 ? W * 0.04 : W * 0.66) + (i % 5) * 16), flash = k.t > 0 && Math.sin(k.t * (7 + i) + i * 3) > 0.9;
-      R(k, x, fy - 14 + (i % 2) * 2, 6, 14, k.c('#2a2a34')); R(k, x + 1, fy - 18 + (i % 2) * 2, 4, 4, k.c('#3a2a24'));
+      ink27(k, () => { R(k, x, fy - 14 + (i % 2) * 2, 6, 14, k.c('#2a2a34')); R(k, x + 1, fy - 18 + (i % 2) * 2, 4, 4, k.c('#3a2a24')); });
       pressCam(k, x + (i < 5 ? 5 : -5), fy - 10 + (i % 2) * 2, flash);
       if (k.band >= 1 && i % 3 === 0) { k.p.line(x + 3, fy - 12, x + (i < 5 ? 14 : -8), fy - 22, k.c('#2a2a2e')); R(k, x + (i < 5 ? 13 : -10), fy - 24, 3, 3, k.c('#3a3a42')); } // microfone de vara
     }
-    if (k.band >= 2) { R(k, W - 46, fy - 26, 40, 16, k.c('#e8e8f0')); text(k, 'TV', W - 30, fy - 22, k.c('#c02020')); R(k, W - 30, fy - 34, 1, 8, k.c('#8a8a92')); k.p.disc(W - 30, fy - 36, 3, k.c('#c8c8d0')); }
+    ink27(k, () => { if (k.band >= 2) { R(k, W - 46, fy - 26, 40, 16, k.c('#e8e8f0')); text(k, 'TV', W - 30, fy - 22, k.c('#c02020')); R(k, W - 30, fy - 34, 1, 8, k.c('#8a8a92')); k.p.disc(W - 30, fy - 36, 3, k.c('#c8c8d0')); } });
   },
   memorial(k, m) {
     const W = k.W, fy = k.fy;
@@ -733,7 +737,7 @@ const P: Record<SceneKind27, Painter> = {
     floor(k, fy, k.c('#2a2228'), k.c('#221c22'));
     // moldura do retrato (o rosto é desenhado por cima na camada do DOM)
     const cx = Math.round(W / 2);
-    R(k, cx - 18, Math.max(4, fy - 66), 36, 42, k.pal.gold); R(k, cx - 16, Math.max(6, fy - 64), 32, 38, k.c('#1a1418'));
+    ink27(k, () => { R(k, cx - 18, Math.max(4, fy - 66), 36, 42, k.pal.gold); R(k, cx - 16, Math.max(6, fy - 64), 32, 38, k.c('#1a1418')); });
     R(k, cx - 4, Math.max(4, fy - 66) + 42, 8, 2, k.c('#18181c')); // fita
     // flores e velas
     for (let i = 0; i < 24; i++) R(k, cx - 40 + ((i * 37) % 80), fy - 6 + ((i * 13) % 5), 2, 2, k.c(['#e05a4e', '#ffffff', '#f0c840', '#e070a8'][i % 4]));
@@ -745,9 +749,9 @@ const P: Record<SceneKind27, Painter> = {
     P.roster(k, m);
     // porta aberta para a rua (luz do dia entrando)
     const dx = W - 30;
-    R(k, dx, fy - 40, 22, 40, k.c('#ffe8c0')); R(k, dx - 2, fy - 42, 26, 2, k.pal.trim);
+    ink27(k, () => { R(k, dx, fy - 40, 22, 40, k.c('#ffe8c0')); R(k, dx - 2, fy - 42, 26, 2, k.pal.trim); });
     cone(k, dx + 11, fy - 1, 22, k.H, 40, k.c('#ffe8c0'), 40);
-    k.p.poly([[dx, fy - 40], [dx - 10, fy - 36], [dx - 10, fy - 2], [dx, fy]], k.pal.woodDark);
+    ink27(k, () => { k.p.poly([[dx, fy - 40], [dx - 10, fy - 36], [dx - 10, fy - 2], [dx, fy]], k.pal.woodDark); });
     dim(k, 50);
   },
   era(k, m) {
@@ -780,8 +784,8 @@ function paintCrime(k: K27, m: ArtModel27): void {
   const busy = m.n.busy === 1;
   cone(k, tx, 2, 4, fy - 10, 46, k.pal.lamp, busy ? 50 : 22); R(k, tx - 3, 0, 7, 3, k.c('#2a4a2a')); k.p.vline(tx, 0, 0, k.c('#3a3a3a'));
   // mesa de jogo (feltro verde, fichas, cartas)
-  k.p.ellipse(tx, fy - 12, 22, 4, k.c('#1f5a32')); k.p.ellipse(tx, fy - 12, 22, 4, k.c('#1f5a32')); R(k, tx - 22, fy - 12, 44, 2, k.c('#3a2a1a'));
-  k.p.vline(tx - 16, fy - 10, fy - 1, k.c('#2a1a10')); k.p.vline(tx + 16, fy - 10, fy - 1, k.c('#2a1a10'));
+  ink27(k, () => { k.p.ellipse(tx, fy - 12, 22, 4, k.c('#1f5a32')); k.p.ellipse(tx, fy - 12, 22, 4, k.c('#1f5a32')); R(k, tx - 22, fy - 12, 44, 2, k.c('#3a2a1a'));
+  k.p.vline(tx - 16, fy - 10, fy - 1, k.c('#2a1a10')); k.p.vline(tx + 16, fy - 10, fy - 1, k.c('#2a1a10')); });
   if (busy) { for (let i = 0; i < 5; i++) { R(k, tx - 14 + i * 7, fy - 14, 2, 2 + (i % 3), [k.c('#e05a4e'), k.c('#f4f0e0'), k.c('#3a6ad0')][i % 3]); } R(k, tx - 3, fy - 14, 4, 2, k.c('#f4f0e0')); R(k, tx + 4, fy - 14, 3, 2, k.c('#f4f0e0')); stackDiscs(k, tx + 10, fy - 12, 2, k.c('#4ade80')); }
   else { chair(k, tx - 26, fy); chair(k, tx + 20, fy); }
   // máquina de pirataria da época, ao fundo

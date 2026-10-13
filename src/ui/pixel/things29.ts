@@ -6,7 +6,7 @@
 
 import { logoColors, logoPx } from '../art';
 import { drawText, fitText } from './font';
-import { C, Px, dith, hsl, mix, shade, withAlpha, type Col } from './px';
+import { C, Px, dith, hsl, inked, mix, shade, withAlpha, type Col } from './px';
 import { K28 as K, OUT28, h28, pxImg28 } from './art28kit';
 import { relicBand28 } from './relic28';
 
@@ -124,42 +124,45 @@ export function vehiclePx29(move: Move29, year: number, seed = ''): Px {
   const hue = h28('vh29', seed) % 360;
   const body = b <= 1 ? hsl(hue, 45, 42) : b === 2 ? hsl(hue, 60, 55) : b === 3 ? K.white : b === 4 ? K.black : C('#d8dce4');
   const glass = C('#8ac0e0');
-  const wheel = (cx: number, cy: number, r = 3) => { p.disc(cx, cy, r, K.ink); p.disc(cx, cy, r - 1.5, K.grey); };
+  // R29 (arte consistente): o fundo (céu/chão) ocupa o quadro inteiro, então o contorno do Px não achava borda —
+  // o veículo agora vai numa camada própria, com relevo pela silhueta e contorno INK
   p.rect(0, 21, W, 3, C('#5c5856'));
-  if (move === 'fly') {
-    p.rect(0, 0, W, 21, C('#9ac8e8')); p.rect(0, 21, W, 3, C('#7a7a80'));
-    const prop = b <= 1;
-    p.ellipse(24, 12, 20, 4, b >= 4 ? K.white : K.silver);
-    p.poly([[42, 12], [47, 4], [47, 12]], hsl(hue, 70, 45));
-    p.poly([[20, 12], [30, 12], [22, 20], [16, 20]], shade(K.silver, -0.15));
-    for (let x = 10; x < 38; x += 3) p.put(x, 11, glass);
-    p.poly([[4, 11], [8, 9], [8, 13]], glass);
-    if (prop) { p.vline(3, 8, 16, K.dgrey); p.rect(20, 14, 3, 2, K.dgrey); } else p.rect(22, 16, 6, 3, K.dgrey);
-    p.hline(6, 42, 13, hsl(hue, 70, 45));
-    if (b >= 4) { drawText(p, fitText(seed.toUpperCase(), 12), 30, 8, hsl(hue, 70, 45)); }
-  } else if (move === 'bus') {
-    const L = b <= 1 ? 40 : 46;
-    p.rect(1, 5, L, 14, body);
-    if (b <= 1) { p.poly([[1, 5], [5, 2], [L - 4, 2], [L + 1, 5]], body); p.hline(2, L - 2, 10, hsl(hue + 180, 50, 40)); }
-    else if (b === 2) for (let x = 1; x < L + 1; x += 2) p.vline(x, 12, 18, K.silver);
-    else if (b >= 4) p.hline(1, L, 15, hsl(hue, 80, 50));
-    for (let x = 4; x < L - 4; x += 5) p.rect(x, 7, 4, 4, b >= 4 ? K.black : glass);
-    p.rect(L - 3, 6, 3, 7, glass);
-    wheel(8, 19); wheel(L - 8, 19); if (b >= 2) wheel(L - 14, 19);
-    if (b >= 3) { const t = fitText('TOUR', 18); drawText(p, t, 6, 13 - 1, b >= 4 ? K.white : hsl(hue, 70, 40)); }
-  } else {
-    if (b <= 1) { // perua/rabo de peixe com reboque
-      p.rect(14, 10, 26, 8, body); p.poly([[19, 10], [23, 5], [34, 5], [37, 10]], body); p.rect(24, 6, 4, 4, glass); p.rect(30, 6, 4, 4, glass); p.rect(1, 9, 11, 9, C('#9a6a3c')); p.hline(12, 14, 15, K.dgrey); wheel(19, 19); wheel(35, 19); wheel(6, 19);
-    } else if (b === 2) { // kombi
-      p.rect(6, 5, 34, 14, body); p.rect(6, 5, 34, 6, K.white); p.poly([[40, 5], [43, 8], [43, 19], [40, 19]], body); p.poly([[40, 5], [43, 8], [43, 11], [40, 11]], K.white);
-      for (let x = 9; x < 38; x += 6) p.rect(x, 6, 4, 4, glass); p.poly([[23, 12], [27, 12], [25, 15]], K.white); wheel(13, 19); wheel(35, 19);
-      for (let i = 0; i < 4; i++) p.put(10 + i * 7, 15, hsl(hue + i * 60, 80, 60));
-    } else { // van de turnê
-      p.rect(4, 6, 36, 13, body); p.poly([[40, 9], [45, 12], [45, 19], [40, 19]], body); p.rect(40, 10, 3, 3, glass); p.rect(34, 8, 5, 4, glass); p.hline(4, 39, 15, hsl(hue, 70, 45)); wheel(11, 19); wheel(37, 19);
-      if (b >= 4) p.rect(6, 4, 30, 2, K.dgrey);
+  if (move === 'fly') { p.rect(0, 0, W, 21, C('#9ac8e8')); p.rect(0, 21, W, 3, C('#7a7a80')); }
+  inked(p, (v) => {
+    const wheel = (cx: number, cy: number, r = 3) => { v.disc(cx, cy, r, K.ink); v.disc(cx, cy, r - 1.5, K.grey); v.put(Math.floor(cx) - 1, Math.floor(cy) - 1, K.white); };
+    if (move === 'fly') {
+      const prop = b <= 1;
+      v.ellipse(24, 12, 20, 4, b >= 4 ? K.white : K.silver);
+      v.poly([[42, 12], [47, 4], [47, 12]], hsl(hue, 70, 45));
+      v.poly([[20, 12], [30, 12], [22, 20], [16, 20]], shade(K.silver, -0.15));
+      for (let x = 10; x < 38; x += 3) v.put(x, 11, glass);
+      v.poly([[4, 11], [8, 9], [8, 13]], glass);
+      if (prop) { v.vline(3, 8, 16, K.dgrey); v.rect(20, 14, 3, 2, K.dgrey); } else v.rect(22, 16, 6, 3, K.dgrey);
+      v.hline(6, 42, 13, hsl(hue, 70, 45));
+      if (b >= 4) { drawText(v, fitText(seed.toUpperCase(), 12), 30, 8, hsl(hue, 70, 45)); }
+    } else if (move === 'bus') {
+      const L = b <= 1 ? 40 : 46;
+      v.rect(1, 5, L, 14, body);
+      if (b <= 1) { v.poly([[1, 5], [5, 2], [L - 4, 2], [L + 1, 5]], body); v.hline(2, L - 2, 10, hsl(hue + 180, 50, 40)); }
+      else if (b === 2) for (let x = 1; x < L + 1; x += 2) v.vline(x, 12, 18, K.silver);
+      else if (b >= 4) v.hline(1, L, 15, hsl(hue, 80, 50));
+      for (let x = 4; x < L - 4; x += 5) v.rect(x, 7, 4, 4, b >= 4 ? K.black : glass);
+      v.rect(L - 3, 6, 3, 7, glass);
+      wheel(8, 19); wheel(L - 8, 19); if (b >= 2) wheel(L - 14, 19);
+      if (b >= 3) { const t = fitText('TOUR', 18); drawText(v, t, 6, 13 - 1, b >= 4 ? K.white : hsl(hue, 70, 40)); }
+    } else {
+      if (b <= 1) { // perua/rabo de peixe com reboque
+        v.rect(14, 10, 26, 8, body); v.poly([[19, 10], [23, 5], [34, 5], [37, 10]], body); v.rect(24, 6, 4, 4, glass); v.rect(30, 6, 4, 4, glass); v.rect(1, 9, 11, 9, C('#9a6a3c')); v.hline(12, 14, 15, K.dgrey); wheel(19, 19); wheel(35, 19); wheel(6, 19);
+      } else if (b === 2) { // kombi
+        v.rect(6, 5, 34, 14, body); v.rect(6, 5, 34, 6, K.white); v.poly([[40, 5], [43, 8], [43, 19], [40, 19]], body); v.poly([[40, 5], [43, 8], [43, 11], [40, 11]], K.white);
+        for (let x = 9; x < 38; x += 6) v.rect(x, 6, 4, 4, glass); v.poly([[23, 12], [27, 12], [25, 15]], K.white); wheel(13, 19); wheel(35, 19);
+        for (let i = 0; i < 4; i++) v.put(10 + i * 7, 15, hsl(hue + i * 60, 80, 60));
+      } else { // van de turnê
+        v.rect(4, 6, 36, 13, body); v.poly([[40, 9], [45, 12], [45, 19], [40, 19]], body); v.rect(40, 10, 3, 3, glass); v.rect(34, 8, 5, 4, glass); v.hline(4, 39, 15, hsl(hue, 70, 45)); wheel(11, 19); wheel(37, 19);
+        if (b >= 4) v.rect(6, 4, 30, 2, K.dgrey);
+      }
     }
-  }
-  p.outline(OUT28);
+  }, OUT28, { relief: true });
   return p;
 }
 

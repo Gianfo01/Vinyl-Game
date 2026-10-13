@@ -11,7 +11,7 @@ import { setTab } from '../vis';
 import { openScene } from '../registry';
 import { avatarSprite, crowdLook27, randomLook } from './avatar';
 import { PALETTES, eraOf } from './palette';
-import { css } from './px';
+import { css, fitIntPx } from './px';
 import { H, W } from './places/kit';
 import { buildPlace } from './places/index';
 import { newCtx, finish, type PlaceModel } from './places/model';
@@ -174,5 +174,9 @@ export function scene14(kind: Scene14, o: SceneView14): HTMLElement {
     o.note ? h('div', { class: 'small' }, o.note) : null,
     size === 'banner' ? h('div', { class: 's14-hint muted small' }, t({ pt: 'Passe o mouse nos objetos; clique para ir à tela ligada a eles.', en: 'Hover objects; click to jump to the related screen.' })) : null);
   root = h('figure', { class: `s14 s14-${size} s14-k-${kind}`, 'data-era': spec.era }, stage, h('figcaption', null, info));
+  // R29 (arte consistente): escala inteira do quadro (2× = 512, 3× = 768) em vez de 100% da largura; os pontos de
+  // interesse acompanham o tamanho real do canvas
+  const spots = stage.querySelector<HTMLElement>('.s14-spots');
+  fitIntPx(cv, W, { max: size === 'banner' ? 512 : 768, host: () => stage, on: (n) => { if (!spots) return; if (n >= 1) { spots.style.right = 'auto'; spots.style.bottom = 'auto'; spots.style.left = '50%'; spots.style.transform = 'translateX(-50%)'; spots.style.width = `${n * W}px`; spots.style.height = `${n * H}px`; } else spots.removeAttribute('style'); } });
   return root;
 }
