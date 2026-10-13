@@ -43,6 +43,10 @@ export interface EventDef {
   weight?: number;
   forcedOnly?: boolean;
   find?: (s: GameState, r: Rng) => Ctx | null;
+  /** r28 (F3): janela de anos em que o evento faz sentido (vocabulário/tecnologia da época) */
+  era?: [number, number];
+  /** r28 (F3): tecnologia que precisa existir nesta história (s.techDates) */
+  needsTech?: string;
   title: L;
   text: L;
   options: Option[];
@@ -858,6 +862,10 @@ export function ctxParams(s: GameState, ctx: Ctx): Record<string, Param> {
   return p;
 }
 
+/** r28 (F3, story28): portão de época e cooldown por (evento, ator) — `skip` depois do find (não mexe nos sorteios),
+ *  `w` multiplica o peso (0,85ⁿ pelas repetições recentes) e `on` registra o disparo. */
+export const EV28: { skip?: (s: GameState, def: EventDef, ctx: Ctx) => boolean; w?: (s: GameState, def: EventDef, ctx: Ctx) => number; on?: (s: GameState, def: EventDef, ctx: Ctx) => void } = {};
+
 /** Tags sensíveis nunca recaem sobre atos com regra de separação reforçada (Catálogo, regra 2). */
 export const SENSITIVE_TAGS = ['drugs', 'death', 'crime', 'violence', 'controversy', 'health'];
 
@@ -896,6 +904,7 @@ export function emitEvent(s: GameState, r: Rng, id: string, ctx: Ctx): void {
     s.decisions.push(d);
   }
   s.eventCooldowns[def.id] = s.week + def.cooldown * 4;
+  EV28.on?.(s, def, ctx);
   s.tension = clamp(s.tension + (def.tone === 'bad' ? 0.18 : def.tone === 'good' ? -0.12 : 0.02), 0, 1);
 }
 
@@ -944,12 +953,12 @@ export function storyteller(s: GameState, r: Rng, monthIndex: number): void {
         const ctx = def.find(s, r);
         // o personagem do jogador decide a própria vida (área Você): eventos pessoais não o escolhem
         if (ctx && def.cat === 'people' && ctx.person && s.persons[String(ctx.person)]?.isPlayer) continue;
-        if (ctx && !filtered(s, def, ctx)) valid.push([def, ctx]);
+        if (ctx && !filtered(s, def, ctx) && !EV28.skip?.(s, def, ctx)) valid.push([def, ctx]);
       }
     });
     if (!valid.length) return;
-    const pick = r.weighted(valid, ([def]) => {
-      let w = def.weight ?? 1;
+    const pick = r.weighted(valid, ([def, cx]) => {
+      let w = (def.weight ?? 1) * (EV28.w?.(s, def, cx) ?? 1);
       if (pc.random) return w;
       if (def.tone === 'bad') {
         w *= (pc.flatBad ?? (s.tension < target ? 1.8 : 0.6)) * pc.bad;

@@ -46,14 +46,17 @@ describe('r27 P2B — modo rápido intacto', () => {
     // (1301031 / 1382068899 / 2195685417 / 2442526734) reproduzem em b748d64; AUD2 (c4c5bfd: estresse, críticos,
     // choques macro) mudou só acts (→ 3789538846); AUD1 (166a36e: playbot compra negócios e contrata no 1º ano) mudou
     // caixa, tours, acts e rng.
+    // R28 F3 (story28, de propósito): mundo inicial pela cena, nomes na língua do país, 0,85ⁿ e cooldown por (evento, ator),
+    // portões de época e eco pela receita mudam caixa, acts e rng (tours igual). Antes: 1089445 / 529417993 / 1761475379 / 3113611029.
     // A garantia "o P2B não mexe no modo rápido" segue provada pelo teste do gancho logo abaixo (com × sem STOP27.pre).
     // R28: re-medidos depois de dois merges que mudam o mundo de propósito — fase 5 (rival disputa a oferta ao vivo e
     // tem reserva própria: 77884 / 1382068899 / 4242977539 / 1276410388) e formações reais na data inicial (95b6b81,
     // realNames: integrantes pela passagem, ex-integrantes, trocas agendadas). O bot prometendo não muda esta semente.
-    expect(AFTER.player.cash).toBe(382059);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3709969893);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3305882789);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3630394072);
+    // Com F3 + F5 + formações juntos (merge R28): 612278 / 1382068899 / 4174246961 / 1111696030.
+    expect(AFTER.player.cash).toBe(612278);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4174246961);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1111696030);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

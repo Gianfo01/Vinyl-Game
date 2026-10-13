@@ -127,6 +127,7 @@ import './pop17';
 import './scene17';
 // Rodada 23 (A): cenas que não interromperam (caixa de entrada + Rever cena no Álbum).
 import './quiet23';
+import './attn28'; // r28 F3: orçamento único de atenção (cenas e dicas)
 // Rodada 18 (art18): trajetória artística (aba no artista) e qualidade em dimensões (disco e projeto).
 import './art18';
 // Rodada 18 (dm18, onda 1): Diário do Mestre (curva de tensão, fios, rixas, quem agiu contra quem) e aba Rixas no ato.

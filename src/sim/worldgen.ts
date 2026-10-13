@@ -220,9 +220,11 @@ export function aliveGenres(s: GameState, year = s.year): string[] {
   return GENRES.filter((g) => genreAvailable20(s, g.id, year)).map((g) => g.id); // r20 (B30): predicado temporal comum
 }
 
-export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; genre?: string; potential?: number; formedYear?: number; fame?: number; members?: number } = {}): Act {
+export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; genre?: string; potential?: number; formedYear?: number; fame?: number; members?: number; init28?: boolean } = {}): Act {
   const year = opts.formedYear ?? s.year;
-  const city = opts.city ?? r.weighted(CITIES, (c) => MARKETS.find((m) => m.id === c.market)!.size(year) * (c.w ?? 1))!.id; // r19: cidades novas pesam 0,4
+  // r28 (F3): no mundo inicial, gênero pedido (elenco de rival) cai numa cidade cuja cena combina com ele
+  const fitW = (cid: string): number => (opts.init28 && opts.genre && !cityGenreFit23(cid, opts.genre) ? 0.03 : 1);
+  const city = opts.city ?? r.weighted(CITIES, (c) => MARKETS.find((m) => m.id === c.market)!.size(year) * (c.w ?? 1) * fitW(c.id))!.id; // r19: cidades novas pesam 0,4
   const cityDef = cityById[city];
   let genre = opts.genre;
   if (!genre) {
@@ -230,7 +232,9 @@ export function spawnProceduralAct(s: GameState, r: Rng, opts: { city?: string; 
     // atos formados antes de 1920 (início em 1920): nenhum gênero "nasceu" ainda — usa os do ano corrente
     const alive = aliveGenres(s, year).length ? aliveGenres(s, year) : aliveGenres(s, Math.max(year, s.year));
     // r23 (D): gênero regional fora da sua terra (ranchera em Odessa) fica bem mais raro
-    genre = sceneGenres.length && r.chance(0.65) ? r.pick(sceneGenres) : r.weighted(alive, (gid) => (s.genrePop[gid] ?? 0.6) * (cityGenreFit23(city, gid) ? 1 : MISFIT_W23))!;
+    // r28 (F3): no mundo inicial a cena da cidade manda (85% dos gêneros da cena; fora da terra quase nunca)
+    const pScene = opts.init28 ? 0.85 : 0.65, misfit = opts.init28 ? 0.03 : MISFIT_W23;
+    genre = sceneGenres.length && r.chance(pScene) ? r.pick(sceneGenres) : r.weighted(alive, (gid) => (s.genrePop[gid] ?? 0.6) * (cityGenreFit23(city, gid) ? 1 : misfit))!;
   }
   const fam = familyOf(genre);
   const soloChance = ['pop', 'hiphop', 'country_folk', 'latin', 'brazil', 'europe', 'sacred'].includes(fam) ? 0.6 : 0.35;
@@ -432,7 +436,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   // procedurais iniciais
   const procCount = Math.round((hasMutator(s, 'small_world') ? 50 : hasMutator(s, 'giant_world') ? 150 : 95) * (cfg.mode === 'historic' ? 0.9 : 1.1) * dbSizeInfo(cfg).gen);
   for (let i = 0; i < procCount; i++) {
-    const act = spawnProceduralAct(s, r, { formedYear: cfg.startYear - r.int(0, 8) });
+    const act = spawnProceduralAct(s, r, { formedYear: cfg.startYear - r.int(0, 8), init28: true });
     const years = cfg.startYear - act.formed;
     act.status = years > 1 ? 'active' : 'emerging';
     act.fame = clamp(r.normal(4 + years * 2.5, 5) * (act.potential / 60), 0, 60);
@@ -600,7 +604,7 @@ function takeoverLabel(s: GameState, id: string): Label | undefined {
   const genres = GENRES.filter((g) => g.born <= cfg.startYear && lb!.focus.includes(familyOf(g.id))).map((g) => g.id);
   const [lo, hi] = FALLBACK_ROSTER[lb.family];
   for (let i = r.int(lo, hi); i > 0; i--) {
-    const act = spawnProceduralAct(s, r, { city: r.chance(0.6) ? lb.city : undefined, genre: genres.length ? r.pick(genres) : undefined, formedYear: cfg.startYear - r.int(1, 8) });
+    const act = spawnProceduralAct(s, r, { city: r.chance(0.6) ? lb.city : undefined, genre: genres.length ? r.pick(genres) : undefined, formedYear: cfg.startYear - r.int(1, 8), init28: true });
     const years = cfg.startYear - act.formed;
     act.status = 'active';
     act.fame = clamp(r.normal(10 + years * 2.5, 5) * (act.potential / 60), 3, 60);

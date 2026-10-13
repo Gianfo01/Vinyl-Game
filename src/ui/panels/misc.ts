@@ -1,6 +1,8 @@
 // Paradas, Mídia, Catálogo, Shows, Empresa, Diário e Sede.
 
 import { LABEL_LEGACY20, freeCash20 } from '../../sim/oblig20';
+import { diary28, fullDiary28, landmarks28, lost28 } from '../../sim/sys/story28';
+import { chartNameL28 } from '../../sim/chartname28';
 import { pager18 } from '../quick18';
 import { sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
@@ -69,7 +71,7 @@ export function chartsPanel(s: GameState): HTMLElement {
     );
   const hot = Object.entries(s.genrePop).filter(([g]) => genreById[g]?.born <= s.year).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', { class: 'panel charts' },
-    h('div', { class: 'col-main' }, section(t(S.singles), table('singles')), section(t(S.albums), table('albums'))),
+    h('div', { class: 'col-main' }, section(t(chartNameL28('singles', s.year, !!s.config.realNames)), table('singles')), section(t(chartNameL28('albums', s.year, !!s.config.realNames)), table('albums'))), // r28: nome pelo ano
     h('aside', { class: 'col-side' },
       hot.length ? hotGenres17(s) : null, // r17: gêneros em alta = estilos das músicas em alta
       section(t(S.number1s), h('ul', { class: 'small' }, s.charts.number1History.slice(-15).reverse().map((n) => h('li', null, `${n.title} — ${n.act}`)))),
@@ -489,25 +491,38 @@ function legacyTab(s: GameState): HTMLElement {
 }
 
 // ---------- Diário ----------
+/** r28: a entrada está entre as marcantes? (cache por render) */
+let lmCache: { s: GameState | null; n: number; ids: Set<string> } = { s: null, n: -1, ids: new Set() };
+function landmarks28Has(s: GameState, m: { id: string }): boolean {
+  const n = s.memory.length + diary28(s).length;
+  if (lmCache.s !== s || lmCache.n !== n) lmCache = { s, n, ids: new Set(landmarks28(s).map((x) => x.id)) };
+  return lmCache.ids.has(m.id);
+}
 let diaryImportant = true;
+let diaryMine = false; // r28 (F3): "Minha história" = só o anel do jogador (sem descarte)
 export function diaryPanel(s: GameState): HTMLElement {
-  const entries = s.memory.filter((m) => !diaryImportant || m.important || m.kind === 'number1').slice().reverse();
+  // r28 (F3): "Só marcantes" sem nº 1 alheio e com o mundo no orçamento (2 fatos por mês); o anel do jogador nunca corta
+  const base = diaryMine ? diary28(s) : diaryImportant ? landmarks28(s) : fullDiary28(s);
+  const entries = (diaryMine && diaryImportant ? base.filter((m) => landmarks28Has(s, m)) : base).slice().reverse();
+  const lost = lost28(s);
   const byYear = new Map<number, typeof entries>();
   for (const e of entries) {
     if (!byYear.has(e.year)) byYear.set(e.year, []);
     byYear.get(e.year)!.push(e);
   }
   const exportTxt = () => {
-    const lines = s.memory.filter((m) => m.important).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`);
+    const lines = landmarks28(s).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`);
     tryDownload(`diario-${s.signature}.txt`, `Masters — Run ${s.signature}\n${s.config.companyName}\n\n${lines.join('\n')}`, 'text/plain');
   };
   return h('div', { class: 'panel diary' },
     section(`${t(S.areaDiary)} — Run ${s.signature}`,
       h('div', { class: 'row' },
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: diaryImportant, onchange: (e: Event) => { diaryImportant = (e.target as HTMLInputElement).checked; rerender(); } }), t(l('Só fatos marcantes', 'Only landmark facts'))),
+        h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: diaryMine, onchange: (e: Event) => { diaryMine = (e.target as HTMLInputElement).checked; rerender(); } }), t(l('Minha história', 'My story'))),
         h('button', { class: 'btn small ghost', onclick: exportTxt }, t(l('Exportar diário', 'Export diary'))),
-        h('button', { class: 'btn small ghost', onclick: async () => { const txt = s.memory.filter((m) => m.important).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`).join('\n'); const ok = await copyText(`Masters — Run ${s.signature}\n${s.config.companyName}\n\n${txt}`); toast(ok ? t(l('Diário copiado.', 'Diary copied.')) : t(l('Não deu para copiar aqui.', 'Copy is not available here.')), ok ? 'good' : 'bad'); } }, t(l('Copiar diário', 'Copy diary'))),
+        h('button', { class: 'btn small ghost', onclick: async () => { const txt = landmarks28(s).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`).join('\n'); const ok = await copyText(`Masters — Run ${s.signature}\n${s.config.companyName}\n\n${txt}`); toast(ok ? t(l('Diário copiado.', 'Diary copied.')) : t(l('Não deu para copiar aqui.', 'Copy is not available here.')), ok ? 'good' : 'bad'); } }, t(l('Copiar diário', 'Copy diary'))),
       ),
+      lost.queue + lost.gone ? h('p', { class: 'muted small' }, t(l('Consequências que se perderam no caminho: {n} (fila cheia: {q}; quem estava nelas saiu: {g}). Estão na sua história.', 'Consequences lost along the way: {n} (queue full: {q}; whoever was in them left: {g}). They are in your story.'), { n: lost.queue + lost.gone, q: lost.queue, g: lost.gone })) : null,
       [...byYear.entries()].map(([y, list]) => h('div', { class: 'year' }, h('h4', null, y), h('ul', null, list.map((m) => h('li', null, h('span', { class: 'muted' }, monthName(m.month) + ' · '), t(m.text), m.actId ? h('span', null, ' ', actLink(s, m.actId)) : null, ' ', replayBtn16(s, m)))))),
     ),
   );

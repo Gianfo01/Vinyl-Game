@@ -49,6 +49,7 @@ import { soc18 } from './society18';
 import { SUP19 } from './supply18';
 import { piracyLevel } from './world4/laws';
 import { releasesNow27 } from '../tickcache27';
+import { echoSceneMark28, echoSceneOk28, strongEcho28 } from './story28';
 
 const F = fmtL;
 const N = (pt: string, en: string): L => l(pt, en);
@@ -321,17 +322,17 @@ LINK18_PARTS.crowd = (s) => {
 export const strongEcho19 = (f: Fact): boolean => { const n = Number(f.data?.n ?? 0); return n >= 3 || (f.tags.includes('bad') && n >= 2); };
 onFact('echo', (s, f) => {
   if (off()) return;
-  if (!strongEcho19(f)) return;
+  if (!strongEcho28(s, f)) return; // r28 (F3): forte = 2+ efeitos, ruim ou dinheiro ≥ 3% da receita anual
   const m = mineOf17(s, f.actors.map((x) => (x.startsWith('p:') ? x.slice(2) : x)));
   if (!m) return;
   const st = l19a(s), mk = s.year * 12 + s.month, thr = String(f.data?.thr ?? f.id);
-  if (st.em === mk || st.eth[thr]) return; // uma cena por mês, uma por fio
-  st.em = mk; st.eth[thr] = 1;
+  if (!echoSceneOk28(s) || st.eth[thr]) return; // r28: uma cena a cada ~2,3 meses (10 semanas), uma por fio
+  st.em = mk; st.eth[thr] = 1; echoSceneMark28(s);
   const ks = Object.keys(st.eth);
   if (ks.length > 60) delete st.eth[ks[0]];
   const tone = f.tags.includes('good') ? 'good' : f.tags.includes('bad') ? 'bad' : 'mixed';
   const sh = logShot18(s, { k: 'echo', act: m.act, pid: m.pid, text: f.text, fact: f.id, d: { o: String(f.data?.o ?? ''), tone } });
-  queueScene(s, 'cine18', tone === 'bad' ? 'street' : 'backstage', { title: F(N('Eco: {o}', 'Echo: {o}'), { o: String(f.data?.o ?? '') }), shot: sh.id, actId: m.act ?? null }, { minor: true, prio: true }); // r19: eco de decisão sua não é cortado
+  queueScene(s, 'cine18', tone === 'bad' ? 'street' : 'backstage', { title: { pt: `Você escolheu "${String(f.data?.o ?? '')}"`, en: `You chose "${String(f.data?.oe ?? f.data?.o ?? '')}"` }, shot: sh.id, actId: m.act ?? null, echo28: 1 }, { minor: true, prio: true }); // r19: eco de decisão sua não é cortado
   log(s, 'echo', F(N('Você escolheu "{o}" — e voltou: {t}', 'You chose "{o}" — and it came back: {t}'), { o: String(f.data?.o ?? ''), t: f.text }));
 }, 'links19a:echo');
 const fitEcho = (fit: Fit18): void => {
@@ -346,7 +347,7 @@ const fitEcho = (fit: Fit18): void => {
 };
 for (const k of Object.keys(FIT18) as Fit18[]) fitEcho(k);
 FIT19.after = (s, key, fit, actId) => { if (!off()) schedule18(s, `fit18:${fit}`, { ...(actId ? { act: actId } : {}), fit: key }, N('Tapete vermelho', 'Red carpet'), FIT18[fit].name); };
-LINK18_PARTS.echo = (s) => [{ label: N('Eco forte = 3+ efeitos (ou ruim com 2+)', 'Strong echo = 3+ effects (or bad with 2+)') }, { label: N('No máximo 1 cena por mês e 1 por fio', 'At most 1 scene a month and 1 per thread') }, { label: N('Cenas de eco já vistas', 'Echo scenes seen'), value: Object.keys(l19a(s).eth).length, fmt: 'num' }];
+LINK18_PARTS.echo = (s) => [{ label: N('Eco forte = 2+ efeitos, ruim, ou dinheiro ≥ 3% da receita anual', 'Strong echo = 2+ effects, bad, or money ≥ 3% of annual revenue') }, { label: N('No máximo 1 cena a cada ~2,3 meses (10 semanas) e 1 por fio', 'At most 1 scene every ~2.3 months (10 weeks) and 1 per thread') }, { label: N('Cenas de eco já vistas', 'Echo scenes seen'), value: Object.keys(l19a(s).eth).length, fmt: 'num' }];
 
 // ================================================================ 6. fãs por região → ingressos e circuitos (I12/I23)
 const REG_CACHE = new WeakMap<GameState, { w: number; m: Map<string, Record<string, number>> }>();

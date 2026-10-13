@@ -90,6 +90,9 @@ export function settleCash(s: GameState, amount: number, cat: string, memo: stri
   book18(s, sect, cat, '', amount, true, false);
 }
 
+/** r28 (F3): ouvinte de cada entrada nova do Diário (story28 copia as do jogador para um anel próprio, sem descarte). */
+export const REMEMBER28: { f?: (s: GameState, e: MemoryEntry) => void } = {};
+
 export function remember(
   s: GameState,
   kind: string,
@@ -98,6 +101,7 @@ export function remember(
 ): MemoryEntry {
   const e: MemoryEntry = { id: nextId(s, 'm'), week: s.week, year: s.year, month: s.month, kind, text, ...opts };
   s.memory.push(e);
+  REMEMBER28.f?.(s, e);
   if (s.memory.length > 1500) {
     // mantém fatos importantes; descarta rotina antiga
     const keep = s.memory.filter((m, i) => m.important || i > s.memory.length - 1000);

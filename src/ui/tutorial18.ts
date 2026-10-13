@@ -24,7 +24,7 @@ import { COMMON18, TIPS18, TRACKS18, dueTips18, trackState18, type Tip18 } from 
 import { ic } from './vis';
 import { minimalHelp20 } from './ux20';
 import { setTutorials19, tutAllowed19 } from './tutoff19';
-import { mayShow27 } from './ps/queue27';
+import { ATTN27, mayShow27 } from './ps/queue27';
 import './tutorial18.css';
 
 type Go = (area: string) => void;
@@ -234,7 +234,7 @@ function checkTips(g: GameState): void {
   if (g.signature === lastSig && g.week === lastWeek && !hot[g.signature]) return;
   lastSig = g.signature; lastWeek = g.week; delete hot[g.signature];
   const [tp] = dueTips18(g, p.tips, 1);
-  if (tp) showTip(tp);
+  if (tp) { showTip(tp); ATTN27.spent?.('tip', g); } // r28: a dica gasta o orçamento de atenção
 }
 
 // ---------------------------------------------------------------- trilhas: aviso ao concluir

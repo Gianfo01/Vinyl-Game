@@ -347,4 +347,5 @@ import './crisis27'; // r27 P2B: crises com relógio (só depois que o jogador a
 import './board27'; // r27 P2B: reunião de diretoria mensal (só depois que o jogador liga a reunião)
 import './aud27'; // r27 AUD2: agiota, filhos×herança, cultura emergente, estresse, críticos, macro, reações (sys/aud27/)
 import './songmkt27'; // r27 SONG: mercado de canções (comprar, ganhar, vender/dar, licenças; gancho mensal só com ato do jogador)
+import './story28'; // r28 F3: história do jogador — Diário próprio, orçamento de atenção, época e repetição dos eventos, ecos
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
