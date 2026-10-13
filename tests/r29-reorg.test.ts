@@ -256,3 +256,39 @@ describe('r29 S03: grade semana/mês com capacidade por recurso (consulta)', () 
     expect(monthOfWeek29(s, s.week)).toBe(monthIndex(s));
   });
 });
+
+// ---------------------------------------------------------------- R29b item 2/3 — S04/S05 inspetor e M41 lote
+import { insp29, INSP_TABS29 } from '../src/ui/ps/insp29model';
+import { UNDO29, undo29 } from '../src/ui/ps/batch29model';
+const estab = (seed: string): GameState => createGame(defaultConfig(seed, { scenario: 'established', startYear: 1975, dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
+describe('r29 S04/S05: inspetor lateral do ato (5 abas, só leitura)', () => {
+  it('abas Formação/Projetos/Contratos/Agenda/Saúde lidas das fontes; nada muda no estado', () => {
+    const s = estab('r29-insp');
+    for (let i = 0; i < 3; i++) { botMonth(s); advanceMonth(s); }
+    expect(INSP_TABS29.map((x) => x.id)).toEqual(['lineup', 'projects', 'contracts', 'agenda', 'health']);
+    const ids = Object.values(s.acts).filter((a) => a.owner === 'player').map((a) => a.id);
+    expect(ids.length).toBeGreaterThan(0);
+    const before = JSON.stringify(s);
+    for (const id of ids) {
+      const m = insp29(s, id)!;
+      expect(m.name).toBe(s.acts[id].name);
+      // formação = integrantes vivos, na mesma ordem do ato
+      expect(m.tabs.lineup.map((r) => r.person)).toEqual(s.acts[id].members.filter((p) => s.persons[p]?.alive));
+      // contratos: só os vigentes do jogador com este ato
+      const live = Object.values(s.contracts).filter((c) => c.actId === id && c.party === 'player' && c.endWeek >= s.week).length;
+      expect(m.tabs.contracts.filter((r) => typeof r.title !== 'string' && r.title.pt.startsWith('Contrato')).length).toBe(live);
+      expect(m.tabs.health.length).toBeGreaterThanOrEqual(4);
+      for (const k of Object.keys(m.empty) as (keyof typeof m.empty)[]) expect(m.empty[k].pt.length).toBeGreaterThan(5);
+    }
+    expect(insp29(s, 'nao-existe')).toBeNull();
+    expect(JSON.stringify(s)).toBe(before);
+  });
+});
+describe('r29 M41: lote com prévia e reversibilidade declarada', () => {
+  it('toda ação em lote do registro tem texto de reversibilidade; nunca promete desfazer o que não desfaz', () => {
+    expect(undo29('agenda.manual').pt).toMatch(/Reversível/);
+    expect(undo29('leader.praise').pt).toMatch(/Não reversível/);
+    expect(undo29('qualquer.coisa').pt).toMatch(/Não se desfaz/);
+    for (const k of Object.keys(UNDO29)) expect(UNDO29[k].en.length).toBeGreaterThan(5);
+  });
+});
