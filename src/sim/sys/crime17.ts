@@ -23,9 +23,12 @@ import { addStress } from '../stress17';
 import type { Act, GameState, Label, Person } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import { legal15 } from './dispute15';
-import { leaderOf } from './leaders10';
+import { leaderOf, leaders } from './leaders10';
 import { playerPerson } from './life';
-import { per13, registerPer13 } from './persona13';
+import { opine, per13, registerPer13 } from './persona13';
+import { CRITICS17 } from '../../data/media17'; // r29: dados puros (crítico real?), sem sistemas
+import { visibleAct } from '../future'; // r29: só tipos + funções puras
+import { KEY16 } from './gone16'; // r29: gancho sem dependências (vida da indústria: chave canônica, estado, morte)
 import { addRelic, relics, type Relic } from './relics9';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27, releasesNow27 } from '../tickcache27';
@@ -137,7 +140,36 @@ export function isReal(s: GameState, id: string): boolean {
   if (s.acts[k]) return !!s.acts[k].catalogNo;
   const lb = s.labels[k];
   if (lb) return k.startsWith('x_') || !!leaderOf(s, k)?.real;
+  // r29: líderes de selo e críticos também podem ser alvo (antes ninguém chamava com essas chaves)
+  if (id.startsWith('l:')) return !!leaders(s).L[id.slice(2)]?.real;
+  if (id.startsWith('c:')) return CRITICS17.some((c) => c.real && c.name === id.slice(2));
   return false;
+}
+
+// ================================================================ r29: qualquer personagem como alvo
+
+/** Chave de pessoa da indústria (fora do banco de artistas): produtor, empresário, líder de selo, equipe, crítico. */
+export const isKey17 = (id: string): boolean => /^(e|pd|l|s|c):/.test(id);
+/** Id de alvo canônico: 'p:x' → 'x'; o papel de quem também é artista (produtor, empresário…) → a pessoa do banco. */
+export function targetId17(s: GameState, id: string): string {
+  if (!id) return '';
+  if (id.startsWith('p:')) return id.slice(2);
+  if (isKey17(id)) { const c = KEY16.canon(s, id); if (c.startsWith('p:') && s.persons[c.slice(2)]) return c.slice(2); }
+  return id;
+}
+/** Fama de quem não tem ato: os mesmos pesos das ações com pessoas (personact18.fameOfKey). */
+function keyFame17(s: GameState, id: string): number {
+  if (id.startsWith('l:')) { const L0 = leaders(s).L[id.slice(2)]; return L0?.label ? s.labels[L0.label]?.reputation ?? 30 : 20; }
+  if (id.startsWith('c:')) return 35;
+  if (id.startsWith('e:') || id.startsWith('pd:')) return 40;
+  return 5; // equipe
+}
+const keyDead17 = (s: GameState, id: string): boolean => KEY16.st(s, id) === 'dead';
+/** Mágoa da vítima com quem agiu: pessoa do banco (relação) ou da indústria (opinião sobre o jogador). */
+function grudge17(s: GameState, target: string, actor: string, d: number): void {
+  const p = s.persons[target];
+  if (p) { p.rel[actor] = clamp((p.rel[actor] ?? 0) + d, -100, 100); return; }
+  if (isKey17(target) && actor === 'player') opine(s, target, d, l('foi alvo de um "serviço" seu.', 'was the target of one of your "jobs".'));
 }
 
 // ================================================================ nomes e lugares
@@ -148,6 +180,7 @@ export function nameOf17(s: GameState, id: string): string {
   if (o) return o.name.pt === o.name.en ? o.name.pt : `${o.name.pt}`;
   const rl = relics(s).list.find((x) => x.id === id);
   if (rl) return rl.n.pt;
+  if (isKey17(id)) return per13(s, id)?.name ?? id; // r29
   return s.persons[id]?.name ?? s.acts[id]?.name ?? s.labels[id]?.name ?? id;
 }
 const actOfPerson = (s: GameState, pid: string): Act | undefined => actsNow27(s).find((a) => a.members.includes(pid) && a.status !== 'split' && a.status !== 'retired') ?? actsNow27(s).find((a) => a.members.includes(pid));
@@ -158,6 +191,11 @@ export function placeOf(s: GameState, id: string): string {
   if (s.acts[id]) return s.acts[id].city;
   if (s.labels[id]) return s.labels[id].city;
   if (id.startsWith('o:')) return orgById(s, id)?.city ?? s.config.homeCity;
+  if (isKey17(id)) { // r29: gente da indústria — o selo do líder, senão a cidade da ficha
+    if (id.startsWith('l:')) { const lb = s.labels[leaders(s).L[id.slice(2)]?.label ?? '']; if (lb) return lb.city; }
+    const c = per13(s, id)?.city;
+    return c && cityById[c] ? c : s.config.homeCity;
+  }
   return crime17(s).rcity[id] ?? s.config.homeCity;
 }
 export const a3Of = (s: GameState, city: string): string => countryOfCity(city) ?? countryOfCity(s.config.homeCity) ?? 'USA';
@@ -169,6 +207,9 @@ export function ownerOfTarget(s: GameState, id: string): string | undefined {
   if (s.labels[id]) return id;
   const rl = relics(s).list.find((x) => x.id === id);
   if (rl) return rl.st === 'player' ? 'player' : undefined;
+  // r29: líder responde pelo selo dele; a sua equipe é sua
+  if (id.startsWith('l:')) { const lb = leaders(s).L[id.slice(2)]?.label; return lb && s.labels[lb] ? lb : undefined; }
+  if (id.startsWith('s:') && s.player.staff.some((x) => x.id === id.slice(2))) return 'player';
   return undefined;
 }
 const isMine = (s: GameState, id: string): boolean => ownerOfTarget(s, id) === 'player';
@@ -247,7 +288,7 @@ export interface Odds17 { p: number; q: number; cost: number; heat: number; sev:
 const pct = (x: number): string => `${x > 0 ? '+' : ''}${Math.round(x * 100)}%`;
 const P13F = (s: GameState, key: string, f: string): number => ((per13(s, key)?.facets as Record<string, number> | undefined)?.[f] ?? 50);
 const keyOf = (s: GameState, id: string): string => (id === 'player' ? 'player' : s.persons[id] ? `p:${id}` : s.labels[id] ? (s.labels[id].leaderId ? `l:${s.labels[id].leaderId}` : '') : id);
-export const famOf = (s: GameState, id: string): number => (s.persons[id] ? actOfPerson(s, id)?.fame ?? 0 : s.acts[id]?.fame ?? (s.labels[id] ? s.labels[id].reputation : 0));
+export const famOf = (s: GameState, id: string): number => (s.persons[id] ? actOfPerson(s, id)?.fame ?? 0 : s.acts[id]?.fame ?? (s.labels[id] ? s.labels[id].reputation : isKey17(id) ? keyFame17(s, id) : 0)); // r29: gente da indústria (sem ato) com fama de reserva
 
 function causeOf(m?: string): L {
   return m === 'drugs' ? l('overdose de droga adulterada', 'overdose of tainted drugs') : m === 'plane' ? l('queda do avião particular', 'private plane crash') : l('acidente de carro', 'car crash');
@@ -290,6 +331,13 @@ export const CRIMES17: CrimeDef17[] = [
     ],
     fx: (s, c, ok, r) => {
       const p = s.persons[c.target];
+      if (!p && isKey17(c.target) && !keyDead17(s, c.target)) { // r29: produtor, empresário, líder, crítico, equipe
+        const n = nameOf17(s, c.target);
+        if (!ok) { grudge17(s, c.target, c.actor, -20); return fmtL(l('{p} sobrevive ao "acidente" — e começa a desconfiar.', '{p} survives the "accident" — and grows suspicious.'), { p: n }); }
+        if (!KEY16.kill(s, c.target, causeOf(c.method))) return l('Alvo sumiu.', 'Target gone.');
+        if (famOf(s, c.target) > 25 || r.chance(0.5)) emitFact(s, { kind: 'rumor', actors: [c.target], place: placeOf(s, c.target), severity: 40, visibility: 'rumor', tags: ['crime', 'rumor'], text: fmtL(l('Boato: a morte de {p} não teria sido acidente.', 'Rumor: {p}\'s death may not have been an accident.'), { p: n }), src: 'crime17' });
+        return fmtL(l('{p} morre: {c}{d}.', '{p} dies: {c}{d}.'), { p: n, c: causeOf(c.method), d: '' });
+      }
       if (!p) return l('Alvo sumiu.', 'Target gone.');
       if (!ok) { addStress(s, p.id, 30, l('Sobreviveu a um "acidente"', 'Survived an "accident"')); return fmtL(l('{p} sobrevive ao "acidente" — e começa a desconfiar.', '{p} survives the "accident" — and grows suspicious.'), { p: p.name }); }
       const drug = c.method === 'drugs' && (p.health === 'addiction' || p.traits.includes('party'));
@@ -302,6 +350,12 @@ export const CRIMES17: CrimeDef17[] = [
     desc: l('Capangas na porta do camarim. Gera medo (obrigação a seu favor) e estresse; ninguém morre.', 'Goons at the dressing-room door. Creates fear (an obligation in your favor) and stress; nobody dies.'),
     fx: (s, c, ok) => {
       const p = s.persons[c.target];
+      if (!p && isKey17(c.target) && !keyDead17(s, c.target)) { // r29: gente da indústria (sem ato para perder embalo)
+        const n = nameOf17(s, c.target);
+        if (!ok) { grudge17(s, c.target, c.actor, -15); return fmtL(l('{p} reagiu e chamou seguranças.', '{p} fought back and called security.'), { p: n }); }
+        grantHold(s, { holder: c.actor, target: c.target, kind: 'favor', strength: 50, months: 36, src: 'crime17', text: l('Medo: cede numa negociação', 'Fear: gives in at a negotiation'), quiet: true });
+        return fmtL(l('{p} levou o recado: medo vira vantagem na próxima conversa.', '{p} got the message: fear becomes leverage in the next talk.'), { p: n });
+      }
       if (!p) return l('Alvo sumiu.', 'Target gone.');
       if (!ok) { p.rel[c.actor] = clamp((p.rel[c.actor] ?? 0) - 15, -100, 100); return fmtL(l('{p} reagiu e chamou seguranças.', '{p} fought back and called security.'), { p: p.name }); }
       addStress(s, p.id, 22, l('Foi intimidado(a)', 'Was intimidated'));
@@ -314,7 +368,7 @@ export const CRIMES17: CrimeDef17[] = [
     desc: l('Um segredo do alvo vale dinheiro. Com segredo guardado (obrigação) a chance sobe muito.', 'A secret of the target is worth money. With a stored secret (obligation) odds soar.'),
     fx: (s, c, ok) => {
       const fam = famOf(s, c.target);
-      if (!ok) { const p = s.persons[c.target]; if (p) p.rel[c.actor] = clamp((p.rel[c.actor] ?? 0) - 25, -100, 100); return fmtL(l('{p} pagou para ver — e não pagou.', '{p} called the bluff — and paid nothing.'), { p: nameOf17(s, c.target) }); }
+      if (!ok) { const p = s.persons[c.target]; if (p) p.rel[c.actor] = clamp((p.rel[c.actor] ?? 0) - 25, -100, 100); else grudge17(s, c.target, c.actor, -25); return fmtL(l('{p} pagou para ver — e não pagou.', '{p} called the bluff — and paid nothing.'), { p: nameOf17(s, c.target) }); }
       const amt = Math.round(money(s, 4000 + fam * 450) * glut19(s, 'blackmail', c.actor));
       const got = takeFrom(s, ownerOfTarget(s, c.target) ?? c.target, amt, `Chantagem: ${nameOf17(s, c.actor)}`);
       giveTo(s, c.actor, got || amt, `"Consultoria": ${nameOf17(s, c.target)}`);
@@ -452,6 +506,78 @@ export function targetsFor(s: GameState, c: CrimeDef17, max = 40): { id: string;
   }
 }
 
+// r29: "deve ter opção para todos os personagens" — a lista acima segue como SUGESTÃO (os mais famosos), mas qualquer
+// pessoa (integrante, artista solo, produtor, empresário, líder de selo, crítico, equipe), ato ou selo é um alvo
+// válido. Ficam de fora, com o motivo: morto, você mesmo, quem é seu (elenco, equipe), o tipo errado de alvo (ação
+// contra ato pede um ato…), quem ainda não entrou em cena na época. Chance, custo e calor: crimeOdds de sempre.
+const TB17 = {
+  pick: l('Escolha um alvo.', 'Pick a target.'),
+  gone: l('Não encontrado nesta partida.', 'Not found in this run.'),
+  you: l('É você.', 'That is you.'),
+  self: l('Quem executa não pode ser o próprio alvo.', 'The one doing the job cannot be the target.'),
+  person: l('Esta ação é contra uma pessoa: escolha alguém (integrante, artista solo, produtor, empresário, líder de selo, crítico…).', 'This action targets a person: pick someone (member, solo artist, producer, manager, label head, critic…).'),
+  act: l('Esta ação exige um artista (o ato): escolha a banda ou o artista, não uma pessoa ou um selo.', 'This action requires an act: pick the band or artist, not a person or a label.'),
+  label: l('Esta ação é contra um selo (gravadora): escolha um selo.', 'This action targets a label: pick a label.'),
+  mineP: l('É do seu elenco: o Submundo é contra os outros (para os seus: "Fraudar as paradas" ou "Desviar royalties").', 'On your roster: the Underworld is for others (for your own: "Rig the charts" or "Skim royalties").'),
+  mineA: l('É seu artista: o Submundo é contra os outros (para os seus: "Fraudar as paradas" ou "Desviar royalties").', 'That is your act: the Underworld is for others (for your own: "Rig the charts" or "Skim royalties").'),
+  staff: l('É da sua equipe: resolva em Equipe (demitir, conversar), não no Submundo.', 'On your staff: deal with it in Staff (fire, talk), not in the Underworld.'),
+  ownOnly: l('Só para artistas do seu elenco.', 'Only for acts on your roster.'),
+  ended: l('O artista encerrou a carreira.', 'The act has ended its career.'),
+  notYet: l('Ainda não entrou em cena nesta época.', 'Not on the scene yet in this era.'),
+  closed: l('O selo fechou.', 'The label has closed.'),
+  reach: l('Fora do alcance agora.', 'Out of reach right now.'),
+};
+const liveAct17 = (a: Act): boolean => a.status !== 'retired' && a.status !== 'split';
+/** Motivo de um alvo não valer para esta ação (null = vale). `actor`: quem executa ('player' ou um artista seu). */
+export function targetBlock17(s: GameState, c: CrimeDef17, raw: string, actor = 'player'): L | null {
+  const id = targetId17(s, raw);
+  if (!id) return TB17.pick;
+  const mineIds = new Set(playerActs(s));
+  if (c.tk === 'person') {
+    if (id === 'player') return TB17.you;
+    if (s.acts[id]) return TB17.person;
+    if (s.labels[id]) return TB17.person;
+    const p = s.persons[id];
+    if (p) {
+      if (p.isPlayer) return TB17.you;
+      if (!p.alive) return fmtL(l('{p} já morreu{y}.', '{p} has already died{y}.'), { p: p.name, y: p.died ? fmtL(l(' (em {y})', ' (in {y})'), { y: p.died }) : '' });
+      if (id === actor) return TB17.self;
+      const acts = actsNow27(s).filter((a) => a.members.includes(id));
+      if (acts.some((a) => liveAct17(a) && mineIds.has(a.id))) return TB17.mineP;
+      if ((p.born ?? 0) > s.year || (acts.length && !acts.some((a) => visibleAct(s, a)))) return TB17.notYet;
+      return null;
+    }
+    if (isKey17(id)) {
+      const P = per13(s, id);
+      if (!P) return TB17.gone;
+      if (keyDead17(s, id)) return fmtL(l('{p} já morreu.', '{p} has already died.'), { p: P.name });
+      if (id.startsWith('s:') && s.player.staff.some((x) => x.id === id.slice(2))) return TB17.staff;
+      if ((P.born ?? 0) > s.year) return TB17.notYet;
+      return null;
+    }
+    return TB17.gone;
+  }
+  if (c.tk === 'act' || c.tk === 'own_act') {
+    if (s.persons[id] || isKey17(id) || id === 'player' || s.labels[id]) return TB17.act;
+    const a = s.acts[id];
+    if (!a) return TB17.gone;
+    const mine = mineIds.has(a.id) || a.owner === 'player' || !!a.playerBand;
+    if (c.tk === 'own_act') return mine && liveAct17(a) ? null : TB17.ownOnly;
+    if (mine) return TB17.mineA;
+    if (!liveAct17(a)) return TB17.ended;
+    if (!visibleAct(s, a)) return TB17.notYet;
+    return null;
+  }
+  if (c.tk === 'label') {
+    if (s.persons[id] || isKey17(id) || id === 'player' || s.acts[id]) return TB17.label;
+    const lb = s.labels[id];
+    if (!lb) return TB17.gone;
+    return lb.active ? null : TB17.closed;
+  }
+  // relíquia e caso: a lista é a de sempre (o que está ao alcance agora)
+  return targetsFor(s, c, 1e6).some((x) => x.id === id) ? null : TB17.reach;
+}
+
 // ================================================================ chances (visíveis, com o porquê)
 
 /** r23: ganchos extras de chance/exposição (cada um empurra o seu porquê). */
@@ -516,7 +642,7 @@ export function crimeOdds(s: GameState, c: Ctx17, cid: string): Odds17 {
   }
   if (isMine(s, c.target) && c.actor !== 'player' && st.sec) { p -= SEC17[st.sec].def; why.push(fmtL(l('Sua segurança ({s}): {x}', 'Your security ({s}): {x}'), { s: SEC17[st.sec].name, x: pct(-SEC17[st.sec].def) })); }
   if (d.id === 'blackmail' && holdsBetween(s, c.actor, c.target).some((h) => h.kind === 'secret' || h.kind === 'blackmail')) { p += 0.25; why.push(l('Você já guarda um segredo dele(a): +25%', 'You already hold a secret on them: +25%')); }
-  if (d.id === 'murder' && c.method === 'drugs' && s.persons[c.target]?.health === 'addiction') { p += 0.15; why.push(l('O alvo já usa drogas: +15%', 'The target already uses drugs: +15%')); }
+  if (d.id === 'murder' && c.method === 'drugs' && (s.persons[c.target]?.health === 'addiction' || (isKey17(c.target) && KEY16.st(s, c.target) === 'addiction'))) { p += 0.15; why.push(l('O alvo já usa drogas: +15%', 'The target already uses drugs: +15%')); }
   if (d.id === 'bribe') { const k = corruption(s, a3); p += k * 0.4 - 0.1; why.push(fmtL(l('Corrupção em {c} na época: {x}', 'Corruption in {c} at the time: {x}'), { c: countryName(a3), x: pct(k * 0.4 - 0.1) })); }
   if (c.actor === 'player' && glutN19(s, cid)) why.push(fmtL(l('Já fez isso {n}× em 12 meses: rende {x}% do normal (mercado saturado, vítimas espertas)', 'Done {n}× in 12 months: pays {x}% of normal (saturated market, wary victims)'), { n: glutN19(s, cid), x: Math.round(glut19(s, cid, 'player') * 100) }));
   { const x = { p, q, why }; for (const f of ODDS17) f(s, c, cid, x); p = x.p; q = x.q; } // r23: membros (proteção, vazamentos, delatores)
@@ -607,6 +733,11 @@ export function commitCrime(s: GameState, cid: string, c: Ctx17, r: Rng = crng(s
   if (ex || !ok) {
     if (s.persons[c.target]) s.persons[c.target].rel[resp] = clamp((s.persons[c.target].rel[resp] ?? 0) - (ex ? 40 : 15), -100, 100);
     if (ex && s.persons[c.target]?.alive) grantHold(s, { holder: c.target, target: resp, kind: 'grievance', strength: clamp(o.sev, 30, 90), months: 240, src: 'crime17', text: fmtL(l('Vítima de "{c}"', 'Victim of "{c}"'), { c: d.name }), quiet: true });
+    // r29: vítima da indústria (produtor, empresário, líder, crítico) também guarda mágoa e fala mal de você
+    if (isKey17(c.target) && !keyDead17(s, c.target)) {
+      grudge17(s, c.target, resp, ex ? -40 : -15);
+      if (ex) grantHold(s, { holder: c.target, target: resp, kind: 'grievance', strength: clamp(o.sev, 30, 90), months: 240, src: 'crime17', text: fmtL(l('Vítima de "{c}"', 'Victim of "{c}"'), { c: d.name }), quiet: true });
+    }
     if (boss === 'player' && tOwner && s.labels[tOwner]) s.rivalries[tOwner] = (s.rivalries[tOwner] ?? 0) + (ex ? 25 : 8);
     if (tOwner === 'player' && s.labels[resp] && ex) s.rivalries[resp] = (s.rivalries[resp] ?? 0) + 30;
     const La = s.labels[resp] ? leaderOf(s, resp) : undefined, Lb = tOwner && s.labels[tOwner] ? leaderOf(s, tOwner) : undefined;

@@ -1,0 +1,17 @@
+/* Rodada 29 — seletor de alvo com busca (Submundo › Planos). Tokens do theme25/ui27 (--accent, --line, --panel…). */
+.tpick29 { display: flex; flex-direction: column; gap: 6px; flex: 1 1 320px; min-width: 0; max-width: 560px; }
+.tpick29-cur { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 4px; min-width: 0; }
+.tpick29-cur b { overflow-wrap: anywhere; }
+.tpick29-q { width: 100%; min-height: 36px; box-sizing: border-box; }
+.tpick29-res { display: flex; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius, 3px); background: var(--panel-2, var(--panel)); padding: 4px; }
+.tpick29-res[hidden] { display: none; }
+.tpick29-res > p { margin: 4px 6px; }
+.tpick29-grp { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); padding: 6px 6px 2px; border-top: 1px solid var(--line); }
+.tpick29-grp:first-child { border-top: 0; }
+.tpick29-it { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; width: 100%; text-align: left; font: inherit; font-size: 0.9rem; min-height: 32px; padding: 4px 8px; border: 1px solid transparent; border-radius: var(--radius, 3px); background: none; color: var(--ink); cursor: pointer; }
+.tpick29-it:hover:not(:disabled), .tpick29-it:focus-visible { border-color: var(--accent); outline: none; background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.tpick29-it.on { border-color: var(--accent); font-weight: 600; }
+.tpick29-it:disabled { cursor: not-allowed; opacity: 0.75; }
+.tpick29-it:disabled b { color: var(--muted); }
+.tpick29-why { flex-basis: 100%; font-size: 0.8rem; color: var(--bad, #c55); }
+@media (max-width: 860px) { .tpick29 { flex-basis: 100%; max-width: none; } .tpick29-it { min-height: 40px; } }

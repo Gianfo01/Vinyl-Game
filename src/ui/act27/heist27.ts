@@ -181,7 +181,9 @@ const SIGI: Record<Sig27['k'], string> = { heat: '🔥', rumor: '🗣', case: '�
 function prepEl(ui: UI27, pool: Crew27[], od: ReturnType<typeof planOdds27>): HTMLElement {
   const { s, plan } = ui;
   const d = crimeById(plan.cid)!;
-  const tg = targetsFor(s, d);
+  // r29: o alvo pode ser qualquer personagem (escolhido no seletor de Submundo › Planos): entra na lista se não for sugestão
+  const tg0 = targetsFor(s, d);
+  const tg = plan.ctx.target && !tg0.some((x) => x.id === plan.ctx.target) ? [{ id: plan.ctx.target, name: l(nameOf17(s, plan.ctx.target)) }, ...tg0] : tg0;
   const set = (f: () => void) => () => { f(); draw(ui); };
   const crewCard = (c: Crew27) => {
     const on = plan.crew.includes(c.key);

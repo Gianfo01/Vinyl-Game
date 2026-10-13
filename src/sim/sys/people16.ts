@@ -26,7 +26,7 @@ import { PRODUCERS, prodHooks } from '../studio';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, nextId, notify, remember, staffAdjusters } from '../util';
 import { actorId, emitFact } from '../facts17';
-import { GONE16 } from './gone16';
+import { GONE16, KEY16 } from './gone16';
 import { SUCC10, depart, leaders, newLeader, succeed, type Leader, type LeaderStyle } from './leaders10';
 import { lz14 } from './leisure14';
 import { inFeud, m14, mgrActive, mgrCap, mgrKey, mgrName, repOf, rosterOf } from './managers14';
@@ -725,4 +725,25 @@ export function force16(s: GameState, key: string, st: St16, weeks = 12): void {
   if (st === 'addiction') x.dep = Math.max(x.dep, 70);
   effect(s, r, key, st, l(''));
 }
+
+// r29 (Submundo: qualquer personagem é alvo) — o crime17 pergunta por aqui (gone16.ts, sem dependências) a chave
+// canônica, o estado de vida e aplica a morte encomendada com os efeitos de sempre no cargo (clientes, sucessão…).
+KEY16.canon = canon16;
+KEY16.st = (s, key) => {
+  const st = status16(s, key);
+  if (st === 'dead') return st;
+  // morte histórica (dados reais) ou do cargo (líder)
+  const id = key.slice(key.indexOf(':') + 1);
+  if (key.startsWith('e:') && (mgrById[id]?.died ?? 9999) <= s.year) return 'dead';
+  if (key.startsWith('pd:') && (prodById[id]?.died ?? 9999) <= s.year) return 'dead';
+  if (key.startsWith('l:') && leaders(s).L[id]?.st === 'dead') return 'dead';
+  return st;
+};
+KEY16.kill = (s, key, cause) => {
+  if (key.startsWith('p:') || KEY16.st(s, key) === 'dead') return false;
+  const P = per13(s, key);
+  if (!P) return false;
+  die(s, Rng.fromSeed(`${s.config.seed}|k16|${key}|${s.week}`), key, P, cause);
+  return true;
+};
 
