@@ -29,6 +29,29 @@ Bloco **Seu personagem** logo abaixo de "Sua atividade principal":
   MC a partir do hip hop (1977). Fora da época o chip some e a principal cai em Vocal; o gênero da banda só lista gêneros já
   nascidos. A lista de instrumento principal da ficha completa também filtra pela época (a atual fica, se vier de antes).
 
+## Gênero sugerido pela cidade e pelo ano
+
+Antes, o gênero padrão da banda era o `rnr` da fábrica ou, fora da época, o primeiro em ordem alfabética ("Adhunik gaan").
+Agora o rascunho novo sugere o que faz sentido no lugar e na época (`src/sim/genre29data.ts`):
+
+- **cena da cidade** (`City.scenes` ×2,2), cenas das outras cidades do mesmo país (×1,6) e da mesma região (×1,15);
+- **gosto do submercado por época** (regions18, por gênero ou família, escala de `MARKET_PREF`);
+- **gosto do país** pela família no ano (`countryTaste`);
+- **idade do gênero**: nascido no ano ×0,8; com 1 ano ×1,05; de 2 a 12 anos ×1,2 (a novidade); até 20 ×1; depois cai
+  (como o `genrePop` inicial; só gêneros já nascidos).
+
+Exemplos (testados): Londres 1962 → Beat; Rio 1962 → Bossa nova; Nova York 1975 → Disco (Punk e Funk entre as
+sugestões); Atlanta 2010 → Trap; Kingston 1972 → Reggae; Seattle 1991 → Grunge; Lagos 1975 → Afrobeat; Seul 2012 → K-pop.
+
+- A lista de gêneros (rápida e completa) começa por **"Sugestões para {cidade} em {ano}"** (5) e depois **todos** os da época.
+- **🎲** percorre as 5 sugestões; mudar cidade ou ano recomeça pela melhor; escolher na lista fixa o gênero.
+- Marca `RunConfig.genre29` (índice entre as sugestões) só no rascunho novo (`newRunConfig20`, tipo livre);
+  `draftDefaults27` e o bloco da banda chamam `syncGenre29`; `buildRun27` apaga a marca. Setters: `setBandGenre29`,
+  `rollGenre29`, `placeChanged29` (completa) e `setBand29`/`rollArtGenre29` (rápida): rápida == completa.
+- Configurações com `bandGenre` próprio e sem a marca (bot `defaultConfig`, testes, códigos de run antigos, cenários) não
+  mudam; `newRunConfig20` + `createGame` direto (sem `draftDefaults27`) também não. O gênero sugerido também vale para o
+  elenco inicial de um selo em situação estabelecida (start29 usa `bandGenre`).
+
 ## Mesma RunConfig
 
 Os dois lados usam os mesmos setters:
@@ -68,5 +91,8 @@ Não sorteia nada: o resto do mundo não muda.
 - `tests/r29-quick-char.test.ts`: rápida == completa (nome, idade, sexo, aparência, funções, banda; não artista ignora a
   banda), idempotência, limite de 3 (rápida == completa), principal + extras na Person, quem canta dispensa cantor extra e a
   banda completa as funções, época de funções e gêneros, padrões válidos para todas as atividades (cria o jogo de cada uma).
+- `tests/r29-genre-suggest.test.ts`: cidade × ano, automático/escolhido/🎲, rápida == completa, configs com gênero próprio
+  intactas e o jogo nasce com o gênero sugerido.
+- Capturas do gênero: `docs/shots29personagem/genero-*` (`node scripts/r29/genero.mjs docs/shots29personagem 5191`).
 - Capturas: `docs/shots29personagem/` (desktop 1440 e celular 390: selo, artista vocal + guitarra, limite de 3 e a ficha
   completa com os mesmos chips). Script: `node scripts/r29/personagem.mjs docs/shots29personagem 5191` com `npx vite --port 5191`.

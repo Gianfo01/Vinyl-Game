@@ -11,6 +11,7 @@ import { playerPerson } from '../src/sim/sys/life';
 import { sings } from '../src/sim/sys/vocals10';
 import { AGE29_MAX, AGE29_MIN, EXTRA29_MAX, ROLES29_MAX, roleOpen29, rolesOpen29, setCharAge29, setCharName29, setExtraRoles29, setMainRole29 } from '../src/sim/char29data';
 import type { GameState, Person, RunConfig } from '../src/sim/types';
+import { rollGenre29, setBandGenre29 } from '../src/sim/genre29data';
 import { applyQuick27, buildRun27, draftDefaults27, quickDefaults27, quickRunConfig27, type QuickRun27 } from '../src/ui/ps/home27model';
 import { artDefaults29, canAddRole29, charDefaults29, charLine29, genresOpen29, setCharSex29, toggleExtra29, type QuickArt29, type QuickChar29 } from '../src/ui/ps/char29model';
 
@@ -31,7 +32,8 @@ function fullFlow(seed: string, e: { startYear: number; homeCity: string; career
   if (a) {
     setMainRole29(ch, a.role, cfg.startYear);
     for (const r of a.extra) { const x = { role: ch.role!, extra: [...(ch.roles27 ?? [])] }; toggleExtra29(x, r, cfg.startYear); setExtraRoles29(ch, x.extra, cfg.startYear); }
-    if (a.genre) cfg.bandGenre = a.genre;
+    if (a.genre) setBandGenre29(cfg, a.genre); // lista de gêneros
+    else for (let i = 0; i < (a.genreK ?? 0); i++) rollGenre29(cfg); // 🎲
     if (a.members !== undefined) cfg.custom!.members = a.members;
     cfg.bandName = a.bandName;
   }

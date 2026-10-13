@@ -7,13 +7,30 @@ import { AGE29_MAX, AGE29_MIN, ROLES29, ROLES29_MAX, ROLE_FROM29, clampAge29, ro
 import { h, select } from '../dom';
 import { portraitCanvas } from '../pixel/avatar';
 import { fitLookToSex, type Sex } from '../pixel/editor';
-import { artDefaults29, bandName29, canAddRole29, charDefaults29, genresOpen29, isArtist29, lookFor29, refreshChar29, roleName29, toggleExtra29 } from './char29model';
+import { artDefaults29, artGenre29, bandName29, canAddRole29, charDefaults29, genresOpen29, isArtist29, lookFor29, refreshChar29, rollArtGenre29, roleName29, toggleExtra29 } from './char29model';
+import { suggestGenres29 } from '../../sim/genre29data';
+import { cityName } from '../common';
+import { genreById } from '../../data/world';
 import type { QuickRun27 } from './home27model';
 import './char29.css';
 
 export const SEXES29: { id: Sex; name: ReturnType<typeof l> }[] = [
   { id: 'f', name: l('Feminino', 'Female') }, { id: 'm', name: l('Masculino', 'Male') }, { id: 'x', name: l('Outro', 'Other') },
 ];
+
+/** Lista de gêneros da banda: primeiro as sugestões para a cidade e o ano (🎲 percorre estas), depois todos os da época. */
+export function fillGenres29(sel: HTMLSelectElement, city: string, year: number, cur: string | undefined): void {
+  const sug = suggestGenres29(city, year);
+  const all = genresOpen29(year);
+  sel.replaceChildren(
+    h('optgroup', { label: t(l('Sugestões para {c} em {y}', 'Suggestions for {c} in {y}'), { c: cityName(city), y: year }) },
+      ...sug.map((id) => h('option', { value: id, selected: id === cur }, t(genreById[id]!.name)))),
+    h('optgroup', { label: t(l('Todos os gêneros de {y}', 'All genres of {y}'), { y: year }) },
+      ...all.filter((g) => !sug.includes(g.id)).map((g) => h('option', { value: g.id, selected: g.id === cur }, t(g.name)))));
+  if (cur) sel.value = cur;
+}
+/** Botão 🎲 do gênero (próxima sugestão). */
+export const genreDice29 = (fn: () => void): HTMLButtonElement => h('button', { type: 'button', class: 'c29-dice', title: t(l('Outra sugestão de gênero para a cidade e o ano', 'Another genre suggestion for the city and year')), 'aria-label': t(l('Outra sugestão de gênero', 'Another genre suggestion')), onclick: fn }, '🎲') as HTMLButtonElement;
 
 /** Seletor das funções extras (chips): a principal aparece marcada e fixa; no máximo 3 no total; fora da época, desligada. */
 export function roleChips29(o: { year: () => number; main: () => string; extras: () => string[]; toggle: (r: string) => void; onChange?: () => void }): { el: HTMLElement; draw: () => void } {
@@ -69,13 +86,14 @@ export function quickCharBlock29(q: QuickRun27, onChange: () => void): { el: HTM
   roleSel.onchange = () => { const a = art(); a.role = roleSel.value; a.extra = a.extra.filter((x) => x !== a.role); chips.draw(); drawPic(); onChange(); };
   const chips = roleChips29({ year: () => q.startYear, main: () => art().role, extras: () => art().extra, toggle: (r) => toggleExtra29(art(), r, q.startYear), onChange });
   const genreSel = h('select', { id: 'c29-genre', onchange: () => { art().genre = genreSel.value; onChange(); } }) as HTMLSelectElement;
+  const genreRoll = genreDice29(() => { rollArtGenre29(q, art()); genreSel.value = artGenre29(q, art()) ?? ''; onChange(); });
   const MEMBERS = [
     { value: '', label: t(l('Sorteada (1–4)', 'Random (1–4)')) }, { value: '1', label: t(l('Solo', 'Solo')) }, { value: '2', label: t(l('Dupla', 'Duo')) }, { value: '3', label: t(l('Trio', 'Trio')) },
     { value: '4', label: t(l('Banda de 4', '4-piece band')) }, { value: '5', label: t(l('Banda de 5', '5-piece band')) }, { value: '6', label: t(l('Banda de 6', '6-piece band')) },
   ];
   const bandIn = h('input', { type: 'text', id: 'c29-band', maxlength: 40, placeholder: t(l('(gerado)', '(generated)')), oninput: (e: Event) => { art().bandName = (e.target as HTMLInputElement).value; onChange(); } }) as HTMLInputElement;
   const bandDice = h('button', { type: 'button', class: 'c29-dice', title: t(l('Sortear nome de banda', 'Roll a band name')), 'aria-label': t(l('Sortear nome de banda', 'Roll a band name')),
-    onclick: () => { const a = art(); bandK++; a.bandName = bandName29(q.seed, q.homeCity, a.genre ?? genreSel.value, a.members ?? 4, bandK); bandIn.value = a.bandName; onChange(); } }, '🎲');
+    onclick: () => { const a = art(); bandK++; a.bandName = bandName29(q.seed, q.homeCity, artGenre29(q, a) ?? genreSel.value, a.members ?? 4, bandK); bandIn.value = a.bandName; onChange(); } }, '🎲');
   let bandK = 0;
   const bandField = h('label', { class: 'h27-field c29-bandname', for: 'c29-band' }, h('span', null, t(l('Nome da banda', 'Band name'))), h('div', { class: 'c29-inrow' }, bandIn, bandDice));
   const memSel = select<string>(q.art29?.members === undefined ? '' : String(q.art29.members), MEMBERS, (v) => { art().members = v === '' ? undefined : Number(v); drawBandName(); onChange(); }, { id: 'c29-members' });
@@ -83,7 +101,7 @@ export function quickCharBlock29(q: QuickRun27, onChange: () => void): { el: HTM
   artBox.append(
     h('div', { class: 'h27-2' },
       h('label', { class: 'h27-field', for: 'c29-role' }, h('span', null, t(l('Função principal', 'Main role'))), roleSel),
-      h('label', { class: 'h27-field', for: 'c29-genre' }, h('span', null, t(l('Gênero da banda', 'Band genre'))), genreSel)),
+      h('label', { class: 'h27-field', for: 'c29-genre' }, h('span', null, t(l('Gênero da banda', 'Band genre'))), h('div', { class: 'c29-inrow' }, genreSel, genreRoll))),
     h('div', { class: 'h27-field' }, h('span', null, t(l('Também toca ou canta', 'Also plays or sings'))), chips.el),
     h('div', { class: 'h27-2' },
       h('label', { class: 'h27-field', for: 'c29-members' }, h('span', null, t(l('Solo ou banda', 'Solo or band'))), memSel),
@@ -100,9 +118,8 @@ export function quickCharBlock29(q: QuickRun27, onChange: () => void): { el: HTM
     roleSel.replaceChildren(...open.map((r) => h('option', { value: r, selected: r === a.role }, t(roleName29(r)))));
     roleSel.value = a.role;
     toggleExtra29(a, a.role, q.startYear); // normaliza (época, repetição, limite) sem mudar nada
-    const gs = genresOpen29(q.startYear);
-    if (a.genre && !gs.some((g) => g.id === a.genre)) a.genre = undefined;
-    genreSel.replaceChildren(...gs.map((g) => h('option', { value: g.id, selected: g.id === (a.genre ?? gs[0]?.id) }, t(g.name))));
+    if (a.genre && !genresOpen29(q.startYear).some((g) => g.id === a.genre)) a.genre = undefined;
+    fillGenres29(genreSel, q.homeCity, q.startYear, artGenre29(q, a)); // r29: sugestões da cidade e do ano primeiro
     bandIn.value = a.bandName;
     drawBandName();
     chips.draw();

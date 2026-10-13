@@ -1,7 +1,8 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
 import { nrConfirm29, nrHero29 } from './ps/nr29'; // r29 (NR01–NR06, Atlas)
-import { SEXES29 } from './ps/char29'; // r29: personagem (revisão)
+import { SEXES29, fillGenres29, genreDice29 } from './ps/char29'; // r29: personagem (revisão) e gênero sugerido
+import { placeChanged29, rollGenre29, setBandGenre29, syncGenre29 } from '../sim/genre29data';
 import { roleName29 } from './ps/char29model';
 import { rolesOfSpec29 } from '../sim/char29data';
 import { riv29ById, rivOf29 } from '../sim/rivals29data'; // r29: nível dos rivais
@@ -9,7 +10,7 @@ import { FREQS29, count29, statusAll29 } from '../sim/labels29data'; // r29: gra
 import { labelsCard29 } from './ng29labels'; // r29
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS, roleOfCareers29 } from '../data/rules';
-import { CITIES, GENRES, l } from '../data/world';
+import { CITIES, l } from '../data/world';
 import { realFounded } from '../data/realnames';
 import { S, t } from '../i18n/strings';
 import type { RunConfig, StartCustom } from '../sim/types';
@@ -183,11 +184,12 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const bandBox = h('div', { class: 'band-box' });
   const renderBand = () => {
     const show = cfg.role !== 'label';
-    const genres = GENRES.filter((g) => g.born <= cfg.startYear).sort((a, b) => t(a.name).localeCompare(t(b.name)));
-    if (!genres.find((g) => g.id === cfg.bandGenre)) cfg.bandGenre = genres[0]?.id;
+    syncGenre29(cfg); // r29: automático segue cidade e ano (o mesmo de draftDefaults27 e da Nova run rápida)
+    const gsel = h('select', { 'aria-label': t(S.bandGenre), onchange: () => { setBandGenre29(cfg, gsel.value); } }) as HTMLSelectElement;
+    fillGenres29(gsel, cfg.homeCity, cfg.startYear, cfg.bandGenre);
     bandBox.replaceChildren(...(show ? [
       h('label', null, ...hl(S.bandName, 'band'), h('input', { type: 'text', value: cfg.bandName, placeholder: t(l('(gerado)', '(generated)')), oninput: (e: Event) => (cfg.bandName = (e.target as HTMLInputElement).value) })),
-      h('label', null, t(S.bandGenre), select(cfg.bandGenre ?? 'rnr', genres.map((g) => ({ value: g.id, label: t(g.name) })), (v) => (cfg.bandGenre = v))),
+      h('label', null, t(S.bandGenre), h('span', { class: 'c29-inrow' }, gsel, genreDice29(() => { rollGenre29(cfg); gsel.value = cfg.bandGenre ?? ''; }))),
     ] : []));
   };
   renderBand();
@@ -195,10 +197,10 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const yearMsg = t(l('Ano exato de início ({a}–{b})', 'Exact start year ({a}–{b})'), { a: YEAR_MIN20, b: YEAR_MAX20 });
   const yearErr = h('small', { class: 'bad', role: 'alert' });
   const yearInput = h('input', { type: 'number', min: YEAR_MIN20, max: YEAR_MAX20, value: cfg.startYear, class: 'year-input', 'aria-label': t(l('Ano exato', 'Exact year')), title: yearMsg,
-    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= YEAR_MIN20 && v <= YEAR_MAX20) { yearErr.textContent = ''; cfg.startYear = v; renderBand(); refreshAll(); } else yearErr.textContent = yearMsg; } }) as HTMLInputElement;
+    onchange: (e: Event) => { const v = Math.round(Number((e.target as HTMLInputElement).value)); if (v >= YEAR_MIN20 && v <= YEAR_MAX20) { yearErr.textContent = ''; cfg.startYear = v; placeChanged29(cfg); renderBand(); refreshAll(); } else yearErr.textContent = yearMsg; } }) as HTMLInputElement;
   // r27: ano fora da lista (vindo da Nova run rápida ou de um código) aparece como opção própria, sem cair em 1889
   const yearOpts = [...(START_YEARS.some((y) => y.year === cfg.startYear) ? [] : [{ value: cfg.startYear, label: `${cfg.startYear} — ${t(l('ano escolhido', 'chosen year'))}` }]), ...START_YEARS.map((y) => ({ value: y.year, label: t(y.label) }))];
-  const yearSel = select(cfg.startYear, yearOpts, (v) => { cfg.startYear = v; yearInput.value = String(v); renderBand(); refreshAll(); });
+  const yearSel = select(cfg.startYear, yearOpts, (v) => { cfg.startYear = v; placeChanged29(cfg); yearInput.value = String(v); renderBand(); refreshAll(); });
   // r20 (§7.5/§9.3): a semente é criada uma vez; editar não sorteia outra; vazia é validada ao começar
   const seedErr = h('small', { class: 'bad', role: 'alert' });
   const seedInput = h('input', { type: 'text', value: cfg.seed, 'aria-label': t(S.seed), 'aria-describedby': 'ng20-seed-help', // r20b (Z3): o <label> envolve o (?) antes, que virava o controle rotulado
@@ -208,13 +210,13 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const cityBox = h('span');
   const drawCity = () => {
     const all = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
-    cityBox.replaceChildren(select(cfg.homeCity, all.map((c) => ({ value: c.id, label: `${cityName(c.id)}${c.a3 ? ` · ${c.a3}` : ''}` })), (v) => { cfg.homeCity = v; lc.refresh(); drawSummary(); }, { 'aria-label': t(S.homeCity), ...(cfg.takeover ? { disabled: true } : {}) }));
+    cityBox.replaceChildren(select(cfg.homeCity, all.map((c) => ({ value: c.id, label: `${cityName(c.id)}${c.a3 ? ` · ${c.a3}` : ''}` })), (v) => { cfg.homeCity = v; placeChanged29(cfg); renderBand(); lc.refresh(); drawSummary(); }, { 'aria-label': t(S.homeCity), ...(cfg.takeover ? { disabled: true } : {}) }));
   };
   drawCity();
   const tk = takeoverCard(cfg, nameInput, drawCity, () => drawSummary());
   const lc = labelsCard(cfg, () => tk.refresh());
   function refreshAll(): void { tk.refresh(); lc.refresh(); drawSummary(); }
-  const onYear = (y: number) => { yearInput.value = String(y); renderBand(); refreshAll(); };
+  const onYear = (y: number) => { yearInput.value = String(y); placeChanged29(cfg); renderBand(); refreshAll(); };
   const extras = newgameCards().filter((f) => !(f as { hidden17?: boolean }).hidden17).map((f) => { const el = f(cfg, onYear); return el.querySelector('h3')?.textContent === t(l('Mundo', 'World')) ? addHelp(el, 'world') : el; });
   // r22: a semente mora no cartão "Mundo" (história prévia e continuação)
   const seedRow = h('div', { class: 'ng22-seed' },

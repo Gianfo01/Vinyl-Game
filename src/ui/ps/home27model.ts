@@ -4,8 +4,7 @@
 // (newRunConfig20), recebe os mesmos padrões que os cartões da configuração completa aplicam ao serem desenhados
 // (draftDefaults27) e passa pelo mesmo preparo antes do createGame (buildRun27).
 
-import { GENRES, l, type L } from '../../data/world';
-import { t } from '../../i18n/strings';
+import { l, type L } from '../../data/world';
 import { defaultCharacter20 } from '../../sim/past20';
 import { newRunConfig20, worldOf17 } from '../../sim/start17';
 import { careerDef, roleFromMain } from '../../sim/sys/careers12';
@@ -18,6 +17,7 @@ import { SITS29, setStart29, start28Fits29, syncStart29, type Sit29 } from '../.
 import { setRivals29, type Riv29 } from '../../sim/rivals29data';
 import { setLabels29, type N29, type Vn29 } from '../../sim/labels29data';
 import { LINEUP29_DEFAULT } from '../../sim/lineup29';
+import { syncGenre29 } from '../../sim/genre29data';
 import { applyChar29, type QuickArt29, type QuickChar29 } from './char29model'; // r29: "Seu personagem"
 
 /** Atividades oferecidas na Nova run (mesma lista e ordem da configuração completa, careers12 NG_CAREERS). */
@@ -79,8 +79,7 @@ export function draftDefaults27(cfg: RunConfig): RunConfig {
   cfg.role = roleFromMain(c.main);
   if (!cfg.world17) cfg.world17 = worldOf17(cfg);
   cfg.lineup29 ??= LINEUP29_DEFAULT; // R29 (formação): cartão do mundo — formação inicial das bandas reais (só vale com nomes reais fora do exato)
-  const genres = GENRES.filter((g) => g.born <= cfg.startYear).sort((a, b) => t(a.name).localeCompare(t(b.name)));
-  if (!genres.find((g) => g.id === cfg.bandGenre)) cfg.bandGenre = genres[0]?.id;
+  syncGenre29(cfg); // r29: gênero sugerido pela cidade e pelo ano enquanto automático; escolhido fica (se já existir no ano)
   syncStart29(cfg); // r29: o cartão "Ponto de partida" mostra a situação coerente com o scenario
   return cfg;
 }
@@ -124,6 +123,7 @@ export function buildRun27(cfg: RunConfig): RunConfig {
   const sc = run.scenario17 ? scenarioById[run.scenario17] : undefined;
   if (sc) Object.assign(run, { startYear: sc.startYear, homeCity: sc.homeCity, scenario: sc.scenario, ...(sc.role ? { role: sc.role } : {}) });
   if (run.scenario17) { delete run.start29; delete run.rivals29; delete run.labels29; } else if (run.start29) syncStart29(run); // r29: cenário histórico tem o próprio começo (e os próprios rivais)
+  delete run.genre29; // r29: a marca de "gênero automático" é só do rascunho
   materializeLabels22(run);
   if (!run.scenario17 && !run.start28) { const st = pickStart28(run.seed).id; if (start28Fits29(st, run.start29)) run.start28 = st; } // r28 (F4): começo sorteado pela semente; r29: pulado se contradiz a situação
   return run;
