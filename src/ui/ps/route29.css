@@ -1,0 +1,23 @@
+/* Rodada 29 (REORG) — Índice completo e Central da campanha. Tokens ui27 (var(--…)); sem arte nova. */
+.ix29 { display: grid; gap: 12px; }
+.ix29-q { width: 100%; max-width: 520px; }
+.ix29-body { display: grid; gap: 16px; }
+.ix29-g h3 { margin: 0 0 6px; }
+.ix29-scr { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+.ix29-s { cursor: pointer; }
+.ix29-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px 16px; }
+.ix29-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; padding: 4px 0; border-bottom: 1px solid var(--line, rgba(255,255,255,.08)); min-width: 0; }
+.ix29-row > * { overflow-wrap: anywhere; }
+.ix29-av { margin-left: auto; font-size: .8em; opacity: .8; }
+.ix29-row.av-era .ix29-av, .ix29-row.av-unknown .ix29-av { font-style: italic; }
+.ix29-off { opacity: .75; }
+.cp29 { display: grid; gap: 14px; max-width: 760px; }
+.cp29-sec h3 { margin: 0 0 6px; }
+.cp29-dl { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 4px 12px; margin: 0; }
+.cp29-dl dt { opacity: .8; }
+.cp29-dl dd { margin: 0; overflow-wrap: anywhere; }
+.cp29-note { display: block; }
+.cp29-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 600px) { .cp29-dl { grid-template-columns: 1fr; } .cp29-dl dd { margin-bottom: 6px; } }
+.back29 { font-size: .82em; white-space: nowrap; max-width: 14em; overflow: hidden; text-overflow: ellipsis; margin-right: 6px; opacity: .85; }
+@media (max-width: 600px) { .back29 { max-width: 8em; } }

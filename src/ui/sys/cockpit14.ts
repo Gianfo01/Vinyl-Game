@@ -29,6 +29,7 @@ import { deskBlocks19, pick19, renderBlocks19 } from '../blocks19';
 import { EXTRA_AREAS, registerArea } from '../registry';
 import { ic, setTab, tabs } from '../vis';
 import { rumoInto28 } from '../end28'; // r28 (F4)
+import { cockpit29Into } from '../ps/screens29'; // r29 REORG (M04/M17)
 import { parts21 } from './ui20';
 import { openSede27 } from '../ps/hqpeek27';
 import './cockpit14.css';
@@ -109,7 +110,7 @@ export function cockpit(s: GameState): HTMLElement {
     // Sem botões "Decisões (n)"/"Mensagens (n)": decisões aparecem uma vez (no Agora) e a caixa tem a própria aba.
     pageHeader27({ title: l('Cockpit', 'Cockpit'), area: 'cockpit', sub: M.sub, kpis: M.strip, art: artHook27.f?.('cockpit', s) ?? null, go: (a) => { setTab('ck20', 'panel'); goArea27(a); } }),
     tabs('ck20', [
-      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => rumoInto28(panel27(M), s) }, // r28 (F4): + "Rumo a: <final> (x/100)"
+      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => cockpit29Into(rumoInto28(panel27(M), s), s) }, // r28 (F4): + "Rumo a: <final> (x/100)"; r29: + retomada e acompanhamento
       { id: 'inbox', label: t(l('Caixa de entrada', 'Inbox')), badge: m || undefined, render: () => h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—')) },
       { id: 'desk', label: t(l('Mesa do mês', 'Monthly desk')), render: () => desk27(s) },
     ], rerender));
