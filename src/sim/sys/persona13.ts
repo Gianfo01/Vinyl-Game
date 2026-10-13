@@ -734,6 +734,17 @@ deferEvents<EventDef>([
     ],
   },
   {
+    // r28 (F3): a mesma barreira antes do rádio e da TV (teatros, salões, editoras de partitura e gravadoras)
+    id: 'p13_race_early', cat: 'culture', tone: 'bad', tags: [], cooldown: 6, forcedOnly: true,
+    title: l('Portas fechadas para {act}', 'Doors closed to {act}'),
+    text: l('Donos de teatro, salões e editoras de partitura estão recusando {act} — não pela música, mas pela cor da pele. É uma barreira da época, e o selo precisa decidir como responder.', 'Theatre owners, dance halls and sheet-music publishers are turning down {act} — not for the music, but for the color of their skin. It is a barrier of the era, and the label must decide how to respond.'),
+    options: [
+      { id: 'fight', label: l('Enfrentar: campanha pública e pressão nos teatros e editoras', 'Fight: public campaign and pressure on theatres and publishers'), hint: l('Custa caro; reduz a barreira à metade por 12 anos; artistas e crítica respeitam, empresários conservadores se irritam.', 'Costly; halves the barrier for 12 years; artists and critics respect it, conservative impresarios get annoyed.'), apply: (s, _r, c) => barrierFight(s, String(c.act), 'race') },
+      { id: 'niche', label: l('Apostar no circuito que acolhe (salões, igrejas e clubes da comunidade)', 'Lean on the circuit that welcomes them (community halls, churches and clubs)'), hint: l('Sem custo; reduz parte da barreira.', 'No cost; trims part of the barrier.'), apply: (s, _r, c) => barrierNiche(s, String(c.act)) },
+      { id: 'comply', label: l('Esconder o artista (capa de partitura sem retrato, só gravações)', 'Hide the act (sheet-music cover without portrait, records only)'), hint: l('Menos barreira, mas o artista se sente traído.', 'Less barrier, but the act feels betrayed.'), apply: (s, _r, c) => barrierComply(s, String(c.act)) },
+    ],
+  },
+  {
     id: 'p13_sex', cat: 'culture', tone: 'bad', tags: [], cooldown: 6, forcedOnly: true,
     title: l('"Mulher não vende {genreName}"', '"Women don\'t sell {genreName}"'),
     text: l('Programadores e lojistas torcem o nariz para {act}: dizem que mulher não vende esse gênero. É o machismo do meio nesta época.', 'Programmers and retailers turn their noses up at {act}: they say women do not sell this genre. It is the trade\'s sexism of the era.'),
@@ -796,7 +807,9 @@ registerSimHook('month', 'persona13', (s) => {
     const b = bs.find((x) => (x.k === 'race' || x.k === 'sex') && x.m < 0.97);
     if (!b || !r.chance(0.12)) continue;
     st.cd[`bar|${id}`] = s.week + 156;
-    emitEvent(s, r, b.k === 'race' ? 'p13_race' : 'p13_sex', { act: id, genre: a.genre });
+    // r28 (F3): antes do rádio/TV (tecnologia nesta história) a mesma barreira vem com o vocabulário da época
+    const early = b.k === 'race' && (s.techDates?.tv_music ?? 1950) > s.year;
+    emitEvent(s, r, b.k === 'race' ? (early ? 'p13_race_early' : 'p13_race') : 'p13_sex', { act: id, genre: a.genre });
     break;
   }
   // rancor: líder muito contrariado fala mal de você
