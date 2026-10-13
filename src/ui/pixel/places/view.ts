@@ -3,7 +3,7 @@
 // quadro estático. Escala inteira via CSS (image-rendering: pixelated).
 
 import { h } from '../../dom';
-import { avatarSprite, randomLook, type Dir, type Pose, type Role } from '../avatar';
+import { avatarSprite, crowdLook27, type Dir, type Pose, type Role } from '../avatar';
 import { C, css } from '../px';
 import type { Appearance } from '../../../sim/types';
 import { H, W } from './kit';
@@ -65,7 +65,7 @@ export function placeView(kind: PlaceKind, o: PlaceViewOpts): HTMLElement {
     for (const pr of model.props) items.push({ y: pr.y, draw: () => ctx.drawImage(pr.sprite.c, pr.x - pr.sprite.ax, pr.y - pr.sprite.ay) });
     for (const m of model.crowd) {
       const bob = reduced() ? 0 : Math.round(Math.max(0, Math.sin(t * (2 + energy * 4) + m.phase)) * m.hop * (1 + energy * 2));
-      const sp = avatarSprite(randomLook(m.seed), { year, pose: m.pose, dir: m.dir, role: m.role ?? null, frame: reduced() ? 0 : Math.floor(t * 2 + m.phase) % 4, synthetic: m.role === 'synthetic' });
+      const sp = avatarSprite(crowdLook27(m.seed, year), { year, pose: m.pose, dir: m.dir, role: m.role ?? null, frame: reduced() ? 0 : Math.floor(t * 2 + m.phase) % 4, synthetic: m.role === 'synthetic' });
       items.push({ y: m.y, draw: () => ctx.drawImage(sp.c, m.x - sp.ax, m.y - sp.ay - bob) });
     }
     for (const a of actors) {

@@ -135,9 +135,9 @@ export interface Appearance {
   body: number; // 0..2
   face: number; // 0..2
   skin: number; // 0..3
-  hair: number; // 0..15 (0 = sem cabelo)
+  hair: number; // 0..36 (0 = sem cabelo; 23+ rodada 27)
   hairColor: number; // 0..7
-  outfit: number; // 0..3
+  outfit: number; // 0..25 (4+ rodada 27)
   outfitColor: number; // 0..7
   glasses: boolean;
   hat: boolean;
@@ -160,6 +160,12 @@ export interface Appearance {
   sx?: 'm' | 'f';
   /** visual real aplicado automaticamente (rodada 15); some quando o jogador edita */
   rl?: string;
+  /** rodada 27 (opcionais, ver src/ui/pixel/looks27.ts): colar/pescoço · brinco · tatuagem · instrumento preferido.
+   *  Também anexa índices novos em hair (23+), outfit (4+), hatT (9+), glT (4+) e bdT (4+). */
+  nk?: number;
+  ear?: number;
+  tat?: number;
+  inst?: number;
   /** rodada 17 (derivados da idade, nunca gravados): rugas 0..3, grisalho 0..10, calvície 0..2, peso extra */
   ag?: number;
   gy?: number;

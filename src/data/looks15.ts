@@ -9,9 +9,23 @@
 // Cores do cabelo 0 preto 1 castanho-escuro 2 castanho 3 ruivo-escuro 4 loiro 5 ruivo 6 grisalho 7 tingido 8 platinado 9 vermelho
 // 10 rosa 11 verde 12 azul. Roupa: 0 casual 1 social 2 vestido/casaco 3 malha. Cores 0 marinho 1 vermelho 2 verde 3 mostarda
 // 4 roxo 5 branco 6 preto 7 laranja 8 dourado 9 rosa 10 prata 11 couro 12 celeste.
+// Rodada 27 (anexados, ver src/ui/pixel/looks27.ts): cabelos 23 box braids 24 cortina 25 jheri curl 26 high-top 27 coquinhos
+// 28 maria-chiquinha 29 emo 30 undercut c/ coque 31 flat top 32 ondas anos 20 33 raspado c/ risco 34 longo repartido
+// 35 dreads presos 36 victory rolls · barba d4 costeletas d5 longa d6 ferradura d7 bigodinho d8 contorno · óculos g4 aviador
+// g5 aro grosso g6 gatinho g7 redondos coloridos g8 envolvente · chapéu t9 turbante t10 gele t11 boné pra trás t12 bucket
+// t13 kangol t14 coco t15 panamá t16 sombrero t17 quepe t18 kufi t19 cangaceiro t20 cloche t21 durag t22 tam rasta
+// · roupa o4 couro o5 jeans o6 camisa aberta o7 regata o8 smoking o9 túnica/kaftan o10 lantejoulas o11 militar
+// o12 agasalho o13 moletom o14 cropped o15 xadrez o16 macacão o17 franjas o18 qipao o19 sári o20 quimono o21 gola alta
+// o22 colete o23 poncho o24 florida o25 estampada · j colar (1 corrente 2 correntão 3 pérolas 4 contas 5 crucifixo
+// 6 lenço 7 gargantilha 8 boá 9 gravata-borboleta 10 medalhão da paz) · e brinco (1 argola 2 ponto 3 argola prata
+// 4 brincão) · x tatuagem (1 braços 2 pescoço 3 rosto 4 um braço) · i instrumento (1 violão 2 Les Paul 3 Strato 4 SG
+// 5 Flying V 6 semiacústica 7 dois braços 8 banjo 9 cavaquinho 10 cítara 11 ukulele 12 baixo violino 13 contrabaixo
+// 14 sanfona 15 keytar 16 gaita 17 pandeiro 18 trombone 19 clarinete 20 flauta 21 violoncelo 22 maracas 23 MPC
+// 24 headset 25 alaúde).
 
 import type { Appearance } from '../sim/types';
 import { LOOKS17 } from './looks17';
+import { LOOKS27 } from './looks27';
 
 const L: Record<string, string> = {
   // anos 30–50
@@ -233,6 +247,12 @@ const L: Record<string, string> = {
   'Seu Jorge': 's3 h3 c0 d0 o0 k5',
 };
 for (const [k, v] of Object.entries(LOOKS17)) L[k] ??= v; // rodada 17: mais visuais reais (não sobrescreve)
+// rodada 27: famosos revistos com as peças novas (substitui). Nomes que não tinham visual entram só no desenho:
+// o sim não grava esse visual (a pele/sexo da ficha seguem como antes — persona13 e o modo rápido não mudam).
+const VISUAL27 = new Set<string>();
+for (const [k, v] of Object.entries(LOOKS27)) { if (!L[k]) VISUAL27.add(k); L[k] = v; }
+/** Rodada 27: visual real só de desenho (não é gravado na pessoa pelo sim). */
+export const visualOnly27 = (name: string): boolean => VISUAL27.has(name);
 L['Beyoncé Knowles'] = L['Beyoncé'];
 
 export interface RealLookSeg { from: number; look: Appearance }
@@ -254,6 +274,10 @@ export function parseLook15(code: string): Appearance {
     else if (k === 'd') { a.beard = true; if (v) a.bdT = v; }
     else if (k === 'p') a.paint = v;
     else if (k === 'm') a.helm = v;
+    else if (k === 'j') a.nk = v || undefined; // rodada 27: colar
+    else if (k === 'e') a.ear = v || undefined; // brinco
+    else if (k === 'x') a.tat = v || undefined; // tatuagem
+    else if (k === 'i') a.inst = v || undefined; // instrumento
   }
   if (!a.sx) a.sx = 'm';
   return a;
