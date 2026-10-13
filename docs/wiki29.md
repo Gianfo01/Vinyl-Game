@@ -18,8 +18,9 @@ Resumo:
   jogo (+29 kB gzip), porque nomes exportados entre pedaços não são encurtados.
 - Atualizado depois com as frentes novas do base: **relíquias procedurais** (`relics29`, artigo Prêmios e legado + catálogo de 23 arquétipos), **famílias do Submundo** (`mob29`/`orglinks29`, artigo Submundo + catálogos), **formação inicial** (`lineup29`), **pessoa sem banda**, **gravadoras no início e ao longo da partida** (`labels29`, artigo Escada de início), **nível dos rivais** (`rivals29`, artigo Escada de início) e **oferta a
   um integrante** (`member29`, artigo Contratos) e **feat de pessoa específica** (`featp29`, artigo Projetos), com verbetes no
-  glossário.
-- `tests/r29-wiki.test.ts`: 19 testes verdes. `r29-reorg`, `r27-ux`, `r27-ctx` e `r29-fixes` continuam verdes.
+  glossário. E os **acordos especiais** (`contracts29`/`terms29`: empresariamento, produção e joint venture), no artigo
+  Contratos (regras, números lidos de `terms29.ts`), no catálogo "Modelos de contrato e papéis" e em 3 verbetes.
+- `tests/r29-wiki.test.ts`: 23 testes verdes. `r29-reorg`, `r27-ux`, `r27-ctx` e `r29-fixes` continuam verdes.
 - Capturas: `docs/shots29wiki/` (16 telas × computador 1440×900 e celular 390×844).
 
 ---
