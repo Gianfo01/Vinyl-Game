@@ -31,6 +31,13 @@ Antes de começar, a fase 0 re-mede tudo na base da R27 (alguns números da aná
 - **1C:** medir com `--grid` (seeds × inícios) e investigar 1889/1975 antes de mexer em choques; `flip` e `--role hybrid` entram como guarda-corpos do teste-meta; o cauteloso não pode quebrar mais do que hoje.
 - `r16-playbot` (`hires` = 0) foi resolvido na R27 (AUD1: primeira contratação no 1º ano quando o selo já fatura).
 
+### Plataforma alvo: jogo instalável (decisão do autor, 2026-10-13)
+Quando os ajustes acabarem, o jogo deixa de ser um HTML e vira um app instalado no computador. A fase 7A já trabalha pensando nisso:
+- **Casca:** Electron (Chromium + V8 iguais em toda máquina) ou Tauri (instalador menor, mas usa o navegador do sistema). A decisão fica para o empacotamento; o código do jogo não muda.
+- **O que o app instalado ganha de verdade:** sem limite de cota do navegador para saves; save em arquivo no disco (gzip/zstd, salvamento em segundo plano); sem a aba ser "congelada" quando fica em segundo plano; dá para reservar mais memória e usar vários núcleos (simulação num Worker, separada da tela).
+- **O que não muda sozinho:** a simulação continua rodando numa linha de execução só, com o mesmo motor JavaScript; uma máquina boa ajuda (~1,5–3× mais rápida que a da medição), mas não segura uma curva que cresce 15–19× até 2008. Por isso a poda/agregação do histórico e o corte dos ganchos caros continuam obrigatórios.
+- **Na 7A:** (1) simulação num Web Worker (a tela não trava no avanço do mês); (2) camada de save com adaptador (IndexedDB hoje → arquivo no app), mantendo o gzip que já existe em `store.ts`; (3) metas: ≤ 2,5× de custo por década e save ≤ 15 MB em 2040.
+
 ## Fase 1 — As três promessas (P0)
 ### 1A. Run reproduzível (C4) — S
 - `ensureExt` passa a atribuir objetivo, idade de aposentadoria, persona e líder **no nascimento** da pessoa; no carregamento só completa saves antigos.
