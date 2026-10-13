@@ -13,7 +13,8 @@
     "balance": "tsx tools/balance19.ts",
     "balance:quick": "tsx tools/balance19.ts --quick",
     "balance:full": "tsx tools/balance19.ts --full",
-    "geo": "tsx tools/build-geo.ts"
+    "geo": "tsx tools/build-geo.ts",
+    "props": "tsx tools/props/build.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

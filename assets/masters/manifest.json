@@ -1,0 +1,2034 @@
+{
+ "sobre": "Props de Masters: 001–101 originais (desenhados à mão), 102+ gerados por tools/props. Pixel art; amplie por vizinho mais próximo.",
+ "escala": {
+  "detalhe": "grade nativa da arte (~256 px)",
+  "jogo": "densidade dos personagens de corpo inteiro (~78 px em pé), com sombra no chão"
+ },
+ "total": 104,
+ "props": [
+  {
+   "n": 1,
+   "id": "fonografo_1890",
+   "nome": "Fonógrafo",
+   "name": "Phonograph",
+   "cat": "midia",
+   "jogo": {
+    "w": 37,
+    "h": 38
+   },
+   "era": [
+    1889,
+    1925
+   ],
+   "arquivo": "001_fonografo_1890.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 225,
+    "h": 220
+   }
+  },
+  {
+   "n": 2,
+   "id": "gramofone_1920",
+   "nome": "Gramofone",
+   "name": "Gramophone",
+   "cat": "midia",
+   "jogo": {
+    "w": 33,
+    "h": 41
+   },
+   "era": [
+    1900,
+    1955
+   ],
+   "arquivo": "002_gramofone_1920.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 208,
+    "h": 255
+   }
+  },
+  {
+   "n": 3,
+   "id": "microfone_1930",
+   "nome": "Microfone de fita",
+   "name": "Ribbon microphone",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 33,
+    "h": 71
+   },
+   "era": [
+    1925,
+    1965
+   ],
+   "arquivo": "003_microfone_1930.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 116,
+    "h": 268
+   }
+  },
+  {
+   "n": 4,
+   "id": "gravador_1950",
+   "nome": "Gravador de rolo",
+   "name": "Reel-to-reel recorder",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 47,
+    "h": 47
+   },
+   "era": [
+    1948,
+    1990
+   ],
+   "arquivo": "004_gravador_1950.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 233,
+    "h": 233
+   }
+  },
+  {
+   "n": 5,
+   "id": "mesa_1960",
+   "nome": "Mesa de som",
+   "name": "Mixing desk",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 45,
+    "h": 40
+   },
+   "era": [
+    1955,
+    1985
+   ],
+   "arquivo": "005_mesa_1960.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 249,
+    "h": 207
+   }
+  },
+  {
+   "n": 6,
+   "id": "multifaixas_1980",
+   "nome": "Gravador multipista",
+   "name": "Multitrack recorder",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 53,
+    "h": 51
+   },
+   "era": [
+    1968,
+    2000
+   ],
+   "arquivo": "006_multifaixas_1980.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 235,
+    "h": 219
+   }
+  },
+  {
+   "n": 7,
+   "id": "daw_2000",
+   "nome": "Estação de trabalho digital",
+   "name": "DAW workstation",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 63,
+    "h": 55
+   },
+   "era": [
+    1995,
+    2040
+   ],
+   "arquivo": "007_daw_2000.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 231,
+    "h": 186
+   }
+  },
+  {
+   "n": 8,
+   "id": "interface_2020",
+   "nome": "Interface de áudio",
+   "name": "Audio interface",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 39,
+    "h": 22
+   },
+   "era": [
+    2005,
+    2040
+   ],
+   "arquivo": "008_interface_2020.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 291,
+    "h": 128
+   }
+  },
+  {
+   "n": 9,
+   "id": "servidor_2035",
+   "nome": "Servidor de música neural",
+   "name": "Neural music server",
+   "cat": "neural",
+   "jogo": {
+    "w": 41,
+    "h": 76
+   },
+   "era": [
+    2028,
+    2040
+   ],
+   "arquivo": "009_servidor_2035.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 133,
+    "h": 252
+   }
+  },
+  {
+   "n": 10,
+   "id": "piano",
+   "nome": "Piano de cauda",
+   "name": "Grand piano",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 61,
+    "h": 60
+   },
+   "arquivo": "010_piano.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 224,
+    "h": 211
+   }
+  },
+  {
+   "n": 11,
+   "id": "violao",
+   "nome": "Violão",
+   "name": "Acoustic guitar",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 29,
+    "h": 55
+   },
+   "arquivo": "011_violao.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 121,
+    "h": 269
+   }
+  },
+  {
+   "n": 12,
+   "id": "guitarra_1960",
+   "nome": "Guitarra elétrica",
+   "name": "Electric guitar",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 25,
+    "h": 55
+   },
+   "era": [
+    1950,
+    2040
+   ],
+   "arquivo": "012_guitarra_1960.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 101,
+    "h": 258
+   }
+  },
+  {
+   "n": 13,
+   "id": "baixo_1970",
+   "nome": "Baixo elétrico",
+   "name": "Electric bass",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 25,
+    "h": 58
+   },
+   "era": [
+    1952,
+    2040
+   ],
+   "arquivo": "013_baixo_1970.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 108,
+    "h": 301
+   }
+  },
+  {
+   "n": 14,
+   "id": "bateria_1960",
+   "nome": "Bateria",
+   "name": "Drum kit",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 67,
+    "h": 59
+   },
+   "era": [
+    1920,
+    2040
+   ],
+   "arquivo": "014_bateria_1960.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 254,
+    "h": 211
+   }
+  },
+  {
+   "n": 15,
+   "id": "sintetizador_1980",
+   "nome": "Sintetizador",
+   "name": "Synthesizer",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 49,
+    "h": 48
+   },
+   "era": [
+    1965,
+    2040
+   ],
+   "arquivo": "015_sintetizador_1980.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 237,
+    "h": 226
+   }
+  },
+  {
+   "n": 16,
+   "id": "sampler_1990",
+   "nome": "Sampler",
+   "name": "Sampler",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 31,
+    "h": 25
+   },
+   "era": [
+    1985,
+    2040
+   ],
+   "arquivo": "016_sampler_1990.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 246,
+    "h": 182
+   }
+  },
+  {
+   "n": 17,
+   "id": "dj_2000",
+   "nome": "Toca-discos de DJ",
+   "name": "DJ decks",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 67,
+    "h": 31
+   },
+   "era": [
+    1975,
+    2040
+   ],
+   "arquivo": "017_dj_2000.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 302,
+    "h": 109
+   }
+  },
+  {
+   "n": 18,
+   "id": "amplificador",
+   "nome": "Amplificador",
+   "name": "Amplifier",
+   "cat": "palco",
+   "jogo": {
+    "w": 45,
+    "h": 45
+   },
+   "era": [
+    1950,
+    2040
+   ],
+   "arquivo": "018_amplificador.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 225,
+    "h": 213
+   }
+  },
+  {
+   "n": 19,
+   "id": "monitor_palco",
+   "nome": "Retorno de palco",
+   "name": "Stage monitor",
+   "cat": "palco",
+   "jogo": {
+    "w": 33,
+    "h": 27
+   },
+   "era": [
+    1965,
+    2040
+   ],
+   "arquivo": "019_monitor_palco.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 213,
+    "h": 162
+   }
+  },
+  {
+   "n": 20,
+   "id": "caixa_pa",
+   "nome": "Caixa de PA",
+   "name": "PA speaker",
+   "cat": "palco",
+   "jogo": {
+    "w": 31,
+    "h": 75
+   },
+   "era": [
+    1965,
+    2040
+   ],
+   "arquivo": "020_caixa_pa.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 100,
+    "h": 260
+   }
+  },
+  {
+   "n": 21,
+   "id": "refletor_1940",
+   "nome": "Refletor",
+   "name": "Stage spotlight",
+   "cat": "palco",
+   "jogo": {
+    "w": 47,
+    "h": 52
+   },
+   "era": [
+    1900,
+    1990
+   ],
+   "arquivo": "021_refletor_1940.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 203,
+    "h": 221
+   }
+  },
+  {
+   "n": 22,
+   "id": "refletor_led",
+   "nome": "Moving head de LED",
+   "name": "LED moving head",
+   "cat": "palco",
+   "jogo": {
+    "w": 31,
+    "h": 39
+   },
+   "era": [
+    2005,
+    2040
+   ],
+   "arquivo": "022_refletor_led.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 163,
+    "h": 213
+   }
+  },
+  {
+   "n": 23,
+   "id": "prensa_1930",
+   "nome": "Prensa de discos",
+   "name": "Record press",
+   "cat": "fabrica",
+   "jogo": {
+    "w": 59,
+    "h": 62
+   },
+   "era": [
+    1900,
+    1960
+   ],
+   "arquivo": "023_prensa_1930.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 239,
+    "h": 244
+   }
+  },
+  {
+   "n": 24,
+   "id": "prensa_1970",
+   "nome": "Prensa hidráulica",
+   "name": "Hydraulic record press",
+   "cat": "fabrica",
+   "jogo": {
+    "w": 57,
+    "h": 64
+   },
+   "era": [
+    1955,
+    2040
+   ],
+   "arquivo": "024_prensa_1970.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 224,
+    "h": 243
+   }
+  },
+  {
+   "n": 25,
+   "id": "duplicador_1980",
+   "nome": "Duplicadora de fitas",
+   "name": "Tape duplicator",
+   "cat": "fabrica",
+   "jogo": {
+    "w": 41,
+    "h": 56
+   },
+   "era": [
+    1968,
+    2005
+   ],
+   "arquivo": "025_duplicador_1980.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 173,
+    "h": 245
+   }
+  },
+  {
+   "n": 26,
+   "id": "duplicador_cd",
+   "nome": "Torre de gravação de CD",
+   "name": "CD duplicator tower",
+   "cat": "fabrica",
+   "jogo": {
+    "w": 43,
+    "h": 56
+   },
+   "era": [
+    1990,
+    2020
+   ],
+   "arquivo": "026_duplicador_cd.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 189,
+    "h": 248
+   }
+  },
+  {
+   "n": 27,
+   "id": "caixa_distribuicao",
+   "nome": "Caixa de distribuição",
+   "name": "Shipping box",
+   "cat": "fabrica",
+   "jogo": {
+    "w": 33,
+    "h": 33
+   },
+   "arquivo": "027_caixa_distribuicao.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 247,
+    "h": 227
+   }
+  },
+  {
+   "n": 28,
+   "id": "carrinho_estoque",
+   "nome": "Carrinho de estoque",
+   "name": "Hand truck",
+   "cat": "fabrica",
+   "jogo": {
+    "w": 37,
+    "h": 52
+   },
+   "arquivo": "028_carrinho_estoque.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 168,
+    "h": 238
+   }
+  },
+  {
+   "n": 29,
+   "id": "cilindros",
+   "nome": "Cilindros de cera",
+   "name": "Wax cylinders",
+   "cat": "midia",
+   "jogo": {
+    "w": 33,
+    "h": 23
+   },
+   "era": [
+    1889,
+    1925
+   ],
+   "arquivo": "029_cilindros.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 261,
+    "h": 162
+   }
+  },
+  {
+   "n": 30,
+   "id": "disco_78",
+   "nome": "Disco de 78 rpm",
+   "name": "78 rpm record",
+   "cat": "midia",
+   "jogo": {
+    "w": 33,
+    "h": 25
+   },
+   "era": [
+    1898,
+    1960
+   ],
+   "arquivo": "030_disco_78.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 237,
+    "h": 164
+   }
+  },
+  {
+   "n": 31,
+   "id": "vinil_lp",
+   "nome": "LP de vinil",
+   "name": "Vinyl LP",
+   "cat": "midia",
+   "jogo": {
+    "w": 31,
+    "h": 27
+   },
+   "era": [
+    1948,
+    2040
+   ],
+   "arquivo": "031_vinil_lp.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 233,
+    "h": 184
+   }
+  },
+  {
+   "n": 32,
+   "id": "fita_cassete",
+   "nome": "Fita cassete",
+   "name": "Cassette tape",
+   "cat": "midia",
+   "jogo": {
+    "w": 19,
+    "h": 18
+   },
+   "era": [
+    1965,
+    2040
+   ],
+   "arquivo": "032_fita_cassete.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 249,
+    "h": 213
+   }
+  },
+  {
+   "n": 33,
+   "id": "cd",
+   "nome": "CD",
+   "name": "Compact disc",
+   "cat": "midia",
+   "jogo": {
+    "w": 21,
+    "h": 20
+   },
+   "era": [
+    1982,
+    2040
+   ],
+   "arquivo": "033_cd.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 183,
+    "h": 172
+   }
+  },
+  {
+   "n": 34,
+   "id": "player_digital",
+   "nome": "Tocador digital",
+   "name": "Digital music player",
+   "cat": "midia",
+   "jogo": {
+    "w": 13,
+    "h": 20
+   },
+   "era": [
+    2000,
+    2015
+   ],
+   "arquivo": "034_player_digital.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 137,
+    "h": 235
+   }
+  },
+  {
+   "n": 35,
+   "id": "smartphone_streaming",
+   "nome": "Celular com streaming",
+   "name": "Streaming smartphone",
+   "cat": "midia",
+   "jogo": {
+    "w": 17,
+    "h": 22
+   },
+   "era": [
+    2008,
+    2040
+   ],
+   "arquivo": "035_smartphone_streaming.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 154,
+    "h": 226
+   }
+  },
+  {
+   "n": 36,
+   "id": "escrivaninha_1900",
+   "nome": "Escrivaninha",
+   "name": "Writing desk",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 57,
+    "h": 42
+   },
+   "era": [
+    1889,
+    1950
+   ],
+   "arquivo": "036_escrivaninha_1900.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 239,
+    "h": 161
+   }
+  },
+  {
+   "n": 37,
+   "id": "escrivaninha_1970",
+   "nome": "Mesa de escritório",
+   "name": "Office desk",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 61,
+    "h": 42
+   },
+   "era": [
+    1950,
+    1995
+   ],
+   "arquivo": "037_escrivaninha_1970.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 245,
+    "h": 150
+   }
+  },
+  {
+   "n": 38,
+   "id": "escrivaninha_2020",
+   "nome": "Mesa moderna",
+   "name": "Modern desk",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 53,
+    "h": 42
+   },
+   "era": [
+    1995,
+    2040
+   ],
+   "arquivo": "038_escrivaninha_2020.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 231,
+    "h": 173
+   }
+  },
+  {
+   "n": 39,
+   "id": "cofre",
+   "nome": "Cofre",
+   "name": "Safe",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 41,
+    "h": 45
+   },
+   "arquivo": "039_cofre.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 202,
+    "h": 217
+   }
+  },
+  {
+   "n": 40,
+   "id": "contrato",
+   "nome": "Contrato",
+   "name": "Contract",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 25,
+    "h": 22
+   },
+   "arquivo": "040_contrato.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 226,
+    "h": 199
+   }
+  },
+  {
+   "n": 41,
+   "id": "arquivo_royalties",
+   "nome": "Arquivo de royalties",
+   "name": "Royalty filing cabinet",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 39,
+    "h": 58
+   },
+   "arquivo": "041_arquivo_royalties.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 153,
+    "h": 240
+   }
+  },
+  {
+   "n": 42,
+   "id": "radio_1930",
+   "nome": "Rádio capelinha",
+   "name": "Cathedral radio",
+   "cat": "imprensa",
+   "jogo": {
+    "w": 31,
+    "h": 37
+   },
+   "era": [
+    1925,
+    1960
+   ],
+   "arquivo": "042_radio_1930.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 192,
+    "h": 225
+   }
+  },
+  {
+   "n": 43,
+   "id": "tv_1960",
+   "nome": "Televisor",
+   "name": "Television set",
+   "cat": "imprensa",
+   "jogo": {
+    "w": 47,
+    "h": 47
+   },
+   "era": [
+    1950,
+    1985
+   ],
+   "arquivo": "043_tv_1960.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 213,
+    "h": 210
+   }
+  },
+  {
+   "n": 44,
+   "id": "radio_entrevista",
+   "nome": "Microfone de entrevista",
+   "name": "Broadcast mic",
+   "cat": "imprensa",
+   "jogo": {
+    "w": 33,
+    "h": 37
+   },
+   "era": [
+    1990,
+    2040
+   ],
+   "arquivo": "044_radio_entrevista.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 225,
+    "h": 249
+   }
+  },
+  {
+   "n": 45,
+   "id": "cameras_tv",
+   "nome": "Câmera de estúdio de TV",
+   "name": "TV studio camera",
+   "cat": "imprensa",
+   "jogo": {
+    "w": 67,
+    "h": 73
+   },
+   "era": [
+    1950,
+    2000
+   ],
+   "arquivo": "045_cameras_tv.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 231,
+    "h": 246
+   }
+  },
+  {
+   "n": 46,
+   "id": "camera_digital",
+   "nome": "Câmera de cinema digital",
+   "name": "Digital cinema camera",
+   "cat": "imprensa",
+   "jogo": {
+    "w": 61,
+    "h": 72
+   },
+   "era": [
+    2005,
+    2040
+   ],
+   "arquivo": "046_camera_digital.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 205,
+    "h": 239
+   }
+  },
+  {
+   "n": 47,
+   "id": "trofeu",
+   "nome": "Troféu de gramofone",
+   "name": "Gramophone trophy",
+   "cat": "premio",
+   "jogo": {
+    "w": 21,
+    "h": 30
+   },
+   "era": [
+    1959,
+    2040
+   ],
+   "arquivo": "047_trofeu.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 155,
+    "h": 231
+   }
+  },
+  {
+   "n": 48,
+   "id": "disco_ouro",
+   "nome": "Disco de ouro",
+   "name": "Gold record",
+   "cat": "premio",
+   "jogo": {
+    "w": 33,
+    "h": 40
+   },
+   "era": [
+    1942,
+    2040
+   ],
+   "arquivo": "048_disco_ouro.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 173,
+    "h": 228
+   }
+  },
+  {
+   "n": 49,
+   "id": "mapa_turne",
+   "nome": "Mapa da turnê",
+   "name": "Tour map",
+   "cat": "turne",
+   "jogo": {
+    "w": 53,
+    "h": 58
+   },
+   "arquivo": "049_mapa_turne.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 203,
+    "h": 215
+   }
+  },
+  {
+   "n": 50,
+   "id": "mala_turne",
+   "nome": "Case de estrada",
+   "name": "Road case",
+   "cat": "turne",
+   "jogo": {
+    "w": 47,
+    "h": 42
+   },
+   "era": [
+    1955,
+    2040
+   ],
+   "arquivo": "050_mala_turne.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 233,
+    "h": 203
+   }
+  },
+  {
+   "n": 51,
+   "id": "onibus_1970",
+   "nome": "Ônibus de turnê",
+   "name": "Tour bus",
+   "cat": "turne",
+   "jogo": {
+    "w": 151,
+    "h": 88
+   },
+   "era": [
+    1950,
+    2040
+   ],
+   "arquivo": "051_onibus_1970.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 305,
+    "h": 151
+   }
+  },
+  {
+   "n": 52,
+   "id": "van_2000",
+   "nome": "Van de turnê",
+   "name": "Tour van",
+   "cat": "turne",
+   "jogo": {
+    "w": 97,
+    "h": 62
+   },
+   "era": [
+    1960,
+    2040
+   ],
+   "arquivo": "052_van_2000.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 277,
+    "h": 155
+   }
+  },
+  {
+   "n": 53,
+   "id": "estante_catalogo",
+   "nome": "Estante do catálogo",
+   "name": "Catalog shelf",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 59,
+    "h": 60
+   },
+   "arquivo": "053_estante_catalogo.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 211,
+    "h": 204
+   }
+  },
+  {
+   "n": 54,
+   "id": "sofa_lounge",
+   "nome": "Sofá do lounge",
+   "name": "Lounge sofa",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 61,
+    "h": 38
+   },
+   "arquivo": "054_sofa_lounge.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 291,
+    "h": 163
+   }
+  },
+  {
+   "n": 55,
+   "id": "quadro_ar",
+   "nome": "Quadro de A&R",
+   "name": "A&R board",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 47,
+    "h": 59
+   },
+   "arquivo": "055_quadro_ar.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 187,
+    "h": 239
+   }
+  },
+  {
+   "n": 56,
+   "id": "mesa_composicao",
+   "nome": "Mesa de composição",
+   "name": "Songwriting desk",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 49,
+    "h": 53
+   },
+   "arquivo": "056_mesa_composicao.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 220,
+    "h": 237
+   }
+  },
+  {
+   "n": 57,
+   "id": "caixa_entrada",
+   "nome": "Caixa de correspondência",
+   "name": "Inbox tray",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 25,
+    "h": 24
+   },
+   "arquivo": "057_caixa_entrada.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 215,
+    "h": 207
+   }
+  },
+  {
+   "n": 58,
+   "id": "terminal_mercado",
+   "nome": "Terminal de mercado",
+   "name": "Market terminal",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 37,
+    "h": 38
+   },
+   "era": [
+    1978,
+    2000
+   ],
+   "arquivo": "058_terminal_mercado.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 231,
+    "h": 225
+   }
+  },
+  {
+   "n": 59,
+   "id": "painel_pesquisa",
+   "nome": "Bancada de pesquisa",
+   "name": "Research bench",
+   "cat": "escritorio",
+   "jogo": {
+    "w": 61,
+    "h": 58
+   },
+   "arquivo": "059_painel_pesquisa.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 240,
+    "h": 216
+   }
+  },
+  {
+   "n": 60,
+   "id": "arquivo_legado",
+   "nome": "Baú do legado",
+   "name": "Legacy chest",
+   "cat": "premio",
+   "jogo": {
+    "w": 37,
+    "h": 38
+   },
+   "arquivo": "060_arquivo_legado.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 238,
+    "h": 234
+   }
+  },
+  {
+   "n": 64,
+   "id": "saxofone",
+   "nome": "Saxofone",
+   "name": "Saxophone",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 31,
+    "h": 51
+   },
+   "arquivo": "064_saxofone.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 140,
+    "h": 245
+   }
+  },
+  {
+   "n": 65,
+   "id": "trompete",
+   "nome": "Trompete",
+   "name": "Trumpet",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 41,
+    "h": 26
+   },
+   "arquivo": "065_trompete.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 280,
+    "h": 144
+   }
+  },
+  {
+   "n": 66,
+   "id": "trombone",
+   "nome": "Trombone",
+   "name": "Trombone",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 25,
+    "h": 58
+   },
+   "arquivo": "066_trombone.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 89,
+    "h": 250
+   }
+  },
+  {
+   "n": 67,
+   "id": "clarinete",
+   "nome": "Clarinete",
+   "name": "Clarinet",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 23,
+    "h": 54
+   },
+   "arquivo": "067_clarinete.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 93,
+    "h": 247
+   }
+  },
+  {
+   "n": 68,
+   "id": "flauta",
+   "nome": "Flauta no estojo",
+   "name": "Flute in case",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 29,
+    "h": 23
+   },
+   "arquivo": "068_flauta.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 246,
+    "h": 179
+   }
+  },
+  {
+   "n": 69,
+   "id": "acordeon",
+   "nome": "Acordeão",
+   "name": "Accordion",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 39,
+    "h": 34
+   },
+   "arquivo": "069_acordeon.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 248,
+    "h": 199
+   }
+  },
+  {
+   "n": 70,
+   "id": "banjo",
+   "nome": "Banjo",
+   "name": "Banjo",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 25,
+    "h": 50
+   },
+   "arquivo": "070_banjo.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 114,
+    "h": 256
+   }
+  },
+  {
+   "n": 71,
+   "id": "bandolim",
+   "nome": "Bandolim",
+   "name": "Mandolin",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 21,
+    "h": 46
+   },
+   "arquivo": "071_bandolim.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 114,
+    "h": 275
+   }
+  },
+  {
+   "n": 72,
+   "id": "harpa",
+   "nome": "Harpa",
+   "name": "Harp",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 41,
+    "h": 80
+   },
+   "arquivo": "072_harpa.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 135,
+    "h": 270
+   }
+  },
+  {
+   "n": 73,
+   "id": "vibrafone",
+   "nome": "Vibrafone",
+   "name": "Vibraphone",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 63,
+    "h": 49
+   },
+   "era": [
+    1925,
+    2040
+   ],
+   "arquivo": "073_vibrafone.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 263,
+    "h": 184
+   }
+  },
+  {
+   "n": 74,
+   "id": "congas",
+   "nome": "Congas",
+   "name": "Congas",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 43,
+    "h": 56
+   },
+   "arquivo": "074_congas.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 172,
+    "h": 223
+   }
+  },
+  {
+   "n": 75,
+   "id": "theremin",
+   "nome": "Teremim",
+   "name": "Theremin",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 51,
+    "h": 53
+   },
+   "era": [
+    1928,
+    2040
+   ],
+   "arquivo": "075_theremin.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 233,
+    "h": 244
+   }
+  },
+  {
+   "n": 76,
+   "id": "orgao",
+   "nome": "Órgão elétrico",
+   "name": "Electric organ",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 61,
+    "h": 58
+   },
+   "era": [
+    1935,
+    2040
+   ],
+   "arquivo": "076_orgao.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 250,
+    "h": 228
+   }
+  },
+  {
+   "n": 77,
+   "id": "pedaleira",
+   "nome": "Pedaleira",
+   "name": "Pedalboard",
+   "cat": "instrumento",
+   "jogo": {
+    "w": 31,
+    "h": 19
+   },
+   "era": [
+    1965,
+    2040
+   ],
+   "arquivo": "077_pedaleira.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 288,
+    "h": 140
+   }
+  },
+  {
+   "n": 78,
+   "id": "patchbay",
+   "nome": "Patchbay",
+   "name": "Patchbay",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 41,
+    "h": 28
+   },
+   "era": [
+    1955,
+    2040
+   ],
+   "arquivo": "078_patchbay.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 263,
+    "h": 149
+   }
+  },
+  {
+   "n": 79,
+   "id": "compressor",
+   "nome": "Compressor valvulado",
+   "name": "Tube compressor",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 39,
+    "h": 26
+   },
+   "era": [
+    1950,
+    2040
+   ],
+   "arquivo": "079_compressor.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 290,
+    "h": 162
+   }
+  },
+  {
+   "n": 80,
+   "id": "reverb_molas",
+   "nome": "Reverb de molas",
+   "name": "Spring reverb",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 35,
+    "h": 20
+   },
+   "era": [
+    1960,
+    2040
+   ],
+   "arquivo": "080_reverb_molas.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 339,
+    "h": 146
+   }
+  },
+  {
+   "n": 81,
+   "id": "emenda_fita",
+   "nome": "Bloco de emenda de fita",
+   "name": "Tape splicing block",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 29,
+    "h": 21
+   },
+   "era": [
+    1948,
+    2000
+   ],
+   "arquivo": "081_emenda_fita.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 245,
+    "h": 152
+   }
+  },
+  {
+   "n": 82,
+   "id": "pop_filter",
+   "nome": "Pop filter",
+   "name": "Pop filter",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 25,
+    "h": 30
+   },
+   "era": [
+    1970,
+    2040
+   ],
+   "arquivo": "082_pop_filter.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 185,
+    "h": 228
+   }
+  },
+  {
+   "n": 83,
+   "id": "biombo_acustico",
+   "nome": "Biombo acústico",
+   "name": "Acoustic screen",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 73,
+    "h": 68
+   },
+   "arquivo": "083_biombo_acustico.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 239,
+    "h": 212
+   }
+  },
+  {
+   "n": 84,
+   "id": "painel_acustico",
+   "nome": "Difusor acústico",
+   "name": "Acoustic diffuser",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 35,
+    "h": 37
+   },
+   "arquivo": "084_painel_acustico.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 172,
+    "h": 174
+   }
+  },
+  {
+   "n": 85,
+   "id": "bass_trap",
+   "nome": "Bass trap",
+   "name": "Bass trap",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 33,
+    "h": 75
+   },
+   "arquivo": "085_bass_trap.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 105,
+    "h": 256
+   }
+  },
+  {
+   "n": 86,
+   "id": "estante_partitura",
+   "nome": "Estante de partitura",
+   "name": "Music stand",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 39,
+    "h": 68
+   },
+   "arquivo": "086_estante_partitura.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 141,
+    "h": 252
+   }
+  },
+  {
+   "n": 87,
+   "id": "suporte_fones",
+   "nome": "Suporte de fones",
+   "name": "Headphone stand",
+   "cat": "gravacao",
+   "jogo": {
+    "w": 21,
+    "h": 32
+   },
+   "era": [
+    1960,
+    2040
+   ],
+   "arquivo": "087_suporte_fones.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 149,
+    "h": 240
+   }
+  },
+  {
+   "n": 88,
+   "id": "jukebox",
+   "nome": "Jukebox",
+   "name": "Jukebox",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 51,
+    "h": 71
+   },
+   "era": [
+    1935,
+    2000
+   ],
+   "arquivo": "088_jukebox.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 170,
+    "h": 243
+   }
+  },
+  {
+   "n": 89,
+   "id": "bilheteria",
+   "nome": "Bilheteria",
+   "name": "Ticket booth",
+   "cat": "palco",
+   "jogo": {
+    "w": 67,
+    "h": 85
+   },
+   "arquivo": "089_bilheteria.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 198,
+    "h": 250
+   }
+  },
+  {
+   "n": 90,
+   "id": "catraca",
+   "nome": "Catraca",
+   "name": "Turnstile",
+   "cat": "palco",
+   "jogo": {
+    "w": 43,
+    "h": 52
+   },
+   "arquivo": "090_catraca.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 180,
+    "h": 215
+   }
+  },
+  {
+   "n": 91,
+   "id": "barreira",
+   "nome": "Grade de contenção",
+   "name": "Crowd barrier",
+   "cat": "palco",
+   "jogo": {
+    "w": 77,
+    "h": 54
+   },
+   "arquivo": "091_barreira.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 283,
+    "h": 177
+   }
+  },
+  {
+   "n": 92,
+   "id": "trelica",
+   "nome": "Treliça de alumínio",
+   "name": "Truss",
+   "cat": "palco",
+   "jogo": {
+    "w": 107,
+    "h": 73
+   },
+   "era": [
+    1970,
+    2040
+   ],
+   "arquivo": "092_trelica.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 293,
+    "h": 178
+   }
+  },
+  {
+   "n": 93,
+   "id": "praticavel",
+   "nome": "Praticável",
+   "name": "Stage riser",
+   "cat": "palco",
+   "jogo": {
+    "w": 73,
+    "h": 35
+   },
+   "arquivo": "093_praticavel.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 337,
+    "h": 123
+   }
+  },
+  {
+   "n": 94,
+   "id": "cortina_palco",
+   "nome": "Cortina de palco",
+   "name": "Stage curtain",
+   "cat": "palco",
+   "jogo": {
+    "w": 61,
+    "h": 84
+   },
+   "arquivo": "094_cortina_palco.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 178,
+    "h": 241
+   }
+  },
+  {
+   "n": 95,
+   "id": "espelho_camarim",
+   "nome": "Espelho de camarim",
+   "name": "Dressing-room mirror",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 51,
+    "h": 77
+   },
+   "arquivo": "095_espelho_camarim.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 149,
+    "h": 234
+   }
+  },
+  {
+   "n": 96,
+   "id": "maleta_maquiagem",
+   "nome": "Maleta de maquiagem",
+   "name": "Makeup case",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 31,
+    "h": 29
+   },
+   "arquivo": "096_maleta_maquiagem.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 241,
+    "h": 215
+   }
+  },
+  {
+   "n": 97,
+   "id": "armario_instrumentos",
+   "nome": "Armário de instrumentos",
+   "name": "Instrument cabinet",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 47,
+    "h": 87
+   },
+   "arquivo": "097_armario_instrumentos.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 151,
+    "h": 289
+   }
+  },
+  {
+   "n": 98,
+   "id": "maquina_lanches",
+   "nome": "Máquina de lanches",
+   "name": "Snack machine",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 57,
+    "h": 88
+   },
+   "era": [
+    1950,
+    2040
+   ],
+   "arquivo": "098_maquina_lanches.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 147,
+    "h": 227
+   }
+  },
+  {
+   "n": 99,
+   "id": "bebedouro",
+   "nome": "Bebedouro",
+   "name": "Water cooler",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 29,
+    "h": 61
+   },
+   "era": [
+    1950,
+    2040
+   ],
+   "arquivo": "099_bebedouro.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 103,
+    "h": 246
+   }
+  },
+  {
+   "n": 100,
+   "id": "palmeira_vaso",
+   "nome": "Palmeira no vaso",
+   "name": "Potted palm",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 55,
+    "h": 68
+   },
+   "arquivo": "100_palmeira_vaso.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 213,
+    "h": 264
+   }
+  },
+  {
+   "n": 101,
+   "id": "luminaria",
+   "nome": "Luminária de pé",
+   "name": "Floor lamp",
+   "cat": "ambiente",
+   "jogo": {
+    "w": 31,
+    "h": 71
+   },
+   "arquivo": "101_luminaria.png",
+   "origem": "original",
+   "detalhe": {
+    "w": 103,
+    "h": 257
+   }
+  },
+  {
+   "n": 102,
+   "id": "amplificador_valvulado",
+   "nome": "Amplificador valvulado",
+   "name": "Tube amp",
+   "cat": "palco",
+   "era": [
+    1955,
+    2040
+   ],
+   "arquivo": "102_amplificador_valvulado.png",
+   "origem": "gerado",
+   "detalhe": {
+    "w": 190,
+    "h": 174
+   },
+   "jogo": {
+    "w": 45,
+    "h": 43
+   }
+  },
+  {
+   "n": 103,
+   "id": "telefone_disco_1950",
+   "nome": "Telefone de disco",
+   "name": "Rotary phone",
+   "cat": "escritorio",
+   "era": [
+    1935,
+    1985
+   ],
+   "arquivo": "103_telefone_disco_1950.png",
+   "origem": "gerado",
+   "detalhe": {
+    "w": 213,
+    "h": 140
+   },
+   "jogo": {
+    "w": 33,
+    "h": 24
+   }
+  },
+  {
+   "n": 104,
+   "id": "violino",
+   "nome": "Violino",
+   "name": "Violin",
+   "cat": "instrumento",
+   "arquivo": "104_violino.png",
+   "origem": "gerado",
+   "detalhe": {
+    "w": 93,
+    "h": 248
+   },
+   "jogo": {
+    "w": 21,
+    "h": 46
+   }
+  },
+  {
+   "n": 105,
+   "id": "maquina_escrever",
+   "nome": "Máquina de escrever",
+   "name": "Typewriter",
+   "cat": "escritorio",
+   "era": [
+    1895,
+    1990
+   ],
+   "arquivo": "105_maquina_escrever.png",
+   "origem": "gerado",
+   "detalhe": {
+    "w": 255,
+    "h": 193
+   },
+   "jogo": {
+    "w": 39,
+    "h": 34
+   }
+  },
+  {
+   "n": 106,
+   "id": "disco_platina",
+   "nome": "Disco de platina emoldurado",
+   "name": "Framed platinum record",
+   "cat": "premio",
+   "era": [
+    1976,
+    2040
+   ],
+   "arquivo": "106_disco_platina.png",
+   "origem": "gerado",
+   "detalhe": {
+    "w": 177,
+    "h": 221
+   },
+   "jogo": {
+    "w": 33,
+    "h": 41
+   }
+  },
+  {
+   "n": 107,
+   "id": "vitrola_maleta_1960",
+   "nome": "Vitrola de maleta",
+   "name": "Suitcase record player",
+   "cat": "midia",
+   "era": [
+    1955,
+    1985
+   ],
+   "arquivo": "107_vitrola_maleta_1960.png",
+   "origem": "gerado",
+   "detalhe": {
+    "w": 257,
+    "h": 223
+   },
+   "jogo": {
+    "w": 47,
+    "h": 43
+   }
+  }
+ ]
+}
