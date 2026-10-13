@@ -34,6 +34,7 @@ const ST_NAME: Record<Story['st'], [L, string]> = {
   open: [l('em aberto', 'open'), 'warn'], confirmed: [l('confirmado', 'confirmed'), ''], denied: [l('desmentido', 'denied'), 'good'],
   debunked: [l('era mentira', 'debunked'), 'good'], retracted: [l('retratado', 'retracted'), 'good'], killed: [l('abafado', 'killed'), 'trait'], faded: [l('esquecido', 'faded'), 'muted'],
 };
+import { outletArt29 } from '../art29ui'; // r29 (arte)
 const SRC_NAME: Record<Story['src'], L> = {
   fact: l('apuração', 'reporting'), insider: l('informante', 'insider'), paparazzi: l('paparazzi', 'paparazzi'), player: l('comunicado', 'press release'),
   npc: l('fofoca de bastidor', 'backstage gossip'), columnist: l('coluna de fofoca', 'gossip column'), hoax: l('teoria de fã', 'fan theory'),
@@ -160,7 +161,7 @@ function outletsTab(s: GameState): HTMLElement {
     h('table', { class: 'tbl small' },
       h('thead', null, h('tr', null, ...[l('Veículo', 'Outlet'), l('Tipo', 'Type'), l('Linha', 'Line'), l('Mercado', 'Market'), l('Alcance', 'Reach'), l('Credib.', 'Cred.'), l('Posição', 'Stance'), l('Dono', 'Owner'), l('Relação', 'Relation'), l('', '')].map((x) => h('th', null, t(x))))),
       h('tbody', null, list.slice(0, 70).map((o) => h('tr', null,
-        h('td', { title: o.desc ? t(o.desc) : '' }, outletName(o)), h('td', null, t(KIND17[o.kind])), h('td', { title: t(LINE17[o.line][1]) }, t(LINE17[o.line][0])), h('td', null, o.market),
+        h('td', { title: o.desc ? t(o.desc) : '' }, outletArt29(o.id, o.name, o.kind, s.year), outletName(o)), /* r29: emissora/mastro */ h('td', null, t(KIND17[o.kind])), h('td', { title: t(LINE17[o.line][1]) }, t(LINE17[o.line][0])), h('td', null, o.market),
         h('td', null, String(o.reach)), h('td', null, `${Math.round(o.cred)}${st.credD[o.id] ? ` (${st.credD[o.id] > 0 ? '+' : ''}${st.credD[o.id]})` : ''}`), h('td', null, stanceTxt(o.stance)),
         h('td', null, o.mine ? t(l('você', 'you')) : st.own[o.id] ? h('b', { class: 'warn' }, s.labels[st.own[o.id]]?.name ?? '?') : o.owner ?? '—'), h('td', null, relTxt(st.rel[o.id] ?? 0)),
         h('td', null, o.mine ? null : h('span', null, cbtn(o, 'lunch', l('Almoço', 'Lunch')), cbtn(o, 'ads', l('Anúncios', 'Ads')))))))));

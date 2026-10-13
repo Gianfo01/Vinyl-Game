@@ -46,6 +46,7 @@ import { wordmarkImg28 } from './pixel/logo28'; // r28 (arte): letreiro do nome 
 
 /** Botões extras no topo da página do ato (rodada 8: projeto musical). */
 export const ACT_HEAD_EXTRAS: ((s: GameState, a: Act, close: () => void) => HTMLElement | null)[] = [];
+import { contractImg29 } from './pixel/paper29'; // r29 (arte)
 
 function g(): GameState {
   return store.game!;
@@ -456,6 +457,7 @@ function contractTab(s: GameState, a: Act): HTMLElement {
   const c = s.contracts[a.contractId!];
   if (!c) return h('p', null, '—');
   return h('div', null,
+    (() => { const i = contractImg29(c.id, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name) || c.model, s.year, 56); i.style.float = 'right'; return i; })(), // r29: papel do contrato
     kv(t(S.model), `${t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name)}${c.party !== 'player' ? ` — ${s.labels[c.party]?.name ?? ''}` : ''}`),
     kv(t(S.royalty), `${Math.round(c.royalty * 100)}%`),
     c.party === 'player' ? kv(t(S.recoup), $(c.recoupBalance)) : null,

@@ -37,6 +37,7 @@ import './mapinfo17.css';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const T = (x: L) => t(x);
+import { signArt29, venueArt29 } from '../art29ui'; // r29 (arte)
 const blk = (icon: string, title: L, ...body: (HTMLElement | null | false | string)[]): HTMLElement | null => {
   const b = body.filter((x): x is HTMLElement | string => !!x);
   return b.length ? h('details', { class: 'mi17-blk', open: true }, h('summary', null, ic(icon), ' ', T(title)), ...b) : null;
@@ -100,7 +101,7 @@ function venues(s: GameState, sc: Scope): HTMLElement | null {
   const vs = VENUES17.filter((v) => sc.cities.includes(v.city) && venueOpen(s, v));
   const clubs = s.clubs.filter((c) => sc.cities.includes(c.city) && !c.closed).slice(0, 4);
   return blk('house', l('Casas de show', 'Venues'),
-    vs.length ? h('ul', { class: 'small' }, vs.map((v) => li(h('button', { class: 'link', ...ent27('venue', v.id), onclick: () => openVenue17(s, v.id) }, v.name), ` · ${N(v.cap)} ${T(l('lugares', 'seats'))} · ${T(l('prestígio', 'prestige'))} ${v.prestige}`))) : null,
+    vs.length ? h('ul', { class: 'small' }, vs.map((v) => li(venueArt29(v.id, v.name, v.cap, s.year, v.city, 20), h('button', { class: 'link', ...ent27('venue', v.id), onclick: () => openVenue17(s, v.id) }, v.name), ` · ${N(v.cap)} ${T(l('lugares', 'seats'))} · ${T(l('prestígio', 'prestige'))} ${v.prestige}`))) : null,
     clubs.length ? h('ul', { class: 'small' }, clubs.map((c) => li(c.name, ` · ${genreName(c.genre)} · ${N(c.capacity)}`, c.owner === 'player' ? pill(T(l('seu', 'yours')), 'good') : null))) : null,
     !vs.length && !clubs.length ? h('p', { class: 'small muted' }, T(l('Sem casas famosas registradas agora.', 'No famous venues on record right now.'))) : null);
 }
@@ -184,6 +185,7 @@ export function openVenue17(s: GameState, id: string): void {
   if (!v || !venueOpen(s, v)) return;
   const owned = s.x4 && (s.x4 as unknown as { venues17?: { own: { id: string }[] } }).venues17?.own.some((o) => o.id === id);
   openScene(v.name, (close) => h('div', { class: 'mi17' },
+    h('div', { class: 'row' }, venueArt29(v.id, v.name, v.cap, s.year, v.city, 64), signArt29(v.id, v.name, Math.max(v.from, s.year), 192)), // r29: fachada e placa
     h('div', { class: 'chips' }, pill(cityName(v.city)), pill(`${N(v.cap)} ${T(l('lugares', 'seats'))}`), pill(`${T(l('prestígio', 'prestige'))} ${v.prestige}`), pill(`${T(l('desde', 'since'))} ${v.from}`), pill(genreName(v.fam)), owned ? pill(T(l('sua casa', 'your venue')), 'good') : null),
     v.note ? h('p', { class: 'small' }, T(v.note)) : null,
     h('p', { class: 'small' }, T(l('Cena do gênero na cidade: ', 'Genre scene in town: ')), sceneFam(s, v.city, v.fam).toFixed(1), v.buyable === false ? '' : ` · ${T(l('preço estimado', 'estimated price'))} ${$(venuePrice(s, v))}`),

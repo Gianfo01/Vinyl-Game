@@ -42,6 +42,8 @@ import { styleOfRel17 } from '../../sim/sys/trends17';
 import { priceBasis20 } from '../../sim/sys/price20';
 import { price20 } from '../price20';
 import { chartRow27 } from '../sys/mundo27model';
+import { placeArt29 } from '../art29ui'; // r29 (arte)
+import { chartHeaderImg29 } from '../pixel/badge29';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -71,7 +73,7 @@ export function chartsPanel(s: GameState): HTMLElement {
     );
   const hot = Object.entries(s.genrePop).filter(([g]) => genreById[g]?.born <= s.year).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', { class: 'panel charts' },
-    h('div', { class: 'col-main' }, section(t(chartNameL28('singles', s.year, !!s.config.realNames)), table('singles')), section(t(chartNameL28('albums', s.year, !!s.config.realNames)), table('albums'))), // r28: nome pelo ano
+    h('div', { class: 'col-main' }, section(t(chartNameL28('singles', s.year, !!s.config.realNames)), chartHeaderImg29(t(chartNameL28('singles', s.year, !!s.config.realNames)), s.year, 160), table('singles')), section(t(chartNameL28('albums', s.year, !!s.config.realNames)), chartHeaderImg29(t(chartNameL28('albums', s.year, !!s.config.realNames)), s.year, 160), table('albums'))), // r28: nome pelo ano
     h('aside', { class: 'col-side' },
       hot.length ? hotGenres17(s) : null, // r17: gêneros em alta = estilos das músicas em alta
       section(t(S.number1s), h('ul', { class: 'small' }, s.charts.number1History.slice(-15).reverse().map((n) => h('li', null, `${n.title} — ${n.act}`)))),
@@ -286,7 +288,7 @@ export function gigsSection20(s: GameState): HTMLElement | HTMLElement[] {
               const est = gigEstimate(s, a, v.id, 4);
               const ok = v.id <= mt;
               return h('tr', { class: ok ? '' : 'muted' },
-                h('td', null, t(v.name), h('small', { class: 'muted' }, ` ${v.cap[0]}–${v.cap[1]}`)),
+                h('td', null, placeArt29((['bar', 'club', 'theater', 'arena', 'stadium'] as const)[v.id] ?? 'club', `tier${v.id}`, t(v.name), s.year, a.city, 24), t(v.name), h('small', { class: 'muted' }, ` ${v.cap[0]}–${v.cap[1]}`)), // r29: fachada do porte
                 h('td', null, ok ? `~${N(est.perDate)}` : '—'),
                 h('td', null, ok ? $(est.revenue) : '—'),
                 h('td', { class: est.net >= 0 ? 'good' : 'bad' }, ok ? $(est.net) : '—'),

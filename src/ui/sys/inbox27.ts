@@ -30,6 +30,7 @@ import {
   CAT27, FILTER0_27, actions27, letter27, mailbox27, snooze27, type Box27, type Filter27, type LS27, type Mail27, type Seg27, type Sender27, type Sort27, type Thread27,
 } from './mail27model';
 import './inbox27.css';
+import { staffPortraitImg29, staffRoleOf29 } from '../pixel/people29'; // r29 (arte)
 
 /** Abre o destino de um "ir para" — injetado por inbox18.ts (go18 mora lá; evita ciclo de import). */
 export const GO27: { f: (g: Goto18) => void; label: (g: Goto18) => L } = { f: () => {}, label: (g) => g.label ?? l('Ir', 'Go') };
@@ -102,8 +103,8 @@ function avatar(s: GameState, snd: Sender27, size: number): HTMLElement {
     let hue = 0;
     for (const ch of snd.name) hue = (hue * 31 + ch.charCodeAt(0)) % 360;
     if (snd.kind === 'person') {
-      const ini = snd.name.split(/\s+/).filter(Boolean).map((x) => x[0]).slice(0, 2).join('').toUpperCase();
-      return h('span', { class: 'portrait m27-ini', style: `width:${size}px;height:${size}px;background:hsl(${hue} 40% 42%)`, 'aria-hidden': 'true' }, ini || '?');
+      // r29 (arte): retrato de bastidor com o adereço da função no lugar das iniciais
+      const img = staffPortraitImg29({ id: `snd:${snd.name}` }, staffRoleOf29(t(snd.role)), s.year, size); img.setAttribute('aria-hidden', 'true'); return img;
     }
     return h('span', { class: 'm27-tile', style: `width:${size}px;height:${size}px;--h:${hue}`, 'aria-hidden': 'true' }, ic(snd.icon, size >= 36 ? 2 : 1));
   }

@@ -346,8 +346,11 @@ export function signKind29(year: number, id = ''): Sign29 {
   return o[h28('sg29', id) % o.length];
 }
 
+/** Largura da placa: 64 px, crescendo até 112 para caber o nome inteiro. */
+export const signW29 = (name: string): number => Math.max(64, Math.min(112, textWidth(fitText(name, 999)) + 10));
+
 export function signPx29(name: string, year: number, id = '', kind = signKind29(year, id)): Px {
-  const W = 64, H = 16;
+  const W = signW29(name), H = 16;
   const p = new Px(W, H);
   const hue = h28('sgh29', id || name) % 360;
   const t = fitText(name, W - 8);
@@ -395,5 +398,6 @@ export function signPx29(name: string, year: number, id = '', kind = signKind29(
 
 export function signImg29(name: string, year: number, id = '', w = 128): HTMLImageElement {
   const k = signKind29(year, id);
-  return pxImg28(`sg29:${id}:${name}:${k}`, () => signPx29(name, year, id, k), w, w / 4, { cls: 'sign29', title: name });
+  const W = signW29(name);
+  return pxImg28(`sg29:${id}:${name}:${k}`, () => signPx29(name, year, id, k), (w * W) / 64, w / 4, { cls: 'sign29', title: name });
 }
