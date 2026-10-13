@@ -9,7 +9,9 @@ import { h } from '../dom';
 import { ic } from '../vis';
 import { single27, type NavGroup25 } from './nav25';
 import { tabTree27, type TabDef27, type TabNode27 } from './subtabs27';
+import { VIEW_LABEL27, entries27, view27, type Entry27, type Hub27 } from './hub27model';
 import './nav27.css';
+import './hub27.css'; // r27 UX
 
 export interface TreeItem27 { id: string; label: string; icon: string; badge?: number }
 export interface TreeCtx27 {
@@ -26,12 +28,14 @@ export interface TreeCtx27 {
   /** casa da seção */
   home: (g: NavGroup25) => string;
   search: () => void;
+  /** r27 UX: seletor Essencial/Completa (a folha do celular mostra no topo) */
+  viewToggle?: () => HTMLElement;
 }
 
 // ---------------------------------------------------------------- aberto/fechado (por pessoa)
 const KEY = 'vtn27.tree';
-interface Fold27 { s: Record<string, 0 | 1>; p: Record<string, 0 | 1> }
-const fold: Fold27 = (() => { try { const x = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Fold27>; return { s: x.s ?? {}, p: x.p ?? {} }; } catch { return { s: {}, p: {} }; } })();
+interface Fold27 { s: Record<string, 0 | 1>; p: Record<string, 0 | 1>; /** r27 UX: hubs abertos */ h: Record<string, 0 | 1> }
+const fold: Fold27 = (() => { try { const x = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Fold27>; return { s: x.s ?? {}, p: x.p ?? {}, h: x.h ?? {} }; } catch { return { s: {}, p: {}, h: {} }; } })();
 const saveFold = (): void => { try { localStorage.setItem(KEY, JSON.stringify(fold)); } catch { /* sem armazenamento */ } };
 /** Seção aberta: a atual abre sozinha (a menos que a pessoa a tenha fechado); as outras só se a pessoa abriu. */
 export const secOpen27 = (id: string, cur: string): boolean => (fold.s[id] ?? (id === cur ? 1 : 0)) === 1;
@@ -62,14 +66,15 @@ function caret(open: boolean, label: string, toggle: (el: HTMLElement) => void):
   return b;
 }
 
-function pageNode(ctx: TreeCtx27, it: TreeItem27): HTMLElement {
-  const kids = tabTree27(it.id, ctx.tabs);
+function pageNode(ctx: TreeCtx27, it: TreeItem27, member = false): HTMLElement {
+  // r27 UX: na vista Essencial as abas ficam só na própria página (faixa); o menu lista seções, hubs e páginas
+  const kids = view27() === 'simple' ? [] : tabTree27(it.id, ctx.tabs);
   const here = it.id === ctx.area;
   const open = kids.length > 0 && pageOpen27(it.id, ctx.area);
   const li: HTMLElement = h('li', { class: `tree27-page ${open ? 'exp27' : ''} ${here ? 'here' : ''}`, 'data-area': it.id },
     h('div', { class: 'tree27-row' },
       h('button', { type: 'button', class: `tree27-pg ${here ? 'on' : ''}`, 'aria-current': here ? 'page' : undefined, title: it.label, onclick: () => ctx.go(it.id) },
-        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(it.icon)), h('span', { class: 'lbl' }, it.label), it.badge ? h('span', { class: 'badge' }, it.badge) : null),
+        member ? null : h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(it.icon)), h('span', { class: 'lbl' }, it.label), it.badge ? h('span', { class: 'badge' }, it.badge) : null),
       kids.length ? caret(open, t(l(`Abas de ${it.label}`, `${it.label} tabs`)), (b) => {
         const now = !li.classList.contains('exp27');
         li.classList.toggle('exp27', now); b.setAttribute('aria-expanded', now ? 'true' : 'false');
@@ -77,6 +82,39 @@ function pageNode(ctx: TreeCtx27, it: TreeItem27): HTMLElement {
       }) : null),
     kids.length ? tabList(ctx, kids, 1) : null);
   return li;
+}
+
+// ---------------------------------------------------------------- r27 UX: vista Essencial (hubs)
+/** Última página aberta em cada hub nesta sessão: clicar no hub volta para ela. */
+const lastHub27: Record<string, string> = {};
+/** Página que o hub abre: a última visitada (se ainda visível) ou a 1ª. */
+export const hubHome27 = (x: Hub27, areas: string[]): string => (lastHub27[x.id] && areas.includes(lastHub27[x.id]) ? lastHub27[x.id] : areas[0]);
+/** Hub aberto no menu: o da página atual abre sozinho (a menos que a pessoa o feche); os outros só se abertos. */
+const hubOpen27 = (id: string, here: boolean): boolean => (fold.h[id] ?? (here ? 1 : 0)) === 1;
+
+function hubNode(ctx: TreeCtx27, x: Hub27, areas: string[]): HTMLElement {
+  const items = areas.map(ctx.item).filter((y): y is TreeItem27 => !!y);
+  const here = areas.includes(ctx.area);
+  if (here) lastHub27[x.id] = ctx.area;
+  const open = hubOpen27(x.id, here);
+  const badge = items.reduce((a, y) => a + (y.badge ?? 0), 0);
+  const li: HTMLElement = h('li', { class: `tree27-page tree27-hub ${open ? 'exp27' : ''} ${here ? 'here' : ''}`, 'data-hub': x.id },
+    h('div', { class: 'tree27-row' },
+      h('button', { type: 'button', class: `tree27-pg ${here ? 'on' : ''}`, 'aria-current': here ? 'true' : undefined, title: t(x.blurb), onclick: () => ctx.go(hubHome27(x, areas)) },
+        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(x.icon)), h('span', { class: 'lbl' }, t(x.label)), badge ? h('span', { class: 'badge' }, badge) : null),
+      caret(open, t(l(`Páginas de ${t(x.label)}`, `${t(x.label)} pages`)), (b) => {
+        const now = !li.classList.contains('exp27');
+        li.classList.toggle('exp27', now); b.setAttribute('aria-expanded', now ? 'true' : 'false');
+        fold.h[x.id] = now ? 1 : 0; saveFold();
+      })),
+    h('ul', { class: 'tree27-tabs tree27-views d1', role: 'group', 'aria-label': t(x.label) }, items.map((it) => pageNode(ctx, it, true))));
+  return li;
+}
+
+function entryNode(ctx: TreeCtx27, e: Entry27): HTMLElement | null {
+  if (e.kind === 'hub') return hubNode(ctx, e.hub, e.areas);
+  const it = ctx.item(e.area);
+  return it ? pageNode(ctx, it) : null;
 }
 
 /** Os grupos de páginas da seção (temas), com os itens que existem agora. */
@@ -112,7 +150,11 @@ export function navSection27(ctx: TreeCtx27, gr: NavGroup25): HTMLElement {
       ctx.go(ctx.home(gr));
     } },
     h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null);
-  const body = one ? h('div', { class: 'tree27-pages tree27-single' }, oneTabs.length ? tabList(ctx, oneTabs, 1) : null) : h('ul', { class: 'tree27-pages', role: 'group', 'aria-label': t(gr.label) },
+  const simple = view27() === 'simple';
+  const body = one ? h('div', { class: 'tree27-pages tree27-single' }, oneTabs.length ? tabList(ctx, oneTabs, 1) : null) : simple
+    // r27 UX (Essencial): poucas entradas por seção — hubs (páginas unificadas) e páginas soltas, sem cabeçalhos de tema
+    ? h('ul', { class: 'tree27-pages tree27-simple', role: 'group', 'aria-label': t(gr.label) }, entries27(gr).map((e) => entryNode(ctx, e)))
+    : h('ul', { class: 'tree27-pages', role: 'group', 'aria-label': t(gr.label) },
     ths.flatMap((th) => [
       ths.length > 1 ? h('li', { class: 'tree27-theme', 'aria-hidden': 'true' }, t(th.label)) : null,
       ...th.items.map((it) => pageNode(ctx, it)),
@@ -143,6 +185,25 @@ function sheetTabs(ctx: TreeCtx27, nodes: TabNode27[], depth: number): HTMLEleme
   });
 }
 
+/** r27 UX (Essencial): a folha lista as entradas (hubs com as páginas deles como botões menores); as abas ficam na página. */
+function sheetSimple(ctx: TreeCtx27, gr: NavGroup25): HTMLElement {
+  const pg = (it: TreeItem27, sub: boolean, label?: string) => {
+    const here = it.id === ctx.area;
+    return h('button', { type: 'button', class: `navsheet27-pg ${sub ? 'navsheet27-view' : ''} ${here ? 'on' : ''}`, 'aria-current': here ? 'page' : undefined, onclick: () => { closeSheet27(); ctx.go(it.id); } },
+      sub ? null : h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(it.icon)), h('span', { class: 'lbl' }, label ?? it.label), it.badge ? h('span', { class: 'badge' }, it.badge) : null);
+  };
+  return h('div', { class: 'navsheet27-body navsheet27-simple' }, entries27(gr).map((e) => {
+    if (e.kind === 'page') { const it = ctx.item(e.area); return it ? h('div', { class: `navsheet27-page ${it.id === ctx.area ? 'here' : ''}` }, pg(it, false)) : null; }
+    const items = e.areas.map(ctx.item).filter((y): y is TreeItem27 => !!y);
+    const here = e.areas.includes(ctx.area);
+    const badge = items.reduce((a, y) => a + (y.badge ?? 0), 0);
+    return h('div', { class: `navsheet27-page navsheet27-hub ${here ? 'here' : ''}` },
+      h('button', { type: 'button', class: `navsheet27-pg ${here ? 'on' : ''}`, title: t(e.hub.blurb), onclick: () => { closeSheet27(); ctx.go(hubHome27(e.hub, e.areas)); } },
+        h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(e.hub.icon)), h('span', { class: 'lbl' }, t(e.hub.label)), badge ? h('span', { class: 'badge' }, badge) : null),
+      h('div', { class: 'navsheet27-tabs' }, items.map((it) => pg(it, true, VIEW_LABEL27[it.id] ? t(VIEW_LABEL27[it.id]) : undefined))));
+  }));
+}
+
 /** Folha (celular): as páginas da seção, cada uma com as suas abas. */
 export function openSheet27(ctx: TreeCtx27, gr: NavGroup25): void {
   const again = sheet && sheetSec === gr.id;
@@ -152,9 +213,10 @@ export function openSheet27(ctx: TreeCtx27, gr: NavGroup25): void {
   const panel = h('div', { class: 'navsheet27', role: 'dialog', 'aria-modal': 'true', 'aria-label': t(gr.label) },
     h('div', { class: 'navsheet27-head' },
       h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('b', null, t(gr.label)),
+      ctx.viewToggle?.() ?? null,
       h('button', { type: 'button', class: 'btn small ghost', onclick: () => { closeSheet27(); ctx.search(); } }, '⌕ ', t(l('Buscar', 'Search'))),
       h('button', { type: 'button', class: 'icon navsheet27-x', 'aria-label': t(l('Fechar', 'Close')), title: t(l('Fechar', 'Close')), onclick: closeSheet27 }, '×')),
-    h('div', { class: 'navsheet27-body' }, ths.map((th) => h('section', { class: 'navsheet27-theme' },
+    view27() === 'simple' ? sheetSimple(ctx, gr) : h('div', { class: 'navsheet27-body' }, ths.map((th) => h('section', { class: 'navsheet27-theme' },
       ths.length > 1 ? h('h4', null, t(th.label)) : null,
       th.items.map((it) => {
         const here = it.id === ctx.area;

@@ -1,0 +1,36 @@
+/* Rodada 27 (UX) — controles de escolha (segmentado, chips, cartões de opção, barra de lista), hubs e vista Essencial.
+   Guia: docs/ux27.md. Tokens do theme25/ui27 (--accent, --line, --panel…). */
+
+/* ================= segmentado ================= */
+.seg27 { display: inline-flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--line); border-radius: var(--radius, 3px); background: var(--panel-2, var(--panel)); padding: 2px; max-width: 100%; vertical-align: middle; }
+.seg27 > button { font: inherit; font-size: 0.88rem; min-height: 34px; padding: 0.2rem 0.75rem; border: 0; border-radius: calc(var(--radius, 3px) - 1px); background: none; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.seg27 > button:hover:not(:disabled) { color: var(--ink); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.seg27 > button.on { background: var(--accent); color: var(--accent-ink, #111); font-weight: 700; box-shadow: var(--press, none); }
+.seg27 > button:disabled { opacity: 0.45; cursor: not-allowed; }
+.seg27 > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg27 .badge { margin-left: 0.3rem; }
+/* o <select> antigo continua no DOM (valor e eventos), escondido */
+select.sel27-x { display: none !important; }
+label > .seg27-auto { margin-left: 0.35rem; }
+@media (max-width: 860px) { .seg27 > button { min-height: 40px; padding: 0.2rem 0.6rem; } }
+
+/* ================= chips de filtro ================= */
+.chips27 { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip27b { font: inherit; font-size: 0.84rem; min-height: 32px; padding: 0.15rem 0.7rem; border: 1px dashed var(--line); border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
+.chip27b.on { border-style: solid; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel)); color: var(--ink); font-weight: 700; }
+.chips27-clear { font-size: 0.82rem; }
+
+/* ================= cartões de opção ================= */
+.cards27 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sp-3, 12px); }
+.card27o { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; font: inherit; padding: var(--sp-3, 12px); border: 1px solid var(--line); border-radius: var(--radius, 3px); background: var(--panel); color: var(--ink); cursor: pointer; }
+.card27o:hover:not(:disabled) { border-color: var(--accent); }
+.card27o.on { border: 2px solid var(--accent); box-shadow: var(--press, none); }
+.card27o-cost { font-family: var(--mono, monospace); font-size: 0.9rem; }
+.card27o-hint { color: var(--muted); font-size: 0.85rem; }
+.card27o ul { margin: 2px 0 0; padding-left: 1.1rem; font-size: 0.85rem; }
+
+/* ================= barra de lista ================= */
+.listbar27 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2, 8px) var(--sp-3, 12px); margin: 0 0 var(--sp-3, 12px); }
+.listbar27-q { min-width: 180px; flex: 1 1 200px; max-width: 320px; min-height: 36px; }
+.listbar27-sort { display: inline-flex; align-items: center; gap: 6px; }
+.listbar27-n { margin-left: auto; }

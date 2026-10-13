@@ -7,6 +7,7 @@ import { t } from '../i18n/strings';
 import type { GameState, Person } from '../sim/types';
 import { h } from './dom';
 import { nameSvg20 } from './ux20';
+import { shownTabs27, view27 } from './ps/view27'; // r27 UX: faixas compactas na vista Essencial
 
 const EMOJI: Record<string, string> = {
   money: '💰', fame: '⭐', fans: '👥', disc: '💿', cd: '📀', cassette: '📼', stream: '📶', 'chart-up': '📈', 'chart-down': '📉',
@@ -125,11 +126,19 @@ export function portrait(p: Person | undefined, size = 40): HTMLElement {
 
 /** Abas simples guardadas por chave. */
 const tabState: Record<string, string> = {};
+/** r27 UX: faixas que a pessoa abriu por inteiro ("+N mais") nesta sessão. */
+const tabsAll27 = new Set<string>();
 export function tabs(key: string, items: { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement }[], rerender: () => void): HTMLElement {
   const cur = tabState[key] && items.some((i) => i.id === tabState[key]) ? tabState[key] : items[0]?.id;
   const active = items.find((i) => i.id === cur);
   tabHook25.f?.(key, items, tabTrail25);
-  const bar = h('div', { class: 'tabs', role: 'tablist' }, items.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null)));
+  // r27 UX: na vista Essencial, faixas longas mostram 5 abas (+ a aberta) e um "+N" que revela o resto (nada some)
+  const ci = items.findIndex((i) => i.id === cur);
+  const shown = view27() === 'simple' && !tabsAll27.has(key) ? new Set(shownTabs27(items.length, ci)) : null;
+  const hid = shown ? items.length - shown.size : 0;
+  const bar = h('div', { class: 'tabs', role: 'tablist' }, items.map((i, k) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: `${i.id === cur ? 'on' : ''} ${shown && !shown.has(k) ? 'tab27-x' : ''}`, onclick: () => { tabState[key] = i.id; rerender(); } }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null)),
+    hid > 0 ? h('button', { type: 'button', class: 'tab27-more', 'aria-expanded': 'false', title: items.filter((_, k) => !shown!.has(k)).map((i) => i.label).join(' · '),
+      onclick: () => { tabsAll27.add(key); rerender(); } }, `+${hid} `, t(l('mais', 'more'))) : null);
   // r25: abas dentro de abas — a trilha diz quais abas-mãe estão abertas (a busca global abre o caminho todo)
   tabTrail25.push([key, cur ?? '']);
   let panel: HTMLElement | null = null;

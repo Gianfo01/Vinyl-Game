@@ -1,0 +1,28 @@
+/* Rodada 27 (UX) — hubs (páginas unificadas), faixa de vistas, vista Essencial × Completa e faixas de abas compactas.
+   Guia: docs/ux27.md. O segmentado base (.seg27) está em pick27.css. */
+
+/* ================= hubs: faixa de vistas (topo da página) ================= */
+.tabs25.views27 { display: flex; gap: 6px; }
+.views27-hub { display: inline-flex; align-items: center; gap: 0.4rem; margin-right: 0.3rem; color: var(--muted); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.views27-hub .ic canvas, .views27-hub .ic img, .views27-hub .ic .ic-px, .views27-hub canvas { width: 18px; height: 18px; }
+.tabs25.views27 .btn25 { min-height: 36px; padding: 0.25rem 0.8rem; font-size: 0.9rem; }
+@media (max-width: 860px) { .views27-hub b { display: none; } }
+
+/* ================= hubs no menu em árvore ================= */
+.tree27-hub > .tree27-views { margin-left: 14px; }
+.app > .nav.nav25 .tree27-views .tree27-pg { min-height: 30px; font-size: 0.86rem; color: var(--nav-muted); }
+.app > .nav.nav25 .tree27-views .tree27-pg.on { color: var(--nav-on-ink); }
+.tree27-views .tree27-page > .tree27-tabs { margin-left: 8px; }
+.navsheet27-simple .navsheet27-view { display: inline-flex; width: auto; min-height: 36px; padding: 0.2rem 0.65rem; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); font-size: 0.86rem; }
+.navsheet27-simple .navsheet27-view.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink, #111); }
+
+/* ================= vista Essencial × Completa (rodapé do menu) ================= */
+.nav-utils25 .view27 { margin: 6px 4px 2px; border-color: var(--nav-line, var(--line)); background: transparent; }
+.nav-utils25 .view27 > button { flex: 1 1 0; color: var(--nav-muted, var(--muted)); font-size: 0.8rem; min-height: 28px; }
+.nav-utils25 .view27 > button.on { background: var(--nav-on, var(--accent)); color: var(--nav-on-ink, var(--accent-ink)); }
+.navsheet27-head .view27 { flex-wrap: nowrap; flex: 0 0 auto; }
+.navsheet27-head .view27 > button { min-height: 32px; font-size: 0.78rem; padding: 0.1rem 0.5rem; }
+
+/* ================= faixas de abas compactas (vista Essencial) ================= */
+main .tabs[role=tablist] > button.tab27-x { display: none; }
+main .tabs[role=tablist] > button.tab27-more { border-style: dashed; color: var(--muted); }
