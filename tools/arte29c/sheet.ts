@@ -49,11 +49,10 @@ if (part === 'hqzoom') {
   const r = sec('garage — recorte');
   for (const y of YEARS) {
     const cv = document.createElement('canvas');
-    drawHqCutaway27(cv, { hq: 0, year: y, rooms: [], city: 'london', brand: 'SELO AGULHA', seedKey: 'arte29c|garage' }, {});
+    const { drawJalopy } = await import('../../src/ui/sys/eggs27');
+    drawHqCutaway27(cv, { hq: 0, year: y, rooms: [], city: 'london', brand: 'SELO AGULHA', seedKey: 'arte29c|garage' }, { props: y >= 1965 ? [{ slot: 'garage', w: 26, h: 16, draw: drawJalopy }] : [] });
     const pl = plan27({ hq: 0, year: y, city: 'london' });
     const lob = pl.cells.find((c) => c.kind === 'lobby')!;
-    const { drawJalopy } = await import('../../src/ui/sys/eggs27');
-    if (y >= 1965) { const at = [lob.x + Math.max(6, (lob.w - 26) >> 1), lob.y + lob.h - 3 - 16]; drawJalopy(cv.getContext('2d')!, at[0], at[1], 0); }
     r.append(cell(crop(cv, Math.max(0, pl.bx - 96), pl.gy - 92, 104, 108, 3), `${y} casa`));
     r.append(cell(crop(cv, lob.x - 30, pl.gy - 92, lob.w + 36, 108, 3), `${y} van`));
   }

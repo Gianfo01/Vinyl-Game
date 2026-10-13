@@ -66,6 +66,8 @@ Não é troca de estilo: o alvo é o pixel art que já existe (o HD foi revertid
 - `crown27` (coroa da torre/campus) → contorno INK (o chanfro do vidro contemporâneo agora recorta para transparente,
   em vez de pintar a cor do céu por cima).
 - `sign` (letreiros da sede e dos interiores) → placa com contorno INK.
+- Calhambeque x van na garagem: o ovo estacionava por cima da van (não cabem os dois na vaga) → com o calhambeque
+  ativo, ele substitui a van (`Plan27.garageTaken`, marcado por `drawHqCutaway27` quando há objeto na vaga 'garage').
 - Os interiores da cidade (`interior27.ts`) reaproveitam `prim27` (rua, vizinhos, postes, placa) e ficam iguais.
 
 ### Ovos da sede e do mapa (`src/ui/sys/eggs27.ts`)
@@ -130,7 +132,6 @@ Não é troca de estilo: o alvo é o pixel art que já existe (o HD foi revertid
 - **Ícones e cartões r29** (insígnias, papéis, capas, logos, relíquias, pessoas): já seguiam o estilo (contorno
   `OUT28`, `bevel`); conferidos nas folhas e mantidos.
 - **Destaques de seleção no mapa** (`strokeStyle` do lote/prédio escolhido): é interface (piscante), não arte.
-- **Calhambeque x van na garagem**: o ovo continua estacionado na vaga da porta, na frente da van (já era assim).
 - `src/ui/map.ts` e `src/ui/hq.ts` (mapa-múndi vetorial e a sede antiga, fora das telas atuais) não foram mexidos.
 - `cenas20.vdisc20/ground20` (elipses com antialiasing) não têm mais quem chame — ficaram como estavam.
 

@@ -49,6 +49,8 @@ export interface Plan27 {
   crown: [number, number] | null;
   /** r27 INT: caixa do toca-discos/gramofone do lounge [x, y, w, h] (preenchida ao pintar; clique do ovo) */
   gramo?: [number, number, number, number];
+  /** R29: a vaga da garagem está ocupada por um objeto extra (calhambeque do ovo) — a van não é pintada */
+  garageTaken?: boolean;
 }
 export interface Spot27 { id: string; room: Room25; x: number; y: number; pose: Pose; dir: 'SE' | 'SW'; sprite: Sprite25 }
 export interface More27 { room: Room25; x: number; y: number; n: number }
@@ -842,7 +844,7 @@ function furnish(g: Ctx, c: Cell27): void {
         for (let yy = y + 4 + Math.floor(dh * 0.55); yy < y + 4 + dh; yy++) for (let xx = dx + 1; xx < dx + dw - 1; xx++) p.put(xx, yy, mix(C('#3a2d62'), C('#e07a5a'), (yy - y) / h));
         for (let yy = y + 5; yy < y + 4 + Math.floor(dh * 0.55); yy += 3) p.hline(dx + 1, dx + dw - 2, yy, C('#a8a8b0'));
         p.rect(dx, y + 4 + Math.floor(dh * 0.55), dw, 2, C('#6a6a72'));
-        van(g, x - 18, fy);
+        if (!pl.garageTaken) van(g, x - 18, fy); // R29: com o calhambeque na vaga, ele substitui a van (não cabem os dois)
         break;
       }
       sign(g, x + Math.floor(w * (w < 140 ? 0.55 : 0.68)), w < 140 ? y + 30 : y + 7, pl.brand, Math.floor(w * 0.8), true);
@@ -1382,6 +1384,7 @@ export interface DrawOpts27 { /** objetos extras (ovos) */ props?: PropIn27[]; /
 export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25, 'hq' | 'year' | 'rooms'> & { city?: string; brand?: string; seedKey?: string; facadeYear?: number; units?: { id: string; status: 'open' | Lock27 }[] }, o: DrawOpts27 = {}): Drawn27 {
   const units = model.units ? Object.fromEntries(model.units.map((u) => [u.id, u.status])) : undefined;
   const plan = plan27({ hq: model.hq, year: model.year, facadeYear: model.facadeYear, city: model.city, brand: model.brand, seedKey: model.seedKey, minW: o.minW, units });
+  if (plan.shell === 'garage' && (o.props ?? []).some((pr) => pr.slot === 'garage')) plan.garageTaken = true;
   const px = paint27(plan);
   canvas.width = plan.W; canvas.height = plan.H;
   const ctx = canvas.getContext('2d');
