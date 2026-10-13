@@ -20,6 +20,7 @@ import type { Act, GameState, Release } from '../types';
 import { fmtL, money, post } from '../util';
 import { headline19 } from './factlink19';
 import { post18, start18 } from './post18';
+import { DEMO29 } from '../demo29hook';
 
 export type RK19 = 'radio_ad' | 'film' | 'tv_ad' | 'series' | 'remix' | 'game' | 'doc' | 'short' | 'viral' | 'sync';
 export const RK19: Record<RK19, { name: L; from: number; h: number; p: number }> = {
@@ -182,7 +183,7 @@ export function revivalMonth19(s: GameState): void {
     // o calor se espalhava por milhares de faixas e a cadeia 2 (remix → comercial → série → revival) não acontecia sozinha
     const hot = Object.keys(st.c).filter((id) => oldRel19(s, s.releases[id]));
     const hid = hot.length && !(globalThis as { __rev19Old?: boolean }).__rev19Old && r.chance(0.5) ? r.weighted(hot, (id) => st.c[id].h) : undefined;
-    const rel = hid ? s.releases[hid] : r.weighted(pool, (x) => (x.q / 50) ** 2 * (flop19(x) ? 1.6 : 1) * (mineRel(s, x) ? 2.5 : 1) * (st.c[x.id] ? 3 : 1));
+    const rel = hid ? s.releases[hid] : r.weighted(pool, (x) => (x.q / 50) ** 2 * (flop19(x) ? 1.6 : 1) * (mineRel(s, x) ? 2.5 : 1) * (st.c[x.id] ? 3 : 1) * (DEMO29.revW?.(s, x) ?? 1)); // R29 demo29: ciclo de nostalgia (~25 anos)
     if (rel) stage19(s, rel.id, k);
   }
   for (const x of activeRev19(s)) {

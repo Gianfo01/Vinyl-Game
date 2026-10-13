@@ -367,4 +367,5 @@ import './member29'; // R29 (integrante): oferta a um integrante específico (so
 import './featp29'; // R29 (feat de pessoa): o feat negociado aceita integrante/pessoa específica (e várias) — gancho novo, no fim
 import './relics29'; // R29 (relíquias): versões procedurais dos arquétipos do catálogo real, para qualquer artista (docs/reliquias29.md)
 import './mob29'; // R29 (Submundo): famílias — interações com consequência, "contratar a família" e favores devidos (gancho só com interação do jogador)
+import './demo29'; // R29 (DEMO): público por idade e região, gosto por geração (docs/demo29.md)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
