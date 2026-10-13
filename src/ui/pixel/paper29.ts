@@ -87,8 +87,9 @@ export function magCoverPx29(outlet: string, kind: Mag29, year: number, cover: {
       if (!c || c >>> 24 < 200) continue;
       const lum = ((c & 255) * 0.3 + ((c >>> 8) & 255) * 0.59 + ((c >>> 16) & 255) * 0.11) / 255;
       let o: Col = c;
-      if (kind === 'zine') o = dith(x, y, 1 - lum) ? K.ink : K.white;
-      else if (kind === 'trade') o = mix(C('#3a3a40'), C('#e8e4dc'), Math.round(lum * 3) / 3);
+      const ln = Math.max(0, Math.min(1, (lum - 0.18) / 0.62)); // contraste esticado (o retrato é de tons médios)
+      if (kind === 'zine') o = ln < 0.35 || (ln < 0.6 && (x + y) % 2 === 0) ? K.ink : K.white;
+      else if (kind === 'trade') o = mix(C('#2a2a30'), C('#f0ece4'), Math.round(ln * 3) / 3);
       else if (year < 1965 && kind !== 'web') o = mix(C('#2a2420'), C('#f0e8d8'), lum);
       p.put(x + 1, y + 9, o);
     }

@@ -86,6 +86,9 @@ function prop(p: Px, k: Staff29, b: number, hue: number): void {
   }
 }
 
+/** Cores da placa de fundo do retrato de avatar.ts (bgA no topo e bgB = sombra pontilhada embaixo). */
+function plate(por: Px): Set<Col> { const a = por.get(1, 10); return new Set([a, shade(a, -0.18)]); }
+
 /** Retrato 32×32 de bastidor: busto da pessoa (avatar.ts) + adereço da função + fundo na cor do ofício. */
 export function staffPortraitPx29(person: PersonLike, role: Staff29, year: number): Px {
   const base = portraitPx(person, year);
@@ -93,11 +96,11 @@ export function staffPortraitPx29(person: PersonLike, role: Staff29, year: numbe
   const hue = (BG29[role] + (h28('stb29', person.id) % 24)) % 360;
   const a = hsl(hue, 30, 62), b = hsl(hue, 34, 50);
   // fundo novo onde o retrato tinha o fundo (mesma placa arredondada)
-  const bg0 = base.get(16, 1), bg1 = base.get(1, 30);
+  const bg = plate(base);
   for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
     const c = base.get(x, y);
     if (!c) continue;
-    p.put(x, y, c === bg0 || c === bg1 ? (y > 20 && dith(x, y, (y - 20) / 14) ? b : a) : c);
+    p.put(x, y, bg.has(c) ? (y > 20 && dith(x, y, (y - 20) / 14) ? b : a) : c);
   }
   prop(p, role, relicBand28(year), hue);
   p.outline(OUT28);
@@ -123,12 +126,12 @@ export function photoTreat29(p: Px, kind: Photo29, seed = 0, tintHue = 30): void
     const L = lum(c);
     const n = noise(x, y, seed);
     switch (kind) {
-      case 'bw': { const v = Math.max(0, Math.min(1, L + (n - 0.5) * 0.18)); return mix(C('#1e1a1a'), C('#ece6da'), Math.round(v * 5) / 5); }
+      case 'bw': { const v = Math.max(0, Math.min(1, (L - 0.12) / 0.7 + (n - 0.5) * 0.06)); return mix(C('#1e1a1a'), C('#ece6da'), Math.round(v * 7) / 7); }
       case 'faded': return mix(mix(c, hsl(tintHue, 55, 62), 0.28), C('#f0e0c0'), 0.12);
       case 'vivid': { const [r, g, b] = [c & 255, (c >>> 8) & 255, (c >>> 16) & 255]; const m = (r + g + b) / 3; const k = 1.35; const f = (v: number) => Math.max(0, Math.min(255, m + (v - m) * k)); return (0xff000000 | (f(b) << 16) | (f(g) << 8) | f(r)) >>> 0; }
       case 'grain': return n < 0.12 ? shade(c, -0.25) : n > 0.9 ? shade(c, 0.18) : mix(c, C('#506070'), 0.1);
       case 'crisp': return c;
-      case 'halftone': return dith(x, y, 1 - L) ? K.ink : K.white;
+      case 'halftone': { const v = Math.max(0, Math.min(1, (L - 0.15) / 0.6)); return v < 0.35 || (v < 0.62 && (x + y) % 2 === 0) ? K.ink : K.white; }
     }
     return c;
   });
@@ -138,11 +141,11 @@ export function photoTreat29(p: Px, kind: Photo29, seed = 0, tintHue = 30): void
  * Foto da banda W×H: até 5 integrantes (bustos do retrato de avatar.ts) lado a lado, de trás para a frente,
  * contra um fundo da época (parede de tijolo, estúdio, rua, céu), com o tratamento de foto.
  */
-export function bandPhotoPx29(members: PersonLike[], year: number, W = 40, H = 30, kind: Photo29 = photoOf29(year), seed = 0): Px {
+export function bandPhotoPx29(members: PersonLike[], year: number, W = 40, H = 30, kind: Photo29 = photoOf29(year), seed = 0, cutout = false): Px {
   const p = new Px(W, H);
   const bgK = h28('bp29', seed) % 4;
   const hue = h28('bph29', seed) % 360;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  if (!cutout) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     let c: Col;
     if (bgK === 0) c = (y % 4 === 3 || (x + (Math.floor(y / 4) % 2) * 3) % 6 === 0) ? C('#7a3a2a') : C('#a8523a'); // tijolo
     else if (bgK === 1) c = dith(x, y, y / H) ? hsl(hue, 30, 30) : hsl(hue, 30, 42); // fundo de estúdio
@@ -163,15 +166,15 @@ export function bandPhotoPx29(members: PersonLike[], year: number, W = 40, H = 3
     const por = portraitPx(m, year);
     const ox = Math.round(x0 + i * step), oy = H - Math.round(32 * sc) + Math.round(-z * 1.5) + 1;
     const S = Math.round(32 * sc);
+    const bg = plate(por);
     for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
       const c = por.get(Math.floor(x / sc), Math.floor(y / sc));
       if (!c || c >>> 24 < 200) continue;
-      const bg0 = por.get(16, 1);
-      if (c === bg0 || c === por.get(1, 30)) continue; // sem a placa de fundo do retrato
+      if (bg.has(c)) continue; // sem a placa de fundo do retrato
       p.put(ox + x, oy + y, c);
     }
   }
-  photoTreat29(p, kind, seed, hue);
+  if (!cutout) photoTreat29(p, kind, seed, hue); // recorte (cutout): só as pessoas, fundo transparente
   return p;
 }
 

@@ -74,7 +74,15 @@ export function flagPx29(a3: string): Px {
     case 'cent': if (cs.length === 3) { for (let y = 0; y < H; y++) for (let x = x0; x < W; x++) p.put(x, y, (x < x0 + w / 2) === (y < H / 2) ? cs[0] : cs[2]); p.rect(x0 + 10, 0, 3, H, cs[1]); p.rect(x0, 6, w, 4, cs[1]); } else { p.rect(x0, 0, w, H, cs[0]); p.rect(x0 + 10, 3, 3, 10, cs[1]); p.rect(x0 + 7, 6, 9, 4, cs[1]); } break;
     case 'grc': for (let y = 0; y < H; y++) p.hline(x0, W - 1, y, Math.floor(y / 1.78) % 2 ? cs[1] : cs[0]); p.rect(x0, 0, 9, 9, cs[0]); p.rect(x0 + 3, 0, 3, 9, cs[1]); p.rect(x0, 3, 9, 3, cs[1]); break;
     case 'tri': { const n = cs.length - 1; for (let y = 0; y < H; y++) for (let x = x0; x < W; x++) p.put(x, y, cs[1 + Math.min(n - 1, Math.floor((y / H) * n))]); if (a3 === 'CUB' || a3 === 'PRI') for (let y = 0; y < H; y++) p.hline(x0, W - 1, y, Math.floor(y / 3.2) % 2 ? cs[1] : a3 === 'CUB' ? cs[0] : cs[0]); p.poly([[x0, 0], [x0 + 10, 8], [x0, 16]], a3 === 'CUB' ? cs[2] : a3 === 'PRI' ? cs[2] : cs[0]); if (a3 === 'CUB' || a3 === 'PRI') star(p, x0 + 3.5, 8, 2.2, K.white); break; }
-    case 'diag': p.rect(x0, 0, w, H, cs[0]); for (let y = 0; y < H; y++) for (let x = x0; x < W; x++) { const d = Math.abs((x - x0) * (H / w) - y), e = Math.abs((x - x0) * (H / w) - (H - y)); if (d < 2.5 || e < 2.5) p.put(x, y, cs[1]); if (a3 === 'JAM' && (x < x0 + w / 2 ? Math.abs(y - H / 2) < (x - x0) * (H / w) / 2 - 1.5 : false)) p.put(x, y, cs[2]); if (a3 === 'JAM' && x >= x0 + w / 2 && Math.abs(y - H / 2) < (W - x) * (H / w) / 2 - 1.5) p.put(x, y, cs[2]); } break;
+    case 'diag': {
+      const slope = H / w;
+      for (let y = 0; y < H; y++) for (let x = x0; x < W; x++) {
+        const u = (x - x0) * slope; // 0..H
+        if (a3 === 'JAM') { const d1 = Math.abs(u - y), d2 = Math.abs(u - (H - y)); const side = u < Math.min(y, H - y) || u > Math.max(y, H - y); p.put(x, y, d1 < 1.6 || d2 < 1.6 ? cs[1] : side ? cs[2] : cs[0]); }
+        else { const d = (H - y) - u; p.put(x, y, Math.abs(d) < 2.2 ? cs[2] : Math.abs(d) < 3.4 ? C('#f0c820') : d > 0 ? cs[0] : cs[1]); }
+      }
+      break;
+    }
     case 'can': p.rect(x0, 0, w, H, cs[0]); p.rect(x0, 0, 11, 8, a3 === 'TWN' ? cs[1] : cs[0]); if (a3 !== 'TWN') { p.line(x0, 0, x0 + 10, 7, cs[1]); p.line(x0 + 10, 0, x0, 7, cs[1]); p.hline(x0, x0 + 10, 3, cs[2]); p.vline(x0 + 5, 0, 7, cs[2]); for (const [sx, sy] of [[17, 4], [19, 8], [15, 9], [17, 13]]) p.put(x0 + sx, sy, K.white); } else p.disc(x0 + 5, 4, 2.2, cs[2]); break;
     case 'usa': for (let y = 0; y < H; y++) p.hline(x0, W - 1, y, Math.floor(y / 1.23) % 2 ? cs[1] : cs[0]); p.rect(x0, 0, 10, 8, cs[2]); for (let y = 1; y < 7; y += 2) for (let x = x0 + 1; x < x0 + 9; x += 2) p.put(x + ((y >> 1) % 2), y, K.white); break;
     case 'gbr': p.rect(x0, 0, w, H, cs[0]); p.line(x0, 0, W - 1, H - 1, cs[1]); p.line(x0, H - 1, W - 1, 0, cs[1]); p.line(x0 + 1, 0, W - 1, H - 2, cs[2]); p.line(x0, H - 2, W - 2, 0, cs[2]); p.rect(x0 + 9, 0, 5, H, cs[1]); p.rect(x0, 5, w, 6, cs[1]); p.rect(x0 + 10, 0, 3, H, cs[2]); p.rect(x0, 6, w, 4, cs[2]); break;

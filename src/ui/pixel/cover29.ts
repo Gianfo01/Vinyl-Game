@@ -105,8 +105,8 @@ const L: Record<CoverLayout29, (c: Cx) => void> = {
     const { p, hue, title, act } = c;
     const bg = hsl(hue, 75, 55), bg2 = hsl(hue + 30, 80, 62);
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) p.put(x, y, dith(x, y, y / N) ? bg2 : bg);
-    const ph = photo(c, N, 34, 'crisp');
-    for (let y = 0; y < 34; y++) for (let x = 0; x < N; x++) { const v = ph.get(x, y); if (v && y > 4) { const isBg = Math.abs(lumOf(v) - lumOf(ph.get(0, y))) < 0.03 && Math.abs(lumOf(v) - lumOf(ph.get(N - 1, y))) < 0.03; if (!isBg) p.put(x, y + 6, ink); } }
+    const ph = bandPhotoPx29(c.ms, c.y, N, 34, 'crisp', c.seed, true);
+    for (let y = 0; y < 34; y++) for (let x = 0; x < N; x++) if (ph.get(x, y)) p.put(x, y + 6, ink);
     drawText(p, fitText(act, 36), 2, 2, ink); drawText(p, fitText(title, 36), 2, 9, K_WHITE);
   },
   test_bars: ({ p, title, act }) => {
@@ -151,7 +151,6 @@ const L: Record<CoverLayout29, (c: Cx) => void> = {
   },
 };
 const K_WHITE = C('#f8f4ec'), K_PAPER = C('#ece0c4');
-const lumOf = (c: Col): number => ((c & 255) + ((c >>> 8) & 255) + ((c >>> 16) & 255)) / 765;
 
 /** Pinta uma composição (folha de contato e testes). */
 export function coverLayoutPx29(lay: CoverLayout29, seed: number, title: string, actName: string, genre: string, year: number, budget = 0.6, ms?: Member[]): Px {
