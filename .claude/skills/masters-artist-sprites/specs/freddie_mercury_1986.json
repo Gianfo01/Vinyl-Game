@@ -1,0 +1,40 @@
+{
+  "name": "Freddie Mercury",
+  "year": 1986,
+  "ref": "Wembley/Magic Tour: jaqueta militar amarela curta com fivelas douradas, regata branca, calça branca com listra vermelha, tênis branco cano alto, bigode, dentes projetados, pedestal sem base erguido.",
+  "body": {
+    "sex": "m",
+    "build": "regular",
+    "skin": "#e0aa82"
+  },
+  "hair": {
+    "style": "short",
+    "color": "#18141a"
+  },
+  "face": {
+    "iris": "#2a1a14",
+    "mouth": "open",
+    "lips": "#b06a58",
+    "facial": "mustache_thick",
+    "teeth": "overbite",
+    "brow_style": "heavy",
+    "jaw": "square"
+  },
+  "top": {
+    "style": "open_military",
+    "color": "#f0c02c",
+    "shirt": "#f0ece4",
+    "shiny": true,
+    "buckle": "#d0a040"
+  },
+  "bottom": {
+    "style": "pants",
+    "color": "#f0ece4",
+    "stripe": "#c8282c"
+  },
+  "shoes": {
+    "color": "#f4f2ee",
+    "style": "hightop"
+  },
+  "pose": "raise_stand"
+}

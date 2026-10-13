@@ -1,0 +1,52 @@
+{
+  "name": "Michael Jackson",
+  "year": 1983,
+  "seed": 5,
+  "ref": "Motown 25 (Billie Jean): fedora preto, paletó preto de paetês, camisa prateada, calça preta curta, meias prateadas, mocassim preto, luva de strass na mão esquerda.",
+  "body": {
+    "sex": "m",
+    "build": "slim",
+    "skin": "#b07448",
+    "head_rx": 9.5
+  },
+  "hair": {
+    "style": "curls_long",
+    "color": "#141016"
+  },
+  "hat": {
+    "style": "fedora",
+    "color": "#1e1c22",
+    "band": "#e8e4dc",
+    "shiny": true,
+    "tilt": -10
+  },
+  "face": {
+    "iris": "#1e1210",
+    "mouth": "lips",
+    "lips": "#a05a4a",
+    "lashes": true,
+    "nose": "small",
+    "jaw": "narrow",
+    "chin_cleft": true,
+    "brow_style": "arched"
+  },
+  "top": {
+    "style": "jacket_open",
+    "color": "#2a2630",
+    "shirt": "#c8ccd8",
+    "shiny": true,
+    "pattern": "sparkle",
+    "pattern_n": 45,
+    "pattern_color": "#e8ecf4"
+  },
+  "bottom": {
+    "style": "highwater",
+    "color": "#1e1c22",
+    "socks": "#d4d8e2"
+  },
+  "shoes": {
+    "color": "#141216"
+  },
+  "glove_back": "#f4f4f8",
+  "pose": "hat_tip"
+}

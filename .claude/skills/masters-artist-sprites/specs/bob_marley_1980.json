@@ -1,0 +1,43 @@
+{
+  "name": "Bob Marley",
+  "year": 1980,
+  "ref": "Uprising Tour (1980): camisa jeans com calça jeans, dreads longos, barba rala, Gibson Les Paul Special marrom.",
+  "body": {
+    "sex": "m",
+    "build": "slim",
+    "skin": "moreno"
+  },
+  "hair": {
+    "style": "dreads",
+    "color": "#2a1c14",
+    "size": 1.25
+  },
+  "face": {
+    "iris": "#1e1412",
+    "mouth": "smile",
+    "facial": "goatee",
+    "eyes": "hooded",
+    "jaw": "narrow"
+  },
+  "top": {
+    "style": "shirt",
+    "color": "#4a6a9a"
+  },
+  "bottom": {
+    "style": "jeans"
+  },
+  "shoes": {
+    "color": "#5e3c26",
+    "style": "boot"
+  },
+  "pose": "guitar",
+  "prop": {
+    "type": "electric",
+    "shape": "lp",
+    "body": "#8a5426",
+    "guard": "#1a1418",
+    "neck": "#5a3020",
+    "pickups": "#1e1a1e",
+    "strap": "#c8282c"
+  }
+}

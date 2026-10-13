@@ -1,0 +1,42 @@
+{
+  "name": "Frank Sinatra",
+  "year": 1957,
+  "ref": "Era Capitol: fedora inclinado, terno escuro, gravata afrouxada, olhos azuis, rosto fino e orelhas de abano.",
+  "body": {
+    "sex": "m",
+    "build": "slim",
+    "skin": "claro"
+  },
+  "hair": {
+    "style": "slick",
+    "color": "#4a3020"
+  },
+  "hat": {
+    "style": "fedora",
+    "color": "#6e6458",
+    "band": "#221c20",
+    "tilt": -9
+  },
+  "face": {
+    "iris": "#4a8ad0",
+    "mouth": "smirk",
+    "jaw": "narrow",
+    "ears": "big",
+    "smile_lines": true
+  },
+  "top": {
+    "style": "suit",
+    "color": "#33405e",
+    "tie": "loose",
+    "tie_color": "#8a2430",
+    "pocket_square": true
+  },
+  "bottom": {
+    "style": "pants",
+    "color": "#33405e"
+  },
+  "shoes": {
+    "color": "#2a2224"
+  },
+  "pose": "mic_stand"
+}

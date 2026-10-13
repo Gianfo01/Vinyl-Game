@@ -1,0 +1,38 @@
+{
+  "name": "Raul Seixas",
+  "year": 1973,
+  "ref": "Pós-FIC 1972: calça e blusão de couro, cinturão de pistoleiro, topete com brilhantina, óculos escuros, barba.",
+  "body": {
+    "sex": "m",
+    "build": "slim",
+    "skin": "claro"
+  },
+  "hair": {
+    "style": "pompadour",
+    "color": "#1e1814",
+    "size": 0.9,
+    "sideburns": 9
+  },
+  "face": {
+    "mouth": "smirk",
+    "glasses": "dark",
+    "facial": "beard",
+    "facial_color": "#1e1814"
+  },
+  "top": {
+    "style": "leather_jacket",
+    "color": "#26201e",
+    "shiny": true,
+    "shirt": "#1e1a1c"
+  },
+  "bottom": {
+    "style": "pants",
+    "color": "#221c1c",
+    "shiny": true
+  },
+  "shoes": {
+    "color": "#1a1414",
+    "style": "boot"
+  },
+  "pose": "hip"
+}
