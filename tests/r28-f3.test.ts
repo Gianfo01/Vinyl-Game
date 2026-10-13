@@ -241,4 +241,15 @@ describe('r28 F3 — determinismo', () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
     expect(diary28(a).length).toBeGreaterThan(0);
   }, 180_000);
+  it('salvar + carregar + continuar (JSON): o anel, os cooldowns e os ecos perdidos seguem idênticos', () => {
+    const s = mk(1962, 'r28save');
+    for (let i = 0; i < 3; i++) { playMonth(s, 'balanced'); advanceMonth(s); }
+    const t = JSON.parse(JSON.stringify(s)) as GameState;
+    for (const g of [s, t]) for (let i = 0; i < 3; i++) { playMonth(g, 'balanced'); advanceMonth(g); }
+    expect(JSON.stringify(st28(t))).toBe(JSON.stringify(st28(s)));
+    // o estado inteiro com ordem de chaves é assunto da fase 1A (save/load); aqui: o que a F3 lê e escreve
+    expect(t.memory.map((m) => m.id)).toEqual(s.memory.map((m) => m.id));
+    expect(JSON.stringify(dec18(t))).toBe(JSON.stringify(dec18(s)));
+    expect(t.player.cash).toBe(s.player.cash);
+  }, 180_000);
 });
