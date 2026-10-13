@@ -76,7 +76,10 @@ beforeAll(() => {
   // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
   // R29 conectar tudo + relíquias juntos: re-medido.
   expect(s.player.cash).toBe(334007);
-  expect(hashString(JSON.stringify(s.acts))).toBe(827562554);
+  // R29 família (sys/family29, de propósito — docs/familia29.md): artistas NPC namoram, casam, se separam e têm filhos
+  // (Rng próprio; famílias semeadas no 1º mês; nesta semente em 8 meses: 1 casamento de casal célebre, 1 filho, 1 divórcio):
+  // só acts muda (caixa e rng iguais). Antes: acts 827562554.
+  expect(hashString(JSON.stringify(s.acts))).toBe(1285188736);
   expect(hashString(JSON.stringify(s.rng))).toBe(2264116950);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
