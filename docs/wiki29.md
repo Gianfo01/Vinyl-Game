@@ -192,3 +192,52 @@ acento ("joao").
   lidas em `nums`.
 - Personagens são só os dos dados reais. Pessoas e bandas geradas existem apenas dentro de cada partida.
 - A busca não indexa músicas.
+
+## 9. Bíblia (aprofundamento pedido pelo autor)
+
+Pedido: *"aprofundar mais a wiki, mostrando os atributos dos personagens, talento inicial e potencial, história real e
+tudo mais… a ideia é ser uma bíblia com TUDO do jogo"*. Como a wiki é separada do jogo, ela mostra também o que o jogo
+esconde do jogador (potencial, fim de carreira previsto).
+
+- **Ficha de jogo de referência** (`wiki29ref.ts`). Atributos, talento inicial (7 habilidades), potencial, idade,
+  ambição, origem, traços, objetivo, persona, atributos de ofício e alma (20 facetas e 12 valores). No jogo esses números
+  são sorteados a cada partida. A wiki gera, só quando a página pede, uma **partida de referência** com o mesmo código:
+  semente `wiki29`, nomes reais, base enorme, Vida real exata, começando no **ano da estreia** do artista (≈0,5 s por ano,
+  com cache). A ficha do ato mostra potencial, fama, momento, fãs, imagem e fim de carreira previsto. As faixas do
+  sorteio também aparecem: potencial 90–99 / 80–93 / 68–84 por porte, fração inicial 0,66, +2 por ano de carreira.
+- **História real ampliada** (`wiki29lore.ts`):
+  - visual famoso **por fase** (um retrato procedural por fase de `looks15`);
+  - família documentada (KIN15/KIN27/KINR27/KIN25);
+  - obras com autores (WORKS27);
+  - covers e samples (COVERS17), sucesso mundial (GLOBAL17), década que ajudou a definir (ERAS17);
+  - relíquias e mês documentado de entradas e saídas (MONTHS27).
+- **Profissionais completos**:
+  - produtores: habilidade, ego, efeito do som, famílias e os 5 atributos de ofício;
+  - empresários: famílias, atributos e facetas;
+  - críticos: o que não gostam, gosto, rigor, prestígio e região;
+  - executivos: formação e estilo de gestão.
+- **Linha do tempo** (`time29.ts` + `wiki29bible.ts`): **2.884 marcos** de 27 tipos em 17 páginas por década (antes de
+  1880 … depois de 2029). Inclui história, gêneros, gravadoras, imprensa, relíquias, fronteiras, prêmios, casas de shows,
+  festivais, marcos urbanos, covers, geopolítica, cenas, estúdios, paradas, hits globais, fatos por país, sociedade,
+  formatos, crimes documentados, tecnologias, movimentos, eras, décadas e cartões de decisão. A busca acha cada marco e
+  leva à década.
+- **Regras e dados** (`cat29_a.ts`, `cat29_b.ts`): **59 catálogos, 1.560 itens**, cada um com página própria. Todos são
+  lidos das tabelas do jogo na hora.
+  - Pessoas e personalidade: habilidades, traços, ambições, origens, personalidade, sonhos, atributos, instrumentos,
+    vícios e saúde, ações com pessoas, agenda, estilos de empresário, assinaturas de produtor, parentesco, eventos de
+    vida, funções, temperamentos rivais, origens e traços do jogador, estilos de vida, vida pessoal.
+  - Regras: formatos, canais, estúdios, abordagens, casas, níveis da sede, departamentos, salas, mobília, andares, foco
+    de filiais, situações iniciais, níveis de rival, começos sorteados, dificuldade, predefinições, bases, finais, legado,
+    crimes, jabá, campanhas de prêmio, produção de shows, pacotes iniciais, conquistas.
+  - Mundo: festivais, plataformas, mídia, estúdios reais, prêmios.
+  - História: cenários, posturas de era, regras de paradas, ovos de páscoa (marcados como spoiler), cenas interativas,
+    cenas animadas.
+  - Objetos: merch, marcas de equipamento.
+- Contagem nova: **13.691 páginas** (12.055 da base + 59 catálogos + 1.560 itens + 17 décadas).
+- `tests/r29-wiki.test.ts`: 23 testes. Os novos cobrem a ficha de referência (Lennon em 1962), a história ampliada
+  (família de Michael Jackson, covers dos Beatles), todas as décadas com links válidos e todo catálogo com itens e
+  páginas que montam.
+- Arquivo único: `dist-wiki/Masters-Wiki.html` (≈7,5 MB).
+- Lacunas: a ficha é de uma partida de referência (outra semente dá outros números dentro das faixas); quem só entra na
+  base pequena/média ou como substituto pode não aparecer nela; algumas explicações dos catálogos são texto escrito a
+  partir do código (os números são lidos ao vivo).

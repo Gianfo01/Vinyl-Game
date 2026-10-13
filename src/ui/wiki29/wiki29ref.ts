@@ -42,6 +42,8 @@ export function refPerson29(name: string, y: number): { s: GameState; p: Person 
   return p ? { s, p } : null;
 }
 
+const PERSONA_L: Record<string, [string, string]> = { openness: ['Abertura', 'Openness'], perfectionism: ['Perfeccionismo', 'Perfectionism'], ambition: ['Ambição', 'Ambition'], sociability: ['Sociabilidade', 'Sociability'], discipline: ['Disciplina', 'Discipline'], resilience: ['Resiliência', 'Resilience'] };
+const GOAL_L: Record<string, [string, string]> = { security: ['segurança', 'security'], credit: ['reconhecimento', 'credit'], family: ['família', 'family'], leadership: ['liderança', 'leadership'], solo: ['carreira solo', 'solo career'] };
 const bar = (v: number): string => `${Math.round(v)} ${'▮'.repeat(Math.round(v / 10))}${'▯'.repeat(10 - Math.round(v / 10))}`;
 const facetTxt = (k: (typeof FACETS)[number], v: number): string => `${Math.round(v)} — ${tx(v >= 60 ? FACET_TXT[k][2] : v <= 40 ? FACET_TXT[k][1] : l('equilibrado', 'balanced'))}`;
 
@@ -71,10 +73,10 @@ export function refBlocks29(name: string, year: number): Block29[] {
     [T('Origem', 'Origin'), [tx(ORIGINS.find((o) => o.id === p.origin)?.name ?? l(p.origin))]],
     [T('Traços', 'Traits'), [p.traits.map((x) => tx(traitById[x]?.name ?? l(x))).join(' · ') || '—']],
   ];
-  if (p.goal) kv.push([T('Objetivo pessoal', 'Personal goal'), [p.goal]]);
+  if (p.goal) kv.push([T('Objetivo pessoal', 'Personal goal'), [GOAL_L[p.goal] ? T(GOAL_L[p.goal][0], GOAL_L[p.goal][1]) : p.goal]]);
   out.push({ k: 'kv', rows: kv });
   out.push(H(T('Talento inicial (habilidades 0–100)', 'Starting talent (skills 0–100)')), { k: 'kv', rows: SKILLS.map((k) => [tx(k.name), [bar(p.skills[k.id] ?? 0)]] as [string, Inline29[]]) });
-  if (p.persona) out.push(H(T('Persona', 'Persona')), { k: 'kv', rows: Object.entries(p.persona).map(([k, v]) => [k, [bar(v)]] as [string, Inline29[]]) });
+  if (p.persona) out.push(H(T('Persona', 'Persona')), { k: 'kv', rows: Object.entries(p.persona).map(([k, v]) => [PERSONA_L[k] ? T(PERSONA_L[k][0], PERSONA_L[k][1]) : k, [bar(v)]] as [string, Inline29[]]) });
   try {
     const P13 = per13(s, `p:${p.id}`);
     if (P13) out.push(H(T('Atributos de ofício', 'Craft attributes')), { k: 'kv', rows: ATTR13_IDS.map((k) => [tx(ATTR13[k][0]), [bar(P13.attrs[k])]] as [string, Inline29[]]) });
