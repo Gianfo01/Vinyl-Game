@@ -14,6 +14,7 @@ import { personaOf } from './ext';
 import { histLocked } from './history15';
 import { actsTouched17 } from './actidx17';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { actsNow27 } from './tickcache27';
 
 const JOBS: L[] = [
   l('professora', 'teacher'), l('enfermeiro', 'nurse'), l('fotógrafa', 'photographer'), l('advogado', 'lawyer'),
@@ -48,7 +49,7 @@ export function personDies(s: GameState, p: Person, cause: L): void {
   if (!p.alive) return;
   p.alive = false;
   p.died = s.year;
-  const acts = Object.values(s.acts).filter((a) => a.members.includes(p.id));
+  const acts = actsNow27(s).filter((a) => a.members.includes(p.id));
   for (const act of acts) {
     const alive = act.members.filter((id) => s.persons[id]?.alive);
     if (!alive.length) {
@@ -84,7 +85,7 @@ export function personDies(s: GameState, p: Person, cause: L): void {
 }
 
 function agingMonth(s: GameState, r: Rng): void {
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     const tracked = act.owner === 'player' || act.fame > 25 || act.catalogNo || act.legend;
     if (!tracked) continue;
     const safe = realSafe(s, act);
@@ -178,7 +179,7 @@ export function familyAction(s: GameState, personId: string, kind: 'talk' | 'sup
   const p = s.persons[personId];
   if (p) p.stress = clamp(p.stress - (kind === 'month' ? 15 : 4), 0, 100);
   if (kind === 'month') {
-    const act = Object.values(s.acts).find((a) => a.members.includes(personId) && a.owner === 'player');
+    const act = actsNow27(s).find((a) => a.members.includes(personId) && a.owner === 'player');
     if (act) act.hiatusUntil = Math.max(act.hiatusUntil ?? 0, s.week + 4);
   }
   return null;
@@ -188,8 +189,8 @@ export function familyAction(s: GameState, personId: string, kind: 'talk' | 'sup
 export function launchHeir(s: GameState, r: Rng, personId: string): L | null {
   const p = s.persons[personId];
   if (!p?.parentId) return l('Pessoa sem vínculo de dinastia.', 'No dynasty link.');
-  if (Object.values(s.acts).some((a) => a.members.includes(personId))) return l('Já tem carreira.', 'Already has a career.');
-  const parentAct = Object.values(s.acts).find((a) => a.members.includes(p.parentId!));
+  if (actsNow27(s).some((a) => a.members.includes(personId))) return l('Já tem carreira.', 'Already has a career.');
+  const parentAct = actsNow27(s).find((a) => a.members.includes(p.parentId!));
   const cost = money(s, 3000);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `heir:${personId}`, -cost, 'artist_dev', `Carreira de ${p.name}`);
@@ -412,7 +413,7 @@ export function hallOfFameYear(s: GameState): void {
 
 /** Disco-tributo póstumo: outros atos regravam o repertório (ver studio.ts para a gravação). */
 export function tributeCandidates(s: GameState): Act[] {
-  return Object.values(s.acts).filter((a) => (a.deceased || a.members.some((id) => s.persons[id] && !s.persons[id].alive)) && a.releases.some((id) => s.releases[id]?.owner === 'player'));
+  return actsNow27(s).filter((a) => (a.deceased || a.members.some((id) => s.persons[id] && !s.persons[id].alive)) && a.releases.some((id) => s.releases[id]?.owner === 'player'));
 }
 
 export function dynastyMonth(s: GameState, r: Rng): void {

@@ -7,6 +7,7 @@ import type { Act, GameState } from './types';
 import type { Fandom } from './xtypes';
 import { fmtL, hasTech, money, notify, playerActs, post, remember } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { actsNow27 } from './tickcache27';
 
 export function fandomOf(s: GameState, actId: string): Fandom {
   return (s.fandoms[actId] ??= { superfans: 0, haters: 0, toxicity: 0 });
@@ -27,7 +28,7 @@ export function ritualFor(s: GameState): L {
 }
 
 export function fandomMonth(s: GameState, r: Rng): void {
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.status === 'retired' || act.status === 'split') continue;
     const total = act.fans.core + act.fans.active;
     if (total < 200 && !s.fandoms[act.id]) continue;

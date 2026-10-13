@@ -12,6 +12,7 @@ import type { GameState, Label, Release } from './types';
 import type { RivalReportItem } from './xtypes';
 import { fmtL, money, playerActs, post, remember } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { actsNow27, releasesNow27 } from './tickcache27';
 
 export const ARCHETYPES: Record<NonNullable<Label['archetype']>, { name: L; desc: L }> = {
   empire: { name: l('Império', 'Empire'), desc: l('Compra estrelas e concorrentes; evita risco artístico.', 'Buys stars and competitors; avoids artistic risk.') },
@@ -78,7 +79,7 @@ export function spyOnRival(s: GameState, r: Rng, labelId: string): L {
     remember(s, 'spy_exposed', fmtL(l('{c} é flagrada espionando {b}.', '{c} is caught spying on {b}.'), { c: s.config.companyName, b: lb.name }), { important: true });
     return l('Flagrado! A imprensa noticiou a espionagem.', 'Caught! The press reported the espionage.');
   }
-  const targets = Object.values(s.acts).filter((a) => !a.owner && a.fame > 6).sort((a, b) => b.fame - a.fame).slice(0, 3).map((a) => a.name);
+  const targets = actsNow27(s).filter((a) => !a.owner && a.fame > 6).sort((a, b) => b.fame - a.fame).slice(0, 3).map((a) => a.name);
   s.flags[`intel:${labelId}`] = s.week;
   return fmtL(l('{b}: caixa {c}, estratégia {st}, de olho em {t}.', '{b}: cash {c}, strategy {st}, eyeing {t}.'), { b: lb.name, c: String(Math.round(lb.cash / 100)), st: archetypeOf(lb), t: targets.join(', ') || '—' });
 }
@@ -87,7 +88,7 @@ export function rivals2Month(s: GameState, r: Rng): void {
   const items: RivalReportItem[] = [];
   const mine = playerActs(s).map((id) => s.acts[id]);
   const recentByOwner = new Map<string, Release[]>();
-  for (const x of Object.values(s.releases)) {
+  for (const x of releasesNow27(s)) {
     if (s.week - x.week >= 5) continue;
     const list = recentByOwner.get(x.owner) ?? [];
     list.push(x);

@@ -9,6 +9,7 @@ import { addSignal, spawnProceduralAct, talentScore } from './worldgen';
 import { perk } from './perks';
 import { fmtL, hasCard, hasTech, money, notify, post, rngOf, staffCount, staffSkill } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { actsNow27 } from './tickcache27';
 
 export const DEGREES: L[] = [
   l('Rumor', 'Rumor'),
@@ -178,7 +179,7 @@ export function monthlySignals(s: GameState, r: Rng): void {
   const homeMarket = cityById[s.config.homeCity]?.market;
   const sources = passiveSources23(s);
   const n = Math.max(0, passiveCount23(s).lo + (r.chance(0.5) ? 1 : 0));
-  const candidates = Object.values(s.acts).filter((a) => signalEligible20(s, a)); // r20 (B9): elegibilidade central
+  const candidates = actsNow27(s).filter((a) => signalEligible20(s, a)); // r20 (B9): elegibilidade central
   for (let i = 0; i < n; i++) {
     const src = r.pick(sources);
     const act = r.weighted(candidates, (a) => {
@@ -194,7 +195,7 @@ export function monthlySignals(s: GameState, r: Rng): void {
   }
   // pedidos de scout: formulário estruturado, sem texto livre (GDD §10)
   for (const req of s.scoutRequests.splice(0)) {
-    const matches = Object.values(s.acts).filter((a) => signalEligible20(s, a) && matchesReq20(a, req));
+    const matches = actsNow27(s).filter((a) => signalEligible20(s, a) && matchesReq20(a, req));
     r.shuffle(matches);
     let found = matches.slice(0, r.int(1, 3));
     if (!found.length) {

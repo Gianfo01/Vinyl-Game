@@ -33,6 +33,7 @@ import { band18 } from './live18';
 import { post18 } from './post18';
 import { r18 } from './rights18';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { noteRelease17 } from '../relidx17';
 
 // ---------------------------------------------------------------- tipos e dados
 
@@ -260,6 +261,7 @@ export function sign19(s: GameState, id: string): L | null {
   const rel: Release = { id: rid, actId: a.id, owner: 'player', prov: 'sim', type: 'lp', title: fmtL(l('{t} toca {a}', '{t} plays {a}'), { t: t.name, a: a.name }).pt, songs: a.songs.slice(0, 10), week: s.week, year: s.year, q: t.q, appeal: Math.round(demand19(s, t).v * 40),
     formats: [], stock: 0, pressed: 0, marketing: [], marketingE: 0, territories: [...s.player.territories], weekly: [], totalUnits: 0, revenue: 0, peak: 0, weeksOnChart: 0, lastPos: 0, coverSeed: t.w * 7919, shortage: 0, live: false, kind: 'tribute' };
   s.releases[rid] = rel;
+  noteRelease17(s, rel);
   t.sign = s.week + 35;
   t.rel = rid;
   logT(s, fmtL(l('Seu selo assina o álbum-tributo "{r}".', 'Your label signs the tribute album "{r}".'), { r: rel.title }));

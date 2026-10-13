@@ -23,6 +23,7 @@ import { crime17 } from './crime17';
 import { simStart20 } from '../worldpolicy20';
 import { addRelic, relics, type Relic, type RelicKind } from './relics9';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { releasesNow27 } from '../tickcache27';
 
 for (const d of RELICS18) if (!RELICS17.some((x) => x.id === d.id)) RELICS17.push(d);
 
@@ -64,7 +65,7 @@ export function statuette18(s: GameState, y = s.year): L {
 const lead = (s: GameState, a: Act): string | undefined => (a.leaderId && a.members.includes(a.leaderId) ? a.leaderId : a.members[0]);
 const latestHit = (s: GameState, a: Act): string | undefined => {
   let best: { t: string; w: number } | undefined;
-  for (const r of Object.values(s.releases)) if (r.actId === a.id && r.peak === 1 && (!best || r.week > best.w)) best = { t: r.title, w: r.week };
+  for (const r of releasesNow27(s)) if (r.actId === a.id && r.peak === 1 && (!best || r.week > best.w)) best = { t: r.title, w: r.week };
   return best?.t;
 };
 /** Ato real intocado no modo exato: nada de peça inventada (o catálogo real cobre). */

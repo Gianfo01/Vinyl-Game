@@ -9,6 +9,7 @@ import { avgReview } from './media';
 import { PRODUCERS } from './studio';
 import { calOf19, honoredYear19 } from './awardcal19';
 import { livePublic20 } from './livesnap20';
+import { releasesNow27 } from './tickcache27';
 
 export interface AwardDef {
   id: string;
@@ -46,7 +47,7 @@ export const isRegional19 = (cat: string): boolean => cat.startsWith('reg_') || 
 export function yearlyAwards2(s: GameState, r: Rng): void {
   const at = (cat: string) => { const c = calOf19(cat); return s.month === c.month && s.year >= c.start; };
   const year = honoredYear19(s.year, s.month);
-  const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
+  const rels = releasesNow27(s).filter((x) => x.year === year && x.totalUnits > 0);
   // crítica: melhor média de resenhas
   const critic = at('critics') ? rels.map((x) => ({ x, v: avgReview(s, x.id) ?? 0 })).filter((y) => y.v > 0).sort((a, b) => b.v - a.v)[0] : undefined;
   if (critic) {

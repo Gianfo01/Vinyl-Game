@@ -11,6 +11,7 @@ import type { Act, GameState, Release, Song } from './types';
 import type { Idea } from './xtypes';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { releasesNow27 } from './tickcache27';
 
 export type SongStatus = 'written' | 'recorded' | 'scheduled' | 'released' | 'vault' | 'discarded';
 
@@ -31,7 +32,7 @@ export function isDiscarded(s: GameState, songId: string): boolean {
 /** Todos os lançamentos (e programados) em que a música entrou. */
 export function songUses(s: GameState, songId: string): SongUse[] {
   const out: SongUse[] = [];
-  for (const r of Object.values(s.releases)) if (r.songs.includes(songId)) out.push({ id: r.id, title: r.title, type: r.type, kind: r.kind, year: r.year, pending: false, owner: r.owner });
+  for (const r of releasesNow27(s)) if (r.songs.includes(songId)) out.push({ id: r.id, title: r.title, type: r.type, kind: r.kind, year: r.year, pending: false, owner: r.owner });
   for (const p of s.pendingReleases) if (p.songs.includes(songId)) out.push({ id: p.id, title: p.title, type: p.type, kind: p.kind, year: s.year, pending: true, owner: 'player' });
   return out.sort((a, b) => a.year - b.year);
 }
@@ -292,7 +293,7 @@ export function pitchSync(s: GameState, r: Rng, songId: string): L {
 
 /** Receita de edição das músicas oferecidas e gravadas por outros. */
 function pitchesMonth(s: GameState): void {
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (!s.flags[`pitchRel:${rel.id}`]) continue;
     const prev = s.flags[`pitchRev:${rel.id}`] ?? 0;
     const delta = rel.revenue - prev;

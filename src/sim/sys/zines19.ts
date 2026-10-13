@@ -32,6 +32,7 @@ import { addHype } from './hype12';
 import { LINKS18, lk18 } from './links18';
 import { pr18 } from './press18';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export type ZK19 = 'zine' | 'blog';
 export interface Zine19 { id: string; name: string; city: string; g: string; y: number; k: ZK19; by: 'npc' | 'player'; reach: number; end?: number }
@@ -116,7 +117,7 @@ onFact('zine_founded', (s, f) => {
 }, 'zines19:press');
 onFact('zine_scene', (s, f) => {
   const g = String(f.data?.g ?? '');
-  for (const a of Object.values(s.acts)) if (a.city === f.place && (a.genre === g || familyOf(a.genre) === familyOf(g)) && a.status !== 'retired') { a.momentum = clamp(a.momentum + 4, -100, 100); if (a.owner === 'player') addHype(s, `a:${a.id}`, 'zines19', N('Cena dos fanzines', 'Fanzine scene'), 4); }
+  for (const a of actsNow27(s)) if (a.city === f.place && (a.genre === g || familyOf(a.genre) === familyOf(g)) && a.status !== 'retired') { a.momentum = clamp(a.momentum + 4, -100, 100); if (a.owner === 'player') addHype(s, `a:${a.id}`, 'zines19', N('Cena dos fanzines', 'Fanzine scene'), 4); }
   headline19(s, f.text, 2);
   remember(s, 'zines19', f.text, { important: f.actors.includes('player') });
   lk18(s).log.unshift([s.week, 'zines19', f.text]);
@@ -237,7 +238,7 @@ registerSimHook('month', 'zines19', (s) => {
   // 1) nascimentos (NPC): onde um gênero cresce numa cidade e ainda não há cena
   if (s.year >= 1966 && zinesLive19(s).filter((z) => z.by === 'npc').length < 14 && r.chance(s.year >= 1976 && s.year <= 1998 ? 0.3 : 0.15)) {
     const pool: [string, string, number][] = [];
-    for (const a of Object.values(s.acts)) {
+    for (const a of actsNow27(s)) {
       if (a.fame < 8 || a.fame > 60 || a.status === 'retired' || a.status === 'split' || (s.genrePop[a.genre] ?? 0.6) < 0.8) continue;
       if (!sceneAt(s, a.city, a.genre) && !zinesLive19(s).some((z) => z.city === a.city && z.g === a.genre)) pool.push([a.city, a.genre, 1 + (s.genrePop[a.genre] ?? 0.6)]);
       if (pool.length > 60) break;
@@ -264,7 +265,7 @@ registerSimHook('month', 'zines19', (s) => {
     }
   }
   const house = (st.own?.line === 'house') || zinesLive19(s).some((z) => z.by === 'player' && mine(s).some((a) => a.city === z.city && a.genre === z.g));
-  const recent = Object.values(s.releases).some((x) => x.owner === 'player' && s.week - x.week <= 8 && s.week >= x.week);
+  const recent = releasesNow27(s).some((x) => x.owner === 'player' && s.week - x.week <= 8 && s.week >= x.week);
   st.coi = house && recent ? st.coi + (st.own?.line === 'house' ? 6 : 3) : st.coi * 0.9;
   if (st.coi >= 30 && s.week - st.coiW > 26) {
     st.coiW = s.week;

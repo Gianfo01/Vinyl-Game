@@ -20,6 +20,7 @@ import type { Act, GameState, Person } from '../types';
 import { fmtL, notify, remember } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { canonKey } from './realworld';
+import { actsNow27 } from '../tickcache27';
 
 export type Rel15 = 'parent' | 'child' | 'sibling' | 'spouse' | 'ex' | 'cousin' | 'uncle' | 'nephew' | 'grandparent' | 'grandchild';
 export const REL15: Record<Rel15, L> = {
@@ -179,9 +180,9 @@ export function kinLabel15(k: { rel: Rel15; sub?: KinSub27; from?: number; to?: 
   }
   return base;
 }
-export const actOf15 = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid));
+export const actOf15 = (s: GameState, pid: string): Act | undefined => actsNow27(s).find((a) => a.members.includes(pid));
 export const feudOf15 = (s: GameState, a: string, b: string): number | undefined => kin15(s).feud[pairKey(a, b)];
-const fameOf = (s: GameState, pid: string) => Object.values(s.acts).reduce((m, a) => (a.members.includes(pid) ? Math.max(m, a.fame) : m), 0);
+const fameOf = (s: GameState, pid: string) => actsNow27(s).reduce((m, a) => (a.members.includes(pid) ? Math.max(m, a.fame) : m), 0);
 
 // ---- mensal -------------------------------------------------------------------------------------------------
 function grief(s: GameState, p: Person): void {
@@ -207,7 +208,7 @@ function grief(s: GameState, p: Person): void {
 
 function feuds(s: GameState, r: Rng): void {
   const st = kin15(s), now = mIdx(s);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if ((a.status !== 'active' && a.status !== 'emerging') || a.members.length < 2) continue;
     const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p && p.alive);
     for (let i = 0; i < ms.length; i++) for (let j = i + 1; j < ms.length; j++) {
@@ -253,7 +254,7 @@ function feuds(s: GameState, r: Rng): void {
 /** Gerados: bandas de irmãos e filhos de músicos que estreiam anos depois. */
 function generate(s: GameState, r: Rng): void {
   const st = kin15(s);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.catalogNo || a.members.length < 2 || st.chk.includes(a.id)) continue;
     st.chk.push(a.id);
     const roll = r.next();
@@ -268,7 +269,7 @@ function generate(s: GameState, r: Rng): void {
     say(s, fmtL(l('{x}: banda de irmãos ({n}).', '{x}: a band of siblings ({n}).'), { x: a.name, n: grp.map((p) => p.name.split(' ')[0]).join(', ') }));
   }
   // filhos de músicos: nascem de pais famosos e viram músicos depois
-  if (s.month % 3 === 0) for (const a of Object.values(s.acts)) {
+  if (s.month % 3 === 0) for (const a of actsNow27(s)) {
     const roll = r.next();
     if (a.catalogNo || a.fame < 30 || (a.status !== 'active' && a.status !== 'emerging')) continue;
     const p = a.members.map((id) => s.persons[id]).find((q) => q && q.alive);
@@ -305,7 +306,7 @@ function generate(s: GameState, r: Rng): void {
 /** Herança de fama para filhos reais (uma vez, quando o ato do filho existe). */
 function inherit(s: GameState): void {
   const st = kin15(s);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!a.catalogNo || a.fame > 45) continue;
     for (const id of a.members) {
       if (st.inh.includes(id)) continue;
@@ -322,7 +323,7 @@ function inherit(s: GameState): void {
 /** Nepotismo: quem está no seu elenco indica parentes (acesso a atos que você ainda não conhece). */
 function tips(s: GameState, r: Rng): void {
   const st = kin15(s);
-  for (const mine of Object.values(s.acts)) {
+  for (const mine of actsNow27(s)) {
     if (mine.owner !== 'player') continue;
     for (const id of mine.members) for (const k of kinOf15(s, id)) {
       const roll = r.next();

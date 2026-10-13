@@ -29,6 +29,7 @@ import { noteLost18 } from './econ18';
 import { catFundBid } from './sale17';
 import { ventures } from './ventures9';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 
@@ -68,9 +69,9 @@ const yr = (s: GameState, y: number): Record<string, number> | undefined => fin1
 /** receita operacional real (US$ de hoje) de um ano; cai na receita bruta antiga quando não há DRE */
 export const opRevReal18 = (s: GameState, y: number): number => toReal(yr(s, y) ? sumP18(yr(s, y), 'rev:') : s.player.revenueByYear[y] ?? 0, y);
 export const opProfReal18 = (s: GameState, y: number): number => toReal(yr(s, y) ? opProfit18(yr(s, y)) : s.player.profitByYear[y] ?? 0, y);
-const mineRels = (s: GameState): Release[] => Object.values(s.releases).filter((r) => (r.owner === 'player' || s.acts[r.actId]?.playerBand) && !r.hist);
+const mineRels = (s: GameState): Release[] => releasesNow27(s).filter((r) => (r.owner === 'player' || s.acts[r.actId]?.playerBand) && !r.hist);
 const vl = (s: GameState, k: string) => ventures(s).list.filter((v) => v.kind === k && v.owner);
-const band = (s: GameState) => (s.player.bandActId ? s.acts[s.player.bandActId] : Object.values(s.acts).find((a) => a.playerBand));
+const band = (s: GameState) => (s.player.bandActId ? s.acts[s.player.bandActId] : actsNow27(s).find((a) => a.playerBand));
 const roster = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a) => a && !a.playerBand && a.status !== 'retired');
 
 /** r18 final: régua da crítica do MERCADO no ano (média e corte dos 10% mais bem avaliados) — a nota do jogo é
@@ -212,7 +213,7 @@ export const PATHS18: PathDef18[] = [
         K(l('Prêmios', 'Awards'), s.player.stats.awards, 10, 'num', l('Prêmios do selo.', 'Label awards.')),
         K(l('Vantagem na crítica (10 últimos)', 'Critical edge (last 10)'), Math.max(0, edge), 12, 'num', l('Sua nota média menos a média do mercado no ano de cada disco (pontos).', 'Your average score minus the market average in each record\'s year (points).')),
         K(l('Seletividade', 'Selectivity'), clamp((2 - rate) / 1.2, 0, 1) * 100, 100, 'pct', l('Até 0,8 lançamento por ato por ano = 100%; 2+ = 0%. Selo cult lança pouco e bem.', 'Up to 0.8 releases per act per year = 100%; 2+ = 0%. A cult label releases little and well.')),
-        K(l('Lendas no elenco', 'Legends on the roster'), Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length, 2, 'num', l('Atos que viraram lenda com você.', 'Acts that became legends with you.')),
+        K(l('Lendas no elenco', 'Legends on the roster'), actsNow27(s).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length, 2, 'num', l('Atos que viraram lenda com você.', 'Acts that became legends with you.')),
       ];
     },
     tiers: [l('Selo de nicho', 'Niche label'), l('Selo cult', 'Cult label'), l('Referência artística', 'Artistic reference')],
@@ -471,7 +472,7 @@ function firstNarr(s: GameState): void {
     if (r) add(id, fmtL(l(`{y}: primeiro ${pt} do selo — "{t}", de {a}{m}.`, `{y}: the label's first ${en} — "{t}" by {a}{m}.`), { y: s.year, t: r.title, a: s.acts[r.actId]?.name ?? '—', m: r.territories.length === 1 ? fmtL(l(' (mercado {k})', ' ({k} market)'), { k: r.territories[0] }) : l('', '') }));
   }
   if (s.player.territories.length >= 2 && !has('abroad')) add('abroad', fmtL(l('{y}: o selo cruza a fronteira — operação em {k}.', '{y}: the label crosses the border — operation in {k}.'), { y: s.year, k: s.player.territories[s.player.territories.length - 1] }));
-  const leg = Object.values(s.acts).find((a) => a.legend && (a.owner === 'player' || a.playerBand));
+  const leg = actsNow27(s).find((a) => a.legend && (a.owner === 'player' || a.playerBand));
   if (leg) add('legend', fmtL(l('{y}: {a} vira lenda com o selo.', '{y}: {a} becomes a legend with the label.'), { y: s.year, a: leg.name }));
   if (st.awards > 0) add('award', fmtL(l('{y}: o primeiro prêmio na estante.', '{y}: the first award on the shelf.'), { y: s.year }));
   if (s.year - s.config.startYear >= 10) add('decade', fmtL(l('{y}: dez anos de {c}.', '{y}: ten years of {c}.'), { y: s.year, c: s.config.companyName }));

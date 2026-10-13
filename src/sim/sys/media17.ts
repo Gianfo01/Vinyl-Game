@@ -30,6 +30,7 @@ import { per13 } from './persona13';
 import { registerSituation } from './situations17';
 import { ventures } from './ventures9';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- críticos reais e novos (entram nas resenhas)
 // preguiçoso: o contentBridge troca a lista (setCritics) e a ordem dos módulos no bundle não é garantida (TDZ)
@@ -165,7 +166,7 @@ const LINE_BY: [RegExp, O17['line'][]][] = [
 ];
 const linesFor = (f: Fact): O17['line'][] => LINE_BY.find(([re]) => re.test(f.kind))?.[1] ?? ['mainstream', 'serious', 'tabloid'];
 const SKIP = new Set(['memory', 'stress', 'hold', 'hold_used', 'favor', 'forgiven']);
-const actOfFact = (s: GameState, f: Fact): Act | undefined => { for (const id of f.actors) { if (s.acts[id]) return s.acts[id]; } for (const id of f.actors) { const a = Object.values(s.acts).find((x) => x.members.includes(id) && x.status !== 'retired'); if (a) return a; } return undefined; };
+const actOfFact = (s: GameState, f: Fact): Act | undefined => { for (const id of f.actors) { if (s.acts[id]) return s.acts[id]; } for (const id of f.actors) { const a = actsNow27(s).find((x) => x.members.includes(id) && x.status !== 'retired'); if (a) return a; } return undefined; };
 const live = (a?: Act): a is Act => !!a && !a.deceased && (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus');
 
 function ingestFacts(s: GameState, r: Rng, list: O17[]): void {
@@ -210,7 +211,7 @@ function leaks(s: GameState, r: Rng, list: O17[]): void {
 }
 
 function gossip(s: GameState, r: Rng, list: O17[]): void {
-  const famous = Object.values(s.acts).filter((a) => live(a) && a.fame >= 30).sort((a, b) => b.fame - a.fame).slice(0, 40);
+  const famous = actsNow27(s).filter((a) => live(a) && a.fame >= 30).sort((a, b) => b.fame - a.fame).slice(0, 40);
   const tpls = tplsIn(s.year);
   if (!tpls.length) return;
   const st = m17(s);
@@ -406,7 +407,7 @@ registerReviewAdjust('media17', (s, rel) => {
 function reviewFacts(s: GameState): void {
   const st = m17(s);
   const mine = new Set(playerActs(s));
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!live(a) || (a.fame < 40 && !mine.has(a.id))) continue;
     const rid = a.releases[a.releases.length - 1];
     const rel = rid ? s.releases[rid] : undefined;
@@ -500,7 +501,7 @@ export function plantRumor(s: GameState, actId: string, tplId: string, outId: st
   st.cd[`p:${actId}`] = s.week + 8;
   const r = Rng.fromSeed(`${s.config.seed}:m17p:${s.week}:${actId}:${tplId}:${outId}`);
   if (!r.chance(od.p)) { st.rel[o.id] = clamp((st.rel[o.id] ?? 0) - 3, -100, 100); return { ok: true, text: fmtL(l('{o} recusou publicar sem provas. O dinheiro não volta.', '{o} refused to print without proof. The money is gone.'), { o: o.name }) }; }
-  const pairs = Object.values(s.acts).filter((b) => live(b) && b.id !== a.id && b.fame >= 30 && (tp.pair !== 'genre' || b.genre === a.genre));
+  const pairs = actsNow27(s).filter((b) => live(b) && b.id !== a.id && b.fame >= 30 && (tp.pair !== 'genre' || b.genre === a.genre));
   const b = tp.pair && pairs.length ? r.pick(pairs) : undefined;
   const truth = tp.real(s, a, b) ? 1 : 0;
   if (o.mine) { const x = medOf(s, o.id.slice(2)); x.cred = clamp(x.cred - 8, 0, 100); }
@@ -677,7 +678,7 @@ export function sellOdds(s: GameState, holdId: string, outId: string): Odds {
   const o = outletById17(s, outId);
   const z: Odds = { ok: false, cost: 0, p: 1, trace: 0.2, suit: 0, truth: 1, notes: [] };
   if (!h || !o || o.mine) return { ...z, why: l('Indisponível.', 'Unavailable.') };
-  const a = s.acts[h.target] ?? Object.values(s.acts).find((x) => x.members.includes(h.target));
+  const a = s.acts[h.target] ?? actsNow27(s).find((x) => x.members.includes(h.target));
   const pay = money(s, (3000 + (a?.fame ?? 20) * 150) * (o.reach / 70) * (o.line === 'tabloid' ? 1 : 0.5));
   return { ...z, ok: true, cost: -pay, notes: [l('Eles pagam e publicam: o segredo vira escândalo para o alvo. 20% de descobrirem quem vendeu.', 'They pay and print: the secret becomes the target\'s scandal. 20% they find out who sold it.')] };
 }
@@ -685,7 +686,7 @@ export function sellSecret(s: GameState, holdId: string, outId: string): { ok: b
   const od = sellOdds(s, holdId, outId);
   if (!od.ok) return { ok: false, text: od.why! };
   const h = holdsOf(s, 'player').has.find((x) => x.id === holdId)!, o = outletById17(s, outId)!;
-  const a = s.acts[h.target] ?? Object.values(s.acts).find((x) => x.members.includes(h.target));
+  const a = s.acts[h.target] ?? actsNow27(s).find((x) => x.members.includes(h.target));
   const res = useHold(s, holdId, 'expose');
   if (!res.ok) return res;
   post(s, `m17sell:${holdId}`, -od.cost, 'other_income', `Venda de furo: ${o.name}`);

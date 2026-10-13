@@ -24,6 +24,7 @@ import { mgrById } from '../../data/managers14';
 import { becomeManager17, leaveLabel17, npc17, okAct17, okPerson17, pickNewLabel17 } from './npc17';
 import { per13, type P13 } from './persona13';
 import { registerSituation, type SitCtx } from './situations17';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- utilidades
 
@@ -33,7 +34,7 @@ const nm = (s: GameState, id?: string): string => (!id ? '?' : s.persons[id]?.na
 const A = (s: GameState, c: SitCtx): Act | undefined => (c.act ? s.acts[c.act] : undefined);
 const mineA = (s: GameState, a: Act): boolean => a.owner === 'player' || playerActs(s).includes(a.id);
 /** Atos com história para contar: os seus e os NPC notáveis (mundo inteiro). */
-const pool = (s: GameState, minFame = 25): Act[] => { const mine = new Set(playerActs(s)); return Object.values(s.acts).filter((a) => live(a) && (mine.has(a.id) || a.fame >= minFame)); };
+const pool = (s: GameState, minFame = 25): Act[] => { const mine = new Set(playerActs(s)); return actsNow27(s).filter((a) => live(a) && (mine.has(a.id) || a.fame >= minFame)); };
 const npcMembers = (s: GameState, a: Act): Person[] => a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p?.alive && !p.isPlayer);
 const leadOf = (s: GameState, a: Act): Person | undefined => { const ms = npcMembers(s, a); return ms.find((p) => p.id === a.leaderId) ?? ms[0]; };
 const pickR = <T>(r: Rng, xs: T[]): T | undefined => (xs.length ? xs[r.int(0, xs.length - 1)] : undefined);
@@ -172,7 +173,7 @@ registerSituation({
   id: 'career_switch', pressure: 'power', cost: 1, cooldown: 8, tone: 'mixed', npcOnly: true,
   when: () => true,
   actorsPick: (s, _c, r) => {
-    const a = pickR(r, Object.values(s.acts).filter((x) => okAct17(s, x) && okPerson17(s, x) && x.fame >= 20 && x.momentum < 25 && x.members.length <= 2));
+    const a = pickR(r, actsNow27(s).filter((x) => okAct17(s, x) && okPerson17(s, x) && x.fame >= 20 && x.momentum < 25 && x.members.length <= 2));
     const p = a ? leadOf(s, a) : undefined;
     return a && p && s.year - p.born >= 40 && !npc17(s).car[`p:${p.id}`] ? { hero: p.id, act: a.id, cast: { person: p.id }, data: {} } : null;
   },
@@ -192,7 +193,7 @@ registerSituation({
   id: 'reunion_offer', pressure: 'money', cost: 1, cooldown: 8, tone: 'good', npcOnly: true,
   when: () => true,
   actorsPick: (s, _c, r) => {
-    const a = pickR(r, Object.values(s.acts).filter((x) => (x.status === 'split' || x.status === 'hiatus' || x.status === 'retired') && !x.playerBand && x.owner !== 'player' && x.fame >= 35 && s.year - (x.careerEnd || s.year) >= 5 && !histLocked(s, x) && npcMembers(s, x).length >= 1));
+    const a = pickR(r, actsNow27(s).filter((x) => (x.status === 'split' || x.status === 'hiatus' || x.status === 'retired') && !x.playerBand && x.owner !== 'player' && x.fame >= 35 && s.year - (x.careerEnd || s.year) >= 5 && !histLocked(s, x) && npcMembers(s, x).length >= 1));
     const p = a ? npcMembers(s, a)[0] : undefined;
     return a && p ? { hero: p.id, act: a.id, cast: { person: p.id }, data: {} } : null;
   },
@@ -234,7 +235,7 @@ registerSituation({
   when: (s, c) => !!c.fact,
   actorsPick: (s, c) => {
     const pid = c.fact!.actors.find((id) => s.persons[id]?.alive && !s.persons[id].isPlayer);
-    const a = pid ? Object.values(s.acts).find((x) => live(x) && x.members.includes(pid)) : undefined;
+    const a = pid ? actsNow27(s).find((x) => live(x) && x.members.includes(pid)) : undefined;
     return pid && a ? { hero: pid, act: a.id, cast: { person: pid }, data: {}, fact: c.fact } : null;
   },
   title: (s, c) => fmtL(l('{p} depois do fim', '{p} after the break-up'), { p: nm(s, c.hero) }),
@@ -254,7 +255,7 @@ registerSituation({
   when: (s, c) => !!c.fact,
   actorsPick: (s, c) => {
     const pid = c.fact!.actors.find((id) => s.persons[id]?.alive && !s.persons[id].isPlayer);
-    const a = pid ? Object.values(s.acts).find((x) => live(x) && x.members.includes(pid) && x.fame >= 20) : undefined;
+    const a = pid ? actsNow27(s).find((x) => live(x) && x.members.includes(pid) && x.fame >= 20) : undefined;
     return pid && a ? { hero: pid, act: a.id, cast: { person: pid }, data: {}, fact: c.fact } : null;
   },
   title: (s, c) => fmtL(l('O casamento de {p}', '{p}\'s wedding'), { p: nm(s, c.hero) }),
@@ -420,7 +421,7 @@ registerSituation({
   id: 'chart_race', pressure: 'fame', cost: 2, cooldown: 6, tone: 'mixed',
   when: () => true,
   actorsPick: (s, _c, r) => {
-    const recent = Object.values(s.releases).filter((x) => x.week >= s.week - 4 && x.lastPos > 0 && x.lastPos <= 10).map((x) => s.acts[x.actId]).filter(live);
+    const recent = releasesNow27(s).filter((x) => x.week >= s.week - 4 && x.lastPos > 0 && x.lastPos <= 10).map((x) => s.acts[x.actId]).filter(live);
     const a = pickR(r, recent);
     const b = a ? recent.find((x) => x.id !== a.id) : undefined;
     const p = a ? leadOf(s, a) : undefined;
@@ -466,7 +467,7 @@ registerSituation({
   id: 'ceo_ultimatum', pressure: 'power', cost: 2, cooldown: 6, tone: 'bad', npcOnly: true,
   when: () => true,
   actorsPick: (s, _c, r) => {
-    const a = pickR(r, Object.values(s.acts).filter((x) => okAct17(s, x) && npcLabelAct(s, x) && x.fame >= 20 && x.positioning < 45 && s.labels[x.owner!].cash < money(s, 300000)));
+    const a = pickR(r, actsNow27(s).filter((x) => okAct17(s, x) && npcLabelAct(s, x) && x.fame >= 20 && x.positioning < 45 && s.labels[x.owner!].cash < money(s, 300000)));
     const p = a ? leadOf(s, a) : undefined;
     return a && p ? { hero: p.id, act: a.id, cast: { person: p.id, label: a.owner! }, data: {} } : null;
   },
@@ -508,7 +509,7 @@ registerSituation({
   id: 'shelved_album', pressure: 'power', cost: 2, cooldown: 8, tone: 'bad', npcOnly: true,
   when: () => true,
   actorsPick: (s, _c, r) => {
-    const a = pickR(r, Object.values(s.acts).filter((x) => okAct17(s, x) && npcLabelAct(s, x) && unreleasedRecorded(s, x).length >= 6 && s.labels[x.owner!].cash < money(s, 150000)));
+    const a = pickR(r, actsNow27(s).filter((x) => okAct17(s, x) && npcLabelAct(s, x) && unreleasedRecorded(s, x).length >= 6 && s.labels[x.owner!].cash < money(s, 150000)));
     const p = a ? leadOf(s, a) : undefined;
     return a && p ? { hero: p.id, act: a.id, cast: { person: p.id, label: a.owner! }, data: {} } : null;
   },

@@ -4,6 +4,7 @@ import { MARKETS, MARKET_PREF, familyOf } from '../data/world';
 import type { GameState } from './types';
 import { fmtL, notify, remember } from './util';
 import { l } from '../data/world';
+import { actsNow27 } from './tickcache27';
 
 export function chartsWeek(s: GameState): void {
   const entries = [...s.charts.singles, ...s.charts.albums];
@@ -63,7 +64,7 @@ function records(s: GameState): void {
     }
     if (!r.longestRun || rel.weeksOnChart > r.longestRun.weeks) r.longestRun = { releaseId: rel.id, weeks: rel.weeksOnChart, title: rel.title, act: act.name };
   }
-  const champ = Object.values(s.acts).reduce<{ id: string; n: number; name: string } | undefined>((best, a) => (a.number1s > (best?.n ?? 0) ? { id: a.id, n: a.number1s, name: a.name } : best), undefined);
+  const champ = actsNow27(s).reduce<{ id: string; n: number; name: string } | undefined>((best, a) => (a.number1s > (best?.n ?? 0) ? { id: a.id, n: a.number1s, name: a.name } : best), undefined);
   if (champ) r.mostNo1sAct = { actId: champ.id, n: champ.n, name: champ.name };
   // limpa contadores de #1 que já saíram
   if (s.week % 26 === 0) for (const k of Object.keys(s.flags)) if (k.startsWith('no1run:') && s.charts.singles[0]?.releaseId !== k.slice(7)) delete s.flags[k];

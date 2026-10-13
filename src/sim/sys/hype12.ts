@@ -16,6 +16,7 @@ import { f12, festHypeHook } from './fest12';
 import { liveOf, type OwnFestival } from './live/state';
 import { w4 } from './world4/state';
 import { eventText17, eventValue17, fameWaitText17, launchText17, momentumParts17, quickParts17, rolloutText17 } from '../hype17';
+import { actsNow27 } from '../tickcache27';
 
 export interface HSrc { k: string; t: L; v: number }
 export interface HEnt { s: HSrc[]; p?: number; v?: number; pk?: number }
@@ -83,12 +84,12 @@ function parts(s: GameState, key: string): { t: L; v: number }[] {
       out.push({ t: l('Reputação do festival', 'Festival reputation'), v: f.rep * 0.15 });
     }
   } else if (k === 'l') {
-    const roster = id === 'player' ? Object.values(s.acts).filter((a) => a.owner === 'player') : (s.labels[id]?.roster ?? []).map((r) => s.acts[r]).filter(Boolean);
+    const roster = id === 'player' ? actsNow27(s).filter((a) => a.owner === 'player') : (s.labels[id]?.roster ?? []).map((r) => s.acts[r]).filter(Boolean);
     const top = roster.map((a) => actBase(s, a)).sort((a, b) => b - a).slice(0, 3);
     if (top.length) out.push({ t: l('Artistas do elenco em alta', 'Hot acts on the roster'), v: (top.reduce((t, x) => t + x, 0) / top.length) * 0.6 });
     if (id === 'player' && w4(s).hype >= 1) out.push({ t: l('Feiras e números 1 (hype do selo)', 'Fairs and number ones (label hype)'), v: w4(s).hype * 0.5 });
   } else if (k === 's') {
-    const acts = (sceneIx ? sceneIx.get(`${id}:${id2}`) ?? [] : Object.values(s.acts).filter((a) => a.city === id && a.genre === id2 && !a.deceased)).map((a) => actBase(s, a)).sort((a, b) => b - a).slice(0, 3);
+    const acts = (sceneIx ? sceneIx.get(`${id}:${id2}`) ?? [] : actsNow27(s).filter((a) => a.city === id && a.genre === id2 && !a.deceased)).map((a) => actBase(s, a)).sort((a, b) => b - a).slice(0, 3);
     if (acts.length) out.push({ t: l('Artistas da cena em alta', 'Hot acts in the scene'), v: (acts.reduce((t, x) => t + x, 0) / acts.length) * 0.8 });
   } else if (k === 't') {
     const tr = s.tours.find((x) => x.id === id), a = tr && s.acts[tr.actId];
@@ -246,7 +247,7 @@ export function nameOfKey(s: GameState, key: string): string {
 /** Entidades acompanhadas (para tendência, ranking e notícias). */
 export function tracked(s: GameState): string[] {
   const st = hy(s), keys = new Set(Object.keys(st.e));
-  for (const a of Object.values(s.acts)) if (!a.deceased && (a.owner === 'player' || a.momentum >= 60)) keys.add(`a:${a.id}`);
+  for (const a of actsNow27(s)) if (!a.deceased && (a.owner === 'player' || a.momentum >= 60)) keys.add(`a:${a.id}`);
   for (const p of s.pendingReleases) keys.add(`n:${p.actId}`);
   for (const rl of relics(s).list) if (rl.st === 'auction') keys.add(`o:${rl.id}`);
   for (const f of liveOf(s).fests) keys.add(`f:${f.id}`);
@@ -261,7 +262,7 @@ registerSimHook('week', 'hype12', (s) => {
   const st = hy(s);
   let news = 0;
   sceneIx = new Map();
-  for (const a of Object.values(s.acts)) if (!a.deceased) { const k = `${a.city}:${a.genre}`; const xs = sceneIx.get(k); if (xs) xs.push(a); else sceneIx.set(k, [a]); }
+  for (const a of actsNow27(s)) if (!a.deceased) { const k = `${a.city}:${a.genre}`; const xs = sceneIx.get(k); if (xs) xs.push(a); else sceneIx.set(k, [a]); }
   try { for (const key of tracked(s)) {
     const e = (st.e[key] ??= { s: [] });
     const v = quickParts17(() => hypeOf(s, key).v);
@@ -309,7 +310,7 @@ const social = (s: GameState) => s.year >= 2006;
 const teaserName = (s: GameState): L => s.year < 1950 ? l('Anúncios no rádio e no jornal', 'Radio and newspaper ads') : s.year < 1981 ? l('Cartazes, rádio e TV', 'Posters, radio and TV') : s.year < 1997 ? l('Clipe-teaser na TV musical', 'Teaser clip on music TV') : !social(s) ? l('Site oficial e trailers', 'Official site and trailers') : l('Contagem regressiva nas redes sociais', 'Social media countdown');
 const CD: Record<Lever, number> = { teaser: 4, leak: 26, feud: 26, party: 12, embargo: 0 };
 const leverCost = (s: GameState, a: Act, id: Lever) => id === 'teaser' ? money(s, (2500 + a.fame * 50) * (social(s) ? 0.6 : 1)) : id === 'feud' ? money(s, 2000) : id === 'party' ? money(s, 4000 + a.fame * 60) : 0;
-const feudTarget = (s: GameState, a: Act): Act | undefined => Object.values(s.acts).filter((b) => b.id !== a.id && b.owner !== 'player' && !b.playerBand && !b.deceased && b.status !== 'retired' && b.status !== 'split' && Math.abs(b.fame - a.fame) <= 25)
+const feudTarget = (s: GameState, a: Act): Act | undefined => actsNow27(s).filter((b) => b.id !== a.id && b.owner !== 'player' && !b.playerBand && !b.deceased && b.status !== 'retired' && b.status !== 'split' && Math.abs(b.fame - a.fame) <= 25)
   .sort((x, y) => (familyOf(y.genre) === familyOf(a.genre) ? 20 : 0) + y.fame - ((familyOf(x.genre) === familyOf(a.genre) ? 20 : 0) + x.fame) || (x.id < y.id ? -1 : 1))[0];
 
 export function levers(s: GameState, actId: string): LeverInfo[] {

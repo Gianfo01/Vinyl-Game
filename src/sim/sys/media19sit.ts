@@ -17,12 +17,13 @@ import { fmtL, money, post } from '../util';
 import type { P13 } from './persona13';
 import { registerSituation, type Pressure, type SitCtx, type SitOption } from './situations17';
 import { VENUES17 } from './venues17';
+import { actsNow27 } from '../tickcache27';
 
 const N = (pt: string, en: string): L => l(pt, en);
 const mkOf = (c: string): MarketId | undefined => cityById[c]?.market as MarketId | undefined;
 const isMine = (a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
 const ok = (s: GameState, a: Act) => a.status !== 'retired' && a.status !== 'split' && a.members.length > 0 && !(histMode(s) === 'strict' && a.catalogNo && !isMine(a));
-const pickAct = (s: GameState, r: Rng, f: (a: Act) => boolean): Act | undefined => { const xs = Object.values(s.acts).filter((a) => ok(s, a) && f(a)); return xs.length ? r.pick(xs.slice(0, 200)) : undefined; };
+const pickAct = (s: GameState, r: Rng, f: (a: Act) => boolean): Act | undefined => { const xs = actsNow27(s).filter((a) => ok(s, a) && f(a)); return xs.length ? r.pick(xs.slice(0, 200)) : undefined; };
 const nm = (s: GameState, c: SitCtx) => s.acts[c.act ?? c.hero]?.name ?? '?';
 const X = (c: SitCtx) => String(c.data.x ?? '');
 const fac = (k: string) => (P: P13 | null) => ((P?.facets as Record<string, number> | undefined)?.[k] ?? 50) / 50 + 0.2;

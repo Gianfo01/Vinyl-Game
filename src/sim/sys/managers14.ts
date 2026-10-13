@@ -25,6 +25,7 @@ import { simStart20 } from '../worldpolicy20';
 import { activeAct } from './ventures12';
 import { mgAdj9, ventures } from './ventures9';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 
@@ -87,7 +88,7 @@ registerPer13('e', (s, id) => {
 
 function realIndex(s: GameState): Map<string, Act> {
   const out = new Map<string, Act>();
-  for (const a of Object.values(s.acts)) { const n = realDataOf(a)?.n; if (n && !out.has(n)) out.set(n, a); }
+  for (const a of actsNow27(s)) { const n = realDataOf(a)?.n; if (n && !out.has(n)) out.set(n, a); }
   return out;
 }
 const isMyClient = (s: GameState, actId: string): boolean => ventures(s).mg.clients.some((c) => c.actId === actId);
@@ -302,7 +303,7 @@ export function managersMonth(s: GameState, r: Rng): void {
     const roster = rosterOf(s, m.id);
     const mk = cityById[m.city]?.market;
     if (roster.length < mgrCap(m) && r.chance(0.08)) {
-      const cands = Object.values(s.acts).filter((a) => activeAct(a) && !a.playerBand && !taken.has(a.id) && a.fame >= 12 && a.debutYear <= s.year && !isMyClient(s, a.id) && (simStart20(s) || !realDataOf(a))
+      const cands = actsNow27(s).filter((a) => activeAct(a) && !a.playerBand && !taken.has(a.id) && a.fame >= 12 && a.debutYear <= s.year && !isMyClient(s, a.id) && (simStart20(s) || !realDataOf(a))
         && cityById[a.city]?.market === mk && m.fam.includes(familyOf(a.genre)) && (a.owner !== 'player' || a.trust < 55 || feud));
       cands.sort((a, b) => b.fame - a.fame);
       const pick = cands.length ? cands[Math.min(cands.length - 1, r.int(0, 3))] : undefined;

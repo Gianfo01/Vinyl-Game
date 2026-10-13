@@ -11,6 +11,8 @@ let VER = 0; // só identidade de versão (nunca entra no estado do jogo)
 
 /** Avisa que s.acts ganhou ou perdeu atos, ou que alguém entrou numa formação (invalida o índice). */
 export const actsTouched17 = (s: GameState): void => { AV.set(s, (AV.get(s) ?? 0) + 1); };
+/** r27: versão de s.acts (muda em actsTouched17); chave de caches derivados (tickcache27). */
+export const actsVersion17 = (s: GameState): number => AV.get(s) ?? 0;
 
 function ix(s: GameState): ActIx {
   let x = IX.get(s);

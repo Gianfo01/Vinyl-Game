@@ -19,6 +19,7 @@ import { rw } from './realworld';
 import { histLocked } from '../history15';
 import { resolveThinking } from '../contracts';
 import { actsTouched17 } from '../actidx17';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 type Ctx = Record<string, string | number>;
 
@@ -40,7 +41,7 @@ function formerPush(s: GameState, actId: string, personId: string, reason: 'left
 // ---------------------------------------------------------------- 1. envelhecer e morrer (todos)
 
 function agingAll(s: GameState, r: Rng): void {
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (tracked(act)) continue;
     const safe = realSafe(s, act); // os acompanhados já envelhecem em dynasty.ts; reais seguem o roteiro
     for (const id of act.members) {
@@ -56,7 +57,7 @@ function agingAll(s: GameState, r: Rng): void {
 
 function bandLoss(s: GameState, r: Rng): void {
   const seen = (s.flags as Record<string, number>);
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.status === 'retired' || act.status === 'split') continue;
     const dead = act.members.filter((id) => s.persons[id] && !s.persons[id].alive);
     if (!dead.length) continue;
@@ -143,7 +144,7 @@ deferEvents([{
 // ---------------------------------------------------------------- 3. aposentadoria e volta
 
 function retirements(s: GameState, r: Rng): void {
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.playerBand || act.owner === 'player' || histLocked(s, act)) continue;
     if (act.status !== 'active' && act.status !== 'hiatus') continue;
     const live = alive(s, act);
@@ -161,7 +162,7 @@ function retirements(s: GameState, r: Rng): void {
 }
 
 function comebacks(s: GameState, r: Rng): void {
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.status !== 'retired' && act.status !== 'split') continue;
     if (act.deceased || act.owner === 'player' || act.playerBand || histLocked(s, act)) continue;
     const live = alive(s, act);
@@ -247,7 +248,7 @@ function careerMoves(s: GameState, r: Rng): void {
 function npcVices(s: GameState, r: Rng): void {
   const mine = new Set(playerActs(s));
   const eraRisk = s.year >= 1965 && s.year < 1995 ? 1.6 : 1;
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (mine.has(act.id) || act.status !== 'active') continue;
     if (!r.chance(0.12)) continue; // amostra: barato e suficiente
     for (const id of act.members) {
@@ -275,7 +276,7 @@ function npcVices(s: GameState, r: Rng): void {
 
 function catalogIncome(s: GameState): void {
   const byAct: Record<string, number> = {};
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.live || rel.owner === 'player') continue;
     const act = s.acts[rel.actId];
     if (!act || act.playerBand) continue;
@@ -321,7 +322,7 @@ function labelLoans(s: GameState, r: Rng): void {
 function yearly(s: GameState): void {
   // composições guardadas de NPCs que nunca vão sair (ato parado ou ideia velha) somem do save
   const mine = new Set(playerActs(s));
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (mine.has(act.id) || act.playerBand) continue;
     const stopped = act.status === 'retired' || act.status === 'split';
     const keep: string[] = [];

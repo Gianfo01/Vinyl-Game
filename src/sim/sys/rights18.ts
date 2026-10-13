@@ -28,6 +28,7 @@ import { mkWeights18, proDue18 } from './econ18';
 import { histMode } from '../history15';
 import { addStress } from '../stress17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 
@@ -322,7 +323,7 @@ function neighMonth(s: GameState): void {
   let label = 0;
   const out: { due: number; amt: number; mk: string }[] = [];
   const perfTo: Record<string, number> = {};
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.owner !== 'player' || !rel.weekly.length || rel.weekly[rel.weekly.length - 1] <= 0) continue;
     const monthly = annualRevenue(rel) / 12;
     if (monthly <= 0) continue;
@@ -640,7 +641,7 @@ function clearancesMonth(s: GameState): void {
 // ---------------------------------------------------------------- regravações (ação do jogador e de NPCs)
 
 export function rerecordable18(s: GameState, actId: string): Release[] {
-  return Object.values(s.releases).filter((x) => x.actId === actId && x.owner !== 'player' && x.owner !== 'indie' && s.year - x.year >= 5 && !r18(s).rr[x.id] && x.totalUnits > 0)
+  return releasesNow27(s).filter((x) => x.actId === actId && x.owner !== 'player' && x.owner !== 'indie' && s.year - x.year >= 5 && !r18(s).rr[x.id] && x.totalUnits > 0)
     .sort((a, b) => b.totalUnits - a.totalUnits).slice(0, 6);
 }
 /** "Versão do artista": o ato regrava as faixas mais fortes dos masters que pertencem a outro selo. */
@@ -666,7 +667,7 @@ function npcRerecordYear(s: GameState): void {
   const st = r18(s), r = seed(s, 'rr');
   if (s.year < 1965) return;
   const by: Record<string, Release[]> = {};
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.owner !== 'player' || st.rr[rel.id] || s.year - rel.year < 5) continue;
     const a = s.acts[rel.actId];
     if (!a || a.playerBand || a.owner === 'player' || a.status === 'retired' || a.status === 'split' || a.fame < 30) continue;
@@ -720,7 +721,7 @@ function termYear(s: GameState): void {
   }
   // novos avisos
   const by: Record<string, Release[]> = {};
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.owner !== 'player') continue;
     const eff = termWindow18(s, rel);
     if (eff === null || s.year < eff - 10 || s.year > eff) continue;
@@ -780,7 +781,7 @@ export function answerTerm18(s: GameState, id: string, how: 'reneg' | 'contest' 
 export function setSoc18(s: GameState, mk: string, id: string): L | null {
   const o = socOptions18(s, mk).find((x) => x.id === id);
   if (!o) return l('Sociedade indisponível.', 'Society unavailable.');
-  if (o.invite && Object.values(s.releases).filter((x) => mineRel(s, x)).length < 15) return l('A SESAC só convida editoras com catálogo relevante (15+ lançamentos).', 'SESAC only invites publishers with a meaningful catalog (15+ releases).');
+  if (o.invite && releasesNow27(s).filter((x) => mineRel(s, x)).length < 15) return l('A SESAC só convida editoras com catálogo relevante (15+ lançamentos).', 'SESAC only invites publishers with a meaningful catalog (15+ releases).');
   const st = r18(s);
   if (st.soc[mk] && st.soc[mk] !== id) post(s, `soc18:${mk}:${s.week}`, -money(s, 1500), 'publishing', 'Troca de sociedade (recadastro do catálogo)');
   st.soc[mk] = id;
@@ -946,7 +947,7 @@ registerExplain('rights18.rate', (s, c) => {
 });
 registerExplain('rights18.cat', (s, c) => {
   const ids = (c.rels as string[] | undefined) ?? [];
-  const rels = ids.length ? ids.map((id) => s.releases[id]).filter(Boolean) : Object.values(s.releases).filter((x) => x.owner === 'player' && !s.acts[x.actId]?.playerBand);
+  const rels = ids.length ? ids.map((id) => s.releases[id]).filter(Boolean) : releasesNow27(s).filter((x) => x.owner === 'player' && !s.acts[x.actId]?.playerBand);
   const v = catVal18(s, rels, !ids.length);
   return { title: l('Valor do catálogo', 'Catalog value'), value: v.value, fmt: 'money', parts: [{ label: l('Receita anual', 'Annual revenue'), value: v.annual, fmt: 'money' }, ...v.parts], note: l('Receita anual × múltiplo da época × diversificação × concentração × duração dos direitos × modas × disputas.', 'Annual revenue × era multiple × diversification × concentration × rights duration × trends × disputes.') };
 });
@@ -966,4 +967,4 @@ export function botRights18(s: GameState, prof: 'cautious' | 'balanced' | 'aggre
 }
 
 // util para a interface
-export const relsOfAct18 = (s: GameState, act: Act): Release[] => Object.values(s.releases).filter((x) => x.actId === act.id);
+export const relsOfAct18 = (s: GameState, act: Act): Release[] => releasesNow27(s).filter((x) => x.actId === act.id);

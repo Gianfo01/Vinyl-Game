@@ -15,6 +15,7 @@ import { artDelta18, fmtL, hasTech, money, nextId, notify, playerActs, post, rem
 import { gone16 } from './sys/gone16';
 import { scandal, type ScandalKind } from './scandal17';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { actsNow27, releasesNow27 } from './tickcache27';
 const CRISIS17: Record<Crisis['kind'], ScandalKind> = { scandal: 'conduct', remark: 'offense', censorship: 'politics', cancel: 'offense', leak: 'conduct', accident: 'violence' };
 
 export interface CriticDef {
@@ -330,7 +331,7 @@ registerEvents(MEDIA_EVENTS);
 export function mediaMonth(s: GameState, r: Rng): void {
   if (s.prAgency) post(s, 'pr_agency', -s.prAgency.monthly, 'marketing', `Assessoria ${s.prAgency.name}`);
   // resenhas dos lançamentos do mês (jogador e principais rivais)
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (s.reviews[rel.id] || s.week - rel.week > 5) continue;
     const act = s.acts[rel.actId];
     if (rel.owner === 'player' || act?.playerBand || (act && act.fame > 40)) reviewRelease(s, r, rel);
@@ -339,5 +340,5 @@ export function mediaMonth(s: GameState, r: Rng): void {
   // limpa resenhas antigas de terceiros
   const keys = Object.keys(s.reviews);
   if (keys.length > 400) for (const k of keys.slice(0, keys.length - 400)) delete s.reviews[k];
-  for (const a of Object.values(s.acts)) if (a.cancelledUntil && a.cancelledUntil < s.week) a.cancelledUntil = undefined;
+  for (const a of actsNow27(s)) if (a.cancelledUntil && a.cancelledUntil < s.week) a.cancelledUntil = undefined;
 }

@@ -46,6 +46,7 @@ import { histAltered, histDiverged, histMode, histRoll } from '../history15';
 import { noteRelease17 } from '../relidx17';
 import { actsTouched17 } from '../actidx17';
 import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
+import { actsNow27 } from '../tickcache27';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 /** r27: chave de deduplicação — "The X" = "X" e "&" = "and" (Carpenters, Four Tops, Smashing Pumpkins apareciam 2×) */
@@ -284,7 +285,7 @@ function pidIndex(s: GameState): Record<string, string> {
   if (st.pid) return st.pid;
   const idx: Record<string, string> = {};
   if (s.config.realNames) {
-    for (const a of Object.values(s.acts)) {
+    for (const a of actsNow27(s)) {
       if (!a.catalogNo) continue;
       for (const id of [...a.members, ...(st.former[a.id] ?? []).map((x) => x.personId)]) {
         const p = s.persons[id];
@@ -313,7 +314,7 @@ function canonical(s: GameState, p: Person, realName: string, born: number | und
 /** Atos (fora `except`) dos quais a pessoa faz ou fez parte. */
 function otherActsOf(s: GameState, personId: string, except: string): Act[] {
   const st = rw(s);
-  return Object.values(s.acts).filter((a) => a.id !== except && (a.members.includes(personId) || (st.former[a.id] ?? []).some((x) => x.personId === personId)));
+  return actsNow27(s).filter((a) => a.id !== except && (a.members.includes(personId) || (st.former[a.id] ?? []).some((x) => x.personId === personId)));
 }
 
 const potentialFor = (r: Rng, tier: number) => (tier === 1 ? r.int(90, 99) : tier === 2 ? r.int(80, 93) : r.int(68, 84));
@@ -535,7 +536,7 @@ function newgame(s: GameState, r: Rng): void {
   const mode = s.config.mode;
   const sim = simStart20(s); // r20 (G8): estado inicial simulado (status, fim, fama e catálogo não vêm das datas reais)
   // catálogo clássico: decora os que existem; quem já terminou antes da run vira história (modo real)
-  const byNo = new Map(Object.values(s.acts).filter((a) => a.catalogNo && a.catalogNo < REAL_BASE).map((a) => [a.catalogNo!, a]));
+  const byNo = new Map(actsNow27(s).filter((a) => a.catalogNo && a.catalogNo < REAL_BASE).map((a) => [a.catalogNo!, a]));
   const upcomingNos = new Set(s.upcoming.map((u) => u.no));
   for (const [noStr, ex] of Object.entries(REAL_CLASSIC)) {
     const no = Number(noStr);
@@ -604,14 +605,14 @@ function newgame(s: GameState, r: Rng): void {
     if (act.fame > 12 || r.chance(0.5)) signToBestRival(s, r, act);
   }
   // atos gerados ativos no início ganham discografia simulada
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.catalogNo || act.owner === 'player' || act.playerBand || act.releases.length) continue;
     const years = y0 - act.formed;
     if (years < 2 || act.fame < 6) continue;
     simulateDiscography(s, r, act, Math.max(act.formed + 1, y0 - 12), y0, act.fame > 40 ? 2 : 3);
   }
   // catálogo clássico ativo também ganha os discos que faltam (modo ficcional)
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (!act.catalogNo || act.catalogNo >= REAL_BASE || act.releases.length || act.status !== 'active') continue;
     simulateDiscography(s, r, act, act.debutYear, y0, 1);
   }
@@ -657,7 +658,7 @@ function monthly(s: GameState, r: Rng): void {
   }
   // catálogo clássico que acabou de surgir
   if (s.config.realNames) {
-    for (const act of Object.values(s.acts)) {
+    for (const act of actsNow27(s)) {
       if (!act.catalogNo || act.catalogNo >= REAL_BASE || st.done[act.id]) continue;
       const ex = REAL_CLASSIC[act.catalogNo];
       if (ex) decorate(s, r, act, { ...ex, n: REAL_ACTS[act.catalogNo]?.name ?? act.name, t: 1 });
@@ -704,7 +705,7 @@ function monthly(s: GameState, r: Rng): void {
     } else if (ev.kind === 'fate' && ev.personId) {
       const p = s.persons[ev.personId];
       if (p?.alive && (r.chance(0.85) || (hm === 'strict' && !histAltered(s, act)))) { // exata: 100% (salvo se você mudou a história do ato)
-        if (Object.values(s.acts).some((a) => a.members.includes(p.id))) personDies(s, p, l('no mesmo ano da vida real', 'in the same year as in real life'));
+        if (actsNow27(s).some((a) => a.members.includes(p.id))) personDies(s, p, l('no mesmo ano da vida real', 'in the same year as in real life'));
         else {
           p.alive = false;
           p.died = s.year;

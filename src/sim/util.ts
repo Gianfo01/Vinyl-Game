@@ -4,6 +4,7 @@ import type { L } from '../data/world';
 import type { GameState, MemoryEntry, Notification } from './types';
 import { book18, postHooks18, sect18, type Sect18 } from './ledger18';
 import { noteSect23 } from './close23';
+import { playerActIds27 } from './tickcache27';
 
 export const START_DAY_MS = (year: number) => Date.UTC(year, 0, 1);
 
@@ -152,7 +153,7 @@ export function withPlayerActsCache<T>(s: GameState, fn: () => T): T {
 
 export function playerActs(s: GameState): string[] {
   if (paCache && paCache.s === s) return paCache.ids.slice();
-  return playerActsRaw(s);
+  return playerActIds27(s) ?? playerActsRaw(s);
 }
 
 function playerActsRaw(s: GameState): string[] {

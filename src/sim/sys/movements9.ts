@@ -20,6 +20,7 @@ import { actAdmiration, admiration, bonds } from './bonds9';
 import { actBond, bump } from './social8';
 import { HIST_SCENES, actInScene, sceneStage, type HistScene } from './world4/scenes';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 export type MvPhase = 'birth' | 'peak' | 'commercial' | 'repression' | 'split' | 'death' | 'revival' | 'canon';
 export type MvEnd = 'censorship' | 'exile' | 'leader_death' | 'dilution' | 'fight';
@@ -181,7 +182,7 @@ function mapScenes(s: GameState, r: Rng): void {
     if (st.scene[sc.id]) continue;
     const stg = sceneStage(s, sc);
     if (stg === 'future' || stg === 'over') continue;
-    const acts = Object.values(s.acts).filter((a) => live(a) && a.city === sc.city && sc.genres.includes(a.genre) && !tierOf(s, a.id));
+    const acts = actsNow27(s).filter((a) => live(a) && a.city === sc.city && sc.genres.includes(a.genre) && !tierOf(s, a.id));
     if (!acts.length && stg !== 'peak') continue;
     const mv: Movement = { id: nextId(s, 'mv'), name: { ...sc.name }, city: sc.city, parent: sc.genres[0], genreId: sc.genres[0], born: sc.from, strength: 15, fashion: { ...sc.look.label }, acts: [] };
     s.movements.push(mv);
@@ -199,7 +200,7 @@ function mapScenes(s: GameState, r: Rng): void {
 
 function sceneMonth(s: GameState, mv: Movement, x: MovX, sc: HistScene): void {
   const stg = sceneStage(s, sc);
-  for (const a of Object.values(s.acts)) if (live(a) && !tierOf(s, a.id) && actInScene(s, a, sc) && x.phase !== 'death') addMember(s, mv, x, a, x.founders.length < 2 ? 'founder' : 'core');
+  for (const a of actsNow27(s)) if (live(a) && !tierOf(s, a.id) && actInScene(s, a, sc) && x.phase !== 'death') addMember(s, mv, x, a, x.founders.length < 2 ? 'founder' : 'core');
   const want: MvPhase = stg === 'rise' ? 'birth' : stg === 'peak' ? 'peak' : stg === 'decline' ? (SCENE_END[sc.id] === 'censorship' ? 'repression' : SCENE_END[sc.id] === 'fight' ? 'split' : 'commercial') : 'death';
   if (want === x.phase || x.phase === 'canon' || x.phase === 'revival' || (x.phase === 'death' && want !== 'death')) return;
   if (want === 'death') kill(s, mv, x, SCENE_END[sc.id] ?? 'dilution', { ...sc.arc[2] });
@@ -246,7 +247,7 @@ function lifecycle(s: GameState, r: Rng, mv: Movement, x: MovX): void {
       else if (age >= 3 && r.chance(0.025)) setPhase(s, mv, x, 'commercial');
       break;
     case 'commercial':
-      if (r.chance(0.05)) { const c = Object.values(s.acts).find((a) => live(a) && a.genre === mv.genreId && !tierOf(s, a.id)); if (c) addMember(s, mv, x, c, 'peri'); }
+      if (r.chance(0.05)) { const c = actsNow27(s).find((a) => live(a) && a.genre === mv.genreId && !tierOf(s, a.id)); if (c) addMember(s, mv, x, c, 'peri'); }
       if (age >= 2 && r.chance(0.03)) setPhase(s, mv, x, 'split', l('Os fundadores discordam sobre os rumos: racha.', 'The founders disagree on direction: split.'));
       else if (age >= 4 && r.chance(0.03)) kill(s, mv, x, 'dilution');
       break;
@@ -281,7 +282,7 @@ function membership(s: GameState, r: Rng, mv: Movement, x: MovX): void {
   const voters = [...x.founders, ...x.core].map((id) => s.acts[id]).filter((a): a is Act => live(a));
   if (!voters.length) return;
   const fam = familyOf(mv.parent);
-  const pool = Object.values(s.acts).filter((a) => live(a) && a.fame > 5 && !tierOf(s, a.id) && (a.city === mv.city || familyOf(a.genre) === fam));
+  const pool = actsNow27(s).filter((a) => live(a) && a.fame > 5 && !tierOf(s, a.id) && (a.city === mv.city || familyOf(a.genre) === fam));
   for (let i = 0; i < 2 && pool.length; i++) {
     const a = r.pick(pool);
     const v = voters.reduce((t, m) => t + (leadOf(m) ? admiration(s, leadOf(m)!, a.id) : 0) + actBond(s, m, a).v * 0.5, 0) / voters.length;
@@ -404,7 +405,7 @@ export function foundMovement(s: GameState, r: Rng, o: FoundSpec, npc = false): 
 /** NPCs também fundam movimentos: um ato notável e aliados próximos da mesma cidade. */
 function npcFound(s: GameState, r: Rng): void {
   if (!r.chance(0.01)) return;
-  const cand = Object.values(s.acts).filter((a) => live(a) && a.fame > 30 && !mine(s, a) && !tierOf(s, a.id));
+  const cand = actsNow27(s).filter((a) => live(a) && a.fame > 30 && !mine(s, a) && !tierOf(s, a.id));
   if (!cand.length) return;
   const A = r.pick(cand);
   const allies = cand.filter((b) => b !== A && b.city === A.city && familyOf(b.genre) === familyOf(A.genre) && actBond(s, A, b).v + actAdmiration(s, A, b.id) > 20).slice(0, 3).map((b) => b.id);

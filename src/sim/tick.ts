@@ -2,6 +2,7 @@
 // (finanças, contratos, pessoas, rivais, mundo, eventos, legado). GDD §6, §7.
 
 import { closeSnapshot20 } from './oblig20';
+import { tickScope27 } from './tickcache27';
 import { legacyOpen23, rotate23 } from './close23';
 import { fin18, sumP18 } from './ledger18';
 import { clamp, type Rng } from '../core/rng';
@@ -55,6 +56,10 @@ function daysInCurrentMonth(s: GameState): number {
  */
 export function advanceWeek(s: GameState): boolean {
   if (s.ended && !s.flags.sandbox) return true;
+  return tickScope27(s, () => advanceWeekIn(s));
+}
+
+function advanceWeekIn(s: GameState): boolean {
   const r = rngOf(s);
   // gêneros de movimentos são globais: garante que pertençam a este jogo (várias partidas no mesmo processo)
   registerMovementGenres(s);

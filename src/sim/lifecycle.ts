@@ -16,9 +16,10 @@ import { emitEvent } from './events';
 import { histLocked } from './history15';
 import { actsTouched17 } from './actidx17';
 import { allReleases17, releasesTouched17 } from './relidx17';
+import { actsNow27 } from './tickcache27';
 
 export function monthlyPeople(s: GameState, r: Rng): void {
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.status === 'retired' || act.status === 'split') continue;
     if (act.hiatusUntil && act.hiatusUntil <= s.week) {
       act.hiatusUntil = undefined;
@@ -108,7 +109,7 @@ export function retireAct(s: GameState, act: Act): void {
 
 /** Atos fora do jogador produzem e lançam conforme dono (selo rival ou independente). */
 export function npcProduction(s: GameState, r: Rng): void {
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.owner === 'player' || (act.status !== 'active' && act.status !== 'emerging') || histLocked(s, act)) continue;
     const lb = act.owner ? s.labels[act.owner] : undefined;
     const pace = lb ? 0.35 : 0.12;
@@ -171,13 +172,13 @@ export function worldSpawns(s: GameState, r: Rng): void {
 export function prune(s: GameState): void {
   const keepActs = new Set<string>();
   for (const k of Object.keys(s.knowledge)) keepActs.add(k);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     const old = a.status === 'retired' || a.status === 'split';
     const notable = a.catalogNo || a.hits > 0 || a.owner === 'player' || a.playerBand || a.legend || keepActs.has(a.id);
     const stale = !old && !a.owner && a.fame < 3 && s.year - a.formed > 8 && a.releases.length === 0;
     if (((old && s.year - a.careerEnd > 3) || stale) && !notable) {
       // a pessoa pode estar em outro ato (carreira solo, supergrupo) ou ser você: só sai se ninguém mais usa
-      for (const id of a.members) if (!s.persons[id]?.isPlayer && !Object.values(s.acts).some((b) => b !== a && b.members.includes(id))) delete s.persons[id];
+      for (const id of a.members) if (!s.persons[id]?.isPlayer && !actsNow27(s).some((b) => b !== a && b.members.includes(id))) delete s.persons[id];
       for (const id of a.songs) delete s.songs[id];
       for (const id of a.releases) delete s.releases[id];
       releasesTouched17(s);

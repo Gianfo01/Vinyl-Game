@@ -36,6 +36,7 @@ import { liveOf } from './live/state';
 import { repOf, mgrName } from './managers14';
 import { soc18 } from './society18';
 import { ventures } from './ventures9';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 // ================================================================ estado
 
@@ -119,7 +120,7 @@ const C27 = new WeakMap<GameState, { w: number; n: number; rels: Release[]; acts
 function cache27(s: GameState): { rels: Release[]; acts: Act[] } {
   const c = C27.get(s);
   if (c && c.w === s.week && c.n === s.idSeq) return c;
-  const v = { w: s.week, n: s.idSeq, rels: Object.values(s.releases).filter((r) => r.owner === 'player'), acts: Object.values(s.acts).filter((a) => a.owner === 'player' || !!a.playerBand) };
+  const v = { w: s.week, n: s.idSeq, rels: releasesNow27(s).filter((r) => r.owner === 'player'), acts: actsNow27(s).filter((a) => a.owner === 'player' || !!a.playerBand) };
   C27.set(s, v);
   return v;
 }
@@ -189,7 +190,7 @@ const at = (s: GameState, y: number, m: number) => s.year === y && s.month === m
 // ---------------------------------------------------------------- 1. Memphis 1953
 R({ id: 'memphis_1953', phase: 'month', p: 0.35, test: (s) => (M(1953, 1954, s) && presence27(s, 'memphis') ? {} : null),
   run: (s, _c, r) => {
-    const real = exactHist(s) ? Object.values(s.acts).find((a) => /^Elvis Presley$/i.test(a.name) && !a.owner && !a.deceased) : undefined;
+    const real = exactHist(s) ? actsNow27(s).find((a) => /^Elvis Presley$/i.test(a.name) && !a.owner && !a.deceased) : undefined;
     const a = real ?? spawnProceduralAct(s, r, { city: 'memphis', genre: 'rnr', potential: 93, members: 1, fame: 0.5, formedYear: s.year });
     if (!real) a.potential = Math.max(a.potential, 92);
     addLead18(s, r, a, 'demo', 3, 4, T('Acetato pago do próprio bolso.', 'Acetate paid out of pocket.'));
@@ -212,7 +213,7 @@ R({ id: 'decca_1962', phase: 'month', p: 1, test: (s) => {
 }, run: (s, c) => deccaFire(s, c.act) });
 R({ id: 'decca_audition', phase: 'month', p: 0.3, test: (s) => (s.year === 1962 && (presence27(s, 'london') || presence27(s, 'liverpool')) ? {} : null),
   run: (s, _c, r) => {
-    const real = exactHist(s) ? Object.values(s.acts).find((a) => /^The Beatles$/i.test(a.name) && !a.owner) : undefined;
+    const real = exactHist(s) ? actsNow27(s).find((a) => /^The Beatles$/i.test(a.name) && !a.owner) : undefined;
     const a = real ?? spawnProceduralAct(s, r, { city: 'liverpool', genre: 'beat', potential: 90, members: 4, fame: 3, formedYear: s.year - 2 });
     eg27(s).seen.decca_audition = s.week;
     msg(s, 'decca_audition', 'A&R', fmtL(T('Audição: {a}, de Liverpool', 'Audition: {a}, from Liverpool'), { a: a.name }),
@@ -516,7 +517,7 @@ const BEATS27: L[] = [
 ];
 R({ id: 'fex_hunt', phase: 'month', p: 0.02, test: (s) => {
   if (s.year < 2007 || eg27(s).hunt || !quarterly(s)) return null;
-  const old = Object.values(s.acts).filter((a) => a.debutYear >= 1980 && a.debutYear <= 1989 && a.songs.length > 0 && (a.status === 'retired' || a.status === 'split' || a.fame < 12) && !a.catalogNo);
+  const old = actsNow27(s).filter((a) => a.debutYear >= 1980 && a.debutYear <= 1989 && a.songs.length > 0 && (a.status === 'retired' || a.status === 'split' || a.fame < 12) && !a.catalogNo);
   const pick = old.find((a) => a.releases.some((id) => s.releases[id]?.owner === 'player')) ?? old.sort((x, y) => x.fame - y.fame || (x.id < y.id ? -1 : 1))[0];
   return pick ? { act: pick, p: pick.releases.some((id) => s.releases[id]?.owner === 'player') ? 0.04 : 0.02 } : null;
 }, run: (s, c, r) => {

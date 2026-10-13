@@ -20,6 +20,7 @@ import { grow, learnInstrument, overall, type Role } from './talent';
 import { BACKGROUNDS, HOBBIES, JOBS, KID_EDU, PARTNER_TRAITS, backgroundById, type BackgroundId, type HobbyId, type KidEdu } from './life/data';
 import { ensureBandVocalist } from './vocals10';
 import { actsTouched17 } from '../actidx17';
+import { actsNow27 } from '../tickcache27';
 
 export * from './life/data';
 
@@ -148,7 +149,7 @@ export function playerPerson(s: GameState): Person | undefined {
 export function playerAct(s: GameState): Act | undefined {
   const p = playerPerson(s);
   if (!p) return undefined;
-  return Object.values(s.acts).find((a) => a.members.includes(p.id) && a.status !== 'split' && a.status !== 'retired');
+  return actsNow27(s).find((a) => a.members.includes(p.id) && a.status !== 'split' && a.status !== 'retired');
 }
 
 export function ownerAgeNow(s: GameState): number {
@@ -228,7 +229,7 @@ export function meetPeople(s: GameState, r: Rng, where: 'out' | 'party' = 'out')
     const artists = Object.values(s.persons).filter((p) => p.alive && !p.isPlayer && Math.abs(s.year - p.born - age) < 12 && s.year - p.born >= 20).slice(0, 400);
     if (artists.length) {
       const a = r.pick(artists);
-      const act = Object.values(s.acts).find((x) => x.members.includes(a.id));
+      const act = actsNow27(s).find((x) => x.members.includes(a.id));
       out[0] = { id: `c${s.week}-a`, name: a.name, born: a.born, job: act ? fmtL(l('artista ({a})', 'artist ({a})'), { a: act.name }) : l('artista', 'artist'), trait: 'artsy', chemistry: clamp(r.int(35, 90), 5, 99), personId: a.id };
     }
   }
@@ -245,7 +246,7 @@ export function startDating(s: GameState, candId: string): L | null {
   L0.candidates = [];
   logLife(s, fmtL(l('Começou a namorar {p}.', 'Started dating {p}.'), { p: c.name }), 'good');
   if (c.personId) {
-    const act = Object.values(s.acts).find((a) => a.members.includes(c.personId!));
+    const act = actsNow27(s).find((a) => a.members.includes(c.personId!));
     if (act && (act.owner === 'player' || act.playerBand)) notify(s, fmtL(l('Você está namorando alguém do próprio elenco ({a}). A imprensa vai adorar; a banda, talvez não.', 'You are dating someone on your own roster ({a}). The press will love it; the band, maybe not.'), { a: act.name }), 'info');
   }
   return null;
@@ -568,7 +569,7 @@ export function startProject(s: GameState, r: Rng, kind: 'solo' | 'band', genre:
 export function joinableActs(s: GameState): Act[] {
   const p = playerPerson(s);
   if (!p) return [];
-  return Object.values(s.acts).filter((a) =>
+  return actsNow27(s).filter((a) =>
     (a.status === 'active' || a.status === 'emerging') && a.archetype !== 'synthetic' && !a.members.includes(p.id) && a.members.length >= 2 && a.members.length < 7 &&
     (a.owner === 'player' || (!a.owner && (s.knowledge[a.id]?.degree ?? 0) >= 2))).sort((x, y) => y.fame - x.fame).slice(0, 12);
 }
@@ -739,7 +740,7 @@ export function industryParty(s: GameState, r: Rng): { text: L; candidates: Cand
     text = l('Boa conversa com artistas: o selo ganhou fama de lugar bom para trabalhar.', 'Good talks with artists: the label is now seen as a good place to work.');
     logLife(s, text, 'good');
   } else if (roll < 0.6) {
-    const acts = Object.values(s.acts).filter((a) => !a.owner && a.status !== 'retired' && a.status !== 'split' && !(s.knowledge[a.id]?.degree)).slice(0, 300);
+    const acts = actsNow27(s).filter((a) => !a.owner && a.status !== 'retired' && a.status !== 'split' && !(s.knowledge[a.id]?.degree)).slice(0, 300);
     if (acts.length) {
       const a = r.pick(acts);
       s.knowledge[a.id] = { actId: a.id, degree: 2, stage: 'monitoring', bias: r.normal(0, 6), updatedWeek: s.week, source: 'network' };

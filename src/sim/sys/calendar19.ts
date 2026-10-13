@@ -23,6 +23,7 @@ import { playerPerson } from './life';
 import { liveOf } from './live/state';
 import { P } from './people/state';
 import { sup18 } from './supply18';
+import { releasesNow27 } from '../tickcache27';
 
 const N = (pt: string, en: string): L => l(pt, en);
 const mineSet = (s: GameState) => new Set(playerActs(s));
@@ -131,7 +132,7 @@ registerDeadline('loans', (s) => {
 // 10. prêmios (indicações em outubro, cerimônia em dezembro) — só quem lançou algo no último ano concorre
 registerDeadline('awards', (s) => {
   const mine = mineSet(s);
-  if (!Object.values(s.releases).some((r) => mine.has(r.actId) && s.week - r.week < 52)) return [];
+  if (!releasesNow27(s).some((r) => mine.has(r.actId) && s.week - r.week < 52)) return [];
   return [
     { id: `noms:${s.year}`, w: nextMonthWeek19(s, NOMS_MONTH), kind: 'award', t: N('Indicações aos prêmios', 'Award nominations'), d: N('Campanha "para sua consideração" só vale antes das indicações.', '"For your consideration" campaigns only count before nominations.'), tone: 'info', goto: { area: 'awards' } },
     { id: `cer:${s.year}`, w: nextMonthWeek19(s, CEREMONY_MONTH), kind: 'award', t: N('Cerimônia de prêmios', 'Awards ceremony'), tone: 'good', goto: { area: 'awards' } },

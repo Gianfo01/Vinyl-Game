@@ -24,6 +24,7 @@ import { addHype } from './hype12';
 import { homeMk19, showName19 } from './media19';
 import { FR18 } from './tv18';
 import { VENUES17 } from './venues17';
+import { releasesNow27 } from '../tickcache27';
 
 type Ctx = Record<string, string | number>;
 const N = (pt: string, en: string): L => l(pt, en);
@@ -92,7 +93,7 @@ for (const sid of SOCS) {
   const so = () => SOCS18.find((x) => x.id === sid);
   ev(`m19c_${sid}`, 'business', 'neutral', 36, (s, r) => {
     const d = so(); if (!d || s.year < d.from || (d.to && s.year > d.to) || d.mk !== homeMk19(s)) return null;
-    if (Object.values(s.releases).filter((x) => x.owner === 'player').length < 3 || !r.chance(0.04)) return null;
+    if (releasesNow27(s).filter((x) => x.owner === 'player').length < 3 || !r.chance(0.04)) return null;
     const a = top(s); return a ? { act: a.id, x: d.name } : null;
   }, N('A {x} bate à porta', '{x} comes knocking'),
   N('A sociedade {x} diz que seus shows e lançamentos tocam obras do repertório dela sem licença — e oferece a filiação do selo (que também arrecada para você).', 'The {x} society says your shows and releases use works from its repertoire unlicensed — and offers to sign up the label (which also collects for you).'), [
