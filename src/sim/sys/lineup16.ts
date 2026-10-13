@@ -517,6 +517,8 @@ export function stints16(s: GameState, a: Act): Stint16[] {
   const shift = d?.d !== undefined ? a.debutYear - d.d : 0;
   const base = a.debutYear;
   const founders29 = !d && !!s.config.realNames && !!lineup29Of(s.config) && !!realDataOf(a)?.m?.length;
+  // R29 (formação): saída simulada sem passagem registrada começa na formação do ato (morte/saída antes da estreia não vira "2009–2008")
+  const from29 = (y: number) => (founders29 ? Math.min(a.formed, base, y) : base);
   // r27 (LIN): fundador ("desde o início") começa na formação — ou na 1ª entrada documentada, se for antes (Beatles 1960)
   const joins = (d?.m ?? []).flatMap((m) => periodsOf(m).map(([x]) => x)).filter((x): x is number => x !== undefined).map((x) => x + shift);
   const start = Math.min(a.formed, base, ...joins);
@@ -536,8 +538,8 @@ export function stints16(s: GameState, a: Act): Stint16[] {
       const y = Math.floor(e[0] / 12), open = segs.find((x) => x.to === undefined);
       if (e[3] === 'j') { if (!open && !segs.some((x) => Math.abs(x.from - y) <= 1)) segs.push({ from: y }); }
       else if (open && open.from <= y) open.to = y;
-      else if (open) { const prev = [...segs].reverse().find((x) => x.from <= y && x !== open); if (prev && (prev.to === undefined || prev.to > y)) prev.to = y; else if (!prev) segs.push({ from: base, to: y }); } // R29: saída simulada não fecha passagem documentada que só começa depois (Richard Wright "1980–1972")
-      else if (!segs.some((x) => x.to !== undefined && Math.abs(x.to - y) <= 1)) segs.push({ from: base, to: y });
+      else if (open) { const prev = [...segs].reverse().find((x) => x.from <= y && x !== open); if (prev && (prev.to === undefined || prev.to > y)) prev.to = y; else if (!prev) segs.push({ from: from29(y), to: y }); } // R29: saída simulada não fecha passagem documentada que só começa depois (Richard Wright "1980–1972")
+      else if (!segs.some((x) => x.to !== undefined && Math.abs(x.to - y) <= 1)) segs.push({ from: from29(y), to: y });
     }
     if (!segs.length) segs.push({ from: Math.max(founders29 ? Math.min(a.formed, base) : base, p.born + 12) }); // R29: substituto gerado não "entra" antes de nascer; R29 (formação): fundador desde a formação do ato
     segs.sort((x, y) => x.from - y.from);

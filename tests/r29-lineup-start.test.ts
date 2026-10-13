@@ -12,6 +12,7 @@ import { advanceMonth } from '../src/sim/tick';
 import type { Act, GameState, RunConfig } from '../src/sim/types';
 import { REAL_CLASSIC } from '../src/data/realacts_classic';
 import { careerActs29, exMembers29 } from '../src/sim/sys/connect29';
+import { l16, stints16 } from '../src/sim/sys/lineup16';
 import { canonKey, lineupPick29, realDataOf, rw } from '../src/sim/sys/realworld';
 import { buildRun27, draftDefaults27, quickDefaults27, quickRunConfig27 } from '../src/ui/ps/home27model';
 
@@ -147,6 +148,19 @@ describe('R29 formação — regras', () => {
       }
     }
   }, 300_000);
+
+  it('saída simulada antes da estreia não vira passagem invertida (auditoria: Macklemore "2009–2008", Compay Segundo)', () => {
+    const s = game('b3', 1962, 'random', 'famous');
+    const b = beatles(s)!;
+    const pid = b.members[3];
+    const y = b.debutYear - 1;
+    b.formed = y - 1;
+    b.members = b.members.filter((x) => x !== pid);
+    (rw(s).former[b.id] ??= []).push({ personId: pid, year: y, reason: 'died' });
+    l16(s).ev.push([y * 12 + 5, b.id, pid, 'l']);
+    const me = stints16(s, b).find((x) => x.pid === pid)!;
+    for (const g of me.segs) expect(g.to === undefined || g.to >= g.from, JSON.stringify(me.segs)).toBe(true);
+  }, 60_000);
 
   it('o modo exato não muda com o campo', () => {
     const a = game('b3', 1962, 'exact');

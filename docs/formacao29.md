@@ -90,17 +90,21 @@ na original) **existem no mundo sem banda**:
 ## Auditoria
 
 `npx tsx scripts/audit29connect.ts --lineup famous|original` (opção nova; sem ela, a geração de antes). Rodada com
-2 sementes × 1950/1962/1975/1990/2005 × aleatório/sem estreias/real/caos × 0 e 6 anos, nas duas opções: **todos os
-códigos de erro em 0** (R1, R2c/a/t, R3, R4, R5, R6, R7, R8, R9). Só aparecem os informativos R1s (troca da simulação na
-história alternativa) e R3l (passagem só na crônica). Não foi preciso regra nova: a pessoa livre não está em nenhum ato,
-então nenhuma vista a liga à banda.
+2 sementes × 1950/1962/1975/1990/2005 × aleatório/sem estreias/real/caos × 0 e 6 anos, nas duas opções (160 linhas):
+totais `famous` R1s 90 · R3l 116 · R4 1; `original` R1s 94 · R3l 120 · R4 1. Os dois R4 (Macklemore em Macklemore &
+Ryan Lewis "2009–2008"; Compay Segundo no Buena Vista Social Club "1995–1994") eram a mesma aresta do `stints16`: saída
+simulada (morte) antes do ano de estreia sem passagem documentada virava `{estreia → ano da saída}`. Corrigido (com a
+formação escolhida a passagem começa na formação do ato) e conferido nas duas combinações: **todos os códigos de erro em 0**
+(R1, R2c/a/t, R3, R4, R5, R6, R7, R8, R9); sobram só os informativos R1s (troca da simulação na história alternativa) e
+R3l (passagem só na crônica). Não foi preciso regra nova na auditoria: a pessoa livre não está em nenhum ato, então
+nenhuma vista a liga à banda.
 
 ## Testes
 
 `tests/r29-lineup-start.test.ts`: escolha pura (Beatles), Beatles 1962 nas duas opções (Pete Best/Stuart/Ringo livres e
 fora dos ex-integrantes), banda que surge depois, nenhuma troca `lin`, mortos fora da mais famosa (The Who 1981), vistas
 do connect29 + auditoria limpa, modo exato inalterado, sem campo = antes, determinismo, rápida = mais famosa e a escolha
-da completa sobrevivendo ao redesenho, ao código e ao preparo (`buildRun27`).
+da completa sobrevivendo ao redesenho, ao código e ao preparo (`buildRun27`), e a passagem que não pode ficar invertida.
 
 ## Capturas
 
