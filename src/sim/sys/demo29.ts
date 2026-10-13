@@ -266,6 +266,13 @@ export const CH_AGE29: Record<string, number[]> = {
   jukebox: [1.4, 1.3, 0.9, 0.6, 0.5], music_video: [1.4, 1.3, 1.0, 0.7, 0.5], street_team: [1.1, 1.4, 1.0, 0.6, 0.4], web_forums: [1.0, 1.3, 1.2, 0.8, 0.5],
   playlists: [1.2, 1.35, 1.1, 0.8, 0.5], social: [1.4, 1.3, 1.0, 0.7, 0.5], short_clips: [1.7, 1.4, 0.9, 0.5, 0.3], neural_feed: [1.3, 1.3, 1.1, 0.8, 0.6],
 };
+/** juventude dos canais de lançamento (outlets17.youth) */
+const OUT_YOUTH29: Record<string, number> = { jukebox_ops: 1, video: 2, streaming: 1, window: -2, short_video: 2 };
+/** formato de rádio (radio18) → idade de quem ouve */
+export const RADIO_AGE29: Record<string, number[]> = {
+  network: [1.0, 1.0, 1.0, 1.1, 1.2], top40: [1.5, 1.3, 0.9, 0.6, 0.4], adult: [0.5, 0.8, 1.2, 1.3, 1.2], aor: [0.8, 1.3, 1.2, 0.9, 0.6], urban: [1.3, 1.3, 1.0, 0.7, 0.5],
+  country: [0.8, 1.0, 1.1, 1.1, 1.2], college: [0.9, 1.6, 1.0, 0.5, 0.3], latin: [1.0, 1.1, 1.1, 1.0, 1.0], dance: [1.3, 1.5, 1.0, 0.5, 0.3],
+};
 /** projeto (proj8/proj12) que gerou o lançamento → público-alvo */
 export function relAud29(s: GameState, rel: Release): string | undefined {
   const x = s.x4 as unknown as { proj8?: { list: { id: string; releaseId?: string }[] }; proj12?: { meta: Record<string, { aud?: string }> } };
@@ -305,6 +312,13 @@ export function inflow29(s: GameState, a: Act, y = s.year, extra = true): Inflow
     for (const r of rels) {
       const aud = relAud29(s, r);
       if (aud && AUD_W[aud]) { w = w.map((x, i) => x * AUD_W[aud][i]); parts.push({ label: fmtL(l('Público-alvo do projeto "{t}"', 'Target audience of "{t}"'), { t: r.title }), w: AUD_W[aud] }); }
+      // canais de lançamento (outlets17: jukebox, vídeo, vídeo curto puxam jovens; janela sem streaming os afasta)
+      const ys = ((s.x4 as unknown as { out17?: { rel: Record<string, string[]> } }).out17?.rel[r.id] ?? []).reduce((t2, id) => t2 + (OUT_YOUTH29[id] ?? 0), 0);
+      if (ys) { const ow = YS.map((k) => Math.max(0.5, 1 + 0.12 * ys * k)); w = w.map((x, i) => x * ow[i]); parts.push({ label: fmtL(l('Canais de venda de "{t}"', 'Retail outlets of "{t}"'), { t: r.title }), w: ow }); }
+      // rotação nas rádios (radio18): o formato da estação decide a idade de quem ouve
+      const rot = (s.x4 as unknown as { radio18?: { rot: Record<string, { st: string }[]>; st: { id: string; fmt: string }[] } }).radio18;
+      const fm = (rot?.rot[r.id] ?? []).map((x) => RADIO_AGE29[rot!.st.find((k) => k.id === x.st)?.fmt ?? '']).filter(Boolean);
+      if (fm.length) { const rw = fm[0].map((_, i) => fm.reduce((t2, f) => t2 + f[i], 0) / fm.length); w = w.map((x, i) => x * Math.sqrt(rw[i])); parts.push({ label: fmtL(l('Rádios que tocam "{t}"', 'Radio stations playing "{t}"'), { t: r.title }), w: rw.map(Math.sqrt) }); }
       const chs = r.marketing.map((m) => CH_AGE29[m.channel]).filter(Boolean);
       if (chs.length) { const cw = chs[0].map((_, i) => chs.reduce((t, c) => t + c[i], 0) / chs.length); w = w.map((x, i) => x * Math.sqrt(cw[i])); parts.push({ label: fmtL(l('Canais de "{t}"', 'Channels of "{t}"'), { t: r.title }), w: cw.map(Math.sqrt) }); }
     }
@@ -769,3 +783,23 @@ registerExplain('demo29.inflow', (s, c) => {
     note: l('Cada parte multiplica a anterior; o resultado é normalizado. Na virada do ano as faixas andam um ano.', 'Each part multiplies the previous one; the result is normalised. At each year turn the bands age one year.') };
 });
 
+
+/** Submundo (stream18.farm — também o 'x:streams' das organizações digitais do mob29): a fazenda já multiplica as
+ *  unidades e não vira fã. Aqui só a LEITURA: os streams falsos aparecem nas plataformas como ouvintes de 13–24
+ *  (é onde a fraude se esconde). Devolve a fatia falsa das unidades recentes e a mistura "como a plataforma vê". */
+export function fakeYouth29(s: GameState, a: Act): { share: number; seen: number[] } {
+  const farm = (s.x4 as unknown as { st18?: { farm: Record<string, { until: number; k: number }> } }).st18?.farm ?? {};
+  let fake = 0, tot = 0;
+  for (const id of a.releases.slice(-6)) {
+    const r = s.releases[id];
+    if (!r) continue;
+    const u = r.weekly.slice(-4).reduce((x, y) => x + y, 0);
+    tot += u;
+    const f = farm[id];
+    if (f && f.until > s.week && f.k > 1) fake += u * (1 - 1 / f.k);
+  }
+  const share = tot > 0 ? fake / tot : 0;
+  const b = ageMix29(s, a);
+  const seen = share > 0 ? norm(b.map((x, i) => x * (1 - share) + (i <= 1 ? share / 2 : 0))) : b;
+  return { share, seen };
+}

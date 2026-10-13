@@ -9,7 +9,7 @@ import { CITIES, MARKETS, genreById, l, type L, type MarketId } from '../../data
 import { countryName, countryOfCity } from '../../data/geo';
 import { t } from '../../i18n/strings';
 import {
-  AGE29, NB29, REF29, ageFans29, ageMix29, artistAge29, demo29, demog29, inflow29, older29, rTrend29, regionMix29, taste29, youth29,
+  AGE29, NB29, REF29, ageFans29, ageMix29, artistAge29, demo29, demog29, fakeYouth29, inflow29, older29, rTrend29, regionMix29, taste29, youth29,
 } from '../../sim/sys/demo29';
 import { hotList17 } from '../../sim/sys/trends17';
 import type { Act, GameState } from '../../sim/types';
@@ -89,6 +89,7 @@ function audienceTab(s: GameState, id: string): HTMLElement | null {
       h('div', { class: 'd29-read' },
         h('p', null, h('b', null, t(readOut(b)))),
         h('p', { class: 'small' }, t(l('Idade da formação: {n} anos. Quem envelhece segura (e atrai) público da sua idade; parado, a base envelhece junto.', 'Line-up age: {n}. Acts that age keep (and attract) audiences their age; when idle, the base ages with them.'), { n: Math.round(artistAge29(s, a)) })),
+        ((fy) => fy.share > 0.005 ? h('p', { class: 'small bad' }, t(l('Streams de robôs: {p} das unidades recentes. Nas plataformas eles aparecem como ouvintes de 13–24 (o painel mostra {y} jovens), mas não viram fã nem royalty.', 'Bot streams: {p} of recent units. Platforms show them as 13–24 listeners (the dashboard shows {y} young), but they become neither fans nor royalties.'), { p: pc(fy.share), y: pc(youth29(fy.seen)) })) : null)(fakeYouth29(s, a)),
         stored ? null : h('p', { class: 'small muted' }, t(l('Estimativa pela carreira (gênero, estreia, cidade e idade da formação): o registro mês a mês começa quando o ato é seu ou vira estrela.', 'Estimate from the career (genre, debut, city and line-up age): the month-by-month record starts when the act is yours or becomes a star.'))),
         why18(s, 'demo29.inflow', { act: id }, t(l('Por que esse público?', 'Why this audience?'))))),
     section(t(l('Idade do público', 'Audience age')),

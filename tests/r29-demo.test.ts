@@ -9,7 +9,7 @@ import { advanceMonth } from '../src/sim/tick';
 import type { Act, GameState, Release } from '../src/sim/types';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import {
-  ageFans29, ageMix29, appealAge29, cityAge29, demo29, inflow29, older29, regionMix29, roll29, seed29, taste29, unitsAge29, youth29,
+  ageFans29, ageMix29, appealAge29, cityAge29, demo29, fakeYouth29, inflow29, older29, regionMix29, roll29, seed29, taste29, unitsAge29, youth29,
 } from '../src/sim/sys/demo29';
 
 const game = (seed: string, year: number): GameState => createGame(defaultConfig(seed, { startYear: year }));
@@ -159,6 +159,15 @@ describe('R29 demo — efeitos por idade', () => {
     const v1 = applyMods(s, 'chartUnits', 1000, { release: rel }).value;
     FRAUD29.length = 0;
     expect(v1).toBeGreaterThan(v0 * 1.3);
+    // fazenda de streams de sempre (stream18; também o 'x:streams' do crime digital): já conta nas unidades;
+    // o demo29 só mostra os falsos como ouvintes de 13–24
+    s.releases[rel.id] = { ...rel, weekly: [1000, 1000, 1000, 1000] };
+    a.releases.push(rel.id);
+    expect(fakeYouth29(s, a).share).toBe(0);
+    (s.x4 as unknown as { st18: { farm: Record<string, unknown> } }).st18.farm[rel.id] = { w: s.week, until: s.week + 6, k: 2 };
+    const fy = fakeYouth29(s, a);
+    expect(fy.share).toBeCloseTo(0.5, 2);
+    expect(youth29(fy.seen)).toBeGreaterThan(youth29(ageMix29(s, a)));
   });
 });
 
