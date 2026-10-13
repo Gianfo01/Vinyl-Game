@@ -325,3 +325,12 @@ O mesmo arquivo `tests/r29-underworld.test.ts` agora cobre:
 
 As capturas estão em `docs/shots29submundo/` e são geradas por `node scripts/shots29submundo.mjs`, com o servidor em
 `npx vite --port 5330`.
+
+As capturas da rodada 29b (10 a 14) são geradas por `node scripts/shots29submundo2.mjs`, com o servidor em
+`npx vite --port 5331`:
+
+- `10-cockpit-favores.png`: o cartão "Favores e dívidas" do Cockpit, com as ações rápidas;
+- `11-crime-digital-card.png`: o card de uma organização de crime digital, com o emblema de chip;
+- `12-cv-cena-funk.png`: o card do Comando Vermelho com a cena do funk;
+- `13-planos-premio-comprado.png`: o planejador em "Manipular a votação de um prêmio";
+- `14-ato-cena-submundo.png`: a seção "A cena e o submundo" na página do ato.
