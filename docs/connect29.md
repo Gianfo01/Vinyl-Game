@@ -188,7 +188,10 @@ alternativa e o que o índice canônico já junta. Antes, por início (ano 0 / +
 670/830 (1975), 1346/1619 (1990), 1828/2226 (2005); R6 30 (1975) → 168 (2005) no ano 0. Depois: zero em todos os
 códigos de erro, em todos os inícios, mundos e nos dois instantes.
 
-Medido no commit 6283222 (antes do §1b e do merge); confirmação na cabeça final em `r29c-0` (40 medições): FINAL_AQUI.
+Medido no commit 6283222 (antes do §1b e do merge); confirmação na cabeça final em `r29c-0` (40 medições): R1s 37, R3l 42 (informativos), 0 em todos os códigos de erro depois de dois refinamentos da própria
+auditoria: R7m acusava 3 créditos legítimos (obra real com autor documentado em lançamento posterior — "Another Brick in
+the Wall, Pt. 2" de Roger Waters numa coletânea de 1995; "Under Pressure" de Mercury/Deacon) e R8 acusava 1 homônimo
+(pessoa gerada que o gerador de nomes chamou de "Wilson" + "Batista", nascida em 1986 — não é o compositor de 1913).
 
 ## 6. Determinismo, golden e equilíbrio
 
@@ -256,5 +259,7 @@ com friendly-brown: `r29-art`, `r29-fixes`, `r29-reorg`, `r29-scenes`, `r9-bonds
 - **Mercado de canções**: a origem da canção comprada (licença × obra × presente) continua só na página do mercado.
 - O índice de dependências completo (todas as ~140 fontes de `registerMod`) não foi sondado; a sonda cobre as 23
   arestas de maior impacto listadas pelo autor.
+- **Homônimos gerados**: o gerador de nomes pode produzir o nome de uma pessoa real famosa para alguém inventado
+  ("Wilson Batista", 1986, no SNJ). Não parte a identidade (a auditoria ignora quem não é real), mas confunde na tela.
 - `R1s` (troca simulada põe pessoa real em banda real na história alternativa) é comportamento da simulação, não erro;
   segue informativo.

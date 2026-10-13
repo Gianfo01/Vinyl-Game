@@ -15,7 +15,7 @@
 //  R7m crédito para ex-integrante que já tinha saído antes da música (formação provisória da criação do mundo)
 //  R8  identidade partida: a mesma pessoa real (nome canônico) em duas Pessoas diferentes
 //  R9  índice nome → pessoa (rw.pid) apontando para alguém com outro nome (a causa raiz do caso Roger Waters)
-import { HOMONYMS27 } from '../data/model27';
+import { HOMONYMS27, workOf27 } from '../data/model27';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { REAL_ACTS } from '../data/realnames';
 import { periodsOf } from '../data/realtypes';
@@ -154,7 +154,8 @@ export function audit29(s: GameState): Finding29[] {
     for (const sid of rel.songs) for (const w of s.songs[sid]?.writers ?? []) {
       const f = (st.former[a.id] ?? []).filter((x) => x.personId === w);
       const made = s.config.startYear + Math.floor((s.songs[sid].createdWeek ?? 0) / 52.18); // composta antes de sair = legítimo
-      if (f.length && !a.members.includes(w) && !s.persons[w]?.real27?.writer && Math.max(...f.map((x) => x.year)) < Math.min(rel.year, made) - 1) add('R7m', `${s.songs[sid].title} (${rel.year}, ${a.name}) creditada a ${nm(w)}, que saiu em ${Math.max(...f.map((x) => x.year))}`);
+      const doc = real && (workOf27(s.songs[sid].title, realDataOf(a)?.n)?.w ?? []).some((n) => canonKey(n) === canonKey(s.persons[w]?.name ?? '')); // obra real: autor documentado
+      if (!doc && f.length && !a.members.includes(w) && !s.persons[w]?.real27?.writer && Math.max(...f.map((x) => x.year)) < Math.min(rel.year, made) - 1) add('R7m', `${s.songs[sid].title} (${rel.year}, ${a.name}) creditada a ${nm(w)}, que saiu em ${Math.max(...f.map((x) => x.year))}`);
     }
   }
 
@@ -167,7 +168,7 @@ export function audit29(s: GameState): Finding29[] {
         const p = s.persons[id];
         if (!p) continue;
         const k = canonKey(p.name);
-        if (!k.includes(' ') || HOMONYMS27.has(k) || !RN.has(k)) continue;
+        if (!k.includes(' ') || HOMONYMS27.has(k) || !RN.has(k) || !p.real27) continue; // gerado com nome igual = homônimo, não identidade partida
         const xs = by.get(k) ?? [];
         if (!xs.includes(id)) xs.push(id);
         by.set(k, xs);
