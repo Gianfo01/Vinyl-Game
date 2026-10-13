@@ -8,11 +8,12 @@ import type { GameState, Release } from '../sim/types';
 import type { Review } from '../sim/xtypes';
 import { h } from './dom';
 import { scoreBadge } from './vis';
+import { mastheadImg28 } from './pixel/extras28'; // r28 (arte): mastro do veículo na crítica
 
 export function reviewCard(s: GameState, rel: Release, rv: Review, opts: { open?: boolean } = {}): HTMLElement {
   const body = reviewBody(s, rel, rv);
   return h('article', { class: 'rv-card' },
-    h('header', { class: 'rv-head' }, scoreBadge(rv.score), h('div', null, h('b', null, rv.outlet), h('small', { class: 'muted' }, ` — ${rv.critic}`), h('div', { class: 'rv-stars', 'aria-label': `${rv.score}/10` }, stars(rv.score)))),
+    h('header', { class: 'rv-head' }, scoreBadge(rv.score), h('div', null, mastheadImg28(rv.outlet, undefined, 64), ' ', h('b', null, rv.outlet), h('small', { class: 'muted' }, ` — ${rv.critic}`), h('div', { class: 'rv-stars', 'aria-label': `${rv.score}/10` }, stars(rv.score)))),
     h('p', { class: 'rv-quote' }, `“${t(rv.quote)}”`),
     body.length ? h('details', { open: opts.open !== false }, h('summary', null, t(l('Ler a crítica', 'Read the review'))), ...body.map((p) => h('p', null, t(p)))) : null,
     rv.aspects ? h('ul', { class: 'rv-aspects' }, ASPECTS.filter((k) => rel.songs.length > 1 || k !== 'cohesion').map((k) => {

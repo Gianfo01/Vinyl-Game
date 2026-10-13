@@ -18,6 +18,8 @@ import { h } from '../dom';
 import { why18 } from '../explain18';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
+import { emblemImg28 } from '../pixel/emblem28'; // r28 (arte): selos de golpe (banda-fantasma, dublagem)
+import { mastheadImg28 } from '../pixel/extras28'; // r28 (arte): mastro do veículo
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null | string, ok: L = l('Feito.', 'Done.')) => { toast(T(r ?? ok), r ? 'info' : 'good'); rerender(); };
@@ -55,7 +57,7 @@ function outletTab(s: GameState): HTMLElement {
   if (st.own && o) {
     const eds = editorsFor19(s).slice(0, 8);
     return h('div', null,
-      card(row(h('b', null, o.real && s.config.realNames ? `${o.name} (≈ ${o.real})` : o.name), pill(T(st.own.line === 'house' ? l('linha da casa', 'house line') : l('linha independente', 'independent line')), st.own.line === 'house' ? 'warn' : 'good'),
+      card(row(mastheadImg28(o.name, o.kind), h('b', null, o.real && s.config.realNames ? `${o.name} (≈ ${o.real})` : o.name), pill(T(st.own.line === 'house' ? l('linha da casa', 'house line') : l('linha independente', 'independent line')), st.own.line === 'house' ? 'warn' : 'good'),
         st.own.ed ? pill(fmtS(l('editor: {e}', 'editor: {e}'), { e: st.own.ed })) : null),
         row(`${T(l('Alcance', 'Reach'))} ${o.reach} · ${T(l('credibilidade', 'credibility'))} ${o.cred} · `, why18(s, 'zn19.coi', {}, fmtS(l('conflito de interesse {v}', 'conflict of interest {v}'), { v: Math.round(st.coi) }))),
         row(btn(l('Linha independente', 'Independent line'), () => say(setLine19(s, 'indep')), st.own.line === 'indep'), btn(l('Linha da casa (empurra seus discos)', 'House line (pushes your records)'), () => say(setLine19(s, 'house')), st.own.line === 'house'), btn(l('Vender a revista', 'Sell the magazine'), () => say(sellOutlet19(s))))),
@@ -64,7 +66,7 @@ function outletTab(s: GameState): HTMLElement {
   const xs = buyable19(s).sort((a, b) => b.reach - a.reach).slice(0, 20);
   return h('div', null,
     muted(l('Compre uma revista existente: receita de vendas e anúncios, voz própria — e o risco de usá-la para elogiar os próprios discos (conflito de interesse). No modo "Vida real exata", os veículos reais não estão à venda.', 'Buy an existing magazine: sales and ad income, a voice of your own — and the risk of using it to praise your own records (conflict of interest). In "Exact real life", real outlets are not for sale.')),
-    xs.length ? h('div', null, ...xs.map((o) => row(h('b', null, o.real && s.config.realNames ? `${o.name} (≈ ${o.real})` : o.name), pill(o.kind), ` ${o.market} · ${T(l('alcance', 'reach'))} ${o.reach} · cred ${o.cred}`, btn(fmtS(l('Comprar ({p})', 'Buy ({p})'), { p: $(outletPrice19(s, o)) }), () => say(buyOutlet19(s, o.id)))))) : muted(l('Nada à venda nesta época.', 'Nothing for sale in this era.')));
+    xs.length ? h('div', null, ...xs.map((o) => row(mastheadImg28(o.name, o.kind, 64), h('b', null, o.real && s.config.realNames ? `${o.name} (≈ ${o.real})` : o.name), pill(o.kind), ` ${o.market} · ${T(l('alcance', 'reach'))} ${o.reach} · cred ${o.cred}`, btn(fmtS(l('Comprar ({p})', 'Buy ({p})'), { p: $(outletPrice19(s, o)) }), () => say(buyOutlet19(s, o.id)))))) : muted(l('Nada à venda nesta época.', 'Nothing for sale in this era.')));
 }
 function editorsTab(s: GameState): HTMLElement {
   const st = zn19(s);
@@ -107,7 +109,7 @@ function lipTab(s: GameState): HTMLElement {
     muted(fmtL19(l('Voz-fantasma: um cantor de estúdio grava escondido e o ato só dubla. Discos +10% de apelo; o risco sobe todo mês com a fama e a cada {p}. Exposto: escândalo, reembolsos, fãs embora e prêmios dos últimos 5 anos cassados.', 'Ghost voice: a session singer records in secret and the act just mimes. Records get +10% appeal; the risk rises every month with fame and with each {p}. Exposed: scandal, refunds, fans leaving and awards from the last 5 years revoked.'), { p: hasTech(s, 'tv_music') ? l('playback na TV', 'TV playback') : l('apresentação dublada', 'mimed appearance') })),
     acts.length ? h('div', null, ...acts.map((a) => {
       const x = st.lip.find((y) => y.act === a.id && !y.exp);
-      return card(row(actLink(s, a.id), x ? pill(t(x.end ? l('parado (risco esfriando)', 'stopped (risk cooling)') : l('voz-fantasma ativa', 'ghost voice active')), 'warn') : null,
+      return card(row(x ? emblemImg28({ id: a.id, kind: 'lipsync', name: a.name }, 24) : null, actLink(s, a.id), x ? pill(t(x.end ? l('parado (risco esfriando)', 'stopped (risk cooling)') : l('voz-fantasma ativa', 'ghost voice active')), 'warn') : null,
         x ? why18(s, 'fk19.risk', { a: a.id }, fmtS(l('risco {r} ({p}%/mês)', 'risk {r} ({p}%/mo)'), { r: Math.round(x.risk), p: Math.round(lipOdds19(x) * 100) })) : null,
         !x ? btn(l('Usar voz-fantasma', 'Use a ghost voice'), () => say(startLip19(s, a.id))) : null,
         x && !x.end ? btn(l('Parar em silêncio', 'Stop quietly'), () => say(endLip19(s, a.id, 'quiet'))) : null,
@@ -123,7 +125,7 @@ function ghostTab(s: GameState): HTMLElement {
     muted(l('Bandas-fantasma excursionam com o nome de um ato famoso que sumiu (separação, hiato, morte) ou se dizem "da cena" que virou febre. Se o nome é seu: processar, licenciar como tributo oficial ou ignorar. Três num mercado e passa uma lei de propaganda enganosa.', 'Ghost bands tour under the name of a famous act that disappeared (split, hiatus, death) or claim to be "from the scene" in a craze. If the name is yours: sue, license it as an official tribute or ignore it. Three in one market and a false-advertising law passes.')),
     live.length ? h('div', null, ...live.map((g) => {
       const a = g.of ? s.acts[g.of] : undefined, own = !!a && (a.owner === 'player') && !a.playerBand;
-      return card(row(h('b', null, `"${g.name}"`), pill(T(g.k === 'scene' ? l('febre de cena', 'scene craze') : l('nome famoso', 'famous name'))), cn(g.city), a ? actLink(s, a.id) : null, g.lic ? pill(t(l('licenciada', 'licensed')), 'good') : null,
+      return card(row(emblemImg28({ id: g.id, kind: 'ghost', name: g.name }, 32, g.name), h('b', null, `"${g.name}"`), pill(T(g.k === 'scene' ? l('febre de cena', 'scene craze') : l('nome famoso', 'famous name'))), cn(g.city), a ? actLink(s, a.id) : null, g.lic ? pill(t(l('licenciada', 'licensed')), 'good') : null,
         g.court ? pill(fmtS(l('sentença em {w} sem.', 'ruling in {w} wks'), { w: g.court - s.week }), 'warn') : null),
         own && !g.lic && !g.court ? row(why18(s, 'fk19.suit', { g: g.id }, btn(fmtS(l('Processar ({c}, {p}%)', 'Sue ({c}, {p}%)'), { c: $(suitCost19(s)), p: Math.round(suitOdds19(s, g) * 100) }), () => say(ghostAct19(s, g.id, 'sue')))), btn(l('Licenciar', 'License'), () => say(ghostAct19(s, g.id, 'license')))) : null);
     })) : muted(l('Nenhuma banda-fantasma na estrada.', 'No ghost band on the road.')),

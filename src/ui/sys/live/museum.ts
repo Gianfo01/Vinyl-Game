@@ -8,6 +8,7 @@ import { N, actLink, cover, section } from '../../common';
 import { h } from '../../dom';
 import { C, Px } from '../../pixel/px';
 import { chips, stat } from '../../vis';
+import { relicImg28, roleImg28 } from '../../pixel/relic28'; // r28 (arte): discos emoldurados e instrumentos desenhados
 
 const INSTRUMENT: Record<Person['role'], { icon: string; name: { pt: string; en: string } }> = {
   vocal: { icon: '🎤', name: l('microfone', 'microphone') },
@@ -70,10 +71,10 @@ export function museumView(s: GameState): HTMLElement {
       stat('gold-disc', st.gold, l('Ouro', 'Gold')), stat('platinum-disc', st.platinum, l('Platina', 'Platinum')), stat('trophy', st.awards, l('Prêmios', 'Awards')), stat('flag', st.festivals, l('Festivais', 'Festivals'))),
     section(t(l('Capas icônicas', 'Iconic covers')), iconic.length ? h('div', { class: 'lv-covers' }, iconic.map((r) => h('figure', null, cover(s, r, 96), h('figcaption', null, h('b', null, r.title), h('small', null, ` ${r.year} · ${N(r.totalUnits)}`), actLink(s, r.actId)))))
       : h('p', { class: 'muted small' }, t(l('As capas dos seus discos mais vendidos aparecem aqui.', 'Covers of your best-selling records appear here.')))),
-    section(t(l('Discos de ouro e platina', 'Gold and platinum records')), certified.length ? h('ul', { class: 'lv-certs' }, certified.map((r) => h('li', null, r.certified === 'gold' ? '🟡' : '⚪', ' ', h('b', null, r.title), ` · ${r.year} · `, actLink(s, r.actId), ` · ${t(r.certified === 'gold' ? l('ouro', 'gold') : r.certified === 'platinum' ? l('platina', 'platinum') : l('diamante', 'diamond'))}`)))
+    section(t(l('Discos de ouro e platina', 'Gold and platinum records')), certified.length ? h('ul', { class: 'lv-certs' }, certified.map((r) => h('li', null, relicImg28('goldrec', r.certified === 'gold' ? 'gold record' : 'platinum record', r.year, r.id, 24), ' ', h('b', null, r.title), ` · ${r.year} · `, actLink(s, r.actId), ` · ${t(r.certified === 'gold' ? l('ouro', 'gold') : r.certified === 'platinum' ? l('platina', 'platinum') : l('diamante', 'diamond'))}`)))
       : h('p', { class: 'muted small' }, t(l('Nenhuma certificação ainda.', 'No certifications yet.')))),
     section(t(l('Instrumentos de lendas', 'Legends\' instruments')), legends.length ? h('div', { class: 'cards' }, legends.map((a) => h('div', { class: 'tile' }, h('div', { class: 'tile-body' }, actLink(s, a.id),
-      h('small', null, a.members.map((id) => s.persons[id]).filter(Boolean).map((p) => `${INSTRUMENT[p.role]?.icon ?? '🎵'} ${t(l('{i} de {p}', '{p}\'s {i}'), { i: INSTRUMENT[p.role]?.name ?? l('instrumento', 'instrument'), p: p.name })}`).join(' · '))))))
+      h('small', null, ...a.members.map((id) => s.persons[id]).filter(Boolean).flatMap((p, i) => [i ? ' · ' : '', roleImg28(p.role, a.formed, p.id, 24), ` ${t(l('{i} de {p}', '{p}\'s {i}'), { i: INSTRUMENT[p.role]?.name ?? l('instrumento', 'instrument'), p: p.name })}`]))))))
       : h('p', { class: 'muted small' }, t(l('Quando seus artistas virarem lendas, os instrumentos deles vêm para cá.', 'When your acts become legends, their instruments come here.')))),
     hall.length ? section(t(l('Hall dos Ecos', 'Hall of Echoes')), h('ul', null, hall.map((x) => h('li', null, `🏛 ${x.year} · `, actLink(s, x.actId))))) : null,
     section(t(l('Linha do tempo', 'Timeline')), Object.keys(byYear).length ? h('ol', { class: 'lv-timeline' }, Object.entries(byYear).map(([y, list]) => h('li', null, h('b', null, y), h('ul', null, list.map((m) => h('li', { class: 'small' }, t(m.text)))))))

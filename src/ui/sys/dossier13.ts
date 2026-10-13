@@ -30,6 +30,7 @@ import { openLabelStory } from './story12';
 import './map13.css';
 import { HINT15, canSee, fameText, knownLevel } from '../../sim/sys/fame15';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
+import { labelMarkImg28 } from '../pixel/extras28';
 
 const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const why = (x: L) => h('p', { class: 'dos13-why' }, t(x));
@@ -68,7 +69,8 @@ export function labelDossier(s: GameState, id: string, close: () => void, tab?: 
   const hype = (() => { try { return hypeMeter(s, `l:${id}`, l('Hype do selo', 'Label hype')); } catch { return null; } })();
   const ld = me ? undefined : leaderOf(s, id);
   const revLast = me ? s.player.revenueByYear[s.year - 1] ?? 0 : lb.revenueLastYear;
-  const head = h('div', { class: 'dos13-head' },
+  const head = h('div', { class: 'dos13-head', style: 'display:flex;gap:0.8rem;align-items:flex-start' },
+    labelMarkImg28(id, labelName13(s, id), me ? s.config.startYear : lb?.founded ?? s.year, 64), // r28 (arte): marca do selo
     h('div', null,
       h('h3', null, labelName13(s, id), ' ', me ? pill(t(l('você', 'you')), 'gold') : null, lb && !lb.active ? pill(t(l('fechado', 'closed')) + (lb.closedYear ? ` ${lb.closedYear}` : ''), 'bad') : null,
         lb?.archetype ? pill(t(ARCH[lb.archetype])) : null, lb?.parentLabel ? pill(`${t(l('subselo de', 'sub-label of'))} ${labelName13(s, lb.parentLabel)}`) : null),
