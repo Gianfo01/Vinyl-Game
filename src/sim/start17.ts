@@ -6,6 +6,7 @@
 import { l, type L } from '../data/world';
 import type { RunConfig } from './types';
 import { CONFIG_SCHEMA_V20, YEAR_MAX20, YEAR_MIN20, legacyConfig20, stampPolicy20 } from './worldpolicy20';
+import { lineup29Of } from './lineup29';
 
 // ---------------------------------------------------------------- modos de mundo
 
@@ -17,9 +18,10 @@ const base = (c: RunConfig, o: Partial<RunConfig>, id: string) => { delete c.sna
 // histórica logo em seguida, para não virar opção escondida. Os seis modos continuam; ids preservados.
 export const WORLDS17: World17[] = [
   { id: 'random', name: l('Reais em mundo aleatório', 'Real names, random world'),
-    short: l('Nomes conhecidos. Músicas, contratos e carreiras diferentes a cada mundo.', 'Known names. Different songs, contracts and careers in every world.'),
+    // R29 (formação): nomes reais e formações iniciais reais (a mais famosa por padrão); o resto é inventado
+    short: l('Nomes e formações iniciais reais (a mais famosa, por padrão). Músicas, contratos, trocas de formação e carreiras inventados a cada mundo.', 'Real names and starting lineups (the most famous, by default). Songs, contracts, lineup changes and careers invented in every world.'),
     desc: l('Artistas e gravadoras reais vivem outra história. Repertórios, contratos, vínculos e trajetórias são simulados desde o estado inicial. A época continua coerente; o futuro não é uma lista de hits garantidos.', 'Real acts and labels live another story. Repertoire, contracts, ties and careers are simulated from the starting state. The era stays coherent; the future is not a list of guaranteed hits.'),
-    fx: l('Real: nomes e referências de identidade · Simulado: catálogo, contratos, vínculos, sucesso e trajetória · Época coerente: não é Caos; tecnologia e disponibilidade seguem o período', 'Real: names and identity references · Simulated: catalog, contracts, ties, success and career · Coherent era: not Chaos; tech and availability follow the period'),
+    fx: l('Real: nomes, referências de identidade e formações iniciais (a mais famosa, por padrão) · Inventado: catálogo, contratos, vínculos, trocas de formação, sucesso e trajetória · Época coerente: não é Caos; tecnologia e disponibilidade seguem o período', 'Real: names, identity references and starting lineups (the most famous, by default) · Invented: catalog, contracts, ties, lineup changes, success and career · Coherent era: not Chaos; tech and availability follow the period'),
     apply: (c) => base(c, { realNames: true, history: 'free', mode: 'free', realFates: false }, 'random') },
   { id: 'exact', name: l('Fidelidade histórica', 'Historical fidelity'),
     short: l('Reviva o roteiro documentado; suas intervenções podem mudar carreiras.', 'Relive the documented script; your interventions can change careers.'),
@@ -151,7 +153,12 @@ export function notes17(c: RunConfig): { level: 'warn' | 'info'; text: L }[] {
   const rs = resolveWorld20(c);
   if (rs.custom) { const d = rs.diffs.join(', '); out.push({ level: 'warn', text: l(`Mundo personalizado: os ajustes avançados (${d}) não batem mais com o modo escolhido. O resumo mostra o que o motor vai executar.`, `Custom world: the advanced tweaks (${d}) no longer match the chosen mode. The summary shows what the engine will run.`) }); }
   if (w === 'random' && legacyConfig20(c)) out.push({ level: 'info', text: l('Configuração legada (código/save antigo): "Personagens reais, história alternativa" com a geração antiga — o começo usa a base histórica. Use "Adaptar ao novo padrão" para simular também o estado inicial.', 'Legacy configuration (old code/save): "Real characters, alternate history" with the old generation — the start uses the historical base. Use "Adapt to the new default" to simulate the starting state too.') });
-  if (w === 'random' && !legacyConfig20(c)) out.push({ level: 'info', text: l('Repertórios, formações, contratos e vínculos iniciais são simulados pela semente; identidade e época continuam reais.', 'Starting repertoire, lineups, contracts and ties are simulated from the seed; identity and era stay real.') });
+  if (w === 'random' && !legacyConfig20(c)) out.push({ level: 'info', text: lineup29Of(c)
+    // R29 (formação): a formação inicial é a real escolhida; as trocas depois são da simulação
+    ? (lineup29Of(c) === 'original'
+      ? l('Cada banda real começa com a formação original (da estreia); quem não está nela existe sem banda. Repertórios, contratos, vínculos e trocas de formação são simulados pela semente; identidade e época continuam reais.', 'Each real band starts with its original lineup (at debut); everyone else exists without a band. Repertoire, contracts, ties and lineup changes are simulated from the seed; identity and era stay real.')
+      : l('Cada banda real começa com a formação mais famosa; quem não está nela existe sem banda. Repertórios, contratos, vínculos e trocas de formação são simulados pela semente; identidade e época continuam reais.', 'Each real band starts with its most famous lineup; everyone else exists without a band. Repertoire, contracts, ties and lineup changes are simulated from the seed; identity and era stay real.'))
+    : l('Repertórios, formações, contratos e vínculos iniciais são simulados pela semente; identidade e época continuam reais.', 'Starting repertoire, lineups, contracts and ties are simulated from the seed; identity and era stay real.') });
   if (w === 'exact' && c.startYear >= 2026) out.push({ level: 'info', text: l('Fidelidade histórica conforme a cobertura da base: depois de 2025 não há fatos documentados — o roteiro real acaba e a simulação assume.', 'Historical fidelity as far as the database covers: after 2025 there are no documented facts — the real script ends and the simulation takes over.') });
   return out;
 }

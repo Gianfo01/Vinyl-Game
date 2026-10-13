@@ -67,6 +67,9 @@ export interface RunConfig {
    *  frequência de selos novos durante a run, fechamentos/fusões e concorrentes da carreira (labels29gate.ts);
    *  ausente = o mundo de sempre */
   labels29?: import('./labels29gate').Labels29;
+  /** R29 (formação): formação inicial das bandas reais nos mundos alternativos com nomes reais (src/sim/lineup29.ts):
+   *  'famous' (mais famosa) ou 'original' (da estreia), sem trocas agendadas; ausente = geração de antes (saves, testes, bot) */
+  lineup29?: 'famous' | 'original';
   scenario17?: string;
   preset17?: string;
   /** rodada 20 (G8, src/sim/worldpolicy20.ts): versões do esquema e da política de mundo; ausentes = configuração
