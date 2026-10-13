@@ -14,6 +14,7 @@ import type { Appearance, CharacterSpec, Person, RunConfig } from '../../sim/typ
 import { randomLook } from '../pixel/avatar';
 import { fitLookToSex, hairAllowed15, outfitAllowed27, type Sex } from '../pixel/editor';
 import type { QuickRun27 } from './home27model';
+import { autoGenre29, setBandGenre29, suggestGenres29, syncGenre29 } from '../../sim/genre29data';
 
 export interface QuickChar29 {
   name: string;
@@ -32,8 +33,10 @@ export interface QuickArt29 {
   role: string;
   /** funções extras (no máximo 2: até 3 instrumentos no total) */
   extra: string[];
-  /** gênero da banda (ausente = o padrão da época, como na configuração completa) */
+  /** gênero da banda escolhido na lista (ausente = automático: sugestão da cidade e do ano) */
   genre?: string;
+  /** 🎲: índice entre as sugestões da cidade e do ano (o mesmo `genre29` da configuração completa) */
+  genreK?: number;
   /** formação: ausente = sorteada (1–4, o padrão de sempre); 1 = solo; 2–6 = banda */
   members?: number;
   /** nome da banda ('' = gerado) */
@@ -95,9 +98,9 @@ export function toggleExtra29(a: Pick<QuickArt29, 'role' | 'extra'>, role: strin
 }
 
 /** Banda do jogador: gênero (só da época), formação (custom.members, o mesmo campo "Seu artista: formação") e nome. */
-export function setBand29(cfg: RunConfig, b: { genre?: string; members?: number; bandName?: string }): void {
-  const gs = genresOpen29(cfg.startYear);
-  if (b.genre && gs.some((g) => g.id === b.genre)) cfg.bandGenre = b.genre;
+export function setBand29(cfg: RunConfig, b: { genre?: string; genreK?: number; members?: number; bandName?: string }): void {
+  if (b.genre && genresOpen29(cfg.startYear).some((g) => g.id === b.genre)) setBandGenre29(cfg, b.genre); // r29: escolha na lista (deixa de ser automático)
+  else if (b.genreK !== undefined) { cfg.genre29 = b.genreK; syncGenre29(cfg); } // 🎲 entre as sugestões
   const c = (cfg.custom ??= {});
   if (b.members === undefined) delete c.members; else c.members = Math.max(1, Math.min(6, Math.round(b.members)));
   cfg.bandName = b.members === 1 ? '' : (b.bandName ?? '').trim().slice(0, 40);
@@ -138,4 +141,17 @@ export function charLine29(ch: Pick<CharacterSpec, 'name' | 'age' | 'role' | 'ro
   if (!artist) return who;
   const rs = rolesOfSpec29(ch).map(roleName29);
   return { pt: [who.pt, ...rs.map((x) => x.pt)].join(' · '), en: [who.en, ...rs.map((x) => x.en)].join(' · ') };
+}
+
+/** Gênero que a banda terá com as escolhas da tela rápida (escolhido, ou a sugestão do 🎲 para a cidade e o ano). */
+export function artGenre29(q: Pick<QuickRun27, 'homeCity' | 'startYear'>, a: Pick<QuickArt29, 'genre' | 'genreK'>): string | undefined {
+  const ok = a.genre && genresOpen29(q.startYear).some((g) => g.id === a.genre);
+  return ok ? a.genre : autoGenre29({ homeCity: q.homeCity, startYear: q.startYear, genre29: a.genreK ?? 0 });
+}
+/** 🎲 da tela rápida: próxima sugestão (como rollGenre29 da configuração completa). */
+export function rollArtGenre29(q: Pick<QuickRun27, 'homeCity' | 'startYear'>, a: QuickArt29): void {
+  const xs = suggestGenres29(q.homeCity, q.startYear);
+  const cur = a.genre === undefined ? a.genreK ?? 0 : Math.max(-1, xs.indexOf(a.genre));
+  a.genre = undefined;
+  a.genreK = xs.length ? (cur + 1) % xs.length : 0;
 }

@@ -27,6 +27,8 @@ export interface RunConfig {
   /** para Artista/Híbrido */
   bandName?: string;
   bandGenre?: string;
+  /** r29: gênero da banda ainda automático (rascunho da Nova run): índice entre as sugestões da cidade e do ano (genre29data); ausente = bandGenre escolhido */
+  genre29?: number;
   contentFilters: string[]; // tags desligadas
   /** rodada 6: artistas, selos, festivais e mídia com nomes reais */
   realNames?: boolean;
