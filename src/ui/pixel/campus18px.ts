@@ -80,7 +80,7 @@ const MAT: Record<Style18, Mat> = {
   loft: { wall: C('#7c3a2a'), roof: C('#4a4a4c'), trim: C('#26262a'), win: C('#9ab8cc'), fh: 9 },
   neon: { wall: C('#2c2642'), roof: C('#3a3252'), trim: C('#ff48c8'), win: C('#3ae0ff'), fh: 6 },
 };
-const LIT = C('#ffd77a'), LIT2 = C('#ffeeb0'), DARK = C('#1c1a20'), RAW = C('#b4aea2'), SCAF = C('#c89838'), SCAF2 = C('#8a6428');
+const LIT = C('#ffd77a'), LIT2 = C('#ffeeb0'), LITG = C('#e8eedc'), DARK = C('#1c1a20'), RAW = C('#b4aea2'), SCAF = C('#c89838'), SCAF2 = C('#8a6428');
 const ACCENT: Partial<Record<BKind, Col>> = {
   hq: C('#c08a2a'), studio: C('#d04040'), publisher: C('#7050c0'), booking: C('#3080d0'), media: C('#e0a020'), platform: C('#30c0c0'), branch: C('#406090'),
   office: C('#406090'), sublabel: C('#c05090'), imprint: C('#50a060'), rehearsal: C('#d07030'), school: C('#2060a0'),
@@ -129,7 +129,10 @@ function box(t: T, L: T, gx: number, gy: number, w: number, d: number, H: number
     else if (k === 'win') {
       c = o.boarded ? C('#7a5a34') : o.burnt ? DARK : o.win ?? m.win;
       if (o.st === 'glass' && (Math.floor(u) + Math.floor(hz)) % 17 < 2) c = shade(c, 0.35);
-      if (!o.boarded && !o.burnt && noise(Math.floor(u / 4) + (right ? 50 : 0), Math.floor(hz / m.fh), o.seed) < o.lit) L.set(x, y, k === 'win' && (Math.floor(u) % 9 === 0) ? LIT2 : LIT);
+      // r27: no vidro a fachada inteira é "janela"; à noite só acende uma faixa por andar, quebrada em janelas,
+      // com luz de escritório (mais fria) — antes acendia blocos 4×4 inteiros e o prédio virava um bloco amarelo
+      const glassOk = o.st !== 'glass' || (Math.floor(hz) % m.fh === 2 && Math.floor(u) % 3 !== 0);
+      if (glassOk && !o.boarded && !o.burnt && noise(Math.floor(u / 4) + (right ? 50 : 0), Math.floor(hz / m.fh), o.seed) < o.lit) L.set(x, y, o.st === 'glass' ? (Math.floor(u) % 9 === 1 ? LIT : LITG) : Math.floor(u) % 9 === 0 ? LIT2 : LIT);
     } else if (k === 'trim') c = m.trim;
     else if (k === 'door') c = o.boarded ? C('#6a4a2a') : shade(m.trim, -0.45);
     else c = wall;
