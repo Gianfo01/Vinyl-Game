@@ -68,9 +68,12 @@ beforeAll(() => {
   // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
   // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
   // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-  expect(s.player.cash).toBe(450735);
-  expect(hashString(JSON.stringify(s.acts))).toBe(2386675548);
-  expect(hashString(JSON.stringify(s.rng))).toBe(2839816166);
+  // R29 (CONECTAR TUDO, de propósito — docs/connect29.md): arestas novas entre sistemas (conn29: confiança no palco/estúdio,
+  // crise na demanda da cidade, prêmios → fama/reputação, reputação → fama/equipe, calor policial…) mudam caixa, tours, acts e
+  // rng. Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+  expect(s.player.cash).toBe(221268);
+  expect(hashString(JSON.stringify(s.acts))).toBe(4246775399);
+  expect(hashString(JSON.stringify(s.rng))).toBe(1175182249);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

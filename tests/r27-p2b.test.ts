@@ -65,10 +65,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-    expect(AFTER.player.cash).toBe(450735);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
+    // R29 (CONECTAR TUDO, de propósito — docs/connect29.md): arestas novas entre sistemas (conn29: confiança no palco/estúdio,
+    // crise na demanda da cidade, prêmios → fama/reputação, reputação → fama/equipe, calor policial…) mudam caixa, tours, acts e
+    // rng. Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+    expect(AFTER.player.cash).toBe(221268);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3005372679);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4246775399);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1175182249);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
@@ -80,7 +83,9 @@ describe('r27 P2B — modo rápido intacto', () => {
     const run = (hook: boolean) => {
       const s = clone(FIX);
       s.player.cash += money(s, 200000);
-      const actId = playerActs(s)[0];
+      // R29: com o mundo novo o bot já tem turnê marcada no 1º ato — mesmo critério do roadFix abaixo
+      let actId = playerActs(s).find((id) => !s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running')));
+      if (!actId) { actId = playerActs(s)[0]; for (const t of s.tours) if (t.actId === actId && (t.status === 'planned' || t.status === 'running')) cancelTour(s, t.id); }
       const r = planTour(s, basePlan27(s, actId, ['rio', 'buenos_aires', 'montevideo', 'santiago'].filter((c) => c !== s.acts[actId].city), { startInDays: 7 }));
       expect('id' in r).toBe(true);
       const pre = STOP27.pre;
