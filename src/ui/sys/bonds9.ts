@@ -35,7 +35,7 @@ const KIND_CLS: Record<BondKind, string> = { duo: 'good', couple: 'gold', super:
 function bondRow(s: GameState, b: Bond, close: () => void): HTMLElement {
   return h('li', null,
     pill(t(BOND_NAME[b.k]), KIND_CLS[b.k]), ' ',
-    h('b', null, bondTitle(s, b)), b.real ? h('small', { class: 'muted' }, ' ★') : null, ' ',
+    h('b', null, bondTitle(s, b)), ' ',
     ...b.p.slice(0, 5).map((p) => h('button', { class: 'link small', onclick: () => { close(); openPersonPage(p); } }, s.persons[p]?.name ?? '?')),
     b.act ? h('span', null, ' → ', actLink(s, b.act)) : null, ' ',
     b.end ? h('small', { class: 'muted' }, ` ${b.y}–${b.end.y} · ${t(END_NAME[b.end.c])}${b.end.ep ? ` · ${t(EPI_NAME[b.end.ep])}` : ''}`) : h('span', null, bar(b.str, 100, b.str > 40 ? 'good' : 'warn'), h('small', { class: 'muted' }, ` ${t(l('desde', 'since'))} ${b.y} · ${t(l('obras', 'works'))} ${b.works}`)),

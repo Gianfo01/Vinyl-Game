@@ -6,7 +6,8 @@
 // RunConfig da configuração completa (home27model.ts) e abre a configuração completa pré-preenchida.
 
 import { endYearField28 } from '../endyear28'; // r28 (F4)
-import { REC_YEARS28 } from '../../sim/start28data';
+import { REC_YEARS28, pickStart28 } from '../../sim/start28data';
+import { SITS29, sit29ById, sitOfScenario29, start28Fits29, statusLabel29, type Sit29 } from '../../sim/start29data'; // r29
 import { drawHqCutaway27 } from './hqpx27';
 import { CITIES, l, type L } from '../../data/world';
 import { S, locale, t, type Lang } from '../../i18n/strings';
@@ -23,7 +24,7 @@ import { launchRun27, newGameScreen, randomSeed } from '../newgame';
 import { scenarioScreen } from '../sys/live/goals';
 import { setTutorials19, tutorialsOff19, TUTOFF_LABEL19 } from '../tutoff19';
 import { ic } from '../vis';
-import { CAREER_SHORT27, DIFFS27, STARTS27, careerOpen27, clampYear27, quickDefaults27, quickRunConfig27, type QuickRun27 } from './home27model';
+import { CAREER_SHORT27, DIFFS27, careerOpen27, clampYear27, quickDefaults27, quickRunConfig27, type QuickRun27 } from './home27model';
 import { achBadge27, homeAch27 } from '../ach27';
 import { profAchCount27 } from '../ach27store';
 import './home27.css';
@@ -37,8 +38,9 @@ function hqArt27(hq: number, year: number, city: string, cls: string, brand = 'M
   return cv;
 }
 const showcase27 = (): HTMLCanvasElement => { const [hq, y, c] = SHOW27[Math.floor(Math.random() * SHOW27.length)]; return hqArt27(hq, y, c, 'h27-bg'); };
-/** Nível da sede sugerido pelo ponto de partida (só para a prévia). */
-const hqOfStart27 = (sc: string): number => (/zero|garage|garag/.test(sc) ? 0 : /estab|major|big/.test(sc) ? 3 : 1);
+/** Nível da sede sugerido pela situação inicial (só para a prévia; r29: a escada inteira). */
+const HQ_PREV29: Record<Sit29, number> = { zero: 0, emerging: 1, mid: 2, hipster: 1, established: 3, top5: 4, leader: 5, fallen: 3 };
+const hqOfStart27 = (sit: Sit29): number => HQ_PREV29[sit] ?? 1;
 const PRIMARY27 = ['label', 'musician', 'manager', 'studio', 'festival', 'booking'];
 const MORE27 = ['venue', 'publisher', 'media', 'platform'];
 /** Troca de tela começa do topo (a rolagem da tela anterior não passa adiante). */
@@ -237,6 +239,7 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
       ic(d.icon, 2), h('span', null, t(CAREER_SHORT27[id] ?? d.name)), tag) as HTMLButtonElement];
   });
   const moreBtn = h('button', { type: 'button', class: 'h27-more', onclick: () => { more = !more; drawCareers(); } });
+  let afterCareer = () => {}; // r29: o ponto de partida e o status seguem a carreira
   careerBox.append(...btns, moreBtn);
   const drawCareers = () => {
     if (!careerOpen27(q.career, q.startYear)) q.career = 'label';
@@ -253,11 +256,13 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
     moreBtn.setAttribute('aria-expanded', String(more));
     moreBtn.textContent = more ? t(l('− menos atividades', '− fewer activities')) : t(l('+ mais atividades', '+ more activities'));
     moreBtn.title = t(l('Casa de shows, editora musical, mídia e plataforma', 'Venue, music publisher, media and platform'));
+    afterCareer();
   };
   drawCareers();
   const nameIn = h('input', { type: 'text', id: 'h27-name', value: q.companyName, maxlength: 60, oninput: (e: Event) => (q.companyName = (e.target as HTMLInputElement).value) }) as HTMLInputElement;
   const prevArt = h('div', { class: 'h27-prev-art' });
-  const drawPrev = () => prevArt.replaceChildren(hqArt27(hqOfStart27(q.scenario), q.startYear, q.homeCity, 'h27-prev-cv', (q.companyName || 'MASTERS').toUpperCase().slice(0, 14)));
+  const sitNow = (): Sit29 => q.start29 ?? sitOfScenario29(q.scenario);
+  const drawPrev = () => prevArt.replaceChildren(hqArt27(hqOfStart27(sitNow()), q.startYear, q.homeCity, 'h27-prev-cv', (q.companyName || 'MASTERS').toUpperCase().slice(0, 14)));
   const yearIn = h('input', { type: 'number', id: 'h27-year', min: YEAR_MIN20, max: YEAR_MAX20, step: 1, value: q.startYear, inputmode: 'numeric',
     onchange: (e: Event) => {
       const raw = Number((e.target as HTMLInputElement).value);
@@ -270,7 +275,17 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
   const endF = endYearField28(() => q.startYear, () => q.runYears ?? REC_YEARS28, (v) => { q.runYears = v; }, 'h27-end');
   const cities = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
   const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => { q.homeCity = v; drawPrev(); }, { id: 'h27-city' });
-  const startSel = select(q.scenario, STARTS27.map((s) => ({ value: s.id, label: t(s.name) })), (v) => { q.scenario = v; drawPrev(); }, { id: 'h27-start' });
+  // r29: situação inicial (escada zero → líder do mercado); o rótulo segue a carreira ("Artista hipster", "Produtor top 5"…)
+  const status = h('p', { class: 'small h27-status', role: 'status', 'aria-live': 'polite' });
+  const drawStatus = () => {
+    const d = sit29ById(sitNow())!;
+    const st28 = pickStart28(q.seed);
+    status.replaceChildren(h('b', null, t(statusLabel29(q.career, d.id))), ' — ', h('span', { class: 'muted' }, t(d.fx)),
+      ...(start28Fits29(st28.id, d.id) ? [h('span', { class: 'muted' }, ` · ${t(l('Começo sorteado', 'Rolled start'))}: ${t(st28.name)}`)] : []));
+  };
+  const startSel = select<Sit29>(sitNow(), SITS29.map((d) => ({ value: d.id, label: t(statusLabel29(q.career, d.id)) })), (v) => { q.start29 = v; q.scenario = sit29ById(v)!.base; drawPrev(); drawStatus(); }, { id: 'h27-start' });
+  afterCareer = () => { SITS29.forEach((d, i) => { const o = startSel.options[i]; if (o) o.textContent = t(statusLabel29(q.career, d.id)); }); drawStatus(); };
+  afterCareer();
   drawPrev();
   const diffSel = select(q.difficulty, DIFFS27.map((d) => ({ value: d.id, label: t(d.name) })), (v) => (q.difficulty = v), { id: 'h27-diff' });
   let busy = false;
@@ -312,6 +327,7 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
         h('div', { class: 'h27-2' },
           field('h27-start', l('Ponto de partida', 'Starting point'), startSel),
           field('h27-diff', l('Dificuldade', 'Difficulty'), diffSel)),
+        status,
         h('p', { class: 'muted small h27-hint' }, t(l('Nomes reais em um mundo simulado. Você pode ajustar história, personagem, carreiras simultâneas, gravadoras, regras e modificadores na configuração completa.', 'Real names in a simulated world. You can adjust history, character, simultaneous careers, labels, rules and modifiers in the full setup.'))),
         err,
         go,
