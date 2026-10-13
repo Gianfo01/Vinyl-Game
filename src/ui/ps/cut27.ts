@@ -17,11 +17,10 @@ import { Px } from '../pixel/px';
 import { AFTER_ADVANCE, registerCutscene, showPendingCutscene } from '../registry';
 import { rerender } from '../common';
 import { savePrefs, store } from '../store';
-import { drawFigs27, fitInt27, paintArt27 } from './art27';
-import { CUT27, CUT_H27, CUT_W27, beat27, beatsOf27, choose27, cut27, cutModel27, onceKey27, pace27, paintFx27, scan27, type CutData27, type CutKey27, type CutPref27 } from './cut27model';
-import { PORTRAIT29, stageOf29 } from './cut29model';
-import { light29, paintStage29 } from '../pixel/cenas29';
-import { kit27 } from './art27kit';
+import { drawFigs27, fitInt27 } from './art27';
+import { CUT27, CUT_H27, CUT_W27, beat27, beatsOf27, choose27, cut27, cutModel27, onceKey27, pace27, scan27, type CutData27, type CutKey27, type CutPref27 } from './cut27model';
+import { PORTRAIT29 } from './cut29model';
+import { paintCut29 } from './cutpaint29';
 import { log29, outcome29 } from './album29'; // r29: toda cena que dispara vai para o álbum e o storyboard
 import './art27.css';
 
@@ -142,15 +141,9 @@ export function cutView27(s: GameState, d: CutData27, close: () => void, cs?: { 
   const picId = PORTRAIT29.has(d.key) ? d.pid ?? (d.actId ? s.acts[d.actId]?.members.find((id) => s.persons[id] && !s.persons[id].alive) : undefined) : undefined;
   const who = picId ? s.persons[picId] : undefined;
   const pic = who ? portraitPx(who, d.year) : null;
-  const st29 = stageOf29(s, d, m); // r29: cenário próprio ou camada, luz por era e hora
   const paint = (tm: number) => {
     if (!ctx || !img) return;
-    if (st29.full) buf.d.fill(0); else paintArt27(m, tm, buf);
-    const k = kit27(buf, m.year, tm, m.seed, m.fy);
-    paintStage29(k, st29.stage, st29);
-    if (pic) buf.blit(pic, Math.round(m.W / 2) - 16, d.key === 'heirs' ? 7 : Math.max(6, m.fy - 64) + 2);
-    paintFx27(buf, m, def.fx, tm);
-    light29(k, { hour: st29.hour, interior: !['shows', 'festival', 'tour', 'night', 'crime', 'era'].includes(m.kind) || st29.full });
+    paintCut29(s, d, m, tm, buf, pic); // r29: cenário próprio ou camada, retrato, efeitos e luz por era e hora
     new Uint32Array(img.data.buffer).set(buf.d);
     ctx.putImageData(img, 0, 0);
     drawFigs27(ctx, s, m, tm, still || tm === 0);

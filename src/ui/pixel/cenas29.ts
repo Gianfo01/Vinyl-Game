@@ -174,6 +174,7 @@ const FULL29: Record<string, Painter29> = {
     const { W, fy } = k;
     wall(k, 0, fy, k.pal.wood);
     planks(k, 0, Math.round(fy * 0.45), W, Math.round(fy * 0.55), k.pal.woodDark, true);
+    floor(k, fy, k.pal.floors.hall.a, k.pal.floors.hall.b);
     for (const x of [Math.round(W * 0.12), Math.round(W * 0.84)]) { windowPane(k, x, 8, 22, 30, k.c(o.hour === 'night' ? '#1a2040' : '#a8c8e8'), o.hour === 'night'); if (o.hour !== 'night') cone(k, x + 11, 38, 22, fy, 40, k.c('#fff0c0'), 26); }
     // brasão e bandeiras
     const cx = Math.round(W / 2);
@@ -277,6 +278,7 @@ const FULL29: Record<string, Painter29> = {
       for (let i = 0; i < 6; i++) R(k, px0 + 20 - i * 3, fy - 26 + i * 4, 8, 2, k.c('#c0c0c8'));
       k.p.line(px0 + 14, fy - 30, px0 + 2, fy - 4, k.c('#8a8a92'));
     }
+    for (let y = fy; y < k.H; y++) k.p.hline(0, W - 1, y, k.c(k.band === 0 ? '#3a3028' : '#2e2e34'));
     departures(k, 6, 6, o.city ?? '');
     if (k.band >= 1) tourVehicle(k, 4, fy + 10, o.act);
   },
@@ -332,6 +334,7 @@ const FULL29: Record<string, Painter29> = {
     const { W, fy } = k;
     R(k, 0, 0, W, fy, k.c('#0a0810'));
     for (let x = 0; x < W; x += 6) R(k, x, 0, 4, Math.round(fy * 0.75), k.c(x % 12 ? '#3a0e14' : '#4a141c')); // cortina
+    R(k, 0, fy - 14, W, k.H - fy + 14, k.c('#08060c'));
     R(k, 0, fy - 14, W, 14, k.pal.woodDark); R(k, 0, fy - 14, W, 1, shade(k.pal.wood, 0.3));
     const cx = Math.round(W / 2);
     cone(k, cx, 0, 6, fy - 14, 46, k.c('#fff4d0'), 60);
