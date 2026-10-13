@@ -1,5 +1,6 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
+import { nrConfirm29, nrHero29 } from './ps/nr29'; // r29 (NR01–NR06, Atlas)
 import { statusOf29 } from '../sim/start29data'; // r29
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
@@ -357,7 +358,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       h('p', { class: 'small' }, `${t(l('Gravadoras', 'Labels'))}: ${lb[0][1]} · ${lb[1][1]}`),
       h('p', { class: 'small' }, `${r[0][1]} · ${r[1][1]}`),
       h('p', { class: 'small muted' }, w[1][1]),
-      ...notes17(cfg).filter((n) => n.level === 'warn').map((n) => h('p', { class: 'small warn' }, '⚠ ', t(n.text)))];
+      ...notes17(cfg).filter((n) => n.level === 'warn').map((n) => h('p', { class: 'small warn' }, '⚠ ', t(n.text))),
+      ...(cur === REVIEW ? [nrConfirm29(cfg, notes17(cfg).filter((n) => n.level === 'warn').length)] : [])]; // r29 (NR-03): confirmação da campanha
     side.replaceChildren(...sideNodes());
     sideM.replaceChildren(...sideNodes());
     mini.textContent = `${w[0][1]} · ${cfg.startYear} · ${cityName(cfg.homeCity)}`;
@@ -368,15 +370,14 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       warns ? t(l('{n} avisos', '{n} warnings'), { n: warns }) : t(l('pronto para começar', 'ready to start'))];
     tabSubs.forEach((el, i) => (el.textContent = subs[i] ?? ''));
   }
-  const TAB_IC21: Record<string, string> = { world: '🌍', you: '👤', mode: '🎯', labels: '💿', rules: '⚖️', review: '✅' };
   const tabSubs = tabs.map(() => h('small', { class: 'ng21-sub' }));
   const tabBtns = tabs.map((tb, i) => h('button', { type: 'button', role: 'tab', id: `ng-tab-${tb.id}`, 'aria-controls': `ng-panel-${tb.id}`, class: 'ng-tab', onclick: () => { fromReview = false; go(i); }, onkeydown: (e: KeyboardEvent) => {
     const k = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
     if (k === null) return;
     e.preventDefault();
     go((k + tabs.length) % tabs.length, true);
-  } }, h('span', { class: 'ng-num ng21-ic', 'aria-hidden': 'true' }, TAB_IC21[tb.id] ?? String(i + 1)), h('span', { class: 'ng21-tl' }, h('b', null, `${i + 1}. ${t(tb.name).toUpperCase()}`), tabSubs[i])));
-  const panels = tabs.map((tb) => h('div', { role: 'tabpanel', id: `ng-panel-${tb.id}`, 'aria-labelledby': `ng-tab-${tb.id}`, class: 'ng-grid ng-panel' }, h('p', { class: 'muted small ng17-step' }, t(STEP20[tb.id] ?? l('', ''))), ...tb.body));
+  } }, h('span', { class: 'ng-num ng21-ic', 'aria-hidden': 'true' }, String(i + 1)) /* r29 (Atlas): etapas numeradas */, h('span', { class: 'ng21-tl' }, h('b', null, `${i + 1}. ${t(tb.name).toUpperCase()}`), tabSubs[i])));
+  const panels = tabs.map((tb, ti) => h('div', { role: 'tabpanel', id: `ng-panel-${tb.id}`, 'aria-labelledby': `ng-tab-${tb.id}`, class: 'ng-grid ng-panel' }, nrHero29(tb.id, t(STEP20[tb.id] ?? l('', '')), ti + 1, tabs.length), ...tb.body)); // r29 (NR/Atlas): herói por etapa
   // r22: cartão Atributos (pontos livres + o que o passado soma + prévia rápida), atento às mudanças da etapa
   const charPanel = panels[tabs.findIndex((x) => x.id === 'you')];
   const attrs = attrsCard22(cfg, charPanel);

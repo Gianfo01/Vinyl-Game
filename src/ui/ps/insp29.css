@@ -1,0 +1,29 @@
+/* R29 (S04/S05) — inspetor lateral no estilo do Atlas. Tokens ui27; arte = logo/pixel existente. */
+.in29i { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+.in29i-id { display: flex; gap: var(--sp-3); align-items: center; }
+.in29i-id h3 { margin: 0; font-size: var(--fs-xl); overflow-wrap: anywhere; }
+.in29i-logo { flex: none; }
+.in29i-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); }
+.in29i-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); font: inherit; font-size: var(--fs-sm); padding: 6px 8px; cursor: pointer; }
+.in29i-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); font-weight: 700; }
+.in29i-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.in29i-list li { display: flex; align-items: center; gap: var(--sp-2); padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2, var(--panel)); min-width: 0; }
+.in29i-t { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.in29i-t > * { overflow-wrap: anywhere; }
+.in29i-go { background: none; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); cursor: pointer; padding: 0 8px; font-size: 1.2em; }
+.in29i-acts > summary { cursor: pointer; font-weight: 700; }
+.in29i-sec { margin-top: var(--sp-2); }
+.in29i-sech { text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-size: var(--fs-xs); }
+.in29i-btns { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.in29i-full { align-self: stretch; }
+/* Elenco no formato do Atlas: lista + inspetor; seletor de vista */
+.ar29-view { display: flex; justify-content: flex-end; margin: 0 0 var(--sp-2); }
+.ar29 .lay29-main .roster.ar20 { max-height: none; }
+.bb29 { padding: var(--sp-3) var(--sp-4); }
+.bb29 h3 { margin: 0 0 var(--sp-2); }
+.bb29-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--sp-2); }
+.bb29-chips .chip27 { cursor: pointer; text-transform: none; }
+.bb29-chips .chip27.on { outline: 1px solid var(--accent); }
+.panel.artists.ar29 { display: block; }
+.panel.artists20 > .ar29-view { grid-column: 1 / -1; }
+.in29i-t .link { text-align: left; align-self: flex-start; }

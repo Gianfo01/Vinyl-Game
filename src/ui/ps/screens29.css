@@ -34,3 +34,18 @@
 .mk29::before { content: ''; position: absolute; left: calc(-1 * var(--sp-4) - 6px); top: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--t-info-fg); }
 .mk29 p { margin: 4px 0 0; }
 .aside29-h { margin: 0; font-size: var(--fs-xl); }
+.al29-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 4px; }
+.al29-c { cursor: pointer; text-transform: none; }
+.al29-c.on { outline: 1px solid var(--accent); }
+.al29-c.muted { opacity: .7; }
+.al29-ck { padding: var(--sp-3) var(--sp-4); margin: var(--sp-3) 0; }
+.al29-ck h3 { margin: 0 0 var(--sp-2); }
+.al29-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.al29-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.al29-top { flex-basis: 100%; overflow-wrap: anywhere; }
+.al29-t th { text-align: left; padding-right: 12px; }
+.al29-t td { padding: 2px 8px; }
+.pr29 { margin: 0 0 var(--sp-3); }
+.pr29 .seg27 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.pr29-now { margin-left: var(--sp-2); }
+.pr29-prev { margin-top: var(--sp-2); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-radius: var(--radius); }

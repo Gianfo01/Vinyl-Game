@@ -15,6 +15,7 @@ import {
   paletteEntries20, recordPlan20, runAction20, runBatch20, togglePin20, type Nav20, type RecOpt20, type Row20,
 } from '../actions20';
 import { $, inspect, modal, rerender, toast } from '../common';
+import { undo29 } from '../ps/batch29model'; // r29 (M41)
 import { h, select } from '../dom';
 import { openCutscene } from '../registry';
 import { savePrefs, store } from '../store';
@@ -267,9 +268,10 @@ function openPins20(s: GameState): void {
 }
 
 /** Lote: escolha explícita dos artistas e da ação; prévia por artista (elegível? custo?) antes de aplicar. */
-function openBatch20(s: GameState, actId: string): void {
+export function openBatch20(s: GameState, actId: string, preset?: string[]): void { // r29 (M41): pode abrir com a seleção do Elenco
   const ids = playerActs(s);
-  const chosen = new Set<string>([actId]);
+  const chosen = new Set<string>(preset?.length ? preset.filter((x) => ids.includes(x)) : [actId]);
+  let armed = false; // r29 (M41): aplicar exige uma confirmação explícita depois da prévia
   const defs = batchable20();
   let act = defs[0]?.id ?? '';
   const box = h('div', { class: 'am20-batch' });
@@ -278,24 +280,30 @@ function openBatch20(s: GameState, actId: string): void {
     const pv = batchPreview20(s, act, [...chosen]);
     box.replaceChildren(
       h('p', { class: 'muted small' }, t(l('O escopo é sempre visível: só os marcados recebem a ação. Cada um é conferido de novo na hora de aplicar.', 'The scope is always visible: only checked acts get the action. Each is re-checked when applying.'))),
-      h('label', null, t(l('Ação: ', 'Action: ')), select(act, defs.map((d) => ({ value: d.id, label: t(d.label) })), (v) => { act = v; draw(); }, { 'aria-label': t(l('Ação em lote', 'Batch action')) })),
+      h('label', null, t(l('Ação: ', 'Action: ')), select(act, defs.map((d) => ({ value: d.id, label: t(d.label) })), (v) => { act = v; armed = false; draw(); }, { 'aria-label': t(l('Ação em lote', 'Batch action')) })),
       h('fieldset', null, h('legend', null, t(l('Artistas', 'Acts')), ` (${chosen.size}/${ids.length})`),
         h('div', { class: 'row wrap' },
           h('button', { class: 'btn small ghost', onclick: () => { ids.forEach((x) => chosen.add(x)); draw(); } }, t(l('Marcar todos', 'Check all'))),
           h('button', { class: 'btn small ghost', onclick: () => { chosen.clear(); draw(); } }, t(l('Desmarcar', 'Uncheck all')))),
-        ids.map((id) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: chosen.has(id), onchange: (e: Event) => { if ((e.target as HTMLInputElement).checked) chosen.add(id); else chosen.delete(id); draw(); } }), s.acts[id].name))),
+        ids.map((id) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: chosen.has(id), onchange: (e: Event) => { if ((e.target as HTMLInputElement).checked) chosen.add(id); else chosen.delete(id); armed = false; draw(); } }), s.acts[id].name))),
       h('table', { class: 'am20-tbl small' }, h('caption', { class: 'sr-only' }, t(l('Prévia por artista', 'Preview per act'))),
-        h('thead', null, h('tr', null, h('th', null, t(l('Artista', 'Act'))), h('th', null, t(l('Situação', 'Status'))), h('th', { class: 'num' }, t(l('Custo', 'Cost'))))),
-        h('tbody', null, pv.rows.map((r) => h('tr', { class: r.block ? 'off' : '' }, h('td', null, r.name), h('td', null, r.block ? `✗ ${t(r.block)}` : `✓ ${t(l('elegível', 'eligible'))}`), h('td', { class: 'num' }, r.block ? '—' : $(r.cost)))))),
+        h('thead', null, h('tr', null, h('th', null, t(l('Artista', 'Act'))), h('th', null, t(l('Situação', 'Status'))), h('th', null, t(l('Efeito', 'Effect'))), h('th', { class: 'num' }, t(l('Custo', 'Cost'))))),
+        h('tbody', null, pv.rows.map((r) => { const row = r.block ? null : actionRow20(s, act, { act: r.act }); return h('tr', { class: r.block ? 'off' : '' }, h('td', null, r.name), h('td', null, r.block ? `✗ ${t(r.block)}` : `✓ ${t(l('elegível', 'eligible'))}`),
+          h('td', { class: 'small' }, row?.effect ? t(row.effect) : '—', row?.time ? h('small', { class: 'muted' }, ' · ', t(row.time)) : null), h('td', { class: 'num' }, r.block ? '—' : $(r.cost))); }))),
+      h('p', { class: 'small' }, '↺ ', t(undo29(act))),
       h('p', null, h('b', null, t(l('Total: ', 'Total: '))), h('span', { class: 'num' }, $(pv.total)), ` · ${pv.ok}/${pv.rows.length} ${t(l('elegíveis', 'eligible'))}`),
       result ? h('p', { class: 'small', role: 'status' }, result) : '',
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn primary', disabled: !pv.ok, onclick: () => {
+        !armed ? h('button', { class: 'btn primary', disabled: !pv.ok, onclick: () => { armed = true; draw(); } }, t(l('Revisar e confirmar…', 'Review and confirm…'))) : null,
+        armed ? h('span', { class: 'small', role: 'alert' }, t(l('Confirmar aplica a {n} artista(s) por {c}. Nada é processado antes deste clique.', 'Confirming applies to {n} act(s) for {c}. Nothing is processed before this click.')).replace('{n}', String(pv.ok)).replace('{c}', $(pv.total)), ' ') : null,
+        armed ? h('button', { class: 'btn primary', disabled: !pv.ok, onclick: () => {
+          armed = false;
           const res = runBatch20(s, act, [...chosen]);
           const ok = res.filter((x) => x.out.ok).length;
           toast(t(l('Aplicado a {n} de {m}.', 'Applied to {n} of {m}.')).replace('{n}', String(ok)).replace('{m}', String(res.length)), ok ? 'good' : 'bad');
           draw(res.map((x) => `${s.acts[x.act]?.name}: ${t(x.out.text)}`).join(' · '));
-        } }, t(l('Aplicar aos elegíveis', 'Apply to eligible'))),
+        } }, t(l('Confirmar e aplicar aos elegíveis', 'Confirm and apply to eligible'))) : null,
+        armed ? h('button', { class: 'btn ghost', onclick: () => { armed = false; draw(); } }, t(l('Voltar à prévia', 'Back to preview'))) : null,
         h('button', { class: 'btn ghost', onclick: () => close() }, t(l('Fechar', 'Close')))),
     );
   };

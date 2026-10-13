@@ -224,3 +224,157 @@ describe('r29 M42: rascunho persistente (preferência de interface, expira, por 
     delete (globalThis as { localStorage?: unknown }).localStorage;
   });
 });
+
+// ---------------------------------------------------------------- R29b item 1 — S03: grade semana/mês com capacidade
+import { cols29, grid29, colItems29, monthOfWeek29 } from '../src/ui/ps/grid29model';
+import { monthIndex } from '../src/sim/capacity';
+describe('r29 S03: grade semana/mês com capacidade por recurso (consulta)', () => {
+  it('semana e mês: 6 colunas, a 1ª é o período atual; recursos pessoas/estúdio/dinheiro/tempo/prazos', () => {
+    const s = played('r29-grid', 6);
+    const before = JSON.stringify(s);
+    for (const mode of ['week', 'month'] as const) {
+      const G = grid29(s, mode);
+      expect(G.cols.length).toBe(6);
+      expect(G.cols[0].now).toBe(true);
+      expect(G.cols[0].month).toBe(monthIndex(s)); // a coluna atual é o mês do relógio do jogo
+      const kinds = new Set(G.rows.map((r) => r.kind));
+      for (const k of ['studio', 'money', 'time', 'deadlines'] as const) expect(kinds.has(k), k).toBe(true);
+      for (const r of G.rows) expect(r.cells.length).toBe(6);
+      // tempo pessoal: só o mês em curso é calculado; os outros meses ficam "desconhecido", nunca zero
+      const time = G.rows.find((r) => r.kind === 'time')!;
+      G.cols.forEach((c, i) => { if (c.month !== monthIndex(s)) expect(time.cells[i].v.kind).toBe('unknown'); else expect(time.cells[i].v.kind).not.toBe('unknown'); });
+      for (const c of G.cols) colItems29(s, c);
+    }
+    expect(JSON.stringify(s)).toBe(before); // selecionar/consultar não muda o estado nem o RNG
+  });
+  it('meses em ordem e semanas contíguas', () => {
+    const s = played('r29-grid2', 2);
+    const M = cols29(s, 'month');
+    for (let i = 1; i < M.length; i++) { expect(M[i].month).toBe(M[i - 1].month + 1); expect(M[i].w0).toBe(M[i - 1].w1); }
+    const W = cols29(s, 'week');
+    for (let i = 1; i < W.length; i++) expect(W[i].w0).toBe(W[i - 1].w1);
+    expect(monthOfWeek29(s, s.week)).toBe(monthIndex(s));
+  });
+});
+
+// ---------------------------------------------------------------- R29b item 2/3 — S04/S05 inspetor e M41 lote
+import { insp29, INSP_TABS29 } from '../src/ui/ps/insp29model';
+import { UNDO29, undo29 } from '../src/ui/ps/batch29model';
+const estab = (seed: string): GameState => createGame(defaultConfig(seed, { scenario: 'established', startYear: 1975, dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
+describe('r29 S04/S05: inspetor lateral do ato (5 abas, só leitura)', () => {
+  it('abas Formação/Projetos/Contratos/Agenda/Saúde lidas das fontes; nada muda no estado', () => {
+    const s = estab('r29-insp');
+    for (let i = 0; i < 3; i++) { botMonth(s); advanceMonth(s); }
+    expect(INSP_TABS29.map((x) => x.id)).toEqual(['lineup', 'projects', 'contracts', 'agenda', 'health']);
+    const ids = Object.values(s.acts).filter((a) => a.owner === 'player').map((a) => a.id);
+    expect(ids.length).toBeGreaterThan(0);
+    const before = JSON.stringify(s);
+    for (const id of ids) {
+      const m = insp29(s, id)!;
+      expect(m.name).toBe(s.acts[id].name);
+      // formação = integrantes vivos, na mesma ordem do ato
+      expect(m.tabs.lineup.map((r) => r.person)).toEqual(s.acts[id].members.filter((p) => s.persons[p]?.alive));
+      // contratos: só os vigentes do jogador com este ato
+      const live = Object.values(s.contracts).filter((c) => c.actId === id && c.party === 'player' && c.endWeek >= s.week).length;
+      expect(m.tabs.contracts.filter((r) => typeof r.title !== 'string' && r.title.pt.startsWith('Contrato')).length).toBe(live);
+      expect(m.tabs.health.length).toBeGreaterThanOrEqual(4);
+      for (const k of Object.keys(m.empty) as (keyof typeof m.empty)[]) expect(m.empty[k].pt.length).toBeGreaterThan(5);
+    }
+    expect(insp29(s, 'nao-existe')).toBeNull();
+    expect(JSON.stringify(s)).toBe(before);
+  });
+});
+describe('r29 M41: lote com prévia e reversibilidade declarada', () => {
+  it('toda ação em lote do registro tem texto de reversibilidade; nunca promete desfazer o que não desfaz', () => {
+    expect(undo29('agenda.manual').pt).toMatch(/Reversível/);
+    expect(undo29('leader.praise').pt).toMatch(/Não reversível/);
+    expect(undo29('qualquer.coisa').pt).toMatch(/Não se desfaz/);
+    for (const k of Object.keys(UNDO29)) expect(UNDO29[k].en.length).toBeGreaterThan(5);
+  });
+});
+
+// ---------------------------------------------------------------- R29b item 4 — M44 alertas por categoria
+import { ALERT_CATS29, alertCat29, alertGroups29, alertPrefs29, toastOrder29, ALERT_DEFAULTS29 } from '../src/ui/ps/alerts29model';
+import { items18 } from '../src/sim/sys/inbox18';
+import { FILTER0_27, mailbox27 } from '../src/ui/sys/mail27model';
+describe('r29 M44: alertas por categoria (preferência; registro íntegro)', () => {
+  it('8 categorias; classificação por texto pt/en', () => {
+    expect(ALERT_CATS29).toEqual(['finance', 'people', 'contracts', 'projects', 'live', 'world', 'underworld', 'legal']);
+    expect(alertCat29('Empréstimo vence: caixa negativo')).toBe('finance');
+    expect(alertCat29('Promessa de turnê vence em 4 semanas')).toBe('contracts');
+    expect(alertCat29('Esquema de payola descoberto')).toBe('underworld');
+    expect(alertCat29('Processo no tribunal por plágio')).toBe('legal');
+    expect(alertCat29('Show esgotado em Londres')).toBe('live');
+    expect(alertCat29('Gravação do álbum atrasou')).toBe('projects');
+    expect(alertCat29('Baixista com estresse alto')).toBe('people');
+    expect(alertCat29('Rival chegou ao topo das paradas')).toBe('world');
+  });
+  it('preferências inválidas caem no padrão; silenciar não apaga nada', () => {
+    const p = alertPrefs29({ finance: { on: false, prio: 9 }, live: { prio: 3 } });
+    expect(p.finance).toEqual({ on: false, prio: ALERT_DEFAULTS29().finance.prio });
+    expect(p.live.prio).toBe(3);
+    const items = [{ key: 'a', text: 'caixa negativo', unread: true }, { key: 'b', text: 'show em Paris', unread: true }, { key: 'c', text: 'show em Roma' }];
+    const G = alertGroups29(items, p);
+    expect(G.reduce((t, g) => t + g.total, 0)).toBe(3); // nada some da contagem
+    expect(G[0].cat).toBe('live'); // prioridade 3 primeiro
+    expect(G.at(-1)!.on).toBe(false); // silenciadas no fim, mas presentes
+    const N = (pt: string) => ({ text: { pt, en: pt } });
+    const o = toastOrder29([N('caixa negativo'), N('show em Paris')], p);
+    expect(o.shown.map((x) => x.text.pt)).toEqual(['show em Paris']);
+    expect(o.muted.length).toBe(1);
+  });
+  it('filtro da caixa por alerta só filtra a vista (mesmas conversas, nenhuma alterada)', () => {
+    const s = played('r29-alert', 6);
+    const before = JSON.stringify(s);
+    const all = mailbox27(s, FILTER0_27());
+    let sum = 0;
+    for (const c of ALERT_CATS29) sum += mailbox27(s, { ...FILTER0_27(), alert: c }).threads.length;
+    expect(sum).toBe(all.threads.length); // cada conversa cai em exatamente uma categoria
+    expect(items18(s).length).toBeGreaterThan(0);
+    expect(JSON.stringify(s)).toBe(before);
+  });
+});
+describe('r29 M44: notas do mundo ficam em Mundo', () => {
+  it('"Mundo: …" e marcos da indústria são Mundo, mesmo citando censura ou discos', () => {
+    expect(alertCat29('Aviso Mundo: Regime franquista. Censura prévia')).toBe('world');
+    expect(alertCat29('Aviso Mundo: Embargo a Cuba. Discos cubanos')).toBe('world');
+    expect(alertCat29('Aviso Marco da indústria: Fábricas de hits')).toBe('world');
+  });
+});
+
+// ---------------------------------------------------------------- R29b item 5 — M20 presets de apresentação
+import { PRESETS29, PRESET_KEYS29, applyPreset29, detectPreset29, presetDiff29 } from '../src/ui/ps/presets29model';
+describe('r29 M20: presets Guiado/Livre/Contemplativo só de apresentação', () => {
+  it('cada preset só toca chaves de apresentação (nunca dificuldade, assist28, som, regras)', () => {
+    expect(PRESETS29.map((p) => p.id)).toEqual(['guided', 'free', 'calm']);
+    for (const p of PRESETS29) for (const k of Object.keys(p.set)) expect(PRESET_KEYS29 as readonly string[], `${p.id}:${k}`).toContain(k);
+    for (const bad of ['difficulty', 'assist28', 'audio28', 'textScale', 'history', 'seed']) expect(PRESET_KEYS29 as readonly string[]).not.toContain(bad);
+  });
+  it('prévia lista exatamente o que muda; aplicar é cópia; detecta o preset aplicado; outras chaves intactas', () => {
+    const cur = { dens20: 'comfy', interrupt23: 'milestones', textScale: 110, audio28: true, menuView: 'simple' } as Record<string, unknown>;
+    const d = presetDiff29(cur, 'free');
+    expect(d.map((x) => x.key)).toContain('dens20');
+    const nxt = applyPreset29(cur, 'free');
+    expect(cur.dens20).toBe('comfy'); // original intacto
+    expect(nxt.dens20).toBe('compact');
+    expect(nxt.textScale).toBe(110);
+    expect(nxt.audio28).toBe(true);
+    expect(detectPreset29(nxt)).toBe('free');
+    expect(presetDiff29(nxt, 'free')).toEqual([]);
+    expect(detectPreset29({})).toBe('custom');
+  });
+  it('preset não entra na partida: o estado do jogo não tem nenhuma das chaves', () => {
+    const s = fresh('r29-preset');
+    const cfg = JSON.stringify(s.config);
+    for (const k of PRESET_KEYS29) expect(cfg.includes(`"${k}"`), k).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------- R29b item 6 — NR01–NR06 no estilo do Atlas
+import { NR_STEP29 } from '../src/ui/ps/nr29';
+describe('r29 NR01–NR06: Nova run completa no estilo do Atlas (só apresentação)', () => {
+  it('as 6 etapas têm herói (título, ícone pixel, frase) em pt e en', () => {
+    expect(Object.keys(NR_STEP29)).toEqual(['world', 'you', 'mode', 'labels', 'rules', 'review']);
+    for (const [k, d] of Object.entries(NR_STEP29)) { expect(d.title.pt && d.title.en, k).toBeTruthy(); expect(d.icon, k).toBeTruthy(); }
+  });
+});

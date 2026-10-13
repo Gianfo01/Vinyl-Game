@@ -14,6 +14,9 @@ import { maxVenueTier } from '../../sim/live';
 import { actState } from '../../sim/people';
 import type { Act, AgendaSlot, GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
+import { layout29 } from '../ps/shell29';
+import { insp29View } from '../ps/insp29';
+import { batchBar29, rosterView29, setRosterView29 } from '../ps/batch29';
 import { $, N, actLink, genreName, cityName, kv, logo, pill, promiseName, rerender, section, statusName } from '../common';
 import { h, select } from '../dom';
 import { statusChip27 } from '../ps/ui27';
@@ -51,8 +54,15 @@ export function artistsPanel(s: GameState): HTMLElement {
   if (!ids.length) return h('div', { class: 'panel' }, section(t(S.roster), emptyState18(S.noActs, l('Artistas chegam por scouting (Mercado → Descobrir), indicações ou leilões. Faça uma oferta e eles aparecem aqui.', 'Acts come from scouting (Market → Discover), referrals or auctions. Make an offer and they show up here.'), { label: l('Ir ao Mercado', 'Go to the Market'), run: () => { store.area = 'market'; rerender(); } })));
   if (!store.selectedAct || !ids.includes(store.selectedAct)) store.selectedAct = ids[0];
   const a = s.acts[store.selectedAct];
+  // r29 REORG (S04/S05, Atlas): vista "Lista + inspetor" (padrão) ou a "Ficha detalhada" de sempre — nada some
+  const v29 = rosterView29();
+  const toggle29 = h('div', { class: 'ar29-view' }, h('div', { class: 'seg27', role: 'radiogroup', 'aria-label': t(l('Vista do elenco', 'Roster view')) },
+    ...(['atlas', 'detail'] as const).map((v) => h('button', { type: 'button', role: 'radio', 'aria-checked': v29 === v ? 'true' : 'false', class: v29 === v ? 'on' : '', onclick: () => { setRosterView29(v); rerender(); } },
+      t(v === 'atlas' ? l('Lista + inspetor', 'List + inspector') : l('Ficha detalhada', 'Detailed sheet'))))));
+  if (v29 === 'atlas') return h('div', { class: 'panel artists artists20 ar29' }, toggle29,
+    layout29([rosterList20(s, ids, a.id), batchBar29(s, ids)], [insp29View(s, a.id), reunionWrap(s)]));
   const sub = (getTab(SUBTAB_KEY20) as Sub20 | undefined) ?? 'overview';
-  return h('div', { class: 'panel artists artists20' },
+  return h('div', { class: 'panel artists artists20' }, toggle29,
     h('aside', { class: 'col-side' }, rosterList20(s, ids, a.id), reunionWrap(s)),
     h('div', { class: 'col-main' },
       header20(s, a),

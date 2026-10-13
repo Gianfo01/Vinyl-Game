@@ -7,6 +7,7 @@
 // queda por categoria, então todo tipo registrado (registerInboxKind) tem e-mail completo em PT e EN.
 // Nada aqui sorteia nem escreve no jogo, exceto os marcadores de interface (lido/estrela/arquivo) via sim/inbox18.
 
+import { alertCat29, type AlertCat29 } from '../ps/alerts29model'; // r29 (M44)
 import { STAFF_ROLES } from '../../data/rules';
 import { cityById, genreById, l, type L } from '../../data/world';
 import { ib18, inboxKind18, isStarred18, type InboxCat18 } from '../../sim/inbox18';
@@ -338,7 +339,7 @@ export function mail27(s: GameState, it: Item18): Mail27 {
 
 export type Box27 = 'inbox' | 'snoozed' | 'archived';
 export type Sort27 = 'date' | 'prio';
-export interface Filter27 { box: Box27; cats: InboxCat18[]; unread: boolean; reply: boolean; starred: boolean; q: string; sort: Sort27 }
+export interface Filter27 { box: Box27; cats: InboxCat18[]; unread: boolean; reply: boolean; starred: boolean; q: string; sort: Sort27; /** r29 (M44): categoria de alerta */ alert?: AlertCat29 }
 export const FILTER0_27 = (): Filter27 => ({ box: 'inbox', cats: [], unread: false, reply: false, starred: false, q: '', sort: 'date' });
 
 /** Adiar (some da Entrada até a semana; fica em "Adiadas"). Estado no save (ib18.snooze, chave m:…). */
@@ -367,6 +368,8 @@ export function threads27(mails: Mail27[]): Thread27[] {
   });
 }
 
+/** r29 (M44): categoria de alerta de uma conversa (assunto + corpo da mensagem principal + categoria da caixa). */
+export const threadAlert27 = (x: Thread27): AlertCat29 => alertCat29(`${x.head.subject.pt} ${x.head.it.body.pt} ${x.head.subject.en}`, x.cat);
 export interface Box27Model { threads: Thread27[]; cats: InboxCat18[]; total: number }
 /** A caixa filtrada e ordenada: caixa (entrada/adiadas/arquivadas), categorias, não lidas, pedem resposta, estrela, busca. */
 export function mailbox27(s: GameState, f: Filter27): Box27Model {
@@ -376,7 +379,8 @@ export function mailbox27(s: GameState, f: Filter27): Box27Model {
   const all = threads27(xs.map((it) => mail27(s, it)));
   const cats = CAT_ORDER27.filter((c) => all.some((x) => x.cat === c));
   const q = norm(f.q.trim());
-  let th = all.filter((x) => (!f.cats.length || f.cats.includes(x.cat)) && (!f.unread || x.unread) && (!f.reply || x.reply) && (!f.starred || x.starred));
+  let th = all.filter((x) => (!f.cats.length || f.cats.includes(x.cat)) && (!f.unread || x.unread) && (!f.reply || x.reply) && (!f.starred || x.starred)
+    && (!f.alert || threadAlert27(x) === f.alert));
   if (q) th = th.filter((x) => x.mails.some((m) => norm(`${m.subject.pt} ${m.subject.en} ${m.it.body.pt} ${m.it.body.en} ${m.sender.name}`).includes(q)));
   th.sort(f.sort === 'prio'
     ? (a, b) => b.prio - a.prio || Number(b.reply) - Number(a.reply) || b.week - a.week

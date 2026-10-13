@@ -2,6 +2,8 @@
 // gráficos acessíveis (nome + resumo + tabela), densidade confortável/compacta, números tabulares, vocabulário de estado,
 // estados vazios úteis e foco preservado depois de cada ação. Lógica sem DOM em ui/ux20.ts.
 
+import { toastOrder29 } from '../ps/alerts29model'; // r29 (M44)
+import { loadAlerts29 } from '../ps/alerts29'; // r29 (M44)
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { calendar19 } from '../../sim/calendar19';
@@ -68,7 +70,10 @@ export function openNotes20(all: Notification[]): void {
 const KIND20: Record<Notification['kind'], L> = { bad: l('problema', 'problem'), event: l('evento', 'event'), good: l('boa notícia', 'good news'), info: l('aviso', 'notice') };
 /** Toasts do avanço: 3 destaques por severidade + um contador "+N outros" que abre a lista inteira. */
 export function advanceToasts20(fresh: Notification[]): void {
-  const { top, rest } = highlights20(fresh);
+  // r29 (M44): categorias silenciadas não viram aviso flutuante (entram no "+N outros"); a lista completa é a mesma
+  const ord = toastOrder29(fresh, loadAlerts29());
+  const h0 = highlights20(ord.shown);
+  const top = h0.top, rest = [...h0.rest, ...ord.muted];
   for (const n of [...top].reverse()) toast(t(n.text), n.kind);
   if (!rest.length) return;
   const host = typeof document !== 'undefined' ? document.getElementById('toasts') : null;

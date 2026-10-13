@@ -7,6 +7,7 @@
 // discreta para correspondência nova. Ações: UM lugar só (ACT27) — as mesmas funções de antes (answerMsg,
 // resolveDecision com o portão decLocked18, go18, archive18, snooze, markRead).
 
+import { alertChips29 } from '../ps/alerts29'; // r29 (M44)
 import { hashString } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -37,6 +38,8 @@ export const GO27: { f: (g: Goto18) => void; label: (g: Goto18) => L } = { f: ()
 
 // ---------------------------------------------------------------- estado de interface (sessão; o que é do save fica no save)
 
+/** r29 (M44): o Cockpit abre a caixa já filtrada por categoria de alerta. */
+export const setInboxAlert27 = (a: Filter27['alert']): void => { ui.f = { ...FILTER0_27(), alert: a }; };
 const ui = {
   f: FILTER0_27() as Filter27,
   /** conversa aberta */
@@ -326,13 +329,14 @@ export function mailView27(s: GameState): HTMLElement {
       chips27<Flag>((['unread', 'reply', 'starred'] as Flag[]).filter((k) => ui.f[k]), [
         { value: 'unread', label: l('Não lidas', 'Unread') }, { value: 'reply', label: l('Pedem resposta', 'Need a reply') }, { value: 'starred', label: l('★ Com estrela', '★ Starred') },
       ], (v) => setF({ unread: v.includes('unread'), reply: v.includes('reply'), starred: v.includes('starred') }), l('Mostrar só', 'Show only')),
-      box.cats.length > 1 ? chips27<InboxCat18>(ui.f.cats, box.cats.map((c) => ({ value: c, label: CAT27[c].name })), (v) => setF({ cats: v }), l('Categorias', 'Categories')) : null);
+      box.cats.length > 1 ? chips27<InboxCat18>(ui.f.cats, box.cats.map((c) => ({ value: c, label: CAT27[c].name })), (v) => setF({ cats: v }), l('Categorias', 'Categories')) : null,
+      alertChips29(s, ui.f.alert, (a) => setF({ alert: a }))); // r29 (M44): alertas por categoria (preferência de apresentação)
     const rows = box.threads.map((x) => rowEl(s, x, isNew(x), (id) => pick(id), paint));
     const list = h('ul', { class: 'm27-list', role: 'listbox', 'aria-label': t(l('Mensagens', 'Messages')), tabindex: rows.length && !ui.sel ? '0' : '-1' }, rows);
     const empty = !rows.length ? emptyState27({
-      icon: 'check', title: ui.f.q || ui.f.cats.length || ui.f.unread || ui.f.reply || ui.f.starred ? l('Nada com esses filtros', 'Nothing matches these filters') : ui.f.box === 'archived' ? l('Nada arquivado', 'Nothing archived') : ui.f.box === 'snoozed' ? l('Nada adiado', 'Nothing snoozed') : l('Caixa limpa', 'Inbox clear'),
+      icon: 'check', title: ui.f.alert || ui.f.q || ui.f.cats.length || ui.f.unread || ui.f.reply || ui.f.starred ? l('Nada com esses filtros', 'Nothing matches these filters') : ui.f.box === 'archived' ? l('Nada arquivado', 'Nothing archived') : ui.f.box === 'snoozed' ? l('Nada adiado', 'Nothing snoozed') : l('Caixa limpa', 'Inbox clear'),
       why: ui.f.box === 'archived' ? l('Arquive avisos lidos para limpar a caixa.', 'Archive read notices to tidy the inbox.') : l('Mensagens chegam com pedidos do elenco, propostas, alertas e relatórios.', 'Messages arrive with roster requests, offers, alerts and reports.'),
-      action: ui.f.q || ui.f.cats.length || ui.f.unread || ui.f.reply || ui.f.starred ? { label: l('Limpar filtros', 'Clear filters'), run: () => setF({ q: '', cats: [], unread: false, reply: false, starred: false }) } : undefined,
+      action: ui.f.alert || ui.f.q || ui.f.cats.length || ui.f.unread || ui.f.reply || ui.f.starred ? { label: l('Limpar filtros', 'Clear filters'), run: () => setF({ q: '', cats: [], unread: false, reply: false, starred: false, alert: undefined }) } : undefined,
     }) : null;
     const reader = readerEl(s, th, box, { back, step, next, repaint: paint, pick: (id) => pick(id) });
     root.classList.toggle('reading', !!(ui.open && th));
