@@ -58,6 +58,7 @@ import { navGroups16 } from './careernav16';
 import { themeButton } from './sys/theme14';
 import { backChip29, bindRoute29, openCampaign29, openIndex29, paletteCmds29 } from './ps/route29';
 import { REDIRECT29, resolve29, type Target29 } from './ps/route29model';
+import { screenTop29 } from './ps/screentop29';
 import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
 import { tabSnapshot } from './vis';
 import { withPlayerActsCache } from '../sim/util';
@@ -547,7 +548,7 @@ function renderApp(): void {
   const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
     topBar(),
     nav(),
-    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), body),
+    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), screenTop29(store.area, g, body), body), // r29 REORG: topo de tela no estilo do Atlas
     mayShow27('tutorial', g) ? tutorialCard(g, render) : null, // r27: as metas de abertura vêm antes (fila de janelas)
     h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
   ));
@@ -587,7 +588,7 @@ function pageTitle21(body: HTMLElement): HTMLElement | null {
   const ownIntro = first?.tagName === 'P' && !first.closest('.card') && (first.textContent ?? '').trim().length > 40;
   const why = PURPOSE23[store.area] ?? (ownIntro ? undefined : PURPOSE27[store.area]);
   const g = store.game!;
-  return pageHeader27({ title: it.label, sub: why, kpis: kpis27(store.area, g, locale()), art: artHook27.f?.(store.area, g) ?? null, area: store.area, go });
+  return pageHeader27({ eyebrow: t(groupOf(store.area).label), title: it.label, sub: why, /* r29 REORG: sobrescrito do grupo (Atlas) */ kpis: kpis27(store.area, g, locale()), art: artHook27.f?.(store.area, g) ?? null, area: store.area, go });
 }
 
 function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {

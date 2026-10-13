@@ -6,7 +6,9 @@
 //   'view'   = apresentação (preferências deste navegador: NÃO mudam regra, RNG nem informação disponível).
 // Nada aqui escreve no estado; desconhecido aparece como "não registrado", nunca como zero.
 
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
+import { playerPerson } from '../../sim/sys/life';
+import { CAREER_PAGE17 } from '../nav17';
 import { endOf28 } from '../../sim/start28data';
 import type { GameState } from '../../sim/types';
 import { MIN_SAVE_VERSION, SAVE_VERSION } from '../../sim/worldgen';
@@ -27,7 +29,10 @@ export interface ViewPrefs29 { menuView?: string; textScale?: number; density?: 
 export function passport29(s: GameState, view: ViewPrefs29 = {}): PassRow29[] {
   const c = s.config;
   const end = endOf28(c.startYear, c.runYears17);
-  const careers = c.careers?.main?.length ? c.careers.main.join(', ') : c.role;
+  const ids = c.careers?.main?.length ? c.careers.main : [c.role];
+  const careers: L = { pt: ids.map((id) => CAREER_PAGE17[id]?.label.pt ?? id).join(', '), en: ids.map((id) => CAREER_PAGE17[id]?.label.en ?? id).join(', ') };
+  let me: string | undefined;
+  try { me = playerPerson(s)?.name; } catch { me = undefined; }
   const sv = s.version ?? 0;
   const rows: PassRow29[] = [
     { id: 'saveVersion', kind: 'save', label: l('Esquema do save', 'Save schema'), value: l(`v${sv} (atual ${SAVE_VERSION} · mínimo ${MIN_SAVE_VERSION})`, `v${sv} (current ${SAVE_VERSION} · minimum ${MIN_SAVE_VERSION})`),
@@ -48,9 +53,9 @@ export function passport29(s: GameState, view: ViewPrefs29 = {}): PassRow29[] {
     { id: 'filters', kind: 'rules', label: l('Filtros de conteúdo', 'Content filters'), value: c.contentFilters?.length ? c.contentFilters.join(', ') : l('nenhum', 'none') },
     { id: 'storyteller', kind: 'rules', label: l('Narrador', 'Storyteller'), value: c.storyteller ?? UNK },
     { id: 'company', kind: 'self', label: l('Empresa', 'Company'), value: c.companyName || UNK },
-    { id: 'character', kind: 'self', label: l('Personagem', 'Character'), value: c.character?.name ?? l('gerado', 'generated') },
+    { id: 'character', kind: 'self', label: l('Personagem', 'Character'), value: c.character?.name || me || l('gerado', 'generated') },
     { id: 'careers', kind: 'self', label: l('Carreiras', 'Careers'), value: careers },
-    { id: 'city', kind: 'self', label: l('Cidade-sede', 'Home city'), value: c.homeCity || UNK },
+    { id: 'city', kind: 'self', label: l('Cidade-sede', 'Home city'), value: (c.homeCity && cityById[c.homeCity]?.name) || c.homeCity || UNK },
     { id: 'menuView', kind: 'view', label: l('Vista do menu', 'Menu view'), value: view.menuView === 'full' ? l('Completa', 'Complete') : l('Essencial', 'Essential') },
     { id: 'text', kind: 'view', label: l('Tamanho do texto', 'Text size'), value: `${view.textScale ?? 100}%` },
     { id: 'density', kind: 'view', label: l('Densidade', 'Density'), value: view.density === 'compact' ? l('compacta', 'compact') : l('confortável', 'comfortable') },

@@ -12,6 +12,8 @@ import type { GameState } from '../../sim/types';
 import { h } from '../dom';
 import { inspect } from '../common';
 import { card27, list27, listRow27 } from './ui27';
+import { layout29 } from './shell29';
+import { ic } from '../vis';
 import { intentCtx29, label29, openTarget29 } from './route29';
 import { INTENTS29, intentTarget29 } from './route29model';
 import { follow29, money29, resume29, review29, type Gate29 } from './screens29model';
@@ -24,25 +26,49 @@ const GATE_L: Record<Gate29, L> = { met: l('atendido', 'met'), pending: l('pende
 const GATE_IC: Record<Gate29, string> = { met: '✓', pending: '•', blocked: '■', unknown: '?' };
 const money = (v: Val29): string => show29(v, (n) => formatMoney(n, locale()), lang());
 
-/** S03 · revisão antes de avançar (consulta; não processa turno). */
+/** S03 · "Revisar período" (coluna do Atlas): grupos Bloqueios · Decisões pendentes · Promessas · Prazos · Caixa, cada um
+ *  com contagem e linhas que abrem a origem. Consulta: não processa turno. */
 export function review29View(s: GameState): HTMLElement {
   const R = review29(s);
   const committed = money29(s).filter((m) => m.kind === 'committed' && m.v.kind !== 'zero');
   const order: Gate29[] = ['blocked', 'pending', 'unknown', 'met'];
-  const rows = [...R.checks].sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state)).map((c) => listRow27({
+  const groups: { id: string; title: L; icon: string; pick: (id: string) => boolean }[] = [
+    { id: 'dec', title: l('Decisões pendentes', 'Pending decisions'), icon: 'scroll', pick: (id) => id.startsWith('dec:') },
+    { id: 'prom', title: l('Promessas', 'Promises'), icon: 'quill', pick: (id) => id.startsWith('prom:') },
+    { id: 'cal', title: l('Prazos que pedem ação', 'Deadlines needing action'), icon: 'datebook', pick: (id) => id.startsWith('cal:') },
+    { id: 'cash', title: l('Caixa', 'Cash'), icon: 'money', pick: (id) => id === 'cash' },
+  ];
+  const row = (c: (typeof R.checks)[number]) => listRow27({
     lead: h('span', { class: `rv29-st st-${c.state}` }, h('span', { 'aria-hidden': 'true' }, GATE_IC[c.state]), ' ', t(GATE_L[c.state])),
     title: tx(c.title), meta: c.detail ? tx(c.detail) : undefined,
     tone: c.state === 'blocked' ? 'bad' : c.state === 'pending' ? 'warn' : undefined,
     onClick: c.go ? () => openTarget29(c.go!) : undefined,
-  }));
-  return card27({ title: l('Antes de avançar', 'Before you advance'), icon: 'clock', cls: 'rv29',
-    actions: [h('span', { class: 'small muted' }, t(l('próximas {n} semanas', 'next {n} weeks'), { n: R.horizonWeeks }))] },
-  h('p', { class: 'small rv29-sum' }, t(R.summary)),
-  h('p', { class: 'rv29-counts', role: 'list' }, order.map((k) => h('span', { role: 'listitem', class: `chip27 st-${k}` }, `${GATE_IC[k]} ${t(GATE_L[k])}: ${R.counts[k]}`))),
-  list27(l('Itens da revisão', 'Review items'), rows),
-  committed.length ? h('div', { class: 'rv29-money' }, h('b', { class: 'small' }, t(l('Já comprometido (sai do caixa livre):', 'Already committed (leaves free cash):'))), ' ',
-    committed.map((m, i) => h('span', { class: 'small' }, i ? ' · ' : '', t(m.label), ' ', h('b', null, money(m.v))))) : null,
-  h('p', { class: 'small muted rv29-foot' }, t(l('Esta revisão não avança nada: o avanço continua no botão de sempre e aplica exatamente estas regras.', 'This review advances nothing: advancing stays on the usual button and applies exactly these rules.'))));
+  });
+  const box = (g: (typeof groups)[number]) => {
+    const xs = R.checks.filter((c) => g.pick(c.id)).sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state));
+    if (!xs.length) return null;
+    const worst = xs[0].state;
+    return h('details', { class: `rv29-g st-${worst}`, open: worst === 'blocked' || worst === 'pending' ? true : undefined },
+      h('summary', null, h('span', { class: 'rv29-gic', 'aria-hidden': 'true' }, ic(g.icon)), h('b', null, t(g.title)), h('small', { class: 'muted' }, ` · ${xs.length} ${t(l('itens', 'items'))}`)),
+      list27(g.title, xs.map(row)));
+  };
+  return h('section', { class: 'rv29 card', 'aria-labelledby': 'rv29-h' },
+    h('h2', { id: 'rv29-h', class: 'rv29-title' }, t(l('Revisar período', 'Review the period'))),
+    h('p', { class: 'small muted' }, t(l('Antes de avançar: conflitos, compromissos e decisões das próximas {n} semanas.', 'Before advancing: conflicts, commitments and decisions for the next {n} weeks.'), { n: R.horizonWeeks })),
+    h('p', { class: 'rv29-counts', role: 'list' }, order.map((k) => h('span', { role: 'listitem', class: `chip27 st-${k}` }, `${GATE_IC[k]} ${t(GATE_L[k])}: ${R.counts[k]}`))),
+    h('p', { class: 'small rv29-sum' }, t(R.summary)),
+    groups.map(box),
+    committed.length ? h('div', { class: 'rv29-money small' }, h('b', null, t(l('Já comprometido:', 'Already committed:'))), ' ',
+      committed.map((m, i) => h('span', null, i ? ' · ' : '', t(m.label), ' ', h('b', null, money(m.v))))) : null,
+    h('p', { class: 'small muted rv29-foot' }, 'ⓘ ', t(l('Esta tela organiza a próxima etapa. Nenhuma ação aqui faz o tempo avançar: o avanço segue no botão de sempre.', 'This screen organizes the next step. Nothing here moves time forward: advancing stays on the usual button.'))));
+}
+
+/** S03 no formato do Atlas: o calendário existente à esquerda, "Revisar período" na coluna da direita. */
+export function calendarLayout29(page: HTMLElement, s: GameState): HTMLElement {
+  const kids = [...page.childNodes];
+  const head = kids.slice(0, 2); // título e apresentação ficam no topo
+  page.replaceChildren(...head, layout29(kids.slice(2), [review29View(s)]));
+  return page;
 }
 
 // ---------------------------------------------------------------- Cockpit: retomada e acompanhamento

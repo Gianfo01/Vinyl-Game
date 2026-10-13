@@ -16,6 +16,7 @@ import { PASS_KIND_L29, passport29, type PassKind29, type ViewPrefs29 } from './
 import { AVAIL_L29, DESTS29, GROUPS29, INTENTS29, SCREENS29, avail29, intentTarget29, terms29, type Group29, type IntentCtx29, type Target29 } from './route29model';
 import { SECTIONS25 } from './nav25';
 import { resumeToggle29 } from './screens29';
+import { linkCards29, note29 } from './shell29';
 import './route29.css';
 
 export interface Api29 {
@@ -96,23 +97,28 @@ export function openIndex29(): void {
   setTimeout(() => q.focus(), 30);
 }
 
-/** Central da campanha (S17): passaporte + atalhos (Arquivo, Opções, Índice). Só leitura. */
+/** Central da campanha (S17), no formato do Atlas: atalhos (Arquivo/Índice/Opções) e a ficha da campanha em duas
+ *  colunas — save e regras gravadas | identidade, apresentação e retomada. Só leitura. */
 export function openCampaign29(): void {
   if (!api) return;
   const A = api;
   let close = () => {};
   const rows = passport29(A.game(), A.view());
-  const kinds: PassKind29[] = ['save', 'rules', 'self', 'view'];
   const tv = (v: L | string) => (typeof v === 'string' ? v : t(v));
+  const sec = (k: PassKind29) => h('section', { class: `cp29-sec cp29-${k}` }, h('h3', null, t(PASS_KIND_L29[k])),
+    h('dl', { class: 'cp29-dl' }, rows.filter((r) => r.kind === k).flatMap((r) => [h('dt', null, t(r.label)), h('dd', null, tv(r.value), r.note ? h('small', { class: 'muted cp29-note' }, t(r.note)) : null)])));
   close = modal(t(l('Central da campanha', 'Campaign hub')), h('div', { class: 'cp29' },
-    h('p', { class: 'small muted' }, t(l('Passaporte desta partida: o que está gravado nela e o que é só preferência deste navegador. Consultar não altera nada.', 'This run\'s passport: what is stored in it and what is only a preference of this browser. Viewing changes nothing.'))),
-    kinds.map((k) => h('section', { class: `cp29-sec cp29-${k}` }, h('h3', null, t(PASS_KIND_L29[k])),
-      h('dl', { class: 'cp29-dl' }, rows.filter((r) => r.kind === k).flatMap((r) => [h('dt', null, t(r.label)), h('dd', null, tv(r.value), r.note ? h('small', { class: 'muted cp29-note' }, t(r.note)) : null)])))),
-    h('section', { class: 'cp29-sec' }, h('h3', null, t(l('Retomada', 'Resume'))), resumeToggle29()),
-    h('div', { class: 'cp29-acts' },
-      h('button', { type: 'button', class: 'btn', onclick: () => { close(); A.files(); } }, t(l('Arquivo: salvar, carregar, exportar', 'Files: save, load, export'))),
-      h('button', { type: 'button', class: 'btn ghost', onclick: () => { close(); A.options(); } }, t(l('Opções de apresentação', 'Presentation options'))),
-      h('button', { type: 'button', class: 'btn ghost', onclick: () => { close(); openIndex29(); } }, t(l('Índice completo', 'Full index'))))), { wide: true });
+    h('p', { class: 'ph27-eyebrow' }, t(l('Campanha', 'Campaign'))),
+    linkCards29([
+      { icon: 'cassette', title: l('Retomar ou salvar', 'Resume or save'), sub: l('Arquivo: saves, exportar cópia, importar.', 'Files: saves, export a copy, import.'), go: () => { close(); A.files(); } },
+      { icon: 'book', title: l('Índice completo', 'Full index'), sub: l('Toda página do jogo, com o motivo de quem está fora.', 'Every page, with the reason for what is out of reach.'), go: () => { close(); openIndex29(); } },
+      { icon: 'key', title: l('Opções de apresentação', 'Presentation options'), sub: l('Texto, contraste, densidade, som.', 'Text, contrast, density, sound.'), go: () => { close(); A.options(); } },
+    ], 'cp29-tiles'),
+    h('div', { class: 'sec29' }, h('h2', null, t(l('Ficha da campanha', 'Campaign record'))), h('span', { class: 'small muted' }, t(l('O que está gravado nesta partida e o que é só preferência deste navegador.', 'What is stored in this run and what is only a preference of this browser.')))),
+    h('div', { class: 'cp29-cols' },
+      h('div', null, sec('save'), sec('rules')),
+      h('div', null, sec('self'), sec('view'), h('section', { class: 'cp29-sec' }, h('h3', null, t(l('Retomada', 'Resume'))), resumeToggle29()),
+        note29(l('Consultar não altera a partida.', 'Viewing does not change the run.'), l('Esta ficha só lê o estado salvo. Regras gravadas mudam apenas numa nova run; preferências mudam em Opções e não afetam a simulação.', 'This record only reads the saved state. Stored rules change only in a new run; preferences change in Options and do not affect the simulation.'), 'warn')))), { wide: true });
 }
 
 /** Abre um alvo do catálogo de qualquer tela (mesmo caminho do menu). */

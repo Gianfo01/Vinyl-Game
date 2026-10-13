@@ -10,7 +10,7 @@ import { monthName, rerender } from '../common';
 import { h } from '../dom';
 import { why18 } from '../explain18';
 import { registerArea } from '../registry';
-import { review29View } from '../ps/screens29'; // r29 REORG (S03): revisão antes de avançar
+import { calendarLayout29 } from '../ps/screens29'; // r29 REORG (S03): calendário + "Revisar período" (Atlas)
 import { store } from '../store';
 import { ic } from '../vis';
 import { go18 } from './inbox18';
@@ -55,11 +55,10 @@ function page(s: GameState): HTMLElement {
   const byM = new Map<string, Deadline19[]>();
   for (const d of xs) { const dt = dateOfDay(s.config.startYear, d.w * 7); const k = `${dt.year}-${String(dt.month).padStart(2, '0')}`; byM.set(k, [...(byM.get(k) ?? []), d]); }
   const chip = (k: CalKind19 | 'all', lb: string, n: number) => h('button', { class: `btn small ${ui.kind === k ? 'primary' : 'ghost'}`, 'aria-pressed': String(ui.kind === k), onclick: () => { ui.kind = k; rerender(); } }, lb, ` (${n})`);
-  return h('div', { class: 'c19-page' },
+  return calendarLayout29(h('div', { class: 'c19-page' },
     h('h2', null, ic('calendar'), ' ', t(l('Calendário', 'Calendar'))),
     h('p', { class: 'muted small' }, t(l('Tudo o que tem data, num só lugar: cartões com prazo, ecos que podem voltar, mensagens que vencem, contratos e cláusulas, prestação de contas, lançamentos e fábrica, turnês, festivais, obras, tribunal, empréstimos e prêmios. Passe o mouse na semana para o resumo.', 'Everything with a date, in one place: timed cards, echoes that may return, expiring messages, contracts and clauses, royalty statements, releases and the plant, tours, festivals, works, court, loans and awards. Hover a week for the summary.'))),
     calStrip19(s),
-    review29View(s),
     h('div', { class: 'c19-filters', role: 'toolbar', 'aria-label': t(l('Filtros', 'Filters')) },
       chip('all', t(l('Tudo', 'All')), all.length), kinds.map((k) => chip(k, `${CAL19_ICON[k]} ${t(KIND_NAME[k])}`, all.filter((d) => d.kind === k).length)),
       h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: ui.act, onchange: () => { ui.act = !ui.act; rerender(); } }), ' ', t(l('Só o que pede ação', 'Only what needs action')))),
@@ -71,7 +70,7 @@ function page(s: GameState): HTMLElement {
           h('span', { class: 'c19-ic', 'aria-hidden': 'true' }, CAL19_ICON[d.kind]),
           h('span', { class: 'c19-tx' }, h('b', null, t(d.t)), d.d ? h('small', { class: 'muted' }, ' — ', t(d.d)) : null, d.act ? h('small', { class: 'c19-need' }, ' ', t(l('pede ação', 'needs action'))) : null),
           d.goto ? h('button', { class: 'btn small ghost', onclick: open(d) }, '›') : null))));
-    }) : h('p', { class: 'muted' }, t(l('Nada com data nos próximos 6 meses com esse filtro.', 'Nothing dated in the next 6 months with this filter.'))));
+    }) : h('p', { class: 'muted' }, t(l('Nada com data nos próximos 6 meses com esse filtro.', 'Nothing dated in the next 6 months with this filter.')))), s);
 }
 
 registerArea({ id: 'calendar19', label: l('Calendário', 'Calendar'), icon: 'calendar', key: '', render: page,
