@@ -71,9 +71,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R29 DEMO (de propósito — docs/demo29.md): público por idade e região muda apelo, demanda nas cidades, divisão por país,
     // line-up dos festivais e o relatório do analista (nova dica): caixa, acts e rng mudam (tours igual). Antes: 450735 / 2386675548 / 2839816166.
     // R29 CONECTAR TUDO + DEMO juntos (merge r29-demo): re-medido. Antes (só conn29): 333758 / 1642544891 / 3380302445 / 2264116950.
-    expect(AFTER.player.cash).toBe(332627);
+    // R29 relíquias, "bem mais relíquias por save" (densidade padrão "muitas" — docs/reliquias29.md): ~7× mais peças
+    // procedurais (22 em 8 meses de 1975 nesta semente, contra 3), mais lotes em leilão e ofertas no mercado negro; caixa, acts e rng mudam
+    // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
+    // R29 conectar tudo + público + relíquias "muitas" juntos (merge friendly-brown): re-medido. Antes: 332627 / 1382068899 / 1849171597 / 4090265307.
+    expect(AFTER.player.cash).toBe(332641);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1849171597);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2093687834);
     expect(hashString(JSON.stringify(AFTER.rng))).toBe(4090265307);
   });
   it('nada de estado P2B criado sem o jogador', () => {

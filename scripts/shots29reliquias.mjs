@@ -41,13 +41,18 @@ const info = await p.evaluate(async () => {
   const mine = Object.values(g.acts).filter((a) => ok(a) && (a.owner === 'player' || a.playerBand));
   const plan = [['smashed', 'show'], ['named_guitar', 'show'], ['napkin_lyrics', 'hit'], ['stage_outfit', 'show'], ['hit_piano', 'hit'], ['ceremony_outfit', 'award'],
     ['tour_van', 'split'], ['drum_head', 'split'], ['infamous', 'scandal'], ['signed', 'charity'], ['personal', 'death'], ['charred', 'fire'], ['show_poster', 'farewell']];
-  R.CAPS29.year = 99; // só para a captura: várias peças no mesmo mês
+  const dens = R.DENS29[R.dens29(g)];
+  const y0 = dens.year;
+  dens.year = 999; // só para a captura: várias peças no mesmo mês (densidade da partida: "muitas")
   const q = R.rel29(g).q;
   plan.forEach(([arch, o], i) => { const a = acts[i * 2 + 1]; if (a) q.push([R.ARCH29.indexOf(arch), a.id, a.members[0], a.city, 70, o, 'Noite de Neon', `shot:${i}`, '']); });
   for (const [i, arch] of ['first_contract', 'master_tape', 'tour_pass', 'console'].entries()) { const a = mine[i % Math.max(1, mine.length)] ?? acts[40 + i]; if (a) q.push([R.ARCH29.indexOf(arch), a.id, a.members[0], a.city, 60, 'sign', 'Primeiro Disco', `shotm:${i}`, '']); }
   q.push([R.ARCH29.indexOf('fixture'), '', '', g.config.homeCity, 60, 'closing', 'Estúdio Aurora', 'shot:fx', '']);
+  // e uma leva grande (densidade "muitas"): dezenas de peças para os filtros e as páginas aparecerem
+  const mass = ['stage_outfit', 'napkin_lyrics', 'session_mic', 'ceremony_outfit', 'master_tape', 'personal', 'hit_piano', 'show_poster'];
+  for (let i = 0; i < 70; i++) { const a = acts[30 + i]; if (a) q.push([R.ARCH29.indexOf(mass[i % mass.length]), a.id, a.members[0], a.city, 50, 'hit', `Canção ${i + 1}`, `shotx:${i}`, '']); }
   const born = R.flush29(g);
-  R.CAPS29.year = 4;
+  dens.year = y0;
   // valor de partida mais alto nas peças da captura (as lendas da partida já são lendas)
   for (const rl of born) rl.v = Math.round(rl.v * 3);
   // uma falsificação da peça mais valiosa vai ao mercado negro (o de sempre, no Submundo)
@@ -97,4 +102,18 @@ await snap('04-mercado-negro-falsificacao');
 await go('goals', 'lv-goals', 'museum');
 await scrollTo(/^Instrumentos de lendas$/i);
 await snap('05-museu-do-selo');
+// Lendas → Relíquias com um filtro aplicado (arquétipo "figurino") e a navegação por páginas
+await go('lendas', 'lendas9', 'relics');
+await scrollTo(/^Seu acervo vale/);
+const arch = p.locator('.r29-filters select[aria-label="Arquétipo"]').first();
+if (await arch.count()) { await arch.selectOption('stage_outfit'); await p.waitForTimeout(600); }
+await snap('06-filtros-por-arquetipo');
+// Opções: densidade das relíquias desta partida
+await p.evaluate(() => document.querySelectorAll('.overlay, .scene-overlay, .modal-back').forEach((e) => e.remove()));
+await p.getByRole('button', { name: /Opções|Options/ }).first().click({ timeout: 30000 }).catch(() => {});
+await p.waitForTimeout(800);
+const rel = p.getByText(/^Relíquias/).last();
+if (await rel.count()) await rel.evaluate((e) => e.scrollIntoView({ block: 'center' }));
+await p.waitForTimeout(400);
+await snap('07-opcoes-densidade');
 await b.close();
