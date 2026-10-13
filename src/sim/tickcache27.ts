@@ -49,23 +49,27 @@ export function playerActIds27(s: GameState): string[] | null {
   return out;
 }
 
-const RC = new WeakMap<GameState, { q: number; vs: Release[]; at?: Map<string, number> }>();
+const RC = new WeakMap<GameState, { q: number; vs: Release[]; at?: Map<string, number>; pend?: Release[] }>();
 /** Object.values(s.releases), guardado durante o passo. */
 export function releasesNow27(s: GameState): readonly Release[] {
   if (TICK !== s) return Object.values(s.releases);
   let c = RC.get(s);
   if (!c || c.q !== SEQ) { c = { q: SEQ, vs: Object.values(s.releases) }; RC.set(s, c); }
+  if (c.pend) {
+    // lançamentos que entraram desde a última leitura: cópia nova com eles no fim (ou no mesmo lugar, se regravados),
+    // como Object.values faria; quem ainda percorre o array antigo segue nele
+    const at = (c.at ??= new Map(c.vs.map((r, i) => [r.id, i])));
+    const vs = c.vs.slice();
+    for (const rel of c.pend) { const i = at.get(rel.id); if (i === undefined) { at.set(rel.id, vs.length); vs.push(rel); } else vs[i] = rel; }
+    c.vs = vs; c.pend = undefined;
+  }
   return c.vs;
 }
-/** relidx17.noteRelease17: lançamento entrou (ou foi regravado) em s.releases — cópia nova com ele no fim (ou no
- *  mesmo lugar), como Object.values faria; laços em andamento seguem no array antigo. */
+/** relidx17.noteRelease17: lançamento entrou (ou foi regravado) em s.releases. */
 export function releaseNoted27(s: GameState, rel: Release): void {
   const c = RC.get(s);
   if (!c || c.q !== SEQ || TICK !== s) { RC.delete(s); return; }
-  c.at ??= new Map(c.vs.map((r, i) => [r.id, i]));
-  const i = c.at.get(rel.id), vs = c.vs.slice();
-  if (i === undefined) { c.at.set(rel.id, vs.length); vs.push(rel); } else vs[i] = rel;
-  c.vs = vs;
+  (c.pend ??= []).push(rel);
 }
 /** relidx17.releasesTouched17: lançamentos saíram de s.releases. */
 export function releasesGone27(s: GameState): void { RC.delete(s); }

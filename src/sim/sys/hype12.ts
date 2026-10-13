@@ -48,7 +48,23 @@ export function addHype(s: GameState, key: string, k: string, t: L, v: number): 
 export interface Meter { v: number; parts: { t: L; v: number }[]; tr: number }
 const stored = (s: GameState, key: string) => (hy(s).e[key]?.s ?? []).map((x) => ({ t: x.t, v: x.v }));
 const pendOf = (s: GameState, actId: string) => s.pendingReleases.filter((p) => p.actId === actId).sort((a, b) => a.week - b.week)[0];
-const actBase = (s: GameState, a: Act) => sum(hy(s).e[`a:${a.id}`]) + Math.max(0, a.momentum - 45) * 0.4;
+const actBase0 = (s: GameState, a: Act) => sum(hy(s).e[`a:${a.id}`]) + Math.max(0, a.momentum - 45) * 0.4;
+// r27 (desempenho): no laço semanal a base de cada ato é lembrada até a chave `a:<ato>` ser processada (é a única
+// coisa do laço que muda as entradas dela: o decaimento; o momento do ato não muda ali). Mesmos valores.
+let baseMemo: Map<string, number> | null = null;
+const actBase = (s: GameState, a: Act): number => {
+  if (!baseMemo) return actBase0(s, a);
+  let v = baseMemo.get(a.id);
+  if (v === undefined) { v = actBase0(s, a); baseMemo.set(a.id, v); }
+  return v;
+};
+/** Os 3 maiores em ordem decrescente (mesmo resultado de `.sort((a, b) => b - a).slice(0, 3)` para números finitos). */
+function top3(xs: number[]): number[] {
+  if (xs.length <= 3) return xs.sort((a, b) => b - a);
+  let a = -Infinity, b = -Infinity, c = -Infinity;
+  for (const x of xs) { if (x > a) { c = b; b = a; a = x; } else if (x > b) { c = b; b = x; } else if (x > c) c = x; }
+  return [a, b, c];
+}
 
 // índice cidade:gênero → atos, só durante o laço semanal (cidade/gênero/morte não mudam dentro dele)
 let sceneIx: Map<string, Act[]> | null = null;
@@ -89,7 +105,7 @@ function parts(s: GameState, key: string): { t: L; v: number }[] {
     if (top.length) out.push({ t: l('Artistas do elenco em alta', 'Hot acts on the roster'), v: (top.reduce((t, x) => t + x, 0) / top.length) * 0.6 });
     if (id === 'player' && w4(s).hype >= 1) out.push({ t: l('Feiras e números 1 (hype do selo)', 'Fairs and number ones (label hype)'), v: w4(s).hype * 0.5 });
   } else if (k === 's') {
-    const acts = (sceneIx ? sceneIx.get(`${id}:${id2}`) ?? [] : actsNow27(s).filter((a) => a.city === id && a.genre === id2 && !a.deceased)).map((a) => actBase(s, a)).sort((a, b) => b - a).slice(0, 3);
+    const acts = top3((sceneIx ? sceneIx.get(`${id}:${id2}`) ?? [] : actsNow27(s).filter((a) => a.city === id && a.genre === id2 && !a.deceased)).map((a) => actBase(s, a)));
     if (acts.length) out.push({ t: l('Artistas da cena em alta', 'Hot acts in the scene'), v: (acts.reduce((t, x) => t + x, 0) / acts.length) * 0.8 });
   } else if (k === 't') {
     const tr = s.tours.find((x) => x.id === id), a = tr && s.acts[tr.actId];
@@ -263,9 +279,11 @@ registerSimHook('week', 'hype12', (s) => {
   let news = 0;
   sceneIx = new Map();
   for (const a of actsNow27(s)) if (!a.deceased) { const k = `${a.city}:${a.genre}`; const xs = sceneIx.get(k); if (xs) xs.push(a); else sceneIx.set(k, [a]); }
+  baseMemo = new Map();
   try { for (const key of tracked(s)) {
     const e = (st.e[key] ??= { s: [] });
     const v = quickParts17(() => hypeOf(s, key).v);
+    if (key.startsWith('a:')) baseMemo.delete(key.slice(2)); // a entrada vai decair logo abaixo
     const mine = key === 'l:player' || key.startsWith('f:') || (key.startsWith('a:') && s.acts[key.slice(2)]?.owner === 'player') || (key.startsWith('o:') && relics(s).list.find((x) => x.id === key.slice(2))?.st === 'player');
     const big = key.startsWith('a:') && (s.acts[key.slice(2)]?.fame ?? 0) >= 55;
     if (e.v !== undefined && e.v < 70 && v >= 70 && (mine || big) && news < 2) { news++; logNews(s, `up:${key}`, fmtL(l('{n} {w}: hype {v}.', '{n} {w}: hype {v}.'), { n: nameOfKey(s, key), w: viralWord(s), v }), true); }
@@ -278,7 +296,7 @@ registerSimHook('week', 'hype12', (s) => {
     for (const x of e.s) x.v *= d;
     e.s = e.s.filter((x) => Math.abs(x.v) >= 0.5);
     if (!e.s.length && v < 3) delete st.e[key];
-  } } finally { sceneIx = null; }
+  } } finally { sceneIx = null; baseMemo = null; }
   // reação e sucesso tardio: notícias, crítica mais dura, fama/confiança
   for (const [id, rh] of Object.entries(st.rel)) {
     const rel = s.releases[id], a = s.acts[rh.a];

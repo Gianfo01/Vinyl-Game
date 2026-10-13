@@ -21,6 +21,9 @@ export function noteRelease17(s: GameState, rel: Release): void {
   if (x) add(x, rel);
   const c = AL.get(s);
   if (!c) return;
+  // r27: dentro do passo do relógio allReleases17 lê de tickcache27; a cópia semanal é refeita na próxima leitura de fora
+  // (mesmo conteúdo: Object.values na ordem de inserção), sem copiar a lista inteira a cada lançamento
+  if (inTick27(s)) { AL.delete(s); return; }
   // cópia nova com o lançamento no fim (ordem de s.releases); laços em andamento seguem no array antigo
   c.at ??= new Map(c.list.map((r, i) => [r.id, i]));
   const i = c.at.get(rel.id);

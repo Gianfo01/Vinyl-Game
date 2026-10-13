@@ -422,14 +422,33 @@ deferEvents([{
 
 // ---------------------------------------------------------------- fama que acompanha a pessoa
 
+// r27 (desempenho): pessoa → atos em que está ou esteve (formação atual + antigos de realworld), na ordem de s.acts.
+// Mesmo critério de srcFame; a fama é lida na hora (objetos vivos). Formações não mudam dentro de carryFame.
+function personActs(s: GameState): Map<string, Act[]> {
+  const f = rw(s).former, m = new Map<string, Act[]>();
+  const put = (pid: string, a: Act) => { const xs = m.get(pid); if (!xs) m.set(pid, [a]); else if (xs[xs.length - 1] !== a) xs.push(a); };
+  for (const a of actsNow27(s)) {
+    for (const pid of a.members) put(pid, a);
+    for (const x of f[a.id] ?? []) put(x.personId, a);
+  }
+  return m;
+}
+function srcFameIx(ix: Map<string, Act[]>, pid: string, except: string): { fame: number; act?: Act } {
+  let best: { fame: number; act?: Act } = { fame: 0 };
+  for (const a of ix.get(pid) ?? []) if (a.id !== except && a.fame > best.fame) best = { fame: a.fame, act: a };
+  return best;
+}
+
 function carryFame(s: GameState): void {
   const st = l16(s);
+  let ix: Map<string, Act[]> | null = null;
   for (const a of actsNow27(s)) {
     if (st.boost[a.id] || a.debutYear < s.year - 1) continue;
     st.boost[a.id] = 1;
     if (s.week <= 0) continue;
     let best = 0, from: Act | undefined;
-    for (const pid of a.members) { const x = srcFame(s, pid, a.id); if (x.fame > best) { best = x.fame; from = x.act; } }
+    ix ??= personActs(s);
+    for (const pid of a.members) { const x = srcFameIx(ix, pid, a.id); if (x.fame > best) { best = x.fame; from = x.act; } }
     const solo = a.members.length === 1;
     const want = best * (solo ? 0.45 : 0.3);
     if (!from || want <= a.fame + 2) continue;

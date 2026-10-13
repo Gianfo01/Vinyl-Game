@@ -81,6 +81,7 @@ const AMB_V: Record<string, Value> = { art: 'arte', fame: 'fama', money: 'dinhei
 
 export interface Soul { f: Record<Facet, number>; v: Record<Value, number> }
 const CACHE = new WeakMap<Person, { k: string; so: Soul }>();
+const BASE = new WeakMap<Person, { seed: string; id: string; f: Record<Facet, number>; v: Record<Value, number> }>();
 const sigOf = (p: Person) => `${p.traits?.join(',')}|${p.ambition}|${p.goal}|${p.persona ? Object.values(p.persona).join(',') : ''}`;
 
 function u(seed: string, id: string, k: string): number {
@@ -99,10 +100,16 @@ export function soul(s: GameState, p: Person): Soul {
   const hit = CACHE.get(p);
   if (hit && hit.k === sig) return hit.so;
   const seed = s.config.seed;
-  const f = {} as Record<Facet, number>;
-  const v = {} as Record<Value, number>;
-  for (const k of FACETS) f[k] = roll(seed, p.id, k);
-  for (const k of VALUES) v[k] = roll(seed, p.id, 'v' + k);
+  // r27 (desempenho): os sorteios base só dependem de (semente, id) — a persona muda todo mês e invalidava tudo
+  let b = BASE.get(p);
+  if (!b || b.seed !== seed || b.id !== p.id) {
+    const f0 = {} as Record<Facet, number>, v0 = {} as Record<Value, number>;
+    for (const k of FACETS) f0[k] = roll(seed, p.id, k);
+    for (const k of VALUES) v0[k] = roll(seed, p.id, 'v' + k);
+    BASE.set(p, (b = { seed, id: p.id, f: f0, v: v0 }));
+  }
+  const f = { ...b.f };
+  const v = { ...b.v };
   const add = (k: Facet | Value, d: number) => { if (k in f) f[k as Facet] += d; else v[k as Value] += d; };
   for (const t of p.traits ?? []) for (const [k, d] of TRAIT_F[t] ?? []) add(k, d);
   const pe = p.persona;
