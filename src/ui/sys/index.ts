@@ -209,6 +209,7 @@ import './scenes19'; // r19 cenas: resultado da cerimônia só depois de vista
 import './careers19';
 // Rodada 20 (G7): aba Fãs por região e seção Fãs e preço por mercado.
 import './terr20';
+import './demo29'; // R29 (DEMO): público por idade e região — aba Público, Artistas, Paradas, Projeto
 // Rodada 20 (G5): Shows, Sede e Mundo por intenção (hubs com subáreas; painel antigo vira "Tudo").
 import './hubs20';
 import './fin20'; // r20 G2: Finanças → Posição (agora × fechamento, obrigações, reconciliação)

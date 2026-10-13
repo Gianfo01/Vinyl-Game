@@ -749,10 +749,10 @@ registerAdvisorTip('demo29', (s) => {
     const a = s.acts[id], d = demo29(s).a[id];
     if (!a || !d || total(a) < 2000) continue;
     const b = d.b.map((x) => x / 1000);
-    if (older29(b) >= 0.55) out.push({ id: `demo29-old-${id}`, level: 'info', cat: 'release', score: 26,
+    if (older29(b) >= 0.55) out.push({ id: `demo29-old-${id}`, level: 'info', cat: 'release', score: 31,
       text: fmtL(l('Seu público envelheceu: {p}% dos fãs de {a} têm 35+. Vinil, CD e edição de luxo vendem mais; single e vídeo curto, menos.', 'Your audience got older: {p}% of {a}\'s fans are 35+. Vinyl, CD and deluxe sell more; singles and short video, less.'), { p: Math.round(older29(b) * 100), a: a.name }),
       why: [l('Formato × idade (apelo da estreia)', 'Format × age (launch appeal)'), l('Fatia física sobe com a idade', 'Physical share rises with age')], goto: { area: 'artists', act: id } });
-    else if (youth29(b) >= 0.5) out.push({ id: `demo29-young-${id}`, level: 'info', cat: 'release', score: 24,
+    else if (youth29(b) >= 0.5) out.push({ id: `demo29-young-${id}`, level: 'info', cat: 'release', score: 30,
       text: fmtL(l('Público jovem: {p}% dos fãs de {a} têm até 24 anos. Singles, streaming e vídeo curto rendem mais; ingresso caro afasta.', 'Young audience: {p}% of {a}\'s fans are 24 or under. Singles, streaming and short video do better; pricey tickets push them away.'), { p: Math.round(youth29(b) * 100), a: a.name }),
       why: [l('Canal × idade e elasticidade do ingresso', 'Channel × age and ticket elasticity')], goto: { area: 'artists', act: id } });
   }
