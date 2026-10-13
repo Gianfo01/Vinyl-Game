@@ -63,7 +63,7 @@ AFTER_ADVANCE.push((s) => { try { enqueue27(s); } catch (e) { console.warn('cut2
 // Aqui o id vira uma cena CUT27 e entra na MESMA fila (s.cutscenes): respeita "Cenas" (todas/só importantes/
 // desligadas) e "Mostrar cenas", vale a regra "uma vez" do scan27 (o avanço seguinte não repete o momento) e
 // só abre quando nada mais está na tela (a janela da atividade fecha primeiro). Uma janela por vez.
-export const BRIDGE27: Record<string, CutKey27> = { magic_take: 'magic', sold_out: 'sold', disaster_show: 'flop', raid: 'raid', betrayal: 'betray' };
+export const BRIDGE27: Record<string, CutKey27> = { magic_take: 'magic', sold_out: 'sold', disaster_show: 'flop', raid: 'raid', betrayal: 'betray', npc_coup: 'coup', hologram_tour: 'holo', heirs_fight: 'heirs' }; // r28 F8: +golpe, holograma, herdeiros
 const str = (x: unknown): string | undefined => (typeof x === 'string' && x ? x : undefined);
 function bridgeText27(s: GameState, id: string, ctx: Record<string, unknown>): string | undefined {
   const cn = str(ctx.cityId) ? cityById[ctx.cityId as string]?.name : undefined;

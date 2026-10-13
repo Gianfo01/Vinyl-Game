@@ -22,9 +22,10 @@ import { fmtL, money, post } from '../../sim/util';
 import { C, Px, noise, withAlpha } from '../pixel/px';
 import { bandOf27, halo, kit27, text } from './art27kit';
 import { artModel27, type ArtModel27, type Fig27, type SceneKind27 } from './art27';
+import { CUT28, actOfFact28, cutOfFact28, figs28, isKey28, onceKey28, pidOfFact28, type CutKey28 } from './cut28model'; // r28 F8: golpe de NPC, holograma, herdeiros
 
 export type CutKey27 = 'press1' | 'chart1' | 'no1' | 'star' | 'show1' | 'sold' | 'flop' | 'tour' | 'award' | 'scandal' | 'raid'
-  | 'leave' | 'death' | 'broke' | 'era' | 'fest' | 'magic' | 'betray';
+  | 'leave' | 'death' | 'broke' | 'era' | 'fest' | 'magic' | 'betray' | CutKey28;
 export type CutPref27 = 'all' | 'major' | 'off';
 export type CutFx27 = 'confetti' | 'flash' | 'fireworks' | 'rain' | 'police' | 'spot' | 'gold' | 'candles' | 'stamp';
 
@@ -206,6 +207,7 @@ export const CUT27: Record<CutKey27, CutDef27> = {
     title: l('Traição', 'Betrayal'),
     beats: [l('Alguém da equipe falou demais.', 'Someone on the crew talked.'), l('{t}', '{t}'), l('No Submundo, a memória é longa.', 'In the underworld, memories are long.')],
     choices: [] },
+  ...CUT28, // r28 F8 (B7/B8): coup / holo / heirs (cut28model.ts)
 };
 export const CUT_KEYS27 = Object.keys(CUT27) as CutKey27[];
 
@@ -242,7 +244,7 @@ export function cutOfFact27(s: GameState, f: Pick<Fact, 'kind' | 'actors' | 'tag
     case 'death': return m?.pid && s.persons[m.pid] && !s.persons[m.pid].isPlayer && f.actors.includes(m.pid) ? 'death' : null;
     case 'award': return m?.act && !f.tags.includes('music_show') ? 'award' : null;
     case 'own_festival': return 'fest';
-    default: return null;
+    default: return cutOfFact28(s, f); // r28 F8
   }
 }
 
@@ -257,6 +259,7 @@ function onceKey(key: CutKey27, d: CutData27): string {
     case 'scandal': return `${key}:${Math.floor(d.week / 8)}`;
     case 'raid': case 'betray': return `${key}:${Math.floor(d.week / 12)}`;
     case 'tour': case 'death': case 'era': case 'broke': return `${key}:${d.ref}`;
+    case 'coup': case 'holo': case 'heirs': return onceKey28(key, d);
   }
 }
 
@@ -299,6 +302,7 @@ export function scan27(s: GameState, pref: CutPref27 = 'all', max = 2): CutData2
     if (!key) continue;
     const m = mineOf17(s, f.actors);
     if (key === 'award' && (s.cutscenes ?? []).some((c) => c.kind === 'awards' && s.week - c.week <= 4)) continue; // a cerimônia completa já toca
+    if (isKey28(key)) { const a28 = actOfFact28(s, key, f), p28 = pidOfFact28(s, key, f, a28); add(dataOf(s, key, f.id, a28, { pid: p28, p: p28 ? s.persons[p28]?.name : undefined, t: T(f.text) })); continue; } // r28 F8
     add(dataOf(s, key, f.id, m?.act, { pid: m?.pid, p: m?.pid ? s.persons[m.pid]?.name : undefined, t: T(f.text) }));
   }
   // sondas de estado
@@ -351,6 +355,7 @@ export function cutModel27(s: GameState, d: CutData27, size: { w: number; h: num
     case 'broke': figs.push({ fx: 0.42, pose: 'sit', dir: 'SE', seed: 'c-acc' }); break;
     case 'era': break;
     case 'fest': m.n.fill = 0.9; m.n.hop = 1; break;
+    case 'coup': case 'holo': case 'heirs': figs.push(...figs28(d.key, m, mem, d)); break; // r28 F8
     case 'magic': figs.push({ fx: 0.72, dy: -22, pose: 'play', dir: 'SW', pid: mem[0], seed: 'c-mg' }, { fx: 0.36, pose: 'sit', dir: 'NE', seed: 'c-prod' }); break;
   }
   m.figs = figs;
