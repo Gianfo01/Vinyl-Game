@@ -306,7 +306,7 @@ quando faz sentido. O "Mapa das conexões" da wiki agora sai da **medição**, n
 | prem |   |   |   |   |   |   |   |   |   | ◐ | — |   |
 | subm | ● |   | ◐ | ● | · |   |   |   |   |   |   | — |
 
-### Matriz depois: 104 de 132 pares (todas as 66 esperadas)
+### Matriz depois: 104 de 132 pares (todas as 64 esperadas)
 
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | dinh | — |   | · | ● | ● | ● |   |   | ● | ● | ● | ● |
@@ -322,7 +322,7 @@ quando faz sentido. O "Mapa das conexões" da wiki agora sai da **medição**, n
 | prem | ◐ | · | · | ● | ● |   | ◐ |   |   | ◐ | — |   |
 | subm | ● | · | ● | ● | · |   |   |   | ● | ● | · | — |
 
-(Entre rodadas o total oscila ±2 nas células fracas por causa da mediana; as 66 esperadas aparecem sempre — teste.)
+(Entre rodadas o total oscila ±2 nas células fracas por causa da mediana; as 64 esperadas aparecem sempre — teste.)
 
 ### O que foi ligado (`src/sim/sys/conn29.ts`, cada aresta com interruptor `CONN29_OFF` e o botão `CONN29.k`)
 Ganchos novos mínimos: `REACT29` (multiplicadores na reação a escândalo, `scandal17`) e `PRESSURE29` (pressões de curto
@@ -368,7 +368,7 @@ então a mediana geral oscila muito. Efeito estável: **mais fama** (11 → 17�
 e escândalos. Botão: `CONN29.k` (0–1) suaviza tudo de uma vez; `CONN29_OFF` desliga arestas para medir.
 
 ### Testes
-- `tests/r29-connect-all.test.ts`: toda aresta esperada (`EDGES29`, 66) medida; as 51 com sinal conhecido andam na
+- `tests/r29-connect-all.test.ts`: toda aresta esperada (`EDGES29`, 64) medida; as 51 com sinal conhecido andam na
   direção certa; o mapa da wiki (`connmap29`) tem todas.
 - Golden re-medidos (`r27-p2a`/`p2b`: 333758 / 1642544891 / 3380302445 / 2264116950; antes desta parte 450735 /
   1382068899 / 2386675548 / 2839816166). `r27-p2b` "turnê pelo caminho de sempre" escolhe um ato sem turnê marcada
