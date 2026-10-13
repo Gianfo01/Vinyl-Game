@@ -27,6 +27,7 @@ import { registerArea, registerPageTab } from '../registry';
 import { relicHype12 } from './hype12';
 import { relicImg28 } from '../pixel/relic28';
 import { erasTab17, relicStory17 } from './heritage17';
+import { relic29Section } from './relics29';
 import { setTab, tabs } from '../vis';
 import './lendas9.css';
 import { relics18Tab } from './talent18';
@@ -161,6 +162,7 @@ export function openRelic(s: GameState, id: string): void {
           h('div', { class: 'row wrap' }, pill(t(RELIC_ST[rl.st]), ST_CLS[rl.st]), h('b', null, $(relicPrice(s, rl)))))),
       relicHype12(s, rl.id),
       relicStory17(s, rl, redraw),
+      relic29Section(s, rl), // R29: versão procedural de um arquétipo real (história, estado, procedência)
       section(t(l('Donos', 'Provenance')), h('ol', { class: 'ln-own' }, rl.own.map((o) => h('li', null, h('b', null, o[0]), h('small', { class: 'muted' }, ` · ${o[1]} · ${o[2]}`))))),
       section(t(l('Ações', 'Actions')), ...acts),
       section(t(l('Na crônica', 'In the chronicle')), chronList(s, chronQuery(s, { kinds: ['relic'] }).filter((e) => t(e.t).includes(t(rl.n))), 10)));

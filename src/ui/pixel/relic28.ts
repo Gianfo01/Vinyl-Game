@@ -85,6 +85,7 @@ export function relicArtOf28(kind: string, name: string, year: number, seed = ''
       if (has(/jukebox/, n)) return 'jukebox';
       if (has(/amp|amplif/, n)) return 'amp';
       if (has(/mirror|espelho|disco ball/, n)) return 'mirrorball';
+      if (has(/console|mixing desk|mesa de som/, n)) return 'mixer'; // r29 (relíquias procedurais): a mesa de som do estúdio
       return year >= 1970 && year < 1985 && hs < 40 ? 'mirrorball' : 'prop';
     case 'art':
       if (has(/photo|foto|polaroid/, n)) return 'photo';
