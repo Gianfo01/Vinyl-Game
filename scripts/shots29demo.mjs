@@ -51,7 +51,10 @@ const actPage = async (id, tab) => p.evaluate(async ([id, tab]) => {
   pg.openActPage(id, tab);
 }, [id, tab]);
 
-if (info.mine[0]) { await actPage(info.mine[0], 'demo29'); await shot('ato-publico'); }
+if (info.mine[0]) {
+  await actPage(info.mine[0], 'demo29'); await shot('ato-publico');
+  await p.evaluate(() => document.querySelector('.d29-pools')?.scrollIntoView({ block: 'start' })); await shot('ato-nucleo-selos');
+}
 if (info.star) { await actPage(info.star, 'demo29'); await shot('estrela-publico'); }
 await area('artists', ['artists20', 'audience']);
 await p.getByRole('radio', { name: 'Ficha detalhada' }).first().click({ timeout: 8000 }).catch(() => console.error('sem Ficha detalhada'));
@@ -60,6 +63,7 @@ await p.getByRole('tab', { name: /Público e mídia/ }).first().click({ timeout:
 await p.evaluate(() => document.querySelector('.d29-top')?.scrollIntoView({ block: 'center' })); await shot('artistas-publico');
 await area('charts', ['chartsHub', 'more']);
 console.log('seção paradas', await p.evaluate(() => { const e = [...document.querySelectorAll('h2,h3,summary')].find((x) => /Quem ouve cada estilo/i.test(x.textContent ?? '')); e?.scrollIntoView({ block: 'start' }); return !!e; })); await shot('paradas-idade');
+console.log('voto do público', await p.evaluate(() => { const e = [...document.querySelectorAll('h2,h3')].find((x) => /Voto do Público/i.test(x.textContent ?? '')); e?.scrollIntoView({ block: 'start' }); return !!e; })); await shot('paradas-voto-publico');
 await area('world');
 await p.getByRole('button', { name: 'Fãs por idade' }).first().click({ timeout: 8000 }).catch(() => console.error('sem botão Fãs por idade'));
 await p.waitForTimeout(1500); await p.evaluate(() => document.querySelector('.map27-map, .wmap')?.scrollIntoView({ block: 'start' })); await shot('mapa-idade');

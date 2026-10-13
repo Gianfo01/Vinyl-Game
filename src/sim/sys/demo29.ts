@@ -442,7 +442,7 @@ export function regionMix29(s: GameState, a: Act, n = 8): RegionMix29 {
   for (const [k, v] of base) if (!st.has(k)) baseRest[mkOf(k)] = (baseRest[mkOf(k)] ?? 0) + v;
   for (const [k, v] of base) {
     const m = mkOf(k);
-    if (st.has(k)) { rows.push({ a3: k, v: st.get(k)!, local: true }); continue; }
+    if (st.has(k)) { rows.push({ a3: k, v: st.get(k)!, local: k === home }); continue; }
     const room = Math.max(0, (mk[m] ?? 0) - (stByMk[m] ?? 0));
     rows.push({ a3: k, v: (baseRest[m] ?? 0) > 0 ? room * v / baseRest[m]! : 0, local: k === home });
   }
@@ -913,14 +913,15 @@ registerSimHook('month', 'demo29:popular', (s) => { if (s.month === 10) popularV
 /** público que o selo procura: arquétipo/estratégia (hitmaker e estrelas → jovens; catálogo → 35+; boutique e caçador
  *  de cena → 18–34) misturado com a idade do público do elenco que ele já tem (selo de roqueiros envelhecidos segue
  *  atrás de público envelhecido). Soma 1. */
+/** geração que o selo procura (para a tela) */
+export const labelAim29 = (lb: Label): 'young' | 'old' | 'mid' | 'flat' => (lb.archetype === 'hitmaker' || lb.strategy === 'stars' ? 'young' : lb.archetype === 'catalog' || lb.strategy === 'buy_catalog' ? 'old'
+  : lb.archetype === 'boutique' || lb.archetype === 'scene_hunter' || lb.strategy === 'niche' ? 'mid' : lb.strategy === 'develop' ? 'young' : 'flat');
 export function labelAge29(s: GameState, lb: Label): number[] {
   // distribuições-alvo absolutas (13–17, 18–24, 25–34, 35–49, 50+)
   const P: Record<string, number[]> = {
     young: [0.25, 0.38, 0.22, 0.10, 0.05], old: [0.04, 0.10, 0.21, 0.35, 0.30], mid: [0.10, 0.33, 0.35, 0.15, 0.07], flat: REF29,
   };
-  const k = lb.archetype === 'hitmaker' || lb.strategy === 'stars' ? 'young' : lb.archetype === 'catalog' || lb.strategy === 'buy_catalog' ? 'old'
-    : lb.archetype === 'boutique' || lb.archetype === 'scene_hunter' || lb.strategy === 'niche' ? 'mid' : lb.strategy === 'develop' ? 'young' : 'flat';
-  const want = P[k];
+  const want = P[labelAim29(lb)];
   const ros = lb.roster.slice(0, 12).map((id) => s.acts[id]).filter((a): a is Act => !!a);
   if (!ros.length) return want;
   const rm = [0, 0, 0, 0, 0];

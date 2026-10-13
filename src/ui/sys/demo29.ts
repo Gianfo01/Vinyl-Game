@@ -9,7 +9,7 @@ import { CITIES, MARKETS, genreById, l, type L, type MarketId } from '../../data
 import { countryName, countryOfCity } from '../../data/geo';
 import { t } from '../../i18n/strings';
 import {
-  AGE29, NB29, POP_START29, REF29, ageFans29, ageMix29, artistAge29, casualMix29, coreMix29, demo29, demog29, fakeYouth29, inflow29, labelFit29, poolFans29, popularBoard29, older29, rTrend29, regionMix29, taste29, youth29,
+  AGE29, NB29, POP_START29, REF29, ageFans29, ageMix29, artistAge29, casualMix29, coreMix29, demo29, demog29, fakeYouth29, inflow29, labelAim29, labelFit29, poolFans29, popularBoard29, older29, rTrend29, regionMix29, taste29, youth29,
 } from '../../sim/sys/demo29';
 import { hotList17 } from '../../sim/sys/trends17';
 import type { Act, GameState } from '../../sim/types';
@@ -110,11 +110,13 @@ function audienceTab(s: GameState, id: string): HTMLElement | null {
         c.local ? [' ', pill(t(l('herói local', 'local hero')), 'good')] : null))),
       h('p', { class: 'small muted' }, t(l('Mercados: livro regional de fãs (seus atos) ou fama regional (os outros). Países: fama local, diáspora do gênero e shows feitos lá — a conversão do show fica no país onde ele aconteceu.', 'Markets: regional fan ledger (your acts) or regional fame (others). Countries: local fame, the genre\'s diaspora and shows played there — a show\'s conversion stays in the country where it happened.')))),
     ((ls) => ls.length ? section(t(l('Selos que procuram este público', 'Labels looking for this audience')),
-      h('ul', { class: 'small' }, ls.map((x) => h('li', null, `${x.lb.name} — ×${x.k.toFixed(2)}`))),
+      h('ul', { class: 'small' }, ls.map((x) => h('li', null, h('b', null, x.lb.name), ` — ${t(AIM29[labelAim29(x.lb)])} · ${t(l('encaixe', 'fit'))} ×${x.k.toFixed(2)}`))),
       h('p', { class: 'small muted' }, t(l('Cada selo mira uma geração (hitmaker e estrelas: jovens; catálogo: 35+; boutique e caçador de cena: 18–34) e segue o público do elenco que já tem. Pesa em quem ele contrata e na disputa por uma oferta.', 'Each label aims at a generation (hitmakers and star-chasers: young; catalog: 35+; boutiques and scene hunters: 18–34) and follows its current roster\'s audience. It weighs on whom it signs and in bidding wars.'))))
       : null)(Object.values(s.labels).filter((x) => x.active).map((lb) => ({ lb, k: labelFit29(s, lb, a) })).sort((x, y) => y.k - x.k || (x.lb.id < y.lb.id ? -1 : 1)).slice(0, 3)),
     log.length ? section(t(l('Diário do público', 'Audience log')), h('ul', { class: 'small' }, log.map(([y, m, x]) => h('li', null, `${m + 1}/${y} · ${t(x)}`)))) : null);
 }
+
+const AIM29: Record<string, L> = { young: l('mira jovens (13–24)', 'aims at youth (13–24)'), old: l('mira 35+', 'aims at 35+'), mid: l('mira 18–34', 'aims at 18–34'), flat: l('sem geração preferida', 'no preferred generation') };
 
 registerPageTab('act', { id: 'demo29', label: l('Público', 'Audience'), icon: 'fans', order: 58, render: audienceTab });
 

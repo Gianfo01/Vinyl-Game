@@ -257,7 +257,10 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     const births: { y: number; a: string; arch: string }[] = [];
     onFact('relic', (s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) births.push({ y: f.y, a: f.actors[0] ?? '', arch: f.tags[3] }); }, 'r29test:bot');
     // o mesmo laço do simulatePlayer (bot equilibrado), devolvendo o controle ao vitest a cada mês (run longa)
-    const s = createGame(defaultConfig('r29rel-bot', { startYear: 1970, realNames: true }));
+    // R29 DEMO (2ª etapa, de propósito — docs/demo29.md): com selos rivais mirando uma geração e o Voto do Público, o bot
+    // da semente 'r29rel-bot' quebra no 20º mês (8 peças); 'r29rel-bot2' joga os 20 anos (73 peças). Com 48 sementes o
+    // balanço do bot fica igual (quebra 17% = 17%): é sensibilidade desta semente, não da regra de relíquias.
+    const s = createGame(defaultConfig('r29rel-bot2', { startYear: 1970, realNames: true }));
     for (let m = 0; m < 20 * 12 && !s.ended; m++) { playMonth(s, 'balanced'); advanceMonth(s); await tick(); }
     const byY: Record<number, number> = {}, byAY: Record<string, number> = {};
     for (const b of births) { byY[b.y] = (byY[b.y] ?? 0) + 1; if (b.a) byAY[`${b.a}:${b.y}`] = (byAY[`${b.a}:${b.y}`] ?? 0) + 1; }

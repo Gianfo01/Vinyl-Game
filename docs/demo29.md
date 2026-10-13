@@ -165,13 +165,52 @@ Partida começada pela tela inicial (NOVA RUN → COMEÇAR MINHA HISTÓRIA, 1962
 (camada Fãs por idade), `projeto-publico.png` (público-alvo × público do ato), `cockpit-dica.png` (dicas na Mesa do mês).
 
 ## 7. Lacunas
-- **Rivais escolhendo demografia:** só a oferta do jogador lê o perfil etário do elenco; os selos NPC ainda contratam sem
-  olhar idade do público.
-- **Prêmio por voto popular:** não existe categoria de voto do público; a fatia jovem do corpo de votantes (`voters18.young`)
-  faz esse papel. O voto popular comprado do Submundo (rig29) não lê idade.
-- **Idade por coorte casual/ativo/núcleo:** uma mistura por ato (o núcleo mais velho que o casual não é guardado).
 - **Países só nos atos do jogador**; estrelas de fora têm idade guardada mas países derivados da fama.
 - **Demografia por mercado** (7) e não por país; a camada do mapa estima a idade no país pela mistura do ato.
 - **Shows simples (`playGigs`)** seguem fora dos modificadores de show (mesma lacuna da R29 CONNECT); idade vale na turnê.
 - **Apelo congelado na estreia** (como antes): a idade conta no lançamento e nas vendas semanais/físico.
 - Viés residual no patrimônio do bot (seção 4): pequeno, dentro do ruído com 24 partidas, mas para baixo.
+
+## 8. Segunda etapa — o que estava nas lacunas
+
+Pedido do autor depois da primeira entrega: "selos rivais ainda contratam sem olhar a idade do público, não existe prêmio
+de voto popular e há uma única idade por artista (não separada entre casual e núcleo)".
+
+**Idade própria do núcleo.** Cada ato guardado tem também a mistura etária do NÚCLEO (`k`, milésimos). Quem entra no núcleo
+vem da base de ~1 ano antes (já era fã) e a troca é 1/3 da base: o núcleo fica mais velho e mais estável. Casuais + ativos
+= total − núcleo, por faixa (`casualMix29`); `poolFans29` reparte os dois em inteiros que somam os totais. Atos sem
+registro: núcleo ≈ 3 anos mais velho que a base. Onde pesa: banca (núcleo vale 50%), fatia física (40%) e, no escândalo,
+os puristas leem o núcleo e mainstream/comunidade leem os casuais (as referências também são misturadas, média neutra).
+
+**Voto do Público** (`popularVote29`, todo novembro desde 1955). Votos = fãs por faixa × peso do voto
+(13–17 1,6→2,0 com internet · 18–24 1,4→1,8 com TV/internet · 25–34 0,9 · 35–49 0,45 · 50+ 0,25→0,2) × embalo; concorrem
+os 40 atos com mais fãs que lançaram nos últimos 12 meses. Vencedor: prêmio no livro (`popular29`), +1,5 de fama e +6 de
+embalo (seu ato: +1 de reputação comercial). **Submundo:** robôs, urna cheia e voto encomendado comprados no rig29
+(métodos `bots`, `ballot`, `vote`) e a fazenda de streams do stream18 viram votos falsos; vitória com mais de 20% de voto
+falso tem 30% de chance de vir à tona (Rng `demo29|pop`): prêmio cassado e escândalo de dinheiro. Tela: placar ao vivo e
+histórico em Paradas › Rádio e outras paradas.
+
+**Selos rivais miram uma geração.** `labelAge29`: arquétipo/estratégia (hitmaker e estrelas → jovens; catálogo → 35+;
+boutique e caçador de cena → 18–34; desenvolver → jovens) misturado com a idade do público do elenco atual. Na contratação
+(`rivals.ts`), entre os 8 melhores candidatos o selo multiplica a nota pelo encaixe (0,8–1,2; sem sorteio a mais); na
+disputa por uma oferta (`rivalsense28.rivalScore28`), o artista soma ±0,04 pelo selo que fala com a geração dele contra o
+seu elenco. Tela: "Selos que procuram este público" na aba Público.
+
+Correção de passagem: `favors27.contacts27` (uma leitura) criava a ficha de carreira de funcionário recém-contratado ao ler a
+lealdade; agora lê sem gravar (mesmo padrão 60). O teste "sem mexer no estado" do r27-p2a pegou isso no mundo novo.
+
+**Números (48 sementes, balance19 --quick):** com as três partes, quebra 17%, patrimônio mediano 1,70 mi, fama 11,
+prestígio 55; com voto popular e selos desligados (`DEMO29_OFF=labels,popular`), 17% / 1,66 mi / 11 / 58 — empate. Com 24
+sementes as variantes oscilam de 17% a 38% de quebra conforme o que se desliga: é ruído de borboleta.
+
+**Golden:** r27-p2a/p2b `649767 / 2864074098 / 1138143925` → `1327854 / 3127334806 / 1901831159` (tours igual). r27-m2: o
+fixture `r16pb-8` deixou de ter show jogável em 24 meses; passou a `r16pb-5` (show no 9º mês; -3 e -4 também passam).
+r29-relics: a semente `r29rel-bot` quebra no 20º mês (8 peças, o teste pede 15); passou a `r29rel-bot2` (20 anos, 73 peças).
+
+**Testes novos** (r29-demo, 15 no total): núcleo mais velho que casuais e totais por coorte; Voto do Público (voto jovem
+pesa mais, robôs viram voto falso, prêmio sai em novembro); selos (catálogo prefere público velho, hitmaker prefere jovem).
+
+**Capturas novas:** `ato-nucleo-selos.png` (núcleo × casuais, selos que procuram o público), `paradas-voto-publico.png`.
+
+Lacunas que sobram: o Voto do Público é um prêmio global (não por país); selos NPC não mudam de estratégia por causa da
+idade, só escolhem melhor dentro dela.
