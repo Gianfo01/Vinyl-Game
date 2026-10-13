@@ -111,10 +111,13 @@ export function eligibleActs(s: GameState): Act[] {
   return Object.values(s.acts).filter((a) => a.debutYear > 0 && s.year - a.debutYear >= HALL_WAIT && !done.has(a.id) && a.releases.length > 0);
 }
 
+/** r29 (Submundo): ajustes externos da pontuação do Hall (lobby comprado, rig29). Vazio = nada muda. */
+export const HALL_ADJ9: ((s: GameState, a: Act) => number)[] = [];
 export function hallScore(s: GameState, a: Act): number {
   const lob = hall(s).lobby.filter((x) => x.actId === a.id && x.year === s.year).reduce((t, x) => t + x.lv, 0);
   let sc = (a.number1s * 3 + a.hits + a.awards * 2 + (a.legend ? 8 : 0) + a.fame / 8 + (a.image?.artistic ?? 50) / 12) * genreW(s, a);
   sc += lob * 3;
+  for (const f of HALL_ADJ9) sc += f(s, a);
   if (s.config.realNames) {
     const ry = realYearOf(a.name);
     if (ry !== undefined) sc += ry <= s.year ? 40 : 4;

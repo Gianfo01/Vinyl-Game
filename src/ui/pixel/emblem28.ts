@@ -12,10 +12,10 @@ import { C, Px, dith, hsl, shade, withAlpha, type Col } from './px';
 import { K28 as K, OUT28, bmp, h28, layer, pxImg28, rng28 } from './art28kit';
 import type { Rng } from '../../core/rng';
 
-export type EmblemKind28 = 'mafia' | 'gang' | 'cartel' | 'syndicate' | 'firm' | 'bootleg' | 'payola' | 'ghost' | 'lipsync' | 'aivoice' | 'fraud';
-export const EMBLEM_KINDS28: EmblemKind28[] = ['mafia', 'gang', 'cartel', 'syndicate', 'firm', 'bootleg', 'payola', 'ghost', 'lipsync', 'aivoice', 'fraud'];
+export type EmblemKind28 = 'mafia' | 'gang' | 'cartel' | 'syndicate' | 'firm' | 'bootleg' | 'payola' | 'ghost' | 'lipsync' | 'aivoice' | 'fraud' | 'cyber';
+export const EMBLEM_KINDS28: EmblemKind28[] = ['mafia', 'gang', 'cartel', 'syndicate', 'firm', 'bootleg', 'payola', 'ghost', 'lipsync', 'aivoice', 'fraud', 'cyber'];
 export const CHARGES28 = ['wolf', 'snake', 'eagle', 'bull', 'crow', 'spider', 'scorpion', 'skull', 'rose', 'hand', 'dagger', 'key', 'dice', 'card', 'coin', 'crown',
-  'jukebox', 'radio', 'cassette', 'record', 'ticket', 'mask', 'accordion', 'mic', 'money'] as const;
+  'jukebox', 'radio', 'cassette', 'record', 'ticket', 'mask', 'accordion', 'mic', 'money', 'chip', 'bot'] as const; // r29: crime digital
 export type Charge28 = (typeof CHARGES28)[number];
 
 export interface EmblemSpec28 { id: string; kind: EmblemKind28; a3?: string; rackets?: string[]; name?: string }
@@ -52,6 +52,9 @@ const G: Partial<Record<Charge28, string[]>> = {
   skull: ['...######...', '..########..', '.##########.', '.##oo##oo##.', '.##oo##oo##.', '.####..####.', '..########..', '...#.#.#.#..', '...######...'],
   rose: ['....###.....', '...#+##+....', '..##+###+...', '..#+##+##...', '...#####....', '....oo......', '.oo.o..oo...', '..ooo.oo....', '....o.......', '....o.......'],
   hand: ['...#.#.#....', '...#.#.#.#..', '...#.#.#.#..', '...#######..', '#..#######..', '##.#######..', '.#########..', '..#######...', '...#####....', '...#####....'],
+  // r29 (crime digital): microchip e robô, no mesmo traço 12×10
+  chip: ['.#.#.#.#.#..', '##########..', '#oooooooo#..', '#o++++++o###', '#o+oooo+o#..', '#o+oooo+o###', '#o++++++o#..', '#oooooooo###', '##########..', '.#.#.#.#.#..'],
+  bot: ['.....+......', '.....#......', '..########..', '..#o####o#..', '..########..', '..#+#+#+##..', '...######...', '.##########.', '.#.######.#.', '...##..##...'],
 };
 
 function drawCharge(p: Px, ch: Charge28, cx: number, cy: number, col: Col, acc: Col): void {
@@ -79,7 +82,7 @@ function drawCharge(p: Px, ch: Charge28, cx: number, cy: number, col: Col, acc: 
 // ---------------------------------------------------------------- formas
 
 type Mask = (x: number, y: number) => boolean;
-type Shape = 'heater' | 'oval' | 'roundel' | 'kamon' | 'diamond' | 'patch' | 'star' | 'coin' | 'stamp' | 'ticket';
+type Shape = 'heater' | 'oval' | 'roundel' | 'kamon' | 'diamond' | 'patch' | 'star' | 'coin' | 'stamp' | 'ticket' | 'chip';
 function shapeMask(sh: Shape): Mask {
   switch (sh) {
     case 'heater': return (x, y) => x >= 5 && x <= 26 && y >= 3 && (y < 16 || Math.abs(x + 0.5 - 16) <= (27 - y) * 0.95) && y <= 27;
@@ -90,6 +93,8 @@ function shapeMask(sh: Shape): Mask {
     case 'star': return (x, y) => { const dx = x + 0.5 - 16, dy = y + 0.5 - 15; const a = Math.atan2(dy, dx); const rr = 9 + 4.5 * Math.max(0, Math.cos(a * 6 + Math.PI / 2)) ** 1.5; return dx * dx + dy * dy <= rr * rr; };
     case 'stamp': return (x, y) => x >= 4 && x <= 27 && y >= 3 && y <= 26 && !((x === 4 || x === 27) && y % 3 === 0) && !((y === 3 || y === 26) && x % 3 === 0);
     case 'ticket': return (x, y) => x >= 2 && x <= 29 && y >= 7 && y <= 23 && (x - 2) ** 2 + (y - 15) ** 2 > 9 && (x - 29) ** 2 + (y - 15) ** 2 > 9;
+    // r29: chip (crime digital) — corpo quadrado com pinos nos quatro lados
+    case 'chip': return (x, y) => (x >= 7 && x <= 24 && y >= 6 && y <= 23) || ((x === 4 || x === 5 || x === 26 || x === 27) && y >= 8 && y <= 21 && y % 3 === 0) || ((y === 3 || y === 4 || y === 25 || y === 26) && x >= 9 && x <= 22 && x % 3 === 0);
   }
 }
 
@@ -118,6 +123,7 @@ const KIND_CHARGE: Record<EmblemKind28, Charge28[]> = {
   mafia: ['hand', 'rose', 'dagger', 'eagle', 'card', 'wolf'], firm: ['bull', 'crow', 'dagger', 'key', 'dice'], syndicate: ['snake', 'spider', 'crow', 'wolf', 'eagle', 'key'],
   cartel: ['scorpion', 'eagle', 'skull', 'rose', 'wolf', 'coin'], gang: ['skull', 'wolf', 'crow', 'dagger', 'spider', 'dice'],
   bootleg: ['cassette', 'record', 'skull'], payola: ['radio', 'coin', 'money'], ghost: ['mask', 'ticket'], lipsync: ['mic'], aivoice: ['mic'], fraud: ['mask', 'card', 'coin'],
+  cyber: ['chip', 'bot', 'skull', 'spider'],
 };
 
 /** Escolhas puras do brasão (forma, divisão, carga, cores) — testável sem desenhar. */
@@ -128,8 +134,8 @@ export function emblemModel28(sp: EmblemSpec28): { shape: Shape; div: Div; charg
     : sp.kind === 'syndicate' ? (sp.a3 === 'JPN' ? 'kamon' : sp.a3 === 'HKG' || sp.a3 === 'CHN' || sp.a3 === 'TWN' ? 'diamond' : r.pick(['oval', 'diamond'] as const))
     : sp.kind === 'cartel' ? r.pick(['star', 'diamond'] as const)
     : sp.kind === 'gang' ? 'patch'
-    : sp.kind === 'payola' ? 'coin' : sp.kind === 'ghost' ? 'ticket' : 'stamp';
-  const div: Div = shape === 'patch' || shape === 'coin' || shape === 'kamon' ? 'plain' : shape === 'star' ? r.pick(['plain', 'rays'] as const) : r.pick(['plain', 'pale', 'fess', 'bend', 'quarterly', 'chevron', 'chief', 'bordure'] as const);
+    : sp.kind === 'payola' ? 'coin' : sp.kind === 'ghost' ? 'ticket' : sp.kind === 'cyber' ? 'chip' : 'stamp';
+  const div: Div = shape === 'patch' || shape === 'coin' || shape === 'kamon' || shape === 'chip' ? 'plain' : shape === 'star' ? r.pick(['plain', 'rays'] as const) : r.pick(['plain', 'pale', 'fess', 'bend', 'quarterly', 'chevron', 'chief', 'bordure'] as const);
   const scheme = !['mafia', 'gang', 'cartel', 'syndicate', 'firm'].includes(sp.kind);
   const rk = scheme ? [] : (sp.rackets ?? []).flatMap((x) => RACKET_CHARGE[x] ?? []);
   const charge = rk.length && r.chance(0.55) ? r.pick(rk) : r.pick(KIND_CHARGE[sp.kind]);
@@ -184,6 +190,7 @@ export function emblemPx28(sp: EmblemSpec28): Px {
   if (md.shape === 'kamon' || md.shape === 'diamond') for (const [x, y] of [[16, 4], [16, 25], [5, 15], [26, 15]] as const) p.put(x, y, m);
   // golpes: carimbo cruzado
   if (sp.kind === 'lipsync' || sp.kind === 'aivoice') { p.line(9, 7, 23, 21, K.red); p.line(10, 7, 24, 21, K.red); if (sp.kind === 'aivoice') for (let x = 8; x < 24; x += 3) p.put(x, 24, K.teal); }
+  if (sp.kind === 'cyber') for (let i = 0; i < 4; i++) { p.hline(8, 11 + i * 3, 9 + i * 4, K.teal); p.put(11 + i * 3, 9 + i * 4, K.white); } // r29: trilhas de circuito
   if (sp.kind === 'ghost' || sp.kind === 'fraud') drawText(p, 'FAKE', 9, sp.kind === 'ghost' ? 18 : 22, withAlpha(K.dred, 230));
   // coroa e fita
   if (md.crown) layer(p, (q) => drawCharge(q, 'crown', 16, 1, m, m));

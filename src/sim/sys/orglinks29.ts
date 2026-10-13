@@ -22,7 +22,7 @@ import { l, type L } from '../../data/world';
 import { allHolds, holds17, type Hold } from '../holds17';
 import { histMode } from '../history15';
 import type { GameState } from '../types';
-import { crime17, orgById, type Mem23 } from './crime17';
+import { crime17, isReal, orgById, type Mem23 } from './crime17';
 import { leaders } from './leaders10';
 import { mgrKey } from './managers14';
 import { canon16, keys16 } from './people16';
@@ -48,7 +48,11 @@ export interface OrgLink29 {
   via?: string;
   /** obrigação de origem */
   hold?: string;
+  /** r29: laço criado por jogada DESTA partida (nunca "documentado") */
+  sim?: 1;
 }
+/** Rótulo do laço simulado (pessoa/ato real só aparece ligado a facção assim, por jogada da partida). */
+export const LINKSIM29: L = l('nesta partida (simulado)', 'in this save (simulated)');
 
 export const LINK29: Record<OrgLinkKind29, L> = {
   doc: l('ligação documentada', 'documented tie'),
@@ -113,7 +117,7 @@ const IX = new WeakMap<GameState, Ix29>();
 function index29(s: GameState): Ix29 {
   const st = crime17(s);
   const mem = st.mem23 ?? {};
-  const mob = (s.x4 as unknown as { mob29?: { seq?: number; o?: Record<string, { partner?: 1 }> } }).mob29;
+  const mob = (s.x4 as unknown as { mob29?: { seq?: number; o?: Record<string, { partner?: 1 }>; sim?: Record<string, string> } }).mob29;
   const k = `${s.week}|${s.year}|${holds17(s).seq}|${holds17(s).h.length}|${Object.keys(mem).length}|${Object.values(mem).reduce((t, m) => t + m.k, 0)}|${Object.keys(st.ties).length}|${mob?.seq ?? 0}`;
   const c = IX.get(s);
   if (c && c.k === k) return c;
@@ -140,6 +144,25 @@ function index29(s: GameState): Ix29 {
   }
   // 5) sociedade com o jogador (mob29)
   for (const [oid, x] of Object.entries(mob?.o ?? {})) if (x.partner) all.push({ o: oid, key: 'player', kind: 'partner', text: l('sócio(a) nos negócios da família', 'partner in the family business'), src: 'mob29' });
+  // r29 (Facções × cenas) — REGRA DE SEGURANÇA: pessoa/ato REAL só aparece ligado a uma organização por laço
+  // DOCUMENTADO (ORGS17.ties) ou por jogada desta partida (mob29/aff29, marcado "simulado"). Filiação, dívida, segredo
+  // ou laço de rua sorteados para gente real (história alternativa) não viram afirmação na ficha nem no card.
+  const mine = new Set(Object.values(s.acts).filter((a) => a.owner === 'player' || a.playerBand).map((a) => a.id));
+  const realKey = (k: string): boolean => {
+    if (!k || k === 'player' || k.startsWith('s:')) return false;
+    const id = k.startsWith('p:') ? k.slice(2) : k;
+    if (s.acts[id]) return !!s.acts[id].catalogNo;
+    try { return isReal(s, k); } catch { return false; }
+  };
+  const kept: OrgLink29[] = [];
+  for (const x of all) {
+    const game = x.src === 'mob29' || (x.src === 'tie17' && (mine.has(x.key) || !!mob?.sim?.[x.key]));
+    if (game && x.kind !== 'doc') x.sim = 1;
+    if (x.kind !== 'doc' && realKey(x.key) && !game) continue;
+    kept.push(x);
+  }
+  all.length = 0;
+  all.push(...kept);
   const byO = new Map<string, OrgLink29[]>(), byK = new Map<string, OrgLink29[]>();
   for (const x of all) {
     (byO.get(x.o) ?? byO.set(x.o, []).get(x.o)!).push(x);
