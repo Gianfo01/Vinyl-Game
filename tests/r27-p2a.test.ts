@@ -64,9 +64,12 @@ beforeAll(() => {
   // Depois, ganchos de início em ordem fixa (atos reais marcados no lineup16 e renomes depois que existem — antes dependia
   // da ordem dos imports e os atos reais ganhavam fama herdada no 1º mês): caixa, acts e rng mudam.
   // Antes da R29: 446096 / 4292160800 / 2262769409.
-  expect(s.player.cash).toBe(252);
-  expect(hashString(JSON.stringify(s.acts))).toBe(2817744560);
-  expect(hashString(JSON.stringify(s.rng))).toBe(1576372716);
+  // R29 (feat de pessoa, de propósito — docs/feat29.md): atos NPC creditam pessoas (integrante/solo/músico de estúdio)
+  // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
+  // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
+  expect(s.player.cash).toBe(450730);
+  expect(hashString(JSON.stringify(s.acts))).toBe(2126210917);
+  expect(hashString(JSON.stringify(s.rng))).toBe(2839816166);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

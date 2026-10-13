@@ -426,6 +426,8 @@ const INTRO_KIND: Record<string, L> = {
   info: l('Para seu conhecimento.', 'For your information.'),
   // sistemas de negócio (ref.sys) e tipos registrados (k18, por família)
   feat8: l('Estou preparando uma faixa nova e penso em {act} para dividir o microfone.', 'I\'m working on a new track and I\'m thinking of {act} to share the mic.'),
+  // R29 (feat de pessoa): o convite é para UMA pessoa do seu ato, não para a banda inteira
+  featp29: l('Estou preparando uma faixa nova e quero {person} nela — só {person}, sem o resto de {act}.', 'I\'m working on a new track and I want {person} on it — just {person}, not the rest of {act}.'),
   bond9: l('Acho que temos interesses em comum. Que tal formalizar?', 'I think we have common interests. Shall we make it formal?'),
   mov9: l('Um grupo de artistas está se juntando em torno de uma ideia — e queremos {act} junto.', 'A group of artists is gathering around an idea — and we want {act} with us.'),
   echo18: l('Sobre "{thr}": a história teve desdobramento.', 'About "{thr}": the story has moved on.'),
@@ -636,7 +638,8 @@ export function letter27(s: GameState, it: Item18): Letter27 {
   // {act} dos modelos: de preferência um ato seu (o convidado do feat, o ato do convite…)
   const act = ents.find((x) => x.e === 'act' && s.acts[x.id]?.owner === 'player') ?? ents.find((x) => x.e === 'act');
   const thr = m?.ref?.thr ? thread18(s, String(m.ref.thr)) : undefined;
-  const vars: V = { from: snd.name, company: s.config.companyName, you: Y.first, act: act?.name ?? '', thr: thr?.t ?? '' };
+  const pRef = m?.ref?.pid ? s.persons[String(m.ref.pid)] : undefined; // R29: {person} dos modelos (convite a uma pessoa)
+  const vars: V = { from: snd.name, company: s.config.companyName, you: Y.first, act: act?.name ?? '', thr: thr?.t ?? '', person: pRef?.name ?? '' };
   const intro = introOf(it, snd, vars);
   const paras = parasOf(it.body, ents); // decisão: as opções (com agora × depois) ficam nos botões, sem repetir no texto
   const replied = m?.resolved ? (m.actions?.find((a) => a.id === m.resolved)?.label ?? l('Respondida', 'Answered')) : null;
