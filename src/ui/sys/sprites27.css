@@ -1,0 +1,14 @@
+/* r27 (CHAR): sprites de semelhança das pessoas reais — sempre em escala inteira, pixel nítido. */
+canvas.body27 { image-rendering: crisp-edges; image-rendering: pixelated; display: block; }
+canvas.body27.deceased { filter: grayscale(1); opacity: 0.8; }
+.pg-portrait canvas.hero27 { width: 192px; height: 304px; background: none; border-radius: 0; }
+.lineup27 { display: flex; align-items: flex-end; flex-wrap: wrap; margin-left: auto; padding: 0 10px; }
+.lineup27-m { display: flex; flex-direction: column; align-items: center; margin: 0 -14px; padding: 0; border: 0; background: none; color: var(--muted); cursor: pointer; font: inherit; }
+.lineup27-m canvas { width: 96px; height: 152px; }
+.lineup27-m small { margin-top: -6px; font-size: 0.72rem; }
+.lineup27-m:hover small, .lineup27-m:focus-visible small { color: var(--accent); }
+.lineup27-m:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+@media (max-width: 560px) {
+  .pg-portrait canvas.hero27 { width: 96px; height: 152px; }
+  .lineup27 { margin-left: 0; width: 100%; justify-content: center; }
+}

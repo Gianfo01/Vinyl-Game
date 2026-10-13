@@ -90,6 +90,7 @@ import './fame15';
 import './fame16';
 // Rodada 15: retratos coerentes (artistas reais e procedurais com pele/sexo da ficha).
 import './looks15';
+import './sprites27'; // r27 (CHAR): sprites de semelhança das pessoas reais nos retratos (modo nomes reais)
 // Rodada 15: aprofundamentos (Sync, Disputas, Fandom do ato, júri dos prêmios).
 import './deep15';
 // Rodada 16: painel Delegar (equipe) e 'Agenciado por' (ato).

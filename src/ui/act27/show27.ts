@@ -19,6 +19,7 @@ import { store } from '../store';
 import { meter } from '../vis';
 import { cutscene27, reduced27 } from './mode27';
 import { H27, W27, drawStage27, type Member27 } from './stage27';
+import { realSprite27, whenSheet27 } from '../pixel/people27';
 import './show27.css';
 
 const songTitle = (x: Song27): string => (x.kind === 'cover' ? t(coverTitle27(x.id) ?? l(x.title, x.title)) : x.title);
@@ -32,7 +33,7 @@ export function openShow27(key: string, onEnd?: (played: boolean) => void): void
   if (gate) { toast(t(gate), 'bad'); onEnd?.(false); return; }
   const c = showCtx27(s, key)!;
   const act = s.acts[c.actId];
-  const members: Member27[] = act.members.map((id) => s.persons[id]).filter((p) => p && p.alive).map((p) => ({ id: p.id, look: p.look, born: p.born, role: p.role }));
+  const members: Member27[] = act.members.map((id) => s.persons[id]).filter((p) => p && p.alive).map((p) => ({ id: p.id, look: p.look, born: p.born, role: p.role, sprite: realSprite27(s, p) })); // r27 (CHAR): corpo real no palco
   let ids = autoSet27(c);
   const root = h('div', { class: 'a27-show' });
   let close = () => {};
@@ -42,6 +43,7 @@ export function openShow27(key: string, onEnd?: (played: boolean) => void): void
   const cv = h('canvas', { class: 'a27-stage', width: W27, height: H27, role: 'img', 'aria-label': t(l('Palco e plateia', 'Stage and crowd')) }) as HTMLCanvasElement;
   const look = { energy: 45, target: 45, frame: 0, power: false, rain: false };
   const paint = () => drawStage27(cv, { tier: c.tier, year: c.year, energy: look.energy, frame: look.frame, power: look.power, rain: look.rain }, members);
+  for (const m of members.slice(0, 5)) if (m.sprite) whenSheet27('body', m.sprite.body.sheet, paint); // r27 (CHAR): repinta quando a folha chega
   let raf = 0;
   const loop = () => {
     if (!cv.isConnected && look.frame > 2) return;
