@@ -133,7 +133,7 @@ describe('5. júri lê o caminho', () => {
     const tot = () => GRAMO_ADJ.reduce((t, f) => t + f(s, rel.id, 'album'), 0);
     const major = tot();
     choosePath18(s, 'indie');
-    expect(tot() - major).toBe(3); // indie com crítica fraca: neutro
+    expect(tot() - major).toBeCloseTo(3, 9); // indie com crítica fraca: neutro (R29: outros ajustes do júri somam frações)
     expect(pathJury19(s, fakeRel(s, a.id, { critic: 95, criticN: 5 }), 'album').v).toBe(2);
   });
 });

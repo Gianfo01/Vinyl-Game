@@ -185,7 +185,7 @@ describe('royalties, recoupment e catálogo', () => {
     const roy0 = c.royalty;
     expect(respondDemand(s, r, d.id, 'accept')).toBeNull();
     expect(c.royalty).toBeGreaterThan(roy0);
-    expect(c.fameAtSign).toBe(60);
+    expect(c.fameAtSign).toBe(Math.round(act.fame * 10) / 10); // R29: a fama anda nos meses de espera (reputação → fama); a base passa a ser a de agora
     // renovar com poder de barganha: o ajuste pesa contra quando o artista cresceu
     c.fameAtSign = 10;
     const tough = renewalAdj(s, c);

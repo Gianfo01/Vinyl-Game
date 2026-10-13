@@ -13,6 +13,7 @@ import { opine, syncPlayerPerson13 } from '../src/sim/sys/persona13';
 import { playerPerson } from '../src/sim/sys/life';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { l } from '../src/data/world';
+import { CONN29 } from '../src/sim/sys/conn29';
 
 describe('r13 persona unificada', () => {
   it('todo tipo de pessoa tem o mesmo esquema, determinístico', () => {
@@ -35,7 +36,9 @@ describe('r13 persona unificada', () => {
     expect(per13(s2, `p:${pid}`)!.attrs).toEqual(per13(s, `p:${pid}`)!.attrs);
     // aptidão e ouvido entram no desempenho efetivo da equipe
     const st = s.player.staff.find((x) => x.id === 'stx')!;
-    expect(staffSkill(s, 'anr')).toBe(st.skill + staffAdj13(s, st).v);
+    // R29 (conectar tudo): a reputação do selo também entra na eficácia da equipe (conn29 'rep_sede'); aqui só a pessoa
+    CONN29.off.add('rep_sede');
+    try { expect(staffSkill(s, 'anr')).toBe(st.skill + staffAdj13(s, st).v); } finally { CONN29.off.delete('rep_sede'); }
   });
 
   it('barreiras da época: segregação nos EUA dos anos 50 e o peso da imagem na era da MTV', () => {
