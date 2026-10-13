@@ -576,7 +576,6 @@ function settings(): void {
     h('button', { class: 'btn small ghost', onclick: () => { resetTut18('all'); setTutorials19(p, true); savePrefs(); if (store.game) restartTutorial(store.game); close(); render(); } }, t(l('Reiniciar tutoriais', 'Restart tutorials'))),
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
     ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
-    h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
     settings19(), // r19 B.5
     settings20(), // r20 G6: densidade
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)

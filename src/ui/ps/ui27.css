@@ -210,3 +210,6 @@ main .card fieldset { border: 0; border-top: 1px solid var(--line); border-radiu
 main .card fieldset > legend { padding: 0 var(--sp-2) 0 0; font-size: var(--fs-sm); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 /* r27 INT: chip desligado (camadas, ingredientes da receita) sem opacidade: cinza com borda tracejada mantém AA */
 main .chip-btn:not(.on):not(:disabled) { opacity: 1; color: var(--muted); border-style: dashed; }
+/* r27: nada dentro de uma janela passa da largura dela */
+.modal { box-sizing: border-box; max-width: calc(100vw - 16px); }
+.modal .form, .modal .form > *, .modal select, .modal input { max-width: 100%; box-sizing: border-box; }

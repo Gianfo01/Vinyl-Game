@@ -1,3 +1,4 @@
+import { actMode27 } from '../../act27/prefs27'; // r27: uma opção só (Atividades) também para os mini-jogos antigos
 // Interface de palco: notas dos shows por turnê, ingressos/cambistas, mini-jogo da curva do setlist
 // e o show ao vivo (cena com público em pixel art, medidor de energia e cartas de resposta).
 
@@ -123,7 +124,7 @@ export function openSetlistGame(s: GameState, tourId: string): void {
       );
       if (focus !== undefined) (root.querySelector(`[data-f="u${focus}"]`) as HTMLElement | null ?? root.querySelector(`[data-f="d${focus}"]`) as HTMLElement | null)?.focus();
     };
-    if (store.prefs.minigames === 'auto') order = autoOrder(s, order);
+    if (actMode27() !== 'play') order = autoOrder(s, order);
     draw();
     return root;
   }, { onClose: () => rerender() });

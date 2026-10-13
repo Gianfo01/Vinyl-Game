@@ -13,7 +13,7 @@
 .ovr.good { background: var(--good); }
 .ovr.elite { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: var(--gold-ink); }
 
-.form { display: inline-block; font-weight: 800; padding: 0 4px; border-radius: 4px; }
+span.form { display: inline-block; font-weight: 800; padding: 0 4px; border-radius: 4px; }
 .form.f0 { color: var(--bad); } .form.f1 { color: var(--bad); } .form.f2 { color: var(--muted); } .form.f3 { color: var(--good); } .form.f4 { color: var(--good); }
 
 .pcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }

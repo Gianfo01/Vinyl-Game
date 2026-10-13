@@ -1,3 +1,4 @@
+import { actMode27 } from '../act27/prefs27'; // r27: uma opção só (Atividades) também para os mini-jogos antigos
 // Interface das cenas da rodada 4: cada local em pixel art (premiação, TV, rádio, tribunal, pregão,
 // estrada, clínica, mansão, rua, feira, loja, fábrica, clube...) com as escolhas da simulação,
 // a galeria "Lugares" e os botões para dar entrevista e visitar a rádio.
@@ -164,7 +165,7 @@ registerCutscene('interview', (s, cs, close) => {
     h('button', { class: 'btn primary', onclick: () => ask(0) }, t(l('Começar a entrevista', 'Start the interview'))),
     h('button', { class: 'btn ghost', onclick: () => { const a = autoAnswers(s, rngOf(s), cs.id); a.forEach((x, i) => (answers[i] = x)); finish(); } }, t(l('Resolver automático', 'Auto-resolve'))));
   box.append(h('p', { class: 'muted small' }, t(l('Escolha a resposta para cada pergunta. O tom de cada uma aparece embaixo; sem resposta em 15 segundos, conta como silêncio.', 'Pick the answer to each question. Each one\'s tone is shown below it; no answer in 15 seconds counts as silence.'))), start);
-  if (store.prefs.minigames === 'auto') setTimeout(() => (start.lastChild as HTMLButtonElement)?.click(), 0);
+  if (actMode27() !== 'play') setTimeout(() => (start.lastChild as HTMLButtonElement)?.click(), 0);
   return frame(s, cs, () => { clearInterval(timer); close(); }, box, { fx: 'flash' });
 });
 

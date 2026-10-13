@@ -1,3 +1,4 @@
+import { actMode27 } from '../../act27/prefs27'; // r27: uma opção só (Atividades) também para os mini-jogos antigos
 // Mesa de negociação (mini-jogo em tela cheia): rodadas de proposta, barra de paciência, cartas de
 // argumento e blefe. No modo automático (ou pelo botão "Resolver automático") fecha sozinha.
 
@@ -11,7 +12,6 @@ import { rngOf } from '../../../sim/util';
 import { $, rerender, toast } from '../../common';
 import { h } from '../../dom';
 import { openScene } from '../../registry';
-import { store } from '../../store';
 import { meter } from '../../vis';
 
 export function negotiateButton(s: GameState, actId: string, mode: 'sign' | 'renew', label?: string): HTMLElement {
@@ -22,7 +22,7 @@ export function negotiateButton(s: GameState, actId: string, mode: 'sign' | 'ren
 
 /** r27 (FLOW2): a renovação passa pelo fluxo (Opções → Atividades); `played` = abrir a mesa mesmo com mini-jogos no automático. */
 export function openNegotiation(s: GameState, actId: string, mode: 'sign' | 'renew', played = false): void {
-  if (!played && store.prefs.minigames === 'auto') {
+  if (!played && actMode27() === 'quick') {
     const res = autoNegotiate(s, actId, mode);
     toast(t(res), s.acts[actId]?.owner === 'player' ? 'good' : 'info');
     rerender();
