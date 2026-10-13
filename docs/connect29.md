@@ -154,9 +154,26 @@ ANTES_DEPOIS_AQUI
 
 ## 6. Determinismo, golden e equilíbrio
 
-GOLDEN_AQUI
+Mundo mudado **de propósito** (perks religados, songQ depois dos ganchos, escândalo → próximo disco, prêmios →
+prestígio). Golden re-medidos com comentário em `tests/r27-p2a.test.ts` e `tests/r27-p2b.test.ts` (semente `r16pb-5`,
+1975, 8 meses de playbot): caixa **446096 → 427926**, acts **4292160800 → 1063419696**; tours (1382068899) e **rng
+(2262769409) iguais** — nenhuma mudança consome o RNG do jogo. `r27-m2` passa sem mudança. As correções de dados/vistas
+(índice, connect29, créditos, kin15, stints16) não mexem nesses golden. A sonda e a auditoria não avançam o tempo nem
+tocam no estado.
 
-BALANCO_AQUI
+Equilíbrio — `tools/balance19.ts --quick --seeds 12` (bot equilibrado, 3 anos, base pequena, mesmas 12 partidas):
+
+| | quebra | caixa mediano | patrimônio mediano | fama | prestígio | escândalos |
+|---|---|---|---|---|---|---|
+| antes (base friendly-brown) | 33% | 43k | 1,07 mi | 11 | 59 | 34 |
+| depois, sem os perks religados | 17% | 32k | 1,42 mi | 11 | 60 | 35 |
+| depois (tudo) | 17% | 18k | 2,37 mi | 11 | 60 | 35 |
+
+Leitura: a maior parte da alta do patrimônio vem dos **perks que passaram a valer** (departamentos da sede, cartas,
+origem — bônus que o jogo já anunciava). A queda de quebras (33% → 17%) aparece nas duas variantes: uma partida de 1889
+(b19-8) deixa de quebrar porque o mundo diverge — com 12 partidas é ruído de uma partida. Por era: 1955/1975 sobem,
+2005 cai (b19-3 3,46 → 1,58 mi; b19-7 4,49 → 2,45 mi). Fama, prestígio e escândalos ficam iguais. Para calibrar sem
+desligar a ligação há um botão: `PERKS29_SCALE.k` em `src/sim/sys/perks29.ts` (1 = valor anunciado).
 
 ## 7. Testes
 
@@ -164,7 +181,10 @@ BALANCO_AQUI
 nunca aponta para outro nome (9 mundos); ex-integrante ⇔ carreira (Syd Barrett/Pink Floyd); um ano em Caos sem R8/R9;
 estresse baixa a nota da gravação; departamentos da sede mexem em apelo e vendas; previsão de renovação com os ganchos.
 
-TESTES_AQUI
+Rodados (lotes pequenos, `--poolOptions.forks.maxForks=2`): `r29-connect` (10/10), `r27-p2a` (18/18), `r27-p2b`
+(21/21), `r27-m2` (12/12), `r27-audit`, `r27-consistency`, `r15-kin`, `r16-links`, `r17-foundation`, `r25-kin` — todos
+verdes. `r16-lineups` › "Michael: nas Jacksons até 1984" **falha igual na base** (friendly-brown, antes da R29: "The
+Jackson 5 já se chama The Jacksons em 1983: expected undefined") — não é desta rodada. `tsc --noEmit` limpo.
 
 ## 8. Capturas
 
