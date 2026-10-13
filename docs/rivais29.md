@@ -1,5 +1,7 @@
 # Rodada 29 — Nível dos rivais na Nova run
 
+> Quantas gravadoras existem no começo, e quantos selos novos aparecem durante a run: ver [gravadoras29.md](gravadoras29.md).
+
 > Pedido do autor: *"no começo, run rápido e completo, permita escolher o nível dos rivais também (do 0, emergentes, etc.)"*.
 
 A Nova run já tinha a escada de **situação inicial** do jogador (`start29`: do zero → emergente → médio → hipster →

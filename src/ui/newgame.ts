@@ -1,7 +1,9 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
 import { nrConfirm29, nrHero29 } from './ps/nr29'; // r29 (NR01–NR06, Atlas)
-import { riv29ById, rivOf29, statusLineOf29 } from '../sim/rivals29data'; // r29: nível dos rivais
+import { riv29ById, rivOf29 } from '../sim/rivals29data'; // r29: nível dos rivais
+import { FREQS29, count29, statusAll29 } from '../sim/labels29data'; // r29: gravadoras no início e selos novos
+import { labelsCard29 } from './ng29labels'; // r29
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
@@ -246,7 +248,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         bandBox,
       ),
     ] },
-    { id: 'labels', name: l('Gravadoras', 'Labels'), body: [rivalsCard29(cfg, rebuild), lc.el] }, // r29: nível dos rivais antes da lista
+    { id: 'labels', name: l('Gravadoras', 'Labels'), body: [rivalsCard29(cfg, rebuild), labelsCard29(cfg, () => drawSummary(), rebuild), lc.el] }, // r29: nível dos rivais e gravadoras no início antes da lista
     // r22: regras em cartões, seletor segmentado, chaves e etiquetas (o ajuste fino fica recolhido)
     { id: 'rules', name: l('Regras e ritmo', 'Rules and rhythm'), body: [
       h('section', { class: 'card wide' }, h('h3', null, ...hl(S.difficulty, 'difficulty')),
@@ -289,7 +291,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const LBSTART: Record<string, ReturnType<typeof l>> = { history: l('pela história', 'by history'), random: l('aleatório', 'random'), equal: l('todos iguais', 'all equal'), inverted: l('mundo virado', 'upside down'), giants: l('gigantes', 'giants'), startups: l('todas novatas', 'all newcomers') };
   const groups = (): { tab: number; name: ReturnType<typeof l>; rows: Row[] }[] => {
     const ids = chosenLabels22(cfg);
-    const rivals = cfg.labels?.count ?? labelPool().filter((d) => ids.includes(d.id) && (cfg.realNames ? realFounded(d.id, d.founded) : d.founded) <= cfg.startYear).length;
+    const rivals = (cfg.scenario17 ? undefined : count29(cfg)) ?? cfg.labels?.count ?? labelPool().filter((d) => ids.includes(d.id) && (cfg.realNames ? realFounded(d.id, d.founded) : d.founded) <= cfg.startYear).length;
     const dsum = Object.entries(cfg.diff17 ?? {}).filter(([, v]) => v).map(([k, v]) => `${k} ${v! > 0 ? '+' : ''}${v}`).join(', ');
     const rs = resolveWorld20(cfg);
     const prehist = (cfg as { prehist?: number }).prehist ?? 0;
@@ -312,15 +314,16 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       { tab: 2, name: l('Modo', 'Mode'), rows: [
         [l('Atividades', 'Activities'), (cfg.careers?.main ?? ['label']).length ? careerSummary(cfg).split(' · ')[0] : '—'],
         [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
-        [l('Situação inicial', 'Starting situation'), t(statusLineOf29(cfg))], // r29: carreira × situação × rivais ("Selo emergente · rivais gigantes")
+        [l('Situação inicial', 'Starting situation'), t(statusAll29(cfg))], // r29: carreira × situação × rivais × gravadoras ("Selo emergente · rivais gigantes · 8 gravadoras")
         [l('Como começa', 'How it starts'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
         [S.companyName, cfg.companyName],
         [S.homeCity, cityName(cfg.homeCity)],
         ...(cfg.custom && Object.keys(cfg.custom).length ? [[l('Ajuste fino do começo', 'Start fine-tuning'), Object.keys(cfg.custom).join(', ')] as Row] : []),
       ] },
       { tab: 3, name: l('Gravadoras', 'Labels'), rows: [
-        [l('No começo', 'At the start'), `${rivals} · ${cfg.labels?.ids ? t(l('lista personalizada', 'custom list')) : t(l('sugestão', 'suggestion'))}`],
+        [l('No começo', 'At the start'), `${rivals} · ${!cfg.scenario17 && count29(cfg) !== undefined ? t(l('escolha da Nova run', 'New run choice')) : cfg.labels?.ids ? t(l('lista personalizada', 'custom list')) : t(l('sugestão', 'suggestion'))}`],
         [l('Nível dos rivais', 'Rival level'), t(riv29ById(rivOf29(cfg))!.name)], // r29
+        ...(cfg.labels29 ? [[l('Selos novos', 'New labels'), cfg.labels29.freq ? t(FREQS29.find((f) => f.id === cfg.labels29!.freq)!.name) : count29(cfg) !== undefined ? t(FREQS29[2].name) : t(l('como sempre', 'as usual'))] as Row] : []), // r29
         [l('Como começam', 'How they start'), t(LBSTART[cfg.labels?.start ?? 'history'])],
         [l('Fundadas depois', 'Founded later'), t(cfg.labels?.future === 'all' ? l('todas do catálogo', 'all from the catalog') : cfg.labels?.future === 'none' ? l('nenhuma', 'none') : l('as da lista', 'the listed ones'))],
       ] },

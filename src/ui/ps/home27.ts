@@ -9,6 +9,8 @@ import { endYearField28 } from '../endyear28'; // r28 (F4)
 import { REC_YEARS28, pickStart28 } from '../../sim/start28data';
 import { SITS29, sit29ById, sitOfScenario29, start28Fits29, statusLabel29, type Sit29 } from '../../sim/start29data'; // r29
 import { RIVS29, riv29ById, statusLine29, type Riv29 } from '../../sim/rivals29data'; // r29: nível dos rivais
+import { NAME_DEFAULT29, NS29, VNS29, labelsTag29, venKind29, type N29, type Vn29 } from '../../sim/labels29data'; // r29: gravadoras no início
+import type { RunConfig } from '../../sim/types';
 import { drawHqCutaway27 } from './hqpx27';
 import { CITIES, l, type L } from '../../data/world';
 import { S, locale, t, type Lang } from '../../i18n/strings';
@@ -282,14 +284,21 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
     const d = sit29ById(sitNow())!;
     const st28 = pickStart28(q.seed);
     const rv = riv29ById(q.rivals29 ?? 'mix')!;
-    status.replaceChildren(h('b', null, t(statusLine29(q.career, d.id, rv.id))), ' — ', h('span', { class: 'muted' }, t(d.fx)),
+    const tag = labelsTag29({ seed: q.seed, startYear: q.startYear, careers: { main: [q.career] }, labels29: { n: q.labels29n, vn: q.labels29vn } } as RunConfig); // r29: "· 8 gravadoras"
+    status.replaceChildren(h('b', null, t(statusLine29(q.career, d.id, rv.id)), t(tag)), ' — ', h('span', { class: 'muted' }, t(d.fx)),
       ...(rv.id !== 'mix' ? [h('span', { class: 'muted' }, ` · ${t(l('Rivais', 'Rivals'))}: ${t(rv.fx)}`)] : []),
       ...(start28Fits29(st28.id, d.id) ? [h('span', { class: 'muted' }, ` · ${t(l('Começo sorteado', 'Rolled start'))}: ${t(st28.name)}`)] : []));
   };
   const startSel = select<Sit29>(sitNow(), SITS29.map((d) => ({ value: d.id, label: t(statusLabel29(q.career, d.id)) })), (v) => { q.start29 = v; q.scenario = sit29ById(v)!.base; drawPrev(); drawStatus(); }, { id: 'h27-start' });
   // r29: nível dos rivais (mesma escada; "mistura realista" = o mundo de sempre)
   const rivSel = select<Riv29>(q.rivals29 ?? 'mix', RIVS29.map((d) => ({ value: d.id, label: t(d.name) })), (v) => { q.rivals29 = v === 'mix' ? undefined : v; drawStatus(); }, { id: 'h27-rivals' });
-  afterCareer = () => { SITS29.forEach((d, i) => { const o = startSel.options[i]; if (o) o.textContent = t(statusLabel29(q.career, d.id)); }); drawStatus(); };
+  // r29: gravadoras no início (atalho; o número sai da semente e respeita a era) e concorrentes da carreira
+  const lbSel = select<N29 | ''>(q.labels29n ?? '', [{ value: '', label: t(NAME_DEFAULT29) }, ...NS29.map((d) => ({ value: d.id, label: t(d.name) }))], (v) => { q.labels29n = v || undefined; drawStatus(); }, { id: 'h27-labels' });
+  const venSel = select<Vn29 | ''>(q.labels29vn ?? '', [{ value: '', label: t(l('Padrão', 'Default')) }, ...VNS29.map((d) => ({ value: d.id, label: t(d.name) }))], (v) => { q.labels29vn = v || undefined; drawStatus(); }, { id: 'h27-ven' });
+  const venLab = h('span');
+  const venField = h('label', { class: 'h27-field', for: 'h27-ven' }, venLab, venSel);
+  const drawVen = () => { const vk = venKind29(q.career, q.startYear); venField.hidden = !vk; if (!vk) { q.labels29vn = undefined; venSel.value = ''; } else venLab.textContent = t(l(`Concorrentes no início (${vk.pt[1]})`, `Competitors at the start (${vk.en[1]})`)); };
+  afterCareer = () => { drawVen(); SITS29.forEach((d, i) => { const o = startSel.options[i]; if (o) o.textContent = t(statusLabel29(q.career, d.id)); }); drawStatus(); };
   afterCareer();
   drawPrev();
   const diffSel = select(q.difficulty, DIFFS27.map((d) => ({ value: d.id, label: t(d.name) })), (v) => (q.difficulty = v), { id: 'h27-diff' });
@@ -333,7 +342,9 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
           field('h27-start', l('Ponto de partida', 'Starting point'), startSel),
           field('h27-rivals', l('Nível dos rivais', 'Rival level'), rivSel)),
         h('div', { class: 'h27-2' },
+          field('h27-labels', l('Gravadoras no início', 'Labels at the start'), lbSel),
           field('h27-diff', l('Dificuldade', 'Difficulty'), diffSel)),
+        h('div', { class: 'h27-2' }, venField),
         status,
         h('p', { class: 'muted small h27-hint' }, t(l('Nomes reais em um mundo simulado. Você pode ajustar história, personagem, carreiras simultâneas, gravadoras, regras e modificadores na configuração completa.', 'Real names in a simulated world. You can adjust history, character, simultaneous careers, labels, rules and modifiers in the full setup.'))),
         err,

@@ -7,6 +7,7 @@ import type { GameState, Label } from './types';
 import { fmtL, money, notify, remember } from './util';
 import { talentScore } from './worldgen';
 import { emitEvent } from './events';
+import { LB29 } from './labels29gate';
 import { rivalSignsLeft } from './sys/gate14';
 import { fameAt } from './famehook16';
 import { actsNow27, releasesNow27 } from './tickcache27';
@@ -77,10 +78,10 @@ export function rivalsMonth(s: GameState, r: Rng): void {
       if (add) lb.territories.push(add);
     }
     // falência
-    if (lb.cash < -money(s, 300000)) closeLabel(s, r, lb);
+    if (lb.cash < -money(s, 300000)) { if (LB29.noClose?.(s)) lb.cash = money(s, 50000); else closeLabel(s, r, lb); } // r29: fechamentos desligados = socorro
   }
   // aquisições: família D/A compra selos fracos
-  if (r.chance(0.04)) {
+  if (r.chance(0.04) && !LB29.noClose?.(s)) { // r29: fusões desligadas
     const buyers = Object.values(s.labels).filter((x) => x.active && (x.family === 'A' || x.family === 'D') && x.cash > money(s, 3_000_000));
     const targets = Object.values(s.labels).filter((x) => x.active && x.cash < money(s, 100000) && x.roster.length > 0);
     if (buyers.length && targets.length) {

@@ -332,7 +332,9 @@ import './price20'; // r20c N2: moeda/base de tempo dos preços ('price20') e ti
 import './showops20'; // r20b (Z): show ↔ notícia e alterar turnê depois de marcar
 import './roles21'; // r21: funções múltiplas por pessoa + decisões que cada inclusão gera
 import './scenarios23'; // r23: cenários de outras profissões e mais selos (depois do careers19)
+import './labels29start'; // r29: gravadoras no início (quais/quantas, porte) e selos novos sorteados durante a run (antes do nível dos rivais)
 import './rivals29start'; // r29: nível dos rivais escolhido na Nova run (antes da situação inicial: o start29 já vê o mercado no porte escolhido)
+import './labels29ven'; // r29: concorrentes da carreira no início (depois do nível dos rivais)
 import './start29'; // r29: situação inicial escolhida (escada zero → líder do mercado; antes do começo sorteado)
 import './start28'; // r28 (F4): começo sorteado pela semente e cenário de entrada "Primeiro hit"
 import './eggs27'; // r27 ovos de Páscoa (raros, determinísticos; docs/eggs27.md)

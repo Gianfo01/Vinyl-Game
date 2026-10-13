@@ -20,6 +20,7 @@ import { cityById, familyOf, l, type L } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { dir17 } from '../director17';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
+import { LB29 } from '../labels29gate';
 import { emitFact, factSeedKey17, onFact, type Fact } from '../facts17';
 import { histLocked, histMode } from '../history15';
 import { allHolds, grantHold, type Hold } from '../holds17';
@@ -307,6 +308,7 @@ export function foundLabel17(s: GameState, r: Rng, o: { by: string; name: string
 }
 
 function founding(s: GameState, r: Rng, W: number): void {
+  if (LB29.noFound?.(s)) return; // r29: frequência de selos novos "nenhuma"
   const act = activeLabels(s);
   if (act.length >= 18 + (W > 1.3 ? 4 : 0) || !r.chance(0.035 * W)) return;
   type C = { w: number; go: () => void };
@@ -611,6 +613,7 @@ function beefs(s: GameState, r: Rng, W: number): void {
 }
 
 function mergers(s: GameState, r: Rng, W: number): void {
+  if (LB29.noClose?.(s)) return; // r29: fechamentos/fusões desligados
   if (!r.chance(0.015 * W)) return;
   const weak = activeLabels(s).filter((x) => (x.family === 'B' || x.family === 'C') && !x.parentLabel && x.cash < money(s, 150000) && x.roster.length >= 1);
   for (const A of weak) {
