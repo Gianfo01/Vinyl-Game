@@ -59,6 +59,7 @@ import { themeButton } from './sys/theme14';
 import { backChip29, bindRoute29, openCampaign29, openIndex29, paletteCmds29 } from './ps/route29';
 import { REDIRECT29, resolve29, type Target29 } from './ps/route29model';
 import { screenTop29 } from './ps/screentop29';
+import { alertsSettings29 } from './ps/alerts29';
 import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
 import { tabSnapshot } from './vis';
 import { withPlayerActsCache } from '../sim/util';
@@ -645,6 +646,7 @@ function settings(): void {
     settings27(), // r27: atividades jogáveis (jogáveis / só importantes / sempre rápido)
     settingsCut27(), // r27 (K): Cenas: todas / só importantes / desligadas
     settingsAudio28(), // r28 (F4): Som — desligado por padrão
+    alertsSettings29(), // r29 REORG (M44): alertas por categoria (preferência, fora do save)
     ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),

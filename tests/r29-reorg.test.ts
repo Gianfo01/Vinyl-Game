@@ -292,3 +292,52 @@ describe('r29 M41: lote com prévia e reversibilidade declarada', () => {
     for (const k of Object.keys(UNDO29)) expect(UNDO29[k].en.length).toBeGreaterThan(5);
   });
 });
+
+// ---------------------------------------------------------------- R29b item 4 — M44 alertas por categoria
+import { ALERT_CATS29, alertCat29, alertGroups29, alertPrefs29, toastOrder29, ALERT_DEFAULTS29 } from '../src/ui/ps/alerts29model';
+import { items18 } from '../src/sim/sys/inbox18';
+import { FILTER0_27, mailbox27 } from '../src/ui/sys/mail27model';
+describe('r29 M44: alertas por categoria (preferência; registro íntegro)', () => {
+  it('8 categorias; classificação por texto pt/en', () => {
+    expect(ALERT_CATS29).toEqual(['finance', 'people', 'contracts', 'projects', 'live', 'world', 'underworld', 'legal']);
+    expect(alertCat29('Empréstimo vence: caixa negativo')).toBe('finance');
+    expect(alertCat29('Promessa de turnê vence em 4 semanas')).toBe('contracts');
+    expect(alertCat29('Esquema de payola descoberto')).toBe('underworld');
+    expect(alertCat29('Processo no tribunal por plágio')).toBe('legal');
+    expect(alertCat29('Show esgotado em Londres')).toBe('live');
+    expect(alertCat29('Gravação do álbum atrasou')).toBe('projects');
+    expect(alertCat29('Baixista com estresse alto')).toBe('people');
+    expect(alertCat29('Rival chegou ao topo das paradas')).toBe('world');
+  });
+  it('preferências inválidas caem no padrão; silenciar não apaga nada', () => {
+    const p = alertPrefs29({ finance: { on: false, prio: 9 }, live: { prio: 3 } });
+    expect(p.finance).toEqual({ on: false, prio: ALERT_DEFAULTS29().finance.prio });
+    expect(p.live.prio).toBe(3);
+    const items = [{ key: 'a', text: 'caixa negativo', unread: true }, { key: 'b', text: 'show em Paris', unread: true }, { key: 'c', text: 'show em Roma' }];
+    const G = alertGroups29(items, p);
+    expect(G.reduce((t, g) => t + g.total, 0)).toBe(3); // nada some da contagem
+    expect(G[0].cat).toBe('live'); // prioridade 3 primeiro
+    expect(G.at(-1)!.on).toBe(false); // silenciadas no fim, mas presentes
+    const N = (pt: string) => ({ text: { pt, en: pt } });
+    const o = toastOrder29([N('caixa negativo'), N('show em Paris')], p);
+    expect(o.shown.map((x) => x.text.pt)).toEqual(['show em Paris']);
+    expect(o.muted.length).toBe(1);
+  });
+  it('filtro da caixa por alerta só filtra a vista (mesmas conversas, nenhuma alterada)', () => {
+    const s = played('r29-alert', 6);
+    const before = JSON.stringify(s);
+    const all = mailbox27(s, FILTER0_27());
+    let sum = 0;
+    for (const c of ALERT_CATS29) sum += mailbox27(s, { ...FILTER0_27(), alert: c }).threads.length;
+    expect(sum).toBe(all.threads.length); // cada conversa cai em exatamente uma categoria
+    expect(items18(s).length).toBeGreaterThan(0);
+    expect(JSON.stringify(s)).toBe(before);
+  });
+});
+describe('r29 M44: notas do mundo ficam em Mundo', () => {
+  it('"Mundo: …" e marcos da indústria são Mundo, mesmo citando censura ou discos', () => {
+    expect(alertCat29('Aviso Mundo: Regime franquista. Censura prévia')).toBe('world');
+    expect(alertCat29('Aviso Mundo: Embargo a Cuba. Discos cubanos')).toBe('world');
+    expect(alertCat29('Aviso Marco da indústria: Fábricas de hits')).toBe('world');
+  });
+});

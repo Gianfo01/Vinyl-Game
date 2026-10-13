@@ -13,6 +13,7 @@ import { h } from '../dom';
 import { inspect } from '../common';
 import { card27, list27, listRow27 } from './ui27';
 import { layout29 } from './shell29';
+import { cockpitAlerts29 } from './alerts29';
 import { grid29View } from './grid29';
 import { ic } from '../vis';
 import { intentCtx29, label29, openTarget29 } from './route29';
@@ -123,7 +124,7 @@ export function cockpit29Into(el: HTMLElement, s: GameState): HTMLElement {
   const host = el.querySelector('.ck27') ?? el;
   const f = followView(s);
   const more = host.querySelector('.ck27-more');
-  for (const x of [f, intentsView(s)]) if (x) { if (more) more.before(x); else host.append(x); }
+  for (const x of [cockpitAlerts29(s), f, intentsView(s)]) if (x) { if (more) more.before(x); else host.append(x); }
   if (s.week > 0 && resumeOn() && !seen.has(s)) {
     const box = h('div', { class: 'rs29-host' });
     const done = () => { seen.add(s); box.remove(); };

@@ -13,10 +13,11 @@ for (const [vw, vh, tag] of [[1440, 900, 'desk'], [390, 844, 'mob']]) {
   { const bt = p.getByRole('button', { name: /Desativar todos os tutoriais/ }).first(); if (await bt.count()) { await bt.click(); await p.waitForTimeout(300); } }
   for (let i = 0; i < 3; i++) { await p.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }))); await p.waitForTimeout(2500); await clear(); }
   for (const a of (process.argv[4] ?? 'calendar19,finance,market,directory,contracts19,you,crime,hq,shows,mundo27,agenda17').split(',')) {
+    if (a === '_opts') { await p.getByRole('button', { name: /Opções|Options/ }).last().click().catch(() => {}); await p.waitForTimeout(800); const fs = await p.$('.al29-set'); if (fs) await fs.scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await p.screenshot({ path: `${out}/${pref}-opcoes-${tag}.png` }); await p.keyboard.press('Escape'); continue; }
     await p.evaluate((h) => { location.hash = h; }, `#/${a}`); await p.waitForTimeout(1000); await clear();
-    await p.screenshot({ path: `${out}/${pref}-${a}-${tag}.png` });
+    if (process.argv[5]) { const el = await p.$(process.argv[5]); if (el) await el.scrollIntoViewIfNeeded(); await p.waitForTimeout(300); }
+    await p.screenshot({ path: `${out}/${pref}-${a.replace(/[^\w]+/g, '_')}-${tag}.png` });
   }
-  await p.evaluate(() => { location.hash = '#/s17'; }); await p.waitForTimeout(900);
-  await p.screenshot({ path: `${out}/${pref}-campanha-${tag}.png` });
+  if (!process.argv[4]) { await p.evaluate(() => { location.hash = '#/s17'; }); await p.waitForTimeout(900); await p.screenshot({ path: `${out}/${pref}-campanha-${tag}.png` }); }
 }
 await b.close();
