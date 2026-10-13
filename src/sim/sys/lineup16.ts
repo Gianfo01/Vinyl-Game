@@ -229,7 +229,18 @@ export function goSolo16(s: GameState, r: Rng, p: Person, from: Act): Act {
 }
 
 /** Banda nova com outros músicos livres; supergrupo se dois vierem de nomes grandes. */
+/** R29 (integrante B): a montagem da banda nova (sem a memória) — a oferta "Montar uma banda" monta, negocia e só anuncia
+ *  (announceBand16) se o contrato fechar; sem acordo, desfaz (sys/member29). newBand16 = montar + anunciar, como antes. */
+export interface BandBuild16 { b: Act; big: boolean; text: L; important: boolean }
 export function newBand16(s: GameState, r: Rng, p: Person, from: Act, partners: Person[]): Act {
+  const x = buildBand16(s, r, p, from, partners);
+  announceBand16(s, x);
+  return x.b;
+}
+export function announceBand16(s: GameState, x: BandBuild16): void {
+  remember(s, x.big ? 'supergroup' : 'lineup', x.text, { actId: x.b.id, important: x.important });
+}
+export function buildBand16(s: GameState, r: Rng, p: Person, from: Act, partners: Person[]): BandBuild16 {
   const crew = [p, ...partners.slice(0, 3)];
   const n = Math.max(3, crew.length);
   const fames = crew.map((q) => srcFame(s, q.id).fame);
@@ -250,8 +261,8 @@ export function newBand16(s: GameState, r: Rng, p: Person, from: Act, partners: 
   for (const q of crew) delete l16(s).free[q.id];
   const who = crew.map((q, i) => `${q.name}${srcs[i] ? ` (ex-${srcs[i].name})` : ''}`).join(', ');
   const one = crew.length === 1;
-  remember(s, big ? 'supergroup' : 'lineup', fmtL(big ? l('Supergrupo: {w} formam {b}.', 'Supergroup: {w} form {b}.') : one ? l('{w} monta uma banda nova, {b}.', '{w} starts a new band, {b}.') : l('{w} formam a banda {b}.', '{w} form a new band, {b}.'), { w: who, b: b.name }), { actId: b.id, important: big || from.fame > 40 });
-  return b;
+  return { b, big, important: big || from.fame > 40,
+    text: fmtL(big ? l('Supergrupo: {w} formam {b}.', 'Supergroup: {w} form {b}.') : one ? l('{w} monta uma banda nova, {b}.', '{w} starts a new band, {b}.') : l('{w} formam a banda {b}.', '{w} form a new band, {b}.'), { w: who, b: b.name }) };
 }
 
 /** Um passo do músico livre: solo, banda nova, entrar em outra banda ou esperar (força = sempre age). */

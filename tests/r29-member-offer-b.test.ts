@@ -9,14 +9,18 @@ import { acceptOffer, defaultOffer, evaluateOffer } from '../src/sim/contracts';
 import { applyWorld17 } from '../src/sim/start17';
 import type { Act, GameState } from '../src/sim/types';
 import { careerActs29, exMembers29 } from '../src/sim/sys/connect29';
-import { acceptTheirs27, propose27, startNego27 } from '../src/sim/sys/nego27';
+import { acceptTheirs27, bringRival27, propose27, startNego27 } from '../src/sim/sys/nego27';
 import { canonKey, rw } from '../src/sim/sys/realworld';
 import { ses19 } from '../src/sim/sys/session19';
 import {
-  freeAgent29, memberBand29, memberBlock29, memberJoin29, memberOptions29, memberSession29, memberSide29, memberStaff29, mo29,
-  realNote29, settleMember29, soloChance29, startMemberSolo29,
+  freeAgent29, memberBlock29, memberJoin29, memberOptions29, memberSession29, memberSide29, memberStaff29, mo29,
+  memberOffer29, realNote29, settleMember29, soloChance29, startMemberBand29, startMemberSolo29,
 } from '../src/sim/sys/member29';
 import { ctxMenu27 } from '../src/ui/ps/ctx27model';
+import { screenOffered27 } from '../src/ui/act27/flow27model';
+import { freeStep16, l16 } from '../src/sim/sys/lineup16';
+import { Rng } from '../src/core/rng';
+import { advanceWeek } from '../src/sim/tick';
 
 const BEATLES = 26;
 function world(seed = 'b3'): GameState {
@@ -34,6 +38,14 @@ function myBand(s: GameState): Act {
   const a = Object.values(s.acts).filter((x) => !x.owner && !x.playerBand && live(x) && x.members.length >= 3 && x.members.every((m) => s.persons[m]?.alive && !s.persons[m].isPlayer) && x.catalogNo !== BEATLES).sort((x, y) => y.fame - x.fame)[0];
   acceptOffer(s, a, { ...defaultOffer(s, a), id: `o-${a.id}`, week: s.week, status: 'pending', advance: 0 });
   return a;
+}
+/** Sem acordo: proposta irrisória com prazo até a mesa acabar (ou sair da mesa). */
+function failAtTable(s: GameState, actId: string): string {
+  const o = { ...defaultOffer(s, s.acts[actId]), advance: 0, royalty: 0.02 };
+  const n = startNego27(s, actId, o);
+  if (!('actId' in n)) throw new Error(n.pt);
+  for (let i = 0; i < 6 && n.status === 'open'; i++) propose27(s, n, o, 'deadline');
+  return n.status;
 }
 function closeAtTable(s: GameState, actId: string): string {
   const o = defaultOffer(s, s.acts[actId]);
@@ -124,17 +136,91 @@ describe('R29 — oferta a uma pessoa SEM banda', () => {
     expect(memberBlock29(s, stu.id)?.pt).toMatch(/equipe/);
   }, 60_000);
 
-  it('montar uma banda: nasce sem contrato com a pessoa e músicos livres; ela deixa de estar "sem banda"', () => {
+  it('montar banda + acordo: a banda só passa a existir de verdade (anunciada, assinada) quando o contrato fecha', () => {
     const s = world();
     const pete = person(s, 'Pete Best');
-    const out = retry(s, pete.id, 'band', () => memberBand29(s, pete.id));
-    expect(out.ok, out.text.pt).toBe(true);
-    const b = s.acts[out.actId!];
+    const cash0 = s.player.cash;
+    const r = startMemberBand29(s, pete.id) as { actId: string };
+    expect(r.actId).toBeTruthy();
+    const b = s.acts[r.actId];
     expect(b.members).toContain(pete.id);
     expect(b.members.length).toBeGreaterThanOrEqual(3);
     expect(b.owner).toBeFalsy();
+    expect(memberOffer29(s, r.actId)).toBe(true);
+    expect(s.player.cash).toBeLessThan(cash0); // audições pagas na hora
+    // sem anúncio antes do contrato
+    expect(s.memory.some((m) => m.actId === r.actId)).toBe(false);
+    expect(closeAtTable(s, r.actId)).toBe('deal');
+    settleMember29(s);
+    expect(s.acts[r.actId].owner).toBe('player');
+    expect(memberOffer29(s, r.actId)).toBe(false);
+    expect(s.memory.some((m) => (m.kind === 'lineup' || m.kind === 'supergroup') && m.actId === r.actId)).toBe(true);
+    expect(careerActs29(s, pete.id).find((x) => x.act.id === r.actId)?.current).toBe(true);
     expect(freeAgent29(s, pete.id)).toBe(false);
-    expect(memberOptions29(s, pete.id).some((o) => o.id === 'mo.band')).toBe(false); // agora tem banda: opções de integrante
+  }, 60_000);
+
+  it('montar banda + recusa: nenhum ato fica, a turma volta livre, gente nova some, sem ex-integrante nem crônica', () => {
+    const s = world();
+    const pete = person(s, 'Pete Best');
+    const acts0 = Object.keys(s.acts).length, persons0 = Object.keys(s.persons).length, mem0 = s.memory.length;
+    const free0 = JSON.stringify(l16(s).free);
+    const cash0 = s.player.cash;
+    const r = startMemberBand29(s, pete.id) as { actId: string };
+    const crew = [...s.acts[r.actId].members];
+    expect(failAtTable(s, r.actId)).not.toBe('deal');
+    settleMember29(s);
+    expect(s.acts[r.actId]).toBeUndefined();
+    expect(Object.keys(s.acts).length).toBe(acts0);
+    expect(Object.keys(s.persons).length).toBe(persons0); // gente nova da montagem não fica
+    expect(JSON.stringify(l16(s).free)).toBe(free0); // a turma volta ao mercado como estava
+    expect(s.player.cash).toBeLessThan(cash0); // as audições ficaram pagas
+    for (const id of crew) if (s.persons[id]) {
+      expect(careerActs29(s, id).some((x) => x.act.id === r.actId)).toBe(false);
+      expect(freeAgent29(s, id) || Object.values(s.acts).some((a) => a.members.includes(id))).toBe(true);
+    }
+    expect(Object.values(s.acts).every((a) => !exMembers29(s, a).some((x) => crew.includes(x.pid) && a.id === r.actId))).toBe(true);
+    expect(s.memory.slice(mem0).some((m) => m.actId === r.actId || (m.kind === 'lineup' && crew.some((c) => m.pid === c)))).toBe(false);
+    expect(memberBlock29(s, pete.id)).toBeNull();
+    expect(memberOptions29(s, pete.id).find((o) => o.id === 'mo.band')?.block?.pt).toMatch(/Recusou há pouco/);
+  }, 60_000);
+
+  it('reserva: enquanto a banda está na mesa, nenhuma banda do mundo leva os músicos dela; a semana que passa desfaz', () => {
+    const s = world();
+    const pete = person(s, 'Pete Best');
+    const r = startMemberBand29(s, pete.id) as { actId: string };
+    const crew = [...s.acts[r.actId].members];
+    for (const id of crew) expect(l16(s).free[id]).toBeUndefined(); // fora do mercado de músicos livres
+    // o passo do músico livre (forçado) não pega ninguém da banda em montagem
+    const before = JSON.stringify(Object.values(s.acts).filter((a) => a.id !== r.actId).map((a) => a.members));
+    for (const id of crew) expect(freeStep16(s, Rng.fromSeed('mo29-reserva'), id, true)).toBeUndefined();
+    expect(JSON.stringify(Object.values(s.acts).filter((a) => a.id !== r.actId).map((a) => a.members))).toBe(before);
+    // nenhum rival disputa a banda que ainda não existe
+    const n = startNego27(s, r.actId, defaultOffer(s, s.acts[r.actId]));
+    if ('actId' in n) { bringRival27(s, n, true); expect(n.rival).toBeNull(); }
+    // sem contrato, a primeira semana que passa desfaz a banda
+    advanceWeek(s);
+    expect(s.acts[r.actId]).toBeUndefined();
+    expect(memberOffer29(s, r.actId)).toBe(false);
+  }, 60_000);
+
+  it('flow27: "Só as importantes" abre a mesa para o solo e a banda em montagem; "Sempre rápido" resolve rápido', () => {
+    const s = world();
+    const pete = person(s, 'Pete Best'), stu = person(s, 'Stuart Sutcliffe');
+    const solo = startMemberSolo29(s, pete.id, 'free') as { actId: string };
+    expect(s.acts[solo.actId].fame).toBeLessThan(15); // fama baixa: antes ia para a proposta única
+    const band = startMemberBand29(s, stu.id) as { actId: string };
+    for (const id of [solo.actId, band.actId]) {
+      const occ = { src: 'screen', key: `nego:${id}`, actId: id };
+      expect(screenOffered27(s, 'nego', occ, 'key'), id).toBe(true);
+      expect(screenOffered27(s, 'nego', occ, 'quick'), id).toBe(false);
+    }
+    // um ato comum de fama baixa continua indo para a proposta única no "Só as importantes"
+    const plain = Object.values(s.acts).find((a) => !a.owner && a.fame < 15 && (a.status === 'active' || a.status === 'emerging') && !memberOffer29(s, a.id))!;
+    expect(screenOffered27(s, 'nego', { src: 'screen', key: `nego:${plain.id}`, actId: plain.id }, 'key')).toBe(false);
+    // membro de banda: o solo-proposta também
+    const mineless = Object.values(s.acts).find((a) => !a.owner && a.members.length >= 3 && (a.status === 'active' || a.status === 'emerging') && a.catalogNo !== BEATLES && a.members.every((m) => s.persons[m]?.alive))!;
+    const m = startMemberSolo29(s, mineless.members[1], 'free') as { actId: string };
+    expect(screenOffered27(s, 'nego', { src: 'screen', key: `nego:${m.actId}`, actId: m.actId }, 'key')).toBe(true);
   }, 60_000);
 
   it('vale para qualquer músico sem banda (banda que acabou), e o menu mostra o item habilitado', () => {
@@ -162,11 +248,10 @@ describe('R29 — oferta a uma pessoa SEM banda', () => {
       const rng0 = JSON.stringify(s.rng);
       const pete = person(s, 'Pete Best'), stu = person(s, 'Stuart Sutcliffe');
       const a = memberJoin29(s, stu.id, mine.id, 'buyout', memberOptions29(s, stu.id).find((o) => o.id.startsWith(`mo.join:${mine.id}`))?.id.split(':')[2]).ok;
-      const b = memberBand29(s, pete.id);
-      const r = startMemberSolo29(s, pete.id, 'free');
-      if ('actId' in r) closeAtTable(s, r.actId);
+      const rb = startMemberBand29(s, pete.id);
+      const bs = 'actId' in rb ? closeAtTable(s, rb.actId) : 'none';
       settleMember29(s);
-      return { a, b: b.ok, bt: b.text.pt, same: JSON.stringify(s.rng) === rng0, acts: Object.keys(s.acts).length, mine: s.acts[mine.id].members.join(','), log: mo29(s).log.map((x) => `${x.k}:${x.ok}:${x.t.pt}`).join('|') };
+      return { a, b: bs, bt: 'actId' in rb ? s.acts[rb.actId]?.name ?? '' : '', same: JSON.stringify(s.rng) === rng0, acts: Object.keys(s.acts).length, mine: s.acts[mine.id].members.join(','), log: mo29(s).log.map((x) => `${x.k}:${x.ok}:${x.t.pt}`).join('|') };
     };
     const x = run();
     expect(x.same).toBe(true);

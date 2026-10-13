@@ -12,7 +12,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { acceptOffer, evaluateOffer, expectedAdvance, makeOffer } from '../contracts';
+import { acceptOffer, evaluateOffer, expectedAdvance, makeOffer, pending29 } from '../contracts';
 import { actHasTrait, mainAmbition } from '../people';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, staffCount, staffSkill } from '../util';
@@ -217,6 +217,11 @@ export function acceptTheirs27(s: GameState, n: Nego27): Nego27 {
 /** Trazer um rival à mesa (ou ele chega sozinho): sobe o mínimo deles até um pouco acima do lance rival. */
 export function bringRival27(s: GameState, n: Nego27, asked = true): Nego27 {
   if (n.status !== 'open' || n.rival) return n;
+  if (s.acts[n.actId] && pending29(s, s.acts[n.actId])) { // R29 (integrante B): a banda ainda não existe — ninguém a disputa
+    if (asked) n.log.push({ who: 'note', t: l('Nenhum selo disputa uma banda que ainda está sendo montada.', 'No label bids on a band that is still being formed.') });
+    n.rivalAsked = asked || n.rivalAsked;
+    return n;
+  }
   const act = s.acts[n.actId];
   const r = rng27(s, n, 'rival');
   const labels = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 50000)).sort((a, b) => b.aggression - a.aggression || (a.id < b.id ? -1 : 1)).slice(0, 3);

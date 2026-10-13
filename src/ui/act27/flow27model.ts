@@ -14,6 +14,7 @@ import { l, type L } from '../../data/world';
 import { defaultAgenda, slotWeek } from '../../sim/agenda';
 import { composeBlock27 } from '../../sim/sys/compose27';
 import { playable27 } from '../../sim/sys/heist27';
+import { memberOffer29 } from '../../sim/sys/member29';
 import { negoGate27 } from '../../sim/sys/nego27';
 import { recordBlock27 } from '../../sim/sys/record27';
 import { playableShows27, showGate27, showKey27, venueName27 } from '../../sim/sys/show27';
@@ -261,7 +262,9 @@ registerActivity27({
 registerActivity27({
   id: 'nego', kind: 'screen', label: l('Negociação', 'Negotiation'),
   when: (s, o) => !!o.actId && !!s.acts[o.actId] && !negoGate27(s, o.actId),
-  important: (s, o) => (s.acts[o.actId ?? '']?.fame ?? 0) >= 15,
+  // R29 (integrante): a oferta a um integrante / pessoa sem banda (solo e banda em montagem) conta sempre como importante —
+  // "Só as importantes" abre a mesa; "Sempre rápido" (escolha explícita) continua resolvendo na proposta única
+  important: (s, o) => (s.acts[o.actId ?? '']?.fame ?? 0) >= 15 || memberOffer29(s, o.actId ?? ''),
   play: viaUi('nego'), quick: (_s, o) => (o.data?.classic as (() => void) | undefined)?.(),
 });
 registerActivity27({

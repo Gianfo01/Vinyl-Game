@@ -62,7 +62,8 @@ O feat de sempre trabalha com o ato (a banda) da pessoa, não com a pessoa sozin
 
 1. A opção cria um **solo-proposta**: um ato solo sem dono, com a pessoa (como na carreira solo paralela, ela continua na
    banda enquanto a proposta corre).
-2. A interface abre a **tela da oferta de sempre** (`openOffer`): a mesa r27 ou, no caminho rápido, a proposta única.
+2. A interface abre a **tela da oferta de sempre** (`openOffer`). É sempre a mesa r27, a menos que você tenha escolhido
+   "Sempre rápido" (aí é a proposta única). Veja "A mesa sempre" abaixo.
 3. A chance de aceitar é a de `evaluateOffer` mais os fatores da pessoa. Um gancho `registerOfferMod('member29')` só vale
    para o solo-proposta; a mesa mostra a linha "Deixar {banda}: …" com os três fatores mais fortes. A chance mostrada no
    menu (`soloChance29`) é a da proposta padrão na mesma curva de `evaluateOffer` (meio em 0,58); o teste confere que ela
@@ -108,7 +109,51 @@ O item "Oferecer a {nome}… ›" vem habilitado, com a nota "Sem banda: …". A
 | **Projeto paralelo** | bonds9, só o custo da produção conjunta |
 | **Equipe (produtor/A&R)** e **ghostwriter** | como para integrantes, sem a saída |
 | **Participação (feat)** | o feat de pessoa (featp29). As pessoas livres da formação real passam a contar como "em atividade" (`featPersonBlock29` aceita `rw.free29`) |
-| **Montar uma banda com {nome}…** | reaproveita `lineup16.newBand16`, o mesmo caminho dos músicos livres do mundo: a pessoa, até dois músicos livres do mercado (mesma família de gênero, outra função) e gente nova nas vagas que sobram. Custa as audições (US$ 800 da época, o mesmo valor do "Formar banda" da carreira de músico). A banda nasce **sem contrato** e a interface abre a proposta de sempre logo em seguida; sem acordo, ela segue independente |
+| **Montar uma banda com {nome}…** | uma **banda em montagem** (veja abaixo): a montagem de `lineup16.newBand16` (`buildBand16`, sem o anúncio), com a pessoa, até dois músicos livres do mercado (mesma família de gênero, outra função) e gente nova nas vagas que sobram. Custa as audições (US$ 800 da época, o mesmo valor do "Formar banda" da carreira de músico), pagas na hora e **perdidas sem acordo**. A banda só existe de verdade se o contrato fechar na mesa |
+
+### Banda em montagem (só existe se o contrato fechar)
+
+`startMemberBand29` monta a banda em um ato para a mesa: o `evaluateOffer` e a mesa r27 precisam de um ato em
+`s.acts`. O ato fica marcado como proposta (`mo29.sh`, `kind: 'band'`), sem dono e sem anúncio: `buildBand16` monta, e
+o anúncio de sempre (`announceBand16`, a memória `lineup`/`supergroup`) só sai no acordo. A banda não atravessa o tempo
+sem contrato. Fora da mesa aberta ela não existe para o mundo: paradas, olheiro e alvos de rivais rodam no avanço, e o
+avanço desfaz a banda primeiro.
+
+- **Reserva:** os músicos escolhidos estão na banda em montagem e saem do mercado de músicos livres
+  (`l16.free`). Assim, o `freeStep16` (solo, banda nova ou entrar noutra banda) e o substituto do `departNpc16` não os
+  alcançam enquanto a mesa está aberta.
+- **Sem rival:** `contracts.registerPending29` marca a banda em montagem.
+  - `resolveOne` não abre disputa nem "pede para pensar": a resposta sai na hora.
+  - `bringRival27` não traz rival: "Nenhum selo disputa uma banda que ainda está sendo montada".
+  - Sem rival na mesa, não há rival para levar a banda ao sair.
+- **Acordo:** `settleMember29` vê `owner === 'player'`. A banda vira ato de verdade (ativa, anunciada, fato
+  `member_band`) e passa a aparecer na carreira das pessoas.
+- **Sem acordo** (recusa, mesa fechada, proposta descartada ou a primeira semana que passar — o gancho semanal): a
+  banda some por inteiro:
+  - o ato, a proposta e a memória da mesa (nego27) somem;
+  - a **gente nova criada para as vagas é removida**: nunca teve passagem em lugar nenhum, então o connect29 não a vê;
+  - a turma volta ao mercado de músicos livres **como estava** (as mesmas entradas de `l16.free`), e as relações voltam
+    ao que eram;
+  - não fica ex-integrante, ato de carreira nem crônica, porque não houve anúncio;
+  - fica a espera de 8 semanas para tentar de novo, e as audições ficam pagas.
+- **Pensar ou contraproposta na proposta única ("Sempre rápido"):** a banda em montagem não pede para pensar (resposta
+  na hora). Uma contraproposta tem que ser aceita no próprio formulário; ao fechar sem aceitar, a banda se desfaz.
+
+### A mesa sempre (flow27)
+
+O pedido do autor: as ofertas a integrante e a pessoa sem banda abrem sempre a mesa de negociação r27.
+
+O caminho continua um só: a atividade `nego` do flow27 (`ui/act27/flow27model.ts`) decide. A importância dela agora vale
+`fama ≥ 15 || memberOffer29(ato)`, em que `memberOffer29` é verdadeiro para o solo-proposta (de integrante ou de pessoa
+sem banda) e para a banda em montagem. Com isso:
+
+- em "Só as importantes" (o padrão), essas ofertas abrem a **mesa**, mesmo com fama baixa;
+- em "Todas jogáveis", também abrem a mesa;
+- em "Sempre rápido", a escolha explícita do jogador vale: vão para a proposta única, que é o caminho rápido de dentro
+  da mesma tela.
+
+Entrar ou substituir numa banda sua não tem contrato novo (a pessoa entra no contrato do seu ato), então não passa pela
+mesa.
 
 O "Formar banda" da carreira de músico (`life.startProject`) monta uma banda em volta do **seu personagem**, não de
 outra pessoa. Por isso o caminho reaproveitado é o `newBand16`.
@@ -245,6 +290,12 @@ Todas são aditivas, e o comportamento antigo ficou igual:
 - (B) `sim/sys/lineup16.ts`: `freePool` exportada;
 - (B) `sim/sys/featp29.ts`: a pessoa livre da formação real (`rw.free29`) conta como em atividade para o feat de pessoa;
 - (B) `sim/sys/connect29.ts`: chave do cache com `actsVersion17`;
+- (C) `sim/sys/lineup16.ts`: `newBand16` dividida em `buildBand16` (montagem) e `announceBand16` (memória); `newBand16`
+  continua igual (montar + anunciar, mesmo consumo de RNG);
+- (C) `sim/contracts.ts`: `registerPending29`/`pending29`; `resolveOne` sem disputa de rival e sem "pensar" para a banda
+  em montagem;
+- (C) `sim/sys/nego27.ts`: `bringRival27` não traz rival para a banda em montagem;
+- (C) `ui/act27/flow27model.ts`: a importância da atividade `nego` inclui `memberOffer29`;
 - `ui/ps/ctx27model.ts` e `ui/ps/ctx27.ts`:
   - item `person.offer29`;
   - submenu `mo29:<pessoa>`;
@@ -278,8 +329,8 @@ Todas são aditivas, e o comportamento antigo ficou igual:
     - montar uma banda;
     - sessão, projeto paralelo e ghostwriter;
     - feat (desabilitado com o motivo).
-13. `13-sem-banda-mesa-do-solo`: a tela da oferta de sempre para o solo. Para um ato de fama baixa, com "Só as
-    importantes" ligado, é a proposta única; acima disso, a mesa r27.
+13. `13-sem-banda-mesa-do-solo`: a mesa r27 para o solo de quem não tem banda (fama baixa, "Só as importantes").
+14. `14-banda-em-montagem-mesa`: a mesa r27 para a banda em montagem (sem rival na disputa).
 
 As capturas 11 a 13 saem de `scripts/shots29member-b.mjs`.
 
@@ -293,7 +344,5 @@ A partida rápida sorteia o mundo, então os nomes mudam de uma captura para out
 - A participação (feat) é do ato da pessoa (a banda), como no feats8. Não existe feat de uma pessoa sem a banda.
 - Projeto paralelo: o supergrupo nasce sem contrato, como no bonds9. A interface abre a proposta para ele logo depois.
 - O bot não usa a oferta a integrante.
-- Sem banda, "Montar uma banda" cria a banda na hora (ela existe mesmo se a proposta de contrato não fechar), como o
-  supergrupo do bonds9.
 - O feat de pessoa (featp29) continua bloqueando ("fora de atividade") o músico sem banda que saiu do mercado de
   músicos livres há mais de 48 meses e não está em `rw.free29`. As outras opções valem para ele.

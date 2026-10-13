@@ -63,4 +63,13 @@ await snap('12-sem-banda-submenu');
 const solo = p.locator('.cx27 [data-act="mo.solo:free"]').first();
 if (await solo.count()) { await solo.click(); await p.waitForTimeout(1500); }
 await snap('13-sem-banda-mesa-do-solo');
+// fecha a mesa sem acordo (o solo-proposta some) e monta uma banda em volta da pessoa: a mesa de sempre, sem rival
+await p.keyboard.press('Escape'); await p.waitForTimeout(600);
+await p.evaluate(async (pid) => { document.querySelectorAll('.overlay, .scene-overlay, [data-ctx27]').forEach((e) => e.remove()); const st = await import('/src/ui/store.ts'); const c = await import('/src/ui/ps/ctx27.ts'); c.openCtx27(st.store.game, 'person', `mo29:${pid}`, document.querySelector('main h2, main h1') ?? document.body, { x: 420, y: 140 }); }, info.pid);
+await p.waitForTimeout(700);
+const band = p.locator('.cx27 [data-act="mo.band"]').first();
+if (await band.count()) { await band.click(); await p.waitForTimeout(1500); }
+const riv = p.getByRole('button', { name: /Chamar um rival/ }).first();
+if (await riv.count()) { await riv.click(); await p.waitForTimeout(500); }
+await snap('14-banda-em-montagem-mesa');
 await b.close();

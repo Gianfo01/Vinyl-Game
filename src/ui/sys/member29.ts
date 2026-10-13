@@ -8,7 +8,7 @@
 //    o projeto paralelo, quando nasce, abre a proposta de contrato do supergrupo (como no bonds9).
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { bandOf29, memberFeatPreset29, runMemberOption29, settleMember29, startMemberSolo29, type MoMode29 } from '../../sim/sys/member29';
+import { bandOf29, memberFeatPreset29, runMemberOption29, settleMember29, startMemberBand29, startMemberSolo29, type MoMode29 } from '../../sim/sys/member29';
 import type { GameState } from '../../sim/types';
 import { rerender, toast } from '../common';
 import { openOffer } from '../ficha';
@@ -29,6 +29,13 @@ export function runMember29(s: GameState, pid: string, itemId: string): void {
     openOffer(r.actId);
     return;
   }
+  if (itemId === 'mo.band') { // R29 B: banda em montagem → a mesa de sempre; só vira ato de verdade se fechar
+    const r = startMemberBand29(s, pid);
+    if (!('actId' in r)) { toast(t(r), 'bad'); return; }
+    toast(t(l('Banda em montagem: fechou, ela existe e assina com você; sem acordo, desfaz (as audições ficam pagas).', 'Band being formed: if the deal closes it exists and signs with you; no deal, it dissolves (the auditions stay paid).')), 'info');
+    openOffer(r.actId);
+    return;
+  }
   if (itemId === 'mo.feat') {
     // R29 (feat de pessoa): a convidada é a PESSOA (não a banda) — carregado sob demanda (não muda a ordem de registro)
     if (s.persons[pid]) void import('./round8').then((m) => m.openFeatModal(s, memberFeatPreset29(s, pid)));
@@ -37,5 +44,5 @@ export function runMember29(s: GameState, pid: string, itemId: string): void {
   const out = runMemberOption29(s, pid, itemId);
   toast(t(out.text), out.ok ? 'good' : 'bad');
   rerender();
-  if (out.ok && (itemId.startsWith('mo.side:') || itemId === 'mo.band') && out.actId && s.acts[out.actId] && !s.acts[out.actId].owner) setTimeout(() => openOffer(out.actId!), 0);
+  if (out.ok && itemId.startsWith('mo.side:') && out.actId && s.acts[out.actId] && !s.acts[out.actId].owner) setTimeout(() => openOffer(out.actId!), 0);
 }
