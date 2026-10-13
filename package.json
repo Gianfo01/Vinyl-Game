@@ -13,7 +13,8 @@
     "balance": "tsx tools/balance19.ts",
     "balance:quick": "tsx tools/balance19.ts --quick",
     "balance:full": "tsx tools/balance19.ts --full",
-    "geo": "tsx tools/build-geo.ts"
+    "geo": "tsx tools/build-geo.ts",
+    "people27": "python3 tools/pack-people27.py"
   },
   "devDependencies": {
     "@fontsource/barlow-semi-condensed": "^5.3.0",

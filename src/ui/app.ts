@@ -90,7 +90,9 @@ import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em n
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
 registerPortrait((p, size) => {
   const img = document.createElement('img');
-  img.src = portraitDataUrl(p, 64, store.game?.year ?? 1960);
+  // r27 (CHAR): o busto real sai no tamanho exato em pixels de tela (escala inteira, sem borrar) e chega quando a folha carrega
+  const dpr = Math.min(3, Math.max(1, Math.round(window.devicePixelRatio || 1)));
+  img.src = portraitDataUrl(p, 64, store.game?.year ?? 1960, (u) => { img.src = u; }, size * dpr);
   img.width = size;
   img.height = size;
   img.alt = p.name;
