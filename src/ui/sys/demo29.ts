@@ -17,7 +17,6 @@ import { playerActs } from '../../sim/util';
 import { N, pill, rerender, section } from '../common';
 import { h, select } from '../dom';
 import { why18 } from '../explain18';
-import { T } from '../help18';
 import { K28 as K, OUT28, pxImg28 } from '../pixel/art28kit';
 import { drawText } from '../pixel/font';
 import { flagImg29 } from '../pixel/geo29';
@@ -174,10 +173,6 @@ export function audLine29(s: GameState, a: Act, aud: string): HTMLElement {
       ? t(l('Fãs fiéis: o disco fala com quem já está aqui (a idade do público não muda).', 'Core fans: the record speaks to those already here (audience age stays).'))
       : t(l('Mira {b}: hoje {p} do público de {a} está nessas faixas. Mirar onde o público está rende agora; mirar fora puxa gente nova dessas idades.', 'Aims at {b}: today {p} of {a}\'s audience is in those bands. Aiming where the audience is pays now; aiming elsewhere pulls new fans of those ages.'), { b: names, p: pc(share), a: a.name }));
 }
-
-T('*', 'demo29', ['Público por idade e região', 'Audience by age and region'],
-  ['Fatias do público por faixa (13–17, 18–24, 25–34, 35–49, 50+) e por mercado/país, somando o total de fãs; as faixas envelhecem a cada ano.', 'Audience shares by band (13–17, 18–24, 25–34, 35–49, 50+) and by market/country, adding up to the fan total; bands age every year.'],
-  ['Público velho compra vinil e paga ingresso caro; jovem vai de single, streaming e vídeo curto. Uma redescoberta por vídeo curto traz filhos; um comercial de TV traz a geração original.', 'Older audiences buy vinyl and pay for pricey tickets; the young go for singles, streaming and short video. A short-video rediscovery brings the kids; a TV ad brings back the original generation.']);
 
 // ---------------------------------------------------------------- Mapa: fãs por idade (camada do painel Mundo)
 
