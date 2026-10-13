@@ -303,6 +303,10 @@ def face_paint(c, kind, skin, cx=47, cy=29, colr=None):
     elif kind == 'mask':
         m = face & (c.yy > ey + 2.5)
         c.shape(m, _col(colr, '#141016'), r=2)
+    elif kind == 'bolt':
+        pts = [(cx - 6, cy - 8), (cx - 9, cy - 1), (cx - 5, cy - 1), (cx - 9, cy + 7)]
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+            c.line(x0, y0, x1, y1, '#d83030'); c.line(x0 + 1, y0, x1 + 1, y1, '#3a7ad8')
     elif kind == 'eyeliner':
         for x in (cx - 10, cx - 9, cx - 3, cx - 2, cx - 1, cx, cx + 1):
             c.px(x, ey - 1, INK)
@@ -313,6 +317,19 @@ def split_facial(c, colr, color2, cx=47, cy=29):
     m1, m2 = c.m(colr), c.m(color2)
     k = (c.mat == m1) & (c.yy > cy + 4) & (c.yy < cy + 16) & (c.xx >= cx - 4.5) & (c.xx < cx + 9)
     c.mat[k] = m2
+
+
+def roots(c, colr, root_col, depth=19):
+    """Raiz de outra cor: recolore o alto do cabelo (y < depth)."""
+    m1, m2 = c.m(colr), c.m(root_col)
+    k = (c.mat == m1) & (c.yy < depth)
+    c.mat[k] = m2
+
+
+def twintails(c, colr, cx=47, length=58):
+    for side, x0 in ((-1, cx - 11), (1, cx + 12)):
+        c.shape(c.cap([(x0, 18), (x0 + side * 5, 34), (x0 + side * 3, length)], 3.2, 2.2), colr, r=3, spec=True)
+        c.shape(c.ell(x0, 17, 2.4, 2.2), '#d83a6a', r=1, spec=True)
 
 
 def split_hair(c, colr, color2, side='right', cx=47):

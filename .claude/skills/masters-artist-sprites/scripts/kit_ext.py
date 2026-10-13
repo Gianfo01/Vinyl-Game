@@ -214,6 +214,10 @@ def top(c, t, build, skin, rng, torso_shape, pattern):
         for y in range(54, 88, 6):
             c.px(48, y, (tc, 1)); c.px(49, y, (tc, 4))
         c.line(48, 52, 48, 88, (tc, 2))
+        if t.get('tie') in ('tie', 'loose'):
+            tcol = _col(t.get('tie_color'), '#8a2430')
+            c.shape(c.poly([(46.5, 49), (50, 49), (49.5, 52), (47, 52)]), tcol, r=1)
+            c.shape(c.poly([(47, 52), (49.5, 52), (50.5, 66), (48.5, 69), (46.5, 65)]), tcol, r=2)
         return True
     if st == 'open_shirt':
         pattern(c, t, torso, rng)

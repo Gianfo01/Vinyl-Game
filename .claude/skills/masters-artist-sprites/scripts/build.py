@@ -129,6 +129,8 @@ def build(spec):
     if fa == 'mic_stand':
         kit.vintage_mic(c)
     kit.hair_back(c, hair, rng)
+    if hair.get('twintails'):
+        kit_more.twintails(c, hair_col, length=hair.get('twintails') if isinstance(hair.get('twintails'), (int, float)) and hair.get('twintails') > 30 else 58)
     if spec.get('cape'):
         kit.cape(c, spec['cape'])
 
@@ -230,6 +232,8 @@ def build(spec):
     if spec.get('earrings'):
         kit.earrings(c, spec['earrings'], skin)
     kit.hair_front(c, hair, hat.get('style'))
+    if hair.get('roots'):
+        kit_more.roots(c, hair_col, hair['roots'])
     if hair.get('color2'):
         kit_more.split_hair(c, hair_col, hair['color2'], hair.get('split', 'right'))
     kit.hat(c, hat, rng)

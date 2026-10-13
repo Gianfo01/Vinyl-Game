@@ -108,7 +108,9 @@ Peça nova vai para `kit_ext.py` (reutilizável), nunca para um artista só. Dep
   shawl, bare_chest; bottom `kilt` (`plaid`, `socks`). `jumpsuit` aceita `belt: "none"`; `dress` aceita `pattern`.
 - rosto: `face.paint`: skull | kiss_star | kiss_cat | white | mask | eyeliner (`paint_color` para a máscara);
   `face.facial` aceita lista (`["mustache", "goatee"]`) e `facial_color2` (bigode bicolor);
-  `glasses: thick` (aro grosso); `hair.color2` + `hair.split: right|left` (cabelo bicolor).
+  `glasses: thick` (aro grosso); `hair.color2` + `hair.split: right|left` (cabelo bicolor); `hair.roots: "#hex"`
+  (raiz de outra cor); `hair.twintails: true` (maria-chiquinhas); `face.paint: bolt` (raio do Aladdin Sane);
+  `top.style: shirt` aceita `tie`.
 
 **Cabelos (23 do jogo + extras):** bald, short, fringe, buzz, pompadour, bowl, afro, long, wavy_long, ponytail, bun,
 mohawk, curly, bob, spiky, dreads, mullet, bouffant, slick, long_fringe, curls_long, braids, pixie, flattop, cropped.
