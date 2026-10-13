@@ -15,6 +15,9 @@ Nada de gerador de imagem externo.
 | `scripts/kit_ext.py` | catálogo estendido: 15 cabelos extras, 12 roupas extras, estampas |
 | `scripts/build.py` | monta uma **ficha** (JSON) na ordem fixa de camadas; braços e poses |
 | `scripts/looks.py` | converte os tokens de aparência do jogo em ficha (rascunho automático, 1:1 nos 23 cabelos) |
+| `scripts/auto.py` | rascunho para **todas** as pessoas reais do jogo (`data/people.json`): pose/instrumento pelo papel, figurino pela cena e época |
+| `data/people.json` | 2.888 pessoas reais (papel, gênero, família, estreia, nascimento, fama, país, atos) — gere de novo com `npx tsx tools/dump-people.ts .claude/skills/masters-artist-sprites/data/people.json` |
+| `specs/lotes/` | fichas de todos os personagens em JSONL (`lote_NN.jsonl`, uma por linha) |
 | `scripts/render.py` | CLI de renderização (sprite, busto, folha de revisão) |
 | `scripts/catalog.py` | folha com todos os cabelos e roupas, para escolher peças |
 | `specs/` | 17 fichas pesquisadas de referência · `reference/` folha do estilo e dos exemplos |
@@ -33,6 +36,9 @@ Dependências: `pip install pillow numpy` (Python 3.10+).
 
 ## Fluxo para produzir em escala
 
+0. **Todos os personagens**: `python3 auto.py --repo ../../../.. --out ../specs/rascunhos.jsonl` gera um rascunho por pessoa
+   (2.888). Divida em lotes (bandas juntas) e revise pessoa a pessoa (passos 2–4); o resultado vai para `specs/lotes/`.
+   `render.py` aceita `.jsonl` e gera folhas de 40 (`_sheet.png`, `_sheet_2.png`, …).
 1. **Rascunho em massa** (segundos) para todo artista que já tem visual no jogo:
    ```bash
    cd .claude/skills/masters-artist-sprites/scripts
@@ -99,7 +105,9 @@ gown, crop. Veja `python3 catalog.py --out /tmp/cat`.
 
 **Poses:** `mic_stand` (microfone de fita de latão), `hand_mic` (mão no microfone + braço aberto), `guitar` /
 `guitar_lefty` (exigem `prop`), `trumpet`, `raise_stand` (pedestal erguido), `hat_tip` (mão na aba), `arm_up`, `hip`,
-`pocket`, `stand`. No desenho, o braço da esquerda da imagem é o "da frente".
+`pocket`, `stand`, `bass`, `sax`, `violin`, `accordion`, `drums` (baquetas, sem prop), `keytar`. No desenho, o braço da esquerda
+da imagem é o "da frente". `prop.type`: acoustic, electric (`shape: lp`), bass, trumpet, sax, violin, accordion, keytar.
+Acessórios: `"headphones": "#hex"` (DJ/produtor), `"chain": "#hex"` + `"chain_big": true` (MC).
 
 ## Regras do estilo (não quebrar)
 

@@ -59,7 +59,10 @@ def main():
     specs = []
     for p in a.specs:
         with open(p, encoding='utf-8') as fh:
-            specs.append(json.load(fh))
+            if p.endswith('.jsonl'):
+                specs.extend(json.loads(l) for l in fh if l.strip())
+            else:
+                specs.append(json.load(fh))
     if a.looks or a.looks_all:
         table = looks.load(a.repo)
         req = [(n, None) for n in sorted(table)] if a.looks_all else [tuple(x.split('@')) if '@' in x else (x, None) for x in a.looks]
@@ -83,8 +86,10 @@ def main():
             with open(os.path.join(a.out, 'specs', fn + '.json'), 'w', encoding='utf-8') as fh:
                 json.dump(s, fh, ensure_ascii=False, indent=2)
         items.append((s['name'], s.get('year', ''), im))
-    if not a.no_sheet and len(items) <= 60:
-        sheet(items, os.path.join(a.out, '_sheet.png'), a.scale)
+    if not a.no_sheet:
+        # folhas de até 40 por arquivo (_sheet.png, _sheet_2.png, …)
+        for k in range(0, len(items), 40):
+            sheet(items[k:k + 40], os.path.join(a.out, '_sheet.png' if k == 0 else f'_sheet_{k // 40 + 1}.png'), a.scale)
     print(f'{len(items)} sprites em {a.out}')
 
 

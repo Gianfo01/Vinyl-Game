@@ -327,3 +327,94 @@ def pattern(c, t, mask, rng):
             k = int((y - top_) / max(1, (bot - top_ + 1)) * 3)
             c.pxa(x, y, (bands[min(k, 2)], 3 if x < 50 else 2))
     return True
+
+
+# ------------------------------------------------------------------ instrumentos e acessórios extras
+BRASS = '#c09048'
+CHROME = '#a8acb8'
+
+
+def bass(c, p, frame_cls, col):
+    """Baixo elétrico (estilo Precision): corpo como a Strat, braço mais longo, 4 cordas."""
+    f = frame_cls(50, 82, -38)
+    bc = col(p.get('body'), '#2a2a34')
+    body = (c.poly(f.ell(-1, 0, 11, 10)) | c.poly(f.ell(8, -6, 4.5, 3.4)) | c.poly(f.ell(6, 6, 3.8, 3.2))
+            | c.poly(f.poly([(-2, -8.5), (8, -8.5), (10, -6), (6, 0)])))
+    c.shape(body, bc, r=4, spec=True)
+    c.shape(c.poly(f.poly([(-5, 2), (-3, -6), (6, -6), (8, 3), (2, 7), (-4, 6)])), col(p.get('guard'), '#ece4d4'), r=1)
+    c.shape(c.poly(f.poly([(1, -3.5), (3, -3.5), (3, 3.5), (1, 3.5)])), '#1e1a1e', r=1)
+    c.shape(c.poly(f.poly([(-7, -3.5), (-5.5, -3.5), (-5.5, 3.5), (-7, 3.5)])), CHROME, r=1, spec=True)
+    nk = col(p.get('neck'), '#e0b070')
+    c.shape(c.poly(f.poly([(10, -1.9), (45, -1.6), (45, 1.6), (10, 1.9)])), nk, r=1, spec=True)
+    c.shape(c.poly(f.poly([(45, -2.2), (52, -2.8), (52, 2.8), (45, 2.2)])), nk, r=2, spec=True)
+    for v in (-1.2, -0.4, 0.4, 1.2):
+        a = f.pt(-6, v * 1.3); b = f.pt(45, v)
+        c.line(a[0], a[1], b[0], b[1], (CHROME, 4))
+    a = f.pt(10, -2)
+    c.shape(c.cap([a, (60, 50)], 0.9), col(p.get('strap'), '#3a2418'), r=1)
+    return f
+
+
+def sax(c, p, col):
+    b = col(p.get('color'), BRASS)
+    c.shape(c.cap([(42, 38), (46, 44), (48, 58), (47, 72), (43, 79)], 1.4, 3.4), b, r=2, spec=True)
+    c.shape(c.ell(38.5, 77, 4.5, 3.5, ang=-20), b, r=2, spec=True)
+    c.shape(c.ell(38.5, 77, 2.6, 1.8, ang=-20), '#3a2410', r=1, lvl=1)
+    for y in (52, 56, 60, 64, 68):
+        c.px(46, y, (b, 5)); c.px(47, y + 1, (b, 2))
+    c.shape(c.cap([(42, 38), (40.5, 36.5)], 0.8), '#1a1416', r=1)
+
+
+def violin(c, p, col):
+    w = col(p.get('color'), '#a0481c')
+    c.shape(c.ell(37, 45, 6.5, 4.6, ang=-28), w, r=3, spec=True)
+    c.shape(c.ell(33, 47, 3.6, 3.2, ang=-28), w, r=2, spec=True)
+    c.shape(c.cap([(31, 49), (19, 56)], 1.1), '#1e1412', r=1)
+    c.shape(c.ell(18, 57, 1.6, 1.6), '#1e1412', r=1)
+    c.px(36, 45, '#1e1412'); c.px(38, 44, '#1e1412')
+    c.shape(c.cap([(58, 72), (30, 40)], 0.6), '#d8c8a0', r=1)
+
+
+def accordion(c, p, col):
+    a = col(p.get('color'), '#a83030')
+    c.shape(c.rect(36, 60, 44, 82), a, r=3, spec=True)
+    c.shape(c.rect(54, 60, 61, 82), a, r=3, spec=True, bias=-0.1)
+    c.shape(c.rect(44, 61, 54, 81), '#2a2228', r=2)
+    for x in range(45, 54, 2):
+        c.line(x, 61, x, 80, ('#e8e0d0', 3))
+    for y in range(62, 80, 3):
+        c.px(38, y, '#f4f0e6'); c.px(40, y + 1, '#f4f0e6')
+    for y in (63, 68, 73, 78):
+        c.px(57, y, ('#d0a040', 5))
+
+
+def keytar(c, p, col):
+    from kit import Frame
+    f = Frame(48, 76, -18)
+    bc = col(p.get('body'), '#e8e4dc')
+    c.shape(c.poly(f.poly([(-12, -5), (8, -5), (12, 0), (8, 5), (-12, 5)])), bc, r=3, spec=True)
+    for u in range(-11, 7, 2):
+        x, y = f.pt(u, 1)
+        c.px(x, y, '#f8f6f0'); x2, y2 = f.pt(u + 1, -1)
+        c.px(x2, y2, '#1e1a1e')
+    c.shape(c.poly(f.poly([(8, -1.5), (24, -1.2), (24, 1.2), (8, 1.5)])), '#2a2830', r=1, spec=True)
+
+
+def drumsticks(c, hands, col):
+    for (hx, hy), (tx, ty) in hands:
+        c.shape(c.cap([(hx, hy), (tx, ty)], 0.8), '#d8b880', r=1, spec=True)
+
+
+def headphones(c, colr, cx=47, cy=29):
+    band = c.ell(cx + 1, cy - 2, 12.5, 13) & ~c.ell(cx + 1, cy - 2, 11, 11.5) & (c.yy < cy - 4)
+    c.shape(band, colr, r=1, spec=True)
+    c.shape(c.ell(cx + 10.5, cy + 2, 3, 4), colr, r=2, spec=True)
+    c.shape(c.ell(cx - 11.5, cy + 1, 1.6, 3.4), colr, r=1, bias=-0.1)
+
+
+def chain(c, colr, big=False):
+    for x in range(42, 55):
+        y = 50 + (6 - abs(x - 48)) * (0.9 if big else 0.6)
+        c.px(x, y, (colr, 5 if x % 2 else 3))
+    if big:
+        c.shape(c.ell(48, 58, 2.6, 3), colr, r=2, spec=True)

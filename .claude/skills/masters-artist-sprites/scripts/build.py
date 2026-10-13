@@ -2,6 +2,7 @@
 import numpy as np
 from px import Canvas
 import kit
+import kit_ext
 from kit import col, hand
 
 # braços: caminho ombro→cotovelo→ponta, mão, camada
@@ -15,6 +16,11 @@ FRONT = {
     'raise_stand': dict(path=[(34, 52), (27, 38), (27, 21)], hand=(26.5, 19.5)),
     'hat_tip':     dict(path=[(36, 52), (24, 40), (31, 22)], hand=(31.5, 20.5), after_hat=True),
     'raise_hand':  dict(path=[(35, 56), (27, 45), (30, 30)], hand=(31, 28)),
+    'sax':         dict(path=[(34, 52), (38, 66), (45, 62)], hand=(46, 62)),
+    'violin':      dict(path=[(34, 52), (26, 60), (21, 55)], hand=(20.5, 55.5)),
+    'squeeze':     dict(path=[(34, 52), (31, 64), (37, 70)], hand=(37.5, 71)),
+    'stick':       dict(path=[(34, 52), (31, 68), (38, 73)], hand=(39, 73)),
+    'keys':        dict(path=[(34, 52), (32, 68), (40, 75)], hand=(41, 75)),
 }
 BACK = {
     'hang':         dict(path=[(62, 51), (64, 67), (62, 80)], hand=(62, 83), behind=True),
@@ -24,6 +30,11 @@ BACK = {
     'fret':         dict(path=[(62, 51), (68, 64), (72, 56)], hand='fret', behind=True),
     'strum_left':   dict(path=[(62, 52), (63, 70), (54, 80)], hand=(52, 81), behind=False),
     'handkerchief': dict(path=[(62, 51), (66, 67), (64, 80)], hand=(64, 82), behind=True, kerchief=True),
+    'sax':          dict(path=[(62, 51), (58, 68), (49, 73)], hand=(48, 73), behind=False),
+    'bow':          dict(path=[(62, 51), (64, 66), (57, 70)], hand=(56, 70), behind=False),
+    'squeeze':      dict(path=[(62, 51), (64, 64), (60, 70)], hand=(59.5, 71), behind=False),
+    'stick':        dict(path=[(62, 51), (66, 66), (60, 74)], hand=(59, 75), behind=True),
+    'keys':         dict(path=[(62, 51), (64, 66), (57, 72)], hand=(56, 72), behind=False),
 }
 POSES = {  # pose → (braço da frente, braço de trás)
     'stand': ('hang', 'hang'),
@@ -37,6 +48,12 @@ POSES = {  # pose → (braço da frente, braço de trás)
     'raise_stand': ('raise_stand', 'hip'),
     'hat_tip': ('hat_tip', 'hang'),
     'arm_up': ('raise_hand', 'hip'),
+    'bass': ('strum', 'fret'),
+    'sax': ('sax', 'sax'),
+    'violin': ('violin', 'bow'),
+    'accordion': ('squeeze', 'squeeze'),
+    'drums': ('stick', 'stick'),
+    'keytar': ('keys', 'keys'),
 }
 
 
@@ -118,6 +135,8 @@ def build(spec):
     kit.legs(c, bottom, shoes, build_)
     c.shape(c.rect(43.5, 36, 52.5, 51) if female else c.rect(43, 36, 53, 49), skin, r=3, bias=-0.35)
     kit.top(c, t, build_, skin, rng)
+    if spec.get('chain'):
+        kit_ext.chain(c, spec['chain'], big=spec.get('chain_big', False))
     if spec.get('necklaces'):
         kit.necklaces(c, spec['necklaces'])
 
@@ -130,6 +149,16 @@ def build(spec):
         frame = kit.electric(c, prop, *((48, 80, 212) if lefty else (50, 80, -35)), lefty=lefty)
     elif ptype == 'trumpet':
         kit.trumpet(c)
+    elif ptype == 'bass':
+        frame = kit_ext.bass(c, prop, kit.Frame, col)
+    elif ptype == 'sax':
+        kit_ext.sax(c, prop, col)
+    elif ptype == 'violin':
+        kit_ext.violin(c, prop, col)
+    elif ptype == 'accordion':
+        kit_ext.accordion(c, prop, col)
+    elif ptype == 'keytar':
+        kit_ext.keytar(c, prop, col)
     if B['hand'] == 'fret' and frame:
         hand(c, skin, *frame.pt(31, -3.2), 3.0)
     if not B['behind']:
@@ -171,6 +200,10 @@ def build(spec):
         kit.earrings(c, spec['earrings'], skin)
     kit.hair_front(c, hair, hat.get('style'))
     kit.hat(c, hat, rng)
+    if spec.get('headphones'):
+        kit_ext.headphones(c, spec['headphones'])
     if F.get('after_hat'):
         front_arm()
+    if ptype == 'drumsticks' or spec.get('pose') == 'drums':
+        kit_ext.drumsticks(c, [((40, 72), (31, 58)), ((58, 74), (68, 60))], col)
     return c
