@@ -24,12 +24,12 @@ export function x29Fields(_s: GameState, o: Pick<Offer, 'model' | 'termMonths'> 
   const num = (label: L, value: number, min: number, max: number, step: number, set: (v: number) => void) =>
     h('label', null, T(label), h('input', { type: 'number', value, min, max, step, oninput: (e: Event) => { set(Number((e.target as HTMLInputElement).value)); onChange(); } }));
   if (o.model === 'management') {
-    return h('div', { class: 'x29-fields row wrap' },
+    return h('div', { class: 'x29-fields', style: 'display:contents' },
       num(l('Comissão do empresário (%)', 'Manager commission (%)'), Math.round(commissionOf29(o) * 100), COMMISSION29.min * 100, COMMISSION29.max * 100, 1, (v) => { o.x29 = { ...o.x29, commission: v / 100 }; }),
       h('small', { class: 'muted' }, T(l('10–25%. Abaixo de 15% agrada; acima de 20% pesa contra.', '10–25%. Below 15% pleases; above 20% counts against.'))));
   }
   if (o.model === 'jv') {
-    return h('div', { class: 'x29-fields row wrap' },
+    return h('div', { class: 'x29-fields', style: 'display:contents' },
       num(l('Participação do artista no selo (%)', 'Artist stake in the label (%)'), Math.round(shareOf29(o) * 100), SHARE29.min * 100, SHARE29.max * 100, 1, (v) => { o.x29 = { ...o.x29, artistShare: v / 100 }; }),
       num(l('Meta de lançamentos no prazo', 'Release target over the term'), targetOf29(o), TARGET29.min, TARGET29.max, 1, (v) => { o.x29 = { ...o.x29, target: v }; }),
       h('small', { class: 'muted' }, T(l('O adiantamento vira o capital do selo. Meta acima de 1 lançamento a cada 9 meses assusta.', 'The advance becomes the label\'s capital. A target above 1 release every 9 months scares them.'))));

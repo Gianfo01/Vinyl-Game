@@ -88,6 +88,9 @@ export const targetOf29 = (o: { x29?: OfferX29 }): number => Math.round(clamp01(
 
 /** Ajusta a proposta ao trocar de modelo (padrões de cada um; o resto fica como estava). */
 export function applyModel29(o: Omit<Offer, 'id' | 'week' | 'status'>, model: ContractModel): void {
+  const prev = o.model;
+  // luvas do empresário são pequenas e a produtora adianta menos que um selo (mesma régua de advFactor29)
+  if (prev !== model) o.advance = Math.round(o.advance * advFactor29(model) / advFactor29(prev) / 100) * 100;
   o.model = model;
   if (model === 'management') { o.x29 = { commission: o.x29?.commission ?? COMMISSION29.def }; o.publishing = false; o.share360 = 0; o.creativeControl = true; o.releasesOwed = 1; }
   else if (model === 'production') { o.x29 = undefined; o.royalty = Math.max(o.royalty, PROD_SPLIT29); o.publishing = false; o.share360 = 0; }
@@ -151,3 +154,9 @@ export const HOW29: Partial<Record<ContractModel, L>> = {
   jv: l('Um selo novo (subselo) com o artista de sócio: o adiantamento vira o capital do selo, o lucro do ano é dividido pela participação, a meta de lançamentos vale no prazo. Você pode comprar a parte do artista ou dissolver (com multa se a meta não estiver cumprida).',
     'A new label (sub-label) with the act as partner: the advance becomes the label\'s capital, the yearly profit is split by stake, the release target counts over the term. You may buy out the act\'s stake or dissolve (with a penalty if the target is not met).'),
 };
+
+/** O contrato de empresariamento vigente do jogador com este ato (ou undefined). */
+export function mgmtOf29(s: GameState, actId: string): Contract | undefined {
+  for (const id in s.contracts) { const c = s.contracts[id]; if (c.actId === actId && c.model === 'management' && c.party === 'player' && active29(s, c)) return c; }
+  return undefined;
+}

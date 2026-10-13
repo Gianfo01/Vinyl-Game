@@ -73,7 +73,6 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       ...CONTRACT_MODELS.filter((m) => m.available).map((m) => { const el = m.id === o.model ? { ok: true } : offerEligible29(s, act, m.id); return h('option', { value: m.id, selected: m.id === o.model, disabled: !el.ok, title: el.ok ? undefined : t(el.why ?? l('Indisponível.', 'Unavailable.')) }, t(m.name)); })));
     const fields = h('div', { class: 'n27-fields' },
       model29,
-      isSpecial29(o.model) ? h('p', { class: 'small muted' }, t(HOW29[o.model]!)) : null,
       h('label', null, t(l('Adiantamento ($)', 'Advance ($)')), num(Math.round(o.advance / 100), 100, (v) => { o.advance = Math.max(0, Math.round(v * 100)); live(); })),
       o.model === 'management' || o.model === 'jv'
         ? x29Fields(s, o, () => live())
@@ -116,7 +115,7 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close')))) : null;
     root.replaceChildren(
       h('div', { class: 'n27-cols' },
-        h('div', null, h('h4', null, t(l('Sua proposta', 'Your offer'))), fields, proms, thermoBox, theirs, tactics, end),
+        h('div', null, h('h4', null, t(l('Sua proposta', 'Your offer'))), isSpecial29(o.model) ? h('p', { class: 'small muted' }, t(HOW29[o.model]!)) : null, fields, proms, thermoBox, theirs, tactics, end),
         h('div', null, h('h4', null, t(l('O que você sabe', 'What you know'))), know, h('h4', null, t(l('Mesa', 'Table'))), logView(n.log))),
     );
     if (!open) (root.querySelector('.n27-end button') as HTMLElement | null)?.focus();

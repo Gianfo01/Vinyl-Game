@@ -43,8 +43,8 @@ function rightsOverview(s: GameState): HTMLElement {
         h('tbody', null, deals.slice(0, 40).map((c) => {
           const rw = revertWeek(c);
           const active = isSpecial29(c.model) ? active29(s, c) : c.endWeek > s.week && s.acts[c.actId]?.contractId === c.id; // R29: empresariamento não é o contrato do ato
-          return h('tr', null, h('td', null, actLink(s, c.actId)), h('td', { title: isSpecial29(c.model) ? t(termTxt29(c)) : undefined }, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name)), h('td', null, t(MASTER_NAME[rightsOf(c).master])),
-            h('td', null, c.reverted ? t(l('revertido', 'reverted')) : rw === Infinity ? '—' : String(yearOfWeek(s, rw))),
+          return h('tr', null, h('td', null, actLink(s, c.actId)), h('td', { title: isSpecial29(c.model) ? t(termTxt29(c)) : undefined }, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name)), h('td', null, c.model === 'management' ? t(l('— (gestão: sem master)', '— (management: no master)')) : t(MASTER_NAME[rightsOf(c).master])),
+            h('td', null, c.reverted ? t(l('revertido', 'reverted')) : rw === Infinity || c.model === 'management' ? '—' : String(yearOfWeek(s, rw))),
             h('td', { class: c.recoupBalance > 0 ? 'bad' : '' }, $(c.recoupBalance)),
             h('td', null, c.reverted ? pill(t(l('do artista', 'artist\'s')), 'bad') : active ? pill(t(l('ativo', 'active')), 'good') : pill(t(l('encerrado', 'ended')))),
             h('td', null, h('button', { class: 'btn small ghost', onclick: () => openSheet(s, c.id) }, t(l('Ficha', 'Sheet')))));

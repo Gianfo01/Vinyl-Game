@@ -191,15 +191,18 @@ export function openOffer(actId: string, classic27 = false, model0?: ContractMod
   // R29 (contratos+): campos do modelo (comissão, participação e meta) e o que acontece ao assinar
   const box29 = h('div', { class: 'x29-box' });
   const royLabel = h('span', null, t(termLabel29(o.model)));
-  const draw29 = () => { royLabel.textContent = t(termLabel29(o.model === 'management' || o.model === 'jv' ? 'classic' : o.model)); box29.replaceChildren(...(isSpecial29(o.model) ? [h('p', { class: 'small' }, t(HOW29[o.model]!)), x29Fields(s, o, update)] : [])); };
+  const draw29 = () => { royLabel.textContent = t(termLabel29(o.model)); if (royLabel.parentElement) royLabel.parentElement.style.display = o.model === 'management' || o.model === 'jv' ? 'none' : ''; /* o termo desses dois fica no quadro do modelo */ box29.replaceChildren(...(isSpecial29(o.model) ? [h('p', { class: 'small' }, t(HOW29[o.model]!)), x29Fields(s, o, update)] : [])); };
   // r20 (G6 §4.5): os MESMOS campos em três grupos (Dinheiro e prazo / Controle e direitos / Compromissos e recuperação)
   const modelDesc = h('p', { class: 'muted small' }, t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc));
+  // R29: trocar o modelo reajusta adiantamento e parte do artista (applyModel29) — os campos acompanham
+  const advIn = num(Math.round(o.advance / 100), Math.max(10, Math.round(unit * 100 / 100)), (v) => (o.advance = Math.round(v * 100))) as HTMLInputElement;
+  const royIn = num(Math.round(o.royalty * 100), 1, (v) => (o.royalty = v / 100)) as HTMLInputElement;
   const moneyF = [
-    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.filter((m) => m.available).map((m) => ({ value: m.id, label: t(m.name) })), (v: ContractModel) => { applyModel29(o, v); o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); modelDesc.textContent = t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc); drawRights(); draw360(); draw29(); update(); })),
+    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.filter((m) => m.available).map((m) => ({ value: m.id, label: t(m.name) })), (v: ContractModel) => { applyModel29(o, v); o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); modelDesc.textContent = t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc); advIn.value = String(Math.round(o.advance / 100)); royIn.value = String(Math.round(o.royalty * 100)); drawRights(); draw360(); draw29(); update(); })),
     modelDesc,
     box29,
-    h('label', null, `${t(S.advanceAmt)} ($)`, num(Math.round(o.advance / 100), Math.max(10, Math.round(unit * 100 / 100)), (v) => (o.advance = Math.round(v * 100)))),
-    h('label', null, royLabel, num(Math.round(o.royalty * 100), 1, (v) => (o.royalty = v / 100))), // R29: na produção é a parte do artista; no empresariamento/JV o termo está no quadro do modelo
+    h('label', null, `${t(S.advanceAmt)} ($)`, advIn),
+    h('label', null, royLabel, royIn), // R29: na produção é a parte do artista; no empresariamento/JV o termo está no quadro do modelo
     h('label', null, `${t(S.distFee)} (%)`, num(Math.round((o.distributionFee ?? 0.2) * 100), 1, (v) => (o.distributionFee = v / 100))),
     h('label', null, `${t(S.share360)} (%)`, num(Math.round(o.share360 * 100), 5, (v) => { o.share360 = v / 100; draw360(); })),
     n360,
