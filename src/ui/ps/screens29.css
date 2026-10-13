@@ -14,3 +14,6 @@
 .rv29 .r27-t, .rs29 .r27-t { overflow-wrap: anywhere; }
 .rs29-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 20px; }
 .rs29-h { margin: 6px 0 2px; font-size: .78em; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
+.in29 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0; }
+.in29 .in29-b { cursor: pointer; text-transform: none; letter-spacing: normal; }
+.in29 .in29-b::first-letter { text-transform: uppercase; }

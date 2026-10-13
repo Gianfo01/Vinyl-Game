@@ -24,6 +24,8 @@ for (const [vw, vh, tag] of [[1440, 900, 'desk'], [390, 844, 'mob']]) {
   const rv = await p.$('.rv29'); if (rv) await rv.screenshot({ path: `${out}/${pref}-revisao-${tag}.png` });
   await p.evaluate(() => { location.hash = '#/cockpit/ck20=panel'; }); await p.waitForTimeout(1000); await clear();
   await p.screenshot({ path: `${out}/${pref}-cockpit-${tag}.png` });
+  await p.evaluate(() => { const m = document.querySelector('main'); if (m) m.scrollTop = 1e6; window.scrollTo(0, 1e6); }); await p.waitForTimeout(400);
+  await p.screenshot({ path: `${out}/${pref}-cockpit-fim-${tag}.png` });
   // recarrega e continua (retomada)
   await p.reload(); await p.waitForTimeout(1800);
   await p.click('.h27-cont'); await p.waitForTimeout(3000);

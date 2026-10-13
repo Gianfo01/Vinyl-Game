@@ -12,7 +12,8 @@ import type { GameState } from '../../sim/types';
 import { h } from '../dom';
 import { inspect } from '../common';
 import { card27, list27, listRow27 } from './ui27';
-import { label29, openTarget29 } from './route29';
+import { intentCtx29, label29, openTarget29 } from './route29';
+import { INTENTS29, intentTarget29 } from './route29model';
 import { follow29, money29, resume29, review29, type Gate29 } from './screens29model';
 import { KNOWN_L29, show29, type Val29 } from './state29model';
 import './screens29.css';
@@ -77,11 +78,25 @@ function followView(s: GameState): HTMLElement | null {
       F.pages.map((p) => h('button', { type: 'button', class: 'link', onclick: () => openTarget29({ area: p }) }, label29(p)))) : null);
 }
 
+/** M02: "O que quero fazer?" — atalhos para etapas EXISTENTES (o passo muda com o contexto); nunca um assistente obrigatório. */
+function intentsView(s: GameState): HTMLElement {
+  const ctx = intentCtx29(s);
+  return h('nav', { class: 'in29', 'aria-label': t(l('O que quero fazer?', 'What do I want to do?')) },
+    h('span', { class: 'in29-l small muted' }, t(l('O que quero fazer?', 'What do I want to do?'))),
+    INTENTS29.map((it) => h('button', { type: 'button', class: 'chip27 in29-b', onclick: () => openTarget29(intentTarget29(it.id, ctx)) }, t(it.label).replace(/^Quero |^I want to /, ''))));
+}
+
+/** Liga/desliga a retomada ao carregar (Central da campanha). */
+export const resumeToggle29 = (): HTMLElement => h('label', { class: 'check small' },
+  h('input', { type: 'checkbox', checked: resumeOn(), onchange: (e: Event) => { try { localStorage.setItem(RES_KEY, (e.target as HTMLInputElement).checked ? 'on' : 'off'); } catch { /* ignora */ } } }),
+  ' ', t(l('Mostrar "Onde eu estava?" ao carregar uma partida', 'Show "Where was I?" when loading a run')));
+
 /** Acrescenta ao painel do Cockpit (sem mexer no modelo r27): retomada no topo e acompanhamento antes do "Ver mais". */
 export function cockpit29Into(el: HTMLElement, s: GameState): HTMLElement {
   const host = el.querySelector('.ck27') ?? el;
   const f = followView(s);
-  if (f) { const more = host.querySelector('.ck27-more'); if (more) more.before(f); else host.append(f); }
+  const more = host.querySelector('.ck27-more');
+  for (const x of [f, intentsView(s)]) if (x) { if (more) more.before(x); else host.append(x); }
   if (s.week > 0 && resumeOn() && !seen.has(s)) {
     const box = h('div', { class: 'rs29-host' });
     const done = () => { seen.add(s); box.remove(); };

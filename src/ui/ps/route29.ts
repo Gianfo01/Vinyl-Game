@@ -15,6 +15,7 @@ import { h } from '../dom';
 import { PASS_KIND_L29, passport29, type PassKind29, type ViewPrefs29 } from './campaign29model';
 import { AVAIL_L29, DESTS29, GROUPS29, INTENTS29, SCREENS29, avail29, intentTarget29, terms29, type Group29, type IntentCtx29, type Target29 } from './route29model';
 import { SECTIONS25 } from './nav25';
+import { resumeToggle29 } from './screens29';
 import './route29.css';
 
 export interface Api29 {
@@ -107,6 +108,7 @@ export function openCampaign29(): void {
     h('p', { class: 'small muted' }, t(l('Passaporte desta partida: o que está gravado nela e o que é só preferência deste navegador. Consultar não altera nada.', 'This run\'s passport: what is stored in it and what is only a preference of this browser. Viewing changes nothing.'))),
     kinds.map((k) => h('section', { class: `cp29-sec cp29-${k}` }, h('h3', null, t(PASS_KIND_L29[k])),
       h('dl', { class: 'cp29-dl' }, rows.filter((r) => r.kind === k).flatMap((r) => [h('dt', null, t(r.label)), h('dd', null, tv(r.value), r.note ? h('small', { class: 'muted cp29-note' }, t(r.note)) : null)])))),
+    h('section', { class: 'cp29-sec' }, h('h3', null, t(l('Retomada', 'Resume'))), resumeToggle29()),
     h('div', { class: 'cp29-acts' },
       h('button', { type: 'button', class: 'btn', onclick: () => { close(); A.files(); } }, t(l('Arquivo: salvar, carregar, exportar', 'Files: save, load, export'))),
       h('button', { type: 'button', class: 'btn ghost', onclick: () => { close(); A.options(); } }, t(l('Opções de apresentação', 'Presentation options'))),

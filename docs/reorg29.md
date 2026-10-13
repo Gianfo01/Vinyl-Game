@@ -53,7 +53,7 @@ Legenda: ✅ feito (antes de R29) · 🆕 feito nesta rodada · 🟡 parcial · 
 | M14 Consequência ligada à decisão | 🟡 | Ecos (`dec18`), "Voltaram recentemente", `conseq27`. 🆕 a retomada mostra "decisão → escolha". | Link da consequência para a decisão original na inbox. |
 | M15 Pré-requisito vira ação | 🟡 | Motivos de bloqueio (ctx27model, `actions20`), estados vazios com ação. | Resolvedor comum "o que falta → como resolver". |
 | M16 Primeiro ciclo por papel | ✅ | `onboard28`, `tutorial*`, `tracks18`. | — |
-| M17 "Onde eu estava?" | 🆕 | `resume29` + painel no Cockpit **só ao carregar uma partida**: data, prazo/sandbox, projetos, próximas datas, últimas escolhas. Diz "nada foi simulado enquanto você esteve fora". Tem "Continuar" e "Não mostrar mais". | Opção para religar a retomada (hoje: limpar `vtn29.resume`). |
+| M17 "Onde eu estava?" | 🆕 | `resume29` + painel no Cockpit **só ao carregar uma partida**: data, prazo/sandbox, projetos, próximas datas, últimas escolhas. Diz "nada foi simulado enquanto você esteve fora". Tem "Continuar" e "Não mostrar mais". | —  (religar: caixa na Central da campanha) |
 | M18 Densidade/texto/contraste | ✅ | `textScale`, `contrast`, `reducedMotion`, `colorblind`, `dens20`. | — |
 | M19 Mobile com atalhos | 🟡 | Barra inferior com as 8 seções + folha (`tree27`). | O jogador escolher até 4 atalhos + Menu. |
 | M20 Presets de apresentação | 🟡 | As preferências existem separadas (act27, cut27, audio28, Essencial/Completa). | Juntar em Guiado/Livre/Contemplativo. |
