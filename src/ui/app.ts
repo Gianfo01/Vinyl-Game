@@ -58,6 +58,7 @@ import { navGroups16 } from './careernav16';
 import { themeButton } from './sys/theme14';
 import { backChip29, bindRoute29, openCampaign29, openIndex29, paletteCmds29 } from './ps/route29';
 import { REDIRECT29, resolve29, type Target29 } from './ps/route29model';
+import { bindWiki29, initWikiHash29, openWiki29 } from './wiki29/wiki29open'; // r29 WIKI: carregada sob demanda
 import { screenTop29 } from './ps/screentop29';
 import { alertsSettings29 } from './ps/alerts29';
 import { presetsSettings29 } from './ps/presets29';
@@ -147,6 +148,7 @@ export function boot(el: HTMLElement): void {
   window.addEventListener('keydown', onKey);
   // rodada 15: voltar/avançar do navegador, abas lembradas, paleta pelo botão da barra
   for (const [k, v] of Object.entries(loadTabs15())) setTab(k, v);
+  bindWiki29({ game: () => store.game, open: open29 }); initWikiHash29(); // r29 WIKI: #/wiki… e "Abrir no jogo"
   // r29 (REORG, M01): catálogo único — Índice completo, Central da campanha e aliases (S07, "submundo", "quero:hire"…)
   bindRoute29({ game: () => store.game!, open: open29, inMenu: (a) => groups().some((gr) => gr.areas.includes(a)), registered: (a) => AREAS.some((x) => x.id === a) || EXTRA_AREAS.some((x) => x.id === a) || a === SEDE25,
     label: (a) => navItems().find((x) => x.id === a)?.label ?? (EXTRA_AREAS.find((x) => x.id === a) ? t(EXTRA_AREAS.find((x) => x.id === a)!.label) : AREAS.find((x) => x.id === a) ? t(S[AREAS.find((x) => x.id === a)!.label]) : a),
@@ -426,6 +428,7 @@ function nav(): HTMLElement {
       util('▤', l('Arquivo', 'Files'), () => saveManagerModal17((g) => { store.game = g; startGame(); })),
       util('☰', l('Índice', 'Index'), openIndex29), // r29 REORG (M01): todas as páginas, com motivo de quem está fora do alcance
       util('⚑', l('Campanha', 'Campaign'), openCampaign29), // r29 REORG (S17/M30): passaporte da campanha
+      util('❖', l('Wiki', 'Wiki'), () => openWiki29()), // r29 WIKI: personagens, mecânicas, mundo, objetos (utilidade global)
       util('⚙', l('Opções', 'Options'), settings),
       // r27 UX: Essencial (poucas entradas, abas compactas) × Completa (a árvore inteira, todas as abas à mostra)
       viewToggle27()),
@@ -716,6 +719,7 @@ function palette(): void {
     { label: t(l('Atalhos de teclado', 'Keyboard shortcuts')), kind: 'action', hint: '?', run: () => shortcutsHelp15(navItems().map((x) => ({ key: x.key, label: x.label }))) },
     { label: t(S.settings), kind: 'action', run: settings },
     ...paletteCmds18(go), // r18 tutorial18: glossário e ajuda no Ctrl+K
+    { label: t(l('Wiki do jogo (personagens, mecânicas, mundo)', 'Game wiki (characters, mechanics, world)')), alt: 'wiki ajuda manual enciclopedia como funciona help encyclopedia', kind: 'action', icon: 'book', weight: 5, run: () => openWiki29() }, // r29 WIKI
     ...paletteCmds29(), // r29 REORG: as 17 telas canônicas (com aliases), intenções "Quero…", Índice e Central da campanha
     ...paletteCmds20(g), // r20 G4: ações do artista selecionado (mesmo custo/bloqueio do menu Ações ▾)
     ...[...mine].map((id): PCmd => ({ label: g.acts[id].name, kind: 'mine', icon: 'guitar', weight: 12, run: () => inspect.act(id) })),
@@ -735,6 +739,7 @@ function palette(): void {
     for (const x of searchRoute16.f?.(g, qq) ?? []) out.push({ label: x.label, kind: 'person', icon: 'star', hint: x.hint, run: () => personRoute16.f?.(x.key) });
     out.push(...paletteCmds20(g, true)); // r20 G4: ações dos outros artistas do elenco
     out.push(...eggCmds27(g, qq)); // r27 ovos: códigos secretos da busca (payola, hall da fama, 1889…)
+    if (qq.length >= 2) out.push({ label: `${t(l('Buscar na wiki', 'Search the wiki'))}: ${q.trim()}`, kind: 'action', icon: 'book', weight: 1, run: () => openWiki29('home', q.trim()) }); // r29 WIKI
     return out;
   };
   palette15(base, search);

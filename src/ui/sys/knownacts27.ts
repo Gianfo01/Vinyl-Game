@@ -4,6 +4,7 @@
 // Modelo puro em sim/sys/knownacts27.ts (knownArtists27). Filtros por motivo (abas + lista), gênero, lugar e
 // situação; busca; colunas ordenáveis em TODAS as páginas (sort27) e paginação.
 
+import { ent27 } from '../ps/ent27';
 import { FAMILIES, familyOf, l, type L } from '../../data/world';
 import { countryName } from '../../data/geo';
 import { t } from '../../i18n/strings';
@@ -121,7 +122,7 @@ function table(s: GameState, all: KnownAct27[], group: 'all' | Group27): HTMLEle
           h('td', null, logo(a, 28)),
           h('td', null, actLink(s, a.id), h('div', { class: 'muted small' }, a.members.length > 1 ? `${t(l('Banda', 'Band'))} (${a.members.length})` : t(l('Solo', 'Solo')))),
           h('td', null, chips(k)),
-          h('td', null, actGenre23(s, a)),
+          h('td', { class: 'ent27', tabindex: '0', ...ent27('genre', a.genre) }, actGenre23(s, a)), // r29 WIKI: gênero com menu (Ver na wiki)
           h('td', null, cityLink(a.city), k.a3 ? h('div', { class: 'muted small' }, t(countryName(k.a3))) : null),
           h('td', null, statusOf(s, a)),
           h('td', { class: 'num' }, fameCell(k)),

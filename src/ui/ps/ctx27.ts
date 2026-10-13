@@ -43,6 +43,7 @@ import { leaderOf } from '../../sim/sys/leaders10';
 import { runPA18 } from '../sys/personact18';
 import { crimeForm17, presetCrimeFor29 } from '../sys/crimeform29';
 import { isEnt27, type Ent27 } from './ent27';
+import { openWiki29, wikiIdOfEnt29 } from '../wiki29/wiki29open'; // r29 WIKI
 import './ctx27.css';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
@@ -104,6 +105,7 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
   const name = T(m.name);
   switch (item.id) {
     case 'copy': void copyText(name); return;
+    case 'wiki': openWiki29(wikiIdOfEnt29(m.ent, id)); return; // r29 WIKI
     // artista
     case 'act.open': inspect.act(id); return;
     case 'act.agenda': case 'act.compose': chooseAction20(s, 'agenda.edit', id, anchor); return;

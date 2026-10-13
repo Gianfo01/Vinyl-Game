@@ -3,6 +3,7 @@
 // estrelas; banda da casa; escolas de música e bolsas; TV de talentos. E a aba "Acervo vivo" em Lendas (relíquias
 // nascidas na partida, legado → valor, perícia, ala-museu, exposição itinerante).
 
+import { ent27 } from '../ps/ent27'; // r29 WIKI: relíquia real com menu (Ver na wiki)
 import { ERA19 } from '../../sim/era19';
 import { FAMILIES, l, type FamilyId, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -191,7 +192,7 @@ export function relics18Tab(s: GameState): HTMLElement {
   const relRow = (x: typeof list[number]) => {
     const m = st.m[x.id];
     const lg = legacy18(s, x);
-    return card(row(relicImg28(x.k, x.n.en, x.y, x.rr ?? x.id, 48, t(RELIC_KIND[x.k])), h('b', null, t(x.n)), pill(t(RELIC_KIND[x.k])), pill(String(x.y)), m && m.o !== 'real' ? pill(t(ORIGIN18[m.o] ?? ORIGIN18.base)) : null, pill(t(RELIC_ST[x.st])),
+    return card(row(relicImg28(x.k, x.n.en, x.y, x.rr ?? x.id, 48, t(RELIC_KIND[x.k])), h('b', x.rr ? { class: 'ent27', tabindex: '0', ...ent27('relic', x.rr) } : null, t(x.n)), pill(t(RELIC_KIND[x.k])), pill(String(x.y)), m && m.o !== 'real' ? pill(t(ORIGIN18[m.o] ?? ORIGIN18.base)) : null, pill(t(RELIC_ST[x.st])),
       why18(s, 'relic.value', { id: x.id }, pill($(money(s, x.v)), 'good')), pill(`×${lg.m.toFixed(2)}`), m?.auth ? pill(t(l('autenticada', 'authenticated')), 'good') : null, x.a ? actLink(s, x.a) : null),
       m?.st ? muted(m.st) : null,
       row(x.st === 'auction' && !m?.auth ? btn(fmtLs(l('Perícia ({c})', 'Appraisal ({c})'), { c: $(authFee18(s, x)) }), () => { toast(t(authenticate18(s, x.id)), 'info'); rerender(); }) : null,
