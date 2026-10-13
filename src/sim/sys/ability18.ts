@@ -34,6 +34,7 @@ import { registerDimAdj18 } from './quality18';
 import { realDataOf } from './realworld';
 import { soul } from './soul9';
 import type { Facet } from './soul9';
+import { actsNow27 } from '../tickcache27';
 
 // ------------------------------------------------------------------ estado
 
@@ -474,7 +475,7 @@ registerSimHook('month', 'ability18', (s) => {
   const st = ab18(s);
   const mi = s.year * 12 + s.month;
   const done = new Set<string>();
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.status === 'retired' || a.status === 'split' || a.deceased) continue;
     const my = a.owner === 'player' || !!a.playerBand;
     // r18 final (desempenho): NPC famoso em rodízio trimestral; o resto semestral (mesmo crescimento médio)
@@ -496,7 +497,7 @@ registerSimHook('year', 'ability18', (s) => {
   const keys = new Set<string>(['player']);
   for (const id of playerActs(s)) for (const pid of s.acts[id]?.members ?? []) keys.add(`p:${pid}`);
   for (const sm of s.player.staff) keys.add(`s:${sm.id}`);
-  for (const a of Object.values(s.acts)) if (a.fame >= 40 && a.status !== 'retired' && a.status !== 'split') for (const pid of a.members) keys.add(`p:${pid}`);
+  for (const a of actsNow27(s)) if (a.fame >= 40 && a.status !== 'retired' && a.status !== 'split') for (const pid of a.members) keys.add(`p:${pid}`);
   for (const k of keys) {
     const A = ability18(s, k);
     if (!A) continue;

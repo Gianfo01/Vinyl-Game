@@ -12,6 +12,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import { labelFunded } from '../production';
 import type { GameState, Release } from '../types';
 import { money, post } from '../util';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export interface OhLine { id: string; label: L; amount: number; why: L }
 export interface Oh13 { ema: number; last: { w: number; lines: OhLine[]; capped: boolean; rate: number } | null; promo: number; promoN: number }
@@ -55,7 +56,7 @@ export function eraName(y: number): L {
 }
 const promoEra = (y: number) => (y < 1981 ? 1 : y < 2000 ? 1.6 : y < 2008 ? 1.3 : 2);
 
-const pRel = (s: GameState) => Object.values(s.releases).filter((r) => r.owner === 'player');
+const pRel = (s: GameState) => releasesNow27(s).filter((r) => r.owner === 'player');
 
 /** Linhas de despesa mensal (centavos nominais, positivas) com o porquê. Puro: não mexe no estado. */
 export function overheadPlan(s: GameState, R = realAnnual(s)): { lines: OhLine[]; tier: Tier; cap: number; raw: number; total: number } {
@@ -66,7 +67,7 @@ export function overheadPlan(s: GameState, R = realAnnual(s)): { lines: OhLine[]
     const amount = Math.round(money(s, real * g));
     if (amount > 0) lines.push({ id, label: l(pt, en), amount, why: l(whyPt, whyEn) });
   };
-  const acts = Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand).length;
+  const acts = actsNow27(s).filter((a) => a.owner === 'player' && !a.playerBand).length;
   const rels = pRel(s);
   const rel12 = rels.filter((r) => r.week > s.week - 52).length;
   const mk = Math.max(1, s.player.territories.length);

@@ -36,6 +36,8 @@ import { genMgrs16 } from './people16';
 import { per13, type P13 } from './persona13';
 import { bump } from './social8';
 import { SIGN_VETO } from './gate14';
+import { actsNow27, releasesNow27 } from '../tickcache27';
+import { actsOfPerson17 } from '../actidx17';
 
 // ---------------------------------------------------------------- estado
 
@@ -205,7 +207,7 @@ function labelExits(s: GameState, r: Rng, W: number): void {
   let n = 0;
   // mágoas abertas: uma leitura do livro por rodada (refeita depois de cada saída/greve, que mexe nele)
   let gv: Hold[] | null = null;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (n >= 2) break;
     if (!okAct17(s, a) || !a.owner || !s.labels[a.owner] || npc17(s).strike[a.id]) continue;
     const lb = s.labels[a.owner];
@@ -310,7 +312,7 @@ function founding(s: GameState, r: Rng, W: number): void {
   type C = { w: number; go: () => void };
   const cs: C[] = [];
   // a) estrela/veterano(a) abre o próprio selo — ou exige um imprint dentro da major
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!okAct17(s, a) || !okPerson(s, a) || (a.fame < 45 && !a.legend)) continue;
     const p = leadOf(s, a);
     if (!p?.alive || s.year - p.born < 28 || npc17(s).car[`p:${p.id}`]?.some((x) => x[2] === 'label' || x[2] === 'imprint')) continue;
@@ -354,7 +356,7 @@ function founding(s: GameState, r: Rng, W: number): void {
     const prev = s.labels[L0.jobs[L0.jobs.length - 1].lb];
     cs.push({ w: L0.amb / 60, go: () => {
       const ws = fmtL(l('saiu da {b} com contatos e vontade de provar que estavam errados', 'left {b} with contacts and a point to prove'), { b: prev?.name ?? '?' });
-      const g = prev?.focus[0] ? Object.values(s.acts).find((a) => fam(a) === prev.focus[0])?.genre ?? 'rock' : 'rock';
+      const g = prev?.focus[0] ? actsNow27(s).find((a) => fam(a) === prev.focus[0])?.genre ?? 'rock' : 'rock';
       const lb = foundLabel17(s, r, { by: `l:${L0.id}`, name: L0.name, born: L0.born, city: L0.city, genre: g, cash: 150000, k: 'exec', why: ws, leaderId: L0.id });
       const fol: Act[] = [];
       for (const id of [...(prev?.roster ?? [])]) {
@@ -389,13 +391,13 @@ function careers(s: GameState, r: Rng, W: number): void {
   const st = npc17(s);
   const cands: [Person, Act][] = [];
   const had = new Set(st.mg.map((m) => m.id));
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if ((a.status !== 'retired' && a.status !== 'split') || a.fame < 18 || a.playerBand || !okPerson(s, a) || a.owner === 'player') continue;
     for (const id of a.members) {
       const p = s.persons[id];
       const age = p ? s.year - p.born : 0;
       if (!p?.alive || p.isPlayer || age < 32 || age > 68 || st.car[`p:${id}`] || had.has(`n17_${id}`)) continue;
-      if (Object.values(s.acts).some((x) => live(x) && x.members.includes(id))) continue;
+      if (actsOfPerson17(s, id).some(live)) continue; // r27: índice pessoa→atos (mesma formação atual) em vez de varrer todos
       cands.push([p, a]);
     }
   }
@@ -433,7 +435,7 @@ function mgrClients(s: GameState, r: Rng): void {
   for (const m of npc17(s).mg) {
     if (!mgrActive(s, m) || rosterOf(s, m.id).length >= mgrCap(m) || !r.chance(0.12)) continue;
     const pid = m.id.slice(4);
-    const pool = Object.values(s.acts).filter((a) => okAct17(s, a) && !st.rep[a.id] && a.fame >= 8 && mkOf(a.city) === mkOf(m.city) && (histMode(s) !== 'strict' || !a.catalogNo));
+    const pool = actsNow27(s).filter((a) => okAct17(s, a) && !st.rep[a.id] && a.fame >= 8 && mkOf(a.city) === mkOf(m.city) && (histMode(s) !== 'strict' || !a.catalogNo));
     const pals = pool.filter((a) => a.members.some((x) => (s.persons[x]?.rel[pid] ?? 0) > 20));
     const a = (pals.length ? pals : pool.filter((x) => m.fam.includes(fam(x) as never))).sort((x, y) => y.fame - x.fame)[r.int(0, 2)];
     if (!a) continue;
@@ -448,11 +450,11 @@ function mgrClients(s: GameState, r: Rng): void {
 function delays(s: GameState, r: Rng, W: number): void {
   const big = new Map<string, Act>();
   const add = (a?: Act) => { if (a && live(a)) { const f = fam(a); if (!big.has(f) || big.get(f)!.fame < a.fame) big.set(f, a); } };
-  for (const rel of Object.values(s.releases)) if (rel.week >= s.week - 4 && rel.week <= s.week) add(s.acts[rel.actId]);
+  for (const rel of releasesNow27(s)) if (rel.week >= s.week - 4 && rel.week <= s.week) add(s.acts[rel.actId]);
   for (const pr of s.pendingReleases) if (pr.week >= s.week && pr.week <= s.week + 6) add(s.acts[pr.actId]);
   if (!big.size) return;
   let n = 0;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (n >= 2) break;
     if (!okAct17(s, a) || a.fame < 15) continue;
     const since = s.week - a.lastRelease;
@@ -487,7 +489,7 @@ function holiday(s: GameState, r: Rng, W: number): void {
     }
   }
   if (s.year >= 2013 && r.chance(0.025 * W)) {
-    const a = Object.values(s.acts).filter((x) => okAct17(s, x) && x.fame >= 60 && unreleasedRecorded(s, x).length >= 5 && s.week - x.lastRelease >= 40).sort((x, y) => y.fame - x.fame)[0];
+    const a = actsNow27(s).filter((x) => okAct17(s, x) && x.fame >= 60 && unreleasedRecorded(s, x).length >= 5 && s.week - x.lastRelease >= 40).sort((x, y) => y.fame - x.fame)[0];
     const P = a ? Pa(s, a) : null;
     if (a && F(P, 'impulsividade') + F(P, 'confianca') > 1.9) {
       a.lastRelease = s.week - 120;
@@ -565,7 +567,7 @@ function poaching(s: GameState, r: Rng, W: number): void {
   const buyers = activeLabels(s).filter((x) => (x.strategy === 'stars' || x.archetype === 'empire' || risk(s, x) > 1.3) && x.cash > money(s, 400000));
   const A = buyers[r.int(0, buyers.length - 1)];
   if (!A) return;
-  const t = Object.values(s.acts).filter((a) => okAct17(s, a) && a.owner && a.owner !== A.id && s.labels[a.owner] && a.fame >= 40 && (a.fame > s.labels[a.owner].reputation || s.labels[a.owner].cash < 0)).sort((x, y) => y.fame - x.fame)[0];
+  const t = actsNow27(s).filter((a) => okAct17(s, a) && a.owner && a.owner !== A.id && s.labels[a.owner] && a.fame >= 40 && (a.fame > s.labels[a.owner].reputation || s.labels[a.owner].cash < 0)).sort((x, y) => y.fame - x.fame)[0];
   if (!t) return;
   const B = s.labels[t.owner!];
   const adv = money(s, expectedAdvance(s, t));
@@ -592,7 +594,7 @@ function beefs(s: GameState, r: Rng, W: number): void {
   const st = npc17(s);
   for (const [k, until] of Object.entries(st.beef)) if (until < s.week) delete st.beef[k];
   if (Object.keys(st.beef).length >= 3 || !r.chance(0.03 * W)) return;
-  const pool = Object.values(s.acts).filter((a) => live(a) && a.fame >= 25 && !a.playerBand && !histLocked(s, a));
+  const pool = actsNow27(s).filter((a) => live(a) && a.fame >= 25 && !a.playerBand && !histLocked(s, a));
   const hot = pool.filter((a) => a.owner !== 'player' && (F(Pa(s, a), 'ego') + F(Pa(s, a), 'vaidade')) / 2 > 1.2);
   const A = hot[r.int(0, hot.length - 1)];
   if (!A) return;
@@ -623,7 +625,7 @@ function mergers(s: GameState, r: Rng, W: number): void {
       small.roster = small.roster.filter((x) => x !== id); big.roster.push(id); a.owner = big.id;
       const c = a.contractId ? s.contracts[a.contractId] : undefined; if (c) c.party = big.id;
     }
-    for (const rel of Object.values(s.releases)) if (rel.owner === small.id) rel.owner = big.id;
+    for (const rel of releasesNow27(s)) if (rel.owner === small.id) rel.owner = big.id;
     big.cash += Math.max(0, small.cash); big.reputation = clamp(Math.max(big.reputation, small.reputation) + 2, 0, 100);
     small.active = false; small.closedYear = s.year; small.parentLabel = big.id;
     const L0 = small.leaderId ? leaders(s)?.L[small.leaderId] : undefined;
@@ -636,7 +638,7 @@ function mergers(s: GameState, r: Rng, W: number): void {
 
 // leilão por agente livre: estrela sem selo atrai lances, vence quem paga mais (com prêmio)
 function bidding(s: GameState, r: Rng, W: number): void {
-  const a = Object.values(s.acts).filter((x) => okAct17(s, x) && !x.owner && x.fame >= 50 && !indieByChoice(s, x.id) && cool(s, `bid:${x.id}`, 26)).sort((x, y) => y.fame - x.fame)[0];
+  const a = actsNow27(s).filter((x) => okAct17(s, x) && !x.owner && x.fame >= 50 && !indieByChoice(s, x.id) && cool(s, `bid:${x.id}`, 26)).sort((x, y) => y.fame - x.fame)[0];
   if (!a || !r.chance(0.3 * Math.min(1.4, W))) return;
   const adv = money(s, expectedAdvance(s, a));
   const bids = activeLabels(s).filter((x) => x.cash > adv * 2 && (x.focus.length === 0 || x.focus.includes(fam(a)))).map((x) => [x, x.cash / adv * (0.5 + x.reputation / 100) * r.float(0.7, 1.3)] as [Label, number]).sort((x, y) => y[1] - x[1]);
@@ -656,7 +658,7 @@ function bidding(s: GameState, r: Rng, W: number): void {
 
 function solos(s: GameState, r: Rng, W: number): void {
   if (!r.chance(0.02 * W)) return;
-  const a = Object.values(s.acts).filter((x) => okAct17(s, x) && x.members.length >= 3 && x.fame >= 45 && okPerson(s, x)).sort(() => r.float(-1, 1))[0];
+  const a = actsNow27(s).filter((x) => okAct17(s, x) && x.members.length >= 3 && x.fame >= 45 && okPerson(s, x)).sort(() => r.float(-1, 1))[0];
   const p = a ? leadOf(s, a) : undefined;
   if (!a || !p?.alive || p.isPlayer) return;
   const P = per13(s, `p:${p.id}`);
@@ -675,7 +677,7 @@ function solos(s: GameState, r: Rng, W: number): void {
 /** Escândalo grave ou prisão de um artista NPC: o chefe do selo decide pelos traços — dispensa ou banca. */
 function onTrouble(s: GameState, f: Fact): void {
   if (f.severity < 55 || f.src === 'npc17') return;
-  const a = f.actors.map((id) => s.acts[id] ?? Object.values(s.acts).find((x) => live(x) && x.members.includes(id))).find((x) => okAct17(s, x) && !!x.owner && !!s.labels[x.owner]);
+  const a = f.actors.map((id) => s.acts[id] ?? actsNow27(s).find((x) => live(x) && x.members.includes(id))).find((x) => okAct17(s, x) && !!x.owner && !!s.labels[x.owner]);
   if (!a || !cool(s, `trouble:${a.id}`, 26)) return;
   const lb = s.labels[a.owner!];
   const r = Rng.fromSeed(`${s.config.seed}:npc17f:${factSeedKey17(f)}`); // r27: conteúdo do fato, não o id global

@@ -30,6 +30,7 @@ import { f16, fameIn, mkOf } from './fame16';
 import { rivals12 } from './rivals12';
 import { PRICE_TIERS } from './industry/retail';
 import type { PriceTier } from './industry/state';
+import { releasesNow27 } from '../tickcache27';
 
 export const MK20: MarketId[] = MARKETS.map((m) => m.id);
 export type Coh20 = [number, number, number]; // casual, ativo, núcleo
@@ -150,7 +151,7 @@ export function relConv20(s: GameState, rel: Release, a: Act): RelConv20[] {
 export function relGains20(s: GameState): void {
   const st = terr20(s), ru = st.ru!, lc: Terr20['lc'] = {};
   const seen = new Set<string>();
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     const a = s.acts[rel.actId];
     if (!mine(a) || (rel.owner !== 'player' && !a.playerBand)) continue;
     if (!rel.live && ru[rel.id] === undefined) continue;

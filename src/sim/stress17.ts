@@ -9,7 +9,7 @@
 import { clamp } from '../core/rng';
 import { l, type L } from '../data/world';
 import { registerExt4 } from './ext4';
-import { facts17 } from './facts17';
+import { facts17, type Fact } from './facts17';
 import type { Act, GameState, Person } from './types';
 
 export interface Stress17State {
@@ -96,7 +96,7 @@ function actsOfP(s: GameState, pid: string): Act[] {
   return c.m.get(pid) ?? [];
 }
 /** Fatos ruins recentes sobre a pessoa ou o ato dela (escândalo, morte, separação…): pesam por 3 meses. */
-const FXC = new WeakMap<GameState, { w: number; n: number; m: Map<string, { v: number; why: L }> }>();
+const FXC = new WeakMap<GameState, { w: number; n: number; m: Map<string, { v: number; why: L }>; bad?: Fact[] }>();
 function factPressure(s: GameState, pid: string): { v: number; why: L } {
   const fs = facts17(s);
   let c = FXC.get(s);
@@ -105,11 +105,14 @@ function factPressure(s: GameState, pid: string): { v: number; why: L } {
   if (hit) return hit;
   const ids = new Set([pid, ...actsOfP(s, pid).map((a) => a.id)]);
   let v = 0, top = 0, why: L = l('fatos ruins recentes', 'recent bad news');
-  const f = fs.f;
-  for (let i = f.length - 1; i >= 0; i--) {
-    const x = f[i];
-    if (s.week - x.w > 13) break;
-    if (!x.tags.includes('bad') || !x.actors.some((a) => ids.has(a))) continue;
+  // r27 (desempenho): fatos ruins das últimas 13 semanas, do mais novo ao mais velho, separados uma vez por (semana, seq)
+  if (!c.bad) {
+    const bad: Fact[] = [], f = fs.f;
+    for (let i = f.length - 1; i >= 0; i--) { const x = f[i]; if (s.week - x.w > 13) break; if (x.tags.includes('bad')) bad.push(x); }
+    c.bad = bad;
+  }
+  for (const x of c.bad) {
+    if (!x.actors.some((a) => ids.has(a))) continue;
     const w = x.severity / 5 * (1 - (s.week - x.w) / 16);
     v += w;
     if (w > top) { top = w; why = x.text; }

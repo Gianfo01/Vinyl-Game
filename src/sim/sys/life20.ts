@@ -15,6 +15,7 @@ import { pushInbox18, registerInboxKind } from '../inbox18';
 import { fixLeader20 } from '../members20';
 import type { GameState } from '../types';
 import { fmtL, playerActs } from '../util';
+import { actsNow27 } from '../tickcache27';
 
 registerInboxKind('life20', { label: l('Carreira', 'Career'), cat: 'people', icon: 'person', prio: 1, goto: () => ({ area: 'artists', label: l('Abrir artistas', 'Open artists') }) });
 
@@ -25,7 +26,7 @@ export function careerEndSoon20(s: GameState): { actId: string; year: number }[]
 }
 
 registerSimHook('month', 'life20', (s) => {
-  for (const a of Object.values(s.acts)) if (a.leaderId) fixLeader20(s, a);
+  for (const a of actsNow27(s)) if (a.leaderId) fixLeader20(s, a);
   for (const { actId, year } of careerEndSoon20(s)) {
     const k = `life20:end:${actId}:${year}`;
     if (s.flags[k]) continue;

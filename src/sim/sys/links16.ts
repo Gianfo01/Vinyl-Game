@@ -40,6 +40,7 @@ import { careerOf } from './people/staff';
 import { conceptById, proj8 } from './project8';
 import { MEDIA15, sy15 } from './sync15';
 import { ventures } from './ventures9';
+import { actsNow27 } from '../tickcache27';
 
 export interface Links16 {
   /** último patamar de fama visto por ato (para notoriedade) */
@@ -92,7 +93,7 @@ export function fameToNoto(s: GameState): void {
     say(s, tx, 'good', t >= 3);
   };
   const clients = new Set(ventures(s).mg.clients.map((c) => c.actId));
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     const mine = mineAct(a) && !a.playerBand, cl = clients.has(a.id);
     if (!mine && !cl) { delete st.ft[a.id]; continue; }
     const t = fameTier(a.fame), t0 = st.ft[a.id];
@@ -148,7 +149,7 @@ export function friendTips(s: GameState, r: Rng): void {
   if (P) mine.push({ p: P });
   for (const id of playerActs(s)) { const a = s.acts[id]; if (a && !a.playerBand) for (const pid of a.members) { const p = s.persons[pid]; if (p?.alive) mine.push({ p, a }); } }
   const actOfP = new Map<string, Act>();
-  for (const a of Object.values(s.acts)) if (!a.owner && (a.status === 'emerging' || a.status === 'active') && !s.knowledge[a.id]) for (const pid of a.members) actOfP.set(pid, a);
+  for (const a of actsNow27(s)) if (!a.owner && (a.status === 'emerging' || a.status === 'active') && !s.knowledge[a.id]) for (const pid of a.members) actOfP.set(pid, a);
   if (!actOfP.size) return;
   const cand: { from: { p: Person; a?: Act }; to: Act; who: Person; v: number }[] = [];
   for (const m of mine) for (const [pid, v] of Object.entries(m.p.rel ?? {})) {
@@ -180,7 +181,7 @@ export function kinLinks(s: GameState): void {
     if (!d || d.died === undefined || d.died < s.year - 1) continue;
     for (const k of kinOf15(s, id)) {
       if (!CLOSE16.has(k.rel) || !k.p.alive) continue;
-      const a = Object.values(s.acts).find((x) => x.members.includes(k.p.id) && mineAct(x));
+      const a = actsNow27(s).find((x) => x.members.includes(k.p.id) && mineAct(x));
       if (!a || st.gr[a.id]?.[0] > s.week) continue;
       const rel = REL15[INV16[k.rel]];
       arcAdd(s, a.id, 'grief', fmtL(l('{q} perdeu {r} {p} em {y}, conosco no selo.', '{q} lost {r} {p} in {y}, while with the label.'), { q: k.p.name, r: rel, p: d.name, y: s.year }), 0);
@@ -192,7 +193,7 @@ export function kinLinks(s: GameState): void {
     if (st.kf[key]) continue;
     st.kf[key] = 1;
     const [x, y] = key.split('|');
-    const a = Object.values(s.acts).find((z) => z.members.includes(x) && z.members.includes(y));
+    const a = actsNow27(s).find((z) => z.members.includes(x) && z.members.includes(y));
     if (!mineAct(a)) continue;
     arcAdd(s, a.id, 'kin_feud', fmtL(l('os irmãos {x} e {y} brigaram em {t}, no auge da rotina do selo.', 'siblings {x} and {y} fell out in {t}, deep in the label routine.'), { x: s.persons[x]?.name ?? '?', y: s.persons[y]?.name ?? '?', t: s.year }), 0);
   }
@@ -359,7 +360,7 @@ export function labelDemos(s: GameState, r: Rng): void {
   const t = notoTier(s, 'label');
   if (t < 1 || !r.chance(0.04 * t)) return;
   const home = cityById[s.config.homeCity]?.market;
-  const pool = Object.values(s.acts).filter((a) => !a.owner && (a.status === 'emerging' || a.status === 'active') && !s.knowledge[a.id] && a.fame <= 15 + t * 10).sort((a, b) => a.id.localeCompare(b.id));
+  const pool = actsNow27(s).filter((a) => !a.owner && (a.status === 'emerging' || a.status === 'active') && !s.knowledge[a.id] && a.fame <= 15 + t * 10).sort((a, b) => a.id.localeCompare(b.id));
   const a = r.weighted(pool, (x) => (cityById[x.city]?.market === home ? 3 : 1) * (1 + x.potential / 50));
   if (!a) return;
   s.knowledge[a.id] = { actId: a.id, degree: t >= 3 ? 2 : 1, stage: 'signal', bias: r.normal(0, t >= 3 ? 4 : 6), updatedWeek: s.week, source: 'demo' };

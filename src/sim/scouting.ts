@@ -10,6 +10,7 @@ import type { Act, GameState, Knowledge } from './types';
 import { addSignal, talentScore } from './worldgen';
 import { perk } from './perks';
 import { hasTech, money, rngOf, staffCount, staffSkill } from './util';
+import { actsNow27 } from './tickcache27';
 
 export const DEGREES: L[] = [
   l('Rumor', 'Rumor'),
@@ -144,7 +145,7 @@ export function monthlySignals(s: GameState, r: Rng): void {
   const homeMarket = cityById[s.config.homeCity]?.market;
   const sources = passiveSources23(s);
   const n = Math.max(0, passiveCount23(s).lo + (r.chance(0.5) ? 1 : 0));
-  const candidates = Object.values(s.acts).filter((a) => signalEligible20(s, a)); // r20 (B9): elegibilidade central
+  const candidates = actsNow27(s).filter((a) => signalEligible20(s, a)); // r20 (B9): elegibilidade central
   for (let i = 0; i < n; i++) {
     const src = r.pick(sources);
     const act = r.weighted(candidates, (a) => {

@@ -27,6 +27,7 @@ import { careerOf, foundLabel17 } from './npc17';
 import { career18 } from './world18';
 import { careers } from './careers12';
 import { ventures } from './ventures9';
+import { actsNow27 } from '../tickcache27';
 
 export type Role21K = 'artist' | 'manager' | 'label_owner' | 'label_exec' | 'festival_founder' | 'producer' | 'financier' | 'publisher' | 'booking'
   | 'studio_owner' | 'dj_radio' | 'media' | 'venue_owner' | 'songwriter' | 'teacher' | 'politics' | 'business';
@@ -66,7 +67,7 @@ const ROLE_K = (x: string): Role21K | undefined => (x in ROLE21_NAME ? (x as Rol
 export function spans21(s: GameState, pid: string): Span21[] {
   const id = pid.replace(/^p:/, '');
   const out: Span21[] = [];
-  for (const a of Object.values(s.acts)) if (a.members.includes(id)) out.push({ k: 'artist', org: a.name, from: a.debutYear || a.formed, ...(a.status === 'retired' || a.status === 'split' ? { ended: 1 as const } : {}) });
+  for (const a of actsNow27(s)) if (a.members.includes(id)) out.push({ k: 'artist', org: a.name, from: a.debutYear || a.formed, ...(a.status === 'retired' || a.status === 'split' ? { ended: 1 as const } : {}) });
   for (const [y, , to, why] of careerOf(s, `p:${id}`)) { const k = ROLE_K(to); if (k && k !== 'artist') out.push({ k, from: y, why }); }
   const c18 = career18(s, `p:${id}`);
   if (c18 && W18_K[c18.k]) out.push({ k: W18_K[c18.k], from: c18.y, why: c18.why, ...(c18.lb && s.labels[c18.lb] ? { org: s.labels[c18.lb].name } : {}) });
@@ -92,7 +93,7 @@ function realRoles(s: GameState, quiet = false): void {
   const st = r21(s);
   const byName = new Map<string, Person>();
   for (const p of Object.values(s.persons)) if (p.alive && ROLES21[p.name]) byName.set(p.name, p);
-  for (const a of Object.values(s.acts)) if (ROLES21[a.name] && a.members.length === 1 && s.persons[a.members[0]]?.alive) byName.set(a.name, s.persons[a.members[0]]);
+  for (const a of actsNow27(s)) if (ROLES21[a.name] && a.members.length === 1 && s.persons[a.members[0]]?.alive) byName.set(a.name, s.persons[a.members[0]]);
   for (const [name, p] of byName) {
     for (const [k0, org, from, to] of ROLES21[name] as Role21[]) {
       const k = ROLE_REAL[k0];
@@ -101,7 +102,7 @@ function realRoles(s: GameState, quiet = false): void {
       const key = `${p.id}|${k}|${org ?? ''}`;
       if (st.seen[key]) continue;
       st.seen[key] = 1;
-      const act = Object.values(s.acts).find((a) => a.members.includes(p.id));
+      const act = actsNow27(s).find((a) => a.members.includes(p.id));
       addSpan(s, p, { k, ...(org ? { org } : {}), from: y, ...(to !== undefined ? { to } : {}), real: 1 }, act, quiet || y < s.year);
       if (k === 'festival_founder' && org && !st.fest.some((f) => f.name === org)) st.fest.push({ id: `f21_${++st.n}`, name: org, city: act?.city ?? s.config.homeCity, owner: p.id, since: y, size: 2 });
     }
@@ -125,7 +126,7 @@ function wishes(p: Person, a: Act): Pick[] {
 }
 function newRoles(s: GameState, r: Rng): void {
   const freeWorld = histMode(s) !== 'strict';
-  const cands = Object.values(s.acts).filter((a) => live(a) && a.owner !== 'player' && !a.playerBand && a.fame >= 40 && (freeWorld || !a.catalogNo))
+  const cands = actsNow27(s).filter((a) => live(a) && a.owner !== 'player' && !a.playerBand && a.fame >= 40 && (freeWorld || !a.catalogNo))
     .sort((x, y) => y.fame - x.fame).slice(0, 80);
   let n = 0;
   for (const a of cands) {
@@ -228,7 +229,7 @@ function offerDecisions(s: GameState, r: Rng): void {
   // você é empresário(a): artista sem empresário pede representação
   if (cs.includes('manager')) opts.push(() => {
     const taken = new Set(ventures(s).mg.clients.map((c) => c.actId));
-    const pool = Object.values(s.acts).filter((a) => live(a) && a.owner !== 'player' && !taken.has(a.id) && a.fame >= 15 && a.fame <= 70 && !(s.x4 as unknown as { m14?: { rep: Record<string, unknown> } }).m14?.rep[a.id]);
+    const pool = actsNow27(s).filter((a) => live(a) && a.owner !== 'player' && !taken.has(a.id) && a.fame >= 15 && a.fame <= 70 && !(s.x4 as unknown as { m14?: { rep: Record<string, unknown> } }).m14?.rep[a.id]);
     if (!pool.length) return false;
     const a = r.pick(pool);
     if (!cool(s, `client:${a.id}`, 24)) return false;

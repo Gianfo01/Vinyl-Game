@@ -6,6 +6,7 @@ import { registerSimHook } from '../../ext4';
 import type { GameState } from '../../types';
 import { fmtL, notify, remember } from '../../util';
 import { liveOf } from './state';
+import { releasesNow27 } from '../../tickcache27';
 
 export interface AchievementDef {
   id: string;
@@ -22,7 +23,7 @@ const MINE = new WeakMap<GameState, { w: number; n: number; v: GameState['releas
 const mine = (s: GameState) => {
   const n = s.idSeq, c = MINE.get(s);
   if (c && c.w === s.week && c.n === n) return c.v;
-  const v = Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+  const v = releasesNow27(s).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
   MINE.set(s, { w: s.week, n, v });
   return v;
 };

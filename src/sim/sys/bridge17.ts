@@ -26,6 +26,7 @@ import { opine } from './persona13';
 import { press } from './press9';
 import { soul } from './soul9';
 import { LENDERS, vices } from './vices';
+import { actsNow27 } from '../tickcache27';
 
 // ================================================================ 1. pontes de fatos
 
@@ -211,7 +212,7 @@ function tracked(s: GameState): [Person, Act | undefined][] {
   const out: [Person, Act | undefined][] = [];
   const seen = new Set<string>();
   const mine = new Set(playerActs(s));
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.status !== 'active' && a.status !== 'emerging' && a.status !== 'hiatus') continue;
     if (!mine.has(a.id) && a.fame < 35) continue;
     for (const id of a.members) { const p = s.persons[id]; if (p?.alive && !seen.has(id)) { seen.add(id); out.push([p, a]); } }
@@ -283,7 +284,7 @@ function breakdown17(s: GameState, r: Rng, p: Person, a: Act, mine: boolean): vo
 onFact('death', (s, f) => {
   const dead = new Set(f.actors.filter((id) => s.persons[id] && !s.persons[id].alive));
   if (!dead.size) return;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!f.actors.includes(a.id) && !a.members.some((m) => dead.has(m))) continue;
     for (const m of a.members) if (!dead.has(m)) addStress(s, m, 15, fmtL(l('{l}: perdeu {d}', '{l}: lost {d}'), { l: LBL.grief, d: [...dead].map((id) => s.persons[id]?.name).join(', ') }));
   }

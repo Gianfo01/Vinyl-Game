@@ -48,6 +48,7 @@ import { queueScene } from './scenes/state';
 import { soc18 } from './society18';
 import { SUP19 } from './supply18';
 import { piracyLevel } from './world4/laws';
+import { releasesNow27 } from '../tickcache27';
 
 const F = fmtL;
 const N = (pt: string, en: string): L => l(pt, en);
@@ -152,7 +153,7 @@ onFact('estate_rights', (s, f) => {
 // fatia do espólio nas vendas dos lançamentos póstumos (dinheiro pelo ledger, categoria direitos)
 function estateMonth(s: GameState): void {
   const st = l19a(s);
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.owner !== 'player' || rel.kind !== 'posthumous' || s.week - rel.week > 156) continue;
     const a = s.acts[rel.actId];
     const pid = a?.members.find((id) => s.persons[id] && !s.persons[id].alive);

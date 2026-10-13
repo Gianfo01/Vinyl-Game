@@ -19,6 +19,7 @@ import { fmtL, hasTech, money, notify, playerActs, post, remember, staffSkill, t
 import { scandal } from './scandal17';
 import { CTXFX19 } from './ext4';
 import { actsTouched17 } from './actidx17';
+import { actsNow27, releasesNow27 } from './tickcache27';
 
 type Opt = EventDef['options'][number];
 type Apply = Opt['apply'];
@@ -52,7 +53,7 @@ const era = (s: GameState, from: number, to: number) => s.year >= from && s.year
 let relCache: { s: GameState; week: number; seq: number; list: Release[] } | null = null;
 const playerRels = (s: GameState): Release[] => {
   if (!relCache || relCache.s !== s || relCache.week !== s.week || relCache.seq !== s.idSeq) {
-    relCache = { s, week: s.week, seq: s.idSeq, list: Object.values(s.releases).filter((x) => x.owner === 'player' || s.acts[x.actId]?.playerBand) };
+    relCache = { s, week: s.week, seq: s.idSeq, list: releasesNow27(s).filter((x) => x.owner === 'player' || s.acts[x.actId]?.playerBand) };
   }
   return relCache.list;
 };
@@ -359,13 +360,13 @@ const ERA_EARLY: EventDef[] = [
   E('skiffle_craze', 'scouting', 'good', [], 24,
     (s, r) => {
       if (!era(s, 1955, 1963) || !isLabel(s)) return null;
-      const cands = Object.values(s.acts).filter((x) => !x.owner && mkt(x) === 'eu' && active(x) && !s.knowledge[x.id]);
+      const cands = actsNow27(s).filter((x) => !x.owner && mkt(x) === 'eu' && active(x) && !s.knowledge[x.id]);
       return cands.length && r.chance(0.4) ? { city: r.pick(['liverpool', 'london', 'glasgow', 'hamburg']) } : null;
     },
     ['Febre skiffle em {cityName}', 'Skiffle craze in {cityName}'],
     ['Adolescentes com tábuas de lavar e baixos de caixote formam mil bandas. Seu A&R pode passar uma semana nos porões de {cityName}.', 'Teens with washboards and tea-chest basses form a thousand bands. Your A&R could spend a week in the {cityName} cellars.'],
     [
-      o('scout', 'Mandar o A&R', 'Send the A&R', (s, r, c) => { pay(s, `skiffle:${c.city}`, 400, 'scouting', 'Viagem de A&R'); const list = Object.values(s.acts).filter((x) => !x.owner && mkt(x) === 'eu' && active(x)); for (const x of r.shuffle(list).slice(0, 3)) signal(s, r, x.id, 1); s.genrePop.skiffle = clamp((s.genrePop.skiffle ?? 0.6) + 0.2, 0, 2.2); }),
+      o('scout', 'Mandar o A&R', 'Send the A&R', (s, r, c) => { pay(s, `skiffle:${c.city}`, 400, 'scouting', 'Viagem de A&R'); const list = actsNow27(s).filter((x) => !x.owner && mkt(x) === 'eu' && active(x)); for (const x of r.shuffle(list).slice(0, 3)) signal(s, r, x.id, 1); s.genrePop.skiffle = clamp((s.genrePop.skiffle ?? 0.6) + 0.2, 0, 2.2); }),
       o('ignore', 'É moda passageira', 'It\'s a passing fad', noop),
     ]),
   E('payola_hearings', 'world', 'neutral', ['crime'], 999,
@@ -783,7 +784,7 @@ const MEDIA_PR: EventDef[] = [
     ]),
   E('biopic_rights', 'contract', 'good', [], 36,
     (s, r) => {
-      const legends = Object.values(s.acts).filter((x) => (x.legend || x.hits > 2) && (x.status === 'retired' || x.status === 'split') && myRels(s, (rel) => rel.actId === x.id).length > 0);
+      const legends = actsNow27(s).filter((x) => (x.legend || x.hits > 2) && (x.status === 'retired' || x.status === 'split') && myRels(s, (rel) => rel.actId === x.id).length > 0);
       return legends.length && r.chance(0.2) ? { act: r.pick(legends).id, fee: 25000 } : null;
     },
     ['Cinebiografia de {act}', '{act} biopic'],
@@ -877,7 +878,7 @@ const FANDOM: EventDef[] = [
       if (s.year < 2005) return null;
       const a = pick(s, r, (x) => x.fans.core > 5000 && ['pop', 'hiphop', 'asia_me', 'latin', 'rnb'].includes(fam(x)));
       if (!a) return null;
-      const rivals = Object.values(s.acts).filter((x) => x.owner && x.owner !== 'player' && fam(x) === fam(a) && x.fame > a.fame * 0.6);
+      const rivals = actsNow27(s).filter((x) => x.owner && x.owner !== 'player' && fam(x) === fam(a) && x.fame > a.fame * 0.6);
       return rivals.length && r.chance(0.3) ? { act: a.id, rival: r.pick(rivals).name } : null;
     },
     ['Guerra de fandoms: {act} × {rival}', 'Fandom war: {act} vs {rival}'],
@@ -1043,7 +1044,7 @@ const TECH: EventDef[] = [
   E('myplace_discovery', 'scouting', 'good', [], 6,
     (s, r) => {
       if (!era(s, 2004, 2011) || !isLabel(s)) return null;
-      const cands = Object.values(s.acts).filter((x) => !x.owner && active(x) && !s.knowledge[x.id] && x.potential > 55);
+      const cands = actsNow27(s).filter((x) => !x.owner && active(x) && !s.knowledge[x.id] && x.potential > 55);
       return cands.length && r.chance(0.4) ? { act: r.pick(cands).id } : null;
     },
     ['{act} bomba no MyPlace', '{act} blowing up on MyPlace'],
@@ -1232,7 +1233,7 @@ const LIVE: EventDef[] = [
     (s, r) => {
       if (!isLabel(s)) return null;
       const a = pick(s, r, (x) => recentGig(s, x, 8) && x.fame > 20);
-      const op = Object.values(s.acts).filter((x) => !x.owner && active(x) && x.potential > 60 && fam(x) === (a ? fam(a) : ''));
+      const op = actsNow27(s).filter((x) => !x.owner && active(x) && x.potential > 60 && fam(x) === (a ? fam(a) : ''));
       if (!a || !op.length || !r.chance(0.25)) return null;
       const chosen = r.pick(op);
       return { act: a.id, opener: chosen.id, openerName: chosen.name };
@@ -1485,7 +1486,7 @@ const LAW: EventDef[] = [
     ]),
   E('estate_dispute', 'contract', 'neutral', ['death', 'legal'], 36,
     (s, r) => {
-      const gone = Object.values(s.acts).filter((x) => (x.status === 'retired' || x.status === 'split') && (x.legend || x.hits > 1) && s.year - x.careerEnd > 3 && myRels(s, (rel) => rel.actId === x.id).length > 0);
+      const gone = actsNow27(s).filter((x) => (x.status === 'retired' || x.status === 'split') && (x.legend || x.hits > 1) && s.year - x.careerEnd > 3 && myRels(s, (rel) => rel.actId === x.id).length > 0);
       return gone.length && r.chance(0.15) ? { act: r.pick(gone).id } : null;
     },
     ['Herdeiros de {act} contestam o catálogo', '{act}\'s heirs contest the catalog'],
@@ -1833,7 +1834,7 @@ const CRITIC_AWARD: EventDef[] = [
   E('hall_of_echoes', 'career', 'good', [], 12,
     (s, r) => {
       if (s.year < 1986) return null;
-      const cands = Object.values(s.acts).filter((x) => s.year - x.debutYear >= 25 && (x.legend || x.hits >= 3) && !s.flags[`hall:${x.id}`] && (x.owner === 'player' || myRels(s, (rel) => rel.actId === x.id).length > 0));
+      const cands = actsNow27(s).filter((x) => s.year - x.debutYear >= 25 && (x.legend || x.hits >= 3) && !s.flags[`hall:${x.id}`] && (x.owner === 'player' || myRels(s, (rel) => rel.actId === x.id).length > 0));
       return cands.length && r.chance(0.4) ? { act: r.pick(cands).id } : null;
     },
     ['{act} no Hall of Echoes', '{act} enters the Hall of Echoes'],
@@ -2008,7 +2009,7 @@ const FEST_MOVE: EventDef[] = [
         const g = String(c.genre);
         s.scenes[`${c.city}:${g}`] = (s.scenes[`${c.city}:${g}`] ?? 0) + 10;
         s.genrePop[g] = clamp((s.genrePop[g] ?? 0.6) + 0.2, 0, 2.2);
-        for (const x of Object.values(s.acts).filter((y) => !y.owner && y.city === c.city && active(y)).slice(0, 3)) signal(s, r, x.id, 1);
+        for (const x of actsNow27(s).filter((y) => !y.owner && y.city === c.city && active(y)).slice(0, 3)) signal(s, r, x.id, 1);
         log(s, 'movement', 'Selo apoia o nascimento de "{m}".', 'Label backs the birth of "{m}".', { m: l(String(c.mpt), String(c.men)) }, undefined, true);
       }),
       o('dress', 'Vestir seus artistas da cidade com a estética', 'Dress your artists from that city in the look', (s, _r, c) => { s.flags[`movement:${c.movement}`] = s.week; for (const a of mine(s).filter((x) => x.city === c.city)) { mom(a, 6); fans(a, 10000, 2000, 500); } }),
@@ -2113,7 +2114,7 @@ const NEURAL: EventDef[] = [
   E('timbre_bank_heirs', 'neural', 'neutral', ['death'], 36,
     (s, r) => {
       if (!hasTech(s, 'synthetic_voice')) return null;
-      const gone = Object.values(s.acts).filter((x) => x.status === 'retired' && (x.legend || x.hits > 1) && myRels(s, (rel) => rel.actId === x.id).length > 0);
+      const gone = actsNow27(s).filter((x) => x.status === 'retired' && (x.legend || x.hits > 1) && myRels(s, (rel) => rel.actId === x.id).length > 0);
       return gone.length && r.chance(0.15) ? { act: r.pick(gone).id, fee: 15000 } : null;
     },
     ['TimbreBank e os herdeiros de {act}', 'TimbreBank and {act}\'s heirs'],

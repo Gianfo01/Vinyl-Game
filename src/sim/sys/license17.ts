@@ -12,6 +12,7 @@ import { emitFact } from '../facts17';
 import type { GameState, Label } from '../types';
 import { fmtL, money, notify, post } from '../util';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { releasesNow27 } from '../tickcache27';
 
 export type Dir = 'in' | 'out';
 export interface Lic17 { id: string; dir: Dir; lb: string; market: MarketId; adv: number; share: number; until: number; since: number; earned: number; status: 'offer' | 'active' | 'ended'; expires: number; why?: L }
@@ -25,7 +26,7 @@ const mkSize = (s: GameState, m: MarketId) => MARKETS.find((x) => x.id === m)?.s
 
 /** Receita mensal (centavos) que um selo faz com lançamentos recentes — base das contas de licença. */
 export function labelMonthGross(s: GameState, lb: Label): number {
-  return Object.values(s.releases).filter((r) => r.owner === lb.id && s.week - r.week < 52).reduce((t, r) => t + r.weekly.slice(-4).reduce((a, x) => a + x, 0) * (r.revenue / Math.max(1, r.totalUnits)), 0);
+  return releasesNow27(s).filter((r) => r.owner === lb.id && s.week - r.week < 52).reduce((t, r) => t + r.weekly.slice(-4).reduce((a, x) => a + x, 0) * (r.revenue / Math.max(1, r.totalUnits)), 0);
 }
 /** Peso do mercado M dentro da operação (tamanho relativo). */
 const weightIn = (s: GameState, terr: MarketId[], m: MarketId) => mkSize(s, m) / Math.max(0.1, terr.reduce((t, x) => t + mkSize(s, x), 0) + mkSize(s, m));

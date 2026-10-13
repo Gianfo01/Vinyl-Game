@@ -14,6 +14,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { songQ } from '../production';
 import type { GameState, Person } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
+import { actsNow27 } from '../tickcache27';
 
 export type InstFamily = 'strings' | 'keys' | 'perc' | 'winds' | 'voice' | 'electronic';
 
@@ -260,7 +261,7 @@ registerSimHook('month', 'inst', (s, r: Rng) => {
   }
   // NPCs famosos às vezes começam um instrumento novo (ninguém para de aprender)
   if (s.month % 3 === 0) {
-    for (const act of Object.values(s.acts)) {
+    for (const act of actsNow27(s)) {
       if (act.owner === 'player' || act.playerBand || (act.status !== 'active' && act.status !== 'hiatus')) continue;
       if (!r.chance(0.04)) continue;
       const p = s.persons[r.pick(act.members)];

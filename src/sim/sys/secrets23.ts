@@ -40,6 +40,7 @@ import { comeOut, isQueer, sexOf } from './sex17';
 import { st18 } from './stream18';
 import { registerSituation } from './situations17';
 import { ventures } from './ventures9';
+import { actsNow27 } from '../tickcache27';
 
 // ================================================================ tipos
 
@@ -432,7 +433,7 @@ function tracked(s: GameState): string[] {
   const out = new Set<string>(['player']);
   for (const id of playerActs(s)) { const a = s.acts[id]; if (!a) continue; out.add(`a:${a.id}`); for (const m of a.members) out.add(`p:${m}`); }
   for (const x of s.player.staff) out.add(`s:${x.id}`);
-  const top = Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.owner !== 'player').sort((a, b) => b.fame - a.fame).slice(0, 12);
+  const top = actsNow27(s).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.owner !== 'player').sort((a, b) => b.fame - a.fame).slice(0, 12);
   for (const a of top) { out.add(`a:${a.id}`); for (const m of a.members) out.add(`p:${m}`); }
   for (const lb of Object.values(s.labels)) if (lb.active) out.add(`lb:${lb.id}`);
   for (const x of sec23(s).own) if (!x.end) out.add(x.subject);
@@ -549,7 +550,7 @@ function nativeMonth(s: GameState, r: Rng): void {
     if (a && STREET(a.genre) && orgs.length && !has(subj, 'informant') && r.chance(0.002)) add({ kind: 'informant', subject: subj, sev: 60, ev: 35, real, data: { o: r.pick(orgs).id } });
   }
   // ghostwriter: atos famosos de pop/rap
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.fame < 35 || a.status === 'retired' || a.status === 'split' || !['pop', 'hiphop', 'rnb'].includes(familyOf(a.genre))) continue;
     const real = !!a.catalogNo;
     if ((real && strict) || has(`a:${a.id}`, 'ghostwriter') || !r.chance(0.0015)) continue;

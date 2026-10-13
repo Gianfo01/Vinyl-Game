@@ -25,6 +25,7 @@ import { nudge16 } from './fame16';
 import { actIxVersion17, actsOfPerson17 } from '../actidx17';
 import { per13 } from './persona13';
 import { registerSituation, type SitOption } from './situations17';
+import { actsNow27 } from '../tickcache27';
 
 export type { Orient17 };
 export type Closet17 = 'out' | 'closet' | 'private' | 'na';
@@ -273,7 +274,7 @@ registerHoldEffect('sex17', (s, h, verb) => {
 
 // ---------------------------------------------------------------- mês: armário pesa, boatos, quem sabe, reais que se declaram
 
-const notableActs = (s: GameState): Act[] => { const mine = new Set(playerActs(s)); return Object.values(s.acts).filter((a) => (a.status === 'active' || a.status === 'emerging') && (mine.has(a.id) || a.fame >= 25)); };
+const notableActs = (s: GameState): Act[] => { const mine = new Set(playerActs(s)); return actsNow27(s).filter((a) => (a.status === 'active' || a.status === 'emerging') && (mine.has(a.id) || a.fame >= 25)); };
 const filtered = (s: GameState) => s.config.contentFilters.includes('romance');
 
 /** Risco mensal de exposição de quem está no armário (interface mostra). */
@@ -296,7 +297,7 @@ registerSimHook('month', 'sex17', (s) => {
   const r = Rng.fromSeed(`${s.config.seed}:sex17:${s.year}:${s.month}`);
   const st = sx17(s);
   // reais: declarações públicas documentadas no ano em que aconteceram
-  if (s.config.realNames && s.month === 5) for (const a of Object.values(s.acts)) {
+  if (s.config.realNames && s.month === 5) for (const a of actsNow27(s)) {
     if (!a.catalogNo) continue;
     for (const m of a.members) {
       const p = s.persons[m];

@@ -23,6 +23,7 @@ import { narrate, narratorPace } from './narrator13';
 import { scandal } from './scandal17';
 import { allReleases17 } from './relidx17';
 import { actsTouched17 } from './actidx17';
+import { actsNow27 } from './tickcache27';
 
 export type Ctx = Record<string, string | number>;
 
@@ -558,7 +559,7 @@ export const EVENTS: EventDef[] = [
     id: 'demo_tape', cat: 'scouting', tone: 'good', tags: [], cooldown: 4,
     find: (s, r) => {
       if (s.config.role === 'artist') return null;
-      const cands = Object.values(s.acts).filter((a) => !a.owner && !s.knowledge[a.id] && (a.status === 'emerging' || a.status === 'active') && a.potential > 70);
+      const cands = actsNow27(s).filter((a) => !a.owner && !s.knowledge[a.id] && (a.status === 'emerging' || a.status === 'active') && a.potential > 70);
       return cands.length && r.chance(0.5) ? { act: r.pick(cands).id } : null;
     },
     title: l('Uma demo diferente', 'A different demo'),
@@ -579,7 +580,7 @@ export const EVENTS: EventDef[] = [
     id: 'reunion', cat: 'band', tone: 'good', tags: [], cooldown: 24,
     find: (s, r) => {
       if (s.config.role === 'artist') return null;
-      const cands = Object.values(s.acts).filter((a) => (a.status === 'retired' || a.status === 'split') && (a.legend || a.hits > 1) && s.year - a.careerEnd >= 5 && s.year - a.careerEnd < 25 && members(s, a).length > 0);
+      const cands = actsNow27(s).filter((a) => (a.status === 'retired' || a.status === 'split') && (a.legend || a.hits > 1) && s.year - a.careerEnd >= 5 && s.year - a.careerEnd < 25 && members(s, a).length > 0);
       return cands.length && r.chance(0.3) ? { act: r.pick(cands).id } : null;
     },
     title: l('{act} considera uma reunião', '{act} considers a reunion'),
@@ -597,14 +598,14 @@ export const EVENTS: EventDef[] = [
       if (!hot.length) return null;
       const [k] = r.pick(hot);
       const [city, genre] = k.split(':');
-      const acts = Object.values(s.acts).filter((a) => a.city === city && a.genre === genre && a.hits > 0);
+      const acts = actsNow27(s).filter((a) => a.city === city && a.genre === genre && a.hits > 0);
       if (acts.length < 2) return null;
       return { scene: k, city, genre };
     },
     title: l('Explode a cena: {genreName} em {cityName}', 'Scene explodes: {genreName} in {cityName}'),
     text: l('Vários atos, clubes e rádios sustentam um movimento. Quem estiver lá agora surfa a onda.', 'Several acts, clubs and radio sustain a movement. Whoever is there now rides the wave.'),
     options: [
-      { id: 'invest', label: l('Apoiar a cena (patrocínio)', 'Back the scene (sponsorship)'), hint: l('Custo; sinais de scouting na cidade.', 'Cost; scouting signals in the city.'), apply: (s, r, c) => { pay(s, `scene:${c.scene}`, 4000, 'marketing', 'Apoio à cena'); s.flags[`scene:${c.scene}`] = 1; s.genrePop[String(c.genre)] = clamp((s.genrePop[String(c.genre)] ?? 1) + 0.35, 0, 2.2); rep(s, 'artistic', 3); for (const a of Object.values(s.acts).filter((x) => x.city === c.city && !x.owner && !s.knowledge[x.id]).slice(0, 3)) s.knowledge[a.id] = { actId: a.id, degree: 2, stage: 'monitoring', bias: r.normal(0, 5), updatedWeek: s.week, source: 'scene' }; remember(s, 'movement', fmtL(l('Nasce um movimento: {g} em {ci}.', 'A movement is born: {g} in {ci}.'), { g: genreById[String(c.genre)]?.name ?? String(c.genre), ci: cityById[String(c.city)]?.name ?? String(c.city) }), { important: true }); } },
+      { id: 'invest', label: l('Apoiar a cena (patrocínio)', 'Back the scene (sponsorship)'), hint: l('Custo; sinais de scouting na cidade.', 'Cost; scouting signals in the city.'), apply: (s, r, c) => { pay(s, `scene:${c.scene}`, 4000, 'marketing', 'Apoio à cena'); s.flags[`scene:${c.scene}`] = 1; s.genrePop[String(c.genre)] = clamp((s.genrePop[String(c.genre)] ?? 1) + 0.35, 0, 2.2); rep(s, 'artistic', 3); for (const a of actsNow27(s).filter((x) => x.city === c.city && !x.owner && !s.knowledge[x.id]).slice(0, 3)) s.knowledge[a.id] = { actId: a.id, degree: 2, stage: 'monitoring', bias: r.normal(0, 5), updatedWeek: s.week, source: 'scene' }; remember(s, 'movement', fmtL(l('Nasce um movimento: {g} em {ci}.', 'A movement is born: {g} in {ci}.'), { g: genreById[String(c.genre)]?.name ?? String(c.genre), ci: cityById[String(c.city)]?.name ?? String(c.city) }), { important: true }); } },
       { id: 'watch', label: l('Só observar', 'Just watch'), apply: (s, _r, c) => { s.flags[`scene:${c.scene}`] = 1; s.genrePop[String(c.genre)] = clamp((s.genrePop[String(c.genre)] ?? 1) + 0.25, 0, 2.2); } },
     ],
   },
@@ -701,7 +702,7 @@ export const EVENTS: EventDef[] = [
     id: 'ghost_voice', cat: 'neural', tone: 'neutral', tags: ['death'], cooldown: 999,
     find: (s, r) => {
       if (!hasTech(s, 'synthetic_voice') || s.flags.ghostAsked) return null;
-      const legends = Object.values(s.acts).filter((a) => (a.status === 'retired') && (a.legend || a.hits > 2) && (a.owner === 'player' || a.releases.some((id) => s.releases[id]?.owner === 'player')));
+      const legends = actsNow27(s).filter((a) => (a.status === 'retired') && (a.legend || a.hits > 2) && (a.owner === 'player' || a.releases.some((id) => s.releases[id]?.owner === 'player')));
       return legends.length && r.chance(0.5) ? { act: r.pick(legends).id } : null;
     },
     title: l('Recriar a voz de {act}?', 'Recreate {act}\'s voice?'),

@@ -17,6 +17,7 @@ import { fmtL, money, notify, post } from '../util';
 import { addHype } from './hype12';
 import { pressLine17 } from '../outlets17';
 import { actsOfPerson17 } from '../actidx17';
+import { actsNow27 } from '../tickcache27';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Só amigos e a cena mais próxima sabem quem é.', 'Only friends and the nearest scene know them.') },
@@ -219,7 +220,7 @@ export function fameMonth(s: GameState): void {
   const st = f15(s);
   const r = Rng.fromSeed(`${s.config.seed}:fame15:${s.year}:${s.month}`);
   const rec0 = s.month % 3 === 0;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     const mine = mineAct(a);
     const t = fameTier(a.fame);
     const pk0 = st.pk[a.id] ?? a.fame;
@@ -328,7 +329,7 @@ export function fameMonth(s: GameState): void {
   }
   // saldo pessoal decai devagar; história trimestral das pessoas conhecidas
   for (const [id, v] of Object.entries(st.po)) { const nv = s.persons[id]?.alive === false ? v : v * 0.985; if (Math.abs(nv) < 0.3) delete st.po[id]; else st.po[id] = nv; }
-  if (rec0) for (const a of Object.values(s.acts)) {
+  if (rec0) for (const a of actsNow27(s)) {
     if (!(mineAct(a) || a.fame >= 25 || st.h[a.id])) continue;
     for (const id of a.members) { const v = pf(s, id); if (v >= 12 || mineAct(a) || st.h[id]) rec(s, id, v); }
   }

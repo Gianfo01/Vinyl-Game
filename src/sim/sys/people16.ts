@@ -36,6 +36,7 @@ import { canonKey, realDataOf } from './realworld';
 import { playbookOf } from './rivals8';
 import { activeAct } from './ventures12';
 import { ventures } from './ventures9';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 
@@ -127,7 +128,7 @@ function assignMgrs(s: GameState, r: Rng): void {
   for (const rp of Object.values(st.rep)) load.set(rp.m, (load.get(rp.m) ?? 0) + 1);
   const mine = new Set(ventures(s).mg.clients.map((c) => c.actId));
   let n = 0;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (n >= 3) break;
     if (a.fame < 18 || st.rep[a.id] || a.playerBand || mine.has(a.id) || a.debutYear > s.year || !activeAct(a) || realDataOf(a)) continue;
     if (!r.chance(0.035 + (a.owner === 'player' ? 0 : a.fame / 4000))) continue;
@@ -197,7 +198,7 @@ function ix16(s: GameState): Ix16 {
   IX.set(s, out);
   // pessoas do banco (a mais relevante por nome: viva, solo com o próprio nome, mais famosa)
   const actOf = new Map<string, Act>();
-  for (const a of Object.values(s.acts)) for (const id of a.members) { const o = actOf.get(id); if (!o || a.fame > o.fame) actOf.set(id, a); }
+  for (const a of actsNow27(s)) for (const id of a.members) { const o = actOf.get(id); if (!o || a.fame > o.fame) actOf.set(id, a); }
   const score = (p: Person) => (p.alive ? 1000 : 0) + (actOf.get(p.id)?.name === p.name ? 500 : 0) + (actOf.get(p.id)?.fame ?? 0);
   const best = new Map<string, Person>();
   for (const p of Object.values(s.persons)) {
@@ -244,7 +245,7 @@ export function roles16(s: GameState, key: string): { role: Role16; key: string 
     const id = rest.join(':');
     if (k === 'player' || (c === 'p' && s.persons[id]?.isPlayer)) {
       out.push({ role: 'owner', key: k });
-      if (c === 'p' && Object.values(s.acts).some((a) => a.members.includes(id))) out.push({ role: 'artist', key: k });
+      if (c === 'p' && actsNow27(s).some((a) => a.members.includes(id))) out.push({ role: 'artist', key: k });
     } else if (c === 'p') out.push({ role: 'artist', key: k });
     else if (c === 'pd') out.push({ role: 'producer', key: k });
     else if (c === 'e') out.push({ role: 'manager', key: k });
@@ -682,12 +683,12 @@ export function works16(s: GameState, id: string): Work16[] {
   }
   if (s.config.realNames) for (const [w, artist, y] of p.w) {
     if (y > s.year) continue;
-    const act = Object.values(s.acts).find((a) => realDataOf(a)?.n === artist || a.name === artist);
-    const rel = act ? Object.values(s.releases).find((r) => r.actId === act.id && canonKey(r.title) === canonKey(w)) : undefined;
+    const act = actsNow27(s).find((a) => realDataOf(a)?.n === artist || a.name === artist);
+    const rel = act ? releasesNow27(s).find((r) => r.actId === act.id && canonKey(r.title) === canonKey(w)) : undefined;
     out.push({ title: w, artist, year: y, actId: act?.id, relId: rel?.id, peak: rel && rel.peak < 999 ? rel.peak : undefined, you: !!act && act.owner === 'player', real: true });
   }
   for (const c of p15(s).credits[id] ?? []) if (!c.you) {
-    const a = Object.values(s.acts).find((x) => x.name === c.who);
+    const a = actsNow27(s).find((x) => x.name === c.who);
     out.push({ title: c.title, artist: c.who, year: c.y, actId: a?.id, you: false, label: c.title });
   }
   return out.sort((a, b) => b.year - a.year);

@@ -24,6 +24,7 @@ import { regimeAt18 } from './society18';
 import { HIST_SCENES, sceneStage } from './world4/scenes';
 import { w4 } from './world4/state';
 import { mov9 } from './movements9';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export type Ph27 = 'born' | 'growing' | 'peak' | 'saturated' | 'fading' | 'dead';
 export const PH27: Record<Ph27, L> = {
@@ -118,7 +119,7 @@ export function venueL27(name: string): L {
 
 function actsByKey(s: GameState): Map<string, Act[]> {
   const m = new Map<string, Act[]>();
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!liveAct(a)) continue;
     const k = `${a.city}:${a.genre}`;
     const arr = m.get(k);
@@ -190,7 +191,7 @@ function births(s: GameState, r: Rng, by: Map<string, Act[]>): void {
 /** Hit do jogador (top 10) planta uma cena na cidade do ato, se ainda não há cena viva ali para o gênero. */
 function hitSeeds(s: GameState, r: Rng): void {
   const st = sc27(s);
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.owner !== 'player' || s.week - rel.week > 10 || rel.peak > 10 || rel.peak <= 0 || st.seen[`hit:${rel.id}`]) continue;
     st.seen[`hit:${rel.id}`] = 1;
     const a = s.acts[rel.actId];

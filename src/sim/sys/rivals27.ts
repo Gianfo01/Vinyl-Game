@@ -26,6 +26,7 @@ import { spawnProceduralAct } from '../worldgen';
 import { headline19 } from './factlink19';
 import { leaders, type LeaderStyle } from './leaders10';
 import { COPIES27 } from './scenes27';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export type Temper27 = 'vengeful' | 'cold' | 'copycat' | 'proud';
 export const TEMPER27: Record<Temper27, [L, L]> = {
@@ -112,7 +113,7 @@ function bumpAgg(s: GameState, lb: Label, x: Riv27, d: number): void {
 
 function react(s: GameState, r: Rng): void {
   const st = rv27(s);
-  const mine = Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand && a.status !== 'retired' && a.status !== 'split');
+  const mine = actsNow27(s).filter((a) => a.owner === 'player' && !a.playerBand && a.status !== 'retired' && a.status !== 'split');
   for (const [id, x] of Object.entries(st.L)) {
     const lb = s.labels[id];
     if (!lb?.active) { delete st.L[id]; continue; }
@@ -156,7 +157,7 @@ COPIES27.f = (s, g) => rv27(s).copies.filter((c) => c.g === g && liveCopy(s, c))
 
 function copycats(s: GameState, r: Rng): void {
   const st = rv27(s);
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.owner !== 'player' || rel.peak > 10 || s.week - rel.week > 10 || st.hit[rel.id]) continue;
     st.hit[rel.id] = 1;
     const a = s.acts[rel.actId];

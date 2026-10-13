@@ -7,6 +7,7 @@ import { cityById, genreById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState, MemoryEntry } from '../types';
 import { fmtL, rememberListeners } from '../util';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export interface ChronEv {
   y: number;
@@ -147,7 +148,7 @@ const alive = (a: Act) => a.status === 'active' || a.status === 'emerging' || a.
 
 /** Genealogia: registra a passagem de cada pessoa por atos notáveis. */
 function trackMembers(s: GameState, c: ChronState): void {
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!alive(a) || !notable(a)) continue;
     for (const pid of a.members) {
       const list = (c.mem[pid] ??= []);
@@ -172,7 +173,7 @@ function trackMembers(s: GameState, c: ChronState): void {
 /** Estreias marcantes e influências (quando o ato chega à fama ou ao primeiro hit). */
 function debuts(s: GameState, c: ChronState): void {
   let pool: Record<string, Act[]> | undefined;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (c.seen[a.id] || !alive(a)) continue;
     if (a.fame < 28 && a.hits === 0) continue;
     c.seen[a.id] = 1;
@@ -184,7 +185,7 @@ function debuts(s: GameState, c: ChronState): void {
 /** r19 (T8, desempenho): candidatos a influência agrupados por família, na ordem de s.acts (mesmo resultado do laço completo). */
 function infPool19(s: GameState): Record<string, Act[]> {
   const out: Record<string, Act[]> = {};
-  for (const b of Object.values(s.acts)) if (b.legend || b.hits > 0 || b.fame > 35) (out[genreById[b.genre]?.family ?? ''] ??= []).push(b);
+  for (const b of actsNow27(s)) if (b.legend || b.hits > 0 || b.fame > 35) (out[genreById[b.genre]?.family ?? ''] ??= []).push(b);
   return out;
 }
 
@@ -206,7 +207,7 @@ function pickInfluence(s: GameState, c: ChronState, a: Act, silent = false, pool
 
 /** Obras-primas: lançamentos de terceiros (ou seus) com crítica altíssima. */
 function landmarkReleases(s: GameState, c: ChronState): void {
-  for (const r of Object.values(s.releases)) {
+  for (const r of releasesNow27(s)) {
     if (r.week <= c.lw || r.hist) continue;
     const a = s.acts[r.actId];
     if (!a) continue;
@@ -218,7 +219,7 @@ function landmarkReleases(s: GameState, c: ChronState): void {
 /** Cenas: nascem quando uma cidade junta artistas de um gênero e público; morrem quando esvaziam. */
 function scenesYear(s: GameState, c: ChronState): void {
   const score: Record<string, number> = {};
-  for (const a of Object.values(s.acts)) if (alive(a) && a.fame >= 8) score[`${a.city}:${a.genre}`] = (score[`${a.city}:${a.genre}`] ?? 0) + 1 + a.fame / 60;
+  for (const a of actsNow27(s)) if (alive(a) && a.fame >= 8) score[`${a.city}:${a.genre}`] = (score[`${a.city}:${a.genre}`] ?? 0) + 1 + a.fame / 60;
   for (const [k, v] of Object.entries(s.scenes)) if (v > 0.5) score[k] = (score[k] ?? 0) + v / 6;
   let born = 0;
   for (const [k, v] of Object.entries(score).sort((a, b) => b[1] - a[1])) {
@@ -247,7 +248,7 @@ function records(s: GameState, c: ChronState): void {
   ];
   for (const R of RECS) {
     let top: Act | undefined;
-    for (const a of Object.values(s.acts)) if (!top || R.f(a) > R.f(top)) top = a;
+    for (const a of actsNow27(s)) if (!top || R.f(a) > R.f(top)) top = a;
     if (!top) continue;
     const v = R.f(top);
     const cur = c.rec[R.k];
@@ -262,7 +263,7 @@ function records(s: GameState, c: ChronState): void {
 // o mundo inicial já existe: quem já é famoso não "desponta" no primeiro mês
 registerSimHook('newgame', 'chron9', (s) => {
   const c = chronState(s);
-  { const pool = infPool19(s); for (const a of Object.values(s.acts)) if (a.fame >= 28 || a.hits > 0) { c.seen[a.id] = 1; if (!c.inf[a.id]) pickInfluence(s, c, a, true, pool); } }
+  { const pool = infPool19(s); for (const a of actsNow27(s)) if (a.fame >= 28 || a.hits > 0) { c.seen[a.id] = 1; if (!c.inf[a.id]) pickInfluence(s, c, a, true, pool); } }
 });
 
 registerSimHook('month', 'chron9', (s) => {

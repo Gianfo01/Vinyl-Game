@@ -40,6 +40,7 @@ import { realAct17 } from './realidx17';
 import { REP_NOTES19, mix18 } from './report18';
 import { stage19 } from './revival19';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 const F = fmtL;
 const usd = (c: number): string => `$${Math.round(c / 100).toLocaleString('en-US')}`;
@@ -166,7 +167,7 @@ export function certMonth19(s: GameState): void {
   if (!bs.length) return;
   let npcF = 0, newP = 0;
   const sfm: Partial<Record<MarketId, number>> = {};
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.totalUnits < 1e4) continue;
     const mine = mineRel(s, rel), a = s.acts[rel.actId];
     if (!mine && (rel.hist || !a || (a.fame < 50 && !(rel.peak && rel.peak <= 10)))) continue;
@@ -455,7 +456,7 @@ export function star360Month19(s: GameState): void {
   if (s.month !== 9 || !r.chance(0.5)) return;
   const strict = s.config.history === 'strict' && s.config.realNames;
   const real = strict && s.year === 2007 ? realAct17(s, 'Madonna') : undefined;
-  const pool = real ? [real] : strict ? [] : Object.values(s.acts).filter((a) => a.owner && a.owner !== 'player' && s.labels[a.owner] && a.fame >= 75 && a.status === 'active' && !s.flags[`mka19:p360:${a.id}`]);
+  const pool = real ? [real] : strict ? [] : actsNow27(s).filter((a) => a.owner && a.owner !== 'player' && s.labels[a.owner] && a.fame >= 75 && a.status === 'active' && !s.flags[`mka19:p360:${a.id}`]);
   const a = pool.sort((x, y) => y.fame - x.fame)[0];
   if (!a || !a.owner || a.owner === 'player' || !s.labels[a.owner]) return;
   const lb = a.owner;
@@ -509,7 +510,7 @@ export function review19(s: GameState, buyer: string, why: L): Anti19 | null {
   if (!lb || off()) return null;
   const sh = share19(s, buyer);
   if (sh < antiTh19(s.year) || mka19(s).anti.some((x) => x.b === buyer && x.y === s.year)) return null;
-  const rels = Object.values(s.releases).filter((x) => x.owner === buyer && x.totalUnits > 5000).sort((a, b) => b.totalUnits - a.totalUnits).slice(2, 10);
+  const rels = releasesNow27(s).filter((x) => x.owner === buyer && x.totalUnits > 5000).sort((a, b) => b.totalUnits - a.totalUnits).slice(2, 10);
   if (rels.length < 3) return null;
   const st = mka19(s);
   const x: Anti19 = { id: `an${++st.seq}`, b: buyer, rels: rels.map((r) => r.id), price: relPrice(s, rels), w: s.week + 6, st: 'open', y: s.year, why };
@@ -533,7 +534,7 @@ export function bid19(s: GameState, id: string, k: keyof typeof BID19 | 'contest
     post(s, `mka19ct:${x.id}`, -money(s, 6000), 'legal', 'Contestação de fusão');
     const ok = rng(s).chance(0.4);
     if (ok) {
-      const more = Object.values(s.releases).filter((r) => r.owner === x.b && r.totalUnits > 5000 && !x.rels.includes(r.id)).sort((a, b) => b.totalUnits - a.totalUnits).slice(0, 4);
+      const more = releasesNow27(s).filter((r) => r.owner === x.b && r.totalUnits > 5000 && !x.rels.includes(r.id)).sort((a, b) => b.totalUnits - a.totalUnits).slice(0, 4);
       x.rels.push(...more.map((r) => r.id)); x.price = Math.round(relPrice(s, x.rels.map((r) => s.releases[r]).filter((r): r is Release => !!r)) * 0.85);
       s.player.reputation.institutional = clamp(s.player.reputation.institutional + 2, 0, 100);
       return F(l('O regulador ouve você: o lote cresce para {n} masters e o preço cai 15%. Dê o lance na página Mercado.', 'The regulator listens: the lot grows to {n} masters and the price falls 15%. Bid on the Market page.'), { n: x.rels.length });
@@ -626,7 +627,7 @@ export function scenesMonth19(s: GameState): void {
 /** Majors assinam atos locais livres (corrida). */
 function rush(s: GameState, x: Sc19, r: Rng, p: number): void {
   if (!r.chance(p)) return;
-  const a = Object.values(s.acts).find((y) => !y.owner && inScene19(y, x.k) && (y.status === 'active' || y.status === 'emerging') && y.fame < 55 && !y.playerBand && !s.flags[`mka19:p360:${y.id}`]);
+  const a = actsNow27(s).find((y) => !y.owner && inScene19(y, x.k) && (y.status === 'active' || y.status === 'emerging') && y.fame < 55 && !y.playerBand && !s.flags[`mka19:p360:${y.id}`]);
   const lb = Object.values(s.labels).filter((y) => y.active && y.family === 'A' && y.cash > money(s, 40000)).sort((m, n) => n.cash - m.cash)[0] ?? Object.values(s.labels).filter((y: Label) => y.active && y.cash > money(s, 20000))[0];
   if (!a || !lb) return;
   signWithRival(s, a, lb.id, r, true);

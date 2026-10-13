@@ -18,6 +18,7 @@ import { TOUR18 } from '../tourhook18';
 import type { Act, GameState } from '../types';
 import { dateOfDay, fmtL, money, post } from '../util';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 export interface NpcShow { a: string; c: string; w: number; cap: number; mv?: 1 }
 export type Tix = 'fair' | 'tiered' | 'dynamic' | 'fanclub' | 'paperless';
@@ -119,7 +120,7 @@ registerMod('showRevenue', 'clash17', (s, v, c) => {
 function genWeeks(s: GameState, from: number, to: number): void {
   const c = cal17(s);
   const ps = playerShows(s);
-  const acts = Object.values(s.acts).filter((a) => live(a) && !mine(s, a) && a.fame >= 30).sort((a, b) => b.fame - a.fame).slice(0, 60);
+  const acts = actsNow27(s).filter((a) => live(a) && !mine(s, a) && a.fame >= 30).sort((a, b) => b.fame - a.fame).slice(0, 60);
   for (let w = from; w < to; w++) {
     const r = Rng.fromSeed(`${s.config.seed}:cal17:${w}`);
     for (const a of acts) {

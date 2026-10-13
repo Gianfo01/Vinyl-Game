@@ -28,6 +28,7 @@ import { replaceMember } from './lifecycle7';
 import { canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
 import { actsTouched17 } from '../actidx17';
 import { simStart20 } from '../worldpolicy20';
+import { actsNow27 } from '../tickcache27';
 
 export type Why16 = 'creative' | 'solo' | 'feud' | 'addiction' | 'left';
 type Ev16 = [number, string, string, 'j' | 'l'];
@@ -61,7 +62,7 @@ function activeIdx(s: GameState): Map<string, string[]> {
   let c = ACTIVE.get(s);
   if (!c || c.k !== k) {
     const m = new Map<string, string[]>();
-    for (const a of Object.values(s.acts)) if (live(a)) for (const id of a.members) { const xs = m.get(id); if (xs) xs.push(a.id); else m.set(id, [a.id]); }
+    for (const a of actsNow27(s)) if (live(a)) for (const id of a.members) { const xs = m.get(id); if (xs) xs.push(a.id); else m.set(id, [a.id]); }
     c = { k, m }; ACTIVE.set(s, c);
   }
   return c.m;
@@ -108,7 +109,7 @@ const realBound = (s: GameState, p: Person) => !!s.config.realNames && histMode(
 function renames(s: GameState): void {
   if (!s.config.realNames || simStart20(s)) return; // r20: mundo aleatório v2 não restaura renomes anteriores ao início
   const st = l16(s);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!a.catalogNo || a.catalogNo < REAL_BASE || a.owner === 'player') continue;
     const d = realDataOf(a);
     if (!d) continue;
@@ -203,7 +204,7 @@ function joinBand(s: GameState, p: Person, a: Act, txt: L, q = ''): void {
 function srcFame(s: GameState, pid: string, except?: string): { fame: number; act?: Act } {
   let best: { fame: number; act?: Act } = { fame: 0 };
   const f = rw(s).former;
-  for (const a of Object.values(s.acts)) if (a.id !== except && (a.members.includes(pid) || f[a.id]?.some((x) => x.personId === pid)) && a.fame > best.fame) best = { fame: a.fame, act: a };
+  for (const a of actsNow27(s)) if (a.id !== except && (a.members.includes(pid) || f[a.id]?.some((x) => x.personId === pid)) && a.fame > best.fame) best = { fame: a.fame, act: a };
   return best;
 }
 
@@ -260,7 +261,7 @@ export function freeStep16(s: GameState, r: Rng, pid: string, force = false): Ac
   if (!force && (scripted(s, p) || !r.chance(0.07))) return undefined;
   const src = srcFame(s, pid).fame;
   const fam = familyOf(from.genre);
-  const homes = Object.values(s.acts).filter((a) => a.id !== from.id && (a.status === 'active' || a.status === 'emerging') && !mineAct(a) && !histLocked(s, a) && !(a.catalogNo && histMode(s) === 'strict') && a.members.length >= 2 && a.members.length < 5 && familyOf(a.genre) === fam && !a.members.some((id) => s.persons[id]?.role === p.role));
+  const homes = actsNow27(s).filter((a) => a.id !== from.id && (a.status === 'active' || a.status === 'emerging') && !mineAct(a) && !histLocked(s, a) && !(a.catalogNo && histMode(s) === 'strict') && a.members.length >= 2 && a.members.length < 5 && familyOf(a.genre) === fam && !a.members.some((id) => s.persons[id]?.role === p.role));
   const partners = freePool(s, from.genre, from.id).filter((q) => q.id !== pid);
   const wSolo = (front(from, p) || f[2] === 'solo') && src > 20 ? 2 + (f[2] === 'solo' ? 3 : 0) : 0.3;
   const bound = realBound(s, p);
@@ -279,7 +280,7 @@ export function freeStep16(s: GameState, r: Rng, pid: string, force = false): Ac
 
 function npcDepartures(s: GameState, r: Rng): void {
   const hm = histMode(s);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if ((a.status !== 'active' && a.status !== 'emerging') || a.members.length < 2 || mineAct(a) || histLocked(s, a)) continue;
     if (a.fame < 8 && !a.catalogNo) continue;
     if (!r.chance(0.25)) continue; // amostra (x4 na chance)
@@ -312,7 +313,7 @@ function returns(s: GameState, r: Rng): void {
 function playerDepartures(s: GameState, r: Rng): void {
   const f = s.flags as Record<string, number>;
   if (s.decisions.some((d) => d.eventId === 'l16_depart')) return;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.owner !== 'player' || a.playerBand || a.members.length < 2 || (a.status !== 'active' && a.status !== 'emerging')) continue;
     for (const id of a.members) {
       const p = s.persons[id];
@@ -392,7 +393,7 @@ deferEvents([{
       if (!a || !p || !a.members.includes(p.id)) return;
       const err = startSoloCareer(s, r, a.id, p.id);
       if (err) { releaseTo(s, r, a, p, why); notify(s, fmtL(l('Não foi possível manter o solo ({e}); {p} saiu livre.', 'Could not keep the solo act ({e}); {p} left as a free agent.'), { e: err, p: p.name }), 'bad'); return; }
-      const solo = Object.values(s.acts).find((x) => x.owner === 'player' && x.members.length === 1 && x.members[0] === p.id && x.debutYear >= s.year - 1) ?? Object.values(s.acts).find((x) => x.members.length === 1 && x.members[0] === p.id);
+      const solo = actsNow27(s).find((x) => x.owner === 'player' && x.members.length === 1 && x.members[0] === p.id && x.debutYear >= s.year - 1) ?? actsNow27(s).find((x) => x.members.length === 1 && x.members[0] === p.id);
       leaveBand16(s, a, p, why);
       if (solo) {
         solo.fame = Math.max(solo.fame, a.fame * (front(a, p) ? 0.45 : 0.25));
@@ -421,14 +422,33 @@ deferEvents([{
 
 // ---------------------------------------------------------------- fama que acompanha a pessoa
 
+// r27 (desempenho): pessoa → atos em que está ou esteve (formação atual + antigos de realworld), na ordem de s.acts.
+// Mesmo critério de srcFame; a fama é lida na hora (objetos vivos). Formações não mudam dentro de carryFame.
+function personActs(s: GameState): Map<string, Act[]> {
+  const f = rw(s).former, m = new Map<string, Act[]>();
+  const put = (pid: string, a: Act) => { const xs = m.get(pid); if (!xs) m.set(pid, [a]); else if (xs[xs.length - 1] !== a) xs.push(a); };
+  for (const a of actsNow27(s)) {
+    for (const pid of a.members) put(pid, a);
+    for (const x of f[a.id] ?? []) put(x.personId, a);
+  }
+  return m;
+}
+function srcFameIx(ix: Map<string, Act[]>, pid: string, except: string): { fame: number; act?: Act } {
+  let best: { fame: number; act?: Act } = { fame: 0 };
+  for (const a of ix.get(pid) ?? []) if (a.id !== except && a.fame > best.fame) best = { fame: a.fame, act: a };
+  return best;
+}
+
 function carryFame(s: GameState): void {
   const st = l16(s);
-  for (const a of Object.values(s.acts)) {
+  let ix: Map<string, Act[]> | null = null;
+  for (const a of actsNow27(s)) {
     if (st.boost[a.id] || a.debutYear < s.year - 1) continue;
     st.boost[a.id] = 1;
     if (s.week <= 0) continue;
     let best = 0, from: Act | undefined;
-    for (const pid of a.members) { const x = srcFame(s, pid, a.id); if (x.fame > best) { best = x.fame; from = x.act; } }
+    ix ??= personActs(s);
+    for (const pid of a.members) { const x = srcFameIx(ix, pid, a.id); if (x.fame > best) { best = x.fame; from = x.act; } }
     const solo = a.members.length === 1;
     const want = best * (solo ? 0.45 : 0.3);
     if (!from || want <= a.fame + 2) continue;
@@ -446,7 +466,7 @@ function diff(s: GameState): void {
   let snap = SNAP.get(s);
   const first = !snap;
   if (!snap) { snap = new Map(); SNAP.set(s, snap); }
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     const cur = a.members.join(',');
     const old = snap.get(a.id);
     snap.set(a.id, cur);
@@ -474,7 +494,7 @@ function month(s: GameState): void {
   diff(s);
 }
 
-registerSimHook('newgame', 'lineup16', (s) => { renames(s); for (const a of Object.values(s.acts)) l16(s).boost[a.id] = 1; });
+registerSimHook('newgame', 'lineup16', (s) => { renames(s); for (const a of actsNow27(s)) l16(s).boost[a.id] = 1; });
 registerSimHook('month', 'lineup16', (s) => month(s));
 
 // ---------------------------------------------------------------- consultas (interface e testes)
@@ -523,7 +543,7 @@ export interface Path16 { act: Act; segs: { from: number; to?: number }[]; solo:
 /** Trajetória da pessoa: bandas (atuais e antigas) e carreiras solo, em ordem. */
 export function path16(s: GameState, pid: string): Path16[] {
   const st = l16(s), f = rw(s).former;
-  const acts = Object.values(s.acts).filter((a) => a.members.includes(pid) || f[a.id]?.some((x) => x.personId === pid) || st.ev.some((e) => e[1] === a.id && e[2] === pid));
+  const acts = actsNow27(s).filter((a) => a.members.includes(pid) || f[a.id]?.some((x) => x.personId === pid) || st.ev.some((e) => e[1] === a.id && e[2] === pid));
   return acts.map((a) => {
     const all = stints16(s, a);
     const me = all.find((x) => x.pid === pid);

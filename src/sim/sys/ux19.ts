@@ -37,6 +37,7 @@ import { burn18 } from './policy18';
 import { moveText, rivals8 } from './rivals8';
 import { sg18 } from './saga18';
 import { CHAINS19, DISC19, HEIRS19, KEY_TECH19, eraBand19, type GoalSpec19 } from './ux19data';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 export interface DecSum19 { y0: number; y1: number; rev: number; prof: number; rels: number; n1: number; signed: number; left: number; cash0: number; cash1: number; best: string[]; facts: L[] }
@@ -60,7 +61,7 @@ const W_MONTH = 4.35;
 
 // ---------------------------------------------------------------- metas
 const stats = (s: GameState) => s.player.stats;
-const myRels = (s: GameState, w0: number) => Object.values(s.releases).filter((r) => r.owner === 'player' && r.week >= w0);
+const myRels = (s: GameState, w0: number) => releasesNow27(s).filter((r) => r.owner === 'player' && r.week >= w0);
 const rosterFans = (s: GameState) => playerActs(s).reduce((t, id) => t + (s.acts[id] ? fanTotal(s.acts[id]) : 0), 0);
 
 /** Valor atual de uma meta (o alvo é `spec.n`). */
@@ -309,7 +310,7 @@ export function chainProgress19(s: GameState): { id: string; n: number; all: boo
   return CHAINS19.map((c) => ({ id: c.id, n: (ch[c.id] ?? []).length, all: (ch[c.id] ?? []).length >= c.steps.length, me: !!me[c.id] }));
 }
 export function epitaph19(s: GameState): Epitaph19 {
-  const rels = Object.values(s.releases).filter((r) => r.owner === 'player');
+  const rels = releasesNow27(s).filter((r) => r.owner === 'player');
   const b = rels.sort((x, y) => y.revenue - x.revenue || x.peak - y.peak)[0];
   const sc = recentFacts(s, { kind: 'scandal' }).filter((f) => f.actors.some((a) => a === 'player' || s.acts[a]?.owner === 'player')).sort((x, y) => y.severity - x.severity)[0];
   const L18 = legacy18(s), p = mainPath18(s) ?? L18.best ?? undefined;
@@ -352,7 +353,7 @@ export function applyHeir19(s: GameState, id: string, from?: string): L | null {
   else if (id === 'rep') for (const k of ['artistic', 'commercial', 'artists', 'institutional'] as const) s.player.reputation[k] = clamp(s.player.reputation[k] + 2, 0, 100);
   else if (id === 'ear') {
     const home = s.config.homeCity;
-    const xs = Object.values(s.acts).filter((a) => !a.owner && a.city === home && !s.knowledge[a.id] && a.status !== 'retired').sort((a, b) => b.potential - a.potential || a.id.localeCompare(b.id)).slice(0, 2);
+    const xs = actsNow27(s).filter((a) => !a.owner && a.city === home && !s.knowledge[a.id] && a.status !== 'retired').sort((a, b) => b.potential - a.potential || a.id.localeCompare(b.id)).slice(0, 2);
     for (const a of xs) s.knowledge[a.id] = { actId: a.id, degree: 2, stage: 'monitoring', bias: 0, updatedWeek: s.week, source: 'heir19' };
   }
   remember(s, 'heir19', fmtL(l('Herança aceita: {h}{f}.', 'Legacy taken: {h}{f}.'), { h: H.name, f: from ? fmtL(l(' (de {x})', ' (from {x})'), { x: from }) : '' }), { important: true });
@@ -360,10 +361,10 @@ export function applyHeir19(s: GameState, id: string, from?: string): L | null {
 }
 
 // ---------------------------------------------------------------- divulgação progressiva
-const relsAny = (s: GameState) => Object.values(s.releases).some((r) => r.owner === 'player');
+const relsAny = (s: GameState) => releasesNow27(s).some((r) => r.owner === 'player');
 /** Gatilhos dos sistemas: a área abre antes do prazo quando passa a importar. */
 const TRIG19: Record<string, (s: GameState) => boolean> = {
-  rights18: relsAny, supply18: relsAny, critics: relsAny, market19a: (s) => Object.values(s.releases).some((r) => r.owner === 'player' && r.peak <= 40),
+  rights18: relsAny, supply18: relsAny, critics: relsAny, market19a: (s) => releasesNow27(s).some((r) => r.owner === 'player' && r.peak <= 40),
   dyn18: (s) => playerActs(s).some((id) => (s.acts[id]?.members.length ?? 0) >= 2),
   contracts19: (s) => playerActs(s).length >= 2, firm19: (s) => s.player.staff.length >= 3,
   regions18: (s) => s.player.territories.length >= 2, regions19: (s) => s.player.territories.length >= 2,

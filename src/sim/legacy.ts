@@ -8,15 +8,16 @@ import type { GameState, Release } from './types';
 import { fmtL, notify, recordAward, remember, sum } from './util';
 import { hqCaps } from './branches';
 import { campaignBonus, restrictToNominees } from './sys/ceremonies8';
+import { actsNow27, releasesNow27 } from './tickcache27';
 
 export function updateLegacy(s: GameState): void {
   const p = s.player;
   const totalRevenueReal = Object.entries(p.revenueByYear).reduce((t, [y, v]) => t + toReal(v, Number(y)), 0);
-  const mine = Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+  const mine = releasesNow27(s).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
   const signed = new Set<string>();
   for (const m of s.memory) if (m.kind === 'signed' && m.actId) signed.add(m.actId);
-  const developed = Object.values(s.acts).filter((a) => (a.owner === 'player' || signed.has(a.id)) && a.fame > 35).length;
-  const legends = Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length;
+  const developed = actsNow27(s).filter((a) => (a.owner === 'player' || signed.has(a.id)) && a.fame > 35).length;
+  const legends = actsNow27(s).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length;
   const share = s.stats.marketShare;
   const L = p.legacy;
   L.commercial = clamp(Math.log10(1 + totalRevenueReal) * 12 - 30, 0, 100);
@@ -34,7 +35,7 @@ export interface GramoWin19 { year: number; cat: string; name: L; e: GameState['
 /** Gramófonos de Ouro: 4 categorias, decididas na noite da cerimônia (fevereiro) para o ano homenageado `year`.
  *  r19: só DECIDE — quem anuncia (livro, avisos, memória) é `publishGramo19`, depois que a cena da cerimônia é vista. */
 export function yearlyAwards(s: GameState, r: Rng, year = s.year): GramoWin19[] {
-  const rels = Object.values(s.releases).filter((x) => x.year === year && x.totalUnits > 0);
+  const rels = releasesNow27(s).filter((x) => x.year === year && x.totalUnits > 0);
   if (!rels.length) return [];
   // rodada 8: só concorre quem foi indicado; campanhas do selo somam pontos
   const winner = (cat: string, list: Release[], score: (x: Release) => number) => {
@@ -80,7 +81,7 @@ export interface Milestone { id: string; text: L; done: boolean }
 
 export function milestones(s: GameState): Milestone[] {
   const st = s.player.stats;
-  const mine = Object.values(s.releases).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
+  const mine = releasesNow27(s).filter((r) => r.owner === 'player' || s.acts[r.actId]?.playerBand);
   const bestPeak = Math.min(999, ...mine.map((r) => r.peak));
   const list: Milestone[] = [
     { id: 'first_release', text: l('Primeiro lançamento', 'First release'), done: mine.length > 0 },
@@ -113,8 +114,8 @@ export function endingScores(s: GameState): { id: string; score: number }[] {
   const totals = s.player.totals;
   const revenue = Math.max(1, (totals.sales ?? 0) + (totals.live ?? 0) + (totals.publishing ?? 0) + (totals.neural ?? 0));
   const liveShare = (totals.live ?? 0) / revenue;
-  const legends = Object.values(s.acts).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length;
-  const recent = Object.values(s.releases).some((r) => r.owner === 'player' && s.year - r.year <= 5);
+  const legends = actsNow27(s).filter((a) => a.legend && (a.owner === 'player' || a.playerBand)).length;
+  const recent = releasesNow27(s).some((r) => r.owner === 'player' && s.year - r.year <= 5);
   const consentOk = consent && n.voiceLicenses + n.synthActs > 0;
   const scores: Record<string, number> = {
     last_vinyl: s.player.equipment.includes('own_plant') && n.humanFocus >= 2 ? 50 + n.humanFocus * 2 + L.catalog * 0.05 : 0,

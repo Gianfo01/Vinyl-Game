@@ -28,6 +28,7 @@ import { playerPerson } from './life';
 import { per13, registerPer13 } from './persona13';
 import { addRelic, relics, type Relic } from './relics9';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 // ================================================================ estado
 
@@ -122,7 +123,7 @@ let realMemo: { s: GameState; m: number; set: Set<string> } | null = null;
 function realPersons(s: GameState): Set<string> {
   if (realMemo && realMemo.s === s && realMemo.m === mIdx(s)) return realMemo.set;
   const set = new Set<string>();
-  for (const a of Object.values(s.acts)) if (a.catalogNo) for (const m of a.members) set.add(m);
+  for (const a of actsNow27(s)) if (a.catalogNo) for (const m of a.members) set.add(m);
   realMemo = { s, m: mIdx(s), set };
   return set;
 }
@@ -149,7 +150,7 @@ export function nameOf17(s: GameState, id: string): string {
   if (rl) return rl.n.pt;
   return s.persons[id]?.name ?? s.acts[id]?.name ?? s.labels[id]?.name ?? id;
 }
-const actOfPerson = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid) && a.status !== 'split' && a.status !== 'retired') ?? Object.values(s.acts).find((a) => a.members.includes(pid));
+const actOfPerson = (s: GameState, pid: string): Act | undefined => actsNow27(s).find((a) => a.members.includes(pid) && a.status !== 'split' && a.status !== 'retired') ?? actsNow27(s).find((a) => a.members.includes(pid));
 /** Cidade onde o crime acontece (alvo). */
 export function placeOf(s: GameState, id: string): string {
   if (id === 'player') return s.config.homeCity;
@@ -434,7 +435,7 @@ export const rigFmt = (y: number): L => y < 1991 ? l('compras plantadas nas loja
 export function targetsFor(s: GameState, c: CrimeDef17, max = 40): { id: string; name: L }[] {
   const mine = new Set(playerActs(s));
   const live = (a: Act) => a.status !== 'retired' && a.status !== 'split';
-  const acts = Object.values(s.acts).filter(live);
+  const acts = actsNow27(s).filter(live);
   switch (c.tk) {
     case 'person': return acts.filter((a) => !mine.has(a.id)).sort((a, b) => b.fame - a.fame).slice(0, max).flatMap((a) => a.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).slice(0, 2).map((m) => ({ id: m, name: l(`${s.persons[m].name} (${a.name})${isReal(s, m) ? ' ★' : ''}`) })));
     case 'act': return acts.filter((a) => !mine.has(a.id) && a.fame > 5).sort((a, b) => b.fame - a.fame).slice(0, max).map((a) => ({ id: a.id, name: l(`${a.name}${a.catalogNo ? ' ★' : ''}`) }));
@@ -967,7 +968,7 @@ function extrasMonth(s: GameState, r: Rng): void {
   }
   // pirataria contra seus lançamentos
   const mine = new Set(playerActs(s));
-  const hits = Object.values(s.releases).filter((x) => x.owner === 'player' && s.week - x.week < 26 && mine.has(x.actId));
+  const hits = releasesNow27(s).filter((x) => x.owner === 'player' && s.week - x.week < 26 && mine.has(x.actId));
   for (const o of orgs17(s).filter((x) => hasRacket(x, 'bootleg') && (st.boot[x.id] ?? 0) < s.week)) {
     if (!hits.length || !r.chance(o.real ? 0.06 : 0.12)) continue;
     const rel = r.pick(hits);
@@ -1000,7 +1001,7 @@ function extrasMonth(s: GameState, r: Rng): void {
     const d = DOC17[i];
     if (histMode(s) !== 'strict' && d.y >= s.config.startYear) continue; // r18: depois do início, só no modo exato
     if (st.doc[i] || d.y > s.year || (d.y === s.year && d.m > s.month) || s.year - d.y > 1) continue;
-    if (d.dead) { const a = Object.values(s.acts).find((x) => x.name === d.dead); if (!a || a.members.some((m) => s.persons[m]?.alive)) continue; }
+    if (d.dead) { const a = actsNow27(s).find((x) => x.name === d.dead); if (!a || a.members.some((m) => s.persons[m]?.alive)) continue; }
     st.doc[i] = 1;
     emitFact(s, { kind: 'crime_doc', actors: d.org ? [`o:${d.org}`] : [], place: d.a3 === 'USA' ? 'new_york' : d.a3 === 'GBR' ? 'london' : d.a3 === 'BRA' ? 'rio' : d.a3 === 'MEX' ? 'mexico_city' : s.config.homeCity, severity: 50, visibility: 'public', tags: ['crime', 'history'], text: d.text, src: 'crime17doc' });
   }

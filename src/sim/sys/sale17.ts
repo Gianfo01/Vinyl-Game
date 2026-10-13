@@ -23,6 +23,7 @@ import { careers, registerLoad } from './careers12';
 import { ownerOf } from './people/owner';
 import { labelValue } from './stakes8';
 import { rateTilt19 } from '../rates19';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 /** r19 (money19, N1/N5): ganchos da venda de master — direito de preferência e reação do artista. */
 export const SALE19: { rofr?: (s: GameState, rel: Release, price: number) => boolean; sold?: (s: GameState, rel: Release, price: number, rofr: boolean) => void; label?: (s: GameState, lbId: string) => void } = {};
 
@@ -49,7 +50,7 @@ const log = (s: GameState, t: L) => { const st = sale17(s); st.log.unshift({ y: 
 export const hasLabel = (s: GameState): boolean => careers(s).active.includes('label');
 const mineActs = (s: GameState): Act[] => {
   const subs = new Set((s.subLabels ?? []).flatMap((x) => x.roster));
-  return Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand && !subs.has(a.id));
+  return actsNow27(s).filter((a) => a.owner === 'player' && !a.playerBand && !subs.has(a.id));
 };
 
 // ---------------------------------------------------------------- avaliação
@@ -102,7 +103,7 @@ export function margin19(s: GameState): { rev: number; op: number; n: number; ma
  *  (comprador paga por crescer: +50% de receita ≈ +0,25×). */
 export const marginFactor19 = (m: number, g = 0): number => clamp(0.6 + 1.6 * m + 0.5 * clamp(g, -0.3, 0.6), 0.35, 1.3);
 export function valuation17(s: GameState): Val17 {
-  const rels = Object.values(s.releases).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand);
+  const rels = releasesNow27(s).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand);
   const catInc = rels.reduce((t, r) => t + relIncome(s, r.id) * netShare19(s, r.actId), 0);
   const em = eraMultiple(s);
   const cat = Math.round(catInc * em.m);
@@ -206,7 +207,7 @@ export function sellLabel(s: GameState, bidId: string): L | null {
     if (!lb.roster.includes(a.id)) lb.roster.push(a.id);
   }
   const subs = new Set((s.subLabels ?? []).flatMap((x) => x.roster));
-  for (const rel of Object.values(s.releases)) if (rel.owner === 'player' && !s.acts[rel.actId]?.playerBand && !subs.has(rel.actId)) rel.owner = lb.id;
+  for (const rel of releasesNow27(s)) if (rel.owner === 'player' && !s.acts[rel.actId]?.playerBand && !subs.has(rel.actId)) rel.owner = lb.id;
   SALE19.label?.(s, lb.id); // r19 (money19): preferência do artista e regravações quando os masters mudam de dono
   // dinheiro: caixa e dívidas vão com a empresa; o preço vai para o seu bolso
   if (s.player.cash) post(s, 'sale17:cash', -s.player.cash, 'acquisitions', 'Caixa transferido ao comprador');
@@ -355,7 +356,7 @@ registerSimHook('month', 'sale17', (s) => {
   if (hasLabel(s) && st.cat.length < 2) {
     const r = Rng.fromSeed(`${s.config.seed}:cat17:${s.year}:${s.month}`);
     const p = s.year >= 2012 ? 0.3 : s.year >= 1985 ? 0.12 : 0.05;
-    const old = Object.values(s.releases).filter((x) => x.owner === 'player' && s.year - x.year >= 5 && x.revenue > money(s, 20000) && !s.acts[x.actId]?.playerBand);
+    const old = releasesNow27(s).filter((x) => x.owner === 'player' && s.year - x.year >= 5 && x.revenue > money(s, 20000) && !s.acts[x.actId]?.playerBand);
     if (old.length && r.chance(p)) {
       const rel = r.pick(old);
       if (!st.cat.some((x) => x.relId === rel.id)) {
