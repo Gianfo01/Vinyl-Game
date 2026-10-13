@@ -9,7 +9,7 @@ import { store } from '../store';
 import { rerender } from '../common';
 import { setTab } from '../vis';
 import { openScene } from '../registry';
-import { avatarSprite, randomLook } from './avatar';
+import { avatarSprite, crowdLook27, randomLook } from './avatar';
 import { PALETTES, eraOf } from './palette';
 import { css } from './px';
 import { H, W } from './places/kit';
@@ -94,7 +94,7 @@ function canvas14(kind: Scene14, o: SceneView14, alt: string): HTMLCanvasElement
     for (const pr of model.props) items.push({ y: pr.y, d: () => ctx.drawImage(pr.sprite.c, pr.x - pr.sprite.ax, pr.y - pr.sprite.ay) });
     for (const m of crowd) {
       const bob = still ? 0 : Math.round(Math.max(0, Math.sin(tm * (2 + energy * 4) + m.phase)) * m.hop * (1 + energy * 2));
-      const sp = avatarSprite(randomLook(m.seed), { year, pose: m.pose, dir: m.dir, role: m.role ?? null, frame: still ? 0 : Math.floor(tm * 2 + m.phase) % 4 });
+      const sp = avatarSprite(crowdLook27(m.seed, year), { year, pose: m.pose, dir: m.dir, role: m.role ?? null, frame: still ? 0 : Math.floor(tm * 2 + m.phase) % 4 });
       items.push({ y: m.y, d: () => ctx.drawImage(sp.c, m.x - sp.ax, m.y - sp.ay - bob) });
     }
     for (const p of people) {

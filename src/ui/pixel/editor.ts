@@ -6,8 +6,9 @@ import type { Appearance, Person } from '../../sim/types';
 import { h } from '../dom';
 import { AV_H, AV_W, HAIR_COLORS, HAIR_STYLES, OUTFIT_COLORS, SKINS, avatarSprite, lookOf, portraitCanvas, randomLook, variantOf, type Dir } from './avatar';
 import { eraOf } from './palette';
+import { BEARD27, EAR27, GLASSES27, HAIR27, HAIR_BASE, HAT27, INST27, NECK27, OUTFIT27, OUTFIT_BASE, TAT27, type Item27 } from './looks27';
 
-const OUTFITS = [l('Casual', 'Casual'), l('Social', 'Formal'), l('Vestido / casaco', 'Dress / coat'), l('Malha / moletom', 'Knit / hoodie')];
+const OUTFITS = [l('Casual', 'Casual'), l('Social', 'Formal'), l('Vestido / casaco', 'Dress / coat'), l('Malha / moletom', 'Knit / hoodie'), ...OUTFIT27.map((x) => x[0])];
 const BODIES = [l('Magro', 'Slim'), l('Médio', 'Average'), l('Robusto', 'Sturdy')];
 const FACES = [l('Sereno', 'Calm'), l('Marcante', 'Strong'), l('Alegre', 'Cheerful')];
 
@@ -16,10 +17,13 @@ type EditablePerson = Pick<Person, 'id' | 'role'> & { look?: Appearance };
 /** Rodada 9: sexo do personagem filtra cabelos, roupas e barba ('x' = todas as opções). */
 export type Sex = 'm' | 'f' | 'x';
 const ALL_HAIR = Array.from({ length: HAIR_STYLES }, (_, i) => i);
+// rodada 27: peças novas entram no fim das listas (índices anexados); as só-femininas/masculinas ficam fora do outro sexo
+const new27 = (list: Item27[], base: number, sx: 'm' | 'f'): number[] => list.map((x, i) => (x[3] && x[3] !== sx ? -1 : base + i)).filter((i) => i >= 0);
+const ALL_OUTFIT = Array.from({ length: OUTFIT_BASE + OUTFIT27.length }, (_, i) => i);
 const ALLOWED: Record<Sex, { hair: number[]; outfit: number[]; beard: boolean }> = {
-  m: { hair: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14, 15, 16, 18, 20, 21], outfit: [0, 1, 2, 3], beard: true },
-  f: { hair: [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22], outfit: [0, 1, 2, 3], beard: false },
-  x: { hair: ALL_HAIR, outfit: [0, 1, 2, 3], beard: true },
+  m: { hair: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14, 15, 16, 18, 20, 21, ...new27(HAIR27, HAIR_BASE, 'm')], outfit: [0, 1, 2, 3, ...new27(OUTFIT27, OUTFIT_BASE, 'm')], beard: true },
+  f: { hair: [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, ...new27(HAIR27, HAIR_BASE, 'f')], outfit: [0, 1, 2, 3, ...new27(OUTFIT27, OUTFIT_BASE, 'f')], beard: false },
+  x: { hair: ALL_HAIR, outfit: ALL_OUTFIT, beard: true },
 };
 
 /** Ajusta uma aparência às opções válidas para o sexo. */
@@ -29,23 +33,27 @@ export function fitLookToSex(look: Appearance, sex: Sex = 'x'): Appearance {
   return { ...look, hair: near(look.hair, a.hair), outfit: near(look.outfit, a.outfit), beard: a.beard && look.beard, sx: sex === 'x' ? look.sx : sex };
 }
 
+const two = (xs: readonly (readonly [L, number, ...unknown[]])[]): [L, number][] => xs.map((x) => [x[0], x[1]]);
 // Rodada 15: peças novas (visuais de artistas reais) com ano mínimo — nada aparece antes de existir.
-const HAIR_FROM: Record<number, number> = { 11: 1975, 16: 1975, 21: 1970, 22: 1985 };
-const HATS15: [L, number][] = [[l('da época', 'era default'), 0], [l('cartola', 'top hat'), 0], [l('caubói', 'cowboy'), 0], [l('boina', 'beret'), 0], [l('gorro', 'beanie'), 0], [l('faixa na testa', 'headband'), 1965], [l('boné', 'cap'), 1975], [l('fedora', 'fedora'), 0], [l('bandana', 'bandana'), 1970]];
-const GLASSES15: [L, number][] = [[l('comuns', 'plain'), 0], [l('redondos', 'round'), 0], [l('escuros', 'shades'), 0], [l('extravagantes', 'flamboyant'), 1970]];
-const BEARDS15: [L, number][] = [[l('cheia', 'full'), 0], [l('bigode', 'mustache'), 0], [l('cavanhaque', 'goatee'), 0], [l('por fazer', 'stubble'), 0]];
+const HAIR_FROM: Record<number, number> = { 11: 1975, 16: 1975, 21: 1970, 22: 1985, ...Object.fromEntries(HAIR27.map((x, i) => [HAIR_BASE + i, x[1]])) };
+const OUTFIT_FROM: Record<number, number> = Object.fromEntries(OUTFIT27.map((x, i) => [OUTFIT_BASE + i, x[1]]));
+const HATS15: [L, number][] = [[l('da época', 'era default'), 0], [l('cartola', 'top hat'), 0], [l('caubói', 'cowboy'), 0], [l('boina', 'beret'), 0], [l('gorro', 'beanie'), 0], [l('faixa na testa', 'headband'), 1965], [l('boné', 'cap'), 1975], [l('fedora', 'fedora'), 0], [l('bandana', 'bandana'), 1970], ...two(HAT27)];
+const GLASSES15: [L, number][] = [[l('comuns', 'plain'), 0], [l('redondos', 'round'), 0], [l('escuros', 'shades'), 0], [l('extravagantes', 'flamboyant'), 1970], ...two(GLASSES27)];
+const BEARDS15: [L, number][] = [[l('cheia', 'full'), 0], [l('bigode', 'mustache'), 0], [l('cavanhaque', 'goatee'), 0], [l('por fazer', 'stubble'), 0], ...two(BEARD27)];
 const PAINT15: [L, number][] = [[l('nenhuma', 'none'), 0], [l('estrela', 'star'), 1973], [l('demônio', 'demon'), 1973], [l('gato', 'cat'), 1973], [l('espacial', 'spaceman'), 1973], [l('raio', 'lightning bolt'), 1973], [l('delineado glam', 'glam liner'), 0], [l('máscara branca', 'white mask'), 1970]];
 const HELM15: [L, number][] = [[l('nenhum', 'none'), 0], [l('robô prateado', 'silver robot'), 1995], [l('robô dourado', 'gold robot'), 1995]];
 /** Opções liberadas no ano (índices). */
 export const opts15 = (list: [L, number][], year: number): number[] => list.map((x, i) => (x[1] <= year ? i : -1)).filter((i) => i >= 0);
 export const hairAllowed15 = (sex: Sex, year: number): number[] => ALLOWED[sex].hair.filter((v) => (HAIR_FROM[v] ?? 0) <= year);
+/** Rodada 27: roupas liberadas para o sexo no ano. */
+export const outfitAllowed27 = (sex: Sex, year: number): number[] => ALLOWED[sex].outfit.filter((v) => (OUTFIT_FROM[v] ?? 0) <= year);
 
 /**
  * Componente DOM do editor. `onChange` recebe a nova aparência a cada ajuste
  * (ou `undefined` ao restaurar a aparência padrão derivada do id).
  */
 export function appearanceEditor(person: EditablePerson, onChange: (look: Appearance | undefined) => void, year = 1960, sex: Sex = 'x'): HTMLElement {
-  const allow = { ...ALLOWED[sex], hair: hairAllowed15(sex, year) };
+  const allow = { ...ALLOWED[sex], hair: hairAllowed15(sex, year), outfit: outfitAllowed27(sex, year) };
   let look: Appearance = fitLookToSex(lookOf(person), sex);
   if (sex !== 'x' && JSON.stringify(look) !== JSON.stringify(lookOf(person))) onChange({ ...look });
   const reduced = document.documentElement.classList.contains('reduced-motion');
@@ -98,9 +106,9 @@ export function appearanceEditor(person: EditablePerson, onChange: (look: Appear
       h('span', { class: 'swatches', role: 'radiogroup', 'aria-label': label }, colors.map((c, i) => h('button', {
         class: `swatch ${look[key] === i ? 'on' : ''}`, style: `background:${c}`, role: 'radio', 'aria-checked': look[key] === i ? 'true' : 'false', 'aria-label': `${label} ${i + 1}`, onclick: () => update({ [key]: i } as Partial<Appearance>),
       }))));
-  type K15 = 'hatT' | 'glT' | 'bdT' | 'paint' | 'helm';
-  const pick15 = (label: string, key: K15, list: [L, number][]) => {
-    const o = opts15(list, year);
+  type K15 = 'hatT' | 'glT' | 'bdT' | 'paint' | 'helm' | 'nk' | 'ear' | 'tat' | 'inst';
+  const pick15 = (label: string, key: K15, list: [L, number][], ok: (i: number) => boolean = () => true) => {
+    const o = opts15(list, year).filter((i) => i === 0 || ok(i));
     const cur = look[key] ?? 0;
     const step = (d: number) => { const i = Math.max(0, o.indexOf(cur)); const v = o[(i + d + o.length) % o.length]; update({ [key]: v || undefined } as Partial<Appearance>); };
     return h('div', { class: 'look-row' }, h('span', null, label),
@@ -129,7 +137,12 @@ export function appearanceEditor(person: EditablePerson, onChange: (look: Appear
       look.glasses ? pick15(t(l('Tipo de óculos', 'Glasses style')), 'glT', GLASSES15) : null,
       look.beard && allow.beard ? pick15(t(l('Tipo de barba', 'Beard style')), 'bdT', BEARDS15) : null,
       pick15(t(l('Maquiagem / pintura', 'Makeup / face paint')), 'paint', PAINT15),
-      opts15(HELM15, year).length > 1 ? pick15(t(l('Capacete', 'Helmet')), 'helm', HELM15) : null),
+      opts15(HELM15, year).length > 1 ? pick15(t(l('Capacete', 'Helmet')), 'helm', HELM15) : null,
+      // rodada 27: colar, brinco, tatuagem e instrumento (só os do papel)
+      pick15(t(l('Colar / pescoço', 'Necklace / neckwear')), 'nk', two(NECK27)),
+      pick15(t(l('Brincos', 'Earrings')), 'ear', two(EAR27)),
+      pick15(t(l('Tatuagem', 'Tattoo')), 'tat', two(TAT27)),
+      person.role && INST27.some((x, i) => i && x[2].includes(person.role as never)) ? pick15(t(l('Instrumento', 'Instrument')), 'inst', two(INST27), (i) => INST27[i][2].includes(person.role as never)) : null),
       h('div', { class: 'row' },
         h('button', { class: 'btn small', onclick: () => update(randomLook(`${person.id}:${Math.random().toString(36).slice(2)}`)) }, '🎲 ', t(l('Aleatório', 'Randomize'))),
         h('button', { class: 'btn small ghost', onclick: () => update({}, true) }, t(l('Restaurar padrão', 'Reset to default'))),

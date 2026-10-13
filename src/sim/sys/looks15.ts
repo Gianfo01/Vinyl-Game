@@ -2,7 +2,7 @@
 // (topete do Elvis, dreads do Marley, capacetes do Daft Punk, pintura do KISS…). A troca acontece
 // quando a pessoa surge e sempre que a fase muda. Visual editado pelo jogador (sem `rl`) nunca é sobrescrito.
 
-import { realLook15 } from '../../data/looks15';
+import { realLook15, visualOnly27 } from '../../data/looks15';
 import { registerSimHook } from '../ext4';
 import type { GameState } from '../types';
 
@@ -12,6 +12,7 @@ export function applyRealLooks15(s: GameState): number {
   let n = 0;
   for (const p of Object.values(s.persons)) {
     if (p.isPlayer || (p.look && !p.look.rl)) continue;
+    if (visualOnly27(p.name)) continue; // rodada 27: só desenho (a UI resolve pelo nome)
     const L = realLook15(p.name, s.year);
     if (!L || p.look?.rl === L.rl) continue;
     p.look = L;
