@@ -22,6 +22,7 @@ async function start(vw, vh) {
   await click(/NOVA RUN|NEW RUN/i);
   await click(/COMEÇAR MINHA HISTÓRIA|START MY STORY/i);
   await p.waitForTimeout(2500);
+  for (let i = 0; i < 120; i++) { if (await p.evaluate(async () => !!(await import('/src/ui/store.ts')).store.game)) break; await p.waitForTimeout(1000); }
   for (let i = 0; i < 6; i++) { if (!(await p.$('.overlay, .scene-overlay'))) break; await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
   return p;
 }
@@ -62,12 +63,20 @@ async function setup(p) {
     F.careerOf(g, key, fam.kids[1], 'manager');
     const cm = await import('/src/ui/common.ts');
     cm.rerender();
-    return { year: g.year, x, y, xn: g.persons[x].name, yn: g.persons[y].name, kid: kid?.id, kidName: kid?.name, k2: k2?.[3], minor: cs?.members[0], minorAct: cs?.id, key, prod: prod?.id };
+    return { ik: F.industryKids29(g, key).map((z) => `${z.name}:${z.pid ?? '-'}:${z.path ?? '-'}`), year: g.year, x, y, xn: g.persons[x].name, yn: g.persons[y].name, kid: kid?.id, kidName: kid?.name, k2: k2?.[3], minor: cs?.members[0], minorAct: cs?.id, key, prod: prod?.id };
   });
 }
 const snap = async (p, name, keep = false) => { if (!keep) await p.mouse.move(1435, 900); await p.waitForTimeout(300); await p.screenshot({ path: `${out}/${name}.png` }); console.log('ok', name); };
 const openFam = (p, pid) => p.evaluate(async (pid) => { document.querySelectorAll('.overlay, .scene-overlay, [data-ctx27]').forEach((e) => e.remove()); const m = await import('/src/ui/sys/family29.ts'); m.openFamily29(pid); }, pid);
-const scrollTo = async (p, re) => { const el = p.getByText(re).first(); if (await el.count()) await el.scrollIntoViewIfNeeded().catch(() => {}); };
+/** Rola o modal até o primeiro elemento com o texto (no topo da área visível). */
+const scrollTo = async (p, re) => {
+  await p.evaluate((src) => {
+    const rx = new RegExp(src);
+    const el = [...document.querySelectorAll('.modal h4, .modal summary, .modal li, .modal h3, .modal small')].find((e) => rx.test(e.textContent ?? ''));
+    el?.scrollIntoView({ block: 'start' });
+  }, re.source);
+  await p.waitForTimeout(400);
+};
 
 // ---------------------------------------------------------------- desktop
 const p = await start(1440, 920);

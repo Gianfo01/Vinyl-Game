@@ -663,6 +663,7 @@ function industryKids(s: GameState): void {
 export function careerOf(s: GameState, key: string, k: { id: string; name: string; born: number; musical: number; personId?: string }, path: Path29): Person | undefined {
   hooks29();
   const st = fam29(s);
+  st.dec[k.id] ??= path;
   const r = rng(s, `car|${k.id}`);
   const P = per13(s, key);
   const city = P?.city && cityById[P.city] ? P.city : s.config.homeCity;
@@ -783,7 +784,7 @@ export function addMinor(s: GameState, p: Person, a: Act | undefined, src: Src29
   const g = guardian ?? kinPar?.name ?? doc ?? (src === 'real' ? l('a família', 'the family').pt
     : T(l('{f} {s} (mãe/pai)', '{f} {s} (parent)'), { f: personName(r, langForCity(a?.city ?? s.config.homeCity, r)).split(' ')[0], s: sur }).pt);
   // pai/mãe-empresário(a): sorteado só para quem não é da história real no modo exato (lá vale o documentado)
-  const pmOk = !(src === 'real' && histMode(s) === 'strict');
+  const pmOk = src !== 'real'; // criança real: nada de pai/mãe-empresário inventado (nem desvio de fundo) em nenhum modo
   const m: Minor29 = { g, ...(kinPar ? { gk: kinPar.id } : {}), tr: 0, ov: 0, src, y0: s.year, ...(pmOk && r.chance(src === 'kidgroup' || src === 'family' ? 0.45 : 0.25) ? { pm: 1 as const } : {}) };
   st.min[p.id] = m;
   if (src !== 'real' && src !== 'gen') count(s, 4); // estrelas mirins de fato (não o estreante de 17 anos comum)
@@ -821,10 +822,14 @@ export function spawnChildStar29(s: GameState, r: Rng, src: Src29): Act | undefi
   const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p);
   const sur = ms[0]?.name.split(' ').slice(1).join(' ');
   const g0 = T(l('{f} {s} (mãe/pai)', '{f} {s} (parent)'), { f: personName(r, langForCity(c.id, r)).split(' ')[0], s: sur || '' }).pt;
+  const firsts = new Set<string>();
   ms.forEach((p, i) => {
     p.born = s.year - r.int(CHILD_MIN29, src === 'trainee' ? 16 : 15);
     p.potential = clamp(p.potential + r.int(4, 12), 30, 99); // prodígio: potencial alto, cresce rápido
-    if (sib && sur && i > 0) p.name = `${p.name.split(' ')[0]} ${sur}`;
+    let first = p.name.split(' ')[0];
+    for (let t = 0; t < 6 && firsts.has(first); t++) first = personName(r, langForCity(c.id, r)).split(' ')[0]; // irmãos não repetem o nome
+    firsts.add(first);
+    if (sib && sur && i > 0) p.name = `${first} ${sur}`;
     if (sib) p.origin = 'family';
     addMinor(s, p, a, src, undefined, sib ? g0 : undefined);
   });
@@ -877,7 +882,8 @@ function minorsYear(s: GameState, r: Rng): void {
       if (m.gk) p.rel[m.gk] = clamp((p.rel[m.gk] ?? 0) - 10, -100, 100);
     }
     // NPC: selo que explora o menor (agenda pesada) — escândalo e reputação do selo
-    if (a && !mine(a) && a.owner && s.labels[a.owner] && age < ADULT29 && !histLocked(s, a) && r.chance(0.035 * (s.year >= 1980 ? 1.3 : 0.7))) exploit(s, p, a, a.owner);
+    // (só gente inventada: denúncia contra criança real e selo real seria afirmar um fato que não existe)
+    if (a && !mine(a) && a.owner && s.labels[a.owner] && age < ADULT29 && m.src !== 'real' && !isReal29(s, p, a) && r.chance(0.035 * (s.year >= 1980 ? 1.3 : 0.7))) exploit(s, p, a, a.owner);
     // maioridade: recebe o fundo e passa a ex-estrela mirim
     if (age >= ADULT29) {
       if (m.tr > 0) {
@@ -944,15 +950,13 @@ function minorsMonth(s: GameState): void {
       const m = st.min[pid], p = s.persons[pid];
       if (!m || !p?.alive) continue;
       const lw = law29(a.city, s.year);
-      if (lw && lw.trust > 0) {
-        const v = money(s, Math.round((40 + a.fame * 8) * lw.trust / 0.15));
-        post(s, `fam29:trust:${pid}`, -v, 'royalties', `Fundo de menor (${p.name})`);
-        m.tr += v;
-      }
+      // fundo (Coogan): a parte da lei sai dos ganhos do PRÓPRIO menor (não é custo do selo) e fica guardada até os 18
+      if (lw && lw.trust > 0) m.tr += money(s, Math.round((40 + a.fame * 8) * lw.trust / 0.15));
       const td = tourDaysInMonth(s, a.id, idx);
       if (td > 0) post(s, `fam29:tutor:${pid}`, -money(s, 300), 'artist_dev', `Tutor na estrada (${p.name})`);
       const load = (s.loadNow[a.id] ?? 0) + Math.round(((td + 4) / 28) * 100 * (td ? 1 : 0));
-      const over = load > (lw ? 70 : 90) || td > (lw ? 10 : 18);
+      const teen = s.year - p.born >= 16;
+      const over = load > (lw ? (teen ? 85 : 70) : 90) || td > (lw ? (teen ? 16 : 10) : 18);
       m.ov = over ? m.ov + 1 : Math.max(0, m.ov - 1);
       if (over) { p.stress = clamp(p.stress + 5, 0, 100); p.fatigue = clamp(p.fatigue + 6, 0, 100); }
       if (m.ov >= 3 && rng(s, `ex|${pid}|${s.week}`).chance(s.year >= 1975 ? 0.6 : 0.35)) exploit(s, p, a, 'player');
@@ -969,8 +973,10 @@ function load29(s: GameState, pid: string, idx: number, parts: { label: L; load:
   const a = actsOfPerson17(s, pid)[0];
   const lw = law29(a?.city ?? s.config.homeCity, s.year);
   const work = parts.reduce((t, x) => t + x.load, 0);
-  const school = lw ? 25 : 15;
-  const extra = lw ? Math.round(work * lw.hours) : 0;
+  // 16–17 anos: ensino médio e regras mais frouxas (meio período, sem o teto de horas inteiro)
+  const teen = s.year - p.born >= 16;
+  const school = teen ? (lw ? 10 : 5) : lw ? 25 : 15;
+  const extra = lw ? Math.round(work * lw.hours * (teen ? 0.3 : 1)) : 0;
   void idx;
   return { label: lw ? T(l('Escola e limite de horas (menor de idade · {n})', 'School and hour limit (minor · {n})'), { n: lw.name }) : l('Escola (menor de idade)', 'School (minor)'), load: school + extra };
 }
@@ -986,7 +992,8 @@ registerOfferMod('family29', (s, act) => {
   const minors = act.members.filter((id) => st.min[id]);
   if (minors.length) {
     const g = st.min[minors[0]];
-    d -= 0.04; why.push(T(l('menor de idade: o responsável ({g}) exige escola, fundo e limite de turnê', 'a minor: the guardian ({g}) demands schooling, a trust and tour limits'), { g: g.g }));
+    const kid = minors.some((id) => s.year - (s.persons[id]?.born ?? 0) < 16);
+    d -= kid ? 0.04 : 0.02; why.push(T(l('menor de idade: o responsável ({g}) exige escola, fundo e limite de turnê', 'a minor: the guardian ({g}) demands schooling, a trust and tour limits'), { g: g.g }));
     if (minors.some((id) => st.min[id].pm)) { d -= 0.03; why.push(l('pai/mãe-empresário(a) quer a parte dele(a)', 'the parent-manager wants their cut')); }
   }
   // nepotismo: pai/mãe no seu elenco (ou que gosta de você) abre a porta; sobrenome famoso de fora encarece

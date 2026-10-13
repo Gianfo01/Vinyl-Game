@@ -133,8 +133,8 @@ describe('R29 família — estrelas mirins', () => {
     const cash0 = s.player.cash;
     fam29(s).seed = 1; // o mundo já passou do 1º mês (antes disso o offer mod não consulta o grafo do kin15)
     minorsMonth29(s);
-    expect(fam29(s).min[kid].tr).toBeGreaterThan(0);
-    expect(s.player.cash).toBeLessThan(cash0);
+    expect(fam29(s).min[kid].tr).toBeGreaterThan(0); // fundo sai dos ganhos do menor: não é custo do selo
+    expect(s.player.cash).toBe(cash0);
     const mod = offerMods().find((x) => x.id === 'family29')!.fn(s, a, {} as never);
     expect(mod?.delta).toBeLessThan(0);
     expect(mod?.reason?.pt).toMatch(/responsável/);
