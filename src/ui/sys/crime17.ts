@@ -71,13 +71,13 @@ function orgsTab(s: GameState): HTMLElement {
         h('p', { class: 'small muted' }, T(era29(s, o).text)),
         membersBox(s, o.id),
         asksBox29(s, o.id),
-        h('div', { class: 'row wrap' },
+        h('details', { class: 'small' }, h('summary', null, `${T(l('Negócios com a família', 'Dealings with the family'))} (${mobActs29(s, o.id).filter((x) => !x.block).length}/${mobActs29(s, o.id).length})`), h('div', { class: 'row wrap' },
           ...mobActs29(s, o.id).map((x) => btn(x.cost ? `${T(x.a.name)} (${T(usd(x.cost))})` : x.a.name, () => { const r = doMob29(s, o.id, x.a.id); say(r.text, r.ok ? 'info' : 'bad'); }, { dis: !!x.block, title: x.block ? T(x.block) : `${T(x.a.desc)} ${T(x.a.fx)}${x.chance !== undefined ? ` · ${P(x.chance)}` : ''}`, cls: x.a.id === 'inform' ? 'ghost' : '' })),
           st.pizzo[o.id] !== undefined ? pill(st.pizzo[o.id] > 0 ? `${T(l('pagando proteção', 'paying protection'))} ${T(usd(pizzoFee(s, o)))}` : T(l('recusou o pizzo', 'refused protection')), st.pizzo[o.id] > 0 ? 'warn' : 'bad') : null,
           (st.vend[o.id] ?? 0) > s.week ? pill(T(l('querem vingança', 'want revenge')), 'bad') : null,
-        ),
-        h('div', { class: 'row wrap' }, h('small', { class: 'muted' }, T(l('Contratar a família para:', 'Hire the family to:'))),
-          ...JOBS29.map((j) => btn(j.name, () => { presetHire29(o.id, j.c); setTab('crime17', 'plans'); rerender(); }, { cls: 'ghost', title: l('Abre Planos com a família como executora: escolha o alvo, veja chance, taxa e o favor devido.', 'Opens Plans with the family as executor: pick the target, see odds, fee and the favor owed.') }))),
+        )),
+        h('details', { class: 'small' }, h('summary', null, T(l('Contratar a família para…', 'Hire the family to…'))), h('div', { class: 'row wrap' },
+          ...JOBS29.map((j) => btn(j.name, () => { presetHire29(o.id, j.c); setTab('crime17', 'plans'); rerender(); }, { cls: 'ghost', title: l('Abre Planos com a família como executora: escolha o alvo, veja chance, taxa e o favor devido.', 'Opens Plans with the family as executor: pick the target, see odds, fee and the favor owed.') })))),
         mobLog29(s, o.id),
         (o.kind === 'gang' || o.kind === 'cartel' || o.kind === 'firm') && mine.length ? h('div', { class: 'row wrap' },
           h('small', { class: 'muted' }, T(l('Seu artista de rua com eles:', 'Your street artist with them:'))),
@@ -170,7 +170,7 @@ function plansTab(s: GameState): HTMLElement {
   const executors = [{ value: 'player', label: `${T(l('Você', 'You'))} (${s.config.companyName})` },
     ...playerActs(s).flatMap((id) => s.acts[id]?.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).map((m) => ({ value: m, label: `${s.persons[m].name} (${s.acts[id].name})` })) ?? [])];
   // r29 (Submundo): "Contratar a família" — a organização executa (mob29.hire29), com taxa e favor devido
-  executors.push(...orgs17(s).filter((o) => (st.down[o.id] ?? 0) < s.week).map((o) => ({ value: `hire:${o.id}`, label: `${T(l('Contratar', 'Hire'))} ${T(o.name)} (${T(l('a família executa', 'the family does it'))})` })));
+  executors.push(...orgs17(s).filter((o) => !((st.down[o.id] ?? 0) > s.week)).map((o) => ({ value: `hire:${o.id}`, label: `${T(l('Contratar', 'Hire'))} ${T(o.name)} (${T(l('a família executa', 'the family does it'))})` })));
   if (!executors.some((x) => x.value === form.actor)) form.actor = 'player';
   const hireO = form.actor.startsWith('hire:') ? form.actor.slice(5) : '';
   const ctx: Ctx17 = { actor: hireO ? 'player' : form.actor, target: form.target, method: d.methods ? form.method : undefined, org: hireO ? undefined : form.org || undefined, partners: hireO ? [] : form.partners };
@@ -200,12 +200,13 @@ function plansTab(s: GameState): HTMLElement {
       ),
       h('div', { class: 'row wrap' }, targetPicker29(s, d, form, (id) => { form.target = id; rerender(); }, form.actor)), // r29: todos os personagens
       h('p', { class: 'small' }, T(d.desc), d.methods ? ` ${T(d.methods.find((m) => m.id === form.method)?.desc ?? '')}` : ''),
-      h('div', { class: 'row wrap' }, h('small', { class: 'muted' }, T(l('Sócios (gravadoras):', 'Partners (labels):'))), ...labels.map((lb) => {
+      hireO ? null : h('div', { class: 'row wrap' }, h('small', { class: 'muted' }, T(l('Sócios (gravadoras):', 'Partners (labels):'))), ...labels.map((lb) => {
         const po = partnerOdds(s, lb.id, ctx);
         const on = form.partners.includes(lb.id);
         return h('label', { class: 'small', title: po.why.map(T).join(' · ') }, h('input', { type: 'checkbox', checked: on, onchange: () => { form.partners = on ? form.partners.filter((x) => x !== lb.id) : [...form.partners, lb.id].slice(-2); rerender(); } }), ` ${lb.name} (${P(po.p)} ${T(l('topa', 'accept'))}, ${P(po.betray)} ${T(l('trai', 'betray'))}) `);
       })),
-      od ? h('div', { class: 'card' },
+      ho && ho.block && !ho.p ? h('div', { class: 'card' }, h('p', { class: 'small bad' }, T(ho.block))) // r29: a família não pega o serviço (motivo)
+      : od ? h('div', { class: 'card' },
         chips(stat('sparkle', P(od.p), l('Chance de sucesso', 'Success odds')), stat('warning', P(od.q), l('Risco de exposição', 'Exposure risk')), stat('money', T(usd(od.cost)), l('Custo', 'Cost')), stat('fire', `+${od.heat}`, l('Calor', 'Heat')), stat('skull', od.sev, l('Gravidade', 'Severity'))),
         h('p', { class: 'small' }, `${T(l('Por quê', 'Why'))}: ${od.why.map(T).join(' · ') || '—'}`),
         h('p', { class: 'small muted' }, fmtTxt(l('Calor em {a}: {h}. Sucesso sem exposição = segredo (só testemunhas sabem e guardam isso contra você). Exposto = boato/manchete, escândalo com reação regional, caso policial, mágoa da vítima e rivalidade.', 'Heat in {a}: {h}. Success without exposure = a secret (only witnesses know, and keep it against you). Exposed = rumor/headline, scandal with regional reaction, police case, the victim\'s grievance and rivalry.'), countryName(od.a3)).replace('{h}', String(heatIn(s, od.a3)))),
