@@ -8,6 +8,7 @@
 
 import type { LmShape } from '../../data/landmarks19';
 import { C, Px, dith, noise, shade, withAlpha, type Col } from './px';
+import { drawText } from './font';
 
 type P = [number, number];
 /** Contexto de desenho: buffer de cor, buffer de luzes, âncora (centro da base no chão), ano. */
@@ -36,13 +37,13 @@ function ibox(k: K, u: number, v: number, r1: number, r2: number, z0: number, h:
     const s = x + 0.5 - W[0], z = W[1] + s / 2 - z0 - (y + 0.5);
     const t = o.tex?.(0, s, z, lenL);
     if (t) return t;
-    return z >= h - 1 ? shade(base, 0.12) : base;
+    return z >= h - 1 ? shade(base, 0.12) : s >= lenL - 1 && lenL > 3 ? shade(base, 0.08) : z0 === 0 && z < 1.5 && h > 6 ? shade(base, -0.1) : base;
   });
   k.p.poly([[S[0], S[1] - z0], [E[0], E[1] - z0], [E[0], E[1] - z0 - h], [S[0], S[1] - z0 - h]], (x, y) => {
     const s = x + 0.5 - S[0], z = S[1] - s / 2 - z0 - (y + 0.5);
     const t = o.tex?.(1, s, z, lenR);
     if (t) return shade(t, -0.18);
-    return z >= h - 1 ? shade(rc, 0.1) : rc;
+    return z >= h - 1 ? shade(rc, 0.1) : z0 === 0 && z < 1.5 && h > 6 ? shade(rc, -0.1) : rc;
   });
   if (!o.noTop) k.p.poly([[N[0], N[1] - z0 - h], [E[0], E[1] - z0 - h], [S[0], S[1] - z0 - h], [W[0], W[1] - z0 - h]], o.top ?? shade(base, 0.16));
 }
@@ -191,7 +192,6 @@ function lattice(k: K, o: { H: number; base: number; col: (z: number) => Col; de
 }
 const eiffel = (k: K) => lattice(k, { H: 66, base: 15, col: () => C('#8a6a50'), decks: [16, 37, 60], ant: 9, lights: k.year >= 1985 ? GOLDL : undefined });
 const tokyoTower = (k: K) => lattice(k, { H: 62, base: 12, pow: 1.5, col: (z) => (Math.floor(z / 7) % 2 ? C('#f4f0ea') : C('#e8482a')), decks: [24, 46], ant: 12, lights: k.year >= 1989 ? C('#ffa040') : undefined });
-const skytree = (k: K) => { const f = lattice(k, { H: 64, base: 6, pow: 0.7, col: () => C('#e6ecf2'), decks: [38, 52], ant: 10, lights: C('#a0c8ff'), arch: false }); return f; };
 
 function empire(k: K, o: { col?: Col; tiers?: [number, number][]; mast?: number } = {}): Foot {
   const c = o.col ?? C('#cfc6b0'), win = C('#46505c');
@@ -303,12 +303,12 @@ function liver(k: K): Foot {
   return { r1: 1.15, r2: 0.62, h: 50 };
 }
 
-function tvTower(k: K, o: { ball: boolean; shaft: Col; podR?: number; pod?: number; H?: number }): Foot {
+function tvTower(k: K, o: { ball: boolean; shaft: Col; podR?: number; pod?: number; H?: number; podCol?: Col }): Foot {
   const H = o.H ?? 50, pod = o.pod ?? H + 4, rr = o.podR ?? 7;
   ibox(k, 0, 0, 1.1, 1.1, 0, 4, C('#d8d4cc'), { top: C('#8a9098') });
   cyl(k, 0, 0, 0.32, 4, H - 4, o.shaft, 0.2);
   if (o.ball) { ball(k, 0, 0, pod, rr, C('#bcc4cc')); const [x, y] = ip(k, 0, 0, pod); for (let i = -rr + 1; i < rr; i++) { k.p.set(x + i, y + 1, C('#3a4250')); lamp(k, x + i, y + 1, WARM); } }
-  else { ibox(k, 0, 0, rr / 11, rr / 11, pod - 3, 6, shade(o.shaft, -0.1), { tex: (_s, s, z) => (z > 2 && z < 4 && Math.floor(s) % 2 ? C('#3a4250') : 0) }); const [x, y] = ip(k, 0, rr / 11, pod); lamp(k, x - 2, y, WARM); lamp(k, x + 2, y, WARM); }
+  else { ibox(k, 0, 0, rr / 11, rr / 11, pod - 3, 6, o.podCol ?? shade(o.shaft, -0.1), { tex: (_s, s, z) => (z > 2 && z < 4 && Math.floor(s) % 2 ? C('#3a4250') : 0) }); const [x, y] = ip(k, 0, rr / 11, pod); lamp(k, x - 2, y, WARM); lamp(k, x + 2, y, WARM); }
   cyl(k, 0, 0, 0.12, pod + rr - 1, 6, o.shaft);
   const [tx, ty] = ip(k, 0, 0, pod + rr + 5);
   for (let i = 0; i < 12; i++) k.p.set(tx, ty - i, Math.floor(i / 3) % 2 ? C('#e83a2a') : WHITE);
@@ -545,6 +545,242 @@ function sears(k: K): Foot {
   return { r1: 0.85, r2: 0.85, h: 72 };
 }
 
+// ---------------------------------------------------------------- r27 (I2b): marcos novos e redesenhados
+
+/** Meia-esfera (cúpula) com ry = r·k, luz no alto à esquerda; só a metade de cima. */
+function hemi(k: K, u: number, v: number, z: number, r: number, base: Col, ky = 1): void {
+  const [cx, cy0] = ip(k, u, v), cy = cy0 - z, ry = r * ky;
+  for (let dy = -Math.ceil(ry); dy <= 0; dy++) for (let dx = -Math.ceil(r); dx <= Math.ceil(r); dx++) {
+    const x = (dx + 0.5) / r, y = (dy + 0.5) / ry, d = x * x + y * y;
+    if (d > 1) continue;
+    const nz = Math.sqrt(1 - d), lum = -0.6 * x - 0.45 * y + 0.62 * nz;
+    k.p.set(cx + dx, cy + dy, lum > 0.85 ? shade(base, 0.42) : lum > 0.5 ? shade(base, 0.16) : lum > 0.15 ? base : lum > -0.2 ? shade(base, -0.2) : shade(base, -0.36));
+  }
+}
+/** Faixa horizontal de pixels (para frisos e marquises). */
+const hrow = (k: K, x: number, y: number, w: number, c: Col) => { for (let i = 0; i < w; i++) k.p.set(x + i, y, c); };
+
+/** Capitol Records: pilha de "discos" (andares redondos com quebra-sol), agulha com a luz em Morse. */
+function capitolRecords(k: K): Foot {
+  diamond(G(k), 0, 0, 1.1, 0.9, (x, y) => ((x + y) % 4 < 2 ? C('#b8b2a6') : C('#c4beb2')));
+  ibox(k, 0.35, 0.25, 0.7, 0.45, 0, 5, C('#e8e2d2'), { tex: winTex(C('#3a4a5a'), 4, 3) });
+  const glass = C('#5a7088'), lip = C('#f0ece2');
+  for (let f = 0; f < 13; f++) {
+    const z = 3 + f * 3, r = 0.5 - f * 0.012;
+    cyl(k, 0, 0, r, z, 2, glass);
+    cyl(k, 0, 0, r + 0.1, z + 2, 1, lip);
+    const [x, y] = ip(k, 0, 0, z + 1);
+    for (let i = -4; i <= 4; i += 2) if (noise(f, i, k.seed) < 0.6) lamp(k, x + i, y, WARM);
+  }
+  cyl(k, 0, 0, 0.26, 42, 3, lip);
+  const [tx, ty] = ip(k, 0, 0, 45);
+  k.p.rect(tx, ty - 14, 1, 14, C('#d8dce0')); k.p.set(tx, ty - 15, REDL); lamp(k, tx, ty - 15, REDL); lamp(k, tx, ty - 16, REDL);
+  return { r1: 0.62, r2: 0.62, h: 60 };
+}
+
+/** Observatório Griffith: corpo branco art déco, cúpula grande de cobre no meio, duas menores nas pontas. */
+function griffith(k: K): Foot {
+  const hAt = (dx: number) => 14 * Math.max(0, 1 - Math.abs(dx) / 34) ** 0.9 + (noise(dx, 1, 41) - 0.5) * 1.2;
+  mountain(k, -34, 34, hAt, C('#9a8a6a'), C('#7a8a50'), 0);
+  const w = C('#f0ece2'), cu = C('#4e7a72'), Z = 12;
+  ibox(k, 0, 0, 1.7, 0.42, Z, 7, w, { tex: (_s, ss, z, len) => (z > 2 && z < 5 && ss > 2 && ss < len - 2 && Math.floor(ss) % 3 === 1 ? C('#5a6470') : 0) });
+  for (const s2 of [-1, 1]) { cyl(k, s2 * 1.55, 0, 0.32, Z + 7, 3, w); hemi(k, s2 * 1.55, 0, Z + 10, 3.6, cu); }
+  ibox(k, 0, 0, 0.62, 0.6, Z, 10, w, { tex: (_s, ss, z, len) => (z > 2 && z < 8 && Math.abs(ss - len / 2) < 1 ? C('#4a5260') : 0) });
+  cyl(k, 0, 0, 0.55, Z + 10, 3, shade(w, -0.04));
+  hemi(k, 0, 0, Z + 13, 6.6, cu);
+  const [x, y] = ip(k, 0, 0, Z + 19); k.p.set(x, y - 1, C('#c8a040'));
+  for (let u = -1.4; u <= 1.4; u += 0.35) { const [lx, ly] = ip(k, u, 0.42, Z + 4); lamp(k, lx, ly, WARM); }
+  lamp(k, x, y + 1, C('#a0c8ff'));
+  return { r1: 1.8, r2: 0.8, h: 34 };
+}
+
+/** Letreiro de Hollywood: morro de chaparral e letras brancas de pé na encosta (HOLLYWOODLAND até 1949). */
+function hollywoodSign(k: K): Foot {
+  const hAt = (dx: number) => 32 * Math.max(0, 1 - Math.abs(dx - 6) / 34) ** 1.15 + 4 * Math.exp(-(((dx + 18) / 8) ** 2)) + (noise(dx, 3, 5) - 0.5) * 1.6;
+  mountain(k, -34, 38, hAt, C('#a08c66'), C('#86904e'), 6, 0.5);
+  for (let dx = -32; dx <= 36; dx += 3) { const h = hAt(dx); if (h > 6 && noise(dx, 9, 3) < 0.5) { const yy = k.Y - Math.round(h * (0.3 + noise(dx, 4, 3) * 0.5)); k.p.set(k.X + dx, yy, C('#5a6a3a')); k.p.set(k.X + dx + 1, yy, C('#4a5a32')); } }
+  const word = k.year < 1949 ? 'HOLLYWOODLAND' : 'HOLLYWOOD', step = k.year < 1949 ? 4 : 5;
+  const x0 = -Math.round((word.length * step) / 2) + 2;
+  for (let i = 0; i < word.length; i++) {
+    const dx = x0 + i * step, y = k.Y - Math.round(hAt(Math.round(dx * 0.35) + 4) * 0.6) - 5 + (i % 3 === 1 ? 1 : 0);
+    drawText(k.p, word[i], k.X + dx + 1, y + 1, C('#8a8a80'));
+    drawText(k.p, word[i], k.X + dx, y, C('#fbfaf6'));
+    if (k.year < 1949 || k.year >= 2000) lamp(k, k.X + dx + 1, y + 2, k.year < 1949 ? C('#fff0b8') : WARM);
+  }
+  return { r1: 2.6, r2: 1, h: 34 };
+}
+
+/** Hollywood Bowl: concha de arcos concêntricos encaixada no morro, plateia em leque. */
+function hollywoodBowl(k: K): Foot {
+  const hAt = (dx: number) => 22 * Math.max(0, 1 - Math.abs(dx + 2) / 30) ** 1.1 + (noise(dx, 2, 8) - 0.5) * 1.2;
+  mountain(k, -30, 28, hAt, C('#9a8a6a'), C('#7a8a50'), -2, 0.6);
+  for (let r = 0; r < 7; r++) { const R0 = 15 - r * 2.2; for (let i = -Math.ceil(R0 * 1.6); i <= R0 * 1.6; i++) { const t = i / (R0 * 1.6); if (Math.abs(t) > 1) continue; const yy = Math.round(Math.sqrt(1 - t * t) * R0 * 0.55); k.g.set(k.X + i, k.Y + 10 - yy, r % 2 ? C('#7a6a5a') : C('#a89880')); } }
+  const cx = k.X - 1, cy = k.Y + 2;
+  for (let r = 0; r < 5; r++) { const R = 13 - r * 2.3; for (let a = 0; a <= 40; a++) { const t = Math.PI * (a / 40); const x = Math.round(cx - Math.cos(t) * R), y = Math.round(cy - Math.sin(t) * R * 0.95); k.p.set(x, y, shade(WHITE, -r * 0.06)); k.p.set(x, y + 1, shade(WHITE, -0.18 - r * 0.05)); } }
+  for (let i = -8; i <= 8; i++) for (let j = 0; j < 3; j++) k.p.set(cx + i, cy - j, C('#3a3438'));
+  for (let i = -6; i <= 6; i += 2) lamp(k, cx + i, cy - 3, k.year >= 1980 ? C('#ff80d0') : WARM);
+  for (let r = 0; r < 5; r++) { const R = 13 - r * 2.3; for (let a = 2; a <= 38; a += 6) { const t = Math.PI * (a / 40); lamp(k, Math.round(cx - Math.cos(t) * R), Math.round(cy - Math.sin(t) * R * 0.95), WARM); } }
+  return { r1: 1.8, r2: 1.2, h: 24 };
+}
+
+/** Stax: cinema velho com marquise ("SOUL CITY USA") e letreiro vertical. */
+function stax(k: K): Foot {
+  diamond(G(k), 0, 0, 1.3, 0.9, (x, y) => ((x + y) % 4 < 2 ? C('#b8b2a6') : C('#c4beb2')));
+  ibox(k, 0, 0, 1.0, 0.6, 0, 12, C('#e8dcc0'), { tex: winTex(C('#5a4a3a'), 6, 4, { from: 7 }) });
+  const [x, y] = ip(k, -1.0, 0.6, 5);
+  for (let i = 0; i < 16; i++) { const yy = y + Math.floor(i / 2); k.p.set(x + i, yy - 1, C('#2a2428')); k.p.set(x + i, yy - 2, C('#e8c040')); k.p.set(x + i, yy - 3, C('#2a2428')); if (i % 2 === 0) lamp(k, x + i, yy - 2, C('#ffe080')); }
+  const [vx, vy] = ip(k, -0.2, 0.6, 9);
+  k.p.rect(vx, vy - 9, 3, 11, C('#c83a2a')); for (let j = 0; j < 4; j++) { k.p.set(vx + 1, vy - 7 + j * 2, C('#fff4d0')); lamp(k, vx + 1, vy - 7 + j * 2, C('#ff8060')); }
+  return { r1: 1.0, r2: 0.6, h: 14 };
+}
+
+/** Hitsville U.S.A.: casinha branca de dois andares com o letreiro azul na frente. */
+function hitsville(k: K): Foot {
+  diamond(G(k), 0, 0, 1.2, 0.95, (x, y) => (noise(x, y, 3) < 0.15 ? C('#5a9a48') : C('#4e8c42')));
+  ibox(k, 0, -0.1, 0.8, 0.55, 0, 13, C('#f2efe6'), { tex: winTex(C('#3a4a5c'), 6, 3) });
+  gableRoof(k, 0, -0.1, 0.8, 0.55, 13, 5, C('#5a5a64'));
+  const [x, y] = ip(k, -0.75, 0.45, 9);
+  const blue = C('#2a5aa8');
+  for (let i = 0; i < 13; i++) for (let j = 0; j < 4; j++) k.p.set(x + i, y + Math.floor(i / 2) - j, j === 0 || j === 3 ? C('#f2efe6') : blue);
+  for (let i = 1; i < 12; i += 2) { k.p.set(x + i, y + Math.floor(i / 2) - 2, C('#ffffff')); lamp(k, x + i, y + Math.floor(i / 2) - 2, C('#c0d8ff')); }
+  return { r1: 0.8, r2: 0.6, h: 18 };
+}
+
+/** Renaissance Center: torre cilíndrica de vidro escuro cercada por quatro torres menores. */
+function renCen(k: K): Foot {
+  diamond(G(k), 0, 0, 1.6, 1.6, (x, y) => ((Math.floor(x / 2) + y) % 2 ? C('#bdb6a8') : C('#c9c2b4')));
+  ibox(k, 0, 0, 1.3, 1.3, 0, 6, C('#8a8e96'), { tex: winTex(C('#3a4250'), 3, 2) });
+  const gl = C('#4a5e72');
+  const ring = (u: number, v: number, r: number, h: number) => { cyl(k, u, v, r, 6, h, gl); const [x, y] = ip(k, u, v, 6); for (let z = 6; z < h; z += 4) for (let i = -Math.floor(r * 9); i <= Math.floor(r * 9); i += 2) if (noise(i, z, k.seed + Math.round(u * 7)) < 0.45) lamp(k, x + i, y - z, WARM); };
+  ring(-0.75, -0.75, 0.38, 38); ring(0.75, -0.75, 0.38, 38);
+  ring(0, 0, 0.52, 62);
+  const [tx, ty] = ip(k, 0, 0, 68); for (let i = -4; i <= 4; i++) lamp(k, tx + i, ty, C('#a0c8ff'));
+  ring(-0.75, 0.75, 0.38, 38); ring(0.75, 0.75, 0.38, 38);
+  return { r1: 1.3, r2: 1.3, h: 70 };
+}
+
+/** Water Tower de Chicago: torre de calcário com ameias e torreões, lanterna e agulha. */
+function waterTower(k: K): Foot {
+  const c = C('#e2d6b2');
+  diamond(G(k), 0, 0, 1.2, 1.2, (x, y) => (noise(x, y, 5) < 0.12 ? C('#5a9a48') : C('#4e8c42')));
+  ibox(k, 0, 0, 0.75, 0.75, 0, 12, c, { tex: (_s, ss, z, len) => (z > 4 && z < 9 && Math.abs(ss - len / 2) < 1 ? C('#4a4a50') : Math.floor(z) % 4 === 0 ? shade(c, -0.08) : 0) });
+  for (const [u, v] of [[-0.75, -0.75], [0.75, -0.75], [-0.75, 0.75], [0.75, 0.75]] as P[]) { ibox(k, u, v, 0.16, 0.16, 0, 15, c); taper(k, u, v, 0.16, 0, 15, 4, shade(c, -0.05)); }
+  ibox(k, 0, 0, 0.32, 0.32, 12, 26, c, { tex: (_s, ss, z) => (Math.floor(z) % 5 === 0 ? shade(c, -0.1) : z > 16 && z < 22 && Math.floor(ss) === 1 ? C('#4a4a50') : 0) });
+  ibox(k, 0, 0, 0.38, 0.38, 38, 2, shade(c, 0.06));
+  for (const [u, v] of [[-0.38, 0.38], [0.38, 0.38], [0.38, -0.38]] as P[]) { const [x, y] = ip(k, u, v, 40); k.p.rect(x, y - 2, 1, 2, c); }
+  cyl(k, 0, 0, 0.2, 40, 6, c); taper(k, 0, 0, 0.2, 0, 46, 8, C('#6a7a70'));
+  const [x, y] = ip(k, 0, 0, 30); lamp(k, x, y, WARM); lamp(k, x, y - 1, WARM);
+  return { r1: 0.85, r2: 0.85, h: 54 };
+}
+
+/** Sacré-Cœur: travertino branco no alto de Montmartre — cúpula ovoide, cupulinhas e campanário. */
+function sacreCoeur(k: K): Foot {
+  const hAt = (dx: number) => 16 * Math.max(0, 1 - (dx / 34) ** 2) ** 0.8 + (noise(dx, 2, 13) - 0.5) * 1.2;
+  mountain(k, -34, 34, hAt, C('#7a8a70'), C('#4e8a44'), 0, 2);
+  for (let dx = -26; dx <= 26; dx += 3) { const h = hAt(dx); if (noise(dx, 5, 9) < 0.55) { const yy = k.Y - Math.round(h * (0.25 + noise(dx, 6, 9) * 0.45)); k.p.rect(k.X + dx, yy - 2, 3, 2, [C('#e8dcc4'), C('#d8c8a8'), C('#c8786a')][Math.floor(noise(dx, 7, 9) * 3)]); if (noise(dx, 8, 9) < 0.4) lamp(k, k.X + dx + 1, yy - 1, WARM); } }
+  const w = WHITE, Z = 15;
+  ibox(k, 0.7, -0.75, 0.2, 0.2, Z, 26, w, { tex: (_s, ss, z) => (z > 18 && z < 22 && Math.floor(ss) === 1 ? C('#5a5a64') : 0) }); taper(k, 0.7, -0.75, 0.2, 0, Z + 26, 5, w);
+  ibox(k, 0, 0, 1.0, 0.6, Z, 10, w, { tex: (_s, ss, z, len) => (z > 3 && z < 8 && ss > 1 && ss < len - 1 && Math.floor(ss) % 3 === 1 ? C('#6a6a74') : 0) });
+  for (const [u, v] of [[-0.75, 0.45], [0.75, 0.45], [-0.75, -0.45]] as P[]) { cyl(k, u, v, 0.14, Z + 10, 3, w); hemi(k, u, v, Z + 13, 2.2, w, 1.3); }
+  cyl(k, 0, 0, 0.4, Z + 10, 7, w);
+  hemi(k, 0, 0, Z + 17, 4.8, w, 1.5);
+  cyl(k, 0, 0, 0.08, Z + 24, 3, w); const [x, y] = ip(k, 0, 0, Z + 27); k.p.set(x, y - 1, C('#c8c0b0'));
+  for (let u = -0.8; u <= 0.8; u += 0.4) { const [lx, ly] = ip(k, u, 0.6, Z + 4); lamp(k, lx, ly, WARM); }
+  return { r1: 1.0, r2: 0.7, h: 46 };
+}
+
+/** Budokan: base octogonal clara e grande telhado côncavo (como o Fuji) com a giboshi dourada no alto. */
+function budokan(k: K): Foot {
+  diamond(G(k), 0, 0, 1.7, 1.7, (x, y) => ((x + y) % 4 < 2 ? C('#b8b2a6') : C('#c4beb2')));
+  cyl(k, 0, 0, 1.25, 0, 7, C('#e8e2d4'));
+  const [cx, cy] = ip(k, 0, 0, 7), roof = C('#5e6e6a');
+  for (let z = 0; z < 16; z++) {
+    const r = 1.55 * Math.pow(1 - z / 16, 1.7) + 0.06, rx = r * 11.3;
+    for (let dx = -Math.ceil(rx); dx <= Math.ceil(rx); dx++) {
+      if (Math.abs(dx + 0.5) > rx + 0.3) continue;
+      const f = (dx + 0.5) / Math.max(1, rx);
+      k.p.set(cx + dx, cy - z, shade(roof, z === 0 ? -0.3 : f < -0.35 ? 0.16 : f < 0.2 ? 0 : f < 0.65 ? -0.16 : -0.3));
+    }
+  }
+  for (let i = -13; i <= 13; i += 2) lamp(k, cx + i, cy + 3, WARM);
+  ball(k, 0, 0, 7 + 18, 2.4, C('#d8b048')); k.p.rect(cx, cy - 22, 1, 2, C('#d8b048'));
+  return { r1: 1.4, r2: 1.4, h: 28 };
+}
+
+/** Tokyo Skytree: fuste branco treliçado que afina, dois mirantes em anel e antena. */
+function skytree2(k: K): Foot {
+  diamond(G(k), 0, 0, 1.0, 1.0, (x, y) => ((Math.floor(x / 2) + y) % 2 ? C('#bdb6a8') : C('#c9c2b4')));
+  const c = C('#e8eef4');
+  for (let z = 0; z < 64; z++) {
+    const w = 6.5 * Math.pow(1 - z / 80, 1.2) + 1, y = k.Y - z;
+    for (let dx = -Math.ceil(w); dx <= Math.ceil(w); dx++) {
+      const ad = Math.abs(dx + 0.5); if (ad > w) continue;
+      const edge = ad > w - 1.2, lace = (Math.abs(dx) + z) % 3 === 0 || (Math.abs(dx) - z + 300) % 3 === 0;
+      k.p.set(k.X + dx, y, edge || lace ? (dx < 0 ? c : shade(c, -0.22)) : shade(C('#b8c4d0'), dx < 0 ? 0 : -0.15));
+      if (edge && z % 4 === 0) lamp(k, k.X + dx, y, k.year % 2 ? C('#a0c8ff') : C('#d0a0ff'));
+    }
+  }
+  cyl(k, 0, 0, 0.62, 40, 5, C('#9aa8b8')); cyl(k, 0, 0, 0.66, 45, 1, c);
+  cyl(k, 0, 0, 0.42, 54, 3, C('#9aa8b8'));
+  const [x0, y0] = ip(k, 0, 0, 42), [x1, y1] = ip(k, 0, 0, 55);
+  for (let i = -6; i <= 6; i++) lamp(k, x0 + i, y0, WARM);
+  for (let i = -4; i <= 4; i++) lamp(k, x1 + i, y1, WARM);
+  const [tx, ty] = ip(k, 0, 0, 64); k.p.rect(tx, ty - 14, 1, 14, c); lamp(k, tx, ty - 14, REDL);
+  return { r1: 0.7, r2: 0.7, h: 80 };
+}
+
+/** Arcos da Lapa: aqueduto branco em dois andares de arcos; bondinho amarelo por cima desde 1896. */
+function lapa(k: K): Foot {
+  diamond(G(k), 0, 0, 3.4, 0.8, (x, y) => ((x + y) % 4 < 2 ? C('#b8b2a6') : C('#c4beb2')));
+  const w = C('#f2eee2');
+  for (let i = 0; i <= 12; i++) ibox(k, -3 + i * 0.5, 0, 0.1, 0.16, 0, 10, w);
+  ibox(k, 0, 0, 3.1, 0.16, 10, 2, w);
+  for (let i = 0; i <= 24; i++) ibox(k, -3 + i * 0.25, 0, 0.05, 0.12, 12, 6, shade(w, -0.03));
+  ibox(k, 0, 0, 3.1, 0.18, 18, 2, w, { top: C('#8a8a90') });
+  if (k.year >= 1896) { ibox(k, 0.8, 0, 0.32, 0.12, 20, 4, C('#e8c030'), { tex: (_s, ss, z) => (z > 1 && z < 3 && Math.floor(ss) % 2 ? C('#3a4048') : 0) }); const [x, y] = ip(k, 0.8, 0, 22); lamp(k, x, y, WARM); }
+  for (let i = 0; i < 12; i++) { const [x, y] = ip(k, -2.75 + i * 0.5, 0.16, 7); lamp(k, x, y, WARM); }
+  return { r1: 3.1, r2: 0.3, h: 22 };
+}
+
+/** 56 Hope Road: casa colonial creme com varanda de colunas, telhado vermelho e o portão rasta. */
+function marley(k: K): Foot {
+  diamond(G(k), 0, 0, 1.5, 1.1, (x, y) => (noise(x, y, 6) < 0.15 ? C('#3fa443') : C('#36963c')));
+  ibox(k, 0.1, -0.15, 1.0, 0.6, 0, 13, C('#f0e2bc'), { tex: winTex(C('#3a4a3a'), 6, 3) });
+  gableRoof(k, 0.1, -0.15, 1.0, 0.6, 13, 5, C('#b84a32'));
+  ibox(k, 0.1, 0.5, 1.0, 0.12, 6, 1, C('#e8dcc0'), { top: C('#c86a4a') });
+  for (let i = 0; i < 6; i++) { const [x, y] = ip(k, -0.8 + i * 0.36, 0.62, 0); k.p.rect(x, y - 6, 1, 6, WHITE); }
+  const rasta = [C('#2a9a3a'), C('#f0c830'), C('#d83a2a')];
+  for (let i = 0; i < 18; i++) { const [x, y] = ip(k, -1.45 + i * 0.12, 1.0, 0); for (let j = 0; j < 3; j++) k.p.set(x, y - j - 1, rasta[j]); }
+  const [lx, ly] = ip(k, 0.1, 0.62, 3); lamp(k, lx, ly, WARM); lamp(k, lx - 4, ly - 2, WARM);
+  return { r1: 1.0, r2: 0.7, h: 18 };
+}
+
+/** Teatro Nacional de Lagos: tambor baixo e largo com a "aba de quepe" e a cobertura em cúpula rasa. */
+function lagosTheatre(k: K): Foot {
+  diamond(G(k), 0, 0, 2.1, 2.1, (x, y) => ((Math.floor(x / 2) + y) % 2 ? C('#bdb6a8') : C('#c9c2b4')));
+  const w = C('#e6e2d8'), rim = C('#d8c890');
+  cyl(k, 0, 0, 1.5, 0, 8, w);
+  const [cx, cy] = ip(k, 0, 0, 0);
+  for (let i = -15; i <= 15; i++) { k.p.set(cx + i, cy - 4, C('#3a4250')); if (i % 2 === 0) lamp(k, cx + i, cy - 4, WARM); }
+  for (let z = 0; z < 3; z++) { const rx = 21 - z; for (let dx = -rx; dx <= rx; dx++) k.p.set(cx + dx, cy - 8 - z, shade(rim, dx < -rx * 0.3 ? 0.12 : dx > rx * 0.4 ? -0.18 : 0)); }
+  hemi(k, 0, 0, 11, 14, C('#c8c4ba'), 0.42);
+  for (let i = -12; i <= 12; i += 3) k.p.set(cx + i, cy - 12, C('#a8a49a'));
+  const [vx, vy] = ip(k, 0, 1.55, 10);
+  for (let j = 0; j < 3; j++) hrow(k, vx - 9 + j, vy + j, 18 - j * 2, shade(rim, -0.1 - j * 0.05));
+  return { r1: 1.6, r2: 1.6, h: 20 };
+}
+
+/** Ponte baixa sobre muitos pilares (Terceiro Continente; Carter com treliça de aço antes de 1970). */
+function beamBridge(k: K, truss: boolean): Foot {
+  diamond(G(k), 0, 0, 3.6, 0.9, (x, y) => (noise(x, y, 5) < 0.06 ? C('#6aa8d0') : C('#4a8ab4')));
+  const c = truss ? C('#6a6a70') : C('#c8c4bc');
+  for (let i = 0; i <= 12; i++) ibox(k, -3.3 + i * 0.55, 0, 0.08, 0.14, 0, 6, shade(c, -0.08));
+  ibox(k, 0, 0, 3.45, 0.2, 6, 2, c, { top: C('#5a5a62') });
+  if (truss) for (let i = 0; i < 28; i++) { const [x, y] = ip(k, -3.3 + i * 0.24, 0.2, 8); k.p.set(x, y - (i % 2 ? 4 : 1), c); k.p.set(x, y - 2, c); k.p.set(x, y - 3, c); }
+  for (let i = 0; i < 14; i++) { const [x, y] = ip(k, -3.2 + i * 0.5, 0.2, 9); lamp(k, x, y, k.year >= 1990 ? C('#ffe8b0') : WARM); }
+  return { r1: 3.4, r2: 0.3, h: 12 };
+}
+
 // ---------------------------------------------------------------- catálogo
 
 interface Spec { base: Base; draw: (k: K) => Foot }
@@ -583,8 +819,8 @@ const BESPOKE: Record<string, Spec> = {
   nash_opry: { base: 'none', draw: (k) => hall(k, { wall: C('#c89a72'), roof: C('#e8e4dc'), cols: true, r1: 1.6, r2: 0.8, h: 9 }) },
   nash_batman: { base: 'plaza', draw: batman },
   tok_tower: { base: 'plaza', draw: tokyoTower },
-  tok_sky: { base: 'plaza', draw: skytree },
-  tok_budokan: { base: 'none', draw: (k) => pagoda(k, C('#e8e0cc')) },
+  tok_sky: { base: 'plaza', draw: skytree2 },
+  tok_budokan: { base: 'none', draw: budokan },
   ber_tv: { base: 'plaza', draw: (k) => tvTower(k, { ball: true, shaft: C('#cfcbc2') }) },
   ber_gate: { base: 'none', draw: (k) => brandenburg(k) },
   ber_wall: { base: 'none', draw: wall },
@@ -594,8 +830,23 @@ const BESPOKE: Record<string, Spec> = {
   lis_bridge: { base: 'none', draw: (k) => suspension(k, { tower: C('#c0402c'), cable: C('#b03828') }) },
   ist_bridge: { base: 'none', draw: (k) => suspension(k, { tower: C('#d8dce0'), cable: C('#9aa0a8') }) },
   det_ambassador: { base: 'none', draw: (k) => suspension(k, { tower: C('#3a4a5a'), cable: C('#3a4a5a') }) },
-  la_sign: { base: 'none', draw: hillSign },
-  la_bowl: { base: 'none', draw: bowl },
+  la_sign: { base: 'none', draw: hollywoodSign },
+  la_bowl: { base: 'none', draw: hollywoodBowl },
+  la_griffith: { base: 'none', draw: griffith },
+  la_capitol: { base: 'plaza', draw: capitolRecords },
+  nash_parthenon: { base: 'plaza', draw: (k) => temple(k, C('#d8ccae')) },
+  mem_stax: { base: 'none', draw: stax },
+  det_hitsville: { base: 'none', draw: hitsville },
+  det_rencen: { base: 'plaza', draw: renCen },
+  chi_water: { base: 'none', draw: waterTower },
+  par_sacre: { base: 'none', draw: sacreCoeur },
+  rio_lapa: { base: 'none', draw: lapa },
+  kgn_devon: { base: 'none', draw: (k) => hall(k, { wall: C('#f2ece0'), roof: C('#4a7a5a'), cols: true, r1: 1.3, r2: 0.75, h: 11 }) },
+  kgn_marley: { base: 'none', draw: marley },
+  lag_theatre: { base: 'none', draw: lagosTheatre },
+  lag_carter: { base: 'none', draw: (k) => beamBridge(k, k.year < 1970) },
+  lag_mainland: { base: 'none', draw: (k) => beamBridge(k, false) },
+  syd_tower: { base: 'plaza', draw: (k) => tvTower(k, { ball: false, shaft: C('#c8c8c4'), podR: 8, pod: 52, H: 50, podCol: C('#d0a848') }) },
   hav_tropicana: { base: 'none', draw: bowl },
   chi_sears: { base: 'plaza', draw: sears },
   sea_needle: { base: 'plaza', draw: (k) => tvTower(k, { ball: false, shaft: C('#e8e4dc'), podR: 13, pod: 46, H: 44 }) },

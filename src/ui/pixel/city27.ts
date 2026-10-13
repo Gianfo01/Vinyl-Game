@@ -29,6 +29,7 @@ import { ventures } from '../../sim/sys/ventures9';
 import { v17 } from '../../sim/sys/venues17';
 import { bldPop19, lotPop19, upkeep19, type PopAct19 } from '../../sim/sys/world19';
 import { scandal17 } from '../../sim/scandal17';
+import { LMW27B, LMX27B } from './lmdata27';
 
 // ---------------------------------------------------------------- utilidades determinísticas
 
@@ -452,6 +453,7 @@ export const LMW27: Record<string, number> = {
   tok_tower: 10, tok_sky: 9, tok_budokan: 6, ber_tv: 10, ber_gate: 9, ber_wall: 7,
   syd_opera: 10, syd_bridge: 9, la_sign: 9, la_griffith: 7, la_bowl: 6, chi_sears: 9, chi_chess: 4,
   sf_gate: 10, sea_needle: 10, tor_cn: 10, was_capitol: 9, was_monument: 8, det_ambassador: 7, det_hitsville: 8,
+  ...LMW27B, // r27 (I2b): marcos novos do mapa (lmdata27.ts)
 };
 /** Marcos que só existem no mapa (relevo natural e prédios fora do horizonte do jogo — não mexem na simulação). */
 export const LMX27: Landmark19[] = [
@@ -460,6 +462,7 @@ export const LMX27: Landmark19[] = [
   { id: 'rio_corcovado', city: 'rio', n: l('Corcovado', 'Corcovado'), from: -9999, to: 1931, sh: 'statue', fact: l('O pico ainda sem o Cristo (inaugurado em 1931).', 'The peak still without the Christ (inaugurated in 1931).') },
   { id: 'mem_pyramid', city: 'memphis', n: l('Pirâmide de Memphis', 'Memphis Pyramid'), from: 1991, sh: 'pyramid', fact: l('Arena em forma de pirâmide aberta em 1991 à beira do Mississippi.', 'Pyramid-shaped arena opened in 1991 on the Mississippi.') },
   { id: 'nash_batman', city: 'nashville', n: l('Torre de duas pontas', 'Twin-spired tower'), from: 1994, sh: 'spire', fact: l('O arranha-céu de duas pontas do centro foi concluído em 1994.', 'Downtown\'s twin-spired skyscraper was completed in 1994.') },
+  ...LMX27B, // r27 (I2b): marcos novos do mapa (lmdata27.ts)
 ];
 /** Marco no mapa: bastidor 0–1 = altos (fundo), 2–3 = largos (laterais). */
 export interface MapLm27 extends Landmark19 { slot: number; w: number }

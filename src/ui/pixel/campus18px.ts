@@ -11,6 +11,7 @@ import { LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, typ
 import { ICON27, cityLook27, env27, era27, hqExt27, type BVis27, type CityLook27, type Env27, type Era27, type HqExt27, type Life27, type Sale27 } from './city27';
 import type { Landmark19 } from '../../data/landmarks19';
 import { LM_SLOTS27, drawLmIso27, outlineOuter } from './lmiso27';
+import { dusk27, paintSky27, skyCols27 } from './skyline27';
 
 export const GW = 20, GH = 16;
 export const MW = 300, MH = 226;
@@ -575,14 +576,11 @@ function conifer27(t: T, x: number, y: number, snow: boolean): void {
 
 /** r27: paleta do céu e da grama por clima, estação e tempo (cores vivas; a neve é branca com sombra azul). */
 export function palette27(env: Env18): { skyTop: Col; skyBot: Col; grass: Col; grass2: Col } {
-  const old = env.year < 1946 ? 0.12 : 0;
-  let skyTop = env.snow ? C('#78b0e4') : env.rain ? C('#7f93ae') : env.climate === 'tropical' ? C('#3c9ce8') : env.climate === 'arid' ? C('#5aa8e6') : C('#4ea2e6');
-  let skyBot = env.snow ? C('#e6f2fc') : env.rain ? C('#c0cad8') : env.climate === 'arid' ? C('#f2e0b8') : env.climate === 'tropical' ? C('#c4ecff') : C('#d4ecfa');
-  if (old) { skyTop = mix(skyTop, C('#c8b890'), old); skyBot = mix(skyBot, C('#f0e4c8'), old); }
+  const sk = skyCols27(env); // r27 (I2b): o céu mora em skyline27.ts
   let grass = env.snow ? C('#f4f8fc') : env.climate === 'arid' ? C('#cdb070') : env.climate === 'tropical' ? C('#3fa443') : env.season === 'autumn' ? C('#b8a03c') : env.season === 'winter' ? C('#7aa058') : env.season === 'spring' ? C('#66bc4c') : C('#52aa46');
   if (env.rain && !env.snow) grass = shade(grass, -0.08);
   const grass2 = env.snow ? C('#d6e4f2') : shade(grass, -0.1);
-  return { skyTop, skyBot, grass, grass2 };
+  return { skyTop: sk.top, skyBot: sk.bot, grass, grass2 };
 }
 
 interface Ground27 { c: HTMLCanvasElement; lc: HTMLCanvasElement }
@@ -633,7 +631,9 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
     }
     p.put(px, py, c);
   }
-  horizon27(p, gl, env, look, seed, pal.skyBot);
+  // r27 (I2b): céu + horizonte por cidade e época (skyline27.ts, cacheado); as assinaturas desviam dos marcos altos
+  const tallX = lms.map((lm, i) => (lm as Landmark19 & { slot?: number }).slot ?? i).filter((sl) => sl % LM_SLOTS27.length < 2).map((sl) => iso(...LM_SLOTS27[sl % LM_SLOTS27.length])[0]);
+  paintSky27(p, gl, HZ, env, look, seed, tallX);
   // r27 (I2): marcos em pixel isométrico, em 4 bastidores atrás do mapa (altos no fundo, largos nas laterais);
   // a escolha (até 4, por peso de ícone e ano de construção) é a função pura mapLms27 (city27.ts)
   lms.forEach((lm, i) => {
@@ -666,103 +666,6 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
     t.poly(q, (x2, y2) => (env.snow && noise(x2, y2, 4) < 0.5 ? C('#eef2f6') : dith(x2, y2, 0.15) ? shade(pc, -0.06) : pc));
   }
   return { c: p.canvas(), lc: gl.canvas() };
-}
-
-/** r27: horizonte pela cidade e pela época — morros + mar (baía), torres (Nova York), sobrados de tijolo com
- *  chaminés (Londres) ou genérico. Janelas do horizonte vão para `gl` (acendem à noite). */
-function horizon27(p: Px, gl: Px, env: Env18, look: CityLook27, seed: number, skyBot: Col): void {
-  const y = env.year;
-  const air = (c: Col, k = 0.42) => mix(c, skyBot, k);
-  const winLit = C('#ffd77a'), winLit2 = C('#fff0b8');
-  const bld = (x: number, bw: number, bh: number, base: Col, o: { win?: boolean; pitch?: boolean; chim?: boolean; ant?: boolean; k?: number } = {}) => {
-    const c = air(base, o.k ?? 0.42), dk = shade(c, -0.12);
-    for (let i = 0; i < bw; i++) for (let j = 0; j < bh; j++) p.put(x + i, HZ - j, i === bw - 1 ? dk : c);
-    if (o.pitch) for (let i = 0; i < bw; i++) { const hh = Math.min(i, bw - 1 - i) / 2; for (let j = 0; j < hh; j++) p.put(x + i, HZ - bh - j, shade(c, -0.2)); }
-    if (o.chim) { p.rect(x + 1, HZ - bh - 4, 2, 4, shade(c, -0.25)); if (bw > 6) p.rect(x + bw - 3, HZ - bh - 3, 2, 3, shade(c, -0.25)); }
-    if (o.ant) { p.rect(x + Math.floor(bw / 2), HZ - bh - 6, 1, 6, shade(c, -0.3)); gl.put(x + Math.floor(bw / 2), HZ - bh - 6, C('#ff4040')); }
-    if (o.win !== false) for (let j = 3; j < bh - 2; j += 3) for (let i = 1; i < bw - 1; i += 2) {
-      p.put(x + i, HZ - j, shade(c, -0.08));
-      if (noise(x + i, j, seed + 11) < (y >= 1920 ? 0.42 : 0.25)) gl.put(x + i, HZ - j, noise(i, j, seed) < 0.2 ? winLit2 : winLit);
-    }
-  };
-  const W = look.wall.map((hx) => C(hx));
-  if (look.k === 'bay') {
-    // r27 (I2): mar atrás da cidade + morros em cumeeira suave (sino, não semicírculo), encosta esquerda iluminada;
-    // favela só no Rio/Salvador (casinhas em fileiras), porto baixo em Sydney
-    for (let px = 0; px < MW; px++) for (let j = 0; j < 7; j++) p.put(px, HZ - j, j === 6 ? air(C('#3a90d0'), 0.3) : (px * 7 + j * 13) % 23 === 0 ? air(C('#9ad0f0'), 0.3) : air(C('#2a80c8'), 0.25));
-    const amp = look.hillAmp;
-    const HILLS: [number, number, number][] = [[20, 48, 30], [72, 30, 24], [244, 40, 26], [292, 54, 24]];
-    const hAt = (px: number) => Math.max(0, ...HILLS.map(([c, hh, w]) => hh * amp * Math.exp(-(((px - c) / w) ** 2) * 1.6))) + (amp > 0 ? (noise(px >> 2, 1, seed) - 0.5) * 1.6 : 0);
-    const roofs = [C('#c8603c'), C('#e8c070'), C('#f0ece0'), C('#70a0d0'), C('#d88a8a'), C('#9ac088')];
-    for (let px = 0; px < MW; px++) {
-      const hh = Math.round(hAt(px));
-      if (hh < 2) continue;
-      const slope = hAt(px + 2) - hAt(px - 2);
-      for (let j = 0; j < hh; j++) {
-        let c = slope > 0 ? C('#3e8c46') : C('#2c6c38');
-        if (j >= hh - 1) c = shade(c, 0.16);
-        else if (Math.abs(slope) > 3.2 && j > hh * 0.45 && noise(px, j, seed + 5) < 0.6) c = slope > 0 ? C('#8e8a7e') : C('#6e6a62'); // costão de pedra
-        else if (dith(px, j, 0.18)) c = shade(c, -0.08);
-        if (look.favela && j < hh * 0.55 && hh > 9) { // casinhas em fileiras escalonadas
-          const row = Math.floor(j / 3), col = Math.floor((px + row * 2) / 3);
-          if (noise(col, row, seed + 9) < 0.72 && (px + row * 2) % 3 !== 2) {
-            const rc = roofs[Math.floor(noise(col, row, seed + 1) * roofs.length)];
-            c = j % 3 === 2 ? shade(rc, -0.2) : rc;
-            if (j % 3 === 0 && noise(col, row, seed + 2) < 0.45) gl.put(px, HZ - 7 - j, winLit);
-          }
-        }
-        p.put(px, HZ - 7 - j, air(c, 0.24));
-      }
-    }
-    const maxH = y < 1930 ? 10 : y < 1960 ? 18 : y < 1990 ? 26 : 34;
-    for (let x = 96; x < 226;) { const bw = 5 + Math.floor(noise(x, 9, seed) * 7), bh = 6 + Math.floor(noise(x, 11, seed) * maxH); bld(x, bw, bh + 7, W[Math.floor(noise(x, 2, seed) * W.length)], { k: 0.3 }); x += bw + 1; }
-    return;
-  }
-  if (look.k === 'stone') {
-    // r27 (I2): fileiras de prédios de pedra clara com mansarda cinza-azulada e chaminés; cúpulas e torres raras
-    for (let x = 0; x < MW;) {
-      const bw = 10 + Math.floor(noise(x, 9, seed) * 10), bh = 10 + Math.floor(noise(x, 11, seed) * (y < 1960 ? 8 : 14));
-      bld(x, bw, bh, W[Math.floor(noise(x, 2, seed) * W.length)], { k: 0.3 });
-      const roof = air(C('#5c6a80'), 0.3);
-      for (let i = 0; i < bw; i++) for (let j = 0; j < 4; j++) if (i >= j && i < bw - j) p.put(x + i, HZ - bh - j, j === 3 ? shade(roof, 0.15) : roof);
-      for (let i = 2; i < bw - 2; i += 4) { p.put(x + i, HZ - bh - 2, air(C('#e8e0cc'), 0.3)); gl.put(x + i, HZ - bh - 2, noise(x + i, 3, seed) < 0.4 ? winLit : 0); }
-      if (noise(x, 4, seed) < 0.3) p.rect(x + bw - 4, HZ - bh - 7, 2, 4, air(C('#8a7a6a'), 0.3));
-      if (noise(x, 6, seed) < 0.08) { const cx = x + Math.floor(bw / 2); for (let j = 0; j < 7; j++) for (let i = -4; i <= 4; i++) if (i * i + j * j * 1.6 <= 20) p.put(cx + i, HZ - bh - 3 - j, air(C('#a8b0a0'), 0.35)); }
-      x += bw;
-    }
-    return;
-  }
-  if (look.k === 'brick') {
-    // fileira de sobrados de tijolo com chaminés; torres de igreja; prédios mais altos ao fundo depois de 1960
-    if (y >= 1960) for (let x = 0; x < MW;) { const bw = 7 + Math.floor(noise(x, 9, seed) * 9), bh = 16 + Math.floor(noise(x, 11, seed) * (y < 1990 ? 18 : 30)); if (noise(x, 4, seed) < 0.45) bld(x, bw, bh, C('#8a8c94'), { k: 0.55 }); x += bw + 6; }
-    for (let x = 0; x < MW;) {
-      const bw = 8 + Math.floor(noise(x, 9, seed) * 8), bh = 9 + Math.floor(noise(x, 11, seed) * 7);
-      bld(x, bw, bh, W[Math.floor(noise(x, 2, seed) * W.length)], { pitch: true, chim: true, k: 0.32 });
-      if (noise(x, 6, seed) < 0.12) { p.rect(x + 2, HZ - bh - 22, 3, 22, air(C('#6a6a72'), 0.4)); p.poly([[x + 1, HZ - bh - 22], [x + 6, HZ - bh - 22], [x + 3.5, HZ - bh - 32]], air(C('#4a4a56'), 0.4)); }
-      x += bw;
-    }
-    return;
-  }
-  if (look.k === 'towers') {
-    // muitas torres altas (com antenas), mais altas a cada década
-    const maxH = y < 1915 ? 22 : y < 1931 ? 44 : y < 1960 ? 56 : y < 1990 ? 64 : 70;
-    for (let x = -2; x < MW;) { const bw = 5 + Math.floor(noise(x, 19, seed) * 6), bh = 8 + Math.floor(noise(x, 21, seed) * maxH * 0.6); bld(x, bw, bh, C('#7a8496'), { k: 0.6 }); x += bw; }
-    for (let x = 0; x < MW;) {
-      const bw = 6 + Math.floor(noise(x, 9, seed) * 9), bh = 10 + Math.floor(noise(x, 11, seed) * maxH);
-      const base = y >= 1960 && noise(x, 3, seed) < 0.45 ? C('#6a8aa8') : W[Math.floor(noise(x, 2, seed) * W.length)];
-      bld(x, bw, bh, base, { ant: bh > 40 && y >= 1930, k: 0.36 });
-      if (y >= 1930 && y < 1960 && bh > 34) { p.rect(x + 2, HZ - bh - 5, bw - 4, 5, air(base, 0.36)); p.rect(x + 3, HZ - bh - 10, bw - 6, 5, air(base, 0.36)); }
-      x += bw + (noise(x, 7, seed) < 0.25 ? 2 : 0);
-    }
-    return;
-  }
-  const maxH = y < 1900 ? 12 : y < 1930 ? 20 : y < 1960 ? 30 : y < 1990 ? 40 : y < 2020 ? 52 : 58;
-  for (let x = 0; x < MW;) {
-    const bw = 5 + Math.floor(noise(x, 9, seed) * 10), bh = 4 + Math.floor(noise(x, 11, seed) * maxH);
-    bld(x, bw, bh, W[Math.floor(noise(x, 2, seed) * W.length)], { chim: y < 1940 && noise(x, 5, seed) < 0.3 });
-    if (y < 1930 && noise(x, 5, seed) < 0.15) for (let j = 0; j < 10; j++) p.put(x + 2, HZ - bh - j, air(W[0]));
-    x += bw + (noise(x, 7, seed) < 0.3 ? 3 : 0);
-  }
 }
 
 // ---------------------------------------------------------------- cena
@@ -1107,6 +1010,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   // r27: tom da estação só em dia sem neve (nada de véu cinza): outono âmbar, verão quente, chuva levemente azul
   const tint = sc.env.rain ? 'rgba(90,110,150,0.08)' : sc.env.snow ? '' : sc.env.season === 'autumn' && sc.env.climate !== 'tropical' ? 'rgba(255,170,80,0.06)' : sc.env.season === 'summer' || sc.env.climate === 'tropical' ? 'rgba(255,230,150,0.04)' : '';
   if (tint && night < 0.5) { ctx.fillStyle = tint; ctx.fillRect(0, 0, MW, MH); }
+  dusk27(ctx, MW, HZ, night); // r27 (I2b): entardecer/amanhecer no ciclo
   // noite (r27: bem mais escura, janelas e neon brilhando, halo dos postes)
   if (night > 0.02) {
     ctx.fillStyle = `rgba(8,12,40,${(night * 0.74).toFixed(3)})`;
