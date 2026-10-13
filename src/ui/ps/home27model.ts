@@ -13,6 +13,7 @@ import { scenarioById } from '../../sim/sys/live';
 import type { RunConfig } from '../../sim/types';
 import { YEAR_MAX20, YEAR_MIN20 } from '../../sim/worldpolicy20';
 import { materializeLabels22 } from '../newgameLabels';
+import { REC_YEARS28, pickStart28, yearsFor28 } from '../../sim/start28data';
 
 /** Atividades oferecidas na Nova run (mesma lista e ordem da configuração completa, careers12 NG_CAREERS). */
 export const CAREERS27 = ['label', 'musician', 'manager', 'studio', 'festival', 'booking', 'venue', 'publisher', 'media', 'platform'] as const;
@@ -40,10 +41,14 @@ export interface QuickRun27 {
   career: string;
   scenario: RunConfig['scenario'];
   difficulty: RunConfig['difficulty'];
+  /** r28 (F4): duração escolhida pelo ano de fim (0 = sem fim / sandbox); ausente = sugestão do Recomendado */
+  runYears?: number;
 }
 
 /** A atividade existe no ano? (carreiras de época, ex.: plataforma, só abrem no ano certo). */
 export const careerOpen27 = (id: string, year: number): boolean => { const d = careerDef(id); return !!d && d.from <= year; };
+/** r28 (F4): ano de fim → anos de partida (0 = sem fim). */
+export const runYearsFor28 = (start: number, end: number | null): number => yearsFor28(start, end);
 export const clampYear27 = (y: number): number => Math.max(YEAR_MIN20, Math.min(YEAR_MAX20, Math.round(Number.isFinite(y) ? y : 1962)));
 
 /** Padrões que os cartões da configuração completa aplicam ao rascunho só por serem desenhados (charCreate, careers12,
@@ -52,6 +57,7 @@ export function draftDefaults27(cfg: RunConfig): RunConfig {
   cfg.custom ??= {};
   cfg.diff17 ??= {};
   cfg.labels ??= {};
+  if (cfg.runYears17 === undefined) cfg.runYears17 = REC_YEARS28; // r28 (F4): o Recomendado sugere um fim (editável)
   const ch = (cfg.character ??= defaultCharacter20());
   ch.traits ??= [];
   ch.points ??= {};
@@ -78,6 +84,7 @@ export function applyQuick27(cfg: RunConfig, q: QuickRun27): RunConfig {
   cfg.homeCity = q.homeCity;
   cfg.scenario = q.scenario;
   cfg.difficulty = q.difficulty;
+  if (q.runYears !== undefined) cfg.runYears17 = q.runYears; // r28 (F4)
   const main = [careerOpen27(q.career, cfg.startYear) ? q.career : 'label'];
   cfg.careers = { ...(cfg.careers ?? { origin: 'none', ambition: 'legacy' }), main };
   cfg.role = roleFromMain(main);
@@ -97,5 +104,6 @@ export function buildRun27(cfg: RunConfig): RunConfig {
   const sc = run.scenario17 ? scenarioById[run.scenario17] : undefined;
   if (sc) Object.assign(run, { startYear: sc.startYear, homeCity: sc.homeCity, scenario: sc.scenario, ...(sc.role ? { role: sc.role } : {}) });
   materializeLabels22(run);
+  if (!run.scenario17 && !run.start28) run.start28 = pickStart28(run.seed).id; // r28 (F4): começo sorteado pela semente
   return run;
 }

@@ -61,7 +61,7 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 | §21 Sede | Garagem, Estúdio pequeno, Loft, Complexo (vagas, equipe, sessões, equipamento), carga de gestão e terceirização; 12 funções de equipe; sede isométrica com uma unidade por banda |
 | §22 Progressão | Metas visíveis, legado em 7 dimensões, Gramófonos de Ouro (4 categorias), Hall of Echoes, 20 finais |
 | §24 Interface | 10 áreas + Diário, Mesa do mês, ficha unificada com cadeia de inspeção, autópsia, paleta de comandos, informação tipada (exato × intervalo) |
-| §25 Arte, áudio, acessibilidade | Logos e capas gerados por parâmetros (fora do save); prévias instrumentais procedurais por gênero e era, só por clique; texto 90–130 %, alto contraste, movimento reduzido, teclado, tema claro/escuro; PT-BR e EN |
+| §25 Arte, áudio, acessibilidade | Logos e capas gerados por parâmetros (fora do save); **som opt-in (desligado por padrão; liga em Opções › Som)**: prévia instrumental procedural por gênero e era no "Ouvir prévia" (menu de contexto de músicas e lançamentos) e na demo da descoberta, e vinhetas de 0,5–1 s com o filtro da era (gramofone, AM, FM, digital, neural) nos marcos — nº 1, prêmio, primeiro hit, fim de capítulo e fim de partida (r28, `src/audio/engine.ts`, `src/audio/stinger28.ts`, `src/ui/audio28.ts`); os mini-jogos não tocam som; texto 90–130 %, alto contraste, movimento reduzido, teclado, tema claro/escuro; PT-BR e EN |
 | §26 Arquitetura | TypeScript, Canvas 2D, simulação separada da renderização, saves em IndexedDB com gzip, exportação/importação JSON, migrações; simulador headless |
 | §27 QA | Testes de determinismo, extrato × caixa, recoupment, cancelar não cobra, chave duplicada, filtros de conteúdo, regra RS, finais |
 
@@ -117,7 +117,7 @@ npm run headless -- --runs 20 --years 30 --start 1960 --mode free   # simulador 
 - **Vida intensa** (`vices.ts`): cigarro, bebida, drogas (dependência, polícia, escândalo, reabilitação), viagens, empréstimos pessoais (banco, família, agiota) e da empresa (banco, fomento, dívida conversível, agiota); traços conquistados (Dependente, Sóbrio, Fumante, Viajado, Endividado).
 - **Venda de composições** (`songsale.ts`) com valor, royalties e parte do selo negociados na hora; **ofertas de contrato com resposta imediata** (o artista pode pedir tempo para pensar).
 - **Agenda em calendário** (`agenda7.ts`): 4 semanas, combinações entre ações, semana cheia, sinergia com a semana do lançamento, modelos prontos e salvos.
-- **Menu agrupado** em 6 grupos (Início, Selo, Artistas, Música, Mundo, Você); a reprodução de áudio saiu e os atributos das composições ficaram explícitos.
+- **Menu agrupado** em 6 grupos (Início, Selo, Artistas, Música, Mundo, Você); a reprodução de áudio saiu e os atributos das composições ficaram explícitos (o som voltou na rodada 28 como opção: ver §25).
 
 ## Rodada 6: personagem com personalidade, capital, gestão, intriga e nomes reais
 

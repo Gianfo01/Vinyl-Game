@@ -35,6 +35,8 @@ export interface Prefs {
   activities27?: 'play' | 'key' | 'quick';
   /** r27 (K): cenas animadas dos grandes momentos — todas, só importantes ou desligadas */
   cut27?: 'all' | 'major' | 'off';
+  /** r28 (F4): som opt-in (prévias no "Ouvir" e vinhetas nos marcos) — desligado por padrão */
+  audio28?: boolean;
   /** pele da interface por era */
   eraSkin?: boolean;
   /** r19 (B.5): perguntar antes de avançar quando há cartões que vão valer o padrão (false = não perguntar) */

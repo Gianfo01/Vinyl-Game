@@ -5,6 +5,8 @@
 // Nova run rápida: uma tela só (empresa, ano, cidade, atividade, ponto de partida, dificuldade) que gera a MESMA
 // RunConfig da configuração completa (home27model.ts) e abre a configuração completa pré-preenchida.
 
+import { endYearField28 } from '../endyear28'; // r28 (F4)
+import { REC_YEARS28 } from '../../sim/start28data';
 import { drawHqCutaway27 } from './hqpx27';
 import { CITIES, l, type L } from '../../data/world';
 import { S, locale, t, type Lang } from '../../i18n/strings';
@@ -262,8 +264,10 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
       if (!(raw >= YEAR_MIN20 && raw <= YEAR_MAX20)) { yearErr.textContent = t(l('Escolha um ano entre {a} e {b}.', 'Pick a year between {a} and {b}.'), { a: YEAR_MIN20, b: YEAR_MAX20 }); return; }
       yearErr.textContent = '';
       q.startYear = clampYear27(raw);
-      drawCareers(); drawPrev();
+      drawCareers(); drawPrev(); endF.refresh();
     } }) as HTMLInputElement;
+  // r28 (F4): ano de fim (o Recomendado sugere 25 anos; "Sem fim" = sandbox)
+  const endF = endYearField28(() => q.startYear, () => q.runYears ?? REC_YEARS28, (v) => { q.runYears = v; }, 'h27-end');
   const cities = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
   const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => { q.homeCity = v; drawPrev(); }, { id: 'h27-city' });
   const startSel = select(q.scenario, STARTS27.map((s) => ({ value: s.id, label: t(s.name) })), (v) => { q.scenario = v; drawPrev(); }, { id: 'h27-start' });
@@ -303,6 +307,7 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
         h('div', { class: 'h27-2' },
           field('h27-year', l('Ano de início', 'Start year'), yearIn, yearErr),
           field('h27-city', l('Cidade', 'City'), citySel)),
+        endF.el,
         h('div', { class: 'h27-field' }, h('span', null, t(l('Sua atividade principal', 'Your main activity'))), careerBox),
         h('div', { class: 'h27-2' },
           field('h27-start', l('Ponto de partida', 'Starting point'), startSel),

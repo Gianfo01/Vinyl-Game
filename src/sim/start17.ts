@@ -114,8 +114,9 @@ export const rank17 = (score: number, years: number): L => {
 
 export interface Preset17 { id: string; name: L; desc: L; apply: (c: RunConfig) => void }
 export const PRESETS17: Preset17[] = [
-  { id: 'rec', name: l('Recomendado', 'Recommended'), desc: l('Entidades reais, mundo simulado, dificuldade normal e ajuda disponível. Sem prazo.', 'Real entities, a simulated world, normal difficulty and help available. No deadline.'),
-    apply: (c) => { applyWorld17(c, 'random'); Object.assign(c, { difficulty: 'normal', ironman: false, mutators: [], storyteller: 'maestro', freedom17: 'normal', dbSize: 'medium', runYears17: 0, diff17: {}, scenario: 'from_zero', custom: {} }); c.realFates = false; } },
+  // r28 (F4, decisão do autor): o Recomendado sugere um fim (25 anos), editável; ao chegar lá dá para continuar em sandbox
+  { id: 'rec', name: l('Recomendado', 'Recommended'), desc: l('Entidades reais, mundo simulado, dificuldade normal e ajuda disponível. Sugere um fim em 25 anos (editável; depois dá para continuar em sandbox).', 'Real entities, a simulated world, normal difficulty and help available. Suggests an end in 25 years (editable; you can keep playing in sandbox afterwards).'),
+    apply: (c) => { applyWorld17(c, 'random'); Object.assign(c, { difficulty: 'normal', ironman: false, mutators: [], storyteller: 'maestro', freedom17: 'normal', dbSize: 'medium', runYears17: 25, diff17: {}, scenario: 'from_zero', custom: {} }); c.realFates = false; } },
   { id: 'hist', name: l('Historiador', 'Historian'), desc: l('Fidelidade ao roteiro documentado e acesso à referência histórica: mortes e discos nas datas reais, base grande e NPCs contidos.', 'Fidelity to the documented script and access to the historical reference: deaths and albums on real dates, a large database and restrained NPCs.'),
     apply: (c) => { applyWorld17(c, 'exact'); Object.assign(c, { difficulty: 'normal', ironman: false, mutators: [], storyteller: 'maestro', freedom17: 'tight', dbSize: 'large', runYears17: 0, diff17: {} }); } },
   { id: 'sandbox', name: l('Sandbox', 'Sandbox'), desc: l('Para experimentar: empresa estabelecida, caixa alto, custos menores, público generoso e mundo solto.', 'To experiment: established company, big cash, lower costs, a generous audience and an unleashed world.'),

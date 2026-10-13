@@ -9,6 +9,7 @@
 
 import { buildSongSpec } from '../../audio/spec';
 import { audioAvailable, nowPlaying, play, stopAll } from '../../audio/engine';
+import { audioOn28 } from '../audio28';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { hireStaff } from '../../sim/economy';
@@ -51,6 +52,7 @@ export function env27(s: GameState): CtxEnv27 {
   return {
     has: (f) => {
       if (f === 'audio') return audioAvailable();
+      if (f === 'sound28') return audioOn28(); // r28 (F4): som é opt-in
       if (f === 'songmarket') return !!songMarketArea(s);
       if (f.startsWith('area:')) return areaOn(s, f.slice(5));
       return false;

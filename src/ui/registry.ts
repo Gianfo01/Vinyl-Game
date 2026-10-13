@@ -199,6 +199,7 @@ export function showPendingCutscene(s: GameState, rerender: () => void, skip: bo
   }
   const cs = pending[0];
   cs.seen = true;
+  for (const f of ON_SCENE_SHOW28) { try { f(s, cs); } catch { /* vinheta nunca derruba a cena */ } }
   let closeFn: () => void = () => {};
   closeFn = openScene((cs.data.title as L | string | undefined) ?? '', (close) => CUTSCENES[cs.kind](s, cs, close), {
     onClose: () => { sceneDone(s, cs); rerender(); setTimeout(() => showPendingCutscene(s, rerender, false), 50); },
@@ -212,9 +213,13 @@ export function openCutscene(s: GameState, cs: Cutscene, rerender: () => void): 
   const fn = CUTSCENES[cs.kind];
   if (!fn) return false;
   cs.seen = true;
+  for (const f of ON_SCENE_SHOW28) { try { f(s, cs); } catch { /* idem */ } }
   openScene((cs.data.title as L | string | undefined) ?? '', (close) => fn(s, cs, close), { onClose: () => { sceneDone(s, cs); rerender(); } });
   return true;
 }
+
+/** r28 (F4): chamados quando uma cena abre na tela (ex.: vinheta de áudio do marco, se o som estiver ligado). */
+export const ON_SCENE_SHOW28: ((s: GameState, cs: Cutscene) => void)[] = [];
 
 /** r19 (cenas): chamados quando uma cena é fechada ou pulada (ex.: anunciar o resultado guardado da cerimônia). */
 export const ON_SCENE_DONE: ((s: GameState, cs: Cutscene) => void)[] = [];
