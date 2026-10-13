@@ -368,4 +368,5 @@ import './featp29'; // R29 (feat de pessoa): o feat negociado aceita integrante/
 import './relics29'; // R29 (relíquias): versões procedurais dos arquétipos do catálogo real, para qualquer artista (docs/reliquias29.md)
 import './mob29'; // R29 (Submundo): famílias — interações com consequência, "contratar a família" e favores devidos (gancho só com interação do jogador)
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
+import './npc29'; // R29 (contratos+): empresários, produtoras e selos NPC usam os três modelos; Caixa: masters e JV
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

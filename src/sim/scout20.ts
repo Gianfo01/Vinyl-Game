@@ -20,6 +20,7 @@ export function scoutEligible20(s: GameState, act: Act | undefined): { ok: boole
   if (!act) return { ok: false, why: l('Ato inexistente.', 'Unknown act.') };
   if (act.owner === 'player') return { ok: false, why: l('Já é do seu selo.', 'Already on your label.') };
   if (act.owner) return { ok: false, why: l('Tem contrato com outro selo.', 'Signed to another label.') };
+  { const b = scoutBlock29().f?.(s, act); if (b) return { ok: false, why: b }; } // R29 (contratos+): contrato de produção com produtora NPC
   if (act.status === 'retired') return { ok: false, why: l('Aposentado: não aceita contrato.', 'Retired: not taking deals.') };
   if (act.status === 'split') return { ok: false, why: l('A formação acabou: não há ato para contratar.', 'The act broke up: nobody left to sign.') };
   if (!act.members.some((id) => s.persons[id]?.alive)) return { ok: false, why: l('Sem integrantes vivos.', 'No living members.') };
@@ -61,3 +62,6 @@ export function spawnPlanForReq20(s: GameState, r: Rng, req: ScoutReq20): { city
   const fame = req.level === 'promising' ? r.float(3, 6) : req.level === 'beginner' ? r.float(0, 5) : undefined;
   return { city, genre, members, fame };
 }
+
+/** R29 (contratos+): bloqueio extra de contratação (sys/npc29: ato com contrato de produção NPC). Hoisted (ciclo de imports). */
+export function scoutBlock29(): { f?: (s: GameState, act: Act) => L | null } { const g = scoutBlock29 as unknown as { o?: { f?: (s: GameState, act: Act) => L | null } }; return (g.o ??= {}); }

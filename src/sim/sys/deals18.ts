@@ -237,7 +237,11 @@ registerInboxKind('deal_imp', {
 // atos do selo de uma estrela pegam carona no nome dela (+4% de apelo no lançamento)
 registerMod('appeal', 'deals18:imprint', (s, v, c) => {
   const rel = c.release;
-  if (!rel || rel.owner !== 'player') return null;
+  if (!rel) return null;
+  if (rel.owner !== 'player') { // R29 (contratos+): selo-vaidade de estrela num selo NPC (JV de npc29) — mesmo +4%
+    const k = s.acts[rel.actId]?.contractId ? s.contracts[s.acts[rel.actId].contractId!] : undefined;
+    return k && k.model === 'jv' && k.party === rel.owner && k.x29?.imprint ? { value: v * 1.04, label: fmtL(l('Selo {n} (nome da estrela)', '{n} imprint (star\'s name)'), { n: k.x29.imprint }) } : null;
+  }
   const im = impOf(s, rel.actId);
   return im ? { value: v * 1.04, label: fmtL(l('Selo {n} (nome da estrela)', '{n} imprint (star\'s name)'), { n: im.name }) } : null;
 });

@@ -55,7 +55,7 @@ export function makeReport18(s: GameState): Rep18 {
   // adiantamento médio pago pelos rivais (12 meses) e no ano anterior
   let a1 = 0, n1 = 0, a0 = 0, n0 = 0;
   for (const c of Object.values(s.contracts)) {
-    if (c.party === 'player') continue;
+    if (c.party === 'player' || c.party.includes(':')) continue; // R29: empresário/produtora NPC não é adiantamento de selo
     const age = s.week - c.startWeek;
     if (age >= 0 && age < 52) { a1 += c.advance; n1++; } else if (age >= 52 && age < 104) { a0 += c.advance; n0++; }
   }

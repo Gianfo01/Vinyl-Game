@@ -65,10 +65,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-    expect(AFTER.player.cash).toBe(450735);
+    // R29 (contratos+, de propósito — docs/contratos29.md): empresários NPC com contrato e comissão (sai do caixa do ato),
+    // produtoras NPC assinando e entregando masters, JV de estrela com selo NPC e disputa por JV mudam caixa, acts e rng
+    // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+    expect(AFTER.player.cash).toBe(187797);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2538409132);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(673973041);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

@@ -174,7 +174,7 @@ function end29(s: GameState, c: Contract, why: End29): void {
   const name = act?.name ?? '?';
   notify(s, fmtL(l('Acordo de {m} com {a} encerrado: {w}.', '{m} deal with {a} ended: {w}.'), { m: MODEL_L[c.model] ?? l(c.model), a: name, w: END29_NAME[why] }), why === 'expired' || why === 'buyout' ? 'info' : 'bad');
 }
-const MODEL_L: Record<string, L> = { management: l('empresariamento', 'management'), production: l('produção', 'production'), jv: l('joint venture', 'joint venture') };
+export const MODEL_L: Record<string, L> = { management: l('empresariamento', 'management'), production: l('produção', 'production'), jv: l('joint venture', 'joint venture') };
 
 // ---------------------------------------------------------------- empresariamento
 
@@ -267,6 +267,7 @@ export function deliverMasters29(s: GameState, cid: string, lbId: string, kind: 
   lb.cash -= qt.adv;
   const d: Delivery29 = { relId: rel.id, lb: lbId, kind, adv: qt.adv, pts: qt.pts, earned: 0, paid: 0, week: s.week };
   list.push(d);
+  bumpDeliveries29();
   payProd(s, c, act, qt.adv, `prod29adv:${rel.id}`, `${kind === 'sale' ? 'Venda' : 'Adiantamento'} de ${lb.name} por "${rel.title}"`);
   notify(s, fmtL(kind === 'sale' ? l('Masters de "{t}" ({a}) vendidos a {l} por {v}.', 'Masters of "{t}" ({a}) sold to {l} for {v}.') : l('Masters de "{t}" ({a}) licenciados a {l}: {v} de adiantamento e {p}% de pontos.', 'Masters of "{t}" ({a}) licensed to {l}: {v} advance and {p}% points.'), { t: rel.title, a: act.name, l: lb.name, v: usd(qt.adv), p: Math.round(qt.pts * 100) }), 'good');
   remember(s, 'signed', fmtL(l('A produtora de {c} entrega "{t}" de {a} para {l}.', '{c}\'s production company delivers "{t}" by {a} to {l}.'), { c: s.config.companyName, t: rel.title, a: act.name, l: lb.name }), { actId: act.id });
@@ -284,30 +285,47 @@ export function releaseProduction29(s: GameState, cid: string): L | null {
   return null;
 }
 
+// índice disco → entrega (todas as produtoras: a sua e as NPC); refeito quando muda o número de entregas
+const DIDX = new WeakMap<GameState, { v: number; map: Map<string, { c: Contract; d: Delivery29 }> }>();
+let dver29 = 0;
+/** Avisa que uma entrega nova existe (o índice se refaz na próxima consulta). */
+export const bumpDeliveries29 = (): void => { dver29++; };
 function findDelivery(s: GameState, relId: string): { c: Contract; d: Delivery29 } | null {
-  for (const id in s.contracts) {
-    const c = s.contracts[id];
-    if (c.model !== 'production' || c.party !== 'player') continue;
-    const d = c.x29?.deliveries?.find((x) => x.relId === relId);
-    if (d) return { c, d };
+  let ix = DIDX.get(s);
+  if (!ix || ix.v !== dver29) {
+    const map = new Map<string, { c: Contract; d: Delivery29 }>();
+    for (const id in s.contracts) {
+      const c = s.contracts[id];
+      if (c.model !== 'production' || !c.x29?.deliveries) continue;
+      for (const d of c.x29.deliveries) map.set(d.relId, { c, d });
+    }
+    ix = { v: dver29, map };
+    DIDX.set(s, ix);
   }
-  return null;
+  return ix.map.get(relId) ?? null;
 }
+export const deliveryOf29 = findDelivery;
 
-// disco entregue: o selo fica com o master (e a receita), a produtora recebe pontos depois de recuperar o adiantamento
+// disco entregue: quem recebeu (selo rival ou o SEU selo) fica com o master e a receita; a produtora (sua ou NPC) recebe
+// pontos depois de recuperar o adiantamento; o artista recebe a parte combinada do que chega à produtora
 prod29().dist = (s, rel, act, gross, units) => {
   const hit = findDelivery(s, rel.id);
   if (!hit) return false;
   const { c, d } = hit;
-  const lb = s.labels[d.lb];
   const pts = d.kind === 'sale' ? 0 : Math.round(gross * d.pts);
-  const labelGets = gross - pts;
-  if (lb) { lb.cash += labelGets; lb.revenueYear += gross; }
-  rel.revenue += labelGets;
+  let due = 0;
   if (pts > 0) {
     d.earned += pts;
-    const due = Math.max(0, d.earned - d.adv) - d.paid;
-    if (due > 0) { d.paid += due; payProd(s, c, act, due, `prod29pts:${rel.id}`, `Pontos de produção "${rel.title}" (${lb?.name ?? '?'})`); }
+    due = Math.max(0, Math.max(0, d.earned - d.adv) - d.paid);
+    d.paid += due;
+  }
+  const labelGets = gross - due;
+  if (d.lb === 'player') post(s, `sales:${rel.id}`, labelGets, 'sales', `Vendas ${rel.title} (masters licenciados)`);
+  else { const lb = s.labels[d.lb]; if (lb) { lb.cash += labelGets; lb.revenueYear += gross; } }
+  rel.revenue += labelGets;
+  if (due > 0) {
+    if (c.party === 'player') payProd(s, c, act, due, `prod29pts:${rel.id}`, `Pontos de produção "${rel.title}" (${s.labels[d.lb]?.name ?? s.config.companyName})`);
+    else npcProdPaid29(c, act, due);
   }
   // edição e fãs como num disco de selo rival
   act.cash += Math.round(gross * 0.05);
@@ -315,6 +333,17 @@ prod29().dist = (s, rel, act, gross, units) => {
   act.fans.active += Math.round(units * 0.006);
   return true;
 };
+/** Produtora NPC recebeu: a parte do artista vai para o caixa dele (o resto é da produtora, fora do jogo). */
+export function npcProdPaid29(c: Contract, act: Act, amount: number): void {
+  const x = (c.x29 ??= {});
+  const part0 = Math.round(amount * clamp(c.royalty, 0, 0.9));
+  const rec = Math.min(Math.max(0, c.recoupBalance), part0); // abate o adiantamento que a produtora deu ao artista
+  if (rec > 0) { c.recoupBalance -= rec; c.recouped = (c.recouped ?? 0) + rec; }
+  const part = part0 - rec;
+  act.cash += part;
+  x.paid = (x.paid ?? 0) + amount;
+  x.artistPaid = (x.artistPaid ?? 0) + part;
+}
 
 function monthProd(s: GameState, c: Contract, act: Act | undefined): void {
   if (!act) return end29(s, c, 'gone');

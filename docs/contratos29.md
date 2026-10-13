@@ -121,15 +121,50 @@ A conta dos modelos antigos não mudou (os goldens r27-p2a/p2b/m2 passam sem re-
   "Empresário: você"; dossiê "Contratos e selos" (dossier13) com o termo e o vigente certos; inspetor lateral
   (insp29model) com "Você é o empresário" / "Contrato de produção" / "Joint venture".
 * **Promessas r28**: valem nos três (verba, prazo, multa); a revisão do avanço as lista como sempre.
+* **Clique direito (ctx27)**, seção "Carreira e contrato" do menu do ato e do menu da pessoa (pelo ato dela):
+  "Propor empresariamento", "Propor contrato de produção" e "Propor joint venture". Bloqueados mostram o motivo da
+  mesma regra da proposta (`offerEligible29`): num ato de selo rival só o empresariamento vale ("Tem contrato com
+  outro selo" nos outros dois). Os três chamam o MESMO handler do botão da ficha (`ctx29c.c29Open().f` →
+  `openOffer(ato, false, modelo)`; despacho `runC29` no `run()` de ctx27.ts). Itens puros em `src/ui/ps/ctx29c.ts`.
+
+## O mundo também usa os três modelos (NPC — `src/sim/sys/npc29.ts`)
+
+* **Empresários NPC** (managers14, reais e gerados): "quem empresaria quem" (`m14.rep`) vira contrato de verdade em
+  `s.contracts` — party `e:<id>`, model `management`, comissão pelo estilo (tubarão/linha-dura 20%, fabricante de
+  imagem 25%, empresário de palco 15%, guardião 12%), prazo 36–60 meses (renova sozinho; trocar de empresário encerra
+  um e abre outro). A comissão sai do caixa do ato todo mês (`mgGross` × taxa). A contratação de clientes pelos
+  empresários NPC segue a curva de época `mgrEra29` (×0,4 antes de 1950, ×0,9 nos 1950, ×1,5 de 1960 a 1989, ×1
+  depois): forte na era do rock.
+* **Produtoras NPC** (produtores reais ativos de producers15 — Spector, a Motown, Sam Phillips… — e os estúdios dos
+  selos rivais, ventures9 `npc`): assinam atos sem selo (party `pd:<id>` / `vs:<selo>:<cidade>`, adiantamento
+  recuperável pela parte do artista, até 8 contratos vivos, 2 por produtora). Chance por mês pela curva `prodEra29`:
+  0 antes de 1950, 6% nos 1950, **30% de 1960 a 1989**, 12% até 2004, 5% depois. A cada ~4 meses a produtora grava
+  (por conta dela) e entrega as masters a um selo rival (licença com adiantamento e pontos, às vezes venda) — **ou
+  oferece ao SEU selo pela Caixa de entrada**: *"{produtora} oferece as masters de {ato}"*, com **Licenciar** (paga o
+  adiantamento; o disco sai pelo seu selo e a produtora ganha pontos depois de recuperar), **Comprar as masters**
+  (2,2×, sem pontos) ou **Recusar** (vai para um selo rival) — a mesma liquidação de entregas (`deliverNpc29` /
+  `prod29().dist`). Quem está com produtora NPC não assina direto (radar/proposta mostram o motivo); um selo NPC que o
+  contrata compra o contrato de produção (`sold`).
+* **JV / selo-vaidade NPC**: quando um selo NPC assina uma estrela (fama ≥ 40), a partir dos anos 1970 (`jvEra29`:
+  12% até 1989, 20% depois) o contrato vira `jv` com selo-vaidade ("<ato> Records"): royalty maior e o mesmo +4% de
+  apelo do selo-vaidade do deals18 (a mesma fonte `deals18:imprint`, sem família nova).
+* **Disputa** (rivalsense28): na disputa por uma estrela (fama ≥ 30, a partir de 1970) o rival agressivo pode cobrir
+  com uma **joint venture** (selo próprio) em vez de um contrato clássico — o artista avalia pela mesma régua
+  (`evaluateOffer`, modelo `jv`); se vencer, assina como JV ("{selo} roubou {ato} com uma joint venture").
+* **Estrela propõe JV ao seu selo** (Caixa de entrada, a partir de 1970, 4–6% ao mês, no máximo 1 por ano): *"{ato}
+  propõe uma joint venture"* com participação, meta e capital pedidos; aceitar assina pelo caminho normal
+  (`acceptOffer` → subselo), recusar magoa um pouco.
+* Medido (bot equilibrado, 10 anos): semente `c29-npc-62` (1962–72) → 416 contratos de empresariamento NPC (com as
+  renovações e trocas), 38 de produção, 3 JV (todas de 1970+); semente `c29-npc-75` (1975–85) → 33 de produção, 18 JV.
 
 ## Fora do escopo / limites
 
-* **NPC não oferece estes modelos** (só o jogador) — o caminho das NPCs (`signWithRival`, rivalsense28) segue só
-  clássico/360/licenciamento.
 * A comissão do empresário usa a estimativa de ganhos de sempre da carreira (`mgGross`, fama e momento), não a
   receita exata de cada fonte do ato; é paga ao dono da carteira (pessoal por padrão, como na carreira).
-* O clique direito (ctx27) segue bloqueando proposta a ato de selo rival ("Tem contrato com…") — o arquivo é de outra
-  frente (Submundo); a entrada do empresariamento para esses atos é o botão da ficha.
+* Produtora NPC e empresário NPC não têm caixa próprio no jogo: o que recebem sai do selo/ato e some (só o
+  artista e o seu selo têm caixa); `x29.paid` guarda quanto andou.
+* A mesa r27 ("Chamar um rival") segue trazendo rival só com contrato clássico; a JV de disputa é da proposta única /
+  fechamento do mês (rivalsense28).
 * O "Propor" rápido da Gestão de artistas (ventures9, taxa fixa) continua sendo o atalho da carreira; o contrato é o
   caminho completo.
 * Disco entregue a selo rival: fãs pela regra simples (sem o caminho de descoberta do media18) e edição resumida
@@ -138,16 +173,26 @@ A conta dos modelos antigos não mudou (os goldens r27-p2a/p2b/m2 passam sem re-
 ## Determinismo e infraestrutura
 
 * Sorte só por fluxos próprios: `Rng.fromSeed(semente|prod29|contrato|n)` na entrega e `…|jv29|contrato` no logo do
-  subselo; nenhum sorteio no fluxo comum (`s.rng`). O gancho mensal `contracts29` não sorteia.
+  subselo; NPC em `…|npc29|…` (empresário, assinatura e mês da produtora, JV de selo, proposta de JV) e a JV de
+  disputa em `rivalsense28 …|jv29|…`; nenhum sorteio no fluxo comum (`s.rng`). O mesmo sorteio do 360 do
+  `signWithRival` continua no lugar (ordem do RNG do selo preservada).
 * Ganchos guardados em funções (`special29()`, `prod29()`): carregam antes dos módulos que registram (ciclo de imports).
 * Nenhum tipo de fato novo nem fonte de appeal nova (r19-infra verde).
-* Goldens r27-p2a, r27-p2b e r27-m2 inalterados (o bot não usa estes modelos).
+* Goldens re-medidos (de propósito, com comentário nos testes): o mundo NPC agora assina empresariamento, produção e
+  JV (ids, caixa dos atos, JV de estrela, disputa por JV). r27-p2a/r27-p2b: caixa 450735 → 187797, acts 2386675548 →
+  2538409132, rng 2839816166 → 673973041 (turnês iguais). r27-m2: o show do 9º mês de r16pb-8 virou empate de resenha;
+  o fixture passou a r16pb-2 (show no 8º mês, resenha 66 × 60, razão de fãs 0,98) depois de medir r16pb-2…11.
+* Desempenho: índices por estado para "contrato de produção NPC do ato" (o radar consulta muito) e "disco → entrega";
+  numa run de 2030 com o bot, com × sem npc29 deu o mesmo tempo (dentro do ruído da máquina).
 
 ## Testes e capturas
 
 * `tests/r29-contracts-more.test.ts`: oferta → aceite → 1 ano para cada modelo (comissão; entrega com adiantamento,
   parte do artista abatendo o adiantamento e pontos depois da recuperação; divisão 60/40 do lucro da JV), as saídas
   (deixar, prazo, demissão; venda e liberar; compra, dissolução com multa, saída do sócio), avaliação × ambição/traço,
-  telas (Acordos especiais, inspetor, dossiê, offers12), a mesa r27 e determinismo; papéis sem "fase 4/5".
+  telas (Acordos especiais, inspetor, dossiê, offers12), a mesa r27 e determinismo; papéis sem "fase 4/5"; NPC em 10
+  anos de bot (contagens por modelo e época), Caixa (masters → licenciar/comprar/recusar; JV proposta por estrela),
+  clique direito (as três propostas num ato de selo rival e na pessoa, mesmo handler) e determinismo do lado NPC.
 * `scripts/shots29contratos.mjs` → `docs/shots29contratos/` (Nova run, ficha com "Propor empresariamento", mesa,
-  formulário de produção e de JV, Acordos especiais, Direitos e a aba Contrato do ato empresariado).
+  formulário de produção e de JV, Acordos especiais, Direitos, a aba Contrato do ato empresariado, o clique direito com
+  as três propostas e a Caixa com "Sam Phillips oferece as masters de …").

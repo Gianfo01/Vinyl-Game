@@ -83,7 +83,7 @@ export const rivalSignsLeft = (s: GameState, lb: Label): number => Math.max(0, r
 
 /** Transferência (compra de contrato, venda, absorção): o contrato anterior acabou nesta semana. */
 function isTransfer(s: GameState, act: Act): boolean {
-  return Object.values(s.contracts).some((k) => k.actId === act.id && k.endWeek === s.week && k.startWeek < s.week);
+  return Object.values(s.contracts).some((k) => k.actId === act.id && k.endWeek === s.week && k.startWeek < s.week && !k.party.includes(':')); // R29: empresário/produtora NPC não é selo
 }
 
 /** Pode o selo assinar mais alguém neste mês? Conta a contratação quando pode. */
