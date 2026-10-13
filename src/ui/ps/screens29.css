@@ -1,0 +1,16 @@
+/* Rodada 29 (REORG) — revisão antes de avançar (S03), retomada (M17) e acompanhamento (M04). Só tokens ui27. */
+.rv29-counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.rv29-st { display: inline-block; min-width: 7.5em; font-size: .78em; text-transform: uppercase; letter-spacing: .04em; }
+.rv29-st.st-blocked { color: var(--bad, #e36b5b); }
+.rv29-st.st-pending { color: var(--warn, #e8b54d); }
+.rv29-st.st-met { color: var(--good, #7fc48a); }
+.rv29-st.st-unknown { opacity: .8; font-style: italic; }
+.rv29-money { margin-top: 8px; }
+.rv29-foot { margin: 8px 0 0; }
+.rs29-host { margin-bottom: 12px; }
+.fl29-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 4px 0; }
+.fl29-row .link { overflow-wrap: anywhere; }
+.rv29 .row27, .rs29 .row27 { min-width: 0; }
+.rv29 .r27-t, .rs29 .r27-t { overflow-wrap: anywhere; }
+.rs29-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 20px; }
+.rs29-h { margin: 6px 0 2px; font-size: .78em; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }

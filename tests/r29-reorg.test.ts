@@ -116,3 +116,93 @@ describe('r29 M01: disponibilidade explicada (o índice mostra tudo, com o motiv
     for (const a of BEFORE) expect(avail29(a, c), a).not.toBe('unknown');
   });
 });
+
+// ---------------------------------------------------------------- modelos das telas do ciclo (puros)
+import { botMonth, defaultConfig } from '../src/sim/bot';
+import { advanceMonth } from '../src/sim/tick';
+import { createGame } from '../src/sim/worldgen';
+import type { GameState } from '../src/sim/types';
+import { follow29, indicators29, money29, resume29, review29, trail29 } from '../src/ui/ps/screens29model';
+import { show29, val29, KNOWN_L29, month29, usd29 } from '../src/ui/ps/state29model';
+import { passport29 } from '../src/ui/ps/campaign29model';
+import { cockpit27 } from '../src/ui/sys/cockpit27model';
+
+const fresh = (seed: string): GameState => createGame(defaultConfig(seed, { dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
+const played = (seed: string, months: number): GameState => { const s = fresh(seed); for (let i = 0; i < months; i++) { botMonth(s); advanceMonth(s); } return s; };
+
+describe('r29 M06/M45: estados de dado distintos (desconhecido ≠ zero ≠ estimado)', () => {
+  it('val29/show29 nunca transformam desconhecido em zero', () => {
+    const f = (n: number) => `$${n}`;
+    expect(show29(val29(null), f)).toBe('desconhecido');
+    expect(show29(val29(undefined), f, 'en')).toBe('unknown');
+    expect(show29(val29(0), f)).toBe('$0');
+    expect(show29(val29(5, { estimated: true }), f)).toBe('≈ $5');
+    expect(show29({ kind: 'na' }, f)).toBe('não se aplica');
+    expect(show29({ kind: 'stale', n: 3, asOf: 'mar/1962' }, f)).toContain('mar/1962');
+    for (const k of Object.keys(KNOWN_L29) as (keyof typeof KNOWN_L29)[]) expect(new Set([KNOWN_L29[k].pt]).size).toBe(1);
+    expect(new Set(Object.values(KNOWN_L29).map((x) => x.pt)).size).toBe(Object.keys(KNOWN_L29).length);
+  });
+  it('dinheiro com sinal e data completa', () => {
+    expect(usd29(-12345)).toBe('−$123');
+    expect(usd29(12345, true)).toBe('+$123');
+    expect(month29(1962, 0)).toEqual({ pt: 'jan/1962', en: 'Jan 1962' });
+  });
+});
+
+describe('r29 S01/S03/S13/S16/M04/M17: modelos do ciclo', () => {
+  it('jogo novo: fôlego desconhecido (sem mês fechado) e fama "não se aplica" sem elenco — nunca zero', () => {
+    const s = fresh('r29-new');
+    const ind = indicators29(s);
+    expect(ind.map((x) => x.id)).toEqual(['month', 'cash', 'runway', 'fame']);
+    expect(ind.find((x) => x.id === 'runway')!.v.kind).toBe('unknown');
+    expect(ind.find((x) => x.id === 'fame')!.v.kind).toBe('na');
+    for (const x of ind) if (x.v.kind === 'value') expect(x.v.source ?? x.v.unit, x.id).toBeTruthy();
+    const r = review29(s);
+    expect(r.checks.find((c) => c.id === 'cash')!.state).toBe('unknown');
+    expect(trail29(s).continuity.pt).toMatch(/dez\/|Sandbox/);
+  });
+  it('depois de jogar: revisão usa as decisões reais (com o padrão escrito) e não altera o estado', () => {
+    const s = played('r29-cycle', 8);
+    const before = JSON.stringify(s);
+    const r = review29(s);
+    const m = money29(s);
+    const f = follow29(s, ['finance', 'crime']);
+    const res = resume29(s);
+    indicators29(s); trail29(s); passport29(s);
+    expect(JSON.stringify(s)).toBe(before); // consulta pura: nada muda, nem o RNG
+    for (const d of s.decisions) {
+      const c = r.checks.find((x) => x.id === `dec:${d.id}`)!;
+      expect(c.state).toBe('pending');
+      expect(c.detail!.pt).toMatch(/padrão|Sem padrão/);
+    }
+    expect(r.counts.met + r.counts.pending + r.counts.blocked + r.counts.unknown).toBe(r.checks.length);
+    expect(r.summary.pt.length).toBeGreaterThan(10);
+    // S13: três naturezas, nada somado entre elas; caixa realizado = saldo do estado
+    expect(new Set(m.map((x) => x.kind))).toEqual(new Set(['realized', 'committed', 'estimated']));
+    expect(m.find((x) => x.id === 'cash')!.v.n ?? 0).toBe(s.player.cash);
+    // M04: páginas fixadas e artistas acompanhados são listas separadas
+    expect(f.pages).toEqual(['finance', 'crime']);
+    expect(Array.isArray(f.acts)).toBe(true);
+    // M17: data do checkpoint, sem inventar passagem de tempo
+    expect(res.date).toEqual(month29(s.year, s.month));
+    expect(res.choices.length).toBeLessThanOrEqual(3);
+  });
+  it('o Cockpit r27 continua o mesmo (o acompanhamento é acrescentado na vista, não no modelo)', () => {
+    const s = played('r29-ck', 3);
+    const m = cockpit27(s, 'pt-BR', 'x');
+    expect(m.strip.map((k) => k.label.pt)).toEqual(['Mês', 'Caixa', 'Fôlego', 'Fama']);
+  });
+  it('M30: passaporte corresponde ao estado (semente, início/fim, versão) e separa regras de apresentação', () => {
+    const s = fresh('r29-pass');
+    const rows = passport29(s, { menuView: 'full', textScale: 120 });
+    const get = (id: string) => rows.find((r) => r.id === id)!;
+    expect(get('seed').value).toBe(s.config.seed);
+    expect(get('seed').kind).toBe('rules');
+    expect(get('menuView').kind).toBe('view');
+    expect(get('text').value).toBe('120%');
+    expect(typeof get('saveVersion').value === 'string' ? get('saveVersion').value : get('saveVersion').value.pt).toContain(`v${s.version}`);
+    const span = get('span').value as { pt: string };
+    expect(span.pt).toContain(String(s.config.startYear));
+    expect(new Set(rows.map((r) => r.id)).size).toBe(rows.length);
+  });
+});

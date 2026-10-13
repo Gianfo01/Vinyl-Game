@@ -112,3 +112,8 @@ export function openCampaign29(): void {
       h('button', { type: 'button', class: 'btn ghost', onclick: () => { close(); A.options(); } }, t(l('Opções de apresentação', 'Presentation options'))),
       h('button', { type: 'button', class: 'btn ghost', onclick: () => { close(); openIndex29(); } }, t(l('Índice completo', 'Full index'))))), { wide: true });
 }
+
+/** Abre um alvo do catálogo de qualquer tela (mesmo caminho do menu). */
+export function openTarget29(x: Target29): void { api?.open(x); }
+/** Rótulo de uma página como no menu (ou o id, sem app ligado — testes). */
+export const label29 = (area: string): string => api?.label(area) ?? area;
