@@ -18,6 +18,7 @@ import { applyMods, runSimHooks } from './ext4';
 import { take360 } from './sys/deal360_17';
 import { TOUR18, type Kit18 } from './tourhook18';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { DEMO29 } from './demo29hook';
 
 export const TICKET = [12, 25, 45, 70, 95];
 export const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
@@ -103,7 +104,7 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
     const v = VENUE_TIERS[tier];
     const capacity = Math.round((v.cap[0] + v.cap[1]) / 2);
     const price = money(s, TICKET[tier] * p.priceMult);
-    const sold = Math.min(capacity, Math.round(demand * (1 + PRODUCTION_BONUS[p.production]) / Math.pow(p.priceMult, 1.2)));
+    const sold = Math.min(capacity, Math.round(demand * (1 + PRODUCTION_BONUS[p.production]) / Math.pow(p.priceMult, 1.2 * (DEMO29.elast?.(s, act, cityId) ?? 1)))); // R29 demo29: elasticidade por idade
     if (demand < 30) warnings.push(fmtL(l('{c}: público local muito baixo.', '{c}: very low local audience.'), { c: cityById[cityId]?.name ?? cityId }));
     if (leg.visa?.needed) {
       visas += 1;
@@ -298,7 +299,7 @@ export function playStop(s: GameState, r: Rng, t: Tour, st: TourStop, day: numbe
     const partnerDraw = partner ? cityDemand(s, partner, st.cityId) * (t.role === 'co' ? 0.8 : 1) : 0;
     const quality = clubBonus(s, st.cityId) * (0.75 + q / 200 + t2.stage / 250) * coverPenalty * (1 + PRODUCTION_BONUS[t.production]) * clim.outdoorFactor * (TOUR18.q?.(s, t, st) ?? 1) * (m?.qMult ?? 1);
     const priceMult = st.price / Math.max(1, money(s, TICKET[st.tier]));
-    let sold = Math.min(st.capacity, Math.round((demand + partnerDraw * (t.role === 'opening' ? 1 : 0.5)) * quality / Math.pow(priceMult, 1.2) * r.float(0.85, 1.12)));
+    let sold = Math.min(st.capacity, Math.round((demand + partnerDraw * (t.role === 'opening' ? 1 : 0.5)) * quality / Math.pow(priceMult, 1.2 * (DEMO29.elast?.(s, act, st.cityId) ?? 1)) * r.float(0.85, 1.12))); // R29 demo29
     sold = Math.max(0, sold);
     st.sold = sold;
     st.status = 'played';

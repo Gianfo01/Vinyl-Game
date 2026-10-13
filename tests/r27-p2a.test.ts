@@ -71,9 +71,12 @@ beforeAll(() => {
   // R29 (CONECTAR TUDO, de propósito — docs/connect29.md): arestas novas entre sistemas (conn29: confiança no palco/estúdio,
   // crise na demanda da cidade, prêmios → fama/reputação, reputação → fama/equipe, calor policial…) mudam caixa, tours, acts e
   // rng (com os grupos 2 e 3 e os pisos anti-espiral). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
-  expect(s.player.cash).toBe(333758);
-  expect(hashString(JSON.stringify(s.acts))).toBe(3380302445);
-  expect(hashString(JSON.stringify(s.rng))).toBe(2264116950);
+  // R29 DEMO (de propósito — docs/demo29.md): público por idade e região muda apelo, demanda nas cidades, divisão por país,
+  // line-up dos festivais e o relatório do analista (nova dica): caixa, acts e rng mudam (tours igual). Antes: 450735 / 2386675548 / 2839816166.
+  // R29 CONECTAR TUDO + DEMO juntos (merge r29-demo): re-medido. Antes (só conn29): 333758 / 1642544891 / 3380302445 / 2264116950.
+  expect(s.player.cash).toBe(332627);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1849171597);
+  expect(hashString(JSON.stringify(s.rng))).toBe(4090265307);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

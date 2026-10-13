@@ -195,7 +195,7 @@ export function monthlyDigest27(s: GameState): Digest27 {
 
 // ================================================================ 2. Mapa: camadas e ficha da cidade
 
-export type MapLayer27 = 'glow' | 'hot' | 'tour' | 'festivals' | 'rivals' | 'closed' | 'mine';
+export type MapLayer27 = 'glow' | 'hot' | 'tour' | 'festivals' | 'rivals' | 'closed' | 'mine' | 'agefans';
 export const LAYERS27: { id: MapLayer27; icon: string; name: L }[] = [
   { id: 'glow', icon: 'sparkle', name: l('Força das cenas', 'Scene strength') },
   { id: 'hot', icon: 'fire', name: l('Gêneros em alta', 'Hot genres') },
@@ -204,6 +204,7 @@ export const LAYERS27: { id: MapLayer27; icon: string; name: L }[] = [
   { id: 'rivals', icon: 'flag', name: l('Rivais', 'Rivals') },
   { id: 'closed', icon: 'lock', name: l('Países fechados', 'Closed countries') },
   { id: 'mine', icon: 'building', name: l('Seus lugares (filiais e escritórios)', 'Your places (branches and offices)') },
+  { id: 'agefans', icon: 'fans', name: l('Fãs por idade', 'Fans by age') }, // R29 demo29
 ];
 
 /** Força total das cenas de uma cidade (soma de "cidade:gênero"). */

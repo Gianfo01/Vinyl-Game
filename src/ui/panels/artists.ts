@@ -42,7 +42,7 @@ import { actStatus } from '../../sim/sys/hq8';
 import { flowNote27, slotHint27, slotMark27 } from '../act27/flow27';
 
 /** Seções registradas por outros sistemas que agora moram numa subaba (e não mais soltas no fim da página). */
-const PLACED20: Record<string, Sub20> = { feats8: 'agenda', 'people-negotiate': 'career', 'scenes-actions': 'audience', w4clubs: 'audience' };
+const PLACED20: Record<string, Sub20> = { feats8: 'agenda', 'people-negotiate': 'career', 'scenes-actions': 'audience', w4clubs: 'audience', demo29: 'audience' }; // R29 demo29: idade e região do público
 hideSection((host, id) => host === 'artists' && id in PLACED20);
 const placed = (s: GameState, sub: Sub20): HTMLElement[] => sectionsOf('artists', Object.keys(PLACED20).filter((k) => PLACED20[k] === sub), s);
 

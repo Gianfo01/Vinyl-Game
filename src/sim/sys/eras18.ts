@@ -12,6 +12,7 @@ import { physicalShare } from '../production';
 import type { GameState, Release } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
 import { mkWeights18 } from './econ18';
+import { DEMO29 } from '../demo29hook';
 
 /** atraso de adoção do digital por mercado (anos) */
 export const MK_LAG18: Record<MarketId, number> = { na: 0, eu: 1, oceania: 1, asia: 1, br: 3, latam: 3, africa: 5 };
@@ -28,6 +29,7 @@ export function physShareRel18(s: GameState, rel: Release): number {
   const fam = familyOf(s.acts[rel.actId]?.genre ?? '');
   let t = 0;
   for (const [mk, w] of mkWeights18(s, rel)) t += w * physIn18(s, mk as MarketId, fam);
+  if (DEMO29.phys) t *= DEMO29.phys(s, rel); // R29 demo29: base mais velha compra físico por mais tempo
   return Math.min(0.95, Math.max(0.02, t));
 }
 
