@@ -9,12 +9,19 @@ artista** (real ou inventado, NPC ou seu), quando um fato que combina passa pelo
 novo: a peça entra na lista de sempre (relics9) e usa os fluxos que já existiam — leilão, negociação com o dono, museu,
 empréstimo/exposição, roubo, detetive, mercado negro, perícia, ala-museu (docs/act27.md, um caminho por ação).
 
+**Segunda leva — "bem mais relíquias por save"**: a densidade virou configuração (`config.relicDensity`: **poucas /
+normal / muitas / tudo**, padrão **muitas**), com tetos que escalam com o tamanho da base e com os atos famosos ativos,
+repetição de arquétipo por ato (com nomes distintos), acervo histórico para o save não crescer, leilão famoso do ano,
+mais ofertas no mercado negro e filtros/páginas nas telas de relíquias. "Poucas" reproduz a primeira versão exatamente.
+
 Arquivos:
-- motor: `src/sim/sys/relics29.ts` (registrado no fim de `src/sim/sys/index.ts`);
-- interface: `src/ui/sys/relics29.ts` (pílulas e seção "História da peça"), usada em `src/ui/sys/lendas9.ts` (ficha da
-  relíquia), `src/ui/sys/talent18.ts` (Acervo vivo) e `src/ui/sys/live/museum.ts` (museu do selo); dica "Primeira
-  relíquia" em `src/ui/tracks18.ts`;
-- ganchos pequenos: `relics9.ts` (`addRelic` aceita id próprio; `relicKeep9` para a poda do teto de 90),
+- motor: `src/sim/sys/relics29.ts` (registrado no fim de `src/sim/sys/index.ts`); `config.relicDensity` em `src/sim/types.ts`;
+- interface: `src/ui/sys/relics29.ts` (pílulas, seção "História da peça", navegador com filtros e páginas
+  `relicBrowser29`, linha do acervo histórico, opção de densidade), usada em `src/ui/sys/lendas9.ts` (ficha e lista de
+  relíquias), `src/ui/sys/talent18.ts` (Acervo vivo), `src/ui/sys/crime17.ts` (ofertas do mercado negro),
+  `src/ui/sys/live/museum.ts` (museu do selo), `src/ui/app.ts` (Opções) e `src/ui/newgame.ts` (Nova run completa →
+  Regras e ritmo → Opções da partida); dica "Primeira relíquia" em `src/ui/tracks18.ts`;
+- ganchos pequenos: `relics9.ts` (`addRelic` aceita id próprio; `relicKeep9` e `relicGone9` para a poda do teto de 90),
   `ui/pixel/relic28.ts` (mesa de som → desenho `mixer`), `ui/pixel/relic29.ts` (título entre aspas não escolhe o
   desenho; `phone` só como palavra, "Gramophone"/"saxophone" não viram telefone), `factmatrix19.ts` (`tour_done` saiu
   da lista de exceções: agora tem consumidor);
@@ -84,7 +91,8 @@ letreiro de neon — e `phone` só vale como palavra.
 ## Gatilhos
 
 O ouvinte (`onFact`) sorteia com `Rng.fromSeed(seed|relics29|factSeedKey17(fato))` e põe a candidata numa fila curta
-(até 12). A peça só nasce no **fechamento do mês** (`flush29`, gancho `month`), depois que relics9/18/28 já criaram as
+(12/24/48/80 por mês conforme a densidade). A chance da tabela é a de "poucas"; as outras multiplicam (×2 normal, ×5
+muitas, ×8 tudo; teto de 95%). A peça só nasce no **fechamento do mês** (`flush29`, gancho `month`), depois que relics9/18/28 já criaram as
 peças deles: assim não nascem duas peças do mesmo tipo para o mesmo ato no mesmo ano.
 
 | Fato | Condição | Chance | Arquétipos |
@@ -110,10 +118,47 @@ peças deles: assim não nascem duas peças do mesmo tipo para o mesmo ato no me
 
 Atos seus têm chance ×1,6 nos gatilhos de carreira (show, nº 1, obra-prima, prêmio, separação, escândalo, relançamento).
 
-**Tetos** (`CAPS29`): 4 peças por ano no mundo, 1 por ato por ano, 3 vivas por ato, 1 de cada arquétipo por ato,
-30 vivas no total, fila de 12 por mês, 3 falsificações vivas. Ao passar de 30, sai a peça procedural mais barata que
-ninguém disputa (com dono ou em museu, nunca a do seu acervo, em leilão ou roubada; as do ano corrente por último).
-A poda do teto de 90 do relics9 passa por cima delas (`relicKeep9`): a poda das procedurais é a própria.
+Gatilhos a mais a partir de "normal" (a densidade "poucas" fica só com os de cima):
+
+| Fato | Condição | Chance (antes do multiplicador) | Arquétipos |
+|---|---|---|---|
+| `legend` | o ato vira lenda | 35% | instrumento com nome (guitarra/baixo), figurino, objeto pessoal |
+| `award` | `chron:hall_of_fame` | 30% | instrumento com nome, figurino |
+| `award` | gravidade 40–59, ato grande | 4% | roupa da cerimônia, estatueta |
+| `chart` | marco fora do nº 1 (nº 1 num país, top 10 lá fora), gravidade ≥ 60, ato grande | 3% | letra do hit, microfone da sessão |
+| `scandal` | gravidade 40–59, fama ≥ 35 | 5% | objeto do escândalo |
+
+## Densidade (`config.relicDensity`)
+
+Fica no config porque muda o mundo. Escolha na Nova run completa (Regras e ritmo → Opções da partida → "Relíquias") e,
+durante a partida, nas Opções (vale daqui em diante; as peças que já existem ficam). Ausente = "muitas".
+
+| | Poucas | Normal | Muitas (padrão) | Tudo |
+|---|---|---|---|---|
+| Teto por ano (mundo médio) | 4 (fixo) | 10 | 24 | 40 |
+| Por ato por ano (superestrela) | 1 | 1 | 2 | 3 |
+| Vivas por ato (superestrela) | 3 | 6 | 12 | 16 |
+| Mesmo arquétipo por ato | 1 | 2 | 3 | 5 |
+| Vivas no total | 30 | 150 | 400 | 500 |
+| Falsificações vivas | 3 | 6 | 15 | 15 |
+| Multiplicador de chance | ×1 | ×2 | ×5 | ×8 |
+| Acervo histórico a partir de | — | 10 anos | 6 anos | 5 anos |
+| Falsários por ano · leilão do ano | 1 · — | 1 · 30% | 2 · 60% | 3 · 90% |
+
+- **Escala do teto anual** (`caps29`, menos em "poucas"): × tamanho da base (`dbSize`: pequena 0,6 · média 1 · grande
+  1,25 · enorme 1,5) × atos famosos ativos (fama ≥ 35, ativos ou em ascensão: n/30, entre 0,5 e 1,6).
+- **Por ato** (`actCaps29`): lenda ou fama ≥ 70 levam o teto cheio; fama ≥ 45 ou ato seu, metade; o resto, um quarto
+  (mínimo 1). Em "muitas": superestrela 12 vivas e 2 por ano; ato médio 6 e 1; ato pequeno 3 e 1.
+- **Repetição com nome distinto**: a segunda e a terceira guitarra/figurino/letra do mesmo ato sorteiam outro modelo,
+  apelido, peça ou cidade; se o nome ainda coincidir com uma peça viva do ato (5 tentativas), a peça não nasce.
+- **Dedupe com relics9/18/28**: continua (nada procedural do mesmo tipo de uma peça deles para o mesmo ato no mesmo ano).
+- **Teto total**: ao passar dele, sai a peça procedural mais barata que ninguém disputa (com dono ou em museu; sem
+  opção, uma roubada fora do esconderijo e do mercado). A poda do teto de 90 do relics9 passa por cima delas
+  (`relicKeep9`); quando ela tira uma procedural perdida, `relicGone9` limpa o registro compacto na hora (e o fechamento do mês confere).
+- **Acervo histórico** (`archive29`, gancho anual): peça procedural com dono comum (ou roubada e sumida), mais velha que
+  a idade da tabela e abaixo do 3º quartil de valor sai da lista e vira contagem por ato (`arc`: quantas e valor somado).
+  Ficam sempre: o quarto mais valioso, peças de lendas e do seu elenco, em museu, leilão, no seu acervo, falsas. A
+  interface mostra "Acervo histórico: N peças antigas de K atos resumidas (valor somado)".
 
 ## Valor e "e até mais"
 
@@ -139,7 +184,12 @@ Ligado ao que já existia:
   receptadores, polícia; detetive do relics9). Algumas peças já nascem roubadas (objeto do escândalo, peça chamuscada
   saqueada) e aparecem no mercado negro.
 - **Colecionadores e leilões**: os de sempre (relics9: lance fechado, colecionadores arrematam, contraproposta do dono).
-  O autografado do show beneficente e o letreiro do estúdio que fechou já nascem em leilão.
+  O autografado do show beneficente e o letreiro do estúdio que fechou já nascem em leilão. Com mais peças, há mais
+  lotes (o relics9 leiloa 2%/ano das peças com dono e 20% das de quem morreu). A partir de "normal", o **leilão do ano**
+  (`famousAuction29`): a peça procedural mais valiosa com colecionador ou herdeiros (3+ anos) vai a pregão, com crônica,
+  fato (`relic` + `auction` + `famous`: manchete e fama pelo factlink19) e aviso.
+- **Mercado negro maior**: a partir de "normal", uma peça procedural roubada ganha às vezes oferta no mercado de sempre
+  do crime17 (até 8 ofertas; as falsas pedem até 10), com a mesma "autenticidade estimada".
 - **Museu**: expor na sede, ala-museu do relics18 (visitantes pelo valor das peças expostas), empréstimo a museu e a
   exposições reais (relics17). O museu do selo (Metas → Museu do selo) ganhou a lista "Relíquias do acervo".
 - **Herdeiros brigam** (afterlife19): peça procedural com os herdeiros, se o espólio existe, abre uma vez
@@ -160,40 +210,58 @@ Ligado ao que já existia:
 - Sorteios só por `Rng.fromSeed` (chaves `relics29`, `relics29g`, `relics29y`), sem o `s.rng`.
 - Ids próprios (`rq1`, `rq2`…): o contador global de ids do jogo não anda por causa delas.
 - Mesmo assim o mundo muda nas partidas padrão (é o pedido): as peças viram notícia (`relic` → manchetes do
-  factlink19) e fama/fãs/caixa dos atos andam décimos. Re-medido: `r27-p2a` e `r27-p2b` (acts `2817744560` →
-  `384561456`; caixa, tours e rng iguais), com comentário. `r27-m2` compara a semente consigo mesma e segue verde sem
-  mudança (o fixture r16pb-8 continua com show jogável no 9º mês).
+  factlink19) e fama/fãs/caixa dos atos andam décimos. Primeira leva: `r27-p2a`/`r27-p2b` re-medidos (só acts).
+- Segunda leva ("muitas" por padrão: 22 peças em 8 meses de 1975 na semente dos goldens, contra 3): caixa, acts e rng
+  mudam, tours igual — `450735 / 2386675548 / 2839816166` → `458975 / 1776542358 / 3652250691` em `r27-p2a` e
+  `r27-p2b`, com comentário. Com `relicDensity: 'few'` a mesma semente dá exatamente os valores de antes (conferido).
+  `r27-m2` compara a semente consigo mesma e segue verde.
 
 ## Números medidos (bot de 20 anos)
 
-Medido com `npx tsx scripts/measure29relics.ts 20 r29rel 1970` (bot equilibrado, nomes reais, história livre,
-1970–1989) e `… 10 …` para os 10 primeiros anos.
+Medido com `npx tsx scripts/measure29relics.ts 20 r29rel 1970 real many` (bot equilibrado, nomes reais, história livre,
+base média, 1970–1989) e `… 10 … {few|normal|all}` para as outras densidades. "Bytes" = estado `relics29` + peças
+procedurais na lista do relics9 + a meta delas no relics18 (o que estas peças pesam no save).
 
-| | 10 anos (1970–79) | 20 anos (1970–89) |
-|---|---|---|
-| Peças procedurais nascidas | 37 | 77 |
-| Por ano | 4 (teto) todo ano, menos 1975 (1) | idem |
-| Vivas no fim | 30 (teto) | 30 (teto) |
-| Bytes no save (estado `relics29` + peças vivas) | 8,3 KB | 8,5 KB |
-| Comparação: peças nascidas de relics9/18/28 (fatos `relic` + `born`) | — | ≈ 700 (≈ 35/ano) |
+| Densidade | Nascidas por ano | Vivas | Acervo histórico | Bytes em 10 anos | Bytes em 20 anos | Ganchos de relíquia |
+|---|---|---|---|---|---|---|
+| Poucas | 4 (teto; 1975: 1) | 30 | — | 9,8 KB | — | 4,1 ms/mês |
+| Normal | 7–16 (média 10,7) | 105 | — (começa aos 10 anos) | 34,3 KB | — | 4,8 ms/mês |
+| **Muitas** | **16–38 (média 22,8)** | 153 (10 anos) · **283 (20 anos)** | 39 · **149 peças de 88 atos** | **48,3 KB** | **91,8 KB** | 6,0–9,5 ms/mês |
+| Tudo | 19–36 (média 27,2) | 194 (10 anos) | 68 peças de 49 atos | 62,2 KB | — | 7,0–11,6 ms/mês |
 
-Nascidas por arquétipo em 20 anos: roupa da cerimônia 13, figurino 10, objeto pessoal 9, instrumento do show 8,
-microfone da sessão 7, objeto do escândalo 7, fita master/acetato 5, cartaz 5, última carta 4, piano do hit 2, letra
-do hit 2, mesa de som 2, peça chamuscada 2, estatueta 1. Vivas no fim: 19 com dono, 6 em museus, 3 roubadas, 1 no
-seu acervo, 1 em leilão; 1 falsificação viva.
+"Muitas", 20 anos: 455 peças nascidas — roupa da cerimônia 67, microfone da sessão 50, figurino 47, letra do hit 44,
+mesa de som 41, fita master/acetato 38, objeto do escândalo 37, piano do hit 32, objeto pessoal 23, instrumento do show
+17, estatueta 10, cartaz 9, última carta 8, peça chamuscada 7, credencial 6, primeiro contrato 4, autografado 4,
+instrumento com nome 4, jaqueta da turnê 3, pele do bumbo 3, arte 1. Vivas no fim: 222 com dono, 14 em museus, 24
+roubadas, 14 no seu acervo, 9 em leilão; 6 falsificações vivas; 114 atos com peça, no máximo 12 por ato. 13 leilões do
+ano em 20 anos. Nos anos 80 o mundo tem mais atos famosos ativos e o teto anual cresce junto (29–38 peças/ano).
 
-Fatos-gatilho que passaram no barramento nos 20 anos (para dar a escala): nº 1 (`chron:number1`) 540, prêmios 350,
-escândalos 564 (75 graves), obras-primas 115, mortes 55, incidentes de palco 52, turnês do jogador 71, separações 4,
-incêndios/tumultos 11, shows beneficentes 3, relançamento 1. Nesta semente não houve show lendário, `session_star` nem
-aposentadoria que virasse fato — os arquétipos ligados a eles aparecem em outras sementes e nos testes.
+**Custo**: os ganchos de relíquia somados (relics9/17/18/28/29 nos ganchos de mês e ano + os ouvintes de fato do
+relics29, medidos com `__hookProf`) ficam em 4–12 ms por mês de jogo, 0,2–0,6% do mês inteiro (2–4,5 s por mês nesta
+máquina, com outras runs em paralelo). O relics29 sozinho: ~3–5 ms/mês no fechamento (fila, nascimento, compactação,
+mercado) e ~2–3 ms/mês nos ouvintes de fato. Para comparar, o `week:hype12` sozinho custa 35–55 ms/mês.
 
-**Crescimento do save**: o teto de 30 peças vivas segura o tamanho — ≈ 8,3 KB nos 10 primeiros anos e ≈ 0,2 KB nos
-10 seguintes (só o histórico por arquétipo e o contador). As peças entram na lista do relics9 (que já tinha teto de 90),
-e a meta do relics18 e o registro compacto (`"arq|estado|proc|cidade|casa|flags"`) saem junto quando a peça sai.
+**Save**: o save inteiro tem 13 MB aos 10 anos e 19 MB aos 20; as relíquias procedurais são ≈ 0,4–0,5% dele (≈ 4,6 KB
+por ano em média em "muitas", 91,8 KB em 20 anos — abaixo da meta de 100 KB). Cada peça viva pesa ≈ 320 bytes (nome
+pt/en, donos, meta de valor); a história não é guardada (montada na hora), o registro é `"arq|estado|proc|cidade|casa|flags"`
+e o multiplicador de legado das procedurais é arredondado a 3 casas. O acervo histórico segura o crescimento: sem ele,
+"muitas" passaria de 400 peças vivas e ~130 KB em 20 anos.
 
-O teste `tests/r29-relics.test.ts` ("run de bot de 20 anos", semente `r29rel-bot`) confere os tetos ano a ano, por
-ato, total e de falsificações, a compactação e o limite de 24 KB. Na última execução: 70 nascidas, 30 vivas, 8,7 KB
-(≈ 4,3 KB por 10 anos na média dos 20 anos; na prática quase tudo nos 8 primeiros anos, até o teto encher).
+O teste `tests/r29-relics.test.ts` confere os tetos de "poucas" (5 anos) e de "muitas" (20 anos, semente
+`r29rel-bot`): por ano (≤ 24 × 1,6), por ato e ano (≤ 2), por ato vivas (≤ 12), total (≤ 400), falsas (≤ 15), pelo
+menos 150 nascidas e 10 arquétipos, acervo histórico ativo, registro compactado e menos de 100 KB. Na última execução:
+453 nascidas, 283 vivas, 137 no acervo histórico, 90,0 KB.
+
+## Interface com centenas de peças
+
+`relicBrowser29` (filtros guardados na sessão, só redesenha a própria lista): busca por peça ou artista, ato (os 80
+com mais peças, com a contagem), arquétipo (procedurais pelo registro; reais pela classificação do catálogo; "outras"
+para as do relics9/18/28), época (década), dono (com dono, seu acervo, museus, leilão, roubadas), valor mínimo
+(US$ 10/50/250 mil em dinheiro de hoje), ordem (mais valiosas, mais novas, mais antigas) e páginas ("‹ Anterior ·
+página x de y · Próxima ›", em cima e embaixo). Entra em: Lendas → Relíquias (24 por página, com os chips de estado de
+sempre), Acervo vivo (seu acervo acima de 12 e "Nascidas nesta partida", 12 por página — antes eram só as 24 mais
+novas), ofertas do mercado negro (acima de 6, 8 por página) e museu do selo (12 por página). A linha do acervo
+histórico aparece em Relíquias e no Acervo vivo.
 
 ## Capturas (`docs/shots29reliquias/`)
 
@@ -201,10 +269,13 @@ ato, total e de falsificações, a compactação e o limite de 24 KB. Na última
 - `02-ficha-reliquia-procedural.png` — ficha: "História da peça", arquétipo, estado, procedência;
 - `03-acervo-vivo.png` / `03b-acervo-vivo-nascidas.png` — Acervo vivo (origem, ×legado, história montada na hora);
 - `04-mercado-negro-falsificacao.png` — mercado negro com a cópia à venda ("autenticidade estimada");
-- `05-museu-do-selo.png` — museu do selo com "Relíquias do acervo".
+- `05-museu-do-selo.png` — museu do selo com "Relíquias do acervo";
+- `06-filtros-por-arquetipo.png` — Lendas → Relíquias com ~90 peças e o filtro "O figurino icônico" (9 peças);
+- `07-opcoes-densidade.png` — Opções: "Relíquias: Muitas — ~15–30 por ano, até 400 vivas…".
 
 As capturas usam a partida rápida (NOVA RUN → COMEÇAR MINHA HISTÓRIA, pt-BR); o script põe peças na fila e as faz
-nascer pelo `flush29` de sempre, com o teto anual aberto só para a captura.
+nascer pelo `flush29` de sempre (mais uma leva de 70 peças para os filtros e páginas aparecerem), com o teto anual
+aberto só para a captura.
 
 ## Lacunas
 
@@ -217,5 +288,8 @@ nascer pelo `flush29` de sempre, com o teto anual aberto só para a captura.
   não catalogados em leilão, réplica encomendada no Submundo).
 - O valor das procedurais é recalculado pelo legado do relics18; os multiplicadores de evento (morte, volta,
   aniversário, escândalo) somam-se a ele e decaem devagar rumo ao alvo do legado.
-- `tests/r18-tutorial.test.ts` ("toda aba registrada … tem ajuda") já falhava antes desta rodada por abas de outras
-  frentes R29 (`insp29`, `connect29`, `facts29`) sem texto de ajuda — fora do escopo das relíquias.
+- A densidade muda nas Opções só daqui em diante; trocar para "poucas" não apaga o que já nasceu (as peças acima dos
+  tetos novos saem aos poucos pela poda própria).
+- O acervo histórico guarda só contagem e valor por ato: as peças arquivadas não voltam para a lista (nem para leilão
+  ou roubo). Um "leilão do espólio" que as trouxesse de volta ficaria para depois.
+- O teto anual escala com os atos famosos ativos, contados no fechamento do mês em que há fila (não há cache por ano).

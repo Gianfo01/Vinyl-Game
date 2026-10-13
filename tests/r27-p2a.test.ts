@@ -71,8 +71,12 @@ beforeAll(() => {
   // R29 (CONECTAR TUDO, de propósito — docs/connect29.md): arestas novas entre sistemas (conn29: confiança no palco/estúdio,
   // crise na demanda da cidade, prêmios → fama/reputação, reputação → fama/equipe, calor policial…) mudam caixa, tours, acts e
   // rng (com os grupos 2 e 3 e os pisos anti-espiral). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
-  expect(s.player.cash).toBe(333758);
-  expect(hashString(JSON.stringify(s.acts))).toBe(3380302445);
+  // R29 relíquias, "bem mais relíquias por save" (densidade padrão "muitas" — docs/reliquias29.md): ~7× mais peças
+  // procedurais (22 em 8 meses de 1975 nesta semente, contra 3), mais lotes em leilão e ofertas no mercado negro; caixa, acts e rng mudam
+  // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
+  // R29 conectar tudo + relíquias juntos: re-medido.
+  expect(s.player.cash).toBe(334007);
+  expect(hashString(JSON.stringify(s.acts))).toBe(827562554);
   expect(hashString(JSON.stringify(s.rng))).toBe(2264116950);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);

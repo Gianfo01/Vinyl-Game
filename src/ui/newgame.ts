@@ -23,6 +23,8 @@ import { h, select } from './dom';
 import { savePrefs, store } from './store';
 import { prepareNewGame } from './sys/live/goals';
 import { cards22, chips22, seg22, toggle22, type Opt22 } from './pick22';
+import { DENS29_NAME } from '../sim/sys/relics29';
+import { DENS29_DESC, DENS29_ORDER } from './sys/relics29'; // R29 (relíquias): densidade na Nova run
 import { helpTip } from './newgame13';
 import { endYearField28, type EndField28 } from './endyear28'; // r28 (F4)
 let endF28: EndField28 | null = null;
@@ -277,6 +279,9 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         h('div', { class: 'ng22-toggles' },
           toggle22(t(S.ironman), t(l('Um save só, sem desfazer e sem carregar pontos antigos. Não substitui backup do navegador.', 'One save, no undo and no loading old points. Not a substitute for browser backups.')), () => !!cfg.ironman, (v) => { cfg.ironman = v; drawSummary(); }),
           toggle22(t(l('Tutoriais e dicas', 'Tutorials and tips')), t(l('Preferência deste navegador: vale para todas as partidas.', 'This browser\'s preference: applies to every run.')), () => !tutorialsOff19(store.prefs), (v) => { setTutorials19(store.prefs, v); savePrefs(); drawSummary(); })),
+        // R29 (relíquias): quantas relíquias procedurais o mundo cria (padrão: muitas)
+        h('div', { class: 'ng22-field' }, h('b', null, t(l('Relíquias', 'Relics'))),
+          seg22(t(l('Relíquias', 'Relics')), DENS29_ORDER.map((d) => ({ value: d, name: t(DENS29_NAME[d]), desc: t(DENS29_DESC[d]) })), () => cfg.relicDensity ?? 'many', (v) => { cfg.relicDensity = v; drawSummary(); })),
         h('div', { class: 'ng22-field' }, h('b', null, ...hl(S.contentFilters, 'filters')), h('small', { class: 'muted' }, t(l('Temas marcados ficam fora da partida.', 'Checked themes stay out of the run.'))),
           chips22(t(S.contentFilters), SENSITIVE.map((x) => ({ value: x.id, name: t(x.label) })), () => cfg.contentFilters, (v) => { cfg.contentFilters = v; drawSummary(); }))),
       h('section', { class: 'card wide' }, h('h3', null, ...hl(S.mutators, 'mutators')), h('p', { class: 'muted small' }, t(l('Regras especiais que mudam o mundo inteiro. Passe o mouse para ver o efeito.', 'Special rules that change the whole world. Hover to see the effect.'))),
@@ -310,6 +315,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         [S.startYear, String(cfg.startYear)],
         [l('História prévia', 'Prior history'), prehist ? t(l('{n} anos', '{n} years'), { n: prehist }) : t(l('nenhuma', 'none'))],
         [l('Base de dados', 'Database'), cfg.dbSize ?? 'medium'],
+        [l('Relíquias', 'Relics'), t(DENS29_NAME[cfg.relicDensity ?? 'many'])],
         [S.seed, cfg.seed || '—'],
       ] },
       { tab: 1, name: l('Personagem', 'Character'), rows: [

@@ -15,7 +15,7 @@ import { crime17 } from '../src/sim/sys/crime17';
 import { realAct17 } from '../src/sim/sys/realidx17';
 import { authenticate18, isFake18, rel18 } from '../src/sim/sys/relics18';
 import {
-  ARCH29, ARCHDEF29, CAPS29, R29, REAL_ARCH29, canBorn29, realArch29, candidates29, flush29, forge29, make29, meta29, realKinds29, rel29, story29, venuePick29, type Arch29,
+  ARCH29, ARCHDEF29, CAPS29, DENS29, R29, REAL_ARCH29, actCaps29, arc29, archive29, canBorn29, caps29, famousAuction29, realArch29, candidates29, flush29, forge29, make29, meta29, realKinds29, rel29, story29, venuePick29, type Arch29,
 } from '../src/sim/sys/relics29';
 import { RELIC_KIND, relics, type Relic } from '../src/sim/sys/relics9';
 import { relicArtOf28 } from '../src/ui/pixel/relic28';
@@ -37,8 +37,10 @@ const bands = (s: GameState) => Object.values(s.acts).filter((a) => a.members.le
 /** Põe uma entrada na fila do mês e faz nascer (o caminho de sempre, sem o sorteio). */
 function bornVia(s: GameState, arch: Arch29, a: Act | undefined, pid = a?.members[0] ?? '', title = 'Canção Teste', o = 'show'): Relic | undefined {
   const st = rel29(s);
+  if (st.yc[0] !== s.year) st.ay = {};
   st.yc = [s.year, 0];
-  st.q.push([ARCH29.indexOf(arch), a?.id ?? '', pid, a?.city ?? s.config.homeCity, 60, o, arch === 'fixture' ? 'Selo Teste' : title, `t:${arch}:${a?.id}`, '']);
+  st.q.length = 0; // só esta peça (fatos emitidos antes no teste podem ter enfileirado outras)
+  st.q.push([ARCH29.indexOf(arch), a?.id ?? '', pid, a?.city ?? s.config.homeCity, 60, o, arch === 'fixture' ? 'Selo Teste' : title, `t:${arch}:${a?.id}:${st.seq}`, '']);
   return flush29(s)[0];
 }
 /** devolve o controle ao laço de eventos (o vitest conversa com o worker durante runs longas) */
@@ -117,7 +119,16 @@ describe('r29 relíquias — gatilhos', () => {
     expect(C(fact('show', [a.id], ['chron:stage_incident']))).toEqual(['smashed', 'stage_outfit']);
     expect(C(fact('show', [a.id], ['tour', 'live'], 30, 'show27'))).toEqual([]);
     expect(C(fact('chart', [a.id], ['good', 'chron:number1']))).toContain('napkin_lyrics');
-    expect(C(fact('chart', [a.id], ['good', 'mem:no1_country']))).toEqual([]);
+    expect(C(fact('chart', [a.id], ['good', 'mem:no1_country']))).toEqual(['napkin_lyrics', 'session_mic']); // densidade padrão: marco de parada fora do nº 1 também
+    expect(C(fact('chart', [a.id], ['good', 'mem:no1_country'], 30))).toEqual([]);
+    expect(C(fact('legend', [a.id], ['good'], 70))).toEqual(expect.arrayContaining(['stage_outfit', 'personal']));
+    expect(C(fact('award', [a.id], ['good', 'chron:hall_of_fame'], 80))).toContain('stage_outfit');
+    // "poucas": só os gatilhos da primeira versão
+    const few = createGame(defaultConfig('r29rel-c', { startYear: 1975, realNames: false, relicDensity: 'few' }));
+    const fa = bands(few)[0];
+    fa.fame = 60;
+    expect(candidates29(few, fact('chart', [fa.id], ['good', 'mem:no1_country']))).toBeNull();
+    expect(candidates29(few, fact('legend', [fa.id], ['good'], 70))).toBeNull();
     expect(C(fact('masterwork', [a.id], ['chron:masterwork']))).toEqual(['master_tape', 'session_mic', 'console']);
     expect(C(fact('session_star', [a.id, pid]))).toEqual(['session_mic', 'console']);
     expect(C(fact('award', [a.id], ['chron:award'], 80))).toEqual(['ceremony_outfit']);
@@ -140,13 +151,13 @@ describe('r29 relíquias — gatilhos', () => {
     expect(C(fact('signing', [fresh.id, 'player', 'player'], ['deal', 'artist18'], 40))).toEqual(['first_contract']);
     // todo arquétipo tem pelo menos um gatilho
     const seen = new Set<string>();
-    for (const k of ['show', 'chart', 'masterwork', 'session_star', 'award', 'death', 'split', 'signing', 'scandal', 'tour_done', 'retired', 'crowd_incident', 'disaster', 'charity_show', 'label_sold', 'catalog_rerelease']) for (const d of Object.values(ARCHDEF29)) if (d.trig.includes(k)) seen.add(k);
-    expect(seen.size).toBe(16);
+    for (const k of ['show', 'chart', 'masterwork', 'session_star', 'award', 'death', 'split', 'signing', 'scandal', 'tour_done', 'retired', 'crowd_incident', 'disaster', 'charity_show', 'label_sold', 'catalog_rerelease', 'legend']) for (const d of Object.values(ARCHDEF29)) if (d.trig.includes(k)) seen.add(k);
+    expect(seen.size).toBe(17);
     for (const arch of ARCH29) expect(ARCHDEF29[arch].trig.length, arch).toBeGreaterThan(0);
   });
 
   it('fato no barramento → fila (sorteio pela semente do fato) → peça no fechamento do mês, com a causa encadeada', () => {
-    const s = createGame(defaultConfig('r29rel-d', { startYear: 1975, realNames: false }));
+    const s = createGame(defaultConfig('r29rel-d', { startYear: 1975, realNames: false, relicDensity: 'few' })); // tetos da primeira versão
     const a = bands(s)[2];
     a.fame = 70;
     R29.force = true;
@@ -252,8 +263,94 @@ describe('r29 relíquias — valor, falsificação, modo exato', () => {
   }, 600000);
 });
 
+describe('r29 relíquias — densidade', () => {
+  it('"poucas" guarda os tetos da primeira versão; o padrão é "muitas"', () => {
+    expect(CAPS29).toBe(DENS29.few);
+    expect([DENS29.few.year, DENS29.few.actYear, DENS29.few.actLive, DENS29.few.archAct, DENS29.few.total, DENS29.few.fakes]).toEqual([4, 1, 3, 1, 30, 3]);
+    const few = createGame(defaultConfig('r29rel-dn', { startYear: 1975, realNames: false, relicDensity: 'few' }));
+    expect(caps29(few)).toBe(DENS29.few); // sem escala
+    const a = bands(few)[0];
+    a.fame = 90;
+    expect(actCaps29(few, a)).toEqual({ live: 3, year: 1 });
+    const def = createGame(defaultConfig('r29rel-dn', { startYear: 1975, realNames: false }));
+    expect(def.config.relicDensity ?? 'many').toBe('many');
+    expect(caps29(def).total).toBe(400);
+    for (const k of ['year', 'actLive', 'total', 'fakes'] as const) expect(DENS29.few[k] < DENS29.normal[k] && DENS29.normal[k] <= DENS29.many[k] && DENS29.many[k] <= DENS29.all[k], k).toBe(true);
+  });
+
+  it('o teto anual escala com o tamanho da base e com os atos famosos ativos', () => {
+    const small = createGame(defaultConfig('r29rel-sz', { startYear: 1975, realNames: false, dbSize: 'small' }));
+    const huge = createGame(defaultConfig('r29rel-sz', { startYear: 1975, realNames: false, dbSize: 'huge' }));
+    expect(caps29(huge).year).toBeGreaterThan(caps29(small).year);
+    const quiet = createGame(defaultConfig('r29rel-sz', { startYear: 1975, realNames: false }));
+    const busy = createGame(defaultConfig('r29rel-sz', { startYear: 1975, realNames: false }));
+    for (const a of Object.values(quiet.acts)) a.fame = Math.min(a.fame, 20);
+    for (const a of Object.values(busy.acts)) if (a.status === 'active' || a.status === 'emerging') a.fame = Math.max(a.fame, 60);
+    expect(caps29(busy).year).toBeGreaterThan(caps29(quiet).year);
+  });
+
+  it('"muitas": a superestrela repete arquétipo com nomes distintos (até 3) e 2 por ano; ato pequeno ganha menos', () => {
+    const s = createGame(defaultConfig('r29rel-rep', { startYear: 1975, realNames: false }));
+    const star = bands(s)[0];
+    star.fame = 85;
+    expect(actCaps29(s, star)).toEqual({ live: 12, year: 2 });
+    const names: string[] = [];
+    const y0 = s.year;
+    for (let i = 0; i < 3; i++) { if (i === 2) s.year = y0 + 1; const rl = bornVia(s, 'stage_outfit', star); expect(rl, `peça ${i}`).toBeTruthy(); names.push(rl!.n.pt); }
+    expect(new Set(names).size).toBe(3);
+    // 3ª no mesmo ano já foi barrada (2 por ano): só nasceu porque o ano virou; a 4ª do mesmo arquétipo não nasce
+    s.year = y0 + 2;
+    expect(bornVia(s, 'stage_outfit', star)).toBeUndefined();
+    expect(bornVia(s, 'napkin_lyrics', star)).toBeTruthy(); // outro arquétipo, sim
+    const small = bands(s)[5];
+    small.fame = 15;
+    expect(actCaps29(s, small)).toEqual({ live: 3, year: 1 });
+    s.year = y0;
+  });
+
+  it('acervo histórico resume peças antigas e baratas; o leilão do ano põe a mais cobiçada em pregão', () => {
+    const s = createGame(defaultConfig('r29rel-arc', { startYear: 1980, realNames: false }));
+    const pool = bands(s);
+    const born: Relic[] = [];
+    for (let i = 0; i < 60 && i < pool.length; i++) { const rl = bornVia(s, i % 2 ? 'stage_outfit' : 'napkin_lyrics', pool[i]); if (rl) born.push(rl); }
+    expect(born.length).toBeGreaterThanOrEqual(40);
+    for (const rl of born) { rl.y = s.year - 12; if (rl.st !== 'kept') rl.st = 'kept'; }
+    const notable = born.slice().sort((a, b) => b.v - a.v)[0];
+    const before = relics(s).list.length;
+    const n = archive29(s, 10);
+    expect(n).toBeGreaterThan(0);
+    expect(relics(s).list.length).toBe(before - n);
+    expect(arc29(s).n).toBe(n);
+    expect(relics(s).list).toContain(notable); // a mais valiosa fica
+    expect(Object.keys(rel29(s).m).every((id) => relics(s).list.some((x) => x.id === id))).toBe(true);
+    // leilão do ano: precisa de colecionador ou herdeiros como dono
+    const left = relics(s).list.filter((x) => rel29(s).m[x.id] && x.st === 'kept');
+    rel29(s).m[left[0].id] = rel29(s).m[left[0].id].replace(/^(\d+\|\d+\|)[a-z]/, '$1c');
+    const facts: Fact[] = [];
+    onFact('relic', (_s, f) => { if (f.tags.includes('famous')) facts.push(f); }, 'r29test:famous');
+    const au = famousAuction29(s);
+    expect(au).toBeTruthy();
+    expect(au!.st).toBe('auction');
+    expect(facts.some((f) => f.data?.relic === au!.id)).toBe(true);
+  });
+});
+
 describe('r29 relíquias — run de bot de 20 anos', () => {
-  it('tetos valem (por ano, por ato, total, falsas) e o save cresce pouco', async () => {
+  it('"poucas" (5 anos): tetos da primeira versão', async () => {
+    const births: { y: number; a: string }[] = [];
+    onFact('relic', (_s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) births.push({ y: f.y, a: f.actors[0] ?? '' }); }, 'r29test:few');
+    const s = createGame(defaultConfig('r29rel-few', { startYear: 1970, realNames: true, relicDensity: 'few' }));
+    for (let m = 0; m < 5 * 12 && !s.ended; m++) { playMonth(s, 'balanced'); advanceMonth(s); await tick(); }
+    onFact('relic', () => {}, 'r29test:few');
+    const byY: Record<number, number> = {}, byAY: Record<string, number> = {};
+    for (const b of births) { byY[b.y] = (byY[b.y] ?? 0) + 1; if (b.a) byAY[`${b.a}:${b.y}`] = (byAY[`${b.a}:${b.y}`] ?? 0) + 1; }
+    for (const [y, n] of Object.entries(byY)) expect(n, `ano ${y}`).toBeLessThanOrEqual(4);
+    for (const [k, n] of Object.entries(byAY)) expect(n, k).toBeLessThanOrEqual(1);
+    expect(births.length).toBeGreaterThan(5);
+    expect(relics(s).list.filter((x) => rel29(s).m[x.id] && x.st !== 'lost').length).toBeLessThanOrEqual(30);
+  }, 900000);
+
+  it('"muitas" (padrão): tetos valem (por ano, por ato, total, falsas) e o save fica abaixo de 100 KB', async () => {
     const births: { y: number; a: string; arch: string }[] = [];
     onFact('relic', (s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) births.push({ y: f.y, a: f.actors[0] ?? '', arch: f.tags[3] }); }, 'r29test:bot');
     // o mesmo laço do simulatePlayer (bot equilibrado), devolvendo o controle ao vitest a cada mês (run longa)
@@ -261,19 +358,22 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     for (let m = 0; m < 20 * 12 && !s.ended; m++) { playMonth(s, 'balanced'); advanceMonth(s); await tick(); }
     const byY: Record<number, number> = {}, byAY: Record<string, number> = {};
     for (const b of births) { byY[b.y] = (byY[b.y] ?? 0) + 1; if (b.a) byAY[`${b.a}:${b.y}`] = (byAY[`${b.a}:${b.y}`] ?? 0) + 1; }
-    for (const [y, n] of Object.entries(byY)) expect(n, `ano ${y}`).toBeLessThanOrEqual(CAPS29.year);
-    for (const [k, n] of Object.entries(byAY)) expect(n, k).toBeLessThanOrEqual(CAPS29.actYear);
-    expect(births.length).toBeGreaterThanOrEqual(15); // acontece de verdade
-    expect(new Set(births.map((b) => b.arch)).size).toBeGreaterThanOrEqual(6); // e é variado
+    const M = DENS29.many;
+    for (const [y, n] of Object.entries(byY)) expect(n, `ano ${y}`).toBeLessThanOrEqual(Math.round(M.year * 1.6)); // base média × atividade máxima
+    for (const [k, n] of Object.entries(byAY)) expect(n, k).toBeLessThanOrEqual(M.actYear);
+    expect(births.length).toBeGreaterThanOrEqual(150); // bem mais relíquias por save
+    expect(new Set(births.map((b) => b.arch)).size).toBeGreaterThanOrEqual(10); // e variadas
     const live = relics(s).list.filter((x) => rel29(s).m[x.id] && x.st !== 'lost');
-    expect(live.length).toBeLessThanOrEqual(CAPS29.total);
+    expect(live.length).toBeLessThanOrEqual(M.total);
     const byAct: Record<string, number> = {};
     for (const x of live) if (x.a && !meta29(s, x.id)!.fake) byAct[x.a] = (byAct[x.a] ?? 0) + 1; // a cópia falsa não é peça nova do ato
-    for (const n of Object.values(byAct)) expect(n).toBeLessThanOrEqual(CAPS29.actLive);
-    expect(live.filter((x) => meta29(s, x.id)!.fake).length).toBeLessThanOrEqual(CAPS29.fakes);
+    for (const n of Object.values(byAct)) expect(n).toBeLessThanOrEqual(M.actLive);
+    expect(live.filter((x) => meta29(s, x.id)!.fake).length).toBeLessThanOrEqual(M.fakes);
     expect(Object.keys(rel29(s).m).every((id) => relics(s).list.some((x) => x.id === id))).toBe(true); // compactado
-    const bytes = JSON.stringify(rel29(s)).length + JSON.stringify(relics(s).list.filter((x) => rel29(s).m[x.id])).length;
-    console.log(`r29 bot 20 anos: ${births.length} nascidas, ${live.length} vivas, ${bytes} bytes (${Math.round(bytes / 2)} por 10 anos)`, JSON.stringify(rel29(s).n));
-    expect(bytes).toBeLessThan(24000);
+    expect(arc29(s).n).toBeGreaterThan(0); // o acervo histórico entrou em ação
+    const list = relics(s).list.filter((x) => rel29(s).m[x.id]);
+    const bytes = JSON.stringify(rel29(s)).length + JSON.stringify(list).length + JSON.stringify(list.map((x) => rel18(s).m[x.id])).length;
+    console.log(`r29 bot 20 anos (muitas): ${births.length} nascidas, ${live.length} vivas, acervo histórico ${arc29(s).n}, ${bytes} bytes`, JSON.stringify(rel29(s).n));
+    expect(bytes).toBeLessThan(100000);
   }, 1500000);
 });
