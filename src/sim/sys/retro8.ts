@@ -82,7 +82,7 @@ export function retrospective(s: GameState): Retrospective {
   const mine = new Set(playerActs(s));
   const alumMap = new Map<string, RetroAlum>();
   for (const c of Object.values(s.contracts)) {
-    if (c.party !== 'player') continue;
+    if (c.party !== 'player' || c.model === 'management') continue; // R29: cliente de empresário não passou pelo selo
     const a = s.acts[c.actId];
     if (!a) continue;
     const cur = alumMap.get(a.id);

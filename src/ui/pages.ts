@@ -3,6 +3,8 @@
 // por grupo, instrumentos, personalidade, saúde, relações, carreira e aulas.
 // O que o jogador vê de atos alheios depende do grau de conhecimento (faixas, não números exatos).
 
+import { isSpecial29, mgmtOf29, termTxt29 } from '../sim/terms29';
+import { fmtL } from '../sim/util';
 import { CAT_MIN17, catCount17, groupTabs17 } from './popcat17';
 import { AMBITIONS, ORIGINS, traitById } from '../data/people';
 import { actAffinity, affinityLabel, bestFamilies, genreFamilyName, worstFamily } from '../sim/sys/temper';
@@ -361,7 +363,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
     { id: 'disco', label: l('Discografia', 'Discography'), icon: 'disc', render: () => discoTab(s, a, mine) },
     vis.private || mine ? { id: 'songs', label: l('Músicas', 'Songs'), icon: 'note', render: () => songsTab(s, a, mine) } : null,
     { id: 'history', label: l('Carreira', 'Career'), icon: 'trophy', render: () => (canSee(s, a.id, 'bio') ? historyTab(s, a) : h('p', { class: 'muted' }, t(HINT15))) },
-    a.contractId && (mine || deg >= 3) ? { id: 'contract', label: S.contract, icon: 'contract', render: () => contractTab(s, a) } : null,
+    (a.contractId && (mine || deg >= 3)) || mgmtOf29(s, a.id) ? { id: 'contract', label: S.contract, icon: 'contract', render: () => contractTab(s, a) } : null, // R29: o ato que você empresaria também
     ...ACT_TABS.map((f) => f(s, a, close)),
     ...extraPageTabs('act', s, a.id).map((x) => ({ id: x.id, label: x.label, icon: x.icon, render: () => x.render(s, a.id) })),
   ].filter((x): x is NonNullable<typeof x> => !!x), tab));
@@ -455,11 +457,14 @@ function historyTab(s: GameState, a: Act): HTMLElement {
 
 function contractTab(s: GameState, a: Act): HTMLElement {
   const c = s.contracts[a.contractId!];
-  if (!c) return h('p', null, '—');
+  const mg = mgmtOf29(s, a.id); // R29 (contratos+): você é o empresário (o contrato do selo, se houver, segue abaixo)
+  const mgRow = mg ? kv(t(l('Empresário', 'Manager')), t(fmtL(l('você — {x}, termina em {m} meses', 'you — {x}, ends in {m} months'), { x: termTxt29(mg), m: Math.max(0, Math.round((mg.endWeek - s.week) / 4.35)) }))) : null;
+  if (!c) return h('div', null, mgRow ?? h('p', null, '—'));
   return h('div', null,
+    mgRow,
     (() => { const i = contractImg29(c.id, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name) || c.model, s.year, 56); i.style.float = 'right'; return i; })(), // r29: papel do contrato
     kv(t(S.model), `${t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name)}${c.party !== 'player' ? ` — ${s.labels[c.party]?.name ?? ''}` : ''}`),
-    kv(t(S.royalty), `${Math.round(c.royalty * 100)}%`),
+    isSpecial29(c.model) && c.party === 'player' ? kv(t(S.royalty), t(termTxt29(c))) : kv(t(S.royalty), `${Math.round(c.royalty * 100)}%`),
     c.party === 'player' ? kv(t(S.recoup), $(c.recoupBalance)) : null,
     kv(t(S.ends), `${Math.max(0, Math.round((c.endWeek - s.week) / 4.35))} ${t(l('meses', 'months'))}`),
     kv(t(S.releasesOwed), `${c.releasesDone}/${c.releasesOwed}`),

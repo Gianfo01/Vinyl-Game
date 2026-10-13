@@ -189,7 +189,7 @@ function scanMonth(s: GameState): void {
   }
   // contratos novos desde a última leitura
   for (const c of Object.values(s.contracts)) {
-    if (c.party !== 'player' || c.startWeek <= st.scan) continue;
+    if (c.party !== 'player' || c.model === 'management' || c.startWeek <= st.scan) continue; // R29: empresariamento não molda a identidade do selo
     const act = s.acts[c.actId];
     if (!act || act.playerBand) continue;
     if (act.city === homeCity) a.scene += 3.5;

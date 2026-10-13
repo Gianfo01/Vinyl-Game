@@ -6,6 +6,7 @@
 // Também: empresário e produtor no topo da página do artista, produção nos lançamentos (com pop-up de cada obra) e
 // histórico de sucessão na página do selo.
 
+import { ventures } from '../../sim/sys/ventures9';
 import { REAL_MGRS, mgrById } from '../../data/managers14';
 import { REAL_PRODS, prodById } from '../../data/producers15';
 import { l, type L } from '../../data/world';
@@ -366,6 +367,7 @@ ACT_HEAD_EXTRAS.push((s, a) => {
   const pr = mainProducer16(s, a);
   return h('span', { class: 'row wrap small' },
     m ? h('button', { class: 'btn small ghost', title: t(l('Quem cuida da carreira: negocia por ele nas propostas.', 'Who runs their career: negotiates for them in offers.')), onclick: () => openPerson16(mgrKey(m.id), 'r_manager') }, ic('handshake'), ` ${t(l('Empresário', 'Manager'))}: ${mgrName(s, m)}`)
+      : ventures(s).mg.clients.some((c) => c.actId === a.id) ? h('span', { class: 'good' }, ic('handshake'), ` ${t(l('Empresário: você', 'Manager: you'))}`) // R29 (contratos+): a sua carteira de empresário
       : h('span', { class: 'muted' }, ic('handshake'), ` ${t(l('Sem empresário', 'No manager'))}`),
     pr ? (pr.real ? h('button', { class: 'btn small ghost', onclick: () => openPerson16(prodKey(pr.real!), 'r_producer') }, ic('cd'), ` ${t(l('Produtor', 'Producer'))}: ${pr.name}`) : h('span', { class: 'muted' }, ic('cd'), ` ${t(l('Produtor', 'Producer'))}: ${pr.name}`)) : null);
 });

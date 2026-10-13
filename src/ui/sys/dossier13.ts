@@ -3,6 +3,7 @@
 // "definiu uma época", fracassos, contratos e selos, relíquias e vida pessoal (com campos genéricos).
 
 import { CONTRACT_MODELS } from '../../data/rules';
+import { active29, isSpecial29, termTxt29 } from '../../sim/terms29';
 import { l, marketById, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { bolsa, change12, holders } from '../../sim/sys/bolsa10';
@@ -275,8 +276,8 @@ ACT_TABS.push((s, a) => (know(s, a) < 2 && !canSee(s, a.id, 'fans') ? null : {
       h('h4', null, t(l('Contratos conhecidos', 'Known contracts'))),
       cs.length ? h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, ...[l('Com', 'With'), l('Modelo', 'Model'), l('Royalty', 'Royalty'), l('Início', 'Start'), l('Lançamentos', 'Releases'), l('Situação', 'Status')].map((x) => h('th', null, t(x))))),
         h('tbody', null, cs.map((c) => h('tr', null, h('td', null, own(c.party)), h('td', null, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name ?? l(c.model))),
-          h('td', null, know(s, a) >= 3 ? pct(c.royalty) : '?'), h('td', null, String(s.config.startYear + Math.floor(c.startWeek / 52))),
-          h('td', null, `${c.releasesDone}/${c.releasesOwed}`), h('td', null, a.contractId === c.id ? pill(t(l('vigente', 'active')), 'good') : pill(t(l('encerrado', 'ended'))))))))
+          h('td', null, know(s, a) >= 3 ? (isSpecial29(c.model) && c.party === 'player' ? t(termTxt29(c)) : pct(c.royalty)) : '?'), h('td', null, String(s.config.startYear + Math.floor(c.startWeek / 52))),
+          h('td', null, `${c.releasesDone}/${c.releasesOwed}`), h('td', null, (isSpecial29(c.model) && c.party === 'player' ? active29(s, c) : a.contractId === c.id) ? pill(t(l('vigente', 'active')), 'good') : pill(t(l('encerrado', 'ended'))))))))
         : empty(l('Nenhum contrato guardado (contratos antigos de rivais somem depois de um ano).', 'No stored contracts (old rival contracts vanish after a year).')),
     );
   },
