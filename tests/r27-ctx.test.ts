@@ -134,7 +134,10 @@ describe('r27 CTX — modelo de ações', () => {
   it('gravadora: dossiê, rivalidade (com nota), elenco, finanças', () => {
     const lb = Object.values(s.labels).find((x) => x.roster.length > 0)!;
     const m = ctxMenu27(s, 'label', lb.id, ENV);
-    expect(ids(m)).toEqual(['label.open', 'label.rival', 'label.roster', 'label.money', 'copy']);
+    // r29: + o chefe do selo (submenu de pessoa) e o plano do Submundo contra o selo (grampo), antes do "Copiar nome"
+    expect(ids(m).slice(0, 4)).toEqual(['label.open', 'label.rival', 'label.roster', 'label.money']);
+    expect(ids(m)).toEqual(expect.arrayContaining(['crime.plan:wiretap', 'copy']));
+    expect(ids(m).at(-1)).toBe('copy');
     expect(pt(item(m, 'label.rival')?.note)).toMatch(/mágoa/);
     expect(item(m, 'label.roster')?.block).toBeNull();
   });

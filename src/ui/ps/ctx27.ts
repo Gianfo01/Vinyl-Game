@@ -37,7 +37,11 @@ import { openPerson16 } from '../sys/people16';
 import { presetCity23 } from '../sys/talentos23';
 import { TIPS18 } from '../tracks18';
 import { ic, setTab } from '../vis';
-import { ctxMenu27, type CtxEnv27, type CtxItem27, type CtxMenu27, type Grp27 } from './ctx27model';
+import { CTXHOOK27, ctxMenu27, menuSections27, type CtxEnv27, type CtxItem27, type CtxMenu27, type Sec29 } from './ctx27model';
+import { CRIMES17, approachOrg, reportOrg, toggleLaunder } from '../../sim/sys/crime17';
+import { leaderOf } from '../../sim/sys/leaders10';
+import { runPA18 } from '../sys/personact18';
+import { presetCrime17 } from '../sys/crimeform29';
 import { isEnt27, type Ent27 } from './ent27';
 import './ctx27.css';
 
@@ -48,6 +52,7 @@ const g = (): GameState | null => store.game ?? null;
 
 const areaOn = (s: GameState, id: string): boolean => EXTRA_AREAS.some((a) => a.id === id && (!a.visible || a.visible(s)));
 const songMarketArea = (s: GameState): string | undefined => EXTRA_AREAS.find((a) => /songmarket|songmkt/i.test(a.id) && (!a.visible || a.visible(s)))?.id;
+CTXHOOK27.env = (s) => env27(s); // r29: o painel "Ações" da ficha usa o mesmo ambiente
 export function env27(s: GameState): CtxEnv27 {
   return {
     has: (f) => {
@@ -152,14 +157,31 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
     case 'venue.city': { const v = VENUES17.find((x) => x.id === id); if (v) openCity27(v.city); return; }
     case 'festival.open': goArea(s, 'festivals'); return;
     case 'place.open': goArea(s, 'campus18'); return;
-    case 'org.open': goArea(s, 'crime'); return;
-    default: return;
+    case 'org.open': goArea(s, 'crime', ['crime17', 'orgs']); return;
+    // r29: Submundo (as mesmas funções dos botões de Submundo › Organizações / Planos)
+    case 'org.approach': toast(T(approachOrg(s, id)), 'info'); rerender(); return;
+    case 'org.launder': toast(T(toggleLaunder(s, id)), 'info'); rerender(); return;
+    case 'org.report': toast(T(reportOrg(s, id)), 'info'); rerender(); return;
+    case 'org.tie': case 'act.tie': goArea(s, 'crime', ['crime17', 'orgs']); return;
+    case 'crime.person': { const c0 = CRIMES17.find((c) => c.tk === 'person'); if (c0) presetCrime17(c0.id, key.slice(2)); goArea(s, 'crime', ['crime17', 'plans']); return; }
+    // r29: atalhos e submenus de pessoa
+    case 'act.leader': { const a = s.acts[id]; const p = a?.leaderId && a.members.includes(a.leaderId) && !s.persons[a.leaderId]?.isPlayer ? a.leaderId : a?.members.find((m) => s.persons[m]?.alive && !s.persons[m].isPlayer); if (p) setTimeout(() => openCtx27(s, 'person', `p:${p}`, anchor), 0); return; }
+    case 'label.leader': { const L0 = leaderOf(s, id); if (L0) setTimeout(() => openCtx27(s, 'person', `l:${L0.id}`, anchor), 0); return; }
+    case 'person.act': { const pid = key.startsWith('p:') ? key.slice(2) : ''; const a = Object.values(s.acts).find((x) => x.members.includes(pid) && x.status !== 'retired' && x.status !== 'split'); if (a) inspect.act(a.id); return; }
+    case 'person.actmore': { const pid = key.slice(2); const a = playerActs(s).find((x) => s.acts[x]?.members.includes(pid)); if (a) openActionMenu20(s, a, anchor); return; }
+    default:
+      if (item.id.startsWith('pa:')) { runPA18(s, key, item.id.slice(3), (txt, ok) => { toast(txt, ok ? 'good' : 'bad'); rerender(); }); return; }
+      if (item.id.startsWith('a20:')) { chooseAction20(s, item.id.slice(4), id, anchor); return; }
+      if (item.id.startsWith('crime.plan:')) { presetCrime17(item.id.slice(11), id); goArea(s, 'crime', ['crime17', 'plans']); return; }
+      return;
   }
 }
+CTXHOOK27.run = (s, m, item, anchor) => run(s, m, item, anchor);
 
 // ---------------------------------------------------------------- o menu
 
-const GRP: Record<Grp27, L> = { open: l('Abrir', 'Open'), do: l('Ações', 'Actions'), info: l('Saber mais', 'Learn more') };
+/** r29: seções recolhidas pelo jogador (lembradas enquanto a página estiver aberta). */
+const folded29 = new Set<Sec29>();
 let closeOpen: ((refocus: boolean) => void) | null = null;
 let seq = 0;
 
@@ -183,36 +205,68 @@ export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElem
   };
   const row = (it: CtxItem27) => {
     const label = it.id.endsWith('.listen') && playing ? l('Parar a prévia', 'Stop the preview') : it.label;
+    const pc = it.chance !== undefined ? Math.round(it.chance * 100) : null;
     const el = h('div', { role: 'menuitem', tabindex: '-1', class: `cx27-item${it.block ? ' off' : ''}`, 'aria-disabled': it.block ? 'true' : null, 'data-act': it.id,
+      title: it.block ? `${T(l('Indisponível', 'Unavailable'))}: ${T(it.block)}` : it.note ? T(it.note) : null,
       onclick: (e: Event) => { e.stopPropagation(); pick({ ...it, label }); } },
       h('span', { class: 'cx27-l' }, it.icon ? ic(it.icon) : null, h('span', null, T(label))),
-      it.cost ? h('span', { class: 'cx27-c num' }, $(it.cost)) : null,
-      it.block ? h('small', { class: 'cx27-why' }, T(it.block)) : it.note ? h('small', { class: 'muted' }, T(it.note)) : null);
-    items.push(el);
+      it.cost || pc !== null ? h('span', { class: 'cx27-c num' }, pc !== null ? h('span', { class: `cx27-pc ${pc >= 60 ? 'good' : pc < 35 ? 'bad' : 'warn'}` }, `${pc}%`) : null, it.cost ? $(it.cost) : null) : null,
+      it.block ? h('small', { class: 'cx27-why' }, T(it.block)) : it.note ? h('small', { class: 'muted cx27-note' }, T(it.note)) : null);
     return el;
   };
-  const groups = (['open', 'do', 'info'] as Grp27[]).map((gr) => ({ gr, xs: m.items.filter((x) => x.grp === gr) })).filter((x) => x.xs.length);
-  const menu = h('div', { role: 'menu', id: mid, class: 'cx27-menu', 'aria-label': `${T(l('Ações', 'Actions'))}: ${T(m.name)}` },
-    groups.map((x, i) => [i ? h('div', { role: 'separator', class: 'cx27-sep' }) : null,
-      h('div', { role: 'group', 'aria-label': T(GRP[x.gr]) }, x.xs.map(row))]));
+  // r29: seções com cabeçalho (Ver / Abrir, Carreira e contrato, Música e projetos, Ao vivo, Relação e vida pessoal,
+  // Imprensa e imagem, Submundo, Atalhos); cada cabeçalho recolhe/abre a seção (clique, Enter, ←/→)
+  const secs = menuSections27(m);
+  const many = m.items.length > 9 && secs.length > 1;
+  const rowsOf = new Map<HTMLElement, HTMLElement[]>();
+  const menu = h('div', { role: 'menu', id: mid, class: `cx27-menu${many ? ' cx27-secs' : ''}`, 'aria-label': `${T(l('Ações', 'Actions'))}: ${T(m.name)}` },
+    secs.map((x, i) => {
+      const rs = x.items.map(row);
+      if (!many) { items.push(...rs); return [i ? h('div', { role: 'separator', class: 'cx27-sep' }) : null, h('div', { role: 'group', 'aria-label': T(x.label) }, rs)]; }
+      const open0 = !folded29.has(x.sec);
+      const n = x.items.filter((y) => !y.block).length;
+      const body = h('div', { role: 'group', 'aria-label': T(x.label), class: 'cx27-sbody', hidden: !open0 }, rs);
+      const hd = h('div', { role: 'menuitem', tabindex: '-1', class: 'cx27-shead', 'data-sec': x.sec, 'aria-expanded': String(open0),
+        onclick: (e: Event) => { e.stopPropagation(); toggle(hd); } },
+        h('span', { class: 'cx27-l' }, ic(x.icon), h('b', null, T(x.label))), h('small', { class: 'muted cx27-n' }, `${n}/${x.items.length}`), h('span', { class: 'cx27-chev', 'aria-hidden': 'true' }, '▾'));
+      rowsOf.set(hd, rs);
+      items.push(hd, ...rs);
+      return h('div', { class: 'cx27-sec', 'data-sec': x.sec }, hd, body);
+    }));
+  function toggle(hd: HTMLElement, force?: boolean): void {
+    const body = hd.nextElementSibling as HTMLElement | null;
+    if (!body) return;
+    const open = force ?? hd.getAttribute('aria-expanded') !== 'true';
+    hd.setAttribute('aria-expanded', String(open));
+    body.hidden = !open;
+    const sec = hd.dataset.sec as Sec29;
+    if (open) folded29.delete(sec); else folded29.add(sec);
+  }
+  const visible = () => items.filter((x) => !(x.parentElement as HTMLElement | null)?.hidden);
   const box = h('div', { class: `cx27${mobile ? ' sheet' : ''}`, 'data-ctx27': '' },
     h('div', { class: 'cx27-head' }, h('b', null, T(m.name)), h('small', { class: 'muted' }, T(m.kind))),
     menu, status);
   const scrim = mobile ? h('div', { class: 'cx27-scrim', onclick: () => close(true) }) : null;
-  const focusAt = (i: number) => { const n = items.length; if (!n) return; items[((i % n) + n) % n].focus(); };
-  const cur = () => items.indexOf(document.activeElement as HTMLElement);
+  const focusAt = (i: number) => { const v = visible(); const n = v.length; if (!n) return; v[((i % n) + n) % n].focus(); };
+  const cur = () => visible().indexOf(document.activeElement as HTMLElement);
+  const headOf = (el: HTMLElement): HTMLElement | null => (el.classList.contains('cx27-shead') ? el : ((el.parentElement?.previousElementSibling as HTMLElement | null) ?? null));
   const onKey = (e: KeyboardEvent) => {
     const i = cur();
+    const v = visible();
+    const el = i >= 0 ? v[i] : null;
     if (e.key === 'ArrowDown') { e.preventDefault(); focusAt(i + 1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); focusAt(i < 0 ? -1 : i - 1); }
     else if (e.key === 'Home') { e.preventDefault(); focusAt(0); }
-    else if (e.key === 'End') { e.preventDefault(); focusAt(items.length - 1); }
+    else if (e.key === 'End') { e.preventDefault(); focusAt(v.length - 1); }
+    else if (e.key === 'ArrowLeft' && el && many) { e.preventDefault(); const hd = headOf(el); if (hd?.classList.contains('cx27-shead')) { toggle(hd, false); hd.focus(); } }
+    else if (e.key === 'ArrowRight' && el?.classList.contains('cx27-shead')) { e.preventDefault(); toggle(el, true); rowsOf.get(el)?.[0]?.focus(); }
+    else if (e.key === 'PageDown' || e.key === 'PageUp') { e.preventDefault(); const hs = v.filter((x) => x.classList.contains('cx27-shead')); const at = el ? headOf(el) : null; const k = at ? hs.indexOf(at) : -1; const nx = hs[Math.max(0, Math.min(hs.length - 1, k + (e.key === 'PageDown' ? 1 : -1)))]; nx?.focus(); }
     else if (e.key === 'Escape') { e.preventDefault(); close(true); }
     else if (e.key === 'Tab') { e.preventDefault(); close(true); }
-    else if ((e.key === 'Enter' || e.key === ' ') && i >= 0) { e.preventDefault(); items[i].click(); }
+    else if ((e.key === 'Enter' || e.key === ' ') && el) { e.preventDefault(); el.click(); }
     else if (e.key.length === 1 && /\S/.test(e.key)) {
-      const k = e.key.toLowerCase(), n = items.length;
-      for (let j = 1; j <= n; j++) { const el = items[(Math.max(i, 0) + j) % n]; if ((el.textContent ?? '').trim().toLowerCase().startsWith(k)) { el.focus(); break; } }
+      const k = e.key.toLowerCase(), n = v.length;
+      for (let j = 1; j <= n; j++) { const x = v[(Math.max(i, 0) + j) % n]; if ((x.textContent ?? '').trim().toLowerCase().startsWith(k)) { x.focus(); break; } }
     }
     e.stopPropagation(); // o Esc não fecha a janela de baixo; atalhos globais não disparam com o menu aberto
   };
@@ -250,7 +304,10 @@ export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElem
     box.style.top = `${Math.max(8, top)}px`;
     box.style.maxHeight = `${vh - Math.max(8, top) - 8}px`;
   }
-  focusAt(0);
+  // foco no primeiro item de ação (o cabeçalho da 1ª seção fica logo acima)
+  const v0 = visible();
+  const first = v0.findIndex((x) => !x.classList.contains('cx27-shead'));
+  focusAt(Math.max(0, first));
   return true;
 }
 

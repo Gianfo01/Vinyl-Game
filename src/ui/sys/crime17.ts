@@ -28,6 +28,8 @@ import { emblemImg28, orgEmblemKind28 } from '../pixel/emblem28';
 import { relicImg28 } from '../pixel/relic28';
 import { heistOn27 } from '../act27/heist27'; // r27 (M3): operação jogável
 import { screen27, screenOn27 } from '../act27/flow27'; // r27 FLOW: uma entrada só
+import { crimeForm17 } from './crimeform29';
+import { ent27 } from '../ps/ent27';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 /** r28 (arte): brasão semeado da organização (forma pelo tipo, cores pela região, carga pelo negócio). */
@@ -54,7 +56,7 @@ function orgsTab(s: GameState): HTMLElement {
       const tied = Object.entries(st.ties).filter(([, oid]) => oid === o.id).map(([aid]) => s.acts[aid]).filter(Boolean);
       const down = (st.down[o.id] ?? 0) > s.week;
       return h('section', { class: 'card' },
-        h('h3', null, orgEmblem(o, 40), ' ', T(o.name), ' ', pill(T(KIND_NAME[o.kind])), down ? pill(T(l('desmantelada', 'dismantled')), 'good') : null),
+        h('h3', null, orgEmblem(o, 40), ' ', h('span', { class: 'ent27', tabindex: '0', ...ent27('org', o.id) }, T(o.name)), ' ', pill(T(KIND_NAME[o.kind])), down ? pill(T(l('desmantelada', 'dismantled')), 'good') : null),
         chips(stat('globe', `${cityName(o.city)} · ${T(countryName(o.a3))}`, l('Sede', 'Base')), stat('fire', o.power, l('Poder', 'Power')), stat('handshake', rel, l('Relação com você', 'Relationship with you'))),
         h('p', { class: 'small' }, T(o.desc)),
         h('p', { class: 'small muted' }, `${T(l('Negócios', 'Rackets'))}: ${o.rackets.map((r) => T(RACKET_NAME[r])).join(' · ')} · ${T(l('Chefe', 'Boss'))}: ${T(bossName(o))}`),
@@ -107,7 +109,7 @@ const fmtTxt = (x: L, v: L | string): string => T(x).replace('{v}', T(v)).replac
 
 // ================================================================ Planos / Ações
 
-const form: { c: string; actor: string; target: string; method: string; org: string; partners: string[] } = { c: 'blackmail', actor: 'player', target: '', method: '', org: '', partners: [] };
+const form = crimeForm17; // r29: rascunho compartilhado com o menu de ações (crimeform29.ts)
 
 function plansTab(s: GameState): HTMLElement {
   const st = crime17(s);
