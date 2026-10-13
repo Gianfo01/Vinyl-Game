@@ -63,7 +63,10 @@ capas e logos.
 
 ## Validação
 
-- `npm ci`, `npm run typecheck` e `npm test` (ver o resultado no commit).
+- `npm ci` ok; `npm run typecheck` ok; `npm test`: 947 passaram, 1 falhou, 1 pulado. A falha
+  (`tests/r16-playbot.test.ts` › "uma run curta tem ações variadas…", `expected 0 to be greater than 0`) também
+  acontece no commit base `5baacc2`, sem estas mudanças: é anterior e não tem relação com a arte. Os 3 "errors" da
+  suíte são timeouts de RPC do worker do vitest (suíte longa, ~13 min).
 - Folha de arte para conferir (dev): `npx vite tools/artsheet`, depois abrir `?part=icons` (barra em 16 px,
   todos os ícones em 1×, 2× e 4×) ou `?part=art` (capas de 9 eras × 8 gêneros, escolhas do jogador, logos em
   40 e 18 px, crachás e cartazes).
