@@ -78,7 +78,7 @@ function bridgeText27(s: GameState, id: string, ctx: Record<string, unknown>): s
       return who ? t(l('{w} entregou o plano.', '{w} gave the plan away.'), { w: who }) : undefined;
     }
   }
-  return undefined;
+  return str(ctx.text); // r28 F8: golpe / holograma / herdeiros trazem o texto pronto
 }
 /** Põe a cena da atividade na fila (ou nada, se a preferência desliga ou o momento já teve cena). */
 export function bridge27(s: GameState, id: string, ctx: Record<string, unknown> = {}, pref: CutPref27 = cutPref27()): CutData27 | null {
@@ -87,7 +87,8 @@ export function bridge27(s: GameState, id: string, ctx: Record<string, unknown> 
   if ((store.prefs as { cutscenes?: boolean }).cutscenes === false || pref === 'off' || (pref === 'major' && CUT27[key].tier !== 'major')) return null;
   const actId = str(ctx.actId) && s.acts[ctx.actId as string] ? (ctx.actId as string) : undefined;
   const st = cut27(s);
-  const d: CutData27 = { key, ref: `act27:${id}:${s.week}:${actId ?? ''}`, actId, year: s.year, week: s.week, a: actId ? s.acts[actId].name : undefined, t: bridgeText27(s, id, ctx) };
+  const pid = str(ctx.pid) && s.persons[ctx.pid as string] ? (ctx.pid as string) : undefined; // r28 F8: holograma (quem volta ao palco)
+  const d: CutData27 = { key, ref: `act27:${id}:${s.week}:${actId ?? ''}`, actId, pid, p: pid ? s.persons[pid].name : undefined, year: s.year, week: s.week, a: actId ? s.acts[actId].name : undefined, t: bridgeText27(s, id, ctx) };
   const k = onceKey27(key, d);
   if (st.once[k] !== undefined) return null;
   st.once[k] = s.week; st.n++;
