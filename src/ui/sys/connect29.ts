@@ -9,6 +9,8 @@ import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { crime17, orgById } from '../../sim/sys/crime17';
 import { tieOf } from '../../sim/sys/crimenpc17';
+import { LINK29, linksOfKey29 } from '../../sim/sys/orglinks29'; // r29 Submundo: fonte única pessoa ↔ organização
+import { ent27 } from '../ps/ent27';
 import { careerActs29, personFeats29 } from '../../sim/sys/connect29';
 import { items18 } from '../../sim/sys/inbox18';
 import { P } from '../../sim/sys/people/state';
@@ -50,13 +52,19 @@ function relicsAwards(s: GameState, ids: string[], pid?: string): HTMLElement | 
     aw.length ? h('ul', { class: 'small' }, ...aw.map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`, a.actId && s.acts[a.actId] ? [' · ', actLink(s, a.actId)] : null))) : null);
 }
 
-function underworld(s: GameState, acts: Act[], keys: string[]): HTMLElement | null {
+function underworld(s: GameState, acts: Act[], keys: string[], linkKey?: string): HTMLElement | null {
   const st = crime17(s), ks = new Set(keys);
-  const ties = acts.map((a) => ({ a, o: tieOf(s, a.id) })).filter((x) => x.o);
+  // r29 (Submundo): ligações com organizações pela fonte única (orglinks29) — a mesma do card da organização
+  const links = linkKey ? linksOfKey29(s, linkKey) : [];
+  const ties = links.length ? [] : acts.map((a) => ({ a, o: tieOf(s, a.id) })).filter((x) => x.o);
   const feuds = Object.entries(st.feud ?? {}).filter(([k]) => k.split('|').some((x) => ks.has(x)));
   const log = (st.log ?? []).filter((x) => ks.has(x.actor) || ks.has(x.target)).slice(-8).reverse();
-  if (!ties.length && !feuds.length && !log.length) return null;
+  if (!links.length && !ties.length && !feuds.length && !log.length) return null;
   return section(t(l('Submundo', 'Underworld')),
+    links.length ? h('ul', { class: 'small' }, ...links.map((x) => { const o = orgById(s, x.o); return h('li', null,
+      h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, o ? t(o.name) : x.o), ' ', pill(t(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''),
+      x.y ? ` ${x.y}` : '', x.via && s.acts[x.via] ? [` · ${t(l('via', 'via'))} `, actLink(s, x.via)] : null,
+      h('div', { class: 'muted' }, t(x.text))); })) : null,
     ties.length ? h('p', { class: 'small' }, ...ties.flatMap((x) => [actLink(s, x.a.id), ` ${t(l('ligado(a) a', 'tied to'))} `, h('b', null, t(x.o!.name)), ' ']) ) : null,
     feuds.length ? h('p', { class: 'small' }, t(l('Rixas: ', 'Feuds: ')), feuds.map(([k, v]) => `${k.split('|').map((x) => orgById(s, x) ? t(orgById(s, x)!.name) : s.acts[x]?.name ?? x).join(' × ')} (${Math.round(v)})`).join(', ')) : null,
     log.length ? h('ul', { class: 'small' }, ...log.map((x) => h('li', { class: x.ok ? '' : 'muted' }, `${x.y} · `, t(x.text)))) : null);
@@ -74,14 +82,14 @@ function featsOf29(s: GameState, p: Person): HTMLElement | null {
 PERSON_TABS.push((s, p: Person) => {
   if (p.isPlayer) return null;
   const acts = careerActs29(s, p.id).map((x) => x.act);
-  const parts = () => [featsOf29(s, p), mailOf(s, `p:${p.id}`), promisesOf(s, p), relicsAwards(s, acts.map((a) => a.id), p.id), underworld(s, acts.filter((a) => a.members.includes(p.id)), [p.id, `p:${p.id}`, ...acts.filter((a) => a.members.includes(p.id)).map((a) => a.id)])].filter((x): x is HTMLElement => !!x);
+  const parts = () => [featsOf29(s, p), mailOf(s, `p:${p.id}`), promisesOf(s, p), relicsAwards(s, acts.map((a) => a.id), p.id), underworld(s, acts.filter((a) => a.members.includes(p.id)), [p.id, `p:${p.id}`, ...acts.filter((a) => a.members.includes(p.id)).map((a) => a.id)], `p:${p.id}`)].filter((x): x is HTMLElement => !!x);
   return { id: 'connect29', label: l('Conexões', 'Connections'), icon: 'handshake', render: () => { const xs = parts(); return xs.length ? h('div', null, ...xs) : h('p', { class: 'muted small' }, t(l('Nada registrado em outros sistemas ainda.', 'Nothing recorded in other systems yet.'))); } };
 });
 
 registerPageTab('act', { id: 'connect29', label: l('Conexões', 'Connections'), icon: 'handshake', order: 86, render: (s, id) => {
   const a = s.acts[id];
   if (!a) return h('div');
-  const xs = [mailOf(s, id), underworld(s, [a], [id, ...a.members, ...a.members.map((x) => `p:${x}`)])].filter((x): x is HTMLElement => !!x);
+  const xs = [mailOf(s, id), underworld(s, [a], [id, ...a.members, ...a.members.map((x) => `p:${x}`)], id)].filter((x): x is HTMLElement => !!x);
   return xs.length ? h('div', null, ...xs) : h('p', { class: 'muted small' }, t(l('Nada registrado em outros sistemas ainda.', 'Nothing recorded in other systems yet.')));
 } });
 
