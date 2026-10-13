@@ -1,9 +1,12 @@
 // Logos e capas em pixel art gerados por parâmetros (seed, família, era, orçamento); nada vai para o save (GDD §25).
 // Desenhados em baixa resolução (logo 32×32, capa 40×40) e ampliados por vizinho mais próximo.
+// Acabamento no estilo do pacote de arte (pixel/finish.ts): gradação quente, relevo com luz de cima à esquerda,
+// textura de papel/vinil e contorno #170e12, sem perder a identidade de cada década.
 
 import { Rng } from '../core/rng';
 import { FAMILIES, familyOf } from '../data/world';
 import { drawText, drawTextOutlined, fitText, textWidth } from './pixel/font';
+import { grade, HOUSE, INK, relief, tone } from './pixel/finish';
 import { C, Px, dith, hsl, mix, noise, shade, upscale, withAlpha, type Col } from './pixel/px';
 
 const cache = new Map<string, string>();
@@ -213,7 +216,11 @@ export function logoPx(seed: number, name: string, genre: string, year: number):
       for (let y = y0; y < y0 + r.int(1, 3); y++) for (let x = 0; x < N; x++) p.put(x, y, src.get(x - sh, y));
     }
   }
-  p.outline(C('#120d10'));
+  // acabamento: gradação quente (mais leve nas eras de néon), relevo do selo inteiro e contorno da casa
+  const k = style === 'neon' || style === 'neural' || style === 'psych' ? 0.55 : 1;
+  p.map((c) => grade(c, k));
+  relief(p, { mode: 'silhouette', r: 3, slope: 0.7, spec: () => style === 'deco' || style === 'gloss' });
+  p.outline(INK);
   pxCache.set(key, p);
   return p;
 }
@@ -239,7 +246,8 @@ export function badgePx(seed: number, name: string, genre: string, year: number)
   p.rect(1, 1, w, 9, col.bg);
   p.hline(2, w - 1, 1, shade(col.bg, 0.25));
   drawText(p, ini, 1 + Math.round((w - textWidth(ini)) / 2), 3, col.fg);
-  p.outline(C('#120d10'));
+  p.map((c) => grade(c));
+  p.outline(INK);
   pxCache.set(key, p);
   return p;
 }
@@ -266,6 +274,7 @@ export function posterPx(seed: number, name: string, genre: string, year: number
   // moldura
   for (let x = 0; x < 14; x++) { p.put(x, 0, shade(paper, -0.35)); p.put(x, 18, shade(paper, -0.45)); }
   for (let y = 0; y < 19; y++) { p.put(0, y, shade(paper, -0.35)); p.put(13, y, shade(paper, -0.45)); }
+  p.map((c) => grade(c));
   pxCache.set(key, p);
   return p;
 }
@@ -300,11 +309,16 @@ export function coverPx(seed: number, title: string, actName: string, genre: str
       p.fill((x, y) => (noise(x, y, seed) < 0.07 ? shade(kraft, -0.1) : kraft));
       // disco com rótulo
       p.disc(20, 20, 11.5, (x, y, d) => (d > 4.2 ? (Math.floor(d) % 2 ? C('#1b1717') : C('#2a2524')) : d < 0.9 ? C('#c9a878') : hsl(hue, 55, 45)));
-      p.set(15, 14, withAlpha(C('#ffffff'), 90));
-      p.set(16, 13, withAlpha(C('#ffffff'), 70));
-      for (let x = 2; x < N - 2; x++) { p.put(x, 1, C('#5a3a20')); p.put(x, N - 2, C('#5a3a20')); }
-      drawText(p, actTxt, Math.round((N - textWidth(actTxt)) / 2), 3, C('#3a2414'));
-      drawText(p, titleTxt, Math.round((N - textWidth(titleTxt)) / 2), 35 - 1, C('#3a2414'));
+      // brilho do vinil: arco de sulcos claros no alto à esquerda (luz da casa)
+      p.fill((x, y) => {
+        const dx = x + 0.5 - 20, dy = y + 0.5 - 20;
+        const d = Math.hypot(dx, dy);
+        const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
+        return d > 5.5 && d < 10.5 && ang > -150 && ang < -105 ? tone(p.get(x, y), Math.floor(d) % 2 ? 4 : 3) : p.get(x, y);
+      }, 8, 8, 12, 12);
+      for (let x = 2; x < N - 2; x++) { p.put(x, 2, HOUSE.mogno); p.put(x, N - 3, HOUSE.mogno); }
+      drawText(p, actTxt, Math.round((N - textWidth(actTxt)) / 2), 4, C('#3a2414'));
+      drawText(p, titleTxt, Math.round((N - textWidth(titleTxt)) / 2), 31, C('#3a2414'));
       break;
     }
     case 'classic': {
@@ -427,8 +441,41 @@ export function coverPx(seed: number, title: string, actName: string, genre: str
     }
   }
   if (!rich && style !== 'minimal') p.map((c) => mix(c, C('#808080'), 0.12));
+  finishCover(p, style, seed);
   pxCache.set(key, p);
   return p;
+}
+
+/** Densidade do grão de papel por estilo (capas impressas em papel/cartão). */
+const GRAIN: Partial<Record<ArtStyle, number>> = { deco: 0.1, classic: 0.07, punk: 0.07, grunge: 0.06, minimal: 0.035 };
+const WORN_STYLES = new Set<ArtStyle>(['deco', 'classic', 'psych', 'punk']);
+
+/** Acabamento de capa: gradação quente, grão de papel, marca do disco (eras de vinil) e capa com volume e contorno. */
+function finishCover(p: Px, style: ArtStyle, seed: number): void {
+  const N = p.w;
+  const k = style === 'neon' || style === 'neural' || style === 'psych' ? 0.55 : 1;
+  const grain = GRAIN[style] ?? 0;
+  const worn = WORN_STYLES.has(style);
+  p.map((c, x, y) => {
+    let o = grade(c, k);
+    const n = noise(x, y, seed + 11);
+    if (n < grain) o = mix(o, tone(o, 2), 0.45);
+    else if (n > 1 - grain * 0.7) o = mix(o, tone(o, 4), 0.5);
+    if (worn) {
+      // marca circular do disco gasta na capa, mais visível no alto à esquerda (de onde vem a luz)
+      const d = Math.hypot(x + 0.5 - N / 2, y + 0.5 - N / 2);
+      if (Math.abs(d - 17) < 0.55 && x + y < N * 1.1 && dith(x, y, 0.5)) o = mix(o, tone(o, 4), 0.55);
+    }
+    return o;
+  });
+  // volume da capa: luz em cima/esquerda, sombra embaixo/direita, contorno da casa
+  for (let i = 1; i < N - 1; i++) {
+    p.put(i, 1, tone(p.get(i, 1), 4));
+    p.put(1, i, tone(p.get(1, i), 4));
+    p.put(i, N - 2, tone(p.get(i, N - 2), 1));
+    p.put(N - 2, i, tone(p.get(N - 2, i), 1));
+  }
+  for (let i = 0; i < N; i++) { p.put(i, 0, INK); p.put(i, N - 1, INK); p.put(0, i, INK); p.put(N - 1, i, INK); }
 }
 
 export function coverUrl(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, size = 160, choice?: string): string {

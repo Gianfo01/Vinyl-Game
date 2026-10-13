@@ -1,12 +1,12 @@
 // Rodada 14 — locais novos: estúdio (técnica e sala de gravação), casa/garagem do artista,
 // horizonte de cidade com marcos datados e coletiva de imprensa. Tudo muda por década.
 
-import { C, shade, withAlpha, type Col } from '../px';
+import { C, INK, Px, glint, inked, lv, tint, withAlpha, type Col } from '../px';
 import { H, W, beam, box, curtain, floor, frame, plant, posters, screen, shelf, sign, sky, table, wall, windowPane } from './kit';
 import { crowdBlock, prop, type BuildCtx } from './model';
 import { landmarks14 } from '../spec14';
 
-const BLACK = C('#16141a');
+const BLACK = C('#1c161c');
 
 /** Fileira de VU / LEDs que piscam. */
 function meters(c: BuildCtx, x: number, y: number, n: number, col: Col): void {
@@ -18,17 +18,30 @@ function meters(c: BuildCtx, x: number, y: number, n: number, col: Col): void {
 
 /** Mesa de som frontal: largura e número de canais pela era. */
 function desk(c: BuildCtx, cx: number, y: number): void {
-  const { f, pal, year } = c;
+  inked(c.f, (f) => deskBody(c, f, cx, y));
+}
+
+function deskBody(c: BuildCtx, f: Px, cx: number, y: number): void {
+  const { pal, year } = c;
   const w = year < 1950 ? 50 : year < 1960 ? 70 : year < 2000 ? 116 : year < 2010 ? 96 : 80;
   const x = Math.round(cx - w / 2);
   const body = year >= 1980 && year < 2000 ? C('#3a3a42') : year >= 2000 ? C('#26262c') : pal.woodDark;
-  f.poly([[x, y], [x + w, y], [x + w - 6, y - 10], [x + 6, y - 10]], shade(body, 0.12));
+  // tampo inclinado com luz, quina de latão (era analógica) e frente em sombra com almofada de braço
+  f.poly([[x, y], [x + w, y], [x + w - 6, y - 10], [x + 6, y - 10]], lv(body, 3.6));
+  f.hline(x + 6, x + w - 7, y - 10, lv(body, 4.6));
   f.rect(x, y, w, 14, body);
-  f.hline(x, x + w - 1, y, shade(body, 0.3));
+  f.hline(x, x + w - 1, y, year < 2000 ? lv(C('#c09048'), 4) : lv(body, 4.4));
+  if (year < 2000) for (let i = x + 4; i < x + w; i += 23) glint(f, i, y, C('#c09048'), 2);
+  f.hline(x, x + w - 1, y + 1, INK);
+  f.rect(x, y + 2, w, 3, lv(body, 2.4));
+  f.hline(x, x + w - 1, y + 2, lv(body, 3.6));
+  f.vline(x, y + 2, y + 13, lv(body, 3.6));
+  f.vline(x + w - 1, y + 2, y + 13, lv(body, 1.4));
+  f.hline(x, x + w - 1, y + 13, lv(body, 1));
   if (year < 2000) {
     // canais com faders
     for (let i = x + 8; i < x + w - 8; i += year < 1960 ? 8 : 4) {
-      f.vline(i, y - 8, y - 3, shade(body, -0.35));
+      f.vline(i, y - 8, y - 3, tint(body, -0.35));
       f.put(i, y - 5 - ((i * 7) % 3), pal.paper);
       f.put(i, y - 9, [pal.accent, pal.accent2, pal.glow][i % 3]);
     }
@@ -49,21 +62,21 @@ function desk(c: BuildCtx, cx: number, y: number): void {
 /** Vidro com a outra sala ao fundo (bateria e microfone, ou técnico na mesa). */
 function glass(c: BuildCtx, x: number, y: number, w: number, hh: number, inside: 'live' | 'control'): void {
   const { p, pal } = c;
-  p.rect(x, y, w, hh, shade(pal.floors.studio.a, -0.35));
-  p.rect(x, y + hh - 10, w, 10, shade(pal.floors.studio.a, -0.2));
+  p.rect(x, y, w, hh, tint(pal.floors.studio.a, -0.35));
+  p.rect(x, y + hh - 10, w, 10, tint(pal.floors.studio.a, -0.2));
   if (inside === 'live') {
     // silhueta da bateria e do pedestal
-    p.ellipse(x + 24, y + hh - 12, 9, 5, shade(pal.accent2, -0.3));
-    p.disc(x + 14, y + hh - 22, 4, shade(pal.gold, -0.2));
-    p.disc(x + 34, y + hh - 24, 4, shade(pal.gold, -0.2));
+    p.ellipse(x + 24, y + hh - 12, 9, 5, tint(pal.accent2, -0.3));
+    p.disc(x + 14, y + hh - 22, 4, tint(pal.gold, -0.2));
+    p.disc(x + 34, y + hh - 24, 4, tint(pal.gold, -0.2));
     p.vline(x + w - 30, y + 14, y + hh - 4, pal.metal);
     p.disc(x + w - 30, y + 12, 3, pal.metalDark);
   } else {
-    p.rect(x + 10, y + hh - 18, w - 20, 8, shade(pal.woodDark, -0.2));
+    p.rect(x + 10, y + hh - 18, w - 20, 8, tint(pal.woodDark, -0.2));
     for (let i = x + 14; i < x + w - 14; i += 5) p.put(i, y + hh - 16, pal.glow);
   }
   for (let i = 0; i < w; i += 3) if ((i * 7) % 11 < 3) p.put(x + i, y + 2 + (i % 9), withAlpha(C('#ffffff'), 90));
-  frame(p, x - 1, y - 1, w + 2, hh + 2, shade(pal.trim, -0.2));
+  frame(p, x - 1, y - 1, w + 2, hh + 2, tint(pal.trim, -0.2));
   frame(p, x - 2, y - 2, w + 4, hh + 4, pal.trim);
 }
 
@@ -73,11 +86,26 @@ function acoustic(c: BuildCtx, y1: number): void {
   if (year < 1960) { wall(p, pal, 0, y1, pal.wall, 'wainscot'); return; }
   if (year < 1980) {
     wall(p, pal, 0, y1, C('#7a5030'), 'panel'); // lambri setentista
-    for (let x = 0; x < W; x += 20) p.rect(x + 2, 6, 14, 30, shade(C('#c8782a'), (x % 40) ? -0.1 : 0.05));
+    for (let x = 0; x < W; x += 20) {
+      const pc = tint(C('#c8782a'), x % 40 ? -0.1 : 0.05);
+      p.rect(x + 1, 5, 16, 32, INK);
+      p.rect(x + 2, 6, 14, 30, pc);
+      p.hline(x + 2, x + 15, 6, lv(pc, 4));
+      p.vline(x + 2, 7, 35, lv(pc, 3.6));
+      p.vline(x + 15, 7, 35, lv(pc, 1.6));
+      p.hline(x + 2, x + 15, 35, lv(pc, 1.2));
+    }
     return;
   }
   wall(p, pal, 0, y1, year >= 2010 ? C('#3a3a40') : C('#2c2a34'), 'plain');
-  for (let y = 4; y < y1 - 6; y += 8) for (let x = (y % 16) / 2; x < W; x += 8) p.rect(x, y, 7, 7, (x + y) % 3 ? shade(C('#3c3848'), -0.1) : C('#4a4458'));
+  for (let y = 4; y < y1 - 6; y += 8)
+    for (let x = (y % 16) / 2; x < W; x += 8) {
+      // espuma em pirâmide: lado de cima/esquerda com luz, de baixo/direita em sombra
+      const fc = (x + y) % 3 ? tint(C('#3c3848'), -0.1) : C('#4a4458');
+      p.rect(x, y, 7, 7, fc);
+      for (let k = 0; k < 7; k++) { p.put(x + k, y + k, lv(fc, 2)); if (k < 6) p.put(x + k + 1, y + k, lv(fc, 3.8)); }
+      p.hline(x, x + 6, y + 6, lv(fc, 1));
+    }
   if (year >= 1980 && year < 1990) for (let x = 0; x < W; x += 2) p.put(x, 2, withAlpha(C('#ff4fd8'), 200)); // neon
 }
 
@@ -96,8 +124,8 @@ export function studioControl(c: BuildCtx): void {
   // monitores
   box(p, 46, 40, 12, 18, BLACK, 2);
   box(p, 198, 40, 12, 18, BLACK, 2);
-  p.disc(52, 52, 3, shade(pal.metal, -0.3));
-  p.disc(204, 52, 3, shade(pal.metal, -0.3));
+  p.disc(52, 52, 3, tint(pal.metal, -0.3));
+  p.disc(204, 52, 3, tint(pal.metal, -0.3));
   if (year >= 1950) meters(c, 102, 64, 9, year < 1980 ? C('#ffd040') : C('#40ff80'));
   desk(c, 128, 108);
   if (year >= 2030) prop(c, 'holo', 150, 96);
@@ -115,10 +143,10 @@ export function studioLive(c: BuildCtx): void {
   glass(c, 90, 8, 76, 36, 'control');
   floor(p, 70, pal.floors.studio.a, pal.floors.studio.b, year >= 1960 && year < 1980 ? 'carpet' : 'boards');
   // tapete persa sob a bateria
-  p.ellipse(52, 112, 40, 12, shade(pal.fabric, -0.15));
+  p.ellipse(52, 112, 40, 12, tint(pal.fabric, -0.15));
   p.ellipse(52, 112, 34, 9, pal.fabric);
   // biombos
-  for (const bx of [8, 222]) { box(p, bx, 46, 26, 40, shade(pal.fabric2, -0.2), 2); for (let y = 50; y < 84; y += 4) p.hline(bx + 2, bx + 23, y, shade(pal.fabric2, -0.35)); }
+  for (const bx of [8, 222]) { box(p, bx, 46, 26, 40, tint(pal.fabric2, -0.2), 2); for (let y = 50; y < 84; y += 4) p.hline(bx + 2, bx + 23, y, tint(pal.fabric2, -0.35)); }
   if (year < 1950) {
     // banda em volta de um único microfone
     prop(c, 'mic', 128, 104);
@@ -144,16 +172,16 @@ export function studioLive(c: BuildCtx): void {
 export function home(c: BuildCtx, garage: boolean): void {
   const { p, pal, year } = c;
   if (garage) {
-    wall(p, pal, 0, 78, shade(pal.wall, -0.15), year < 1960 ? 'brick' : 'plain');
+    wall(p, pal, 0, 78, tint(pal.wall, -0.15), year < 1960 ? 'brick' : 'plain');
     // portão de enrolar
-    box(p, 150, 8, 66, 62, shade(pal.metal, -0.2), 0);
-    for (let y = 10; y < 70; y += 4) p.hline(151, 214, y, shade(pal.metal, -0.4));
+    box(p, 150, 8, 66, 62, tint(pal.metal, -0.2), 0);
+    for (let y = 10; y < 70; y += 4) p.hline(151, 214, y, tint(pal.metal, -0.4));
     p.rect(151, 60, 64, 10, withAlpha(C('#ffe8a0'), 120)); // luz do dia por baixo
     posters(p, 8, 14, 5, pal, year);
     shelf(p, 66, 18, 40, 40, pal, 9);
     floor(p, 78, pal.floors.garage.a, pal.floors.garage.b, 'concrete');
     // mancha de óleo
-    p.ellipse(120, 126, 14, 3, shade(pal.floors.garage.a, -0.25));
+    p.ellipse(120, 126, 14, 3, tint(pal.floors.garage.a, -0.25));
     prop(c, 'drumkit', 50, 108);
     prop(c, 'amp', 96, 102);
     prop(c, 'mic', 124, 118);
@@ -174,7 +202,7 @@ export function home(c: BuildCtx, garage: boolean): void {
   curtain(p, 150, 8, 10, 44, pal.fabric);
   // pôsteres da época
   if (year >= 1960) posters(p, 172, 16, 6, pal, year + 3);
-  else { frame(p, 180, 18, 30, 22, pal.gold); p.rect(181, 19, 28, 20, shade(pal.fabric2, -0.1)); }
+  else { frame(p, 180, 18, 30, 22, pal.gold); p.rect(181, 19, 28, 20, tint(pal.fabric2, -0.1)); }
   floor(p, 80, pal.floors.lounge.a, pal.floors.lounge.b, year >= 1960 && year < 1980 ? 'carpet' : 'boards');
   // cama/sofá
   box(p, 20, 98, 70, 18, year >= 1960 && year < 1980 ? C('#c8782a') : pal.fabric2, 5);
@@ -204,7 +232,7 @@ function stereo(c: BuildCtx, x: number, y: number): void {
   if (year < 1946) { prop(c, 'gramophone', x + 22, y + 20); return; }
   if (year < 1960) { box(p, x + 8, y + 4, 28, 16, pal.wood, 2); p.disc(x + 16, y + 12, 4, pal.paper); p.rect(x + 24, y + 8, 10, 3, pal.glow); return; }
   if (year < 1980) { box(p, x + 4, y + 2, 36, 18, C('#c8c0b0'), 3); p.ellipse(x + 22, y, 12, 2, BLACK); for (const k of [10, 34]) p.disc(x + k, y + 13, 4, BLACK); return; }
-  if (year < 1995) { box(p, x + 4, y + 6, 36, 14, BLACK, 2); for (const k of [11, 33]) p.disc(x + k, y + 13, 5, shade(pal.metal, -0.3)); p.rect(x + 18, y + 9, 8, 6, pal.screen); return; }
+  if (year < 1995) { box(p, x + 4, y + 6, 36, 14, BLACK, 2); for (const k of [11, 33]) p.disc(x + k, y + 13, 5, tint(pal.metal, -0.3)); p.rect(x + 18, y + 9, 8, 6, pal.screen); return; }
   if (year < 2010) { box(p, x + 10, y + 6, 24, 14, C('#d0d4dc'), 2); p.rect(x + 13, y + 9, 18, 8, pal.screen); return; }
   box(p, x + 6, y + 10, 10, 10, BLACK, 1);
   box(p, x + 28, y + 10, 10, 10, BLACK, 1);
@@ -215,38 +243,38 @@ function stereo(c: BuildCtx, x: number, y: number): void {
 export function city(c: BuildCtx, cityId: string): void {
   const { p, pal, year } = c;
   const night = c.variant % 2 === 1;
-  sky(p, 0, 62, night ? C('#141a38') : pal.sky, night ? C('#3a2a5a') : shade(pal.sky, 0.25));
+  sky(p, 0, 62, night ? C('#141a38') : pal.sky, night ? C('#3a2a5a') : tint(pal.sky, 0.25));
   // prédios genéricos: crescem com o século
   const maxH = 14 + Math.min(44, Math.max(0, (year - 1920) * 0.4));
   for (let i = 0, x = 0; x < W; i++) {
     const bw = 10 + ((i * 37 + cityId.length * 11) % 16);
     const bh = Math.round(8 + ((i * 53 + cityId.charCodeAt(0)) % 100) / 100 * maxH);
-    const col = shade(night ? C('#232a44') : C('#7a7c8c'), ((i % 3) - 1) * 0.08);
+    const col = tint(night ? C('#232a44') : C('#7a7c8c'), ((i % 3) - 1) * 0.08);
     p.rect(x, 62 - bh, bw - 1, bh, col);
-    for (let wy = 64 - bh; wy < 60; wy += 3) for (let wx = x + 2; wx < x + bw - 3; wx += 3) if ((wx * 13 + wy * 7) % 5 < (night ? 2 : 1)) p.put(wx, wy, night ? C('#ffd889') : shade(col, 0.3));
+    for (let wy = 64 - bh; wy < 60; wy += 3) for (let wx = x + 2; wx < x + bw - 3; wx += 3) if ((wx * 13 + wy * 7) % 5 < (night ? 2 : 1)) p.put(wx, wy, night ? C('#ffd889') : tint(col, 0.3));
     if (year >= 2005 && i % 7 === 3) { p.rect(x + 1, 64 - bh, bw - 3, 6, pal.accent2); c.blinks.push({ x: x + 1, y: 64 - bh, w: bw - 3, h: 6, col: withAlpha(pal.glow, 120), rate: 0.6 }); }
     x += bw;
   }
   for (const lm of landmarks14(cityId, year)) landmark(c, lm, night);
   // rua: casa de shows, loja de discos, prédio da rádio
-  floor(p, 62, shade(pal.wall, -0.1), shade(pal.wall, -0.2), 'concrete', 66);
-  box(p, 6, 66, 84, 52, shade(pal.wall2, -0.15), 0);
+  floor(p, 62, tint(pal.wall, -0.1), tint(pal.wall, -0.2), 'concrete', 66);
+  box(p, 6, 66, 84, 52, tint(pal.wall2, -0.15), 0);
   p.rect(10, 70, 76, 12, BLACK);
   sign(p, 48, 72, year < 1960 ? 'SHOW HOJE' : year < 2000 ? 'AO VIVO' : 'LIVE', pal.glow, BLACK);
   for (let x = 12; x < 86; x += 4) c.blinks.push({ x, y: 69, w: 2, h: 1, col: withAlpha(pal.lamp, 255), rate: 2 + (x % 3) * 0.3 });
-  p.rect(36, 94, 24, 24, shade(pal.wood, -0.3));
+  p.rect(36, 94, 24, 24, tint(pal.wood, -0.3));
   box(p, 92, 72, 72, 46, C('#8a5a3a'), 0);
-  sign(p, 128, 76, year >= 1985 && year < 2008 ? 'CDS' : 'DISCOS', pal.paper, shade(pal.accent, -0.2));
+  sign(p, 128, 76, year >= 1985 && year < 2008 ? 'CDS' : 'DISCOS', pal.paper, tint(pal.accent, -0.2));
   p.rect(98, 88, 60, 22, pal.glass);
   for (let i = 0; i < 4; i++) { p.rect(102 + i * 14, 92, 10, 10, [pal.accent, pal.accent2, pal.gold, pal.fabric][i]); p.disc(107 + i * 14, 97, 2, BLACK); }
-  box(p, 166, 50, 86, 68, shade(pal.metal, -0.25), 0);
+  box(p, 166, 50, 86, 68, tint(pal.metal, -0.25), 0);
   for (let y = 56; y < 110; y += 8) for (let x = 172; x < 246; x += 10) p.rect(x, y, 6, 5, night ? C('#ffd889') : pal.glass);
   // antena: rádio / TV / antena 5G
   p.vline(208, 18, 50, pal.metalDark);
   p.line(200, 50, 208, 22, pal.metalDark);
   p.line(216, 50, 208, 22, pal.metalDark);
   c.blinks.push({ x: 207, y: 16, w: 3, h: 3, col: C('#ff3030'), rate: 1 });
-  sign(p, 209, 52, year < 1950 ? 'RADIO' : year < 2010 ? 'RADIO TV' : 'STREAM', pal.paper, shade(pal.accent2, -0.2));
+  sign(p, 209, 52, year < 1950 ? 'RADIO' : year < 2010 ? 'RADIO TV' : 'STREAM', pal.paper, tint(pal.accent2, -0.2));
   floor(p, 118, C('#4a4850'), C('#3e3c44'), 'asphalt');
   for (let x = 0; x < W; x += 22) p.rect(x, 132, 10, 2, C('#e8e0b0'));
   car(c, 30 + (c.variant * 40) % 120, 128);
@@ -265,7 +293,7 @@ function car(c: BuildCtx, x: number, y: number): void {
   const len = year < 1946 ? 26 : year < 1980 ? 40 : 34;
   p.rect(x, y - 8, len, 6, col);
   if (year < 1946) p.rect(x + 8, y - 15, 14, 7, col);
-  else p.poly([[x + 8, y - 8], [x + len - 8, y - 8], [x + len - 12, y - 14], [x + 12, y - 14]], shade(col, -0.1));
+  else p.poly([[x + 8, y - 8], [x + len - 8, y - 8], [x + len - 12, y - 14], [x + 12, y - 14]], tint(col, -0.1));
   if (year >= 1950 && year < 1960) p.line(x + len - 2, y - 10, x + len, y - 13, col); // rabo de peixe
   p.disc(x + 7, y - 2, 3, BLACK);
   p.disc(x + len - 7, y - 2, 3, BLACK);
@@ -276,7 +304,7 @@ function landmark(c: BuildCtx, id: string, night: boolean): void {
   const { p } = c;
   const ink = night ? C('#0e1226') : C('#4a4c5c');
   switch (id) {
-    case 'eiffel': p.poly([[118, 62], [138, 62], [129, 6], [127, 6]], ink); p.rect(122, 40, 12, 2, ink); p.disc(128, 60, 5, night ? C('#141a38') : shade(c.pal.sky, 0.1)); break;
+    case 'eiffel': p.poly([[118, 62], [138, 62], [129, 6], [127, 6]], ink); p.rect(122, 40, 12, 2, ink); p.disc(128, 60, 5, night ? C('#141a38') : tint(c.pal.sky, 0.1)); break;
     case 'bigben': p.rect(30, 12, 10, 50, ink); p.poly([[29, 12], [41, 12], [35, 2]], ink); p.disc(35, 20, 3, C('#f0e0a0')); break;
     case 'eye': p.ring(200, 38, 18, ink); for (let a = 0; a < 8; a++) p.line(200, 38, 200 + Math.round(Math.cos(a) * 18), 38 + Math.round(Math.sin(a) * 18), ink); break;
     case 'shard': p.poly([[150, 62], [166, 62], [159, 4]], C('#8a98b0')); break;
@@ -313,11 +341,11 @@ export function press(c: BuildCtx): void {
     for (let y = 6; y < 74; y += 14) for (let x = (y % 28) ? 0 : 14; x < W; x += 28) sign(p, x + 12, y, 'PRESS', pal.accent2, C('#f0eee8'));
   } else {
     wall(p, pal, 0, 80, pal.wall, pal.wallKind);
-    curtain(p, 0, 0, W, 76, shade(pal.fabric, -0.1), false);
+    curtain(p, 0, 0, W, 76, tint(pal.fabric, -0.1), false);
   }
   floor(p, 80, pal.floors.office.a, pal.floors.office.b, 'carpet');
   // mesa / púlpito
-  table(c.f, 72, 100, 112, 14, pal.woodDark, shade(pal.fabric2, -0.2));
+  table(c.f, 72, 100, 112, 14, pal.woodDark, tint(pal.fabric2, -0.2));
   const mics = year < 1950 ? 1 : year < 1970 ? 3 : year < 2010 ? 7 : 4;
   for (let i = 0; i < mics; i++) {
     const x = 128 - (mics - 1) * 5 + i * 10;
