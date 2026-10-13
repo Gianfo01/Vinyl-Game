@@ -49,6 +49,8 @@ export interface Relic {
 export interface Relics9State { list: Relic[] }
 /** Rodada 12 (hype12): multiplicador de preço pelo hype da peça. */
 export const relicHook: { f: (s: GameState, rl: Relic) => number } = { f: () => 1 };
+/** R29 (relics29): peças que a poda do teto de 90 não tira (as procedurais, que já têm teto e poda próprios). */
+export const relicKeep9: { f: (s: GameState, rl: Relic) => boolean } = { f: () => false };
 declare module '../ext4' { interface Ext4 { relics9: Relics9State } }
 registerExt4('relics9', () => ({ list: [] }));
 export function relics(s: GameState): Relics9State {
@@ -68,16 +70,17 @@ export const RELIC_KIND: Record<RelicKind, L> = {
 export const RELIC_ST: Record<RelicStatus, L> = {
   kept: l('com o dono', 'with its owner'), auction: l('em leilão', 'at auction'), stolen: l('roubada', 'stolen'), lost: l('perdida', 'lost'), museum: l('em museu', 'in a museum'), player: l('no seu acervo', 'in your collection'),
 };
-const COLLECTORS = ['Hartmann', 'Sato', 'Okafor', 'Delacroix', 'Moreira', 'Lindqvist', 'Castellano', 'Brandt', 'Ivanova', 'Whitlock'];
+export const COLLECTORS = ['Hartmann', 'Sato', 'Okafor', 'Delacroix', 'Moreira', 'Lindqvist', 'Castellano', 'Brandt', 'Ivanova', 'Whitlock'];
 
-export function addRelic(s: GameState, k: RelicKind, n: L, actId: string | undefined, pid: string | undefined, v: number, y = s.year): Relic {
+/** `id` opcional (r29): o relics29 usa ids próprios para não mexer no contador global de ids do jogo. */
+export function addRelic(s: GameState, k: RelicKind, n: L, actId: string | undefined, pid: string | undefined, v: number, y = s.year, id?: string): Relic {
   const st = relics(s);
   const owner = (pid && nameOf(s, pid)) || (actId && nameOf(s, actId)) || '?';
-  const rl: Relic = { id: nextId(s, 'rl'), k, n, a: actId, p: pid, y, own: [[owner, y, 'origem']], st: 'kept', v: Math.round(v) };
+  const rl: Relic = { id: id ?? nextId(s, 'rl'), k, n, a: actId, p: pid, y, own: [[owner, y, 'origem']], st: 'kept', v: Math.round(v) };
   st.list.push(rl);
   if (st.list.length > 90) { // r18: mais fontes de peças — descarta perdida, senão a de menor valor fora do seu acervo
     let i = st.list.findIndex((x) => x.st === 'lost' && !x.rr);
-    if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'player' && x.st !== 'auction' && !x.rr && (i < 0 || x.v < st.list[i].v)) i = j; }
+    if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'player' && x.st !== 'auction' && !x.rr && !relicKeep9.f(s, x) && (i < 0 || x.v < st.list[i].v)) i = j; }
     if (i >= 0) st.list.splice(i, 1);
   }
   return rl;
@@ -104,7 +107,7 @@ export function relicPrice(s: GameState, rl: Relic): number {
 /** Lance inicial do leilão (dinheiro do jogo). */
 export const openingBid = (s: GameState, rl: Relic): number => money(s, rl.v * relicHook.f(s, rl));
 export const ownerName = (rl: Relic): string => rl.own[rl.own.length - 1]?.[0] ?? '?';
-const MUSEUMS = ['Museu do Som', 'Arquivo Nacional da Música', 'Hall dos Ecos'];
+export const MUSEUMS = ['Museu do Som', 'Arquivo Nacional da Música', 'Hall dos Ecos'];
 const roll = (s: GameState, rl: Relic, what: string): number => (hashString(`${s.config.seed}|rl11|${what}|${rl.id}|${s.week}`) % 1000) / 1000;
 const find = (s: GameState, id: string) => relics(s).list.find((x) => x.id === id);
 

@@ -34,6 +34,13 @@ export function registerContractHook(id: string, h: ContractHook): void {
 }
 import { renewalAdj, rightsScore, scopeTerritories, signingTrust } from './rights';
 
+/** R29 (integrante B): atos em negociação que ainda não existem no mundo (a banda montada pela oferta, sys/member29) —
+ *  sem disputa de rival (ninguém disputa uma banda que não existe) e com resposta na hora (sem "pensar"). */
+// lista guardada numa função (hoisted), como contractHooks: sistemas carregados antes deste módulo terminar já registram
+function pendingList29(): ((s: GameState, act: Act) => boolean)[] { const f = pendingList29 as unknown as { l?: ((s: GameState, act: Act) => boolean)[] }; return (f.l ??= []); }
+export function registerPending29(f: (s: GameState, act: Act) => boolean): void { pendingList29().push(f); }
+export function pending29(s: GameState, act: Act): boolean { return pendingList29().some((f) => f(s, act)); }
+
 export function expectedAdvance(s: GameState, act: Act): number {
   // dólares reais
   let v = 800 + act.fame * act.fame * 30 + act.fame * 150;
@@ -189,7 +196,7 @@ export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer[
   const ev = evaluateOffer(s, act, o);
   // rival disputa atos públicos. r28 (C7): também na oferta ao vivo de ato com fama > 10; o rival tem reserva
   // própria (fama percebida, não o seu lance) e pode cobrir a sua proposta num sorteio (sys/rivalsense28)
-  const rivalBid = (!live || act.fame > 10) && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
+  const rivalBid = !pending29(s, act) && (!live || act.fame > 10) && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
   if (rivalBid) {
     const won = rivalContest28(s, r, act, o, ev.score, live);
     if (won) {
@@ -203,7 +210,7 @@ export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer[
     }
   }
   // na hora: quem está em dúvida pede alguns dias para pensar (uma vez)
-  if (live && o.thinkUntil === undefined && ev.p > 0.3 && ev.p < 0.72 && r.chance(0.45)) {
+  if (live && o.thinkUntil === undefined && !pending29(s, act) && ev.p > 0.3 && ev.p < 0.72 && r.chance(0.45)) {
     o.thinkUntil = s.week + r.int(1, 2);
     o.note = 'thinking';
     const kn = s.knowledge[act.id];

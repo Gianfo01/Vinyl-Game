@@ -41,7 +41,8 @@ import { CTXHOOK27, ctxMenu27, menuSections27, type CtxEnv27, type CtxItem27, ty
 import { CRIMES17, approachOrg, reportOrg, toggleLaunder } from '../../sim/sys/crime17';
 import { leaderOf } from '../../sim/sys/leaders10';
 import { runPA18 } from '../sys/personact18';
-import { crimeForm17, presetCrimeFor29 } from '../sys/crimeform29';
+import { crimeForm17, presetCrimeFor29, presetHire29 } from '../sys/crimeform29';
+import { doMob29, fulfill29, hire29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
 import { runMember29 } from '../sys/member29';
 import { memberFeatPreset29 } from '../../sim/sys/member29';
 import { isEnt27, type Ent27 } from './ent27';
@@ -178,11 +179,26 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
       if (item.id.startsWith('mo.') && key.startsWith('mo29:')) { runMember29(s, key.slice(5), item.id); return; } // R29 (integrante)
       if (item.id.startsWith('pa:')) { runPA18(s, key, item.id.slice(3), (txt, ok) => { toast(txt, ok ? 'good' : 'bad'); rerender(); }); return; }
       if (item.id.startsWith('a20:')) { chooseAction20(s, item.id.slice(4), id, anchor); return; }
+      if (mobRun29(s, m, item, anchor)) return; // r29 Submundo: famílias (ctxmob29 → sim/sys/mob29)
       if (item.id.startsWith('crime.plan:')) { presetCrimeFor29(s, item.id.slice(11), id); goArea(s, 'crime', ['crime17', 'plans']); return; }
       return;
   }
 }
 CTXHOOK27.run = (s, m, item, anchor) => run(s, m, item, anchor);
+
+/** r29 (Submundo): itens das famílias — as mesmas funções do card da organização e do planejador (sim/sys/mob29). */
+function mobRun29(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): boolean {
+  const id = item.id;
+  const res = (r: { ok: boolean; text: L }) => { toast(T(r.text), r.ok ? 'good' : 'bad'); rerender(); };
+  if (id.startsWith('org29:')) { const oid = id.slice(6); setTimeout(() => openCtx27(s, 'org', oid, anchor), 0); return true; }
+  if (id.startsWith('mob.hire:')) { const oid = id.slice(9); const target = m.ent === 'org' ? '' : m.id; setTimeout(() => openCtx27(s, 'org', `hire29:${oid}|${target}`, anchor), 0); return true; }
+  if (id.startsWith('mob.job:')) { const [oid, target = ''] = m.id.slice(7).split('|'); res(hire29(s, oid, id.slice(8), target)); return true; }
+  if (id.startsWith('mob.plan:')) { const oid = m.id.slice(7).split('|')[0]; presetHire29(oid, id.slice(9)); goArea(s, 'crime', ['crime17', 'plans']); return true; }
+  if (id.startsWith('mob.do:')) { res(doMob29(s, m.id, id.slice(7))); return true; }
+  if (id.startsWith('mob.ask:')) { res(fulfill29(s, id.slice(8))); return true; }
+  if (id.startsWith('mob.refuse:')) { res(refuse29(s, id.slice(11))); return true; }
+  return id.startsWith('mob.');
+}
 
 // ---------------------------------------------------------------- o menu
 

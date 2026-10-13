@@ -64,9 +64,10 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R29 (feat de pessoa, de propósito — docs/feat29.md): atos NPC creditam pessoas (integrante/solo/músico de estúdio)
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
-    expect(AFTER.player.cash).toBe(450730);
+    // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
+    expect(AFTER.player.cash).toBe(450735);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2126210917);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
     expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
   });
   it('nada de estado P2B criado sem o jogador', () => {

@@ -23,7 +23,7 @@ import { familyOf, l, type L } from '../../data/world';
 import { staffRoleById } from '../../data/rules';
 import { hqCaps } from '../branches';
 import { fileLawsuit } from '../business';
-import { defaultOffer, evaluateOffer, expectedAdvance } from '../contracts';
+import { defaultOffer, evaluateOffer, expectedAdvance, registerPending29 } from '../contracts';
 import { soloActFrom29 } from '../dynasty';
 import { registerExt4, registerOfferMod, registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
@@ -36,7 +36,7 @@ import { admiration, bondCost, formBond } from './bonds9';
 import { personFame } from './fame15';
 import { clearance, featSongs } from './feats8';
 import { featPersonBlock29 } from './featp29';
-import { departNpc16, freePool, joinBand, l16, leaveBand16, newBand16, pressure16, WHY16 } from './lineup16';
+import { announceBand16, buildBand16, departNpc16, freePool, joinBand, l16, leaveBand16, pressure16, WHY16, type Why16 } from './lineup16';
 import { careerActs29 } from './connect29';
 import { rw } from './realworld';
 import { opinionOf } from './persona13';
@@ -49,7 +49,9 @@ export type MoKind29 = 'solo' | 'join' | 'session' | 'side' | 'staff' | 'ghost' 
 export type MoMode29 = 'free' | 'buyout' | 'tamper';
 export const MO29_RNG = 'member29v1';
 
-interface Shell29 { pid: string; from: string; w: number; lb?: string; mode: MoMode29; buy: number }
+/** Banda em montagem (R29 B): o que desfazer se o contrato não fechar e o anúncio para quando fechar. */
+interface Band29 { gen: string[]; free: Record<string, [number, string, Why16]>; rel: [string, string, number | null][]; text: L; big: boolean; important: boolean }
+interface Shell29 { pid: string; from: string; w: number; lb?: string; mode: MoMode29; buy: number; kind?: 'solo' | 'band'; band?: Band29 }
 export interface Mo29Log { w: number; y: number; pid: string; k: MoKind29; ok: boolean; t: L }
 export interface Mo29State {
   /** solo-proposta em negociação: ato → de onde veio */
@@ -217,6 +219,11 @@ registerOfferMod('member29', (s, act) => {
   if (!sh) return null;
   const p = s.persons[sh.pid], band = sh.from ? s.acts[sh.from] : undefined;
   if (!p || (sh.from && !band)) return null;
+  if (sh.kind === 'band') {
+    const fb = bandFactors29(s, p);
+    const tb = [...fb].sort((a, b) => Math.abs(b.v) - Math.abs(a.v)).slice(0, 3);
+    return { delta: sum(fb), reason: l(`Montar ${act.name} com ${p.name}: ${tb.map((f) => `${f.t.pt} ${sg(f.v)}`).join('; ') || 'neutro'}`, `Forming ${act.name} around ${p.name}: ${tb.map((f) => `${f.t.en} ${sg(f.v)}`).join('; ') || 'neutral'}`) };
+  }
   const fs = factors29(s, p, band, 'solo', sh.mode);
   const top = [...fs].sort((a, b) => Math.abs(b.v) - Math.abs(a.v)).slice(0, 3).map((f) => `${f.t.pt} ${sg(f.v)}`).join('; ');
   const topEn = [...fs].sort((a, b) => Math.abs(b.v) - Math.abs(a.v)).slice(0, 3).map((f) => `${f.t.en} ${sg(f.v)}`).join('; ');
@@ -348,6 +355,7 @@ export function settleMember29(s: GameState): Settled29[] {
   for (const [id, sh] of Object.entries(st.sh)) {
     const a = s.acts[id];
     if (!a) { delete st.sh[id]; continue; }
+    if (sh.kind === 'band') { if (a.owner === 'player') out.push(finalizeBand(s, id, sh)); else dissolveBand(s, id, sh); continue; } // a banda não atravessa o tempo sem contrato
     if (a.owner) { out.push(finalizeSolo(s, id, sh)); continue; }
     const open = s.offers.some((o) => o.actId === id && (o.status === 'pending' || o.status === 'counter'));
     const p = s.persons[sh.pid];
@@ -357,6 +365,8 @@ export function settleMember29(s: GameState): Settled29[] {
   return out;
 }
 export const shells29 = (s: GameState): string[] => Object.keys(mo29(s).sh);
+/** O ato é uma proposta da oferta a integrante/pessoa (solo ou banda em montagem)? A mesa r27 conta como importante (flow27). */
+export const memberOffer29 = (s: GameState, actId: string): boolean => !!(s.x4 as unknown as { mo29?: Mo29State }).mo29?.sh?.[actId];
 
 // ---------------------------------------------------------------- 2) entrar numa banda sua
 
@@ -642,41 +652,92 @@ export function memberGhost29(s: GameState, pid: string, actId: string): MoOut29
 
 // ---------------------------------------------------------------- 6) sem banda: montar uma banda em volta da pessoa (lineup16)
 
-/** Audições para montar a banda (o mesmo valor do "Formar banda" da carreira de músico, sys/life). */
+/** Audições para montar a banda (o mesmo valor do "Formar banda" da carreira de músico, sys/life). Gastas mesmo sem acordo. */
 export const bandFee29 = (s: GameState): number => money(s, 800);
-export function bandChance29(s: GameState, pid: string): Chance29 {
-  const p = s.persons[pid];
-  if (!p || !freeAgent29(s, pid)) return { p: 0, why: [] };
+/** Fatores da pessoa para topar uma banda nova (entram no placar de evaluateOffer, como no solo). */
+function bandFactors29(s: GameState, p: Person): Factor29[] {
   const fs = factors29(s, p, undefined, 'join', 'free');
-  fs.push(F(T('Reputação com artistas ({r})', 'Reputation with artists ({r})', { r: Math.round(s.player.reputation.artists) }), (s.player.reputation.artists - 50) / 500));
   if (p.goal === 'solo') fs.push(F(l('Prefere carreira solo', 'Would rather go solo'), -0.06));
   if (p.goal === 'leadership') fs.push(F(l('Quer liderar', 'Wants to lead'), 0.05));
-  return chanceOf(0.04, l('Base: uma banda nova com o seu selo por trás', 'Base: a new band with your label behind it'), fs.filter((f) => Math.abs(f.v) >= 0.004));
+  return fs.filter((f) => Math.abs(f.v) >= 0.004);
 }
-/** Monta uma banda nova com a pessoa e músicos livres do mercado (newBand16; vagas restantes = gente nova). Nasce sem
- *  contrato (como os supergrupos do bonds9): a interface abre a proposta de sempre para ela. */
-export function memberBand29(s: GameState, pid: string): MoOut29 {
-  if (s.config.role === 'artist') return fail(LABEL_ONLY);
-  const b0 = memberBlock29(s, pid) ?? cdBlock(s, pid, 'band');
-  if (b0) return fail(b0);
-  if (bandOf29(s, pid)) return fail(l('Já está numa banda.', 'Already in a band.'));
+/** Chance estimada da proposta padrão para a banda (sem criar nada): evaluateOffer numa banda virtual + fatores. */
+export function bandChance29(s: GameState, pid: string): Chance29 {
   const p = s.persons[pid], mold = refAct29(s, pid);
-  if (!mold) return fail(l('Sem referência de gênero e cidade para a banda.', 'No genre/city reference for the band.'));
+  if (!p || !mold || !freeAgent29(s, pid)) return { p: 0, why: [] };
+  const v: Act = { ...structuredClone(mold), id: `${mold.id}~mo29b`, playerBand: undefined, trust: 50, members: [p.id], leaderId: p.id, owner: null, contractId: undefined, status: 'emerging', fame: clamp(personFame(s, pid).v * 0.3, 0, 30) };
+  let score = 0.58;
+  try { score = evaluateOffer(s, v, defaultOffer(s, v)).score; } catch { /* placar neutro */ }
+  return chanceOf(score - 0.58, l('Proposta padrão para a banda nova', 'Standard offer for the new band'), bandFactors29(s, p));
+}
+/** Banda em montagem: um ato existe só enquanto a mesa está aberta (para a mesa de sempre e o evaluateOffer) — sem dono,
+ *  sem anúncio, sem disputa de rival (contracts.pending29), com os músicos reservados (estão nela: o lineup16 não os
+ *  oferece a outras bandas). Fechou com você: vira ato de verdade e é anunciada; senão (recusa, mesa fechada, proposta
+ *  descartada, ou a primeira semana que passar), some sem deixar rastro. */
+registerPending29((s, act) => (s.x4 as unknown as { mo29?: Mo29State }).mo29?.sh?.[act.id]?.kind === 'band');
+
+/** Monta a banda da pessoa (lineup16.buildBand16: ela + até 2 músicos livres do mercado + gente nova) e devolve o ato
+ *  para a mesa de negociação. As audições são pagas aqui. */
+export function startMemberBand29(s: GameState, pid: string): { actId: string } | L {
+  if (s.config.role === 'artist') return LABEL_ONLY;
+  const b0 = memberBlock29(s, pid) ?? cdBlock(s, pid, 'band');
+  if (b0) return b0;
+  if (bandOf29(s, pid)) return l('Já está numa banda.', 'Already in a band.');
+  const p = s.persons[pid], mold = refAct29(s, pid);
+  if (!mold) return l('Sem referência de gênero e cidade para a banda.', 'No genre/city reference for the band.');
   const fee = bandFee29(s);
-  if (freeCash20(s) < fee) return fail(cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.')));
-  const ch = bandChance29(s, pid);
-  mo29(s).n++;
+  if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
+  const st = mo29(s);
+  st.n++;
   const r = rng29(s, `band:${pid}`);
-  if (!r.chance(ch.p)) return refuse(s, pid, 'band', undefined, T('{p} não quer montar banda agora ({c}% de chance).', '{p} doesn\'t want to form a band right now ({c}% odds).', { p: p.name, c: Math.round(ch.p * 100) }));
-  post(s, `mo29band:${pid}:${s.week}`, -fee, 'artist_dev', `Audições: banda de ${p.name}`);
+  post(s, `mo29band:${pid}:${s.week}:${st.n}`, -fee, 'artist_dev', `Audições: banda de ${p.name}`);
   const partners = r.shuffle(freePool(s, mold.genre, mold.id).filter((q) => q.id !== pid && q.role !== p.role)).slice(0, 2);
-  const b = newBand16(s, r, p, mold, partners);
-  if (b.genre !== mold.genre) b.genre = mold.genre;
-  delete l16(s).free[pid];
-  const txt = T('{p} monta a banda {b} com o apoio de {c}.', '{p} forms the band {b} backed by {c}.', { p: p.name, b: b.name, c: s.config.companyName });
-  emitFact(s, { kind: 'member_band', actors: ['player', pid, b.id], severity: clamp(15 + personFame(s, pid).v / 2, 15, 50), visibility: 'public', tags: ['member29', 'band'], text: txt, src: 'member29' });
-  logIt(s, pid, 'band', true, txt);
-  return { ok: true, text: txt, actId: b.id };
+  const crew = [p, ...partners];
+  // o que desfazer: entradas no mercado de músicos livres e relações entre a turma
+  const free: Band29['free'] = {};
+  for (const q of crew) { const f = l16(s).free[q.id]; if (f) free[q.id] = [...f] as [number, string, Why16]; }
+  const rel: Band29['rel'] = [];
+  for (const a of crew) for (const c of crew) if (a !== c) rel.push([a.id, c.id, a.rel[c.id] ?? null]);
+  const x = buildBand16(s, r, p, mold, partners);
+  const b = x.b;
+  b.genre = mold.genre;
+  b.status = 'emerging';
+  delete l16(s).boost[b.id];
+  const ids = new Set(crew.map((q) => q.id));
+  st.sh[b.id] = { pid, from: '', w: s.week, mode: 'free', buy: 0, kind: 'band', band: { gen: b.members.filter((id) => !ids.has(id)), free, rel, text: x.text, big: x.big, important: x.important } };
+  return { actId: b.id };
+}
+
+function finalizeBand(s: GameState, id: string, sh: Shell29): Settled29 {
+  const b = s.acts[id], p = s.persons[sh.pid], x = sh.band!;
+  delete mo29(s).sh[id];
+  l16(s).boost[id] = 1;
+  b.status = 'active';
+  announceBand16(s, { b, big: x.big, text: x.text, important: x.important }); // o anúncio de sempre (memória lineup/supergroup)
+  const txt = T('{p} monta a banda {b} e assina com {c}.', '{p} forms the band {b} and signs with {c}.', { p: p?.name ?? '?', b: b.name, c: s.config.companyName });
+  emitFact(s, { kind: 'member_band', actors: ['player', sh.pid, id], severity: clamp(15 + personFame(s, sh.pid).v / 2, 15, 50), visibility: 'public', tags: ['member29', 'band'], text: txt, src: 'member29' });
+  logIt(s, sh.pid, 'band', true, txt);
+  return { t: txt, ok: true, actId: id };
+}
+
+/** Sem acordo: a banda some por inteiro — ato, gente nova (nunca existiu fora da mesa), proposta e memória da mesa; a
+ *  turma volta ao mercado de músicos livres como estava e as relações voltam ao que eram. Nada de ex-integrante, ato de
+ *  carreira ou crônica (não houve anúncio). As audições ficam pagas. */
+function dissolveBand(s: GameState, id: string, sh: Shell29): void {
+  const x = sh.band!, p = s.persons[sh.pid];
+  delete s.acts[id]; delete s.soloOf[id]; delete s.delegated[id]; delete s.knowledge[id];
+  delete (s.agenda as Record<string, unknown>)[id];
+  delete l16(s).boost[id];
+  s.offers = s.offers.filter((o) => o.actId !== id);
+  const ng = (s.x4 as unknown as { nego27?: Record<string, unknown> }).nego27;
+  if (ng) delete ng[id];
+  for (const g of x.gen) delete s.persons[g];
+  for (const [pid, f] of Object.entries(x.free)) if (s.persons[pid]?.alive) l16(s).free[pid] = f;
+  for (const [a, c, v] of x.rel) { const q = s.persons[a]; if (q) { if (v === null) delete q.rel[c]; else q.rel[c] = v; } }
+  actsTouched17(s);
+  delete mo29(s).sh[id];
+  mo29(s).cd[`${sh.pid}|band`] = s.week + 8;
+  if (p) logIt(s, p.id, 'band', false, T('{p} não fechou a banda nova; segue sem banda (as audições ficaram pagas).', '{p} did not close the new band; still without one (the auditions stay paid).', { p: p.name }));
 }
 
 // ---------------------------------------------------------------- opções (menu: clique direito e ficha)
@@ -772,7 +833,7 @@ export function memberOptions29(s: GameState, pid: string): Opt29[] {
     const block = blk('band', artist, cash(fee), !refAct29(s, pid) ? l('Sem referência de gênero e cidade para a banda.', 'No genre/city reference for the band.') : null);
     const ch = block ? null : bandChance29(s, pid);
     out.push({ id: 'mo.band', k: 'band', label: T('Montar uma banda com {n}…', 'Form a band around {n}…', { n: p.name }), block, chance: ch?.p, why: ch?.why, cost: fee, sec: 'career',
-      note: l('Audições: a banda nasce com músicos livres do mercado (lineup16) e a proposta de contrato abre em seguida. Sem contrato, ela segue independente.', 'Auditions: the band is formed with free musicians from the market (lineup16) and the deal offer opens next. Unsigned, it carries on independent.') });
+      note: l('Audições (pagas mesmo sem acordo): monta a banda com músicos livres do mercado (lineup16) e abre a mesa de negociação. Só existe se o contrato fechar.', 'Auditions (paid even without a deal): forms the band with free musicians from the market (lineup16) and opens the negotiation table. It only exists if the deal closes.') });
   }
   const songs = mine.some((a) => featSongs(s, a.id).length);
   // R29 (feat de pessoa): o convidado é a PESSOA (não a banda inteira) — o feat negociado de sempre com ela pré-escolhida
@@ -797,7 +858,6 @@ export function runMemberOption29(s: GameState, pid: string, optId: string): MoO
     case 'mo.side': return memberSide29(s, pid, rest[0]);
     case 'mo.staff': return memberStaff29(s, pid, rest[0] as StaffRole29);
     case 'mo.ghost': return memberGhost29(s, pid, rest[0]);
-    case 'mo.band': return memberBand29(s, pid);
     default: return fail(l('Ação indisponível.', 'Action unavailable.'));
   }
 }

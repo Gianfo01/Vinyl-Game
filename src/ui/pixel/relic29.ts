@@ -17,12 +17,12 @@ const RULES: [RegExp, RelicArt29][] = [
   [/cavaquinho|ukulele|\buke\b|charango/, 'cavaquinho'], [/sitar|cítara|citara|\boud\b|bouzouki|buzuqui|alaúde|alaude/, 'sitar'], [/boombox|ghetto blaster|rádio-gravador|radio-gravador|boom box/, 'boombox'],
   [/walkman|discman|ipod|mp3/, 'walkman'], [/backstage|laminate|credencial|crachá|cracha|all access|\bpass\b/, 'pass'], [/\bpick\b|palheta|plectr/, 'pick'],
   [/pandeiro|tamborim|tambourine|pandeireta/, 'pandeiro'], [/flyer|panfleto|filipeta/, 'flyer'], [/\bmpc\b|sampler|sp-1200|sp1200/, 'sampler'], [/keytar/, 'keytar'],
-  [/\bneon\b|letreiro|marquee sign/, 'neonsign'], [/phone|telefone|celular|orelhão|orelhao/, 'phone'], [/scarf|lenço|lenco|bandana/, 'scarf'],
+  [/\bneon\b|letreiro|marquee sign/, 'neonsign'], [/\bphone\b|telephone|telefone|celular|orelhão|orelhao/, 'phone'], [/scarf|lenço|lenco|bandana/, 'scarf'],
 ];
 
 /** Desenho novo pela palavra do nome; ou, para peça genérica da rodada 28 ('prop'), um objeto da época (≈55%). */
 export function relicArtOf29(kind: string, name: string, year: number, seed = '', art28 = ''): RelicArt29 | null {
-  const n = name.toLowerCase();
+  const n = name.toLowerCase().replace(/"[^"]*"/g, ''); // r29 (relíquias): título entre aspas ("Noite de Neon") não escolhe o desenho
   for (const [re, a] of RULES) if (re.test(n)) return a;
   if (art28 === 'prop' && h28('r29p', seed, name) % 100 < 55) {
     const b = relicBand28(year);

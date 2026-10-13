@@ -186,7 +186,10 @@ describe('r27 M2 — show jogável', () => {
 });
 
 describe('r27 M2 — negociação jogável', () => {
-  const pickAct = (s: GameState) => Object.values(s.acts).filter((a) => !a.owner && scoutEligible20(s, a).ok && !s.offers.some((o) => o.actId === a.id)).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1))[0];
+  // R29: desde a F5 o rival disputa a assinatura de ato com fama > 10 (resolveOne), e o mundo das relíquias R29 faz o
+  // mais famoso livre do fixture cair nessa disputa. Estes testes medem a mesa (faixa, mínimo, táticas), não o rival:
+  // usam o ato livre mais famoso ATÉ fama 10 (o rival é testado à parte, com bringRival27 explícito, e no r28-f5).
+  const pickAct = (s: GameState) => Object.values(s.acts).filter((a) => !a.owner && a.fame <= 10 && scoutEligible20(s, a).ok && !s.offers.some((o) => o.actId === a.id)).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1))[0];
   const draft = (s: GameState, id: string) => { const o = defaultOffer(s, s.acts[id]); o.rights = defaultRights(o.model, o.publishing); return o; };
 
   it('determinística e sem tocar no s.rng', () => {

@@ -1,7 +1,7 @@
 // Rodada 18 (tutorial18) — ajuda de TODAS as páginas do menu (nav17 + páginas registradas por outras frentes).
 // Regra: o quê / como (com exemplo) / 1–3 dicas / páginas ligadas / termos do glossário.
 
-import { H, help18, registerHelp18 } from './help18';
+import { H, T, help18, registerHelp18 } from './help18';
 
 // ---------------------------------------------------------------- Início
 H('cockpit', ['Cockpit', 'Cockpit'],
@@ -470,3 +470,14 @@ H('review20', ['Revisão da fase do projeto', 'Project phase review'],
   [], ['project', 'releases']);
 // r20: as duas abas do Cockpit usam a mesma ajuda
 for (const tab of ['panel', 'inbox']) registerHelp18(`tab:ck20:${tab}`, help18('cockpit20')!);
+
+// R29: abas novas da ficha do artista e do dossiê do selo
+T('act', 'insp29', ['Resumo', 'Summary'],
+  ['Visão rápida do artista: formação atual, projetos, contrato, agenda e saúde, com as mesmas ações do clique direito.', 'Quick view of the act: current lineup, projects, contract, schedule and health, with the same actions as right-click.'],
+  ['Use o Resumo para decidir sem abrir cada aba. Ex.: contrato vencendo + estresse alto → renovar antes de marcar turnê.', 'Use the Summary to decide without opening every tab. E.g. contract expiring + high stress → renew before booking a tour.']);
+T('act', 'connect29', ['Conexões', 'Connections'],
+  ['Tudo o que outros sistemas registraram sobre o artista e as pessoas dele: feats, relíquias, prêmios, processos, Submundo, ex-integrantes e favores.', 'Everything other systems recorded about the act and its people: feats, relics, awards, lawsuits, underworld, former members and favors.'],
+  ['É a mesma fonte da ficha da pessoa e da wiki: se algo aparece aqui, aparece lá. Ex.: um feat com uma pessoa específica entra em "Participações".', 'Same source as the person sheet and the wiki: if it shows here, it shows there. E.g. a feat with a specific person goes under "Participations".']);
+T('label', 'facts29', ['Fatos e rivalidade', 'Facts and rivalry'],
+  ['O que o selo rival fez e sofreu: contratações, disputas com você, processos, escândalos do fundador e a reputação que os artistas enxergam.', 'What the rival label did and went through: signings, fights with you, lawsuits, founder scandals and the reputation acts see.'],
+  ['Antes de disputar um artista, veja se o rival anda processando gente ou quebrou: isso derruba o peso da proposta dele.', 'Before fighting over an act, check whether the rival has been suing people or went broke: it lowers the weight of their offer.']);

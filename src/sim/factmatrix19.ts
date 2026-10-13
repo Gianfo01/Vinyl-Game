@@ -63,7 +63,7 @@ export const WHITELIST19: Record<string, string> = {
   feud_end: 'fim de rixa (feud18): a rixa é o próprio estado',
   release_review: 'crítica do lançamento (review18): a nota já entra no lançamento; tutorial18 lê na interface',
   rumor: 'boato de crime (crime17): já nasce como boato no press9 pelo próprio crime17',
-  tour_done: 'fim de turnê (live18): balanço aplicado no live18; tutorial18 lê na interface',
+  // R29: 'tour_done' saiu da lista — relics29 ouve (turnê grande → jaqueta/credencial da turnê)
 };
 
 /** Tipos reservados dos 13 sistemas da Frente 9 (plano19) → consumidores previstos. Quando o sistema nasce e emite, o tipo

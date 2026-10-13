@@ -75,12 +75,13 @@ function myShark(s: GameState): { id: string; k: 'p' | 'c'; bal: number; missed:
 }
 
 /** Liga um empréstimo de agiota novo à organização: segredo, dívida (holds17), relação. Idempotente. */
-export function linkShark27(s: GameState): number {
+export function linkShark27(s: GameState, pick?: (loanId: string) => string | undefined): number {
   const st = shark27(s);
   let n = 0;
   for (const ln of myShark(s)) {
     if (st.L[ln.id]) continue;
-    const o = lenderOrg27(s, s.config.homeCity, ln.id);
+    const chosen = pick?.(ln.id); // r29 (mob29): empréstimo pedido a uma família específica
+    const o = (chosen ? orgById(s, chosen) : undefined) ?? lenderOrg27(s, s.config.homeCity, ln.id);
     const sec = addSecret23(s, { kind: 'shark', subject: 'player', sev: 40, ev: 45, data: { o: o?.id ?? '', amt: ln.bal, loan: ln.id }, base: { p: 4 } });
     st.L[ln.id] = { k: ln.k, o: o?.id ?? '', sec: sec.id, amt: ln.bal, miss: 0, last: ln.missed, visit: -99, w: s.week };
     if (o) {

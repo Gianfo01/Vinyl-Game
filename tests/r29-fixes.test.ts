@@ -73,6 +73,8 @@ function handled(id: string): boolean {
   if (id.startsWith('pa:')) return personActionDefs18().some((d) => d.id === id.slice(3)) && CTX_SRC.includes("startsWith('pa:')");
   if (id.startsWith('a20:')) return actions20().some((d) => d.id === id.slice(4)) && CTX_SRC.includes("startsWith('a20:')");
   if (id.startsWith('crime.plan:')) return CRIMES17.some((c) => c.id === id.slice(11)) && CTX_SRC.includes("startsWith('crime.plan:')");
+  // r29 (Submundo, famílias): itens de ps/ctxmob29 despachados por mobRun29 em ps/ctx27.ts
+  if (id.startsWith('org29:') || id.startsWith('mob.')) return CTX_SRC.includes('mobRun29(s, m, item, anchor)') && CTX_SRC.includes(`startsWith('${id.startsWith('org29:') ? 'org29:' : id.slice(0, id.indexOf(':') + 1) || id}`);
   return false;
 }
 
