@@ -17,6 +17,7 @@ import { REC_YEARS28, pickStart28, yearsFor28 } from '../../sim/start28data';
 import { SITS29, setStart29, start28Fits29, syncStart29, type Sit29 } from '../../sim/start29data';
 import { setRivals29, type Riv29 } from '../../sim/rivals29data';
 import { setLabels29, type N29, type Vn29 } from '../../sim/labels29data';
+import { LINEUP29_DEFAULT } from '../../sim/lineup29';
 
 /** Atividades oferecidas na Nova run (mesma lista e ordem da configuração completa, careers12 NG_CAREERS). */
 export const CAREERS27 = ['label', 'musician', 'manager', 'studio', 'festival', 'booking', 'venue', 'publisher', 'media', 'platform'] as const;
@@ -72,6 +73,7 @@ export function draftDefaults27(cfg: RunConfig): RunConfig {
   const c = (cfg.careers ??= { main: ['label'], origin: 'none', ambition: 'legacy' });
   cfg.role = roleFromMain(c.main);
   if (!cfg.world17) cfg.world17 = worldOf17(cfg);
+  cfg.lineup29 ??= LINEUP29_DEFAULT; // R29 (formação): cartão do mundo — formação inicial das bandas reais (só vale com nomes reais fora do exato)
   const genres = GENRES.filter((g) => g.born <= cfg.startYear).sort((a, b) => t(a.name).localeCompare(t(b.name)));
   if (!genres.find((g) => g.id === cfg.bandGenre)) cfg.bandGenre = genres[0]?.id;
   syncStart29(cfg); // r29: o cartão "Ponto de partida" mostra a situação coerente com o scenario
@@ -95,6 +97,7 @@ export function applyQuick27(cfg: RunConfig, q: QuickRun27): RunConfig {
   if (q.rivals29) setRivals29(cfg, q.rivals29); // r29: mesmo handler do cartão "Nível dos rivais" da configuração completa
   if (q.labels29n || q.labels29vn) setLabels29(cfg, { n: q.labels29n, vn: q.labels29vn }); // r29: mesmo setter do cartão "Gravadoras no início"
   cfg.difficulty = q.difficulty;
+  cfg.lineup29 = LINEUP29_DEFAULT; // R29 (formação): a Nova run rápida começa sempre com a formação mais famosa
   if (q.runYears !== undefined) cfg.runYears17 = q.runYears; // r28 (F4)
   const main = [careerOpen27(q.career, cfg.startYear) ? q.career : 'label'];
   cfg.careers = { ...(cfg.careers ?? { origin: 'none', ambition: 'legacy' }), main };

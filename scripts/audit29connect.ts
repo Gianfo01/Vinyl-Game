@@ -1,6 +1,7 @@
 // R29 (CONNECT): auditoria pessoa ↔ ato ↔ biografia ↔ formação em várias sementes × anos iniciais × mundos.
 // Uso: npx tsx scripts/audit29connect.ts [--seeds 2] [--starts 1950,1962,1975,1990,2005] [--worlds random,exact,real,chaos]
-//      [--years 0,6] [--show R1,R2c] [--json saida.json]
+//      [--years 0,6] [--show R1,R2c] [--json saida.json] [--lineup famous|original]
+// --lineup: formação inicial das bandas reais (R29 formação, config.lineup29) — sem a opção, a geração de antes.
 // Para cada combinação cria a partida, roda N anos (sandbox se quebrar) e conta os achados de src/sim/audit29.ts.
 import { writeFileSync } from 'node:fs';
 import { defaultConfig } from '../src/sim/bot';
@@ -16,6 +17,7 @@ const starts = arg('starts', '1950,1962,1975,1990,2005').split(',').map(Number);
 const worlds = arg('worlds', 'random,exact,real,chaos').split(',');
 const years = arg('years', '0,6').split(',').map(Number);
 const show = arg('show', '').split(',').filter(Boolean);
+const lineup = arg('lineup', '') as '' | 'famous' | 'original';
 const total: Record<string, number> = {};
 const rows: { seed: string; start: number; world: string; at: number; counts: Record<string, number> }[] = [];
 const ex: Record<string, Finding29[]> = {};
@@ -23,6 +25,7 @@ for (let i = 0; i < seeds; i++) for (const start of starts) for (const world of 
   const seed = `r29c-${i}`;
   const cfg = defaultConfig(seed, { startYear: start });
   applyWorld17(cfg, world);
+  if (lineup) cfg.lineup29 = lineup;
   const s = createGame(cfg);
   let y = 0;
   for (const target of years) {
