@@ -196,7 +196,7 @@ export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () =
 function lineupPick29(cfg: RunConfig, changed: () => void): HTMLElement | null {
   if (!lineupApplies29(cfg)) return null;
   const cur = cfg.lineup29 ?? LINEUP29_DEFAULT;
-  return h('fieldset', { class: 'ng20-fs ng29-lineup', 'data-lineup29': cur },
+  return h('fieldset', { class: 'ng20-fs ng29-lineup', 'data-lineup29-cur': cur },
     h('legend', null, h('b', null, t(l('Formação inicial das bandas reais', 'Starting lineup of real bands'))), ' ',
       helpTip(l('Com quem cada banda real começa nesta partida. Nos dois casos ninguém entra ou sai por roteiro: depois do começo, as trocas de formação são da simulação. Os integrantes reais que ficam de fora existem no mundo sem banda (dá para encontrá-los, contratá-los e chamá-los para bandas, feats e sessões) e não aparecem como ex-integrantes.', 'Who each real band starts with in this run. Either way nobody joins or leaves by script: after the start, lineup changes come from the simulation. Real members left out exist in the world without a band (you can find, sign and recruit them for bands, feats and sessions) and do not show up as former members.'))),
     h('div', { class: 'ng17-start-grid' }, ...LINEUPS29.map((x) => h('label', { class: `radio pick ${cur === x.id ? 'on' : ''}`, 'data-lineup29': x.id },

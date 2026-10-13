@@ -516,6 +516,7 @@ export function stints16(s: GameState, a: Act): Stint16[] {
   const d = s.config.realNames && !lineup29Of(s.config) ? realDataOf(a) : undefined;
   const shift = d?.d !== undefined ? a.debutYear - d.d : 0;
   const base = a.debutYear;
+  const founders29 = !d && !!s.config.realNames && !!lineup29Of(s.config) && !!realDataOf(a)?.m?.length;
   // r27 (LIN): fundador ("desde o início") começa na formação — ou na 1ª entrada documentada, se for antes (Beatles 1960)
   const joins = (d?.m ?? []).flatMap((m) => periodsOf(m).map(([x]) => x)).filter((x): x is number => x !== undefined).map((x) => x + shift);
   const start = Math.min(a.formed, base, ...joins);
@@ -538,7 +539,7 @@ export function stints16(s: GameState, a: Act): Stint16[] {
       else if (open) { const prev = [...segs].reverse().find((x) => x.from <= y && x !== open); if (prev && (prev.to === undefined || prev.to > y)) prev.to = y; else if (!prev) segs.push({ from: base, to: y }); } // R29: saída simulada não fecha passagem documentada que só começa depois (Richard Wright "1980–1972")
       else if (!segs.some((x) => x.to !== undefined && Math.abs(x.to - y) <= 1)) segs.push({ from: base, to: y });
     }
-    if (!segs.length) segs.push({ from: Math.max(base, p.born + 12) }); // R29: substituto gerado não "entra" antes de nascer
+    if (!segs.length) segs.push({ from: Math.max(founders29 ? Math.min(a.formed, base) : base, p.born + 12) }); // R29: substituto gerado não "entra" antes de nascer; R29 (formação): fundador desde a formação do ato
     segs.sort((x, y) => x.from - y.from);
     const member = a.members.includes(pid);
     const outY = member ? undefined : [...f].reverse().find((x) => x.personId === pid)?.year;

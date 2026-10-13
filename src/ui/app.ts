@@ -4,6 +4,7 @@ import { LABEL_LEGACY20 } from '../sim/oblig20';
 import { ERA19 } from '../sim/era19';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
 import { l, type L } from '../data/world';
+import { rw } from '../sim/sys/realworld';
 import { S, t, type Lang } from '../i18n/strings';
 import { endingScores, legacyTotal } from '../sim/legacy';
 import { advance } from '../sim/tick';
@@ -732,6 +733,8 @@ function palette(): void {
     const actOf: Record<string, string> = {};
     for (const a of Object.values(g.acts)) if (visibleAct(g, a)) for (const m of a.members) actOf[m] = a.name;
     for (const p of Object.values(g.persons)) if (actOf[p.id] && p.name.toLowerCase().includes(qq.slice(0, 2))) out.push({ label: p.name, kind: 'person', icon: 'star', hint: actOf[p.id] + (p.alive ? '' : ' · †'), run: () => openPerson(p.id) });
+    // R29 (formação): pessoas reais fora da formação inicial — existem sem banda (dá para achar e abrir a ficha)
+    for (const id of Object.keys(rw(g).free29 ?? {})) { const p = g.persons[id]; if (p && !actOf[p.id] && p.born <= g.year && p.name.toLowerCase().includes(qq.slice(0, 2))) out.push({ label: p.name, kind: 'person', icon: 'star', hint: t(l('sem banda', 'no band')) + (p.alive ? '' : ' · †'), run: () => openPerson(p.id) }); }
     for (const x of searchRoute16.f?.(g, qq) ?? []) out.push({ label: x.label, kind: 'person', icon: 'star', hint: x.hint, run: () => personRoute16.f?.(x.key) });
     out.push(...paletteCmds20(g, true)); // r20 G4: ações dos outros artistas do elenco
     out.push(...eggCmds27(g, qq)); // r27 ovos: códigos secretos da busca (payola, hall da fama, 1889…)
