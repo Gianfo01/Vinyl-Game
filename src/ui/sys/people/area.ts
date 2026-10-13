@@ -20,7 +20,6 @@ import { $, N, actLink, pill, rerender, section, toast } from '../../common';
 import { h, select } from '../../dom';
 import { registerArea, registerSection } from '../../registry';
 import { chips, ic, meter, portrait, stat, tabs, tile } from '../../vis';
-import { inboxArea, inboxBadge } from './inbox';
 import { renewBtn27 } from '../../act27/flow27p2'; // r27 FLOW2: renovar = a mesa (pedido → negotiate27), rápido dentro
 import { feedView, socialDiagram } from './views';
 import { ficha13Btn } from '../persona13';
@@ -209,7 +208,6 @@ function peopleArea(s: GameState): HTMLElement {
 }
 
 registerArea({ id: 'people', label: l('Pessoas', 'People'), icon: 'heart', key: 'p', render: peopleArea, badge: (s) => rosterPeople(s).filter((p) => breakRisk(s, p) > 0.08).length || undefined });
-registerArea({ id: 'inbox', label: l('Caixa de entrada', 'Inbox'), icon: 'newspaper', key: 'e', render: inboxArea, badge: inboxBadge });
 
 registerSection('artists', {
   id: 'people-negotiate',

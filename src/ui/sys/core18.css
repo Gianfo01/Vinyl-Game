@@ -14,22 +14,6 @@
 .why18-sub { all: unset; cursor: pointer; text-decoration: underline dotted; color: var(--accent); }
 .why18-hint { font-size: 0.72rem; color: var(--muted); margin: 0.3rem 0 0; }
 
-/* inbox 2.0 */
-.ib18 { display: grid; gap: 0.5rem; }
-.ib18-bar { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
-.ib18-bar .on { background: var(--accent); color: var(--accent-ink); }
-.ib18-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
-.ib18-it { border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 6px; padding: 0.35rem 0.5rem; background: var(--panel); }
-.ib18-it.p3 { border-left-color: var(--bad); }
-.ib18-it.p2 { border-left-color: var(--accent); }
-.ib18-it.p1 { border-left-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
-.ib18-it.unread .ib18-sj { font-weight: 700; }
-.ib18-hd { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; font-size: 0.78rem; color: var(--muted); }
-.ib18-hd .ib18-cat { font-weight: 600; }
-.ib18-sj { cursor: pointer; }
-.ib18-bd { font-size: 0.85rem; margin: 0.2rem 0; }
-.ib18-acts { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.ib18-more { text-align: center; }
 
 /* conselheiro v2 */
 .adv18 { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
