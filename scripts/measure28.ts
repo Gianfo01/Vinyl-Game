@@ -64,13 +64,13 @@ function long(): void {
     if ((Date.now() - t0) / 60000 > capMin) { console.log(`CORTE: ${capMin} min atingidos em ${s.year}-${s.month}`); break; }
     const c0 = process.cpuUsage();
     if (!s.ended) playMonth(s, 'balanced');
-    else if (!endedAt) { endedAt = `${s.ended.ending}@${s.year}-${s.month}`; s.flags.sandbox = true; console.log(`fim da partida: ${endedAt} — segue em sandbox`); }
+    else if (!endedAt) { endedAt = `${s.ended.ending}@${s.year}-${s.month}`; s.flags.sandbox = 1; console.log(`fim da partida: ${endedAt} — segue em sandbox`); }
     const y0 = s.year, m0 = s.month;
     advanceMonth(s);
     if (s.year === y0 && s.month === m0) { console.log(`relógio parado em ${y0}-${m0}`); break; }
     const ms = cpuMs(c0);
     win.cpu += ms; win.months++; win.maxMs = Math.max(win.maxMs, ms);
-    if (s.ended && !endedAt) { endedAt = `${s.ended.ending}@${s.year}-${s.month}`; s.flags.sandbox = true; console.log(`fim da partida: ${endedAt} — segue em sandbox`); }
+    if (s.ended && !endedAt) { endedAt = `${s.ended.ending}@${s.year}-${s.month}`; s.flags.sandbox = 1; console.log(`fim da partida: ${endedAt} — segue em sandbox`); }
     if (s.month === 1 && s.year - lastSampleYear >= 5) { sample(); lastSampleYear = s.year; }
   }
   sample();
