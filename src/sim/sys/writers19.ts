@@ -356,7 +356,7 @@ registerInboxKind('wr19_ghost', { label: l('Ghostwriter', 'Ghostwriter'), cat: '
     if (r.chance(g.grudge / 140)) { reveal(s, g, r); return l('Encerrado — e ele foi direto à imprensa.', 'Ended — and they went straight to the press.'); }
     return l('Acordo encerrado. Ele saiu calado… por ora.', 'Deal ended. They left quietly… for now.');
   } });
-registerInboxKind('wr19_offer', { label: l('Canção oferecida', 'Song offer'), cat: 'deals', icon: 'pen', prio: 1, goto: () => ({ area: 'creation', tab: ['creation-write', 'writers19'] }),
+registerInboxKind('wr19_offer', { label: l('Canção oferecida', 'Song offer'), cat: 'deals', icon: 'pen', prio: 1, goto: () => ({ area: 'songmkt27', tab: ['songmkt27', 'offers'] }), // r27 SONG: Mercado de canções
   handle: (s, m, act) => (act === 'no' ? (wr19(s).offers = wr19(s).offers.filter((x) => x.id !== m.ref?.o), l('Recusada.', 'Passed.')) : takeOffer19(s, String(m.ref?.o ?? ''), act === 'cut')) });
 registerInboxKind('wr19_plag', { label: l('Plágio', 'Plagiarism'), cat: 'money', icon: 'gavel', prio: 3, goto: () => ({ area: 'creation', tab: ['creation-write', 'writers19'] }),
   handle: (s, m, act) => answerSuit19(s, String(m.ref?.su ?? ''), act === 'fight' && s.player.cash < money(s, 5000) ? 'settle' : (act as 'fight' | 'credit' | 'settle')) });

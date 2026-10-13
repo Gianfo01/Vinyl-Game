@@ -43,6 +43,7 @@ export function mix27(a: string, b: string, p: number): string {
 // ---------------------------------------------------------------- propósito de cada página (subtítulo)
 /** Uma linha sob o título: para que serve a página. Páginas da jornada do disco usam PURPOSE23 (journey23). */
 export const PURPOSE27: Record<string, L> = {
+  songmkt27: l('Comprar, ganhar, vender e licenciar canções — a gravação segue pela agenda e pelo estúdio.', 'Buy, receive, sell and license songs — recording goes through the schedule and the studio.'),
   cockpit: l('O mês num relance: o que pede decisão, o dinheiro e o próximo passo de cada artista.', 'The month at a glance: what needs a decision, the money and each act\'s next step.'),
   hq: l('Sua sede: salas, equipe e o que acontece hoje no prédio.', 'Your HQ: rooms, staff and what is happening in the building today.'),
   plan: l('Central de planos: metas do mês e o que fazer primeiro.', 'Planning hub: this month\'s goals and what to do first.'),

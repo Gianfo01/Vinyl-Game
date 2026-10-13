@@ -177,7 +177,7 @@ registerSimHook('month', 'camps18', (s) => {
       ref: { sale: sid }, actions: [{ id: 'public', label: l('Ir a público', 'Go public') }, { id: 'quiet', label: l('Ficar quieto', 'Stay quiet') }] });
   }
 });
-registerInboxKind('camps18_pitch', { label: l('Pedido de canção', 'Song request'), cat: 'deals', icon: 'pen', prio: 1, goto: () => ({ area: 'talent18', tab: ['talent18', 'camps'] }) });
+registerInboxKind('camps18_pitch', { label: l('Pedido de canção', 'Song request'), cat: 'deals', icon: 'pen', prio: 1, goto: () => ({ area: 'songmkt27', tab: ['songmkt27', 'sell'] }) }); // r27 SONG: Mercado de canções
 
 registerExplain('camps18.pitch', (s, c) => {
   const o = pitchOdds18(s, String(c.pitch), String(c.song), !!c.cut);

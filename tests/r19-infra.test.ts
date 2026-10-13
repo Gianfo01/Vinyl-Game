@@ -162,6 +162,7 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
 /** Tipos que não aparecem com segurança em bots curtos (1 ano), com o motivo (levantamento: 6 bots de 3 anos, 1889–2015,
  *  selo/artista/híbrido — 25 de 74 tipos apareceram). Revisar quando um tipo novo entrar. */
 const INBOX_RARE19: Record<string, string> = {
+  songmkt27_gift: 'songmkt27: presente de canção só com laço de amizade/parceria com outro ato (7%/mês)',
   rv27_copy: 'rivals27: selo imitador copia um top 10 seu — bots curtos quase nunca emplacam top 10',
   dlg19: 'budget19: exceção da equipe delegada por carreira — só com delegação de empresário/festival/estúdio ligada (desligada por padrão)',
   m19_call: 'money19: banco chama a dívida só com empréstimo e covenant quebrado (3 trimestres no prejuízo ou dívida > receita de 12 meses)',

@@ -37,7 +37,7 @@ export const SECTIONS25: Section25[] = [
     th('pros', l('Bastidores', 'Behind the scenes'), ['management', 'managers14', 'producers15'])] },
   { id: 'projects', label: l('Projetos', 'Projects'), icon: 'disc', blurb: l('Compor, gravar, lançar e reviver.', 'Write, record, release and revive.'),
     main: ['project', 'creation', 'studio', 'releases', 'catalog'], themes: [
-    th('make', l('Criar', 'Create'), ['project', 'creation', 'studio', 'studio12', 'publishing16']),
+    th('make', l('Criar', 'Create'), ['project', 'creation', 'songmkt27', 'studio', 'studio12', 'publishing16']),
     th('release', l('Lançar e reviver', 'Release and revive'), ['releases', 'catalog', 'tribute19', 'media19'])] },
   { id: 'live', label: l('Ao vivo', 'Live'), icon: 'stage', blurb: l('Shows, turnês, festivais e prêmios.', 'Shows, tours, festivals and awards.'),
     main: ['shows', 'cal17', 'festivals', 'awards', 'live19'], themes: [
