@@ -24,6 +24,7 @@ import { newgameCards } from '../newgame';
 import { PERSON_TABS, openActPage } from '../pages';
 import { registerArea, registerPageTab } from '../registry';
 import { relicHype12 } from './hype12';
+import { relicImg28 } from '../pixel/relic28';
 import { erasTab17, relicStory17 } from './heritage17';
 import { setTab, tabs } from '../vis';
 import './lendas9.css';
@@ -34,7 +35,8 @@ const WORLD_KEY = 'vtn.world9';
 const F: { dec: number; city: string; genre: string; who: string; minI: number; bioQ: string; city2: string; rf: string } = { dec: 0, city: '', genre: '', who: '', minI: 2, bioQ: '', city2: '', rf: '' };
 
 const stars = (i: number) => h('span', { class: 'ln-stars', title: t(l('Importância', 'Importance')) }, '★'.repeat(i) + '☆'.repeat(5 - i));
-const RELIC_ICON: Record<Relic['k'], string> = { guitar: '🎸', tape: '📼', lyrics: '📝', trophy: '🏆', outfit: '👗', mic: '🎤', drums: '🥁', record: '💿', car: '🚗', glasses: '👓', piano: '🎹', prop: '🎈', art: '🎨', bass: '🎸' };
+/** r28 (arte): cada peça tem desenho próprio em pixel art (tipo pela categoria + nome, modelo pela época, cores pela semente). */
+const relicArt = (rl: Relic, size: number) => relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, size, t(RELIC_KIND[rl.k]));
 const ST_CLS: Record<Relic['st'], string> = { auction: 'gold', player: 'good', stolen: 'bad', lost: 'bad', museum: '', kept: '' };
 
 function who(s: GameState, id: string): HTMLElement {
@@ -153,7 +155,7 @@ export function openRelic(s: GameState, id: string): void {
       acts.push(h('button', { class: 'btn small', onclick: () => res(seekRelic(s, rl.id), l('Achada! Devolvida ao dono, e o crédito é seu.', 'Found! Returned to its owner, and you get the credit.')) }, t(l('Contratar detetive ({v})', 'Hire an investigator ({v})'), { v: $(seekFee(s, rl)) })));
     } else acts.push(empty(l('Perdida para sempre.', 'Lost forever.')));
     return h('div', null,
-      h('div', { class: 'ln-relhead' }, h('span', { class: 'ln-ico' }, RELIC_ICON[rl.k]),
+      h('div', { class: 'ln-relhead' }, h('span', { class: 'ln-ico' }, relicArt(rl, 96)),
         h('div', null, h('div', null, t(RELIC_KIND[rl.k]), ' · ', String(rl.y), rl.a ? h('span', null, ' · ', who(s, rl.a)) : null, rl.p && rl.p !== rl.a ? h('span', null, ' · ', who(s, rl.p)) : null),
           h('div', { class: 'row wrap' }, pill(t(RELIC_ST[rl.st]), ST_CLS[rl.st]), h('b', null, $(relicPrice(s, rl)))))),
       relicHype12(s, rl.id),
@@ -179,7 +181,7 @@ function figureCard(s: GameState, id: string, score?: number): HTMLElement {
     h('div', null, h('b', null, nameOf(s, id)), h('small', { class: 'muted' }, sub), score !== undefined ? h('small', { class: 'muted' }, t(l('peso histórico {v}', 'historical weight {v}'), { v: Math.round(score) })) : null));
 }
 function relicCard(s: GameState, rl: Relic): HTMLElement {
-  return card(ST_CLS[rl.st], () => openRelic(s, rl.id), h('span', { class: 'ln-ico' }, RELIC_ICON[rl.k]),
+  return card(ST_CLS[rl.st], () => openRelic(s, rl.id), h('span', { class: 'ln-ico' }, relicArt(rl, 48)),
     h('div', null, h('b', null, t(rl.n)), h('small', { class: 'muted' }, `${t(RELIC_KIND[rl.k])} · ${rl.y}`), h('span', null, pill(t(RELIC_ST[rl.st]), ST_CLS[rl.st]), ' ', h('small', null, $(relicPrice(s, rl))))));
 }
 

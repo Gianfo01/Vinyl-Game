@@ -5,6 +5,8 @@ import { Rng } from '../core/rng';
 import { FAMILIES, familyOf } from '../data/world';
 import { drawText, drawTextOutlined, fitText, textWidth } from './pixel/font';
 import { C, Px, dith, hsl, mix, noise, shade, upscale, withAlpha, type Col } from './pixel/px';
+import { cover28, wear28 } from './pixel/cover28';
+import { logo28 } from './pixel/logo28';
 
 const cache = new Map<string, string>();
 const pxCache = new Map<string, Px>();
@@ -91,6 +93,9 @@ export function logoPx(seed: number, name: string, genre: string, year: number):
   const key = `L:${seed}:${name}:${eraStyle(year)}`;
   const hit = pxCache.get(key);
   if (hit) return hit;
+  // r28 (arte): logos por gênero (metal, punk, disco, rap, synth, indie…) em ~55% dos atos; o resto segue o desenho abaixo
+  const alt = logo28(seed, initials(name), genre, year);
+  if (alt) { pxCache.set(key, alt); return alt; }
   const N = 32;
   const r = Rng.fromSeed(String(seed));
   const col = logoColors(seed, genre, year);
@@ -277,11 +282,14 @@ const COVER_N = 40;
 /** Estilo de capa escolhido pelo jogador (rodada 8) → estilo visual. */
 const CHOICE_ART: Record<string, ArtStyle> = { portrait: 'classic', concept: 'neon', provocative: 'punk', minimal: 'minimal', illustrated: 'psych', scene: 'grunge', diy: 'punk' };
 
-export function coverPx(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, choice?: string): Px {
+export function coverPx(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, choice?: string, age = 0): Px {
   const style = (choice && CHOICE_ART[choice]) || eraStyle(year);
-  const key = `C:${seed}:${style}:${Math.round(budget * 4)}`;
+  const key = `C:${seed}:${style}:${Math.round(budget * 4)}:${age >= 12 ? 1 : 0}`;
   const hit = pxCache.get(key);
   if (hit) return hit;
+  // r28 (arte): composições novas por gênero/época (≈2/3 das capas) + desgaste de estante; o resto segue o desenho abaixo
+  const alt = cover28(seed, title, actName, genre, year, budget, style);
+  if (alt) { wear28(alt, seed, age, year); pxCache.set(key, alt); return alt; }
   const N = COVER_N;
   const r = Rng.fromSeed(String(seed));
   const hue = (hueFor(genre) + r.int(-40, 40) + 360) % 360;
@@ -427,15 +435,16 @@ export function coverPx(seed: number, title: string, actName: string, genre: str
     }
   }
   if (!rich && style !== 'minimal') p.map((c) => mix(c, C('#808080'), 0.12));
+  wear28(p, seed, age, year);
   pxCache.set(key, p);
   return p;
 }
 
-export function coverUrl(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, size = 160, choice?: string): string {
-  const key = `cover:${seed}:${(choice && CHOICE_ART[choice]) || eraStyle(year)}:${Math.round(budget * 4)}:${size}`;
+export function coverUrl(seed: number, title: string, actName: string, genre: string, year: number, budget = 0.5, size = 160, choice?: string, age = 0): string {
+  const key = `cover:${seed}:${(choice && CHOICE_ART[choice]) || eraStyle(year)}:${Math.round(budget * 4)}:${size}:${age >= 12 ? 1 : 0}`;
   const hit = cache.get(key);
   if (hit) return hit;
-  const url = upscale(coverPx(seed, title, actName, genre, year, budget, choice).canvas(), size).toDataURL();
+  const url = upscale(coverPx(seed, title, actName, genre, year, budget, choice, age).canvas(), size).toDataURL();
   cache.set(key, url);
   return url;
 }

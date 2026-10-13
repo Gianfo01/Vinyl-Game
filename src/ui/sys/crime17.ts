@@ -24,10 +24,14 @@ import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
 import { chips, stat, tabs } from '../vis';
 import { intriguePanel } from './intrigue';
+import { emblemImg28, orgEmblemKind28 } from '../pixel/emblem28';
+import { relicImg28 } from '../pixel/relic28';
 import { heistOn27 } from '../act27/heist27'; // r27 (M3): operação jogável
 import { screen27, screenOn27 } from '../act27/flow27'; // r27 FLOW: uma entrada só
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
+/** r28 (arte): brasão semeado da organização (forma pelo tipo, cores pela região, carga pelo negócio). */
+const orgEmblem = (o: { id: string; kind: string; a3: string; rackets: string[]; name: L }, size: number) => emblemImg28({ id: o.id, kind: orgEmblemKind28(o.kind), a3: o.a3, rackets: o.rackets, name: o.name.pt }, size, T(o.name));
 const say = (x: L | string, tone: 'good' | 'bad' | 'info' = 'info') => { toast(T(x), tone); rerender(); };
 const P = (x: number): string => `${Math.round(x * 100)}%`;
 const btn = (label: L | string, fn: () => void, o: { title?: L | string; dis?: boolean; cls?: string } = {}) =>
@@ -50,7 +54,7 @@ function orgsTab(s: GameState): HTMLElement {
       const tied = Object.entries(st.ties).filter(([, oid]) => oid === o.id).map(([aid]) => s.acts[aid]).filter(Boolean);
       const down = (st.down[o.id] ?? 0) > s.week;
       return h('section', { class: 'card' },
-        h('h3', null, T(o.name), ' ', pill(T(KIND_NAME[o.kind])), o.real ? pill(T(l('real', 'real')), 'trait') : pill(T(l('fictícia', 'fictional'))), down ? pill(T(l('desmantelada', 'dismantled')), 'good') : null),
+        h('h3', null, orgEmblem(o, 40), ' ', T(o.name), ' ', pill(T(KIND_NAME[o.kind])), o.real ? pill(T(l('real', 'real')), 'trait') : pill(T(l('fictícia', 'fictional'))), down ? pill(T(l('desmantelada', 'dismantled')), 'good') : null),
         chips(stat('globe', `${cityName(o.city)} · ${T(countryName(o.a3))}`, l('Sede', 'Base')), stat('fire', o.power, l('Poder', 'Power')), stat('handshake', rel, l('Relação com você', 'Relationship with you'))),
         h('p', { class: 'small' }, T(o.desc)),
         h('p', { class: 'small muted' }, `${T(l('Negócios', 'Rackets'))}: ${o.rackets.map((r) => T(RACKET_NAME[r])).join(' · ')} · ${T(l('Chefe', 'Boss'))}: ${T(bossName(o))}`),
@@ -178,13 +182,13 @@ function marketTab(s: GameState): HTMLElement {
         st.fake[rl!.id] ? null : btn(l('Devolver e cobrar recompensa (10%)', 'Return for the reward (10%)'), () => say(returnHot(s, rl!.id), 'good'), { cls: 'ghost' }))))) : h('p', { class: 'muted small' }, T(l('Vazio. Relíquias roubadas (Planos → Roubar relíquia) ou compradas aqui ficam escondidas; a polícia pode achá-las (mais calor, mais buscas).', 'Empty. Relics stolen (Plans → Steal a relic) or bought here stay hidden; police may find them (more heat, more searches).'))),
       h('p', { class: 'muted small' }, T(l('Receptadores cobram corte e alguns são armadilhas da polícia. Peça "quente" vale menos; procedência duvidosa derruba o preço.', 'Fences take a cut and some are police stings. A "hot" piece is worth less; doubtful provenance cuts the price.')))),
     section(T(l('Ofertas no mercado negro', 'Black-market offers')),
-      st.market.length ? h('ul', null, st.market.map((of) => { const rl = relics(s).list.find((x) => x.id === of.rl); return rl ? h('li', null, `${T(rl.n)} — ${T(FENCES17[of.fence].name)} · ${T(usd(of.price))} · ${T(l('autenticidade estimada', 'estimated authenticity'))} ${P(of.auth)} · ${T(l('até semana', 'until week'))} ${of.until} `, btn(l('Comprar', 'Buy'), () => say(buyOffer(s, of.id)), { title: l('Pode ser falsa; receptação aumenta o calor.', 'May be fake; handling stolen goods raises heat.') })) : null; })) : h('p', { class: 'muted small' }, T(l('Nada à venda agora. Peças roubadas pelo mundo aparecem aqui com preço baixo — e risco.', 'Nothing for sale now. Pieces stolen around the world show up here cheap — and risky.')))),
+      st.market.length ? h('ul', null, st.market.map((of) => { const rl = relics(s).list.find((x) => x.id === of.rl); return rl ? h('li', null, relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, 24), ` ${T(rl.n)} — ${T(FENCES17[of.fence].name)} · ${T(usd(of.price))} · ${T(l('autenticidade estimada', 'estimated authenticity'))} ${P(of.auth)} · ${T(l('até semana', 'until week'))} ${of.until} `, btn(l('Comprar', 'Buy'), () => say(buyOffer(s, of.id)), { title: l('Pode ser falsa; receptação aumenta o calor.', 'May be fake; handling stolen goods raises heat.') })) : null; })) : h('p', { class: 'muted small' }, T(l('Nada à venda agora. Peças roubadas pelo mundo aparecem aqui com preço baixo — e risco.', 'Nothing for sale now. Pieces stolen around the world show up here cheap — and risky.')))),
     section(T(l('Falsificação', 'Forgery')),
       h('p', { class: 'small muted' }, T(l('Encomende uma réplica de peça famosa e venda como verdadeira: o comprador desconfia (autenticidade baixa).', 'Commission a replica of a famous piece and sell it as genuine: buyers get suspicious (low authenticity).'))),
       h('div', { class: 'row wrap' }, ...famous.map((rl) => btn(`${T(rl.n)} (${T(usd(forgeCost(s, rl.v)))})`, () => say(forgeRelic(s, rl.id)), { title: fmtTxt(l('Autenticidade percebida {v}', 'Perceived authenticity {v}'), P(0.25)) })))),
     section(T(l('Pirataria (bootlegs)', 'Bootleg rings')),
       h('p', { class: 'small muted' }, T(l('Fábricas piratas copiam seus sucessos recentes e você perde vendas. Uma batida com a polícia fecha a fábrica por um ano.', 'Bootleg plants copy your recent hits and you lose sales. A police raid shuts the plant for a year.'))),
-      h('ul', { class: 'small' }, bootOrgs.map((o) => h('li', null, `${T(o.name)} (${T(countryName(o.a3))}) `, (st.boot[o.id] ?? 0) > s.week ? pill(T(l('fechada', 'shut')), 'good') : btn(fmtTxt(l('Batida ({v})', 'Raid ({v})'), usd(raidCost(s))), () => say(raidBootleggers(s, o.id)), { title: l('~55% (+ Jurídico) de fechar por 1 ano; relação com eles −20.', '~55% (+ Legal) to shut it for 1 year; relationship −20.') }))))),
+      h('ul', { class: 'small' }, bootOrgs.map((o) => h('li', null, orgEmblem(o, 20), ` ${T(o.name)} (${T(countryName(o.a3))}) `, (st.boot[o.id] ?? 0) > s.week ? pill(T(l('fechada', 'shut')), 'good') : btn(fmtTxt(l('Batida ({v})', 'Raid ({v})'), usd(raidCost(s))), () => say(raidBootleggers(s, o.id)), { title: l('~55% (+ Jurídico) de fechar por 1 ano; relação com eles −20.', '~55% (+ Legal) to shut it for 1 year; relationship −20.') }))))),
   );
 }
 

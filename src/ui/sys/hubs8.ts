@@ -26,6 +26,11 @@ import { registerSection } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
 import { personRoute16 } from '../route16';
+import { festivalPinImg28, festivalPosterImg28, mastheadImg28 } from '../pixel/extras28'; // r28 (arte)
+import { relicImg28 } from '../pixel/relic28';
+
+/** r28 (arte): estatueta da premiação (gramofone, astronauta, taça ou estrela, pela semente do id). */
+const trophyImg = (c: { id: string; name: string }, size: number) => relicImg28('trophy', c.id === 'gramo' ? 'gramophone' : c.id === 'critics' ? 'critics cup' : c.name, 1990, `aw:${c.id}`, size, c.name);
 
 const MONTHS = [l('jan', 'Jan'), l('fev', 'Feb'), l('mar', 'Mar'), l('abr', 'Apr'), l('mai', 'May'), l('jun', 'Jun'), l('jul', 'Jul'), l('ago', 'Aug'), l('set', 'Sep'), l('out', 'Oct'), l('nov', 'Nov'), l('dez', 'Dec')];
 const famName = (id: string) => t(FAMILIES.find((f) => f.id === id)?.name ?? l(id));
@@ -56,7 +61,7 @@ export function festivalsTab(s: GameState): HTMLElement {
             const mine = ed?.lineup.filter((x) => mineAct(s, x.actId)) ?? [];
             return h('tr', { class: mine.length ? 'mine' : '' },
               h('td', null, t(MONTHS[festMonth(f, fi)])),
-              h('td', null, h('button', { class: 'link', onclick: () => openFestivalPage(fi) }, f.name)),
+              h('td', null, festivalPinImg28(f.name, f.start, 16), ' ', h('button', { class: 'link', onclick: () => openFestivalPage(fi) }, f.name)),
               h('td', null, cityName(f.city)),
               h('td', null, bar(f.prestige, 100)),
               h('td', { class: 'small' }, heads.join(', ') || (festActive(f, s.year) ? '—' : t(l('extinto', 'defunct')))),
@@ -107,6 +112,7 @@ export function openFestivalPage(fi: number): void {
       return h('div', null, h('h4', null, t(TIER_NAME[tier])), slots.length ? h('div', { class: 'chips' }, slots.map((x) => h('span', { class: `chip ${mineAct(s, x.actId) ? 'good' : ''}` }, actLink(s, x.actId), mineAct(s, x.actId) && !ed?.done ? h('button', { class: 'link small', title: t(l('Cancelar (multa de 25% do cachê)', 'Cancel (25% fee penalty)')), onclick: () => { if (confirm(t(l('Cancelar a participação? Multa de 25% do cachê e o festival não chama de novo tão cedo.', 'Cancel the appearance? 25% fee penalty and the festival will not call again soon.')))) { withdraw(s, fi, x.actId); close(); openFestivalPage(fi); rerender(); } } }, ' ✕') : null))) : h('p', { class: 'muted small' }, '—'));
     };
     const body = h('div', { class: 'ficha' },
+      h('div', { style: 'float:right;margin-left:0.6rem' }, festivalPosterImg28(f.name, s.year, (ed?.lineup.filter((x) => x.tier === 'headline').map((x) => s.acts[x.actId]?.name).filter((x): x is string => !!x)) ?? [], 96)), // r28 (arte): cartaz da edição
       h('div', { class: 'grid2' },
         h('div', null,
           kv(t(l('Tipo', 'Type')), t(f.kind)),
@@ -177,7 +183,7 @@ export function ceremoniesTab(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' }, select(cui.filter, [{ value: 'main', label: t(l('Mundiais, crítica, indústria e regionais', 'World, critics, industry and regional')) }, { value: 'national', label: t(l('Nacionais (por país)', 'National (by country)')) }, { value: 'mine', label: t(l('Onde já ganhei', 'Where I have won')) }], (v) => { cui.filter = v as typeof cui.filter; rerender(); })),
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Premiação', 'Ceremony'))), h('th', null, t(l('Tipo', 'Type'))), h('th', null, t(l('Mês', 'Month'))), h('th', null, t(l('Seus prêmios', 'Your awards'))))),
-      h('tbody', null, list.map((c) => h('tr', null, h('td', null, h('button', { class: 'link', onclick: () => openCeremonyPage(c.id) }, c.name)), h('td', null, t(c.kind)), h('td', null, t(MONTHS[c.month])), h('td', null, myWins(c) || '—'))))),
+      h('tbody', null, list.map((c) => h('tr', null, h('td', null, trophyImg(c, 24), ' ', h('button', { class: 'link', onclick: () => openCeremonyPage(c.id) }, c.name)), h('td', null, t(c.kind)), h('td', null, t(MONTHS[c.month])), h('td', null, myWins(c) || '—'))))),
   );
 }
 
@@ -187,7 +193,7 @@ export function openCeremonyPage(id: string): void {
   if (!c) return;
   let close = () => {};
   const draw = () => {
-    const blocks: (HTMLElement | null)[] = [kv(t(l('Tipo', 'Type')), t(c.kind)), kv(t(l('Cerimônia', 'Ceremony')), `${t(MONTHS[c.month])} ${c.month >= s.month ? s.year : s.year + 1}`), h('p', { class: 'small' }, t(c.desc))];
+    const blocks: (HTMLElement | null)[] = [h('div', { style: 'float:right;margin-left:0.6rem' }, trophyImg(c, 96)), kv(t(l('Tipo', 'Type')), t(c.kind)), kv(t(l('Cerimônia', 'Ceremony')), `${t(MONTHS[c.month])} ${c.month >= s.month ? s.year : s.year + 1}`), h('p', { class: 'small' }, t(c.desc))];
     if (c.id === 'gramo') {
       const st = cer8(s);
       const cy = cycleYear(s);
@@ -260,7 +266,7 @@ export function criticsTab(s: GameState): HTMLElement {
       h('thead', null, h('tr', null, h('th', null, t(l('Crítico', 'Critic'))), h('th', null, t(l('Veículo', 'Outlet'))), h('th', null, t(l('Região', 'Region'))), h('th', null, t(l('Gosta de', 'Likes'))), h('th', null, t(l('Rigor', 'Harshness'))), h('th', null, t(l('Relação', 'Relationship'))))),
       h('tbody', null, list.map((c) => h('tr', null,
         h('td', null, h('button', { class: 'link', onclick: () => openCriticPage(c.name) }, c.name)),
-        h('td', { class: 'small' }, outletName(s, c)),
+        h('td', { class: 'small' }, mastheadImg28(c.outlet, undefined, 64), ' ', outletName(s, c)),
         h('td', { class: 'small' }, regionName(c.region)),
         h('td', { class: 'small' }, c.favors.map(famName).join(', ')),
         h('td', null, bar(c.harsh * 100, 100)),

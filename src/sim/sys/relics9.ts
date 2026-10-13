@@ -10,7 +10,9 @@ import { fmtL, money, nextId, notify, post } from '../util';
 import { chron, chronListeners, nameOf, type ChronEv } from './chron9';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
-export type RelicKind = 'guitar' | 'tape' | 'lyrics' | 'trophy' | 'outfit' | 'mic' | 'drums' | 'record' | 'car' | 'glasses' | 'piano' | 'prop' | 'art' | 'bass';
+export type RelicKind = 'guitar' | 'tape' | 'lyrics' | 'trophy' | 'outfit' | 'mic' | 'drums' | 'record' | 'car' | 'glasses' | 'piano' | 'prop' | 'art' | 'bass'
+  // r28 (arte): peças de memorabilia com desenho próprio (sys/relics28 + ui/pixel/relic28)
+  | 'setlist' | 'poster' | 'ticket' | 'contract' | 'sticks' | 'notebook' | 'jukebox' | 'amp' | 'photo' | 'goldrec' | 'horn' | 'synth';
 export type RelicStatus = 'kept' | 'auction' | 'stolen' | 'lost' | 'museum' | 'player';
 export interface Relic {
   id: string;
@@ -60,6 +62,8 @@ export const RELIC_KIND: Record<RelicKind, L> = {
   guitar: l('Guitarra', 'Guitar'), tape: l('Fitas master', 'Master tapes'), lyrics: l('Letra manuscrita', 'Handwritten lyrics'),
   trophy: l('Troféu', 'Trophy'), outfit: l('Figurino', 'Stage outfit'), mic: l('Microfone', 'Microphone'),
   drums: l('Bateria', 'Drums'), record: l('Disco raro', 'Rare record'), car: l('Carro', 'Car'), glasses: l('Óculos', 'Glasses'), piano: l('Piano', 'Piano'), prop: l('Objeto de cena', 'Stage prop'), art: l('Arte original', 'Original artwork'), bass: l('Baixo', 'Bass'),
+  setlist: l('Setlist', 'Setlist'), poster: l('Cartaz', 'Poster'), ticket: l('Ingresso', 'Ticket'), contract: l('Contrato', 'Contract'), sticks: l('Baquetas', 'Drumsticks'), notebook: l('Caderno', 'Notebook'),
+  jukebox: l('Jukebox', 'Jukebox'), amp: l('Amplificador', 'Amplifier'), photo: l('Fotografia', 'Photograph'), goldrec: l('Disco emoldurado', 'Framed record'), horn: l('Sopro', 'Horn'), synth: l('Sintetizador', 'Synthesizer'),
 };
 export const RELIC_ST: Record<RelicStatus, L> = {
   kept: l('com o dono', 'with its owner'), auction: l('em leilão', 'at auction'), stolen: l('roubada', 'stolen'), lost: l('perdida', 'lost'), museum: l('em museu', 'in a museum'), player: l('no seu acervo', 'in your collection'),
