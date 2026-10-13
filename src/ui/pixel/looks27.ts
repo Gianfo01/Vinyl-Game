@@ -11,6 +11,7 @@
 import { Rng, hashString } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import type { Appearance } from '../../sim/types';
+import { flavor29 } from './looks29';
 
 /** [nome, ano mínimo, peça antiga equivalente (fallback), sexo ('m'/'f' = só esse; '' = todos)] */
 export type Item27 = [L, number, number, '' | 'm' | 'f'];
@@ -91,10 +92,19 @@ export const OUTFIT27: Item27[] = [
   [l('Poncho', 'Poncho'), 0, 3, ''], // 23
   [l('Camisa florida', 'Hawaiian shirt'), 1935, 0, ''], // 24
   [l('Camiseta estampada', 'Graphic tee'), 1965, 0, ''], // 25
+  // rodada 29 (looks29.ts): roupas por época e região
+  [l('Terno zoot', 'Zoot suit'), 1938, 1, 'm'], // 26
+  [l('Guayabera', 'Guayabera'), 1940, 0, ''], // 27
+  [l('Agbada / bubu', 'Agbada / boubou'), 0, 2, ''], // 28
+  [l('Hanbok', 'Hanbok'), 0, 2, ''], // 29
+  [l('Jaqueta college', 'Varsity jacket'), 1950, 1, ''], // 30
+  [l('Terninho de ombreiras', 'Power suit'), 1980, 1, ''], // 31
+  [l('Colete de patches', 'Battle vest'), 1970, 0, ''], // 32
+  [l('Camisa de futebol', 'Football shirt'), 1970, 0, ''], // 33
 ];
 export const OUTFIT_BASE = 4;
 /** Peças que vão até o tornozelo (saia/túnica comprida). */
-export const LONG27 = new Set([9, 18, 19, 20]);
+export const LONG27 = new Set([9, 18, 19, 20, 28, 29]);
 
 /** Colares e afins (nk). */
 export const NECK27: Item27[] = [
@@ -383,7 +393,7 @@ export function flavor27(base: Appearance, seed: string, c: Ctx27): Appearance {
   if (!a.bdT) delete a.bdT;
   const ins = c.role ? instPick(seed, c) : 0;
   if (ins) a.inst = ins;
-  return gate27(a, c.year);
+  return gate27(flavor29(a, seed, c), c.year); // r29: roupas regionais e corpos novos (RNG próprio)
 }
 
 /** Variação estável (0..n-1) por pessoa — útil para cores do instrumento etc. */
