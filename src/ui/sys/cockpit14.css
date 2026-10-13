@@ -4,9 +4,9 @@
 .ck14-top { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 0.8rem; align-items: start; }
 .ck14-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .ck14-head h3 { margin: 0 0 0.4rem; }
-.ck14-inbox { max-height: 480px; overflow: auto; border-radius: var(--radius); }
+.ck14-inbox { border-radius: var(--radius); } /* r27 (INBOX): sem caixa rolável própria — a caixa tem lista e leitura com rolagem própria */
 .ck14-inbox .card { margin: 0; }
-@media (max-width: 900px) { .ck14-top { grid-template-columns: minmax(0, 1fr); } .ck14-inbox { max-height: 340px; } }
+@media (max-width: 900px) { .ck14-top { grid-template-columns: minmax(0, 1fr); } }
 
 /* Rodada 14 — menu: grupos por carreira e "Outras atividades" */
 .nav-other > .nav-head { opacity: 0.8; font-style: italic; }

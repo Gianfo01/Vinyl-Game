@@ -565,7 +565,9 @@ function pageTitle21(body: HTMLElement): HTMLElement | null {
 function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const gr = groupOf(store.area);
   const items = groupItems(gr);
-  const tabLbl = body.querySelector('[data-tabs] > .tabs > [aria-selected=true]')?.textContent?.trim();
+  const tabBtn = body.querySelector('[data-tabs] > .tabs > [aria-selected=true]');
+  // r27 (INBOX): o contador da aba (badge) não entra na migalha ("Caixa de entrada28")
+  const tabLbl = tabBtn ? [...tabBtn.childNodes].filter((n) => !(n instanceof Element && n.classList.contains('badge'))).map((n) => n.textContent ?? '').join('').trim() || undefined : undefined;
   const head = () => { const last = lastInGroup[gr.id]; go(last && items.some((x) => x.id === last) ? last : gr.home && items.some((x) => x.id === gr.home!.area) ? gr.home.area : items[0]?.id ?? 'cockpit'); };
   // r17: Grupo › Seção › Página › Aba, avançar, fixar e recentes
   // r27 UX (Essencial): o nível do meio é o hub (página unificada), não o tema antigo

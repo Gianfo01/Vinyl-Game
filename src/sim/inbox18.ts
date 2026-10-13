@@ -7,7 +7,7 @@
 //   pushInbox18(s, 'radio_payola', { from: 'DJ Joe', subject: l(...), body: l(...), actions: [{ id: 'pay', label: l('Pagar', 'Pay') }, { id: 'no', label: l('Recusar', 'Refuse') }] });
 //   registerAdvisorTip('cash18', (s) => [{ id: 'runway', level: 'warn', text: l(...), why: [l(...)], effect: l('+$2k/mês', '+$2k/mo'), goto: { area: 'finance' } }]);
 
-import type { Rng } from '../core/rng';
+import { hashString, type Rng } from '../core/rng';
 import type { L } from '../data/world';
 import { registerExt4 } from './ext4';
 import { addMsg, type InboxMsg } from './sys/people/state';
@@ -89,7 +89,9 @@ export function advisorTips18(s: GameState): AdvTip18[] {
 
 // ---------------------------------------------------------------- estado (arquivo, adiamento)
 
-export interface Inbox18State { arch: Record<string, number>; snooze: Record<string, number>; rep: number }
+/** r27 (INBOX): `star` (com estrela) e `seen` (aviso/decisão aberto na caixa) são só de interface, opcionais — saves antigos
+ *  ganham {} na primeira leitura. Nada do sorteio lê esses campos. */
+export interface Inbox18State { arch: Record<string, number>; snooze: Record<string, number>; rep: number; star?: Record<string, number>; seen?: Record<string, number> }
 declare module './ext4' { interface Ext4 { inbox18: Inbox18State } }
 const fresh = (): Inbox18State => ({ arch: {}, snooze: {}, rep: -1 });
 registerExt4('inbox18', fresh);
@@ -99,13 +101,40 @@ export function ib18(s: GameState): Inbox18State {
   st.arch ??= {}; st.snooze ??= {};
   return st;
 }
+/** Mantém um mapa chave → semana com no máximo `max` entradas (descarta as mais antigas). */
+function cap18(m: Record<string, number>, max: number): void {
+  const ks = Object.keys(m);
+  if (ks.length > max) for (const k of ks.sort((x, y) => m[x] - m[y]).slice(0, ks.length - max)) delete m[k];
+}
 export function archive18(s: GameState, key: string, on = true): void {
   const a = ib18(s).arch;
   if (on) a[key] = s.week; else delete a[key];
-  const ks = Object.keys(a);
-  if (ks.length > 300) for (const k of ks.sort((x, y) => a[x] - a[y]).slice(0, ks.length - 300)) delete a[k];
+  cap18(a, 300);
 }
 export const isArchived18 = (s: GameState, key: string): boolean => ib18(s).arch[key] !== undefined;
+
+// ---------------------------------------------------------------- r27 (INBOX): estrela e "aberto" por item
+/** Chave estável de um aviso (notificação) na caixa: semana + hash do texto. */
+export const noteKey18 = (week: number, textPt: string): string => `n${week}:${hashString(textPt)}`;
+export function star18(s: GameState, key: string, on = true): void {
+  const st = ib18(s);
+  const m = (st.star ??= {});
+  if (on) m[key] = s.week; else delete m[key];
+  cap18(m, 200);
+}
+export const isStarred18 = (s: GameState, key: string): boolean => (ib18(s).star ?? {})[key] !== undefined;
+/** Marca um aviso/decisão como aberto (mensagens usam o próprio `read`). */
+export function seen18(s: GameState, key: string): void {
+  const st = ib18(s);
+  const m = (st.seen ??= {});
+  if (m[key] !== undefined) return;
+  m[key] = s.week;
+  cap18(m, 400);
+}
+export const isSeen18 = (s: GameState, key: string): boolean => {
+  const x = s.x4 as unknown as { inbox18?: Inbox18State };
+  return x?.inbox18?.seen?.[key] !== undefined;
+};
 /** Adia uma dica do conselheiro por n semanas. */
 export function snoozeTip18(s: GameState, id: string, weeks = 8): void { ib18(s).snooze[id] = s.week + weeks; }
 export const snoozed18 = (s: GameState, id: string): boolean => (ib18(s).snooze[id] ?? -1) > s.week;

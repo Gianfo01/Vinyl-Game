@@ -1,5 +1,4 @@
 /* Rodada 19 (Frente 8) — calendário único, cabeçalho Hoje/Ameaças/Andamento e blocos do Cockpit */
-.ib18-bd { white-space: pre-line; }
 .c19-ev.k-decision, .c19-ev.k-court, .c19-ev.bad { background: color-mix(in srgb, var(--bad) 22%, var(--panel)); }
 .c19-ev.k-release, .c19-ev.good { background: color-mix(in srgb, var(--good) 22%, var(--panel)); }
 .c19-ev.k-msg { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }

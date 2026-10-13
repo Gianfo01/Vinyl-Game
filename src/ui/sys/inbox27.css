@@ -1,0 +1,124 @@
+/* Rodada 27 (INBOX) — caixa estilo e-mail / FM: lista compacta | painel de leitura (celular: lista → e-mail em tela cheia).
+   Tokens do theme25/ui27 (--panel, --line, --accent, --sp-*, --fs-*); nada de cor solta. */
+
+.mail27 { display: flex; flex-direction: column; gap: var(--sp-2, 8px); min-width: 0; contain: inline-size; } /* a largura vem da página, nunca do conteúdo (faixa de chips rolável no celular) */
+.m27-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2, 8px); }
+.m27-q { flex: 1 1 220px; min-width: 0; min-height: 36px; padding: 0 0.6rem; font: inherit; border: 1px solid var(--line); border-radius: var(--radius, 3px); background: var(--panel); color: var(--ink); }
+.m27-sort { display: inline-flex; align-items: center; gap: 6px; }
+.m27-bulk { display: inline-flex; gap: 4px; margin-left: auto; }
+.m27-filters { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+
+/* divisão: lista à esquerda, leitura à direita */
+.m27-split { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: var(--sp-3, 12px); align-items: start; }
+.m27-lpane, .m27-rpane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius, 3px); box-shadow: var(--card-shadow, none); min-width: 0; }
+.m27-lpane { display: flex; flex-direction: column; }
+.m27-list { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 250px); min-height: 360px; overflow-y: auto; overscroll-behavior: contain; }
+.m27-rpane { position: sticky; top: var(--sp-2, 8px); max-height: calc(100vh - 250px); min-height: 360px; overflow-y: auto; overscroll-behavior: contain; }
+.m27-count { margin: 0; padding: 6px 12px; border-top: 1px solid var(--line); }
+
+/* linha da lista */
+.m27-row { position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr) 26px; gap: 10px; align-items: start; padding: 10px 8px 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; outline: none; }
+.m27-row:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.m27-row.sel { background: color-mix(in srgb, var(--accent) 13%, var(--panel)); box-shadow: inset 3px 0 0 var(--accent); }
+.m27-row:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.m27-row.due::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--bad); }
+.m27-row.sel.due::after { display: none; }
+.m27-av { position: relative; width: 34px; height: 34px; }
+.m27-av .portrait, .m27-av .logo, .m27-av .m27-tile { width: 34px; height: 34px; border-radius: 50%; display: block; object-fit: cover; }
+.m27-dot { position: absolute; right: -2px; top: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--panel); }
+.m27-rb { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.m27-r1 { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.m27-from { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm, 0.875rem); color: var(--muted); }
+.m27-n { flex: none; font-size: var(--fs-xs, 0.75rem); color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 0 5px; line-height: 1.35; }
+.m27-date { flex: none; font-size: var(--fs-xs, 0.75rem); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.m27-sj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
+.m27-sn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm, 0.875rem); color: var(--muted); }
+.m27-r3 { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.m27-r3 .chip27 { font-size: 0.66rem; padding: 0 6px; }
+.m27-row.unread .m27-from { color: var(--ink); font-weight: 700; }
+.m27-row.unread .m27-sj { font-weight: 800; }
+.m27-row:not(.unread) .m27-sj { color: color-mix(in srgb, var(--ink) 82%, var(--muted)); }
+.m27-star { align-self: start; width: 26px; height: 26px; border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 1.05rem; line-height: 1; padding: 0; border-radius: 50%; }
+.m27-star:hover { color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); }
+.m27-star.on { color: var(--gold); }
+
+/* correspondência nova: entra deslizando, com o ponto pulsando uma vez */
+.m27-new { animation: m27-in 520ms cubic-bezier(.2, .8, .2, 1) both; }
+.m27-new .m27-dot { animation: m27-pulse 1.4s ease-out 2; }
+@keyframes m27-in { from { opacity: 0; transform: translateY(-6px); background: color-mix(in srgb, var(--accent) 22%, var(--panel)); } to { opacity: 1; transform: none; } }
+@keyframes m27-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+@media (prefers-reduced-motion: reduce) { .m27-new, .m27-new .m27-dot { animation: none; } }
+
+/* painel de leitura */
+.m27-reader { padding: var(--sp-3, 12px) var(--sp-4, 16px) var(--sp-4, 16px); }
+.m27-none { padding-top: var(--sp-5, 24px); }
+.m27-keys { margin: var(--sp-3, 12px) 0; }
+.m27-rbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 0 0 var(--sp-2, 8px); }
+.m27-rbar-sp { flex: 1; }
+.m27-rbar .btn.on { color: var(--gold); border-color: var(--gold); }
+.m27-back { display: none; }
+.m27-subj { font-size: var(--fs-xl, 1.375rem); line-height: 1.25; margin: 0 0 6px; font-weight: 800; }
+.m27-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: var(--sp-3, 12px); }
+.m27-thread { display: flex; flex-direction: column; gap: var(--sp-2, 8px); }
+.m27-fold { display: grid; grid-template-columns: 22px auto minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; text-align: left; font: inherit; font-size: var(--fs-sm, 0.875rem); padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius, 3px); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+.m27-fold .portrait, .m27-fold .logo, .m27-fold .m27-tile { width: 22px; height: 22px; border-radius: 50%; }
+.m27-fold-sn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.m27-fold.unread b { font-weight: 800; }
+.m27-fold-re { color: var(--ink); font-weight: 600; }
+
+.m27-letter { border: 1px solid var(--line); border-radius: var(--radius, 3px); background: var(--panel); }
+.m27-letter.focus { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.m27-lh { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--panel-2); }
+.m27-lav .portrait, .m27-lav .logo, .m27-lav .m27-tile { width: 44px; height: 44px; border-radius: 50%; display: block; }
+.m27-lhd { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.m27-lfrom { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+.m27-lfrom .dc18-voice { margin-left: 4px; }
+.m27-lbody { padding: 14px 16px 6px; max-width: 70ch; line-height: 1.55; }
+.m27-lbody p { margin: 0 0 0.75em; }
+.m27-greet { font-weight: 600; }
+.m27-ul { margin: 0 0 0.85em; padding-left: 1.2em; }
+.m27-ul li { margin: 0.2em 0; }
+.m27-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0.4em 0 1em; padding: 10px 12px; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--panel)); font-size: var(--fs-sm, 0.875rem); }
+.m27-facts dt { color: var(--muted); font-weight: 700; text-transform: uppercase; font-size: var(--fs-xs, 0.75rem); letter-spacing: 0.04em; padding-top: 2px; }
+.m27-facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+.m27-facts dd.t-bad { color: var(--bad); font-weight: 700; } .m27-facts dd.t-warn { color: var(--warn); font-weight: 600; }
+.m27-sign { margin-top: 1em !important; }
+.m27-reply { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin: 0 14px 12px auto; max-width: 70%; padding: 8px 12px; border-radius: 12px 12px 2px 12px; background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.m27-reply-l { font-size: var(--fs-xs, 0.75rem); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+.m27-acts { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); background: var(--panel-2); }
+.m27-acts-r, .m27-acts-g { display: flex; flex-wrap: wrap; gap: 6px; }
+.m27-acts-r.dec { align-items: stretch; }
+
+/* meio da época: só um toque no cabeçalho (o texto segue sem serifa, como toda a página) */
+.m27-letter.med-fax .m27-lh { background: repeating-linear-gradient(0deg, var(--panel-2), var(--panel-2) 3px, var(--panel) 4px); }
+
+.m27-tile { display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, hsl(var(--h, 30) 45% 50%) 22%, var(--panel-2)); border: 1px solid var(--line); }
+.m27-tile.desk { background: color-mix(in srgb, var(--accent) 16%, var(--panel-2)); }
+.m27-ini { display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.72rem; font-weight: 700; }
+
+.m27-toast .link { font-weight: 700; }
+
+/* celular: lista OU e-mail em tela cheia */
+@media (max-width: 860px) {
+  .m27-split { grid-template-columns: minmax(0, 1fr); }
+  .m27-split:not(.reading) .m27-rpane { display: none; }
+  .m27-split.reading .m27-lpane { display: none; }
+  .m27-list { max-height: none; min-height: 0; overflow: visible; }
+  .m27-rpane { position: static; max-height: none; min-height: 0; overflow: visible; }
+  .m27-back { display: inline-flex; }
+  .m27-nav { display: none; }
+  .m27-bulk { margin-left: 0; }
+  .mail27.reading .m27-tools, .mail27.reading .m27-filters { display: none; }
+  .m27-tools .seg27 { flex: 1 1 100%; }
+  .m27-tools .seg27 > button { flex: 1; }
+  .m27-q { flex-basis: 100%; }
+  .m27-bulk .btn { min-height: 34px; padding: 0 8px; font-size: var(--fs-sm, 0.875rem); }
+  .m27-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .m27-filters .chips27 { flex-wrap: nowrap; flex: none; }
+  .m27-filters .chip27b { white-space: nowrap; }
+  .m27-reader { padding: var(--sp-3, 12px); }
+  .m27-lbody { padding: 12px; }
+  .m27-reply { max-width: 85%; }
+  .m27-facts { grid-template-columns: minmax(0, 1fr); gap: 0 0; }
+  .m27-facts dd { margin-bottom: 6px; }
+}

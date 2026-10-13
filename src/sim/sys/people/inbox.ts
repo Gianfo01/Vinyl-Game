@@ -14,6 +14,7 @@ import { personalAdvance } from './life';
 import { leakSecret } from './secrets';
 import { talk } from './talks';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { isSeen18, noteKey18 } from '../../inbox18';
 
 /**
  * Rodada 8: respostas de mensagens de outros sistemas (convites de feat, propostas). A mensagem leva
@@ -177,17 +178,17 @@ export function inboxItems(s: GameState): InboxItem[] {
   }
   s.notifications.forEach((n: Notification, i) => {
     const year = yearAtWeek(s, n.week);
-    items.push({ key: `n${i}-${n.week}`, week: n.week, year, medium: mediumFor(year, n.kind === 'bad'), from: s.config.companyName, subject: n.kind === 'bad' ? l('Alerta', 'Alert') : n.kind === 'good' ? l('Boa notícia', 'Good news') : l('Aviso', 'Notice'), body: n.text, tone: n.kind, unread: n.week > st.readUntil, source: 'notification' });
+    items.push({ key: `n${i}-${n.week}`, week: n.week, year, medium: mediumFor(year, n.kind === 'bad'), from: s.config.companyName, subject: n.kind === 'bad' ? l('Alerta', 'Alert') : n.kind === 'good' ? l('Boa notícia', 'Good news') : l('Aviso', 'Notice'), body: n.text, tone: n.kind, unread: n.week > st.readUntil && !isSeen18(s, noteKey18(n.week, n.text.pt)), source: 'notification' });
   });
   for (const d of s.decisions) {
-    items.push({ key: d.id, week: d.week, year: s.year, medium: mediumFor(s.year, true), from: l('Mesa de decisões', 'Decision desk').pt, subject: d.title, body: d.text, tone: 'event', unread: true, source: 'decision', decisionId: d.id });
+    items.push({ key: d.id, week: d.week, year: s.year, medium: mediumFor(s.year, true), from: l('Mesa de decisões', 'Decision desk').pt, subject: d.title, body: d.text, tone: 'event', unread: !isSeen18(s, d.id), source: 'decision', decisionId: d.id });
   }
   return items.sort((a, b) => b.week - a.week || (a.source === 'decision' ? -1 : 1));
 }
 
 export function unreadCount(s: GameState): number {
   const st = P(s);
-  return st.inbox.filter((m) => !m.read && !m.resolved).length + s.decisions.length + s.notifications.filter((n) => n.week > st.readUntil && n.kind !== 'info').length;
+  return st.inbox.filter((m) => !m.read && !m.resolved).length + s.decisions.length + s.notifications.filter((n) => n.week > st.readUntil && n.kind !== 'info' && !isSeen18(s, noteKey18(n.week, n.text.pt))).length;
 }
 
 export { money };
