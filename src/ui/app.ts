@@ -60,6 +60,7 @@ import { backChip29, bindRoute29, openCampaign29, openIndex29, paletteCmds29 } f
 import { REDIRECT29, resolve29, type Target29 } from './ps/route29model';
 import { screenTop29 } from './ps/screentop29';
 import { alertsSettings29 } from './ps/alerts29';
+import { presetsSettings29 } from './ps/presets29';
 import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
 import { tabSnapshot } from './vis';
 import { withPlayerActsCache } from '../sim/util';
@@ -640,6 +641,7 @@ function settings(): void {
     h('button', { class: 'btn small ghost', onclick: () => { resetTut18('all'); setTutorials19(p, true); savePrefs(); if (store.game) restartTutorial(store.game); close(); render(); } }, t(l('Reiniciar tutoriais', 'Restart tutorials'))),
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
     ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
+    presetsSettings29(), // r29 REORG (M20): Guiado / Livre / Contemplativo — só apresentação
     settings19(), // r19 B.5
     settings20(), // r20 G6: densidade
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)

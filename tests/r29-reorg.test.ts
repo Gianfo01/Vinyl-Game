@@ -341,3 +341,31 @@ describe('r29 M44: notas do mundo ficam em Mundo', () => {
     expect(alertCat29('Aviso Marco da indústria: Fábricas de hits')).toBe('world');
   });
 });
+
+// ---------------------------------------------------------------- R29b item 5 — M20 presets de apresentação
+import { PRESETS29, PRESET_KEYS29, applyPreset29, detectPreset29, presetDiff29 } from '../src/ui/ps/presets29model';
+describe('r29 M20: presets Guiado/Livre/Contemplativo só de apresentação', () => {
+  it('cada preset só toca chaves de apresentação (nunca dificuldade, assist28, som, regras)', () => {
+    expect(PRESETS29.map((p) => p.id)).toEqual(['guided', 'free', 'calm']);
+    for (const p of PRESETS29) for (const k of Object.keys(p.set)) expect(PRESET_KEYS29 as readonly string[], `${p.id}:${k}`).toContain(k);
+    for (const bad of ['difficulty', 'assist28', 'audio28', 'textScale', 'history', 'seed']) expect(PRESET_KEYS29 as readonly string[]).not.toContain(bad);
+  });
+  it('prévia lista exatamente o que muda; aplicar é cópia; detecta o preset aplicado; outras chaves intactas', () => {
+    const cur = { dens20: 'comfy', interrupt23: 'milestones', textScale: 110, audio28: true, menuView: 'simple' } as Record<string, unknown>;
+    const d = presetDiff29(cur, 'free');
+    expect(d.map((x) => x.key)).toContain('dens20');
+    const nxt = applyPreset29(cur, 'free');
+    expect(cur.dens20).toBe('comfy'); // original intacto
+    expect(nxt.dens20).toBe('compact');
+    expect(nxt.textScale).toBe(110);
+    expect(nxt.audio28).toBe(true);
+    expect(detectPreset29(nxt)).toBe('free');
+    expect(presetDiff29(nxt, 'free')).toEqual([]);
+    expect(detectPreset29({})).toBe('custom');
+  });
+  it('preset não entra na partida: o estado do jogo não tem nenhuma das chaves', () => {
+    const s = fresh('r29-preset');
+    const cfg = JSON.stringify(s.config);
+    for (const k of PRESET_KEYS29) expect(cfg.includes(`"${k}"`), k).toBe(false);
+  });
+});

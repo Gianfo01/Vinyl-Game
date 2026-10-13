@@ -45,3 +45,7 @@
 .al29-top { flex-basis: 100%; overflow-wrap: anywhere; }
 .al29-t th { text-align: left; padding-right: 12px; }
 .al29-t td { padding: 2px 8px; }
+.pr29 { margin: 0 0 var(--sp-3); }
+.pr29 .seg27 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.pr29-now { margin-left: var(--sp-2); }
+.pr29-prev { margin-top: var(--sp-2); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-radius: var(--radius); }
