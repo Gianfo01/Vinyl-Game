@@ -19,6 +19,7 @@ import { SCANDAL_NAME, type ScandalKind } from '../scandal17';
 import type { Act, GameState } from '../types';
 import { fmtL } from '../util';
 import { FAC18, FAC_NAME18, factions18, fan18, type Fac18 } from './fans18';
+import { DEMO29 } from '../demo29hook';
 
 export type FKind28 = ScandalKind | 'founder';
 const KINDS28: FKind28[] = ['drugs', 'sex', 'violence', 'blasphemy', 'politics', 'money', 'conduct', 'offense', 'meltdown', 'crime', 'founder'];
@@ -64,6 +65,7 @@ export function stance28(s: GameState, a: Act, kind: FKind28, noise: number[] = 
     let v = base[i] + (f.loy - 50) / 250 + f.fac[i] / 200 + noise[i];
     if (rebel && k === 'purist' && (kind === 'drugs' || kind === 'offense' || kind === 'meltdown')) v += 0.3;
     if (rebel && k === 'main' && kind === 'drugs') v += 0.1;
+    v += DEMO29.scandal?.(s, a, kind, k) ?? 0; // R29 demo29: jovem perdoa mais rápido; purista mais velho, não
     out[k] = clamp(v, -1, 1);
   });
   return out;

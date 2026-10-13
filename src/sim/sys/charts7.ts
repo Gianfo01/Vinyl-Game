@@ -19,6 +19,7 @@ import { isUnlocked } from '../era';
 import { fmtL, hasTech, recordAward, remember } from '../util';
 import { boycotting, flushAwards, flushTop10, homeK, juryMemHook, juryRng, queueAward, queueTop10, snub15 } from './awards15';
 import { allReleases17 } from '../relidx17';
+import { DEMO29 } from '../demo29hook';
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -115,6 +116,7 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
   const wc = weekCache(s.year);
   const tastes = (wc.taste[fam] ??= COUNTRY_INFO.map((c) => countryTaste(c, fam as never, s.year)));
   let sum = 0;
+  const dm = act && DEMO29.cw ? DEMO29.cw(s, rel, act) : null; // R29 demo29: fãs por país e tendência regional do gênero
   for (let i = 0; i < COUNTRY_INFO.length; i++) {
     const c = COUNTRY_INFO[i];
     const taste = tastes[i];
@@ -125,6 +127,7 @@ function countryWeights(s: GameState, rel: Release, out: number[]): number {
     else {
       w *= (homeMarket === c.market ? 1.25 : 1) * (0.25 + 0.75 * Math.max(wc.soft(home), own)) / LPS[i];
     }
+    if (dm) w *= dm[i];
     out[i] = w;
     sum += w;
   }

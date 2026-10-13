@@ -45,7 +45,7 @@ const K = () => CONN29.k;
 /** aresta ligada? (CONN29_OFF=a,b no ambiente desliga — só para medir equilíbrio) */
 const on = (id: string) => !CONN29.off.has(id);
 
-interface C29 { aw: number }
+interface C29 { aw: number; /** contratos → imprensa: última semana em que a briga com o selo virou nota, por ato */ dp?: Record<string, number> }
 declare module '../ext4' { interface Ext4 { conn29: C29 } }
 registerExt4('conn29', () => ({ aw: -1 }));
 const st29 = (s: GameState): C29 => { const x = (s as unknown as { x4: { conn29?: C29 } }).x4; return (x.conn29 ??= { aw: -1 }); };
@@ -194,10 +194,13 @@ registerSimHook('newgame', 'conn29', (s) => { st29(s).aw = (s.awards ?? []).leng
 registerSimHook('month', 'conn29', (s: GameState) => {
   const st = st29(s), aw = s.awards ?? [];
   if (st.aw < 0) st.aw = aw.length; // saves antigos / início: só os prêmios daqui para frente
-  let nRep = 0;
+  let nRep = 0, nNews = 0;
   if (on('premios')) for (let i = st.aw; i < aw.length; i++) {
     const x = aw[i], a = x.actId ? s.acts[x.actId] : undefined;
     if (a) a.fame = Math.min(100, a.fame + 0.8 * (1 - a.fame / 100) * K()); // prêmios → fama
+    // prêmios → imprensa: o prêmio do seu ato vira nota (uma por mês; o barramento junta com a nota da cerimônia da mesma semana)
+    if (a && mine(a) && on('premios_imprensa') && nNews++ < 1) emitFact(s, { kind: 'award', actors: [a.id], severity: 30, visibility: 'public', tags: ['good', 'conn29'], src: 'conn29', place: a.city,
+      text: fmtL(l('{a} leva {n} — e a imprensa repercute', '{a} wins {n} — and the press picks it up'), { a: a.name, n: x.name }) });
     if (x.byPlayer && nRep++ < 3) s.player.reputation.artistic = Math.min(100, s.player.reputation.artistic + 1 * K()); // prêmios → reputação (até 3 por mês)
   }
   st.aw = aw.length;
@@ -317,6 +320,15 @@ registerSimHook('month', 'conn29b', (s: GameState) => {
     if (on('vida_rep') && avgStress(s, a) >= 26) r.artists = down(r.artists, 0.3); // vida → reputação: "selo que esgota artistas"
     if (on('vida_contratos') && avgStress(s, a) >= 22) a.trust = Math.max(0, a.trust - 1.5 * K());
     if (on('contratos_rep') && a.trust < 30) r.artists = down(r.artists, 0.4);
+    // contratos → imprensa: briga com o selo vaza (uma nota a cada 3 meses, no máximo, por ato)
+    if (on('contratos_imprensa') && a.trust < 30 && a.fame >= 10) {
+      const dp = (st29(s).dp ??= {});
+      if (s.week - (dp[a.id] ?? -99) >= 12) {
+        dp[a.id] = s.week;
+        emitFact(s, { kind: 'statement', actors: [a.id], severity: Math.round(Math.min(40, 10 + (30 - a.trust)) * K()), visibility: 'public', tags: ['contract', 'conn29'], src: 'conn29',
+          text: fmtL(l('{a} reclama do selo em entrevista: "ninguém nos ouve"', '{a} complains about the label in an interview: "nobody listens to us"'), { a: a.name }) });
+      }
+    }
   }
 });
 

@@ -371,4 +371,5 @@ import './mob29'; // R29 (Submundo): famílias — interações com consequênci
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
 import './family29'; // R29 (família): vida familiar de todo artista NPC, filhos da indústria com carreira, estrelas mirins (docs/familia29.md)
+import './demo29'; // R29 (DEMO): público por idade e região, gosto por geração (docs/demo29.md)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

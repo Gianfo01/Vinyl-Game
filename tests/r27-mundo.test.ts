@@ -97,7 +97,7 @@ describe('r27 mapa e ficha da cidade', () => {
     expect(Math.max(...g.values())).toBeCloseTo(1, 5);
     for (const v of g.values()) { expect(v).toBeGreaterThan(0); expect(v).toBeLessThanOrEqual(1); }
     expect([sceneTier27(0), sceneTier27(1.5), sceneTier27(4), sceneTier27(9)]).toEqual([0, 1, 2, 3]);
-    expect(LAYERS27.map((x) => x.id)).toEqual(['glow', 'hot', 'tour', 'festivals', 'rivals', 'closed', 'mine']); // r27 FLOW2: seus lugares fora da sede
+    expect(LAYERS27.map((x) => x.id)).toEqual(['glow', 'hot', 'tour', 'festivals', 'rivals', 'closed', 'mine', 'agefans']); // r27 FLOW2: seus lugares fora da sede; R29 demo29: fãs por idade
   });
   it('países fechados: Cortina de Ferro em 1962 (selo no Ocidente), aberta em 2005', () => {
     const s = game('r27-g', 1962);
