@@ -205,6 +205,7 @@ import './eras18';
 import './ability18';
 // Rodada 18 (talent18, onda 1): relíquias criadas no jogo + mais reais, descoberta por canais/demos, camps e pitching, banda da casa, escolas e TV de talentos.
 import './relics18';
+import './relics28'; // r28 (arte): relíquias de memorabilia (cartaz, ingresso, setlist, disco emoldurado…)
 import './discover18';
 // Rodada 23: Talentos (procurar / funil / decidir)
 import './scout23';
