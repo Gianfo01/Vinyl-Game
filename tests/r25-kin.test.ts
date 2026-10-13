@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { applyWorld17, newRunConfig20 } from '../src/sim/start17';
 import { createGame } from '../src/sim/worldgen';
 import { kinOf15, type Rel15 } from '../src/sim/sys/kin15';
-import { canonKey, classicLineup25, realDataOf, REAL_ALL } from '../src/sim/sys/realworld';
+import { canonKey, classicLineup25, realDataOf, REAL_ALL, rw } from '../src/sim/sys/realworld';
+import { inLineupAt } from '../src/data/realtypes';
 import { KIN25 } from '../src/data/kin25';
 import { REAL_CLASSIC } from '../src/data/realacts_classic';
 import { REAL_ACTS } from '../src/data/realnames';
@@ -61,7 +62,17 @@ describe('r25 formações', () => {
         const c = classicLineup25(d.m, d.d ?? a.debutYear);
         if (!c) continue;
         seen++;
-        if (a.members.length < c.size) short.push(`${a.name} ${a.members.length}/${c.size}`);
+        // r27 (LIN): mudança intencional — antes a formação clássica entrava inteira já no início (Elvis com Scotty Moore,
+        // Bill Black e D.J. Fontana em 1975). Agora quem falta da clássica ou já saiu na data inicial (ex-integrante) ou
+        // ainda vai entrar, com a entrada agendada (a banda continua sem ficar presa à formação de estreia).
+        const shift = a.debutYear - (d.d ?? a.debutYear);
+        const names = new Set(a.members.map((id) => canonKey(s.persons[id]?.name ?? '')));
+        const queued = new Set(rw(s).sched.filter((e) => e.actId === a.id && e.kind === 'join').map((e) => canonKey(e.m?.[0] ?? '')));
+        for (const i of c) {
+          const m = d.m[i];
+          if (names.has(canonKey(m[0])) || queued.has(canonKey(m[0])) || !inLineupAt(m, y, shift) || (m[3] !== undefined && m[3] <= y)) continue;
+          short.push(`${a.name}: ${m[0]}`);
+        }
       }
       expect(seen).toBeGreaterThan(0);
       expect(short).toEqual([]);

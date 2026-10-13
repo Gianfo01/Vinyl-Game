@@ -9,8 +9,9 @@ import { callOutToxic, fanMeetup, moderateCommunity, fandomOf } from '../../sim/
 import { cedeTerritory, crisisRenegotiate, exerciseOption, setClauses } from '../../sim/contracts2';
 import type { Act, GameState, Person } from '../../sim/types';
 import { instById, instrumentsOf } from '../../sim/sys/instruments';
-import { overall, ROLE_NAMES, type Role } from '../../sim/sys/talent/attrs';
+import { overall } from '../../sim/sys/talent/attrs';
 import { sings } from '../../sim/sys/vocals10';
+import { roleLine27 } from '../../sim/sys/roles27';
 import { openPersonPage } from '../pages';
 import { rngOf } from '../../sim/util';
 import { $, N, inspect, pill, rerender, section, toast } from '../common';
@@ -56,7 +57,7 @@ export function membersSection(s: GameState, a: Act): HTMLElement {
     return h('article', { class: `member ${p.alive ? '' : 'gone'}` },
       // rodada 10: o cabeçalho abre a ficha completa da pessoa
       h('header', { class: 'click', role: 'button', tabindex: 0, title: t(l('Abrir ficha completa', 'Open full card')), onclick: () => openPersonPage(pid), onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter') openPersonPage(pid); } },
-        portrait(p, 56), h('div', null, h('button', { class: 'link', type: 'button' }, h('b', null, p.name)), h('small', null, `${s.year - p.born} ${t(l('anos', 'yrs'))} · ${t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))}`), a.leaderId === pid ? pill(t(l('líder', 'leader')), 'good') : null, group >= 0 && (fac?.groups.length ?? 0) > 1 ? pill(`${t(l('facção', 'faction'))} ${group + 1}`) : null, !p.alive ? pill('✝') : null)),
+        portrait(p, 56), h('div', null, h('button', { class: 'link', type: 'button' }, h('b', null, p.name)), h('small', null, `${s.year - p.born} ${t(l('anos', 'yrs'))} · ${t(roleLine27(s, p))}`), a.leaderId === pid ? pill(t(l('líder', 'leader')), 'good') : null, group >= 0 && (fac?.groups.length ?? 0) > 1 ? pill(`${t(l('facção', 'faction'))} ${group + 1}`) : null, !p.alive ? pill('✝') : null)),
       mainTraits(s, a, p, !!known),
       chips(stat('heart', Math.round(p.morale), l('Moral', 'Morale'), p.morale < 35 ? 'warn' : ''), stat('stress', Math.round(p.stress), l('Estresse', 'Stress'), p.stress > 65 ? 'warn' : ''), p.health !== 'ok' ? stat('warning', t(HEALTH[p.health] ?? l(p.health, p.health)), l('Saúde', 'Health'), 'warn') : null),
       known ? h('details', { class: 'persona' }, h('summary', { class: 'small' }, t(l('Personalidade', 'Personality'))), PERSONA.map(([k, lbl]) => meter('sparkle', lbl, pe[k]))) : null,

@@ -8,6 +8,7 @@ import { fameText, knownLevel } from '../../sim/sys/fame15';
 import type { Act, GameState, Person } from '../../sim/types';
 import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
+import { roleLine27 } from '../../sim/sys/roles27';
 import { preDebut, visibleAct } from '../../sim/future';
 import { actLink, cityLink, cityName, actGenre23, genreName, labelLink, logo, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
@@ -132,7 +133,7 @@ function personRows(s: GameState): HTMLElement {
         const o = overall(s, p);
         return h('tr', null,
           h('td', null, h('b', null, p.name), p.isPlayer ? pill(t(l('você', 'you')), 'good') : null, !p.alive ? pill('†', 'bad') : null),
-          h('td', null, t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))),
+          h('td', null, t(roleLine27(s, p))),
           h('td', null, String(s.year - p.born)),
           h('td', null, a ? actLink(s, a.id) : '—'),
           h('td', null, deg >= 4 ? String(o) : deg >= 2 ? `${Math.max(0, o - 8)}–${Math.min(99, o + 8)}` : '?'),
@@ -165,7 +166,7 @@ function goneRows(s: GameState): HTMLElement {
         sortHead27(SD, [[l('Nome', 'Name'), 'name'], [l('Função', 'Role'), 'role'], [l('Vida', 'Life'), 'life'], [l('Atos', 'Acts'), 'acts'], ['', null]], toPage0, list),
         h('tbody', null, sorted.slice(F.page * PAGE, F.page * PAGE + PAGE).map((p) => h('tr', null,
           h('td', null, h('b', null, p.name), ' ', pill('†', 'bad')),
-          h('td', null, t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role))),
+          h('td', null, t(roleLine27(s, p))),
           h('td', null, `${p.born}–${p.died ?? '?'}${p.died ? ` (${p.died - p.born})` : ''}`),
           h('td', null, (actsOf[p.id] ?? []).map((a) => actLink(s, a.id))),
           h('td', null, h('button', { class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),

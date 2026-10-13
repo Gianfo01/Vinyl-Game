@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { histLocked } from '../src/sim/history15';
-import { realDataOf, rw } from '../src/sim/sys/realworld';
+import { identityYear27, realDataOf, rw } from '../src/sim/sys/realworld';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import type { GameState } from '../src/sim/types';
@@ -41,7 +41,14 @@ describe('modos de história r15', () => {
   it('história alternativa (r18): fora do modo exato nenhum fato real futuro é agendado', () => {
     const free = mk('free'), loose = mk('loose'), strict = mk('strict');
     const fut = (s: GameState, k: string) => rw(s).sched.filter((x) => x.kind === k && x.year >= 1975).length;
-    for (const s of [free, loose]) for (const k of ['fate', 'release', 'join', 'leave']) expect(fut(s, k)).toBe(0);
+    for (const s of [free, loose]) for (const k of ['fate', 'release']) expect(fut(s, k)).toBe(0);
+    // r27 (LIN): mudança intencional — fora do modo exato só a formação de identidade (até a estreia ou a formação
+    // clássica) é agendada, marcada com `lin`; trocas posteriores continuam por conta da simulação
+    for (const s of [free, loose]) for (const x of rw(s).sched.filter((e) => (e.kind === 'join' || e.kind === 'leave') && e.year >= 1975)) {
+      expect(x.lin).toBe(1);
+      const a = s.acts[x.actId], d = realDataOf(a)!;
+      expect(x.year).toBeLessThanOrEqual(identityYear27(d.m!, d.d!) + a.debutYear - d.d!);
+    }
     expect(fut(strict, 'fate')).toBeGreaterThan(0);
     expect(fut(strict, 'release')).toBeGreaterThan(0);
   });

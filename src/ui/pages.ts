@@ -3,7 +3,7 @@
 // por grupo, instrumentos, personalidade, saúde, relações, carreira e aulas.
 // O que o jogador vê de atos alheios depende do grau de conhecimento (faixas, não números exatos).
 
-import { CAT_MIN17, groupTabs17 } from './popcat17';
+import { CAT_MIN17, catCount17, groupTabs17 } from './popcat17';
 import { AMBITIONS, ORIGINS, traitById } from '../data/people';
 import { actAffinity, affinityLabel, bestFamilies, genreFamilyName, worstFamily } from '../sim/sys/temper';
 import { CONTRACT_MODELS } from '../data/rules';
@@ -13,10 +13,11 @@ import { avgReview } from '../sim/media';
 import { actState } from '../sim/people';
 import { DEGREES, estimate, sourceName, visibleFields } from '../sim/scouting';
 import {
-  GROUP_NAMES, LESSON_COST, LESSON_NAMES, ROLE_NAMES, attrsOf, form, groupAvg, lessonFor, marketValue, overall, startLessons, stopLessons, tal,
+  GROUP_NAMES, LESSON_COST, LESSON_NAMES, attrsOf, form, groupAvg, lessonFor, marketValue, overall, startLessons, stopLessons, tal,
   type AttrGroup,
 } from '../sim/sys/talent';
 import { P } from '../sim/sys/people/state';
+import { roleLine27 } from '../sim/sys/roles27';
 import { activeThoughts, thoughtText } from '../sim/sys/people/thoughts';
 import type { Act, GameState, Person } from '../sim/types';
 import { money } from '../sim/util';
@@ -60,7 +61,9 @@ export const PERSON_HEAD_EXTRAS: ((s: GameState, p: Person) => HTMLElement | nul
 const GROUP_ICON: Record<AttrGroup, string> = { tech: 'guitar', create: 'pen', stage: 'mic', mind: 'bulb', body: 'heart' };
 
 /** Abas locais de uma página (redesenham só o corpo da página). */
-export function pageTabs(items: { id: string; label: L; icon?: string; render: () => HTMLElement | null }[], initial?: string): HTMLElement {
+/** `count` (r27 LIN): número que a aba mostra no rótulo e no selo da categoria (Integrantes = integrantes atuais, não o
+ *  número de abas da categoria, que confundia: "Integrantes 2" numa banda de 4). */
+export function pageTabs(items: { id: string; label: L; icon?: string; count?: number; render: () => HTMLElement | null }[], initial?: string): HTMLElement {
   const body = h('div', { class: 'pg-tab-body' });
   const bar0 = h('div', { class: 'tabs', role: 'tablist' });
   // r17: com muitas abas, primeiro a categoria (Resumo, Carreira, Vida, Negócios, Mundo e imprensa, Mais)
@@ -69,9 +72,9 @@ export function pageTabs(items: { id: string; label: L; icon?: string; render: (
   let cur = items.find((i) => i.id === initial)?.id ?? items[0]?.id;
   const draw = () => {
     const g = cats ? groups!.find((x) => x.items.some((i) => i.id === cur)) ?? groups![0] : null;
-    if (cats && g) cats.replaceChildren(...groups!.map((x) => h('button', { role: 'tab', 'aria-selected': x === g ? 'true' : 'false', class: x === g ? 'on' : '', onclick: () => { cur = x.items[0].id; draw(); } }, ic(x.cat.icon), ' ', t(x.cat.label), h('span', { class: 'n17' }, ` ${x.items.length}`))));
+    if (cats && g) cats.replaceChildren(...groups!.map((x) => h('button', { role: 'tab', 'aria-selected': x === g ? 'true' : 'false', class: x === g ? 'on' : '', onclick: () => { cur = x.items[0].id; draw(); } }, ic(x.cat.icon), ' ', t(x.cat.label), h('span', { class: 'n17' }, ` ${catCount17(x.items)}`))));
     const shown = g ? g.items : items;
-    bar0.replaceChildren(...shown.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { cur = i.id; draw(); } }, i.icon ? ic(i.icon) : null, i.icon ? ' ' : null, t(i.label))));
+    bar0.replaceChildren(...shown.map((i) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: i.id === cur ? 'on' : '', onclick: () => { cur = i.id; draw(); } }, i.icon ? ic(i.icon) : null, i.icon ? ' ' : null, t(i.label), i.count !== undefined ? h('span', { class: 'n17' }, ` ${i.count}`) : null)));
     body.replaceChildren(items.find((i) => i.id === cur)?.render() ?? h('span'));
   };
   draw();
@@ -122,7 +125,7 @@ export function personCard(s: GameState, p: Person, opts: { onClick?: () => void
   const extra = all.filter((x) => x.def.group === 'create' || x.def.group === 'stage').sort((a, b) => b.value - a.value).slice(0, 1);
   const top = [...main, ...extra].slice(0, opts.compact ? 2 : 3);
   return h('button', { class: `pcard ${tone(ovr)}`, type: 'button', ...ent27('person', `p:${p.id}`), onclick: opts.onClick ?? (() => openPersonPage(p.id)) },
-    h('div', { class: 'pcard-top' }, w >= 99 ? ovrBadge('?') : ovrBadge(w ? shown(ovr, w) : ovr), h('small', null, t(ROLE_NAMES[p.role] ?? l(p.role, p.role))), mine ? formIcon(form(p)) : null),
+    h('div', { class: 'pcard-top' }, w >= 99 ? ovrBadge('?') : ovrBadge(w ? shown(ovr, w) : ovr), h('small', { title: t(roleLine27(s, p)) }, t(roleLine27(s, p, 3))), mine ? formIcon(form(p)) : null), // r27 (LIN): todas as funções
     portraitCanvas(p, s, 2),
     h('b', { class: 'pcard-name' }, p.name, p.isPlayer ? ' ★' : ''),
     h('small', { class: 'muted' }, `${s.year - p.born} ${t(l('anos', 'yrs'))}`),
@@ -163,7 +166,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
     h('div', { class: 'pg-head-main' },
       h('div', { class: 'row wrap' }, w >= 99 ? ovrBadge('?', true) : ovrBadge(w ? shown(ovr, w) : ovr, true), h('div', null,
         h('h3', null, p.name, p.isPlayer ? pill(t(l('você', 'you')), 'gold') : null, !p.alive ? pill(t(l('falecido(a)', 'deceased')), 'bad') : null),
-        h('div', null, pill(t(ROLE_NAMES[p.role] ?? l(p.role, p.role))), ' ', act ? actLink(s, act.id) : h('span', { class: 'muted' }, t(l('sem banda', 'no band'))), mine ? h('span', null, ' ', formIcon(form(p))) : null))),
+        h('div', null, pill(t(roleLine27(s, p))), ' ', act ? actLink(s, act.id) : h('span', { class: 'muted' }, t(l('sem banda', 'no band'))), mine ? h('span', null, ' ', formIcon(form(p))) : null))),
       chips(
         stat('calendar', p.real27?.bornEst ? `~${s.year - p.born}` : s.year - p.born, p.real27?.bornEst ? l('Idade aproximada', 'Approximate age') : l('Idade', 'Age')), // r27 (F)
         stat('star', potShown, l('Potencial', 'Potential')),
@@ -351,7 +354,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
   );
   return h('div', { class: 'ficha pg' }, head, pageTabs([
     { id: 'overview', label: l('Visão geral', 'Overview'), icon: 'star', render: () => overviewTab(s, a, deg, mine) },
-    { id: 'members', label: l('Integrantes', 'Members'), icon: 'fans', render: () => (canSee(s, a.id, 'bio') ? membersTab(s, a, ms) : h('p', { class: 'muted' }, `${ms.length} ${t(l('integrante(s)', 'member(s)'))} · `, t(HINT15))) },
+    { id: 'members', label: l('Integrantes', 'Members'), icon: 'fans', count: ms.length, render: () => (canSee(s, a.id, 'bio') ? membersTab(s, a, ms) : h('p', { class: 'muted' }, `${ms.length} ${t(l('integrante(s)', 'member(s)'))} · `, t(HINT15))) },
     { id: 'disco', label: l('Discografia', 'Discography'), icon: 'disc', render: () => discoTab(s, a, mine) },
     vis.private || mine ? { id: 'songs', label: l('Músicas', 'Songs'), icon: 'note', render: () => songsTab(s, a, mine) } : null,
     { id: 'history', label: l('Carreira', 'Career'), icon: 'trophy', render: () => (canSee(s, a.id, 'bio') ? historyTab(s, a) : h('p', { class: 'muted' }, t(HINT15))) },

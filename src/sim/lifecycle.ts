@@ -3,6 +3,7 @@
 
 import { clamp, type Rng } from '../core/rng';
 import { CITIES, MARKETS, l } from '../data/world';
+import { REAL_CLASSIC } from '../data/realacts_classic';
 import { makeAct } from './people';
 import { growPerson, traitMod } from './people';
 import { composeSongs, recordSongs, unrecorded, unreleasedRecorded } from './production';
@@ -150,6 +151,10 @@ export function npcProduction(s: GameState, r: Rng): void {
 export function worldSpawns(s: GameState, r: Rng): void {
   for (const u of [...s.upcoming]) {
     if (s.year < u.debut - 2) continue;
+    // r27 (LIN): com nomes reais o ato não surge antes da formação real (deslocada como a estreia) — o Jimi Hendrix
+    // Experience (formado em 1966) aparecia em 1964 com a formação e o nome de 1966 (Mitch Mitchell com 16 anos)
+    const ex = s.config.realNames ? REAL_CLASSIC[u.no] : undefined;
+    if (ex?.d !== undefined && s.year < (ex.f ?? ex.d - 1) + (u.debut - ex.d)) continue;
     s.upcoming.splice(s.upcoming.indexOf(u), 1);
     const act = makeAct(s, r, {
       name: u.name, genre: u.genre, city: u.city, members: u.members, potential: u.potential,

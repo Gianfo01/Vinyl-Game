@@ -2,7 +2,7 @@
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { formerNames16, lineupLog16, path16, segTxt, stints16, type Path16 } from '../../sim/sys/lineup16';
-import { ROLE_NAMES } from '../../sim/sys/talent/attrs';
+import { roleLine27 } from '../../sim/sys/roles27';
 import type { Act, GameState, Person } from '../../sim/types';
 import { actLink, pill } from '../common';
 import { h } from '../dom';
@@ -11,7 +11,7 @@ import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const MO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const live = (a: Act) => a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus';
-const roleName = (p: Person) => t((ROLE_NAMES as Record<string, ReturnType<typeof l>>)[p.role] ?? l(p.role, p.role));
+const roleName = (s: GameState, p: Person) => t(roleLine27(s, p)); // r27 (LIN): todas as funções (Guitarra · Vocal)
 
 /** Outros atos da pessoa, com rótulo (solo / banda) e anos. */
 function others(s: GameState, pid: string, except: string): HTMLElement[] {
@@ -36,7 +36,7 @@ function lineupTab(s: GameState, a: Act): HTMLElement {
         const p = s.persons[x.pid];
         const now = a.members.includes(x.pid);
         return [
-          h('div', { class: 'small' }, h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, p.name), !p.alive ? ' †' : '', h('div', { class: 'muted', style: 'font-size:11px' }, `${roleName(p)} · ${segTxt(x.segs)}`)),
+          h('div', { class: 'small' }, h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, p.name), !p.alive ? ' †' : '', h('div', { class: 'muted', style: 'font-size:11px' }, `${roleName(s, p)} — ${segTxt(x.segs)}`)),
           h('div', null,
             h('div', { title: segTxt(x.segs), style: 'position:relative;height:10px;border-radius:5px;background:var(--panel-2)' },
               ...x.segs.map((g) => h('div', { style: `position:absolute;top:0;bottom:0;left:${pct(g.from)};width:calc(${pct(g.to ?? y1)} - ${pct(g.from)} + 4px);min-width:4px;border-radius:5px;background:${now && g.to === undefined ? 'var(--accent)' : 'var(--muted)'}` }))),
