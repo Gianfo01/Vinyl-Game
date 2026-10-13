@@ -37,10 +37,11 @@ export function sampleLooks(): [string, Appearance][] {
   return out;
 }
 
-export function looksHashes(): Record<string, number> {
+/** Hash do retrato (4 épocas) e do sprite (4 poses) de cada visual. */
+export function looksHashes(looks: [string, Appearance][] = sampleLooks()): Record<string, number> {
   fakeCanvas();
   const res: Record<string, number> = {};
-  for (const [k, a] of sampleLooks()) {
+  for (const [k, a] of looks) {
     for (const y of [1935, 1968, 1992, 2031]) res[`${k}|p${y}`] = pxHash28(portraitPx({ id: k, look: a }, y));
     for (const [pose, dir, role] of [['stand', 'SE', null], ['walk', 'SW', null], ['play', 'SE', 'guitar'], ['sitplay', 'NE', 'drums']] as const) {
       const sp = avatarSprite(a, { year: 1975, pose, dir, role: role as never, frame: 1 });
