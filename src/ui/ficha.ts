@@ -1,11 +1,12 @@
 // Ficha unificada com cadeia de inspeção por IDs estáveis (GDD §24) + modal de oferta.
 
 import { freeCash20, reservedAdvances20 } from '../sim/oblig20';
-import { scoutEligible20 } from '../sim/scout20';
 import { cap14 } from '../sim/sys/gate14';
 import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
-import { acceptCounter, defaultOffer, evaluateOffer, offerNow, pressForAnswer, withdrawCounter } from '../sim/contracts';
+import { acceptCounter, defaultOffer, evaluateOffer, offerEligible29, offerNow, pressForAnswer, withdrawCounter } from '../sim/contracts';
+import { HOW29, applyModel29, isSpecial29, termLabel29 } from '../sim/terms29';
+import { x29Fields } from './sys/contracts29';
 import type { Act, GameState, Offer, Release, Song } from '../sim/types';
 import { criticScore, fmtSecs, scoreClass, trackList } from '../sim/relinfo';
 import { $, N, actLink, cityLink, cover, songName, genreName, inspect, kv, labelLink, logo, modal, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
@@ -156,18 +157,20 @@ export function registerInspect(): void {
 }
 
 // ---------- Oferta ----------
-export function openOffer(actId: string, classic27 = false): void {
+export function openOffer(actId: string, classic27 = false, model0?: ContractModel): void {
   const s = g();
   const a = s.acts[actId];
   if (!a) return;
-  if (!classic27 && screen27('nego', s, { actId }, () => openOffer(actId, true))) return; // r27 FLOW: a mesa de negociação É a tela da oferta (proposta única = caminho rápido)
-  const o: Omit<Offer, 'id' | 'week' | 'status'> = defaultOffer(s, a);
+  // R29 (contratos+): `model0` abre já no modelo (ex.: "Propor empresariamento" na ficha de um ato de selo rival); a mesa recebe o mesmo rascunho
+  const base29 = model0 ? (() => { const d = defaultOffer(s, a); applyModel29(d, model0); d.rights = defaultRights(d.model, d.publishing); return d; })() : undefined;
+  if (!classic27 && screen27('nego', s, { actId, data: base29 ? { base: base29 } : undefined }, () => openOffer(actId, true, model0))) return; // r27 FLOW: a mesa de negociação É a tela da oferta (proposta única = caminho rápido)
+  const o: Omit<Offer, 'id' | 'week' | 'status'> = base29 ?? defaultOffer(s, a);
   const evalBox = h('div', { class: 'eval' });
   let layers: Layers20 | null = null; // r20 (G6 §4.5): oferta em camadas
   const update = () => {
     layers?.refresh();
     const ev = evaluateOffer(s, a, o);
-    const el = scoutEligible20(s, a); // r20 (B9): mesma regra do radar, da proposta e do aceite
+    const el = offerEligible29(s, a, o.model); // r20 (B9): mesma regra do radar, da proposta e do aceite (R29: a regra do modelo)
     evalBox.replaceChildren(
       el.why ? h('p', { class: el.ok ? 'small' : 'small bad', role: el.ok ? undefined : 'alert' }, pill(t(el.ok ? l('Volta do hiato', 'Comeback') : l('Não contratável', 'Not signable')), el.ok ? 'warn' : 'bad'), ' ', t(el.why)) : '',
       h('div', null, t(S.chance), ': ', why18(s, 'offer.chance', { act: a.id, offer: o }, pill(t(S[ev.band]), ev.band)), ' ', h('small', { class: 'muted' }, t(l('(passe o mouse para ver cada termo)', '(hover to see each term)')))),
@@ -185,12 +188,18 @@ export function openOffer(actId: string, classic27 = false): void {
   const n360 = h('p', { class: 'muted small' });
   const draw360 = () => { n360.textContent = o.model === '360' ? t(why360(s, a, o.share360)) : ''; };
   const drawRights = () => rightsBox.replaceChildren(rightsFieldset(s, o, update));
+  // R29 (contratos+): campos do modelo (comissão, participação e meta) e o que acontece ao assinar
+  const box29 = h('div', { class: 'x29-box' });
+  const royLabel = h('span', null, t(termLabel29(o.model)));
+  const draw29 = () => { royLabel.textContent = t(termLabel29(o.model === 'management' || o.model === 'jv' ? 'classic' : o.model)); box29.replaceChildren(...(isSpecial29(o.model) ? [h('p', { class: 'small' }, t(HOW29[o.model]!)), x29Fields(s, o, update)] : [])); };
   // r20 (G6 §4.5): os MESMOS campos em três grupos (Dinheiro e prazo / Controle e direitos / Compromissos e recuperação)
+  const modelDesc = h('p', { class: 'muted small' }, t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc));
   const moneyF = [
-    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.map((m) => ({ value: m.id, label: t(m.name) + (m.available ? '' : ' ' + t(S.phaseLater)), disabled: !m.available })), (v: ContractModel) => { o.model = v; o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); drawRights(); draw360(); update(); })),
-    h('p', { class: 'muted small' }, t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc)),
+    h('label', null, t(S.model), select(o.model, CONTRACT_MODELS.filter((m) => m.available).map((m) => ({ value: m.id, label: t(m.name) })), (v: ContractModel) => { applyModel29(o, v); o.publishing = v === 'publishing' || v === '360'; o.rights = defaultRights(v, o.publishing); modelDesc.textContent = t(CONTRACT_MODELS.find((m) => m.id === o.model)?.desc); drawRights(); draw360(); draw29(); update(); })),
+    modelDesc,
+    box29,
     h('label', null, `${t(S.advanceAmt)} ($)`, num(Math.round(o.advance / 100), Math.max(10, Math.round(unit * 100 / 100)), (v) => (o.advance = Math.round(v * 100)))),
-    h('label', null, `${t(S.royalty)} (%)`, num(Math.round(o.royalty * 100), 1, (v) => (o.royalty = v / 100))),
+    h('label', null, royLabel, num(Math.round(o.royalty * 100), 1, (v) => (o.royalty = v / 100))), // R29: na produção é a parte do artista; no empresariamento/JV o termo está no quadro do modelo
     h('label', null, `${t(S.distFee)} (%)`, num(Math.round((o.distributionFee ?? 0.2) * 100), 1, (v) => (o.distributionFee = v / 100))),
     h('label', null, `${t(S.share360)} (%)`, num(Math.round(o.share360 * 100), 5, (v) => { o.share360 = v / 100; draw360(); })),
     n360,
@@ -210,6 +219,7 @@ export function openOffer(actId: string, classic27 = false): void {
   const form = h('div', { class: 'form' }, layers.el);
   drawRights();
   draw360();
+  draw29();
   update();
   let close = () => {};
   const reply = h('div', { class: 'offer-reply' });
@@ -248,7 +258,7 @@ export function openOffer(actId: string, classic27 = false): void {
     layers.review, // r20: caixa livre/reservado, dívidas, promessas e requisitos antes de enviar
     h('button', { class: 'btn primary', onclick: () => {
       if (freeCash20(s) < o.advance) return toast(reservedAdvances20(s) > 0 ? t(l('Caixa livre insuficiente: {r} já está reservado em ofertas pendentes.', 'Not enough free cash: {r} is already reserved for pending offers.'), { r: $(reservedAdvances20(s)) }) : t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
-      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined });
+      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined, x29: o.x29 ? { ...o.x29 } : undefined });
       showReply(offer, result);
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
     reply,

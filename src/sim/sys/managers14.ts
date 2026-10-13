@@ -340,7 +340,7 @@ registerSimHook('month', 'managers14', (s) => managersMonth(s, Rng.fromSeed(`${s
 // ---------------------------------------------------------------- evento: exigência em nome do cliente
 
 function bumpRoyalty(s: GameState, actId: string): void {
-  const c = Object.values(s.contracts).filter((x) => x.actId === actId && x.party === 'player' && x.endWeek > s.week).sort((a, b) => b.startWeek - a.startWeek)[0];
+  const c = Object.values(s.contracts).filter((x) => x.actId === actId && x.party === 'player' && x.model !== 'management' && x.endWeek > s.week).sort((a, b) => b.startWeek - a.startWeek)[0]; // R29: royalty é do contrato de selo
   if (c) c.royalty = Math.min(0.5, Math.round((c.royalty + 0.03) * 100) / 100);
 }
 deferEvents<EventDef>([

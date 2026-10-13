@@ -5,7 +5,7 @@ import { riv29ById, rivOf29 } from '../sim/rivals29data'; // r29: nível dos riv
 import { FREQS29, count29, statusAll29 } from '../sim/labels29data'; // r29: gravadoras no início e selos novos
 import { labelsCard29 } from './ng29labels'; // r29
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
-import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
+import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS, roleOfCareers29 } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
 import { realFounded } from '../data/realnames';
 import { S, t } from '../i18n/strings';
@@ -315,7 +315,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       ] },
       { tab: 2, name: l('Modo', 'Mode'), rows: [
         [l('Atividades', 'Activities'), (cfg.careers?.main ?? ['label']).length ? careerSummary(cfg).split(' · ')[0] : '—'],
-        [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
+        [S.role, t(ROLES.find((r) => r.id === roleOfCareers29(cfg.careers?.main))!.name)], // R29: o papel segue as atividades (Empresário/Editora/Estúdio também)
         [l('Situação inicial', 'Starting situation'), t(statusAll29(cfg))], // r29: carreira × situação × rivais × gravadoras ("Selo emergente · rivais gigantes · 8 gravadoras")
         [l('Como começa', 'How it starts'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
         [S.companyName, cfg.companyName],

@@ -315,7 +315,7 @@ registerSimHook('month', 'dossier8', (s) => {
   const st = dos(s);
   // assinaturas novas viram apostas registradas
   for (const c of Object.values(s.contracts)) {
-    if (c.party !== 'player' || c.startWeek < s.week - 5) continue;
+    if (c.party !== 'player' || c.model === 'management' || c.startWeek < s.week - 5) continue; // R29: empresariamento não é aposta de A&R
     const act = s.acts[c.actId];
     if (!act || act.playerBand || st.calls.some((x) => x.actId === act.id && x.kind === 'sign' && x.week >= c.startWeek - 5)) continue;
     logCall(s, act, 'sign');
