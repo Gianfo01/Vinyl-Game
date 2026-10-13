@@ -13,7 +13,7 @@ import { avatarSprite, lookOf, portraitCanvas, randomLook } from './avatar';
 import { drawText, fitText, textWidth } from './font';
 import { buildPlace } from './places';
 import { H, W } from './places/kit';
-import { css } from './px';
+import { css, ctxEllipse, ctxPoly } from './px';
 import type { Appearance } from '../../sim/types';
 import type { Sprite } from './px';
 import './cine18.css';
@@ -99,14 +99,14 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, s: GameState, f: Fram
         const g = ghostOf(sp, a.ghost);
         const fl = still ? 0.7 : a.ghost === 2 ? 0.55 + 0.25 * Math.sin(tm * 9) + (Math.sin(tm * 37) > 0.93 ? -0.35 : 0) : 0.4 + 0.12 * Math.sin(tm * 3);
         const jit = !still && Math.sin(tm * 23) > 0.95 ? 1 : 0;
-        const sc = f.place === 'holo_stage' ? 1.25 : 1.6;
+        const sc = f.place === 'holo_stage' ? 1 : 2; // R29: escala inteira do holograma (1,25/1,6 deixavam pixels desiguais)
         ctx.globalAlpha = 0.14; ctx.fillStyle = a.ghost === 2 ? '#5ffff0' : '#c8d8ff';
-        ctx.beginPath(); ctx.ellipse(x, y - sp.ay * sc / 2, 14 * sc, sp.ay * sc / 1.6, 0, 0, Math.PI * 2); ctx.fill();
+        ctxEllipse(ctx, Math.round(x), Math.round(y - sp.ay * sc / 2), Math.round(14 * sc), Math.round(sp.ay * sc / 1.6));
         ctx.globalAlpha = Math.max(0.15, Math.min(0.95, fl));
         ctx.drawImage(g, Math.round(x - sp.ax * sc + jit), Math.round(y - sp.ay * sc - bob), Math.round(g.width * sc), Math.round(g.height * sc));
         ctx.globalAlpha = 0.18;
         ctx.fillStyle = a.ghost === 2 ? '#5ffff0' : '#c8d8ff';
-        ctx.beginPath(); ctx.ellipse(x, y, 9, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctxEllipse(ctx, Math.round(x), Math.round(y), 9, 2);
         ctx.globalAlpha = 1;
       } else ctx.drawImage(sp.c, x - sp.ax, y - sp.ay - bob);
       if (a.inj && !a.ghost) { ctx.fillStyle = '#f4f4f0'; ctx.fillRect(x - 3, y - sp.ay + 5, 7, 2); ctx.fillStyle = '#d03030'; ctx.fillRect(x + 1, y - sp.ay + 5, 1, 1); }
@@ -151,7 +151,7 @@ function props(ctx: CanvasRenderingContext2D, s: GameState, f: Frame18, tm: numb
   const still = reduced();
   for (const p of f.props) {
     if (layer === 'back') {
-      if (p === 'carpet') { ctx.fillStyle = '#9a1c22'; ctx.beginPath(); ctx.moveTo(116, 88); ctx.lineTo(140, 88); ctx.lineTo(176, 144); ctx.lineTo(80, 144); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#d4a63c'; ctx.fillRect(80, 142, 96, 2); }
+      if (p === 'carpet') { ctx.fillStyle = '#9a1c22'; ctxPoly(ctx, [[116, 88], [140, 88], [176, 144], [80, 144]]); ctx.fillStyle = '#d4a63c'; ctx.fillRect(80, 142, 96, 2); }
       else if (p === 'screen') {
         ctx.fillStyle = '#0c1020'; ctx.fillRect(84, 6, 88, 40); ctx.fillStyle = '#20406a'; ctx.fillRect(86, 8, 84, 36);
         const who = f.pic ?? f.actors.find((a) => a.ghost)?.pid ?? f.noms?.find((n) => n.win || n.mine)?.pid;
@@ -160,7 +160,7 @@ function props(ctx: CanvasRenderingContext2D, s: GameState, f: Frame18, tm: numb
       } else if (p === 'chart') {
         ctx.fillStyle = '#1a1840'; ctx.fillRect(18, 18, 70, 46);
         for (let i = 0; i < 3; i++) { ctx.fillStyle = i === 0 ? '#ffd040' : '#8a88c8'; ctx.fillRect(34, 24 + i * 13, i === 0 ? 46 : 36 - i * 6, 8); drawText(ctx, String(i + 1), 24, 26 + i * 13, '#ffffff'); }
-      } else if (p === 'glass') { ctx.fillStyle = 'rgba(190,225,255,0.16)'; ctx.beginPath(); ctx.moveTo(84, 30); ctx.lineTo(172, 30); ctx.lineTo(186, 92); ctx.lineTo(70, 92); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(220,240,255,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(70.5, 92); ctx.lineTo(84.5, 30); ctx.lineTo(171.5, 30); ctx.lineTo(185.5, 92); ctx.stroke(); }
+      } else if (p === 'glass') { ctx.fillStyle = 'rgba(190,225,255,0.16)'; ctxPoly(ctx, [[84, 30], [172, 30], [186, 92], [70, 92]]); ctx.fillStyle = 'rgba(220,240,255,0.5)'; ctx.fillRect(84, 30, 88, 1); for (let y = 31; y < 92; y++) { const t = (y - 30) / 62; ctx.fillRect(Math.round(84 - 14 * t), y, 1, 1); ctx.fillRect(Math.round(171 + 14 * t), y, 1, 1); } }
       else if (p === 'table') { ctx.fillStyle = '#5a3a22'; ctx.fillRect(84, 94, 96, 10); ctx.fillStyle = '#3a2414'; ctx.fillRect(84, 104, 96, 3); }
       else if (p === 'barrier') { ctx.fillStyle = '#9aa0a8'; ctx.fillRect(0, 96, W, 2); for (let x = 4; x < W; x += 16) ctx.fillRect(x, 96, 1, 6); }
       continue;
@@ -168,7 +168,7 @@ function props(ctx: CanvasRenderingContext2D, s: GameState, f: Frame18, tm: numb
     if (p === 'rope') { for (const x of [92, 164]) { ctx.fillStyle = '#d4a63c'; for (let y = 96; y < 144; y += 16) ctx.fillRect(x + (y - 96) * (x < 128 ? -0.4 : 0.4), y, 2, 8); } }
     else if (p === 'cameras') { for (const [x, y] of [[22, 108], [40, 122], [212, 110], [230, 124]]) { ctx.fillStyle = '#18181c'; ctx.fillRect(x, y, 9, 6); ctx.fillStyle = '#6a7a8c'; ctx.fillRect(x + 3, y + 1, 3, 3); if (!still && Math.sin(tm * 11 + x) > 0.9) { ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 2, y - 2, 13, 10); } } }
     else if (p === 'podium') { ctx.fillStyle = '#4a2c18'; ctx.fillRect(120, 84, 18, 16); ctx.fillStyle = '#d4a63c'; ctx.fillRect(126, 89, 6, 4); ctx.fillStyle = '#2a2a2a'; ctx.fillRect(128, 74, 1, 10); }
-    else if (p === 'trophy') { const x = 146, y = 84; ctx.fillStyle = '#e3c057'; ctx.fillRect(x, y - 2, 6, 2); ctx.fillRect(x + 2, y - 8, 2, 6); ctx.beginPath(); ctx.arc(x + 3, y - 10, 4, Math.PI, 0); ctx.fill(); ctx.fillRect(x - 1, y - 11, 8, 1); }
+    else if (p === 'trophy') { const x = 146, y = 84; ctx.fillStyle = '#e3c057'; ctx.fillRect(x, y - 2, 6, 2); ctx.fillRect(x + 2, y - 8, 2, 6); ctx.fillRect(x, y - 13, 7, 3); ctx.fillRect(x + 1, y - 10, 5, 1); ctx.fillRect(x + 2, y - 9, 3, 1); ctx.fillRect(x - 1, y - 11, 8, 1); }
     else if (p === 'mic') { ctx.fillStyle = '#2a2a2a'; ctx.fillRect(138, 72, 1, 14); ctx.fillRect(137, 71, 3, 2); }
     else if (p === 'casket') { ctx.fillStyle = '#3a2214'; ctx.fillRect(104, 94, 48, 12); ctx.fillStyle = '#6a4428'; ctx.fillRect(104, 94, 48, 3); ctx.fillStyle = '#d4a63c'; ctx.fillRect(112, 99, 2, 2); ctx.fillRect(142, 99, 2, 2); }
     else if (p === 'flowers') { const cols = ['#e05a4e', '#ffffff', '#f0c840', '#e070a8']; for (let i = 0; i < 18; i++) { ctx.fillStyle = cols[i % 4]; ctx.fillRect(96 + ((i * 37) % 64), 106 + ((i * 13) % 6), 2, 2); } }
