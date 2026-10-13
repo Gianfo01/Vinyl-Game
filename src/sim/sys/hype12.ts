@@ -115,6 +115,17 @@ function parts(s: GameState, key: string): { t: L; v: number }[] {
   return out.filter((x) => Math.abs(x.v) >= 0.5).sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
 }
 
+/** r27 (desempenho): só o valor de uma cena ("s:cidade:gênero") no laço semanal — mesmas partes, mesmo filtro, mesma
+ *  ordenação estável por |v| e mesma soma de parts()+hypeOf(), sem montar textos (são ~800 cenas por semana). */
+function sceneV(s: GameState, key: string): number {
+  const vs = (hy(s).e[key]?.s ?? []).map((x) => x.v);
+  const i = key.indexOf(':', 2), ix = sceneIx!.get(`${key.slice(2, i)}:${key.slice(i + 1)}`) ?? [];
+  const acts = top3(ix.map((a) => actBase(s, a)));
+  if (acts.length) vs.push((acts.reduce((t, x) => t + x, 0) / acts.length) * 0.8);
+  const ps = vs.filter((v) => Math.abs(v) >= 0.5).sort((a, b) => Math.abs(b) - Math.abs(a));
+  return clamp(Math.round(ps.reduce((t, x) => t + x, 0)), 0, 100);
+}
+
 /** Medidor 0–100 com tendência (vs. semana anterior) e os motivos. */
 export function hypeOf(s: GameState, key: string): Meter {
   const ps = parts(s, key);
@@ -282,7 +293,7 @@ registerSimHook('week', 'hype12', (s) => {
   baseMemo = new Map();
   try { for (const key of tracked(s)) {
     const e = (st.e[key] ??= { s: [] });
-    const v = quickParts17(() => hypeOf(s, key).v);
+    const v = key.startsWith('s:') && key.split(':').length === 3 ? sceneV(s, key) : quickParts17(() => hypeOf(s, key).v);
     if (key.startsWith('a:')) baseMemo.delete(key.slice(2)); // a entrada vai decair logo abaixo
     const mine = key === 'l:player' || key.startsWith('f:') || (key.startsWith('a:') && s.acts[key.slice(2)]?.owner === 'player') || (key.startsWith('o:') && relics(s).list.find((x) => x.id === key.slice(2))?.st === 'player');
     const big = key.startsWith('a:') && (s.acts[key.slice(2)]?.fame ?? 0) >= 55;
