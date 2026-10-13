@@ -19,6 +19,26 @@ import { orgById, orgs17 } from '../src/sim/sys/crime17';
 import type { GameState } from '../src/sim/types';
 import { playerActs } from '../src/sim/util';
 import { ctxMenu27, type CtxEnv27 } from '../src/ui/ps/ctx27model';
+import { Rng } from '../src/core/rng';
+import { l } from '../src/data/world';
+import { CYBER29 } from '../src/data/cyber29';
+import { calendar19 } from '../src/sim/calendar19';
+import { recentFacts } from '../src/sim/facts17';
+import { grantHold } from '../src/sim/holds17';
+import { publishGramo19, yearlyAwards } from '../src/sim/legacy';
+import { juryMemHook } from '../src/sim/sys/awards15';
+import { campaignBonus } from '../src/sim/sys/ceremonies8';
+import { commitCrime as commit17, crimeById, crimeOdds, isReal, targetBlock17 } from '../src/sim/sys/crime17';
+import { AFF29, sceneAff29 } from '../src/sim/sys/aff29';
+import { delay29, favorRows29, jobsFor29 } from '../src/sim/sys/mob29';
+import { allLinks29 } from '../src/sim/sys/orglinks29';
+import { AWCAT29, peekRig29, rigAward29, rigPow29 } from '../src/sim/sys/rig29';
+import { hallScore } from '../src/sim/sys/rockhall9';
+import { st18 } from '../src/sim/sys/stream18';
+import { cockpit27 } from '../src/ui/sys/cockpit27model';
+const commitCrime = commit17;
+/** Rng que sempre "acerta". */
+const LUCKY = { chance: () => true, float: (a: number) => a, int: (a: number) => a, pick: <T>(x: T[]) => x[0] } as unknown as Rng;
 
 type Hist = 'strict' | 'loose';
 const game = (y: number, h: Hist = 'loose', seed = 'r29mob'): GameState => createGame(defaultConfig(`${seed}-${y}-${h}`, { startYear: y, scenario: 'established', realNames: true, history: h }));
@@ -224,5 +244,239 @@ describe('r29 Submundo — famílias: interações, contratar, favores, escalada
     const s = game(1975, 'loose', 'quiet');
     for (let i = 0; i < 3; i++) advanceMonth(s);
     expect(peek29(s)).toBeUndefined();
+  }, 120000);
+});
+
+// ================================================================ rodada 29b — prêmios comprados, crime digital, Cockpit, facções × cenas
+
+describe('r29 Submundo — votação de prêmio comprada (rig29)', () => {
+  it('muda o resultado dos Gramófonos; ganhou e vazou → prêmio cassado, escândalo e reputação', () => {
+    const s = rich(game(1975, 'loose', 'rig'));
+    const year = s.year - 1;
+    const R = () => Rng.fromSeed(`rigtest|${year}`);
+    const before = yearlyAwards(s, R(), year);
+    const alb = before.find((w) => w.cat === 'album')!;
+    expect(alb).toBeTruthy();
+    const loser = Object.values(s.releases).find((x) => x.year === year && x.type === 'lp' && x.totalUnits > 0 && x.actId !== alb.e.actId)!;
+    const b0 = campaignBonus(s, loser.id, 'album');
+    const rg = rigAward29(s, { act: loser.actId, cat: 'gramo', m: 'jury', by: 'player', pow: 500, q: 1 });
+    expect(campaignBonus(s, loser.id, 'album') - b0).toBe(500); // indicação e noite (GRAMO_ADJ)
+    const after = yearlyAwards(s, R(), year);
+    expect(after.find((w) => w.cat === 'album')!.e.actId).toBe(loser.actId); // o voto comprado ganha
+    // a noite: o prêmio entra no livro; no mês, o sorteio de exposição (q = 1) cassa
+    publishGramo19(s, after.find((w) => w.cat === 'album')!);
+    expect(s.awards.some((e) => e.actId === loser.actId && e.category === 'album')).toBe(true);
+    const inst0 = s.player.reputation.institutional;
+    advanceMonth(s);
+    expect(peekRig29(s)!.r.find((x) => x.id === rg.id)!.done).toBe('exposed');
+    expect(s.awards.some((e) => e.actId === loser.actId && e.category === 'album' && e.year === year)).toBe(false);
+    expect(s.player.reputation.institutional).toBeLessThan(inst0);
+    expect(recentFacts(s, { kind: 'award_revoked' }).some((f) => f.actors.includes(loser.actId))).toBe(true);
+  }, 60000);
+
+  it('os outros prêmios também leem a compra (Ofício, Crítica, nacionais, Hall) — e sem compra nada muda', () => {
+    const s = game(1990, 'loose', 'rig2');
+    const a = Object.values(s.acts).find((x) => x.status === 'active' && x.fame > 20 && !playerActs(s).includes(x.id))!;
+    const h0 = hallScore(s, a);
+    const j0 = juryMemHook.f!(s, a.id, a3Of(s, a.city));
+    expect(rigPow29(s, a.id, 'hall')).toBe(0);
+    rigAward29(s, { act: a.id, cat: 'hall', m: 'lobby', by: 'player' });
+    rigAward29(s, { act: a.id, cat: 'national', m: 'jury', by: 'player' });
+    expect(hallScore(s, a)).toBeGreaterThan(h0);
+    expect(juryMemHook.f!(s, a.id, a3Of(s, a.city))).toBeGreaterThan(j0);
+    expect(AWCAT29.map((c) => c.id)).toEqual(['gramo', 'craft', 'critics', 'national', 'hall']);
+  });
+
+  it('ação direta (jurado), serviço da família e métodos por época', () => {
+    const s = rich(game(1975, 'loose', 'rig3'));
+    const a = Object.values(s.acts).find((x) => x.status === 'active' && x.fame > 10 && !playerActs(s).includes(x.id))!;
+    const d = crimeById('award_rig')!;
+    expect(targetBlock17(s, d, playerActs(s)[0])).toBeNull(); // o seu ato também (qualquer ato)
+    expect(pt(crimeOdds(s, { actor: 'player', target: a.id, method: 'bots', partners: [] }, 'award_rig').block)).toMatch(/2005/);
+    expect(crimeOdds(s, { actor: 'player', target: a.id, method: 'ballot', partners: [] }, 'award_rig').block).toBeNull();
+    const r = commitCrime(s, 'award_rig', { actor: 'player', target: a.id, method: 'jury', cat: 'critics', partners: [] }, LUCKY);
+    expect(typeof r === 'object' && 'ok' in r && r.ok).toBe(true);
+    expect(rigPow29(s, a.id, 'critics')).toBeGreaterThan(0);
+    const s2 = rich(game(2010, 'loose', 'rig4'));
+    expect(pt(crimeOdds(s2, { actor: 'player', target: Object.values(s2.acts).find((x) => x.status === 'active')!.id, method: 'ballot', partners: [] }, 'award_rig').block)).toMatch(/online/);
+    // a família contratada para o prêmio (jurado) — favor devido
+    const v = victim(s);
+    const h = hire29(s, 'fnoite', 'award_rig', v.id, undefined, 'gramo');
+    expect(pt(h.text)).toMatch(/deve um favor/);
+  });
+
+  it('o pedido "vote como a gente quer" mexe no prêmio: com voto na academia, mais; sem voto, lobby (custa)', () => {
+    for (const inst of [70, 10]) {
+      const s = rich(game(1975, 'loose', `vote${inst}`));
+      s.player.reputation.institutional = inst;
+      s.player.stats.awards = 0;
+      const o = orgById(s, 'fnoite')!;
+      const a = _mob29.ask29(s, o, 'vote');
+      expect(a.act).toBeTruthy();
+      const c0 = s.player.cash;
+      const f = fulfill29(s, a.id);
+      expect(f.ok, pt(f.text)).toBe(true);
+      const rg = peekRig29(s)!.r.at(-1)!;
+      expect(rg.act).toBe(a.act);
+      expect(rg.by).toBe('vote');
+      if (inst >= 50) { expect(rg.m).toBe('vote'); expect(rg.pow).toBeGreaterThanOrEqual(5); expect(s.player.cash).toBe(c0); }
+      else { expect(rg.m).toBe('lobby'); expect(s.player.cash).toBeLessThan(c0); }
+      expect(rigPow29(s, a.act!, rg.cat)).toBe(rg.pow);
+    }
+  });
+});
+
+describe('r29 Submundo — crime digital (anos 1995+)', () => {
+  it('aparece por época e nunca na lista padrão (NPCs e mundo intocados)', () => {
+    const ids = (y: number) => { const s = game(y, 'loose', 'cy'); expect(orgs17(s).some((o) => o.kind === 'cyber')).toBe(false); return orgs17(s, false, true).filter((o) => o.kind === 'cyber').map((o) => o.id); };
+    expect(ids(1990)).toEqual([]);
+    expect(ids(2000)).toEqual(expect.arrayContaining(['fwarez', 'fleak']));
+    expect(ids(2000)).not.toContain('fstream');
+    expect(ids(2010)).toEqual(expect.arrayContaining(['fstream', 'fscalp']));
+    expect(ids(2012)).toContain('fdark');
+    expect(ids(2010)).not.toContain('fclone');
+    expect(ids(2020)).toEqual(expect.arrayContaining(['fclone', 'fstream']));
+    expect(ids(2020)).not.toContain('fwarez');
+    for (const o of CYBER29) expect(o.real).toBe(false);
+  }, 60000);
+
+  it('serviços digitais ligados às fraudes de sempre: streams (stream18), vazamento (sabotagem), clone de voz (fakes19)', () => {
+    const s = rich(game(2020, 'loose', 'cyjob'));
+    const fs = orgById(s, 'fstream')!;
+    expect(jobsFor29(fs).map((j) => j.id)).toEqual(expect.arrayContaining(['x:streams', 'cy:vote']));
+    expect(jobsFor29(orgById(s, 'fnoite')!).some((j) => j.for === 'cyber')).toBe(false);
+    // streams: um lançamento recente do seu ato
+    const mine = s.acts[playerActs(s)[0]];
+    const base = Object.values(s.releases)[0];
+    const rel = { ...base, id: 'rtest29', actId: mine.id, owner: 'player', week: s.week, year: s.year, title: 'Teste' };
+    s.releases.rtest29 = rel as typeof base;
+    mine.releases.push('rtest29');
+    const r1 = hire29(s, 'fstream', 'x:streams', mine.id);
+    expect(pt(r1.text)).toMatch(/deve um favor/);
+    if (r1.ok) expect(st18(s).farm[rel.id]?.until).toBeGreaterThan(s.week);
+    // vazamento: sabotagem 'release' executada pela quadrilha
+    const v = Object.values(s.acts).find((x) => x.status === 'active' && x.fame > 5 && !playerActs(s).includes(x.id))!;
+    hire29(s, 'fleak', 'cy:leak', v.id);
+    expect(crime17(s).log.some((e) => e.actor === 'o:fleak' && e.target === v.id)).toBe(true);
+    // clone de voz: alvo é um(a) cantor(a) de ato ativo de outro selo
+    const p = v.members.find((m) => s.persons[m]?.alive)!;
+    const od = hireOdds29(s, 'fclone', 'x:clone', p);
+    expect(od.block).toBeNull();
+    const n0 = recentFacts(s, { kind: 'ai_voice_fake' }).length;
+    const r3 = hire29(s, 'fclone', 'x:clone', p);
+    if (r3.ok) expect(recentFacts(s, { kind: 'ai_voice_fake' }).length).toBeGreaterThan(n0);
+    // fora da época: antes de 2015 não existe quem clone
+    const s15 = rich(game(2012, 'loose', 'cyjob'));
+    expect(pt(hireOdds29(s15, 'fclone', 'x:clone', 'x').block)).toMatch(/não existe nesta época/);
+  }, 60000);
+});
+
+describe('r29 Submundo — Cockpit "Favores e dívidas" e calendário', () => {
+  it('lista pedidos com prazo, o que você deve e o que devem a você; ações rápidas e prazos no calendário', () => {
+    const s = rich(game(1975, 'loose', 'ck'));
+    const o = orgById(s, 'fnoite')!;
+    hire29(s, 'fnoite', 'sabotage', victim(s).id);
+    const fav = owed29(s, o).find((h) => h.src === 'mob29')!;
+    let rows = favorRows29(s);
+    expect(rows.find((r) => r.kind === 'owe')!.due).toBe(Number(fav.data!.due));
+    const a = _mob29.ask29(s, o, 'cut', fav.id);
+    rows = favorRows29(s);
+    const r0 = rows[0];
+    expect(r0.kind).toBe('ask');
+    expect(r0.due).toBe(a.dl);
+    expect(r0.acts.map((x) => x.id)).toEqual([`mob.ask:${a.id}`, `mob.delay:${a.id}`, `mob.refuse:${a.id}`]);
+    expect(rows.some((r) => r.kind === 'owe' && r.id === `owe:${fav.id}`)).toBe(false); // o favor cobrado vira o pedido
+    const ck = cockpit27(s);
+    const card = ck.cards.find((c) => c.id === 'favors')!;
+    expect(card).toBeTruthy();
+    expect(card.rows[0].acts?.length).toBe(3);
+    expect(pt(card.rows[0].aside as { pt: string })).toMatch(/4 sem/);
+    // negociar prazo: +4 semanas, uma vez
+    expect(delay29(s, a.id).ok).toBe(true);
+    expect(favorRows29(s)[0].due).toBe(a.dl);
+    expect(a.dl - a.w).toBe(8);
+    expect(delay29(s, a.id).ok).toBe(false);
+    // calendário único (agenda/grade do S03)
+    const cal = calendar19(s, { weeks: 12 });
+    expect(cal.some((d) => d.id === `mob29:ask:${a.id}` && d.w === a.dl && d.act)).toBe(true);
+    // favor que a família deve a você
+    grantHold(s, { holder: 'player', target: o.key, kind: 'favor', strength: 40, text: l('teste', 'test'), quiet: true });
+    expect(favorRows29(s).some((r) => r.kind === 'owed' && r.o === 'fnoite')).toBe(true);
+    // sem nada com as famílias, o cartão não aparece
+    expect(cockpit27(game(1975, 'loose', 'ck0')).cards.some((c) => c.id === 'favors')).toBe(false);
+  });
+});
+
+describe('r29 Submundo — facções × gêneros e cenas (aff29)', () => {
+  it('funk proibidão no Rio ↔ Comando Vermelho (desde 1995) e PCC em São Paulo (2001+); narcocorrido ↔ cartel', () => {
+    const s99 = game(1999, 'loose', 'aff');
+    expect(sceneAff29(s99, 'funk_carioca', 'rio').map((x) => x.o)).toContain('cv');
+    expect(sceneAff29(s99, 'funk_carioca', 'rio').find((x) => x.o === 'cv')!.doc).toBe(true);
+    expect(sceneAff29(s99, 'funk_carioca', 'sao_paulo').map((x) => x.o)).not.toContain('pcc');
+    expect(sceneAff29(game(1990, 'loose', 'aff'), 'funk_carioca', 'rio').map((x) => x.o)).not.toContain('cv'); // antes do proibidão
+    expect(sceneAff29(game(2005, 'loose', 'aff'), 'funk_carioca', 'sao_paulo').map((x) => x.o)).toContain('pcc');
+    expect(sceneAff29(game(1995, 'loose', 'aff'), 'norteno', 'guadalajara').map((x) => x.o)).toContain('sinaloa');
+    expect(sceneAff29(game(1985, 'loose', 'aff'), 'norteno', 'guadalajara').map((x) => x.o)).not.toContain('sinaloa');
+    expect(sceneAff29(game(1965, 'loose', 'aff'), 'enka', 'osaka').map((x) => x.o)).toContain('yamaguchi');
+    expect(sceneAff29(game(1995, 'loose', 'aff'), 'enka', 'osaka').map((x) => x.o)).not.toContain('yamaguchi'); // lei de 1992
+    expect(AFF29.length).toBeGreaterThanOrEqual(12);
+  }, 60000);
+
+  it('cena com efeito: ato seu de funk no Rio recebe a facção (baile, pedágio, homenagem); a homenagem vira laço SIMULADO', () => {
+    const s = rich(game(2000, 'loose', 'baile'));
+    const a = s.acts[playerActs(s)[0]];
+    a.genre = 'funk_carioca'; a.city = 'rio';
+    let ask: ReturnType<typeof asks29>[number] | undefined;
+    for (let i = 0; i < 24 && !ask; i++) { advanceMonth(s); ask = asks29(s).find((x) => x.act === a.id && ['baile', 'homage', 'toll'].includes(x.k)); }
+    expect(ask).toBeTruthy();
+    expect(sceneAff29(s, 'funk_carioca', 'rio').some((x) => x.o === ask!.o)).toBe(true);
+    // a homenagem: laço de rua desta partida, rotulado simulado (nunca documentado)
+    const o = orgById(s, ask!.o)!;
+    const h = _mob29.ask29(s, o, 'homage', undefined, a.id);
+    expect(fulfill29(s, h.id).ok).toBe(true);
+    const ln = linksOfKey29(s, a.id).find((x) => x.o === o.id)!;
+    expect(ln.kind).toBe('assoc');
+    expect(ln.sim).toBe(1);
+    expect(orgLinks29(s, o.id).some((x) => x.key === a.id && x.sim === 1)).toBe(true);
+    expect(count29(audit29(s)).R10 ?? 0).toBe(0);
+  }, 120000);
+
+  it('nenhuma pessoa/ato REAL ganha laço criminal não documentado (só "ligação documentada" ou jogada da partida)', () => {
+    const s = game(1999, 'loose', 'safe');
+    const real = Object.values(s.acts).find((x) => x.catalogNo && x.status === 'active' && !playerActs(s).includes(x.id))!;
+    const fict = Object.values(s.acts).find((x) => !x.catalogNo && x.status === 'active' && !playerActs(s).includes(x.id))!;
+    crime17(s).ties[real.id] = 'cv';
+    crime17(s).ties[fict.id] = 'cv';
+    const rp = real.members[0];
+    (crime17(s).mem23 ??= {})[`p:${rp}`] = { o: 'cv', rk: 1, ro: 'musico', w: s.week, why: [l('x', 'x')], k: 2, n: 0 };
+    grantHold(s, { holder: 'o:cv', target: rp, kind: 'debt', strength: 50, text: l('dívida', 'debt'), quiet: true });
+    const card = orgLinks29(s, 'cv', true);
+    expect(card.some((x) => x.key === real.id || x.key === `p:${rp}`)).toBe(false);
+    expect(linksOfKey29(s, `p:${rp}`, true).filter((x) => x.kind !== 'doc')).toEqual([]);
+    expect(card.some((x) => x.key === fict.id && x.kind === 'assoc' && !x.sim)).toBe(true); // ato inventado: laço simulado do mundo
+    // varredura: em qualquer mundo, ligação de chave real é documentada ou da partida
+    for (const w of [game(1965, 'loose', 'safe2'), game(1999, 'loose', 'safe3')]) {
+      for (let i = 0; i < 3; i++) advanceMonth(w);
+      for (const x of allLinks29(w)) {
+        const id = x.key.startsWith('p:') ? x.key.slice(2) : x.key;
+        const real2 = w.acts[id] ? !!w.acts[id].catalogNo : x.key !== 'player' && !x.key.startsWith('s:') && isReal(w, x.key);
+        if (real2) expect(x.kind === 'doc' || x.sim === 1, `${x.key} ${x.o} ${x.kind}`).toBe(true);
+      }
+    }
+    // a ficha do Sinatra continua com a ligação documentada
+    expect(linksOfKey29(game(1965, 'loose', 'safe4'), resolveWho29(game(1965, 'loose', 'safe4'), 'Frank Sinatra')!).some((x) => x.kind === 'doc')).toBe(true);
+  }, 120000);
+
+  it('determinismo: cena, crime digital e prêmio comprado repetem igual', () => {
+    const run = () => {
+      const s = rich(game(2006, 'loose', 'det2'));
+      const a = s.acts[playerActs(s)[0]];
+      a.genre = 'funk_carioca'; a.city = 'rio';
+      rigAward29(s, { act: a.id, cat: 'gramo', m: 'bots', by: 'player' });
+      hire29(s, 'fleak', 'cy:leak', Object.values(s.acts).find((x) => x.status === 'active' && x.fame > 5 && !playerActs(s).includes(x.id))!.id);
+      for (let i = 0; i < 4; i++) advanceMonth(s);
+      return JSON.stringify([peek29(s), peekRig29(s), s.player.cash, crime17(s).log.length]);
+    };
+    expect(run()).toBe(run());
   }, 120000);
 });

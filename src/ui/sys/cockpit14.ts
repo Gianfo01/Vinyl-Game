@@ -14,12 +14,12 @@ import type { Tone27 } from '../ps/ui27model';
 import { go25 } from '../ps/hq25';
 import type { Goto25 } from '../ps/hq25model';
 import type { Goto18 } from '../../sim/inbox18';
-import { cockpit27, type Card27m, type Cockpit27 } from './cockpit27model';
+import { ROW_ACT27, cockpit27, type Card27m, type Cockpit27 } from './cockpit27model';
 import { go18 } from './inbox18';
 import { goToHub } from './project12';
 import { store } from '../store';
 import type { GameState } from '../../sim/types';
-import { dateLabel, rerender } from '../common';
+import { dateLabel, rerender, toast } from '../common';
 import { h } from '../dom';
 import { deskPanel } from '../panels/desk';
 import { campusThumb18 } from './campus18';
@@ -69,6 +69,8 @@ function cardView(c: Card27m): HTMLElement {
   const rows = c.rows.map((r) => listRow27({
     title: tx(r.title), meta: r.meta ? tx(r.meta) : undefined, aside: r.aside ? tx(r.aside) : undefined, tone: r.tone,
     onClick: r.hub ? () => goToHub(r.hub!.actId, r.hub!.pid) : r.go ? () => goTo(r.go!) : undefined,
+    // r29: ações rápidas (Favores e dívidas: cumprir, negociar prazo, recusar, pagar) — as funções do mob29
+    actions: r.acts?.length ? r.acts.map((a) => h('button', { type: 'button', class: 'btn small ghost', onclick: () => { const g = store.game; const x = g ? ROW_ACT27.f?.(g, a.id) : null; if (x) toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); } }, t(a.label))) : undefined,
   }));
   return card27({ title: c.title, icon: c.icon, cls: `ck27-card ck27-${c.id}`,
     actions: [h('button', { type: 'button', class: 'btn small ghost', onclick: () => goTo(c.action.go) }, t(c.action.label), ' →')] },

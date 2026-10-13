@@ -11,6 +11,7 @@ import { clamp, Rng, seedState } from '../../core/rng';
 import { formatMoney } from '../../core/money';
 import { countryName, countryOfCity } from '../../data/geo';
 import { DOC17, ORGS17, type OrgDef17, type Racket17 } from '../../data/orgs17';
+import { CYBER29, STREET29 } from '../../data/cyber29'; // r29: crime digital e facções das cenas (só pelo mob29)
 import { cityById, l, type L } from '../../data/world';
 import { personDies } from '../dynasty';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -102,9 +103,11 @@ export const crng = (s: GameState, tag: string): Rng => new Rng(seedState(`crime
 // ================================================================ organizações
 
 export interface Org17 extends OrgDef17 { key: string; a3: string }
-export function orgs17(s: GameState, all = false): Org17[] {
+/** Organizações da época. `all` = todas (inclusive fora da época e o crime digital); `cyber` = inclui o crime digital
+ *  (data/cyber29, só pelo mob29: a lista padrão continua a de sempre, então os NPCs e o mundo não mudam). */
+export function orgs17(s: GameState, all = false, cyber = false): Org17[] {
   const home = s.config.homeCity;
-  return ORGS17.filter((o) => all || (o.from <= s.year && s.year <= o.to)).map((o) => {
+  return (all || cyber ? [...ORGS17, ...CYBER29, ...STREET29] : ORGS17).filter((o) => all || (o.from <= s.year && s.year <= o.to)).map((o) => {
     const city = o.city || home;
     return { ...o, city, key: `o:${o.id}`, a3: countryOfCity(city) ?? 'USA' };
   });
@@ -274,7 +277,7 @@ export function setSecurity(s: GameState, tier: number): L | null {
 
 // ================================================================ ações
 
-export type TK = 'person' | 'act' | 'label' | 'relic' | 'own_act' | 'case';
+export type TK = 'person' | 'act' | 'label' | 'relic' | 'own_act' | 'case' | 'any_act';
 export interface Method17 { id: string; name: L; desc: L; dp?: number; dq?: number; sev?: number; cost?: number; ok?: (s: GameState, target: string) => L | null }
 export interface CrimeDef17 {
   id: string; name: L; desc: L; tk: TK; p: number; q: number; sev: number; cost: number; heat: number;
@@ -282,7 +285,7 @@ export interface CrimeDef17 {
   /** efeito; devolve o texto da consequência */
   fx: (s: GameState, c: Ctx17, ok: boolean, r: Rng) => L;
 }
-export interface Ctx17 { actor: string; target: string; method?: string; org?: string; partners: string[]; /** ajuste extra de chance (ex.: alvo avisado) */ dp?: number; dpWhy?: L; /** r27 (heist27): ajuste extra de exposição (plano jogável) */ dq?: number; dqWhy?: L }
+export interface Ctx17 { actor: string; target: string; method?: string; org?: string; partners: string[]; /** r29: categoria do prêmio (award_rig) */ cat?: string; /** ajuste extra de chance (ex.: alvo avisado) */ dp?: number; dpWhy?: L; /** r27 (heist27): ajuste extra de exposição (plano jogável) */ dq?: number; dqWhy?: L }
 export interface Odds17 { p: number; q: number; cost: number; heat: number; sev: number; why: L[]; block: L | null; a3: string; place: string }
 
 const pct = (x: number): string => `${x > 0 ? '+' : ''}${Math.round(x * 100)}%`;
@@ -319,6 +322,9 @@ export function glutN19(s: GameState, cid: string): number {
   return crime17(s).log.filter((e) => e.actor === 'player' && e.c === cid && e.ok && s.week - e.w < 52).length;
 }
 export const glut19 = (s: GameState, cid: string, actor: string): number => (actor === 'player' ? 1 / (1 + 0.25 * glutN19(s, cid)) : 1);
+
+/** r29 (Submundo): votação de prêmio comprada — preenchido por sys/rig29 (gancho sem import, ordem de carga intacta). */
+export const RIG17: { f?: (s: GameState, c: Ctx17, ok: boolean) => L; ok?: (s: GameState, m: string, t: string) => L | null } = {};
 
 export const CRIMES17: CrimeDef17[] = [
   { id: 'murder', name: l('Encomendar morte', 'Order a death'), tk: 'person', p: 0.45, q: 0.35, sev: 95, cost: 40000, heat: 40, violent: 1,
@@ -458,6 +464,16 @@ export const CRIMES17: CrimeDef17[] = [
       giveTo(s, c.actor, v, `Bootleg: ${a.name}`);
       return fmtL(l('{f} piratas de {a} rendem {v}.', 'Bootleg {f} of {a} earn {v}.'), { f: fmt, a: a.name, v: usd(v) });
     } },
+  // r29 (Submundo): manipular a votação de um prêmio — para qualquer ato (o seu ou um protegido); categoria em Ctx17.cat
+  { id: 'award_rig', name: l('Manipular a votação de um prêmio', 'Rig an award vote'), tk: 'any_act', p: 0.6, q: 0.24, sev: 40, cost: 8000, heat: 8, extra: 1,
+    desc: l('Gramófonos, Prêmios do Ofício, Crítica, prêmios nacionais ou o Hall da Fama: o ato sobe nas indicações e na noite. Descoberto, o prêmio é cassado.', 'Gramophones, Craft Awards, Critics, national awards or the Hall of Fame: the act climbs in nominations and on the night. If caught, the award is revoked.'),
+    methods: [
+      { id: 'jury', name: l('Subornar um jurado', 'Bribe a jury member'), desc: l('Um envelope para quem vota.', 'An envelope for someone who votes.'), ok: (s, t) => RIG17.ok?.(s, 'jury', t) ?? null },
+      { id: 'lobby', name: l('Lobby na academia', 'Academy lobbying'), desc: l('Jantares, presentes e "audições" para votantes: discreto, rende menos.', 'Dinners, gifts and "screenings" for voters: discreet, yields less.'), dq: -0.1, ok: (s, t) => RIG17.ok?.(s, 'lobby', t) ?? null },
+      { id: 'ballot', name: l('Encher as urnas do voto popular', 'Stuff the popular-vote ballots'), desc: l('Cédulas e cupons de revista comprados aos milhares (até os anos 90).', 'Ballots and magazine coupons bought by the thousand (until the 1990s).'), dq: 0.05, ok: (s, t) => RIG17.ok?.(s, 'ballot', t) ?? null },
+      { id: 'bots', name: l('Fazenda de robôs no voto online', 'Bot farm for the online vote'), desc: l('Contas falsas votando sem parar (2005+). Rende mais; as plataformas procuram.', 'Fake accounts voting nonstop (2005+). Yields more; platforms are looking.'), dq: 0.08, cost: 4000, ok: (s, t) => RIG17.ok?.(s, 'bots', t) ?? null },
+    ],
+    fx: (s, c, ok) => RIG17.f?.(s, c, ok) ?? l('Nada a manipular agora.', 'Nothing to rig right now.') },
   { id: 'chart_rig', name: l('Fraudar as paradas', 'Rig the charts'), tk: 'own_act', p: 0.75, q: 0.22, sev: 35, cost: 6000, heat: 8, extra: 1,
     desc: l('Compras em massa/robôs pelo seu ato: +35% nas paradas por 8 semanas. Exposto: escândalo e −40% por 6 meses.', 'Bulk buys/bots for your act: +35% chart units for 8 weeks. Exposed: scandal and −40% for 6 months.'),
     fx: (s, c, ok) => {
@@ -494,6 +510,7 @@ export function targetsFor(s: GameState, c: CrimeDef17, max = 40): { id: string;
     case 'person': return acts.filter((a) => !mine.has(a.id)).sort((a, b) => b.fame - a.fame).slice(0, max).flatMap((a) => a.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).slice(0, 2).map((m) => ({ id: m, name: l(`${s.persons[m].name} (${a.name})`) })));
     case 'act': return acts.filter((a) => !mine.has(a.id) && a.fame > 5).sort((a, b) => b.fame - a.fame).slice(0, max).map((a) => ({ id: a.id, name: l(a.name) }));
     case 'own_act': return acts.filter((a) => mine.has(a.id)).map((a) => ({ id: a.id, name: l(a.name) }));
+    case 'any_act': return [...acts.filter((a) => mine.has(a.id)), ...acts.filter((a) => !mine.has(a.id) && a.fame > 5).sort((a, b) => b.fame - a.fame).slice(0, max)].map((a) => ({ id: a.id, name: l(a.name) })); // r29: prêmio (o seu ou outro)
     case 'label': return Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.reputation - a.reputation).slice(0, max).map((x) => ({ id: x.id, name: l(x.name) }));
     case 'relic': return relics(s).list.filter(liveRelic).sort((a, b) => b.v - a.v).slice(0, max).map((x) => ({ id: x.id, name: fmtL(l('{n} · {o}', '{n} · {o}'), { n: x.n, o: x.own.at(-1)?.[0] ?? '?' }) }));
     case 'case': {
@@ -557,11 +574,12 @@ export function targetBlock17(s: GameState, c: CrimeDef17, raw: string, actor = 
     }
     return TB17.gone;
   }
-  if (c.tk === 'act' || c.tk === 'own_act') {
+  if (c.tk === 'act' || c.tk === 'own_act' || c.tk === 'any_act') {
     if (s.persons[id] || isKey17(id) || id === 'player' || s.labels[id]) return TB17.act;
     const a = s.acts[id];
     if (!a) return TB17.gone;
     const mine = mineIds.has(a.id) || a.owner === 'player' || !!a.playerBand;
+    if (c.tk === 'any_act') return !liveAct17(a) ? TB17.ended : !visibleAct(s, a) ? TB17.notYet : null; // r29: prêmio para qualquer ato
     if (c.tk === 'own_act') return mine && liveAct17(a) ? null : TB17.ownOnly;
     if (mine) return TB17.mineA;
     if (!liveAct17(a)) return TB17.ended;

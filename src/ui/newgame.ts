@@ -1,11 +1,14 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
 import { nrConfirm29, nrHero29 } from './ps/nr29'; // r29 (NR01–NR06, Atlas)
+import { SEXES29 } from './ps/char29'; // r29: personagem (revisão)
+import { roleName29 } from './ps/char29model';
+import { rolesOfSpec29 } from '../sim/char29data';
 import { riv29ById, rivOf29 } from '../sim/rivals29data'; // r29: nível dos rivais
 import { FREQS29, count29, statusAll29 } from '../sim/labels29data'; // r29: gravadoras no início e selos novos
 import { labelsCard29 } from './ng29labels'; // r29
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
-import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
+import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS, roleOfCareers29 } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
 import { realFounded } from '../data/realnames';
 import { S, t } from '../i18n/strings';
@@ -309,13 +312,16 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       ] },
       { tab: 1, name: l('Personagem', 'Character'), rows: [
         [l('Nome', 'Name'), ch?.name || t(l('(gerado)', '(generated)'))],
+        [l('Idade e sexo', 'Age and sex'), ch ? `${ch.age} · ${t(SEXES29.find((x) => x.id === (ch.sex ?? 'x'))!.name)}` : '—'], // r29
+        ...(cfg.role !== 'label' ? [[l('Instrumentos', 'Instruments'), ch ? rolesOfSpec29(ch).map((r) => t(roleName29(r))).join(' · ') : '—'] as Row,
+          [l('Formação', 'Line-up'), cfg.custom?.members === 1 ? t(l('solo', 'solo')) : cfg.custom?.members ? t(l('banda de {n}', '{n}-piece band'), { n: cfg.custom.members }) : t(l('sorteada (1–4)', 'random (1–4)'))] as Row] : []),
         [l('Trajetória', 'Path'), ch ? t(originById[careerOfSpec(ch)]?.name ?? l('—', '—')) : '—'],
         [l('Traços', 'Traits'), ch?.traits?.length ? String(ch.traits.length) : '—'],
         [l('Ambição', 'Ambition'), t(AMBITIONS[cfg.careers?.ambition as Ambition]?.name ?? l('—', '—'))],
       ] },
       { tab: 2, name: l('Modo', 'Mode'), rows: [
         [l('Atividades', 'Activities'), (cfg.careers?.main ?? ['label']).length ? careerSummary(cfg).split(' · ')[0] : '—'],
-        [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
+        [S.role, t(ROLES.find((r) => r.id === roleOfCareers29(cfg.careers?.main))!.name)], // R29: o papel segue as atividades (Empresário/Editora/Estúdio também)
         [l('Situação inicial', 'Starting situation'), t(statusAll29(cfg))], // r29: carreira × situação × rivais × gravadoras ("Selo emergente · rivais gigantes · 8 gravadoras")
         [l('Como começa', 'How it starts'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
         [S.companyName, cfg.companyName],

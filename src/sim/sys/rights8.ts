@@ -16,7 +16,7 @@ registerSimHook('month', 'rights8', (s, r) => {
   if (s.config.role === 'artist') return;
   const st = rst(s);
   for (const c of Object.values(s.contracts)) {
-    if (c.party !== 'player' || c.reverted) continue;
+    if (c.party !== 'player' || c.reverted || c.model === 'management') continue; // R29: o empresário não tem master para reverter
     const act = s.acts[c.actId];
     if (!act || act.playerBand) continue;
     // --- reversão dos masters

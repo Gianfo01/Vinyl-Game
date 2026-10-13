@@ -21,6 +21,10 @@ import { store } from '../store';
 import { settleMember29 } from '../../sim/sys/member29';
 import { meter } from '../vis';
 import { promiseChecks28 } from '../sys/promises28';
+import { CONTRACT_MODELS, type ContractModel } from '../../data/rules';
+import { offerEligible29 } from '../../sim/contracts';
+import { HOW29, applyModel29, isSide29, isSpecial29, termLabel29, termTxt29 } from '../../sim/terms29';
+import { x29Fields } from '../sys/contracts29';
 import './negotiate27.css';
 
 /** Termômetro: faixa revelada do mínimo (sombreada) e onde a sua proposta cai. */
@@ -63,11 +67,18 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
     const rd = read27(s, n, o);
     const open = n.status === 'open';
     const play = (tac: Tactic27) => { propose27(s, n, o, tac); draw(); };
+    // R29 (contratos+): o modelo escolhe-se antes da 1ª proposta (empresariamento, produção e JV também)
+    const started = n.log.some((x) => x.who === 'you');
+    const model29 = h('label', null, t(l('Modelo', 'Model')), h('select', { disabled: started || !open, 'data-c29': 'model', onchange: (e: Event) => { const v = (e.target as HTMLSelectElement).value as ContractModel; applyModel29(o, v); o.rights = defaultRights(o.model, o.publishing); n.ours = copyDraft27(o); draw(); } },
+      ...CONTRACT_MODELS.filter((m) => m.available).map((m) => { const el = m.id === o.model ? { ok: true } : offerEligible29(s, act, m.id); return h('option', { value: m.id, selected: m.id === o.model, disabled: !el.ok, title: el.ok ? undefined : t(el.why ?? l('Indisponível.', 'Unavailable.')) }, t(m.name)); })));
     const fields = h('div', { class: 'n27-fields' },
+      model29,
       h('label', null, t(l('Adiantamento ($)', 'Advance ($)')), num(Math.round(o.advance / 100), 100, (v) => { o.advance = Math.max(0, Math.round(v * 100)); live(); })),
-      o.model === 'distribution'
+      o.model === 'management' || o.model === 'jv'
+        ? x29Fields(s, o, () => live())
+        : o.model === 'distribution'
         ? h('label', null, t(l('Taxa de distribuição (%)', 'Distribution fee (%)')), num(Math.round((o.distributionFee ?? 0.2) * 100), 1, (v) => { o.distributionFee = v / 100; live(); }, 5, 40))
-        : h('label', null, t(l('Royalty (%)', 'Royalty (%)')), num(Math.round(o.royalty * 100), 1, (v) => { o.royalty = v / 100; live(); }, 1, 50)),
+        : h('label', null, t(termLabel29(o.model)), num(Math.round(o.royalty * 100), 1, (v) => { o.royalty = v / 100; live(); }, 1, o.model === 'production' ? 70 : 50)),
       h('label', null, t(l('Prazo (meses)', 'Term (months)')), num(o.termMonths, 6, (v) => { o.termMonths = Math.max(6, v); live(); }, 6, 120)),
       h('label', null, t(l('Discos devidos', 'Records owed')), num(o.releasesOwed, 1, (v) => { o.releasesOwed = Math.max(1, v); live(); }, 1, 10)),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.creativeControl, onchange: (e: Event) => { o.creativeControl = (e.target as HTMLInputElement).checked; live(); } }), ' ', t(l('Controle criativo', 'Creative control'))),
@@ -87,7 +98,7 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
     );
     const theirs = n.theirs && open ? h('div', { class: 'n27-theirs' },
       h('b', null, t(l('Contraproposta deles', 'Their counter'))),
-      h('p', { class: 'small' }, `${$(n.theirs.advance)} · ${Math.round((n.theirs.model === 'distribution' ? 1 - (n.theirs.distributionFee ?? 0.2) : n.theirs.royalty) * 100)}% · ${n.theirs.termMonths}m · ${n.theirs.releasesOwed} ${t(l('disco(s)', 'record(s)'))}${n.theirs.creativeControl ? ' · ' + t(l('controle criativo', 'creative control')) : ''}`),
+      h('p', { class: 'small' }, isSpecial29(n.theirs.model) ? `${$(n.theirs.advance)} · ${t(termTxt29(n.theirs))} · ${n.theirs.termMonths}m` : `${$(n.theirs.advance)} · ${Math.round((n.theirs.model === 'distribution' ? 1 - (n.theirs.distributionFee ?? 0.2) : n.theirs.royalty) * 100)}% · ${n.theirs.termMonths}m · ${n.theirs.releasesOwed} ${t(l('disco(s)', 'record(s)'))}${n.theirs.creativeControl ? ' · ' + t(l('controle criativo', 'creative control')) : ''}`),
       h('div', { class: 'row' },
         h('button', { class: 'btn small primary', onclick: () => { acceptTheirs27(s, n); draw(); } }, t(l('Aceitar a contraproposta', 'Accept their counter'))),
         h('button', { class: 'btn small ghost', onclick: () => { Object.assign(o, copyDraft27(n.theirs!)); draw(); } }, t(l('Usar como base', 'Use as a base'))))) : null;
@@ -96,15 +107,15 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       h('button', { class: 'btn', title: t(l('"Temos outro artista na mira." Se colar, eles baixam a pedida; se não, confiança e paciência caem.', '"We have another act lined up." If it lands they lower the ask; if not, trust and patience drop.')), onclick: () => play('bluff') }, t(l('Blefar e propor', 'Bluff and propose'))),
       h('button', { class: 'btn', title: t(l('Resposta agora: fecha se estiver perto do mínimo; senão eles saem.', 'Answer now: closes if near their minimum; otherwise they leave.')), onclick: () => play('deadline') }, t(l('Propor com prazo', 'Propose with a deadline'))),
       // R29: banda em montagem (pending29) não tem rival — o botão fica desativado com o motivo
-      h('button', { class: 'btn', disabled: !!n.rival || (!!s.acts[n.actId] && pending29(s, s.acts[n.actId])), title: s.acts[n.actId] && pending29(s, s.acts[n.actId]) ? t(l('Nenhum selo disputa uma banda que ainda está sendo montada.', 'No label bids on a band that is still being put together.')) : t(l('Abre a disputa: +1 rodada e paciência, mas o mínimo sobe acima do lance rival.', 'Opens the bidding: +1 round and patience, but their minimum rises above the rival bid.')), onclick: () => { bringRival27(s, n, true); draw(); } }, t(l('Chamar um rival', 'Bring in a rival'))),
+      h('button', { class: 'btn', disabled: !!n.rival || isSide29(o) || (!!s.acts[n.actId] && pending29(s, s.acts[n.actId])), title: isSide29(o) ? t(l('No empresariamento não há leilão de selos: o ato continua onde está.', 'Management has no label auction: the act stays where it is.')) : s.acts[n.actId] && pending29(s, s.acts[n.actId]) ? t(l('Nenhum selo disputa uma banda que ainda está sendo montada.', 'No label bids on a band that is still being put together.')) : t(l('Abre a disputa: +1 rodada e paciência, mas o mínimo sobe acima do lance rival.', 'Opens the bidding: +1 round and patience, but their minimum rises above the rival bid.')), onclick: () => { bringRival27(s, n, true); draw(); } }, t(l('Chamar um rival', 'Bring in a rival'))),
       h('button', { class: 'btn ghost', onclick: () => { walk27(s, n); draw(); } }, t(l('Sair da mesa', 'Walk away'))),
       quick && !n.log.some((x) => x.who === 'you') ? h('button', { class: 'btn ghost', title: t(l('O formulário de sempre: uma proposta, uma resposta.', 'The usual form: one offer, one answer.')), onclick: () => { close(); quick(); } }, t(l('Resolver rápido: proposta única', 'Resolve quickly: single offer'))) : null) : null;
     const end = !open ? h('div', { class: `n27-end ${n.status === 'deal' ? 'good' : 'bad'}` },
-      h('b', null, t(n.status === 'deal' ? l('Contrato assinado.', 'Contract signed.') : n.status === 'sniped' ? l('O rival levou o ato.', 'The rival signed the act.') : l('Sem acordo.', 'No deal.'))),
+      h('b', null, t(n.status === 'deal' ? (o.model === 'management' ? l('Contrato assinado: você é o empresário.', 'Contract signed: you are the manager.') : l('Contrato assinado.', 'Contract signed.')) : n.status === 'sniped' ? l('O rival levou o ato.', 'The rival signed the act.') : l('Sem acordo.', 'No deal.'))),
       h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close')))) : null;
     root.replaceChildren(
       h('div', { class: 'n27-cols' },
-        h('div', null, h('h4', null, t(l('Sua proposta', 'Your offer'))), fields, proms, thermoBox, theirs, tactics, end),
+        h('div', null, h('h4', null, t(l('Sua proposta', 'Your offer'))), isSpecial29(o.model) ? h('p', { class: 'small muted' }, t(HOW29[o.model]!)) : null, fields, proms, thermoBox, theirs, tactics, end),
         h('div', null, h('h4', null, t(l('O que você sabe', 'What you know'))), know, h('h4', null, t(l('Mesa', 'Table'))), logView(n.log))),
     );
     if (!open) (root.querySelector('.n27-end button') as HTMLElement | null)?.focus();

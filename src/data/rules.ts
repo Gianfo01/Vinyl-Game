@@ -244,9 +244,10 @@ export const CONTRACT_MODELS: { id: ContractModel; name: L; desc: L; available: 
   { id: 'licensing', name: l('Licenciamento', 'Licensing'), desc: l('Artista mantém o master; selo licencia por prazo e território.', 'Artist keeps the master; label licenses it for a term and territory.'), available: true },
   { id: 'distribution', name: l('Distribuição', 'Distribution'), desc: l('Artista independente paga taxa para chegar ao varejo e às plataformas.', 'Independent artist pays a fee to reach retail and platforms.'), available: true },
   { id: 'publishing', name: l('Edição (publishing)', 'Publishing'), desc: l('Editora administra composições: mecânicos, execução, sync.', 'Publisher administers compositions: mechanicals, performance, sync.'), available: true },
-  { id: 'management', name: l('Empresariamento', 'Management'), desc: l('Comissão sobre receitas em troca de gestão de carreira (papel Empresário, fase 4).', 'Commission on income for career management (Manager role, phase 4).'), available: false },
-  { id: 'production', name: l('Produção (P&D)', 'Production deal'), desc: l('Produtor entrega masters ao selo (papel Estúdio, fase 4).', 'Producer delivers masters to the label (Studio role, phase 4).'), available: false },
-  { id: 'jv', name: l('Joint venture', 'Joint venture'), desc: l('Selo subsidiário com co-propriedade e metas (fase 5).', 'Subsidiary label with co-ownership and targets (phase 5).'), available: false },
+  // R29 (contratos+): os três modelos jogáveis (sys/contracts29.ts; termos em sim/terms29.ts; docs/contratos29.md)
+  { id: 'management', name: l('Empresariamento', 'Management'), desc: l('Comissão sobre o que o artista ganha em troca de gestão de carreira; ele fica no selo dele (carreira Empresário).', 'Commission on what the act earns for career management; the act stays on its own label (Manager career).'), available: true },
+  { id: 'production', name: l('Produção (P&D)', 'Production deal'), desc: l('Sua produtora assina o ato, fica com os masters e os entrega a um selo (o seu ou um rival) por adiantamento e pontos (carreira Estúdio/produtor).', 'Your production company signs the act, owns the masters and delivers them to a label (yours or a rival) for an advance and points (Studio/producer career).'), available: true },
+  { id: 'jv', name: l('Joint venture', 'Joint venture'), desc: l('Selo subsidiário co-propriedade sua e do artista, com metas, divisão do lucro e cláusulas de compra/saída.', 'Subsidiary label co-owned by you and the act, with targets, profit split and buyout/exit clauses.'), available: true },
 ];
 
 // ---------- Mutators (GDD §5.5) ----------
@@ -302,15 +303,25 @@ export const STORYTELLERS: { id: 'maestro' | 'brisa' | 'acaso' | 'cronista' | 't
 ];
 
 // ---------- Papéis (GDD §4) ----------
+// R29 (contratos+): os papéis do r8 viraram as atividades do sistema de 12 carreiras (careers12). Todos jogáveis:
+// `careers` diz por quais atividades cada papel começa (Nova run / configuração completa); o papel do MOTOR
+// (RunConfig.role) continua sendo só label/artist/hybrid, derivado das atividades (careers12.roleFromMain).
 export type RoleId = 'label' | 'artist' | 'hybrid' | 'manager' | 'publisher' | 'studio';
-export const ROLES: { id: RoleId; name: L; desc: L; available: boolean }[] = [
-  { id: 'label', name: l('Gravadora', 'Record label'), desc: l('Contrate, produza, lance e distribua. Receita de masters.', 'Sign, produce, release and distribute. Master revenue.'), available: true },
-  { id: 'artist', name: l('Artista / banda', 'Artist / band'), desc: l('Carreira, arte e autonomia. Receita de shows e royalties.', 'Career, art and autonomy. Live and royalty income.'), available: true },
-  { id: 'hybrid', name: l('Híbrido', 'Hybrid'), desc: l('Sua banda + seu selo. Equilibre prioridades.', 'Your band + your label. Balance priorities.'), available: true },
-  { id: 'manager', name: l('Empresário', 'Manager'), desc: l('Comissão sobre carreiras (fase 4).', 'Commission on careers (phase 4).'), available: false },
-  { id: 'publisher', name: l('Editora musical', 'Music publisher'), desc: l('Administra composições (fase 4).', 'Administers compositions (phase 4).'), available: false },
-  { id: 'studio', name: l('Estúdio / produtor', 'Studio / producer'), desc: l('Diárias e pontos de produção (fase 4).', 'Day rates and production points (phase 4).'), available: false },
+export const ROLES: { id: RoleId; name: L; desc: L; available: boolean; careers: string[] }[] = [
+  { id: 'label', name: l('Gravadora', 'Record label'), desc: l('Contrate, produza, lance e distribua. Receita de masters.', 'Sign, produce, release and distribute. Master revenue.'), available: true, careers: ['label'] },
+  { id: 'artist', name: l('Artista / banda', 'Artist / band'), desc: l('Carreira, arte e autonomia. Receita de shows e royalties.', 'Career, art and autonomy. Live and royalty income.'), available: true, careers: ['musician'] },
+  { id: 'hybrid', name: l('Híbrido', 'Hybrid'), desc: l('Sua banda + seu selo. Equilibre prioridades.', 'Your band + your label. Balance priorities.'), available: true, careers: ['label', 'musician'] },
+  { id: 'manager', name: l('Empresário', 'Manager'), desc: l('Comissão sobre carreiras de artistas de qualquer selo: confiança, plano, mandato e equipe (contrato de empresariamento).', 'Commission on the careers of acts from any label: trust, plan, mandate and team (management contract).'), available: true, careers: ['manager'] },
+  { id: 'publisher', name: l('Editora musical', 'Music publisher'), desc: l('Administra composições: compositores, catálogo, mecânicos, execução e sync.', 'Administers compositions: songwriters, catalog, mechanicals, performance and sync.'), available: true, careers: ['publisher'] },
+  { id: 'studio', name: l('Estúdio / produtor', 'Studio / producer'), desc: l('Diárias, sessões e pontos de produção; a produtora assina atos e entrega masters (contrato de produção).', 'Day rates, sessions and production points; the production company signs acts and delivers masters (production deal).'), available: true, careers: ['studio'] },
 ];
+/** R29: papel mostrado para um conjunto de atividades (a principal decide; músico + selo = híbrido). */
+export function roleOfCareers29(main: string[] | undefined): RoleId {
+  const m = main?.length ? main : ['label'];
+  if (m.includes('musician')) return m.includes('label') ? 'hybrid' : 'artist';
+  const first = ROLES.find((r) => r.id !== 'hybrid' && r.careers.length === 1 && r.careers[0] === m[0]);
+  return first?.id ?? 'label';
+}
 
 // ---------- Finais do Arco Neural (GDD §22) ----------
 export const ENDINGS: { id: string; name: L; text: L }[] = [

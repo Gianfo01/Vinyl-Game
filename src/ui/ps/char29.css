@@ -1,0 +1,40 @@
+/* Rodada 29 — "Seu personagem" da Nova run rápida e o seletor de funções (até 3 instrumentos), também na ficha completa. */
+
+.c29 { border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 2px; padding: 12px 14px 4px; margin: 0 0 18px; background: var(--panel-2, var(--panel)); }
+.c29-title { margin: 0 0 8px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+.c29-head { display: grid; grid-template-columns: auto minmax(0, 1fr) 92px; gap: 12px; align-items: end; }
+.c29-head .h27-field { margin-bottom: 10px; }
+.c29-picbox { width: 64px; height: 64px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); background: #0b1723; }
+.c29-pic canvas { width: 64px; height: 64px; image-rendering: pixelated; display: block; }
+.c29-inrow { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.c29-inrow input { flex: 1 1 auto; min-width: 0; }
+.c29-dice { flex: 0 0 auto; min-width: 44px; min-height: 44px; font-size: 18px; line-height: 1; cursor: pointer; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; }
+.c29-dice:hover { border-color: var(--gold); }
+.c29-more { margin: 0 0 8px; }
+.c29-more > summary { cursor: pointer; font-size: 13px; padding: 6px 0 10px; list-style: none; }
+.c29-more > summary::-webkit-details-marker { display: none; }
+.c29-more > summary small { font-size: 11px; }
+.c29-art[hidden], .c29-bandname[hidden], .c29-chip[hidden] { display: none; }
+.c29-note { display: block; margin: -8px 0 10px; line-height: 1.5; }
+
+/* chips de funções (rápida e ficha completa) */
+.c29-roles { display: flex; flex-direction: column; gap: 6px; }
+.c29-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.c29-chip { min-height: 34px; padding: 4px 11px; font-size: 12px; cursor: pointer; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; }
+.c29-chip:hover:not(:disabled) { border-color: var(--gold); }
+.c29-chip.on { background: #edbc65; color: #15212e; border-color: #edbc65; font-weight: 600; }
+.c29-chip.main { box-shadow: inset 0 0 0 2px #15212e55; }
+.c29-chip.main::before { content: '★ '; }
+.c29-chip:disabled { cursor: not-allowed; }
+.c29-chip:disabled:not(.on) { opacity: 0.45; }
+.c29-chip:focus-visible { outline: 3px solid #f5d38e; outline-offset: 2px; }
+.c29-hint { line-height: 1.5; font-size: 11px; }
+:root[data-theme='light'] .c29-chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+@media (max-width: 760px) {
+  .c29 { padding: 10px 10px 2px; }
+  .c29-head { grid-template-columns: 48px minmax(0, 1fr) 70px; gap: 8px; }
+  .c29-picbox, .c29-pic canvas { width: 48px; height: 48px; }
+  .c29-chip { min-height: 32px; padding: 3px 9px; font-size: 11px; }
+  .c29 .h27-2 { grid-template-columns: 1fr 1fr; }
+}

@@ -70,7 +70,6 @@ export const S = {
   easy: s('Fácil', 'Easy'),
   normal: s('Normal', 'Normal'),
   hard: s('Difícil', 'Hard'),
-  phaseLater: s('(fase posterior)', '(later phase)'),
   // barra
   week: s('semana', 'week'),
   cash: s('Caixa', 'Cash'),
