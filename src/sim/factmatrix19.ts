@@ -52,7 +52,6 @@ export const WHITELIST19: Record<string, string> = {
   venue_event: 'evento de casa de show (venues17): efeito local',
   tie: 'laço entre NPCs (crimenpc17): consumido pelo grafo social (social8), não pelo barramento',
   release_jail: 'saída da prisão (crime17): crônica; a pessoa volta pelo próprio crime17',
-  piracy: 'pirataria (crime17): efeito no mercado aplicado no crime17',
   road_fight: 'briga na estrada (live18): estresse e relações aplicados no live18',
   succession: 'sucessão (saga18): consumida pela própria saga e pela crônica',
   // r28 F8: 'dispute' saiu da lista — agora a cena dos herdeiros (ui/ps/cut28model.ts) lê o fato
