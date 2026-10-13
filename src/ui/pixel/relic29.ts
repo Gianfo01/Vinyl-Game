@@ -17,7 +17,7 @@ const RULES: [RegExp, RelicArt29][] = [
   [/cavaquinho|ukulele|\buke\b|charango/, 'cavaquinho'], [/sitar|cítara|citara|\boud\b|bouzouki|buzuqui|alaúde|alaude/, 'sitar'], [/boombox|ghetto blaster|rádio-gravador|radio-gravador|boom box/, 'boombox'],
   [/walkman|discman|ipod|mp3/, 'walkman'], [/backstage|laminate|credencial|crachá|cracha|all access|\bpass\b/, 'pass'], [/\bpick\b|palheta|plectr/, 'pick'],
   [/pandeiro|tamborim|tambourine|pandeireta/, 'pandeiro'], [/flyer|panfleto|filipeta/, 'flyer'], [/\bmpc\b|sampler|sp-1200|sp1200/, 'sampler'], [/keytar/, 'keytar'],
-  [/\bneon\b|letreiro|marquee sign/, 'neonsign'], [/phone|telefone|celular|orelhão|orelhao/, 'phone'], [/scarf|lenço|lenco|bandana/, 'scarf'],
+  [/\bneon\b|letreiro|marquee sign/, 'neonsign'], [/\bphone\b|telephone|telefone|celular|orelhão|orelhao/, 'phone'], [/scarf|lenço|lenco|bandana/, 'scarf'],
 ];
 
 /** Desenho novo pela palavra do nome; ou, para peça genérica da rodada 28 ('prop'), um objeto da época (≈55%). */

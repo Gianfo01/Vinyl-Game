@@ -61,9 +61,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // tours e rng iguais (427926 / 1382068899 / 1063419696 / 2262769409). Depois, ganchos de início em ordem fixa (atos reais
     // marcados no lineup16 e renomes depois que existem; antes dependia da ordem dos imports): caixa, acts e rng mudam.
     // Antes da R29: 446096 / 1382068899 / 4292160800 / 2262769409.
+    // R29 (relíquias procedurais, de propósito — docs/reliquias29.md): versões dos arquétipos do catálogo real nascem
+    // dos fatos da partida (4 em 1975 nesta semente) e viram notícia; fama/fãs/caixa dos atos andam décimos (acts muda).
+    // Caixa, tours e rng iguais: as peças usam ids próprios (rq…) e sorteios semeados (Rng.fromSeed), sem o s.rng.
+    // Antes das relíquias procedurais: acts 2817744560.
     expect(AFTER.player.cash).toBe(252);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2817744560);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(384561456);
     expect(hashString(JSON.stringify(AFTER.rng))).toBe(1576372716);
   });
   it('nada de estado P2B criado sem o jogador', () => {

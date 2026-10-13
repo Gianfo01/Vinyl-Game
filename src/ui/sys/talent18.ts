@@ -15,6 +15,8 @@ import { actOfPerson17 } from '../../sim/sys/love17';
 import { ORIGIN18, WING18, authFee18, authenticate18, buildWing18, legacy18, rel18, shown18, tourExhibit18, wingYield18 } from '../../sim/sys/relics18';
 import { RELIC_KIND, RELIC_ST, relics, toggleExhibit } from '../../sim/sys/relics9';
 import { relicImg28 } from '../pixel/relic28'; // r28 (arte)
+import { story29 } from '../../sim/sys/relics29';
+import { relic29Pills } from './relics29';
 import { OWN18, SCHOOLS18, bolsaCost18, foundSchool18, school18, schoolName18, schoolYield18, schoolsNow18, setBolsas18, setTeacher18 } from '../../sim/sys/school18';
 import { disbandHB18, foundHB18, hbMaxQ18, hbSalary18, hbSetup18, sess18, setCredit18, setRent18 } from '../../sim/sys/session18';
 import { FR18, becomePartner18, frName18, frNow18, ownCost18, partnerFee18, partnerQuote18, produceShow18, pushCost18, pushVotes18, setJudge18, tv18, voteScore18 } from '../../sim/sys/tv18';
@@ -193,7 +195,7 @@ export function relics18Tab(s: GameState): HTMLElement {
     const lg = legacy18(s, x);
     return card(row(relicImg28(x.k, x.n.en, x.y, x.rr ?? x.id, 48, t(RELIC_KIND[x.k])), h('b', null, t(x.n)), pill(t(RELIC_KIND[x.k])), pill(String(x.y)), m && m.o !== 'real' ? pill(t(ORIGIN18[m.o] ?? ORIGIN18.base)) : null, pill(t(RELIC_ST[x.st])),
       why18(s, 'relic.value', { id: x.id }, pill($(money(s, x.v)), 'good')), pill(`×${lg.m.toFixed(2)}`), m?.auth ? pill(t(l('autenticada', 'authenticated')), 'good') : null, x.a ? actLink(s, x.a) : null),
-      m?.st ? muted(m.st) : null,
+      m?.st ? muted(m.st) : story29(s, x) ? h('div', null, muted(story29(s, x)!), relic29Pills(s, x)) : null, // R29: história montada na hora
       row(x.st === 'auction' && !m?.auth ? btn(fmtLs(l('Perícia ({c})', 'Appraisal ({c})'), { c: $(authFee18(s, x)) }), () => { toast(t(authenticate18(s, x.id)), 'info'); rerender(); }) : null,
         x.st === 'player' && !x.ln ? btn(x.ex ? l('Guardar no cofre', 'Back to vault') : l('Expor', 'Put on show'), () => say(toggleExhibit(s, x.id))) : null,
         x.st === 'player' && !m?.auth ? btn(l('Certificar', 'Certify'), () => { toast(t(authenticate18(s, x.id)), 'info'); rerender(); }) : null));
