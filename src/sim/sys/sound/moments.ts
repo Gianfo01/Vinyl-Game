@@ -5,6 +5,7 @@
 
 import { l, type L } from '../../../data/world';
 import type { GameState } from '../../types';
+import { tickSeq27 } from '../../tickcache27';
 
 export type MomentDef = { name: L; phrase: L; themes?: string[] };
 /** Eixos: en de el vo po ex me gl tr (me = melancolia↔euforia, gl = local↔global, tr = tradição↔ruptura). */
@@ -153,9 +154,31 @@ export function detectNewMoments(c: MomentCtx): { code: string; k: number }[] {
 export function markMoment(s: GameState, actId: string, code: string, weeks = 52): void {
   if (!MOMENTS[code]) return;
   s.flags[`mom:${code}:${actId}`] = s.week + weeks;
+  if (MIX && MIX.s === s && MIX.f === s.flags && MIX.q === tickSeq27(s)) { const xs = MIX.m.get(actId); if (xs) xs.add(code); else MIX.m.set(actId, new Set([code])); }
+}
+// r27 (desempenho): dentro do passo do relógio, quais atos têm marcas `mom:` (só markMoment escreve essas chaves).
+// Os valores continuam lidos de s.flags na hora, na mesma ordem de NEW_MOMENTS; atos sem marca saem direto.
+let MIX: { s: GameState; f: GameState['flags']; q: number; m: Map<string, Set<string>> } | null = null;
+function marksIx(s: GameState): Map<string, Set<string>> | null {
+  const q = tickSeq27(s);
+  if (q < 0) return null;
+  if (!MIX || MIX.s !== s || MIX.f !== s.flags || MIX.q !== q) {
+    const m = new Map<string, Set<string>>();
+    for (const k in s.flags) {
+      if (!k.startsWith('mom:')) continue;
+      const i = k.indexOf(':', 4);
+      if (i < 0) continue;
+      const code = k.slice(4, i), id = k.slice(i + 1);
+      const xs = m.get(id); if (xs) xs.add(code); else m.set(id, new Set([code]));
+    }
+    MIX = { s, f: s.flags, q, m };
+  }
+  return MIX.m;
 }
 export function momentMarks(s: GameState, actId: string): Record<string, number> {
   const out: Record<string, number> = {};
+  const ix = marksIx(s);
+  if (ix && !ix.has(actId)) return out;
   for (const code of Object.keys(NEW_MOMENTS)) {
     const until = s.flags[`mom:${code}:${actId}`];
     if (until !== undefined && until > s.week) out[code] = until - s.week;

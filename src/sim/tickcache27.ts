@@ -19,6 +19,8 @@ export function tickScope27<T>(s: GameState, fn: () => T): T {
 }
 
 export const inTick27 = (s: GameState): boolean => TICK === s;
+/** Identidade do passo atual para `s` (−1 fora do passo): chave de caches que só valem dentro do passo. */
+export const tickSeq27 = (s: GameState): number => (TICK === s ? SEQ : -1);
 
 const AC = new WeakMap<GameState, { q: number; v: number; ks: string[]; vs: Act[] }>();
 function actsEntry(s: GameState): { ks: string[]; vs: Act[] } | null {
