@@ -509,16 +509,19 @@ export function stints16(s: GameState, a: Act): Stint16[] {
   const d = s.config.realNames ? realDataOf(a) : undefined;
   const shift = d?.d !== undefined ? a.debutYear - d.d : 0;
   const base = a.debutYear;
+  // r27 (LIN): fundador ("desde o início") começa na formação — ou na 1ª entrada documentada, se for antes (Beatles 1960)
+  const joins = (d?.m ?? []).flatMap((m) => periodsOf(m).map(([x]) => x)).filter((x): x is number => x !== undefined).map((x) => x + shift);
+  const start = Math.min(a.formed, base, ...joins);
   return ids.map((pid) => {
     const p = s.persons[pid];
     const segs: { from: number; to?: number }[] = [];
     for (const m of d?.m ?? []) {
       if (canonKey(m[0]) !== canonKey(p.name)) continue;
       for (const [a, b] of periodsOf(m)) { // r27 (F): uma passagem por período (saiu e voltou)
-        const from = (a ?? d!.d ?? base) + (a !== undefined ? shift : 0);
+        const from = a !== undefined ? a + shift : start;
         if (from > s.year) continue;
         const to = b !== undefined && b + shift <= s.year ? b + shift : undefined;
-        segs.push({ from: Math.max(base, from), to });
+        segs.push({ from, to }); // r27 (LIN): sem cortar na estreia (Stuart Sutcliffe aparecia "1962–1961")
       }
     }
     for (const e of evs.filter((x) => x[2] === pid)) {

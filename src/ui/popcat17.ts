@@ -46,3 +46,6 @@ export function groupTabs17<T extends { id: string }>(items: T[]): { cat: (typeo
 
 /** A partir de quantas abas vale usar categorias. */
 export const CAT_MIN17 = 8;
+/** r27 (LIN): número no selo da categoria — o `count` de uma aba que o declare (Integrantes = integrantes atuais), senão
+ *  o número de abas. Antes era sempre o de abas ("Integrantes 2" = abas Integrantes + Formação, não 2 integrantes). */
+export const catCount17 = (items: { id: string; count?: number }[]): number => items.find((i) => i.count !== undefined)?.count ?? items.length;

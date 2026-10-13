@@ -1,6 +1,6 @@
 // Dados reais extras (rodada 7) para os 100 atos do catálogo: fim, voltas, nascimento/morte, integrantes com entrada/saída e discografia.
 import type { RealMember, RealRelease, RealRole } from './realtypes';
-export interface ClassicExtra { d?: number; e?: number; rj?: [number, number?][]; b?: number; x?: number; r?: RealRole; m?: RealMember[]; al?: RealRelease[] }
+export interface ClassicExtra { d?: number; /** r27 (LIN): ano de formação (ausente = estreia − 1) */ f?: number; e?: number; rj?: [number, number?][]; b?: number; x?: number; r?: RealRole; m?: RealMember[]; al?: RealRelease[] }
 
 const U = undefined;
 
@@ -75,7 +75,7 @@ export const REAL_CLASSIC: Record<number, ClassicExtra> = {
     al: [['Surfin\' Safari', 1962], ['Surfin\' U.S.A.', 1963], ['Pet Sounds', 1966], ['Good Vibrations', 1966, 'single'], ['Smiley Smile', 1967], ["Surf's Up", 1971]],
   },
   30: {
-    d: 1966, e: 1969,
+    d: 1966, f: 1966, e: 1969, // formado em out/1966 (Londres); estreia com "Hey Joe" em dez/1966
     m: [['Jimi Hendrix', 'guitar', 1942, 1970], ['Noel Redding', 'bass', 1945, 2003, U, 1969], ['Mitch Mitchell', 'drums', 1946, 2008]],
     al: [['Hey Joe', 1966, 'single'], ['Are You Experienced', 1967], ['Axis: Bold as Love', 1967], ['Electric Ladyland', 1968]],
   },

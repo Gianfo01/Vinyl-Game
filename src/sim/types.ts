@@ -201,6 +201,9 @@ export interface Person {
   /** r27 (F): procedência da pessoa real — c confirmado · a aproximado · u não conferido; bornEst = nascimento gerado
    *  ("idade aproximada"); writer = compositor(a) real sem ato (parceiro de composição) */
   real27?: { prov?: 'c' | 'a' | 'u'; bornEst?: 1; writer?: 1 };
+  /** r27 (LIN): funções na banda além da principal (data/lineup27 ROLES27) — só exibição; [função, ano] = desde o ano.
+   *  Opcional: saves antigos sem o campo caem na consulta pelo nome real. */
+  roles27?: (string | [string, number])[];
 }
 
 export type ActStatus = 'emerging' | 'active' | 'hiatus' | 'retired' | 'split';

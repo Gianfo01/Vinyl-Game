@@ -28,6 +28,7 @@ import { ARTISTS27, FILL27 } from '../../data/audit27_artists';
 import { SONGS27 } from '../../data/audit27_songs';
 import { applyAudit27, applyFix27, applySongs27, type AnyArtist27 } from '../../data/audit27';
 import { NEW27_C1 } from '../../data/new27c1';
+import { frontmanSings27, lineupMonth27, realRoles27 } from '../../data/lineup27';
 import { FIXR27, FIXV27, NEW27_F } from '../../data/research27';
 import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD27, songList27, takeOf27, workOf27, WORKS27, WRITERS27 } from '../../data/model27';
 const ACERVO22 = [...ACERVO21, ...LIKES22_ARTISTS];
@@ -115,7 +116,9 @@ const acRng = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}|acervo
 /** catalogNo dos novos artistas reais: 1000 + índice em REAL_ALL. */
 export const REAL_BASE = 1000;
 
-type Sched = { year: number; kind: 'join' | 'leave' | 'reunion' | 'fate' | 'release'; actId: string; personId?: string; m?: RealMember; until?: number; rel?: RealRelease; mo?: number };
+type Sched = { year: number; kind: 'join' | 'leave' | 'reunion' | 'fate' | 'release'; actId: string; personId?: string; m?: RealMember; until?: number; rel?: RealRelease; mo?: number;
+  /** r27 (LIN): troca de formação de identidade agendada fora do modo exato (sobrevive à limpeza de saves antigos) */
+  lin?: 1 };
 
 export interface RwState {
   upcoming: number[];
@@ -374,7 +377,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   // r18 (world18): só o modo exato agenda fatos reais futuros; nos outros (história alternativa) o futuro é da simulação
   const fates = hm === 'strict';
   const keep = (k: string, pr: number) => { void k; void pr; return hm === 'strict'; };
-  const sched = { push: (e: Sched) => st.sched.push(hm === 'strict' ? { ...e, mo: Math.floor(histRoll(s, `${e.kind}:${act.id}:${e.personId ?? e.rel?.[0] ?? e.m?.[0] ?? e.year}`) * 12) } : e) };
+  const sched = { push: (e: Sched) => st.sched.push(e.mo !== undefined ? e : hm === 'strict' ? { ...e, mo: Math.floor(histRoll(s, `${e.kind}:${act.id}:${e.personId ?? e.rel?.[0] ?? e.m?.[0] ?? e.year}`) * 12) } : e) };
   const debut = act.debutYear;
   const shift = d.d !== undefined ? debut - d.d : 0; // deslocamento (modos livre/caos)
   // r20 (G8): mundo aleatório v2 — identidade real (nome, papel, nascimento, formação de estreia), mas nada da cronologia
@@ -386,33 +389,44 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   if (d.m?.length) {
     const now: string[] = [];
     const old = act.members.map((id) => s.persons[id]).filter(Boolean);
-    // r25: fora do modo exato, quem é da formação clássica entra já (não fica de fora por ter entrado depois da estreia)
-    const classic = fates ? undefined : classicLineup25(d.m, d.d ?? debut - shift);
+    // r27 (LIN): a formação na data atual (ano E mês) — quem saiu antes vira ex-integrante, quem entra depois é agendado.
+    // Antes, no mundo aleatório (G8) todo mundo que entrou até a estreia ficava como atual (Beatles com Stuart, Pete e
+    // Ringo juntos em jan/1962), e fora do modo exato a "formação clássica" entrava já no início.
+    // Trocas agendadas: no modo exato, todas; nos outros, só as da formação de identidade (até a estreia ou, se a banda
+    // cresceu depois, até a formação clássica) — depois disso o futuro é da simulação.
+    const identY = fates ? Infinity : identityYear27(d.m, d.d ?? debut - shift) + shift;
+    const canSched = (y: number) => (fates ? s.config.mode !== 'chaos' : y <= identY);
+    const lin = fates ? {} : { lin: 1 as const };
+    const shifted = (m: RealMember) => periodsOf(m).map(([a, b]) => [a !== undefined ? a + shift : undefined, b !== undefined ? b + shift : undefined] as RealPeriod);
+    const begun = (name: string, a: number | undefined, relax: boolean) => a === undefined || a < s.year || (a === s.year && (relax || lineupMo27(s, act, name, 'j', a) <= s.month));
+    const over = (name: string, b: number | undefined) => b !== undefined && (b < s.year || (b === s.year && lineupMo27(s, act, name, 'l', b) <= s.month));
+    const skip = (m: RealMember) => hm === 'strict' && memberProv27(d.n, m[0]) === 'u'; // r27 (F): integrante não conferido some do modo exato
+    // ninguém dentro pelo mês (todos entram no próprio ano): vale o ano, para o ato não ficar com integrantes gerados
+    const relax = !d.m.some((m) => !skip(m) && shifted(m).some(([a, b]) => begun(m[0], a, false) && !over(m[0], b)));
     d.m.forEach((m, i) => {
       const [name, role, born, died0] = m;
       const mp = memberProv27(d.n, name);
-      if (hm === 'strict' && mp === 'u') return; // r27 (F): integrante não conferido some do modo exato
+      if (skip(m)) return;
       // r27 (F): passagens (saiu e voltou) — deslocadas nos modos livre/caos
-      const ps = periodsOf(m).map(([a, b]) => [a !== undefined ? a + shift : undefined, b !== undefined ? b + shift : undefined] as RealPeriod);
+      const ps = shifted(m);
       const join = ps[0][0];
-      const early = !!classic?.has(i) && join !== undefined && join > Math.min(debut, s.year);
-      if (sim && join !== undefined && join > debut && !early) return; // r20: entradas posteriores à estreia são história, não identidade
-      const started = ps.filter(([a]) => a === undefined || a <= s.year);
-      const cur = sim || early ? ps[0] : started.find(([, b]) => b === undefined || b > s.year);
-      const future = sim ? [] : ps.filter(([a]) => a !== undefined && a > s.year);
+      const started = ps.filter(([a]) => begun(name, a, relax));
+      const cur = started.find(([, b]) => !over(name, b));
+      const future = ps.filter(([a]) => !begun(name, a, relax) && canSched(a!));
       const died = sim ? simDead(name, born) : died0;
+      // agenda as entradas futuras (1ª passagem de quem ainda não entrou; voltas) no mês documentado ou sorteado
+      const pushJoins = (pid?: string) => { for (const [a, b] of future) sched.push({ year: a!, mo: lineupMo27(s, act, name, 'j', a!), kind: 'join', actId: act.id, m, until: b !== undefined && canSched(b) ? b : undefined, personId: pid, ...lin }); };
+      if (!started.length) {
+        pushJoins(); // ainda não entrou: entra no ano/mês real (fora da janela de identidade, nem entra)
+        return;
+      }
       const reuse = old[i] && (join === undefined || join <= debut) ? old[i] : undefined;
-      // agenda as voltas (2ª, 3ª passagem…) no modo exato
-      const pushJoins = (pid?: string) => { if (s.config.mode !== 'chaos') for (const [a, b] of future) if (keep(`j${name}${a}`, 0.5)) sched.push({ year: a!, kind: 'join', actId: act.id, m, until: b, personId: pid }); };
       let p: Person;
       if (reuse) {
         p = reuse;
         if (real) p.name = name;
         p.role = role;
         if (born) p.born = born;
-      } else if (!started.length && !early) {
-        pushJoins(); // ainda não entrou: entra no ano real (e sai/volta nas passagens seguintes)
-        return;
       } else {
         p = makeRealPerson(s, r, act, { name, role, born, died }, act.potential, real);
       }
@@ -423,6 +437,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
         p = c;
       }
       prov27(p, mp ?? (d.exact === false ? 'u' : d.ap?.includes('m') ? 'a' : 'c'), born);
+      roles27(p, name, i === 0 && frontmanSings27(act.genre, d.m!) === name);
       if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
       else if (died !== undefined && fates) sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
       if (!cur) {
@@ -431,10 +446,16 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       } else {
         now.push(p.id);
         const leave = cur[1];
-        if (!sim && leave !== undefined && s.config.mode !== 'chaos' && keep(`l${name}`, 0.5)) sched.push({ year: leave, kind: 'leave', actId: act.id, personId: p.id });
+        if (leave !== undefined && canSched(leave)) sched.push({ year: leave, mo: lineupMo27(s, act, name, 'l', leave), kind: 'leave', actId: act.id, personId: p.id, ...lin });
       }
       pushJoins(p.id);
     });
+    // r27 (LIN): ato que já acabou com todo mundo fora (Menudo em 2005): a última formação continua como a do ato
+    if (!now.length && st.former[act.id]?.length) {
+      const xs = st.former[act.id], last = Math.max(...xs.map((x) => x.year));
+      for (const x of xs.filter((f) => f.year === last)) now.push(x.personId);
+      st.former[act.id] = xs.filter((f) => f.year !== last);
+    }
     // integrantes gerados que sobraram saem do ato
     for (const p of old) if (!now.includes(p.id) && !(st.former[act.id] ?? []).some((x) => x.personId === p.id)) delete s.persons[p.id];
     if (now.length) act.members = now; actsTouched17(s); // r17: índice pessoa→atos
@@ -460,6 +481,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       if (real) p.name = d.n;
       if (d.b) p.born = d.b;
       if (d.r) p.role = d.r;
+      roles27(p, d.n, false);
       prov27(p, d.exact === false ? 'u' : d.ap?.some((x) => x === 'b' || x === 'd' || x === 'x') ? 'a' : 'c', d.b);
       const x = sim ? simDead(d.n, d.b) : d.x;
       if (x !== undefined && x <= s.year) { p.alive = false; p.died = x; }
@@ -500,6 +522,26 @@ export function classicLineup25(m: RealMember[], debut: number): Set<number> | u
     if (xs.length > best.length) best = xs;
   }
   return best.length > deb ? new Set(best) : undefined;
+}
+
+/** r27 (LIN): último ano das trocas de formação roteirizadas fora do modo exato — a estreia ou, quando a banda cresceu
+ *  depois (classicLineup25), o primeiro ano da formação clássica. */
+export function identityYear27(m: RealMember[], debut: number): number {
+  const deb = m.filter((x) => inLineupAt(x, debut)).length;
+  let best = 0, at = debut;
+  for (let y = debut; y <= 2030; y++) { const n = m.filter((x) => inLineupAt(x, y)).length; if (n > best) { best = n; at = y; } }
+  return best > deb ? at : debut;
+}
+
+/** r27 (LIN): mês (0–11) de uma entrada/saída: o documentado (MONTHS27) ou um sorteio fixo pela semente. */
+export function lineupMo27(s: GameState, act: Act, name: string, k: 'j' | 'l', y: number): number {
+  return lineupMonth27(realDataOf(act)?.n ?? act.name, name, k) ?? Math.floor(histRoll(s, `${k}27:${act.id}:${name}:${y}`) * 12);
+}
+
+/** r27 (LIN): funções extras da pessoa real (ROLES27) ou, pela heurística, o frontman que canta. Só exibição. */
+function roles27(p: Person, name: string, sings: boolean): void {
+  const xs = realRoles27(name) ?? (sings ? ['vocal' as const] : undefined);
+  if (xs?.length) p.roles27 = xs.map((x) => (Array.isArray(x) ? [x[0], x[1]] as [string, number] : x));
 }
 
 function membersAtDebut(a: RealArtist): number {
@@ -546,7 +588,8 @@ function newgame(s: GameState, r: Rng): void {
       if (s.config.realNames) decorate(s, r, act, d);
       continue;
     }
-    if (upcomingNos.has(no) || !s.config.realNames || ex.d === undefined || ex.d > y0) continue;
+    // r27 (LIN): quem estreia no próprio ano inicial não pode ter "terminado antes do início" (Beatles separados em jan/1962)
+    if (upcomingNos.has(no) || !s.config.realNames || ex.d === undefined || ex.d >= y0) continue;
     // terminou antes do início: entra aposentado/separado, com catálogo
     const real = REAL_ACTS[no];
     const memberCount = Math.max(1, (ex.m ?? []).filter((m) => inLineupAt(m, ex.d!)).length);
@@ -667,7 +710,7 @@ function monthly(s: GameState, r: Rng): void {
   }
   // agenda histórica
   if (!st.sched.length) return;
-  if (histMode(s) !== 'strict' && st.sched.some((x) => x.year >= s.config.startYear)) st.sched = st.sched.filter((x) => x.year < s.config.startYear); // r18: saves antigos
+  if (histMode(s) !== 'strict' && st.sched.some((x) => x.year >= s.config.startYear && !x.lin)) st.sched = st.sched.filter((x) => x.year < s.config.startYear || x.lin); // r18: saves antigos (r27 LIN: menos a formação de identidade)
   const isDue = (x: Sched) => x.year < s.year || (x.year === s.year && (x.mo ?? 0) <= s.month);
   const due = st.sched.filter(isDue);
   if (!due.length) return;
@@ -688,7 +731,8 @@ function monthly(s: GameState, r: Rng): void {
       prov27(p, memberProv27(realDataOf(act)?.n ?? '', name) ?? 'c', born);
       act.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
       const until = ev.until; // fim desta passagem
-      if (until !== undefined && until > s.year) st.sched.push({ year: until, kind: 'leave', actId: act.id, personId: p.id }); // rodada 16: segunda passagem também sai
+      roles27(p, name, false);
+      if (until !== undefined && until >= s.year) st.sched.push({ year: until, mo: until === s.year ? Math.max(s.month + 1, lineupMo27(s, act, name, 'l', until)) : lineupMo27(s, act, name, 'l', until), kind: 'leave', actId: act.id, personId: p.id, lin: ev.lin }); // rodada 16: segunda passagem também sai (r27 LIN: no mês)
       remember(s, 'lineup', fmtL(l('{p} entra em {a}.', '{p} joins {a}.'), { p: p.name, a: act.name }), { actId: act.id, important: act.fame > 30 });
     } else if (ev.kind === 'leave' && ev.personId && !histDiverged(s, act) && act.members.includes(ev.personId) && act.members.length > 1) {
       exitMember20(s, act, ev.personId);
