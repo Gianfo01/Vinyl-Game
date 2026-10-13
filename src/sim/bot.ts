@@ -131,7 +131,6 @@ export function defaultConfig(seed: string, over: Partial<RunConfig> = {}): RunC
     startYear: 1960,
     mode: 'free',
     storyteller: 'maestro',
-    card: 'none',
     mutators: [],
     difficulty: 'normal',
     ironman: false,

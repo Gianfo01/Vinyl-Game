@@ -50,7 +50,7 @@ let undo20: string | null = null;
 const PKEY20: Record<string, L> = {
   world17: l('mundo', 'world'), realNames: l('mundo', 'world'), history: l('mundo', 'world'), mode: l('mundo', 'world'), realFates: l('mundo', 'world'), snap17: l('mundo', 'world'),
   difficulty: l('dificuldade', 'difficulty'), diff17: l('dificuldade detalhada', 'detailed difficulty'), ironman: l('Ironman', 'Ironman'), runYears17: l('prazo', 'deadline'),
-  storyteller: l('narrador', 'storyteller'), freedom17: l('liberdade do diretor', 'director freedom'), mutators: l('modificadores', 'mutators'), card: l('carta', 'card'),
+  storyteller: l('narrador', 'storyteller'), freedom17: l('liberdade do diretor', 'director freedom'), mutators: l('modificadores', 'mutators'),
   dbSize: l('tamanho da base', 'database size'), scenario: l('ponto de partida', 'starting point'), custom: l('ajuste fino do começo', 'start fine-tuning'),
 };
 /** Grupos (sem repetição) que uma lista de campos representa. */

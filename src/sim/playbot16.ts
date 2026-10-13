@@ -390,15 +390,13 @@ function team(s: GameState, k: Knobs): void {
   if (role && s.player.staff.length < hqCaps(s).staff && liquid18(s, 2) / Math.max(1, burn(s)) > k.cut * 2.5) { // r18: conta recebíveis próximos
     const pro = s.professionals.filter((p) => p.role === role).sort((a, b) => b.skill / Math.max(1, b.salary) - a.skill / Math.max(1, a.salary))[0];
     const liq = liquid18(s, 3); // r18: caixa + recebíveis dos próximos 3 meses
-    const afford = pro && liq > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || liq > (salaries + pro.salary) * 24 * k.hireMult);
+    // r27: a 1ª contratação nos dois primeiros anos (ainda sem receita do ano anterior) não exige 2 anos de salário em
+    // caixa — basta o selo já faturar no ano o bastante para meio ano do salário, um ano e meio dele (× o perfil) em
+    // caixa e fôlego de 3× o de corte já contando o salário novo; antes quase ninguém contratava no 1º ano
+    const first = !!pro && !s.player.staff.length && !yearRev && s.year - s.config.startYear < 2 && (s.player.revenueByYear[s.year] ?? 0) > pro.salary * 6
+      && liq > (salaries + pro.salary) * 18 * k.hireMult && liq / Math.max(1, burn(s) + pro.salary) > k.cut * 3;
+    const afford = pro && liq > (salaries + pro.salary) * 12 * k.hireMult && (yearRev > (salaries + pro.salary) * 8 || liq > (salaries + pro.salary) * 24 * k.hireMult || first);
     if (pro && afford && !hireStaff(s, pro.id)) L.hires++;
-  }
-  // r27: no 1º ano (ainda sem receita do ano anterior) a primeira contratação — A&R ou agente de shows, o mais barato
-  // que aparecer — sai quando um ano de salário cabe com folga no caixa e o fôlego segue acima do de corte
-  else if (!s.player.staff.length && acts.length && s.year - s.config.startYear < 2 && !yearRev && s.player.staff.length < hqCaps(s).staff) {
-    const pro = s.professionals.filter((p) => p.role === 'anr' || p.role === 'booking_agent').sort((a, b) => a.salary - b.salary)[0];
-    const liq = liquid18(s, 3);
-    if (pro && liq > pro.salary * 12 * (1 + k.hireMult) && (s.player.cash - pro.salary * 6) / Math.max(1, burn(s) + pro.salary) > k.cut * 2 && !hireStaff(s, pro.id)) L.hires++;
   }
   // ordens permanentes para os delegados (como no painel de equipe)
   for (const st of s.player.staff) {

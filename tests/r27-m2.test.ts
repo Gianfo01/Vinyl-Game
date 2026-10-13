@@ -17,16 +17,22 @@ import { acceptOffer, defaultOffer, evaluateOffer, makeOffer } from '../src/sim/
 import { scoutEligible20 } from '../src/sim/scout20';
 import { defaultRights } from '../src/sim/rights';
 
-let FIX: GameState; // 7º mês da semente r16pb-5 com duas turnês marcadas
-let AFTER: GameState; // 8º mês (modo rápido)
+let FIX: GameState; // 1º mês (a partir do 8º) da semente r16pb-4 com show jogável marcado
+let AFTER: GameState; // o mês seguinte (modo rápido)
 const clone = (s: GameState): GameState => structuredClone(s);
 
 beforeAll(() => {
-  const s = createGame(defaultConfig('r16pb-5', { startYear: 1975, realNames: true }));
-  for (let m = 0; m < 8 && !s.ended; m++) {
+  // r27 (AUD1): o bot passou a usar o motor único de scouting (e a contratar no 1º ano), então o mundo de cada semente
+  // mudou. O fixture agora é o primeiro mês ≥ 8 com show jogável; a semente r16pb-5 deixou de ter show aí perto e as
+  // calibrações abaixo variam com o show sorteado (razão de fãs 0,83–1,30 nas sementes r16pb-2..6) — r16pb-4 é o
+  // caso típico. Os valores do modo rápido foram medidos de novo.
+  const s = createGame(defaultConfig('r16pb-4', { startYear: 1975, realNames: true }));
+  for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
-    if (m === 7) FIX = clone(s);
+    const hit = m >= 7 && playableShows27(s, 40).length > 0;
+    if (hit) FIX = clone(s);
     advanceMonth(s);
+    if (hit) break;
   }
   AFTER = s;
 }, 600000);
@@ -35,13 +41,13 @@ const nan = (o: unknown): boolean => JSON.stringify(o, (_k, v) => (typeof v === 
 
 describe('r27 M2 — modo rápido intacto', () => {
   it('tourDay refatorado (playStop) dá exatamente o mesmo mundo de antes', () => {
-    // valores medidos ANTES da extração de playStop (mesma semente, 8 meses de playbot)
+    // valores medidos com o modo rápido (mesma semente, playbot até o mês seguinte ao fixture); r27 AUD1 remediu
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
     expect(played).toBe(7);
-    expect(AFTER.player.cash).toBe(812016);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3959194536);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2687729053);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3125636362);
+    expect(AFTER.player.cash).toBe(1200328);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1789632474);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3248365416);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1392637596);
   });
 });
 

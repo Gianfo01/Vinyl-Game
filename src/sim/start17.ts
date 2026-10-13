@@ -115,7 +115,7 @@ export const rank17 = (score: number, years: number): L => {
 export interface Preset17 { id: string; name: L; desc: L; apply: (c: RunConfig) => void }
 export const PRESETS17: Preset17[] = [
   { id: 'rec', name: l('Recomendado', 'Recommended'), desc: l('Entidades reais, mundo simulado, dificuldade normal e ajuda disponível. Sem prazo.', 'Real entities, a simulated world, normal difficulty and help available. No deadline.'),
-    apply: (c) => { applyWorld17(c, 'random'); Object.assign(c, { difficulty: 'normal', ironman: false, mutators: [], card: 'none', storyteller: 'maestro', freedom17: 'normal', dbSize: 'medium', runYears17: 0, diff17: {}, scenario: 'from_zero', custom: {} }); c.realFates = false; } },
+    apply: (c) => { applyWorld17(c, 'random'); Object.assign(c, { difficulty: 'normal', ironman: false, mutators: [], storyteller: 'maestro', freedom17: 'normal', dbSize: 'medium', runYears17: 0, diff17: {}, scenario: 'from_zero', custom: {} }); c.realFates = false; } },
   { id: 'hist', name: l('Historiador', 'Historian'), desc: l('Fidelidade ao roteiro documentado e acesso à referência histórica: mortes e discos nas datas reais, base grande e NPCs contidos.', 'Fidelity to the documented script and access to the historical reference: deaths and albums on real dates, a large database and restrained NPCs.'),
     apply: (c) => { applyWorld17(c, 'exact'); Object.assign(c, { difficulty: 'normal', ironman: false, mutators: [], storyteller: 'maestro', freedom17: 'tight', dbSize: 'large', runYears17: 0, diff17: {} }); } },
   { id: 'sandbox', name: l('Sandbox', 'Sandbox'), desc: l('Para experimentar: empresa estabelecida, caixa alto, custos menores, público generoso e mundo solto.', 'To experiment: established company, big cash, lower costs, a generous audience and an unleashed world.'),
@@ -184,7 +184,7 @@ export function readSetupCode17(code: string): RunConfig | null {
  * Os outros defaults não mudam: 1962, Londres, selo do zero, dificuldade normal. */
 export function newRunConfig20(o: { seed: string; companyName: string; kind?: 'free' | 'scenario' }): RunConfig {
   const c: RunConfig = {
-    seed: o.seed, role: 'label', scenario: 'from_zero', startYear: 1962, mode: 'free', storyteller: 'maestro', card: 'none', mutators: [],
+    seed: o.seed, role: 'label', scenario: 'from_zero', startYear: 1962, mode: 'free', storyteller: 'maestro', mutators: [],
     difficulty: 'normal', ironman: false, homeCity: 'london', companyName: o.companyName, bandName: '', bandGenre: 'rnr', contentFilters: [], custom: {},
   };
   if (o.kind === 'scenario') {

@@ -54,7 +54,6 @@ export const S = {
   homeCity: s('Cidade-sede', 'Home city'),
   mode: s('Modo de mundo', 'World mode'),
   storyteller: s('Diretor criativo (narrador)', 'Creative director (storyteller)'),
-  card: s('Carta do Selo', 'Label Card'),
   mutators: s('Mutators', 'Mutators'),
   difficulty: s('Dificuldade', 'Difficulty'),
   seed: s('Semente do mundo', 'World seed'),
@@ -258,7 +257,6 @@ export const S = {
   ledger: s('Extrato', 'Ledger'),
   byCategory: s('Último mês por categoria', 'Last month by category'),
   yearly: s('Por ano', 'Per year'),
-  cardGoal: s('Meta da carta', 'Card goal'),
   done: s('cumprida', 'done'),
   pending: s('pendente', 'pending'),
   // fim
