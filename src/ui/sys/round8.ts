@@ -260,7 +260,14 @@ export function openFeatModal(s: GameState, pre: { host?: string; guest?: string
     if (o.guest) { const f = fairFeat(s, o.host, o.guest); o.fee = f.fee; o.split = f.split; }
   };
   if (o.mode === 'person') resetTerms();
-  const draw = () => {
+  // redesenho sem reentrada: trocar o conteúdo tira o foco do campo e o "change" do blur pediria outro redesenho no meio
+  let drawing = false;
+  const draw = (): void => {
+    if (drawing) { queueMicrotask(draw); return; }
+    drawing = true;
+    try { draw0(); } finally { drawing = false; }
+  };
+  const draw0 = () => {
     const songs = featSongs(s, o.host);
     if (!songs.some((x) => x.id === o.song)) o.song = songs[0]?.id ?? '';
     let targets = featTargets(s, o.host, 40);

@@ -377,6 +377,7 @@ registerSimHook('launch', 'featp29', (s, _r, arg) => {
 // ---------------------------------------------------------------- busca (o seletor "pessoa específica")
 
 export interface FeatPick29 { pid: string; name: string; role: Person['role']; fame: number; block: L | null }
+/** actId '' = sem banda agora; 'solo' = artistas solo (o ato tem uma pessoa só) */
 export interface FeatPickGroup29 { actId: string; name: string; rows: FeatPick29[] }
 const norm29 = (x: string): string => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -406,9 +407,10 @@ export function searchFeatPersons29(s: GameState, hostId: string, q: string, lim
   rows.sort((a, b) => (a.block ? 1 : 0) - (b.block ? 1 : 0) || b.pre - a.pre || b.fame - a.fame || (a.pid < b.pid ? -1 : 1));
   const groups: FeatPickGroup29[] = [];
   for (const x of rows.slice(0, limit)) {
-    const key = x.act?.id ?? '';
+    const solo = !!x.act && x.act.members.length <= 1;
+    const key = solo ? 'solo' : x.act?.id ?? '';
     let gr = groups.find((y) => y.actId === key);
-    if (!gr) groups.push((gr = { actId: key, name: x.act?.name ?? '', rows: [] }));
+    if (!gr) groups.push((gr = { actId: key, name: solo ? '' : x.act?.name ?? '', rows: [] }));
     gr.rows.push({ pid: x.pid, name: x.name, role: x.role, fame: x.fame, block: x.block });
   }
   return groups;

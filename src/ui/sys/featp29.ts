@@ -39,7 +39,7 @@ export function featPicker29(s: GameState, hostId: string, chosen: string[], pic
       !q.v.trim() ? h('p', { class: 'muted small' }, T(l('Sugestões: as pessoas disponíveis mais famosas. Digite para buscar qualquer integrante, solo ou músico.', 'Suggestions: the most famous available people. Type to search any member, soloist or musician.'))) : null,
       full ? h('p', { class: 'warn small' }, T(l('No máximo 4 pessoas por faixa.', 'At most 4 people per track.'))) : null,
       ...groups.flatMap((g) => [
-        h('div', { class: 'tpick29-grp' }, g.name || T(l('Sem banda agora', 'No band right now'))),
+        h('div', { class: 'tpick29-grp' }, g.actId === 'solo' ? T(l('Artistas solo', 'Solo artists')) : g.name || T(l('Sem banda agora', 'No band right now'))),
         ...g.rows.map((x) => {
           const on = chosen.includes(x.pid);
           const why = x.block ?? (on ? l('Já escolhida.', 'Already picked.') : full ? l('Limite de pessoas.', 'People limit.') : null);
@@ -62,9 +62,9 @@ export function featChips29(s: GameState, persons: string[], drop: (pid: string)
   return h('div', { class: 'row wrap', style: 'gap:6px' }, ...persons.map((pid) => {
     const p = s.persons[pid];
     const A = homeAct29(s, pid);
-    return h('span', { class: 'pill', style: 'display:inline-flex;align-items:center;gap:4px' },
+    return h('span', { style: 'display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);border-radius:var(--radius, 3px);padding:2px 2px 2px 8px;max-width:100%' },
       h('b', { ...ent27('person', `p:${pid}`) }, p?.name ?? '?'),
-      h('small', null, `${p ? T(roleName29(p.role)) : ''} · ${T(l('fama', 'fame'))} ${Math.round(personFame(s, pid).v)}${A ? ` · ${A.name}` : ''}`),
+      h('small', { class: 'muted' }, `${p ? T(roleName29(p.role)) : ''} · ${T(l('fama', 'fame'))} ${Math.round(personFame(s, pid).v)}${A ? ` · ${A.name}` : ''}`),
       h('button', { type: 'button', class: 'btn small ghost', 'aria-label': `${T(l('Tirar', 'Remove'))} ${p?.name ?? ''}`, onclick: () => drop(pid) }, '✕'));
   }));
 }
