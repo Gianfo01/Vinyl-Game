@@ -30,6 +30,7 @@ import type { BackgroundId } from './life/data';
 import { FACETS, FACET_TXT, soul, type Facet } from './soul9';
 import { actsOfPerson17 } from '../actidx17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- esquema
 
@@ -528,7 +529,7 @@ export function opine(s: GameState, key: string, d: number, why: L, o: { pol?: b
     const p = s.persons[id];
     const me = pid0(s);
     if (p && me && me !== id) p.rel[me] = clamp((p.rel[me] ?? 0) + v, -100, 100);
-    const a = p && Object.values(s.acts).find((x) => x.members.includes(id) && x.owner === 'player');
+    const a = p && actsNow27(s).find((x) => x.members.includes(id) && x.owner === 'player');
     if (a) a.trust = clamp(a.trust + v * 0.25, 0, 100);
   }
   const keys = Object.keys(st.op);

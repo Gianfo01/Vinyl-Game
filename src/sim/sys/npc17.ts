@@ -37,6 +37,7 @@ import { per13, type P13 } from './persona13';
 import { bump } from './social8';
 import { SIGN_VETO } from './gate14';
 import { actsNow27, releasesNow27 } from '../tickcache27';
+import { actsOfPerson17 } from '../actidx17';
 
 // ---------------------------------------------------------------- estado
 
@@ -396,7 +397,7 @@ function careers(s: GameState, r: Rng, W: number): void {
       const p = s.persons[id];
       const age = p ? s.year - p.born : 0;
       if (!p?.alive || p.isPlayer || age < 32 || age > 68 || st.car[`p:${id}`] || had.has(`n17_${id}`)) continue;
-      if (actsNow27(s).some((x) => live(x) && x.members.includes(id))) continue;
+      if (actsOfPerson17(s, id).some(live)) continue; // r27: índice pessoa→atos (mesma formação atual) em vez de varrer todos
       cands.push([p, a]);
     }
   }

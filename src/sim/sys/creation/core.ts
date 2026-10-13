@@ -17,6 +17,7 @@ import type { Act, GameState, Release, Song } from '../../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../../util';
 import { exploitBlock } from '../../rights';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { actsNow27 } from '../../tickcache27';
 
 // ------------------------------------------------------------------ estado
 
@@ -106,15 +107,22 @@ const BASE: Partial<Record<FamilyId, Partial<Record<string, number>>>> = {
   asia_me: { love: 0.7, nostalgia: 0.6, faith: 0.5, tech: 0.3, rebellion: -0.3 },
 };
 
+const AFF_H = new Map<string, number>(); // r27 (desempenho): hash puro de (semente, família, tema)
 export function themeAffinity(s: GameState, fam: FamilyId, theme: string): number {
   const base = BASE[fam]?.[theme] ?? 0;
-  const jitter = ((hashString(`${s.config.seed}:${fam}:${theme}`) % 1000) / 1000 - 0.5) * 0.5;
+  const jk = `${s.config.seed}:${fam}:${theme}`;
+  let jh = AFF_H.get(jk);
+  if (jh === undefined) { if (AFF_H.size > 50000) AFF_H.clear(); AFF_H.set(jk, (jh = hashString(jk))); }
+  const jitter = ((jh % 1000) / 1000 - 0.5) * 0.5;
   return clamp(base + jitter, -1, 1);
 }
 
 /** Tendência do tema no ano (0.7..1.35), com ondas por tema e eventos históricos. */
+const TREND_H = new Map<string, number>(); // r27 (desempenho): hash puro de (tema, mercado), chamado por música × tema
 export function themeTrend(s: GameState, theme: string, market?: MarketId): number {
-  const h = hashString(`${theme}:${market ?? 'all'}`);
+  const hk = `${theme}:${market ?? 'all'}`;
+  let h = TREND_H.get(hk);
+  if (h === undefined) TREND_H.set(hk, (h = hashString(hk)));
   const phase = (h % 360) * (Math.PI / 180);
   const period = 9 + (h % 7);
   let v = 1 + 0.18 * Math.sin((s.year / period) * Math.PI * 2 + phase);
@@ -334,7 +342,7 @@ function onCompose(s: GameState, r: Rng, song: Song): void {
 
 export function featureCandidates(s: GameState, song: Song): Act[] {
   const mine = new Set(playerActs(s));
-  return Object.values(s.acts).filter((a) => !mine.has(a.id) && a.status !== 'retired' && !a.deceased && a.fame > 15 && a.id !== song.actId).sort((a, b) => b.fame - a.fame).slice(0, 10);
+  return actsNow27(s).filter((a) => !mine.has(a.id) && a.status !== 'retired' && !a.deceased && a.fame > 15 && a.id !== song.actId).sort((a, b) => b.fame - a.fame).slice(0, 10);
 }
 
 export function featureFee(s: GameState, guest: Act): number {

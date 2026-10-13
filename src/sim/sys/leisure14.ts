@@ -26,6 +26,7 @@ import { opine, opinionOf, per13, type P13 } from './persona13';
 import { scene12 } from './scenes12';
 import { actsOfPerson17 } from '../actidx17';
 import { relief27 } from '../relief27';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- dados
 
@@ -119,7 +120,7 @@ export function pool14(s: GameState): { fixed: string[]; rot: string[] } {
   const fixed: string[] = [];
   const rot: string[] = [];
   const seen = new Set<string>();
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.status === 'retired' || a.status === 'split' || a.deceased) continue;
     const mine = a.owner === 'player';
     if (!mine && a.fame < 30) continue;

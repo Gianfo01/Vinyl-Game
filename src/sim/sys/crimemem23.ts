@@ -32,6 +32,7 @@ import { STREET } from './crimenpc17';
 import { leaders } from './leaders10';
 import { per13 } from './persona13';
 import { registerSituation } from './situations17';
+import { actsNow27 } from '../tickcache27';
 
 // ================================================================ nomes
 
@@ -63,7 +64,7 @@ function actOf(s: GameState, pid: string): Act | undefined {
   let c = ACTMAP.get(s);
   if (!c || c.w !== s.week) {
     const m = new Map<string, Act>();
-    for (const a of Object.values(s.acts)) if (live(a)) for (const x of a.members) if (!m.has(x)) m.set(x, a);
+    for (const a of actsNow27(s)) if (live(a)) for (const x of a.members) if (!m.has(x)) m.set(x, a);
     ACTMAP.set(s, (c = { w: s.week, m }));
   }
   const a = c.m.get(pid); // o ato pode ter mudado na mesma semana (saída/separação)

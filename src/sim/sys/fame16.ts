@@ -23,6 +23,7 @@ import { FTIERS, fameTier, f15, feeMult, mainActOf, personFame } from './fame15'
 import { addHype } from './hype12';
 import { mapx } from './mapx8';
 import { scene12 } from './scenes12';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 
@@ -199,6 +200,8 @@ function buildPlayedIx(s: GameState): Map<string, { id: string }[]> {
   for (const id of acts) { const xs = CITIES.filter((c) => has.has(`played:${id}:${c.id}`)); if (xs.length) m.set(id, xs); }
   return m;
 }
+// r27 (desempenho): maior cena (país, gênero) lembrada durante fame16Month (s.scenes não muda ali dentro)
+let sceneMax: Map<string, number> | null = null;
 function targets(s: GameState, a: Act, cp: Map<string, number> | undefined): { t: Map<string, number>; m: Map<string, number> } {
   const t = new Map<string, number>(), m = new Map<string, number>();
   const add = (k: string, v: number, bit: number) => { if (v <= 0) return; t.set(k, (t.get(k) ?? 0) + v); m.set(k, (m.get(k) ?? 0) | bit); };
@@ -231,7 +234,9 @@ function targets(s: GameState, a: Act, cp: Map<string, number> | undefined): { t
   for (const a3 of [...t.keys()]) {
     if (a3.startsWith('r:')) continue;
     let sc = 0;
-    for (const c of citiesOf(a3)) sc = Math.max(sc, s.scenes[`${c}:${a.genre}`] ?? 0);
+    const sk = `${a3}|${a.genre}`, hit = sceneMax?.get(sk);
+    if (hit !== undefined) sc = hit;
+    else { for (const c of citiesOf(a3)) sc = Math.max(sc, s.scenes[`${c}:${a.genre}`] ?? 0); sceneMax?.set(sk, sc); }
     if (sc > 0) add(a3, Math.min(4, sc / 10), 128);
   }
   // transbordo: vizinhos de mercado e países do mesmo idioma recebem parte do maior desvio
@@ -255,8 +260,9 @@ export function fame16Month(s: GameState): void {
   const st = f16(s);
   const cp = chartPts(s);
   const cand = new Set<string>([...cp.keys(), ...Object.keys(st.d)]);
-  for (const a of Object.values(s.acts)) if (live(a) && (mineAct(a) || a.fame >= 25)) cand.add(a.id);
+  for (const a of actsNow27(s)) if (live(a) && (mineAct(a) || a.fame >= 25)) cand.add(a.id);
   playedIx = buildPlayedIx(s);
+  sceneMax = new Map();
   try { for (const id of cand) {
     const a = s.acts[id];
     if (!a) { delete st.d[id]; delete st.m[id]; delete st.lt[id]; continue; }
@@ -278,7 +284,7 @@ export function fame16Month(s: GameState): void {
       for (const k of Object.keys(nd)) { const b = m.get(k) ?? st.m[id]?.[k] ?? 0; if (b) mm[k] = b; }
       st.m[id] = mm;
     } else { delete st.d[id]; delete st.m[id]; }
-  } } finally { playedIx = null; }
+  } } finally { playedIx = null; sceneMax = null; }
   localEvents(s);
 }
 
@@ -287,7 +293,7 @@ export function fame16Month(s: GameState): void {
 function localEvents(s: GameState): void {
   const st = f16(s);
   const r = Rng.fromSeed(`${s.config.seed}:fame16:${s.year}:${s.month}`);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!mineAct(a) || !live(a)) continue;
     const top = fameMap16(s, a).slice(0, 8);
     // novo degrau num país (≥ Nacional)

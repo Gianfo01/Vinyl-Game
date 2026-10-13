@@ -19,6 +19,7 @@ import { tiesOf } from './social8';
 import { histLocked } from '../history15';
 import { scandal } from '../scandal17';
 import { actsTouched17 } from '../actidx17';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- facetas e valores
 
@@ -80,9 +81,27 @@ const TRAIT_F: Record<string, [Facet | Value, number][]> = {
 const AMB_V: Record<string, Value> = { art: 'arte', fame: 'fama', money: 'dinheiro', freedom: 'liberdade', critics: 'arte', security: 'familia', status: 'poder', legacy: 'fama' };
 
 export interface Soul { f: Record<Facet, number>; v: Record<Value, number> }
-const CACHE = new WeakMap<Person, { k: string; so: Soul }>();
+// r27 (desempenho): a assinatura (traços, ambição, objetivo, valores da persona) é comparada campo a campo, sem montar
+// a string a cada chamada (soul é chamado milhares de vezes por mês)
+interface SoulSig { tr?: string[]; am: unknown; go: unknown; pv: unknown[] | null }
+const CACHE = new WeakMap<Person, { k: SoulSig; so: Soul }>();
+function sigNow(p: Person): SoulSig {
+  return { tr: p.traits ? p.traits.slice() : undefined, am: p.ambition, go: p.goal, pv: p.persona ? Object.values(p.persona) : null };
+}
+function sameSig(k: SoulSig, p: Person): boolean {
+  if (k.am !== p.ambition || k.go !== p.goal) return false;
+  const t = p.traits;
+  if (!t || !k.tr) { if (t || k.tr) return false; } else {
+    if (t.length !== k.tr.length) return false;
+    for (let i = 0; i < t.length; i++) if (t[i] !== k.tr[i]) return false;
+  }
+  const pe = p.persona as Record<string, unknown> | undefined;
+  if (!pe || !k.pv) return !pe && !k.pv;
+  let i = 0;
+  for (const key in pe) { if (i >= k.pv.length || pe[key] !== k.pv[i]) return false; i++; }
+  return i === k.pv.length;
+}
 const BASE = new WeakMap<Person, { seed: string; id: string; f: Record<Facet, number>; v: Record<Value, number> }>();
-const sigOf = (p: Person) => `${p.traits?.join(',')}|${p.ambition}|${p.goal}|${p.persona ? Object.values(p.persona).join(',') : ''}`;
 
 function u(seed: string, id: string, k: string): number {
   return hashString(`${seed}|${id}|${k}`) / 4294967296;
@@ -96,9 +115,9 @@ function roll(seed: string, id: string, k: string): number {
 
 /** Personalidade e valores de uma pessoa (determinísticos; mesclam traços, persona e ambição já existentes). */
 export function soul(s: GameState, p: Person): Soul {
-  const sig = sigOf(p);
   const hit = CACHE.get(p);
-  if (hit && hit.k === sig) return hit.so;
+  if (hit && sameSig(hit.k, p)) return hit.so;
+  const sig = sigNow(p);
   const seed = s.config.seed;
   // r27 (desempenho): os sorteios base só dependem de (semente, id) — a persona muda todo mês e invalidava tudo
   let b = BASE.get(p);
@@ -251,7 +270,7 @@ export function formAct(s: GameState, r: Rng, pids: string[], genre: string, cit
 }
 
 const actOfP = (s: GameState, pid: string): Act | undefined => {
-  for (const a of Object.values(s.acts)) if (a.members.includes(pid) && (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus')) return a;
+  for (const a of actsNow27(s)) if (a.members.includes(pid) && (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus')) return a;
   return undefined;
 };
 
@@ -342,7 +361,7 @@ deferEvents([{
 
 registerSimHook('month', 'soul9', (s, r) => {
   const pace = worldPace(s);
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!isNotableAct(a) || (a.status !== 'active' && a.status !== 'emerging')) continue;
     const npc = a.owner !== 'player' && !a.playerBand;
     let egoClash = 0;
@@ -443,7 +462,7 @@ function pursueDream(s: GameState, r: Rng, a: Act, p: Person): boolean {
     case 'supergroup': {
       if (a.fame < 40) return false;
       const fam = familyOf(a.genre);
-      const others = Object.values(s.acts).filter((b) => b !== a && b.fame >= 40 && (b.status === 'active' || b.status === 'emerging') && familyOf(b.genre) === fam);
+      const others = actsNow27(s).filter((b) => b !== a && b.fame >= 40 && (b.status === 'active' || b.status === 'emerging') && familyOf(b.genre) === fam);
       if (!others.length) return false;
       const picks = r.shuffle(others).slice(0, r.int(1, 2)).map((b) => r.pick(b.members)).filter((x) => s.persons[x]?.alive && !s.persons[x].isPlayer);
       if (!picks.length) return false;
@@ -458,7 +477,7 @@ function pursueDream(s: GameState, r: Rng, a: Act, p: Person): boolean {
 /** Músicos livres (sem ato ativo) que já passaram por bandas notáveis. */
 export function freeMusicians(s: GameState): Person[] {
   const busy = new Set<string>();
-  for (const a of Object.values(s.acts)) if (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus') for (const m of a.members) busy.add(m);
+  for (const a of actsNow27(s)) if (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus') for (const m of a.members) busy.add(m);
   const out: Person[] = [];
   for (const id of Object.keys(chronState(s).mem)) {
     const p = s.persons[id];
@@ -495,7 +514,7 @@ registerSimHook('year', 'soul9', (s, r) => {
   for (const id of Object.keys(st.p)) { const p = s.persons[id]; if (!p || (!p.alive && s.year - (p.died ?? s.year) > 2)) delete st.p[id]; }
   const pace = worldPace(s);
   let acted = 0;
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.owner === 'player' || a.playerBand || a.status !== 'active' || a.fame < 25) continue;
     // troca de empresário
     if (!a.owner && a.fame > 30 && r.chance(0.04)) {
@@ -524,7 +543,7 @@ function worldSongs(s: GameState, e: ChronEv): void {
   const pick = <T>(arr: T[]) => arr[(e.y * 7 + e.m + (e.a?.[0]?.length ?? 0)) % arr.length];
   const singer = (exclude: string[], genre?: string): Act | undefined => {
     let best: Act | undefined;
-    for (const b of Object.values(s.acts)) if (!exclude.includes(b.id) && b.status === 'active' && b.fame >= 20 && (!genre || b.genre === genre) && (!best || b.fame > best.fame)) best = b;
+    for (const b of actsNow27(s)) if (!exclude.includes(b.id) && b.status === 'active' && b.fame >= 20 && (!genre || b.genre === genre) && (!best || b.fame > best.fame)) best = b;
     return best;
   };
   let a: Act | undefined;
@@ -545,7 +564,7 @@ function worldSongs(s: GameState, e: ChronEv): void {
     title = fmtL(pick(DISS), { p: src.name });
     k = 'song_diss';
   } else if (e.k === 'recession' || e.k === 'strike') {
-    for (const b of Object.values(s.acts)) {
+    for (const b of actsNow27(s)) {
       if (b.status !== 'active' || b.fame < 20) continue;
       const lead = s.persons[b.leaderId ?? b.members[0]];
       if (lead && soul(s, lead).v.politica > 62) { a = b; break; }
