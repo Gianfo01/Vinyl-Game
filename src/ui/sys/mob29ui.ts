@@ -5,8 +5,9 @@
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { orgById, orgs17 } from '../../sim/sys/crime17';
-import { meter29 } from '../../sim/sys/mob29';
-import { LINK29, linksOfKey29, orgLinks29 } from '../../sim/sys/orglinks29';
+import { delay29, doMob29, fulfill29, meter29, refuse29 } from '../../sim/sys/mob29';
+import { ROW_ACT27 } from './cockpit27model';
+import { LINK29, LINKSIM29, linksOfKey29, orgLinks29 } from '../../sim/sys/orglinks29';
 import type { GameState } from '../../sim/types';
 import { pill, rerender } from '../common';
 import { h } from '../dom';
@@ -23,7 +24,7 @@ export function underworldLinks29(s: GameState, key: string): HTMLElement | null
   return h('ul', { class: 'small' }, ...xs.map((x) => {
     const o = orgById(s, x.o);
     return h('li', null, h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, o ? t(o.name) : x.o), ' ',
-      pill(t(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''), x.y ? ` ${x.y}` : '',
+      pill(t(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''), x.sim ? pill(t(LINKSIM29), 'warn') : null, x.y ? ` ${x.y}` : '',
       h('div', { class: 'muted' }, t(x.text)));
   }));
 }
@@ -39,7 +40,7 @@ setTimeout(() => {
   searchRoute16.f = (s: GameState, q: string) => {
     const out = prevS?.(s, q) ?? [];
     if (q.length < 2) return out;
-    for (const o of orgs17(s)) {
+    for (const o of orgs17(s, false, true)) {
       const nm = t(o.name);
       if (!nm.toLowerCase().includes(q)) continue;
       const m = meter29(s, o.id);
@@ -55,3 +56,12 @@ setTimeout(() => {
     return true;
   };
 }, 0);
+
+// Cockpit › Favores e dívidas: as ações rápidas chamam as mesmas funções do card da família e do menu de ações
+ROW_ACT27.f = (s, id) => {
+  if (id.startsWith('mob.ask:')) return fulfill29(s, id.slice(8));
+  if (id.startsWith('mob.refuse:')) return refuse29(s, id.slice(11));
+  if (id.startsWith('mob.delay:')) return delay29(s, id.slice(10));
+  if (id.startsWith('mob.pay:')) return doMob29(s, id.slice(8), 'paydebt');
+  return null;
+};

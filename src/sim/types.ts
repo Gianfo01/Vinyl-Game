@@ -122,6 +122,8 @@ export interface CharacterSpec {
   age: number;
   background: string;
   role?: Person['role'];
+  /** r29: funções do personagem na banda além da principal (vira Person.roles27; vocal/MC = ele canta) */
+  roles27?: string[];
   look?: Appearance;
   /** rodada 6: personalização e personalidade */
   nickname?: string;

@@ -221,3 +221,4 @@ import './mundo27'; // r27 (E1): Mundo — Este mês no mundo, mapa pixel art co
 import './core18';
 import './eggs27';
 import './prov27'; // r27 (F): linha "fonte/certeza" na ficha (confirmado / aproximado / não conferido / simulado) // r27 ovos de Páscoa: Konami, pele 1889/chiptune, registros para busca/sede/mapa (docs/eggs27.md)
+import './contracts29reg'; // R29 (contratos+): "Propor empresariamento" na ficha de ato com selo rival

@@ -134,6 +134,173 @@ Os bloqueios sempre mostram o motivo:
 - alvo morto ou inválido (`targetBlock17`);
 - caixa.
 
+## 4. Votação de prêmio comprada (`src/sim/sys/rig29.ts`)
+
+"Manipular a votação de um prêmio" agora é uma ação de verdade, com três entradas e um caminho só (`rigAward29`):
+
+- **Ação direta do Submundo** (crime `award_rig`, para qualquer ato, o seu ou outro): no Planos, escolhe-se o prêmio
+  e o método. O menu de um ato tem "Manipular a votação de um prêmio…".
+- **Serviço de "Contratar {família} para…"**: famílias tradicionais subornam um jurado; o crime digital usa robôs no
+  voto popular.
+- **Pedido "vote como a gente quer"**: a família indica o protegido dela. Se você tem voto na academia (reputação
+  institucional 50+ ou 3+ prêmios), seu voto pesa mais; sem voto, você faz lobby, e isso custa dinheiro.
+
+Os métodos dependem da época:
+
+| Método | Época | Força | Chance base de vazar |
+|---|---|---|---|
+| Subornar um jurado | sempre | 6 | 22% |
+| Lobby na academia | sempre | 4 | 12% |
+| Encher as urnas do voto popular | 1950–1999 | 5 | 28% |
+| Fazenda de robôs no voto online | 2005+ | 7 | 30%, sobe com os anos |
+
+A compra entra nos prêmios que existem, cada um pelo seu gancho. Sem compra, todos os ganchos devolvem 0 e nada muda.
+
+- **Gramófonos** (`GRAMO_ADJ`): pesa na indicação e na noite.
+- **Prêmios do Ofício** (`CRAFT_ADJ28`).
+- **Prêmio da Crítica** (`CRITIC_ADJ29`).
+- **Prêmios nacionais de júri local** (`juryMemHook`).
+- **Hall da Fama** (`HALL_ADJ9`).
+
+**Exposição.** Quando o ato ganha com voto comprado, há um sorteio de exposição (o método mais o calor). Se vazar:
+
+- o prêmio é **cassado** (fato `award_revoked`, que tira fama, gera manchete e estresse);
+- sai um escândalo (facções de fãs e imprensa);
+- a reputação institucional cai;
+- o calor sobe e abre um caso na polícia;
+- a cena de escândalo mostra tudo isso.
+
+Se a compra não ganhar nada, ela vence em cerca de um ano, com uma pequena chance de vazar mesmo assim.
+
+## 5. Crime digital (anos 1995+) (`src/data/cyber29.ts`)
+
+São organizações **inventadas** (ids `f…`), como as fictícias de sempre. Elas existem em todos os modos e são
+claramente fictícias.
+
+| Organização | Época | Base | Ramo |
+|---|---|---|---|
+| Cena 0day "Nulo" | 1995–2014 | cidade-base | vazamentos, darknet |
+| Coletivo Vazamento Zero | 1999+ | Kiev | vazamentos/ransomware, vozes, lavagem |
+| Fazenda de Plays Aurora | 2005+ | Manila | fazendas de streams, robôs |
+| Rede Bilhete-Bot | 2008+ | cidade-base | cambismo por robôs |
+| Mercado Sombra | 2011+ | Berlim | darknet, pirataria, lavagem |
+| Estúdio Espelho | 2015+ | Seul | vozes clonadas por IA, robôs |
+
+Elas agem online, então alcançam qualquer país. O emblema delas é um chip (`emblem28`, tipo `cyber`), com trilhas de
+circuito e as cargas chip/robô.
+
+Ficam **fora** da lista padrão `orgs17(s)`, porque os NPCs e o mundo não as usam (mundo sem interação fica igual).
+Entram pelo mob29: medidor, interações e serviços.
+
+Os serviços estão ligados às fraudes de sempre:
+
+| Serviço | Como funciona |
+|---|---|
+| Inflar streams | Fazenda do `stream18`. As plataformas procuram e, se acharem, há derrubada, multa, lista negra e escândalo. |
+| Vazar o álbum de um rival | Sabotagem `release`. |
+| Invadir um selo (hack/DDoS) | Grampo. |
+| Expor um jornalista ou rival (doxxing) | Intimidação. |
+| Cambismo por robôs no seu show | Dinheiro. Se vier a público, escândalo com os fãs. |
+| Clonar a voz de um astro | Fato `ai_voice_fake` (`fakes19`: pressão pela lei de voz e confiança da vítima). Se vier a público, derrubada, caso e reputação. |
+| Pirataria na darknet | Pirataria. |
+| Robôs no voto popular de um prêmio | Votação comprada pelo `rig29`. |
+
+## 6. Cockpit "Favores e dívidas" e calendário
+
+O Cockpit ganhou o cartão **Favores e dívidas** (categoria M44 Submundo/Jurídico). Ele só aparece quando há algo e
+lista:
+
+- os pedidos com prazo e o nível de escalada;
+- o que você deve e quando cobram;
+- o que as famílias devem a você;
+- os medidores das famílias com que você lida.
+
+As ações rápidas chamam as mesmas funções do card da organização: **Cumprir**, **Negociar prazo** (+4 semanas, uma
+vez, com custo e respeito −2), **Recusar** e **Pagar** (quita a dívida).
+
+Os prazos entram no **calendário único** (`registerDeadline('mob29')`), e com isso também na agenda/grade do S03 e no
+Cockpit.
+
+## Facções × gêneros e cenas (`src/sim/sys/aff29.ts`)
+
+O autor pediu: "veja como conectar facções a certos artistas, gêneros e movimentos, como o Comando Vermelho com o funk
+proibidão". A ligação é **cultural**: uma organização tem afinidade com um gênero ou cena, com época e território (o
+país dela). Datas reais só onde são bem documentadas.
+
+| Organização | Gênero / cena | Época | Tipo |
+|---|---|---|---|
+| Comando Vermelho | funk carioca ("proibidão" nos bailes do Rio) | 1995+ | documentada |
+| Bonde da Laje (inventada) | funk carioca (bailes da laje) | 1995+ | de jogo |
+| PCC | funk proibidão e ostentação em São Paulo | 2001+ | documentada |
+| Cartel de Sinaloa | narcocorridos (norteño), corridos tumbados | 1989+ | documentada |
+| Camorra | neomelódicos (canção napolitana) | 1990+ | documentada |
+| Yamaguchi-gumi | enka e a promoção de shows (kōgyō) | 1950–1992 (lei antiyakuza) | documentada |
+| Sumiyoshi-kai | enka nas casas noturnas | 1958–1992 | de jogo |
+| Mob Piru Bloods | gangsta rap da Costa Oeste | 1988+ | documentada (processos públicos) |
+| Southside Compton Crips | gangsta rap da Costa Oeste | 1988+ | de jogo |
+| Os do Quarteirão (inventada) | drill de Chicago | 2012+ | de jogo |
+| Turma do Código Postal (inventada) | drill britânico / road rap | 2014+ | de jogo |
+| Shower Posse | dancehall dos "garrisons" de Kingston | 1980–2010 | documentada |
+| Chicago Outfit / Família Genovese | boates e jukeboxes (doo-wop, jump blues, jazz e pop) | 1945–1979 | documentada (audiências de 1959) |
+| Solntsevskaya Bratva | chanson russo (no jogo, dentro de Estrada) | 1990+ | de jogo |
+
+Uma organização real bem conhecida entrou, com descrição neutra: o PCC (fundado em 1993). As especulativas são
+**inventadas** (`STREET29`, como o crime digital, fora da lista padrão).
+
+Efeitos, sempre pelos sistemas de sempre e sobre o que é **seu** (o mundo sem você fica igual):
+
+- **Pedidos da facção** a um ato seu do gênero, no território dela (pedidos do mob29 com prazo):
+  - **convite para o baile ou evento**: cachê, fama, embalo e divulgação de rua; risco de batida policial (cena de
+    batida) e de pânico moral (escândalo para as facções de fãs e a imprensa);
+  - **pedágio** para tocar: recusar escala como uma dívida;
+  - **pressão para escrever sobre eles**: o ato passa a andar com a facção. É o laço de rua de sempre
+    (credibilidade, rixas), marcado como desta partida, com pânico moral, censura e calor.
+- **Movimentos** (`movements9`) de um gênero da facção, no território dela e com ato seu dentro, crescem mais rápido,
+  mas carregam estigma (escândalo de vez em quando).
+- A **cena** aparece no card da organização ("cena documentada" / "afinidade de jogo") e na página do ato (Conexões ›
+  "A cena e o submundo"), com o aviso de que é uma afinidade da cena e não diz que as pessoas pertencem à facção.
+
+### Regra de segurança (pessoas reais)
+
+- A afinidade é de **gênero e cena**, nunca de pessoa.
+- Nenhuma pessoa real viva aparece como membro ou associada de uma facção real sem registro público. Esses registros
+  são os laços documentados do `orgs17` (Sinatra, Morris Levy…), rotulados **"ligação documentada"** e com nota
+  factual neutra.
+- Na história alternativa, laços simulados só valem para atos e pessoas **inventados** ou para **jogadas desta
+  partida**. Por exemplo, o seu ato aceita escrever sobre a facção; aí o laço aparece como **"nesta partida
+  (simulado)"**, nunca como documentado.
+- O `orglinks29` aplica a regra para a ficha, o card, o menu e a busca. Filiação, dívida, segredo ou laço de rua
+  sorteados para gente real (por exemplo, um ato do catálogo ligado a uma gangue no modo livre, ou um artista real
+  devendo a um agiota de NPC) não viram afirmação em lugar nenhum.
+- A cena real de um ato real pode gerar **interações** no jogo (convites, pressão), mas não a afirmação de que a
+  pessoa pertence à facção.
+
+## Testes da rodada 29b
+
+O mesmo arquivo `tests/r29-underworld.test.ts` agora cobre:
+
+- **Prêmio comprado:**
+  - muda o vencedor dos Gramófonos;
+  - ganhou e vazou → prêmio cassado, `award_revoked`, reputação;
+  - os outros prêmios leem a compra (Ofício, Crítica, nacionais, Hall);
+  - ação direta e métodos por época;
+  - o serviço da família;
+  - o pedido de voto, com e sem voto na academia.
+- **Crime digital:**
+  - aparece por época e nunca na lista padrão;
+  - streams, vazamento e clone de voz ligados a `stream18` e `fakes19`;
+  - fora de época, bloqueia com o motivo.
+- **Cockpit e calendário:**
+  - linhas, prazos, ações e "negociar prazo";
+  - o que a família deve a você;
+  - o cartão some sem dívidas.
+- **Facções × cenas:**
+  - CV ↔ funk (1995+), PCC (2001+), Sinaloa ↔ norteño (1989+), Yamaguchi ↔ enka (até 1992);
+  - um ato seu no Rio recebe pedidos da facção;
+  - a homenagem vira laço **simulado**, com R10 = 0;
+  - pessoa/ato real nunca ganha laço não documentado (varredura);
+  - determinismo.
+
 ## Determinismo
 
 - Os sorteios usam `Rng.fromSeed` com a chave `mob29`.
@@ -158,3 +325,12 @@ Os bloqueios sempre mostram o motivo:
 
 As capturas estão em `docs/shots29submundo/` e são geradas por `node scripts/shots29submundo.mjs`, com o servidor em
 `npx vite --port 5330`.
+
+As capturas da rodada 29b (10 a 14) são geradas por `node scripts/shots29submundo2.mjs`, com o servidor em
+`npx vite --port 5331`:
+
+- `10-cockpit-favores.png`: o cartão "Favores e dívidas" do Cockpit, com as ações rápidas;
+- `11-crime-digital-card.png`: o card de uma organização de crime digital, com o emblema de chip;
+- `12-cv-cena-funk.png`: o card do Comando Vermelho com a cena do funk;
+- `13-planos-premio-comprado.png`: o planejador em "Manipular a votação de um prêmio";
+- `14-ato-cena-submundo.png`: a seção "A cena e o submundo" na página do ato.

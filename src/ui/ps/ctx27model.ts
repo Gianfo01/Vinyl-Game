@@ -379,7 +379,7 @@ function venueMenu(s: GameState, id: string): CtxMenu27 | null {
 /** r29: organização do Submundo — as mesmas ações dos botões do cartão em Submundo › Organizações. */
 function orgMenu(s: GameState, id: string, env: CtxEnv27, name: string): CtxMenu27 | null {
   if (env.has?.('area:crime') === false) return plainMenu('org', id, name || id, null);
-  const o = (() => { try { return orgs17(s).find((x) => x.id === id); } catch { return undefined; } })();
+  const o = (() => { try { return orgs17(s, false, true).find((x) => x.id === id); } catch { return undefined; } })(); // r29: inclui o crime digital
   if (!o) return plainMenu('org', id, name || id, it('org.open', N('Abrir Submundo', 'Open Underworld'), 'skull', 'open'));
   const st = crime17(s);
   const down = (st.down[o.id] ?? 0) > s.week;

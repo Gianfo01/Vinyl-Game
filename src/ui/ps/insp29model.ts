@@ -16,6 +16,7 @@ import { PROM28_NAME, promiseRows28 } from '../../sim/sys/promises28';
 import { ROLE_NAMES } from '../../sim/sys/talent/attrs';
 import type { GameState } from '../../sim/types';
 import { fmtL } from '../../sim/util';
+import { isSpecial29, termTxt29 } from '../../sim/terms29';
 import type { Hue29 } from './shell29';
 
 export type InspTab29 = 'lineup' | 'projects' | 'contracts' | 'agenda' | 'health';
@@ -53,8 +54,8 @@ export function insp29(s: GameState, actId: string): Insp29 | null {
   ];
   const contracts: InspRow29[] = [
     ...Object.values(s.contracts).filter((c) => c.actId === actId && c.party === 'player' && c.endWeek >= s.week).map((c) => ({
-      title: l('Contrato com o selo', 'Contract with the label'),
-      meta: fmtL(l('royalty {r}% · termina em {w} sem.', 'royalty {r}% · ends in {w} wk'), { r: Math.round(c.royalty * 100), w: c.endWeek - s.week }),
+      title: c.model === 'management' ? l('Você é o empresário', 'You are the manager') : c.model === 'production' ? l('Contrato de produção', 'Production deal') : c.model === 'jv' ? l('Joint venture', 'Joint venture') : l('Contrato com o selo', 'Contract with the label'), // R29 (contratos+)
+      meta: isSpecial29(c.model) ? fmtL(l('{x} · termina em {w} sem.', '{x} · ends in {w} wk'), { x: termTxt29(c), w: c.endWeek - s.week }) : fmtL(l('royalty {r}% · termina em {w} sem.', 'royalty {r}% · ends in {w} wk'), { r: Math.round(c.royalty * 100), w: c.endWeek - s.week }),
       pill: { label: l('vigente', 'active'), hue: 'good' as Hue29 }, go: { area: 'contracts19' } })),
     ...safe(() => promiseRows28(s, actId).filter((r) => r.state === 'open'), [] as ReturnType<typeof promiseRows28>).map((r) => ({
       title: fmtL(l('Promessa: {k}', 'Promise: {k}'), { k: PROM28_NAME[r.kind] }),

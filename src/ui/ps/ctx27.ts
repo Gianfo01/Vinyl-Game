@@ -42,7 +42,7 @@ import { CRIMES17, approachOrg, reportOrg, toggleLaunder } from '../../sim/sys/c
 import { leaderOf } from '../../sim/sys/leaders10';
 import { runPA18 } from '../sys/personact18';
 import { crimeForm17, presetCrimeFor29, presetHire29 } from '../sys/crimeform29';
-import { doMob29, fulfill29, hire29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
+import { delay29, doMob29, fulfill29, hire29, jobOf29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
 import { runMember29 } from '../sys/member29';
 import { memberFeatPreset29 } from '../../sim/sys/member29';
 import { isEnt27, type Ent27 } from './ent27';
@@ -193,7 +193,8 @@ function mobRun29(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLEleme
   if (id.startsWith('org29:')) { const oid = id.slice(6); setTimeout(() => openCtx27(s, 'org', oid, anchor), 0); return true; }
   if (id.startsWith('mob.hire:')) { const oid = id.slice(9); const target = m.ent === 'org' ? '' : m.id; setTimeout(() => openCtx27(s, 'org', `hire29:${oid}|${target}`, anchor), 0); return true; }
   if (id.startsWith('mob.job:')) { const [oid, target = ''] = m.id.slice(7).split('|'); res(hire29(s, oid, id.slice(8), target)); return true; }
-  if (id.startsWith('mob.plan:')) { const oid = m.id.slice(7).split('|')[0]; presetHire29(oid, id.slice(9)); goArea(s, 'crime', ['crime17', 'plans']); return true; }
+  if (id.startsWith('mob.plan:')) { const oid = m.id.slice(7).split('|')[0]; const j = jobOf29(id.slice(9)); presetHire29(oid, j?.c ?? id.slice(9), j?.m); goArea(s, 'crime', ['crime17', 'plans']); return true; }
+  if (id.startsWith('mob.delay:')) { res(delay29(s, id.slice(10))); return true; }
   if (id.startsWith('mob.do:')) { res(doMob29(s, m.id, id.slice(7))); return true; }
   if (id.startsWith('mob.ask:')) { res(fulfill29(s, id.slice(8))); return true; }
   if (id.startsWith('mob.refuse:')) { res(refuse29(s, id.slice(11))); return true; }

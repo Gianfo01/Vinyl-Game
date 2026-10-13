@@ -4,6 +4,7 @@ import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CONTRACT_MODELS } from '../../data/rules';
 import { MASTER_NAME, catalogValue, revertWeek, rightsOf, rst } from '../../sim/rights';
+import { active29, isSpecial29, termTxt29 } from '../../sim/terms29';
 import type { GameState } from '../../sim/types';
 import { yearOfWeek } from '../../sim/util';
 import { $, actLink, modal, pill, releaseLink, rerender, section } from '../common';
@@ -41,9 +42,9 @@ function rightsOverview(s: GameState): HTMLElement {
         h('thead', null, h('tr', null, h('th', null, t(l('Ato', 'Act'))), h('th', null, t(l('Modelo', 'Model'))), h('th', null, t(l('Master', 'Master'))), h('th', null, t(l('Reversão', 'Reversion'))), h('th', null, t(l('Não recuperado', 'Unrecouped'))), h('th', null, ''), h('th', null, ''))),
         h('tbody', null, deals.slice(0, 40).map((c) => {
           const rw = revertWeek(c);
-          const active = c.endWeek > s.week && s.acts[c.actId]?.contractId === c.id;
-          return h('tr', null, h('td', null, actLink(s, c.actId)), h('td', null, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name)), h('td', null, t(MASTER_NAME[rightsOf(c).master])),
-            h('td', null, c.reverted ? t(l('revertido', 'reverted')) : rw === Infinity ? '—' : String(yearOfWeek(s, rw))),
+          const active = isSpecial29(c.model) ? active29(s, c) : c.endWeek > s.week && s.acts[c.actId]?.contractId === c.id; // R29: empresariamento não é o contrato do ato
+          return h('tr', null, h('td', null, actLink(s, c.actId)), h('td', { title: isSpecial29(c.model) ? t(termTxt29(c)) : undefined }, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name)), h('td', null, c.model === 'management' ? t(l('— (gestão: sem master)', '— (management: no master)')) : t(MASTER_NAME[rightsOf(c).master])),
+            h('td', null, c.reverted ? t(l('revertido', 'reverted')) : rw === Infinity || c.model === 'management' ? '—' : String(yearOfWeek(s, rw))),
             h('td', { class: c.recoupBalance > 0 ? 'bad' : '' }, $(c.recoupBalance)),
             h('td', null, c.reverted ? pill(t(l('do artista', 'artist\'s')), 'bad') : active ? pill(t(l('ativo', 'active')), 'good') : pill(t(l('encerrado', 'ended')))),
             h('td', null, h('button', { class: 'btn small ghost', onclick: () => openSheet(s, c.id) }, t(l('Ficha', 'Sheet')))));

@@ -21,13 +21,17 @@ import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
 import { hqModel25, runway25, type Goto25, type Need25 } from '../ps/hq25model';
 import type { Kpi27, Tone27 } from '../ps/ui27model';
+import { favorRows29, meters29 } from '../../sim/sys/mob29'; // r29 Submundo: favores e dívidas
+import { orgById } from '../../sim/sys/crime17';
 
 export const AGORA_MAX27 = 3;
 export const CARDS_MAX27 = 4;
 export const ROWS_MAX27 = 3;
 
-export type CardId27 = 'commit' | 'proj' | 'inbox' | 'cast';
-export interface Row27m { id: string; title: L | string; meta?: L | string; aside?: L | string; tone?: Tone27; go?: Goto25; hub?: { actId: string; pid: string } }
+export type CardId27 = 'commit' | 'proj' | 'inbox' | 'cast' | 'favors';
+export interface Row27m { id: string; title: L | string; meta?: L | string; aside?: L | string; tone?: Tone27; go?: Goto25; hub?: { actId: string; pid: string }; /** r29: ações rápidas (despacho ROW_ACT27) */ acts?: { id: string; label: L }[] }
+/** r29: despacho das ações rápidas das linhas (preenchido pela interface: ui/sys/mob29ui → sim/sys/mob29). */
+export const ROW_ACT27: { f?: (s: GameState, id: string) => { ok: boolean; text: L } | null } = {};
 export interface Card27m { id: CardId27; title: L; icon: string; rows: Row27m[]; foot?: L; action: { label: L; go: Goto25 } }
 export interface More27 { id: string; label: L; go: Goto25 }
 export interface Cockpit27 {
@@ -116,6 +120,25 @@ function inbox(s: GameState): { rows: Row27m[]; foot?: L } {
   return { rows, foot: rest > 0 ? fmtL(pl(rest, l('+{n} mensagem não lida', '+{n} unread message'), l('+{n} mensagens não lidas', '+{n} unread messages')), { n: rest }) : undefined };
 }
 
+/** r29 (Submundo, M44 "Submundo/Jurídico"): favores e dívidas com as famílias — pedidos com prazo, o que você deve, o
+ *  que devem a você; ações rápidas pelas MESMAS funções do card da família (mob29). Só aparece quando há algo. */
+function favors(s: GameState): { rows: Row27m[]; foot?: L } {
+  let xs: ReturnType<typeof favorRows29> = [];
+  try { xs = favorRows29(s); } catch { xs = []; }
+  const rows = xs.slice(0, ROWS_MAX27).map((r): Row27m => ({
+    id: r.id, title: r.title, meta: r.meta,
+    aside: r.due === undefined ? undefined : r.due <= s.week ? l('esta semana', 'this week') : fmtL(l('em {n} sem.', 'in {n} wk'), { n: r.due - s.week }),
+    tone: r.tone === 'warn' ? 'warn' : r.tone === 'bad' ? 'bad' : r.tone === 'good' ? 'good' : undefined, go: { area: 'crime', tab: ['crime17', 'orgs'] }, acts: r.acts,
+  }));
+  let ms: ReturnType<typeof meters29> = [];
+  try { ms = meters29(s); } catch { ms = []; }
+  const mt = (k: 'pt' | 'en') => ms.slice(0, 2).map((x) => `${orgById(s, x.o)?.name[k] ?? x.o}: ${x.m.respect}/${x.m.fear}/${x.m.debt}/${x.m.hostility}`).join(' · ');
+  const meter = ms.length ? l(mt('pt'), mt('en')) : null;
+  const rest = xs.length - rows.length;
+  const foot = rest > 0 || meter ? fmtL(l('{r}Respeito/medo/dívida/hostilidade — {m}', '{r}Respect/fear/debt/hostility — {m}'), { r: rest > 0 ? fmtL(l('+{n} · ', '+{n} · '), { n: rest }) : '', m: meter ?? '—' }) : undefined;
+  return { rows, foot };
+}
+
 function cast(s: GameState): Row27m[] {
   return live(s).sort((a, b) => b.fame - a.fame).slice(0, ROWS_MAX27).map((a) => ({
     id: a.id, title: a.name,
@@ -139,6 +162,9 @@ export function cockpit27(s: GameState, loc = 'pt-BR', date = `${s.month + 1}/${
     { id: 'inbox', title: l('Caixa de entrada', 'Inbox'), icon: 'newspaper', rows: ib.rows, foot: ib.foot, action: { label: l('Abrir a caixa', 'Open the inbox'), go: INBOX } },
     { id: 'cast', title: l('Elenco em destaque', 'Roster highlights'), icon: 'guitar', rows: cast(s), action: { label: l('Elenco', 'Roster'), go: { area: 'artists' } } },
   ];
+  // r29: "Favores e dívidas" (Submundo) entra depois dos compromissos quando há algo — e só então
+  const fv = favors(s);
+  if (fv.rows.length) all.splice(1, 0, { id: 'favors', title: l('Favores e dívidas', 'Favors and debts'), icon: 'skull', rows: fv.rows, foot: fv.foot, action: { label: l('Submundo › Organizações', 'Underworld › Organizations'), go: { area: 'crime', tab: ['crime17', 'orgs'] } } });
   const cards = all.filter((c) => c.rows.length).slice(0, CARDS_MAX27);
   return {
     sub: s.decisions.length
