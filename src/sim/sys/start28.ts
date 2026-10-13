@@ -8,6 +8,7 @@
 
 import { l } from '../../data/world';
 import { start28ById, type Start28 } from '../start28data';
+import { start28Fits29 } from '../start29data';
 export { REC_YEARS28, STARTS28, pickStart28, start28ById, yearsFor28, type Start28 } from '../start28data';
 import { registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
@@ -32,6 +33,7 @@ export function applyStart28(s: GameState, st: Start28): void {
 registerSimHook('newgame', 'start28', (s) => {
   const st = start28ById(s.config.start28);
   if (!st || s.config.scenario17 || scenarioId28(s)) return; // cenário histórico tem seu próprio começo
+  if (!start28Fits29(st.id, s.config.start29)) return; // r29: não contradiz a situação escolhida (uma major não começa "devendo o equipamento")
   applyStart28(s, st);
 });
 

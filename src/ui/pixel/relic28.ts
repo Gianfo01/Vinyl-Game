@@ -11,6 +11,7 @@ import { drawText, fitText } from './font';
 import { C, Px, dith, hsl, mix, noise, shade, withAlpha, type Col } from './px';
 import { K28 as K, OUT28, bevel, h28, pxImg28, rng28 } from './art28kit';
 import type { Rng } from '../../core/rng';
+import { relicArtOf29, relicPx29 } from './relic29';
 
 export const RELIC_ARTS28 = [
   'guitar', 'hollow', 'vguitar', 'acoustic', 'bass', 'drums', 'sticks', 'mic', 'micstand', 'piano', 'synth', 'tape', 'cassette', 'drive',
@@ -706,6 +707,8 @@ export function relicPx28(art: RelicArt28, seed: string, year: number, name = ''
 /** <img> da relíquia (memorizado). `size` em px de tela (múltiplos de 24 ficam mais nítidos). */
 export function relicImg28(kind: string, name: string, year: number, seed: string, size = 48, title?: string): HTMLImageElement {
   const art = relicArtOf28(kind, name, year, seed);
+  const a29 = relicArtOf29(kind, name, year, seed, art); // r29: mais relíquias (banjo, sanfona, boombox, credencial…)
+  if (a29) return pxImg28(`rl29:${a29}:${seed}:${relicBand28(year)}:${name.length}`, () => relicPx29(a29, seed, year, name), size, size, { cls: 'relic28', title });
   return pxImg28(`rl:${art}:${seed}:${relicBand28(year)}:${name.length}`, () => relicPx28(art, seed, year, name), size, size, { cls: 'relic28', title });
 }
 

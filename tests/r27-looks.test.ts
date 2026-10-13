@@ -62,7 +62,7 @@ describe('r27 visuais', () => {
       S(a, y, null, 'walk', 'NW', 2); S(a, y, null, 'stand');
       n++;
     }
-    expect(n).toBe(78 * 9);
+    expect(n).toBe(86 * 9); // r29: +8 roupas (looks29) anexadas a OUTFIT27
     // instrumentos: cada um com um papel que o aceita, tocando, sentado e de costas
     INST27.forEach(([, , roles], i) => {
       if (!i) return;

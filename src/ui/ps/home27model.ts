@@ -14,6 +14,7 @@ import type { RunConfig } from '../../sim/types';
 import { YEAR_MAX20, YEAR_MIN20 } from '../../sim/worldpolicy20';
 import { materializeLabels22 } from '../newgameLabels';
 import { REC_YEARS28, pickStart28, yearsFor28 } from '../../sim/start28data';
+import { SITS29, setStart29, start28Fits29, syncStart29, type Sit29 } from '../../sim/start29data';
 
 /** Atividades oferecidas na Nova run (mesma lista e ordem da configuração completa, careers12 NG_CAREERS). */
 export const CAREERS27 = ['label', 'musician', 'manager', 'studio', 'festival', 'booking', 'venue', 'publisher', 'media', 'platform'] as const;
@@ -23,11 +24,8 @@ export const CAREER_SHORT27: Record<string, L> = {
   studio: l('Estúdio / produtor', 'Studio / producer'), festival: l('Festival', 'Festival'), booking: l('Agenciamento de shows', 'Booking agency'),
   venue: l('Casa de shows', 'Venue'), publisher: l('Editora musical', 'Music publisher'), media: l('Mídia', 'Media'), platform: l('Plataforma', 'Platform'),
 };
-export const STARTS27: { id: RunConfig['scenario']; name: L }[] = [
-  { id: 'from_zero', name: l('Do zero', 'From zero') },
-  { id: 'emerging', name: l('Selo emergente', 'Emerging label') },
-  { id: 'established', name: l('Empresa estabelecida', 'Established company') },
-];
+/** Pontos de partida (r29: a escada de situações; o nome mostrado segue a carreira — statusLabel29). */
+export const STARTS27: { id: Sit29; name: L }[] = SITS29.map((x) => ({ id: x.id, name: x.name }));
 export const DIFFS27: { id: RunConfig['difficulty']; name: L }[] = [
   { id: 'easy', name: l('Tranquila', 'Relaxed') }, { id: 'normal', name: l('Equilibrada', 'Balanced') }, { id: 'hard', name: l('Difícil', 'Hard') },
 ];
@@ -41,6 +39,8 @@ export interface QuickRun27 {
   career: string;
   scenario: RunConfig['scenario'];
   difficulty: RunConfig['difficulty'];
+  /** r29: situação inicial escolhida (ausente = a equivalente ao `scenario`) */
+  start29?: Sit29;
   /** r28 (F4): duração escolhida pelo ano de fim (0 = sem fim / sandbox); ausente = sugestão do Recomendado */
   runYears?: number;
 }
@@ -67,6 +67,7 @@ export function draftDefaults27(cfg: RunConfig): RunConfig {
   if (!cfg.world17) cfg.world17 = worldOf17(cfg);
   const genres = GENRES.filter((g) => g.born <= cfg.startYear).sort((a, b) => t(a.name).localeCompare(t(b.name)));
   if (!genres.find((g) => g.id === cfg.bandGenre)) cfg.bandGenre = genres[0]?.id;
+  syncStart29(cfg); // r29: o cartão "Ponto de partida" mostra a situação coerente com o scenario
   return cfg;
 }
 
@@ -83,6 +84,7 @@ export function applyQuick27(cfg: RunConfig, q: QuickRun27): RunConfig {
   cfg.startYear = clampYear27(q.startYear);
   cfg.homeCity = q.homeCity;
   cfg.scenario = q.scenario;
+  if (q.start29) setStart29(cfg, q.start29); // r29: mesmo handler do cartão "Ponto de partida" da configuração completa
   cfg.difficulty = q.difficulty;
   if (q.runYears !== undefined) cfg.runYears17 = q.runYears; // r28 (F4)
   const main = [careerOpen27(q.career, cfg.startYear) ? q.career : 'label'];
@@ -103,7 +105,8 @@ export function buildRun27(cfg: RunConfig): RunConfig {
   run.seed = run.seed.trim();
   const sc = run.scenario17 ? scenarioById[run.scenario17] : undefined;
   if (sc) Object.assign(run, { startYear: sc.startYear, homeCity: sc.homeCity, scenario: sc.scenario, ...(sc.role ? { role: sc.role } : {}) });
+  if (run.scenario17) delete run.start29; else if (run.start29) syncStart29(run); // r29: cenário histórico tem o próprio começo
   materializeLabels22(run);
-  if (!run.scenario17 && !run.start28) run.start28 = pickStart28(run.seed).id; // r28 (F4): começo sorteado pela semente
+  if (!run.scenario17 && !run.start28) { const st = pickStart28(run.seed).id; if (start28Fits29(st, run.start29)) run.start28 = st; } // r28 (F4): começo sorteado pela semente; r29: pulado se contradiz a situação
   return run;
 }

@@ -1,5 +1,6 @@
 // Tela inicial e criação de run: papel, cenário, ano, cidade, modo, narrador, Carta, mutators (GDD §5, §23).
 
+import { statusOf29 } from '../sim/start29data'; // r29
 import { DIR17, FREEDOM17, type Freedom17 } from '../sim/director17';
 import { HQ_LEVELS, MUTATORS, ROLES, STORYTELLERS } from '../data/rules';
 import { CITIES, GENRES, l } from '../data/world';
@@ -281,7 +282,6 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   tabs[REVIEW].body.push(fullSummary);
   const side = h('div', { class: 'ng-side-body' });
   const mini = h('span', { class: 'ng-mini muted small' });
-  const SCN = () => [{ value: 'from_zero', label: t(S.scenarioFromZero) }, { value: 'emerging', label: t(S.scenarioEmerging) }, { value: 'established', label: t(S.scenarioEstablished) }];
   const DIFF = () => [{ value: 'easy', label: t(S.easy) }, { value: 'normal', label: t(S.normal) }, { value: 'hard', label: t(S.hard) }];
   const opt = (v: string, xs: { value: string; label: string }[]) => xs.find((x) => x.value === v)?.label ?? v;
   type Row = [ReturnType<typeof l>, string];
@@ -311,7 +311,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
       { tab: 2, name: l('Modo', 'Mode'), rows: [
         [l('Atividades', 'Activities'), (cfg.careers?.main ?? ['label']).length ? careerSummary(cfg).split(' · ')[0] : '—'],
         [S.role, t(ROLES.find((r) => r.id === cfg.role)!.name)],
-        [S.scenario, opt(cfg.scenario, SCN())],
+        [l('Situação inicial', 'Starting situation'), t(statusOf29(cfg))], // r29: carreira × situação ("Artista iniciante", "Produtor top 5"…)
         [l('Como começa', 'How it starts'), cfg.takeover ? t(l('assume a gravadora (ignora o ponto de partida)', 'takes over the label (ignores the starting point)')) : t(l('selo novo', 'new label'))],
         [S.companyName, cfg.companyName],
         [S.homeCity, cityName(cfg.homeCity)],

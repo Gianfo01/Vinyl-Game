@@ -125,7 +125,11 @@ export function echoChains28(s: GameState, max = 3): Chain28[] {
 
 /** Álbum: até `max` cenas espalhadas pela partida (uma por ano, as mais recentes de cada ano). */
 export function album28(s: GameState, max = 9): SceneLog[] {
-  const arch = ((x4(s).scenes as { archive?: SceneLog[] } | undefined)?.archive ?? []) as SceneLog[];
+  const arch0 = ((x4(s).scenes as { archive?: SceneLog[] } | undefined)?.archive ?? []) as SceneLog[];
+  // r29: as cenas animadas (cut27/28/29) registradas pela interface entram no álbum junto com as cenas de lugar
+  const cut = ((x4(s).cut27 as { log?: { id: string; k: string; w: number; y: number; ti: L }[] } | undefined)?.log ?? [])
+    .map((e): SceneLog => ({ id: e.id, kind: 'cut27', week: e.w, year: e.y, title: e.ti, place: 'street' }));
+  const arch = cut.length ? [...arch0, ...cut].sort((a, b) => a.week - b.week) : arch0;
   const perYear = new Map<number, SceneLog>();
   for (const a of arch) perYear.set(a.year, a);
   const xs = [...perYear.values()].sort((a, b) => a.week - b.week);

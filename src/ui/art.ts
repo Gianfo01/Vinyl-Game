@@ -7,6 +7,9 @@ import { drawText, drawTextOutlined, fitText, textWidth } from './pixel/font';
 import { C, Px, dith, hsl, mix, noise, shade, upscale, withAlpha, type Col } from './pixel/px';
 import { cover28, wear28 } from './pixel/cover28';
 import { logo28 } from './pixel/logo28';
+import { cover29 } from './pixel/cover29';
+import { logo29 } from './pixel/logo29';
+import { posterKind29, posterPx29 } from './pixel/poster29';
 
 const cache = new Map<string, string>();
 const pxCache = new Map<string, Px>();
@@ -96,6 +99,9 @@ export function logoPx(seed: number, name: string, genre: string, year: number):
   // r28 (arte): logos por gênero (metal, punk, disco, rap, synth, indie…) em ~55% dos atos; o resto segue o desenho abaixo
   const alt = logo28(seed, initials(name), genre, year);
   if (alt) { pxCache.set(key, alt); return alt; }
+  // r29 (arte): mais 12 estilos (gótico, faixa, circuito, chamas, 8-bit…) em metade dos atos que ficavam no original
+  const alt29 = logo29(seed, initials(name), genre, year);
+  if (alt29) { pxCache.set(key, alt29); return alt29; }
   const N = 32;
   const r = Rng.fromSeed(String(seed));
   const col = logoColors(seed, genre, year);
@@ -255,6 +261,9 @@ export function posterPx(seed: number, name: string, genre: string, year: number
   const hit = pxCache.get(key);
   if (hit) return hit;
   const col = logoColors(seed, genre, year);
+  // r29 (arte): mais cartazes de parede (show, silhueta, espiral, xerox, datas, retrato, explosão) em ≈60% dos atos
+  const pk = posterKind29(seed, year);
+  if (pk) { const q = posterPx29(pk, seed, initials(name), year, col); pxCache.set(key, q); return q; }
   const style = eraStyle(year);
   const p = new Px(14, 19);
   const paper = style === 'deco' || style === 'classic' ? C('#e8dcc0') : col.bg;
@@ -290,6 +299,9 @@ export function coverPx(seed: number, title: string, actName: string, genre: str
   // r28 (arte): composições novas por gênero/época (≈2/3 das capas) + desgaste de estante; o resto segue o desenho abaixo
   const alt = cover28(seed, title, actName, genre, year, budget, style);
   if (alt) { wear28(alt, seed, age, year); pxCache.set(key, alt); return alt; }
+  // r29 (arte): fotos da banda (integrantes desenhados) e mais composições em ≈60% das capas que ficavam no original
+  const alt29 = cover29(seed, title, actName, genre, year, budget);
+  if (alt29) { wear28(alt29, seed, age, year); pxCache.set(key, alt29); return alt29; }
   const N = COVER_N;
   const r = Rng.fromSeed(String(seed));
   const hue = (hueFor(genre) + r.int(-40, 40) + 360) % 360;

@@ -3,6 +3,7 @@
 // variação, personalidade, gráfico de evolução ano a ano) em toda página de pessoa, bloco de elenco no artista,
 // e estrelas nas listas de elenco, mercado/scouting e profissionais.
 
+import { ent27 } from '../ps/ent27'; // r29: nome com menu de ações (clique direito)
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState, Person } from '../../sim/types';
@@ -136,7 +137,7 @@ ACT_OVERVIEW_EXTRAS.push((s, a, _deg, mine) => {
     h('div', { class: 'ab18-members' }, ms.map((p) => {
       const e = est18(s, `p:${p.id}`);
       return h('div', { class: 'ab18-mem' },
-        h('button', { class: 'link', onclick: () => openPersonPage(p.id, 'ability18') }, p.name), ' ', h('small', { class: 'muted' }, `${s.year - p.born}`),
+        h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id, 'ability18') }, p.name), ' ', h('small', { class: 'muted' }, `${s.year - p.born}`),
         ' ', personStars18(s, `p:${p.id}`), e ? h('small', { class: 'muted' }, ` ${T(e.report[0])}`) : null);
     })),
     !mine ? h('p', { class: 'small muted' }, T(l('Estimativa do seu A&R: olheiros e conversas estreitam a faixa.', 'Your A&R\'s estimate: scouts and talks narrow the range.'))) : null);

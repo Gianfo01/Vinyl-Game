@@ -16,6 +16,7 @@ import { modal } from './common';
 import { h } from './dom';
 import { AFTER_ADVANCE, registerCutscene } from './registry';
 import { runCard17body } from './newgame17';
+import { allScenes29, thumb29 } from './ps/album29'; // r29
 import { monthName } from './common';
 import './end28.css';
 
@@ -105,9 +106,10 @@ function storyView(st: Story28, s: GameState): HTMLElement {
     st.rumo ? h('p', { class: 'small' }, t(l('Final: {f} ({x}/100).', 'Ending: {f} ({x}/100).'), { f: T(st.rumo.name), x: st.rumo.score })) : null,
     h('h4', null, T(l('Álbum de cenas', 'Scene album'))),
     st.album.length ? h('ol', { class: 'sb28-album' }, st.album.map((a) => h('li', null,
-      h('span', { class: 'sb28-frame', 'aria-hidden': 'true' }, String(a.year).slice(-2)),
+      a.kind === 'cut27' ? thumb29(s, a.id) ?? h('span', { class: 'sb28-frame', 'aria-hidden': 'true' }, String(a.year).slice(-2)) : h('span', { class: 'sb28-frame', 'aria-hidden': 'true' }, String(a.year).slice(-2)), // r29: miniatura da cena animada
       h('b', null, T(a.title ?? l('Cena', 'Scene'))), h('small', { class: 'muted' }, ` ${a.year}`))))
       : h('p', { class: 'small muted' }, T(l('Nenhuma cena guardada ainda.', 'No scenes stored yet.'))),
+    allScenes29(s), // r29: toda cena animada que disparou, por ano
     h('h4', null, T(l('As 3 maiores cadeias de eco', 'The 3 biggest echo chains'))),
     st.chains.length ? h('ol', { class: 'sb28-chains' }, st.chains.map((c) => h('li', null,
       h('b', null, T(c.title)), c.choice.pt ? h('span', null, ' — ', T(c.choice)) : null,

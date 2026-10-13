@@ -15,7 +15,7 @@
 
 import { l, type L } from '../../data/world';
 import type { GameState } from '../../sim/types';
-import { avatarSprite, lookOf, randomLook } from '../pixel/avatar';
+import { avatarSprite, crowdLook27, lookOf, randomLook } from '../pixel/avatar';
 import { drawText } from '../pixel/font';
 import { eraOf, type EraId } from '../pixel/palette';
 import { C, Px, mix, noise, shade, withAlpha } from '../pixel/px';
@@ -80,6 +80,8 @@ export interface Fig27 {
   walkTo?: number;
   /** escurece (silhueta na contraluz) */
   dark?: boolean;
+  /** r29: holograma (translúcido, ciano, com brilho e tremido) */
+  holo?: boolean;
 }
 export interface ArtModel27 {
   area: string; kind: SceneKind27; year: number; band: Band27; era: EraId;
@@ -832,7 +834,7 @@ export function drawFigs27(ctx: CanvasRenderingContext2D, s: GameState, m: ArtMo
   const figs = [...m.figs].sort((a, b) => (a.dy ?? 0) - (b.dy ?? 0));
   for (const f of figs) {
     const p = f.pid ? s.persons?.[f.pid] : undefined;
-    const look = p ? lookOf(p) : randomLook(f.seed);
+    const look = p ? lookOf(p) : f.seed.startsWith('c-') || f.seed.startsWith('c29') ? crowdLook27(f.seed, m.year) : randomLook(f.seed); // r29: figurantes das cenas com a roupa da época
     const k = f.walkTo !== undefined && !still ? Math.min(1, t / 5) : 1;
     const fx = f.walkTo !== undefined ? f.fx + (f.walkTo - f.fx) * k : f.fx;
     const walking = f.walkTo !== undefined && k < 1 && !still;
@@ -840,6 +842,13 @@ export function drawFigs27(ctx: CanvasRenderingContext2D, s: GameState, m: ArtMo
     const bob = !still && f.pose === 'play' ? Math.round(Math.max(0, Math.sin(t * 5 + fx * 9))) : 0;
     const x = Math.round(fx * m.W - sp.ax), y = Math.round(m.fy + (f.dy ?? 0) - sp.ay - bob);
     if (f.dark) { ctx.globalAlpha = 0.85; ctx.filter = 'brightness(0.35)'; }
+    if (f.holo) { // r29 (F8): holograma — duas passadas translúcidas em ciano, com tremido de varredura
+      const jit = still ? 0 : Math.round(Math.sin(t * 13) * 0.6);
+      ctx.globalAlpha = 0.35; ctx.filter = 'brightness(1.6) sepia(1) hue-rotate(150deg) saturate(3) blur(1px)'; ctx.drawImage(sp.c, x - 1, y);
+      ctx.globalAlpha = still ? 0.6 : 0.45 + 0.15 * Math.abs(Math.sin(t * 3)); ctx.filter = 'brightness(1.4) sepia(1) hue-rotate(150deg) saturate(2.4)'; ctx.drawImage(sp.c, x + jit, y);
+      ctx.globalAlpha = 1; ctx.filter = 'none';
+      continue;
+    }
     ctx.drawImage(sp.c, x, y);
     ctx.globalAlpha = 1; ctx.filter = 'none';
   }

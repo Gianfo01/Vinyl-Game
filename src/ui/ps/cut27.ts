@@ -17,8 +17,11 @@ import { Px } from '../pixel/px';
 import { AFTER_ADVANCE, registerCutscene, showPendingCutscene } from '../registry';
 import { rerender } from '../common';
 import { savePrefs, store } from '../store';
-import { drawFigs27, fitInt27, paintArt27 } from './art27';
-import { CUT27, CUT_H27, CUT_W27, beat27, choose27, cut27, cutModel27, onceKey27, paintFx27, scan27, type CutData27, type CutKey27, type CutPref27 } from './cut27model';
+import { drawFigs27, fitInt27 } from './art27';
+import { CUT27, CUT_H27, CUT_W27, beat27, beatsOf27, choose27, cut27, cutModel27, onceKey27, pace27, scan27, type CutData27, type CutKey27, type CutPref27 } from './cut27model';
+import { PORTRAIT29 } from './cut29model';
+import { paintCut29 } from './cutpaint29';
+import { log29, outcome29 } from './album29'; // r29: toda cena que dispara vai para o álbum e o storyboard
 import './art27.css';
 
 const reduced = (): boolean => typeof document !== 'undefined' && (document.documentElement.classList.contains('reduced-motion') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
@@ -42,7 +45,7 @@ export function enqueue27(s: GameState, pref: CutPref27 = cutPref27()): Cutscene
     const same = SAME27[d.key];
     if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !d.actId || c.data.actId === d.actId) && same(c)) { c.seen = true; c.data.quiet23 = true; }
     const cs = queueCutscene(s, 'cut27', { title: CUT27[d.key].title, d, actId: d.actId ?? null, int23: CUT27[d.key].choices.length ? 'always' : 'milestone' });
-    const lg = (cut27(s).log ??= []); lg.push(cs); if (lg.length > 30) lg.splice(0, lg.length - 30); // R29 (CONNECT): vai para o álbum
+    log29(s, cs, d); // r29
     return cs;
   });
 }
@@ -57,6 +60,10 @@ const SAME27: Partial<Record<CutData27['key'], (c: Cutscene) => boolean>> = {
   star: (c) => c.kind === 'cine18' || m16('Contrato assinado')(c),
   sold: (c) => c.kind === 'cine18',
   fest: (c) => c.kind === 'cine18',
+  // r29: o disco de ouro/platina e o palco holográfico antigos ficam no álbum quando a cena animada conta o momento
+  gold: (c) => c.kind === 'goldfx',
+  plat: (c) => c.kind === 'goldfx',
+  holo: (c) => c.kind === 'hologram',
 };
 AFTER_ADVANCE.push((s) => { try { enqueue27(s); } catch (e) { console.warn('cut27', e); } });
 
@@ -96,7 +103,7 @@ export function bridge27(s: GameState, id: string, ctx: Record<string, unknown> 
   st.once[k] = s.week; st.n++;
   const same = SAME27[key];
   if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !actId || c.data.actId === actId) && same(c)) { c.seen = true; c.data.quiet23 = true; }
-  queueCutscene(s, 'cut27', { title: CUT27[key].title, d, actId: actId ?? null, int23: CUT27[key].choices.length ? 'always' : 'milestone' });
+  log29(s, queueCutscene(s, 'cut27', { title: CUT27[key].title, d, actId: actId ?? null, int23: CUT27[key].choices.length ? 'always' : 'milestone' }), d); // r29: álbum
   return d;
 }
 let waiting27 = 0;
@@ -134,18 +141,19 @@ export function cutView27(s: GameState, d: CutData27, close: () => void, cs?: { 
   if (ctx) ctx.imageSmoothingEnabled = false;
   const buf = new Px(m.W, m.H);
   const img = ctx?.createImageData(m.W, m.H);
-  const who = d.key === 'death' && d.pid ? s.persons[d.pid] : undefined;
+  // r29: retrato na moldura (morte, herdeiros: a pessoa da cena ou o primeiro integrante que já se foi)
+  const picId = PORTRAIT29.has(d.key) ? d.pid ?? (d.actId ? s.acts[d.actId]?.members.find((id) => s.persons[id] && !s.persons[id].alive) : undefined) : undefined;
+  const who = picId ? s.persons[picId] : undefined;
   const pic = who ? portraitPx(who, d.year) : null;
   const paint = (tm: number) => {
     if (!ctx || !img) return;
-    paintArt27(m, tm, buf);
-    if (pic) buf.blit(pic, Math.round(m.W / 2) - 16, Math.max(6, m.fy - 64) + 2);
-    paintFx27(buf, m, def.fx, tm);
+    paintCut29(s, d, m, tm, buf, pic); // r29: cenário próprio ou camada, retrato, efeitos e luz por era e hora
     new Uint32Array(img.data.buffer).set(buf.d);
     ctx.putImageData(img, 0, 0);
     drawFigs27(ctx, s, m, tm, still || tm === 0);
   };
-  const beats = def.beats.map((b) => beat27(s, d, b));
+  const beats = beatsOf27(d).map((b) => beat27(s, d, b)); // r29: variantes de fala
+  const ms = pace27(beats.length); // r29: ritmo único
   const cap = h('p', { class: 'cut27-cap', 'aria-live': 'polite' });
   const bar = h('i');
   const choiceBox = h('div', { class: 'cut27-choices' });
@@ -164,6 +172,7 @@ export function cutView27(s: GameState, d: CutData27, close: () => void, cs?: { 
     choiceBox.replaceChildren(...def.choices.map((c) => h('button', { class: 'btn', type: 'button', onclick: () => {
       const out = choose27(s, d, c.id);
       if (cs) { cs.data.choice27 = c.id; if (out) cs.data.out27 = out; }
+      outcome29(s, d, c.id, out); // r29: o álbum guarda a escolha e o resultado
       outBox.replaceChildren(h('p', { class: 'cut27-out' }, h('b', null, `${t(c.label)}: `), out ? t(out) : ''));
       choiceBox.replaceChildren(h('button', { class: 'btn primary', type: 'button', onclick: close }, t(l('Continuar', 'Continue'))));
       (choiceBox.querySelector('button') as HTMLButtonElement | null)?.focus();
@@ -172,9 +181,14 @@ export function cutView27(s: GameState, d: CutData27, close: () => void, cs?: { 
   const wrap = h('div', { class: 'cut27', 'data-key': d.key },
     h('div', { class: 'cut27-stage' }, cv), cap, outBox, choiceBox,
     h('div', { class: 'cut27-ctl' }, h('span', { class: 'cut27-bar' }, bar),
-      h('button', { class: 'btn small ghost', type: 'button', onclick: () => { t0 -= def.ms; showEnd(); } }, t(l('Pular ⏭', 'Skip ⏭')))));
+      h('button', { class: 'btn small ghost', type: 'button', onclick: () => { t0 -= ms; showEnd(); } }, t(l('Pular ⏭', 'Skip ⏭')))));
   fitInt27(cv, m.W, 3);
-  let t0 = 0, last = 0;
+  let t0 = 0, last = 0, skip = 0;
+  // r29: clique no quadro (ou Enter/Espaço com o foco nele) pula para a próxima fala
+  cv.tabIndex = 0;
+  const nextBeat = () => { if (shown) return; const per = ms / 1000 / beats.length; const cur = ((performance.now() - t0) / 1000) + skip; skip += per - (cur % per); };
+  cv.addEventListener('click', nextBeat);
+  cv.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nextBeat(); } });
   if (still) { paint(0); showEnd(); }
   else {
     paint(0.01);
@@ -186,7 +200,7 @@ export function cutView27(s: GameState, d: CutData27, close: () => void, cs?: { 
         last = now;
         const tm = (now - t0) / 1000;
         paint(tm);
-        const k = Math.min(1, tm / (def.ms / 1000));
+        const k = Math.min(1, (tm + skip) / (ms / 1000));
         bar.style.width = `${Math.round(k * 100)}%`;
         if (!shown) { const i = Math.min(beats.length - 1, Math.floor(k * beats.length)); cap.replaceChildren(h('b', null, t(beats[i]))); }
         if (k >= 1) showEnd();

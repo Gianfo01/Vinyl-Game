@@ -56,6 +56,9 @@ import { setTab } from './vis';
 import { alias14, type NavGroup14 } from './careernav14';
 import { navGroups16 } from './careernav16';
 import { themeButton } from './sys/theme14';
+import { backChip29, bindRoute29, openCampaign29, openIndex29, paletteCmds29 } from './ps/route29';
+import { REDIRECT29, resolve29, type Target29 } from './ps/route29model';
+import { screenTop29 } from './ps/screentop29';
 import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
 import { tabSnapshot } from './vis';
 import { withPlayerActsCache } from '../sim/util';
@@ -142,7 +145,12 @@ export function boot(el: HTMLElement): void {
   window.addEventListener('keydown', onKey);
   // rodada 15: voltar/avançar do navegador, abas lembradas, paleta pelo botão da barra
   for (const [k, v] of Object.entries(loadTabs15())) setTab(k, v);
-  initRouter15((r) => { if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
+  // r29 (REORG, M01): catálogo único — Índice completo, Central da campanha e aliases (S07, "submundo", "quero:hire"…)
+  bindRoute29({ game: () => store.game!, open: open29, inMenu: (a) => groups().some((gr) => gr.areas.includes(a)), registered: (a) => AREAS.some((x) => x.id === a) || EXTRA_AREAS.some((x) => x.id === a) || a === SEDE25,
+    label: (a) => navItems().find((x) => x.id === a)?.label ?? (EXTRA_AREAS.find((x) => x.id === a) ? t(EXTRA_AREAS.find((x) => x.id === a)!.label) : AREAS.find((x) => x.id === a) ? t(S[AREAS.find((x) => x.id === a)!.label]) : a),
+    files: () => saveManagerModal17((g) => { store.game = g; startGame(); }), options: () => settings(),
+    view: () => ({ menuView: view27(), textScale: store.prefs.textScale, density: (store.prefs as { dens20?: string }).dens20, reducedMotion: store.prefs.reducedMotion, audio: !!(store.prefs as { audio28?: boolean }).audio28 }) });
+  initRouter15((r) => { if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (store.game && (REDIRECT29[r.area] || !areaExists(r.area))) { const x = resolve29(r.area); if (x && (x.util || (x.area && areaExists(x.area)))) { open29(x); return true; } } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
   document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
   titleScreen(root, startGame);
 }
@@ -361,7 +369,22 @@ function groupItems(gr: NavGroup): NavItem[] {
   return gr.areas.map((id) => all.find((x) => x.id === id)).filter((x): x is NavItem => !!x);
 }
 
+/** r29 (REORG): abre um alvo do catálogo (página + aba, ou utilidade global). */
+function open29(x: Target29): void {
+  if (x.util === 'index') return openIndex29();
+  if (x.util === 'campaign') return openCampaign29();
+  if (x.util === 'files') return saveManagerModal17((g) => { store.game = g; startGame(); });
+  if (x.util === 'options') return settings();
+  if (x.util === 'search') return openSearch25();
+  if (!x.area) return;
+  if (x.tab) setTab(x.tab[0], x.tab[1]);
+  go(x.area);
+}
+
 function go(id: string): void {
+  // r29 (REORG, M01): nomes que não são página nem hub (S07, "submundo", "quero:hire") resolvem pelo catálogo único
+  if (store.game && REDIRECT29[id]) return open29(REDIRECT29[id]); // nomes antigos (inbox, desk) abrem a aba certa do Cockpit
+  if (store.game && !id.startsWith('hub:') && !areaExists(id)) { const x = resolve29(id); if (x && (x.util || (x.area && x.area !== id))) return open29(x); }
   // r27 UX: id de hub ("hub:money") abre a página certa do hub (a última visitada nele ou a 1ª visível)
   if (hubById27(id) && id.startsWith('hub:')) { const x = hubById27(id)!; id = resolveHub27(id, areaExists, hubHome27(x, x.areas.filter(areaExists))) ?? 'cockpit'; }
   const r = resolve17(alias14(id), groups());
@@ -399,6 +422,8 @@ function nav(): HTMLElement {
     h('div', { class: 'nav-utils25' },
       util('⌕', l('Buscar', 'Search'), openSearch25, 'Ctrl K'),
       util('▤', l('Arquivo', 'Files'), () => saveManagerModal17((g) => { store.game = g; startGame(); })),
+      util('☰', l('Índice', 'Index'), openIndex29), // r29 REORG (M01): todas as páginas, com motivo de quem está fora do alcance
+      util('⚑', l('Campanha', 'Campaign'), openCampaign29), // r29 REORG (S17/M30): passaporte da campanha
       util('⚙', l('Opções', 'Options'), settings),
       // r27 UX: Essencial (poucas entradas, abas compactas) × Completa (a árvore inteira, todas as abas à mostra)
       viewToggle27()),
@@ -523,7 +548,7 @@ function renderApp(): void {
   const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
     topBar(),
     nav(),
-    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), body),
+    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), screenTop29(store.area, g, body), body), // r29 REORG: topo de tela no estilo do Atlas
     mayShow27('tutorial', g) ? tutorialCard(g, render) : null, // r27: as metas de abertura vêm antes (fila de janelas)
     h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
   ));
@@ -563,7 +588,7 @@ function pageTitle21(body: HTMLElement): HTMLElement | null {
   const ownIntro = first?.tagName === 'P' && !first.closest('.card') && (first.textContent ?? '').trim().length > 40;
   const why = PURPOSE23[store.area] ?? (ownIntro ? undefined : PURPOSE27[store.area]);
   const g = store.game!;
-  return pageHeader27({ title: it.label, sub: why, kpis: kpis27(store.area, g, locale()), art: artHook27.f?.(store.area, g) ?? null, area: store.area, go });
+  return pageHeader27({ eyebrow: t(groupOf(store.area).label), title: it.label, sub: why, /* r29 REORG: sobrescrito do grupo (Atlas) */ kpis: kpis27(store.area, g, locale()), art: artHook27.f?.(store.area, g) ?? null, area: store.area, go });
 }
 
 function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
@@ -579,6 +604,7 @@ function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const secL = hb ? hb.label : sectionOf17(gr, store.area);
   const one = gr.areas.length === 1; // r27 (COCK): seção de uma página só (Cockpit) — sem "Cockpit › Agora › Cockpit"
   const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL && !one ? [{ label: t(secL), go: head }] : []), ...(one ? [] : [{ label: areaLabel(store.area), go: () => go(store.area) }]), ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
+  backChip29(bar0, store17.recent[1], store.area, areaLabel, (a) => groups().some((gr) => gr.areas.includes(a)), go); // r29 REORG (M43): ↩ Voltar a <origem>
   const row = bar0.querySelector('.crumbs15');
   const pinned = store17.pins.includes(store.area);
   const all = navItems();
@@ -686,6 +712,7 @@ function palette(): void {
     { label: t(l('Atalhos de teclado', 'Keyboard shortcuts')), kind: 'action', hint: '?', run: () => shortcutsHelp15(navItems().map((x) => ({ key: x.key, label: x.label }))) },
     { label: t(S.settings), kind: 'action', run: settings },
     ...paletteCmds18(go), // r18 tutorial18: glossário e ajuda no Ctrl+K
+    ...paletteCmds29(), // r29 REORG: as 17 telas canônicas (com aliases), intenções "Quero…", Índice e Central da campanha
     ...paletteCmds20(g), // r20 G4: ações do artista selecionado (mesmo custo/bloqueio do menu Ações ▾)
     ...[...mine].map((id): PCmd => ({ label: g.acts[id].name, kind: 'mine', icon: 'guitar', weight: 12, run: () => inspect.act(id) })),
     // rodada 16: abas extras (Sync, Disputas...) também aparecem no Ir para… — antes só se achavam abrindo a área certa

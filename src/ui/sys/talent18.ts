@@ -191,7 +191,7 @@ export function relics18Tab(s: GameState): HTMLElement {
   const relRow = (x: typeof list[number]) => {
     const m = st.m[x.id];
     const lg = legacy18(s, x);
-    return card(row(relicImg28(x.k, x.n.en, x.y, x.rr ?? x.id, 48, t(RELIC_KIND[x.k])), h('b', null, t(x.n)), pill(t(RELIC_KIND[x.k])), pill(String(x.y)), m ? pill(t(ORIGIN18[m.o] ?? ORIGIN18.base)) : null, m?.alt ? pill(t(l('história alternativa', 'alternate history')), 'warn') : null, pill(t(RELIC_ST[x.st])),
+    return card(row(relicImg28(x.k, x.n.en, x.y, x.rr ?? x.id, 48, t(RELIC_KIND[x.k])), h('b', null, t(x.n)), pill(t(RELIC_KIND[x.k])), pill(String(x.y)), m && m.o !== 'real' ? pill(t(ORIGIN18[m.o] ?? ORIGIN18.base)) : null, pill(t(RELIC_ST[x.st])),
       why18(s, 'relic.value', { id: x.id }, pill($(money(s, x.v)), 'good')), pill(`×${lg.m.toFixed(2)}`), m?.auth ? pill(t(l('autenticada', 'authenticated')), 'good') : null, x.a ? actLink(s, x.a) : null),
       m?.st ? muted(m.st) : null,
       row(x.st === 'auction' && !m?.auth ? btn(fmtLs(l('Perícia ({c})', 'Appraisal ({c})'), { c: $(authFee18(s, x)) }), () => { toast(t(authenticate18(s, x.id)), 'info'); rerender(); }) : null,

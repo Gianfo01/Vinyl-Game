@@ -2,6 +2,7 @@
 // cartão mais completo por cenário (duração, ponto de partida, dificuldade, meta e medalhas, regras especiais, marcos
 // históricos, dica e melhor medalha). Usado na tela "Cenários históricos" e no Novo Jogo (Modo → Ponto de partida).
 
+import { sitOfScenario29, statusLabel29 } from '../sim/start29data'; // r29
 import { cityById, marketById, l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import { SCENARIOS, type Medal, type ScenarioDef } from '../sim/sys/live';
@@ -80,7 +81,6 @@ const ERAS22: { id: string; name: L; from: number; to: number }[] = [
   { id: '90s00s', name: l('1990–2009', '1990–2009'), from: 1990, to: 2009 },
   { id: 'now', name: l('2010 em diante', '2010 onward'), from: 2010, to: 9999 },
 ];
-const START22: Record<string, L> = { from_zero: l('Do zero', 'From zero'), emerging: l('Selo emergente', 'Emerging label'), established: l('Empresa estabelecida', 'Established company') };
 const MEDAL22: Record<Medal, string> = { gold: '🥇', silver: '🥈', bronze: '🥉', none: '' };
 
 type Dim22 = 'all' | 'kind' | 'era' | 'region' | 'diff';
@@ -135,7 +135,7 @@ function scenCard22(d: ScenarioDef, o: ScenBrowser22): HTMLElement {
     h('p', { class: 'small sc22-goal' }, h('b', null, t(l('Meta: ', 'Goal: '))), t(d.goal), h('span', { class: 'muted' }, ` · 🥉 ${d.tiers[0]} · 🥈 ${d.tiers[1]} · 🥇 ${d.tiers[2]} ${t(d.unit)}`)),
     open ? h('div', { class: 'sc22-more small' },
       h('dl', { class: 'sc22-dl' },
-        h('dt', null, t(l('Começo', 'Start'))), h('dd', null, `${t(START22[d.scenario] ?? l(d.scenario, d.scenario))}${d.role === 'artist' ? ` · ${t(l('você é artista', 'you are an artist'))}` : ''}`),
+        h('dt', null, t(l('Começo', 'Start'))), h('dd', null, t(statusLabel29(d.careers?.[0] ?? (d.role === 'artist' ? 'musician' : 'label'), sitOfScenario29(d.scenario)))), // r29: o status segue a carreira
         h('dt', null, t(l('Mercado', 'Market'))), h('dd', null, t(marketById[regionOf(d)]?.name ?? l('—', '—'))),
         h('dt', null, t(l('Prazo', 'Deadline'))), h('dd', null, t(l('dezembro de {y}', 'December {y}'), { y: d.endYear })),
         h('dt', null, t(l('Dificuldade', 'Difficulty'))), h('dd', null, t(DIFF22_DESC[m.d]))),

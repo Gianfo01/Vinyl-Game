@@ -1,0 +1,36 @@
+/* Rodada 29 (REORG) — revisão antes de avançar (S03), retomada (M17) e acompanhamento (M04). Só tokens ui27. */
+.rv29-counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.rv29-st { display: inline-block; min-width: 7.5em; font-size: .78em; text-transform: uppercase; letter-spacing: .04em; }
+.rv29-st.st-blocked { color: var(--bad, #e36b5b); }
+.rv29-st.st-pending { color: var(--warn, #e8b54d); }
+.rv29-st.st-met { color: var(--good, #7fc48a); }
+.rv29-st.st-unknown { opacity: .8; font-style: italic; }
+.rv29-money { margin-top: 8px; }
+.rv29-foot { margin: 8px 0 0; }
+.rs29-host { margin-bottom: 12px; }
+.fl29-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 4px 0; }
+.fl29-row .link { overflow-wrap: anywhere; }
+.rv29 .row27, .rs29 .row27 { min-width: 0; }
+.rv29 .r27-t, .rs29 .r27-t { overflow-wrap: anywhere; }
+.rs29-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 20px; }
+.rs29-h { margin: 6px 0 2px; font-size: .78em; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
+.in29 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0; }
+.in29 .in29-b { cursor: pointer; text-transform: none; letter-spacing: normal; }
+.in29 .in29-b::first-letter { text-transform: uppercase; }
+.rv29.card { padding: var(--sp-3) var(--sp-4); }
+.rv29-title { margin: 0; font-size: var(--fs-xl); padding-left: var(--sp-3); border-left: 4px solid var(--accent); }
+.rv29-g { border: 1px solid var(--line); border-radius: var(--radius); margin: var(--sp-2) 0; padding: 0 var(--sp-2); }
+.rv29-g > summary { cursor: pointer; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) 0; list-style: none; }
+.rv29-g > summary::-webkit-details-marker { display: none; }
+.rv29-g > summary::after { content: '▾'; margin-left: auto; opacity: .7; }
+.rv29-g:not([open]) > summary::after { content: '▸'; }
+.rv29-g.st-blocked { border-left: 4px solid var(--bad); }
+.rv29-g.st-pending { border-left: 4px solid var(--warn); }
+.rv29-g.st-met { border-left: 4px solid var(--good); }
+.rv29-g .row27 { flex-wrap: wrap; }
+.rv29-st { min-width: 0; }
+.mk29-list { list-style: none; margin: 0; padding: 0 0 0 var(--sp-4); border-left: 2px solid var(--line); }
+.mk29 { position: relative; padding: var(--sp-2) var(--sp-3); margin: 0 0 var(--sp-2); border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.mk29::before { content: ''; position: absolute; left: calc(-1 * var(--sp-4) - 6px); top: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--t-info-fg); }
+.mk29 p { margin: 4px 0 0; }
+.aside29-h { margin: 0; font-size: var(--fs-xl); }

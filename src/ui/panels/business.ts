@@ -16,6 +16,8 @@ import { h, select } from '../dom';
 import { logoUrl } from '../art';
 import { chips, ic, lineChart, stat, tabs, tile } from '../vis';
 import { mergeTabs } from '../registry';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { caseImg29 } from '../pixel/paper29';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 
@@ -154,7 +156,7 @@ function legalTab(s: GameState): HTMLElement {
   const closed = s.lawsuits.filter((x) => ['settled', 'won', 'lost'].includes(x.stage)).slice(-8);
   const STAGE: Record<string, L> = { filed: l('ajuizado', 'filed'), discovery: l('instrução', 'discovery'), trial: l('julgamento', 'trial'), settled: l('acordo', 'settled'), won: l('vitória', 'won'), lost: l('derrota', 'lost') };
   return h('div', null,
-    section(t(l('Processos em andamento', 'Active lawsuits')), open.length ? open.map((x) => h('div', { class: 'lawsuit' }, ic('gavel', 2), ' ', h('b', null, t(x.text)), ' ', pill(t(STAGE[x.stage])), ` ${t(l('valor', 'claim'))} ${$(x.claim)} · ${t(l('chance estimada', 'est. odds'))} ${Math.round(x.odds * 100)}% `,
+    section(t(l('Processos em andamento', 'Active lawsuits')), open.length ? open.map((x) => h('div', { class: 'lawsuit' }, a29(caseImg29(x.id, x.stage === 'trial' ? 'courtroom' : /sample|plág|plagi|direito|rights|copyright/i.test(t(x.text)) ? 'scales' : 'gavel', s.year, 32)), ' ', h('b', null, t(x.text)), /* r29: processo */ ' ', pill(t(STAGE[x.stage])), ` ${t(l('valor', 'claim'))} ${$(x.claim)} · ${t(l('chance estimada', 'est. odds'))} ${Math.round(x.odds * 100)}% `,
       h('button', { class: 'btn small', onclick: () => { say(settleLawsuit(s, x.id), l('Acordo fechado.', 'Settled.')); rerender(); } }, t(l('Fazer acordo', 'Settle'))))) : h('p', { class: 'muted small' }, t(l('Nenhum processo. Samples sem liberação, plágio e auditorias geram ações.', 'No lawsuits. Uncleared samples, plagiarism and audits trigger suits.')))),
     closed.length ? section(t(l('Encerrados', 'Closed')), h('ul', { class: 'small' }, closed.map((x) => h('li', null, t(x.text), ' — ', pill(t(STAGE[x.stage]), x.stage === 'won' ? 'good' : x.stage === 'lost' ? 'bad' : ''))))) : null,
   );

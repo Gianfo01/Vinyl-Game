@@ -22,6 +22,7 @@ import { emblemImg28 } from '../pixel/emblem28'; // r28 (arte): selos de golpe (
 import { mastheadImg28 } from '../pixel/extras28'; // r28 (arte): mastro do veículo
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
+import { a29 } from '../art29ui'; // r29 (arte)
 const say = (r: L | null | string, ok: L = l('Feito.', 'Done.')) => { toast(T(r ?? ok), r ? 'info' : 'good'); rerender(); };
 const btn = (label: L | string, fn: () => void, dis = false) => h('button', { class: 'btn small', disabled: dis, onclick: fn }, T(label));
 const row = (...k: (Node | string | null)[]) => h('div', { class: 'row wrap', style: 'gap:6px;align-items:center;margin:4px 0' }, ...k);
@@ -47,7 +48,7 @@ function zinesTab(s: GameState): HTMLElement {
         genres.length ? h('select', { onchange: (e: Event) => { g = (e.target as HTMLSelectElement).value; } }, ...genres.map((x) => h('option', { value: x }, gn(x)))) : muted(l('Sem gênero (contrate atos).', 'No genre (sign acts).')),
         h('input', { type: 'text', placeholder: T(l('Nome', 'Name')), oninput: (e: Event) => { name = (e.target as HTMLInputElement).value; } }),
         btn(fmtS(l('Fundar ({c})', 'Launch ({c})'), { c: $(zineCost19(s)) }), () => say(foundZine19(s, city, g, name)), !genres.length))) : muted(l('Fanzines de música ainda não existem (1966+).', 'Music fanzines do not exist yet (1966+).')),
-    section(t(l('Fanzines e blogs na ativa', 'Active fanzines and blogs')), zs.length ? h('div', null, ...zs.slice(-20).reverse().map((z) => row(h('b', null, z.name), pill(z.k === 'blog' ? 'blog' : 'zine'), cn(z.city), ' · ', gn(z.g), ` · ${T(l('alcance', 'reach'))} ${z.reach}`,
+    section(t(l('Fanzines e blogs na ativa', 'Active fanzines and blogs')), zs.length ? h('div', null, ...zs.slice(-20).reverse().map((z) => row(a29(mastheadImg28(z.name, z.k === 'blog' ? 'online' : 'zine', 64)), h('b', null, z.name), /* r29: mastro do fanzine */ pill(z.k === 'blog' ? 'blog' : 'zine'), cn(z.city), ' · ', gn(z.g), ` · ${T(l('alcance', 'reach'))} ${z.reach}`,
       z.by === 'player' ? pill(t(l('seu', 'yours')), 'good') : null, z.by === 'player' ? btn(l('Fechar', 'Close'), () => say(closeZine19(s, z.id))) : null))) : muted(l('Nenhum ainda.', 'None yet.'))),
     section(t(l('Calor das cenas (cidade × gênero)', 'Scene heat (city × genre)')), heat.length ? list(heat.map(([k, v]) => { const [c, gg] = k.split('|'); return why18(s, 'zn19.heat', { c, g: gg }, `${cn(c)} · ${gn(gg)}: ${Math.round(v)}/${SCENE_HEAT19}`); })) : muted(l('Nada esquentando.', 'Nothing heating up.'))),
     section(t(l('Cenas criadas pelos fanzines', 'Scenes born from fanzines')), zScenesLive19(s).length ? list(zScenesLive19(s).map((x) => `${cn(x.city)} · ${gn(x.g)} (${x.y}–${x.to})`)) : muted(l('Nenhuma ainda.', 'None yet.'))));

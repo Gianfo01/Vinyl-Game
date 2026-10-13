@@ -4,9 +4,8 @@
 //  - promessas feitas à pessoa (abertas, cumpridas, quebradas) — antes só as abertas, no card do elenco;
 //  - relíquias da pessoa e prêmios dos atos da carreira (a página do ato já tinha; a da pessoa não);
 //  - submundo: organização ligada ao ato, rixas e ocorrências do registro do crime;
-//  - álbum de cenas: as cenas animadas (cut27) que tocaram, para rever;
 //  - selo: fatos do barramento (facts17) com o selo como ator e a memória da rivalidade (rivals27).
-import { l, type L } from '../../data/world';
+import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { crime17, orgById } from '../../sim/sys/crime17';
 import { tieOf } from '../../sim/sys/crimenpc17';
@@ -16,10 +15,8 @@ import { P } from '../../sim/sys/people/state';
 import { relics } from '../../sim/sys/relics9';
 import { rivalMemory27 } from '../../sim/sys/rivals27';
 import type { Act, GameState, Person } from '../../sim/types';
-import { actLink, pill, rerender, section } from '../common';
-import { CUT27, cut27, type CutData27 } from '../ps/cut27model';
-import { openCutscene, registerPageTab } from '../registry';
-import { ALBUM17_X } from './scene17';
+import { actLink, pill, section } from '../common';
+import { registerPageTab } from '../registry';
 import { h } from '../dom';
 import { PERSON_TABS } from '../pages';
 import { factsList17 } from './found17';
@@ -89,15 +86,3 @@ registerPageTab('label', { id: 'facts29', label: l('Fatos e rivalidade', 'Facts 
     factsList17(s, id, false));
 } });
 
-// Álbum de cenas: as animadas (cut27) que tocaram — antes só as silenciosas (quiet23) apareciam para rever.
-ALBUM17_X.push((s) => {
-  const list = (cut27(s).log ?? []).slice().reverse().slice(0, 20);
-  if (!list.length) return null;
-  return section(t(l('Cenas animadas', 'Animated scenes')),
-    h('ul', { class: 'small' }, list.map((c) => {
-      const d = c.data.d as CutData27 | undefined;
-      const choice = !!(d && CUT27[d.key]?.choices.length);
-      return h('li', null, h('b', null, t(c.data.title as L)), h('span', { class: 'muted' }, ` · ${t(l('semana', 'week'))} ${c.week}`),
-        choice ? h('small', { class: 'muted' }, ` · ${t(l('com decisão (já tomada)', 'with a decision (already made)'))}`) : [' · ', h('button', { class: 'link small', onclick: () => openCutscene(s, { ...c, seen: true }, rerender) }, t(l('rever cena', 'replay scene')))]);
-    })));
-});

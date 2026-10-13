@@ -25,6 +25,7 @@ import { h, select } from '../dom';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
 import { why18 } from '../explain18';
+import { placeArt29 } from '../art29ui'; // r29 (arte)
 
 const pc = (v: number) => `${Math.round(v * 100)}%`;
 const res = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
@@ -68,7 +69,7 @@ function pressTab(s: GameState): HTMLElement {
     })) : muted(l('Nenhum lançamento físico programado. A reserva é feita sozinha quando você programa um.', 'No physical release scheduled. Booking happens on its own when you schedule one.'))),
     section(t(l('Fábricas disponíveis em {y}', 'Plants available in {y}'), { y: s.year }), h('table', { class: 'tbl small' },
       h('tr', null, h('th', null, t(l('Fábrica', 'Plant'))), ...mats.map((m) => h('th', null, t(MATERIAL_NAMES[m]))), h('th', null, t(l('Defeitos', 'Defects'))), h('th', null, t(l('Preço', 'Price')))),
-      ...plants.map((p) => h('tr', { title: t(p.desc) }, h('td', null, h('b', null, t(p.name)), h('div', { class: 'muted' }, `${t(p.where)} · ${t(p.desc)}`)),
+      ...plants.map((p) => h('tr', { title: t(p.desc) }, h('td', null, placeArt29('plant', p.id, t(p.name), s.year, '', 24), h('b', null, t(p.name)), /* r29: fábrica */ h('div', { class: 'muted' }, `${t(p.where)} · ${t(p.desc)}`)),
         ...mats.map((m) => h('td', null, plantMats(p, s.year, s).includes(m) ? why18(s, 'supply.queue', { plant: p.id, mat: m }, `${queueOf18(s, p, m)} ${t(l('sem.', 'wk'))}`) : '—')),
         h('td', null, p.def > 0.005 ? pill(t(l('mais', 'more')), 'bad') : p.def < -0.005 ? pill(t(l('menos', 'fewer')), 'good') : t(l('média', 'avg'))),
         h('td', null, `×${p.price.toFixed(2)}`)))),

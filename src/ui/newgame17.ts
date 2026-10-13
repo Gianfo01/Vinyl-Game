@@ -3,6 +3,7 @@
 // cenário histórico no próprio Novo Jogo, dificuldade detalhada, prazo, avisos de combinações, código de partida e
 // a ficha COMPLETA do personagem ao vivo (simula o começo do jogo com as escolhas e mostra tudo o que você ganha).
 
+import { SITS29, careerOf29, setStart29, sitOf29, statusLabel29, syncStart29 } from '../sim/start29data'; // r29
 import { formatMoney } from '../core/money';
 import { SKILLS } from '../data/people';
 import { l, type L } from '../data/world';
@@ -36,7 +37,7 @@ const R = (k: string, v: L) => ({ [k]: v });
 /** Ajudas "(?)" novas (mesmo formato do HELP da rodada 13). */
 export const HELP17: Record<string, L> = {
   ...R('world17', l('Um seletor só para "quanto o mundo é real": junta os antigos Modo, Nomes reais, Mortes reais e Modo de história, que se sobrepunham. Cada opção mostra exatamente o que liga e desliga.', 'One selector for "how real the world is": merges the old Mode, Real names, Real deaths and History mode, which overlapped. Each option shows exactly what it turns on and off.')),
-  ...R('start17', l('Do zero: pouco caixa, nenhum artista. Emergente: um artista contratado e caixa médio. Estabelecida: elenco, catálogo, equipe e custos maiores. Um cenário histórico define ano, cidade, elenco, meta com medalhas e regras especiais.', 'From zero: little cash, no acts. Emerging: one signed act and mid cash. Established: roster, catalog, staff and higher costs. A historical scenario sets year, city, roster, a medal goal and special rules.')),
+  ...R('start17', l('Uma escada que vale para qualquer carreira: do zero (garagem) → emergente → porte médio → estabelecido → top 5 → líder do mercado. Subindo, crescem caixa, reputação, elenco (ou a fama da sua banda), sede, equipe e mercados — e também a folha, os custos fixos e a atenção dos rivais. Hipster troca alcance comercial por prestígio artístico; em crise é um gigante caído: nome grande, dívida grande.', 'A ladder that works for any career: from zero (garage) → emerging → mid-size → established → top 5 → market leader. Going up, cash, reputation, roster (or your band\'s fame), HQ, staff and markets grow — and so do payroll, fixed costs and rivals\' attention. Hipster trades commercial reach for artistic prestige; in crisis is a fallen giant: big name, big debt.')),
   ...R('diff17', l('Ajuste fino por eixo, além da dificuldade geral. Cada passo mostra o efeito exato; ele aparece também nos detalhamentos "por quê" do jogo.', 'Fine-tune per axis, on top of the overall difficulty. Each step shows the exact effect, which also appears in the game\'s "why" breakdowns.')),
   ...R('run17', l('Sem fim: jogue quanto quiser. Com prazo: em dezembro do último ano o jogo soma legado, sucessos, certificações e festivais numa pontuação com patente (comparável entre prazos). Você pode continuar depois.', 'No end: play as long as you like. With a deadline: in December of the last year the game adds up legacy, hits, certifications and festivals into a score with a rank (comparable across lengths). You can keep playing after.')),
   ...R('preview17', l('O jogo simula o começo da partida com as suas escolhas (sem gravar nada e com uma população simplificada) e mostra a ficha do seu personagem: atributos, personalidade, habilidades musicais, estilo de vida, dinheiro, reputação, crenças e TODOS os bônus ativos. ▲▼ marcam o que mudou na última escolha.', 'The game simulates the start of the run with your choices (saving nothing, with a simplified population) and shows your character sheet: attributes, personality, music skills, lifestyle, money, reputation, beliefs and ALL active bonuses. ▲▼ mark what changed with your last choice.')),
@@ -189,19 +190,18 @@ export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () =
 
 // ---------------------------------------------------------------- ponto de partida + cenário histórico
 
-const STARTS: { id: RunConfig['scenario']; name: L; fx: L }[] = [
-  { id: 'from_zero', name: l('Do zero', 'From zero'), fx: l('Caixa pequeno, nenhum artista: você monta tudo. Mais difícil e mais seu.', 'Small cash, no acts: you build everything. Harder and more yours.') },
-  { id: 'emerging', name: l('Selo emergente', 'Emerging label'), fx: l('Um artista contratado e caixa médio: começa com algo para lançar.', 'One signed act and mid cash: you start with something to release.') },
-  { id: 'established', name: l('Empresa estabelecida', 'Established company'), fx: l('Três artistas, catálogo, equipe e custos fixos maiores: mais a perder.', 'Three acts, a catalog, staff and higher fixed costs: more to lose.') },
-];
-
-/** r22: cenários são uma modalidade à parte (tela inicial); aqui só o ponto de partida da run livre. */
+/** r22: cenários são uma modalidade à parte (tela inicial); aqui só o ponto de partida da run livre.
+ *  r29: a escada de situações (zero → líder do mercado, hipster e em crise); o nome de cada cartão segue a carreira
+ *  ("Artista hipster", "Produtor top 5") e a escolha usa o MESMO handler da Nova run rápida (setStart29). */
 export function startCard17(cfg: RunConfig, rebuild: () => void, custom: HTMLElement): HTMLElement {
+  syncStart29(cfg); // padrão do cartão: situação coerente com o scenario
+  const cur = sitOf29(cfg);
+  const career = careerOf29(cfg);
   return h('section', { class: 'card wide ng17-start' },
     h('h3', null, t(l('Ponto de partida', 'Starting point')), ' ', helpTip(HELP17.start17)),
-    h('div', { class: 'ng17-start-grid' }, ...STARTS.map((s0) => h('label', { class: `radio pick ${cfg.scenario === s0.id ? 'on' : ''}` },
-      h('input', { type: 'radio', name: 'st17', checked: cfg.scenario === s0.id, onchange: () => { cfg.scenario = s0.id; rebuild(); } }),
-      h('span', null, h('b', null, t(s0.name)), h('small', null, t(s0.fx)))))),
+    h('div', { class: 'ng17-start-grid' }, ...SITS29.map((s0) => h('label', { class: `radio pick ${cur === s0.id ? 'on' : ''}`, 'data-start29': s0.id },
+      h('input', { type: 'radio', name: 'st17', checked: cur === s0.id, onchange: () => { setStart29(cfg, s0.id); rebuild(); } }),
+      h('span', null, h('b', null, t(statusLabel29(career, s0.id))), h('small', null, t(s0.fx)))))),
     h('details', { class: 'ng17-custom' }, h('summary', { class: 'small' }, t(l('Ajuste fino do começo (caixa, sede, elenco, equipe…)', 'Fine-tune the start (cash, HQ, roster, staff…)'))), custom),
   );
 }

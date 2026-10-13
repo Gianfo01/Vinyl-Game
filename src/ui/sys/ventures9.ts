@@ -29,6 +29,7 @@ import { careersPanel } from './careers12';
 import { fameText } from '../../sim/sys/fame15';
 import { f12, festOf } from '../../sim/sys/fest12';
 import { store } from '../store';
+import { ventureArt29 } from '../art29ui'; // r29 (arte)
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -51,7 +52,7 @@ export function plLine(v: Venture): HTMLElement {
 export function ventureHead(s: GameState, v: Venture): HTMLElement {
   return h('div', null,
     h('div', { class: 'row between wrap' },
-      h('h4', null, v.name, ' ', pill(t(v.owner === 'label' ? l('selo', 'label') : l('pessoal', 'personal')), v.owner === 'label' ? '' : 'good'), ' ', pill(`${t(l('Nível', 'Level'))} ${v.level}/${MAX_LEVEL}`)),
+      h('h4', null, ventureArt29(v, s.year), v.name, ' ', pill(t(v.owner === 'label' ? l('selo', 'label') : l('pessoal', 'personal')), v.owner === 'label' ? '' : 'good'), ' ', pill(`${t(l('Nível', 'Level'))} ${v.level}/${MAX_LEVEL}`)),
       h('span', { class: 'small muted' }, `${cityName(v.city)} · ${t(l('desde', 'since'))} ${v.founded}`)),
     h('div', { class: 'row wrap small' }, t(l('Reputação', 'Reputation')), ' ', bar(v.rep), ` ${Math.round(v.rep)}`),
     plLine(v),

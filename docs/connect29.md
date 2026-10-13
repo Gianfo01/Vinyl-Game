@@ -79,8 +79,8 @@ Aba **Conexões** (pessoa e ato, `src/ui/sys/connect29.ts`), só leitura:
 Selo (dossiê): aba **Fatos e rivalidade** — fatos do barramento com o selo como ator e a memória da rivalidade
 (`rivalMemory27`: mágoa, lembranças datadas, cópias) que só aparecia como um número.
 
-Álbum de cenas: **Cenas animadas** (cut27) que tocaram — antes só as silenciosas iam para "Rever cena". As com decisão
-aparecem marcadas (não se repete a escolha).
+Álbum de cenas: as cenas animadas (cut27) que tocaram também precisavam ir para o álbum — a rodada r29-cenas fez isso em
+paralelo (`src/ui/ps/album29.ts`, `log29`); no merge fica só a versão dela (uma fonte, sem duplicar).
 
 Diário "Só marcantes": troca de formação dos **seus** atos é marco (antes só passava com fama > 25–30).
 

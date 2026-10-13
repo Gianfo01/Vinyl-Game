@@ -26,6 +26,8 @@ import { openRoad27 } from '../act27/road27'; // r27 (P2B)
 import { bookTour27 } from '../act27/flow27p2'; // r27 FLOW2: "Confirmar turnê" abre a turnê no mapa (rápido dentro)
 import { isRoad27 } from '../../sim/sys/road27';
 import { tourMark27 } from '../act27/flow27';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { merchImg29, vehicleImg29 } from '../pixel/things29';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
 
@@ -136,7 +138,7 @@ export function activeToursSection(s: GameState): HTMLElement | null {
   const tours = s.tours.filter((x) => x.status === 'planned' || x.status === 'running' || (x.status === 'done' && s.day - (x.stops.at(-1)?.day ?? 0) < 120));
   if (!tours.length) return null;
   return section(t(l('Turnês', 'Tours')), tours.map((tr) => h('div', { class: 'tour' },
-    h('header', null, ic('tour-bus', 2), h('b', null, tr.name), ' ', actLink(s, tr.actId), ' ', pill(t({ planned: l('marcada', 'booked'), running: l('na estrada', 'on the road'), done: l('encerrada', 'finished'), cancelled: l('cancelada', 'cancelled') }[tr.status]), tr.status === 'running' ? 'good' : ''),
+    h('header', null, a29(vehicleImg29(({ ...KIT0, ...(tr.kit18 ?? {}) } as Kit18).move, s.year, tr.id, 64)), h('b', null, tr.name), /* r29: veículo da época */ ' ', actLink(s, tr.actId), ' ', pill(t({ planned: l('marcada', 'booked'), running: l('na estrada', 'on the road'), done: l('encerrada', 'finished'), cancelled: l('cancelada', 'cancelled') }[tr.status]), tr.status === 'running' ? 'good' : ''),
       chips(stat('money', $(tr.revenue), l('Receita', 'Revenue')), stat('fans', N(tr.stops.reduce((x, y) => x + y.sold, 0)), l('Público', 'Attendance')), tr.accidents ? stat('warning', tr.accidents, l('Acidentes', 'Accidents'), 'bad') : null),
       tr.status === 'planned' || tr.status === 'running' ? h('button', { class: 'btn small ghost', onclick: () => { const e = cancelTour(s, tr.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(l('Cancelar (devolve metade)', 'Cancel (half refunded)'))) : null,
       tourMark27(s, tr.id), // r27 FLOW: o próximo show é jogado no avanço (Jogar / Resolver rápido), não num botão à parte
@@ -191,7 +193,7 @@ export function merchSection(s: GameState): HTMLElement {
   return section(t(l('Merch', 'Merch')), h('div', { class: 'cards' }, ids.map((id) => {
     const a = s.acts[id];
     const m = s.merch[id];
-    return h('div', { class: 'tile' }, h('div', { class: 'tile-ic' }, ic('shirt', 2)), h('div', { class: 'tile-body' },
+    return h('div', { class: 'tile' }, h('div', { class: 'tile-ic' }, merchImg29(s.year >= 1968 ? 'tee' : 'button', a.logoSeed, a.name, a.genre, s.year, 32)), h('div', { class: 'tile-body' }, // r29: produto com o logo
       h('b', null, a.name),
       m ? chips(stat('shirt', N(m.stock), l('Estoque', 'Stock')), stat('money', $(m.revenue), l('Receita', 'Revenue')), stat('sparkle', m.quality, l('Qualidade', 'Quality'))) : h('small', { class: 'muted' }, t(l('Sem linha de merch.', 'No merch line.'))),
       h('div', { class: 'row' },

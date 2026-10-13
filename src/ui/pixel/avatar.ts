@@ -1088,6 +1088,58 @@ function outfit27(p: Px, n: number, k: O27): R27 {
       if (front) { p.hline(CX - 1, CX, ty0, col.skin); p.put(CX - 2, ty0, col.clothL); p.put(CX + 1, ty0, col.clothL); }
       return { sleeve: col.cloth, frac: 0.4 };
     }
+    // ---- rodada 29 (looks29.ts): roupas por época e região ----
+    case 26: { // terno zoot: paletó comprido, corrente
+      torso(col.cloth);
+      p.rect(tx0, ty1, tw, 3, col.cloth); p.vline(tx0 + tw - 1, ty1, ty1 + 2, col.clothD);
+      if (front) { vee(col.shirt, 3); p.vline(CX - 1, ty0 + 1, ty0 + 4, col.accent); p.line(CX, ty1, tx0 + tw - 1, ty1 + 3, gold); }
+      return { sleeve: col.cloth, frac: 0.95 };
+    }
+    case 27: { // guayabera: pregas verticais e bolsos
+      torso(col.cloth);
+      for (const x of [tx0 + 1, tx0 + tw - 2]) for (let y = ty0 + 2; y <= ty1; y++) if (y % 2) p.put(x, y, col.clothD);
+      if (front) { p.hline(CX - 1, CX, ty0, col.skin); p.put(CX - 2, ty0, col.clothL); p.put(CX + 1, ty0, col.clothL); p.put(tx0 + 1, ty1 - 2, col.clothL); p.put(tx0 + tw - 2, ty1 - 2, col.clothL); }
+      return { sleeve: col.cloth, frac: 0.4 };
+    }
+    case 28: { // agbada / bubu: túnica larga até o tornozelo, bordado no peito
+      torso(col.cloth);
+      for (let y = ty0 + 1; y <= ty1; y++) { const wv = Math.min(3, Math.floor((y - ty0) / 2)); p.hline(tx0 - wv, tx0 + tw - 1 + wv, y, col.cloth); p.put(tx0 + tw - 1 + wv, y, col.clothD); }
+      skirt27(p, k, col.cloth, col.clothD, 1);
+      if (front) { p.hline(CX - 2, CX + 1, ty0 + 1, gold); p.vline(CX - 1, ty0 + 2, ty0 + 5, gold); p.put(CX - 2, ty0 + 3, gold); p.put(CX + 1, ty0 + 3, gold); p.hline(CX - 1, CX, ty0, col.skin); }
+      return { sleeve: col.cloth, frac: 1 };
+    }
+    case 29: { // hanbok: jaqueta curta (jeogori) com laço e saia alta e rodada
+      torso(col.shirt);
+      skirt27(p, k, col.cloth, col.clothD, 2, ty0 + 4);
+      if (front) { p.line(CX - 2, ty0, CX, ty0 + 2, white); p.line(CX + 1, ty0, CX - 1, ty0 + 2, white); p.vline(CX, ty0 + 3, ty0 + 6, col.accent); p.put(CX + 1, ty0 + 3, col.accent); }
+      return { sleeve: col.shirt, frac: 0.95 };
+    }
+    case 30: { // jaqueta college: corpo de uma cor, mangas brancas, letra no peito
+      torso(col.cloth);
+      p.hline(tx0, tx0 + tw - 1, ty1, white);
+      if (front) { p.vline(CX - 1, ty0, ty1 - 1, col.clothD); p.rect(tx0 + 1, ty0 + 2, 2, 2, white); p.put(tx0 + 1, ty0 + 2, col.accent); p.hline(CX - 2, CX + 1, ty0, white); }
+      return { sleeve: white, frac: 0.92 };
+    }
+    case 31: { // terninho de ombreiras
+      torso(col.cloth);
+      p.hline(tx0 - 1, tx0 + tw, ty0, col.clothL); p.put(tx0 - 1, ty0 + 1, col.cloth); p.put(tx0 + tw, ty0 + 1, col.clothD);
+      if (front) { vee(col.shirt, 3); p.put(CX - 2, ty0 + 3, col.clothL); p.put(CX + 1, ty0 + 3, col.clothL); p.put(CX - 1, ty0 + 5, gold); }
+      return { sleeve: col.cloth, frac: 0.92 };
+    }
+    case 32: { // colete de patches sobre camiseta
+      torso(col.shirt);
+      p.rect(tx0, ty0 + 1, tw, ty1 - ty0, col.cloth); p.vline(tx0 + tw - 1, ty0 + 1, ty1, col.clothD);
+      const pc = [tone(C('#e04848'), pal), white, tone(C('#f0c040'), pal), tone(C('#48b85c'), pal)];
+      each((x, y) => { if (p.get(x, y) === col.cloth && (x * 5 + y * 3) % 7 === 0) p.put(x, y, pc[(x + y) % 4]); });
+      if (front) { p.vline(CX - 1, ty0 + 1, ty1, col.shirt); p.vline(CX, ty0 + 1, ty1, col.shirt); }
+      return { sleeve: col.shirt, frac: 0.35 };
+    }
+    case 33: { // camisa de futebol: listras verticais e gola em V
+      torso(col.cloth);
+      each((x, y) => { if ((x - tx0) % 3 === 1) p.put(x, y, col.accent); });
+      if (front) { p.put(CX - 1, ty0, white); p.put(CX, ty0, white); p.put(CX - 1, ty0 + 1, col.skin); }
+      return { sleeve: col.cloth, frac: 0.35 };
+    }
     default: { // 25 camiseta estampada
       torso(col.cloth);
       if (front) {
@@ -1286,8 +1338,9 @@ function inst27(p: Px, n: number, k: I27): { hL: Pt; hR: Pt } {
 function drawFigure(p: Px, look: Appearance, pal: Palette, o: FigOpts): void {
   const col = colorsFor(look, pal);
   const e = pal.era;
-  const hw = [3, 4, 4][look.body % 3];
-  const heavy = look.body === 2;
+  const hw = look.body === 4 ? 5 : look.body === 3 ? 4 : [3, 4, 4][look.body % 3]; // r29: 3 atlético, 4 grandalhão
+  const heavy = look.body === 2 || look.body === 4;
+  const broad = look.body === 3 ? 1 : 0;
   const sitting = o.pose === 'sit' || o.pose === 'sitplay';
   const walk = o.pose === 'walk';
   const f = o.frame;
@@ -1335,11 +1388,12 @@ function drawFigure(p: Px, look: Appearance, pal: Palette, o: FigOpts): void {
   // ---- tronco ----
   const tx0 = CX - hw - (heavy ? 0 : 0);
   const tw = hw * 2;
-  const shoulderPad = e === '1980' && outfit === 1 ? 1 : 0;
+  const shoulderPad = (e === '1980' && outfit === 1 ? 1 : 0) || broad;
   const torso = (c: Col) => {
     p.rect(tx0 - shoulderPad, ty0, tw + shoulderPad * 2, 1, c);
     p.rect(tx0, ty0 + 1, tw, ty1 - ty0, c);
     if (heavy) p.rect(tx0 - 1, ty0 + 3, tw + 2, ty1 - ty0 - 3, c);
+    if (broad) p.rect(tx0 - 1, ty0 + 1, tw + 2, 2, c); // r29: atlético (ombros largos, cintura fina)
     p.vline(tx0 + tw - 1 + (heavy ? 1 : 0), ty0 + 1, ty1, shade(c, -0.18));
     p.hline(tx0, tx0 + tw - 1, ty0, shade(c, 0.12));
   };
@@ -1815,6 +1869,44 @@ function portrait27(p: Px, n: number, col: Colors, pal: Palette, w: number): voi
       p.poly([[14, 24], [18, 24], [16, 28]], col.skin); collarPts(col.clothL, 27);
       break;
     }
+    // ---- rodada 29 ----
+    case 26: // terno zoot
+      p.poly([[12.5, 24], [19.5, 24], [16, 31]], col.shirt); p.rect(15, 25, 2, 6, col.accent);
+      p.line(12, 24, 15, 31, col.clothL); p.line(19, 24, 17, 31, shade(col.cloth, -0.25)); p.line(18, 29, 22, 31, gold);
+      break;
+    case 27: // guayabera
+      p.poly([[14, 24], [18, 24], [16, 27]], col.skin); collarPts(col.clothL, 27);
+      eachS((x, y) => { if ((x === 11 || x === 20) && y % 2) p.put(x, y, col.clothD); }, 25);
+      break;
+    case 28: { // agbada: bordado dourado no peito
+      p.poly([[13.5, 24], [18.5, 24], [16, 27]], col.skin);
+      p.line(12, 24, 16, 30, gold); p.line(20, 24, 16, 30, gold); p.hline(14, 18, 28, gold); p.put(16, 29, shade(gold, 0.3));
+      break;
+    }
+    case 29: // hanbok: gola branca cruzada e laço
+      p.line(13, 24, 17, 28, white); p.line(19, 24, 15, 28, white); p.vline(17, 28, 31, col.accent); p.put(18, 29, col.accent); p.put(18, 30, shade(col.accent, -0.2));
+      break;
+    case 30: { // jaqueta college
+      eachS((x, y) => { const [a, b] = shoulderSpan(w, y); if (x <= a + 2 || x >= b - 2) p.put(x, y, white); });
+      p.vline(16, 25, 31, col.clothD); p.rect(11, 27, 3, 3, white); p.put(12, 28, col.accent); p.hline(14, 18, 24, white);
+      break;
+    }
+    case 31: { // terninho de ombreiras
+      const [a, b] = shoulderSpan(w, 24);
+      p.rect(a - 1, 24, 4, 2, col.clothL); p.rect(b - 2, 24, 4, 2, col.cloth);
+      p.poly([[12.5, 24], [19.5, 24], [16, 31]], col.shirt); p.line(12, 24, 15, 31, col.clothL); p.line(19, 24, 17, 31, shade(col.cloth, -0.25)); p.put(16, 30, gold);
+      break;
+    }
+    case 32: { // colete de patches
+      const pc = [tone(C('#e04848'), pal), white, tone(C('#f0c040'), pal), tone(C('#48b85c'), pal)];
+      p.rect(14, 24, 4, 8, col.shirt);
+      eachS((x, y) => { if ((x < 14 || x > 17) && (x * 5 + y * 3) % 7 === 0) p.put(x, y, pc[(x + y) % 4]); }, 25);
+      break;
+    }
+    case 33: // camisa de futebol
+      eachS((x, y) => { if (x % 3 === 1) p.put(x, y, col.accent); }, 25);
+      p.poly([[14, 24], [18, 24], [16, 27]], col.skin); p.line(14, 24, 16, 27, white); p.line(18, 24, 16, 27, white);
+      break;
     default: { // 25 camiseta estampada
       p.rect(14, 24, 4, 1, col.skinD);
       const pr = printOn(col.cloth, pal);
@@ -1881,7 +1973,7 @@ export function portraitPx(person: PersonLike, year: number): Px {
   const n27 = look.outfit >= 4 ? look.outfit : 0; // rodada 27
   const outfit = n27 ? -1 : look.outfit % 4;
   const shirtC = n27 === 7 || n27 === 14 ? col.skin : n27 === 22 ? col.shirt : outfit === 0 && pal.era === '1920' ? col.shirt : col.cloth;
-  const w = [9, 11, 12][look.body % 3];
+  const w = look.body === 4 ? 13 : look.body === 3 ? 12 : [9, 11, 12][look.body % 3]; // r29: corpos 3 e 4
   for (let y = 24; y < 32; y++) {
     const ww = w + Math.min(3, y - 24);
     p.hline(16 - ww, 15 + ww, y, y === 24 ? shade(shirtC, 0.15) : shirtC);

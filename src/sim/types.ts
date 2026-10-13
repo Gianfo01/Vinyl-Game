@@ -57,6 +57,9 @@ export interface RunConfig {
   runYears17?: number;
   /** r28 (F4): situação inicial sorteada pela semente (id de start28.ts); ausente = começo de sempre (testes, saves antigos) */
   start28?: string;
+  /** r29: situação inicial escolhida na Nova run (id de start29data.ts: zero, emerging, mid, hipster, established, top5,
+   *  leader, fallen); ausente = só o `scenario` de sempre (testes, bot, saves antigos) */
+  start29?: string;
   scenario17?: string;
   preset17?: string;
   /** rodada 20 (G8, src/sim/worldpolicy20.ts): versões do esquema e da política de mundo; ausentes = configuração

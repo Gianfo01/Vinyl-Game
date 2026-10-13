@@ -287,7 +287,8 @@ describe('r27 AUD2 — choques macro no dinheiro', () => {
     bolsa(s).q.zz = { p: 10000, lv: 0, x: 0, hist: [10000], born: s.year, evY: s.year, chg: 0, base: 10000 };
     goods(s).inv.stocks = { principal: 100000, value: 100000 };
     emitFact(s, { kind: 'rate_shift', actors: ['market'], severity: 40, tags: ['money', 'rates', 'up'], text: l('juros', 'rates'), data: { r: 9, d: 3 } });
-    expect(ln.rate).toBeCloseTo(r0 + 0.012, 5);
+    // R28: a taxa nova é arredondada a 4 casas; com o mundo da F3 a taxa inicial deixou de ser "redonda" (0,12267)
+    expect(ln.rate).toBeCloseTo(r0 + 0.012, 3);
     expect(bolsa(s).q.zz.p).toBeLessThan(10000);
     expect(goods(s).inv.stocks!.value).toBeLessThan(100000);
     expect(macro27(s).log.length).toBe(1);

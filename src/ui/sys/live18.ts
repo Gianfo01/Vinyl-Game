@@ -17,6 +17,8 @@ import { $, N, actLink, cityName, pill, rerender, section, toast } from '../comm
 import { bar, h, select } from '../dom';
 import { registerPageTab, registerSection } from '../registry';
 import { why18 } from '../explain18';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { fanBannerImg29 } from '../pixel/badge29';
 
 const kitDraft: Kit18 = { ...KIT0 };
 /** Kit atual do planejador (o painel de turnês junta ao plano). */
@@ -124,7 +126,7 @@ registerPageTab('act', {
       h('h4', null, t(l('Por que ouvem', 'Why they listen'))),
       h('div', null, MOT18.map((k, i) => h('div', { class: 'row' }, h('span', { style: 'min-width:11em' }, t(MOT_NAME18[k])), bar(f.m[i] * 100), h('small', null, `${Math.round(f.m[i] * 100)}%`)))),
       h('h4', null, t(l('Facções', 'Factions'))),
-      h('div', null, FAC18.map((k, i) => h('div', { class: 'row', title: t(FAC_NAME18[k].desc) }, h('span', { style: 'min-width:11em' }, t(FAC_NAME18[k].name)), bar(fac[k] * 100), h('small', { class: f.fac[i] < -15 ? 'bad' : f.fac[i] > 15 ? 'good' : 'muted' }, `${Math.round(fac[k] * 100)}% · ${t(l('humor', 'mood'))} ${Math.round(f.fac[i])}`)))),
+      h('div', null, FAC18.map((k, i) => h('div', { class: 'row', title: t(FAC_NAME18[k].desc) }, a29(fanBannerImg29(k, t(FAC_NAME18[k].name), s.acts[id]?.name ?? '', s.acts[id]?.genre ?? 'pop', k, 14)), h('span', { style: 'min-width:11em' }, t(FAC_NAME18[k].name)), /* r29: flâmula */ bar(fac[k] * 100), h('small', { class: f.fac[i] < -15 ? 'bad' : f.fac[i] > 15 ? 'good' : 'muted' }, `${Math.round(fac[k] * 100)}% · ${t(l('humor', 'mood'))} ${Math.round(f.fac[i])}`)))),
       f.dr.length ? h('ul', { class: 'small' }, f.dr.map((d) => h('li', null, t(d.why), ` — ${d.n} ${t(l('meses restantes', 'months left'))}`))) : null,
       mineA && s.year >= TEAM_FROM18 ? h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: !!f.team, onchange: (e: Event) => { const r = setTeam18(s, id, (e.target as HTMLInputElement).checked); if (r) toast(t(r), 'bad'); rerender(); } }), ' ',
         t(l('Equipe de rua ({c}/mês): mobilização sobe, +8% de público no mercado de origem, barulho na estreia; às vezes exagera.', 'Street team ({c}/mo): mobilisation rises, +8% draw in the home market, release-day noise; sometimes overdoes it.'), { c: $(teamCost18(s)) })) : null,
