@@ -53,6 +53,8 @@ export function dec18(s: GameState): Dec18State {
 }
 
 const W = 4.35;
+/** r28 (F3): eco que sai da fila sem disparar (fila cheia ou quem estava nele saiu do mundo) — story28 registra. */
+export const LOST18: { f?: (s: GameState, e: Echo18, why: 'queue' | 'gone') => void } = {};
 /** Agenda os ecos de uma escolha. Devolve quantos ficaram pendentes. */
 export function schedule18(s: GameState, key: string, c: Ctx18, title: L, pick: L): number {
   const spec = conseq18(key);
@@ -74,7 +76,7 @@ export function schedule18(s: GameState, key: string, c: Ctx18, title: L, pick: 
     st.th.unshift({ id: tid, t: title, o: pick, w: s.week, n });
     if (st.th.length > 60) st.th.length = 60;
   }
-  if (st.q.length > 80) st.q.splice(0, st.q.length - 80);
+  if (st.q.length > 80) for (const e of st.q.splice(0, st.q.length - 80)) LOST18.f?.(s, e, 'queue');
   return n;
 }
 
@@ -86,8 +88,9 @@ export function fire18(s: GameState, e: Echo18): { text: L; tone: Tone18 | 'miss
   if (!spec) return null;
   const r = Rng.fromSeed(`${s.config.seed}:echo18:${e.id}:${e.k}`);
   const f = new Fx18(s, e.c, r);
+  f.t = e.t; // r28: o eco padrão cita a decisão original (objeto)
   // quem saiu do mundo leva o eco junto
-  if ((e.c.act && !s.acts[String(e.c.act)]) || (e.c.person && !s.persons[String(e.c.person)]?.alive)) return null;
+  if ((e.c.act && !s.acts[String(e.c.act)]) || (e.c.person && !s.persons[String(e.c.person)]?.alive)) { LOST18.f?.(s, e, 'gone'); return null; }
   const okCond = !spec.when || safe(() => spec.when!(s, e.c), false);
   let text: L | void = undefined;
   let tone: Tone18 | 'miss' = spec.tone;
@@ -109,7 +112,7 @@ export function fire18(s: GameState, e: Echo18): { text: L; tone: Tone18 | 'miss
   emitFact(s, {
     kind: 'echo', actors: [e.c.person ? `p:${e.c.person}` : e.c.act ? String(e.c.act) : 'player'], severity: tone === 'bad' ? 35 : 20,
     visibility: tone === 'bad' ? 'rumor' : 'public', tags: ['echo18', String(tone), e.k], text, src: 'decide18',
-    data: { o: e.o.pt, oe: e.o.en, n: f.lines.length, thr: threadOf(e) }, // r19 (11.7): força do eco → cena curta (links19a)
+    data: { o: e.o.pt, oe: e.o.en, n: f.lines.length, thr: threadOf(e), cs: f.cs }, // r28: cs = dinheiro do eco (força da cena) // r19 (11.7): força do eco → cena curta (links19a)
   });
   return { text, tone };
 }

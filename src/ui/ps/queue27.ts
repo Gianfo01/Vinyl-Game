@@ -46,7 +46,9 @@ export function kick27(g: GameState): void {
   const k = nextOverlay27(due, on);
   if (k) KICK[k]?.();
 }
+/** r28 (F3): orçamento único de atenção — camadas de tutorial também gastam (story28.attnTip28). */
+export const ATTN27: { ok?: (kind: Ov27, g: GameState) => boolean; spent?: (kind: Ov27, g: GameState) => void } = {};
 export function mayShow27(kind: Ov27, g: GameState): boolean {
   const on = typeof document !== 'undefined' && !!document.querySelector(SCREEN[kind]);
-  return mayShowPure27(kind, due27(g), on);
+  return mayShowPure27(kind, due27(g), on) && (ATTN27.ok?.(kind, g) ?? true);
 }

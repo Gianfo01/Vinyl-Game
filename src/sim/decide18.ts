@@ -23,6 +23,9 @@ export type Tone18 = 'good' | 'bad' | 'mixed';
 export class Fx18 {
   lines: L[] = [];
   private n = 0;
+  /** r28 (F3): título da decisão original (o "objeto" das variantes do eco padrão) e dinheiro somado do eco */
+  t?: L;
+  cs = 0;
   constructor(public s: GameState, public c: Ctx18, public r: Rng, public tag = 'echo18') {}
   get act(): Act | undefined {
     const a = this.c.act ? this.s.acts[String(this.c.act)] : undefined;
@@ -43,6 +46,7 @@ export class Fx18 {
     if (!real) return this;
     const c = money(this.s, real);
     post(this.s, `${this.tag}:${memo}:${this.c.e18 ?? ''}:${++this.n}`, c, cat, memo);
+    this.cs += c;
     const v = l(formatMoney(Math.abs(c), 'pt-BR'), formatMoney(Math.abs(c), 'en-US'));
     this.lines.push(fmtL(real >= 0 ? l('+{v} em caixa', '+{v} cash') : l('−{v} do caixa', '−{v} cash'), { v }));
     return this;

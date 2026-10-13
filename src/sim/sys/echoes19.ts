@@ -19,6 +19,7 @@ import { registerAdvisorTip } from '../inbox18';
 import { scandal } from '../scandal17';
 import type { GameState } from '../types';
 import { fmtL, playerActs } from '../util';
+import { echoText28 as V28, stake28 } from './echovar28';
 
 /** Os 120 eventos mais sorteados (playbot balanced, 12 partidas × 4 anos: 1889, 1900, 1925, 1950, 1960, 1968, 1975, 1985,
  *  1990, 2000, 2005, 2015; selo e artista). Ordem = frequência. Remedir quando o diretor mudar. */
@@ -64,7 +65,7 @@ const WHERE: Record<string, L> = {
 const nm = (f: Fx18): L => (f.act ? l(f.act.name, f.act.name) : l('o selo', 'the label'));
 const T = (f: Fx18, pt: string, en: string, w?: L): L => fmtL(l(pt, en), { a: nm(f), p: f.person?.name ?? nm(f), w: w ?? l('', '') });
 /** escala: ato famoso → mais em jogo (dinheiro em US$ reais; money() converte para a época) */
-const stake = (f: Fx18, base: number): number => Math.round(base * (0.7 + (f.act?.fame ?? 25) / 80));
+const stake = (f: Fx18, base: number): number => stake28(f, base); // r28 (F3): escala pela receita anual, com teto
 const R = (s: GameState) => s.player.reputation;
 const tag = (f: Fx18, kind: 'risk_paid' | 'risk_lost', text: L) =>
   emitFact(f.s, { kind, actors: [f.act?.id ?? 'player'], severity: kind === 'risk_lost' ? 25 : 15, visibility: 'public', tags: ['echo19', kind], src: 'echoes19', text });
@@ -85,27 +86,27 @@ function defSpec(ev: EventDef, t: OptTone19): EchoSpec18 {
   const big = ev.tone === 'bad' ? 1.25 : 1;
   switch (t) {
     case 'risky': return { in: [3, 9], p: (s) => VOL * clamp(0.48 + (R(s).commercial - 50) / 250, 0.3, 0.68), tone: 'mixed', hint: HINT.risky,
-      fx: (f) => { f.cash(stake(f, 650 * big), 'Aposta que pagou', 'other_income').momentum(5).fame(1); const x = T(f, 'A aposta pagou {w}: {a} colheu o que você arriscou.', 'The gamble paid off {w}: {a} reaped what you risked.', w); tag(f, 'risk_paid', x); return x; },
-      miss: (f) => { if (!lose(f, 0.48 + (R(f.s).commercial - 50) / 250)) return; f.cash(-stake(f, 500 * big), 'Aposta que deu errado', 'misc').momentum(-4); const x = T(f, 'A aposta deu errado {w}: a conta chegou para {a}.', 'The gamble went wrong {w}: the bill came for {a}.', w); tag(f, 'risk_lost', x); return x; } };
+      fx: (f) => { f.cash(stake(f, 650 * big), 'Aposta que pagou', 'other_income').momentum(5).fame(1); const x = V28(f, 'riskWin', ev.cat, w); tag(f, 'risk_paid', x); return x; },
+      miss: (f) => { if (!lose(f, 0.48 + (R(f.s).commercial - 50) / 250)) return; f.cash(-stake(f, 500 * big), 'Aposta que deu errado', 'misc').momentum(-4); const x = V28(f, 'riskLose', ev.cat, w); tag(f, 'risk_lost', x); return x; } };
     case 'generous': return { in: [3, 10], p: 0.4 * VOL, tone: 'good', hint: HINT.generous,
       fx: (f) => {
         if (f.act) { f.trust(4).mood('morale', 5); const m = f.act.members[0]; if (m && f.act.owner === 'player') grantHold(f.s, { holder: m, target: 'player', kind: 'favor', strength: 20, text: l('Lembra do gesto do selo', 'Remembers the label\'s gesture'), months: 18, src: 'echoes19', quiet: true }); }
         else f.rep('artists', 2);
-        return T(f, 'O gesto não foi esquecido {w}: {a} fala bem de você por aí.', 'The gesture was not forgotten {w}: {a} speaks well of you.', w);
+        return V28(f, 'generous', ev.cat, w);
       } };
     case 'deceitful': return { in: [4, 12], p: (s) => (R(s).institutional < 40 ? 0.4 : 0.3) * VOL, tone: 'bad', hint: HINT.deceitful,
       fx: (f) => {
         f.rep('institutional', -2).trust(-5);
-        const x = T(f, 'A versão oficial não colou {w}: alguém contou a outra.', 'The official story did not hold {w}: someone told the other one.', w);
+        const x = V28(f, 'deceit', ev.cat, w);
         if (f.act) scandal(f.s, f.act.id, 'conduct', 15, x, { text: x });
         return x;
       } };
     case 'cautious': return { in: [4, 10], p: 0.5 * VOL, tone: 'mixed', hint: HINT.cautious,
-      fx: (f) => { f.rep('commercial', 1); return T(f, 'A cautela poupou dor de cabeça {w}.', 'Caution spared you a headache {w}.', w); },
-      miss: (f) => (f.r.chance(0.5) ? (f.momentum(-3), T(f, 'Um rival fez o que você não quis {w} — e saiu na frente.', 'A rival did what you would not {w} — and got ahead.', w)) : undefined) };
+      fx: (f) => { f.rep('commercial', 1); return V28(f, 'cautWin', ev.cat, w); },
+      miss: (f) => (f.r.chance(0.5) ? (f.momentum(-3), V28(f, 'cautMiss', ev.cat, w)) : undefined) };
     case 'aggressive': return { in: [2, 8], p: (s) => VOL * clamp(0.38 + R(s).institutional / 250, 0.3, 0.7), tone: 'mixed', hint: HINT.aggressive,
-      fx: (f) => { f.rep('commercial', 2).fame(1); return T(f, 'A briga {w} virou manchete a seu favor.', 'The fight {w} made headlines in your favour.', w); },
-      miss: (f) => { if (!lose(f, 0.38 + R(f.s).institutional / 250)) return; f.cash(-stake(f, 450 * big), 'Briga que custou caro', 'legal').rep('artists', -2); return T(f, 'A briga {w} custou caro: advogados e inimizades.', 'The fight {w} cost dearly: lawyers and enemies.', w); } };
+      fx: (f) => { f.rep('commercial', 2).fame(1); return V28(f, 'aggrWin', ev.cat, w); },
+      miss: (f) => { if (!lose(f, 0.38 + R(f.s).institutional / 250)) return; f.cash(-stake(f, 450 * big), 'Briga que custou caro', 'legal').rep('artists', -2); return V28(f, 'aggrLose', ev.cat, w); } };
   }
 }
 const DEF: Record<string, Conseq18 | null> = {}; // derivado só dos EventDefs (estático, não é estado de partida)

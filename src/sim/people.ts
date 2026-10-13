@@ -1,6 +1,7 @@
 // Geração de pessoas, atos, nomes e músicas (GDD §5.3, §9; Catálogo §9).
 
 import { clamp, type Rng } from '../core/rng';
+import { BAND_LANG28 } from '../data/bandnames28';
 import { AMBITIONS, BAND_WORDS, FIRST_NAMES, LAST_NAMES, ORIGINS, SONG_WORDS, TRAITS, GENRE_AFFINITY, TEMPER_TRAITS, traitById, type SkillId } from '../data/people';
 import { cityById, familyOf, type FamilyId, type NameGroup } from '../data/world';
 import type { Act, GameState, Person } from './types';
@@ -99,6 +100,9 @@ export function bandName(r: Rng, lang: NameGroup, family: FamilyId, members: num
     return r.chance(0.5) ? r.pick(W.ptPlural) : `${r.pick(W.ptNoun)} ${r.pick(W.ptColor)}`;
   }
   if (lang === 'es') return r.pick(W.esPlural);
+  // r28 (F3): nome na língua do país (mesmos sorteios do inglês: chance + 2 escolhas)
+  const B = BAND_LANG28[lang];
+  if (B) return r.chance(0.5) ? B.plural(r.pick(B.adj), r.pick(B.plur)) : B.pair(r.pick(B.adj), r.pick(B.noun));
   if (r.chance(0.5)) return `The ${r.pick(W.enAdj)} ${r.pick(W.enPlural)}`;
   return `${r.pick(W.enAdj)} ${r.pick(W.enNoun)}`;
 }

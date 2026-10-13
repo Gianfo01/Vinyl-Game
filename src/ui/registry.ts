@@ -87,6 +87,8 @@ export function registerCutscene(kind: string, render: (s: GameState, cs: Cutsce
 
 /** r23 (A): chamados com as cenas que NÃO interromperam (foram para a caixa de entrada / Álbum). */
 export const ON_QUIET23: ((s: GameState, list: Cutscene[]) => void)[] = [];
+/** r28 (F3): quais das cenas pendentes podem abrir agora (ids); as outras vão para o álbum em silêncio. */
+export const SCENE_GATE28: { f?: (s: GameState, list: Cutscene[]) => string[] } = {};
 
 /** Abas extras no formato de `tabs()` de vis.ts. */
 export function extraTabs(host: TabHost, s: GameState): { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement; order: number }[] {
@@ -190,6 +192,17 @@ export function showPendingCutscene(s: GameState, rerender: () => void, skip: bo
       for (const c of quiet) { c.seen = true; c.data.quiet23 = true; sceneDone(s, c); }
       for (const f of ON_QUIET23) f(s, quiet);
       pending = pending.filter((c) => !quiet.includes(c));
+      if (!pending.length) { rerender(); return false; }
+    }
+  }
+  // r28 (F3): orçamento único de atenção (story28) — no máximo 2 cenas por avanço e 3 por mês; decisões sempre passam
+  if (!skip && SCENE_GATE28.f) {
+    const ok = new Set(SCENE_GATE28.f(s, pending));
+    const over = pending.filter((c) => !ok.has(c.id));
+    if (over.length) {
+      for (const c of over) { c.seen = true; c.data.quiet23 = true; sceneDone(s, c); }
+      for (const f of ON_QUIET23) f(s, over);
+      pending = pending.filter((c) => ok.has(c.id));
       if (!pending.length) { rerender(); return false; }
     }
   }
