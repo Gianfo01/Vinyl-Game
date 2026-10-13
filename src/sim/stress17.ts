@@ -11,6 +11,7 @@ import { l, type L } from '../data/world';
 import { registerExt4 } from './ext4';
 import { facts17, type Fact } from './facts17';
 import type { Act, GameState, Person } from './types';
+import { actsNow27 } from './tickcache27';
 
 export interface Stress17State {
   /** desgaste de longo prazo por pessoa (0..100) */
@@ -89,7 +90,7 @@ function actsOfP(s: GameState, pid: string): Act[] {
   let c = AOP.get(s);
   if (!c || c.k !== k) {
     const m = new Map<string, Act[]>();
-    for (const a of Object.values(s.acts)) if (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus') for (const id of a.members) { const l0 = m.get(id); if (l0) l0.push(a); else m.set(id, [a]); }
+    for (const a of actsNow27(s)) if (a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus') for (const id of a.members) { const l0 = m.get(id); if (l0) l0.push(a); else m.set(id, [a]); }
     c = { k, m };
     AOP.set(s, c);
   }

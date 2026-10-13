@@ -28,6 +28,7 @@ import { ownerOf } from '../people/owner';
 import { _secrets23, addSecret23, raise23, sec23, secretsOf23, type Sec23 } from '../secrets23';
 import { vices } from '../vices';
 import { OFF_AUD27 } from './off';
+import { actsNow27 } from '../../tickcache27';
 
 const N = (pt: string, en: string): L => l(pt, en);
 
@@ -248,7 +249,7 @@ function npcMonth(s: GameState): void {
       st.npc[`lb:${lb.id}`] = { o: o.id, w: s.week, amt, miss: 0, last: -99 };
     }
     // artistas viciados (dinheiro para o vício) — de qualquer selo, inclusive o seu
-    for (const a of Object.values(s.acts)) {
+    for (const a of actsNow27(s)) {
       if ((a.status !== 'active' && a.status !== 'emerging') || a.fame < 10) continue;
       for (const pid of a.members) {
         const p = s.persons[pid];
@@ -298,7 +299,7 @@ function collect(s: GameState, x: Sec23, r: Rng): void {
   if (s.week - e.last < 13 || !r.chance(0.12)) return;
   e.last = s.week; e.miss++;
   addStress(s, pid, 10, N('Ameaçado(a) por cobradores', 'Threatened by collectors'));
-  const a = Object.values(s.acts).find((y) => y.members.includes(pid) && (y.status === 'active' || y.status === 'emerging'));
+  const a = actsNow27(s).find((y) => y.members.includes(pid) && (y.status === 'active' || y.status === 'emerging'));
   if (a) a.momentum = clamp(a.momentum - 2, -100, 100);
   const t = fmtL(N('{p} recebe "uma visita" de cobradores de {o}.', '{p} gets "a visit" from {o}\'s collectors.'), { p: p.name, o: o?.name ?? N('um agiota', 'a loan shark') });
   emitFact(s, { kind: 'crime', actors: [o?.key ?? 'shark', pid, ...(a ? [a.id] : [])], place: a?.city, severity: 30, visibility: x.real ? 'secret' : 'rumor', tags: ['shark', 'threat', 'bad'], text: t, src: 'shark27' });

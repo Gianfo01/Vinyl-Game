@@ -31,6 +31,7 @@ import { shield18, startFeud18 } from './feud18';
 import { goSolo16 } from './lineup16';
 import { registerDimAdj18 } from './quality18';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 /** Editoras por época (nomes reais só com nomes reais ligados). */
 const PUB19: [string, string, number, number][] = [
@@ -161,7 +162,7 @@ function ghostWrite(s: GameState, g: Ghost19, r: Rng): void {
         { n: g.songs.length, h: g.hits, v: usd(hushCost19(s, g)), d: g.nda ? l(' Há NDA: se revelar, o escândalo é maior.', ' There is an NDA: if they talk, the scandal is bigger.') : '' }),
       ref: { g: g.id }, actions: [{ id: 'credit', label: l('Dar crédito', 'Give credit') }, { id: 'pay', label: l('Pagar o silêncio', 'Pay for silence') }, { id: 'end', label: l('Encerrar o acordo', 'End the deal') }] });
   }
-  const own = Object.values(s.acts).find((x) => x.members.includes(p.id) && x.status === 'active');
+  const own = actsNow27(s).find((x) => x.members.includes(p.id) && x.status === 'active');
   const pr = g.grudge < 50 ? 0 : ((g.grudge - 40) / 600) * (g.nda ? 0.4 : 1) + (own && own.fame >= 30 ? 0.03 : 0);
   if (pr > 0 && r.chance(pr)) reveal(s, g, r);
 }
@@ -176,7 +177,7 @@ function reveal(s: GameState, g: Ghost19, r: Rng): void {
   scandal(s, a.id, 'conduct', sev, l('Ghostwriter revelado', 'Ghostwriter revealed'), { text: t, cause: [f.id], tags: ['ghost', 'credit'] });
   for (const sid of g.songs) { const so = s.songs[sid]; if (so) cutIn(so, p.id, 0.3); }
   // vira solo: a revelação é o lançamento da carreira (fora do modo exato, ou se não for gente real)
-  const own = Object.values(s.acts).some((x) => x.members.includes(p.id) && x.status === 'active');
+  const own = actsNow27(s).some((x) => x.members.includes(p.id) && x.status === 'active');
   if (!own && (histMode(s) !== 'strict' || !shield18(s, `p:${p.id}`))) {
     const solo = goSolo16(s, r, p, a);
     solo.fame = Math.max(solo.fame, clamp(10 + g.hits * 4, 8, 40));
@@ -188,7 +189,7 @@ function reveal(s: GameState, g: Ghost19, r: Rng): void {
 function npcGhosts(s: GameState, r: Rng): void {
   const st = wr19(s);
   if (s.year < 1950 || st.gh.filter((g) => !g.mine && g.st === 'on').length >= 3 || !r.chance(0.04)) return;
-  const stars = Object.values(s.acts).filter((a) => a.owner && a.owner !== 'player' && a.status === 'active' && a.fame >= 55 && !shield18(s, a.id) && !st.gh.some((g) => g.act === a.id));
+  const stars = actsNow27(s).filter((a) => a.owner && a.owner !== 'player' && a.status === 'active' && a.fame >= 55 && !shield18(s, a.id) && !st.gh.some((g) => g.act === a.id));
   if (!stars.length) return;
   const a = r.pick(stars);
   const { p, from } = ghostCandidate(s, r, a.city);
@@ -203,7 +204,7 @@ function offers(s: GameState, r: Rng): void {
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');
   if (!mine.length) return;
   const act = r.pick(mine);
-  const pool = Object.values(s.acts).filter((x) => x.owner !== 'player' && !x.playerBand && x.status !== 'retired' && familyOf(x.genre) === familyOf(act.genre));
+  const pool = actsNow27(s).filter((x) => x.owner !== 'player' && !x.playerBand && x.status !== 'retired' && familyOf(x.genre) === familyOf(act.genre));
   let w: Person | undefined;
   for (let i = 0; i < 12 && pool.length && !w; i++) { const x = r.pick(pool); const p = s.persons[x.members[0]]; if (p?.alive && p.skills.comp >= 55 && !shield18(s, `p:${p.id}`)) w = p; }
   if (!w) return;
@@ -245,7 +246,7 @@ export const plagSettle19 = (s: GameState, so: Song) => money(s, 3000 + Math.min
  *  "ideia emprestada" da composição jogável, src/sim/sys/compose27.ts). */
 export function openPlagSuit19(s: GameState, r: Rng, so: Song): boolean {
   const st = wr19(s);
-  const pool = Object.values(s.acts).filter((x) => x.owner !== 'player' && x.status !== 'retired' && x.fame >= 20 && familyOf(x.genre) === familyOf(so.genre) && !shield18(s, x.id));
+  const pool = actsNow27(s).filter((x) => x.owner !== 'player' && x.status !== 'retired' && x.fame >= 20 && familyOf(x.genre) === familyOf(so.genre) && !shield18(s, x.id));
   if (!pool.length) return false;
   const other = r.pick(pool);
   const su: Suit19 = { id: `pl${++st.seq}`, dir: 'in', song: so.id, other: other.id, st: 'open', odds: plagOdds19(s, so, 'in'), amt: plagSettle19(s, so) };
@@ -369,7 +370,7 @@ onFact('cowrite_split', (s, f) => {
   for (const a of ps) for (const b of ps) if (a !== b) a.rel[b.id] = clamp((a.rel[b.id] ?? 0) + d, -100, 100);
 }, 'writers19:rel');
 onFact('ghostwriter_revealed', (s, f) => {
-  const star = s.acts[f.actors[0]], own = Object.values(s.acts).find((x) => x.members.includes(f.actors[1]) && x.status === 'active');
+  const star = s.acts[f.actors[0]], own = actsNow27(s).find((x) => x.members.includes(f.actors[1]) && x.status === 'active');
   if (star && own && own.id !== star.id) startFeud18(s, own.id, star.id, l('O ghostwriter revelou tudo', 'The ghostwriter told everything'), 18);
   if (star) for (const pid of star.members) addStress(s, pid, 10, l('Ghostwriter revelado', 'Ghostwriter revealed'));
   headline19(s, f.text, 3);

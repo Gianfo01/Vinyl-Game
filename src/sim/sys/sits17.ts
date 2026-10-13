@@ -14,6 +14,7 @@ import { nudge16 } from './fame16';
 import { leaders } from './leaders10';
 import { P, healthOf } from './people/state';
 import { registerSituation, type SitCtx } from './situations17';
+import { actsNow27 } from '../tickcache27';
 
 const pay = (s: GameState, ctx: SitCtx, key: string, real: number, memo: string): void => {
   const act = ctx.act ? s.acts[ctx.act] : undefined;
@@ -22,7 +23,7 @@ const pay = (s: GameState, ctx: SitCtx, key: string, real: number, memo: string)
   else { const lb = act.owner ? s.labels[act.owner] : undefined; if (lb) lb.cash -= v; else act.cash -= v; }
 };
 const live = (a?: Act): a is Act => !!a && (a.status === 'active' || a.status === 'emerging');
-const notable = (s: GameState): Act[] => { const mine = new Set(playerActs(s)); return Object.values(s.acts).filter((a) => live(a) && (mine.has(a.id) || a.fame >= 30)); };
+const notable = (s: GameState): Act[] => { const mine = new Set(playerActs(s)); return actsNow27(s).filter((a) => live(a) && (mine.has(a.id) || a.fame >= 30)); };
 const leadOf = (s: GameState, a: Act): Person | undefined => s.persons[a.leaderId && a.members.includes(a.leaderId) ? a.leaderId : a.members[0]];
 const F = (P0: { facets: Record<string, number> } | null, k: string): number => (P0?.facets[k] ?? 50) / 50;
 const nm = (s: GameState, id: string): string => s.persons[id]?.name ?? s.acts[id]?.name ?? s.labels[id]?.name ?? leaders(s)?.L[id.replace(/^l:/, '')]?.name ?? '?';
@@ -144,7 +145,7 @@ function leak(s: GameState, sec: ReturnType<typeof P>['secrets'][number], c: Sit
   sec.leaked = true;
   sec.known = true;
   if (sec.owner === 'owner') { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 5 * sec.severity, 0, 100); notify(s, fmtL(l('{b} vazou um segredo seu.', '{b} leaked a secret of yours.'), { b: nm(s, c.cast.label) }), 'bad'); return; }
-  const a = Object.values(s.acts).find((x) => x.members.includes(sec.owner));
+  const a = actsNow27(s).find((x) => x.members.includes(sec.owner));
   const K: Record<string, Parameters<typeof scandal>[2]> = { affair: 'sex', child: 'sex', addiction: 'drugs', tax: 'money', debt: 'money', payola: 'money', plagiarism: 'money', fake_bio: 'conduct' };
   if (a) scandal(s, a.id, K[sec.kind] ?? 'conduct', 25 + sec.severity * 18, fmtL(l('{b} vaza: {p} esconde algo.', '{b} leaks: {p} is hiding something.'), { b: nm(s, c.cast.label), p: nm(s, sec.owner) }), { person: sec.owner });
 }
@@ -217,7 +218,7 @@ registerSituation({
 const forSale = (s: GameState): { id: string; owner: string; act: Act } | null => {
   for (const sec of P(s).secrets) {
     if (sec.known || sec.leaked || sec.owner.startsWith('label:') || sec.owner === 'owner') continue;
-    const a = Object.values(s.acts).find((x) => x.members.includes(sec.owner) && live(x) && x.owner !== 'player' && x.fame >= 30);
+    const a = actsNow27(s).find((x) => x.members.includes(sec.owner) && live(x) && x.owner !== 'player' && x.fame >= 30);
     if (a) return { id: sec.id, owner: sec.owner, act: a };
   }
   return null;

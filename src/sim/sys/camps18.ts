@@ -19,6 +19,7 @@ import type { Act, GameState, Song } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
 import { canSell, closeSale, fairTerms, sales } from './songsale';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 export interface Camp18 { id: string; host: string; w1: number; size: number; top: number; songs?: string[] }
 export interface Pitch18 { id: string; a: string; g: string; minQ: number; until: number; fee: number; cut: number; done?: string }
@@ -154,7 +155,7 @@ registerSimHook('month', 'camps18', (s) => {
   const r = Rng.fromSeed(`${s.config.seed}|pitch18m|${s.week}`);
   st.pitches = st.pitches.filter((p) => p.until >= s.week - 8).slice(-10);
   if (st.pitches.filter((p) => !p.done && p.until >= s.week).length < 3 && r.chance(0.55)) {
-    const stars = Object.values(s.acts).filter((a: Act) => a.owner && a.owner !== 'player' && a.status === 'active' && !a.deceased && a.fame >= 35);
+    const stars = actsNow27(s).filter((a: Act) => a.owner && a.owner !== 'player' && a.status === 'active' && !a.deceased && a.fame >= 35);
     if (stars.length) {
       const a = r.weighted(stars, (x) => x.fame)!;
       const cut = a.fame >= 70 && (s.year < 1975 || r.chance(0.35)) ? (r.chance(0.5) ? 0.5 : 0.33) : a.fame >= 55 && r.chance(0.2) ? 0.25 : 0;

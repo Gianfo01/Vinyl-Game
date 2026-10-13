@@ -26,6 +26,7 @@ import { addSignal, spawnProceduralAct } from '../worldgen';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { CH18, disc18 } from './discover18';
 import { energyLeft, spendEnergy } from './life';
+import { actsNow27 } from '../tickcache27';
 
 export interface Trip23 {
   id: string;
@@ -174,7 +175,7 @@ export const FIND23: ((s: GameState, a: Act, tr: Trip23) => number)[] = [];
 function reqOf(tr: Trip23) { return tr.req ? { genreFamily: tr.fam, market: tr.market, level: tr.req.level, role: tr.req.role } : undefined; }
 function tripFind(s: GameState, r: Rng, tr: Trip23): Act | undefined {
   const req = reqOf(tr);
-  const cands = Object.values(s.acts).filter((a) => signalEligible20(s, a) && (tr.city ? a.city === tr.city : cityById[a.city]?.market === tr.market) && (tr.fam === 'any' || familyOf(a.genre) === tr.fam) && (!req || matchesReq20(a, req)));
+  const cands = actsNow27(s).filter((a) => signalEligible20(s, a) && (tr.city ? a.city === tr.city : cityById[a.city]?.market === tr.market) && (tr.fam === 'any' || familyOf(a.genre) === tr.fam) && (!req || matchesReq20(a, req)));
   // olheiro bom enxerga potencial; o mediano vai atrás de quem já faz barulho
   const a = cands.length && r.chance(0.75) ? r.weighted(cands, (x) => (1 + (x.potential / 40) * (tr.skill / 60) + x.fame / 30) * FIND23.reduce((m, f) => m * f(s, x, tr), 1)) : undefined;
   if (a) return a;

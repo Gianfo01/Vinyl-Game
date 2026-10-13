@@ -26,8 +26,8 @@ export const HUBS27: Hub27[] = [
   hub('deals', 'people', l('Contratos', 'Contracts'), 'contract', l('Mercado de contratos e o lado do artista.', 'Contract market and the artist side.'), ['contracts19', 'artist18']),
   hub('scout', 'people', l('Descobrir talentos', 'Discover talent'), 'fans', l('Procurar, acompanhar e formar artistas.', 'Search, track and train artists.'), ['market', 'knownacts27', 'directory', 'talent18']),
   hub('pros', 'people', l('Bastidores', 'Behind the scenes'), 'handshake', l('Empresários, produtores e gestão de carreira.', 'Managers, producers and career management.'), ['management', 'managers14', 'producers15']),
-  // Projetos (9 → 3)
-  hub('record', 'projects', l('Fazer um disco', 'Make a record'), 'disc', l('Projeto → compor → gravar → lançar.', 'Project → write → record → release.'), ['project', 'creation', 'studio', 'releases']),
+  // Projetos (10 → 3) — o mercado de canções (SONG) fica entre compor e gravar, como no menu da r25
+  hub('record', 'projects', l('Fazer um disco', 'Make a record'), 'disc', l('Projeto → compor → gravar → lançar.', 'Project → write → record → release.'), ['project', 'creation', 'songmkt27', 'studio', 'releases']),
   hub('catalog', 'projects', l('Catálogo e reviver', 'Catalog and revival'), 'cd', l('O que já saiu e como fazer render de novo.', 'What is out and how to make it pay again.'), ['catalog', 'tribute19', 'media19']),
   hub('studiobiz', 'projects', l('Estúdio e editora', 'Studio and publishing'), 'mic', l('Os negócios de estúdio e de edição.', 'The studio and publishing businesses.'), ['studio12', 'publishing16']),
   // Ao vivo (7 → 2)

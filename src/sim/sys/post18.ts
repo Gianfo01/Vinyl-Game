@@ -28,6 +28,7 @@ import { logShot18, type Kind18 } from './cine18';
 import { nudge16 } from './fame16';
 import { countryOfCity } from '../../data/geo';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 const F = fmtL;
 
@@ -74,7 +75,7 @@ export function post18(s: GameState): Post18 {
 }
 const rng = (s: GameState, tag: string) => Rng.fromSeed(`${s.config.seed}:post18:${tag}`);
 const log = (s: GameState, t: L) => { const st = post18(s); st.log.push([s.year, s.month, t]); if (st.log.length > 60) st.log.shift(); };
-export const actOfP18 = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid));
+export const actOfP18 = (s: GameState, pid: string): Act | undefined => actsNow27(s).find((a) => a.members.includes(pid));
 /** R19 (afterlife19, 11.8): ganchos do espólio como ator — quem guarda os masters bloqueia/ajusta projetos; opinião dos herdeiros pesa. */
 export const POST19: { block?: (s: GameState, pid: string, k: PK18) => L | null; adj?: (s: GameState, pid: string, k: PK18) => { d: number; why: L } | null; held?: (s: GameState, actId: string) => boolean } = {};
 const mine = (a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
@@ -105,7 +106,7 @@ const majority = (e: Est18): Heir18['st'] => { const c = { guard: 0, cash: 0, ar
 /** Quem pode virar projeto: mortos com obra (seus ou de terceiros) e, para alguns tipos, seus atos vivos. */
 export function cands18(s: GameState): { pid: string; act: Act; dead: boolean }[] {
   const out: { pid: string; act: Act; dead: boolean }[] = [];
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (!mine(a) && a.fame < 25) continue;
     const dead = a.members.filter((id) => s.persons[id] && !s.persons[id].alive);
     for (const id of dead.slice(0, 2)) out.push({ pid: id, act: a, dead: true });
@@ -395,7 +396,7 @@ function altWorld18(s: GameState): void {
   const st = post18(s);
   const r = rng(s, `alt:${s.year}:${s.month}`);
   if (!r.chance(0.03)) return;
-  const pool = Object.values(s.acts).filter((a) => !mine(a) && a.fame >= 55 && a.members.some((id) => s.persons[id] && !s.persons[id].alive));
+  const pool = actsNow27(s).filter((a) => !mine(a) && a.fame >= 55 && a.members.some((id) => s.persons[id] && !s.persons[id].alive));
   if (!pool.length) return;
   const a = r.pick(pool);
   const k: PK18 = s.year >= 2018 && r.chance(0.5) ? 'holo_tour' : s.year >= 2012 && r.chance(0.4) ? 'holo_show' : 'biopic';

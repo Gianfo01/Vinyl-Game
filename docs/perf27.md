@@ -144,3 +144,60 @@ tests/r27-consistency.test.ts tests/r27-factseed.test.ts tests/r27-world.test.ts
 tests/r27-int.test.ts tests/r27-flow.test.ts tests/r27-flow2.test.ts tests/r27-audit.test.ts tests/r27-known.test.ts`:
 174 de 176 testes passaram e 1 foi pulado. O teste de tempo do r14-db falhou nessa rodada por disputa de CPU, com
 1523 ms/mês. Rodado sozinho 3 vezes, passou nas 3 (1406, 1409 e 1419 ms/mês). `npx tsc --noEmit` passou limpo.
+
+## Rodada 2 (sobre `73ec77d`: AUD1, SONG, CTX já integrados)
+
+Depois do merge, o r14-db "enorme" voltou a ficar perto do limite: 1505–1542 ms/mês no vitest, segundo a medição da
+sessão integradora. Pelo perfil, voltaram a subir week:hype12 (130 ms no bundle), week:charts7, compose:sound e o
+`createGame` que roda dentro de `simulate`.
+
+### O que mudou (resultados idênticos)
+
+1. **hype17/hype12: índice ator → fato mais recente** (`withFactIx17`). O laço semanal do hype chamava
+   `recentFacts` uma vez por ato, varrendo 2 meses de fatos a cada vez. Agora um índice é montado sob demanda e vale
+   só durante esse laço. O laço não emite nem altera fatos; fora dele os fatos podem mudar (visibilidade revelada,
+   fato substituído no lugar), por isso o índice não sobrevive ao laço. O filtro é o mesmo (≥ 25, não secreto,
+   2 meses) e devolve o primeiro fato do mais novo para o mais velho. **hype12: 130 → 61 ms/mês.**
+2. **reviews.ctxOf: candidatos por (ano, família)** (`withRivalIx27`, só dentro do laço de resenhas de
+   `mediaMonth`). Antes, cada resenha percorria os lançamentos do ano inteiro com `familyOf`. Agora os candidatos são
+   separados uma vez, na mesma ordem; a qualidade é lida na hora e o desempate é `>` estrito. O laço não cria nem
+   apaga lançamentos, nem muda gênero, ano ou qualidade.
+3. **relidx17.allReleases17 fora do passo:** `noteRelease17` copiava a lista inteira (10 mil) a cada lançamento
+   inserido. Ao semear a base enorme no `createGame`, isso virava O(n²). Agora os lançamentos ficam pendentes e a
+   próxima leitura faz uma cópia só. **`createGame` (enorme 2010) caiu de ~880 ms para ~580 ms.** Como `simulate`
+   chama `createGame`, isso também baixa o número por mês do teste.
+4. **sound/moments.momentMarks:** dentro do passo do relógio, um índice diz quais atos têm marcas `mom:`. Só
+   `markMoment` escreve essas chaves e atualiza o índice; ninguém apaga. Atos sem marca saem direto; os valores
+   continuam lidos de `s.flags`, na ordem de `NEW_MOMENTS`.
+5. `actidx17.ix` e as varreduras restantes nos sistemas novos e antigos que apareciam no perfil (songmkt27, scout23,
+   night27, botbiz27, rivals8, money19, writers19, fakes19, love17 e outros, 91 pontos) passaram a usar
+   `actsNow27`/`releasesNow27`.
+
+### Medições (rodada 2)
+
+| medição | 73ec77d | depois |
+|---|---:|---:|
+| bundle, enorme 2010, avanço/mês | ~1150 ms | ~1070–1115 ms |
+| bundle, week:hype12 | 130 ms | 61 ms |
+| vitest r14-db sozinho, `simulate(1 ano)/mês` (máquina ociosa) | 1300–1393 ms | **1231–1245 ms** |
+| vitest r14-db, alternando base/novo com outra suíte rodando | 1380 / 1434 / 1859 ms | 1297 / 1345 / 1308 ms |
+| `createGame` enorme 2010 (vitest) | 875–908 ms | 545–642 ms |
+
+Com a máquina ociosa, o r14-db sozinho ficou em ≈1,24 s/mês, abaixo da meta de ~1,35 s. Um ponto de cautela: a
+sessão integradora mediu o base em 1505–1542 ms, mais lento que os 1300–1393 ms medidos aqui. A melhora relativa
+nesta rodada foi de ~8–10% no mês (mais ~300 ms no `createGame`). Numa máquina como a dela, isso deve dar perto de
+1,35–1,40 s/mês.
+
+### Determinismo (rodada 2, contra 73ec77d)
+
+`scripts/det27.mts`, 4 cenários × 12 meses. Todos os 48 hashes mensais são iguais entre `73ec77d` e o branch:
+
+| cenário | hash após 12 meses |
+|---|---|
+| m1962 (seedA, medium) | `bdd4ec6360` |
+| m1985 (seedB, medium) | `a157bbfecc` |
+| m2005 (seedC, medium) | `2c68b9cd46` |
+| h2010 (r14perf, huge) | `8b017215e2` |
+
+Testes: passaram r27-m2 (os 48 valores-referência), r19-infra, r16-playbot, r27-eggs, r27-consistency, r27-world,
+r27-flow e r27-int (140 passados, 1 pulado). O r14-db passa sozinho. `npx tsc --noEmit` passou limpo.

@@ -62,6 +62,11 @@ export function criticWeights(c: CriticDef): Record<Aspect, number> {
   return w;
 }
 
+// r27: índice (ano, família) → lançamentos, válido só dentro de withRivalIx27 (o laço de resenhas do mês, que não
+// cria/apaga lançamentos nem muda gênero, ano ou qualidade de ninguém). A qualidade é lida na hora.
+let RIX: { s: GameState; m: Map<string, Release[]> } | null = null;
+export function withRivalIx27<T>(s: GameState, fn: () => T): T { const prev = RIX; RIX = { s, m: new Map() }; try { return fn(); } finally { RIX = prev; } }
+
 function ctxOf(s: GameState, rel: Release): ReviewCtx {
   const act = s.acts[rel.actId];
   const prevs = (act?.releases ?? []).map((id) => s.releases[id]).filter((x) => x && x.id !== rel.id && x.week < rel.week && !x.reissueOf).sort((a, b) => b.week - a.week);
@@ -76,7 +81,17 @@ function ctxOf(s: GameState, rel: Release): ReviewCtx {
   if (act) {
     const fam = familyOf(act.genre);
     let best: Release | undefined;
-    for (const x of releasesOfYear17(s, rel.year)) {
+    if (RIX && RIX.s === s) {
+      // r27 (desempenho): candidatos do (ano, família) na mesma ordem de releasesOfYear17, separados uma vez por laço
+      const k = `${rel.year}|${fam}`;
+      let xs = RIX.m.get(k);
+      if (!xs) {
+        xs = [];
+        for (const x of releasesOfYear17(s, rel.year)) { const xa = s.acts[x.actId]; if (x.year === rel.year && xa && familyOf(xa.genre) === fam) xs.push(x); }
+        RIX.m.set(k, xs);
+      }
+      for (const x of xs) if (x.actId !== rel.actId && x.id !== rel.id && (!best || x.q > best.q)) best = x;
+    } else for (const x of releasesOfYear17(s, rel.year)) {
       if (x.year !== rel.year || x.actId === rel.actId || x.id === rel.id) continue;
       const xa = s.acts[x.actId];
       if (!xa || familyOf(xa.genre) !== fam) continue;

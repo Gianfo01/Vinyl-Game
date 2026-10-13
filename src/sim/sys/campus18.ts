@@ -98,6 +98,8 @@ export interface Campus18 {
   nm: Record<string, [string, string, BKind]>;
   log: { y: number; m: number; t: L }[];
   seq: number;
+  /** r27 (LOTS): bairros já abertos (índice em DIST18; nunca diminui). Saves antigos: ausente = só o centro. */
+  dist?: number;
 }
 declare module '../ext4' { interface Ext4 { campus18: Campus18 } }
 const fresh = (): Campus18 => ({ born: {}, lvl: {}, ren: {}, lot: {}, dmg: {}, gone: [], built: {}, proj: [], snaps: [], upl: {}, nm: {}, log: [], seq: 0 });
@@ -167,7 +169,7 @@ export const STATE18: Record<BState, L> = {
   damaged: l('Danificado', 'Damaged'), closed: l('Fechado', 'Closed'), sold: l('Vendido', 'Sold'),
 };
 
-// ---------------------------------------------------------------- lotes do campus (grade isométrica 20×16)
+// ---------------------------------------------------------------- lotes do campus (grade isométrica 20×16; r27: cresce até 29×24)
 
 export interface Lot18 { gx: number; gy: number; w: number; d: number; name: L; pm: number; vis: number }
 /** Lote 0 = sede; 11 = residencial (sua casa). Ruas: avenida em gy 7–8, rua em gx 9–10. */
@@ -186,8 +188,45 @@ export const LOTS18: Lot18[] = [
   { gx: 0, gy: 13, w: 4, d: 3, name: l('Bairro residencial', 'Residential corner'), pm: 0.9, vis: 0.6 },
   { gx: 17, gy: 0, w: 3, d: 3, name: l('Beco norte', 'North alley'), pm: 0.7, vis: 0.6 },
   { gx: 0, gy: 0, w: 4, d: 3, name: l('Terreno do rio', 'Riverside plot'), pm: 0.85, vis: 0.8 },
+  // r27 (LOTS): bairros novos — só ACRESCENTAM lotes ao fim (os índices 0–13 não mudam: saves e referências seguem).
+  // Leste (rua nova em gx 20–21; quarteirões em gx 22–28)
+  { gx: 22, gy: 3, w: 4, d: 4, name: l('Esquina da rua nova', 'New street corner'), pm: 1.2, vis: 1.2 },
+  { gx: 26, gy: 3, w: 3, d: 4, name: l('Fim da avenida', 'Avenue end'), pm: 1, vis: 1 },
+  { gx: 22, gy: 0, w: 4, d: 3, name: l('Galpão do leste', 'East warehouse plot'), pm: 0.8, vis: 0.7 },
+  { gx: 26, gy: 0, w: 3, d: 3, name: l('Fundos do leste', 'East back lot'), pm: 0.7, vis: 0.6 },
+  { gx: 22, gy: 9, w: 4, d: 4, name: l('Esquina leste-sul', 'East-south corner'), pm: 1.2, vis: 1.2 },
+  { gx: 26, gy: 9, w: 3, d: 4, name: l('Lote da ponta', 'Far end lot'), pm: 0.95, vis: 0.9 },
+  { gx: 22, gy: 13, w: 4, d: 3, name: l('Rua de trás do leste', 'East back street'), pm: 0.8, vis: 0.75 },
+  { gx: 26, gy: 13, w: 3, d: 3, name: l('Terreno baldio', 'Vacant plot'), pm: 0.7, vis: 0.6 },
+  // Avenida sul (avenida nova em gy 16–17; lotes em gy 18–20)
+  { gx: 0, gy: 18, w: 4, d: 3, name: l('Avenida nova, oeste', 'New avenue, west'), pm: 0.9, vis: 0.9 },
+  { gx: 4, gy: 18, w: 5, d: 3, name: l('Esquina da avenida nova', 'New avenue corner'), pm: 1.1, vis: 1.1 },
+  { gx: 11, gy: 18, w: 5, d: 3, name: l('Esquina da avenida sul', 'South avenue corner'), pm: 1.2, vis: 1.2 },
+  { gx: 16, gy: 18, w: 4, d: 3, name: l('Lote da avenida nova', 'New avenue lot'), pm: 1, vis: 1 },
+  { gx: 22, gy: 18, w: 4, d: 3, name: l('Cruzamento sudeste', 'Southeast crossing'), pm: 1.1, vis: 1.1 },
+  { gx: 26, gy: 18, w: 3, d: 3, name: l('Ponta sudeste', 'Southeast tip'), pm: 0.8, vis: 0.7 },
+  // Bairro novo (gy 21–23, atrás da avenida nova)
+  { gx: 0, gy: 21, w: 4, d: 3, name: l('Vila do oeste', 'West village'), pm: 0.75, vis: 0.6 },
+  { gx: 4, gy: 21, w: 5, d: 3, name: l('Loteamento novo', 'New subdivision'), pm: 0.8, vis: 0.7 },
+  { gx: 11, gy: 21, w: 5, d: 3, name: l('Quadra nova', 'New block'), pm: 0.85, vis: 0.75 },
+  { gx: 16, gy: 21, w: 4, d: 3, name: l('Beira do trilho', 'By the tracks'), pm: 0.7, vis: 0.6 },
+  { gx: 22, gy: 21, w: 4, d: 3, name: l('Conjunto novo', 'New estate'), pm: 0.8, vis: 0.7 },
+  { gx: 26, gy: 21, w: 3, d: 3, name: l('Último lote', 'Last plot'), pm: 0.7, vis: 0.55 },
 ];
 export const HOME_LOT18 = 11;
+
+/** r27 (LOTS): bairros da cidade-sede. O centro (lotes 0–13) existe sempre; os outros abrem com a época (`year`), com o
+ *  tamanho do selo (nível da sede `hq`) ou quando faltaria terreno: a cidade CRESCE para que sempre sobrem pelo menos
+ *  MIN_FREE18 lotes livres (vizinhos deixam 3 deles livres → sempre há placas "À venda"). Abrem em ordem e nunca fecham.
+ *  `end` = fim (exclusivo) dos lotes abertos; `gw`×`gh` = grade do mapa com esse bairro (ui/pixel/campus18px). */
+export interface Dist18 { name: L; end: number; gw: number; gh: number; hq: number; year: number }
+export const DIST18: Dist18[] = [
+  { name: l('Centro', 'Downtown'), end: 14, gw: 20, gh: 16, hq: 0, year: 0 },
+  { name: l('Quarteirões do leste', 'East blocks'), end: 22, gw: 29, gh: 16, hq: 2, year: 1960 },
+  { name: l('Avenida sul', 'South avenue'), end: 28, gw: 29, gh: 21, hq: 3, year: 1985 },
+  { name: l('Bairro novo', 'New quarter'), end: 34, gw: 29, gh: 24, hq: 4, year: 2010 },
+];
+export const MIN_FREE18 = 3;
 
 // ---------------------------------------------------------------- prédios derivados do estado
 
@@ -322,8 +361,8 @@ export function buildings18(s: GameState): Bld18[] {
   return out;
 }
 
-/** Lotes: fixos já atribuídos + preenchimento determinístico (não muda o estado). */
-export function layout18(s: GameState, bs: Bld18[]): Map<string, number> {
+/** Lotes entre os `n` primeiros: fixos já atribuídos + preenchimento determinístico (não muda o estado). */
+function layoutN(s: GameState, bs: Bld18[], n: number): Map<string, number> {
   const st = campus18(s);
   const m = new Map<string, number>();
   const used = new Set<number>();
@@ -337,17 +376,38 @@ export function layout18(s: GameState, bs: Bld18[]): Map<string, number> {
   for (const p of st.proj) used.add(p.lot);
   const order = bs.filter((b) => b.zone === 'campus' && !m.has(b.id)).sort((a, b) => a.since - b.since || (a.id < b.id ? -1 : 1));
   for (const b of order) {
-    const n = LOTS18.findIndex((_, i) => !used.has(i) && i !== HOME_LOT18);
-    if (n < 0) break;
-    fix(b.id, n);
+    const k = LOTS18.findIndex((_, i) => i < n && !used.has(i) && i !== HOME_LOT18);
+    if (k < 0) break;
+    fix(b.id, k);
   }
   return m;
 }
-/** Lotes livres para uma obra nova. */
+const freeN = (s: GameState, bs: Bld18[], n: number): number[] => {
+  const used = new Set(layoutN(s, bs, n).values());
+  return LOTS18.map((_, i) => i).filter((i) => i < n && i !== 0 && !used.has(i) && !(i === HOME_LOT18 && (P(s).owner?.house ?? -1) >= 0));
+};
+/** r27 (LOTS): bairros abertos agora (índice em DIST18). Puro: o que já abriu (save), a época, o tamanho do selo e
+ *  — a regra que garante terreno — a falta de lote livre (abre o próximo bairro até sobrarem MIN_FREE18). */
+export function dist18(s: GameState, bs: Bld18[] = buildings18(s)): number {
+  const st = campus18(s), last = DIST18.length - 1;
+  let d = Math.max(0, Math.min(last, st.dist ?? 0));
+  while (d < last && (s.player.hq >= DIST18[d + 1].hq || s.year >= DIST18[d + 1].year)) d++;
+  // lote já usado num bairro (save, obra em curso) mantém o bairro aberto
+  const top = Math.max(-1, ...Object.values(st.lot), ...st.proj.map((p) => p.lot), ...bs.map((b) => b.lot ?? -1));
+  while (d < last && top >= DIST18[d].end) d++;
+  while (d < last && freeN(s, bs, DIST18[d].end).length < MIN_FREE18) d++;
+  return d;
+}
+/** Quantos lotes (prefixo de LOTS18) estão abertos agora. */
+export const lotsOpen18 = (s: GameState, bs: Bld18[] = buildings18(s)): number => DIST18[dist18(s, bs)].end;
+/** Lotes: fixos já atribuídos + preenchimento determinístico nos bairros abertos (não muda o estado). */
+export function layout18(s: GameState, bs: Bld18[]): Map<string, number> {
+  return layoutN(s, bs, DIST18[dist18(s, bs)].end);
+}
+/** Lotes livres para uma obra nova (só nos bairros abertos; nunca menos de MIN_FREE18 enquanto houver bairro a abrir). */
 export function freeLots18(s: GameState): number[] {
-  const m = layout18(s, buildings18(s));
-  const used = new Set(m.values());
-  return LOTS18.map((_, i) => i).filter((i) => i !== 0 && !used.has(i) && !(i === HOME_LOT18 && (P(s).owner?.house ?? -1) >= 0));
+  const bs = buildings18(s);
+  return freeN(s, bs, DIST18[dist18(s, bs)].end);
 }
 
 // ---------------------------------------------------------------- obras
@@ -584,6 +644,12 @@ export function sync18(s: GameState): void {
     delete st.lvl[id]; delete st.lot[id]; delete st.nm[id];
   }
   st.gone = st.gone.filter((g) => s.year - g.y <= 1);
+  // r27 (LOTS): a cidade cresce (e não encolhe): grava o bairro aberto e anota no diário
+  const d = dist18(s, bs);
+  if (d > (st.dist ?? 0) || st.dist === undefined) {
+    if (st.dist !== undefined) for (let i = st.dist + 1; i <= d; i++) log(s, fmtL(l('A cidade cresce: novo bairro "{n}" com {k} lotes.', 'The city grows: a new district, "{n}", with {k} lots.'), { n: DIST18[i].name, k: DIST18[i].end - DIST18[i - 1].end }));
+    st.dist = d;
+  }
   // fixa os lotes atribuídos
   const m = layout18(s, bs);
   for (const [id, n] of m) if (!id.startsWith('c:') || st.built[id.slice(2) as 'store']) st.lot[id] = n;

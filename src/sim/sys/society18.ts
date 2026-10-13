@@ -32,6 +32,7 @@ import { shield18 } from './feud18';
 import { playerPerson } from './life';
 import { v17, vdef } from './venues17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const exact = (s: GameState) => histMode(s) === 'strict';
@@ -270,7 +271,7 @@ function censorMonth(s: GameState, r: Rng): void {
     if (exact(s) && s.config.realNames && s.year - y <= 1) emitFact(s, { kind: 'statement', actors: [], severity: 45, visibility: 'public', tags: ['censorship', 'soc18', 'chronicle'], src: 'soc18', text: t });
   }
   if (!exact(s) && s.month === 6) {
-    const pool = Object.values(s.acts).filter((a) => !mineAct(s, a) && a.fame >= 30 && a.status !== 'retired' && a.status !== 'split' && !st.exile[a.id] && regimeAt18(s, countryOfCity(a.city)));
+    const pool = actsNow27(s).filter((a) => !mineAct(s, a) && a.fame >= 30 && a.status !== 'retired' && a.status !== 'split' && !st.exile[a.id] && regimeAt18(s, countryOfCity(a.city)));
     if (pool.length && r.chance(0.3)) {
       const a = r.pick(pool), reg = regimeAt18(s, countryOfCity(a.city))!;
       const to = reg.exile.find((c) => cityById[c]);
@@ -383,9 +384,9 @@ function charityStep(s: GameState, r: Rng): void {
 export const UNESCO18: [string, number][] = [['sevilla', 2006], ['glasgow', 2008], ['bogota', 2012], ['liverpool', 2015], ['salvador', 2015], ['kingston', 2015], ['medellin', 2015], ['adelaide', 2015], ['kinshasa', 2015], ['kansas_city', 2017], ['auckland', 2017], ['chennai', 2017]];
 export function cityScore18(s: GameState, city: string): { v: number; why: [L, number][] } {
   const st = soc18(s), why: [L, number][] = [];
-  const acts = Object.values(s.acts).filter((a) => a.city === city && a.fame >= 40 && a.status !== 'split');
+  const acts = actsNow27(s).filter((a) => a.city === city && a.fame >= 40 && a.status !== 'split');
   if (acts.length) why.push([fmtL(l('{n} atos famosos da cidade', '{n} famous acts from the city'), { n: acts.length }), Math.min(35, acts.length * 4)]);
-  const legends = Object.values(s.acts).filter((a) => a.city === city && (a.awards ?? 0) >= 2).length;
+  const legends = actsNow27(s).filter((a) => a.city === city && (a.awards ?? 0) >= 2).length;
   if (legends) why.push([l('Lendas premiadas', 'Award-winning legends'), Math.min(15, legends * 3)]);
   const own = v17(s).own.filter((o) => vdef(o.id)?.city === city).length;
   if (own) why.push([l('Suas casas de show', 'Your venues'), own * 5]);

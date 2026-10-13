@@ -23,6 +23,7 @@ import { BOARD_SEAT, CONTROL, holdings as stakeHoldings, labelValue, npcAbsorb, 
 import { ventures } from './ventures9';
 import { withCatalogSums } from '../business';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- catálogo
 
@@ -757,7 +758,7 @@ function npcTrade(s: GameState): void {
   const r = Rng.fromSeed(`${s.config.seed}:bolsa10npc:${s.year}:${s.month}`);
   const rich = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 1_000_000));
   const lds = Object.values(s.labels).filter((x) => x.active && x.leaderId && leaders(s).L[x.leaderId]).map((x) => x.leaderId!);
-  const stars = Object.values(s.acts).filter((a) => a.fame >= 70 && a.status !== 'retired' && a.status !== 'split').map((a) => a.id);
+  const stars = actsNow27(s).filter((a) => a.fame >= 70 && a.status !== 'retired' && a.status !== 'split').map((a) => a.id);
   const fs = FUNDS.map((_, i) => i).filter((i) => s.year >= FUNDS[i].from);
   for (const id of Object.keys(st.q).sort()) {
     const q = st.q[id];

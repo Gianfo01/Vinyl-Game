@@ -1,4 +1,5 @@
-// Rodada 18 (campus18) — pixel art isométrica do "Nosso mundo": quarteirões da cidade-sede (grade 20×16),
+// Rodada 18 (campus18) — pixel art isométrica do "Nosso mundo": quarteirões da cidade-sede (grade 20×16; r27: a
+// grade e o canvas crescem com os bairros abertos — DIST18 em sim/sys/campus18 — até 29×24),
 // prédios com estilo da época em que foram erguidos/reformados (1889 → 2040), estados de obra (lote cercado,
 // andaime + guindaste, reforma com lona, fuligem de incêndio, tábuas de "vendido"), veículos por era,
 // pedestres, filas, fãs, protestos, polícia, imprensa, clima por estação e ciclo dia/noite.
@@ -7,20 +8,37 @@
 
 import { C, Px, mix, noise, shade, withAlpha, dith, type Col } from './px';
 import { drawText, textWidth } from './font';
-import { LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, type Style18 } from '../../sim/sys/campus18';
+import { DIST18, LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, type Style18 } from '../../sim/sys/campus18';
 import { ICON27, cityLook27, env27, era27, hqExt27, type BVis27, type CityLook27, type Env27, type Era27, type HqExt27, type Life27, type Sale27 } from './city27';
 import type { Landmark19 } from '../../data/landmarks19';
 import { LM_SLOTS27, drawLmIso27, outlineOuter } from './lmiso27';
 import { dusk27, paintSky27, skyCols27 } from './skyline27';
 
+/** Grade e canvas do CENTRO (o mapa original, 300×226). Com mais bairros a cena usa `geo18` (ver Scene18.geo). */
 export const GW = 20, GH = 16;
 export const MW = 300, MH = 226;
-const OX = GH * 8 + 6, OY = 76, HZ = 74;
-export const iso = (gx: number, gy: number): [number, number] => [OX + (gx - gy) * 8, OY + (gx + gy) * 4];
+const OY = 76, HZ = 74;
+/** r27 (LOTS): geometria do mapa para uma grade gw×gh (o centro dá exatamente 300×226 e a origem de sempre). */
+export interface Geo18 { gw: number; gh: number; mw: number; mh: number; ox: number }
+export const geo18 = (gw: number, gh: number): Geo18 => ({ gw, gh, mw: (gw + gh) * 8 + 12, mh: OY + (gw + gh) * 4 + 6, ox: gh * 8 + 6 });
+/** Geometria da cena em uso: buildScene18 define e drawFrame18 reativa (sprites e postes guardam coordenadas de tela). */
+let G: Geo18 = geo18(GW, GH);
+/** Geometria com os `d`+1 primeiros bairros abertos. */
+export const geoDist18 = (d: number): Geo18 => { const x = DIST18[Math.max(0, Math.min(DIST18.length - 1, d))]; return geo18(x.gw, x.gh); };
+/** Grade → tela numa geometria dada (pura; `iso` usa a da cena em uso). */
+export const isoAt18 = (g: Geo18, gx: number, gy: number): [number, number] => [g.ox + (gx - gy) * 8, OY + (gx + gy) * 4];
+export const iso = (gx: number, gy: number): [number, number] => isoAt18(G, gx, gy);
 /** Tela → grade (para o chão). */
-const unIso = (x: number, y: number): [number, number] => { const a = (x - OX) / 8, b = (y - OY) / 4; return [(a + b) / 2, (b - a) / 2]; };
-const ROAD = (gx: number, gy: number) => (gy >= 7 && gy < 9) || (gx >= 9 && gx < 11);
-const WALK = (gx: number, gy: number) => !ROAD(gx, gy) && ((gy >= 6.6 && gy < 9.4) || (gx >= 8.6 && gx < 11.4));
+const unIso = (x: number, y: number): [number, number] => { const a = (x - G.ox) / 8, b = (y - OY) / 4; return [(a + b) / 2, (b - a) / 2]; };
+/** r27 (LOTS): avenidas (início em gy, 2 de largura) e ruas (início em gx). O centro só tem a avenida 7 e a rua 9;
+ *  as outras aparecem quando o bairro abre (fora da grade não se desenha nada). */
+const HROADS = [7, 16], VROADS = [9, 20];
+const hIn = () => HROADS.filter((b) => b + 2 <= G.gh), vIn = () => VROADS.filter((a) => a + 2 <= G.gw);
+const hAt = (gy: number) => HROADS.find((b) => gy >= b && gy < b + 2), vAt = (gx: number) => VROADS.find((a) => gx >= a && gx < a + 2);
+const ROAD = (gx: number, gy: number) => hAt(gy) !== undefined || vAt(gx) !== undefined;
+/** Célula de avenida ou rua (todas, abertas ou não) — os testes conferem que nenhum lote cai na rua. */
+export const roadAt18 = ROAD;
+const WALK = (gx: number, gy: number) => !ROAD(gx, gy) && (HROADS.some((b) => gy >= b - 0.4 && gy < b + 2.4) || VROADS.some((a) => gx >= a - 0.4 && gx < a + 2.4));
 
 // ---------------------------------------------------------------- ambiente (estação, clima)
 
@@ -586,13 +604,14 @@ export function palette27(env: Env18): { skyTop: Col; skyBot: Col; grass: Col; g
 interface Ground27 { c: HTMLCanvasElement; lc: HTMLCanvasElement }
 function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Sprite18[], lms: Landmark19[], marks: Mark19[], look: CityLook27, sale: Sale27[]): Ground27 {
   const y = env.year;
-  const p = new Px(MW, MH), gl = new Px(MW, MH);
+  const p = new Px(G.mw, G.mh), gl = new Px(G.mw, G.mh);
   const road = y < 1910 ? C('#8a6e4c') : y < 1950 ? C('#6e6a66') : y < 2025 ? C('#44464e') : C('#4e5668');
   const walk = y < 1910 ? C('#b0946a') : y < 2025 ? C('#c4bcae') : C('#d0d4da');
   const pal = palette27(env);
   const { grass } = pal;
   const sea = env.rain ? C('#3a7aa0') : C('#2a8ad0'), sea2 = shade(sea, 0.25), sand = C('#ead8a8');
-  for (let py = 0; py < MH; py++) for (let px = 0; px < MW; px++) {
+  const { gw: GW, gh: GH } = G;
+  for (let py = 0; py < G.mh; py++) for (let px = 0; px < G.mw; px++) {
     const [gx, gy] = unIso(px + 0.5, py + 0.5);
     let c: Col;
     if (gx < 0 || gy < 0 || gx >= GW || gy >= GH) {
@@ -612,9 +631,11 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
       else if (y >= 1910 && y < 1950 && ((Math.floor(gx * 4) + Math.floor(gy * 4)) % 2 === 0)) c = shade(road, 0.06);
       if (y >= 1955) {
         const lc = y >= 2025 ? C('#60e0ff') : y >= 1975 ? C('#f0d040') : C('#e8e8e8');
-        if (gy >= 7 && gy < 9 && Math.abs(gy - 8) < 0.06 && Math.floor(gx * 2) % 2 === 0 && !(gx >= 9 && gx < 11)) c = lc;
-        if (gx >= 9 && gx < 11 && Math.abs(gx - 10) < 0.06 && Math.floor(gy * 2) % 2 === 0 && !(gy >= 7 && gy < 9)) c = lc;
-        if (((gx >= 8.9 && gx < 11.1 && (gy > 6.5 && gy < 7.1)) || (gy >= 6.9 && gy < 9.1 && gx > 11 && gx < 11.5)) && Math.floor((gx + gy) * 5) % 2 === 0) c = C('#e8e8e8');
+        const hb = hAt(gy), va = vAt(gx);
+        if (hb !== undefined && Math.abs(gy - hb - 1) < 0.06 && Math.floor(gx * 2) % 2 === 0 && va === undefined) c = lc;
+        if (va !== undefined && Math.abs(gx - va - 1) < 0.06 && Math.floor(gy * 2) % 2 === 0 && hb === undefined) c = lc;
+        // faixas de pedestre em cada cruzamento (r27: também nos dos bairros novos)
+        if (Math.floor((gx + gy) * 5) % 2 === 0 && VROADS.some((a) => HROADS.some((b) => (gx >= a - 0.1 && gx < a + 2.1 && gy > b - 0.5 && gy < b + 0.1) || (gy >= b - 0.1 && gy < b + 2.1 && gx > a + 2 && gx < a + 2.5)))) c = C('#e8e8e8');
       }
       if (env.snow && noise(px, py, 2) < 0.18) c = mix(c, C('#f4f8fc'), 0.7); // neve só nas bordas: a rua continua escura e legível
       if (env.rain) { c = shade(c, -0.1); if (noise(px, py, 8) < 0.04) c = shade(c, 0.35); } // poças refletindo
@@ -651,7 +672,7 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
   }
   const t = new T(p, 0, 0);
   // r19: árvores alinhadas na avenida (a partir de 1920); r27: palmeiras no trópico, galhos nus no inverno frio
-  if (y >= 1920) for (const gx of [2, 6, 14, 18]) { const [x, yy] = iso(gx + 0.3, 6.75); tree(t, x, yy, y, env.season, gx, env); }
+  if (y >= 1920) for (const b of hIn()) for (const gx of [2, 6, 14, 18, 24, 27]) { if (gx >= GW) continue; const [x, yy] = iso(gx + 0.3, b - 0.25); tree(t, x, yy, y, env.season, b === 7 ? gx : gx + b * 7, env); }
   // r27: lotes à venda (só os que você pode pagar): terreno capinado e placa "À VENDA" com a cor do tipo sugerido
   for (const sl of sale) {
     const l0 = LOTS18[sl.lot];
@@ -672,13 +693,14 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
 
 export interface Mark19 { id: string; box: [number, number, number, number] }
 export interface Scene18 { hl?: number; sel?: string; pins?: boolean; ground: HTMLCanvasElement; lights: HTMLCanvasElement; sprites: Sprite18[]; env: Env18; amb: { k: Amb18 | string; at: string }[]; seed: number; lamps: [number, number][]; marks: Mark19[];
-  /** r27 */ look?: CityLook27; era?: Era27; life?: Life27; walks?: { pts: [number, number][]; len: number; k: 'artist' | 'staff'; off: number }[]; sale?: Sale27[]; selLot?: number; signs?: SaleSign27[] }
+  /** r27 */ look?: CityLook27; era?: Era27; life?: Life27; walks?: { pts: [number, number][]; len: number; k: 'artist' | 'staff'; off: number }[]; sale?: Sale27[]; selLot?: number; signs?: SaleSign27[];
+  /** r27 (LOTS): grade e tamanho do canvas desta cena (crescem com os bairros abertos) */ geo: Geo18 }
 
 /** Caminho (células de meia quadra) da porta do prédio até a rua/calçada; desvia de outros prédios. */
 export function path19(sp: Sprite18, all: Sprite18[]): [number, number][] {
   const [gx, gy, w, d] = sp.fp;
   if (!w || !d) return [];
-  const N = 2, W = GW * N, Hh = GH * N;
+  const N = 2, W = G.gw * N, Hh = G.gh * N;
   const blocked = (cx: number, cy: number) => { const x = (cx + 0.5) / N, y = (cy + 0.5) / N; return all.some((o) => x > o.fp[0] - 0.05 && x < o.fp[0] + o.fp[2] + 0.05 && y > o.fp[1] - 0.05 && y < o.fp[1] + o.fp[3] + 0.05); };
   const goal = (cx: number, cy: number) => { const x = (cx + 0.5) / N, y = (cy + 0.5) / N; return ROAD(x, y) || WALK(x, y); };
   const sx = Math.floor((gx + w / 2) * N), sy = Math.floor((gy + d) * N);
@@ -698,10 +720,10 @@ export function path19(sp: Sprite18, all: Sprite18[]): [number, number][] {
 export interface Nbr19 { lot: number; k: string; name: string }
 const NBK: Record<string, BKind> = { rival: 'branch', records: 'store', bar: 'venue', rehearsal: 'rehearsal', radio: 'media' };
 /** r27: extras da cena (estado dos prédios, lotes à venda, cidade comum, vida na rua). */
-export interface SceneX27 { /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string; /** r27 (CITY2): tipo de prédio de cada lote de cidade comum (lugares do bairro) */ fillKind?: Map<number, BKind> }
+export interface SceneX27 { /** r27 (LOTS): bairros abertos (índice em DIST18); sem isso, o menor que cabe nos lotes desenhados */ dist?: number; /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string; /** r27 (CITY2): tipo de prédio de cada lote de cidade comum (lugares do bairro) */ fillKind?: Map<number, BKind> }
 /** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
 export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
-/** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido). */
+/** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido; letra cinza quando não cabe no caixa). */
 function saleSign27(sl: Sale27, txt: string): SaleSign27 {
   const l0 = LOTS18[sl.lot];
   const [bx, by] = signAt27(sl.lot);
@@ -710,7 +732,7 @@ function saleSign27(sl: Sale27, txt: string): SaleSign27 {
   t.line(x0 + 2, H - 1, x0 + 2, H - 10, C('#6a4a2a')); t.line(x0 + tw - 3, H - 1, x0 + tw - 3, H - 10, C('#6a4a2a'));
   t.rect(0, 0, tw + 2, 10, C('#3a2a1a'));
   t.rect(x0, 1, tw, 8, C('#fbf6ea'));
-  t.text(txt, x0 + 2, 2, C('#c8302c'));
+  t.text(txt, x0 + 2, 2, sl.dis ? C('#6a6470') : C('#c8302c')); // r27 (LOTS): fora do caixa = letra apagada (a placa continua lá)
   t.rect(x0, 8, tw, 1, C(ICON27[sl.kind]?.col ?? '#c8302c'));
   return { lot: sl.lot, c: p.canvas(), x: Math.round(bx - W / 2), y: Math.round(by - H + 1), d: l0.gx + l0.w / 2 + signGy27(sl.lot), base: [Math.round(bx), Math.round(by)] };
 }
@@ -730,11 +752,30 @@ export function liftSign27(sg: SaleSign27, sprites: { depth: number; box: [numbe
   sg.y = Math.max(2, Math.round(top - h - 2));
   sg.lift = true;
 }
+/** r27 (LOTS): placas vizinhas (lotes estreitos lado a lado) não se cobrem — nem o preço que a página põe em cima de
+ *  cada uma: a de trás desliza para o lado (ainda sobre o seu lote, até 22 px); se não der, sobe acima da outra, com haste. */
+export function unstackSigns27(signs: SaleSign27[]): void {
+  const done: SaleSign27[] = [];
+  const board = 11, pin = 12; // quadro da placa (o resto são os pés) e a etiqueta de preço por cima
+  for (const sg of [...signs].sort((a, b) => b.d - a.d || a.x - b.x)) {
+    const w = sg.c.width, h = sg.c.height;
+    for (let k = 0; k < 4; k++) {
+      const hit = done.find((o) => o.x < sg.x + w && sg.x < o.x + o.c.width && o.y - pin < sg.y + board && sg.y - pin < o.y + board);
+      if (!hit) break;
+      const dir = sg.x + w / 2 >= hit.x + hit.c.width / 2 ? 1 : -1;
+      const need = dir > 0 ? hit.x + hit.c.width - sg.x + 1 : sg.x + w - hit.x + 1;
+      if (k === 0 && need <= 22) sg.x += dir * need;
+      else { sg.y = Math.max(2, hit.y - pin - h); sg.lift = true; }
+    }
+    done.push(sg);
+  }
+}
 /** Caminho de um pedestre em coordenadas da grade (porta → calçada → porta). */
 type Walk27 = { pts: [number, number][]; len: number; k: 'artist' | 'staff'; off: number };
 function walkPath27(a: Sprite18, b: Sprite18): [number, number][] {
   const door = (s: Sprite18): [number, number] => [s.fp[0] + s.fp[2] / 2, s.fp[1] + s.fp[3] + 0.15];
-  const side = (gy: number) => (gy < 8 ? 6.8 : 9.2);
+  // calçada da avenida mais perto da porta (r27 LOTS: a avenida nova serve os lotes do sul)
+  const side = (gy: number) => hIn().flatMap((b) => [b - 0.2, b + 2.2]).reduce((m, v) => (Math.abs(v - gy) < Math.abs(m - gy) ? v : m), 9.2);
   const [ax, ay] = door(a), [bx, by] = door(b), wa = side(ay), wb = side(by);
   const pts: [number, number][] = [[ax, ay], [ax, wa]];
   if (wa === wb) pts.push([bx, wa]); else { pts.push([bx, wa]); pts.push([bx, wb]); }
@@ -753,6 +794,11 @@ function along(pts: [number, number][], d: number): [number, number] {
 
 export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18, amb: { k: Amb18 | string; at: string }[], seed: number, brand = 'REC', nbs: Nbr19[] = [], lms: Landmark19[] = [], x: SceneX27 = {}): Scene18 {
   const used = new Set<number>(lots.values());
+  // r27 (LOTS): a grade cobre os bairros abertos (retratos antigos: o menor bairro que contém os lotes desenhados)
+  const top = Math.max(0, ...used, ...(x.sale ?? []).map((q) => q.lot), ...(x.filler ?? []), ...nbs.map((q) => q.lot));
+  const dist = Math.max(x.dist ?? 0, DIST18.findIndex((q) => top < q.end));
+  G = geoDist18(dist < 0 ? DIST18.length - 1 : dist);
+  const geo = G;
   const look = cityLook27(env.city, env.lat, env.year), era = era27(env.year);
   const sprites: Sprite18[] = [];
   for (const b of bs) {
@@ -793,14 +839,17 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
   const signs: SaleSign27[] = (x.sale ?? []).filter((sl) => LOTS18[sl.lot]).map((sl) => saleSign27(sl, x.saleTxt ?? 'VENDA'));
   // r27 (I2): se um prédio da FRENTE cobre a placa, ela sobe acima do telhado dele (com haste até o lote)
   for (const sg of signs) liftSign27(sg, sprites);
+  unstackSigns27(signs);
   const lights = document.createElement('canvas');
-  lights.width = MW; lights.height = MH;
+  lights.width = G.mw; lights.height = G.mh;
   const lc = lights.getContext('2d')!;
   lc.drawImage(gr.lc, 0, 0);
   for (const s of sprites) { lc.globalCompositeOperation = 'destination-out'; lc.drawImage(s.c, s.x, s.y); lc.globalCompositeOperation = 'source-over'; lc.drawImage(s.lc, s.x, s.y); }
   const lamps: [number, number][] = [];
-  if (env.year >= 1880) for (let g = 1; g < GW; g += 3) { if (g >= 8 && g <= 11) continue; lamps.push(iso(g + 0.2, 6.65)); lamps.push(iso(g + 0.8, 9.35)); }
-  for (let g = 1; g < GH; g += 4) { if (g >= 6 && g <= 9) continue; lamps.push(iso(8.65, g + 0.3)); lamps.push(iso(11.35, g + 0.7)); }
+  // postes nas duas calçadas de cada avenida e rua abertas, longe dos cruzamentos
+  const hr = hIn(), vr = vIn();
+  if (env.year >= 1880) for (const b of hr) for (let g = 1; g < G.gw; g += 3) { if (vr.some((a) => g >= a - 1 && g <= a + 2)) continue; lamps.push(iso(g + 0.2, b - 0.35)); lamps.push(iso(g + 0.8, b + 2.35)); }
+  for (const a of vr) for (let g = 1; g < G.gh; g += 4) { if (hr.some((b) => g >= b - 1 && g <= b + 2)) continue; lamps.push(iso(a - 0.35, g + 0.3)); lamps.push(iso(a + 2.35, g + 0.7)); }
   // r27: pedestres com destino (artistas e equipe entre a sede e o estúdio etc.)
   const byId = new Map(sprites.map((s) => [s.id, s]));
   const walks: Walk27[] = [];
@@ -810,7 +859,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
     const pts = walkPath27(a, b);
     walks.push({ pts, len: plen(pts), k: w.k, off: noise(i, 41, seed) * 30 });
   });
-  return { ground: gr.c, lights, sprites, env, amb, seed, lamps, marks, pins: true, look, era, life: x.life, walks, sale: x.sale ?? [], signs };
+  return { ground: gr.c, lights, sprites, env, amb, seed, lamps, marks, pins: true, look, era, life: x.life, walks, sale: x.sale ?? [], signs, geo };
 }
 
 // ---------------------------------------------------------------- vida (quadro a quadro)
@@ -891,6 +940,8 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   const y = sc.env.year;
   const era = sc.era ?? era27(y);
   const pal = era.outfit, cars = era.cars;
+  if (sc.geo) G = sc.geo; // r27 (LOTS): coordenadas desta cena
+  const { gw: GW, gh: GH, mw: MW, mh: MH } = G;
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, MW, MH);
   ctx.drawImage(sc.ground, 0, 0);
@@ -908,11 +959,16 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   const items: { d: number; f: () => void }[] = sc.sprites.map((s) => ({ d: s.depth, f: () => { ctx.drawImage(s.c, s.x, s.y); if (s.lit && dayLit) { ctx.globalAlpha = 0.75; ctx.drawImage(s.lc, s.x, s.y); ctx.globalAlpha = 1; } } }));
   for (const [x, yy] of sc.lamps) { const [gx, gy] = unIso(x, yy); items.push({ d: gx + gy, f: () => lampPost(ctx, x, yy, era.lamp) }); }
   for (const sg of sc.signs ?? []) if (!sg.lift) items.push({ d: sg.d, f: () => ctx.drawImage(sg.c, sg.x, sg.y) });
-  const nP = y < 1920 ? 8 : y < 1970 ? 12 : 16;
+  // calçadas: as do centro primeiro (mesma ordem de sempre), depois as das avenidas e ruas novas
+  const hr = hIn(), vr = vIn();
+  const walksH = hr.flatMap((b) => [b - 0.2, b + 2.2]), walksV = vr.flatMap((a) => [a - 0.2, a + 2.2]);
+  const paths: [boolean, number][] = [...walksH.slice(0, 2).map((v) => [true, v] as [boolean, number]), ...walksV.slice(0, 2).map((v) => [false, v] as [boolean, number]),
+    ...walksH.slice(2).map((v) => [true, v] as [boolean, number]), ...walksV.slice(2).map((v) => [false, v] as [boolean, number])];
+  const nP = Math.round((y < 1920 ? 8 : y < 1970 ? 12 : 16) * paths.length / 4);
   for (let i = 0; i < nP; i++) {
-    const r = noise(i, 1, sc.seed), sp = 0.15 + noise(i, 2, sc.seed) * 0.25, path = i % 4;
-    const u = ((r * 40 + t * sp * (i % 2 ? 1 : -1)) % 20 + 20) % 20;
-    const [gx, gy] = path === 0 ? [u, 6.8] : path === 1 ? [u, 9.2] : path === 2 ? [8.8, u * 0.8] : [11.2, u * 0.8];
+    const r = noise(i, 1, sc.seed), sp = 0.15 + noise(i, 2, sc.seed) * 0.25, [ph, at] = paths[i % paths.length];
+    const u = ((r * 40 + t * sp * (i % 2 ? 1 : -1)) % GW + GW) % GW;
+    const [gx, gy] = ph ? [u, at] : [at, (u * GH) / GW];
     if (ROAD(gx, gy)) continue;
     const [x, yy] = iso(gx, gy);
     items.push({ d: gx + gy, f: () => person(ctx, x, yy, i, y, Math.floor(t * 4 + i), undefined, pal) });
@@ -925,13 +981,16 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
     const [x, yy] = iso(gx, gy);
     items.push({ d: gx + gy, f: () => person(ctx, x, yy, w.k === 'artist' ? 4 + Math.floor(w.off) : 6, y, Math.floor(t * 5 + w.off), undefined, w.k === 'artist' ? pal : ['#2a2a30', '#3a4a6a'], w.k === 'artist' ? 'case' : undefined) });
   }
-  const nV = y < 1910 ? 2 : y < 1950 ? 3 : 5;
+  // faixas: as do centro primeiro (mesma ordem de sempre), depois as das avenidas e ruas novas
+  const lanes: [boolean, number, number][] = [[true, hr[0] + 0.5, 1], [true, hr[0] + 1.5, -1], [false, vr[0] + 0.5, -1], [false, vr[0] + 1.5, 1],
+    ...hr.slice(1).flatMap((b) => [[true, b + 0.5, 1], [true, b + 1.5, -1]] as [boolean, number, number][]), ...vr.slice(1).flatMap((a) => [[false, a + 0.5, -1], [false, a + 1.5, 1]] as [boolean, number, number][])];
+  const nV = Math.round((y < 1910 ? 2 : y < 1950 ? 3 : 5) * lanes.length / 4), fv = (0.75 * GH * 20) / (16 * GW);
   for (let i = 0; i < nV; i++) {
-    const sp = 1 + noise(i, 4, sc.seed) * 1.2, lane = i % 4;
-    const u = ((noise(i, 5, sc.seed) * 30 + t * sp) % 26) - 3;
-    const [gx, gy, dir] = lane === 0 ? [u, 7.5, 1] : lane === 1 ? [GW - u, 8.5, -1] : lane === 2 ? [9.5, u * 0.75, -1] : [10.5, GH - u * 0.75, 1];
+    const sp = 1 + noise(i, 4, sc.seed) * 1.2, [lh, at, dir] = lanes[i % lanes.length];
+    const u = ((noise(i, 5, sc.seed) * 30 + t * sp) % (GW + 6)) - 3;
+    const [gx, gy] = lh ? [dir > 0 ? u : GW - u, at] : [at, dir < 0 ? u * fv : GH - u * fv];
     const [x, yy] = iso(gx, gy);
-    items.push({ d: gx + gy, f: () => vehicle(ctx, x, yy, vk, i, lane < 2 ? dir : -dir, undefined, t, cars, night) });
+    items.push({ d: gx + gy, f: () => vehicle(ctx, x, yy, vk, i, lh ? dir : -dir, undefined, t, cars, night) });
   }
   const byId = new Map(sc.sprites.map((s) => [s.id, s]));
   // r27: estado de cada prédio — fila de músicos (estúdio), fila de público (show), fumaça (fábrica prensando)
@@ -1010,7 +1069,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   // r27: tom da estação só em dia sem neve (nada de véu cinza): outono âmbar, verão quente, chuva levemente azul
   const tint = sc.env.rain ? 'rgba(90,110,150,0.08)' : sc.env.snow ? '' : sc.env.season === 'autumn' && sc.env.climate !== 'tropical' ? 'rgba(255,170,80,0.06)' : sc.env.season === 'summer' || sc.env.climate === 'tropical' ? 'rgba(255,230,150,0.04)' : '';
   if (tint && night < 0.5) { ctx.fillStyle = tint; ctx.fillRect(0, 0, MW, MH); }
-  dusk27(ctx, MW, HZ, night); // r27 (I2b): entardecer/amanhecer no ciclo
+  dusk27(ctx, G.mw, HZ, night); // r27 (I2b): entardecer/amanhecer no ciclo
   // noite (r27: bem mais escura, janelas e neon brilhando, halo dos postes)
   if (night > 0.02) {
     ctx.fillStyle = `rgba(8,12,40,${(night * 0.74).toFixed(3)})`;

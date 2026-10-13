@@ -34,6 +34,7 @@ import { post18 } from './post18';
 import { r18 } from './rights18';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { noteRelease17 } from '../relidx17';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- tipos e dados
 
@@ -357,7 +358,7 @@ registerSimHook('month', 'tribute19', (s, r0) => {
   void r0;
   const st = t19(s);
   // 1) separações e reuniões (o "antes e depois" que os tributos e o sósia leem)
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.fame < 35) continue;
     if (a.status === 'split' || a.status === 'retired') st.was[a.id] ??= s.week;
     else if (st.was[a.id] !== undefined && !a.deceased) { st.reu[a.id] = s.week; delete st.was[a.id]; }
@@ -365,7 +366,7 @@ registerSimHook('month', 'tribute19', (s, r0) => {
   // 2) nascimentos
   const live = live19(s);
   if (live.length < 16) {
-    for (const a of Object.values(s.acts)) {
+    for (const a of actsNow27(s)) {
       if (a.fame < 40 || a.playerBand && a.fame < 30) continue;
       const n = live.filter((t) => t.act === a.id).length;
       if (n >= 3) continue;

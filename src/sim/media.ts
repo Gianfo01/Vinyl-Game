@@ -6,7 +6,7 @@ import { cityById, familyOf, l, type L, type MarketId } from '../data/world';
 import { registerEvents, type EventDef } from './events';
 import type { Act, GameState, Release } from './types';
 import type { Crisis, Review } from './xtypes';
-import { buildReviews } from './reviews';
+import { buildReviews, withRivalIx27 } from './reviews';
 import { coverCriticBonus } from './covers';
 import { REGIONAL_CRITICS } from '../data/critics8';
 import { criticRelBonus } from './criticrel';
@@ -331,12 +331,12 @@ registerEvents(MEDIA_EVENTS);
 export function mediaMonth(s: GameState, r: Rng): void {
   if (s.prAgency) post(s, 'pr_agency', -s.prAgency.monthly, 'marketing', `Assessoria ${s.prAgency.name}`);
   // resenhas dos lançamentos do mês (jogador e principais rivais)
-  for (const rel of releasesNow27(s)) {
+  withRivalIx27(s, () => { for (const rel of releasesNow27(s)) {
     if (s.reviews[rel.id] || s.week - rel.week > 5) continue;
     const act = s.acts[rel.actId];
     if (rel.owner === 'player' || act?.playerBand || (act && act.fame > 40)) reviewRelease(s, r, rel);
     if (rel.owner === 'player' || act?.playerBand) censorCheck(s, r, rel);
-  }
+  } });
   // limpa resenhas antigas de terceiros
   const keys = Object.keys(s.reviews);
   if (keys.length > 400) for (const k of keys.slice(0, keys.length - 400)) delete s.reviews[k];

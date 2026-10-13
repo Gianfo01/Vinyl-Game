@@ -34,6 +34,7 @@ import { tragedyOdds19 } from './links19a';
 import { bestPlant18, queueOf18, sup18 } from './supply18';
 import { c12 } from './tour12';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 export interface Boy19 { id: string; act: string; w: number; y: number; hear: number; cost: number; res?: 'win' | 'lose'; end?: number }
@@ -136,7 +137,7 @@ registerMod('cityDemand', 'live19:boy', (s, v, c) => (c.act && activeBoy19(s, c.
 // NPC: em história alternativa, um astro também pode boicotar (soma força na audiência)
 function npcBoy(s: GameState, r: Rng): void {
   if (exactHist(s) || s.year < 1985 || !giant18(s) || !r.chance(0.02)) return;
-  const a = r.pick(Object.values(s.acts).filter((x) => npc(x) && x.status === 'active' && x.fame >= 65));
+  const a = r.pick(actsNow27(s).filter((x) => npc(x) && x.status === 'active' && x.fame >= 65));
   if (!a) return;
   lv19(s).npcBoy++;
   const t = fmtL(l('{a} também boicota a {g} e só toca em casas independentes (história alternativa).', '{a} also boycotts {g} and only plays independent venues (alternate history).'), { a: a.name, g: giant18(s)!.name });
@@ -209,7 +210,7 @@ export function vinylIdx19(y: number): number {
 }
 export const RSD_FROM19 = 2008;
 export const RSD_MONTH19 = 3;
-const rsdPool = (s: GameState): Release[] => Object.values(s.releases).filter((x) => x.owner === 'player' || !!s.acts[x.actId]?.playerBand);
+const rsdPool = (s: GameState): Release[] => releasesNow27(s).filter((x) => x.owner === 'player' || !!s.acts[x.actId]?.playerBand);
 export function rsdRel19(s: GameState, k: 'cat' | 'new'): Release | undefined {
   const xs = rsdPool(s);
   return k === 'new' ? xs.filter((x) => s.year - x.year <= 1).sort((a, b) => b.week - a.week)[0] : xs.filter((x) => s.year - x.year >= 5).sort((a, b) => b.q + b.totalUnits / 1e5 - (a.q + a.totalUnits / 1e5))[0];
@@ -273,7 +274,7 @@ export const xmasCost19 = (s: GameState) => money(s, 3000);
 /** Disco do jogador elegível para a campanha de Natal (set–nov; lançado há ≤ 10 semanas). */
 export const xmasRels19 = (s: GameState): Release[] => rsdPool(s).filter((x) => s.week - x.week <= 10 && s.week >= x.week);
 /** Astros NPC que lançaram nas últimas 8 semanas (concorrência da temporada; o npc17 guarda discos para o Natal). */
-export const xmasRivals19 = (s: GameState): number => Object.values(s.releases).filter((x) => x.owner !== 'player' && s.week - x.week <= 8 && s.week >= x.week && (s.acts[x.actId]?.fame ?? 0) >= 60).length;
+export const xmasRivals19 = (s: GameState): number => releasesNow27(s).filter((x) => x.owner !== 'player' && s.week - x.week <= 8 && s.week >= x.week && (s.acts[x.actId]?.fame ?? 0) >= 60).length;
 export const xmasMult19 = (s: GameState): number => Math.max(1.05, 1.25 - 0.03 * xmasRivals19(s));
 export function xmasPush19(s: GameState, relId: string): L | null {
   const rel = s.releases[relId];
@@ -349,7 +350,7 @@ onFact('free_fest', (s, f) => {
   const att = Number(f.data?.att ?? 0), acts = f.actors.filter((x) => mine(s, s.acts[x]));
   for (const id of acts) { const a = s.acts[id]; a.fans.casual += Math.round(att * 0.15 / Math.max(1, acts.length)); a.fans.active += Math.round(att * 0.02 / Math.max(1, acts.length)); a.fame = clamp(a.fame + 2, 0, 100); a.momentum = clamp(a.momentum + 5, 0, 100); const x = fan18(s, id, false); if (x) x.mob = clamp((x.mob ?? 0) + 5, 0, 100); }
   if (!f.tags.includes('bad')) s.player.reputation.artistic = clamp(s.player.reputation.artistic + 2, 0, 100);
-  const r = rng(s), loc = Object.values(s.acts).filter((a) => !a.owner && a.status === 'emerging' && !a.deceased && a.city === f.place);
+  const r = rng(s), loc = actsNow27(s).filter((a) => !a.owner && a.status === 'emerging' && !a.deceased && a.city === f.place);
   const d = loc.length ? r.pick(loc) : undefined;
   if (d) addLead18(s, r, d, 'festival', 2, 9, l('Tocou no palco aberto do seu festival gratuito.', 'Played the open stage at your free festival.'));
   headline19(s, f.text, 2);

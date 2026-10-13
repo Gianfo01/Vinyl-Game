@@ -19,6 +19,7 @@ import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import type { P13 } from './persona13';
 import { registerSituation, type Pressure, type SitCtx } from './situations17';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- utilidades
 
@@ -29,7 +30,7 @@ const okA = (s: GameState, a?: Act): a is Act => live(a) && !shield18(s, a.id);
 const mineA = (s: GameState, a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand || playerActs(s).includes(a.id));
 const pool = (s: GameState, r: Rng, n = 14): Act[] => {
   const mine = new Set(playerActs(s));
-  return r.shuffle(Object.values(s.acts).filter((a) => okA(s, a) && (mine.has(a.id) || a.fame >= 18))).slice(0, n);
+  return r.shuffle(actsNow27(s).filter((a) => okA(s, a) && (mine.has(a.id) || a.fame >= 18))).slice(0, n);
 };
 const nmP = (s: GameState, id?: string): string => (!id ? '?' : id === 'player' ? s.config.companyName : s.persons[id]?.name ?? s.acts[id]?.name ?? (id.startsWith('l:') ? leaders(s).L[id.slice(2)]?.name : undefined) ?? id);
 const rel = (s: GameState, a: string, b: string, d: number) => { const x = s.persons[a], y = s.persons[b]; if (x) x.rel[b] = clamp((x.rel[b] ?? 0) + d, -100, 100); if (y) y.rel[a] = clamp((y.rel[a] ?? 0) + d, -100, 100); };
@@ -70,7 +71,7 @@ const MOTIVES: Motive[] = [
     pick: (s, r) => {
       for (const a of pool(s, r)) {
         const p = leadOf18(s, a); if (!okP(s, p)) continue;
-        const b = Object.values(s.acts).find((x) => okA(s, x) && x.id !== a.id && familyOf(x.genre) === familyOf(a.genre) && x.fame > a.fame + 3 && x.fame < a.fame + 30);
+        const b = actsNow27(s).find((x) => okA(s, x) && x.id !== a.id && familyOf(x.genre) === familyOf(a.genre) && x.fame > a.fame + 3 && x.fame < a.fame + 30);
         const q = leadOf18(s, b); if (b && okP(s, q)) return { hero: p.id, act: a.id, cast: { person: p.id, other: q.id, oact: b.id }, data: {} };
       }
       return null;

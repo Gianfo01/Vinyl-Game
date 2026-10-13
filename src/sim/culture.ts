@@ -9,6 +9,7 @@ import type { Movement } from './xtypes';
 import { fmtL, money, nextId, notify, post, remember } from './util';
 import { addAsset } from './finance';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { actsNow27 } from './tickcache27';
 
 // ---------- Moda e visual ----------
 export function fashionOf(year: number, family: string): L {
@@ -72,7 +73,7 @@ function movementName(r: Rng, cityId: string, parent: string): L {
 function movementsMonth(s: GameState, r: Rng): void {
   // candidatos: cenas fortes com vários artistas ativos (a nomeação emerge de identidade compartilhada)
   const counts: Record<string, string[]> = {};
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if (a.status !== 'active' && a.status !== 'emerging') continue;
     const k = `${a.city}:${a.genre}`;
     (counts[k] ??= []).push(a.id);

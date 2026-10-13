@@ -24,12 +24,9 @@ export function noteRelease17(s: GameState, rel: Release): void {
   // r27: dentro do passo do relógio allReleases17 lê de tickcache27; a cópia semanal é refeita na próxima leitura de fora
   // (mesmo conteúdo: Object.values na ordem de inserção), sem copiar a lista inteira a cada lançamento
   if (inTick27(s)) { AL.delete(s); return; }
-  // cópia nova com o lançamento no fim (ordem de s.releases); laços em andamento seguem no array antigo
-  c.at ??= new Map(c.list.map((r, i) => [r.id, i]));
-  const i = c.at.get(rel.id);
-  const list = c.list.slice();
-  if (i === undefined) { c.at.set(rel.id, list.length); list.push(rel); } else list[i] = rel;
-  c.list = list;
+  // r27: fica pendente; a próxima leitura faz UMA cópia nova com os pendentes no fim (ordem de s.releases) — antes era uma
+  // cópia inteira por lançamento (milhares ao semear a base enorme). Laços em andamento seguem no array antigo.
+  (c.pend ??= []).push(rel);
 }
 /** Chamar depois de apagar lançamentos de s.releases. */
 export function releasesTouched17(s: GameState): void { AL.delete(s); releasesGone27(s); }
@@ -37,11 +34,19 @@ export function releasesTouched17(s: GameState): void { AL.delete(s); releasesGo
 // Object.values(s.releases) compartilhado: vale enquanto nenhum lançamento entra/sai (e por semana, por segurança).
 // O array devolvido é somente leitura (os objetos são os vivos, então campos como live/owner estão sempre atuais);
 // inserir/apagar no meio de um laço não muda o array em uso (vira um novo na próxima chamada), como antes.
-const AL = new WeakMap<GameState, { w: number; list: readonly Release[]; at?: Map<string, number> }>();
+const AL = new WeakMap<GameState, { w: number; list: readonly Release[]; at?: Map<string, number>; pend?: Release[] }>();
 export function allReleases17(s: GameState): readonly Release[] {
   if (inTick27(s)) return releasesNow27(s); // r27: mesmo conteúdo, mantido por passo (sem refazer a cada semana)
   const c = AL.get(s);
-  if (c && c.w === s.week) return c.list;
+  if (c && c.w === s.week) {
+    if (c.pend) {
+      const at = (c.at ??= new Map(c.list.map((r, i) => [r.id, i])));
+      const list = c.list.slice();
+      for (const rel of c.pend) { const i = at.get(rel.id); if (i === undefined) { at.set(rel.id, list.length); list.push(rel); } else list[i] = rel; }
+      c.list = list; c.pend = undefined;
+    }
+    return c.list;
+  }
   const list = Object.values(s.releases);
   AL.set(s, { w: s.week, list });
   return list;

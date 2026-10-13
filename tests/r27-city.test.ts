@@ -5,7 +5,7 @@ import { createGame } from '../src/sim/worldgen';
 import { advanceWeek } from '../src/sim/tick';
 import { startSession } from '../src/sim/studio';
 import { scandal17 } from '../src/sim/scandal17';
-import { LOTS18, buildings18, campus18, layout18, startProj18, freeLots18 } from '../src/sim/sys/campus18';
+import { buildings18, campus18, layout18, lotsOpen18, startProj18, freeLots18 } from '../src/sim/sys/campus18';
 import { nb19 } from '../src/sim/sys/hood19';
 import { VENUES17, v17 } from '../src/sim/sys/venues17';
 import {
@@ -118,10 +118,13 @@ describe('r27 estado dos prédios', () => {
 });
 
 describe('r27 lotes à venda', () => {
-  it('só aparecem quando cabem no caixa; no máximo 3; o resto vira cidade comum', () => {
+  it('sempre aparecem (fora do caixa = bloqueados com o motivo); no máximo 3; o resto vira cidade comum', () => {
     const g = game('new_york', 2005);
     g.player.cash = 0;
-    expect(forSale27(g)).toEqual([]);
+    // r27 (LOTS, mudança intencional): sem caixa os lotes NÃO somem mais — a placa fica, com a compra bloqueada e o motivo
+    const broke = forSale27(g);
+    expect(broke.length).toBe(SALE_MAX27);
+    for (const x of broke) expect(x.dis?.pt).toBeTruthy();
     g.player.cash = 5e9;
     const sale = forSale27(g);
     expect(sale.length).toBeGreaterThan(0);
@@ -130,7 +133,8 @@ describe('r27 lotes à venda', () => {
     for (const x of sale) { expect(used.has(x.lot)).toBe(false); expect(nbl.has(x.lot)).toBe(false); expect(x.price).toBeGreaterThan(0); expect(ICON27[x.kind]).toBeTruthy(); }
     const filler = fillerLots27(g, sale);
     const all = new Set([...used, ...nbl, ...sale.map((x) => x.lot), ...filler, ...campus18(g).proj.map((p) => p.lot), 0]);
-    expect(all.size).toBe(LOTS18.length);
+    // r27 (LOTS, mudança intencional): a conta fecha nos lotes dos bairros ABERTOS (LOTS18 agora tem os bairros futuros)
+    expect(all.size).toBe(lotsOpen18(g));
     for (const f of filler) expect(sale.some((x) => x.lot === f)).toBe(false);
   });
 });

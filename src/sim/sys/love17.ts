@@ -20,6 +20,7 @@ import { per13 } from './persona13';
 import { comeOut, isQueer, isRealP, marriageLegal, sexOf } from './sex17';
 import { registerSituation } from './situations17';
 import { soul } from './soul9';
+import { actsNow27 } from '../tickcache27';
 
 export interface Affair17 { name: string; pid?: string; since: number; sx: 'm' | 'f'; disc: number; married?: 1; ss?: 1; known?: 1 }
 export interface Pay17 { kind: 'alimony' | 'child'; to: string; amt: number; until: number; kid?: string }
@@ -161,7 +162,7 @@ function discover(s: GameState, a: Affair17, why: L): void {
     const act = playerAct(s);
     if (act) scandal(s, act.id, 'sex', 35, text, { person: pp?.id, cause: [f.id] });
   }
-  if (a.pid) { const act = Object.values(s.acts).find((x) => x.members.includes(a.pid!)); if (act && act.fame >= 25 && (!act.catalogNo || s.config.history !== 'strict')) scandal(s, act.id, 'sex', 30, text, { person: a.pid, cause: [f.id] }); }
+  if (a.pid) { const act = actsNow27(s).find((x) => x.members.includes(a.pid!)); if (act && act.fame >= 25 && (!act.catalogNo || s.config.history !== 'strict')) scandal(s, act.id, 'sex', 30, text, { person: a.pid, cause: [f.id] }); }
   notify(s, text, 'bad');
   log(s, text);
 }
@@ -350,7 +351,7 @@ registerSimHook('month', 'love17', (s) => {
 
 /** NPCs: traição pelos traços (lealdade baixa, impulsividade alta); segredo vira obrigação e pode estourar. */
 function npcAffairs(s: GameState, r: Rng): void {
-  const pool = Object.values(s.acts).filter((a) => (a.status === 'active' || a.status === 'emerging') && a.fame >= 20 && (!a.catalogNo || s.config.history !== 'strict')); // r18: história alternativa
+  const pool = actsNow27(s).filter((a) => (a.status === 'active' || a.status === 'emerging') && a.fame >= 20 && (!a.catalogNo || s.config.history !== 'strict')); // r18: história alternativa
   if (!pool.length) return;
   for (let i = 0; i < 3; i++) {
     const a = r.pick(pool);
@@ -371,7 +372,7 @@ function npcAffairs(s: GameState, r: Rng): void {
   for (const h of holds17(s).h) {
     if (h.status !== 'open' || h.src !== 'love17n' || !r.chance(0.04)) continue;
     const p = s.persons[h.target];
-    const a = Object.values(s.acts).find((x) => x.members.includes(h.target));
+    const a = actsNow27(s).find((x) => x.members.includes(h.target));
     h.status = 'used';
     if (!p?.alive || !a) continue;
     scandal(s, a.id, 'sex', 30 + Math.round(a.fame / 4), fmtL(l('Tabloide revela o caso extraconjugal de {n}.', 'Tabloid reveals {n}\'s extramarital affair.'), { n: p.name }), { person: p.id, cause: h.factId ? [h.factId] : undefined });
@@ -455,4 +456,4 @@ function tellAll(s: GameState, i: number, k: number): void {
 // outros sistemas: separação de NPC do seu elenco por traição pesa no estresse dele
 onFact('breakup', (s, f) => { const pid = f.actors[0]; if (s.persons[pid] && playerActs(s).some((a) => s.acts[a]?.members.includes(pid))) addStress(s, pid, 8, l('Separação', 'Breakup')); }, 'love17:breakup');
 
-export const actOfPerson17 = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid));
+export const actOfPerson17 = (s: GameState, pid: string): Act | undefined => actsNow27(s).find((a) => a.members.includes(pid));

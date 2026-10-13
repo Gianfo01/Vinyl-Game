@@ -12,6 +12,7 @@ import { familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, hasTech, notify, playerActs, remember } from '../util';
+import { actsNow27, releasesNow27 } from '../tickcache27';
 
 export interface AudMem {
   /** últimos 6 meses: [casual, ativo, núcleo] */
@@ -164,7 +165,7 @@ function yearlyRediscovery(s: GameState, r: Rng): void {
   const st = audience(s);
   const techBoost = (hasTech(s, 'streaming') ? 0.01 : 0) + (hasTech(s, 'short_video') ? 0.02 : 0);
   const cands: { rel: Release; w: number }[] = [];
-  for (const rel of Object.values(s.releases)) {
+  for (const rel of releasesNow27(s)) {
     if (rel.reissueOf || rel.kind === 'compilation') continue;
     const a = s.acts[rel.actId];
     if (!a) continue;
@@ -202,7 +203,7 @@ function monthlyMigration(s: GameState): void {
     m.set(k, list);
   };
   const sources: Act[] = [];
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     const live = a.status === 'active' || a.status === 'emerging';
     if (live && a.fame > 5 && s.week - a.lastRelease < 52) {
       push(byGenre, a.genre, a);

@@ -43,6 +43,7 @@ import { canSell, closeSale, fairTerms } from './songsale';
 import { settleVocals } from './vocals10';
 import { ventures } from './ventures9';
 import { openPlagSuit19, pubName19 } from './writers19';
+import { actsNow27 } from '../tickcache27';
 
 export const SONGMKT27 = 'songmkt27';
 
@@ -142,7 +143,7 @@ function myFams(s: GameState): FamilyId[] {
 function genreFor(s: GameState, r: Rng, fam: FamilyId): string {
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => live(a) && familyOf(a.genre) === fam);
   if (mine.length) return r.pick(mine).genre;
-  const any = Object.values(s.acts).filter((a) => live(a) && familyOf(a.genre) === fam);
+  const any = actsNow27(s).filter((a) => live(a) && familyOf(a.genre) === fam);
   return any.length ? r.pick(any.slice(0, 200)).genre : (playerActs(s).map((id) => s.acts[id]).find(live)?.genre ?? 'pop');
 }
 
@@ -159,7 +160,7 @@ function genLots(s: GameState): Lot27[] {
   const home = (cityById[s.config.homeCity]?.lang ?? 'en') as NameGroup;
   const out: Lot27[] = [];
   const n = r.int(6, 9);
-  const writers = Object.values(s.acts).filter((a) => npc(a) && a.fame >= 8 && a.debutYear <= s.year).slice(0, 600);
+  const writers = actsNow27(s).filter((a) => npc(a) && a.fame >= 8 && a.debutYear <= s.year).slice(0, 600);
   for (let i = 0; i < n && srcs.length; i++) {
     const fam: FamilyId = fams.length && r.chance(0.75) ? r.pick(fams) : r.pick(['pop', 'rock', 'rnb', 'country_folk', 'blues_jazz', 'hiphop', 'electronic', 'latin', 'brazil'] as FamilyId[]);
     const okSrc = srcs.filter((k) => !SRC27[k].fam || SRC27[k].fam!.includes(fam));
@@ -184,7 +185,7 @@ function genLots(s: GameState): Lot27[] {
     const org = clamp((src === 'factory' || src === 'topline' ? 38 : 50) + r.normal(0, 14), 5, 95);
     const pr = priceOf27(s, src, q, fame);
     const sim = r.chance(src === 'topline' || src === 'factory' ? 0.1 : 0.06) ? 1 : undefined;
-    const dupPool = r.chance(0.08) ? Object.values(s.acts).filter((a) => npc(a) && a.fame >= 20 && familyOf(a.genre) === fam).slice(0, 80) : [];
+    const dupPool = r.chance(0.08) ? actsNow27(s).filter((a) => npc(a) && a.fame >= 20 && familyOf(a.genre) === fam).slice(0, 80) : [];
     out.push({
       id: `ml${++st.seq}`, t: songTitle(r, lang), g: genreFor(s, r, fam), src, wn, ...(wid ? { wid } : {}), pub, ...(act ? { act } : {}),
       q, mel: Math.round(mel), lyr: Math.round(lyr), org: Math.round(org), u: Math.round(r.next() * 100) / 100, h: r.int(0, 9999),
@@ -294,7 +295,7 @@ export function friends27(s: GameState): Friend27[] {
     if (!prev || bond > prev.bond) best.set(k, { act: o.id, mine: m.id, bond, why, pid: p.id });
   };
   const byPerson = new Map<string, Act>();
-  for (const a of Object.values(s.acts)) if (npc(a)) for (const pid of a.members) if (!byPerson.has(pid)) byPerson.set(pid, a);
+  for (const a of actsNow27(s)) if (npc(a)) for (const pid of a.members) if (!byPerson.has(pid)) byPerson.set(pid, a);
   for (const m of mine) {
     const ms = new Set(m.members);
     for (const t of social(s).ties) {
@@ -539,7 +540,7 @@ function risks(s: GameState, r: Rng): void {
   // a canção que você recusou: outro grava; se virar hit, todo mundo fica sabendo
   for (const p of st.passed) {
     if (!p.act && s.week >= p.due) {
-      const pool = Object.values(s.acts).filter((a) => npc(a) && a.fame >= 15 && familyOf(a.genre) === familyOf(p.g)).slice(0, 120);
+      const pool = actsNow27(s).filter((a) => npc(a) && a.fame >= 15 && familyOf(a.genre) === familyOf(p.g)).slice(0, 120);
       const o = pool.length ? r.pick(pool) : undefined;
       if (!o) { p.told = 1; p.act = ''; continue; }
       const so: Song = { id: nextId(s, 's'), actId: o.id, title: p.t, genre: o.genre, writers: [], melody: p.q, lyrics: p.q, performance: clamp(45 + o.fame / 2 + r.normal(0, 6), 5, 100), production: clamp(55 + r.normal(0, 8), 5, 100), originality: 50, q: 0, recorded: true, createdWeek: s.week };
@@ -593,7 +594,7 @@ registerInboxKind('songmkt27_gift', { label: l('Canção de presente', 'Song gif
 // cobrar o favor de quem recebeu uma canção sua (quadro de favores): ele manda uma canção de volta
 registerHoldEffect('songmkt27', (s, h, verb, r) => {
   if (verb !== 'call' || h.holder !== 'player') return null;
-  const o = Object.values(s.acts).find((a) => npc(a) && a.members.includes(h.target));
+  const o = actsNow27(s).find((a) => npc(a) && a.members.includes(h.target));
   const mine = playerActs(s).map((id) => s.acts[id]).find(live);
   if (!o || !mine) return null;
   const g = newGift(s, r, { act: o.id, mine: mine.id, bond: 30, why: 'friend', pid: h.target }, true);

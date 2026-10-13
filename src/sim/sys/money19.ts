@@ -40,6 +40,7 @@ import { fan18, setTeam18 } from './fans18';
 import { REP_NOTES19 } from './report18';
 import { r18 } from './rights18';
 import { eraMultiple, relIncome, SALE19, sale17 } from './sale17';
+import { releasesNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- estado
 
@@ -107,7 +108,7 @@ export function cov19(s: GameState): Cov19 {
     { label: l('Juro básico do ano (%)', 'Base rate this year (%)'), value: rate19(s), fmt: 'num' },
   ] };
 }
-const pledgeable = (s: GameState): Release[] => Object.values(s.releases).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand && s.year - r.year >= 1).sort((a, b) => relIncome(s, b.id) - relIncome(s, a.id));
+const pledgeable = (s: GameState): Release[] => releasesNow27(s).filter((r) => r.owner === 'player' && !s.acts[r.actId]?.playerBand && s.year - r.year >= 1).sort((a, b) => relIncome(s, b.id) - relIncome(s, a.id));
 
 function callDebt(s: GameState, why: L[]): void {
   const st = m19(s);
@@ -291,7 +292,7 @@ function seize19(s: GameState, cause: 'bank' | 'bond'): Auc19 | null {
 
 // N1: rival quebra → leilão (substitui "catálogo vai para o mais rico")
 CLOSE19.f = (s, lb) => {
-  const rels = Object.values(s.releases).filter((r) => r.owner === lb.id);
+  const rels = releasesNow27(s).filter((r) => r.owner === lb.id);
   if (!rels.length) return false;
   const t = fmtL(l('{n} quebra: o banco executa a dívida e os masters vão a leilão.', '{n} goes bust: the bank forecloses and the masters go to auction.'), { n: lb.name });
   emitFact(s, { kind: 'label_bankrupt', actors: [lb.id], place: lb.city, severity: 60, visibility: 'public', tags: ['money', 'bankrupt'], text: t, src: 'money19', data: { lb: lb.id } });
@@ -354,7 +355,7 @@ SALE19.label = (s, lbId) => {
   const lb = s.labels[lbId];
   if (!lb) return;
   const by: Record<string, Release[]> = {};
-  for (const rel of Object.values(s.releases)) if (rel.owner === lbId) (by[rel.actId] ??= []).push(rel);
+  for (const rel of releasesNow27(s)) if (rel.owner === lbId) (by[rel.actId] ??= []).push(rel);
   for (const [aid, rels] of Object.entries(by)) {
     const a = s.acts[aid];
     if (!a) continue;
@@ -526,7 +527,7 @@ registerSimHook('month', 'money19', (s) => {
   // fundos compram quando o dinheiro é barato (M13): lance extra por master antigo seu
   const app = fundAppetite19(s), sc = sale17(s);
   if (isLabel(s) && app > 1.1 && sc.cat.length < 2 && r.chance((app - 1) * 0.25)) {
-    const old = Object.values(s.releases).filter((x) => x.owner === 'player' && s.year - x.year >= 5 && x.revenue > money(s, 20000) && !s.acts[x.actId]?.playerBand && !sc.cat.some((c) => c.relId === x.id));
+    const old = releasesNow27(s).filter((x) => x.owner === 'player' && s.year - x.year >= 5 && x.revenue > money(s, 20000) && !s.acts[x.actId]?.playerBand && !sc.cat.some((c) => c.relId === x.id));
     if (old.length) { const rel = r.pick(old); sc.cat.push({ id: `cb19:${s.week}`, relId: rel.id, fund: r.pick(FUNDS19), price: Math.round(relIncome(s, rel.id) * eraMultiple(s).m * app), expires: s.week + 10 }); }
   }
 });
@@ -543,10 +544,10 @@ onFact('debt_called', (s, f) => {
 onFact('label_bankrupt', (s, f) => {
   const lb = s.labels[String(f.data?.lb ?? f.actors[0])];
   if (!lb) return;
-  const a = openAuction19(s, lb.id, lb.name, Object.values(s.releases).filter((r) => r.owner === lb.id), 'bankrupt');
-  if (!a) { const buyer = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 500000)).sort((x, y) => y.cash - x.cash)[0]; if (buyer) for (const r of Object.values(s.releases)) if (r.owner === lb.id) r.owner = buyer.id; return; }
+  const a = openAuction19(s, lb.id, lb.name, releasesNow27(s).filter((r) => r.owner === lb.id), 'bankrupt');
+  if (!a) { const buyer = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 500000)).sort((x, y) => y.cash - x.cash)[0]; if (buyer) for (const r of releasesNow27(s)) if (r.owner === lb.id) r.owner = buyer.id; return; }
   // o resto do catálogo (fora do lote) fica com o banco e sai do mercado
-  for (const r of Object.values(s.releases)) if (r.owner === lb.id && !a.rels.includes(r.id)) r.owner = 'indie';
+  for (const r of releasesNow27(s)) if (r.owner === lb.id && !a.rels.includes(r.id)) r.owner = 'indie';
   headline19(s, f.text, 2);
   remember(s, 'label_closed', f.text, { important: true });
   if (isLabel(s)) pushInbox18(s, 'm19_auc', { from: l('Leiloeiro judicial', 'Court auctioneer').pt, ref: { auc: a.id }, weeks: 8, subject: fmtL(l('Leilão: masters de {n}', 'Auction: {n}\'s masters'), { n: lb.name }), body: fmtL(l('{k} gravações, valor justo {f}, lance mínimo {m}. Lances em Finanças › Dívida e catálogo.', '{k} recordings, fair value {f}, minimum bid {m}. Bid in Finance › Debt & catalog.'), { k: a.rels.length, f: usd(a.fair), m: usd(a.ask) }),

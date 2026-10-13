@@ -19,6 +19,7 @@ import { emitEvent } from '../events';
 import { postHooks18 } from '../ledger18';
 import { fileLawsuit } from '../business';
 import type { EventDef } from '../events';
+import { actsNow27 } from '../tickcache27';
 
 export interface Clauses18 {
   /** pacote de origem (só rótulo) */
@@ -258,7 +259,7 @@ function monthly(s: GameState): void {
   const st = st18(s);
   const f = fin18(s);
   const r = new Rng(seedState(`c18|${s.config.seed}|${s.year}|${s.month}`));
-  for (const act of Object.values(s.acts)) {
+  for (const act of actsNow27(s)) {
     if (act.owner !== 'player' || act.playerBand || !act.contractId || act.status === 'retired' || act.status === 'split') continue;
     const c = s.contracts[act.contractId] as C18 | undefined;
     if (!c || c.party !== 'player') continue;
@@ -284,7 +285,7 @@ function monthly(s: GameState): void {
   }
   // auditorias: uma vez por ano (em março), quem tem direito ou assessoria e motivo
   if (s.month === 2) {
-    for (const act of Object.values(s.acts)) {
+    for (const act of actsNow27(s)) {
       if (act.owner !== 'player' || act.playerBand || !act.contractId) continue;
       const c = s.contracts[act.contractId] as C18 | undefined;
       const k = c?.clauses18;

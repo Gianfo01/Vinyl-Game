@@ -238,5 +238,5 @@ export function songMarketPage(s: GameState): HTMLElement {
     ], rerender));
 }
 
-registerArea({ id: SONGMKT27, label: l('Mercado de canções', 'Song market'), icon: 'quill', key: '', render: songMarketPage,
+registerArea({ id: SONGMKT27, label: l('Mercado de canções', 'Song market'), icon: 'songsheet', key: '', render: songMarketPage,
   badge: (s) => { const n = mkt27(s).gifts.filter((g) => g.until >= s.week).length; return n || undefined; } });

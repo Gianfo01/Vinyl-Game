@@ -15,6 +15,7 @@ import { registerPerkSource, type PerkEntry } from '../perks';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, notify, playerActs, remember } from '../util';
 import { actsOfPerson17 } from '../actidx17';
+import { actsNow27 } from '../tickcache27';
 
 export type TieKind = 'friend' | 'rival' | 'romance' | 'mentor' | 'feud' | 'collab';
 export type TieSrc = 'scene' | 'festival' | 'tour' | 'feat' | 'producer' | 'label' | 'mentor' | 'chart' | 'romance';
@@ -170,7 +171,7 @@ const ageOf = (s: GameState, p?: Person) => (p ? s.year - p.born : 30);
 function formation(s: GameState, r: Rng): void {
   const pool: Act[] = [];
   const byCity = new Map<string, Act[]>();
-  for (const a of Object.values(s.acts)) {
+  for (const a of actsNow27(s)) {
     if ((a.status !== 'active' && a.status !== 'emerging') || a.deceased || !a.members.length) continue;
     if (a.fame < 4 && a.owner !== 'player' && !a.playerBand) continue;
     pool.push(a);
@@ -349,7 +350,7 @@ registerSimHook('show', 'social8', (s, r, arg) => {
   if (!sh || !r.chance(0.04)) return;
   const act = s.acts[sh.actId];
   if (!act) return;
-  const locals = Object.values(s.acts).filter((a) => a.city === sh.cityId && a.id !== act.id && (a.status === 'active' || a.status === 'emerging') && a.members.length);
+  const locals = actsNow27(s).filter((a) => a.city === sh.cityId && a.id !== act.id && (a.status === 'active' || a.status === 'emerging') && a.members.length);
   if (!locals.length) return;
   const B = r.pick(locals);
   const pa = pickMember(r, act);

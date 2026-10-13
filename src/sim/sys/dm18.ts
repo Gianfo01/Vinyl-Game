@@ -34,6 +34,7 @@ import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import { opine, opinionOf, per13 } from './persona13';
 import { sit17 } from './situations17';
+import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- curva de tensão
 
@@ -218,7 +219,7 @@ registerThread18({
   open: (s, r) => {
     const m = myActs(s)[0];
     if (!m) return null;
-    const c = Object.values(s.acts).filter((a) => live(a) && a.owner !== 'player' && !a.playerBand && familyOf(a.genre) === familyOf(m.genre) && a.fame < m.fame + 15 && a.fame > m.fame - 25 && a.momentum > 50 && ok(s, a.id) && !busy(s, a.id));
+    const c = actsNow27(s).filter((a) => live(a) && a.owner !== 'player' && !a.playerBand && familyOf(a.genre) === familyOf(m.genre) && a.fame < m.fame + 15 && a.fame > m.fame - 25 && a.momentum > 50 && ok(s, a.id) && !busy(s, a.id));
     if (!c.length) return null;
     const a = r.pick(c);
     return { hero: a.id, cast: { rival: a.id, mine: m.id }, data: {} };
@@ -445,7 +446,7 @@ for (const A of NPC_ARCS) {
     k: A.k, name: A.name, mine: false,
     sum: (s, th) => { const an = s.acts[th.cast.act]?.name ?? '?'; const pn = nm(s, th.hero); return fmtL(an === pn ? l('{p}: {n}.', '{p}: {n}.') : l('{p} ({a}): {n}.', '{p} ({a}): {n}.'), { p: pn, a: an, n: A.name }); },
     open: (s, r) => {
-      const pool = Object.values(s.acts).filter((a) => live(a) && a.fame >= 20 && a.owner !== 'player' && !a.playerBand).sort((a, b) => b.fame - a.fame).slice(0, 30);
+      const pool = actsNow27(s).filter((a) => live(a) && a.fame >= 20 && a.owner !== 'player' && !a.playerBand).sort((a, b) => b.fame - a.fame).slice(0, 30);
       const c = pool.map((a) => [a, leadOf18(s, a)] as const).filter(([a, p]) => p && !p.isPlayer && ok(s, `p:${p.id}`) && ok(s, a.id) && !busy(s, `p:${p.id}`) && A.fit(s, a, `p:${p.id}`));
       if (!c.length) return null;
       const [a, p] = r.pick(c);
