@@ -56,7 +56,7 @@ import { setTab } from './vis';
 import { alias14, type NavGroup14 } from './careernav14';
 import { navGroups16 } from './careernav16';
 import { themeButton } from './sys/theme14';
-import { bindRoute29, openCampaign29, openIndex29, paletteCmds29 } from './ps/route29';
+import { backChip29, bindRoute29, openCampaign29, openIndex29, paletteCmds29 } from './ps/route29';
 import { REDIRECT29, resolve29, type Target29 } from './ps/route29model';
 import { crumbBar15, drawer15, initialRoute15, initRouter15, loadTabs15, menuButton15, pageTitle15, palette15, perfNote, saveSoon, saveTabs15, scroll15, shortcutsHelp15, stickyFix15, syncRoute15, type PCmd } from './nav15';
 import { tabSnapshot } from './vis';
@@ -603,6 +603,7 @@ function crumbs(body: HTMLElement, sub: HTMLElement | null): HTMLElement {
   const secL = hb ? hb.label : sectionOf17(gr, store.area);
   const one = gr.areas.length === 1; // r27 (COCK): seção de uma página só (Cockpit) — sem "Cockpit › Agora › Cockpit"
   const bar0 = crumbBar15([{ label: t(gr.label), go: head }, ...(secL && !one ? [{ label: t(secL), go: head }] : []), ...(one ? [] : [{ label: areaLabel(store.area), go: () => go(store.area) }]), ...(tabLbl ? [{ label: tabLbl }] : [])], sub);
+  backChip29(bar0, store17.recent[1], store.area, areaLabel, (a) => groups().some((gr) => gr.areas.includes(a)), go); // r29 REORG (M43): ↩ Voltar a <origem>
   const row = bar0.querySelector('.crumbs15');
   const pinned = store17.pins.includes(store.area);
   const all = navItems();

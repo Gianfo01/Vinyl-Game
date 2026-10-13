@@ -200,9 +200,27 @@ describe('r29 S01/S03/S13/S16/M04/M17: modelos do ciclo', () => {
     expect(get('seed').kind).toBe('rules');
     expect(get('menuView').kind).toBe('view');
     expect(get('text').value).toBe('120%');
-    expect(typeof get('saveVersion').value === 'string' ? get('saveVersion').value : get('saveVersion').value.pt).toContain(`v${s.version}`);
+    const sv = get('saveVersion').value;
+    expect(typeof sv === 'string' ? sv : sv.pt).toContain(`v${s.version}`);
     const span = get('span').value as { pt: string };
     expect(span.pt).toContain(String(s.config.startYear));
     expect(new Set(rows.map((r) => r.id)).size).toBe(rows.length);
+  });
+});
+
+import { clearDraft29, loadDraft29, saveDraft29 } from '../src/ui/ps/draft29';
+describe('r29 M42: rascunho persistente (preferência de interface, expira, por partida)', () => {
+  it('grava, recupera, expira e apaga — sem tocar no estado do jogo', () => {
+    const mem = new Map<string, string>();
+    (globalThis as { localStorage?: unknown }).localStorage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v), removeItem: (k: string) => void mem.delete(k) };
+    saveDraft29('runA', 'nego', 'act1', { advance: 5000 }, 10);
+    expect(loadDraft29<{ advance: number }>('runA', 'nego', 'act1', 12)!.v.advance).toBe(5000);
+    expect(loadDraft29('runB', 'nego', 'act1', 12)).toBeNull(); // outra partida não vê
+    expect(loadDraft29('runA', 'nego', 'act1', 30)).toBeNull(); // expirou (mundo mudou)
+    expect(mem.size).toBe(0);
+    saveDraft29('runA', 'nego', 'act1', { advance: 1 }, 10);
+    clearDraft29('runA', 'nego', 'act1');
+    expect(loadDraft29('runA', 'nego', 'act1', 10)).toBeNull();
+    delete (globalThis as { localStorage?: unknown }).localStorage;
   });
 });

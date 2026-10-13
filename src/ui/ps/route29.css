@@ -19,3 +19,5 @@
 .cp29-note { display: block; }
 .cp29-acts { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 600px) { .cp29-dl { grid-template-columns: 1fr; } .cp29-dl dd { margin-bottom: 6px; } }
+.back29 { font-size: .82em; white-space: nowrap; max-width: 14em; overflow: hidden; text-overflow: ellipsis; margin-right: 6px; opacity: .85; }
+@media (max-width: 600px) { .back29 { max-width: 8em; } }

@@ -117,3 +117,13 @@ export function openCampaign29(): void {
 export function openTarget29(x: Target29): void { api?.open(x); }
 /** Rótulo de uma página como no menu (ou o id, sem app ligado — testes). */
 export const label29 = (area: string): string => api?.label(area) ?? area;
+
+/** M43/M05: "↩ Voltar a <origem>" — reabre a página de onde você veio com aba e rolagem lembradas (scroll15/abas),
+ *  em vez de um "voltar" anônimo. Só aparece quando a origem é outra página ainda no menu. */
+export function backChip29(bar: HTMLElement, prev: string | undefined, cur: string, labelOf: (a: string) => string, inMenu: (a: string) => boolean, go: (a: string) => void): void {
+  if (!prev || prev === cur || !inMenu(prev)) return;
+  const back = bar.querySelector('.back15');
+  const name = labelOf(prev);
+  const chip = h('button', { type: 'button', class: 'link back29', title: t(l('Voltar a {p} (com a aba e a rolagem de antes)', 'Back to {p} (same tab and scroll as before)'), { p: name }), onclick: () => go(prev) }, '↩ ', name);
+  if (back) back.after(chip); else bar.prepend(chip);
+}

@@ -15,6 +15,7 @@ import {
 } from '../../sim/sys/nego27';
 import { $, modal, pill, rerender, toast } from '../common';
 import { h } from '../dom';
+import { clearDraft29, loadDraft29, saveDraft29 } from '../ps/draft29';
 import { store } from '../store';
 import { meter } from '../vis';
 import { promiseChecks28 } from '../sys/promises28';
@@ -47,7 +48,9 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
   if (!s) return;
   const act = s.acts[actId];
   if (!act) return;
-  const d0 = base ? copyDraft27(base) : (() => { const o = defaultOffer(s, act); o.rights = defaultRights(o.model, o.publishing); return o; })();
+  // r29 REORG (M42): rascunho da última mesa com este ato (preferência deste navegador; expira em 8 semanas de jogo)
+  const dr = base ? null : loadDraft29<Draft27>(s.signature, 'nego', actId, s.week);
+  const d0 = base ? copyDraft27(base) : dr ? copyDraft27(dr.v) : (() => { const o = defaultOffer(s, act); o.rights = defaultRights(o.model, o.publishing); return o; })();
   const st = startNego27(s, actId, d0);
   if (!('actId' in st)) { toast(t(st), 'bad'); return; }
   const n: Nego27 = st;
@@ -104,7 +107,12 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
     if (!open) (root.querySelector('.n27-end button') as HTMLElement | null)?.focus();
   };
   draw();
-  close = modal(t(l('Negociar com {a}', 'Negotiate with {a}'), { a: act.name }), root, { wide: true, onClose: () => rerender() });
+  close = modal(t(l('Negociar com {a}', 'Negotiate with {a}'), { a: act.name }), root, { wide: true, onClose: () => {
+    // r29 (M42): mesa fechada aberta → guarda o rascunho; acordo ou ruptura → apaga
+    if (n.status === 'open') saveDraft29(s.signature, 'nego', actId, copyDraft27(o), s.week); else clearDraft29(s.signature, 'nego', actId);
+    rerender();
+  } });
+  if (dr) toast(t(l('Rascunho da sua última proposta recuperado. A leitura da mesa usa a situação de agora.', 'Your last offer draft was restored. The table reading uses the current situation.')), 'info');
 }
 
 // ---------------------------------------------------------------- renegociar
