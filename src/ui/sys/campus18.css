@@ -94,7 +94,7 @@ body.w19-open .tutorial, body.w19-open .tip18 { display: none; }
 .c27-main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; align-items: start; }
 .c27-mapcol { min-width: 0; }
 .c27 .w19-frame { max-width: none; margin: 6px 0 4px; }
-.c27 .w19-vp { width: min(100%, calc((100dvh - 330px) * 300 / 226)); min-width: min(100%, 480px); margin: 0 auto; }
+.c27 .w19-vp { width: min(100%, calc((100dvh - 330px) * var(--ar, 1.3274))); min-width: min(100%, 480px); margin: 0 auto; } /* r27 (LOTS): --ar = proporção do canvas (cresce com a cidade) */
 .c27-side { position: sticky; top: 8px; max-height: calc(100dvh - 24px); overflow: auto; border: 1px solid var(--line, #444); border-radius: 8px; background: var(--panel, #1c2028); color: var(--ink, #eee); padding: 10px 12px; box-sizing: border-box; }
 .c27-pn { display: grid; gap: 6px; }
 .c27-ph { display: flex; align-items: center; gap: 8px; }
@@ -144,6 +144,10 @@ body.w19-open .tutorial, body.w19-open .tip18 { display: none; }
 .w19-hs.sale .c27-pin { background: #fbf6ea; box-shadow: 0 0 0 1.5px #c8302c, 0 2px 4px rgba(0,0,0,0.4); }
 .w19-hs.sale .c27-nm { color: #8a1c18; }
 .w19-hs.sale .c27-pin::after { border-top-color: #c8302c; }
+/* r27 (LOTS): à venda, mas fora do caixa — mesma placa, apagada */
+.w19-hs.sale.dis .c27-pin { background: #e4e0d8; box-shadow: 0 0 0 1.5px #8a8490, 0 2px 4px rgba(0,0,0,0.3); opacity: 0.85; }
+.w19-hs.sale.dis .c27-nm { color: #5a5460; }
+.w19-hs.sale.dis .c27-pin::after { border-top-color: #8a8490; }
 .w19-hs.on { outline: 2px solid #ffd040; outline-offset: 1px; }
 .w19-hs.mine:hover .c27-pin, .w19-hs.mine:focus-visible .c27-pin, .w19-hs.on .c27-pin { transform: translate(-50%, -5px) scale(1.12); }
 .w19-hs.lot.mv { display: grid; place-items: center; border-radius: 50%; min-width: 18px; min-height: 18px; color: #fff; }
