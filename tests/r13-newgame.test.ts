@@ -55,7 +55,8 @@ describe('novo jogo r13', () => {
   });
 
   it('toda seção tem ajuda bilíngue', () => {
-    for (const k of ['storyteller', 'origin', 'ambition', 'traits', 'path', 'year', 'mode', 'rivals', 'card', 'mutators']) {
+    // r27 AUD1 (a4702a8) tirou a seção 'card' (Cartas do selo apagadas)
+    for (const k of ['storyteller', 'origin', 'ambition', 'traits', 'path', 'year', 'mode', 'rivals', 'mutators']) {
       expect(HELP[k]?.pt).toBeTruthy();
       expect(HELP[k]?.en).toBeTruthy();
     }
