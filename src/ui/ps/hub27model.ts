@@ -33,11 +33,13 @@ export const HUBS27: Hub27[] = [
   // Ao vivo (7 → 2)
   hub('stage', 'live', l('Shows e turnês', 'Shows and tours'), 'stage', l('Agenda, turnês, ingressos e temporada.', 'Schedule, tours, tickets and season.'), ['shows', 'cal17', 'tour12', 'live19']),
   hub('events', 'live', l('Festivais e prêmios', 'Festivals and awards'), 'trophy', l('Circuito de festivais, premiações e Hall da Fama.', 'Festival circuit, awards and Hall of Fame.'), ['festivals', 'awards', 'rockhall']),
-  // Mundo (23 → 5)
+  // Mundo (23 → 6)
   hub('now', 'world', l('Este mês', 'This month'), 'globe', l('O que mudou no mundo, o que se sabe e os boatos.', 'What changed, what is known and the rumors.'), ['mundo27', 'known27', 'news17']),
   hub('charts', 'world', l('Paradas e mercado', 'Charts and market'), 'chart-up', l('Paradas, gravadoras rivais, indústria e mercados.', 'Charts, rival labels, industry and markets.'), ['charts', 'labels', 'industry', 'regions18', 'market19a', 'platform16']),
-  hub('press', 'world', l('Imprensa', 'Press'), 'newspaper', l('Mídia, críticos, fanzines, veículos e fraudes.', 'Media, critics, fanzines, outlets and frauds.'), ['media', 'critics', 'zines19', 'outlets16', 'fakes19']),
-  hub('map', 'world', l('Mapa e política', 'Map and politics'), 'globe', l('Países, cenas, leis, regiões e o submundo.', 'Countries, scenes, laws, regions and the underworld.'), ['world', 'world17', 'regions19', 'after18', 'crime']),
+  hub('press', 'world', l('Imprensa', 'Press'), 'newspaper', l('Mídia, críticos, fanzines e veículos.', 'Media, critics, fanzines and outlets.'), ['media', 'critics', 'zines19', 'outlets16']),
+  hub('map', 'world', l('Mapa e política', 'Map and politics'), 'globe', l('Países, cenas, leis e regiões.', 'Countries, scenes, laws and regions.'), ['world', 'world17', 'regions19', 'after18']),
+  // r27: o Submundo ficava escondido como 5ª aba de "Mapa e política" — volta a ser uma entrada própria do Mundo
+  hub('under', 'world', l('Submundo', 'Underworld'), 'skull', l('Crime, golpes, fraudes e o lado escuro do negócio.', 'Crime, scams, frauds and the dark side of the business.'), ['crime', 'fakes19']),
   hub('culture', 'world', l('Cultura e lendas', 'Culture and legends'), 'vault', l('Lendas, movimentos, sociedade e o diário do mestre.', 'Legends, movements, society and the DM journal.'), ['lendas', 'movements', 'society18', 'dm18']),
   // Gestão (15 → 4)
   hub('money', 'admin', l('Dinheiro', 'Money'), 'money', l('Caixa, negócios e a cadeia física.', 'Cash, business and the supply chain.'), ['finance', 'business', 'supply18']),

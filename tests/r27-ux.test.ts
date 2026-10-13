@@ -55,7 +55,8 @@ describe('r27 UX: hubs (páginas unificadas)', () => {
         const es = entries27(g).filter((e) => !(e.kind === 'page' && e.career));
         // telas "fora da carreira" e carreiras sem página caem como páginas soltas: contam, mas a seção típica fica ≤ 5
         const loose = es.filter((e) => e.kind === 'page' && !KNOWN25.has(e.area)).length;
-        expect(es.length - loose, `${act.join('+')}/${g.id}`).toBeLessThanOrEqual(5);
+        // r27: o Mundo ganhou a 6ª porta (Submundo) a pedido do autor — ele não achava o Submundo dentro de "Mapa e política"
+        expect(es.length - loose, `${act.join('+')}/${g.id}`).toBeLessThanOrEqual(g.id === 'world' ? 6 : 5);
         entries += entries27(g).length; pages += g.areas.length;
       }
       expect(entries, act.join('+')).toBeLessThan(pages * 0.5);
