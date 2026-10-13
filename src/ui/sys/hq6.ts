@@ -73,7 +73,7 @@ export function branchBlock(s: GameState): HTMLElement {
       const next = BRANCH_LEVELS[b.level + 1];
       const here = acts.filter((id) => s.branchOf[id] === b.id);
       const focus = st.branchFocus[b.id];
-      return h('div', { class: 'mg-card' },
+      return h('div', { class: 'mg-card', id: `br27-${b.id}` }, // r27 FLOW2: âncora do marcador no mapa-múndi
         h('h4', null, `${cityName(b.city)} — ${t(lv.name)}`),
         h('small', null, `+${lv.careers} ${t(l('carreiras', 'careers'))} · +${lv.staff} ${t(l('equipe', 'staff'))} · +${lv.sessions} ${t(l('sessões', 'sessions'))} · ${$(money(s, lv.rent))}/${t(l('mês', 'mo'))}`),
         h('label', null, t(l('Foco', 'Focus')), ' ', select<string>(focus ?? '', [{ value: '', label: t(l('(nenhum)', '(none)')) }, ...(Object.keys(BRANCH_FOCUS) as BranchFocus[]).map((f) => ({ value: f, label: `${t(BRANCH_FOCUS[f].name)} — ${t(BRANCH_FOCUS[f].desc)}` }))], (v) => { if (v) setBranchFocus(s, b.id, v as BranchFocus); else { delete st.branchFocus[b.id]; } rerender(); })),

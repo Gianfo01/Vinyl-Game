@@ -7,7 +7,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
-  campMeter27, campOf27, channels27, choose27, doMove27, endCamp27, moves27, openEv27, payolaEra27, setPayola27, setPlan27, startCamp27, targets27, weekCost27,
+  campMeter27, campOf27, camps27, channels27, choose27, doMove27, endCamp27, moves27, openEv27, payolaEra27, setPayola27, setPlan27, startCamp27, targets27, weekCost27,
   type Lvl27, type Target27,
 } from '../../sim/sys/camp27';
 import type { GameState } from '../../sim/types';
@@ -22,7 +22,7 @@ import './p2a27.css';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 
-/** Botão "▶ Campanha" para um ato (próximo lançamento) ou para um lançamento já na rua. Null se não há alvo. */
+/** @deprecated r27 FLOW2: não use (uma entrada só por ação) — a campanha vem pelo fluxo (flow27p2.ts: afterSchedule27, campRow27, cartão no Avançar). */
 export function campBtn27(s: GameState, key: { actId?: string; relId?: string; prId?: string }): HTMLElement | null {
   const tg = targets27(s).find((x) => (key.prId && x.prId === key.prId) || (key.relId && x.relId === key.relId) || (key.actId && !key.prId && !key.relId && x.actId === key.actId));
   if (!tg) return null;
@@ -31,13 +31,17 @@ export function campBtn27(s: GameState, key: { actId?: string; relId?: string; p
     l('Quadro de semanas: verba por canal da época, imprevistos com escolhas, jogadas e pós-morte.', 'Week board: budget per era channel, surprises with choices, moves and post-mortem.'));
 }
 
-export function openCampaign27(tg: Target27): void {
+/** r27 (FLOW2): `onDone(jogou?)` ao fechar (cartão do avanço); `quick` = o caminho rápido dentro do quadro (sem campanha:
+ *  só o marketing do plano), oferecido enquanto a campanha acabou de abrir e nada foi gasto. */
+export function openCampaign27(tg: Target27, o: { onDone?: (played: boolean) => void; quick?: () => void } = {}): void {
   const s = store.game;
-  if (!s) return;
+  if (!s) { o.onDone?.(false); return; }
   let c = campOf27(s, tg);
+  const fresh = !c;
+  let dropped = false;
   if (!c) {
     const r = startCamp27(s, tg);
-    if (!('id' in r)) { toast(t(r), 'bad'); return; }
+    if (!('id' in r)) { toast(t(r), 'bad'); o.onDone?.(false); return; }
     c = r;
   }
   const cp = c;
@@ -125,10 +129,12 @@ export function openCampaign27(tg: Target27): void {
           h('ol', { class: 'p2a-log', 'aria-live': 'polite' }, [...cp.log].reverse().slice(0, 30).map((x) => h('li', { class: x.tone ?? '' }, h('small', null, `${t(l('sem.', 'wk'))} ${x.w - cp.w0 + 1}`), T(x.t)))),
           live ? h('div', { class: 'row wrap' },
             h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar (a campanha segue com as semanas)', 'Close (the campaign runs with the weeks)'))),
+            fresh && !cp.spent ? h('button', { class: 'btn ghost', 'data-fl27': 'quick', title: t(l('Fecha sem campanha: o lançamento segue com o marketing do plano, como sempre.', 'Closes without a campaign: the release keeps the planned marketing, as always.')),
+              onclick: () => { delete camps27(s).c[cp.id]; dropped = true; o.quick?.(); close(); } }, t(l('Resolver rápido: só o marketing do plano', 'Resolve quickly: just the planned marketing'))) : null,
             h('button', { class: 'btn ghost', onclick: () => { endCamp27(s, cp); draw(); } }, t(l('Encerrar campanha', 'End campaign')))) : h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close'))),
           h('p', { class: 'small muted' }, t(l('A verba entra no marketing do lançamento semana a semana (o mesmo alcance de sempre, com saturação). Sem resposta a um imprevisto, vale a primeira opção.', 'Budget flows into the release marketing week by week (the usual reach, with saturation). If a surprise goes unanswered, the first option applies.'))))),
     );
   };
   draw();
-  close = modal(t(l('Campanha de lançamento — "{t}"', 'Release campaign — "{t}"'), { t: cp.title }), root, { wide: true, onClose: () => rerender() });
+  close = modal(t(l('Campanha de lançamento — "{t}"', 'Release campaign — "{t}"'), { t: cp.title }), root, { wide: true, onClose: () => { o.onDone?.(!dropped); rerender(); } });
 }

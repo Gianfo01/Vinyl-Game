@@ -8,7 +8,7 @@
 // Só LÊ o estado (nada de sorteio, nada de escrita): a simulação é do E2.
 
 import { CITIES, MARKETS, cityById, genreById, l, type L } from '../../data/world';
-import { FORMATS, TECHS } from '../../data/rules';
+import { BRANCH_LEVELS, FORMATS, TECHS } from '../../data/rules';
 import { FESTIVALS } from '../../data/catalog';
 import { countryInfoByA3, countryMarketSize, countryPop } from '../../data/countries';
 import { allCountryCodes, countryName, countryOfCity, marketOfCountry, unitOfCountry } from '../../data/geo';
@@ -28,6 +28,7 @@ import { hotList17 } from '../../sim/sys/trends17';
 import { CHAN23, KIND23, knownAbout23, sec23, subjAct23, subjName23, type Lvl23 } from '../../sim/sys/secrets23';
 import type { ChartEntry, GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
+import { KIND18, buildings18, type BState } from '../../sim/sys/campus18';
 
 // ================================================================ destinos
 
@@ -194,7 +195,7 @@ export function monthlyDigest27(s: GameState): Digest27 {
 
 // ================================================================ 2. Mapa: camadas e ficha da cidade
 
-export type MapLayer27 = 'glow' | 'hot' | 'tour' | 'festivals' | 'rivals' | 'closed';
+export type MapLayer27 = 'glow' | 'hot' | 'tour' | 'festivals' | 'rivals' | 'closed' | 'mine';
 export const LAYERS27: { id: MapLayer27; icon: string; name: L }[] = [
   { id: 'glow', icon: 'sparkle', name: l('Força das cenas', 'Scene strength') },
   { id: 'hot', icon: 'fire', name: l('Gêneros em alta', 'Hot genres') },
@@ -202,6 +203,7 @@ export const LAYERS27: { id: MapLayer27; icon: string; name: L }[] = [
   { id: 'festivals', icon: 'star', name: l('Festivais', 'Festivals') },
   { id: 'rivals', icon: 'flag', name: l('Rivais', 'Rivals') },
   { id: 'closed', icon: 'lock', name: l('Países fechados', 'Closed countries') },
+  { id: 'mine', icon: 'building', name: l('Seus lugares (filiais e escritórios)', 'Your places (branches and offices)') },
 ];
 
 /** Força total das cenas de uma cidade (soma de "cidade:gênero"). */
@@ -435,4 +437,34 @@ export function pioneerOf27(s: Pick<GameState, 'year'>, genre: string, formed: n
   const g = genreById[genre];
   if (g && !genre.startsWith('mv_') && s.year - g.born <= 3 && s.year >= g.born && formed <= g.born) return genre;
   return undefined;
+}
+
+// ================================================================ 5. Seus lugares fora da sede (r27 FLOW2)
+// Filiais, escritórios no exterior e empreendimentos em outras cidades não aparecem no mapa da cidade-sede (CITY2):
+// no mapa-múndi viram marcadores (camada "Seus lugares") com ficha (cidade, tipo, equipe, ações → a página).
+
+export interface Site27 {
+  id: string; city: string; kind: string; kindName: L; icon: string; name: string;
+  lvl: number; staff?: number; acts?: number; state: BState; go: Go27;
+}
+const OFF27: ReadonlySet<BState> = new Set<BState>(['sold', 'closed', 'planned']);
+
+/** Lugares do jogador fora da cidade-sede (não planejados, vendidos ou fechados). */
+export function foreignSites27(s: GameState): Site27[] {
+  const home = s.config.homeCity;
+  return buildings18(s).filter((b) => b.zone === 'world' && b.city !== home && !!cityById[b.city] && !OFF27.has(b.st)).map((b): Site27 => {
+    const br = b.kind === 'branch' ? s.branches.find((x) => `br:${x.id}` === b.id) : undefined;
+    const go: Go27 = br ? { area: 'hq', anchor: `br27-${br.id}` } : { area: b.goto?.area ?? 'campus18', ...(b.goto?.tab ? { tab: b.goto.tab } : {}), ...(b.goto?.act ? { act: b.goto.act } : {}) };
+    return {
+      id: b.id, city: b.city, kind: b.kind, kindName: br ? BRANCH_LEVELS[br.level]?.name ?? KIND18.branch.name : KIND18[b.kind].name, icon: KIND18[b.kind].icon, name: b.name,
+      lvl: b.lvl, staff: b.staff, state: b.st, go,
+      ...(br ? { acts: Object.values(s.branchOf ?? {}).filter((x) => x === br.id).length } : {}),
+    };
+  }).sort((a, b) => (a.city < b.city ? -1 : a.city > b.city ? 1 : a.id < b.id ? -1 : 1));
+}
+/** Lugares por cidade (marcadores do mapa). */
+export function sitesByCity27(s: GameState): Map<string, Site27[]> {
+  const m = new Map<string, Site27[]>();
+  for (const x of foreignSites27(s)) { const a = m.get(x.city); if (a) a.push(x); else m.set(x.city, [x]); }
+  return m;
 }

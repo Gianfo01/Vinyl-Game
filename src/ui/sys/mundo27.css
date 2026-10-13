@@ -101,3 +101,9 @@
   .mw27-item { flex-wrap: wrap; }
   .era27-step { width: 80px; }
 }
+
+/* r27 FLOW2: seus lugares fora da sede (ficha da cidade) */
+.sites27-list { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 6px; }
+.sites27-list li { display: grid; gap: 2px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.sites27-list li:last-child { border-bottom: 0; }
+.sites27-list .row.between { align-items: center; gap: 8px; }

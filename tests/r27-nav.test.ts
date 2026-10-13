@@ -116,3 +116,18 @@ describe('r27: uma janela por vez', () => {
     expect(mayShowPure27('tour', ['tip'], false)).toBe(false);
   });
 });
+
+describe('r27 FLOW2: contador das seções do menu', () => {
+  it('cada seção soma só as próprias páginas; decisões contam só no Cockpit', async () => {
+    const { secBadge27, DECISION_PAGES27 } = await import('../src/ui/ps/tree27');
+    const it = (id: string, badge?: number) => ({ id, label: id, icon: 'x', badge });
+    expect(secBadge27('cockpit', [it('cockpit', 5)])).toBe(5);
+    // uma página de decisões perdida na Sede (mesa/caixa antigas) não infla o contador da Sede
+    expect(secBadge27('sede', [it(SEDE25), it('campus18', 2), it('desk', 5), it('inbox', 3), it('cockpit', 4)])).toBe(2);
+    expect(secBadge27('people', [it('artists', 1), it('managers14', 2)])).toBe(3);
+    expect(secBadge27('sede', [it('hq'), it('plan')])).toBe(0);
+    // e no menu real nenhuma página de decisões fica fora do Cockpit
+    for (const g of menu(['label', 'musician'])) if (g.id !== 'cockpit') for (const a of g.areas) expect(DECISION_PAGES27.has(a)).toBe(false);
+    expect(menu(['label']).find((g) => g.id === 'cockpit')?.areas).toEqual(['cockpit']);
+  });
+});

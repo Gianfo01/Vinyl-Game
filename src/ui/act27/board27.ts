@@ -14,7 +14,8 @@ import { $, modal, rerender } from '../common';
 import { h } from '../dom';
 import { card27, emptyState27, kpiRow27, statusChip27 } from '../ps/ui27';
 import { store } from '../store';
-import { cutscene27, playBtn27 } from './mode27';
+import { occMark27 } from './flow27';
+import { cutscene27 } from './mode27';
 import { paintBoard27, seatX27, put27 } from './px27b';
 import { drawScene27, type Who27 } from './scene27';
 import './act27.css';
@@ -28,9 +29,9 @@ function room(s: GameState, ds: Dir27[], speaker?: string): HTMLCanvasElement {
 }
 const nameOf = (ds: Dir27[], id: string) => ds.find((d) => d.id === id)?.name ?? id;
 
-export function openBoard27(): void {
+export function openBoard27(onDone?: (played: boolean) => void): void {
   const s = store.game;
-  if (!s) return;
+  if (!s) { onDone?.(false); return; }
   const B = board27(s);
   if (!B.on) setBoard27(s, true);
   const root = h('div', { class: 'a27 p2b-board' });
@@ -69,7 +70,7 @@ export function openBoard27(): void {
     (root.querySelector('.p2b-prop .btn.primary:not([disabled])') as HTMLElement | null)?.focus();
   };
   view();
-  const close = modal(t(l('Reunião de diretoria', 'Board meeting')), root, { wide: true, onClose: () => rerender() });
+  const close = modal(t(l('Reunião de diretoria', 'Board meeting')), root, { wide: true, onClose: () => { onDone?.(true); rerender(); } });
 }
 
 function propCard(s: GameState, p: Prop27, ds: Dir27[], done: 'yes' | 'no' | undefined, after: (t: L, tone: string) => void): HTMLElement {
@@ -102,7 +103,10 @@ export function boardSection27(s: GameState): HTMLElement | null {
       ? t(l('{n} proposta(s) na pauta deste mês ({w}).', '{n} proposal(s) on this month\'s agenda ({w}).'), { n: pend, w: props.map((p) => t(p.title)).slice(0, 2).join('; ') })
       : t(l('Pauta do mês decidida.', 'This month\'s agenda is decided.'))),
     B?.on ? null : h('p', { class: 'small muted' }, t(l('Desligada: o jogo segue como sempre até você se sentar à mesa pela primeira vez.', 'Off: the game runs as always until you first sit at the table.'))),
-    h('div', { class: 'row' }, playBtn27(l('Sentar à mesa', 'Take a seat'), () => openBoard27(), true) ?? h('button', { class: 'btn small', onclick: () => openBoard27() }, t(l('Abrir a reunião', 'Open the meeting')))));
+    // r27 (FLOW2): a reunião chega como cartão no Avançar (Jogar / Resolver rápido) — aqui, o marcador e a chave liga/desliga
+    h('div', { class: 'row wrap' },
+      pend ? occMark27(s, { src: 'board', key: `board:${monthKey27(s)}`, data: { n: pend, on: !!B?.on } }) ?? h('small', { class: 'muted' }, t(l('No rápido: a pauta é decidida pelas regras de delegação.', 'Quick: the agenda is decided by the delegation rules.'))) : null,
+      B?.on ? h('button', { class: 'btn small ghost', onclick: () => { const g = store.game; if (g) setBoard27(g, false); rerender(); } }, t(l('Desligar a reunião mensal', 'Turn off the monthly meeting'))) : null));
 }
 export const boardPending27 = (s: GameState): number => { const B = (s.x4 as unknown as { board27?: { on: boolean; held: Record<string, { dec: Record<string, string> }> } }).board27; if (!B?.on) return 0; const dec = B.held[monthKey27(s)]?.dec ?? {}; return agenda27(s).filter((p) => !dec[p.id]).length; };
 

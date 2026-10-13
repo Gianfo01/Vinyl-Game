@@ -4,7 +4,7 @@
 import { l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
 import {
-  applySetlistOrder, autoLiveEnergy, autoOrder, avgNotes, curveFor, dynamicPricingAvailable, finishLiveShow, idealEnergy, liveIncidents20, liveOf, playLiveCard20, resolveCard, songEnergy,
+  applySetlistOrder, autoLiveEnergy, autoOrder, avgNotes, curveFor, dynamicPricingAvailable, finishLiveShow, idealEnergy, liveOf, songEnergy,
 } from '../../../sim/sys/live';
 import type { GameState } from '../../../sim/types';
 import { $, N, actLink, cityName, pill, rerender, section, toast } from '../../common';
@@ -172,53 +172,21 @@ function crowdCanvas(energyRef: { v: number }, tier: number, year: number): HTML
   return c;
 }
 
+// r27 (FLOW2): um caminho só para o show — a noite jogável (setlist e momentos) é o cartão do show no Avançar
+// (show27). O antigo mini-jogo pós-show (cartas de incidente) não pede mais uma segunda partida da mesma noite:
+// a cena só mostra o resultado, resolvido pelos atributos da banda (o modo rápido de sempre).
 registerCutscene('liveShow', (s, cs, close) => {
   const d = cs.data as { key: string; actId: string; cityId: string; tier: number; sold: number; cap: number; ex: number };
   const act = s.acts[d.actId];
-  const energy = { v: Math.round(20 + d.ex * 0.5) };
-  const incidents = liveIncidents20(s, d.key); // r20 (B7): semente do show, sem Math.random
-  let step = 0;
-  const log: string[] = [];
-  const body = h('div', { class: 'lv-live-body', 'aria-live': 'polite' });
-  const meterBox = h('div');
-  const done = (final: number, auto: boolean) => {
-    const res = finishLiveShow(s, d.key, d.actId, d.sold, final);
-    meterBox.replaceChildren(meter('fire', l('Energia do público', 'Crowd energy'), final));
-    body.replaceChildren(
-      h('h4', null, final >= 85 ? t(l('Noite lendária!', 'A legendary night!')) : final >= 60 ? t(l('Grande show!', 'Great show!')) : final >= 40 ? t(l('Show correto.', 'A decent show.')) : t(l('Noite difícil.', 'A rough night.'))),
-      auto ? h('p', { class: 'small muted' }, t(l('Resolvido automaticamente pelos atributos da banda.', 'Resolved automatically from the band\'s attributes.'))) : '',
-      h('ul', { class: 'small' }, log.map((x) => h('li', null, x))),
-      res ? h('p', null, t(l('Efeito: {b}% de fãs novos sobre o público, fama e reputação.', 'Effect: {b}% new fans over the crowd, fame and reputation.'), { b: Math.round(res.bonus * 100) })) : h('p', { class: 'muted' }, t(l('Este show já foi resolvido.', 'This show was already resolved.'))),
-      h('button', { class: 'btn primary', onclick: () => { rerender(); close(); } }, t(l('Fechar', 'Close'))),
-    );
-  };
-  const draw = () => {
-    meterBox.replaceChildren(meter('fire', l('Energia do público', 'Crowd energy'), energy.v));
-    if (step >= incidents.length) return done(energy.v, false);
-    const inc = incidents[step];
-    body.replaceChildren(
-      h('p', { class: 'lv-incident' }, ic('warning'), ' ', h('b', null, t(inc.text))),
-      h('div', { class: 'lv-cards' }, inc.cards.map((card, ci) => {
-        const chance = resolveCard(s, d.actId, card, 0, d.key).chance;
-        return h('button', { class: 'lv-card', onclick: () => {
-          const r = playLiveCard20(s, d.key, d.actId, step, inc, ci);
-          energy.v = Math.max(0, Math.min(100, energy.v + r.delta));
-          log.push(`${t(card.label)} → ${r.ok ? '✓' : '✗'} (${r.delta >= 0 ? '+' : ''}${r.delta})`);
-          step += 1;
-          draw();
-          (body.querySelector('button') as HTMLElement | null)?.focus();
-        } }, h('b', null, t(card.label)), h('small', null, t(card.hint)), h('small', { class: 'muted' }, t(l('Chance: {p}%', 'Chance: {p}%'), { p: Math.round(chance * 100) })));
-      })),
-      h('button', { class: 'btn ghost small', onclick: () => done(autoLiveEnergy(s, d.actId, d.ex), true) }, t(l('Resolver automático', 'Auto-resolve'))),
-    );
-  };
-  const root = h('div', { class: 'lv-live-scene' },
-    crowdCanvas(energy, d.tier, s.year),
+  const final = autoLiveEnergy(s, d.actId, d.ex);
+  const res = finishLiveShow(s, d.key, d.actId, d.sold, final);
+  return h('div', { class: 'lv-live-scene' },
+    crowdCanvas({ v: final }, d.tier, s.year),
     h('p', null, act ? actLink(s, act.id) : null, ' · ', cityName(d.cityId), ' · ', t(l('{n} pessoas', '{n} people'), { n: N(d.sold) })),
-    meterBox,
-    body,
-  );
-  if (store.prefs.minigames === 'auto') done(autoLiveEnergy(s, d.actId, d.ex), true);
-  else draw();
-  return root;
+    meter('fire', l('Energia do público', 'Crowd energy'), final),
+    h('div', { class: 'lv-live-body', 'aria-live': 'polite' },
+      h('h4', null, final >= 85 ? t(l('Noite lendária!', 'A legendary night!')) : final >= 60 ? t(l('Grande show!', 'Great show!')) : final >= 40 ? t(l('Show correto.', 'A decent show.')) : t(l('Noite difícil.', 'A rough night.'))),
+      h('p', { class: 'small muted' }, t(l('Resolvido pelos atributos da banda. Para jogar a noite (setlist e momentos), escolha "Jogar" no cartão do show ao Avançar.', "Resolved from the band's attributes. To play the night (setlist and moments), pick \"Play\" on the show card when you Advance."))),
+      res ? h('p', null, t(l('Efeito: {b}% de fãs novos sobre o público, fama e reputação.', 'Effect: {b}% new fans over the crowd, fame and reputation.'), { b: Math.round(res.bonus * 100) })) : h('p', { class: 'muted' }, t(l('Este show já foi resolvido.', 'This show was already resolved.'))),
+      h('button', { class: 'btn primary', onclick: () => { rerender(); close(); } }, t(l('Fechar', 'Close')))));
 });

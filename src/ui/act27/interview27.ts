@@ -21,7 +21,7 @@ import './p2a27.css';
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const pc = (x: number) => `${Math.round(x * 100)}%`;
 
-/** Botão "▶ Entrevista/Coletiva" para a oportunidade que casa com o filtro (ou nada). */
+/** @deprecated r27 FLOW2: não use — a entrevista/coletiva chega como cartão no Avançar (flow27p2model.ts; marcador ivMark27). */
 export function ivBtn27(s: GameState, f: (o: Opp27) => boolean, label?: L): HTMLElement | null {
   const o = opps27(s).find(f);
   if (!o || ivGate27(s, o)) return null;
@@ -29,11 +29,12 @@ export function ivBtn27(s: GameState, f: (o: Opp27) => boolean, label?: L): HTML
   return playBtn27(lb, () => openInterview27(o), o.ctx !== 'press', l('Você escolhe a postura de cada resposta: polêmica, charmosa, misteriosa ou esquiva.', 'You pick the stance of each answer: controversial, charming, mysterious or deflecting.'));
 }
 
-export function openInterview27(o: Opp27): void {
+/** r27 (FLOW2): `onDone(jogou?)` ao fechar — o cartão do avanço segue para o próximo. */
+export function openInterview27(o: Opp27, onDone?: (played: boolean) => void): void {
   const s = store.game;
-  if (!s) return;
+  if (!s) { onDone?.(false); return; }
   const st = startIv27(s, o);
-  if (!('id' in st)) { toast(t(st), 'bad'); return; }
+  if (!('id' in st)) { toast(t(st), 'bad'); onDone?.(false); return; }
   const iv: Iv27 = st;
   const act = iv.actId ? s.acts[iv.actId] : undefined;
   const lead = act ? s.persons[act.leaderId ?? act.members[0]] : undefined;
@@ -96,5 +97,5 @@ export function openInterview27(o: Opp27): void {
   };
   draw();
   document.addEventListener('keydown', onKey);
-  close = modal(o.ctx === 'press' ? t(l('Entrevista — {a}', 'Interview — {a}'), { a: act?.name ?? s.config.companyName }) : T(o.title), root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); while (iv.status === 'open') answer27(s, iv, 'deflect'); rerender(); } }); // sair no meio = "sem comentários" até o fim
+  close = modal(o.ctx === 'press' ? t(l('Entrevista — {a}', 'Interview — {a}'), { a: act?.name ?? s.config.companyName }) : T(o.title), root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); const played = iv.ans.length > 0; while (iv.status === 'open') answer27(s, iv, 'deflect'); onDone?.(played); rerender(); } }); // sair no meio = "sem comentários" até o fim
 }

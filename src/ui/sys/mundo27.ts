@@ -23,7 +23,7 @@ import { store } from '../store';
 import { ic, setTab } from '../vis';
 import { openMapInfo17 } from './mapinfo17';
 import {
-  KIND_INFO27, KINDS27, KNOWN27, LAYERS27, MAPTAB27, MUNDO27, TIER27, citySheet27, closedCountries27, eraTimeline27, hotGenres27, known27, monthlyDigest27, sceneGlow27,
+  KIND_INFO27, KINDS27, KNOWN27, LAYERS27, MAPTAB27, MUNDO27, TIER27, citySheet27, closedCountries27, eraTimeline27, hotGenres27, known27, monthlyDigest27, sceneGlow27, sitesByCity27, type Site27,
   sceneStrength27, sceneTier27, type CitySheet27, type DigestItem27, type EraStep27, type Go27, type KnownRow27, type MapLayer27,
 } from './mundo27model';
 import './mundo27.css';
@@ -33,7 +33,7 @@ const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 // ================================================================ navegação
 
 let mapSel: string | null = null;
-const layers = new Set<MapLayer27>(['glow', 'tour']);
+const layers = new Set<MapLayer27>(['glow', 'tour', 'mine']);
 let eraSel: string | null = null;
 
 /** Leva ao destino de um item (área, aba, cidade no mapa, camada, âncora). */
@@ -155,10 +155,12 @@ function cities27(s: GameState, closed: ReturnType<typeof closedCountries27>, st
 function overlays27(s: GameState): MapOverlay[] {
   const o: MapOverlay[] = [];
   const slots = new Map<string, number>();
-  const icon = (city: string, k: 'hq' | 'rival' | 'festival' | 'tour') => { const n = slots.get(city) ?? 0; slots.set(city, n + 1); o.push({ kind: 'icon', city, icon: k, slot: n }); };
+  const icon = (city: string, k: 'hq' | 'rival' | 'festival' | 'tour' | 'branch') => { const n = slots.get(city) ?? 0; slots.set(city, n + 1); o.push({ kind: 'icon', city, icon: k, slot: n }); };
   if (layers.has('glow')) for (const [c, v] of sceneGlow27(s)) o.push({ kind: 'glow', city: c, value: v });
   if (layers.has('hot')) for (const [c, v] of hotGenres27(s).heat) if (v > 0.12) o.push({ kind: 'bubble', city: c, value: v, color: '#a35bd8' });
   icon(s.config.homeCity, 'hq');
+  // r27 FLOW2: filiais, escritórios e empreendimentos fora da cidade-sede (CITY2 os tirou do mapa do bairro)
+  if (layers.has('mine')) for (const c of sitesByCity27(s).keys()) icon(c, 'branch');
   if (layers.has('tour')) {
     const mine = new Set(playerActs(s));
     for (const tr of s.tours) {
@@ -183,6 +185,17 @@ const block = (icon: string, title: L, ...body: (HTMLElement | string | null | f
   h('div', { class: 'sheet27-blk' }, h('h4', null, ic(icon), ' ', T(title)), ...body.filter((x): x is HTMLElement | string => !!x));
 const none = (x: L) => h('p', { class: 'small muted' }, T(x));
 
+/** r27 FLOW2: a "janela" do marcador — seus lugares nesta cidade (tipo, nível, equipe, artistas) com a ação de abrir a página. */
+function sitesBlock27(xs: Site27[]): HTMLElement | null {
+  if (!xs.length) return null;
+  return h('div', { class: 'sheet27-blk sites27', 'data-sites27': String(xs.length) }, h('h4', null, ic('building'), ' ', T(l('Seus lugares aqui', 'Your places here'))),
+    h('ul', { class: 'small sites27-list' }, xs.map((x) => h('li', null,
+      h('div', null, h('b', null, x.name), ' ', pill(T(x.kindName), 'mine27')),
+      h('div', { class: 'row between' },
+        h('small', { class: 'muted' }, [`${T(l('nível', 'level'))} ${x.lvl}`, x.staff !== undefined ? `${T(l('equipe', 'staff'))} ${x.staff}` : '', x.acts !== undefined ? `${T(l('artistas', 'acts'))} ${x.acts}` : ''].filter(Boolean).join(' · ')),
+        h('button', { type: 'button', class: 'btn tiny', 'aria-label': `${T(l('Abrir', 'Open'))}: ${x.name}`, onclick: () => go27(x.go) }, T(l('Abrir', 'Open')), ' →'))))));
+}
+
 function sheet27(s: GameState, c: CitySheet27): HTMLElement {
   const sc = c.scene;
   const tierCls = ['', '', 'good', 'gold'][sc.tier];
@@ -191,6 +204,7 @@ function sheet27(s: GameState, c: CitySheet27): HTMLElement {
       h('div', null, h('h3', null, T(c.name)), h('small', { class: 'muted' }, `${T(c.country)}${c.market ? ` · ${T(c.market)}` : ''}`)),
       h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar ficha', 'Close sheet')), onclick: () => { mapSel = null; rerender(); } }, '✕')),
     c.closed.length ? h('div', { class: 'chips' }, c.closed.map((x) => pill(T(x), 'bad'))) : null,
+    sitesBlock27(sitesByCity27(s).get(c.id) ?? []),
     block('fire', l('Cena', 'Scene'),
       h('div', { class: 'row wrap' }, pill(`${T(l('Cena', 'Scene'))}: ${T(TIER27[sc.tier])}`, tierCls), h('span', { class: `sheet27-meter t${sc.tier}`, role: 'meter', 'aria-valuemin': '0', 'aria-valuemax': '3', 'aria-valuenow': String(sc.tier), 'aria-label': T(l('Força da cena', 'Scene strength')) }, [0, 1, 2].map((i) => h('i', { class: i < sc.tier ? 'on' : '' })))),
       sc.genres.length ? h('ul', { class: 'small' }, sc.genres.map((g) => h('li', null, genreName(g.id), ` ${g.v.toFixed(1)}`, g.hot ? [' ', pill(T(l('em alta', 'hot')), 'warn')] : null))) : none(l('Nenhuma cena forte agora.', 'No strong scene right now.')),
@@ -223,7 +237,9 @@ function hintSheet(s: GameState): HTMLElement {
     h('p', { class: 'small muted' }, T(l('Cidades brilham pela força da cena musical. A ficha mostra cena, casas, rádios, público e quem domina.', 'Cities glow by the strength of their music scene. The sheet shows scene, venues, radios, audience and who rules.'))),
     top.length ? h('div', null, h('h4', null, ic('sparkle'), ' ', T(l('Cenas mais fortes', 'Strongest scenes'))),
       h('ol', { class: 'small' }, top.map(([id, v]) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => { mapSel = id; rerender(); } }, cityName(id)), ` · ${T(TIER27[sceneTier27(v)])}`)))) : null,
-    hot.length ? h('p', { class: 'small' }, ic('fire'), ` ${T(l('Em alta', 'Hot'))}: ${hot.map(genreName).join(', ')}`) : null);
+    hot.length ? h('p', { class: 'small' }, ic('fire'), ` ${T(l('Em alta', 'Hot'))}: ${hot.map(genreName).join(', ')}`) : null,
+    ((m) => m.size ? h('div', null, h('h4', null, ic('building'), ' ', T(l('Seus lugares fora da sede', 'Your places away from HQ'))),
+      h('ul', { class: 'small' }, [...m].map(([id, xs]) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => { mapSel = id; layers.add('mine'); rerender(); } }, cityName(id)), ` · ${xs.map((x) => T(x.kindName)).join(', ')}`)))) : null)(sitesByCity27(s)));
 }
 
 function mapTab(s: GameState): HTMLElement {
@@ -231,6 +247,7 @@ function mapTab(s: GameState): HTMLElement {
   const st = strengths27(s);
   const cities = cities27(s, closed, st);
   const ov = overlays27(s);
+  const sites = sitesByCity27(s);
   const opts = {
     getYear: () => store.game?.year ?? s.year,
     getMonth: () => store.game?.month ?? s.month,
@@ -241,10 +258,11 @@ function mapTab(s: GameState): HTMLElement {
     onCountryClick: (a3: string) => openMapInfo17(s, 'country', a3),
     overlays: () => ov,
     countryShade: (a3: string) => { const c = closed.get(a3); return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
-    cityTipExtra: (id: string) => { const v = st.get(id) ?? 0; return h('div', { class: 'small' }, `${T(l('Cena', 'Scene'))}: ${T(TIER27[sceneTier27(v)])}`); },
+    cityTipExtra: (id: string) => { const v = st.get(id) ?? 0; const mine = layers.has('mine') ? sites.get(id) ?? [] : []; return h('div', { class: 'small' }, `${T(l('Cena', 'Scene'))}: ${T(TIER27[sceneTier27(v)])}`, mine.length ? h('div', { class: 'mine27' }, ic('building'), ` ${mine.map((x) => `${x.name} (${T(x.kindName)})`).join(' · ')}`) : null); },
     countryTipExtra: (a3: string) => { const c = closed.get(a3); return c ? h('div', { class: 'small bad' }, ic('lock'), ' ', T(c.why)) : null; },
     legendExtra: () => [
       h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--gold)' }), T(l('Brilho: força da cena', 'Glow: scene strength'))),
+      layers.has('mine') && sites.size ? h('span', { class: 'wmap-key' }, ic('building'), ' ', T(l('Seus lugares fora da sede', 'Your places away from HQ'))) : null,
       layers.has('hot') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:#a35bd8' }), T(l('Gêneros em alta', 'Hot genres'))) : null,
       layers.has('rivals') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--bad)' }), T(l('Força dos rivais', 'Rival strength'))) : null,
       layers.has('closed') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw hatch', style: 'background-color:var(--bad)' }), T(l('Fechado (guerra, bloco, shows proibidos)', 'Closed (war, bloc, shows banned)'))) : null,

@@ -1,9 +1,9 @@
-// r27 (P2B) — pontos de entrada das mecânicas da fase 2, sem mexer nas telas dos outros:
-//   • Cockpit (HOME_EXTRA19): bloco "Crises" (com "▶ Enfrentar"), "Reunião de diretoria" no começo do mês e
-//     "Na estrada" (diário das turnês planejadas no mapa com eventos pela frente).
-//   • Rumo do selo › Políticas (POLICY19): reunião de diretoria (ligar/sentar à mesa) e crises.
+// r27 (P2B) — estado das mecânicas da fase 2, sem mexer nas telas dos outros (r27 FLOW2: a entrada é o Avançar):
+//   • Cockpit (HOME_EXTRA19): blocos "Crises", "Reunião de diretoria" (começo do mês) e "Na estrada", com o
+//     marcador 🎮 — a sala de crise, a reunião e o diário de estrada chegam como cartão no Avançar.
+//   • Rumo do selo › Políticas (POLICY19): reunião de diretoria (marcador, desligar) e crises.
 //   • Depois de avançar (AFTER_ADVANCE): aviso de crise nova e de evento de estrada a decidir.
-// Tudo some no modo "sempre rápido" (os botões "Jogar" saem; o jogo segue como antes).
+// No modo "sempre rápido" os blocos do Cockpit somem e o jogo segue como antes.
 
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -18,8 +18,9 @@ import { POLICY19 } from '../sys/long18';
 import { card27 } from '../ps/ui27';
 import { boardPending27, boardSection27 } from './board27';
 import { crisesSection27 } from './crisis27';
-import { actMode27, playBtn27 } from './mode27';
-import { openRoad27, roadTours27 } from './road27';
+import { occMark27 } from './flow27';
+import { actMode27 } from './mode27';
+import { roadTours27 } from './road27';
 
 function roadSection27(s: GameState): HTMLElement | null {
   const pend = pendingRoad27(s, 21);
@@ -28,8 +29,10 @@ function roadSection27(s: GameState): HTMLElement | null {
   return card27({ title: l('Na estrada', 'On the road'), icon: 'tour-bus' },
     h('ul', { class: 'p2b-list' }, tours.map((x) => {
       const n = pend.filter((p) => p.t.id === x.id).length;
+      // r27 (FLOW2): os eventos chegam como cartão no Avançar; o diário completo fica na turnê (Ao vivo › Turnês)
+      const first = pend.find((p) => p.t.id === x.id);
       return h('li', null, h('b', null, x.name), ' ', n ? h('small', { class: 'warn' }, t(l('{n} evento(s) para decidir', '{n} event(s) to decide'), { n })) : h('small', { class: 'muted' }, t(l('nada pela frente', 'nothing ahead'))), ' ',
-        playBtn27(l('Diário de estrada', 'Road journal'), () => openRoad27(x.id), true) ?? '');
+        first ? occMark27(s, { src: 'road', key: `road:${x.id}:${first.st.day}`, actId: first.t.actId, data: { tourId: x.id, tour: x.name, n } }) : null);
     })));
 }
 
@@ -56,9 +59,9 @@ AFTER_ADVANCE.push((s) => {
   try {
     const cands = crisisCands27(s).filter((c) => !seen27.has(c.id));
     for (const c of cands) seen27.add(c.id);
-    if (cands.length) toast(t(l('Crise na mesa: {t}. Veja no Cockpit (▶ Enfrentar).', 'Crisis on the table: {t}. See the Cockpit (▶ Face it).'), { t: t(cands[0].text) }), 'bad');
+    if (cands.length) toast(t(l('Crise na mesa: {t}. Ela chega como cartão no próximo Avançar (Jogar / Resolver rápido).', 'Crisis on the table: {t}. It comes as a card on the next Advance (Play / Resolve quickly).'), { t: t(cands[0].text) }), 'bad');
     const rd = pendingRoad27(s, 10);
-    if (rd.length) toast(t(l('Estrada: {n} evento(s) nas próximas datas — abra o Diário de estrada.', 'Road: {n} event(s) on the next dates — open the Road journal.'), { n: rd.length }), 'warn');
+    if (rd.length) toast(t(l('Estrada: {n} evento(s) nas próximas datas — chegam no próximo Avançar.', 'Road: {n} event(s) on the next dates — they come on the next Advance.'), { n: rd.length }), 'warn');
     if (seen27.size > 200) seen27 = new Set([...seen27].slice(-100));
   } catch (e) { console.warn('p2b27', e); }
 });

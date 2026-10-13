@@ -20,8 +20,9 @@ export function negotiateButton(s: GameState, actId: string, mode: 'sign' | 'ren
     '🤝 ', label ?? (mode === 'sign' ? t(l('Mesa de negociação', 'Negotiating table')) : t(l('Renovar na mesa', 'Renew at the table'))));
 }
 
-export function openNegotiation(s: GameState, actId: string, mode: 'sign' | 'renew'): void {
-  if (store.prefs.minigames === 'auto') {
+/** r27 (FLOW2): a renovação passa pelo fluxo (Opções → Atividades); `played` = abrir a mesa mesmo com mini-jogos no automático. */
+export function openNegotiation(s: GameState, actId: string, mode: 'sign' | 'renew', played = false): void {
+  if (!played && store.prefs.minigames === 'auto') {
     const res = autoNegotiate(s, actId, mode);
     toast(t(res), s.acts[actId]?.owner === 'player' ? 'good' : 'info');
     rerender();

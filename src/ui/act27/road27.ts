@@ -42,14 +42,15 @@ function roadCanvas(s: GameState, o: { sky?: Sky27; broken?: boolean; border?: b
 
 // ================================================================ 1. planejar no mapa
 
-export function openRoute27(actId0?: string, cities0: string[] = []): void {
+/** r27 (FLOW2): o planejador É a tela de marcar turnê — `o.classic` = "Resolver rápido" (marca como no formulário). */
+export function openRoute27(actId0?: string, cities0: string[] = [], o: { classic?: () => void; start?: number } = {}): void {
   const s = store.game;
   if (!s) return;
   const ids = playerActs(s).filter((id) => { const a = s.acts[id]; return a && a.status !== 'retired' && a.status !== 'split'; });
   if (!ids.length) { toast(t(l('Nenhum artista para levar à estrada.', 'No act to take on the road.')), 'bad'); return; }
   let actId = actId0 && ids.includes(actId0) ? actId0 : ids[0];
   let cities: string[] = cities0.filter((c) => !!cityById[c]);
-  const opt: Partial<TourPlan> = { startInDays: 21, priceMult: 1 };
+  const opt: Partial<TourPlan> = { startInDays: o.start && [14, 21, 35, 56].includes(o.start) ? o.start : 21, priceMult: 1 };
   let ins: 0 | 1 = 0;
   let move: 'van' | 'bus' | 'fly' = 'van';
   let demandCache = new Map<string, number>();
@@ -123,6 +124,7 @@ export function openRoute27(actId0?: string, cities0: string[] = []): void {
       rv?.est.warnings.length ? h('ul', { class: 'small p2b-warn' }, rv.est.warnings.slice(0, 5).map((w) => h('li', null, t(w)))) : null,
       h('div', { class: 'row a27-actions' },
         cities.length ? h('button', { class: 'btn ghost', onclick: () => { cities = []; refresh(); } }, t(l('Limpar rota', 'Clear route'))) : null,
+        o.classic ? h('button', { class: 'btn ghost', 'data-fl27': 'quick', title: t(l('Marca a turnê do formulário, sem o diário de estrada (o de sempre).', 'Books the tour from the form, without the road journal (as always).')), onclick: () => { close(); o.classic?.(); } }, t(l('Resolver rápido: marcar como no formulário', 'Resolve quickly: book as in the form'))) : null,
         h('button', { class: 'btn primary', disabled: !rv, onclick: () => book() }, t(l('Marcar a turnê', 'Book the tour')))),
     );
   };
@@ -143,11 +145,11 @@ export function openRoute27(actId0?: string, cities0: string[] = []): void {
 
 // ================================================================ 2. diário de estrada
 
-export function openRoad27(tourId: string): void {
+export function openRoad27(tourId: string, onDone?: (played: boolean) => void): void {
   const s = store.game;
-  if (!s) return;
+  if (!s) { onDone?.(false); return; }
   const tr = s.tours.find((x) => x.id === tourId);
-  if (!tr || !isRoad27(s, tourId)) { toast(t(l('Turnê não encontrada.', 'Tour not found.')), 'bad'); return; }
+  if (!tr || !isRoad27(s, tourId)) { toast(t(l('Turnê não encontrada.', 'Tour not found.')), 'bad'); onDone?.(false); return; }
   const root = h('div', { class: 'a27 p2b-road' });
   const view = (flash?: { t: L; tone: string }) => {
     const pend = pendingRoad27(s, 35).filter((x) => x.t.id === tourId);
@@ -174,7 +176,7 @@ export function openRoad27(tourId: string): void {
     (root.querySelector('.p2b-opt:not([disabled])') as HTMLElement | null)?.focus();
   };
   view();
-  const close = modal(t(l('Diário de estrada', 'Road journal')), root, { wide: true, onClose: () => rerender() });
+  const close = modal(t(l('Diário de estrada', 'Road journal')), root, { wide: true, onClose: () => { onDone?.(true); rerender(); } });
 }
 
 function evCard(s: GameState, ev: RoadEv27, cityId: string, day: number, done: (t: L, tone: string) => void): HTMLElement {
