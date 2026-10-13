@@ -56,7 +56,7 @@
 .wk29-rg ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2px 12px; }
 .wk29-hit { display: flex; align-items: center; gap: 8px; padding: 4px 0; text-align: left; width: 100%; }
 .wk29-dgw { margin: 8px 0 12px; }
-.wk29-dg { width: 100%; max-width: 760px; height: auto; display: block; }
+.wk29-dg { width: 100%; max-width: 860px; height: auto; display: block; }
 .wk29-dg .wk29-n rect { fill: var(--panel-2); stroke: var(--accent); stroke-width: 1.5; }
 .wk29-dg .wk29-n text { fill: var(--ink); font-size: 11px; font-family: var(--sans, sans-serif); }
 .wk29-dg .wk29-n { cursor: pointer; }

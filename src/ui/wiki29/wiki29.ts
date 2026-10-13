@@ -103,7 +103,7 @@ function results(c: W29): HTMLElement {
 function pageEl(p: Page29): HTMLElement {
   const crumbs = p.crumbs.length ? h('nav', { class: 'wk29-crumbs', 'aria-label': T('Migalhas', 'Breadcrumbs') }, p.crumbs.flatMap((x, i) => [i ? h('span', { 'aria-hidden': 'true' }, ' › ') : null, link(x.id, x.label)])) : null;
   return h('article', { class: 'wk29-page' }, crumbs,
-    h('header', { class: 'wk29-head' }, p.art ? h('div', { class: `wk29-art wk29-art-${p.art.k}` }, art(p.art, 96)) : null,
+    h('div', { class: 'wk29-head' }, p.art ? h('div', { class: `wk29-art wk29-art-${p.art.k}` }, art(p.art, 96)) : null,
       h('div', null, p.kind ? h('p', { class: 'wk29-kind' }, p.kind) : null, h('h2', null, p.title))),
     ...p.blocks.map(block));
 }
@@ -224,8 +224,8 @@ const svg = (tag: string, at: Record<string, string | number>, text?: string): S
 
 function diagram(): HTMLElement {
   const nodes = [...new Set(EDGES29W.flatMap((e) => [e.from, e.to]))];
-  const W = 640, Hh = 420, cx = W / 2, cy = Hh / 2, R = 160;
-  const pos = new Map(nodes.map((n, i) => { const a = (i / nodes.length) * Math.PI * 2 - Math.PI / 2; return [n, [cx + Math.cos(a) * R * 1.35, cy + Math.sin(a) * R] as [number, number]]; }));
+  const W = 780, Hh = 440, cx = W / 2, cy = Hh / 2, RX = 300, RY = 180;
+  const pos = new Map(nodes.map((n, i) => { const a = (i / nodes.length) * Math.PI * 2 - Math.PI / 2; return [n, [cx + Math.cos(a) * RX, cy + Math.sin(a) * RY] as [number, number]]; }));
   const root = svg('svg', { viewBox: `0 0 ${W} ${Hh}`, class: 'wk29-dg', role: 'img', 'aria-label': T('Mapa de conexões entre sistemas', 'Map of connections between systems') });
   const defs = svg('defs', {});
   for (const k of ['ok', 'weak', 'fixed', 'intended']) { const m = svg('marker', { id: `wk29ar-${k}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }); m.append(svg('path', { d: 'M0,0 L10,5 L0,10 z', class: `wk29-e-${k}` })); defs.append(m); }
@@ -243,7 +243,7 @@ function diagram(): HTMLElement {
     const [x, y] = pos.get(n)!;
     const g = svg('g', { class: 'wk29-n', tabindex: 0, role: 'link' });
     const name = title29(ctx(), `mech:${n}`);
-    g.append(svg('rect', { x: x - 58, y: y - 14, width: 116, height: 28, rx: 4 }), svg('text', { x, y: y + 4, 'text-anchor': 'middle' }, name.length > 18 ? `${name.slice(0, 17)}…` : name));
+    g.append(svg('rect', { x: x - 74, y: y - 14, width: 148, height: 28, rx: 4 }), svg('text', { x, y: y + 4, 'text-anchor': 'middle' }, name.length > 23 ? `${name.slice(0, 22)}…` : name));
     g.addEventListener('click', () => go(`mech:${n}`));
     g.addEventListener('keydown', (ev) => { if ((ev as KeyboardEvent).key === 'Enter') go(`mech:${n}`); });
     root.append(g);
