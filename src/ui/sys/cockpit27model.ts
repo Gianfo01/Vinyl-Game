@@ -16,6 +16,7 @@ import type { Goto18 } from '../../sim/inbox18';
 import { items18 } from '../../sim/sys/inbox18';
 import { STAGE_NAMES, openProjects, projectStage } from '../../sim/sys/project8';
 import { slack } from '../../sim/sys/project12';
+import { PROM28_NAME, promiseRows28 } from '../../sim/sys/promises28';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
 import { hqModel25, runway25, type Goto25, type Need25 } from '../ps/hq25model';
@@ -61,14 +62,29 @@ export function strip27(s: GameState, loc: string, date: string): Kpi27[] {
   ];
 }
 
+/** r28 (C7): promessas abertas (verba comprometida, prazo, multa) entram primeiro nos compromissos. */
+function promises(s: GameState): Row27m[] {
+  let xs: ReturnType<typeof promiseRows28> = [];
+  try { xs = promiseRows28(s).filter((r) => r.state === 'open'); } catch { xs = []; }
+  return xs.slice(0, 2).map((r) => ({
+    id: `prom28:${r.actId}:${r.kind}`,
+    title: fmtL(l('Promessa a {a}: {k}', 'Promise to {a}: {k}'), { a: r.act, k: PROM28_NAME[r.kind] }),
+    meta: fmtL(l('verba {b} · multa {m}', 'budget {b} · penalty {m}'), { b: usd(r.budget - r.spent), m: usd(r.penalty) }),
+    aside: r.met ? l('atendida', 'met') : r.kind === 'freedom' ? l('contrato todo', 'whole deal') : fmtL(l('vence em {n} sem.', 'due in {n} wk'), { n: Math.max(0, r.weeksLeft) }),
+    tone: r.met ? 'good' : r.kind !== 'freedom' && r.weeksLeft < 8 ? 'warn' : undefined, go: { act: r.actId } as Goto25,
+  }));
+}
+const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
+
 function commit(s: GameState): Row27m[] {
   let xs: ReturnType<typeof calendar19> = [];
   try { xs = calendar19(s, { weeks: 4 }); } catch { xs = []; }
-  return xs.filter((d) => d.kind !== 'decision' && d.kind !== 'msg' && d.w0 === undefined).slice(0, ROWS_MAX27).map((d) => ({
+  const pr = promises(s);
+  return [...pr, ...xs.filter((d) => d.kind !== 'decision' && d.kind !== 'msg' && d.w0 === undefined).slice(0, ROWS_MAX27).map((d): Row27m => ({
     id: d.id, title: d.t, meta: d.d,
     aside: d.w <= s.week ? l('esta semana', 'this week') : fmtL(l('em {n} sem.', 'in {n} wk'), { n: d.w - s.week }),
     tone: d.tone === 'bad' ? 'bad' : undefined, go: d.goto as Goto25 | undefined,
-  }));
+  }))].slice(0, ROWS_MAX27);
 }
 
 function proj(s: GameState): Row27m[] {

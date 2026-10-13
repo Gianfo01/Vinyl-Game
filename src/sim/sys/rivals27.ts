@@ -27,6 +27,7 @@ import { headline19 } from './factlink19';
 import { leaders, type LeaderStyle } from './leaders10';
 import { COPIES27 } from './scenes27';
 import { actsNow27, releasesNow27 } from '../tickcache27';
+import { perceivedTrust28 } from './rivalsense28';
 
 export type Temper27 = 'vengeful' | 'cold' | 'copycat' | 'proud';
 export const TEMPER27: Record<Temper27, [L, L]> = {
@@ -124,7 +125,7 @@ function react(s: GameState, r: Rng): void {
     x.last = s.week;
     const why = x.mem[0]?.t ?? l('velhas contas.', 'old scores.');
     if (tp === 'vengeful') {
-      const target = mine.filter((a) => a.fame > 15 && (a.trust < 55 || (a.contractId && (s.contracts[a.contractId]?.endWeek ?? 0) - s.week < 40))).sort((a, b) => b.fame - a.fame)[0];
+      const target = mine.filter((a) => a.fame > 15 && (perceivedTrust28(s, lb.id, a) < 55 || (a.contractId && (s.contracts[a.contractId]?.endWeek ?? 0) - s.week < 40))).sort((a, b) => b.fame - a.fame)[0];
       if (target && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
         emitEvent(s, r, 'poach_attempt', { act: target.id, label: lb.id });
         say(s, lb, x, 'poach', fmtL(l('{b} vai atrás de {a} para se vingar ({w})', '{b} goes after {a} for revenge ({w})'), { b: lb.name, a: target.name, w: why }), 45, target.id);

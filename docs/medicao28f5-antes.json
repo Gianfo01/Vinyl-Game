@@ -1,0 +1,132 @@
+{
+ "years": 3,
+ "seeds": 6,
+ "rows": [
+  {
+   "seed": "m28f5-0",
+   "year0": 1975,
+   "offers": 4,
+   "signs": 3,
+   "contracts": 3,
+   "advReal": 5016,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 53759
+  },
+  {
+   "seed": "m28f5-1",
+   "year0": 1990,
+   "offers": 5,
+   "signs": 4,
+   "contracts": 4,
+   "advReal": 3828,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 60185
+  },
+  {
+   "seed": "m28f5-2",
+   "year0": 1962,
+   "offers": 5,
+   "signs": 4,
+   "contracts": 4,
+   "advReal": 4120,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 40069
+  },
+  {
+   "seed": "m28f5-3",
+   "year0": 2005,
+   "offers": 4,
+   "signs": 3,
+   "contracts": 2,
+   "advReal": 1773,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 64890
+  },
+  {
+   "seed": "m28f5-4",
+   "year0": 1985,
+   "offers": 6,
+   "signs": 3,
+   "contracts": 4,
+   "advReal": 3409,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 43552
+  },
+  {
+   "seed": "m28f5-5",
+   "year0": 1998,
+   "offers": 4,
+   "signs": 2,
+   "contracts": 4,
+   "advReal": 4613,
+   "sniped": 0,
+   "rivalLive": 0,
+   "promises": 0,
+   "kept": 0,
+   "broken": 0,
+   "penaltyReal": 0,
+   "ms": 51484
+  }
+ ],
+ "probe": {
+  "live": {
+   "rejected": 35,
+   "thinking": 4,
+   "accepted": 6,
+   "counter": 3
+  },
+  "live15": {
+   "rejected": 16,
+   "counter": 3,
+   "accepted": 17,
+   "thinking": 12
+  },
+  "month": {
+   "sniped": 15,
+   "accepted": 10,
+   "rejected": 22,
+   "counter": 1
+  },
+  "advLive": [
+   54200,
+   22300,
+   21600,
+   22000,
+   19500,
+   66300
+  ],
+  "prom": {
+   "n": 10,
+   "kept": 10,
+   "broken": 0,
+   "open": 0,
+   "penaltyReal": 0,
+   "budgetReal": 0
+  }
+ }
+}

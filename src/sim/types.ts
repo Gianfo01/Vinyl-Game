@@ -380,6 +380,11 @@ export interface ContractPromise {
   kind: 'priority' | 'tour' | 'freedom';
   dueWeek: number;
   kept?: boolean;
+  /** r28 (C7, sys/promises28): verba comprometida, quanto já saiu, multa por descumprir e multa paga (centavos) */
+  budget?: number;
+  spent?: number;
+  penalty?: number;
+  paidPenalty?: number;
 }
 
 export interface Contract {

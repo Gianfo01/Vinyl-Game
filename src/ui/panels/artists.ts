@@ -30,6 +30,7 @@ import { contractExtra, fandomSection, membersSection, reunionSection } from './
 import { forecastRenewal } from '../../sim/sys/explain12';
 import { forecastBox } from '../sys/explain12';
 import { pledgeLine } from '../sys/offers12';
+import { promiseList28 } from '../sys/promises28';
 import { hideSection, sectionsOf } from '../registry';
 import { FILTER0_20, SUB20, SUBTAB_KEY20, actionRow20, alerts20, filterRoster20, nextCommitment20, project20, type Filter20, type Sub20 } from '../actions20';
 import { actionsButton20, applyNav20, bindContext20, chooseAction20, quickPins20 } from '../sys/actmenu20';
@@ -231,7 +232,8 @@ function contractBlock(s: GameState, a: Act): HTMLElement[] {
       kv(t(S.recoup), $(c.recoupBalance)),
       kv(t(S.ends), `${Math.max(0, Math.round((c.endWeek - s.week) / 4.35))} ${t(l('meses', 'months'))}`),
       kv(t(S.releasesOwed), `${c.releasesDone}/${c.releasesOwed}`),
-      c.promises.length ? kv(t(S.promises), h('span', null, c.promises.map((p) => pill(`${promiseName(p.kind)}${p.kept === undefined ? '' : p.kept ? ' ✓' : ' ✗'}`, p.kept === false ? 'bad' : '')))) : null,
+      c.promises.length && c.party === 'player' ? kv(t(S.promises), promiseList28(s, a.id) ?? '—') // r28 (C7): verba, prazo e multa
+      : c.promises.length ? kv(t(S.promises), h('span', null, c.promises.map((p) => pill(`${promiseName(p.kind)}${p.kept === undefined ? '' : p.kept ? ' ✓' : ' ✗'}`, p.kept === false ? 'bad' : '')))) : null,
       c.party === 'player' && !a.playerBand ? h('div', { class: 'actions' },
         h('button', { class: 'btn', onclick: (e: Event) => chooseAction20(s, 'contract.renew', a.id, e.currentTarget as HTMLElement) }, `${t(S.renew)} (36m, ${$(money(s, 1500 + a.fame * a.fame * 15))}) …`),
         h('button', { class: 'btn ghost', onclick: (e: Event) => chooseAction20(s, 'contract.royalty', a.id, e.currentTarget as HTMLElement) }, t(S.raiseRoyalty), ' …'),

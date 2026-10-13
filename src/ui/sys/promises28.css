@@ -1,0 +1,7 @@
+/* r28 (C7): promessas com verba, prazo e multa (proposta e ficha do ato) */
+.prom28 { margin: 8px 0; padding: 6px 10px; display: grid; gap: 4px; }
+.prom28 legend { font-size: .9em; }
+.prom28 label.check { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+.prom28 label.check small { flex-basis: 100%; padding-left: 1.7em; }
+.prom28-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.prom28-list li { line-height: 1.35; }

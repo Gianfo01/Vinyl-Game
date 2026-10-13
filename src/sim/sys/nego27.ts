@@ -12,7 +12,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { acceptOffer, evaluateOffer, expectedAdvance, makeOffer, signWithRival } from '../contracts';
+import { acceptOffer, evaluateOffer, expectedAdvance, makeOffer } from '../contracts';
 import { actHasTrait, mainAmbition } from '../people';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, staffCount, staffSkill } from '../util';
@@ -20,13 +20,16 @@ import { scoutEligible20 } from '../scout20';
 import { freeCash20 } from '../oblig20';
 import { cap14 } from './gate14';
 import { respondDemand, rst, settleDemand } from '../rights';
+import { rivalCounter28, rivalReserve28, rivalScore28, rivalSign28, rivalTerms28 } from './rivalsense28';
 
 export type Draft27 = Omit<Offer, 'id' | 'week' | 'status'>;
 export const NEGO27_RNG = 'nego27v1';
 
 export type Tactic27 = 'plain' | 'bluff' | 'deadline';
 export interface Line27 { who: 'you' | 'them' | 'rival' | 'note'; t: L; tone?: 'good' | 'bad' | 'warn' }
-export interface Rival27 { id: string; name: string; score: number; terms: Draft27 }
+export interface Rival27 { id: string; name: string; score: number; terms: Draft27;
+  /** r28 (C7): reserva própria do rival (escondida), lance atual, quantas vezes cobriu e se já recuou */
+  reserve?: number; bid?: number; counters?: number; out?: boolean }
 export interface Nego27 {
   actId: string; week: number; attempt: number;
   round: number; maxRounds: number;
@@ -189,6 +192,7 @@ export function propose27(s: GameState, n: Nego27, o: Draft27, tactic: Tactic27 
   }
   // rival entra na disputa (ato visível, a partir da 2ª rodada, ou se você chamou)
   if (!n.rival && n.round >= 2 && (act.fame > 10 || !!act.catalogNo) && r.next() < clamp(0.12 + act.fame / 150, 0, 0.55)) bringRival27(s, n, false);
+  if (n.rival && !n.rival.out && sc > n.rival.score) rivalCounter27(s, n, r);
   if (sc >= n.asp || (n.round >= n.maxRounds && sc >= n.res)) return deal27(s, n, n.ours, l('"Fechado." Eles aceitam a sua proposta.', '"Deal." They accept your offer.'));
   // paciência: proposta longe do mínimo ofende
   const gap = n.res - sc;
@@ -218,14 +222,13 @@ export function bringRival27(s: GameState, n: Nego27, asked = true): Nego27 {
   const labels = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 50000)).sort((a, b) => b.aggression - a.aggression || (a.id < b.id ? -1 : 1)).slice(0, 3);
   if (!labels.length) { if (asked) n.log.push({ who: 'note', t: l('Nenhum selo rival com caixa para entrar na disputa.', 'No rival label has the cash to join the bidding.') }); n.rivalAsked = asked || n.rivalAsked; return n; }
   const lb = labels[r.int(0, labels.length - 1)];
-  const target = n.res + r.float(0.02, 0.1) + lb.aggression * 0.04;
-  // termos do rival: o padrão com adiantamento subindo até o placar-alvo
-  const o = copyDraft27(n.ours);
-  o.advance = money(s, Math.round(expectedAdvance(s, act) / 100) * 100);
-  const step = Math.max(money(s, 200), Math.round(o.advance * 0.1 / 100) * 100);
-  for (let i = 0; i < 40 && scoreOf(s, act, o) < target; i++) o.advance += step;
-  const sc = scoreOf(s, act, o);
-  n.rival = { id: lb.id, name: lb.name, score: sc, terms: o };
+  // r28 (C7): o lance sai da reserva PRÓPRIA do rival (fama percebida, agressividade, caixa) — não do seu lance
+  // nem do mínimo escondido do artista; o placar soma a diferença de força entre os selos
+  const reserve = rivalReserve28(s, lb, act);
+  const bid = Math.round(reserve * r.float(0.7, 0.9) / 100) * 100;
+  const o: Draft27 = copyDraft27(rivalTerms28(s, act, bid));
+  const sc = rivalScore28(s, act, lb, bid);
+  n.rival = { id: lb.id, name: lb.name, score: sc, terms: o, reserve, bid, counters: 0 };
   n.rivalAsked = asked;
   n.res = Math.max(n.res, sc + 0.01);
   n.asp = Math.max(n.asp, sc + 0.05);
@@ -236,6 +239,27 @@ export function bringRival27(s: GameState, n: Nego27, asked = true): Nego27 {
   }
   n.log.push({ who: 'rival', tone: 'warn', t: fmtL(asked ? l('Você abre a disputa: {l} entra com {a} de adiantamento. Eles ganham fôlego (+1 rodada, paciência +15), mas agora você precisa cobrir o lance.', 'You open the bidding: {l} comes in with a {a} advance. They get breathing room (+1 round, patience +15), but now you must top the bid.') : l('{l} fica sabendo e entra na disputa com {a} de adiantamento.', '{l} hears about it and joins the bidding with a {a} advance.'), { l: lb.name, a: usd(o.advance) }) });
   return n;
+}
+
+/** r28 (C7): você passou o rival — ele cobre (sorteio pela agressividade, até a reserva dele) ou recua de vez. */
+function rivalCounter27(s: GameState, n: Nego27, r: Rng): void {
+  const rv = n.rival!;
+  const lb = s.labels[rv.id];
+  const act = s.acts[n.actId];
+  const bid = rv.bid ?? rv.terms.advance;
+  const nb = lb ? rivalCounter28(lb, bid, rv.reserve ?? bid, r) : null;
+  if (nb === null || !lb) {
+    rv.out = true;
+    n.log.push({ who: 'rival', tone: 'good', t: fmtL(l('{l} não cobre: chegou no limite dele.', '{l} won\'t go higher: they hit their limit.'), { l: rv.name }) });
+    return;
+  }
+  rv.bid = nb;
+  rv.counters = (rv.counters ?? 0) + 1;
+  rv.terms = copyDraft27(rivalTerms28(s, act, nb));
+  rv.score = rivalScore28(s, act, lb, nb);
+  n.res = Math.max(n.res, rv.score + 0.01);
+  n.asp = Math.max(n.asp, rv.score + 0.05);
+  n.log.push({ who: 'rival', tone: 'warn', t: fmtL(l('{l} sobe o lance: {a} de adiantamento.', '{l} raises its bid: a {a} advance.'), { l: rv.name, a: usd(nb) }) });
 }
 
 /** Sair da mesa. Sem rival e com proposta perto do mínimo, às vezes eles ligam de volta e topam a sua última. */
@@ -285,7 +309,8 @@ function fail27(s: GameState, n: Nego27, st: 'walked' | 'lost'): Nego27 {
   if (k) k.stage = 'investigating';
   n.status = st;
   if (n.rival && !act.owner) {
-    signWithRival(s, act, n.rival.id, rng27(s, n, 'snipe'));
+    const lb = s.labels[n.rival.id];
+    if (lb) rivalSign28(s, act, lb, n.rival.bid ?? n.rival.terms.advance, rng27(s, n, 'snipe'));
     if (act.owner) {
       n.status = 'sniped';
       s.rivalries[n.rival.id] = (s.rivalries[n.rival.id] ?? 0) + 10;

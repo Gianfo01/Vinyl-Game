@@ -50,8 +50,15 @@ export const KIND_NAME20: Record<OblKind20, L> = {
 export function reservedAdvances20(s: GameState, exceptId?: string): number {
   return (s.offers ?? []).filter((o) => o.status === 'pending' && o.id !== exceptId).reduce((t, o) => t + Math.max(0, o.advance), 0);
 }
-/** Caixa livre = caixa − reservas de ofertas pendentes. */
-export const freeCash20 = (s: GameState, exceptId?: string): number => s.player.cash - reservedAdvances20(s, exceptId);
+/** r28 (C7): outras reservas de caixa (ex.: verba de promessas — sys/promises28), registradas sem dependência. */
+const RESERVES20: { id: string; fn: (s: GameState) => number }[] = [];
+export function registerReserve20(id: string, fn: (s: GameState) => number): void {
+  const i = RESERVES20.findIndex((x) => x.id === id);
+  if (i >= 0) RESERVES20[i] = { id, fn }; else RESERVES20.push({ id, fn });
+}
+export const otherReserves20 = (s: GameState): number => RESERVES20.reduce((t, x) => t + Math.max(0, x.fn(s)), 0);
+/** Caixa livre = caixa − reservas de ofertas pendentes − outras reservas (r28: verba de promessas). */
+export const freeCash20 = (s: GameState, exceptId?: string): number => s.player.cash - reservedAdvances20(s, exceptId) - otherReserves20(s);
 const usd20 = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 /** r20c (N2): motivo do bloqueio de um gasto checado contra o caixa LIVRE. Se o caixa bruto também não cobre, mantém
  *  a mensagem original do sistema; se só a reserva impede, diz quanto está reservado e para quê. */

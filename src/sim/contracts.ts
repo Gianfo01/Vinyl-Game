@@ -12,6 +12,8 @@ import { hqCaps } from './branches';
 import { perk } from './perks';
 import { offerMods } from './ext4';
 import { freeCash20 } from './oblig20';
+import { armPromises28, promiseMet28, PROM28_NAME, settlePromise28 } from './sys/promises28';
+import { rivalContest28, usd28 } from './sys/rivalsense28';
 export { registerOfferMod } from './ext4';
 import { rivalSignOk, useMeeting } from './sys/gate14';
 
@@ -183,16 +185,17 @@ export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer[
   }
   if (!scoutEligible20(s, act).ok) { o.status = 'rejected'; o.thinkUntil = undefined; o.note = scoutEligible20(s, act).why?.pt; return 'rejected'; } // r20 (B9): aposentou/acabou no meio da negociação
   const ev = evaluateOffer(s, act, o);
-  // rival disputa atos públicos (na mesa, ele só aparece se o artista pedir tempo)
-  const rivalBid = !live && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
+  // rival disputa atos públicos. r28 (C7): também na oferta ao vivo de ato com fama > 10; o rival tem reserva
+  // própria (fama percebida, não o seu lance) e pode cobrir a sua proposta num sorteio (sys/rivalsense28)
+  const rivalBid = (!live || act.fame > 10) && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
   if (rivalBid) {
-    const rival = Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 50000)).sort((a, b) => b.aggression - a.aggression)[0];
-    if (rival && r.chance((0.15 + rival.aggression * 0.35 - ev.score * 0.2) * (o.thinkUntil !== undefined ? 0.6 : 1))) {
+    const won = rivalContest28(s, r, act, o, ev.score, live);
+    if (won) {
+      const rival = won.lb;
       o.status = 'sniped';
       o.note = rival.name;
-      signWithRival(s, act, rival.id, r);
       s.rivalries[rival.id] = (s.rivalries[rival.id] ?? 0) + 15;
-      notify(s, fmtL(l('{label} assinou com {act} antes da sua resposta.', '{label} signed {act} before your answer.'), { label: rival.name, act: act.name }), 'bad');
+      notify(s, fmtL(won.countered ? l('{label} cobriu a sua proposta e assinou com {act} ({v} de adiantamento).', '{label} topped your offer and signed {act} ({v} advance).') : l('{label} assinou com {act} antes da sua resposta ({v} de adiantamento).', '{label} signed {act} before your answer ({v} advance).'), { label: rival.name, act: act.name, v: usd28(won.bid) }), 'bad');
       remember(s, 'sniped', fmtL(l('{label} levou {act} numa disputa com você.', '{label} took {act} from you in a bidding war.'), { label: rival.name, act: act.name }), { actId: act.id });
       return 'sniped';
     }
@@ -328,6 +331,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
   }
   if (o.clauses18) c.clauses18 = { ...o.clauses18 };
   s.contracts[id] = c;
+  armPromises28(s, c); // r28 (C7): verba, multa e prazo da promessa
   act.owner = 'player';
   act.contractId = id;
   act.trust = clamp(act.trust + 10 + perk(s, 'trust', act), 0, 100);
@@ -428,16 +432,14 @@ export function checkPromises(s: GameState): void {
     if (!act) continue;
     for (const p of c.promises) {
       if (p.kept !== undefined || s.week < p.dueWeek) continue;
-      let kept = true;
-      if (p.kind === 'priority') kept = act.releases.some((rid) => s.releases[rid] && s.releases[rid].week >= c.startWeek);
-      if (p.kind === 'tour') kept = (act.history.length > 0 && s.memory.some((m) => m.actId === act.id && m.kind === 'gigs' && m.week >= c.startWeek));
-      if (p.kind === 'freedom') kept = c.creativeControl;
+      // r28 (C7): verba prometida sai no cumprimento; descumprir (ou faltar caixa para a verba) paga multa
+      const kept = settlePromise28(s, c, act, p, promiseMet28(s, c, act, p));
       p.kept = kept;
       if (!kept) {
         act.trust = clamp(act.trust - 18, 0, 100);
         s.player.reputation.artists = clamp(s.player.reputation.artists - 3, 0, 100);
-        remember(s, 'broken_promise', fmtL(l('Promessa quebrada com {act} ({kind}).', 'Broken promise to {act} ({kind}).'), { act: act.name, kind: p.kind }), { actId: act.id, important: true });
-        notify(s, fmtL(l('Você descumpriu uma promessa a {act}.', 'You broke a promise to {act}.'), { act: act.name }), 'bad');
+        remember(s, 'broken_promise', fmtL(l('Promessa quebrada com {act} ({kind}).', 'Broken promise to {act} ({kind}).'), { act: act.name, kind: PROM28_NAME[p.kind] }), { actId: act.id, important: true });
+        notify(s, p.paidPenalty ? fmtL(l('Você descumpriu uma promessa a {act}: multa de {v}.', 'You broke a promise to {act}: {v} penalty.'), { act: act.name, v: `$${Math.round(p.paidPenalty / 100).toLocaleString('en-US')}` }) : fmtL(l('Você descumpriu uma promessa a {act}.', 'You broke a promise to {act}.'), { act: act.name }), 'bad');
       } else {
         act.trust = clamp(act.trust + 6, 0, 100);
       }

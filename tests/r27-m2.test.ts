@@ -269,16 +269,22 @@ describe('r27 M2 — renegociação', () => {
   const mineC = (s: GameState) => Object.values(s.contracts).find((c) => c.party === 'player' && s.acts[c.actId]?.owner === 'player' && s.acts[c.actId].contractId === c.id && !s.acts[c.actId].playerBand)!;
 
   it('pedido dispara quando o ato cresceu desde a assinatura (antes: nunca em 24 meses)', () => {
+    // r28 (fase 5): com o rival novo (reserva própria, disputa ao vivo) o mundo do fixture mudou e, nele, a banda do 1º
+    // contrato se separa no 2º mês (integrante sai solo) antes do sorteio do pedido. O teste agora faz TODOS os
+    // contratos do jogador "crescerem" e exige que pelo menos um peça renegociação — a mesma garantia de antes.
     const s = clone(FIX);
-    const c = mineC(s);
-    const act = s.acts[c.actId];
-    c.startWeek = s.week - 60;
-    c.endWeek = s.week + 200;
-    c.fameAtSign = Math.max(0, act.fame - 20);
+    const cs = Object.values(s.contracts).filter((c) => c.party === 'player' && s.acts[c.actId]?.owner === 'player' && s.acts[c.actId].contractId === c.id && !s.acts[c.actId].playerBand);
+    expect(cs.length).toBeGreaterThan(0);
+    for (const c of cs) {
+      const act = s.acts[c.actId];
+      c.startWeek = s.week - 60;
+      c.endWeek = s.week + 200;
+      c.fameAtSign = Math.max(0, act.fame - 20);
+    }
     let got = false;
     for (let m = 0; m < 6 && !got; m++) {
       advanceMonth(s);
-      got = rst(s).demands.some((d) => d.contractId === c.id) || s.contracts[c.id].lastRenegWeek !== undefined;
+      got = cs.some((c) => rst(s).demands.some((d) => d.contractId === c.id) || s.contracts[c.id].lastRenegWeek !== undefined);
     }
     expect(got).toBe(true);
   }, 120000);

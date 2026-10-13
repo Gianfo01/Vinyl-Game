@@ -24,6 +24,7 @@ import { leaders } from './leaders10';
 import { playbookOf } from './rivals8';
 import { rivals12 } from './rivals12';
 import { courtNewcomer18 } from './world18';
+import { perceivedDependence28, perceivedTrust28 } from './rivalsense28';
 
 export type Sign18K = 'target' | 'court' | 'flood' | 'giveup' | 'develop' | 'abandon' | 'pact' | 'dispute' | 'overexp' | 'badsign' | 'trouble' | 'bankrupt' | 'bid';
 export interface Sign18 { w: number; k: Sign18K; t: L }
@@ -101,7 +102,8 @@ function hunt(s: GameState, r: Rng): void {
   if (s.config.role === 'artist' || s.month % 3 !== 1) return;
   const labels = Object.values(s.labels).filter((x) => x.active);
   const hunting = labels.filter((x) => (mind18(s, x.id).target?.until ?? 0) > s.week);
-  const dep = dependence18(s);
+  // r28 (C7): o rival não vê a sua receita real — estima pelas paradas e vendas aproximadas, com ruído
+  const dep = perceivedDependence28(s, familyOf);
   // desistências: a dependência caiu ou você blindou o artista
   for (const lb of hunting) {
     const m = mind18(s, lb.id);
@@ -111,15 +113,15 @@ function hunt(s: GameState, r: Rng): void {
       const a = s.acts[t.id];
       const c = a?.contractId ? s.contracts[a.contractId] : undefined;
       if (!a || a.owner !== 'player') stop = l('o alvo saiu do seu selo', 'the target left your label');
-      else if (c && c.endWeek - s.week > 150 && a.trust >= 70) stop = fmtL(l('{a} está blindado(a): contrato longo e confiança alta', '{a} is shielded: long contract and high trust'), { a: a.name });
+      else if (c && c.endWeek - s.week > 150 && perceivedTrust28(s, lb.id, a) >= 70) stop = fmtL(l('{a} está blindado(a): contrato longo e confiança alta', '{a} is shielded: long contract and high trust'), { a: a.name });
       else if ((dep.act?.id !== t.id || dep.act.share < 0.3)) stop = l('você deixou de depender de um só artista', 'you no longer depend on one act');
     } else if (dep.fam?.id !== t.id || dep.fam.share < 0.45) stop = fmtL(l('você diversificou além de {f}', 'you diversified beyond {f}'), { f: famName(t.id) });
     if (stop) { m.target = undefined; sign(s, lb, 'giveup', fmtL(l('parou de mirar no seu ponto fraco: {w}.', 'stopped going after your weak spot: {w}.'), { w: stop })); }
   }
   if (hunting.length >= 1 || dep.total < money(s, 150000) || s.year - s.config.startYear < 2) return; // carência: selo novo ainda não chama atenção
   let tg: { k: 'fam' | 'act'; id: string; why: L } | null = null;
-  if (dep.act && dep.act.share >= 0.45 && s.acts[dep.act.id] && !s.acts[dep.act.id].playerBand) tg = { k: 'act', id: dep.act.id, why: fmtL(l('{a} responde por {p}% da sua receita de discos', '{a} is {p}% of your record revenue'), { a: s.acts[dep.act.id].name, p: Math.round(dep.act.share * 100) }) };
-  else if (dep.fam && dep.fam.share >= 0.6) tg = { k: 'fam', id: dep.fam.id, why: fmtL(l('{f} responde por {p}% da sua receita de discos', '{f} is {p}% of your record revenue'), { f: famName(dep.fam.id), p: Math.round(dep.fam.share * 100) }) };
+  if (dep.act && dep.act.share >= 0.45 && s.acts[dep.act.id] && !s.acts[dep.act.id].playerBand) tg = { k: 'act', id: dep.act.id, why: fmtL(l('{a} responde por cerca de {p}% da sua receita de discos (estimativa do mercado)', '{a} is about {p}% of your record revenue (market estimate)'), { a: s.acts[dep.act.id].name, p: Math.round(dep.act.share * 100) }) };
+  else if (dep.fam && dep.fam.share >= 0.6) tg = { k: 'fam', id: dep.fam.id, why: fmtL(l('{f} responde por cerca de {p}% da sua receita de discos (estimativa do mercado)', '{f} is about {p}% of your record revenue (market estimate)'), { f: famName(dep.fam.id), p: Math.round(dep.fam.share * 100) }) };
   if (!tg || hunting.some((x) => mind18(s, x.id).target?.id === tg!.id)) return;
   const pool = labels.filter((x) => x.cash > money(s, 300000) && !(mind18(s, x.id).target) && !mind18(s, x.id).pact);
   const sc = (x: Label) => x.aggression + (HUNTERS.has(playbookOf(x)) ? 0.35 : 0) + (s.rivalries[x.id] ?? 0) / 100 + (tg!.k === 'fam' && x.focus.includes(tg!.id as never) ? 0.3 : 0);
@@ -145,10 +147,11 @@ function pressTargets(s: GameState, r: Rng): void {
       if (!a || a.owner !== 'player') continue;
       const c = a.contractId ? s.contracts[a.contractId] : undefined;
       const near = !!c && c.endWeek - s.week < 52;
-      if ((near || a.trust < 50) && r.chance(0.18) && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
+      const seen = perceivedTrust28(s, lb.id, a); // r28 (C7): confiança vista de fora (boatos), não a real
+      if ((near || seen < 50) && r.chance(0.18) && !s.decisions.some((d) => d.eventId === 'poach_attempt')) {
         emitEvent(s, r, 'poach_attempt', { act: a.id, label: lb.id });
         sign(s, lb, 'court', fmtL(l('fez proposta direta a {a}.', 'made a direct offer to {a}.'), { a: a.name }), { public: true, actors: [a.id], sev: 40 });
-      } else if (r.chance(0.2) && a.trust > 40) {
+      } else if (r.chance(0.2) && seen > 40 && a.trust > 40) {
         a.trust = Math.max(40, a.trust - 1);
         if (r.chance(0.4)) sign(s, lb, 'court', fmtL(l('jantou com gente próxima de {a} (confiança dele(a) em você −1).', 'had dinner with people close to {a} (their trust in you −1).'), { a: a.name }));
       }

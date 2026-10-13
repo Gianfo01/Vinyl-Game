@@ -17,6 +17,7 @@ import { $, modal, pill, rerender, toast } from '../common';
 import { h } from '../dom';
 import { store } from '../store';
 import { meter } from '../vis';
+import { promiseChecks28 } from '../sys/promises28';
 import './negotiate27.css';
 
 /** Termômetro: faixa revelada do mínimo (sombreada) e onde a sua proposta cai. */
@@ -66,6 +67,7 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       h('label', null, t(l('Discos devidos', 'Records owed')), num(o.releasesOwed, 1, (v) => { o.releasesOwed = Math.max(1, v); live(); }, 1, 10)),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.creativeControl, onchange: (e: Event) => { o.creativeControl = (e.target as HTMLInputElement).checked; live(); } }), ' ', t(l('Controle criativo', 'Creative control'))),
     );
+    const proms = promiseChecks28(s, act, o, () => live()); // r28 (C7): promessas com verba, prazo e multa
     const thermoBox = h('div');
     const live = () => { const r2 = read27(s, n, o); thermoBox.replaceChildren(thermo(r2.lo, r2.hi, r2.score, 0.1, 1.2, l('Sua proposta × o mínimo deles', 'Your offer × their minimum'))); };
     live();
@@ -75,7 +77,8 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       h('p', { class: 'small muted' }, t(l('Leitura do outro lado: {p}% (olheiro e pesquisa no ato, analista, jurídico, empresário).', 'Read on the other side: {p}% (scouting and research on the act, analyst, legal, manager).'), { p: Math.round(insight27(s, act) * 100) })),
       meter('heart', l('Paciência deles', 'Their patience'), Math.max(0, n.patience)),
       h('p', { class: 'small' }, t(l('Rodada {r} de {m}', 'Round {r} of {m}'), { r: Math.min(n.round + 1, n.maxRounds), m: n.maxRounds })),
-      n.rival ? h('p', { class: 'n27-rival' }, pill(t(l('disputa', 'bidding war')), 'warn'), ' ', t(l('{l} oferece {a} de adiantamento.', '{l} offers a {a} advance.'), { l: n.rival.name, a: $(n.rival.terms.advance) })) : null,
+      n.rival ? h('p', { class: 'n27-rival' }, pill(t(n.rival.out ? l('rival no limite', 'rival maxed out') : l('disputa', 'bidding war')), n.rival.out ? 'good' : 'warn'), ' ', t(l('{l} oferece {a} de adiantamento.', '{l} offers a {a} advance.'), { l: n.rival.name, a: $(n.rival.terms.advance) }),
+        n.rival.counters ? h('small', { class: 'muted' }, ' ', t(l('(subiu o lance {n}×; o limite dele é segredo)', '(raised {n}×; their limit is secret)'), { n: n.rival.counters })) : null) : null,
     );
     const theirs = n.theirs && open ? h('div', { class: 'n27-theirs' },
       h('b', null, t(l('Contraproposta deles', 'Their counter'))),
@@ -95,7 +98,7 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close')))) : null;
     root.replaceChildren(
       h('div', { class: 'n27-cols' },
-        h('div', null, h('h4', null, t(l('Sua proposta', 'Your offer'))), fields, thermoBox, theirs, tactics, end),
+        h('div', null, h('h4', null, t(l('Sua proposta', 'Your offer'))), fields, proms, thermoBox, theirs, tactics, end),
         h('div', null, h('h4', null, t(l('O que você sabe', 'What you know'))), know, h('h4', null, t(l('Mesa', 'Table'))), logView(n.log))),
     );
     if (!open) (root.querySelector('.n27-end button') as HTMLElement | null)?.focus();

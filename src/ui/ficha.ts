@@ -26,6 +26,7 @@ import { why18 } from './explain18';
 import { clauses18Fields } from './sys/contracts18';
 import { offerLayers20, type Layers20 } from './sys/offer20';
 import { screen27 } from './act27/flow27';
+import { promiseChecks28 } from './sys/promises28';
 
 function g(): GameState {
   return store.game!;
@@ -200,9 +201,7 @@ export function openOffer(actId: string, classic27 = false): void {
     rightsBox,
   ];
   const commit = [
-    h('fieldset', null, h('legend', null, t(S.promises)),
-      (['priority', 'tour', 'freedom'] as const).map((p) => h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; o.promises = on ? [...o.promises, p] : o.promises.filter((x) => x !== p); update(); } }), t(p === 'priority' ? S.promisePriority : p === 'tour' ? S.promiseTour : S.promiseFreedom))),
-    ),
+    promiseChecks28(s, a, o, update), // r28 (C7): cada promessa mostra verba, prazo e multa
     clauses18Fields(s, a, o, update),
     packageFields(s, o, () => update()),
   ];
