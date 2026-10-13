@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { l } from '../src/data/world';
 import { defaultConfig } from '../src/sim/bot';
+import { fileLawsuit } from '../src/sim/business';
 import { queueCutscene } from '../src/sim/ext4';
 import { emitFact } from '../src/sim/facts17';
 import { album28 } from '../src/sim/sys/end28';
@@ -129,6 +130,16 @@ describe('r29 — escolhas', () => {
       expect(r1).toEqual(r2);
       expect(r1.rng, `${k}/${c.id} mexeu no rng`).toBe(true);
     }
+  });
+  it('acordo do processo é o mesmo fluxo do painel (settleLawsuit) e o advogado mexe na chance real', () => {
+    const s = game(); const a = myAct(s);
+    s.player.cash += 10_000_000;
+    const suit = fileLawsuit(s, { kind: 'plagiarism', plaintiff: 'Compositor', defendant: 'player', actId: a.id, claim: 100000, odds: 0.5, text: l('Plágio de teste', 'Test plagiarism') });
+    const d = { ...dataFor(s, a, 'court', s.year), t: 'Plágio de teste' };
+    expect(choose27(s, { ...d, ref: 'c-fight' }, 'fight')).toBeTruthy();
+    expect(suit.odds).toBeCloseTo(0.58);
+    expect(choose27(s, d, 'settle')).toBeTruthy();
+    expect(suit.stage).toBe('settled');
   });
   it('o cara-ou-coroa sai do hash da cena', () => {
     expect(coin29('abc', 0.5)).toBe(coin29('abc', 0.5));

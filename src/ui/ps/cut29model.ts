@@ -15,6 +15,7 @@
 import { TECHS } from '../../data/rules';
 import { cityById, l, type L } from '../../data/world';
 import type { Fact } from '../../sim/facts17';
+import { settleLawsuit } from '../../sim/business';
 import { a3Of, addHeat } from '../../sim/sys/crime17';
 import type { Act, GameState } from '../../sim/types';
 import { fmtL, money, post } from '../../sim/util';
@@ -53,7 +54,7 @@ export const CUT29: Record<CutKey29, CutDef27> = {
     [l('Uma mesa pequena. Um contrato de três páginas.', 'A small desk. A three-page contract.'), l('{a} assina com {b}. O primeiro nome do elenco.', '{a} signs with {b}. The first name on the roster.'), l('Como começar essa história?', 'How do you start this story?')],
     [
       Ch('photo', l('Foto oficial na porta', 'Official photo at the door'), l('custa US$ 400 · +3 momento, +1 reputação comercial', 'costs US$ 400 · +3 momentum, +1 commercial reputation'), (s, d) => { const v = pay(s, d, 'photo', 400, 'marketing', 'Foto da 1ª assinatura'); mom(s, d, 3); rep(s, 'commercial', 1); return fmtL(l('O fotógrafo bate três chapas ({v}). Uma vai para a parede.', 'The photographer takes three shots ({v}). One goes on the wall.'), { v: $(v) }); }),
-      Ch('promise', l('Prometer liberdade criativa', 'Promise creative freedom'), l('+6 confiança, +1 reputação com artistas', '+6 trust, +1 reputation with artists'), (s, d) => { trust(s, d, 6); rep(s, 'artists', 1); return l('"Você grava do seu jeito." O aperto de mão demora.', '"You record your way." The handshake lingers.'); }),
+      Ch('talk', l('Conversar sobre o som', 'Talk about the sound'), l('+6 confiança, +1 reputação com artistas', '+6 trust, +1 reputation with artists'), (s, d) => { trust(s, d, 6); rep(s, 'artists', 1); return l('Duas horas falando de discos que vocês amam. O aperto de mão demora.', 'Two hours talking about records you both love. The handshake lingers.'); }),
       Ch('toast', l('Brinde com o que tiver', 'Toast with whatever is around'), l('+4 moral', '+4 morale'), (s, d) => { members(s, d, (p) => { p.morale = cl(p.morale + 4); }); return l('Café requentado em copos de geleia. Ninguém esquece.', 'Reheated coffee in jam jars. Nobody forgets.'); }),
     ],
     [[l('A caneta falha na primeira linha.', 'The pen skips on the first line.'), l('{a} ri, sopra a ponta e assina com {b}.', '{a} laughs, blows on the nib and signs with {b}.'), l('O selo agora tem um artista. E agora?', 'The label now has an artist. Now what?')]]),
@@ -119,16 +120,26 @@ export const CUT29: Record<CutKey29, CutDef27> = {
   court: D('court', 'major', 'rights', 77, [], l('O processo', 'The lawsuit'),
     [l('Um oficial de justiça entrega o envelope.', 'A process server hands over the envelope.'), l('{t}', '{t}'), l('Acordo ou briga no tribunal?', 'Settle or fight in court?')],
     [
-      Ch('settle', l('Propor acordo', 'Offer a settlement'), l('custa US$ 2.500 · +1 reputação institucional', 'costs US$ 2,500 · +1 institutional reputation'), (s, d) => { const v = pay(s, d, 'settle', 2500, 'legal', 'Acordo extrajudicial'); rep(s, 'institutional', 1); return fmtL(l('Assinado no corredor ({v}). Sem manchete.', 'Signed in the hallway ({v}). No headline.'), { v: $(v) }); }),
-      Ch('fight', l('Contratar o melhor advogado', 'Hire the best lawyer'), l('custa US$ 1.500 · arriscado: +2 ou -2 reputação institucional', 'costs US$ 1,500 · risky: +2 or -2 institutional reputation'), (s, d) => { const v = pay(s, d, 'fight', 1500, 'legal', 'Honorários do processo'); if (coin29(`${d.ref}:fight`, 0.55)) { rep(s, 'institutional', 2); return fmtL(l('O advogado desmonta a acusação na primeira audiência ({v}).', 'The lawyer takes the case apart at the first hearing ({v}).'), { v: $(v) }); } rep(s, 'institutional', -2); return fmtL(l('O juiz não gosta da estratégia ({v}). Vai ser longo.', 'The judge dislikes the strategy ({v}). It will be long.'), { v: $(v) }); }),
+      // o acordo é o MESMO do painel de processos (settleLawsuit): paga a parte do pedido e encerra o caso
+      Ch('settle', l('Propor acordo', 'Offer a settlement'), l('encerra o processo: paga ~45% do pedido (como no painel de processos)', 'closes the case: pays ~45% of the claim (as in the lawsuits panel)'), (s, d) => {
+        const suit = suit29(s, d);
+        if (!suit) return l('O processo já foi encerrado.', 'The case is already closed.');
+        const why = settleLawsuit(s, suit.id);
+        return why ?? l('Assinado no corredor. Sem manchete, sem audiência.', 'Signed in the hallway. No headline, no hearing.');
+      }),
+      Ch('fight', l('Contratar o melhor advogado', 'Hire the best lawyer'), l('custa US$ 1.500 · +8 pontos de chance no processo', 'costs US$ 1,500 · +8 points of odds in the case'), (s, d) => {
+        const v = pay(s, d, 'fight', 1500, 'legal', 'Honorários do processo'); const suit = suit29(s, d); if (suit) suit.odds = Math.min(0.95, suit.odds + 0.08);
+        return fmtL(l('O escritório mais caro da cidade assume o caso ({v}).', 'The priciest firm in town takes the case ({v}).'), { v: $(v) });
+      }),
       Ch('wait', l('Esperar a audiência', 'Wait for the hearing'), l('nada muda agora', 'nothing changes now'), () => l('O envelope vai para a gaveta. O prazo corre.', 'The envelope goes in the drawer. The clock ticks.')),
     ],
     [[l('O carimbo do fórum na primeira página.', 'The court stamp on the first page.'), l('{t}', '{t}'), l('Os advogados do outro lado já estão sorrindo.', 'The lawyers on the other side are already smiling.')]]),
+  // o recurso de uma derrota é a cena interativa do tribunal (scenes/court 'appeal'): aqui só a reação ao martelo
   verdict: D('verdict', 'major', 'rights', 80, ['stamp'], l('A sentença', 'The verdict'),
     [l('"Todos de pé."', '"All rise."'), l('{t}', '{t}'), l('O martelo bate. E agora?', 'The gavel falls. Now what?')],
     [
       Ch('statement', l('Nota sóbria à imprensa', 'A sober press statement'), l('+1 reputação institucional', '+1 institutional reputation'), (s) => { rep(s, 'institutional', 1); return l('Três linhas, sem adjetivos. O mercado respeita.', 'Three lines, no adjectives. The industry respects it.'); }),
-      Ch('appeal', l('Recorrer / ir além', 'Appeal / push further'), l('custa US$ 1.000 · arriscado: +2 reputação institucional ou -1,5', 'costs US$ 1,000 · risky: +2 institutional reputation or -1.5'), (s, d) => { const v = pay(s, d, 'appeal', 1000, 'legal', 'Recurso'); if (coin29(`${d.ref}:ap`, 0.4)) { rep(s, 'institutional', 2); return fmtL(l('A segunda instância fica do seu lado ({v}).', 'The appeals court sides with you ({v}).'), { v: $(v) }); } rep(s, 'institutional', -1.5); return fmtL(l('Recurso negado ({v}). Fica a fama de teimoso.', 'Appeal denied ({v}). You get a reputation for stubbornness.'), { v: $(v) }); }),
+      Ch('team', l('Jantar com o jurídico', 'Dinner with the legal team'), l('custa US$ 600 · +3 confiança do ato', 'costs US$ 600 · +3 act trust'), (s, d) => { const v = pay(s, d, 'team', 600, 'legal', 'Jantar do jurídico'); trust(s, d, 3); return fmtL(l('O artista vê que o selo foi até o fim por ele ({v}).', 'The artist sees the label went all the way for them ({v}).'), { v: $(v) }); }),
     ],
     [[l('A sala lotada de repórteres.', 'The courtroom packed with reporters.'), l('{t}', '{t}'), l('Lá fora, os flashes esperam.', 'Outside, the flashes wait.')]]),
   bootleg: D('bootleg', 'minor', 'crime', 57, ['police'], l('Piratas na calçada', 'Bootlegs on the sidewalk'),
@@ -217,6 +228,12 @@ export const CUT29: Record<CutKey29, CutDef27> = {
     [[l('O vendedor liga o aparelho na vitrine.', 'The salesman switches the set on in the shop window.'), l('{y}: {t} chega às casas.', '{y}: {t} reaches people\'s homes.'), l('{m} nunca mais vai ser igual.', '{m} will never be the same.')]]),
 };
 
+/** O processo da cena (o mais recente em aberto com o mesmo texto; senão o mais recente em aberto do selo). */
+function suit29(s: GameState, d: CutData27): GameState['lawsuits'][number] | undefined {
+  const open = (s.lawsuits ?? []).filter((x) => !['settled', 'won', 'lost'].includes(x.stage) && (x.defendant === 'player' || x.plaintiff === 'player'));
+  return [...open].reverse().find((x) => x.text.pt === d.t) ?? open[open.length - 1];
+}
+
 // ---------------------------------------------------------------- variantes de fala para as cenas antigas (r27/r28)
 
 export const VARS29: Record<string, L[][]> = {
@@ -268,7 +285,7 @@ export function cutOfMemory29(s: GameState, e: Mem, once: Record<string, number>
     case 'promise_kept': return mine ? 'vow_kept' : null;
     case 'promise_broken': case 'broken_promise': return mine ? 'vow_broken' : null;
     case 'lawsuit': return !e.actId || mine ? 'court' : null;
-    case 'verdict': return !e.actId || mine ? 'verdict' : null;
+    case 'verdict': return (!e.actId || mine) && !(s.cutscenes ?? []).some((c) => c.kind === 'appeal' && !c.data.done && s.week - c.week <= 4) ? 'verdict' : null; // a derrota com recurso já tem a cena do tribunal
     case 'payola': return !e.actId || mine ? 'payola' : null;
     case 'cert': return mine ? (/platin|diamant|diamond/i.test(`${T(e.text)} ${e.text?.en ?? ''}`) ? 'plat' : 'gold') : null;
     case 'festival': return mine && /headline/i.test(`${T(e.text)} ${e.text?.en ?? ''}`) ? 'headline' : null;

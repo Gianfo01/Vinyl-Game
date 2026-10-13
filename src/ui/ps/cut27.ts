@@ -60,6 +60,10 @@ const SAME27: Partial<Record<CutData27['key'], (c: Cutscene) => boolean>> = {
   star: (c) => c.kind === 'cine18' || m16('Contrato assinado')(c),
   sold: (c) => c.kind === 'cine18',
   fest: (c) => c.kind === 'cine18',
+  // r29: o disco de ouro/platina e o palco holográfico antigos ficam no álbum quando a cena animada conta o momento
+  gold: (c) => c.kind === 'goldfx',
+  plat: (c) => c.kind === 'goldfx',
+  holo: (c) => c.kind === 'hologram',
 };
 AFTER_ADVANCE.push((s) => { try { enqueue27(s); } catch (e) { console.warn('cut27', e); } });
 
