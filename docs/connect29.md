@@ -368,7 +368,7 @@ então a mediana geral oscila muito. Efeito estável: **mais fama** (11 → 17�
 e escândalos. Botão: `CONN29.k` (0–1) suaviza tudo de uma vez; `CONN29_OFF` desliga arestas para medir.
 
 ### Testes
-- `tests/r29-connect-all.test.ts`: toda aresta esperada (`EDGES29`, 66) medida; as 48 com sinal conhecido andam na
+- `tests/r29-connect-all.test.ts`: toda aresta esperada (`EDGES29`, 66) medida; as 51 com sinal conhecido andam na
   direção certa; o mapa da wiki (`connmap29`) tem todas.
 - Golden re-medidos (`r27-p2a`/`p2b`: 333758 / 1642544891 / 3380302445 / 2264116950; antes desta parte 450735 /
   1382068899 / 2386675548 / 2839816166). `r27-p2b` "turnê pelo caminho de sempre" escolhe um ato sem turnê marcada
