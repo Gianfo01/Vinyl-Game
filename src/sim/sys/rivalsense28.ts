@@ -15,6 +15,7 @@ import { defaultOffer, evaluateOffer, expectedAdvance, signWithRival } from '../
 import type { Act, GameState, Label, Offer } from '../types';
 import { fmtL, money, playerActs } from '../util';
 import { labelClout } from './offers12';
+import { DEMO29 } from '../demo29hook';
 
 export const RS28 = 'rs28v1';
 const q28 = (s: GameState) => Math.floor(s.week / 13);
@@ -114,7 +115,8 @@ export function rivalTerms28(s: GameState, act: Act, bid: number): Omit<Offer, '
 
 /** Placar da proposta rival aos olhos do artista: mesma régua da sua (evaluateOffer) + diferença de força do selo. */
 export function rivalScore28(s: GameState, act: Act, lb: Label, bid: number): number {
-  return evaluateOffer(s, act, rivalTerms28(s, act, bid)).score + (labelClout(s, lb.id) - labelClout(s, 'player')) * 0.25;
+  // R29 demo29: o artista também pesa o selo que fala com a geração do público dele (rival × seu elenco)
+  return evaluateOffer(s, act, rivalTerms28(s, act, bid)).score + (labelClout(s, lb.id) - labelClout(s, 'player')) * 0.25 + (DEMO29.rivalOffer?.(s, lb, act) ?? 0);
 }
 
 /** Contraproposta do rival (sorteio): cobre se a reserva deixa e a agressividade manda. Devolve o lance novo ou null. */

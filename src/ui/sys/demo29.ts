@@ -9,7 +9,7 @@ import { CITIES, MARKETS, genreById, l, type L, type MarketId } from '../../data
 import { countryName, countryOfCity } from '../../data/geo';
 import { t } from '../../i18n/strings';
 import {
-  AGE29, NB29, REF29, ageFans29, ageMix29, artistAge29, demo29, demog29, fakeYouth29, inflow29, older29, rTrend29, regionMix29, taste29, youth29,
+  AGE29, NB29, POP_START29, REF29, ageFans29, ageMix29, artistAge29, casualMix29, coreMix29, demo29, demog29, fakeYouth29, inflow29, labelFit29, poolFans29, popularBoard29, older29, rTrend29, regionMix29, taste29, youth29,
 } from '../../sim/sys/demo29';
 import { hotList17 } from '../../sim/sys/trends17';
 import type { Act, GameState } from '../../sim/types';
@@ -94,6 +94,10 @@ function audienceTab(s: GameState, id: string): HTMLElement | null {
         why18(s, 'demo29.inflow', { act: id }, t(l('Por que esse público?', 'Why this audience?'))))),
     section(t(l('Idade do público', 'Audience age')),
       bandBar29(b), legend29(),
+      ((pf) => h('div', { class: 'd29-pools' },
+        h('div', null, h('b', { class: 'small' }, t(l('Núcleo ({n} fãs)', 'Core ({n} fans)'), { n: N(pf.core.reduce((x, y) => x + y, 0)) })), bandBar29(coreMix29(s, a))),
+        h('div', null, h('b', { class: 'small' }, t(l('Casuais e ativos ({n})', 'Casual and active ({n})'), { n: N(pf.rest.reduce((x, y) => x + y, 0)) })), bandBar29(casualMix29(s, a))),
+        h('p', { class: 'small muted' }, t(l('O núcleo é quem fica anos: mais velho e mais estável. Ele pesa na banca, no vinil e na reação dos puristas a um escândalo; os casuais e ativos pesam no perdão do mainstream.', 'The core is who stays for years: older and steadier. It weighs on merch, vinyl and purists\' reaction to a scandal; casual and active fans weigh on mainstream forgiveness.')))))(poolFans29(s, a)),
       h('div', { style: 'overflow-x:auto' }, h('table', { class: 'tbl compact num' },
         h('thead', null, h('tr', null, [l('Faixa', 'Band'), l('Fatia', 'Share'), l('Fãs', 'Fans'), l('Quem chega agora', 'Who joins now'), l('Gosto pelo gênero', 'Taste for the genre')].map((x) => h('th', null, t(x))))),
         h('tbody', null, AGE29.map((x, i) => h('tr', null, h('td', null, h('i', { class: 'd29-dot', style: `background:${BAND_COL29[i]}` }), ' ', t(x.name)), h('td', null, pc(b[i])), h('td', null, N(fans[i])), h('td', null, pc(inf[i])),
@@ -105,6 +109,10 @@ function audienceTab(s: GameState, id: string): HTMLElement | null {
       h('ul', { class: 'd29-cty' }, mk.top.map((c) => h('li', null, flagImg29(c.a3, 24), ' ', t(countryName(c.a3)), ' ', h('b', null, pc(c.v)),
         c.local ? [' ', pill(t(l('herói local', 'local hero')), 'good')] : null))),
       h('p', { class: 'small muted' }, t(l('Mercados: livro regional de fãs (seus atos) ou fama regional (os outros). Países: fama local, diáspora do gênero e shows feitos lá — a conversão do show fica no país onde ele aconteceu.', 'Markets: regional fan ledger (your acts) or regional fame (others). Countries: local fame, the genre\'s diaspora and shows played there — a show\'s conversion stays in the country where it happened.')))),
+    ((ls) => ls.length ? section(t(l('Selos que procuram este público', 'Labels looking for this audience')),
+      h('ul', { class: 'small' }, ls.map((x) => h('li', null, `${x.lb.name} — ×${x.k.toFixed(2)}`))),
+      h('p', { class: 'small muted' }, t(l('Cada selo mira uma geração (hitmaker e estrelas: jovens; catálogo: 35+; boutique e caçador de cena: 18–34) e segue o público do elenco que já tem. Pesa em quem ele contrata e na disputa por uma oferta.', 'Each label aims at a generation (hitmakers and star-chasers: young; catalog: 35+; boutiques and scene hunters: 18–34) and follows its current roster\'s audience. It weighs on whom it signs and in bidding wars.'))))
+      : null)(Object.values(s.labels).filter((x) => x.active).map((lb) => ({ lb, k: labelFit29(s, lb, a) })).sort((x, y) => y.k - x.k || (x.lb.id < y.lb.id ? -1 : 1)).slice(0, 3)),
     log.length ? section(t(l('Diário do público', 'Audience log')), h('ul', { class: 'small' }, log.map(([y, m, x]) => h('li', null, `${m + 1}/${y} · ${t(x)}`)))) : null);
 }
 
@@ -158,6 +166,22 @@ function chartsSection(s: GameState): HTMLElement | null {
       })))),
     h('p', { class: 'small muted' }, t(l('Jovem adota o gênero novo; cada geração guarda a música da sua juventude. A tendência regional sai das paradas de cada mercado (a média mundial continua sendo a popularidade global).', 'Youth adopts new genres; each generation keeps the music of its youth. The regional trend comes from each market\'s charts (the world average remains global popularity).'))));
 }
+function popularSection(s: GameState): HTMLElement | null {
+  if (s.year < POP_START29) return null;
+  const board = popularBoard29(s, 8), hist = demo29(s).pv ?? [];
+  const tot = board.reduce((x, y) => x + y.votes, 0) || 1;
+  const mine = new Set(playerActs(s));
+  return section(t(l('Voto do Público (prêmio por voto popular)', 'People\'s Vote (popular-vote award)')),
+    h('p', { class: 'small' }, t(l('Os fãs votam todo novembro. Quem tem 13–24 vota muito mais (e mais ainda com TV e internet); 50+ quase não vota. Robôs, urna cheia e voto encomendado (Submundo) e streams de fazenda viram votos falsos — e prêmio ganho assim pode ser cassado.', 'Fans vote every November. 13–24s vote far more (more so with TV and the internet); 50+ barely vote. Bots, ballot stuffing, bought votes (Underworld) and farm streams become fake votes — and a prize won that way can be revoked.'))),
+    board.length ? h('div', { style: 'overflow-x:auto' }, h('table', { class: 'tbl compact' },
+      h('thead', null, h('tr', null, [l('Ato', 'Act'), l('Prévia dos votos', 'Vote preview'), l('Quem vota (idade)', 'Who votes (age)')].map((x) => h('th', null, t(x))))),
+      h('tbody', null, board.map((x) => h('tr', null, h('td', null, mine.has(x.act.id) ? h('b', null, x.act.name) : x.act.name),
+        h('td', null, pc(x.votes / tot), x.fake > 0 ? [' ', pill(t(l('voto falso', 'fake votes')), 'bad')] : null),
+        h('td', { style: 'min-width:140px' }, bandBar29(x.byAge.map((v) => v / (x.byAge.reduce((p, q) => p + q, 0) || 1))))))))) : null,
+    hist.length ? h('ul', { class: 'small' }, hist.slice(0, 6).map(([y, id, f, rv]) => h('li', null, `${y}: ${s.acts[id]?.name ?? id}`, f > 0 ? ` (${pc(f)} ${t(l('falso', 'fake'))})` : '', rv ? [' ', pill(t(l('cassado', 'revoked')), 'bad')] : null))) : null);
+}
+registerSection('charts', { id: 'demo29pop', order: 76, render: popularSection, title: l('Voto do Público', 'People\'s Vote') });
+
 registerSection('charts', { id: 'demo29', order: 75, render: chartsSection, title: l('Quem ouve cada estilo (idade)', 'Who listens to each style (age)') });
 
 // ---------------------------------------------------------------- Projeto: quem é o público-alvo

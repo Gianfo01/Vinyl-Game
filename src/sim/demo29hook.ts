@@ -3,7 +3,7 @@
 // desligado, as fórmulas antigas valem. Sem imports de sistemas (evita ciclo e TDZ no bundle).
 
 import type { Festival } from '../data/catalog';
-import type { Act, GameState, Release } from './types';
+import type { Act, GameState, Label, Release } from './types';
 
 export interface Demo29Hooks {
   /** multiplicador da fatia física de um lançamento pela idade do público (eras18.physShareRel18) */
@@ -18,6 +18,10 @@ export interface Demo29Hooks {
   revW?: (s: GameState, rel: Release) => number;
   /** encaixe da idade do público do ato com a do festival (fests8, montagem do line-up) */
   fest?: (s: GameState, f: Festival, act: Act) => number;
+  /** selo rival × idade do público do ato: peso na escolha de quem contratar (rivals.ts) */
+  label?: (s: GameState, lb: Label, act: Act) => number;
+  /** disputa de oferta: vantagem do rival por falar com a geração do ato, contra o seu elenco (rivalsense28) */
+  rivalOffer?: (s: GameState, lb: Label, act: Act) => number;
 }
 export const DEMO29: Demo29Hooks = {};
 

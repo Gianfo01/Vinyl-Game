@@ -11,6 +11,7 @@ import { LB29 } from './labels29gate';
 import { rivalSignsLeft } from './sys/gate14';
 import { fameAt } from './famehook16';
 import { actsNow27, releasesNow27 } from './tickcache27';
+import { DEMO29 } from './demo29hook';
 
 const STRAT = { develop: l('desenvolver', 'develop'), buy_catalog: l('comprar catálogos', 'buy catalogs'), niche: l('nichos', 'niches'), stars: l('estrelas', 'stars') };
 
@@ -41,6 +42,9 @@ export function rivalsMonth(s: GameState, r: Rng): void {
           const strat = lb.strategy === 'stars' ? fl * 1.5 : lb.strategy === 'develop' ? talentScore(s, a) : fl + talentScore(s, a) * 0.5;
           return { a, v: strat * fit * r.float(0.7, 1.3) };
         })
+        .sort((x, y) => y.v - x.v)
+        // R29 demo29: entre os 8 melhores, o selo prefere o público da geração que ele procura (sem sorteio a mais)
+        .slice(0, 8).map((x) => ({ a: x.a, v: x.v * (DEMO29.label?.(s, lb, x.a) ?? 1) }))
         .sort((x, y) => y.v - x.v)[0];
       if (best && best.v > 12 && lb.cash > money(s, expectedAdvance(s, best.a))) {
         signWithRival(s, best.a, lb.id, r);

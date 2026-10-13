@@ -21,7 +21,7 @@
 // Efeitos (todos com rótulo e teto: caps18/APPEAL_CAT19) ficam no fim do arquivo. API de leitura para a sonda da
 // R29 CONNECT: ageMix29, regionMix29, taste29.
 
-import { clamp } from '../../core/rng';
+import { Rng, clamp } from '../../core/rng';
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize } from '../../data/countries';
 import { subOfA3_18 } from '../../data/regions18';
 import { countryOfCity } from '../../data/geo';
@@ -34,8 +34,9 @@ import { registerAdvisorTip, type AdvTip18 } from '../inbox18';
 import { MEDIA18 } from '../media18hook';
 import { mainAmbition } from '../people';
 import { actsNow27 } from '../tickcache27';
-import type { Act, GameState, Release } from '../types';
-import { fmtL, hasTech, playerActs } from '../util';
+import { scandal } from '../scandal17';
+import type { Act, GameState, Label, Release } from '../types';
+import { fmtL, hasTech, notify, playerActs, recordAward, remember } from '../util';
 import { REL_ADJ19, voters18 } from './awards18';
 import { board } from './charts7';
 import { fameIn, mkOf } from './fame16';
@@ -71,6 +72,10 @@ export interface D29Act {
   p?: number[];
   /** países (só atos do jogador): [a3, milésimos do TOTAL] — até 8 */
   c?: [string, number][];
+  /** idade do NÚCLEO (milésimos, soma 1000): quem fica anos vira núcleo — mais velho e mais estável que o casual */
+  k?: number[];
+  /** núcleo na última conta */
+  nk?: number;
 }
 export interface Demo29 {
   a: Record<string, D29Act>;
@@ -87,6 +92,8 @@ export interface Demo29 {
   /** versão das curvas (sobe a cada virada de mês do demo29; chaves dos caches) */
   v?: number;
   log: [number, number, L][];
+  /** voto popular: [ano, ato, fatia de votos falsos (robôs/urna cheia), cassado?] */
+  pv?: [number, string, number, number][];
 }
 declare module '../ext4' { interface Ext4 { demo29: Demo29 } }
 const fresh = (): Demo29 => ({ a: {}, rp: {}, gh: {}, ru: {}, pc: {}, log: [] });
@@ -374,6 +381,25 @@ export function ageFans29(s: GameState, a: Act): number[] {
   for (let k = 0; rest > 0 && ord.length; k = (k + 1) % ord.length, rest--) out[ord[k][1]]++;
   return out;
 }
+/** idade do núcleo: guardada, ou ~3 anos mais velha que a base (quem fica é quem chegou antes) */
+export function coreMix29(s: GameState, a: Act): number[] {
+  const d = demo29(s).a[a.id];
+  if (d?.k) return d.k.map((x) => x / 1000);
+  return roll29(roll29(roll29(ageMix29(s, a))));
+}
+/** idade de casuais + ativos: o total menos o núcleo (por faixa) */
+export function casualMix29(s: GameState, a: Act): number[] {
+  const T = total(a), C = Math.max(0, Math.min(T, a.fans.core));
+  if (T - C <= 0) return ageMix29(s, a);
+  const b = ageMix29(s, a), k = coreMix29(s, a);
+  return norm(b.map((x, i) => Math.max(0, x * T - k[i] * C)));
+}
+/** fãs por faixa em cada coorte: núcleo e casuais + ativos (inteiros que somam os totais) */
+export function poolFans29(s: GameState, a: Act): { core: number[]; rest: number[] } {
+  const ap = (mix: number[], n: number) => { const f = mix.map((x) => x * n), o = f.map(Math.floor); let r = n - o.reduce((x, y) => x + y, 0); const ord = f.map((x, i) => [x - Math.floor(x), i] as [number, number]).sort((x, y) => y[0] - x[0] || x[1] - y[1]); for (let q = 0; r > 0 && ord.length; q = (q + 1) % ord.length, r--) o[ord[q][1]]++; return o; };
+  const C = Math.max(0, Math.round(a.fans.core)), R = Math.max(0, Math.round(total(a)) - C);
+  return { core: ap(coreMix29(s, a), C), rest: ap(casualMix29(s, a), R) };
+}
 /** atalhos de leitura */
 export const youth29 = (b: number[]) => b[0] + b[1];
 export const older29 = (b: number[]) => b[3] + b[4];
@@ -451,6 +477,19 @@ function stepAct(s: GameState, a: Act, d: D29Act, viral: boolean): void {
   }
   d.b = permille(b);
   d.n = Math.round(T);
+  // núcleo: quem entra no núcleo vem da base de ~1 ano antes (já era fã); troca bem mais lenta
+  const C = Math.max(0, a.fans.core), C0 = d.nk ?? C;
+  let k = (d.k ?? permille(roll29(roll29(roll29(b))))).map((x) => x / 1000);
+  const kin = roll29(b);
+  const kr = repl / 3;
+  const lk = norm(k.map((x, i) => x * LEAVE[i]));
+  k = k.map((x, i) => Math.max(0, x - lk[i] * kr) + kin[i] * kr);
+  if (C0 > 0 && C > 0 && Math.abs(C - C0) >= 1) {
+    if (C > C0) { const g = (C - C0) / C; k = k.map((x, i) => x * (1 - g) + kin[i] * g); }
+    else { const g = (C0 - C) / C0; const lk2 = norm(k.map((x, i) => x * LEAVE[i])); k = k.map((x, i) => Math.max(0, x - lk2[i] * g)); }
+  }
+  d.k = permille(k);
+  d.nk = Math.round(C);
 }
 
 function stepCountries(s: GameState, a: Act, d: D29Act): void {
@@ -527,9 +566,9 @@ export function demo29Month(s: GameState): void {
     const a = s.acts[id];
     if (!a) continue;
     let d = st.a[id];
-    if (!d) { d = st.a[id] = { b: permille(seed29(s, a)), n: Math.round(total(a)) }; if (mineA(a)) d.p = [...d.b]; }
+    if (!d) { const sd = seed29(s, a); d = st.a[id] = { b: permille(sd), n: Math.round(total(a)), k: permille(roll29(roll29(roll29(sd)))), nk: Math.round(Math.max(0, a.fans.core)) }; if (mineA(a)) d.p = [...d.b]; }
     else {
-      if (jan) d.b = permille(roll29(d.b.map((x) => x / 1000)));
+      if (jan) { d.b = permille(roll29(d.b.map((x) => x / 1000))); if (d.k) d.k = permille(roll29(d.k.map((x) => x / 1000))); }
       const vw = au[id]?.vw;
       stepAct(s, a, d, vw !== undefined && s.week - vw < 26);
     }
@@ -563,7 +602,7 @@ onFact('reunion', (s, f) => { const id = f.actors[0]; if (id && s.acts[id]) demo
 // ---------------------------------------------------------------- efeitos
 
 /** Depuração/balanço: DEMO29_OFF=appeal,reg,units,phys,cw,live,elast,merch,eff,scandal,revw,fest,awards,offer desliga
- *  ligações (só no Node, para a ablação do tools/balance19; no navegador nada desliga). */
+ *  ligações (também 'popular' e 'labels'; só no Node, para a ablação do tools/balance19; no navegador nada desliga). */
 export const OFF29: Set<string> = new Set(((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DEMO29_OFF ?? '').split(',').filter(Boolean));
 
 /** formato × idade: quem compra cada tipo de lançamento */
@@ -580,6 +619,10 @@ export const ATT29 = [0.9, 1.25, 1.1, 0.8, 0.5];
 export const EL29 = [1.35, 1.2, 1.0, 0.8, 0.85];
 /** gasto na banca (merch) por idade */
 export const MERCH29 = [1.15, 1.05, 0.95, 1.05, 0.8];
+/** referência do núcleo (≈3 anos mais velha que REF29) e mistura 50/50 com a base: quem compra na banca e o físico */
+const REFK29 = roll29(roll29(roll29(REF29)));
+const buyMix29 = (s: GameState, a: Act, wk: number): number[] => { const b = ageMix29(s, a), k = coreMix29(s, a); return b.map((x, i) => x * (1 - wk) + k[i] * wk); };
+const relBuy29 = (mix: number[], prof: number[], wk: number) => dot(mix, prof) / dot(REF29.map((x, i) => x * (1 - wk) + REFK29[i] * wk), prof);
 
 /** Apelo da estreia: formato × idade dos fãs e público-alvo do projeto (família 'fans' do teto por causa). */
 export function appealAge29(s: GameState, rel: Release, a: Act): { k: number; fmt: number; aim: number; aud?: string } {
@@ -632,7 +675,7 @@ registerMod('chartUnits', 'demo29', (s, v, c) => {
 DEMO29.phys = (s, rel) => {
   const a = s.acts[rel.actId];
   if (!a || OFF29.has('phys') || !hasTech(s, 'download') && !hasTech(s, 'streaming')) return 1;
-  return clamp(rel29(ageMix29(s, a), PHYS_AGE29), 0.7, 1.35);
+  return clamp(relBuy29(buyMix29(s, a, 0.4), PHYS_AGE29, 0.4), 0.7, 1.35); // núcleo pesa 40% (coleciona)
 };
 
 // paradas por país: país onde o ato tem mais fãs do que a base explica leva mais das unidades (só atos com países)
@@ -690,7 +733,7 @@ const WEALTH29: Record<string, number> = { na: 1.25, eu: 1.15, oceania: 1.15, as
 DEMO29.elast = (s, a, cityId) => OFF29.has('elast') ? 1 : clamp(rel29(ageMix29(s, a), EL29) / Math.pow(WEALTH29[cityById[cityId]?.market ?? 'na'] ?? 1, 0.3), 0.7, 1.35);
 registerMod('showRevenue', 'demo29', (s, v, c) => {
   if (!c.act || OFF29.has('merch')) return null;
-  const k = clamp(rel29(ageMix29(s, c.act), MERCH29), 0.92, 1.08);
+  const k = clamp(relBuy29(buyMix29(s, c.act, 0.5), MERCH29, 0.5), 0.92, 1.08); // núcleo pesa metade na banca
   return Math.abs(k - 1) < 0.005 ? null : { value: v * k, label: l('Banca: quanto cada idade gasta', 'Merch stand: spend by age') };
 });
 
@@ -702,8 +745,9 @@ MEDIA18.eff = (s, actId, ch) => { const base = prevEff ? prevEff(s, actId, ch) :
 // escândalo: jovem perdoa mais rápido; purista mais velho não (fanscandal28)
 DEMO29.scandal = (s, a, kind, fac) => {
   if (OFF29.has('scandal')) return 0;
-  const b = ageMix29(s, a);
-  const yv = youth29(b) - (REF29[0] + REF29[1]), ov = older29(b) - (REF29[3] + REF29[4]);
+  const b = casualMix29(s, a), k = coreMix29(s, a);
+  // mainstream/comunidade = os casuais e ativos; purista = o núcleo (que é mais velho)
+  const yv = youth29(b) - (REF29[0] + REF29[1]), ov = older29(k) - (REFK29[3] + REFK29[4]);
   if (fac === 'main' || fac === 'comm') return 0.35 * yv;
   if (fac === 'purist' && kind !== 'politics' && kind !== 'blasphemy') return -0.35 * ov;
   return 0;
@@ -803,3 +847,96 @@ export function fakeYouth29(s: GameState, a: Act): { share: number; seen: number
   const seen = share > 0 ? norm(b.map((x, i) => x * (1 - share) + (i <= 1 ? share / 2 : 0))) : b;
   return { share, seen };
 }
+
+// ---------------------------------------------------------------- VOTO DO PÚBLICO (prêmio por voto popular)
+// Todo novembro (desde 1955: enquete de revista adolescente; TV e depois internet ampliam o voto jovem) os fãs votam.
+// Peso do voto por idade: quem tem 13–24 vota muito mais; 50+ quase não vota. Votos = fãs por faixa × peso × embalo.
+// Submundo: robôs, urna cheia e voto encomendado comprados no rig29 (métodos 'bots', 'ballot', 'vote') para o ato
+// viram votos FALSOS jovens; e a fazenda de streams (stream18) também infla o voto online. Ganhou com mais de 20% de
+// voto falso → chance de vir à tona (Rng dedicado 'demo29|pop'): prêmio cassado e escândalo de dinheiro.
+
+export const POP_START29 = 1955;
+/** peso do voto por faixa na época (revista → TV → internet: o voto jovem cresce) */
+export function voteW29(s: GameState): number[] {
+  const net = hasTech(s, 'internet') ? 1 : 0, tv = hasTech(s, 'tv_music') ? 1 : 0;
+  return [1.6 + 0.4 * net, 1.4 + 0.2 * tv + 0.2 * net, 0.9, 0.45, 0.25 - 0.05 * net];
+}
+export interface PopVote29 { act: Act; votes: number; fake: number; byAge: number[] }
+/** placar do Voto do Público agora (os 40 atos com mais fãs entre quem lançou nos últimos 12 meses) */
+export function popularBoard29(s: GameState, n = 10): PopVote29[] {
+  const vw = voteW29(s);
+  const rig = (s.x4 as unknown as { rig29?: { r: { act: string; m: string; pow: number; until: number; done?: string }[] } }).rig29?.r ?? [];
+  const farm = (s.x4 as unknown as { st18?: { farm: Record<string, { until: number; k: number }> } }).st18?.farm ?? {};
+  const cands = actsNow27(s).filter((a) => liveA(a) && total(a) >= 1000 && a.releases.some((id) => { const r = s.releases[id]; return !!r && s.week - r.week <= 52 && s.week >= r.week; }))
+    .sort((x, y) => total(y) - total(x) || (x.id < y.id ? -1 : 1)).slice(0, 40);
+  const out = cands.map((a) => {
+    const f = ageFans29(s, a);
+    const byAge = f.map((x, i) => x * vw[i] * (0.6 + a.momentum / 150));
+    const real = byAge.reduce((x, y) => x + y, 0);
+    let fake = 0;
+    for (const r of rig) if (!r.done && r.act === a.id && r.until >= s.week && (r.m === 'bots' || r.m === 'ballot' || r.m === 'vote')) fake += real * Math.min(0.6, r.pow / 25);
+    for (const id of a.releases.slice(-4)) { const fm = farm[id]; if (fm && fm.until > s.week) fake += real * Math.min(0.5, (fm.k - 1) * 0.4); }
+    return { act: a, votes: real + fake, fake, byAge };
+  });
+  return out.sort((x, y) => y.votes - x.votes || (x.act.id < y.act.id ? -1 : 1)).slice(0, n);
+}
+function popularVote29(s: GameState): void {
+  if (s.year < POP_START29 || OFF29.has('popular')) return;
+  const st = demo29(s);
+  if ((st.pv ?? []).some((x) => x[0] === s.year)) return;
+  const top = popularBoard29(s, 1)[0];
+  if (!top) return;
+  const a = top.act, mine = a.owner === 'player' || !!a.playerBand, share = top.votes > 0 ? top.fake / top.votes : 0;
+  const name = { pt: `Voto do Público ${s.year}`, en: `People's Vote ${s.year}` };
+  recordAward(s, { year: s.year, category: 'popular29', actId: a.id, name: `${name.pt} / ${name.en}: ${a.name}`, byPlayer: mine });
+  a.fame = clamp(a.fame + 1.5, 0, 100);
+  a.momentum = clamp(a.momentum + 6, 0, 100);
+  const young = youth29(norm(top.byAge));
+  const tx = fmtL(l('{a} vence o Voto do Público {y} ({p}% dos votos vieram de quem tem até 24 anos).', '{a} wins the {y} People\'s Vote ({p}% of votes from people 24 or under).'), { a: a.name, y: s.year, p: Math.round(young * 100) });
+  remember(s, 'award', tx, { actId: a.id, important: mine || a.fame >= 50 });
+  if (mine) { s.player.reputation.commercial = clamp(s.player.reputation.commercial + 1, 0, 100); notify(s, tx, 'good'); }
+  let revoked = 0;
+  if (share > 0.2 && Rng.fromSeed(`${s.config.seed}|demo29|pop|${s.year}|${a.id}`).chance(0.3)) {
+    revoked = 1;
+    const i = s.awards.findIndex((e) => e.category === 'popular29' && e.year === s.year && e.actId === a.id);
+    if (i >= 0) { s.awards.splice(i, 1); a.awards = Math.max(0, a.awards - 1); if (mine) s.player.stats.awards = Math.max(0, s.player.stats.awards - 1); }
+    scandal(s, a.id, 'money', 35, fmtL(l('Voto do Público {y} cassado: {p}% dos votos de {a} eram robôs ou urna cheia.', '{y} People\'s Vote revoked: {p}% of {a}\'s votes were bots or ballot stuffing.'), { y: s.year, p: Math.round(share * 100), a: a.name }), { tags: ['awards', 'demo29', 'fraud'] });
+  }
+  (st.pv ??= []).unshift([s.year, a.id, Math.round(share * 100) / 100, revoked]);
+  if (st.pv.length > 15) st.pv.length = 15;
+  logIt(s, revoked ? fmtL(l('Voto do Público {y}: {a} venceu, mas o prêmio foi cassado (voto falso).', '{y} People\'s Vote: {a} won, but the prize was revoked (fake votes).'), { y: s.year, a: a.name }) : tx);
+}
+registerSimHook('month', 'demo29:popular', (s) => { if (s.month === 10) popularVote29(s); });
+
+// ---------------------------------------------------------------- SELOS RIVAIS: cada um mira uma geração
+
+/** público que o selo procura: arquétipo/estratégia (hitmaker e estrelas → jovens; catálogo → 35+; boutique e caçador
+ *  de cena → 18–34) misturado com a idade do público do elenco que ele já tem (selo de roqueiros envelhecidos segue
+ *  atrás de público envelhecido). Soma 1. */
+export function labelAge29(s: GameState, lb: Label): number[] {
+  // distribuições-alvo absolutas (13–17, 18–24, 25–34, 35–49, 50+)
+  const P: Record<string, number[]> = {
+    young: [0.25, 0.38, 0.22, 0.10, 0.05], old: [0.04, 0.10, 0.21, 0.35, 0.30], mid: [0.10, 0.33, 0.35, 0.15, 0.07], flat: REF29,
+  };
+  const k = lb.archetype === 'hitmaker' || lb.strategy === 'stars' ? 'young' : lb.archetype === 'catalog' || lb.strategy === 'buy_catalog' ? 'old'
+    : lb.archetype === 'boutique' || lb.archetype === 'scene_hunter' || lb.strategy === 'niche' ? 'mid' : lb.strategy === 'develop' ? 'young' : 'flat';
+  const want = P[k];
+  const ros = lb.roster.slice(0, 12).map((id) => s.acts[id]).filter((a): a is Act => !!a);
+  if (!ros.length) return want;
+  const rm = [0, 0, 0, 0, 0];
+  for (const a of ros) ageMix29(s, a).forEach((x, i) => (rm[i] += x));
+  return norm(want.map((x, i) => x + rm[i] / ros.length));
+}
+/** encaixe do público do ato com o que o selo procura (0,8–1,2) */
+export function labelFit29(s: GameState, lb: Label, a: Act): number {
+  if (OFF29.has('labels')) return 1;
+  return 0.8 + 0.4 * clamp((cos(labelAge29(s, lb), ageMix29(s, a)) - 0.5) / 0.5, 0, 1);
+}
+DEMO29.label = (s, lb, a) => labelFit29(s, lb, a);
+/** na disputa por uma oferta, o artista também pesa o selo que fala com o público dele (rival × você) */
+DEMO29.rivalOffer = (s, lb, a) => {
+  if (OFF29.has('labels')) return 0;
+  const lm = labelMix29(s, a.id);
+  const mine = lm ? cos(lm, ageMix29(s, a)) : 0.85;
+  return Math.round(clamp((cos(labelAge29(s, lb), ageMix29(s, a)) - mine) / 0.3, -1, 1) * 0.04 * 1000) / 1000;
+};

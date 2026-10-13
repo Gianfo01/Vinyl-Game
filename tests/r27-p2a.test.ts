@@ -70,9 +70,11 @@ beforeAll(() => {
   // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
     // R29 DEMO (de propósito — docs/demo29.md): público por idade e região muda apelo, demanda nas cidades, divisão por país,
     // line-up dos festivais e o relatório do analista (nova dica): caixa, acts e rng mudam (tours igual). Antes: 450735 / 2386675548 / 2839816166.
-  expect(s.player.cash).toBe(649767);
-  expect(hashString(JSON.stringify(s.acts))).toBe(2864074098);
-  expect(hashString(JSON.stringify(s.rng))).toBe(1138143925);
+    // R29 DEMO (2ª etapa): idade do núcleo (banca, físico, puristas), Voto do Público em novembro e selos rivais mirando uma
+    // geração (escolha entre os 8 melhores candidatos e disputa de oferta): caixa, acts e rng mudam. Antes: 649767 / 2864074098 / 1138143925.
+  expect(s.player.cash).toBe(1327854);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3127334806);
+  expect(hashString(JSON.stringify(s.rng))).toBe(1901831159);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

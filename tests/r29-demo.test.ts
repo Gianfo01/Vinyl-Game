@@ -9,7 +9,7 @@ import { advanceMonth } from '../src/sim/tick';
 import type { Act, GameState, Release } from '../src/sim/types';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import {
-  ageFans29, ageMix29, appealAge29, cityAge29, demo29, fakeYouth29, inflow29, older29, regionMix29, roll29, seed29, taste29, unitsAge29, youth29,
+  ageFans29, ageMix29, appealAge29, casualMix29, cityAge29, coreMix29, demo29, fakeYouth29, inflow29, labelFit29, poolFans29, popularBoard29, older29, regionMix29, roll29, seed29, taste29, unitsAge29, youth29,
 } from '../src/sim/sys/demo29';
 
 const game = (seed: string, year: number): GameState => createGame(defaultConfig(seed, { startYear: year }));
@@ -185,5 +185,57 @@ describe('R29 demo — saves e determinismo', () => {
   it('determinismo: mesma semente, mesmo estado', () => {
     const run = () => { const s = game('r29d-det', 1995); mine(s); for (let i = 0; i < 3; i++) advanceMonth(s); return JSON.stringify(demo29(s)); };
     expect(run()).toBe(run());
+  });
+});
+
+describe('R29 demo — núcleo, voto popular e selos rivais', () => {
+  it('núcleo com idade própria (mais velho que casuais e ativos); por coorte os fãs somam os totais', () => {
+    const s = game('r29d-core', 1980);
+    const a = mine(s);
+    for (let i = 0; i < 14; i++) advanceMonth(s);
+    const d = demo29(s).a[a.id];
+    expect(d.k!.reduce((x, y) => x + y, 0)).toBe(1000);
+    const k = coreMix29(s, a), c = casualMix29(s, a);
+    expect(older29(k)).toBeGreaterThan(older29(c));
+    const pf = poolFans29(s, a);
+    expect(pf.core.reduce((x, y) => x + y, 0)).toBe(Math.round(a.fans.core));
+    expect(pf.core.reduce((x, y) => x + y, 0) + pf.rest.reduce((x, y) => x + y, 0)).toBe(Math.round(a.fans.casual + a.fans.active + a.fans.core));
+  });
+  it('Voto do Público: sai todo novembro; público jovem vota mais; robôs viram voto falso', () => {
+    const s = game('r29d-pop', 1985);
+    const young = mine(s), old = mine(s);
+    young.fans = { casual: 4_000_000, active: 800_000, core: 200_000 };
+    old.fans = { ...young.fans };
+    young.momentum = old.momentum = 50;
+    const rel = (a: Act, id: string) => { s.releases[id] = fakeRel(s, a, 'single', { id, actId: a.id }); a.releases.push(id); };
+    rel(young, 'rY'); rel(old, 'rO');
+    advanceMonth(s);
+    setMix(s, young, [350, 400, 150, 70, 30]);
+    setMix(s, old, [20, 40, 140, 400, 400]);
+    const b = popularBoard29(s, 40);
+    const vy = b.find((x) => x.act.id === young.id)!.votes, vo = b.find((x) => x.act.id === old.id)!.votes;
+    expect(vy).toBeGreaterThan(vo * 1.8);
+    // Submundo: robôs no voto (rig29) do ato mais velho viram votos falsos
+    const x4 = s.x4 as unknown as { rig29?: { r: unknown[]; seq: number } };
+    x4.rig29 = { r: [{ id: 'g1', act: old.id, cat: 'gramo', m: 'bots', pow: 10, q: 0.1, by: 'player', w: s.week, until: s.week + 52, y0: s.year, pre: [] }], seq: 1 };
+    const b2 = popularBoard29(s, 40).find((x) => x.act.id === old.id)!;
+    expect(b2.fake).toBeGreaterThan(0);
+    while (s.month !== 11) advanceMonth(s);
+    expect(s.awards.some((e) => e.category === 'popular29' && e.year === s.year)).toBe(true);
+    expect(demo29(s).pv?.[0]?.[0]).toBe(s.year);
+  });
+  it('selos rivais miram uma geração: catálogo prefere público velho, hitmaker prefere jovem', () => {
+    const s = game('r29d-lab', 1995);
+    const young = mine(s), old = mine(s);
+    advanceMonth(s);
+    setMix(s, young, [350, 400, 150, 70, 30]);
+    setMix(s, old, [20, 40, 140, 400, 400]);
+    const lbs = Object.values(s.labels);
+    const cat = { ...lbs[0], archetype: 'catalog' as const, strategy: 'buy_catalog' as const, roster: [] };
+    const hit = { ...lbs[0], archetype: 'hitmaker' as const, strategy: 'stars' as const, roster: [] };
+    expect(labelFit29(s, cat, old)).toBeGreaterThan(labelFit29(s, cat, young));
+    expect(labelFit29(s, hit, young)).toBeGreaterThan(labelFit29(s, hit, old));
+    expect(DEMO29.label).toBeTruthy();
+    expect(DEMO29.rivalOffer!(s, cat, old)).toBeGreaterThanOrEqual(DEMO29.rivalOffer!(s, cat, young));
   });
 });
