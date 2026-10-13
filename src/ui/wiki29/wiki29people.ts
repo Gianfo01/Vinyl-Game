@@ -21,7 +21,7 @@ import { relics } from '../../sim/sys/relics9';
 import { realDataOf, rw } from '../../sim/sys/realworld';
 import type { Act, GameState, Person } from '../../sim/types';
 import { playerActs } from '../../sim/util';
-import { H, P, T, hidden29, join29, ln29, realCat29, roleName29, slug29, span29, staticLabels29, tx, year29, type RArt29, type RPer29, type W29 } from './wiki29core';
+import { H, P, T, hidden29, safeP29, join29, ln29, realCat29, roleName29, slug29, span29, staticLabels29, tx, year29, type RArt29, type RPer29, type W29 } from './wiki29core';
 import type { Block29, Inline29, Page29 } from './wiki29types';
 
 const hash = (x: string): number => { let h = 2166136261; for (let i = 0; i < x.length; i++) { h ^= x.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
@@ -84,9 +84,10 @@ function realActFacts29(c: W29, a: RArt29 | { n: string; d?: number; e?: number;
   const mem: Inline29[][] = [];
   for (const m of a.m ?? []) {
     const per = m[6]?.length ? m[6] : [[m[4], m[5]] as [number | undefined, number?]];
-    const vis = per.filter(([x]) => !hidden29(c, x));
+    const st0 = (x: number | undefined) => x ?? (a as RArt29).f ?? (a.d !== undefined ? a.d - 1 : undefined);
+    const vis = per.filter(([x]) => !hidden29(c, st0(x)));
     if (!vis.length) { hid++; continue; }
-    const txt = vis.map(([x, y]) => span29(x ?? a.d, hidden29(c, y) ? undefined : y)).join(', ');
+    const txt = vis.map(([x, y]) => span29(st0(x), hidden29(c, y) ? undefined : y)).join(', ');
     if (vis.some(([, y]) => hidden29(c, y))) hid++;
     mem.push([ln29(`rp:${slug29(m[0])}`, m[0]), ` — ${roleName29(m[1])}${txt ? ` (${txt})` : ''}`]);
   }
@@ -338,7 +339,7 @@ export function pageProd29(c: W29, id: string): Page29 | null {
     [T('Atividade', 'Active'), [span29(p.from, hidden29(c, p.to) ? undefined : p.to)]], [T('Base', 'Base'), [p.studio, ' · ', cityById[p.city] ? ln29(`city:${p.city}`, tx(cityById[p.city].name)) : p.city]],
     ...(p.born ? [[T('Nascimento', 'Born'), [String(p.born)]] as [string, Inline29[]]] : []), ...(p.died && !hidden29(c, p.died) ? [[T('Morte', 'Died'), [String(p.died)]] as [string, Inline29[]]] : []),
     [T('Som', 'Sound'), [tx(p.snd)]], [T('Faixa de cachê', 'Fee tier'), [`${p.tier}/5`]],
-  ] }, P(tx(p.bio))];
+  ] }, ...safeP29(c, tx(p.bio))];
   if (w.items.length) blocks.push(H(T('Obras', 'Works')), { k: 'ul', items: w.items });
   if (w.hid) blocks.push({ k: 'spoiler', n: w.hid });
   blocks.push(P(T('Contrate pelo estúdio; o jantar no estúdio melhora a relação — veja ', 'Hire through the studio; a studio dinner improves the relationship — see '), ln29('mech:music', T('Projetos e estúdio', 'Projects and studio')), '.'));
@@ -349,11 +350,14 @@ export function pageMgr29(c: W29, id: string): Page29 | null {
   const m = MGRS29().find((x) => x.id === id);
   if (!m) return null;
   if (hidden29(c, m.from)) return futurePage29(`mgr:${id}`, m.name, T('empresário(a)', 'manager'));
-  const cl = works(c, m.cl.map(([a, f, t0]) => [a, `${f}–${t0}`, f] as [string, string, number]));
+  let clh = 0;
+  const cl = { items: [] as Inline29[][], hid: 0 };
+  for (const [a, f, t0] of m.cl) { if (hidden29(c, f)) { clh++; continue; } if (hidden29(c, t0)) clh++; cl.items.push([`${a} (${span29(f, hidden29(c, t0) ? undefined : t0)})`]); }
+  cl.hid = clh;
   const blocks: Block29[] = [{ k: 'kv', rows: [
     [T('Atividade', 'Active'), [span29(m.from, hidden29(c, m.to) ? undefined : m.to)]], [T('Cidade', 'City'), cityById[m.city] ? [ln29(`city:${m.city}`, tx(cityById[m.city].name))] : [m.city]],
     [T('Estilo', 'Style'), [`${tx(MGR_STYLE[m.style][0])} — ${tx(MGR_STYLE[m.style][1])}`]], [T('Comissão típica', 'Typical commission'), [`${Math.round(m.rate * 100)}%`]],
-  ] }, P(tx(m.bio))];
+  ] }, ...safeP29(c, tx(m.bio))];
   if (cl.items.length) blocks.push(H(T('Clientes', 'Clients')), { k: 'ul', items: cl.items });
   if (cl.hid) blocks.push({ k: 'spoiler', n: cl.hid });
   blocks.push(P(T('O empresário senta à mesa quando você negocia com o cliente dele — veja ', 'The manager sits at the table when you negotiate with their client — see '), ln29('mech:contracts', T('Contratos', 'Contracts')), '.'));
@@ -367,7 +371,7 @@ export function pageExec29(c: W29, rid: string): Page29 | null {
   const lb = staticLabels29().find((x) => x.id === e.label);
   return { id: `exec:${rid}`, title: e.name, kind: T('executivo(a) de gravadora', 'label executive'), art: { k: 'staff', id: `l:${e.rid}`, role: 'exec', year: Math.min(year29(c), e.y + 3), born: e.born }, crumbs: crumbs29('pessoas', 'execs'),
     blocks: [{ k: 'kv', rows: [[T('Selo', 'Label'), lb ? [ln29(`label:${lb.id}`, lb.real ?? lb.name)] : [e.label]], [T('No comando desde', 'In charge since'), [String(e.y)]], [T('Nascimento', 'Born'), [String(e.born)]],
-      ...(e.died && !hidden29(c, e.died) ? [[T('Morte', 'Died'), [String(e.died)]] as [string, Inline29[]]] : [])] }, P(tx(l(e.pt, e.en)))] };
+      ...(e.died && !hidden29(c, e.died) ? [[T('Morte', 'Died'), [String(e.died)]] as [string, Inline29[]]] : [])] }, ...safeP29(c, tx(l(e.pt, e.en)))] };
 }
 
 export function pageCritic29(c: W29, slug: string): Page29 | null {
@@ -378,7 +382,7 @@ export function pageCritic29(c: W29, slug: string): Page29 | null {
   return { id: `critic:${slug}`, title: k.name, kind: T('crítico(a)', 'critic'), art: { k: 'staff', id: `c:${slug}`, role: 'critic', year: Math.min(year29(c), k.from + 5) }, crumbs: crumbs29('pessoas', 'critics'),
     blocks: [{ k: 'kv', rows: [[T('Veículo', 'Outlet'), out ? [ln29(`outlet:${out.id}`, k.outlet)] : [k.outlet]], [T('Atividade', 'Active'), [span29(k.from, hidden29(c, k.to) ? undefined : k.to)]],
       [T('Prefere', 'Favors'), [k.favors.join(', ') || '—']], [T('Origem', 'Source'), [k.real ? T('pessoa real', 'real person') : T('personagem do jogo', 'game character')]]] },
-    ...(k.note ? [P(k.note)] : []), P(T('Críticos dão notas que mexem nas vendas das primeiras semanas — veja ', 'Critics give scores that move first-weeks sales — see '), ln29('mech:press', T('Imprensa e críticos', 'Press and critics')), '.')] };
+    ...(k.note ? safeP29(c, k.note) : []), P(T('Críticos dão notas que mexem nas vendas das primeiras semanas — veja ', 'Critics give scores that move first-weeks sales — see '), ln29('mech:press', T('Imprensa e críticos', 'Press and critics')), '.')] };
 }
 
 // ---------------------------------------------------------------- comuns

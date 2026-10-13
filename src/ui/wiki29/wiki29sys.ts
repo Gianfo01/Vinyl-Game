@@ -6,7 +6,7 @@
 export const SYS_OF_MECH29: Record<string, string[]> = {
   money: ['capital', 'vices', 'bolsa10', 'overhead13', 'econ18', 'money19', 'fin20', 'price20', 'budget19', 'insure19', 'sale17', 'intra19', 'bandpay19', 'stakes8', 'report18', 'supply16', 'industry'],
   contracts: ['offers12', 'contracts18', 'dispute15', 'moneyb19', 'deals18', 'rivals8', 'rivals12', 'rivalmind18', 'rivals27', 'leaders10', 'labelrep28', 'image17', 'license17', 'consent8', 'union20', 'feats8'],
-  scouting: ['scout11', 'scout23', 'dossier8', 'discover18', 'talent', 'ability18', 'schools19', 'tv18', 'contests19', 'kpop18', 'idols18'],
+  scouting: ['scout11', 'scout23', 'dossier8', 'discover18', 'talent', 'ability18', 'schools19', 'tv18', 'contests19', 'kpop18', 'idols18', 'school18'],
   music: ['music', 'creation', 'quality18', 'traj18', 'sound', 'recipe12', 'project8', 'project12', 'project13', 'compose27', 'camp27', 'session18', 'session19', 'camps18', 'writers19', 'remix19',
     'charts7', 'world4', 'warmup8', 'relevance8', 'explain8', 'review18', 'mkt18', 'stream18', 'radio18', 'media18', 'outlets17', 'supply18', 'songsale', 'songmkt27', 'rights8', 'rights18',
     'reach17', 'trends17', 'revival19', 'sync15', 'adsync19', 'score19', 'instruments', 'ai18', 'market19a', 'gear19'],

@@ -189,3 +189,16 @@ export function staticLabels29(): SLabel29[] {
   return (SLAB ??= [...CATALOG_LABELS, ...EXTRA_LABELS].filter((x, i, xs) => xs.findIndex((y) => y.id === x.id) === i)
     .map((x) => ({ id: x.id, name: x.name, real: REAL_LABELS[x.id], city: x.city, founded: x.founded, focus: x.focus, arch: x.archetype })));
 }
+
+/** Texto livre (bio, história, descrição) que cita um ano depois da partida: escondido sem "Revelar história real". */
+export function futureText29(c: W29, text: string): boolean {
+  if (!c.s || c.reveal) return false;
+  const y = c.s.year;
+  return [...text.matchAll(/\b(1[89]\d\d|20\d\d)\b/g)].some((m) => +m[1] > y);
+}
+/** Parágrafo seguro: o texto, ou um aviso + spoiler quando cita o futuro. */
+export function safeP29(c: W29, text: string): Block29[] {
+  return futureText29(c, text)
+    ? [{ k: 'p', x: [T('(Este texto cita fatos posteriores ao ano da partida.)', '(This text mentions facts after the run\'s year.)')] }, { k: 'spoiler', n: 1 }]
+    : [{ k: 'p', x: [text] }];
+}

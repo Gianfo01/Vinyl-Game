@@ -22,7 +22,7 @@ import { relics } from '../../sim/sys/relics9';
 import { VENUES17 } from '../../sim/sys/venues17';
 import { histMode } from '../../sim/history15';
 import { money } from '../../sim/util';
-import { H, P, T, hidden29, join29, ln29, realCat29, span29, staticLabels29, tx, year29, type W29 } from './wiki29core';
+import { H, P, T, futureText29, hidden29, safeP29, join29, ln29, realCat29, span29, staticLabels29, tx, year29, type W29 } from './wiki29core';
 import { crumbs29, futurePage29, hashName29, visible29 } from './wiki29people';
 import type { Block29, Inline29, Page29 } from './wiki29types';
 
@@ -165,8 +165,8 @@ export function pageMove29(c: W29, id: string): Page29 | null {
     [T('Época', 'Period'), [span29(m.from, hidden29(c, m.to) ? undefined : m.to)]],
     [T('Gêneros de origem', 'Parent genres'), join29(m.parents.map((p) => genreById[p]).filter(Boolean).map((p) => ln29(`genre:${p.id}`, tx(p.name))))],
     [T('Cidades', 'Cities'), join29(m.cities.filter((x) => cityById[x]).map((x) => ln29(`city:${x}`, tx(cityById[x].name))))],
-    [T('Visual', 'Look'), [tx(m.look)]],
-  ] }, P(tx(m.desc))];
+    [T('Visual', 'Look'), [futureText29(c, tx(m.look)) ? '—' : tx(m.look)]],
+  ] }, ...safeP29(c, tx(m.desc))];
   if (c.s) {
     // movimentos vivos da partida com a mesma origem e época (o mundo dá nome próprio a cada um)
     const live = c.s.movements.filter((x) => x.born <= c.s!.year && (m.parents.includes(x.parent) || m.parents.includes(x.genreId)) && x.born >= m.from - 5 && x.born <= m.to + 5);
@@ -224,7 +224,7 @@ export function pageVenue29(c: W29, id: string): Page29 | null {
       [T('Cidade', 'City'), cityById[v.city] ? [ln29(`city:${v.city}`, tx(cityById[v.city].name))] : [v.city]], [T('Capacidade', 'Capacity'), [v.cap.toLocaleString()]],
       [T('Época', 'Period'), [span29(v.from, v.to && hidden29(c, v.to) ? undefined : v.to)]], [T('Prestígio', 'Prestige'), [`${v.prestige}/100`]],
       [T('Pode ser comprada', 'Can be bought'), [v.buyable === false ? T('não', 'no') : `${T('sim, a partir de', 'yes, from')} ${c.s ? usd(money(c.s, v.price)) : `US$ ${v.price.toLocaleString()} (${T('dólares da época', 'era dollars')})`}`]],
-    ] }, ...(v.note ? [P(tx(v.note))] : []), P(T('Shows aqui rendem conforme a fama do ato na cidade e a cena local — veja ', 'Gigs here earn according to the act\'s fame in the city and the local scene — see '), ln29('mech:live', T('Ao vivo', 'Live')), '.')] };
+    ] }, ...(v.note ? safeP29(c, tx(v.note)) : []), P(T('Shows aqui rendem conforme a fama do ato na cidade e a cena local — veja ', 'Gigs here earn according to the act\'s fame in the city and the local scene — see '), ln29('mech:live', T('Ao vivo', 'Live')), '.')] };
 }
 
 export function pageOutlet29(c: W29, id: string): Page29 | null {
@@ -238,7 +238,7 @@ export function pageOutlet29(c: W29, id: string): Page29 | null {
       [T('Tipo', 'Type'), [o.kind]], [T('Mercado', 'Market'), [o.market === 'global' ? T('global', 'global') : tx(marketById[o.market]?.name ?? l(o.market))]],
       [T('Época', 'Period'), [span29(o.from, hidden29(c, o.to) ? undefined : o.to)]], [T('Alcance', 'Reach'), [`${o.reach}/100`]], [T('Credibilidade', 'Credibility'), [`${o.cred}/100`]],
       [T('Linha', 'Stance'), [o.stance < -0.2 ? T('progressista', 'progressive') : o.stance > 0.2 ? T('conservadora', 'conservative') : T('ao centro', 'centrist')]],
-    ] }, P(tx(o.desc))] };
+    ] }, ...safeP29(c, tx(o.desc))] };
 }
 
 export function pageOrg29(c: W29, id: string): Page29 | null {
@@ -251,7 +251,7 @@ export function pageOrg29(c: W29, id: string): Page29 | null {
     [T('Tipo', 'Kind'), [tx(KIND_NAME[o.kind])]], [T('Base', 'Base'), o.city && cityById[o.city] ? [ln29(`city:${o.city}`, tx(cityById[o.city].name))] : [T('a cidade-base do jogador', 'the player\'s home city')]],
     [T('Época', 'Period'), [span29(o.from, hidden29(c, o.to) ? undefined : o.to)]], [T('Negócios', 'Rackets'), [o.rackets.map((r) => tx(RACKET_NAME[r])).join(', ')]],
     [T('Origem', 'Source'), [o.real ? T('organização real documentada', 'documented real organization') : T('organização fictícia', 'fictional organization')]],
-  ] }, P(tx(o.desc))];
+  ] }, ...safeP29(c, tx(o.desc))];
   if (ties.length) blocks.push(H(T('Laços documentados', 'Documented ties')), { k: 'ul', items: ties.map((x) => [`${x.y} · ${tx(x.text)}`]) });
   if (hid) blocks.push({ k: 'spoiler', n: hid });
   blocks.push(P(T('Aproximar-se, lavar dinheiro ou denunciar mexem no calor policial — veja ', 'Approaching, laundering or reporting moves police heat — see '), ln29('mech:underworld', T('Submundo', 'Underworld')), '.'));
@@ -272,8 +272,8 @@ export function pageRelic29(c: W29, id: string): Page29 | null {
   const blocks: Block29[] = [{ k: 'kv', rows: [
     [T('De quem', 'Whose'), owner && !c.s ? [ln29(`ract:${owner.slug}`, d.owner)] : [d.owner]], [T('Ano', 'Year'), [String(d.year)]],
     [T('Valor estimado', 'Estimated value'), [`US$ ${d.value.toLocaleString()} ${T('(dólares reais)', '(real dollars)')}`]],
-    [T('Onde está (história real)', 'Where it is (real history)'), [hid ? T('— (depende de fatos futuros)', '— (depends on future facts)') : tx(d.location)]],
-  ] }, P(tx(d.story))];
+    [T('Onde está (história real)', 'Where it is (real history)'), [hid || futureText29(c, tx(d.location)) ? T('— (depende de fatos futuros)', '— (depends on future facts)') : tx(d.location)]],
+  ] }, ...safeP29(c, tx(d.story))];
   if (steps.length) blocks.push(H(T('Caminho', 'Path')), { k: 'ul', items: steps });
   if (hid) blocks.push({ k: 'spoiler', n: hid });
   if (c.s) {
@@ -295,7 +295,7 @@ export function pageGear29(c: W29, id: string): Page29 | null {
       [T('Tipo', 'Kind'), [g.kind]], [T('Fabricante', 'Maker'), [real ? g.maker : T('(fictício na partida)', '(fictional in the run)')]], [T('Desde', 'Since'), [String(g.from)]],
       [T('Famílias de gênero', 'Genre families'), [g.fam.map(famName).join(', ')]],
       ...(g.fx ? [[T('Som (produção · performance · originalidade)', 'Sound (production · performance · originality)'), [g.fx.map((x) => (x > 0 ? `+${x}` : String(x))).join(' · ')]] as [string, Inline29[]]] : []),
-    ] }, ...(g.note ? [P(tx(g.note))] : []), P(T('Músicos podem ganhar endosso de fabricantes e virar donos de um instrumento-ícone — veja ', 'Musicians can get maker endorsements and own an icon instrument — see '), ln29('mech:music', T('Estúdio', 'Studio')), '.')] };
+    ] }, ...(g.note ? safeP29(c, tx(g.note)) : []), P(T('Músicos podem ganhar endosso de fabricantes e virar donos de um instrumento-ícone — veja ', 'Musicians can get maker endorsements and own an icon instrument — see '), ln29('mech:music', T('Estúdio', 'Studio')), '.')] };
 }
 
 export function pageMerch29(c: W29, sku: string): Page29 | null {
