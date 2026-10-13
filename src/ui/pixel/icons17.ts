@@ -19,6 +19,8 @@ export const ICON17_NAMES = [
   'datebook', 'quill', 'turntable', 'spotlight', 'ballot', 'zine', 'certificate',
   // r27 (KNOWN): Artistas conhecidos — fichário de contatos
   'rolodex',
+  // r27 (SONG): Mercado de canções — partitura com etiqueta de preço (antes reusava o 'quill' de Contratos)
+  'songsheet',
 ] as const;
 export type Icon17 = (typeof ICON17_NAMES)[number];
 
@@ -60,6 +62,7 @@ const DRAW: Record<Icon17, (p: Px) => void> = {
   passport: (p) => { p.rect(3, 1, 10, 14, K.dblue); p.disc(8, 7, 3, K.gold); p.ring(8, 7, 2, K.dgold); p.hline(5, 10, 12, K.gold); },
   columns: (p) => { p.poly([[1, 5], [8, 1], [15, 5]], K.cream); p.rect(2, 5, 12, 1, K.grey); for (const x of [3, 7, 11]) p.rect(x, 6, 2, 7, K.white); p.rect(1, 13, 14, 2, K.grey); },
   datebook: (p) => { p.rect(2, 3, 12, 12, K.white); p.rect(2, 3, 12, 3, K.red); p.rect(4, 1, 2, 4, K.dgrey); p.rect(10, 1, 2, 4, K.dgrey); for (let y = 8; y < 14; y += 2) for (let x = 4; x < 13; x += 3) p.rect(x, y, 2, 1, K.grey); p.rect(10, 11, 2, 2, K.red); },
+  songsheet: (p) => { p.rect(2, 2, 10, 13, K.cream); p.hline(4, 10, 5, K.grey); p.hline(4, 10, 7, K.grey); p.hline(4, 10, 9, K.grey); p.disc(5.5, 9, 1.3, K.ink); p.vline(6, 4, 9, K.ink); p.disc(9, 7, 1.3, K.ink); p.vline(10, 3, 7, K.ink); p.poly([[10, 10], [15, 10], [15, 15], [10, 15]], K.gold); p.put(12, 12, K.dgold); },
   quill: (p) => { p.rect(2, 10, 9, 5, K.cream); p.hline(3, 9, 12, K.grey); p.poly([[14, 1], [9, 9], [8, 11], [10, 9], [15, 3]], K.white); p.line(13, 3, 8, 11, K.grey); p.put(8, 12, K.ink); },
   turntable: (p) => { p.rect(1, 3, 14, 11, K.brown); p.disc(7, 8.5, 4.6, K.black); p.disc(7, 8.5, 1.4, K.red); p.ring(7, 8.5, 3, K.dgrey); p.line(13, 4, 11, 10, K.grey); p.rect(12, 3, 2, 2, K.white); },
   spotlight: (p) => { p.poly([[6, 1], [10, 1], [14, 14], [2, 14]], C('#fff2b0')); p.rect(5, 0, 6, 2, K.dgrey); p.ellipse(8, 14, 6, 1.4, K.gold); p.disc(8, 10, 1.6, K.skin); p.rect(7, 11, 3, 3, K.blue); },
