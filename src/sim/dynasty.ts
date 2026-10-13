@@ -366,6 +366,23 @@ export function negotiateReunion(s: GameState, r: Rng, actId: string): L {
 }
 
 // ---------- Carreira solo paralela (GDD §43) ----------
+/** R29 (integrante): o ato solo nascido da banda — mesma montagem da carreira solo paralela, com dono/contrato à escolha
+ *  (a oferta a um integrante de outra banda cria o solo SEM contrato e o assina pela proposta de sempre, sys/member29). */
+export function soloActFrom29(s: GameState, r: Rng, act: Act, p: Person, o: { owner: Act['owner']; contractId?: string }): Act {
+  const solo: Act = {
+    ...structuredClone(act),
+    id: nextId(s, 'a'), name: p.name, members: [p.id], status: 'emerging', fame: Math.min(15, act.fame * 0.3),
+    fans: { casual: Math.round(act.fans.casual * 0.05), active: Math.round(act.fans.active * 0.05), core: Math.round(act.fans.core * 0.05) },
+    songs: [], releases: [], lastRelease: -999, peakChart: 999, hits: 0, number1s: 0, awards: 0, legend: false, scandals: 0,
+    history: [], logoSeed: r.int(1, 2 ** 30), catalogNo: undefined, contractId: o.contractId, leaderId: p.id, owner: o.owner,
+  };
+  s.acts[solo.id] = solo;
+  actsTouched17(s);
+  s.soloOf[solo.id] = act.id;
+  s.delegated[solo.id] = true;
+  return solo;
+}
+
 export function startSoloCareer(s: GameState, r: Rng, actId: string, personId: string): L | null {
   const act = s.acts[actId];
   const p = s.persons[personId];
@@ -374,17 +391,7 @@ export function startSoloCareer(s: GameState, r: Rng, actId: string, personId: s
   const cost = money(s, 1500);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `solo:${personId}`, -cost, 'artist_dev', `Carreira solo ${p.name}`);
-  const solo: Act = {
-    ...structuredClone(act),
-    id: nextId(s, 'a'), name: p.name, members: [p.id], status: 'emerging', fame: Math.min(15, act.fame * 0.3),
-    fans: { casual: Math.round(act.fans.casual * 0.05), active: Math.round(act.fans.active * 0.05), core: Math.round(act.fans.core * 0.05) },
-    songs: [], releases: [], lastRelease: -999, peakChart: 999, hits: 0, number1s: 0, awards: 0, legend: false, scandals: 0,
-    history: [], logoSeed: r.int(1, 2 ** 30), catalogNo: undefined, contractId: act.contractId, leaderId: p.id, owner: act.owner,
-  };
-  s.acts[solo.id] = solo;
-  actsTouched17(s);
-  s.soloOf[solo.id] = act.id;
-  s.delegated[solo.id] = true;
+  const solo = soloActFrom29(s, r, act, p, { owner: act.owner, contractId: act.contractId });
   if (p.goal === 'solo') p.morale = clamp(p.morale + 20, 0, 100);
   for (const id of act.members) if (id !== p.id && s.persons[id]) s.persons[id].rel[p.id] = clamp((s.persons[id].rel[p.id] ?? 0) - 5, -100, 100);
   remember(s, 'solo', fmtL(l('{p} lança carreira solo paralela a {a}.', '{p} launches a solo career alongside {a}.'), { p: p.name, a: act.name }), { actId: solo.id, important: true });

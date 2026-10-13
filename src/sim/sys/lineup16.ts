@@ -189,7 +189,8 @@ function freePool(s: GameState, genre: string, except: string): Person[] {
     .map(([pid]) => s.persons[pid]);
 }
 
-function joinBand(s: GameState, p: Person, a: Act, txt: L, q = ''): void {
+/** Entrada na banda (fato de formação com a pessoa). R29: exportada para a oferta a integrante (sys/member29). */
+export function joinBand(s: GameState, p: Person, a: Act, txt: L, q = ''): void {
   if (a.members.includes(p.id)) return;
   BUMP++;
   a.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos

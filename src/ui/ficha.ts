@@ -27,6 +27,7 @@ import { clauses18Fields } from './sys/contracts18';
 import { offerLayers20, type Layers20 } from './sys/offer20';
 import { screen27 } from './act27/flow27';
 import { promiseChecks28 } from './sys/promises28';
+import { settleMember29, shells29 } from '../sim/sys/member29';
 
 function g(): GameState {
   return store.game!;
@@ -252,7 +253,8 @@ export function openOffer(actId: string, classic27 = false): void {
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
     reply,
   );
-  close = modal(`${t(S.offerTitle)}: ${a.name}`, h('div', null, form, actions), { wide: true });
+  // R29 (integrante): ao fechar a proposta única, o solo-proposta assinado vira a saída da banda (sem acordo, some)
+  close = modal(`${t(S.offerTitle)}: ${a.name}`, h('div', null, form, actions), { wide: true, onClose: () => { const n0 = shells29(s).length; const m = settleMember29(s); for (const x of m) toast(t(x.t), x.ok ? 'good' : 'bad'); if (m.length || shells29(s).length !== n0) rerender(); } });
 }
 
 export function actRow(s: GameState, a: Act): HTMLElement {

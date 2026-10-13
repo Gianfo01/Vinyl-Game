@@ -42,6 +42,7 @@ import { CRIMES17, approachOrg, reportOrg, toggleLaunder } from '../../sim/sys/c
 import { leaderOf } from '../../sim/sys/leaders10';
 import { runPA18 } from '../sys/personact18';
 import { crimeForm17, presetCrimeFor29 } from '../sys/crimeform29';
+import { runMember29 } from '../sys/member29';
 import { isEnt27, type Ent27 } from './ent27';
 import './ctx27.css';
 
@@ -169,8 +170,10 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
     case 'act.leader': { const a = s.acts[id]; const p = a?.leaderId && a.members.includes(a.leaderId) && !s.persons[a.leaderId]?.isPlayer ? a.leaderId : a?.members.find((m) => s.persons[m]?.alive && !s.persons[m].isPlayer); if (p) setTimeout(() => openCtx27(s, 'person', `p:${p}`, anchor), 0); return; }
     case 'label.leader': { const L0 = leaderOf(s, id); if (L0) setTimeout(() => openCtx27(s, 'person', `l:${L0.id}`, anchor), 0); return; }
     case 'person.act': { const pid = key.startsWith('p:') ? key.slice(2) : ''; const a = Object.values(s.acts).find((x) => x.members.includes(pid) && x.status !== 'retired' && x.status !== 'split'); if (a) inspect.act(a.id); return; }
+    case 'person.offer29': { const pid = key.startsWith('p:') ? key.slice(2) : ''; if (pid) setTimeout(() => openCtx27(s, 'person', `mo29:${pid}`, anchor), 0); return; } // R29: submenu "Oferecer a…"
     case 'person.actmore': { const pid = key.slice(2); const a = playerActs(s).find((x) => s.acts[x]?.members.includes(pid)); if (a) openActionMenu20(s, a, anchor); return; }
     default:
+      if (item.id.startsWith('mo.') && key.startsWith('mo29:')) { runMember29(s, key.slice(5), item.id); return; } // R29 (integrante)
       if (item.id.startsWith('pa:')) { runPA18(s, key, item.id.slice(3), (txt, ok) => { toast(txt, ok ? 'good' : 'bad'); rerender(); }); return; }
       if (item.id.startsWith('a20:')) { chooseAction20(s, item.id.slice(4), id, anchor); return; }
       if (item.id.startsWith('crime.plan:')) { presetCrimeFor29(s, item.id.slice(11), id); goArea(s, 'crime', ['crime17', 'plans']); return; }

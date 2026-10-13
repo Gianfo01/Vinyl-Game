@@ -19,6 +19,7 @@ import { TEMPER27, rivalMemory27 } from '../../sim/sys/rivals27';
 import { isWatched } from '../../sim/sys/scout11';
 import { nextStep23 } from '../../sim/sys/scout23';
 import { VENUES17, venueOpen } from '../../sim/sys/venues17';
+import { memberBlock29, memberOptions29 } from '../../sim/sys/member29';
 import type { Act, GameState } from '../../sim/types';
 import { fmtL, money, playerActs } from '../../sim/util';
 import { actionRow20, actionRows20, type Cat20 } from '../actions20';
@@ -253,6 +254,14 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
       out.push(it('crime.person', N('Mais opções no Submundo (método, sócios, organização)…', 'More Underworld options (method, partners, organization)…'), 'skull', 'do', block, { sec: 'dark' }));
     }
   }
+  // R29 (integrante): "Oferecer a {nome}… ›" — solo, entrar numa banda sua, sessão, projeto paralelo, equipe, feat (submenu)
+  if (person && !me) {
+    let block: L | null = null;
+    try { block = memberBlock29(s, pid); } catch { block = N('Indisponível agora.', 'Unavailable now.'); }
+    out.push(it('person.offer29', fmtL(N('Oferecer a {n}… ›', 'Offer {n}… ›'), { n: person.name }), 'contract', 'do', block, {
+      sec: 'career', note: N('Carreira solo no seu selo, entrar numa banda sua, sessão, projeto paralelo, equipe ou feat.', 'Solo career on your label, join one of your bands, sessions, side project, staff or a feature.'),
+    }));
+  }
   // atalhos: o ato da pessoa
   const actOf = pid ? Object.values(s.acts).find((a) => a.members.includes(pid) && a.status !== 'retired' && a.status !== 'split') : undefined;
   if (actOf) {
@@ -370,6 +379,17 @@ function orgMenu(s: GameState, id: string, env: CtxEnv27, name: string): CtxMenu
   return { ent: 'org', id, name: o.name, kind: KIND27.org, items: out };
 }
 
+/** R29 (integrante): o submenu "Oferecer a {nome}…" — as opções de sim/sys/member29 (bloqueio com motivo, chance, custo). */
+function memberMenu29(s: GameState, pid: string): CtxMenu27 | null {
+  const p = s.persons[pid];
+  if (!p) return null;
+  let opts: ReturnType<typeof memberOptions29> = [];
+  try { opts = memberOptions29(s, pid); } catch { opts = []; }
+  const ICON29: Record<string, string> = { solo: 'mic', join: 'people', staff: 'contract', session: 'guitar', side: 'network', ghost: 'pen', feat: 'note' };
+  const items = opts.map((o) => it(o.id, o.label, ICON29[o.k] ?? 'handshake', 'do', o.block, { sec: o.sec, chance: o.chance, cost: o.cost || undefined, note: o.note ?? null }));
+  return { ent: 'person', id: `mo29:${pid}`, name: fmtL(N('Oferecer a {n}', 'Offer {n}'), { n: p.name }), kind: KIND27.person, items };
+}
+
 const plainMenu = (ent: Ent27, id: string, name: string, open: CtxItem27 | null): CtxMenu27 => ({ ent, id, name, kind: KIND27[ent], items: [...(open ? [open] : []), COPY()] });
 
 /** Menu da entidade (ou null se o id não existe neste mundo). `name` = texto do elemento (para tipos sem registro). */
@@ -377,7 +397,7 @@ export function ctxMenu27(s: GameState, ent: Ent27, id: string, env: CtxEnv27 = 
   if (!id) return null;
   switch (ent) {
     case 'act': return actMenu(s, id, env);
-    case 'person': return personMenu(s, id, env);
+    case 'person': return id.startsWith('mo29:') ? memberMenu29(s, id.slice(5)) : personMenu(s, id, env);
     case 'label': return labelMenu(s, id, env);
     case 'city': return cityMenu(s, id, env);
     case 'release': return releaseMenu(s, id, env);
