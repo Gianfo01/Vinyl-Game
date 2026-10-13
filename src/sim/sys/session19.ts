@@ -70,7 +70,11 @@ export interface Ace19 {
   id: string; name: string; crew: string; inst: Inst19; born: number; sk: number; real?: 1;
   pid?: string; hits: number; unc: number; cred: number; grudge: number; fame: number;
   plays: string[]; hire?: { act: string; until: number; credit: boolean }; sued?: number; star?: string;
+  /** R29 (integrante): músico de banda contratado avulso (crew = FREE19), com a família do gênero da banda dele */
+  fam?: FamilyId;
 }
+/** R29: "coletivo" dos músicos de banda contratados como avulsos pela oferta a integrante (sys/member29). */
+export const FREE19 = 'free';
 export interface Ses19State { house?: { name: string; fam: FamilyId; from: number; to?: number; credit: boolean }; aces: Ace19[]; seq: number; docs: Record<string, number>; on: Record<string, string[]>; cr: Record<string, string[]>; hc: Record<string, 1>; seen: Record<string, 1>; log: { w: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { ses19: Ses19State } }
 const fresh = (): Ses19State => ({ aces: [], seq: 0, docs: {}, on: {}, cr: {}, hc: {}, seen: {}, log: [] });
@@ -95,7 +99,7 @@ export function collectives19(s: GameState, onlyNow = false): Coll19[] {
   return out;
 }
 const crewName19 = (s: GameState, c: Crew): L => (c.name && s.config.realNames ? l(c.name, c.name) : c.alt);
-export const collName19 = (s: GameState, id: string): L => { if (id === 'house') { const n = ses19(s).house?.name ?? '?'; return l(n, n); } const c = crewById(id); if (c) return crewName19(s, c); return FICT19.find((f) => f.id === id)?.name ?? l(id, id); };
+export const collName19 = (s: GameState, id: string): L => { if (id === FREE19) return l('avulso (de banda)', 'freelance (band member)'); if (id === 'house') { const n = ses19(s).house?.name ?? '?'; return l(n, n); } const c = crewById(id); if (c) return crewName19(s, c); return FICT19.find((f) => f.id === id)?.name ?? l(id, id); };
 
 /** Garante os ases dos coletivos que já chegaram (determinístico por semente). */
 function ensureAces(s: GameState): void {
@@ -120,9 +124,9 @@ function ensureAces(s: GameState): void {
 }
 const collOf = (s: GameState, a: Ace19) => collectives19(s).find((c) => c.id === a.crew);
 /** Disponível para contratar: coletivo na ativa, vivo, sem carreira solo. */
-export const hireable19 = (s: GameState, a: Ace19): boolean => { const c = collOf(s, a); return !!c && s.year <= c.to + 8 && s.year - a.born < 72 && !a.star && (!a.pid || !!s.persons[a.pid]?.alive); };
+export const hireable19 = (s: GameState, a: Ace19): boolean => { const c = collOf(s, a); return (a.crew === FREE19 || (!!c && s.year <= c.to + 8)) && s.year - a.born < 72 && !a.star && (!a.pid || !!s.persons[a.pid]?.alive); };
 export const aceFee19 = (s: GameState, a: Ace19, credit: boolean): number => money(s, (500 + a.sk * 22) * (credit ? 1.25 : 1));
-export const market19 = (s: GameState): Ace19[] => { ensureAces(s); return ses19(s).aces.filter((a) => a.crew !== 'house' && hireable19(s, a)); };
+export const market19 = (s: GameState): Ace19[] => { ensureAces(s); return ses19(s).aces.filter((a) => a.crew !== 'house' && a.crew !== FREE19 && hireable19(s, a)); }; // R29: o avulso de banda só pela oferta a integrante (um caminho só)
 
 /** O ás vira pessoa (para crescer pelo ability18, processar e virar artista). */
 function personOf(s: GameState, a: Ace19): Person {
@@ -184,7 +188,7 @@ registerDimAdj18('session19', (s, rel, act) => {
     const a = st.aces.find((x) => x.id === id);
     if (!a) continue;
     done.add(id);
-    const fit = collOf(s, a)?.fam.includes(familyOf(act.genre)) ?? false;
+    const fit = a.fam ? a.fam === familyOf(act.genre) : collOf(s, a)?.fam.includes(familyOf(act.genre)) ?? false;
     const v = Math.min(8 - tot, Math.round((1 + a.sk / 25) * (fit ? 1 : 0.5) + ((st.cr[sid] ?? []).includes(id) ? 1 : 0)));
     if (v <= 0) continue;
     tot += v;

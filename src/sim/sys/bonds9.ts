@@ -316,7 +316,7 @@ export function actAdmiration(s: GameState, from: Act, toId: string): number {
 
 // ---------------------------------------------------------------- criação
 
-export function formBond(s: GameState, k: BondKind, persons: string[], o: { name?: string; real?: boolean; pl?: boolean; str?: number; term?: number } = {}): Bond | null {
+export function formBond(s: GameState, k: BondKind, persons: string[], o: { name?: string; real?: boolean; pl?: boolean; str?: number; term?: number; /** R29: gerador próprio para o supergrupo (sem tocar no fluxo compartilhado) */ r?: Rng } = {}): Bond | null {
   const ps = [...new Set(persons)].filter((id) => s.persons[id]?.alive);
   if (ps.length < 2) return null;
   const acts = ps.map((id) => actOfPerson(s, id)?.id ?? '');
@@ -329,7 +329,7 @@ export function formBond(s: GameState, k: BondKind, persons: string[], o: { name
   hist(b, s.year, fmtL(l('Começa: {n}.', 'Begins: {n}.'), { n: BOND_NAME[k] }));
   st.list.push(b);
   for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) bump(s, ps[i], ps[j], 12, k === 'couple' ? 'romance' : k === 'patron' ? 'mentor' : 'feat', k === 'couple' ? 'romance' : k === 'patron' ? 'mentor' : 'collab');
-  if (k === 'super') makeSuper(s, b);
+  if (k === 'super') makeSuper(s, b, o.r);
   if (k === 'ally' || k === 'cross') b.term ??= s.year + 1;
   trim(s);
   const A = s.acts[acts[0]];
@@ -338,11 +338,11 @@ export function formBond(s: GameState, k: BondKind, persons: string[], o: { name
   return b;
 }
 
-function makeSuper(s: GameState, b: Bond): void {
+function makeSuper(s: GameState, b: Bond, r?: Rng): void {
   const srcs = b.a.map((id) => s.acts[id]).filter((x): x is Act => !!x);
   const base = srcs[0];
   if (!base) return;
-  const sg = makeAct(s, rngOf(s), { genre: base.genre, city: base.city, members: 2, potential: Math.max(...b.p.map((p) => s.persons[p].potential)), formed: s.year, debutYear: s.year, fame: srcs.reduce((x, a) => x + a.fame, 0) / srcs.length * 0.6 });
+  const sg = makeAct(s, r ?? rngOf(s), { genre: base.genre, city: base.city, members: 2, potential: Math.max(...b.p.map((p) => s.persons[p].potential)), formed: s.year, debutYear: s.year, fame: srcs.reduce((x, a) => x + a.fame, 0) / srcs.length * 0.6 });
   for (const id of sg.members) delete s.persons[id];
   sg.members = b.p.slice(); actsTouched17(s); // r17: índice pessoa→atos
   sg.leaderId = b.p[0];
