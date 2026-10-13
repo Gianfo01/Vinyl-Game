@@ -15,6 +15,9 @@
 //  R7m crédito para ex-integrante que já tinha saído antes da música (formação provisória da criação do mundo)
 //  R8  identidade partida: a mesma pessoa real (nome canônico) em duas Pessoas diferentes
 //  R9  índice nome → pessoa (rw.pid) apontando para alguém com outro nome (a causa raiz do caso Roger Waters)
+//  R10 organização ↔ pessoa assimétrica: ligação (documentada, membro, associado, favor/dívida, inimizade, sócio) que
+//      aparece num lado (card da organização) e não no outro (ficha da pessoa/ato), ou laço documentado de alguém que
+//      existe no mundo e não foi ligado à pessoa (o caso "Frank Sinatra citado na Outfit, ausente dos membros")
 import { HOMONYMS27, workOf27 } from '../data/model27';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { REAL_ACTS } from '../data/realnames';
@@ -23,6 +26,7 @@ import { histAltered, histMode } from './history15';
 import { chronState } from './sys/chron9';
 import { kinOf15 } from './sys/kin15';
 import { careerActs29, exMembers29 } from './sys/connect29';
+import { allLinks29, docTies29, linkId29, linksOfKey29, orgLinks29, unresolved29 } from './sys/orglinks29';
 import { l16, stints16 } from './sys/lineup16';
 import { P } from './sys/people/state';
 import { canonKey, REAL_ALL, realDataOf, rw } from './sys/realworld';
@@ -176,9 +180,31 @@ export function audit29(s: GameState): Finding29[] {
     }
     for (const [k, xs] of by) if (xs.length > 1) add('R8', `${k}: ${xs.length} pessoas (${xs.join(', ')})`);
   }
+  // R10 — organização ↔ pessoa: os dois lados leem a mesma fonte (orglinks29); a auditoria confere as duas vistas
+  r10(s, add);
   // R9 — índice velho
   for (const [k, id] of Object.entries(st.pid ?? {})) { const p = s.persons[id]; if (p && canonKey(p.name) !== k) add('R9', `índice "${k}" → ${p.name}`); }
   return out;
+}
+
+/** R10: ligação organização ↔ pessoa que só aparece de um lado, ou laço documentado de alguém do mundo sem ligação. */
+export function r10(s: GameState, add: (code: string, msg: string) => void): void {
+  const links = allLinks29(s);
+  const byOrg = new Map<string, Set<string>>();
+  const orgSide = (o: string) => byOrg.get(o) ?? byOrg.set(o, new Set(orgLinks29(s, o, true).map(linkId29))).get(o)!;
+  const byKey = new Map<string, Set<string>>();
+  const keySide = (k: string) => byKey.get(k) ?? byKey.set(k, new Set(linksOfKey29(s, k, true).filter((x) => !x.via).map(linkId29))).get(k)!;
+  for (const x of links) {
+    const id = linkId29(x);
+    if (!orgSide(x.o).has(id)) add('R10', `${x.o}: ${x.key} (${x.kind}) fora do card da organização`);
+    if (!keySide(x.key).has(id)) add('R10', `${x.key}: ${x.o} (${x.kind}) fora da ficha`);
+  }
+  // o inverso: o que a ficha mostra precisa estar no card
+  for (const k of new Set(links.map((x) => x.key))) for (const x of linksOfKey29(s, k, true)) if (!x.via && !orgSide(x.o).has(linkId29(x))) add('R10', `${k}: ${x.o} (${x.kind}) só na ficha`);
+  // laço documentado de quem existe no mundo, mas não ligado
+  const names = new Set(Object.values(s.persons).map((p) => p.name));
+  for (const u of unresolved29(s)) if (names.has(u.who)) add('R10', `${u.o}: laço documentado de ${u.who} sem pessoa ligada`);
+  void docTies29;
 }
 
 /** Contagem por código. */

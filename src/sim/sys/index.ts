@@ -365,4 +365,5 @@ import './mech29'; // R29 (CONNECT): escândalo → próximo disco; prêmios →
 import './perks29'; // R29 (CONNECT): perks appeal/chartUnits/showRevenue/pressingCost passam a valer (eram escritos e nunca lidos)
 import './member29'; // R29 (integrante): oferta a um integrante específico (solo pela proposta de sempre, entrar numa banda sua, sessão, projeto paralelo, equipe)
 import './featp29'; // R29 (feat de pessoa): o feat negociado aceita integrante/pessoa específica (e várias) — gancho novo, no fim
+import './mob29'; // R29 (Submundo): famílias — interações com consequência, "contratar a família" e favores devidos (gancho só com interação do jogador)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

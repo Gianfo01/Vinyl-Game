@@ -29,3 +29,12 @@ export const defaultCrime29 = (tk: 'person' | 'act' | 'label' | 'own_act'): stri
 export function presetCrimeFor29(s: GameState, c: string, entityId: string): void {
   presetCrime17(c, targetId17(s, entityId));
 }
+
+/** r29 (Submundo): o planejador com a família como executora ("Contratar a família"): o alvo se escolhe no seletor. */
+export function presetHire29(oid: string, c: string): void {
+  crimeForm17.c = c;
+  crimeForm17.actor = `hire:${oid.replace(/^o:/, '')}`;
+  crimeForm17.method = '';
+  crimeForm17.q = '';
+  crimeForm17.org = '';
+}

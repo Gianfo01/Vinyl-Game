@@ -26,6 +26,7 @@ import type { Act, GameState } from '../../sim/types';
 import { fmtL, money, playerActs } from '../../sim/util';
 import { actionRow20, actionRows20, type Cat20 } from '../actions20';
 import { personKey27, type Ent27 } from './ent27';
+import { hireMenu29, mobHireItems29, mobLinkItems29, mobOrgItems29 } from './ctxmob29'; // r29 Submundo: famílias
 
 export type Grp27 = 'open' | 'do' | 'info';
 /** r29: seções do menu (a mesma divisão no clique direito e no painel "Ações" da ficha). */
@@ -208,6 +209,7 @@ function actMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
   out.push(it('act.compare', N('Comparar com outros', 'Compare with others'), 'network', 'info', pool ? null : N('Você ainda não conhece este artista (observe ou mande olheiro).', 'You don\'t know this act yet (watch or scout them).')));
   out.push(it('act.charts', N('Ver nas paradas', 'See on the charts'), 'chart-up', 'info', chartBlock(s, inCharts(s, (r) => s.releases[r]?.actId === id))));
   out.push(it('act.known', N('Notícias e boatos (O que sabemos)', 'News and rumors (What we know)'), 'newspaper', 'info'));
+  out.push(...mobLinkItems29(s, id), ...(a.status !== 'retired' && a.status !== 'split' ? mobHireItems29(s, id, env) : [])); // r29 Submundo: famílias (ctxmob29)
   out.push(COPY());
   void env;
   return { ent: 'act', id, name: a.name, kind: KIND27.act, items: out };
@@ -282,6 +284,7 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
     out.push(it('person.act', fmtL(N('Abrir o artista ({a})', 'Open the act ({a})'), { a: actOf.name }), 'guitar', 'open'));
     if (playerActs(s).includes(actOf.id)) out.push(it('person.actmore', fmtL(N('Todas as ações de {a}…', 'All {a} actions…'), { a: actOf.name }), 'people', 'do', null, { sec: 'more' }));
   }
+  if (!me) out.push(...mobLinkItems29(s, key), ...(person ? (person.alive && !playerActs(s).some((x) => s.acts[x]?.members.includes(pid)) ? mobHireItems29(s, key, env) : []) : P ? mobHireItems29(s, key, env) : [])); // r29 Submundo: famílias (ctxmob29)
   out.push(COPY());
   return { ent: 'person', id: key, name, kind: KIND27.person, items: out };
 }
@@ -301,6 +304,7 @@ function labelMenu(s: GameState, id: string, env: CtxEnv27 = {}): CtxMenu27 | nu
   const boss = (() => { try { return leaderOf(s, id); } catch { return undefined; } })();
   if (boss) out.push(it('label.leader', fmtL(N('Ações com {n} (chefe) ›', 'Actions with {n} (head) ›'), { n: boss.name }), 'handshake', 'do', null, { sec: 'more' }));
   if (lb.active) out.push(...crimeItems29(s, 'label', id, env));
+  out.push(...mobLinkItems29(s, id), ...(lb.active ? mobHireItems29(s, id, env) : [])); // r29 Submundo: famílias (ctxmob29)
   out.push(COPY());
   return { ent: 'label', id, name: lb.name, kind: KIND27.label, items: out };
 }
@@ -389,6 +393,7 @@ function orgMenu(s: GameState, id: string, env: CtxEnv27, name: string): CtxMenu
     { sec: 'dark', note: N('Renda mensal; calor +3/mês; eles guardam um segredo provado seu.', 'Monthly income; heat +3/month; they hold a proven secret on you.') }));
   out.push(it('org.report', N('Denunciar à polícia', 'Report to the police'), 'gavel', 'do', null, { sec: 'dark', note: N('Reputação +3, calor −15, caso contra eles; vingança por 18 meses.', 'Reputation +3, heat −15, case on them; revenge for 18 months.') }));
   if (GANG29.has(o.kind)) out.push(it('org.tie', N('Ligar um artista seu a eles…', 'Tie one of your acts to them…'), 'guitar', 'do', playerActs(s).length ? null : NO_ACTS, { sec: 'dark' }));
+  if (!down) out.push(...mobOrgItems29(s, o.id, env)); // r29 Submundo: famílias — proteção, empréstimo, boate, jukebox, sociedade, contratar…
   out.push(COPY());
   return { ent: 'org', id, name: o.name, kind: KIND27.org, items: out };
 }
@@ -419,7 +424,7 @@ export function ctxMenu27(s: GameState, ent: Ent27, id: string, env: CtxEnv27 = 
     case 'venue': return venueMenu(s, id);
     case 'festival': return plainMenu(ent, id, name || id, it('festival.open', N('Abrir festivais', 'Open festivals'), 'star', 'open', env.has?.('area:festivals') === false ? N('Ainda não há festivais nesta época.', 'No festivals in this era yet.') : null));
     case 'place': return plainMenu(ent, id, name || id, it('place.open', N('Abrir "Nosso mundo"', 'Open "Our world"'), 'house', 'open'));
-    case 'org': return orgMenu(s, id, env, name);
+    case 'org': return id.startsWith('hire29:') ? hireMenu29(s, id) : orgMenu(s, id, env, name); // r29: submenu "Contratar {família} para…"
     default: return null;
   }
 }
