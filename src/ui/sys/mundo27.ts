@@ -30,6 +30,8 @@ import './mundo27.css';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
+import { a29, placeArt29, venueArt29 } from '../art29ui'; // r29 (arte)
+import { cityCrestImg29, skylineThumbImg29 } from '../pixel/geo29';
 
 // ================================================================ navegação
 
@@ -202,8 +204,9 @@ function sheet27(s: GameState, c: CitySheet27): HTMLElement {
   const tierCls = ['', '', 'good', 'gold'][sc.tier];
   return h('aside', { class: 'card sheet27', 'aria-label': `${T(l('Ficha da cidade', 'City sheet'))}: ${T(c.name)}` },
     h('header', { class: 'sheet27-h' },
-      h('div', null, h('h3', null, T(c.name)), h('small', { class: 'muted' }, `${T(c.country)}${c.market ? ` · ${T(c.market)}` : ''}`)),
+      h('div', null, h('h3', null, a29(cityCrestImg29(c.id, 20)), T(c.name)), h('small', { class: 'muted' }, `${T(c.country)}${c.market ? ` · ${T(c.market)}` : ''}`)),
       h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar ficha', 'Close sheet')), onclick: () => { mapSel = null; rerender(); } }, '✕')),
+    (() => { const i = skylineThumbImg29(c.id, s.year, 240); i.style.display = 'block'; i.style.width = '100%'; i.style.height = 'auto'; return i; })(), // r29: horizonte da cidade
     c.closed.length ? h('div', { class: 'chips' }, c.closed.map((x) => pill(T(x), 'bad'))) : null,
     sitesBlock27(sitesByCity27(s).get(c.id) ?? []),
     block('fire', l('Cena', 'Scene'),
@@ -212,9 +215,9 @@ function sheet27(s: GameState, c: CitySheet27): HTMLElement {
       sc.native.length ? h('p', { class: 'small muted' }, `${T(l('Da terra', 'Native'))}: ${sc.native.map(genreName).join(', ')}`) : null,
       sc.movements.length ? h('p', { class: 'small' }, `${T(l('Movimentos', 'Movements'))}: ${sc.movements.map(T).join(' · ')}`) : null),
     block('house', l('Casas de show', 'Venues'),
-      c.venues.length ? h('ul', { class: 'small' }, c.venues.map((v) => h('li', null, h('b', null, v.name), ` · ${N(v.cap)} ${T(l('lugares', 'seats'))}`, v.mine ? [' ', pill(T(l('sua', 'yours')), 'good')] : null))) : none(l('Sem casas famosas registradas.', 'No famous venues on record.'))),
+      c.venues.length ? h('ul', { class: 'small' }, c.venues.map((v) => h('li', null, venueArt29(v.name, v.name, v.cap, s.year, c.id, 20), h('b', null, v.name), ` · ${N(v.cap)} ${T(l('lugares', 'seats'))}`, v.mine ? [' ', pill(T(l('sua', 'yours')), 'good')] : null))) : none(l('Sem casas famosas registradas.', 'No famous venues on record.'))),
     block('radio', l('Rádios e TV', 'Radio and TV'),
-      c.radios.length ? h('ul', { class: 'small' }, c.radios.map((r) => h('li', null, ic(r.kind === 'tv' ? 'tv' : 'radio'), ` ${r.name} · ${T(l('alcance', 'reach'))} ${Math.round(r.reach)}`))) : none(l('Nenhuma emissora de peso neste mercado.', 'No major broadcaster in this market.'))),
+      c.radios.length ? h('ul', { class: 'small' }, c.radios.map((r) => h('li', null, placeArt29(r.kind === 'tv' ? 'tv' : 'radio', r.name, r.name, s.year, c.id, 20), `${r.name} · ${T(l('alcance', 'reach'))} ${Math.round(r.reach)}`))) : none(l('Nenhuma emissora de peso neste mercado.', 'No major broadcaster in this market.'))),
     block('fans', l('Público', 'Audience'),
       h('div', { class: 'chips' },
         c.audience.popM ? pill(`${T(l('País', 'Country'))}: ${N(Math.round(c.audience.popM))} mi`) : null,

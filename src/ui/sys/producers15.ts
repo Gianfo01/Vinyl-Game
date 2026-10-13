@@ -16,6 +16,7 @@ import { personRoute16 } from '../route16';
 import { favorAct27 } from '../act27/flow27p2'; // r27 FLOW2: o jantar abre a conversa de favor (rápido dentro)
 
 const F = { fam: '', past: false };
+import { staffFace29 } from '../art29ui'; // r29 (arte)
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
 const years = (s: GameState, p: RealProd) => `${p.from}–${prodActive(s, p) ? '' : Math.min(p.to, p.died ?? 9999)}`;
 const opPill = (s: GameState, p: RealProd) => { const v = opOf(s, p); return pill(signed(v), v >= 15 ? 'good' : v <= -15 ? 'bad' : ''); };
@@ -28,7 +29,7 @@ function status(s: GameState, p: RealProd): HTMLElement {
   const busy = (s.producerBusy[prodDefId(p.id)] ?? 0) - s.week;
   return busy > 0 ? pill(t(l('ocupado por {w} sem.', 'busy for {w} wk'), { w: busy }), 'bad') : pill(t(l('livre', 'available')), 'good');
 }
-const link = (s: GameState, p: RealProd) => h('button', { class: 'link', onclick: () => openProd15(p.id) }, prodName(s, p));
+const link = (s: GameState, p: RealProd) => h('button', { class: 'link', onclick: () => openProd15(p.id) }, staffFace29(`prod:${p.id}`, 'producer', s.year, p.born, 20), prodName(s, p)); // r29: rosto com fones
 
 export function profile(s: GameState, id: string, redraw: () => void, full = true): HTMLElement {
   const p = prodById[id];

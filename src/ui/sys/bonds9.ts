@@ -19,6 +19,8 @@ import {
 import { actTies, actOfPerson, social } from '../../sim/sys/social8';
 import { visibleAct } from '../../sim/future';
 import { fameText } from '../../sim/sys/fame15';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { movementBadgeImg29 } from '../pixel/badge29';
 
 const mine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
 const myActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.members.length > 0 && a.status !== 'split' && a.status !== 'retired');
@@ -137,7 +139,7 @@ export function openMovementPage(s: GameState, id: string): void {
   const reply = h('div');
   const join = myActs(s).filter((a) => { const tt = tierOf(s, a.id); return !tt || tt.tier === 'symp'; });
   const body = h('div', null,
-    h('p', null, pill(t(PHASE_NAME[x.phase]), x.phase === 'death' ? 'bad' : x.phase === 'peak' || x.phase === 'canon' ? 'gold' : ''), ' ',
+    h('p', null, a29(movementBadgeImg29(mv.id, x.parents[0] ?? 'rock', mv.born, 48)), pill(t(PHASE_NAME[x.phase]), x.phase === 'death' ? 'bad' : x.phase === 'peak' || x.phase === 'canon' ? 'gold' : ''), ' ',
       `${t(cityById[mv.city]?.name ?? l(mv.city))} · ${x.parents.map((g) => t(genreById[g]?.name ?? l(g))).join(' + ')} · ${t(l('desde', 'since'))} ${mv.born}`,
       x.end ? ` · ${t(l('fim', 'end'))} ${x.end.y} (${t(MV_END_NAME[x.end.c])})` : ''),
     h('blockquote', null, '“', t(x.idea), '”'),
@@ -249,7 +251,7 @@ export function relTab(s: GameState): HTMLElement {
       h('button', { class: 'btn small primary', onclick: () => openBondModal(s) }, t(l('Propor laço artístico', 'Propose an artistic bond'))),
       h('button', { class: 'btn small', onclick: () => openFoundModal(s) }, t(l('Fundar um movimento', 'Start a movement')))),
     section(t(l('Movimentos', 'Movements')), mvs.length ? h('ul', { class: 'attr-list' }, mvs.slice(0, 30).map(({ mv, x }) => h('li', null,
-      h('button', { class: 'link', onclick: () => openMovementPage(s, mv.id) }, t(mv.name)), ' ',
+      h('button', { class: 'link', onclick: () => openMovementPage(s, mv.id) }, a29(movementBadgeImg29(mv.id, x.parents[0] ?? 'rock', mv.born, 24)), t(mv.name)), ' ', // r29: selo do movimento
       pill(t(PHASE_NAME[x.phase]), x.phase === 'death' ? 'bad' : x.phase === 'peak' ? 'gold' : ''), x.pl ? pill(t(l('seu', 'yours')), 'good') : null, ' ',
       bar(mv.strength, 100, 'good'),
       h('small', { class: 'muted' }, ` ${t(cityById[mv.city]?.name ?? l(mv.city))} · ${mv.born} · ${members(x).length} ${t(l('artistas', 'artists'))}${x.end ? ` · ${t(MV_END_NAME[x.end.c])}` : ''}`)))) : h('p', { class: 'muted small' }, t(l('Nenhum movimento por enquanto.', 'No movements yet.')))),

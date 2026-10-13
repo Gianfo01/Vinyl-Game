@@ -13,6 +13,8 @@ import { bar, h } from '../dom';
 import { RELEASE_SONG_EXTRAS } from '../ficha';
 import { REP_SONG_EXTRAS } from '../panels/repertoire';
 import { registerPageTab } from '../registry';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { genreBadgeImg29 } from '../pixel/badge29';
 
 const songStyle = (_s: GameState, so: Song) => stylePill17(so.genre);
 REP_SONG_EXTRAS.push(songStyle);
@@ -23,7 +25,7 @@ export function hotGenres17(s: GameState): HTMLElement {
   const rows = hotList17(s, 10);
   return section(t(l('Gêneros em alta', 'Hot genres')),
     h('p', { class: 'muted small' }, t(l('Medido pelas músicas nas paradas (posição pesa). Estilo em alta dá apelo a quem lança nele; estilo sem músicas nas paradas esfria.', 'Measured from the songs on the charts (position matters). A hot style boosts whoever releases in it; a style with no charting songs cools off.'))),
-    rows.length ? h('ul', null, rows.map((x) => h('li', null, stylePill17(x.g), ' ', bar(x.share * 100, 30), ' ',
+    rows.length ? h('ul', null, rows.map((x) => h('li', null, a29(genreBadgeImg29(x.g, 20)), stylePill17(x.g), ' ', /* r29: selo do gênero */ bar(x.share * 100, 30), ' ',
       h('small', null, `${Math.round(x.share * 100)}% · ${x.n} ${t(l('nas paradas', 'charting'))} `),
       h('small', { class: x.d > 0.01 ? 'good' : x.d < -0.01 ? 'bad' : 'muted' }, x.d > 0.01 ? '▲' : x.d < -0.01 ? '▼' : '='),
       h('small', { class: 'muted', title: t(l('Popularidade do gênero (entra no apelo)', 'Genre popularity (feeds appeal)')) }, ` ×${x.pop.toFixed(2)}`))))

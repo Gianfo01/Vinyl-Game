@@ -14,6 +14,8 @@ import { N, actLink, labelLink, pill, releaseLink, rerender, section } from '../
 import { bar, h, select } from '../dom';
 import { registerTab } from '../registry';
 import { sparkline } from '../common';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { flagImg29 } from '../pixel/geo29';
 
 const ui = { key: '', kind: 'songs' as ChartKind, country: '', awardCountry: '' };
 
@@ -111,6 +113,7 @@ export function countryCard(s: GameState, c: CountryInfo, compact = false): HTML
   const locals = Object.values(s.acts).filter((a) => (a.status === 'active' || a.status === 'emerging') && countryOfCity(a.city) === c.a3).length;
   const popSeries = [1920, 1940, 1960, 1980, 2000, 2020, 2040].filter((x) => x <= Math.max(1930, y)).map((x) => countryPop(c, x));
   return section(t(countryName(c.a3)),
+    a29(flagImg29(c.a3, 48)), // r29: bandeira
     h('div', { class: 'kv-grid small' },
       h('div', null, t(l('População', 'Population')), ': ', h('b', null, fmtPop(countryPop(c, y))), ' ', sparkline(popSeries, 70, 18)),
       h('div', null, t(l('Poder de compra (EUA = 100)', 'Buying power (US = 100)')), ': ', h('b', null, Math.round(countryBuy(c, y) * 100))),
@@ -144,7 +147,7 @@ export function countriesTab(s: GameState): HTMLElement {
             const lead = countryLeader(s, c.a3);
             const rel = lead ? s.releases[lead.relId] : undefined;
             return h('tr', { class: c.a3 === sel.a3 ? 'mine' : '' },
-              h('td', null, h('button', { class: 'link', onclick: () => { ui.country = c.a3; rerender(); } }, t(countryName(c.a3)))),
+              h('td', null, a29(flagImg29(c.a3, 18)), h('button', { class: 'link', onclick: () => { ui.country = c.a3; rerender(); } }, t(countryName(c.a3)))),
               h('td', null, fmtPop(countryPop(c, y))),
               h('td', null, bar(countryMarketSize(c, y), 120)),
               h('td', { class: 'small' }, topFamilies(c, y, 2).map((f) => famName(f.id)).join(', ')),

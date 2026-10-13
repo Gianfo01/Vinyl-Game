@@ -12,6 +12,8 @@ import { hqCaps } from '../../sim/branches';
 import { crewProfileCell } from '../sys/crew8';
 import { staffStars18 } from '../ab18stars';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
+import { a29 } from '../art29ui'; // r29 (arte)
+import { labelMarkImg28 } from '../pixel/extras28';
 
 export function rivals(s: GameState): HTMLElement {
   const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.revenueLastYear - a.revenueLastYear);
@@ -21,7 +23,7 @@ export function rivals(s: GameState): HTMLElement {
     h('table', { class: 'tbl' },
       h('thead', null, h('tr', null, h('th', null, t(l('Selo', 'Label'))), h('th', null, t(l('Família', 'Family'))), h('th', null, t(S.city)), h('th', null, t(S.roster)), h('th', null, t(S.revenue)), h('th', null, t(S.territories)), h('th', null, t(l('Última decisão', 'Last decision'))))),
       h('tbody', null, labels.map((lb) => h('tr', null,
-        h('td', null, labelLink(s, lb.id)),
+        h('td', null, a29(labelMarkImg28(lb.id, lb.name, lb.founded, 20)), labelLink(s, lb.id)), // r29: marca do selo
         h('td', null, `${lb.family} · ${famName[lb.family]}`),
         h('td', null, cityLink(lb.city)),
         h('td', null, lb.roster.length),

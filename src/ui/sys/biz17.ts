@@ -24,6 +24,8 @@ import { RATE19 } from './neg19';
 import { h, select } from '../dom';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { merchImg29 } from '../pixel/things29';
 
 const famName = (f: string) => t(FAMILIES.find((x) => x.id === f)?.name ?? l(f, f));
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -216,7 +218,7 @@ function merchTab(s: GameState): HTMLElement {
         h('button', { class: 'btn small ghost', onclick: () => { toggleFight(s, a.id); rerender(); } }, st.fight[a.id] ? t(l('Parar combate à pirataria', 'Stop anti-bootleg')) : t(l('Combater pirataria ({c}/mês)', 'Fight bootlegs ({c}/mo)'), { c: $(fightCost(s)) })),
         h('button', { class: 'btn small ghost', onclick: () => res(toggleLicense(s, a.id), l('Licença atualizada.', 'License updated.')) }, st.lic[a.id] ? t(l('Encerrar licença para lojas', 'End retail license')) : t(l('Licenciar para rede de lojas', 'License to a retail chain'))))) : h('p', { class: 'muted' }, t(l('Sem artistas.', 'No acts.'))),
     section(t(l('Linhas', 'Lines')), st.lines.length ? h('table', { class: 'tbl small' }, h('tr', null, ...[l('Artista', 'Act'), l('Produto', 'Product'), l('Estoque', 'Stock'), l('Vendidos', 'Sold'), l('Demanda/mês', 'Demand/mo'), l('Por quê', 'Why')].map((x) => h('th', null, t(x)))),
-      st.lines.map((ln) => { const d = demandOf(s, ln); return h('tr', null, h('td', null, s.acts[ln.act]?.name ?? ''), h('td', null, t(SKUS[ln.sku].name), ln.drop ? ' ★' : ''), h('td', null, N(ln.stock)), h('td', null, N(ln.sold)), h('td', null, N(d.units)), h('td', null, d.why.map(([w, v]) => `${t(w)} ×${v.toFixed(2)}`).join(' · '))); })) : h('p', { class: 'muted small' }, '—')),
+      st.lines.map((ln) => { const d = demandOf(s, ln); return h('tr', null, h('td', null, s.acts[ln.act]?.name ?? ''), h('td', null, s.acts[ln.act] ? a29(merchImg29(ln.sku, s.acts[ln.act].logoSeed, s.acts[ln.act].name, s.acts[ln.act].genre, s.year, 24)) : null, t(SKUS[ln.sku].name), ln.drop ? ' ★' : ''), /* r29: produto */ h('td', null, N(ln.stock)), h('td', null, N(ln.sold)), h('td', null, N(d.units)), h('td', null, d.why.map(([w, v]) => `${t(w)} ×${v.toFixed(2)}`).join(' · '))); })) : h('p', { class: 'muted small' }, '—')),
     section(t(l('Histórico', 'History')), logList(st.log)));
 }
 const activeDealMerch = (s: GameState, id: string) => !!activeDeal(s, id)?.scopes.includes('merch');

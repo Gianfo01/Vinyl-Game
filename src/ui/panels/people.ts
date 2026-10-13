@@ -17,6 +17,8 @@ import { rngOf } from '../../sim/util';
 import { $, N, inspect, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, ic, meter, portrait, stat, tile } from '../vis';
+import { a29 } from '../art29ui'; // r29 (arte)
+import { fanBannerImg29 } from '../pixel/badge29';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 
@@ -84,7 +86,7 @@ export function fandomSection(s: GameState, a: Act): HTMLElement {
   const f = fandomOf(s, a.id);
   return section(t(l('Público e fandom', 'Audience and fandom')),
     chips(stat('fans', N(a.fans.casual), l('Casuais', 'Casual')), stat('heart', N(a.fans.active), l('Ativos', 'Active')), stat('fire', N(a.fans.core), l('Núcleo', 'Core')), stat('sparkle', N(f.superfans), l('Superfãs', 'Superfans')), stat('broken-heart', N(f.haters), l('Haters', 'Haters'), f.haters > f.superfans ? 'bad' : '')),
-    f.name ? h('p', null, ic('trophy'), ' ', h('b', null, f.name), f.ritual ? [' — ', h('i', null, t(f.ritual))] : null) : null,
+    f.name ? h('p', null, a29(fanBannerImg29(`fd:${a.id}`, f.name, a.name, a.genre, f.name, 20)), ' ', h('b', null, f.name), /* r29: flâmula do fandom */ f.ritual ? [' — ', h('i', null, t(f.ritual))] : null) : null,
     meter('skull', l('Toxicidade da comunidade', 'Community toxicity'), f.toxicity, 100, true),
     a.image ? h('div', { class: 'image4' }, meter('sparkle', l('Reputação artística', 'Artistic reputation'), a.image.artistic), meter('fame', l('Popularidade', 'Popularity'), a.image.popularity), meter('contract', l('Profissionalismo', 'Professionalism'), a.image.professionalism), meter('camera', l('Imagem pública', 'Public image'), a.image.publicImage)) : null,
     a.owner === 'player' ? h('div', { class: 'row wrap' },
