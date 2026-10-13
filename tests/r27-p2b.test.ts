@@ -47,10 +47,14 @@ describe('r27 P2B — modo rápido intacto', () => {
     // choques macro) mudou só acts (→ 3789538846); AUD1 (166a36e: playbot compra negócios e contrata no 1º ano) mudou
     // caixa, tours, acts e rng.
     // A garantia "o P2B não mexe no modo rápido" segue provada pelo teste do gancho logo abaixo (com × sem STOP27.pre).
-    expect(AFTER.player.cash).toBe(1089445);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(529417993);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1761475379);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3113611029);
+    // r28 F8: re-medido de propósito. Com os sistemas da F8 desligados (OFF_LREP28/OFF_FS28/OFF_CH28/OFF_Q28/OFF_SH28/OFF_AW28)
+    // os valores voltam exatos a 1089445 / 529417993 / 1761475379 / 3113611029. A reputação de selo NPC nas ofertas
+    // (labelrep28: processos, falências do CEO, fundador) muda quais propostas vencem → caixa, turnês, atos e rng; facções ×
+    // escândalo, prêmios do ofício e o Mestre das cadeias mudam só os atos.
+    expect(AFTER.player.cash).toBe(1050409);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1747737694);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1770513929);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(546633518);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

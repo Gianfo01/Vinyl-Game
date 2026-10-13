@@ -58,9 +58,11 @@ beforeAll(() => {
   // Re-medidos na r27 (docs/suite27-final.md), mesmos do r27-p2b: os antigos (1301031 / 2195685417 / 2442526734)
   // reproduzem em b748d64; AUD2 (c4c5bfd) mudou acts e AUD1 (166a36e: playbot compra negócios e contrata no 1º ano)
   // mudou caixa, acts e rng. "Sem campanha nada muda" segue provado no 1º teste da campanha (a × b).
-  expect(s.player.cash).toBe(1089445);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1761475379);
-  expect(hashString(JSON.stringify(s.rng))).toBe(3113611029);
+  // r28 F8: re-medido de propósito (mesmos valores e mesma explicação do r27-p2b): com os sistemas da F8 desligados volta
+  // exato a 1089445 / 1761475379 / 3113611029; a reputação de selo NPC nas ofertas e as facções × escândalo mudam o mundo.
+  expect(s.player.cash).toBe(1050409);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1770513929);
+  expect(hashString(JSON.stringify(s.rng))).toBe(546633518);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
