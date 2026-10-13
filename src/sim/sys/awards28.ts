@@ -53,6 +53,8 @@ export const CRAFT28: { id: string; dim: Dim18; name: L; lp?: boolean }[] = [
   { id: 'craft_coh', dim: 'coh', name: l('Prêmio do Ofício — Álbum Coeso', 'Craft Award — Cohesive Album'), lp: true },
 ];
 export interface CraftWin28 { cat: string; rel: Release; v: number }
+/** r29 (Submundo): ajustes externos por lançamento/categoria (votação comprada, rig29). Vazio = nada muda. */
+export const CRAFT_ADJ28: ((s: GameState, rel: Release, cat: string) => number)[] = [];
 
 /** Vencedores do ano (puro dado o sorteio de desempate). */
 export function craftWinners28(s: GameState, year: number, r: Rng): CraftWin28[] {
@@ -65,7 +67,7 @@ export function craftWinners28(s: GameState, year: number, r: Rng): CraftWin28[]
       if (c.lp && x.type !== 'lp') continue;
       const v = dm.get(x.id)?.[c.dim] ?? -1;
       if (v < 0) continue;
-      const k = v + r.float(0, 1.5);
+      const k = v + r.float(0, 1.5) + (CRAFT_ADJ28.length ? CRAFT_ADJ28.reduce((t, f) => t + f(s, x, c.id), 0) : 0);
       if (k > bv) { bv = k; best = { cat: c.id, rel: x, v: Math.round(v) }; }
     }
     if (best) out.push(best);

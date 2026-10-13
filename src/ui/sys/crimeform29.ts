@@ -11,6 +11,8 @@ export interface CrimeForm17 {
   c: string; actor: string; target: string; method: string; org: string; partners: string[];
   /** r29: texto da busca do seletor de alvo (some ao escolher) */
   q?: string;
+  /** r29: prêmio da votação comprada (award_rig) */
+  cat?: string;
 }
 export const crimeForm17: CrimeForm17 = { c: 'blackmail', actor: 'player', target: '', method: '', org: '', partners: [], q: '' };
 
@@ -31,10 +33,10 @@ export function presetCrimeFor29(s: GameState, c: string, entityId: string): voi
 }
 
 /** r29 (Submundo): o planejador com a família como executora ("Contratar a família"): o alvo se escolhe no seletor. */
-export function presetHire29(oid: string, c: string): void {
+export function presetHire29(oid: string, c: string, method?: string): void {
   crimeForm17.c = c;
   crimeForm17.actor = `hire:${oid.replace(/^o:/, '')}`;
-  crimeForm17.method = '';
+  crimeForm17.method = method ?? '';
   crimeForm17.q = '';
   crimeForm17.org = '';
 }
