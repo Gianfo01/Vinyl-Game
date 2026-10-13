@@ -42,8 +42,7 @@ function chip(s: GameState, n: Node29): HTMLElement {
   const pic = portraitCanvas({ id: n.pid ?? `fam29:${n.id}`, born: n.born, look: n.pid ? s.persons[n.pid]?.look : undefined }, s, 1);
   return h('div', { class: `fam29-node${n.me ? ' me' : ''}${n.died !== undefined ? ' gone' : ''}` }, pic,
     h('div', { class: 'fam29-n' }, n.pid && !n.me ? plink(s, n.pid, n.name) : n.key ? klink(s, n.key) : h('b', null, n.name)),
-    h('small', { class: 'muted' }, `${t(n.rel)} · ${age(s, n.born, n.died)}`),
-    n.sim ? h('small', { class: 'fam29-sim' }, t(l('simulado', 'simulated'))) : null);
+    h('small', { class: 'muted' }, `${t(n.rel)} · ${age(s, n.born, n.died)}`)); // R29: sem etiqueta "simulado" (pedido do autor)
 }
 const fromKin = (k: Kin15Item): Node29 => ({ id: k.id, pid: k.id, name: k.p.name, born: k.p.born, died: k.p.alive ? undefined : k.p.died, rel: kinLabel15(k) });
 
@@ -87,8 +86,7 @@ export function famSection29(s: GameState, p: Person): HTMLElement {
   const sibs = ks.filter((k) => k.rel === 'sibling');
   const m = F.minor;
   const lines: (HTMLElement | null)[] = [
-    h('li', null, ic('heart'), ` ${t(status)}`, F.partner ? [' · ', F.partner.pid ? plink(s, F.partner.pid, F.partner.name) : h('span', null, F.partner.name), F.partner.married ? h('span', { class: 'muted' }, ` (${t(l('desde', 'since'))} ${F.partner.married})`) : null, F.partner.pid ? [' ', pill(t(l('casal célebre', 'celebrity couple')), 'gold')] : null] : null,
-      F.sim ? [' ', pill(t(l('família simulada (história alternativa)', 'simulated family (alternate history)')), 'warn')] : null),
+    h('li', null, ic('heart'), ` ${t(status)}`, F.partner ? [' · ', F.partner.pid ? plink(s, F.partner.pid, F.partner.name) : h('span', null, F.partner.name), F.partner.married ? h('span', { class: 'muted' }, ` (${t(l('desde', 'since'))} ${F.partner.married})`) : null, F.partner.pid ? [' ', pill(t(l('casal célebre', 'celebrity couple')), 'gold')] : null] : null),
     F.exes.length ? h('li', { class: 'muted' }, `${t(l('Ex', 'Exes'))}: `, ...F.exes.slice(0, 4).flatMap((x, i) => [i ? ', ' : '', x.pid ? plink(s, x.pid, x.name) : h('span', null, x.name)])) : null,
     parents.length || F.ipar ? h('li', null, `${t(l('Pais', 'Parents'))}: `, ...parents.flatMap((k, i) => [i ? ', ' : '', plink(s, k.id, k.p.name)]), F.ipar ? [parents.length ? ', ' : '', klink(s, F.ipar), h('span', { class: 'muted' }, ` (${t(l('indústria', 'industry'))})`)] : null) : null,
     sibs.length ? h('li', null, `${t(l('Irmãos', 'Siblings'))}: `, ...sibs.slice(0, 8).flatMap((k, i) => [i ? ', ' : '', plink(s, k.id, k.p.name)])) : null,
