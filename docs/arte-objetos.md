@@ -116,3 +116,10 @@ Loja: [1925](arte-objetos/loja-1925-depois.png) · [2025](arte-objetos/loja-2025
 
 Atlas: 13,7 KB (PNG indexado). Código novo: ~6 KB não minificado. Os PNGs originais do pacote ficam só em `art/`
 (não entram no build).
+
+## Validação
+
+- `npm ci` ok; `npm run typecheck` ok; `vite build` ok (atlas sai como `assets/gear21-*.png`, 13,7 KB).
+- `npm test`: 947 passam, 1 falha — `tests/r16-playbot.test.ts` ("uma run curta tem ações variadas…",
+  `expected L.tours > 0`). A falha é anterior a esta branch: o mesmo teste falha igual no commit base `5baacc2`
+  (só simulação; esta branch não toca em `src/sim`).
