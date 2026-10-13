@@ -14,7 +14,7 @@ import { avatarSprite, lookOf, lookKey, variantOf, type Dir, type Pose, type Rol
 import { drawText, fitText } from './pixel/font';
 import { icon } from './pixel/icons';
 import { PALETTES, eraOf } from './pixel/palette';
-import { C, Px, mix, shade, withAlpha, type Sprite } from './pixel/px';
+import { C, Px, lv, mix, tint, withAlpha, type Sprite } from './pixel/px';
 import { BRANCH_LAYOUT, ROOM_NAMES, buildScene, findPath, freeTiles, roomAt, type Scene, type Spot } from './pixel/scene';
 import { WALL_H, decalPx, floorAt, furniture, groundAt, rugAt, wallSprite, type DecalKind, type RoomKind } from './pixel/sprites';
 
@@ -444,15 +444,18 @@ export class HqView {
           // oclusão perto das paredes do fundo e das internas
           const lx = gx - tx * 16;
           const ly = gy - ty * 16;
+          // oclusão perto das paredes do fundo e das internas: sombra arroxeada da rampa, em degraus
           let occ = 0;
-          if (gx < 4 || gy < 4) occ = 0.22;
-          else if ((lx < 2 && sc.edges.has(`E:${tx - 1}:${ty}`)) || (ly < 2 && sc.edges.has(`S:${tx}:${ty - 1}`))) occ = 0.16;
-          if (occ) c = shade(c, -occ);
-          for (const lt of sc.lights) if (gx >= lt.x && gy >= lt.y && gx < lt.x + lt.w && gy < lt.y + lt.h && (px + py) % 2 === 0) c = mix(c, pal.lamp, 0.16);
+          if (gx < 3 || gy < 3) occ = 0.3;
+          else if (gx < 7 || gy < 7) occ = (px + py) % 2 === 0 ? 0.16 : 0.1;
+          else if ((lx < 2 && sc.edges.has(`E:${tx - 1}:${ty}`)) || (ly < 2 && sc.edges.has(`S:${tx}:${ty - 1}`))) occ = 0.18;
+          if (occ) c = tint(c, -occ);
+          // luz das janelas: quente, pontilhada
+          for (const lt of sc.lights) if (gx >= lt.x && gy >= lt.y && gx < lt.x + lt.w && gy < lt.y + lt.h && (px + py) % 2 === 0) c = mix(tint(c, 0.12), pal.lamp, 0.12);
         } else {
           c = groundAt(pal, gx, gy);
           // sombra do prédio (luz do alto à esquerda)
-          if ((gx >= W * 16 && gx < W * 16 + 14 && gy > -4 && gy < H * 16 + 14) || (gy >= H * 16 && gy < H * 16 + 10 && gx > -4 && gx < W * 16 + 14)) c = shade(c, -0.28);
+          if ((gx >= W * 16 && gx < W * 16 + 14 && gy > -4 && gy < H * 16 + 14) || (gy >= H * 16 && gy < H * 16 + 10 && gx > -4 && gx < W * 16 + 14)) c = tint(c, -0.34);
           // escurece a borda do terreno
           const edge = Math.min(gx - lo, gy - lo, hiX - gx, hiY - gy);
           if (edge < 10) c = mix(c, pal.bg, (10 - edge) / 12);
@@ -536,9 +539,11 @@ export class HqView {
     const w = Math.min(64, txt.length * 4 + 6);
     const p = new Px(w + 2, 22);
     p.vline(2, 8, 21, pal.metalDark);
+    p.vline(3, 8, 21, lv(pal.metalDark, 4));
     p.vline(w - 1, 8, 21, pal.metalDark);
     p.rect(0, 0, w + 1, 9, lit ? C('#14121a') : pal.woodDark);
     p.rect(1, 1, w - 1, 7, lit ? C('#1e1a28') : pal.wood);
+    if (!lit) { p.hline(1, w - 1, 1, lv(pal.wood, 4)); p.hline(1, w - 1, 7, lv(pal.wood, 1.6)); }
     drawText(p, fitText(txt, w - 4), 3, 2, lit ? pal.glow : pal.paper);
     p.outline(pal.outline);
     cx.drawImage(p.canvas(), Math.round(x - w / 2), Math.round(y - 22));
@@ -664,7 +669,9 @@ export class HqView {
     }
     const shadow = getCanvas('shadow', () => {
       const p = new Px(14, 5);
-      p.ellipse(7, 2.5, 6.5, 2, withAlpha(C('#000000'), 70));
+      // sombra no chão: roxo escuro do estilo, mais densa no miolo
+      p.ellipse(7, 2.5, 6.5, 2, withAlpha(C('#2a1830'), 70));
+      p.ellipse(7, 2.5, 4, 1.2, withAlpha(C('#2a1830'), 60));
       return p.canvas();
     });
     for (const a of this.agents.values()) {
