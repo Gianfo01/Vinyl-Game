@@ -188,7 +188,7 @@ export function soloChance29(s: GameState, pid: string, mode: MoMode29): Chance2
   const v: Act = { ...structuredClone(band), id: `${band.id}~mo29`, name: p.name, members: [p.id], leaderId: p.id, owner: null, contractId: undefined, status: 'emerging', fame: soloFame(s, band, p) };
   let score = 0.58;
   try { score = evaluateOffer(s, v, defaultOffer(s, v)).score; } catch { /* hooks que exigem o ato no mundo: placar neutro */ }
-  return chanceOf(score, T('Proposta padrão (adiantamento esperado para fama {f})', 'Standard offer (expected advance for fame {f})', { f: Math.round(v.fame) }), factors29(s, p, band, 'solo', mode));
+  return chanceOf(score - 0.58, T('Proposta padrão (adiantamento esperado para fama {f})', 'Standard offer (expected advance for fame {f})', { f: Math.round(v.fame) }), factors29(s, p, band, 'solo', mode));
 }
 
 /** Abre a proposta de carreira solo: cria o solo-proposta (sem dono, a pessoa segue na banda) para a mesa de sempre. */
@@ -257,7 +257,7 @@ function rivalHit(s: GameState, r: Rng, lb: Label | undefined, mode: MoMode29, b
 const alter = (s: GameState, band: Act): void => { if (band.catalogNo) (s.flags as Record<string, number>)[`h15alt:${band.id}`] = 1; };
 const why16 = (s: GameState, band: Act, p: Person) => { const pr = pressure16(s, band, p); return pr.w ? pr.why : 'left'; };
 
-function finalizeSolo(s: GameState, id: string, sh: Shell29): L {
+function finalizeSolo(s: GameState, id: string, sh: Shell29): Settled29 {
   const solo = s.acts[id], p = s.persons[sh.pid], band = s.acts[sh.from];
   delete mo29(s).sh[id];
   const r = rng29(s, `solo:${id}`);
@@ -279,21 +279,22 @@ function finalizeSolo(s: GameState, id: string, sh: Shell29): L {
   l16(s).boost[id] = 1;
   if (solo.status === 'emerging' && solo.fame > 5) solo.status = 'active';
   const by = mine ? s.config.companyName : s.labels[solo.owner ?? '']?.name ?? '?';
-  const txt = T('{p} deixa {a} e começa carreira solo pelo selo {c}.', '{p} leaves {a} and starts a solo career with {c}.', { p: p?.name ?? '?', a: band?.name ?? '?', c: by });
+  const txt = T('{p} deixa {a} e começa carreira solo com {c}.', '{p} leaves {a} and starts a solo career with {c}.', { p: p?.name ?? '?', a: band?.name ?? '?', c: by });
   remember(s, mine && lb ? 'poach' : 'solo', txt, { actId: id, pid: sh.pid, important: true });
   emitFact(s, { kind: 'member_solo', actors: [mine ? 'player' : solo.owner ?? '', sh.pid, id, band?.id ?? ''], severity: clamp(25 + (band?.fame ?? 0) / 2, 25, 70), visibility: 'public', tags: ['member29', 'solo', ...(lb && mine ? ['poach'] : [])], text: txt, src: 'member29' });
   if (!mine) notify(s, txt, 'bad');
   const out = extra ? T('{t} {e}', '{t} {e}', { t: txt, e: extra }) : txt;
   if (p) logIt(s, p.id, 'solo', mine, out);
-  return out;
+  return { t: out, ok: mine, actId: id };
 }
 
 /** Fecha os solos-proposta: assinados (por você ou por um rival) viram a saída da banda; sem acordo, somem.
  *  Chamado ao fechar a mesa/proposta e toda semana (pensando, contraproposta, prazo de 8 semanas). */
-export function settleMember29(s: GameState): L[] {
+export interface Settled29 { t: L; ok: boolean; actId: string }
+export function settleMember29(s: GameState): Settled29[] {
   const st = (s.x4 as unknown as { mo29?: Mo29State }).mo29;
   if (!st?.sh || !Object.keys(st.sh).length) return [];
-  const out: L[] = [];
+  const out: Settled29[] = [];
   for (const [id, sh] of Object.entries(st.sh)) {
     const a = s.acts[id];
     if (!a) { delete st.sh[id]; continue; }
@@ -340,7 +341,7 @@ export function joinChance29(s: GameState, pid: string, actId: string, mode: MoM
   fs.push(F(T('{a} (fama {f}) × {b} (fama {g})', '{a} (fame {f}) × {b} (fame {g})', { a: T0.name, f: Math.round(T0.fame), b: band.name, g: Math.round(band.fame) }), (T0.fame - band.fame) / 200));
   fs.push(F(familyOf(T0.genre) === familyOf(band.genre) ? l('Mesmo universo musical', 'Same musical world') : l('Outro universo musical', 'A different musical world'), familyOf(T0.genre) === familyOf(band.genre) ? 0.03 : -0.08));
   fs.push(F(T('Reputação com artistas ({r})', 'Reputation with artists ({r})', { r: Math.round(s.player.reputation.artists) }), (s.player.reputation.artists - 50) / 500));
-  return chanceOf(0, l('Base: proposta de troca de banda com luvas', 'Base: band-switch offer with a signing fee'), fs.filter((f) => Math.abs(f.v) >= 0.004));
+  return chanceOf(0.05, l('Base: proposta de troca de banda com luvas', 'Base: band-switch offer with a signing fee'), fs.filter((f) => Math.abs(f.v) >= 0.004));
 }
 
 export interface MoOut29 { ok: boolean; text: L; actId?: string }

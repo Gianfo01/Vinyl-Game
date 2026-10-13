@@ -12,6 +12,7 @@ import { acceptTheirs27, propose27, startNego27 } from '../src/sim/sys/nego27';
 import { rv27 } from '../src/sim/sys/rivals27';
 import { ses19 } from '../src/sim/sys/session19';
 import { bonds } from '../src/sim/sys/bonds9';
+import { ctxMenu27, menuSections27 } from '../src/ui/ps/ctx27model';
 import {
   bandOf29, buyout29, memberBlock29, memberJoin29, memberOptions29, memberSession29, memberSide29, memberStaff29, mo29,
   settleMember29, soloChance29, startMemberSolo29,
@@ -40,6 +41,7 @@ describe('R29 — oferta a um integrante específico', () => {
     const s = game();
     const band = freeBand(s);
     const pid = band.members.find((m) => m !== band.leaderId)!;
+    const pre = soloChance29(s, pid, 'free').p;
     const r = startMemberSolo29(s, pid, 'free');
     expect('actId' in r).toBe(true);
     const id = (r as { actId: string }).actId;
@@ -47,6 +49,7 @@ describe('R29 — oferta a um integrante específico', () => {
     expect(s.acts[band.id].members).toContain(pid);
     const ev = evaluateOffer(s, s.acts[id], defaultOffer(s, s.acts[id]));
     expect(ev.parts?.some((x) => /Deixar /.test(x.t.pt))).toBe(true);
+    expect(Math.abs(ev.p - pre)).toBeLessThan(0.1); // a chance do menu é a da proposta padrão na mesa
     expect(closeAtTable(s, id)).toBe('deal');
     const msgs = settleMember29(s);
     expect(msgs.length).toBe(1);
@@ -181,6 +184,7 @@ describe('R29 — oferta a um integrante específico', () => {
   it('a chance do solo mostrada no menu cai no aliciamento e sobe com quem sonha com a carreira solo', () => {
     const s = game('r29mo-g');
     const band = rivalBand(s);
+    band.fame = 30; // longe do teto/piso da curva
     const pid = band.members[0];
     const a = soloChance29(s, pid, 'buyout').p, b = soloChance29(s, pid, 'tamper').p;
     expect(b).toBeLessThan(a);
@@ -215,4 +219,25 @@ describe('R29 — oferta a um integrante específico', () => {
     const band = freeBand(s);
     expect(bandOf29(s, band.members[0])?.id).toBe(band.id);
   });
+  it('menu: "Oferecer a {nome}… ›" em Carreira e contrato (clique direito e ficha) abre o submenu com motivo/chance/custo', () => {
+    const s = game('r29mo-j');
+    const band = freeBand(s);
+    const pid = band.members[1];
+    const m = ctxMenu27(s, 'person', `p:${pid}`)!;
+    const car = menuSections27(m).find((x) => x.sec === 'career')!;
+    const it0 = car.items.find((x) => x.id === 'person.offer29')!;
+    expect(it0.block).toBeNull();
+    expect(it0.label.pt).toContain(s.persons[pid].name);
+    const sub = ctxMenu27(s, 'person', `mo29:${pid}`)!;
+    expect(sub.items.some((x) => x.id === 'mo.solo:free' && x.chance !== undefined)).toBe(true);
+    expect(sub.items.some((x) => x.id.startsWith('mo.join'))).toBe(true);
+    expect(sub.items.some((x) => x.id.startsWith('mo.session'))).toBe(true);
+    expect(sub.items.some((x) => x.id === 'mo.feat')).toBe(true);
+    // sem banda sua: "entrar" desabilitado com o motivo
+    expect(sub.items.find((x) => x.id.startsWith('mo.join'))?.block?.pt).toMatch(/banda/);
+    // pessoa morta: o item do menu aparece desabilitado com o motivo
+    s.persons[pid].alive = false;
+    expect(ctxMenu27(s, 'person', `p:${pid}`)?.items.find((x) => x.id === 'person.offer29')?.block?.pt ?? 'sem item').toMatch(/Faleceu|sem item/);
+  }, 60_000);
 });
+
