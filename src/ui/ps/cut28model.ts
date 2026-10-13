@@ -117,7 +117,7 @@ export const isKey28 = (k: string): k is CutKey28 => k === 'coup' || k === 'holo
 export function figs28(key: CutKey28, m: ArtModel27, mem: string[], d: CutData27): Fig27[] {
   switch (key) {
     case 'coup': return [{ fx: 0.3, pose: 'stand', dir: 'SE', pid: mem[0], seed: 'c-cp1' }, { fx: 0.72, walkTo: 0.55, pose: 'walk', dir: 'SW', seed: 'c-cp2' }];
-    case 'holo': m.n.fill = 1; m.n.hop = 0; return [{ fx: 0.5, dy: -16, pose: 'play', dir: 'SE', pid: d.pid, seed: 'c-holo' }];
+    case 'holo': m.n.fill = 1; m.n.hop = 0; return [{ fx: 0.5, dy: -16, pose: 'play', dir: 'SE', pid: d.pid, seed: 'c-holo', holo: true }]; // r29: translúcido
     case 'heirs': return [{ fx: 0.3, pose: 'stand', dir: 'SE', seed: 'c-h1' }, { fx: 0.7, pose: 'stand', dir: 'SW', seed: 'c-h2' }, { fx: 0.5, pose: 'sit', dir: 'NE', seed: 'c-law' }];
   }
 }

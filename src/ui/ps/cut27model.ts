@@ -10,7 +10,7 @@
 // e nada muda na simulação se ninguém escolher (ficar parado = status quo). Sem sorteios: os "cara ou coroa" das
 // escolhas arriscadas saem de um hash do id da cena (não mexe em nenhum fluxo do Rng).
 
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { EQUIPMENT } from '../../data/rules';
 import { takeLoan } from '../../sim/economy';
 import { registerExt4 } from '../../sim/ext4';
@@ -23,9 +23,10 @@ import { C, Px, noise, withAlpha } from '../pixel/px';
 import { bandOf27, halo, kit27, text } from './art27kit';
 import { artModel27, type ArtModel27, type Fig27, type SceneKind27 } from './art27';
 import { CUT28, actOfFact28, cutOfFact28, figs28, isKey28, onceKey28, pidOfFact28, type CutKey28 } from './cut28model'; // r28 F8: golpe de NPC, holograma, herdeiros
+import { CUT29, VARS29, cutOfFact29, cutOfMemory29, dataOfMemory29, eraWords29, figs29, hash29, init29, isKey29, onceKey29, probes29, type CutKey29 } from './cut29model'; // r29: mais cenas + variantes de fala
 
 export type CutKey27 = 'press1' | 'chart1' | 'no1' | 'star' | 'show1' | 'sold' | 'flop' | 'tour' | 'award' | 'scandal' | 'raid'
-  | 'leave' | 'death' | 'broke' | 'era' | 'fest' | 'magic' | 'betray' | CutKey28;
+  | 'leave' | 'death' | 'broke' | 'era' | 'fest' | 'magic' | 'betray' | CutKey28 | CutKey29;
 export type CutPref27 = 'all' | 'major' | 'off';
 export type CutFx27 = 'confetti' | 'flash' | 'fireworks' | 'rain' | 'police' | 'spot' | 'gold' | 'candles' | 'stamp';
 
@@ -33,6 +34,8 @@ export interface CutData27 {
   key: CutKey27; actId?: string; pid?: string; ref: string; year: number; week: number;
   /** textos já resolvidos para as falas */
   a?: string; p?: string; t?: string;
+  /** r29: cidade da cena (id), para {c} */
+  city?: string;
 }
 export interface Choice27 { id: string; label: L; hint: L; apply: (s: GameState, d: CutData27) => L }
 export interface CutDef27 {
@@ -41,6 +44,8 @@ export interface CutDef27 {
   beats: L[]; fx: CutFx27[]; ms: number; choices: Choice27[];
   /** prioridade quando várias acontecem no mesmo avanço (maior primeiro) */
   prio: number;
+  /** r29: falas alternativas (uma é escolhida pelo hash da cena) */
+  vars?: L[][];
 }
 
 // ---------------------------------------------------------------- estado
@@ -208,6 +213,7 @@ export const CUT27: Record<CutKey27, CutDef27> = {
     beats: [l('Alguém da equipe falou demais.', 'Someone on the crew talked.'), l('{t}', '{t}'), l('No Submundo, a memória é longa.', 'In the underworld, memories are long.')],
     choices: [] },
   ...CUT28, // r28 F8 (B7/B8): coup / holo / heirs (cut28model.ts)
+  ...CUT29, // r29: 22 cenas novas (cut29model.ts)
 };
 export const CUT_KEYS27 = Object.keys(CUT27) as CutKey27[];
 
@@ -244,7 +250,7 @@ export function cutOfFact27(s: GameState, f: Pick<Fact, 'kind' | 'actors' | 'tag
     case 'death': return m?.pid && s.persons[m.pid] && !s.persons[m.pid].isPlayer && f.actors.includes(m.pid) ? 'death' : null;
     case 'award': return m?.act && !f.tags.includes('music_show') ? 'award' : null;
     case 'own_festival': return 'fest';
-    default: return cutOfFact28(s, f); // r28 F8
+    default: return cutOfFact28(s, f) ?? cutOfFact29(s, f); // r28 F8, r29
   }
 }
 
@@ -260,6 +266,7 @@ function onceKey(key: CutKey27, d: CutData27): string {
     case 'raid': case 'betray': return `${key}:${Math.floor(d.week / 12)}`;
     case 'tour': case 'death': case 'era': case 'broke': return `${key}:${d.ref}`;
     case 'coup': case 'holo': case 'heirs': return onceKey28(key, d);
+    default: return onceKey29(key as CutKey29, d); // r29
   }
 }
 
@@ -283,6 +290,7 @@ export function scan27(s: GameState, pref: CutPref27 = 'all', max = 2): CutData2
     if (s.player.stats.top10s > 0 || Object.values(s.acts).some((a) => isMine(s, a.id) && a.peakChart > 0 && a.peakChart <= 100)) st.once.chart1 = s.week;
     if (s.week > 12) st.once.show1 = s.week;
     for (const t of s.tours ?? []) if (isMine(s, t.actId) && t.status !== 'planned') st.once[`tour:tour:${t.id}`] = s.week;
+    init29(s, st.once); // r29
     return [];
   }
   const out: CutData27[] = [];
@@ -290,6 +298,8 @@ export function scan27(s: GameState, pref: CutPref27 = 'all', max = 2): CutData2
   // memória
   for (const e of s.memory ?? []) {
     if (memNo(e.id) <= st.mem) continue;
+    const k29 = cutOfMemory29(s, e, st.once); // r29: cenas novas (podem refinar um caso das antigas: headline, 1ª assinatura)
+    if (k29) { const o = dataOfMemory29(s, k29, e); add(dataOf(s, k29, e.id, e.actId && s.acts[e.actId] ? e.actId : undefined, { t: o.t, pid: o.pid, p: o.pid ? s.persons[o.pid]?.name : undefined })); continue; }
     const key = cutOfMemory27(s, e.kind, e.actId, e.text);
     if (!key) continue;
     const t = key === 'flop' || key === 'leave' || key === 'fest' ? T(e.text) : (/"([^"]+)"/.exec(T(e.text))?.[1] ?? latestTitle(s, e.actId));
@@ -314,6 +324,7 @@ export function scan27(s: GameState, pref: CutPref27 = 'all', max = 2): CutData2
     if (!isMine(s, t.actId) || t.status !== 'running' || !t.stops.some((x) => x.status === 'played')) continue;
     add(dataOf(s, 'tour', `tour:${t.id}`, t.actId, { t: t.name }));
   }
+  probes29(s, add); // r29: a turnê que cruza a fronteira
   if (band !== st.era) { if (band > st.era && st.era >= 0) add(dataOf(s, 'era', `era:${band}`)); st.era = band; }
   if (s.player.cash < 0 && s.player.insolvencyMonths >= 1 && s.week - st.broke >= 52) { st.broke = s.week; add(dataOf(s, 'broke', `broke:${s.week}`)); }
   st.mem = Math.max(st.mem, memTop); st.fact = Math.max(st.fact, fs.seq);
@@ -357,6 +368,7 @@ export function cutModel27(s: GameState, d: CutData27, size: { w: number; h: num
     case 'fest': m.n.fill = 0.9; m.n.hop = 1; break;
     case 'coup': case 'holo': case 'heirs': figs.push(...figs28(d.key, m, mem, d)); break; // r28 F8
     case 'magic': figs.push({ fx: 0.72, dy: -22, pose: 'play', dir: 'SW', pid: mem[0], seed: 'c-mg' }, { fx: 0.36, pose: 'sit', dir: 'NE', seed: 'c-prod' }); break;
+    default: if (isKey29(d.key)) figs.push(...figs29(d.key, m, mem, d)); // r29
   }
   m.figs = figs;
   m.variant = `cut/${d.key}/${m.band}`;
@@ -368,8 +380,18 @@ export function cutModel27(s: GameState, d: CutData27, size: { w: number; h: num
 export function beat27(s: GameState, d: CutData27, b: L): L {
   // sem título conhecido: "{t}" vira "o disco" (sem aspas)
   const bb = d.t ? b : { pt: b.pt.replace('"{t}"', '{t}'), en: b.en.replace('"{t}"', '{t}') };
-  return fmtL(bb, { a: d.a ?? s.config.companyName, p: d.p ?? '', t: d.t || l('o disco', 'the record'), y: d.year, b: s.config.companyName });
+  const ew = eraWords29(d.year); // r29: {o} objeto da época, {m} meio, {c} cidade
+  const city = d.city ? cityById[d.city]?.name : undefined;
+  return fmtL(bb, { a: d.a ?? s.config.companyName, p: d.p ?? '', t: d.t || l('o disco', 'the record'), y: d.year, b: s.config.companyName, o: ew.o, m: ew.m, c: city ?? l('outro país', 'another country') });
 }
+/** r29: falas da cena — a lista padrão ou uma variante, escolhida pelo hash da cena (estável entre aberturas). */
+export function beatsOf27(d: CutData27): L[] {
+  const def = CUT27[d.key];
+  const all = [def.beats, ...(def.vars ?? []), ...(VARS29[d.key] ?? [])];
+  return all[hash29(`${d.ref}:beats`) % all.length];
+}
+/** r29: ritmo único (2,6 s por fala + 1,8 s para as escolhas), igual para todas as cenas. */
+export const pace27 = (n: number): number => 1800 + n * 2600;
 
 /** Aplica a escolha (uma vez por cena; repetir não faz nada) e devolve o resultado. */
 export function choose27(s: GameState, d: CutData27, id: string): L | null {
