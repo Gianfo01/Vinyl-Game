@@ -22,6 +22,7 @@ import { catalogPanel, chartsPanel, companyPanel, diaryPanel, hqPanel, mediaPane
 import { applyPrefs, exportSave, migrate, saveGame, savePrefs, store, type Area } from './store';
 import { settings27 } from './act27/prefs27';
 import { flowGate27 } from './act27/flow27';
+import './act27/flow27p2'; // r27 FLOW2: campanha, entrevista, favores, crise, reunião, estrada, turnê e renovação no caminho único
 import { centralPanel } from './panels/central';
 import { worldPanel } from './panels/world';
 import { businessPanel } from './panels/business';
@@ -578,7 +579,6 @@ function settings(): void {
     h('label', null, t(l('Mini-jogos', 'Mini-games')), select(p.minigames ?? 'play', [{ value: 'play' as const, label: t(l('Jogar quando aparecerem', 'Play when they come up')) }, { value: 'auto' as const, label: t(l('Resolver automaticamente', 'Resolve automatically')) }], (v) => { p.minigames = v; savePrefs(); })),
     settings19(), // r19 B.5
     settings20(), // r20 G6: densidade
-    settings27(), // r27: atividades jogáveis × rápidas
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)
     settings27(), // r27: atividades jogáveis (jogáveis / só importantes / sempre rápido)
     settingsCut27(), // r27 (K): Cenas: todas / só importantes / desligadas

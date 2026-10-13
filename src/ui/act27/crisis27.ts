@@ -6,7 +6,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
-  CFG27, CRISIS_NAME27, OUT_NAME27, actCrisis27, crisisActs27, crisisById27, crisisCands27, delegatePick27, dismissCrisis27, evAct27, openCrisis27, openCrises27, outcomeOf27,
+  CFG27, CRISIS_NAME27, OUT_NAME27, actCrisis27, crisisActs27, crisisById27, crisisCands27, delegatePick27, evAct27, openCrisis27, openCrises27, outcomeOf27,
   type Crisis27,
 } from '../../sim/sys/crisis27';
 import { staffRoleById } from '../../data/rules';
@@ -15,7 +15,8 @@ import { $, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { card27, kpiRow27, statusChip27 } from '../ps/ui27';
 import { store } from '../store';
-import { cutscene27, playBtn27, reduced27 } from './mode27';
+import { occMark27 } from './flow27';
+import { cutscene27, reduced27 } from './mode27';
 import { paintCrisis27, put27 } from './px27b';
 import { drawScene27, type Who27 } from './scene27';
 import './act27.css';
@@ -39,13 +40,13 @@ function bar(threat: number): HTMLElement {
 }
 
 /** Abre (se preciso) e mostra a sala de crise. */
-export function openCrisisRoom27(id: string): void {
+export function openCrisisRoom27(id: string, onDone?: (played: boolean) => void): void {
   const s = store.game;
-  if (!s) return;
+  if (!s) { onDone?.(false); return; }
   let c = crisisById27(s, id);
   if (!c) {
     const r = openCrisis27(s, id);
-    if (!('k' in r)) { toast(t(r), 'bad'); return; }
+    if (!('k' in r)) { toast(t(r), 'bad'); onDone?.(false); return; }
     c = r;
     cutscene27('crisis_open', { kind: c.k, id: c.id });
   }
@@ -99,7 +100,7 @@ export function openCrisisRoom27(id: string): void {
     (root.querySelector('.p2b-opt:not([disabled])') as HTMLElement | null)?.focus();
   };
   view();
-  const close = modal(t(l('Sala de crise — {k}', 'Crisis room — {k}'), { k: t(CRISIS_NAME27[cc.k]) }), root, { wide: true, onClose: () => rerender() });
+  const close = modal(t(l('Sala de crise — {k}', 'Crisis room — {k}'), { k: t(CRISIS_NAME27[cc.k]) }), root, { wide: true, onClose: () => { onDone?.(true); rerender(); } });
 }
 
 /** Seção com as crises na mesa e as abertas (Cockpit / Políticas). */
@@ -109,9 +110,9 @@ export function crisesSection27(s: GameState): HTMLElement | null {
   if (!cands.length && !open.length) return null;
   return card27({ title: l('Crises', 'Crises'), icon: 'warning', tone: 'bad' },
     h('ul', { class: 'p2b-list' },
+      // r27 (FLOW2): uma entrada só — a sala de crise chega como cartão no Avançar (Jogar / Resolver rápido); aqui, o estado e o marcador
       open.map((c: Crisis27) => h('li', null, h('b', null, t(c.title)), ' ', statusChip27(t(l('{w} sem. · ameaça {v}', '{w} wk · threat {v}'), { w: c.left, v: Math.round(c.threat) }), c.threat > 65 ? 'bad' : c.threat > 30 ? 'warn' : 'good'), ' ',
-        h('button', { class: 'btn small', onclick: () => openCrisisRoom27(c.id) }, t(l('Abrir a sala', 'Open the room'))))),
+        c.used ? h('small', { class: 'muted' }, t(l('ações da semana feitas', 'this week\'s moves done'))) : occMark27(s, { src: 'crisis', key: `crw:${c.id}:${s.week}`, data: { crisis: c.id, k: c.k } }))),
       cands.map((c) => h('li', null, h('b', null, t(CRISIS_NAME27[c.k])), ' ', h('small', { class: 'muted' }, t(c.text)), ' ',
-        playBtn27(l('Enfrentar', 'Face it'), () => openCrisisRoom27(c.id), true, l('Abre a sala de crise com relógio', 'Opens the crisis room with a clock')) ?? '',
-        h('button', { class: 'btn small ghost', onclick: () => { const g = store.game; if (g) dismissCrisis27(g, c.id); rerender(); } }, t(l('Deixar correr', 'Let it run')))))));
+        occMark27(s, { src: 'crisis', key: `cr:${c.id}`, data: { cand: c.id, k: c.k } }) ?? h('small', { class: 'muted' }, t(l('corre sozinha (sempre rápido)', 'runs on its own (always quick)')))))));
 }

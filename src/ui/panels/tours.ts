@@ -22,8 +22,8 @@ import { kitDraft18, kitForm18 } from '../sys/live18';
 import { changeTour20, futureStops20, tourChangeQuote20, type TourChange20 } from '../../sim/sys/showops20';
 import { FLY_FROM18, KIT_TXT18 } from '../../sim/sys/live18';
 import { KIT0, type Kit18 } from '../../sim/tourhook18';
-import { playBtn27 } from '../act27/mode27';
-import { openRoad27, openRoute27 } from '../act27/road27'; // r27 (P2B)
+import { openRoad27 } from '../act27/road27'; // r27 (P2B)
+import { bookTour27 } from '../act27/flow27p2'; // r27 FLOW2: "Confirmar turnê" abre a turnê no mapa (rápido dentro)
 import { isRoad27 } from '../../sim/sys/road27';
 import { tourMark27 } from '../act27/flow27';
 
@@ -88,7 +88,6 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
     : step === 0 ? [fActor] : step === 1 ? [fStart, fMin, fRole, fPartner] : step === 2 ? [fProd, fCrew] : step === 3 ? [fPrice, fPay] : [];
   const cf = est && on(4) ? tourConflicts20(s, act.id, est) : null;
   return section(t(l('Planejar turnê', 'Plan a tour')),
-    on(0) ? playBtn27(l('Planejar no mapa (estrada jogável)', 'Plan on the map (playable road)'), () => openRoute27(act.id), true) : null, // r27 (P2B)
     form.some(Boolean) ? h('div', { class: 'form grid2' }, ...form) : null,
     on(2) ? kitForm18(s, plan, est) : null,
     on(1) ? h('p', { class: 'small' }, ic('disc'), ' ', t(l('Setlist: {n} gravações próprias ({q} necessárias){c}.', 'Setlist: {n} own recordings ({q} needed){c}.'), { n: draft.setlist.length, q: need, c: draft.setlist.length < need ? t(l(' — o resto vira covers, com penalidade', ' — the rest will be covers, with a penalty')) : '' })) : null,
@@ -107,7 +106,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
         cf.hard.length ? h('div', null, h('b', { class: 'bad' }, ic('lock'), ' ', t(l('Conflitos duros (o artista estaria em dois lugares)', 'Hard conflicts (the act would be in two places)'))), h('ul', { class: 'small' }, cf.hard.map((x) => h('li', null, t(x))))) : null,
         cf.soft.length ? h('div', null, h('b', { class: 'warn' }, ic('fans'), ' ', t(l('Conflitos brandos (disputa de público — a mesma conta entra no acerto do show)', 'Soft conflicts (audience competition — the same math applies at settlement)'))), h('ul', { class: 'small' }, cf.soft.map((x) => h('li', null, t(x))))) : null) : null,
       forecastBox(forecastTour(s, plan, est)),
-      h('button', { class: 'btn primary', onclick: () => {
+      h('button', { class: 'btn primary', onclick: () => bookTour27(s, act.id, stops, draft.startInDays, () => {
         const res = planTour(s, plan);
         if ('pt' in res) toast(t(res), 'bad');
         else {
@@ -115,7 +114,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
           afterBook20?.();
           rerender();
         }
-      } }, ic('tour-bus'), ' ', t(l('Confirmar turnê', 'Confirm tour'))),
+      }) }, ic('tour-bus'), ' ', t(l('Confirmar turnê', 'Confirm tour'))),
     ) : null,
     !all && step === 4 && !est ? h('p', { class: 'muted small' }, t(l('Sem rota ainda: volte à etapa Rota.', 'No route yet: go back to the Route step.'))) : null,
   );
@@ -141,7 +140,7 @@ export function activeToursSection(s: GameState): HTMLElement | null {
       chips(stat('money', $(tr.revenue), l('Receita', 'Revenue')), stat('fans', N(tr.stops.reduce((x, y) => x + y.sold, 0)), l('Público', 'Attendance')), tr.accidents ? stat('warning', tr.accidents, l('Acidentes', 'Accidents'), 'bad') : null),
       tr.status === 'planned' || tr.status === 'running' ? h('button', { class: 'btn small ghost', onclick: () => { const e = cancelTour(s, tr.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(l('Cancelar (devolve metade)', 'Cancel (half refunded)'))) : null,
       tourMark27(s, tr.id), // r27 FLOW: o próximo show é jogado no avanço (Jogar / Resolver rápido), não num botão à parte
-      isRoad27(s, tr.id) && (tr.status === 'planned' || tr.status === 'running') ? playBtn27(l('Diário de estrada', 'Road journal'), () => openRoad27(tr.id), true) : null), // r27 (P2B)
+      isRoad27(s, tr.id) && (tr.status === 'planned' || tr.status === 'running') ? h('button', { class: 'btn small ghost', onclick: () => openRoad27(tr.id) }, t(l('Diário de estrada', 'Road journal'))) : null), // r27 (P2B; FLOW2: os eventos também chegam no Avançar)
     h('div', { class: 'tour-stops' }, tr.stops.map((st) => h('span', { class: `stop ${st.status}`, title: st.note ? t(st.note) : '' }, ic(stopIcon(st)), h('b', null, cityName(st.cityId)), st.status === 'played' ? h('small', null, `${N(st.sold)}/${N(st.capacity)}`) : st.note ? h('small', null, t(st.note)) : null))),
     tr.status === 'planned' || tr.status === 'running' ? tourChangeForm20(s, tr) : null,
     dailyTimeline(s, tr.actId, 6),

@@ -24,7 +24,7 @@ import { store } from '../store';
 import { ficha13 } from './persona13';
 import { personRoute16 } from '../route16';
 import { mgrsOfAct16 } from '../../sim/sys/people16';
-import { favorsBtn27 } from '../act27/favors27'; // r27 P2A: almoço vira jogada de favor
+import { favorAct27 } from '../act27/flow27p2'; // r27 FLOW2: o almoço abre a conversa de favor (rápido dentro)
 
 /** Rodada 16: quem já empresariou o ato (com anos). */
 function mgrHist16(s: GameState, actId: string): HTMLElement | null {
@@ -76,7 +76,7 @@ export function profile(s: GameState, id: string, redraw: () => void, full = tru
       live ? h('p', { class: 'small muted' }, t(l('Capacidade: {c} clientes (gestão {g}).', 'Capacity: {c} clients (management {g}).'), { c: mgrCap(m), g: m.a[3] })) : null),
     s.config.realNames && past.length ? section(t(l('Clientes na história real', 'Clients in real history')), h('ul', { class: 'small' }, past.map(([n, a, b]) => h('li', null, `${n} (${a}–${b})`)))) : null,
     live ? h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small', disabled: !!lb, title: t(lb ?? l('Aproxima: conta seu carisma e o dele. A cada 6 meses.', 'Brings you closer: your charisma and theirs count. Every 6 months.')), onclick: act14(redraw, () => lunch(s, id)) }, `${t(l('Almoço de negócios', 'Business lunch'))} · ${$(money(s, LUNCH_COST))}`), favorsBtn27(mgrKey(id), l('Almoço como favor', 'Lunch as a favor')),
+      h('button', { class: 'btn small', disabled: !!lb, title: t(lb ?? l('Aproxima: conta seu carisma e o dele. A cada 6 meses.', 'Brings you closer: your charisma and theirs count. Every 6 months.')), onclick: () => favorAct27(s, mgrKey(id), 'lunch', act14(redraw, () => lunch(s, id))) }, `${t(l('Almoço de negócios', 'Business lunch'))} · ${$(money(s, LUNCH_COST))}`),
       h('button', { class: 'btn small', disabled: !!rb, title: t(rb ?? l('Gasta boa vontade: ele manda um cliente sem selo; suas propostas a ele ganham peso por 3 meses.', 'Spends goodwill: they send an unsigned client; your offers to them gain weight for 3 months.')), onclick: act14(redraw, () => askReferral(s, id)) }, t(l('Pedir indicação', 'Ask for a referral'))),
       feud ? h('button', { class: 'btn small', disabled: !!pb, title: t(pb ?? l('Paga um acordo e encerra a rixa.', 'Pay a settlement and end the feud.')), onclick: act14(redraw, () => makePeace(s, id)) }, `${t(l('Fazer as pazes', 'Make peace'))} · ${$(peaceCost(s, m))}`) : null,
     ) : null,

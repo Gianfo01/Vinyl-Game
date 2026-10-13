@@ -24,7 +24,6 @@ import { store } from '../store';
 import { ic, lineChart, scoreBadge } from '../vis';
 import './scenes.css';
 import { awardChoices17 } from './scene17';
-import { ivBtn27 } from '../act27/interview27'; // r27 P2A: entrevista jogável
 
 // ------------------------------------------------------------------ peças comuns
 
@@ -314,7 +313,6 @@ registerSection('artists', {
       h('div', { class: 'row wrap' },
         h('button', { class: 'btn', disabled: !!ivErr, title: ivErr ? t(ivErr) : '', onclick: () => { const cs = startInterview(s, rngOf(s), id); if ('pt' in cs && !('kind' in cs)) toast(t(cs as L), 'bad'); else openCutscene(s, cs as Cutscene, rerender); } }, ic('tv'), ` ${t(l('Dar entrevista', 'Give an interview'))}`),
         h('button', { class: 'btn', disabled: !!rdErr, title: rdErr ? t(rdErr) : '', onclick: () => { const cs = startRadioVisit(s, rngOf(s), id); if ('pt' in cs && !('kind' in cs)) toast(t(cs as L), 'bad'); else openCutscene(s, cs as Cutscene, rerender); } }, ic('radio'), ` ${t(l('Visitar uma rádio', 'Visit a radio station'))}`)),
-      ivBtn27(s, (o) => o.ctx === 'press' && o.actId === id),
       ivErr || rdErr ? h('p', { class: 'muted small' }, [ivErr, rdErr].filter(Boolean).map((x) => t(x as L)).join(' · ')) : null,
     );
   },

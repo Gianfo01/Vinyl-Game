@@ -16,8 +16,9 @@ import { bar, h } from '../dom';
 import { store } from '../store';
 import { HINT15, canSee, knownLevel } from '../../sim/sys/fame15';
 import { personRoute16 } from '../route16';
-import { favorsBtn27 } from '../act27/favors27'; // r27 P2A: presente/favor viram jogadas na rede de favores
-import { ivBtn27 } from '../act27/interview27'; // r27 P2A: entrevista do dono
+import { openFavors27 } from '../act27/favors27';
+import { favorAct27 } from '../act27/flow27p2'; // r27 FLOW2: presente e pedir favor abrem a conversa de favor (rápido dentro)
+import { actMode27 } from '../act27/prefs27';
 
 const tone = (v: number) => (v >= 65 ? 'good' : v <= 35 ? 'bad' : '');
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -82,15 +83,14 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
       h('p', null, pill(signed(op), op >= 15 ? 'good' : op <= -15 ? 'bad' : ''), ' ', h('span', { class: 'small muted' }, t(l('(−100 a +100; a personalidade amplia ou suaviza cada gesto)', '(−100 to +100; personality amplifies or softens each gesture)')))),
       led?.w.length ? h('ul', { class: 'small' }, [...led.w].reverse().map(([y, m, d, w]) => h('li', { class: d >= 0 ? 'good' : 'bad' }, `${signed(d)} · ${m + 1}/${y} — `, t(w)))) : h('p', { class: 'muted small' }, t(l('Nada marcante entre vocês ainda.', 'Nothing notable between you yet.'))),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn small', disabled: !!giftBlock(s, P.key), title: t(giftBlock(s, P.key) ?? l('Agrada mais quem é vaidoso ou mão-fechada.', 'Pleases the vain and the stingy most.')), onclick: () => say(sendGift(s, P.key)) }, `${t(l('Presente', 'Gift'))} · ${$(money(s, GIFT_COST))}`),
-        h('button', { class: 'btn small', disabled: !!favorBlock(s, P.key), title: t(favorBlock(s, P.key) ?? l('Gasta boa vontade por um ganho imediato.', 'Spends goodwill for an immediate gain.')), onclick: () => say(askFavor(s, P.key)) }, t(l('Pedir favor', 'Ask a favor'))),
-        favorsBtn27(P.key),
+        h('button', { class: 'btn small', disabled: !!giftBlock(s, P.key), title: t(giftBlock(s, P.key) ?? l('Agrada mais quem é vaidoso ou mão-fechada.', 'Pleases the vain and the stingy most.')), onclick: () => favorAct27(s, P.key, 'gift', () => say(sendGift(s, P.key))) }, `${t(l('Presente', 'Gift'))} · ${$(money(s, GIFT_COST))}`),
+        h('button', { class: 'btn small', disabled: !!favorBlock(s, P.key), title: t(favorBlock(s, P.key) ?? l('Gasta boa vontade por um ganho imediato.', 'Spends goodwill for an immediate gain.')), onclick: () => favorAct27(s, P.key, 'ask', () => say(askFavor(s, P.key))) }, t(l('Pedir favor', 'Ask a favor'))),
         h('button', { class: 'btn small ghost', onclick: () => say(publicStatement(s, P.key, true)) }, t(l('Elogiar em público', 'Praise publicly'))),
         h('button', { class: 'btn small ghost', onclick: () => say(publicStatement(s, P.key, false)) }, t(l('Criticar em público', 'Criticize publicly'))),
       ),
       h('p', { class: 'small muted' }, t(l('Também mexem na opinião: dispensar ou contratar ex-artistas de rivais, aliciar, processar, atrasar salários, quebrar promessas, vender masters, ganhar prêmios em cima deles e suas posições políticas.', 'Opinion also moves with: dropping acts or signing rivals\' ex-acts, poaching, lawsuits, late salaries, broken promises, selling masters, beating them at awards and your political stances.'))),
     ),
-    self ? h('div', { class: 'row wrap' }, ivBtn27(s, (o) => o.who === 'player'), favorsBtn27(), h('button', { class: 'btn small', title: t(l('Quem pensa como você se aproxima; quem discorda se afasta (pesa mais em quem é engajado).', 'Like-minded people come closer; those who disagree drift away (more so for the engaged).')), onclick: () => say(politicalStatement(s)) }, t(l('Fazer declaração política', 'Make a political statement')))) : null,
+    self ? h('div', { class: 'row wrap' }, actMode27() !== 'quick' ? h('button', { class: 'btn small ghost', title: t(l('Quem deve a quem e quem sabe o quê: cobrar, retribuir, queimar.', 'Who owes whom and who knows what: call in, repay, burn.')), onclick: () => openFavors27() }, t(l('Livro de favores', 'Favor ledger'))) : null, h('button', { class: 'btn small', title: t(l('Quem pensa como você se aproxima; quem discorda se afasta (pesa mais em quem é engajado).', 'Like-minded people come closer; those who disagree drift away (more so for the engaged).')), onclick: () => say(politicalStatement(s)) }, t(l('Fazer declaração política', 'Make a political statement')))) : null,
   );
 }
 

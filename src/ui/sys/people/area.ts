@@ -21,7 +21,7 @@ import { h, select } from '../../dom';
 import { registerArea, registerSection } from '../../registry';
 import { chips, ic, meter, portrait, stat, tabs, tile } from '../../vis';
 import { inboxArea, inboxBadge } from './inbox';
-import { negotiateButton } from './negotiation';
+import { renewBtn27 } from '../../act27/flow27p2'; // r27 FLOW2: renovar = a mesa (pedido → negotiate27), rápido dentro
 import { feedView, socialDiagram } from './views';
 import { ficha13Btn } from '../persona13';
 import { hireBlock as hireBlock17 } from '../agenda17';
@@ -217,6 +217,6 @@ registerSection('artists', {
   render: (s) => {
     const ids = playerActs(s).filter((id) => s.acts[id].contractId);
     if (!ids.length) return null;
-    return section(t(l('Renegociar contratos', 'Renegotiate contracts')), h('div', { class: 'row wrap' }, ids.slice(0, 10).map((id) => negotiateButton(s, id, 'renew', `${s.acts[id].name}`))), h('p', { class: 'muted small' }, `${N(ids.length)} ${t(l('contratos ativos', 'active contracts'))}`));
+    return section(t(l('Renegociar contratos', 'Renegotiate contracts')), h('div', { class: 'row wrap' }, ids.slice(0, 10).map((id) => renewBtn27(s, id, `${s.acts[id].name}`))), h('p', { class: 'muted small' }, `${N(ids.length)} ${t(l('contratos ativos', 'active contracts'))}`));
   },
 });

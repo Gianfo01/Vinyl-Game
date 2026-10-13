@@ -7,7 +7,7 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { HoldKind } from '../../sim/holds17';
 import {
-  ASK27, askBlock27, askNow27, burn27, call27, contacts27, give27, giveBlock27, repay27, repayCost27, strings27, talkFit27, useDirt27,
+  ASK27, askBlock27, askNow27, burn27, call27, contact27, contacts27, give27, giveBlock27, repay27, repayCost27, strings27, talkFit27, useDirt27,
   type Ask27, type Contact27, type Gesture27, type Talk27,
 } from '../../sim/sys/favors27';
 import { GIFT_COST } from '../../sim/sys/persona13';
@@ -33,7 +33,7 @@ const STR_COL: Partial<Record<HoldKind, string>> = { favor: '#3fa34d', loyalty: 
 const GEST: Record<Gesture27, { n: L; cost: number }> = { lunch: { n: l('Almoço', 'Lunch'), cost: LUNCH_COST }, dinner: { n: l('Jantar', 'Dinner'), cost: DINNER_COST }, gift: { n: l('Presente', 'Gift'), cost: GIFT_COST } };
 const TALK: Record<Talk27, L> = { flatter: l('Elogiar', 'Flatter'), business: l('Falar de negócios', 'Talk business'), help: l('Oferecer ajuda', 'Offer help') };
 
-/** Botão "▶ Rede de favores" (opcionalmente já focado num contato). */
+/** @deprecated r27 FLOW2: não use — almoço/jantar/presente/pedir favor abrem a conversa (flow27p2.ts: favorAct27). */
 export function favorsBtn27(focus?: string, label?: L): HTMLElement | null {
   return playBtn27(label ?? l('Rede de favores', 'Favor network'), () => openFavors27(focus), false,
     l('Quem deve a quem e quem sabe o quê: dar cria crédito, pedir cria dívida, cobrar gasta, queimar tem preço.', 'Who owes whom and who knows what: giving builds credit, asking builds debt, calling in spends it, burning has a price.'));
@@ -41,17 +41,20 @@ export function favorsBtn27(focus?: string, label?: L): HTMLElement | null {
 
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
 
-export function openFavors27(focus?: string): void {
+/** r27 (FLOW2): `o.gesture` = a ação que abriu a conversa (almoço, jantar, presente, pedir favor); `o.classic` = o
+ *  caminho rápido dentro dela (a mesma ação de sempre, sem conversa). */
+export function openFavors27(focus?: string, o: { gesture?: Gesture27 | 'ask'; classic?: () => void } = {}): void {
   const s = store.game;
   if (!s) return;
   let sel = focus;
+  let closeFn = (): void => {};
   let talk: Talk27 = 'help';
   let ask: Ask27 = 'word';
   const root = h('div', { class: 'p2a fv27' });
   const say = (ok: boolean, x: L) => { toast(t(x), ok ? 'info' : 'bad'); draw(); };
   const draw = () => {
     let cs = contacts27(s, 12);
-    if (focus && !cs.some((c) => c.key === focus)) { const extra = contacts27(s, 40).find((c) => c.key === focus); if (extra) cs = [...cs.slice(0, 11), extra]; }
+    if (focus && !cs.some((c) => c.key === focus)) { const extra = contacts27(s, 40).find((c) => c.key === focus) ?? contact27(s, focus); if (extra) cs = [...cs.slice(0, 11), extra]; }
     const cur = cs.find((c) => c.key === sel) ?? cs[0];
     sel = cur?.key;
     // posições: você no centro, contatos numa elipse
@@ -126,5 +129,13 @@ export function openFavors27(focus?: string): void {
     );
   };
   draw();
-  modal(t(l('Rede de favores', 'Favor network')), root, { wide: true, onClose: () => rerender() });
+  const g = o.gesture;
+  const who = focus ? contact27(s, focus)?.name ?? '' : '';
+  const lead = g && focus ? h('div', { class: 'p2a-chips fv27-lead', role: 'note' },
+    h('span', { class: 'p2a-chip' }, g === 'ask'
+      ? t(l('Pedir favor a {n}: cobre um crédito do livro ou peça sem crédito (aí você passa a dever).', 'Ask {n} a favor: call in a credit from the ledger or ask without credit (then you owe).'), { n: who })
+      : t(l('{g} com {n}: escolha a conversa (pela personalidade) e clique em {g} ao lado — a gentileza vira crédito: a pessoa passa a te dever.', '{g} with {n}: pick the talk (by personality) and click {g} on the side — the kindness becomes credit: they now owe you.'), { g: T(GEST[g].n), n: who })),
+    o.classic ? h('button', { class: 'btn small ghost', 'data-fl27': 'quick', onclick: () => { closeFn(); o.classic?.(); } },
+      g === 'ask' ? t(l('Resolver rápido: pedir o favor de sempre', 'Resolve quickly: ask the usual favor')) : t(l('Resolver rápido: o {g} de sempre', 'Resolve quickly: the usual {g}'), { g: T(GEST[g].n).toLowerCase() })) : null) : null;
+  closeFn = modal(t(l('Rede de favores', 'Favor network')), lead ? h('div', null, lead, root) : root, { wide: true, onClose: () => rerender() });
 }

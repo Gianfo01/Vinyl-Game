@@ -15,7 +15,7 @@ import { PERSON_TABS } from '../pages';
 import { registerPageTab } from '../registry';
 import { meter } from '../vis';
 import { PAGE16_TABS } from './people16';
-import { ivBtn27 } from '../act27/interview27'; // r27 P2A: coletiva de crise jogável
+import { ivMark27 } from '../act27/flow27p2'; // r27 FLOW2: a coletiva de crise chega como cartão no Avançar (marcador 🎮)
 
 const LEVEL_CLS = { ok: 'good', tense: '', strained: 'warn', breaking: 'bad' } as const;
 const VIS_CLS = { secret: 'trait', rumor: 'warn', public: '' } as const;
@@ -76,7 +76,7 @@ export function factsList17(s: GameState, id: string, withAct = true): HTMLEleme
   const sc = s.acts[id] ? lastScandal(s, id) : undefined;
   return section(t(l('Fatos recentes', 'Recent facts')),
     fs.length ? h('ul', { class: 'small' }, ...fs.map((f) => factRow(s, f))) : h('p', { class: 'muted small' }, t(l('Nada notável registrado ainda.', 'Nothing notable on record yet.'))),
-    sc ? h('p', { class: 'small' }, `${t(l('Último escândalo', 'Last scandal'))} (${t(SCANDAL_NAME[sc.kind])}, ${sc.sev} → ${sc.eff}): ${sc.why.map((w) => t(w)).join(' · ')}${sc.lost?.length ? ` · ${t(l('patrocínio perdido', 'sponsorship lost'))}: ${sc.lost.join(', ')}` : ''}`, ' ', ivBtn27(s, (o) => o.ctx === 'scandal' && o.actId === id)) : null,
+    sc ? h('p', { class: 'small' }, `${t(l('Último escândalo', 'Last scandal'))} (${t(SCANDAL_NAME[sc.kind])}, ${sc.sev} → ${sc.eff}): ${sc.why.map((w) => t(w)).join(' · ')}${sc.lost?.length ? ` · ${t(l('patrocínio perdido', 'sponsorship lost'))}: ${sc.lost.join(', ')}` : ''}`, ' ', ivMark27(s, (o) => o.ctx === 'scandal' && o.actId === id)) : null,
     h('p', { class: 'small muted' }, t(l('Boato = circula em algumas cidades (press9); público = manchete. Escândalos reagem à religião e à censura do país na época, à imprensa local, aos fãs núcleo e à fama regional.', 'Rumor = circulating in some cities (press9); public = headline. Scandals react to the country\'s religion and censorship at the time, local press, core fans and regional fame.'))));
 }
 

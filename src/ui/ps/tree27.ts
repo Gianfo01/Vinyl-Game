@@ -84,12 +84,19 @@ function themes(ctx: TreeCtx27, gr: NavGroup25): { label: L; items: TreeItem27[]
   return (gr.sections ?? [{ label: gr.label, areas: gr.areas }]).map((sc) => ({ label: sc.label, items: sc.areas.map(ctx.item).filter((x): x is TreeItem27 => !!x) })).filter((x) => x.items.length);
 }
 
+/** Páginas cujo contador é o das decisões (mesa, caixa de entrada, Cockpit): as decisões são do Cockpit. */
+export const DECISION_PAGES27: ReadonlySet<string> = new Set(['cockpit', 'desk', 'inbox']);
+/** r27 (FLOW2): contador da seção = só as páginas dela; as decisões contam só no Cockpit (nunca na Sede ou em outra). */
+export function secBadge27(secId: string, items: readonly TreeItem27[]): number {
+  return items.reduce((a, y) => a + (secId !== 'cockpit' && DECISION_PAGES27.has(y.id) ? 0 : Math.max(0, y.badge ?? 0)), 0);
+}
+
 /** Uma seção do menu: cabeçalho (vai para a casa da seção) + seta (abre/fecha) + páginas por tema, com abas. */
 export function navSection27(ctx: TreeCtx27, gr: NavGroup25): HTMLElement {
   const here = gr.id === ctx.section;
   const open = secOpen27(gr.id, ctx.section);
   const ths = themes(ctx, gr);
-  const badge = ths.reduce((a, x) => a + x.items.reduce((b, y) => b + (y.badge ?? 0), 0), 0);
+  const badge = secBadge27(gr.id, ths.flatMap((x) => x.items));
   // r27 (COCK): seção de uma página só (Cockpit) — o cabeçalho abre a página direto (também no celular, sem folha)
   // e, aberta, a seção mostra as abas da página logo abaixo (sem repetir o nome da página)
   const one = single27(gr) ? ths[0]?.items[0] : undefined;

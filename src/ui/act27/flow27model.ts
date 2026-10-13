@@ -223,6 +223,8 @@ type Player27 = (s: GameState, occ: Occ27, done: (r: FlowOut27) => void) => void
 const PLAYERS: Record<string, Player27> = {};
 export function setPlayer27(id: string, fn: Player27): void { PLAYERS[id] = fn; }
 const viaUi = (id: string): Player27 => (s, occ, done) => { const p = PLAYERS[id]; if (p) p(s, occ, done); else done({ played: false }); };
+/** r27 (FLOW2): o mesmo "play pela tela ligada" para as atividades da fase 2 (flow27p2model.ts). */
+export const viaUi27 = viaUi;
 const nothing = (): void => {};
 
 registerActivity27({

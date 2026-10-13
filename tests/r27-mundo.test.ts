@@ -11,7 +11,7 @@ import type { GameState } from '../src/sim/types';
 import { CITIES } from '../src/data/world';
 import { VENUES17 } from '../src/sim/sys/venues17';
 import {
-  KIND_INFO27, KINDS27, LAYERS27, chartRow27, citySheet27, closedCountries27, eraTimeline27, known27, monthlyDigest27, pioneerOf27, sceneGlow27, sceneTier27,
+  KIND_INFO27, KINDS27, LAYERS27, chartRow27, citySheet27, closedCountries27, eraTimeline27, foreignSites27, known27, monthlyDigest27, pioneerOf27, sceneGlow27, sceneTier27, sitesByCity27,
 } from '../src/ui/sys/mundo27model';
 
 const game = (seed: string, year: number): GameState => createGame(defaultConfig(seed, { scenario: 'established', startYear: year, dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
@@ -97,7 +97,7 @@ describe('r27 mapa e ficha da cidade', () => {
     expect(Math.max(...g.values())).toBeCloseTo(1, 5);
     for (const v of g.values()) { expect(v).toBeGreaterThan(0); expect(v).toBeLessThanOrEqual(1); }
     expect([sceneTier27(0), sceneTier27(1.5), sceneTier27(4), sceneTier27(9)]).toEqual([0, 1, 2, 3]);
-    expect(LAYERS27.map((x) => x.id)).toEqual(['glow', 'hot', 'tour', 'festivals', 'rivals', 'closed']);
+    expect(LAYERS27.map((x) => x.id)).toEqual(['glow', 'hot', 'tour', 'festivals', 'rivals', 'closed', 'mine']); // r27 FLOW2: seus lugares fora da sede
   });
   it('países fechados: Cortina de Ferro em 1962 (selo no Ocidente), aberta em 2005', () => {
     const s = game('r27-g', 1962);
@@ -170,5 +170,35 @@ describe('r27 O que sabemos e paradas', () => {
     expect(pioneerOf27({ year: 1989 }, 'grunge', 1985)).toBe('grunge');
     expect(pioneerOf27({ year: 1989 }, 'grunge', 1988)).toBeUndefined();
     expect(pioneerOf27({ year: 2010 }, 'grunge', 1980)).toBeUndefined();
+  });
+});
+
+describe('r27 FLOW2: seus lugares fora da sede no mapa-múndi', () => {
+  it('filial em outra cidade vira marcador com ficha (cidade, tipo, equipe, artistas) e leva à página dela', () => {
+    const s = game('r27-sites', 1985);
+    const home = s.config.homeCity;
+    expect(foreignSites27(s).every((x) => x.city !== home)).toBe(true);
+    const city = CITIES.find((c) => c.id !== home)!.id;
+    const actId = playerActs(s)[0];
+    s.branches.push({ id: 'brT', city, level: 1, name: 'Filial Teste', opened: s.week });
+    s.branchOf[actId] = 'brT';
+    const xs = foreignSites27(s);
+    const b = xs.find((x) => x.id === 'br:brT');
+    expect(b).toBeTruthy();
+    expect(b!.city).toBe(city);
+    expect(b!.kind).toBe('branch');
+    expect(b!.kindName.pt).toBe('Estúdio regional');
+    expect(b!.acts).toBe(1);
+    expect(b!.staff).toBeGreaterThan(0);
+    expect(b!.go).toEqual({ area: 'hq', anchor: 'br27-brT' });
+    expect(sitesByCity27(s).get(city)?.map((x) => x.id)).toContain('br:brT');
+    // nada da cidade-sede no mapa-múndi (ela tem o mapa do bairro) e a lista é estável
+    expect(sitesByCity27(s).has(home)).toBe(false);
+    expect(foreignSites27(s).map((x) => x.id)).toEqual(xs.map((x) => x.id));
+  });
+  it('sem filiais fora: nenhum marcador de filial', () => {
+    const s = game('r27-sites0', 1965);
+    s.branches.length = 0;
+    expect(foreignSites27(s).filter((x) => x.kind === 'branch')).toHaveLength(0);
   });
 });
