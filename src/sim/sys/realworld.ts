@@ -228,10 +228,14 @@ export function seedRelease(s: GameState, r: Rng, act: Act, o: { title: string; 
 /** Discografia simulada para quem já tinha carreira (atos gerados e o jogador). */
 export function simulateDiscography(s: GameState, r: Rng, act: Act, fromYear: number, toYear: number, tier: number): void {
   const lang = langForCity(act.city, r);
+  // R28: o título gerado pode coincidir por acaso com um lançamento real do ato (Peggy Lee sorteou "Fever") — no
+  // mundo aleatório isso "restaura" a discografia real; troca por uma variação sem novo sorteio (o Rng não desloca)
+  const realAl = new Set((realDataOf(act)?.al ?? []).map((a) => a[0].toLowerCase()));
   let y = fromYear;
   while (y < toYear) {
     const type: Release['type'] = y < 1958 ? 'single' : r.chance(0.55) ? 'lp' : r.chance(0.5) ? 'ep' : 'single';
-    const gen = songTitle(r, lang);
+    const gen0 = songTitle(r, lang);
+    const gen = realAl.has(gen0.toLowerCase()) ? `${gen0} (${y})` : gen0;
     seedRelease(s, r, act, { title: (type === 'single' ? realSongTitle22(s, act, y) : undefined) ?? gen, year: y, type, tier });
     y += r.int(1, 3);
   }

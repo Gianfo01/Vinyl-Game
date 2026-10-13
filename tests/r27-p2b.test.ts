@@ -53,11 +53,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // tem reserva própria: 77884 / 1382068899 / 4242977539 / 1276410388) e formações reais na data inicial (95b6b81,
     // realNames: integrantes pela passagem, ex-integrantes, trocas agendadas). O bot prometendo não muda esta semente.
     // Com F3 + F5 + formações juntos (merge R28): 612278 / 1382068899 / 4174246961 / 1111696030. Mais F8 (reputação de
-    // selo NPC nas ofertas, facções, prêmios, cadeias) e F4: 446768 / 1382068899 / 855772293 / 288537379.
-    expect(AFTER.player.cash).toBe(446768);
+    // selo NPC nas ofertas, facções, prêmios, cadeias) e F4: 284310 / 1382068899 / 2698844748 / 292729101. Bot equilibrado
+    // trocando promessa de prioridade por adiantamento menor (F5): 446768 / 1382068899 / 855772293 / 288537379. Relíquias
+    // novas que nascem de eventos (R28 arte: certificados, pôsteres, ingressos…): 446096 / 1382068899 / 4292160800 / 2262769409.
+    expect(AFTER.player.cash).toBe(446096);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(855772293);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(288537379);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4292160800);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2262769409);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

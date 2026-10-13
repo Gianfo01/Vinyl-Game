@@ -209,7 +209,9 @@ describe('r27 M2 — negociação jogável', () => {
     const rd = read27(s, n);
     expect(['below', 'inside', 'above']).toContain(rd.band);
     const o = { ...n.ours, advance: n.ours.advance * 6, royalty: 0.3, creativeControl: true };
-    propose27(s, n, o);
+    // R28: o ato mais famoso livre do fixture novo é ambicioso (aspiração acima de qualquer nota na 1ª rodada) — a
+    // proposta generosa fecha quando a rodada final chega com ela acima do mínimo, sem estourar a paciência
+    for (let i = 0; i < n.maxRounds && n.status === 'open'; i++) propose27(s, n, o);
     expect(n.status).toBe('deal');
     const c = s.contracts[n.contractId!];
     // mesma estrutura do caminho normal (makeOffer → acceptOffer)

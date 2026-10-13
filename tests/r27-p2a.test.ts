@@ -59,9 +59,9 @@ beforeAll(() => {
   // reproduzem em b748d64; AUD2 (c4c5bfd) mudou acts e AUD1 (166a36e: playbot compra negócios e contrata no 1º ano)
   // mudou caixa, acts e rng. "Sem campanha nada muda" segue provado no 1º teste da campanha (a × b).
   // R28: re-medidos (mesmos do r27-p2b): fase 5 (rivais) e formações reais na data inicial mudam o mundo de propósito; depois F3, F4 e F8 (r27-p2b explica cada um).
-  expect(s.player.cash).toBe(446768);
-  expect(hashString(JSON.stringify(s.acts))).toBe(855772293);
-  expect(hashString(JSON.stringify(s.rng))).toBe(288537379);
+  expect(s.player.cash).toBe(446096);
+  expect(hashString(JSON.stringify(s.acts))).toBe(4292160800);
+  expect(hashString(JSON.stringify(s.rng))).toBe(2262769409);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
