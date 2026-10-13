@@ -16,7 +16,7 @@ Resumo:
 - Pacote: o jogo e a wiki compartilham um pedaço comum (dados e motor, 7,8 MB). A wiki soma **228 kB** de JS próprio
   (86 kB gzip) e 7,4 kB de CSS. O jogo continua com o mesmo código; dividir em dois pacotes custou +58 kB no total de JS do
   jogo (+29 kB gzip), porque nomes exportados entre pedaços não são encurtados.
-- Atualizado depois com as frentes novas do base: **nível dos rivais** (`rivals29`, artigo Escada de início) e **oferta a
+- Atualizado depois com as frentes novas do base: **gravadoras no início e ao longo da partida** (`labels29`, artigo Escada de início), **nível dos rivais** (`rivals29`, artigo Escada de início) e **oferta a
   um integrante** (`member29`, artigo Contratos) e **feat de pessoa específica** (`featp29`, artigo Projetos), com verbetes no
   glossário.
 - `tests/r29-wiki.test.ts`: 19 testes verdes. `r29-reorg`, `r27-ux`, `r27-ctx` e `r29-fixes` continuam verdes.

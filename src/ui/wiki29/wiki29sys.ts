@@ -24,7 +24,7 @@ export const SYS_OF_MECH29: Record<string, string[]> = {
   awards: ['ceremonies8', 'awards18', 'awards28', 'rockhall9', 'relics9', 'relics18', 'relics28', 'paths18', 'saga18', 'tribute19'],
   story: ['scenes', 'stories8', 'situations17', 'sits17', 'dm18', 'dmsits18', 'decide18', 'echoes18', 'echoes19', 'decnew18', 'conseq27', 'crisis27', 'story12', 'story28', 'chains28', 'quarter28',
     'scene17', 'scenedefs17', 'cine18', 'moments16', 'scenes19', 'eggs27', 'pace9', 'chron9'],
-  start: ['start17', 'start28', 'start29', 'rivals29start', 'custom7', 'cards6', 'scenarios17', 'scenarios23'],
+  start: ['start17', 'start28', 'start29', 'rivals29start', 'labels29start', 'labels29ven', 'custom7', 'cards6', 'scenarios17', 'scenarios23'],
   careers: ['careers12', 'careers19', 'ventures9', 'ventures12', 'media12', 'platform12', 'studio12', 'tour12', 'venue12', 'fest12', 'screen18', 'artist18', 'shared18', 'shared28', 'exp17'],
   modes: ['assist28', 'history15'],
   connections: ['links16', 'links18', 'links19a', 'links19b', 'links23', 'bridge17', 'factlink19', 'mech29', 'perks29', 'final18', 'facades19', 'ctxsys19', 'why18', 'explain12'],
