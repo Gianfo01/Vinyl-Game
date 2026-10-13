@@ -14,8 +14,8 @@ import { rngOf } from '../src/sim/util';
 
 // Sonda: no mês 9, para cada ato livre com fama > 10 (até 8), oferta padrão numa CÓPIA do estado —
 // ao vivo (offerNow) e pelo fechamento do mês (makeOffer → resolveOffers). Conta quem fica com o ato.
-type Probe = { live: Record<string, number>; live15: Record<string, number>; month: Record<string, number>; advLive: number[]; prom: { n: number; kept: number; broken: number; open: number; penaltyReal: number; budgetReal: number } };
-const probe: Probe = { live: {}, live15: {}, month: {}, advLive: [], prom: { n: 0, kept: 0, broken: 0, open: 0, penaltyReal: 0, budgetReal: 0 } };
+type Probe = { live: Record<string, number>; live15: Record<string, number>; month: Record<string, number>; advLive: number[]; prom: { n: number; kept: number; broken: number; open: number; penaltyReal: number; owedReal: number; budgetReal: number } };
+const probe: Probe = { live: {}, live15: {}, month: {}, advLive: [], prom: { n: 0, kept: 0, broken: 0, open: 0, penaltyReal: 0, owedReal: 0, budgetReal: 0 } };
 function runProbe(s: GameState): void {
   const cands = Object.values(s.acts).filter((a) => !a.owner && a.fame > 10 && scoutEligible20(s, a).ok).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1)).slice(0, 8);
   for (const a of cands) {
@@ -56,12 +56,13 @@ function promProbe(s: GameState): void {
     if (p.kept === true) probe.prom.kept++; else if (p.kept === false) probe.prom.broken++; else probe.prom.open++;
     probe.prom.budgetReal += Math.round(toReal(p.budget ?? 0, c.year));
     probe.prom.penaltyReal += Math.round(toReal(p.paidPenalty ?? 0, c.year));
+    probe.prom.owedReal += Math.round(toReal(p.owed28 ?? 0, c.year));
   }
 }
 
 // Sonda "promete e não cumpre": mesma assinatura (cópia), mas o jogador some — 14 meses só com o mundo andando,
 // sem shows nem disco do ato. Mede quebras, multas pagas ao artista e o efeito na confiança e na reputação.
-const broke = { n: 0, broken: 0, penaltyReal: 0, trust: 0, rep: 0, acts: 0 };
+const broke = { n: 0, broken: 0, penaltyReal: 0, owedReal: 0, trust: 0, rep: 0, acts: 0 };
 function breakProbe(s: GameState): void {
   const a0 = Object.values(s.acts).filter((a) => !a.owner && a.fame <= 10 && a.fame > 2 && scoutEligible20(s, a).ok).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1))[0];
   if (!a0) return;
@@ -78,6 +79,7 @@ function breakProbe(s: GameState): void {
     broke.n++;
     if (p.kept === false) broke.broken++;
     broke.penaltyReal += Math.round(toReal(p.paidPenalty ?? 0, c.year));
+    broke.owedReal += Math.round(toReal(p.owed28 ?? 0, c.year));
   }
   broke.trust += Math.round(c.acts[a.id].trust - t0);
   broke.rep += Math.round((c.player.reputation.artists - r0) * 10) / 10;

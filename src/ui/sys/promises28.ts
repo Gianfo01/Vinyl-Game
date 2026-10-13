@@ -41,5 +41,6 @@ export function promiseList28(s: GameState, actId: string): HTMLElement | null {
     h('small', { class: 'muted' }, ' ',
       r.budget > 0 ? t(l('verba {s}/{b}', 'budget {s}/{b}'), { s: $(r.spent), b: $(r.budget) }) : t(l('sem verba', 'no budget')),
       ' · ', t(l('cumprir: {g}', 'to keep: {g}'), { g: PROM28_GOAL[r.kind] }),
-      ' · ', t(l('multa {v}', 'penalty {v}'), { v: $(r.penalty) })))));
+      ' · ', t(l('multa {v}', 'penalty {v}'), { v: $(r.penalty) }),
+      r.owed > 0 ? h('span', null, ' · ', pill(t(l('devendo {v} ao artista', 'owing {v} to the artist'), { v: $(r.owed) }), 'bad')) : null))));
 }

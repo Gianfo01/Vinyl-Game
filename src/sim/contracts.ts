@@ -439,7 +439,8 @@ export function checkPromises(s: GameState): void {
         act.trust = clamp(act.trust - 18, 0, 100);
         s.player.reputation.artists = clamp(s.player.reputation.artists - 3, 0, 100);
         remember(s, 'broken_promise', fmtL(l('Promessa quebrada com {act} ({kind}).', 'Broken promise to {act} ({kind}).'), { act: act.name, kind: PROM28_NAME[p.kind] }), { actId: act.id, important: true });
-        notify(s, p.paidPenalty ? fmtL(l('Você descumpriu uma promessa a {act}: multa de {v}.', 'You broke a promise to {act}: {v} penalty.'), { act: act.name, v: `$${Math.round(p.paidPenalty / 100).toLocaleString('en-US')}` }) : fmtL(l('Você descumpriu uma promessa a {act}.', 'You broke a promise to {act}.'), { act: act.name }), 'bad');
+        notify(s, p.owed28 ? fmtL(l('Você descumpriu uma promessa a {act}: multa de {v}; sem caixa, {o} ficam devidos e saem aos poucos.', 'You broke a promise to {act}: {v} penalty; short on cash, {o} is owed and paid over time.'), { act: act.name, v: `$${Math.round((p.penalty ?? 0) / 100).toLocaleString('en-US')}`, o: `$${Math.round(p.owed28 / 100).toLocaleString('en-US')}` })
+          : p.paidPenalty ? fmtL(l('Você descumpriu uma promessa a {act}: multa de {v}.', 'You broke a promise to {act}: {v} penalty.'), { act: act.name, v: `$${Math.round(p.paidPenalty / 100).toLocaleString('en-US')}` }) : fmtL(l('Você descumpriu uma promessa a {act}.', 'You broke a promise to {act}.'), { act: act.name }), 'bad');
       } else {
         act.trust = clamp(act.trust + 6, 0, 100);
       }

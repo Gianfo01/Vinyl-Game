@@ -108,15 +108,50 @@ export function settlePromise28(s: GameState, c: Contract, act: Act, p: Contract
   if (kept) st.kept += 1;
   else {
     st.broken += 1;
-    const pen = Math.min(p.penalty ?? 0, Math.max(0, s.player.cash));
-    if (pen > 0 && !p.paidPenalty) {
-      post(s, `prom28pen:${c.id}:${p.kind}`, -pen, 'legal', `Multa por promessa quebrada ${act.name}`);
-      act.cash += pen;
-      st.penalties += pen;
+    const full = p.penalty ?? 0;
+    if (full > 0 && p.paidPenalty === undefined && p.owed28 === undefined) {
+      // paga o que houver em caixa; o resto vira dívida com o artista (sai do caixa livre e é quitada aos poucos)
+      const pen = Math.min(full, Math.max(0, s.player.cash));
+      if (pen > 0) {
+        post(s, `prom28pen:${c.id}:${p.kind}`, -pen, 'legal', `Multa por promessa quebrada ${act.name}`);
+        act.cash += pen;
+        st.penalties += pen;
+      }
       p.paidPenalty = pen;
+      if (full - pen > 0) p.owed28 = full - pen;
     }
   }
   return kept;
+}
+
+/** Fração do caixa que a dívida de multa leva por semana (quitação aos poucos, sem quebrar o selo de uma vez). */
+export const OWED_RATE28 = 0.25;
+
+/** Semanal: quita multas devidas (de contratos vigentes ou já encerrados) com parte do caixa disponível. */
+export function payOwed28(s: GameState): void {
+  for (const c of Object.values(s.contracts)) {
+    if (c.party !== 'player' || !c.promises.length) continue;
+    for (const p of c.promises) {
+      const owed = p.owed28 ?? 0;
+      if (owed <= 0 || s.player.cash <= 0) continue;
+      const pay = Math.min(owed, Math.max(100, Math.round(s.player.cash * OWED_RATE28 / 100) * 100), s.player.cash);
+      if (pay <= 0) continue;
+      const act = s.acts[c.actId];
+      if (!post(s, `prom28owe:${c.id}:${p.kind}`, -pay, 'legal', `Multa devida por promessa quebrada ${act?.name ?? ''}`.trim())) continue;
+      if (act) act.cash += pay;
+      prom28(s).penalties += pay;
+      p.paidPenalty = (p.paidPenalty ?? 0) + pay;
+      p.owed28 = owed - pay > 0 ? owed - pay : undefined;
+      if (!p.owed28 && act) notify(s, fmtL(l('Multa da promessa quebrada com {a} quitada.', 'Penalty for the promise broken to {a} paid off.'), { a: act.name }), 'info');
+    }
+  }
+}
+
+/** Multas ainda devidas ao artista (todas as promessas do jogador). */
+export function owed28(s: GameState): number {
+  let t = 0;
+  for (const c of Object.values(s.contracts)) if (c.party === 'player') for (const p of c.promises) t += p.owed28 ?? 0;
+  return t;
 }
 
 /** Semanal: arma promessas novas e cumpre antes do prazo as que já foram atendidas (libera a verba). */
@@ -140,7 +175,7 @@ export function tickPromises28(s: GameState): void {
 }
 
 /** Linhas para a interface (ficha do ato e Cockpit). */
-export interface PromRow28 { actId: string; act: string; kind: PromKind28; budget: number; spent: number; penalty: number; dueWeek: number; weeksLeft: number; met: boolean; state: 'open' | 'kept' | 'broken' }
+export interface PromRow28 { actId: string; act: string; kind: PromKind28; budget: number; spent: number; penalty: number; owed: number; dueWeek: number; weeksLeft: number; met: boolean; state: 'open' | 'kept' | 'broken' }
 export function promiseRows28(s: GameState, actId?: string): PromRow28[] {
   const out: PromRow28[] = [];
   for (const c of Object.values(s.contracts)) {
@@ -150,12 +185,12 @@ export function promiseRows28(s: GameState, actId?: string): PromRow28[] {
     if (!act || act.contractId !== c.id) continue;
     for (const p of c.promises) {
       const t = p.budget === undefined && p.kept === undefined ? promiseTerms28(s, act, p.kind, c.endWeek - c.startWeek) : null;
-      out.push({ actId: act.id, act: act.name, kind: p.kind, budget: t?.budget ?? p.budget ?? 0, spent: p.spent ?? 0, penalty: t?.penalty ?? p.penalty ?? 0,
+      out.push({ actId: act.id, act: act.name, kind: p.kind, budget: t?.budget ?? p.budget ?? 0, spent: p.spent ?? 0, penalty: t?.penalty ?? p.penalty ?? 0, owed: p.owed28 ?? 0,
         dueWeek: p.dueWeek, weeksLeft: p.dueWeek - s.week, met: p.kept === undefined && promiseMet28(s, c, act, p), state: p.kept === undefined ? 'open' : p.kept ? 'kept' : 'broken' });
     }
   }
   return out.sort((a, b) => (a.state === 'open' ? 0 : 1) - (b.state === 'open' ? 0 : 1) || a.dueWeek - b.dueWeek || (a.actId < b.actId ? -1 : 1));
 }
 
-registerSimHook('week', 'promises28', (s) => tickPromises28(s));
-registerReserve20('prom28', committed28);
+registerSimHook('week', 'promises28', (s) => { payOwed28(s); tickPromises28(s); });
+registerReserve20('prom28', (s) => committed28(s) + owed28(s)); // verba aberta + multa devida saem do caixa livre

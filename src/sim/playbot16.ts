@@ -222,13 +222,22 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
     // negocia como na ficha: se a leitura é ruim, sobe royalty / dá controle criativo antes de desistir
     if (ev.band === 'unlikely') { o.royalty = Math.min(0.3, o.royalty + 0.03); ev = evaluateOffer(s, act, o); }
     if (ev.band === 'unlikely' && p !== 'cautious') { o.creativeControl = true; ev = evaluateOffer(s, act, o); }
-    // r28 (fase 5): promete como um jogador — o equilibrado promete turnê quando a leitura ainda é ruim; o agressivo
+    // r28 (fase 5): promete como um jogador. O equilibrado promete o que sabe cumprir: prioridade de lançamento (ele
+    // grava e lança todo contratado) sempre que a leitura não é boa, e turnê também quando ela segue ruim. O agressivo
     // promete turnê + prioridade sempre que a leitura não é boa (promete demais: às vezes não cumpre e paga a multa).
     // Promessa separa verba do caixa livre e, descumprida, paga multa ao artista — só promete se a verba cabe no caixa.
-    if ((ev.band === 'unlikely' && p !== 'cautious') || (ev.band !== 'likely' && p === 'aggressive')) {
-      const kinds: ('tour' | 'priority')[] = p === 'aggressive' ? ['tour', 'priority'] : ['tour'];
+    if (ev.band !== 'likely' && p !== 'cautious') {
+      const kinds: ('tour' | 'priority')[] = p === 'aggressive' || ev.band === 'unlikely' ? ['priority', 'tour'] : ['priority'];
       const need = kinds.reduce((a, kd) => a + promiseTerms28(s, act, kd, o.termMonths * 4).budget, 0);
       if (s.player.cash - o.advance - need > burn(s) * k.cut * 1.5) { o.promises = [...new Set([...o.promises, ...kinds])]; ev = evaluateOffer(s, act, o); }
+    }
+    // r28: com a leitura já boa, o equilibrado troca a promessa de prioridade (ele lança todo contratado) por um
+    // adiantamento 10 % menor — só fica com a troca se a leitura continua boa e a verba cabe no caixa
+    if (ev.band === 'likely' && p === 'balanced' && !o.promises.includes('priority')) {
+      const need = promiseTerms28(s, act, 'priority', o.termMonths * 4).budget;
+      const tryO = { ...o, promises: [...o.promises, 'priority' as const], advance: Math.round(o.advance * 0.9 / 100) * 100 };
+      const e2 = evaluateOffer(s, act, tryO);
+      if (e2.band === 'likely' && s.player.cash - tryO.advance - need > burn(s) * k.cut * 1.5) { Object.assign(o, tryO); ev = e2; }
     }
     if (ev.band === 'unlikely') continue;
     if (o.advance > s.player.cash * k.advCash || s.player.cash - o.advance < burn(s) * k.cut * 1.5) continue;
@@ -522,13 +531,14 @@ export interface PlayerSummary { seed: string; profile: Profile; startYear: numb
   /** menor caixa real (US$ de hoje) e caixa real ao fim do 1º e 2º anos: mede o aperto do começo */
   low: number; y1: number; y2: number; acts: number; releases: number; number1s: number; log: PlayLog;
   /** r28 (fase 5): promessas que o bot fez nos contratos e o desfecho (multas em US$ de hoje) */
-  prom28: { made: number; kept: number; broken: number; open: number; penaltyReal: number } }
+  prom28: { made: number; kept: number; broken: number; open: number; penaltyReal: number; owedReal: number } }
 
 /** r28 (fase 5): promessas feitas pelo jogador (bot) e o desfecho — para o balanço medir "prometer e não cumprir". */
 export function promSummary28(s: GameState): PlayerSummary['prom28'] {
   const ps = Object.values(s.contracts).filter((c) => c.party === 'player').flatMap((c) => c.promises);
   const pen = ps.reduce((a, p) => a + (p.paidPenalty ?? 0), 0);
-  return { made: ps.length, kept: ps.filter((p) => p.kept === true).length, broken: ps.filter((p) => p.kept === false).length, open: ps.filter((p) => p.kept === undefined).length, penaltyReal: Math.round(toReal(pen, s.year)) };
+  const owed = ps.reduce((a, p) => a + (p.owed28 ?? 0), 0);
+  return { made: ps.length, kept: ps.filter((p) => p.kept === true).length, broken: ps.filter((p) => p.kept === false).length, open: ps.filter((p) => p.kept === undefined).length, penaltyReal: Math.round(toReal(pen, s.year)), owedReal: Math.round(toReal(owed, s.year)) };
 }
 
 /** Joga `years` anos com o perfil escolhido. */

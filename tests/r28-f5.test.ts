@@ -6,7 +6,7 @@ import { acceptOffer, checkPromises, defaultOffer, resolveOne } from '../src/sim
 import { freeCash20 } from '../src/sim/oblig20';
 import { scoutEligible20 } from '../src/sim/scout20';
 import { bringRival27, propose27, startNego27, type Nego27 } from '../src/sim/sys/nego27';
-import { committed28, prom28, promiseMet28, promiseRows28, promiseTerms28, tickPromises28, TOUR_GIG_WEEKS28 } from '../src/sim/sys/promises28';
+import { committed28, payOwed28, prom28, promiseMet28, promiseRows28, promiseTerms28, tickPromises28, TOUR_GIG_WEEKS28 } from '../src/sim/sys/promises28';
 import { contender28, perceivedDependence28, perceivedTrust28, rivalContest28, rivalReserve28, rs28 } from '../src/sim/sys/rivalsense28';
 import type { Act, GameState, Offer } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
@@ -230,6 +230,16 @@ describe('r28 C7 — cumprimento antecipado sem caixa', () => {
     checkPromises(s);
     expect(p.kept).toBe(false);
     expect(prom28(s).broken).toBe(1);
+    // r28: sem caixa no prazo a multa não some — vira dívida com o artista, sai do caixa livre e é quitada aos poucos
+    expect(p.paidPenalty).toBe(0);
+    expect(p.owed28).toBe(p.penalty);
+    expect(freeCash20(s)).toBeLessThanOrEqual(-p.penalty!);
+    const actCash0 = a.cash;
+    s.player.cash = p.penalty! * 10;
+    for (let i = 0; i < 20 && p.owed28; i++) { s.week++; payOwed28(s); }
+    expect(p.owed28).toBeUndefined();
+    expect(p.paidPenalty).toBe(p.penalty);
+    expect(a.cash - actCash0).toBe(p.penalty);
   });
 });
 

@@ -398,6 +398,8 @@ export interface ContractPromise {
   spent?: number;
   penalty?: number;
   paidPenalty?: number;
+  /** r28: parte da multa ainda devida ao artista (sem caixa no prazo) — sai do caixa livre e é paga aos poucos */
+  owed28?: number;
 }
 
 export interface Contract {
