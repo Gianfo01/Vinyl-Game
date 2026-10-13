@@ -13,7 +13,10 @@ import './ui/ps/theme25.css'; // r25: Pixel Studio — azul-noite + dourado (esc
 import './ui/ps/ui27.css'; // r27 (J): sistema visual compartilhado (docs/ui27.md) — depois do tema
 import './ui/ps/hq25'; // r25: Sede viva (Pixel Studio) — registra a tela da Sede no slot25
 
-boot(document.getElementById('app')!);
+import { gearReady } from './ui/pixel/gear21';
+
+// o atlas de equipamentos (~14 KB) chega antes da primeira cena; se falhar, os objetos ficam procedurais
+void gearReady().then(() => boot(document.getElementById('app')!));
 // r22: toda tabela ordena pelo cabeçalho
 import { installSort22 } from './ui/sort22';
 if (typeof document !== 'undefined') installSort22();

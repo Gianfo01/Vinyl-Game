@@ -1,7 +1,7 @@
 // Locais "de bastidor": rádio, fábrica, loja, camarim, ônibus, aeroporto, hotel, tribunal, conselho,
 // pregão, set de clipe, casa de campo, clínica, velório, mansão, rua e feira do setor.
 
-import { C, shade, withAlpha } from '../px';
+import { C, tint, withAlpha } from '../px';
 import {
   H, W, beam, bleachers, box, curtain, facade, floor, frame, lightRig, plant, posters, screen, seatRows, shelf, sign, sky, table, wall, windowPane,
 } from './kit';
@@ -11,7 +11,7 @@ import { crowdBlock, prop, type BuildCtx } from './model';
 export function radio(c: BuildCtx, band: 'am' | 'fm' | 'curators'): void {
   const { p, pal } = c;
   if (band === 'curators') {
-    wall(p, pal, 0, 78, shade(pal.wall, -0.1), 'plain');
+    wall(p, pal, 0, 78, tint(pal.wall, -0.1), 'plain');
     for (let i = 0; i < 3; i++) {
       screen(p, 24 + i * 72, 14, 60, 36, pal.screen, C('#1a1a20'));
       for (let j = 0; j < 5; j++) p.rect(30 + i * 72, 20 + j * 6, 30 + ((i + j) * 7) % 20, 3, [pal.accent, pal.accent2, pal.glow][(i + j) % 3]);
@@ -27,9 +27,9 @@ export function radio(c: BuildCtx, band: 'am' | 'fm' | 'curators'): void {
     return;
   }
   const fm = band === 'fm';
-  wall(p, pal, 0, 78, fm ? shade(pal.bg, 0.12) : pal.wall, fm ? 'plain' : pal.wallKind);
+  wall(p, pal, 0, 78, fm ? tint(pal.bg, 0.12) : pal.wall, fm ? 'plain' : pal.wallKind);
   // espuma / painéis
-  for (let y = 6; y < 70; y += 8) for (let x = 6; x < 90; x += 8) p.rect(x, y, 7, 7, fm ? shade(pal.bg, 0.2) : shade(pal.wall2, (x + y) % 16 ? -0.1 : 0.05));
+  for (let y = 6; y < 70; y += 8) for (let x = 6; x < 90; x += 8) p.rect(x, y, 7, 7, fm ? tint(pal.bg, 0.2) : tint(pal.wall2, (x + y) % 16 ? -0.1 : 0.05));
   // janela para a técnica
   windowPane(p, 150, 14, 90, 40, pal, 'night');
   p.rect(150, 14, 90, 40, withAlpha(pal.glass, 40));
@@ -37,7 +37,7 @@ export function radio(c: BuildCtx, band: 'am' | 'fm' | 'curators'): void {
   c.blinks.push({ x: 110, y: 3, w: 36, h: 11, col: withAlpha(C('#ff4040'), 120), rate: 1.2 });
   if (fm) {
     for (let x = 100; x < 250; x += 2) p.put(x, 62, withAlpha(pal.accent, 220));
-    sign(p, 200, 62, 'FM', pal.glow, shade(pal.bg, -0.3), pal.accent, 2);
+    sign(p, 200, 62, 'FM', pal.glow, tint(pal.bg, -0.3), pal.accent, 2);
   }
   floor(p, 78, pal.floors.control.a, pal.floors.control.b, fm ? 'carpet' : 'boards');
   table(c.f, 60, 104, 136, 14, pal.woodDark);
@@ -51,12 +51,12 @@ export function radio(c: BuildCtx, band: 'am' | 'fm' | 'curators'): void {
 /** Fábrica: prensas, forno de vinil, esteira e linha de CD (a partir de 1983). */
 export function factory(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 70, shade(pal.metalDark, 0.1), 'brick');
+  wall(p, pal, 0, 70, tint(pal.metalDark, 0.1), 'brick');
   for (let i = 0; i < 4; i++) windowPane(p, 14 + i * 62, 8, 40, 18, pal, 'day');
   lightRig(p, 30, pal, 5);
   floor(p, 70, C('#6e6a64'), C('#5e5a54'), 'concrete');
   // forno
-  box(p, 8, 46, 34, 26, shade(pal.metalDark, -0.1), 3);
+  box(p, 8, 46, 34, 26, tint(pal.metalDark, -0.1), 3);
   p.rect(14, 54, 22, 10, C('#e86a2a'));
   c.blinks.push({ x: 14, y: 54, w: 22, h: 10, col: withAlpha(C('#ffd040'), 120), rate: 1.8 });
   for (let i = 0; i < 3; i++) prop(c, 'press', 70 + i * 46, 84, 'SW', 0, i);
@@ -68,7 +68,7 @@ export function factory(c: BuildCtx): void {
     sign(p, 221, 54, 'CD', pal.paper, pal.screen);
     for (let i = 0; i < 4; i++) p.ring(206 + i * 10, 68, 3, C('#d8e0f0'));
   }
-  sign(p, 128, 120, 'CONTROLE DE QUALIDADE', pal.paper, shade(pal.accent2, -0.2));
+  sign(p, 128, 120, 'CONTROLE DE QUALIDADE', pal.paper, tint(pal.accent2, -0.2));
   c.spots.main = { x: 110, y: 104, dir: 'SE' };
   c.spots.host = { x: 150, y: 104, dir: 'SW' };
   c.spots.side = { x: 60, y: 130, dir: 'NE' };
@@ -82,7 +82,7 @@ export function store(c: BuildCtx): void {
   shelf(p, 190, 14, 60, 60, pal, 2);
   // cabines de audição
   for (let i = 0; i < 2; i++) {
-    box(p, 76 + i * 30, 26, 26, 50, shade(pal.wood, -0.1), 2);
+    box(p, 76 + i * 30, 26, 26, 50, tint(pal.wood, -0.1), 2);
     windowPane(p, 80 + i * 30, 32, 18, 14, pal, 'day');
   }
   // vitrine com o lançamento
@@ -105,7 +105,7 @@ export function store(c: BuildCtx): void {
 /** Camarim: espelho com lâmpadas, sofá, mesa do pedido. */
 export function backstage(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 80, shade(pal.wall, -0.15), pal.wallKind);
+  wall(p, pal, 0, 80, tint(pal.wall, -0.15), pal.wallKind);
   box(p, 20, 18, 90, 40, pal.metalDark, 0);
   p.rect(24, 22, 82, 32, mixGlass(pal));
   for (let i = 0; i < 9; i++) {
@@ -125,7 +125,7 @@ export function backstage(c: BuildCtx): void {
 }
 
 function mixGlass(pal: BuildCtx['pal']): number {
-  return shade(pal.glass, -0.1);
+  return tint(pal.glass, -0.1);
 }
 
 /** Ônibus de turnê na estrada (lado de fora). */
@@ -133,21 +133,21 @@ export function tourBus(c: BuildCtx): void {
   const { p, pal } = c;
   sky(p, 0, 64, C('#f0a868'), C('#ffd8a0'));
   p.disc(200, 40, 12, withAlpha(C('#fff2c0'), 230));
-  p.poly([[0, 64], [50, 46], [110, 60], [170, 42], [W, 58], [W, 66], [0, 66]], shade(pal.plant, -0.35));
-  floor(p, 64, shade(pal.plant, -0.1), shade(pal.plant, -0.2), 'grass', 92);
+  p.poly([[0, 64], [50, 46], [110, 60], [170, 42], [W, 58], [W, 66], [0, 66]], tint(pal.plant, -0.35));
+  floor(p, 64, tint(pal.plant, -0.1), tint(pal.plant, -0.2), 'grass', 92);
   floor(p, 92, C('#3c3a40'), C('#34323a'), 'asphalt');
   for (let x = 0; x < W; x += 20) p.rect(x, 116, 10, 2, C('#e8e0b0'));
   // ônibus (frontal-lateral)
   const bx = 44;
   box(p, bx, 66, 150, 40, c.ei >= 3 ? pal.accent2 : pal.accent, 0);
-  p.rect(bx, 66, 150, 6, shade(c.ei >= 3 ? pal.accent2 : pal.accent, 0.2));
+  p.rect(bx, 66, 150, 6, tint(c.ei >= 3 ? pal.accent2 : pal.accent, 0.2));
   for (let i = 0; i < 7; i++) p.rect(bx + 8 + i * 20, 74, 14, 12, C('#2a3448'));
   p.rect(bx + 136, 74, 12, 26, C('#2a3448'));
   for (const wx of [bx + 22, bx + 120]) {
     p.disc(wx, 106, 8, C('#1a1a1a'));
     p.disc(wx, 106, 3, pal.metal);
   }
-  sign(p, bx + 70, 90, 'TOUR', pal.paper, shade(pal.bg, -0.2));
+  sign(p, bx + 70, 90, 'TOUR', pal.paper, tint(pal.bg, -0.2));
   c.spots.main = { x: 200, y: 112, dir: 'SW' };
   c.spots.side = { x: 222, y: 114, dir: 'SW' };
   c.spots.host = { x: 30, y: 112, dir: 'SE' };
@@ -156,7 +156,7 @@ export function tourBus(c: BuildCtx): void {
 /** Aeroporto: painel de partidas, balcão da imigração, fila. */
 export function airport(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 72, shade(pal.metal, -0.1), 'glass');
+  wall(p, pal, 0, 72, tint(pal.metal, -0.1), 'glass');
   windowPane(p, 8, 8, 110, 46, pal, 'day');
   // avião lá fora
   p.rect(30, 36, 60, 6, C('#e8eef6'));
@@ -168,7 +168,7 @@ export function airport(c: BuildCtx): void {
   c.blinks.push({ x: 206, y: 32, w: 32, h: 7, col: withAlpha(C('#ff4040'), 140), rate: 1.4 });
   floor(p, 72, pal.floors.hall.a, pal.floors.hall.b, 'tiles');
   box(c.f, 150, 98, 80, 22, pal.metalDark, 4);
-  sign(c.f, 190, 102, 'IMIGRACAO', pal.paper, shade(pal.accent2, -0.3));
+  sign(c.f, 190, 102, 'IMIGRACAO', pal.paper, tint(pal.accent2, -0.3));
   c.spots.host = { x: 196, y: 94, dir: 'SW' };
   c.spots.main = { x: 130, y: 112, dir: 'NE' };
   c.spots.side = { x: 112, y: 116, dir: 'NE' };
@@ -183,7 +183,7 @@ export function hotel(c: BuildCtx): void {
   curtain(p, 150, 10, 12, 54, pal.fabric);
   curtain(p, 228, 10, 12, 54, pal.fabric);
   frame(p, 30, 20, 40, 26, pal.gold);
-  p.rect(31, 21, 38, 24, shade(pal.fabric2, -0.1));
+  p.rect(31, 21, 38, 24, tint(pal.fabric2, -0.1));
   floor(p, 80, pal.floors.lounge.a, pal.floors.lounge.b, 'carpet');
   // cama
   box(p, 24, 92, 100, 26, pal.paper, 6);
@@ -206,9 +206,9 @@ export function hotel(c: BuildCtx): void {
 /** Tribunal: bancada do juiz, tribuna da testemunha, mesas das partes e galeria. */
 export function court(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 72, shade(pal.wood, -0.15), 'panel');
+  wall(p, pal, 0, 72, tint(pal.wood, -0.15), 'panel');
   p.disc(128, 14, 9, pal.gold);
-  p.disc(128, 14, 6, shade(pal.gold, -0.3));
+  p.disc(128, 14, 6, tint(pal.gold, -0.3));
   box(p, 88, 38, 80, 34, pal.woodDark, 5);
   p.rect(88, 38, 80, 3, pal.wood);
   box(p, 176, 52, 34, 20, pal.woodDark, 3);
@@ -226,14 +226,14 @@ export function court(c: BuildCtx): void {
 /** Sala do conselho: mesa longa, gráfico, cadeiras. */
 export function boardroom(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 76, shade(pal.wall, -0.05), c.ei >= 5 ? 'glass' : 'panel');
+  wall(p, pal, 0, 76, tint(pal.wall, -0.05), c.ei >= 5 ? 'glass' : 'panel');
   windowPane(p, 170, 10, 74, 50, pal, 'city');
   screen(p, 20, 12, 70, 42, pal.paper, pal.metalDark, false);
   for (let i = 0; i < 6; i++) p.line(26 + i * 10, 46 - ((i * 13) % 26), 36 + i * 10, 46 - (((i + 1) * 13) % 26), pal.accent2);
   floor(p, 76, pal.floors.office.a, pal.floors.office.b, 'carpet');
   // mesa longa em perspectiva
   c.f.poly([[60, 104], [196, 104], [176, 90], [80, 90]], pal.woodDark);
-  c.f.poly([[60, 104], [196, 104], [196, 108], [60, 108]], shade(pal.woodDark, -0.3));
+  c.f.poly([[60, 104], [196, 104], [196, 108], [60, 108]], tint(pal.woodDark, -0.3));
   c.spots.host = { x: 128, y: 92, dir: 'SE', pose: 'sit' };
   c.spots.main = { x: 128, y: 122, dir: 'NE' };
   c.spots.side = { x: 210, y: 112, dir: 'SW', pose: 'sit' };
@@ -261,10 +261,10 @@ export function exchange(c: BuildCtx): void {
 /** Set de clipe / estúdio de fotos. */
 export function videoSet(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 82, shade(pal.bg, 0.1), 'plain');
+  wall(p, pal, 0, 82, tint(pal.bg, 0.1), 'plain');
   // fundo pintado
   p.rect(50, 10, 156, 70, pal.sky);
-  p.poly([[50, 80], [100, 40], [150, 70], [206, 30], [206, 80]], shade(pal.plant, -0.1));
+  p.poly([[50, 80], [100, 40], [150, 70], [206, 30], [206, 80]], tint(pal.plant, -0.1));
   frame(p, 49, 9, 158, 72, pal.metalDark);
   floor(p, 82, C('#d8d4cc'), C('#c8c4bc'), 'concrete');
   for (const x of [26, 230]) {
@@ -281,7 +281,7 @@ export function videoSet(c: BuildCtx): void {
 /** Casa de campo para composição: lareira, piano, janela com árvores. */
 export function countryHouse(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 80, shade(pal.wood, 0.1), 'panel');
+  wall(p, pal, 0, 80, tint(pal.wood, 0.1), 'panel');
   windowPane(p, 150, 14, 80, 46, pal, 'trees');
   box(p, 20, 30, 60, 50, C('#7a6a5a'), 4);
   p.rect(32, 50, 36, 30, C('#1a1210'));
@@ -326,7 +326,7 @@ export function funeral(c: BuildCtx): void {
     c.blinks.push({ x: x - 1, y: 46, w: 5, h: 4, col: withAlpha(C('#ffd040'), 160), rate: 2.8 });
   }
   floor(p, 80, C('#3a3640'), C('#34303a'), 'carpet');
-  seatRows(c.f, 116, 4, shade(pal.woodDark, -0.1), 8);
+  seatRows(c.f, 116, 4, tint(pal.woodDark, -0.1), 8);
   c.spots.main = { x: 104, y: 98, dir: 'NE' };
   c.spots.side = { x: 152, y: 98, dir: 'NW' };
   c.spots.host = { x: 128, y: 92, dir: 'NE' };
@@ -338,7 +338,7 @@ export function mansion(c: BuildCtx): void {
   const { p, pal } = c;
   const lv = Math.max(0, Math.min(5, c.variant));
   sky(p, 0, 74, C('#7ab8e8'), C('#c8e4f4'));
-  floor(p, 74, shade(pal.plant, 0.1), pal.plant, 'grass');
+  floor(p, 74, tint(pal.plant, 0.1), pal.plant, 'grass');
   const w = 70 + lv * 26;
   const x = Math.round((W - w) / 2);
   const hgt = 30 + Math.min(3, lv) * 10;
@@ -372,10 +372,10 @@ export function mansion(c: BuildCtx): void {
 /** Rua: calçada, cartazes, músico de rua e fila na porta da loja. */
 export function street(c: BuildCtx): void {
   const { p, pal } = c;
-  sky(p, 0, 30, pal.sky, shade(pal.sky, 0.2));
-  facade(p, 0, 16, 90, 70, shade(pal.wall, -0.1), pal, 'DISCOS');
+  sky(p, 0, 30, pal.sky, tint(pal.sky, 0.2));
+  facade(p, 0, 16, 90, 70, tint(pal.wall, -0.1), pal, 'DISCOS');
   facade(p, 92, 6, 76, 80, C('#8a5a3a'), pal, 'CAFE');
-  facade(p, 170, 20, 86, 66, shade(pal.wall2, -0.1), pal);
+  facade(p, 170, 20, 86, 66, tint(pal.wall2, -0.1), pal);
   posters(p, 174, 34, 7, pal, 7);
   floor(p, 86, pal.ground[0], pal.ground[1], 'tiles', 118);
   floor(p, 118, C('#3c3a40'), C('#34323a'), 'asphalt');
@@ -392,14 +392,14 @@ export function street(c: BuildCtx): void {
 /** Feira do setor: estandes com faixas dos selos. */
 export function tradeFair(c: BuildCtx): void {
   const { p, pal } = c;
-  wall(p, pal, 0, 60, shade(pal.metal, -0.2), 'plain');
+  wall(p, pal, 0, 60, tint(pal.metal, -0.2), 'plain');
   lightRig(p, 4, pal, 8);
   for (let i = 0; i < 4; i++) {
     const x = 6 + i * 63;
     const col = [pal.accent, pal.accent2, pal.fabric, pal.fabric2][i];
-    box(p, x, 26, 58, 40, shade(col, -0.25), 3);
+    box(p, x, 26, 58, 40, tint(col, -0.25), 3);
     p.rect(x, 26, 58, 9, col);
-    sign(p, x + 29, 28, ['SELO', 'RIVAL', 'INDIE', 'MAJOR'][i], pal.paper, shade(col, -0.2));
+    sign(p, x + 29, 28, ['SELO', 'RIVAL', 'INDIE', 'MAJOR'][i], pal.paper, tint(col, -0.2));
     p.rect(x + 6, 42, 14, 14, pal.paper);
     p.disc(x + 13, 49, 4, C('#1a1a1a'));
   }

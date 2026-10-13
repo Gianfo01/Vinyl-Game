@@ -21,6 +21,8 @@ import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
 import { type HqView, hqHooks } from '../hq';
 import { hqPeek27 } from '../ps/hqpeek27';
+import { equipmentThumb } from '../pixel/sprites';
+import { eraOf } from '../pixel/palette';
 import { copyText, store, tryDownload } from '../store';
 import { CITIES, cityById, genreById } from '../../data/world';
 import { nominal } from '../../core/money';
@@ -443,8 +445,8 @@ export function branchesSection(s: GameState): HTMLElement {
 /** r20: equipamentos da empresa (Empresa › Sede e Sede › Equipamentos e conforto). */
 export function equipmentSection20(s: GameState): HTMLElement {
   return section(t(S.equipment), h('p', { class: 'muted small' }, t(l('Equipar = investimento (uma vez). ', 'Equip = investment (one-off). ')), t(priceBasis20(s, money(s, 1000)))), h('table', { class: 'tbl compact' }, h('tbody', null,
-        s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', null, t(e.name)), h('td', null, branchName(e.branch)), h('td', null, '✓'), h('td', null, '')); }),
-        availableEquipment(s).map((e) => h('tr', null, h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, price20(s, money(s, e.cost), 'equip')), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
+        s.player.equipment.map((id) => { const e = EQUIPMENT.find((x) => x.id === id)!; return h('tr', { class: 'mine' }, h('td', { class: 'equip-thumb-cell' }, equipmentThumb(id, eraOf(s.year))), h('td', null, t(e.name)), h('td', null, branchName(e.branch)), h('td', null, '✓'), h('td', null, '')); }),
+        availableEquipment(s).map((e) => h('tr', null, h('td', { class: 'equip-thumb-cell' }, equipmentThumb(e.id, eraOf(s.year))), h('td', null, t(e.name), e.needsEngineer ? pill(t(l('requer engenheiro', 'needs engineer'))) : null), h('td', null, branchName(e.branch)), h('td', null, price20(s, money(s, e.cost), 'equip')), h('td', null, h('button', { class: 'btn small', onclick: () => { const err = buyEquipment(s, e.id); if (err) toast(t(err), 'bad'); rerender(); } }, t(S.buy))))),
       )));
 }
 

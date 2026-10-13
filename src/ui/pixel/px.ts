@@ -1,5 +1,7 @@
 // Núcleo de pixel art: buffer RGBA próprio (sem antialiasing do canvas), cores empacotadas,
 // pontilhado Bayer, caixas isométricas 2:1 com shaders por face e contorno automático.
+// Utilitários do estilo do pacote de assets: rampa de 6 tons (ramp6/lv/tint), sombreamento por volume
+// (volume/discV/ellipseV/rectV), contorno em camada (inked) e brilho especular (glint).
 
 /** Cor empacotada 0xAABBGGRR (ordem do ImageData em little-endian). 0 = transparente. */
 export type Col = number;
@@ -52,6 +54,173 @@ export function mix(a: Col, b: Col, t: number): Col {
 
 export function withAlpha(c: Col, a: number): Col {
   return ((c & 0xffffff) | ((Math.round(a) & 255) << 24)) >>> 0;
+}
+
+// ---------- estilo do pacote de assets (pixel art HD, ver .claude/skills/masters-artist-sprites) ----------
+
+/** Contorno externo de 1 px e linhas internas: escuro quente. */
+export const INK = C('#170e12');
+/** Paleta da casa: mogno, latão, vinho e cromado. */
+export const HOUSE = { mahogany: C('#6e2e20'), brass: C('#c09048'), wine: C('#8a2430'), chrome: C('#a8acb8'), ink: INK } as const;
+
+const SH_TINT = [pack(58, 32, 80), pack(42, 24, 56), pack(28, 16, 36)];
+const HI_TINT = [pack(255, 240, 200), pack(255, 251, 232)];
+const mul = (c: Col, m: number): Col => {
+  const [r, g, b, a] = rgba(c);
+  return pack(Math.min(255, r * m), Math.min(255, g * m), Math.min(255, b * m), a);
+};
+const rampCache = new Map<Col, Col[]>();
+
+/**
+ * Rampa de 6 tons a partir da cor base (índice 3): sombras deslocadas para o roxo, luzes para o amarelo quente.
+ * 0 sombra profunda · 1 sombra · 2 meia-sombra · 3 base · 4 luz · 5 brilho (só material brilhante).
+ */
+export function ramp6(base: Col): Col[] {
+  const hit = rampCache.get(base);
+  if (hit) return hit;
+  const a = base >>> 24;
+  const keep = (c: Col) => withAlpha(c, a);
+  const r = [
+    keep(mix(mul(base, 0.4), SH_TINT[2], 0.32)),
+    keep(mix(mul(base, 0.6), SH_TINT[1], 0.22)),
+    keep(mix(mul(base, 0.8), SH_TINT[0], 0.12)),
+    base,
+    keep(mix(base, HI_TINT[0], 0.24)),
+    keep(mix(base, HI_TINT[1], 0.55)),
+  ];
+  if (rampCache.size > 4096) rampCache.clear();
+  rampCache.set(base, r);
+  return r;
+}
+
+/** Tom n (0..5, aceita fração) da rampa da cor. */
+export function lv(base: Col, n: number): Col {
+  const r = ramp6(base);
+  if (n <= 0) return r[0];
+  if (n >= 5) return r[5];
+  const i = Math.floor(n);
+  const f = n - i;
+  return f < 0.01 ? r[i] : mix(r[i], r[i + 1], f);
+}
+
+/**
+ * Como shade(), mas andando pela rampa do estilo: f < 0 vai para a sombra arroxeada (−0.6 ≈ tom 0),
+ * f > 0 para a luz quente (+0.24 ≈ tom 4, +0.55 ≈ tom 5). Abaixo de −0.6 escurece até o contorno.
+ */
+export function tint(c: Col, f: number): Col {
+  if (f >= 0) return lv(c, f <= 0.24 ? 3 + f / 0.24 : 4 + Math.min(1, (f - 0.24) / 0.31));
+  if (f >= -0.6) return lv(c, 3 + f / 0.2);
+  return withAlpha(mix(lv(c, 0), INK, Math.min(1, (-f - 0.6) / 0.4)), c >>> 24);
+}
+
+/** Direção da luz (cima à esquerda, vindo da frente), normalizada. */
+const LIGHT = (() => {
+  const v = [-0.5, -0.72, 0.62];
+  const n = Math.hypot(v[0], v[1], v[2]);
+  return v.map((x) => x / n);
+})();
+
+export interface VolumeOpts {
+  /** raio do "inflado" em px (bordas arredondadas); padrão 4 */
+  r?: number;
+  /** desloca a luz: negativo = mais sombra (membros de trás, áreas sob algo) */
+  bias?: number;
+  /** material brilhante: libera o tom 5 */
+  spec?: boolean;
+  /** contorno de 1 px (INK) em volta da forma */
+  ink?: Col | false;
+}
+
+/**
+ * Preenche uma forma com sombreamento pelo volume (como o motor de referência px.py): a máscara é
+ * "inflada" (altura pela distância à borda), a normal vem do gradiente e a luz de cima à esquerda escolhe o tom da rampa.
+ */
+export function volume(p: Px, x0: number, y0: number, w: number, h: number, inside: (x: number, y: number) => boolean, base: Col, o: VolumeOpts = {}): void {
+  x0 = Math.floor(x0); y0 = Math.floor(y0); w = Math.ceil(w); h = Math.ceil(h);
+  const R = Math.max(1, o.r ?? 4);
+  const W = w + 2;
+  const H = h + 2;
+  const m = new Uint8Array(W * H);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (inside(x0 + x, y0 + y)) m[(y + 1) * W + x + 1] = 1;
+  // distância (chanfro 3-4) até fora da máscara
+  const d = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) d[i] = m[i] ? 1e9 : 0;
+  const pass = (fw: boolean) => {
+    for (let k = 0; k < W * H; k++) {
+      const i = fw ? k : W * H - 1 - k;
+      if (!m[i]) continue;
+      const x = i % W;
+      const y = (i / W) | 0;
+      const s = fw ? -1 : 1;
+      const nb = [[s, 0, 1], [0, s, 1], [s, s, 1.4], [-s, s, 1.4]] as const;
+      for (const [dx, dy, c] of nb) {
+        const xx = x + dx;
+        const yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+        const v = d[yy * W + xx] + c;
+        if (v < d[i]) d[i] = v;
+      }
+    }
+  };
+  pass(true);
+  pass(false);
+  const hgt = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    if (!m[i]) continue;
+    const t = Math.min(1, d[i] / R);
+    hgt[i] = R * Math.sqrt(1 - (1 - t) * (1 - t));
+  }
+  const ramp = ramp6(base);
+  const bias = o.bias ?? 0;
+  const tmp = o.ink === false ? null : new Px(W, H);
+  for (let y = 1; y <= h; y++)
+    for (let x = 1; x <= w; x++) {
+      const i = y * W + x;
+      if (!m[i]) continue;
+      const gx = (hgt[i + 1] - hgt[i - 1]) / 2;
+      const gy = (hgt[i + W] - hgt[i - W]) / 2;
+      const n = Math.hypot(gx, gy, 1);
+      const lam = (-gx * LIGHT[0] - gy * LIGHT[1] + LIGHT[2]) / n + bias;
+      let L = lam < -0.1 ? 0 : lam < 0.25 ? 1 : lam < 0.48 ? 2 : lam < 0.74 ? 3 : lam < 0.92 ? 4 : 5;
+      if (!o.spec) L = Math.min(L, 4);
+      if (tmp) tmp.put(x, y, ramp[L]);
+      else p.set(x0 + x - 1, y0 + y - 1, ramp[L]);
+    }
+  if (tmp) {
+    tmp.outline(o.ink === undefined ? INK : (o.ink as Col));
+    p.blit(tmp, x0 - 1, y0 - 1);
+  }
+}
+
+/** Atalhos de volume para formas simples. */
+export function discV(p: Px, cx: number, cy: number, r: number, base: Col, o: VolumeOpts = {}): void {
+  const r2 = r * r + 0.3;
+  volume(p, cx - r - 1, cy - r - 1, 2 * r + 3, 2 * r + 3, (x, y) => (x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 <= r2, base, { r: Math.max(2, r * 0.8), ...o });
+}
+
+export function ellipseV(p: Px, cx: number, cy: number, rx: number, ry: number, base: Col, o: VolumeOpts = {}): void {
+  volume(p, cx - rx - 1, cy - ry - 1, 2 * rx + 3, 2 * ry + 3, (x, y) => ((x + 0.5 - cx) / (rx + 0.3)) ** 2 + ((y + 0.5 - cy) / (ry + 0.3)) ** 2 <= 1, base, { r: Math.max(2, Math.min(rx, ry) * 0.8), ...o });
+}
+
+export function rectV(p: Px, x: number, y: number, w: number, h: number, base: Col, o: VolumeOpts = {}): void {
+  volume(p, x, y, w, h, () => true, base, { r: Math.max(1, Math.min(4, Math.min(w, h) / 3)), ...o });
+}
+
+/**
+ * Desenha numa camada própria, contorna a silhueta com 1 px (INK) e cola no destino.
+ * Use para objetos desenhados por cima de um fundo já preenchido (o contorno do Px só enxerga o vazio).
+ */
+export function inked(dst: Px, draw: (q: Px) => void, ink: Col = INK): void {
+  const q = new Px(dst.w, dst.h);
+  draw(q);
+  q.outline(ink);
+  dst.blit(q, 0, 0);
+}
+
+/** Brilho especular (tom 5) em material brilhante: latão, cromado, verniz, vidro. */
+export function glint(p: Px, x: number, y: number, base: Col, len = 1, vertical = false): void {
+  const c = lv(base, 5);
+  for (let i = 0; i < len; i++) p.set(vertical ? x : x + i, vertical ? y + i : y, c);
 }
 
 export function hsl(h: number, s: number, l: number, a = 255): Col {
@@ -250,29 +419,31 @@ export class Px {
     }
   }
 
-  /** Caixa com sombreamento padrão (luz do alto à esquerda) e arestas realçadas. */
+  /** Caixa com sombreamento padrão (luz do alto à esquerda, tons da rampa do estilo) e arestas realçadas. */
   sbox(ox: number, oy: number, W: number, D: number, H: number, base: Col, o: { top?: Col; tex?: BoxShader; edge?: boolean } = {}): void {
-    const top = o.top ?? shade(base, 0.18);
+    const top = o.top ?? tint(base, 0.18);
     const left = base;
-    const right = shade(base, -0.22);
+    const right = tint(base, -0.24);
     const edge = o.edge !== false;
     this.box(ox, oy, W, D, H, {
       top: (u, v) => {
         const t = o.tex?.top?.(u, v);
         if (t) return t;
-        if (edge && (u >= W - 1 || v >= D - 1)) return shade(top, 0.22);
+        if (edge && (u >= W - 1 || v >= D - 1)) return tint(top, 0.22);
         return top;
       },
       left: (u, v) => {
         const t = o.tex?.left?.(u, v);
         if (t) return t;
-        if (edge && v >= H - 1) return shade(left, 0.12);
+        if (edge && v >= H - 1) return tint(left, 0.12);
+        if (edge && v < 1) return tint(left, -0.2);
         return left;
       },
       right: (u, v) => {
         const t = o.tex?.right?.(u, v);
         if (t) return t;
-        if (edge && v >= H - 1) return shade(right, 0.1);
+        if (edge && v >= H - 1) return tint(right, 0.1);
+        if (edge && v < 1) return tint(right, -0.2);
         return right;
       },
     });

@@ -729,3 +729,7 @@ main select { max-width: 100%; }
 .topbar .sh20.bad { color: var(--bad); border-color: var(--bad); font-weight: 600; }
 .topbar .sh20.warn { color: var(--warn); }
 .sh20-detail .sh20-box { margin-bottom: 0.5rem; }
+
+/* arte-objetos: miniatura do equipamento na loja (sprite do pacote reduzido, ampliado por fator inteiro) */
+td.equip-thumb-cell { width: 52px; text-align: center; padding-top: 2px; padding-bottom: 2px; }
+canvas.equip-thumb { display: inline-block; vertical-align: middle; }
