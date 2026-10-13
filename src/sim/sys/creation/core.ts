@@ -351,7 +351,16 @@ export function featureCandidates(s: GameState, song: Song): Act[] {
 
 /** R29 (feat de pessoa): apelo de convidados pessoa a pessoa (fama própria — fame15). Preenchido por sys/featp29 sem
  *  import estático daqui (um import novo mudaria a ordem de avaliação dos módulos e, com ela, a dos ganchos do tick). */
-export const FEATP29_CORE: { appeal?: (s: GameState, pids: string[], fam: FamilyId) => number } = {};
+export const FEATP29_CORE: {
+  appeal?: (s: GameState, pids: string[], fam: FamilyId) => number;
+  /** R29: convite rápido (preço de tabela, sem negociar) a pessoa(s) — o mesmo feat de pessoa do sys/featp29 */
+  quick?: (s: GameState, songId: string, persons: string[], act?: string) => L;
+} = {};
+
+/** R29 (feat de pessoa): o convite rápido, para pessoa(s) em vez do ato (preço pela fama e habilidade de cada uma). */
+export function inviteFeaturePersons(s: GameState, songId: string, persons: string[], act?: string): L {
+  return FEATP29_CORE.quick ? FEATP29_CORE.quick(s, songId, persons, act) : l('Indisponível.', 'Unavailable.');
+}
 
 export function featureFee(s: GameState, guest: Act): number {
   return money(s, 1500 + guest.fame * guest.fame * 6);

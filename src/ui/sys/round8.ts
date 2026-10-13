@@ -358,7 +358,7 @@ function featsSection(s: GameState): HTMLElement | null {
         : h('span', null, pill(`${t(l('contraproposta', 'counter'))}: ${$(d.counter?.fee ?? 0)} · ${pct(d.counter?.split ?? 0)}`, 'warn'), ' ',
           h('button', { class: 'btn small primary', onclick: () => say(acceptFeatCounter(s, d.id), l('Participação gravada.', 'Feature recorded.')) }, t(l('Aceitar', 'Accept'))),
           h('button', { class: 'btn small ghost', onclick: () => { dropFeatDeal(s, d.id); rerender(); } }, t(l('Recusar', 'Decline'))))))) : null,
-    done.length ? h('ul', { class: 'small' }, done.map((d) => h('li', null, d.side === 'host' ? h('span', null, actLink(s, d.hostActId), ` "${d.title}" feat. `, ...dealGuests29(s, d)) : h('span', null, actLink(s, d.guestActId), ` ${t(l('em', 'on'))} "${d.title}" ${t(l('de', 'by'))} `, actLink(s, d.hostActId)),
+    done.length ? h('ul', { class: 'small' }, done.map((d) => h('li', null, d.side === 'host' ? h('span', null, actLink(s, d.hostActId), ` "${d.title}" feat. `, ...dealGuests29(s, d)) : h('span', null, ...dealGuests29(s, d), ` ${t(l('em', 'on'))} "${d.title}" ${t(l('de', 'by'))} `, actLink(s, d.hostActId)),
       ` · ${$(d.fee)} · ${pct(d.split)}`, d.paid ? ` · ${t(l('royalties', 'royalties'))} ${$(d.paid)}` : ''))) : null,
     ties.length ? h('div', null, h('h4', null, t(l('Laços do seu elenco fora do selo', 'Your roster\'s ties outside the label'))),
       h('ul', { class: 'attr-list' }, ties.map(({ t: x, me }) => h('div', null, h('small', { class: 'muted' }, `${s.persons[me]?.name ?? ''} ↔ `), tieRow(s, x, me, () => {}))))) : null,
