@@ -5,6 +5,7 @@ import { tryDownload } from '../store';
 // (negociar com o dono, lance fechado no leilão, emprestar, expor, doar, pedir a um museu, detetive).
 // Só passado e presente: tudo vem da crônica já acontecida.
 
+import { biography29, careerActs29, segs29 } from '../../sim/sys/connect29'; // R29 (CONNECT)
 import { MAX_FILE23 } from '../../core/save20';
 import { CITIES, l, type L } from '../../data/world';
 import { getLang, t } from '../../i18n/strings';
@@ -90,7 +91,7 @@ function openLegend(s: GameState, id: string): void {
       A ? pill(t(genreL(A.genre))) : null, A ? pill(t(cityL(A.city))) : null, A?.legend ? pill(t(l('lenda', 'legend')), 'gold') : null,
       p ? h('button', { class: 'btn small', onclick: () => openPerson(id) }, t(l('Abrir ficha', 'Open profile'))) : null,
       A ? h('button', { class: 'btn small', onclick: () => openActPage(id) }, t(l('Abrir página do ato', 'Open act page'))) : null),
-    p ? h('div', null, bandPath(s, id), soulBlock(s, p), section(t(l('Vida', 'Life')), chronList(s, biography(s, id))))
+    p ? h('div', null, bandPath(s, id), soulBlock(s, p), section(t(l('Vida', 'Life')), chronList(s, biography29(s, id))))
       : h('div', null, A ? null : bandPath(s, id), actLegend(s, id))), true);
 }
 
@@ -251,9 +252,10 @@ export function soulBlock(s: GameState, p: Person): HTMLElement {
 }
 
 function bandPath(s: GameState, pid: string): HTMLElement | null {
-  const list = chronState(s).mem[pid];
-  if (!list?.length) return null;
-  return h('p', null, h('b', null, t(l('Bandas: ', 'Bands: '))), ...list.flatMap((x, i) => { const [a, y] = x.split(':'); return [i ? ' → ' : '', who(s, a), ` (${y})`]; }));
+  // R29 (CONNECT): mesma fonte da página do ato (antes só a crônica, que não via quem saiu antes do início da run)
+  const list = careerActs29(s, pid);
+  if (!list.length) return null;
+  return h('p', null, h('b', null, t(l('Bandas: ', 'Bands: '))), ...list.flatMap((x, i) => [i ? ' → ' : '', who(s, x.act.id), ` (${segs29(x)})`]));
 }
 
 function actLegend(s: GameState, id: string): HTMLElement {
@@ -381,7 +383,7 @@ registerArea({ id: 'lendas', label: l('Lendas', 'Legends'), icon: 'vault', key: 
 
 PERSON_TABS.push((s, p) => (p.isPlayer ? null : {
   id: 'soul9', label: l('Alma', 'Soul'), icon: 'brain',
-  render: () => h('div', null, bandPath(s, p.id), soulBlock(s, p), section(t(l('Na crônica', 'In the chronicle')), h('ul', { class: 'attr-list' }, biography(s, p.id).slice(-30).reverse().map((e) => evRow(s, e))))),
+  render: () => h('div', null, bandPath(s, p.id), soulBlock(s, p), section(t(l('Na crônica', 'In the chronicle')), h('ul', { class: 'attr-list' }, biography29(s, p.id).slice(-30).reverse().map((e) => evRow(s, e))))),
 }));
 
 registerPageTab('act', { id: 'lendas9', label: l('Lendas', 'Legends'), icon: 'vault', order: 80, render: (s, id) => actLegend(s, id) });

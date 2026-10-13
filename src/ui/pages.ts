@@ -31,7 +31,7 @@ import { appearanceEditor } from './pixel/editor';
 import { personActivity } from './pixel/activity';
 import { instrumentsTab } from './sys/instruments';
 import { viewsLine } from './sys/beliefs10';
-import { rw } from '../sim/sys/realworld';
+import { careerActs29, exMembers29 } from '../sim/sys/connect29'; // R29 (CONNECT)
 import { kinLabel15, kinOf15 } from '../sim/sys/kin15';
 import { instById, instrumentsOf } from '../sim/sys/instruments';
 import { icon } from './pixel/icons';
@@ -297,7 +297,7 @@ function careerTab(s: GameState, p: Person): HTMLElement {
   const released = written.filter((so) => so.releaseId);
   const hits = released.filter((so) => (s.releases[so.releaseId!]?.peak ?? 999) <= 10);
   const best = released.sort((a, b) => (s.releases[a.releaseId!]?.peak ?? 999) - (s.releases[b.releaseId!]?.peak ?? 999)).slice(0, 5);
-  const acts = Object.values(s.acts).filter((a) => a.members.includes(p.id) || (a.history.length && p.parentId === a.id));
+  const acts = careerActs29(s, p.id).map((x) => x.act); // R29 (CONNECT): bandas antigas também (antes só a formação atual)
   return h('div', null,
     chips(stat('pen', written.length, l('Músicas escritas', 'Songs written')), stat('disc', released.length, l('Lançadas', 'Released')), stat('trophy', hits.length, l('No top 10', 'Top 10'))),
     acts.length ? h('p', null, t(l('Atos: ', 'Acts: ')), acts.map((a) => actLink(s, a.id))) : null,
@@ -407,7 +407,7 @@ function overviewGrid(s: GameState, a: Act, deg: number, mine: boolean): HTMLEle
 }
 
 function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
-  const former = (rw(s).former[a.id] ?? []).map((f) => ({ f, p: s.persons[f.personId] })).filter((x) => x.p && !a.members.includes(x.f.personId)); // r27 (F): quem voltou não é ex
+  const former = exMembers29(s, a).map((x) => ({ f: x, p: s.persons[x.pid] })); // R29 (CONNECT): mesma fonte da ficha da pessoa (r27 F: quem voltou não é ex)
   const why = { left: l('saiu', 'left'), died: l('faleceu', 'died'), retired: l('aposentou-se', 'retired'), fired: l('foi demitido', 'was fired') };
   return h('div', null,
     h('div', { class: 'pcard-grid' }, ms.map((p) => personCard(s, p))),

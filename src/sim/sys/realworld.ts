@@ -309,7 +309,11 @@ function canonical(s: GameState, p: Person, realName: string, born: number | und
   const idx = pidIndex(s);
   const key = canonKey(realName);
   if (!key) return p;
-  const ex = idx[key] ? s.persons[idx[key]] : undefined;
+  let ex = idx[key] ? s.persons[idx[key]] : undefined;
+  // R29 (CONNECT): o índice guarda nome → id, mas a Pessoa pode ter sido renomeada depois (integrante gerado reaproveitado
+  // pela posição em decorate, sobrenome de família…). Sem esta checagem "jeremy spencer" apontava para quem virou
+  // Mick Fleetwood, e a vaga de um real ia para OUTRA pessoa real (o caso Roger Waters como ex-Led Zeppelin).
+  if (ex && canonKey(ex.name) !== key) { delete idx[key]; ex = undefined; }
   if (ex && ex !== p && !exclude.includes(ex.id) && !ex.isPlayer && (born === undefined || Math.abs(ex.born - born) <= 1)) {
     if (born !== undefined) ex.born = born;
     return ex;
@@ -432,7 +436,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
       let p: Person;
       if (reuse) {
         p = reuse;
-        if (real) p.name = name;
+        if (real && p.name !== name) { const idx = pidIndex(s), k0 = canonKey(p.name); if (idx[k0] === p.id) delete idx[k0]; p.name = name; } // R29: índice segue o nome
         p.role = role;
         if (born) p.born = born;
       } else {
@@ -466,6 +470,13 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     }
     // integrantes gerados que sobraram saem do ato
     for (const p of old) if (!now.includes(p.id) && !(st.former[act.id] ?? []).some((x) => x.personId === p.id)) delete s.persons[p.id];
+    // R29 (CONNECT): músicas já criadas com os integrantes gerados nos créditos passam para quem ocupou a vaga (mesma
+    // posição) ou para o(a) líder — antes ficavam com ids de pessoas apagadas ("compositor inexistente" na ficha da música)
+    const heir = (id: string, i: number) => (s.persons[id] ? id : (now[i] ?? now[0]));
+    for (const sid of act.songs) {
+      const so = s.songs[sid];
+      if (so?.writers.some((w) => !s.persons[w])) so.writers = [...new Set(so.writers.map((w) => heir(w, old.findIndex((o) => o.id === w))).filter((w): w is string => !!w && !!s.persons[w]))];
+    }
     if (now.length) act.members = now; actsTouched17(s); // r17: índice pessoa→atos
     act.leaderId = act.members[0];
     // relações entre os integrantes (pessoas reaproveitadas de outros atos)

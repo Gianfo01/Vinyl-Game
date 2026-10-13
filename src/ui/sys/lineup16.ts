@@ -1,7 +1,8 @@
 // Rodada 16: linha do tempo da formação (página do ato) e trajetória da pessoa (bandas, ex-bandas, carreira solo).
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { formerNames16, lineupLog16, path16, segTxt, stints16, type Path16 } from '../../sim/sys/lineup16';
+import { formerNames16, lineupLog16, segTxt, stints16 } from '../../sim/sys/lineup16';
+import { careerActs29, type CareerAct29 } from '../../sim/sys/connect29'; // R29 (CONNECT)
 import { roleLine27 } from '../../sim/sys/roles27';
 import type { Act, GameState, Person } from '../../sim/types';
 import { actLink, pill } from '../common';
@@ -15,7 +16,7 @@ const roleName = (s: GameState, p: Person) => t(roleLine27(s, p)); // r27 (LIN):
 
 /** Outros atos da pessoa, com rótulo (solo / banda) e anos. */
 function others(s: GameState, pid: string, except: string): HTMLElement[] {
-  return path16(s, pid).filter((x) => x.act.id !== except).map((x) => h('span', { class: 'small' }, ' ', pill(t(x.solo ? l('solo', 'solo') : x.current ? l('banda', 'band') : l('ex-banda', 'ex-band')), x.solo ? 'gold' : ''), ' ', actLink(s, x.act.id), h('small', { class: 'muted' }, ` ${segTxt(x.segs)}`)));
+  return careerActs29(s, pid).filter((x) => x.act.id !== except).map((x) => h('span', { class: 'small' }, ' ', pill(t(x.solo ? l('solo', 'solo') : x.current ? l('banda', 'band') : l('ex-banda', 'ex-band')), x.solo ? 'gold' : ''), ' ', actLink(s, x.act.id), h('small', { class: 'muted' }, ` ${segTxt(x.segs)}`)));
 }
 
 function lineupTab(s: GameState, a: Act): HTMLElement {
@@ -55,10 +56,10 @@ ACT_TABS.push((s, a) => {
 });
 
 function pathTab(s: GameState, p: Person): HTMLElement {
-  const xs = path16(s, p.id);
+  const xs = careerActs29(s, p.id); // R29 (CONNECT): + bandas da crônica; falecido(a) não aparece como integrante atual
   const bands = xs.filter((x) => !x.solo), solos = xs.filter((x) => x.solo);
-  const ex = bands.filter((x) => !x.act.members.includes(p.id));
-  const overlap = (a: Path16, b: Path16) => a.segs.some((g) => b.segs.some((k) => g.from <= (k.to ?? 9999) && k.from <= (g.to ?? 9999)));
+  const ex = bands.filter((x) => !x.current);
+  const overlap = (a: CareerAct29, b: CareerAct29) => a.segs.some((g) => b.segs.some((k) => g.from <= (k.to ?? 9999) && k.from <= (g.to ?? 9999)));
   return h('div', null,
     h('p', { class: 'small' },
       ex.length ? [h('b', null, t(l('Ex-integrante de: ', 'Former member of: '))), ...ex.flatMap((x, i) => [i ? ', ' : '', actLink(s, x.act.id), h('small', { class: 'muted' }, ` (${segTxt(x.segs)})`)]), h('br')] : null,
@@ -72,4 +73,4 @@ function pathTab(s: GameState, p: Person): HTMLElement {
   );
 }
 
-PERSON_TABS.push((s, p) => (path16(s, p.id).length ? { id: 'path16', label: l('Trajetória', 'Career path'), icon: 'guitar', render: () => pathTab(s, p) } : null));
+PERSON_TABS.push((s, p) => (careerActs29(s, p.id).length ? { id: 'path16', label: l('Trajetória', 'Career path'), icon: 'guitar', render: () => pathTab(s, p) } : null));
