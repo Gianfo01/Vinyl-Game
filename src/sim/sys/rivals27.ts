@@ -93,7 +93,7 @@ function sources(s: GameState): void {
   }
   // artista que era deles e assinou com você
   for (const c of Object.values(s.contracts)) {
-    if (c.party !== 'player' || s.week - c.startWeek > 6 || st.k[c.id]) continue;
+    if (c.party !== 'player' || c.model === 'management' || s.week - c.startWeek > 6 || st.k[c.id]) continue; // R29: empresariar não tira o ato do selo dele
     st.k[c.id] = 1;
     const prev = Object.values(s.contracts).filter((o) => o.actId === c.actId && o.id !== c.id && o.party !== 'player' && s.labels[o.party] && o.startWeek < c.startWeek && o.endWeek >= c.startWeek - 52)
       .sort((a, b) => b.startWeek - a.startWeek)[0];

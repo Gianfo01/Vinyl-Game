@@ -3,6 +3,7 @@
 // camadas (resumo do que cada lado concede, diferença do preset, comparação com até 2 alternativas e revisão de caixa).
 // A interface (ui/sys/ui20.ts, offer20.ts, review20.ts) só desenha o que sai daqui.
 
+import { commissionOf29, shareOf29, targetOf29 } from '../sim/terms29';
 import { formatMoney } from '../core/money';
 import { l, type L } from '../data/world';
 import { getLang, t } from '../i18n/strings';
@@ -175,8 +176,22 @@ export interface Concede20 { side: 'label' | 'artist'; t: L }
 export function concessions20(o: Draft20): Concede20[] {
   const r = o.rights ?? defaultRights(o.model, o.publishing);
   const out: Concede20[] = [];
-  if (o.advance > 0) out.push({ side: 'label', t: fmtL(l('Adiantamento de {v} (recuperável pelas vendas)', 'Advance of {v} (recoupable from sales)'), { v: $$(o.advance) }) });
-  out.push({ side: 'label', t: fmtL(l('Royalty de {r} ao artista', '{r} royalty to the artist'), { r: pc(o.royalty) }) });
+  // R29 (contratos+): o que cada lado concede nos modelos novos
+  if (o.model === 'management') {
+    if (o.advance > 0) out.push({ side: 'label', t: fmtL(l('Luvas de {v}', 'Signing bonus of {v}'), { v: $$(o.advance) }) });
+    out.push({ side: 'label', t: l('Gestão da carreira (turnês, negociar com o selo, crises)', 'Career management (tours, label negotiations, crises)') });
+    out.push({ side: 'artist', t: fmtL(l('{p} de comissão sobre o que ganhar', '{p} commission on what they earn'), { p: pc(commissionOf29(o)) }) });
+    out.push({ side: 'artist', t: fmtL(l('{n} meses de exclusividade de gestão', '{n} months of exclusive management'), { n: o.termMonths }) });
+    return out;
+  }
+  if (o.model === 'jv') {
+    if (o.advance > 0) out.push({ side: 'label', t: fmtL(l('Capital de {v} no selo da sociedade', '{v} of capital in the partnership label'), { v: $$(o.advance) }) });
+    out.push({ side: 'label', t: fmtL(l('{p} do selo ao artista (lucro dividido todo ano)', '{p} of the label to the act (profit split every year)'), { p: pc(shareOf29(o)) }) });
+    out.push({ side: 'artist', t: fmtL(l('Meta de {n} lançamento(s) em {m} meses', 'Target of {n} release(s) in {m} months'), { n: targetOf29(o), m: o.termMonths }) });
+  } else {
+    if (o.advance > 0) out.push({ side: 'label', t: fmtL(l('Adiantamento de {v} (recuperável pelas vendas)', 'Advance of {v} (recoupable from sales)'), { v: $$(o.advance) }) });
+    out.push({ side: 'label', t: o.model === 'production' ? fmtL(l('{r} de tudo o que a produtora receber, ao artista', '{r} of everything the company receives, to the act'), { r: pc(o.royalty) }) : fmtL(l('Royalty de {r} ao artista', '{r} royalty to the artist'), { r: pc(o.royalty) }) });
+  }
   if (o.creativeControl) out.push({ side: 'label', t: l('Controle criativo ao artista', 'Creative control to the artist') });
   if (o.pk12?.tour) out.push({ side: 'label', t: fmtL(l('Apoio de turnê prometido: {v} (12 parcelas)', 'Pledged tour support: {v} (12 instalments)'), { v: $$(o.pk12.tour) }) });
   if (o.pk12?.mkt) out.push({ side: 'label', t: fmtL(l('Verba de marketing prometida: {v} (12 parcelas)', 'Pledged marketing: {v} (12 instalments)'), { v: $$(o.pk12.mkt) }) });

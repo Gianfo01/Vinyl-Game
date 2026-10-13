@@ -35,6 +35,10 @@ import {
   mIdx, nameOf17, orgById, orgs17, pizzoFee, reportOrg, targetBlock17, targetId17, toggleLaunder, usd, type Ctx17, type Org17,
 } from './crime17';
 import { linkShark27 } from './aud27/shark27';
+import { registerDeadline } from '../calendar19'; // r29: favores com prazo no calendário único
+import { st18 } from './stream18'; // r29: fazenda de streams (crime digital)
+import { scandal } from '../scandal17';
+import { AWCAT29, awCatsOn29, hasVote29, rigAward29 } from './rig29'; // r29: votação de prêmio comprada
 import { companyLoanBlocker, takeCompanyLoan } from './vices';
 
 const N = (pt: string, en: string): L => l(pt, en);
@@ -50,9 +54,9 @@ export interface MobO29 {
   /** proteção de artista: ato → semana até quando */
   guard?: Record<string, number>;
 }
-export type AskKind29 = 'sign' | 'club' | 'launder' | 'hide' | 'cut' | 'vote' | 'job';
-export interface Ask29 { id: string; o: string; k: AskKind29; hold?: string; w: number; dl: number; esc: number }
-export interface Mob29State { o: Record<string, MobO29>; asks: Ask29[]; seq: number; log: [number, number, string, L][] }
+export type AskKind29 = 'sign' | 'club' | 'launder' | 'hide' | 'cut' | 'vote' | 'job' | 'baile' | 'homage' | 'toll'; // r29: baile/homage/toll vêm das facções das cenas (aff29)
+export interface Ask29 { id: string; o: string; k: AskKind29; hold?: string; w: number; dl: number; esc: number; /** r29: o ato protegido da família (voto) */ act?: string; /** prazo já renegociado */ delay?: 1 }
+export interface Mob29State { o: Record<string, MobO29>; asks: Ask29[]; seq: number; log: [number, number, string, L][]; /** r29: laços de rua causados pelo jogo (ato → família) */ sim?: Record<string, string> }
 
 export const peek29 = (s: GameState): Mob29State | undefined => (s.x4 as unknown as { mob29?: Mob29State }).mob29;
 export function mob29(s: GameState): Mob29State {
@@ -109,7 +113,7 @@ export function era29(s: GameState, o: Org17): { text: L; club: number } {
   return { text: N('Gangues de rua: proteção, credibilidade e rixas.', 'Street gangs: protection, credibility and feuds.'), club: 1 };
 }
 /** A família alcança este país? (sede no país, ou poder ≥ 85 = alcance internacional) */
-export const present29 = (o: Org17, a3: string): boolean => o.a3 === a3 || o.power >= 85;
+export const present29 = (o: Org17, a3: string): boolean => o.kind === 'cyber' || o.a3 === a3 || o.power >= 85; // r29: o crime digital age online
 const liveAct = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.status !== 'split';
 const myActs = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter(liveAct).sort((a, b) => b.fame - a.fame);
 /** Seus atos na área da família. */
@@ -191,7 +195,7 @@ export const MOB29: MobAct29[] = [
     desc: N('Dinheiro na hora, juros absurdos, e a família sabe onde fica a sede.', 'Cash right now, absurd interest, and the family knows where HQ is.'),
     fx: N('Empréstimo de agiota ligado a eles: dívida (holds17), segredo; atrasar traz visita.', 'A loan-shark loan tied to them: debt (holds17), a secret; missing payments brings a visit.'),
     cost: () => 0,
-    block: (s, o) => orgBlock29(s, o, { a3: home(s) }) ?? companyLoanBlocker(s, 'shark'),
+    block: (s, o) => (o.kind === 'cyber' ? N('Crime digital não empresta dinheiro vivo.', 'Cybercrime does not lend cash.') : null) ?? orgBlock29(s, o, { a3: home(s) }) ?? companyLoanBlocker(s, 'shark'),
     run: (s, o) => {
       const before = new Set(s.player.loans.map((x) => x.id));
       const err = takeCompanyLoan(s, 'shark');
@@ -237,7 +241,7 @@ export const MOB29: MobAct29[] = [
     desc: N('A rota das jukeboxes e dos DJs é deles: seu lançamento toca em todo lugar.', 'The jukebox and DJ route is theirs: your release plays everywhere.'),
     fx: N('+35% nas paradas por 6 semanas; eles fazem um favor (vão cobrar); risco de o jabá vir à tona (escândalo, caso).', '+35% chart units for 6 weeks; they do you a favor (they will collect); risk the payola surfaces (scandal, case).'),
     cost: (s, o) => money(s, 2500 + o.power * 40), chance: (s, o) => 1 - jukeQ(s, o),
-    block: (s, o) => (!(hasRacket(o, 'jukebox') && s.year <= 1985) && !hasRacket(o, 'payola') ? (hasRacket(o, 'jukebox') ? N('A era das jukeboxes acabou (depois de 1985).', 'The jukebox era is over (after 1985).') : N('Não é o ramo deles (jukebox/jabá).', 'Not their racket (jukebox/payola).')) : null)
+    block: (s, o) => (!(hasRacket(o, 'jukebox') && s.year <= 1985) && !hasRacket(o, 'payola') && !(hasRacket(o, 'streams') && s.year >= 2005) ? (hasRacket(o, 'jukebox') ? N('A era das jukeboxes acabou (depois de 1985).', 'The jukebox era is over (after 1985).') : N('Não é o ramo deles (jukebox/jabá).', 'Not their racket (jukebox/payola).')) : null)
       ?? orgBlock29(s, o, { a3: home(s), cost: money(s, 2500 + o.power * 40) }) ?? (bestRecent(s, o) ? null : N('Nenhum lançamento seu dos últimos 6 meses para emplacar.', 'No release of yours from the last 6 months to push.')),
     run: (s, o, r) => {
       const a = bestRecent(s, o)!;
@@ -362,62 +366,164 @@ function owe29(s: GameState, o: Org17, strength: number, what: L, r: Rng): Hold 
 
 // ================================================================ contratar a família
 
-export interface Job29 { c: string; name: L; icon: string }
-/** Serviços (os crimes de sempre, executados pela família) — 'guard' é a proteção de artista. */
+export interface Job29 {
+  /** id do serviço no menu ('mob.job:<id>'): o id do crime, ou 'cy:…' / 'x:…' (crime digital) */
+  id: string;
+  /** crime de sempre (crime17) ou serviço próprio do crime digital ('x:streams', 'x:scalp', 'x:clone') */
+  c: string;
+  name: L; icon: string;
+  /** método fixo do crime (ex.: vazamento = sabotagem 'release'; voto por robôs) */
+  m?: string;
+  /** quem oferece: famílias tradicionais, crime digital ou ambas */
+  for?: 'trad' | 'cyber';
+  /** ramo exigido (qualquer um) */
+  racket?: Racket17[];
+}
+/** Serviços (os crimes de sempre, executados pela família) e os do crime digital. */
 export const JOBS29: Job29[] = [
-  { c: 'assault', name: N('Intimidar ("convencer" alguém)', 'Intimidate ("convince" someone)'), icon: 'skull' },
-  { c: 'blackmail', name: N('Cobrar / pressionar com um segredo', 'Collect / squeeze with a secret'), icon: 'eye' },
-  { c: 'sabotage', name: N('Sabotar (disco, turnê, estúdio)', 'Sabotage (record, tour, studio)'), icon: 'fire' },
-  { c: 'bribe', name: N('Fazer um problema sumir (polícia, testemunha, juiz)', 'Make a problem go away (police, witness, judge)'), icon: 'money' },
-  { c: 'chart_rig', name: N('Pressionar rádio e DJs (paradas)', 'Lean on radio and DJs (charts)'), icon: 'radio' },
-  { c: 'bootleg', name: N('Rodar uma pirataria', 'Run a bootleg operation'), icon: 'cd' },
-  { c: 'wiretap', name: N('Grampear um selo', 'Wiretap a label'), icon: 'camera' },
-  { c: 'steal_relic', name: N('Roubar uma relíquia', 'Steal a relic'), icon: 'vault' },
-  { c: 'murder', name: N('Encomendar uma morte', 'Order a death'), icon: 'skull' },
+  { id: 'assault', c: 'assault', name: N('Intimidar ("convencer" alguém)', 'Intimidate ("convince" someone)'), icon: 'skull', for: 'trad' },
+  { id: 'blackmail', c: 'blackmail', name: N('Cobrar / pressionar com um segredo', 'Collect / squeeze with a secret'), icon: 'eye' },
+  { id: 'sabotage', c: 'sabotage', name: N('Sabotar (disco, turnê, estúdio)', 'Sabotage (record, tour, studio)'), icon: 'fire', for: 'trad' },
+  { id: 'bribe', c: 'bribe', name: N('Fazer um problema sumir (polícia, testemunha, juiz)', 'Make a problem go away (police, witness, judge)'), icon: 'money', for: 'trad' },
+  { id: 'chart_rig', c: 'chart_rig', name: N('Pressionar rádio e DJs (paradas)', 'Lean on radio and DJs (charts)'), icon: 'radio', for: 'trad' },
+  { id: 'award_rig', c: 'award_rig', name: N('Manipular a votação de um prêmio (jurado)', 'Rig an award vote (jury)'), icon: 'trophy', m: 'jury', for: 'trad' },
+  { id: 'bootleg', c: 'bootleg', name: N('Rodar uma pirataria', 'Run a bootleg operation'), icon: 'cd', for: 'trad' },
+  { id: 'wiretap', c: 'wiretap', name: N('Grampear um selo', 'Wiretap a label'), icon: 'camera', for: 'trad' },
+  { id: 'steal_relic', c: 'steal_relic', name: N('Roubar uma relíquia', 'Steal a relic'), icon: 'vault', for: 'trad' },
+  { id: 'murder', c: 'murder', name: N('Encomendar uma morte', 'Order a death'), icon: 'skull', for: 'trad' },
+  // r29: crime digital (data/cyber29) — os crimes de sempre com o método digital, e três serviços próprios
+  { id: 'x:streams', c: 'x:streams', name: N('Inflar streams (fazenda de robôs)', 'Inflate streams (bot farm)'), icon: 'chart-up', for: 'cyber', racket: ['streams', 'bots'] },
+  { id: 'cy:leak', c: 'sabotage', m: 'release', name: N('Vazar o álbum de um rival', 'Leak a rival\'s album'), icon: 'fire', for: 'cyber', racket: ['leaks', 'darknet'] },
+  { id: 'cy:hack', c: 'wiretap', name: N('Invadir o sistema de um selo (hack/DDoS)', 'Hack a label\'s systems (hack/DDoS)'), icon: 'camera', for: 'cyber', racket: ['leaks'] },
+  { id: 'cy:dox', c: 'assault', name: N('Expor um jornalista ou rival (doxxing)', 'Dox a journalist or rival'), icon: 'eye', for: 'cyber', racket: ['leaks', 'bots'] },
+  { id: 'x:scalp', c: 'x:scalp', name: N('Cambismo por robôs no show do seu artista', 'Bot-scalp your act\'s show'), icon: 'ticket', for: 'cyber', racket: ['scalp'] },
+  { id: 'x:clone', c: 'x:clone', name: N('Clonar a voz de um astro (IA)', 'Clone a star\'s voice (AI)'), icon: 'mic', for: 'cyber', racket: ['clones'] },
+  { id: 'cy:dark', c: 'bootleg', name: N('Pirataria na darknet', 'Darknet piracy'), icon: 'cd', for: 'cyber', racket: ['darknet'] },
+  { id: 'cy:vote', c: 'award_rig', m: 'bots', name: N('Robôs no voto popular de um prêmio', 'Bots in an award\'s popular vote'), icon: 'trophy', for: 'cyber', racket: ['bots', 'streams'] },
 ];
-export const jobOf29 = (c: string): Job29 | undefined => JOBS29.find((j) => j.c === c);
-/** Tipo de alvo de cada serviço (para os menus: pessoa, ato, selo, seu ato, relíquia, caso). */
-export const jobTk29 = (c: string): string => crimeById(c)?.tk ?? '';
+const isCyber = (o: Org17): boolean => o.kind === 'cyber';
+/** Serviços que esta família oferece (tradicional × crime digital; ramo exigido). */
+export const jobsFor29 = (o: Org17): Job29[] => JOBS29.filter((j) => (!j.for || (j.for === 'cyber') === isCyber(o)) && (!j.racket || j.racket.some((r) => hasRacket(o, r))));
+/** Serviço pelo id (ou pelo crime, para o planejador). */
+export const jobOf29 = (id: string, o?: Org17): Job29 | undefined => (o ? jobsFor29(o) : JOBS29).find((j) => j.id === id) ?? (o ? jobsFor29(o) : JOBS29).find((j) => j.c === id);
+const XTK: Record<string, string> = { 'x:streams': 'own_act', 'x:scalp': 'own_act', 'x:clone': 'person' };
+/** Tipo de alvo de cada serviço (para os menus: pessoa, ato, selo, seu ato, qualquer ato, relíquia, caso). */
+export const jobTk29 = (id: string): string => { const j = jobOf29(id); const c = j?.c ?? id; return XTK[c] ?? crimeById(c)?.tk ?? ''; };
 
 export interface HireOdds29 { block: L | null; p: number; q: number; cost: number; fee: number; heatYou: number; favor: number; why: L[]; a3: string }
-const ctxOf = (o: Org17, c: string, target: string, method?: string): Ctx17 => ({ actor: o.key, target, method: method ?? crimeById(c)?.methods?.[0]?.id, org: o.id, partners: [], dp: 0.08, dpWhy: N('Profissionais da família +8%', 'Family professionals +8%') });
+const ctxOf = (o: Org17, c: string, target: string, method?: string, cat?: string): Ctx17 => ({ actor: o.key, target, method: method ?? crimeById(c)?.methods?.[0]?.id, org: o.id, partners: [], dp: 0.08, dpWhy: N('Profissionais da família +8%', 'Family professionals +8%'), ...(cat ? { cat } : {}) });
 export const hireFee29 = (s: GameState, o: Org17): number => Math.round(money(s, 2500 + o.power * 60) * clamp(1 - (crime17(s).org[o.id] ?? 0) / 200, 0.6, 1.4));
 
-/** Chance, custo, calor que sobra para você e o favor devido — com o motivo quando não dá. */
-export function hireOdds29(s: GameState, oid: string, c: string, rawTarget: string, method?: string): HireOdds29 {
+/** Serviços próprios do crime digital: chance, exposição, custo, gravidade. */
+const XJOB: Record<string, { p: number; q: number; cost: number; sev: number; heat: number; gate: (s: GameState, target: string) => L | null }> = {
+  'x:streams': { p: 0.85, q: 0.2, cost: 3000, sev: 30, heat: 4, gate: (s, t) => (s.year < 2005 ? N('Sem streaming para fraudar (2005+).', 'No streaming to fake (2005+).') : !recentRel(s, t) ? N('Nenhum lançamento deste artista nos últimos 6 meses.', 'No release by this act in the last 6 months.') : (st18(s).farm[recentRel(s, t)!.id]?.until ?? 0) > s.week ? N('Já há streams comprados neste lançamento.', 'This release already has bought streams.') : null) },
+  'x:scalp': { p: 0.8, q: 0.25, cost: 1500, sev: 25, heat: 3, gate: () => null },
+  'x:clone': { p: 0.75, q: 0.3, cost: 4000, sev: 35, heat: 5, gate: (s, t) => (s.year < 2015 ? N('Ainda não dá para clonar vozes (2015+).', 'Voices cannot be cloned yet (2015+).') : !actOfP29(s, t) ? N('Escolha um(a) cantor(a) de um ato ativo.', 'Pick a singer from an active act.') : null) },
+};
+const recentRel = (s: GameState, actId: string) => (s.acts[actId]?.releases ?? []).map((id) => s.releases[id]).filter((x) => x && s.week - x.week < 26).sort((a, b) => b.week - a.week)[0];
+const actOfP29 = (s: GameState, pid: string): Act | undefined => Object.values(s.acts).find((a) => a.members.includes(pid) && liveAct(a) && !(a.owner === 'player' || a.playerBand));
+
+/** Chance, custo, calor que sobra para você e o favor devido — com o motivo quando não dá. `job` = id do serviço ou crime. */
+export function hireOdds29(s: GameState, oid: string, job: string, rawTarget: string, method?: string, cat?: string): HireOdds29 {
   const o = orgById(s, oid);
-  const d = crimeById(c);
   const target = targetId17(s, rawTarget);
   const zero = (block: L): HireOdds29 => ({ block, p: 0, q: 0, cost: 0, fee: 0, heatYou: 0, favor: 0, why: [], a3: home(s) });
-  if (!o || !d) return zero(N('Inválido.', 'Invalid.'));
+  if (!o) return zero(N('Inválido.', 'Invalid.'));
+  const j = jobOf29(job, o);
+  if (!j) return zero(fmtL(N('{o} não faz esse tipo de serviço.', '{o} does not do this kind of job.'), { o: o.name }));
   const pre = orgBlock29(s, o, { job: true });
   if (pre) return zero(pre);
+  const fee = hireFee29(s, o);
+  if (j.c.startsWith('x:')) {
+    const x = XJOB[j.c];
+    const tk = XTK[j.c];
+    const tb = tk === 'own_act' ? (playerActs(s).includes(target) && liveAct(s.acts[target]) ? null : N('Só para artistas do seu elenco.', 'Only for acts on your roster.')) : x.gate(s, target);
+    if (tb) return zero(tb);
+    const g = x.gate(s, target);
+    if (g) return zero(g);
+    const heat = heatIn(s, home(s));
+    const p = clamp(x.p + o.power / 400, 0.05, 0.95), q = clamp(x.q + heat / 250 - 0.08, 0.03, 0.9);
+    const cost = money(s, x.cost) + fee;
+    return { block: freeCash20(s) < cost ? cashWhy20(s, cost, B.cash) : null, p, q, cost, fee, heatYou: Math.round(x.heat * 0.35), favor: Math.round(clamp(25 + x.sev / 2, 25, 80)), why: [fmtL(N('{o} executa (online)', '{o} runs it (online)'), { o: o.name })], a3: home(s) };
+  }
+  const d = crimeById(j.c);
+  if (!d) return zero(N('Inválido.', 'Invalid.'));
   const tb = targetBlock17(s, d, target);
   if (tb) return zero(tb);
-  const od = crimeOdds(s, ctxOf(o, c, target, method), c);
+  const od = crimeOdds(s, ctxOf(o, j.c, target, method ?? j.m, cat), j.c);
   if (!present29(o, od.a3)) return zero(B.far);
-  const fee = hireFee29(s, o);
   const cost = od.cost + fee;
   const block = od.block ?? (freeCash20(s) < cost ? cashWhy20(s, cost, B.cash) : null);
   return { block, p: od.p, q: od.q, cost, fee, heatYou: Math.round(od.heat * 0.35), favor: Math.round(clamp(25 + od.sev / 2, 25, 80)), why: od.why, a3: od.a3 };
 }
 
+/** Serviço próprio do crime digital (ligado aos sistemas de fraude de sempre: stream18, fakes19). */
+function xJob29(s: GameState, o: Org17, c: string, target: string, r: Rng): { ok: boolean; ex: boolean; text: L } {
+  const x = XJOB[c];
+  const ok = r.chance(clamp(x.p + o.power / 400, 0.05, 0.95));
+  const ex = r.chance(clamp(x.q + heatIn(s, home(s)) / 250 - 0.08 + (ok ? 0 : 0.15), 0.03, 0.9));
+  if (c === 'x:streams') {
+    const a = s.acts[target], rel = recentRel(s, target);
+    if (!a || !rel) return { ok: false, ex: false, text: N('Nada para inflar.', 'Nothing to inflate.') };
+    if (!ok) return { ok, ex, text: fmtL(N('A fazenda de {o} caiu antes de rodar.', '{o}\'s farm went down before it ran.'), { o: o.name }) };
+    st18(s).farm[rel.id] = { w: s.week, until: s.week + 6, k: 1.6 };
+    emitFact(s, { kind: 'stream_fraud', actors: ['player', rel.actId], severity: 40, visibility: 'secret', tags: ['crime', 'fraud', 'streaming', 'mob29'], text: fmtL(N('{o} infla os streams de "{t}".', '{o} inflates the streams of "{t}".'), { o: o.name, t: rel.title }), src: 'mob29' });
+    return { ok, ex, text: fmtL(N('Celulares de {o} tocam "{t}" sem parar: unidades ×1,6 por 6 semanas — as plataformas procuram (derrubada, multa, escândalo).', '{o}\'s phones play "{t}" nonstop: units ×1.6 for 6 weeks — platforms are looking (takedown, fine, scandal).'), { o: o.name, t: rel.title }) };
+  }
+  if (c === 'x:scalp') {
+    const a = s.acts[target];
+    if (!a) return { ok: false, ex: false, text: N('Inválido.', 'Invalid.') };
+    if (ok) { const v = money(s, 1500 + a.fame * 80); post(s, `mob29scalp:${a.id}:${s.week}`, v, 'other_income', `Revenda de ingressos (${o.name.pt})`); crime17(s).loot19 = (crime17(s).loot19 ?? 0) + v; }
+    if (ex) { scandal(s, a.id, 'money', 30, fmtL(N('Fãs de {a} descobrem: os ingressos esgotados foram para robôs de revenda.', '{a}\'s fans find out: the sold-out tickets went to resale bots.'), { a: a.name }), { tags: ['mob29', 'tickets'] }); s.player.reputation.commercial = clamp(s.player.reputation.commercial - 3, 0, 100); }
+    return { ok, ex, text: ok ? fmtL(N('Os robôs de {o} compram o show de {a} e revendem pelo triplo.', '{o}\'s bots buy out {a}\'s show and resell at triple.'), { o: o.name, a: a.name }) : N('A bilheteria bloqueou os robôs.', 'The box office blocked the bots.') };
+  }
+  // x:clone — a "inédita" com voz clonada viraliza (fakes19 ouve 'ai_voice_fake': lei de voz, confiança da vítima)
+  const a = actOfP29(s, target);
+  if (!a) return { ok: false, ex: false, text: N('Inválido.', 'Invalid.') };
+  if (ok) {
+    const v = money(s, 2000 + a.fame * 100);
+    post(s, `mob29clone:${a.id}:${s.week}`, v, 'other_income', `"Inédita" de ${a.name} (${o.name.pt})`);
+    crime17(s).loot19 = (crime17(s).loot19 ?? 0) + v;
+    emitFact(s, { kind: 'ai_voice_fake', actors: [a.id], place: a.city, severity: 40, visibility: 'public', tags: ['fakes19', 'ai', 'mob29'], src: 'mob29', text: fmtL(N('Uma faixa "inédita" de {a} viraliza — a voz foi gerada por IA, sem autorização.', 'An "unreleased" {a} track goes viral — the voice was AI-generated, without permission.'), { a: a.name }) });
+  }
+  if (ex) { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 5, 0, 100); feedCase(s, 'player', home(s), 15, 35, true); notify(s, fmtL(N('A plataforma derruba a faixa clonada de {a} e aponta o seu selo.', 'The platform takes down the cloned {a} track and points at your label.'), { a: a.name }), 'bad'); }
+  return { ok, ex, text: ok ? fmtL(N('{o} solta uma "inédita" de {a} com a voz clonada.', '{o} drops an "unreleased" {a} track with the cloned voice.'), { o: o.name, a: a.name }) : N('O clone ficou robótico demais; ninguém caiu.', 'The clone sounded too robotic; nobody bought it.') };
+}
+
+/** Alvo padrão de um serviço próprio do crime digital a partir do card (seu artista com lançamento recente / o mais famoso). */
+export function jobTarget29(s: GameState, oid: string, job: string): string | null {
+  const tk = jobTk29(job);
+  if (tk !== 'own_act') return null;
+  const acts = myActs(s);
+  const a = job === 'x:streams' ? acts.find((x) => recentRel(s, x.id)) : acts[0];
+  return a && !hireOdds29(s, oid, job, a.id).block ? a.id : null;
+}
+
 /** Contrata a família para o serviço: ela executa (crime de sempre), você paga, fica com pouco calor e DEVE UM FAVOR. */
-export function hire29(s: GameState, oid: string, c: string, rawTarget: string, method?: string): { ok: boolean; text: L } {
+export function hire29(s: GameState, oid: string, job: string, rawTarget: string, method?: string, cat?: string): { ok: boolean; text: L } {
   const o = orgById(s, oid);
   const target = targetId17(s, rawTarget);
-  const od = hireOdds29(s, oid, c, target, method);
+  const od = hireOdds29(s, oid, job, target, method, cat);
   if (!o || od.block) return { ok: false, text: od.block ?? N('Inválido.', 'Invalid.') };
+  const j = jobOf29(job, o)!;
+  const c = j.c;
   const st = mob29(s);
   st.seq++;
-  const r = rng(s, `hire:${o.id}:${c}:${target}`);
+  const r = rng(s, `hire:${o.id}:${job}:${target}`);
   post(s, `mob29hire:${o.id}:${s.week}:${st.seq}`, -od.cost, 'legal', `Serviço da família (${o.name.pt})`);
-  const res = commitCrime(s, c, ctxOf(o, c, target, method), r);
-  if (!(typeof res === 'object' && 'ok' in res)) { post(s, `mob29refund:${o.id}:${s.week}:${st.seq}`, od.cost, 'legal', `Devolução (${o.name.pt})`); return { ok: false, text: res }; }
+  let res: { ok: boolean; ex: boolean; text: L };
+  let cname: L;
+  if (c.startsWith('x:')) { res = xJob29(s, o, c, target, r); cname = j.name; }
+  else {
+    const out = commitCrime(s, c, ctxOf(o, c, target, method ?? j.m, cat), r);
+    if (!(typeof out === 'object' && 'ok' in out)) { post(s, `mob29refund:${o.id}:${s.week}:${st.seq}`, od.cost, 'legal', `Devolução (${o.name.pt})`); return { ok: false, text: out }; }
+    res = out;
+    cname = crimeById(c)!.name;
+  }
   // o calor que sobra para você (a família leva o resto); exposto, a polícia pode ligar o serviço a você
   addHeat(s, 'player', od.a3, od.heatYou * (res.ex ? 2 : 1));
   let leak: L | null = null;
-  if (res.ex && r.chance(0.45)) {
+  if (res.ex && !c.startsWith('x:') && r.chance(0.45)) {
     const d = crimeById(c)!;
     feedCase(s, 'player', od.a3, 10 + d.sev / 5, d.sev, true);
     if (s.persons[target]?.alive) grantHold(s, { holder: target, target: 'player', kind: 'grievance', strength: clamp(d.sev, 30, 90), months: 240, src: 'mob29', text: fmtL(N('Mandou {o} fazer "{c}"', 'Sent {o} to do "{c}"'), { o: o.name, c: d.name }), quiet: true });
@@ -425,7 +531,7 @@ export function hire29(s: GameState, oid: string, c: string, rawTarget: string, 
     if (owner && s.labels[owner]) s.rivalries[owner] = (s.rivalries[owner] ?? 0) + 15;
     leak = fmtL(N(' A polícia liga o serviço a {c}.', ' Police tie the job to {c}.'), { c: s.config.companyName });
   }
-  owe29(s, o, od.favor, fmtL(N('serviço "{c}" contra {t}', 'the "{c}" job against {t}'), { c: crimeById(c)!.name, t: nameOf17(s, target) }), r);
+  owe29(s, o, od.favor, fmtL(N('serviço "{c}" contra {t}', 'the "{c}" job against {t}'), { c: cname, t: nameOf17(s, target) }), r);
   bump(s, o.id, { res: 3 }); rel(s, o.id, 4);
   const text = fmtL(N('{o} fez o serviço: {x}{l} Você deve um favor a {b}.', '{o} did the job: {x}{l} You owe {b} a favor.'), { o: o.name, x: res.text, l: leak ?? '', b: bossName(o) });
   logIt(s, o.id, text);
@@ -434,7 +540,7 @@ export function hire29(s: GameState, oid: string, c: string, rawTarget: string, 
 
 // ================================================================ a família cobra (pedidos com prazo)
 
-export interface AskDef29 { k: AskKind29; name: L; desc: L; fx: L; block: (s: GameState, o: Org17) => L | null; cost: (s: GameState, o: Org17) => number; run: (s: GameState, o: Org17, r: Rng) => L }
+export interface AskDef29 { k: AskKind29; name: L; desc: L; fx: L; block: (s: GameState, o: Org17) => L | null; cost: (s: GameState, o: Org17) => number; run: (s: GameState, o: Org17, r: Rng, a?: Ask29) => L }
 const bestRev = (s: GameState): number => Math.max(0, ...myActs(s).flatMap((a) => a.releases.map((id) => s.releases[id]).filter((x) => x && s.week - x.week < 26).map((x) => x.revenue)));
 export const ASKS29: AskDef29[] = [
   { k: 'sign', name: N('Assinar o afilhado deles', 'Sign their protégé'), desc: N('"O garoto canta. Ele merece um contrato."', '"The kid can sing. He deserves a contract."'),
@@ -458,21 +564,72 @@ export const ASKS29: AskDef29[] = [
     cost: (s) => Math.max(money(s, 2000), Math.round(bestRev(s) * 0.15)), block: (s) => { const c = Math.max(money(s, 2000), Math.round(bestRev(s) * 0.15)); return freeCash20(s) < c ? cashWhy20(s, c, B.cash) : null; },
     run: (s, o) => { const c = Math.max(money(s, 2000), Math.round(bestRev(s) * 0.15)); post(s, `mob29cut:${o.id}:${s.week}`, -c, 'royalties', `Participação de ${o.name.pt}`); return fmtL(N('{o} leva {v} do seu disco.', '{o} takes {v} of your record.'), { o: o.name, v: usd(c) }); } },
   { k: 'vote', name: N('Votar como eles querem', 'Vote the way they want'), desc: N('"Na associação das gravadoras, você vota com a gente."', '"At the labels\' association, you vote with us."'),
-    fx: N('Reputação institucional −4.', 'Institutional reputation −4.'),
-    cost: () => 0, block: () => null,
-    run: (s, o) => { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 4, 0, 100); return fmtL(N('Você vota com {o}. Os outros selos reparam.', 'You vote with {o}. The other labels notice.'), { o: o.name }); } },
+    fx: N('Com voto na academia (reputação institucional 50+ ou 3+ prêmios): o protegido deles sobe no prêmio; sem voto, você faz lobby (custa). Reputação institucional −2.', 'With an academy vote (institutional reputation 50+ or 3+ awards): their protégé climbs in the award; without a vote, you lobby (costs). Institutional reputation −2.'),
+    cost: (s) => (hasVote29(s) ? 0 : money(s, 1500)), block: (s) => (!hasVote29(s) && freeCash20(s) < money(s, 1500) ? cashWhy20(s, money(s, 1500), B.cash) : null),
+    run: (s, o, _r, a) => {
+      s.player.reputation.institutional = clamp(s.player.reputation.institutional - 2, 0, 100);
+      const act = a?.act && s.acts[a.act] ? s.acts[a.act] : protege29(s, o);
+      const cat = awCatsOn29(s).includes('gramo') ? 'gramo' : awCatsOn29(s)[0];
+      if (!act || !cat) return fmtL(N('Você vota com {o}. Os outros selos reparam.', 'You vote with {o}. The other labels notice.'), { o: o.name });
+      const name = AWCAT29.find((x) => x.id === cat)!.name(s);
+      if (hasVote29(s)) {
+        rigAward29(s, { act: act.id, cat, m: 'vote', by: 'vote', o: o.id, pow: Math.round(3 + s.player.reputation.institutional / 25) });
+        return fmtL(N('Seu voto na academia vai para {a} ({p}), como {o} pediu.', 'Your academy vote goes to {a} ({p}), as {o} asked.'), { a: act.name, p: name, o: o.name });
+      }
+      post(s, `mob29lobby:${o.id}:${s.week}`, -money(s, 1500), 'marketing', `Lobby a pedido de ${o.name.pt}`);
+      rigAward29(s, { act: act.id, cat, m: 'lobby', by: 'vote', o: o.id, pow: 2 });
+      return fmtL(N('Sem voto na academia, você faz lobby por {a} ({p}) para {o}.', 'With no academy vote, you lobby for {a} ({p}) for {o}.'), { a: act.name, p: name, o: o.name });
+    } },
   { k: 'job', name: N('Aceitar um trabalho da família', 'Take a job from the family'), desc: N('"Um caminhão precisa chegar ao outro lado da cidade. Você tem caminhões."', '"A truck needs to cross town. You have trucks."'),
     fx: N('Dinheiro; calor +6; 15% de virar caso; a família fica devendo a você.', 'Cash; heat +6; 15% chance of a case; the family owes you.'),
     cost: () => 0, block: () => null,
     run: (s, o, r) => { const v = money(s, 3000 + o.power * 50); post(s, `mob29job:${o.id}:${s.week}`, v, 'other_income', `"Frete" (${o.name.pt})`); crime17(s).loot19 = (crime17(s).loot19 ?? 0) + v; addHeat(s, 'player', home(s), 6); if (r.chance(0.15)) feedCase(s, 'player', home(s), 15, 40, true); grantHold(s, { holder: 'player', target: o.key, kind: 'favor', strength: 40, months: 60, src: 'mob29', ref: `j${mob29(s).seq}`, text: fmtL(N('{o} deve um favor por um "frete"', '{o} owes a favor for a "delivery"'), { o: o.name }), quiet: true }); return fmtL(N('O "frete" de {o} rende {v}. Agora eles devem a você.', '{o}\'s "delivery" pays {v}. Now they owe you.'), { o: o.name, v: usd(v) }); } },
 ];
+// r29 (Facções × gêneros e cenas, aff29): convites e pressões a um ato SEU do gênero/cena que a facção domina
+const askAct = (s: GameState, a?: Ask29): Act | undefined => (a?.act && liveAct(s.acts[a.act]) ? s.acts[a.act] : undefined);
+ASKS29.push(
+  { k: 'baile', name: N('Tocar no baile/evento deles', 'Play at their party/event'), desc: N('"O baile é nosso. Seu artista toca, a comunidade inteira escuta."', '"The party is ours. Your act plays, the whole neighborhood listens."'),
+    fx: N('Cachê, fama e divulgação de rua (bailes, mixtapes); risco de batida policial (cena) e de pânico moral (escândalo).', 'A fee, fame and street promotion (parties, mixtapes); risk of a police raid (scene) and of moral panic (scandal).'),
+    cost: () => 0, block: (s) => (myActs(s).length ? null : B.noAct),
+    run: (s, o, r, a) => {
+      const act = askAct(s, a) ?? myActs(s)[0];
+      const v = money(s, 800 + act.fame * 60);
+      post(s, `mob29baile:${o.id}:${act.id}:${s.week}`, v, 'live', `Baile (${o.name.pt})`);
+      act.fame = clamp(act.fame + 0.6, 0, 100); act.momentum = clamp(act.momentum + 6, 0, 100);
+      addHeat(s, 'player', a3Of(s, act.city), 3);
+      if (r.chance(0.2 + heatIn(s, a3Of(s, act.city)) / 300)) {
+        const t = fmtL(N('A polícia invade o baile de {o} durante o show de {a}.', 'Police raid {o}\'s party during {a}\'s show.'), { o: o.name, a: act.name });
+        emitFact(s, { kind: 'arrest', actors: ['player', o.key, act.id], place: act.city, severity: 40, visibility: 'public', tags: ['crime', 'raid', 'bad', 'aff29'], text: t, src: 'mob29' });
+        for (const m of act.members) addStress(s, m, 8, N('Batida no baile', 'Raid at the party'));
+        return t;
+      }
+      if (r.chance(0.15)) scandal(s, act.id, 'conduct', 25, fmtL(N('Pânico moral: {a} toca num baile ligado a {o}.', 'Moral panic: {a} plays a party tied to {o}.'), { a: act.name, o: o.name }), { tags: ['aff29'] });
+      return fmtL(N('{a} faz o baile de {o}: {v} e o nome corre nas mixtapes.', '{a} plays {o}\'s party: {v} and the name spreads on mixtapes.'), { a: act.name, o: o.name, v: usd(v) });
+    } },
+  { k: 'homage', name: N('Escrever sobre eles (faixa de homenagem)', 'Write about them (a tribute track)'), desc: N('"Uma letra pra nós. A rua vai saber de que lado você está."', '"A verse for us. The street will know whose side you are on."'),
+    fx: N('Credibilidade de rua (o ato passa a andar com eles — laço desta partida); pânico moral, censura e calor.', 'Street credibility (the act runs with them — a tie in this save); moral panic, censorship and heat.'),
+    cost: () => 0, block: (s) => (myActs(s).length ? null : B.noAct),
+    run: (s, o, r, a) => {
+      const act = askAct(s, a) ?? myActs(s)[0];
+      crime17(s).ties[act.id] = o.id; // laço de rua de sempre (crimenpc17: credibilidade, rixas) — causado pelo jogo
+      (mob29(s).sim ??= {})[act.id] = o.id;
+      addHeat(s, 'player', a3Of(s, act.city), 5);
+      if (r.chance(0.5)) scandal(s, act.id, 'conduct', 35, fmtL(N('Faixa de {a} exalta {o}: pânico moral, rádios recusam tocar.', '{a}\'s track glorifies {o}: moral panic, radio refuses to play it.'), { a: act.name, o: o.name }), { tags: ['aff29', 'censorship'] });
+      return fmtL(N('{a} grava a faixa: a rua aplaude, as rádios torcem o nariz.', '{a} records the track: the street cheers, radio frowns.'), { a: act.name });
+    } },
+  { k: 'toll', name: N('Pagar o pedágio para tocar no território', 'Pay the toll to play in their turf'), desc: N('"Aqui quem toca, paga."', '"Whoever plays here, pays."'),
+    fx: N('Uma taxa; sem pedágio, a família escala como numa dívida.', 'A fee; without the toll, the family escalates as with a debt.'),
+    cost: (s, o) => money(s, 600 + o.power * 15), block: (s, o) => (freeCash20(s) < money(s, 600 + o.power * 15) ? cashWhy20(s, money(s, 600 + o.power * 15), B.cash) : null),
+    run: (s, o) => { const c = money(s, 600 + o.power * 15); post(s, `mob29toll:${o.id}:${s.week}`, -c, 'live_costs', `Pedágio (${o.name.pt})`); return fmtL(N('Pedágio pago a {o}: {v}.', 'Toll paid to {o}: {v}.'), { o: o.name, v: usd(c) }); } },
+);
 export const askDef29 = (k: AskKind29): AskDef29 => ASKS29.find((x) => x.k === k)!;
 export const asks29 = (s: GameState, oid?: string): Ask29[] => (peek29(s)?.asks ?? []).filter((a) => !oid || a.o === oid.replace(/^o:/, ''));
 
 /** Cria um pedido (a família cobra o favor ou oferece trabalho). */
-function ask29(s: GameState, o: Org17, k: AskKind29, hold?: string): Ask29 {
+function ask29(s: GameState, o: Org17, k: AskKind29, hold?: string, actId?: string): Ask29 {
   const st = mob29(s);
-  const a: Ask29 = { id: `mk${++st.seq}`, o: o.id, k, hold, w: s.week, dl: s.week + 4, esc: mo(s, o.id).esc };
+  const p = k === 'vote' ? protege29(s, o) : actId ? s.acts[actId] : undefined;
+  const a: Ask29 = { id: `mk${++st.seq}`, o: o.id, k, hold, w: s.week, dl: s.week + 4, esc: mo(s, o.id).esc, ...(p ? { act: p.id } : {}) };
   st.asks.push(a);
   const def = askDef29(k);
   notify(s, k === 'job'
@@ -491,7 +648,7 @@ export function fulfill29(s: GameState, askId: string): { ok: boolean; text: L }
   const b = def.block(s, o);
   if (b) return { ok: false, text: b };
   st.seq++;
-  const text = def.run(s, o, rng(s, `ask:${a.id}`));
+  const text = def.run(s, o, rng(s, `ask:${a.id}`), a);
   if (a.hold) for (const h of holds17(s).h) if (h.id === a.hold) { h.status = 'used'; h.uses++; h.lastUse = s.week; }
   st.asks = st.asks.filter((x) => x.id !== a.id);
   const m = mo(s, o.id);
@@ -499,6 +656,29 @@ export function fulfill29(s: GameState, askId: string): { ok: boolean; text: L }
   bump(s, o.id, a.k === 'job' ? { res: 6 } : { res: 12, hos: -10 }); rel(s, o.id, a.k === 'job' ? 4 : 8);
   logIt(s, o.id, text);
   return { ok: true, text };
+}
+
+/** O protegido da família: um ato que anda com ela, senão o ato de outro selo mais forte na área dela. */
+export function protege29(s: GameState, o: Org17): Act | undefined {
+  const st = crime17(s);
+  const tied = Object.entries(st.ties).filter(([, oid]) => oid === o.id).map(([aid]) => s.acts[aid]).find((a) => liveAct(a) && !(a.owner === 'player' || a.playerBand));
+  if (tied) return tied;
+  return Object.values(s.acts).filter((a) => liveAct(a) && a.owner !== 'player' && !a.playerBand && a.debutYear <= s.year && (o.kind === 'cyber' || a3Of(s, a.city) === o.a3)).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1))[0];
+}
+export const delayCost29 = (s: GameState, o: Org17): number => money(s, 800 + o.power * 10);
+/** Negociar o prazo (uma vez por pedido): +4 semanas, uma "taxa de paciência" e um pouco de respeito. */
+export function delay29(s: GameState, askId: string): { ok: boolean; text: L } {
+  const st = mob29(s);
+  const a = st.asks.find((x) => x.id === askId);
+  const o = a ? orgById(s, a.o) : undefined;
+  if (!a || !o) return { ok: false, text: N('Pedido não encontrado.', 'Request not found.') };
+  if (a.delay) return { ok: false, text: N('O prazo já foi renegociado uma vez.', 'The deadline was already renegotiated once.') };
+  const c = delayCost29(s, o);
+  if (freeCash20(s) < c) return { ok: false, text: cashWhy20(s, c, B.cash) };
+  post(s, `mob29delay:${a.id}`, -c, 'legal', `Prazo com ${o.name.pt}`);
+  a.dl += 4; a.delay = 1; st.seq++;
+  bump(s, o.id, { res: -2 });
+  return { ok: true, text: fmtL(N('{b} aceita esperar mais 4 semanas ({v}).', '{b} agrees to wait 4 more weeks ({v}).'), { b: bossName(o), v: usd(c) }) };
 }
 
 /** Recusa (ou deixa vencer): a dívida continua e a família escala — ameaça, sabotagem, violência. */
@@ -510,6 +690,7 @@ export function refuse29(s: GameState, askId: string): { ok: boolean; text: L } 
   st.asks = st.asks.filter((x) => x.id !== a.id);
   st.seq++;
   if (a.k === 'job') { bump(s, o.id, { res: -2 }); return { ok: true, text: fmtL(N('Você recusa o trabalho de {o}. Sem ressentimento — por ora.', 'You turn down {o}\'s job. No hard feelings — for now.'), { o: o.name }) }; }
+  if (a.k === 'baile' || a.k === 'homage') { bump(s, o.id, { hos: a.k === 'homage' ? 8 : 5, res: -3 }); return { ok: true, text: fmtL(N('{o} não gostou da recusa, mas deixa passar.', '{o} did not like the refusal, but lets it go.'), { o: o.name }) }; }
   const m = mo(s, o.id);
   m.esc++;
   bump(s, o.id, { hos: 15 * m.esc, fear: 5 }); rel(s, o.id, -10);
@@ -570,7 +751,7 @@ registerSimHook('month', 'mob29', (s) => {
     if (Number(h.data?.due ?? Infinity) > s.week || st.asks.some((a) => a.hold === h.id)) continue;
     const o = orgById(s, h.holder);
     if (!o) continue;
-    const pool = ASKS29.filter((d) => d.k !== 'job' && !d.block(s, o) && (d.k !== 'club' || hasRacket(o, 'clubs')) && (d.k !== 'launder' || hasRacket(o, 'laundering') || o.kind === 'cartel'));
+    const pool = ASKS29.filter((d) => !['job', 'baile', 'homage', 'toll'].includes(d.k) && !d.block(s, o) && (d.k !== 'club' || hasRacket(o, 'clubs')) && (d.k !== 'launder' || hasRacket(o, 'laundering') || o.kind === 'cartel'));
     if (pool.length) ask29(s, o, r.pick(pool).k, h.id);
   }
   // cada família com que você lida
@@ -599,6 +780,63 @@ registerSimHook('month', 'mob29', (s) => {
     if (mt.respect >= 50 && !st.asks.some((a) => a.o === oid) && r.chance(0.12)) ask29(s, o, 'job');
   }
 });
+
+// ================================================================ Favores e dívidas (Cockpit, calendário)
+
+export interface FavorRow29 {
+  id: string;
+  /** pedido com prazo · favor que você deve · favor que a família deve a você */
+  kind: 'ask' | 'owe' | 'owed';
+  o: string; title: L; meta: L;
+  /** semana do prazo / da cobrança */
+  due?: number;
+  /** nível de escalada da família (recusas) */
+  esc: number;
+  tone: 'bad' | 'warn' | 'good' | 'info';
+  /** ações rápidas: ids do mesmo despacho do menu (mob.ask:/mob.refuse:/mob.delay:/mob.pay:) */
+  acts: { id: string; label: L }[];
+}
+/** Tudo o que você deve e o que devem a você, com os prazos — a mesma fonte do card da família e do calendário. */
+export function favorRows29(s: GameState): FavorRow29[] {
+  const st = peek29(s);
+  const out: FavorRow29[] = [];
+  const asked = new Set((st?.asks ?? []).map((a) => a.hold).filter(Boolean));
+  for (const a of st?.asks ?? []) {
+    const o = orgById(s, a.o);
+    if (!o) continue;
+    const d = askDef29(a.k);
+    const job = a.k === 'job' || a.k === 'baile' || a.k === 'homage';
+    out.push({ id: `ask:${a.id}`, kind: 'ask', o: o.id, due: a.dl, esc: st!.o[o.id]?.esc ?? 0, tone: job ? 'info' : 'bad',
+      title: fmtL(job ? N('{o} oferece: {n}', '{o} offers: {n}') : N('{o} cobra: {n}', '{o} calls in: {n}'), { o: o.name, n: d.name }),
+      meta: fmtL(N('{x} · escalada {e}', '{x} · escalation {e}'), { x: d.fx, e: st!.o[o.id]?.esc ?? 0 }),
+      acts: [{ id: `mob.ask:${a.id}`, label: job ? N('Aceitar', 'Accept') : N('Cumprir', 'Do it') }, ...(!a.delay && !job ? [{ id: `mob.delay:${a.id}`, label: N('Negociar prazo', 'Negotiate') }] : []), { id: `mob.refuse:${a.id}`, label: N('Recusar', 'Refuse') }] });
+  }
+  for (const h of holds17(s).h) {
+    if (h.status !== 'open' || h.target !== 'player' || !h.holder.startsWith('o:') || h.src !== 'mob29' || h.kind !== 'favor' || asked.has(h.id)) continue;
+    const o = orgById(s, h.holder);
+    if (!o) continue;
+    const due = Number(h.data?.due ?? NaN);
+    out.push({ id: `owe:${h.id}`, kind: 'owe', o: o.id, due: Number.isFinite(due) ? due : undefined, esc: st?.o[o.id]?.esc ?? 0, tone: 'warn',
+      title: fmtL(N('Você deve a {o}', 'You owe {o}'), { o: o.name }), meta: fmtL(N('{x} · escalada {e}', '{x} · escalation {e}'), { x: h.text, e: st?.o[o.id]?.esc ?? 0 }),
+      acts: [{ id: `mob.pay:${o.id}`, label: fmtL(N('Pagar ({v})', 'Pay ({v})'), { v: usd(payDebtCost29(s, o)) }) }] });
+  }
+  for (const h of holds17(s).h) {
+    if (h.status !== 'open' || h.holder !== 'player' || !h.target.startsWith('o:') || (h.kind !== 'favor' && h.kind !== 'debt')) continue;
+    const o = orgById(s, h.target);
+    if (!o) continue;
+    out.push({ id: `owed:${h.id}`, kind: 'owed', o: o.id, esc: 0, tone: 'good', title: fmtL(N('{o} deve a você', '{o} owes you'), { o: o.name }), meta: h.text, acts: [] });
+  }
+  const pr = { ask: 0, owe: 1, owed: 2 } as const;
+  return out.sort((a, b) => pr[a.kind] - pr[b.kind] || (a.due ?? 1e9) - (b.due ?? 1e9));
+}
+/** Medidores das famílias com que você lida (Cockpit e card). */
+export const meters29 = (s: GameState): { o: string; m: Meter29 }[] => Object.keys(peek29(s)?.o ?? {}).filter((oid) => orgById(s, oid)).map((oid) => ({ o: oid, m: meter29(s, oid) }));
+
+// prazos no calendário único (agenda/grade do S03, Cockpit): pedidos com prazo e favores com data de cobrança
+registerDeadline('mob29', (s, from, to) => favorRows29(s).filter((r) => r.due !== undefined && r.due >= from && r.due <= to && r.kind !== 'owed').map((r) => ({
+  id: `mob29:${r.id}`, w: r.due!, kind: 'other' as const, t: r.title, d: r.kind === 'ask' ? N('Sem resposta no prazo = recusa (a família escala).', 'No answer by the deadline = refusal (the family escalates).') : N('A família vai cobrar o favor.', 'The family will call in the favor.'),
+  tone: r.kind === 'ask' ? 'bad' as const : 'info' as const, act: r.kind === 'ask', goto: { area: 'crime', tab: ['crime17', 'orgs'] as [string, string] },
+})));
 
 /** Para a interface e os testes. */
 export const _mob29 = { owe29, ask29, retaliate29, orgBlock29, B };

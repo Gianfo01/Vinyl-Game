@@ -19,6 +19,7 @@ import { gainXp, ownerOf, type OwnerAttr } from './people/owner';
 import { grow, learnInstrument, overall, type Role } from './talent';
 import { BACKGROUNDS, HOBBIES, JOBS, KID_EDU, PARTNER_TRAITS, backgroundById, type BackgroundId, type HobbyId, type KidEdu } from './life/data';
 import { ensureBandVocalist } from './vocals10';
+import { applyRoles29 } from './char29'; // r29: funções extras do personagem e a banda que o completa
 import { actsTouched17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
 
@@ -203,6 +204,7 @@ function applyCharacter(s: GameState, r: Rng): void {
     if (band.members.length === 1 && !s.config.bandName) band.name = p.name;
     for (const id of band.members) if (id !== p.id && s.persons[id]) { s.persons[id].rel[p.id] = r.int(10, 50); p.rel[id] = r.int(10, 50); }
   }
+  applyRoles29(s, p, band); // r29: extras da ficha (vocal = canta) e integrantes repetidos passam para a função que falta
   ensureBandVocalist(s, band); // rodada 10: a banda começa com alguém que canta
 }
 

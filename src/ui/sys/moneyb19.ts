@@ -13,6 +13,8 @@ import { why18 } from '../explain18';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
 import { freeCash20 } from '../../sim/oblig20';
+import { deals29Tab } from './contracts29';
+import { specialDeals29 } from '../../sim/sys/contracts29';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null, ok: L = l('Feito.', 'Done.')) => { toast(T(r ?? ok), r ? 'info' : 'good'); rerender(); };
@@ -94,6 +96,7 @@ function page(s: GameState): HTMLElement {
       { id: 'clause', label: t(l('Cláusulas', 'Clauses')), render: () => clauseTab(s) },
       { id: 'mgr', label: t(l('Empresários', 'Managers')), badge: Object.values(mb19(s).mgr).filter((m) => m.revolt >= 60).length || undefined, render: () => mgrTab(s) },
       { id: 'masters', label: t(l('Gestão e masters', 'Management and masters')), render: () => mastersTab(s) },
+      { id: 'deals29', label: t(l('Acordos especiais', 'Special deals')), badge: specialDeals29(s).filter((r) => r.active).length || undefined, render: () => deals29Tab(s) }, // R29 (contratos+): empresariamento, produção, JV
       { id: 'hist', label: t(l('Histórico', 'History')), render: () => histTab(s) },
     ], rerender));
 }

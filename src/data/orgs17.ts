@@ -4,8 +4,9 @@
 
 import { l, type L } from './world';
 
-export type Racket17 = 'jukebox' | 'clubs' | 'payola' | 'bootleg' | 'tickets' | 'protection' | 'laundering' | 'violence' | 'carnival' | 'corridos';
-export type OrgKind17 = 'mafia' | 'gang' | 'cartel' | 'syndicate' | 'firm';
+export type Racket17 = 'jukebox' | 'clubs' | 'payola' | 'bootleg' | 'tickets' | 'protection' | 'laundering' | 'violence' | 'carnival' | 'corridos'
+  | 'bots' | 'streams' | 'leaks' | 'scalp' | 'clones' | 'darknet'; // r29: crime digital (data/cyber29)
+export type OrgKind17 = 'mafia' | 'gang' | 'cartel' | 'syndicate' | 'firm' | 'cyber';
 export interface OrgDef17 {
   id: string;
   name: L;
@@ -31,9 +32,12 @@ export const RACKET_NAME: Record<Racket17, L> = {
   jukebox: l('Jukeboxes', 'Jukeboxes'), clubs: l('Boates e casas', 'Nightclubs and venues'), payola: l('Jabá', 'Payola'), bootleg: l('Pirataria', 'Bootlegging'),
   tickets: l('Bilheteria/cambistas', 'Tickets/scalping'), protection: l('Proteção (pizzo)', 'Protection money'), laundering: l('Lavagem', 'Laundering'),
   violence: l('Violência', 'Violence'), carnival: l('Carnaval e escolas', 'Carnival and samba schools'), corridos: l('Narcocorridos', 'Narcocorridos'),
+  bots: l('Robôs e contas falsas', 'Bots and fake accounts'), streams: l('Fazendas de streams', 'Stream farms'), leaks: l('Vazamentos e invasões', 'Leaks and hacks'),
+  scalp: l('Cambismo por robôs', 'Ticket-bot scalping'), clones: l('Vozes clonadas por IA', 'AI-cloned voices'), darknet: l('Pirataria na darknet', 'Darknet piracy'),
 };
 export const KIND_NAME: Record<OrgKind17, L> = {
   mafia: l('Máfia', 'Mafia'), gang: l('Gangue', 'Gang'), cartel: l('Cartel', 'Cartel'), syndicate: l('Sindicato do crime', 'Crime syndicate'), firm: l('"Firma"', '"Firm"'),
+  cyber: l('Crime digital', 'Cybercrime'),
 };
 
 export const ORGS17: OrgDef17[] = [

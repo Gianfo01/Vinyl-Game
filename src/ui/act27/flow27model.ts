@@ -261,7 +261,7 @@ registerActivity27({
 // telas: a ocasião vem da própria tela (oferta, pedido de renegociação, operação do submundo)
 registerActivity27({
   id: 'nego', kind: 'screen', label: l('Negociação', 'Negotiation'),
-  when: (s, o) => !!o.actId && !!s.acts[o.actId] && !negoGate27(s, o.actId),
+  when: (s, o) => !!o.actId && !!s.acts[o.actId] && !negoGate27(s, o.actId, (o.data?.base as { model?: import('../../data/rules').ContractModel } | undefined)?.model), // R29: o modelo da proposta (empresariamento aceita ato com selo)
   // R29 (integrante): a oferta a um integrante / pessoa sem banda (solo e banda em montagem) conta sempre como importante —
   // "Só as importantes" abre a mesa; "Sempre rápido" (escolha explícita) continua resolvendo na proposta única
   important: (s, o) => (s.acts[o.actId ?? '']?.fame ?? 0) >= 15 || memberOffer29(s, o.actId ?? ''),

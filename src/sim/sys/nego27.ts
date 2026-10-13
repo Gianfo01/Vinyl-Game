@@ -12,7 +12,9 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { acceptOffer, evaluateOffer, expectedAdvance, makeOffer, pending29 } from '../contracts';
+import { acceptOffer, evaluateOffer, expectedAdvance, makeOffer, offerEligible29, pending29 } from '../contracts';
+import { COMMISSION29, SHARE29, commissionOf29, isSide29, isSpecial29, shareOf29, termTxt29 } from '../terms29';
+import type { ContractModel } from '../../data/rules';
 import { actHasTrait, mainAmbition } from '../people';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, staffCount, staffSkill } from '../util';
@@ -52,16 +54,16 @@ export interface Nego27 {
 
 const rng27 = (s: GameState, n: Nego27, part: string) => Rng.fromSeed(`${s.config.seed}|${NEGO27_RNG}|${n.actId}|${n.week}|${n.attempt}|${part}`);
 const scoreOf = (s: GameState, act: Act, o: Draft27) => evaluateOffer(s, act, o).score;
-export const copyDraft27 = (o: Draft27): Draft27 => ({ ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined, clauses18: o.clauses18 ? { ...o.clauses18 } : undefined });
+export const copyDraft27 = (o: Draft27): Draft27 => ({ ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined, clauses18: o.clauses18 ? { ...o.clauses18 } : undefined, x29: o.x29 ? { ...o.x29 } : undefined });
 
 const GREEDY = ['manipulative', 'opportunist', 'ambitious', 'spendthrift', 'big_ego'];
 const EASY = ['generous', 'frugal', 'loyal', 'diplomatic'];
 
-/** Por que não dá para negociar agora (ou null). */
-export function negoGate27(s: GameState, actId: string): L | null {
+/** Por que não dá para negociar agora (ou null). R29: `model` — empresariamento aceita ato com selo rival. */
+export function negoGate27(s: GameState, actId: string, model: ContractModel = 'classic'): L | null {
   const act = s.acts[actId];
-  if (!act || act.owner) return l('Este ato já tem contrato.', 'This act is already signed.');
-  const el = scoutEligible20(s, act);
+  if (!act || (isSide29({ model }) ? act.owner === 'player' && !act.playerBand : act.owner)) return act?.owner === 'player' ? l('Este ato já é do seu selo.', 'This act is already on your label.') : l('Este ato já tem contrato.', 'This act is already signed.');
+  const el = isSide29({ model }) ? offerEligible29(s, act, model) : scoutEligible20(s, act);
   if (!el.ok) return el.why ?? l('Não contratável agora.', 'Not signable now.');
   if (s.offers.some((x) => x.actId === actId && (x.status === 'pending' || x.status === 'counter'))) return l('Já existe uma oferta em aberto para este artista.', 'There is already an open offer for this act.');
   return null;
@@ -75,7 +77,7 @@ export function insight27(s: GameState, act: Act): number {
 
 /** Abre a mesa: sorteia o mínimo escondido, a faixa revelada, a paciência e (talvez) um rival à espreita. */
 export function startNego27(s: GameState, actId: string, draft: Draft27): Nego27 | L {
-  const gate = negoGate27(s, actId);
+  const gate = negoGate27(s, actId, draft.model);
   if (gate) return gate;
   const act = s.acts[actId];
   const x = s.x4 as unknown as { nego27?: Record<string, { w: number; n: number }> };
@@ -125,11 +127,20 @@ function steps27(s: GameState, act: Act): Step27[] {
   const sec = mainAmbition(s, act) === 'security';
   return [
     { k: 'advance', cost: 1, f: (o) => { o.advance += da; return true; } },
-    { k: 'royalty', cost: 1.2, f: (o) => { if (o.model === 'distribution') { if ((o.distributionFee ?? 0.2) <= 0.06) return false; o.distributionFee = Math.round(((o.distributionFee ?? 0.2) - 0.02) * 100) / 100; return true; } if (o.royalty >= 0.5) return false; o.royalty = Math.round((o.royalty + 0.01) * 100) / 100; return true; } },
+    { k: 'royalty', cost: 1.2, f: (o) => { if (isSpecial29(o.model)) return step29(o); if (o.model === 'distribution') { if ((o.distributionFee ?? 0.2) <= 0.06) return false; o.distributionFee = Math.round(((o.distributionFee ?? 0.2) - 0.02) * 100) / 100; return true; } if (o.royalty >= 0.5) return false; o.royalty = Math.round((o.royalty + 0.01) * 100) / 100; return true; } },
     { k: 'control', cost: 1, f: (o) => { if (o.creativeControl) return false; o.creativeControl = true; return true; } },
     { k: 'term', cost: 0.6, f: (o) => { if (sec) { if (o.termMonths >= 84) return false; o.termMonths += 6; return true; } if (o.termMonths <= 12) return false; o.termMonths -= 6; return true; } },
     { k: 'albums', cost: 0.8, f: (o) => { if (o.releasesOwed <= 1) return false; o.releasesOwed -= 1; return true; } },
   ];
+}
+
+/** R29 (contratos+): o "royalty" de cada modelo novo — comissão menor, participação maior, parte maior. */
+function step29(o: Draft27): boolean {
+  if (o.model === 'management') { const c = commissionOf29(o); if (c <= COMMISSION29.min) return false; o.x29 = { ...o.x29, commission: Math.round((c - 0.01) * 100) / 100 }; return true; }
+  if (o.model === 'jv') { const v = shareOf29(o); if (v >= SHARE29.max) return false; o.x29 = { ...o.x29, artistShare: Math.round((v + 0.03) * 100) / 100 }; return true; }
+  if (o.royalty >= 0.7) return false;
+  o.royalty = Math.round((o.royalty + 0.02) * 100) / 100;
+  return true;
 }
 
 /** O artista melhora a SUA proposta no que mais valoriza até chegar na aspiração (no máx. 8 passos). */
@@ -170,7 +181,7 @@ export function propose27(s: GameState, n: Nego27, o: Draft27, tactic: Tactic27 
   n.round += 1;
   const r = rng27(s, n, `r${n.round}`);
   const sc = scoreOf(s, act, n.ours);
-  n.log.push({ who: 'you', t: fmtL(l('Proposta: {a} de adiantamento, {r}% de royalty, {m} meses, {d} disco(s){c}.', 'Offer: {a} advance, {r}% royalty, {m} months, {d} record(s){c}.'), { a: usd(n.ours.advance), r: Math.round((n.ours.model === 'distribution' ? 1 - (n.ours.distributionFee ?? 0.2) : n.ours.royalty) * 100), m: n.ours.termMonths, d: n.ours.releasesOwed, c: n.ours.creativeControl ? l(', controle criativo', ', creative control').pt : '' }) });
+  n.log.push(isSpecial29(n.ours.model) ? { who: 'you', t: line29(l('Proposta', 'Offer'), n.ours) } : { who: 'you', t: fmtL(l('Proposta: {a} de adiantamento, {r}% de royalty, {m} meses, {d} disco(s){c}.', 'Offer: {a} advance, {r}% royalty, {m} months, {d} record(s){c}.'), { a: usd(n.ours.advance), r: Math.round((n.ours.model === 'distribution' ? 1 - (n.ours.distributionFee ?? 0.2) : n.ours.royalty) * 100), m: n.ours.termMonths, d: n.ours.releasesOwed, c: n.ours.creativeControl ? l(', controle criativo', ', creative control').pt : '' }) });
   if (tactic === 'bluff') {
     n.bluffs += 1;
     const p = clamp(0.5 + (s.player.reputation.artists - 50) / 200 - (n.rival ? 0.2 : 0) - (actHasTrait(s, act, 'manipulative') ? 0.2 : 0) + (actHasTrait(s, act, 'insecure') || actHasTrait(s, act, 'anxious') ? 0.15 : 0) - (n.bluffs - 1) * 0.2, 0.1, 0.85);
@@ -191,7 +202,7 @@ export function propose27(s: GameState, n: Nego27, o: Draft27, tactic: Tactic27 
     return fail27(s, n, 'walked');
   }
   // rival entra na disputa (ato visível, a partir da 2ª rodada, ou se você chamou)
-  if (!n.rival && n.round >= 2 && (act.fame > 10 || !!act.catalogNo) && r.next() < clamp(0.12 + act.fame / 150, 0, 0.55)) bringRival27(s, n, false);
+  if (!n.rival && !isSide29(n.ours) && n.round >= 2 && (act.fame > 10 || !!act.catalogNo) && r.next() < clamp(0.12 + act.fame / 150, 0, 0.55)) bringRival27(s, n, false);
   if (n.rival && !n.rival.out && sc > n.rival.score) rivalCounter27(s, n, r);
   if (sc >= n.asp || (n.round >= n.maxRounds && sc >= n.res)) return deal27(s, n, n.ours, l('"Fechado." Eles aceitam a sua proposta.', '"Deal." They accept your offer.'));
   // paciência: proposta longe do mínimo ofende
@@ -203,7 +214,7 @@ export function propose27(s: GameState, n: Nego27, o: Draft27, tactic: Tactic27 
   }
   concede(n);
   n.theirs = counter27(s, n);
-  n.log.push({ who: 'them', tone: 'warn', t: fmtL(l('Contraproposta: {a} de adiantamento, {r}% de royalty, {m} meses, {d} disco(s){c}. Paciência {p}/100.', 'Counter: {a} advance, {r}% royalty, {m} months, {d} record(s){c}. Patience {p}/100.'), { a: usd(n.theirs.advance), r: Math.round((n.theirs.model === 'distribution' ? 1 - (n.theirs.distributionFee ?? 0.2) : n.theirs.royalty) * 100), m: n.theirs.termMonths, d: n.theirs.releasesOwed, c: n.theirs.creativeControl ? l(', controle criativo', ', creative control').pt : '', p: Math.max(0, n.patience) }) });
+  n.log.push(isSpecial29(n.theirs.model) ? { who: 'them', tone: 'warn', t: fmtL(l('{x} Paciência {p}/100.', '{x} Patience {p}/100.'), { x: line29(l('Contraproposta', 'Counter'), n.theirs), p: Math.max(0, n.patience) }) } : { who: 'them', tone: 'warn', t: fmtL(l('Contraproposta: {a} de adiantamento, {r}% de royalty, {m} meses, {d} disco(s){c}. Paciência {p}/100.', 'Counter: {a} advance, {r}% royalty, {m} months, {d} record(s){c}. Patience {p}/100.'), { a: usd(n.theirs.advance), r: Math.round((n.theirs.model === 'distribution' ? 1 - (n.theirs.distributionFee ?? 0.2) : n.theirs.royalty) * 100), m: n.theirs.termMonths, d: n.theirs.releasesOwed, c: n.theirs.creativeControl ? l(', controle criativo', ', creative control').pt : '', p: Math.max(0, n.patience) }) });
   return n;
 }
 
@@ -217,6 +228,11 @@ export function acceptTheirs27(s: GameState, n: Nego27): Nego27 {
 /** Trazer um rival à mesa (ou ele chega sozinho): sobe o mínimo deles até um pouco acima do lance rival. */
 export function bringRival27(s: GameState, n: Nego27, asked = true): Nego27 {
   if (n.status !== 'open' || n.rival) return n;
+  if (isSide29(n.ours)) { // R29: no empresariamento nenhum selo disputa (o ato fica no selo dele)
+    if (asked) n.log.push({ who: 'note', t: l('No empresariamento não há leilão de selos: o ato continua onde está.', 'Management has no label auction: the act stays where it is.') });
+    n.rivalAsked = asked || n.rivalAsked;
+    return n;
+  }
   if (s.acts[n.actId] && pending29(s, s.acts[n.actId])) { // R29 (integrante B): a banda ainda não existe — ninguém a disputa
     if (asked) n.log.push({ who: 'note', t: l('Nenhum selo disputa uma banda que ainda está sendo montada.', 'No label bids on a band that is still being formed.') });
     n.rivalAsked = asked || n.rivalAsked;
@@ -301,7 +317,8 @@ function deal27(s: GameState, n: Nego27, o: Draft27, why: L, who: Line27['who'] 
   }
   acceptOffer(s, act, offer);
   act.trust = clamp(act.trust + n.trust, 0, 100);
-  n.contractId = act.contractId;
+  // R29: no empresariamento o contrato não é o act.contractId (o ato fica no selo dele)
+  n.contractId = isSide29(offer) ? Object.values(s.contracts).filter((c) => c.actId === act.id && c.party === 'player' && c.model === 'management').sort((a, b) => b.startWeek - a.startWeek)[0]?.id : act.contractId;
   n.status = 'deal';
   n.log.push({ who, tone: 'good', t: why });
   return n;
@@ -326,6 +343,11 @@ function fail27(s: GameState, n: Nego27, st: 'walked' | 'lost'): Nego27 {
 }
 
 function usd(c: number): string { return `$${Math.round(c / 100).toLocaleString('en-US')}`; }
+/** R29 (contratos+): linha da proposta nos modelos novos (comissão / parte / participação e meta). */
+function line29(head: L, o: Draft27): L {
+  const x = termTxt29(o);
+  return fmtL(l('{h}: {a} de adiantamento, {x}, {m} meses.', '{h}: {a} advance, {x}, {m} months.'), { h: head, a: usd(o.advance), x, m: o.termMonths });
+}
 
 // ================================================================ RENEGOCIAÇÃO (pedido de artista que cresceu)
 // O pedido (rights8) traz royalty e bônus desejados. No modo rápido: aceitar tudo, meio-termo (chance
