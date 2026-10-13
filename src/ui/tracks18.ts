@@ -49,7 +49,7 @@ export const TRACKS18: Track18[] = [
     o('compose', 'Compor músicas novas', 'Write new songs', 'creation'),
     o('show', 'Fazer o primeiro show', 'Play your first show', 'shows', (s) => anyFact(s, ['show', 'tour_done'], 'me')),
     o('release', 'Lançar a primeira gravação', 'Release your first recording', 'releases', (s) => st(s).releases >= 1),
-    o('skills', 'Ver suas habilidades e personalidade', 'Check your skills and personality', 'you'),
+    o('skills', 'Ver sua personalidade e seu momento', 'Check your personality and current state', 'you'),
     o('fame', 'Chegar a fama 25 com a banda', 'Reach fame 25 with the band', 'artists', (s) => mine(s).some((id) => (s.acts[id]?.fame ?? 0) >= 25)),
   ] },
   { id: 'manager', name: l('Empresário', 'Manager'), intro: l('Clientes, comissões e contratos melhores.', 'Clients, commissions and better deals.'), objs: [
