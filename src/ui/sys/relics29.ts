@@ -4,12 +4,14 @@
 
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { ARCHDEF29, COND29, PROV29, meta29, story29 } from '../../sim/sys/relics29';
+import { ARCHDEF29, COND29, PROV29, meta29, story29, type Prov29 } from '../../sim/sys/relics29';
 import type { Relic } from '../../sim/sys/relics9';
 import type { GameState } from '../../sim/types';
 import { pill, section } from '../common';
 import { h } from '../dom';
 
+/** Com quem está agora: o estado da peça manda (comprada, no museu, roubada, em leilão); senão, a procedência de origem. */
+const holder = (rl: Relic, prov: Prov29): Prov29 => (rl.st === 'player' ? 'p' : rl.st === 'museum' ? 'm' : rl.st === 'stolen' ? 'b' : rl.st === 'auction' ? 'u' : prov === 'p' || prov === 'u' || prov === 'b' || prov === 'm' ? 'c' : prov);
 /** Pílulas curtas (arquétipo, estado, procedência) — ou null se a peça não é procedural. */
 export function relic29Pills(s: GameState, rl: Relic): HTMLElement | null {
   const m = meta29(s, rl.id);
@@ -17,7 +19,7 @@ export function relic29Pills(s: GameState, rl: Relic): HTMLElement | null {
   return h('span', { class: 'r29-pills' },
     pill(t(ARCHDEF29[m.arch].name)), ' ',
     pill(`${t(l('estado', 'condition'))}: ${t(COND29[m.cond] ?? COND29[1])}`, m.cond >= 3 ? 'bad' : m.cond === 0 ? 'good' : ''), ' ',
-    pill(t(PROV29[m.prov] ?? PROV29.a)));
+    pill(t(PROV29[holder(rl, m.prov)] ?? PROV29.a)));
 }
 
 /** Seção "Versão de um arquétipo real" da ficha: história, estado, procedência e o porquê do valor. */

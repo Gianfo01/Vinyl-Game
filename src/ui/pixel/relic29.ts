@@ -22,7 +22,7 @@ const RULES: [RegExp, RelicArt29][] = [
 
 /** Desenho novo pela palavra do nome; ou, para peça genérica da rodada 28 ('prop'), um objeto da época (≈55%). */
 export function relicArtOf29(kind: string, name: string, year: number, seed = '', art28 = ''): RelicArt29 | null {
-  const n = name.toLowerCase();
+  const n = name.toLowerCase().replace(/"[^"]*"/g, ''); // r29 (relíquias): título entre aspas ("Noite de Neon") não escolhe o desenho
   for (const [re, a] of RULES) if (re.test(n)) return a;
   if (art28 === 'prop' && h28('r29p', seed, name) % 100 < 55) {
     const b = relicBand28(year);

@@ -40,6 +40,7 @@ import { crime17, fences } from './crime17';
 import { est19, suit19 } from './afterlife19';
 import { realAct17 } from './realidx17';
 import { COLLECTORS, MUSEUMS, addRelic, relicKeep9, relics, type Relic, type RelicKind } from './relics9';
+import { per13 } from './persona13';
 import { ORIGIN18, rel18, statuette18 } from './relics18';
 import { VENUES17 } from './venues17';
 
@@ -140,14 +141,16 @@ export interface Relics29State {
   fk: number;
   /** contador dos ids próprios ("rq…": não mexe no contador global de ids do jogo) */
   seq: number;
+  /** atos que já ganharam peça no ano corrente (zera na virada do ano) */
+  ay: Record<string, number>;
 }
 declare module '../ext4' { interface Ext4 { relics29: Relics29State } }
-const fresh = (): Relics29State => ({ m: {}, q: [], yc: [0, 0], n: [], fk: 0, seq: 0 });
+const fresh = (): Relics29State => ({ m: {}, q: [], yc: [0, 0], n: [], fk: 0, seq: 0, ay: {} });
 registerExt4('relics29', fresh);
 export function rel29(s: GameState): Relics29State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.relics29 ??= fresh()) as Relics29State;
-  st.m ??= {}; st.q ??= []; st.yc ??= [0, 0]; st.n ??= []; st.fk ??= 0; st.seq ??= 0;
+  st.m ??= {}; st.q ??= []; st.yc ??= [0, 0]; st.n ??= []; st.fk ??= 0; st.seq ??= 0; st.ay ??= {};
   return st;
 }
 export interface Meta29 { arch: Arch29; cond: number; prov: Prov29; city: string; vi: number; fake: boolean; suit: boolean }
@@ -224,6 +227,9 @@ export function make29(s: GameState, arch: Arch29, c: Ctx29, r: Rng): Made29 {
   const v = venueL29(c.city, c.vi);
   const F = (pt: string, en: string, x: Record<string, string | number | L> = {}) => fmtL(l(pt, en), { p, a, y: c.y, t, c: cityN, v, ...x });
   const cond = (base: number) => clamp(base + (r.chance(0.3) ? 1 : 0), 0, 4);
+  // vestido só para quem a persona diz que é mulher (sem dado: paletó, jaqueta, macacão…)
+  const fem = !!c.pid && per13(s, `p:${c.pid}`)?.sex === 'f';
+  const wear = (xs: [string, string][]) => (fem ? xs : xs.filter(([, en]) => !/dress|gown/.test(en)));
   switch (arch) {
     case 'named_guitar': {
       const [np, ne] = r.pick(NICKS);
@@ -237,11 +243,11 @@ export function make29(s: GameState, arch: Arch29, c: Ctx29, r: Rng): Made29 {
       return r.chance(0.25) ? { k: 'guitar', n: F('Os restos da {m} que {p} queimou em {c}', 'The remains of the {m} {p} burned in {c}', { m: r.pick(GUITARS[b]) }), cond: 4 }
         : { k: 'guitar', n: F('Os restos da {m} que {p} destruiu em {c}', 'The remains of the {m} {p} smashed in {c}', { m: r.pick(GUITARS[b]) }), cond: 3 };
     case 'stage_outfit': {
-      const [ip, ie] = r.pick(OUTFITS[b]);
+      const [ip, ie] = r.pick(wear(OUTFITS[b]));
       return { k: 'outfit', n: c.farewell ? F('{i} da despedida de {p} ({y})', '{p}\'s farewell {ie} ({y})', { i: cap(ip), ie }) : F('{i} de {p} em {c} ({y})', '{p}\'s {ie} from {c} ({y})', { i: cap(ip), ie }), cond: cond(1) };
     }
     case 'ceremony_outfit': {
-      const [ip, ie] = r.pick(CEREMONY);
+      const [ip, ie] = r.pick(wear(CEREMONY));
       return { k: 'outfit', n: F('{i} de {p} no {cer} de {y}', '{p}\'s {y} {cer} {ie}', { i: cap(ip), ie, cer: ceremonyL(s, c.y) }), cond: cond(0) };
     }
     case 'napkin_lyrics': {
@@ -267,7 +273,7 @@ export function make29(s: GameState, arch: Arch29, c: Ctx29, r: Rng): Made29 {
       const [ip, ie, k] = r.pick(PERSONAL);
       return { k, n: F('{i} de {p}', '{p}\'s {ie}', { i: cap(ip), ie }), cond: 2 };
     }
-    case 'fixture': return { k: 'prop', n: F('O letreiro de neon do estúdio de {l}', 'The {l} studio neon sign', { l: c.lab ?? a }), cond: cond(1) };
+    case 'fixture': return { k: 'prop', n: F('O letreiro de neon do estúdio de {l}', '{l} studio neon sign', { l: c.lab ?? a }), cond: cond(1) };
     case 'charred':
       if (c.a && (role === 'guitar' || role === 'bass')) return { k: 'guitar', n: F('A guitarra chamuscada de {p} ({v}, {y})', '{p}\'s charred guitar ({v}, {y})'), cond: 4 };
       return r.chance(0.5) ? { k: 'amp', n: F('O amplificador chamuscado da noite do tumulto ({v}, {y})', 'The charred amplifier from the night of the riot ({v}, {y})'), cond: 4 }
@@ -309,9 +315,10 @@ export function story29(s: GameState, rl: Relic): L | null {
   const m = meta29(s, rl.id);
   if (!m) return null;
   const a = rl.a ? s.acts[rl.a] : undefined;
-  const p = rl.p ? nameOf(s, rl.p) : a ? nameOf(s, a.id) : rl.a ? nameOf(s, rl.a) : '?';
+  const first = rl.own[0]?.[0] ?? '?'; // sem ato (letreiro do estúdio, peça do incêndio): o primeiro dono — o selo, a casa
+  const p = rl.p ? nameOf(s, rl.p) : a ? nameOf(s, a.id) : rl.a ? nameOf(s, rl.a) : first;
   const [pt, en] = STORY[m.arch];
-  return fmtL(l(pt, en), { p, a: a?.name ?? (rl.a ? nameOf(s, rl.a) : p), c: cityL(m.city), v: venueL29(m.city, m.vi), y: rl.y });
+  return fmtL(l(pt, en), { p, a: a?.name ?? (rl.a ? nameOf(s, rl.a) : first), c: cityL(m.city), v: venueL29(m.city, m.vi), y: rl.y });
 }
 
 // ---------------------------------------------------------------- regras de nascimento
@@ -337,7 +344,7 @@ export function canBorn29(s: GameState, arch: Arch29, a: Act | undefined, k?: Re
   const mineL = live29(s).filter((x) => x.a === a.id);
   if (mineL.length >= CAPS29.actLive) return false;
   if (mineL.some((x) => meta29(s, x.id)?.arch === arch)) return false;
-  if (mineL.some((x) => x.y === s.year)) return false;
+  if (mineL.some((x) => x.y === s.year) || rel29(s).ay[a.id] === s.year) return false;
   if (k && relics(s).list.some((x) => x.a === a.id && x.k === k && x.y === s.year)) return false; // relics9/18/28 já fizeram
   return true;
 }
@@ -367,13 +374,13 @@ export function candidates29(s: GameState, f: Fact): { arch: Arch29[]; p: number
       const arch: Arch29[] = ['napkin_lyrics'];
       if (role === 'keys' || role === 'vocal') arch.push('hit_piano');
       if (role === 'guitar') arch.push('named_guitar');
-      return { arch, p: 0.12 * boost, o: 'hit' };
+      return { arch, p: 0.06 * boost, o: 'hit' };
     }
-    case 'masterwork': return act ? { arch: ['master_tape', 'session_mic', 'console'], p: 0.3 * boost, o: 'master' } : null;
+    case 'masterwork': return act ? { arch: ['master_tape', 'session_mic', 'console'], p: 0.2 * boost, o: 'master' } : null;
     case 'session_star': return act ? { arch: ['session_mic', 'console'], p: 0.4, o: 'session', pid: ids.find((x) => s.persons[x]) } : null;
     case 'award':
       if (!act) return null;
-      if (f.severity >= 60) return { arch: ['ceremony_outfit'], p: 0.2 * boost, o: 'award' };
+      if (f.severity >= 60) return { arch: ['ceremony_outfit'], p: 0.08 * boost, o: 'award' };
       return mine(act) && f.severity >= 30 ? { arch: ['statue'], p: 0.25, o: 'award' } : null;
     case 'death': {
       const pid = ids.find((x) => s.persons[x] && !s.persons[x].alive);
@@ -434,7 +441,7 @@ onFact('revival_hit', (s, f) => shift(s, f, 'up'), 'relics29:revival');
 export function flush29(s: GameState): Relic[] {
   const st = rel29(s);
   const out: Relic[] = [];
-  if (st.yc[0] !== s.year) st.yc = [s.year, 0];
+  if (st.yc[0] !== s.year) { st.yc = [s.year, 0]; st.ay = {}; }
   const q = st.q.splice(0);
   for (const [ai, actId, pid0, city, sev, o0, title, key, fid] of q) {
     if (st.yc[1] >= CAPS29.year) break;
@@ -458,6 +465,7 @@ export function flush29(s: GameState): Relic[] {
     rel18(s).m[rl.id] = { o, b: rl.v };
     place(s, rl, prov, pid, lab, city, vi, r);
     st.yc[1]++;
+    if (a) st.ay[a.id] = s.year;
     st.n[ai] = (st.n[ai] ?? 0) + 1;
     out.push(rl);
     emitFact(s, { kind: 'relic', actors: a ? [a.id, ...(pid ? [pid] : [])] : [], place: city, severity: 20 + Math.min(30, Math.round(v / 4000)), visibility: 'public', tags: ['relic', 'born', 'r29', arch], src: 'relics29', cause: fid ? [fid] : undefined,
@@ -472,7 +480,10 @@ function room(s: GameState): boolean {
   const list = live29(s);
   if (list.length < CAPS29.total) return true;
   const st = rel29(s);
-  const victim = list.filter((x) => x.st === 'kept' || x.st === 'museum').sort((a, b) => a.v - b.v)[0];
+  const stash = new Set(crime17(s).stash);
+  let pool = list.filter((x) => x.st === 'kept' || x.st === 'museum');
+  if (!pool.length) pool = list.filter((x) => x.st === 'stolen' && !stash.has(x.id)); // sumiu no submundo de vez
+  const victim = (pool.some((x) => x.y < s.year) ? pool.filter((x) => x.y < s.year) : pool).sort((a, b) => a.v - b.v)[0];
   if (!victim) return false;
   relics(s).list.splice(relics(s).list.indexOf(victim), 1);
   delete st.m[victim.id];
@@ -484,8 +495,8 @@ function provOf(s: GameState, arch: Arch29, a: Act | undefined, pid: string | un
   if (ARCHDEF29[arch].label && a && mine(a)) return 'p';
   if (ARCHDEF29[arch].label && a?.owner && s.labels[a.owner]) return 'l';
   if (arch === 'smashed') return r.chance(0.4) ? 'f' : 'a';
-  if (arch === 'charred') return r.chance(0.3) ? 'b' : 'v';
-  if (arch === 'infamous') return r.chance(0.4) ? 'b' : 'c';
+  if (arch === 'charred') return r.chance(0.15) ? 'b' : 'v';
+  if (arch === 'infamous') return r.chance(0.2) ? 'b' : 'c';
   if (arch === 'personal' || arch === 'last_note') return pid && s.persons[pid] && !s.persons[pid].alive ? 'h' : 'a';
   if (arch === 'ceremony_outfit' && r.chance(0.2)) return 'm';
   if (arch === 'show_poster' || arch === 'tour_pass') return 'c';
@@ -500,7 +511,7 @@ function place(s: GameState, rl: Relic, prov: Prov29, pid: string | undefined, l
     case 'l': who(lab ?? rl.own[0][0]); break;
     case 'c': who(`${r.pick(COLLECTORS)} (colecionador)`, 'compra'); break;
     case 'm': rl.st = 'museum'; who(r.pick(MUSEUMS), 'doação'); break;
-    case 'b': rl.st = 'stolen'; who(`${pn ?? rl.own[0][0]}`); rl.own.push(['?', s.year, 'saqueada']); break;
+    case 'b': rl.st = 'stolen'; who(`${pn ?? rl.own[0][0]}`); rl.own.push(['paradeiro desconhecido', s.year, 'saqueada']); break;
     case 'f': who(fmtL(l('um fã em {c}', 'a fan in {c}'), { c: cityL(city) }).pt, 'achado'); break;
     case 'h': who(`herdeiros de ${pn ?? rl.own[0][0]}`, 'herança'); break;
     case 'u': rl.st = 'auction'; rl.au = s.week + 13; who(lab ?? rl.own[0][0]); break;
@@ -545,7 +556,7 @@ function shift(s: GameState, f: Fact, how: 'scandal' | 'up'): void {
 export function forge29(s: GameState, src: Relic, r: Rng): Relic | null {
   const st = rel29(s);
   const m = meta29(s, src.id);
-  if (!m || m.fake) return null;
+  if (!m || m.fake || !room(s) || !relics(s).list.includes(src)) return null; // a cópia conta no teto total
   const copy = addRelic(s, src.k, src.n, src.a, src.p, src.v, src.y, nid29(s));
   copy.own = [...src.own.map((o) => [...o] as [string, number, string]), [l('vendedor anônimo', 'anonymous seller').pt, s.year, 'mercado negro']];
   copy.st = 'stolen';

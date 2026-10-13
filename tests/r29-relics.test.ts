@@ -6,7 +6,7 @@ import { Rng } from '../src/core/rng';
 import { l } from '../src/data/world';
 import { defaultConfig } from '../src/sim/bot';
 import { emitFact, onFact, type Fact } from '../src/sim/facts17';
-import { simulatePlayer } from '../src/sim/playbot16';
+import { playMonth } from '../src/sim/playbot16';
 import { RELICS17 } from '../src/sim/relics17';
 import { advanceMonth } from '../src/sim/tick';
 import type { Act, GameState } from '../src/sim/types';
@@ -41,6 +41,8 @@ function bornVia(s: GameState, arch: Arch29, a: Act | undefined, pid = a?.member
   st.q.push([ARCH29.indexOf(arch), a?.id ?? '', pid, a?.city ?? s.config.homeCity, 60, o, arch === 'fixture' ? 'Selo Teste' : title, `t:${arch}:${a?.id}`, '']);
   return flush29(s)[0];
 }
+/** devolve o controle ao laço de eventos (o vitest conversa com o worker durante runs longas) */
+const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 const fact = (kind: string, actors: string[], tags: string[] = [], severity = 60, src = 'test'): Fact =>
   ({ id: 'fx', y: 1975, m: 0, w: 1, kind, actors, tags, severity, visibility: 'public', text: l('t', 't'), src });
 
@@ -89,7 +91,7 @@ describe('r29 relíquias — arquétipos', () => {
       const st = story29(s, rl!)!;
       expect(st.pt.length).toBeGreaterThan(20);
       expect(st.en.length).toBeGreaterThan(20);
-      expect(`${st.pt}${st.en}`).not.toMatch(/[{}]|undefined/);
+      expect(`${st.pt}${st.en}`).not.toMatch(/[{}]|undefined| \? /);
       expect(rl!.v).toBeGreaterThan(0);
       expect(rel18(s).m[rl!.id]?.b).toBe(rl!.v);
       expect(born).toContain(rl!.id);
@@ -240,9 +242,10 @@ describe('r29 relíquias — valor, falsificação, modo exato', () => {
     }
   }, 300000);
 
-  it('determinismo: mesma semente, mesmas peças', () => {
-    const run = () => { const s = createGame(defaultConfig('r29rel-det', { startYear: 1972, realNames: false })); for (let i = 0; i < 30; i++) advanceMonth(s); return s; };
-    const a = run(), b = run();
+  it('determinismo: mesma semente, mesmas peças', async () => {
+    const run = async () => { const s = createGame(defaultConfig('r29rel-det', { startYear: 1972, realNames: false })); for (let i = 0; i < 30; i++) { advanceMonth(s); await tick(); } return s; };
+    const a = await run(), b = await run();
+    expect(rel29(a).seq).toBeGreaterThan(0); // nasceu alguma coisa de verdade
     expect(JSON.stringify(rel29(a))).toBe(JSON.stringify(rel29(b)));
     const r29 = (s: GameState) => relics(s).list.filter((x) => rel29(s).m[x.id]);
     expect(JSON.stringify(r29(a))).toBe(JSON.stringify(r29(b)));
@@ -250,10 +253,12 @@ describe('r29 relíquias — valor, falsificação, modo exato', () => {
 });
 
 describe('r29 relíquias — run de bot de 20 anos', () => {
-  it('tetos valem (por ano, por ato, total, falsas) e o save cresce pouco', () => {
+  it('tetos valem (por ano, por ato, total, falsas) e o save cresce pouco', async () => {
     const births: { y: number; a: string; arch: string }[] = [];
     onFact('relic', (s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) births.push({ y: f.y, a: f.actors[0] ?? '', arch: f.tags[3] }); }, 'r29test:bot');
-    const { state: s } = simulatePlayer(defaultConfig('r29rel-bot', { startYear: 1970, realNames: true }), 20);
+    // o mesmo laço do simulatePlayer (bot equilibrado), devolvendo o controle ao vitest a cada mês (run longa)
+    const s = createGame(defaultConfig('r29rel-bot', { startYear: 1970, realNames: true }));
+    for (let m = 0; m < 20 * 12 && !s.ended; m++) { playMonth(s, 'balanced'); advanceMonth(s); await tick(); }
     const byY: Record<number, number> = {}, byAY: Record<string, number> = {};
     for (const b of births) { byY[b.y] = (byY[b.y] ?? 0) + 1; if (b.a) byAY[`${b.a}:${b.y}`] = (byAY[`${b.a}:${b.y}`] ?? 0) + 1; }
     for (const [y, n] of Object.entries(byY)) expect(n, `ano ${y}`).toBeLessThanOrEqual(CAPS29.year);
@@ -263,7 +268,7 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     const live = relics(s).list.filter((x) => rel29(s).m[x.id] && x.st !== 'lost');
     expect(live.length).toBeLessThanOrEqual(CAPS29.total);
     const byAct: Record<string, number> = {};
-    for (const x of live) if (x.a) byAct[x.a] = (byAct[x.a] ?? 0) + 1;
+    for (const x of live) if (x.a && !meta29(s, x.id)!.fake) byAct[x.a] = (byAct[x.a] ?? 0) + 1; // a cópia falsa não é peça nova do ato
     for (const n of Object.values(byAct)) expect(n).toBeLessThanOrEqual(CAPS29.actLive);
     expect(live.filter((x) => meta29(s, x.id)!.fake).length).toBeLessThanOrEqual(CAPS29.fakes);
     expect(Object.keys(rel29(s).m).every((id) => relics(s).list.some((x) => x.id === id))).toBe(true); // compactado

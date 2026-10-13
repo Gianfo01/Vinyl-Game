@@ -5,10 +5,13 @@ import { defaultConfig } from '../src/sim/bot';
 import { simulatePlayer } from '../src/sim/playbot16';
 import { onFact } from '../src/sim/facts17';
 import { relics } from '../src/sim/sys/relics9';
+import { ARCH29 } from '../src/sim/sys/relics29';
 import '../src/sim/sys/index';
 
 const K = new Set(['show', 'chart', 'masterwork', 'award', 'death', 'split', 'signing', 'session_star', 'scandal', 'tour_done', 'crowd_incident', 'disaster', 'legend', 'comeback', 'revival_hit', 'charity_show', 'theft', 'breakup', 'catalog_rerelease', 'relic']);
 const cnt: Record<string, number> = {};
+const born: Record<string, number> = {}, perYear: Record<number, number> = {};
+onFact('relic', (_s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) { born[f.tags[3]] = (born[f.tags[3]] ?? 0) + 1; perYear[f.y] = (perYear[f.y] ?? 0) + 1; } }, 'measure29relics:born');
 onFact('*', (_s, f) => {
   if (!K.has(f.kind)) return;
   const tg = f.tags.filter((t) => t.startsWith('chron:') || ['tour', 'live', 'good', 'homecoming', 'reunion', 'first', 'fire', 'tragedy', 'born'].includes(t)).join(',');
@@ -27,8 +30,12 @@ if (p29) {
   const ids = new Set(Object.keys(p29.m ?? {}));
   const list = relics(s).list.filter((x) => ids.has(x.id));
   const by: Record<string, number> = {};
-  for (const id of ids) { const a = String((p29.m as Record<string, string>)[id]).split('|')[0]; by[a] = (by[a] ?? 0) + 1; }
-  console.log('r29 vivos', list.length, 'total nascidos', JSON.stringify((p29 as { n?: unknown }).n));
+  for (const id of ids) { const a = ARCH29[+String((p29.m as Record<string, string>)[id]).split('|')[0]]; by[a] = (by[a] ?? 0) + 1; }
+  console.log('r29 vivos', list.length, 'nascidas', Object.values(born).reduce((a, b) => a + b, 0), 'por arquétipo', JSON.stringify(born));
+  console.log('por ano', JSON.stringify(perYear));
+  const st: Record<string, number> = {};
+  for (const x of list) st[x.st] = (st[x.st] ?? 0) + 1;
+  console.log('estado das vivas', JSON.stringify(st), 'falsas', list.filter((x) => String((p29.m as Record<string, string>)[x.id]).endsWith('F')).length);
   console.log('por arquétipo (vivos)', JSON.stringify(by));
   const bytes = JSON.stringify(p29).length + JSON.stringify(list).length;
   console.log('bytes r29 (estado + peças vivas)', bytes);
