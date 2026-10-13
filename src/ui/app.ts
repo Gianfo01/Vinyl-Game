@@ -74,6 +74,7 @@ import { sedeHome25, sedeNav25 } from './ps/slot25';
 import { openSearch25, searchTabs25, seenDefs27 } from './ps/search25';
 // r27: menu em árvore (Seção › Página › Aba), folha do celular, todas as abas conhecidas e uma janela por vez
 import { navSection27 } from './ps/tree27';
+import { enhanceSelects27 } from './ps/pick27'; // r27 UX: escolhas curtas viram controle segmentado (docs/ux27.md)
 import { allTabs27 } from './ps/subtabs27';
 import { kick27, mayShow27 } from './ps/queue27';
 import { settingsCut27 } from './ps/cut27'; // r27 (K): cenas animadas dos grandes momentos
@@ -486,6 +487,7 @@ function renderApp(): void {
   shownArea = store.area;
   // render não muda o elenco: a lista de atos do jogador é calculada uma vez só
   const [sub, body] = withPlayerActsCache(g, () => [subnav(), panel()] as const);
+  enhanceSelects27(body); // r27 UX: escolhas curtas (2–4 opções) viram controle segmentado; o <select> segue por baixo
   liveTabs27 = new Map([...body.querySelectorAll<HTMLElement>('[data-tabs]')].map((e) => [e.dataset.tabs ?? '', e.dataset.cur ?? '']));
   const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
     topBar(),
