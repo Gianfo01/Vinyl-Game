@@ -18,6 +18,7 @@ import { SITS29, setStart29, start28Fits29, syncStart29, type Sit29 } from '../.
 import { setRivals29, type Riv29 } from '../../sim/rivals29data';
 import { setLabels29, type N29, type Vn29 } from '../../sim/labels29data';
 import { LINEUP29_DEFAULT } from '../../sim/lineup29';
+import { applyChar29, type QuickArt29, type QuickChar29 } from './char29model'; // r29: "Seu personagem"
 
 /** Atividades oferecidas na Nova run (mesma lista e ordem da configuração completa, careers12 NG_CAREERS). */
 export const CAREERS27 = ['label', 'musician', 'manager', 'studio', 'festival', 'booking', 'venue', 'publisher', 'media', 'platform'] as const;
@@ -51,6 +52,10 @@ export interface QuickRun27 {
   labels29vn?: Vn29;
   /** r28 (F4): duração escolhida pelo ano de fim (0 = sem fim / sandbox); ausente = sugestão do Recomendado */
   runYears?: number;
+  /** r29: personagem (nome, idade, sexo, aparência); ausente = o da fábrica (nome gerado no jogo, 30 anos) */
+  char29?: QuickChar29;
+  /** r29: artista (função principal + até 2 extras, gênero, formação, nome da banda); só vale com banda própria */
+  art29?: QuickArt29;
 }
 
 /** A atividade existe no ano? (carreiras de época, ex.: plataforma, só abrem no ano certo). */
@@ -102,6 +107,7 @@ export function applyQuick27(cfg: RunConfig, q: QuickRun27): RunConfig {
   const main = [careerOpen27(q.career, cfg.startYear) ? q.career : 'label'];
   cfg.careers = { ...(cfg.careers ?? { origin: 'none', ambition: 'legacy' }), main };
   cfg.role = roleFromMain(main);
+  applyChar29(cfg, q); // r29: mesmos setters da ficha completa (charCreate) e do bloco da banda
   return draftDefaults27(cfg);
 }
 
