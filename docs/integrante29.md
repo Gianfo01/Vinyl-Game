@@ -29,7 +29,8 @@ Motivos de bloqueio comuns (`memberBlock29`):
 - a pessoa faleceu;
 - é você;
 - já está no seu elenco ou na sua equipe;
-- não está numa banda (para artista solo, use "Fazer proposta");
+- já tem carreira solo em atividade (use "Fazer proposta");
+- jovem demais (menos de 15 anos);
 - já há uma proposta em andamento para ela;
 - recusou há pouco (espera de 8 a 13 semanas);
 - falta caixa (`cashWhy20`).
@@ -77,6 +78,60 @@ O feat de sempre trabalha com o ato (a banda) da pessoa, não com a pessoa sozin
 
    Se a proposta ficar pendente ("pensando", contraproposta), o gancho semanal conclui ou desfaz sozinho, com prazo de 8
    semanas. Se o solo-proposta já tiver obra quando for desfeito, ele vira um solo encerrado, para nada ficar órfão.
+
+## Pessoa sem banda (R29 B)
+
+Com a formação inicial real (`config.lineup29`, docs/formacao29.md), quem está fora da formação escolhida existe no mundo
+sem banda. Exemplos: Pete Best e Stuart Sutcliffe num mundo "mais famosa" de 1962, listados em `rw.free29`. Essas pessoas
+(e qualquer outro músico sem ato em atividade) agora podem ser contratadas.
+
+`freeAgent29` considera sem banda quem:
+- está vivo, não é você e tem 15 anos ou mais;
+- não está na sua equipe;
+- não tem nenhum ato em atividade.
+
+Isso inclui:
+- as pessoas livres da formação real;
+- os músicos livres do lineup16;
+- quem viu a banda acabar;
+- quem se aposentou.
+
+Quem tem carreira solo em atividade continua indo pelo "Fazer proposta".
+
+O item "Oferecer a {nome}… ›" vem habilitado, com a nota "Sem banda: …". As opções:
+
+| Opção | Como |
+|---|---|
+| **Assinar {nome} como artista solo…** | o mesmo solo-proposta (`soloActFrom29`) e a mesma tela da oferta. Sem banda, não há saída nem banda que reage. O molde de gênero e cidade (`refAct29`) é escolhido nesta ordem: o ato mais recente da carreira; senão o ato de onde saiu (lineup16); senão a banda real de referência (`rw.free29`). O molde serve só para gênero e cidade: o solo não vira "solo de" banda nenhuma (sem `soloOf`, confiança 50) |
+| **Entrar em / Substituir em {sua banda}** | a mesma entrada de formação (`joinBand`). A memória diz "{p} entra em {a}" (sem "ex-…" inventado), e a cena "join" dispara |
+| **Músico(a) de sessão** | session19, sem liberação de selo |
+| **Projeto paralelo** | bonds9, só o custo da produção conjunta |
+| **Equipe (produtor/A&R)** e **ghostwriter** | como para integrantes, sem a saída |
+| **Participação (feat)** | o feat de pessoa (featp29). As pessoas livres da formação real passam a contar como "em atividade" (`featPersonBlock29` aceita `rw.free29`) |
+| **Montar uma banda com {nome}…** | reaproveita `lineup16.newBand16`, o mesmo caminho dos músicos livres do mundo: a pessoa, até dois músicos livres do mercado (mesma família de gênero, outra função) e gente nova nas vagas que sobram. Custa as audições (US$ 800 da época, o mesmo valor do "Formar banda" da carreira de músico). A banda nasce **sem contrato** e a interface abre a proposta de sempre logo em seguida; sem acordo, ela segue independente |
+
+O "Formar banda" da carreira de músico (`life.startProject`) monta uma banda em volta do **seu personagem**, não de
+outra pessoa. Por isso o caminho reaproveitado é o `newBand16`.
+
+**Fatores sem banda** (substituem os da banda que fica):
+- "Sem banda: quer voltar a tocar" (+0,06; +0,04 na equipe);
+- fama própria e habilidade (no solo e na entrada numa banda);
+- idade (pesa depois dos 45);
+- moral;
+- no solo, se canta (voz ou MC) ou não.
+
+Na entrada numa banda sua, o fator "fama da banda × fama da banda atual" vira "fama da sua banda × fama própria".
+
+**História real:** para quem está em `rw.free29`, a opção de solo mostra só uma nota de referência, "Na história real
+tocou com {banda} (nesta partida, sem banda)". A banda nunca aparece como dela:
+- não entra em ex-integrantes;
+- não entra nos atos de carreira;
+- não há "ex-{banda}" na entrada.
+
+Os testes conferem isso com Pete Best.
+
+O índice canônico pessoa ↔ ato (connect29) passou a incluir a versão das formações (`actsVersion17`) na chave do cache.
+Antes, entrar numa banda na mesma semana deixava "Carreira" e "Ex-integrantes" com a leitura velha.
 
 ## A chance (fatores da pessoa)
 
@@ -187,6 +242,9 @@ Todas são aditivas, e o comportamento antigo ficou igual:
   - campo `fam` para a afinidade de gênero;
 - `sim/sys/writers19.ts`: `hireGhost19(..., pid?)`;
 - `ui/act27/negotiate27.ts` e `ui/ficha.ts`: ao fechar a mesa ou a proposta única, `settleMember29`;
+- (B) `sim/sys/lineup16.ts`: `freePool` exportada;
+- (B) `sim/sys/featp29.ts`: a pessoa livre da formação real (`rw.free29`) conta como em atividade para o feat de pessoa;
+- (B) `sim/sys/connect29.ts`: chave do cache com `actsVersion17`;
 - `ui/ps/ctx27model.ts` e `ui/ps/ctx27.ts`:
   - item `person.offer29`;
   - submenu `mo29:<pessoa>`;
@@ -211,6 +269,20 @@ Todas são aditivas, e o comportamento antigo ficou igual:
    se a troca foi recusada).
 10. `10-submenu-celular-390`: a folha inferior no celular.
 
+11. `11-sem-banda-clique-direito`: clique direito numa pessoa livre da formação real (na captura, Ben Webster em 1962);
+    "Oferecer a {nome}… ›" vem habilitado, com a nota "Sem banda: …".
+12. `12-sem-banda-submenu`: o submenu sem banda:
+    - assinar como artista solo;
+    - substituir na sua banda;
+    - produtor e A&R;
+    - montar uma banda;
+    - sessão, projeto paralelo e ghostwriter;
+    - feat (desabilitado com o motivo).
+13. `13-sem-banda-mesa-do-solo`: a tela da oferta de sempre para o solo. Para um ato de fama baixa, com "Só as
+    importantes" ligado, é a proposta única; acima disso, a mesa r27.
+
+As capturas 11 a 13 saem de `scripts/shots29member-b.mjs`.
+
 A partida rápida sorteia o mundo, então os nomes mudam de uma captura para outra.
 
 ## Limites conhecidos
@@ -221,3 +293,7 @@ A partida rápida sorteia o mundo, então os nomes mudam de uma captura para out
 - A participação (feat) é do ato da pessoa (a banda), como no feats8. Não existe feat de uma pessoa sem a banda.
 - Projeto paralelo: o supergrupo nasce sem contrato, como no bonds9. A interface abre a proposta para ele logo depois.
 - O bot não usa a oferta a integrante.
+- Sem banda, "Montar uma banda" cria a banda na hora (ela existe mesmo se a proposta de contrato não fechar), como o
+  supergrupo do bonds9.
+- O feat de pessoa (featp29) continua bloqueando ("fora de atividade") o músico sem banda que saiu do mercado de
+  músicos livres há mais de 48 meses e não está em `rw.free29`. As outras opções valem para ele.

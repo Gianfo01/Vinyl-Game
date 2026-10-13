@@ -8,7 +8,7 @@
 //    o projeto paralelo, quando nasce, abre a proposta de contrato do supergrupo (como no bonds9).
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { memberFeatPreset29, runMemberOption29, settleMember29, startMemberSolo29, type MoMode29 } from '../../sim/sys/member29';
+import { bandOf29, memberFeatPreset29, runMemberOption29, settleMember29, startMemberSolo29, type MoMode29 } from '../../sim/sys/member29';
 import type { GameState } from '../../sim/types';
 import { rerender, toast } from '../common';
 import { openOffer } from '../ficha';
@@ -21,9 +21,11 @@ export function settleToast29(s: GameState): void {
 /** Executa um item `mo.*` do submenu "Oferecer a {nome}…". */
 export function runMember29(s: GameState, pid: string, itemId: string): void {
   if (itemId.startsWith('mo.solo:')) {
+    const hadBand = !!bandOf29(s, pid);
     const r = startMemberSolo29(s, pid, itemId.slice(8) as MoMode29);
     if (!('actId' in r)) { toast(t(r), 'bad'); return; }
-    toast(t(l('Proposta de carreira solo: assinou, sai da banda; sem acordo, fica onde está.', 'Solo career offer: if they sign, they leave the band; no deal, they stay put.')), 'info');
+    toast(t(hadBand ? l('Proposta de carreira solo: assinou, sai da banda; sem acordo, fica onde está.', 'Solo career offer: if they sign, they leave the band; no deal, they stay put.')
+      : l('Proposta de carreira solo (sem banda): assinou, vira artista do selo; sem acordo, nada muda.', 'Solo career offer (no band): if they sign, they join the label; no deal, nothing changes.')), 'info');
     openOffer(r.actId);
     return;
   }
@@ -35,5 +37,5 @@ export function runMember29(s: GameState, pid: string, itemId: string): void {
   const out = runMemberOption29(s, pid, itemId);
   toast(t(out.text), out.ok ? 'good' : 'bad');
   rerender();
-  if (out.ok && itemId.startsWith('mo.side:') && out.actId && s.acts[out.actId] && !s.acts[out.actId].owner) setTimeout(() => openOffer(out.actId!), 0);
+  if (out.ok && (itemId.startsWith('mo.side:') || itemId === 'mo.band') && out.actId && s.acts[out.actId] && !s.acts[out.actId].owner) setTimeout(() => openOffer(out.actId!), 0);
 }

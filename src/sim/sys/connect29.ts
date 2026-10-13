@@ -9,6 +9,7 @@
 import { l16, segTxt, stints16 } from './lineup16';
 import { biography, chronState, type ChronEv } from './chron9';
 import { rw } from './realworld';
+import { actsVersion17 } from '../actidx17';
 import type { Act, GameState } from '../types';
 
 export interface Seg29 { from: number; to?: number }
@@ -22,7 +23,8 @@ const CACHE = new WeakMap<GameState, Idx29>();
 
 function index29(s: GameState): Idx29 {
   const st = rw(s), ev = l16(s).ev, mem = chronState(s).mem;
-  const k = `${s.week}|${s.day}|${ev.length}|${Object.keys(s.acts).length}|${Object.keys(mem).length}`;
+  // R29 (integrante): + versão das formações (actsTouched17) — entrar numa banda na mesma semana não deixa o índice velho
+  const k = `${s.week}|${s.day}|${ev.length}|${Object.keys(s.acts).length}|${Object.keys(mem).length}|${actsVersion17(s)}`;
   const c = CACHE.get(s);
   if (c && c.k === k) return c;
   const byP = new Map<string, Set<string>>(), byA = new Map<string, Set<string>>(), chronY = new Map<string, number>();

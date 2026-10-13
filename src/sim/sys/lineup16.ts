@@ -183,8 +183,8 @@ function freeUp(s: GameState, p: Person, from: Act, why: Why16): void {
   if (p.alive && !p.isPlayer && !inActive(s, p.id)) l16(s).free[p.id] = [mIdx(s), from.id, why];
 }
 
-/** Músicos livres (saíram de bandas há pouco, vivos, sem banda ativa) do mesmo universo musical. */
-function freePool(s: GameState, genre: string, except: string): Person[] {
+/** Músicos livres (saíram de bandas há pouco, vivos, sem banda ativa) do mesmo universo musical. R29: exportada (sys/member29). */
+export function freePool(s: GameState, genre: string, except: string): Person[] {
   const fam = familyOf(genre);
   return Object.entries(l16(s).free).filter(([pid, f]) => f[1] !== except && s.acts[f[1]] && familyOf(s.acts[f[1]].genre) === fam && s.persons[pid]?.alive && !inActive(s, pid) && s.year - s.persons[pid].born < 66 && !scripted(s, s.persons[pid]) && !realBound(s, s.persons[pid]))
     .map(([pid]) => s.persons[pid]);

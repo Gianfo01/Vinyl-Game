@@ -29,6 +29,7 @@ import { MSG_HANDLERS } from './people/inbox';
 import { addMsg, P } from './people/state';
 import { FEAT29, acceptNpcInvite, clearance, fairFeat, featChance, feats, hasFeat29, linkActs, pushDeal, type FeatDeal, type FeatResult, type FeatTerms } from './feats8';
 import { l16 } from './lineup16';
+import { rw } from './realworld';
 import { ownerBonus } from './people/owner';
 import { actBond, bump, tieOf } from './social8';
 import { hasSinger, settleVocals, sings } from './vocals10';
@@ -95,7 +96,7 @@ export function featPersonBlock29(s: GameState, pid: string, hostId?: string): L
   const A = homeAct29(s, pid);
   if (hostId && s.acts[hostId]?.members.includes(pid)) return l('Já está neste artista.', 'Already in this act.');
   if (A && mine(A)) return l('Já está no seu elenco.', 'Already on your roster.');
-  if (!A && !l16(s).free[pid] && !aceOf29(s, pid)) return l('Fora de atividade agora (sem banda nem carreira em andamento).', 'Not active right now (no band or ongoing career).');
+  if (!A && !l16(s).free[pid] && !aceOf29(s, pid) && !rw(s).free29?.[pid]) return l('Fora de atividade agora (sem banda nem carreira em andamento).', 'Not active right now (no band or ongoing career).');
   if (A) { const cl = clearance(s, A.id, 1); if (cl.blocked) return cl.text; }
   return null;
 }

@@ -19,7 +19,7 @@ import { TEMPER27, rivalMemory27 } from '../../sim/sys/rivals27';
 import { isWatched } from '../../sim/sys/scout11';
 import { nextStep23 } from '../../sim/sys/scout23';
 import { VENUES17, venueOpen } from '../../sim/sys/venues17';
-import { memberBlock29, memberOptions29 } from '../../sim/sys/member29';
+import { freeAgent29, memberBlock29, memberOptions29 } from '../../sim/sys/member29';
 import { featPersonBlock29 } from '../../sim/sys/featp29';
 import { featSongs } from '../../sim/sys/feats8';
 import type { Act, GameState } from '../../sim/types';
@@ -261,7 +261,8 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
     let block: L | null = null;
     try { block = memberBlock29(s, pid); } catch { block = N('Indisponível agora.', 'Unavailable now.'); }
     out.push(it('person.offer29', fmtL(N('Oferecer a {n}… ›', 'Offer {n}… ›'), { n: person.name }), 'contract', 'do', block, {
-      sec: 'career', note: N('Carreira solo no seu selo, entrar numa banda sua, sessão, projeto paralelo, equipe ou feat.', 'Solo career on your label, join one of your bands, sessions, side project, staff or a feature.'),
+      sec: 'career', note: freeAgent29(s, pid) ? N('Sem banda: assinar como solo, montar uma banda, entrar numa banda sua, sessão, projeto, equipe ou feat.', 'No band: sign as a solo act, form a band, join one of your bands, sessions, project, staff or a feature.')
+        : N('Carreira solo no seu selo, entrar numa banda sua, sessão, projeto paralelo, equipe ou feat.', 'Solo career on your label, join one of your bands, sessions, side project, staff or a feature.'),
     }));
   }
   // R29 (feat de pessoa): "Convidar {nome} para um feat…" — o feat negociado de sempre com SÓ esta pessoa como convidada
@@ -399,7 +400,7 @@ function memberMenu29(s: GameState, pid: string): CtxMenu27 | null {
   if (!p) return null;
   let opts: ReturnType<typeof memberOptions29> = [];
   try { opts = memberOptions29(s, pid); } catch { opts = []; }
-  const ICON29: Record<string, string> = { solo: 'mic', join: 'people', staff: 'contract', session: 'guitar', side: 'network', ghost: 'pen', feat: 'note' };
+  const ICON29: Record<string, string> = { solo: 'mic', join: 'people', staff: 'contract', session: 'guitar', side: 'network', ghost: 'pen', feat: 'note', band: 'fans' };
   const items = opts.map((o) => it(o.id, o.label, ICON29[o.k] ?? 'handshake', 'do', o.block, { sec: o.sec, chance: o.chance, cost: o.cost || undefined, note: o.note ?? null }));
   return { ent: 'person', id: `mo29:${pid}`, name: fmtL(N('Oferecer a {n}', 'Offer {n}'), { n: p.name }), kind: KIND27.person, items };
 }
