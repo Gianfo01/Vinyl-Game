@@ -53,8 +53,10 @@ export const AGE29: { id: string; name: L; lo: number; hi: number; mid: number; 
   { id: 'mid', name: l('35–49', '35–49'), lo: 35, hi: 49, mid: 42, w: 15 },
   { id: 'old', name: l('50+', '50+'), lo: 50, hi: 99, mid: 60, w: 0 },
 ];
-/** mistura de referência (normaliza os efeitos: um ato "médio" fica neutro) */
-export const REF29 = [0.12, 0.16, 0.21, 0.26, 0.25];
+/** mistura de referência (normaliza os efeitos): a de um ato em início/meio de carreira — medida em 4 eras
+ *  (scripts/mix29demo.ts: atos do jogador ≈ 0,22/0,40/0,26/0,10/0,02; ativos com fama ≥ 5 ≈ 0,09/0,23/0,30/0,25/0,14).
+ *  Assim a média dos efeitos fica neutra no equilíbrio do jogo e só a DIFERENÇA entre públicos pesa. */
+export const REF29 = [0.17, 0.33, 0.28, 0.15, 0.07];
 /** índice da faixa de uma idade */
 export const bandOf29 = (age: number): number => (age < 18 ? 0 : age < 25 ? 1 : age < 35 ? 2 : age < 50 ? 3 : 4);
 
@@ -546,6 +548,10 @@ onFact('reunion', (s, f) => { const id = f.actors[0]; if (id && s.acts[id]) demo
 
 // ---------------------------------------------------------------- efeitos
 
+/** Depuração/balanço: DEMO29_OFF=appeal,reg,units,phys,cw,live,elast,merch,eff,scandal,revw,fest,awards,offer desliga
+ *  ligações (só no Node, para a ablação do tools/balance19; no navegador nada desliga). */
+export const OFF29: Set<string> = new Set(((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DEMO29_OFF ?? '').split(',').filter(Boolean));
+
 /** formato × idade: quem compra cada tipo de lançamento */
 export const FMT_AGE29: Record<string, number[]> = {
   single: [1.3, 1.2, 1.0, 0.85, 0.7], ep: [1.1, 1.1, 1.0, 0.9, 0.85], lp: [0.75, 0.9, 1.1, 1.2, 1.15],
@@ -574,7 +580,7 @@ export function appealAge29(s: GameState, rel: Release, a: Act): { k: number; fm
   return { k: clamp(fmt * aim, 0.82, 1.18), fmt, aim, aud };
 }
 registerMod('appeal', 'demo29', (s, v, c) => {
-  if (!c.release || !c.act) return null;
+  if (!c.release || !c.act || OFF29.has('appeal')) return null;
   const x = appealAge29(s, c.release, c.act);
   return Math.abs(x.k - 1) < 0.005 ? null : { value: v * x.k, label: l('Idade do público × formato', 'Audience age × format') };
 });
@@ -586,7 +592,7 @@ export function regionAppeal29(s: GameState, rel: Release, a: Act): number {
   return w > 0 ? clamp(Math.pow(t / w, 0.4), 0.85, 1.15) : 1;
 }
 registerMod('appeal', 'demo29reg', (s, v, c) => {
-  if (!c.release || !c.act) return null;
+  if (!c.release || !c.act || OFF29.has('reg')) return null;
   const k = regionAppeal29(s, c.release, c.act);
   return Math.abs(k - 1) < 0.005 ? null : { value: v * k, label: l('Tendência do gênero nas regiões do lançamento', 'Genre trend in the release regions') };
 });
@@ -604,14 +610,14 @@ export function unitsAge29(s: GameState, rel: Release, a: Act): number {
 registerMod('chartUnits', 'demo29', (s, v, c) => {
   const rel = c.release, a = rel ? s.acts[rel.actId] : undefined;
   if (!rel || !a) return null;
-  const k = unitsAge29(s, rel, a) * fraud29(s, rel);
+  const k = (OFF29.has('units') ? 1 : unitsAge29(s, rel, a)) * fraud29(s, rel);
   return Math.abs(k - 1) < 0.003 ? null : { value: v * k, label: l('Idade do público × canal (streaming)', 'Audience age × channel (streaming)') };
 });
 
 // fatia física (eras18): base mais velha compra vinil/CD por mais tempo
 DEMO29.phys = (s, rel) => {
   const a = s.acts[rel.actId];
-  if (!a || !hasTech(s, 'download') && !hasTech(s, 'streaming')) return 1;
+  if (!a || OFF29.has('phys') || !hasTech(s, 'download') && !hasTech(s, 'streaming')) return 1;
   return clamp(rel29(ageMix29(s, a), PHYS_AGE29), 0.7, 1.35);
 };
 
@@ -621,6 +627,7 @@ DEMO29.cw = (s, rel, a) => {
   const ck = `${s.week}|${demo29(s).v ?? 0}`;
   let CW = CWS.get(s);
   if (!CW || CW.k !== ck) { CW = { k: ck, m: new Map() }; CWS.set(s, CW); }
+  if (OFF29.has('cw')) return null;
   const hit = CW.m.get(a.id);
   if (hit !== undefined) return hit;
   const d = demo29(s).a[a.id];
@@ -660,15 +667,15 @@ export function cityAge29(s: GameState, a: Act, cityId: string): { k: number; at
   return { k: att * loc * ru, att, loc, ru };
 }
 registerMod('cityDemand', 'demo29', (s, v, c) => {
-  if (!c.act || !c.cityId) return null;
+  if (!c.act || !c.cityId || OFF29.has('live')) return null;
   const x = cityAge29(s, c.act, c.cityId);
   return Math.abs(x.k - 1) < 0.005 ? null : { value: v * x.k, label: x.ru > 1 ? l('Turnê de reunião: a geração original volta', 'Reunion tour: the original generation returns') : l('Idade e país dos fãs', 'Fans\' age and country') };
 });
 const WEALTH29: Record<string, number> = { na: 1.25, eu: 1.15, oceania: 1.15, asia: 1, br: 0.75, latam: 0.75, africa: 0.6 };
 // ingresso: jovem sai quando o preço sobe; adulto de mercado rico paga
-DEMO29.elast = (s, a, cityId) => clamp(rel29(ageMix29(s, a), EL29) / Math.pow(WEALTH29[cityById[cityId]?.market ?? 'na'] ?? 1, 0.3), 0.7, 1.35);
+DEMO29.elast = (s, a, cityId) => OFF29.has('elast') ? 1 : clamp(rel29(ageMix29(s, a), EL29) / Math.pow(WEALTH29[cityById[cityId]?.market ?? 'na'] ?? 1, 0.3), 0.7, 1.35);
 registerMod('showRevenue', 'demo29', (s, v, c) => {
-  if (!c.act) return null;
+  if (!c.act || OFF29.has('merch')) return null;
   const k = clamp(rel29(ageMix29(s, c.act), MERCH29), 0.92, 1.08);
   return Math.abs(k - 1) < 0.005 ? null : { value: v * k, label: l('Banca: quanto cada idade gasta', 'Merch stand: spend by age') };
 });
@@ -676,10 +683,11 @@ registerMod('showRevenue', 'demo29', (s, v, c) => {
 // mídia (só seus atos — MEDIA18.eff): o canal rende mais quando alcança a idade do público do ato
 const prevEff = MEDIA18.eff;
 export const chanFit29 = (s: GameState, a: Act, ch: string): number => (CH_AGE29[ch] ? clamp(Math.sqrt(rel29(ageMix29(s, a), CH_AGE29[ch])), 0.82, 1.2) : 1);
-MEDIA18.eff = (s, actId, ch) => { const base = prevEff ? prevEff(s, actId, ch) : 1; const a = s.acts[actId]; return a ? base * chanFit29(s, a, ch) : base; };
+MEDIA18.eff = (s, actId, ch) => { const base = prevEff ? prevEff(s, actId, ch) : 1; const a = s.acts[actId]; return a && !OFF29.has('eff') ? base * chanFit29(s, a, ch) : base; };
 
 // escândalo: jovem perdoa mais rápido; purista mais velho não (fanscandal28)
 DEMO29.scandal = (s, a, kind, fac) => {
+  if (OFF29.has('scandal')) return 0;
   const b = ageMix29(s, a);
   const yv = youth29(b) - (REF29[0] + REF29[1]), ov = older29(b) - (REF29[3] + REF29[4]);
   if (fac === 'main' || fac === 'comm') return 0.35 * yv;
@@ -688,7 +696,7 @@ DEMO29.scandal = (s, a, kind, fac) => {
 };
 
 // redescoberta: o ciclo de nostalgia (~25 anos: quem era jovem no lançamento chega à idade de decidir trilha e comercial)
-DEMO29.revW = (s, rel) => { const age = s.year - rel.year; return 1 + 0.8 * Math.exp(-(((age - 25) / 6) ** 2)); };
+DEMO29.revW = (s, rel) => { if (OFF29.has('revw')) return 1; const age = s.year - rel.year; return 1 + 0.8 * Math.exp(-(((age - 25) / 6) ** 2)); };
 
 // festival: público do festival (foco de gêneros → idade) × público do ato
 const FEST_AGE = new Map<string, number[]>();
@@ -705,12 +713,12 @@ export function festAge29(s: GameState, f: { name: string; focus: string[]; city
   return w;
 }
 const cos = (a: number[], b: number[]) => dot(a, b) / Math.sqrt(dot(a, a) * dot(b, b) || 1);
-DEMO29.fest = (s, f, a) => 0.85 + 0.3 * clamp((cos(festAge29(s, f), ageMix29(s, a)) - 0.75) / 0.25, 0, 1);
+DEMO29.fest = (s, f, a) => OFF29.has('fest') ? 1 : 0.85 + 0.3 * clamp((cos(festAge29(s, f), ageMix29(s, a)) - 0.75) / 0.25, 0, 1);
 
 // prêmios: corpo de votantes mais velho (awards18) favorece público mais velho; categorias com voto popular/redes, o jovem
 REL_ADJ19.push((s, rel) => {
   const a = s.acts[rel.actId];
-  if (!a) return null;
+  if (!a || OFF29.has('awards')) return null;
   const v = voters18(s), b = ageMix29(s, a);
   const pts = Math.round(clamp((older29(b) - 0.45) * 10 * ((v.age - 38) / 12) + (youth29(b) - 0.3) * 10 * v.young, -4, 4));
   return pts ? [fmtL(l('Idade dos votantes ({v}) × idade do público', 'Voter age ({v}) × audience age'), { v: v.age }), pts] : null;
@@ -726,7 +734,7 @@ export function labelMix29(s: GameState, except?: string): number[] | null {
 }
 registerOfferMod('demo29', (s, act) => {
   const amb = mainAmbition(s, act);
-  if (amb !== 'fame' && amb !== 'status' && amb !== 'money') return null;
+  if (OFF29.has('offer') || amb !== 'fame' && amb !== 'status' && amb !== 'money') return null;
   const lm = labelMix29(s, act.id);
   if (!lm) return null;
   const delta = Math.round(clamp((cos(lm, ageMix29(s, act)) - 0.85) / 0.15, -1, 1) * 0.04 * 1000) / 1000;

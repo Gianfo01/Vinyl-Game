@@ -65,10 +65,12 @@ describe('r27 P2B — modo rápido intacto', () => {
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-    expect(AFTER.player.cash).toBe(450735);
+    // R29 DEMO (de propósito — docs/demo29.md): público por idade e região muda apelo, demanda nas cidades, divisão por país,
+    // line-up dos festivais e o relatório do analista (nova dica): caixa, acts e rng mudam (tours igual). Antes: 450735 / 2386675548 / 2839816166.
+    expect(AFTER.player.cash).toBe(649767);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2864074098);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1138143925);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
@@ -101,7 +103,8 @@ function roadFix(): { s: GameState; tid: string } {
   let actId = playerActs(s).find((id) => !s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running')));
   if (!actId) { actId = playerActs(s)[0]; for (const t of s.tours) if (t.actId === actId && (t.status === 'planned' || t.status === 'running')) cancelTour(s, t.id); }
   const home = s.acts[actId].city;
-  const cities = CITIES.filter((c) => c !== home).slice(0, 6);
+  // R29 demo29: com o mundo novo, 6 paradas desta semente não sorteiam nenhum evento de estrada; 10 paradas garantem a amostra
+  const cities = CITIES.filter((c) => c !== home).slice(0, 10);
   s.player.cash += money(s, 200000);
   const r = bookRoute27(s, basePlan27(s, actId, cities, { startInDays: 7 }));
   if (!('id' in r)) throw new Error(`book: ${r.pt}`);
