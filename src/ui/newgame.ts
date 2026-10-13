@@ -16,7 +16,8 @@ import { savePrefs, store } from './store';
 import { prepareNewGame } from './sys/live/goals';
 import { cards22, chips22, seg22, toggle22, type Opt22 } from './pick22';
 import { helpTip } from './newgame13';
-import { RUN_YEARS17 } from '../sim/start17';
+import { endYearField28, type EndField28 } from './endyear28'; // r28 (F4)
+let endF28: EndField28 | null = null;
 import { attrsCard22 } from './newgame20you';
 import { chosenLabels22, labelsCard } from './newgameLabels';
 import { identityCard22, traitsCard22 } from './charCreate';
@@ -254,7 +255,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         ] as Opt22<RunConfig['difficulty']>[], () => cfg.difficulty, (v) => { cfg.difficulty = v; tk.refresh(); drawSummary(); }, 'ng22-3'),
         h('details', { class: 'ng22-more' }, h('summary', null, t(l('Ajuste fino por eixo (mercado, custos, rivais, talento)', 'Fine-tune per axis (market, costs, rivals, talent)'))), diffCard17(cfg))),
       h('section', { class: 'card wide' }, h('h3', null, t(l('Duração da partida', 'Run length')), ' ', helpTip(l('Sem fim: jogue quanto quiser. Com prazo: em dezembro do último ano o jogo soma legado, sucessos, certificações e festivais numa pontuação com patente. Dá para continuar depois.', 'No end: play as long as you like. With a deadline: in December of the last year the game totals legacy, hits, certifications and festivals into a ranked score. You can keep playing after.'))),
-        cards22(t(l('Duração', 'Length')), RUN_YEARS17.map((n) => ({ value: n, name: n ? t(l('{n} anos', '{n} years'), { n }) : t(l('Sem fim', 'Endless')), desc: n ? t(l('Pontuação e patente em dezembro de {y}.', 'Score and rank in December {y}.'), { y: cfg.startYear + n - 1 }) : t(l('Sandbox: segue enquanto você e seus herdeiros quiserem.', 'Sandbox: goes on as long as you and your heirs want.')) })), () => cfg.runYears17 ?? 0, (v) => { cfg.runYears17 = v; drawSummary(); }, 'ng22-4')),
+        (endF28 = endYearField28(() => cfg.startYear, () => cfg.runYears17 ?? 0, (v) => { cfg.runYears17 = v; drawSummary(); }, 'ng28-end')).el), // r28 (F4): ano de fim escolhido (Recomendado sugere 25 anos)
       h('section', { class: 'card wide' }, h('h3', null, ...hl(S.storyteller, 'storyteller')),
         cards22(t(S.storyteller), STORYTELLERS.map((st) => ({ value: st.id, name: t(st.name), desc: `${t(st.desc)} ${t(DIR17[st.id].how)}` })), () => cfg.storyteller, (v) => { cfg.storyteller = v; drawSummary(); }),
         h('div', { class: 'ng22-field' }, h('b', null, ...hl(l('Liberdade do diretor (mundo dos NPCs)', 'Director freedom (NPC world)'), 'freedom17')),
@@ -332,6 +333,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const startErr = h('p', { class: 'bad small', role: 'alert' });
   const sideM = h('div', { class: 'small' });
   function drawSummary(): void {
+    endF28?.refresh(); // r28 (F4): o fim acompanha o ano de início
     startBtns.length = 0;
     const gs = groups();
     const dl = (rows: Row[]) => h('dl', { class: 'ng-dl' }, ...rows.flatMap(([k, v]) => [h('dt', null, t(k)), h('dd', null, v)]));

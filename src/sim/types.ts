@@ -53,6 +53,8 @@ export interface RunConfig {
   snap17?: boolean;
   diff17?: { market?: number; costs?: number; rivals?: number; talent?: number };
   runYears17?: number;
+  /** r28 (F4): situação inicial sorteada pela semente (id de start28.ts); ausente = começo de sempre (testes, saves antigos) */
+  start28?: string;
   scenario17?: string;
   preset17?: string;
   /** rodada 20 (G8, src/sim/worldpolicy20.ts): versões do esquema e da política de mundo; ausentes = configuração

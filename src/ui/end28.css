@@ -1,0 +1,34 @@
+/* Rodada 28 (F4): "Rumo a" no Cockpit, capítulos por década e storyboard do fim (tokens do ui27). */
+.rumo28 { border: 1px solid var(--line); border-left: 4px solid var(--gold); background: var(--panel); padding: 10px 12px; margin: 10px 0; box-shadow: var(--card-shadow); }
+.rumo28-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; }
+.rumo28-k { font-family: var(--pixel); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.rumo28-f { font-size: 1.08rem; color: var(--ink); }
+.rumo28-x { font-variant-numeric: tabular-nums; color: var(--gold); font-weight: 700; cursor: help; }
+.rumo28-bar { flex: 1 1 120px; min-width: 80px; height: 6px; background: var(--panel-2); border: 1px solid var(--line); align-self: center; }
+.rumo28-bar > i { display: block; height: 100%; background: var(--gold); }
+.rumo28-sub { margin-top: 4px; }
+.rumo28-sub .link { min-height: 24px; }
+.ch28-list { display: grid; gap: 10px; }
+.ch28 { border: 1px solid var(--line); background: var(--panel-2); padding: 8px 10px; }
+.ch28.open { border-style: dashed; }
+.ch28 h4 { margin: 0 0 4px; }
+.ch28-ep { margin: 0; font-style: italic; }
+.ch28-scene { max-width: 560px; display: grid; gap: 10px; }
+.sb28 { display: grid; gap: 8px; }
+.sb28-ep { font-size: 1.1rem; font-style: italic; border-left: 4px solid var(--gold); padding-left: 10px; margin: 0; }
+.sb28-album { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.sb28-album li { border: 1px solid var(--line); background: var(--panel); padding: 8px; display: grid; gap: 4px; box-shadow: var(--card-shadow); }
+.sb28-frame { font-family: var(--pixel); font-size: 1.4rem; color: var(--gold); background: var(--hq-bg); text-align: center; padding: 10px 0; }
+.sb28-chains { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.sb28-end { display: grid; gap: 12px; max-width: 760px; }
+.ob28 { display: inline-flex; gap: 6px; align-items: center; font-size: 0.85rem; }
+.ob28-do { border: 1px dashed var(--gold); padding: 2px 6px; }
+.ob28-do.ok { border-style: solid; color: var(--good); border-color: var(--good); }
+.ny28 { display: grid; gap: 4px; }
+.ny28 .h27-field input:disabled { opacity: 0.5; }
+.ny28-free { display: inline-flex; gap: 6px; align-items: center; min-height: 24px; }
+.ny28-rec { min-height: 24px; }
+.h27-form .ny28-free { display: flex; flex-direction: row; justify-content: flex-start; gap: 8px; font-size: 0.85rem; }
+.h27-form .ny28-free input[type='checkbox'], .ng22 .ny28-free input[type='checkbox'], .ny28-free input[type='checkbox'] { width: 18px; height: 18px; min-height: 0; flex: none; margin: 0; padding: 0; }
+.ny28 .small { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.h27-form .ny28 { margin: -6px 0 18px; }

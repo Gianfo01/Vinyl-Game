@@ -30,7 +30,7 @@ import { studioHub } from './panels/studio';
 import { talentosHub23 } from './sys/talentos23';
 import { pressSection } from './panels/media2';
 import { compareActs } from './compare';
-import { restartTutorial, tutorialCard } from './tutorial';
+import { restartTutorial, tutorialCard, tutorialTick28 } from './tutorial';
 import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
 import { eggCmds27, undoEgg27 } from './sys/eggs27'; // r27 ovos de Páscoa (busca secreta e 3/2/1959)
@@ -81,6 +81,8 @@ import { enhanceSelects27 } from './ps/pick27';
 import { allTabs27 } from './ps/subtabs27';
 import { kick27, mayShow27 } from './ps/queue27';
 import { settingsCut27 } from './ps/cut27'; // r27 (K): cenas animadas dos grandes momentos
+import { settingsAudio28 } from './audio28'; // r28 (F4): som opt-in (prévias e vinhetas)
+import { openStory28 } from './end28'; // r28 (F4): capítulos, rumo e storyboard do fim
 import { getLang } from '../i18n/strings';
 import { locale } from '../i18n/strings';
 import { artHook27, pageHeader27 } from './ps/ui27'; // r27 (J): sistema visual compartilhado
@@ -533,6 +535,7 @@ function renderApp(): void {
   syncRoute15({ area: store.area, tab: tk && tid ? [tk, tid] : undefined }, pageTitle15(areaLabel(store.area), g.config.companyName));
   saveTabs15(tabSnapshot());
   afterRender18(g, store.area, go); // r18 tutorial18: dicas de 1ª vez e trilhas (r27: tour só no "?")
+  tutorialTick28(g, store.area, render); // r28 (F4): o passo do tutorial se conclui fazendo
   kick27(g); // r27: a próxima janela da fila (metas de abertura) entra logo
 }
 
@@ -614,6 +617,7 @@ function settings(): void {
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)
     settings27(), // r27: atividades jogáveis (jogáveis / só importantes / sempre rápido)
     settingsCut27(), // r27 (K): Cenas: todas / só importantes / desligadas
+    settingsAudio28(), // r28 (F4): Som — desligado por padrão
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
@@ -704,6 +708,8 @@ function palette(): void {
 }
 
 // rodada 8: aposentadoria sem herdeiros encerra a run fora do avanço do tempo
+// r28 (F4): "Encerrar e voltar ao menu" do storyboard do fim do prazo
+if (typeof window !== 'undefined') window.addEventListener('vtn-menu28', () => { void saveGame('auto'); store.game = null; titleScreen(root, startGame); });
 if (typeof window !== 'undefined') window.addEventListener('vtn-ended', () => { if (store.game?.ended && !store.game.flags.sandbox) { render(); endScreen(); } });
 
 function endScreen(): void {
@@ -724,6 +730,7 @@ function endScreen(): void {
     !insolvent ? h('p', { class: 'small muted' }, t(l('Finais mais próximos: ', 'Closest endings: ')), top.map((x) => t(ENDINGS.find((e) => e.id === x.id)?.name)).join(' · ')) : null,
     h('div', { class: 'row center' },
       h('button', { class: 'btn', onclick: () => openLabelStory(g) }, t(l('História do selo', 'Label story'))),
+      h('button', { class: 'btn', onclick: () => openStory28(g) }, t(l('Storyboard', 'Storyboard'))), // r28 (F4)
       h('button', { class: 'btn', onclick: () => { document.querySelector('.overlay')?.remove(); store.area = 'diary'; render(); } }, t(S.areaDiary)),
       !insolvent ? h('button', { class: 'btn', onclick: () => { g.flags.sandbox = 1; document.querySelector('.overlay')?.remove(); render(); } }, t(S.sandbox)) : null,
       h('button', { class: 'btn primary', onclick: () => { document.querySelector('.overlay')?.remove(); store.game = null; titleScreen(root, startGame); } }, t(S.newGame)),

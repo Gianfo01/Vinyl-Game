@@ -25,6 +25,7 @@ import { ic } from './vis';
 import { minimalHelp20 } from './ux20';
 import { setTutorials19, tutAllowed19 } from './tutoff19';
 import { ATTN27, mayShow27 } from './ps/queue27';
+import { trackToastOk28 } from './onboard28'; // r28 (F4): uma camada por vez
 import './tutorial18.css';
 
 type Go = (area: string) => void;
@@ -244,7 +245,7 @@ function checkTracks(g: GameState): void {
   let changed = false;
   for (const id of careers(g).active) for (const x of trackState18(g, id, p.visits, p.done)) {
     const k = `${id}:${x.obj.id}`;
-    if (x.ok && !p.done[k]) { p.done[k] = 1; changed = true; if (tutAllowed19(store.prefs, 'track')) toast(`✓ ${t(l('Objetivo', 'Goal'))}: ${t(x.obj.label)}`, 'good'); }
+    if (x.ok && !p.done[k]) { p.done[k] = 1; changed = true; if (tutAllowed19(store.prefs, 'track') && trackToastOk28(g)) toast(`✓ ${t(l('Objetivo', 'Goal'))}: ${t(x.obj.label)}`, 'good'); }
   }
   if (changed) savePrefs();
 }

@@ -1,6 +1,7 @@
 // Descoberta e rivais: olheiros (viés, custo, missões), concursos, demos, leilões; arquétipos dos
 // rivais, espionagem e segurança.
 
+import { listenDemo28 } from '../audio28'; // r28 (F4): prévia da demo com o som ligado (opt-in)
 import { FAMILIES, MARKETS, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { attendContest, fireScout, hireScout, listenDemo, raiseBid, scoutPool, sponsorContest, startAuction, withdrawAuction } from '../../sim/discovery';
@@ -79,7 +80,7 @@ export function demosSection(s: GameState): HTMLElement {
     const a = s.acts[d.actId];
     return tile('cassette', a?.name ?? '?', [
       h('small', null, `${actGenre23(s, a)} · ${cityName(a?.city ?? '')}`),
-      d.heard ? h('span', null, t(l('Impressão: ', 'Impression: ')), h('b', null, `${d.hint}`), h('small', { class: 'muted' }, t(l(' (uma demo engana)', ' (a demo can mislead)')))) : h('button', { class: 'btn small', onclick: () => { say(listenDemo(s, r, d.id), l('Ouvida. O ato entrou no radar.', 'Listened. The act is on your radar.')); rerender(); } }, ic('cassette'), ' ', t(l('Ouvir', 'Listen'))),
+      d.heard ? h('span', null, t(l('Impressão: ', 'Impression: ')), h('b', null, `${d.hint}`), h('small', { class: 'muted' }, t(l(' (uma demo engana)', ' (a demo can mislead)')))) : h('button', { class: 'btn small', onclick: () => { say(listenDemo(s, r, d.id), l('Ouvida. O ato entrou no radar.', 'Listened. The act is on your radar.')); listenDemo28(s, d.actId); rerender(); } }, ic('cassette'), ' ', t(l('Ouvir', 'Listen'))),
       h('small', { class: 'muted' }, t(l('expira na semana {w}', 'expires week {w}'), { w: d.expires })),
     ]);
   })) : h('p', { class: 'muted small' }, t(l('Nenhuma demo. Reputação com artistas atrai mais.', 'No demos. Reputation with artists attracts more.'))));

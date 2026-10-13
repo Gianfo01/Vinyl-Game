@@ -191,7 +191,8 @@ function releaseMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null 
 }
 
 const listenBlock = (env: CtxEnv27, has: boolean): L | null =>
-  !has ? N('Sem gravação guardada.', 'No stored recording.') : env.has?.('audio') === false ? N('Áudio indisponível neste navegador.', 'Audio unavailable in this browser.') : null;
+  !has ? N('Sem gravação guardada.', 'No stored recording.') : env.has?.('audio') === false ? N('Áudio indisponível neste navegador.', 'Audio unavailable in this browser.')
+    : env.has?.('sound28') === false ? N('Som desligado: ligue em Opções › Som.', 'Sound is off: turn it on in Options › Sound.') : null; // r28 (F4): opt-in
 
 function songMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
   const so = s.songs[id];

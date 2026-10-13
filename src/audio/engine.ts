@@ -27,8 +27,13 @@ export function audioAvailable(): boolean {
   return typeof window !== 'undefined' && !!(window.AudioContext || (window as unknown as { webkitAudioContext?: unknown }).webkitAudioContext);
 }
 
+// r28 (F4): áudio é opt-in — desligado por padrão; a interface liga pela chave "Som" nas Opções (ui/audio28.ts).
+let optIn28 = false;
+export function setAudioOptIn28(on: boolean): void { optIn28 = on; if (!on) stopAll(); }
+export const audioOptIn28 = (): boolean => optIn28;
+
 function getCtx(): AudioContext | null {
-  if (!audioAvailable()) return null;
+  if (!optIn28 || !audioAvailable()) return null;
   if (!ctx) {
     const C = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     ctx = new C();

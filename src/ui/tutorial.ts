@@ -12,6 +12,7 @@ import { ic } from './vis';
 import { tutorialIntro14 } from './tutorial14';
 import { careers } from '../sim/sys/careers12';
 import { registerOverlay27 } from './ps/queue27';
+import { doHint28, tick28 } from './onboard28'; // r28 (F4): o passo se conclui fazendo
 
 export interface Step {
   icon: string;
@@ -57,9 +58,10 @@ export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | 
       h('small', { class: 'muted' }, `${tu.step + 1}/${STEPS.length}`),
       h('b', null, t(st.title)),
       h('p', null, t(st.text)),
+      h('p', { class: 'ob28' }, h('span', { class: 'ob28-do' }, t(doHint28(st0.area))), h('small', { class: 'muted' }, t(l('conclui sozinho quando você fizer', 'completes on its own once you do it')))), // r28 (F4)
       h('div', { class: 'row' },
         st.area && store.area !== st.area ? h('button', { class: 'btn small primary', onclick: () => { store.area = st.area!; rerender(); } }, t(l('Mostrar', 'Show me'))) : null,
-        h('button', { class: 'btn small', onclick: next }, tu.step === STEPS.length - 1 ? t(l('Começar!', "Let's go!")) : t(l('Próximo', 'Next'))),
+        h('button', { class: 'btn small ghost', onclick: next }, t(l('Pular passo', 'Skip step'))), // r28 (F4): o passo se conclui fazendo
         h('button', { class: 'btn small ghost', onclick: () => { tu.done = true; rerender(); } }, t(l('Pular tutorial', 'Skip tutorial'))),
         h('button', { class: 'btn small ghost tut19-off', onclick: () => { setTutorials19(store.prefs, false); savePrefs(); tu.done = true; rerender(); toast(t(l('Tutoriais desativados. Religue em Configurações.', 'Tutorials off. Turn them back on in Settings.')), 'info'); } }, t(l('Desativar todos os tutoriais', 'Turn off all tutorials'))),
       ),
@@ -69,6 +71,19 @@ export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | 
 
 // r27: fila de janelas — o passo do tutorial está pendente enquanto o tutorial não acabou (as metas de abertura vêm antes)
 registerOverlay27('tutorial', (s) => !s.tutorial?.done && (s.tutorial?.step ?? 0) < tutSteps23(careers(s).active).length && tutAllowed19(store.prefs, 'card'));
+
+/** r28 (F4): depois de cada desenho — conclui o passo atual se o jogador já fez o que ele pede. */
+export function tutorialTick28(s: GameState, area: string, rerender: () => void): void {
+  const tu = s.tutorial;
+  const steps = tutSteps23(careers(s).active);
+  if (!tu || tu.done || tu.step >= steps.length || !tutAllowed19(store.prefs, 'card')) return;
+  tick28(s, steps[tu.step].area, tu.step, area, () => {
+    tu.step += 1;
+    if (tu.step >= steps.length) { tu.done = true; toast(t(l('Tutorial concluído — agora é com você.', 'Tutorial complete — over to you.')), 'good'); }
+    else toast(`✓ ${t(steps[tu.step - 1].title)}`, 'good');
+    setTimeout(rerender, 0); // fora do desenho em curso
+  });
+}
 
 export function restartTutorial(s: GameState): void {
   s.tutorial = { step: 0, done: false, seen: [] };
