@@ -22,6 +22,8 @@ import { SITS29 } from '../../sim/start29data';
 import { REC_YEARS28, STARTS28 } from '../../sim/start28data';
 import { DIFF17, RANKS17 } from '../../sim/start17';
 import { EQUAL_REP, EQUAL_START_REAL, LABELS_MAX22 } from '../../sim/worldgen';
+import { RIVS29, riv29ById, rivOf29 } from '../../sim/rivals29data';
+import { eraBig29 } from '../../sim/sys/rivals29start';
 
 // centavos nominais → texto; dólares reais (2020) → texto
 const usd = (c: number): string => 'US$ ' + Math.round(c / 100).toLocaleString('pt-BR');
@@ -123,6 +125,8 @@ export const MECH_A: MechArt29[] = [
         'Every act has a hidden minimum it will accept. You only see a range where it probably lies, narrower the better you know the act and the better your staff.'),
       l('Selos rivais disputam artistas visíveis. Eles não sabem o que você sabe: deduzem pela fama pública, paradas e boatos, e cada um tem um limite próprio que você não vê.',
         'Rival labels fight over visible acts. They do not know what you know: they infer from public fame, charts and rumors, and each has its own limit that you cannot see.'),
+      l('Além da banda inteira, dá para abordar UM integrante: clique direito na pessoa (ou na ficha dela) → Carreira e contrato → "Oferecer a {nome}…". As opções são carreira solo no seu selo (assinada pela mesma oferta/mesa de sempre; a pessoa só sai da banda ao assinar), entrar ou substituir alguém numa banda sua, músico de sessão por 6 meses (com crédito), projeto paralelo/supergrupo, produtor ou A&R na equipe (habilidade ≥ 50), compor em segredo (ghostwriter) ou um feat da banda dela.',
+        'Besides the whole band, you can approach ONE member: right-click the person (or their sheet) → Career and contract → "Offer {name}…". The options are a solo career on your label (signed through the usual offer/table; the person only leaves the band on signing), joining or replacing someone in one of your bands, session musician for 6 months (credited), side project/supergroup, producer or A&R on staff (skill ≥ 50), secret songwriting (ghostwriter) or a feature by their band.'),
     ],
     inputs: [
       l('Adiantamento comparado ao que o artista espera (cresce com o quadrado da fama).', 'Advance versus what the act expects (grows with the square of fame).'),
@@ -133,6 +137,8 @@ export const MECH_A: MechArt29[] = [
       l('Promessas (turnê, prioridade de lançamento, liberdade).', 'Promises (tour, release priority, freedom).'),
       l('Equipe: analista, jurídico, empresário e olheiro melhoram a leitura.', 'Staff: analyst, legal, manager and scout improve your read.'),
       l('O quanto você conhece o ato pelo [[mech:scouting|scouting]].', 'How well you know the act through [[mech:scouting|scouting]].'),
+      l('Na oferta a um integrante: pressão para sair da banda, relação com os colegas e o líder, ressentimento, moral, sucesso da banda × fama própria, tamanho da fatia, lealdade e, no solo, o sonho de carreira solo, a ambição de fama e ser a voz/rosto da banda.',
+        'In an offer to a member: pressure to leave the band, relationship with bandmates and the leader, resentment, morale, band success × own fame, size of the share, loyalty and, for solo, the solo-career dream, fame ambition and being the band\'s voice/face.'),
     ],
     outputs: [
       l('Quem entra no seu elenco e por quanto.', 'Who joins your roster and at what price.'),
@@ -140,6 +146,8 @@ export const MECH_A: MechArt29[] = [
       l('Royalties devidos ao artista em cada venda (depois do recoupment).', 'Royalties owed to the act on every sale (after recoupment).'),
       l('Confiança do artista, reputação com artistas e mágoa dos rivais.', 'The act\'s trust, reputation with artists and rival grudges.'),
       l('Disputas: auditoria de royalties, greve de estúdio ou briga na imprensa.', 'Disputes: royalty audits, studio strikes or fights in the press.'),
+      l('Quando um integrante sai para você: a banda que fica perde moral (−8), confiança em você (−10) e momento (−5) e pode acabar; quem recebe ganha manchete e momento; a pessoa passa a ex-integrante na página da banda.',
+        'When a member leaves for you: the band left behind loses morale (−8), trust in you (−10) and momentum (−5) and may break up; the receiving act gets a headline and momentum; the person becomes a former member on the band\'s page.'),
     ],
     rules: [
       l('Oferta padrão: modelo clássico, royalty de 14% + fama/600, 36 meses, 3 discos e taxa de distribuição de 20%. O adiantamento esperado é 800 + 30 × fama² + 150 × fama (dólares de 2020).',
@@ -156,6 +164,8 @@ export const MECH_A: MechArt29[] = [
         'Renewal: chance = 25% + trust/100 + 0.3 × (bonus ÷ expected advance) + adjustments, up to 97%. Renewing adds records owed and resets accumulated bargaining power; failing costs 4 trust.'),
       l('360: o selo leva a fatia contratada de shows e merch até a fama 45; depois a fatia encolhe até 40% dela na fama 93+. Há um teto anual por ato que cresce com a época (maior a partir de 1990 e de 2005).',
         '360: the label takes its contracted cut of live and merch up to fame 45; beyond that the cut shrinks to 40% of it at fame 93+. There is a yearly cap per act that grows with the era (higher from 1990 and from 2005).'),
+      l('Integrante de banda de selo rival: pague a rescisão (adiantamento esperado da banda ÷ integrantes × (0,6 + parte do contrato que falta) + US$ 1.500 da época; mágoa pequena) ou, só no solo, alicie sem pagar: chance menor, mágoa grande, +10 de rivalidade e risco de processo de 35% (+20% se o selo for vingativo), entre 10% e 80%. Se a rivalidade passar de 60, o selo não libera sessão nem projeto paralelo. Recusa dá 8 a 13 semanas de espera.',
+        'Member of a rival label\'s band: pay the buyout (band\'s expected advance ÷ members × (0.6 + remaining share of the contract) + US$1,500 of the era; small grudge) or, for solo only, poach without paying: lower odds, big grudge, +10 rivalry and a 35% lawsuit risk (+20% if the label is vengeful), between 10% and 80%. Above rivalry 60, the label won\'t clear session work or side projects. A refusal means 8 to 13 weeks of waiting.'),
       l('Rivais têm temperamento (vingativo, frio, imitador, orgulhoso) e guardam mágoa quando você leva um artista deles. Perder uma disputa soma calor de rivalidade. Artista insatisfeito (confiança baixa) pode abrir disputa; tribunal custa 25% e, na derrota, você paga 160% da cobrança.',
         'Rivals have a temperament (vengeful, cold, copycat, proud) and hold grudges when you take one of their acts. Losing a bidding war adds rivalry heat. An unhappy act (low trust) may open a dispute; court costs 25% and, if you lose, you pay 160% of the claim.'),
     ],
@@ -164,6 +174,7 @@ export const MECH_A: MechArt29[] = [
       l('Dê ao artista o que a ambição dele pede: controle para quem quer arte, adiantamento para quem quer segurança.', 'Give the act what their ambition wants: control for art, advance for security.'),
       l('Só prometa o que vai cumprir: a verba sai do caixa livre e a promessa quebrada vira boato que os rivais usam.', 'Only promise what you will deliver: the budget leaves free cash and a broken promise becomes a rumor rivals use.'),
       l('Renove cedo quem fatura muito: rivais miram artistas de quem você depende.', 'Renew big earners early: rivals target the acts you depend on.'),
+      l('Quer só a estrela da banda? A voz que sonha com carreira solo, briga com o líder e tem fama maior que a do grupo é a mais fácil de tirar — mas aliciar de um rival pode virar processo.', 'Only want the band\'s star? The singer who dreams of going solo, fights with the leader and is more famous than the group is the easiest to pull — but poaching from a rival can end in court.'),
     ],
     pages: ['contracts19', 'market', 'labels', 'artist18', 'rights18'],
     see: ['mech:money', 'mech:scouting', 'mech:reputation', 'mech:fame', 'glossario:adiantamento', 'glossario:mesa-de-negociacao'],
@@ -180,7 +191,7 @@ export const MECH_A: MechArt29[] = [
       }
       return out;
     },
-    docs: ['docs/act27.md', 'docs/f5-r28.md', 'docs/rodada20.md', 'docs/connect29.md', 'docs/balance17.md'],
+    docs: ['docs/act27.md', 'docs/f5-r28.md', 'docs/rodada20.md', 'docs/connect29.md', 'docs/balance17.md', 'docs/integrante29.md'],
   },
 
   // ------------------------------------------------------------------ DESCOBRIR TALENTOS
@@ -268,13 +279,16 @@ export const MECH_A: MechArt29[] = [
         'In the New run you pick a starting situation on a size ladder that works the same for all 12 careers: zero, emerging, mid-size, hipster, established, top 5, market leader and in crisis. Your status combines career and situation ("Top-5 producer", "Emerging label").'),
       l('Cada degrau muda caixa, reputação, sede, equipe, mercados, elenco (ou a fama da sua banda), a atenção dos rivais e, no gigante caído, uma dívida de verdade. Começar grande dá mais ferramentas e mais custo fixo.',
         'Each rung changes cash, reputation, HQ, staff, markets, roster (or your band\'s fame), rival attention and, for the fallen giant, a real debt. Starting big gives you more tools and more fixed costs.'),
-      l('Os rivais também têm "nível": você escolhe como as gravadoras começam, quantas existem e quão agressivas são no eixo Rivais da dificuldade. Há também um começo sorteado pela semente (herança, amigo na rádio…) que é pulado quando contradiz a situação.',
-        'Rivals have a "level" too: you choose how labels start, how many exist and how aggressive they are on the Rivals difficulty axis. There is also a seed-rolled start (inheritance, a friend at the station…) that is skipped when it contradicts the situation.'),
+      l('Os rivais também têm nível: na Nova run (rápida e completa) o campo "Nível dos rivais" põe as gravadoras rivais numa escada parecida — do zero, emergentes, médios, hipsters / indie de prestígio, estabelecidos, gigantes (top 5), um líder dominante ou mistura realista (o padrão, o mundo de sempre). O status junta os dois: "Selo emergente · rivais gigantes".',
+        'Rivals have a level too: in the New run (quick and full) the "Rival level" field puts the rival labels on a similar ladder — from zero, emerging, mid-size, hipsters / prestige indies, established, giants (top 5), one dominant leader or realistic mix (the default, the usual world). The status joins both: "Emerging label · giant rivals".'),
+      l('O nível dos rivais mexe no caixa, na reputação artística e comercial, no porte, no elenco (cortado ou reforçado com nomes livres), na fama do elenco, nos mercados e na agressividade de cada selo rival. Os negócios rivais da sua carreira (estúdios, festivais, agências, editoras, mídia, plataformas) também nascem pelo nível. Ainda dá para ajustar quantas gravadoras existem e o eixo Rivais da dificuldade, e há um começo sorteado pela semente (herança, amigo na rádio…) que é pulado quando contradiz a situação.',
+        'The rival level changes each rival label\'s cash, artistic and commercial reputation, size, roster (cut or reinforced with free names), roster fame, markets and aggressiveness. Your career\'s rival businesses (studios, festivals, agencies, publishers, media, platforms) are also created by level. You can still set how many labels exist and the Rivals difficulty axis, and there is a seed-rolled start (inheritance, a friend at the station…) that is skipped when it contradicts the situation.'),
     ],
     inputs: [
       l('A situação escolhida na escada.', 'The situation picked on the ladder.'),
       l('A [[mech:careers|carreira]] (negócio, artista ou híbrido): define o caixa base.', 'Your [[mech:careers|career]] (business, artist or hybrid): sets the base cash.'),
       l('Dificuldade geral (fácil, normal, difícil) e os 4 eixos detalhados.', 'Overall difficulty (easy, normal, hard) and the 4 detailed axes.'),
+      l('O nível dos rivais (do zero até um líder dominante; mistura realista é o padrão).', 'The rival level (from zero up to one dominant leader; realistic mix is the default).'),
       l('Como as gravadoras começam e quantas são.', 'How labels start and how many there are.'),
       l('Ajustes personalizados (caixa, sede, elenco, equipe, mercados) valem por cima de tudo.', 'Custom settings (cash, HQ, roster, staff, markets) override everything.'),
       l('O começo sorteado pela semente.', 'The seed-rolled start.'),
@@ -297,6 +311,10 @@ export const MECH_A: MechArt29[] = [
         'In crisis: debt of 1.6 × starting cash as a 60-month loan at 14% a year, charged every month. See [[mech:money|money]].'),
       l('Como as gravadoras começam: pela história (padrão), aleatório, todos iguais, mundo virado, gigantes ou todas novatas. "Todos iguais" dá a todos, você incluso, US$ 600 mil de 2020, reputação 40 e nenhum artista — e pula a escada.',
         'How labels start: by history (default), random, all equal, upside down, giants or all newcomers. "All equal" gives everyone, you included, US$600k in 2020 money, reputation 40 and no acts — and skips the ladder.'),
+      l('Nível dos rivais, exemplos do perfil: do zero = caixa ×0,06 e um artista por selo; hipsters = reputação artística 72–90 e comercial 12–28; gigantes = os 5 maiores com caixa ×3,2, comercial 80–94 e +15 nomes livres cada; líder dominante = o maior com caixa ×10 e +45 nomes, os demais pequenos. A agressividade vai de ×0,55 (do zero) a ×1,4 (líder).',
+        'Rival level, profile examples: from zero = cash ×0.06 and one act per label; hipsters = artistic reputation 72–90 and commercial 12–28; giants = the 5 biggest with cash ×3.2, commercial 80–94 and +15 free names each; dominant leader = the biggest with cash ×10 and +45 names, the others small. Aggressiveness goes from ×0.55 (from zero) to ×1.4 (leader).'),
+      l('Eras: a era limita quantos gigantes cabem — 2 antes de 1920, 3 antes de 1950, 5 depois. Multiplicadores de crescimento valem pela metade antes de 1920 e ¾ antes de 1950, e "o mundo" de um gigante é o da época. Cenário histórico, "assumir gravadora" e um "Como começam" escolhido anulam o nível dos rivais.',
+        'Eras: the era limits how many giants fit — 2 before 1920, 3 before 1950, 5 after. Growth multipliers count half before 1920 and ¾ before 1950, and a giant\'s "world" is the era\'s. A historical scenario, "take over a label" and a chosen "How labels start" override the rival level.'),
       l('Eixo Rivais da dificuldade (−2 a +2): positivo deixa os rivais mansos. Cada passo multiplica a agressividade por 1 − 0,2 × passo e soma 2 pontos às suas propostas. Dá para escolher de 0 a 100 gravadoras rivais.',
         'Rivals difficulty axis (−2 to +2): positive makes rivals tame. Each step multiplies aggression by 1 − 0.2 × step and adds 2 points to your offers. You can pick 0 to 100 rival labels.'),
       l('O Recomendado sugere 25 anos de partida; com prazo, a pontuação final dá uma patente, de "Selo de garagem" a "Lenda da indústria". "Assumir gravadora" e cenários históricos têm começo próprio. As predefinições de apresentação (Guiado, Livre, Contemplativo) não mexem em regras: veja [[mech:modes|modos]].',
@@ -306,7 +324,8 @@ export const MECH_A: MechArt29[] = [
       l('Primeira partida? Emergente ou médio dão margem para errar sem a folha pesada de uma major.', 'First run? Emerging or mid-size leave room for mistakes without a major\'s heavy payroll.'),
       l('Top 5 e líder começam com rivais magoados: proteja seus artistas principais desde o começo.', 'Top 5 and leader start with grudging rivals: protect your key acts from day one.'),
       l('No gigante caído, a parcela do banco vem todo mês: corte custos e gere caixa antes de crescer.', 'As a fallen giant, the bank installment comes every month: cut costs and build cash before growing.'),
-      l('Quer desafio sem mudar a escada? Use o eixo Rivais negativo ou "Gigantes".', 'Want a challenge without changing the ladder? Use a negative Rivals axis or "Giants".'),
+      l('Quer desafio sem mudar a sua situação? Escolha rivais "Gigantes" ou "Um líder dominante", ou o eixo Rivais negativo.', 'Want a challenge without changing your own situation? Pick "Giants" or "One dominant leader" rivals, or a negative Rivals axis.'),
+      l('Rivais "Do zero" deixam os artistas famosos livres no mercado: bom para montar elenco cedo, mas o caixa decide quem você assina primeiro.', '"From zero" rivals leave famous acts free on the market: good for building a roster early, but cash decides whom you sign first.'),
     ],
     pages: ['goals', 'plan', 'cockpit'],
     see: ['mech:modes', 'mech:careers', 'mech:money', 'mech:contracts', 'glossario:situacao-inicial'],
@@ -320,14 +339,23 @@ export const MECH_A: MechArt29[] = [
         row('Prazo sugerido (anos)', 'Suggested run length (years)', String(REC_YEARS28)),
         row('Começos sorteados · eixos de dificuldade · patentes', 'Rolled starts · difficulty axes · ranks', `${STARTS28.length} · ${DIFF17.length} · ${RANKS17.length}`),
       ];
+      out.push(row('Níveis de rival (padrão: mistura realista)', 'Rival levels (default: realistic mix)', String(RIVS29.length)));
+      out.push(row('Gigantes que a era comporta (antes de 1920 · 1950 · depois)', 'Giants the era allows (before 1920 · 1950 · after)', `${eraBig29(1900, 5)} · ${eraBig29(1940, 5)} · ${eraBig29(1980, 5)}`));
       if (sit) out.push(row('Sua situação', 'Your situation', sit.name.pt));
+      if (s) out.push(row('Nível dos rivais nesta partida', 'Rival level in this run', riv29ById(rivOf29(s.config))?.name.pt ?? '—'));
       return out;
     },
-    docs: ['docs/fixes29.md', 'docs/f4-r28.md', 'docs/rodada17.md', 'docs/reorg29.md'],
+    docs: ['docs/fixes29.md', 'docs/f4-r28.md', 'docs/rodada17.md', 'docs/reorg29.md', 'docs/rivais29.md'],
   },
 ];
 
 export const TERMS_A: Term29[] = [
+  { id: 'nivel-dos-rivais', term: l('Nível dos rivais', 'Rival level'),
+    def: l('Escolha da Nova run que põe as gravadoras rivais (e os negócios rivais da sua carreira) numa escada: do zero, emergentes, médios, hipsters, estabelecidos, gigantes, um líder dominante ou mistura realista (padrão).', 'New run choice that puts rival labels (and your career\'s rival businesses) on a ladder: from zero, emerging, mid-size, hipsters, established, giants, one dominant leader or realistic mix (default).'),
+    see: ['mech:start'] },
+  { id: 'oferta-a-integrante', term: l('Oferta a um integrante', 'Offer to a band member'),
+    def: l('Abordar uma pessoa de qualquer banda em vez da banda inteira: carreira solo, entrar numa banda sua, sessão, projeto paralelo, equipe, ghostwriter ou feat. Com selo rival, há rescisão ou aliciamento.', 'Approaching one person from any band instead of the whole band: solo career, joining one of your bands, session work, side project, staff, ghostwriter or feature. With a rival label, there is a buyout or poaching.'),
+    see: ['mech:contracts'] },
   { id: 'caixa-livre', term: l('Caixa livre', 'Free cash'),
     def: l('Caixa menos o que já está prometido: adiantamentos de ofertas pendentes e verbas de promessas abertas. É ele que os gastos checam.', 'Cash minus what is already promised: advances on pending offers and budgets of open promises. It is what spending checks against.'),
     see: ['mech:money'] },

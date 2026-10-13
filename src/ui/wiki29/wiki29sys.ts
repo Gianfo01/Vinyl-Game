@@ -5,7 +5,7 @@
 /** artigo de mecânica → módulos de src/sim/sys que ele explica */
 export const SYS_OF_MECH29: Record<string, string[]> = {
   money: ['capital', 'vices', 'bolsa10', 'overhead13', 'econ18', 'money19', 'fin20', 'price20', 'budget19', 'insure19', 'sale17', 'intra19', 'bandpay19', 'stakes8', 'report18', 'supply16', 'industry'],
-  contracts: ['offers12', 'contracts18', 'dispute15', 'moneyb19', 'deals18', 'rivals8', 'rivals12', 'rivalmind18', 'rivals27', 'leaders10', 'labelrep28', 'image17', 'license17', 'consent8', 'union20', 'feats8'],
+  contracts: ['offers12', 'contracts18', 'dispute15', 'moneyb19', 'deals18', 'rivals8', 'rivals12', 'rivalmind18', 'rivals27', 'leaders10', 'labelrep28', 'image17', 'license17', 'consent8', 'union20', 'feats8', 'member29'],
   scouting: ['scout11', 'scout23', 'dossier8', 'discover18', 'talent', 'ability18', 'schools19', 'tv18', 'contests19', 'kpop18', 'idols18', 'school18'],
   music: ['music', 'creation', 'quality18', 'traj18', 'sound', 'recipe12', 'project8', 'project12', 'project13', 'compose27', 'camp27', 'session18', 'session19', 'camps18', 'writers19', 'remix19',
     'charts7', 'world4', 'warmup8', 'relevance8', 'explain8', 'review18', 'mkt18', 'stream18', 'radio18', 'media18', 'outlets17', 'supply18', 'songsale', 'songmkt27', 'rights8', 'rights18',
@@ -24,7 +24,7 @@ export const SYS_OF_MECH29: Record<string, string[]> = {
   awards: ['ceremonies8', 'awards18', 'awards28', 'rockhall9', 'relics9', 'relics18', 'relics28', 'paths18', 'saga18', 'tribute19'],
   story: ['scenes', 'stories8', 'situations17', 'sits17', 'dm18', 'dmsits18', 'decide18', 'echoes18', 'echoes19', 'decnew18', 'conseq27', 'crisis27', 'story12', 'story28', 'chains28', 'quarter28',
     'scene17', 'scenedefs17', 'cine18', 'moments16', 'scenes19', 'eggs27', 'pace9', 'chron9'],
-  start: ['start17', 'start28', 'start29', 'custom7', 'cards6', 'scenarios17', 'scenarios23'],
+  start: ['start17', 'start28', 'start29', 'rivals29start', 'custom7', 'cards6', 'scenarios17', 'scenarios23'],
   careers: ['careers12', 'careers19', 'ventures9', 'ventures12', 'media12', 'platform12', 'studio12', 'tour12', 'venue12', 'fest12', 'screen18', 'artist18', 'shared18', 'shared28', 'exp17'],
   modes: ['assist28', 'history15'],
   connections: ['links16', 'links18', 'links19a', 'links19b', 'links23', 'bridge17', 'factlink19', 'mech29', 'perks29', 'final18', 'facades19', 'ctxsys19', 'why18', 'explain12'],
