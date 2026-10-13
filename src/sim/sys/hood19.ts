@@ -21,7 +21,7 @@ import type { Goto18 } from '../inbox18';
 import { addStress } from '../stress17';
 import type { GameState } from '../types';
 import { fmtL, hasTech, money, playerActs, post } from '../util';
-import { LOTS18, buildings18, campus18, freeLots18, log18, lotMult18, styleDef18 } from './campus18';
+import { DIST18, LOTS18, buildings18, campus18, freeLots18, log18, lotMult18, styleDef18 } from './campus18';
 import { hq6 } from './hq6';
 import { liveOf } from './live/state';
 import { v17, vdef } from './venues17';
@@ -123,10 +123,12 @@ export const localRivals19 = (s: GameState) => {
 };
 const RIVAL0 = (y: number): L => (y < 1920 ? l('Companhia Fonográfica Central', 'Central Phonograph Company') : y < 1960 ? l('Discos Metrópole', 'Metropole Records') : l('Selo do Bairro', 'Neighbourhood Label'));
 export interface Nb19 { lot: number; k: NbK; name: L; sale: boolean; price: number; who?: string }
-/** Vizinhos agora: ocupam lotes livres (deixando pelo menos 3 livres para você); somem quando você usa o lote. */
+/** Vizinhos agora: ocupam lotes livres (deixando pelo menos 3 livres para você); somem quando você usa o lote.
+ *  r27 (LOTS): preferem os lotes do centro (DIST18[0]) — quando a cidade cresce, os vizinhos de sempre não mudam de lugar. */
 export function nb19(s: GameState): Nb19[] {
   const st = hood19(s), free = freeLots18(s).filter((n) => st.bought[n] === undefined);
-  const order = [...free].sort((a, b) => hash(`${s.config.seed}|nb|${a}`) - hash(`${s.config.seed}|nb|${b}`));
+  const core = DIST18[0].end;
+  const order = [...free].sort((a, b) => Number(a >= core) - Number(b >= core) || hash(`${s.config.seed}|nb|${a}`) - hash(`${s.config.seed}|nb|${b}`));
   const rivals = localRivals19(s); // r27 (CITY2): só rivais locais (nada de escritório estrangeiro no bairro)
   const kinds = (Object.keys(NB19) as NbK[]).filter((k) => s.year >= NB19[k].from && (k !== 'radio' || hasTech(s, 'radio')));
   const n = Math.max(0, Math.min(kinds.length, free.length - 3, 4));

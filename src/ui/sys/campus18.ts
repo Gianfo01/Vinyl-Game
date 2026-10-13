@@ -5,14 +5,15 @@ import { hqFloors27 } from '../../sim/sys/hqrooms27';
 // mudar de lote, renomear…). Sem nada escolhido, o painel é a visão geral do bairro (seus prédios com o que está
 // acontecendo, vizinhos e rivais com o que estão fazendo, lotes à venda que cabem no caixa). Ícone próprio por
 // tipo, com contador de alertas e prazo de obra. Clicar na SEDE entra nela (Sede → Sua sede). O mapa cabe na tela.
-// Lotes vazios só aparecem como "À venda" quando você pode pagar; os outros viram cidade comum.
+// Lotes vazios "À venda": sempre pelo menos 3 (a cidade abre bairros novos quando falta terreno — DIST18); os que não
+// cabem no caixa aparecem com a compra bloqueada e o motivo; os outros lotes livres viram cidade comum.
 // Anima com requestAnimationFrame (~8 quadros/s) só enquanto visível; com "reduzir movimento", desenha parado.
 
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import {
-  CONTRACTORS18, KIND18, LOTS18, STATE18, type Style18, ambient18, buildings18, campus18, decode18, layout18, styleName18, styleOf18, type Bld18,
+  CONTRACTORS18, KIND18, LOTS18, STATE18, type Style18, ambient18, buildings18, campus18, decode18, dist18, layout18, lotsOpen18, styleName18, styleOf18, type Bld18,
 } from '../../sim/sys/campus18';
 import { act19, bldPop19, lotPop19, syn19, upkeep19, type Pop19, type PopAct19 } from '../../sim/sys/world19';
 import { EV19, STAGE19, actEv19, buyNb19, evPop19, hoodStats19, live19ev, lmPop19, nb19, nbPop19 } from '../../sim/sys/hood19';
@@ -21,7 +22,7 @@ import { h } from '../dom';
 import { why18 } from '../explain18';
 import { COSTK20, NATURE20, priceBasis20, type CostKind20 } from '../../sim/sys/price20';
 import { price20 } from '../price20';
-import { MH, MW, buildScene18, drawFrame18, env18, iso, nightOf, signAt27, stylePreview19, type Scene18 } from '../pixel/campus18px';
+import { buildScene18, drawFrame18, env18, iso, nightOf, signAt27, stylePreview19, type Scene18 } from '../pixel/campus18px';
 import { ICON27, bldVis27, fillerLots27, forSale27, life27, lmPop27, mapLms27, nbInfo27, panel27, type BVis27, type NbInfo27, type Sale27 } from '../pixel/city27';
 import { SEDE25 } from '../ps/nav25';
 import { sedeNav25 } from '../ps/slot25';
@@ -45,7 +46,7 @@ const tx = (x: L | string | undefined) => (x === undefined ? '' : typeof x === '
 const mobile = () => !!window.matchMedia?.('(max-width: 860px)').matches;
 
 /** UI efêmera (por sessão; não vai para o save). */
-const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number; /** r27 (CITY2): lugar aberto por dentro */ inside?: string } =
+const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number; /** r27 (CITY2): lugar aberto por dentro */ inside?: string; /** r27 (LOTS): largura do mapa já enquadrado no celular */ zFor?: number } =
   { mode: 'cycle', q: 1, f: { mine: true, nb: true, lm: true }, z: 1, px: 0, py: 0 };
 
 interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[] }
@@ -69,7 +70,7 @@ function makeView(s: GameState, year?: number): View {
   const places = places27(s, filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1);
   const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n }))];
   const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms,
-    { vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill').map((p) => [p.lot, p.draw])) });
+    { dist: dist18(s, bs), vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill').map((p) => [p.lot, p.draw])) });
   return { s, bs, year: s.year, live: true, vis, sale, nbs, places, scene };
 }
 /** Iniciais do selo (placa da sede e letreiro). */
@@ -78,7 +79,8 @@ const hashSeed = (s: GameState) => { let x = 7; for (const c of s.config.seed) x
 
 /** Canvas animado: ~8 quadros/s via requestAnimationFrame, só enquanto visível; parado com "reduzir movimento". */
 function mapCanvas(v: View): HTMLCanvasElement {
-  const cv = h('canvas', { class: 'c18-cv px', width: MW, height: MH, role: 'img', 'aria-label': t(l('Mapa do bairro com os seus prédios', 'Map of the neighbourhood with your buildings')) }) as HTMLCanvasElement;
+  const { mw: MW, mh: MH } = v.scene.geo; // r27 (LOTS): o canvas cresce com a cidade
+  const cv = h('canvas', { class: 'c18-cv px', width: MW, height: MH, style: `aspect-ratio:${MW} / ${MH}`, role: 'img', 'aria-label': t(l('Mapa do bairro com os seus prédios', 'Map of the neighbourhood with your buildings')) }) as HTMLCanvasElement;
   const ctx = cv.getContext('2d');
   if (!ctx) return cv;
   const nightFor = (tm: number) => (ui.mode === 'day' ? 0 : ui.mode === 'night' ? 1 : reduced() ? 0 : nightOf(tm));
@@ -289,6 +291,7 @@ function lotPanel(v: View, id: string, close: () => void, rerun: () => void): HT
     h('header', { class: 'c27-ph' }, chip27('building', '#c8302c', 'sale'), h('div', null, h('b', null, tx(p.title)), h('small', { class: 'muted' }, ui.moving ? t(l('Destino da mudança', 'Move destination')) : t(l('À venda', 'For sale')))),
       h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
     sl ? h('p', { class: 'small c27-sug' }, t(l('Sugestão: ', 'Suggestion: ')), ic(ICON27[sl.kind]?.ic ?? 'building'), ' ', h('b', null, t(sl.name)), ` · ${$(sl.price)}`) : null,
+    sl?.dis ? h('p', { class: 'small bad c27-sug' }, t(l('Ainda não dá para comprar: ', 'Not buyable yet: ')), t(sl.dis)) : null,
     popBody(v, p, close, rerun, true));
 }
 
@@ -313,11 +316,13 @@ function overview27(v: View, open: (id: string) => void): HTMLElement {
         x?.alerts ? h('i', { class: 'c27-n', title: x.why.map((w) => t(w)).join(' · ') }, String(x.alerts)) : null));
     })),
     v.nbs.length ? [h('h4', null, t(l('Vizinhos e rivais', 'Neighbours and rivals'))), h('ul', { class: 'c27-list' }, v.nbs.map((n) => h('li', null, h('button', { type: 'button', onclick: () => open(`nb:${n.lot}`) }, chip27(n.icon, n.k === 'rival' ? '#8a3a3a' : '#6a6a72', 'nb'), h('span', { class: 'c27-tx' }, h('b', null, t(n.name)), h('small', { class: 'muted' }, t(n.doing)))))))] : null,
+    // r27 (LOTS): sempre há lotes à venda (antes dos lugares da cidade, que cresceram com o mapa); os que não cabem no
+    // caixa aparecem com o motivo (compra bloqueada)
+    v.sale.length ? [h('h4', null, t(l('À venda', 'For sale'))), h('ul', { class: 'c27-list' }, v.sale.map((x) => h('li', null, h('button', { type: 'button', onclick: () => open(`lot:${x.lot}`) }, chip27(ICON27[x.kind]?.ic ?? 'building', x.dis ? '#8a8490' : '#c8302c', 'sale'), h('span', { class: 'c27-tx' }, h('b', null, t(LOTS18[x.lot].name)), h('small', { class: 'muted' }, `${t(x.name)} · ${$(x.price)}`), x.dis ? h('small', { class: 'bad' }, t(x.dis)) : null)))))]
+      : v.live ? h('p', { class: 'small muted' }, t(l('A cidade não tem mais terreno livre: todos os bairros estão ocupados.', 'The city has no free land left: every district is taken.'))) : null,
     // r27 (CITY2): os lugares da cidade (loja, casa de shows, rádio, estúdio, jornal, prédios) — todos clicáveis
     v.places.some((p) => p.src === 'fill') ? [h('h4', null, t(l('Lugares da cidade', 'Places in town'))), h('ul', { class: 'c27-list' }, v.places.filter((p) => p.src === 'fill').map((p) => h('li', null, h('button', { type: 'button', onclick: () => open(p.id) },
       chip27(PLACE_IC27[p.k].ic, PLACE_IC27[p.k].col), h('span', { class: 'c27-tx' }, h('b', null, t(p.name)), h('small', { class: 'muted' }, `${t(p.what)}${p.also.length ? ' +' : ''} · ${t(p.now)}`))))))] : null,
-    v.sale.length ? [h('h4', null, t(l('À venda (cabe no caixa)', 'For sale (affordable)'))), h('ul', { class: 'c27-list' }, v.sale.map((x) => h('li', null, h('button', { type: 'button', onclick: () => open(`lot:${x.lot}`) }, chip27(ICON27[x.kind]?.ic ?? 'building', '#c8302c', 'sale'), h('span', { class: 'c27-tx' }, h('b', null, t(LOTS18[x.lot].name)), h('small', { class: 'muted' }, `${t(x.name)} · ${$(x.price)}`))))))]
-      : v.live ? h('p', { class: 'small muted' }, t(l('Nenhum lote vazio cabe no caixa agora: os terrenos livres aparecem como cidade comum.', 'No empty lot fits your cash right now: free plots show as ordinary city.'))) : null,
     h('p', { class: 'small muted' }, t(l('Clique na sede para entrar nela. Toque num prédio, vizinho, placa "À venda" ou marco para ver detalhes e agir.', 'Click the HQ to step inside. Tap a building, neighbour, "For sale" sign or landmark to see details and act.'))));
 }
 const fmt27 = (x: L, o: Record<string, string | number>): L => ({ pt: x.pt.replace(/\{(\w+)\}/g, (_, k) => String(o[k] ?? '')), en: x.en.replace(/\{(\w+)\}/g, (_, k) => String(o[k] ?? '')) });
@@ -327,8 +332,9 @@ const fmt27 = (x: L, o: Record<string, string | number>): L => ({ pt: x.pt.repla
 function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const s = v.s;
   for (const old of document.querySelectorAll('body > .c27-sheet')) old.remove(); // folha antiga (celular) de um render anterior
+  const { mw: MW, mh: MH } = v.scene.geo;
   const frame = h('div', { class: 'w19-frame c27-frame' });
-  const vp = h('div', { class: 'w19-vp' });
+  const vp = h('div', { class: 'w19-vp', style: `--ar:${(MW / MH).toFixed(4)}` });
   const zoom = h('div', { class: 'w19-zoom' });
   const layer = h('div', { class: 'w19-hot' });
   const tip = h('div', { class: 'c18-tip', hidden: true, role: 'tooltip' });
@@ -442,17 +448,17 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   if (ui.f.lm) for (const m of sc.marks) { const lm = mapLms27(s.config.homeCity, v.year).find((x) => x.id === m.id); if (lm) hot(`lm:${m.id}`, 'lm', m.box, `${t(lm.n)} · ${lm.from > 0 ? lm.from : ''}`); }
   if (v.live && ui.f.mine) {
     if (ui.moving) { // mudança: todo lote livre é destino
-      const used = new Set(layout18(s, v.bs).values()), nbl = new Set(nb19(s).map((x) => x.lot)), busy = new Set(campus18(s).proj.map((p) => p.lot));
+      const used = new Set(layout18(s, v.bs).values()), nbl = new Set(nb19(s).map((x) => x.lot)), busy = new Set(campus18(s).proj.map((p) => p.lot)), open = lotsOpen18(s, v.bs);
       LOTS18.forEach((L0, i) => {
-        if (used.has(i) || nbl.has(i) || busy.has(i)) return;
+        if (i >= open || used.has(i) || nbl.has(i) || busy.has(i)) return;
         const [cx, cy] = iso(L0.gx + L0.w / 2, L0.gy + L0.d / 2);
         hot(`lot:${i}`, 'lot mv', [cx - 7, cy - 7, cx + 7, cy + 7], `${t(L0.name)} · ${t(l('mudar para cá', 'move here'))}`, ['→']);
       });
-    } else for (const x of v.sale) { // r27: placas "À venda" (só o que cabe no caixa)
+    } else for (const x of v.sale) { // r27: placas "À venda" (r27 LOTS: as que não cabem no caixa vêm apagadas, com o motivo)
       const L0 = LOTS18[x.lot];
       const [bx, by] = signAt27(x.lot), sg = sc.signs?.find((g) => g.lot === x.lot); // r27 (I2): placa erguida leva o ponto clicável junto
-      hot(`lot:${x.lot}`, 'sale', sg ? [sg.x, sg.y, sg.x + sg.c.width, sg.y + 10] : [bx - 14, by - 19, bx + 14, by + 1], `${t(L0.name)} · ${t(l('à venda', 'for sale'))} · ${t(l('sugestão', 'suggestion'))}: ${t(x.name)} ${$(x.price)}`,
-        [h('span', { class: 'c27-pin sale', 'aria-hidden': 'true' }, ic(ICON27[x.kind]?.ic ?? 'building'), h('i', { class: 'c27-nm' }, $(x.price)))]);
+      hot(`lot:${x.lot}`, x.dis ? 'sale dis' : 'sale', sg ? [sg.x, sg.y, sg.x + sg.c.width, sg.y + 10] : [bx - 14, by - 19, bx + 14, by + 1], `${t(L0.name)} · ${t(l('à venda', 'for sale'))} · ${t(l('sugestão', 'suggestion'))}: ${t(x.name)} ${$(x.price)}${x.dis ? ` — ${t(x.dis)}` : ''}`,
+        [h('span', { class: `c27-pin sale ${x.dis ? 'dis' : ''}`, 'aria-hidden': 'true' }, ic(ICON27[x.kind]?.ic ?? 'building'), h('i', { class: 'c27-nm' }, $(x.price)))]);
     }
     // eventos do bairro
     for (const e of live19ev(s)) { const sp = sc.sprites.find((x) => x.id === e.at); if (sp) hot(`ev:${e.id}`, 'ev', [sp.door[0] - 6, sp.door[1] - 2, sp.door[0] + 6, sp.door[1] + 10], `${t(EV19[e.k].n)} — ${t(l('decidir', 'decide'))}`, ['!']); }
@@ -484,7 +490,12 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   layer.addEventListener('mousemove', (e) => { const q = eggAt(e); layer.style.cursor = q ? 'pointer' : ''; if (q) layer.title = t(q.e.title); else if (layer.title) layer.title = ''; });
   zoom.append(cv, layer);
   vp.append(zoom);
-  requestAnimationFrame?.(() => { clampPan(); apply(); });
+  // r27 (LOTS): no celular, uma cidade maior que o centro abre aproximada na sede (pixel ~1:1, como o mapa de sempre);
+  // a pinça ou o "−" mostram a cidade inteira. Só na 1ª vez para cada tamanho de mapa (depois vale o zoom do jogador).
+  const autoZ = () => (mobile() ? Math.min(2.2, Math.max(1, MW / 300)) : 1);
+  const centerHq = (z: number) => { const hq = layer.querySelector('[data-id="hq"]') as HTMLElement | null; if (!hq) return; ui.z = z; ui.px = vp.clientWidth / 2 - (hq.offsetLeft + hq.offsetWidth / 2) * z; ui.py = vp.clientHeight / 2 - (hq.offsetTop + hq.offsetHeight / 2) * z; clampPan(); };
+  const arriving = zoom27.arrive;
+  requestAnimationFrame?.(() => { if (!arriving && v.live && ui.zFor !== MW) { ui.zFor = MW; if (autoZ() > 1) centerHq(autoZ()); } clampPan(); apply(); });
   // barra sobre o mapa
   const modes: [typeof ui.mode, L][] = [['cycle', l('Dia e noite', 'Day & night')], ['day', l('Dia', 'Day')], ['night', l('Noite', 'Night')]];
   const tog = (k: keyof typeof ui.f, n: L) => h('button', { type: 'button', class: `btn small ${ui.f[k] ? '' : 'ghost'}`, 'aria-pressed': String(ui.f[k]), onclick: () => { ui.f[k] = !ui.f[k]; rerender(); } }, t(n));
@@ -520,9 +531,13 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
       zoom.style.transformOrigin = `${r.left + r.width / 2 - vr.left}px ${r.top + r.height / 2 - vr.top}px`;
       zoom.style.transform = 'scale(2.6)';
       void zoom.offsetWidth;
+      // r27 (LOTS): no celular com cidade grande, o afastamento para na sede enquadrada (mesma conta com a origem na sede)
+      const ox = r.left + r.width / 2 - vr.left, oy = r.top + r.height / 2 - vr.top, z = autoZ();
+      ui.zFor = MW;
+      if (z > 1) centerHq(z);
       requestAnimationFrame(() => {
         zoom.style.transition = 'transform 560ms cubic-bezier(.2,.7,.2,1)';
-        zoom.style.transform = 'translate(0px, 0px) scale(1)';
+        zoom.style.transform = `translate(${ui.px - ox * (1 - ui.z)}px, ${ui.py - oy * (1 - ui.z)}px) scale(${ui.z})`;
         setTimeout(() => { zoom.style.transition = ''; zoom.style.transformOrigin = ''; apply(); }, 600);
       });
     });
@@ -536,8 +551,8 @@ function legend(): HTMLElement {
   return h('div', { class: 'w19-legend small' },
     h('b', null, t(l('Legenda', 'Legend'))),
     h('ul', null, ks.map((k) => h('li', null, chip27(ICON27[k].ic, ICON27[k].col), ' ', t(KIND18[k].name)))),
-    h('p', { class: 'muted' }, t(l('Número vermelho = alertas; "3m" = meses de obra; placa "À venda" = lote que cabe no caixa (o tipo sugerido no ícone); cinza = vizinho, vinho = gravadora rival. Janelas acesas = gente trabalhando; fila na porta = sessão ou show; fumaça = fábrica prensando. Marcos da cidade ficam no horizonte.',
-      'Red number = alerts; "3mo" = months of works; "For sale" sign = a lot you can afford (suggested type on the icon); grey = neighbour, wine = rival label. Lit windows = people at work; queue at the door = session or show; smoke = plant pressing. City landmarks sit on the skyline.'))));
+    h('p', { class: 'muted' }, t(l('Número vermelho = alertas; "3m" = meses de obra; placa "À venda" = lote livre (o tipo sugerido no ícone; letra cinza = ainda não cabe no caixa); cinza = vizinho, vinho = gravadora rival. Janelas acesas = gente trabalhando; fila na porta = sessão ou show; fumaça = fábrica prensando. Marcos da cidade ficam no horizonte.',
+      'Red number = alerts; "3mo" = months of works; "For sale" sign = a free lot (suggested type on the icon; grey letters = not affordable yet); grey = neighbour, wine = rival label. Lit windows = people at work; queue at the door = session or show; smoke = plant pressing. City landmarks sit on the skyline.'))));
 }
 
 // ---------------------------------------------------------------- página
@@ -585,7 +600,8 @@ function campusArea(s: GameState): HTMLElement {
 /** Miniatura (sem animação) para o Cockpit: clique abre a página. */
 export function campusThumb18(s: GameState): HTMLElement {
   const v = makeView(s);
-  const cv = h('canvas', { class: 'c18-thumb px', width: MW, height: MH, role: 'img', 'aria-label': t(l('Nosso mundo (miniatura)', 'Our world (thumbnail)')) }) as HTMLCanvasElement;
+  const { mw: MW, mh: MH } = v.scene.geo;
+  const cv = h('canvas', { class: 'c18-thumb px', width: MW, height: MH, style: `aspect-ratio:${MW} / ${MH}`, role: 'img', 'aria-label': t(l('Nosso mundo (miniatura)', 'Our world (thumbnail)')) }) as HTMLCanvasElement;
   const ctx = cv.getContext('2d');
   if (ctx) drawFrame18(ctx, v.scene, 3, 0);
   const hs = hoodStats19(s), ev = live19ev(s).length;

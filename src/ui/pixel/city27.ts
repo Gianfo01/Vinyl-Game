@@ -6,7 +6,8 @@
 //     tijolo + chuva em Londres…);
 //   • estado de cada prédio (estúdio aceso + fila de músicos, marquise acesa + fila em noite de show, fumaça na
 //     fábrica que prensa, andaime + prazo na obra, ícone próprio por tipo + contador de alertas);
-//   • lotes "À venda" (só os que você pode pagar, com o tipo sugerido); o resto vira cidade comum;
+//   • lotes "À venda" (sempre ≥3: os que cabem no caixa primeiro, os outros bloqueados com o motivo; com o tipo
+//     sugerido); a cidade cresce em bairros novos quando falta terreno; o resto vira cidade comum;
 //   • vida na rua (artistas e equipe indo da sede ao estúdio, ônibus da turnê saindo, fãs quando um disco
 //     entra na parada, imprensa na porta durante um escândalo);
 //   • vizinhos com nome (gravadoras rivais, rádio, bar com palco): quem são e o que estão fazendo;
@@ -19,7 +20,7 @@ import type { Style18 } from '../../sim/sys/campus18';
 import { cityById, l, type L } from '../../data/world';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
-import { KIND18, LOTS18, buildings18, campus18, dormPeople, layout18, storeIncome18, type BKind, type Bld18 } from '../../sim/sys/campus18';
+import { KIND18, LOTS18, buildings18, campus18, dormPeople, layout18, lotsOpen18, storeIncome18, type BKind, type Bld18 } from '../../sim/sys/campus18';
 import { NB19, live19ev, nb19, type Nb19 } from '../../sim/sys/hood19';
 import { liveOf } from '../../sim/sys/live/state';
 import { rel18 } from '../../sim/sys/relics18';
@@ -201,40 +202,46 @@ export function bldVis27(s: GameState, bs: Bld18[] = buildings18(s)): Map<string
 
 // ---------------------------------------------------------------- lotes à venda
 
-export interface Sale27 { lot: number; price: number; kind: BKind; opt: string; name: L }
-/** Lotes livres que você PODE pagar agora, com o tipo sugerido (melhor vizinhança, depois o mais barato). */
+/** r27 (LOTS): `dis` = nenhuma obra cabe no caixa (ou todas já existem): a placa aparece igual, com o preço e o
+ *  motivo, e a compra fica bloqueada até dar (antes o lote sumia e virava cidade comum). */
+export interface Sale27 { lot: number; price: number; kind: BKind; opt: string; name: L; dis?: L }
+/** Lotes livres À VENDA com o tipo sugerido (melhor vizinhança, depois o mais barato). Os que cabem no caixa vêm
+ *  primeiro; os outros aparecem bloqueados com o motivo. A cidade cresce (sim/sys/campus18 `dist18`) e os vizinhos
+ *  deixam 3 lotes livres: sempre há pelo menos 3 placas enquanto houver bairro para abrir. */
 export function forSale27(s: GameState): Sale27[] {
   const bs = buildings18(s);
+  const open = lotsOpen18(s, bs);
   const used = new Set(layout18(s, bs).values());
   const st = campus18(s);
   const nbl = new Set(nb19(s).map((x) => x.lot));
   const busy = new Set(st.proj.map((p) => p.lot));
   const out: Sale27[] = [];
   LOTS18.forEach((_, lot) => {
-    if (lot === 0 || used.has(lot) || nbl.has(lot) || busy.has(lot)) return;
+    if (lot === 0 || lot >= open || used.has(lot) || nbl.has(lot) || busy.has(lot)) return;
     const p = lotPop19(s, lot);
-    if (!p) return;
+    if (!p || !p.opts.length) return;
     const ok = p.opts.filter((o) => !o.dis);
-    if (!ok.length) return;
-    const score = (o: (typeof ok)[number]) => o.syn.reduce((t, x) => t + (tx(x).startsWith('−') ? -1 : 1), 0);
-    ok.sort((a, b) => score(b) - score(a) || a.cost - b.cost);
-    const o = ok[0];
+    const pool = ok.length ? ok : [...p.opts];
+    const score = (o: (typeof pool)[number]) => o.syn.reduce((t, x) => t + (tx(x).startsWith('−') ? -1 : 1), 0);
+    pool.sort((a, b) => score(b) - score(a) || a.cost - b.cost);
+    const o = pool[0];
     const kind: BKind = o.id.startsWith('p:') ? (o.id.slice(2) as BKind) : o.id === 'v:festival' ? 'fest' : (o.id.slice(2) as BKind);
-    out.push({ lot, price: o.cost, kind: KIND18[kind] ? kind : 'store', opt: o.id, name: o.name });
+    out.push({ lot, price: o.cost, kind: KIND18[kind] ? kind : 'store', opt: o.id, name: o.name, ...(ok.length ? {} : { dis: o.dis }) });
   });
-  // no máximo SALE_MAX27 placas (as de lote mais visível; depois as mais baratas): o resto é cidade comum
-  return out.sort((a, b) => LOTS18[b.lot].vis - LOTS18[a.lot].vis || a.price - b.price || a.lot - b.lot).slice(0, SALE_MAX27);
+  // no máximo SALE_MAX27 placas (as que cabem no caixa; depois as de lote mais visível; depois as mais baratas): o resto é cidade comum
+  return out.sort((a, b) => Number(!!a.dis) - Number(!!b.dis) || LOTS18[b.lot].vis - LOTS18[a.lot].vis || a.price - b.price || a.lot - b.lot).slice(0, SALE_MAX27);
 }
 export const SALE_MAX27 = 3;
 const tx = (x: L | string): string => (typeof x === 'string' ? x : x.pt);
-/** Lotes livres que NÃO estão à venda para você: viram cidade comum (prédios genéricos). */
+/** Lotes livres (nos bairros abertos) que NÃO estão à venda: viram cidade comum (prédios genéricos). */
 export function fillerLots27(s: GameState, sale: Sale27[] = forSale27(s)): number[] {
   const bs = buildings18(s);
+  const open = lotsOpen18(s, bs);
   const used = new Set(layout18(s, bs).values());
   const nbl = new Set(nb19(s).map((x) => x.lot));
   const busy = new Set(campus18(s).proj.map((p) => p.lot));
   const sl = new Set(sale.map((x) => x.lot));
-  return LOTS18.map((_, i) => i).filter((i) => i !== 0 && !used.has(i) && !nbl.has(i) && !busy.has(i) && !sl.has(i));
+  return LOTS18.map((_, i) => i).filter((i) => i !== 0 && i < open && !used.has(i) && !nbl.has(i) && !busy.has(i) && !sl.has(i));
 }
 
 // ---------------------------------------------------------------- vida na rua
